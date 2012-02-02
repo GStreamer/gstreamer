@@ -205,7 +205,7 @@ gst_object_class_init (GstObjectClass * klass)
 
 #ifndef GST_DISABLE_TRACE
   _gst_object_trace =
-      _gst_alloc_trace_register (g_type_name (GST_TYPE_OBJECT), 0);
+      _gst_alloc_trace_register (g_type_name (GST_TYPE_OBJECT), -2);
 #endif
 
   gobject_class->set_property = gst_object_set_property;

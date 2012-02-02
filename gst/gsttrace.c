@@ -168,15 +168,18 @@ gst_alloc_trace_print (const GstAllocTrace * trace)
       gpointer data = mem_live->data;
       const gchar *type_name;
 
-      if (G_IS_OBJECT (data)) {
-        type_name = G_OBJECT_TYPE_NAME (data);
-      } else if (trace->offset != -1) {
+      if (trace->offset == -2) {
+        if (G_IS_OBJECT (data))
+          type_name = G_OBJECT_TYPE_NAME (data);
+        else
+          type_name = "<invalid>";
+      } else if (trace->offset == -1) {
+        type_name = "<unknown>";
+      } else {
         GType type;
 
         type = G_STRUCT_MEMBER (GType, data, trace->offset);
         type_name = g_type_name (type);
-      } else {
-        type_name = "";
       }
 
       g_print ("  %-20.20s : %p\n", type_name, data);
