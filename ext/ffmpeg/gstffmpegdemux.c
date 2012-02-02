@@ -1849,7 +1849,7 @@ gst_ffmpegdemux_register (GstPlugin * plugin)
 {
   GType type;
   AVInputFormat *in_plugin;
-  gchar **extensions;
+  gchar *extensions;
   GTypeInfo typeinfo = {
     sizeof (GstFFMpegDemuxClass),
     (GBaseInitFunc) gst_ffmpegdemux_base_init,
@@ -2008,7 +2008,7 @@ gst_ffmpegdemux_register (GstPlugin * plugin)
     g_type_set_qdata (type, GST_FFDEMUX_PARAMS_QDATA, (gpointer) in_plugin);
 
     if (in_plugin->extensions)
-      extensions = g_strsplit (in_plugin->extensions, " ", 0);
+      extensions = g_strdelimit (g_strdup (in_plugin->extensions), " ", ',');
     else
       extensions = NULL;
 
@@ -2025,8 +2025,7 @@ gst_ffmpegdemux_register (GstPlugin * plugin)
 
     g_free (type_name);
     g_free (typefind_name);
-    if (extensions)
-      g_strfreev (extensions);
+    g_free (extensions);
 
   next:
     g_free (name);
