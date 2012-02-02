@@ -197,6 +197,8 @@ _memory_add (GstBuffer * buffer, guint idx, GstMemory * mem)
     /* FIXME, there is room for improvement here: We could only try to merge
      * 2 buffers to make some room. If we can't efficiently merge 2 buffers we
      * could try to only merge the two smallest buffers to avoid memcpy, etc. */
+    GST_CAT_DEBUG (GST_CAT_PERFORMANCE, "memory array overflow in buffer %p",
+        buffer);
     _replace_memory (buffer, _span_memory (buffer, 0, -1, FALSE));
     /* we now have 1 single spanned buffer */
     len = 1;
@@ -973,6 +975,10 @@ gst_buffer_map (GstBuffer * buffer, GstMapInfo * info, GstMapFlags flags)
   /* if the buffer is writable, replace the memory */
   if (writable)
     _replace_memory (buffer, gst_memory_ref (mem));
+  else if (GST_BUFFER_MEM_LEN (buffer) > 1) {
+    GST_CAT_DEBUG (GST_CAT_PERFORMANCE,
+        "temporary mapping for memory %p in buffer %p", mem, buffer);
+  }
 
   return TRUE;
 
@@ -995,7 +1001,6 @@ no_memory:
 cannot_map:
   {
     GST_DEBUG_OBJECT (buffer, "cannot map memory");
-    gst_memory_unref (mem);
     return FALSE;
   }
 }
@@ -1301,10 +1306,12 @@ _gst_buffer_arr_span (GstMemory ** mem[], gsize len[], guint n, gsize offset,
 
   if (!writable
       && _gst_buffer_arr_is_span_fast (mem, len, n, &poffset, &parent)) {
-    if (parent->flags & GST_MEMORY_FLAG_NO_SHARE)
+    if (parent->flags & GST_MEMORY_FLAG_NO_SHARE) {
+      GST_CAT_DEBUG (GST_CAT_PERFORMANCE, "copy for span %p", parent);
       span = gst_memory_copy (parent, offset + poffset, size);
-    else
+    } else {
       span = gst_memory_share (parent, offset + poffset, size);
+    }
   } else {
     gsize count, left;
     GstMapInfo dinfo;
@@ -1328,6 +1335,8 @@ _gst_buffer_arr_span (GstMemory ** mem[], gsize len[], guint n, gsize offset,
         gst_memory_map (cmem[i], &sinfo, GST_MAP_READ);
         tocopy = MIN (sinfo.size, left);
         if (tocopy > offset) {
+          GST_CAT_DEBUG (GST_CAT_PERFORMANCE,
+              "memcpy for span %p from memory %p", span, cmem[i]);
           memcpy (ptr, (guint8 *) sinfo.data + offset, tocopy - offset);
           left -= tocopy;
           ptr += tocopy;
