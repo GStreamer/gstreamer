@@ -701,7 +701,8 @@ gst_kate_tiger_kate_chain (GstPad * pad, GstBuffer * buf)
             ev->ki, ev->start_time, ev->end_time, ev->bitmap, ev->text);
         if (G_UNLIKELY (ret < 0)) {
           GST_WARNING_OBJECT (tiger,
-              "failed to add Kate event to Tiger renderer: %d", ret);
+              "failed to add Kate event to Tiger renderer: %s",
+              gst_kate_util_get_error_message (ret));
         }
       }
     }
@@ -1216,7 +1217,8 @@ gst_kate_tiger_video_chain (GstPad * pad, GstBuffer * buf)
       tiger->video_height, tiger->video_width * 4, tiger->swap_rgb);
   if (G_UNLIKELY (ret < 0)) {
     GST_WARNING_OBJECT (tiger,
-        "Tiger renderer failed to set buffer to video frame: %d", ret);
+        "Tiger renderer failed to set buffer to video frame: %s",
+        gst_kate_util_get_error_message (ret));
     goto pass;
   }
 
@@ -1226,7 +1228,8 @@ gst_kate_tiger_video_chain (GstPad * pad, GstBuffer * buf)
       (long) tiger->video_segment.last_stop, t);
   ret = tiger_renderer_update (tiger->tr, t, 1);
   if (G_UNLIKELY (ret < 0)) {
-    GST_WARNING_OBJECT (tiger, "Tiger renderer failed to update: %d", ret);
+    GST_WARNING_OBJECT (tiger, "Tiger renderer failed to update: %s",
+        gst_kate_util_get_error_message (ret));
     goto pass;
   }
 
@@ -1260,13 +1263,15 @@ gst_kate_tiger_video_chain (GstPad * pad, GstBuffer * buf)
       tiger->video_height, tiger->video_width * 4, tiger->swap_rgb);
   if (G_UNLIKELY (ret < 0)) {
     GST_WARNING_OBJECT (tiger,
-        "Tiger renderer failed to set buffer to video frame: %d", ret);
+        "Tiger renderer failed to set buffer to video frame: %s",
+        gst_kate_util_get_error_message (ret));
     goto pass;
   }
   ret = tiger_renderer_render (tiger->tr);
   if (G_UNLIKELY (ret < 0)) {
     GST_WARNING_OBJECT (tiger,
-        "Tiger renderer failed to render to video frame: %d", ret);
+        "Tiger renderer failed to render to video frame: %s",
+        gst_kate_util_get_error_message (ret));
   } else {
     GST_LOG_OBJECT (tiger, "Tiger renderer rendered on video frame at %f", t);
   }
@@ -1321,15 +1326,16 @@ gst_kate_tiger_change_state (GstElement * element, GstStateChange transition)
       if (tiger->decoder.initialized) {
         int ret = tiger_renderer_create (&tiger->tr);
         if (ret < 0) {
-          GST_WARNING_OBJECT (tiger, "failed to create tiger renderer: %d",
-              ret);
+          GST_WARNING_OBJECT (tiger, "failed to create tiger renderer: %s",
+              gst_kate_util_get_error_message (ret));
         } else {
           ret =
               tiger_renderer_set_default_font_description (tiger->tr,
               tiger->default_font_desc);
           if (ret < 0) {
             GST_WARNING_OBJECT (tiger,
-                "failed to set tiger default font description: %d", ret);
+                "failed to set tiger default font description: %s",
+                gst_kate_util_get_error_message (ret));
           }
           gst_kate_tiger_update_default_font_color (tiger);
           gst_kate_tiger_update_default_background_color (tiger);

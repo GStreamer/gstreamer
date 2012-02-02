@@ -618,7 +618,8 @@ gst_kate_enc_send_headers (GstKateEnc * ke)
       break;
     } else {
       GST_ELEMENT_ERROR (ke, STREAM, ENCODE, (NULL),
-          ("kate_encode_headers: %d", ret));
+          ("Failed encoding headers: %s",
+              gst_kate_util_get_error_message (ret)));
       rflow = GST_FLOW_ERROR;
       break;
     }
@@ -676,7 +677,8 @@ gst_kate_enc_flush_headers (GstKateEnc * ke)
       ke->headers_sent = TRUE;
       GST_INFO_OBJECT (ke, "headers flushed");
     } else {
-      GST_WARNING_OBJECT (ke, "Failed to flush headers: %d", rflow);
+      GST_WARNING_OBJECT (ke, "Failed to flush headers: %s",
+          gst_flow_get_name (rflow));
     }
   }
   return rflow;
@@ -714,7 +716,8 @@ gst_kate_enc_generate_keepalive (GstKateEnc * ke, GstClockTime timestamp)
   GST_DEBUG_OBJECT (ke, "keepalive at %f", t);
   ret = kate_encode_keepalive (&ke->k, t, &kp);
   if (ret < 0) {
-    GST_WARNING_OBJECT (ke, "Failed to encode keepalive packet: %d", ret);
+    GST_WARNING_OBJECT (ke, "Failed to encode keepalive packet: %s",
+        gst_kate_util_get_error_message (ret));
   } else {
     kate_int64_t granpos = kate_encode_get_granule (&ke->k);
     GST_LOG_OBJECT (ke, "Keepalive packet encoded");
@@ -744,7 +747,8 @@ gst_kate_enc_flush_waiting (GstKateEnc * ke, GstClockTime now)
     ret = kate_encode_text (&ke->k, t0, t1, "", 0, &kp);
     if (G_UNLIKELY (ret < 0)) {
       GST_ELEMENT_ERROR (ke, STREAM, ENCODE, (NULL),
-          ("kate_encode_text: %d", ret));
+          ("Failed to encode text packet: %s",
+              gst_kate_util_get_error_message (ret)));
       rflow = GST_FLOW_ERROR;
     } else {
       rflow =
@@ -755,7 +759,8 @@ gst_kate_enc_flush_waiting (GstKateEnc * ke, GstClockTime now)
     if (rflow == GST_FLOW_OK) {
       GST_DEBUG_OBJECT (ke, "delayed SPU packet flushed");
     } else {
-      GST_WARNING_OBJECT (ke, "Failed to flush delayed SPU packet: %d", rflow);
+      GST_WARNING_OBJECT (ke, "Failed to flush delayed SPU packet: %s",
+          gst_flow_get_name (rflow));
     }
 
     /* forget it even if we couldn't flush it */
@@ -865,19 +870,21 @@ gst_kate_enc_chain_spu (GstKateEnc * ke, GstBuffer * buf)
     ret = kate_encode_set_region (&ke->k, kregion);
     if (G_UNLIKELY (ret < 0)) {
       GST_ELEMENT_ERROR (ke, STREAM, ENCODE, (NULL),
-          ("kate_encode_set_region: %d", ret));
+          ("Failed to set region: %s", gst_kate_util_get_error_message (ret)));
       rflow = GST_FLOW_ERROR;
     } else {
       ret = kate_encode_set_palette (&ke->k, kpalette);
       if (G_UNLIKELY (ret < 0)) {
         GST_ELEMENT_ERROR (ke, STREAM, ENCODE, (NULL),
-            ("kate_encode_set_palette: %d", ret));
+            ("Failed to set palette: %s",
+                gst_kate_util_get_error_message (ret)));
         rflow = GST_FLOW_ERROR;
       } else {
         ret = kate_encode_set_bitmap (&ke->k, kbitmap);
         if (G_UNLIKELY (ret < 0)) {
           GST_ELEMENT_ERROR (ke, STREAM, ENCODE, (NULL),
-              ("kate_encode_set_bitmap: %d", ret));
+              ("Failed to set bitmap: %s",
+                  gst_kate_util_get_error_message (ret)));
           rflow = GST_FLOW_ERROR;
         } else {
           /* Some SPUs have no hide time - so I'm going to delay the encoding of the packet
@@ -899,7 +906,8 @@ gst_kate_enc_chain_spu (GstKateEnc * ke, GstBuffer * buf)
             ret = kate_encode_text (&ke->k, t0, t1, "", 0, &kp);
             if (G_UNLIKELY (ret < 0)) {
               GST_ELEMENT_ERROR (ke, STREAM, ENCODE, (NULL),
-                  ("Failed to encode empty text for SPU buffer: %d", ret));
+                  ("Failed to encode empty text for SPU buffer: %s",
+                      gst_kate_util_get_error_message (ret)));
               rflow = GST_FLOW_ERROR;
             } else {
               rflow =
@@ -941,7 +949,8 @@ gst_kate_enc_chain_text (GstKateEnc * ke, GstBuffer * buf,
 
   if (G_UNLIKELY (ret < 0)) {
     GST_ELEMENT_ERROR (ke, STREAM, ENCODE, (NULL),
-        ("kate_encode_set_markup_type: %d", ret));
+        ("Failed to set markup type: %s",
+            gst_kate_util_get_error_message (ret)));
     rflow = GST_FLOW_ERROR;
   } else {
     const char *text = (const char *) GST_BUFFER_DATA (buf);
@@ -960,7 +969,7 @@ gst_kate_enc_chain_text (GstKateEnc * ke, GstBuffer * buf,
     ret = kate_encode_text (&ke->k, t0, t1, text, text_len, &kp);
     if (G_UNLIKELY (ret < 0)) {
       GST_ELEMENT_ERROR (ke, STREAM, ENCODE, (NULL),
-          ("Failed to encode text: %d", ret));
+          ("Failed to encode text: %s", gst_kate_util_get_error_message (ret)));
       rflow = GST_FLOW_ERROR;
     } else {
       rflow = gst_kate_enc_chain_push_packet (ke, &kp, start, stop - start + 1);
@@ -1044,21 +1053,23 @@ gst_kate_enc_change_state (GstElement * element, GstStateChange transition)
       GST_DEBUG_OBJECT (ke, "READY -> PAUSED, initializing kate state");
       ret = kate_info_init (&ke->ki);
       if (ret < 0) {
-        GST_WARNING_OBJECT (ke, "failed to initialize kate info structure: %d",
-            ret);
+        GST_WARNING_OBJECT (ke, "failed to initialize kate info structure: %s",
+            gst_kate_util_get_error_message (ret));
         break;
       }
       if (ke->language) {
         ret = kate_info_set_language (&ke->ki, ke->language);
         if (ret < 0) {
-          GST_WARNING_OBJECT (ke, "failed to set stream language: %d", ret);
+          GST_WARNING_OBJECT (ke, "failed to set stream language: %s",
+              gst_kate_util_get_error_message (ret));
           break;
         }
       }
       if (ke->category) {
         ret = kate_info_set_category (&ke->ki, ke->category);
         if (ret < 0) {
-          GST_WARNING_OBJECT (ke, "failed to set stream category: %d", ret);
+          GST_WARNING_OBJECT (ke, "failed to set stream category: %s",
+              gst_kate_util_get_error_message (ret));
           break;
         }
       }
@@ -1066,18 +1077,21 @@ gst_kate_enc_change_state (GstElement * element, GstStateChange transition)
           kate_info_set_original_canvas_size (&ke->ki,
           ke->original_canvas_width, ke->original_canvas_height);
       if (ret < 0) {
-        GST_WARNING_OBJECT (ke, "failed to set original canvas size: %d", ret);
+        GST_WARNING_OBJECT (ke, "failed to set original canvas size: %s",
+            gst_kate_util_get_error_message (ret));
         break;
       }
       ret = kate_comment_init (&ke->kc);
       if (ret < 0) {
         GST_WARNING_OBJECT (ke,
-            "failed to initialize kate comment structure: %d", ret);
+            "failed to initialize kate comment structure: %s",
+            gst_kate_util_get_error_message (ret));
         break;
       }
       ret = kate_encode_init (&ke->k, &ke->ki);
       if (ret < 0) {
-        GST_WARNING_OBJECT (ke, "failed to initialize kate state: %d", ret);
+        GST_WARNING_OBJECT (ke, "failed to initialize kate state: %s",
+            gst_kate_util_get_error_message (ret));
         break;
       }
       ke->headers_sent = FALSE;
@@ -1381,7 +1395,8 @@ gst_kate_enc_sink_event (GstPad * pad, GstEvent * event)
 
           ret = kate_encode_finish (&ke->k, -1, &kp);
           if (ret < 0) {
-            GST_WARNING_OBJECT (ke, "Failed to encode EOS packet: %d", ret);
+            GST_WARNING_OBJECT (ke, "Failed to encode EOS packet: %s",
+                gst_kate_util_get_error_message (ret));
           } else {
             kate_int64_t granpos = kate_encode_get_granule (&ke->k);
             GST_LOG_OBJECT (ke, "EOS packet encoded");
