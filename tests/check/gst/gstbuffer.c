@@ -610,6 +610,52 @@ GST_START_TEST (test_resize)
 
 GST_END_TEST;
 
+GST_START_TEST (test_map)
+{
+  GstBuffer *buf;
+  GstMapInfo map;
+  gsize maxalloc;
+  gsize size, offset;
+
+  buf = gst_buffer_new ();
+  gst_buffer_take_memory (buf, -1, gst_allocator_alloc (NULL, 50, 0));
+  gst_buffer_take_memory (buf, -1, gst_allocator_alloc (NULL, 50, 0));
+
+  size = gst_buffer_get_sizes (buf, &offset, &maxalloc);
+  fail_unless (size == 100);
+  fail_unless (offset == 0);
+  fail_unless (maxalloc >= 100);
+  fail_unless (gst_buffer_n_memory (buf) == 2);
+
+  /* make readonly */
+  gst_buffer_ref (buf);
+  /* map should merge */
+  gst_buffer_map (buf, &map, GST_MAP_READ);
+  /* merged memory is not stored */
+  fail_unless (gst_buffer_n_memory (buf) == 2);
+  gst_buffer_unmap (buf, &map);
+
+  fail_unless (gst_buffer_n_memory (buf) == 2);
+
+  /* can't map write on readonly buffer */
+  ASSERT_CRITICAL (gst_buffer_map (buf, &map, GST_MAP_WRITE));
+  /* make writable again */
+  gst_buffer_unref (buf);
+
+  /* should merge and store */
+  gst_buffer_map (buf, &map, GST_MAP_READ);
+  fail_unless (gst_buffer_n_memory (buf) == 1);
+  gst_buffer_unmap (buf, &map);
+
+  gst_buffer_map (buf, &map, GST_MAP_WRITE);
+  gst_buffer_unmap (buf, &map);
+
+  gst_buffer_unref (buf);
+}
+
+GST_END_TEST;
+
+
 static Suite *
 gst_buffer_suite (void)
 {
@@ -627,6 +673,7 @@ gst_buffer_suite (void)
   tcase_add_test (tc_chain, test_try_new_and_alloc);
   tcase_add_test (tc_chain, test_size);
   tcase_add_test (tc_chain, test_resize);
+  tcase_add_test (tc_chain, test_map);
 
   return s;
 }
