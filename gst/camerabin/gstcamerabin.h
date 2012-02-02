@@ -129,6 +129,7 @@ struct _GstCameraBin
   /* concurrency control */
   GMutex *capture_mutex;
   GCond *cond;
+  GCond *idle_cond;
   gboolean capturing;
   gboolean eos_handled;
   /* everytime a new capture is started this is incremented, when it is
