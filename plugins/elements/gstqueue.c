@@ -396,6 +396,7 @@ gst_queue_init (GstQueue * queue)
   gst_pad_set_query_function (queue->sinkpad, gst_queue_handle_sink_query);
   gst_pad_set_link_function (queue->sinkpad, gst_queue_link_sink);
   GST_PAD_SET_PROXY_CAPS (queue->sinkpad);
+  GST_PAD_SET_PROXY_ALLOCATION (queue->sinkpad);
   gst_element_add_pad (GST_ELEMENT (queue), queue->sinkpad);
 
   queue->srcpad = gst_pad_new_from_static_template (&srctemplate, "src");
