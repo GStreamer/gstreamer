@@ -1417,6 +1417,9 @@ default_prepare_output_buffer (GstBaseTransform * trans,
   GstBaseTransformPrivate *priv;
   GstFlowReturn ret = GST_FLOW_OK;
   GstBaseTransformClass *bclass;
+  GstCaps *incaps, *outcaps;
+  gsize insize, outsize;
+  gboolean res;
 
   priv = trans->priv;
   bclass = GST_BASE_TRANSFORM_GET_CLASS (trans);
@@ -1427,49 +1430,58 @@ default_prepare_output_buffer (GstBaseTransform * trans,
      * reuse it */
     GST_DEBUG_OBJECT (trans, "passthrough: reusing input buffer");
     *outbuf = inbuf;
-  } else {
-    /* we can't reuse the input buffer */
-    if (priv->pool) {
-      GST_DEBUG_OBJECT (trans, "using pool alloc");
-      ret = gst_buffer_pool_acquire_buffer (priv->pool, outbuf, NULL);
-    } else {
-      gboolean want_in_place;
-      gsize insize, outsize;
-      gboolean res;
-
-      /* no pool, we need to figure out the size of the output buffer first */
-      insize = gst_buffer_get_size (inbuf);
-
-      want_in_place = (bclass->transform_ip != NULL)
-          && trans->always_in_place;
-
-      if (want_in_place) {
-        GST_DEBUG_OBJECT (trans, "doing inplace alloc");
-        /* we alloc a buffer of the same size as the input */
-        outsize = insize;
-      } else {
-        GstCaps *incaps, *outcaps;
-
-        /* else use the transform function to get the size */
-        incaps = gst_pad_get_current_caps (trans->sinkpad);
-        outcaps = gst_pad_get_current_caps (trans->srcpad);
-
-        GST_DEBUG_OBJECT (trans, "getting output size for alloc");
-        /* copy transform, figure out the output size */
-        res = gst_base_transform_transform_size (trans,
-            GST_PAD_SINK, incaps, insize, outcaps, &outsize);
-
-        gst_caps_unref (incaps);
-        gst_caps_unref (outcaps);
-
-        if (!res)
-          goto unknown_size;
-      }
-      GST_DEBUG_OBJECT (trans, "doing alloc of size %" G_GSIZE_FORMAT, outsize);
-      *outbuf =
-          gst_buffer_new_allocate (priv->allocator, outsize, priv->alignment);
-    }
+    goto done;
   }
+
+  /* we can't reuse the input buffer */
+  if (priv->pool) {
+    GST_DEBUG_OBJECT (trans, "using pool alloc");
+    ret = gst_buffer_pool_acquire_buffer (priv->pool, outbuf, NULL);
+    goto done;
+  }
+
+  /* no pool, we need to figure out the size of the output buffer first */
+  if ((bclass->transform_ip != NULL) && trans->always_in_place) {
+    /* we want to do an in-place alloc */
+    if (gst_buffer_is_writable (inbuf)) {
+      GST_DEBUG_OBJECT (trans, "inplace reuse writable input buffer");
+      *outbuf = inbuf;
+    } else {
+      GST_DEBUG_OBJECT (trans, "making writable buffer copy");
+      /* we make a copy of the input buffer */
+      *outbuf = gst_buffer_copy (inbuf);
+    }
+    goto done;
+  }
+
+  /* else use the transform function to get the size */
+  incaps = gst_pad_get_current_caps (trans->sinkpad);
+  outcaps = gst_pad_get_current_caps (trans->srcpad);
+
+  GST_DEBUG_OBJECT (trans, "getting output size for alloc");
+  /* copy transform, figure out the output size */
+  insize = gst_buffer_get_size (inbuf);
+  res = gst_base_transform_transform_size (trans,
+      GST_PAD_SINK, incaps, insize, outcaps, &outsize);
+
+  gst_caps_unref (incaps);
+  gst_caps_unref (outcaps);
+
+  if (!res)
+    goto unknown_size;
+
+  GST_DEBUG_OBJECT (trans, "doing alloc of size %" G_GSIZE_FORMAT, outsize);
+  *outbuf = gst_buffer_new_allocate (priv->allocator, outsize, priv->alignment);
+
+  /* copy the metadata */
+  if (bclass->copy_metadata)
+    if (!bclass->copy_metadata (trans, inbuf, *outbuf)) {
+      /* something failed, post a warning */
+      GST_ELEMENT_WARNING (trans, STREAM, NOT_IMPLEMENTED,
+          ("could not copy metadata"), (NULL));
+    }
+
+done:
   return ret;
 
   /* ERRORS */
@@ -1836,26 +1848,6 @@ no_qos:
   if (ret != GST_FLOW_OK || *outbuf == NULL)
     goto no_buffer;
 
-  if (inbuf == *outbuf) {
-    GST_DEBUG_OBJECT (trans, "reusing input buffer");
-  } else if (trans->passthrough) {
-    /* we are asked to perform a passthrough transform but the input and
-     * output buffers are different. We have to discard the output buffer and
-     * reuse the input buffer. This is rather weird, it means that the prepare
-     * output buffer does something wrong. */
-    GST_WARNING_OBJECT (trans, "passthrough but different buffers, check the "
-        "prepare_output_buffer implementation");
-    gst_buffer_unref (*outbuf);
-    *outbuf = inbuf;
-  } else {
-    /* copy the metadata */
-    if (bclass->copy_metadata)
-      if (!bclass->copy_metadata (trans, inbuf, *outbuf)) {
-        /* something failed, post a warning */
-        GST_ELEMENT_WARNING (trans, STREAM, NOT_IMPLEMENTED,
-            ("could not copy metadata"), (NULL));
-      }
-  }
   GST_DEBUG_OBJECT (trans, "using allocated buffer in %p, out %p", inbuf,
       *outbuf);
 
@@ -1875,25 +1867,6 @@ no_qos:
 
     if (want_in_place) {
       GST_DEBUG_OBJECT (trans, "doing inplace transform");
-
-      if (inbuf != *outbuf) {
-        GstMapInfo ininfo, outinfo;
-
-        /* Different buffer. The data can still be the same when we are dealing
-         * with subbuffers of the same buffer. Note that because of the FIXME in
-         * prepare_output_buffer() we have decreased the refcounts of inbuf and
-         * outbuf to keep them writable */
-        if (gst_buffer_map (inbuf, &ininfo, GST_MAP_READ)) {
-          if (gst_buffer_map (*outbuf, &outinfo, GST_MAP_WRITE)) {
-
-            if (ininfo.data != outinfo.data)
-              memcpy (outinfo.data, ininfo.data, ininfo.size);
-
-            gst_buffer_unmap (*outbuf, &outinfo);
-          }
-          gst_buffer_unmap (inbuf, &ininfo);
-        }
-      }
       ret = bclass->transform_ip (trans, *outbuf);
     } else {
       GST_DEBUG_OBJECT (trans, "doing non-inplace transform");
