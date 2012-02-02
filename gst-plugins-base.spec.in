@@ -130,7 +130,7 @@ rm -rf $RPM_BUILD_ROOT
 @USE_LIBVISUAL_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgstlibvisual.so
 @USE_PANGO_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgstpango.so
 @USE_CDPARANOIA_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgstcdparanoia.so
-@USE_GIO_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgstgio.so
+%{_libdir}/gstreamer-%{majorminor}/libgstgio.so
 # @USE_SCHRO_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgstschro.so                                                                     
 %package devel
 Summary: 	GStreamer Plugin Library Headers
