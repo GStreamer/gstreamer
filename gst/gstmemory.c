@@ -70,6 +70,12 @@
 #include "gst_private.h"
 #include "gstmemory.h"
 
+#ifndef GST_DISABLE_TRACE
+#include "gsttrace.h"
+static GstAllocTrace *_gst_memory_trace;
+static GstAllocTrace *_gst_allocator_trace;
+#endif
+
 G_DEFINE_BOXED_TYPE (GstMemory, gst_memory, (GBoxedCopyFunc) gst_memory_ref,
     (GBoxedFreeFunc) gst_memory_unref);
 
@@ -137,7 +143,7 @@ _default_mem_init (GstMemoryDefault * mem, GstMemoryFlags flags,
   mem->data = data;
   mem->free_func = free_func;
 
-  GST_DEBUG ("new memory %p", mem);
+  GST_CAT_DEBUG (GST_CAT_MEMORY, "new memory %p", mem);
 }
 
 /* create a new memory block that manages the given memory */
@@ -209,7 +215,7 @@ _default_mem_unmap (GstMemoryDefault * mem)
 static void
 _default_mem_free (GstMemoryDefault * mem)
 {
-  GST_DEBUG ("free memory %p", mem);
+  GST_CAT_DEBUG (GST_CAT_MEMORY, "free memory %p", mem);
 
   if (mem->mem.parent)
     gst_memory_unref (mem->mem.parent);
@@ -290,7 +296,7 @@ _fallback_mem_copy (GstMemory * mem, gssize offset, gssize size)
   /* use the same allocator as the memory we copy  */
   copy = gst_allocator_alloc (mem->allocator, size, mem->align);
   if (!gst_memory_map (copy, &dinfo, GST_MAP_WRITE)) {
-    GST_WARNING ("could not write map memory %p", copy);
+    GST_CAT_WARNING (GST_CAT_MEMORY, "could not write map memory %p", copy);
     gst_memory_unmap (mem, &sinfo);
     return NULL;
   }
@@ -332,6 +338,11 @@ _priv_gst_memory_initialize (void)
     (GstMemoryIsSpanFunction) _default_mem_is_span,
   };
 
+#ifndef GST_DISABLE_TRACE
+  _gst_memory_trace = _gst_alloc_trace_register ("GstMemory", -1);
+  _gst_allocator_trace = _gst_alloc_trace_register ("GstAllocator", -1);
+#endif
+
   g_rw_lock_init (&lock);
   allocators = g_hash_table_new (g_str_hash, g_str_equal);
 
@@ -341,7 +352,8 @@ _priv_gst_memory_initialize (void)
 #endif
 #endif
 
-  GST_DEBUG ("memory alignment: %" G_GSIZE_FORMAT, gst_memory_alignment);
+  GST_CAT_DEBUG (GST_CAT_MEMORY, "memory alignment: %" G_GSIZE_FORMAT,
+      gst_memory_alignment);
 
   _default_mem_impl = gst_allocator_new (&_mem_info, NULL, _priv_sysmem_notify);
 
@@ -374,6 +386,10 @@ gst_memory_new_wrapped (GstMemoryFlags flags, gpointer data,
 
   mem = _default_mem_new (flags, NULL, data, free_func, maxsize, offset, size);
 
+#ifndef GST_DISABLE_TRACE
+  _gst_alloc_trace_new (_gst_memory_trace, mem);
+#endif
+
   return (GstMemory *) mem;
 }
 
@@ -390,7 +406,8 @@ gst_memory_ref (GstMemory * mem)
 {
   g_return_val_if_fail (mem != NULL, NULL);
 
-  GST_DEBUG ("memory %p, %d->%d", mem, mem->refcount, mem->refcount + 1);
+  GST_CAT_TRACE (GST_CAT_MEMORY, "memory %p, %d->%d", mem, mem->refcount,
+      mem->refcount + 1);
 
   g_atomic_int_inc (&mem->refcount);
 
@@ -410,10 +427,15 @@ gst_memory_unref (GstMemory * mem)
   g_return_if_fail (mem != NULL);
   g_return_if_fail (mem->allocator != NULL);
 
-  GST_DEBUG ("memory %p, %d->%d", mem, mem->refcount, mem->refcount - 1);
+  GST_CAT_TRACE (GST_CAT_MEMORY, "memory %p, %d->%d", mem, mem->refcount,
+      mem->refcount - 1);
 
-  if (g_atomic_int_dec_and_test (&mem->refcount))
+  if (g_atomic_int_dec_and_test (&mem->refcount)) {
+#ifndef GST_DISABLE_TRACE
+    _gst_alloc_trace_free (_gst_memory_trace, mem);
+#endif
     mem->allocator->info.mem_free (mem);
+  }
 }
 
 /**
@@ -503,8 +525,8 @@ gst_memory_lock (GstMemory * mem, GstMapFlags flags)
 
 lock_failed:
   {
-    GST_DEBUG ("lock failed %p: state %d, access_mode %d", mem, state,
-        access_mode);
+    GST_CAT_DEBUG (GST_CAT_MEMORY, "lock failed %p: state %d, access_mode %d",
+        mem, state, access_mode);
     return FALSE;
   }
 }
@@ -563,12 +585,13 @@ gst_memory_make_mapped (GstMemory * mem, GstMapInfo * info, GstMapFlags flags)
   /* ERRORS */
 cannot_copy:
   {
-    GST_DEBUG ("cannot copy memory %p", mem);
+    GST_CAT_DEBUG (GST_CAT_MEMORY, "cannot copy memory %p", mem);
     return NULL;
   }
 cannot_map:
   {
-    GST_DEBUG ("cannot map memory %p with flags %d", mem, flags);
+    GST_CAT_DEBUG (GST_CAT_MEMORY, "cannot map memory %p with flags %d", mem,
+        flags);
     gst_memory_unref (result);
     return NULL;
   }
@@ -620,13 +643,13 @@ gst_memory_map (GstMemory * mem, GstMapInfo * info, GstMapFlags flags)
   /* ERRORS */
 lock_failed:
   {
-    GST_DEBUG ("mem %p: lock %d failed", mem, flags);
+    GST_CAT_DEBUG (GST_CAT_MEMORY, "mem %p: lock %d failed", mem, flags);
     return FALSE;
   }
 error:
   {
     /* something went wrong, restore the orginal state again */
-    GST_ERROR ("mem %p: map failed", mem);
+    GST_CAT_ERROR (GST_CAT_MEMORY, "mem %p: map failed", mem);
     gst_memory_unlock (mem);
     return FALSE;
   }
@@ -670,11 +693,12 @@ gst_memory_copy (GstMemory * mem, gssize offset, gssize size)
   GstMemory *copy;
 
   g_return_val_if_fail (mem != NULL, NULL);
-  g_return_val_if_fail (gst_memory_lock (mem, GST_MAP_READ), NULL);
 
   copy = mem->allocator->info.mem_copy (mem, offset, size);
 
-  gst_memory_unlock (mem);
+#ifndef GST_DISABLE_TRACE
+  _gst_alloc_trace_new (_gst_memory_trace, copy);
+#endif
 
   return copy;
 }
@@ -695,9 +719,17 @@ gst_memory_copy (GstMemory * mem, gssize offset, gssize size)
 GstMemory *
 gst_memory_share (GstMemory * mem, gssize offset, gssize size)
 {
+  GstMemory *shared;
+
   g_return_val_if_fail (mem != NULL, NULL);
 
-  return mem->allocator->info.mem_share (mem, offset, size);
+  shared = mem->allocator->info.mem_share (mem, offset, size);
+
+#ifndef GST_DISABLE_TRACE
+  _gst_alloc_trace_new (_gst_memory_trace, shared);
+#endif
+
+  return shared;
 }
 
 /**
@@ -777,7 +809,11 @@ gst_allocator_new (const GstMemoryInfo * info, gpointer user_data,
   INSTALL_FALLBACK (mem_is_span);
 #undef INSTALL_FALLBACK
 
-  GST_DEBUG ("new allocator %p", allocator);
+  GST_CAT_DEBUG (GST_CAT_MEMORY, "new allocator %p", allocator);
+
+#ifndef GST_DISABLE_TRACE
+  _gst_alloc_trace_new (_gst_allocator_trace, allocator);
+#endif
 
   return allocator;
 }
@@ -811,8 +847,8 @@ gst_allocator_ref (GstAllocator * allocator)
 {
   g_return_val_if_fail (allocator != NULL, NULL);
 
-  GST_DEBUG ("alocator %p, %d->%d", allocator, allocator->refcount,
-      allocator->refcount + 1);
+  GST_CAT_TRACE (GST_CAT_MEMORY, "alocator %p, %d->%d", allocator,
+      allocator->refcount, allocator->refcount + 1);
 
   g_atomic_int_inc (&allocator->refcount);
 
@@ -831,12 +867,15 @@ gst_allocator_unref (GstAllocator * allocator)
 {
   g_return_if_fail (allocator != NULL);
 
-  GST_DEBUG ("allocator %p, %d->%d", allocator, allocator->refcount,
-      allocator->refcount - 1);
+  GST_CAT_TRACE (GST_CAT_MEMORY, "allocator %p, %d->%d", allocator,
+      allocator->refcount, allocator->refcount - 1);
 
   if (g_atomic_int_dec_and_test (&allocator->refcount)) {
     if (allocator->notify)
       allocator->notify (allocator->user_data);
+#ifndef GST_DISABLE_TRACE
+    _gst_alloc_trace_free (_gst_allocator_trace, allocator);
+#endif
     g_slice_free1 (sizeof (GstAllocator), allocator);
   }
 }
@@ -855,7 +894,8 @@ gst_allocator_register (const gchar * name, GstAllocator * allocator)
   g_return_if_fail (name != NULL);
   g_return_if_fail (allocator != NULL);
 
-  GST_DEBUG ("registering allocator %p with name \"%s\"", allocator, name);
+  GST_CAT_DEBUG (GST_CAT_MEMORY, "registering allocator %p with name \"%s\"",
+      allocator, name);
 
   g_rw_lock_writer_lock (&lock);
   g_hash_table_insert (allocators, (gpointer) name, (gpointer) allocator);
@@ -930,11 +970,16 @@ gst_allocator_set_default (GstAllocator * allocator)
 GstMemory *
 gst_allocator_alloc (GstAllocator * allocator, gsize maxsize, gsize align)
 {
+  GstMemory *mem;
+
   g_return_val_if_fail (((align + 1) & align) == 0, NULL);
 
   if (allocator == NULL)
     allocator = _default_allocator;
 
-  return allocator->info.alloc (allocator, maxsize, align,
-      allocator->user_data);
+  mem = allocator->info.alloc (allocator, maxsize, align, allocator->user_data);
+#ifndef GST_DISABLE_TRACE
+  _gst_alloc_trace_new (_gst_memory_trace, mem);
+#endif
+  return mem;
 }
