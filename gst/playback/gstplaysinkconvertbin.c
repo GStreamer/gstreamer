@@ -467,7 +467,7 @@ gst_play_sink_convert_bin_query (GstPad * pad, GstObject * parent,
       break;
     }
     default:
-      res = gst_pad_query_default (pad, parent, query);
+      res = gst_proxy_pad_query_default (pad, parent, query);
       break;
   }
   return res;
