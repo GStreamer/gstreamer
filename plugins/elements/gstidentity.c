@@ -268,6 +268,7 @@ gst_identity_class_init (GstIdentityClass * klass)
 
   gstelement_class->change_state =
       GST_DEBUG_FUNCPTR (gst_identity_change_state);
+
   gstbasetrans_class->sink_event = GST_DEBUG_FUNCPTR (gst_identity_sink_event);
   gstbasetrans_class->transform_ip =
       GST_DEBUG_FUNCPTR (gst_identity_transform_ip);
@@ -602,9 +603,9 @@ gst_identity_transform_ip (GstBaseTransform * trans, GstBuffer * buf)
   GstFlowReturn ret = GST_FLOW_OK;
   GstIdentity *identity = GST_IDENTITY (trans);
   GstClockTime runtimestamp = G_GINT64_CONSTANT (0);
-  GstMapInfo info;
+  gsize size;
 
-  gst_buffer_map (buf, &info, GST_MAP_READ);
+  size = gst_buffer_get_size (buf);
 
   if (identity->check_perfect)
     gst_identity_check_perfect (identity, buf);
@@ -631,12 +632,15 @@ gst_identity_transform_ip (GstBaseTransform * trans, GstBuffer * buf)
   }
 
   if (identity->dump) {
+    GstMapInfo info;
+
+    gst_buffer_map (buf, &info, GST_MAP_READ);
     gst_util_dump_mem (info.data, info.size);
+    gst_buffer_unmap (buf, &info);
   }
 
   if (!identity->silent) {
-    gst_identity_update_last_message_for_buffer (identity, "chain", buf,
-        info.size);
+    gst_identity_update_last_message_for_buffer (identity, "chain", buf, size);
   }
 
   if (identity->datarate > 0) {
@@ -644,7 +648,7 @@ gst_identity_transform_ip (GstBaseTransform * trans, GstBuffer * buf)
         GST_SECOND, identity->datarate);
 
     GST_BUFFER_TIMESTAMP (buf) = time;
-    GST_BUFFER_DURATION (buf) = info.size * GST_SECOND / identity->datarate;
+    GST_BUFFER_DURATION (buf) = size * GST_SECOND / identity->datarate;
   }
 
   if (identity->signal_handoffs)
@@ -681,7 +685,7 @@ gst_identity_transform_ip (GstBaseTransform * trans, GstBuffer * buf)
     GST_OBJECT_UNLOCK (identity);
   }
 
-  identity->offset += info.size;
+  identity->offset += size;
 
   if (identity->sleep_time && ret == GST_FLOW_OK)
     g_usleep (identity->sleep_time);
@@ -693,8 +697,6 @@ gst_identity_transform_ip (GstBaseTransform * trans, GstBuffer * buf)
     GST_BUFFER_OFFSET_END (buf) = GST_CLOCK_TIME_NONE;
   }
 
-  gst_buffer_unmap (buf, &info);
-
   return ret;
 
   /* ERRORS */
@@ -702,16 +704,14 @@ error_after:
   {
     GST_ELEMENT_ERROR (identity, CORE, FAILED,
         (_("Failed after iterations as requested.")), (NULL));
-    gst_buffer_unmap (buf, &info);
     return GST_FLOW_ERROR;
   }
 dropped:
   {
     if (!identity->silent) {
       gst_identity_update_last_message_for_buffer (identity, "dropping", buf,
-          info.size);
+          size);
     }
-    gst_buffer_unmap (buf, &info);
     /* return DROPPED to basetransform. */
     return GST_BASE_TRANSFORM_FLOW_DROPPED;
   }
