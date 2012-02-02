@@ -329,7 +329,9 @@ static void
 add_object_to_track (GESTimelineObject * object, GESTrack * track)
 {
   if (!ges_timeline_object_create_track_objects (object, track)) {
-    GST_WARNING ("error creating track objects");
+    if ((track->type & ges_timeline_object_get_supported_formats (object))) {
+      GST_WARNING ("Error creating track objects");
+    }
   }
 }
 
