@@ -42,14 +42,12 @@ static GstStaticCaps foobar_caps = GST_STATIC_CAPS ("foo/x-bar");
 /* make sure the entire data in the buffer is available for peeking */
 GST_START_TEST (test_buffer_range)
 {
-  static gchar *foobar_exts[] = { (char *) "foobar", NULL };
-
   GstStructure *s;
   GstBuffer *buf;
   GstCaps *caps;
 
   fail_unless (gst_type_find_register (NULL, "foo/x-bar",
-          GST_RANK_PRIMARY + 50, foobar_typefind, (gchar **) foobar_exts,
+          GST_RANK_PRIMARY + 50, foobar_typefind, "foobar",
           FOOBAR_CAPS, NULL, NULL));
 
   buf = gst_buffer_new ();

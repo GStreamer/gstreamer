@@ -47,8 +47,8 @@ G_DEFINE_POINTER_TYPE (GstTypeFind, gst_type_find);
  * @name: The name for registering
  * @rank: The rank (or importance) of this typefind function
  * @func: The #GstTypeFindFunction to use
- * @extensions: (transfer none) (array zero-terminated=1) (element-type utf8):
- *     Optional extensions that could belong to this type
+ * @extensions: (allow-none): Optional comma-separated list of extensions
+ *     that could belong to this type
  * @possible_caps: Optionally the caps that could be returned when typefinding
  *                 succeeds
  * @data: Optional user data. This user data must be available until the plugin
@@ -64,7 +64,7 @@ G_DEFINE_POINTER_TYPE (GstTypeFind, gst_type_find);
  */
 gboolean
 gst_type_find_register (GstPlugin * plugin, const gchar * name, guint rank,
-    GstTypeFindFunction func, gchar ** extensions,
+    GstTypeFindFunction func, const gchar * extensions,
     GstCaps * possible_caps, gpointer data, GDestroyNotify data_notify)
 {
   GstTypeFindFactory *factory;
@@ -80,9 +80,12 @@ gst_type_find_register (GstPlugin * plugin, const gchar * name, guint rank,
   gst_plugin_feature_set_name (GST_PLUGIN_FEATURE_CAST (factory), name);
   gst_plugin_feature_set_rank (GST_PLUGIN_FEATURE_CAST (factory), rank);
 
-  if (factory->extensions)
+  if (factory->extensions) {
     g_strfreev (factory->extensions);
-  factory->extensions = g_strdupv (extensions);
+    factory->extensions = NULL;
+  }
+  if (extensions)
+    factory->extensions = g_strsplit (extensions, ",", -1);
 
   gst_caps_replace (&factory->caps, possible_caps);
   factory->function = func;

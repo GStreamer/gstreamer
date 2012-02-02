@@ -114,7 +114,7 @@ gboolean  gst_type_find_register   (GstPlugin            * plugin,
                                     const gchar          * name,
                                     guint                  rank,
                                     GstTypeFindFunction    func,
-                                    gchar               ** extensions,
+                                    const gchar          * extensions,
                                     GstCaps              * possible_caps,
                                     gpointer               data,
                                     GDestroyNotify         data_notify);
