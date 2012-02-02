@@ -2769,12 +2769,14 @@ done:
 gboolean
 gst_pad_query_default (GstPad * pad, GstObject * parent, GstQuery * query)
 {
-  gboolean forward = TRUE, ret = FALSE;
+  gboolean forward, ret = FALSE;
 
   switch (GST_QUERY_TYPE (query)) {
     case GST_QUERY_SCHEDULING:
-    case GST_QUERY_ALLOCATION:
       forward = FALSE;
+      break;
+    case GST_QUERY_ALLOCATION:
+      forward = GST_PAD_IS_PROXY_ALLOCATION (pad);
       break;
     case GST_QUERY_ACCEPT_CAPS:
       ret = gst_pad_query_accept_caps_default (pad, query);
@@ -2792,6 +2794,7 @@ gst_pad_query_default (GstPad * pad, GstObject * parent, GstQuery * query)
     case GST_QUERY_RATE:
     case GST_QUERY_CONVERT:
     default:
+      forward = TRUE;
       break;
   }
 

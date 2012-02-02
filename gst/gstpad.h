@@ -587,10 +587,11 @@ typedef gboolean  (*GstPadStickyEventsForeachFunction) (GstPad *pad, GstEvent **
  * @GST_PAD_FLAG_BLOCKED: is dataflow on a pad blocked
  * @GST_PAD_FLAG_FLUSHING: is pad refusing buffers
  * @GST_PAD_FLAG_BLOCKING: is pad currently blocking on a buffer or event
+ * @GST_PAD_FLAG_NEED_PARENT: ensure that there is a parent object before calling
+ *                       into the pad callbacks.
  * @GST_PAD_FLAG_NEED_RECONFIGURE: the pad should be reconfigured/renegotiated.
  *                            The flag has to be unset manually after
  *                            reconfiguration happened.
- *                            Since: 0.10.34.
  * @GST_PAD_FLAG_PENDING_EVENTS: the pad has pending events
  * @GST_PAD_FLAG_FIXED_CAPS: the pad is using fixed caps this means that once the
  *                      caps are set on the pad, the caps query function only
@@ -598,8 +599,9 @@ typedef gboolean  (*GstPadStickyEventsForeachFunction) (GstPad *pad, GstEvent **
  * @GST_PAD_FLAG_PROXY_CAPS: the default event and query handler will forward
  *                      all events and queries to the internally linked pads
  *                      instead of discarding them.
- * @GST_PAD_FLAG_NEED_PARENT: ensure that there is a parent object before calling
- *                       into the pad callbacks.
+ * @GST_PAD_FLAG_PROXY_ALLOCATION: the default query handler will forward
+ *                      allocation queries to the internally linked pads
+ *                      instead of discarding them.
  * @GST_PAD_FLAG_LAST: offset to define more flags
  *
  * Pad state flags
@@ -608,11 +610,12 @@ typedef enum {
   GST_PAD_FLAG_BLOCKED          = (GST_OBJECT_FLAG_LAST << 0),
   GST_PAD_FLAG_FLUSHING         = (GST_OBJECT_FLAG_LAST << 1),
   GST_PAD_FLAG_BLOCKING         = (GST_OBJECT_FLAG_LAST << 2),
-  GST_PAD_FLAG_NEED_RECONFIGURE = (GST_OBJECT_FLAG_LAST << 3),
-  GST_PAD_FLAG_PENDING_EVENTS   = (GST_OBJECT_FLAG_LAST << 4),
-  GST_PAD_FLAG_FIXED_CAPS       = (GST_OBJECT_FLAG_LAST << 5),
-  GST_PAD_FLAG_PROXY_CAPS       = (GST_OBJECT_FLAG_LAST << 6),
-  GST_PAD_FLAG_NEED_PARENT      = (GST_OBJECT_FLAG_LAST << 7),
+  GST_PAD_FLAG_NEED_PARENT      = (GST_OBJECT_FLAG_LAST << 3),
+  GST_PAD_FLAG_NEED_RECONFIGURE = (GST_OBJECT_FLAG_LAST << 4),
+  GST_PAD_FLAG_PENDING_EVENTS   = (GST_OBJECT_FLAG_LAST << 5),
+  GST_PAD_FLAG_FIXED_CAPS       = (GST_OBJECT_FLAG_LAST << 6),
+  GST_PAD_FLAG_PROXY_CAPS       = (GST_OBJECT_FLAG_LAST << 7),
+  GST_PAD_FLAG_PROXY_ALLOCATION = (GST_OBJECT_FLAG_LAST << 8),
   /* padding */
   GST_PAD_FLAG_LAST        = (GST_OBJECT_FLAG_LAST << 16)
 } GstPadFlags;
@@ -755,6 +758,10 @@ struct _GstPadClass {
 #define GST_PAD_IS_PROXY_CAPS(pad)      (GST_OBJECT_FLAG_IS_SET (pad, GST_PAD_FLAG_PROXY_CAPS))
 #define GST_PAD_SET_PROXY_CAPS(pad)     (GST_OBJECT_FLAG_SET (pad, GST_PAD_FLAG_PROXY_CAPS))
 #define GST_PAD_UNSET_PROXY_CAPS(pad)   (GST_OBJECT_FLAG_UNSET (pad, GST_PAD_FLAG_PROXY_CAPS))
+
+#define GST_PAD_IS_PROXY_ALLOCATION(pad)    (GST_OBJECT_FLAG_IS_SET (pad, GST_PAD_FLAG_PROXY_ALLOCATION))
+#define GST_PAD_SET_PROXY_ALLOCATION(pad)   (GST_OBJECT_FLAG_SET (pad, GST_PAD_FLAG_PROXY_ALLOCATION))
+#define GST_PAD_UNSET_PROXY_ALLOCATION(pad) (GST_OBJECT_FLAG_UNSET (pad, GST_PAD_FLAG_PROXY_ALLOCATION))
 
 /**
  * GST_PAD_GET_STREAM_LOCK:
