@@ -171,8 +171,7 @@ DEFINE_INLINE_G_VALUE_GET_UNCHECKED(const gchar *,string,v_pointer)
 #ifndef GST_REMOVE_GST_DEBUG
 
 GST_EXPORT GstDebugCategory *GST_CAT_GST_INIT;
-GST_EXPORT GstDebugCategory *GST_CAT_AUTOPLUG; /* FIXME 0.11: remove? */
-GST_EXPORT GstDebugCategory *GST_CAT_AUTOPLUG_ATTEMPT; /* FIXME 0.11: remove? */
+GST_EXPORT GstDebugCategory *GST_CAT_MEMORY;
 GST_EXPORT GstDebugCategory *GST_CAT_PARENTAGE;
 GST_EXPORT GstDebugCategory *GST_CAT_STATES;
 GST_EXPORT GstDebugCategory *GST_CAT_SCHEDULING;
@@ -199,7 +198,6 @@ GST_EXPORT GstDebugCategory *GST_CAT_SIGNAL;
 GST_EXPORT GstDebugCategory *GST_CAT_PROBE;
 GST_EXPORT GstDebugCategory *GST_CAT_REGISTRY;
 GST_EXPORT GstDebugCategory *GST_CAT_QOS;
-GST_EXPORT GstDebugCategory *GST_CAT_TYPES; /* FIXME 0.11: remove? */
 
 /* Categories that should be completely private to
  * libgstreamer should be done like this: */
