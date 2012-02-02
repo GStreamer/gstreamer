@@ -125,7 +125,10 @@ enum
 #define AUDIO_CAPS \
   GST_STATIC_CAPS ( \
     "audio/mpeg, " \
-      "mpegversion = (int) { 1, 4 };" \
+      "mpegversion = (int) 1;" \
+    "audio/mpeg, " \
+      "mpegversion = (int) 4, " \
+      "stream-format = (string) { adts, loas };" \
     "audio/x-lpcm, " \
       "width = (int) { 16, 20, 24 }, " \
       "rate = (int) { 48000, 96000 }, " \
