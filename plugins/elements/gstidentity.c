@@ -108,8 +108,6 @@ static gboolean gst_identity_sink_event (GstBaseTransform * trans,
     GstEvent * event);
 static GstFlowReturn gst_identity_transform_ip (GstBaseTransform * trans,
     GstBuffer * buf);
-static GstFlowReturn gst_identity_prepare_output_buffer (GstBaseTransform *
-    trans, GstBuffer * in_buf, GstBuffer ** out_buf);
 static gboolean gst_identity_start (GstBaseTransform * trans);
 static gboolean gst_identity_stop (GstBaseTransform * trans);
 static GstStateChangeReturn gst_identity_change_state (GstElement * element,
@@ -272,8 +270,6 @@ gst_identity_class_init (GstIdentityClass * klass)
   gstbasetrans_class->sink_event = GST_DEBUG_FUNCPTR (gst_identity_sink_event);
   gstbasetrans_class->transform_ip =
       GST_DEBUG_FUNCPTR (gst_identity_transform_ip);
-  gstbasetrans_class->prepare_output_buffer =
-      GST_DEBUG_FUNCPTR (gst_identity_prepare_output_buffer);
   gstbasetrans_class->start = GST_DEBUG_FUNCPTR (gst_identity_start);
   gstbasetrans_class->stop = GST_DEBUG_FUNCPTR (gst_identity_stop);
 }
@@ -380,27 +376,6 @@ gst_identity_sink_event (GstBaseTransform * trans, GstEvent * event)
   }
 
   return ret;
-}
-
-static GstFlowReturn
-gst_identity_prepare_output_buffer (GstBaseTransform * trans,
-    GstBuffer * in_buf, GstBuffer ** out_buf)
-{
-  GstIdentity *identity = GST_IDENTITY (trans);
-
-  /* only bother if we may have to alter metadata */
-  if (identity->datarate > 0 || identity->single_segment) {
-    if (gst_buffer_is_writable (in_buf))
-      /* reuse */
-      *out_buf = in_buf;
-    else {
-      /* copy */
-      *out_buf = gst_buffer_copy (in_buf);
-    }
-  } else
-    *out_buf = in_buf;
-
-  return GST_FLOW_OK;
 }
 
 static void
@@ -766,6 +741,10 @@ gst_identity_set_property (GObject * object, guint prop_id,
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
   }
+  if (identity->datarate > 0 || identity->single_segment)
+    gst_base_transform_set_passthrough (GST_BASE_TRANSFORM (identity), FALSE);
+  else
+    gst_base_transform_set_passthrough (GST_BASE_TRANSFORM (identity), TRUE);
 }
 
 static void
