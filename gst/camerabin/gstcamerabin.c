@@ -237,25 +237,37 @@ static guint camerabin_signals[LAST_SIGNAL];
   GST_DEBUG_OBJECT ((c), "Processing counter incremented to: %d", \
       (c)->processing_counter);               \
   if ((c)->processing_counter == 1)           \
-    g_object_notify (G_OBJECT (c), "idle");            \
+    g_object_notify (G_OBJECT (c), "idle");
 
 #define CAMERABIN_PROCESSING_DEC_UNLOCKED(c)  \
   (c)->processing_counter -= 1;               \
   GST_DEBUG_OBJECT ((c), "Processing counter decremented to: %d", \
       (c)->processing_counter);               \
   g_assert ((c)->processing_counter >= 0);    \
-  if ((c)->processing_counter == 0)           \
-    g_object_notify (G_OBJECT (c), "idle");            \
+  if ((c)->processing_counter == 0) {         \
+    g_cond_signal ((c)->idle_cond);           \
+    g_object_notify (G_OBJECT (c), "idle");   \
+  }
 
 #define CAMERABIN_PROCESSING_INC(c)           \
   g_mutex_lock ((c)->capture_mutex);          \
   CAMERABIN_PROCESSING_INC_UNLOCKED ((c));    \
-  g_mutex_unlock ((c)->capture_mutex);        \
+  g_mutex_unlock ((c)->capture_mutex);
 
 #define CAMERABIN_PROCESSING_DEC(c)           \
   g_mutex_lock ((c)->capture_mutex);          \
   CAMERABIN_PROCESSING_DEC_UNLOCKED ((c));    \
-  g_mutex_unlock ((c)->capture_mutex);        \
+  g_mutex_unlock ((c)->capture_mutex);
+
+#define CAMERABIN_PROCESSING_WAIT_IDLE(c)             \
+  g_mutex_lock ((c)->capture_mutex);                  \
+  if ((c)->processing_counter > 0) {                  \
+    GST_DEBUG_OBJECT ((c), "Waiting for processing operations to finish %d", \
+        (c)->processing_counter);                     \
+    g_cond_wait ((c)->idle_cond, (c)->capture_mutex); \
+    GST_DEBUG_OBJECT ((c), "Processing operations finished"); \
+  }                                                   \
+  g_mutex_unlock ((c)->capture_mutex);
 
 /*
  * static helper functions declaration
@@ -934,6 +946,10 @@ camerabin_dispose_elements (GstCameraBin * camera)
     g_cond_free (camera->cond);
     camera->cond = NULL;
   }
+  if (camera->idle_cond) {
+    g_cond_free (camera->idle_cond);
+    camera->idle_cond = NULL;
+  }
   if (camera->filename) {
     g_string_free (camera->filename, TRUE);
     camera->filename = NULL;
@@ -1607,6 +1623,9 @@ reset_video_capture_caps (GstCameraBin * camera)
 
   /* Interrupt ongoing capture */
   gst_camerabin_do_stop (camera);
+
+  /* prevent image captures from being lost */
+  CAMERABIN_PROCESSING_WAIT_IDLE (camera);
 
   gst_element_get_state (GST_ELEMENT (camera), &state, &pending, 0);
   if (state == GST_STATE_PAUSED || state == GST_STATE_PLAYING) {
@@ -3349,6 +3368,7 @@ gst_camerabin_init (GstCameraBin * camera, GstCameraBinClass * gclass)
   /* concurrency control */
   camera->capture_mutex = g_mutex_new ();
   camera->cond = g_cond_new ();
+  camera->idle_cond = g_cond_new ();
   camera->processing_counter = 0;
 
   /* pad names for output and input selectors */
@@ -3927,6 +3947,7 @@ gst_camerabin_change_state (GstElement * element, GstStateChange transition)
       GST_DEBUG_OBJECT (camera, "Reset processing counter from %d to 0",
           camera->processing_counter);
       camera->processing_counter = 0;
+      g_cond_signal (camera->idle_cond);
       g_object_notify (G_OBJECT (camera), "idle");
       g_mutex_unlock (camera->capture_mutex);
 
