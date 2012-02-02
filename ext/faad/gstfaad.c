@@ -92,7 +92,8 @@ GST_DEBUG_CATEGORY_STATIC (faad_debug);
 static GstStaticPadTemplate sink_template = GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS ("audio/mpeg, " "mpegversion = (int) { 2, 4 }")
+    GST_STATIC_CAPS ("audio/mpeg, " "mpegversion = (int) 2; "
+        "audio/mpeg, mpegversion = (int) 4, stream-format = (string) { raw, adts }")
     );
 
 #define STATIC_INT_CAPS(bpp) \
