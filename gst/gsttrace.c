@@ -167,6 +167,7 @@ gst_alloc_trace_print (const GstAllocTrace * trace)
     while (mem_live) {
       gpointer data = mem_live->data;
       const gchar *type_name;
+      gchar *extra = NULL;
 
       if (trace->offset == -2) {
         if (G_IS_OBJECT (data))
@@ -180,9 +181,16 @@ gst_alloc_trace_print (const GstAllocTrace * trace)
 
         type = G_STRUCT_MEMBER (GType, data, trace->offset);
         type_name = g_type_name (type);
+
+        if (type == GST_TYPE_CAPS)
+          extra = gst_caps_to_string (data);
       }
 
-      g_print ("  %-20.20s : %p\n", type_name, data);
+      if (extra) {
+        g_print ("  %-20.20s : %p (\"%s\")\n", type_name, data, extra);
+        g_free (extra);
+      } else
+        g_print ("  %-20.20s : %p\n", type_name, data);
 
       mem_live = mem_live->next;
     }
