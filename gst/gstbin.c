@@ -3051,6 +3051,16 @@ bin_do_eos (GstBin * bin)
       && g_atomic_int_compare_and_exchange (&bin->priv->posted_eos, FALSE,
           TRUE)) {
     GstMessage *tmessage;
+
+    /* Clear out any further messages, and reset posted_eos so we can
+       detect any new EOS that happens (eg, after a seek). Since all
+       sinks have now posted an EOS, there will be no further EOS events
+       seen unless there is a new logical EOS */
+    GST_OBJECT_LOCK (bin);
+    bin_remove_messages (bin, NULL, GST_MESSAGE_EOS);
+    bin->priv->posted_eos = FALSE;
+    GST_OBJECT_UNLOCK (bin);
+
     tmessage = gst_message_new_eos (GST_OBJECT_CAST (bin));
     gst_message_set_seqnum (tmessage, seqnum);
     GST_DEBUG_OBJECT (bin,
