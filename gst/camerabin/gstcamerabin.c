@@ -3924,7 +3924,8 @@ gst_camerabin_change_state (GstElement * element, GstStateChange transition)
       }
 
       /* reset processing counter */
-      GST_DEBUG_OBJECT (camera, "Reset processing counter to 0");
+      GST_DEBUG_OBJECT (camera, "Reset processing counter from %d to 0",
+          camera->processing_counter);
       camera->processing_counter = 0;
       g_object_notify (G_OBJECT (camera), "idle");
       g_mutex_unlock (camera->capture_mutex);
