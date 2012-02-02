@@ -51,7 +51,7 @@ plug-ins.
   --enable-debug \
   --enable-DEBUG 
 
-make %{?_smp_mflags}
+make %{?_smp_mflags} CFLAGS+="-Wno-error" CXXFLAGS+="-Wno-error"
                                                                                 
 %install
 rm -rf $RPM_BUILD_ROOT
@@ -101,17 +101,17 @@ rm -rf $RPM_BUILD_ROOT
 %{_libdir}/gstreamer-%{majorminor}/libgstalphacolor.so
 @USE_CAIRO_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgstcairo.so
 # %{_libdir}/gstreamer-%{majorminor}/libgstflxdec.so
-# %{_libdir}/gstreamer-%{majorminor}/libgstmatroska.so
-# %{_libdir}/gstreamer-%{majorminor}/libgstvideomixer.so
+%{_libdir}/gstreamer-%{majorminor}/libgstmatroska.so
+%{_libdir}/gstreamer-%{majorminor}/libgstvideomixer.so
 %{_libdir}/gstreamer-%{majorminor}/libgstcutter.so
 %{_libdir}/gstreamer-%{majorminor}/libgstmultipart.so
 %{_libdir}/gstreamer-%{majorminor}/libgstid3demux.so
 @USE_GDK_PIXBUF_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgstgdkpixbuf.so
-# %{_libdir}/gstreamer-%{majorminor}/libgstapetag.so
+%{_libdir}/gstreamer-%{majorminor}/libgstapetag.so
 %{_libdir}/gstreamer-%{majorminor}/libgstannodex.so
 %{_libdir}/gstreamer-%{majorminor}/libgstvideocrop.so
 %{_libdir}/gstreamer-%{majorminor}/libgsticydemux.so
-# %{_libdir}/gstreamer-%{majorminor}/libgsttaglib.so
+%{_libdir}/gstreamer-%{majorminor}/libgsttaglib.so
 %{_libdir}/gstreamer-%{majorminor}/libgstximagesrc.so
 %{_libdir}/gstreamer-%{majorminor}/libgstaudiofx.so
 %{_libdir}/gstreamer-%{majorminor}/libgstequalizer.so
