@@ -192,13 +192,6 @@ GST_EXPORT GType _gst_event_type;
 #define GST_EVENT(obj)                  (GST_EVENT_CAST(obj))
 
 /**
- * GST_EVENT_TRACE_NAME:
- *
- * The name used for memory allocation tracing
- */
-#define GST_EVENT_TRACE_NAME    "GstEvent"
-
-/**
  * GST_EVENT_TYPE:
  * @event: the event to query
  *

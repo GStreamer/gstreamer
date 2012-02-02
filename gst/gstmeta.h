@@ -94,13 +94,6 @@ struct _GstMeta {
 };
 
 /**
- * GST_META_TRACE_NAME:
- *
- * The name used for tracing memory allocations.
- */
-#define GST_META_TRACE_NAME           "GstMeta"
-
-/**
  * GstMetaInitFunction:
  * @meta: a #GstMeta
  * @params: parameters passed to the init function

@@ -134,13 +134,6 @@ typedef enum
 #include <gst/gststructure.h>
 #include <gst/gstquery.h>
 
-/**
- * GST_MESSAGE_TRACE_NAME:
- *
- * The name used for memory allocation tracing
- */
-#define GST_MESSAGE_TRACE_NAME  "GstMessage"
-
 #define GST_TYPE_MESSAGE                         (gst_message_get_type())
 #define GST_IS_MESSAGE(obj)                      (GST_IS_MINI_OBJECT_TYPE (obj, GST_TYPE_MESSAGE))
 #define GST_MESSAGE_CAST(obj)                    ((GstMessage*)(obj))

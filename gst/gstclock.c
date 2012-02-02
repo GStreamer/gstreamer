@@ -657,8 +657,7 @@ gst_clock_class_init (GstClockClass * klass)
   GObjectClass *gobject_class = G_OBJECT_CLASS (klass);
 
 #ifndef GST_DISABLE_TRACE
-  _gst_clock_entry_trace =
-      _gst_alloc_trace_register (GST_CLOCK_ENTRY_TRACE_NAME, -1);
+  _gst_clock_entry_trace = _gst_alloc_trace_register ("GstClockEntry", -1);
 #endif
 
   gobject_class->dispose = gst_clock_dispose;

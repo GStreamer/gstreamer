@@ -176,7 +176,6 @@ GST_BUFFER_DTS_IS_VALID
 GST_BUFFER_OFFSET_IS_VALID
 GST_BUFFER_OFFSET_END_IS_VALID
 GST_BUFFER_IS_DISCONT
-GST_BUFFER_TRACE_NAME
 
 gst_buffer_new
 gst_buffer_new_and_alloc
@@ -259,7 +258,6 @@ gst_meta_register
 gst_meta_get_info
 <SUBSECTION Standard>
 GST_META_CAST
-GST_META_TRACE_NAME
 <SUBSECTION Private>
 GST_TYPE_META_FLAGS
 gst_meta_flags_get_type
@@ -297,7 +295,6 @@ gst_buffer_pool_release_buffer
 <SUBSECTION Standard>
 GST_BUFFER_POOL_CLASS
 GST_BUFFER_POOL_CAST
-GST_BUFFER_POOL_TRACE_NAME
 GstBufferPoolPrivate
 GST_BUFFER_POOL
 GST_IS_BUFFER_POOL
@@ -433,7 +430,6 @@ gst_value_get_sample
 gst_value_set_sample
 gst_value_take_sample
 <SUBSECTION Standard>
-GST_SAMPLE_TRACE_NAME
 GST_IS_SAMPLE
 GST_SAMPLE
 GST_TYPE_SAMPLE
@@ -491,7 +487,6 @@ GST_TIMEVAL_TO_TIME
 GST_TIME_TO_TIMEVAL
 GST_TIMESPEC_TO_TIME
 GST_TIME_TO_TIMESPEC
-GST_CLOCK_ENTRY_TRACE_NAME
 GstClockEntry
 GstClockCallback
 GstClockEntryType
@@ -505,7 +500,7 @@ GstClockReturn
 GstClockFlags
 GST_CLOCK_FLAGS
 GST_CLOCK_BROADCAST
-GST_CLOCK_COND
+GST_CLOCK_GET_COND
 GST_CLOCK_TIMED_WAIT
 GST_CLOCK_WAIT
 gst_clock_add_observation
@@ -901,8 +896,6 @@ GST_EVENT_MAKE_TYPE
 
 GstEventType
 
-GST_EVENT_TRACE_NAME
-
 GST_EVENT_TYPE
 GST_EVENT_TYPE_NAME
 GST_EVENT_TIMESTAMP
@@ -1284,7 +1277,6 @@ gst_allocator_register
 gst_allocator_set_default
 <SUBSECTION Standard>
 GST_TYPE_MEMORY
-GST_MEMORY_TRACE_NAME
 GST_TYPE_MAP_FLAGS
 GST_TYPE_MEMORY_FLAGS
 gst_map_flags_get_type
@@ -1303,7 +1295,6 @@ GST_MESSAGE_TIMESTAMP
 GST_MESSAGE_SEQNUM
 GST_MESSAGE_TYPE
 GST_MESSAGE_TYPE_NAME
-GST_MESSAGE_TRACE_NAME
 gst_message_type_to_quark
 gst_message_type_get_name
 gst_message_ref

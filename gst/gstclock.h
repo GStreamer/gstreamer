@@ -243,13 +243,6 @@ G_STMT_START {                                          \
         GST_CLOCK_TIME_IS_VALID (t) ? \
         (guint) (((GstClockTime)(t)) % GST_SECOND) : 999999999
 
-/**
- * GST_CLOCK_ENTRY_TRACE_NAME:
- *
- * The name used for tracing clock entry allocations.
- */
-#define GST_CLOCK_ENTRY_TRACE_NAME "GstClockEntry"
-
 typedef struct _GstClockEntry   GstClockEntry;
 typedef struct _GstClock        GstClock;
 typedef struct _GstClockClass   GstClockClass;

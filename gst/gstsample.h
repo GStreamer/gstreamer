@@ -46,13 +46,6 @@ GST_EXPORT GType _gst_sample_type;
  */
 typedef struct _GstSample GstSample;
 
-/**
- * GST_SAMPLE_TRACE_NAME:
- *
- * The name used for tracing memory allocations.
- */
-#define GST_SAMPLE_TRACE_NAME           "GstSample"
-
 GType gst_sample_get_type            (void);
 
 /* allocation */
