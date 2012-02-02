@@ -47,13 +47,21 @@ GST_STATIC_PAD_TEMPLATE ("src",
 
 /* class initialization */
 
-GST_BOILERPLATE (GstChecksumSink, gst_checksum_sink, GstBaseSink,
-    GST_TYPE_BASE_SINK);
+#define gst_checksum_sink_parent_class parent_class
+G_DEFINE_TYPE (GstChecksumSink, gst_checksum_sink, GST_TYPE_BASE_SINK);
 
 static void
-gst_checksum_sink_base_init (gpointer g_class)
+gst_checksum_sink_class_init (GstChecksumSinkClass * klass)
 {
-  GstElementClass *element_class = GST_ELEMENT_CLASS (g_class);
+  GObjectClass *gobject_class = G_OBJECT_CLASS (klass);
+  GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
+  GstBaseSinkClass *base_sink_class = GST_BASE_SINK_CLASS (klass);
+
+  gobject_class->dispose = gst_checksum_sink_dispose;
+  gobject_class->finalize = gst_checksum_sink_finalize;
+  base_sink_class->start = GST_DEBUG_FUNCPTR (gst_checksum_sink_start);
+  base_sink_class->stop = GST_DEBUG_FUNCPTR (gst_checksum_sink_stop);
+  base_sink_class->render = GST_DEBUG_FUNCPTR (gst_checksum_sink_render);
 
   gst_element_class_add_pad_template (element_class,
       gst_static_pad_template_get (&gst_checksum_sink_src_template));
@@ -66,21 +74,7 @@ gst_checksum_sink_base_init (gpointer g_class)
 }
 
 static void
-gst_checksum_sink_class_init (GstChecksumSinkClass * klass)
-{
-  GObjectClass *gobject_class = G_OBJECT_CLASS (klass);
-  GstBaseSinkClass *base_sink_class = GST_BASE_SINK_CLASS (klass);
-
-  gobject_class->dispose = gst_checksum_sink_dispose;
-  gobject_class->finalize = gst_checksum_sink_finalize;
-  base_sink_class->start = GST_DEBUG_FUNCPTR (gst_checksum_sink_start);
-  base_sink_class->stop = GST_DEBUG_FUNCPTR (gst_checksum_sink_stop);
-  base_sink_class->render = GST_DEBUG_FUNCPTR (gst_checksum_sink_render);
-}
-
-static void
-gst_checksum_sink_init (GstChecksumSink * checksumsink,
-    GstChecksumSinkClass * checksumsink_class)
+gst_checksum_sink_init (GstChecksumSink * checksumsink)
 {
   gst_base_sink_set_sync (GST_BASE_SINK (checksumsink), FALSE);
 }
@@ -113,9 +107,11 @@ static GstFlowReturn
 gst_checksum_sink_render (GstBaseSink * sink, GstBuffer * buffer)
 {
   gchar *s;
+  GstMapInfo map;
 
-  s = g_compute_checksum_for_data (G_CHECKSUM_SHA1, GST_BUFFER_DATA (buffer),
-      GST_BUFFER_SIZE (buffer));
+  gst_buffer_map (buffer, &map, GST_MAP_READ);
+  s = g_compute_checksum_for_data (G_CHECKSUM_SHA1, map.data, map.size);
+  gst_buffer_unmap (buffer, &map);
   g_print ("%" GST_TIME_FORMAT " %s\n",
       GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (buffer)), s);
 

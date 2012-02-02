@@ -108,31 +108,16 @@ static void gst_compare_get_property (GObject * object,
 
 static void gst_compare_reset (GstCompare * overlay);
 
-static GstCaps *gst_compare_getcaps (GstPad * pad);
+static gboolean gst_compare_query (GstPad * pad, GstObject * parent,
+    GstQuery * query);
 static GstFlowReturn gst_compare_collect_pads (GstCollectPads2 * cpads,
     GstCompare * comp);
 
 static GstStateChangeReturn gst_compare_change_state (GstElement * element,
     GstStateChange transition);
 
-GST_BOILERPLATE (GstCompare, gst_compare, GstElement, GST_TYPE_ELEMENT);
-
-
-static void
-gst_compare_base_init (gpointer g_class)
-{
-  GstElementClass *element_class = GST_ELEMENT_CLASS (g_class);
-
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&src_factory));
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&sink_factory));
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&check_sink_factory));
-  gst_element_class_set_details_simple (element_class, "Compare buffers",
-      "Filter/Debug", "Compares incoming buffers",
-      "Mark Nauwelaerts <mark.nauwelaerts@collabora.co.uk>");
-}
+#define gst_compare_parent_class parent_class
+G_DEFINE_TYPE (GstCompare, gst_compare, GST_TYPE_ELEMENT);
 
 static void
 gst_compare_finalize (GObject * object)
@@ -184,10 +169,20 @@ gst_compare_class_init (GstCompareClass * klass)
       g_param_spec_boolean ("upper", "Threshold Upper Bound",
           "Whether threshold value is upper bound or lower bound for difference measure",
           DEFAULT_UPPER, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
+  gst_element_class_add_pad_template (gstelement_class,
+      gst_static_pad_template_get (&src_factory));
+  gst_element_class_add_pad_template (gstelement_class,
+      gst_static_pad_template_get (&sink_factory));
+  gst_element_class_add_pad_template (gstelement_class,
+      gst_static_pad_template_get (&check_sink_factory));
+  gst_element_class_set_details_simple (gstelement_class, "Compare buffers",
+      "Filter/Debug", "Compares incoming buffers",
+      "Mark Nauwelaerts <mark.nauwelaerts@collabora.co.uk>");
 }
 
 static void
-gst_compare_init (GstCompare * comp, GstCompareClass * klass)
+gst_compare_init (GstCompare * comp)
 {
   comp->cpads = gst_collect_pads2_new ();
   gst_collect_pads2_set_function (comp->cpads,
@@ -195,12 +190,12 @@ gst_compare_init (GstCompare * comp, GstCompareClass * klass)
       comp);
 
   comp->sinkpad = gst_pad_new_from_static_template (&sink_factory, "sink");
-  gst_pad_set_getcaps_function (comp->sinkpad, gst_compare_getcaps);
+  GST_PAD_SET_PROXY_CAPS (comp->sinkpad);
   gst_element_add_pad (GST_ELEMENT (comp), comp->sinkpad);
 
   comp->checkpad =
       gst_pad_new_from_static_template (&check_sink_factory, "check");
-  gst_pad_set_getcaps_function (comp->checkpad, gst_compare_getcaps);
+  gst_pad_set_query_function (comp->checkpad, gst_compare_query);
   gst_element_add_pad (GST_ELEMENT (comp), comp->checkpad);
 
   gst_collect_pads2_add_pad_full (comp->cpads, comp->sinkpad,
@@ -209,7 +204,7 @@ gst_compare_init (GstCompare * comp, GstCompareClass * klass)
       sizeof (GstCollectData2), NULL, TRUE);
 
   comp->srcpad = gst_pad_new_from_static_template (&src_factory, "src");
-  gst_pad_set_getcaps_function (comp->srcpad, gst_compare_getcaps);
+  gst_pad_set_query_function (comp->srcpad, gst_compare_query);
   gst_element_add_pad (GST_ELEMENT (comp), comp->srcpad);
 
   /* init properties */
@@ -227,29 +222,21 @@ gst_compare_reset (GstCompare * comp)
 {
 }
 
-static GstCaps *
-gst_compare_getcaps (GstPad * pad)
+static gboolean
+gst_compare_query (GstPad * pad, GstObject * parent, GstQuery * query)
 {
   GstCompare *comp;
   GstPad *otherpad;
-  GstCaps *result;
 
-  comp = GST_COMPARE (gst_pad_get_parent (pad));
-  if (G_UNLIKELY (comp == NULL))
-    return gst_caps_new_any ();
-
+  comp = GST_COMPARE (parent);
   otherpad = (pad == comp->srcpad ? comp->sinkpad : comp->srcpad);
-  result = gst_pad_peer_get_caps (otherpad);
-  if (result == NULL)
-    result = gst_caps_new_any ();
 
-  gst_object_unref (comp);
-
-  return result;
+  return gst_pad_peer_query (otherpad, query);
 }
 
 static void
-gst_compare_meta (GstCompare * comp, GstBuffer * buf1, GstBuffer * buf2)
+gst_compare_meta (GstCompare * comp, GstBuffer * buf1, GstCaps * caps1,
+    GstBuffer * buf2, GstCaps * caps2)
 {
   gint flags = 0;
 
@@ -290,14 +277,16 @@ gst_compare_meta (GstCompare * comp, GstBuffer * buf1, GstBuffer * buf2)
       }
     }
   }
+#if 0
+  /* FIXME ?? */
   if (comp->meta & GST_BUFFER_COPY_CAPS) {
-    if (!gst_caps_is_equal (GST_BUFFER_CAPS (buf1), GST_BUFFER_CAPS (buf2))) {
+    if (!gst_caps_is_equal (caps1, caps2)) {
       flags |= GST_BUFFER_COPY_CAPS;
       GST_DEBUG_OBJECT (comp,
-          "caps %" GST_PTR_FORMAT " != caps %" GST_PTR_FORMAT,
-          GST_BUFFER_CAPS (buf1), GST_BUFFER_CAPS (buf2));
+          "caps %" GST_PTR_FORMAT " != caps %" GST_PTR_FORMAT, caps1, caps2);
     }
   }
+#endif
 
   /* signal mismatch by debug and message */
   if (flags) {
@@ -313,23 +302,39 @@ gst_compare_meta (GstCompare * comp, GstBuffer * buf1, GstBuffer * buf2)
 /* when comparing contents, it is already ensured sizes are equal */
 
 static gint
-gst_compare_mem (GstCompare * comp, GstBuffer * buf1, GstBuffer * buf2)
+gst_compare_mem (GstCompare * comp, GstBuffer * buf1, GstCaps * caps1,
+    GstBuffer * buf2, GstCaps * caps2)
 {
-  return memcmp (GST_BUFFER_DATA (buf1), GST_BUFFER_DATA (buf2),
-      GST_BUFFER_SIZE (buf1)) ? 1 : 0;
+  GstMapInfo map1, map2;
+  gint c;
+
+  gst_buffer_map (buf1, &map1, GST_MAP_READ);
+  gst_buffer_map (buf2, &map2, GST_MAP_READ);
+
+  c = memcmp (map1.data, map2.data, map1.size);
+
+  gst_buffer_unmap (buf1, &map1);
+  gst_buffer_unmap (buf2, &map2);
+
+  return c ? 1 : 0;
 }
 
 static gint
-gst_compare_max (GstCompare * comp, GstBuffer * buf1, GstBuffer * buf2)
+gst_compare_max (GstCompare * comp, GstBuffer * buf1, GstCaps * caps1,
+    GstBuffer * buf2, GstCaps * caps2)
 {
   gint i, delta = 0;
   gint8 *data1, *data2;
+  GstMapInfo map1, map2;
 
-  data1 = (gint8 *) GST_BUFFER_DATA (buf1);
-  data2 = (gint8 *) GST_BUFFER_DATA (buf2);
+  gst_buffer_map (buf1, &map1, GST_MAP_READ);
+  gst_buffer_map (buf2, &map2, GST_MAP_READ);
+
+  data1 = (gint8 *) map1.data;
+  data2 = (gint8 *) map2.data;
 
   /* primitive loop */
-  for (i = 0; i < GST_BUFFER_SIZE (buf1); i++) {
+  for (i = 0; i < map1.size; i++) {
     gint diff = ABS (*data1 - *data2);
     if (diff > 0)
       GST_LOG_OBJECT (comp, "diff at %d = %d", i, diff);
@@ -337,6 +342,9 @@ gst_compare_max (GstCompare * comp, GstBuffer * buf1, GstBuffer * buf2)
     data1++;
     data2++;
   }
+
+  gst_buffer_unmap (buf1, &map1);
+  gst_buffer_unmap (buf2, &map2);
 
   return delta;
 }
@@ -410,64 +418,65 @@ gst_compare_ssim_component (GstCompare * comp, guint8 * data1, guint8 * data2,
 }
 
 static gdouble
-gst_compare_ssim (GstCompare * comp, GstBuffer * buf1, GstBuffer * buf2)
+gst_compare_ssim (GstCompare * comp, GstBuffer * buf1, GstCaps * caps1,
+    GstBuffer * buf2, GstCaps * caps2)
 {
-  GstCaps *caps;
-  GstVideoFormat format, f;
-  gint width, height, w, h, i, comps;
+  GstVideoInfo info1, info2;
+  GstVideoFrame frame1, frame2;
+  gint i, comps;
   gdouble cssim[4], ssim, c[4] = { 1.0, 0.0, 0.0, 0.0 };
-  guint8 *data1, *data2;
 
-  caps = GST_BUFFER_CAPS (buf1);
-  if (!caps)
+  if (!caps1)
     goto invalid_input;
 
-  if (!gst_video_format_parse_caps (caps, &format, &width, &height))
+  if (!gst_video_info_from_caps (&info1, caps1))
     goto invalid_input;
 
-  caps = GST_BUFFER_CAPS (buf2);
-  if (!caps)
+  if (!caps2)
     goto invalid_input;
 
-  if (!gst_video_format_parse_caps (caps, &f, &w, &h))
+  if (!gst_video_info_from_caps (&info2, caps1))
     goto invalid_input;
 
-  if (f != format || w != width || h != height)
+  if (GST_VIDEO_INFO_FORMAT (&info1) != GST_VIDEO_INFO_FORMAT (&info2) ||
+      GST_VIDEO_INFO_WIDTH (&info1) != GST_VIDEO_INFO_WIDTH (&info2) ||
+      GST_VIDEO_INFO_HEIGHT (&info1) != GST_VIDEO_INFO_HEIGHT (&info2))
     return comp->threshold + 1;
 
-  comps = gst_video_format_is_gray (format) ? 1 : 3;
-  if (gst_video_format_has_alpha (format))
-    comps += 1;
-
+  comps = GST_VIDEO_INFO_N_COMPONENTS (&info1);
   /* note that some are reported both yuv and gray */
   for (i = 0; i < comps; ++i)
     c[i] = 1.0;
   /* increase luma weight if yuv */
-  if (gst_video_format_is_yuv (format) && (comps > 1))
+  if (GST_VIDEO_INFO_IS_YUV (&info1) && (comps > 1))
     c[0] = comps - 1;
   for (i = 0; i < comps; ++i)
-    c[i] /= (gst_video_format_is_yuv (format) && (comps > 1)) ?
+    c[i] /= (GST_VIDEO_INFO_IS_YUV (&info1) && (comps > 1)) ?
         2 * (comps - 1) : comps;
 
-  data1 = GST_BUFFER_DATA (buf1);
-  data2 = GST_BUFFER_DATA (buf2);
+  gst_video_frame_map (&frame1, &info1, buf1, GST_MAP_READ);
+  gst_video_frame_map (&frame2, &info2, buf2, GST_MAP_READ);
+
   for (i = 0; i < comps; i++) {
-    gint offset, cw, ch, step, stride;
+    gint cw, ch, step, stride;
 
     /* only support most common formats */
-    if (gst_video_format_get_component_depth (format, i) != 8)
+    if (GST_VIDEO_INFO_COMP_DEPTH (&info1, i) != 8)
       goto unsupported_input;
-    offset = gst_video_format_get_component_offset (format, i, width, height);
-    cw = gst_video_format_get_component_width (format, i, width);
-    ch = gst_video_format_get_component_height (format, i, height);
-    step = gst_video_format_get_pixel_stride (format, i);
-    stride = gst_video_format_get_row_stride (format, i, width);
+    cw = GST_VIDEO_FRAME_COMP_WIDTH (&frame1, i);
+    ch = GST_VIDEO_FRAME_COMP_HEIGHT (&frame1, i);
+    step = GST_VIDEO_FRAME_COMP_PSTRIDE (&frame1, i);
+    stride = GST_VIDEO_FRAME_COMP_STRIDE (&frame1, i);
 
     GST_LOG_OBJECT (comp, "component %d", i);
-    cssim[i] = gst_compare_ssim_component (comp, data1 + offset, data2 + offset,
-        cw, ch, step, stride);
+    cssim[i] = gst_compare_ssim_component (comp,
+        GST_VIDEO_FRAME_COMP_DATA (&frame1, i),
+        GST_VIDEO_FRAME_COMP_DATA (&frame2, i), cw, ch, step, stride);
     GST_LOG_OBJECT (comp, "ssim[%d] = %f", i, cssim[i]);
   }
+
+  gst_video_frame_unmap (&frame1);
+  gst_video_frame_unmap (&frame2);
 
 #ifndef GST_DISABLE_GST_DEBUG
   for (i = 0; i < 4; i++) {
@@ -488,37 +497,46 @@ invalid_input:
 unsupported_input:
   {
     GST_ERROR_OBJECT (comp, "raw video format not supported %" GST_PTR_FORMAT,
-        caps);
+        caps1);
     return 0;
   }
 }
 
 static void
-gst_compare_buffers (GstCompare * comp, GstBuffer * buf1, GstBuffer * buf2)
+gst_compare_buffers (GstCompare * comp, GstBuffer * buf1, GstCaps * caps1,
+    GstBuffer * buf2, GstCaps * caps2)
 {
   gdouble delta = 0;
+  gsize size1, size2;
 
   /* first check metadata */
-  gst_compare_meta (comp, buf1, buf2);
+  gst_compare_meta (comp, buf1, caps1, buf2, caps2);
+
+  size1 = gst_buffer_get_size (buf1);
+  size2 = gst_buffer_get_size (buf1);
 
   /* check content according to method */
   /* but at least size should match */
-  if (GST_BUFFER_SIZE (buf1) != GST_BUFFER_SIZE (buf2)) {
+  if (size1 != size2) {
     delta = comp->threshold + 1;
   } else {
-    GST_MEMDUMP_OBJECT (comp, "buffer 1", GST_BUFFER_DATA (buf1),
-        GST_BUFFER_SIZE (buf1));
-    GST_MEMDUMP_OBJECT (comp, "buffer 2", GST_BUFFER_DATA (buf2),
-        GST_BUFFER_SIZE (buf2));
+    GstMapInfo map1, map2;
+
+    gst_buffer_map (buf1, &map1, GST_MAP_READ);
+    gst_buffer_map (buf2, &map2, GST_MAP_READ);
+    GST_MEMDUMP_OBJECT (comp, "buffer 1", map1.data, map2.size);
+    GST_MEMDUMP_OBJECT (comp, "buffer 2", map2.data, map2.size);
+    gst_buffer_unmap (buf1, &map1);
+    gst_buffer_unmap (buf2, &map2);
     switch (comp->method) {
       case GST_COMPARE_METHOD_MEM:
-        delta = gst_compare_mem (comp, buf1, buf2);
+        delta = gst_compare_mem (comp, buf1, caps1, buf2, caps2);
         break;
       case GST_COMPARE_METHOD_MAX:
-        delta = gst_compare_max (comp, buf1, buf2);
+        delta = gst_compare_max (comp, buf1, caps1, buf2, caps2);
         break;
       case GST_COMPARE_METHOD_SSIM:
-        delta = gst_compare_ssim (comp, buf1, buf2);
+        delta = gst_compare_ssim (comp, buf1, caps1, buf2, caps2);
         break;
       default:
         g_assert_not_reached ();
@@ -542,18 +560,21 @@ static GstFlowReturn
 gst_compare_collect_pads (GstCollectPads2 * cpads, GstCompare * comp)
 {
   GstBuffer *buf1, *buf2;
+  GstCaps *caps1, *caps2;
 
   buf1 = gst_collect_pads2_pop (comp->cpads,
       gst_pad_get_element_private (comp->sinkpad));
+  caps1 = gst_pad_get_current_caps (comp->sinkpad);
 
   buf2 = gst_collect_pads2_pop (comp->cpads,
       gst_pad_get_element_private (comp->checkpad));
+  caps2 = gst_pad_get_current_caps (comp->checkpad);
 
   if (!buf1 && !buf2) {
     gst_pad_push_event (comp->srcpad, gst_event_new_eos ());
-    return GST_FLOW_UNEXPECTED;
+    return GST_FLOW_EOS;
   } else if (buf1 && buf2) {
-    gst_compare_buffers (comp, buf1, buf2);
+    gst_compare_buffers (comp, buf1, caps1, buf2, caps2);
   } else {
     GST_WARNING_OBJECT (comp, "buffer %p != NULL", buf1 ? buf1 : buf2);
 
@@ -569,6 +590,12 @@ gst_compare_collect_pads (GstCollectPads2 * cpads, GstCompare * comp)
 
   if (buf2)
     gst_buffer_unref (buf2);
+
+  if (caps1)
+    gst_caps_unref (caps1);
+
+  if (caps2)
+    gst_caps_unref (caps2);
 
   return GST_FLOW_OK;
 }

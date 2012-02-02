@@ -59,9 +59,12 @@ static void gst_chop_my_data_get_property (GObject * object,
 static GstStateChangeReturn
 gst_chop_my_data_change_state (GstElement * element, GstStateChange transition);
 
-static GstFlowReturn gst_chop_my_data_chain (GstPad * pad, GstBuffer * buffer);
-static gboolean gst_chop_my_data_sink_event (GstPad * pad, GstEvent * event);
-static gboolean gst_chop_my_data_src_event (GstPad * pad, GstEvent * event);
+static GstFlowReturn gst_chop_my_data_chain (GstPad * pad, GstObject * parent,
+    GstBuffer * buffer);
+static gboolean gst_chop_my_data_sink_event (GstPad * pad, GstObject * parent,
+    GstEvent * event);
+static gboolean gst_chop_my_data_src_event (GstPad * pad, GstObject * parent,
+    GstEvent * event);
 
 #define DEFAULT_MAX_SIZE 4096
 #define DEFAULT_MIN_SIZE 1
@@ -91,21 +94,8 @@ GST_STATIC_PAD_TEMPLATE ("src",
 
 /* class initialization */
 
-GST_BOILERPLATE (GstChopMyData, gst_chop_my_data, GstElement, GST_TYPE_ELEMENT);
-
-static void
-gst_chop_my_data_base_init (gpointer g_class)
-{
-  GstElementClass *element_class = GST_ELEMENT_CLASS (g_class);
-
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&gst_chop_my_data_src_template));
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&gst_chop_my_data_sink_template));
-
-  gst_element_class_set_details_simple (element_class, "FIXME",
-      "Generic", "FIXME", "David Schleef <ds@schleef.org>");
-}
+#define gst_chop_my_data_parent_class parent_class
+G_DEFINE_TYPE (GstChopMyData, gst_chop_my_data, GST_TYPE_ELEMENT);
 
 static void
 gst_chop_my_data_class_init (GstChopMyDataClass * klass)
@@ -130,11 +120,18 @@ gst_chop_my_data_class_init (GstChopMyDataClass * klass)
       g_param_spec_int ("step-size", "step-size",
           "Step increment for random buffer sizes", 1, G_MAXINT,
           DEFAULT_MAX_SIZE, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
+  gst_element_class_add_pad_template (element_class,
+      gst_static_pad_template_get (&gst_chop_my_data_src_template));
+  gst_element_class_add_pad_template (element_class,
+      gst_static_pad_template_get (&gst_chop_my_data_sink_template));
+
+  gst_element_class_set_details_simple (element_class, "FIXME",
+      "Generic", "FIXME", "David Schleef <ds@schleef.org>");
 }
 
 static void
-gst_chop_my_data_init (GstChopMyData * chopmydata,
-    GstChopMyDataClass * chopmydata_class)
+gst_chop_my_data_init (GstChopMyData * chopmydata)
 {
 
   chopmydata->sinkpad =
@@ -144,16 +141,14 @@ gst_chop_my_data_init (GstChopMyData * chopmydata,
       GST_DEBUG_FUNCPTR (gst_chop_my_data_sink_event));
   gst_pad_set_chain_function (chopmydata->sinkpad,
       GST_DEBUG_FUNCPTR (gst_chop_my_data_chain));
-  gst_pad_set_getcaps_function (chopmydata->sinkpad, gst_pad_proxy_getcaps);
-  gst_pad_set_setcaps_function (chopmydata->sinkpad, gst_pad_proxy_setcaps);
+  GST_PAD_SET_PROXY_CAPS (chopmydata->sinkpad);
   gst_element_add_pad (GST_ELEMENT (chopmydata), chopmydata->sinkpad);
 
   chopmydata->srcpad =
       gst_pad_new_from_static_template (&gst_chop_my_data_src_template, "src");
   gst_pad_set_event_function (chopmydata->srcpad,
       GST_DEBUG_FUNCPTR (gst_chop_my_data_src_event));
-  gst_pad_set_getcaps_function (chopmydata->srcpad, gst_pad_proxy_getcaps);
-  gst_pad_set_setcaps_function (chopmydata->srcpad, gst_pad_proxy_setcaps);
+  GST_PAD_SET_PROXY_CAPS (chopmydata->srcpad);
   gst_element_add_pad (GST_ELEMENT (chopmydata), chopmydata->srcpad);
 
   chopmydata->step_size = DEFAULT_STEP_SIZE;
@@ -315,29 +310,28 @@ gst_chop_my_data_process (GstChopMyData * chopmydata, gboolean flush)
 }
 
 static GstFlowReturn
-gst_chop_my_data_chain (GstPad * pad, GstBuffer * buffer)
+gst_chop_my_data_chain (GstPad * pad, GstObject * parent, GstBuffer * buffer)
 {
   GstChopMyData *chopmydata;
   GstFlowReturn ret;
 
-  chopmydata = GST_CHOP_MY_DATA (gst_pad_get_parent (pad));
+  chopmydata = GST_CHOP_MY_DATA (parent);
 
   GST_DEBUG_OBJECT (chopmydata, "chain");
 
   gst_adapter_push (chopmydata->adapter, buffer);
   ret = gst_chop_my_data_process (chopmydata, FALSE);
 
-  gst_object_unref (chopmydata);
   return ret;
 }
 
 static gboolean
-gst_chop_my_data_sink_event (GstPad * pad, GstEvent * event)
+gst_chop_my_data_sink_event (GstPad * pad, GstObject * parent, GstEvent * event)
 {
   gboolean res;
   GstChopMyData *chopmydata;
 
-  chopmydata = GST_CHOP_MY_DATA (gst_pad_get_parent (pad));
+  chopmydata = GST_CHOP_MY_DATA (parent);
 
   GST_DEBUG_OBJECT (chopmydata, "event");
 
@@ -349,7 +343,7 @@ gst_chop_my_data_sink_event (GstPad * pad, GstEvent * event)
       gst_adapter_clear (chopmydata->adapter);
       res = gst_pad_push_event (chopmydata->srcpad, event);
       break;
-    case GST_EVENT_NEWSEGMENT:
+    case GST_EVENT_SEGMENT:
       res = gst_pad_push_event (chopmydata->srcpad, event);
       break;
     case GST_EVENT_EOS:
@@ -361,17 +355,16 @@ gst_chop_my_data_sink_event (GstPad * pad, GstEvent * event)
       break;
   }
 
-  gst_object_unref (chopmydata);
   return res;
 }
 
 static gboolean
-gst_chop_my_data_src_event (GstPad * pad, GstEvent * event)
+gst_chop_my_data_src_event (GstPad * pad, GstObject * parent, GstEvent * event)
 {
   gboolean res;
   GstChopMyData *chopmydata;
 
-  chopmydata = GST_CHOP_MY_DATA (gst_pad_get_parent (pad));
+  chopmydata = GST_CHOP_MY_DATA (parent);
 
   GST_DEBUG_OBJECT (chopmydata, "event");
 
@@ -384,6 +377,5 @@ gst_chop_my_data_src_event (GstPad * pad, GstEvent * event)
       break;
   }
 
-  gst_object_unref (chopmydata);
   return res;
 }

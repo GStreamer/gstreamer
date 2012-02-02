@@ -95,8 +95,7 @@ static GstStaticPadTemplate src_factory = GST_STATIC_PAD_TEMPLATE ("src",
     GST_STATIC_CAPS ("ANY")
     );
 
-GST_BOILERPLATE (GstDebugSpy, gst_debug_spy, GstBaseTransform,
-    GST_TYPE_BASE_TRANSFORM);
+G_DEFINE_TYPE (GstDebugSpy, gst_debug_spy, GST_TYPE_BASE_TRANSFORM);
 
 static void gst_debug_spy_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec);
@@ -107,33 +106,16 @@ static GstFlowReturn gst_debug_spy_transform_ip (GstBaseTransform * transform,
 
 /* GObject vmethod implementations */
 
-static void
-gst_debug_spy_base_init (gpointer gclass)
-{
-  GstElementClass *element_class = GST_ELEMENT_CLASS (gclass);
-
-  GST_DEBUG_CATEGORY_INIT (gst_debug_spy_debug, "debugspy", 0, "debugspy");
-
-  gst_element_class_set_details_simple (element_class,
-      "DebugSpy",
-      "Filter/Analyzer/Debug",
-      "DebugSpy provides information on buffers with bus messages",
-      "Guillaume Emont <gemont@igalia.com>");
-
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&src_factory));
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&sink_factory));
-}
-
 /* initialize the debugspy's class */
 static void
 gst_debug_spy_class_init (GstDebugSpyClass * klass)
 {
   GObjectClass *gobject_class;
+  GstElementClass *element_class;
   GstBaseTransformClass *base_transform_class;
 
   gobject_class = (GObjectClass *) klass;
+  element_class = (GstElementClass *) klass;
   base_transform_class = (GstBaseTransformClass *) klass;
 
   gobject_class->set_property = gst_debug_spy_set_property;
@@ -151,6 +133,18 @@ gst_debug_spy_class_init (GstDebugSpyClass * klass)
           "Checksum algorithm to use", GST_DEBUG_SPY_CHECKSUM_TYPE,
           G_CHECKSUM_SHA1, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
+  gst_element_class_set_details_simple (element_class,
+      "DebugSpy",
+      "Filter/Analyzer/Debug",
+      "DebugSpy provides information on buffers with bus messages",
+      "Guillaume Emont <gemont@igalia.com>");
+
+  gst_element_class_add_pad_template (element_class,
+      gst_static_pad_template_get (&src_factory));
+  gst_element_class_add_pad_template (element_class,
+      gst_static_pad_template_get (&sink_factory));
+
+  GST_DEBUG_CATEGORY_INIT (gst_debug_spy_debug, "debugspy", 0, "debugspy");
 }
 
 /* initialize the new element
@@ -159,7 +153,7 @@ gst_debug_spy_class_init (GstDebugSpyClass * klass)
  * initialize instance structure
  */
 static void
-gst_debug_spy_init (GstDebugSpy * debugspy, GstDebugSpyClass * gclass)
+gst_debug_spy_init (GstDebugSpy * debugspy)
 {
   debugspy->silent = FALSE;
   debugspy->checksum_type = G_CHECKSUM_SHA1;
@@ -214,20 +208,26 @@ gst_debug_spy_transform_ip (GstBaseTransform * transform, GstBuffer * buf)
     gchar *checksum;
     GstMessage *message;
     GstStructure *message_structure;
+    GstMapInfo map;
+    GstCaps *caps;
 
+    gst_buffer_map (buf, &map, GST_MAP_READ);
     checksum = g_compute_checksum_for_data (debugspy->checksum_type,
-        GST_BUFFER_DATA (buf), GST_BUFFER_SIZE (buf));
+        map.data, map.size);
 
+    caps = gst_pad_get_current_caps (GST_BASE_TRANSFORM_SRC_PAD (transform));
     message_structure = gst_structure_new ("buffer",
         "checksum", G_TYPE_STRING, checksum,
         "timestamp", GST_TYPE_CLOCK_TIME, GST_BUFFER_TIMESTAMP (buf),
         "duration", GST_TYPE_CLOCK_TIME, GST_BUFFER_DURATION (buf),
         "offset", G_TYPE_UINT64, GST_BUFFER_OFFSET (buf),
         "offset_end", G_TYPE_UINT64, GST_BUFFER_OFFSET_END (buf),
-        "size", G_TYPE_UINT, GST_BUFFER_SIZE (buf),
-        "caps", GST_TYPE_CAPS, GST_BUFFER_CAPS (buf), NULL);
+        "size", G_TYPE_UINT, map.size, "caps", GST_TYPE_CAPS, caps, NULL);
+    if (caps)
+      gst_caps_unref (caps);
 
     g_free (checksum);
+    gst_buffer_unmap (buf, &map);
 
     message =
         gst_message_new_element (GST_OBJECT (transform), message_structure);

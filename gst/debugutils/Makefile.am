@@ -16,9 +16,9 @@ plugin_LTLIBRARIES = libgstdebugutilsbad.la
 
 libgstdebugutilsbad_la_SOURCES = \
 	gstdebugspy.c \
-	fpsdisplaysink.c \
 	debugutilsbad.c \
-	gstchecksumsink.c \
+        fpsdisplaysink.c \
+        gstchecksumsink.c \
 	gstchecksumsink.h \
 	gstchopmydata.c \
 	gstchopmydata.h \

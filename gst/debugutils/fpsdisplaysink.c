@@ -49,7 +49,6 @@
 
 #include "debugutils-marshal.h"
 #include "fpsdisplaysink.h"
-#include <gst/interfaces/xoverlay.h>
 
 #define DEFAULT_SIGNAL_FPS_MEASUREMENTS FALSE
 #define DEFAULT_FPS_UPDATE_INTERVAL_MS 500      /* 500 ms */
@@ -214,10 +213,11 @@ fps_display_sink_class_init (GstFPSDisplaySinkClass * klass)
       "Zeeshan Ali <zeeshan.ali@nokia.com>, Stefan Kost <stefan.kost@nokia.com>");
 }
 
-static gboolean
-on_video_sink_data_flow (GstPad * pad, GstMiniObject * mini_obj,
+static GstPadProbeReturn
+on_video_sink_data_flow (GstPad * pad, GstPadProbeInfo * info,
     gpointer user_data)
 {
+  GstMiniObject *mini_obj = GST_PAD_PROBE_INFO_DATA (info);
   GstFPSDisplaySink *self = GST_FPS_DISPLAY_SINK (user_data);
 
 #if 0
@@ -246,7 +246,7 @@ on_video_sink_data_flow (GstPad * pad, GstMiniObject * mini_obj,
       GstClockTimeDiff diff;
       GstClockTime ts;
 
-      gst_event_parse_qos (ev, NULL, &diff, &ts);
+      gst_event_parse_qos (ev, NULL, NULL, &diff, &ts);
       if (diff <= 0.0) {
         g_atomic_int_inc (&self->frames_rendered);
       } else {
@@ -263,7 +263,7 @@ on_video_sink_data_flow (GstPad * pad, GstMiniObject * mini_obj,
       }
     }
   }
-  return TRUE;
+  return GST_PAD_PROBE_OK;
 }
 
 static void
@@ -279,6 +279,14 @@ update_sub_sync (GstElement * sink, gpointer data)
 }
 
 static void
+update_sub_sync_foreach (const GValue * item, gpointer data)
+{
+  GstElement *sink = g_value_get_object (item);
+
+  update_sub_sync (sink, data);
+}
+
+static void
 fps_display_sink_update_sink_sync (GstFPSDisplaySink * self)
 {
   GstIterator *iterator;
@@ -288,7 +296,8 @@ fps_display_sink_update_sink_sync (GstFPSDisplaySink * self)
 
   if (GST_IS_BIN (self->video_sink)) {
     iterator = gst_bin_iterate_sinks (GST_BIN (self->video_sink));
-    gst_iterator_foreach (iterator, (GFunc) update_sub_sync,
+    gst_iterator_foreach (iterator,
+        (GstIteratorForeachFunction) update_sub_sync_foreach,
         (void *) &self->sync);
     gst_iterator_free (iterator);
   } else
@@ -305,7 +314,7 @@ update_video_sink (GstFPSDisplaySink * self, GstElement * video_sink)
 
     /* remove pad probe */
     sink_pad = gst_element_get_static_pad (self->video_sink, "sink");
-    gst_pad_remove_data_probe (sink_pad, self->data_probe_id);
+    gst_pad_remove_probe (sink_pad, self->data_probe_id);
     gst_object_unref (sink_pad);
     self->data_probe_id = -1;
 
@@ -332,8 +341,9 @@ update_video_sink (GstFPSDisplaySink * self, GstElement * video_sink)
 
   /* attach or pad probe */
   sink_pad = gst_element_get_static_pad (self->video_sink, "sink");
-  self->data_probe_id = gst_pad_add_data_probe (sink_pad,
-      G_CALLBACK (on_video_sink_data_flow), (gpointer) self);
+  self->data_probe_id = gst_pad_add_probe (sink_pad,
+      GST_PAD_PROBE_TYPE_DATA_BOTH, on_video_sink_data_flow,
+      (gpointer) self, NULL);
   gst_object_unref (sink_pad);
 }
 
