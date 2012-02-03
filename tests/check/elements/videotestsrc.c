@@ -205,9 +205,15 @@ check_rgb_buf (const guint8 * pixels, guint32 r_mask, guint32 g_mask,
 
 static void
 got_buf_cb (GstElement * sink, GstBuffer * new_buf, GstPad * pad,
-    GstBuffer ** p_old_buf)
+    GstSample ** p_old_sample)
 {
-  gst_buffer_replace (p_old_buf, new_buf);
+  GstCaps *caps;
+
+  caps = gst_pad_get_current_caps (pad);
+
+  if (*p_old_sample)
+    gst_sample_unref (*p_old_sample);
+  *p_old_sample = gst_sample_new (new_buf, caps, NULL, NULL);
 }
 
 /* tests the positioning of pixels within the various RGB pixel layouts */
@@ -250,7 +256,7 @@ GST_START_TEST (test_rgb_formats)
   };
   GstElement *pipeline, *src, *filter, *sink;
   GstCaps *template_caps;
-  GstBuffer *buf = NULL;
+  GstSample *sample = NULL;
   GstPad *srcpad;
   gint p, i, e;
 
@@ -271,7 +277,7 @@ GST_START_TEST (test_rgb_formats)
   template_caps = gst_pad_get_pad_template_caps (srcpad);
 
   g_object_set (sink, "signal-handoffs", TRUE, NULL);
-  g_signal_connect (sink, "preroll-handoff", G_CALLBACK (got_buf_cb), &buf);
+  g_signal_connect (sink, "preroll-handoff", G_CALLBACK (got_buf_cb), &sample);
 
   GST_LOG ("videotestsrc src template caps: %" GST_PTR_FORMAT, template_caps);
 
@@ -311,33 +317,36 @@ GST_START_TEST (test_rgb_formats)
           state_ret = gst_element_set_state (pipeline, GST_STATE_NULL);
           fail_unless (state_ret == GST_STATE_CHANGE_SUCCESS);
 
-          fail_unless (buf != NULL);
+          fail_unless (sample != NULL);
 
           /* check buffer caps */
           {
+            GstBuffer *buf;
             GstStructure *s;
             GstCaps *caps;
             const gchar *format;
 
-            caps = gst_pad_get_current_caps (srcpad);
+            buf = gst_sample_get_buffer (sample);
+            fail_unless (buf != NULL);
+            caps = gst_sample_get_caps (sample);
             fail_unless (caps != NULL);
 
             s = gst_caps_get_structure (caps, 0);
             format = gst_structure_get_string (s, "format");
             fail_unless (g_str_equal (format, rgb_formats[i].nick));
+
+            /* now check the first pixel */
+            gst_buffer_map (buf, &map, GST_MAP_READ);
+            check_rgb_buf (map.data, rgb_formats[i].red_mask,
+                rgb_formats[i].green_mask, rgb_formats[i].blue_mask,
+                rgb_formats[i].alpha_mask, test_patterns[p].r_expected,
+                test_patterns[p].g_expected, test_patterns[p].b_expected,
+                rgb_formats[i].bpp, rgb_formats[i].depth);
+            gst_buffer_unmap (buf, &map);
+
+            gst_sample_unref (sample);
+            sample = NULL;
           }
-
-          /* now check the first pixel */
-          gst_buffer_map (buf, &map, GST_MAP_READ);
-          check_rgb_buf (map.data, rgb_formats[i].red_mask,
-              rgb_formats[i].green_mask, rgb_formats[i].blue_mask,
-              rgb_formats[i].alpha_mask, test_patterns[p].r_expected,
-              test_patterns[p].g_expected, test_patterns[p].b_expected,
-              rgb_formats[i].bpp, rgb_formats[i].depth);
-          gst_buffer_unmap (buf, &map);
-
-          gst_buffer_unref (buf);
-          buf = NULL;
         }
 
       } else {
