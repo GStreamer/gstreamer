@@ -1163,7 +1163,8 @@ gst_audio_encoder_proxy_getcaps (GstAudioEncoder * enc, GstCaps * caps)
   /* we want to be able to communicate to upstream elements like audioconvert
    * and audioresample any rate/channel restrictions downstream (e.g. muxer
    * only accepting certain sample rates) */
-  templ_caps = caps ? caps : gst_pad_get_pad_template_caps (enc->sinkpad);
+  templ_caps =
+      caps ? gst_caps_ref (caps) : gst_pad_get_pad_template_caps (enc->sinkpad);
   allowed = gst_pad_get_allowed_caps (enc->srcpad);
   if (!allowed || gst_caps_is_empty (allowed) || gst_caps_is_any (allowed)) {
     fcaps = gst_caps_copy (templ_caps);
