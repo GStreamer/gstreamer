@@ -57,49 +57,57 @@ static GstPad *mysrcpad, *mysinkpad;
     "audio/x-raw, "                     \
     "format = (string) "FORMATS1", "    \
     "channels = (int) [ 1, MAX ], "     \
-    "rate = (int) [ 1,  MAX ]"
+    "rate = (int) [ 1,  MAX ], "        \
+    "layout = (string) interleaved"
 
 #define VOLUME_CAPS_STRING_S8           \
     "audio/x-raw, "                     \
-    "formats = (string) "FORMATS2", "   \
+    "format = (string) "FORMATS2", "   \
     "channels = (int) 1, "              \
-    "rate = (int) 44100"
+    "rate = (int) 44100,"               \
+    "layout = (string) interleaved"
 
 #define VOLUME_CAPS_STRING_S16          \
     "audio/x-raw, "                     \
-    "formats = (string) "FORMATS3", "   \
+    "format = (string) "FORMATS3", "   \
     "channels = (int) 1, "              \
-    "rate = (int) 44100"
+    "rate = (int) 44100,"               \
+    "layout = (string) interleaved"
 
 #define VOLUME_CAPS_STRING_S24          \
     "audio/x-raw, "                     \
-    "formats = (string) "FORMATS4", "   \
+    "format = (string) "FORMATS4", "   \
     "channels = (int) 1, "              \
-    "rate = (int) 44100"
+    "rate = (int) 44100,"               \
+    "layout = (string) interleaved"
 
 #define VOLUME_CAPS_STRING_S32          \
     "audio/x-raw, "                     \
-    "formats = (string) "FORMATS5", "   \
+    "format = (string) "FORMATS5", "   \
     "channels = (int) 1, "              \
-    "rate = (int) 44100"
+    "rate = (int) 44100,"               \
+    "layout = (string) interleaved"
 
 #define VOLUME_CAPS_STRING_F32          \
     "audio/x-raw, "                     \
-    "formats = (string) "FORMATS6", "   \
+    "format = (string) "FORMATS6", "   \
     "channels = (int) 1, "              \
-    "rate = (int) 44100"
+    "rate = (int) 44100,"               \
+    "layout = (string) interleaved"
 
 #define VOLUME_CAPS_STRING_F64          \
     "audio/x-raw, "                     \
-    "formats = (string) "FORMATS7", "   \
+    "format = (string) "FORMATS7", "   \
     "channels = (int) 1, "              \
-    "rate = (int) 44100"
+    "rate = (int) 44100,"               \
+    "layout = (string) interleaved"
 
 #define VOLUME_WRONG_CAPS_STRING        \
     "audio/x-raw, "                     \
-    "formats = (string) "FORMATS8", "   \
+    "format = (string) "FORMATS8", "   \
     "channels = (int) 1, "              \
-    "rate = (int) 44100"
+    "rate = (int) 44100,"               \
+    "layout = (string) interleaved"
 
 
 static GstStaticPadTemplate sinktemplate = GST_STATIC_PAD_TEMPLATE ("sink",
@@ -179,6 +187,7 @@ GST_START_TEST (test_unity_s8)
   GstBuffer *inbuffer, *outbuffer;
   GstCaps *caps;
   gint8 in[2] = { 64, -16 };
+  gint8 *res;
   GstMapInfo map;
 
   volume = setup_volume ();
@@ -201,9 +210,9 @@ GST_START_TEST (test_unity_s8)
   fail_if ((outbuffer = (GstBuffer *) buffers->data) == NULL);
   fail_unless (inbuffer == outbuffer);
   gst_buffer_map (outbuffer, &map, GST_MAP_READ);
-  GST_INFO ("expected %+5d %+5d  real %+5d %+5d", in[0], in[1], map.data[0],
-      map.data[1]);
-  fail_unless (memcmp (map.data, in, 2) == 0);
+  res = (gint8 *) map.data;
+  GST_INFO ("expected %+5d %+5d  real %+5d %+5d", in[0], in[1], res[0], res[1]);
+  fail_unless (memcmp (res, in, 2) == 0);
   gst_buffer_unmap (outbuffer, &map);
 
   /* cleanup */
@@ -220,6 +229,7 @@ GST_START_TEST (test_half_s8)
   GstCaps *caps;
   gint8 in[2] = { 64, -16 };
   gint8 out[2] = { 32, -8 };
+  gint8 *res;
   GstMapInfo map;
 
   volume = setup_volume ();
@@ -248,9 +258,10 @@ GST_START_TEST (test_half_s8)
   fail_if ((outbuffer = (GstBuffer *) buffers->data) == NULL);
   fail_unless (inbuffer == outbuffer);
   gst_buffer_map (outbuffer, &map, GST_MAP_READ);
-  GST_INFO ("expected %+5d %+5d  real %+5d %+5d", out[0], out[1], map.data[0],
-      map.data[1]);
-  fail_unless (memcmp (map.data, out, 2) == 0);
+  res = (gint8 *) map.data;
+  GST_INFO ("expected %+5d %+5d  real %+5d %+5d", out[0], out[1], res[0],
+      res[1]);
+  fail_unless (memcmp (res, out, 2) == 0);
   gst_buffer_unmap (outbuffer, &map);
 
   /* cleanup */
@@ -267,6 +278,7 @@ GST_START_TEST (test_double_s8)
   GstCaps *caps;
   gint8 in[2] = { 64, -16 };
   gint8 out[2] = { 127, -32 };  /* notice the clamped sample */
+  gint8 *res;
   GstMapInfo map;
 
   volume = setup_volume ();
@@ -295,9 +307,10 @@ GST_START_TEST (test_double_s8)
   fail_if ((outbuffer = (GstBuffer *) buffers->data) == NULL);
   fail_unless (inbuffer == outbuffer);
   gst_buffer_map (outbuffer, &map, GST_MAP_READ);
-  GST_INFO ("expected %+5d %+5d  real %+5d %+5d", out[0], out[1], map.data[0],
-      map.data[1]);
-  fail_unless (memcmp (map.data, out, 2) == 0);
+  res = (gint8 *) map.data;
+  GST_INFO ("expected %+5d %+5d  real %+5d %+5d", out[0], out[1], res[0],
+      res[1]);
+  fail_unless (memcmp (res, out, 2) == 0);
   gst_buffer_unmap (outbuffer, &map);
 
   /* cleanup */
@@ -314,6 +327,7 @@ GST_START_TEST (test_ten_s8)
   GstCaps *caps;
   gint8 in[2] = { 64, -10 };
   gint8 out[2] = { 127, -100 }; /* notice the clamped sample */
+  gint8 *res;
   GstMapInfo map;
 
   volume = setup_volume ();
@@ -343,9 +357,10 @@ GST_START_TEST (test_ten_s8)
   fail_if ((outbuffer = (GstBuffer *) buffers->data) == NULL);
   fail_unless (inbuffer == outbuffer);
   gst_buffer_map (outbuffer, &map, GST_MAP_READ);
-  GST_INFO ("expected %+5d %+5d  real %+5d %+5d", out[0], out[1], map.data[0],
-      map.data[1]);
-  fail_unless (memcmp (map.data, out, 2) == 0);
+  res = (gint8 *) map.data;
+  GST_INFO ("expected %+5d %+5d  real %+5d %+5d", out[0], out[1], res[0],
+      res[1]);
+  fail_unless (memcmp (res, out, 2) == 0);
   gst_buffer_unmap (outbuffer, &map);
 
   /* cleanup */
@@ -1145,7 +1160,7 @@ GST_START_TEST (test_unity_f32)
   GstElement *volume;
   GstBuffer *inbuffer, *outbuffer;
   GstCaps *caps;
-  gfloat in[2] = { 0.75, -0.25 };
+  gfloat in[2] = { 0.75, -0.25 }, *res;
   GstMapInfo map;
 
   volume = setup_volume ();
@@ -1154,7 +1169,7 @@ GST_START_TEST (test_unity_f32)
       "could not set to playing");
 
   inbuffer = gst_buffer_new_and_alloc (8);
-  gst_buffer_fill (inbuffer, 0, in, 8);
+  gst_buffer_fill (inbuffer, 0, in, sizeof (in));
   caps = gst_caps_from_string (VOLUME_CAPS_STRING_F32);
   gst_pad_set_caps (mysrcpad, caps);
   gst_caps_unref (caps);
@@ -1168,10 +1183,12 @@ GST_START_TEST (test_unity_f32)
   fail_if ((outbuffer = (GstBuffer *) buffers->data) == NULL);
   fail_unless (inbuffer == outbuffer);
   gst_buffer_map (outbuffer, &map, GST_MAP_READ);
+  res = (gfloat *) map.data;
   GST_INFO ("expected %+1.4f %+1.4f  real %+1.4f %+1.4f", in[0], in[1],
-      map.data[0], map.data[1]);
-  fail_unless_equals_float (map.data[0], in[0]);
-  fail_unless_equals_float (map.data[1], in[1]);
+      res[0], res[1]);
+  fail_unless_equals_float (res[0], in[0]);
+  fail_unless_equals_float (res[1], in[1]);
+  gst_buffer_unmap (outbuffer, &map);
 
   /* cleanup */
   cleanup_volume (volume);
@@ -1187,6 +1204,7 @@ GST_START_TEST (test_half_f32)
   GstCaps *caps;
   gfloat in[2] = { 0.75, -0.25 };
   gfloat out[2] = { 0.375, -0.125 };
+  gfloat *res;
   GstMapInfo map;
 
   volume = setup_volume ();
@@ -1215,10 +1233,11 @@ GST_START_TEST (test_half_f32)
   fail_if ((outbuffer = (GstBuffer *) buffers->data) == NULL);
   fail_unless (inbuffer == outbuffer);
   gst_buffer_map (outbuffer, &map, GST_MAP_READ);
+  res = (gfloat *) map.data;
   GST_INFO ("expected %+1.4f %+1.4f  real %+1.4f %+1.4f", out[0], out[1],
-      map.data[0], map.data[1]);
-  fail_unless_equals_float (map.data[0], out[0]);
-  fail_unless_equals_float (map.data[1], out[1]);
+      res[0], res[1]);
+  fail_unless_equals_float (res[0], out[0]);
+  fail_unless_equals_float (res[1], out[1]);
   gst_buffer_unmap (outbuffer, &map);
 
   /* cleanup */
@@ -1235,6 +1254,7 @@ GST_START_TEST (test_double_f32)
   GstCaps *caps;
   gfloat in[2] = { 0.75, -0.25 };
   gfloat out[2] = { 1.5, -0.5 };        /* nothing is clamped */
+  gfloat *res;
   GstMapInfo map;
 
   volume = setup_volume ();
@@ -1263,10 +1283,11 @@ GST_START_TEST (test_double_f32)
   fail_if ((outbuffer = (GstBuffer *) buffers->data) == NULL);
   fail_unless (inbuffer == outbuffer);
   gst_buffer_map (outbuffer, &map, GST_MAP_READ);
+  res = (gfloat *) map.data;
   GST_INFO ("expected %+1.4f %+1.4f  real %+1.4f %+1.4f", out[0], out[1],
-      map.data[0], map.data[1]);
-  fail_unless_equals_float (map.data[0], out[0]);
-  fail_unless_equals_float (map.data[1], out[1]);
+      res[0], res[1]);
+  fail_unless_equals_float (res[0], out[0]);
+  fail_unless_equals_float (res[1], out[1]);
   gst_buffer_unmap (outbuffer, &map);
 
   /* cleanup */
@@ -1283,6 +1304,7 @@ GST_START_TEST (test_ten_f32)
   GstCaps *caps;
   gfloat in[2] = { 0.75, -0.25 };
   gfloat out[2] = { 7.5, -2.5 };        /* nothing is clamped */
+  gfloat *res;
   GstMapInfo map;
 
   volume = setup_volume ();
@@ -1312,10 +1334,11 @@ GST_START_TEST (test_ten_f32)
   fail_if ((outbuffer = (GstBuffer *) buffers->data) == NULL);
   fail_unless (inbuffer == outbuffer);
   gst_buffer_map (outbuffer, &map, GST_MAP_READ);
+  res = (gfloat *) map.data;
   GST_INFO ("expected %+1.4f %+1.4f  real %+1.4f %+1.4f", out[0], out[1],
-      map.data[0], map.data[1]);
-  fail_unless_equals_float (map.data[0], out[0]);
-  fail_unless_equals_float (map.data[1], out[1]);
+      res[0], res[1]);
+  fail_unless_equals_float (res[0], out[0]);
+  fail_unless_equals_float (res[1], out[1]);
   gst_buffer_unmap (outbuffer, &map);
 
   /* cleanup */
@@ -1333,6 +1356,7 @@ GST_START_TEST (test_mute_f32)
   GstCaps *caps;
   gfloat in[2] = { 0.75, -0.25 };
   gfloat out[2] = { 0, 0 };
+  gfloat *res;
   GstMapInfo map;
 
   volume = setup_volume ();
@@ -1361,10 +1385,11 @@ GST_START_TEST (test_mute_f32)
   fail_if ((outbuffer = (GstBuffer *) buffers->data) == NULL);
   fail_unless (inbuffer == outbuffer);
   gst_buffer_map (outbuffer, &map, GST_MAP_READ);
+  res = (gfloat *) map.data;
   GST_INFO ("expected %+1.4f %+1.4f  real %+1.4f %+1.4f", out[0], out[1],
-      map.data[0], map.data[1]);
-  fail_unless_equals_float (map.data[0], out[0]);
-  fail_unless_equals_float (map.data[1], out[1]);
+      res[0], res[1]);
+  fail_unless_equals_float (res[0], out[0]);
+  fail_unless_equals_float (res[1], out[1]);
   gst_buffer_unmap (outbuffer, &map);
 
   /* cleanup */
@@ -1379,6 +1404,7 @@ GST_START_TEST (test_unity_f64)
   GstBuffer *inbuffer, *outbuffer;
   GstCaps *caps;
   gdouble in[2] = { 0.75, -0.25 };
+  gdouble *res;
   GstMapInfo map;
 
   volume = setup_volume ();
@@ -1401,10 +1427,12 @@ GST_START_TEST (test_unity_f64)
   fail_if ((outbuffer = (GstBuffer *) buffers->data) == NULL);
   fail_unless (inbuffer == outbuffer);
   gst_buffer_map (outbuffer, &map, GST_MAP_READ);
+  res = (gdouble *) map.data;
   GST_INFO ("expected %+1.4f %+1.4f  real %+1.4f %+1.4f", in[0], in[1],
-      map.data[0], map.data[1]);
-  fail_unless_equals_float (map.data[0], in[0]);
-  fail_unless_equals_float (map.data[1], in[1]);
+      res[0], res[1]);
+  fail_unless_equals_float (res[0], in[0]);
+  fail_unless_equals_float (res[1], in[1]);
+  gst_buffer_unmap (outbuffer, &map);
 
   /* cleanup */
   cleanup_volume (volume);
@@ -1420,6 +1448,7 @@ GST_START_TEST (test_half_f64)
   GstCaps *caps;
   gdouble in[2] = { 0.75, -0.25 };
   gdouble out[2] = { 0.375, -0.125 };
+  gdouble *res;
   GstMapInfo map;
 
   volume = setup_volume ();
@@ -1448,10 +1477,11 @@ GST_START_TEST (test_half_f64)
   fail_if ((outbuffer = (GstBuffer *) buffers->data) == NULL);
   fail_unless (inbuffer == outbuffer);
   gst_buffer_map (outbuffer, &map, GST_MAP_READ);
+  res = (gdouble *) map.data;
   GST_INFO ("expected %+1.4f %+1.4f  real %+1.4f %+1.4f", out[0], out[1],
-      map.data[0], map.data[1]);
-  fail_unless_equals_float (map.data[0], out[0]);
-  fail_unless_equals_float (map.data[1], out[1]);
+      res[0], res[1]);
+  fail_unless_equals_float (res[0], out[0]);
+  fail_unless_equals_float (res[1], out[1]);
   gst_buffer_unmap (outbuffer, &map);
 
   /* cleanup */
@@ -1468,6 +1498,7 @@ GST_START_TEST (test_double_f64)
   GstCaps *caps;
   gdouble in[2] = { 0.75, -0.25 };
   gdouble out[2] = { 1.5, -0.5 };       /* nothing is clamped */
+  gdouble *res;
   GstMapInfo map;
 
   volume = setup_volume ();
@@ -1496,10 +1527,11 @@ GST_START_TEST (test_double_f64)
   fail_if ((outbuffer = (GstBuffer *) buffers->data) == NULL);
   fail_unless (inbuffer == outbuffer);
   gst_buffer_map (outbuffer, &map, GST_MAP_READ);
+  res = (gdouble *) map.data;
   GST_INFO ("expected %+1.4f %+1.4f  real %+1.4f %+1.4f", out[0], out[1],
-      map.data[0], map.data[1]);
-  fail_unless_equals_float (map.data[0], out[0]);
-  fail_unless_equals_float (map.data[1], out[1]);
+      res[0], res[1]);
+  fail_unless_equals_float (res[0], out[0]);
+  fail_unless_equals_float (res[1], out[1]);
   gst_buffer_unmap (outbuffer, &map);
 
   /* cleanup */
@@ -1516,6 +1548,7 @@ GST_START_TEST (test_ten_f64)
   GstCaps *caps;
   gdouble in[2] = { 0.75, -0.25 };
   gdouble out[2] = { 7.5, -2.5 };       /* nothing is clamped */
+  gdouble *res;
   GstMapInfo map;
 
   volume = setup_volume ();
@@ -1545,10 +1578,11 @@ GST_START_TEST (test_ten_f64)
   fail_if ((outbuffer = (GstBuffer *) buffers->data) == NULL);
   fail_unless (inbuffer == outbuffer);
   gst_buffer_map (outbuffer, &map, GST_MAP_READ);
+  res = (gdouble *) map.data;
   GST_INFO ("expected %+1.4f %+1.4f  real %+1.4f %+1.4f", out[0], out[1],
-      map.data[0], map.data[1]);
-  fail_unless_equals_float (map.data[0], out[0]);
-  fail_unless_equals_float (map.data[1], out[1]);
+      res[0], res[1]);
+  fail_unless_equals_float (res[0], out[0]);
+  fail_unless_equals_float (res[1], out[1]);
   gst_buffer_unmap (outbuffer, &map);
 
   /* cleanup */
@@ -1566,6 +1600,7 @@ GST_START_TEST (test_mute_f64)
   GstCaps *caps;
   gdouble in[2] = { 0.75, -0.25 };
   gdouble out[2] = { 0, 0 };
+  gdouble *res;
   GstMapInfo map;
 
   volume = setup_volume ();
@@ -1594,10 +1629,11 @@ GST_START_TEST (test_mute_f64)
   fail_if ((outbuffer = (GstBuffer *) buffers->data) == NULL);
   fail_unless (inbuffer == outbuffer);
   gst_buffer_map (outbuffer, &map, GST_MAP_READ);
+  res = (gdouble *) map.data;
   GST_INFO ("expected %+1.4f %+1.4f  real %+1.4f %+1.4f", out[0], out[1],
-      map.data[0], map.data[1]);
-  fail_unless_equals_float (map.data[0], out[0]);
-  fail_unless_equals_float (map.data[1], out[1]);
+      res[0], res[1]);
+  fail_unless_equals_float (res[0], out[0]);
+  fail_unless_equals_float (res[1], out[1]);
   gst_buffer_unmap (outbuffer, &map);
 
   /* cleanup */
@@ -1727,6 +1763,7 @@ GST_START_TEST (test_controller_processing)
   GstCaps *caps;
   gint16 in[2] = { 16384, -256 };
   GstMapInfo map;
+  GstSegment seg;
 
   volume = setup_volume ();
 
@@ -1746,6 +1783,10 @@ GST_START_TEST (test_controller_processing)
   GST_BUFFER_TIMESTAMP (inbuffer) = 0;
   gst_caps_unref (caps);
   ASSERT_BUFFER_REFCOUNT (inbuffer, "inbuffer", 1);
+
+  gst_segment_init (&seg, GST_FORMAT_TIME);
+  fail_unless (gst_pad_push_event (mysrcpad,
+          gst_event_new_segment (&seg)) == TRUE);
 
   /* pushing gives away my reference ... */
   fail_unless (gst_pad_push (mysrcpad, inbuffer) == GST_FLOW_OK);
