@@ -341,7 +341,7 @@ gst_audio_rate_sink_event (GstPad * pad, GstObject * parent, GstEvent * event)
       res = gst_pad_push_event (audiorate->srcpad, event);
       break;
     default:
-      res = gst_pad_push_event (audiorate->srcpad, event);
+      res = gst_pad_event_default (pad, parent, event);
       break;
   }
 
