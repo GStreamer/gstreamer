@@ -410,6 +410,7 @@ GST_START_TEST (test_large_discont)
   audiorate = gst_check_setup_element ("audiorate");
   caps = gst_caps_new_simple ("audio/x-raw",
       "format", G_TYPE_STRING, GST_AUDIO_NE (F32),
+      "layout", G_TYPE_STRING, "interleaved",
       "channels", G_TYPE_INT, 1, "rate", G_TYPE_INT, 44100, NULL);
 
   srcpad = gst_check_setup_src_pad (audiorate, &srctemplate);
