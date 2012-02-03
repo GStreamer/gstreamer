@@ -186,6 +186,8 @@ gst_video_filter_set_caps (GstBaseTransform * trans, GstCaps * incaps,
   if (res) {
     filter->in_info = in_info;
     filter->out_info = out_info;
+    if (fclass->transform_frame == NULL)
+      gst_base_transform_set_in_place (trans, TRUE);
   }
   filter->negotiated = res;
 
@@ -226,8 +228,10 @@ gst_video_filter_transform (GstBaseTransform * trans, GstBuffer * inbuf,
 
     gst_video_frame_unmap (&out_frame);
     gst_video_frame_unmap (&in_frame);
-  } else
+  } else {
+    GST_DEBUG_OBJECT (trans, "no transform_frame vmethod");
     res = GST_FLOW_OK;
+  }
 
   return res;
 
@@ -266,8 +270,10 @@ gst_video_filter_transform_ip (GstBaseTransform * trans, GstBuffer * buf)
     res = fclass->transform_frame_ip (filter, &frame);
 
     gst_video_frame_unmap (&frame);
-  } else
+  } else {
+    GST_DEBUG_OBJECT (trans, "no transform_frame_ip vmethod");
     res = GST_FLOW_OK;
+  }
 
   return res;
 
