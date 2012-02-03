@@ -1,7 +1,7 @@
 plugin_LTLIBRARIES = libgstliveadder.la
 
 libgstliveadder_la_SOURCES = liveadder.c
-libgstliveadder_la_CFLAGS = $(GST_PLUGINS_BASE_CFLAGS) $(GST_PLUGINS_BAD_CFLAGS) $(GST_CFLAGS)
+libgstliveadder_la_CFLAGS = $(GST_PLUGINS_BAD_CFLAGS) $(GST_PLUGINS_BASE_CFLAGS) $(GST_CFLAGS)
 libgstliveadder_la_LIBADD = \
 	$(GST_PLUGINS_BASE_LIBS) -lgstaudio-@GST_MAJORMINOR@ \
 	$(GST_BASE_LIBS) $(GST_LIBS)

@@ -1,8 +1,8 @@
 plugin_LTLIBRARIES = libgstdecklink.la
 
 libgstdecklink_la_CPPFLAGS = \
-	$(GST_BASE_CFLAGS) \
 	$(GST_PLUGINS_BAD_CFLAGS) \
+	$(GST_BASE_CFLAGS) \
 	$(GST_CXXFLAGS) \
 	$(DECKLINK_CXXFLAGS)
 libgstdecklink_la_LIBADD = \

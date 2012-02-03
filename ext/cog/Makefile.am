@@ -5,9 +5,9 @@ include $(top_srcdir)/common/orc.mak
 
 libgstcog_la_CFLAGS = \
 	-DCOG_ENABLE_UNSTABLE_API \
+	$(GST_PLUGINS_BAD_CFLAGS) \
 	-I$(srcdir)/.. \
 	$(GST_PLUGINS_BASE_CFLAGS) \
-	$(GST_PLUGINS_BAD_CFLAGS) \
 	$(GST_CFLAGS) \
 	$(ORC_CFLAGS) \
 	$(COG_CFLAGS)
