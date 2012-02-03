@@ -442,9 +442,11 @@ gst_cmml_enc_parse_tag_head (GstCmmlEnc * enc, GstCmmlTagHead * head)
     goto alloc_error;
   headers = g_list_append (headers, head_buf);
 
-  caps = gst_pad_get_current_caps (enc->srcpad);
+  caps = gst_pad_query_caps (enc->srcpad, NULL);
   caps = gst_cmml_enc_set_header_on_caps (enc, caps,
       ident_buf, preamble_buf, head_buf);
+  gst_pad_set_caps (enc->srcpad, caps);
+  gst_caps_unref (caps);
 
   while (headers) {
     buffer = GST_BUFFER (headers->data);
@@ -458,8 +460,6 @@ gst_cmml_enc_parse_tag_head (GstCmmlEnc * enc, GstCmmlTagHead * head)
       goto push_error;
   }
 
-  gst_caps_unref (caps);
-
   enc->sent_headers = TRUE;
   return;
 
@@ -469,7 +469,6 @@ flow_unexpected:
   enc->flow_return = GST_FLOW_ERROR;
   return;
 push_error:
-  gst_caps_unref (caps);
   /* fallthrough */
 alloc_error:
   for (walk = headers; walk; walk = walk->next)
