@@ -1493,8 +1493,14 @@ gst_collect_pads2_recalculate_waiting (GstCollectPads2 * pads)
     int cmp_res;
 
     /* check if pad has a segment */
-    if (data->segment.format == GST_FORMAT_UNDEFINED)
-      continue;
+    if (data->segment.format == GST_FORMAT_UNDEFINED) {
+      GST_WARNING_OBJECT (pads,
+          "GstCollectPads2 has no time segment, assuming 0 based.");
+      gst_segment_init (&data->segment, GST_FORMAT_TIME);
+      gst_segment_set_newsegment (&data->segment, FALSE, 1.0f,
+          GST_FORMAT_TIME, 0, -1, 0);
+      GST_COLLECT_PADS2_STATE_SET (data, GST_COLLECT_PADS2_STATE_NEW_SEGMENT);
+    }
 
     /* check segment format */
     if (data->segment.format != GST_FORMAT_TIME) {
@@ -1808,21 +1814,21 @@ gst_collect_pads2_event (GstPad * pad, GstEvent * event)
           ", stop %" GST_TIME_FORMAT, GST_TIME_ARGS (start),
           GST_TIME_ARGS (stop));
 
-      gst_segment_set_newsegment_full (&data->segment, update, rate, arate,
-          format, start, stop, time);
-
-      GST_COLLECT_PADS2_STATE_SET (data, GST_COLLECT_PADS2_STATE_NEW_SEGMENT);
-
       /* default muxing functionality */
       if (!buffer_func)
         goto newsegment_done;
 
       /* default collection can not handle other segment formats than time */
       if (format != GST_FORMAT_TIME) {
-        GST_ERROR_OBJECT (pads, "GstCollectPads2 default collecting "
-            "can only handle time segments.");
+        GST_WARNING_OBJECT (pads, "GstCollectPads2 default collecting "
+            "can only handle time segments. Non time segment ignored.");
         goto newsegment_done;
       }
+
+      gst_segment_set_newsegment_full (&data->segment, update, rate, arate,
+          format, start, stop, time);
+
+      GST_COLLECT_PADS2_STATE_SET (data, GST_COLLECT_PADS2_STATE_NEW_SEGMENT);
 
       /* If oldest time is not known, or current pad got newsegment;
        * recalculate the state */
