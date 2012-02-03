@@ -125,7 +125,10 @@ buffer_new (const gchar * buffer_data, guint size)
   data = g_malloc (size);
   memcpy (data, buffer_data, size);
 
-  buffer = gst_buffer_new_wrapped (data, size);
+  if (data)
+    buffer = gst_buffer_new_wrapped (data, size);
+  else
+    buffer = gst_buffer_new ();
 
   return buffer;
 }
