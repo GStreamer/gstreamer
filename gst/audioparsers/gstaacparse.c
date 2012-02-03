@@ -878,9 +878,11 @@ gst_aac_parse_detect_stream (GstAacParse * aacparse,
     gst_base_parse_set_min_frame_size (GST_BASE_PARSE (aacparse), 512);
 
     /* arrange for metadata and get out of the way */
-    sinkcaps = gst_pad_get_current_caps (GST_BASE_PARSE_SINK_PAD (aacparse));
-    gst_aac_parse_set_src_caps (aacparse, sinkcaps);
-    gst_caps_unref (sinkcaps);
+    if ((sinkcaps =
+            gst_pad_get_current_caps (GST_BASE_PARSE_SINK_PAD (aacparse)))) {
+      gst_aac_parse_set_src_caps (aacparse, sinkcaps);
+      gst_caps_unref (sinkcaps);
+    }
 
     /* not syncable, not easily seekable (unless we push data from start */
     gst_base_parse_set_syncable (GST_BASE_PARSE_CAST (aacparse), FALSE);
@@ -1024,12 +1026,14 @@ gst_aac_parse_parse_frame (GstBaseParse * parse, GstBaseParseFrame * frame)
       aacparse->sample_rate = rate;
       aacparse->channels = channels;
 
-      sinkcaps = gst_pad_get_current_caps (GST_BASE_PARSE (aacparse)->sinkpad);
-      if (!gst_aac_parse_set_src_caps (aacparse, sinkcaps)) {
-        /* If linking fails, we need to return appropriate error */
-        ret = GST_FLOW_NOT_LINKED;
+      if ((sinkcaps =
+              gst_pad_get_current_caps (GST_BASE_PARSE (aacparse)->sinkpad))) {
+        if (!gst_aac_parse_set_src_caps (aacparse, sinkcaps)) {
+          /* If linking fails, we need to return appropriate error */
+          ret = GST_FLOW_NOT_LINKED;
+        }
+        gst_caps_unref (sinkcaps);
       }
-      gst_caps_unref (sinkcaps);
 
       gst_base_parse_set_frame_rate (GST_BASE_PARSE (aacparse),
           aacparse->sample_rate, aacparse->frame_samples, 2, 2);
@@ -1059,13 +1063,16 @@ gst_aac_parse_parse_frame (GstBaseParse * parse, GstBaseParseFrame * frame)
        before knowing about rate/channels. */
     if (setcaps
         || !gst_pad_has_current_caps (GST_BASE_PARSE_SRC_PAD (aacparse))) {
-      GstCaps *sinkcaps =
-          gst_pad_get_current_caps (GST_BASE_PARSE (aacparse)->sinkpad);
-      if (!gst_aac_parse_set_src_caps (aacparse, sinkcaps)) {
-        /* If linking fails, we need to return appropriate error */
-        ret = GST_FLOW_NOT_LINKED;
+      GstCaps *sinkcaps;
+
+      if ((sinkcaps =
+              gst_pad_get_current_caps (GST_BASE_PARSE (aacparse)->sinkpad))) {
+        if (!gst_aac_parse_set_src_caps (aacparse, sinkcaps)) {
+          /* If linking fails, we need to return appropriate error */
+          ret = GST_FLOW_NOT_LINKED;
+        }
+        gst_caps_unref (sinkcaps);
       }
-      gst_caps_unref (sinkcaps);
 
       gst_base_parse_set_frame_rate (GST_BASE_PARSE (aacparse),
           aacparse->sample_rate, aacparse->frame_samples, 2, 2);
