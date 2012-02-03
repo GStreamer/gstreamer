@@ -24,7 +24,6 @@
 
 #include <gst/check/gstcheck.h>
 #include <gst/audio/audio.h>
-#undef GST_CAT_DEFAULT
 #include "../../gst/gdp/dataprotocol.c"
 
 /* For ease of programming we use globals to keep refs for our floating

@@ -24,7 +24,6 @@
 
 #include <gst/check/gstcheck.h>
 #include <gst/audio/audio.h>
-#undef GST_CAT_DEFAULT
 #include "../../gst/gdp/dataprotocol.c"
 
 /* For ease of programming we use globals to keep refs for our floating
@@ -366,7 +365,6 @@ GST_START_TEST (test_streamheader)
 
   /* FIXME: get streamheader, compare data with buffer */
   gst_buffer_unref (outbuffer);
-  gst_caps_unref (caps);
 
   /* clean up */
   fail_unless (gst_element_set_state (gdpdepay,
