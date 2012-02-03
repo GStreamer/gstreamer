@@ -78,7 +78,6 @@
 
 /* debug category */
 GST_DEBUG_CATEGORY_STATIC (data_protocol_debug);
-#define GST_CAT_DEFAULT data_protocol_debug
 
 /* helper macros */
 
