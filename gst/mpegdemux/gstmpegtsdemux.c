@@ -399,6 +399,14 @@ gst_mpegts_demux_reset (GstMpegTSDemux * demux)
   demux->last_buf_ts = GST_CLOCK_TIME_NONE;
 }
 
+static void
+gst_mpegts_demux_no_more_pads (GstElement * demux)
+{
+  /* We should really call no-more-pads here, but we don't as
+     this would preclude addition of more pads if/when new streams
+     are added. */
+}
+
 #if 0
 static void
 gst_mpegts_demux_remove_pads (GstMpegTSDemux * demux)
@@ -1086,7 +1094,7 @@ gst_mpegts_demux_sync_streams (GstMpegTSDemux * demux, GstClockTime time)
          any pad that might be waiting for data */
       if (!stream->pad && demux->pending_pads > 0) {
         demux->pending_pads = 0;
-        gst_element_no_more_pads (GST_ELEMENT (demux));
+        gst_mpegts_demux_no_more_pads (GST_ELEMENT (demux));
       }
 
       if (stream->pad) {
@@ -1332,7 +1340,7 @@ gst_mpegts_demux_data_cb (GstPESFilter * filter, gboolean first,
          If not, we'll add pads as we get data for them, and will end up
          hitting decodebin2's overrun threshold (if using decodebin2) */
       GST_DEBUG_OBJECT (demux, "All pads added, we can signal no-more-pads");
-      gst_element_no_more_pads (GST_ELEMENT (demux));
+      gst_mpegts_demux_no_more_pads (GST_ELEMENT (demux));
     } else {
       GST_DEBUG_OBJECT (demux,
           "All pads could not be added, we will not signal no-more-pads");
@@ -1387,7 +1395,7 @@ gst_mpegts_demux_data_cb (GstPESFilter * filter, gboolean first,
         "Adding pad due to received data, decreasing pending pads to %d",
         demux->pending_pads);
     if (demux->pending_pads == 0)
-      gst_element_no_more_pads (GST_ELEMENT (demux));
+      gst_mpegts_demux_no_more_pads (GST_ELEMENT (demux));
 
     stream->discont = TRUE;
 
@@ -1741,7 +1749,7 @@ gst_mpegts_stream_parse_pmt (GstMpegTSStream * stream,
   GST_DEBUG_OBJECT (demux, "Done parsing PMT, pending pads now %d",
       demux->pending_pads);
   if (demux->pending_pads == 0)
-    gst_element_no_more_pads (GST_ELEMENT (demux));
+    gst_mpegts_demux_no_more_pads (GST_ELEMENT (demux));
 
   return TRUE;
 
