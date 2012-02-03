@@ -546,6 +546,8 @@ gst_gdp_queue_buffer (GstGDPPay * this, GstBuffer * buffer)
       "queued buffer %p, now %d buffers queued",
       buffer, g_list_length (this->queue));
 
+  gst_gdp_pay_reset_streamheader (this);
+
   return GST_FLOW_OK;
 }
 
@@ -587,33 +589,9 @@ gst_gdp_pay_chain (GstPad * pad, GstObject * parent, GstBuffer * buffer)
       this->new_segment_buf = outbuffer;
     }
   }
-#if 0
   /* make sure we've received caps before */
-  caps = gst_buffer_get_caps (buffer);
-  if (!this->caps && !caps)
+  if (!this->caps)
     goto no_caps;
-
-  /* if the caps have changed, process caps first */
-  if (caps && !gst_caps_is_equal (this->caps, caps)) {
-    GST_LOG_OBJECT (this, "caps changed to %p, %" GST_PTR_FORMAT, caps, caps);
-    gst_caps_replace (&(this->caps), caps);
-    outbuffer = gst_gdp_buffer_from_caps (this, caps);
-    if (!outbuffer)
-      goto no_caps_buffer;
-
-    GST_BUFFER_TIMESTAMP (outbuffer) = GST_BUFFER_TIMESTAMP (buffer);
-    GST_BUFFER_DURATION (outbuffer) = 0;
-    GST_BUFFER_FLAG_SET (outbuffer, GST_BUFFER_FLAG_HEADER);
-
-    if (this->caps_buf)
-      gst_buffer_unref (this->caps_buf);
-    this->caps_buf = outbuffer;
-    gst_gdp_pay_reset_streamheader (this);
-  }
-
-  if (caps)
-    gst_caps_unref (caps);
-#endif
 
   /* create a GDP header packet,
    * then create a GST buffer of the header packet and the buffer contents */
@@ -642,18 +620,16 @@ done:
   return ret;
 
   /* ERRORS */
-#if 0
 no_caps:
   {
     /* when returning a fatal error as a GstFlowReturn we must post an error
      * message */
     GST_ELEMENT_ERROR (this, STREAM, FORMAT, (NULL),
         ("first received buffer does not have caps set"));
-    if (caps)
-      gst_caps_unref (caps);
     ret = GST_FLOW_NOT_NEGOTIATED;
     goto done;
   }
+#if 0
 no_caps_buffer:
   {
     GST_ELEMENT_ERROR (this, STREAM, ENCODE, (NULL),
