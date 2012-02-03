@@ -215,24 +215,24 @@ GST_START_TEST (test_more)
 
   /* pushing gives away my reference ... */
   fail_unless (gst_pad_push (mysrcpad, first) == GST_FLOW_OK);
-  /* ... and it is now stuck inside videorate */
-  ASSERT_BUFFER_REFCOUNT (first, "first", 2);
+  /* ... and a copy is now stuck inside videorate */
+  ASSERT_BUFFER_REFCOUNT (first, "first", 1);
   fail_unless_equals_int (g_list_length (buffers), 0);
   assert_videorate_stats (videorate, "first buffer", 1, 0, 0, 0);
 
   /* second buffer; inbetween second and third output frame's timestamp */
   second = gst_buffer_new_and_alloc (4);
   GST_BUFFER_TIMESTAMP (second) = GST_SECOND * 3 / 50;
-  GST_BUFFER_OFFSET (first) = g_rand_int (rand);
-  GST_BUFFER_OFFSET_END (first) = g_rand_int (rand);
+  GST_BUFFER_OFFSET (second) = g_rand_int (rand);
+  GST_BUFFER_OFFSET_END (second) = g_rand_int (rand);
   gst_buffer_memset (second, 0, 2, 4);
   ASSERT_BUFFER_REFCOUNT (second, "second", 1);
   gst_buffer_ref (second);
 
   /* pushing gives away one of my references ... */
   fail_unless (gst_pad_push (mysrcpad, second) == GST_FLOW_OK);
-  /* ... and it is now stuck inside videorate */
-  ASSERT_BUFFER_REFCOUNT (second, "second", 2);
+  /* ... and a copy is now stuck inside videorate */
+  ASSERT_BUFFER_REFCOUNT (second, "second", 1);
 
   /* ... and the first one is pushed out, with timestamp 0 */
   fail_unless_equals_int (g_list_length (buffers), 1);
@@ -245,16 +245,16 @@ GST_START_TEST (test_more)
   /* third buffer */
   third = gst_buffer_new_and_alloc (4);
   GST_BUFFER_TIMESTAMP (third) = GST_SECOND * 12 / 50;
-  GST_BUFFER_OFFSET (first) = g_rand_int (rand);
-  GST_BUFFER_OFFSET_END (first) = g_rand_int (rand);
+  GST_BUFFER_OFFSET (third) = g_rand_int (rand);
+  GST_BUFFER_OFFSET_END (third) = g_rand_int (rand);
   gst_buffer_memset (third, 0, 3, 4);
   ASSERT_BUFFER_REFCOUNT (third, "third", 1);
   gst_buffer_ref (third);
 
   /* pushing gives away my reference ... */
   fail_unless (gst_pad_push (mysrcpad, third) == GST_FLOW_OK);
-  /* ... and it is now stuck inside videorate */
-  ASSERT_BUFFER_REFCOUNT (third, "third", 2);
+  /* ... and a copy is now stuck inside videorate */
+  ASSERT_BUFFER_REFCOUNT (third, "third", 1);
 
   /* submitting the third buffer has triggered flushing of three more frames */
   assert_videorate_stats (videorate, "third buffer", 3, 4, 0, 2);
@@ -334,8 +334,8 @@ GST_START_TEST (test_wrong_order_from_zero)
   GST_DEBUG ("pushing first buffer");
   /* pushing gives away my reference ... */
   fail_unless (gst_pad_push (mysrcpad, first) == GST_FLOW_OK);
-  /* ... and it is now stuck inside videorate */
-  ASSERT_BUFFER_REFCOUNT (first, "first", 2);
+  /* ... and a copy is now stuck inside videorate */
+  ASSERT_BUFFER_REFCOUNT (first, "first", 1);
   fail_unless_equals_int (g_list_length (buffers), 0);
   assert_videorate_stats (videorate, "first", 1, 0, 0, 0);
 
@@ -354,7 +354,7 @@ GST_START_TEST (test_wrong_order_from_zero)
 
   /* ... and the first one is still there */
   assert_videorate_stats (videorate, "second", 2, 0, 1, 0);
-  ASSERT_BUFFER_REFCOUNT (first, "first", 2);
+  ASSERT_BUFFER_REFCOUNT (first, "first", 1);
 
   /* third buffer */
   third = gst_buffer_new_and_alloc (4);
@@ -365,15 +365,15 @@ GST_START_TEST (test_wrong_order_from_zero)
 
   /* pushing gives away my reference ... */
   fail_unless (gst_pad_push (mysrcpad, third) == GST_FLOW_OK);
-  /* ... and it is now stuck inside videorate */
-  ASSERT_BUFFER_REFCOUNT (third, "third", 2);
+  /* ... and a copy is now stuck inside videorate */
+  ASSERT_BUFFER_REFCOUNT (third, "third", 1);
 
   /* and now the first one should be pushed once and dupped 24 + 13 times, to
    * reach the half point between 1 s (first) and 2 s (third) */
   fail_unless_equals_int (g_list_length (buffers), 38);
   ASSERT_BUFFER_REFCOUNT (first, "first", 1);
   ASSERT_BUFFER_REFCOUNT (second, "second", 1);
-  ASSERT_BUFFER_REFCOUNT (third, "third", 2);
+  ASSERT_BUFFER_REFCOUNT (third, "third", 1);
   assert_videorate_stats (videorate, "third", 3, 38, 1, 37);
 
   /* verify last buffer */
@@ -417,8 +417,8 @@ GST_START_TEST (test_wrong_order)
   GST_DEBUG ("pushing first buffer");
   /* pushing gives away my reference ... */
   fail_unless (gst_pad_push (mysrcpad, first) == GST_FLOW_OK);
-  /* ... and it is now stuck inside videorate */
-  ASSERT_BUFFER_REFCOUNT (first, "first", 2);
+  /* ... and a copy is now stuck inside videorate */
+  ASSERT_BUFFER_REFCOUNT (first, "first", 1);
   fail_unless_equals_int (g_list_length (buffers), 0);
   assert_videorate_stats (videorate, "first", 1, 0, 0, 0);
 
@@ -431,8 +431,8 @@ GST_START_TEST (test_wrong_order)
 
   /* pushing gives away my reference ... */
   fail_unless (gst_pad_push (mysrcpad, second) == GST_FLOW_OK);
-  /* ... and it is now stuck inside videorate */
-  ASSERT_BUFFER_REFCOUNT (second, "second", 2);
+  /* ... and a copy is now stuck inside videorate */
+  ASSERT_BUFFER_REFCOUNT (second, "second", 1);
   /* and it created 13 output buffers as copies of the first frame */
   fail_unless_equals_int (g_list_length (buffers), 13);
   assert_videorate_stats (videorate, "second", 2, 13, 0, 12);
@@ -447,8 +447,8 @@ GST_START_TEST (test_wrong_order)
 
   /* pushing gives away my reference ... */
   fail_unless (gst_pad_push (mysrcpad, third) == GST_FLOW_OK);
-  /* ... and it is now stuck inside videorate */
-  ASSERT_BUFFER_REFCOUNT (third, "third", 2);
+  /* ... and a copy is now stuck inside videorate */
+  ASSERT_BUFFER_REFCOUNT (third, "third", 1);
 
   /* submitting a frame with 2 seconds triggers output of 25 more frames */
   fail_unless_equals_int (g_list_length (buffers), 38);
