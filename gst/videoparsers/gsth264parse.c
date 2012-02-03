@@ -291,6 +291,9 @@ gst_h264_parse_get_string (GstH264Parse * parse, gboolean format, gint code)
 static void
 gst_h264_parse_format_from_caps (GstCaps * caps, guint * format, guint * align)
 {
+  g_return_if_fail (gst_caps_is_fixed (caps));
+
+  GST_DEBUG ("parsing caps: %" GST_PTR_FORMAT, caps);
 
   if (format)
     *format = GST_H264_PARSE_FORMAT_NONE;
@@ -330,8 +333,19 @@ gst_h264_parse_negotiate (GstH264Parse * h264parse, GstCaps * in_caps)
   guint format = GST_H264_PARSE_FORMAT_NONE;
   guint align = GST_H264_PARSE_ALIGN_NONE;
 
+  g_return_if_fail ((in_caps == NULL) || gst_caps_is_fixed (in_caps));
+
   caps = gst_pad_get_allowed_caps (GST_BASE_PARSE_SRC_PAD (h264parse));
   GST_DEBUG_OBJECT (h264parse, "allowed caps: %" GST_PTR_FORMAT, caps);
+
+  /* concentrate on leading structure, since decodebin2 parser
+   * capsfilter always includes parser template caps */
+  if (caps) {
+    caps = gst_caps_make_writable (caps);
+    gst_caps_truncate (caps);
+    GST_DEBUG_OBJECT (h264parse, "negotiating with caps: %" GST_PTR_FORMAT,
+        caps);
+  }
 
   if (in_caps && caps) {
     if (gst_caps_can_intersect (in_caps, caps)) {
@@ -343,6 +357,8 @@ gst_h264_parse_negotiate (GstH264Parse * h264parse, GstCaps * in_caps)
   }
 
   if (caps) {
+    /* fixate to avoid ambiguity with lists when parsing */
+    gst_pad_fixate_caps (GST_BASE_PARSE_SRC_PAD (h264parse), caps);
     gst_h264_parse_format_from_caps (caps, &format, &align);
     gst_caps_unref (caps);
   }
