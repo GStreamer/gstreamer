@@ -118,9 +118,6 @@ notgst_check_teardown_src_pad2 (GstElement * element,
 
   gst_pad_unlink (srcpad, sinkpad);
 
-  /* caps could have been set, make sure they get unset */
-  gst_pad_set_caps (srcpad, NULL);
-
   /* pad refs held by both creator and this function (through _get) */
   ASSERT_OBJECT_REFCOUNT (sinkpad, "element sinkpad", 2);
   gst_object_unref (sinkpad);
@@ -179,7 +176,7 @@ buffer_is_all_black (GstBuffer * buf, GstCaps * caps)
 
     for (x = 0; x < w; ++x) {
       if (ptr[x] != 0x00) {
-        GST_LOG ("non-black pixel at (x,y) %d,%d", x, y);
+        GST_LOG ("non-black pixel (%d) at (x,y) %d,%d", ptr[x], x, y);
         return FALSE;
       }
     }
