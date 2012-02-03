@@ -50,7 +50,7 @@ plugin_init (GstPlugin * plugin)
     return FALSE;
 
 #ifdef HAVE_PULSE_1_0
-  if (!gst_element_register (plugin, "pulseaudiosink", GST_RANK_PRIMARY + 11,
+  if (!gst_element_register (plugin, "pulseaudiosink", GST_RANK_MARGINAL - 1,
           GST_TYPE_PULSE_AUDIO_SINK))
     return FALSE;
 #endif
