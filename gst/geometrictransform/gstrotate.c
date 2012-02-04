@@ -134,7 +134,7 @@ gst_rotate_base_init (gpointer gclass)
   gst_element_class_set_details_simple (element_class,
       "rotate",
       "Transform/Effect/Video",
-      "Warps the picture into an arc shaped form",
+      "Rotates the picture by an arbitrary angle",
       "Thiago Santos<thiago.sousa.santos@collabora.co.uk>");
 }
 
