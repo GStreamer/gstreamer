@@ -56,11 +56,17 @@
 /* system wide data directory */
 #define GST_DATADIR PREFIX "\\share"
 
+/* Extra platform specific plugin suffix */
+#undef GST_EXTRA_MODULE_SUFFIX
+
 /* macro to use to show function name */
 #undef GST_FUNCTION
 
 /* Defined if gcov is enabled to force a rebuild due to config.h changing */
 #undef GST_GCOV_ENABLED
+
+/* Defined when registry scanning through fork is unsafe */
+#undef GST_HAVE_UNSAFE_FORK
 
 /* plugin install helper script */
 #define GST_INSTALL_PLUGINS_HELPER PREFIX "\\libexec\\gst-install-plugins-helper.exe"
@@ -81,7 +87,7 @@
 #define GST_PACKAGE_ORIGIN "Unknown package origin"
 
 /* GStreamer package release date/time for plugins as YYYY-MM-DD */
-#define GST_PACKAGE_RELEASE_DATETIME "2011-12-10T01:08Z"
+#define GST_PACKAGE_RELEASE_DATETIME "2012-02-05T13:47Z"
 
 /* I know the API is subject to change. */
 #undef G_UDEV_API_IS_SUBJECT_TO_CHANGE
@@ -242,6 +248,9 @@
 /* Use Orc */
 #undef HAVE_ORC
 
+/* Defined if compiling for OSX */
+#undef HAVE_OSX
+
 /* Define to enable Pango font rendering (used by pango). */
 #undef HAVE_PANGO
 
@@ -292,6 +301,9 @@
 
 /* defined if vorbis_synthesis_restart is present */
 #undef HAVE_VORBIS_SYNTHESIS_RESTART
+
+/* Defined if compiling for Windows */
+#define HAVE_WIN32 1
 
 /* Define to 1 if you have the <winsock2.h> header file. */
 #define HAVE_WINSOCK2_H 1
@@ -411,3 +423,6 @@
 
 /* Define for large files, on AIX-style hosts. */
 #undef _LARGE_FILES
+
+/* We need at least WinXP SP2 for __stat64 */
+#undef __MSVCRT_VERSION__
