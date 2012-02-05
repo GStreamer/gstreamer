@@ -211,20 +211,19 @@ static void
 gst_vaapiupload_base_init(gpointer klass)
 {
     GstElementClass * const element_class = GST_ELEMENT_CLASS(klass);
+    GstPadTemplate *pad_template;
 
     gst_element_class_set_details(element_class, &gst_vaapiupload_details);
 
     /* sink pad */
-    gst_element_class_add_pad_template(
-        element_class,
-        gst_static_pad_template_get(&gst_vaapiupload_sink_factory)
-    );
+    pad_template = gst_static_pad_template_get(&gst_vaapiupload_sink_factory);
+    gst_element_class_add_pad_template(element_class, pad_template);
+    gst_object_unref(pad_template);
 
     /* src pad */
-    gst_element_class_add_pad_template(
-        element_class,
-        gst_static_pad_template_get(&gst_vaapiupload_src_factory)
-    );
+    pad_template = gst_static_pad_template_get(&gst_vaapiupload_src_factory);
+    gst_element_class_add_pad_template(element_class, pad_template);
+    gst_object_unref(pad_template);
 }
 
 static void
