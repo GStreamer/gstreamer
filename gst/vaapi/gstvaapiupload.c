@@ -695,7 +695,7 @@ gst_vaapiupload_buffer_alloc(
         image   = gst_vaapi_surface_derive_image(surface);
         if (image && gst_vaapi_image_get_data_size(image) == size) {
             gst_vaapi_video_buffer_set_image(vbuffer, image);
-            gst_object_unref(image); /* video buffer owns an extra reference */
+            g_object_unref(image); /* video buffer owns an extra reference */
             break;
         }
 
