@@ -13,7 +13,7 @@ libgsttag_@GST_MAJORMINOR@_la_SOURCES = \
 
 libgsttag_@GST_MAJORMINOR@_la_CFLAGS = $(GST_PLUGINS_BASE_CFLAGS) \
 	$(GST_BASE_CFLAGS) $(GST_CFLAGS) $(ZLIB_CFLAGS) \
-	-DLICENSE_TRANSLATIONS_PATH=\"$(pkgdatadir)/license-translations.dict\"
+	-DLICENSE_TRANSLATIONS_PATH=\"$(pkgdatadir)/@GST_MAJORMINOR@/license-translations.dict\"
 libgsttag_@GST_MAJORMINOR@_la_LIBADD = $(GST_BASE_LIBS) $(GST_LIBS) $(LIBM) $(ZLIB_LIBS)
 libgsttag_@GST_MAJORMINOR@_la_LDFLAGS = $(GST_LIB_LDFLAGS) $(GST_ALL_LDFLAGS) $(GST_LT_LDFLAGS)
 
