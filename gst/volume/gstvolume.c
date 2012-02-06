@@ -170,15 +170,14 @@ static void volume_process_controlled_int8_clamp (GstVolume * self,
 /* helper functions */
 
 static gboolean
-volume_choose_func (GstVolume * self)
+volume_choose_func (GstVolume * self, const GstAudioInfo * info)
 {
-  GstAudioFilter *filter = GST_AUDIO_FILTER (self);
   GstAudioFormat format;
 
   self->process = NULL;
   self->process_controlled = NULL;
 
-  format = GST_AUDIO_FORMAT_INFO_FORMAT (filter->info.finfo);
+  format = GST_AUDIO_INFO_FORMAT (info);
 
   if (format == GST_AUDIO_FORMAT_UNKNOWN)
     return FALSE;
@@ -236,7 +235,8 @@ volume_choose_func (GstVolume * self)
 }
 
 static gboolean
-volume_update_volume (GstVolume * self, gfloat volume, gboolean mute)
+volume_update_volume (GstVolume * self, const GstAudioInfo * info,
+    gfloat volume, gboolean mute)
 {
   gboolean passthrough;
   gboolean res;
@@ -275,7 +275,7 @@ volume_update_volume (GstVolume * self, gfloat volume, gboolean mute)
 
   gst_base_transform_set_passthrough (GST_BASE_TRANSFORM (self), passthrough);
 
-  res = self->negotiated = volume_choose_func (self);
+  res = self->negotiated = volume_choose_func (self, info);
 
   return res;
 }
@@ -732,7 +732,7 @@ volume_setup (GstAudioFilter * filter, const GstAudioInfo * info)
   mute = self->mute;
   GST_OBJECT_UNLOCK (self);
 
-  res = volume_update_volume (self, volume, mute);
+  res = volume_update_volume (self, info, volume, mute);
   if (!res) {
     GST_ELEMENT_ERROR (self, CORE, NEGOTIATION,
         ("Invalid incoming format"), (NULL));
@@ -786,7 +786,7 @@ volume_before_transform (GstBaseTransform * base, GstBuffer * buffer)
   if ((volume != self->current_volume) || (mute != self->current_mute)) {
     /* the volume or mute was updated, update our internal state before
      * we continue processing. */
-    volume_update_volume (self, volume, mute);
+    volume_update_volume (self, GST_AUDIO_FILTER_INFO (self), volume, mute);
   }
 }
 
