@@ -563,7 +563,7 @@ gst_audio_info_from_caps (GstAudioInfo * info, const GstCaps * caps)
       position[0] = GST_AUDIO_CHANNEL_POSITION_MONO;
     } else if (channels == 2) {
       position[0] = GST_AUDIO_CHANNEL_POSITION_FRONT_LEFT;
-      position[0] = GST_AUDIO_CHANNEL_POSITION_FRONT_RIGHT;
+      position[1] = GST_AUDIO_CHANNEL_POSITION_FRONT_RIGHT;
     } else {
       goto no_channel_mask;
     }
