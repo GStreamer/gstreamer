@@ -171,6 +171,10 @@ gst_vaapi_decoder_push_surface_proxy(
     GstVaapiSurfaceProxy *proxy
 ) attribute_hidden;
 
+GstVaapiDecoderStatus
+gst_vaapi_decoder_check_status(GstVaapiDecoder *decoder)
+    attribute_hidden;
+
 G_END_DECLS
 
 #endif /* GST_VAAPI_DECODER_PRIV_H */

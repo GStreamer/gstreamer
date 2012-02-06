@@ -99,14 +99,13 @@ pop_buffer(GstVaapiDecoder *decoder)
 static GstVaapiDecoderStatus
 decode_step(GstVaapiDecoder *decoder)
 {
-    GstVaapiDecoderPrivate * const priv = decoder->priv;
     GstVaapiDecoderStatus status;
     GstBuffer *buffer;
 
     /* Decoding will fail if there is no surface left */
-    if (priv->context &&
-        gst_vaapi_context_get_surface_count(priv->context) == 0)
-        return GST_VAAPI_DECODER_STATUS_ERROR_NO_SURFACE;
+    status = gst_vaapi_decoder_check_status(decoder);
+    if (status != GST_VAAPI_DECODER_STATUS_SUCCESS)
+        return status;
 
     do {
         buffer = pop_buffer(decoder);
@@ -560,4 +559,14 @@ gst_vaapi_decoder_push_surface_proxy(
 )
 {
     return push_surface(decoder, proxy);
+}
+
+GstVaapiDecoderStatus
+gst_vaapi_decoder_check_status(GstVaapiDecoder *decoder)
+{
+    GstVaapiDecoderPrivate * const priv = decoder->priv;
+
+    if (priv->context && gst_vaapi_context_get_surface_count(priv->context) < 1)
+        return GST_VAAPI_DECODER_STATUS_ERROR_NO_SURFACE;
+    return GST_VAAPI_DECODER_STATUS_SUCCESS;
 }
