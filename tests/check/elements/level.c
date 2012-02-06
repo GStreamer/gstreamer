@@ -36,14 +36,17 @@ GstPad *mysrcpad, *mysinkpad;
 #define LEVEL_CAPS_TEMPLATE_STRING \
   "audio/x-raw, " \
     "format = (string) { S8, "GST_AUDIO_NE(S16)" }, " \
+    "layout = (string) interleaved, " \
     "rate = (int) [ 1, MAX ], " \
     "channels = (int) [ 1, 8 ]"
 
 #define LEVEL_CAPS_STRING \
   "audio/x-raw, " \
     "format = (string) "GST_AUDIO_NE(S16)", " \
+    "layout = (string) interleaved, " \
     "rate = (int) 1000, " \
-    "channels = (int) 2"
+    "channels = (int) 2, "  \
+    "channel-mask = (bitmask) 3"  \
 
 static GstStaticPadTemplate sinktemplate = GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,

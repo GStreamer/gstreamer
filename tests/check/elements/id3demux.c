@@ -24,18 +24,6 @@
 
 typedef void (CheckTagsFunc) (const GstTagList * tags, const gchar * file);
 
-static void
-pad_added_cb (GstElement * id3demux, GstPad * pad, GstBin * pipeline)
-{
-  GstElement *sink;
-
-  sink = gst_bin_get_by_name (pipeline, "fakesink");
-  fail_unless (gst_element_link (id3demux, sink));
-  gst_object_unref (sink);
-
-  gst_element_set_state (sink, GST_STATE_PAUSED);
-}
-
 static GstBusSyncReply
 error_cb (GstBus * bus, GstMessage * msg, gpointer user_data)
 {
@@ -91,9 +79,7 @@ read_tags_from_file (const gchar * file, gboolean push_mode)
 
   fail_unless (gst_element_link (src, sep));
   fail_unless (gst_element_link (sep, id3demux));
-
-  /* can't link id3demux and sink yet, do that later */
-  g_signal_connect (id3demux, "pad-added", G_CALLBACK (pad_added_cb), pipeline);
+  fail_unless (gst_element_link (id3demux, sink));
 
   path = g_build_filename (GST_TEST_FILES_PATH, file, NULL);
   GST_LOG ("reading file '%s'", path);

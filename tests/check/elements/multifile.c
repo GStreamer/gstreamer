@@ -161,10 +161,10 @@ GST_START_TEST (test_multifilesink_key_unit)
   buf = gst_buffer_new_and_alloc (4);
 
   gst_buffer_fill (buf, 0, "foo", 4);
-  fail_if (gst_pad_chain (sink, gst_buffer_ref (buf)) != GST_FLOW_OK);
+  fail_if (gst_pad_chain (sink, gst_buffer_copy (buf)) != GST_FLOW_OK);
 
   gst_buffer_fill (buf, 0, "bar", 4);
-  fail_if (gst_pad_chain (sink, gst_buffer_ref (buf)) != GST_FLOW_OK);
+  fail_if (gst_pad_chain (sink, gst_buffer_copy (buf)) != GST_FLOW_OK);
 
   fail_unless (gst_pad_send_event (sink,
           gst_video_event_new_downstream_force_key_unit (GST_CLOCK_TIME_NONE,
