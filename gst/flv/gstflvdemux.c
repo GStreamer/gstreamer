@@ -41,6 +41,7 @@
 #include <gst/base/gstbytereader.h>
 #include <gst/pbutils/descriptions.h>
 #include <gst/pbutils/pbutils.h>
+#include <gst/audio/audio.h>
 
 /* FIXME: don't rely on own GstIndex */
 #include "gstindex.c"
@@ -64,8 +65,7 @@ static GstStaticPadTemplate audio_src_template =
         "audio/mpeg, mpegversion = (int) 1, layer = (int) 3, channels = (int) { 1, 2 }, rate = (int) { 5512, 8000, 11025, 22050, 44100 }, parsed = (boolean) TRUE; "
         "audio/mpeg, mpegversion = (int) 4, framed = (boolean) TRUE; "
         "audio/x-nellymoser, channels = (int) { 1, 2 }, rate = (int) { 5512, 8000, 11025, 16000, 22050, 44100 }; "
-        "audio/x-raw-int, endianness = (int) LITTLE_ENDIAN, channels = (int) { 1, 2 }, width = (int) 8, depth = (int) 8, rate = (int) { 5512, 11025, 22050, 44100 }, signed = (boolean) FALSE; "
-        "audio/x-raw-int, endianness = (int) LITTLE_ENDIAN, channels = (int) { 1, 2 }, width = (int) 16, depth = (int) 16, rate = (int) { 5512, 11025, 22050, 44100 }, signed = (boolean) TRUE; "
+        "audio/x-raw, format = (string) { U8, S16LE }, layout = (string) interleaved, channels = (int) { 1, 2 }, rate = (int) { 5512, 11025, 22050, 44100 }; "
         "audio/x-alaw, channels = (int) { 1, 2 }, rate = (int) { 5512, 11025, 22050, 44100 }; "
         "audio/x-mulaw, channels = (int) { 1, 2 }, rate = (int) { 5512, 11025, 22050, 44100 }; "
         "audio/x-speex, channels = (int) { 1, 2 }, rate = (int) { 5512, 11025, 22050, 44100 };")
@@ -646,14 +646,20 @@ gst_flv_demux_audio_negotiate (GstFlvDemux * demux, guint32 codec_tag,
       break;
     case 0:
     case 3:
+    {
+      GstAudioFormat format;
+
       /* Assuming little endian for 0 (aka endianness of the
        * system on which the file was created) as most people
        * are probably using little endian machines */
-      caps = gst_caps_new_simple ("audio/x-raw-int",
-          "endianness", G_TYPE_INT, G_LITTLE_ENDIAN,
-          "signed", G_TYPE_BOOLEAN, (width == 8) ? FALSE : TRUE,
-          "width", G_TYPE_INT, width, "depth", G_TYPE_INT, width, NULL);
+      format = gst_audio_format_build_integer ((width == 8) ? FALSE : TRUE,
+          G_LITTLE_ENDIAN, width, width);
+
+      caps = gst_caps_new_simple ("audio/x-raw",
+          "format", G_TYPE_STRING, gst_audio_format_to_string (format),
+          "layout", G_TYPE_STRING, "interleaved", NULL);
       break;
+    }
     case 4:
     case 5:
     case 6:

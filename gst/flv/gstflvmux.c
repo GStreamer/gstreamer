@@ -38,6 +38,8 @@
 #include <math.h>
 #include <string.h>
 
+#include <gst/audio/audio.h>
+
 #include "gstflvmux.h"
 #include "amfdefs.h"
 
@@ -76,8 +78,7 @@ static GstStaticPadTemplate audiosink_templ = GST_STATIC_PAD_TEMPLATE ("audio",
         "audio/mpeg, mpegversion = (int) 1, layer = (int) 3, channels = (int) { 1, 2 }, rate = (int) { 5512, 8000, 11025, 22050, 44100 }, parsed = (boolean) TRUE; "
         "audio/mpeg, mpegversion = (int) { 2, 4 }, framed = (boolean) TRUE; "
         "audio/x-nellymoser, channels = (int) { 1, 2 }, rate = (int) { 5512, 8000, 11025, 16000, 22050, 44100 }; "
-        "audio/x-raw-int, endianness = (int) LITTLE_ENDIAN, channels = (int) { 1, 2 }, width = (int) 8, depth = (int) 8, rate = (int) { 5512, 11025, 22050, 44100 }, signed = (boolean) FALSE; "
-        "audio/x-raw-int, endianness = (int) LITTLE_ENDIAN, channels = (int) { 1, 2 }, width = (int) 16, depth = (int) 16, rate = (int) { 5512, 11025, 22050, 44100 }, signed = (boolean) TRUE; "
+        "audio/x-raw, format = (string) { U8, S16LE}, layout = (string) interleaved, channels = (int) { 1, 2 }, rate = (int) { 5512, 11025, 22050, 44100 }; "
         "audio/x-alaw, channels = (int) { 1, 2 }, rate = (int) { 5512, 11025, 22050, 44100 }; "
         "audio/x-mulaw, channels = (int) { 1, 2 }, rate = (int) { 5512, 11025, 22050, 44100 }; "
         "audio/x-speex, channels = (int) { 1, 2 }, rate = (int) { 5512, 11025, 22050, 44100 };")
@@ -425,13 +426,19 @@ gst_flv_mux_audio_pad_setcaps (GstPad * pad, GstCaps * caps)
     } else {
       cpad->audio_codec = 6;
     }
-  } else if (strcmp (gst_structure_get_name (s), "audio/x-raw-int") == 0) {
-    gint endianness;
+  } else if (strcmp (gst_structure_get_name (s), "audio/x-raw") == 0) {
+    GstAudioInfo info;
 
-    if (gst_structure_get_int (s, "endianness", &endianness)
-        && endianness == G_LITTLE_ENDIAN)
+    if (gst_audio_info_from_caps (&info, caps)) {
       cpad->audio_codec = 3;
-    else
+
+      if (GST_AUDIO_INFO_WIDTH (&info) == 8)
+        cpad->width = 0;
+      else if (GST_AUDIO_INFO_WIDTH (&info) == 16)
+        cpad->width = 1;
+      else
+        ret = FALSE;
+    } else
       ret = FALSE;
   } else if (strcmp (gst_structure_get_name (s), "audio/x-alaw") == 0) {
     cpad->audio_codec = 7;
@@ -444,7 +451,7 @@ gst_flv_mux_audio_pad_setcaps (GstPad * pad, GstCaps * caps)
   }
 
   if (ret) {
-    gint rate, channels, width;
+    gint rate, channels;
 
     if (gst_structure_get_int (s, "rate", &rate)) {
       if (cpad->audio_codec == 10)
@@ -491,20 +498,8 @@ gst_flv_mux_audio_pad_setcaps (GstPad * pad, GstCaps * caps)
       ret = FALSE;
     }
 
-    if (gst_structure_get_int (s, "width", &width)) {
-      if (cpad->audio_codec != 3)
-        cpad->width = 1;
-      else if (width == 8)
-        cpad->width = 0;
-      else if (width == 16)
-        cpad->width = 1;
-      else
-        ret = FALSE;
-    } else if (cpad->audio_codec != 3) {
+    if (cpad->audio_codec != 3)
       cpad->width = 1;
-    } else {
-      ret = FALSE;
-    }
   }
 
   if (ret && gst_structure_has_field (s, "codec_data")) {
