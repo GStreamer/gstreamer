@@ -40,6 +40,8 @@ typedef struct _GstAudioFilterClass GstAudioFilterClass;
   (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_AUDIO_FILTER,GstAudioFilterClass))
 #define GST_AUDIO_FILTER_CLASS_CAST(klass) \
   ((GstAudioFilterClass *) (klass))
+#define GST_AUDIO_FILTER_GET_CLASS(obj) \
+  (G_TYPE_INSTANCE_GET_CLASS((obj),GST_TYPE_AUDIO_FILTER,GstAudioFilterClass))
 #define GST_IS_AUDIO_FILTER(obj) \
   (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_AUDIO_FILTER))
 #define GST_IS_AUDIO_FILTER_CLASS(klass) \

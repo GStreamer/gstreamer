@@ -119,17 +119,24 @@ gst_audio_filter_set_caps (GstBaseTransform * btrans, GstCaps * incaps,
 {
   GstAudioFilterClass *klass;
   GstAudioFilter *filter = GST_AUDIO_FILTER (btrans);
+  GstAudioInfo info;
   gboolean ret = TRUE;
 
   GST_LOG_OBJECT (filter, "caps: %" GST_PTR_FORMAT, incaps);
+  GST_LOG_OBJECT (filter, "info: %d", GST_AUDIO_FILTER_RATE (filter));
 
-  if (!gst_audio_info_from_caps (&filter->info, incaps))
+  if (!gst_audio_info_from_caps (&info, incaps))
     goto invalid_format;
 
-  klass = GST_AUDIO_FILTER_CLASS_CAST (G_OBJECT_GET_CLASS (filter));
+  klass = GST_AUDIO_FILTER_GET_CLASS (filter);
 
   if (klass->setup)
-    ret = klass->setup (filter, &filter->info);
+    ret = klass->setup (filter, &info);
+
+  if (ret) {
+    filter->info = info;
+    GST_LOG_OBJECT (filter, "configured caps: %" GST_PTR_FORMAT, incaps);
+  }
 
   return ret;
 
