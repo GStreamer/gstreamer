@@ -1847,9 +1847,9 @@ gst_avi_mux_handle_event (GstCollectPads2 * pads, GstCollectData2 * data,
       g_assert (avipad);
 
       if (avipad->parent.is_video) {
-        ret = gst_avi_mux_vidsink_set_caps (GST_PAD (avipad), caps);
+        ret = gst_avi_mux_vidsink_set_caps (data->pad, caps);
       } else {
-        ret = gst_avi_mux_audsink_set_caps (GST_PAD (avipad), caps);
+        ret = gst_avi_mux_audsink_set_caps (data->pad, caps);
       }
       gst_event_unref (event);
       break;
