@@ -31,7 +31,9 @@ GstPad *mysrcpad, *mysinkpad;
 #define ECHO_CAPS_STRING    \
     "audio/x-raw, "               \
     "channels = (int) 2, "              \
+    "channel-mask = (bitmask) 3, "      \
     "rate = (int) 100000, "             \
+    "layout = (string) interleaved, "   \
     "format = (string) " GST_AUDIO_NE(F64)
 
 static GstStaticPadTemplate sinktemplate = GST_STATIC_PAD_TEMPLATE ("sink",
@@ -40,18 +42,16 @@ static GstStaticPadTemplate sinktemplate = GST_STATIC_PAD_TEMPLATE ("sink",
     GST_STATIC_CAPS ("audio/x-raw, "
         "channels = (int) [ 1, 2 ], "
         "rate = (int) [ 1,  MAX ], "
-	"format = (string) { "
-	GST_AUDIO_NE(F32) ", "
-	GST_AUDIO_NE(F64) " }"));
+        "format = (string) { "
+        GST_AUDIO_NE (F32) ", " GST_AUDIO_NE (F64) " }"));
 static GstStaticPadTemplate srctemplate = GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS ("audio/x-raw, "
         "channels = (int) [ 1, 2 ], "
         "rate = (int) [ 1,  MAX ], "
-	"format = (string) { "
-	GST_AUDIO_NE(F32) ", "
-	GST_AUDIO_NE(F64) " }"));
+        "format = (string) { "
+        GST_AUDIO_NE (F32) ", " GST_AUDIO_NE (F64) " }"));
 
 static GstElement *
 setup_echo (void)
@@ -113,7 +113,8 @@ GST_START_TEST (test_passthrough)
   fail_unless_equals_int (g_list_length (buffers), 1);
   fail_if ((outbuffer = (GstBuffer *) buffers->data) == NULL);
 
-  fail_unless (gst_buffer_extract (outbuffer, 0, res, sizeof (res)) == sizeof (res));
+  fail_unless (gst_buffer_extract (outbuffer, 0, res,
+          sizeof (res)) == sizeof (res));
   GST_INFO
       ("expected %+lf %+lf %+lf %+lf %+lf %+lf real %+lf %+lf %+lf %+lf %+lf %+lf",
       in[0], in[1], in[2], in[3], in[4], in[5], res[0], res[1], res[2], res[3],
@@ -156,7 +157,8 @@ GST_START_TEST (test_echo)
   fail_unless_equals_int (g_list_length (buffers), 1);
   fail_if ((outbuffer = (GstBuffer *) buffers->data) == NULL);
 
-  fail_unless (gst_buffer_extract (outbuffer, 0, res, sizeof (res)) == sizeof (res));
+  fail_unless (gst_buffer_extract (outbuffer, 0, res,
+          sizeof (res)) == sizeof (res));
   GST_INFO
       ("expected %+lf %+lf %+lf %+lf %+lf %+lf %+lf %+lf %+lf %+lf real %+lf %+lf %+lf %+lf %+lf %+lf %+lf %+lf %+lf %+lf",
       out[0], out[1], out[2], out[3], out[4], out[5], out[6], out[7], out[8],
@@ -200,7 +202,8 @@ GST_START_TEST (test_feedback)
   fail_unless_equals_int (g_list_length (buffers), 1);
   fail_if ((outbuffer = (GstBuffer *) buffers->data) == NULL);
 
-  fail_unless (gst_buffer_extract (outbuffer, 0, res, sizeof (res)) == sizeof (res));
+  fail_unless (gst_buffer_extract (outbuffer, 0, res,
+          sizeof (res)) == sizeof (res));
   GST_INFO
       ("expected %+lf %+lf %+lf %+lf %+lf %+lf %+lf %+lf %+lf %+lf real %+lf %+lf %+lf %+lf %+lf %+lf %+lf %+lf %+lf %+lf",
       out[0], out[1], out[2], out[3], out[4], out[5], out[6], out[7], out[8],

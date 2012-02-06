@@ -41,6 +41,7 @@ GstPad *mysrcpad, *mysinkpad;
     "audio/x-raw, "                     \
     "channels = (int) 1, "              \
     "rate = (int) 44100, "              \
+    "layout = (string) interleaved, "   \
     "format = (string) " GST_AUDIO_NE(S16)
 
 static GstStaticPadTemplate sinktemplate = GST_STATIC_PAD_TEMPLATE ("sink",
@@ -49,14 +50,16 @@ static GstStaticPadTemplate sinktemplate = GST_STATIC_PAD_TEMPLATE ("sink",
     GST_STATIC_CAPS ("audio/x-raw, "
         "channels = (int) 1, "
         "rate = (int) [ 1,  MAX ], "
-	"format = (string)" GST_AUDIO_NE(S16)));
+        "layout = (string) interleaved, "
+        "format = (string)" GST_AUDIO_NE (S16)));
 static GstStaticPadTemplate srctemplate = GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS ("audio/x-raw, "
         "channels = (int) 1, "
         "rate = (int) [ 1,  MAX ], "
-	"format = (string) " GST_AUDIO_NE(S16)));
+        "layout = (string) interleaved, "
+        "format = (string) " GST_AUDIO_NE (S16)));
 
 static GstElement *
 setup_dynamic (void)
