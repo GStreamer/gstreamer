@@ -75,7 +75,6 @@ struct _GstDVDemux {
   GstDVDemuxSeekHandler seek_handler;
   GstSegment     byte_segment;
   GstSegment     time_segment;
-  gboolean       running;
   gboolean       need_segment;
   gboolean       new_media;
   int            frames_since_new_media;
