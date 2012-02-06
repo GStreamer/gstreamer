@@ -5,7 +5,6 @@ EXTRA_DIST = \
 	gettext.m4 \
 	glibc21.m4 \
 	gst-alsa.m4 \
-	gst-fionread.m4 \
 	gst-ivorbis.m4 \
 	iconv.m4 \
 	intdiv0.m4 \
