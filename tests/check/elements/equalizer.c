@@ -35,6 +35,7 @@ GstPad *mysrcpad, *mysinkpad;
 #define EQUALIZER_CAPS_STRING                     \
     "audio/x-raw, "                               \
     "format = (string) "GST_AUDIO_NE (F64) ", "   \
+    "layout = (string) interleaved, "             \
     "channels = (int) 1, "                        \
     "rate = (int) 48000"
 
@@ -43,6 +44,7 @@ static GstStaticPadTemplate sinktemplate = GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS ("audio/x-raw, "
         "format = (string) " GST_AUDIO_NE (F64) ", "
+        "layout = (string) interleaved, "
         "channels = (int) 1, " "rate = (int) 48000")
     );
 static GstStaticPadTemplate srctemplate = GST_STATIC_PAD_TEMPLATE ("src",
@@ -50,6 +52,7 @@ static GstStaticPadTemplate srctemplate = GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS ("audio/x-raw, "
         "format = (string) " GST_AUDIO_NE (F64) ", "
+        "layout = (string) interleaved, "
         "channels = (int) 1, " "rate = (int) 48000")
     );
 

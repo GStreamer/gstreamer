@@ -612,12 +612,12 @@ update_coefficients (GstIirEqualizer * equ)
 
 /* Must be called with transform lock! */
 static void
-alloc_history (GstIirEqualizer * equ)
+alloc_history (GstIirEqualizer * equ, const GstAudioInfo * info)
 {
   /* free + alloc = no memcpy */
   g_free (equ->history);
   equ->history =
-      g_malloc0 (equ->history_size * GST_AUDIO_FILTER_CHANNELS (equ) *
+      g_malloc0 (equ->history_size * GST_AUDIO_INFO_CHANNELS (info) *
       equ->freq_band_count);
 }
 
@@ -667,7 +667,7 @@ gst_iir_equalizer_compute_frequencies (GstIirEqualizer * equ, guint new_count)
     }
   }
 
-  alloc_history (equ);
+  alloc_history (equ, GST_AUDIO_FILTER_INFO (equ));
 
   /* set center frequencies and name band objects
    * FIXME: arg! we can't change the name of parented objects :(
@@ -851,7 +851,7 @@ gst_iir_equalizer_transform_ip (GstBaseTransform * btrans, GstBuffer * buf)
   }
   BANDS_UNLOCK (equ);
 
-  gst_buffer_map (buf, &map, GST_MAP_WRITE);
+  gst_buffer_map (buf, &map, GST_MAP_READWRITE);
   equ->process (equ, map.data, map.size, channels);
   gst_buffer_unmap (buf, &map);
 
@@ -880,7 +880,7 @@ gst_iir_equalizer_setup (GstAudioFilter * audio, const GstAudioInfo * info)
       return FALSE;
   }
 
-  alloc_history (equ);
+  alloc_history (equ, info);
   return TRUE;
 }
 
