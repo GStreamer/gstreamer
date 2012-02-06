@@ -102,7 +102,7 @@ update-licenses: mklicensestables
 # translations come from an external source here, so we don't want the
 # strings retranslated, but also we don't want to create 30 1kB .mo files,
 # so just do something for now, we can change it later if someone really cares.
-licensetransdir = $(pkgdatadir)
+licensetransdir = $(pkgdatadir)/@GST_MAJORMINOR@
 licensetrans_DATA = $(srcdir)/license-translations.dict
 #endif
 
