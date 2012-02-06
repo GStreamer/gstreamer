@@ -80,7 +80,7 @@ setup_jitterbuffer (gint num_buffers)
   gint i;
 
   GST_DEBUG ("setup_jitterbuffer");
-  jitterbuffer = gst_check_setup_element ("gstrtpjitterbuffer");
+  jitterbuffer = gst_check_setup_element ("rtpjitterbuffer");
   /* we need a clock here */
   clock = gst_system_clock_obtain ();
   gst_element_set_clock (jitterbuffer, clock);
@@ -98,6 +98,9 @@ setup_jitterbuffer (gint num_buffers)
 
   /* create n buffers */
   caps = gst_caps_from_string (RTP_CAPS_STRING);
+  gst_pad_set_caps (mysrcpad, caps);
+  gst_caps_unref (caps);
+
   for (i = 0; i < num_buffers; i++) {
     buffer = gst_buffer_new_and_alloc (sizeof (in));
     gst_buffer_fill (buffer, 0, in, sizeof (in));
@@ -117,7 +120,6 @@ setup_jitterbuffer (gint num_buffers)
     in[7] += RTP_FRAME_SIZE;    /* inc. timestamp with framesize */
     ts += tso;
   }
-  gst_caps_unref (caps);
   num_dropped = 0;
 
   return jitterbuffer;
