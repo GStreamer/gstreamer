@@ -38,18 +38,22 @@ GstPad *mysrcpad, *mysinkpad;
     "audio/x-raw, "                     \
     "channels = (int) 1, "              \
     "rate = (int) 44100, "              \
+    "layout = (string) interleaved, "   \
     "format = (string) " GST_AUDIO_NE(S16)
 
 #define PANORAMA_STEREO_CAPS_STRING  \
     "audio/x-raw, "                     \
     "channels = (int) 2, "              \
+    "channel-mask = (bitmask) 3, "      \
     "rate = (int) 44100, "              \
+    "layout = (string) interleaved, "   \
     "format = (string) " GST_AUDIO_NE(S16)
 
 #define PANORAMA_WRONG_CAPS_STRING  \
     "audio/x-raw, "                     \
     "channels = (int) 5, "              \
     "rate = (int) 44100, "              \
+    "layout = (string) interleaved, "   \
     "format = (string) " GST_AUDIO_NE(U16)
 
 
@@ -59,7 +63,8 @@ static GstStaticPadTemplate sinktemplate = GST_STATIC_PAD_TEMPLATE ("sink",
     GST_STATIC_CAPS ("audio/x-raw, "
         "channels = (int) 2, "
         "rate = (int) [ 1,  MAX ], "
-	"format = (string) " GST_AUDIO_NE(S16))
+        "layout = (string) interleaved, "
+        "format = (string) " GST_AUDIO_NE (S16))
     );
 static GstStaticPadTemplate msrctemplate = GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
@@ -67,7 +72,8 @@ static GstStaticPadTemplate msrctemplate = GST_STATIC_PAD_TEMPLATE ("src",
     GST_STATIC_CAPS ("audio/x-raw, "
         "channels = (int) 1, "
         "rate = (int) [ 1,  MAX ], "
-	"format = (string) " GST_AUDIO_NE(S16))
+        "layout = (string) interleaved, "
+        "format = (string) " GST_AUDIO_NE (S16))
     );
 static GstStaticPadTemplate ssrctemplate = GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
@@ -75,7 +81,8 @@ static GstStaticPadTemplate ssrctemplate = GST_STATIC_PAD_TEMPLATE ("src",
     GST_STATIC_CAPS ("audio/x-raw, "
         "channels = (int) 2, "
         "rate = (int) [ 1,  MAX ], "
-	"format = (string) " GST_AUDIO_NE(S16))
+        "layout = (string) interleaved, "
+        "format = (string) " GST_AUDIO_NE (S16))
     );
 
 static GstElement *
