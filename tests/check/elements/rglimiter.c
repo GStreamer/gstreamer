@@ -33,6 +33,7 @@ static GstPad *mysrcpad, *mysinkpad;
 #define RG_LIMITER_CAPS_TEMPLATE_STRING       \
   "audio/x-raw, "                             \
   "format = (string) "GST_AUDIO_NE (F32) ", " \
+  "layout = (string) interleaved, "           \
   "channels = (int) [ 1, MAX ], "             \
   "rate = (int) [ 1, MAX ]"
 
@@ -108,7 +109,8 @@ create_test_buffer (void)
 
   caps = gst_caps_new_simple ("audio/x-raw",
       "rate", G_TYPE_INT, 44100, "channels", G_TYPE_INT, 1,
-      "format", G_TYPE_STRING, GST_AUDIO_NE (F32), NULL);
+      "format", G_TYPE_STRING, GST_AUDIO_NE (F32),
+      "layout", G_TYPE_STRING, "interleaved", NULL);
   gst_pad_set_caps (mysrcpad, caps);
   gst_caps_unref (caps);
 

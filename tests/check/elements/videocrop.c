@@ -36,15 +36,18 @@
 static GList *
 video_crop_get_test_caps (GstElement * videocrop)
 {
-  const GstCaps *allowed_caps;
+  GstCaps *templ, *allowed_caps;
   GstPad *srcpad;
   GList *list = NULL;
   guint i;
 
   srcpad = gst_element_get_static_pad (videocrop, "src");
   fail_unless (srcpad != NULL);
-  allowed_caps = gst_pad_get_pad_template_caps (srcpad);
-  fail_unless (allowed_caps != NULL);
+  templ = gst_pad_get_pad_template_caps (srcpad);
+  fail_unless (templ != NULL);
+
+  allowed_caps = gst_caps_normalize (templ);
+  gst_caps_unref (templ);
 
   for (i = 0; i < gst_caps_get_size (allowed_caps); ++i) {
     GstStructure *new_structure;
@@ -59,12 +62,14 @@ video_crop_get_test_caps (GstElement * videocrop)
     gst_structure_remove_field (new_structure, "height");
     gst_caps_append_structure (single_caps, new_structure);
 
+    GST_DEBUG ("have caps %" GST_PTR_FORMAT, single_caps);
     /* should be fixed without width/height */
     fail_unless (gst_caps_is_fixed (single_caps));
 
     list = g_list_prepend (list, single_caps);
   }
 
+  gst_caps_unref (allowed_caps);
   gst_object_unref (srcpad);
 
   return list;
@@ -80,8 +85,8 @@ GST_START_TEST (test_unit_sizes)
   fail_unless (videocrop != NULL, "Failed to create videocrop element");
   vcrop_klass = GST_BASE_TRANSFORM_GET_CLASS (videocrop);
 
-  csp = gst_element_factory_make ("ffmpegcolorspace", "csp");
-  fail_unless (csp != NULL, "Failed to create ffmpegcolorspace element");
+  csp = gst_element_factory_make ("videoconvert", "csp");
+  fail_unless (csp != NULL, "Failed to create videoconvert element");
   csp_klass = GST_BASE_TRANSFORM_GET_CLASS (csp);
 
   caps_list = video_crop_get_test_caps (videocrop);
@@ -120,10 +125,10 @@ GST_START_TEST (test_unit_sizes)
       caps_str = gst_caps_to_string (caps);
       GST_INFO ("Testing unit size for %s", caps_str);
 
-      /* skip if ffmpegcolorspace doesn't support these caps
+      /* skip if videoconvert doesn't support these caps
        * (only works with gst-plugins-base 0.10.9.1 or later) */
       if (!csp_klass->get_unit_size ((GstBaseTransform *) csp, caps, &csp_size)) {
-        GST_INFO ("ffmpegcolorspace does not support format %s", caps_str);
+        GST_INFO ("videoconvert does not support format %s", caps_str);
         g_free (caps_str);
         continue;
       }
@@ -132,7 +137,7 @@ GST_START_TEST (test_unit_sizes)
               caps, &vc_size));
 
       fail_unless (vc_size == csp_size,
-          "videocrop and ffmpegcolorspace return different unit sizes for "
+          "videocrop and videoconvert return different unit sizes for "
           "caps %s: vc_size=%d, csp_size=%d", caps_str, vc_size, csp_size);
 
       g_free (caps_str);
@@ -251,10 +256,12 @@ check_1x1_buffer (GstBuffer * buf, GstCaps * caps)
   GstVideoInfo info;
   GstVideoFrame frame;
   /* the exact values we check for come from videotestsrc */
-  static const guint yuv_values[] = { 81, 90, 240, 0 };
-  static const guint rgb_values[] = { 0xff, 0, 0, 0 };
+  static const guint yuv_values[] = { 81, 90, 240, 255 };
+  static const guint rgb_values[] = { 0xff, 0, 0, 255 };
+  static const guint gray_values[] = { 63, 63, 63, 255 };
   const guint *values;
   guint i;
+  const GstVideoFormatInfo *finfo;
 
   fail_unless (buf != NULL);
   fail_unless (caps != NULL);
@@ -262,15 +269,52 @@ check_1x1_buffer (GstBuffer * buf, GstCaps * caps)
   fail_unless (gst_video_info_from_caps (&info, caps));
   fail_unless (gst_video_frame_map (&frame, &info, buf, GST_MAP_READ));
 
-  if (GST_VIDEO_INFO_IS_YUV (&info))
+  finfo = info.finfo;
+
+
+  if (GST_VIDEO_INFO_FORMAT (&info) == GST_VIDEO_FORMAT_Y800)
+    values = gray_values;
+  else if (GST_VIDEO_INFO_IS_YUV (&info))
     values = yuv_values;
+  else if (GST_VIDEO_INFO_IS_GRAY (&info))
+    values = gray_values;
   else
     values = rgb_values;
+
+  GST_MEMDUMP ("buffer", GST_VIDEO_FRAME_PLANE_DATA (&frame, 0), 8);
 
   for (i = 0; i < GST_VIDEO_FRAME_N_COMPONENTS (&frame); i++) {
     guint8 *data = GST_VIDEO_FRAME_COMP_DATA (&frame, i);
 
-    fail_unless_equals_int (data[0], values[i]);
+    GST_DEBUG ("W: %d", GST_VIDEO_FORMAT_INFO_W_SUB (finfo, i));
+    GST_DEBUG ("H: %d", GST_VIDEO_FORMAT_INFO_H_SUB (finfo, i));
+
+    if (GST_VIDEO_FORMAT_INFO_W_SUB (finfo,
+            i) >= GST_VIDEO_FRAME_WIDTH (&frame))
+      continue;
+    if (GST_VIDEO_FORMAT_INFO_H_SUB (finfo,
+            i) >= GST_VIDEO_FRAME_HEIGHT (&frame))
+      continue;
+
+    if (GST_VIDEO_FORMAT_INFO_BITS (finfo) == 8) {
+      fail_unless_equals_int (data[0], values[i]);
+    } else if (GST_VIDEO_FORMAT_INFO_BITS (finfo) == 16) {
+      guint16 pixels, val;
+      gint depth;
+
+      if (GST_VIDEO_FORMAT_INFO_IS_LE (finfo))
+        pixels = GST_READ_UINT16_LE (data);
+      else
+        pixels = GST_READ_UINT16_BE (data);
+
+      depth = GST_VIDEO_FORMAT_INFO_DEPTH (finfo, i);
+      val = pixels >> GST_VIDEO_FORMAT_INFO_SHIFT (finfo, i);
+      val = val & ((1 << depth) - 1);
+
+      GST_DEBUG ("val %08x %d : %d", pixels, i, val);
+      fail_unless_equals_int (val, values[i] >> (8 - depth));
+    } else {
+    }
   }
 
   /*
@@ -296,12 +340,6 @@ GST_START_TEST (test_crop_to_1x1)
     caps = gst_caps_copy (GST_CAPS (node->data));
     s = gst_caps_get_structure (caps, 0);
     fail_unless (s != NULL);
-
-    if (g_strcmp0 (gst_structure_get_name (s), "video/x-raw-gray") == 0) {
-      /* videotestsrc does not support this format */
-      gst_caps_unref (caps);
-      continue;
-    }
 
     GST_INFO ("testing format: %" GST_PTR_FORMAT, caps);
 
@@ -489,7 +527,7 @@ GST_START_TEST (test_caps_transform)
   klass = GST_BASE_TRANSFORM_GET_CLASS (ctx.crop);
   fail_unless (klass != NULL);
 
-  caps = gst_caps_new_simple ("video/x-raw-yuv",
+  caps = gst_caps_new_simple ("video/x-raw",
       "format", G_TYPE_STRING, "I420",
       "framerate", GST_TYPE_FRACTION, 1, 1,
       "width", G_TYPE_INT, 200, "height", G_TYPE_INT, 100, NULL);

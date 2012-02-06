@@ -36,6 +36,7 @@ GstPad *mysrcpad, *mysinkpad;
     "audio/x-raw, "                                                   \
     " rate = (int) [ 1, MAX ], "                                      \
     " channels = (int) [ 1, MAX ], "                                  \
+    " layout = (string) interleaved, "                                \
     " format = (string) { "                                           \
     GST_AUDIO_NE(S16) ", "                                            \
     GST_AUDIO_NE(S32) ", "                                            \
@@ -46,24 +47,28 @@ GstPad *mysrcpad, *mysinkpad;
   "audio/x-raw, " \
     "rate = (int) 44100, " \
     "channels = (int) 1, " \
+    "layout = (string) interleaved, " \
     "format = (string) " GST_AUDIO_NE(S16)
 
 #define SPECT_CAPS_STRING_S32 \
   "audio/x-raw, " \
     "rate = (int) 44100, " \
     "channels = (int) 1, " \
+    "layout = (string) interleaved, " \
     "format = (string) " GST_AUDIO_NE(S32)
 
 #define SPECT_CAPS_STRING_F32 \
     "audio/x-raw, "                                                   \
     " rate = (int) 44100, "                                           \
     " channels = (int) 1, "                                           \
+    " layout = (string) interleaved, " \
     " format = (string) " GST_AUDIO_NE(F32)
 
 #define SPECT_CAPS_STRING_F64 \
     "audio/x-raw, "                                                   \
     " rate = (int) 44100, "                                           \
     " channels = (int) 1, "                                           \
+    " layout = (string) interleaved, " \
     " format = (string) " GST_AUDIO_NE(F64)
 
 #define SPECT_BANDS 256

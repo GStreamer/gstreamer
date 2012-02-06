@@ -35,6 +35,7 @@ static GstPad *mysrcpad, *mysinkpad;
 #define RG_VOLUME_CAPS_TEMPLATE_STRING        \
   "audio/x-raw, "                             \
   "format = (string) "GST_AUDIO_NE (F32) ", " \
+  "layout = (string) interleaved, "           \
   "channels = (int) [ 1, MAX ], "             \
   "rate = (int) [ 1, MAX ]"
 
@@ -56,6 +57,7 @@ static GstBuffer *test_buffer_new (gfloat value);
 static gboolean
 event_func (GstPad * pad, GstObject * parent, GstEvent * event)
 {
+  GST_DEBUG ("received event %p", event);
   events = g_list_append (events, event);
 
   return TRUE;
@@ -65,6 +67,7 @@ static GstElement *
 setup_rgvolume (void)
 {
   GstElement *element;
+  GstCaps *caps;
 
   GST_DEBUG ("setup_rgvolume");
   element = gst_check_setup_element ("rgvolume");
@@ -76,6 +79,11 @@ setup_rgvolume (void)
 
   gst_pad_set_active (mysrcpad, TRUE);
   gst_pad_set_active (mysinkpad, TRUE);
+
+  caps = gst_caps_from_string ("audio/x-raw, format = F32LE, "
+      "layout = interleaved, rate = 8000, channels = 1");
+  gst_pad_set_caps (mysrcpad, caps);
+  gst_caps_unref (caps);
 
   return element;
 }
@@ -94,16 +102,21 @@ send_newsegment_and_empty_buffer (void)
   fail_unless (gst_pad_push_event (mysrcpad, ev),
       "Pushing newsegment event failed");
 
+  /* makes caps event */
   buf = test_buffer_new (0.0);
   gst_buffer_resize (buf, 0, 0);
   GST_BUFFER_DURATION (buf) = 0;
   GST_BUFFER_OFFSET_END (buf) = GST_BUFFER_OFFSET (buf);
   fail_unless (gst_pad_push (mysrcpad, buf) == GST_FLOW_OK);
 
-  fail_unless (g_list_length (events) == 1);
+  fail_unless (g_list_length (events) == 2);
   fail_unless (events->data == ev);
   gst_mini_object_unref ((GstMiniObject *) events->data);
   events = g_list_remove (events, ev);
+  ev = events->data;
+  gst_mini_object_unref ((GstMiniObject *) ev);
+  events = g_list_remove (events, ev);
+  fail_unless (g_list_length (events) == 0);
 
   fail_unless (g_list_length (buffers) == 1);
   fail_unless (buffers->data == buf);
@@ -151,6 +164,8 @@ static void
 send_eos_event (GstElement * element)
 {
   GstEvent *event = gst_event_new_eos ();
+
+  GST_DEBUG ("events : %d", g_list_length (events));
 
   fail_unless (g_list_length (events) == 0);
   fail_unless (gst_pad_push_event (mysrcpad, event),
@@ -201,7 +216,6 @@ static GstBuffer *
 test_buffer_new (gfloat value)
 {
   GstBuffer *buf;
-  GstCaps *caps;
   GstMapInfo map;
   gfloat *data;
   gint i;
@@ -213,10 +227,6 @@ test_buffer_new (gfloat value)
     data[i] = value;
   gst_buffer_unmap (buf, &map);
 
-  caps = gst_caps_from_string ("audio/x-raw-float, "
-      "rate = 8000, channels = 1, endianness = BYTE_ORDER, width = 32");
-  gst_pad_set_caps (mysrcpad, caps);
-  gst_caps_unref (caps);
 
   ASSERT_BUFFER_REFCOUNT (buf, "buf", 1);
 
@@ -338,8 +348,6 @@ GST_START_TEST (test_events)
       GST_TAG_ARTIST, "Foobar", NULL);
   event = gst_event_new_tag (tag_list);
   new_event = send_tag_event (element, event);
-  /* Expect the element to modify the writable event. */
-  fail_unless (event == new_event, "Writable tag event not reused");
   gst_event_parse_tag (new_event, &tag_list);
   fail_unless (gst_tag_list_get_string (tag_list, GST_TAG_ARTIST, &artist));
   fail_unless (g_str_equal (artist, "Foobar"));
@@ -354,15 +362,11 @@ GST_START_TEST (test_events)
       GST_TAG_ALBUM_GAIN, -1.54, GST_TAG_ALBUM_PEAK, 0.693415,
       GST_TAG_ARTIST, "Foobar", NULL);
   event = gst_event_new_tag (tag_list);
-  /* Holding an extra ref makes the event unwritable: */
-  gst_event_ref (event);
   new_event = send_tag_event (element, event);
-  fail_unless (event != new_event, "Unwritable tag event reused");
   gst_event_parse_tag (new_event, &tag_list);
   fail_unless (gst_tag_list_get_string (tag_list, GST_TAG_ARTIST, &artist));
   fail_unless (g_str_equal (artist, "Foobar"));
   g_free (artist);
-  gst_event_unref (event);
   gst_event_unref (new_event);
 
   cleanup_rgvolume (element);
