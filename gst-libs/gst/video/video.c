@@ -107,11 +107,15 @@ typedef struct
 
 #define MAKE_RGB_FORMAT(name, desc, depth, pstride, plane, offs, sub) \
  { 0x00000000, {GST_VIDEO_FORMAT_ ##name, G_STRINGIFY(name), desc, GST_VIDEO_FORMAT_FLAG_RGB, depth, pstride, plane, offs, sub } }
+#define MAKE_RGB_LE_FORMAT(name, desc, depth, pstride, plane, offs, sub) \
+ { 0x00000000, {GST_VIDEO_FORMAT_ ##name, G_STRINGIFY(name), desc, GST_VIDEO_FORMAT_FLAG_RGB | GST_VIDEO_FORMAT_FLAG_LE, depth, pstride, plane, offs, sub } }
 #define MAKE_RGBA_FORMAT(name, desc, depth, pstride, plane, offs, sub) \
  { 0x00000000, {GST_VIDEO_FORMAT_ ##name, G_STRINGIFY(name), desc, GST_VIDEO_FORMAT_FLAG_RGB | GST_VIDEO_FORMAT_FLAG_ALPHA, depth, pstride, plane, offs, sub } }
 
 #define MAKE_GRAY_FORMAT(name, desc, depth, pstride, plane, offs, sub) \
  { 0x00000000, {GST_VIDEO_FORMAT_ ##name, G_STRINGIFY(name), desc, GST_VIDEO_FORMAT_FLAG_GRAY, depth, pstride, plane, offs, sub } }
+#define MAKE_GRAY_LE_FORMAT(name, desc, depth, pstride, plane, offs, sub) \
+ { 0x00000000, {GST_VIDEO_FORMAT_ ##name, G_STRINGIFY(name), desc, GST_VIDEO_FORMAT_FLAG_GRAY | GST_VIDEO_FORMAT_FLAG_LE, depth, pstride, plane, offs, sub } }
 
 static VideoFormat formats[] = {
   {0x00000000, {GST_VIDEO_FORMAT_UNKNOWN, "UNKNOWN", "unknown video", 0, DPTH0,
@@ -179,7 +183,8 @@ static VideoFormat formats[] = {
 
   MAKE_GRAY_FORMAT (GRAY8, "raw video", DPTH8, PSTR1, PLANE0, OFFS0, SUB4),
   MAKE_GRAY_FORMAT (GRAY16_BE, "raw video", DPTH16, PSTR2, PLANE0, OFFS0, SUB4),
-  MAKE_GRAY_FORMAT (GRAY16_LE, "raw video", DPTH16, PSTR2, PLANE0, OFFS0, SUB4),
+  MAKE_GRAY_LE_FORMAT (GRAY16_LE, "raw video", DPTH16, PSTR2, PLANE0, OFFS0,
+      SUB4),
 
   MAKE_YUV_FORMAT (v308, "raw video", GST_MAKE_FOURCC ('v', '3', '0', '8'),
       DPTH888, PSTR333,
@@ -191,10 +196,21 @@ static VideoFormat formats[] = {
       DPTH16, PSTR2,
       PLANE0, OFFS0, SUB4),
 
+#if G_BYTE_ORDER == G_LITTLE_ENDIAN
+  MAKE_RGB_LE_FORMAT (RGB16, "raw video", DPTH565, PSTR222, PLANE0, OFFS0,
+      SUB444),
+  MAKE_RGB_LE_FORMAT (BGR16, "raw video", DPTH565, PSTR222, PLANE0, OFFS0,
+      SUB444),
+  MAKE_RGB_LE_FORMAT (RGB15, "raw video", DPTH555, PSTR222, PLANE0, OFFS0,
+      SUB444),
+  MAKE_RGB_LE_FORMAT (BGR15, "raw video", DPTH555, PSTR222, PLANE0, OFFS0,
+      SUB444),
+#else
   MAKE_RGB_FORMAT (RGB16, "raw video", DPTH565, PSTR222, PLANE0, OFFS0, SUB444),
   MAKE_RGB_FORMAT (BGR16, "raw video", DPTH565, PSTR222, PLANE0, OFFS0, SUB444),
   MAKE_RGB_FORMAT (RGB15, "raw video", DPTH555, PSTR222, PLANE0, OFFS0, SUB444),
   MAKE_RGB_FORMAT (BGR15, "raw video", DPTH555, PSTR222, PLANE0, OFFS0, SUB444),
+#endif
 
   MAKE_YUV_FORMAT (UYVP, "raw video", GST_MAKE_FOURCC ('U', 'Y', 'V', 'P'),
       DPTH10_10_10,
