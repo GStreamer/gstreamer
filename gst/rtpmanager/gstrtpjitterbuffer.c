@@ -723,7 +723,7 @@ gst_rtp_jitter_buffer_getcaps (GstPad * pad, GstCaps * filter)
   GstRtpJitterBufferPrivate *priv;
   GstPad *other;
   GstCaps *caps;
-  const GstCaps *templ;
+  GstCaps *templ;
 
   jitterbuffer = GST_RTP_JITTER_BUFFER (gst_pad_get_parent (pad));
   priv = jitterbuffer->priv;
@@ -734,8 +734,8 @@ gst_rtp_jitter_buffer_getcaps (GstPad * pad, GstCaps * filter)
 
   templ = gst_pad_get_pad_template_caps (pad);
   if (caps == NULL) {
-    GST_DEBUG_OBJECT (jitterbuffer, "copy template");
-    caps = gst_caps_copy (templ);
+    GST_DEBUG_OBJECT (jitterbuffer, "use template");
+    caps = templ;
   } else {
     GstCaps *intersect;
 
@@ -743,6 +743,7 @@ gst_rtp_jitter_buffer_getcaps (GstPad * pad, GstCaps * filter)
 
     intersect = gst_caps_intersect (caps, templ);
     gst_caps_unref (caps);
+    gst_caps_unref (templ);
 
     caps = intersect;
   }
