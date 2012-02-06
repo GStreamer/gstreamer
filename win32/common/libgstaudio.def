@@ -51,7 +51,7 @@ EXPORTS
 	gst_audio_decoder_set_latency
 	gst_audio_decoder_set_max_errors
 	gst_audio_decoder_set_min_latency
-	gst_audio_decoder_set_outcaps
+	gst_audio_decoder_set_output_format
 	gst_audio_decoder_set_plc
 	gst_audio_decoder_set_plc_aware
 	gst_audio_decoder_set_tolerance
@@ -78,6 +78,7 @@ EXPORTS
 	gst_audio_encoder_set_latency
 	gst_audio_encoder_set_lookahead
 	gst_audio_encoder_set_mark_granule
+	gst_audio_encoder_set_output_format
 	gst_audio_encoder_set_perfect_timestamp
 	gst_audio_encoder_set_tolerance
 	gst_audio_filter_class_add_pad_templates
