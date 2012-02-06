@@ -214,12 +214,13 @@ void
 gst_mini_object_unref (GstMiniObject * mini_object)
 {
   g_return_if_fail (mini_object != NULL);
-  g_return_if_fail (mini_object->refcount > 0);
 
   GST_CAT_TRACE (GST_CAT_REFCOUNTING, "%p unref %d->%d",
       mini_object,
       GST_MINI_OBJECT_REFCOUNT_VALUE (mini_object),
       GST_MINI_OBJECT_REFCOUNT_VALUE (mini_object) - 1);
+
+  g_return_if_fail (mini_object->refcount > 0);
 
   if (G_UNLIKELY (g_atomic_int_dec_and_test (&mini_object->refcount))) {
     gboolean do_free;

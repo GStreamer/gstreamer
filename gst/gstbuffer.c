@@ -985,6 +985,7 @@ gst_buffer_map (GstBuffer * buffer, GstMapInfo * info, GstMapFlags flags)
   /* ERROR */
 not_writable:
   {
+    GST_WARNING_OBJECT (buffer, "write map requested on non-writable buffer");
     g_critical ("write map requested on non-writable buffer");
     return FALSE;
   }

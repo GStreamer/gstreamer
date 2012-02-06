@@ -4250,6 +4250,8 @@ not_accepted:
     gst_caps_unref (templ);
     GST_CAT_DEBUG_OBJECT (GST_CAT_CAPS, pad,
         "caps %" GST_PTR_FORMAT " not accepted", caps);
+    GST_CAT_DEBUG_OBJECT (GST_CAT_CAPS, pad,
+        "no intersection with template %" GST_PTR_FORMAT, templ);
     return GST_FLOW_NOT_NEGOTIATED;
   }
 }
