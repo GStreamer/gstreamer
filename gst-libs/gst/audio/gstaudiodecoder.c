@@ -282,7 +282,6 @@ static gboolean gst_audio_decoder_src_event (GstPad * pad, GstObject * parent,
     GstEvent * event);
 static gboolean gst_audio_decoder_sink_setcaps (GstAudioDecoder * dec,
     GstCaps * caps);
-gboolean gst_audio_decoder_src_setcaps (GstAudioDecoder * dec, GstCaps * caps);
 static GstFlowReturn gst_audio_decoder_chain (GstPad * pad, GstObject * parent,
     GstBuffer * buf);
 static gboolean gst_audio_decoder_src_query (GstPad * pad, GstObject * parent,
