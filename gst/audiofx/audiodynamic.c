@@ -181,17 +181,17 @@ gst_audio_dynamic_mode_get_type (void)
 }
 
 static gboolean
-gst_audio_dynamic_set_process_function (GstAudioDynamic * filter)
+gst_audio_dynamic_set_process_function (GstAudioDynamic * filter,
+    const GstAudioInfo * info)
 {
   gint func_index;
 
-  if (GST_AUDIO_FILTER_FORMAT (filter) == GST_AUDIO_FORMAT_UNKNOWN)
+  if (GST_AUDIO_INFO_FORMAT (info) == GST_AUDIO_FORMAT_UNKNOWN)
     return FALSE;
 
   func_index = (filter->mode == MODE_COMPRESSOR) ? 0 : 4;
   func_index += (filter->characteristics == CHARACTERISTICS_HARD_KNEE) ? 0 : 2;
-  func_index +=
-      (GST_AUDIO_FILTER_FORMAT (filter) == GST_AUDIO_FORMAT_F32) ? 1 : 0;
+  func_index += (GST_AUDIO_INFO_FORMAT (info) == GST_AUDIO_FORMAT_F32) ? 1 : 0;
 
   if (func_index >= 0 && func_index < 8) {
     filter->process = process_functions[func_index];
@@ -280,11 +280,13 @@ gst_audio_dynamic_set_property (GObject * object, guint prop_id,
   switch (prop_id) {
     case PROP_CHARACTERISTICS:
       filter->characteristics = g_value_get_enum (value);
-      gst_audio_dynamic_set_process_function (filter);
+      gst_audio_dynamic_set_process_function (filter,
+          GST_AUDIO_FILTER_INFO (filter));
       break;
     case PROP_MODE:
       filter->mode = g_value_get_enum (value);
-      gst_audio_dynamic_set_process_function (filter);
+      gst_audio_dynamic_set_process_function (filter,
+          GST_AUDIO_FILTER_INFO (filter));
       break;
     case PROP_THRESHOLD:
       filter->threshold = g_value_get_float (value);
@@ -331,7 +333,7 @@ gst_audio_dynamic_setup (GstAudioFilter * base, const GstAudioInfo * info)
   GstAudioDynamic *filter = GST_AUDIO_DYNAMIC (base);
   gboolean ret = TRUE;
 
-  ret = gst_audio_dynamic_set_process_function (filter);
+  ret = gst_audio_dynamic_set_process_function (filter, info);
 
   return ret;
 }
