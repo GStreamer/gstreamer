@@ -28,7 +28,7 @@
 #define ASPECT_RATIO_CROP_CAPS                      \
   GST_VIDEO_CAPS_MAKE ("{ RGBx, xRGB, BGRx, xBGR, " \
       "RGBA, ARGB, BGRA, ABGR, RGB, BGR, AYUV, "    \
-      "YUY2, YVYU, UYVY, Y800, I420, YV12, RGB16 "  \
+      "YUY2, YVYU, UYVY, Y800, I420, YV12, RGB16, " \
       "RGB15 }")
 
 static GstStaticPadTemplate sinktemplate = GST_STATIC_PAD_TEMPLATE ("sink",
@@ -67,12 +67,16 @@ check_aspectratiocrop (const gchar * in_string, const gchar * out_string,
 
   /* create the src pad */
   src_pad = gst_pad_new (NULL, GST_PAD_SRC);
+  gst_pad_set_active (src_pad, TRUE);
+  GST_DEBUG ("setting caps %s %" GST_PTR_FORMAT, in_string, incaps);
+  fail_unless (gst_pad_set_caps (src_pad, incaps),
+      "Couldn't set input caps %" GST_PTR_FORMAT, incaps);
+
   pad_peer = gst_element_get_static_pad (element, "sink");
   fail_if (pad_peer == NULL);
   fail_unless (gst_pad_link (src_pad, pad_peer) == GST_PAD_LINK_OK,
       "Could not link source and %s sink pads", GST_ELEMENT_NAME (element));
   gst_object_unref (pad_peer);
-  gst_pad_set_active (src_pad, TRUE);
 
   /* create the sink pad */
   pad_peer = gst_element_get_static_pad (element, "src");
@@ -87,9 +91,6 @@ check_aspectratiocrop (const gchar * in_string, const gchar * out_string,
   fail_unless (gst_element_set_state (element,
           GST_STATE_PLAYING) == GST_STATE_CHANGE_SUCCESS,
       "could not set to playing");
-
-  fail_unless (gst_pad_set_caps (src_pad, incaps),
-      "Couldn't set input caps %" GST_PTR_FORMAT, incaps);
 
   fail_unless (gst_pad_push (src_pad, buffer) == GST_FLOW_OK,
       "Failed to push buffer");
@@ -127,12 +128,12 @@ check_aspectratiocrop (const gchar * in_string, const gchar * out_string,
 GST_START_TEST (test_no_cropping)
 {
   check_aspectratiocrop
-      ("video/x-raw-yuv, format=(fourcc)YUY2, width=(int)320, height=(int)240, framerate=(fraction)30/1",
-      "video/x-raw-yuv, format=(fourcc)YUY2, width=(int)320, height=(int)240, framerate=(fraction)30/1",
+      ("video/x-raw, format=(string)YUY2, width=(int)320, height=(int)240, framerate=(fraction)30/1",
+      "video/x-raw, format=(string)YUY2, width=(int)320, height=(int)240, framerate=(fraction)30/1",
       153600, 153600, 4, 3);
   check_aspectratiocrop
-      ("video/x-raw-yuv, format=(fourcc)YUY2, width=(int)320, height=(int)320, framerate=(fraction)30/1, pixel-aspect-ratio=(fraction)4/3",
-      "video/x-raw-yuv, format=(fourcc)YUY2, width=(int)320, height=(int)320, framerate=(fraction)30/1, pixel-aspect-ratio=(fraction)4/3",
+      ("video/x-raw, format=(string)YUY2, width=(int)320, height=(int)320, framerate=(fraction)30/1, pixel-aspect-ratio=(fraction)4/3",
+      "video/x-raw, format=(string)YUY2, width=(int)320, height=(int)320, framerate=(fraction)30/1, pixel-aspect-ratio=(fraction)4/3",
       204800, 204800, 4, 3);
 }
 
@@ -141,18 +142,18 @@ GST_END_TEST;
 GST_START_TEST (test_autocropping)
 {
   check_aspectratiocrop
-      ("video/x-raw-yuv, format=(fourcc)YUY2, width=(int)320, height=(int)240, framerate=(fraction)30/1, pixel-aspect-ratio=(fraction)4/3",
-      "video/x-raw-yuv, format=(fourcc)YUY2, width=(int)240, height=(int)240, framerate=(fraction)30/1, pixel-aspect-ratio=(fraction)4/3",
+      ("video/x-raw, format=(string)YUY2, width=(int)320, height=(int)240, framerate=(fraction)30/1, pixel-aspect-ratio=(fraction)4/3",
+      "video/x-raw, format=(string)YUY2, width=(int)240, height=(int)240, framerate=(fraction)30/1, pixel-aspect-ratio=(fraction)4/3",
       153600, 115200, 4, 3);
 
   check_aspectratiocrop
-      ("video/x-raw-yuv, format=(fourcc)YUY2, width=(int)320, height=(int)240, framerate=(fraction)30/1, pixel-aspect-ratio=(fraction)16/9",
-      "video/x-raw-yuv, format=(fourcc)YUY2, width=(int)180, height=(int)240, framerate=(fraction)30/1, pixel-aspect-ratio=(fraction)16/9",
+      ("video/x-raw, format=(string)YUY2, width=(int)320, height=(int)240, framerate=(fraction)30/1, pixel-aspect-ratio=(fraction)16/9",
+      "video/x-raw, format=(string)YUY2, width=(int)180, height=(int)240, framerate=(fraction)30/1, pixel-aspect-ratio=(fraction)16/9",
       153600, 86400, 4, 3);
 
   check_aspectratiocrop
-      ("video/x-raw-yuv, format=(fourcc)YUY2, width=(int)320, height=(int)240, framerate=(fraction)30/1, pixel-aspect-ratio=(fraction)16/15",
-      "video/x-raw-yuv, format=(fourcc)YUY2, width=(int)320, height=(int)192, framerate=(fraction)30/1, pixel-aspect-ratio=(fraction)16/15",
+      ("video/x-raw, format=(string)YUY2, width=(int)320, height=(int)240, framerate=(fraction)30/1, pixel-aspect-ratio=(fraction)16/15",
+      "video/x-raw, format=(string)YUY2, width=(int)320, height=(int)192, framerate=(fraction)30/1, pixel-aspect-ratio=(fraction)16/15",
       153600, 122880, 16, 9);
 
 }

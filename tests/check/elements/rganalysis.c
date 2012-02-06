@@ -127,10 +127,12 @@ get_expected_gain (guint sample_rate)
 #define RG_ANALYSIS_CAPS_TEMPLATE_STRING      \
   "audio/x-raw, "                             \
   "format = (string) "GST_AUDIO_NE (F32) ", " \
+  "layout = (string) interleaved, "           \
   REPLAY_GAIN_CAPS                            \
   "; "                                        \
   "audio/x-raw, "                             \
   "format = (string) "GST_AUDIO_NE (S16) ", " \
+  "layout = (string) interleaved, "           \
   REPLAY_GAIN_CAPS
 
 static GstStaticPadTemplate sinktemplate = GST_STATIC_PAD_TEMPLATE ("sink",
@@ -362,7 +364,8 @@ test_buffer_const_float_mono (gint sample_rate, gsize n_frames, gfloat value)
 
   caps = gst_caps_new_simple ("audio/x-raw",
       "format", G_TYPE_STRING, GST_AUDIO_NE (F32),
-      "rate", G_TYPE_INT, sample_rate, "channels", G_TYPE_INT, 1, NULL);
+      "rate", G_TYPE_INT, sample_rate, "channels", G_TYPE_INT, 1,
+      "layout", G_TYPE_STRING, "interleaved", NULL);
   gst_pad_set_caps (mysrcpad, caps);
   gst_caps_unref (caps);
 
@@ -391,7 +394,10 @@ test_buffer_const_float_stereo (gint sample_rate, gsize n_frames,
 
   caps = gst_caps_new_simple ("audio/x-raw",
       "format", G_TYPE_STRING, GST_AUDIO_NE (F32),
-      "rate", G_TYPE_INT, sample_rate, "channels", G_TYPE_INT, 2, NULL);
+      "layout", G_TYPE_STRING, "interleaved",
+      "rate", G_TYPE_INT, sample_rate,
+      "channels", G_TYPE_INT, 2,
+      "channel-mask", GST_TYPE_BITMASK, (gint64) 0x3, NULL);
   gst_pad_set_caps (mysrcpad, caps);
   gst_caps_unref (caps);
 
@@ -418,6 +424,7 @@ test_buffer_const_int16_mono (gint sample_rate, gint depth, gsize n_frames,
 
   caps = gst_caps_new_simple ("audio/x-raw",
       "format", G_TYPE_STRING, GST_AUDIO_NE (S16),
+      "layout", G_TYPE_STRING, "interleaved",
       "rate", G_TYPE_INT, sample_rate, "channels", G_TYPE_INT, 1, NULL);
   gst_pad_set_caps (mysrcpad, caps);
   gst_caps_unref (caps);
@@ -447,7 +454,9 @@ test_buffer_const_int16_stereo (gint sample_rate, gint depth, gsize n_frames,
 
   caps = gst_caps_new_simple ("audio/x-raw",
       "format", G_TYPE_STRING, GST_AUDIO_NE (S16),
-      "rate", G_TYPE_INT, sample_rate, "channels", G_TYPE_INT, 2, NULL);
+      "layout", G_TYPE_STRING, "interleaved",
+      "rate", G_TYPE_INT, sample_rate, "channels", G_TYPE_INT, 2,
+      "channel-mask", GST_TYPE_BITMASK, (gint64) 0x3, NULL);
   gst_pad_set_caps (mysrcpad, caps);
   gst_caps_unref (caps);
 
@@ -484,6 +493,7 @@ test_buffer_square_float_mono (gint * accumulator, gint sample_rate,
 
   caps = gst_caps_new_simple ("audio/x-raw",
       "format", G_TYPE_STRING, GST_AUDIO_NE (F32),
+      "layout", G_TYPE_STRING, "interleaved",
       "rate", G_TYPE_INT, sample_rate, "channels", G_TYPE_INT, 1, NULL);
   gst_pad_set_caps (mysrcpad, caps);
   gst_caps_unref (caps);
@@ -521,7 +531,9 @@ test_buffer_square_float_stereo (gint * accumulator, gint sample_rate,
 
   caps = gst_caps_new_simple ("audio/x-raw",
       "format", G_TYPE_STRING, GST_AUDIO_NE (F32),
-      "rate", G_TYPE_INT, sample_rate, "channels", G_TYPE_INT, 2, NULL);
+      "layout", G_TYPE_STRING, "interleaved",
+      "rate", G_TYPE_INT, sample_rate, "channels", G_TYPE_INT, 2,
+      "channel-mask", GST_TYPE_BITMASK, (gint64) 0x3, NULL);
   gst_pad_set_caps (mysrcpad, caps);
   gst_caps_unref (caps);
 
@@ -555,6 +567,7 @@ test_buffer_square_int16_mono (gint * accumulator, gint sample_rate,
 
   caps = gst_caps_new_simple ("audio/x-raw",
       "format", G_TYPE_STRING, GST_AUDIO_NE (S16),
+      "layout", G_TYPE_STRING, "interleaved",
       "rate", G_TYPE_INT, sample_rate, "channels", G_TYPE_INT, 1, NULL);
   gst_pad_set_caps (mysrcpad, caps);
   gst_caps_unref (caps);
@@ -592,7 +605,9 @@ test_buffer_square_int16_stereo (gint * accumulator, gint sample_rate,
 
   caps = gst_caps_new_simple ("audio/x-raw",
       "format", G_TYPE_STRING, GST_AUDIO_NE (S16),
-      "rate", G_TYPE_INT, sample_rate, "channels", G_TYPE_INT, 2, NULL);
+      "layout", G_TYPE_STRING, "interleaved",
+      "rate", G_TYPE_INT, sample_rate, "channels", G_TYPE_INT, 2,
+      "channel-mask", GST_TYPE_BITMASK, (gint64) 0x3, NULL);
   gst_pad_set_caps (mysrcpad, caps);
   gst_caps_unref (caps);
 
