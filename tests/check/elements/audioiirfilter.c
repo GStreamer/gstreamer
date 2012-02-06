@@ -103,10 +103,10 @@ on_handoff (GstElement * object, GstBuffer * buffer, GstPad * pad,
 {
   if (!have_data) {
     GstMapInfo map;
-    gdouble *data;
+    gfloat *data;
 
-    gst_buffer_map (buffer, &map, GST_MAP_READ);
-    data = (gdouble *) map.data;
+    fail_unless (gst_buffer_map (buffer, &map, GST_MAP_READ));
+    data = (gfloat *) map.data;
 
     fail_unless (map.size > 5 * sizeof (gdouble));
     fail_unless (data[0] == 0.0);
