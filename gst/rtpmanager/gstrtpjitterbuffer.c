@@ -1287,14 +1287,13 @@ gst_rtp_jitter_buffer_chain (GstPad * pad, GstObject * parent,
     priv->last_pt = pt;
     /* reset clock-rate so that we get a new one */
     priv->clock_rate = -1;
-#if 0
     GstCaps *caps;
     /* Try to get the clock-rate from the caps first if we can. If there are no
      * caps we must fire the signal to get the clock-rate. */
-    if ((caps = GST_BUFFER_CAPS (buffer))) {
+    if ((caps = gst_pad_get_current_caps (pad))) {
       gst_jitter_buffer_sink_parse_caps (jitterbuffer, caps);
+      gst_caps_unref (caps);
     }
-#endif
   }
 
   if (G_UNLIKELY (priv->clock_rate == -1)) {
