@@ -48,23 +48,26 @@ static GstStaticPadTemplate gst_test_scope_src_template =
 GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS (GST_VIDEO_CAPS_xRGB_HOST_ENDIAN)
+    GST_STATIC_CAPS (GST_VIDEO_CAPS_MAKE ("xRGB"))
     );
 
 static GstStaticPadTemplate gst_test_scope_sink_template =
 GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS (GST_AUDIO_INT_STANDARD_PAD_TEMPLATE_CAPS)
+    GST_STATIC_CAPS ("audio/x-raw, "
+        "format = (string) " GST_AUDIO_NE (S16) ", "
+        "layout = (string) interleaved, "
+        "channels = (int) 2, "
+        "channel-mask = (bitmask) 3, " "rate = (int) 44100")
     );
 
 static GType gst_test_scope_get_type (void);
 
-GST_BOILERPLATE (GstTestScope, gst_test_scope, GstBaseAudioVisualizer,
-    GST_TYPE_BASE_AUDIO_VISUALIZER);
+G_DEFINE_TYPE (GstTestScope, gst_test_scope, GST_TYPE_BASE_AUDIO_VISUALIZER);
 
 static void
-gst_test_scope_base_init (gpointer g_class)
+gst_test_scope_class_init (GstTestScopeClass * g_class)
 {
   GstElementClass *element_class = GST_ELEMENT_CLASS (g_class);
 
@@ -79,43 +82,31 @@ gst_test_scope_base_init (gpointer g_class)
 }
 
 static void
-gst_test_scope_class_init (GstTestScopeClass * g_class)
-{
-  /* do nothing */
-}
-
-static void
-gst_test_scope_init (GstTestScope * scope, GstTestScopeClass * g_class)
+gst_test_scope_init (GstTestScope * scope)
 {
   /* do nothing */
 }
 
 /* tests */
+#define CAPS "audio/x-raw, "  \
+        "format = (string) " GST_AUDIO_NE (S16) ", " \
+        "layout = (string) interleaved, " \
+        "rate = (int) 44100, " \
+        "channels = (int) 2, " \
+        "channel-mask = (bitmask) 3"
 
 static GstStaticPadTemplate sinktemplate = GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS ("video/x-raw-rgb, "
-        "bpp = (int) 32, "
-        "depth = (int) 24, " "endianness = (int) BIG_ENDIAN, "
-#if G_BYTE_ORDER == G_BIG_ENDIAN
-        "red_mask = (int) 0xFF000000, "
-        "green_mask = (int) 0x00FF0000, " "blue_mask = (int) 0x0000FF00, "
-#else
-        "red_mask = (int) 0x0000FF00, "
-        "green_mask = (int) 0x00FF0000, " "blue_mask = (int) 0xFF000000, "
-#endif
+    GST_STATIC_CAPS ("video/x-raw, "
+        "format = (string) xRGB, "
         "width = (int) 320, "
         "height = (int) 240, " "framerate = (fraction) 30/1")
     );
 static GstStaticPadTemplate srctemplate = GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS ("audio/x-raw-int, "
-        "rate = (int) 44100, "
-        "channels = (int) 2, "
-        "endianness = (int) BYTE_ORDER, "
-        "width = (int) 16, " "depth = (int) 16, " "signed = (boolean) true")
+    GST_STATIC_CAPS (CAPS)
     );
 
 GST_START_TEST (count_in_out)
@@ -123,6 +114,7 @@ GST_START_TEST (count_in_out)
   GstElement *elem;
   GstPad *srcpad, *sinkpad;
   GstBuffer *buffer;
+  GstCaps *caps;
 
   /* setup up */
   elem = gst_check_setup_element ("testscope");
@@ -130,13 +122,17 @@ GST_START_TEST (count_in_out)
   sinkpad = gst_check_setup_sink_pad (elem, &sinktemplate);
   gst_pad_set_active (srcpad, TRUE);
   gst_pad_set_active (sinkpad, TRUE);
+
   fail_unless (gst_element_set_state (elem,
           GST_STATE_PLAYING) == GST_STATE_CHANGE_SUCCESS,
       "could not set to playing");
 
+  caps = gst_caps_from_string (CAPS);
+  gst_pad_set_caps (srcpad, caps);
+  gst_caps_unref (caps);
+
   /* push 1s audio to get 30 video-frames */
   buffer = gst_buffer_new_and_alloc (44100 * 2 * sizeof (gint16));
-  gst_buffer_set_caps (buffer, GST_PAD_CAPS (srcpad));
   ASSERT_BUFFER_REFCOUNT (buffer, "buffer", 1);
 
   /* pushing gives away my reference ... */

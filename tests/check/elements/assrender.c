@@ -99,22 +99,21 @@ sink_handoff_cb_xRGB (GstElement * object, GstBuffer * buffer, GstPad * pad,
   guint *sink_pos = (guint *) user_data;
   gboolean contains_text = (*sink_pos == 1 || *sink_pos == 2);
   guint i, j;
-  guint8 *data;
-  gsize size;
+  GstMapInfo map;
   gboolean all_red = TRUE;
 
-  data = gst_buffer_map (buffer, &size, NULL, GST_MAP_READ);
+  gst_buffer_map (buffer, &map, GST_MAP_READ);
 
-  fail_unless_equals_int (size, 640 * 480 * 4);
+  fail_unless_equals_int (map.size, 640 * 480 * 4);
 
   for (i = 0; i < 640; i++) {
     for (j = 0; j < 480; j++) {
-      all_red = all_red && (data[i * 480 * 4 + j * 4 + 1] == 255 &&
-          data[i * 480 * 4 + j * 4 + 2] == 0 &&
-          data[i * 480 * 4 + j * 4 + 3] == 0);
+      all_red = all_red && (map.data[i * 480 * 4 + j * 4 + 1] == 255 &&
+          map.data[i * 480 * 4 + j * 4 + 2] == 0 &&
+          map.data[i * 480 * 4 + j * 4 + 3] == 0);
     }
   }
-  gst_buffer_unmap (buffer, data, size);
+  gst_buffer_unmap (buffer, &map);
 
   fail_unless (contains_text != all_red,
       "Frame %d is incorrect (all red %d, contains text %d)", *sink_pos,

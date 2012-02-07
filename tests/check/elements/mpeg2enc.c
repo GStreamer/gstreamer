@@ -57,7 +57,7 @@ static GCond *mpeg2enc_cond;
 static gboolean arrived_eos;
 
 static gboolean
-test_sink_event (GstPad * pad, GstEvent * event)
+test_sink_event (GstPad * pad, GstObject * parent, GstEvent * event)
 {
 
   switch (GST_EVENT_TYPE (event)) {
@@ -71,7 +71,7 @@ test_sink_event (GstPad * pad, GstEvent * event)
       break;
   }
 
-  return gst_pad_event_default (pad, event);
+  return gst_pad_event_default (pad, parent, event);
 }
 
 static GstElement *
@@ -81,8 +81,8 @@ setup_mpeg2enc (void)
 
   GST_DEBUG ("setup_mpeg2enc");
   mpeg2enc = gst_check_setup_element ("mpeg2enc");
-  mysrcpad = gst_check_setup_src_pad (mpeg2enc, &srctemplate, NULL);
-  mysinkpad = gst_check_setup_sink_pad (mpeg2enc, &sinktemplate, NULL);
+  mysrcpad = gst_check_setup_src_pad (mpeg2enc, &srctemplate);
+  mysinkpad = gst_check_setup_sink_pad (mpeg2enc, &sinktemplate);
   gst_pad_set_active (mysrcpad, TRUE);
   gst_pad_set_active (mysinkpad, TRUE);
 
@@ -129,9 +129,9 @@ GST_START_TEST (test_video_pad)
   /* corresponds to I420 buffer for the size mentioned in the caps */
   inbuffer = gst_buffer_new_and_alloc (384 * 288 * 3 / 2);
   /* makes valgrind's memcheck happier */
-  memset (GST_BUFFER_DATA (inbuffer), 0, GST_BUFFER_SIZE (inbuffer));
+  gst_buffer_memset (inbuffer, 0, 0, -1);
   caps = gst_caps_from_string (VIDEO_CAPS_STRING);
-  gst_buffer_set_caps (inbuffer, caps);
+  gst_pad_set_caps (mysrcpad, caps);
   gst_caps_unref (caps);
   GST_BUFFER_TIMESTAMP (inbuffer) = 0;
   ASSERT_BUFFER_REFCOUNT (inbuffer, "inbuffer", 1);
@@ -156,8 +156,8 @@ GST_START_TEST (test_video_pad)
 
     switch (i) {
       case 0:
-        fail_unless (GST_BUFFER_SIZE (outbuffer) >= sizeof (data0));
-        fail_unless (memcmp (data0, GST_BUFFER_DATA (outbuffer),
+        fail_unless (gst_buffer_get_size (outbuffer) >= sizeof (data0));
+        fail_unless (gst_buffer_memcmp (outbuffer, 0, data0,
                 sizeof (data0)) == 0);
         break;
       default:

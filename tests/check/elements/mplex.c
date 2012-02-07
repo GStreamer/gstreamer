@@ -98,7 +98,7 @@ guint8 mp2_data[] =             /* 384 */
 /* end binary data. size = 384 bytes */
 
 static gboolean
-test_sink_event (GstPad * pad, GstEvent * event)
+test_sink_event (GstPad * pad, GstObject * parent, GstEvent * event)
 {
 
   switch (GST_EVENT_TYPE (event)) {
@@ -112,7 +112,7 @@ test_sink_event (GstPad * pad, GstEvent * event)
       break;
   }
 
-  return gst_pad_event_default (pad, event);
+  return gst_pad_event_default (pad, parent, event);
 }
 
 /* setup and teardown needs some special handling for muxer */
@@ -183,7 +183,7 @@ setup_mplex (void)
   GST_DEBUG ("setup_mplex");
   mplex = gst_check_setup_element ("mplex");
   mysrcpad = setup_src_pad (mplex, &srctemplate, NULL, "audio_%u");
-  mysinkpad = gst_check_setup_sink_pad (mplex, &sinktemplate, NULL);
+  mysinkpad = gst_check_setup_sink_pad (mplex, &sinktemplate);
   gst_pad_set_active (mysrcpad, TRUE);
   gst_pad_set_active (mysinkpad, TRUE);
 
@@ -234,10 +234,9 @@ GST_START_TEST (test_audio_pad)
 
   /* corresponds to I420 buffer for the size mentioned in the caps */
   inbuffer = gst_buffer_new ();
-  GST_BUFFER_DATA (inbuffer) = mp2_data;
-  GST_BUFFER_SIZE (inbuffer) = sizeof (mp2_data);
+  gst_buffer_fill (inbuffer, 0, mp2_data, sizeof (mp2_data));
   caps = gst_caps_from_string (AUDIO_CAPS_STRING);
-  gst_buffer_set_caps (inbuffer, caps);
+  gst_pad_set_caps (mysrcpad, caps);
   gst_caps_unref (caps);
   GST_BUFFER_TIMESTAMP (inbuffer) = 0;
   ASSERT_BUFFER_REFCOUNT (inbuffer, "inbuffer", 1);
@@ -261,14 +260,14 @@ GST_START_TEST (test_audio_pad)
     fail_if (outbuffer == NULL);
 
     if (i == 0) {
-      fail_unless (GST_BUFFER_SIZE (outbuffer) >= sizeof (data0));
-      fail_unless (memcmp (data0, GST_BUFFER_DATA (outbuffer),
+      fail_unless (gst_buffer_get_size (outbuffer) >= sizeof (data0));
+      fail_unless (gst_buffer_memcmp (outbuffer, 0, data0,
               sizeof (data0)) == 0);
     }
     if (i == num_buffers - 1) {
-      fail_unless (GST_BUFFER_SIZE (outbuffer) >= sizeof (data1));
-      fail_unless (memcmp (data1, GST_BUFFER_DATA (outbuffer) +
-              GST_BUFFER_SIZE (outbuffer) - sizeof (data1),
+      fail_unless (gst_buffer_get_size (outbuffer) >= sizeof (data1));
+      fail_unless (gst_buffer_memcmp (outbuffer,
+              gst_buffer_get_size (outbuffer) - sizeof (data1), data1,
               sizeof (data1)) == 0);
     }
     buffers = g_list_remove (buffers, outbuffer);

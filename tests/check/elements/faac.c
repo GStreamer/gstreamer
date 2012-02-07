@@ -23,19 +23,19 @@
 #include <unistd.h>
 
 #include <gst/check/gstcheck.h>
+#include <gst/audio/audio.h>
 
 /* For ease of programming we use globals to keep refs for our floating
  * src and sink pads we create; otherwise we always have to do get_pad,
  * get_peer, and then remove references in every test function */
 static GstPad *mysrcpad, *mysinkpad;
 
-#define AUDIO_CAPS_STRING "audio/x-raw-int, " \
+#define AUDIO_CAPS_STRING "audio/x-raw, " \
+                           "format = (string) " GST_AUDIO_NE (S16) \
+                           "layout = (string) interleaved, " \
                            "rate = (int) 48000, " \
                            "channels = (int) 2, " \
-                           "width = (int) 16, " \
-                           "depth = (int) 16, " \
-                           "signed = (boolean) true, " \
-                           "endianness = (int) BYTE_ORDER "
+                           "channel-mask = (bitmask) 3"
 
 #define AAC_RAW_CAPS_STRING "audio/mpeg, " \
                           "mpegversion = (int) 4, " \
@@ -134,13 +134,16 @@ do_test (gboolean adts)
   /* clean up buffers */
   for (i = 0; i < num_buffers; ++i) {
     gint header = 0, id;
+    GstMapInfo map;
     gsize size;
     guint8 *data;
 
     outbuffer = GST_BUFFER (buffers->data);
     fail_if (outbuffer == NULL);
 
-    data = gst_buffer_map (outbuffer, &size, NULL, GST_MAP_READ);
+    gst_buffer_map (outbuffer, &map, GST_MAP_READ);
+    data = map.data;
+    size = map.size;
 
     if (adts) {
       gboolean protection;
@@ -175,8 +178,7 @@ do_test (gboolean adts)
       const GValue *value;
       GstBuffer *buf;
       gint k;
-      gsize csize;
-      guint8 *cdata;
+      GstMapInfo cmap;
 
       caps = gst_pad_get_current_caps (mysinkpad);
       fail_if (caps == NULL);
@@ -186,10 +188,10 @@ do_test (gboolean adts)
       fail_if (value == NULL);
       buf = gst_value_get_buffer (value);
       fail_if (buf == NULL);
-      cdata = gst_buffer_map (buf, &csize, NULL, GST_MAP_READ);
-      fail_if (csize < 2);
-      k = GST_READ_UINT16_BE (cdata);
-      gst_buffer_unmap (buf, cdata, csize);
+      gst_buffer_map (buf, &cmap, GST_MAP_READ);
+      fail_if (cmap.size < 2);
+      k = GST_READ_UINT16_BE (cmap.data);
+      gst_buffer_unmap (buf, &cmap);
       /* profile, rate, channels */
       fail_unless ((k & 0xFFF8) == ((0x02 << 11) | (0x3 << 7) | (0x02 << 3)));
       gst_caps_unref (caps);
@@ -199,7 +201,7 @@ do_test (gboolean adts)
     id = data[header] & (0x7 << 5);
     /* allow all but ID_END or ID_LFE */
     fail_if (id == 7 || id == 3);
-    gst_buffer_unmap (outbuffer, data, size);
+    gst_buffer_unmap (outbuffer, &map);
 
     buffers = g_list_remove (buffers, outbuffer);
 
