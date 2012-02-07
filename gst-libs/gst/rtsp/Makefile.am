@@ -71,12 +71,13 @@ GstRtsp-@GST_MAJORMINOR@.gir: $(INTROSPECTION_SCANNER) libgstrtsp-@GST_MAJORMINO
 		--add-include-path=$(builddir)/../sdp \
 		--add-include-path=`$(PKG_CONFIG) --variable=girdir gstreamer-@GST_MAJORMINOR@` \
 		--library=libgstrtsp-@GST_MAJORMINOR@.la \
+		--include=Gio-2.0 \
 		--include=Gst-@GST_MAJORMINOR@ \
 		--include=GstSdp-@GST_MAJORMINOR@ \
 		--libtool="$(top_builddir)/libtool" \
+		--pkg gio-2.0 \
 		--pkg gstreamer-@GST_MAJORMINOR@ \
 		--pkg gstreamer-sdp-@GST_MAJORMINOR@ \
-		--pkg gio-2.0 \
 		--pkg-export gstreamer-rtsp-@GST_MAJORMINOR@ \
 		--add-init-section="gst_init(NULL,NULL);" \
 		--output $@ \
