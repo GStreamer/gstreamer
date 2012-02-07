@@ -219,7 +219,7 @@ gst_synae_scope_render (GstBaseAudioVisualizer * bscope, GstBuffer * audio,
   guint32 *colors = scope->colors, c;
   guint *shade = scope->shade;
   //guint w2 = w /2;
-  guint ch = bscope->channels;
+  guint ch = GST_AUDIO_INFO_CHANNELS (&bscope->ainfo);
   guint num_samples;
   gint i, j, b;
   gint br, br1, br2;

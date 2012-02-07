@@ -435,7 +435,8 @@ gst_space_scope_render (GstBaseAudioVisualizer * base, GstBuffer * audio,
   gst_buffer_map (audio, &amap, GST_MAP_READ);
   gst_buffer_map (video, &vmap, GST_MAP_WRITE);
 
-  num_samples = amap.size / (base->channels * sizeof (gint16));
+  num_samples =
+      amap.size / (GST_AUDIO_INFO_CHANNELS (&base->ainfo) * sizeof (gint16));
   scope->process (base, (guint32 *) vmap.data, (gint16 *) amap.data,
       num_samples);
   gst_buffer_unmap (video, &vmap);

@@ -498,8 +498,7 @@ gst_base_audio_visualizer_init (GstBaseAudioVisualizer * scope,
   scope->frame_duration = GST_CLOCK_TIME_NONE;
 
   /* reset the initial audio state */
-  scope->rate = GST_AUDIO_DEF_RATE;
-  scope->channels = 2;
+  gst_audio_info_init (&scope->ainfo);
 
   g_mutex_init (&scope->config_lock);
 }
@@ -583,49 +582,24 @@ static gboolean
 gst_base_audio_visualizer_sink_setcaps (GstBaseAudioVisualizer * scope,
     GstCaps * caps)
 {
-  GstStructure *structure;
-  gint channels;
-  gint rate;
+  GstAudioInfo info;
   gboolean res = TRUE;
 
-  structure = gst_caps_get_structure (caps, 0);
+  if (!gst_audio_info_from_caps (&info, caps))
+    goto wrong_caps;
 
-  if (!gst_structure_get_int (structure, "channels", &channels) ||
-      !gst_structure_get_int (structure, "rate", &rate))
-    goto missing_caps_details;
-
-  if (channels != 2)
-    goto wrong_channels;
-
-  if (rate <= 0)
-    goto wrong_rate;
-
-  scope->channels = channels;
-  scope->rate = rate;
+  scope->ainfo = info;
 
   GST_DEBUG_OBJECT (scope, "audio: channels %d, rate %d",
-      scope->channels, scope->rate);
+      GST_AUDIO_INFO_CHANNELS (&info), GST_AUDIO_INFO_RATE (&info));
 
 done:
   return res;
 
   /* Errors */
-missing_caps_details:
+wrong_caps:
   {
-    GST_WARNING_OBJECT (scope, "missing channels or rate in the caps");
-    res = FALSE;
-    goto done;
-  }
-wrong_channels:
-  {
-    GST_WARNING_OBJECT (scope, "number of channels must be 2, but is %d",
-        channels);
-    res = FALSE;
-    goto done;
-  }
-wrong_rate:
-  {
-    GST_WARNING_OBJECT (scope, "sample rate must be >0, but is %d", rate);
+    GST_WARNING_OBJECT (scope, "could not parse caps");
     res = FALSE;
     goto done;
   }
@@ -652,7 +626,7 @@ gst_base_audio_visualizer_src_setcaps (GstBaseAudioVisualizer * scope,
 
   scope->frame_duration = gst_util_uint64_scale_int (GST_SECOND,
       scope->fps_d, scope->fps_n);
-  scope->spf = gst_util_uint64_scale_int (scope->rate,
+  scope->spf = gst_util_uint64_scale_int (GST_AUDIO_INFO_RATE (&scope->ainfo),
       scope->fps_d, scope->fps_n);
   scope->req_spf = scope->spf;
 
@@ -795,6 +769,7 @@ gst_base_audio_visualizer_chain (GstPad * pad, GstObject * parent,
   gpointer adata;
   gboolean (*render) (GstBaseAudioVisualizer * scope, GstBuffer * audio,
       GstBuffer * video);
+  gint bps, channels, rate;
 
   scope = GST_BASE_AUDIO_VISUALIZER (parent);
   klass = GST_BASE_AUDIO_VISUALIZER_CLASS (G_OBJECT_GET_CLASS (scope));
@@ -808,14 +783,18 @@ gst_base_audio_visualizer_chain (GstPad * pad, GstObject * parent,
     gst_adapter_clear (scope->adapter);
   }
 
-  if (scope->bps == 0) {
-    ret = GST_FLOW_NOT_NEGOTIATED;
-    goto beach;
-  }
   /* Make sure have an output format */
   ret = gst_base_audio_visualizer_ensure_negotiated (scope);
   if (ret != GST_FLOW_OK) {
     gst_buffer_unref (buffer);
+    goto beach;
+  }
+  channels = GST_AUDIO_INFO_CHANNELS (&scope->ainfo);
+  rate = GST_AUDIO_INFO_RATE (&scope->ainfo);
+  bps = GST_AUDIO_INFO_BPS (&scope->ainfo);
+
+  if (bps == 0) {
+    ret = GST_FLOW_NOT_NEGOTIATED;
     goto beach;
   }
 
@@ -824,7 +803,7 @@ gst_base_audio_visualizer_chain (GstPad * pad, GstObject * parent,
   g_mutex_lock (&scope->config_lock);
 
   /* this is what we want */
-  sbpf = scope->req_spf * scope->channels * sizeof (gint16);
+  sbpf = scope->req_spf * channels * sizeof (gint16);
 
   inbuf = scope->inbuf;
   /* FIXME: the timestamp in the adapter would be different */
@@ -841,8 +820,8 @@ gst_base_audio_visualizer_chain (GstPad * pad, GstObject * parent,
     ts = gst_adapter_prev_timestamp (scope->adapter, &dist);
     if (GST_CLOCK_TIME_IS_VALID (ts)) {
       /* convert bytes to time */
-      dist /= scope->bps;
-      ts += gst_util_uint64_scale_int (dist, GST_SECOND, scope->rate);
+      dist /= bps;
+      ts += gst_util_uint64_scale_int (dist, GST_SECOND, rate);
     }
 
     if (GST_CLOCK_TIME_IS_VALID (ts)) {
@@ -870,7 +849,7 @@ gst_base_audio_visualizer_chain (GstPad * pad, GstObject * parent,
     ret = gst_buffer_pool_acquire_buffer (scope->pool, &outbuf, NULL);
     g_mutex_lock (&scope->config_lock);
     /* recheck as the value could have changed */
-    sbpf = scope->req_spf * scope->channels * sizeof (gint16);
+    sbpf = scope->req_spf * channels * sizeof (gint16);
 
     /* no buffer allocated, we don't care why. */
     if (ret != GST_FLOW_OK)
@@ -919,7 +898,7 @@ gst_base_audio_visualizer_chain (GstPad * pad, GstObject * parent,
 
   skip:
     /* recheck as the value could have changed */
-    sbpf = scope->req_spf * scope->channels * sizeof (gint16);
+    sbpf = scope->req_spf * channels * sizeof (gint16);
     GST_LOG_OBJECT (scope, "avail: %u, bpf: %u", avail, sbpf);
     /* we want to take less or more, depending on spf : req_spf */
     if (avail - sbpf >= sbpf) {
@@ -1044,8 +1023,9 @@ gst_base_audio_visualizer_src_query (GstPad * pad, GstObject * parent,
       gboolean us_live;
       GstClockTime our_latency;
       guint max_samples;
+      gint rate = GST_AUDIO_INFO_RATE (&scope->ainfo);
 
-      if (scope->rate == 0)
+      if (rate == 0)
         break;
 
       if ((res = gst_pad_peer_query (scope->sinkpad, query))) {
@@ -1057,8 +1037,7 @@ gst_base_audio_visualizer_src_query (GstPad * pad, GstObject * parent,
 
         /* the max samples we must buffer buffer */
         max_samples = MAX (scope->req_spf, scope->spf);
-        our_latency =
-            gst_util_uint64_scale_int (max_samples, GST_SECOND, scope->rate);
+        our_latency = gst_util_uint64_scale_int (max_samples, GST_SECOND, rate);
 
         GST_DEBUG_OBJECT (scope, "Our latency: %" GST_TIME_FORMAT,
             GST_TIME_ARGS (our_latency));

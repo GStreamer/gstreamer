@@ -175,15 +175,18 @@ gst_spectra_scope_render (GstBaseAudioVisualizer * bscope, GstBuffer * audio,
   guint w = bscope->width;
   GstMapInfo amap, vmap;
   guint32 *vdata;
+  gint channels;
 
   gst_buffer_map (audio, &amap, GST_MAP_READ);
   gst_buffer_map (video, &vmap, GST_MAP_WRITE);
   vdata = (guint32 *) vmap.data;
 
+  channels = GST_AUDIO_INFO_CHANNELS (&bscope->ainfo);
+
   mono_adata = (gint16 *) g_memdup (amap.data, amap.size);
 
-  if (bscope->channels > 1) {
-    guint ch = bscope->channels;
+  if (channels > 1) {
+    guint ch = channels;
     guint num_samples = amap.size / (ch * sizeof (gint16));
     guint i, c, v, s = 0;
 

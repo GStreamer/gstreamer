@@ -83,9 +83,6 @@ struct _GstBaseAudioVisualizer
   GstBaseAudioVisualizerShaderFunc shader;
   guint32 shade_amount;
 
-  guint64 frame_duration;
-  guint bpf;                    /* bytes per frame */
-  guint bps;                    /* bytes per sample */
   guint spf;                    /* samples per video frame */
   guint req_spf;                /* min samples per frame wanted by the subclass */
 
@@ -94,12 +91,12 @@ struct _GstBaseAudioVisualizer
   gint fps_n, fps_d;
   gint width;
   gint height;
+  guint64 frame_duration;
+  guint bpf;                    /* bytes per frame */
 
   /* audio state */
-  gint sample_rate;
-  gint channels;
-  gint rate;
-  
+  GstAudioInfo ainfo;
+
   /* configuration mutex */
   GMutex config_lock;
   

@@ -181,7 +181,7 @@ gst_wave_scope_setup (GstBaseAudioVisualizer * bscope)
   if (scope->flt)
     g_free (scope->flt);
 
-  scope->flt = g_new0 (gdouble, 6 * bscope->channels);
+  scope->flt = g_new0 (gdouble, 6 * GST_AUDIO_INFO_CHANNELS (&bscope->ainfo));
 
   return TRUE;
 }
@@ -238,7 +238,7 @@ static void
 render_dots (GstBaseAudioVisualizer * base, guint32 * vdata, gint16 * adata,
     guint num_samples)
 {
-  gint channels = base->channels;
+  gint channels = GST_AUDIO_INFO_CHANNELS (&base->ainfo);
   guint i, c, s, x, y, oy;
   gfloat dx, dy;
   guint w = base->width;
@@ -263,7 +263,7 @@ static void
 render_lines (GstBaseAudioVisualizer * base, guint32 * vdata, gint16 * adata,
     guint num_samples)
 {
-  gint channels = base->channels;
+  gint channels = GST_AUDIO_INFO_CHANNELS (&base->ainfo);
   guint i, c, s, x, y, oy;
   gfloat dx, dy;
   guint w = base->width;
@@ -308,7 +308,7 @@ render_color_dots (GstBaseAudioVisualizer * base, guint32 * vdata,
     gint16 * adata, guint num_samples)
 {
   GstWaveScope *scope = (GstWaveScope *) base;
-  gint channels = base->channels;
+  gint channels = GST_AUDIO_INFO_CHANNELS (&base->ainfo);
   guint i, c, s, x, y, oy;
   gfloat dx, dy;
   guint w = base->width;
@@ -348,7 +348,7 @@ render_color_lines (GstBaseAudioVisualizer * base, guint32 * vdata,
     gint16 * adata, guint num_samples)
 {
   GstWaveScope *scope = (GstWaveScope *) base;
-  gint channels = base->channels;
+  gint channels = GST_AUDIO_INFO_CHANNELS (&base->ainfo);
   guint i, c, s, x, y, oy;
   gfloat dx, dy;
   guint w = base->width;
@@ -409,11 +409,12 @@ gst_wave_scope_render (GstBaseAudioVisualizer * base, GstBuffer * audio,
   GstWaveScope *scope = GST_WAVE_SCOPE (base);
   GstMapInfo amap, vmap;
   guint num_samples;
+  gint channels = GST_AUDIO_INFO_CHANNELS (&base->ainfo);
 
   gst_buffer_map (audio, &amap, GST_MAP_READ);
   gst_buffer_map (video, &vmap, GST_MAP_WRITE);
 
-  num_samples = amap.size / (base->channels * sizeof (gint16));
+  num_samples = amap.size / (channels * sizeof (gint16));
   scope->process (base, (guint32 *) vmap.data, (gint16 *) amap.data,
       num_samples);
 
