@@ -499,6 +499,8 @@ gst_vaapi_surface_proxy_get_surface_id
 gst_vaapi_surface_proxy_set_surface
 gst_vaapi_surface_proxy_get_timestamp
 gst_vaapi_surface_proxy_set_timestamp
+gst_vaapi_surface_proxy_get_tff
+gst_vaapi_surface_proxy_set_tff
 <SUBSECTION Standard>
 GST_VAAPI_SURFACE_PROXY
 GST_VAAPI_IS_SURFACE_PROXY

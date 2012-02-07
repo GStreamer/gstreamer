@@ -72,6 +72,15 @@ G_BEGIN_DECLS
 #define GST_VAAPI_SURFACE_PROXY_TIMESTAMP(surface) \
     gst_vaapi_surface_proxy_get_timestamp(surface)
 
+/**
+ * GST_VAAPI_SURFACE_PROXY_TFF:
+ * @surface: a #GstVaapiSurfaceProxy
+ *
+ * Macro that evaluates to the tff flag of the @surface
+ */
+#define GST_VAAPI_SURFACE_PROXY_TFF(surface) \
+    gst_vaapi_surface_proxy_get_tff(surface)
+
 typedef struct _GstVaapiSurfaceProxy            GstVaapiSurfaceProxy;
 typedef struct _GstVaapiSurfaceProxyPrivate     GstVaapiSurfaceProxyPrivate;
 typedef struct _GstVaapiSurfaceProxyClass       GstVaapiSurfaceProxyClass;
@@ -133,6 +142,12 @@ gst_vaapi_surface_proxy_set_timestamp(
     GstVaapiSurfaceProxy *proxy,
     GstClockTime          timestamp
 );
+
+gboolean
+gst_vaapi_surface_proxy_get_tff(GstVaapiSurfaceProxy *proxy);
+
+void
+gst_vaapi_surface_proxy_set_tff(GstVaapiSurfaceProxy *proxy, gboolean tff);
 
 G_END_DECLS
 
