@@ -166,7 +166,7 @@ get_profile(AVCodecContext *avctx, GstVaapiEntrypoint entrypoint)
 
 /** Ensures VA context is correctly set up for the current FFmpeg context */
 static GstVaapiContext *
-get_context(AVCodecContext *avctx)
+get_context(AVCodecContext *avctx, AVFrame *pic)
 {
     GstVaapiContextFfmpeg * const vactx = avctx->hwaccel_context;
     GstVaapiDecoder * const decoder = GST_VAAPI_DECODER(vactx->decoder);
@@ -188,6 +188,8 @@ get_context(AVCodecContext *avctx)
         avctx->sample_aspect_ratio.num,
         avctx->sample_aspect_ratio.den
     );
+
+    gst_vaapi_decoder_set_interlaced(decoder, !!pic->interlaced_frame);
 
     success = gst_vaapi_decoder_ensure_context(
         decoder,
@@ -263,7 +265,7 @@ gst_vaapi_decoder_ffmpeg_get_buffer(AVCodecContext *avctx, AVFrame *pic)
     GstVaapiSurfaceProxy *proxy;
     GstVaapiID surface_id;
 
-    context = get_context(avctx);
+    context = get_context(avctx, pic);
     if (!context)
         return -1;
 
@@ -494,6 +496,8 @@ render_frame(GstVaapiDecoderFfmpeg *decoder, AVFrame *frame)
         return GST_VAAPI_DECODER_STATUS_ERROR_INVALID_SURFACE;
 
     gst_vaapi_surface_proxy_set_timestamp(proxy, frame->pts);
+    if (frame->interlaced_frame)
+        gst_vaapi_surface_proxy_set_tff(proxy, frame->top_field_first);
     gst_vaapi_decoder_push_surface_proxy(base_decoder, g_object_ref(proxy));
     return GST_VAAPI_DECODER_STATUS_SUCCESS;
 }
