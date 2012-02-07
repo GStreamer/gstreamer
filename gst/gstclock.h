@@ -455,7 +455,6 @@ struct _GstClock {
 
   /*< private >*/ /* with LOCK */
   GstClockTime   resolution;
-  gboolean       stats;
 
   /* for master/slave clocks */
   GstClock      *master;
