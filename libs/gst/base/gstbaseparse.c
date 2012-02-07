@@ -317,9 +317,6 @@ struct _GstBaseParsePrivate
   /* Newsegment event to be sent after SEEK */
   GstEvent *pending_segment;
 
-  /* Segment event that closes the running segment prior to SEEK */
-  GstEvent *close_segment;
-
   /* push mode helper frame */
   GstBaseParseFrame frame;
 
@@ -468,10 +465,6 @@ gst_base_parse_finalize (GObject * object)
 
   if (parse->priv->pending_segment) {
     p_ev = &parse->priv->pending_segment;
-    gst_event_replace (p_ev, NULL);
-  }
-  if (parse->priv->close_segment) {
-    p_ev = &parse->priv->close_segment;
     gst_event_replace (p_ev, NULL);
   }
 
@@ -1948,13 +1941,6 @@ gst_base_parse_push_frame (GstBaseParse * parse, GstBaseParseFrame * frame)
     }
   }
 
-  /* and should then also be linked downstream, so safe to send some events */
-  if (G_UNLIKELY (parse->priv->close_segment)) {
-    /* only set up by loop */
-    GST_DEBUG_OBJECT (parse, "loop sending close segment");
-    gst_pad_push_event (parse->srcpad, parse->priv->close_segment);
-    parse->priv->close_segment = NULL;
-  }
   if (G_UNLIKELY (parse->priv->pending_segment)) {
     GstEvent *pending_segment;
 
