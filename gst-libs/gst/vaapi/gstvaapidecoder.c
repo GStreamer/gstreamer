@@ -162,6 +162,7 @@ set_caps(GstVaapiDecoder *decoder, GstCaps *caps)
     GstVaapiProfile profile;
     const GValue *v_codec_data;
     gint v1, v2;
+    gboolean b;
 
     profile = gst_vaapi_profile_from_caps(caps);
     if (!profile)
@@ -187,6 +188,9 @@ set_caps(GstVaapiDecoder *decoder, GstCaps *caps)
         priv->par_n = v1;
         priv->par_d = v2;
     }
+
+    if (gst_structure_get_boolean(structure, "interlaced", &b))
+        priv->is_interlaced = b;
 
     v_codec_data = gst_structure_get_value(structure, "codec_data");
     if (v_codec_data)
@@ -346,6 +350,7 @@ gst_vaapi_decoder_init(GstVaapiDecoder *decoder)
     priv->par_d                 = 0;
     priv->buffers               = g_queue_new();
     priv->surfaces              = g_queue_new();
+    priv->is_interlaced         = FALSE;
 }
 
 /**
@@ -497,6 +502,23 @@ gst_vaapi_decoder_set_pixel_aspect_ratio(
         gst_caps_set_simple(
             priv->caps,
             "pixel-aspect-ratio", GST_TYPE_FRACTION, par_n, par_d,
+            NULL
+        );
+        g_object_notify(G_OBJECT(decoder), "caps");
+    }
+}
+
+void
+gst_vaapi_decoder_set_interlaced(GstVaapiDecoder *decoder, gboolean interlaced)
+{
+    GstVaapiDecoderPrivate * const priv = decoder->priv;
+
+    if (priv->is_interlaced != interlaced) {
+        GST_DEBUG("interlaced changed to %s", interlaced ? "true" : "false");
+        priv->is_interlaced = interlaced;
+        gst_caps_set_simple(
+            priv->caps,
+            "interlaced", G_TYPE_BOOLEAN, interlaced,
             NULL
         );
         g_object_notify(G_OBJECT(decoder), "caps");

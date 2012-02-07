@@ -125,6 +125,7 @@ struct _GstVaapiDecoderPrivate {
     guint               par_d;
     GQueue             *buffers;
     GQueue             *surfaces;
+    guint               is_interlaced   : 1;
 };
 
 void
@@ -147,6 +148,10 @@ gst_vaapi_decoder_set_pixel_aspect_ratio(
     guint               par_n,
     guint               par_d
 ) attribute_hidden;
+
+void
+gst_vaapi_decoder_set_interlaced(GstVaapiDecoder *decoder, gboolean interlaced)
+    attribute_hidden;
 
 gboolean
 gst_vaapi_decoder_ensure_context(
