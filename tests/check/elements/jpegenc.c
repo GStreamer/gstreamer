@@ -195,7 +195,8 @@ GST_START_TEST (test_jpegenc_different_caps)
   caps = gst_caps_new_simple ("video/x-raw", "width", G_TYPE_INT,
       800, "height", G_TYPE_INT, 600, "framerate",
       GST_TYPE_FRACTION, 1, 1, "format", G_TYPE_STRING, "I420", NULL);
-  buffer = create_video_buffer (caps);
+  fail_unless (gst_pad_set_caps (mysrcpad, caps));
+  fail_unless ((buffer = create_video_buffer (caps)) != NULL);
   gst_caps_unref (caps);
   fail_unless (gst_pad_push (mysrcpad, buffer) == GST_FLOW_OK);
 
@@ -208,6 +209,7 @@ GST_START_TEST (test_jpegenc_different_caps)
       640, "height", G_TYPE_INT, 480, "framerate",
       GST_TYPE_FRACTION, 1, 1, "format", G_TYPE_STRING, "I420", NULL);
   fail_unless (gst_caps_can_intersect (allowed_caps, caps));
+  fail_unless (gst_pad_set_caps (mysrcpad, caps));
 
   /* push second buffer with 640x480 resolution */
   buffer = create_video_buffer (caps);
