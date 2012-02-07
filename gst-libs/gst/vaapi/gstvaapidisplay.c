@@ -361,6 +361,7 @@ gst_vaapi_display_destroy(GstVaapiDisplay *display)
         gst_vaapi_display_cache_remove(get_display_cache(), display);
         free_display_cache();
     }
+    g_static_rec_mutex_free(&priv->mutex);
 }
 
 static gboolean

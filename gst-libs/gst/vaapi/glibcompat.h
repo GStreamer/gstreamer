@@ -33,4 +33,26 @@ g_list_free_full(GList *list, GDestroyNotify free_func)
 }
 #endif
 
+#if GLIB_CHECK_VERSION(2,31,2)
+#define GStaticMutex                    GMutex
+#undef  g_static_mutex_init
+#define g_static_mutex_init(mutex)      g_mutex_init(mutex)
+#undef  g_static_mutex_free
+#define g_static_mutex_free(mutex)      g_mutex_clear(mutex)
+#undef  g_static_mutex_lock
+#define g_static_mutex_lock(mutex)      g_mutex_lock(mutex)
+#undef  g_static_mutex_unlock
+#define g_static_mutex_unlock(mutex)    g_mutex_unlock(mutex)
+
+#define GStaticRecMutex                 GRecMutex
+#undef  g_static_rec_mutex_init
+#define g_static_rec_mutex_init(mutex)  g_rec_mutex_init(mutex)
+#undef  g_static_rec_mutex_free
+#define g_static_rec_mutex_free(mutex)  g_rec_mutex_clear(mutex)
+#undef  g_static_rec_mutex_lock
+#define g_static_rec_mutex_lock(mutex)  g_rec_mutex_lock(mutex)
+#undef  g_static_rec_mutex_unlock
+#define g_static_rec_mutex_unlock(m)    g_rec_mutex_unlock(m)
+#endif
+
 #endif /* GLIB_COMPAT_H */

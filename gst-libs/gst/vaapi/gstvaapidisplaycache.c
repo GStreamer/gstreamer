@@ -169,6 +169,7 @@ gst_vaapi_display_cache_free(GstVaapiDisplayCache *cache)
         g_list_free(cache->list);
         cache->list = NULL;
     }
+    g_static_mutex_free(&cache->mutex);
     g_slice_free(GstVaapiDisplayCache, cache);
 }
 
