@@ -240,6 +240,8 @@ gst_vaapisink_destroy(GstVaapiSink *sink)
         g_object_unref(sink->display);
         sink->display = NULL;
     }
+
+    gst_caps_replace(&sink->caps, NULL);
 }
 
 /* Checks whether a ConfigureNotify event is in the queue */
@@ -299,6 +301,10 @@ gst_vaapisink_ensure_render_rect(GstVaapiSink *sink, guint width, guint height)
     GstVaapiRectangle * const display_rect = &sink->display_rect;
     guint num, den, display_par_n, display_par_d;
     gboolean success;
+
+    /* Return success if caps are not set yet */
+    if (!sink->caps)
+        return TRUE;
 
     GST_DEBUG("ensure render rect within %ux%u bounds", width, height);
 
@@ -458,6 +464,8 @@ gst_vaapisink_set_caps(GstBaseSink *base_sink, GstCaps *caps)
     sink->video_par_n  = video_par_n;
     sink->video_par_d  = video_par_d;
     GST_DEBUG("video pixel-aspect-ratio %d/%d", video_par_n, video_par_d);
+
+    gst_caps_replace(&sink->caps, caps);
 
     if (!gst_vaapi_ensure_display(sink, &sink->display))
         return FALSE;
@@ -861,6 +869,7 @@ gst_vaapisink_class_init(GstVaapiSinkClass *klass)
 static void
 gst_vaapisink_init(GstVaapiSink *sink, GstVaapiSinkClass *klass)
 {
+    sink->caps           = NULL;
     sink->display        = NULL;
     sink->window         = NULL;
     sink->window_width   = 0;

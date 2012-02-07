@@ -1,7 +1,10 @@
-gst-vaapi NEWS -- summary of changes.  2012-04-02
+gst-vaapi NEWS -- summary of changes.  2012-04-DD
 Copyright (C) 2010-2011 Splitted-Desktop Systems
 Copyright (C) 2011-2012 Intel Corporation
 Copyright (C) 2011 Collabora
+
+Version 0.3.7 - DD.Apr.2012
+* Recalculate render rect only if caps are negotiated (Holger Kaelberer)
 
 Version 0.3.6 - 02.Apr.2012
 * Add support for decoding MPEG-2 interlaced streams
