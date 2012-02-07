@@ -38,10 +38,53 @@ GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS ("ANY"));
 
+static void
+gst_tag_lib_mux_iface_init (GType taglib_type)
+{
+  static const GInterfaceInfo tag_setter_info = {
+    NULL,
+    NULL,
+    NULL
+  };
 
-#define gst_tag_lib_mux_parent_class parent_class
-G_DEFINE_TYPE_WITH_CODE (GstTagLibMux, gst_tag_lib_mux, GST_TYPE_ELEMENT,
-    G_IMPLEMENT_INTERFACE (GST_TYPE_TAG_SETTER, NULL));
+  g_type_add_interface_static (taglib_type, GST_TYPE_TAG_SETTER,
+      &tag_setter_info);
+}
+
+static GstElementClass *parent_class = NULL;
+
+static void gst_tag_lib_mux_class_init (GstTagLibMuxClass * klass);
+static void gst_tag_lib_mux_init (GstTagLibMux * mux,
+    GstTagLibMuxClass * mux_class);
+
+GType
+gst_tag_lib_mux_get_type (void)
+{
+  static volatile gsize tag_lib_mux_type = 0;
+
+  if (g_once_init_enter (&tag_lib_mux_type)) {
+    GType _type;
+    static const GTypeInfo tag_lib_mux_info = {
+      sizeof (GstTagLibMuxClass),
+      NULL,
+      NULL,
+      (GClassInitFunc) gst_tag_lib_mux_class_init,
+      NULL,
+      NULL,
+      sizeof (GstTagLibMux),
+      0,
+      (GInstanceInitFunc) gst_tag_lib_mux_init,
+    };
+
+    _type = g_type_register_static (GST_TYPE_ELEMENT,
+        "GstTagLibMux", &tag_lib_mux_info, 0);
+
+    gst_tag_lib_mux_iface_init (_type);
+
+    g_once_init_leave (&tag_lib_mux_type, _type);
+  }
+  return tag_lib_mux_type;
+}
 
 static GstStateChangeReturn
 gst_tag_lib_mux_change_state (GstElement * element, GstStateChange transition);
@@ -77,6 +120,8 @@ gst_tag_lib_mux_class_init (GstTagLibMuxClass * klass)
   gobject_class = (GObjectClass *) klass;
   gstelement_class = (GstElementClass *) klass;
 
+  parent_class = g_type_class_peek_parent (klass);
+
   gobject_class->finalize = gst_tag_lib_mux_finalize;
   gstelement_class->change_state =
       GST_DEBUG_FUNCPTR (gst_tag_lib_mux_change_state);
@@ -89,9 +134,8 @@ gst_tag_lib_mux_class_init (GstTagLibMuxClass * klass)
 }
 
 static void
-gst_tag_lib_mux_init (GstTagLibMux * mux)
+gst_tag_lib_mux_init (GstTagLibMux * mux, GstTagLibMuxClass * mux_class)
 {
-  GstTagLibMuxClass *mux_class = GST_TAG_LIB_MUX_GET_CLASS (mux);
   GstElementClass *element_klass = GST_ELEMENT_CLASS (mux_class);
   GstPadTemplate *tmpl;
 
@@ -107,9 +151,13 @@ gst_tag_lib_mux_init (GstTagLibMux * mux)
   /* pad through which data goes out of the element */
   tmpl = gst_element_class_get_pad_template (element_klass, "src");
   if (tmpl) {
+    GstCaps *caps;
+
     mux->srcpad = gst_pad_new_from_template (tmpl, "src");
     gst_pad_use_fixed_caps (mux->srcpad);
-    gst_pad_set_caps (mux->srcpad, gst_pad_template_get_caps (tmpl));
+    caps = gst_pad_template_get_caps (tmpl);
+    gst_pad_set_caps (mux->srcpad, caps);
+    gst_caps_unref (caps);
     gst_element_add_pad (GST_ELEMENT (mux), mux->srcpad);
   }
 
