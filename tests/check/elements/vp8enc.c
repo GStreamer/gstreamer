@@ -30,8 +30,8 @@ static GstStaticPadTemplate sinktemplate = GST_STATIC_PAD_TEMPLATE ("sink",
 static GstStaticPadTemplate srctemplate = GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS ("video/x-raw-yuv, "
-        "format = (fourcc) I420, "
+    GST_STATIC_CAPS ("video/x-raw, "
+        "format = (string) I420, "
         "width = (int) [1, MAX], "
         "height = (int) [1, MAX], " "framerate = (fraction) [0, MAX]"));
 
@@ -97,20 +97,20 @@ GST_START_TEST (test_encode_simple)
   gint i;
   GList *l;
   GstCaps *outcaps;
+  GstSegment seg;
 
   vp8enc =
       setup_vp8enc
-      ("video/x-raw-yuv,format=(fourcc)I420,width=(int)320,height=(int)240,framerate=(fraction)25/1");
+      ("video/x-raw,format=(string)I420,width=(int)320,height=(int)240,framerate=(fraction)25/1");
 
   g_object_set (vp8enc, "max-latency", 5, NULL);
 
-  fail_unless (gst_pad_push_event (srcpad, gst_event_new_new_segment (FALSE,
-              1.0, GST_FORMAT_TIME, 0, gst_util_uint64_scale (20, GST_SECOND,
-                  25), 0)));
+  gst_segment_init (&seg, GST_FORMAT_TIME);
+  seg.stop = gst_util_uint64_scale (20, GST_SECOND, 25);
+  fail_unless (gst_pad_push_event (srcpad, gst_event_new_segment (&seg)));
 
   buffer = gst_buffer_new_and_alloc (320 * 240 + 2 * 160 * 120);
-  memset (GST_BUFFER_DATA (buffer), 0, GST_BUFFER_SIZE (buffer));
-  gst_buffer_set_caps (buffer, GST_PAD_CAPS (srcpad));
+  gst_buffer_memset (buffer, 0, 0, -1);
 
   for (i = 0; i < 20; i++) {
     GST_BUFFER_TIMESTAMP (buffer) = gst_util_uint64_scale (i, GST_SECOND, 25);
@@ -143,8 +143,6 @@ GST_START_TEST (test_encode_simple)
         gst_util_uint64_scale (i, GST_SECOND, 25));
     fail_unless_equals_uint64 (GST_BUFFER_DURATION (buffer),
         gst_util_uint64_scale (1, GST_SECOND, 25));
-
-    fail_unless (gst_caps_can_intersect (GST_BUFFER_CAPS (buffer), outcaps));
   }
 
   gst_caps_unref (outcaps);
