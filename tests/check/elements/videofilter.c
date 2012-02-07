@@ -137,13 +137,16 @@ check_filter (const gchar * name, gint num_buffers, const gchar * prop, ...)
   385, 385}};
   gint i, n, r;
   gint size;
-  GstCaps *templ = gst_caps_from_string (VIDEO_CAPS_TEMPLATE_STRING);
+  GstCaps *allcaps, *templ = gst_caps_from_string (VIDEO_CAPS_TEMPLATE_STRING);
   va_list varargs;
 
-  n = gst_caps_get_size (templ);
+  allcaps = gst_caps_normalize (templ);
+  gst_caps_unref (templ);
+
+  n = gst_caps_get_size (allcaps);
 
   for (i = 0; i < n; i++) {
-    GstStructure *s = gst_caps_get_structure (templ, i);
+    GstStructure *s = gst_caps_get_structure (allcaps, i);
     GstCaps *caps = gst_caps_new_empty ();
 
     gst_caps_append_structure (caps, gst_structure_copy (s));
@@ -169,7 +172,7 @@ check_filter (const gchar * name, gint num_buffers, const gchar * prop, ...)
     gst_caps_unref (caps);
   }
 
-  gst_caps_unref (templ);
+  gst_caps_unref (allcaps);
 }
 
 GST_START_TEST (test_videobalance)
