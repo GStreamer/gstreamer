@@ -471,8 +471,12 @@ gst_vaapisink_set_caps(GstBaseSink *base_sink, GstCaps *caps)
         return FALSE;
 
     gst_vaapi_display_get_size(sink->display, &display_width, &display_height);
-    if (sink->fullscreen ||
-        video_width > display_width || video_height > display_height) {
+    if (sink->foreign_window) {
+        win_width  = sink->window_width;
+        win_height = sink->window_height;
+    }
+    else if (sink->fullscreen ||
+             video_width > display_width || video_height > display_height) {
         win_width  = display_width;
         win_height = display_height;
     }
@@ -481,8 +485,10 @@ gst_vaapisink_set_caps(GstBaseSink *base_sink, GstCaps *caps)
         win_height = video_height;
     }
 
-    if (sink->window)
-        gst_vaapi_window_set_size(sink->window, win_width, win_height);
+    if (sink->window) {
+        if (!sink->foreign_window || sink->fullscreen)
+            gst_vaapi_window_set_size(sink->window, win_width, win_height);
+    }
     else {
         gst_vaapi_display_lock(sink->display);
         gst_x_overlay_prepare_xwindow_id(GST_X_OVERLAY(sink));
