@@ -149,7 +149,7 @@ gst_vaapidecode_update_src_caps(GstVaapiDecode *decode, GstCaps *caps)
 {
     GstCaps *other_caps;
     GstStructure *structure;
-    const GValue *v_width, *v_height, *v_framerate, *v_par;
+    const GValue *v_width, *v_height, *v_framerate, *v_par, *v_interlaced;
     gboolean success;
 
     if (!decode->srcpad_caps) {
@@ -163,6 +163,7 @@ gst_vaapidecode_update_src_caps(GstVaapiDecode *decode, GstCaps *caps)
     v_height     = gst_structure_get_value(structure, "height");
     v_framerate  = gst_structure_get_value(structure, "framerate");
     v_par        = gst_structure_get_value(structure, "pixel-aspect-ratio");
+    v_interlaced = gst_structure_get_value(structure, "interlaced");
 
     structure = gst_caps_get_structure(decode->srcpad_caps, 0);
     if (v_width && v_height) {
@@ -173,6 +174,8 @@ gst_vaapidecode_update_src_caps(GstVaapiDecode *decode, GstCaps *caps)
         gst_structure_set_value(structure, "framerate", v_framerate);
     if (v_par)
         gst_structure_set_value(structure, "pixel-aspect-ratio", v_par);
+    if (v_interlaced)
+        gst_structure_set_value(structure, "interlaced", v_interlaced);
 
     gst_structure_set(structure, "type", G_TYPE_STRING, "vaapi", NULL);
     gst_structure_set(structure, "opengl", G_TYPE_BOOLEAN, USE_VAAPI_GLX, NULL);
@@ -239,6 +242,10 @@ gst_vaapidecode_step(GstVaapiDecode *decode)
 
         GST_BUFFER_TIMESTAMP(buffer) = GST_VAAPI_SURFACE_PROXY_TIMESTAMP(proxy);
         gst_buffer_set_caps(buffer, GST_PAD_CAPS(decode->srcpad));
+
+        if (GST_VAAPI_SURFACE_PROXY_TFF(proxy))
+            GST_BUFFER_FLAG_SET(buffer, GST_VIDEO_BUFFER_TFF);
+
         gst_vaapi_video_buffer_set_surface_proxy(
             GST_VAAPI_VIDEO_BUFFER(buffer),
             proxy
