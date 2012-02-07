@@ -887,6 +887,7 @@ check_content (ExifContent * content, void *user_data)
     }
       break;
     case EXIF_TYPE_UNDEFINED:{
+      GstMapInfo map;
       GstBuffer *buf;
       gint i;
 
@@ -895,10 +896,12 @@ check_content (ExifContent * content, void *user_data)
         return;
       }
 
-      fail_unless (entry->size, GST_BUFFER_SIZE (buf));
-      for (i = 0; i < GST_BUFFER_SIZE (buf); i++) {
-        fail_unless (GST_BUFFER_DATA (buf)[i] == (guint8) entry->data[i]);
+      gst_buffer_map (buf, &map, GST_MAP_READ);
+      fail_unless (entry->size, map.size);
+      for (i = 0; i < map.size; i++) {
+        fail_unless (map.data[i] == (guint8) entry->data[i]);
       }
+      gst_buffer_unmap (buf, &map);
 
       test_data->result = TRUE;
       gst_buffer_unref (buf);
@@ -972,7 +975,7 @@ generate_jif_file_with_tags (const gchar * tags, const gchar * filepath)
 {
   GstTagList *taglist;
 
-  taglist = gst_structure_from_string (tags, NULL);
+  taglist = gst_tag_list_new_from_string (tags);
   generate_jif_file_with_tags_from_taglist (taglist, filepath);
 
   gst_tag_list_free (taglist);
@@ -1004,7 +1007,7 @@ libexif_check_tags (const gchar * tags, const gchar * filepath)
 {
   GstTagList *taglist;
 
-  taglist = gst_structure_from_string (tags, NULL);
+  taglist = gst_tag_list_new_from_string (tags);
   fail_unless (taglist != NULL);
 
   libexif_check_tags_from_taglist (taglist, filepath);
@@ -1019,6 +1022,7 @@ GST_START_TEST (test_jifmux_tags)
   GstTagList *taglist;
   GstDateTime *datetime;
   GstBuffer *buffer;
+  GstMapInfo map;
   gint i;
 
   gst_tag_register_musicbrainz_tags ();
@@ -1029,10 +1033,13 @@ GST_START_TEST (test_jifmux_tags)
 
   datetime = gst_date_time_new_local_time (2000, 10, 5, 8, 45, 13);
   buffer = gst_buffer_new_and_alloc (100);
+  gst_buffer_map (buffer, &map, GST_MAP_WRITE);
   for (i = 0; i < 100; i++) {
-    GST_BUFFER_DATA (buffer)[i] = i;
+    map.data[i] = i;
   }
-  taglist = gst_tag_list_new_full (GST_TAG_ARTIST, "some artist",
+  gst_buffer_unmap (buffer, &map);
+
+  taglist = gst_tag_list_new (GST_TAG_ARTIST, "some artist",
       GST_TAG_COPYRIGHT, "My copyright notice",
       GST_TAG_DEVICE_MANUFACTURER, "MyFavoriteBrand",
       GST_TAG_DEVICE_MODEL, "123v42.1",
@@ -1209,7 +1216,7 @@ GST_START_TEST (test_jifmux_tags)
 GST_END_TEST;
 
 #define HAVE_ELEMENT(name) \
-  gst_default_registry_check_feature_version (name,\
+  gst_registry_check_feature_version (gst_registry_get (), name,\
       GST_VERSION_MAJOR, GST_VERSION_MINOR, 0)
 
 static Suite *

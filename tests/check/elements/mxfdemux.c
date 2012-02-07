@@ -48,46 +48,59 @@ _pad_added (GstElement * element, GstPad * pad, gpointer user_data)
   g_free (name);
 }
 
-static GstFlowReturn
-_sink_chain (GstPad * pad, GstBuffer * buffer)
+static void
+_sink_check_caps (GstPad * pad, GstCaps * caps)
 {
-  GstCaps *caps = gst_caps_new_simple ("audio/x-raw-int",
+  GstCaps *tcaps = gst_caps_new_simple ("audio/x-raw",
       "rate", G_TYPE_INT, 11025,
       "channels", G_TYPE_INT, 1,
-      "signed", G_TYPE_BOOLEAN, FALSE,
-      "endianness", G_TYPE_INT, G_LITTLE_ENDIAN,
-      "depth", G_TYPE_INT, 8,
-      "width", G_TYPE_INT, 8,
+      "format", G_TYPE_STRING, "U8",
+      "layout", G_TYPE_STRING, "interleaved",
       NULL);
 
-  fail_unless (GST_BUFFER_CAPS (buffer) != NULL);
-  fail_unless (gst_caps_is_always_compatible (GST_BUFFER_CAPS (buffer), caps));
+  fail_unless (gst_caps_is_always_compatible (caps, tcaps));
+  gst_caps_unref (tcaps);
+}
 
-  fail_unless_equals_int (GST_BUFFER_SIZE (buffer), sizeof (mxf_essence));
-  fail_unless (memcmp (GST_BUFFER_DATA (buffer), mxf_essence,
+static GstFlowReturn
+_sink_chain (GstPad * pad, GstObject * parent, GstBuffer * buffer)
+{
+  fail_unless_equals_int (gst_buffer_get_size (buffer), sizeof (mxf_essence));
+  fail_unless (gst_buffer_memcmp (buffer, 0, mxf_essence,
           sizeof (mxf_essence)) == 0);
 
   fail_unless (GST_BUFFER_TIMESTAMP (buffer) == 0);
   fail_unless (GST_BUFFER_DURATION (buffer) == 200 * GST_MSECOND);
 
   gst_buffer_unref (buffer);
-  gst_caps_unref (caps);
 
   have_data = TRUE;
   return GST_FLOW_OK;
 }
 
 static gboolean
-_sink_event (GstPad * pad, GstEvent * event)
+_sink_event (GstPad * pad, GstObject * parent, GstEvent * event)
 {
-  if (GST_EVENT_TYPE (event) == GST_EVENT_EOS) {
-    if (loop) {
-      while (!g_main_loop_is_running (loop));
-    }
+  switch (GST_EVENT_TYPE (event)) {
+    case GST_EVENT_EOS:
+      if (loop) {
+        while (!g_main_loop_is_running (loop));
+      }
 
-    have_eos = TRUE;
-    if (loop)
-      g_main_loop_quit (loop);
+      have_eos = TRUE;
+      if (loop)
+        g_main_loop_quit (loop);
+      break;
+    case GST_EVENT_CAPS:
+    {
+      GstCaps *caps;
+
+      gst_event_parse_caps (event, &caps);
+      _sink_check_caps (pad, caps);
+      break;
+    }
+    default:
+      break;
   }
 
   gst_event_unref (event);
@@ -115,26 +128,20 @@ _create_src_pad_push (void)
 }
 
 static GstFlowReturn
-_src_getrange (GstPad * pad, guint64 offset, guint length, GstBuffer ** buffer)
+_src_getrange (GstPad * pad, GstObject * parent, guint64 offset, guint length,
+    GstBuffer ** buffer)
 {
-  GstCaps *caps;
-
   if (offset + length > sizeof (mxf_file))
-    return GST_FLOW_UNEXPECTED;
+    return GST_FLOW_EOS;
 
-  caps = gst_caps_new_simple ("application/mxf", NULL);
-
-  *buffer = gst_buffer_new ();
-  GST_BUFFER_DATA (*buffer) = (guint8 *) (mxf_file + offset);
-  GST_BUFFER_SIZE (*buffer) = length;
-  gst_buffer_set_caps (*buffer, caps);
-  gst_caps_unref (caps);
+  *buffer = gst_buffer_new_wrapped_full ((guint8 *) (mxf_file + offset), NULL,
+      0, length);
 
   return GST_FLOW_OK;
 }
 
 static gboolean
-_src_query (GstPad * pad, GstQuery * query)
+_src_query (GstPad * pad, GstObject * parent, GstQuery * query)
 {
   GstFormat fmt;
 
@@ -221,9 +228,9 @@ GST_START_TEST (test_push)
   sinkpad = gst_element_get_static_pad (mxfdemux, "sink");
   fail_unless (sinkpad != NULL);
 
-  buffer = gst_buffer_new ();
-  GST_BUFFER_DATA (buffer) = (guint8 *) mxf_file;
-  GST_BUFFER_SIZE (buffer) = sizeof (mxf_file);
+  buffer =
+      gst_buffer_new_wrapped_full ((guint8 *) mxf_file, NULL, 0,
+      sizeof (mxf_file));
   GST_BUFFER_OFFSET (buffer) = 0;
 
   mysinkpad = _create_sink_pad ();

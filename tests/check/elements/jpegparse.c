@@ -154,16 +154,10 @@ static GList *
 _make_buffers_in (GList * buffer_in, guint8 * test_data, gsize test_data_size)
 {
   GstBuffer *buffer;
-  GstCaps *caps;
   gsize i;
 
   for (i = 0; i < test_data_size; i++) {
-    buffer = gst_buffer_new ();
-    gst_buffer_set_data (buffer, test_data + i, 1);
-    caps = gst_caps_new_simple ("image/jpeg", "parsed", G_TYPE_BOOLEAN, FALSE,
-        NULL);
-    gst_buffer_set_caps (buffer, caps);
-    gst_caps_unref (caps);
+    buffer = gst_buffer_new_wrapped_full (test_data + i, NULL, 0, 1);
     buffer_in = g_list_append (buffer_in, buffer);
   }
   return buffer_in;
@@ -176,17 +170,10 @@ static GList *
 _make_buffers_out (GList * buffer_out, guint8 * test_data, gsize test_data_size)
 {
   GstBuffer *buffer;
-  GstCaps *caps;
 
-  buffer = gst_buffer_new ();
-  gst_buffer_set_data (buffer, test_data, test_data_size);
-
-  caps = gst_caps_new_simple ("image/jpeg", "parsed", G_TYPE_BOOLEAN, TRUE,
-      "framerate", GST_TYPE_FRACTION, 1, 1, NULL);
-  gst_buffer_set_caps (buffer, caps);
-  gst_caps_unref (caps);
-
+  buffer = gst_buffer_new_wrapped_full (test_data, NULL, 0, test_data_size);
   buffer_out = g_list_append (buffer_out, buffer);
+
   return buffer_out;
 }
 
@@ -196,6 +183,12 @@ _make_buffers_out (GList * buffer_out, guint8 * test_data, gsize test_data_size)
 GST_START_TEST (test_parse_single_byte)
 {
   GList *buffer_in = NULL, *buffer_out = NULL;
+  GstCaps *caps_in, *caps_out;
+
+  caps_in = gst_caps_new_simple ("image/jpeg", "parsed", G_TYPE_BOOLEAN, FALSE,
+      NULL);
+  caps_out = gst_caps_new_simple ("image/jpeg", "parsed", G_TYPE_BOOLEAN, TRUE,
+      "framerate", GST_TYPE_FRACTION, 1, 1, NULL);
 
   /* Push the data byte by byte, injecting some garbage. */
   buffer_in = make_buffers_in (buffer_in, test_data_garbage);
@@ -210,8 +203,11 @@ GST_START_TEST (test_parse_single_byte)
   buffer_out = make_buffers_out (buffer_out, test_data_normal_frame);
   buffer_out = make_buffers_out (buffer_out, test_data_entropy);
   buffer_out = make_buffers_out (buffer_out, test_data_extra_ff);
-  gst_check_element_push_buffer_list ("jpegparse", buffer_in, buffer_out,
-      GST_FLOW_OK);
+  gst_check_element_push_buffer_list ("jpegparse", buffer_in, caps_in,
+      buffer_out, caps_out, GST_FLOW_OK);
+
+  gst_caps_unref (caps_in);
+  gst_caps_unref (caps_out);
 }
 
 GST_END_TEST;
@@ -224,7 +220,7 @@ GST_START_TEST (test_parse_all_in_one_buf)
   GstBuffer *buffer = NULL;
   gsize total_size = 0;
   gsize offset = 0;
-  GstCaps *caps;
+  GstCaps *caps_in, *caps_out;
 
   /* Push the data in a single buffer, injecting some garbage. */
   total_size += sizeof (test_data_garbage);
@@ -235,41 +231,44 @@ GST_START_TEST (test_parse_all_in_one_buf)
   total_size += sizeof (test_data_entropy);
   total_size += sizeof (test_data_extra_ff);
   buffer = gst_buffer_new_and_alloc (total_size);
-  memcpy (GST_BUFFER_DATA (buffer) + offset, test_data_garbage,
+  gst_buffer_fill (buffer, offset, test_data_garbage,
       sizeof (test_data_garbage));
   offset += sizeof (test_data_garbage);
-  memcpy (GST_BUFFER_DATA (buffer) + offset, test_data_short_frame,
+  gst_buffer_fill (buffer, offset, test_data_short_frame,
       sizeof (test_data_short_frame));
   offset += sizeof (test_data_short_frame);
-  memcpy (GST_BUFFER_DATA (buffer) + offset, test_data_garbage,
+  gst_buffer_fill (buffer, offset, test_data_garbage,
       sizeof (test_data_garbage));
   offset += sizeof (test_data_garbage);
-  memcpy (GST_BUFFER_DATA (buffer) + offset, test_data_normal_frame,
+  gst_buffer_fill (buffer, offset, test_data_normal_frame,
       sizeof (test_data_normal_frame));
   offset += sizeof (test_data_normal_frame);
-  memcpy (GST_BUFFER_DATA (buffer) + offset, test_data_ff,
-      sizeof (test_data_ff));
+  gst_buffer_fill (buffer, offset, test_data_ff, sizeof (test_data_ff));
   offset += sizeof (test_data_ff);
-  memcpy (GST_BUFFER_DATA (buffer) + offset, test_data_entropy,
+  gst_buffer_fill (buffer, offset, test_data_entropy,
       sizeof (test_data_entropy));
   offset += sizeof (test_data_entropy);
-  memcpy (GST_BUFFER_DATA (buffer) + offset, test_data_extra_ff,
+  gst_buffer_fill (buffer, offset, test_data_extra_ff,
       sizeof (test_data_extra_ff));
   offset += sizeof (test_data_extra_ff);
 
-  caps = gst_caps_new_simple ("image/jpeg", "parsed",
+  caps_in = gst_caps_new_simple ("image/jpeg", "parsed",
       G_TYPE_BOOLEAN, FALSE, NULL);
-  gst_buffer_set_caps (buffer, caps);
-  gst_caps_unref (caps);
   GST_LOG ("Pushing single buffer of %u bytes.", (guint) total_size);
   buffer_in = g_list_append (buffer_in, buffer);
 
+  caps_out = gst_caps_new_simple ("image/jpeg", "parsed", G_TYPE_BOOLEAN, TRUE,
+      "framerate", GST_TYPE_FRACTION, 1, 1, NULL);
   buffer_out = make_buffers_out (buffer_out, test_data_short_frame);
   buffer_out = make_buffers_out (buffer_out, test_data_normal_frame);
   buffer_out = make_buffers_out (buffer_out, test_data_entropy);
   buffer_out = make_buffers_out (buffer_out, test_data_extra_ff);
-  gst_check_element_push_buffer_list ("jpegparse", buffer_in, buffer_out,
-      GST_FLOW_OK);
+
+  gst_check_element_push_buffer_list ("jpegparse", buffer_in, caps_in,
+      buffer_out, caps_out, GST_FLOW_OK);
+
+  gst_caps_unref (caps_in);
+  gst_caps_unref (caps_out);
 }
 
 GST_END_TEST;
@@ -279,7 +278,6 @@ make_my_input_buffer (guint8 * test_data_header, gsize test_data_size)
 {
   GstBuffer *buffer;
   gsize total_size = 0, offset = 0;
-  GstCaps *caps;
 
   total_size += sizeof (test_data_soi);
   total_size += test_data_size;
@@ -288,41 +286,28 @@ make_my_input_buffer (guint8 * test_data_header, gsize test_data_size)
 
   buffer = gst_buffer_new_and_alloc (total_size);
 
-  memcpy (GST_BUFFER_DATA (buffer) + offset, test_data_soi,
-      sizeof (test_data_soi));
+  gst_buffer_fill (buffer, offset, test_data_soi, sizeof (test_data_soi));
   offset += sizeof (test_data_soi);
-  memcpy (GST_BUFFER_DATA (buffer) + offset, test_data_header, test_data_size);
+  gst_buffer_fill (buffer, offset, test_data_header, test_data_size);
   offset += test_data_size;
-  memcpy (GST_BUFFER_DATA (buffer) + offset, test_data_sof0,
-      sizeof (test_data_sof0));
+  gst_buffer_fill (buffer, offset, test_data_sof0, sizeof (test_data_sof0));
   offset += sizeof (test_data_sof0);
-  memcpy (GST_BUFFER_DATA (buffer) + offset, test_data_eoi,
-      sizeof (test_data_eoi));
+  gst_buffer_fill (buffer, offset, test_data_eoi, sizeof (test_data_eoi));
   offset += sizeof (test_data_eoi);
-
-  caps = gst_caps_new_simple ("image/jpeg", "parsed", G_TYPE_BOOLEAN, FALSE,
-      NULL);
-  gst_buffer_set_caps (buffer, caps);
-  gst_caps_unref (caps);
 
   return buffer;
 }
 
 static inline GstBuffer *
-make_my_output_buffer (const GstBuffer * buffer_in)
+make_my_output_buffer (GstBuffer * buffer_in)
 {
   GstBuffer *buffer;
-  GstCaps *caps;
+  GstMapInfo map;
 
   buffer = gst_buffer_new ();
-  caps = gst_caps_new_simple ("image/jpeg", "parsed", G_TYPE_BOOLEAN, TRUE,
-      "framerate", GST_TYPE_FRACTION, 1, 1, "format", GST_TYPE_FOURCC,
-      GST_MAKE_FOURCC ('I', '4', '2', '0'), "interlaced", G_TYPE_BOOLEAN, FALSE,
-      "width", G_TYPE_INT, 80, "height", G_TYPE_INT, 60, NULL);
-  gst_buffer_set_data (buffer, GST_BUFFER_DATA (buffer_in),
-      GST_BUFFER_SIZE (buffer_in));
-  gst_buffer_set_caps (buffer, caps);
-  gst_caps_unref (caps);
+  gst_buffer_map (buffer_in, &map, GST_MAP_READ);
+  gst_buffer_fill (buffer, 0, map.data, map.size);
+  gst_buffer_unmap (buffer_in, &map);
 
   return buffer;
 }
@@ -331,12 +316,25 @@ make_my_output_buffer (const GstBuffer * buffer_in)
 GST_START_TEST (test_parse_app1_exif)
 {
   GstBuffer *buffer_in, *buffer_out;
+  GstCaps *caps_in, *caps_out;
+
+  caps_in = gst_caps_new_simple ("image/jpeg", "parsed",
+      G_TYPE_BOOLEAN, FALSE, NULL);
+
+  caps_out = gst_caps_new_simple ("image/jpeg", "parsed", G_TYPE_BOOLEAN, TRUE,
+      "framerate", GST_TYPE_FRACTION, 1, 1, "format", G_TYPE_STRING,
+      "I420", "interlaced", G_TYPE_BOOLEAN, FALSE,
+      "width", G_TYPE_INT, 80, "height", G_TYPE_INT, 60, NULL);
 
   buffer_in = make_my_input_buffer (test_data_app1_exif,
       sizeof (test_data_app1_exif));
   buffer_out = make_my_output_buffer (buffer_in);
 
-  gst_check_element_push_buffer ("jpegparse", buffer_in, buffer_out);
+  gst_check_element_push_buffer ("jpegparse", buffer_in, caps_in, buffer_out,
+      caps_out);
+
+  gst_caps_unref (caps_in);
+  gst_caps_unref (caps_out);
 }
 
 GST_END_TEST;
@@ -344,12 +342,25 @@ GST_END_TEST;
 GST_START_TEST (test_parse_comment)
 {
   GstBuffer *buffer_in, *buffer_out;
+  GstCaps *caps_in, *caps_out;
+
+  caps_in = gst_caps_new_simple ("image/jpeg", "parsed",
+      G_TYPE_BOOLEAN, FALSE, NULL);
+
+  caps_out = gst_caps_new_simple ("image/jpeg", "parsed", G_TYPE_BOOLEAN, TRUE,
+      "framerate", GST_TYPE_FRACTION, 1, 1, "format", G_TYPE_STRING,
+      "I420", "interlaced", G_TYPE_BOOLEAN, FALSE,
+      "width", G_TYPE_INT, 80, "height", G_TYPE_INT, 60, NULL);
 
   buffer_in = make_my_input_buffer (test_data_comment,
       sizeof (test_data_comment));
   buffer_out = make_my_output_buffer (buffer_in);
 
-  gst_check_element_push_buffer ("jpegparse", buffer_in, buffer_out);
+  gst_check_element_push_buffer ("jpegparse", buffer_in, caps_in, buffer_out,
+      caps_out);
+
+  gst_caps_unref (caps_in);
+  gst_caps_unref (caps_out);
 }
 
 GST_END_TEST;

@@ -29,7 +29,8 @@
  * get_peer, and then remove references in every test function */
 static GstPad *mysrcpad, *mysinkpad;
 
-#define VIDEO_CAPS_STRING "video/x-raw-yuv, " \
+#define VIDEO_CAPS_STRING "video/x-raw, " \
+                           "format = (string) I420, " \
                            "width = (int) 384, " \
                            "height = (int) 288, " \
                            "framerate = (fraction) 25/1"

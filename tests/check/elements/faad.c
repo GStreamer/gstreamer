@@ -23,19 +23,18 @@
 #include <unistd.h>
 
 #include <gst/check/gstcheck.h>
+#include <gst/audio/audio.h>
 
 /* For ease of programming we use globals to keep refs for our floating
  * src and sink pads we create; otherwise we always have to do get_pad,
  * get_peer, and then remove references in every test function */
 static GstPad *mysrcpad, *mysinkpad;
 
-#define AUDIO_CAPS_STRING "audio/x-raw-int, " \
+#define AUDIO_CAPS_STRING "audio/x-raw, " \
+                           "format = (string) " GST_AUDIO_NE (S16) ", " \
                            "rate = (int) 48000, " \
                            "channels = (int) 2, " \
-                           "width = (int) 16, " \
-                           "depth = (int) 16, " \
-                           "signed = (boolean) true, " \
-                           "endianness = (int) BYTE_ORDER "
+                           "channel-mask = (bitmask) 3"
 
 #define AAC_CAPS_STRING "audio/mpeg, " \
                           "mpegversion = (int) 4, " \

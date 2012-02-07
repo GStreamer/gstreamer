@@ -31,7 +31,7 @@
 static GstPad *mysrcpad, *mysinkpad;
 
 #define AUDIO_CAPS_STRING "audio/x-raw, " \
-                           "format = (string) " GST_AUDIO_NE (S16) \
+                           "format = (string) " GST_AUDIO_NE (S16) ", "\
                            "layout = (string) interleaved, " \
                            "rate = (int) 48000, " \
                            "channels = (int) 2, " \

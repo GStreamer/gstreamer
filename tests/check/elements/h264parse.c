@@ -97,19 +97,22 @@ verify_buffer (buffer_verify_data_s * vdata, GstBuffer * buffer)
     gint i = vdata->buffer_counter;
 
     fail_unless (i <= 1);
-    fail_unless (GST_BUFFER_SIZE (buffer) == ctx_headers[i].size);
-    fail_unless (memcmp (GST_BUFFER_DATA (buffer), ctx_headers[i].data,
-            GST_BUFFER_SIZE (buffer)) == 0);
+    fail_unless (gst_buffer_get_size (buffer) == ctx_headers[i].size);
+    fail_unless (gst_buffer_memcmp (buffer, 0, ctx_headers[i].data,
+            gst_buffer_get_size (buffer)) == 0);
   } else {
-    fail_unless (GST_BUFFER_SIZE (buffer) > 4);
+    GstMapInfo map;
+
+    gst_buffer_map (buffer, &map, GST_MAP_READ);
+    fail_unless (map.size > 4);
     /* only need to check avc output case */
-    if (GST_READ_UINT32_BE (GST_BUFFER_DATA (buffer)) == 0x01)
+    if (GST_READ_UINT32_BE (map.data) == 0x01)
       return FALSE;
     /* header is merged in initial frame */
     if (vdata->buffer_counter == 0) {
-      guint8 *data = GST_BUFFER_DATA (buffer);
+      guint8 *data = map.data;
 
-      fail_unless (GST_BUFFER_SIZE (buffer) == vdata->data_to_verify_size +
+      fail_unless (map.size == vdata->data_to_verify_size +
           ctx_headers[0].size + ctx_headers[1].size);
       fail_unless (GST_READ_UINT32_BE (data) == ctx_headers[0].size - 4);
       fail_unless (memcmp (data + 4, ctx_headers[0].data + 4,
@@ -123,12 +126,12 @@ verify_buffer (buffer_verify_data_s * vdata, GstBuffer * buffer)
       fail_unless (memcmp (data + 4, vdata->data_to_verify + 4,
               vdata->data_to_verify_size - 4) == 0);
     } else {
-      fail_unless (GST_READ_UINT32_BE (GST_BUFFER_DATA (buffer)) ==
-          GST_BUFFER_SIZE (buffer) - 4);
-      fail_unless (GST_BUFFER_SIZE (buffer) == vdata->data_to_verify_size);
-      fail_unless (memcmp (GST_BUFFER_DATA (buffer) + 4,
-              vdata->data_to_verify + 4, GST_BUFFER_SIZE (buffer) - 4) == 0);
+      fail_unless (GST_READ_UINT32_BE (map.data) == map.size - 4);
+      fail_unless (map.size == vdata->data_to_verify_size);
+      fail_unless (memcmp (map.data + 4, vdata->data_to_verify + 4,
+              map.size - 4) == 0);
     }
+    gst_buffer_unmap (buffer, &map);
     return TRUE;
   }
 
@@ -209,9 +212,9 @@ GST_START_TEST (test_parse_detect_stream)
     fail_unless (val != NULL);
     buf = gst_value_get_buffer (val);
     fail_unless (buf != NULL);
-    fail_unless (GST_BUFFER_SIZE (buf) == sizeof (h264_codec_data));
-    fail_unless (memcmp (GST_BUFFER_DATA (buf), h264_codec_data,
-            GST_BUFFER_SIZE (buf)) == 0);
+    fail_unless (gst_buffer_get_size (buf) == sizeof (h264_codec_data));
+    fail_unless (gst_buffer_memcmp (buf, 0, h264_codec_data,
+            gst_buffer_get_size (buf)) == 0);
   }
 
   gst_caps_unref (caps);
@@ -240,8 +243,12 @@ h264parse_suite (void)
 static gboolean
 verify_buffer_packetized (buffer_verify_data_s * vdata, GstBuffer * buffer)
 {
-  fail_unless (GST_BUFFER_SIZE (buffer) > 4);
-  fail_unless (GST_READ_UINT32_BE (GST_BUFFER_DATA (buffer)) == 0x01);
+  GstMapInfo map;
+
+  gst_buffer_map (buffer, &map, GST_MAP_READ);
+
+  fail_unless (map.size > 4);
+  fail_unless (GST_READ_UINT32_BE (map.data) == 0x01);
   if (vdata->discard) {
     /* check separate header NALs */
     guint8 *data;
@@ -255,14 +262,14 @@ verify_buffer_packetized (buffer_verify_data_s * vdata, GstBuffer * buffer)
       size = sizeof (h264_pps);
     }
 
-    fail_unless (GST_BUFFER_SIZE (buffer) == size);
-    fail_unless (memcmp (GST_BUFFER_DATA (buffer) + 4, data + 4,
-            size - 4) == 0);
+    fail_unless (map.size == size);
+    fail_unless (memcmp (map.data + 4, data + 4, size - 4) == 0);
   } else {
-    fail_unless (GST_BUFFER_SIZE (buffer) == vdata->data_to_verify_size);
-    fail_unless (memcmp (GST_BUFFER_DATA (buffer) + 4,
-            vdata->data_to_verify + 4, GST_BUFFER_SIZE (buffer) - 4) == 0);
+    fail_unless (map.size == vdata->data_to_verify_size);
+    fail_unless (memcmp (map.data + 4,
+            vdata->data_to_verify + 4, map.size - 4) == 0);
   }
+  gst_buffer_unmap (buffer, &map);
 
   return TRUE;
 }
@@ -282,9 +289,9 @@ GST_START_TEST (test_parse_packetized)
 
   /* some caps messing */
   caps = gst_caps_from_string (SRC_CAPS_TMPL);
-  cdata = gst_buffer_new ();
-  GST_BUFFER_DATA (cdata) = h264_codec_data;
-  GST_BUFFER_SIZE (cdata) = sizeof (h264_codec_data);
+  cdata =
+      gst_buffer_new_wrapped_full (h264_codec_data, NULL, 0,
+      sizeof (h264_codec_data));
   gst_caps_set_simple (caps, "codec_data", GST_TYPE_BUFFER, cdata, NULL);
   gst_buffer_unref (cdata);
   desc = gst_caps_to_string (caps);

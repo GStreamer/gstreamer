@@ -56,7 +56,7 @@ typedef struct _ThreadData
 } ThreadData;
 
 static gboolean
-src_event (GstPad * pad, GstEvent * event)
+src_event (GstPad * pad, GstObject * parent, GstEvent * event)
 {
   TestData *data = (TestData *) gst_pad_get_element_private (pad);
 
@@ -72,7 +72,7 @@ src_event (GstPad * pad, GstEvent * event)
 }
 
 static gboolean
-sink_event (GstPad * pad, GstEvent * event)
+sink_event (GstPad * pad, GstObject * parent, GstEvent * event)
 {
   TestData *data = (TestData *) gst_pad_get_element_private (pad);
 
@@ -111,7 +111,7 @@ link_sinks (GstElement * mpegtsmux,
   mux_sink3 = gst_element_get_request_pad (mpegtsmux, "sink_3");
   fail_unless (gst_pad_link (*src3, mux_sink3) == GST_PAD_LINK_OK);
 
-  caps = gst_caps_new_simple ("video/x-h264", NULL);
+  caps = gst_caps_new_empty_simple ("video/x-h264");
   gst_pad_set_caps (mux_sink1, caps);
   gst_pad_set_caps (mux_sink2, caps);
   gst_caps_unref (caps);
@@ -185,7 +185,7 @@ GST_START_TEST (test_force_key_unit_event_downstream)
 
   /* hack: make sure collectpads builds collect->data */
   gst_pad_push_event (src1, gst_event_new_flush_start ());
-  gst_pad_push_event (src1, gst_event_new_flush_stop ());
+  gst_pad_push_event (src1, gst_event_new_flush_stop (FALSE));
 
   /* send a force-key-unit event with running_time=2s */
   timestamp = stream_time = running_time = 2 * GST_SECOND;
@@ -250,7 +250,7 @@ GST_START_TEST (test_force_key_unit_event_upstream)
 
   /* hack: make sure collectpads builds collect->data */
   gst_pad_push_event (src1, gst_event_new_flush_start ());
-  gst_pad_push_event (src1, gst_event_new_flush_stop ());
+  gst_pad_push_event (src1, gst_event_new_flush_stop (FALSE));
 
   /* send an upstream force-key-unit event with running_time=2s */
   timestamp = stream_time = running_time = 2 * GST_SECOND;

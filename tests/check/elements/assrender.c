@@ -217,7 +217,7 @@ GST_START_TEST (test_assrender_basic_##format) \
   gst_app_src_set_caps (GST_APP_SRC (appsrc), text_caps); \
   g_object_set (appsrc, "format", GST_FORMAT_TIME, NULL); \
   pad = gst_element_get_static_pad (appsrc, "src"); \
-  gst_pad_add_probe (pad, GST_PAD_PROBE_TYPE_BUFFER, src_buffer_probe_cb, \
+  probe_id = gst_pad_add_probe (pad, GST_PAD_PROBE_TYPE_BUFFER, src_buffer_probe_cb, \
       gst_object_ref (blocked_pad), (GDestroyNotify) gst_object_unref); \
   gst_object_unref (blocked_pad); \
   gst_object_unref (pad); \

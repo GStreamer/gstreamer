@@ -71,36 +71,40 @@ static guint8 mpeg2_iframe[] = {
 static gboolean
 verify_buffer (buffer_verify_data_s * vdata, GstBuffer * buffer)
 {
+  GstMapInfo map;
+
+  gst_buffer_map (buffer, &map, GST_MAP_READ);
+
   /* check initial header special case, otherwise delegate to default */
   if (vdata->discard) {
     /* header is separate */
-    fail_unless (GST_BUFFER_SIZE (buffer) == ctx_headers[0].size - 8);
-    fail_unless (memcmp (GST_BUFFER_DATA (buffer), ctx_headers[0].data,
-            GST_BUFFER_SIZE (buffer)) == 0);
+    fail_unless (map.size == ctx_headers[0].size - 8);
+    fail_unless (memcmp (map.data, ctx_headers[0].data, map.size) == 0);
   } else {
     /* header is merged in initial frame */
     if (vdata->buffer_counter == 0) {
-      fail_unless (GST_BUFFER_SIZE (buffer) > 4);
-      if (GST_READ_UINT32_BE (GST_BUFFER_DATA (buffer)) == 0x1b3) {
+      fail_unless (map.size > 4);
+      if (GST_READ_UINT32_BE (map.data) == 0x1b3) {
         /* the whole sequence header is included */
-        fail_unless (GST_BUFFER_SIZE (buffer) ==
+        fail_unless (map.size ==
             ctx_headers[0].size + vdata->data_to_verify_size);
-        fail_unless (memcmp (GST_BUFFER_DATA (buffer), ctx_headers[0].data,
+        fail_unless (memcmp (map.data, ctx_headers[0].data,
                 ctx_headers[0].size) == 0);
-        fail_unless (memcmp (GST_BUFFER_DATA (buffer) + ctx_headers[0].size,
+        fail_unless (memcmp (map.data + ctx_headers[0].size,
                 vdata->data_to_verify, vdata->data_to_verify_size) == 0);
       } else {
         /* sequence was separate, only gop here */
-        fail_unless (GST_BUFFER_SIZE (buffer) ==
-            8 + vdata->data_to_verify_size);
-        fail_unless (memcmp (GST_BUFFER_DATA (buffer),
+        fail_unless (map.size == 8 + vdata->data_to_verify_size);
+        fail_unless (memcmp (map.data,
                 ctx_headers[0].data + ctx_headers[0].size - 8, 8) == 0);
-        fail_unless (memcmp (GST_BUFFER_DATA (buffer) + 8,
+        fail_unless (memcmp (map.data + 8,
                 vdata->data_to_verify, vdata->data_to_verify_size) == 0);
       }
+      gst_buffer_unmap (buffer, &map);
       return TRUE;
     }
   }
+  gst_buffer_unmap (buffer, &map);
 
   return FALSE;
 }
@@ -158,6 +162,7 @@ mpeg_video_parse_check_caps (guint version, guint8 * seq, gint size)
   GstStructure *s;
   GstBuffer *buf;
   const GValue *val;
+  GstMapInfo map;
 
   ctx_headers[0].data = seq;
   ctx_headers[0].size = size;
@@ -182,10 +187,11 @@ mpeg_video_parse_check_caps (guint version, guint8 * seq, gint size)
   fail_unless (val != NULL);
   buf = gst_value_get_buffer (val);
   fail_unless (buf != NULL);
+  gst_buffer_map (buf, &map, GST_MAP_READ);
   /* codec-data = header - GOP */
-  assert_equals_int (GST_BUFFER_SIZE (buf), size - 8);
-  fail_unless (memcmp (GST_BUFFER_DATA (buf), seq + 4,
-          GST_BUFFER_SIZE (buf)) == 0);
+  assert_equals_int (map.size, size - 8);
+  fail_unless (memcmp (map.data, seq + 4, map.size) == 0);
+  gst_buffer_unmap (buf, &map);
 
   gst_caps_unref (caps);
 }

@@ -23,6 +23,7 @@
 GST_START_TEST (test_still_image)
 {
   GstMessage *zbar_msg = NULL;
+  const GstStructure *s;
   GstElement *pipeline, *src, *dec, *csp, *zbar, *sink;
   const gchar *type, *symbol;
   gchar *path;
@@ -70,16 +71,19 @@ GST_START_TEST (test_still_image)
   } while (1);
 
   fail_unless (zbar_msg != NULL);
-  fail_unless (gst_structure_has_name (zbar_msg->structure, "barcode"));
-  fail_unless (gst_structure_has_field (zbar_msg->structure, "timestamp"));
-  fail_unless (gst_structure_has_field (zbar_msg->structure, "type"));
-  fail_unless (gst_structure_has_field (zbar_msg->structure, "symbol"));
-  fail_unless (gst_structure_has_field (zbar_msg->structure, "quality"));
-  fail_unless (gst_structure_get_int (zbar_msg->structure, "quality", &qual));
+  s = gst_message_get_structure (zbar_msg);
+  fail_unless (s != NULL);
+
+  fail_unless (gst_structure_has_name (s, "barcode"));
+  fail_unless (gst_structure_has_field (s, "timestamp"));
+  fail_unless (gst_structure_has_field (s, "type"));
+  fail_unless (gst_structure_has_field (s, "symbol"));
+  fail_unless (gst_structure_has_field (s, "quality"));
+  fail_unless (gst_structure_get_int (s, "quality", &qual));
   fail_unless (qual >= 90);
-  type = gst_structure_get_string (zbar_msg->structure, "type");
+  type = gst_structure_get_string (s, "type");
   fail_unless_equals_string (type, "EAN-13");
-  symbol = gst_structure_get_string (zbar_msg->structure, "symbol");
+  symbol = gst_structure_get_string (s, "symbol");
   fail_unless_equals_string (symbol, "9876543210128");
 
   fail_unless_equals_int (gst_element_set_state (pipeline, GST_STATE_NULL),
@@ -99,7 +103,8 @@ zbar_suite (void)
 
   suite_add_tcase (s, tc_chain);
 
-  if (!gst_default_registry_check_feature_version ("pngdec", 0, 10, 25)) {
+  if (!gst_registry_check_feature_version (gst_registry_get (), "pngdec", 0, 10,
+          25)) {
     GST_INFO ("Skipping test, pngdec either not available or too old");
   } else {
     tcase_add_test (tc_chain, test_still_image);

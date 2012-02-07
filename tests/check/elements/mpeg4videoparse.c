@@ -62,17 +62,22 @@ static guint8 mpeg4_iframe[] = {
 static gboolean
 verify_buffer (buffer_verify_data_s * vdata, GstBuffer * buffer)
 {
+  GstMapInfo map;
+
+  gst_buffer_map (buffer, &map, GST_MAP_READ);
+
   /* header is merged in initial frame */
   if (vdata->buffer_counter == 0) {
     /* the whole sequence header is included */
-    fail_unless (GST_BUFFER_SIZE (buffer) ==
-        ctx_headers[0].size + vdata->data_to_verify_size);
-    fail_unless (memcmp (GST_BUFFER_DATA (buffer), ctx_headers[0].data,
+    fail_unless (map.size == ctx_headers[0].size + vdata->data_to_verify_size);
+    fail_unless (memcmp (map.data, ctx_headers[0].data,
             ctx_headers[0].size) == 0);
-    fail_unless (memcmp (GST_BUFFER_DATA (buffer) + ctx_headers[0].size,
+    fail_unless (memcmp (map.data + ctx_headers[0].size,
             vdata->data_to_verify, vdata->data_to_verify_size) == 0);
+    gst_buffer_unmap (buffer, &map);
     return TRUE;
   }
+  gst_buffer_unmap (buffer, &map);
 
   return FALSE;
 }
@@ -112,6 +117,7 @@ GST_START_TEST (test_parse_detect_stream)
   GstStructure *s;
   GstBuffer *buf;
   const GValue *val;
+  GstMapInfo map;
 
   caps = gst_parser_test_get_output_caps (mpeg4_iframe, sizeof (mpeg4_iframe),
       NULL);
@@ -133,9 +139,10 @@ GST_START_TEST (test_parse_detect_stream)
   buf = gst_value_get_buffer (val);
   fail_unless (buf != NULL);
   /* codec-data == config header - GOP */
-  fail_unless (GST_BUFFER_SIZE (buf) == sizeof (mpeg4_config) - 7);
-  fail_unless (memcmp (GST_BUFFER_DATA (buf), mpeg4_config,
-          GST_BUFFER_SIZE (buf)) == 0);
+  gst_buffer_map (buf, &map, GST_MAP_READ);
+  fail_unless (map.size == sizeof (mpeg4_config) - 7);
+  fail_unless (memcmp (map.data, mpeg4_config, map.size) == 0);
+  gst_buffer_unmap (buf, &map);
 
   gst_caps_unref (caps);
 }
