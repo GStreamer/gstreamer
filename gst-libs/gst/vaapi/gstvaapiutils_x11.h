@@ -24,7 +24,7 @@
 
 #include "config.h"
 #include <X11/Xlib.h>
-#include <glib/gtypes.h>
+#include <glib.h>
 
 void x11_trap_errors(void)
     attribute_hidden;

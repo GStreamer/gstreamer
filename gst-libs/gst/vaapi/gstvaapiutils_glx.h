@@ -27,7 +27,7 @@
 #include <GL/glext.h>
 #include <GL/glx.h>
 #include <GL/glxext.h>
-#include <glib/gtypes.h>
+#include <glib.h>
 
 #if GLX_GLXEXT_VERSION < 18
 typedef void (*PFNGLXBINDTEXIMAGEEXTPROC)(Display *, GLXDrawable, int, const int *);
