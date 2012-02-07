@@ -54,17 +54,18 @@ static void gst_waveform_sink_set_property (GObject * object,
     guint prop_id, const GValue * value, GParamSpec * pspec);
 static void gst_waveform_sink_get_property (GObject * object,
     guint prop_id, GValue * value, GParamSpec * pspec);
-static GstCaps *gst_waveform_sink_getcaps (GstBaseSink * bsink);
+static GstCaps *gst_waveform_sink_getcaps (GstBaseSink * bsink,
+    GstCaps * filter);
 
 /************************************************************************/
 /* GstAudioSink functions                                               */
 /************************************************************************/
 static gboolean gst_waveform_sink_prepare (GstAudioSink * asink,
-    GstRingBufferSpec * spec);
+    GstAudioRingBufferSpec * spec);
 static gboolean gst_waveform_sink_unprepare (GstAudioSink * asink);
 static gboolean gst_waveform_sink_open (GstAudioSink * asink);
 static gboolean gst_waveform_sink_close (GstAudioSink * asink);
-static guint gst_waveform_sink_write (GstAudioSink * asink, gpointer data,
+static gint gst_waveform_sink_write (GstAudioSink * asink, gpointer data,
     guint length);
 static guint gst_waveform_sink_delay (GstAudioSink * asink);
 static void gst_waveform_sink_reset (GstAudioSink * asink);
@@ -73,42 +74,23 @@ static void gst_waveform_sink_reset (GstAudioSink * asink);
 /* Utils                                                                */
 /************************************************************************/
 GstCaps *gst_waveform_sink_create_caps (gint rate, gint channels,
-    gint bits_per_sample);
+    const gchar * format);
 WAVEHDR *bufferpool_get_buffer (GstWaveFormSink * wfsink, gpointer data,
     guint length);
 void CALLBACK waveOutProc (HWAVEOUT hwo, UINT uMsg, DWORD_PTR dwInstance,
     DWORD_PTR dwParam1, DWORD_PTR dwParam2);
 
 static GstStaticPadTemplate waveformsink_sink_factory =
-    GST_STATIC_PAD_TEMPLATE ("sink",
+GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS ("audio/x-raw-int, "
-        "signed = (boolean) { TRUE, FALSE }, "
-        "width = (int) 16, "
-        "depth = (int) 16, "
-        "rate = (int) [ 1, MAX ], " "channels = (int) [ 1, 2 ]; "
-        "audio/x-raw-int, "
-        "signed = (boolean) { TRUE, FALSE }, "
-        "width = (int) 8, "
-        "depth = (int) 8, "
+    GST_STATIC_CAPS ("audio/x-raw, "
+        "format = (string) { " GST_AUDIO_NE (S16) ", S8 }, "
+        "layout = (string) interleaved, "
         "rate = (int) [ 1, MAX ], " "channels = (int) [ 1, 2 ]"));
 
-GST_BOILERPLATE (GstWaveFormSink, gst_waveform_sink, GstAudioSink,
-    GST_TYPE_AUDIO_SINK);
-
-static void
-gst_waveform_sink_base_init (gpointer g_class)
-{
-  GstElementClass *element_class = GST_ELEMENT_CLASS (g_class);
-
-  gst_element_class_set_details_simple (element_class, "WaveForm Audio Sink",
-      "Sink/Audio",
-      "Output to a sound card via WaveForm API",
-      "Sebastien Moutte <sebastien@moutte.net>");
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&waveformsink_sink_factory));
-}
+#define gst_waveform_sink_parent_class parent_class
+G_DEFINE_TYPE (GstWaveFormSink, gst_waveform_sink, GST_TYPE_AUDIO_SINK);
 
 static void
 gst_waveform_sink_class_init (GstWaveFormSinkClass * klass)
@@ -116,14 +98,14 @@ gst_waveform_sink_class_init (GstWaveFormSinkClass * klass)
   GObjectClass *gobject_class;
   GstElementClass *gstelement_class;
   GstBaseSinkClass *gstbasesink_class;
-  GstBaseAudioSinkClass *gstbaseaudiosink_class;
   GstAudioSinkClass *gstaudiosink_class;
+  GstElementClass *element_class;
 
   gobject_class = (GObjectClass *) klass;
   gstelement_class = (GstElementClass *) klass;
   gstbasesink_class = (GstBaseSinkClass *) klass;
-  gstbaseaudiosink_class = (GstBaseAudioSinkClass *) klass;
   gstaudiosink_class = (GstAudioSinkClass *) klass;
+  element_class = GST_ELEMENT_CLASS (klass);
 
   parent_class = g_type_class_peek_parent (klass);
 
@@ -144,6 +126,14 @@ gst_waveform_sink_class_init (GstWaveFormSinkClass * klass)
 
   GST_DEBUG_CATEGORY_INIT (waveformsink_debug, "waveformsink", 0,
       "Waveform sink");
+
+  gst_element_class_set_details_simple (element_class, "WaveForm Audio Sink",
+      "Sink/Audio",
+      "Output to a sound card via WaveForm API",
+      "Sebastien Moutte <sebastien@moutte.net>");
+
+  gst_element_class_add_pad_template (element_class,
+      gst_static_pad_template_get (&waveformsink_sink_factory));
 }
 
 static void
@@ -173,8 +163,7 @@ gst_waveform_sink_get_property (GObject * object, guint prop_id,
 }
 
 static void
-gst_waveform_sink_init (GstWaveFormSink * wfsink,
-    GstWaveFormSinkClass * g_class)
+gst_waveform_sink_init (GstWaveFormSink * wfsink)
 {
   /* initialize members */
   wfsink->hwaveout = NULL;
@@ -205,7 +194,7 @@ gst_waveform_sink_finalise (GObject * object)
 }
 
 static GstCaps *
-gst_waveform_sink_getcaps (GstBaseSink * bsink)
+gst_waveform_sink_getcaps (GstBaseSink * bsink, GstCaps * filter)
 {
   GstWaveFormSink *wfsink = GST_WAVEFORM_SINK (bsink);
   MMRESULT mmresult;
@@ -232,97 +221,97 @@ gst_waveform_sink_getcaps (GstBaseSink * bsink)
   /* create a caps for all wave formats supported by the device 
      starting by the best quality format */
   if (wocaps.dwFormats & WAVE_FORMAT_96S16) {
-    caps_temp = gst_waveform_sink_create_caps (96000, 2, 16);
+    caps_temp = gst_waveform_sink_create_caps (96000, 2, GST_AUDIO_NE (S16));
     if (caps_temp) {
       gst_caps_append (caps, caps_temp);
     }
   }
   if (wocaps.dwFormats & WAVE_FORMAT_96S08) {
-    caps_temp = gst_waveform_sink_create_caps (96000, 2, 8);
+    caps_temp = gst_waveform_sink_create_caps (96000, 2, "S8");
     if (caps_temp) {
       gst_caps_append (caps, caps_temp);
     }
   }
   if (wocaps.dwFormats & WAVE_FORMAT_96M16) {
-    caps_temp = gst_waveform_sink_create_caps (96000, 1, 16);
+    caps_temp = gst_waveform_sink_create_caps (96000, 1, GST_AUDIO_NE (S16));
     if (caps_temp) {
       gst_caps_append (caps, caps_temp);
     }
   }
   if (wocaps.dwFormats & WAVE_FORMAT_96M08) {
-    caps_temp = gst_waveform_sink_create_caps (96000, 1, 8);
+    caps_temp = gst_waveform_sink_create_caps (96000, 1, "S8");
     if (caps_temp) {
       gst_caps_append (caps, caps_temp);
     }
   }
   if (wocaps.dwFormats & WAVE_FORMAT_4S16) {
-    caps_temp = gst_waveform_sink_create_caps (44100, 2, 16);
+    caps_temp = gst_waveform_sink_create_caps (44100, 2, GST_AUDIO_NE (S16));
     if (caps_temp) {
       gst_caps_append (caps, caps_temp);
     }
   }
   if (wocaps.dwFormats & WAVE_FORMAT_4S08) {
-    caps_temp = gst_waveform_sink_create_caps (44100, 2, 8);
+    caps_temp = gst_waveform_sink_create_caps (44100, 2, "S8");
     if (caps_temp) {
       gst_caps_append (caps, caps_temp);
     }
   }
   if (wocaps.dwFormats & WAVE_FORMAT_4M16) {
-    caps_temp = gst_waveform_sink_create_caps (44100, 1, 16);
+    caps_temp = gst_waveform_sink_create_caps (44100, 1, GST_AUDIO_NE (S16));
     if (caps_temp) {
       gst_caps_append (caps, caps_temp);
     }
   }
   if (wocaps.dwFormats & WAVE_FORMAT_4M08) {
-    caps_temp = gst_waveform_sink_create_caps (44100, 1, 8);
+    caps_temp = gst_waveform_sink_create_caps (44100, 1, "S8");
     if (caps_temp) {
       gst_caps_append (caps, caps_temp);
     }
   }
   if (wocaps.dwFormats & WAVE_FORMAT_2S16) {
-    caps_temp = gst_waveform_sink_create_caps (22050, 2, 16);
+    caps_temp = gst_waveform_sink_create_caps (22050, 2, GST_AUDIO_NE (S16));
     if (caps_temp) {
       gst_caps_append (caps, caps_temp);
     }
   }
   if (wocaps.dwFormats & WAVE_FORMAT_2S08) {
-    caps_temp = gst_waveform_sink_create_caps (22050, 2, 8);
+    caps_temp = gst_waveform_sink_create_caps (22050, 2, "S8");
     if (caps_temp) {
       gst_caps_append (caps, caps_temp);
     }
   }
   if (wocaps.dwFormats & WAVE_FORMAT_2M16) {
-    caps_temp = gst_waveform_sink_create_caps (22050, 1, 16);
+    caps_temp = gst_waveform_sink_create_caps (22050, 1, GST_AUDIO_NE (S16));
     if (caps_temp) {
       gst_caps_append (caps, caps_temp);
     }
   }
   if (wocaps.dwFormats & WAVE_FORMAT_2M08) {
-    caps_temp = gst_waveform_sink_create_caps (22050, 1, 8);
+    caps_temp = gst_waveform_sink_create_caps (22050, 1, "S8");
     if (caps_temp) {
       gst_caps_append (caps, caps_temp);
     }
   }
   if (wocaps.dwFormats & WAVE_FORMAT_1S16) {
-    caps_temp = gst_waveform_sink_create_caps (11025, 2, 16);
+    caps_temp = gst_waveform_sink_create_caps (11025, 2, GST_AUDIO_NE (S16));
     if (caps_temp) {
       gst_caps_append (caps, caps_temp);
     }
   }
   if (wocaps.dwFormats & WAVE_FORMAT_1S08) {
-    caps_temp = gst_waveform_sink_create_caps (11025, 2, 8);
+    caps_temp = gst_waveform_sink_create_caps (11025, 2, "S8");
     if (caps_temp) {
       gst_caps_append (caps, caps_temp);
     }
   }
   if (wocaps.dwFormats & WAVE_FORMAT_1M16) {
-    caps_temp = gst_waveform_sink_create_caps (11025, 1, 16);
+    caps_temp = gst_waveform_sink_create_caps (11025, 1, GST_AUDIO_NE (S16));
     if (caps_temp) {
       gst_caps_append (caps, caps_temp);
     }
   }
   if (wocaps.dwFormats & WAVE_FORMAT_1M08) {
-    caps_temp = gst_waveform_sink_create_caps (11025, 1, 8);
+    caps_temp = gst_waveform_sink_create_caps (11025, 1, "S8");
     if (caps_temp) {
       gst_caps_append (caps, caps_temp);
     }
@@ -352,7 +341,7 @@ gst_waveform_sink_open (GstAudioSink * asink)
 }
 
 static gboolean
-gst_waveform_sink_prepare (GstAudioSink * asink, GstRingBufferSpec * spec)
+gst_waveform_sink_prepare (GstAudioSink * asink, GstAudioRingBufferSpec * spec)
 {
   GstWaveFormSink *wfsink = GST_WAVEFORM_SINK (asink);
   WAVEFORMATEX wfx;
@@ -363,14 +352,14 @@ gst_waveform_sink_prepare (GstAudioSink * asink, GstRingBufferSpec * spec)
   memset (&wfx, 0, sizeof (wfx));
   wfx.cbSize = 0;
   wfx.wFormatTag = WAVE_FORMAT_PCM;
-  wfx.nChannels = spec->channels;
-  wfx.nSamplesPerSec = spec->rate;
-  wfx.wBitsPerSample = (spec->bytes_per_sample * 8) / wfx.nChannels;
-  wfx.nBlockAlign = spec->bytes_per_sample;
+  wfx.nChannels = spec->info.channels;
+  wfx.nSamplesPerSec = spec->info.rate;
+  wfx.wBitsPerSample = (spec->info.bpf * 8) / wfx.nChannels;
+  wfx.nBlockAlign = spec->info.bpf;
   wfx.nAvgBytesPerSec = wfx.nSamplesPerSec * wfx.nBlockAlign;
 
   /* save bytes per sample to use it in delay */
-  wfsink->bytes_per_sample = spec->bytes_per_sample;
+  wfsink->bytes_per_sample = spec->info.bpf;
 
   /* open the default audio device with the given caps */
   mmresult = waveOutOpen (&wfsink->hwaveout, WAVE_MAPPER,
@@ -449,7 +438,7 @@ gst_waveform_sink_close (GstAudioSink * asink)
   return TRUE;
 }
 
-static guint
+static gint
 gst_waveform_sink_write (GstAudioSink * asink, gpointer data, guint length)
 {
   GstWaveFormSink *wfsink = GST_WAVEFORM_SINK (asink);
@@ -554,15 +543,13 @@ gst_waveform_sink_reset (GstAudioSink * asink)
 }
 
 GstCaps *
-gst_waveform_sink_create_caps (gint rate, gint channels, gint bits_per_sample)
+gst_waveform_sink_create_caps (gint rate, gint channels, const gchar * format)
 {
   GstCaps *caps = NULL;
 
-  caps = gst_caps_new_simple ("audio/x-raw-int",
-      "width", G_TYPE_INT, bits_per_sample,
-      "depth", G_TYPE_INT, bits_per_sample,
-      "endianness", G_TYPE_INT, G_BYTE_ORDER,
-      "signed", G_TYPE_BOOLEAN, TRUE,
+  caps = gst_caps_new_simple ("audio/x-raw",
+      "format", G_TYPE_STRING, format,
+      "layout", G_TYPE_STRING, "interleaved",
       "channels", G_TYPE_INT, channels, "rate", G_TYPE_INT, rate, NULL);
   return caps;
 }
