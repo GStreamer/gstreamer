@@ -1342,6 +1342,7 @@ GstElement *
 setup_mpeg2dec ()
 {
   GstElement *mpeg2dec;
+  GstSegment seg;
 
   GST_DEBUG ("setup_mpeg2dec");
   mpeg2dec = gst_check_setup_element ("mpeg2dec");
@@ -1349,6 +1350,9 @@ setup_mpeg2dec ()
   mysinkpad = gst_check_setup_sink_pad (mpeg2dec, &sinktemplate);
   gst_pad_set_active (mysrcpad, TRUE);
   gst_pad_set_active (mysinkpad, TRUE);
+
+  gst_segment_init (&seg, GST_FORMAT_TIME);
+  gst_pad_push_event (mysrcpad, gst_event_new_segment (&seg));
 
   return mpeg2dec;
 }
@@ -1381,7 +1385,9 @@ GST_START_TEST (test_decode_stream1)
       "could not set to playing");
   bus = gst_bus_new ();
 
-  inbuffer = gst_buffer_new_wrapped (test_stream1, sizeof (test_stream1));
+  inbuffer =
+      gst_buffer_new_wrapped_full (test_stream1, NULL, 0,
+      sizeof (test_stream1));
   ASSERT_BUFFER_REFCOUNT (inbuffer, "inbuffer", 1);
   gst_buffer_ref (inbuffer);
 
@@ -1402,7 +1408,8 @@ GST_START_TEST (test_decode_stream1)
       gst_caps_new_simple ("video/x-raw", "format", G_TYPE_STRING,
       "I420", "width", G_TYPE_INT, 176, "height", G_TYPE_INT, 144,
       "pixel-aspect-ratio", GST_TYPE_FRACTION, 1, 1, "framerate",
-      GST_TYPE_FRACTION, 25, 1, "interlaced", G_TYPE_BOOLEAN, FALSE, NULL);
+      GST_TYPE_FRACTION, 25, 1, "interlace-mode", G_TYPE_STRING, "progressive",
+      "chroma-site", G_TYPE_STRING, "mpeg2", NULL);
 
   caps = gst_pad_get_current_caps (mysinkpad);
   GST_LOG ("output caps %" GST_PTR_FORMAT, caps);
@@ -1449,7 +1456,9 @@ GST_START_TEST (test_decode_stream2)
       "could not set to playing");
   bus = gst_bus_new ();
 
-  inbuffer = gst_buffer_new_wrapped (test_stream2, sizeof (test_stream2));
+  inbuffer =
+      gst_buffer_new_wrapped_full (test_stream2, NULL, 0,
+      sizeof (test_stream2));
   ASSERT_BUFFER_REFCOUNT (inbuffer, "inbuffer", 1);
   gst_buffer_ref (inbuffer);
 
@@ -1470,7 +1479,8 @@ GST_START_TEST (test_decode_stream2)
       gst_caps_new_simple ("video/x-raw", "format", G_TYPE_STRING, "I420",
       "width", G_TYPE_INT, 183, "height", G_TYPE_INT, 217,
       "pixel-aspect-ratio", GST_TYPE_FRACTION, 1, 1, "framerate",
-      GST_TYPE_FRACTION, 25, 1, "interlaced", G_TYPE_BOOLEAN, FALSE, NULL);
+      GST_TYPE_FRACTION, 25, 1, "interlace-mode", G_TYPE_STRING, "progressive",
+      "chroma-site", G_TYPE_STRING, "mpeg2", NULL);
 
   caps = gst_pad_get_current_caps (mysinkpad);
   GST_LOG ("output caps %" GST_PTR_FORMAT, caps);
