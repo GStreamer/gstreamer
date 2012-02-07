@@ -98,7 +98,7 @@ check_caps (GstCaps * caps)
   stream_format = g_value_get_string (sf);
   fail_unless (stream_format != NULL);
   if (strcmp (stream_format, "avc") == 0) {
-    const guint8 *data;
+    GstMapInfo map;
     GstBuffer *buf;
 
     avcc = gst_structure_get_value (s, "codec_data");
@@ -106,11 +106,12 @@ check_caps (GstCaps * caps)
     fail_unless (GST_VALUE_HOLDS_BUFFER (avcc));
     buf = gst_value_get_buffer (avcc);
     fail_unless (buf != NULL);
-    data = gst_buffer_map (buf, NULL, NULL, GST_MAP_READ);
-    fail_unless_equals_int (data[0], 1);
+    gst_buffer_map (buf, &map, GST_MAP_READ);
+    fail_unless_equals_int (map.data[0], 1);
     /* should be either baseline, main profile or extended profile */
-    fail_unless (data[1] == 0x42 || data[1] == 0x4D || data[1] == 0x58);
-    gst_buffer_unmap (buf, (gpointer) data, -1);
+    fail_unless (map.data[1] == 0x42 || map.data[1] == 0x4D
+        || map.data[1] == 0x58);
+    gst_buffer_unmap (buf, &map);
   } else if (strcmp (stream_format, "byte-stream") == 0) {
     fail_if (gst_structure_get_value (s, "codec_data") != NULL);
   } else {
@@ -123,6 +124,7 @@ GST_START_TEST (test_video_pad)
   GstElement *x264enc;
   GstBuffer *inbuffer, *outbuffer;
   GstCaps *caps;
+  GstMapInfo map;
   guint8 *data;
   gsize size;
   int i, num_buffers;
@@ -139,9 +141,7 @@ GST_START_TEST (test_video_pad)
   /* corresponds to I420 buffer for the size mentioned in the caps */
   inbuffer = gst_buffer_new_and_alloc (384 * 288 * 3 / 2);
   /* makes valgrind's memcheck happier */
-  data = gst_buffer_map (inbuffer, &size, NULL, GST_MAP_WRITE);
-  memset (data, 0, size);
-  gst_buffer_unmap (inbuffer, data, size);
+  gst_buffer_memset (inbuffer, 0, 0, -1);
   GST_BUFFER_TIMESTAMP (inbuffer) = 0;
   ASSERT_BUFFER_REFCOUNT (inbuffer, "inbuffer", 1);
   fail_unless (gst_pad_push (mysrcpad, inbuffer) == GST_FLOW_OK);
@@ -170,10 +170,13 @@ GST_START_TEST (test_video_pad)
       case 0:
       {
         gint nsize, npos, j, type, next_type;
+        GstMapInfo map;
         const guint8 *data;
         gsize size;
 
-        data = gst_buffer_map (outbuffer, &size, NULL, GST_MAP_READ);
+        gst_buffer_map (outbuffer, &map, GST_MAP_READ);
+        data = map.data;
+        size = map.size;
 
         npos = 0;
         j = 0;
@@ -205,6 +208,7 @@ GST_START_TEST (test_video_pad)
           }
           npos += nsize + 4;
         }
+        gst_buffer_unmap (outbuffer, &map);
         /* should have reached the exact end */
         fail_unless (npos == size);
         break;
@@ -213,7 +217,6 @@ GST_START_TEST (test_video_pad)
         break;
     }
 
-    gst_buffer_unmap (outbuffer, (gpointer) data, size);
 
     buffers = g_list_remove (buffers, outbuffer);
 

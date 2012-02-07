@@ -25,7 +25,7 @@
 #include <gst/audio/audio.h>
 
 #define SRC_CAPS "audio/x-raw, format = (string)" GST_AUDIO_NE (S16) ", " \
-    "channels = (int) 1, rate = (int) 8000"
+    "layout = (string) interleaved, channels = (int) 1, rate = (int) 8000"
 #define SINK_CAPS "audio/AMR"
 
 GList *buffers;

@@ -102,30 +102,29 @@ GST_START_TEST (test_xing_remux)
   verify_data = test_xing;
   for (it = buffers; it != NULL; it = it->next) {
     GstBuffer *outbuffer = (GstBuffer *) it->data;
-    gsize size;
-    guint8 *data;
+    GstMapInfo map;
 
-    data = gst_buffer_map (outbuffer, &size, NULL, GST_MAP_READ);
+    gst_buffer_map (outbuffer, &map, GST_MAP_READ);
 
     if (it == buffers) {
       gint j;
 
       /* Empty Xing header, should be the same as input data until the "Xing" marker
        * and zeroes afterwards. */
-      fail_unless (memcmp (data, test_xing, 25) == 0);
-      for (j = 26; j < size; j++)
-        fail_unless (data[j] == 0);
-      verify_data += size;
+      fail_unless (memcmp (map.data, test_xing, 25) == 0);
+      for (j = 26; j < map.size; j++)
+        fail_unless (map.data[j] == 0);
+      verify_data += map.size;
     } else if (it->next != NULL) {
       /* Should contain the raw MP3 data without changes */
-      fail_unless (memcmp (data, verify_data, size) == 0);
-      verify_data += size;
+      fail_unless (memcmp (map.data, verify_data, map.size) == 0);
+      verify_data += map.size;
     } else {
       /* Last buffer is the rewrite of the first buffer and should be exactly the same
        * as the old Xing header we had */
-      fail_unless (memcmp (test_xing, data, size) == 0);
+      fail_unless (memcmp (test_xing, map.data, map.size) == 0);
     }
-    gst_buffer_unmap (outbuffer, data, size);
+    gst_buffer_unmap (outbuffer, &map);
   }
 
   /* cleanup */
