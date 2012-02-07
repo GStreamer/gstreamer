@@ -155,9 +155,7 @@ gst_y4m_encode_setcaps (GstPad * pad, GstCaps * vscaps)
   if (!gst_video_info_from_caps (&info, vscaps))
     goto invalid_format;
 
-  filter->info = info;
-
-  switch (GST_VIDEO_INFO_FORMAT (&filter->info)) {
+  switch (GST_VIDEO_INFO_FORMAT (&info)) {
     case GST_VIDEO_FORMAT_I420:
       filter->colorspace = "420";
       break;
@@ -173,6 +171,8 @@ gst_y4m_encode_setcaps (GstPad * pad, GstCaps * vscaps)
     default:
       goto invalid_format;
   }
+
+  filter->info = info;
 
   /* the template caps will do for the src pad, should always accept */
   ret = gst_pad_set_caps (filter->srcpad,
@@ -270,7 +270,7 @@ gst_y4m_encode_chain (GstPad * pad, GstObject * parent, GstBuffer * buf)
   GstClockTime timestamp;
 
   /* check we got some decent info from caps */
-  if (GST_VIDEO_INFO_FORMAT (&filter->info) != GST_VIDEO_FORMAT_UNKNOWN)
+  if (GST_VIDEO_INFO_FORMAT (&filter->info) == GST_VIDEO_FORMAT_UNKNOWN)
     goto not_negotiated;
 
   timestamp = GST_BUFFER_TIMESTAMP (buf);
@@ -299,7 +299,7 @@ gst_y4m_encode_chain (GstPad * pad, GstObject * parent, GstBuffer * buf)
   /* ERRORS */
 not_negotiated:
   {
-    GST_ELEMENT_ERROR ("filter", CORE, NEGOTIATION, (NULL),
+    GST_ELEMENT_ERROR (filter, CORE, NEGOTIATION, (NULL),
         ("format wasn't negotiated before chain function"));
     gst_buffer_unref (buf);
     return GST_FLOW_NOT_NEGOTIATED;
