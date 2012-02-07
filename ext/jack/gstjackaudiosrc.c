@@ -215,18 +215,6 @@ jack_process_cb (jack_nframes_t nframes, void *arg)
   buf = GST_RING_BUFFER_CAST (arg);
   src = GST_JACK_AUDIO_SRC (GST_OBJECT_PARENT (buf));
 
-  /* handle transport state requisitions */
-  if (src->transport == GST_JACK_TRANSPORT_SLAVE) {
-    GstState state = gst_jack_audio_client_get_transport_state (src->client);
-
-    if ((state != GST_STATE_VOID_PENDING) && (GST_STATE (src) != state)) {
-      GST_DEBUG_OBJECT (src, "requesting state change: %s",
-          gst_element_state_get_name (state));
-      gst_element_post_message (GST_ELEMENT (src),
-          gst_message_new_request_state (GST_OBJECT (src), state));
-    }
-  }
-
   channels = buf->spec.channels;
 
   /* get input buffers */
