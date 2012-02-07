@@ -909,7 +909,6 @@ decode_buffer(GstVaapiDecoderMpeg4 *decoder, GstBuffer *buffer)
 static GstVaapiDecoderStatus
 decode_codec_data(GstVaapiDecoderMpeg4 *decoder, GstBuffer *buffer)
 {
-    GstVaapiDecoderMpeg4Private * const priv = decoder->priv;
     GstVaapiDecoderStatus status;
     guchar *buf, *_buf;
     guint pos, buf_size, _buf_size;

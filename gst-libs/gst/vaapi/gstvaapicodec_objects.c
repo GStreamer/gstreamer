@@ -215,7 +215,7 @@ gst_vaapi_bitplane_create(
                                args->param_size,
                                args->param,
                                &bitplane->data_id,
-                               &bitplane->data);
+                               (void **)&bitplane->data);
 }
 
 static void

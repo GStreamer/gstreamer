@@ -497,7 +497,7 @@ gst_vaapi_display_create(GstVaapiDisplay *display)
     flags   = g_new(guint, n);
     if (!formats || !flags)
         goto end;
-    status = vaQuerySubpictureFormats(priv->display, formats, flags, &n);
+    status = vaQuerySubpictureFormats(priv->display, formats, flags, (guint *)&n);
     if (!vaapi_check_status(status, "vaQuerySubpictureFormats()"))
         goto end;
 

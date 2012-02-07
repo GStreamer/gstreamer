@@ -685,7 +685,7 @@ decode_buffer(GstVaapiDecoderMpeg2 *decoder, GstBuffer *buffer)
         gst_adapter_flush(priv->adapter, ofs);
         size -= ofs;
 
-        status = gst_vaapi_decoder_check_status(decoder);
+        status = gst_vaapi_decoder_check_status(GST_VAAPI_DECODER(decoder));
         if (status != GST_VAAPI_DECODER_STATUS_SUCCESS)
             break;
 
