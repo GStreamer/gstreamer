@@ -325,7 +325,7 @@ setup (void)
 
   /* create the taglists */
   for (i = 0; i < TAGLISTS_COUNT; i++) {
-    taglists[i] = gst_tag_list_new_full (GST_TAG_ARTIST, "test-artist",
+    taglists[i] = gst_tag_list_new (GST_TAG_ARTIST, "test-artist",
         GST_TAG_GEO_LOCATION_LONGITUDE, g_random_double_range (-180, 180),
         GST_TAG_GEO_LOCATION_LATITUDE, g_random_double_range (-90, 90),
         GST_TAG_GEO_LOCATION_ELEVATION, g_random_double_range (0, 3000), NULL);

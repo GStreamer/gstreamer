@@ -24,6 +24,7 @@
 #include <unistd.h>
 
 #include <gst/check/gstcheck.h>
+#include <gst/audio/audio.h>
 
 /* For ease of programming we use globals to keep refs for our floating
  * src and sink pads we create; otherwise we always have to do get_pad,
@@ -32,13 +33,10 @@ static GstPad *mysrcpad, *mysinkpad;
 
 
 #define RESAMPLE_CAPS_TEMPLATE_STRING   \
-    "audio/x-raw-int, "                 \
+    "audio/x-raw, "                     \
+    "format = (string) " GST_AUDIO_NE (S16) ", "     \
     "channels = (int) [ 1, MAX ], "     \
-    "rate = (int) [ 1,  MAX ], "        \
-    "endianness = (int) BYTE_ORDER, "   \
-    "width = (int) 16, "                \
-    "depth = (int) 16, "                \
-    "signed = (bool) TRUE"
+    "rate = (int) [ 1,  MAX ]"
 
 static GstStaticPadTemplate sinktemplate = GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
@@ -154,7 +152,7 @@ test_perfect_stream_instance (int inrate, int outrate, int samples,
   gint16 *p;
 
   legacyresample = setup_legacyresample (2, inrate, outrate);
-  caps = gst_pad_get_negotiated_caps (mysrcpad);
+  caps = gst_pad_get_current_caps (mysrcpad);
   fail_unless (gst_caps_is_fixed (caps));
 
   fail_unless (gst_element_set_state (legacyresample,
@@ -162,6 +160,7 @@ test_perfect_stream_instance (int inrate, int outrate, int samples,
       "could not set to playing");
 
   for (j = 1; j <= numbuffers; ++j) {
+    GstMapInfo map;
 
     inbuffer = gst_buffer_new_and_alloc (samples * 4);
     GST_BUFFER_DURATION (inbuffer) = samples * GST_SECOND / inrate;
@@ -170,9 +169,8 @@ test_perfect_stream_instance (int inrate, int outrate, int samples,
     offset += samples;
     GST_BUFFER_OFFSET_END (inbuffer) = offset;
 
-    gst_buffer_set_caps (inbuffer, caps);
-
-    p = (gint16 *) GST_BUFFER_DATA (inbuffer);
+    gst_buffer_map (inbuffer, &map, GST_MAP_WRITE);
+    p = (gint16 *) map.data;
 
     /* create a 16 bit signed ramp */
     for (i = 0; i < samples; ++i) {
@@ -181,6 +179,7 @@ test_perfect_stream_instance (int inrate, int outrate, int samples,
       *p = -32767 + i * (65535 / samples);
       ++p;
     }
+    gst_buffer_unmap (inbuffer, &map);
 
     /* pushing gives away my reference ... */
     fail_unless (gst_pad_push (mysrcpad, inbuffer) == GST_FLOW_OK);
@@ -241,7 +240,7 @@ test_discont_stream_instance (int inrate, int outrate, int samples,
       inrate, outrate, samples, numbuffers);
 
   legacyresample = setup_legacyresample (2, inrate, outrate);
-  caps = gst_pad_get_negotiated_caps (mysrcpad);
+  caps = gst_pad_get_current_caps (mysrcpad);
   fail_unless (gst_caps_is_fixed (caps));
 
   fail_unless (gst_element_set_state (legacyresample,
@@ -249,6 +248,7 @@ test_discont_stream_instance (int inrate, int outrate, int samples,
       "could not set to playing");
 
   for (j = 1; j <= numbuffers; ++j) {
+    GstMapInfo map;
 
     inbuffer = gst_buffer_new_and_alloc (samples * 4);
     GST_BUFFER_DURATION (inbuffer) = samples * GST_SECOND / inrate;
@@ -258,9 +258,8 @@ test_discont_stream_instance (int inrate, int outrate, int samples,
     GST_BUFFER_OFFSET (inbuffer) = (j - 1) * 2 * samples;
     GST_BUFFER_OFFSET_END (inbuffer) = j * 2 * samples + samples;
 
-    gst_buffer_set_caps (inbuffer, caps);
-
-    p = (gint16 *) GST_BUFFER_DATA (inbuffer);
+    gst_buffer_map (inbuffer, &map, GST_MAP_WRITE);
+    p = (gint16 *) map.data;
 
     /* create a 16 bit signed ramp */
     for (i = 0; i < samples; ++i) {
@@ -269,6 +268,7 @@ test_discont_stream_instance (int inrate, int outrate, int samples,
       *p = -32767 + i * (65535 / samples);
       ++p;
     }
+    gst_buffer_unmap (inbuffer, &map);
 
     GST_DEBUG ("Sending Buffer time:%" G_GUINT64_FORMAT " duration:%"
         G_GINT64_FORMAT " discont:%d offset:%" G_GUINT64_FORMAT " offset_end:%"
@@ -325,24 +325,25 @@ GST_START_TEST (test_reuse)
   GstEvent *newseg;
   GstBuffer *inbuffer;
   GstCaps *caps;
+  GstSegment seg;
 
   legacyresample = setup_legacyresample (1, 9343, 48000);
-  caps = gst_pad_get_negotiated_caps (mysrcpad);
+  caps = gst_pad_get_current_caps (mysrcpad);
   fail_unless (gst_caps_is_fixed (caps));
 
   fail_unless (gst_element_set_state (legacyresample,
           GST_STATE_PLAYING) == GST_STATE_CHANGE_SUCCESS,
       "could not set to playing");
 
-  newseg = gst_event_new_new_segment (FALSE, 1.0, GST_FORMAT_TIME, 0, -1, 0);
+  gst_segment_init (&seg, GST_FORMAT_TIME);
+  newseg = gst_event_new_segment (&seg);
   fail_unless (gst_pad_push_event (mysrcpad, newseg) != FALSE);
 
   inbuffer = gst_buffer_new_and_alloc (9343 * 4);
-  memset (GST_BUFFER_DATA (inbuffer), 0, GST_BUFFER_SIZE (inbuffer));
+  gst_buffer_memset (inbuffer, 0, 0, -1);
   GST_BUFFER_DURATION (inbuffer) = GST_SECOND;
   GST_BUFFER_TIMESTAMP (inbuffer) = 0;
   GST_BUFFER_OFFSET (inbuffer) = 0;
-  gst_buffer_set_caps (inbuffer, caps);
 
   /* pushing gives away my reference ... */
   fail_unless (gst_pad_push (mysrcpad, inbuffer) == GST_FLOW_OK);
@@ -358,15 +359,15 @@ GST_START_TEST (test_reuse)
           GST_STATE_PLAYING) == GST_STATE_CHANGE_SUCCESS,
       "could not set to playing");
 
-  newseg = gst_event_new_new_segment (FALSE, 1.0, GST_FORMAT_TIME, 0, -1, 0);
+  gst_segment_init (&seg, GST_FORMAT_TIME);
+  newseg = gst_event_new_segment (&seg);
   fail_unless (gst_pad_push_event (mysrcpad, newseg) != FALSE);
 
   inbuffer = gst_buffer_new_and_alloc (9343 * 4);
-  memset (GST_BUFFER_DATA (inbuffer), 0, GST_BUFFER_SIZE (inbuffer));
+  gst_buffer_memset (inbuffer, 0, 0, -1);
   GST_BUFFER_DURATION (inbuffer) = GST_SECOND;
   GST_BUFFER_TIMESTAMP (inbuffer) = 0;
   GST_BUFFER_OFFSET (inbuffer) = 0;
-  gst_buffer_set_caps (inbuffer, caps);
 
   fail_unless (gst_pad_push (mysrcpad, inbuffer) == GST_FLOW_OK);
 
@@ -429,6 +430,7 @@ GST_START_TEST (test_shutdown)
 
 GST_END_TEST;
 
+#if 0
 static GstFlowReturn
 live_switch_alloc_only_48000 (GstPad * pad, guint64 offset,
     guint size, GstCaps * caps, GstBuffer ** buf)
@@ -487,7 +489,7 @@ live_switch_push (int rate, GstCaps * caps)
   fail_unless (inbuffer != NULL);
   fail_unless (gst_caps_is_equal (desired, GST_BUFFER_CAPS (inbuffer)));
 
-  memset (GST_BUFFER_DATA (inbuffer), 0, GST_BUFFER_SIZE (inbuffer));
+  gst_buffer_memset (inbuffer, 0, 0, -1);
   GST_BUFFER_DURATION (inbuffer) = GST_SECOND;
   GST_BUFFER_TIMESTAMP (inbuffer) = 0;
   GST_BUFFER_OFFSET (inbuffer) = 0;
@@ -549,7 +551,9 @@ GST_START_TEST (test_live_switch)
   gst_caps_unref (caps);
 }
 
-GST_END_TEST static Suite *
+GST_END_TEST
+#endif
+static Suite *
 legacyresample_suite (void)
 {
   Suite *s = suite_create ("legacyresample");
@@ -560,7 +564,9 @@ legacyresample_suite (void)
   tcase_add_test (tc_chain, test_discont_stream);
   tcase_add_test (tc_chain, test_reuse);
   tcase_add_test (tc_chain, test_shutdown);
+#if 0
   tcase_add_test (tc_chain, test_live_switch);
+#endif
 
   return s;
 }
