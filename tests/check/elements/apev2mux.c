@@ -236,33 +236,6 @@ got_buffer (GstElement * fakesink, GstBuffer * buf, GstPad * pad,
 }
 
 static void
-demux_pad_added (GstElement * apedemux, GstPad * srcpad, GstBuffer ** p_outbuf)
-{
-  GstElement *fakesink, *pipeline;
-  GstCaps *caps;
-
-  caps = gst_pad_get_current_caps (srcpad);
-  GST_LOG ("apedemux added source pad with caps %" GST_PTR_FORMAT, caps);
-  gst_caps_unref (caps);
-
-  pipeline = apedemux;
-  while (GST_OBJECT_PARENT (pipeline) != NULL)
-    pipeline = (GstElement *) GST_OBJECT_PARENT (pipeline);
-
-  fakesink = gst_element_factory_make ("fakesink", "fakesink");
-  g_assert (fakesink != NULL);
-
-  /* set up sink */
-  g_object_set (fakesink, "signal-handoffs", TRUE, NULL);
-  g_signal_connect (fakesink, "handoff", G_CALLBACK (got_buffer), p_outbuf);
-
-  gst_bin_add (GST_BIN (pipeline), fakesink);
-  gst_element_set_state (fakesink, GST_STATE_PLAYING);
-
-  fail_unless (gst_element_link (apedemux, fakesink));
-}
-
-static void
 test_taglib_apev2mux_check_output_buffer (GstBuffer * buf)
 {
   GstMapInfo map;
@@ -283,7 +256,7 @@ test_taglib_apev2mux_with_tags (GstTagList * tags, guint32 mask)
 {
   GstMessage *msg;
   GstTagList *tags_read = NULL;
-  GstElement *pipeline, *apev2mux, *apedemux, *fakesrc;
+  GstElement *pipeline, *apev2mux, *apedemux, *fakesrc, *fakesink;
   GstBus *bus;
   guint64 offset;
   GstBuffer *outbuf = NULL;
@@ -300,18 +273,23 @@ test_taglib_apev2mux_with_tags (GstTagList * tags, guint32 mask)
   apedemux = gst_element_factory_make ("apedemux", "apedemux");
   g_assert (apedemux != NULL);
 
+  fakesink = gst_element_factory_make ("fakesink", "fakesink");
+  g_assert (fakesink != NULL);
+
+  /* set up sink */
   outbuf = NULL;
-  g_signal_connect (apedemux, "pad-added",
-      G_CALLBACK (demux_pad_added), &outbuf);
+  g_object_set (fakesink, "signal-handoffs", TRUE, NULL);
+  g_signal_connect (fakesink, "handoff", G_CALLBACK (got_buffer), &outbuf);
 
   gst_bin_add (GST_BIN (pipeline), fakesrc);
   gst_bin_add (GST_BIN (pipeline), apev2mux);
   gst_bin_add (GST_BIN (pipeline), apedemux);
+  gst_bin_add (GST_BIN (pipeline), fakesink);
 
   gst_tag_setter_merge_tags (GST_TAG_SETTER (apev2mux), tags,
       GST_TAG_MERGE_APPEND);
 
-  gst_element_link_many (fakesrc, apev2mux, apedemux, NULL);
+  gst_element_link_many (fakesrc, apev2mux, apedemux, fakesink, NULL);
 
   /* set up source */
   g_object_set (fakesrc, "signal-handoffs", TRUE, "can-activate-pull", FALSE,

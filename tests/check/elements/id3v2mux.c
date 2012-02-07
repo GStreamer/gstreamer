@@ -322,33 +322,6 @@ got_buffer (GstElement * fakesink, GstBuffer * buf, GstPad * pad,
 }
 
 static void
-demux_pad_added (GstElement * id3demux, GstPad * srcpad, GstBuffer ** p_outbuf)
-{
-  GstElement *fakesink, *pipeline;
-  GstCaps *caps;
-
-  caps = gst_pad_get_current_caps (srcpad);
-  GST_LOG ("id3demux added source pad with caps %" GST_PTR_FORMAT, caps);
-  gst_caps_unref (caps);
-
-  pipeline = id3demux;
-  while (GST_OBJECT_PARENT (pipeline) != NULL)
-    pipeline = (GstElement *) GST_OBJECT_PARENT (pipeline);
-
-  fakesink = gst_element_factory_make ("fakesink", "fakesink");
-  g_assert (fakesink != NULL);
-
-  /* set up sink */
-  g_object_set (fakesink, "signal-handoffs", TRUE, NULL);
-  g_signal_connect (fakesink, "handoff", G_CALLBACK (got_buffer), p_outbuf);
-
-  gst_bin_add (GST_BIN (pipeline), fakesink);
-  gst_element_set_state (fakesink, GST_STATE_PLAYING);
-
-  fail_unless (gst_element_link (id3demux, fakesink));
-}
-
-static void
 test_taglib_id3mux_check_output_buffer (GstBuffer * buf)
 {
   GstMapInfo map;
@@ -377,7 +350,7 @@ test_taglib_id3mux_with_tags (GstTagList * tags, guint32 mask)
 {
   GstMessage *msg;
   GstTagList *tags_read = NULL;
-  GstElement *pipeline, *id3mux, *id3demux, *fakesrc, *identity;
+  GstElement *pipeline, *id3mux, *id3demux, *fakesrc, *identity, *fakesink;
   GstBus *bus;
   guint64 offset;
   GstBuffer *outbuf = NULL;
@@ -399,19 +372,24 @@ test_taglib_id3mux_with_tags (GstTagList * tags, guint32 mask)
   id3demux = gst_element_factory_make ("id3demux", "id3demux");
   g_assert (id3demux != NULL);
 
+  fakesink = gst_element_factory_make ("fakesink", "fakesink");
+  g_assert (fakesink != NULL);
+
+  /* set up sink */
   outbuf = NULL;
-  g_signal_connect (id3demux, "pad-added",
-      G_CALLBACK (demux_pad_added), &outbuf);
+  g_object_set (fakesink, "signal-handoffs", TRUE, NULL);
+  g_signal_connect (fakesink, "handoff", G_CALLBACK (got_buffer), &outbuf);
 
   gst_bin_add (GST_BIN (pipeline), fakesrc);
   gst_bin_add (GST_BIN (pipeline), id3mux);
   gst_bin_add (GST_BIN (pipeline), identity);
   gst_bin_add (GST_BIN (pipeline), id3demux);
+  gst_bin_add (GST_BIN (pipeline), fakesink);
 
   gst_tag_setter_merge_tags (GST_TAG_SETTER (id3mux), tags,
       GST_TAG_MERGE_APPEND);
 
-  gst_element_link_many (fakesrc, id3mux, identity, id3demux, NULL);
+  gst_element_link_many (fakesrc, id3mux, identity, id3demux, fakesink, NULL);
 
   /* set up source */
   g_object_set (fakesrc, "signal-handoffs", TRUE, "can-activate-pull", FALSE,
