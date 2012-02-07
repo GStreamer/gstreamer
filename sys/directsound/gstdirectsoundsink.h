@@ -31,7 +31,6 @@
 
 #include <gst/gst.h>
 #include <gst/audio/gstaudiosink.h>
-#include "gstdirectsoundringbuffer.h"
 
 #include <windows.h>
 #include <dxerr9.h>
