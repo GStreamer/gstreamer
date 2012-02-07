@@ -68,7 +68,7 @@ typedef enum _dice_dir
 #define gst_dicetv_parent_class parent_class
 G_DEFINE_TYPE (GstDiceTV, gst_dicetv, GST_TYPE_VIDEO_FILTER);
 
-static void gst_dicetv_create_map (GstDiceTV * filter);
+static void gst_dicetv_create_map (GstDiceTV * filter, GstVideoInfo * info);
 
 static GstStaticPadTemplate gst_dicetv_src_template =
 GST_STATIC_PAD_TEMPLATE ("src",
@@ -100,7 +100,7 @@ gst_dicetv_set_info (GstVideoFilter * vfilter, GstCaps * incaps,
   filter->dicemap =
       (guint8 *) g_malloc (GST_VIDEO_INFO_WIDTH (in_info) *
       GST_VIDEO_INFO_WIDTH (in_info));
-  gst_dicetv_create_map (filter);
+  gst_dicetv_create_map (filter, in_info);
 
   return TRUE;
 }
@@ -200,11 +200,10 @@ gst_dicetv_transform_frame (GstVideoFilter * vfilter, GstVideoFrame * in_frame,
 }
 
 static void
-gst_dicetv_create_map (GstDiceTV * filter)
+gst_dicetv_create_map (GstDiceTV * filter, GstVideoInfo * info)
 {
   gint x, y, i;
   gint width, height;
-  GstVideoInfo *info = &GST_VIDEO_FILTER (filter)->in_info;
 
   width = GST_VIDEO_INFO_WIDTH (info);
   height = GST_VIDEO_INFO_HEIGHT (info);
@@ -237,7 +236,7 @@ gst_dicetv_set_property (GObject * object, guint prop_id, const GValue * value,
     case PROP_CUBE_BITS:
       GST_OBJECT_LOCK (filter);
       filter->g_cube_bits = g_value_get_int (value);
-      gst_dicetv_create_map (filter);
+      gst_dicetv_create_map (filter, &GST_VIDEO_FILTER (filter)->in_info);
       GST_OBJECT_UNLOCK (filter);
       break;
     default:

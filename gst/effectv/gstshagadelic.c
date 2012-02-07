@@ -52,7 +52,8 @@
 #define gst_shagadelictv_parent_class parent_class
 G_DEFINE_TYPE (GstShagadelicTV, gst_shagadelictv, GST_TYPE_VIDEO_FILTER);
 
-static void gst_shagadelic_initialize (GstShagadelicTV * filter);
+static void gst_shagadelic_initialize (GstShagadelicTV * filter,
+    GstVideoInfo * in_info);
 
 #if G_BYTE_ORDER == G_LITTLE_ENDIAN
 #define CAPS_STR GST_VIDEO_CAPS_MAKE ("BGRx")
@@ -91,13 +92,13 @@ gst_shagadelictv_set_info (GstVideoFilter * vfilter, GstCaps * incaps,
   filter->ripple = (guint8 *) g_malloc (area * 4);
   filter->spiral = (guint8 *) g_malloc (area);
 
-  gst_shagadelic_initialize (filter);
+  gst_shagadelic_initialize (filter, in_info);
 
   return TRUE;
 }
 
 static void
-gst_shagadelic_initialize (GstShagadelicTV * filter)
+gst_shagadelic_initialize (GstShagadelicTV * filter, GstVideoInfo * info)
 {
   int i, x, y;
 #ifdef PS2
@@ -106,7 +107,6 @@ gst_shagadelic_initialize (GstShagadelicTV * filter)
   double xx, yy;
 #endif
   gint width, height;
-  GstVideoInfo *info = &GST_VIDEO_FILTER (filter)->in_info;
 
   width = GST_VIDEO_INFO_WIDTH (info);
   height = GST_VIDEO_INFO_HEIGHT (info);
