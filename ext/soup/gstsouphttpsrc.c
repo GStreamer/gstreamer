@@ -712,6 +712,8 @@ gst_soup_http_src_got_headers_cb (SoupMessage * msg, GstSoupHTTPSrc * src)
 
       src->src_caps = gst_caps_new_simple ("application/x-icy",
           "metadata-interval", G_TYPE_INT, icy_metaint, NULL);
+
+      gst_base_src_set_caps (GST_BASE_SRC (src), src->src_caps);
     }
   }
   if ((value =
@@ -735,13 +737,19 @@ gst_soup_http_src_got_headers_cb (SoupMessage * msg, GstSoupHTTPSrc * src)
         rate = atol (param);
 
       src->src_caps = gst_caps_new_simple ("audio/x-raw",
-          "format", G_TYPE_STRING, "S16_BE",
+          "format", G_TYPE_STRING, "S16BE",
+          "layout", G_TYPE_STRING, "interleaved",
           "channels", G_TYPE_INT, channels, "rate", G_TYPE_INT, rate, NULL);
+
+      gst_base_src_set_caps (GST_BASE_SRC (src), src->src_caps);
     } else {
       /* Set the Content-Type field on the caps */
-      if (src->src_caps)
+      if (src->src_caps) {
+        src->src_caps = gst_caps_make_writable (src->src_caps);
         gst_caps_set_simple (src->src_caps, "content-type", G_TYPE_STRING,
             value, NULL);
+        gst_base_src_set_caps (GST_BASE_SRC (src), src->src_caps);
+      }
     }
   }
 
