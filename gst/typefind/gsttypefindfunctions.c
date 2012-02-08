@@ -2451,9 +2451,8 @@ h264_video_type_find (GstTypeFind * tf, gpointer unused)
     data_scan_ctx_advance (tf, &c, 1);
   }
 
-  if (good >= 2 && bad < 1) {
+  if (good >= 2 && bad == 0) {
     gst_type_find_suggest (tf, GST_TYPE_FIND_POSSIBLE, H264_VIDEO_CAPS);
-    return;
   }
 }
 
