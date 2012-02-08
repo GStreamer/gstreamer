@@ -2402,6 +2402,9 @@ h264_video_type_find (GstTypeFind * tf, gpointer unused)
   /* Stream consists of: a series of sync codes (00 00 00 01) followed 
    * by NALs
    */
+  gboolean seen_idr = FALSE;
+  gboolean seen_sps = FALSE;
+  gboolean seen_pps = FALSE;
   int nut, ref;
   int good = 0;
   int bad = 0;
@@ -2426,6 +2429,13 @@ h264_video_type_find (GstTypeFind * tf, gpointer unused)
             ((nut == 6 || (nut >= 9 && nut <= 12)) && ref != 0)) {
           bad++;
         } else {
+          if (nut == 7)
+            seen_sps = TRUE;
+          else if (nut == 8)
+            seen_pps = TRUE;
+          else if (nut == 5)
+            seen_idr = TRUE;
+
           good++;
         }
       } else if (nut >= 14 && nut <= 33) {
@@ -2439,9 +2449,10 @@ h264_video_type_find (GstTypeFind * tf, gpointer unused)
         /* don't consider these bad */
       }
 
-      GST_DEBUG ("good %d bad %d", good, bad);
+      GST_LOG ("good:%d, bad:%d, pps:%d, sps:%d, idr:%d", good, bad, seen_pps,
+          seen_sps, seen_idr);
 
-      if (good >= 10 && bad < 4) {
+      if (seen_sps && seen_pps && seen_idr && good >= 10 && bad < 4) {
         gst_type_find_suggest (tf, GST_TYPE_FIND_LIKELY, H264_VIDEO_CAPS);
         return;
       }
@@ -2450,6 +2461,9 @@ h264_video_type_find (GstTypeFind * tf, gpointer unused)
     }
     data_scan_ctx_advance (tf, &c, 1);
   }
+
+  GST_LOG ("good:%d, bad:%d, pps:%d, sps:%d, idr:%d", good, bad, seen_pps,
+      seen_sps, seen_idr);
 
   if (good >= 2 && bad == 0) {
     gst_type_find_suggest (tf, GST_TYPE_FIND_POSSIBLE, H264_VIDEO_CAPS);
