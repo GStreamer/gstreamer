@@ -293,6 +293,7 @@ struct _GstVaapiDecoderH264Private {
     guint                       is_constructed          : 1;
     guint                       is_opened               : 1;
     guint                       is_avc                  : 1;
+    guint                       has_context             : 1;
 };
 
 static gboolean
@@ -574,7 +575,7 @@ ensure_context(GstVaapiDecoderH264 *decoder, GstH264SPS *sps)
     guint i, n_profiles = 0;
     gboolean success, reset_context = FALSE;
 
-    if (priv->sps != sps || priv->sps->profile_idc != sps->profile_idc) {
+    if (!priv->has_context || priv->sps->profile_idc != sps->profile_idc) {
         GST_DEBUG("profile changed");
         reset_context = TRUE;
 
@@ -607,7 +608,8 @@ ensure_context(GstVaapiDecoderH264 *decoder, GstH264SPS *sps)
         priv->profile = profiles[i];
     }
 
-    if (priv->sps != sps || priv->sps->chroma_format_idc != sps->chroma_format_idc) {
+    if (!priv->has_context ||
+        priv->sps->chroma_format_idc != sps->chroma_format_idc) {
         GST_DEBUG("chroma format changed");
         reset_context = TRUE;
 
@@ -616,7 +618,7 @@ ensure_context(GstVaapiDecoderH264 *decoder, GstH264SPS *sps)
             return GST_VAAPI_DECODER_STATUS_ERROR_UNSUPPORTED_CHROMA_FORMAT;
     }
 
-    if (priv->sps         != sps        ||
+    if (!priv->has_context              ||
         priv->sps->width  != sps->width ||
         priv->sps->height != sps->height) {
         GST_DEBUG("size changed");
@@ -638,6 +640,7 @@ ensure_context(GstVaapiDecoderH264 *decoder, GstH264SPS *sps)
         );
         if (!success)
             return GST_VAAPI_DECODER_STATUS_ERROR_UNKNOWN;
+        priv->has_context = TRUE;
 
         /* Reset DPB */
         dpb_reset(decoder, sps);
@@ -693,7 +696,7 @@ decode_sps(GstVaapiDecoderH264 *decoder, GstH264NalUnit *nalu)
     if (result != GST_H264_PARSER_OK)
         return get_status(result);
 
-    return GST_VAAPI_DECODER_STATUS_SUCCESS;
+    return ensure_context(decoder, sps);
 }
 
 static GstVaapiDecoderStatus
@@ -2370,8 +2373,8 @@ gst_vaapi_decoder_h264_init(GstVaapiDecoderH264 *decoder)
     priv                        = GST_VAAPI_DECODER_H264_GET_PRIVATE(decoder);
     decoder->priv               = priv;
     priv->parser                = NULL;
-    priv->sps                   = NULL;
-    priv->pps                   = NULL;
+    priv->sps                   = &priv->last_sps;
+    priv->pps                   = &priv->last_pps;
     priv->current_picture       = NULL;
     priv->dpb_count             = 0;
     priv->dpb_size              = 0;
@@ -2402,6 +2405,7 @@ gst_vaapi_decoder_h264_init(GstVaapiDecoderH264 *decoder)
     priv->is_constructed        = FALSE;
     priv->is_opened             = FALSE;
     priv->is_avc                = FALSE;
+    priv->has_context           = FALSE;
 
     memset(priv->dpb, 0, sizeof(priv->dpb));
     memset(priv->short_ref, 0, sizeof(priv->short_ref));
