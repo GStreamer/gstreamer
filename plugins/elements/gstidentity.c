@@ -64,7 +64,7 @@ enum
 #define DEFAULT_ERROR_AFTER             -1
 #define DEFAULT_DROP_PROBABILITY        0.0
 #define DEFAULT_DATARATE                0
-#define DEFAULT_SILENT                  FALSE
+#define DEFAULT_SILENT                  TRUE
 #define DEFAULT_SINGLE_SEGMENT          FALSE
 #define DEFAULT_DUMP                    FALSE
 #define DEFAULT_SYNC                    FALSE

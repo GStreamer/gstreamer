@@ -81,7 +81,7 @@ enum
 #define DEFAULT_PATTERN         NULL
 #define DEFAULT_EOS             FALSE
 #define DEFAULT_SIGNAL_HANDOFFS FALSE
-#define DEFAULT_SILENT          FALSE
+#define DEFAULT_SILENT          TRUE
 #define DEFAULT_DUMP            FALSE
 #define DEFAULT_PARENTSIZE      4096*10
 #define DEFAULT_CAN_ACTIVATE_PULL TRUE
