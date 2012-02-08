@@ -168,7 +168,6 @@
     <xi:include href="xml/plugin-gaudieffects.xml" />
     <xi:include href="xml/plugin-geometrictransform.xml" />
     <xi:include href="xml/plugin-gsm.xml" />
-    <xi:include href="xml/plugin-h264parse.xml" />
     <xi:include href="xml/plugin-ivfparse.xml" />
     <xi:include href="xml/plugin-jpegformat.xml" />
     <xi:include href="xml/plugin-kate.xml" />

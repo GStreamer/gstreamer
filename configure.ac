@@ -316,7 +316,7 @@ dnl Make sure you have a space before and after all plugins
 GST_PLUGINS_NONPORTED=" aiff asfmux \
  camerabin cdxaparse coloreffects \
  dccp faceoverlay festival \
- fieldanalysis freeverb freeze frei0r gaudieffects geometrictransform h264parse \
+ fieldanalysis freeverb freeze frei0r gaudieffects geometrictransform \
  hdvparse hls id3tag inter interlace ivfparse jpegformat jp2kdecimator \
  kate liveadder legacyresample librfb mpegtsmux \
  mpegpsmux mve mxf mythtv nsf nuvdemux \
@@ -356,7 +356,6 @@ AG_GST_CHECK_PLUGIN(freeverb)
 AG_GST_CHECK_PLUGIN(frei0r)
 AG_GST_CHECK_PLUGIN(gaudieffects)
 AG_GST_CHECK_PLUGIN(geometrictransform)
-AG_GST_CHECK_PLUGIN(h264parse)
 AG_GST_CHECK_PLUGIN(hdvparse)
 AG_GST_CHECK_PLUGIN(hls)
 AG_GST_CHECK_PLUGIN(id3tag)
@@ -1973,7 +1972,6 @@ gst/freeverb/Makefile
 gst/frei0r/Makefile
 gst/gaudieffects/Makefile
 gst/geometrictransform/Makefile
-gst/h264parse/Makefile
 gst/hdvparse/Makefile
 gst/hls/Makefile
 gst/id3tag/Makefile
