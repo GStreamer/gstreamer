@@ -1029,8 +1029,8 @@ gst_base_parse_sink_eventfunc (GstBaseParse * parse, GstEvent * event)
         gst_event_unref (event);
 
         out_segment.start = 0;
-        out_segment.stop = GST_CLOCK_TIME_NONE;;
-        out_segment.time = 0;;
+        out_segment.stop = GST_CLOCK_TIME_NONE;
+        out_segment.time = 0;
 
         event = gst_event_new_segment (&out_segment);
 
