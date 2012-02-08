@@ -1224,7 +1224,7 @@ gst_queue_handle_src_query (GstPad * pad, GstObject * parent, GstQuery * query)
   GstQueue *queue = GST_QUEUE (parent);
   gboolean res;
 
-  res = gst_pad_peer_query (queue->sinkpad, query);
+  res = gst_pad_query_default (pad, parent, query);
   if (!res)
     return FALSE;
 
