@@ -691,6 +691,9 @@ decode_sps(GstVaapiDecoderH264 *decoder, GstH264NalUnit *nalu)
 
     GST_DEBUG("decode SPS");
 
+    if (priv->current_picture && !decode_current_picture(decoder))
+        return GST_VAAPI_DECODER_STATUS_ERROR_UNKNOWN;
+
     memset(sps, 0, sizeof(*sps));
     result = gst_h264_parser_parse_sps(priv->parser, nalu, sps, TRUE);
     if (result != GST_H264_PARSER_OK)
@@ -707,6 +710,9 @@ decode_pps(GstVaapiDecoderH264 *decoder, GstH264NalUnit *nalu)
     GstH264ParserResult result;
 
     GST_DEBUG("decode PPS");
+
+    if (priv->current_picture && !decode_current_picture(decoder))
+        return GST_VAAPI_DECODER_STATUS_ERROR_UNKNOWN;
 
     memset(pps, 0, sizeof(*pps));
     result = gst_h264_parser_parse_pps(priv->parser, nalu, pps);
