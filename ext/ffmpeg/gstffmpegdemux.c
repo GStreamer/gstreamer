@@ -1509,7 +1509,7 @@ read_failed:
     GST_OBJECT_LOCK (demux);
     /* pause appropriatly based on if we are flushing or not */
     if (demux->flushing)
-      ret = GST_FLOW_WRONG_STATE;
+      ret = GST_FLOW_FLUSHING;
     else if (gst_ffmpegdemux_has_outputted (demux)
         || gst_ffmpegdemux_is_eos (demux)) {
       GST_DEBUG_OBJECT (demux, "We are EOS");
@@ -1562,7 +1562,7 @@ gst_ffmpegdemux_sink_event (GstPad * sinkpad, GstObject * parent,
 
       /* now unblock the chain function */
       GST_FFMPEG_PIPE_MUTEX_LOCK (ffpipe);
-      ffpipe->srcresult = GST_FLOW_WRONG_STATE;
+      ffpipe->srcresult = GST_FLOW_FLUSHING;
       GST_FFMPEG_PIPE_SIGNAL (ffpipe);
       GST_FFMPEG_PIPE_MUTEX_UNLOCK (ffpipe);
 
@@ -1680,7 +1680,7 @@ ignore:
 
     if (buffer)
       gst_buffer_unref (buffer);
-    return GST_FLOW_WRONG_STATE;
+    return GST_FLOW_FLUSHING;
   }
 }
 
@@ -1742,7 +1742,7 @@ gst_ffmpegdemux_sink_activate_push (GstPad * sinkpad, GstObject * parent,
 
     /* release chain and loop */
     GST_FFMPEG_PIPE_MUTEX_LOCK (ffpipe);
-    demux->ffpipe.srcresult = GST_FLOW_WRONG_STATE;
+    demux->ffpipe.srcresult = GST_FLOW_FLUSHING;
     /* end streaming by making ffmpeg believe eos */
     demux->ffpipe.eos = TRUE;
     GST_FFMPEG_PIPE_SIGNAL (ffpipe);

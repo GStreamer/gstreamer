@@ -118,7 +118,7 @@ gst_ffmpegdata_peek (URLContext * h, unsigned char *buf, int size)
     case GST_FLOW_EOS:
       total = 0;
       break;
-    case GST_FLOW_WRONG_STATE:
+    case GST_FLOW_FLUSHING:
       total = -1;
       break;
     default:
