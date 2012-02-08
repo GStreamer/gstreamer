@@ -1578,7 +1578,7 @@ gst_asf_demux_loop (GstASFDemux * demux)
     GST_DEBUG_OBJECT (demux, "got flow %s", gst_flow_get_name (flow));
     if (flow == GST_FLOW_EOS)
       goto eos;
-    else if (flow == GST_FLOW_WRONG_STATE) {
+    else if (flow == GST_FLOW_FLUSHING) {
       GST_DEBUG_OBJECT (demux, "Not fatal");
       goto pause;
     } else

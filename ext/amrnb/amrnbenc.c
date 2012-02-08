@@ -246,7 +246,7 @@ gst_amrnbenc_handle_frame (GstAudioEncoder * enc, GstBuffer * buffer)
 
   amrnbenc = GST_AMRNBENC (enc);
 
-  g_return_val_if_fail (amrnbenc->handle, GST_FLOW_WRONG_STATE);
+  g_return_val_if_fail (amrnbenc->handle, GST_FLOW_FLUSHING);
 
   /* we don't deal with squeezing remnants, so simply discard those */
   if (G_UNLIKELY (buffer == NULL)) {

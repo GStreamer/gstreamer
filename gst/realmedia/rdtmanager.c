@@ -593,7 +593,7 @@ gst_rdt_manager_src_activate_mode (GstPad * pad, GstObject * parent,
         /* make sure all data processing stops ASAP */
         JBUF_LOCK (session);
         /* mark ourselves as flushing */
-        session->srcresult = GST_FLOW_WRONG_STATE;
+        session->srcresult = GST_FLOW_FLUSHING;
         GST_DEBUG_OBJECT (rdtmanager, "Disabling pop on queue");
         /* this unblocks any waiting pops on the src pad task */
         JBUF_SIGNAL (session);
