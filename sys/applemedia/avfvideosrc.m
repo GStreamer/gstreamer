@@ -421,7 +421,7 @@ didOutputSampleBuffer:(CMSampleBufferRef)sampleBuffer
   [bufQueueLock lockWhenCondition:HAS_BUFFER_OR_STOP_REQUEST];
   if (stopRequest) {
     [bufQueueLock unlock];
-    return GST_FLOW_WRONG_STATE;
+    return GST_FLOW_FLUSHING;
   }
 
   sbuf = (CMSampleBufferRef) [bufQueue lastObject];

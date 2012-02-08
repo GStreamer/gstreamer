@@ -741,7 +741,7 @@ gst_decklink_sink_videosink_chain (GstPad * pad, GstBuffer * buffer)
 
     ret = GST_FLOW_OK;
   } else {
-    ret = GST_FLOW_WRONG_STATE;
+    ret = GST_FLOW_FLUSHING;
   }
 
   frame->Release ();

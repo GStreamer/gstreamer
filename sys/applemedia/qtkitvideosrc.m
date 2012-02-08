@@ -434,7 +434,7 @@ openFailed:
   [queueLock lockWhenCondition:HAS_FRAME_OR_STOP_REQUEST];
   if (stopRequest) {
     [queueLock unlock];
-    return GST_FLOW_WRONG_STATE;
+    return GST_FLOW_FLUSHING;
   }
 
   frame = (CVPixelBufferRef) [queue lastObject];

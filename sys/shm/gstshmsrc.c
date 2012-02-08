@@ -306,14 +306,14 @@ gst_shm_src_create (GstPushSrc * psrc, GstBuffer ** outbuf)
   do {
     if (gst_poll_wait (self->poll, GST_CLOCK_TIME_NONE) < 0) {
       if (errno == EBUSY)
-        return GST_FLOW_WRONG_STATE;
+        return GST_FLOW_FLUSHING;
       GST_ELEMENT_ERROR (self, RESOURCE, READ, ("Failed to read from shmsrc"),
           ("Poll failed on fd: %s", strerror (errno)));
       return GST_FLOW_ERROR;
     }
 
     if (self->unlocked)
-      return GST_FLOW_WRONG_STATE;
+      return GST_FLOW_FLUSHING;
 
     if (gst_poll_fd_has_closed (self->poll, &self->pollfd)) {
       GST_ELEMENT_ERROR (self, RESOURCE, READ, ("Failed to read from shmsrc"),

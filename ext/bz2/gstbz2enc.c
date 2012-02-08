@@ -225,7 +225,7 @@ done:
 not_ready:
   {
     GST_ELEMENT_ERROR (b, LIBRARY, FAILED, (NULL), ("Compressor not ready."));
-    flow = GST_FLOW_WRONG_STATE;
+    flow = GST_FLOW_FLUSHING;
     goto done;
   }
 compress_error:

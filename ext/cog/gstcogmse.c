@@ -338,7 +338,7 @@ gst_mse_chain_ref (GstPad * pad, GstBuffer * buffer)
     if (fs->cancel) {
       g_mutex_unlock (fs->lock);
       gst_object_unref (fs);
-      return GST_FLOW_WRONG_STATE;
+      return GST_FLOW_FLUSHING;
     }
   }
 
@@ -370,7 +370,7 @@ gst_mse_chain_test (GstPad * pad, GstBuffer * buffer)
     if (fs->cancel) {
       g_mutex_unlock (fs->lock);
       gst_object_unref (fs);
-      return GST_FLOW_WRONG_STATE;
+      return GST_FLOW_FLUSHING;
     }
   }
 

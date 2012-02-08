@@ -1146,7 +1146,7 @@ error_cancel:
     if (error_str != NULL)
       *error_str = NULL;
 
-    return GST_FLOW_WRONG_STATE;
+    return GST_FLOW_FLUSHING;
   }
 error_get_result:
   {

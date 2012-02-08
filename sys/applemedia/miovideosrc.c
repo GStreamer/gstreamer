@@ -441,7 +441,7 @@ shutting_down:
       *buf = NULL;
     }
 
-    return GST_FLOW_WRONG_STATE;
+    return GST_FLOW_FLUSHING;
   }
 unexpected_format:
   {

@@ -1053,7 +1053,7 @@ gst_ass_render_chain_text (GstPad * pad, GstObject * parent, GstBuffer * buffer)
 
   if (render->subtitle_flushing) {
     gst_buffer_unref (buffer);
-    return GST_FLOW_WRONG_STATE;
+    return GST_FLOW_FLUSHING;
   }
 
   timestamp = GST_BUFFER_TIMESTAMP (buffer);
@@ -1106,7 +1106,7 @@ gst_ass_render_chain_text (GstPad * pad, GstObject * parent, GstBuffer * buffer)
       GST_DEBUG_OBJECT (render, "Text pad flushing");
       gst_buffer_unref (buffer);
       g_mutex_unlock (&render->subtitle_mutex);
-      return GST_FLOW_WRONG_STATE;
+      return GST_FLOW_FLUSHING;
     }
     GST_DEBUG_OBJECT (render,
         "Too early text buffer, waiting (%" GST_TIME_FORMAT " > %"

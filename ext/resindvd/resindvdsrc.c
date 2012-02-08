@@ -1159,7 +1159,7 @@ internal_error:
 branching:
   {
     g_mutex_unlock (src->branch_lock);
-    return GST_FLOW_WRONG_STATE;
+    return GST_FLOW_FLUSHING;
   }
 }
 

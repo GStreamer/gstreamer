@@ -675,7 +675,7 @@ flushing:
     GST_DEBUG_OBJECT (pad, "We are flushing, discard buffer %p", buf);
     GST_INPUT_SELECTOR_UNLOCK (sel);
     gst_buffer_unref (buf);
-    res = GST_FLOW_WRONG_STATE;
+    res = GST_FLOW_FLUSHING;
     goto done;
   }
 }

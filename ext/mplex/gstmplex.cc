@@ -465,7 +465,7 @@ gst_mplex_sink_event (GstPad * sinkpad, GstObject * parent, GstEvent * event)
 
       /* now unblock the chain function */
       GST_MPLEX_MUTEX_LOCK (mplex);
-      mplex->srcresult = GST_FLOW_WRONG_STATE;
+      mplex->srcresult = GST_FLOW_FLUSHING;
       GST_MPLEX_SIGNAL (mplex, mpad);
       GST_MPLEX_MUTEX_UNLOCK (mplex);
       /* no way to pause/restart loop task */
@@ -709,7 +709,7 @@ gst_mplex_src_activate_mode (GstPad * pad, GstObject * parent,
     /* end the muxing loop by forcing eos and unblock chains */
     GST_MPLEX_MUTEX_LOCK (mplex);
     mplex->eos = TRUE;
-    mplex->srcresult = GST_FLOW_WRONG_STATE;
+    mplex->srcresult = GST_FLOW_FLUSHING;
     GST_MPLEX_SIGNAL_ALL (mplex);
     GST_MPLEX_MUTEX_UNLOCK (mplex);
 

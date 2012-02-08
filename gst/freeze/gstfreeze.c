@@ -239,7 +239,7 @@ gst_freeze_play (GstPad * pad, GstBuffer * buff)
 
   if (freeze->on_flush) {
     g_object_unref (freeze);
-    return GST_FLOW_WRONG_STATE;
+    return GST_FLOW_FLUSHING;
   }
 
   /* If it is working in push mode this function will be called by "_chain"

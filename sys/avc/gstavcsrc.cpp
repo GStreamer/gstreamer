@@ -391,7 +391,7 @@ gst_avc_src_create (GstBaseSrc * src, guint64 offset, guint size,
   if (avcsrc->unlock) {
     if (buffer)
       gst_buffer_unref (buffer);
-    return GST_FLOW_WRONG_STATE;
+    return GST_FLOW_FLUSHING;
   }
 
   gst_buffer_set_caps (buffer, GST_PAD_CAPS (avcsrc->srcpad));

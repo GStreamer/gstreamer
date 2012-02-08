@@ -778,7 +778,7 @@ flushing:
   {
     GST_DEBUG_OBJECT (ringbuffer, "ringbuffer is flushing");
     GST_OBJECT_UNLOCK (ringbuffer);
-    return GST_FLOW_WRONG_STATE;
+    return GST_FLOW_FLUSHING;
   }
 }
 
@@ -944,7 +944,7 @@ flushing:
     GST_DEBUG_OBJECT (ringbuffer, "we are flushing");
     GST_OBJECT_UNLOCK (ringbuffer);
     gst_object_unref (ringbuffer);
-    return GST_FLOW_WRONG_STATE;
+    return GST_FLOW_FLUSHING;
   }
 wrong_size:
   {

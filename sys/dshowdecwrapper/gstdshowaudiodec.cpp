@@ -579,7 +579,7 @@ gst_dshowaudiodec_chain (GstPad * pad, GstBuffer * buffer)
   if (!adec->setup) {
     /* we are not set up */
     GST_WARNING_OBJECT (adec, "Decoder not set up, failing");
-    adec->last_ret = GST_FLOW_WRONG_STATE;
+    adec->last_ret = GST_FLOW_FLUSHING;
     goto beach;
   }
 

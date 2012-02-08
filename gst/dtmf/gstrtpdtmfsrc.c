@@ -844,7 +844,7 @@ paused:
     dtmfsrc->redundancy_count = dtmfsrc->packet_redundancy;
     goto send_last;
   } else {
-    return GST_FLOW_WRONG_STATE;
+    return GST_FLOW_FLUSHING;
   }
 
 no_clock:

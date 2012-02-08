@@ -415,7 +415,7 @@ gst_linsys_sdi_src_create (GstBaseSrc * src, guint64 _offset, guint size,
   guint8 *data = linsyssdisrc->tmpdata;
 
   if (linsyssdisrc->fd < 0)
-    return GST_FLOW_WRONG_STATE;
+    return GST_FLOW_FLUSHING;
 
   if (linsyssdisrc->is_625) {
     sdi_width = 864;

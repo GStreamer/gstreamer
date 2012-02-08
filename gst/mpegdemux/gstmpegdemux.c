@@ -2738,7 +2738,7 @@ gst_flups_demux_loop (GstPad * pad)
   demux = GST_FLUPS_DEMUX (gst_pad_get_parent (pad));
 
   if (G_UNLIKELY (demux->flushing)) {
-    ret = GST_FLOW_WRONG_STATE;
+    ret = GST_FLOW_FLUSHING;
     goto pause;
   }
 
@@ -3013,7 +3013,7 @@ gst_flups_demux_chain (GstPad * pad, GstObject * parent, GstBuffer * buffer)
   while (gst_flups_demux_resync (demux, save)) {
     gboolean ps_sync = TRUE;
     if (G_UNLIKELY (demux->flushing)) {
-      ret = GST_FLOW_WRONG_STATE;
+      ret = GST_FLOW_FLUSHING;
       goto done;
     }
 

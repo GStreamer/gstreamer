@@ -868,7 +868,7 @@ gst_dshowvideosrc_create (GstPushSrc * psrc, GstBuffer ** buf)
       gst_buffer_unref (*buf);
       *buf = NULL;
     }
-    return GST_FLOW_WRONG_STATE;
+    return GST_FLOW_FLUSHING;
   }
 
   GST_DEBUG ("dshowvideosrc_create => pts %" GST_TIME_FORMAT " duration %"

@@ -432,7 +432,7 @@ found_eos:
   {
     GST_DEBUG ("found EOS");
     gst_pad_push_event (ttaparse->srcpad, gst_event_new_eos ());
-    return GST_FLOW_WRONG_STATE;
+    return GST_FLOW_FLUSHING;
   }
 pull_error:
   {

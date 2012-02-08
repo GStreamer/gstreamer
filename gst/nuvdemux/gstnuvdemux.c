@@ -773,7 +773,7 @@ gst_nuv_demux_read_bytes (GstNuvDemux * nuv, guint64 size, gboolean move,
       /* got eos */
     } else if (ret == GST_FLOW_UNEXPECTED) {
       gst_nuv_demux_send_eos (nuv);
-      return GST_FLOW_WRONG_STATE;
+      return GST_FLOW_FLUSHING;
     }
   } else {
     if (gst_adapter_available (nuv->adapter) < size)

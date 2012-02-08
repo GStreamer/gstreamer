@@ -404,7 +404,7 @@ gst_shm_sink_render (GstBaseSink * bsink, GstBuffer * buf)
     g_cond_wait (self->cond, GST_OBJECT_GET_LOCK (self));
     if (self->unlock) {
       GST_OBJECT_UNLOCK (self);
-      return GST_FLOW_WRONG_STATE;
+      return GST_FLOW_FLUSHING;
     }
   }
 
@@ -412,7 +412,7 @@ gst_shm_sink_render (GstBaseSink * bsink, GstBuffer * buf)
     g_cond_wait (self->cond, GST_OBJECT_GET_LOCK (self));
     if (self->unlock) {
       GST_OBJECT_UNLOCK (self);
-      return GST_FLOW_WRONG_STATE;
+      return GST_FLOW_FLUSHING;
     }
   }
 
@@ -427,7 +427,7 @@ gst_shm_sink_render (GstBaseSink * bsink, GstBuffer * buf)
       g_cond_wait (self->cond, GST_OBJECT_GET_LOCK (self));
       if (self->unlock) {
         GST_OBJECT_UNLOCK (self);
-        return GST_FLOW_WRONG_STATE;
+        return GST_FLOW_FLUSHING;
       }
     }
     while (self->wait_for_connection && !self->clients) {
@@ -435,7 +435,7 @@ gst_shm_sink_render (GstBaseSink * bsink, GstBuffer * buf)
       if (self->unlock) {
         sp_writer_free_block (block);
         GST_OBJECT_UNLOCK (self);
-        return GST_FLOW_WRONG_STATE;
+        return GST_FLOW_FLUSHING;
       }
     }
 

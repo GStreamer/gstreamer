@@ -824,7 +824,7 @@ gst_kate_tiger_video_chain (GstPad * pad, GstBuffer * buf)
     GST_KATE_TIGER_MUTEX_UNLOCK (tiger);
     gst_object_unref (tiger);
     gst_buffer_unref (buf);
-    return GST_FLOW_WRONG_STATE;
+    return GST_FLOW_FLUSHING;
   }
 
   if (G_LIKELY (GST_BUFFER_TIMESTAMP_IS_VALID (buf))) {

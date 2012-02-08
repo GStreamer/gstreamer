@@ -470,7 +470,7 @@ gst_cel_video_src_create (GstPushSrc * pushsrc, GstBuffer ** buf)
 shutting_down:
   {
     cm->FigSampleBufferRelease (sbuf);
-    return GST_FLOW_WRONG_STATE;
+    return GST_FLOW_FLUSHING;
   }
 }
 

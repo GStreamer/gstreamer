@@ -646,7 +646,7 @@ gst_mpeg2enc_src_activate_mode (GstPad * pad, GstObject * parent,
     /* can only end the encoding loop by forcing eos */
     GST_MPEG2ENC_MUTEX_LOCK (enc);
     enc->eos = TRUE;
-    enc->srcresult = GST_FLOW_WRONG_STATE;
+    enc->srcresult = GST_FLOW_FLUSHING;
     GST_MPEG2ENC_SIGNAL (enc);
     GST_MPEG2ENC_MUTEX_UNLOCK (enc);
 

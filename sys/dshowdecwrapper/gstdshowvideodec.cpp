@@ -853,7 +853,7 @@ gst_dshowvideodec_chain (GstPad * pad, GstBuffer * buffer)
   if (!vdec->setup) {
     /* we are not setup */
     GST_WARNING_OBJECT (vdec, "Decoder not set up, failing");
-    vdec->last_ret = GST_FLOW_WRONG_STATE;
+    vdec->last_ret = GST_FLOW_FLUSHING;
     goto beach;
   }
 
