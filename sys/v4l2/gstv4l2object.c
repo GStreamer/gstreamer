@@ -2557,7 +2557,7 @@ gst_v4l2_object_get_mmap (GstV4l2Object * v4l2object, GstBuffer ** buf)
 no_buffer_pool:
   {
     GST_DEBUG_OBJECT (v4l2object->element, "no buffer pool");
-    return GST_FLOW_WRONG_STATE;
+    return GST_FLOW_FLUSHING;
   }
 poll_error:
   {

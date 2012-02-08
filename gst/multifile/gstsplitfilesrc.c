@@ -600,6 +600,6 @@ cancelled:
     GST_DEBUG_OBJECT (src, "I/O operation cancelled from another thread");
     g_error_free (err);
     gst_buffer_unref (buf);
-    return GST_FLOW_WRONG_STATE;
+    return GST_FLOW_FLUSHING;
   }
 }

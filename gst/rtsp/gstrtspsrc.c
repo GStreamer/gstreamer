@@ -3685,7 +3685,7 @@ interrupt:
     gst_rtsp_message_unset (&message);
     GST_DEBUG_OBJECT (src, "got interrupted: stop connection flush");
     gst_rtspsrc_connection_flush (src, FALSE);
-    return GST_FLOW_WRONG_STATE;
+    return GST_FLOW_FLUSHING;
   }
 receive_error:
   {
@@ -3812,7 +3812,7 @@ interrupt:
     gst_rtsp_message_unset (&message);
     GST_DEBUG_OBJECT (src, "got interrupted: stop connection flush");
     gst_rtspsrc_connection_flush (src, FALSE);
-    return GST_FLOW_WRONG_STATE;
+    return GST_FLOW_FLUSHING;
   }
 connect_error:
   {
@@ -3826,7 +3826,7 @@ connect_error:
       g_free (str);
       ret = GST_FLOW_ERROR;
     } else {
-      ret = GST_FLOW_WRONG_STATE;
+      ret = GST_FLOW_FLUSHING;
     }
     return ret;
   }
@@ -3851,7 +3851,7 @@ handle_request_failed:
       g_free (str);
       ret = GST_FLOW_ERROR;
     } else {
-      ret = GST_FLOW_WRONG_STATE;
+      ret = GST_FLOW_FLUSHING;
     }
     return ret;
   }
@@ -4084,7 +4084,7 @@ gst_rtspsrc_loop (GstRTSPSrc * src)
 no_connection:
   {
     GST_WARNING_OBJECT (src, "we are not connected");
-    ret = GST_FLOW_WRONG_STATE;
+    ret = GST_FLOW_FLUSHING;
     goto pause;
   }
 pause:

@@ -463,7 +463,7 @@ gst_rg_analysis_transform_ip (GstBaseTransform * base, GstBuffer * buf)
   GstRgAnalysis *filter = GST_RG_ANALYSIS (base);
   GstMapInfo map;
 
-  g_return_val_if_fail (filter->ctx != NULL, GST_FLOW_WRONG_STATE);
+  g_return_val_if_fail (filter->ctx != NULL, GST_FLOW_FLUSHING);
   g_return_val_if_fail (filter->analyze != NULL, GST_FLOW_NOT_NEGOTIATED);
 
   if (filter->skip)

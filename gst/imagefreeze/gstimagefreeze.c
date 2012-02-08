@@ -343,8 +343,7 @@ gst_image_freeze_sink_bufferalloc (GstPad * pad, guint64 offset, guint size,
       GST_PAD_STREAM_LOCK (self->srcpad);
       ret = gst_pad_alloc_buffer (self->srcpad, offset, size, caps, buf);
 
-      seeking = ret == GST_FLOW_WRONG_STATE
-          && g_atomic_int_get (&self->seeking);
+      seeking = ret == GST_FLOW_FLUSHING && g_atomic_int_get (&self->seeking);
       GST_PAD_STREAM_UNLOCK (self->srcpad);
     } while (seeking);
 

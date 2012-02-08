@@ -485,7 +485,7 @@ select_error:
 stopped:
   {
     GST_DEBUG ("stop called");
-    return GST_FLOW_WRONG_STATE;
+    return GST_FLOW_FLUSHING;
   }
 get_available_error:
   {
@@ -500,7 +500,7 @@ receive_error:
     if (g_error_matches (err, G_IO_ERROR, G_IO_ERROR_BUSY) ||
         g_error_matches (err, G_IO_ERROR, G_IO_ERROR_CANCELLED)) {
       g_clear_error (&err);
-      return GST_FLOW_WRONG_STATE;
+      return GST_FLOW_FLUSHING;
     } else {
       GST_ELEMENT_ERROR (udpsrc, RESOURCE, READ, (NULL),
           ("receive error %d: %s", ret, err->message));

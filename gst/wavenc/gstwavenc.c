@@ -652,7 +652,7 @@ gst_wavenc_chain (GstPad * pad, GstObject * parent, GstBuffer * buf)
   GstWavEnc *wavenc = GST_WAVENC (parent);
   GstFlowReturn flow = GST_FLOW_OK;
 
-  g_return_val_if_fail (wavenc->channels > 0, GST_FLOW_WRONG_STATE);
+  g_return_val_if_fail (wavenc->channels > 0, GST_FLOW_FLUSHING);
 
   if (!wavenc->sent_header) {
     /* use bogus size initially, we'll write the real

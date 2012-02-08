@@ -845,7 +845,7 @@ gst_rtp_jitter_buffer_flush_start (GstRtpJitterBuffer * jitterbuffer)
 
   JBUF_LOCK (priv);
   /* mark ourselves as flushing */
-  priv->srcresult = GST_FLOW_WRONG_STATE;
+  priv->srcresult = GST_FLOW_FLUSHING;
   GST_DEBUG_OBJECT (jitterbuffer, "Disabling pop on queue");
   /* this unblocks any waiting pops on the src pad task */
   JBUF_SIGNAL (priv);
@@ -1152,7 +1152,7 @@ gst_rtp_jitter_buffer_sink_rtcp_event (GstPad * pad, GstObject * parent,
 /*
  * Must be called with JBUF_LOCK held, will release the LOCK when emiting the
  * signal. The function returns GST_FLOW_ERROR when a parsing error happened and
- * GST_FLOW_WRONG_STATE when the element is shutting down. On success
+ * GST_FLOW_FLUSHING when the element is shutting down. On success
  * GST_FLOW_OK is returned.
  */
 static GstFlowReturn
@@ -1201,7 +1201,7 @@ no_caps:
 out_flushing:
   {
     GST_DEBUG_OBJECT (jitterbuffer, "we are flushing");
-    return GST_FLOW_WRONG_STATE;
+    return GST_FLOW_FLUSHING;
   }
 parse_failed:
   {
@@ -1299,7 +1299,7 @@ gst_rtp_jitter_buffer_chain (GstPad * pad, GstObject * parent,
   if (G_UNLIKELY (priv->clock_rate == -1)) {
     /* no clock rate given on the caps, try to get one with the signal */
     if (gst_rtp_jitter_buffer_get_clock_rate (jitterbuffer,
-            pt) == GST_FLOW_WRONG_STATE)
+            pt) == GST_FLOW_FLUSHING)
       goto out_flushing;
 
     if (G_UNLIKELY (priv->clock_rate == -1))

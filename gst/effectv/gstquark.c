@@ -116,7 +116,7 @@ gst_quarktv_transform_frame (GstVideoFilter * vfilter, GstVideoFrame * in_frame,
     gst_object_sync_values (GST_OBJECT (filter), timestamp);
 
   if (G_UNLIKELY (filter->planetable == NULL))
-    return GST_FLOW_WRONG_STATE;
+    return GST_FLOW_FLUSHING;
 
   src = GST_VIDEO_FRAME_PLANE_DATA (in_frame, 0);
   dest = GST_VIDEO_FRAME_PLANE_DATA (out_frame, 0);

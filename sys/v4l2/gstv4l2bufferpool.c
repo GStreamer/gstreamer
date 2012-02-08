@@ -501,7 +501,7 @@ gst_v4l2_object_poll (GstV4l2Object * v4l2object)
 stopped:
   {
     GST_DEBUG ("stop called");
-    return GST_FLOW_WRONG_STATE;
+    return GST_FLOW_FLUSHING;
   }
 select_error:
   {
@@ -741,7 +741,7 @@ gst_v4l2_buffer_pool_acquire_buffer (GstBufferPool * bpool, GstBuffer ** buffer,
 flushing:
   {
     GST_DEBUG_OBJECT (pool, "We are flushing");
-    return GST_FLOW_WRONG_STATE;
+    return GST_FLOW_FLUSHING;
   }
 }
 

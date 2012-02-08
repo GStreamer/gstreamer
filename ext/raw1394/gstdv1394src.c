@@ -725,7 +725,7 @@ error_while_polling:
 told_to_stop:
   {
     GST_DEBUG_OBJECT (dv1394src, "told to stop, shutting down");
-    return GST_FLOW_WRONG_STATE;
+    return GST_FLOW_FLUSHING;
   }
 }
 

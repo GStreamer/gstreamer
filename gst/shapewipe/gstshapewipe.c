@@ -929,7 +929,7 @@ shutdown:
   {
     GST_DEBUG_OBJECT (self, "Shutting down");
     gst_buffer_unref (buffer);
-    return GST_FLOW_WRONG_STATE;
+    return GST_FLOW_FLUSHING;
   }
 qos:
   {

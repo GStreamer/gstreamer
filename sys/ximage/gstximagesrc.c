@@ -838,7 +838,7 @@ gst_ximage_src_create (GstPushSrc * bs, GstBuffer ** buf)
     if (ret == GST_CLOCK_UNSCHEDULED) {
       /* Got woken up by the unlock function */
       GST_OBJECT_UNLOCK (s);
-      return GST_FLOW_WRONG_STATE;
+      return GST_FLOW_FLUSHING;
     }
     /* Duration is a complete 1/fps frame duration */
     dur = gst_util_uint64_scale_int (GST_SECOND, s->fps_d, s->fps_n);

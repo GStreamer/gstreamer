@@ -1837,7 +1837,7 @@ parse:
 
   if (G_UNLIKELY (demux->flushing)) {
     GST_DEBUG_OBJECT (demux, "we are now flushing, exiting parser loop");
-    ret = GST_FLOW_WRONG_STATE;
+    ret = GST_FLOW_FLUSHING;
     goto beach;
   }
 

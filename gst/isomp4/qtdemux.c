@@ -5278,7 +5278,7 @@ parse_failed:
 flow_failed:
   {
     /* maybe upstream temporarily flushing */
-    if (ret != GST_FLOW_WRONG_STATE) {
+    if (ret != GST_FLOW_FLUSHING) {
       GST_DEBUG_OBJECT (qtdemux, "no next moof");
       offset = 0;
     } else {

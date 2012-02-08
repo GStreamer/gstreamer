@@ -677,7 +677,7 @@ beach:
 not_configured:
   {
     GST_LOG_OBJECT (pngdec, "we are not configured yet");
-    ret = GST_FLOW_WRONG_STATE;
+    ret = GST_FLOW_FLUSHING;
     goto beach;
   }
 }

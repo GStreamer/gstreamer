@@ -799,9 +799,9 @@ gst_wavpack_enc_chain (GstPad * pad, GstBuffer * buf)
     } else if ((enc->srcpad_last_return == GST_FLOW_NOT_LINKED) &&
         (enc->wvcsrcpad_last_return == GST_FLOW_NOT_LINKED)) {
       ret = GST_FLOW_NOT_LINKED;
-    } else if ((enc->srcpad_last_return == GST_FLOW_WRONG_STATE) &&
-        (enc->wvcsrcpad_last_return == GST_FLOW_WRONG_STATE)) {
-      ret = GST_FLOW_WRONG_STATE;
+    } else if ((enc->srcpad_last_return == GST_FLOW_FLUSHING) &&
+        (enc->wvcsrcpad_last_return == GST_FLOW_FLUSHING)) {
+      ret = GST_FLOW_FLUSHING;
     } else {
       GST_ELEMENT_ERROR (enc, LIBRARY, ENCODE, (NULL),
           ("encoding samples failed"));

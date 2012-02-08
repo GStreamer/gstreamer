@@ -326,7 +326,7 @@ gst_gdk_pixbuf_sink_event (GstPad * pad, GstEvent * event)
         /* as long as we don't have flow returns for event functions we need
          * to post an error here, or the application might never know that
          * things failed */
-        if (res != GST_FLOW_OK && res != GST_FLOW_WRONG_STATE) {
+        if (res != GST_FLOW_OK && res != GST_FLOW_FLUSHING) {
           GST_ELEMENT_ERROR (pixbuf, STREAM, FAILED, (NULL),
               ("Flow: %s", gst_flow_get_name (res)));
         }
