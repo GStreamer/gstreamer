@@ -972,6 +972,9 @@ gst_type_find_element_activate_src_mode (GstPad * pad, GstObject * parent,
 
   switch (mode) {
     case GST_PAD_MODE_PULL:
+      /* make sure our task stops pushing, we can't call _stop here because this
+       * activation might happen from the streaming thread. */
+      gst_pad_pause_task (typefind->sink);
       res = gst_pad_activate_mode (typefind->sink, mode, active);
       if (typefind->caps) {
         GstCaps *caps;
@@ -1139,8 +1142,6 @@ gst_type_find_element_activate_sink_mode (GstPad * pad, GstObject * parent,
         gst_segment_init (&typefind->segment, GST_FORMAT_BYTES);
         typefind->need_segment = TRUE;
         typefind->offset = 0;
-        gst_pad_start_task (pad, (GstTaskFunction) gst_type_find_element_loop,
-            pad);
       } else {
         gst_pad_stop_task (pad);
       }
@@ -1200,6 +1201,9 @@ gst_type_find_element_activate_sink (GstPad * pad, GstObject * parent)
 
   if (!gst_pad_activate_mode (pad, GST_PAD_MODE_PULL, TRUE))
     goto typefind_push;
+
+  /* only start our task if we ourselves decide to start in pull mode */
+  gst_pad_start_task (pad, (GstTaskFunction) gst_type_find_element_loop, pad);
 
   return TRUE;
 
