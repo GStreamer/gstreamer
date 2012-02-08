@@ -45,10 +45,13 @@ GST_DEBUG_CATEGORY_STATIC (rtph264pay_debug);
  */
 
 static GstStaticPadTemplate gst_rtp_h264_pay_sink_template =
-GST_STATIC_PAD_TEMPLATE ("sink",
+    GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS ("video/x-h264")
+    GST_STATIC_CAPS ("video/x-h264, "
+        "stream-format = (string) byte-stream, alignment = (string) { nal, au };"
+        "video/x-h264, "
+        "stream-format = (string) avc, alignment = (string) au")
     );
 
 static GstStaticPadTemplate gst_rtp_h264_pay_src_template =
@@ -271,98 +274,110 @@ static const gchar *all_levels[] = {
 static GstCaps *
 gst_rtp_h264_pay_getcaps (GstBaseRTPPayload * payload, GstPad * pad)
 {
+  GstCaps *template_caps;
   GstCaps *allowed_caps;
+  GstCaps *caps, *icaps;
+  guint i;
 
   allowed_caps =
       gst_pad_peer_get_caps_reffed (GST_BASE_RTP_PAYLOAD_SRCPAD (payload));
 
-  if (allowed_caps) {
-    GstCaps *caps = NULL;
-    guint i;
+  if (allowed_caps == NULL)
+    return NULL;
 
-    if (gst_caps_is_any (allowed_caps)) {
-      gst_caps_unref (allowed_caps);
-      goto any;
-    }
+  template_caps =
+      gst_static_pad_template_get_caps (&gst_rtp_h264_pay_sink_template);
 
-    if (gst_caps_is_empty (allowed_caps))
-      return allowed_caps;
-
-    caps = gst_caps_new_empty ();
-
-    for (i = 0; i < gst_caps_get_size (allowed_caps); i++) {
-      GstStructure *s = gst_caps_get_structure (allowed_caps, i);
-      GstStructure *new_s = gst_structure_new ("video/x-h264", NULL);
-      const gchar *profile_level_id;
-
-      profile_level_id = gst_structure_get_string (s, "profile-level-id");
-
-      if (profile_level_id && strlen (profile_level_id) == 6) {
-        const gchar *profile;
-        const gchar *level;
-        long int spsint;
-        guint8 sps[3];
-
-        spsint = strtol (profile_level_id, NULL, 16);
-        sps[0] = spsint >> 16;
-        sps[1] = spsint >> 8;
-        sps[2] = spsint;
-
-        profile = gst_codec_utils_h264_get_profile (sps, 3);
-        level = gst_codec_utils_h264_get_level (sps, 3);
-
-        if (profile && level) {
-          GST_LOG_OBJECT (payload, "In caps, have profile %s and level %s",
-              profile, level);
-
-          if (!strcmp (profile, "constrained-baseline"))
-            gst_structure_set (new_s, "profile", G_TYPE_STRING, profile, NULL);
-          else {
-            GValue val = { 0, };
-            GValue profiles = { 0, };
-
-            g_value_init (&profiles, GST_TYPE_LIST);
-            g_value_init (&val, G_TYPE_STRING);
-
-            g_value_set_static_string (&val, profile);
-            gst_value_list_append_value (&profiles, &val);
-
-            g_value_set_static_string (&val, "constrained-baseline");
-            gst_value_list_append_value (&profiles, &val);
-
-            gst_structure_take_value (new_s, "profile", &profiles);
-          }
-
-          if (!strcmp (level, "1"))
-            gst_structure_set (new_s, "level", G_TYPE_STRING, level, NULL);
-          else {
-            GValue levels = { 0, };
-            GValue val = { 0, };
-            int j;
-
-            g_value_init (&levels, GST_TYPE_LIST);
-            g_value_init (&val, G_TYPE_STRING);
-
-            for (j = 0; all_levels[j]; j++) {
-              g_value_set_static_string (&val, all_levels[j]);
-              gst_value_list_prepend_value (&levels, &val);
-              if (!strcmp (level, all_levels[j]))
-                break;
-            }
-            gst_structure_take_value (new_s, "level", &levels);
-          }
-        }
-      }
-
-      gst_caps_merge_structure (caps, new_s);
-    }
-
-    gst_caps_unref (allowed_caps);
-    return caps;
+  if (gst_caps_is_any (allowed_caps)) {
+    caps = gst_caps_ref (template_caps);
+    goto done;
   }
 
-any:
-  return gst_caps_new_simple ("video/x-h264", NULL);
+  if (gst_caps_is_empty (allowed_caps)) {
+    caps = gst_caps_ref (allowed_caps);
+    goto done;
+  }
+
+  caps = gst_caps_new_empty ();
+
+  for (i = 0; i < gst_caps_get_size (allowed_caps); i++) {
+    GstStructure *s = gst_caps_get_structure (allowed_caps, i);
+    GstStructure *new_s = gst_structure_new ("video/x-h264", NULL);
+    const gchar *profile_level_id;
+
+    profile_level_id = gst_structure_get_string (s, "profile-level-id");
+
+    if (profile_level_id && strlen (profile_level_id) == 6) {
+      const gchar *profile;
+      const gchar *level;
+      long int spsint;
+      guint8 sps[3];
+
+      spsint = strtol (profile_level_id, NULL, 16);
+      sps[0] = spsint >> 16;
+      sps[1] = spsint >> 8;
+      sps[2] = spsint;
+
+      profile = gst_codec_utils_h264_get_profile (sps, 3);
+      level = gst_codec_utils_h264_get_level (sps, 3);
+
+      if (profile && level) {
+        GST_LOG_OBJECT (payload, "In caps, have profile %s and level %s",
+            profile, level);
+
+        if (!strcmp (profile, "constrained-baseline"))
+          gst_structure_set (new_s, "profile", G_TYPE_STRING, profile, NULL);
+        else {
+          GValue val = { 0, };
+          GValue profiles = { 0, };
+
+          g_value_init (&profiles, GST_TYPE_LIST);
+          g_value_init (&val, G_TYPE_STRING);
+
+          g_value_set_static_string (&val, profile);
+          gst_value_list_append_value (&profiles, &val);
+
+          g_value_set_static_string (&val, "constrained-baseline");
+          gst_value_list_append_value (&profiles, &val);
+
+          gst_structure_take_value (new_s, "profile", &profiles);
+        }
+
+        if (!strcmp (level, "1"))
+          gst_structure_set (new_s, "level", G_TYPE_STRING, level, NULL);
+        else {
+          GValue levels = { 0, };
+          GValue val = { 0, };
+          int j;
+
+          g_value_init (&levels, GST_TYPE_LIST);
+          g_value_init (&val, G_TYPE_STRING);
+
+          for (j = 0; all_levels[j]; j++) {
+            g_value_set_static_string (&val, all_levels[j]);
+            gst_value_list_prepend_value (&levels, &val);
+            if (!strcmp (level, all_levels[j]))
+              break;
+          }
+          gst_structure_take_value (new_s, "level", &levels);
+        }
+      }
+    }
+
+    gst_caps_merge_structure (caps, new_s);
+  }
+
+  icaps = gst_caps_intersect (caps, template_caps);
+  gst_caps_unref (caps);
+  caps = icaps;
+
+done:
+
+  gst_caps_unref (template_caps);
+  gst_caps_unref (allowed_caps);
+
+  GST_LOG_OBJECT (payload, "returning caps %" GST_PTR_FORMAT, caps);
+  return caps;
 }
 
 /* take the currently configured SPS and PPS lists and set them on the caps as
