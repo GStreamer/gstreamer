@@ -1,6 +1,12 @@
 #!/bin/sh
 # Run this to generate all the initial makefiles, etc.
 
+test -n "$srcdir" || srcdir=`dirname "$0"`
+test -n "$srcdir" || srcdir=.
+
+olddir=`pwd`
+cd "$srcdir"
+
 DIE=0
 package=gstreamer
 srcfile=gst/gst.c
@@ -97,13 +103,15 @@ test -n "$NOCONFIGURE" && {
   exit 0
 }
 
+cd "$olddir"
+
 echo "+ running configure ... "
 test ! -z "$CONFIGURE_DEF_OPT" && echo "  ./configure default flags: $CONFIGURE_DEF_OPT"
 test ! -z "$CONFIGURE_EXT_OPT" && echo "  ./configure external flags: $CONFIGURE_EXT_OPT"
 echo
 
-echo ./configure $CONFIGURE_DEF_OPT $CONFIGURE_EXT_OPT
-./configure $CONFIGURE_DEF_OPT $CONFIGURE_EXT_OPT || {
+echo "$srcdir/configure" $CONFIGURE_DEF_OPT $CONFIGURE_EXT_OPT
+"$srcdir/configure" $CONFIGURE_DEF_OPT $CONFIGURE_EXT_OPT || {
         echo "  configure failed"
         exit 1
 }

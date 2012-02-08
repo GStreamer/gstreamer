@@ -1145,11 +1145,12 @@ gst_registry_scan_plugin_file (GstRegistryScanContext * context,
     gst_object_unref (newplugin);
     changed = TRUE;
   }
-
+#ifndef GST_DISABLE_REGISTRY
   if (!__registry_reuse_plugin_scanner) {
     clear_scan_context (context);
     context->helper_state = REGISTRY_SCAN_HELPER_NOT_STARTED;
   }
+#endif
 
   return changed;
 }
