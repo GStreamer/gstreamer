@@ -29,10 +29,7 @@ extern void gst_marshal_VOID__BOXED_OBJECT (GClosure     *closure,
                                             gpointer      invocation_hint,
                                             gpointer      marshal_data);
 
-/* VOID:POINTER (./gstmarshal.list:7) */
-#define gst_marshal_VOID__POINTER	g_cclosure_marshal_VOID__POINTER
-
-/* VOID:POINTER,OBJECT (./gstmarshal.list:8) */
+/* VOID:POINTER,OBJECT (./gstmarshal.list:7) */
 extern void gst_marshal_VOID__POINTER_OBJECT (GClosure     *closure,
                                               GValue       *return_value,
                                               guint         n_param_values,
@@ -40,10 +37,10 @@ extern void gst_marshal_VOID__POINTER_OBJECT (GClosure     *closure,
                                               gpointer      invocation_hint,
                                               gpointer      marshal_data);
 
-/* VOID:OBJECT (./gstmarshal.list:9) */
+/* VOID:OBJECT (./gstmarshal.list:8) */
 #define gst_marshal_VOID__OBJECT	g_cclosure_marshal_VOID__OBJECT
 
-/* VOID:OBJECT,OBJECT (./gstmarshal.list:10) */
+/* VOID:OBJECT,OBJECT (./gstmarshal.list:9) */
 extern void gst_marshal_VOID__OBJECT_OBJECT (GClosure     *closure,
                                              GValue       *return_value,
                                              guint         n_param_values,
@@ -51,7 +48,7 @@ extern void gst_marshal_VOID__OBJECT_OBJECT (GClosure     *closure,
                                              gpointer      invocation_hint,
                                              gpointer      marshal_data);
 
-/* VOID:OBJECT,PARAM (./gstmarshal.list:11) */
+/* VOID:OBJECT,PARAM (./gstmarshal.list:10) */
 extern void gst_marshal_VOID__OBJECT_PARAM (GClosure     *closure,
                                             GValue       *return_value,
                                             guint         n_param_values,
@@ -59,7 +56,7 @@ extern void gst_marshal_VOID__OBJECT_PARAM (GClosure     *closure,
                                             gpointer      invocation_hint,
                                             gpointer      marshal_data);
 
-/* VOID:OBJECT,POINTER (./gstmarshal.list:12) */
+/* VOID:OBJECT,POINTER (./gstmarshal.list:11) */
 extern void gst_marshal_VOID__OBJECT_POINTER (GClosure     *closure,
                                               GValue       *return_value,
                                               guint         n_param_values,
@@ -67,7 +64,7 @@ extern void gst_marshal_VOID__OBJECT_POINTER (GClosure     *closure,
                                               gpointer      invocation_hint,
                                               gpointer      marshal_data);
 
-/* VOID:OBJECT,BOXED (./gstmarshal.list:13) */
+/* VOID:OBJECT,BOXED (./gstmarshal.list:12) */
 extern void gst_marshal_VOID__OBJECT_BOXED (GClosure     *closure,
                                             GValue       *return_value,
                                             guint         n_param_values,
@@ -75,7 +72,7 @@ extern void gst_marshal_VOID__OBJECT_BOXED (GClosure     *closure,
                                             gpointer      invocation_hint,
                                             gpointer      marshal_data);
 
-/* VOID:OBJECT,BOXED,STRING (./gstmarshal.list:14) */
+/* VOID:OBJECT,BOXED,STRING (./gstmarshal.list:13) */
 extern void gst_marshal_VOID__OBJECT_BOXED_STRING (GClosure     *closure,
                                                    GValue       *return_value,
                                                    guint         n_param_values,
@@ -83,7 +80,7 @@ extern void gst_marshal_VOID__OBJECT_BOXED_STRING (GClosure     *closure,
                                                    gpointer      invocation_hint,
                                                    gpointer      marshal_data);
 
-/* VOID:OBJECT,OBJECT,STRING (./gstmarshal.list:15) */
+/* VOID:OBJECT,OBJECT,STRING (./gstmarshal.list:14) */
 extern void gst_marshal_VOID__OBJECT_OBJECT_STRING (GClosure     *closure,
                                                     GValue       *return_value,
                                                     guint         n_param_values,
@@ -91,7 +88,7 @@ extern void gst_marshal_VOID__OBJECT_OBJECT_STRING (GClosure     *closure,
                                                     gpointer      invocation_hint,
                                                     gpointer      marshal_data);
 
-/* VOID:OBJECT,STRING (./gstmarshal.list:16) */
+/* VOID:OBJECT,STRING (./gstmarshal.list:15) */
 extern void gst_marshal_VOID__OBJECT_STRING (GClosure     *closure,
                                              GValue       *return_value,
                                              guint         n_param_values,
@@ -99,7 +96,7 @@ extern void gst_marshal_VOID__OBJECT_STRING (GClosure     *closure,
                                              gpointer      invocation_hint,
                                              gpointer      marshal_data);
 
-/* VOID:INT,INT (./gstmarshal.list:17) */
+/* VOID:INT,INT (./gstmarshal.list:16) */
 extern void gst_marshal_VOID__INT_INT (GClosure     *closure,
                                        GValue       *return_value,
                                        guint         n_param_values,
@@ -107,7 +104,7 @@ extern void gst_marshal_VOID__INT_INT (GClosure     *closure,
                                        gpointer      invocation_hint,
                                        gpointer      marshal_data);
 
-/* VOID:INT64 (./gstmarshal.list:18) */
+/* VOID:INT64 (./gstmarshal.list:17) */
 extern void gst_marshal_VOID__INT64 (GClosure     *closure,
                                      GValue       *return_value,
                                      guint         n_param_values,
@@ -115,7 +112,7 @@ extern void gst_marshal_VOID__INT64 (GClosure     *closure,
                                      gpointer      invocation_hint,
                                      gpointer      marshal_data);
 
-/* VOID:UINT,BOXED (./gstmarshal.list:19) */
+/* VOID:UINT,BOXED (./gstmarshal.list:18) */
 extern void gst_marshal_VOID__UINT_BOXED (GClosure     *closure,
                                           GValue       *return_value,
                                           guint         n_param_values,
@@ -123,10 +120,10 @@ extern void gst_marshal_VOID__UINT_BOXED (GClosure     *closure,
                                           gpointer      invocation_hint,
                                           gpointer      marshal_data);
 
-/* VOID:UINT,POINTER (./gstmarshal.list:20) */
+/* VOID:UINT,POINTER (./gstmarshal.list:19) */
 #define gst_marshal_VOID__UINT_POINTER	g_cclosure_marshal_VOID__UINT_POINTER
 
-/* BOOLEAN:VOID (./gstmarshal.list:21) */
+/* BOOLEAN:VOID (./gstmarshal.list:20) */
 extern void gst_marshal_BOOLEAN__VOID (GClosure     *closure,
                                        GValue       *return_value,
                                        guint         n_param_values,
@@ -134,7 +131,7 @@ extern void gst_marshal_BOOLEAN__VOID (GClosure     *closure,
                                        gpointer      invocation_hint,
                                        gpointer      marshal_data);
 
-/* BOOLEAN:POINTER (./gstmarshal.list:22) */
+/* BOOLEAN:POINTER (./gstmarshal.list:21) */
 extern void gst_marshal_BOOLEAN__POINTER (GClosure     *closure,
                                           GValue       *return_value,
                                           guint         n_param_values,
@@ -142,7 +139,7 @@ extern void gst_marshal_BOOLEAN__POINTER (GClosure     *closure,
                                           gpointer      invocation_hint,
                                           gpointer      marshal_data);
 
-/* BOOLEAN:BOXED (./gstmarshal.list:23) */
+/* BOOLEAN:BOXED (./gstmarshal.list:22) */
 extern void gst_marshal_BOOLEAN__BOXED (GClosure     *closure,
                                         GValue       *return_value,
                                         guint         n_param_values,
@@ -150,7 +147,7 @@ extern void gst_marshal_BOOLEAN__BOXED (GClosure     *closure,
                                         gpointer      invocation_hint,
                                         gpointer      marshal_data);
 
-/* POINTER:POINTER (./gstmarshal.list:24) */
+/* POINTER:POINTER (./gstmarshal.list:23) */
 extern void gst_marshal_POINTER__POINTER (GClosure     *closure,
                                           GValue       *return_value,
                                           guint         n_param_values,
@@ -158,7 +155,7 @@ extern void gst_marshal_POINTER__POINTER (GClosure     *closure,
                                           gpointer      invocation_hint,
                                           gpointer      marshal_data);
 
-/* BOXED:BOXED (./gstmarshal.list:25) */
+/* BOXED:BOXED (./gstmarshal.list:24) */
 extern void gst_marshal_BOXED__BOXED (GClosure     *closure,
                                       GValue       *return_value,
                                       guint         n_param_values,

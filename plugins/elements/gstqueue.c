@@ -420,7 +420,7 @@ gst_queue_init (GstQueue * queue)
   queue->head_needs_discont = queue->tail_needs_discont = FALSE;
 
   queue->leaky = GST_QUEUE_NO_LEAK;
-  queue->srcresult = GST_FLOW_WRONG_STATE;
+  queue->srcresult = GST_FLOW_FLUSHING;
 
   g_mutex_init (&queue->qlock);
   g_cond_init (&queue->item_add);
@@ -749,7 +749,7 @@ gst_queue_handle_sink_event (GstPad * pad, GstObject * parent, GstEvent * event)
 
       /* now unblock the chain function */
       GST_QUEUE_MUTEX_LOCK (queue);
-      queue->srcresult = GST_FLOW_WRONG_STATE;
+      queue->srcresult = GST_FLOW_FLUSHING;
       /* unblock the loop and chain functions */
       GST_QUEUE_SIGNAL_ADD (queue);
       GST_QUEUE_SIGNAL_DEL (queue);
@@ -1131,7 +1131,7 @@ no_item:
 out_flushing:
   {
     GST_CAT_LOG_OBJECT (queue_dataflow, queue, "exit because we are flushing");
-    return GST_FLOW_WRONG_STATE;
+    return GST_FLOW_FLUSHING;
   }
 }
 
@@ -1305,7 +1305,7 @@ gst_queue_sink_activate_mode (GstPad * pad, GstObject * parent, GstPadMode mode,
       } else {
         /* step 1, unblock chain function */
         GST_QUEUE_MUTEX_LOCK (queue);
-        queue->srcresult = GST_FLOW_WRONG_STATE;
+        queue->srcresult = GST_FLOW_FLUSHING;
         gst_queue_locked_flush (queue);
         GST_QUEUE_MUTEX_UNLOCK (queue);
       }
@@ -1346,7 +1346,7 @@ gst_queue_src_activate_mode (GstPad * pad, GstObject * parent, GstPadMode mode,
       } else {
         /* step 1, unblock loop function */
         GST_QUEUE_MUTEX_LOCK (queue);
-        queue->srcresult = GST_FLOW_WRONG_STATE;
+        queue->srcresult = GST_FLOW_FLUSHING;
         /* the item add signal will unblock */
         g_cond_signal (&queue->item_add);
         GST_QUEUE_MUTEX_UNLOCK (queue);

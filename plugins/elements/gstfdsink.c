@@ -299,7 +299,7 @@ stopped:
   {
     GST_DEBUG_OBJECT (fdsink, "Select stopped");
     gst_buffer_unmap (buffer, &info);
-    return GST_FLOW_WRONG_STATE;
+    return GST_FLOW_FLUSHING;
   }
 #endif
 

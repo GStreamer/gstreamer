@@ -77,24 +77,12 @@ GType gst_event_type_get_type (void);
 #define GST_TYPE_EVENT_TYPE (gst_event_type_get_type())
 GType gst_qos_type_get_type (void);
 #define GST_TYPE_QOS_TYPE (gst_qos_type_get_type())
+GType gst_stream_config_flags_get_type (void);
+#define GST_TYPE_STREAM_CONFIG_FLAGS (gst_stream_config_flags_get_type())
 
 /* enumerations from "gstformat.h" */
 GType gst_format_get_type (void);
 #define GST_TYPE_FORMAT (gst_format_get_type())
-
-/* enumerations from "gstindex.h" */
-GType gst_index_certainty_get_type (void);
-#define GST_TYPE_INDEX_CERTAINTY (gst_index_certainty_get_type())
-GType gst_index_entry_type_get_type (void);
-#define GST_TYPE_INDEX_ENTRY_TYPE (gst_index_entry_type_get_type())
-GType gst_index_lookup_method_get_type (void);
-#define GST_TYPE_INDEX_LOOKUP_METHOD (gst_index_lookup_method_get_type())
-GType gst_assoc_flags_get_type (void);
-#define GST_TYPE_ASSOC_FLAGS (gst_assoc_flags_get_type())
-GType gst_index_resolver_method_get_type (void);
-#define GST_TYPE_INDEX_RESOLVER_METHOD (gst_index_resolver_method_get_type())
-GType gst_index_flags_get_type (void);
-#define GST_TYPE_INDEX_FLAGS (gst_index_flags_get_type())
 
 /* enumerations from "gstinfo.h" */
 GType gst_debug_level_get_type (void);
@@ -118,6 +106,10 @@ GType gst_stream_status_type_get_type (void);
 GType gst_progress_type_get_type (void);
 #define GST_TYPE_PROGRESS_TYPE (gst_progress_type_get_type())
 
+/* enumerations from "gstmeta.h" */
+GType gst_meta_flags_get_type (void);
+#define GST_TYPE_META_FLAGS (gst_meta_flags_get_type())
+
 /* enumerations from "gstmemory.h" */
 GType gst_memory_flags_get_type (void);
 #define GST_TYPE_MEMORY_FLAGS (gst_memory_flags_get_type())
@@ -131,18 +123,18 @@ GType gst_mini_object_flags_get_type (void);
 /* enumerations from "gstpad.h" */
 GType gst_pad_direction_get_type (void);
 #define GST_TYPE_PAD_DIRECTION (gst_pad_direction_get_type())
+GType gst_pad_mode_get_type (void);
+#define GST_TYPE_PAD_MODE (gst_pad_mode_get_type())
 GType gst_pad_link_return_get_type (void);
 #define GST_TYPE_PAD_LINK_RETURN (gst_pad_link_return_get_type())
 GType gst_flow_return_get_type (void);
 #define GST_TYPE_FLOW_RETURN (gst_flow_return_get_type())
 GType gst_pad_link_check_get_type (void);
 #define GST_TYPE_PAD_LINK_CHECK (gst_pad_link_check_get_type())
-GType gst_activate_mode_get_type (void);
-#define GST_TYPE_ACTIVATE_MODE (gst_activate_mode_get_type())
-GType gst_probe_type_get_type (void);
-#define GST_TYPE_PROBE_TYPE (gst_probe_type_get_type())
-GType gst_probe_return_get_type (void);
-#define GST_TYPE_PROBE_RETURN (gst_probe_return_get_type())
+GType gst_pad_probe_type_get_type (void);
+#define GST_TYPE_PAD_PROBE_TYPE (gst_pad_probe_type_get_type())
+GType gst_pad_probe_return_get_type (void);
+#define GST_TYPE_PAD_PROBE_RETURN (gst_pad_probe_return_get_type())
 GType gst_pad_flags_get_type (void);
 #define GST_TYPE_PAD_FLAGS (gst_pad_flags_get_type())
 
@@ -173,6 +165,8 @@ GType gst_query_type_get_type (void);
 #define GST_TYPE_QUERY_TYPE (gst_query_type_get_type())
 GType gst_buffering_mode_get_type (void);
 #define GST_TYPE_BUFFERING_MODE (gst_buffering_mode_get_type())
+GType gst_scheduling_flags_get_type (void);
+#define GST_TYPE_SCHEDULING_FLAGS (gst_scheduling_flags_get_type())
 
 /* enumerations from "gstsegment.h" */
 GType gst_seek_type_get_type (void);
@@ -196,15 +190,13 @@ GType gst_tag_flag_get_type (void);
 GType gst_task_state_get_type (void);
 #define GST_TYPE_TASK_STATE (gst_task_state_get_type())
 
-/* enumerations from "gsttrace.h" */
-GType gst_alloc_trace_flags_get_type (void);
-#define GST_TYPE_ALLOC_TRACE_FLAGS (gst_alloc_trace_flags_get_type())
-
 /* enumerations from "gsttypefind.h" */
 GType gst_type_find_probability_get_type (void);
 #define GST_TYPE_TYPE_FIND_PROBABILITY (gst_type_find_probability_get_type())
 
 /* enumerations from "gsturi.h" */
+GType gst_uri_error_get_type (void);
+#define GST_TYPE_URI_ERROR (gst_uri_error_get_type())
 GType gst_uri_type_get_type (void);
 #define GST_TYPE_URI_TYPE (gst_uri_type_get_type())
 

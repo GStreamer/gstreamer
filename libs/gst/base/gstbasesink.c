@@ -2061,7 +2061,7 @@ no_clock:
  * This function will block until a state change to PLAYING happens (in which
  * case this function returns #GST_FLOW_OK) or the processing must be stopped due
  * to a state change to READY or a FLUSH event (in which case this function
- * returns #GST_FLOW_WRONG_STATE).
+ * returns #GST_FLOW_FLUSHING).
  *
  * This function should only be called with the PREROLL_LOCK held, like in the
  * render function.
@@ -2091,7 +2091,7 @@ gst_base_sink_wait_preroll (GstBaseSink * sink)
 stopping:
   {
     GST_DEBUG_OBJECT (sink, "preroll interrupted because of flush");
-    return GST_FLOW_WRONG_STATE;
+    return GST_FLOW_FLUSHING;
   }
 step_unlocked:
   {
@@ -2181,7 +2181,7 @@ preroll_canceled:
 stopping:
   {
     GST_DEBUG_OBJECT (sink, "stopping while commiting state");
-    return GST_FLOW_WRONG_STATE;
+    return GST_FLOW_FLUSHING;
   }
 preroll_failed:
   {
@@ -2262,7 +2262,7 @@ gst_base_sink_wait_eos (GstBaseSink * sink, GstClockTime time,
 flushing:
   {
     GST_DEBUG_OBJECT (sink, "we are flushing");
-    return GST_FLOW_WRONG_STATE;
+    return GST_FLOW_FLUSHING;
   }
 }
 
@@ -2442,7 +2442,7 @@ qos_dropped:
 flushing:
   {
     GST_DEBUG_OBJECT (basesink, "we are flushing");
-    return GST_FLOW_WRONG_STATE;
+    return GST_FLOW_FLUSHING;
   }
 preroll_failed:
   {
@@ -3203,7 +3203,7 @@ flushing:
   {
     GST_DEBUG_OBJECT (basesink, "sink is flushing");
     gst_mini_object_unref (GST_MINI_OBJECT_CAST (obj));
-    return GST_FLOW_WRONG_STATE;
+    return GST_FLOW_FLUSHING;
   }
 was_eos:
   {

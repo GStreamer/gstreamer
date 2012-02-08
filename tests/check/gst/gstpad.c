@@ -488,7 +488,7 @@ GST_START_TEST (test_push_unlinked)
   GST_DEBUG ("push buffer inactive");
   buffer = gst_buffer_new ();
   gst_buffer_ref (buffer);
-  fail_unless (gst_pad_push (src, buffer) == GST_FLOW_WRONG_STATE);
+  fail_unless (gst_pad_push (src, buffer) == GST_FLOW_FLUSHING);
   ASSERT_MINI_OBJECT_REFCOUNT (buffer, "buffer", 1);
   gst_buffer_unref (buffer);
 
@@ -672,7 +672,7 @@ GST_START_TEST (test_push_linked_flushing)
   /* pushing on a flushing pad will drop the buffer */
   buffer = gst_buffer_new ();
   gst_buffer_ref (buffer);
-  fail_unless (gst_pad_push (src, buffer) == GST_FLOW_WRONG_STATE);
+  fail_unless (gst_pad_push (src, buffer) == GST_FLOW_FLUSHING);
   ASSERT_MINI_OBJECT_REFCOUNT (buffer, "buffer", 1);
   fail_unless_equals_int (g_list_length (buffers), 0);
   gst_buffer_unref (buffer);
@@ -698,7 +698,7 @@ GST_START_TEST (test_push_linked_flushing)
       GINT_TO_POINTER (1), NULL);
   buffer = gst_buffer_new ();
   gst_buffer_ref (buffer);
-  fail_unless (gst_pad_push (src, buffer) == GST_FLOW_WRONG_STATE);
+  fail_unless (gst_pad_push (src, buffer) == GST_FLOW_FLUSHING);
   ASSERT_MINI_OBJECT_REFCOUNT (buffer, "buffer", 1);
   fail_unless_equals_int (g_list_length (buffers), 0);
   gst_buffer_unref (buffer);
@@ -1053,7 +1053,7 @@ test_pad_blocking_with_type (GstPadProbeType type)
   /* unflush now */
   gst_pad_push_event (pad, gst_event_new_flush_stop (FALSE));
   /* must be wrong state */
-  fail_unless (ret == GST_FLOW_WRONG_STATE);
+  fail_unless (ret == GST_FLOW_FLUSHING);
 
   gst_object_unref (pad);
 }

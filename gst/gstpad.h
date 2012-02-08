@@ -127,7 +127,7 @@ typedef enum {
  * GstFlowReturn:
  * @GST_FLOW_OK:		 Data passing was ok.
  * @GST_FLOW_NOT_LINKED:	 Pad is not linked.
- * @GST_FLOW_WRONG_STATE:	 Pad is in wrong state.
+ * @GST_FLOW_FLUSHING:	         Pad is flushing.
  * @GST_FLOW_EOS:                Pad is EOS.
  * @GST_FLOW_NOT_NEGOTIATED:	 Pad is not negotiated.
  * @GST_FLOW_ERROR:		 Some (fatal) error occured. Element generating
@@ -165,7 +165,7 @@ typedef enum {
   GST_FLOW_OK		  =  0,
   /* expected failures */
   GST_FLOW_NOT_LINKED     = -1,
-  GST_FLOW_WRONG_STATE    = -2,
+  GST_FLOW_FLUSHING       = -2,
   /* error cases */
   GST_FLOW_EOS            = -3,
   GST_FLOW_NOT_NEGOTIATED = -4,

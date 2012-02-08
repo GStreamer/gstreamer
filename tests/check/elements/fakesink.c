@@ -343,7 +343,7 @@ GST_START_TEST (test_preroll_sync)
 
     /* should be wrong state now */
     fret = chain_async_return (data);
-    fail_if (fret != GST_FLOW_WRONG_STATE);
+    fail_if (fret != GST_FLOW_FLUSHING);
   }
   gst_element_set_state (pipeline, GST_STATE_NULL);
   gst_element_get_state (pipeline, NULL, NULL, GST_CLOCK_TIME_NONE);
@@ -696,7 +696,7 @@ GST_START_TEST (test_position)
 
   /* preroll buffer is flushed out */
   fret = chain_async_return (data);
-  fail_unless (fret == GST_FLOW_WRONG_STATE);
+  fail_unless (fret == GST_FLOW_FLUSHING);
 
   /* do position query, this should succeed with the time value from the
    * segment before the flush. */

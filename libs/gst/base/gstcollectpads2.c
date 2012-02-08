@@ -2001,14 +2001,14 @@ not_started:
   {
     GST_DEBUG ("not started");
     gst_collect_pads2_clear (pads, data);
-    ret = GST_FLOW_WRONG_STATE;
+    ret = GST_FLOW_FLUSHING;
     goto unlock_done;
   }
 flushing:
   {
     GST_DEBUG ("pad %s:%s is flushing", GST_DEBUG_PAD_NAME (pad));
     gst_collect_pads2_clear (pads, data);
-    ret = GST_FLOW_WRONG_STATE;
+    ret = GST_FLOW_FLUSHING;
     goto unlock_done;
   }
 eos:

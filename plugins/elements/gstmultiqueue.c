@@ -740,7 +740,7 @@ gst_single_queue_flush (GstMultiQueue * mq, GstSingleQueue * sq, gboolean flush)
       sq->id);
 
   if (flush) {
-    sq->srcresult = GST_FLOW_WRONG_STATE;
+    sq->srcresult = GST_FLOW_FLUSHING;
     gst_data_queue_set_flushing (sq->queue, TRUE);
 
     sq->flushing = TRUE;
@@ -1397,7 +1397,7 @@ gst_multi_queue_sink_activate_mode (GstPad * pad, GstObject * parent,
         /* All pads start off linked until they push one buffer */
         sq->srcresult = GST_FLOW_OK;
       } else {
-        sq->srcresult = GST_FLOW_WRONG_STATE;
+        sq->srcresult = GST_FLOW_FLUSHING;
         gst_data_queue_flush (sq->queue);
       }
       res = TRUE;
@@ -1885,7 +1885,7 @@ gst_single_queue_new (GstMultiQueue * mqueue, guint id)
   GST_DEBUG_OBJECT (mqueue, "Creating GstSingleQueue id:%d", sq->id);
 
   sq->mqueue = mqueue;
-  sq->srcresult = GST_FLOW_WRONG_STATE;
+  sq->srcresult = GST_FLOW_FLUSHING;
   sq->queue = gst_data_queue_new_full ((GstDataQueueCheckFullFunction)
       single_queue_check_full,
       (GstDataQueueFullCallback) single_queue_overrun_cb,

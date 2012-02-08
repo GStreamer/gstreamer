@@ -434,8 +434,8 @@ gst_queue2_init (GstQueue2 * queue)
   queue->sink_tainted = TRUE;
   queue->src_tainted = TRUE;
 
-  queue->srcresult = GST_FLOW_WRONG_STATE;
-  queue->sinkresult = GST_FLOW_WRONG_STATE;
+  queue->srcresult = GST_FLOW_FLUSHING;
+  queue->sinkresult = GST_FLOW_FLUSHING;
   queue->is_eos = FALSE;
   queue->in_timer = g_timer_new ();
   queue->out_timer = g_timer_new ();
@@ -1298,7 +1298,7 @@ out_flushing:
     GST_DEBUG_OBJECT (queue, "we are flushing");
     gst_buffer_unmap (buf, &info);
     gst_buffer_unref (buf);
-    return GST_FLOW_WRONG_STATE;
+    return GST_FLOW_FLUSHING;
   }
 read_error:
   {
@@ -2085,8 +2085,8 @@ gst_queue2_handle_sink_event (GstPad * pad, GstObject * parent,
 
         /* now unblock the chain function */
         GST_QUEUE2_MUTEX_LOCK (queue);
-        queue->srcresult = GST_FLOW_WRONG_STATE;
-        queue->sinkresult = GST_FLOW_WRONG_STATE;
+        queue->srcresult = GST_FLOW_FLUSHING;
+        queue->sinkresult = GST_FLOW_FLUSHING;
         /* unblock the loop and chain functions */
         GST_QUEUE2_SIGNAL_ADD (queue);
         GST_QUEUE2_SIGNAL_DEL (queue);
@@ -2099,7 +2099,7 @@ gst_queue2_handle_sink_event (GstPad * pad, GstObject * parent,
       } else {
         GST_QUEUE2_MUTEX_LOCK (queue);
         /* flush the sink pad */
-        queue->sinkresult = GST_FLOW_WRONG_STATE;
+        queue->sinkresult = GST_FLOW_FLUSHING;
         GST_QUEUE2_SIGNAL_DEL (queue);
         GST_QUEUE2_MUTEX_UNLOCK (queue);
 
@@ -2480,7 +2480,7 @@ no_item:
 out_flushing:
   {
     GST_CAT_LOG_OBJECT (queue_dataflow, queue, "exit because we are flushing");
-    return GST_FLOW_WRONG_STATE;
+    return GST_FLOW_FLUSHING;
   }
 }
 
@@ -2570,7 +2570,7 @@ gst_queue2_handle_src_event (GstPad * pad, GstObject * parent, GstEvent * event)
         /* now unblock the getrange function */
         GST_QUEUE2_MUTEX_LOCK (queue);
         GST_DEBUG_OBJECT (queue, "flushing");
-        queue->srcresult = GST_FLOW_WRONG_STATE;
+        queue->srcresult = GST_FLOW_FLUSHING;
         GST_QUEUE2_SIGNAL_ADD (queue);
         GST_QUEUE2_MUTEX_UNLOCK (queue);
 
@@ -2913,8 +2913,8 @@ gst_queue2_sink_activate_mode (GstPad * pad, GstObject * parent,
         /* unblock chain function */
         GST_QUEUE2_MUTEX_LOCK (queue);
         GST_DEBUG_OBJECT (queue, "deactivating push mode");
-        queue->srcresult = GST_FLOW_WRONG_STATE;
-        queue->sinkresult = GST_FLOW_WRONG_STATE;
+        queue->srcresult = GST_FLOW_FLUSHING;
+        queue->sinkresult = GST_FLOW_FLUSHING;
         gst_queue2_locked_flush (queue);
         GST_QUEUE2_MUTEX_UNLOCK (queue);
       }
@@ -2950,8 +2950,8 @@ gst_queue2_src_activate_push (GstPad * pad, GstObject * parent, gboolean active)
     /* unblock loop function */
     GST_QUEUE2_MUTEX_LOCK (queue);
     GST_DEBUG_OBJECT (queue, "deactivating push mode");
-    queue->srcresult = GST_FLOW_WRONG_STATE;
-    queue->sinkresult = GST_FLOW_WRONG_STATE;
+    queue->srcresult = GST_FLOW_FLUSHING;
+    queue->sinkresult = GST_FLOW_FLUSHING;
     /* the item add signal will unblock */
     GST_QUEUE2_SIGNAL_ADD (queue);
     GST_QUEUE2_MUTEX_UNLOCK (queue);
@@ -2996,16 +2996,16 @@ gst_queue2_src_activate_pull (GstPad * pad, GstObject * parent, gboolean active)
       GST_DEBUG_OBJECT (queue, "no temp file, cannot activate pull mode");
       /* this is not allowed, we cannot operate in pull mode without a temp
        * file. */
-      queue->srcresult = GST_FLOW_WRONG_STATE;
-      queue->sinkresult = GST_FLOW_WRONG_STATE;
+      queue->srcresult = GST_FLOW_FLUSHING;
+      queue->sinkresult = GST_FLOW_FLUSHING;
       result = FALSE;
     }
     GST_QUEUE2_MUTEX_UNLOCK (queue);
   } else {
     GST_QUEUE2_MUTEX_LOCK (queue);
     GST_DEBUG_OBJECT (queue, "deactivating pull mode");
-    queue->srcresult = GST_FLOW_WRONG_STATE;
-    queue->sinkresult = GST_FLOW_WRONG_STATE;
+    queue->srcresult = GST_FLOW_FLUSHING;
+    queue->sinkresult = GST_FLOW_FLUSHING;
     /* this will unlock getrange */
     GST_QUEUE2_SIGNAL_ADD (queue);
     result = TRUE;

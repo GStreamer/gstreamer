@@ -511,19 +511,19 @@ GST_START_TEST (test_flow_aggregation)
   GST_DEBUG ("Trying to push with mysink2 disabled");
   gst_pad_set_active (mysink2, FALSE);
   fail_unless (gst_pad_push (mysrc,
-          gst_buffer_ref (buffer)) == GST_FLOW_WRONG_STATE);
+          gst_buffer_ref (buffer)) == GST_FLOW_FLUSHING);
 
   GST_DEBUG ("Trying to push with mysink2 disabled");
   gst_pad_set_active (mysink1, FALSE);
   gst_pad_set_active (mysink2, TRUE);
   gst_pad_set_caps (mysink2, caps);
   fail_unless (gst_pad_push (mysrc,
-          gst_buffer_ref (buffer)) == GST_FLOW_WRONG_STATE);
+          gst_buffer_ref (buffer)) == GST_FLOW_FLUSHING);
 
   GST_DEBUG ("Trying to push with mysink2 and mysink1 disabled");
   gst_pad_set_active (mysink2, FALSE);
   fail_unless (gst_pad_push (mysrc,
-          gst_buffer_ref (buffer)) == GST_FLOW_WRONG_STATE);
+          gst_buffer_ref (buffer)) == GST_FLOW_FLUSHING);
 
   /* Test if everything still works in normal state */
   GST_DEBUG ("Reactivate both pads and try pushing");

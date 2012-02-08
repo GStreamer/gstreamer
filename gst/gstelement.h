@@ -274,7 +274,7 @@ typedef enum {
  *     Elements unblock any waits on devices
  *   </para></listitem>
  *   <listitem><para>
- *     Chain or get_range functions return %GST_FLOW_WRONG_STATE.
+ *     Chain or get_range functions return %GST_FLOW_FLUSHING.
  *   </para></listitem>
  *   <listitem><para>
  *     The element pads are deactivated so that streaming becomes impossible and

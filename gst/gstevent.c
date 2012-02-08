@@ -468,7 +468,7 @@ gst_event_set_seqnum (GstEvent * event, guint32 seqnum)
  * upstream and downstream and travels out-of-bounds with the dataflow.
  *
  * It marks pads as being flushing and will make them return
- * #GST_FLOW_WRONG_STATE when used for data flow with gst_pad_push(),
+ * #GST_FLOW_FLUSHING when used for data flow with gst_pad_push(),
  * gst_pad_chain(), gst_pad_alloc_buffer(), gst_pad_get_range() and
  * gst_pad_pull_range(). Any event (except a #GST_EVENT_FLUSH_STOP) received
  * on a flushing pad will return %FALSE immediately.

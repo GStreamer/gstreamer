@@ -484,7 +484,7 @@ poll_error:
 stopped:
   {
     GST_DEBUG_OBJECT (psrc, "Poll stopped");
-    return GST_FLOW_WRONG_STATE;
+    return GST_FLOW_FLUSHING;
   }
 #endif
 alloc_failed:

@@ -438,7 +438,7 @@ gst_base_src_init (GstBaseSrc * basesrc, gpointer g_class)
   basesrc->priv->do_timestamp = DEFAULT_DO_TIMESTAMP;
   g_atomic_int_set (&basesrc->priv->have_events, FALSE);
 
-  basesrc->priv->start_result = GST_FLOW_WRONG_STATE;
+  basesrc->priv->start_result = GST_FLOW_FLUSHING;
   GST_OBJECT_FLAG_UNSET (basesrc, GST_BASE_SRC_FLAG_STARTED);
   GST_OBJECT_FLAG_UNSET (basesrc, GST_BASE_SRC_FLAG_STARTING);
   GST_OBJECT_FLAG_SET (basesrc, GST_ELEMENT_FLAG_SOURCE);
@@ -480,7 +480,7 @@ gst_base_src_finalize (GObject * object)
  * This function will block until a state change to PLAYING happens (in which
  * case this function returns #GST_FLOW_OK) or the processing must be stopped due
  * to a state change to READY or a FLUSH event (in which case this function
- * returns #GST_FLOW_WRONG_STATE).
+ * returns #GST_FLOW_FLUSHING).
  *
  * Since: 0.10.12
  *
@@ -507,7 +507,7 @@ gst_base_src_wait_playing (GstBaseSrc * src)
 flushing:
   {
     GST_DEBUG_OBJECT (src, "we are flushing");
-    return GST_FLOW_WRONG_STATE;
+    return GST_FLOW_FLUSHING;
   }
 }
 
@@ -2334,7 +2334,7 @@ again:
          * get rid of the produced buffer. */
         GST_DEBUG_OBJECT (src,
             "clock was unscheduled (%d), returning WRONG_STATE", status);
-        ret = GST_FLOW_WRONG_STATE;
+        ret = GST_FLOW_FLUSHING;
       } else {
         /* If we are running when this happens, we quickly switched between
          * pause and playing. We try to produce a new buffer */
@@ -2371,7 +2371,7 @@ not_ok:
 not_started:
   {
     GST_DEBUG_OBJECT (src, "getrange but not started");
-    return GST_FLOW_WRONG_STATE;
+    return GST_FLOW_FLUSHING;
   }
 no_function:
   {
@@ -2394,7 +2394,7 @@ flushing:
     GST_DEBUG_OBJECT (src, "we are flushing");
     gst_buffer_unref (*buf);
     *buf = NULL;
-    return GST_FLOW_WRONG_STATE;
+    return GST_FLOW_FLUSHING;
   }
 eos:
   {
@@ -2427,7 +2427,7 @@ done:
 flushing:
   {
     GST_DEBUG_OBJECT (src, "we are flushing");
-    res = GST_FLOW_WRONG_STATE;
+    res = GST_FLOW_FLUSHING;
     goto done;
   }
 }
@@ -2642,7 +2642,7 @@ flushing:
   {
     GST_DEBUG_OBJECT (src, "we are flushing");
     GST_LIVE_UNLOCK (src);
-    ret = GST_FLOW_WRONG_STATE;
+    ret = GST_FLOW_FLUSHING;
     goto pause;
   }
 pause:
@@ -2942,7 +2942,7 @@ gst_base_src_start (GstBaseSrc * basesrc)
   if (GST_BASE_SRC_IS_STARTED (basesrc))
     goto was_started;
 
-  basesrc->priv->start_result = GST_FLOW_WRONG_STATE;
+  basesrc->priv->start_result = GST_FLOW_FLUSHING;
   GST_OBJECT_FLAG_SET (basesrc, GST_BASE_SRC_FLAG_STARTING);
   basesrc->num_buffers_left = basesrc->num_buffers;
   basesrc->running = FALSE;
@@ -3148,7 +3148,7 @@ flushing:
   {
     GST_DEBUG_OBJECT (basesrc, "we are flushing");
     GST_LIVE_UNLOCK (basesrc);
-    return GST_FLOW_WRONG_STATE;
+    return GST_FLOW_FLUSHING;
   }
 }
 
@@ -3171,7 +3171,7 @@ gst_base_src_stop (GstBaseSrc * basesrc)
 
   GST_OBJECT_FLAG_UNSET (basesrc, GST_BASE_SRC_FLAG_STARTING);
   GST_OBJECT_FLAG_UNSET (basesrc, GST_BASE_SRC_FLAG_STARTED);
-  basesrc->priv->start_result = GST_FLOW_WRONG_STATE;
+  basesrc->priv->start_result = GST_FLOW_FLUSHING;
   GST_LIVE_SIGNAL (basesrc);
   GST_LIVE_UNLOCK (basesrc);
 

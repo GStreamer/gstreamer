@@ -170,7 +170,7 @@ static GstFlowQuarks flow_quarks[] = {
   {GST_FLOW_CUSTOM_SUCCESS, "custom-success", 0},
   {GST_FLOW_OK, "ok", 0},
   {GST_FLOW_NOT_LINKED, "not-linked", 0},
-  {GST_FLOW_WRONG_STATE, "wrong-state", 0},
+  {GST_FLOW_FLUSHING, "flushing", 0},
   {GST_FLOW_EOS, "eos", 0},
   {GST_FLOW_NOT_NEGOTIATED, "not-negotiated", 0},
   {GST_FLOW_ERROR, "error", 0},
@@ -3018,7 +3018,7 @@ again:
 flushing:
   {
     GST_DEBUG_OBJECT (pad, "pad is flushing");
-    return GST_FLOW_WRONG_STATE;
+    return GST_FLOW_FLUSHING;
   }
 dropped:
   {
@@ -3364,7 +3364,7 @@ flushing:
     GST_OBJECT_UNLOCK (pad);
     GST_PAD_STREAM_UNLOCK (pad);
     gst_mini_object_unref (GST_MINI_OBJECT_CAST (data));
-    return GST_FLOW_WRONG_STATE;
+    return GST_FLOW_FLUSHING;
   }
 wrong_mode:
   {
@@ -3412,7 +3412,7 @@ no_function:
  *
  * Chain a buffer to @pad.
  *
- * The function returns #GST_FLOW_WRONG_STATE if the pad was flushing.
+ * The function returns #GST_FLOW_FLUSHING if the pad was flushing.
  *
  * If the buffer type is not acceptable for @pad (as negotiated with a
  * preceeding GST_EVENT_CAPS event), this function returns
@@ -3476,7 +3476,7 @@ gst_pad_chain_list_default (GstPad * pad, GstObject * parent,
  *
  * Chain a bufferlist to @pad.
  *
- * The function returns #GST_FLOW_WRONG_STATE if the pad was flushing.
+ * The function returns #GST_FLOW_FLUSHING if the pad was flushing.
  *
  * If @pad was not negotiated properly with a CAPS event, this function
  * returns #GST_FLOW_NOT_NEGOTIATED.
@@ -3567,7 +3567,7 @@ flushing:
         "pushing, but pad was flushing");
     GST_OBJECT_UNLOCK (pad);
     gst_mini_object_unref (GST_MINI_OBJECT_CAST (data));
-    return GST_FLOW_WRONG_STATE;
+    return GST_FLOW_FLUSHING;
   }
 wrong_mode:
   {
@@ -3751,7 +3751,7 @@ flushing:
         "getrange, but pad was flushing");
     GST_OBJECT_UNLOCK (pad);
     GST_PAD_STREAM_UNLOCK (pad);
-    return GST_FLOW_WRONG_STATE;
+    return GST_FLOW_FLUSHING;
   }
 wrong_mode:
   {
@@ -3774,7 +3774,7 @@ no_parent:
     GST_DEBUG_OBJECT (pad, "no parent");
     GST_OBJECT_UNLOCK (pad);
     GST_PAD_STREAM_UNLOCK (pad);
-    return GST_FLOW_WRONG_STATE;
+    return GST_FLOW_FLUSHING;
   }
 no_function:
   {
@@ -3822,7 +3822,7 @@ get_range_failed:
  * @buffer: (out callee-allocates): a pointer to hold the #GstBuffer,
  *     returns #GST_FLOW_ERROR if %NULL.
  *
- * When @pad is flushing this function returns #GST_FLOW_WRONG_STATE
+ * When @pad is flushing this function returns #GST_FLOW_FLUSHING
  * immediately and @buffer is %NULL.
  *
  * Calls the getrange function of @pad, see #GstPadGetRangeFunction for a
@@ -3932,7 +3932,7 @@ flushing:
     GST_CAT_LOG_OBJECT (GST_CAT_SCHEDULING, pad,
         "pullrange, but pad was flushing");
     GST_OBJECT_UNLOCK (pad);
-    return GST_FLOW_WRONG_STATE;
+    return GST_FLOW_FLUSHING;
   }
 wrong_mode:
   {
@@ -4168,7 +4168,7 @@ flushed:
     GST_DEBUG_OBJECT (pad, "We're flushing");
     GST_OBJECT_UNLOCK (pad);
     gst_event_unref (event);
-    return GST_FLOW_WRONG_STATE;
+    return GST_FLOW_FLUSHING;
   }
 probe_stopped:
   {
@@ -4438,7 +4438,7 @@ flushing:
     GST_CAT_INFO_OBJECT (GST_CAT_EVENT, pad,
         "Received event on flushing pad. Discarding");
     gst_event_unref (event);
-    return GST_FLOW_WRONG_STATE;
+    return GST_FLOW_FLUSHING;
   }
 probe_stopped:
   {
@@ -4475,7 +4475,7 @@ no_parent:
     if (need_unlock)
       GST_PAD_STREAM_UNLOCK (pad);
     gst_event_unref (event);
-    return GST_FLOW_WRONG_STATE;
+    return GST_FLOW_FLUSHING;
   }
 precheck_failed:
   {

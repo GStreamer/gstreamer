@@ -302,7 +302,7 @@ do_stop (GstBufferPool * pool)
  * @active: the new active state
  *
  * Control the active state of @pool. When the pool is active, new calls to
- * gst_buffer_pool_acquire_buffer() will return with GST_FLOW_WRONG_STATE.
+ * gst_buffer_pool_acquire_buffer() will return with GST_FLOW_FLUSHING.
  *
  * Activating the bufferpool will preallocate all resources in the pool based on
  * the configuration of the pool.
@@ -830,7 +830,7 @@ default_acquire_buffer (GstBufferPool * pool, GstBuffer ** buffer,
 flushing:
   {
     GST_DEBUG_OBJECT (pool, "we are flushing");
-    return GST_FLOW_WRONG_STATE;
+    return GST_FLOW_FLUSHING;
   }
 }
 
@@ -887,7 +887,7 @@ default_reset_buffer (GstBufferPool * pool, GstBuffer * buffer,
  *
  * @params can be NULL or contain optional parameters to influence the allocation.
  *
- * Returns: a #GstFlowReturn such as GST_FLOW_WRONG_STATE when the pool is
+ * Returns: a #GstFlowReturn such as GST_FLOW_FLUSHING when the pool is
  * inactive.
  */
 GstFlowReturn
