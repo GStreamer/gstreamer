@@ -46,10 +46,13 @@ enum
 static const guint8 sync_bytes[] = { 0, 0, 0, 1 };
 
 static GstStaticPadTemplate gst_rtp_h264_depay_src_template =
-GST_STATIC_PAD_TEMPLATE ("src",
+    GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS ("video/x-h264")
+    GST_STATIC_CAPS ("video/x-h264, "
+        "stream-format = (string) avc, alignment = (string) au; "
+        "video/x-h264, "
+        "stream-format = (string) byte-stream, alignment = (string) { nal, au }")
     );
 
 static GstStaticPadTemplate gst_rtp_h264_depay_sink_template =
