@@ -1469,7 +1469,7 @@ flushing:
   {
     GST_DEBUG_OBJECT (sink, "we are flushing");
     GST_OBJECT_LOCK (sink);
-    return GST_FLOW_WRONG_STATE;
+    return GST_FLOW_FLUSHING;
   }
 }
 

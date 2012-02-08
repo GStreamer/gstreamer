@@ -245,7 +245,7 @@ gst_tcp_client_src_create (GstPushSrc * psrc, GstBuffer ** outbuf)
     *outbuf = NULL;
   } else if (rret < 0) {
     if (g_error_matches (err, G_IO_ERROR, G_IO_ERROR_CANCELLED)) {
-      ret = GST_FLOW_WRONG_STATE;
+      ret = GST_FLOW_FLUSHING;
       GST_DEBUG_OBJECT (src, "Cancelled reading from socket");
     } else {
       ret = GST_FLOW_ERROR;
@@ -290,7 +290,7 @@ get_available_error:
 wrong_state:
   {
     GST_DEBUG_OBJECT (src, "connection to closed, cannot read data");
-    return GST_FLOW_WRONG_STATE;
+    return GST_FLOW_FLUSHING;
   }
 }
 

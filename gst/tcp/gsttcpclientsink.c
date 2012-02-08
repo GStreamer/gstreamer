@@ -180,7 +180,7 @@ gst_tcp_client_sink_render (GstBaseSink * bsink, GstBuffer * buf)
   sink = GST_TCP_CLIENT_SINK (bsink);
 
   g_return_val_if_fail (GST_OBJECT_FLAG_IS_SET (sink, GST_TCP_CLIENT_SINK_OPEN),
-      GST_FLOW_WRONG_STATE);
+      GST_FLOW_FLUSHING);
 
   gst_buffer_map (buf, &map, GST_MAP_READ);
   GST_LOG_OBJECT (sink, "writing %" G_GSIZE_FORMAT " bytes for buffer data",
@@ -207,7 +207,7 @@ write_error:
     GstFlowReturn ret;
 
     if (g_error_matches (err, G_IO_ERROR, G_IO_ERROR_CANCELLED)) {
-      ret = GST_FLOW_WRONG_STATE;
+      ret = GST_FLOW_FLUSHING;
       GST_DEBUG_OBJECT (sink, "Cancelled reading from socket");
     } else {
       GST_ELEMENT_ERROR (sink, RESOURCE, WRITE,

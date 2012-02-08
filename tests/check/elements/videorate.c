@@ -657,7 +657,7 @@ GST_START_TEST (test_non_ok_flow)
   GST_BUFFER_TIMESTAMP (buf) = ts;
 
   /* pushing gives away our reference */
-  fail_unless_equals_int (gst_pad_push (mysrcpad, buf), GST_FLOW_WRONG_STATE);
+  fail_unless_equals_int (gst_pad_push (mysrcpad, buf), GST_FLOW_FLUSHING);
 
   /* cleanup */
   cleanup_videorate (videorate);

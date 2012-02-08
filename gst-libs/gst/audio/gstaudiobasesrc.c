@@ -1028,7 +1028,7 @@ no_sync:
 wrong_state:
   {
     GST_DEBUG_OBJECT (src, "ringbuffer in wrong state");
-    return GST_FLOW_WRONG_STATE;
+    return GST_FLOW_FLUSHING;
   }
 wrong_offset:
   {
@@ -1046,7 +1046,7 @@ stopped:
   {
     gst_buffer_unref (buf);
     GST_DEBUG_OBJECT (src, "ringbuffer stopped");
-    return GST_FLOW_WRONG_STATE;
+    return GST_FLOW_FLUSHING;
   }
 }
 

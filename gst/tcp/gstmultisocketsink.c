@@ -2341,7 +2341,7 @@ gst_multi_socket_sink_render (GstBaseSink * bsink, GstBuffer * buf)
   sink = GST_MULTI_SOCKET_SINK (bsink);
 
   g_return_val_if_fail (GST_OBJECT_FLAG_IS_SET (sink,
-          GST_MULTI_SOCKET_SINK_OPEN), GST_FLOW_WRONG_STATE);
+          GST_MULTI_SOCKET_SINK_OPEN), GST_FLOW_FLUSHING);
 
 #if 0
   /* since we check every buffer for streamheader caps, we need to make

@@ -2367,7 +2367,7 @@ gst_base_text_overlay_text_chain (GstPad * pad, GstObject * parent,
 
   if (overlay->text_flushing) {
     GST_OBJECT_UNLOCK (overlay);
-    ret = GST_FLOW_WRONG_STATE;
+    ret = GST_FLOW_FLUSHING;
     GST_LOG_OBJECT (overlay, "text flushing");
     goto beach;
   }
@@ -2413,7 +2413,7 @@ gst_base_text_overlay_text_chain (GstPad * pad, GstObject * parent,
       GST_DEBUG ("Pad %s:%s resuming", GST_DEBUG_PAD_NAME (pad));
       if (overlay->text_flushing) {
         GST_OBJECT_UNLOCK (overlay);
-        ret = GST_FLOW_WRONG_STATE;
+        ret = GST_FLOW_FLUSHING;
         goto beach;
       }
     }
@@ -2735,7 +2735,7 @@ flushing:
     GST_OBJECT_UNLOCK (overlay);
     GST_DEBUG_OBJECT (overlay, "flushing, discarding buffer");
     gst_buffer_unref (buffer);
-    return GST_FLOW_WRONG_STATE;
+    return GST_FLOW_FLUSHING;
   }
 have_eos:
   {

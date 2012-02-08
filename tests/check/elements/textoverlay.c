@@ -620,7 +620,7 @@ GST_START_TEST (test_video_waits_for_text)
 
   GST_LOG ("pushing video buffer 4");
   gst_buffer_ref (inbuffer);
-  fail_unless (gst_pad_push (myvideosrcpad, inbuffer) == GST_FLOW_WRONG_STATE);
+  fail_unless (gst_pad_push (myvideosrcpad, inbuffer) == GST_FLOW_FLUSHING);
 
   /* and clean up */
   g_list_foreach (buffers, (GFunc) gst_mini_object_unref, NULL);

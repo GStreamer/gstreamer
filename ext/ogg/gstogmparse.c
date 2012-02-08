@@ -687,7 +687,7 @@ gst_ogm_parse_comment_packet (GstOgmParse * ogm, GstBuffer * buf)
 
   if (ogm->srcpad == NULL) {
     GST_DEBUG ("no source pad");
-    return GST_FLOW_WRONG_STATE;
+    return GST_FLOW_FLUSHING;
   }
 
   /* if this is not a subtitle stream, push the vorbiscomment packet
@@ -821,7 +821,7 @@ gst_ogm_parse_data_packet (GstOgmParse * ogm, GstBuffer * buf,
           GST_DEBUG_PAD_NAME (ogm->srcpad), gst_flow_get_name (ret));
     }
   } else {
-    ret = GST_FLOW_WRONG_STATE;
+    ret = GST_FLOW_FLUSHING;
   }
 
   return ret;

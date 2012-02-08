@@ -1041,7 +1041,7 @@ flushing:
   {
     GST_DEBUG_OBJECT (appsrc, "we are flushing");
     g_mutex_unlock (priv->mutex);
-    return GST_FLOW_WRONG_STATE;
+    return GST_FLOW_FLUSHING;
   }
 eos:
   {
@@ -1502,7 +1502,7 @@ flushing:
     if (steal_ref)
       gst_buffer_unref (buffer);
     g_mutex_unlock (priv->mutex);
-    return GST_FLOW_WRONG_STATE;
+    return GST_FLOW_FLUSHING;
   }
 eos:
   {
@@ -1526,7 +1526,7 @@ eos:
  * space becomes available in the queue.
  *
  * Returns: #GST_FLOW_OK when the buffer was successfuly queued.
- * #GST_FLOW_WRONG_STATE when @appsrc is not PAUSED or PLAYING.
+ * #GST_FLOW_FLUSHING when @appsrc is not PAUSED or PLAYING.
  * #GST_FLOW_EOS when EOS occured.
  *
  * Since: 0.10.22
@@ -1553,7 +1553,7 @@ gst_app_src_push_buffer_action (GstAppSrc * appsrc, GstBuffer * buffer)
  * element is the last buffer of the stream.
  *
  * Returns: #GST_FLOW_OK when the EOS was successfuly queued.
- * #GST_FLOW_WRONG_STATE when @appsrc is not PAUSED or PLAYING.
+ * #GST_FLOW_FLUSHING when @appsrc is not PAUSED or PLAYING.
  *
  * Since: 0.10.22
  */
@@ -1584,7 +1584,7 @@ flushing:
   {
     g_mutex_unlock (priv->mutex);
     GST_DEBUG_OBJECT (appsrc, "refuse EOS, we are flushing");
-    return GST_FLOW_WRONG_STATE;
+    return GST_FLOW_FLUSHING;
   }
 }
 

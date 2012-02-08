@@ -634,7 +634,7 @@ flushing:
   {
     GST_DEBUG_OBJECT (appsink, "we are flushing");
     g_mutex_unlock (priv->mutex);
-    return GST_FLOW_WRONG_STATE;
+    return GST_FLOW_FLUSHING;
   }
 }
 
@@ -745,7 +745,7 @@ flushing:
   {
     GST_DEBUG_OBJECT (appsink, "we are flushing");
     g_mutex_unlock (priv->mutex);
-    return GST_FLOW_WRONG_STATE;
+    return GST_FLOW_FLUSHING;
   }
 stopping:
   {

@@ -1643,7 +1643,7 @@ gst_ogg_mux_process_best_pad (GstOggMux * ogg_mux, GstOggPadData * best)
     } else {
       /* no pad to pull on, send EOS */
       gst_pad_push_event (ogg_mux->srcpad, gst_event_new_eos ());
-      return GST_FLOW_WRONG_STATE;
+      return GST_FLOW_FLUSHING;
     }
   }
 

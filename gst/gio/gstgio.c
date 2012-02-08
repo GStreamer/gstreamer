@@ -37,7 +37,7 @@ GST_DEBUG_CATEGORY_STATIC (gst_gio_debug);
 /* @func_name: Name of the GIO function, for debugging messages.
  * @err: Error location.  *err may be NULL, but err must be non-NULL.
  * @ret: Flow return location.  May be NULL.  Is set to either #GST_FLOW_ERROR
- * or #GST_FLOW_WRONG_STATE.
+ * or #GST_FLOW_FLUSHING.
  *
  * Returns: TRUE to indicate a handled error.  Error at given location err will
  * be freed and *err will be set to NULL.  A FALSE return indicates an unhandled
@@ -56,7 +56,7 @@ gst_gio_error (gpointer element, const gchar * func_name, GError ** err,
   if (GST_GIO_ERROR_MATCHES (*err, CANCELLED)) {
     GST_DEBUG_OBJECT (element, "blocking I/O call cancelled (%s)", func_name);
     if (ret)
-      *ret = GST_FLOW_WRONG_STATE;
+      *ret = GST_FLOW_FLUSHING;
   } else if (*err != NULL) {
     handled = FALSE;
   } else {
