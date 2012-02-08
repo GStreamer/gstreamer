@@ -3305,6 +3305,9 @@ gst_pad_chain_data_unchecked (GstPad * pad, GstPadProbeType type, void *data)
   if (G_UNLIKELY (GST_PAD_IS_FLUSHING (pad)))
     goto flushing;
 
+  if (G_UNLIKELY (GST_PAD_MODE (pad) != GST_PAD_MODE_PUSH))
+    goto wrong_mode;
+
   PROBE_PUSH (pad, type | GST_PAD_PROBE_TYPE_BLOCK, data, probe_stopped);
 
   PROBE_PUSH (pad, type, data, probe_stopped);
@@ -3363,6 +3366,16 @@ flushing:
     gst_mini_object_unref (GST_MINI_OBJECT_CAST (data));
     return GST_FLOW_WRONG_STATE;
   }
+wrong_mode:
+  {
+    GST_ELEMENT_ERROR (GST_PAD_PARENT (pad), CORE, PAD, (NULL),
+        ("chain on pad %s:%s but it was not in push mode",
+            GST_DEBUG_PAD_NAME (pad)));
+    GST_OBJECT_UNLOCK (pad);
+    GST_PAD_STREAM_UNLOCK (pad);
+    gst_mini_object_unref (GST_MINI_OBJECT_CAST (data));
+    return GST_FLOW_ERROR;
+  }
 probe_stopped:
   {
     GST_OBJECT_UNLOCK (pad);
@@ -3383,10 +3396,8 @@ probe_stopped:
 no_function:
   {
     gst_mini_object_unref (GST_MINI_OBJECT_CAST (data));
-    GST_CAT_LOG_OBJECT (GST_CAT_SCHEDULING, pad,
-        "pushing, but not chainhandler");
     GST_ELEMENT_ERROR (parent, CORE, PAD, (NULL),
-        ("push on pad %s:%s but it has no chainfunction",
+        ("chain on pad %s:%s but it has no chainfunction",
             GST_DEBUG_PAD_NAME (pad)));
     GST_PAD_STREAM_UNLOCK (pad);
     return GST_FLOW_NOT_SUPPORTED;
@@ -3505,6 +3516,9 @@ gst_pad_push_data (GstPad * pad, GstPadProbeType type, void *data)
   if (G_UNLIKELY (GST_PAD_IS_FLUSHING (pad)))
     goto flushing;
 
+  if (G_UNLIKELY (GST_PAD_MODE (pad) != GST_PAD_MODE_PUSH))
+    goto wrong_mode;
+
   if (G_UNLIKELY (GST_PAD_HAS_PENDING_EVENTS (pad))) {
     GST_OBJECT_FLAG_UNSET (pad, GST_PAD_FLAG_PENDING_EVENTS);
 
@@ -3554,6 +3568,15 @@ flushing:
     GST_OBJECT_UNLOCK (pad);
     gst_mini_object_unref (GST_MINI_OBJECT_CAST (data));
     return GST_FLOW_WRONG_STATE;
+  }
+wrong_mode:
+  {
+    GST_ELEMENT_ERROR (GST_PAD_PARENT (pad), CORE, PAD, (NULL),
+        ("pushing on pad %s:%s but it was not activated in push mode",
+            GST_DEBUG_PAD_NAME (pad)));
+    GST_OBJECT_UNLOCK (pad);
+    gst_mini_object_unref (GST_MINI_OBJECT_CAST (data));
+    return GST_FLOW_ERROR;
   }
 events_error:
   {
@@ -3673,6 +3696,9 @@ gst_pad_get_range_unchecked (GstPad * pad, guint64 offset, guint size,
   if (G_UNLIKELY (GST_PAD_IS_FLUSHING (pad)))
     goto flushing;
 
+  if (G_UNLIKELY (GST_PAD_MODE (pad) != GST_PAD_MODE_PULL))
+    goto wrong_mode;
+
   if (G_UNLIKELY (GST_PAD_HAS_PENDING_EVENTS (pad))) {
     GST_OBJECT_FLAG_UNSET (pad, GST_PAD_FLAG_PENDING_EVENTS);
 
@@ -3726,6 +3752,15 @@ flushing:
     GST_OBJECT_UNLOCK (pad);
     GST_PAD_STREAM_UNLOCK (pad);
     return GST_FLOW_WRONG_STATE;
+  }
+wrong_mode:
+  {
+    GST_ELEMENT_ERROR (GST_PAD_PARENT (pad), CORE, PAD, (NULL),
+        ("getrange on pad %s:%s but it was not activated in pull mode",
+            GST_DEBUG_PAD_NAME (pad)));
+    GST_OBJECT_UNLOCK (pad);
+    GST_PAD_STREAM_UNLOCK (pad);
+    return GST_FLOW_ERROR;
   }
 events_error:
   {
@@ -3853,6 +3888,9 @@ gst_pad_pull_range (GstPad * pad, guint64 offset, guint size,
   if (G_UNLIKELY (GST_PAD_IS_FLUSHING (pad)))
     goto flushing;
 
+  if (G_UNLIKELY (GST_PAD_MODE (pad) != GST_PAD_MODE_PULL))
+    goto wrong_mode;
+
   /* when one of the probes returns a buffer, probed_data will be called and we
    * skip calling the peer getrange function */
   PROBE_PRE_PULL (pad, GST_PAD_PROBE_TYPE_PULL | GST_PAD_PROBE_TYPE_BLOCK,
@@ -3895,6 +3933,14 @@ flushing:
         "pullrange, but pad was flushing");
     GST_OBJECT_UNLOCK (pad);
     return GST_FLOW_WRONG_STATE;
+  }
+wrong_mode:
+  {
+    GST_ELEMENT_ERROR (GST_PAD_PARENT (pad), CORE, PAD, (NULL),
+        ("gpulltange on pad %s:%s but it was not activated in pull mode",
+            GST_DEBUG_PAD_NAME (pad)));
+    GST_OBJECT_UNLOCK (pad);
+    return GST_FLOW_ERROR;
   }
 pre_probe_stopped:
   {
@@ -4306,8 +4352,8 @@ gst_pad_send_event_unchecked (GstPad * pad, GstEvent * event,
       if (GST_PAD_IS_SRC (pad))
         GST_OBJECT_FLAG_SET (pad, GST_PAD_FLAG_NEED_RECONFIGURE);
     default:
-      GST_CAT_DEBUG_OBJECT (GST_CAT_EVENT, pad, "have event type %s",
-          GST_EVENT_TYPE_NAME (event));
+      GST_CAT_DEBUG_OBJECT (GST_CAT_EVENT, pad,
+          "have event type %" GST_PTR_FORMAT, event);
 
       if (G_UNLIKELY (GST_PAD_IS_FLUSHING (pad)))
         goto flushing;
