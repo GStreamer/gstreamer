@@ -256,7 +256,9 @@ struct _GstVaapiDecoderH264Private {
     GstBuffer                  *sub_buffer;
     GstH264NalParser           *parser;
     GstH264SPS                 *sps;
+    GstH264SPS                  last_sps;
     GstH264PPS                 *pps;
+    GstH264PPS                  last_pps;
     GstVaapiPictureH264        *current_picture;
     GstVaapiPictureH264        *dpb[16];
     guint                       dpb_count;
@@ -681,13 +683,13 @@ static GstVaapiDecoderStatus
 decode_sps(GstVaapiDecoderH264 *decoder, GstH264NalUnit *nalu)
 {
     GstVaapiDecoderH264Private * const priv = decoder->priv;
-    GstH264SPS sps;
+    GstH264SPS * const sps = &priv->last_sps;
     GstH264ParserResult result;
 
     GST_DEBUG("decode SPS");
 
-    memset(&sps, 0, sizeof(sps));
-    result = gst_h264_parser_parse_sps(priv->parser, nalu, &sps, TRUE);
+    memset(sps, 0, sizeof(*sps));
+    result = gst_h264_parser_parse_sps(priv->parser, nalu, sps, TRUE);
     if (result != GST_H264_PARSER_OK)
         return get_status(result);
 
@@ -698,13 +700,13 @@ static GstVaapiDecoderStatus
 decode_pps(GstVaapiDecoderH264 *decoder, GstH264NalUnit *nalu)
 {
     GstVaapiDecoderH264Private * const priv = decoder->priv;
-    GstH264PPS pps;
+    GstH264PPS * const pps = &priv->last_pps;
     GstH264ParserResult result;
 
     GST_DEBUG("decode PPS");
 
-    memset(&pps, 0, sizeof(pps));
-    result = gst_h264_parser_parse_pps(priv->parser, nalu, &pps);
+    memset(pps, 0, sizeof(*pps));
+    result = gst_h264_parser_parse_pps(priv->parser, nalu, pps);
     if (result != GST_H264_PARSER_OK)
         return get_status(result);
 
