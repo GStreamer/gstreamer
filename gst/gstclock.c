@@ -173,8 +173,6 @@ static void gst_clock_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec);
 static void gst_clock_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec);
-static void gst_clock_update_stats (GstClock * clock);
-
 
 /* static guint gst_clock_signals[LAST_SIGNAL] = { 0 }; */
 
