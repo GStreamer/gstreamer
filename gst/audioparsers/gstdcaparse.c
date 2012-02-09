@@ -74,10 +74,8 @@ static void gst_dca_parse_finalize (GObject * object);
 
 static gboolean gst_dca_parse_start (GstBaseParse * parse);
 static gboolean gst_dca_parse_stop (GstBaseParse * parse);
-static gboolean gst_dca_parse_check_valid_frame (GstBaseParse * parse,
-    GstBaseParseFrame * frame, guint * size, gint * skipsize);
-static GstFlowReturn gst_dca_parse_parse_frame (GstBaseParse * parse,
-    GstBaseParseFrame * frame);
+static GstFlowReturn gst_dca_parse_handle_frame (GstBaseParse * parse,
+    GstBaseParseFrame * frame, gint * skipsize);
 static GstCaps *gst_dca_parse_get_sink_caps (GstBaseParse * parse,
     GstCaps * filter);
 
@@ -98,9 +96,7 @@ gst_dca_parse_class_init (GstDcaParseClass * klass)
 
   parse_class->start = GST_DEBUG_FUNCPTR (gst_dca_parse_start);
   parse_class->stop = GST_DEBUG_FUNCPTR (gst_dca_parse_stop);
-  parse_class->check_valid_frame =
-      GST_DEBUG_FUNCPTR (gst_dca_parse_check_valid_frame);
-  parse_class->parse_frame = GST_DEBUG_FUNCPTR (gst_dca_parse_parse_frame);
+  parse_class->handle_frame = GST_DEBUG_FUNCPTR (gst_dca_parse_handle_frame);
   parse_class->get_sink_caps = GST_DEBUG_FUNCPTR (gst_dca_parse_get_sink_caps);
 
   gst_element_class_add_pad_template (element_class,
@@ -305,9 +301,9 @@ gst_dca_parse_find_sync (GstDcaParse * dcaparse, GstByteReader * reader,
   return best_offset;
 }
 
-static gboolean
-gst_dca_parse_check_valid_frame (GstBaseParse * parse,
-    GstBaseParseFrame * frame, guint * framesize, gint * skipsize)
+static GstFlowReturn
+gst_dca_parse_handle_frame (GstBaseParse * parse,
+    GstBaseParseFrame * frame, gint * skipsize)
 {
   GstDcaParse *dcaparse = GST_DCA_PARSE (parse);
   GstBuffer *buf = frame->buffer;
@@ -316,15 +312,19 @@ gst_dca_parse_check_valid_frame (GstBaseParse * parse,
   gboolean parser_in_sync;
   gboolean terminator;
   guint32 sync = 0;
-  guint size, rate, chans, num_blocks, samples_per_block;
+  guint size, rate, chans, num_blocks, samples_per_block, depth;
+  gint block_size;
+  gint endianness;
   gint off = -1;
   GstMapInfo map;
-  gboolean ret = FALSE;
+  GstFlowReturn ret = GST_FLOW_EOS;
 
   gst_buffer_map (buf, &map, GST_MAP_READ);
 
-  if (G_UNLIKELY (map.size < 16))
+  if (G_UNLIKELY (map.size < 16)) {
+    *skipsize = 1;
     goto cleanup;
+  }
 
   parser_in_sync = !GST_BASE_PARSE_LOST_SYNC (parse);
 
@@ -355,16 +355,14 @@ gst_dca_parse_check_valid_frame (GstBaseParse * parse,
   }
 
   /* make sure the values in the frame header look sane */
-  if (!gst_dca_parse_parse_header (dcaparse, &r, &size, &rate, &chans, NULL,
-          NULL, &num_blocks, &samples_per_block, &terminator)) {
+  if (!gst_dca_parse_parse_header (dcaparse, &r, &size, &rate, &chans, &depth,
+          &endianness, &num_blocks, &samples_per_block, &terminator)) {
     *skipsize = 4;
     goto cleanup;
   }
 
   GST_LOG_OBJECT (parse, "got frame, sync %08x, size %u, rate %d, channels %d",
       sync, size, rate, chans);
-
-  *framesize = size;
 
   dcaparse->last_sync = sync;
 
@@ -391,41 +389,18 @@ gst_dca_parse_check_valid_frame (GstBaseParse * parse,
       /* ok, got sync now, let's assume constant frame size */
       gst_base_parse_set_min_frame_size (parse, size);
     } else {
-      /* FIXME: baseparse always seems to hand us buffers of min_frame_size
-       * bytes, which is unhelpful here */
+      /* wait for some more data */
       GST_LOG_OBJECT (dcaparse,
           "next sync out of reach (%" G_GSIZE_FORMAT " < %u)", map.size,
           size + 16);
-      /* *skipsize = 0; */
-      /* return FALSE; */
+      goto cleanup;
     }
   }
 
-  ret = TRUE;
+  /* found frame */
+  ret = GST_FLOW_OK;
 
-cleanup:
-  gst_buffer_unmap (buf, &map);
-  return ret;
-}
-
-static GstFlowReturn
-gst_dca_parse_parse_frame (GstBaseParse * parse, GstBaseParseFrame * frame)
-{
-  GstDcaParse *dcaparse = GST_DCA_PARSE (parse);
-  GstBuffer *buf = frame->buffer;
-  GstByteReader r;
-  guint size, rate, chans, depth, block_size, num_blocks, samples_per_block;
-  gint endianness;
-  gboolean terminator;
-  GstMapInfo map;
-
-  gst_buffer_map (buf, &map, GST_MAP_READ);
-  gst_byte_reader_init (&r, map.data, map.size);
-
-  if (!gst_dca_parse_parse_header (dcaparse, &r, &size, &rate, &chans, &depth,
-          &endianness, &num_blocks, &samples_per_block, &terminator))
-    goto broken_header;
-
+  /* metadata handling */
   block_size = num_blocks * samples_per_block;
 
   if (G_UNLIKELY (dcaparse->rate != rate || dcaparse->channels != chans
@@ -453,17 +428,16 @@ gst_dca_parse_parse_frame (GstBaseParse * parse, GstBaseParseFrame * frame)
     gst_base_parse_set_frame_rate (parse, rate, block_size, 0, 0);
   }
 
+cleanup:
   gst_buffer_unmap (buf, &map);
-  return GST_FLOW_OK;
 
-/* ERRORS */
-broken_header:
-  {
-    /* this really shouldn't ever happen */
-    GST_ELEMENT_ERROR (parse, STREAM, DECODE, (NULL), (NULL));
-    gst_buffer_unmap (buf, &map);
-    return GST_FLOW_ERROR;
+  if (ret == GST_FLOW_OK && size <= map.size) {
+    ret = gst_base_parse_finish_frame (parse, frame, size);
+  } else {
+    ret = GST_FLOW_OK;
   }
+
+  return ret;
 }
 
 static GstCaps *

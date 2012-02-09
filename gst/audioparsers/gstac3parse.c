@@ -159,10 +159,8 @@ static void gst_ac3_parse_finalize (GObject * object);
 
 static gboolean gst_ac3_parse_start (GstBaseParse * parse);
 static gboolean gst_ac3_parse_stop (GstBaseParse * parse);
-static gboolean gst_ac3_parse_check_valid_frame (GstBaseParse * parse,
-    GstBaseParseFrame * frame, guint * size, gint * skipsize);
-static GstFlowReturn gst_ac3_parse_parse_frame (GstBaseParse * parse,
-    GstBaseParseFrame * frame);
+static GstFlowReturn gst_ac3_parse_handle_frame (GstBaseParse * parse,
+    GstBaseParseFrame * frame, gint * skipsize);
 static gboolean gst_ac3_parse_src_event (GstBaseParse * parse,
     GstEvent * event);
 static GstCaps *gst_ac3_parse_get_sink_caps (GstBaseParse * parse,
@@ -194,9 +192,7 @@ gst_ac3_parse_class_init (GstAc3ParseClass * klass)
 
   parse_class->start = GST_DEBUG_FUNCPTR (gst_ac3_parse_start);
   parse_class->stop = GST_DEBUG_FUNCPTR (gst_ac3_parse_stop);
-  parse_class->check_valid_frame =
-      GST_DEBUG_FUNCPTR (gst_ac3_parse_check_valid_frame);
-  parse_class->parse_frame = GST_DEBUG_FUNCPTR (gst_ac3_parse_parse_frame);
+  parse_class->handle_frame = GST_DEBUG_FUNCPTR (gst_ac3_parse_handle_frame);
   parse_class->src_event = GST_DEBUG_FUNCPTR (gst_ac3_parse_src_event);
   parse_class->get_sink_caps = GST_DEBUG_FUNCPTR (gst_ac3_parse_get_sink_caps);
 }
@@ -481,9 +477,9 @@ cleanup:
   return ret;
 }
 
-static gboolean
-gst_ac3_parse_check_valid_frame (GstBaseParse * parse,
-    GstBaseParseFrame * frame, guint * framesize, gint * skipsize)
+static GstFlowReturn
+gst_ac3_parse_handle_frame (GstBaseParse * parse,
+    GstBaseParseFrame * frame, gint * skipsize)
 {
   GstAc3Parse *ac3parse = GST_AC3_PARSE (parse);
   GstBuffer *buf = frame->buffer;
@@ -491,14 +487,20 @@ gst_ac3_parse_check_valid_frame (GstBaseParse * parse,
   gint off;
   gboolean lost_sync, draining, eac, more = FALSE;
   guint frmsiz, blocks, sid;
+  guint rate, chans;
+  gboolean update_rate = FALSE;
+  gint framesize = 0;
   gint have_blocks = 0;
   GstMapInfo map;
   gboolean ret = FALSE;
+  GstFlowReturn res = GST_FLOW_OK;
 
   gst_buffer_map (buf, &map, GST_MAP_READ);
 
-  if (G_UNLIKELY (map.size < 6))
+  if (G_UNLIKELY (map.size < 6)) {
+    *skipsize = 1;
     goto cleanup;
+  }
 
   gst_byte_reader_init (&reader, map.data, map.size);
   off = gst_byte_reader_masked_scan_uint32 (&reader, 0xffff0000, 0x0b770000,
@@ -519,13 +521,16 @@ gst_ac3_parse_check_valid_frame (GstBaseParse * parse,
   }
 
   /* make sure the values in the frame header look sane */
-  if (!gst_ac3_parse_frame_header (ac3parse, buf, 0, &frmsiz, NULL, NULL,
+  if (!gst_ac3_parse_frame_header (ac3parse, buf, 0, &frmsiz, &rate, &chans,
           &blocks, &sid, &eac)) {
     *skipsize = off + 2;
     goto cleanup;
   }
 
-  *framesize = frmsiz;
+  GST_LOG_OBJECT (parse, "size: %u, blocks: %u, rate: %u, chans: %u", frmsiz,
+      blocks, rate, chans);
+
+  framesize = frmsiz;
 
   if (G_UNLIKELY (g_atomic_int_get (&ac3parse->align) ==
           GST_AC3_PARSE_ALIGN_NONE))
@@ -550,21 +555,21 @@ gst_ac3_parse_check_valid_frame (GstBaseParse * parse,
       goto cleanup;
     }
 
-    *framesize = 0;
+    framesize = 0;
 
     /* Loop till we have 6 blocks per substream */
     for (have_blocks = 0; !more && have_blocks < 6; have_blocks += blocks) {
       /* Loop till we get one frame from each substream */
       do {
-        *framesize += frmsiz;
+        framesize += frmsiz;
 
         if (!gst_byte_reader_skip (&reader, frmsiz)
-            || map.size < (*framesize + 6)) {
+            || map.size < (framesize + 6)) {
           more = TRUE;
           break;
         }
 
-        if (!gst_ac3_parse_frame_header (ac3parse, buf, *framesize, &frmsiz,
+        if (!gst_ac3_parse_frame_header (ac3parse, buf, framesize, &frmsiz,
                 NULL, NULL, NULL, &sid, &eac)) {
           *skipsize = off + 2;
           goto cleanup;
@@ -584,7 +589,7 @@ gst_ac3_parse_check_valid_frame (GstBaseParse * parse,
     if (more || !gst_byte_reader_skip (&reader, frmsiz) ||
         !gst_byte_reader_get_uint16_be (&reader, &word)) {
       GST_DEBUG_OBJECT (ac3parse, "... but not sufficient data");
-      gst_base_parse_set_min_frame_size (parse, *framesize + 6);
+      gst_base_parse_set_min_frame_size (parse, framesize + 6);
       *skipsize = 0;
       goto cleanup;
     } else {
@@ -594,34 +599,16 @@ gst_ac3_parse_check_valid_frame (GstBaseParse * parse,
         goto cleanup;
       } else {
         /* ok, got sync now, let's assume constant frame size */
-        gst_base_parse_set_min_frame_size (parse, *framesize);
+        gst_base_parse_set_min_frame_size (parse, framesize);
       }
     }
   }
 
+  /* expect to have found a frame here */
+  g_assert (framesize);
   ret = TRUE;
 
-cleanup:
-  gst_buffer_unmap (buf, &map);
-
-  return ret;
-}
-
-static GstFlowReturn
-gst_ac3_parse_parse_frame (GstBaseParse * parse, GstBaseParseFrame * frame)
-{
-  GstAc3Parse *ac3parse = GST_AC3_PARSE (parse);
-  GstBuffer *buf = frame->buffer;
-  guint fsize, rate, chans, blocks, sid;
-  gboolean eac, update_rate = FALSE;
-
-  if (!gst_ac3_parse_frame_header (ac3parse, buf, 0, &fsize, &rate, &chans,
-          &blocks, &sid, &eac))
-    goto broken_header;
-
-  GST_LOG_OBJECT (parse, "size: %u, blocks: %u, rate: %u, chans: %u", fsize,
-      blocks, rate, chans);
-
+  /* arrange for metadata setup */
   if (G_UNLIKELY (sid)) {
     /* dependent frame, no need to (ac)count for or consider further */
     GST_LOG_OBJECT (parse, "sid: %d", sid);
@@ -631,9 +618,9 @@ gst_ac3_parse_parse_frame (GstBaseParse * parse, GstBaseParseFrame * frame)
     /* occupies same time space as previous base frame */
     if (G_LIKELY (GST_BUFFER_TIMESTAMP (buf) >= GST_BUFFER_DURATION (buf)))
       GST_BUFFER_TIMESTAMP (buf) -= GST_BUFFER_DURATION (buf);
-    /* only return if we already arranged for caps */
+    /* only shortcut if we already arranged for caps */
     if (G_LIKELY (ac3parse->sample_rate > 0))
-      return GST_FLOW_OK;
+      goto cleanup;
   }
 
   if (G_UNLIKELY (ac3parse->sample_rate != rate || ac3parse->channels != chans
@@ -663,15 +650,14 @@ gst_ac3_parse_parse_frame (GstBaseParse * parse, GstBaseParseFrame * frame)
   if (G_UNLIKELY (update_rate))
     gst_base_parse_set_frame_rate (parse, rate, 256 * blocks, 2, 2);
 
-  return GST_FLOW_OK;
+cleanup:
+  gst_buffer_unmap (buf, &map);
 
-/* ERRORS */
-broken_header:
-  {
-    /* this really shouldn't ever happen */
-    GST_ELEMENT_ERROR (parse, STREAM, DECODE, (NULL), (NULL));
-    return GST_FLOW_ERROR;
+  if (ret && framesize <= map.size) {
+    res = gst_base_parse_finish_frame (parse, frame, framesize);
   }
+
+  return res;
 }
 
 static gboolean

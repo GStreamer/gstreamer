@@ -91,10 +91,8 @@ static void gst_mpeg_audio_parse_finalize (GObject * object);
 
 static gboolean gst_mpeg_audio_parse_start (GstBaseParse * parse);
 static gboolean gst_mpeg_audio_parse_stop (GstBaseParse * parse);
-static gboolean gst_mpeg_audio_parse_check_valid_frame (GstBaseParse * parse,
-    GstBaseParseFrame * frame, guint * size, gint * skipsize);
-static GstFlowReturn gst_mpeg_audio_parse_parse_frame (GstBaseParse * parse,
-    GstBaseParseFrame * frame);
+static GstFlowReturn gst_mpeg_audio_parse_handle_frame (GstBaseParse * parse,
+    GstBaseParseFrame * frame, gint * skipsize);
 static GstFlowReturn gst_mpeg_audio_parse_pre_push_frame (GstBaseParse * parse,
     GstBaseParseFrame * frame);
 static gboolean gst_mpeg_audio_parse_convert (GstBaseParse * parse,
@@ -102,6 +100,9 @@ static gboolean gst_mpeg_audio_parse_convert (GstBaseParse * parse,
     GstFormat dest_format, gint64 * dest_value);
 static GstCaps *gst_mpeg_audio_parse_get_sink_caps (GstBaseParse * parse,
     GstCaps * filter);
+
+static void gst_mpeg_audio_parse_handle_first_frame (GstMpegAudioParse *
+    mp3parse, GstBuffer * buf);
 
 #define gst_mpeg_audio_parse_parent_class parent_class
 G_DEFINE_TYPE (GstMpegAudioParse, gst_mpeg_audio_parse, GST_TYPE_BASE_PARSE);
@@ -156,10 +157,8 @@ gst_mpeg_audio_parse_class_init (GstMpegAudioParseClass * klass)
 
   parse_class->start = GST_DEBUG_FUNCPTR (gst_mpeg_audio_parse_start);
   parse_class->stop = GST_DEBUG_FUNCPTR (gst_mpeg_audio_parse_stop);
-  parse_class->check_valid_frame =
-      GST_DEBUG_FUNCPTR (gst_mpeg_audio_parse_check_valid_frame);
-  parse_class->parse_frame =
-      GST_DEBUG_FUNCPTR (gst_mpeg_audio_parse_parse_frame);
+  parse_class->handle_frame =
+      GST_DEBUG_FUNCPTR (gst_mpeg_audio_parse_handle_frame);
   parse_class->pre_push_frame =
       GST_DEBUG_FUNCPTR (gst_mpeg_audio_parse_pre_push_frame);
   parse_class->convert = GST_DEBUG_FUNCPTR (gst_mpeg_audio_parse_convert);
@@ -485,9 +484,9 @@ gst_mpeg_audio_parse_head_check (GstMpegAudioParse * mp3parse,
   return TRUE;
 }
 
-static gboolean
-gst_mpeg_audio_parse_check_valid_frame (GstBaseParse * parse,
-    GstBaseParseFrame * frame, guint * framesize, gint * skipsize)
+static GstFlowReturn
+gst_mpeg_audio_parse_handle_frame (GstBaseParse * parse,
+    GstBaseParseFrame * frame, gint * skipsize)
 {
   GstMpegAudioParse *mp3parse = GST_MPEG_AUDIO_PARSE (parse);
   GstBuffer *buf = frame->buffer;
@@ -500,8 +499,10 @@ gst_mpeg_audio_parse_check_valid_frame (GstBaseParse * parse,
   gboolean res = FALSE;
 
   gst_buffer_map (buf, &map, GST_MAP_READ);
-  if (G_UNLIKELY (map.size < 6))
+  if (G_UNLIKELY (map.size < 6)) {
+    *skipsize = 1;
     goto cleanup;
+  }
 
   gst_byte_reader_init (&reader, map.data, map.size);
 
@@ -566,12 +567,67 @@ gst_mpeg_audio_parse_check_valid_frame (GstBaseParse * parse,
   /* restore default minimum */
   gst_base_parse_set_min_frame_size (parse, MIN_FRAME_SIZE);
 
-  *framesize = bpf;
   res = TRUE;
+
+  /* metadata handling */
+  if (G_UNLIKELY (caps_change)) {
+    GstCaps *caps = gst_caps_new_simple ("audio/mpeg",
+        "mpegversion", G_TYPE_INT, 1,
+        "mpegaudioversion", G_TYPE_INT, version,
+        "layer", G_TYPE_INT, layer,
+        "rate", G_TYPE_INT, rate,
+        "channels", G_TYPE_INT, channels, "parsed", G_TYPE_BOOLEAN, TRUE, NULL);
+    gst_pad_set_caps (GST_BASE_PARSE_SRC_PAD (parse), caps);
+    gst_caps_unref (caps);
+
+    mp3parse->rate = rate;
+    mp3parse->channels = channels;
+    mp3parse->layer = layer;
+    mp3parse->version = version;
+
+    /* see http://www.codeproject.com/audio/MPEGAudioInfo.asp */
+    if (mp3parse->layer == 1)
+      mp3parse->spf = 384;
+    else if (mp3parse->layer == 2)
+      mp3parse->spf = 1152;
+    else if (mp3parse->version == 1) {
+      mp3parse->spf = 1152;
+    } else {
+      /* MPEG-2 or "2.5" */
+      mp3parse->spf = 576;
+    }
+
+    /* lead_in:
+     * We start pushing 9 frames earlier (29 frames for MPEG2) than
+     * segment start to be able to decode the first frame we want.
+     * 9 (29) frames are the theoretical maximum of frames that contain
+     * data for the current frame (bit reservoir).
+     *
+     * lead_out:
+     * Some mp3 streams have an offset in the timestamps, for which we have to
+     * push the frame *after* the end position in order for the decoder to be
+     * able to decode everything up until the segment.stop position. */
+    gst_base_parse_set_frame_rate (parse, mp3parse->rate, mp3parse->spf,
+        (version == 1) ? 10 : 30, 2);
+  }
+
+  mp3parse->hdr_bitrate = bitrate;
+
+  /* For first frame; check for seek tables and output a codec tag */
+  gst_mpeg_audio_parse_handle_first_frame (mp3parse, buf);
+
+  /* store some frame info for later processing */
+  mp3parse->last_crc = crc;
+  mp3parse->last_mode = mode;
 
 cleanup:
   gst_buffer_unmap (buf, &map);
-  return res;
+
+  if (res && bpf <= map.size) {
+    return gst_base_parse_finish_frame (parse, frame, bpf);
+  }
+
+  return GST_FLOW_OK;
 }
 
 static void
@@ -975,94 +1031,6 @@ gst_mpeg_audio_parse_handle_first_frame (GstMpegAudioParse * mp3parse,
 
 cleanup:
   gst_buffer_unmap (buf, &map);
-}
-
-static GstFlowReturn
-gst_mpeg_audio_parse_parse_frame (GstBaseParse * parse,
-    GstBaseParseFrame * frame)
-{
-  GstMpegAudioParse *mp3parse = GST_MPEG_AUDIO_PARSE (parse);
-  GstBuffer *buf = frame->buffer;
-  GstMapInfo map;
-  guint bitrate, layer, rate, channels, version, mode, crc;
-
-  gst_buffer_map (buf, &map, GST_MAP_READ);
-  if (G_UNLIKELY (map.size < 4))
-    goto short_buffer;
-
-  if (!mp3_type_frame_length_from_header (mp3parse,
-          GST_READ_UINT32_BE (map.data),
-          &version, &layer, &channels, &bitrate, &rate, &mode, &crc))
-    goto broken_header;
-
-  if (G_UNLIKELY (channels != mp3parse->channels || rate != mp3parse->rate ||
-          layer != mp3parse->layer || version != mp3parse->version)) {
-    GstCaps *caps = gst_caps_new_simple ("audio/mpeg",
-        "mpegversion", G_TYPE_INT, 1,
-        "mpegaudioversion", G_TYPE_INT, version,
-        "layer", G_TYPE_INT, layer,
-        "rate", G_TYPE_INT, rate,
-        "channels", G_TYPE_INT, channels, "parsed", G_TYPE_BOOLEAN, TRUE, NULL);
-    gst_pad_set_caps (GST_BASE_PARSE_SRC_PAD (parse), caps);
-    gst_caps_unref (caps);
-
-    mp3parse->rate = rate;
-    mp3parse->channels = channels;
-    mp3parse->layer = layer;
-    mp3parse->version = version;
-
-    /* see http://www.codeproject.com/audio/MPEGAudioInfo.asp */
-    if (mp3parse->layer == 1)
-      mp3parse->spf = 384;
-    else if (mp3parse->layer == 2)
-      mp3parse->spf = 1152;
-    else if (mp3parse->version == 1) {
-      mp3parse->spf = 1152;
-    } else {
-      /* MPEG-2 or "2.5" */
-      mp3parse->spf = 576;
-    }
-
-    /* lead_in:
-     * We start pushing 9 frames earlier (29 frames for MPEG2) than
-     * segment start to be able to decode the first frame we want.
-     * 9 (29) frames are the theoretical maximum of frames that contain
-     * data for the current frame (bit reservoir).
-     *
-     * lead_out:
-     * Some mp3 streams have an offset in the timestamps, for which we have to
-     * push the frame *after* the end position in order for the decoder to be
-     * able to decode everything up until the segment.stop position. */
-    gst_base_parse_set_frame_rate (parse, mp3parse->rate, mp3parse->spf,
-        (version == 1) ? 10 : 30, 2);
-  }
-
-  mp3parse->hdr_bitrate = bitrate;
-
-  /* For first frame; check for seek tables and output a codec tag */
-  gst_mpeg_audio_parse_handle_first_frame (mp3parse, buf);
-
-  /* store some frame info for later processing */
-  mp3parse->last_crc = crc;
-  mp3parse->last_mode = mode;
-
-  gst_buffer_unmap (buf, &map);
-  return GST_FLOW_OK;
-
-/* ERRORS */
-broken_header:
-  {
-    /* this really shouldn't ever happen */
-    gst_buffer_unmap (buf, &map);
-    GST_ELEMENT_ERROR (parse, STREAM, DECODE, (NULL), (NULL));
-    return GST_FLOW_ERROR;
-  }
-
-short_buffer:
-  {
-    gst_buffer_unmap (buf, &map);
-    return GST_FLOW_ERROR;
-  }
 }
 
 static gboolean

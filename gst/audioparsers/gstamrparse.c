@@ -79,11 +79,8 @@ static gboolean gst_amr_parse_sink_setcaps (GstBaseParse * parse,
 static GstCaps *gst_amr_parse_sink_getcaps (GstBaseParse * parse,
     GstCaps * filter);
 
-static gboolean gst_amr_parse_check_valid_frame (GstBaseParse * parse,
-    GstBaseParseFrame * frame, guint * framesize, gint * skipsize);
-
-static GstFlowReturn gst_amr_parse_parse_frame (GstBaseParse * parse,
-    GstBaseParseFrame * frame);
+static GstFlowReturn gst_amr_parse_handle_frame (GstBaseParse * parse,
+    GstBaseParseFrame * frame, gint * skipsize);
 
 G_DEFINE_TYPE (GstAmrParse, gst_amr_parse, GST_TYPE_BASE_PARSE);
 
@@ -115,9 +112,7 @@ gst_amr_parse_class_init (GstAmrParseClass * klass)
   parse_class->stop = GST_DEBUG_FUNCPTR (gst_amr_parse_stop);
   parse_class->set_sink_caps = GST_DEBUG_FUNCPTR (gst_amr_parse_sink_setcaps);
   parse_class->get_sink_caps = GST_DEBUG_FUNCPTR (gst_amr_parse_sink_getcaps);
-  parse_class->parse_frame = GST_DEBUG_FUNCPTR (gst_amr_parse_parse_frame);
-  parse_class->check_valid_frame =
-      GST_DEBUG_FUNCPTR (gst_amr_parse_check_valid_frame);
+  parse_class->handle_frame = GST_DEBUG_FUNCPTR (gst_amr_parse_handle_frame);
 }
 
 
@@ -254,15 +249,16 @@ gst_amr_parse_parse_header (GstAmrParse * amrparse,
  *
  * Returns: TRUE if the given data contains valid frame.
  */
-static gboolean
-gst_amr_parse_check_valid_frame (GstBaseParse * parse,
-    GstBaseParseFrame * frame, guint * framesize, gint * skipsize)
+static GstFlowReturn
+gst_amr_parse_handle_frame (GstBaseParse * parse,
+    GstBaseParseFrame * frame, gint * skipsize)
 {
   GstBuffer *buffer;
   GstMapInfo map;
-  gint fsize, mode, dsize;
+  gint fsize = 0, mode, dsize;
   GstAmrParse *amrparse;
-  gboolean ret = FALSE;
+  GstFlowReturn ret = GST_FLOW_OK;
+  gboolean found = FALSE;
 
   amrparse = GST_AMR_PARSE (parse);
   buffer = frame->buffer;
@@ -285,6 +281,7 @@ gst_amr_parse_check_valid_frame (GstBaseParse * parse,
     goto done;
   }
 
+  *skipsize = 1;
   /* Does this look like a possible frame header candidate? */
   if ((map.data[0] & 0x83) == 0) {
     /* Yep. Retrieve the frame size */
@@ -299,8 +296,7 @@ gst_amr_parse_check_valid_frame (GstBaseParse * parse,
      *       perform this check)
      */
     if (fsize) {
-      gboolean found = FALSE;
-
+      *skipsize = 0;
       /* in sync, no further check */
       if (!GST_BASE_PARSE_LOST_SYNC (parse)) {
         found = TRUE;
@@ -311,41 +307,19 @@ gst_amr_parse_check_valid_frame (GstBaseParse * parse,
       } else if (GST_BASE_PARSE_DRAINING (parse)) {
         /* not enough, but draining, so ok */
         found = TRUE;
-      } else {
-        /* indicate we need not skip, but need more data */
-        *skipsize = 0;
-        *framesize = fsize + 1;
-      }
-      if (found) {
-        *framesize = fsize;
-        return TRUE;
       }
     }
   }
-  GST_LOG ("sync lost");
 
 done:
   gst_buffer_unmap (buffer, &map);
 
+  if (found && fsize <= map.size) {
+    ret = gst_base_parse_finish_frame (parse, frame, fsize);
+  }
+
   return ret;
 }
-
-
-/**
- * gst_amr_parse_parse_frame:
- * @parse: #GstBaseParse.
- * @buffer: #GstBuffer.
- *
- * Implementation of "parse" vmethod in #GstBaseParse class.
- *
- * Returns: #GstFlowReturn defining the parsing status.
- */
-static GstFlowReturn
-gst_amr_parse_parse_frame (GstBaseParse * parse, GstBaseParseFrame * frame)
-{
-  return GST_FLOW_OK;
-}
-
 
 /**
  * gst_amr_parse_start:
