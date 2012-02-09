@@ -621,7 +621,7 @@ gst_flac_dec_write (GstFlacDec * flacdec, const FLAC__Frame * frame,
     if (width != depth) {
       for (i = 0; i < samples; i++) {
         for (j = 0; j < channels; j++) {
-          *outbuffer++ = (gint8) (buffer[reorder_map[j]][i] >> (width - depth));
+          *outbuffer++ = (gint8) (buffer[reorder_map[j]][i] << (width - depth));
         }
       }
     } else {
@@ -639,7 +639,7 @@ gst_flac_dec_write (GstFlacDec * flacdec, const FLAC__Frame * frame,
       for (i = 0; i < samples; i++) {
         for (j = 0; j < channels; j++) {
           *outbuffer++ =
-              (gint16) (buffer[reorder_map[j]][i] >> (width - depth));
+              (gint16) (buffer[reorder_map[j]][i] << (width - depth));
         }
       }
     } else {
@@ -657,7 +657,7 @@ gst_flac_dec_write (GstFlacDec * flacdec, const FLAC__Frame * frame,
       for (i = 0; i < samples; i++) {
         for (j = 0; j < channels; j++) {
           *outbuffer++ =
-              (gint32) (buffer[reorder_map[j]][i] >> (width - depth));
+              (gint32) (buffer[reorder_map[j]][i] << (width - depth));
         }
       }
     } else {
