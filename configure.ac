@@ -325,7 +325,7 @@ GST_PLUGINS_NONPORTED=" aiff asfmux \
  videomeasure videosignal vmnc \
  decklink fbdev linsys shm vcd \
  apexsink bz2 cdaudio celt cog curl dc1394 dirac directfb resindvd \
- gsettings jp2k ladspa modplug mimic \
+ gsettings jp2k ladspa mimic \
  musepack musicbrainz nas neon ofa openal opencv rsvg schro sdl smooth sndfile soundtouch spandsp timidity \
  wildmidi xvid apple_media lv2 teletextdec opus dvb"
 AC_SUBST(GST_PLUGINS_NONPORTED)
