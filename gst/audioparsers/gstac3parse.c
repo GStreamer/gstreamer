@@ -547,7 +547,7 @@ gst_ac3_parse_check_valid_frame (GstBaseParse * parse,
       /* We need the first substream to be the one with id 0 */
       GST_LOG_OBJECT (ac3parse, "Skipping till we find sid 0");
       *skipsize = off + 2;
-      return FALSE;
+      goto cleanup;
     }
 
     *framesize = 0;
@@ -567,7 +567,7 @@ gst_ac3_parse_check_valid_frame (GstBaseParse * parse,
         if (!gst_ac3_parse_frame_header (ac3parse, buf, *framesize, &frmsiz,
                 NULL, NULL, NULL, &sid, &eac)) {
           *skipsize = off + 2;
-          return FALSE;
+          goto cleanup;
         }
       } while (sid);
     }
