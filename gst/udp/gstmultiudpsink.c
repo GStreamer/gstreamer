@@ -298,7 +298,7 @@ gst_multiudpsink_class_init (GstMultiUDPSinkClass * klass)
           G_PARAM_READABLE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_BYTES_SERVED,
       g_param_spec_uint64 ("bytes-served", "Bytes served",
-          "Total number of bytes send to all clients", 0, G_MAXUINT64, 0,
+          "Total number of bytes sent to all clients", 0, G_MAXUINT64, 0,
           G_PARAM_READABLE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (gobject_class, PROP_SOCKFD,
       g_param_spec_int ("sockfd", "Socket Handle",
