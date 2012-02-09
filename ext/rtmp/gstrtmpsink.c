@@ -50,12 +50,7 @@
 GST_DEBUG_CATEGORY_STATIC (gst_rtmp_sink_debug);
 #define GST_CAT_DEFAULT gst_rtmp_sink_debug
 
-/* Filter signals and args */
-enum
-{
-  /* FILL ME */
-  LAST_SIGNAL
-};
+#define DEFAULT_LOCATION NULL
 
 enum
 {
@@ -101,8 +96,9 @@ gst_rtmp_sink_class_init (GstRTMPSinkClass * klass)
   gobject_class->set_property = gst_rtmp_sink_set_property;
   gobject_class->get_property = gst_rtmp_sink_get_property;
 
-  gst_element_class_install_std_props (gstelement_class,
-      "location", PROP_LOCATION, G_PARAM_READWRITE, NULL);
+  g_object_class_install_property (gobject_class, PROP_LOCATION,
+      g_param_spec_string ("location", "RTMP Location", "RTMP url",
+          DEFAULT_LOCATION, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   gst_element_class_set_details_simple (gstelement_class,
       "RTMP output sink",
@@ -300,7 +296,7 @@ gst_rtmp_sink_uri_set_uri (GstURIHandler * handler, const gchar * uri,
 
   if (GST_STATE (sink) >= GST_STATE_PAUSED) {
     g_set_error (error, GST_URI_ERROR, GST_URI_ERROR_BAD_STATE,
-        "Changing the URI on rtmpsrc when it is running is not supported");
+        "Changing the URI on rtmpsink when it is running is not supported");
     return FALSE;
   }
 

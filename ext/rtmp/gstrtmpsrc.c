@@ -68,10 +68,14 @@ static GstStaticPadTemplate srctemplate = GST_STATIC_PAD_TEMPLATE ("src",
 enum
 {
   PROP_0,
-  PROP_LOCATION,
-  PROP_SWF_URL,
+  PROP_LOCATION
+#if 0
+      PROP_SWF_URL,
   PROP_PAGE_URL
+#endif
 };
+
+#define DEFAULT_LOCATION NULL
 
 static void gst_rtmp_src_uri_handler_init (gpointer g_iface,
     gpointer iface_data);
@@ -115,8 +119,10 @@ gst_rtmp_src_class_init (GstRTMPSrcClass * klass)
   gobject_class->get_property = gst_rtmp_src_get_property;
 
   /* properties */
-  gst_element_class_install_std_props (gstelement_class,
-      "location", PROP_LOCATION, G_PARAM_READWRITE, NULL);
+  g_object_class_install_property (gobject_class, PROP_LOCATION,
+      g_param_spec_string ("location", "RTMP Location",
+          "Location of the RTMP url to read",
+          DEFAULT_LOCATION, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   gst_element_class_add_pad_template (gstelement_class,
       gst_static_pad_template_get (&srctemplate));
