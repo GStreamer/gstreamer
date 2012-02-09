@@ -878,11 +878,10 @@ gst_aac_parse_detect_stream (GstAacParse * aacparse,
     gst_base_parse_set_min_frame_size (GST_BASE_PARSE (aacparse), 512);
 
     /* arrange for metadata and get out of the way */
-    if ((sinkcaps =
-            gst_pad_get_current_caps (GST_BASE_PARSE_SINK_PAD (aacparse)))) {
-      gst_aac_parse_set_src_caps (aacparse, sinkcaps);
+    sinkcaps = gst_pad_get_current_caps (GST_BASE_PARSE_SINK_PAD (aacparse));
+    gst_aac_parse_set_src_caps (aacparse, sinkcaps);
+    if (sinkcaps)
       gst_caps_unref (sinkcaps);
-    }
 
     /* not syncable, not easily seekable (unless we push data from start */
     gst_base_parse_set_syncable (GST_BASE_PARSE_CAST (aacparse), FALSE);
