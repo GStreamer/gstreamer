@@ -474,7 +474,7 @@ float_buffer_check_probe (GstPad * pad, GstPadProbeInfo * info,
   gint channels;
   GstBuffer *buffer = GST_PAD_PROBE_INFO_BUFFER (info);
   GstAudioInfo audio_info;
-  gint pad_id = (gint) userdata;
+  guint pad_id = GPOINTER_TO_UINT (userdata);
 
   fail_unless_equals_int (sscanf (GST_PAD_NAME (pad), "src_%u", &padnum), 1);
 
@@ -541,7 +541,7 @@ pad_added_setup_data_check_float32_8ch_cb (GstElement * deinterleave,
 
 
   gst_pad_add_probe (pad, GST_PAD_PROBE_TYPE_BUFFER, float_buffer_check_probe,
-      (gpointer) pads_created, NULL);
+      GUINT_TO_POINTER (pads_created), NULL);
 
   gst_element_set_state (sink, GST_STATE_PLAYING);
   gst_element_set_state (queue, GST_STATE_PLAYING);
