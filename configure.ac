@@ -247,6 +247,7 @@ AC_DEFINE_UNQUOTED(USE_CODEC_PARSERS, $USE_CODEC_PARSERS,
     [Defined to 1 if GStreamer codec parsers are used])
 AM_CONDITIONAL(USE_CODEC_PARSERS, test $USE_CODEC_PARSERS -eq 1)
 
+USE_LOCAL_CODEC_PARSERS=0
 if test "$enable_codecparsers" = "yes"; then
 AC_CACHE_CHECK([for GstH264SliceHdr::n_emulation_prevention_bytes],
     ac_cv_have_gst_h264_slice_hdr_epb_count, [
@@ -264,12 +265,34 @@ AC_CACHE_CHECK([for GstH264SliceHdr::n_emulation_prevention_bytes],
     CFLAGS="$saved_CFLAGS"
     LIBS="$saved_LIBS"
 ])
+
+AC_CACHE_CHECK([for JPEG parser],
+    ac_cv_have_gst_jpeg_parser, [
+    saved_CFLAGS="$CFLAGS"
+    CFLAGS="$CFLAGS $GST_CFLAGS $GST_CODEC_PARSERS_CFLAGS"
+    saved_LIBS="$LIBS"
+    LIBS="$LIBS $GST_LIBS $GST_CODEC_PARSERS_LIBS"
+    AC_TRY_COMPILE(
+        [#include <gst/codecparsers/gstjpegparser.h>],
+        [GstJpegImage jpeg_image;],
+        [ac_cv_have_gst_jpeg_parser="yes"],
+        [ac_cv_have_gst_jpeg_parser="no" USE_LOCAL_CODEC_PARSERS=1]
+    )
+    CFLAGS="$saved_CFLAGS"
+    LIBS="$saved_LIBS"
+])
 fi
 
 if test "$ac_cv_have_gst_h264_slice_hdr_epb_count" = "yes"; then
     AC_DEFINE_UNQUOTED(HAVE_GST_H264_SLICE_HDR_EPB_COUNT, 1,
         [Defined to 1 if GstH264SliceHdr::n_emulation_prevention_bytes exists.])
 fi
+
+if test "$ac_cv_have_gst_jpeg_parser" = "yes"; then
+    AC_DEFINE_UNQUOTED(HAVE_GST_JPEG_PARSER, 1,
+        [Defined to 1 if JPEG parser exists.])
+fi
+AM_CONDITIONAL(USE_LOCAL_CODEC_PARSERS, test $USE_LOCAL_CODEC_PARSERS -eq 1)
 
 dnl Check for GStreamer interfaces
 PKG_CHECK_MODULES([GST_INTERFACES],
@@ -458,6 +481,7 @@ debian.upstream/libgstvaapi-glx.install.in
     gst-libs/Makefile
     gst-libs/gst/Makefile
     gst-libs/gst/gstutils_version.h
+    gst-libs/gst/codecparsers/Makefile
     gst-libs/gst/vaapi/Makefile
     pkgconfig/Makefile
     pkgconfig/gstreamer-vaapi-$GST_MAJORMINOR.pc:\

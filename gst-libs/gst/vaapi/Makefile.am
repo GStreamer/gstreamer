@@ -170,6 +170,11 @@ libgstvaapi_cflags	+= $(GST_CODEC_PARSERS_CFLAGS)
 libgstvaapi_libs	+= $(GST_CODEC_PARSERS_LIBS)
 endif
 
+if USE_LOCAL_CODEC_PARSERS
+libgstvaapi_libs += \
+	$(top_builddir)/gst-libs/gst/codecparsers/libgstvaapi-codecparsers.la
+endif
+
 libgstvaapi_@GST_MAJORMINOR@_la_SOURCES =	\
 	$(libgstvaapi_source_c)			\
 	$(libgstvaapi_source_priv_h)		\

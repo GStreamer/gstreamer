@@ -1,4 +1,4 @@
-SUBDIRS = vaapi
+SUBDIRS = codecparsers vaapi
 
 gen_headers	= gstutils_version.h
 noinst_HEADERS	= $(gen_headers)
