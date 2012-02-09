@@ -168,6 +168,11 @@ libgstvaapi_source_priv_h += \
 	$(NULL)
 libgstvaapi_cflags	+= $(GST_CODEC_PARSERS_CFLAGS)
 libgstvaapi_libs	+= $(GST_CODEC_PARSERS_LIBS)
+
+if USE_JPEG_DECODER
+libgstvaapi_source_c	+= gstvaapidecoder_jpeg.c
+libgstvaapi_source_h	+= gstvaapidecoder_jpeg.h
+endif
 endif
 
 if USE_LOCAL_CODEC_PARSERS

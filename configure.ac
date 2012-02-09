@@ -404,6 +404,32 @@ AC_SUBST(LIBVA_GLX_PKGNAME)
 AC_SUBST(LIBVA_EXTRA_CFLAGS)
 AC_SUBST(LIBVA_EXTRA_LIBS)
 
+dnl Check for JPEG decoding API (0.33+)
+USE_JPEG_DECODER=0
+if test "$enable_codecparsers" = "yes"; then
+AC_CACHE_CHECK([for JPEG decoding API],
+    ac_cv_have_jpeg_decoding_api, [
+    saved_CFLAGS="$CFLAGS"
+    CFLAGS="$CFLAGS $LIBVA_CFLAGS"
+    saved_LIBS="$LIBS"
+    LIBS="$CFLAGS $LIBVA_LIBS"
+    AC_TRY_COMPILE(
+        [#include <va/va.h>],
+        [VAPictureParameterBufferJPEG pic_param;
+         VASliceParameterBufferJPEG slice_param;
+         VAIQMatrixBufferJPEG iq_matrix;],
+        [ac_cv_have_jpeg_decoding_api="yes" USE_JPEG_DECODER=1],
+        [ac_cv_have_jpeg_decoding_api="no"]
+    )
+    CFLAGS="$saved_CFLAGS"
+    LIBS="$saved_LIBS"
+])
+fi
+
+AC_DEFINE_UNQUOTED(USE_JPEG_DECODER, $USE_JPEG_DECODER,
+    [Defined to 1 if JPEG decoder is used])
+AM_CONDITIONAL(USE_JPEG_DECODER, test $USE_JPEG_DECODER -eq 1)
+
 dnl Check for OpenGL support to vaapisink
 if test "$enable_vaapisink_glx:$USE_GLX" = "yes:1"; then
     USE_VAAPISINK_GLX=1

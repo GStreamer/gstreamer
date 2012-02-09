@@ -49,6 +49,7 @@
 #endif
 #if USE_CODEC_PARSERS
 # include <gst/vaapi/gstvaapidecoder_h264.h>
+# include <gst/vaapi/gstvaapidecoder_jpeg.h>
 # include <gst/vaapi/gstvaapidecoder_mpeg2.h>
 # include <gst/vaapi/gstvaapidecoder_mpeg4.h>
 # include <gst/vaapi/gstvaapidecoder_vc1.h>
@@ -83,6 +84,7 @@ static const char gst_vaapidecode_sink_caps_str[] =
     GST_CAPS_CODEC("video/x-h263")
     GST_CAPS_CODEC("video/x-h264")
     GST_CAPS_CODEC("video/x-wmv")
+    GST_CAPS_CODEC("image/jpeg")
     ;
 
 static const char gst_vaapidecode_src_caps_str[] =
@@ -343,6 +345,10 @@ gst_vaapidecode_create(GstVaapiDecode *decode, GstCaps *caps)
                  gst_structure_has_name(structure, "video/x-divx") ||
                  gst_structure_has_name(structure, "video/x-xvid"))
             decode->decoder = gst_vaapi_decoder_mpeg4_new(dpy, caps);
+#if USE_JPEG_DECODER
+        else if (gst_structure_has_name(structure, "image/jpeg"))
+            decode->decoder = gst_vaapi_decoder_jpeg_new(dpy, caps);
+#endif
 #endif
     }
     if (!decode->decoder)

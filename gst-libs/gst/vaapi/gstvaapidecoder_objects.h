@@ -146,6 +146,7 @@ struct _GstVaapiPicture {
     gpointer                    param;
     GPtrArray                  *slices;
     GstVaapiIqMatrix           *iq_matrix;
+    GstVaapiHuffmanTable       *huf_table;
     GstVaapiBitPlane           *bitplane;
     GstClockTime                pts;
     gint32                      poc;

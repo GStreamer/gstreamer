@@ -92,6 +92,9 @@ static const GstVaapiProfileMap gst_vaapi_profiles[] = {
     { GST_VAAPI_PROFILE_VC1_ADVANCED, VAProfileVC1Advanced,
       "video/x-wmv, wmvversion=3, format=(fourcc)WVC1", "advanced"
     },
+    { GST_VAAPI_PROFILE_JPEG_BASELINE, VAProfileJPEGBaseline,
+      "image/jpeg", "baseline"
+    },
     { 0, }
 };
 
@@ -336,6 +339,9 @@ gst_vaapi_profile_get_codec(GstVaapiProfile profile)
         break;
     case GST_VAAPI_PROFILE_VC1_ADVANCED:
         codec = GST_VAAPI_CODEC_VC1;
+        break;
+    case GST_VAAPI_PROFILE_JPEG_BASELINE:
+        codec = GST_VAAPI_CODEC_JPEG;
         break;
     default:
         codec = (guint32)profile & GST_MAKE_FOURCC(0xff,0xff,0xff,0);

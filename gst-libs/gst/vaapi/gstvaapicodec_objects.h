@@ -35,6 +35,8 @@ typedef struct _GstVaapiIqMatrix                GstVaapiIqMatrix;
 typedef struct _GstVaapiIqMatrixClass           GstVaapiIqMatrixClass;
 typedef struct _GstVaapiBitPlane                GstVaapiBitPlane;
 typedef struct _GstVaapiBitPlaneClass           GstVaapiBitPlaneClass;
+typedef struct _GstVaapiHuffmanTable            GstVaapiHuffmanTable;
+typedef struct _GstVaapiHuffmanTableClass       GstVaapiHuffmanTableClass;
 
 /* ------------------------------------------------------------------------- */
 /* --- Base Codec Object                                                 --- */
@@ -257,6 +259,72 @@ gst_vaapi_bitplane_new(GstVaapiDecoder *decoder, guint8 *data, guint data_size)
     attribute_hidden;
 
 /* ------------------------------------------------------------------------- */
+/* --- JPEG Huffman Tables                                               --- */
+/* ------------------------------------------------------------------------- */
+
+#define GST_VAAPI_TYPE_HUFFMAN_TABLE \
+    (gst_vaapi_huffman_table_get_type())
+
+#define GST_VAAPI_HUFFMAN_TABLE_CAST(obj) \
+    ((GstVaapiHuffmanTable *)(obj))
+
+#define GST_VAAPI_HUFFMAN_TABLE(obj)                            \
+    (G_TYPE_CHECK_INSTANCE_CAST((obj),                          \
+                                GST_VAAPI_TYPE_HUFFMAN_TABLE,   \
+                                GstVaapiHuffmanTable))
+
+#define GST_VAAPI_HUFFMAN_TABLE_CLASS(klass)                    \
+    (G_TYPE_CHECK_CLASS_CAST((klass),                           \
+                             GST_VAAPI_TYPE_HUFFMAN_TABLE,      \
+                             GstVaapiHuffmanTableClass))
+
+#define GST_VAAPI_IS_HUFFMAN_TABLE(obj) \
+    (G_TYPE_CHECK_INSTANCE_TYPE((obj), GST_VAAPI_TYPE_HUFFMAN_TABLE))
+
+#define GST_VAAPI_IS_HUFFMAN_TABLE_CLASS(klass) \
+    (G_TYPE_CHECK_CLASS_TYPE((klass), GST_VAAPI_TYPE_HUFFMAN_TABLE))
+
+#define GST_VAAPI_HUFFMAN_TABLE_GET_CLASS(obj)                  \
+    (G_TYPE_INSTANCE_GET_CLASS((obj),                           \
+                               GST_VAAPI_TYPE_HUFFMAN_TABLE,    \
+                               GstVaapiHuffmanTableClass))
+
+/**
+ * GstVaapiHuffmanTable:
+ *
+ * A #GstVaapiCodecObject holding huffman table.
+ */
+struct _GstVaapiHuffmanTable {
+    /*< private >*/
+    GstVaapiCodecObject         parent_instance;
+    VABufferID                  param_id;
+
+    /*< public >*/
+    gpointer                    param;
+};
+
+/**
+ * GstVaapiHuffmanTableClass:
+ *
+ * The #GstVaapiHuffmanTable base class.
+ */
+struct _GstVaapiHuffmanTableClass {
+    /*< private >*/
+    GstVaapiCodecObjectClass    parent_class;
+};
+
+GType
+gst_vaapi_huffman_table_get_type(void)
+    attribute_hidden;
+
+GstVaapiHuffmanTable *
+gst_vaapi_huffman_table_new(
+    GstVaapiDecoder *decoder,
+    guint8          *data,
+    guint            data_size
+) attribute_hidden;
+
+/* ------------------------------------------------------------------------- */
 /* --- Helpers to create codec-dependent objects                         --- */
 /* ------------------------------------------------------------------------- */
 
@@ -318,6 +386,10 @@ prefix##_class_init(type##Class *klass)                                 \
 
 #define GST_VAAPI_BITPLANE_NEW(decoder, size) \
     gst_vaapi_bitplane_new(GST_VAAPI_DECODER_CAST(decoder), NULL, size)
+    
+#define GST_VAAPI_HUFFMAN_TABLE_NEW(codec, decoder)              \
+      gst_vaapi_huffman_table_new(GST_VAAPI_DECODER_CAST(decoder),    \
+                            NULL, sizeof(VAHuffmanTableBuffer##codec))
 
 G_END_DECLS
 

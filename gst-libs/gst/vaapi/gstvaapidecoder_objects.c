@@ -71,6 +71,11 @@ gst_vaapi_picture_destroy(GstVaapiPicture *picture)
         picture->iq_matrix = NULL;
     }
 
+    if (picture->huf_table) {
+        gst_mini_object_unref(GST_MINI_OBJECT(picture->huf_table));
+        picture->huf_table = NULL;
+    }
+
     if (picture->bitplane) {
         gst_mini_object_unref(GST_MINI_OBJECT(picture->bitplane));
         picture->bitplane = NULL;
@@ -179,6 +184,7 @@ gst_vaapi_picture_init(GstVaapiPicture *picture)
     picture->param_size = 0;
     picture->slices     = NULL;
     picture->iq_matrix  = NULL;
+    picture->huf_table  = NULL;
     picture->bitplane   = NULL;
     picture->pts        = GST_CLOCK_TIME_NONE;
     picture->poc        = 0;
@@ -264,6 +270,7 @@ gst_vaapi_picture_decode(GstVaapiPicture *picture)
 {
     GstVaapiIqMatrix *iq_matrix;
     GstVaapiBitPlane *bitplane;
+    GstVaapiHuffmanTable *huf_table;
     VADisplay va_display;
     VAContextID va_context;
     VAStatus status;
@@ -291,6 +298,12 @@ gst_vaapi_picture_decode(GstVaapiPicture *picture)
     bitplane = picture->bitplane;
     if (bitplane && !do_decode(va_display, va_context,
                                &bitplane->data_id, (void **)&bitplane->data))
+        return FALSE;
+
+    huf_table = picture->huf_table;
+    if (huf_table && !do_decode(va_display, va_context,
+                                &huf_table->param_id,
+                                (void **)&huf_table->param))
         return FALSE;
 
     for (i = 0; i < picture->slices->len; i++) {

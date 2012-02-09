@@ -243,3 +243,62 @@ gst_vaapi_bitplane_new(GstVaapiDecoder *decoder, guint8 *data, guint data_size)
         return NULL;
     return GST_VAAPI_BITPLANE_CAST(object);
 }
+
+/* ------------------------------------------------------------------------- */
+/* --- JPEG Huffman Tables                                               --- */
+/* ------------------------------------------------------------------------- */
+
+GST_VAAPI_CODEC_DEFINE_TYPE(GstVaapiHuffmanTable,
+                            gst_vaapi_huffman_table,
+                            GST_VAAPI_TYPE_CODEC_OBJECT)
+
+static void
+gst_vaapi_huffman_table_destroy(GstVaapiHuffmanTable *huf_table)
+{
+    vaapi_destroy_buffer(GET_VA_DISPLAY(huf_table), &huf_table->param_id);
+    huf_table->param = NULL;
+}
+
+static gboolean
+gst_vaapi_huffman_table_create(
+    GstVaapiHuffmanTable                     *huf_table,
+    const GstVaapiCodecObjectConstructorArgs *args
+)
+{
+    return vaapi_create_buffer(GET_VA_DISPLAY(huf_table),
+                               GET_VA_CONTEXT(huf_table),
+                               VAHuffmanTableBufferType,
+                               args->param_size,
+                               args->param,
+                               &huf_table->param_id,
+                               (void **)&huf_table->param);
+}
+
+static void
+gst_vaapi_huffman_table_init(GstVaapiHuffmanTable *huf_table)
+{
+    huf_table->param    = NULL;
+    huf_table->param_id = VA_INVALID_ID;
+}
+
+GstVaapiHuffmanTable *
+gst_vaapi_huffman_table_new(
+    GstVaapiDecoder *decoder,
+    guint8          *data,
+    guint            data_size
+)
+{
+    GstVaapiCodecObject *object;
+
+    g_return_val_if_fail(GST_VAAPI_IS_DECODER(decoder), NULL);
+
+    object = gst_vaapi_codec_object_new(
+        GST_VAAPI_TYPE_HUFFMAN_TABLE,
+        GST_VAAPI_CODEC_BASE(decoder),
+        data, data_size,
+        NULL, 0
+    );
+    if (!object)
+        return NULL;
+    return GST_VAAPI_HUFFMAN_TABLE_CAST(object);
+}
