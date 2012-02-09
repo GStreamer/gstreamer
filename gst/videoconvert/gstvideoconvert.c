@@ -47,7 +47,7 @@
 
 GST_DEBUG_CATEGORY (videoconvert_debug);
 #define GST_CAT_DEFAULT videoconvert_debug
-GST_DEBUG_CATEGORY_STATIC (GST_CAT_PERFORMANCE);
+GST_DEBUG_CATEGORY_EXTERN (GST_CAT_PERFORMANCE);
 
 
 enum
@@ -403,7 +403,6 @@ plugin_init (GstPlugin * plugin)
 {
   GST_DEBUG_CATEGORY_INIT (videoconvert_debug, "videoconvert", 0,
       "Colorspace Converter");
-  GST_DEBUG_CATEGORY_GET (GST_CAT_PERFORMANCE, "GST_PERFORMANCE");
 
   return gst_element_register (plugin, "videoconvert",
       GST_RANK_NONE, GST_TYPE_VIDEO_CONVERT);
