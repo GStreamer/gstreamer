@@ -184,8 +184,8 @@ gst_siddec_class_init (GstSidDecClass * klass)
           DEFAULT_FORCE_SPEED,
           (GParamFlags)(G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
   g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_BLOCKSIZE,
-      g_param_spec_ulong ("blocksize", "Block size",
-          "Size in bytes to output per buffer", 1, G_MAXULONG,
+      g_param_spec_uint ("blocksize", "Block size",
+          "Size in bytes to output per buffer", 1, G_MAXUINT,
           DEFAULT_BLOCKSIZE,
           (GParamFlags)(G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
   g_object_class_install_property (gobject_class, PROP_METADATA,
@@ -679,7 +679,7 @@ gst_siddec_set_property (GObject * object, guint prop_id, const GValue * value,
       siddec->config->mos8580 = g_value_get_boolean (value);
       break;
     case PROP_BLOCKSIZE:
-      siddec->blocksize = g_value_get_ulong (value);
+      siddec->blocksize = g_value_get_uint (value);
       break;
     case PROP_FORCE_SPEED:
       siddec->config->forceSongSpeed = g_value_get_boolean (value);
@@ -720,7 +720,7 @@ gst_siddec_get_property (GObject * object, guint prop_id, GValue * value,
       g_value_set_boolean (value, siddec->config->forceSongSpeed);
       break;
     case PROP_BLOCKSIZE:
-      g_value_set_ulong (value, siddec->blocksize);
+      g_value_set_uint (value, siddec->blocksize);
       break;
     case PROP_METADATA:
       g_value_set_boxed (value, NULL);
