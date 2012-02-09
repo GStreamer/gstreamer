@@ -240,9 +240,20 @@ _is_raw_video (GstStructure * s)
 static gboolean
 _is_video_pad (GstPad * pad, gboolean * hw_accelerated)
 {
-  GstCaps *caps = gst_pad_get_current_caps (pad);
+  GstPad *peer = gst_pad_get_peer (pad);
+  GstCaps *caps;
   gboolean ret;
   const gchar *name;
+
+  if (peer) {
+    caps = gst_pad_get_current_caps (peer);
+    if (!caps) {
+      caps = gst_pad_query_caps (peer, NULL);
+    }
+    gst_object_unref (peer);
+  } else {
+    caps = gst_pad_query_caps (pad, NULL);
+  }
 
   name = gst_structure_get_name (gst_caps_get_structure (caps, 0));
   if (g_str_has_prefix (name, "video/x-raw-")) {
