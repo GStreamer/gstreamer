@@ -885,10 +885,6 @@ gboolean                gst_element_query_duration      (GstElement *element, Gs
 gboolean                gst_element_query_convert       (GstElement *element, GstFormat src_format, gint64 src_val,
                                                          GstFormat dest_format, gint64 *dest_val);
 
-/* element class functions */
-void                    gst_element_class_install_std_props (GstElementClass * klass,
-                                                         const gchar * first_name, ...) G_GNUC_NULL_TERMINATED;
-
 /* pad functions */
 void                    gst_pad_use_fixed_caps          (GstPad *pad);
 GstElement*             gst_pad_get_parent_element      (GstPad *pad);
