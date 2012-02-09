@@ -28,6 +28,8 @@
 #include "video.h"
 #include "gstvideometa.h"
 
+GST_DEBUG_CATEGORY_EXTERN (GST_CAT_PERFORMANCE);
+
 static int fill_planes (GstVideoInfo * info);
 
 typedef struct
@@ -1154,7 +1156,7 @@ gst_video_frame_copy (GstVideoFrame * dest, const GstVideoFrame * src)
 
   n_planes = dinfo->finfo->n_planes;
 
-  GST_DEBUG ("doing video frame copy");
+  GST_CAT_DEBUG (GST_CAT_PERFORMANCE, "doing video frame copy");
 
   for (i = 0; i < n_planes; i++) {
     guint w, h, j;
