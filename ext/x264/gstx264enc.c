@@ -478,8 +478,8 @@ static GstStaticPadTemplate src_factory = GST_STATIC_PAD_TEMPLATE ("src",
         "width = (int) [ 1, MAX ], " "height = (int) [ 1, MAX ], "
         "stream-format = (string) { byte-stream, avc }, "
         "alignment = (string) { au }, "
-        "profile = (string) { high-10, high, main, constrained-baseline, "
-        "high-10-intra }")
+        "profile = (string) { high-10, high, main, baseline, "
+        "constrained-baseline, high-10-intra }")
     );
 
 static void gst_x264_enc_finalize (GObject * object);
@@ -1601,7 +1601,11 @@ gst_x264_enc_sink_set_caps (GstPad * pad, GstCaps * caps)
 
     profile = gst_structure_get_string (s, "profile");
     if (profile) {
-      if (!strcmp (profile, "constrained-baseline")) {
+      /* FIXME - if libx264 ever adds support for FMO, ASO or redundant slices
+       * make sure constrained profile has a separate case which disables
+       * those */
+      if (!strcmp (profile, "constrained-baseline") ||
+          !strcmp (profile, "baseline")) {
         encoder->peer_profile = "baseline";
       } else if (!strcmp (profile, "high-10-intra")) {
         encoder->peer_intra_profile = TRUE;
