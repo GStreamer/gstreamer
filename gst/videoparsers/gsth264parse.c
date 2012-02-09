@@ -995,7 +995,7 @@ gst_h264_parse_update_src_caps (GstH264Parse * h264parse, GstCaps * caps)
   /* if this is being called from the first _setcaps call, caps on the sinkpad
    * aren't set yet and so they need to be passed as an argument */
   if (caps)
-    sink_caps = caps;
+    sink_caps = gst_caps_ref (caps);
   else
     sink_caps = gst_pad_get_current_caps (GST_BASE_PARSE_SINK_PAD (h264parse));
 
