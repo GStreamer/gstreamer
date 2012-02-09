@@ -77,13 +77,14 @@ static GstStaticPadTemplate sink_templ = GST_STATIC_PAD_TEMPLATE ("sink",
     GST_STATIC_CAPS ("audio/x-sid")
     );
 
-#define FORMATS "{ S8, U8, "GST_AUDIO_NE(S16)","GST_AUDIO_NE(U16)" }"
+#define FORMATS "{ "GST_AUDIO_NE(S16)","GST_AUDIO_NE(U16)", S8, U8 }"
 
 static GstStaticPadTemplate src_templ = GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS ("audio/x-raw, "
         "format = (string) " FORMATS ", "
+        "layout = (string) interleaved, "
         "rate = (int) [ 8000, 48000 ], " "channels = (int) [ 1, 2 ]")
     );
 
@@ -278,7 +279,7 @@ update_tags (GstSidDec * siddec)
 static gboolean
 siddec_negotiate (GstSidDec * siddec)
 {
-  GstCaps *allowed;
+  GstCaps *allowed, *tmp;
   GstStructure *structure;
   int rate = 44100;
   int channels = 1;
@@ -291,6 +292,10 @@ siddec_negotiate (GstSidDec * siddec)
     goto nothing_allowed;
 
   GST_DEBUG_OBJECT (siddec, "allowed caps: %" GST_PTR_FORMAT, allowed);
+
+  tmp = gst_caps_normalize (allowed);
+  gst_caps_unref (allowed);
+  allowed = tmp;
 
   structure = gst_caps_get_structure (allowed, 0);
 
@@ -327,6 +332,7 @@ siddec_negotiate (GstSidDec * siddec)
 
   caps = gst_caps_new_simple ("audio/x-raw",
       "format", G_TYPE_STRING, gst_audio_format_to_string (format),
+      "layout", G_TYPE_STRING, "interleaved",
       "rate", G_TYPE_INT, siddec->config->frequency,
       "channels", G_TYPE_INT, siddec->config->channels, NULL);
   gst_pad_set_caps (siddec->srcpad, caps);
@@ -483,10 +489,10 @@ gst_siddec_sink_event (GstPad * pad, GstObject * parent, GstEvent * event)
       res = start_play_tune (siddec);
       break;
     case GST_EVENT_SEGMENT:
-      res = FALSE;
+      res = TRUE;
       break;
     default:
-      res = FALSE;
+      res = TRUE;
       break;
   }
   gst_event_unref (event);
