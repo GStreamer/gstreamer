@@ -1154,6 +1154,8 @@ gst_video_frame_copy (GstVideoFrame * dest, const GstVideoFrame * src)
 
   n_planes = dinfo->finfo->n_planes;
 
+  GST_DEBUG ("doing video frame copy");
+
   for (i = 0; i < n_planes; i++) {
     guint w, h, j;
     guint8 *sp, *dp;

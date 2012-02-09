@@ -47,7 +47,8 @@
 
 GST_DEBUG_CATEGORY (videoconvert_debug);
 #define GST_CAT_DEFAULT videoconvert_debug
-GST_DEBUG_CATEGORY (videoconvert_performance);
+GST_DEBUG_CATEGORY_STATIC (GST_CAT_PERFORMANCE);
+
 
 enum
 {
@@ -385,16 +386,14 @@ gst_video_convert_transform_frame (GstVideoFilter * filter,
 
   space = GST_VIDEO_CONVERT_CAST (filter);
 
-  GST_DEBUG ("from %s -> to %s", GST_VIDEO_INFO_NAME (&filter->in_info),
+  GST_CAT_DEBUG_OBJECT (GST_CAT_PERFORMANCE, filter,
+      "doing colorspace conversion from %s -> to %s",
+      GST_VIDEO_INFO_NAME (&filter->in_info),
       GST_VIDEO_INFO_NAME (&filter->out_info));
 
   videoconvert_convert_set_dither (space->convert, space->dither);
 
   videoconvert_convert_convert (space->convert, out_frame, in_frame);
-
-  /* baseclass copies timestamps */
-  GST_DEBUG ("from %s -> to %s done", GST_VIDEO_INFO_NAME (&filter->in_info),
-      GST_VIDEO_INFO_NAME (&filter->out_info));
 
   return GST_FLOW_OK;
 }
@@ -404,7 +403,7 @@ plugin_init (GstPlugin * plugin)
 {
   GST_DEBUG_CATEGORY_INIT (videoconvert_debug, "videoconvert", 0,
       "Colorspace Converter");
-  GST_DEBUG_CATEGORY_GET (videoconvert_performance, "GST_PERFORMANCE");
+  GST_DEBUG_CATEGORY_GET (GST_CAT_PERFORMANCE, "GST_PERFORMANCE");
 
   return gst_element_register (plugin, "videoconvert",
       GST_RANK_NONE, GST_TYPE_VIDEO_CONVERT);

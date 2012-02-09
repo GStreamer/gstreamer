@@ -87,6 +87,7 @@
 
 /* debug variable definition */
 GST_DEBUG_CATEGORY (video_scale_debug);
+GST_DEBUG_CATEGORY_STATIC (GST_CAT_PERFORMANCE);
 
 #define DEFAULT_PROP_METHOD       GST_VIDEO_SCALE_BILINEAR
 #define DEFAULT_PROP_ADD_BORDERS  FALSE
@@ -492,9 +493,12 @@ gst_video_scale_set_info (GstVideoFilter * filter, GstCaps * in,
     g_free (videoscale->tmp_buf);
   videoscale->tmp_buf = g_malloc (out_info->width * 8 * 4);
 
-  gst_base_transform_set_passthrough (GST_BASE_TRANSFORM (filter),
-      (in_info->width == out_info->width
-          && in_info->height == out_info->height));
+  if (in_info->width == out_info->width && in_info->height == out_info->height) {
+    gst_base_transform_set_passthrough (GST_BASE_TRANSFORM (filter), TRUE);
+  } else {
+    GST_CAT_DEBUG_OBJECT (GST_CAT_PERFORMANCE, filter, "setup videoscaling");
+    gst_base_transform_set_passthrough (GST_BASE_TRANSFORM (filter), FALSE);
+  }
 
   GST_DEBUG_OBJECT (videoscale, "from=%dx%d (par=%d/%d dar=%d/%d), size %"
       G_GSIZE_FORMAT " -> to=%dx%d (par=%d/%d dar=%d/%d borders=%d:%d), "
@@ -1083,6 +1087,9 @@ gst_video_scale_transform_frame (GstVideoFilter * filter,
         videoscale->borders_w, videoscale->borders_h);
   }
 
+  GST_CAT_DEBUG_OBJECT (GST_CAT_PERFORMANCE, filter,
+      "doing videoscale format %s", GST_VIDEO_INFO_NAME (&filter->in_info));
+
   switch (format) {
     case GST_VIDEO_FORMAT_RGBx:
     case GST_VIDEO_FORMAT_xRGB:
@@ -1369,6 +1376,7 @@ plugin_init (GstPlugin * plugin)
 
   GST_DEBUG_CATEGORY_INIT (video_scale_debug, "videoscale", 0,
       "videoscale element");
+  GST_DEBUG_CATEGORY_GET (GST_CAT_PERFORMANCE, "GST_PERFORMANCE");
 
   vs_4tap_init ();
 
