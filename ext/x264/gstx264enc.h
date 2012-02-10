@@ -49,6 +49,7 @@ struct _GstX264Enc
   /*< private >*/
   GstPad *sinkpad;
   GstPad *srcpad;
+  GstSegment segment;
 
   x264_t *x264enc;
   x264_param_t x264param;
@@ -105,9 +106,6 @@ struct _GstX264Enc
   guint8 *buffer;
   gulong buffer_size;
 
-  gint i_type;
-  GstEvent *forcekeyunit_event;
-
   /* configuration changed  while playing */
   gboolean reconfig;
 
@@ -115,6 +113,9 @@ struct _GstX264Enc
   const gchar *peer_profile;
   gboolean peer_intra_profile;
   const x264_level_t *peer_level;
+
+  GstClockTime pending_key_unit_ts;
+  GstEvent *force_key_unit_event;
 };
 
 struct _GstX264EncClass

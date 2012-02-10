@@ -418,6 +418,17 @@ exit:
   *_offset = offset;
   *len = consumed;
 
+  /* ensure that if we added some dummy guard bytes above, we don't claim
+     to have used them as they're unknown to the caller. */
+  if (mad->eos) {
+    g_assert (av >= MAD_BUFFER_GUARD);
+    av -= MAD_BUFFER_GUARD;
+    if (*_offset > av)
+      *_offset = av;
+    if (*len > av)
+      *len = av;
+  }
+
   return ret;
 }
 
