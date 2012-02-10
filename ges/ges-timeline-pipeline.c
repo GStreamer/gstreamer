@@ -214,9 +214,9 @@ ges_timeline_pipeline_update_caps (GESTimelinePipeline * self)
           GST_DEBUG ("Smart Render mode, setting input caps");
           ocaps = gst_encoding_profile_get_input_caps (prof);
           if (track->type == GES_TRACK_TYPE_AUDIO)
-            rcaps = gst_caps_from_string ("audio/x-raw-int;audio/x-raw-float");
+            rcaps = gst_caps_new_empty_simple ("audio/x-raw");
           else
-            rcaps = gst_caps_from_string ("video/x-raw-yuv;video/x-raw-rgb");
+            rcaps = gst_caps_new_empty_simple ("video/x-raw");
           gst_caps_append (ocaps, rcaps);
           ges_track_set_caps (track, ocaps);
         } else {
@@ -224,9 +224,9 @@ ges_timeline_pipeline_update_caps (GESTimelinePipeline * self)
 
           /* Raw preview or rendering mode */
           if (track->type == GES_TRACK_TYPE_VIDEO)
-            caps = gst_caps_from_string ("video/x-raw-yuv;video/x-raw-rgb");
+            caps = gst_caps_new_empty_simple ("video/x-raw");
           else if (track->type == GES_TRACK_TYPE_AUDIO)
-            caps = gst_caps_from_string ("audio/x-raw-int;audio/x-raw-float");
+            caps = gst_caps_new_empty_simple ("audio/x-raw");
 
           if (caps) {
             ges_track_set_caps (track, caps);
@@ -878,7 +878,8 @@ ges_timeline_pipeline_get_thumbnail_rgb24 (GESTimelinePipeline * self,
   GstSample *ret;
   GstCaps *caps;
 
-  caps = gst_caps_from_string ("video/x-raw-rgb,bpp=(int)24," "depth=(int)24");
+  caps = gst_caps_new_simple ("video/x-raw", "format", G_TYPE_STRING,
+      "RGB", NULL);
 
   if (width != -1)
     gst_caps_set_simple (caps, "width", G_TYPE_INT, (gint) width, NULL);

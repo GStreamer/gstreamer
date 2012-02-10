@@ -152,7 +152,7 @@ ges_track_class_init (GESTrackClass * klass)
    * GESTrack:caps
    *
    * Caps used to filter/choose the output stream. This is generally set to
-   * a generic set of caps like 'video/x-raw-rgb;video/x-raw-yuv' for raw video.
+   * a generic set of caps like 'video/x-raw' for raw video.
    *
    * Default value: #GST_CAPS_ANY.
    */
@@ -239,7 +239,7 @@ ges_track_new (GESTrackType type, GstCaps * caps)
  * ges_track_video_raw_new:
  *
  * Creates a new #GESTrack of type #GES_TRACK_TYPE_VIDEO and with generic
- * raw video caps ("video/x-raw-yuv;video/x-raw-rgb");
+ * raw video caps ("video/x-raw");
  *
  * Returns: A new #GESTrack.
  */
@@ -247,7 +247,7 @@ GESTrack *
 ges_track_video_raw_new (void)
 {
   GESTrack *track;
-  GstCaps *caps = gst_caps_from_string ("video/x-raw-yuv;video/x-raw-rgb");
+  GstCaps *caps = gst_caps_new_empty_simple ("video/x-raw");
 
   track = ges_track_new (GES_TRACK_TYPE_VIDEO, caps);
 
@@ -258,7 +258,7 @@ ges_track_video_raw_new (void)
  * ges_track_audio_raw_new:
  *
  * Creates a new #GESTrack of type #GES_TRACK_TYPE_AUDIO and with generic
- * raw audio caps ("audio/x-raw-int;audio/x-raw-float");
+ * raw audio caps ("audio/x-raw");
  *
  * Returns: A new #GESTrack.
  */
@@ -266,7 +266,7 @@ GESTrack *
 ges_track_audio_raw_new (void)
 {
   GESTrack *track;
-  GstCaps *caps = gst_caps_from_string ("audio/x-raw-int;audio/x-raw-float");
+  GstCaps *caps = gst_caps_new_empty_simple ("audio/x-raw");
 
   track = ges_track_new (GES_TRACK_TYPE_AUDIO, caps);
 

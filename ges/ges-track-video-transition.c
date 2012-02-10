@@ -197,7 +197,7 @@ on_caps_set (GstPad * srca_pad, GParamSpec * pspec, GstElement * capsfilt)
 
     /* Set capsfilter to the size of the first video */
     size_caps =
-        gst_caps_new_simple ("video/x-raw-yuv", "width", G_TYPE_INT, width,
+        gst_caps_new_simple ("video/x-raw", "width", G_TYPE_INT, width,
         "height", G_TYPE_INT, height, NULL);
     g_object_set (capsfilt, "caps", size_caps, NULL);
   }
