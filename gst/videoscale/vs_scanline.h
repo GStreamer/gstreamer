@@ -55,6 +55,11 @@ void vs_scanline_resample_nearest_UYVY (uint8_t *dest, uint8_t *src, int src_wid
 void vs_scanline_resample_linear_UYVY (uint8_t *dest, uint8_t *src, int src_width, int n, int *accumulator, int increment);
 void vs_scanline_merge_linear_UYVY (uint8_t *dest, uint8_t *src1, uint8_t *src2, int n, int x);
 
+void vs_scanline_downsample_NV12 (uint8_t *dest, uint8_t *src, int n);
+void vs_scanline_resample_nearest_NV12 (uint8_t *dest, uint8_t *src, int src_width, int n, int *accumulator, int increment);
+void vs_scanline_resample_linear_NV12 (uint8_t *dest, uint8_t *src, int src_width, int n, int *accumulator, int increment);
+void vs_scanline_merge_linear_NV12 (uint8_t *dest, uint8_t *src1, uint8_t *src2, int n, int x);
+
 void vs_scanline_downsample_RGB565 (uint8_t *dest, uint8_t *src, int n);
 void vs_scanline_resample_nearest_RGB565 (uint8_t *dest, uint8_t *src, int src_width, int n, int *accumulator, int increment);
 void vs_scanline_resample_linear_RGB565 (uint8_t *dest, uint8_t *src, int src_width, int n, int *accumulator, int increment);

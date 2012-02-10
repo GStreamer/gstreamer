@@ -204,6 +204,9 @@ static void vs_image_scale_lanczos_AYUV_float (const VSImage * dest,
 static void vs_image_scale_lanczos_AYUV_double (const VSImage * dest,
     const VSImage * src, uint8_t * tmpbuf, double sharpness, gboolean dither,
     double a, double sharpen);
+static void vs_image_scale_lanczos_AYUV64_double (const VSImage * dest,
+    const VSImage * src, uint8_t * tmpbuf, double sharpness, gboolean dither,
+    double a, double sharpen);
 
 static double
 sinc (double x)
@@ -590,6 +593,15 @@ vs_image_scale_lanczos_AYUV (const VSImage * dest, const VSImage * src,
   }
 }
 
+void
+vs_image_scale_lanczos_AYUV64 (const VSImage * dest, const VSImage * src,
+    uint8_t * tmpbuf, double sharpness, gboolean dither, int submethod,
+    double a, double sharpen)
+{
+  vs_image_scale_lanczos_AYUV64_double (dest, src, tmpbuf, sharpness, dither,
+      a, sharpen);
+}
+
 
 
 #define RESAMPLE_HORIZ_FLOAT(function, dest_type, tap_type, src_type, _n_taps) \
@@ -813,9 +825,9 @@ RESAMPLE_VERT_DITHER (resample_vert_dither_int16_generic, gint16, gint16,
     n_taps, shift)
 /* *INDENT-ON* */
 
-#define RESAMPLE_VERT_FLOAT(function, tap_type, src_type, _n_taps, _shift) \
+#define RESAMPLE_VERT_FLOAT(function, dest_type, clamp, tap_type, src_type, _n_taps, _shift) \
 static void \
-function (guint8 *dest, \
+function (dest_type *dest, \
     const tap_type *taps, const src_type *src, int stride, int n_taps, \
     int shift, int n) \
 { \
@@ -828,13 +840,13 @@ function (guint8 *dest, \
       const src_type *line = PTR_OFFSET(src, stride * l); \
       sum_y += line[i] * taps[l]; \
     } \
-    dest[i] = CLAMP (floor(0.5 + sum_y), 0, 255); \
+    dest[i] = CLAMP (floor(0.5 + sum_y), 0, clamp); \
   } \
 }
 
-#define RESAMPLE_VERT_FLOAT_DITHER(function, tap_type, src_type, _n_taps, _shift) \
+#define RESAMPLE_VERT_FLOAT_DITHER(function, dest_type, clamp, tap_type, src_type, _n_taps, _shift) \
 static void \
-function (guint8 *dest, \
+function (dest_type *dest, \
     const tap_type *taps, const src_type *src, int stride, int n_taps, \
     int shift, int n) \
 { \
@@ -849,19 +861,24 @@ function (guint8 *dest, \
       sum_y += line[i] * taps[l]; \
     } \
     err_y += sum_y; \
-    dest[i] = CLAMP (floor (err_y), 0, 255); \
+    dest[i] = CLAMP (floor (err_y), 0, clamp); \
     err_y -= floor (err_y); \
   } \
 }
 
 /* *INDENT-OFF* */
-RESAMPLE_VERT_FLOAT (resample_vert_double_generic, double, double, n_taps,
+RESAMPLE_VERT_FLOAT (resample_vert_double_generic, guint8, 255, double, double, n_taps,
     shift)
-RESAMPLE_VERT_FLOAT_DITHER (resample_vert_dither_double_generic, double, double,
+RESAMPLE_VERT_FLOAT_DITHER (resample_vert_dither_double_generic, guint8, 255, double, double,
     n_taps, shift)
 
-RESAMPLE_VERT_FLOAT (resample_vert_float_generic, float, float, n_taps, shift)
-RESAMPLE_VERT_FLOAT_DITHER (resample_vert_dither_float_generic, float, float,
+RESAMPLE_VERT_FLOAT (resample_vert_double_generic_u16, guint16, 65535, double, double, n_taps,
+    shift)
+RESAMPLE_VERT_FLOAT_DITHER (resample_vert_dither_double_generic_u16, guint16, 65535, double, double,
+    n_taps, shift)
+
+RESAMPLE_VERT_FLOAT (resample_vert_float_generic, guint8, 255, float, float, n_taps, shift)
+RESAMPLE_VERT_FLOAT_DITHER (resample_vert_dither_float_generic, guint8, 255, float, float,
     n_taps, shift)
 /* *INDENT-ON* */
 
@@ -1551,6 +1568,80 @@ vs_image_scale_lanczos_AYUV_float (const VSImage * dest, const VSImage * src,
       g_malloc (sizeof (float) * scale->dest->width * scale->src->height * 4);
 
   vs_scale_lanczos_AYUV_float (scale);
+
+  scale1d_cleanup (&scale->x_scale1d);
+  scale1d_cleanup (&scale->y_scale1d);
+  g_free (scale->tmpdata);
+}
+
+static void
+vs_scale_lanczos_AYUV64_double (Scale * scale)
+{
+  int j;
+  int yi;
+  int tmp_yi;
+
+  tmp_yi = 0;
+
+  for (j = 0; j < scale->dest->height; j++) {
+    guint16 *destline;
+    double *taps;
+
+    destline = (guint16 *) (scale->dest->pixels + scale->dest->stride * j);
+
+    yi = scale->y_scale1d.offsets[j];
+
+    while (tmp_yi < yi + scale->y_scale1d.n_taps) {
+      scale->horiz_resample_func (TMP_LINE_DOUBLE_AYUV (tmp_yi),
+          scale->x_scale1d.offsets, scale->x_scale1d.taps, SRC_LINE (tmp_yi),
+          scale->x_scale1d.n_taps, 0, scale->dest->width);
+      tmp_yi++;
+    }
+
+    taps = (double *) scale->y_scale1d.taps + j * scale->y_scale1d.n_taps;
+    if (scale->dither) {
+      resample_vert_dither_double_generic_u16 (destline,
+          taps, TMP_LINE_DOUBLE_AYUV (scale->y_scale1d.offsets[j]),
+          sizeof (double) * 4 * scale->dest->width,
+          scale->y_scale1d.n_taps, 0, scale->dest->width * 4);
+    } else {
+      resample_vert_double_generic_u16 (destline,
+          taps, TMP_LINE_DOUBLE_AYUV (scale->y_scale1d.offsets[j]),
+          sizeof (double) * 4 * scale->dest->width,
+          scale->y_scale1d.n_taps, 0, scale->dest->width * 4);
+    }
+  }
+}
+
+void
+vs_image_scale_lanczos_AYUV64_double (const VSImage * dest, const VSImage * src,
+    uint8_t * tmpbuf, double sharpness, gboolean dither, double a,
+    double sharpen)
+{
+  Scale s = { 0 };
+  Scale *scale = &s;
+  int n_taps;
+
+  scale->dest = dest;
+  scale->src = src;
+
+  n_taps = scale1d_get_n_taps (src->width, dest->width, a, sharpness);
+  scale1d_calculate_taps (&scale->x_scale1d,
+      src->width, dest->width, n_taps, a, sharpness, sharpen);
+
+  n_taps = scale1d_get_n_taps (src->height, dest->height, a, sharpness);
+  scale1d_calculate_taps (&scale->y_scale1d,
+      src->height, dest->height, n_taps, a, sharpness, sharpen);
+
+  scale->dither = dither;
+
+  scale->horiz_resample_func =
+      (HorizResampleFunc) resample_horiz_double_ayuv_generic;
+
+  scale->tmpdata =
+      g_malloc (sizeof (double) * scale->dest->width * scale->src->height * 4);
+
+  vs_scale_lanczos_AYUV64_double (scale);
 
   scale1d_cleanup (&scale->x_scale1d);
   scale1d_cleanup (&scale->y_scale1d);

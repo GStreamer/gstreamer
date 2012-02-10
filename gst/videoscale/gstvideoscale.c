@@ -1,6 +1,6 @@
 /* GStreamer
  * Copyright (C) <1999> Erik Walthinsen <omega@cse.ogi.edu>
- * Copyright (C) 2005 David Schleef <ds@schleef.org>
+ * Copyright (C) 2005-2012 David Schleef <ds@schleef.org>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -112,10 +112,10 @@ enum
 #undef GST_VIDEO_SIZE_RANGE
 #define GST_VIDEO_SIZE_RANGE "(int) [ 1, 32767]"
 
-#define GST_VIDEO_FORMATS "{ \"I420\", \"YV12\", \"YUY2\", \"UYVY\", \"AYUV\", \"RGBx\", " \
-    "\"BGRx\", \"xRGB\", \"xBGR\", \"RGBA\", \"BGRA\", \"ARGB\", \"ABGR\", \"RGB\", " \
-    "\"BGR\", \"Y41B\", \"Y42B\", \"YVYU\", \"Y444\", \"GRAY8\", \"GRAY16_BE\", \"GRAY16_LE\", " \
-    "\"v308\", \"Y800\", \"Y16\", \"RGB16\", \"RGB15\", \"ARGB64\", \"AYUV64\" } "
+#define GST_VIDEO_FORMATS "{ I420, YV12, YUY2, UYVY, AYUV, RGBx, " \
+    "BGRx, xRGB, xBGR, RGBA, BGRA, ARGB, ABGR, RGB, " \
+    "BGR, Y41B, Y42B, YVYU, Y444, GRAY8, GRAY16_BE, GRAY16_LE, " \
+    "v308, Y800, Y16, RGB16, RGB15, ARGB64, AYUV64, NV12 } "
 
 
 static GstStaticCaps gst_video_scale_format_caps[] = {
@@ -1042,6 +1042,7 @@ _get_black_for_format (GstVideoFormat format)
     case GST_VIDEO_FORMAT_Y444:
     case GST_VIDEO_FORMAT_Y42B:
     case GST_VIDEO_FORMAT_Y41B:
+    case GST_VIDEO_FORMAT_NV12:
       return black[4];          /* Y, U, V, 0 */
     case GST_VIDEO_FORMAT_RGB16:
     case GST_VIDEO_FORMAT_RGB15:
@@ -1135,6 +1136,11 @@ gst_video_scale_transform_frame (GstVideoFilter * filter,
           break;
         case GST_VIDEO_SCALE_4TAP:
           vs_image_scale_4tap_AYUV64 (&dest[0], &src[0], videoscale->tmp_buf);
+          break;
+        case GST_VIDEO_SCALE_LANCZOS:
+          vs_image_scale_lanczos_AYUV64 (&dest[0], &src[0], videoscale->tmp_buf,
+              videoscale->sharpness, videoscale->dither, videoscale->submethod,
+              videoscale->envelope, videoscale->sharpen);
           break;
         default:
           goto unknown_mode;
@@ -1267,6 +1273,20 @@ gst_video_scale_transform_frame (GstVideoFilter * filter,
           vs_image_scale_lanczos_Y (&dest[2], &src[2], videoscale->tmp_buf,
               videoscale->sharpness, videoscale->dither, videoscale->submethod,
               videoscale->envelope, videoscale->sharpen);
+          break;
+        default:
+          goto unknown_mode;
+      }
+      break;
+    case GST_VIDEO_FORMAT_NV12:
+      switch (method) {
+        case GST_VIDEO_SCALE_NEAREST:
+          vs_image_scale_nearest_Y (&dest[0], &src[0], videoscale->tmp_buf);
+          vs_image_scale_nearest_NV12 (&dest[1], &src[1], videoscale->tmp_buf);
+          break;
+        case GST_VIDEO_SCALE_BILINEAR:
+          vs_image_scale_linear_Y (&dest[0], &src[0], videoscale->tmp_buf);
+          vs_image_scale_linear_NV12 (&dest[1], &src[1], videoscale->tmp_buf);
           break;
         default:
           goto unknown_mode;

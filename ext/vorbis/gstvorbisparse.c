@@ -400,7 +400,7 @@ vorbis_parse_parse_packet (GstVorbisParse * parse, GstBuffer * buf)
   have_header = FALSE;
   gst_buffer_map (buf, &map, GST_MAP_READ);
   if (map.size >= 1) {
-    if (map.data[0] >= 0x01 && map.data[0] <= 0x05)
+    if (map.data[0] & 1)
       have_header = TRUE;
   }
   gst_buffer_unmap (buf, &map);

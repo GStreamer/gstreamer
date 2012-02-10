@@ -52,6 +52,9 @@ void vs_image_scale_linear_RGBA (const VSImage *dest, const VSImage *src,
 void vs_image_scale_lanczos_AYUV (const VSImage * dest, const VSImage * src,
     uint8_t * tmpbuf, double sharpness, gboolean dither, int submethod,
     double a, double sharpen);
+void vs_image_scale_lanczos_AYUV64 (const VSImage * dest, const VSImage * src,
+    uint8_t * tmpbuf, double sharpness, gboolean dither, int submethod,
+    double a, double sharpen);
 
 void vs_image_scale_nearest_RGB (const VSImage *dest, const VSImage *src,
     uint8_t *tmpbuf);
@@ -66,6 +69,11 @@ void vs_image_scale_linear_YUYV (const VSImage *dest, const VSImage *src,
 void vs_image_scale_nearest_UYVY (const VSImage *dest, const VSImage *src,
     uint8_t *tmpbuf);
 void vs_image_scale_linear_UYVY (const VSImage *dest, const VSImage *src,
+    uint8_t *tmpbuf);
+
+void vs_image_scale_nearest_NV12 (const VSImage *dest, const VSImage *src,
+    uint8_t *tmpbuf);
+void vs_image_scale_linear_NV12 (const VSImage *dest, const VSImage *src,
     uint8_t *tmpbuf);
 
 void vs_image_scale_nearest_Y (const VSImage *dest, const VSImage *src,
