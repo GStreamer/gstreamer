@@ -200,6 +200,10 @@ _gst_message_free (GstMessage * message)
   g_slice_free1 (GST_MINI_OBJECT_SIZE (message), message);
 }
 
+static void
+gst_message_init (GstMessageImpl * message, gsize size, GstMessageType type,
+    GstObject * src);
+
 static GstMessage *
 _gst_message_copy (GstMessage * message)
 {
@@ -212,30 +216,44 @@ _gst_message_copy (GstMessage * message)
 
   copy = g_slice_new0 (GstMessageImpl);
 
-  gst_mini_object_init (GST_MINI_OBJECT_CAST (copy),
-      _gst_message_type, sizeof (GstMessageImpl));
+  gst_message_init (copy, sizeof (GstMessageImpl), GST_MESSAGE_TYPE (message),
+      GST_MESSAGE_SRC (message));
 
-  copy->message.mini_object.copy =
-      (GstMiniObjectCopyFunction) _gst_message_copy;
-  copy->message.mini_object.free =
-      (GstMiniObjectFreeFunction) _gst_message_free;
-
-  GST_MESSAGE_TYPE (copy) = GST_MESSAGE_TYPE (message);
   GST_MESSAGE_TIMESTAMP (copy) = GST_MESSAGE_TIMESTAMP (message);
   GST_MESSAGE_SEQNUM (copy) = GST_MESSAGE_SEQNUM (message);
-  if (GST_MESSAGE_SRC (message)) {
-    GST_MESSAGE_SRC (copy) = gst_object_ref (GST_MESSAGE_SRC (message));
-  }
 
   structure = GST_MESSAGE_STRUCTURE (message);
   if (structure) {
-    copy->structure = gst_structure_copy (structure);
-    gst_structure_set_parent_refcount (copy->structure,
+    GST_MESSAGE_STRUCTURE (copy) = gst_structure_copy (structure);
+    gst_structure_set_parent_refcount (GST_MESSAGE_STRUCTURE (copy),
         &copy->message.mini_object.refcount);
+  } else {
+    GST_MESSAGE_STRUCTURE (copy) = NULL;
   }
 
   return GST_MESSAGE_CAST (copy);
 }
+
+static void
+gst_message_init (GstMessageImpl * message, gsize size, GstMessageType type,
+    GstObject * src)
+{
+  gst_mini_object_init (GST_MINI_OBJECT_CAST (message), _gst_message_type,
+      size);
+
+  message->message.mini_object.copy =
+      (GstMiniObjectCopyFunction) _gst_message_copy;
+  message->message.mini_object.free =
+      (GstMiniObjectFreeFunction) _gst_message_free;
+
+  GST_MESSAGE_TYPE (message) = type;
+  if (src)
+    gst_object_ref (src);
+  GST_MESSAGE_SRC (message) = src;
+  GST_MESSAGE_TIMESTAMP (message) = GST_CLOCK_TIME_NONE;
+  GST_MESSAGE_SEQNUM (message) = gst_util_seqnum_next ();
+}
+
 
 /**
  * gst_message_new_custom:
@@ -260,32 +278,29 @@ gst_message_new_custom (GstMessageType type, GstObject * src,
 
   message = g_slice_new0 (GstMessageImpl);
 
-  gst_mini_object_init (GST_MINI_OBJECT_CAST (message),
-      _gst_message_type, sizeof (GstMessageImpl));
-
-  message->message.mini_object.copy =
-      (GstMiniObjectCopyFunction) _gst_message_copy;
-  message->message.mini_object.free =
-      (GstMiniObjectFreeFunction) _gst_message_free;
-
   GST_CAT_LOG (GST_CAT_MESSAGE, "source %s: creating new message %p %s",
       (src ? GST_OBJECT_NAME (src) : "NULL"), message,
       gst_message_type_get_name (type));
 
-  GST_MESSAGE_TYPE (message) = type;
-  if (src)
-    gst_object_ref (src);
-  GST_MESSAGE_SRC (message) = src;
-  GST_MESSAGE_TIMESTAMP (message) = GST_CLOCK_TIME_NONE;
-  GST_MESSAGE_SEQNUM (message) = gst_util_seqnum_next ();
-
   if (structure) {
-    gst_structure_set_parent_refcount (structure,
-        &message->message.mini_object.refcount);
+    /* structure must not have a parent */
+    if (!gst_structure_set_parent_refcount (structure,
+            &message->message.mini_object.refcount))
+      goto had_parent;
   }
-  message->structure = structure;
+  gst_message_init (message, sizeof (GstMessageImpl), type, src);
+
+  GST_MESSAGE_STRUCTURE (message) = structure;
 
   return GST_MESSAGE_CAST (message);
+
+  /* ERRORS */
+had_parent:
+  {
+    g_slice_free1 (GST_MINI_OBJECT_SIZE (message), message);
+    g_warning ("structure is already owned by another object");
+    return NULL;
+  }
 }
 
 /**

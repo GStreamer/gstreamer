@@ -251,6 +251,8 @@ _gst_event_copy (GstEvent * event)
     GST_EVENT_STRUCTURE (copy) = gst_structure_copy (s);
     gst_structure_set_parent_refcount (GST_EVENT_STRUCTURE (copy),
         &copy->event.mini_object.refcount);
+  } else {
+    GST_EVENT_STRUCTURE (copy) = NULL;
   }
   return GST_EVENT_CAST (copy);
 }
@@ -268,20 +270,6 @@ gst_event_init (GstEventImpl * event, gsize size, GstEventType type)
   GST_EVENT_SEQNUM (event) = gst_util_seqnum_next ();
 }
 
-static GstEvent *
-gst_event_new (GstEventType type)
-{
-  GstEventImpl *event;
-
-  event = g_slice_new0 (GstEventImpl);
-
-  GST_CAT_DEBUG (GST_CAT_EVENT, "creating new event %p %s %d", event,
-      gst_event_type_get_name (type), type);
-
-  gst_event_init (event, sizeof (GstEventImpl), type);
-
-  return GST_EVENT_CAST (event);
-}
 
 /**
  * gst_event_new_custom:
@@ -305,23 +293,30 @@ gst_event_new (GstEventType type)
 GstEvent *
 gst_event_new_custom (GstEventType type, GstStructure * structure)
 {
-  GstEvent *event;
+  GstEventImpl *event;
 
-  /* structure must not have a parent */
-  event = gst_event_new (type);
+  event = g_slice_new0 (GstEventImpl);
+
+  GST_CAT_DEBUG (GST_CAT_EVENT, "creating new event %p %s %d", event,
+      gst_event_type_get_name (type), type);
+
   if (structure) {
+    /* structure must not have a parent */
     if (!gst_structure_set_parent_refcount (structure,
-            &event->mini_object.refcount))
+            &event->event.mini_object.refcount))
       goto had_parent;
 
-    GST_EVENT_STRUCTURE (event) = structure;
   }
-  return event;
+  gst_event_init (event, sizeof (GstEventImpl), type);
+
+  GST_EVENT_STRUCTURE (event) = structure;
+
+  return GST_EVENT_CAST (event);
 
   /* ERRORS */
 had_parent:
   {
-    gst_event_unref (event);
+    g_slice_free1 (GST_MINI_OBJECT_SIZE (event), event);
     g_warning ("structure is already owned by another object");
     return NULL;
   }
@@ -484,7 +479,7 @@ gst_event_set_seqnum (GstEvent * event, guint32 seqnum)
 GstEvent *
 gst_event_new_flush_start (void)
 {
-  return gst_event_new (GST_EVENT_FLUSH_START);
+  return gst_event_new_custom (GST_EVENT_FLUSH_START, NULL);
 }
 
 /**
@@ -562,7 +557,7 @@ gst_event_parse_flush_stop (GstEvent * event, gboolean * reset_time)
 GstEvent *
 gst_event_new_eos (void)
 {
-  return gst_event_new (GST_EVENT_EOS);
+  return gst_event_new_custom (GST_EVENT_EOS, NULL);
 }
 
 /**
@@ -1605,5 +1600,5 @@ gst_event_parse_sink_message (GstEvent * event, GstMessage ** msg)
 GstEvent *
 gst_event_new_stream_start (void)
 {
-  return gst_event_new (GST_EVENT_STREAM_START);
+  return gst_event_new_custom (GST_EVENT_STREAM_START, NULL);
 }

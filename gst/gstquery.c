@@ -339,41 +339,25 @@ _gst_query_free (GstQuery * query)
   g_slice_free1 (GST_MINI_OBJECT_SIZE (query), query);
 }
 
-static GstQuery *gst_query_new (GstQueryType type, GstStructure * structure);
-
 static GstQuery *
 _gst_query_copy (GstQuery * query)
 {
   GstQuery *copy;
 
-  copy = gst_query_new (query->type, GST_QUERY_STRUCTURE (query));
+  copy = gst_query_new_custom (query->type, GST_QUERY_STRUCTURE (query));
 
   return copy;
 }
 
-static GstQuery *
-gst_query_new (GstQueryType type, GstStructure * structure)
+static void
+gst_query_init (GstQueryImpl * query, gsize size, GstQueryType type)
 {
-  GstQueryImpl *query;
-
-  query = g_slice_new0 (GstQueryImpl);
-
-  gst_mini_object_init (GST_MINI_OBJECT_CAST (query),
-      _gst_query_type, sizeof (GstQueryImpl));
+  gst_mini_object_init (GST_MINI_OBJECT_CAST (query), _gst_query_type, size);
 
   query->query.mini_object.copy = (GstMiniObjectCopyFunction) _gst_query_copy;
   query->query.mini_object.free = (GstMiniObjectFreeFunction) _gst_query_free;
 
-  GST_DEBUG ("creating new query %p %s", query, gst_query_type_get_name (type));
-
-  GST_QUERY_TYPE (query) = type;
-  query->structure = structure;
-
-  if (structure)
-    gst_structure_set_parent_refcount (structure,
-        &query->query.mini_object.refcount);
-
-  return GST_QUERY_CAST (query);
+  GST_EVENT_TYPE (query) = type;
 }
 
 /**
@@ -398,7 +382,7 @@ gst_query_new_position (GstFormat format)
       GST_QUARK (FORMAT), GST_TYPE_FORMAT, format,
       GST_QUARK (CURRENT), G_TYPE_INT64, G_GINT64_CONSTANT (-1), NULL);
 
-  query = gst_query_new (GST_QUERY_POSITION, structure);
+  query = gst_query_new_custom (GST_QUERY_POSITION, structure);
 
   return query;
 }
@@ -477,7 +461,7 @@ gst_query_new_duration (GstFormat format)
       GST_QUARK (FORMAT), GST_TYPE_FORMAT, format,
       GST_QUARK (DURATION), G_TYPE_INT64, G_GINT64_CONSTANT (-1), NULL);
 
-  query = gst_query_new (GST_QUERY_DURATION, structure);
+  query = gst_query_new_custom (GST_QUERY_DURATION, structure);
 
   return query;
 }
@@ -557,7 +541,7 @@ gst_query_new_latency (void)
       GST_QUARK (MIN_LATENCY), G_TYPE_UINT64, G_GUINT64_CONSTANT (0),
       GST_QUARK (MAX_LATENCY), G_TYPE_UINT64, G_GUINT64_CONSTANT (-1), NULL);
 
-  query = gst_query_new (GST_QUERY_LATENCY, structure);
+  query = gst_query_new_custom (GST_QUERY_LATENCY, structure);
 
   return query;
 }
@@ -647,7 +631,7 @@ gst_query_new_convert (GstFormat src_format, gint64 value,
       GST_QUARK (DEST_FORMAT), GST_TYPE_FORMAT, dest_format,
       GST_QUARK (DEST_VALUE), G_TYPE_INT64, G_GINT64_CONSTANT (-1), NULL);
 
-  query = gst_query_new (GST_QUERY_CONVERT, structure);
+  query = gst_query_new_custom (GST_QUERY_CONVERT, structure);
 
   return query;
 }
@@ -741,7 +725,7 @@ gst_query_new_segment (GstFormat format)
       GST_QUARK (START_VALUE), G_TYPE_INT64, G_GINT64_CONSTANT (-1),
       GST_QUARK (STOP_VALUE), G_TYPE_INT64, G_GINT64_CONSTANT (-1), NULL);
 
-  query = gst_query_new (GST_QUERY_SEGMENT, structure);
+  query = gst_query_new_custom (GST_QUERY_SEGMENT, structure);
 
   return query;
 }
@@ -835,10 +819,31 @@ gst_query_parse_segment (GstQuery * query, gdouble * rate, GstFormat * format,
 GstQuery *
 gst_query_new_custom (GstQueryType type, GstStructure * structure)
 {
-  g_return_val_if_fail (gst_query_type_get_details (type) != NULL, NULL);
-  g_return_val_if_fail (structure != NULL, NULL);
+  GstQueryImpl *query;
 
-  return gst_query_new (type, structure);
+  query = g_slice_new0 (GstQueryImpl);
+
+  GST_DEBUG ("creating new query %p %s", query, gst_query_type_get_name (type));
+
+  if (structure) {
+    /* structure must not have a parent */
+    if (!gst_structure_set_parent_refcount (structure,
+            &query->query.mini_object.refcount))
+      goto had_parent;
+  }
+  gst_query_init (query, sizeof (GstQueryImpl), type);
+
+  GST_QUERY_STRUCTURE (query) = structure;
+
+  return GST_QUERY_CAST (query);
+
+  /* ERRORS */
+had_parent:
+  {
+    g_slice_free1 (GST_MINI_OBJECT_SIZE (query), query);
+    g_warning ("structure is already owned by another object");
+    return NULL;
+  }
 }
 
 /**
@@ -901,7 +906,7 @@ gst_query_new_seeking (GstFormat format)
       GST_QUARK (SEGMENT_START), G_TYPE_INT64, G_GINT64_CONSTANT (-1),
       GST_QUARK (SEGMENT_END), G_TYPE_INT64, G_GINT64_CONSTANT (-1), NULL);
 
-  query = gst_query_new (GST_QUERY_SEEKING, structure);
+  query = gst_query_new_custom (GST_QUERY_SEEKING, structure);
 
   return query;
 }
@@ -1014,7 +1019,7 @@ gst_query_new_formats (void)
   GstStructure *structure;
 
   structure = gst_structure_new_id_empty (GST_QUARK (QUERY_FORMATS));
-  query = gst_query_new (GST_QUERY_FORMATS, structure);
+  query = gst_query_new_custom (GST_QUERY_FORMATS, structure);
 
   return query;
 }
@@ -1193,7 +1198,7 @@ gst_query_new_buffering (GstFormat format)
       GST_QUARK (START_VALUE), G_TYPE_INT64, G_GINT64_CONSTANT (-1),
       GST_QUARK (STOP_VALUE), G_TYPE_INT64, G_GINT64_CONSTANT (-1), NULL);
 
-  query = gst_query_new (GST_QUERY_BUFFERING, structure);
+  query = gst_query_new_custom (GST_QUERY_BUFFERING, structure);
 
   return query;
 }
@@ -1527,7 +1532,7 @@ gst_query_new_uri (void)
   structure = gst_structure_new_id (GST_QUARK (QUERY_URI),
       GST_QUARK (URI), G_TYPE_STRING, NULL, NULL);
 
-  query = gst_query_new (GST_QUERY_URI, structure);
+  query = gst_query_new_custom (GST_QUERY_URI, structure);
 
   return query;
 }
@@ -1606,7 +1611,7 @@ gst_query_new_allocation (GstCaps * caps, gboolean need_pool)
       GST_QUARK (ALIGN), G_TYPE_UINT, 0,
       GST_QUARK (POOL), GST_TYPE_BUFFER_POOL, NULL, NULL);
 
-  query = gst_query_new (GST_QUERY_ALLOCATION, structure);
+  query = gst_query_new_custom (GST_QUERY_ALLOCATION, structure);
 
   return query;
 }
@@ -1913,7 +1918,7 @@ gst_query_new_scheduling (void)
       GST_QUARK (MINSIZE), G_TYPE_INT, 1,
       GST_QUARK (MAXSIZE), G_TYPE_INT, -1,
       GST_QUARK (ALIGN), G_TYPE_INT, 0, NULL);
-  query = gst_query_new (GST_QUERY_SCHEDULING, structure);
+  query = gst_query_new_custom (GST_QUERY_SCHEDULING, structure);
 
   return query;
 }
@@ -2096,7 +2101,7 @@ gst_query_new_accept_caps (GstCaps * caps)
   structure = gst_structure_new_id (GST_QUARK (QUERY_ACCEPT_CAPS),
       GST_QUARK (CAPS), GST_TYPE_CAPS, caps,
       GST_QUARK (RESULT), G_TYPE_BOOLEAN, FALSE, NULL);
-  query = gst_query_new (GST_QUERY_ACCEPT_CAPS, structure);
+  query = gst_query_new_custom (GST_QUERY_ACCEPT_CAPS, structure);
 
   return query;
 }
@@ -2179,7 +2184,7 @@ gst_query_new_caps (GstCaps * filter)
   structure = gst_structure_new_id (GST_QUARK (QUERY_CAPS),
       GST_QUARK (FILTER), GST_TYPE_CAPS, filter,
       GST_QUARK (CAPS), GST_TYPE_CAPS, NULL, NULL);
-  query = gst_query_new (GST_QUERY_CAPS, structure);
+  query = gst_query_new_custom (GST_QUERY_CAPS, structure);
 
   return query;
 }
