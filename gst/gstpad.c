@@ -2658,6 +2658,9 @@ gst_pad_query_accept_caps_default (GstPad * pad, GstQuery * query)
     }
   }
 
+  GST_CAT_DEBUG_OBJECT (GST_CAT_PERFORMANCE, pad,
+      "fallback ACCEPT_CAPS query, consider implementing a specialized version");
+
   allowed = gst_pad_query_caps (pad, NULL);
   gst_query_parse_accept_caps (query, &caps);
 
