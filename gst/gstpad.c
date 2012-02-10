@@ -2817,9 +2817,6 @@ probe_hook_marshal (GHook * hook, ProbeMarshall * data)
   GstPadProbeCallback callback;
   GstPadProbeReturn ret;
 
-  GST_CAT_LOG_OBJECT (GST_CAT_SCHEDULING, pad,
-      "hook %lu, cookie %u checking", hook->hook_id, PROBE_COOKIE (hook));
-
   /* if we have called this callback, do nothing */
   if (PROBE_COOKIE (hook) == data->cookie) {
     GST_CAT_LOG_OBJECT (GST_CAT_SCHEDULING, pad,
@@ -2849,7 +2846,8 @@ probe_hook_marshal (GHook * hook, ProbeMarshall * data)
     goto no_match;
 
   GST_CAT_LOG_OBJECT (GST_CAT_SCHEDULING, pad,
-      "hook %lu with flags 0x%08x matches", hook->hook_id, flags);
+      "hook %lu, cookie %u with flags 0x%08x matches", hook->hook_id,
+      PROBE_COOKIE (hook), flags);
 
   callback = (GstPadProbeCallback) hook->func;
   if (callback == NULL)
@@ -2891,8 +2889,8 @@ probe_hook_marshal (GHook * hook, ProbeMarshall * data)
 no_match:
   {
     GST_CAT_LOG_OBJECT (GST_CAT_SCHEDULING, pad,
-        "hook %lu with flags 0x%08x does not match %08x", hook->hook_id,
-        flags, info->type);
+        "hook %lu, cookie %u with flags 0x%08x does not match %08x",
+        hook->hook_id, PROBE_COOKIE (hook), flags, info->type);
     return;
   }
 }
