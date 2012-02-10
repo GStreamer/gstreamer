@@ -108,8 +108,6 @@ The EOS event can only be sent on a sinkpad. It is typically emited by the
 source element when it has finished sending data. This event is mainly sent
 in the streaming thread but can also be sent from the application thread.
 
-An EOS event sent on a srcpad returns GST_FLOW_EOS.
-
 The downstream element should forward the EOS event to its downstream peer
 elements. This way the event will eventually reach the sinks which should
 then post an EOS message on the bus when in PLAYING.
