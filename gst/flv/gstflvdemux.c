@@ -3064,7 +3064,7 @@ gst_flv_demux_query (GstPad * pad, GstObject * parent, GstQuery * query)
     }
     case GST_QUERY_LATENCY:
     default:
-      res = gst_pad_peer_query (demux->sinkpad, query);
+      res = gst_pad_query_default (pad, parent, query);
       break;
   }
 
