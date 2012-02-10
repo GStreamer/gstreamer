@@ -1976,6 +1976,7 @@ static GstFlowReturn
 gst_x264_enc_encode_frame (GstX264Enc * encoder, x264_picture_t * pic_in,
     int *i_nal, gboolean send)
 {
+  GstFlowReturn ret;
   GstBuffer *out_buf = NULL, *in_buf = NULL;
   x264_picture_t pic_out;
   x264_nal_t *nal;
