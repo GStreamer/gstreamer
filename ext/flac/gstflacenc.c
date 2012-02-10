@@ -839,7 +839,6 @@ gst_flac_enc_seek_callback (const FLAC__StreamEncoder * encoder,
     FLAC__uint64 absolute_byte_offset, void *client_data)
 {
   GstFlacEnc *flacenc;
-  GstEvent *event;
   GstPad *peerpad;
   GstSegment seg;
 
@@ -848,15 +847,17 @@ gst_flac_enc_seek_callback (const FLAC__StreamEncoder * encoder,
   if (flacenc->stopped)
     return FLAC__STREAM_ENCODER_SEEK_STATUS_OK;
 
-  gst_segment_init (&seg, GST_FORMAT_BYTES);
-  seg.start = absolute_byte_offset;
-  seg.stop = GST_BUFFER_OFFSET_NONE;
-  seg.time = 0;
-  event = gst_event_new_segment (&seg);
-
   if ((peerpad = gst_pad_get_peer (GST_AUDIO_ENCODER_SRC_PAD (flacenc)))) {
-    gboolean ret = gst_pad_send_event (peerpad, event);
+    GstEvent *event;
+    gboolean ret;
 
+    gst_segment_init (&seg, GST_FORMAT_BYTES);
+    seg.start = absolute_byte_offset;
+    seg.stop = GST_BUFFER_OFFSET_NONE;
+    seg.time = 0;
+    event = gst_event_new_segment (&seg);
+
+    ret = gst_pad_send_event (peerpad, event);
     gst_object_unref (peerpad);
 
     if (ret) {

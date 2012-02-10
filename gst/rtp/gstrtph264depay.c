@@ -46,10 +46,13 @@ enum
 static const guint8 sync_bytes[] = { 0, 0, 0, 1 };
 
 static GstStaticPadTemplate gst_rtp_h264_depay_src_template =
-GST_STATIC_PAD_TEMPLATE ("src",
+    GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS ("video/x-h264")
+    GST_STATIC_CAPS ("video/x-h264, "
+        "stream-format = (string) avc, alignment = (string) au; "
+        "video/x-h264, "
+        "stream-format = (string) byte-stream, alignment = (string) { nal, au }")
     );
 
 static GstStaticPadTemplate gst_rtp_h264_depay_sink_template =
@@ -735,8 +738,9 @@ gst_rtp_h264_depay_process (GstRTPBaseDepayload * depayload, GstBuffer * buf)
            */
           nalu_size = (payload[0] << 8) | payload[1];
 
-          if (nalu_size > payload_len)
-            nalu_size = payload_len;
+          /* dont include nalu_size */
+          if (nalu_size > (payload_len - 2))
+            nalu_size = payload_len - 2;
 
           outsize = nalu_size + sizeof (sync_bytes);
           outbuf = gst_buffer_new_and_alloc (outsize);

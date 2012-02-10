@@ -124,6 +124,8 @@ gst_rtp_mp2t_pay_flush (GstRTPMP2TPay * rtpmp2tpay)
   GstRTPBuffer rtp = { NULL };
 
   avail = gst_adapter_available (rtpmp2tpay->adapter);
+  if (avail == 0)
+    return GST_FLOW_OK;
   outbuf = gst_rtp_buffer_new_allocate (avail, 0, 0);
 
   /* get payload */

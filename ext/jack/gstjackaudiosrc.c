@@ -217,18 +217,6 @@ jack_process_cb (jack_nframes_t nframes, void *arg)
 
   channels = GST_AUDIO_INFO_CHANNELS (&buf->spec.info);
 
-  /* handle transport state requisitions */
-  if (src->transport == GST_JACK_TRANSPORT_SLAVE) {
-    GstState state = gst_jack_audio_client_get_transport_state (src->client);
-
-    if ((state != GST_STATE_VOID_PENDING) && (GST_STATE (src) != state)) {
-      GST_DEBUG_OBJECT (src, "requesting state change: %s",
-          gst_element_state_get_name (state));
-      gst_element_post_message (GST_ELEMENT (src),
-          gst_message_new_request_state (GST_OBJECT (src), state));
-    }
-  }
-
   /* get input buffers */
   for (i = 0; i < channels; i++)
     src->buffers[i] =

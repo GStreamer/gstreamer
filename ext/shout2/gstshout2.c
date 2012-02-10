@@ -1,6 +1,7 @@
 /* GStreamer
  * Copyright (C) <1999> Erik Walthinsen <omega@cse.ogi.edu>
  * Copyright (C) <2006> Tim-Philipp Müller <tim centricular net>
+ * Copyright (C) <2012> Ralph Giles <giles@mozilla.com>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -70,12 +71,17 @@ enum
 
 static GstElementClass *parent_class = NULL;
 
+#ifdef SHOUT_FORMAT_WEBM
+#define WEBM_CAPS "; video/webm"
+#else
+#define WEBM_CAPS ""
+#endif
 static GstStaticPadTemplate sink_template = GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS ("application/ogg; "
-        "audio/mpeg, mpegversion = (int) 1, layer = (int) [ 1, 3 ]")
-    );
+        "audio/mpeg, mpegversion = (int) 1, layer = (int) [ 1, 3 ]" WEBM_CAPS));
+
 static void gst_shout2send_class_init (GstShout2sendClass * klass);
 static void gst_shout2send_base_init (GstShout2sendClass * klass);
 static void gst_shout2send_init (GstShout2send * shout2send);
@@ -162,6 +168,7 @@ gst_shout2send_base_init (GstShout2sendClass * klass)
 
   gst_element_class_add_pad_template (element_class,
       gst_static_pad_template_get (&sink_template));
+
   gst_element_class_set_details_simple (element_class, "Icecast network sink",
       "Sink/Network", "Sends data to an icecast server",
       "Wim Taymans <wim.taymans@chello.be>, "
@@ -538,9 +545,14 @@ set_failed:
 static gboolean
 gst_shout2send_connect (GstShout2send * sink)
 {
-  GST_DEBUG_OBJECT (sink, "Connection format is: %s",
+  const char *format =
       (sink->audio_format == SHOUT_FORMAT_VORBIS) ? "vorbis" :
-      ((sink->audio_format == SHOUT_FORMAT_MP3) ? "mp3" : "unknown"));
+      ((sink->audio_format == SHOUT_FORMAT_MP3) ? "mp3" : "unknown");
+#ifdef SHOUT_FORMAT_WEBM
+  if (sink->audio_format == SHOUT_FORMAT_WEBM)
+    format = "webm";
+#endif
+  GST_DEBUG_OBJECT (sink, "Connection format is: %s", format);
 
   if (shout_set_format (sink->conn, sink->audio_format) != SHOUTERR_SUCCESS)
     goto could_not_set_format;
@@ -810,6 +822,10 @@ gst_shout2send_setcaps (GstPad * pad, GstCaps * caps)
     shout2send->audio_format = SHOUT_FORMAT_MP3;
   } else if (!strcmp (mimetype, "application/ogg")) {
     shout2send->audio_format = SHOUT_FORMAT_VORBIS;
+#ifdef SHOUT_FORMAT_WEBM
+  } else if (!strcmp (mimetype, "video/webm")) {
+    shout2send->audio_format = SHOUT_FORMAT_WEBM;
+#endif
   } else {
     ret = FALSE;
   }

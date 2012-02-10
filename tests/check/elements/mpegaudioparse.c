@@ -41,8 +41,6 @@ GstStaticPadTemplate srctemplate = GST_STATIC_PAD_TEMPLATE ("src",
     GST_STATIC_CAPS (SRC_CAPS_TMPL)
     );
 
-const gchar *factory = "aacparse";
-
 /* some data */
 static guint8 mp3_frame[384] = {
   0xff, 0xfb, 0x94, 0xc4, 0xff, 0x83, 0xc0, 0x00,

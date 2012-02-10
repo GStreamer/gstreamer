@@ -3549,10 +3549,12 @@ gst_matroska_demux_parse_blockgroup_or_simpleblock (GstMatroskaDemux * demux,
           demux->common.segment.duration =
               last_stop_end - demux->stream_start_time;
           GST_OBJECT_UNLOCK (demux);
-          gst_element_post_message (GST_ELEMENT_CAST (demux),
-              gst_message_new_duration (GST_OBJECT_CAST (demux),
-                  GST_FORMAT_TIME, GST_CLOCK_TIME_NONE));
-          demux->invalid_duration = TRUE;
+          if (!demux->invalid_duration) {
+            gst_element_post_message (GST_ELEMENT_CAST (demux),
+                gst_message_new_duration (GST_OBJECT_CAST (demux),
+                    GST_FORMAT_TIME, GST_CLOCK_TIME_NONE));
+            demux->invalid_duration = TRUE;
+          }
         } else {
           GST_OBJECT_UNLOCK (demux);
         }
