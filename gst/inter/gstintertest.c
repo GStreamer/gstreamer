@@ -29,6 +29,7 @@
 #endif
 
 #include <gst/gst.h>
+#include <gst/glib-compat-private.h>
 #include <stdlib.h>
 
 //#define GETTEXT_PACKAGE "intertest"
@@ -80,8 +81,10 @@ main (int argc, char *argv[])
   GstInterTest *intertest2;
   GMainLoop *main_loop;
 
+#if !GLIB_CHECK_VERSION (2, 31, 0)
   if (!g_thread_supported ())
     g_thread_init (NULL);
+#endif
 
   context = g_option_context_new ("- FIXME");
   g_option_context_add_main_entries (context, entries, GETTEXT_PACKAGE);

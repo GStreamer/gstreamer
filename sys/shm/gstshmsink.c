@@ -27,6 +27,7 @@
 #include "gstshmsink.h"
 
 #include <gst/gst.h>
+#include <gst/glib-compat-private.h>
 
 #include <string.h>
 
@@ -512,11 +513,14 @@ pollthread_func (gpointer data)
 {
   GstShmSink *self = GST_SHM_SINK (data);
   GList *item;
+  GstClockTime timeout = GST_CLOCK_TIME_NONE;
 
   while (!self->stop) {
 
-    if (gst_poll_wait (self->poll, GST_CLOCK_TIME_NONE) < 0)
+    if (gst_poll_wait (self->poll, timeout) < 0)
       return NULL;
+
+    timeout = GST_CLOCK_TIME_NONE;
 
     if (self->stop)
       return NULL;
@@ -561,6 +565,7 @@ pollthread_func (gpointer data)
          functions on that new descriptor, so restart the loop, so _wait
          will have been called on all elements of self->poll, whether
          they have just been added or not. */
+      timeout = 0;
       continue;
     }
 

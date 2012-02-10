@@ -19,6 +19,7 @@
 #include "config.h"
 #endif
 
+#include <gst/glib-compat-private.h>
 #include <gtk/gtk.h>
 #include <glib/gprintf.h>
 #include <math.h>

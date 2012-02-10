@@ -271,18 +271,24 @@ gst_schro_enc_set_format (GstBaseVideoEncoder * base_video_encoder,
   switch (state->format) {
     case GST_VIDEO_FORMAT_I420:
     case GST_VIDEO_FORMAT_YV12:
+#if SCHRO_CHECK_VERSION(1,0,11)
     case GST_VIDEO_FORMAT_Y42B:
+#endif
       schro_enc->video_format->chroma_format = SCHRO_CHROMA_420;
       break;
     case GST_VIDEO_FORMAT_YUY2:
     case GST_VIDEO_FORMAT_UYVY:
+#if SCHRO_CHECK_VERSION(1,0,11)
     case GST_VIDEO_FORMAT_v216:
     case GST_VIDEO_FORMAT_v210:
+#endif
       schro_enc->video_format->chroma_format = SCHRO_CHROMA_422;
       break;
     case GST_VIDEO_FORMAT_AYUV:
+#if SCHRO_CHECK_VERSION(1,0,11)
     case GST_VIDEO_FORMAT_Y444:
     case GST_VIDEO_FORMAT_AYUV64:
+#endif
       schro_enc->video_format->chroma_format = SCHRO_CHROMA_444;
       break;
     case GST_VIDEO_FORMAT_ARGB:
@@ -305,10 +311,13 @@ gst_schro_enc_set_format (GstBaseVideoEncoder * base_video_encoder,
   schro_enc->video_format->aspect_ratio_numerator = state->par_n;
   schro_enc->video_format->aspect_ratio_denominator = state->par_d;
 
+#if SCHRO_CHECK_VERSION(1,0,11)
   switch (state->format) {
     default:
+#endif
       schro_video_format_set_std_signal_range (schro_enc->video_format,
           SCHRO_SIGNAL_RANGE_8BIT_VIDEO);
+#if SCHRO_CHECK_VERSION(1,0,11)
       break;
     case GST_VIDEO_FORMAT_v210:
       schro_video_format_set_std_signal_range (schro_enc->video_format,
@@ -322,6 +331,7 @@ gst_schro_enc_set_format (GstBaseVideoEncoder * base_video_encoder,
       schro_enc->video_format->chroma_excursion = 224 << 8;
       break;
   }
+#endif
 
   schro_video_format_set_std_colour_spec (schro_enc->video_format,
       SCHRO_COLOUR_SPEC_HDTV);

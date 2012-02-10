@@ -57,6 +57,7 @@
 #include "config.h"
 #endif
 
+#include <gst/glib-compat-private.h>
 #include "gstmpeg2enc.hh"
 
 GST_DEBUG_CATEGORY (mpeg2enc_debug);

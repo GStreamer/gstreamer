@@ -46,6 +46,10 @@
 #include "config.h"
 #endif
 
+/* FIXME 0.11: suppress warnings for deprecated API such as GStaticRecMutex
+ * with newer GLib versions (>= 2.31.0) */
+#define GLIB_DISABLE_DEPRECATION_WARNINGS
+
 #include <string.h>
 
 #include "gstmpegdefs.h"
@@ -114,8 +118,8 @@ static GstStaticPadTemplate audio_template =
     GST_STATIC_PAD_TEMPLATE ("audio_%02x",
     GST_PAD_SRC,
     GST_PAD_SOMETIMES,
-    GST_STATIC_CAPS ("audio/mpeg, "
-        "mpegversion = (int) { 1, 4 };"
+    GST_STATIC_CAPS ("audio/mpeg, mpegversion = (int) 1;"
+        "audio/mpeg, mpegversion = (int) 4, stream-format = (string) { adts, loas };"
         "audio/x-private1-lpcm; "
         "audio/x-private1-ac3;" "audio/x-private1-dts;" "audio/ac3")
     );

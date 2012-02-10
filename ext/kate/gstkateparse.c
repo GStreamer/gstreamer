@@ -189,7 +189,8 @@ gst_kate_parse_push_headers (GstKateParse * parse)
     kate_packet_wrap (&packet, size, data);
     ret = kate_decode_headerin (&parse->ki, &parse->kc, &packet);
     if (G_UNLIKELY (ret < 0)) {
-      GST_WARNING_OBJECT (parse, "kate_decode_headerin returned %d", ret);
+      GST_WARNING_OBJECT (parse, "Failed to decode header: %s",
+          gst_kate_util_get_error_message (ret));
     }
     gst_buffer_unmap (outbuf, data, size);
     /* takes ownership of outbuf, which was previously in parse->streamheader */

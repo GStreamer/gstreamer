@@ -88,6 +88,10 @@
 #include <stdio.h>
 #include <string.h>
 
+/* FIXME 0.11: suppress warnings for deprecated API such as GStaticRecMutex
+ * with newer GLib versions (>= 2.31.0) */
+#define GLIB_DISABLE_DEPRECATION_WARNINGS
+
 #include <gst/video/video.h>
 
 #include "mpegtsmux.h"
@@ -117,7 +121,9 @@ static GstStaticPadTemplate mpegtsmux_sink_factory =
         "video/x-dirac;"
         "video/x-h264,stream-format=(string)byte-stream;"
         "audio/mpeg, "
-        "mpegversion = (int) { 1, 2, 4 };"
+        "mpegversion = (int) { 1, 2 };"
+        "audio/mpeg, "
+        "mpegversion = (int) 4, stream-format = (string) { raw, adts };"
         "audio/x-lpcm, "
         "width = (int) { 16, 20, 24 }, "
         "rate = (int) { 48000, 96000 }, "
@@ -659,27 +665,6 @@ mpegtsmux_choose_best_stream (MpegTsMux * mux)
 
 #define COLLECT_DATA_PAD(collect_data) (((GstCollectData2 *)(collect_data))->pad)
 
-static MpegTsPadData *
-find_pad_data (MpegTsMux * mux, GstPad * pad)
-{
-  GSList *walk;
-  MpegTsPadData *ts_data = NULL;
-
-  GST_COLLECT_PADS2_STREAM_LOCK (mux->collect);
-  walk = mux->collect->pad_list;
-  while (walk) {
-    if (((GstCollectData2 *) walk->data)->pad == pad) {
-      ts_data = (MpegTsPadData *) walk->data;
-      break;
-    }
-
-    walk = g_slist_next (walk);
-  }
-  GST_COLLECT_PADS2_STREAM_UNLOCK (mux->collect);
-
-  return ts_data;
-}
-
 static gboolean
 mpegtsmux_sink_event (GstPad * pad, GstEvent * event)
 {
@@ -688,7 +673,7 @@ mpegtsmux_sink_event (GstPad * pad, GstEvent * event)
   gboolean res = TRUE;
   gboolean forward = TRUE;
 
-  ts_data = find_pad_data (mux, pad);
+  ts_data = (MpegTsPadData *) gst_pad_get_element_private (pad);
 
   switch (GST_EVENT_TYPE (event)) {
     case GST_EVENT_CUSTOM_DOWNSTREAM:

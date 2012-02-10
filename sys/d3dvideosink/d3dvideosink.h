@@ -83,8 +83,9 @@ struct _GstD3DVideoSink
   gboolean is_hooked;
 
   GMutex *d3d_swap_chain_lock;
-  LPDIRECT3DSWAPCHAIN9 d3d_swap_chain;
   LPDIRECT3DSURFACE9 d3d_offscreen_surface;
+  LPDIRECT3DDEVICE9 d3ddev;
+  D3DPRESENT_PARAMETERS d3dpp;
 
   D3DFORMAT d3dformat;
   D3DFORMAT d3dfourcc;

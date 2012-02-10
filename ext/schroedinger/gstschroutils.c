@@ -72,6 +72,7 @@ gst_schro_buffer_wrap (GstBuffer * buf, GstVideoFormat format, int width,
       frame =
           schro_frame_new_from_data_AYUV (GST_BUFFER_DATA (buf), width, height);
       break;
+#if SCHRO_CHECK_VERSION(1,0,11)
     case GST_VIDEO_FORMAT_Y42B:
       frame =
           schro_frame_new_from_data_Y42B (GST_BUFFER_DATA (buf), width, height);
@@ -88,8 +89,6 @@ gst_schro_buffer_wrap (GstBuffer * buf, GstVideoFormat format, int width,
       frame =
           schro_frame_new_from_data_v216 (GST_BUFFER_DATA (buf), width, height);
       break;
-#ifdef SCHRO_FRAME_FORMAT_AY64
-      /* Added in 1.0.11 */
     case GST_VIDEO_FORMAT_AYUV64:
       frame =
           schro_frame_new_from_data_AY64 (GST_BUFFER_DATA (buf), width, height);

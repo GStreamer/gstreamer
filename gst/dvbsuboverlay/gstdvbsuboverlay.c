@@ -38,6 +38,7 @@
 #  include <config.h>
 #endif
 
+#include <gst/glib-compat-private.h>
 #include "gstdvbsuboverlay.h"
 
 #include <string.h>

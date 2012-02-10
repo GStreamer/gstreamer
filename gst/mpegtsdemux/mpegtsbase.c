@@ -32,6 +32,10 @@
 #include "config.h"
 #endif
 
+/* FIXME 0.11: suppress warnings for deprecated API such as GStaticRecMutex
+ * with newer GLib versions (>= 2.31.0) */
+#define GLIB_DISABLE_DEPRECATION_WARNINGS
+
 #include <stdlib.h>
 #include <string.h>
 
@@ -174,6 +178,7 @@ mpegts_base_class_init (MpegTSBaseClass * klass)
 
   element_class = GST_ELEMENT_CLASS (klass);
   element_class->change_state = mpegts_base_change_state;
+
   gst_element_class_add_pad_template (element_class,
       gst_static_pad_template_get (&sink_template));
 

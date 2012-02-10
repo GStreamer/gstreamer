@@ -166,6 +166,8 @@ gst_voaacenc_class_init (GstVoAacEncClass * klass)
 
   gst_element_class_set_details_simple (element_class, "AAC audio encoder",
       "Codec/Encoder/Audio", "AAC audio encoder", "Kan Hu <kan.hu@linaro.org>");
+
+  GST_DEBUG_CATEGORY_INIT (gst_voaacenc_debug, "voaacenc", 0, "voaac encoder");
 }
 
 static void

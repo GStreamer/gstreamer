@@ -22,14 +22,15 @@ noinst_HEADERS = \
 	gstintersurface.h
 
 libgstinter_la_CFLAGS = \
-	$(GST_CFLAGS) \
+	$(GST_PLUGINS_BAD_CFLAGS) \
 	$(GST_PLUGINS_BASE_CFLAGS) \
-	$(GST_BASE_CFLAGS)
+	$(GST_BASE_CFLAGS) \
+	$(GST_CFLAGS)
 
 libgstinter_la_LIBADD = \
-	$(GST_LIBS) \
-	$(GST_BASE_LIBS) \
 	$(GST_PLUGINS_BASE_LIBS) -lgstvideo-@GST_MAJORMINOR@ -lgstaudio-@GST_MAJORMINOR@ \
+	$(GST_BASE_LIBS) \
+	$(GST_LIBS) \
 	$(LIBM)
 
 libgstinter_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
@@ -39,12 +40,13 @@ gstintertest_SOURCES = \
 	gstintertest.c
 
 gstintertest_CFLAGS = \
-	$(GST_CFLAGS) \
-	$(GST_PLUGINS_BASE_CFLAGS)
+	$(GST_PLUGINS_BAD_CFLAGS) \
+	$(GST_PLUGINS_BASE_CFLAGS) \
+	$(GST_CFLAGS)
 
 gstintertest_LDADD = \
-	$(GST_LIBS) \
 	$(GST_PLUGINS_BASE_LIBS) \
+	$(GST_LIBS) \
 	$(LIBM)
 
 Android.mk: Makefile.am $(BUILT_SOURCES)

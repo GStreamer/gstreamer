@@ -98,6 +98,8 @@ extern gboolean gst_kate_decoder_base_sink_query (GstKateDecoderBase * decoder,
     GstElement * element, GstPad * pad, GstQuery * query);
 extern gboolean
 gst_kate_util_decoder_base_queue_event (GstKateDecoderBase * decoder, GstEvent * event, gboolean (*handler)(GstPad *, GstEvent *), GstPad * pad);
+extern const char *
+gst_kate_util_get_error_message (int ret);
 
 G_END_DECLS
 #endif /* __GST_KATE_UTIL_H__ */

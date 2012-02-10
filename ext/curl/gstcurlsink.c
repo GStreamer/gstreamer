@@ -57,6 +57,8 @@
 
 #include "gstcurlsink.h"
 
+#include "gst/glib-compat-private.h"
+
 /* Default values */
 #define GST_CAT_DEFAULT                gst_curl_sink_debug
 #define DEFAULT_URL                    "localhost:5555"

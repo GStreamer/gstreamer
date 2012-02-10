@@ -44,6 +44,7 @@
 
 #include "liveadder.h"
 
+#include <gst/glib-compat-private.h>
 #include <gst/audio/audio.h>
 
 #include <string.h>

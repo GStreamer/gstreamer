@@ -18,7 +18,7 @@ libgstgsettingselements_la_SOURCES = \
         gstswitchsrc.c \
 	plugin.c
 
-libgstgsettingselements_la_CFLAGS = $(GST_CFLAGS) $(GSETTINGS_CFLAGS) $(DIR_CFLAGS) \
+libgstgsettingselements_la_CFLAGS = $(GST_PLUGINS_BAD_CFLAGS) $(GST_CFLAGS) $(GSETTINGS_CFLAGS) $(DIR_CFLAGS) \
 	-DGstSwitchSrc=GstGSettingsSwitchSrc \
 	-DGstSwitchSrcClass=GstGSettingsSwitchSrcClass \
 	-DGstSwitchSink=GstGSettingsSwitchSink \

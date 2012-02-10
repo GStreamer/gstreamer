@@ -134,7 +134,7 @@ gst_rotate_base_init (gpointer gclass)
   gst_element_class_set_details_simple (element_class,
       "rotate",
       "Transform/Effect/Video",
-      "Warps the picture into an arc shaped form",
+      "Rotates the picture by an arbitrary angle",
       "Thiago Santos<thiago.sousa.santos@collabora.co.uk>");
 }
 
@@ -154,7 +154,7 @@ rotate_map (GstGeometricTransform * gt, gint x, gint y, gdouble * in_x,
   h = gt->height;
 
   /* our parameters */
-  ar = rotate->angle * G_PI / 180.0;    /* angle of rotation, degrees to radians */
+  ar = rotate->angle;           /* angle of rotation */
 
   /* get in and out centers */
   cox = 0.5 * w;

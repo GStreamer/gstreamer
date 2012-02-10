@@ -24,6 +24,7 @@
 #include <string.h>
 
 #include <gst/gst.h>
+#include <gst/glib-compat-private.h>
 #include <gst/pbutils/missing-plugins.h>
 
 #include "resindvdbin.h"
