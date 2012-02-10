@@ -4536,6 +4536,19 @@ gst_base_sink_default_query (GstBaseSink * basesink, GstQuery * query)
       res = TRUE;
       break;
     }
+    case GST_QUERY_ACCEPT_CAPS:
+    {
+      GstCaps *caps, *allowed;
+      gboolean subset;
+
+      /* slightly faster than the default implementation */
+      gst_query_parse_accept_caps (query, &caps);
+      allowed = gst_base_sink_query_caps (basesink, basesink->sinkpad, NULL);
+      subset = gst_caps_is_subset (caps, allowed);
+      gst_query_set_accept_caps_result (query, subset);
+      res = TRUE;
+      break;
+    }
     default:
       res =
           gst_pad_query_default (basesink->sinkpad, GST_OBJECT_CAST (basesink),
