@@ -265,8 +265,8 @@ ges_timeline_pipeline_change_state (GstElement * element,
         ret = GST_STATE_CHANGE_FAILURE;
         goto done;
       }
-      if (self->
-          priv->mode & (TIMELINE_MODE_RENDER | TIMELINE_MODE_SMART_RENDER))
+      if (self->priv->
+          mode & (TIMELINE_MODE_RENDER | TIMELINE_MODE_SMART_RENDER))
         GST_DEBUG ("rendering => Updating pipeline caps");
       if (!ges_timeline_pipeline_update_caps (self)) {
         GST_ERROR_OBJECT (element, "Error setting the caps for rendering");
@@ -809,7 +809,7 @@ ges_timeline_pipeline_get_thumbnail (GESTimelinePipeline * self, GstCaps * caps)
  * 
  * Returns: %TRUE if the thumbnail was properly save, else %FALSE.
  */
-
+/* FIXME 0.11: save_thumbnail should have a GError parameter */
 gboolean
 ges_timeline_pipeline_save_thumbnail (GESTimelinePipeline * self, int width, int
     height, const gchar * format, const gchar * location)
@@ -817,7 +817,6 @@ ges_timeline_pipeline_save_thumbnail (GESTimelinePipeline * self, int width, int
   GstMapInfo map_info;
   GstBuffer *b;
   GstSample *sample;
-  FILE *fp;
   GstCaps *caps;
   gboolean res = TRUE;
 
@@ -836,12 +835,14 @@ ges_timeline_pipeline_save_thumbnail (GESTimelinePipeline * self, int width, int
 
   b = gst_sample_get_buffer (sample);
   if (gst_buffer_map (b, &map_info, GST_MAP_READ)) {
-    /* FIXME : Use standard glib methods */
-    fp = fopen (location, "w+");
-    if (!fwrite (map_info.data, map_info.size, 1, fp) || ferror (fp)) {
+    GError *err = NULL;
+
+    if (!g_file_set_contents (location, (const char *) map_info.data,
+            map_info.size, &err)) {
+      GST_WARNING ("Could not save thumbnail: %s", err->message);
+      g_error_free (err);
       res = FALSE;
     }
-    fclose (fp);
   }
 
   gst_caps_unref (caps);
