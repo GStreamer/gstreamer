@@ -355,7 +355,7 @@ gst_h264_parse_negotiate (GstH264Parse * h264parse, GstCaps * in_caps)
 
   if (caps) {
     /* fixate to avoid ambiguity with lists when parsing */
-    gst_pad_fixate_caps (GST_BASE_PARSE_SRC_PAD (h264parse), caps);
+    gst_caps_fixate (caps);
     gst_h264_parse_format_from_caps (caps, &format, &align);
     gst_caps_unref (caps);
   }
@@ -1914,13 +1914,13 @@ gst_h264_parse_chain (GstPad * pad, GstObject * parent, GstBuffer * buffer)
         GST_BUFFER_TIMESTAMP (sub) = GST_BUFFER_TIMESTAMP (buffer);
         /* transfer flags (e.g. DISCONT) for first fragment */
         if (nalu.offset <= nl)
-          gst_buffer_copy_metadata (sub, buffer, GST_BUFFER_COPY_FLAGS);
+          gst_buffer_copy_into (sub, buffer, GST_BUFFER_COPY_FLAGS, 0, -1);
         /* in reverse playback, baseparse gathers buffers, so we cannot
          * guarantee a buffer to contain a single whole NALU */
         h264parse->packetized_chunked =
             (GST_BASE_PARSE (h264parse)->segment.rate > 0.0);
         h264parse->packetized_last =
-            (nalu.offset + nalu.size + nl >= GST_BUFFER_SIZE (buffer));
+            (nalu.offset + nalu.size + nl >= gst_buffer_get_size (buffer));
         GST_LOG_OBJECT (h264parse, "pushing NAL of size %d, last = %d",
             nalu.size, h264parse->packetized_last);
         ret = h264parse->parse_chain (pad, parent, sub);
