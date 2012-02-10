@@ -149,7 +149,7 @@ GST_START_TEST (test_gsl_move_simple)
   timeline = ges_timeline_new ();
   layer = (GESTimelineLayer *) ges_simple_timeline_layer_new ();
   fail_unless (ges_timeline_add_layer (timeline, layer));
-  track = ges_track_new (GES_TRACK_TYPE_CUSTOM, GST_CAPS_ANY);
+  track = ges_track_new (GES_TRACK_TYPE_CUSTOM, gst_caps_new_any ());
   fail_unless (ges_timeline_add_track (timeline, track));
   g_signal_connect (G_OBJECT (layer), "object-moved", G_CALLBACK
       (object_moved_cb), &info);
@@ -260,10 +260,10 @@ GST_START_TEST (test_gsl_with_transitions)
   fail_unless (ges_timeline_add_layer (timeline, layer));
   ges_timeline_layer_set_priority (layer, 0);
 
-  track = ges_track_new (GES_TRACK_TYPE_VIDEO, GST_CAPS_ANY);
+  track = ges_track_new (GES_TRACK_TYPE_VIDEO, gst_caps_new_any ());
   fail_unless (ges_timeline_add_track (timeline, track));
 
-  track = ges_track_new (GES_TRACK_TYPE_AUDIO, GST_CAPS_ANY);
+  track = ges_track_new (GES_TRACK_TYPE_AUDIO, gst_caps_new_any ());
   fail_unless (ges_timeline_add_track (timeline, track));
 
 
