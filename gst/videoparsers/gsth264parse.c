@@ -177,11 +177,7 @@ gst_h264_parse_reset_frame (GstH264Parse * h264parse)
   GST_DEBUG_OBJECT (h264parse, "reset frame");
 
   /* done parsing; reset state */
-  h264parse->nalu.valid = FALSE;
-  h264parse->nalu.offset = 0;
-  h264parse->nalu.sc_offset = 0;
-  h264parse->nalu.size = 0;
-  h264parse->current_off = 0;
+  h264parse->current_off = -1;
 
   h264parse->picture_start = FALSE;
   h264parse->update_caps = FALSE;
@@ -656,10 +652,12 @@ gst_h264_parse_check_valid_frame (GstBaseParse * parse,
   GstH264Parse *h264parse = GST_H264_PARSE (parse);
   GstBuffer *buffer = frame->buffer;
   guint8 *data;
-  guint size, current_off = 0;
-  gboolean drain;
+  guint size;
+  gint current_off = 0;
+  gboolean drain, nonext;
   GstH264NalParser *nalparser = h264parse->nalparser;
   GstH264NalUnit nalu;
+  GstH264ParserResult pres;
 
   /* expect at least 3 bytes startcode == sc, and 2 bytes NALU payload */
   if (G_UNLIKELY (GST_BUFFER_SIZE (buffer) < 5))
@@ -681,16 +679,38 @@ gst_h264_parse_check_valid_frame (GstBaseParse * parse,
   data = GST_BUFFER_DATA (buffer);
   size = GST_BUFFER_SIZE (buffer);
 
-  drain = FALSE;
-  nalu = h264parse->nalu;
+  drain = GST_BASE_PARSE_DRAINING (parse);
+  nonext = FALSE;
+
   current_off = h264parse->current_off;
-
+  if (current_off < 0)
+    current_off = 0;
   g_assert (current_off < size);
+  GST_DEBUG_OBJECT (h264parse, "last parse position %d", current_off);
 
-  GST_DEBUG_OBJECT (h264parse, "last parse position %u", current_off);
+  /* check for initial skip */
+  if (h264parse->current_off == -1) {
+    pres =
+        gst_h264_parser_identify_nalu_unchecked (nalparser, data, current_off,
+        size, &nalu);
+    switch (pres) {
+      case GST_H264_PARSER_OK:
+        if (nalu.sc_offset > 0) {
+          *skipsize = nalu.sc_offset;
+          goto skip;
+        }
+        break;
+      case GST_H264_PARSER_NO_NAL:
+        *skipsize = size - 3;
+        goto skip;
+        break;
+      default:
+        g_assert_not_reached ();
+        break;
+    }
+  }
+
   while (TRUE) {
-    GstH264ParserResult pres;
-
     if (h264parse->packetized_chunked)
       pres =
           gst_h264_parser_identify_nalu_unchecked (nalparser, data, current_off,
@@ -702,99 +722,85 @@ gst_h264_parse_check_valid_frame (GstBaseParse * parse,
 
     switch (pres) {
       case GST_H264_PARSER_OK:
-        GST_DEBUG_OBJECT (h264parse, "complete nal found. "
-            "current offset: %u, Nal offset: %u, Nal Size: %u",
-            current_off, nalu.offset, nalu.size);
-
-        GST_DEBUG_OBJECT (h264parse, "current off. %u",
-            nalu.offset + nalu.size);
-
-        if (!h264parse->nalu.size && !h264parse->nalu.valid)
-          h264parse->nalu = nalu;
-
-        /* need 2 bytes of next nal */
-        if (!h264parse->packetized_chunked &&
-            (nalu.offset + nalu.size + 4 + 2 > size)) {
-          if (GST_BASE_PARSE_DRAINING (parse)) {
-            drain = TRUE;
-          } else {
-            GST_DEBUG_OBJECT (h264parse, "need more bytes of next nal");
-            current_off = nalu.sc_offset;
-            goto more;
-          }
-        } else if (h264parse->packetized_chunked) {
-          /* normal next nal based collection not possible,
-           * _chain will have to tell us whether this was last one for AU */
-          drain = h264parse->packetized_last;
-        }
+        GST_DEBUG_OBJECT (h264parse, "complete nal (offset, size): (%u, %u) ",
+            nalu.offset, nalu.size);
         break;
-      case GST_H264_PARSER_BROKEN_LINK:
-        return FALSE;
-      case GST_H264_PARSER_ERROR:
-        current_off = size - 3;
-        goto parsing_error;
-      case GST_H264_PARSER_NO_NAL:
-        /* don't expect to have found any NAL so far */
-        g_assert (h264parse->nalu.size == 0);
-        current_off = h264parse->nalu.sc_offset = size - 3;
-        goto more;
-      case GST_H264_PARSER_BROKEN_DATA:
-        GST_WARNING_OBJECT (h264parse, "input stream is corrupt; "
-            "it contains a NAL unit of length %d", nalu.size);
-
-        /* broken nal at start -> arrange to skip it,
-         * otherwise have it terminate current au
-         * (and so it will be skipped on next frame round) */
-        if (nalu.sc_offset == h264parse->nalu.sc_offset) {
-          *skipsize = nalu.offset;
-
-          GST_DEBUG_OBJECT (h264parse, "skipping broken nal");
-          goto invalid;
-        } else {
-          nalu.size = 0;
-          goto end;
-        }
       case GST_H264_PARSER_NO_NAL_END:
         GST_DEBUG_OBJECT (h264parse, "not a complete nal found at offset %u",
             nalu.offset);
-
-        current_off = nalu.sc_offset;
-        /* We keep the reference to this nal so we start over the parsing
-         * here */
-        if (!h264parse->nalu.size && !h264parse->nalu.valid)
-          h264parse->nalu = nalu;
-
-        if (GST_BASE_PARSE_DRAINING (parse)) {
-          drain = TRUE;
-          GST_DEBUG_OBJECT (h264parse, "draining NAL %u %u %u", size,
-              h264parse->nalu.offset, h264parse->nalu.size);
-          /*  Can't parse the nalu */
-          if (size - h264parse->nalu.offset < 2) {
-            *skipsize = nalu.offset;
-            goto invalid;
-          }
-
-          /* We parse it anyway */
+        /* if draining, accept it as complete nal */
+        if (drain) {
+          nonext = TRUE;
           nalu.size = size - nalu.offset;
+          GST_DEBUG_OBJECT (h264parse, "draining, accepting with size %u",
+              nalu.size);
+          /* if it's not too short at least */
+          if (nalu.size < 2)
+            goto broken;
           break;
         }
+        /* otherwise need more */
         goto more;
+      case GST_H264_PARSER_BROKEN_LINK:
+        g_assert_not_reached ();
+        break;
+      case GST_H264_PARSER_ERROR:
+        /* should not really occur either */
+        GST_DEBUG_OBJECT (h264parse, "error parsing Nal Unit");
+        /* fall-through */
+      case GST_H264_PARSER_NO_NAL:
+        g_assert_not_reached ();
+        break;
+      case GST_H264_PARSER_BROKEN_DATA:
+        GST_WARNING_OBJECT (h264parse, "input stream is corrupt; "
+            "it contains a NAL unit of length %u", nalu.size);
+      broken:
+        /* broken nal at start -> arrange to skip it,
+         * otherwise have it terminate current au
+         * (and so it will be skipped on next frame round) */
+        if (current_off == 0) {
+          GST_DEBUG_OBJECT (h264parse, "skipping broken nal");
+          *skipsize = nalu.offset;
+          goto skip;
+        } else {
+          GST_DEBUG_OBJECT (h264parse, "terminating au");
+          nalu.size = 0;
+          nalu.offset = nalu.sc_offset;
+          goto end;
+        }
+        break;
+      default:
+        g_assert_not_reached ();
+        break;
     }
-
-    current_off = nalu.offset + nalu.size;
 
     GST_DEBUG_OBJECT (h264parse, "%p complete nal found. Off: %u, Size: %u",
         data, nalu.offset, nalu.size);
 
+    /* simulate no next nal if none needed */
+    nonext = nonext || (h264parse->align == GST_H264_PARSE_ALIGN_NAL);
+
+    if (!nonext && !h264parse->packetized_chunked) {
+      if (nalu.offset + nalu.size + 4 + 2 > size) {
+        GST_DEBUG_OBJECT (h264parse, "not enough data for next NALU");
+        if (drain) {
+          GST_DEBUG_OBJECT (h264parse, "but draining anyway");
+          nonext = TRUE;
+        } else {
+          goto more;
+        }
+      }
+    }
+
     gst_h264_parse_process_nal (h264parse, &nalu);
 
-    /* simulate no next nal if none needed */
-    drain = drain || (h264parse->align == GST_H264_PARSE_ALIGN_NAL);
+    if (nonext)
+      break;
 
     /* In packetized mode we know there's only on NALU in each input packet,
      * but we may not have seen the whole AU already, possibly need more */
     if (h264parse->packetized_chunked) {
-      if (drain)
+      if (h264parse->packetized_last)
         break;
       /* next NALU expected at end of current data */
       current_off = size;
@@ -802,42 +808,30 @@ gst_h264_parse_check_valid_frame (GstBaseParse * parse,
     }
 
     /* if no next nal, we know it's complete here */
-    if (drain || gst_h264_parse_collect_nal (h264parse, data, size, &nalu))
+    if (gst_h264_parse_collect_nal (h264parse, data, size, &nalu))
       break;
 
     GST_DEBUG_OBJECT (h264parse, "Looking for more");
+    current_off = nalu.offset + nalu.size;
   }
 
 end:
-  *skipsize = h264parse->nalu.sc_offset;
-  *framesize = nalu.offset + nalu.size - h264parse->nalu.sc_offset;
-  h264parse->current_off = current_off;
-
+  *framesize = nalu.offset + nalu.size;
   return TRUE;
-
-parsing_error:
-  GST_DEBUG_OBJECT (h264parse, "error parsing Nal Unit");
 
 more:
   /* ask for best next available */
   *framesize = G_MAXUINT;
-  if (!h264parse->nalu.size) {
-    /* skip up to initial startcode */
-    *skipsize = h264parse->nalu.sc_offset;
-    /* but mind some stuff will have been skipped */
-    g_assert (current_off >= *skipsize);
-    current_off -= *skipsize;
-    h264parse->nalu.sc_offset = 0;
-  } else {
-    *skipsize = 0;
-  }
+  *skipsize = 0;
 
   /* Restart parsing from here next time */
-  h264parse->current_off = current_off;
+  if (current_off > 0)
+    h264parse->current_off = current_off;
 
   return FALSE;
 
-invalid:
+skip:
+  GST_DEBUG_OBJECT (h264parse, "skipping %d", *skipsize);
   gst_h264_parse_reset_frame (h264parse);
   return FALSE;
 }

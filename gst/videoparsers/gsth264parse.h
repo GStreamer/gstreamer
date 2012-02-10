@@ -67,10 +67,9 @@ struct _GstH264Parse
 
   /* state */
   GstH264NalParser *nalparser;
-  GstH264NalUnit nalu;
   guint align;
   guint format;
-  guint current_off;
+  gint current_off;
   gboolean packetized_last;
   gboolean packetized_chunked;
 
