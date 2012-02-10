@@ -215,7 +215,7 @@ ges_track_init (GESTrack * self)
 /**
  * ges_track_new:
  * @type: The type of track
- * @caps: The caps to restrict the output of the track to.
+ * @caps: (transfer full): The caps to restrict the output of the track to.
  *
  * Creates a new #GESTrack with the given @type and @caps.
  *
