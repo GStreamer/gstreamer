@@ -351,6 +351,30 @@
   )
 )
 
+(define-enum Edge
+  (in-module "GES")
+  (c-name "GESEdge")
+  (gtype-id "GES_TYPE_EDGE")
+  (values
+    '("edge_start" "GES_EDGE_START")
+    '("edge_end" "GES_EDGE_END")
+    '("edge_none" "GES_EDGE_NONE")
+  )
+)
+
+(define-enum EditMode
+  (in-module "GES")
+  (c-name "GESEditMode")
+  (gtype-id "GES_TYPE_EDIT_MODE")
+  (values
+    '("edit_normal" "GES_EDIT_MODE_NORMAL")
+    '("edit_ripple" "GES_EDIT_MODE_RIPPLE")
+    '("edit_roll" "GES_EDIT_MODE_ROLL")
+    '("edit_trim" "GES_EDIT_MODE_TRIM")
+    '("edit_slide" "GES_EDIT_MODE_SLIDE")
+  )
+)
+
 (define-enum TextHAlign
   (in-module "GES")
   (c-name "GESTextHAlign")
@@ -1154,6 +1178,20 @@
   (return-type "GESTimelineObject*")
   (parameters
     '("guint64" "position")
+  )
+)
+
+(define-method edit
+  (of-object "GESTimelineObject")
+  (c-name "ges_timeline_object_edit")
+  (return-type "gboolean")
+  (parameters
+    '("GList*" "layers")
+    '("guint" "move_layer")
+    '("GESEditMode" "mode")
+    '("GESEdge" "edge")
+    '("guint64" "position")
+    '("guint64" "snap_distance")
   )
 )
 
@@ -2021,6 +2059,18 @@
   (varargs #t)
 )
 
+(define-method edit
+  (of-object "GESTrackObject")
+  (c-name "ges_track_object_edit")
+  (return-type "gboolean")
+  (parameters
+    '("GList*" "layers")
+    '("GESEditMode" "mode")
+    '("GESEdge" "edge")
+    '("guint64" "position")
+    '("guint64" "snap_distance")
+  )
+)
 
 
 ;; From ges-track-operation.h

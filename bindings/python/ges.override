@@ -489,6 +489,93 @@ _wrap_ges_version (PyObject *self)
 
 
 %%
+override ges_track_object_edit kwargs
+static PyObject *
+_wrap_ges_track_object_edit (PyGObject *self, PyObject *args, PyObject *kwargs)
+{
+    GList *layers = NULL;
+    GESEditMode mode;
+    GESEdge edge;
+    guint64 position;
+    guint i;
+    gboolean ret;
+
+    PyObject *py_position = NULL;
+    PyObject *list = NULL, *pymode = NULL, *pyedge = NULL;
+    PyGObject *tmpobj = NULL;
+    Py_ssize_t list_size;
+
+    GESTrackObject *tckobj = GES_TRACK_OBJECT (self->obj);
+
+    if (!PyArg_ParseTuple(args, "OOOl:GESTrackObject.edit",
+                          &list, &pymode, &pyedge, &py_position))
+        return NULL;
+
+    position = PyLong_AsUnsignedLongLong(py_position);
+
+    list_size = PyList_GET_SIZE(list);
+
+    for (i = 0; i < list_size; i++) {
+      tmpobj = (PyGObject*)PyList_GetItem(list, i);
+      layers = g_list_prepend (layers, GES_TIMELINE_LAYER (tmpobj->obj));
+    }
+
+    if (pyg_enum_get_value(GES_TYPE_EDIT_MODE, pymode, (gpointer)&mode))
+        return FALSE;
+
+    if (pyg_enum_get_value(GES_TYPE_EDGE, pyedge, (gpointer)&edge))
+        return FALSE;
+
+    ret = ges_track_object_edit (tckobj, layers, mode, edge, position);
+
+    return PyBool_FromLong(ret);
+}
+
+%%
+override ges_timeline_object_edit kwargs
+static PyObject *
+_wrap_ges_timeline_object_edit (PyGObject *self, PyObject *args, PyObject *kwargs)
+{
+    GList *layers = NULL;
+    GESEditMode mode;
+    GESEdge edge;
+    gint64 position;
+    guint move_layer, i;
+    gboolean ret;
+
+    PyObject *py_position = NULL;
+    PyObject *list = NULL, *pymode = NULL, *pyedge = NULL;
+    PyGObject *tmpobj = NULL;
+    Py_ssize_t list_size;
+
+    GESTimelineObject *tlobj = GES_TIMELINE_OBJECT (self->obj);
+
+    if (!PyArg_ParseTuple(args, "OiOOO:GESTimelineObject.edit",
+                          &list, &move_layer, &pymode, &pyedge, &py_position))
+        return NULL;
+
+    position = PyLong_AsUnsignedLongLong(py_position);
+
+    list_size = PyList_GET_SIZE(list);
+
+    for (i = 0; i < list_size; i++) {
+      tmpobj = (PyGObject*)PyList_GetItem(list, i);
+      layers = g_list_prepend (layers, GES_TIMELINE_LAYER (tmpobj->obj));
+    }
+
+    if (pyg_enum_get_value(GES_TYPE_EDIT_MODE, pymode, (gpointer)&mode))
+        return FALSE;
+
+    if (pyg_enum_get_value(GES_TYPE_EDGE, pyedge, (gpointer)&edge))
+        return FALSE;
+
+    ret = ges_timeline_object_edit (tlobj, layers, move_layer, mode, edge, position);
+
+    return PyBool_FromLong(ret);
+}
+
+
+%%
 ignore-glob
 
   *_get_type
