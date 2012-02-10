@@ -814,13 +814,12 @@ gboolean
 ges_timeline_pipeline_save_thumbnail (GESTimelinePipeline * self, int width, int
     height, const gchar * format, const gchar * location)
 {
+  GstMapInfo map_info;
   GstBuffer *b;
   GstSample *sample;
   FILE *fp;
   GstCaps *caps;
   gboolean res = TRUE;
-  gpointer data;
-  gsize size;
 
   caps = gst_caps_from_string (format);
 
@@ -836,17 +835,17 @@ ges_timeline_pipeline_save_thumbnail (GESTimelinePipeline * self, int width, int
   }
 
   b = gst_sample_get_buffer (sample);
-  data = gst_buffer_map (b, &size, NULL, GST_MAP_READ);
-
-  /* FIXME : Use standard glib methods */
-  fp = fopen (location, "w+");
-  if (!fwrite (data, size, 1, fp) || ferror (fp)) {
-    res = FALSE;
+  if (gst_buffer_map (b, &map_info, GST_MAP_READ)) {
+    /* FIXME : Use standard glib methods */
+    fp = fopen (location, "w+");
+    if (!fwrite (map_info.data, map_info.size, 1, fp) || ferror (fp)) {
+      res = FALSE;
+    }
+    fclose (fp);
   }
-  fclose (fp);
 
   gst_caps_unref (caps);
-  gst_buffer_unmap (b, data, size);
+  gst_buffer_unmap (b, &map_info);
   gst_buffer_unref (b);
   gst_sample_unref (sample);
 
