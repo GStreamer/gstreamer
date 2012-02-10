@@ -1745,12 +1745,14 @@ videoconvert_convert_generic (VideoConvert * convert, GstVideoFrame * dest,
   int j;
 
   if (convert->getline == NULL) {
-    GST_ERROR ("no getline");
+    GST_ERROR ("no getline for format %s",
+        gst_video_format_to_string (GST_VIDEO_FRAME_FORMAT (src)));
     return;
   }
 
   if (convert->putline == NULL) {
-    GST_ERROR ("no putline");
+    GST_ERROR ("no putline for format %s",
+        gst_video_format_to_string (GST_VIDEO_FRAME_FORMAT (dest)));
     return;
   }
 
