@@ -170,9 +170,6 @@ main (int argc, char **argv)
     {NULL}
   };
 
-  if (!g_thread_supported ())
-    g_thread_init (NULL);
-
   ctx = g_option_context_new ("- transition between two media files");
   g_option_context_set_summary (ctx,
       "Select two files, and optionally a transition duration and type.\n"

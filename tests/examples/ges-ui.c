@@ -1675,9 +1675,6 @@ main (int argc, char *argv[])
   App *app;
 
   /* intialize GStreamer and GES */
-  if (!g_thread_supported ())
-    g_thread_init (NULL);
-
   gst_init (&argc, &argv);
   ges_init ();
 

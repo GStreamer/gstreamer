@@ -49,10 +49,6 @@ main (int argc, gchar ** argv)
     {NULL}
   };
 
-  /* Initialization and option parsing */
-  if (!g_thread_supported ())
-    g_thread_init (NULL);
-
   ctx =
       g_option_context_new
       ("- Plays an video file with sound (origin/muted/replaced)");

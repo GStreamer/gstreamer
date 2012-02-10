@@ -457,9 +457,6 @@ main (int argc, gchar ** argv)
   GMainLoop *mainloop;
   GstBus *bus;
 
-  if (!g_thread_supported ())
-    g_thread_init (NULL);
-
   ctx = g_option_context_new ("- plays or renders a timeline.");
   g_option_context_set_summary (ctx,
       "ges-launch renders a timeline, which can be specified on the commandline,\n"

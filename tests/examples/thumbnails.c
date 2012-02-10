@@ -146,9 +146,6 @@ main (int argc, gchar ** argv)
   GMainLoop *mainloop;
   GstBus *bus;
 
-  if (!g_thread_supported ())
-    g_thread_init (NULL);
-
   ctx = g_option_context_new ("tests thumbnail supoprt (produces no output)");
   g_option_context_set_summary (ctx, "");
   g_option_context_add_main_entries (ctx, options, NULL);
