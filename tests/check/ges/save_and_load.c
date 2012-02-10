@@ -21,6 +21,8 @@
 #include <gst/check/gstcheck.h>
 #include <string.h>
 
+#include <gst/audio/audio.h>
+
 #define KEY_FILE_START {\
   if (cmp) g_key_file_free (cmp);\
   cmp = g_key_file_new ();\
@@ -101,7 +103,7 @@ GST_START_TEST (test_keyfile_save)
   KEY_FILE_START;
   KEY ("General", "version", "1");
   KEY ("Track0", "type", "GES_TRACK_TYPE_AUDIO");
-  KEY ("Track0", "caps", "audio/x-raw-int; audio/x-raw-float");
+  KEY ("Track0", "caps", "audio/x-raw");
   KEY ("Layer0", "priority", "0");
   KEY ("Layer0", "type", "simple");
   COMPARE;
@@ -512,7 +514,7 @@ fail:
 static const gchar *data = "\n[General]\n"
     "[Track0]\n"
     "type=GES_TRACK_TYPE_AUDIO\n"
-    "caps=audio/x-raw-int; audio/x-raw-float\n"
+    "caps=audio/x-raw\n"
     "\n"
     "[Layer0]\n"
     "priority=0\n"
@@ -587,7 +589,7 @@ GST_START_TEST (test_keyfile_load)
 
   TIMELINE_BEGIN (expected) {
 
-    TRACK (GES_TRACK_TYPE_AUDIO, "audio/x-raw-float; audio/x-raw-int");
+    TRACK (GES_TRACK_TYPE_AUDIO, "audio/x-raw");
 
     SIMPLE_LAYER_BEGIN (0) {
 
@@ -639,8 +641,9 @@ GST_START_TEST (test_keyfile_identity)
 
   TIMELINE_BEGIN (orig) {
 
-    TRACK (GES_TRACK_TYPE_AUDIO, "audio/x-raw-int,width=32,rate=8000");
-    TRACK (GES_TRACK_TYPE_VIDEO, "video/x-raw-rgb");
+    TRACK (GES_TRACK_TYPE_AUDIO, "audio/x-raw,"
+        "format=(string)" GST_AUDIO_NE (S32) ",rate=8000");
+    TRACK (GES_TRACK_TYPE_VIDEO, "video/x-raw,format=(string)RGB24");
 
     LAYER_BEGIN (5) {
 
