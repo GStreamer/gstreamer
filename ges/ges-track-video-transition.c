@@ -26,6 +26,8 @@
 #include <ges/ges.h>
 #include "ges-internal.h"
 
+#include <gst/controller/gstdirectcontrolbinding.h>
+
 G_DEFINE_TYPE (GESTrackVideoTransition, ges_track_video_transition,
     GES_TYPE_TRACK_TRANSITION);
 
@@ -34,7 +36,7 @@ struct _GESTrackVideoTransitionPrivate
   GESVideoStandardTransitionType type;
 
   /* these enable video interpolation */
-  GstInterpolationControlSource *control_source;
+  GstControlSource *control_source;
 
   /* so we can support changing between wipes */
   GstElement *smpte;
@@ -210,9 +212,9 @@ ges_track_video_transition_create_element (GESTrackObject * object)
   GstElement *mixer = NULL;
   GstPad *sinka_target, *sinkb_target, *src_target, *sinka, *sinkb, *src,
       *srca_pad;
-  GstInterpolationControlSource *control_source;
   GESTrackVideoTransition *self;
   GESTrackVideoTransitionPrivate *priv;
+  GstControlSource *control_source;
 
   self = GES_TRACK_VIDEO_TRANSITION (object);
   priv = self->priv;
@@ -295,8 +297,9 @@ ges_track_video_transition_create_element (GESTrackObject * object)
   g_object_set (target, propname, (gfloat) 0.0, NULL);
 
   control_source = gst_interpolation_control_source_new ();
-  gst_object_set_control_source (GST_OBJECT (target), propname,
-      GST_CONTROL_SOURCE (control_source));
+  gst_object_add_control_binding (GST_OBJECT (target),
+      gst_direct_control_binding_new (GST_OBJECT (target), propname,
+          control_source));
   g_object_set (control_source, "mode", GST_INTERPOLATION_MODE_LINEAR, NULL);
 
   priv->control_source = control_source;
