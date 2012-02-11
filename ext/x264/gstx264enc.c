@@ -1914,6 +1914,8 @@ gst_x264_enc_chain (GstPad * pad, GstObject * parent, GstBuffer * buf)
 
   ret = gst_x264_enc_encode_frame (encoder, &pic_in, &i_nal, TRUE);
 
+  gst_video_frame_unmap (&frame);
+
   /* input buffer is released later on */
   return ret;
 
