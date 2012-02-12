@@ -185,13 +185,13 @@ gst_multifdsink_create_streamheader (const gchar * data1,
   fail_if (hbuf2 == NULL);
   fail_if (caps == NULL);
 
-  /* create caps with streamheader, set the caps, and push the IN_CAPS
+  /* create caps with streamheader, set the caps, and push the HEADER
    * buffers */
   *hbuf1 = gst_buffer_new_and_alloc (size1);
-  GST_BUFFER_FLAG_SET (*hbuf1, GST_BUFFER_FLAG_IN_CAPS);
+  GST_BUFFER_FLAG_SET (*hbuf1, GST_BUFFER_FLAG_HEADER);
   gst_buffer_fill (*hbuf1, 0, data1, size1);
   *hbuf2 = gst_buffer_new_and_alloc (size2);
-  GST_BUFFER_FLAG_SET (*hbuf2, GST_BUFFER_FLAG_IN_CAPS);
+  GST_BUFFER_FLAG_SET (*hbuf2, GST_BUFFER_FLAG_HEADER);
   gst_buffer_fill (*hbuf2, 0, data2, size2);
 
   g_value_init (&array, GST_TYPE_ARRAY);
@@ -231,7 +231,7 @@ gst_multifdsink_create_streamheader (const gchar * data1,
 /* this test:
  * - adds a first client
  * - sets streamheader caps on the pad
- * - pushes the IN_CAPS buffers
+ * - pushes the HEADER buffers
  * - pushes a buffer
  * - verifies that the client received all the data correctly, and did not
  *   get multiple copies of the streamheader
@@ -258,7 +258,7 @@ GST_START_TEST (test_streamheader)
   g_signal_emit_by_name (sink, "add", pfd1[1]);
   fail_unless_num_handles (sink, 1);
 
-  /* create caps with streamheader, set the caps, and push the IN_CAPS
+  /* create caps with streamheader, set the caps, and push the HEADER
    * buffers */
   gst_multifdsink_create_streamheader ("babe", "deadbeef", &hbuf1, &hbuf2,
       &caps);
@@ -273,7 +273,7 @@ GST_START_TEST (test_streamheader)
   //FIXME:
   //fail_if_can_read ("first client", pfd1[0]);
 
-  /* push a non-IN_CAPS buffer, this should trigger the client receiving the
+  /* push a non-HEADER buffer, this should trigger the client receiving the
    * first three buffers */
   buf = gst_buffer_new_and_alloc (4);
   gst_buffer_fill (buf, 0, "f00d", 4);
@@ -328,7 +328,7 @@ GST_END_TEST;
 
 /* this tests changing of streamheaders
  * - set streamheader caps on the pad
- * - pushes the IN_CAPS buffers
+ * - pushes the HEADER buffers
  * - pushes a buffer
  * - add a first client
  * - verifies that this first client receives the first streamheader caps,
@@ -350,7 +350,7 @@ GST_START_TEST (test_change_streamheader)
 
   ASSERT_SET_STATE (sink, GST_STATE_PLAYING, GST_STATE_CHANGE_ASYNC);
 
-  /* create caps with streamheader, set the caps, and push the IN_CAPS
+  /* create caps with streamheader, set the caps, and push the HEADER
    * buffers */
   gst_multifdsink_create_streamheader ("first", "header", &hbuf1, &hbuf2,
       &caps);
