@@ -21,7 +21,7 @@
 #ifndef GST_ID3V2_MUX_H
 #define GST_ID3V2_MUX_H
 
-#include "gsttaglibmux.h"
+#include <gst/tag/gsttagmux.h>
 
 G_BEGIN_DECLS
 
@@ -29,11 +29,11 @@ typedef struct _GstId3v2Mux GstId3v2Mux;
 typedef struct _GstId3v2MuxClass GstId3v2MuxClass;
 
 struct _GstId3v2Mux {
-  GstTagLibMux  taglibmux;
+  GstTagMux  tagmux;
 };
 
 struct _GstId3v2MuxClass {
-  GstTagLibMuxClass  taglibmux_class;
+  GstTagMuxClass  tagmux_class;
 };
 
 #define GST_TYPE_ID3V2_MUX \

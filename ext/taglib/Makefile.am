@@ -1,6 +1,6 @@
 plugin_LTLIBRARIES = libgsttaglib.la
 
-libgsttaglib_la_SOURCES = gsttaglibmux.c gstid3v2mux.cc gstapev2mux.cc
+libgsttaglib_la_SOURCES = gsttaglibplugin.c gstid3v2mux.cc gstapev2mux.cc
 libgsttaglib_la_CFLAGS = \
 	$(GST_PLUGINS_BASE_CFLAGS) \
 	$(GST_CFLAGS) \
@@ -16,4 +16,4 @@ libgsttaglib_la_LIBADD = \
 libgsttaglib_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
 libgsttaglib_la_LIBTOOLFLAGS = --tag=disable-static
 
-noinst_HEADERS = gsttaglibmux.h gstid3v2mux.h gstapev2mux.h
+noinst_HEADERS = gstid3v2mux.h gstapev2mux.h

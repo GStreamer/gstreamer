@@ -64,17 +64,25 @@ static GstStaticPadTemplate src_template = GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS ("application/x-apetag"));
 
-GST_BOILERPLATE (GstApev2Mux, gst_apev2_mux, GstTagLibMux,
-    GST_TYPE_TAG_LIB_MUX);
+static GstStaticPadTemplate sink_template = GST_STATIC_PAD_TEMPLATE ("sink",
+    GST_PAD_SINK,
+    GST_PAD_ALWAYS,
+    GST_STATIC_CAPS ("ANY"));
 
-static GstBuffer *gst_apev2_mux_render_tag (GstTagLibMux * mux,
-    GstTagList * taglist);
+GST_BOILERPLATE (GstApev2Mux, gst_apev2_mux, GstTagMux,
+    GST_TYPE_TAG_MUX);
+
+static GstBuffer *gst_apev2_mux_render_tag (GstTagMux * mux,
+    const GstTagList * taglist);
+static GstBuffer *gst_apev2_mux_render_end_tag (GstTagMux * mux,
+    const GstTagList * taglist);
 
 static void
 gst_apev2_mux_base_init (gpointer g_class)
 {
   GstElementClass *element_class = GST_ELEMENT_CLASS (g_class);
 
+  gst_element_class_add_static_pad_template (element_class, &sink_template);
   gst_element_class_add_static_pad_template (element_class, &src_template);
 
   gst_element_class_set_details_simple (element_class,
@@ -89,8 +97,10 @@ gst_apev2_mux_base_init (gpointer g_class)
 static void
 gst_apev2_mux_class_init (GstApev2MuxClass * klass)
 {
-  GST_TAG_LIB_MUX_CLASS (klass)->render_tag =
+  GST_TAG_MUX_CLASS (klass)->render_start_tag =
       GST_DEBUG_FUNCPTR (gst_apev2_mux_render_tag);
+  GST_TAG_MUX_CLASS (klass)->render_end_tag =
+      GST_DEBUG_FUNCPTR (gst_apev2_mux_render_end_tag);
 }
 
 static void
@@ -339,11 +349,12 @@ add_one_tag (const GstTagList * list, const gchar * tag, gpointer user_data)
 }
 
 static GstBuffer *
-gst_apev2_mux_render_tag (GstTagLibMux * mux, GstTagList * taglist)
+gst_apev2_mux_render_tag (GstTagMux * mux, const GstTagList * taglist)
 {
   APE::Tag apev2tag;
   ByteVector rendered_tag;
   GstBuffer *buf;
+  GstCaps *caps;
   guint tag_size;
 
   /* Render the tag */
@@ -357,17 +368,16 @@ gst_apev2_mux_render_tag (GstTagLibMux * mux, GstTagList * taglist)
   /* Create buffer with tag */
   buf = gst_buffer_new_and_alloc (tag_size);
   memcpy (GST_BUFFER_DATA (buf), rendered_tag.data (), tag_size);
-  gst_buffer_set_caps (buf, GST_PAD_CAPS (mux->srcpad));
+
+  caps = gst_static_pad_template_get_caps (&src_template);
+  gst_buffer_set_caps (buf, caps);
+  gst_caps_unref (caps);
 
   return buf;
 }
 
-gboolean
-gst_apev2_mux_plugin_init (GstPlugin * plugin)
+static GstBuffer *
+gst_apev2_mux_render_end_tag (GstTagMux * mux, const GstTagList * taglist)
 {
-  if (!gst_element_register (plugin, "apev2mux", GST_RANK_NONE,
-          GST_TYPE_APEV2_MUX))
-    return FALSE;
-
-  return TRUE;
+  return NULL;
 }
