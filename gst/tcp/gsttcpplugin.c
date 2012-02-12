@@ -45,9 +45,11 @@ plugin_init (GstPlugin * plugin)
   if (!gst_element_register (plugin, "tcpserversrc", GST_RANK_NONE,
           GST_TYPE_TCP_SERVER_SRC))
     return FALSE;
+#ifdef HAVE_SYS_SOCKET_H
   if (!gst_element_register (plugin, "multifdsink", GST_RANK_NONE,
           GST_TYPE_MULTI_FD_SINK))
     return FALSE;
+#endif
   if (!gst_element_register (plugin, "multisocketsink", GST_RANK_NONE,
           GST_TYPE_MULTI_SOCKET_SINK))
     return FALSE;

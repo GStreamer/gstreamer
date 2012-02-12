@@ -187,6 +187,11 @@ AC_COMPILE_IFELSE(
 CPPFLAGS="$ac_cppflags_save"
 AM_CONDITIONAL(HAVE_LIBXML_HTML, test "x$HAVE_LIBXML_HTML" = "xyes")
 
+dnl used in gst/tcp
+AC_CHECK_HEADERS([sys/socket.h],
+  HAVE_SYS_SOCKET_H="yes", HAVE_SYS_SOCKET_H="no")
+AM_CONDITIONAL(HAVE_SYS_SOCKET_H, test "x$HAVE_SYS_SOCKET_H" = "xyes")
+
 dnl used in gst-libs/gst/pbutils and associated unit test
 AC_CHECK_HEADERS([process.h sys/types.h sys/wait.h sys/stat.h])
 

@@ -13,10 +13,17 @@ built_headers = gsttcp-enumtypes.h gsttcp-marshal.h
 
 BUILT_SOURCES = $(built_sources) $(built_headers)
 
+if HAVE_SYS_SOCKET_H
+multifdsink_SOURCES = \
+	gstmultifdsink.c
+else
+multifdsink_SOURCES =
+endif
+
 libgsttcp_la_SOURCES = \
 	gsttcpplugin.c \
 	gsttcpclientsrc.c gsttcpclientsink.c \
-	gstmultifdsink.c  \
+	$(multifdsink_SOURCES) \
 	gstmultihandlesink.c  \
 	gstmultisocketsink.c  \
 	gsttcpserversrc.c gsttcpserversink.c
