@@ -124,7 +124,7 @@ GST_START_TEST (create_events)
 
     /* set buf to something random but guaranteed to be non-NULL */
     buf = (GstBuffer *) & dummy;
-    gst_event_parse_stream_config_codec_data (event, &buf);
+    gst_event_parse_stream_config_setup_data (event, &buf);
     fail_unless (buf == NULL);
 
     buf = (GstBuffer *) & dummy;
@@ -135,17 +135,17 @@ GST_START_TEST (create_events)
     gst_event_parse_nth_stream_config_header (event, 98416, &buf);
     fail_unless (buf == NULL);
 
-    ASSERT_CRITICAL (gst_event_set_stream_config_codec_data (event, NULL));
+    ASSERT_CRITICAL (gst_event_set_stream_config_setup_data (event, NULL));
     ASSERT_CRITICAL (gst_event_add_stream_config_header (event, NULL));
 
     cd = gst_buffer_new_wrapped_full ((gpointer) "SetMeUpScottie", NULL, 0, 14);
-    gst_event_set_stream_config_codec_data (event, cd);
+    gst_event_set_stream_config_setup_data (event, cd);
     gst_buffer_unref (cd);
 
     buf = (GstBuffer *) & dummy;
     gst_event_parse_nth_stream_config_header (event, 0, &buf);
     fail_unless (buf == NULL);
-    gst_event_parse_stream_config_codec_data (event, &buf);
+    gst_event_parse_stream_config_setup_data (event, &buf);
     fail_unless (buf == cd);
     fail_unless (GST_IS_BUFFER (buf));
 

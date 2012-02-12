@@ -501,9 +501,9 @@ GstEvent *      gst_event_new_stream_config                (GstStreamConfigFlags
 void            gst_event_parse_stream_config              (GstEvent * event, GstStreamConfigFlags * flags);
 
 
-void            gst_event_set_stream_config_codec_data     (GstEvent * event, GstBuffer  * buf);
+void            gst_event_set_stream_config_setup_data     (GstEvent * event, GstBuffer  * buf);
 
-void            gst_event_parse_stream_config_codec_data   (GstEvent * event, GstBuffer ** buf);
+void            gst_event_parse_stream_config_setup_data   (GstEvent * event, GstBuffer ** buf);
 
 
 void            gst_event_add_stream_config_header         (GstEvent * event, GstBuffer  * buf);

@@ -675,7 +675,7 @@ gst_event_parse_caps (GstEvent * event, GstCaps ** caps)
  * Create a new STREAM CONFIG event. The stream config event travels
  * downstream synchronized with the buffer flow and contains stream
  * configuration information for the stream, such as stream-headers
- * or codec-data. It is optional and should be sent after the CAPS
+ * or setup-data. It is optional and should be sent after the CAPS
  * event.
  *
  * Returns: (transfer full): the new STREAM CONFIG event.
@@ -718,18 +718,18 @@ gst_event_parse_stream_config (GstEvent * event, GstStreamConfigFlags * flags)
 }
 
 /**
- * gst_event_set_stream_config_codec_data:
+ * gst_event_set_stream_config_setup_data:
  * @event: a stream config event
- * @buf: a #GstBuffer with codec data
+ * @buf: a #GstBuffer with setup data
  *
- * Set codec data on the stream info event to signal out of bound setup data
- * to downstream elements. Unlike stream headers, codec data contains data
+ * Set setup data on the stream info event to signal out of bound setup data
+ * to downstream elements. Unlike stream headers, setup data contains data
  * that is required to interpret the data stream, but is not valid as-is
  * inside the data stream and thus can't just be prepended to or inserted
  * into the data stream.
  */
 void
-gst_event_set_stream_config_codec_data (GstEvent * event, GstBuffer * buf)
+gst_event_set_stream_config_setup_data (GstEvent * event, GstBuffer * buf)
 {
   GstStructure *s;
 
@@ -738,21 +738,21 @@ gst_event_set_stream_config_codec_data (GstEvent * event, GstBuffer * buf)
   g_return_if_fail (GST_IS_BUFFER (buf) && gst_buffer_get_size (buf) > 0);
 
   s = GST_EVENT_STRUCTURE (event);
-  gst_structure_id_set (s, GST_QUARK (CODEC_DATA), GST_TYPE_BUFFER, buf, NULL);
+  gst_structure_id_set (s, GST_QUARK (SETUP_DATA), GST_TYPE_BUFFER, buf, NULL);
 }
 
 /**
- * gst_event_set_stream_config_codec_data:
+ * gst_event_set_stream_config_setup_data:
  * @event: a stream config event
- * @buf: (out) (transfer none): location where to store the #GstBuffer with codec data
+ * @buf: (out) (transfer none): location where to store the #GstBuffer with setup data
  *
- * Extracts the codec data buffer from the stream info event. Will store
- * %NULL in @buf if the event contains no codec data. The buffer returned
+ * Extracts the setup data buffer from the stream info event. Will store
+ * %NULL in @buf if the event contains no setup data. The buffer returned
  * will remain valid as long as @event remains valid. The caller should
- * acquire a referenceto to @buf if needed.
+ * acquire a reference to to @buf if needed.
  */
 void
-gst_event_parse_stream_config_codec_data (GstEvent * event, GstBuffer ** buf)
+gst_event_parse_stream_config_setup_data (GstEvent * event, GstBuffer ** buf)
 {
   const GValue *val;
   GstStructure *s;
@@ -762,7 +762,7 @@ gst_event_parse_stream_config_codec_data (GstEvent * event, GstBuffer ** buf)
   g_return_if_fail (buf != NULL);
 
   s = GST_EVENT_STRUCTURE (event);
-  val = gst_structure_id_get_value (s, GST_QUARK (CODEC_DATA));
+  val = gst_structure_id_get_value (s, GST_QUARK (SETUP_DATA));
   if (val != NULL)
     *buf = g_value_get_boxed (val);
   else
