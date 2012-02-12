@@ -235,7 +235,6 @@ static GstEvent *
 gst_tag_lib_mux_adjust_event_offsets (GstTagLibMux * mux,
     const GstEvent * newsegment_event)
 {
-  gint64 start, stop, cur;
   GstSegment segment;
 
   gst_event_copy_segment ((GstEvent *) newsegment_event, &segment);
@@ -243,11 +242,11 @@ gst_tag_lib_mux_adjust_event_offsets (GstTagLibMux * mux,
   g_assert (segment.format == GST_FORMAT_BYTES);
 
   if (segment.start != -1)
-    start += mux->tag_size;
+    segment.start += mux->tag_size;
   if (segment.stop != -1)
-    stop += mux->tag_size;
+    segment.stop += mux->tag_size;
   if (segment.time != -1)
-    cur += mux->tag_size;
+    segment.time += mux->tag_size;
 
   GST_DEBUG_OBJECT (mux, "adjusting newsegment event offsets to start=%"
       G_GUINT64_FORMAT ", stop=%" G_GUINT64_FORMAT ", cur=%" G_GUINT64_FORMAT
