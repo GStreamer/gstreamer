@@ -1300,11 +1300,28 @@ gst_decklink_src_task (void *priv)
     event = gst_event_new_new_segment (FALSE, 1.0, GST_FORMAT_TIME, 0,
         GST_CLOCK_TIME_NONE, 0);
 
-    ret = gst_pad_push_event (decklinksrc->videosrcpad, event);
-    if (!ret) {
-      GST_ERROR_OBJECT (decklinksrc, "new segment event ret=%d", ret);
-      return;
+    if (gst_pad_is_linked (decklinksrc->videosrcpad)) {
+      gst_event_ref (event);
+      ret = gst_pad_push_event (decklinksrc->videosrcpad, event);
+      if (!ret) {
+        GST_ERROR_OBJECT (decklinksrc, "new segment event ret=%d", ret);
+        gst_event_unref (event);
+        return;
+      }
+    } else {
+      gst_event_unref (event);
     }
+
+    if (gst_pad_is_linked (decklinksrc->audiosrcpad)) {
+      ret = gst_pad_push_event (decklinksrc->audiosrcpad, event);
+      if (!ret) {
+        GST_ERROR_OBJECT (decklinksrc, "new segment event ret=%d", ret);
+        gst_event_unref (event);
+      }
+    } else {
+      gst_event_unref (event);
+    }
+
   }
 
   if (decklinksrc->video_caps == NULL) {
