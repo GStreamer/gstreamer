@@ -82,16 +82,39 @@ struct _GstTagMuxPrivate
 GST_DEBUG_CATEGORY_STATIC (gst_tag_mux_debug);
 #define GST_CAT_DEFAULT gst_tag_mux_debug
 
-#define gst_tag_mux_parent_class parent_class
-G_DEFINE_TYPE_WITH_CODE (GstTagMux, gst_tag_mux, GST_TYPE_ELEMENT,
-    G_IMPLEMENT_INTERFACE (GST_TYPE_TAG_SETTER, NULL));
+static GstElementClass *parent_class;
 
+static void gst_tag_mux_class_init (GstTagMuxClass * klass);
+static void gst_tag_mux_init (GstTagMux * mux, GstTagMuxClass * mux_class);
 static GstStateChangeReturn
 gst_tag_mux_change_state (GstElement * element, GstStateChange transition);
 static GstFlowReturn gst_tag_mux_chain (GstPad * pad, GstObject * parent,
     GstBuffer * buffer);
 static gboolean gst_tag_mux_sink_event (GstPad * pad, GstObject * parent,
     GstEvent * event);
+
+/* we can't use G_DEFINE_ABSTRACT_TYPE because we need the klass in the _init
+ * method to get to the padtemplates */
+GType
+gst_tag_mux_get_type (void)
+{
+  static volatile gsize tag_mux_type = 0;
+
+  if (g_once_init_enter (&tag_mux_type)) {
+    const GInterfaceInfo interface_info = { NULL, NULL, NULL };
+    GType _type;
+
+    _type = g_type_register_static_simple (GST_TYPE_ELEMENT,
+        "GstTagMux", sizeof (GstTagMuxClass),
+        (GClassInitFunc) gst_tag_mux_class_init, sizeof (GstTagMux),
+        (GInstanceInitFunc) gst_tag_mux_init, G_TYPE_FLAG_ABSTRACT);
+
+    g_type_add_interface_static (_type, GST_TYPE_TAG_SETTER, &interface_info);
+
+    g_once_init_leave (&tag_mux_type, _type);
+  }
+  return tag_mux_type;
+}
 
 static void
 gst_tag_mux_finalize (GObject * obj)
@@ -125,6 +148,8 @@ gst_tag_mux_class_init (GstTagMuxClass * klass)
   gobject_class = (GObjectClass *) klass;
   gstelement_class = (GstElementClass *) klass;
 
+  parent_class = g_type_class_peek_parent (klass);
+
   gobject_class->finalize = GST_DEBUG_FUNCPTR (gst_tag_mux_finalize);
   gstelement_class->change_state = GST_DEBUG_FUNCPTR (gst_tag_mux_change_state);
 
@@ -135,9 +160,9 @@ gst_tag_mux_class_init (GstTagMuxClass * klass)
 }
 
 static void
-gst_tag_mux_init (GstTagMux * mux)
+gst_tag_mux_init (GstTagMux * mux, GstTagMuxClass * mux_class)
 {
-  GstElementClass *element_klass = GST_ELEMENT_GET_CLASS (mux);
+  GstElementClass *element_klass = GST_ELEMENT_CLASS (mux_class);
   GstPadTemplate *tmpl;
 
   mux->priv =
