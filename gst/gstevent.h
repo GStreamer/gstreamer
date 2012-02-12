@@ -503,14 +503,14 @@ void            gst_event_parse_stream_config              (GstEvent * event, Gs
 
 void            gst_event_set_stream_config_setup_data     (GstEvent * event, GstBuffer  * buf);
 
-void            gst_event_parse_stream_config_setup_data   (GstEvent * event, GstBuffer ** buf);
+gboolean        gst_event_parse_stream_config_setup_data   (GstEvent * event, GstBuffer ** buf);
 
 
 void            gst_event_add_stream_config_header         (GstEvent * event, GstBuffer  * buf);
 
 guint           gst_event_get_n_stream_config_headers      (GstEvent * event);
 
-void            gst_event_parse_nth_stream_config_header   (GstEvent * event, guint index, GstBuffer ** buf);
+gboolean        gst_event_parse_nth_stream_config_header   (GstEvent * event, guint index, GstBuffer ** buf);
 
 /* segment event */
 GstEvent*       gst_event_new_segment           (const GstSegment *segment) G_GNUC_MALLOC;

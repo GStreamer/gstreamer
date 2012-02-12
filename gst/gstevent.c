@@ -750,16 +750,20 @@ gst_event_set_stream_config_setup_data (GstEvent * event, GstBuffer * buf)
  * %NULL in @buf if the event contains no setup data. The buffer returned
  * will remain valid as long as @event remains valid. The caller should
  * acquire a reference to to @buf if needed.
+ *
+ * Returns: TRUE if @event contained setup data and @buf has been set,
+ *     otherwise FALSE.
  */
-void
+gboolean
 gst_event_parse_stream_config_setup_data (GstEvent * event, GstBuffer ** buf)
 {
   const GValue *val;
   GstStructure *s;
 
-  g_return_if_fail (GST_IS_EVENT (event));
-  g_return_if_fail (GST_EVENT_TYPE (event) == GST_EVENT_STREAM_CONFIG);
-  g_return_if_fail (buf != NULL);
+  g_return_val_if_fail (GST_IS_EVENT (event), FALSE);
+  g_return_val_if_fail (GST_EVENT_TYPE (event) == GST_EVENT_STREAM_CONFIG,
+      FALSE);
+  g_return_val_if_fail (buf != NULL, FALSE);
 
   s = GST_EVENT_STRUCTURE (event);
   val = gst_structure_id_get_value (s, GST_QUARK (SETUP_DATA));
@@ -767,6 +771,8 @@ gst_event_parse_stream_config_setup_data (GstEvent * event, GstBuffer ** buf)
     *buf = g_value_get_boxed (val);
   else
     *buf = NULL;
+
+  return (*buf != NULL);
 }
 
 /**
@@ -851,8 +857,11 @@ gst_event_get_n_stream_config_headers (GstEvent * event)
  * Retrieves the n-th stream header buffer attached to the stream config
  * event and stores it in @buf. Will store %NULL in @buf if there is no such
  * stream header.
+ *
+ * Returns: TRUE if @event contained a stream header at @index and @buf has
+ *    been set, otherwise FALSE.
  */
-void
+gboolean
 gst_event_parse_nth_stream_config_header (GstEvent * event, guint index,
     GstBuffer ** buf)
 {
@@ -860,9 +869,10 @@ gst_event_parse_nth_stream_config_header (GstEvent * event, guint index,
   GstStructure *s;
   GstBuffer *ret = NULL;
 
-  g_return_if_fail (GST_IS_EVENT (event));
-  g_return_if_fail (GST_EVENT_TYPE (event) == GST_EVENT_STREAM_CONFIG);
-  g_return_if_fail (buf != NULL);
+  g_return_val_if_fail (GST_IS_EVENT (event), FALSE);
+  g_return_val_if_fail (GST_EVENT_TYPE (event) == GST_EVENT_STREAM_CONFIG,
+      FALSE);
+  g_return_val_if_fail (buf != NULL, FALSE);
 
   s = GST_EVENT_STRUCTURE (event);
   val = gst_structure_id_get_value (s, GST_QUARK (STREAM_HEADERS));
@@ -874,6 +884,7 @@ gst_event_parse_nth_stream_config_header (GstEvent * event, guint index,
   }
 
   *buf = ret;
+  return (ret != NULL);
 }
 
 /**
