@@ -146,20 +146,6 @@ if test "x$HAVE_UNISTD_H" != "xyes"; then
   GST_PLUGINS_SELECTED=`echo $GST_PLUGINS_SELECTED | $SED -e s/festival//`
 fi
 
-dnl used in gst/multifdsink
-AC_CHECK_HEADERS([sys/socket.h],
-  HAVE_SYS_SOCKET_H="yes", HAVE_SYS_SOCKET_H="no")
-AM_CONDITIONAL(HAVE_SYS_SOCKET_H, test "x$HAVE_SYS_SOCKET_H" = "xyes")
-
-dnl disable plug-ins that require sys/socket.h if it is not available
-if test "x$HAVE_SYS_SOCKET_H" != "xyes"; then
-  AG_GST_DISABLE_PLUGIN(multifdsink)
-fi
-
-dnl Check for FIONREAD ioctl declaration
-dnl used in gst/multifdsink
-GST_CHECK_FIONREAD
-
 dnl used by camerabin
 AC_CHECK_HEADERS([sys/time.h])
 
@@ -371,7 +357,6 @@ AG_GST_CHECK_PLUGIN(mpegdemux)
 AG_GST_CHECK_PLUGIN(mpegtsdemux)
 AG_GST_CHECK_PLUGIN(mpegtsmux)
 AG_GST_CHECK_PLUGIN(mpegpsmux)
-AG_GST_CHECK_PLUGIN(multifdsink)
 AG_GST_CHECK_PLUGIN(mve)
 AG_GST_CHECK_PLUGIN(mxf)
 AG_GST_CHECK_PLUGIN(nsf)
@@ -1988,7 +1973,6 @@ gst/mpegtsdemux/Makefile
 gst/mpegtsmux/Makefile
 gst/mpegtsmux/tsmux/Makefile
 gst/mpegpsmux/Makefile
-gst/multifdsink/Makefile
 gst/mve/Makefile
 gst/mxf/Makefile
 gst/nsf/Makefile
