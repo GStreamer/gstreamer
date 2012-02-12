@@ -64,19 +64,30 @@ static GstStaticPadTemplate src_template = GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS ("application/x-apetag"));
 
-G_DEFINE_TYPE (GstApev2Mux, gst_apev2_mux, GST_TYPE_TAG_LIB_MUX);
+static GstStaticPadTemplate sink_template = GST_STATIC_PAD_TEMPLATE ("sink",
+    GST_PAD_SINK,
+    GST_PAD_ALWAYS,
+    GST_STATIC_CAPS ("ANY"));
 
-static GstBuffer *gst_apev2_mux_render_tag (GstTagLibMux * mux,
-    GstTagList * taglist);
+G_DEFINE_TYPE (GstApev2Mux, gst_apev2_mux, GST_TYPE_TAG_MUX);
+
+static GstBuffer *gst_apev2_mux_render_tag (GstTagMux * mux,
+    const GstTagList * taglist);
+static GstBuffer *gst_apev2_mux_render_end_tag (GstTagMux * mux,
+    const GstTagList * taglist);
 
 static void
 gst_apev2_mux_class_init (GstApev2MuxClass * klass)
 {
   GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
 
-  GST_TAG_LIB_MUX_CLASS (klass)->render_tag =
+  GST_TAG_MUX_CLASS (klass)->render_start_tag =
       GST_DEBUG_FUNCPTR (gst_apev2_mux_render_tag);
+  GST_TAG_MUX_CLASS (klass)->render_end_tag =
+      GST_DEBUG_FUNCPTR (gst_apev2_mux_render_end_tag);
 
+  gst_element_class_add_pad_template (element_class,
+      gst_static_pad_template_get (&sink_template));
   gst_element_class_add_pad_template (element_class,
       gst_static_pad_template_get (&src_template));
 
@@ -335,7 +346,7 @@ add_one_tag (const GstTagList * list, const gchar * tag, gpointer user_data)
 }
 
 static GstBuffer *
-gst_apev2_mux_render_tag (GstTagLibMux * mux, GstTagList * taglist)
+gst_apev2_mux_render_tag (GstTagMux * mux, const GstTagList * taglist)
 {
   APE::Tag apev2tag;
   ByteVector rendered_tag;
@@ -357,12 +368,8 @@ gst_apev2_mux_render_tag (GstTagLibMux * mux, GstTagList * taglist)
   return buf;
 }
 
-gboolean
-gst_apev2_mux_plugin_init (GstPlugin * plugin)
+static GstBuffer *
+gst_apev2_mux_render_end_tag (GstTagMux * mux, const GstTagList * taglist)
 {
-  if (!gst_element_register (plugin, "apev2mux", GST_RANK_NONE,
-          GST_TYPE_APEV2_MUX))
-    return FALSE;
-
-  return TRUE;
+  return NULL;
 }

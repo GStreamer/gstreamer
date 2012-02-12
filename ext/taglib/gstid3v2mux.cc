@@ -72,20 +72,30 @@ static GstStaticPadTemplate src_template = GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS ("application/x-id3"));
 
+static GstStaticPadTemplate sink_template = GST_STATIC_PAD_TEMPLATE ("sink",
+    GST_PAD_SINK,
+    GST_PAD_ALWAYS,
+    GST_STATIC_CAPS ("ANY"));
 
-G_DEFINE_TYPE (GstId3v2Mux, gst_id3v2_mux, GST_TYPE_TAG_LIB_MUX);
+G_DEFINE_TYPE (GstId3v2Mux, gst_id3v2_mux, GST_TYPE_TAG_MUX);
 
-static GstBuffer *gst_id3v2_mux_render_tag (GstTagLibMux * mux,
-    GstTagList * taglist);
+static GstBuffer *gst_id3v2_mux_render_tag (GstTagMux * mux,
+    const GstTagList * taglist);
+static GstBuffer *gst_id3v2_mux_render_end_tag (GstTagMux * mux,
+    const GstTagList * taglist);
 
 static void
 gst_id3v2_mux_class_init (GstId3v2MuxClass * klass)
 {
   GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
 
-  GST_TAG_LIB_MUX_CLASS (klass)->render_tag =
+  GST_TAG_MUX_CLASS (klass)->render_start_tag =
       GST_DEBUG_FUNCPTR (gst_id3v2_mux_render_tag);
+  GST_TAG_MUX_CLASS (klass)->render_end_tag =
+      GST_DEBUG_FUNCPTR (gst_id3v2_mux_render_end_tag);
 
+  gst_element_class_add_pad_template (element_class,
+      gst_static_pad_template_get (&sink_template));
   gst_element_class_add_pad_template (element_class,
       gst_static_pad_template_get (&src_template));
 
@@ -731,7 +741,7 @@ foreach_add_tag (const GstTagList * list, const gchar * tag, gpointer userdata)
 }
 
 static GstBuffer *
-gst_id3v2_mux_render_tag (GstTagLibMux * mux, GstTagList * taglist)
+gst_id3v2_mux_render_tag (GstTagMux * mux, const GstTagList * taglist)
 {
   ID3v2::Tag id3v2tag;
   ByteVector rendered_tag;
@@ -769,14 +779,8 @@ gst_id3v2_mux_render_tag (GstTagLibMux * mux, GstTagList * taglist)
   return buf;
 }
 
-gboolean
-gst_id3v2_mux_plugin_init (GstPlugin * plugin)
+static GstBuffer *
+gst_id3v2_mux_render_end_tag (GstTagMux * mux, const GstTagList * taglist)
 {
-  if (!gst_element_register (plugin, "id3v2mux", GST_RANK_NONE,
-          GST_TYPE_ID3V2_MUX))
-    return FALSE;
-
-  gst_tag_register_musicbrainz_tags ();
-
-  return TRUE;
+  return NULL;
 }
