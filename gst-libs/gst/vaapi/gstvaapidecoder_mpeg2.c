@@ -396,8 +396,8 @@ decode_sequence_ext(GstVaapiDecoderMpeg2 *decoder, guchar *buf, guint buf_size)
     priv->has_seq_ext = TRUE;
     priv->progressive_sequence = seq_ext->progressive;
 
-    width  = (priv->width  & 0xffff) | ((guint32)seq_ext->horiz_size_ext << 16);
-    height = (priv->height & 0xffff) | ((guint32)seq_ext->vert_size_ext  << 16);
+    width  = (priv->width  & 0x0fff) | ((guint32)seq_ext->horiz_size_ext << 12);
+    height = (priv->height & 0x0fff) | ((guint32)seq_ext->vert_size_ext  << 12);
     GST_DEBUG("video resolution %ux%u", width, height);
 
     if (seq_ext->fps_n_ext && seq_ext->fps_d_ext) {
