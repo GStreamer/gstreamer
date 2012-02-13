@@ -2181,11 +2181,10 @@ push:
         }
         seen_key = FALSE;
       }
-    } else {
       seen_delta = TRUE;
+    } else {
+      seen_key = TRUE;
     }
-
-    seen_key |= !GST_BUFFER_FLAG_IS_SET (buf, GST_BUFFER_FLAG_DELTA_UNIT);
 
     parse->priv->buffers_send =
         g_slist_prepend (parse->priv->buffers_send, buf);
