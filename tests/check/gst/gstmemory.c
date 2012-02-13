@@ -133,7 +133,7 @@ create_read_only_memory (void)
   /* assign some read-only data to the new memory */
   mem = gst_memory_new_wrapped (GST_MEMORY_FLAG_READONLY,
       (gpointer) ro_memory, NULL, sizeof (ro_memory), 0, sizeof (ro_memory));
-  fail_if (gst_memory_is_writable (mem));
+  fail_unless (GST_MEMORY_IS_READONLY (mem));
 
   return mem;
 }
@@ -147,11 +147,10 @@ GST_START_TEST (test_writable)
   mem = create_read_only_memory ();
 
   fail_if (gst_memory_map (mem, &info, GST_MAP_WRITE));
-  fail_if (gst_memory_is_writable (mem));
 
   mem2 = gst_memory_copy (mem, 0, -1);
-  fail_if (gst_memory_is_writable (mem));
-  fail_unless (gst_memory_is_writable (mem2));
+  fail_unless (GST_MEMORY_IS_READONLY (mem));
+  fail_if (GST_MEMORY_IS_READONLY (mem2));
 
   fail_unless (gst_memory_map (mem2, &info, GST_MAP_WRITE));
   info.data[4] = 'a';
@@ -180,7 +179,7 @@ GST_START_TEST (test_submemory_writable)
   mem = create_read_only_memory ();
 
   sub_mem = gst_memory_share (mem, 0, 8);
-  fail_if (gst_memory_is_writable (sub_mem));
+  fail_unless (GST_MEMORY_IS_READONLY (sub_mem));
 
   fail_if (gst_memory_map (mem, &info, GST_MAP_WRITE));
   fail_if (gst_memory_map (sub_mem, &info, GST_MAP_WRITE));

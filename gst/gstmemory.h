@@ -41,6 +41,8 @@ typedef struct _GstAllocator GstAllocator;
 
 GST_EXPORT gsize gst_memory_alignment;
 
+#define GST_MEMORY_CAST(mem)   ((GstMemory *)(mem))
+
 /**
  * GstMemoryFlags:
  * @GST_MEMORY_FLAG_READONLY: memory is readonly. It is not allowed to map the
@@ -57,6 +59,30 @@ typedef enum {
 
   GST_MEMORY_FLAG_LAST     = (1 << 16)
 } GstMemoryFlags;
+
+/**
+ * GST_MEMORY_FLAGS:
+ * @mem: a #GstMemory.
+ *
+ * A flags word containing #GstMemoryFlags flags set on @mem
+ */
+#define GST_MEMORY_FLAGS(mem)  (GST_MEMORY_CAST (mem)->flags)
+/**
+ * GST_MEMORY_FLAG_IS_SET:
+ * @mem: a #GstMemory.
+ * @flag: the #GstMemoryFlags to check.
+ *
+ * Gives the status of a specific flag on a @mem.
+ */
+#define GST_MEMORY_FLAG_IS_SET(mem,flag)   !!(GST_MEMORY_FLAGS (mem) & (flag))
+
+/**
+ * GST_MEMORY_IS_READONLY:
+ * @mem: a #GstMemory.
+ *
+ * Check if @mem is readonly.
+ */
+#define GST_MEMORY_IS_READONLY(mem)        GST_MEMORY_FLAG_IS_SET(mem,GST_MEMORY_FLAG_READONLY)
 
 /**
  * GstMemory:
@@ -278,30 +304,30 @@ void           gst_allocator_set_default     (GstAllocator * allocator);
 GstMemory *    gst_allocator_alloc           (GstAllocator * allocator,
                                               gsize maxsize, gsize align);
 
-GstMemory *    gst_memory_new_wrapped (GstMemoryFlags flags, gpointer data, GFreeFunc free_func,
-                                       gsize maxsize, gsize offset, gsize size);
+GstMemory *    gst_memory_new_wrapped  (GstMemoryFlags flags, gpointer data, GFreeFunc free_func,
+                                        gsize maxsize, gsize offset, gsize size);
 
 /* refcounting */
-GstMemory *    gst_memory_ref         (GstMemory *mem);
-void           gst_memory_unref       (GstMemory *mem);
+GstMemory *    gst_memory_ref          (GstMemory *mem);
+void           gst_memory_unref        (GstMemory *mem);
+
+gboolean       gst_memory_is_exclusive (GstMemory *mem);
 
 /* getting/setting memory properties */
-gsize          gst_memory_get_sizes   (GstMemory *mem, gsize *offset, gsize *maxsize);
-void           gst_memory_resize      (GstMemory *mem, gssize offset, gsize size);
+gsize          gst_memory_get_sizes    (GstMemory *mem, gsize *offset, gsize *maxsize);
+void           gst_memory_resize       (GstMemory *mem, gssize offset, gsize size);
 
 /* retrieving data */
-gboolean       gst_memory_is_writable (GstMemory *mem);
-
-GstMemory *    gst_memory_make_mapped (GstMemory *mem, GstMapInfo *info, GstMapFlags flags);
-gboolean       gst_memory_map         (GstMemory *mem, GstMapInfo *info, GstMapFlags flags);
-void           gst_memory_unmap       (GstMemory *mem, GstMapInfo *info);
+GstMemory *    gst_memory_make_mapped  (GstMemory *mem, GstMapInfo *info, GstMapFlags flags);
+gboolean       gst_memory_map          (GstMemory *mem, GstMapInfo *info, GstMapFlags flags);
+void           gst_memory_unmap        (GstMemory *mem, GstMapInfo *info);
 
 /* copy and subregions */
-GstMemory *    gst_memory_copy        (GstMemory *mem, gssize offset, gssize size);
-GstMemory *    gst_memory_share       (GstMemory *mem, gssize offset, gssize size);
+GstMemory *    gst_memory_copy         (GstMemory *mem, gssize offset, gssize size);
+GstMemory *    gst_memory_share        (GstMemory *mem, gssize offset, gssize size);
 
 /* span memory */
-gboolean       gst_memory_is_span     (GstMemory *mem1, GstMemory *mem2, gsize *offset);
+gboolean       gst_memory_is_span      (GstMemory *mem1, GstMemory *mem2, gsize *offset);
 
 G_END_DECLS
 

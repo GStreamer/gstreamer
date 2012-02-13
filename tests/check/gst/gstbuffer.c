@@ -450,8 +450,9 @@ GST_START_TEST (test_size)
   fail_unless (offset == 0);
   fail_unless (maxalloc >= 100);
 
-  mem = gst_buffer_peek_memory (buf, 0, GST_MAP_WRITE);
+  mem = gst_buffer_get_memory (buf, 0);
   gst_memory_resize (mem, 10, 70);
+  gst_memory_unref (mem);
 
   size = gst_buffer_get_sizes (buf, &offset, &maxsize);
   fail_unless (size == 70);

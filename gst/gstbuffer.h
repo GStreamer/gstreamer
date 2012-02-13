@@ -265,9 +265,13 @@ GstBuffer * gst_buffer_new_wrapped         (gpointer data, gsize size);
 /* memory blocks */
 guint       gst_buffer_n_memory            (GstBuffer *buffer);
 void        gst_buffer_take_memory         (GstBuffer *buffer, gint idx, GstMemory *mem);
-GstMemory * gst_buffer_peek_memory         (GstBuffer *buffer, guint idx, GstMapFlags flags);
-void        gst_buffer_remove_memory_range (GstBuffer *buffer, guint idx, guint length);
+void        gst_buffer_replace_memory      (GstBuffer *buffer, gint idx, GstMemory *mem);
+GstMemory * gst_buffer_get_memory          (GstBuffer *buffer, gint idx);
+void        gst_buffer_remove_memory_range (GstBuffer *buffer, guint idx, gint length);
 
+#define     gst_buffer_append_memory(b,m)      gst_buffer_take_memory ((b), -1, (m))
+#define     gst_buffer_replace_all_memory(b,m) gst_buffer_replace_memory ((b), -1, (m))
+#define     gst_buffer_get_merged_memory(b)    gst_buffer_get_memory ((b), -1)
 /**
  * gst_buffer_remove_memory:
  * @b: a #GstBuffer.
@@ -275,7 +279,8 @@ void        gst_buffer_remove_memory_range (GstBuffer *buffer, guint idx, guint 
  *
  * Remove the memory block in @b at @i.
  */
-#define     gst_buffer_remove_memory(b,i)  gst_buffer_remove_memory_range ((b), (i), 1)
+#define     gst_buffer_remove_memory(b,i)      gst_buffer_remove_memory_range ((b), (i), 1)
+#define     gst_buffer_remove_all_memory(b)    gst_buffer_remove_memory_range ((b), 0, -1)
 
 gsize       gst_buffer_fill                (GstBuffer *buffer, gsize offset,
                                             gconstpointer src, gsize size);

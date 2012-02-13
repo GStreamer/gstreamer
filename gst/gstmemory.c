@@ -135,7 +135,7 @@ _default_mem_init (GstMemoryDefault * mem, GstMemoryFlags flags,
   mem->mem.flags = flags;
   mem->mem.refcount = 1;
   mem->mem.parent = parent ? gst_memory_ref (parent) : NULL;
-  mem->mem.state = (flags & GST_MEMORY_FLAG_READONLY ? 0x5 : 0);
+  mem->mem.state = (flags & GST_MEMORY_FLAG_READONLY ? 0x1 : 0);
   mem->mem.maxsize = maxsize;
   mem->mem.offset = offset;
   mem->mem.size = size;
@@ -431,11 +431,27 @@ gst_memory_unref (GstMemory * mem)
       mem->refcount - 1);
 
   if (g_atomic_int_dec_and_test (&mem->refcount)) {
+    g_return_if_fail (g_atomic_int_get (&mem->state) < 4);
 #ifndef GST_DISABLE_TRACE
     _gst_alloc_trace_free (_gst_memory_trace, mem);
 #endif
     mem->allocator->info.mem_free (mem);
   }
+}
+
+/**
+ * gst_memory_is_exclusive:
+ * @mem: a #GstMemory
+ *
+ * Check if the current ref to @mem is exclusive, this means that no other
+ * references exist other than @mem.
+ */
+gboolean
+gst_memory_is_exclusive (GstMemory * mem)
+{
+  g_return_val_if_fail (mem != NULL, FALSE);
+
+  return (g_atomic_int_get (&mem->refcount) == 1);
 }
 
 /**
@@ -474,30 +490,11 @@ void
 gst_memory_resize (GstMemory * mem, gssize offset, gsize size)
 {
   g_return_if_fail (mem != NULL);
-  g_return_if_fail (gst_memory_is_writable (mem));
   g_return_if_fail (offset >= 0 || mem->offset >= -offset);
   g_return_if_fail (size + mem->offset + offset <= mem->maxsize);
 
   mem->offset += offset;
   mem->size = size;
-}
-
-/**
- * gst_memory_is_writable:
- * @mem: a #GstMemory
- *
- * Check if @mem is writable.
- *
- * Returns: %TRUE is @mem is writable.
- */
-gboolean
-gst_memory_is_writable (GstMemory * mem)
-{
-  g_return_val_if_fail (mem != NULL, FALSE);
-
-  return (mem->refcount == 1) &&
-      ((mem->parent == NULL) || (mem->parent->refcount == 1)) &&
-      ((mem->flags & GST_MEMORY_FLAG_READONLY) == 0);
 }
 
 static gboolean
@@ -610,8 +607,8 @@ cannot_map:
  * - the memory backed by @mem is not accessible with the given @flags.
  * - the memory was already mapped with a different mapping.
  *
- * @info and its contents remains valid for as long as @mem is alive and until
- * gst_memory_unmap() is called.
+ * @info and its contents remain valid for as long as @mem is valid and
+ * until gst_memory_unmap() is called.
  *
  * For each gst_memory_map() call, a corresponding gst_memory_unmap() call
  * should be done.
@@ -722,6 +719,8 @@ gst_memory_share (GstMemory * mem, gssize offset, gssize size)
   GstMemory *shared;
 
   g_return_val_if_fail (mem != NULL, NULL);
+  g_return_val_if_fail (!GST_MEMORY_FLAG_IS_SET (mem, GST_MEMORY_FLAG_NO_SHARE),
+      NULL);
 
   shared = mem->allocator->info.mem_share (mem, offset, size);
 

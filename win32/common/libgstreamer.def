@@ -90,6 +90,7 @@ EXPORTS
 	gst_buffer_fill
 	gst_buffer_flags_get_type
 	gst_buffer_foreach_meta
+	gst_buffer_get_memory
 	gst_buffer_get_meta
 	gst_buffer_get_sizes
 	gst_buffer_get_type
@@ -113,7 +114,6 @@ EXPORTS
 	gst_buffer_new_allocate
 	gst_buffer_new_wrapped
 	gst_buffer_new_wrapped_full
-	gst_buffer_peek_memory
 	gst_buffer_pool_acquire_buffer
 	gst_buffer_pool_config_add_option
 	gst_buffer_pool_config_get
@@ -133,6 +133,7 @@ EXPORTS
 	gst_buffer_pool_set_config
 	gst_buffer_remove_memory_range
 	gst_buffer_remove_meta
+	gst_buffer_replace_memory
 	gst_buffer_resize
 	gst_buffer_span
 	gst_buffer_take_memory
@@ -507,8 +508,8 @@ EXPORTS
 	gst_memory_flags_get_type
 	gst_memory_get_sizes
 	gst_memory_get_type
+	gst_memory_is_exclusive
 	gst_memory_is_span
-	gst_memory_is_writable
 	gst_memory_make_mapped
 	gst_memory_map
 	gst_memory_new_wrapped
