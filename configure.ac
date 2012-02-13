@@ -242,8 +242,8 @@ tests/Makefile
 bindings/Makefile
 bindings/vala/Makefile
 pkgconfig/Makefile
-pkgconfig/gst-rtsp-server.pc
-pkgconfig/gst-rtsp-server-uninstalled.pc
+pkgconfig/gstreamer-rtsp-server.pc
+pkgconfig/gstreamer-rtsp-server-uninstalled.pc
 docs/Makefile
 docs/version.entities
 docs/libs/Makefile
