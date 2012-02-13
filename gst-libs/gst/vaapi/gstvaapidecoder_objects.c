@@ -168,6 +168,22 @@ gst_vaapi_picture_add_slice(GstVaapiPicture *picture, GstVaapiSlice *slice)
     g_ptr_array_add(picture->slices, slice);
 }
 
+static gboolean
+do_decode(VADisplay dpy, VAContextID ctx, VABufferID *buf_id, void **buf_ptr)
+{
+    VAStatus status;
+
+    vaapi_unmap_buffer(dpy, *buf_id, buf_ptr);
+
+    status = vaRenderPicture(dpy, ctx, buf_id, 1);
+    if (!vaapi_check_status(status, "vaRenderPicture()"))
+        return FALSE;
+
+    /* XXX: vaRenderPicture() is meant to destroy the VA buffer implicitly */
+    vaapi_destroy_buffer(dpy, buf_id);
+    return TRUE;
+}
+
 gboolean
 gst_vaapi_picture_decode(GstVaapiPicture *picture)
 {
@@ -175,9 +191,8 @@ gst_vaapi_picture_decode(GstVaapiPicture *picture)
     GstVaapiBitPlane *bitplane;
     VADisplay va_display;
     VAContextID va_context;
-    VABufferID va_buffers[3];
-    guint i, n_va_buffers = 0;
     VAStatus status;
+    guint i;
 
     g_return_val_if_fail(GST_VAAPI_IS_PICTURE(picture), FALSE);
 
@@ -186,50 +201,37 @@ gst_vaapi_picture_decode(GstVaapiPicture *picture)
 
     GST_DEBUG("decode picture 0x%08x", picture->surface_id);
 
-    vaapi_unmap_buffer(va_display, picture->param_id, &picture->param);
-    va_buffers[n_va_buffers++] = picture->param_id;
-
-    iq_matrix = picture->iq_matrix;
-    if (iq_matrix) {
-        vaapi_unmap_buffer(
-            va_display,
-            iq_matrix->param_id, &iq_matrix->param
-        );
-        va_buffers[n_va_buffers++] = iq_matrix->param_id;
-    }
-
-    bitplane = picture->bitplane;
-    if (bitplane) {
-        vaapi_unmap_buffer(
-            va_display,
-            bitplane->data_id, (void **)&bitplane->data
-        );
-        va_buffers[n_va_buffers++] = bitplane->data_id;
-    }
-
     status = vaBeginPicture(va_display, va_context, picture->surface_id);
     if (!vaapi_check_status(status, "vaBeginPicture()"))
         return FALSE;
 
-    status = vaRenderPicture(va_display, va_context, va_buffers, n_va_buffers);
-    if (!vaapi_check_status(status, "vaRenderPicture()"))
+    if (!do_decode(va_display, va_context, &picture->param_id, &picture->param))
+        return FALSE;
+
+    iq_matrix = picture->iq_matrix;
+    if (iq_matrix && !do_decode(va_display, va_context,
+                                &iq_matrix->param_id, &iq_matrix->param))
+        return FALSE;
+
+    bitplane = picture->bitplane;
+    if (bitplane && !do_decode(va_display, va_context,
+                               &bitplane->data_id, (void **)&bitplane->data))
         return FALSE;
 
     for (i = 0; i < picture->slices->len; i++) {
         GstVaapiSlice * const slice = g_ptr_array_index(picture->slices, i);
+        VABufferID va_buffers[2];
 
         vaapi_unmap_buffer(va_display, slice->param_id, NULL);
         va_buffers[0] = slice->param_id;
         va_buffers[1] = slice->data_id;
-        n_va_buffers  = 2;
 
-        status = vaRenderPicture(
-            va_display,
-            va_context,
-            va_buffers, n_va_buffers
-        );
+        status = vaRenderPicture(va_display, va_context, va_buffers, 2);
         if (!vaapi_check_status(status, "vaRenderPicture()"))
             return FALSE;
+
+        vaapi_destroy_buffer(va_display, &slice->param_id);
+        vaapi_destroy_buffer(va_display, &slice->data_id);
     }
 
     status = vaEndPicture(va_display, va_context);
