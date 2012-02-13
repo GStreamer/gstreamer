@@ -400,22 +400,23 @@ static gboolean
 do_send_data (GstBuffer * buffer, guint8 channel, GstRTSPClient * client)
 {
   GstRTSPMessage message = { 0 };
+  GstMapInfo map_info;
   guint8 *data;
   guint usize;
-  gsize size;
 
   gst_rtsp_message_init_data (&message, channel);
 
-  data = gst_buffer_map (buffer, &size, NULL, GST_MAP_READ);
-  usize = size;
-  gst_rtsp_message_take_body (&message, data, usize);
+  if (!gst_buffer_map (buffer, &map_info, GST_MAP_READ))
+    return FALSE;
+
+  gst_rtsp_message_take_body (&message, map_info.data, map_info.size);
 
   /* FIXME, client->watch could have been finalized here, we need to keep an
    * extra refcount to the watch.  */
   gst_rtsp_watch_send_message (client->watch, &message, NULL);
 
   gst_rtsp_message_steal_body (&message, &data, &usize);
-  gst_buffer_unmap (buffer, data, size);
+  gst_buffer_unmap (buffer, &map_info);
 
   gst_rtsp_message_unset (&message);
 
