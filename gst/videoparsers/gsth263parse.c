@@ -32,6 +32,8 @@
 #include <gst/base/gstbytereader.h>
 #include "gsth263parse.h"
 
+#include <string.h>
+
 GST_DEBUG_CATEGORY (h263_parse_debug);
 #define GST_CAT_DEFAULT h263_parse_debug
 
@@ -54,10 +56,8 @@ static gboolean gst_h263_parse_start (GstBaseParse * parse);
 static gboolean gst_h263_parse_stop (GstBaseParse * parse);
 static gboolean gst_h263_parse_sink_event (GstBaseParse * parse,
     GstEvent * event);
-static gboolean gst_h263_parse_check_valid_frame (GstBaseParse * parse,
-    GstBaseParseFrame * frame, guint * framesize, gint * skipsize);
-static GstFlowReturn gst_h263_parse_parse_frame (GstBaseParse * parse,
-    GstBaseParseFrame * frame);
+static GstFlowReturn gst_h263_parse_handle_frame (GstBaseParse * parse,
+    GstBaseParseFrame * frame, gint * skipsize);
 static GstCaps *gst_h263_parse_get_sink_caps (GstBaseParse * parse,
     GstCaps * filter);
 
@@ -83,9 +83,7 @@ gst_h263_parse_class_init (GstH263ParseClass * klass)
   parse_class->start = GST_DEBUG_FUNCPTR (gst_h263_parse_start);
   parse_class->stop = GST_DEBUG_FUNCPTR (gst_h263_parse_stop);
   parse_class->event = GST_DEBUG_FUNCPTR (gst_h263_parse_sink_event);
-  parse_class->check_valid_frame =
-      GST_DEBUG_FUNCPTR (gst_h263_parse_check_valid_frame);
-  parse_class->parse_frame = GST_DEBUG_FUNCPTR (gst_h263_parse_parse_frame);
+  parse_class->handle_frame = GST_DEBUG_FUNCPTR (gst_h263_parse_handle_frame);
   parse_class->get_sink_caps = GST_DEBUG_FUNCPTR (gst_h263_parse_get_sink_caps);
 }
 
@@ -256,21 +254,25 @@ gst_h263_parse_set_src_caps (GstH263Parse * h263parse,
   gst_caps_unref (caps);
 }
 
-static gboolean
-gst_h263_parse_check_valid_frame (GstBaseParse * parse,
-    GstBaseParseFrame * frame, guint * framesize, gint * skipsize)
+static GstFlowReturn
+gst_h263_parse_handle_frame (GstBaseParse * parse,
+    GstBaseParseFrame * frame, gint * skipsize)
 {
   GstH263Parse *h263parse;
   GstBuffer *buffer;
   guint psc_pos, next_psc_pos;
   gsize size;
+  H263Params params = { 0, };
+  GstFlowReturn res = GST_FLOW_OK;
 
   h263parse = GST_H263_PARSE (parse);
   buffer = frame->buffer;
   size = gst_buffer_get_size (buffer);
 
-  if (size < 3)
-    return FALSE;
+  if (size < 3) {
+    *skipsize = 1;
+    return GST_FLOW_OK;
+  }
 
   psc_pos = find_psc (buffer, 0);
 
@@ -282,6 +284,10 @@ gst_h263_parse_check_valid_frame (GstBaseParse * parse,
       psc_pos = 0;
     goto more;
   }
+
+  /* need to skip */
+  if (psc_pos > 0)
+    goto more;
 
   /* Found the start of the frame, now try to find the end */
   next_psc_pos = psc_pos + 3;
@@ -299,9 +305,6 @@ gst_h263_parse_check_valid_frame (GstBaseParse * parse,
 
   /* If this is the first frame, parse and set srcpad caps */
   if (h263parse->state == PARSING) {
-    H263Params params = { 0, };
-    GstFlowReturn res;
-
     res = gst_h263_parse_get_params (&params, buffer, FALSE, &h263parse->state);
     if (res != GST_FLOW_OK || h263parse->state != GOT_HEADER) {
       GST_WARNING ("Couldn't parse header - setting passthrough mode");
@@ -311,42 +314,18 @@ gst_h263_parse_check_valid_frame (GstBaseParse * parse,
       gst_h263_parse_set_src_caps (h263parse, &params);
       gst_base_parse_set_passthrough (parse, FALSE);
     }
+    memset (&params, 0, sizeof (params));
   }
-
-  *skipsize = psc_pos;
-  *framesize = next_psc_pos - psc_pos;
 
   /* XXX: After getting a keyframe, should we adjust min_frame_size to
    * something smaller so we don't end up collecting too many non-keyframes? */
 
-  GST_DEBUG_OBJECT (h263parse, "found a frame of size %d at pos %d",
-      *framesize, *skipsize);
-
-  return TRUE;
-
-more:
-  /* ask for best next available */
-  *framesize = G_MAXUINT;
-
-  *skipsize = psc_pos;
-
-  return FALSE;
-}
-
-static GstFlowReturn
-gst_h263_parse_parse_frame (GstBaseParse * parse, GstBaseParseFrame * frame)
-{
-  GstH263Parse *h263parse;
-  GstBuffer *buffer;
-  GstFlowReturn res;
-  H263Params params = { 0, };
-
-  h263parse = GST_H263_PARSE (parse);
-  buffer = frame->buffer;
+  GST_DEBUG_OBJECT (h263parse, "found a frame of size %u at pos %u",
+      next_psc_pos, psc_pos);
 
   res = gst_h263_parse_get_params (&params, buffer, TRUE, &h263parse->state);
   if (res != GST_FLOW_OK)
-    goto out;
+    goto more;
 
   if (h263parse->state == PASSTHROUGH || h263parse->state == PARSING) {
     /* There's a feature we don't support, or we didn't have enough data to
@@ -354,17 +333,18 @@ gst_h263_parse_parse_frame (GstBaseParse * parse, GstBaseParseFrame * frame)
      * passthrough mode and let downstream handle it if it can. */
     GST_WARNING ("Couldn't parse header - setting passthrough mode");
     gst_base_parse_set_passthrough (parse, TRUE);
-    goto out;
+    goto more;
   }
-
-  /* h263parse->state is now GOT_HEADER */
 
   if (gst_h263_parse_is_delta_unit (&params))
     GST_BUFFER_FLAG_UNSET (buffer, GST_BUFFER_FLAG_DELTA_UNIT);
   else
     GST_BUFFER_FLAG_SET (buffer, GST_BUFFER_FLAG_DELTA_UNIT);
 
-out:
+  return gst_base_parse_finish_frame (parse, frame, next_psc_pos);
+
+more:
+  *skipsize = psc_pos;
 
   return res;
 }

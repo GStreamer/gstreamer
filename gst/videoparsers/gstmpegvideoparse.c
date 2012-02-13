@@ -66,8 +66,8 @@ G_DEFINE_TYPE (GstMpegvParse, gst_mpegv_parse, GST_TYPE_BASE_PARSE);
 
 static gboolean gst_mpegv_parse_start (GstBaseParse * parse);
 static gboolean gst_mpegv_parse_stop (GstBaseParse * parse);
-static gboolean gst_mpegv_parse_check_valid_frame (GstBaseParse * parse,
-    GstBaseParseFrame * frame, guint * framesize, gint * skipsize);
+static GstFlowReturn gst_mpegv_parse_handle_frame (GstBaseParse * parse,
+    GstBaseParseFrame * frame, gint * skipsize);
 static GstFlowReturn gst_mpegv_parse_parse_frame (GstBaseParse * parse,
     GstBaseParseFrame * frame);
 static gboolean gst_mpegv_parse_set_caps (GstBaseParse * parse, GstCaps * caps);
@@ -159,9 +159,7 @@ gst_mpegv_parse_class_init (GstMpegvParseClass * klass)
   /* Override BaseParse vfuncs */
   parse_class->start = GST_DEBUG_FUNCPTR (gst_mpegv_parse_start);
   parse_class->stop = GST_DEBUG_FUNCPTR (gst_mpegv_parse_stop);
-  parse_class->check_valid_frame =
-      GST_DEBUG_FUNCPTR (gst_mpegv_parse_check_valid_frame);
-  parse_class->parse_frame = GST_DEBUG_FUNCPTR (gst_mpegv_parse_parse_frame);
+  parse_class->handle_frame = GST_DEBUG_FUNCPTR (gst_mpegv_parse_handle_frame);
   parse_class->set_sink_caps = GST_DEBUG_FUNCPTR (gst_mpegv_parse_set_caps);
   parse_class->get_sink_caps = GST_DEBUG_FUNCPTR (gst_mpegv_parse_get_caps);
   parse_class->pre_push_frame =
@@ -493,9 +491,9 @@ update_frame_parsing_status (GstMpegvParse * mpvparse,
 }
 
 
-static gboolean
-gst_mpegv_parse_check_valid_frame (GstBaseParse * parse,
-    GstBaseParseFrame * frame, guint * framesize, gint * skipsize)
+static GstFlowReturn
+gst_mpegv_parse_handle_frame (GstBaseParse * parse,
+    GstBaseParseFrame * frame, gint * skipsize)
 {
   GstMpegvParse *mpvparse = GST_MPEGVIDEO_PARSE (parse);
   GstBuffer *buf = frame->buffer;
@@ -547,10 +545,9 @@ gst_mpegv_parse_check_valid_frame (GstBaseParse * parse,
 
 end:
   if (fsize > 0) {
-    *framesize = fsize;
     ret = TRUE;
   } else if (GST_BASE_PARSE_DRAINING (parse)) {
-    *framesize = buf_size;
+    fsize = buf_size;
     ret = TRUE;
 
   } else {
@@ -562,8 +559,6 @@ end:
     else
       *skipsize = 0;
 
-    /* request best next available */
-    *framesize = G_MAXUINT;
     ret = FALSE;
   }
 
@@ -571,7 +566,18 @@ end:
   g_list_free (mpvparse->typeoffsize);
   mpvparse->typeoffsize = NULL;
 
-  return ret;
+  if (ret) {
+    GstFlowReturn res;
+
+    *skipsize = 0;
+    g_assert (fsize <= buf_size);
+    res = gst_mpegv_parse_parse_frame (parse, frame);
+    if (res == GST_BASE_PARSE_FLOW_DROPPED)
+      frame->flags |= GST_BASE_PARSE_FRAME_FLAG_DROP;
+    return gst_base_parse_finish_frame (parse, frame, fsize);
+  }
+
+  return GST_FLOW_OK;
 }
 
 static void

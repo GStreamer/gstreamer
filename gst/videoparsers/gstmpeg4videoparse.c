@@ -70,8 +70,8 @@ G_DEFINE_TYPE (GstMpeg4VParse, gst_mpeg4vparse, GST_TYPE_BASE_PARSE);
 
 static gboolean gst_mpeg4vparse_start (GstBaseParse * parse);
 static gboolean gst_mpeg4vparse_stop (GstBaseParse * parse);
-static gboolean gst_mpeg4vparse_check_valid_frame (GstBaseParse * parse,
-    GstBaseParseFrame * frame, guint * framesize, gint * skipsize);
+static GstFlowReturn gst_mpeg4vparse_handle_frame (GstBaseParse * parse,
+    GstBaseParseFrame * frame, gint * skipsize);
 static GstFlowReturn gst_mpeg4vparse_parse_frame (GstBaseParse * parse,
     GstBaseParseFrame * frame);
 static GstFlowReturn gst_mpeg4vparse_pre_push_frame (GstBaseParse * parse,
@@ -166,9 +166,7 @@ gst_mpeg4vparse_class_init (GstMpeg4VParseClass * klass)
   /* Override BaseParse vfuncs */
   parse_class->start = GST_DEBUG_FUNCPTR (gst_mpeg4vparse_start);
   parse_class->stop = GST_DEBUG_FUNCPTR (gst_mpeg4vparse_stop);
-  parse_class->check_valid_frame =
-      GST_DEBUG_FUNCPTR (gst_mpeg4vparse_check_valid_frame);
-  parse_class->parse_frame = GST_DEBUG_FUNCPTR (gst_mpeg4vparse_parse_frame);
+  parse_class->handle_frame = GST_DEBUG_FUNCPTR (gst_mpeg4vparse_handle_frame);
   parse_class->pre_push_frame =
       GST_DEBUG_FUNCPTR (gst_mpeg4vparse_pre_push_frame);
   parse_class->set_sink_caps = GST_DEBUG_FUNCPTR (gst_mpeg4vparse_set_caps);
@@ -363,9 +361,9 @@ gst_mpeg4vparse_process_sc (GstMpeg4VParse * mp4vparse, GstMpeg4Packet * packet,
  * see https://bugzilla.gnome.org/show_bug.cgi?id=650093 */
 #define GST_BASE_PARSE_FRAME_FLAG_PARSING   0x10000
 
-static gboolean
-gst_mpeg4vparse_check_valid_frame (GstBaseParse * parse,
-    GstBaseParseFrame * frame, guint * framesize, gint * skipsize)
+static GstFlowReturn
+gst_mpeg4vparse_handle_frame (GstBaseParse * parse,
+    GstBaseParseFrame * frame, gint * skipsize)
 {
   GstMpeg4VParse *mp4vparse = GST_MPEG4VIDEO_PARSE (parse);
   GstMpeg4Packet packet;
@@ -374,6 +372,7 @@ gst_mpeg4vparse_check_valid_frame (GstBaseParse * parse,
   gsize size;
   gint off = 0;
   gboolean ret = FALSE;
+  guint framesize;
 
   gst_buffer_map (frame->buffer, &map, GST_MAP_READ);
   data = map.data;
@@ -381,8 +380,10 @@ gst_mpeg4vparse_check_valid_frame (GstBaseParse * parse,
 
 retry:
   /* at least start code and subsequent byte */
-  if (G_UNLIKELY (size - off < 5))
+  if (G_UNLIKELY (size - off < 5)) {
+    *skipsize = 1;
     goto out;
+  }
 
   /* avoid stale cached parsing state */
   if (!(frame->flags & GST_BASE_PARSE_FRAME_FLAG_PARSING)) {
@@ -453,13 +454,11 @@ next:
     case (GST_MPEG4_PARSER_ERROR):
       /* if draining, take all */
       if (GST_BASE_PARSE_DRAINING (parse)) {
-        *framesize = size;
+        framesize = size;
         ret = TRUE;
       } else {
         /* resume scan where we left it */
         mp4vparse->last_sc = size - 3;
-        /* request best next available */
-        *framesize = G_MAXUINT;
       }
       goto out;
       break;
@@ -472,14 +471,25 @@ next:
   off = packet.offset;
 
   if (ret) {
-    *framesize = off - 3;
+    framesize = off - 3;
   } else {
     goto next;
   }
 
 out:
   gst_buffer_unmap (frame->buffer, &map);
-  return ret;
+
+  if (ret) {
+    GstFlowReturn res;
+
+    g_assert (framesize <= map.size);
+    res = gst_mpeg4vparse_parse_frame (parse, frame);
+    if (res == GST_BASE_PARSE_FLOW_DROPPED)
+      frame->flags |= GST_BASE_PARSE_FRAME_FLAG_DROP;
+    return gst_base_parse_finish_frame (parse, frame, framesize);
+  }
+
+  return GST_FLOW_OK;
 }
 
 static void
@@ -694,7 +704,7 @@ gst_mpeg4vparse_pre_push_frame (GstBaseParse * parse, GstBaseParseFrame * frame)
           superbuf = gst_buffer_merge (mp4vparse->config, buffer);
           gst_buffer_copy_into (superbuf, buffer, GST_BUFFER_COPY_METADATA, 0,
               csize);
-          gst_buffer_replace (&frame->buffer, superbuf);
+          gst_buffer_replace (&frame->out_buffer, superbuf);
           gst_buffer_unref (superbuf);
         } else {
           GST_INFO_OBJECT (parse, "... but avoiding duplication");

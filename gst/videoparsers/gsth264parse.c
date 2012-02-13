@@ -79,8 +79,8 @@ static void gst_h264_parse_finalize (GObject * object);
 
 static gboolean gst_h264_parse_start (GstBaseParse * parse);
 static gboolean gst_h264_parse_stop (GstBaseParse * parse);
-static gboolean gst_h264_parse_check_valid_frame (GstBaseParse * parse,
-    GstBaseParseFrame * frame, guint * framesize, gint * skipsize);
+static GstFlowReturn gst_h264_parse_handle_frame (GstBaseParse * parse,
+    GstBaseParseFrame * frame, gint * skipsize);
 static GstFlowReturn gst_h264_parse_parse_frame (GstBaseParse * parse,
     GstBaseParseFrame * frame);
 static GstFlowReturn gst_h264_parse_pre_push_frame (GstBaseParse * parse,
@@ -124,9 +124,7 @@ gst_h264_parse_class_init (GstH264ParseClass * klass)
   /* Override BaseParse vfuncs */
   parse_class->start = GST_DEBUG_FUNCPTR (gst_h264_parse_start);
   parse_class->stop = GST_DEBUG_FUNCPTR (gst_h264_parse_stop);
-  parse_class->check_valid_frame =
-      GST_DEBUG_FUNCPTR (gst_h264_parse_check_valid_frame);
-  parse_class->parse_frame = GST_DEBUG_FUNCPTR (gst_h264_parse_parse_frame);
+  parse_class->handle_frame = GST_DEBUG_FUNCPTR (gst_h264_parse_handle_frame);
   parse_class->pre_push_frame =
       GST_DEBUG_FUNCPTR (gst_h264_parse_pre_push_frame);
   parse_class->set_sink_caps = GST_DEBUG_FUNCPTR (gst_h264_parse_set_caps);
@@ -645,9 +643,9 @@ gst_h264_parse_collect_nal (GstH264Parse * h264parse, const guint8 * data,
  * see https://bugzilla.gnome.org/show_bug.cgi?id=650093 */
 #define GST_BASE_PARSE_FRAME_FLAG_PARSING   0x10000
 
-static gboolean
-gst_h264_parse_check_valid_frame (GstBaseParse * parse,
-    GstBaseParseFrame * frame, guint * framesize, gint * skipsize)
+static GstFlowReturn
+gst_h264_parse_handle_frame (GstBaseParse * parse,
+    GstBaseParseFrame * frame, gint * skipsize)
 {
   GstH264Parse *h264parse = GST_H264_PARSE (parse);
   GstBuffer *buffer = frame->buffer;
@@ -659,6 +657,7 @@ gst_h264_parse_check_valid_frame (GstBaseParse * parse,
   GstH264NalParser *nalparser = h264parse->nalparser;
   GstH264NalUnit nalu;
   GstH264ParserResult pres;
+  gint framesize;
 
   gst_buffer_map (buffer, &map, GST_MAP_READ);
   data = map.data;
@@ -667,7 +666,8 @@ gst_h264_parse_check_valid_frame (GstBaseParse * parse,
   /* expect at least 3 bytes startcode == sc, and 2 bytes NALU payload */
   if (G_UNLIKELY (size < 5)) {
     gst_buffer_unmap (buffer, &map);
-    return FALSE;
+    *skipsize = 1;
+    return GST_FLOW_OK;
   }
 
   /* need to configure aggregation */
@@ -820,14 +820,15 @@ gst_h264_parse_check_valid_frame (GstBaseParse * parse,
   }
 
 end:
-  *framesize = nalu.offset + nalu.size;
+  framesize = nalu.offset + nalu.size;
 
   gst_buffer_unmap (buffer, &map);
-  return TRUE;
+
+  gst_h264_parse_parse_frame (parse, frame);
+
+  return gst_base_parse_finish_frame (parse, frame, framesize);
 
 more:
-  /* ask for best next available */
-  *framesize = G_MAXUINT;
   *skipsize = 0;
 
   /* Restart parsing from here next time */
@@ -837,7 +838,7 @@ more:
   /* Fall-through. */
 out:
   gst_buffer_unmap (buffer, &map);
-  return FALSE;
+  return GST_FLOW_OK;
 
 skip:
   GST_DEBUG_OBJECT (h264parse, "skipping %d", *skipsize);
@@ -1321,7 +1322,7 @@ gst_h264_parse_parse_frame (GstBaseParse * parse, GstBaseParseFrame * frame)
 
     buf = gst_adapter_take_buffer (h264parse->frame_out, av);
     gst_buffer_copy_into (buf, buffer, GST_BUFFER_COPY_METADATA, 0, -1);
-    gst_buffer_replace (&frame->buffer, buf);
+    gst_buffer_replace (&frame->out_buffer, buf);
     gst_buffer_unref (buf);
   }
 
@@ -1541,7 +1542,7 @@ gst_h264_parse_pre_push_frame (GstBaseParse * parse, GstBaseParseFrame * frame)
           /* should already be keyframe/IDR, but it may not have been,
            * so mark it as such to avoid being discarded by picky decoder */
           GST_BUFFER_FLAG_UNSET (new_buf, GST_BUFFER_FLAG_DELTA_UNIT);
-          gst_buffer_replace (&frame->buffer, new_buf);
+          gst_buffer_replace (&frame->out_buffer, new_buf);
           gst_buffer_unref (new_buf);
         }
       }

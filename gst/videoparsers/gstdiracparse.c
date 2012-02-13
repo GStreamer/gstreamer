@@ -56,10 +56,8 @@ static gboolean gst_dirac_parse_set_sink_caps (GstBaseParse * parse,
     GstCaps * caps);
 static GstCaps *gst_dirac_parse_get_sink_caps (GstBaseParse * parse,
     GstCaps * filter);
-static gboolean gst_dirac_parse_check_valid_frame (GstBaseParse * parse,
-    GstBaseParseFrame * frame, guint * framesize, gint * skipsize);
-static GstFlowReturn gst_dirac_parse_parse_frame (GstBaseParse * parse,
-    GstBaseParseFrame * frame);
+static GstFlowReturn gst_dirac_parse_handle_frame (GstBaseParse * parse,
+    GstBaseParseFrame * frame, gint * skipsize);
 static gboolean gst_dirac_parse_convert (GstBaseParse * parse,
     GstFormat src_format, gint64 src_value, GstFormat dest_format,
     gint64 * dest_value);
@@ -127,10 +125,8 @@ gst_dirac_parse_class_init (GstDiracParseClass * klass)
       GST_DEBUG_FUNCPTR (gst_dirac_parse_set_sink_caps);
   base_parse_class->get_sink_caps =
       GST_DEBUG_FUNCPTR (gst_dirac_parse_get_sink_caps);
-  base_parse_class->check_valid_frame =
-      GST_DEBUG_FUNCPTR (gst_dirac_parse_check_valid_frame);
-  base_parse_class->parse_frame =
-      GST_DEBUG_FUNCPTR (gst_dirac_parse_parse_frame);
+  base_parse_class->handle_frame =
+      GST_DEBUG_FUNCPTR (gst_dirac_parse_handle_frame);
   base_parse_class->convert = GST_DEBUG_FUNCPTR (gst_dirac_parse_convert);
   base_parse_class->event = GST_DEBUG_FUNCPTR (gst_dirac_parse_event);
   base_parse_class->src_event = GST_DEBUG_FUNCPTR (gst_dirac_parse_src_event);
@@ -213,9 +209,9 @@ gst_dirac_parse_set_sink_caps (GstBaseParse * parse, GstCaps * caps)
   return TRUE;
 }
 
-static gboolean
-gst_dirac_parse_check_valid_frame (GstBaseParse * parse,
-    GstBaseParseFrame * frame, guint * framesize, gint * skipsize)
+static GstFlowReturn
+gst_dirac_parse_handle_frame (GstBaseParse * parse,
+    GstBaseParseFrame * frame, gint * skipsize)
 {
   int off;
   guint32 next_header;
@@ -224,13 +220,16 @@ gst_dirac_parse_check_valid_frame (GstBaseParse * parse,
   gsize size;
   gboolean have_picture = FALSE;
   int offset;
+  guint framesize = 0;
 
   gst_buffer_map (frame->buffer, &map, GST_MAP_READ);
   data = map.data;
   size = map.size;
 
-  if (G_UNLIKELY (size < 13))
+  if (G_UNLIKELY (size < 13)) {
+    *skipsize = 1;
     goto out;
+  }
 
   GST_DEBUG ("%" G_GSIZE_FORMAT ": %02x %02x %02x %02x", size, data[0], data[1],
       data[2], data[3]);
@@ -261,7 +260,7 @@ gst_dirac_parse_check_valid_frame (GstBaseParse * parse,
     GST_DEBUG ("offset %d:", offset);
 
     if (offset + 13 >= size) {
-      *framesize = offset + 13;
+      framesize = offset + 13;
       goto out;
     }
 
@@ -284,43 +283,21 @@ gst_dirac_parse_check_valid_frame (GstBaseParse * parse,
 
     offset += next_header;
     if (offset >= size) {
-      *framesize = offset;
+      framesize = offset;
       goto out;
     }
   }
 
   gst_buffer_unmap (frame->buffer, &map);
 
-  *framesize = offset;
-  GST_DEBUG ("framesize %d", *framesize);
+  framesize = offset;
+  GST_DEBUG ("framesize %d", framesize);
 
-  return TRUE;
-
-out:
-  gst_buffer_unmap (frame->buffer, &map);
-  return FALSE;
-}
-
-static GstFlowReturn
-gst_dirac_parse_parse_frame (GstBaseParse * parse, GstBaseParseFrame * frame)
-{
-  GstDiracParse *diracparse = GST_DIRAC_PARSE (parse);
-  GstMapInfo map;
-  guint8 *data;
-  gsize size;
-
-  /* Called when processing incoming buffers.  Function should parse
-     a checked frame. */
-  /* MUST implement */
-
-  gst_buffer_map (frame->buffer, &map, GST_MAP_READ);
-  data = map.data;
-  size = map.size;
-
-  //GST_ERROR("got here %d", size);
+  g_assert (framesize <= size);
 
   if (data[4] == SCHRO_PARSE_CODE_SEQUENCE_HEADER) {
     GstCaps *caps;
+    GstDiracParse *diracparse = GST_DIRAC_PARSE (parse);
     DiracSequenceHeader sequence_header;
     int ret;
 
@@ -349,10 +326,14 @@ gst_dirac_parse_parse_frame (GstBaseParse * parse, GstBaseParseFrame * frame)
     }
   }
 
-  gst_buffer_unmap (frame->buffer, &map);
-
   gst_base_parse_set_min_frame_size (parse, 13);
 
+  return gst_base_parse_finish_frame (parse, frame, framesize);
+
+out:
+  gst_buffer_unmap (frame->buffer, &map);
+  if (framesize)
+    gst_base_parse_set_min_frame_size (parse, framesize);
   return GST_FLOW_OK;
 }
 
