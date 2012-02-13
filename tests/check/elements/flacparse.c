@@ -230,10 +230,12 @@ GST_START_TEST (test_parse_flac_detect_stream)
     buf = g_value_peek_pointer (bufval);
     if (i == 0) {
       fail_unless (GST_BUFFER_SIZE (buf) == sizeof (streaminfo_header));
-      fail_unless (memcmp (buf, streaminfo_header, sizeof (streaminfo_header)));
+      fail_unless (memcmp (GST_BUFFER_DATA (buf), streaminfo_header,
+              sizeof (streaminfo_header)) == 0);
     } else if (i == 1) {
       fail_unless (GST_BUFFER_SIZE (buf) == sizeof (comment_header));
-      fail_unless (memcmp (buf, comment_header, sizeof (comment_header)));
+      fail_unless (memcmp (GST_BUFFER_DATA (buf), comment_header,
+              sizeof (comment_header)) == 0);
     }
   }
 
