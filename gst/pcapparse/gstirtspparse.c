@@ -70,10 +70,8 @@ static void gst_irtsp_parse_finalize (GObject * object);
 
 static gboolean gst_irtsp_parse_start (GstBaseParse * parse);
 static gboolean gst_irtsp_parse_stop (GstBaseParse * parse);
-static gboolean gst_irtsp_parse_check_valid_frame (GstBaseParse * parse,
-    GstBaseParseFrame * frame, guint * size, gint * skipsize);
-static GstFlowReturn gst_irtsp_parse_parse_frame (GstBaseParse * parse,
-    GstBaseParseFrame * frame);
+static GstFlowReturn gst_irtsp_parse_handle_frame (GstBaseParse * parse,
+    GstBaseParseFrame * frame, gint * skipsize);
 
 static void gst_irtsp_parse_set_property (GObject * object,
     guint prop_id, const GValue * value, GParamSpec * pspec);
@@ -105,9 +103,7 @@ gst_irtsp_parse_class_init (GstIRTSPParseClass * klass)
 
   parse_class->start = GST_DEBUG_FUNCPTR (gst_irtsp_parse_start);
   parse_class->stop = GST_DEBUG_FUNCPTR (gst_irtsp_parse_stop);
-  parse_class->check_valid_frame =
-      GST_DEBUG_FUNCPTR (gst_irtsp_parse_check_valid_frame);
-  parse_class->parse_frame = GST_DEBUG_FUNCPTR (gst_irtsp_parse_parse_frame);
+  parse_class->handle_frame = GST_DEBUG_FUNCPTR (gst_irtsp_parse_handle_frame);
 
   gst_element_class_add_pad_template (element_class,
       gst_static_pad_template_get (&sink_template));
@@ -158,9 +154,9 @@ gst_irtsp_parse_stop (GstBaseParse * parse)
   return TRUE;
 }
 
-static gboolean
-gst_irtsp_parse_check_valid_frame (GstBaseParse * parse,
-    GstBaseParseFrame * frame, guint * framesize, gint * skipsize)
+static GstFlowReturn
+gst_irtsp_parse_handle_frame (GstBaseParse * parse,
+    GstBaseParseFrame * frame, gint * skipsize)
 {
   GstIRTSPParse *IRTSPParse = GST_IRTSP_PARSE (parse);
   GstBuffer *buf = frame->buffer;
@@ -168,6 +164,7 @@ gst_irtsp_parse_check_valid_frame (GstBaseParse * parse,
   gint off;
   GstMapInfo map;
   gboolean ret = FALSE;
+  guint framesize;
 
   gst_buffer_map (buf, &map, GST_MAP_READ);
   if (G_UNLIKELY (map.size < 4))
@@ -192,25 +189,9 @@ gst_irtsp_parse_check_valid_frame (GstBaseParse * parse,
     goto exit;
   }
 
-  *framesize = GST_READ_UINT16_BE (map.data + 2) + 4;
-  GST_LOG_OBJECT (parse, "got frame size %d", *framesize);
+  framesize = GST_READ_UINT16_BE (map.data + 2) + 4;
+  GST_LOG_OBJECT (parse, "got frame size %d", framesize);
   ret = TRUE;
-
-exit:
-  gst_buffer_unmap (buf, &map);
-
-  return ret;
-}
-
-static GstFlowReturn
-gst_irtsp_parse_parse_frame (GstBaseParse * parse, GstBaseParseFrame * frame)
-{
-  /* HACK HACK skip header.
-   * could also ask baseparse to skip this,
-   * but that would give us a discontinuity for free
-   * which is a bit too much to have on all our packets */
-  frame->buffer = gst_buffer_make_writable (frame->buffer);
-  gst_buffer_resize (frame->buffer, 4, -1);
 
   if (!gst_pad_has_current_caps (GST_BASE_PARSE_SRC_PAD (parse))) {
     GstCaps *caps;
@@ -220,10 +201,21 @@ gst_irtsp_parse_parse_frame (GstBaseParse * parse, GstBaseParseFrame * frame)
     gst_caps_unref (caps);
   }
 
-  GST_BUFFER_FLAG_UNSET (frame->buffer, GST_BUFFER_FLAG_DISCONT);
+exit:
+  gst_buffer_unmap (buf, &map);
+
+  if (ret && framesize <= map.size) {
+    /* HACK HACK skip header.
+     * could also ask baseparse to skip this,
+     * but that would give us a discontinuity for free
+     * which is a bit too much to have on all our packets */
+    frame->out_buffer = gst_buffer_copy (frame->buffer);
+    gst_buffer_resize (frame->out_buffer, 4, -1);
+    GST_BUFFER_FLAG_UNSET (frame->out_buffer, GST_BUFFER_FLAG_DISCONT);
+    return gst_base_parse_finish_frame (parse, frame, framesize);
+  }
 
   return GST_FLOW_OK;
-
 }
 
 static void
