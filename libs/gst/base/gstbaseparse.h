@@ -65,16 +65,6 @@ G_BEGIN_DECLS
  */
 #define GST_BASE_PARSE_FLOW_DROPPED     GST_FLOW_CUSTOM_SUCCESS
 
-/**
- * GST_BASE_PARSE_FLOW_QUEUED:
- *
- * A #GstFlowReturn that can be returned from parse frame to indicate that
- * the buffer will be queued to be pushed when the next OK
- *
- * Since: 0.10.33
- */
-#define GST_BASE_PARSE_FLOW_QUEUED      GST_FLOW_CUSTOM_SUCCESS_1
-
 /* not public API, use accessor macros below */
 #define GST_BASE_PARSE_FLAG_LOST_SYNC (1 << 0)
 #define GST_BASE_PARSE_FLAG_DRAINING  (1 << 1)
@@ -110,6 +100,11 @@ G_BEGIN_DECLS
  * @GST_BASE_PARSE_FRAME_FLAG_CLIP: @pre_push_frame can set this to indicate
  *    that regular segment clipping can still be performed (as opposed to
  *    any custom one having been done).
+ * @GST_BASE_PARSE_FRAME_FLAG_DROP: indicates to @finish_frame that the
+ *    the frame should be dropped (and might be handled internall by subclass)
+ * @GST_BASE_PARSE_FRAME_FLAG_QUEUE: indicates to @finish_frame that the
+ *    the frame should be queued for now and processed fully later
+ *    when the first non-queued frame is finished
  *
  * Flags to be used in a #GstBaseParseFrame.
  *
@@ -118,13 +113,17 @@ G_BEGIN_DECLS
 typedef enum {
   GST_BASE_PARSE_FRAME_FLAG_NONE         = 0,
   GST_BASE_PARSE_FRAME_FLAG_NO_FRAME     = (1 << 0),
-  GST_BASE_PARSE_FRAME_FLAG_CLIP         = (1 << 1)
+  GST_BASE_PARSE_FRAME_FLAG_CLIP         = (1 << 1),
+  GST_BASE_PARSE_FRAME_FLAG_DROP         = (1 << 2),
+  GST_BASE_PARSE_FRAME_FLAG_QUEUE        = (1 << 3)
 } GstBaseParseFrameFlags;
 
 /**
  * GstBaseParseFrame:
- * @buffer: data to check for valid frame or parsed frame.
- *   Subclass is allowed to replace this buffer.
+ * @buffer: input data to be parsed for frames.
+ * @out_buffer: (optional) (replacement) output data.
+ * @offset: media specific offset of input frame
+ *   Note that a converter may have a different one on the frame's buffer.
  * @overhead: subclass can set this to indicates the metadata overhead
  *   for the given frame, which is then used to enable more accurate bitrate
  *   computations. If this is -1, it is assumed that this frame should be
@@ -145,9 +144,12 @@ typedef enum {
  */
 typedef struct {
   GstBuffer * buffer;
+  GstBuffer * out_buffer;
   guint       flags;
+  guint64     offset;
   gint        overhead;
   /*< private >*/
+  gint        size;
   guint       _gst_reserved_i[2];
   gpointer    _gst_reserved_p[2];
   guint       _private_flags;
@@ -192,12 +194,17 @@ struct _GstBaseParse {
  *                  Allows closing external resources.
  * @set_sink_caps:  allows the subclass to be notified of the actual caps set.
  * @get_sink_caps:  allows the subclass to do its own sink get caps if needed.
- * @check_valid_frame:  Check if the given piece of data contains a valid
- *                      frame.
- * @parse_frame:    Parse the already checked frame. Subclass need to
- *                  set the buffer timestamp, duration, caps and possibly
- *                  other necessary metadata. This is called with srcpad's
- *                  STREAM_LOCK held.
+ * @handle_frame:   Parses the input data into valid frames as defined by subclass
+ *                  which should be passed to gst_base_parse_finish_frame().
+ *                  The frame's input buffer is guaranteed writable,
+ *                  whereas the input frame ownership is held by caller
+ *                  (so subclass should make a copy if it needs to hang on).
+ *                  Input buffer (data) is equally managed by baseclass and should also be
+ *                  copied (e.g. gst_buffer_copy_region()) when needed.
+ *                  Time metadata will already be set as much as possible by baseclass
+ *                  according to upstream information and/or subclass settings,
+ *                  though subclass may still set buffer timestamp and duration
+ *                  if desired.
  * @convert:        Optional.
  *                  Convert between formats.
  * @event:          Optional.
@@ -234,13 +241,9 @@ struct _GstBaseParseClass {
   gboolean      (*set_sink_caps)      (GstBaseParse * parse,
                                        GstCaps      * caps);
 
-  gboolean      (*check_valid_frame)  (GstBaseParse      * parse,
+  GstFlowReturn (*handle_frame)       (GstBaseParse      * parse,
                                        GstBaseParseFrame * frame,
-                                       guint             * framesize,
                                        gint              * skipsize);
-
-  GstFlowReturn (*parse_frame)        (GstBaseParse      * parse,
-                                       GstBaseParseFrame * frame);
 
   GstFlowReturn (*pre_push_frame)     (GstBaseParse      * parse,
                                        GstBaseParseFrame * frame);
@@ -281,6 +284,10 @@ void            gst_base_parse_frame_free      (GstBaseParseFrame * frame);
 
 GstFlowReturn   gst_base_parse_push_frame      (GstBaseParse      * parse,
                                                 GstBaseParseFrame * frame);
+
+GstFlowReturn   gst_base_parse_finish_frame    (GstBaseParse * parse,
+                                                GstBaseParseFrame * frame,
+                                                gint size);
 
 void            gst_base_parse_set_duration    (GstBaseParse      * parse,
                                                 GstFormat           fmt,
