@@ -1104,11 +1104,11 @@ new_packet_m2ts (MpegTsMux * mux, guint8 * data, guint len, gint64 new_pcr)
     return FALSE;
   }
 
-  new_packet_common_init (mux, buf, data, len);
-
   /* copies the TS data of 188 bytes to the m2ts buffer at an offset
      of 4 bytes to leave space for writing the timestamp later */
   memcpy (GST_BUFFER_DATA (buf) + 4, data, len);
+  /* After copying the data into the buffer, do other common init (flags and streamheaders) */
+  new_packet_common_init (mux, buf, data, len);
 
   if (new_pcr < 0) {
     /* If theres no pcr in current ts packet then just add the packet
@@ -1215,9 +1215,10 @@ new_packet_normal_ts (MpegTsMux * mux, guint8 * data, guint len, gint64 new_pcr)
     return FALSE;
   }
 
+  memcpy (GST_BUFFER_DATA (buf), data, len);
+  /* After copying the data into the buffer, do other common init (flags and streamheaders) */
   new_packet_common_init (mux, buf, data, len);
 
-  memcpy (GST_BUFFER_DATA (buf), data, len);
   GST_BUFFER_TIMESTAMP (buf) = mux->last_ts;
 
   ret = gst_pad_push (mux->srcpad, buf);
