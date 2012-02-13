@@ -52,13 +52,13 @@ typedef enum {
  * GST_META_FLAGS:
  * @meta: a #GstMeta.
  *
- * A flags word containing #GstMetaFlag flags set on @meta
+ * A flags word containing #GstMetaFlags flags set on @meta
  */
 #define GST_META_FLAGS(meta)  (GST_META_CAST (meta)->flags)
 /**
  * GST_META_FLAG_IS_SET:
  * @meta: a #GstMeta.
- * @flag: the #GstMetaFlag to check.
+ * @flag: the #GstMetaFlags to check.
  *
  * Gives the status of a specific flag on a metadata.
  */
@@ -66,7 +66,7 @@ typedef enum {
 /**
  * GST_META_FLAG_SET:
  * @meta: a #GstMeta.
- * @flag: the #GstMetaFlag to set.
+ * @flag: the #GstMetaFlags to set.
  *
  * Sets a metadata flag on a metadata.
  */
@@ -74,7 +74,7 @@ typedef enum {
 /**
  * GST_META_FLAG_UNSET:
  * @meta: a #GstMeta.
- * @flag: the #GstMetaFlag to clear.
+ * @flag: the #GstMetaFlags to clear.
  *
  * Clears a metadata flag.
  */
