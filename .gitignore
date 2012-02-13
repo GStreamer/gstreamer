@@ -32,7 +32,6 @@ libtool
 ltmain.sh
 missing
 stamp-h1
-bindings/python/rtspserver.c
 tags
 gst-rtsp.spec
 stamp-h.in
