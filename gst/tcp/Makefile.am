@@ -41,7 +41,7 @@ noinst_HEADERS = \
   gsttcpclientsrc.h gsttcpclientsink.h \
   gstmultifdsink.h  \
   gstmultisocketsink.h  \
-  gsttcpserversrc.h gsttcpserversink.h
+  gsttcpserversrc.h gsttcpserversink.h gstmultihandlesink.h
 
 CLEANFILES = $(BUILT_SOURCES)
 
