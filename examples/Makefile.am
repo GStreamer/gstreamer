@@ -1,9 +1,6 @@
 noinst_PROGRAMS = test-video test-ogg test-mp4 test-readme test-launch test-sdp test-uri test-auth
 
-INCLUDES = -I$(top_srcdir) -I$(srcdir)
+#INCLUDES = -I$(top_srcdir) -I$(srcdir)
 
-AM_CFLAGS = $(GST_PLUGINS_BASE_CFLAGS) $(GST_CFLAGS)
-AM_LDFLAGS = \
-	$(GST_LIBS) \
-	$(top_builddir)/gst/rtsp-server/libgstrtspserver-@GST_MAJORMINOR@.la
-
+AM_CFLAGS = $(GST_OBJ_CFLAGS)
+AM_LDFLAGS = $(GST_OBJ_LIBS)

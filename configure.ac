@@ -203,7 +203,7 @@ dnl vars common to for all internal objects (core libs, elements, applications)
 dnl CFLAGS:
 dnl - src and build dirs need to be added because every piece that gets built
 dnl   will need the GStreamer source and generated headers
-GST_ALL_CFLAGS="-I\$(top_srcdir) -I\$(top_builddir) $GST_CFLAGS \$(GST_OPTION_CFLAGS)"
+GST_ALL_CFLAGS="-I\$(top_srcdir) -I\$(top_builddir) $GST_PLUGINS_BASE_CFLAGS $GST_CFLAGS \$(GST_OPTION_CFLAGS)"
 AC_SUBST([GST_ALL_CFLAGS])
 
 dnl FIXME: check if LTLIBINTL is needed everywhere
@@ -217,11 +217,11 @@ GST_ALL_LDFLAGS="-no-undefined"
 AC_SUBST(GST_ALL_LDFLAGS)
 
 dnl GST_OBJ_*
-dnl default vars for all internal objects built on libgstphonon
+dnl default vars for all internal objects built on libgstrtspserver
 dnl includes GST_ALL_*
 GST_OBJ_CFLAGS="\$(GST_ALL_CFLAGS)"
 AC_SUBST([GST_OBJ_CFLAGS])
-GST_OBJ_LIBS="\$(top_builddir)/gst-phonon/libgstphonon.la \$(GST_ALL_LIBS)"
+GST_OBJ_LIBS="\$(top_builddir)/gst/rtsp-server/libgstrtspserver-@GST_MAJORMINOR@.la \$(GST_ALL_LIBS)"
 AC_SUBST([GST_OBJ_LIBS])
 
 dnl this really should only contain flags, not libs - they get added before
@@ -259,5 +259,5 @@ Configuration
 	Compiler                   : ${CC}
 	Vala bindings              : ${enable_vala}
 
-Gst-rtsp-server configured. Type 'make' to build.
+gst-rtsp-server configured. Type 'make' to build.
 "
