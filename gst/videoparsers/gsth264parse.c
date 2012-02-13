@@ -654,7 +654,7 @@ gst_h264_parse_check_valid_frame (GstBaseParse * parse,
   GstMapInfo map;
   guint8 *data;
   gsize size;
-  guint current_off = 0;
+  gint current_off = 0;
   gboolean drain, nonext;
   GstH264NalParser *nalparser = h264parse->nalparser;
   GstH264NalUnit nalu;
