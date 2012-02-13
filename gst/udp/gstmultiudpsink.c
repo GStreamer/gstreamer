@@ -458,7 +458,7 @@ gst_multiudpsink_render (GstBaseSink * bsink, GstBuffer * buffer)
 
   size = 0;
   for (i = 0; i < n_mem; i++) {
-    mem = gst_buffer_peek_memory (buffer, i, GST_MAP_READ);
+    mem = gst_buffer_get_memory (buffer, i);
     gst_memory_map (mem, &map[i], GST_MAP_READ);
 
     if (map[i].size > UDP_MAX_SIZE) {
@@ -510,8 +510,10 @@ gst_multiudpsink_render (GstBaseSink * bsink, GstBuffer * buffer)
   g_mutex_unlock (&sink->client_lock);
 
   /* unmap all memory again */
-  for (i = 0; i < n_mem; i++)
+  for (i = 0; i < n_mem; i++) {
     gst_memory_unmap (map[i].memory, &map[i]);
+    gst_memory_unref (map[i].memory);
+  }
 
   g_free (vec);
   g_free (map);

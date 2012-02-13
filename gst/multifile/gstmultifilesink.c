@@ -692,8 +692,8 @@ buffer_list_copy_data (GstBuffer ** buf, guint idx, gpointer data)
   for (i = 0; i < num; ++i) {
     GstMemory *mem;
 
-    mem = gst_buffer_peek_memory (*buf, i, GST_MAP_READ);
-    gst_buffer_take_memory (dest, -1, gst_memory_ref (mem));
+    mem = gst_buffer_get_memory (*buf, i);
+    gst_buffer_take_memory (dest, -1, mem);
   }
 
   return TRUE;
