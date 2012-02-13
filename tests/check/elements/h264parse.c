@@ -106,8 +106,10 @@ verify_buffer (buffer_verify_data_s * vdata, GstBuffer * buffer)
     gst_buffer_map (buffer, &map, GST_MAP_READ);
     fail_unless (map.size > 4);
     /* only need to check avc output case */
-    if (GST_READ_UINT32_BE (map.data) == 0x01)
+    if (GST_READ_UINT32_BE (map.data) == 0x01) {
+      gst_buffer_unmap (buffer, &map);
       return FALSE;
+    }
     /* header is merged in initial frame */
     if (vdata->buffer_counter == 0) {
       guint8 *data = map.data;
