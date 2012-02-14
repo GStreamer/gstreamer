@@ -1340,13 +1340,17 @@ gst_tag_demux_pad_query (GstPad * pad, GstObject * parent, GstQuery * query)
   GstTagDemux *demux = GST_TAG_DEMUX (parent);
   GstFormat format;
   gint64 result;
-
-  if (!gst_pad_peer_query (demux->priv->sinkpad, query))
-    return FALSE;
+  gboolean res = TRUE;
 
   switch (GST_QUERY_TYPE (query)) {
+    case GST_QUERY_SCHEDULING:
+      res = gst_pad_peer_query (demux->priv->sinkpad, query);
+      break;
     case GST_QUERY_POSITION:
     {
+      if (!(res = gst_pad_peer_query (demux->priv->sinkpad, query)))
+        goto done;
+
       gst_query_parse_position (query, &format, &result);
       if (format == GST_FORMAT_BYTES) {
         result -= demux->priv->strip_start;
@@ -1356,6 +1360,9 @@ gst_tag_demux_pad_query (GstPad * pad, GstObject * parent, GstQuery * query)
     }
     case GST_QUERY_DURATION:
     {
+      if (!(res = gst_pad_peer_query (demux->priv->sinkpad, query)))
+        goto done;
+
       gst_query_parse_duration (query, &format, &result);
       if (format == GST_FORMAT_BYTES) {
         result -= demux->priv->strip_start + demux->priv->strip_end;
@@ -1364,10 +1371,11 @@ gst_tag_demux_pad_query (GstPad * pad, GstObject * parent, GstQuery * query)
       break;
     }
     default:
+      res = gst_pad_query_default (pad, parent, query);
       break;
   }
-
-  return TRUE;
+done:
+  return res;
 }
 
 static void
