@@ -95,7 +95,7 @@ GST_START_TEST (test_##element) \
   gchar *pipeline; \
   \
   pipeline = g_strdup_printf ("videotestsrc num-buffers=100 ! " \
-      "ffmpegcolorspace ! " \
+      "videoconvert ! " \
       " %s ! " \
       " fakesink", #element); \
   \
