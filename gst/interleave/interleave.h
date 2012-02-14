@@ -56,8 +56,8 @@ struct _GstInterleave
   gint rate;
   gint width;
 
-  GValueArray *channel_positions;
-  GValueArray *input_channel_positions;
+    GArray* channel_positions;
+    GArray* input_channel_positions;
   gboolean channel_positions_from_input;
 
   GstCaps *sinkcaps;

@@ -18,10 +18,6 @@
  * Boston, MA 02111-1307, USA.
  */
 
-/* FIXME 0.11: suppress warnings for deprecated API such as GValueArray
- * with newer GLib versions (>= 2.31.0) */
-#define GLIB_DISABLE_DEPRECATION_WARNINGS
-
 #ifdef HAVE_CONFIG_H
 # include "config.h"
 #endif
@@ -81,19 +77,19 @@ static GstStaticPadTemplate sinktemplate = GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS ("audio/x-raw, "
         "format = (string) " GST_AUDIO_NE (F32) ", "
-        "channels = (int) 2, " "rate = (int) 48000"));
+        "channels = (int) 2, layout = (string) {interleaved, non-interleaved}, rate = (int) 48000"));
 
 static GstStaticPadTemplate srctemplate = GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS ("audio/x-raw, "
         "format = (string) " GST_AUDIO_NE (F32) ", "
-        "channels = (int) 1, " "rate = (int) 48000"));
+        "channels = (int) 1, layout = (string) interleaved, rate = (int) 48000"));
 
 #define CAPS_48khz \
         "audio/x-raw, " \
         "format = (string) " GST_AUDIO_NE (F32) ", " \
-        "channels = (int) 1, " \
+        "channels = (int) 1, layout = (string) non-interleaved," \
         "rate = (int) 48000"
 
 static GstFlowReturn
@@ -153,12 +149,14 @@ GST_START_TEST (test_interleave_2ch)
   fail_unless (mysrcpads[0] != NULL);
 
   caps = gst_caps_from_string (CAPS_48khz);
+  gst_pad_set_active (mysrcpads[0], TRUE);
   fail_unless (gst_pad_set_caps (mysrcpads[0], caps));
   gst_pad_use_fixed_caps (mysrcpads[0]);
 
   mysrcpads[1] = gst_pad_new_from_static_template (&srctemplate, "src1");
   fail_unless (mysrcpads[1] != NULL);
 
+  gst_pad_set_active (mysrcpads[1], TRUE);
   fail_unless (gst_pad_set_caps (mysrcpads[1], caps));
   gst_pad_use_fixed_caps (mysrcpads[1]);
 
@@ -281,12 +279,14 @@ GST_START_TEST (test_interleave_2ch_1eos)
   fail_unless (mysrcpads[0] != NULL);
 
   caps = gst_caps_from_string (CAPS_48khz);
+  gst_pad_set_active (mysrcpads[0], TRUE);
   fail_unless (gst_pad_set_caps (mysrcpads[0], caps));
   gst_pad_use_fixed_caps (mysrcpads[0]);
 
   mysrcpads[1] = gst_pad_new_from_static_template (&srctemplate, "src1");
   fail_unless (mysrcpads[1] != NULL);
 
+  gst_pad_set_active (mysrcpads[1], TRUE);
   fail_unless (gst_pad_set_caps (mysrcpads[1], caps));
   gst_pad_use_fixed_caps (mysrcpads[1]);
 
@@ -381,6 +381,34 @@ src_handoff_float32 (GstElement * element, GstBuffer * buffer, GstPad * pad,
   gfloat *data;
   gint i;
   gsize size;
+  GstCaps *caps;
+  guint64 mask;
+  GstAudioChannelPosition pos;
+
+  switch (n) {
+    case 0:
+    case 1:
+    case 2:
+      pos = GST_AUDIO_CHANNEL_POSITION_FRONT_LEFT;
+      break;
+    case 3:
+      pos = GST_AUDIO_CHANNEL_POSITION_FRONT_RIGHT;
+      break;
+    default:
+      pos = GST_AUDIO_CHANNEL_POSITION_INVALID;
+      break;
+  }
+
+  mask = G_GUINT64_CONSTANT (1) << pos;
+
+  caps = gst_caps_new_simple ("audio/x-raw",
+      "format", G_TYPE_STRING, GST_AUDIO_NE (F32),
+      "channels", G_TYPE_INT, 1,
+      "layout", G_TYPE_STRING, "interleaved",
+      "channel-mask", GST_TYPE_BITMASK, mask, "rate", G_TYPE_INT, 48000, NULL);
+
+  gst_pad_set_caps (pad, caps);
+  gst_caps_unref (caps);
 
   size = 48000 * sizeof (gfloat);
   data = g_malloc (size);
@@ -433,7 +461,8 @@ sink_handoff_float32 (GstElement * element, GstBuffer * buffer, GstPad * pad,
   caps = gst_caps_new_simple ("audio/x-raw",
       "format", G_TYPE_STRING, GST_AUDIO_NE (F32),
       "channels", G_TYPE_INT, 2, "rate", G_TYPE_INT, 48000,
-      "channel-mask", GST_TYPE_BITMASK, &mask, NULL);
+      "layout", G_TYPE_STRING, "interleaved",
+      "channel-mask", GST_TYPE_BITMASK, mask, NULL);
 
   ccaps = gst_pad_get_current_caps (pad);
   fail_unless (gst_caps_is_equal (caps, ccaps));
@@ -619,7 +648,7 @@ GST_START_TEST (test_interleave_2ch_pipeline_custom_chanpos)
   GstElement *pipeline, *queue, *src1, *src2, *interleave, *sink;
   GstPad *sinkpad0, *sinkpad1, *tmp, *tmp2;
   GstMessage *msg;
-  GValueArray *arr;
+  GArray *arr;
   GValue val = { 0, };
 
   have_data = 0;
@@ -650,16 +679,18 @@ GST_START_TEST (test_interleave_2ch_pipeline_custom_chanpos)
   interleave = gst_element_factory_make ("interleave", "interleave");
   fail_unless (interleave != NULL);
   g_object_set (interleave, "channel-positions-from-input", FALSE, NULL);
-  arr = g_value_array_new (2);
+  arr = g_array_new (FALSE, TRUE, sizeof (GValue));
+
   g_value_init (&val, GST_TYPE_AUDIO_CHANNEL_POSITION);
   g_value_set_enum (&val, GST_AUDIO_CHANNEL_POSITION_FRONT_CENTER);
-  g_value_array_append (arr, &val);
+  g_array_append_val (arr, val);
   g_value_reset (&val);
   g_value_set_enum (&val, GST_AUDIO_CHANNEL_POSITION_REAR_CENTER);
-  g_value_array_append (arr, &val);
+  g_array_append_val (arr, val);
   g_value_unset (&val);
+
   g_object_set (interleave, "channel-positions", arr, NULL);
-  g_value_array_free (arr);
+  g_array_free (arr, TRUE);
   gst_bin_add (GST_BIN (pipeline), gst_object_ref (interleave));
 
   sinkpad0 = gst_element_get_request_pad (interleave, "sink_%u");
