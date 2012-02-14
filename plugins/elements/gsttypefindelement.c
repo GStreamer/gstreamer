@@ -384,26 +384,32 @@ gst_type_find_handle_src_query (GstPad * pad, GstObject * parent,
   GST_DEBUG_OBJECT (typefind, "Handling src query %s",
       GST_QUERY_TYPE_NAME (query));
 
-  /* We can hijack caps query if we typefind already */
-  if (GST_QUERY_TYPE (query) == GST_QUERY_CAPS) {
-    GST_DEBUG_OBJECT (typefind, "Got caps query, our caps are %" GST_PTR_FORMAT,
-        typefind->caps);
-    if (typefind->caps) {
-      gst_query_set_caps_result (query, typefind->caps);
-      res = TRUE;
-      goto out;
-    }
-  }
-
-  res = gst_pad_peer_query (typefind->sink, query);
-  if (!res)
-    goto out;
-
   switch (GST_QUERY_TYPE (query)) {
+    case GST_QUERY_SCHEDULING:
+      /* FIXME, filter out the scheduling modes that we understand */
+      res = gst_pad_peer_query (typefind->sink, query);
+      break;
+    case GST_QUERY_CAPS:
+    {
+      GST_DEBUG_OBJECT (typefind,
+          "Got caps query, our caps are %" GST_PTR_FORMAT, typefind->caps);
+
+      /* We can hijack caps query if we typefind already */
+      if (typefind->caps) {
+        gst_query_set_caps_result (query, typefind->caps);
+        res = TRUE;
+      } else {
+        res = gst_pad_peer_query (typefind->sink, query);
+      }
+      break;
+    }
     case GST_QUERY_POSITION:
     {
       gint64 peer_pos;
       GstFormat format;
+
+      if (!(res = gst_pad_peer_query (typefind->sink, query)))
+        goto out;
 
       gst_query_parse_position (query, &format, &peer_pos);
 
@@ -422,9 +428,9 @@ gst_type_find_handle_src_query (GstPad * pad, GstObject * parent,
       break;
     }
     default:
+      res = gst_pad_query_default (pad, parent, query);
       break;
   }
-
 out:
   return res;
 }
