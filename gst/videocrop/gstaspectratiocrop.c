@@ -165,7 +165,6 @@ gst_aspect_ratio_crop_sink_event (GstPad * pad, GstObject * parent,
 
       gst_event_parse_caps (evt, &caps);
       ret = gst_aspect_ratio_crop_set_caps (aspect_ratio_crop, caps);
-      gst_caps_unref (caps);
       break;
     }
     default:
@@ -397,7 +396,6 @@ gst_aspect_ratio_crop_get_caps (GstPad * pad, GstCaps * filter)
   peer = gst_pad_get_peer (aspect_ratio_crop->sink);
   if (peer == NULL) {
     return_caps = gst_static_pad_template_get_caps (&src_template);
-    gst_caps_ref (return_caps);
   } else {
     GstCaps *peer_caps;
 
