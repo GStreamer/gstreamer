@@ -1132,6 +1132,7 @@ static gboolean
 gst_type_find_element_activate_sink_mode (GstPad * pad, GstObject * parent,
     GstPadMode mode, gboolean active)
 {
+  gboolean res;
   GstTypeFindElement *typefind;
 
   typefind = GST_TYPE_FIND_ELEMENT (parent);
@@ -1142,10 +1143,10 @@ gst_type_find_element_activate_sink_mode (GstPad * pad, GstObject * parent,
         gst_segment_init (&typefind->segment, GST_FORMAT_BYTES);
         typefind->need_segment = TRUE;
         typefind->offset = 0;
+        res = TRUE;
       } else {
-        gst_pad_stop_task (pad);
+        res = gst_pad_stop_task (pad);
       }
-      return TRUE;
       break;
     case GST_PAD_MODE_PUSH:
       if (active)
@@ -1153,11 +1154,13 @@ gst_type_find_element_activate_sink_mode (GstPad * pad, GstObject * parent,
       else
         stop_typefinding (typefind);
 
-      return TRUE;
+      res = TRUE;
       break;
     default:
-      return FALSE;
+      res = FALSE;
+      break;
   }
+  return res;
 }
 
 static gboolean
