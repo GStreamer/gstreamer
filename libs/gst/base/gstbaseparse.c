@@ -2597,71 +2597,57 @@ gst_base_parse_chain (GstPad * pad, GstObject * parent, GstBuffer * buffer)
   while (!parse->priv->flushing) {
     gint flush = 0;
 
-    /* Synchronization loop */
-    for (;;) {
-      /* note: if subclass indicates MAX fsize,
-       * this will not likely be available anyway ... */
-      min_size = MAX (parse->priv->min_frame_size, fsize);
-      av = gst_adapter_available (parse->priv->adapter);
+    /* note: if subclass indicates MAX fsize,
+     * this will not likely be available anyway ... */
+    min_size = MAX (parse->priv->min_frame_size, fsize);
+    av = gst_adapter_available (parse->priv->adapter);
 
-      if (G_UNLIKELY (parse->priv->drain)) {
-        min_size = av;
-        GST_DEBUG_OBJECT (parse, "draining, data left: %d", min_size);
-        if (G_UNLIKELY (!min_size)) {
-          goto done;
-        }
-      }
-
-      /* Collect at least min_frame_size bytes */
-      if (av < min_size) {
-        GST_DEBUG_OBJECT (parse, "not enough data available (only %d bytes)",
-            av);
-        goto done;
-      }
-
-      /* move along with upstream timestamp (if any),
-       * but interpolate in between */
-      timestamp = gst_adapter_prev_timestamp (parse->priv->adapter, NULL);
-      if (GST_CLOCK_TIME_IS_VALID (timestamp) &&
-          (parse->priv->prev_ts != timestamp)) {
-        parse->priv->prev_ts = parse->priv->next_ts = timestamp;
-      }
-
-      /* always pass all available data */
-      data = gst_adapter_map (parse->priv->adapter, av);
-      /* arrange for actual data to be copied if subclass tries to,
-       * since what is passed is tied to the adapter */
-      tmpbuf = gst_buffer_new ();
-      gst_buffer_take_memory (tmpbuf, -1,
-          gst_memory_new_wrapped (GST_MEMORY_FLAG_READONLY |
-              GST_MEMORY_FLAG_NO_SHARE, (gpointer) data, NULL, av, 0, av));
-      GST_BUFFER_TIMESTAMP (tmpbuf) = timestamp;
-
-      /* keep the adapter mapped, so keep track of what has to be flushed */
-      ret = gst_base_parse_handle_buffer (parse, tmpbuf, &skip, &flush);
-      tmpbuf = NULL;
-
-      /* probably already implicitly unmapped due to adapter operation,
-       * but for good measure ... */
-      gst_adapter_unmap (parse->priv->adapter);
-      if (ret != GST_FLOW_OK) {
-        goto done;
-      }
-      if (skip == 0 && flush == 0) {
-        GST_LOG_OBJECT (parse, "nothing skipped and no frames finished, "
-            "breaking to get more data");
+    if (G_UNLIKELY (parse->priv->drain)) {
+      min_size = av;
+      GST_DEBUG_OBJECT (parse, "draining, data left: %d", min_size);
+      if (G_UNLIKELY (!min_size)) {
         goto done;
       }
     }
 
-    /* Grab lock to prevent a race with FLUSH_START handler */
-    GST_PAD_STREAM_LOCK (parse->srcpad);
+    /* Collect at least min_frame_size bytes */
+    if (av < min_size) {
+      GST_DEBUG_OBJECT (parse, "not enough data available (only %d bytes)", av);
+      goto done;
+    }
 
-    /* FLUSH_START event causes the "flushing" flag to be set. In this
-     * case we can leave the frame pushing loop */
-    if (parse->priv->flushing) {
-      GST_PAD_STREAM_UNLOCK (parse->srcpad);
-      break;
+    /* move along with upstream timestamp (if any),
+     * but interpolate in between */
+    timestamp = gst_adapter_prev_timestamp (parse->priv->adapter, NULL);
+    if (GST_CLOCK_TIME_IS_VALID (timestamp) &&
+        (parse->priv->prev_ts != timestamp)) {
+      parse->priv->prev_ts = parse->priv->next_ts = timestamp;
+    }
+
+    /* always pass all available data */
+    data = gst_adapter_map (parse->priv->adapter, av);
+    /* arrange for actual data to be copied if subclass tries to,
+     * since what is passed is tied to the adapter */
+    tmpbuf = gst_buffer_new ();
+    gst_buffer_take_memory (tmpbuf, -1,
+        gst_memory_new_wrapped (GST_MEMORY_FLAG_READONLY |
+            GST_MEMORY_FLAG_NO_SHARE, (gpointer) data, NULL, av, 0, av));
+    GST_BUFFER_TIMESTAMP (tmpbuf) = timestamp;
+
+    /* keep the adapter mapped, so keep track of what has to be flushed */
+    ret = gst_base_parse_handle_buffer (parse, tmpbuf, &skip, &flush);
+    tmpbuf = NULL;
+
+    /* probably already implicitly unmapped due to adapter operation,
+     * but for good measure ... */
+    gst_adapter_unmap (parse->priv->adapter);
+    if (ret != GST_FLOW_OK) {
+      goto done;
+    }
+    if (skip == 0 && flush == 0) {
+      GST_LOG_OBJECT (parse, "nothing skipped and no frames finished, "
+          "breaking to get more data");
+      goto done;
     }
   }
 
