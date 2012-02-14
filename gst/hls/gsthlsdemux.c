@@ -845,7 +845,6 @@ gst_hls_demux_make_fetcher_locked (GstHLSDemux * demux, const gchar * uri)
   demux->stopping_fetcher = FALSE;
   gst_element_set_bus (GST_ELEMENT (demux->fetcher), demux->fetcher_bus);
 
-  g_object_set (G_OBJECT (demux->fetcher), "location", uri, NULL);
   pad = gst_element_get_static_pad (demux->fetcher, "src");
   if (pad) {
     gst_pad_link (pad, demux->fetcherpad);
