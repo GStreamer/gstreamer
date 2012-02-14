@@ -18,6 +18,7 @@ EXPORTS
 	gst_adapter_unmap
 	gst_base_parse_add_index_entry
 	gst_base_parse_convert_default
+	gst_base_parse_finish_frame
 	gst_base_parse_frame_free
 	gst_base_parse_frame_get_type
 	gst_base_parse_frame_init
