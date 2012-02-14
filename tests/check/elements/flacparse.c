@@ -231,11 +231,11 @@ GST_START_TEST (test_parse_flac_detect_stream)
     if (i == 0) {
       fail_unless (gst_buffer_get_size (buf) == sizeof (streaminfo_header));
       fail_unless (gst_buffer_memcmp (buf, 0, streaminfo_header,
-              sizeof (streaminfo_header)));
+              sizeof (streaminfo_header)) == 0);
     } else if (i == 1) {
       fail_unless (gst_buffer_get_size (buf) == sizeof (comment_header));
       fail_unless (gst_buffer_memcmp (buf, 0, comment_header,
-              sizeof (comment_header)));
+              sizeof (comment_header)) == 0);
     }
   }
 
