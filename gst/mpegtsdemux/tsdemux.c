@@ -149,7 +149,7 @@ struct _TSDemuxStream
       "mpegversion = (int) 1;" \
     "audio/mpeg, " \
       "mpegversion = (int) 4, " \
-      "stream-format = (string) adts; " \
+      "stream-format = (string) {adts, loas}; " \
     "audio/x-lpcm, " \
       "width = (int) { 16, 20, 24 }, " \
       "rate = (int) { 48000, 96000 }, " \
@@ -256,14 +256,11 @@ gst_ts_demux_base_init (gpointer klass)
 {
   GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
 
-  gst_element_class_add_static_pad_template (element_class,
-      &video_template);
-  gst_element_class_add_static_pad_template (element_class,
-      &audio_template);
+  gst_element_class_add_static_pad_template (element_class, &video_template);
+  gst_element_class_add_static_pad_template (element_class, &audio_template);
   gst_element_class_add_static_pad_template (element_class,
       &subpicture_template);
-  gst_element_class_add_static_pad_template (element_class,
-      &private_template);
+  gst_element_class_add_static_pad_template (element_class, &private_template);
 
   gst_element_class_set_details_simple (element_class,
       "MPEG transport stream demuxer",
@@ -1080,12 +1077,19 @@ create_pad_for_stream (MpegTSBase * base, MpegTSBaseStream * bstream,
     case ST_DSMCC_D:
       MPEGTS_BIT_UNSET (base->is_pes, bstream->pid);
       break;
-    case ST_AUDIO_AAC:         /* ADTS */
+    case ST_AUDIO_AAC_ADTS:
       template = gst_static_pad_template_get (&audio_template);
       name = g_strdup_printf ("audio_%04x", bstream->pid);
       caps = gst_caps_new_simple ("audio/mpeg",
           "mpegversion", G_TYPE_INT, 4,
           "stream-format", G_TYPE_STRING, "adts", NULL);
+      break;
+    case ST_AUDIO_AAC_LATM:
+      template = gst_static_pad_template_get (&audio_template);
+      name = g_strdup_printf ("audio_%04x", bstream->pid);
+      caps = gst_caps_new_simple ("audio/mpeg",
+          "mpegversion", G_TYPE_INT, 4,
+          "stream-format", G_TYPE_STRING, "loas", NULL);
       break;
     case ST_VIDEO_MPEG4:
       template = gst_static_pad_template_get (&video_template);
