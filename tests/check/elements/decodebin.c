@@ -218,10 +218,8 @@ static GstStaticPadTemplate sink_template = GST_STATIC_PAD_TEMPLATE ("sink",
 static GType test_mpeg_audio_parse_get_type (void);
 static gboolean test_mpeg_audio_parse_start (GstBaseParse * parse);
 static gboolean test_mpeg_audio_parse_stop (GstBaseParse * parse);
-static gboolean test_mpeg_audio_parse_check_valid_frame (GstBaseParse * parse,
-    GstBaseParseFrame * frame, guint * size, gint * skipsize);
-static GstFlowReturn test_mpeg_audio_parse_parse_frame (GstBaseParse * parse,
-    GstBaseParseFrame * frame);
+static GstFlowReturn test_mpeg_audio_parse_handle_frame (GstBaseParse * parse,
+    GstBaseParseFrame * frame, gint * skipsize);
 
 G_DEFINE_TYPE (TestMpegAudioParse, test_mpeg_audio_parse, GST_TYPE_BASE_PARSE);
 
@@ -242,8 +240,7 @@ test_mpeg_audio_parse_class_init (TestMpegAudioParseClass * klass)
 
   parse_class->start = test_mpeg_audio_parse_start;
   parse_class->stop = test_mpeg_audio_parse_stop;
-  parse_class->check_valid_frame = test_mpeg_audio_parse_check_valid_frame;
-  parse_class->parse_frame = test_mpeg_audio_parse_parse_frame;
+  parse_class->handle_frame = test_mpeg_audio_parse_handle_frame;
 }
 
 static gint num_parse_instances = 0;
@@ -268,38 +265,31 @@ test_mpeg_audio_parse_stop (GstBaseParse * parse)
   return TRUE;
 }
 
-static gboolean
-test_mpeg_audio_parse_check_valid_frame (GstBaseParse * parse,
-    GstBaseParseFrame * frame, guint * framesize, gint * skipsize)
+static GstFlowReturn
+test_mpeg_audio_parse_handle_frame (GstBaseParse * parse,
+    GstBaseParseFrame * frame, gint * skipsize)
 {
   guint8 data[2];
 
   gst_buffer_extract (frame->buffer, 0, data, 2);
 
   if ((GST_READ_UINT16_BE (data) & 0xffe0) == 0xffe0) {
+    if (GST_BUFFER_OFFSET (frame->buffer) == 0) {
+      GstCaps *caps;
+
+      caps = gst_caps_new_simple ("audio/mpeg", "mpegversion", G_TYPE_INT, 1,
+          "mpegaudioversion", G_TYPE_INT, 1, "layer", G_TYPE_INT, 3,
+          "rate", G_TYPE_INT, 44100, "channels", G_TYPE_INT, 2, NULL);
+      gst_pad_set_caps (GST_BASE_PARSE_SRC_PAD (parse), caps);
+      gst_caps_unref (caps);
+    }
+
     /* this framesize is hard-coded for ../test.mp3 */
-    *framesize = 1045;
-    return TRUE;
+    return gst_base_parse_finish_frame (parse, frame, 1045);
   } else {
     *skipsize = 1;
-    return FALSE;
+    return GST_FLOW_OK;
   }
-}
-
-static GstFlowReturn
-test_mpeg_audio_parse_parse_frame (GstBaseParse * parse,
-    GstBaseParseFrame * frame)
-{
-  if (GST_BUFFER_OFFSET (frame->buffer) == 0) {
-    GstCaps *caps;
-
-    caps = gst_caps_new_simple ("audio/mpeg", "mpegversion", G_TYPE_INT, 1,
-        "mpegaudioversion", G_TYPE_INT, 1, "layer", G_TYPE_INT, 3,
-        "rate", G_TYPE_INT, 44100, "channels", G_TYPE_INT, 2, NULL);
-    gst_pad_set_caps (GST_BASE_PARSE_SRC_PAD (parse), caps);
-    gst_caps_unref (caps);
-  }
-  return GST_FLOW_OK;
 }
 
 static gboolean
