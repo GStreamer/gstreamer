@@ -1026,6 +1026,31 @@ discoverer_collect (GstDiscoverer * dc)
           GST_DEBUG ("Got duration %" GST_TIME_FORMAT, GST_TIME_ARGS (dur));
           dc->priv->current_info->duration = (guint64) dur;
         }
+      } else {
+        GstStateChangeReturn sret;
+
+        /* Some parsers may not even return a rough estimate right away, e.g.
+         * because they've only processed a single frame so far, so if we
+         * didn't get a duration the first time, spin a bit and try again.
+         * Ugly, but still better than making parsers or other elements return
+         * completely bogus values. We need some API extensions to solve this
+         * better. */
+        GST_INFO ("No duration yet, try a bit harder..");
+        sret = gst_element_set_state (pipeline, GST_STATE_PLAYING);
+        if (sret != GST_STATE_CHANGE_FAILURE) {
+          int i;
+
+          for (i = 0; i < 2; ++i) {
+            g_usleep (G_USEC_PER_SEC / 20);
+            if (gst_element_query_duration (pipeline, &format, &dur) &&
+                format == GST_FORMAT_TIME && dur > 0) {
+              GST_DEBUG ("Got duration %" GST_TIME_FORMAT, GST_TIME_ARGS (dur));
+              dc->priv->current_info->duration = (guint64) dur;
+              break;
+            }
+          }
+          gst_element_set_state (pipeline, GST_STATE_PAUSED);
+        }
       }
 
       if (dc->priv->seeking_query) {
