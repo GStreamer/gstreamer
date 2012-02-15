@@ -50,6 +50,7 @@ GST_STATIC_PAD_TEMPLATE ("sink", GST_PAD_SINK,
     GST_STATIC_CAPS ("video/x-h263, variant = (string) itu")
     );
 
+#define parent_class gst_h263_parse_parent_class
 G_DEFINE_TYPE (GstH263Parse, gst_h263_parse, GST_TYPE_BASE_PARSE);
 
 static gboolean gst_h263_parse_start (GstBaseParse * parse);
