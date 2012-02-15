@@ -53,8 +53,6 @@ struct _GstH264Parse
 {
   GstBaseParse baseparse;
 
-  GstPadChainFunction parse_chain;
-
   /* stream */
   gint width, height;
   gint fps_num, fps_den;
@@ -64,14 +62,14 @@ struct _GstH264Parse
   GstBuffer *codec_data;
   guint nal_length_size;
   gboolean packetized;
+  gboolean split_packetized;
+  gboolean transform;
 
   /* state */
   GstH264NalParser *nalparser;
   guint align;
   guint format;
   gint current_off;
-  gboolean packetized_last;
-  gboolean packetized_chunked;
 
   GstClockTime last_report;
   gboolean push_codec;
@@ -107,7 +105,6 @@ struct _GstH264Parse
   gboolean picture_start;
 
   /* props */
-  gboolean split_packetized;
   guint interval;
 
   GstClockTime pending_key_unit_ts;
