@@ -357,10 +357,6 @@ gst_mpeg4vparse_process_sc (GstMpeg4VParse * mp4vparse, GstMpeg4Packet * packet,
   return FALSE;
 }
 
-/* FIXME move into baseparse, or anything equivalent;
- * see https://bugzilla.gnome.org/show_bug.cgi?id=650093 */
-#define GST_BASE_PARSE_FRAME_FLAG_PARSING   0x10000
-
 static GstFlowReturn
 gst_mpeg4vparse_handle_frame (GstBaseParse * parse,
     GstBaseParseFrame * frame, gint * skipsize)
@@ -386,10 +382,9 @@ retry:
   }
 
   /* avoid stale cached parsing state */
-  if (!(frame->flags & GST_BASE_PARSE_FRAME_FLAG_PARSING)) {
+  if (frame->flags & GST_BASE_PARSE_FRAME_FLAG_NEW_FRAME) {
     GST_LOG_OBJECT (mp4vparse, "parsing new frame");
     gst_mpeg4vparse_reset_frame (mp4vparse);
-    frame->flags |= GST_BASE_PARSE_FRAME_FLAG_PARSING;
   } else {
     GST_LOG_OBJECT (mp4vparse, "resuming frame parsing");
   }

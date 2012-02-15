@@ -472,19 +472,14 @@ get_frame_size (GstMpegvParse * mpvparse, GstBuffer * buf, GList * l_codoffsz)
   return -1;
 }
 
-/* FIXME move into baseparse, or anything equivalent;
- * see https://bugzilla.gnome.org/show_bug.cgi?id=650093 */
-#define GST_BASE_PARSE_FRAME_FLAG_PARSING   0x10000
-
 static inline void
 update_frame_parsing_status (GstMpegvParse * mpvparse,
     GstBaseParseFrame * frame)
 {
   /* avoid stale cached parsing state */
-  if (!(frame->flags & GST_BASE_PARSE_FRAME_FLAG_PARSING)) {
+  if (frame->flags & GST_BASE_PARSE_FRAME_FLAG_NEW_FRAME) {
     GST_LOG_OBJECT (mpvparse, "parsing new frame");
     gst_mpegv_parse_reset_frame (mpvparse);
-    frame->flags |= GST_BASE_PARSE_FRAME_FLAG_PARSING;
   } else {
     GST_LOG_OBJECT (mpvparse, "resuming frame parsing");
   }
