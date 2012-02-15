@@ -837,6 +837,7 @@ gst_mpeg4vparse_event (GstBaseParse * parse, GstEvent * event)
           mp4vparse->pending_key_unit_ts = running_time;
           gst_event_replace (&mp4vparse->force_key_unit_event, event);
         }
+        gst_event_unref (event);
         res = TRUE;
       } else {
         res = GST_BASE_PARSE_CLASS (parent_class)->event (parse, event);

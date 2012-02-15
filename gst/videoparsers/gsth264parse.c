@@ -1806,6 +1806,7 @@ gst_h264_parse_event (GstBaseParse * parse, GstEvent * event)
           h264parse->pending_key_unit_ts = running_time;
           gst_event_replace (&h264parse->force_key_unit_event, event);
         }
+        gst_event_unref (event);
         res = TRUE;
       } else {
         res = GST_BASE_PARSE_CLASS (parent_class)->event (parse, event);
