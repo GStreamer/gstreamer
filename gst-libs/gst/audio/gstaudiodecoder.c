@@ -1722,7 +1722,7 @@ gst_audio_decoder_src_event (GstPad * pad, GstObject * parent, GstEvent * event)
       break;
     }
     default:
-      res = gst_pad_push_event (dec->sinkpad, event);
+      res = gst_pad_event_default (pad, parent, event);
       break;
   }
 done:
