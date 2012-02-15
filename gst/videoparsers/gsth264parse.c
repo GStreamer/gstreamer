@@ -510,7 +510,7 @@ gst_h264_parse_process_nal (GstH264Parse * h264parse, GstH264NalUnit * nalu)
         if (h264parse->format == GST_H264_PARSE_FORMAT_AVC)
           h264parse->sei_pos = gst_adapter_available (h264parse->frame_out);
         else
-          h264parse->sei_pos = nalu->offset - 4;
+          h264parse->sei_pos = nalu->sc_offset;
         GST_DEBUG_OBJECT (h264parse, "marking SEI in frame at offset %d",
             h264parse->sei_pos);
       }
@@ -553,7 +553,7 @@ gst_h264_parse_process_nal (GstH264Parse * h264parse, GstH264NalUnit * nalu)
         if (h264parse->format == GST_H264_PARSE_FORMAT_AVC)
           h264parse->idr_pos = gst_adapter_available (h264parse->frame_out);
         else
-          h264parse->idr_pos = nalu->offset - 4;
+          h264parse->idr_pos = nalu->sc_offset;
         GST_DEBUG_OBJECT (h264parse, "marking IDR in frame at offset %d",
             h264parse->idr_pos);
       }
