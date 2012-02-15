@@ -1007,7 +1007,7 @@ memcpy_pic(
     for (i = 0; i < height; i++)  {
         memcpy(dst, src, len);
         dst += dst_stride;
-        src += dst_stride;
+        src += src_stride;
     }
 }
 
