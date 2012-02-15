@@ -164,65 +164,6 @@ vorbis_dec_stop (GstAudioDecoder * dec)
   return TRUE;
 }
 
-#if 0
-static gboolean
-vorbis_dec_src_event (GstPad * pad, GstEvent * event)
-{
-  gboolean res = TRUE;
-  GstVorbisDec *dec;
-
-  dec = GST_VORBIS_DEC (gst_pad_get_parent (pad));
-
-  switch (GST_EVENT_TYPE (event)) {
-    case GST_EVENT_SEEK:
-    {
-      GstFormat format, tformat;
-      gdouble rate;
-      GstEvent *real_seek;
-      GstSeekFlags flags;
-      GstSeekType cur_type, stop_type;
-      gint64 cur, stop;
-      gint64 tcur, tstop;
-      guint32 seqnum;
-
-      gst_event_parse_seek (event, &rate, &format, &flags, &cur_type, &cur,
-          &stop_type, &stop);
-      seqnum = gst_event_get_seqnum (event);
-      gst_event_unref (event);
-
-      /* First bring the requested format to time */
-      tformat = GST_FORMAT_TIME;
-      if (!(res = vorbis_dec_convert (pad, format, cur, &tformat, &tcur)))
-        goto convert_error;
-      if (!(res = vorbis_dec_convert (pad, format, stop, &tformat, &tstop)))
-        goto convert_error;
-
-      /* then seek with time on the peer */
-      real_seek = gst_event_new_seek (rate, GST_FORMAT_TIME,
-          flags, cur_type, tcur, stop_type, tstop);
-      gst_event_set_seqnum (real_seek, seqnum);
-
-      res = gst_pad_push_event (dec->sinkpad, real_seek);
-      break;
-    }
-    default:
-      res = gst_pad_push_event (dec->sinkpad, event);
-      break;
-  }
-done:
-  gst_object_unref (dec);
-
-  return res;
-
-  /* ERRORS */
-convert_error:
-  {
-    GST_DEBUG_OBJECT (dec, "cannot convert start/stop for seek");
-    goto done;
-  }
-}
-#endif
-
 static GstFlowReturn
 vorbis_handle_identification_packet (GstVorbisDec * vd)
 {
