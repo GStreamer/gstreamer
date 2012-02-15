@@ -92,15 +92,6 @@ static GstCaps *gst_aac_parse_sink_getcaps (GstBaseParse * parse,
 static GstFlowReturn gst_aac_parse_handle_frame (GstBaseParse * parse,
     GstBaseParseFrame * frame, gint * skipsize);
 
-gboolean gst_aac_parse_convert (GstBaseParse * parse,
-    GstFormat src_format,
-    gint64 src_value, GstFormat dest_format, gint64 * dest_value);
-
-gint gst_aac_parse_get_frame_overhead (GstBaseParse * parse,
-    GstBuffer * buffer);
-
-gboolean gst_aac_parse_event (GstBaseParse * parse, GstEvent * event);
-
 G_DEFINE_TYPE (GstAacParse, gst_aac_parse, GST_TYPE_BASE_PARSE);
 
 static inline gint
