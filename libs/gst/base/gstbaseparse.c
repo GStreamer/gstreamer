@@ -2224,6 +2224,9 @@ gst_base_parse_finish_frame (GstBaseParse * parse, GstBaseParseFrame * frame,
   gst_buffer_unref (frame->out_buffer);
   frame->out_buffer = NULL;
 
+  /* mark input size consumed */
+  frame->size = size;
+
   /* subclass might queue frames/data internally if it needs more
    * frames to decide on the format, or might request us to queue here. */
   if (frame->flags & GST_BASE_PARSE_FRAME_FLAG_DROP) {
