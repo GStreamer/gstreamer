@@ -1212,9 +1212,8 @@ gst_type_find_element_activate_sink (GstPad * pad, GstObject * parent)
     goto typefind_push;
 
   /* only start our task if we ourselves decide to start in pull mode */
-  gst_pad_start_task (pad, (GstTaskFunction) gst_type_find_element_loop, pad);
-
-  return TRUE;
+  return gst_pad_start_task (pad, (GstTaskFunction) gst_type_find_element_loop,
+      pad);
 
 typefind_push:
   {
