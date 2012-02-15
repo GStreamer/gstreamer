@@ -514,7 +514,7 @@ gst_mad_event (GstAudioDecoder * dec, GstEvent * event)
   }
 
   /* Let the base class do its usual thing */
-  return FALSE;
+  return GST_AUDIO_DECODER_CLASS (parent_class)->event (dec, event);
 }
 
 static void
