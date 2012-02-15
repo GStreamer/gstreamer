@@ -297,7 +297,9 @@ gst_task_func (GstTask * task)
         g_rec_mutex_unlock (lock);
 
         GST_TASK_SIGNAL (task);
+        GST_INFO_OBJECT (task, "Task going to paused");
         GST_TASK_WAIT (task);
+        GST_INFO_OBJECT (task, "Task resume from paused");
         GST_OBJECT_UNLOCK (task);
         /* locking order.. */
         g_rec_mutex_lock (lock);
