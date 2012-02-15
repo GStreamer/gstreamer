@@ -811,7 +811,7 @@ gst_mpeg4vparse_get_caps (GstBaseParse * parse, GstCaps * filter)
 static gboolean
 gst_mpeg4vparse_event (GstBaseParse * parse, GstEvent * event)
 {
-  gboolean handled = FALSE;
+  gboolean res;
   GstMpeg4VParse *mp4vparse = GST_MPEG4VIDEO_PARSE (parse);
 
   switch (GST_EVENT_TYPE (event)) {
@@ -821,39 +821,39 @@ gst_mpeg4vparse_event (GstBaseParse * parse, GstEvent * event)
       gboolean all_headers;
       guint count;
 
-      if (!gst_video_event_is_force_key_unit (event))
-        break;
+      if (gst_video_event_is_force_key_unit (event)) {
+        gst_video_event_parse_downstream_force_key_unit (event,
+            &timestamp, &stream_time, &running_time, &all_headers, &count);
 
-      gst_video_event_parse_downstream_force_key_unit (event,
-          &timestamp, &stream_time, &running_time, &all_headers, &count);
+        GST_INFO_OBJECT (mp4vparse, "received downstream force key unit event, "
+            "seqnum %d running_time %" GST_TIME_FORMAT
+            " all_headers %d count %d", gst_event_get_seqnum (event),
+            GST_TIME_ARGS (running_time), all_headers, count);
 
-      GST_INFO_OBJECT (mp4vparse, "received downstream force key unit event, "
-          "seqnum %d running_time %" GST_TIME_FORMAT " all_headers %d count %d",
-          gst_event_get_seqnum (event), GST_TIME_ARGS (running_time),
-          all_headers, count);
-      handled = TRUE;
-
-      if (mp4vparse->force_key_unit_event) {
-        GST_INFO_OBJECT (mp4vparse, "ignoring force key unit event "
-            "as one is already queued");
-        break;
+        if (mp4vparse->force_key_unit_event) {
+          GST_INFO_OBJECT (mp4vparse, "ignoring force key unit event "
+              "as one is already queued");
+        } else {
+          mp4vparse->pending_key_unit_ts = running_time;
+          gst_event_replace (&mp4vparse->force_key_unit_event, event);
+        }
+        res = TRUE;
+      } else {
+        res = GST_BASE_PARSE_CLASS (parent_class)->event (parse, event);
       }
-
-      mp4vparse->pending_key_unit_ts = running_time;
-      gst_event_replace (&mp4vparse->force_key_unit_event, event);
       break;
     }
     default:
+      res = GST_BASE_PARSE_CLASS (parent_class)->event (parse, event);
       break;
   }
-
-  return handled;
+  return res;
 }
 
 static gboolean
 gst_mpeg4vparse_src_event (GstBaseParse * parse, GstEvent * event)
 {
-  gboolean handled = FALSE;
+  gboolean res;
   GstMpeg4VParse *mp4vparse = GST_MPEG4VIDEO_PARSE (parse);
 
   switch (GST_EVENT_TYPE (event)) {
@@ -863,28 +863,27 @@ gst_mpeg4vparse_src_event (GstBaseParse * parse, GstEvent * event)
       gboolean all_headers;
       guint count;
 
-      if (!gst_video_event_is_force_key_unit (event))
-        break;
+      if (gst_video_event_is_force_key_unit (event)) {
+        gst_video_event_parse_upstream_force_key_unit (event,
+            &running_time, &all_headers, &count);
 
-      gst_video_event_parse_upstream_force_key_unit (event,
-          &running_time, &all_headers, &count);
+        GST_INFO_OBJECT (mp4vparse, "received upstream force-key-unit event, "
+            "seqnum %d running_time %" GST_TIME_FORMAT
+            " all_headers %d count %d", gst_event_get_seqnum (event),
+            GST_TIME_ARGS (running_time), all_headers, count);
 
-      GST_INFO_OBJECT (mp4vparse, "received upstream force-key-unit event, "
-          "seqnum %d running_time %" GST_TIME_FORMAT " all_headers %d count %d",
-          gst_event_get_seqnum (event), GST_TIME_ARGS (running_time),
-          all_headers, count);
-
-      if (!all_headers)
-        break;
-
-      mp4vparse->pending_key_unit_ts = running_time;
-      gst_event_replace (&mp4vparse->force_key_unit_event, event);
-      /* leave handled = FALSE so that the event gets propagated upstream */
+        if (all_headers) {
+          mp4vparse->pending_key_unit_ts = running_time;
+          gst_event_replace (&mp4vparse->force_key_unit_event, event);
+        }
+      }
+      res = GST_BASE_PARSE_CLASS (parent_class)->src_event (parse, event);
       break;
     }
     default:
+      res = GST_BASE_PARSE_CLASS (parent_class)->src_event (parse, event);
       break;
   }
 
-  return handled;
+  return res;
 }

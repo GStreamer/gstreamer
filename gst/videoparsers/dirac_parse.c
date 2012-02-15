@@ -32,9 +32,6 @@ void schro_video_format_set_std_signal_range (DiracSequenceHeader * format,
 void schro_video_format_set_std_colour_spec (DiracSequenceHeader * format,
     int index);
 
-
-
-
 int
 dirac_sequence_header_parse (DiracSequenceHeader * header,
     unsigned char *data, int n_bytes)

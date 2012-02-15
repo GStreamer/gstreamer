@@ -1781,7 +1781,7 @@ gst_h264_parse_get_caps (GstBaseParse * parse, GstCaps * filter)
 static gboolean
 gst_h264_parse_event (GstBaseParse * parse, GstEvent * event)
 {
-  gboolean handled = FALSE;
+  gboolean res;
   GstH264Parse *h264parse = GST_H264_PARSE (parse);
 
   switch (GST_EVENT_TYPE (event)) {
@@ -1791,31 +1791,33 @@ gst_h264_parse_event (GstBaseParse * parse, GstEvent * event)
       gboolean all_headers;
       guint count;
 
-      if (!gst_video_event_is_force_key_unit (event))
-        break;
+      if (gst_video_event_is_force_key_unit (event)) {
+        gst_video_event_parse_downstream_force_key_unit (event,
+            &timestamp, &stream_time, &running_time, &all_headers, &count);
 
-      gst_video_event_parse_downstream_force_key_unit (event,
-          &timestamp, &stream_time, &running_time, &all_headers, &count);
-
-      GST_INFO_OBJECT (h264parse, "received downstream force key unit event, "
-          "seqnum %d running_time %" GST_TIME_FORMAT " all_headers %d count %d",
-          gst_event_get_seqnum (event), GST_TIME_ARGS (running_time),
-          all_headers, count);
-      handled = TRUE;
-
-      if (h264parse->force_key_unit_event) {
-        GST_INFO_OBJECT (h264parse, "ignoring force key unit event "
-            "as one is already queued");
+        GST_INFO_OBJECT (h264parse, "received downstream force key unit event, "
+            "seqnum %d running_time %" GST_TIME_FORMAT
+            " all_headers %d count %d", gst_event_get_seqnum (event),
+            GST_TIME_ARGS (running_time), all_headers, count);
+        if (h264parse->force_key_unit_event) {
+          GST_INFO_OBJECT (h264parse, "ignoring force key unit event "
+              "as one is already queued");
+        } else {
+          h264parse->pending_key_unit_ts = running_time;
+          gst_event_replace (&h264parse->force_key_unit_event, event);
+        }
+        res = TRUE;
+      } else {
+        res = GST_BASE_PARSE_CLASS (parent_class)->event (parse, event);
         break;
       }
-
-      h264parse->pending_key_unit_ts = running_time;
-      gst_event_replace (&h264parse->force_key_unit_event, event);
       break;
     }
     case GST_EVENT_FLUSH_STOP:
       h264parse->dts = GST_CLOCK_TIME_NONE;
       h264parse->ts_trn_nb = GST_CLOCK_TIME_NONE;
+
+      res = GST_BASE_PARSE_CLASS (parent_class)->event (parse, event);
       break;
     case GST_EVENT_SEGMENT:
     {
@@ -1827,19 +1829,21 @@ gst_h264_parse_event (GstBaseParse * parse, GstEvent * event)
           (segment->start != 0 || segment->rate != 1.0
               || segment->applied_rate != 1.0))
         h264parse->do_ts = FALSE;
+
+      res = GST_BASE_PARSE_CLASS (parent_class)->event (parse, event);
       break;
     }
     default:
+      res = GST_BASE_PARSE_CLASS (parent_class)->event (parse, event);
       break;
   }
-
-  return handled;
+  return res;
 }
 
 static gboolean
 gst_h264_parse_src_event (GstBaseParse * parse, GstEvent * event)
 {
-  gboolean handled = FALSE;
+  gboolean res;
   GstH264Parse *h264parse = GST_H264_PARSE (parse);
 
   switch (GST_EVENT_TYPE (event)) {
@@ -1849,30 +1853,29 @@ gst_h264_parse_src_event (GstBaseParse * parse, GstEvent * event)
       gboolean all_headers;
       guint count;
 
-      if (!gst_video_event_is_force_key_unit (event))
-        break;
+      if (gst_video_event_is_force_key_unit (event)) {
+        gst_video_event_parse_upstream_force_key_unit (event,
+            &running_time, &all_headers, &count);
 
-      gst_video_event_parse_upstream_force_key_unit (event,
-          &running_time, &all_headers, &count);
+        GST_INFO_OBJECT (h264parse, "received upstream force-key-unit event, "
+            "seqnum %d running_time %" GST_TIME_FORMAT
+            " all_headers %d count %d", gst_event_get_seqnum (event),
+            GST_TIME_ARGS (running_time), all_headers, count);
 
-      GST_INFO_OBJECT (h264parse, "received upstream force-key-unit event, "
-          "seqnum %d running_time %" GST_TIME_FORMAT " all_headers %d count %d",
-          gst_event_get_seqnum (event), GST_TIME_ARGS (running_time),
-          all_headers, count);
-
-      if (!all_headers)
-        break;
-
-      h264parse->pending_key_unit_ts = running_time;
-      gst_event_replace (&h264parse->force_key_unit_event, event);
-      /* leave handled = FALSE so that the event gets propagated upstream */
+        if (all_headers) {
+          h264parse->pending_key_unit_ts = running_time;
+          gst_event_replace (&h264parse->force_key_unit_event, event);
+        }
+      }
+      res = GST_BASE_PARSE_CLASS (parent_class)->src_event (parse, event);
       break;
     }
     default:
+      res = GST_BASE_PARSE_CLASS (parent_class)->src_event (parse, event);
       break;
   }
 
-  return handled;
+  return res;
 }
 
 static GstFlowReturn

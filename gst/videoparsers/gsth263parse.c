@@ -122,7 +122,6 @@ static gboolean
 gst_h263_parse_sink_event (GstBaseParse * parse, GstEvent * event)
 {
   GstH263Parse *h263parse;
-  gboolean res = FALSE;
 
   h263parse = GST_H263_PARSE (parse);
 
@@ -138,12 +137,11 @@ gst_h263_parse_sink_event (GstBaseParse * parse, GstEvent * event)
 
       break;
     }
-
     default:
       break;
   }
 
-  return res;
+  return GST_BASE_PARSE_CLASS (parent_class)->event (parse, event);
 }
 
 static guint

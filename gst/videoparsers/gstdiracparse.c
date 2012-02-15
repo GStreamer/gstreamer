@@ -61,9 +61,6 @@ static GstFlowReturn gst_dirac_parse_handle_frame (GstBaseParse * parse,
 static gboolean gst_dirac_parse_convert (GstBaseParse * parse,
     GstFormat src_format, gint64 src_value, GstFormat dest_format,
     gint64 * dest_value);
-static gboolean gst_dirac_parse_event (GstBaseParse * parse, GstEvent * event);
-static gboolean gst_dirac_parse_src_event (GstBaseParse * parse,
-    GstEvent * event);
 static GstFlowReturn gst_dirac_parse_pre_push_frame (GstBaseParse * parse,
     GstBaseParseFrame * frame);
 
@@ -128,8 +125,6 @@ gst_dirac_parse_class_init (GstDiracParseClass * klass)
   base_parse_class->handle_frame =
       GST_DEBUG_FUNCPTR (gst_dirac_parse_handle_frame);
   base_parse_class->convert = GST_DEBUG_FUNCPTR (gst_dirac_parse_convert);
-  base_parse_class->event = GST_DEBUG_FUNCPTR (gst_dirac_parse_event);
-  base_parse_class->src_event = GST_DEBUG_FUNCPTR (gst_dirac_parse_src_event);
   base_parse_class->pre_push_frame =
       GST_DEBUG_FUNCPTR (gst_dirac_parse_pre_push_frame);
 
@@ -342,22 +337,6 @@ gst_dirac_parse_convert (GstBaseParse * parse, GstFormat src_format,
     gint64 src_value, GstFormat dest_format, gint64 * dest_value)
 {
   /* Convert between formats */
-
-  return FALSE;
-}
-
-static gboolean
-gst_dirac_parse_event (GstBaseParse * parse, GstEvent * event)
-{
-  /* Sink pad event handler */
-
-  return FALSE;
-}
-
-static gboolean
-gst_dirac_parse_src_event (GstBaseParse * parse, GstEvent * event)
-{
-  /* Src pad event handler */
 
   return FALSE;
 }
