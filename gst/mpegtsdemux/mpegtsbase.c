@@ -639,6 +639,7 @@ mpegts_base_activate_program (MpegTSBase * base, MpegTSBaseProgram * program,
   /* activate new pmt */
   if (program->pmt_info)
     gst_structure_free (program->pmt_info);
+
   program->pmt_info = gst_structure_copy (pmt_info);
   program->pmt_pid = pmt_pid;
   program->pcr_pid = pcr_pid;
@@ -689,7 +690,7 @@ mpegts_base_is_psi (MpegTSBase * base, MpegTSPacketizerPacket * packet)
   if (MPEGTS_BIT_IS_SET (base->known_psi, packet->pid))
     retval = TRUE;
 
-  /* check is it is a pes pid */
+  /* check if it is a pes pid */
   if (MPEGTS_BIT_IS_SET (base->is_pes, packet->pid))
     return FALSE;
 
@@ -839,7 +840,6 @@ mpegts_base_apply_pmt (MpegTSBase * base,
 {
   MpegTSBaseProgram *program, *old_program;
   guint program_number;
-  gboolean deactivate_old_program = FALSE;
 
   /* FIXME : not so sure this is valid anymore */
   if (G_UNLIKELY (base->seen_pat == FALSE)) {
@@ -870,18 +870,15 @@ mpegts_base_apply_pmt (MpegTSBase * base,
     program = mpegts_base_new_program (base, program_number, pmt_pid);
     g_hash_table_insert (base->programs,
         GINT_TO_POINTER (program_number), program);
-    deactivate_old_program = TRUE;
+
+    /* Desactivate the old program */
+    mpegts_base_deactivate_program (base, old_program);
+    mpegts_base_free_program (old_program);
   } else
     program = old_program;
 
   /* First activate program */
   mpegts_base_activate_program (base, program, pmt_pid, pmt_info);
-
-  if (deactivate_old_program) {
-    /* deactivate old pmt */ ;
-    mpegts_base_deactivate_program (base, old_program);
-    mpegts_base_free_program (old_program);
-  }
 
   /* if (program->pmt_info) */
   /*   gst_structure_free (program->pmt_info); */
@@ -1266,8 +1263,7 @@ mpegts_base_chain (GstPad * pad, GstBuffer * buf)
   }
 
   mpegts_packetizer_push (base->packetizer, buf);
-  while (((pret =
-              mpegts_packetizer_next_packet (base->packetizer,
+  while (((pret = mpegts_packetizer_next_packet (base->packetizer,
                   &packet)) != PACKET_NEED_MORE) && res == GST_FLOW_OK) {
     if (G_UNLIKELY (pret == PACKET_BAD))
       /* bad header, skip the packet */
@@ -1319,8 +1315,9 @@ mpegts_base_scan (MpegTSBase * base)
 
   /* Find initial sync point */
   for (i = 0; i < 10; i++) {
-    GST_DEBUG ("Grabbing %d => %d",
-        i * 50 * MPEGTS_MAX_PACKETSIZE, 50 * MPEGTS_MAX_PACKETSIZE);
+    GST_DEBUG ("Grabbing %d => %d", i * 50 * MPEGTS_MAX_PACKETSIZE,
+        50 * MPEGTS_MAX_PACKETSIZE);
+
     ret = gst_pad_pull_range (base->sinkpad, i * 50 * MPEGTS_MAX_PACKETSIZE,
         50 * MPEGTS_MAX_PACKETSIZE, &buf);
     if (G_UNLIKELY (ret != GST_FLOW_OK))
