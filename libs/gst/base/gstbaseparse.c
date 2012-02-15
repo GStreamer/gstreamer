@@ -896,8 +896,10 @@ gst_base_parse_sink_event (GstPad * pad, GstObject * parent, GstEvent * event)
 
     if (bclass->event)
       ret = bclass->event (parse, event);
-    else
+    else {
+      gst_event_unref (event);
       ret = FALSE;
+    }
   }
 
   GST_DEBUG_OBJECT (parse, "event handled");
