@@ -656,8 +656,7 @@ gst_base_parse_frame_init (GstBaseParseFrame * frame)
  * then use gst_base_parse_frame_init() to initialise it.
  *
  * Returns: a newly-allocated #GstBaseParseFrame. Free with
- *     gst_base_parse_frame_free() when no longer needed, unless you gave
- *     away ownership to gst_base_parse_push_frame().
+ *     gst_base_parse_frame_free() when no longer needed.
  *
  * Since: 0.10.33
  */
@@ -2163,7 +2162,8 @@ no_caps:
  * If @frame's out_buffer is set, that will be used as subsequent frame data.
  * Otherwise, @size samples will be taken from the input and used for output,
  * and the output's metadata (timestamps etc) will be taken as (optionally)
- * set by the subclass on @frame's (input) buffer.
+ * set by the subclass on @frame's (input) buffer (which is otherwise
+ * ignored for any but the above purpose/information).
  *
  * Note that the latter buffer is invalidated by this call, whereas the
  * caller retains ownership of @frame.

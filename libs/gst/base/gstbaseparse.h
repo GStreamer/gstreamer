@@ -203,10 +203,9 @@ struct _GstBaseParse {
  *                  The frame's input buffer is guaranteed writable,
  *                  whereas the input frame ownership is held by caller
  *                  (so subclass should make a copy if it needs to hang on).
- *                  Input buffer (data) is equally managed by baseclass and should also be
- *                  copied (e.g. gst_buffer_copy_region()) when needed.
- *                  Time metadata will already be set as much as possible by baseclass
- *                  according to upstream information and/or subclass settings,
+ *                  Input buffer (data) is provided by baseclass with as much
+ *                  metadata set as possible by baseclass according to upstream
+ *                  information and/or subclass settings,
  *                  though subclass may still set buffer timestamp and duration
  *                  if desired.
  * @convert:        Optional.
