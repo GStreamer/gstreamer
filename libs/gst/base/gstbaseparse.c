@@ -1272,13 +1272,13 @@ gst_base_parse_convert_default (GstBaseParse * parse,
 
   /* need at least some frames */
   if (!parse->priv->framecount)
-    return FALSE;
+    goto no_framecount;
 
   duration = parse->priv->acc_duration / GST_MSECOND;
   bytes = parse->priv->bytecount;
 
   if (G_UNLIKELY (!duration || !bytes))
-    return FALSE;
+    goto no_duration_bytes;
 
   if (src_format == GST_FORMAT_BYTES) {
     if (dest_format == GST_FORMAT_TIME) {
@@ -1289,6 +1289,8 @@ gst_base_parse_convert_default (GstBaseParse * parse,
       GST_DEBUG_OBJECT (parse, "conversion result: %" G_GINT64_FORMAT " ms",
           *dest_value / GST_MSECOND);
       ret = TRUE;
+    } else {
+      GST_DEBUG_OBJECT (parse, "converting bytes -> other not implemented");
     }
   } else if (src_format == GST_FORMAT_TIME) {
     if (dest_format == GST_FORMAT_BYTES) {
@@ -1299,20 +1301,39 @@ gst_base_parse_convert_default (GstBaseParse * parse,
           "time %" G_GINT64_FORMAT " ms in bytes = %" G_GINT64_FORMAT,
           src_value / GST_MSECOND, *dest_value);
       ret = TRUE;
+    } else {
+      GST_DEBUG_OBJECT (parse, "converting time -> other not implemented");
     }
   } else if (src_format == GST_FORMAT_DEFAULT) {
     /* DEFAULT == frame-based */
     if (dest_format == GST_FORMAT_TIME) {
+      GST_DEBUG_OBJECT (parse, "converting default -> time");
       if (parse->priv->fps_den) {
         *dest_value = gst_util_uint64_scale (src_value,
             GST_SECOND * parse->priv->fps_den, parse->priv->fps_num);
         ret = TRUE;
       }
-    } else if (dest_format == GST_FORMAT_BYTES) {
+    } else {
+      GST_DEBUG_OBJECT (parse, "converting default -> other not implemented");
     }
+  } else {
+    GST_DEBUG_OBJECT (parse, "conversion not implemented");
+  }
+  return ret;
+
+  /* ERRORS */
+no_framecount:
+  {
+    GST_DEBUG_OBJECT (parse, "no framecount");
+    return FALSE;
+  }
+no_duration_bytes:
+  {
+    GST_DEBUG_OBJECT (parse, "no duration %" G_GUINT64_FORMAT ", bytes %"
+        G_GUINT64_FORMAT, duration, bytes);
+    return FALSE;
   }
 
-  return ret;
 }
 
 static void
