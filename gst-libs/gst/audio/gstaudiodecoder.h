@@ -193,9 +193,8 @@ struct _GstAudioDecoder
  *                  @hard indicates whether a FLUSH is being processed,
  *                  or otherwise a DISCONT (or conceptually similar).
  * @event:          Optional.
- *                  Event handler on the sink pad. This function should return
- *                  TRUE if the event was handled and should be discarded
- *                  (i.e. not unref'ed).
+ *                  Event handler on the sink pad. Subclasses should chain up to
+ *                  the parent implementation to invoke the default handler.
  * @pre_push:       Optional.
  *                  Called just prior to pushing (encoded data) buffer downstream.
  *                  Subclass has full discretionary access to buffer,
