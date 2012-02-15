@@ -3013,7 +3013,6 @@ static gboolean
 gst_base_parse_sink_activate (GstPad * sinkpad, GstObject * parent)
 {
   GstBaseParse *parse;
-  gboolean result = TRUE;
   GstQuery *query;
   gboolean pull_mode;
 
@@ -3022,24 +3021,29 @@ gst_base_parse_sink_activate (GstPad * sinkpad, GstObject * parent)
   GST_DEBUG_OBJECT (parse, "sink activate");
 
   query = gst_query_new_scheduling ();
-  result = gst_pad_peer_query (sinkpad, query);
-  if (result) {
-    pull_mode = gst_query_has_scheduling_mode (query, GST_PAD_MODE_PULL);
-  } else {
-    pull_mode = FALSE;
+  if (!gst_pad_peer_query (sinkpad, query)) {
+    gst_query_unref (query);
+    goto baseparse_push;
   }
+
+  pull_mode = gst_query_has_scheduling_mode (query, GST_PAD_MODE_PULL);
   gst_query_unref (query);
 
-  if (pull_mode) {
-    GST_DEBUG_OBJECT (parse, "trying to activate in pull mode");
-    result = gst_pad_activate_mode (sinkpad, GST_PAD_MODE_PULL, TRUE);
-  } else {
-    GST_DEBUG_OBJECT (parse, "trying to activate in push mode");
-    result = gst_pad_activate_mode (sinkpad, GST_PAD_MODE_PUSH, TRUE);
-  }
+  if (!pull_mode)
+    goto baseparse_push;
 
-  GST_DEBUG_OBJECT (parse, "sink activate return %d", result);
-  return result;
+  GST_DEBUG_OBJECT (parse, "trying to activate in pull mode");
+  if (!gst_pad_activate_mode (sinkpad, GST_PAD_MODE_PULL, TRUE))
+    goto baseparse_push;
+
+  return gst_pad_start_task (sinkpad, (GstTaskFunction) gst_base_parse_loop,
+      sinkpad);
+  /* fallback */
+baseparse_push:
+  {
+    GST_DEBUG_OBJECT (parse, "trying to activate in push mode");
+    return gst_pad_activate_mode (sinkpad, GST_PAD_MODE_PUSH, TRUE);
+  }
 }
 
 static gboolean
@@ -3078,31 +3082,28 @@ static gboolean
 gst_base_parse_sink_activate_mode (GstPad * pad, GstObject * parent,
     GstPadMode mode, gboolean active)
 {
-  gboolean result = TRUE;
+  gboolean result;
   GstBaseParse *parse;
 
   parse = GST_BASE_PARSE (parent);
 
   GST_DEBUG_OBJECT (parse, "sink activate mode %d, %d", mode, active);
 
-  result = gst_base_parse_activate (parse, active);
+  if (!gst_base_parse_activate (parse, active))
+    goto activate_failed;
 
-  if (result) {
-    switch (mode) {
-      case GST_PAD_MODE_PULL:
-        if (active) {
-          parse->priv->pending_segment =
-              gst_event_new_segment (&parse->segment);
-          result &=
-              gst_pad_start_task (pad, (GstTaskFunction) gst_base_parse_loop,
-              pad);
-        } else {
-          result &= gst_pad_stop_task (pad);
-        }
-        break;
-      default:
-        break;
-    }
+  switch (mode) {
+    case GST_PAD_MODE_PULL:
+      if (active) {
+        parse->priv->pending_segment = gst_event_new_segment (&parse->segment);
+        result = TRUE;
+      } else {
+        result = gst_pad_stop_task (pad);
+      }
+      break;
+    default:
+      result = TRUE;
+      break;
   }
   if (result)
     parse->priv->pad_mode = active ? mode : GST_PAD_MODE_NONE;
@@ -3110,6 +3111,13 @@ gst_base_parse_sink_activate_mode (GstPad * pad, GstObject * parent,
   GST_DEBUG_OBJECT (parse, "sink activate return: %d", result);
 
   return result;
+
+  /* ERRORS */
+activate_failed:
+  {
+    GST_DEBUG_OBJECT (parse, "activate failed");
+    return FALSE;
+  }
 }
 
 /**
