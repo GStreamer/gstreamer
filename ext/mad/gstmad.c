@@ -88,6 +88,7 @@ static void gst_mad_set_property (GObject * object, guint prop_id,
 static void gst_mad_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec);
 
+#define parent_class gst_mad_parent_class
 G_DEFINE_TYPE (GstMad, gst_mad, GST_TYPE_AUDIO_DECODER);
 
 static void
