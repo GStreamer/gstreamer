@@ -526,6 +526,7 @@ gst_base_parse_class_init (GstBaseParseClass * klass)
 #endif
 
   /* Default handlers */
+  klass->event = gst_base_parse_sink_eventfunc;
   klass->src_event = gst_base_parse_src_eventfunc;
   klass->convert = gst_base_parse_convert_default;
 
@@ -863,8 +864,7 @@ gst_base_parse_sink_event (GstPad * pad, GstObject * parent, GstEvent * event)
 {
   GstBaseParse *parse;
   GstBaseParseClass *bclass;
-  gboolean handled = FALSE;
-  gboolean ret = TRUE;
+  gboolean ret;
 
   parse = GST_BASE_PARSE (parent);
   bclass = GST_BASE_PARSE_GET_CLASS (parse);
@@ -895,13 +895,9 @@ gst_base_parse_sink_event (GstPad * pad, GstObject * parent, GstEvent * event)
       gst_base_parse_post_bitrates (parse, TRUE, TRUE, TRUE);
 
     if (bclass->event)
-      handled = bclass->event (parse, event);
-
-    if (!handled)
-      handled = gst_base_parse_sink_eventfunc (parse, event);
-
-    if (!handled)
-      ret = gst_pad_event_default (pad, parent, event);
+      ret = bclass->event (parse, event);
+    else
+      ret = FALSE;
   }
 
   GST_DEBUG_OBJECT (parse, "event handled");
@@ -924,7 +920,7 @@ gst_base_parse_sink_event (GstPad * pad, GstObject * parent, GstEvent * event)
 static gboolean
 gst_base_parse_sink_eventfunc (GstBaseParse * parse, GstEvent * event)
 {
-  gboolean handled = FALSE;
+  gboolean ret;
   GstEvent **eventp;
 
   switch (GST_EVENT_TYPE (event)) {
@@ -939,11 +935,12 @@ gst_base_parse_sink_eventfunc (GstBaseParse * parse, GstEvent * event)
       GST_DEBUG_OBJECT (parse, "caps: %" GST_PTR_FORMAT, caps);
 
       if (klass->set_sink_caps)
-        klass->set_sink_caps (parse, caps);
+        ret = klass->set_sink_caps (parse, caps);
+      else
+        ret = TRUE;
 
       /* will send our own caps downstream */
       gst_event_unref (event);
-      handled = TRUE;
       break;
     }
     case GST_EVENT_SEGMENT:
@@ -1049,7 +1046,7 @@ gst_base_parse_sink_eventfunc (GstBaseParse * parse, GstEvent * event)
       eventp = &parse->priv->pending_segment;
       gst_event_replace (eventp, event);
       gst_event_unref (event);
-      handled = TRUE;
+      ret = TRUE;
 
       /* but finish the current segment */
       GST_DEBUG_OBJECT (parse, "draining current segment");
@@ -1070,16 +1067,14 @@ gst_base_parse_sink_eventfunc (GstBaseParse * parse, GstEvent * event)
 
     case GST_EVENT_FLUSH_START:
       parse->priv->flushing = TRUE;
-      handled = gst_pad_push_event (parse->srcpad, gst_event_ref (event));
-      if (handled)
-        gst_event_unref (event);
+      ret = gst_pad_push_event (parse->srcpad, event);
       /* Wait for _chain() to exit by taking the srcpad STREAM_LOCK */
       GST_PAD_STREAM_LOCK (parse->srcpad);
       GST_PAD_STREAM_UNLOCK (parse->srcpad);
-
       break;
 
     case GST_EVENT_FLUSH_STOP:
+      ret = gst_pad_push_event (parse->srcpad, event);
       gst_adapter_clear (parse->priv->adapter);
       gst_base_parse_clear_queues (parse);
       parse->priv->flushing = FALSE;
@@ -1107,13 +1102,16 @@ gst_base_parse_sink_eventfunc (GstBaseParse * parse, GstEvent * event)
         gst_pad_push_event (parse->srcpad, parse->priv->pending_segment);
         parse->priv->pending_segment = NULL;
       }
+      ret = gst_pad_push_event (parse->srcpad, event);
       break;
 
     default:
+      ret =
+          gst_pad_event_default (parse->sinkpad, GST_OBJECT_CAST (parse),
+          event);
       break;
   }
-
-  return handled;
+  return ret;
 }
 
 static gboolean
@@ -1184,7 +1182,6 @@ gst_base_parse_src_event (GstPad * pad, GstObject * parent, GstEvent * event)
 {
   GstBaseParse *parse;
   GstBaseParseClass *bclass;
-  gboolean handled = FALSE;
   gboolean ret = TRUE;
 
   parse = GST_BASE_PARSE (parent);
@@ -1194,10 +1191,9 @@ gst_base_parse_src_event (GstPad * pad, GstObject * parent, GstEvent * event)
       GST_EVENT_TYPE_NAME (event));
 
   if (bclass->src_event)
-    handled = bclass->src_event (parse, event);
-
-  if (!handled)
-    ret = gst_pad_event_default (pad, parent, event);
+    ret = bclass->src_event (parse, event);
+  else
+    gst_event_unref (event);
 
   return ret;
 }
@@ -1221,20 +1217,19 @@ gst_base_parse_is_seekable (GstBaseParse * parse)
 static gboolean
 gst_base_parse_src_eventfunc (GstBaseParse * parse, GstEvent * event)
 {
-  gboolean handled = FALSE;
+  gboolean res = FALSE;
 
   switch (GST_EVENT_TYPE (event)) {
     case GST_EVENT_SEEK:
-    {
-      if (gst_base_parse_is_seekable (parse)) {
-        handled = gst_base_parse_handle_seek (parse, event);
-      }
+      if (gst_base_parse_is_seekable (parse))
+        res = gst_base_parse_handle_seek (parse, event);
       break;
-    }
     default:
+      res = gst_pad_event_default (parse->srcpad, GST_OBJECT_CAST (parse),
+          event);
       break;
   }
-  return handled;
+  return res;
 }
 
 
@@ -3343,6 +3338,8 @@ gst_base_parse_get_duration (GstBaseParse * parse, GstFormat format,
     GST_LOG_OBJECT (parse, "using estimated duration");
     *duration = parse->priv->estimated_duration;
     res = TRUE;
+  } else {
+    GST_LOG_OBJECT (parse, "cannot estimate duration");
   }
 
   GST_LOG_OBJECT (parse, "res: %d, duration %" GST_TIME_FORMAT, res,
@@ -3793,16 +3790,9 @@ gst_base_parse_handle_seek (GstBaseParse * parse, GstEvent * event)
   /* For any format other than TIME, see if upstream handles
    * it directly or fail. For TIME, try upstream, but do it ourselves if
    * it fails upstream */
-  if (format != GST_FORMAT_TIME) {
-    /* default action delegates to upstream */
-    res = FALSE;
+  res = gst_pad_push_event (parse->sinkpad, event);
+  if (format != GST_FORMAT_TIME || res)
     goto done;
-  } else {
-    gst_event_ref (event);
-    if ((res = gst_pad_push_event (parse->sinkpad, event))) {
-      goto done;
-    }
-  }
 
   /* get flush flag */
   flush = flags & GST_SEEK_FLAG_FLUSH;
@@ -3989,9 +3979,6 @@ gst_base_parse_handle_seek (GstBaseParse * parse, GstEvent * event)
   }
 
 done:
-  /* handled event is ours to free */
-  if (res)
-    gst_event_unref (event);
   return res;
 
   /* ERRORS */

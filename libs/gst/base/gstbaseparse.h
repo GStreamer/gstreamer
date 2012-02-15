@@ -208,11 +208,12 @@ struct _GstBaseParse {
  * @convert:        Optional.
  *                  Convert between formats.
  * @event:          Optional.
- *                  Event handler on the sink pad. This function should return
- *                  TRUE if the event was handled and can be dropped.
+ *                  Event handler on the sink pad. This function should chain
+ *                  up to the parent implementation to let the default handler
+ *                  run.
  * @src_event:      Optional.
- *                  Event handler on the source pad. Should return TRUE
- *                  if the event was handled and can be dropped.
+ *                  Event handler on the source pad. Should chain up to the
+ *                  parent to let the default handler run.
  * @pre_push_frame: Optional.
  *                   Called just prior to pushing a frame (after any pending
  *                   events have been sent) to give subclass a chance to perform
