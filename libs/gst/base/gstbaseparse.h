@@ -93,6 +93,9 @@ G_BEGIN_DECLS
 /**
  * GstBaseParseFrameFlags:
  * @GST_BASE_PARSE_FRAME_FLAG_NONE: no flag
+ * @GST_BASE_PARSE_FRAME_FLAG_NEW_FRAME: set by baseclass if current frame
+ *   is passed for processing to the subclass for the first time
+ *   (and not set on subsequent calls with same data).
  * @GST_BASE_PARSE_FRAME_FLAG_NO_FRAME: set to indicate this buffer should not be
  *   counted as frame, e.g. if this frame is dependent on a previous one.
  *   As it is not counted as a frame, bitrate increases but frame to time
@@ -112,6 +115,7 @@ G_BEGIN_DECLS
  */
 typedef enum {
   GST_BASE_PARSE_FRAME_FLAG_NONE         = 0,
+  GST_BASE_PARSE_FRAME_FLAG_NEW_FRAME    = (1 << 0),
   GST_BASE_PARSE_FRAME_FLAG_NO_FRAME     = (1 << 0),
   GST_BASE_PARSE_FRAME_FLAG_CLIP         = (1 << 1),
   GST_BASE_PARSE_FRAME_FLAG_DROP         = (1 << 2),

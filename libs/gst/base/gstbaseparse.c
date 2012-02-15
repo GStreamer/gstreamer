@@ -323,10 +323,10 @@ struct _GstBaseParsePrivate
   /* Newsegment event to be sent after SEEK */
   GstEvent *pending_segment;
 
-  /* frame previously passed to subclass (might be re-used) */
-  GstBaseParseFrame *prev_frame;
-  /* offset corresponding to above frame */
+  /* offset of last parsed frame/data */
   gint64 prev_offset;
+  /* force a new frame, regardless of offset */
+  gboolean new_frame;
   /* whether we are merely scanning for a frame */
   gboolean scanning;
   /* ... and resulting frame, if any */
@@ -762,11 +762,7 @@ gst_base_parse_reset (GstBaseParse * parse)
   if (parse->priv->adapter)
     gst_adapter_clear (parse->priv->adapter);
 
-  /* we know it is not alloc'ed, but maybe other stuff to free, some day ... */
-  if (parse->priv->prev_frame) {
-    gst_base_parse_frame_free (parse->priv->prev_frame);
-    parse->priv->prev_frame = NULL;
-  }
+  parse->priv->new_frame = TRUE;
 
   g_list_foreach (parse->priv->detect_buffers, (GFunc) gst_buffer_unref, NULL);
   g_list_free (parse->priv->detect_buffers);
@@ -1082,10 +1078,7 @@ gst_base_parse_sink_eventfunc (GstBaseParse * parse, GstEvent * event)
       parse->priv->flushing = FALSE;
       parse->priv->discont = TRUE;
       parse->priv->last_ts = GST_CLOCK_TIME_NONE;
-      if (parse->priv->prev_frame) {
-        gst_base_parse_frame_free (parse->priv->prev_frame);
-        parse->priv->prev_frame = NULL;
-      }
+      parse->priv->new_frame = TRUE;
       break;
 
     case GST_EVENT_EOS:
@@ -1725,22 +1718,17 @@ gst_base_parse_prepare_frame (GstBaseParse * parse, GstBuffer * buffer)
 
   GST_BUFFER_OFFSET (buffer) = parse->priv->offset;
 
-  if (parse->priv->prev_frame) {
-    if (parse->priv->prev_offset == parse->priv->offset) {
-      frame = parse->priv->prev_frame;
-    } else {
-      gst_base_parse_frame_free (parse->priv->prev_frame);
-    }
-    parse->priv->prev_frame = NULL;
-  }
-
-  if (!frame) {
-    frame = gst_base_parse_frame_new (buffer, 0, 0);
-  }
+  frame = gst_base_parse_frame_new (buffer, 0, 0);
 
   /* also ensure to update state flags */
   gst_base_parse_frame_update (parse, frame, buffer);
   gst_buffer_unref (buffer);
+
+  if (parse->priv->prev_offset != parse->priv->offset || parse->priv->new_frame) {
+    GST_LOG_OBJECT (parse, "marking as new frame");
+    parse->priv->new_frame = FALSE;
+    frame->flags |= GST_BASE_PARSE_FRAME_FLAG_NEW_FRAME;
+  }
 
   frame->offset = parse->priv->prev_offset = parse->priv->offset;
 
@@ -1748,15 +1736,6 @@ gst_base_parse_prepare_frame (GstBaseParse * parse, GstBuffer * buffer)
   gst_base_parse_parse_frame (parse, frame);
 
   return frame;
-}
-
-static void
-gst_base_parse_unprepare_frame (GstBaseParse * parse, GstBaseParseFrame * frame)
-{
-  g_assert (parse->priv->prev_frame == NULL);
-
-  parse->priv->prev_frame = frame;
-  gst_base_parse_frame_update (parse, frame, NULL);
 }
 
 /* Wraps buffer in a frame and dispatches to subclass.
@@ -1790,7 +1769,6 @@ gst_base_parse_handle_buffer (GstBaseParse * parse, GstBuffer * buffer,
 
   frame = gst_base_parse_prepare_frame (parse, buffer);
   ret = klass->handle_frame (parse, frame, skip);
-  gst_base_parse_unprepare_frame (parse, frame);
 
   *flushed = parse->priv->flushed;
 
@@ -1804,14 +1782,6 @@ gst_base_parse_handle_buffer (GstBaseParse * parse, GstBuffer * buffer,
 
   /* subclass can only do one of these, or semantics are too unclear */
   g_assert (*skip == 0 || *flushed == 0);
-
-  /* if it did something, clear frame state,
-   * though this should also trigger the offset check anyway */
-  if (*skip != 0 || *flushed != 0) {
-    GST_LOG_OBJECT (parse, "clearing prev frame");
-    gst_base_parse_frame_free (parse->priv->prev_frame);
-    parse->priv->prev_frame = NULL;
-  }
 
   /* track skipping */
   if (*skip > 0) {
@@ -1848,6 +1818,8 @@ exit:
   if (parse->priv->pad_mode == GST_PAD_MODE_PULL) {
     gst_adapter_clear (parse->priv->adapter);
   }
+
+  gst_base_parse_frame_free (frame);
 
   return ret;
 }
