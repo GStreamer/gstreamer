@@ -1697,7 +1697,7 @@ process_pcr (MpegTSBase * base, guint64 initoff, TSPcrOffset * pcroffset,
   GstFlowReturn ret = GST_FLOW_OK;
   MpegTSBaseProgram *program;
   GstBuffer *buf;
-  guint nbpcr, i = 0;
+  guint i, nbpcr = 0;
   guint32 pcrmask, pcrpattern;
   guint64 pcrs[50];
   guint64 pcroffs[50];
@@ -1708,8 +1708,12 @@ process_pcr (MpegTSBase * base, guint64 initoff, TSPcrOffset * pcroffset,
 
   /* Get the program */
   program = demux->program;
-  if (G_UNLIKELY (program == NULL))
-    return GST_FLOW_ERROR;
+  if (G_UNLIKELY (program == NULL)) {
+    GST_DEBUG ("No program set, can not keep processing pcr");
+
+    ret = GST_FLOW_ERROR;
+    goto beach;
+  }
 
   /* First find the first X PCR */
   nbpcr = 0;
