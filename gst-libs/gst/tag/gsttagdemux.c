@@ -1095,8 +1095,8 @@ done:
  * 3. if we didn't find any caps, fail.
  * 4. set caps on srcpad
  */
-static void
-gst_tag_demux_element_loop (GstTagDemux * demux)
+static GstFlowReturn
+gst_tag_demux_element_find (GstTagDemux * demux)
 {
   GstTagDemuxClass *klass;
   GstTypeFindProbability probability = 0;
@@ -1164,29 +1164,24 @@ gst_tag_demux_element_loop (GstTagDemux * demux)
    * the chain function if we end up in push mode */
   demux->priv->state = GST_TAG_DEMUX_STREAMING;
 
-  /* 6 Set the srcpad caps now we know them */
+  /* 6 Set the srcpad caps now that we know them */
   gst_tag_demux_set_src_caps (demux, caps);
+  gst_caps_unref (caps);
 
-  if (caps)
-    gst_caps_unref (caps);
-
-  /* now we pause */
-  goto pause;
+  return ret;
 
   /* ERRORS */
 no_size:
   {
     GST_ELEMENT_ERROR (demux, STREAM, TYPE_NOT_FOUND,
         ("Could not get stream size"), (NULL));
-    ret = GST_FLOW_ERROR;
-    goto pause;
+    return GST_FLOW_ERROR;
   }
 no_tags:
   {
     GST_ELEMENT_ERROR (demux, STREAM, TYPE_NOT_FOUND,
         ("Could not get start and/or end tag"), (NULL));
-    ret = GST_FLOW_ERROR;
-    goto pause;
+    return GST_FLOW_ERROR;
   }
 no_data:
   {
@@ -1194,16 +1189,46 @@ no_data:
     /* so we don't know about type either */
     GST_ELEMENT_ERROR (demux, STREAM, TYPE_NOT_FOUND, ("No data in file"),
         (NULL));
-    ret = GST_FLOW_ERROR;
-    goto pause;
+    return GST_FLOW_ERROR;
   }
 no_caps:
   {
     GST_ELEMENT_ERROR (demux, STREAM, TYPE_NOT_FOUND,
         ("Could not detect type of contents"), (NULL));
-    ret = GST_FLOW_ERROR;
-    goto pause;
+    return GST_FLOW_ERROR;
   }
+}
+
+/* This function operates similarly to gst_type_find_element_loop
+ * in the typefind element
+ * 1. try to read tags in pull mode
+ * 2. typefind the contents
+ * 3. if we didn't find any caps, fail.
+ * 4. set caps on srcpad
+ */
+static void
+gst_tag_demux_element_loop (GstTagDemux * demux)
+{
+  GstFlowReturn ret;
+
+  switch (demux->priv->state) {
+    case GST_TAG_DEMUX_READ_START_TAG:
+    case GST_TAG_DEMUX_TYPEFINDING:
+      ret = gst_tag_demux_element_find (demux);
+      break;
+    case GST_TAG_DEMUX_STREAMING:
+      ret = GST_FLOW_ERROR;
+      break;
+    default:
+      ret = GST_FLOW_ERROR;
+      break;
+  }
+  if (ret != GST_FLOW_OK)
+    goto pause;
+
+  return;
+
+  /* ERRORS */
 pause:
   {
     const gchar *reason = gst_flow_get_name (ret);
