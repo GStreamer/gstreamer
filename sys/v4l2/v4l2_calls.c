@@ -253,7 +253,7 @@ gst_v4l2_fill_lists (GstV4l2Object * v4l2object)
 
     control.id = n;
     if (v4l2_ioctl (v4l2object->video_fd, VIDIOC_QUERYCTRL, &control) < 0) {
-      if (errno == EINVAL || errno == ENOTTY) {
+      if (errno == EINVAL || errno == ENOTTY || errno == EIO) {
         if (n < V4L2_CID_PRIVATE_BASE) {
           GST_DEBUG_OBJECT (e, "skipping control %08x", n);
           /* continue so that we also check private controls */
@@ -263,12 +263,9 @@ gst_v4l2_fill_lists (GstV4l2Object * v4l2object)
           break;
         }
       } else {
-        GST_ELEMENT_ERROR (e, RESOURCE, SETTINGS,
-            (_("Failed getting controls attributes on device '%s'."),
-                v4l2object->videodev),
-            ("Failed querying control %d on device '%s'. (%d - %s)",
-                n, v4l2object->videodev, errno, strerror (errno)));
-        return FALSE;
+        GST_WARNING_OBJECT (e, "Failed querying control %d on device '%s'. "
+            "(%d - %s)", n, v4l2object->videodev, errno, strerror (errno));
+        continue;
       }
     }
     if (control.flags & V4L2_CTRL_FLAG_DISABLED) {
