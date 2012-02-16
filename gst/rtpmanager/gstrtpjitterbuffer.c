@@ -1281,13 +1281,15 @@ gst_rtp_jitter_buffer_chain (GstPad * pad, GstObject * parent,
   JBUF_LOCK_CHECK (priv, out_flushing);
 
   if (G_UNLIKELY (priv->last_pt != pt)) {
+    GstCaps *caps;
+
     GST_DEBUG_OBJECT (jitterbuffer, "pt changed from %u to %u", priv->last_pt,
         pt);
 
     priv->last_pt = pt;
     /* reset clock-rate so that we get a new one */
     priv->clock_rate = -1;
-    GstCaps *caps;
+
     /* Try to get the clock-rate from the caps first if we can. If there are no
      * caps we must fire the signal to get the clock-rate. */
     if ((caps = gst_pad_get_current_caps (pad))) {
