@@ -184,6 +184,8 @@ enum
 #define DEFAULT_GRANULE      FALSE
 #define DEFAULT_HARD_RESYNC  FALSE
 #define DEFAULT_TOLERANCE    40000000
+#define DEFAULT_HARD_MIN     FALSE
+#define DEFAULT_DRAINABLE    TRUE
 
 typedef struct _GstAudioEncoderContext
 {
@@ -243,6 +245,8 @@ struct _GstAudioEncoderPrivate
   gboolean perfect_ts;
   gboolean hard_resync;
   gboolean granule;
+  gboolean hard_min;
+  gboolean drainable;
 
   /* pending tags */
   GstTagList *tags;
@@ -399,6 +403,8 @@ gst_audio_encoder_init (GstAudioEncoder * enc, GstAudioEncoderClass * bclass)
   enc->priv->perfect_ts = DEFAULT_PERFECT_TS;
   enc->priv->hard_resync = DEFAULT_HARD_RESYNC;
   enc->priv->tolerance = DEFAULT_TOLERANCE;
+  enc->priv->hard_min = DEFAULT_HARD_MIN;
+  enc->priv->drainable = DEFAULT_DRAINABLE;
 
   /* init state */
   gst_audio_encoder_reset (enc, TRUE);
@@ -755,11 +761,15 @@ gst_audio_encoder_push_buffers (GstAudioEncoder * enc, gboolean force)
       }
     }
 
-    if (need) {
+    priv->got_data = FALSE;
+    if (G_LIKELY (need)) {
       buf = gst_buffer_new ();
       GST_BUFFER_DATA (buf) = (guint8 *)
           gst_adapter_peek (priv->adapter, priv->offset + need) + priv->offset;
       GST_BUFFER_SIZE (buf) = need;
+    } else if (!priv->drainable) {
+      GST_DEBUG_OBJECT (enc, "non-drainable and no more data");
+      goto finish;
     }
 
     GST_LOG_OBJECT (enc, "providing subclass with %d bytes at offset %d",
@@ -770,12 +780,19 @@ gst_audio_encoder_push_buffers (GstAudioEncoder * enc, gboolean force)
     priv->offset += need;
     priv->samples_in += need / ctx->info.bpf;
 
-    priv->got_data = FALSE;
-    ret = klass->handle_frame (enc, buf);
+    /* subclass might not want to be bothered with leftover data,
+     * so take care of that here if so, otherwise pass along */
+    if (G_UNLIKELY (priv->force && priv->hard_min && buf)) {
+      GST_DEBUG_OBJECT (enc, "bypassing subclass with leftover");
+      ret = gst_audio_encoder_finish_frame (enc, NULL, -1);
+    } else {
+      ret = klass->handle_frame (enc, buf);
+    }
 
     if (G_LIKELY (buf))
       gst_buffer_unref (buf);
 
+  finish:
     /* no data to feed, no leftover provided, then bail out */
     if (G_UNLIKELY (!buf && !priv->got_data)) {
       priv->drained = TRUE;
@@ -2127,6 +2144,106 @@ gst_audio_encoder_get_tolerance (GstAudioEncoder * enc)
 
   GST_OBJECT_LOCK (enc);
   result = enc->priv->tolerance;
+  GST_OBJECT_UNLOCK (enc);
+
+  return result;
+}
+
+/**
+ * gst_audio_encoder_set_hard_min:
+ * @enc: a #GstAudioEncoder
+ * @enabled: new state
+ *
+ * Configures encoder hard minimum handling.  If enabled, subclass
+ * will never be handed less samples than it configured, which otherwise
+ * might occur near end-of-data handling.  Instead, the leftover samples
+ * will simply be discarded.
+ *
+ * MT safe.
+ *
+ * Since: 0.10.36
+ */
+void
+gst_audio_encoder_set_hard_min (GstAudioEncoder * enc, gboolean enabled)
+{
+  g_return_if_fail (GST_IS_AUDIO_ENCODER (enc));
+
+  GST_OBJECT_LOCK (enc);
+  enc->priv->hard_min = enabled;
+  GST_OBJECT_UNLOCK (enc);
+}
+
+/**
+ * gst_audio_encoder_get_hard_min:
+ * @enc: a #GstAudioEncoder
+ *
+ * Queries encoder hard minimum handling.
+ *
+ * Returns: TRUE if hard minimum handling is enabled.
+ *
+ * MT safe.
+ *
+ * Since: 0.10.36
+ */
+gboolean
+gst_audio_encoder_get_hard_min (GstAudioEncoder * enc)
+{
+  gboolean result;
+
+  g_return_val_if_fail (GST_IS_AUDIO_ENCODER (enc), 0);
+
+  GST_OBJECT_LOCK (enc);
+  result = enc->priv->hard_min;
+  GST_OBJECT_UNLOCK (enc);
+
+  return result;
+}
+
+/**
+ * gst_audio_encoder_set_drainable:
+ * @enc: a #GstAudioEncoder
+ * @enabled: new state
+ *
+ * Configures encoder drain handling.  If drainable, subclass might
+ * be handed a NULL buffer to have it return any leftover encoded data.
+ * Otherwise, it is not considered so capable and will only ever be passed
+ * real data.
+ *
+ * MT safe.
+ *
+ * Since: 0.10.36
+ */
+void
+gst_audio_encoder_set_drainable (GstAudioEncoder * enc, gboolean enabled)
+{
+  g_return_if_fail (GST_IS_AUDIO_ENCODER (enc));
+
+  GST_OBJECT_LOCK (enc);
+  enc->priv->drainable = enabled;
+  GST_OBJECT_UNLOCK (enc);
+}
+
+/**
+ * gst_audio_encoder_get_drainable:
+ * @enc: a #GstAudioEncoder
+ *
+ * Queries encoder drain handling.
+ *
+ * Returns: TRUE if drainable handling is enabled.
+ *
+ * MT safe.
+ *
+ * Since: 0.10.36
+ */
+gboolean
+gst_audio_encoder_get_drainable (GstAudioEncoder * enc)
+{
+  gboolean result;
+
+  g_return_val_if_fail (GST_IS_AUDIO_ENCODER (enc), 0);
+
+  GST_OBJECT_LOCK (enc);
+  result = enc->priv->drainable;
   GST_OBJECT_UNLOCK (enc);
 
   return result;
