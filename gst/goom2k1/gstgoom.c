@@ -91,8 +91,6 @@ static GstStaticPadTemplate sink_template = GST_STATIC_PAD_TEMPLATE ("sink",    
         "channel-mask = (bitmask) 0x3, " "layout = (string) interleaved")
     );
 
-static void gst_goom_class_init (GstGoomClass * klass);
-static void gst_goom_init (GstGoom * goom);
 static void gst_goom_finalize (GObject * object);
 
 static GstStateChangeReturn gst_goom_change_state (GstElement * element,
@@ -108,30 +106,10 @@ static gboolean gst_goom_sink_event (GstPad * pad, GstObject * parent,
 static gboolean gst_goom_src_query (GstPad * pad, GstObject * parent,
     GstQuery * query);
 
-static GstElementClass *parent_class = NULL;
-
-GType
-gst_goom_get_type (void)
-{
-  static GType type = 0;
-
-  if (!type) {
-    static const GTypeInfo info = {
-      sizeof (GstGoomClass),
-      NULL,
-      NULL,
-      (GClassInitFunc) gst_goom_class_init,
-      NULL,
-      NULL,
-      sizeof (GstGoom),
-      0,
-      (GInstanceInitFunc) gst_goom_init,
-    };
-
-    type = g_type_register_static (GST_TYPE_ELEMENT, "GstGoom2k1", &info, 0);
-  }
-  return type;
-}
+#define gst_goom_parent_class parent_class
+typedef GstGoom GstGoom2k1;
+typedef GstGoomClass GstGoom2k1Class;
+G_DEFINE_TYPE (GstGoom2k1, gst_goom, GST_TYPE_ELEMENT);
 
 static void
 gst_goom_class_init (GstGoomClass * klass)
