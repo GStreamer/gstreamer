@@ -66,14 +66,14 @@
  * </listitem>
  * <listitem>
  *   <para>
- *   #GstValueList of #gdouble
+ *   #GValueArray of #gdouble
  *   <classname>&quot;peak&quot;</classname>:
  *   the peak power level in dB for each channel
  *   </para>
  * </listitem>
  * <listitem>
  *   <para>
- *   #GstValueList of #gdouble
+ *   #GValueArray of #gdouble
  *   <classname>&quot;decay&quot;</classname>:
  *   the decaying peak power level in dB for each channel
  *   the decaying peak level follows the peak level, but starts dropping
@@ -86,7 +86,7 @@
  * </listitem>
  * <listitem>
  *   <para>
- *   #GstValueList of #gdouble
+ *   #GValueArray of #gdouble
  *   <classname>&quot;rms&quot;</classname>:
  *   the Root Mean Square (or average power) level in dB for each channel
  *   </para>
@@ -104,6 +104,11 @@
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif
+
+/* FIXME 0.11: suppress warnings for deprecated API such as GValueArray
+ * with newer GLib versions (>= 2.31.0) */
+#define GLIB_DISABLE_DEPRECATION_WARNINGS
+
 #include <string.h>
 #include <math.h>
 #include <gst/gst.h>
@@ -478,8 +483,6 @@ gst_level_message_new (GstLevel * level, GstClockTime timestamp,
   GValue v = { 0, };
   GstClockTime endtime, running_time, stream_time;
 
-  g_value_init (&v, GST_TYPE_LIST);
-
   running_time = gst_segment_to_running_time (&trans->segment, GST_FORMAT_TIME,
       timestamp);
   stream_time = gst_segment_to_stream_time (&trans->segment, GST_FORMAT_TIME,
@@ -493,12 +496,18 @@ gst_level_message_new (GstLevel * level, GstClockTime timestamp,
       "stream-time", G_TYPE_UINT64, stream_time,
       "running-time", G_TYPE_UINT64, running_time,
       "duration", G_TYPE_UINT64, duration, NULL);
-  /* will copy-by-value */
-  gst_structure_set_value (s, "rms", &v);
-  gst_structure_set_value (s, "peak", &v);
-  gst_structure_set_value (s, "decay", &v);
 
-  g_value_unset (&v);
+  g_value_init (&v, G_TYPE_VALUE_ARRAY);
+  g_value_take_boxed (&v, g_value_array_new (0));
+  gst_structure_take_value (s, "rms", &v);
+
+  g_value_init (&v, G_TYPE_VALUE_ARRAY);
+  g_value_take_boxed (&v, g_value_array_new (0));
+  gst_structure_take_value (s, "peak", &v);
+
+  g_value_init (&v, G_TYPE_VALUE_ARRAY);
+  g_value_take_boxed (&v, g_value_array_new (0));
+  gst_structure_take_value (s, "decay", &v);
 
   return gst_message_new_element (GST_OBJECT (level), s);
 }
@@ -507,25 +516,29 @@ static void
 gst_level_message_append_channel (GstMessage * m, gdouble rms, gdouble peak,
     gdouble decay)
 {
+  const GValue *array_val;
   GstStructure *s;
+  GValueArray *arr;
   GValue v = { 0, };
-  GValue *l;
 
   g_value_init (&v, G_TYPE_DOUBLE);
 
   s = (GstStructure *) gst_message_get_structure (m);
 
-  l = (GValue *) gst_structure_get_value (s, "rms");
+  array_val = gst_structure_get_value (s, "rms");
+  arr = (GValueArray *) g_value_get_boxed (array_val);
   g_value_set_double (&v, rms);
-  gst_value_list_append_value (l, &v);  /* copies by value */
+  g_value_array_append (arr, &v);       /* copies by value */
 
-  l = (GValue *) gst_structure_get_value (s, "peak");
+  array_val = gst_structure_get_value (s, "peak");
+  arr = (GValueArray *) g_value_get_boxed (array_val);
   g_value_set_double (&v, peak);
-  gst_value_list_append_value (l, &v);  /* copies by value */
+  g_value_array_append (arr, &v);       /* copies by value */
 
-  l = (GValue *) gst_structure_get_value (s, "decay");
+  array_val = gst_structure_get_value (s, "decay");
+  arr = (GValueArray *) g_value_get_boxed (array_val);
   g_value_set_double (&v, decay);
-  gst_value_list_append_value (l, &v);  /* copies by value */
+  g_value_array_append (arr, &v);       /* copies by value */
 
   g_value_unset (&v);
 }
