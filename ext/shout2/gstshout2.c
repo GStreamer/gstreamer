@@ -69,8 +69,6 @@ enum
 #define DEFAULT_URL          ""
 #define DEFAULT_PROTOCOL     SHOUT2SEND_PROTOCOL_HTTP
 
-static GstElementClass *parent_class = NULL;
-
 #ifdef SHOUT_FORMAT_WEBM
 #define WEBM_CAPS "; video/webm"
 #else
@@ -82,8 +80,6 @@ static GstStaticPadTemplate sink_template = GST_STATIC_PAD_TEMPLATE ("sink",
     GST_STATIC_CAPS ("application/ogg; "
         "audio/mpeg, mpegversion = (int) 1, layer = (int) [ 1, 3 ]" WEBM_CAPS));
 
-static void gst_shout2send_class_init (GstShout2sendClass * klass);
-static void gst_shout2send_init (GstShout2send * shout2send);
 static void gst_shout2send_finalize (GstShout2send * shout2send);
 
 static gboolean gst_shout2send_event (GstBaseSink * sink, GstEvent * event);
@@ -125,40 +121,9 @@ gst_shout2send_protocol_get_type (void)
   return shout2send_protocol_type;
 }
 
-GType
-gst_shout2send_get_type (void)
-{
-  static GType shout2send_type = 0;
-
-  if (!shout2send_type) {
-    static const GTypeInfo shout2send_info = {
-      sizeof (GstShout2sendClass),
-      NULL,
-      NULL,
-      (GClassInitFunc) gst_shout2send_class_init,
-      NULL,
-      NULL,
-      sizeof (GstShout2send),
-      0,
-      (GInstanceInitFunc) gst_shout2send_init,
-    };
-
-    static const GInterfaceInfo tag_setter_info = {
-      NULL,
-      NULL,
-      NULL
-    };
-
-    shout2send_type =
-        g_type_register_static (GST_TYPE_BASE_SINK, "GstShout2send",
-        &shout2send_info, 0);
-
-    g_type_add_interface_static (shout2send_type, GST_TYPE_TAG_SETTER,
-        &tag_setter_info);
-
-  }
-  return shout2send_type;
-}
+#define gst_shout2send_parent_class parent_class
+G_DEFINE_TYPE_WITH_CODE (GstShout2send, gst_shout2send, GST_TYPE_BASE_SINK,
+    G_IMPLEMENT_INTERFACE (GST_TYPE_TAG_SETTER, NULL));
 
 static void
 gst_shout2send_class_init (GstShout2sendClass * klass)
