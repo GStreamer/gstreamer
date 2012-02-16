@@ -713,7 +713,7 @@ gst_mve_audio_init (GstMveDemux * mve, guint8 version, const guint8 * data,
   if (gst_mve_add_stream (mve, stream, list))
     return gst_pad_push_event (mve->audio_stream->pad,
         gst_event_new_new_segment (FALSE, 1.0, GST_FORMAT_TIME,
-            0, GST_CLOCK_TIME_NONE, 0));
+            0, GST_CLOCK_TIME_NONE, 0)) ? GST_FLOW_OK : GST_FLOW_ERROR;
   else
     return GST_FLOW_OK;
 }
@@ -866,7 +866,7 @@ gst_mve_timer_create (GstMveDemux * mve, const guint8 * data, guint16 len,
   if (gst_mve_add_stream (mve, s, list))
     return gst_pad_push_event (s->pad,
         gst_event_new_new_segment (FALSE, 1.0, GST_FORMAT_TIME,
-            0, GST_CLOCK_TIME_NONE, 0));
+            0, GST_CLOCK_TIME_NONE, 0)) ? GST_FLOW_OK : GST_FLOW_ERROR;
   else
     return GST_FLOW_OK;
 }
@@ -1090,12 +1090,9 @@ gst_mve_demux_base_init (GstMveDemuxClass * klass)
 
   GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
 
-  gst_element_class_add_static_pad_template (element_class,
-      &sink_template);
-  gst_element_class_add_static_pad_template (element_class,
-      &vidsrc_template);
-  gst_element_class_add_static_pad_template (element_class,
-      &audsrc_template);
+  gst_element_class_add_static_pad_template (element_class, &sink_template);
+  gst_element_class_add_static_pad_template (element_class, &vidsrc_template);
+  gst_element_class_add_static_pad_template (element_class, &audsrc_template);
   gst_element_class_set_details_simple (element_class, "MVE Demuxer",
       "Codec/Demuxer",
       "Demultiplex an Interplay movie (MVE) stream into audio and video",
