@@ -999,6 +999,7 @@ gst_audio_decoder_push_buffers (GstAudioDecoder * dec, gboolean force)
           break;
         } else if (ret == GST_FLOW_OK) {
           GST_LOG_OBJECT (dec, "frame at offset %d of length %d", offset, len);
+          g_assert (len);
           g_assert (offset + len <= av);
           priv->sync_flush = 0;
         } else {
