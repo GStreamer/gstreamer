@@ -83,7 +83,6 @@ static GstStaticPadTemplate sink_template = GST_STATIC_PAD_TEMPLATE ("sink",
         "audio/mpeg, mpegversion = (int) 1, layer = (int) [ 1, 3 ]" WEBM_CAPS));
 
 static void gst_shout2send_class_init (GstShout2sendClass * klass);
-static void gst_shout2send_base_init (GstShout2sendClass * klass);
 static void gst_shout2send_init (GstShout2send * shout2send);
 static void gst_shout2send_finalize (GstShout2send * shout2send);
 
@@ -100,7 +99,7 @@ static void gst_shout2send_set_property (GObject * object, guint prop_id,
 static void gst_shout2send_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec);
 
-static gboolean gst_shout2send_setcaps (GstPad * pad, GstCaps * caps);
+static gboolean gst_shout2send_setcaps (GstBaseSink * basesink, GstCaps * caps);
 
 static guint gst_shout2send_signals[LAST_SIGNAL] = { 0 };
 
@@ -134,7 +133,7 @@ gst_shout2send_get_type (void)
   if (!shout2send_type) {
     static const GTypeInfo shout2send_info = {
       sizeof (GstShout2sendClass),
-      (GBaseInitFunc) gst_shout2send_base_init,
+      NULL,
       NULL,
       (GClassInitFunc) gst_shout2send_class_init,
       NULL,
@@ -162,29 +161,14 @@ gst_shout2send_get_type (void)
 }
 
 static void
-gst_shout2send_base_init (GstShout2sendClass * klass)
-{
-  GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
-
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&sink_template));
-
-  gst_element_class_set_details_simple (element_class, "Icecast network sink",
-      "Sink/Network", "Sends data to an icecast server",
-      "Wim Taymans <wim.taymans@chello.be>, "
-      "Pedro Corte-Real <typo@netcabo.pt>, "
-      "Zaheer Abbas Merali <zaheerabbas at merali dot org>");
-
-  GST_DEBUG_CATEGORY_INIT (shout2_debug, "shout2", 0, "shout2send element");
-}
-
-static void
 gst_shout2send_class_init (GstShout2sendClass * klass)
 {
   GObjectClass *gobject_class;
+  GstElementClass *gstelement_class;
   GstBaseSinkClass *gstbasesink_class;
 
   gobject_class = (GObjectClass *) klass;
+  gstelement_class = (GstElementClass *) klass;
   gstbasesink_class = (GstBaseSinkClass *) klass;
 
   parent_class = g_type_class_peek_parent (klass);
@@ -255,15 +239,25 @@ gst_shout2send_class_init (GstShout2sendClass * klass)
       GST_DEBUG_FUNCPTR (gst_shout2send_unlock_stop);
   gstbasesink_class->render = GST_DEBUG_FUNCPTR (gst_shout2send_render);
   gstbasesink_class->event = GST_DEBUG_FUNCPTR (gst_shout2send_event);
+  gstbasesink_class->set_caps = GST_DEBUG_FUNCPTR (gst_shout2send_setcaps);
+
+  gst_element_class_add_pad_template (gstelement_class,
+      gst_static_pad_template_get (&sink_template));
+
+  gst_element_class_set_details_simple (gstelement_class,
+      "Icecast network sink",
+      "Sink/Network", "Sends data to an icecast server",
+      "Wim Taymans <wim.taymans@chello.be>, "
+      "Pedro Corte-Real <typo@netcabo.pt>, "
+      "Zaheer Abbas Merali <zaheerabbas at merali dot org>");
+
+  GST_DEBUG_CATEGORY_INIT (shout2_debug, "shout2", 0, "shout2send element");
 }
 
 static void
 gst_shout2send_init (GstShout2send * shout2send)
 {
   gst_base_sink_set_sync (GST_BASE_SINK (shout2send), FALSE);
-
-  gst_pad_set_setcaps_function (GST_BASE_SINK_PAD (shout2send),
-      GST_DEBUG_FUNCPTR (gst_shout2send_setcaps));
 
   shout2send->timer = gst_poll_new_timer ();
 
@@ -279,7 +273,7 @@ gst_shout2send_init (GstShout2send * shout2send)
   shout2send->protocol = DEFAULT_PROTOCOL;
   shout2send->ispublic = DEFAULT_PUBLIC;
 
-  shout2send->tags = gst_tag_list_new ();
+  shout2send->tags = gst_tag_list_new_empty ();
   shout2send->conn = NULL;
   shout2send->audio_format = SHOUT_FORMAT_VORBIS;
   shout2send->connected = FALSE;
@@ -650,6 +644,7 @@ gst_shout2send_render (GstBaseSink * basesink, GstBuffer * buf)
   glong ret;
   gint delay;
   GstFlowReturn fret;
+  GstMapInfo map;
 
   sink = GST_SHOUT2SEND (basesink);
 
@@ -675,8 +670,10 @@ gst_shout2send_render (GstBaseSink * basesink, GstBuffer * buf)
     GST_LOG_OBJECT (sink, "we're %d msec late", -delay);
   }
 
-  GST_LOG_OBJECT (sink, "sending %u bytes of data", GST_BUFFER_SIZE (buf));
-  ret = shout_send (sink->conn, GST_BUFFER_DATA (buf), GST_BUFFER_SIZE (buf));
+  gst_buffer_map (buf, &map, GST_MAP_READ);
+  GST_LOG_OBJECT (sink, "sending %u bytes of data", (guint) map.size);
+  ret = shout_send (sink->conn, map.data, map.size);
+  gst_buffer_unmap (buf, &map);
   if (ret != SHOUTERR_SUCCESS)
     goto send_error;
 
@@ -806,13 +803,13 @@ gst_shout2send_get_property (GObject * object, guint prop_id,
 }
 
 static gboolean
-gst_shout2send_setcaps (GstPad * pad, GstCaps * caps)
+gst_shout2send_setcaps (GstBaseSink * basesink, GstCaps * caps)
 {
   const gchar *mimetype;
   GstShout2send *shout2send;
   gboolean ret = TRUE;
 
-  shout2send = GST_SHOUT2SEND (GST_OBJECT_PARENT (pad));
+  shout2send = GST_SHOUT2SEND (basesink);
 
   mimetype = gst_structure_get_name (gst_caps_get_structure (caps, 0));
 

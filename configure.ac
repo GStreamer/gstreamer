@@ -315,7 +315,7 @@ GST_PLUGINS_NONPORTED="deinterlace interleave flx goom2k1 \
  imagefreeze monoscope smpte \
  videobox \
  cairo cairo_gobject dv1394 gdk_pixbuf \
- oss oss4 shout2 \
+ oss oss4 \
  wavpack \
  osx_video osx_audio "
 AC_SUBST(GST_PLUGINS_NONPORTED)
