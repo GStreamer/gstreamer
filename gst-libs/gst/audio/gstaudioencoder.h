@@ -246,6 +246,16 @@ void            gst_audio_encoder_set_tolerance (GstAudioEncoder * enc,
 
 gint64          gst_audio_encoder_get_tolerance (GstAudioEncoder * enc);
 
+void            gst_audio_encoder_set_hard_min (GstAudioEncoder * enc,
+                                                gboolean enabled);
+
+gboolean        gst_audio_encoder_get_hard_min (GstAudioEncoder * enc);
+
+void            gst_audio_encoder_set_drainable (GstAudioEncoder * enc,
+                                                 gboolean enabled);
+
+gboolean        gst_audio_encoder_get_drainable (GstAudioEncoder * enc);
+
 void            gst_audio_encoder_merge_tags (GstAudioEncoder * enc,
                                               const GstTagList * tags, GstTagMergeMode mode);
 
