@@ -494,6 +494,7 @@ gst_goom_chain (GstPad * pad, GstObject * parent, GstBuffer * buffer)
 
   goom = GST_GOOM (parent);
   if (goom->bps == 0) {
+    gst_buffer_unref (buffer);
     ret = GST_FLOW_NOT_NEGOTIATED;
     goto beach;
   }
