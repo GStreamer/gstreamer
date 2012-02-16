@@ -175,13 +175,15 @@
  * <refsect2>
  * <title>Specifying which CD/DVD device to use</title>
  * The device to use for CDs/DVDs needs to be set on the source element
- * playbin creates before it is opened. The only way to do this at the moment
- * is to connect to playbin's "notify::source" signal, which will be emitted
- * by playbin when it has created the source element for a particular URI.
- * In the signal callback you can check if the source element has a "device"
- * property and set it appropriately. In future ways might be added to specify
- * the device as part of the URI, but at the time of writing this is not
- * possible yet.
+ * playbin creates before it is opened. The most generic way of doing this
+ * is to connect to playbin's "source-setup" (or "notify::source") signal,
+ * which will be emitted by playbin2 when it has created the source element
+ * for a particular URI. In the signal callback you can check if the source
+ * element has a "device" property and set it appropriately. In some cases
+ * the device can also be set as part of the URI, but it depends on the
+ * elements involved if this will work or not. For example, for DVD menu
+ * playback, the following syntax might work (if the resindvd plugin is used):
+ * dvd://[/path/to/device]
  * </refsect2>
  * <refsect2>
  * <title>Handling redirects</title>
@@ -196,19 +198,19 @@
  * <refsect2>
  * <title>Examples</title>
  * |[
- * gst-launch -v playbin uri=file:///path/to/somefile.avi
+ * gst-launch -v playbin2 uri=file:///path/to/somefile.avi
  * ]| This will play back the given AVI video file, given that the video and
  * audio decoders required to decode the content are installed. Since no
  * special audio sink or video sink is supplied (not possible via gst-launch),
  * playbin will try to find a suitable audio and video sink automatically
  * using the autoaudiosink and autovideosink elements.
  * |[
- * gst-launch -v playbin uri=cdda://4
+ * gst-launch -v playbin2 uri=cdda://4
  * ]| This will play back track 4 on an audio CD in your disc drive (assuming
  * the drive is detected automatically by the plugin).
  * |[
- * gst-launch -v playbin uri=dvd://1
- * ]| This will play back title 1 of a DVD in your disc drive (assuming
+ * gst-launch -v playbin2 uri=dvd://
+ * ]| This will play back the DVD in your disc drive (assuming
  * the drive is detected automatically by the plugin).
  * </refsect2>
  */
