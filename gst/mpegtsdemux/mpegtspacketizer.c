@@ -1,7 +1,7 @@
 /*
- * mpegtspacketizer.c - 
+ * mpegtspacketizer.c -
  * Copyright (C) 2007, 2008 Alessandro Decina, Zaheer Merali
- * 
+ *
  * Authors:
  *   Zaheer Merali <zaheerabbas at merali dot org>
  *   Alessandro Decina <alessandro@nnva.org>
@@ -78,6 +78,7 @@ static gchar *get_encoding_and_convert (const gchar * text, guint length);
 #define MAX_CONTINUITY 15
 #define VERSION_NUMBER_UNSET 255
 #define TABLE_ID_UNSET 0xFF
+#define PACKET_SYNC_BYTE 0x47
 
 static gint
 mpegts_packetizer_stream_subtable_compare (gconstpointer a, gconstpointer b)
@@ -403,7 +404,7 @@ mpegts_packetizer_parse_descriptors (MpegTSPacketizer2 * packetizer,
     /* include length */
     desc = g_string_new_len ((gchar *) data - 2, length + 2);
     data += length;
-    /* G_TYPE_GSTING is a GBoxed type and is used so properly marshalled from python */
+    /* G_TYPE_GSTRING is a GBoxed type and is used so properly marshalled from python */
     g_value_init (&value, G_TYPE_GSTRING);
     g_value_take_boxed (&value, desc);
     g_value_array_append (descriptors, &value);
@@ -537,6 +538,8 @@ mpegts_packetizer_parse_pmt (MpegTSPacketizer2 * packetizer,
   program_number = GST_READ_UINT16_BE (data);
   data += 2;
 
+  GST_DEBUG ("Parsing %d Program Map Table", program_number);
+
   tmp = *data++;
   section->version_number = (tmp >> 1) & 0x1F;
   section->current_next_indicator = tmp & 0x01;
@@ -581,6 +584,7 @@ mpegts_packetizer_parse_pmt (MpegTSPacketizer2 * packetizer,
    * bytes) plus the CRC */
   while (data <= end - 4 - 5) {
     stream_type = *data++;
+    GST_DEBUG ("Stream type 0x%02x found", stream_type);
 
     pid = GST_READ_UINT16_BE (data) & 0x1FFF;
     data += 2;
@@ -2206,13 +2210,14 @@ mpegts_try_discover_packet_size (MpegTSPacketizer2 * packetizer)
     /* find first sync byte */
     pos = -1;
     for (i = 0; i < MPEGTS_MAX_PACKETSIZE; i++) {
-      if (dest[i] == 0x47) {
+      if (dest[i] == PACKET_SYNC_BYTE) {
         for (j = 0; j < 4; j++) {
           guint packetsize = psizes[j];
           /* check each of the packet size possibilities in turn */
-          if (dest[i] == 0x47 && dest[i + packetsize] == 0x47 &&
-              dest[i + packetsize * 2] == 0x47 &&
-              dest[i + packetsize * 3] == 0x47) {
+          if (dest[i] == PACKET_SYNC_BYTE
+              && dest[i + packetsize] == PACKET_SYNC_BYTE
+              && dest[i + packetsize * 2] == PACKET_SYNC_BYTE
+              && dest[i + packetsize * 3] == PACKET_SYNC_BYTE) {
             packetizer->know_packet_size = TRUE;
             packetizer->packet_size = packetsize;
             packetizer->caps = gst_caps_new_simple ("video/mpegts",
@@ -2247,10 +2252,10 @@ mpegts_try_discover_packet_size (MpegTSPacketizer2 * packetizer)
       GST_DEBUG ("Flushing out %d bytes", pos);
       gst_adapter_flush (packetizer->adapter, pos);
       packetizer->offset += pos;
-    } else if (!packetizer->know_packet_size) {
-      /* drop invalid data and move to the next possible packets */
-      gst_adapter_flush (packetizer->adapter, MPEGTS_MAX_PACKETSIZE);
     }
+  } else {
+    /* drop invalid data and move to the next possible packets */
+    GST_DEBUG ("Could not determine packet size");
   }
 
   return packetizer->know_packet_size;
@@ -2406,7 +2411,6 @@ mpegts_packetizer_push_section (MpegTSPacketizer2 * packetizer,
   sub_buf = gst_buffer_copy_region (packet->buffer, GST_BUFFER_COPY_ALL,
       data - packet->bufmap.data, packet->data_end - data);
 
-
   stream = packetizer->streams[packet->pid];
   if (stream == NULL) {
     stream = mpegts_packetizer_stream_new ();
@@ -2415,7 +2419,7 @@ mpegts_packetizer_push_section (MpegTSPacketizer2 * packetizer,
 
   if (packet->payload_unit_start_indicator) {
     table_id = *data++;
-    /* subtable_extension should be read from 4th and 5th bytes only if 
+    /* subtable_extension should be read from 4th and 5th bytes only if
      * section_syntax_indicator is 1 */
     if ((data[0] & 0x80) == 0)
       subtable_extension = 0;
@@ -2541,7 +2545,7 @@ _init_local (void)
  * @is_multibyte: Location where information whether it's a multibyte encoding
  * or not is stored
  * @returns: Name of encoding or NULL of encoding could not be detected.
- * 
+ *
  * The returned string should be freed with g_free () when no longer needed.
  */
 static gchar *

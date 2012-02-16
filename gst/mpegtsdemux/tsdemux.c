@@ -44,7 +44,7 @@
 #include "payload_parsers.h"
 #include "pesparse.h"
 
-/* 
+/*
  * tsdemux
  *
  * See TODO for explanations on improvements needed
@@ -56,7 +56,7 @@
 #define TABLE_ID_UNSET 0xFF
 
 /* Size of the pendingbuffers array. */
-#define TS_MAX_PENDING_BUFFERS	256
+#define TS_MAX_PENDING_BUFFERS  256
 
 #define PCR_WRAP_SIZE_128KBPS (((gint64)1490)*(1024*1024))
 /* small PCR for wrap detection */
@@ -147,7 +147,7 @@ struct _TSDemuxStream
       "mpegversion = (int) 1;" \
     "audio/mpeg, " \
       "mpegversion = (int) 4, " \
-      "stream-format = (string) adts; " \
+      "stream-format = (string) {adts, loas}; " \
     "audio/x-lpcm, " \
       "width = (int) { 16, 20, 24 }, " \
       "rate = (int) { 48000, 96000 }, " \
@@ -1085,12 +1085,19 @@ create_pad_for_stream (MpegTSBase * base, MpegTSBaseStream * bstream,
     case ST_DSMCC_D:
       MPEGTS_BIT_UNSET (base->is_pes, bstream->pid);
       break;
-    case ST_AUDIO_AAC:         /* ADTS */
+    case ST_AUDIO_AAC_ADTS:
       template = gst_static_pad_template_get (&audio_template);
       name = g_strdup_printf ("audio_%04x", bstream->pid);
       caps = gst_caps_new_simple ("audio/mpeg",
           "mpegversion", G_TYPE_INT, 4,
           "stream-format", G_TYPE_STRING, "adts", NULL);
+      break;
+    case ST_AUDIO_AAC_LATM:
+      template = gst_static_pad_template_get (&audio_template);
+      name = g_strdup_printf ("audio_%04x", bstream->pid);
+      caps = gst_caps_new_simple ("audio/mpeg",
+          "mpegversion", G_TYPE_INT, 4,
+          "stream-format", G_TYPE_STRING, "loas", NULL);
       break;
     case ST_VIDEO_MPEG4:
       template = gst_static_pad_template_get (&video_template);
@@ -1369,10 +1376,10 @@ process_section (MpegTSBase * base)
   MpegTSPacketizerPacket packet;
   MpegTSPacketizerPacketReturn pret;
 
-  while ((!done)
-      && ((pret =
-              mpegts_packetizer_next_packet (base->packetizer,
-                  &packet)) != PACKET_NEED_MORE)) {
+  while ((!done) &&
+      ((pret = mpegts_packetizer_next_packet (base->packetizer, &packet))
+          != PACKET_NEED_MORE)) {
+
     if (G_UNLIKELY (pret == PACKET_BAD))
       /* bad header, skip the packet */
       goto next;
@@ -1381,8 +1388,9 @@ process_section (MpegTSBase * base)
     if (packet.payload != NULL && mpegts_base_is_psi (base, &packet)) {
       MpegTSPacketizerSection section;
 
-      based =
-          mpegts_packetizer_push_section (base->packetizer, &packet, &section);
+      based = mpegts_packetizer_push_section (base->packetizer, &packet,
+          &section);
+
       if (G_UNLIKELY (!based))
         /* bad section data */
         goto next;
@@ -1419,10 +1427,9 @@ process_pes (MpegTSBase * base, TSPcrOffset * pcroffset)
   GstTSDemux *demux = GST_TS_DEMUX (base);
   guint16 pcr_pid = 0;
 
-  while ((!done)
-      && ((pret =
-              mpegts_packetizer_next_packet (base->packetizer,
-                  &packet)) != PACKET_NEED_MORE)) {
+  while ((!done) &&
+      ((pret = mpegts_packetizer_next_packet (base->packetizer, &packet))
+          != PACKET_NEED_MORE)) {
     if (G_UNLIKELY (pret == PACKET_BAD))
       /* bad header, skip the packet */
       goto next;
@@ -1435,8 +1442,9 @@ process_pes (MpegTSBase * base, TSPcrOffset * pcroffset)
     if (packet.payload != NULL && mpegts_base_is_psi (base, &packet)) {
       MpegTSPacketizerSection section;
 
-      based =
-          mpegts_packetizer_push_section (base->packetizer, &packet, &section);
+      based = mpegts_packetizer_push_section (base->packetizer, &packet,
+          &section);
+
       if (G_UNLIKELY (!based))
         /* bad section data */
         goto next;
@@ -1593,16 +1601,15 @@ find_timestamps (MpegTSBase * base, guint64 initoff, guint64 * offset)
 
   GST_DEBUG ("Scanning for timestamps");
 
-  /* Flush what remained from before */
-  mpegts_packetizer_clear (base->packetizer);
+  /* Start scanning from now PAT offset */
 
-  /* Start scanning from know PAT offset */
   while (!done) {
-    ret =
-        gst_pad_pull_range (base->sinkpad, i * 50 * MPEGTS_MAX_PACKETSIZE,
+    ret = gst_pad_pull_range (base->sinkpad, i * 50 * MPEGTS_MAX_PACKETSIZE,
         50 * MPEGTS_MAX_PACKETSIZE, &buf);
+
     if (ret != GST_FLOW_OK)
       goto beach;
+
     mpegts_packetizer_push (base->packetizer, buf);
     done = process_section (base);
     i++;
@@ -1610,7 +1617,6 @@ find_timestamps (MpegTSBase * base, guint64 initoff, guint64 * offset)
   mpegts_packetizer_clear (base->packetizer);
   done = FALSE;
   i = 1;
-
 
   *offset = base->seek_offset;
 
@@ -1623,7 +1629,7 @@ find_timestamps (MpegTSBase * base, guint64 initoff, guint64 * offset)
   }
 
   mpegts_packetizer_clear (base->packetizer);
-  /* Remove current program so we ensure looking for a PAT when scanning the 
+  /* Remove current program so we ensure looking for a PAT when scanning
    * for the final PCR */
   gst_structure_free (base->pat);
   base->pat = NULL;
@@ -1634,9 +1640,9 @@ find_timestamps (MpegTSBase * base, guint64 initoff, guint64 * offset)
   if (G_UNLIKELY (!gst_pad_peer_query_duration (base->sinkpad, GST_FORMAT_BYTES,
               &total_bytes))) {
     GST_WARNING_OBJECT (base, "Couldn't get upstream size in bytes");
-    ret = GST_FLOW_ERROR;
     mpegts_packetizer_clear (base->packetizer);
-    return ret;
+
+    return GST_FLOW_ERROR;
   }
   GST_DEBUG ("Upstream is %" G_GINT64_FORMAT " bytes", total_bytes);
 
@@ -1646,10 +1652,11 @@ find_timestamps (MpegTSBase * base, guint64 initoff, guint64 * offset)
 
   GST_DEBUG ("Scanning for last sync point between:%" G_GINT64_FORMAT
       " and the end:%" G_GINT64_FORMAT, scan_offset, total_bytes);
+
   while ((!done) && (scan_offset < total_bytes)) {
-    ret =
-        gst_pad_pull_range (base->sinkpad,
-        scan_offset, 50 * MPEGTS_MAX_PACKETSIZE, &buf);
+    ret = gst_pad_pull_range (base->sinkpad, scan_offset,
+        50 * MPEGTS_MAX_PACKETSIZE, &buf);
+
     if (ret != GST_FLOW_OK)
       goto beach;
 
@@ -1660,10 +1667,8 @@ find_timestamps (MpegTSBase * base, guint64 initoff, guint64 * offset)
 
   mpegts_packetizer_clear (base->packetizer);
 
-  GST_DEBUG ("Searching PCR");
-  ret =
-      process_pcr (base, scan_offset - 50 * MPEGTS_MAX_PACKETSIZE, &final, 10,
-      FALSE);
+  ret = process_pcr (base, scan_offset - 50 * MPEGTS_MAX_PACKETSIZE, &final,
+      10, FALSE);
 
   if (ret != GST_FLOW_OK) {
     GST_DEBUG ("Problem getting last PCRs");
@@ -1699,7 +1704,7 @@ process_pcr (MpegTSBase * base, guint64 initoff, TSPcrOffset * pcroffset,
   GstFlowReturn ret = GST_FLOW_OK;
   MpegTSBaseProgram *program;
   GstBuffer *buf;
-  guint nbpcr, i = 0;
+  guint i, nbpcr = 0;
   guint32 pcrmask, pcrpattern;
   guint64 pcrs[50];
   guint64 pcroffs[50];
@@ -1710,8 +1715,12 @@ process_pcr (MpegTSBase * base, guint64 initoff, TSPcrOffset * pcroffset,
 
   /* Get the program */
   program = demux->program;
-  if (G_UNLIKELY (program == NULL))
-    return GST_FLOW_ERROR;
+  if (G_UNLIKELY (program == NULL)) {
+    GST_DEBUG ("No program set, can not keep processing pcr");
+
+    ret = GST_FLOW_ERROR;
+    goto beach;
+  }
 
   /* First find the first X PCR */
   nbpcr = 0;
@@ -1733,8 +1742,7 @@ process_pcr (MpegTSBase * base, guint64 initoff, TSPcrOffset * pcroffset,
     GstMapInfo map;
     gsize size;
 
-    ret =
-        gst_pad_pull_range (base->sinkpad,
+    ret = gst_pad_pull_range (base->sinkpad,
         initoff + i * 500 * base->packetsize, 500 * base->packetsize, &buf);
 
     if (G_UNLIKELY (ret != GST_FLOW_OK))

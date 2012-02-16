@@ -151,8 +151,9 @@
 #define ST_DSMCC_D                      0x0d
 
 /* later extensions */
-#define ST_AUDIO_AAC                    0x0f
+#define ST_AUDIO_AAC_ADTS               0x0f
 #define ST_VIDEO_MPEG4                  0x10
+#define ST_AUDIO_AAC_LATM               0x11
 #define ST_VIDEO_H264                   0x1b
 
 /* Un-official Dirac extension */
