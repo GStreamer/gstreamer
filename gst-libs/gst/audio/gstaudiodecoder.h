@@ -293,6 +293,16 @@ void              gst_audio_decoder_set_tolerance   (GstAudioDecoder * dec,
 
 gint64            gst_audio_decoder_get_tolerance   (GstAudioDecoder * dec);
 
+void              gst_audio_decoder_set_drainable (GstAudioDecoder * dec,
+                                                   gboolean enabled);
+
+gboolean          gst_audio_decoder_get_drainable (GstAudioDecoder * dec);
+
+void              gst_audio_decoder_set_needs_format (GstAudioDecoder * dec,
+                                                      gboolean enabled);
+
+gboolean          gst_audio_decoder_get_needs_format (GstAudioDecoder * dec);
+
 G_END_DECLS
 
 #endif /* _GST_AUDIO_DECODER_H_ */

@@ -181,6 +181,8 @@ enum
 #define DEFAULT_LATENCY    0
 #define DEFAULT_TOLERANCE  0
 #define DEFAULT_PLC        FALSE
+#define DEFAULT_DRAINABLE  TRUE
+#define DEFAULT_NEEDS_FORMAT  FALSE
 
 typedef struct _GstAudioDecoderContext
 {
@@ -262,6 +264,8 @@ struct _GstAudioDecoderPrivate
   GstClockTime latency;
   GstClockTime tolerance;
   gboolean plc;
+  gboolean drainable;
+  gboolean needs_format;
 
   /* pending serialized sink events, will be sent from finish_frame() */
   GList *pending_events;
@@ -395,6 +399,8 @@ gst_audio_decoder_init (GstAudioDecoder * dec, GstAudioDecoderClass * klass)
   dec->priv->latency = DEFAULT_LATENCY;
   dec->priv->tolerance = DEFAULT_TOLERANCE;
   dec->priv->plc = DEFAULT_PLC;
+  dec->priv->drainable = DEFAULT_DRAINABLE;
+  dec->priv->needs_format = DEFAULT_NEEDS_FORMAT;
 
   /* init state */
   gst_audio_decoder_reset (dec, TRUE);
@@ -1024,6 +1030,10 @@ gst_audio_decoder_push_buffers (GstAudioDecoder * dec, gboolean force)
     } else {
       if (!force)
         break;
+      if (!priv->drainable) {
+        priv->drained = TRUE;
+        break;
+      }
       buffer = NULL;
     }
 
@@ -1344,6 +1354,9 @@ gst_audio_decoder_chain (GstPad * pad, GstBuffer * buffer)
 
   dec = GST_AUDIO_DECODER (GST_PAD_PARENT (pad));
 
+  if (G_UNLIKELY (!GST_PAD_CAPS (pad) && dec->priv->needs_format))
+    goto not_negotiated;
+
   GST_LOG_OBJECT (dec,
       "received buffer of size %d with ts %" GST_TIME_FORMAT
       ", duration %" GST_TIME_FORMAT, GST_BUFFER_SIZE (buffer),
@@ -1381,6 +1394,15 @@ gst_audio_decoder_chain (GstPad * pad, GstBuffer * buffer)
   GST_AUDIO_DECODER_STREAM_UNLOCK (dec);
 
   return ret;
+
+  /* ERRORS */
+not_negotiated:
+  {
+    GST_ELEMENT_ERROR (dec, CORE, NEGOTIATION, (NULL),
+        ("decoder not initialized"));
+    gst_buffer_unref (buffer);
+    return GST_FLOW_NOT_NEGOTIATED;
+  }
 }
 
 /* perform upstream byte <-> time conversion (duration, seeking)
@@ -2457,6 +2479,108 @@ gst_audio_decoder_get_tolerance (GstAudioDecoder * dec)
 
   GST_OBJECT_LOCK (dec);
   result = dec->priv->tolerance;
+  GST_OBJECT_UNLOCK (dec);
+
+  return result;
+}
+
+/**
+ * gst_audio_decoder_set_drainable:
+ * @enc: a #GstAudioDecoder
+ * @enabled: new state
+ *
+ * Configures decoder drain handling.  If drainable, subclass might
+ * be handed a NULL buffer to have it return any leftover decoded data.
+ * Otherwise, it is not considered so capable and will only ever be passed
+ * real data.
+ *
+ * MT safe.
+ *
+ * Since: 0.10.36
+ */
+void
+gst_audio_decoder_set_drainable (GstAudioDecoder * dec, gboolean enabled)
+{
+  g_return_if_fail (GST_IS_AUDIO_DECODER (dec));
+
+  GST_OBJECT_LOCK (dec);
+  dec->priv->drainable = enabled;
+  GST_OBJECT_UNLOCK (dec);
+}
+
+/**
+ * gst_audio_decoder_get_drainable:
+ * @enc: a #GstAudioDecoder
+ *
+ * Queries decoder drain handling.
+ *
+ * Returns: TRUE if drainable handling is enabled.
+ *
+ * MT safe.
+ *
+ * Since: 0.10.36
+ */
+gboolean
+gst_audio_decoder_get_drainable (GstAudioDecoder * dec)
+{
+  gboolean result;
+
+  g_return_val_if_fail (GST_IS_AUDIO_DECODER (dec), 0);
+
+  GST_OBJECT_LOCK (dec);
+  result = dec->priv->drainable;
+  GST_OBJECT_UNLOCK (dec);
+
+  return result;
+}
+
+/**
+ * gst_audio_decoder_set_needs_format:
+ * @enc: a #GstAudioDecoder
+ * @enabled: new state
+ *
+ * Configures decoder format needs.  If enabled, subclass needs to be
+ * negotiated with format caps before it can process any data.  It will then
+ * never be handed any data before it has been configured.
+ * Otherwise, it might be handed data without having been configured and
+ * is then expected being able to do so either by default
+ * or based on the input data.
+ *
+ * MT safe.
+ *
+ * Since: 0.10.36
+ */
+void
+gst_audio_decoder_set_needs_format (GstAudioDecoder * dec, gboolean enabled)
+{
+  g_return_if_fail (GST_IS_AUDIO_DECODER (dec));
+
+  GST_OBJECT_LOCK (dec);
+  dec->priv->needs_format = enabled;
+  GST_OBJECT_UNLOCK (dec);
+}
+
+/**
+ * gst_audio_decoder_get_needs_format:
+ * @enc: a #GstAudioDecoder
+ *
+ * Queries decoder required format handling.
+ *
+ * Returns: TRUE if required format handling is enabled.
+ *
+ * MT safe.
+ *
+ * Since: 0.10.36
+ */
+gboolean
+gst_audio_decoder_get_needs_format (GstAudioDecoder * dec)
+{
+  gboolean result;
+
+  g_return_val_if_fail (GST_IS_AUDIO_DECODER (dec), 0);
+
+  GST_OBJECT_LOCK (dec);
+  result = dec->priv->needs_format;
   GST_OBJECT_UNLOCK (dec);
 
   return result;
