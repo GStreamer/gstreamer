@@ -17,6 +17,19 @@
  * Boston, MA 02111-1307, USA.
  */
 /* TODO: add wave selection */
+/* fast vs. slow mode - see update_spectrum_bands()
+ * we are still cheating below, we only draw the first spect_bands and ignore a few :/
+ *
+ * xtime gst-launch-0.10 -q audiotestsrc num-buffers=10000 ! spectrum bands=1441 ! fakesink
+ * 2.29u 0.02s 2.14r 25504kB gst-launch-0.10 -q audiotestsrc num-buffers=10000 ! spectrum bands=1441 ! fakesink
+ * 2.20u 0.05s 2.10r 25664kB gst-launch-0.10 -q audiotestsrc num-buffers=10000 ! spectrum bands=1441 ! fakesink
+ * 2.23u 0.04s 2.10r 25664kB gst-launch-0.10 -q audiotestsrc num-buffers=10000 ! spectrum bands=1441 ! fakesink
+ * 
+ * xtime gst-launch-0.10 -q audiotestsrc num-buffers=10000 ! spectrum bands=1440 ! fakesink
+ * 25.01u 0.08s 25.00r 25552kB gst-launch-0.10 -q audiotestsrc num-buffers=10000 ! spectrum bands=1440 ! fakesink
+ * 24.96u 0.03s 24.88r 25568kB gst-launch-0.10 -q audiotestsrc num-buffers=10000 ! spectrum bands=1440 ! fakesink
+ * 25.11u 0.03s 25.03r 25536kB gst-launch-0.10 -q audiotestsrc num-buffers=10000 ! spectrum bands=1440 ! fakesink
+ */
 
 #ifdef HAVE_CONFIG_H
 #include "config.h"
@@ -27,6 +40,7 @@
 #include <string.h>
 #include <math.h>
 #include <gst/gst.h>
+#include <gst/fft/gstfft.h>
 #include <gtk/gtk.h>
 
 #ifndef DEFAULT_AUDIOSINK
@@ -36,8 +50,10 @@
 static guint spect_height = 64;
 static guint spect_bands = 256;
 static gfloat height_scale = 1.0;
+static gboolean fast = FALSE;
 
 static GtkWidget *drawingarea = NULL;
+static GtkWidget *bands_used = NULL;
 static GstClock *sync_clock = NULL;
 
 static void
@@ -57,19 +73,39 @@ on_frequency_changed (GtkRange * range, gpointer user_data)
   g_object_set (machine, "freq", value, NULL);
 }
 
+static void
+update_spectrum_bands (GstElement * spectrum)
+{
+  guint bands = spect_bands;
+  gchar str[50];
+
+  if (fast)
+    bands = ((gst_fft_next_fast_length (2 * bands - 2) + 2) / 2);
+
+  sprintf (str, "using %u bands", bands);
+
+  g_object_set (bands_used, "label", str, NULL);
+  g_object_set (G_OBJECT (spectrum), "bands", bands, NULL);
+}
+
 static gboolean
 on_configure_event (GtkWidget * widget, GdkEventConfigure * event,
     gpointer user_data)
 {
-  GstElement *spectrum = GST_ELEMENT (user_data);
-
   /*GST_INFO ("%d x %d", event->width, event->height); */
   spect_height = event->height;
   height_scale = event->height / 64.0;
   spect_bands = event->width;
 
-  g_object_set (G_OBJECT (spectrum), "bands", spect_bands, NULL);
+  update_spectrum_bands (GST_ELEMENT (user_data));
   return FALSE;
+}
+
+static void
+on_fast_slow_mode_changed (GtkToggleButton * togglebutton, gpointer user_data)
+{
+  fast = gtk_toggle_button_get_active (togglebutton);
+  update_spectrum_bands (GST_ELEMENT (user_data));
 }
 
 /* draw frequency spectrum as a bunch of bars */
@@ -170,7 +206,7 @@ main (int argc, char *argv[])
   GstElement *bin;
   GstElement *src, *spectrum, *audioconvert, *sink;
   GstBus *bus;
-  GtkWidget *appwindow, *vbox, *widget;
+  GtkWidget *appwindow, *vbox, *hbox, *widget;
 
   gst_init (&argc, &argv);
   gtk_init (&argc, &argv);
@@ -204,6 +240,16 @@ main (int argc, char *argv[])
   g_signal_connect (G_OBJECT (appwindow), "destroy",
       G_CALLBACK (on_window_destroy), NULL);
   vbox = gtk_vbox_new (FALSE, 6);
+
+  hbox = gtk_hbox_new (FALSE, 6);
+  widget = gtk_check_button_new_with_label ("Fast");
+  g_signal_connect (G_OBJECT (widget), "toggled",
+      G_CALLBACK (on_fast_slow_mode_changed), (gpointer) spectrum);
+  gtk_box_pack_start (GTK_BOX (hbox), widget, FALSE, FALSE, 0);
+  bands_used = gtk_label_new ("");
+  gtk_box_pack_start (GTK_BOX (hbox), bands_used, FALSE, FALSE, 0);
+
+  gtk_box_pack_start (GTK_BOX (vbox), hbox, FALSE, FALSE, 0);
 
   widget = gtk_hscale_new_with_range (50.0, 20000.0, 10);
   gtk_scale_set_draw_value (GTK_SCALE (widget), TRUE);
