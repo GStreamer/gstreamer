@@ -158,7 +158,10 @@ gst_wrapper_camera_bin_reset_video_src_caps (GstWrapperCameraBinSrc * self,
     self->drop_newseg = TRUE;
 
     GST_DEBUG_OBJECT (self, "Bringing source up");
-    gst_element_sync_state_with_parent (self->src_vid_src);
+    if (!gst_element_sync_state_with_parent (self->src_vid_src)) {
+      GST_WARNING_OBJECT (self, "Failed to reset source caps");
+      gst_element_set_state (self->src_vid_src, GST_STATE_NULL);
+    }
 
     if (clock) {
       gst_element_set_clock (self->src_vid_src, clock);
