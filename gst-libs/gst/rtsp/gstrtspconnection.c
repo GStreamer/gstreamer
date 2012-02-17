@@ -3320,7 +3320,7 @@ gst_rtsp_watch_write_data (GstRTSPWatch * watch, const guint8 * data,
   g_mutex_lock (watch->mutex);
 
   /* try to send the message synchronously first */
-  if (watch->messages->length == 0) {
+  if (watch->messages->length == 0 && watch->write_data == NULL) {
     res =
         write_bytes (watch->conn->write_socket, data, &off, size,
         watch->conn->cancellable);

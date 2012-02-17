@@ -2502,7 +2502,7 @@ gst_audio_decoder_get_tolerance (GstAudioDecoder * dec)
 
 /**
  * gst_audio_decoder_set_drainable:
- * @enc: a #GstAudioDecoder
+ * @dec: a #GstAudioDecoder
  * @enabled: new state
  *
  * Configures decoder drain handling.  If drainable, subclass might
@@ -2526,7 +2526,7 @@ gst_audio_decoder_set_drainable (GstAudioDecoder * dec, gboolean enabled)
 
 /**
  * gst_audio_decoder_get_drainable:
- * @enc: a #GstAudioDecoder
+ * @dec: a #GstAudioDecoder
  *
  * Queries decoder drain handling.
  *
@@ -2552,7 +2552,7 @@ gst_audio_decoder_get_drainable (GstAudioDecoder * dec)
 
 /**
  * gst_audio_decoder_set_needs_format:
- * @enc: a #GstAudioDecoder
+ * @dec: a #GstAudioDecoder
  * @enabled: new state
  *
  * Configures decoder format needs.  If enabled, subclass needs to be
@@ -2578,7 +2578,7 @@ gst_audio_decoder_set_needs_format (GstAudioDecoder * dec, gboolean enabled)
 
 /**
  * gst_audio_decoder_get_needs_format:
- * @enc: a #GstAudioDecoder
+ * @dec: a #GstAudioDecoder
  *
  * Queries decoder required format handling.
  *
