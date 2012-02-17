@@ -69,8 +69,6 @@ EXTRA_HFILES = \
 	$(top_srcdir)/ext/jack/gstjackaudiosink.h \
 	$(top_srcdir)/ext/jpeg/gstjpegdec.h \
 	$(top_srcdir)/ext/jpeg/gstjpegenc.h \
-	$(top_srcdir)/ext/jpeg/gstsmokedec.h \
-	$(top_srcdir)/ext/jpeg/gstsmokeenc.h \
 	$(top_srcdir)/ext/libcaca/gstcacasink.h \
 	$(top_srcdir)/ext/libpng/gstpngdec.h \
 	$(top_srcdir)/ext/libpng/gstpngenc.h \
