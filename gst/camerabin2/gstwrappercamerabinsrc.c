@@ -157,7 +157,13 @@ gst_wrapper_camera_bin_reset_video_src_caps (GstWrapperCameraBinSrc * self,
     clock = gst_element_get_clock (self->src_vid_src);
     base_time = gst_element_get_base_time (self->src_vid_src);
 
-    gst_element_set_state (self->src_vid_src, GST_STATE_READY);
+    /* Ideally, we should only need to get the source to READY here,
+     * but it seems v4l2src isn't happy with this. Putting to NULL makes
+     * it work.
+     *
+     * TODO fix this in v4l2src
+     */
+    gst_element_set_state (self->src_vid_src, GST_STATE_NULL);
     set_capsfilter_caps (self, caps);
 
     self->drop_newseg = TRUE;
