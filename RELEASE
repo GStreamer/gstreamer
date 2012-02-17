@@ -1,15 +1,16 @@
 
-Release notes for GStreamer FFmpeg Plug-ins 0.10.13 "Speeding, sparks like lightning"
+Release notes for GStreamer FFmpeg Plug-ins 0.11.1 "Serpentine Sibilance"
         
 
 The GStreamer team is proud to announce a new release
-in the 0.10.x stable series of the
+in the 0.11.x unstable series of the
 GStreamer FFmpeg Plug-ins.
 
 
-The 0.10.x series is a stable series targeted at end users.
-It is not API or ABI compatible with the stable 0.8.x series.
-It is, however, parallel installable with the 0.8.x series.
+The 0.11.x series is an unstable series targeted at developers and will
+eventually lead up to the stable 1.0 series.
+It is not API or ABI compatible with the stable 0.10.x series.
+It is, however, parallel installable with the 0.10.x series.
 
 
 This module contains plug-ins using libraries from the FFmpeg project.
@@ -34,26 +35,14 @@ contains a set of less supported plug-ins that haven't passed the
 
 Features of this release
     
-      * Use libav 0.7.2 internal branch for security fixes
-      * Fixes for handling FLAC 
-      * Post QoS messages when dropping 
-      * Properly report GPL or LGPL licensing
+      * Parallel installability with 0.10.x series
+      * Threadsafe design and API
+      * Many cleanups
+      * Ported to new 0.11 core API changes
 
 Bugs fixed in this release
      
-      * 566605 : Support the new ffmpeg metadata API
-      * 574661 : [gstffmpegdec] Wrong usage of parsers
-      * 608892 : DCA/AAC/AC-3 decoders broken in gst-ffmpeg
-      * 532779 : ffmpeg configured with options leading to GPL license
-      * 589361 : [ffdec_flac] extradata NULL or too small error
-      * 640012 : ffmpegdec outputs wrong timestamps
-      * 643591 : ffmpegdec: invalid timestamp being used for next timestamp calculation
-      * 651768 : [PATCH] Arm cross compile fail (Failed to configure embedded FFmpeg tree)
-      * 654634 : postproc: gst-inspect-0.10 -a aborts with gstpostproc.c:360:change_mode: assertion failed: (postproc- > mode)
-      * 656155 : ffdec_mpeg2video and interlace property
-      * 656328 : [ffdeinterlace] add automatic " mode " property
-      * 657950 : ffmpegdec: post QoS messages when dropping a frame
-      * 658019 : ffdec_ass: caps seems wrong
+      * 667539 : [0.11] ffdec doesn't reorder channels if necessary
 
 Download
 
@@ -83,11 +72,12 @@ Applications
 Contributors to this release
     
       * Edward Hervey
-      * Martin Storsjo
-      * Nicolas Dufresne
-      * Sjoerd Simons
+      * Mark Nauwelaerts
+      * Matej Knopp
+      * Sebastian Dröge
       * Stefan Sauer
+      * Thomas Vander Stichele
       * Tim-Philipp Müller
-      * Tvrtko Ursulin
       * Vincent Penquerc'h
+      * Wim Taymans
  

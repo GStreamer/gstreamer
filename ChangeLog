@@ -1,9 +1,404 @@
-=== release 0.10.13 ===
+=== release 0.11.1 ===
 
-2011-11-02  Edward Hervey <edward.hervey@collabora.co.uk>
+2012-02-17  Wim Taymans <wim.taymans@collabora.co.uk>
 
 	* configure.ac:
-	  releasing 0.10.13, "Speeding, sparks like lightning"
+	  releasing 0.11.1, "Serpentine Sibilance"
+
+2012-02-08 16:41:19 +0100  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* ext/ffmpeg/gstffmpegdemux.c:
+	* ext/ffmpeg/gstffmpegprotocol.c:
+	  GST_FLOW_WRONG_STATE -> GST_FLOW_FLUSHING
+
+2012-02-02 01:36:05 +0000  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+
+	* ext/ffmpeg/gstffmpegdemux.c:
+	  Fix for gst_type_find_register() API change
+
+2012-01-25 14:11:17 +0100  Thomas Vander Stichele <thomas (at) apestaart (dot) org>
+
+	* common:
+	  Automatic update of common submodule
+	  From c463bc0 to 7fda524
+
+2012-01-25 13:14:51 +0100  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	  Merge branch 'master' into 0.11
+
+2012-01-25 13:10:07 +0100  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* common:
+	* configure.ac:
+	  configure: Add --disable-fatal-warnings configure option
+
+2012-01-24 14:40:37 +0100  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* ext/ffmpeg/gstffmpegcodecmap.c:
+	* ext/ffmpeg/gstffmpegdec.c:
+	* ext/ffmpeg/gstffmpegdeinterlace.c:
+	* ext/ffmpeg/gstffmpegdemux.c:
+	* ext/ffmpeg/gstffmpegenc.c:
+	* ext/ffmpeg/gstffmpegmux.c:
+	  ffmpeg: port to new memory API
+
+2012-01-25 11:39:58 +0100  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* common:
+	  Automatic update of common submodule
+	  From 2a59016 to c463bc0
+
+2012-01-19 11:34:59 +0100  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* ext/ffmpeg/gstffmpegdemux.c:
+	  port to new gthread API
+
+2012-01-18 16:47:51 +0100  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* common:
+	  Automatic update of common submodule
+	  From 0807187 to 2a59016
+
+2012-01-18 10:21:36 +0100  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	  Merge branch 'master' into 0.11
+
+2012-01-18 10:05:09 +0100  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* ext/ffmpeg/gstffmpegdec.c:
+	  ffdec: Only set get_buffer() function for video
+	  Fixes bug #666435.
+
+2012-01-12 18:03:10 +0000  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+
+	* ext/ffmpeg/gstffmpegdemux.c:
+	  ffmpegdemux: demote swf demuxer to GST_RANK_NONE
+	  SWF doesn't really make sense in our context, don't pretend
+	  to support it. People should use a dedicated swf player for that.
+
+2012-01-12 14:57:48 +0000  Vincent Penquerc'h <vincent.penquerch@collabora.co.uk>
+
+	* ext/ffmpeg/gstffmpegdemux.c:
+	  ffmpegdemux: fix caps leak
+
+2012-01-10 13:41:23 +0100  Mark Nauwelaerts <mark.nauwelaerts@collabora.co.uk>
+
+	* ext/ffmpeg/Makefile.am:
+	  ffmpeg: fix and extend LIBS in Makefile.am
+	  ... to account for -base video helper functions.
+
+2011-01-27 22:25:13 +0100  Mark Nauwelaerts <mark.nauwelaerts@collabora.co.uk>
+
+	* configure.ac:
+	  configure.ac: improve path handling in out-of-tree build
+	  That is, handle the srcdir being given by a relative path as well as
+	  an absolute path by using autotools provided absolute path.
+
+2012-01-10 11:49:57 +0100  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* ext/ffmpeg/gstffmpegmux.c:
+	  ffmux: gst_element_class_add_pad_template() takes ownership of the pad template
+
+2012-01-10 11:39:27 +0100  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* ext/ffmpeg/gstffmpegdec.c:
+	* ext/libpostproc/gstpostproc.c:
+	* gst-libs/ext/libav:
+	  ffmpeg: Fix merge mistakes
+
+2012-01-10 11:35:55 +0100  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	  Merge branch 'master' into 0.11
+	  Conflicts:
+	  configure.ac
+	  ext/ffmpeg/gstffmpegcodecmap.c
+	  ext/ffmpeg/gstffmpegdec.c
+	  ext/ffmpeg/gstffmpegdeinterlace.c
+	  ext/ffmpeg/gstffmpegmux.c
+	  ext/libswscale/gstffmpegscale.c
+
+2012-01-10 10:08:05 +0100  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* ext/ffmpeg/gstffmpegcodecmap.c:
+	  ffmpeg: Channel layouts are now set for DTS and (E)AC3 by libav
+
+2012-01-10 11:12:59 +0100  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* gst-libs/ext/libav:
+	  libav: Update to current GIT master
+
+2012-01-10 11:04:56 +0100  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* ext/ffmpeg/gstffmpegdec.c:
+	  ffdec: Give the (E)AC3/DTS decoders a rank of marginal
+	  Even if they don't downmix to stereo, they're still working
+	  correctly. The only advantage of dtsdec/a52dec is that they
+	  downmix to stereo (using the special downmixing matrices) if
+	  downstream prefers stereo but in every other case they should
+	  be equivalent.
+
+2012-01-10 10:59:57 +0100  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* ext/ffmpeg/gstffmpegdec.c:
+	  ffdec: Revert accidentially committed rank change of the (E)AC3/DTS decoders
+
+2012-01-10 10:45:42 +0100  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* ext/ffmpeg/gstffmpegdec.c:
+	  ffmpegdec: Reorder audio channels after clipping the audio buffer
+
+2012-01-10 10:37:50 +0100  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* ext/ffmpeg/gstffmpegcodecmap.c:
+	* ext/ffmpeg/gstffmpegcodecmap.h:
+	* ext/ffmpeg/gstffmpegdec.c:
+	  ffmpegdec: Correctly reorder audio channels to the GStreamer order if necessary
+
+2012-01-10 10:08:05 +0100  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* ext/ffmpeg/gstffmpegcodecmap.c:
+	  ffmpeg: Channel layouts are now set for DTS and (E)AC3 by libav
+
+2012-01-10 10:01:26 +0100  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* ext/ffmpeg/gstffmpegcodecmap.c:
+	* ext/ffmpeg/gstffmpegdec.c:
+	  ffmpeg: Use stack-allocated channel positions array
+
+2012-01-09 13:40:05 +0100  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* ext/ffmpeg/gstffmpegcodecmap.c:
+	  ffmpeg: Put the new layout field in raw audio caps
+
+2012-01-09 13:24:55 +0100  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* ext/ffmpeg/gstffmpegcodecmap.c:
+	  ffdec: Add mappings for the top channel positions
+
+2012-01-09 13:23:29 +0100  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* ext/ffmpeg/gstffmpegcodecmap.c:
+	  ffdec: Correctly set the channel-mask and also set it for stereo
+
+2012-01-07 19:56:42 +0000  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+
+	* configure.ac:
+	  configure: require core from git/pre-release
+	  For  gst_element_class_add_static_pad_template() which
+	  was added only recently.
+
+2012-01-05 14:06:33 +0100  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* ext/ffmpeg/gstffmpegcodecmap.c:
+	* ext/ffmpeg/gstffmpegcodecmap.h:
+	  ffmpeg: port to new channel mapping
+
+2012-01-04 19:54:49 +0000  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+
+	* common:
+	  Automatic update of common submodule
+	  From 11f0cd5 to 0807187
+
+2012-01-04 10:17:01 +0100  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* tests/check/elements/ffdec_adpcm.c:
+	* tests/check/elements/ffdemux_ape.c:
+	* tests/check/generic/libavcodec-locking.c:
+	  tests: make tests compile
+
+2012-01-03 15:27:54 +0100  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* ext/ffmpeg/gstffmpegdemux.c:
+	* ext/ffmpeg/gstffmpegmux.c:
+	* ext/ffmpeg/gstffmpegprotocol.c:
+	  GST_FLOW_UNEXPECTED -> GST_FLOW_EOS
+
+2011-12-21 23:52:00 +0100  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* ext/libpostproc/gstpostproc.c:
+	  update for videofilter changes
+
+2011-12-21 18:06:32 +0100  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* ext/ffmpeg/gstffmpegdec.c:
+	  ffdec: fill in the stride alignment
+	  Copy the stride alignment we got from ffmpeg to the alignment structure.
+
+2011-12-19 18:14:27 +0100  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* ext/ffmpeg/gstffmpegdec.c:
+	  ffmpegdec: update for new interlace fields
+
+2011-12-15 14:28:00 +0000  Vincent Penquerc'h <vincent.penquerch@collabora.co.uk>
+
+	* ext/ffmpeg/gstffmpegmux.c:
+	  ffmpeg: port to GstCollectPads2
+
+2011-11-08 18:56:54 +0100  Edward Hervey <edward.hervey@collabora.co.uk>
+
+	* ext/ffmpeg/gstffmpegdec.c:
+	  ffmpegdec: Report latency if B-frames are present
+	  ... and cleanup the query handler while we're at it
+	  https://bugzilla.gnome.org/show_bug.cgi?id=663616
+
+2011-11-28 13:23:42 +0000  Vincent Penquerc'h <vincent.penquerch@collabora.co.uk>
+
+	* ext/ffmpeg/gstffmpegaudioresample.c:
+	* ext/ffmpeg/gstffmpegdeinterlace.c:
+	* ext/ffmpeg/gstffmpegmux.c:
+	* ext/ffmpeg/gstffmpegscale.c:
+	* ext/libpostproc/gstpostproc.c:
+	* ext/libswscale/gstffmpegscale.c:
+	  ffmpeg: fix pad template ref leaks
+	  https://bugzilla.gnome.org/show_bug.cgi?id=662664
+
+2011-11-26 15:39:40 +0000  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+
+	  Merge remote-tracking branch 'origin/master' into 0.11
+
+2011-11-24 00:41:27 +0100  Matej Knopp <matej.knopp@gmail.com>
+
+	* ext/ffmpeg/gstffmpegutils.c:
+	  Fix cpu cores detection on OS X
+	  https://bugzilla.gnome.org/show_bug.cgi?id=664687
+
+2011-11-24 00:41:27 +0100  Matej Knopp <matej.knopp@gmail.com>
+
+	* ext/ffmpeg/gstffmpegutils.c:
+	  Fix cpu cores detection on OS X
+	  https://bugzilla.gnome.org/show_bug.cgi?id=664687
+
+2011-11-21 13:36:34 +0100  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* ext/ffmpeg/gstffmpegdemux.c:
+	  update for activation changes
+
+2011-11-18 18:00:59 +0100  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* ext/ffmpeg/gstffmpegdemux.c:
+	  update for new scheduling query
+
+2011-11-18 13:59:59 +0100  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* ext/ffmpeg/gstffmpegdemux.c:
+	  add parent to activate functions
+
+2011-11-17 12:49:33 +0100  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* ext/ffmpeg/gstffmpegdec.c:
+	* ext/ffmpeg/gstffmpegdeinterlace.c:
+	* ext/ffmpeg/gstffmpegdemux.c:
+	* ext/ffmpeg/gstffmpegenc.c:
+	* ext/ffmpeg/gstffmpegmux.c:
+	* ext/libswscale/gstffmpegscale.c:
+	  add parent to pad functions
+
+2011-11-17 08:25:48 +0100  Stefan Sauer <ensonic@users.sf.net>
+
+	* ext/ffmpeg/gstffmpegmux.c:
+	  collectpads: port API changes
+
+2011-11-16 17:29:22 +0100  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* ext/ffmpeg/gstffmpegdec.c:
+	* ext/ffmpeg/gstffmpegdemux.c:
+	* ext/ffmpeg/gstffmpegenc.c:
+	  add parent to query function
+
+2011-11-15 17:55:29 +0100  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* ext/ffmpeg/gstffmpegdec.c:
+	  _query_peer_*() -> _peer_query_*()
+
+2011-11-15 17:23:21 +0100  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* ext/ffmpeg/gstffmpegenc.c:
+	  _peer_get_caps() -> _peer_query_caps()
+
+2011-11-15 16:35:17 +0100  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* ext/ffmpeg/gstffmpegdec.c:
+	* ext/ffmpeg/gstffmpegenc.c:
+	  ffmpeg: change getcaps to query
+
+2011-11-10 18:25:21 +0100  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* ext/ffmpeg/gstffmpegenc.c:
+	  update for adapter api change
+
+2011-11-09 11:58:15 +0100  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* ext/ffmpeg/gstffmpegdemux.c:
+	  remove query types
+
+2011-11-04 16:23:32 +0100  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* ext/ffmpeg/gstffmpegdec.c:
+	  ffdec: get the pixfmt correctly
+	  Use the pixfmt from the passed context, which can be different from our other
+	  context and which might not have the pixfmt set correctly.
+
+2011-11-04 12:43:17 +0100  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* ext/ffmpeg/gstffmpegdemux.c:
+	* ext/ffmpeg/gstffmpegmux.c:
+	  ffmpeg: fix template to %u
+
+2011-11-04 11:02:32 +0100  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	  Merge branch 'master' into 0.11
+	  Conflicts:
+	  configure.ac
+
+2011-11-04 10:15:32 +0100  Edward Hervey <edward.hervey@collabora.co.uk>
+
+	* tests/check/elements/ffdemux_ape.c:
+	  tests: Fix for pad probe API change
+
+2011-11-02 17:47:40 +0100  Edward Hervey <edward.hervey@collabora.co.uk>
+
+	  Merge remote-tracking branch 'origin/0.10.13'
+
+=== release 0.10.13 ===
+
+2011-11-02 17:26:54 +0100  Edward Hervey <edward.hervey@collabora.co.uk>
+
+	* ChangeLog:
+	* NEWS:
+	* RELEASE:
+	* configure.ac:
+	* gst-ffmpeg.doap:
+	  0.10.13 Release "Speeding, sparks like lightning"
+
+2011-11-02 12:10:25 +0100  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* ext/ffmpeg/gstffmpegdemux.c:
+	  tags: update for tag API removal
+
+2011-11-02 10:31:57 +0100  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	  Merge branch 'master' into 0.11
+
+2011-10-29 09:27:46 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* ext/ffmpeg/gstffmpegdemux.c:
+	  demux: update for new task api
+
+2011-10-29 09:11:53 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* ext/ffmpeg/gstffmpegdemux.c:
+	* ext/ffmpeg/gstffmpegenc.c:
+	  structure: fix for api upate
+
+2011-10-31 14:53:01 +0000  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+
+	  Merge remote-tracking branch 'origin/master' into 0.11
+
+2011-10-31 11:47:10 +0100  Edward Hervey <edward.hervey@collabora.co.uk>
+
+	* configure.ac:
+	  configure.ac: Remove --enable-postproc from the default flags
+	  fixes previous patch
 
 2011-10-31 11:40:37 +0100  Edward Hervey <edward.hervey@collabora.co.uk>
 
@@ -46,6 +441,72 @@
 	  restrict the caps.
 	  Also restrict the maximum channels for G726 and G722 to 1 channel
 
+2011-07-05 21:35:46 +0300  Martin Storsjo <martin@martin.st>
+
+	* configure.ac:
+	* ext/Makefile.am:
+	* ext/ffmpeg/gstffmpeg.c:
+	* ext/libswscale/gstffmpegscale.c:
+	  Allow building a LGPL only gst-ffmpeg plugin
+	  This removes --enable-gpl and --enable-postproc from the
+	  ffmpeg configure line, and disables building the postproc
+	  gstreamer plugin.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=654037
+
+2011-10-30 12:23:51 +0000  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+
+	* tests/check/Makefile.am:
+	* tests/check/elements/ffdec_adpcm.c:
+	* tests/check/elements/ffdemux_ape.c:
+	* tests/check/generic/libavcodec-locking.c:
+	  tests: port to 0.11
+	  Some still fail though, for various reasons. ffmpeg warning:
+	  "get_buffer() cannot be called after ff_thread_finish_setup()".
+
+2011-10-30 12:03:36 +0000  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+
+	* ext/ffmpeg/gstffmpegdemux.c:
+	  ffmpegdemux: update for taglist API changes
+
+2011-10-28 16:35:54 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* ext/ffmpeg/gstffmpegcodecmap.c:
+	* ext/ffmpeg/gstffmpegenc.c:
+	  fix compilation with new caps api
+
+2011-10-27 16:47:18 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* ext/ffmpeg/gstffmpegenc.c:
+	  ffenc: fix compilation
+
+2011-10-27 16:31:30 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	  Merge branch 'master' into 0.11
+	  Conflicts:
+	  ext/ffmpeg/gstffmpegcodecmap.c
+
+2011-10-10 23:56:04 +0100  Sjoerd Simons <sjoerd.simons@collabora.co.uk>
+
+	* ext/ffmpeg/gstffmpegenc.c:
+	  ffmpegenc: Pass the size of the output buffer to avcodec_encode_audio
+	  avcodec_encode_audio is documented as taking the size of the output
+	  buffer not the size of the input buffer.  This fixes the use of the G722
+	  encoder and makes the code more consistent with avconv from the libav
+	  source tree.
+
+2011-10-10 22:04:48 +0100  Sjoerd Simons <sjoerd.simons@collabora.co.uk>
+
+	* ext/ffmpeg/gstffmpegcodecmap.c:
+	  ffmpegcodecmap: Further specify allowed rates for G722 and G726
+
+2011-10-10 14:50:09 +0100  Sjoerd Simons <sjoerd.simons@collabora.co.uk>
+
+	* ext/ffmpeg/gstffmpegcodecmap.c:
+	  ffmpegcodecmap: Always restrict audio codec in the unfixed cases
+	  If the context isn't fixed yet or if it doesn't exist then always
+	  restrict the caps.
+	  Also restrict the maximum channels for G726 and G722 to 1 channel
+
 2011-10-18 10:23:44 +0200  Edward Hervey <edward.hervey@collabora.co.uk>
 
 	* configure.ac:
@@ -55,6 +516,44 @@
 
 	* gst-libs/ext/libav:
 	  libav: Update to v0.7.2 release
+
+2011-10-17 16:29:10 +0200  Edward Hervey <edward.hervey@collabora.co.uk>
+
+	  Merge remote-tracking branch 'origin/master' into 0.11
+
+2011-10-17 16:27:36 +0200  Edward Hervey <edward.hervey@collabora.co.uk>
+
+	* ext/ffmpeg/gstffmpegdec.c:
+	  gstffmpegdec: Re-enable MT-decoding by default
+
+2011-10-17 16:26:52 +0200  Edward Hervey <edward.hervey@collabora.co.uk>
+
+	* ext/ffmpeg/gstffmpegutils.h:
+	  gstffmpegutils: Fix include
+
+2011-10-17 16:26:20 +0200  Edward Hervey <edward.hervey@collabora.co.uk>
+
+	* configure.ac:
+	  configure.ac: Fix for new libav
+
+2011-10-17 16:02:51 +0200  Edward Hervey <edward.hervey@collabora.co.uk>
+
+	* gst-libs/ext/libav:
+	  libav: Switch to current git master
+
+2011-10-11 14:02:53 +0200  Edward Hervey <edward.hervey@collabora.co.uk>
+
+	* ext/ffmpeg/gstffmpegcodecmap.c:
+	  gstffmpegcodecmap: Avoid string operations on NULL
+
+2011-10-03 11:34:34 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* ext/ffmpeg/gstffmpegdec.c:
+	  dec: remove interlaced update code
+
+2011-10-03 11:32:24 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	  Merge branch 'master' into 0.11
 
 2011-08-29 15:18:39 +0100  Vincent Penquerc'h <vincent.penquerch@collabora.co.uk>
 
@@ -66,6 +565,14 @@
 	  changes, we update the buffer (if any) caps with the correct
 	  interlaced flag once we know.
 	  https://bugzilla.gnome.org/show_bug.cgi?id=656155
+
+2011-09-28 13:29:08 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	  Merge branch 'master' into 0.11
+	  Conflicts:
+	  configure.ac
+	  ext/ffmpeg/gstffmpegcodecmap.c
+	  ext/ffmpeg/gstffmpegdeinterlace.c
 
 2011-09-01 16:46:47 +0100  Vincent Penquerc'h <vincent.penquerch@collabora.co.uk>
 
@@ -120,6 +627,11 @@
 	  Automatic update of common submodule
 	  From 605cd9a to a39eb83
 
+2011-09-06 15:29:26 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* ext/ffmpeg/gstffmpegcodecmap.c:
+	  ffmpeg: fix for audio caps change
+
 2011-09-02 16:25:16 -0400  Nicolas Dufresne <nicolas.dufresne@collabora.com>
 
 	* ext/ffmpeg/gstffmpegdec.c:
@@ -148,6 +660,129 @@
 	* configure.ac:
 	  configure: back to development
 
+2011-08-25 16:41:36 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* ext/ffmpeg/gstffmpegdec.c:
+	  ffdec: port to new flags
+
+2011-08-22 13:33:31 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* ext/ffmpeg/gstffmpegcodecmap.c:
+	* ext/libswscale/gstffmpegscale.c:
+	  ffmpeg: convert to new caps
+
+2011-08-19 18:33:11 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* ext/ffmpeg/gstffmpegaudioresample.c:
+	* ext/ffmpeg/gstffmpegcodecmap.c:
+	* ext/ffmpeg/gstffmpegdec.c:
+	* ext/ffmpeg/gstffmpegmux.c:
+	  ffmpeg: port to new audio caps
+
+2011-08-05 12:04:13 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* ext/ffmpeg/gstffmpegdec.c:
+	  ffmpegdec: react to the reconfigure event
+	  Also renegotiate the caps and bufferpool when we have a rereconfigure event
+	  pending.
+
+2011-08-04 11:10:26 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* ext/ffmpeg/gstffmpegdec.c:
+	  ffdec: ensure bufferpool size
+	  Make sure the bufferpool size is at least what we expect.
+	  Add some more debug.
+
+2011-08-01 18:10:53 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* ext/ffmpeg/gstffmpegdec.c:
+	  ffdec: enable direct rendering for all formats
+	  Since we now support padding, we can enable direct rendering for all formats.
+
+2011-08-01 17:57:38 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* ext/ffmpeg/gstffmpegdec.c:
+	  ffdec: add alignment support
+	  Always diable EMU_EDGE. Use the bufferpool options to enable extra padding on
+	  allocated frames. If the downstream bufferpool does not support the padding,
+	  disable direct rendering and do the final copy/cropping into the non-padded
+	  output frame.
+
+2011-07-29 13:40:30 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* ext/ffmpeg/gstffmpegdec.c:
+	  ffdec: refactor picture fill code
+	  Make a method to hold the code to convert a GstVideoFrame to an AVFrame so that
+	  we can reuse it in the non-direct rendering case.
+
+2011-07-29 13:08:53 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* ext/ffmpeg/gstffmpegdec.c:
+	  ffdec: cleanups
+	  Make things a little more readable.
+
+2011-07-29 12:36:12 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* ext/ffmpeg/gstffmpegdec.c:
+	  ffdec: use video frame helpers
+	  Use the video frame helper functions to map and set up the strides in the
+	  picture for ffmpeg.
+
+2011-07-29 12:34:04 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* ext/ffmpeg/gstffmpegdec.c:
+	  ffmpegdec: fix for query API change
+
+2011-07-29 12:32:45 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* ext/ffmpeg/gstffmpegdemux.c:
+	* ext/ffmpeg/gstffmpegprotocol.c:
+	  ffmpeg: fix for query API changes
+
+2011-07-29 10:57:20 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* ext/ffmpeg/gstffmpegdec.c:
+	  ffdec: remove unused variable
+
+2011-07-29 10:31:03 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* ext/ffmpeg/gstffmpegdec.c:
+	  ffmpeg: First set of cleanups
+	  Store incomming info from the caps, current context and output formats into
+	  separate variables so that we can more easily handle them.
+	  Refactor the negotiation code.
+	  Rework the bufferpool setup code. Take into account that we might want to
+	  negotiate extra borders around the image in direct rendering.
+	  Remove some of the cropping code for now.
+
+2011-07-29 10:25:03 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* ext/ffmpeg/gstffmpegcodecmap.c:
+	* ext/ffmpeg/gstffmpegcodecmap.h:
+	  ffmpeg: add GstVideoFormat helper function
+	  Add a function to convert an ffmpeg pixfmt to a GStreamer GstVideoFormat.
+
+2011-07-28 11:38:27 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* ext/ffmpeg/gstffmpegdec.c:
+	  ffdec: cleanups
+	  Remove useless switch
+	  Remove old EXTRA_REF define
+	  Move errors out of the main code path
+
+2011-07-28 10:50:01 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* ext/ffmpeg/gstffmpegdec.c:
+	  ffdec: small cleanups
+	  USe gst_pad_peer_query() to forward the query to the peer.
+
+2011-07-22 17:54:32 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	  Merge branch 'master' into 0.11
+	  Conflicts:
+	  configure.ac
+	  ext/ffmpeg/gstffmpegcodecmap.c
+
 === release 0.10.12 ===
 
 2011-07-20 12:14:45 +0200  Edward Hervey <edward.hervey@collabora.co.uk>
@@ -170,6 +805,10 @@
 	  If extradata is created for LATM, libav will use it for initialising AAC
 	  decoder and decoding will fail.
 	  Fixes bug #652812.
+
+2011-07-15 12:34:19 +0200  Edward Hervey <edward.hervey@collabora.co.uk>
+
+	  Merge branch 'master' into 0.11
 
 2011-07-12 18:36:35 +0200  Edward Hervey <edward.hervey@collabora.co.uk>
 
@@ -197,6 +836,34 @@
 	  remove -Wcast-align
 	  See: https://bugzilla.gnome.org/show_bug.cgi?id=615698
 
+2011-07-07 18:52:23 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* configure.ac:
+	  remove -Wcast-align
+	  See: https://bugzilla.gnome.org/show_bug.cgi?id=615698
+
+2011-07-07 13:50:18 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	  Merge branch 'master' into 0.11
+	  Conflicts:
+	  configure.ac
+	  ext/ffmpeg/gstffmpegdec.c
+
+2011-07-05 10:42:56 +0100  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+
+	* ext/libswscale/gstffmpegscale.c:
+	  ffmpegscale: add cast to fix compiler warning
+
+2011-07-05 10:39:52 +0100  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+
+	* ext/libswscale/gstffmpegscale.c:
+	  ffmpegscale: update for GstVideoInfo API changes
+
+2011-07-05 10:34:24 +0100  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+
+	* configure.ac:
+	  Add -DGST_USE_UNSTABLE_API to the compiler flags to avoid warnings
+
 2011-06-30 21:38:57 +0200  Edward Hervey <bilboed@bilboed.com>
 
 	* ext/ffmpeg/gstffmpegdec.c:
@@ -217,6 +884,37 @@
 	  ffmpegdec: avoid allocating and leaking local avpacket helpers
 	  ... by _init'ing them as locals rather than _new'ing them.
 	  Fixes #653648.
+
+2011-06-30 09:21:31 +0200  Mark Nauwelaerts <mark.nauwelaerts@collabora.co.uk>
+
+	* ext/ffmpeg/gstffmpegenc.c:
+	  ffmpegenc: handle filter caps in _getcaps
+
+2011-06-30 09:20:11 +0200  Mark Nauwelaerts <mark.nauwelaerts@collabora.co.uk>
+
+	* ext/ffmpeg/gstffmpegenc.c:
+	  ffmpegenc: properly handle caps event
+	  ... which comes down to unconditionally eating incoming caps event,
+	  since that one could never correctly describe the setup for downstream
+	  elements.
+
+2011-06-30 09:18:42 +0200  Mark Nauwelaerts <mark.nauwelaerts@collabora.co.uk>
+
+	* ext/ffmpeg/gstffmpegenc.c:
+	  ffmpegenc: ensure properly negotiated prior to processing
+	  Doing so is even more pertinent in 0.11, since core assists much less
+	  in setting up negotiation and feedback on handling caps event is more likely
+	  to get lost.
+
+2011-06-29 11:44:27 +0200  Mark Nauwelaerts <mark.nauwelaerts@collabora.co.uk>
+
+	* ext/ffmpeg/gstffmpegdec.c:
+	  ffmpegdec: unref eaten caps event
+
+2011-06-29 11:44:11 +0200  Mark Nauwelaerts <mark.nauwelaerts@collabora.co.uk>
+
+	* ext/ffmpeg/gstffmpegdec.c:
+	  ffmpegdec: unref allocation query
 
 2011-06-25 13:05:41 +0200  Edward Hervey <bilboed@bilboed.com>
 
@@ -245,11 +943,89 @@
 	  the ffmpeg worker thread count to match the computer processor
 	  count by default.
 
+2011-06-20 11:57:29 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* ext/ffmpeg/gstffmpegcodecmap.c:
+	* ext/ffmpeg/gstffmpegdec.c:
+	* ext/ffmpeg/gstffmpegenc.c:
+	  ffmpeg: port to new caps
+
+2011-06-20 11:29:10 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* ext/libswscale/gstffmpegscale.c:
+	  swscale: port to new video API
+
+2011-06-20 10:42:30 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* ext/ffmpeg/gstffmpegdeinterlace.c:
+	* ext/libpostproc/gstpostproc.c:
+	* ext/libswscale/gstffmpegscale.c:
+	  ffmpeg: fix some caps
+
+2011-06-13 16:34:18 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* ext/ffmpeg/gstffmpegutils.c:
+	  utils: update for buffer API change
+
+2011-06-11 18:55:05 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* ext/ffmpeg/gstffmpegdec.c:
+	  ffdec: update for bufferpool API change
+
+2011-06-10 18:07:28 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* ext/ffmpeg/gstffmpegdec.c:
+	  ffdec: small cleanups
+	  We can use or to calculate the max alignment
+
+2011-06-10 17:56:27 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* ext/ffmpeg/gstffmpegdec.c:
+	  dec: fix for new alignment values
+
+2011-06-10 17:56:01 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* ext/ffmpeg/gstffmpegdemux.c:
+	  ffdemux: fix for API change of flush_start
+
+2011-06-08 18:04:38 +0200  Edward Hervey <edward.hervey@collabora.co.uk>
+
+	  Merge branch 'master' into 0.11
+
+2011-06-08 18:04:07 +0200  Edward Hervey <edward.hervey@collabora.co.uk>
+
+	* ext/ffmpeg/gstffmpegdeinterlace.c:
+	* ext/ffmpeg/gstffmpegenc.c:
+	* ext/ffmpeg/gstffmpegmux.c:
+	  ext: caps are now set via GstEvent and not setcaps
+
 2011-06-02 18:02:38 +0300  Raimo Järvi <raimo.jarvi@gmail.com>
 
 	* ext/ffmpeg/gstffmpegdec.c:
 	  ffdec: Fix calculating frame duration from last timestamp and frame count.
 	  Fixes bug #651714.
+
+2011-06-02 18:39:07 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* ext/ffmpeg/gstffmpegdec.c:
+	  ffdec: use caps event instead of setcaps
+
+2011-06-02 17:03:21 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	  Merge branch 'master' into 0.11
+
+2011-06-02 16:23:19 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* ext/ffmpeg/gstffmpegdec.c:
+	* ext/ffmpeg/gstffmpegdeinterlace.c:
+	* ext/ffmpeg/gstffmpegdemux.c:
+	* ext/ffmpeg/gstffmpegenc.c:
+	* ext/ffmpeg/gstffmpegmux.c:
+	* ext/ffmpeg/gstffmpegprotocol.c:
+	* ext/ffmpeg/gstffmpegutils.c:
+	* ext/ffmpeg/gstffmpegutils.h:
+	* ext/libswscale/gstffmpegscale.c:
+	  ffmpeg: port to new API
 
 2011-05-31 13:16:26 +0300  Raimo Järvi <raimo.jarvi@gmail.com>
 
@@ -344,6 +1120,26 @@
 	  to parameters like --with-ffmpeg-extra-configure=" --target-os=linux
 	  --extra-cflags='-mfpu=neon -mfloat-abi=softfp'".
 	  Fixes bug #648816.
+
+2011-05-02 11:12:10 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* ext/ffmpeg/gstffmpegdec.c:
+	  ffdec: fix for ALLOCATION query API changes
+
+2011-04-29 18:40:36 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	  Merge branch 'master' into 0.11
+	  Conflicts:
+	  configure.ac
+	  ext/ffmpeg/gstffmpegdec.c
+
+2011-04-29 18:35:55 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* ext/ffmpeg/gstffmpegdec.c:
+	* ext/ffmpeg/gstffmpegdeinterlace.c:
+	* ext/ffmpeg/gstffmpegdemux.c:
+	* ext/ffmpeg/gstffmpegprotocol.c:
+	  ffmpeg: use bufferpool instead of pad_alloc
 
 2011-04-24 14:05:34 +0100  Tim-Philipp Müller <tim.muller@collabora.co.uk>
 
@@ -467,6 +1263,16 @@
 	* gst-libs/ext/libav:
 	  ext: Add libav as a git submodule
 
+2011-04-19 19:04:36 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* ext/ffmpeg/gstffmpegdeinterlace.c:
+	* ext/libswscale/gstffmpegscale.c:
+	  ffmpeg_use G_DEFINE_TYPE
+
+2011-04-19 19:03:06 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	  Merge branch 'master' into 0.11
+
 2011-04-19 16:26:55 +0200  Marc Plano-Lesay <marc.planolesay@gmail.com>
 
 	* ext/ffmpeg/gstffmpegdec.c:
@@ -489,6 +1295,17 @@
 	  ffmpeg: don't divide by 0 when checking the framerates
 	  Check for denom==0 first and set it to on in that case.
 
+2011-04-07 12:38:01 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	  Merge branch 'master' into 0.11
+	  Conflicts:
+	  ext/ffmpeg/gstffmpegdec.c
+
+2011-04-07 12:37:09 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* common:
+	  common: recommit to updated version
+
 2011-04-07 12:34:51 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
 
 	* ext/ffmpeg/gstffmpegdec.c:
@@ -498,6 +1315,21 @@
 	  references to frames, making the buffer metadata writable where it was done
 	  before pushing will always end up with a copy and that makes the sink do a slow
 	  memcpy all the time.
+
+2011-04-07 12:11:37 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	  Merge branch 'master' into 0.11
+	  Conflicts:
+	  ext/ffmpeg/gstffmpegdec.c
+
+2011-04-07 12:02:57 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* ext/ffmpeg/gstffmpegdec.c:
+	  dec: Fixes
+	  Set caps on buffers right after we allocate them to avoid refcounting problems
+	  and having to make the buffer metadata writable for no good reason.
+	  Don't unmap the memory with a 0 size or we would modify the memory size when
+	  it's not needed.
 
 2011-04-04 16:37:42 +0200  Miguel Angel Cabrera Moya <madmac2501@gmail.com>
 
@@ -513,6 +1345,30 @@
 	* common:
 	  Automatic update of common submodule
 	  From 1ccbe09 to c3cafe1
+
+2011-04-04 13:18:13 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* ext/ffmpeg/gstffmpegaudioresample.c:
+	* ext/ffmpeg/gstffmpegdec.c:
+	* ext/ffmpeg/gstffmpegdeinterlace.c:
+	* ext/ffmpeg/gstffmpegdemux.c:
+	* ext/ffmpeg/gstffmpegmux.c:
+	* ext/libpostproc/gstpostproc.c:
+	* ext/libswscale/gstffmpegscale.c:
+	  ffmpeg: port to new memory API
+
+2011-04-04 12:24:03 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	  Merge branch 'master' into 0.11
+
+2011-04-04 12:23:05 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* ext/ffmpeg/gstffmpegcodecmap.c:
+	* ext/ffmpeg/gstffmpegdec.c:
+	* ext/ffmpeg/gstffmpegenc.c:
+	* ext/ffmpeg/gstffmpegprotocol.c:
+	* ext/ffmpeg/gstffmpegutils.c:
+	  WIP: porting to 0.11
 
 2011-03-25 22:35:11 +0100  Sebastian Dröge <sebastian.droege@collabora.co.uk>
 
@@ -549,6 +1405,10 @@
 	* autogen.sh:
 	  autogen: wingo signed comment
 
+2011-03-04 14:00:28 +0100  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	  Merge branch 'master' into 0.11
+
 2011-01-23 14:43:26 +0100  Mark Nauwelaerts <mark.nauwelaerts@collabora.co.uk>
 
 	* configure.ac:
@@ -572,6 +1432,23 @@
 	* common:
 	  Automatic update of common submodule
 	  From 1de7f6a to 6aec6b9
+
+2011-02-28 10:37:34 +0100  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* ext/ffmpeg/Makefile.am:
+	* ext/ffmpeg/gstffmpeg.c:
+	  ffmpeg: disable resample
+
+2011-02-26 15:09:43 +0100  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* ext/ffmpeg/gstffmpegcodecmap.c:
+	  codecmap: use new g_value getters
+
+2011-02-28 12:12:51 +0100  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	  Merge branch 'master' into 0.11
+	  Conflicts:
+	  configure.ac
 
 2011-02-10 12:00:11 +0100  Julien Isorce <julien.isorce@gmail.com>
 
@@ -740,6 +1617,11 @@
 	  Use the diff between input timestamps to estimate the duration when no duration
 	  is set on input buffers. Only do this when there are no reordered input
 	  timestamps. Improves interpolation in DTS mode when no input duration is set.
+
+2010-12-06 12:32:41 +0100  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* configure.ac:
+	  configure: open 0.11 branch
 
 2010-10-27 13:17:43 +0100  Jan Schmidt <thaytan@noraisin.net>
 
