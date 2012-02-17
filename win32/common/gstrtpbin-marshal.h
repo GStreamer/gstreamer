@@ -82,6 +82,23 @@ extern void gst_rtp_bin_marshal_VOID__UINT64 (GClosure     *closure,
                                               gpointer      invocation_hint,
                                               gpointer      marshal_data);
 
+/* BOOL:BOXED,BOOL (gstrtpbin-marshal.list:11) */
+extern void gst_rtp_bin_marshal_BOOLEAN__BOXED_BOOLEAN (GClosure     *closure,
+                                                        GValue       *return_value,
+                                                        guint         n_param_values,
+                                                        const GValue *param_values,
+                                                        gpointer      invocation_hint,
+                                                        gpointer      marshal_data);
+#define gst_rtp_bin_marshal_BOOL__BOXED_BOOL	gst_rtp_bin_marshal_BOOLEAN__BOXED_BOOLEAN
+
+/* VOID:UINT,UINT,UINT,UINT,BOXED (gstrtpbin-marshal.list:12) */
+extern void gst_rtp_bin_marshal_VOID__UINT_UINT_UINT_UINT_BOXED (GClosure     *closure,
+                                                                 GValue       *return_value,
+                                                                 guint         n_param_values,
+                                                                 const GValue *param_values,
+                                                                 gpointer      invocation_hint,
+                                                                 gpointer      marshal_data);
+
 G_END_DECLS
 
 #endif /* __gst_rtp_bin_marshal_MARSHAL_H__ */

@@ -3,10 +3,10 @@
   <description>ISO base media file format support (mp4, 3gpp, qt, mj2)</description>
   <filename>../../gst/isomp4/.libs/libgstisomp4.so</filename>
   <basename>libgstisomp4.so</basename>
-  <version>0.10.30.1</version>
+  <version>0.11.1</version>
   <license>LGPL</license>
   <source>gst-plugins-good</source>
-  <package>GStreamer Good Plug-ins git</package>
+  <package>GStreamer Good Plug-ins source release</package>
   <origin>Unknown package origin</origin>
   <elements>
     <element>
@@ -17,13 +17,13 @@
       <author>Thiago Sousa Santos &lt;thiagoss@embedded.ufcg.edu.br&gt;</author>
       <pads>
         <caps>
-          <name>audio_%d</name>
+          <name>audio_%u</name>
           <direction>sink</direction>
           <presence>request</presence>
           <details>audio/AMR, rate=(int)8000, channels=(int)[ 1, 2 ]; audio/AMR-WB, rate=(int)16000, channels=(int)[ 1, 2 ]; audio/mpeg, mpegversion=(int)1, layer=(int)3, channels=(int)[ 1, 2 ], rate=(int)[ 1, 2147483647 ]; audio/mpeg, mpegversion=(int)4, stream-format=(string)raw, channels=(int)[ 1, 8 ], rate=(int)[ 1, 2147483647 ]</details>
         </caps>
         <caps>
-          <name>video_%d</name>
+          <name>video_%u</name>
           <direction>sink</direction>
           <presence>request</presence>
           <details>video/x-h263, width=(int)[ 16, 4096 ], height=(int)[ 16, 4096 ], framerate=(fraction)[ 0/1, 2147483647/1 ]; video/mpeg, mpegversion=(int)4, systemstream=(boolean)false, width=(int)[ 16, 4096 ], height=(int)[ 16, 4096 ], framerate=(fraction)[ 0/1, 2147483647/1 ]; video/x-divx, divxversion=(int)5, width=(int)[ 16, 4096 ], height=(int)[ 16, 4096 ], framerate=(fraction)[ 0/1, 2147483647/1 ]; video/x-h264, stream-format=(string)avc, alignment=(string)au, width=(int)[ 16, 4096 ], height=(int)[ 16, 4096 ], framerate=(fraction)[ 0/1, 2147483647/1 ]</details>
@@ -44,13 +44,13 @@
       <author>Thiago Sousa Santos &lt;thiagoss@embedded.ufcg.edu.br&gt;</author>
       <pads>
         <caps>
-          <name>audio_%d</name>
+          <name>audio_%u</name>
           <direction>sink</direction>
           <presence>request</presence>
           <details>audio/AMR, rate=(int)8000, channels=(int)[ 1, 2 ]; audio/AMR-WB, rate=(int)16000, channels=(int)[ 1, 2 ]; audio/mpeg, mpegversion=(int)1, layer=(int)3, channels=(int)[ 1, 2 ], rate=(int)[ 1, 2147483647 ]; audio/mpeg, mpegversion=(int)4, stream-format=(string)raw, channels=(int)[ 1, 8 ], rate=(int)[ 1, 2147483647 ]</details>
         </caps>
         <caps>
-          <name>video_%d</name>
+          <name>video_%u</name>
           <direction>sink</direction>
           <presence>request</presence>
           <details>video/x-h263, width=(int)[ 16, 4096 ], height=(int)[ 16, 4096 ], framerate=(fraction)[ 0/1, 2147483647/1 ]; video/mpeg, mpegversion=(int)4, systemstream=(boolean)false, width=(int)[ 16, 4096 ], height=(int)[ 16, 4096 ], framerate=(fraction)[ 0/1, 2147483647/1 ]; video/x-divx, divxversion=(int)5, width=(int)[ 16, 4096 ], height=(int)[ 16, 4096 ], framerate=(fraction)[ 0/1, 2147483647/1 ]; video/x-h264, stream-format=(string)avc, alignment=(string)au, width=(int)[ 16, 4096 ], height=(int)[ 16, 4096 ], framerate=(fraction)[ 0/1, 2147483647/1 ]</details>
@@ -71,13 +71,13 @@
       <author>Thiago Sousa Santos &lt;thiagoss@embedded.ufcg.edu.br&gt;</author>
       <pads>
         <caps>
-          <name>audio_%d</name>
+          <name>audio_%u</name>
           <direction>sink</direction>
           <presence>request</presence>
           <details>audio/mpeg, mpegversion=(int)1, layer=(int)3, channels=(int)[ 1, 2 ], rate=(int)[ 1, 2147483647 ]; audio/mpeg, mpegversion=(int)4, stream-format=(string)raw, channels=(int)[ 1, 8 ], rate=(int)[ 1, 2147483647 ]</details>
         </caps>
         <caps>
-          <name>video_%d</name>
+          <name>video_%u</name>
           <direction>sink</direction>
           <presence>request</presence>
           <details>video/mpeg, mpegversion=(int)4, systemstream=(boolean)false, width=(int)[ 16, 4096 ], height=(int)[ 16, 4096 ], framerate=(fraction)[ 0/1, 2147483647/1 ]; video/x-divx, divxversion=(int)5, width=(int)[ 16, 4096 ], height=(int)[ 16, 4096 ], framerate=(fraction)[ 0/1, 2147483647/1 ]; video/x-h264, stream-format=(string)avc, alignment=(string)au, width=(int)[ 16, 4096 ], height=(int)[ 16, 4096 ], framerate=(fraction)[ 0/1, 2147483647/1 ]</details>
@@ -98,13 +98,13 @@
       <author>Thiago Sousa Santos &lt;thiagoss@embedded.ufcg.edu.br&gt;</author>
       <pads>
         <caps>
-          <name>audio_%d</name>
+          <name>audio_%u</name>
           <direction>sink</direction>
           <presence>request</presence>
-          <details>audio/x-raw-int, width=(int)8, depth=(int)8, channels=(int)[ 1, 2 ], rate=(int)[ 1, 2147483647 ], signed=(boolean){ true, false }; audio/x-raw-int, width=(int)16, depth=(int)16, endianness=(int){ 4321, 1234 }, channels=(int)[ 1, 2 ], rate=(int)[ 1, 2147483647 ], signed=(boolean)true</details>
+          <details>audio/x-raw, format=(string){ S8, U8 }, layout=(string)interleaved, channels=(int)[ 1, 2 ], rate=(int)[ 1, 2147483647 ]; audio/x-raw, format=(string){ S16LE, S16BE }, layout=(string)interleaved, channels=(int)[ 1, 2 ], rate=(int)[ 1, 2147483647 ]</details>
         </caps>
         <caps>
-          <name>video_%d</name>
+          <name>video_%u</name>
           <direction>sink</direction>
           <presence>request</presence>
           <details>image/x-j2c, width=(int)[ 16, 4096 ], height=(int)[ 16, 4096 ], framerate=(fraction)[ 0/1, 2147483647/1 ]; image/x-jpc, width=(int)[ 16, 4096 ], height=(int)[ 16, 4096 ], framerate=(fraction)[ 0/1, 2147483647/1 ]</details>
@@ -125,13 +125,13 @@
       <author>Thiago Sousa Santos &lt;thiagoss@embedded.ufcg.edu.br&gt;</author>
       <pads>
         <caps>
-          <name>audio_%d</name>
+          <name>audio_%u</name>
           <direction>sink</direction>
           <presence>request</presence>
           <details>audio/mpeg, mpegversion=(int)1, layer=(int)3, channels=(int)[ 1, 2 ], rate=(int)[ 1, 2147483647 ]; audio/mpeg, mpegversion=(int)4, stream-format=(string)raw, channels=(int)[ 1, 8 ], rate=(int)[ 1, 2147483647 ]; audio/x-alac, channels=(int)[ 1, 2 ], rate=(int)[ 1, 2147483647 ]</details>
         </caps>
         <caps>
-          <name>video_%d</name>
+          <name>video_%u</name>
           <direction>sink</direction>
           <presence>request</presence>
           <details>video/mpeg, mpegversion=(int)4, systemstream=(boolean)false, width=(int)[ 16, 4096 ], height=(int)[ 16, 4096 ], framerate=(fraction)[ 0/1, 2147483647/1 ]; video/x-divx, divxversion=(int)5, width=(int)[ 16, 4096 ], height=(int)[ 16, 4096 ], framerate=(fraction)[ 0/1, 2147483647/1 ]; video/x-h264, stream-format=(string)avc, alignment=(string)au, width=(int)[ 16, 4096 ], height=(int)[ 16, 4096 ], framerate=(fraction)[ 0/1, 2147483647/1 ]; video/x-mp4-part, width=(int)[ 16, 4096 ], height=(int)[ 16, 4096 ], framerate=(fraction)[ 0/1, 2147483647/1 ]</details>
@@ -158,19 +158,19 @@
           <details>video/quicktime; video/mj2; audio/x-m4a; application/x-3gp</details>
         </caps>
         <caps>
-          <name>audio_%02d</name>
+          <name>audio_%u</name>
           <direction>source</direction>
           <presence>sometimes</presence>
           <details>ANY</details>
         </caps>
         <caps>
-          <name>subtitle_%02d</name>
+          <name>subtitle_%u</name>
           <direction>source</direction>
           <presence>sometimes</presence>
           <details>ANY</details>
         </caps>
         <caps>
-          <name>video_%02d</name>
+          <name>video_%u</name>
           <direction>source</direction>
           <presence>sometimes</presence>
           <details>ANY</details>
@@ -194,16 +194,16 @@
       <author>Thiago Sousa Santos &lt;thiagoss@embedded.ufcg.edu.br&gt;</author>
       <pads>
         <caps>
-          <name>audio_%d</name>
+          <name>audio_%u</name>
           <direction>sink</direction>
           <presence>request</presence>
-          <details>audio/x-raw-int, width=(int)8, depth=(int)8, channels=(int)[ 1, 2 ], rate=(int)[ 1, 2147483647 ], signed=(boolean){ true, false }; audio/x-raw-int, width=(int)16, depth=(int)16, endianness=(int){ 4321, 1234 }, channels=(int)[ 1, 2 ], rate=(int)[ 1, 2147483647 ], signed=(boolean)true; audio/x-raw-int, width=(int)24, depth=(int)24, endianness=(int){ 4321, 1234 }, channels=(int)[ 1, 2 ], rate=(int)[ 1, 2147483647 ], signed=(boolean)true; audio/x-raw-int, width=(int)32, depth=(int)32, endianness=(int){ 4321, 1234 }, channels=(int)[ 1, 2 ], rate=(int)[ 1, 2147483647 ], signed=(boolean)true; audio/mpeg, mpegversion=(int)1, layer=(int)3, channels=(int)[ 1, 2 ], rate=(int)[ 1, 2147483647 ]; audio/mpeg, mpegversion=(int)4, stream-format=(string)raw, channels=(int)[ 1, 8 ], rate=(int)[ 1, 2147483647 ]; audio/x-adpcm, layout=(string)dvi, block_align=(int)[ 64, 8096 ], channels=(int)[ 1, 2 ], rate=(int)[ 1, 2147483647 ]; audio/x-alaw, channels=(int)[ 1, 2 ], rate=(int)[ 1, 2147483647 ]; audio/AMR, rate=(int)8000, channels=(int)[ 1, 2 ]; audio/AMR-WB, rate=(int)16000, channels=(int)[ 1, 2 ]; audio/x-alac, channels=(int)[ 1, 2 ], rate=(int)[ 1, 2147483647 ]</details>
+          <details>audio/x-raw, format=(string){ S8, U8 }, layout=(string)interleaved, channels=(int)[ 1, 2 ], rate=(int)[ 1, 2147483647 ]; audio/x-raw, format=(string){ S16LE, S16BE }, layout=(string)interleaved, channels=(int)[ 1, 2 ], rate=(int)[ 1, 2147483647 ]; audio/x-raw, format=(string){ S24LE, S24BE }, layout=(string)interleaved, channels=(int)[ 1, 2 ], rate=(int)[ 1, 2147483647 ]; audio/x-raw, format=(string){ S32LE, S32BE }, layout=(string)interleaved, channels=(int)[ 1, 2 ], rate=(int)[ 1, 2147483647 ]; audio/mpeg, mpegversion=(int)1, layer=(int)3, channels=(int)[ 1, 2 ], rate=(int)[ 1, 2147483647 ]; audio/mpeg, mpegversion=(int)4, stream-format=(string)raw, channels=(int)[ 1, 8 ], rate=(int)[ 1, 2147483647 ]; audio/x-adpcm, layout=(string)dvi, block_align=(int)[ 64, 8096 ], channels=(int)[ 1, 2 ], rate=(int)[ 1, 2147483647 ]; audio/x-alaw, channels=(int)[ 1, 2 ], rate=(int)[ 1, 2147483647 ]; audio/AMR, rate=(int)8000, channels=(int)[ 1, 2 ]; audio/AMR-WB, rate=(int)16000, channels=(int)[ 1, 2 ]; audio/x-alac, channels=(int)[ 1, 2 ], rate=(int)[ 1, 2147483647 ]</details>
         </caps>
         <caps>
-          <name>video_%d</name>
+          <name>video_%u</name>
           <direction>sink</direction>
           <presence>request</presence>
-          <details>video/x-raw-rgb, width=(int)[ 16, 4096 ], height=(int)[ 16, 4096 ], framerate=(fraction)[ 0/1, 2147483647/1 ]; video/x-raw-yuv, format=(fourcc)UYVY, width=(int)[ 16, 4096 ], height=(int)[ 16, 4096 ], framerate=(fraction)[ 0/1, 2147483647/1 ]; video/mpeg, mpegversion=(int)4, systemstream=(boolean)false, width=(int)[ 16, 4096 ], height=(int)[ 16, 4096 ], framerate=(fraction)[ 0/1, 2147483647/1 ]; video/x-divx, divxversion=(int)5, width=(int)[ 16, 4096 ], height=(int)[ 16, 4096 ], framerate=(fraction)[ 0/1, 2147483647/1 ]; video/x-h263, width=(int)[ 16, 4096 ], height=(int)[ 16, 4096 ], framerate=(fraction)[ 0/1, 2147483647/1 ]; video/x-h264, stream-format=(string)avc, alignment=(string)au, width=(int)[ 16, 4096 ], height=(int)[ 16, 4096 ], framerate=(fraction)[ 0/1, 2147483647/1 ]; video/x-svq, svqversion=(int)3, width=(int)[ 16, 4096 ], height=(int)[ 16, 4096 ], framerate=(fraction)[ 0/1, 2147483647/1 ]; video/x-dv, systemstream=(boolean)false, width=(int)[ 16, 4096 ], height=(int)[ 16, 4096 ], framerate=(fraction)[ 0/1, 2147483647/1 ]; image/jpeg, width=(int)[ 16, 4096 ], height=(int)[ 16, 4096 ]; video/x-vp8, width=(int)[ 16, 4096 ], height=(int)[ 16, 4096 ], framerate=(fraction)[ 0/1, 2147483647/1 ]; video/x-dirac, width=(int)[ 16, 4096 ], height=(int)[ 16, 4096 ], framerate=(fraction)[ 0/1, 2147483647/1 ]; video/x-qt-part, width=(int)[ 16, 4096 ], height=(int)[ 16, 4096 ], framerate=(fraction)[ 0/1, 2147483647/1 ]</details>
+          <details>video/x-raw, format=(string){ RGB, UYVY }, width=(int)[ 16, 4096 ], height=(int)[ 16, 4096 ], framerate=(fraction)[ 0/1, 2147483647/1 ]; video/mpeg, mpegversion=(int)4, systemstream=(boolean)false, width=(int)[ 16, 4096 ], height=(int)[ 16, 4096 ], framerate=(fraction)[ 0/1, 2147483647/1 ]; video/x-divx, divxversion=(int)5, width=(int)[ 16, 4096 ], height=(int)[ 16, 4096 ], framerate=(fraction)[ 0/1, 2147483647/1 ]; video/x-h263, width=(int)[ 16, 4096 ], height=(int)[ 16, 4096 ], framerate=(fraction)[ 0/1, 2147483647/1 ]; video/x-h264, stream-format=(string)avc, alignment=(string)au, width=(int)[ 16, 4096 ], height=(int)[ 16, 4096 ], framerate=(fraction)[ 0/1, 2147483647/1 ]; video/x-svq, svqversion=(int)3, width=(int)[ 16, 4096 ], height=(int)[ 16, 4096 ], framerate=(fraction)[ 0/1, 2147483647/1 ]; video/x-dv, systemstream=(boolean)false, width=(int)[ 16, 4096 ], height=(int)[ 16, 4096 ], framerate=(fraction)[ 0/1, 2147483647/1 ]; image/jpeg, width=(int)[ 16, 4096 ], height=(int)[ 16, 4096 ]; video/x-vp8, width=(int)[ 16, 4096 ], height=(int)[ 16, 4096 ], framerate=(fraction)[ 0/1, 2147483647/1 ]; video/x-dirac, width=(int)[ 16, 4096 ], height=(int)[ 16, 4096 ], framerate=(fraction)[ 0/1, 2147483647/1 ]; video/x-qt-part, width=(int)[ 16, 4096 ], height=(int)[ 16, 4096 ], framerate=(fraction)[ 0/1, 2147483647/1 ]</details>
         </caps>
         <caps>
           <name>src</name>

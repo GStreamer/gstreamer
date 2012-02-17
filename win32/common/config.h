@@ -31,7 +31,13 @@
 #undef ENABLE_NLS
 
 /* gettext package name */
-#define GETTEXT_PACKAGE "gst-plugins-good-0.10"
+#define GETTEXT_PACKAGE "gst-plugins-good-0.11"
+
+/* The GIO library directory. */
+#undef GIO_LIBDIR
+
+/* The GIO modules directory. */
+#undef GIO_MODULE_DIR
 
 /* Defined if gcov is enabled to force a rebuild due to config.h changing */
 #undef GST_GCOV_ENABLED
@@ -43,13 +49,13 @@
 #define GST_LICENSE "LGPL"
 
 /* package name in plugins */
-#define GST_PACKAGE_NAME "GStreamer Good Plug-ins git"
+#define GST_PACKAGE_NAME "GStreamer Good Plug-ins source release"
 
 /* package origin */
 #define GST_PACKAGE_ORIGIN "Unknown package origin"
 
 /* GStreamer package release date/time for plugins as YYYY-MM-DD */
-#define GST_PACKAGE_RELEASE_DATETIME "2011-05-18T13:36Z"
+#define GST_PACKAGE_RELEASE_DATETIME "2012-02-16"
 
 /* struct v4l2_buffer missing */
 #undef GST_V4L2_MISSING_BUFDECL
@@ -145,9 +151,6 @@
 /* Define to enable raw1394 and avc1394 library (used by 1394). */
 #undef HAVE_DV1394
 
-/* Define to enable ESounD sound daemon (used by esdsink). */
-#undef HAVE_ESD
-
 /* Define to enable building of experimental plug-ins. */
 #undef HAVE_EXPERIMENTAL
 
@@ -172,12 +175,6 @@
 /* Define if compiler supports gcc inline assembly */
 #undef HAVE_GCC_ASM
 
-/* Define to enable GConf libraries (used by gconfelements). */
-#undef HAVE_GCONF
-
-/* Define to enable GConf schemas. */
-#undef HAVE_GCONFTOOL
-
 /* Define to enable GDK pixbuf (used by gdkpixbuf). */
 #undef HAVE_GDK_PIXBUF
 
@@ -192,9 +189,6 @@
 
 /* Whether gudev is available for device detection */
 #undef HAVE_GUDEV
-
-/* Define to enable HAL libraries (used by halelements). */
-#undef HAVE_HAL
 
 /* Define if you have the iconv() function and it works. */
 #undef HAVE_ICONV
@@ -229,9 +223,6 @@
 /* Define to enable Portable Network Graphics library (used by png). */
 #undef HAVE_LIBPNG
 
-/* Define to 1 if you have the `socket' library (-lsocket). */
-#undef HAVE_LIBSOCKET
-
 /* soup gnome integration */
 #undef HAVE_LIBSOUP_GNOME
 
@@ -243,9 +234,6 @@
 
 /* Define to 1 if you have a working `mmap' system call. */
 #undef HAVE_MMAP
-
-/* Define to 1 if you have the <netinet/in.h> header file. */
-#undef HAVE_NETINET_IN_H
 
 /* Use Orc */
 #undef HAVE_ORC
@@ -276,24 +264,6 @@
 
 /* Define to enable pulseaudio plug-in (used by pulseaudio). */
 #undef HAVE_PULSE
-
-/* defined if pulseaudio >= 0.9.11 is available */
-#undef HAVE_PULSE_0_9_11
-
-/* defined if pulseaudio >= 0.9.12 is available */
-#undef HAVE_PULSE_0_9_12
-
-/* defined if pulseaudio >= 0.9.13 is available */
-#undef HAVE_PULSE_0_9_13
-
-/* defined if pulseaudio >= 0.9.15 is available */
-#undef HAVE_PULSE_0_9_15
-
-/* defined if pulseaudio >= 0.9.16 is available */
-#undef HAVE_PULSE_0_9_16
-
-/* defined if pulseaudio >= 0.9.20 is available */
-#undef HAVE_PULSE_0_9_20
 
 /* Define if RDTSC is available */
 #undef HAVE_RDTSC
@@ -334,9 +304,6 @@
 /* Define to 1 if you have the <sys/param.h> header file. */
 #undef HAVE_SYS_PARAM_H
 
-/* Define to 1 if you have the <sys/socket.h> header file. */
-#undef HAVE_SYS_SOCKET_H
-
 /* Define to 1 if you have the <sys/stat.h> header file. */
 #define HAVE_SYS_STAT_H 1
 
@@ -355,11 +322,11 @@
 /* Define if valgrind should be used */
 #undef HAVE_VALGRIND
 
+/* Define to enable Win32 WaveForm (used by waveformsink). */
+#undef HAVE_WAVEFORM
+
 /* Define to enable wavpack plug-in (used by wavpack). */
 #undef HAVE_WAVPACK
-
-/* Define to 1 if you have the <winsock2.h> header file. */
-#define HAVE_WINSOCK2_H 1
 
 /* Define to enable X libraries and plugins (used by ximagesrc). */
 #undef HAVE_X
@@ -370,7 +337,7 @@
 /* Define to enable X11 XVideo extensions. */
 #undef HAVE_XVIDEO
 
-/* Define to enable zlib support for id3demux/qtdemux/matroska. */
+/* Define to enable zlib support for qtdemux/matroska. */
 #undef HAVE_ZLIB
 
 /* the host CPU */
@@ -396,7 +363,7 @@
 #define PACKAGE_NAME "GStreamer Good Plug-ins"
 
 /* Define to the full name and version of this package. */
-#define PACKAGE_STRING "GStreamer Good Plug-ins 0.10.30.1"
+#define PACKAGE_STRING "GStreamer Good Plug-ins 0.11.1"
 
 /* Define to the one symbol short name of this package. */
 #define PACKAGE_TARNAME "gst-plugins-good"
@@ -405,13 +372,13 @@
 #undef PACKAGE_URL
 
 /* Define to the version of this package. */
-#define PACKAGE_VERSION "0.10.30.1"
+#define PACKAGE_VERSION "0.11.1"
 
 /* directory where plugins are located */
 #ifdef _DEBUG
-#  define PLUGINDIR PREFIX "\\debug\\lib\\gstreamer-0.10"
+#  define PLUGINDIR PREFIX "\\debug\\lib\\gstreamer-0.11"
 #else
-#  define PLUGINDIR PREFIX "\\lib\\gstreamer-0.10"
+#  define PLUGINDIR PREFIX "\\lib\\gstreamer-0.11"
 #endif
 
 /* The size of `char', as computed by sizeof. */
@@ -436,7 +403,7 @@
 #undef STDC_HEADERS
 
 /* Version number of package */
-#define VERSION "0.10.30.1"
+#define VERSION "0.11.1"
 
 /* old wavpack API */
 #undef WAVPACK_OLD_API

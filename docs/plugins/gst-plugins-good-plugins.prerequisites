@@ -1,4 +1,5 @@
 GIcon GObject
+GInitable GObject
 GstChildProxy GstObject
 GstColorBalance GstImplementsInterface GstElement
 GstImplementsInterface GstElement

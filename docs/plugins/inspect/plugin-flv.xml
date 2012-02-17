@@ -3,10 +3,10 @@
   <description>FLV muxing and demuxing plugin</description>
   <filename>../../gst/flv/.libs/libgstflv.so</filename>
   <basename>libgstflv.so</basename>
-  <version>0.10.30.1</version>
+  <version>0.11.1</version>
   <license>LGPL</license>
   <source>gst-plugins-good</source>
-  <package>GStreamer Good Plug-ins git</package>
+  <package>GStreamer Good Plug-ins source release</package>
   <origin>Unknown package origin</origin>
   <elements>
     <element>
@@ -26,7 +26,7 @@
           <name>audio</name>
           <direction>source</direction>
           <presence>sometimes</presence>
-          <details>audio/x-adpcm, layout=(string)swf, channels=(int){ 1, 2 }, rate=(int){ 5512, 11025, 22050, 44100 }; audio/mpeg, mpegversion=(int)1, layer=(int)3, channels=(int){ 1, 2 }, rate=(int){ 5512, 8000, 11025, 22050, 44100 }, parsed=(boolean)true; audio/mpeg, mpegversion=(int)4, framed=(boolean)true; audio/x-nellymoser, channels=(int){ 1, 2 }, rate=(int){ 5512, 8000, 11025, 16000, 22050, 44100 }; audio/x-raw-int, endianness=(int)1234, channels=(int){ 1, 2 }, width=(int)8, depth=(int)8, rate=(int){ 5512, 11025, 22050, 44100 }, signed=(boolean)false; audio/x-raw-int, endianness=(int)1234, channels=(int){ 1, 2 }, width=(int)16, depth=(int)16, rate=(int){ 5512, 11025, 22050, 44100 }, signed=(boolean)true; audio/x-alaw, channels=(int){ 1, 2 }, rate=(int){ 5512, 11025, 22050, 44100 }; audio/x-mulaw, channels=(int){ 1, 2 }, rate=(int){ 5512, 11025, 22050, 44100 }; audio/x-speex, channels=(int){ 1, 2 }, rate=(int){ 5512, 11025, 22050, 44100 }</details>
+          <details>audio/x-adpcm, layout=(string)swf, channels=(int){ 1, 2 }, rate=(int){ 5512, 11025, 22050, 44100 }; audio/mpeg, mpegversion=(int)1, layer=(int)3, channels=(int){ 1, 2 }, rate=(int){ 5512, 8000, 11025, 22050, 44100 }, parsed=(boolean)true; audio/mpeg, mpegversion=(int)4, stream-format=(string)raw, framed=(boolean)true; audio/x-nellymoser, channels=(int){ 1, 2 }, rate=(int){ 5512, 8000, 11025, 16000, 22050, 44100 }; audio/x-raw, format=(string){ U8, S16LE }, layout=(string)interleaved, channels=(int){ 1, 2 }, rate=(int){ 5512, 11025, 22050, 44100 }; audio/x-alaw, channels=(int){ 1, 2 }, rate=(int){ 5512, 11025, 22050, 44100 }; audio/x-mulaw, channels=(int){ 1, 2 }, rate=(int){ 5512, 11025, 22050, 44100 }; audio/x-speex, channels=(int){ 1, 2 }, rate=(int){ 5512, 11025, 22050, 44100 }</details>
         </caps>
         <caps>
           <name>video</name>
@@ -47,7 +47,7 @@
           <name>audio</name>
           <direction>sink</direction>
           <presence>request</presence>
-          <details>audio/x-adpcm, layout=(string)swf, channels=(int){ 1, 2 }, rate=(int){ 5512, 11025, 22050, 44100 }; audio/mpeg, mpegversion=(int)1, layer=(int)3, channels=(int){ 1, 2 }, rate=(int){ 5512, 8000, 11025, 22050, 44100 }, parsed=(boolean)true; audio/mpeg, mpegversion=(int){ 2, 4 }, framed=(boolean)true; audio/x-nellymoser, channels=(int){ 1, 2 }, rate=(int){ 5512, 8000, 11025, 16000, 22050, 44100 }; audio/x-raw-int, endianness=(int)1234, channels=(int){ 1, 2 }, width=(int)8, depth=(int)8, rate=(int){ 5512, 11025, 22050, 44100 }, signed=(boolean)false; audio/x-raw-int, endianness=(int)1234, channels=(int){ 1, 2 }, width=(int)16, depth=(int)16, rate=(int){ 5512, 11025, 22050, 44100 }, signed=(boolean)true; audio/x-alaw, channels=(int){ 1, 2 }, rate=(int){ 5512, 11025, 22050, 44100 }; audio/x-mulaw, channels=(int){ 1, 2 }, rate=(int){ 5512, 11025, 22050, 44100 }; audio/x-speex, channels=(int){ 1, 2 }, rate=(int){ 5512, 11025, 22050, 44100 }</details>
+          <details>audio/x-adpcm, layout=(string)swf, channels=(int){ 1, 2 }, rate=(int){ 5512, 11025, 22050, 44100 }; audio/mpeg, mpegversion=(int)1, layer=(int)3, channels=(int){ 1, 2 }, rate=(int){ 5512, 8000, 11025, 22050, 44100 }, parsed=(boolean)true; audio/mpeg, mpegversion=(int)2, framed=(boolean)true; audio/mpeg, mpegversion=(int)4, stream-format=(string)raw, framed=(boolean)true; audio/x-nellymoser, channels=(int){ 1, 2 }, rate=(int){ 5512, 8000, 11025, 16000, 22050, 44100 }; audio/x-raw, format=(string){ U8, S16LE }, layout=(string)interleaved, channels=(int){ 1, 2 }, rate=(int){ 5512, 11025, 22050, 44100 }; audio/x-alaw, channels=(int){ 1, 2 }, rate=(int){ 5512, 11025, 22050, 44100 }; audio/x-mulaw, channels=(int){ 1, 2 }, rate=(int){ 5512, 11025, 22050, 44100 }; audio/x-speex, channels=(int){ 1, 2 }, rate=(int){ 5512, 11025, 22050, 44100 }</details>
         </caps>
         <caps>
           <name>video</name>

@@ -3,10 +3,10 @@
   <description>ReplayGain volume normalization</description>
   <filename>../../gst/replaygain/.libs/libgstreplaygain.so</filename>
   <basename>libgstreplaygain.so</basename>
-  <version>0.10.30.1</version>
+  <version>0.11.1</version>
   <license>LGPL</license>
   <source>gst-plugins-good</source>
-  <package>GStreamer Good Plug-ins git</package>
+  <package>GStreamer Good Plug-ins source release</package>
   <origin>Unknown package origin</origin>
   <elements>
     <element>
@@ -20,13 +20,13 @@
           <name>sink</name>
           <direction>sink</direction>
           <presence>always</presence>
-          <details>audio/x-raw-float, width=(int)32, endianness=(int)1234, channels=(int){ 1, 2 }, rate=(int){ 8000, 11025, 12000, 16000, 22050, 24000, 32000, 44100, 48000 }; audio/x-raw-int, width=(int)16, depth=(int)[ 1, 16 ], signed=(boolean)true, endianness=(int)1234, channels=(int){ 1, 2 }, rate=(int){ 8000, 11025, 12000, 16000, 22050, 24000, 32000, 44100, 48000 }</details>
+          <details>audio/x-raw, format=(string){ F32LE, S16LE }, layout=(string)interleaved, channels=(int)1, rate=(int){ 8000, 11025, 12000, 16000, 22050, 24000, 32000, 44100, 48000 }; audio/x-raw, format=(string){ F32LE, S16LE }, layout=(string)interleaved, channels=(int)2, channel-mask=(bitmask)0x0000000000000003, rate=(int){ 8000, 11025, 12000, 16000, 22050, 24000, 32000, 44100, 48000 }</details>
         </caps>
         <caps>
           <name>src</name>
           <direction>source</direction>
           <presence>always</presence>
-          <details>audio/x-raw-float, width=(int)32, endianness=(int)1234, channels=(int){ 1, 2 }, rate=(int){ 8000, 11025, 12000, 16000, 22050, 24000, 32000, 44100, 48000 }; audio/x-raw-int, width=(int)16, depth=(int)[ 1, 16 ], signed=(boolean)true, endianness=(int)1234, channels=(int){ 1, 2 }, rate=(int){ 8000, 11025, 12000, 16000, 22050, 24000, 32000, 44100, 48000 }</details>
+          <details>audio/x-raw, format=(string){ F32LE, S16LE }, layout=(string)interleaved, channels=(int)1, rate=(int){ 8000, 11025, 12000, 16000, 22050, 24000, 32000, 44100, 48000 }; audio/x-raw, format=(string){ F32LE, S16LE }, layout=(string)interleaved, channels=(int)2, channel-mask=(bitmask)0x0000000000000003, rate=(int){ 8000, 11025, 12000, 16000, 22050, 24000, 32000, 44100, 48000 }</details>
         </caps>
       </pads>
     </element>
@@ -41,13 +41,13 @@
           <name>sink</name>
           <direction>sink</direction>
           <presence>always</presence>
-          <details>audio/x-raw-float, width=(int)32, channels=(int)[ 1, 2147483647 ], rate=(int)[ 1, 2147483647 ], endianness=(int)1234</details>
+          <details>audio/x-raw, format=(string)F32LE, layout=(string){ interleaved, non-interleaved }, channels=(int)[ 1, 2147483647 ], rate=(int)[ 1, 2147483647 ]</details>
         </caps>
         <caps>
           <name>src</name>
           <direction>source</direction>
           <presence>always</presence>
-          <details>audio/x-raw-float, width=(int)32, channels=(int)[ 1, 2147483647 ], rate=(int)[ 1, 2147483647 ], endianness=(int)1234</details>
+          <details>audio/x-raw, format=(string)F32LE, layout=(string){ interleaved, non-interleaved }, channels=(int)[ 1, 2147483647 ], rate=(int)[ 1, 2147483647 ]</details>
         </caps>
       </pads>
     </element>
@@ -62,13 +62,13 @@
           <name>sink</name>
           <direction>sink</direction>
           <presence>always</presence>
-          <details>audio/x-raw-float, rate=(int)[ 1, 2147483647 ], channels=(int)[ 1, 2147483647 ], endianness=(int)1234, width=(int)32; audio/x-raw-int, channels=(int)[ 1, 2147483647 ], rate=(int)[ 1, 2147483647 ], endianness=(int)1234, width=(int)16, depth=(int)16, signed=(boolean)true</details>
+          <details>audio/x-raw, format=(string){ F32LE, S16LE }, layout=(string){ interleaved, non-interleaved }, rate=(int)[ 1, 2147483647 ], channels=(int)[ 1, 2147483647 ]</details>
         </caps>
         <caps>
           <name>src</name>
           <direction>source</direction>
           <presence>always</presence>
-          <details>audio/x-raw-float, rate=(int)[ 1, 2147483647 ], channels=(int)[ 1, 2147483647 ], endianness=(int)1234, width=(int)32; audio/x-raw-int, channels=(int)[ 1, 2147483647 ], rate=(int)[ 1, 2147483647 ], endianness=(int)1234, width=(int)16, depth=(int)16, signed=(boolean)true</details>
+          <details>audio/x-raw, format=(string){ F32LE, S16LE }, layout=(string){ interleaved, non-interleaved }, rate=(int)[ 1, 2147483647 ], channels=(int)[ 1, 2147483647 ]</details>
         </caps>
       </pads>
     </element>

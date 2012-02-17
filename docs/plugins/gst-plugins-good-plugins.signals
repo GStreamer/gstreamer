@@ -47,7 +47,7 @@ gint  arg2
 
 <SIGNAL>
 <NAME>GstMultiUDPSink::get-stats</NAME>
-<RETURNS>GValueArray*</RETURNS>
+<RETURNS>GstStructure*</RETURNS>
 <FLAGS>la</FLAGS>
 GstMultiUDPSink *gstmultiudpsink
 gchar *arg1
@@ -65,8 +65,8 @@ gint  arg2
 
 <SIGNAL>
 <NAME>GstDynUDPSink::get-stats</NAME>
-<RETURNS>GValueArray*</RETURNS>
-<FLAGS>l</FLAGS>
+<RETURNS>GstStructure*</RETURNS>
+<FLAGS>la</FLAGS>
 GstDynUDPSink *gstdynudpsink
 gchar *arg1
 gint  arg2

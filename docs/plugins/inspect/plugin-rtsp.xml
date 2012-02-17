@@ -3,10 +3,10 @@
   <description>transfer data via RTSP</description>
   <filename>../../gst/rtsp/.libs/libgstrtsp.so</filename>
   <basename>libgstrtsp.so</basename>
-  <version>0.10.30.1</version>
+  <version>0.11.1</version>
   <license>LGPL</license>
   <source>gst-plugins-good</source>
-  <package>GStreamer Good Plug-ins git</package>
+  <package>GStreamer Good Plug-ins source release</package>
   <origin>Unknown package origin</origin>
   <elements>
     <element>
@@ -14,28 +14,28 @@
       <longname>RTP Decoder</longname>
       <class>Codec/Parser/Network</class>
       <description>Accepts raw RTP and RTCP packets and sends them forward</description>
-      <author>Wim Taymans &lt;wim@fluendo.com&gt;</author>
+      <author>Wim Taymans &lt;wim.taymans@gmail.com&gt;</author>
       <pads>
         <caps>
-          <name>recv_rtcp_sink_%d</name>
+          <name>recv_rtcp_sink_%u</name>
           <direction>sink</direction>
           <presence>request</presence>
           <details>application/x-rtcp</details>
         </caps>
         <caps>
-          <name>recv_rtp_sink_%d</name>
+          <name>recv_rtp_sink_%u</name>
           <direction>sink</direction>
           <presence>request</presence>
           <details>application/x-rtp</details>
         </caps>
         <caps>
-          <name>recv_rtp_src_%d_%d_%d</name>
+          <name>recv_rtp_src_%u_%u_%u</name>
           <direction>source</direction>
           <presence>sometimes</presence>
           <details>application/x-rtp</details>
         </caps>
         <caps>
-          <name>rtcp_src_%d</name>
+          <name>rtcp_src_%u</name>
           <direction>source</direction>
           <presence>request</presence>
           <details>application/x-rtcp</details>
@@ -50,7 +50,7 @@
       <author>Wim Taymans &lt;wim@fluendo.com&gt;, Thijs Vermeir &lt;thijs.vermeir@barco.com&gt;, Lutz Mueller &lt;lutz@topfrose.de&gt;</author>
       <pads>
         <caps>
-          <name>stream%d</name>
+          <name>stream_%u</name>
           <direction>source</direction>
           <presence>sometimes</presence>
           <details>application/x-rtp; application/x-rdt</details>

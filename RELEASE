@@ -1,14 +1,17 @@
 
-Release notes for GStreamer Good Plug-ins 0.10.30 "Adagio"
+Release notes for GStreamer Good Plug-ins 0.11.1 "The Leper Affinity"
         
 
 
 The GStreamer team is proud to announce a new release
-in the 0.10.x stable series of the
+in the 0.11.x unstable series of the
 GStreamer Good Plug-ins.
 
 
-The 0.10.x series is a stable series targeted at end users.
+The 0.11.x series is an unstable series targeted at developers and will
+eventually lead up to the stable 1.0 series.
+It is not API or ABI compatible with the stable 0.10.x series.
+It is, however, parallel installable with the 0.10.x series.
 
 
 
@@ -52,14 +55,12 @@ contains a set of less supported plug-ins that haven't passed the
 
 Features of this release
     
-      * work around GLib atomic ops API change
-      * better handling of malformed buffers in RTP depayloders
-      * some minor compilation fixes
-
-Bugs fixed in this release
-     
-      * 650470 : RTP: Some depayloaders break with malformed rtp packets
-      * 652144 : [udp] Fix compiler warning on mingw-w64
+      * Many cleanups
+      * Ported to new 0.11 core API changes
+      * v4l2 major improvements
+      * Ported network elements to GIO
+There were no bugs fixed in this release
+    
 
 Download
 
@@ -88,9 +89,68 @@ Applications
   
 Contributors to this release
     
+      * Alessandro Decina
+      * Alexey Fisher
+      * Andoni Morales Alastruey
+      * Antoine Jacoutot
+      * Arun Raghavan
+      * Branko Subasic
+      * Brian Li
+      * Chad
+      * Christian Fredrik Kalager Schaller
+      * David Henningsson
       * David Schleef
-      * Jose Antonio Santos Cadenas
-      * Pino Toscano
+      * David Svensson Fors
+      * Debarshi Ray
+      * Edward Hervey
+      * Gary Ching-Pang Lin
+      * Guillaume Desmottes
+      * Ha Nguyen
+      * Havard Graff
+      * Jan Schmidt
+      * Jayakrishnan M
+      * John Ogness
+      * Jonas Larsson
+      * Jonny Lamb
+      * Julien Isorce
+      * Konstantin Miller
+      * Lasse Laukkanen
+      * Leo Singer
+      * Luis de Bethencourt
+      * Marc Leeman
+      * Mark Nauwelaerts
+      * Mart Raudsepp
+      * Matej Knopp
+      * Miguel Angel Cabrera Moya
+      * Monty Montgomery
+      * Nicola Murino
+      * Nicolas Baron
+      * Oleksij Rempel (Alexey Fisher)
+      * Olivier Crête
+      * Pascal Buhler
+      * Peter Korsgaard
+      * Peter Seiderer
+      * Philip Jägenstedt
+      * Philippe Normand
       * Raimo Järvi
+      * Ralph Giles
+      * Raul Gutierrez Segales
+      * René Stadler
+      * Reynaldo H. Verdejo Pinochet
+      * Robert Krakora
       * Sebastian Dröge
+      * Sebastian Rasmussen
+      * Sjoerd Simons
+      * Stas Sergeev
+      * Stefan Kost
+      * Stefan Sauer
+      * Stig Sandnes
+      * Thiago Santos
+      * Thomas Vander Stichele
+      * Tim-Philipp Müller
+      * Tristan Matthews
+      * Tuukka Pasanen
+      * Vincent Penquerc'h
+      * Wim Taymans
+      * Yaakov Selkowitz
  

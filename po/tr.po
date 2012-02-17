@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-good 0.10.26.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2011-11-26 13:52+0000\n"
+"POT-Creation-Date: 2012-02-17 10:30+0100\n"
 "PO-Revision-Date: 2011-01-08 00:03+0200\n"
 "Last-Translator: Server Acim <serveracim@gmail.com>\n"
 "Language-Team: Turkish <gnu-tr-u12a@lists.sourceforge.net>\n"
@@ -552,9 +552,9 @@ msgstr ""
 msgid "Device '%s' does not support video capture"
 msgstr "Aygıt '%s' bir çıkış aygıtı değil."
 
-#, fuzzy, c-format
+#, c-format
 msgid "Device '%s' is busy"
-msgstr "Aygıt '%s' bir çıkış aygıtı değil."
+msgstr ""
 
 #, c-format
 msgid "Device '%s' cannot capture at %dx%d"
@@ -700,17 +700,17 @@ msgstr "Çalışırken çözünürlüğü değiştirmek henüz desteklenmiyor."
 msgid "Cannot operate without a clock"
 msgstr "Saat olmadan çalışamaz"
 
-#~ msgid "Error reading %d bytes on device '%s'."
-#~ msgstr "%d baytı şu aygıtta '%s' okumada hata."
-
-#~ msgid "Could not enqueue buffers in device '%s'."
-#~ msgstr "Aygıtta '%s' arabellek kuyruğa sokulamıyor."
-
 #~ msgid "Could not establish connection to sound server"
 #~ msgstr "Ses sunucusuyla bağlantı kurulumayor"
 
 #~ msgid "Failed to query sound server capabilities"
 #~ msgstr "Ses sunucusu olanakları sorgulanamadı"
+
+#~ msgid "Error reading %d bytes on device '%s'."
+#~ msgstr "%d baytı şu aygıtta '%s' okumada hata."
+
+#~ msgid "Could not enqueue buffers in device '%s'."
+#~ msgstr "Aygıtta '%s' arabellek kuyruğa sokulamıyor."
 
 #~ msgid ""
 #~ "The buffer type is not supported, or the index is out of bounds, or no "

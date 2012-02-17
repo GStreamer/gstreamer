@@ -3,10 +3,10 @@
   <description>Real-time protocol plugins</description>
   <filename>../../gst/rtp/.libs/libgstrtp.so</filename>
   <basename>libgstrtp.so</basename>
-  <version>0.10.30.1</version>
+  <version>0.11.1</version>
   <license>LGPL</license>
   <source>gst-plugins-good</source>
-  <package>GStreamer Good Plug-ins git</package>
+  <package>GStreamer Good Plug-ins source release</package>
   <origin>Unknown package origin</origin>
   <elements>
     <element>
@@ -47,7 +47,7 @@
           <name>src</name>
           <direction>source</direction>
           <presence>always</presence>
-          <details>audio/x-raw-int, endianness=(int)4321, signed=(boolean)true, width=(int)16, depth=(int)16, rate=(int)[ 1, 2147483647 ], channels=(int)[ 1, 2147483647 ]</details>
+          <details>audio/x-raw, format=(string)S16_BE, layout=(string)interleaved, rate=(int)[ 1, 2147483647 ], channels=(int)[ 1, 2147483647 ]</details>
         </caps>
       </pads>
     </element>
@@ -62,7 +62,7 @@
           <name>sink</name>
           <direction>sink</direction>
           <presence>always</presence>
-          <details>audio/x-raw-int, endianness=(int)4321, signed=(boolean)true, width=(int)16, depth=(int)16, rate=(int)[ 1, 2147483647 ], channels=(int)[ 1, 2147483647 ]</details>
+          <details>audio/x-raw, format=(string)S16_BE, layout=(string)interleaved, rate=(int)[ 1, 2147483647 ], channels=(int)[ 1, 2147483647 ]</details>
         </caps>
         <caps>
           <name>src</name>
@@ -237,39 +237,6 @@
           <direction>source</direction>
           <presence>always</presence>
           <details>application/x-rtp, media=(string)audio, payload=(int)[ 96, 127 ], clock-rate=(int)[ 32000, 48000 ], encoding-name=(string)CELT</details>
-        </caps>
-      </pads>
-    </element>
-    <element>
-      <name>rtpdepay</name>
-      <longname>Dummy RTP session manager</longname>
-      <class>Codec/Depayloader/Network/RTP</class>
-      <description>Accepts raw RTP and RTCP packets and sends them forward</description>
-      <author>Wim Taymans &lt;wim.taymans@gmail.com&gt;</author>
-      <pads>
-        <caps>
-          <name>sinkrtcp</name>
-          <direction>sink</direction>
-          <presence>always</presence>
-          <details>application/x-rtcp</details>
-        </caps>
-        <caps>
-          <name>sinkrtp</name>
-          <direction>sink</direction>
-          <presence>always</presence>
-          <details>application/x-rtp</details>
-        </caps>
-        <caps>
-          <name>srcrtcp</name>
-          <direction>source</direction>
-          <presence>always</presence>
-          <details>application/x-rtcp</details>
-        </caps>
-        <caps>
-          <name>srcrtp</name>
-          <direction>source</direction>
-          <presence>always</presence>
-          <details>application/x-rtp</details>
         </caps>
       </pads>
     </element>
@@ -668,7 +635,7 @@
           <name>src</name>
           <direction>source</direction>
           <presence>always</presence>
-          <details>video/x-h264</details>
+          <details>video/x-h264, stream-format=(string)avc, alignment=(string)au; video/x-h264, stream-format=(string)byte-stream, alignment=(string){ nal, au }</details>
         </caps>
       </pads>
     </element>
@@ -683,7 +650,7 @@
           <name>sink</name>
           <direction>sink</direction>
           <presence>always</presence>
-          <details>video/x-h264</details>
+          <details>video/x-h264, stream-format=(string)byte-stream, alignment=(string){ nal, au }; video/x-h264, stream-format=(string)avc, alignment=(string)au</details>
         </caps>
         <caps>
           <name>src</name>
@@ -851,7 +818,7 @@
           <name>sink</name>
           <direction>sink</direction>
           <presence>always</presence>
-          <details>application/x-rtp, media=(string)video, payload=(int)[ 96, 127 ], clock-rate=(int)[ 1, 2147483647 ], encoding-name=(string)MP2T-ES; application/x-rtp, media=(string)video, payload=(int)33, clock-rate=(int)[ 1, 2147483647 ]</details>
+          <details>application/x-rtp, media=(string)video, payload=(int)[ 96, 127 ], clock-rate=(int)[ 1, 2147483647 ], encoding-name=(string)MP2T; application/x-rtp, media=(string)video, payload=(int)33, clock-rate=(int)[ 1, 2147483647 ]</details>
         </caps>
         <caps>
           <name>src</name>
@@ -878,7 +845,7 @@
           <name>src</name>
           <direction>source</direction>
           <presence>always</presence>
-          <details>application/x-rtp, media=(string)video, payload=(int)[ 96, 127 ], clock-rate=(int)90000, encoding-name=(string)MP2T-ES</details>
+          <details>application/x-rtp, media=(string)video, payload=(int)[ 96, 127 ], clock-rate=(int)90000, encoding-name=(string)MP2T</details>
         </caps>
       </pads>
     </element>
@@ -1445,7 +1412,7 @@
           <name>src</name>
           <direction>source</direction>
           <presence>always</presence>
-          <details>video/x-raw-rgb; video/x-raw-yuv</details>
+          <details>video/x-raw</details>
         </caps>
       </pads>
     </element>
@@ -1460,7 +1427,7 @@
           <name>sink</name>
           <direction>sink</direction>
           <presence>always</presence>
-          <details>video/x-raw-rgb, bpp=(int)24, depth=(int)24, endianness=(int)4321, red_mask=(int)16711680, green_mask=(int)65280, blue_mask=(int)255, width=(int)[ 1, 32767 ], height=(int)[ 1, 32767 ]; video/x-raw-rgb, bpp=(int)32, depth=(int)32, endianness=(int)4321, red_mask=(int)-16777216, green_mask=(int)16711680, blue_mask=(int)65280, alpha_mask=(int)255, width=(int)[ 1, 32767 ], height=(int)[ 1, 32767 ]; video/x-raw-rgb, bpp=(int)24, depth=(int)24, endianness=(int)4321, red_mask=(int)255, green_mask=(int)65280, blue_mask=(int)16711680, width=(int)[ 1, 32767 ], height=(int)[ 1, 32767 ]; video/x-raw-rgb, bpp=(int)32, depth=(int)32, endianness=(int)4321, red_mask=(int)65280, green_mask=(int)16711680, blue_mask=(int)-16777216, alpha_mask=(int)255, width=(int)[ 1, 32767 ], height=(int)[ 1, 32767 ]; video/x-raw-yuv, format=(fourcc){ AYUV, UYVY, I420, Y41B, UYVP }, width=(int)[ 1, 32767 ], height=(int)[ 1, 32767 ]</details>
+          <details>video/x-raw, format=(string){ RGB, RGBA, BGR, BGRA, AYUYV, UYVY, I420, Y41B, UYVP, I420, Y42B, Y444 }, width=(int)[ 1, 32767 ], height=(int)[ 1, 32767 ]</details>
         </caps>
         <caps>
           <name>src</name>

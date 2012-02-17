@@ -1,3 +1,4 @@
+GSocket GInitable
 GdkPixbuf GIcon
 Gst3GPPMux GstTagSetter GstTagXmpWriter
 GstApev2Mux GstTagSetter
@@ -40,8 +41,11 @@ GstOssSrc GstImplementsInterface GstMixer
 GstPipeline GstChildProxy
 GstPulseAudioSink GstChildProxy
 GstPulseMixer GstImplementsInterface GstMixer GstPropertyProbe
+GstPulseMixer GstMixer
+GstPulseSink GstStreamVolume
 GstPulseSink GstStreamVolume GstImplementsInterface GstPropertyProbe
 GstPulseSrc GstImplementsInterface GstMixer GstPropertyProbe
+GstPulseSrc GstMixer GstStreamVolume
 GstPulseSrc GstStreamVolume GstImplementsInterface GstMixer GstPropertyProbe
 GstPushFileSrc GstChildProxy GstURIHandler
 GstQTMoovRecover GstChildProxy
@@ -56,11 +60,16 @@ GstSpeexEnc GstTagSetter GstPreset
 GstSwitchSink GstChildProxy
 GstSwitchSrc GstChildProxy
 GstTagLibMux GstTagSetter
+GstTagMux GstTagSetter
 GstUDPSink GstURIHandler
 GstUDPSrc GstURIHandler
 GstV4l2Radio GstURIHandler GstImplementsInterface GstTuner GstPropertyProbe
+GstV4l2Radio GstURIHandler GstTuner
 GstV4l2Sink GstImplementsInterface GstXOverlay GstNavigation GstColorBalance GstVideoOrientation GstPropertyProbe
+GstV4l2Sink GstTuner GstVideoOverlay GstNavigation GstColorBalance GstVideoOrientation
 GstV4l2Src GstURIHandler GstImplementsInterface GstTuner GstColorBalance GstVideoOrientation GstPropertyProbe
+GstV4l2Src GstURIHandler GstTuner GstColorBalance GstVideoOrientation
+GstVideoBalance GstColorBalance
 GstVideoBalance GstImplementsInterface GstColorBalance
 GstVideoMixer GstChildProxy
 GstVideoMixer2 GstChildProxy

@@ -189,6 +189,16 @@
 </ARG>
 
 <ARG>
+<NAME>GstMultiFileSink::max-file-size</NAME>
+<TYPE>guint64</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Maximum File Size</NICK>
+<BLURB>Maximum file size before starting a new file in max-size mode.</BLURB>
+<DEFAULT>2147483648</DEFAULT>
+</ARG>
+
+<ARG>
 <NAME>GstMultiFileSrc::caps</NAME>
 <TYPE>GstCaps*</TYPE>
 <RANGE></RANGE>
@@ -524,7 +534,7 @@
 <RANGE></RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>Timeout</NICK>
-<BLURB>Post a message after timeout microseconds (0 = disabled).</BLURB>
+<BLURB>Post a message after timeout nanoseconds (0 = disabled).</BLURB>
 <DEFAULT>0</DEFAULT>
 </ARG>
 
@@ -586,6 +596,36 @@
 <NICK>Reuse</NICK>
 <BLURB>Enable reuse of the port.</BLURB>
 <DEFAULT>TRUE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstUDPSrc::close-socket</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Close socket</NICK>
+<BLURB>Close socket if passed as property on state change.</BLURB>
+<DEFAULT>TRUE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstUDPSrc::socket</NAME>
+<TYPE>GSocket*</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Socket</NICK>
+<BLURB>Socket to use for UDP reception. (NULL == allocate).</BLURB>
+<DEFAULT></DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstUDPSrc::used-socket</NAME>
+<TYPE>GSocket*</TYPE>
+<RANGE></RANGE>
+<FLAGS>r</FLAGS>
+<NICK>Socket Handle</NICK>
+<BLURB>Socket currently in use for UDP reception. (NULL = no socket).</BLURB>
+<DEFAULT></DEFAULT>
 </ARG>
 
 <ARG>
@@ -720,8 +760,8 @@
 
 <ARG>
 <NAME>GstRTSPSrc::connection-speed</NAME>
-<TYPE>guint</TYPE>
-<RANGE><= 2147483</RANGE>
+<TYPE>guint64</TYPE>
+<RANGE><= 18446744073709551</RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>Connection Speed</NICK>
 <BLURB>Network connection speed in kbps (0 = unknown).</BLURB>
@@ -1285,7 +1325,7 @@
 <FLAGS>rw</FLAGS>
 <NICK>Snapshot</NICK>
 <BLURB>Send EOS after encoding a frame, useful for snapshots.</BLURB>
-<DEFAULT>TRUE</DEFAULT>
+<DEFAULT>FALSE</DEFAULT>
 </ARG>
 
 <ARG>
@@ -2469,6 +2509,26 @@
 </ARG>
 
 <ARG>
+<NAME>GstDynUDPSink::close-socket</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Close socket</NICK>
+<BLURB>Close socket if passed as property on state change.</BLURB>
+<DEFAULT>TRUE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstDynUDPSink::socket</NAME>
+<TYPE>GSocket*</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Socket</NICK>
+<BLURB>Socket to use for UDP sending. (NULL == allocate).</BLURB>
+<DEFAULT></DEFAULT>
+</ARG>
+
+<ARG>
 <NAME>GstCdioCddaSrc::read-speed</NAME>
 <TYPE>gint</TYPE>
 <RANGE>[-1,100]</RANGE>
@@ -2484,7 +2544,7 @@
 <RANGE></RANGE>
 <FLAGS>r</FLAGS>
 <NICK>Bytes served</NICK>
-<BLURB>Total number of bytes send to all clients.</BLURB>
+<BLURB>Total number of bytes sent to all clients.</BLURB>
 <DEFAULT>0</DEFAULT>
 </ARG>
 
@@ -2606,6 +2666,36 @@
 <NICK>Buffer Size</NICK>
 <BLURB>Size of the kernel send buffer in bytes, 0=default.</BLURB>
 <DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstMultiUDPSink::close-socket</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Close socket</NICK>
+<BLURB>Close socket if passed as property on state change.</BLURB>
+<DEFAULT>TRUE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstMultiUDPSink::socket</NAME>
+<TYPE>GSocket*</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Socket Handle</NICK>
+<BLURB>Socket to use for UDP sending. (NULL == allocate).</BLURB>
+<DEFAULT></DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstMultiUDPSink::used-socket</NAME>
+<TYPE>GSocket*</TYPE>
+<RANGE></RANGE>
+<FLAGS>r</FLAGS>
+<NICK>Used Socket Handle</NICK>
+<BLURB>Socket currently in use for UDP sending. (NULL == no socket).</BLURB>
+<DEFAULT></DEFAULT>
 </ARG>
 
 <ARG>
@@ -2960,7 +3050,7 @@
 
 <ARG>
 <NAME>GstAudioAmplify::clipping-method</NAME>
-<TYPE>GstAudioPanoramaClippingMethod</TYPE>
+<TYPE>GstAudioAmplifyClippingMethod</TYPE>
 <RANGE></RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>Clipping method</NICK>
@@ -3276,6 +3366,16 @@
 <NICK>TV norm</NICK>
 <BLURB>video standard.</BLURB>
 <DEFAULT>none</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstV4l2Src::io-mode</NAME>
+<TYPE>GstV4l2IOMode</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>IO mode</NICK>
+<BLURB>I/O mode.</BLURB>
+<DEFAULT>GST_V4L2_IO_AUTO</DEFAULT>
 </ARG>
 
 <ARG>
@@ -19949,6 +20049,16 @@
 </ARG>
 
 <ARG>
+<NAME>GstPulseSink::client-name</NAME>
+<TYPE>gchar*</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Client Name</NICK>
+<BLURB>The PulseAudio client name to use.</BLURB>
+<DEFAULT>"lt-gst-plugins-good-plugins-scan"</DEFAULT>
+</ARG>
+
+<ARG>
 <NAME>GstPulseSrc::device</NAME>
 <TYPE>gchar*</TYPE>
 <RANGE></RANGE>
@@ -20026,6 +20136,16 @@
 <NICK>Volume</NICK>
 <BLURB>Linear volume of this stream, 1.0=100%.</BLURB>
 <DEFAULT>1</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstPulseSrc::client-name</NAME>
+<TYPE>gchar*</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Client Name</NICK>
+<BLURB>The PulseAudio client_name_to_use.</BLURB>
+<DEFAULT>"lt-gst-plugins-good-plugins-scan"</DEFAULT>
 </ARG>
 
 <ARG>
@@ -20334,7 +20454,7 @@
 <RANGE></RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>A</NICK>
-<BLURB>Filter coefficients (numerator of transfer function).</BLURB>
+<BLURB>Filter coefficients (denominator of transfer function).</BLURB>
 <DEFAULT></DEFAULT>
 </ARG>
 
@@ -20344,7 +20464,7 @@
 <RANGE></RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>B</NICK>
-<BLURB>Filter coefficients (denominator of transfer function).</BLURB>
+<BLURB>Filter coefficients (numerator of transfer function).</BLURB>
 <DEFAULT></DEFAULT>
 </ARG>
 
@@ -20981,7 +21101,7 @@
 <ARG>
 <NAME>GstV4l2Sink::device-fd</NAME>
 <TYPE>gint</TYPE>
-<RANGE>>= -1</RANGE>
+<RANGE>>= G_MAXULONG</RANGE>
 <FLAGS>r</FLAGS>
 <NICK>File descriptor</NICK>
 <BLURB>File descriptor of the device.</BLURB>
@@ -21146,6 +21266,26 @@
 <NICK>Minimum queued bufs</NICK>
 <BLURB>Minimum number of queued bufs; v4l2sink won't dqbuf if the driver doesn't have more than this number (which normally you shouldn't change).</BLURB>
 <DEFAULT>1</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstV4l2Sink::io-mode</NAME>
+<TYPE>GstV4l2IOMode</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>IO mode</NICK>
+<BLURB>I/O mode.</BLURB>
+<DEFAULT>GST_V4L2_IO_AUTO</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstV4l2Sink::norm</NAME>
+<TYPE>V4L2_TV_norms</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>TV norm</NICK>
+<BLURB>video standard.</BLURB>
+<DEFAULT>none</DEFAULT>
 </ARG>
 
 <ARG>
@@ -21369,6 +21509,26 @@
 </ARG>
 
 <ARG>
+<NAME>GstJackAudioSrc::client-name</NAME>
+<TYPE>gchar*</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Client name</NICK>
+<BLURB>The client name of the Jack instance (NULL = default).</BLURB>
+<DEFAULT>NULL</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstJackAudioSrc::transport</NAME>
+<TYPE>GstJackTransport</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Transport mode</NICK>
+<BLURB>Jack transport behaviour of the client.</BLURB>
+<DEFAULT>No transport support</DEFAULT>
+</ARG>
+
+<ARG>
 <NAME>GstJackAudioSink::client</NAME>
 <TYPE>JackClient*</TYPE>
 <RANGE></RANGE>
@@ -21396,6 +21556,26 @@
 <NICK>Server</NICK>
 <BLURB>The Jack server to connect to (NULL = default).</BLURB>
 <DEFAULT>NULL</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstJackAudioSink::client-name</NAME>
+<TYPE>gchar*</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Client name</NICK>
+<BLURB>The client name of the Jack instance (NULL = default).</BLURB>
+<DEFAULT>NULL</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstJackAudioSink::transport</NAME>
+<TYPE>GstJackTransport</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Transport mode</NICK>
+<BLURB>Jack transport behaviour of the client.</BLURB>
+<DEFAULT>No transport support</DEFAULT>
 </ARG>
 
 <ARG>
@@ -22024,7 +22204,7 @@
 <RANGE></RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>Maximum gap time</NICK>
-<BLURB>The demuxer sends out newsegment events for skipping gaps longer than this (0 = disabled).</BLURB>
+<BLURB>The demuxer sends out segment events for skipping gaps longer than this (0 = disabled).</BLURB>
 <DEFAULT>2000000000</DEFAULT>
 </ARG>
 
@@ -22386,5 +22566,15 @@
 <NICK>user-pw</NICK>
 <BLURB>user password for authentication.</BLURB>
 <DEFAULT>""</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstWavParse::ignore-length</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Ignore length</NICK>
+<BLURB>Ignore length from the Wave header.</BLURB>
+<DEFAULT>FALSE</DEFAULT>
 </ARG>
 
