@@ -3,10 +3,10 @@
   <description>ADPCM encoder</description>
   <filename>../../gst/adpcmenc/.libs/libgstadpcmenc.so</filename>
   <basename>libgstadpcmenc.so</basename>
-  <version>0.10.22.1</version>
+  <version>0.11.1</version>
   <license>LGPL</license>
   <source>gst-plugins-bad</source>
-  <package>GStreamer Bad Plug-ins git</package>
+  <package>GStreamer Bad Plug-ins source release</package>
   <origin>Unknown package origin</origin>
   <elements>
     <element>
@@ -20,7 +20,7 @@
           <name>sink</name>
           <direction>sink</direction>
           <presence>always</presence>
-          <details>audio/x-raw-int, depth=(int)16, width=(int)16, channels=(int)[ 1, 2 ], rate=(int)[ 1, 2147483647 ]</details>
+          <details>audio/x-raw, format=(string)S16LE, layout=(string)interleaved, rate=(int)[ 1, 2147483647 ], channels=(int)[ 1, 2 ]</details>
         </caps>
         <caps>
           <name>src</name>

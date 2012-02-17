@@ -1080,7 +1080,7 @@
 
 <ARG>
 <NAME>GstMMS::connection-speed</NAME>
-<TYPE>guint</TYPE>
+<TYPE>guint64</TYPE>
 <RANGE><= 2147483</RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>Connection Speed</NICK>
@@ -1092,9 +1092,9 @@
 <NAME>GstFaac::bitrate</NAME>
 <TYPE>gint</TYPE>
 <RANGE>[8000,320000]</RANGE>
-<FLAGS>rw</FLAGS>
+<FLAGS>rwx</FLAGS>
 <NICK>Bitrate (bps)</NICK>
-<BLURB>Bitrate in bits/sec.</BLURB>
+<BLURB>Average Bitrate (ABR) in bits/sec.</BLURB>
 <DEFAULT>128000</DEFAULT>
 </ARG>
 
@@ -1102,7 +1102,7 @@
 <NAME>GstFaac::midside</NAME>
 <TYPE>gboolean</TYPE>
 <RANGE></RANGE>
-<FLAGS>rw</FLAGS>
+<FLAGS>rwx</FLAGS>
 <NICK>Midside</NICK>
 <BLURB>Allow mid/side encoding.</BLURB>
 <DEFAULT>TRUE</DEFAULT>
@@ -1132,7 +1132,7 @@
 <NAME>GstFaac::shortctl</NAME>
 <TYPE>GstFaacShortCtl</TYPE>
 <RANGE></RANGE>
-<FLAGS>rw</FLAGS>
+<FLAGS>rwx</FLAGS>
 <NICK>Block type</NICK>
 <BLURB>Block type encorcing.</BLURB>
 <DEFAULT>SHORTCTL_NORMAL</DEFAULT>
@@ -1142,10 +1142,30 @@
 <NAME>GstFaac::tns</NAME>
 <TYPE>gboolean</TYPE>
 <RANGE></RANGE>
-<FLAGS>rw</FLAGS>
+<FLAGS>rwx</FLAGS>
 <NICK>TNS</NICK>
 <BLURB>Use temporal noise shaping.</BLURB>
 <DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstFaac::quality</NAME>
+<TYPE>gint</TYPE>
+<RANGE>[1,1000]</RANGE>
+<FLAGS>rwx</FLAGS>
+<NICK>Quality (%)</NICK>
+<BLURB>Variable bitrate (VBR) quantizer quality in %.</BLURB>
+<DEFAULT>100</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstFaac::rate-control</NAME>
+<TYPE>GstFaacBrtype</TYPE>
+<RANGE></RANGE>
+<FLAGS>rwx</FLAGS>
+<NICK>Rate Control (ABR/VBR)</NICK>
+<BLURB>Encoding bitrate type (VBR/ABR).</BLURB>
+<DEFAULT>VBR</DEFAULT>
 </ARG>
 
 <ARG>
@@ -22341,6 +22361,16 @@
 <NICK>Caps</NICK>
 <BLURB>The caps of the source pad.</BLURB>
 <DEFAULT></DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstPcapParse::ts-offset</NAME>
+<TYPE>gint64</TYPE>
+<RANGE>>= G_MAXULONG</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Timestamp Offset</NICK>
+<BLURB>Relative timestamp offset (ns) to apply (-1 = use absolute packet time).</BLURB>
+<DEFAULT>-1</DEFAULT>
 </ARG>
 
 <ARG>
@@ -45686,7 +45716,7 @@
 <ARG>
 <NAME>GstVP8Enc::speed</NAME>
 <TYPE>gint</TYPE>
-<RANGE>[0,2]</RANGE>
+<RANGE>[0,7]</RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>Speed</NICK>
 <BLURB>Speed.</BLURB>
@@ -45710,7 +45740,7 @@
 <FLAGS>rw</FLAGS>
 <NICK>Multipass Cache File</NICK>
 <BLURB>Multipass cache file.</BLURB>
-<DEFAULT>NULL</DEFAULT>
+<DEFAULT>"multipass.cache"</DEFAULT>
 </ARG>
 
 <ARG>
@@ -45751,6 +45781,106 @@
 <NICK>Minimum quantizer</NICK>
 <BLURB>Minimum (best) quantizer.</BLURB>
 <DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstVP8Enc::drop-frame</NAME>
+<TYPE>gint</TYPE>
+<RANGE>[0,100]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Drop Frame</NICK>
+<BLURB>Drop Frame.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstVP8Enc::lag-in-frames</NAME>
+<TYPE>guint</TYPE>
+<RANGE><= 64</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Max number of frames to lag</NICK>
+<BLURB>If set, this value allows the encoder to consume a number of input frames before producing output frames.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstVP8Enc::maxsection-pct</NAME>
+<TYPE>guint</TYPE>
+<RANGE>[200,800]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>maximum percentage allocation per section</NICK>
+<BLURB>The numbers represent a percentage of the average allocation per section (frame).</BLURB>
+<DEFAULT>800</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstVP8Enc::minsection-pct</NAME>
+<TYPE>guint</TYPE>
+<RANGE><= 20</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>minimum percentage allocation per section</NICK>
+<BLURB>The numbers represent a percentage of the average allocation per section (frame).</BLURB>
+<DEFAULT>5</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstVP8Enc::noise-sensitivity</NAME>
+<TYPE>gint</TYPE>
+<RANGE>[0,6]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Noise Sensitivity</NICK>
+<BLURB>Noise Sensitivity.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstVP8Enc::resize-allowed</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Resize Allowed</NICK>
+<BLURB>Resize Allowed.</BLURB>
+<DEFAULT>TRUE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstVP8Enc::sharpness</NAME>
+<TYPE>gint</TYPE>
+<RANGE>[0,7]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Sharpness</NICK>
+<BLURB>Sharpness.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstVP8Enc::static-threshold</NAME>
+<TYPE>gint</TYPE>
+<RANGE>[0,1000]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Static Threshold</NICK>
+<BLURB>Static Threshold.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstVP8Enc::token-parts</NAME>
+<TYPE>gint</TYPE>
+<RANGE>[0,3]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Token Parts</NICK>
+<BLURB>Token Parts.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstVP8Enc::tune</NAME>
+<TYPE>GstVP8EncTune</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Tune</NICK>
+<BLURB>Tune.</BLURB>
+<DEFAULT>Tune for PSNR</DEFAULT>
 </ARG>
 
 <ARG>
@@ -47644,6 +47774,16 @@
 </ARG>
 
 <ARG>
+<NAME>GstViewfinderBin::disable-converters</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Disable conversion elements</NICK>
+<BLURB>If video converters should be disabled (must be set on NULL).</BLURB>
+<DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
 <NAME>GstImageCaptureBin::image-encoder</NAME>
 <TYPE>GstElement*</TYPE>
 <RANGE></RANGE>
@@ -47820,7 +47960,7 @@
 <FLAGS>rw</FLAGS>
 <NICK>Post Previews</NICK>
 <BLURB>If capture preview images should be posted to the bus.</BLURB>
-<DEFAULT>TRUE</DEFAULT>
+<DEFAULT>FALSE</DEFAULT>
 </ARG>
 
 <ARG>
@@ -47960,6 +48100,26 @@
 <FLAGS>rw</FLAGS>
 <NICK>Camera source</NICK>
 <BLURB>The camera source element to be used. It is only taken into use on the next null to ready transition.</BLURB>
+<DEFAULT></DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstCameraBin2::audio-filter</NAME>
+<TYPE>GstElement*</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Audio filter</NICK>
+<BLURB>The element that will process captured audio buffers when recording. (Should be set on NULL state).</BLURB>
+<DEFAULT></DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstCameraBin2::flags</NAME>
+<TYPE>GstCamFlags</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Flags</NICK>
+<BLURB>Flags to control behaviour.</BLURB>
 <DEFAULT></DEFAULT>
 </ARG>
 
@@ -57500,7 +57660,7 @@
 <FLAGS>rw</FLAGS>
 <NICK>Compare Meta</NICK>
 <BLURB>Indicates which metadata should be compared.</BLURB>
-<DEFAULT>GST_BUFFER_COPY_FLAGS|GST_BUFFER_COPY_TIMESTAMPS|GST_BUFFER_COPY_CAPS</DEFAULT>
+<DEFAULT>GST_BUFFER_COPY_FLAGS|GST_BUFFER_COPY_TIMESTAMPS|GST_BUFFER_COPY_META|GST_BUFFER_COPY_MEMORY</DEFAULT>
 </ARG>
 
 <ARG>
@@ -57651,5 +57811,35 @@
 <NICK>Mode</NICK>
 <BLURB>Mode.</BLURB>
 <DEFAULT>ntsc</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstWaveScope::style</NAME>
+<TYPE>GstWaveScopeStyle</TYPE>
+<RANGE></RANGE>
+<FLAGS>rwx</FLAGS>
+<NICK>drawing style</NICK>
+<BLURB>Drawing styles for the wave form display.</BLURB>
+<DEFAULT>draw dots (default)</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstSpaceScope::style</NAME>
+<TYPE>GstSpaceScopeStyle</TYPE>
+<RANGE></RANGE>
+<FLAGS>rwx</FLAGS>
+<NICK>drawing style</NICK>
+<BLURB>Drawing styles for the space scope display.</BLURB>
+<DEFAULT>draw dots (default)</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstIRTSPParse::channel-id</NAME>
+<TYPE>gint</TYPE>
+<RANGE>[0,255]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>channel-id</NICK>
+<BLURB>Channel Identifier.</BLURB>
+<DEFAULT>0</DEFAULT>
 </ARG>
 

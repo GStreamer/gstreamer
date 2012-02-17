@@ -3,10 +3,10 @@
   <description>MPEG TS demuxer</description>
   <filename>../../gst/mpegtsdemux/.libs/libgstmpegtsdemux.so</filename>
   <basename>libgstmpegtsdemux.so</basename>
-  <version>0.10.22.1</version>
+  <version>0.11.1</version>
   <license>unknown</license>
   <source>gst-plugins-bad</source>
-  <package>GStreamer Bad Plug-ins git</package>
+  <package>GStreamer Bad Plug-ins source release</package>
   <origin>Unknown package origin</origin>
   <elements>
     <element>
@@ -27,7 +27,7 @@ Edward Hervey &lt;edward.hervey@collabora.co.uk&gt;</author>
           <name>audio_%04x</name>
           <direction>source</direction>
           <presence>sometimes</presence>
-          <details>audio/mpeg, mpegversion=(int){ 1, 4 }; audio/x-lpcm, width=(int){ 16, 20, 24 }, rate=(int){ 48000, 96000 }, channels=(int)[ 1, 8 ], dynamic_range=(int)[ 0, 255 ], emphasis=(boolean){ false, true }, mute=(boolean){ false, true }; audio/x-ac3; audio/x-eac3; audio/x-dts; audio/x-private-ts-lpcm</details>
+          <details>audio/mpeg, mpegversion=(int)1; audio/mpeg, mpegversion=(int)4, stream-format=(string){ adts, loas }; audio/x-lpcm, width=(int){ 16, 20, 24 }, rate=(int){ 48000, 96000 }, channels=(int)[ 1, 8 ], dynamic_range=(int)[ 0, 255 ], emphasis=(boolean){ false, true }, mute=(boolean){ false, true }; audio/x-ac3; audio/x-eac3; audio/x-dts; audio/x-private-ts-lpcm</details>
         </caps>
         <caps>
           <name>private_%04x</name>
@@ -45,7 +45,7 @@ Edward Hervey &lt;edward.hervey@collabora.co.uk&gt;</author>
           <name>video_%04x</name>
           <direction>source</direction>
           <presence>sometimes</presence>
-          <details>video/mpeg, mpegversion=(int){ 1, 2, 4 }, systemstream=(boolean)false; video/x-h264, stream-format=(string)byte-stream, alignment=(string)nal; video/x-dirac; video/x-wmv, wmvversion=(int)3, format=(fourcc)WVC1</details>
+          <details>video/mpeg, mpegversion=(int){ 1, 2, 4 }, systemstream=(boolean)false; video/x-h264, stream-format=(string)byte-stream, alignment=(string)nal; video/x-dirac; video/x-wmv, wmvversion=(int)3, format=(string)WVC1</details>
         </caps>
       </pads>
     </element>
@@ -63,13 +63,13 @@ Edward Hervey &lt;edward.hervey@collabora.co.uk&gt;</author>
           <details>video/mpegts, systemstream=(boolean)true</details>
         </caps>
         <caps>
-          <name>program_%d</name>
+          <name>program_%u</name>
           <direction>source</direction>
           <presence>sometimes</presence>
           <details>video/mpegts, systemstream=(boolean)true</details>
         </caps>
         <caps>
-          <name>src%d</name>
+          <name>src_%u</name>
           <direction>source</direction>
           <presence>request</presence>
           <details>video/mpegts, systemstream=(boolean)true</details>

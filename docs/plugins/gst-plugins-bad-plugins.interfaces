@@ -1,7 +1,9 @@
+ADPCMEnc GstPreset
 DvbBaseBin GstChildProxy GstURIHandler
 GstAmrWbEnc GstPreset
 GstApExSink GstImplementsInterface GstMixer
 GstAsfMux GstTagSetter
+GstAudioEncoder GstPreset
 GstAutoConvert GstChildProxy
 GstAutoVideoConvert GstChildProxy
 GstBaseCameraSrc GstChildProxy
@@ -17,6 +19,7 @@ GstDiracEnc GstPreset
 GstFPSDisplaySink GstChildProxy
 GstFaac GstPreset
 GstFaceOverlay GstChildProxy
+GstGSMEnc GstPreset
 GstGSettingsAudioSink GstChildProxy
 GstGSettingsAudioSrc GstChildProxy
 GstGSettingsSwitchSink GstChildProxy

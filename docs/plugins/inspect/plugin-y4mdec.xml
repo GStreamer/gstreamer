@@ -3,7 +3,7 @@
   <description>Demuxes/decodes YUV4MPEG streams</description>
   <filename>../../gst/y4m/.libs/libgsty4mdec.so</filename>
   <basename>libgsty4mdec.so</basename>
-  <version>0.10.22.1</version>
+  <version>0.11.1</version>
   <license>LGPL</license>
   <source>gst-plugins-bad</source>
   <package>GStreamer Bad Plug-ins</package>
@@ -26,7 +26,7 @@
           <name>src</name>
           <direction>source</direction>
           <presence>always</presence>
-          <details>video/x-raw-yuv, format=(fourcc){ I420, Y42B, Y444 }, width=(int)[ 1, 2147483647 ], height=(int)[ 1, 2147483647 ], framerate=(fraction)[ 0/1, 2147483647/1 ]</details>
+          <details>video/x-raw, format=(string){ I420, Y42B, Y444 }, width=(int)[ 1, 2147483647 ], height=(int)[ 1, 2147483647 ], framerate=(fraction)[ 0/1, 2147483647/1 ]</details>
         </caps>
       </pads>
     </element>
