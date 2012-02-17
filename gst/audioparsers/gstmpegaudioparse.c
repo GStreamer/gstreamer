@@ -791,9 +791,7 @@ gst_mpeg_audio_parse_handle_first_frame (GstMpegAudioParse * mp3parse,
       GST_DEBUG_OBJECT (mp3parse, "Encoder delay %u, encoder padding %u",
           encoder_delay, encoder_padding);
     }
-  }
-
-  if (read_id_vbri == vbri_id) {
+  } else if (read_id_vbri == vbri_id) {
     gint64 total_bytes, total_frames;
     GstClockTime total_time;
     guint16 nseek_points;
