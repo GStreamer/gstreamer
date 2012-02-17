@@ -45,7 +45,7 @@ setup_multifdsink (void)
   GST_DEBUG ("setup_multifdsink");
   multifdsink = gst_check_setup_element ("multifdsink");
   mysrcpad = gst_check_setup_src_pad (multifdsink, &srctemplate);
-  GST_PAD_UNSET_FLUSHING (mysrcpad);
+  gst_pad_set_active (mysrcpad, TRUE);
 
   return multifdsink;
 }
