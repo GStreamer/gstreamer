@@ -146,6 +146,7 @@ static gboolean
 gst_ssa_parse_setcaps (GstPad * sinkpad, GstCaps * caps)
 {
   GstSsaParse *parse = GST_SSA_PARSE (GST_PAD_PARENT (sinkpad));
+  GstCaps *outcaps;
   const GValue *val;
   GstStructure *s;
   const guchar bom_utf8[] = { 0xEF, 0xBB, 0xBF };
@@ -153,6 +154,7 @@ gst_ssa_parse_setcaps (GstPad * sinkpad, GstCaps * caps)
   GstMapInfo map;
   gchar *ptr;
   gsize left;
+  gboolean ret;
 
   s = gst_caps_get_structure (caps, 0);
   val = gst_structure_get_value (s, "codec_data");
@@ -194,7 +196,11 @@ gst_ssa_parse_setcaps (GstPad * sinkpad, GstCaps * caps)
   gst_buffer_unmap (priv, &map);
   gst_buffer_unref (priv);
 
-  return TRUE;
+  outcaps = gst_caps_new_empty_simple ("text/x-pango-markup");
+  ret = gst_pad_set_caps (parse->srcpad, outcaps);
+  gst_caps_unref (outcaps);
+
+  return ret;
 
   /* ERRORS */
 invalid_init:
