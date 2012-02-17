@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-base-0.10.32.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2011-12-12 12:57+0000\n"
+"POT-Creation-Date: 2012-02-17 09:59+0100\n"
 "PO-Revision-Date: 2011-12-05 09:10+0200\n"
 "Last-Translator: Мирослав Николић <miroslavnikolic@rocketmail.com>\n"
 "Language-Team: Serbian <gnu@prevod.org>\n"
@@ -188,10 +188,6 @@ msgstr "Изворни елемент је неисправан."
 #, c-format
 msgid "Error while sending data to \"%s:%d\"."
 msgstr "Грешка приликом слања података у „%s:%d“."
-
-#, c-format
-msgid "Connection to %s:%d refused."
-msgstr "Повезивање са %s:%d је одбијено."
 
 msgid "This CD has no audio tracks"
 msgstr "Овај ЦД нема звучних нумера"
@@ -506,6 +502,9 @@ msgstr "Непознати елемент кодера"
 
 msgid "Plugin or element of unknown type"
 msgstr "Прикључак или елемент непознате врсте"
+
+#~ msgid "Connection to %s:%d refused."
+#~ msgstr "Повезивање са %s:%d је одбијено."
 
 #~ msgid "Could not open vfs file \"%s\" for writing: %s."
 #~ msgstr "Не могу да отворим всд датотеку „%s“ ради уписа: %s."

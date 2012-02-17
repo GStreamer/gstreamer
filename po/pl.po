@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-base 0.10.32.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2011-11-12 00:54+0000\n"
+"POT-Creation-Date: 2012-02-17 09:59+0100\n"
 "PO-Revision-Date: 2011-04-26 18:01+0200\n"
 "Last-Translator: Jakub Bogusz <qboosh@pld-linux.org>\n"
 "Language-Team: Polish <translation-team-pl@lists.sourceforge.net>\n"
@@ -193,10 +193,6 @@ msgstr "Element źródłowy jest niepoprawny."
 #, c-format
 msgid "Error while sending data to \"%s:%d\"."
 msgstr "Błąd podczas wysyłania danych do \"%s:%d\"."
-
-#, c-format
-msgid "Connection to %s:%d refused."
-msgstr "Połączenie z %s:%d odrzucone."
 
 msgid "This CD has no audio tracks"
 msgstr "Ta płyta CD nie ma ścieżek dźwiękowych"
@@ -511,6 +507,9 @@ msgstr "Nieznany element kodujący"
 
 msgid "Plugin or element of unknown type"
 msgstr "Wtyczka lub element nieznanego typu"
+
+#~ msgid "Connection to %s:%d refused."
+#~ msgstr "Połączenie z %s:%d odrzucone."
 
 #~ msgid "Uncompressed planar YUV 4:2:0"
 #~ msgstr "Nieskompresowany planarny YUV 4:2:0"

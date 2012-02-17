@@ -8,17 +8,23 @@
 
 G_BEGIN_DECLS
 
-/* enumerations from "multichannel.h" */
+/* enumerations from "audio.h" */
+GType gst_audio_format_get_type (void);
+#define GST_TYPE_AUDIO_FORMAT (gst_audio_format_get_type())
+GType gst_audio_format_flags_get_type (void);
+#define GST_TYPE_AUDIO_FORMAT_FLAGS (gst_audio_format_flags_get_type())
 GType gst_audio_channel_position_get_type (void);
 #define GST_TYPE_AUDIO_CHANNEL_POSITION (gst_audio_channel_position_get_type())
+GType gst_audio_flags_get_type (void);
+#define GST_TYPE_AUDIO_FLAGS (gst_audio_flags_get_type())
+GType gst_audio_layout_get_type (void);
+#define GST_TYPE_AUDIO_LAYOUT (gst_audio_layout_get_type())
 
-/* enumerations from "gstringbuffer.h" */
-GType gst_ring_buffer_state_get_type (void);
-#define GST_TYPE_RING_BUFFER_STATE (gst_ring_buffer_state_get_type())
-GType gst_ring_buffer_seg_state_get_type (void);
-#define GST_TYPE_RING_BUFFER_SEG_STATE (gst_ring_buffer_seg_state_get_type())
-GType gst_buffer_format_type_get_type (void);
-#define GST_TYPE_BUFFER_FORMAT_TYPE (gst_buffer_format_type_get_type())
+/* enumerations from "gstaudioringbuffer.h" */
+GType gst_audio_ring_buffer_state_get_type (void);
+#define GST_TYPE_AUDIO_RING_BUFFER_STATE (gst_audio_ring_buffer_state_get_type())
+GType gst_audio_ring_buffer_format_type_get_type (void);
+#define GST_TYPE_AUDIO_RING_BUFFER_FORMAT_TYPE (gst_audio_ring_buffer_format_type_get_type())
 G_END_DECLS
 
 #endif /* __GST_AUDIO_ENUM_TYPES_H__ */

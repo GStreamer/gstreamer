@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-base 0.10.32.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2011-11-12 00:54+0000\n"
+"POT-Creation-Date: 2012-02-17 09:59+0100\n"
 "PO-Revision-Date: 2011-09-05 12:48+0200\n"
 "Last-Translator: Fran Dieguez <frandieguez@ubuntu.com>\n"
 "Language-Team: Galician <proxecto@trasno.net>\n"
@@ -190,10 +190,6 @@ msgstr "O elemento fonte é incorrecto."
 #, c-format
 msgid "Error while sending data to \"%s:%d\"."
 msgstr "Produciuse un erro mentres se enviaban datos a \"%s:%d\"."
-
-#, c-format
-msgid "Connection to %s:%d refused."
-msgstr "Rexeitouse a conexión a %s:%d."
 
 msgid "This CD has no audio tracks"
 msgstr "Este CD non contén pistas de son"
@@ -509,6 +505,9 @@ msgstr "O elemento codificador é descoñecido"
 
 msgid "Plugin or element of unknown type"
 msgstr "Engadido ou elemento de tipo descoñecido"
+
+#~ msgid "Connection to %s:%d refused."
+#~ msgstr "Rexeitouse a conexión a %s:%d."
 
 #~ msgid "Could not open vfs file \"%s\" for writing: %s."
 #~ msgstr "Non foi posíbel abrir o ficheiro vfs «%s» para escribir: %s."

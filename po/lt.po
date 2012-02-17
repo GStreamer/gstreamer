@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-base-0.10.15.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2011-11-12 00:54+0000\n"
+"POT-Creation-Date: 2012-02-17 09:59+0100\n"
 "PO-Revision-Date: 2008-03-07 23:43+0200\n"
 "Last-Translator: Gintautas Miliauskas <gintas@akl.lt>\n"
 "Language-Team: Lithuanian <komp_lt@konferencijos.lt>\n"
@@ -192,10 +192,6 @@ msgstr "Šaltinio elementas nekorektiškas."
 #, c-format
 msgid "Error while sending data to \"%s:%d\"."
 msgstr "Klaida siunčiant duomenis į „%s:%d“."
-
-#, c-format
-msgid "Connection to %s:%d refused."
-msgstr "Prisijungimas prie %s:%d atmestas."
 
 msgid "This CD has no audio tracks"
 msgstr "Šiame CD nėra audio takelių"
@@ -511,6 +507,9 @@ msgstr "Nežinomas kodavimo elementas"
 
 msgid "Plugin or element of unknown type"
 msgstr "Nežinomo tipo įskiepis ar elementas"
+
+#~ msgid "Connection to %s:%d refused."
+#~ msgstr "Prisijungimas prie %s:%d atmestas."
 
 #~ msgid "Uncompressed planar YUV 4:2:0"
 #~ msgstr "Nekompresuotas planarinis YUV 4:2:0"

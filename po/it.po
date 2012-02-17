@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-base 0.10.28.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2011-11-12 00:54+0000\n"
+"POT-Creation-Date: 2012-02-17 09:59+0100\n"
 "PO-Revision-Date: 2010-04-28 14:27+0200\n"
 "Last-Translator: Luca Ferretti <elle.uca@infinito.it>\n"
 "Language-Team: Italian <tp@lists.linux.it>\n"
@@ -191,10 +191,6 @@ msgstr "L'elemento sorgente non è valido."
 #, c-format
 msgid "Error while sending data to \"%s:%d\"."
 msgstr "Errore durante l'invio dei dati a \"%s:%d\"."
-
-#, c-format
-msgid "Connection to %s:%d refused."
-msgstr "Connessione a %s:%d rifiutata."
 
 msgid "This CD has no audio tracks"
 msgstr "Questo CD non presenta alcuna traccia audio"
@@ -520,6 +516,9 @@ msgstr "Elemento di codifica sconosciuto"
 
 msgid "Plugin or element of unknown type"
 msgstr "Plugin o elemento di tipo sconosciuto"
+
+#~ msgid "Connection to %s:%d refused."
+#~ msgstr "Connessione a %s:%d rifiutata."
 
 # cfr http://en.wikipedia.org/wiki/YUV
 #     http://support.microsoft.com/kb/281188/it

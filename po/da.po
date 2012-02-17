@@ -33,7 +33,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-base 0.10.32.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2011-11-12 00:54+0000\n"
+"POT-Creation-Date: 2012-02-17 09:59+0100\n"
 "PO-Revision-Date: 2011-04-28 16:38+0100\n"
 "Last-Translator: Joe Hansen <joedalton2@yahoo.dk>\n"
 "Language-Team: Danish <dansk@dansk-gruppen.dk>\n"
@@ -212,10 +212,6 @@ msgstr "Kildeelement er ugyldigt."
 #, c-format
 msgid "Error while sending data to \"%s:%d\"."
 msgstr "Der opstod en fejl under data-overførsel til \"%s:%d\"."
-
-#, c-format
-msgid "Connection to %s:%d refused."
-msgstr "Opkobling til %s:%d afvist."
 
 msgid "This CD has no audio tracks"
 msgstr "Denne cd har ingen lydspor"
@@ -547,6 +543,9 @@ msgstr "Ukendt indkodeelement"
 
 msgid "Plugin or element of unknown type"
 msgstr "Plugin eller element af ukendt type"
+
+#~ msgid "Connection to %s:%d refused."
+#~ msgstr "Opkobling til %s:%d afvist."
 
 #~ msgid "Uncompressed planar YUV 4:2:0"
 #~ msgstr "Ukomprimeret plan-YUV 4:2:0"

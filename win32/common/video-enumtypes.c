@@ -4,6 +4,7 @@
 #include "video-enumtypes.h"
 
 #include "video.h"
+#include "colorbalance.h"
 
 /* enumerations from "video.h" */
 GType
@@ -89,6 +90,29 @@ gst_video_format_flags_get_type (void)
 }
 
 GType
+gst_video_interlace_mode_get_type (void)
+{
+  static volatile gsize g_define_type_id__volatile = 0;
+  if (g_once_init_enter (&g_define_type_id__volatile)) {
+    static const GEnumValue values[] = {
+      {GST_VIDEO_INTERLACE_MODE_PROGRESSIVE,
+          "GST_VIDEO_INTERLACE_MODE_PROGRESSIVE", "progressive"},
+      {GST_VIDEO_INTERLACE_MODE_INTERLEAVED,
+          "GST_VIDEO_INTERLACE_MODE_INTERLEAVED", "interleaved"},
+      {GST_VIDEO_INTERLACE_MODE_MIXED, "GST_VIDEO_INTERLACE_MODE_MIXED",
+          "mixed"},
+      {GST_VIDEO_INTERLACE_MODE_FIELDS, "GST_VIDEO_INTERLACE_MODE_FIELDS",
+          "fields"},
+      {0, NULL, NULL}
+    };
+    GType g_define_type_id =
+        g_enum_register_static ("GstVideoInterlaceMode", values);
+    g_once_init_leave (&g_define_type_id__volatile, g_define_type_id);
+  }
+  return g_define_type_id__volatile;
+}
+
+GType
 gst_video_flags_get_type (void)
 {
   static volatile gsize g_define_type_id__volatile = 0;
@@ -99,8 +123,8 @@ gst_video_flags_get_type (void)
       {GST_VIDEO_FLAG_TFF, "GST_VIDEO_FLAG_TFF", "tff"},
       {GST_VIDEO_FLAG_RFF, "GST_VIDEO_FLAG_RFF", "rff"},
       {GST_VIDEO_FLAG_ONEFIELD, "GST_VIDEO_FLAG_ONEFIELD", "onefield"},
-      {GST_VIDEO_FLAG_TELECINE, "GST_VIDEO_FLAG_TELECINE", "telecine"},
-      {GST_VIDEO_FLAG_PROGRESSIVE, "GST_VIDEO_FLAG_PROGRESSIVE", "progressive"},
+      {GST_VIDEO_FLAG_VARIABLE_FPS, "GST_VIDEO_FLAG_VARIABLE_FPS",
+          "variable-fps"},
       {0, NULL, NULL}
     };
     GType g_define_type_id = g_flags_register_static ("GstVideoFlags", values);
@@ -166,6 +190,7 @@ gst_video_color_matrix_get_type (void)
       {GST_VIDEO_COLOR_MATRIX_UNKNOWN, "GST_VIDEO_COLOR_MATRIX_UNKNOWN",
           "unknown"},
       {GST_VIDEO_COLOR_MATRIX_RGB, "GST_VIDEO_COLOR_MATRIX_RGB", "rgb"},
+      {GST_VIDEO_COLOR_MATRIX_FCC, "GST_VIDEO_COLOR_MATRIX_FCC", "fcc"},
       {GST_VIDEO_COLOR_MATRIX_BT709, "GST_VIDEO_COLOR_MATRIX_BT709", "bt709"},
       {GST_VIDEO_COLOR_MATRIX_BT601, "GST_VIDEO_COLOR_MATRIX_BT601", "bt601"},
       {GST_VIDEO_COLOR_MATRIX_SMPTE240M, "GST_VIDEO_COLOR_MATRIX_SMPTE240M",
@@ -195,6 +220,8 @@ gst_video_transfer_function_get_type (void)
           "smpte240m"},
       {GST_VIDEO_TRANSFER_SRGB, "GST_VIDEO_TRANSFER_SRGB", "srgb"},
       {GST_VIDEO_TRANSFER_GAMMA28, "GST_VIDEO_TRANSFER_GAMMA28", "gamma28"},
+      {GST_VIDEO_TRANSFER_LOG100, "GST_VIDEO_TRANSFER_LOG100", "log100"},
+      {GST_VIDEO_TRANSFER_LOG316, "GST_VIDEO_TRANSFER_LOG316", "log316"},
       {0, NULL, NULL}
     };
     GType g_define_type_id =
@@ -237,17 +264,35 @@ gst_video_buffer_flags_get_type (void)
   static volatile gsize g_define_type_id__volatile = 0;
   if (g_once_init_enter (&g_define_type_id__volatile)) {
     static const GFlagsValue values[] = {
+      {GST_VIDEO_BUFFER_FLAG_INTERLACED, "GST_VIDEO_BUFFER_FLAG_INTERLACED",
+          "interlaced"},
       {GST_VIDEO_BUFFER_FLAG_TFF, "GST_VIDEO_BUFFER_FLAG_TFF", "tff"},
       {GST_VIDEO_BUFFER_FLAG_RFF, "GST_VIDEO_BUFFER_FLAG_RFF", "rff"},
       {GST_VIDEO_BUFFER_FLAG_ONEFIELD, "GST_VIDEO_BUFFER_FLAG_ONEFIELD",
           "onefield"},
-      {GST_VIDEO_BUFFER_FLAG_PROGRESSIVE, "GST_VIDEO_BUFFER_FLAG_PROGRESSIVE",
-          "progressive"},
       {GST_VIDEO_BUFFER_FLAG_LAST, "GST_VIDEO_BUFFER_FLAG_LAST", "last"},
       {0, NULL, NULL}
     };
     GType g_define_type_id =
         g_flags_register_static ("GstVideoBufferFlags", values);
+    g_once_init_leave (&g_define_type_id__volatile, g_define_type_id);
+  }
+  return g_define_type_id__volatile;
+}
+
+/* enumerations from "colorbalance.h" */
+GType
+gst_color_balance_type_get_type (void)
+{
+  static volatile gsize g_define_type_id__volatile = 0;
+  if (g_once_init_enter (&g_define_type_id__volatile)) {
+    static const GEnumValue values[] = {
+      {GST_COLOR_BALANCE_HARDWARE, "GST_COLOR_BALANCE_HARDWARE", "hardware"},
+      {GST_COLOR_BALANCE_SOFTWARE, "GST_COLOR_BALANCE_SOFTWARE", "software"},
+      {0, NULL, NULL}
+    };
+    GType g_define_type_id =
+        g_enum_register_static ("GstColorBalanceType", values);
     g_once_init_leave (&g_define_type_id__volatile, g_define_type_id);
   }
   return g_define_type_id__volatile;

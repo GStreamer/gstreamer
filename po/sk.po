@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-base 0.10.30.3\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2011-11-12 00:54+0000\n"
+"POT-Creation-Date: 2012-02-17 09:59+0100\n"
 "PO-Revision-Date: 2010-11-08 15:34+0100\n"
 "Last-Translator: Peter Tuhársky <tuharsky@misbb.sk>\n"
 "Language-Team: Slovak <sk-i18n@lists.linux.sk>\n"
@@ -190,10 +190,6 @@ msgstr "Zdrojový prvok je chybný."
 #, c-format
 msgid "Error while sending data to \"%s:%d\"."
 msgstr "Chyba pri posielaní údajov do \"%s:%d\"."
-
-#, c-format
-msgid "Connection to %s:%d refused."
-msgstr "Spojenie s %s:%d bolo odmietnuté."
 
 msgid "This CD has no audio tracks"
 msgstr "Toto CD nemá zvukové stopy"
@@ -510,6 +506,9 @@ msgstr "Neznámy prvok enkodéra"
 
 msgid "Plugin or element of unknown type"
 msgstr "Neznámy typ zásuvného modulu alebo prvku"
+
+#~ msgid "Connection to %s:%d refused."
+#~ msgstr "Spojenie s %s:%d bolo odmietnuté."
 
 #~ msgid "Uncompressed planar YUV 4:2:0"
 #~ msgstr "Nekomprimovaný planar YUV 4:2:0"

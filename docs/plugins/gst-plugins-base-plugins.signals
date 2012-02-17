@@ -27,12 +27,12 @@ gint  arg1
 <FLAGS>l</FLAGS>
 GstMultiFdSink *gstmultifdsink
 gint  arg1
-GstClientStatus  arg2
+GstMultiHandleSinkClientStatus  arg2
 </SIGNAL>
 
 <SIGNAL>
 <NAME>GstMultiFdSink::get-stats</NAME>
-<RETURNS>GValueArray*</RETURNS>
+<RETURNS>GstStructure*</RETURNS>
 <FLAGS>la</FLAGS>
 GstMultiFdSink *gstmultifdsink
 gint  arg1
@@ -60,10 +60,10 @@ gint  arg1
 <FLAGS>la</FLAGS>
 GstMultiFdSink *gstmultifdsink
 gint  arg1
-GstSyncMethod  arg2
-GstTCPUnitType  arg3
+GstMultiHandleSinkSyncMethod  arg2
+GstFormat  arg3
 guint64  arg4
-GstTCPUnitType  arg5
+GstFormat  arg5
 guint64  arg6
 </SIGNAL>
 
@@ -71,6 +71,14 @@ guint64  arg6
 <NAME>GstMultiFdSink::remove-flush</NAME>
 <RETURNS>void</RETURNS>
 <FLAGS>la</FLAGS>
+GstMultiFdSink *gstmultifdsink
+gint  arg1
+</SIGNAL>
+
+<SIGNAL>
+<NAME>GstMultiFdSink::client-handle-removed</NAME>
+<RETURNS>void</RETURNS>
+<FLAGS>l</FLAGS>
 GstMultiFdSink *gstmultifdsink
 gint  arg1
 </SIGNAL>
@@ -586,7 +594,7 @@ GSocket *arg1
 <FLAGS>la</FLAGS>
 GstMultiSocketSink *gstmultisocketsink
 GSocket *arg1
-GstMultiSocketSinkSyncMethod  arg2
+GstMultiHandleSinkSyncMethod  arg2
 GstFormat  arg3
 guint64  arg4
 GstFormat  arg5
@@ -614,7 +622,7 @@ GObject *arg1
 <FLAGS>l</FLAGS>
 GstMultiSocketSink *gstmultisocketsink
 gint  arg1
-GstMultiSocketSinkClientStatus  arg2
+GstMultiHandleSinkClientStatus  arg2
 </SIGNAL>
 
 <SIGNAL>
@@ -645,6 +653,14 @@ GSocket *arg1
 <NAME>GstMultiSocketSink::remove-flush</NAME>
 <RETURNS>void</RETURNS>
 <FLAGS>la</FLAGS>
+GstMultiSocketSink *gstmultisocketsink
+GSocket *arg1
+</SIGNAL>
+
+<SIGNAL>
+<NAME>GstMultiSocketSink::client-handle-removed</NAME>
+<RETURNS>void</RETURNS>
+<FLAGS>l</FLAGS>
 GstMultiSocketSink *gstmultisocketsink
 GSocket *arg1
 </SIGNAL>

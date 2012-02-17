@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-base 0.10.30.3\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2011-11-12 00:54+0000\n"
+"POT-Creation-Date: 2012-02-17 09:59+0100\n"
 "PO-Revision-Date: 2010-10-24 21:44+0200\n"
 "Last-Translator: Kjartan Maraas <kmaraas@gnome.org>\n"
 "Language-Team: Norwegian Bokmaal <i18n-nb@lister.ping.uio.no>\n"
@@ -185,10 +185,6 @@ msgstr "Kildeelement er ugyldig."
 
 #, c-format
 msgid "Error while sending data to \"%s:%d\"."
-msgstr ""
-
-#, c-format
-msgid "Connection to %s:%d refused."
 msgstr ""
 
 msgid "This CD has no audio tracks"

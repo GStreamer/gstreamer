@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-base 0.10.28.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2011-11-12 00:54+0000\n"
+"POT-Creation-Date: 2012-02-17 09:59+0100\n"
 "PO-Revision-Date: 2010-04-27 22:51+0930\n"
 "Last-Translator: Clytie Siddall <clytie@riverland.net.au>\n"
 "Language-Team: Vietnamese <vi-VN@googlegroups.com>\n"
@@ -184,10 +184,6 @@ msgstr "Phần tử nguồn không phải hợp lệ."
 #, c-format
 msgid "Error while sending data to \"%s:%d\"."
 msgstr "Lỗi khi gởi dữ liệu cho « %s:%d »."
-
-#, c-format
-msgid "Connection to %s:%d refused."
-msgstr "Kết nối tới « %s:%d » bị từ chối."
 
 msgid "This CD has no audio tracks"
 msgstr "Đĩa CD này không có rãnh âm thanh nào"
@@ -507,6 +503,9 @@ msgstr "Không rõ phần tử mã hoá"
 
 msgid "Plugin or element of unknown type"
 msgstr "Không rõ kiểu phần bổ sung hay phần tử"
+
+#~ msgid "Connection to %s:%d refused."
+#~ msgstr "Kết nối tới « %s:%d » bị từ chối."
 
 #~ msgid "Uncompressed planar YUV 4:2:0"
 #~ msgstr "YUV 4:2:0 phẳng không nén"

@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-base 0.10.32.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2011-11-12 00:54+0000\n"
+"POT-Creation-Date: 2012-02-17 09:59+0100\n"
 "PO-Revision-Date: 2011-04-26 15:56+0100\n"
 "Last-Translator: Klemen Košir <klemen.kosir@gmx.com>\n"
 "Language-Team: Slovenian <translation-team-sl@lists.sourceforge.net>\n"
@@ -189,10 +189,6 @@ msgstr "Izvorni predmet je neveljaven."
 #, c-format
 msgid "Error while sending data to \"%s:%d\"."
 msgstr "Napaka med pošiljanjem podatkov na \"%s:%d\"."
-
-#, c-format
-msgid "Connection to %s:%d refused."
-msgstr "Povezava s %s:%d zavrnjena."
 
 msgid "This CD has no audio tracks"
 msgstr "Ta CD nima zvočnih sledi"
@@ -508,6 +504,9 @@ msgstr "Neznan predmet kodirnika"
 
 msgid "Plugin or element of unknown type"
 msgstr "Vstavek ali predmet neznane vrste"
+
+#~ msgid "Connection to %s:%d refused."
+#~ msgstr "Povezava s %s:%d zavrnjena."
 
 #~ msgid "Uncompressed planar YUV 4:2:0"
 #~ msgstr "Nestisnjen ploskovni YUV 4:2:0"

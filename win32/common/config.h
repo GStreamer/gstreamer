@@ -56,11 +56,17 @@
 /* set to disable libxml2-dependent code in subparse */
 #undef GST_DISABLE_XML
 
+/* Extra platform specific plugin suffix */
+#undef GST_EXTRA_MODULE_SUFFIX
+
 /* macro to use to show function name */
 #undef GST_FUNCTION
 
 /* Defined if gcov is enabled to force a rebuild due to config.h changing */
 #undef GST_GCOV_ENABLED
+
+/* Defined when registry scanning through fork is unsafe */
+#undef GST_HAVE_UNSAFE_FORK
 
 /* plugin install helper script */
 #define GST_INSTALL_PLUGINS_HELPER PREFIX "\\libexec\\gst-install-plugins-helper.exe"
@@ -81,7 +87,7 @@
 #define GST_PACKAGE_ORIGIN "Unknown package origin"
 
 /* GStreamer package release date/time for plugins as YYYY-MM-DD */
-#define GST_PACKAGE_RELEASE_DATETIME "2011-09-29"
+#define GST_PACKAGE_RELEASE_DATETIME "2012-02-16"
 
 /* Define to enable ALSA (used by alsa). */
 #undef HAVE_ALSA
@@ -152,12 +158,6 @@
 /* Define to enable building of plug-ins with external deps. */
 #undef HAVE_EXTERNAL
 
-/* FIONREAD ioctl found in sys/filio.h */
-#undef HAVE_FIONREAD_IN_SYS_FILIO
-
-/* FIONREAD ioctl found in sys/ioclt.h */
-#undef HAVE_FIONREAD_IN_SYS_IOCTL
-
 /* Define to 1 if fseeko (and presumably ftello) exists and is declared. */
 #undef HAVE_FSEEKO
 
@@ -169,9 +169,6 @@
 
 /* Define if the GNU gettext() function is already present or preinstalled. */
 #undef HAVE_GETTEXT
-
-/* Define to enable GIO library (used by gio). */
-#undef HAVE_GIO
 
 /* Define to 1 if you have the `gmtime_r' function. */
 #undef HAVE_GMTIME_R
@@ -190,15 +187,6 @@
 
 /* Define to 1 if you have the `asound' library (-lasound). */
 #undef HAVE_LIBASOUND
-
-/* Define to 1 if you have the `nsl' library (-lnsl). */
-#undef HAVE_LIBNSL
-
-/* Define to 1 if you have the `resolv' library (-lresolv). */
-#undef HAVE_LIBRESOLV
-
-/* Define to 1 if you have the `socket' library (-lsocket). */
-#undef HAVE_LIBSOCKET
 
 /* Define to enable libvisual visualization library (used by libvisual). */
 #undef HAVE_LIBVISUAL
@@ -223,6 +211,9 @@
 
 /* Use Orc */
 #undef HAVE_ORC
+
+/* Defined if compiling for OSX */
+#undef HAVE_OSX
 
 /* Define to enable Pango font rendering (used by pango). */
 #undef HAVE_PANGO
@@ -275,8 +266,8 @@
 /* defined if vorbis_synthesis_restart is present */
 #undef HAVE_VORBIS_SYNTHESIS_RESTART
 
-/* Define to 1 if you have the <winsock2.h> header file. */
-#define HAVE_WINSOCK2_H 1
+/* Defined if compiling for Windows */
+#define HAVE_WIN32 1
 
 /* Define to enable X libraries and plugins (used by ximagesink). */
 #undef HAVE_X
@@ -309,9 +300,6 @@
    */
 #undef LT_OBJDIR
 
-/* Define if you have no native hstrerror() function. */
-#undef NO_HSTRERROR
-
 /* Define to 1 if your C compiler doesn't accept -c and -o together. */
 #undef NO_MINUS_C_MINUS_O
 
@@ -325,7 +313,7 @@
 #define PACKAGE_NAME "GStreamer Base Plug-ins"
 
 /* Define to the full name and version of this package. */
-#define PACKAGE_STRING "GStreamer Base Plug-ins 0.11.1"
+#define PACKAGE_STRING "GStreamer Base Plug-ins 0.11.2"
 
 /* Define to the one symbol short name of this package. */
 #define PACKAGE_TARNAME "gst-plugins-base"
@@ -334,7 +322,7 @@
 #undef PACKAGE_URL
 
 /* Define to the version of this package. */
-#define PACKAGE_VERSION "0.11.1"
+#define PACKAGE_VERSION "0.11.2"
 
 /* directory where plugins are located */
 #ifdef _DEBUG
@@ -365,7 +353,7 @@
 #undef USE_TREMOLO
 
 /* Version number of package */
-#define VERSION "0.11.1"
+#define VERSION "0.11.2"
 
 /* Define WORDS_BIGENDIAN to 1 if your processor stores words with the most
    significant byte first (like Motorola and SPARC, unlike Intel). */
@@ -390,3 +378,6 @@
 
 /* Define for large files, on AIX-style hosts. */
 #undef _LARGE_FILES
+
+/* We need at least WinXP SP2 for __stat64 */
+#undef __MSVCRT_VERSION__

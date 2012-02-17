@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-base-0.10.32.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2011-12-12 12:57+0000\n"
+"POT-Creation-Date: 2012-02-17 09:59+0100\n"
 "PO-Revision-Date: 2011-05-29 16:49+0200\n"
 "Last-Translator: Petr Kovar <pknbe@volny.cz>\n"
 "Language-Team: Czech <translation-team-cs@lists.sourceforge.net>\n"
@@ -189,10 +189,6 @@ msgstr "Zdrojový prvek je neplatný."
 #, c-format
 msgid "Error while sending data to \"%s:%d\"."
 msgstr "Chyba při odesílání dat na \"%s:%d\"."
-
-#, c-format
-msgid "Connection to %s:%d refused."
-msgstr "Spojení s %s:%d bylo odmítnuto."
 
 msgid "This CD has no audio tracks"
 msgstr "Toto CD nemá žádné zvukové stopy"
@@ -510,6 +506,9 @@ msgstr "Neznámý kodérový prvek"
 
 msgid "Plugin or element of unknown type"
 msgstr "Zásuvný modul nebo prvek neznámého typu"
+
+#~ msgid "Connection to %s:%d refused."
+#~ msgstr "Spojení s %s:%d bylo odmítnuto."
 
 #~ msgid "Could not open vfs file \"%s\" for writing: %s."
 #~ msgstr "Nezdařilo se otevření souboru vfs \"%s\" k zápisu: %s."

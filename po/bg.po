@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-base 0.10.32.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2011-11-12 00:54+0000\n"
+"POT-Creation-Date: 2012-02-17 09:59+0100\n"
 "PO-Revision-Date: 2011-04-26 22:31+0300\n"
 "Last-Translator: Alexander Shopov <ash@kambanaria.org>\n"
 "Language-Team: Bulgarian <dict@fsa-bg.org>\n"
@@ -188,10 +188,6 @@ msgstr "Елементът-източник е грешен."
 #, c-format
 msgid "Error while sending data to \"%s:%d\"."
 msgstr "Грешка при запис във файла „%s:%d“."
-
-#, c-format
-msgid "Connection to %s:%d refused."
-msgstr "Връзката към %s:%d е отказана."
 
 msgid "This CD has no audio tracks"
 msgstr "В това CD липсва аудио"
@@ -506,6 +502,9 @@ msgstr "Непознат елемент-кодер"
 
 msgid "Plugin or element of unknown type"
 msgstr "Приставка или елемент от непознат вид"
+
+#~ msgid "Connection to %s:%d refused."
+#~ msgstr "Връзката към %s:%d е отказана."
 
 #~ msgid "Uncompressed planar YUV 4:2:0"
 #~ msgstr "Некомпресирано видео по равнини YUV 4:2:0"

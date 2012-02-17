@@ -26,8 +26,10 @@ GObject
           GstGioBaseSink
             GstGioSink
             GstGioStreamSink
-          GstMultiSocketSink
-            GstTCPServerSink
+          GstMultiHandleSink
+            GstMultiFdSink
+            GstMultiSocketSink
+              GstTCPServerSink
           GstTCPClientSink
           GstVideoSink
             GstXImageSink
@@ -84,6 +86,15 @@ GObject
         GstTheoraDec
         GstTheoraEnc
         GstTheoraParse
+        GstVisual
+          GstVisualbumpscope
+          GstVisualcorona
+          GstVisualinfinite
+          GstVisualjakdaw
+          GstVisualjess
+          GstVisuallv_analyzer
+          GstVisuallv_scope
+          GstVisualoinksie
         GstVorbisParse
           GstVorbisTag
       GstPad
@@ -98,8 +109,6 @@ GObject
   GInputStream
   GOutputStream
   GSocket
-  GTypeModule
-    PangoModule
   GstColorBalanceChannel
   GstEncodingProfile
   GstMixerTrack

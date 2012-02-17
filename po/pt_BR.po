@@ -9,7 +9,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-base-0.10.31.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2011-11-12 00:54+0000\n"
+"POT-Creation-Date: 2012-02-17 09:59+0100\n"
 "PO-Revision-Date: 2011-01-08 01:02-0300\n"
 "Last-Translator: Fabrício Godoy <skarllot@gmail.com>\n"
 "Language-Team: Brazilian Portuguese <ldp-br@bazar.conectiva.com.br>\n"
@@ -190,10 +190,6 @@ msgstr "O elemente de origem é inválido."
 #, c-format
 msgid "Error while sending data to \"%s:%d\"."
 msgstr "Erro ao enviar dados para \"%s:%d\"."
-
-#, c-format
-msgid "Connection to %s:%d refused."
-msgstr "A conexão para %s:%d foi recusada."
 
 msgid "This CD has no audio tracks"
 msgstr "Este CD não tem trilhas de áudio"
@@ -517,6 +513,9 @@ msgstr "Elemento codificador desconhecido"
 
 msgid "Plugin or element of unknown type"
 msgstr "Elemento ou plug-in de tipo desconhecido"
+
+#~ msgid "Connection to %s:%d refused."
+#~ msgstr "A conexão para %s:%d foi recusada."
 
 #~ msgid "Uncompressed planar YUV 4:2:0"
 #~ msgstr "YUV 4:2:0 plano sem compressão"

@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-base 0.10.30.3\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2011-11-12 00:54+0000\n"
+"POT-Creation-Date: 2012-02-17 09:59+0100\n"
 "PO-Revision-Date: 2010-10-27 12:05+0200\n"
 "Last-Translator: Michael Kotsarinis <mk73628@gmail.com>\n"
 "Language-Team: Greek <team@lists.gnome.gr>\n"
@@ -190,10 +190,6 @@ msgstr "Το στοιχείο προέλευσης δεν είναι έγκυρ�
 #, c-format
 msgid "Error while sending data to \"%s:%d\"."
 msgstr "Σφάλμα κατά την αποστολή δεδομένων σε «%s:%d»."
-
-#, c-format
-msgid "Connection to %s:%d refused."
-msgstr "Άρνηση σύνδεσης σε %s:%d."
 
 msgid "This CD has no audio tracks"
 msgstr "Αυτό το CD δεν έχει ηχητικά κομμάτια"
@@ -525,6 +521,9 @@ msgstr "Άγνωστο στοιχείο κωδικοποιητή"
 
 msgid "Plugin or element of unknown type"
 msgstr "Πρόσθετη λειτουργία ή στοιχείο άγνωστου τύπου"
+
+#~ msgid "Connection to %s:%d refused."
+#~ msgstr "Άρνηση σύνδεσης σε %s:%d."
 
 #~ msgid "Uncompressed planar YUV 4:2:0"
 #~ msgstr "Ασυμπίεστο planar YUV 4:2:0"

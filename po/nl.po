@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-base 0.10.32.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2011-11-12 00:54+0000\n"
+"POT-Creation-Date: 2012-02-17 09:59+0100\n"
 "PO-Revision-Date: 2011-04-27 00:12+0200\n"
 "Last-Translator: Freek de Kruijf <f.de.kruijf@gmail.com>\n"
 "Language-Team: Dutch <vertaling@vrijschrift.org>\n"
@@ -187,10 +187,6 @@ msgstr "Bronelement is ongeldig."
 #, c-format
 msgid "Error while sending data to \"%s:%d\"."
 msgstr "Fout bij het zenden van gegevens naar \"%s:%d\"."
-
-#, c-format
-msgid "Connection to %s:%d refused."
-msgstr "Verbinding naar %s:%d is geweigerd."
 
 msgid "This CD has no audio tracks"
 msgstr "Deze CD heeft geen audiotracks"
@@ -514,6 +510,9 @@ msgstr "Onbekend encoder-element"
 
 msgid "Plugin or element of unknown type"
 msgstr "Plugin of element van onbekend type"
+
+#~ msgid "Connection to %s:%d refused."
+#~ msgstr "Verbinding naar %s:%d is geweigerd."
 
 #~ msgid "Uncompressed planar YUV 4:2:0"
 #~ msgstr "Niet-gecomprimeerde planar YUV 4:2:0"

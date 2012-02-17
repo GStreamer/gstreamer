@@ -3,129 +3,10 @@
 
 #include "interfaces-enumtypes.h"
 
-#include "colorbalance.h"
-#include "colorbalancechannel.h"
-#include "mixer.h"
-#include "mixeroptions.h"
-#include "mixertrack.h"
 #include "navigation.h"
-#include "propertyprobe.h"
-#include "streamvolume.h"
 #include "tuner.h"
 #include "tunernorm.h"
 #include "tunerchannel.h"
-#include "videoorientation.h"
-#include "videooverlay.h"
-
-/* enumerations from "colorbalance.h" */
-GType
-gst_color_balance_type_get_type (void)
-{
-  static volatile gsize g_define_type_id__volatile = 0;
-  if (g_once_init_enter (&g_define_type_id__volatile)) {
-    static const GEnumValue values[] = {
-      {GST_COLOR_BALANCE_HARDWARE, "GST_COLOR_BALANCE_HARDWARE", "hardware"},
-      {GST_COLOR_BALANCE_SOFTWARE, "GST_COLOR_BALANCE_SOFTWARE", "software"},
-      {0, NULL, NULL}
-    };
-    GType g_define_type_id =
-        g_enum_register_static ("GstColorBalanceType", values);
-    g_once_init_leave (&g_define_type_id__volatile, g_define_type_id);
-  }
-  return g_define_type_id__volatile;
-}
-
-/* enumerations from "mixer.h" */
-GType
-gst_mixer_type_get_type (void)
-{
-  static volatile gsize g_define_type_id__volatile = 0;
-  if (g_once_init_enter (&g_define_type_id__volatile)) {
-    static const GEnumValue values[] = {
-      {GST_MIXER_HARDWARE, "GST_MIXER_HARDWARE", "hardware"},
-      {GST_MIXER_SOFTWARE, "GST_MIXER_SOFTWARE", "software"},
-      {0, NULL, NULL}
-    };
-    GType g_define_type_id = g_enum_register_static ("GstMixerType", values);
-    g_once_init_leave (&g_define_type_id__volatile, g_define_type_id);
-  }
-  return g_define_type_id__volatile;
-}
-
-GType
-gst_mixer_message_type_get_type (void)
-{
-  static volatile gsize g_define_type_id__volatile = 0;
-  if (g_once_init_enter (&g_define_type_id__volatile)) {
-    static const GEnumValue values[] = {
-      {GST_MIXER_MESSAGE_INVALID, "GST_MIXER_MESSAGE_INVALID", "invalid"},
-      {GST_MIXER_MESSAGE_MUTE_TOGGLED, "GST_MIXER_MESSAGE_MUTE_TOGGLED",
-          "mute-toggled"},
-      {GST_MIXER_MESSAGE_RECORD_TOGGLED, "GST_MIXER_MESSAGE_RECORD_TOGGLED",
-          "record-toggled"},
-      {GST_MIXER_MESSAGE_VOLUME_CHANGED, "GST_MIXER_MESSAGE_VOLUME_CHANGED",
-          "volume-changed"},
-      {GST_MIXER_MESSAGE_OPTION_CHANGED, "GST_MIXER_MESSAGE_OPTION_CHANGED",
-          "option-changed"},
-      {GST_MIXER_MESSAGE_OPTIONS_LIST_CHANGED,
-          "GST_MIXER_MESSAGE_OPTIONS_LIST_CHANGED", "options-list-changed"},
-      {GST_MIXER_MESSAGE_MIXER_CHANGED, "GST_MIXER_MESSAGE_MIXER_CHANGED",
-          "mixer-changed"},
-      {0, NULL, NULL}
-    };
-    GType g_define_type_id =
-        g_enum_register_static ("GstMixerMessageType", values);
-    g_once_init_leave (&g_define_type_id__volatile, g_define_type_id);
-  }
-  return g_define_type_id__volatile;
-}
-
-GType
-gst_mixer_flags_get_type (void)
-{
-  static volatile gsize g_define_type_id__volatile = 0;
-  if (g_once_init_enter (&g_define_type_id__volatile)) {
-    static const GFlagsValue values[] = {
-      {GST_MIXER_FLAG_NONE, "GST_MIXER_FLAG_NONE", "none"},
-      {GST_MIXER_FLAG_AUTO_NOTIFICATIONS, "GST_MIXER_FLAG_AUTO_NOTIFICATIONS",
-          "auto-notifications"},
-      {GST_MIXER_FLAG_HAS_WHITELIST, "GST_MIXER_FLAG_HAS_WHITELIST",
-          "has-whitelist"},
-      {GST_MIXER_FLAG_GROUPING, "GST_MIXER_FLAG_GROUPING", "grouping"},
-      {0, NULL, NULL}
-    };
-    GType g_define_type_id = g_flags_register_static ("GstMixerFlags", values);
-    g_once_init_leave (&g_define_type_id__volatile, g_define_type_id);
-  }
-  return g_define_type_id__volatile;
-}
-
-/* enumerations from "mixertrack.h" */
-GType
-gst_mixer_track_flags_get_type (void)
-{
-  static volatile gsize g_define_type_id__volatile = 0;
-  if (g_once_init_enter (&g_define_type_id__volatile)) {
-    static const GFlagsValue values[] = {
-      {GST_MIXER_TRACK_INPUT, "GST_MIXER_TRACK_INPUT", "input"},
-      {GST_MIXER_TRACK_OUTPUT, "GST_MIXER_TRACK_OUTPUT", "output"},
-      {GST_MIXER_TRACK_MUTE, "GST_MIXER_TRACK_MUTE", "mute"},
-      {GST_MIXER_TRACK_RECORD, "GST_MIXER_TRACK_RECORD", "record"},
-      {GST_MIXER_TRACK_MASTER, "GST_MIXER_TRACK_MASTER", "master"},
-      {GST_MIXER_TRACK_SOFTWARE, "GST_MIXER_TRACK_SOFTWARE", "software"},
-      {GST_MIXER_TRACK_NO_RECORD, "GST_MIXER_TRACK_NO_RECORD", "no-record"},
-      {GST_MIXER_TRACK_NO_MUTE, "GST_MIXER_TRACK_NO_MUTE", "no-mute"},
-      {GST_MIXER_TRACK_WHITELIST, "GST_MIXER_TRACK_WHITELIST", "whitelist"},
-      {GST_MIXER_TRACK_READONLY, "GST_MIXER_TRACK_READONLY", "readonly"},
-      {GST_MIXER_TRACK_WRITEONLY, "GST_MIXER_TRACK_WRITEONLY", "writeonly"},
-      {0, NULL, NULL}
-    };
-    GType g_define_type_id =
-        g_flags_register_static ("GstMixerTrackFlags", values);
-    g_once_init_leave (&g_define_type_id__volatile, g_define_type_id);
-  }
-  return g_define_type_id__volatile;
-}
 
 /* enumerations from "navigation.h" */
 GType
@@ -227,27 +108,6 @@ gst_navigation_event_type_get_type (void)
     };
     GType g_define_type_id =
         g_enum_register_static ("GstNavigationEventType", values);
-    g_once_init_leave (&g_define_type_id__volatile, g_define_type_id);
-  }
-  return g_define_type_id__volatile;
-}
-
-/* enumerations from "streamvolume.h" */
-GType
-gst_stream_volume_format_get_type (void)
-{
-  static volatile gsize g_define_type_id__volatile = 0;
-  if (g_once_init_enter (&g_define_type_id__volatile)) {
-    static const GEnumValue values[] = {
-      {GST_STREAM_VOLUME_FORMAT_LINEAR, "GST_STREAM_VOLUME_FORMAT_LINEAR",
-          "linear"},
-      {GST_STREAM_VOLUME_FORMAT_CUBIC, "GST_STREAM_VOLUME_FORMAT_CUBIC",
-          "cubic"},
-      {GST_STREAM_VOLUME_FORMAT_DB, "GST_STREAM_VOLUME_FORMAT_DB", "db"},
-      {0, NULL, NULL}
-    };
-    GType g_define_type_id =
-        g_enum_register_static ("GstStreamVolumeFormat", values);
     g_once_init_leave (&g_define_type_id__volatile, g_define_type_id);
   }
   return g_define_type_id__volatile;

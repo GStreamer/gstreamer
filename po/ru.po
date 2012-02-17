@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-base 0.10.32.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2011-11-12 00:54+0000\n"
+"POT-Creation-Date: 2012-02-17 09:59+0100\n"
 "PO-Revision-Date: 2011-04-26 20:30+0400\n"
 "Last-Translator: Yuri Kozlov <yuray@komyakino.ru>\n"
 "Language-Team: Russian <gnu@mx.ru>\n"
@@ -191,10 +191,6 @@ msgstr "Неверный элемент источника."
 #, c-format
 msgid "Error while sending data to \"%s:%d\"."
 msgstr "Ошибка отправки данных в «%s:%d»."
-
-#, c-format
-msgid "Connection to %s:%d refused."
-msgstr "В соединении с %s:%d отказано."
 
 msgid "This CD has no audio tracks"
 msgstr "На CD нет звуковых дорожек"
@@ -511,6 +507,9 @@ msgstr "Неизвестный элемент-кодировщик"
 
 msgid "Plugin or element of unknown type"
 msgstr "Модуль или элемент неизвестного типа"
+
+#~ msgid "Connection to %s:%d refused."
+#~ msgstr "В соединении с %s:%d отказано."
 
 #~ msgid "Uncompressed planar YUV 4:2:0"
 #~ msgstr "Несжатый планарный YUV 4:2:0"

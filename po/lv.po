@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-base 0.10.32.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2011-11-12 00:54+0000\n"
+"POT-Creation-Date: 2012-02-17 09:59+0100\n"
 "PO-Revision-Date: 2011-09-02 12:02-0000\n"
 "Last-Translator: Rihards Priedītis <rprieditis@gmail.com>\n"
 "Language-Team: Latvian <translation-team-lv@lists.sourceforge.net>\n"
@@ -191,10 +191,6 @@ msgstr "Avota elements ir nederīgs."
 #, c-format
 msgid "Error while sending data to \"%s:%d\"."
 msgstr "Radās kļūda nosūtot datus uz \"%s:%d\"."
-
-#, c-format
-msgid "Connection to %s:%d refused."
-msgstr "Savienojums ar %s:%d noraidīts."
 
 msgid "This CD has no audio tracks"
 msgstr "Šajā CD nav neviena audio celiņa"
@@ -509,6 +505,9 @@ msgstr "Nezināms kodētāja elements"
 
 msgid "Plugin or element of unknown type"
 msgstr "Nezināma veida spraudnis vai elements"
+
+#~ msgid "Connection to %s:%d refused."
+#~ msgstr "Savienojums ar %s:%d noraidīts."
 
 #~ msgid "Could not open vfs file \"%s\" for writing: %s."
 #~ msgstr "Nevarēja atvērt vfs failu \"%s\" rakstīšanai: %s."
