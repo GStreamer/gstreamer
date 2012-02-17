@@ -3007,9 +3007,6 @@ gst_base_src_start_complete (GstBaseSrc * basesrc, GstFlowReturn ret)
   GstFormat format;
   GstPadMode mode;
   GstEvent *event;
-  GstBaseSrcClass *bclass;
-
-  bclass = GST_BASE_SRC_GET_CLASS (basesrc);
 
   if (ret != GST_FLOW_OK)
     goto error;
@@ -3021,7 +3018,7 @@ gst_base_src_start_complete (GstBaseSrc * basesrc, GstFlowReturn ret)
   have_size = FALSE;
   size = -1;
   if (format == GST_FORMAT_BYTES) {
-    bclass = GST_BASE_SRC_GET_CLASS (basesrc);
+    GstBaseSrcClass *bclass = GST_BASE_SRC_GET_CLASS (basesrc);
 
     if (bclass->get_size) {
       if (!(have_size = bclass->get_size (basesrc, &size)))
