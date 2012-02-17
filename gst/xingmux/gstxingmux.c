@@ -50,7 +50,8 @@
 GST_DEBUG_CATEGORY_STATIC (xing_mux_debug);
 #define GST_CAT_DEFAULT xing_mux_debug
 
-GST_BOILERPLATE (GstXingMux, gst_xing_mux, GstElement, GST_TYPE_ELEMENT);
+#define gst_xing_mux_parent_class parent_class
+G_DEFINE_TYPE (GstXingMux, gst_xing_mux, GST_TYPE_ELEMENT);
 
 /* Xing Header stuff */
 #define GST_XING_FRAME_FIELD   (1 << 0)
@@ -79,8 +80,10 @@ gst_xing_seek_entry_free (GstXingSeekEntry * entry)
 static void gst_xing_mux_finalize (GObject * obj);
 static GstStateChangeReturn
 gst_xing_mux_change_state (GstElement * element, GstStateChange transition);
-static GstFlowReturn gst_xing_mux_chain (GstPad * pad, GstBuffer * buffer);
-static gboolean gst_xing_mux_sink_event (GstPad * pad, GstEvent * event);
+static GstFlowReturn gst_xing_mux_chain (GstPad * pad, GstObject * parent,
+    GstBuffer * buffer);
+static gboolean gst_xing_mux_sink_event (GstPad * pad, GstObject * parent,
+    GstEvent * event);
 
 static GstStaticPadTemplate gst_xing_mux_sink_template =
 GST_STATIC_PAD_TEMPLATE ("sink",
@@ -224,16 +227,25 @@ get_xing_offset (guint32 header)
 }
 
 static gboolean
-has_xing_header (guint32 header, guchar * data, gsize size)
+has_xing_header (guint32 header, GstBuffer * buffer, gsize size)
 {
+  gboolean ret;
+  GstMapInfo map;
+  guint8 *data;
+
+  gst_buffer_map (buffer, &map, GST_MAP_READ);
+  data = map.data;
   data += 4;
   data += get_xing_offset (header);
 
   if (memcmp (data, "Xing", 4) == 0 ||
       memcmp (data, "Info", 4) == 0 || memcmp (data, "VBRI", 4) == 0)
-    return TRUE;
+    ret = TRUE;
   else
-    return FALSE;
+    ret = FALSE;
+
+  gst_buffer_unmap (buffer, &map);
+  return ret;
 }
 
 static GstBuffer *
@@ -242,6 +254,7 @@ generate_xing_header (GstXingMux * xing)
   guint8 *xing_flags;
   guint32 xing_flags_tmp = 0;
   GstBuffer *xing_header;
+  GstMapInfo map;
   guchar *data;
 
   guint32 header;
@@ -271,13 +284,12 @@ generate_xing_header (GstXingMux * xing)
     return NULL;
   }
 
-  if (gst_pad_alloc_buffer_and_set_caps (xing->srcpad, 0, size,
-          GST_PAD_CAPS (xing->srcpad), &xing_header) != GST_FLOW_OK) {
-    xing_header = gst_buffer_new_and_alloc (size);
-    gst_buffer_set_caps (xing_header, GST_PAD_CAPS (xing->srcpad));
-  }
+  xing_header = gst_buffer_new_and_alloc (size);
+  // TODO set caps
+//  gst_buffer_set_caps (xing_header, GST_PAD_CAPS (xing->srcpad));
 
-  data = GST_BUFFER_DATA (xing_header);
+  gst_buffer_map (xing_header, &map, GST_MAP_WRITE);
+  data = map.data;
   memset (data, 0, size);
   header_be = GUINT32_TO_BE (header);
   memcpy (data, &header_be, 4);
@@ -296,7 +308,7 @@ generate_xing_header (GstXingMux * xing)
   } else {
     GstFormat fmt = GST_FORMAT_TIME;
 
-    if (!gst_pad_query_peer_duration (xing->sinkpad, &fmt, &duration))
+    if (!gst_pad_peer_query_duration (xing->sinkpad, fmt, &duration))
       duration = GST_CLOCK_TIME_NONE;
   }
 
@@ -320,7 +332,7 @@ generate_xing_header (GstXingMux * xing)
   } else {
     GstFormat fmt = GST_FORMAT_BYTES;
 
-    if (!gst_pad_query_peer_duration (xing->sinkpad, &fmt, &byte_count))
+    if (!gst_pad_peer_query_duration (xing->sinkpad, fmt, &byte_count))
       byte_count = 0;
     if (byte_count == -1)
       byte_count = 0;
@@ -382,25 +394,8 @@ generate_xing_header (GstXingMux * xing)
   GST_DEBUG ("Setting Xing flags to 0x%x\n", xing_flags_tmp);
   xing_flags_tmp = GUINT32_TO_BE (xing_flags_tmp);
   memcpy (xing_flags, &xing_flags_tmp, 4);
+  gst_buffer_unmap (xing_header, &map);
   return xing_header;
-}
-
-static void
-gst_xing_mux_base_init (gpointer g_class)
-{
-  GstElementClass *element_class = GST_ELEMENT_CLASS (g_class);
-
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&gst_xing_mux_src_template));
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&gst_xing_mux_sink_template));
-
-  GST_DEBUG_CATEGORY_INIT (xing_mux_debug, "xingmux", 0, "Xing Header Muxer");
-
-  gst_element_class_set_details_simple (element_class, "MP3 Xing muxer",
-      "Formatter/Metadata",
-      "Adds a Xing header to the beginning of a VBR MP3 file",
-      "Christophe Fergeau <teuf@gnome.org>");
 }
 
 static void
@@ -415,6 +410,18 @@ gst_xing_mux_class_init (GstXingMuxClass * klass)
   gobject_class->finalize = GST_DEBUG_FUNCPTR (gst_xing_mux_finalize);
   gstelement_class->change_state =
       GST_DEBUG_FUNCPTR (gst_xing_mux_change_state);
+
+  gst_element_class_add_pad_template (gstelement_class,
+      gst_static_pad_template_get (&gst_xing_mux_src_template));
+  gst_element_class_add_pad_template (gstelement_class,
+      gst_static_pad_template_get (&gst_xing_mux_sink_template));
+
+  GST_DEBUG_CATEGORY_INIT (xing_mux_debug, "xingmux", 0, "Xing Header Muxer");
+
+  gst_element_class_set_details_simple (gstelement_class, "MP3 Xing muxer",
+      "Formatter/Metadata",
+      "Adds a Xing header to the beginning of a VBR MP3 file",
+      "Christophe Fergeau <teuf@gnome.org>");
 }
 
 static void
@@ -455,26 +462,21 @@ xing_reset (GstXingMux * xing)
 
 
 static void
-gst_xing_mux_init (GstXingMux * xing, GstXingMuxClass * xingmux_class)
+gst_xing_mux_init (GstXingMux * xing)
 {
-  GstElementClass *klass = GST_ELEMENT_CLASS (xingmux_class);
-
   /* pad through which data comes in to the element */
   xing->sinkpad =
-      gst_pad_new_from_template (gst_element_class_get_pad_template (klass,
-          "sink"), "sink");
-  gst_pad_set_setcaps_function (xing->sinkpad,
-      GST_DEBUG_FUNCPTR (gst_pad_proxy_setcaps));
+      gst_pad_new_from_static_template (&gst_xing_mux_sink_template, "sink");
   gst_pad_set_chain_function (xing->sinkpad,
       GST_DEBUG_FUNCPTR (gst_xing_mux_chain));
   gst_pad_set_event_function (xing->sinkpad,
       GST_DEBUG_FUNCPTR (gst_xing_mux_sink_event));
+  GST_PAD_SET_PROXY_CAPS (xing->sinkpad);
   gst_element_add_pad (GST_ELEMENT (xing), xing->sinkpad);
 
   /* pad through which data goes out of the element */
   xing->srcpad =
-      gst_pad_new_from_template (gst_element_class_get_pad_template (klass,
-          "src"), "src");
+      gst_pad_new_from_static_template (&gst_xing_mux_src_template, "src");
   gst_element_add_pad (GST_ELEMENT (xing), xing->srcpad);
 
   xing->adapter = gst_adapter_new ();
@@ -483,15 +485,15 @@ gst_xing_mux_init (GstXingMux * xing, GstXingMuxClass * xingmux_class)
 }
 
 static GstFlowReturn
-gst_xing_mux_chain (GstPad * pad, GstBuffer * buffer)
+gst_xing_mux_chain (GstPad * pad, GstObject * parent, GstBuffer * buffer)
 {
-  GstXingMux *xing = GST_XING_MUX (GST_PAD_PARENT (pad));
+  GstXingMux *xing = GST_XING_MUX (parent);
   GstFlowReturn ret = GST_FLOW_OK;
 
   gst_adapter_push (xing->adapter, buffer);
 
   while (gst_adapter_available (xing->adapter) >= 4) {
-    const guchar *data = gst_adapter_peek (xing->adapter, 4);
+    const guchar *data;
     guint32 header;
     GstBuffer *outbuf;
     GstClockTime duration;
@@ -499,7 +501,9 @@ gst_xing_mux_chain (GstPad * pad, GstBuffer * buffer)
     gulong rate;
     GstXingSeekEntry *seek_entry;
 
+    data = gst_adapter_map (xing->adapter, 4);
     header = GST_READ_UINT32_BE (data);
+    gst_adapter_unmap (xing->adapter);
 
     if (!parse_header (header, &size, &spf, &rate)) {
       GST_DEBUG ("Lost sync, resyncing");
@@ -511,10 +515,9 @@ gst_xing_mux_chain (GstPad * pad, GstBuffer * buffer)
       break;
 
     outbuf = gst_adapter_take_buffer (xing->adapter, size);
-    gst_buffer_set_caps (outbuf, GST_PAD_CAPS (xing->srcpad));
 
     if (!xing->sent_xing) {
-      if (has_xing_header (header, GST_BUFFER_DATA (outbuf), size)) {
+      if (has_xing_header (header, outbuf, size)) {
         GST_LOG_OBJECT (xing, "Dropping old Xing header");
         gst_buffer_unref (outbuf);
         continue;
@@ -532,7 +535,7 @@ gst_xing_mux_chain (GstPad * pad, GstBuffer * buffer)
           return GST_FLOW_ERROR;
         }
 
-        xing_header_size = GST_BUFFER_SIZE (xing_header);
+        xing_header_size = gst_buffer_get_size (xing_header);
 
         if ((ret = gst_pad_push (xing->srcpad, xing_header)) != GST_FLOW_OK) {
           GST_ERROR_OBJECT (xing, "Failed to push Xing header: %s",
@@ -560,10 +563,8 @@ gst_xing_mux_chain (GstPad * pad, GstBuffer * buffer)
         (xing->duration == GST_CLOCK_TIME_NONE) ? 0 : xing->duration;
     GST_BUFFER_DURATION (outbuf) = duration;
     GST_BUFFER_OFFSET (outbuf) = xing->byte_count;
-    GST_BUFFER_OFFSET_END (outbuf) =
-        xing->byte_count + GST_BUFFER_SIZE (outbuf);
-
-    xing->byte_count += GST_BUFFER_SIZE (outbuf);
+    xing->byte_count += gst_buffer_get_size (outbuf);
+    GST_BUFFER_OFFSET_END (outbuf) = xing->byte_count;
 
     if (xing->duration == GST_CLOCK_TIME_NONE)
       xing->duration = duration;
@@ -581,31 +582,31 @@ gst_xing_mux_chain (GstPad * pad, GstBuffer * buffer)
 }
 
 static gboolean
-gst_xing_mux_sink_event (GstPad * pad, GstEvent * event)
+gst_xing_mux_sink_event (GstPad * pad, GstObject * parent, GstEvent * event)
 {
   GstXingMux *xing;
   gboolean result;
 
-  xing = GST_XING_MUX (gst_pad_get_parent (pad));
+  xing = GST_XING_MUX (parent);
 
   switch (GST_EVENT_TYPE (event)) {
-    case GST_EVENT_NEWSEGMENT:
+    case GST_EVENT_SEGMENT:
       if (xing->sent_xing) {
         GST_ERROR ("Already sent Xing header, dropping NEWSEGMENT event!");
         gst_event_unref (event);
         result = FALSE;
       } else {
-        GstFormat fmt;
+        GstSegment segment;
 
-        gst_event_parse_new_segment (event, NULL, NULL, &fmt, NULL, NULL, NULL);
+        gst_event_copy_segment (event, &segment);
 
-        if (fmt == GST_FORMAT_BYTES) {
+        if (segment.format == GST_FORMAT_BYTES) {
           result = gst_pad_push_event (xing->srcpad, event);
         } else {
-          gst_event_unref (event);
 
-          event = gst_event_new_new_segment (FALSE, 1.0, GST_FORMAT_BYTES,
-              0, GST_CLOCK_TIME_NONE, 0);
+          gst_event_unref (event);
+          gst_segment_init (&segment, GST_FORMAT_BYTES);
+          event = gst_event_new_segment (&segment);
 
           result = gst_pad_push_event (xing->srcpad, event);
         }
@@ -618,9 +619,10 @@ gst_xing_mux_sink_event (GstPad * pad, GstEvent * event)
       GST_DEBUG_OBJECT (xing, "handling EOS event");
 
       if (xing->sent_xing) {
+        GstSegment segment;
 
-        n_event = gst_event_new_new_segment (FALSE, 1.0, GST_FORMAT_BYTES,
-            0, GST_CLOCK_TIME_NONE, 0);
+        gst_segment_init (&segment, GST_FORMAT_BYTES);
+        n_event = gst_event_new_segment (&segment);
 
         if (G_UNLIKELY (!gst_pad_push_event (xing->srcpad, n_event))) {
           GST_WARNING
@@ -647,10 +649,9 @@ gst_xing_mux_sink_event (GstPad * pad, GstEvent * event)
       break;
     }
     default:
-      result = gst_pad_event_default (pad, event);
+      result = gst_pad_event_default (pad, parent, event);
       break;
   }
-  gst_object_unref (GST_OBJECT (xing));
 
   return result;
 }
