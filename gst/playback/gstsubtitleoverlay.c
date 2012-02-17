@@ -1745,7 +1745,6 @@ gst_subtitle_overlay_video_sink_setcaps (GstSubtitleOverlay * self,
     block_video (self);
   }
 
-  GST_SUBTITLE_OVERLAY_LOCK (self);
   if (self->fps_n != info.fps_n || self->fps_d != info.fps_d) {
     GST_DEBUG_OBJECT (self, "New video fps: %d/%d", info.fps_n, info.fps_d);
     self->fps_n = info.fps_n;
