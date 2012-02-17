@@ -1,13 +1,13 @@
 # Latvain translation of gst-plugins
 # This file is put in the public domain.
 # Arvis Lācis <arvis.lacis@inbox.lv>, 2009.
-#
+# Rihards Prieditis <rprieditis@gmail.com>, 2011.
 msgid ""
 msgstr ""
-"Project-Id-Version: gst-plugins-ugly 0.10.11.2\n"
+"Project-Id-Version: gst-plugins-ugly 0.10.17.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2011-11-11 01:29+0000\n"
-"PO-Revision-Date: 2009-08-20 11:40+0100\n"
+"POT-Creation-Date: 2012-02-17 10:49+0100\n"
+"PO-Revision-Date: 2011-09-02 12:04-0000\n"
 "Last-Translator: Rihards Priedītis <rprieditis@gmail.com>\n"
 "Language-Team: Latvian <translation-team-lv@lists.sourceforge.net>\n"
 "Language: lv\n"
@@ -49,16 +49,16 @@ msgid ""
 "Could not read DVD. This may be because the DVD is encrypted and a DVD "
 "decryption library is not installed."
 msgstr ""
+"Nevarēja nolasīt DVD. Iespējams, ka DVD ir šifrēts un DVD atšifrēšanas "
+"bibliotēka nav instalēta."
 
-#, fuzzy
 msgid "Could not read DVD."
-msgstr "Nevar atvērt DVD"
+msgstr "Nevar nolasīt  DVD."
 
 #, fuzzy
 msgid ""
 "Failed to configure LAME mp3 audio encoder. Check your encoding parameters."
-msgstr ""
-"Nezidevās uzstādīt TwoLAME kodētāju. Pārbaudiet jūsu kodējuma parametrus."
+msgstr "Neizdevās uzstādīt LAME kodētāju. Pārbaudiet jūsu kodējuma parametrus."
 
 #, c-format
 msgid ""
@@ -77,12 +77,6 @@ msgstr "Šī straume nesatur datus."
 
 msgid "Internal data stream error."
 msgstr "Iekšējās datu plūsmas kļūda."
-
-#, fuzzy
-#~ msgid ""
-#~ "Failed to configure LAMEMP3ENC encoder. Check your encoding parameters."
-#~ msgstr ""
-#~ "Neizdevās uzstādīt LAME kodētāju. Pārbaudiet jūsu kodējuma parametrus."
 
 #~ msgid "Invalid title information on DVD."
 #~ msgstr "Nederīga DVD virsraksta informācija."

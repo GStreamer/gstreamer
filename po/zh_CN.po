@@ -3,16 +3,16 @@
 # This file is distributed under the same license as the gst-plugins-ugly package.
 # Wenzheng Hu <db_lobster@163.com>, 2007.
 # LI Daobing <lidaobing@gmail.com>, 2008, 2009.
+# Wylmer Wang <wantinghard@gmail.com>, 2011.
 #
 msgid ""
 msgstr ""
-"Project-Id-Version: gst-plugins-ugly 0.10.11.2\n"
+"Project-Id-Version: gst-plugins-ugly 0.10.17.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2011-11-11 01:29+0000\n"
-"PO-Revision-Date: 2009-06-12 23:12+0800\n"
-"Last-Translator: LI Daobing <lidaobing@gmail.com>\n"
-"Language-Team: Chinese (simplified) <translation-team-zh-cn@lists."
-"sourceforge.net>\n"
+"POT-Creation-Date: 2012-02-17 10:49+0100\n"
+"PO-Revision-Date: 2011-12-20 10:58+0800\n"
+"Last-Translator: Wylmer Wang <wantinghard@gmail.com>\n"
+"Language-Team: Chinese (simplified) <i18n-zh@googlegroups.com>\n"
 "Language: zh_CN\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
@@ -47,16 +47,15 @@ msgstr "无法打开 DVD 标题 %d. 这个元素不支持互动标题"
 msgid ""
 "Could not read DVD. This may be because the DVD is encrypted and a DVD "
 "decryption library is not installed."
-msgstr ""
+msgstr "无法读取 DVD。可能 DVD 光盘已加密，但 DVD 解密库没有安装。"
 
-#, fuzzy
 msgid "Could not read DVD."
-msgstr "无法打开 DVD"
+msgstr "无法读取 DVD。"
 
 #, fuzzy
 msgid ""
 "Failed to configure LAME mp3 audio encoder. Check your encoding parameters."
-msgstr "设置 TwoLAME 编码器失败. 请检查你的编码参数."
+msgstr "设置 LAME 编码器失败. 请检查你的编码参数."
 
 #, c-format
 msgid ""
@@ -72,11 +71,6 @@ msgstr "这个串流中没有包含数据."
 
 msgid "Internal data stream error."
 msgstr "内部数据流错误。"
-
-#, fuzzy
-#~ msgid ""
-#~ "Failed to configure LAMEMP3ENC encoder. Check your encoding parameters."
-#~ msgstr "设置 LAME 编码器失败. 请检查你的编码参数."
 
 #~ msgid "Invalid title information on DVD."
 #~ msgstr "无效的 DVD 标题信息。"

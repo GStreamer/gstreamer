@@ -81,7 +81,7 @@
 <ARG>
 <NAME>GstCdioCddaSrc::read-speed</NAME>
 <TYPE>gint</TYPE>
-<RANGE>[-1,100]</RANGE>
+<RANGE>[G_MAXULONG,100]</RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>Read speed</NICK>
 <BLURB>Read from device at the specified speed (-1 = default).</BLURB>
@@ -530,12 +530,12 @@
 
 <ARG>
 <NAME>GstSidDec::blocksize</NAME>
-<TYPE>gulong</TYPE>
+<TYPE>guint</TYPE>
 <RANGE>>= 1</RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>Block size</NICK>
 <BLURB>Size in bytes to output per buffer.</BLURB>
-<DEFAULT></DEFAULT>
+<DEFAULT>4096</DEFAULT>
 </ARG>
 
 <ARG>

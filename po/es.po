@@ -1,14 +1,14 @@
-# translation of gst-plugins-ugly-0.10.10.2.po to Español
+# translation of gst-plugins-ugly-0.10.17.2.po to Español
 # spanish translation for gst-plugins-ugly
 # This file is put in the public domain.
+# Jorge González <jorgegonz@svn.gnome.org>, 2007, 2009, 2011.
 #
-# Jorge González González <aloriel@gmail.com>, 2007, 20, 2009.
 msgid ""
 msgstr ""
-"Project-Id-Version: gst-plugins-ugly 0.10.10.2\n"
+"Project-Id-Version: gst-plugins-ugly 0.10.17.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2011-11-11 01:29+0000\n"
-"PO-Revision-Date: 2009-04-04 13:32+0200\n"
+"POT-Creation-Date: 2012-02-17 10:49+0100\n"
+"PO-Revision-Date: 2011-10-02 15:45+0200\n"
 "Last-Translator: Jorge González González <aloriel@gmail.com>\n"
 "Language-Team: Spanish <es@li.org>\n"
 "Language: es\n"
@@ -16,7 +16,7 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "X-Generator: KBabel 1.11.4\n"
-"Plural-Forms:  nplurals=2; plural=(n != 1);\n"
+"Plural-Forms: nplurals=2; plural=(n!=1);\n"
 
 msgid "Could not read from CD."
 msgstr "No se pudo leer del CD."
@@ -50,16 +50,17 @@ msgid ""
 "Could not read DVD. This may be because the DVD is encrypted and a DVD "
 "decryption library is not installed."
 msgstr ""
+"No se pudo leer el DVD. Puede ser debido a que el DVD está cifrado y la "
+"biblioteca de descifrado del DVD no está instalada."
 
-#, fuzzy
 msgid "Could not read DVD."
-msgstr "No se pudo abrir el DVD"
+msgstr "No se pudo leer el DVD."
 
 #, fuzzy
 msgid ""
 "Failed to configure LAME mp3 audio encoder. Check your encoding parameters."
 msgstr ""
-"Falló al configurar el codificador TwoLAME. Compruebe sus parámetros de "
+"Falló al configurar el codificador LAME. Compruebe sus parámetros de "
 "codificación."
 
 #, c-format
@@ -80,13 +81,6 @@ msgstr "Este medio no contiene datos."
 
 msgid "Internal data stream error."
 msgstr "Error del flujo de datos interno."
-
-#, fuzzy
-#~ msgid ""
-#~ "Failed to configure LAMEMP3ENC encoder. Check your encoding parameters."
-#~ msgstr ""
-#~ "Falló al configurar el codificador LAME. Compruebe sus parámetros de "
-#~ "codificación."
 
 #~ msgid "Invalid title information on DVD."
 #~ msgstr "Información del título del DVD no válida."

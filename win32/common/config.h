@@ -31,7 +31,13 @@
 #undef ENABLE_NLS
 
 /* gettext package name */
-#define GETTEXT_PACKAGE "gst-plugins-ugly-0.10"
+#define GETTEXT_PACKAGE "gst-plugins-ugly-0.11"
+
+/* The GIO library directory. */
+#undef GIO_LIBDIR
+
+/* The GIO modules directory. */
+#undef GIO_MODULE_DIR
 
 /* macro to use to show function name */
 #undef GST_FUNCTION
@@ -46,13 +52,13 @@
 #define GST_LICENSE "LGPL"
 
 /* package name in plugins */
-#define GST_PACKAGE_NAME "GStreamer Ugly Plug-ins git"
+#define GST_PACKAGE_NAME "GStreamer Ugly Plug-ins source release"
 
 /* package origin */
 #define GST_PACKAGE_ORIGIN "Unknown package origin"
 
 /* GStreamer package release date/time for plugins as YYYY-MM-DD */
-#define GST_PACKAGE_RELEASE_DATETIME "2011-05-14T09:08Z"
+#define GST_PACKAGE_RELEASE_DATETIME "2012-02-16"
 
 /* Define to enable a52dec (used by a52dec). */
 #undef HAVE_A52DEC
@@ -147,9 +153,6 @@
 /* Define if you have the iconv() function and it works. */
 #undef HAVE_ICONV
 
-/* defined if libid3tag is available */
-#undef HAVE_ID3TAG
-
 /* Define to 1 if you have the <inttypes.h> header file. */
 #undef HAVE_INTTYPES_H
 
@@ -236,7 +239,7 @@
 #define PACKAGE_NAME "GStreamer Ugly Plug-ins"
 
 /* Define to the full name and version of this package. */
-#define PACKAGE_STRING "GStreamer Ugly Plug-ins 0.10.18.1"
+#define PACKAGE_STRING "GStreamer Ugly Plug-ins 0.11.1"
 
 /* Define to the one symbol short name of this package. */
 #define PACKAGE_TARNAME "gst-plugins-ugly"
@@ -245,13 +248,13 @@
 #undef PACKAGE_URL
 
 /* Define to the version of this package. */
-#define PACKAGE_VERSION "0.10.18.1"
+#define PACKAGE_VERSION "0.11.1"
 
 /* directory where plugins are located */
 #ifdef _DEBUG
-#  define PLUGINDIR PREFIX "\\debug\\lib\\gstreamer-0.10"
+#  define PLUGINDIR PREFIX "\\debug\\lib\\gstreamer-0.11"
 #else
-#  define PLUGINDIR PREFIX "\\lib\\gstreamer-0.10"
+#  define PLUGINDIR PREFIX "\\lib\\gstreamer-0.11"
 #endif
 
 /* The size of `char', as computed by sizeof. */
@@ -273,7 +276,7 @@
 #undef STDC_HEADERS
 
 /* Version number of package */
-#define VERSION "0.10.18.1"
+#define VERSION "0.11.1"
 
 /* Define WORDS_BIGENDIAN to 1 if your processor stores words with the most
    significant byte first (like Motorola and SPARC, unlike Intel). */

@@ -1,4 +1,5 @@
 GstAmrnbEnc GstPreset
+GstAudioCdSrc GstURIHandler
 GstAudioEncoder GstPreset
 GstBin GstChildProxy
 GstCddaBaseSrc GstURIHandler

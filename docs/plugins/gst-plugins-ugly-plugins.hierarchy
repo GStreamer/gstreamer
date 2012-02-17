@@ -3,20 +3,23 @@ GObject
     GstObject
       GstBus
       GstClock
+      GstControlBinding
+      GstControlSource
       GstElement
-        GstA52Dec
         GstASFDemux
         GstAudioDecoder
+          GstA52Dec
           GstAmrnbDec
           GstAmrwbDec
+          GstMad
         GstAudioEncoder
           GstAmrnbEnc
           GstLameMP3Enc
           GstTwoLame
-        GstBaseRTPDepayload
-          GstRtpAsfDepay
         GstBaseSrc
           GstPushSrc
+            GstAudioCdSrc
+              GstCdioCddaSrc
             GstDvdReadSrc
             GstPNMSrc
         GstBin
@@ -24,11 +27,12 @@ GObject
         GstDvdLpcmDec
         GstDvdSubDec
         GstDvdSubParse
-        GstMad
         GstMpeg2dec
         GstRDTDepay
         GstRDTManager
         GstRMDemux
+        GstRTPBaseDepayload
+          GstRtpAsfDepay
         GstRTSPReal
         GstRTSPWMS
         GstRealAudioDemux
@@ -39,7 +43,6 @@ GObject
       GstPlugin
       GstPluginFeature
         GstElementFactory
-        GstIndexFactory
         GstTypeFindFactory
       GstRegistry
       GstTask

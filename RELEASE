@@ -1,15 +1,16 @@
 
-Release notes for GStreamer Ugly Plug-ins 0.10.18 "Extra Life"
+Release notes for GStreamer Ugly Plug-ins 0.11.1 "Moonlapse Vertigo"
         
 
 The GStreamer team is proud to announce a new release
-in the 0.10.x stable series of the
+in the 0.11.x unstable series of the
 GStreamer Ugly Plug-ins.
 
 
-The 0.10.x series is a stable series targeted at end users.
-It is not API or ABI compatible with the stable 0.8.x series.
-It is, however, parallel installable with the 0.8.x series.
+The 0.11.x series is an unstable series targeted at developers and will
+eventually lead up to the stable 1.0 series.
+It is not API or ABI compatible with the stable 0.10.x series.
+It is, however, parallel installable with the 0.10.x series.
 
 
 
@@ -55,34 +56,11 @@ contains a set of less supported plug-ins that haven't passed the
 
 Features of this release
     
-      * amrwbdec: avoid stalling on invalid frame
-      * asfpacket: don't rely on data from duration extension
-      * dvdsubdec: Implement clipping if the video size is smaller than the subpicture size
-      * dvdsubdec: Output only a single buffer per subpicture and set the correct duration
-      * lamemp3enc: implement sinkpad get_caps() function to proxy rate and channels restrictions from downstream
-      * mad: build the mad plugin even if libid3tag is not available
-      * mpeg2dec: do not fail fatally when downstream is unlinked (let upstream handle that)
-      * mpeg2dec: don't deadlock when setting an index
-      * mpegstream: increase allowable gap between streams
-      * x264enc: allow changing the bitrate and quantitizers dynamically
-      * x264enc: don't register flags with a value of 0
-      * x264enc: implement getcaps function to proxy downstream caps restrictions upstream
-      * x264enc: make tag event writable before modifying tag list in place
-      * x264enc: set max bitrate in quality mode
-
-Bugs fixed in this release
-     
-      * 539708 : [mpegstream] Increase allowable gap between streams
-      * 607698 : asfdemux: fix parsing of packets with padding
-      * 619136 : [dvdsubdec] spits out buffers at video framerate
-      * 621663 : x264enc: support changing bitrate property on the fly
-      * 639291 : [xingmux] Return NULL instead of 0 for a function returning gboolean
-      * 639715 : amrparse: seek error with EOS
-      * 640272 : x264enc: make tag event writable before modifying tag list in place
-      * 641151 : lame: doesn't negotiate sample rate properly
-      * 642360 : x264enc: Don't register flags which have 0 as a value
-      * 644704 : [dvdsubedc] no SPU clipping implemented
-      * 647709 : mpeg2dec: errors out on not-linked flow return
+      * Parallel installability with 0.10.x series
+      * Many cleanups
+      * Ported to new 0.11 core API changes
+There were no bugs fixed in this release
+    
 
 Download
 
@@ -111,17 +89,24 @@ Applications
   
 Contributors to this release
     
-      * Brendan Le Foll
+      * Alessandro Decina
+      * Brian Gitonga Marete
+      * Christian Fredrik Kalager Schaller
+      * David Schleef
       * Edward Hervey
-      * Luis de Bethencourt
+      * Julien Isorce
       * Mark Nauwelaerts
-      * Miguel Angel Cabrera Moya
+      * Matej Knopp
       * Olivier Crête
+      * René Stadler
+      * Robert Swain
       * Sebastian Dröge
-      * Sjoerd Simons
       * Stefan Kost
-      * Thibault Saunier
+      * Stefan Sauer
+      * Thiago Santos
+      * Thomas Vander Stichele
       * Tim-Philipp Müller
       * Vincent Penquerc'h
-      * Yang Xichuan
+      * Wim Taymans
+      * Руслан Ижбулатов
  
