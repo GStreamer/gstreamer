@@ -484,7 +484,7 @@ void            gst_event_parse_flush_stop      (GstEvent *event, gboolean *rese
 GstEvent *      gst_event_new_eos               (void) G_GNUC_MALLOC;
 
 /* GAP event */
-GstEvent *      gst_event_new_gap               (GstClockTime   ts,
+GstEvent *      gst_event_new_gap               (GstClockTime   timestamp,
                                                  GstClockTime   duration) G_GNUC_MALLOC;
 
 void            gst_event_parse_gap             (GstEvent     * event,

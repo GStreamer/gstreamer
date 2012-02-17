@@ -193,9 +193,14 @@ gst_buffer_set_size
 
 gst_buffer_n_memory
 gst_buffer_take_memory
-gst_buffer_peek_memory
+gst_buffer_append_memory
+gst_buffer_get_memory
+gst_buffer_get_merged_memory
 gst_buffer_remove_memory
 gst_buffer_remove_memory_range
+gst_buffer_remove_all_memory
+gst_buffer_replace_all_memory
+gst_buffer_replace_memory
 
 gst_buffer_join
 gst_buffer_merge
@@ -933,6 +938,9 @@ gst_event_parse_flush_stop
 
 gst_event_new_eos
 
+gst_event_new_gap
+gst_event_parse_gap
+
 gst_event_new_stream_start
 
 gst_event_new_segment
@@ -1239,9 +1247,14 @@ GstMemory
 GstMemoryInfo
 GstAllocator
 GstMemoryFlags
+GstMapInfo
+GST_MAP_INFO_INIT
 GstMapFlags
+GST_MEMORY_FLAGS
+GST_MEMORY_FLAG_IS_SET
+GST_MEMORY_IS_READONLY
 GST_MAP_READWRITE
-GstMemoryAllocFunction
+GstAllocatorAllocFunction
 GstMemoryMapFunction
 GstMemoryUnmapFunction
 GstMemoryFreeFunction
@@ -1253,6 +1266,7 @@ gst_memory_alignment
 
 gst_allocator_alloc
 gst_memory_new_wrapped
+gst_memory_make_mapped
 
 gst_memory_ref
 gst_memory_unref
@@ -1260,7 +1274,7 @@ gst_memory_unref
 gst_memory_get_sizes
 gst_memory_resize
 
-gst_memory_is_writable
+gst_memory_is_exclusive
 
 gst_memory_map
 gst_memory_unmap
@@ -1276,6 +1290,7 @@ gst_allocator_register
 gst_allocator_set_default
 <SUBSECTION Standard>
 GST_TYPE_MEMORY
+GST_MEMORY_CAST
 GST_TYPE_MAP_FLAGS
 GST_TYPE_MEMORY_FLAGS
 gst_map_flags_get_type
@@ -1526,6 +1541,14 @@ GstPadProbeReturn
 GstPadProbeType
 GST_PAD_PROBE_TYPE_BLOCKING
 GST_PAD_PROBE_TYPE_SCHEDULING
+GST_PAD_PROBE_TYPE_ALL_BOTH
+GST_PAD_PROBE_TYPE_BLOCK_DOWNSTREAM
+GST_PAD_PROBE_TYPE_BLOCK_UPSTREAM
+GST_PAD_PROBE_TYPE_DATA_BOTH
+GST_PAD_PROBE_TYPE_DATA_DOWNSTREAM
+GST_PAD_PROBE_TYPE_DATA_UPSTREAM
+GST_PAD_PROBE_TYPE_EVENT_BOTH
+GST_PAD_PROBE_TYPE_QUERY_BOTH
 
 <SUBSECTION Application>
 gst_pad_get_name
@@ -2068,6 +2091,14 @@ gst_query_parse_nth_format
 gst_query_new_segment
 gst_query_set_segment
 gst_query_parse_segment
+
+gst_query_new_caps
+gst_query_parse_caps
+gst_query_parse_caps_result
+
+gst_query_new_accept_caps
+gst_query_parse_accept_caps
+gst_query_parse_accept_caps_result
 
 GstBufferingMode
 gst_query_new_buffering

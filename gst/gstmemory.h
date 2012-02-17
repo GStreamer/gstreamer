@@ -258,7 +258,7 @@ typedef gboolean    (*GstMemoryIsSpanFunction)    (GstMemory *mem1, GstMemory *m
 
 /**
  * GstMemoryInfo:
- * @type: the memory type this allocator provides
+ * @mem_type: the memory type this allocator provides
  * @alloc: the implementation of the GstAllocatorAllocFunction
  * @mem_map: the implementation of the GstMemoryMapFunction
  * @mem_unmap: the implementation of the GstMemoryUnmapFunction
@@ -295,7 +295,7 @@ const gchar *  gst_allocator_get_memory_type (GstAllocator * allocator);
 GstAllocator * gst_allocator_ref             (GstAllocator * allocator);
 void           gst_allocator_unref           (GstAllocator * allocator);
 
-void           gst_allocator_register        (const gchar *name, GstAllocator *alloc);
+void           gst_allocator_register        (const gchar *name, GstAllocator *allocator);
 GstAllocator * gst_allocator_find            (const gchar *name);
 
 void           gst_allocator_set_default     (GstAllocator * allocator);
