@@ -3369,9 +3369,8 @@ flushing:
   }
 wrong_mode:
   {
-    GST_ELEMENT_ERROR (GST_PAD_PARENT (pad), CORE, PAD, (NULL),
-        ("chain on pad %s:%s but it was not in push mode",
-            GST_DEBUG_PAD_NAME (pad)));
+    g_critical ("chain on pad %s:%s but it was not in push mode",
+        GST_DEBUG_PAD_NAME (pad));
     GST_OBJECT_UNLOCK (pad);
     GST_PAD_STREAM_UNLOCK (pad);
     gst_mini_object_unref (GST_MINI_OBJECT_CAST (data));
@@ -3397,9 +3396,8 @@ probe_stopped:
 no_function:
   {
     gst_mini_object_unref (GST_MINI_OBJECT_CAST (data));
-    GST_ELEMENT_ERROR (parent, CORE, PAD, (NULL),
-        ("chain on pad %s:%s but it has no chainfunction",
-            GST_DEBUG_PAD_NAME (pad)));
+    g_critical ("chain on pad %s:%s but it has no chainfunction",
+        GST_DEBUG_PAD_NAME (pad));
     GST_PAD_STREAM_UNLOCK (pad);
     return GST_FLOW_NOT_SUPPORTED;
   }
@@ -3572,9 +3570,8 @@ flushing:
   }
 wrong_mode:
   {
-    GST_ELEMENT_ERROR (GST_PAD_PARENT (pad), CORE, PAD, (NULL),
-        ("pushing on pad %s:%s but it was not activated in push mode",
-            GST_DEBUG_PAD_NAME (pad)));
+    g_critical ("pushing on pad %s:%s but it was not activated in push mode",
+        GST_DEBUG_PAD_NAME (pad));
     GST_OBJECT_UNLOCK (pad);
     gst_mini_object_unref (GST_MINI_OBJECT_CAST (data));
     return GST_FLOW_ERROR;
@@ -3756,9 +3753,8 @@ flushing:
   }
 wrong_mode:
   {
-    GST_ELEMENT_ERROR (GST_PAD_PARENT (pad), CORE, PAD, (NULL),
-        ("getrange on pad %s:%s but it was not activated in pull mode",
-            GST_DEBUG_PAD_NAME (pad)));
+    g_critical ("getrange on pad %s:%s but it was not activated in pull mode",
+        GST_DEBUG_PAD_NAME (pad));
     GST_OBJECT_UNLOCK (pad);
     GST_PAD_STREAM_UNLOCK (pad);
     return GST_FLOW_ERROR;
@@ -3779,9 +3775,8 @@ no_parent:
   }
 no_function:
   {
-    GST_ELEMENT_ERROR (parent, CORE, PAD, (NULL),
-        ("getrange on pad %s:%s but it has no getrangefunction",
-            GST_DEBUG_PAD_NAME (pad)));
+    g_critical ("getrange on pad %s:%s but it has no getrangefunction",
+        GST_DEBUG_PAD_NAME (pad));
     RELEASE_PARENT (parent);
     GST_PAD_STREAM_UNLOCK (pad);
     return GST_FLOW_NOT_SUPPORTED;
@@ -3937,9 +3932,8 @@ flushing:
   }
 wrong_mode:
   {
-    GST_ELEMENT_ERROR (GST_PAD_PARENT (pad), CORE, PAD, (NULL),
-        ("gpulltange on pad %s:%s but it was not activated in pull mode",
-            GST_DEBUG_PAD_NAME (pad)));
+    g_critical ("pullrange on pad %s:%s but it was not activated in pull mode",
+        GST_DEBUG_PAD_NAME (pad));
     GST_OBJECT_UNLOCK (pad);
     return GST_FLOW_ERROR;
   }
