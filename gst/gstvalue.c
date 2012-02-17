@@ -1069,8 +1069,8 @@ gst_value_copy_int64_range (const GValue * src_value, GValue * dest_value)
 
   if (vals == NULL) {
     gst_value_init_int64_range (dest_value);
-    vals = (gint64 *) dest_value->data[0].v_pointer;
   }
+
   if (src_vals != NULL) {
     INT64_RANGE_MIN (dest_value) = INT64_RANGE_MIN (src_value);
     INT64_RANGE_MAX (dest_value) = INT64_RANGE_MAX (src_value);
