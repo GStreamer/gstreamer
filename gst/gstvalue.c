@@ -299,6 +299,9 @@ gst_value_lcopy_list_or_array (const GValue * value, guint n_collect_values,
 static gboolean
 gst_value_list_or_array_get_basic_type (const GValue * value, GType * type)
 {
+  if (G_UNLIKELY (value == NULL))
+    return FALSE;
+
   if (GST_VALUE_HOLDS_LIST (value)) {
     if (VALUE_LIST_SIZE (value) == 0)
       return FALSE;
@@ -312,7 +315,9 @@ gst_value_list_or_array_get_basic_type (const GValue * value, GType * type)
     return gst_value_list_or_array_get_basic_type (&g_array_index (array,
             GValue, 0), type);
   }
+
   *type = G_VALUE_TYPE (value);
+
   return TRUE;
 }
 
