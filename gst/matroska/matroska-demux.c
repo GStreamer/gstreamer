@@ -2424,7 +2424,6 @@ gst_matroska_demux_sync_streams (GstMatroskaDemux * demux)
 
       /* advance stream time */
       segment = demux->common.segment;
-      segment.start = new_start;
       segment.position = new_start;
       event = gst_event_new_segment (&segment);
       GST_OBJECT_UNLOCK (demux);
