@@ -43,46 +43,43 @@ static GstStaticPadTemplate gst_synaesthesia_src_template =
 GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS (GST_VIDEO_CAPS_xRGB_HOST_ENDIAN)
+#if G_BYTE_ORDER == G_BIG_ENDIAN
+    GST_STATIC_CAPS (GST_VIDEO_CAPS_MAKE ("xRGB"))
+#else
+    GST_STATIC_CAPS (GST_VIDEO_CAPS_MAKE ("BGRx"))
+#endif
     );
 
 static GstStaticPadTemplate gst_synaesthesia_sink_template =
 GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS (GST_AUDIO_INT_STANDARD_PAD_TEMPLATE_CAPS)
+    GST_STATIC_CAPS ("audio/x-raw, "
+        "format = (string) " GST_AUDIO_NE (S16) ", "
+        "rate = (int) [ 8000, 96000 ], "
+        "channels = (int) 2, "
+        "channel-mask = (bitmask) 0x3, " "layout = (string) interleaved")
     );
 
 static void gst_synaesthesia_finalize (GObject * object);
 static void gst_synaesthesia_dispose (GObject * object);
 
-static GstFlowReturn gst_synaesthesia_chain (GstPad * pad, GstBuffer * buffer);
+static GstFlowReturn gst_synaesthesia_chain (GstPad * pad, GstObject * parent,
+    GstBuffer * buffer);
+static gboolean gst_synaesthesia_sink_event (GstPad * pad, GstObject * parent,
+    GstEvent * event);
 
 static GstStateChangeReturn
 gst_synaesthesia_change_state (GstElement * element, GstStateChange transition);
 
 static gboolean gst_synaesthesia_src_negotiate (GstSynaesthesia * synaesthesia);
-static gboolean gst_synaesthesia_src_setcaps (GstPad * pad, GstCaps * caps);
-static gboolean gst_synaesthesia_sink_setcaps (GstPad * pad, GstCaps * caps);
+static gboolean gst_synaesthesia_src_setcaps (GstSynaesthesia * synaesthesia,
+    GstCaps * caps);
+static gboolean gst_synaesthesia_sink_setcaps (GstSynaesthesia * synaesthesia,
+    GstCaps * caps);
 
-GST_BOILERPLATE (GstSynaesthesia, gst_synaesthesia, GstElement,
-    GST_TYPE_ELEMENT);
-
-static void
-gst_synaesthesia_base_init (gpointer g_class)
-{
-  GstElementClass *element_class = GST_ELEMENT_CLASS (g_class);
-
-  gst_element_class_set_details_simple (element_class, "Synaesthesia",
-      "Visualization",
-      "Creates video visualizations of audio input, using stereo and pitch information",
-      "Richard Boulton <richard@tartarus.org>");
-
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&gst_synaesthesia_src_template));
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&gst_synaesthesia_sink_template));
-}
+#define gst_synaesthesia_parent_class parent_class
+G_DEFINE_TYPE (GstSynaesthesia, gst_synaesthesia, GST_TYPE_ELEMENT);
 
 static void
 gst_synaesthesia_class_init (GstSynaesthesiaClass * klass)
@@ -101,12 +98,21 @@ gst_synaesthesia_class_init (GstSynaesthesiaClass * klass)
   gstelement_class->change_state =
       GST_DEBUG_FUNCPTR (gst_synaesthesia_change_state);
 
+  gst_element_class_set_details_simple (gstelement_class, "Synaesthesia",
+      "Visualization",
+      "Creates video visualizations of audio input, using stereo and pitch information",
+      "Richard Boulton <richard@tartarus.org>");
+
+  gst_element_class_add_pad_template (gstelement_class,
+      gst_static_pad_template_get (&gst_synaesthesia_src_template));
+  gst_element_class_add_pad_template (gstelement_class,
+      gst_static_pad_template_get (&gst_synaesthesia_sink_template));
+
   synaesthesia_init ();
 }
 
 static void
-gst_synaesthesia_init (GstSynaesthesia * synaesthesia,
-    GstSynaesthesiaClass * g_class)
+gst_synaesthesia_init (GstSynaesthesia * synaesthesia)
 {
   /* create the sink and src pads */
   synaesthesia->sinkpad =
@@ -114,14 +120,12 @@ gst_synaesthesia_init (GstSynaesthesia * synaesthesia,
       "sink");
   gst_pad_set_chain_function (synaesthesia->sinkpad,
       GST_DEBUG_FUNCPTR (gst_synaesthesia_chain));
-  gst_pad_set_setcaps_function (synaesthesia->sinkpad,
-      GST_DEBUG_FUNCPTR (gst_synaesthesia_sink_setcaps));
+  gst_pad_set_event_function (synaesthesia->sinkpad,
+      GST_DEBUG_FUNCPTR (gst_synaesthesia_sink_event));
   gst_element_add_pad (GST_ELEMENT (synaesthesia), synaesthesia->sinkpad);
 
   synaesthesia->srcpad =
       gst_pad_new_from_static_template (&gst_synaesthesia_src_template, "src");
-  gst_pad_set_setcaps_function (synaesthesia->srcpad,
-      GST_DEBUG_FUNCPTR (gst_synaesthesia_src_setcaps));
   gst_element_add_pad (GST_ELEMENT (synaesthesia), synaesthesia->srcpad);
 
   synaesthesia->adapter = gst_adapter_new ();
@@ -171,15 +175,13 @@ gst_synaesthesia_finalize (GObject * object)
 }
 
 static gboolean
-gst_synaesthesia_sink_setcaps (GstPad * pad, GstCaps * caps)
+gst_synaesthesia_sink_setcaps (GstSynaesthesia * synaesthesia, GstCaps * caps)
 {
-  GstSynaesthesia *synaesthesia;
   GstStructure *structure;
   gint channels;
   gint rate;
   gboolean res = TRUE;
 
-  synaesthesia = GST_SYNAESTHESIA (gst_pad_get_parent (pad));
   structure = gst_caps_get_structure (caps, 0);
 
   if (!gst_structure_get_int (structure, "channels", &channels) ||
@@ -196,7 +198,6 @@ gst_synaesthesia_sink_setcaps (GstPad * pad, GstCaps * caps)
   synaesthesia->rate = rate;
 
 done:
-  gst_object_unref (synaesthesia);
   return res;
 
   /* Errors */
@@ -228,13 +229,16 @@ gst_synaesthesia_src_negotiate (GstSynaesthesia * synaesthesia)
   GstCaps *othercaps, *target, *intersect;
   GstStructure *structure;
   const GstCaps *templ;
+  GstQuery *query;
+  GstBufferPool *pool = NULL;
+  guint size, min, max, prefix, alignment;
 
   templ = gst_pad_get_pad_template_caps (synaesthesia->srcpad);
 
   GST_DEBUG_OBJECT (synaesthesia, "performing negotiation");
 
   /* see what the peer can do */
-  othercaps = gst_pad_peer_get_caps (synaesthesia->srcpad);
+  othercaps = gst_pad_peer_query_caps (synaesthesia->srcpad, NULL);
   if (othercaps) {
     intersect = gst_caps_intersect (othercaps, templ);
     gst_caps_unref (othercaps);
@@ -258,7 +262,42 @@ gst_synaesthesia_src_negotiate (GstSynaesthesia * synaesthesia)
 
   GST_DEBUG_OBJECT (synaesthesia, "final caps are %" GST_PTR_FORMAT, target);
 
-  gst_pad_set_caps (synaesthesia->srcpad, target);
+  gst_synaesthesia_src_setcaps (synaesthesia, target);
+
+  /* try to get a bufferpool now */
+  /* find a pool for the negotiated caps now */
+  query = gst_query_new_allocation (target, TRUE);
+
+  if (gst_pad_peer_query (synaesthesia->srcpad, query)) {
+    /* we got configuration from our peer, parse them */
+    gst_query_parse_allocation_params (query, &size, &min, &max, &prefix,
+        &alignment, &pool);
+  } else {
+    size = synaesthesia->outsize;
+    min = max = 0;
+    prefix = 0;
+    alignment = 0;
+  }
+
+  if (pool == NULL) {
+    GstStructure *config;
+
+    /* we did not get a pool, make one ourselves then */
+    pool = gst_buffer_pool_new ();
+
+    config = gst_buffer_pool_get_config (pool);
+    gst_buffer_pool_config_set (config, target, size, min, max, prefix,
+        alignment);
+    gst_buffer_pool_set_config (pool, config);
+  }
+
+  if (synaesthesia->pool)
+    gst_object_unref (synaesthesia->pool);
+  synaesthesia->pool = pool;
+
+  /* and activate */
+  gst_buffer_pool_set_active (pool, TRUE);
+
   gst_caps_unref (target);
 
   return TRUE;
@@ -271,15 +310,13 @@ no_format:
 }
 
 static gboolean
-gst_synaesthesia_src_setcaps (GstPad * pad, GstCaps * caps)
+gst_synaesthesia_src_setcaps (GstSynaesthesia * synaesthesia, GstCaps * caps)
 {
-  GstSynaesthesia *synaesthesia;
   GstStructure *structure;
   gint w, h;
   gint num, denom;
   gboolean res = TRUE;
 
-  synaesthesia = GST_SYNAESTHESIA (gst_pad_get_parent (pad));
   structure = gst_caps_get_structure (caps, 0);
 
   if (!gst_structure_get_int (structure, "width", &w) ||
@@ -296,6 +333,8 @@ gst_synaesthesia_src_setcaps (GstPad * pad, GstCaps * caps)
   synaesthesia_resize (synaesthesia->si, synaesthesia->width,
       synaesthesia->height);
 
+  /* size of the output buffer in bytes, depth is always 4 bytes */
+  synaesthesia->outsize = synaesthesia->width * synaesthesia->height * 4;
   synaesthesia->frame_duration = gst_util_uint64_scale_int (GST_SECOND,
       synaesthesia->fps_d, synaesthesia->fps_n);
   synaesthesia->spf = gst_util_uint64_scale_int (synaesthesia->rate,
@@ -305,8 +344,9 @@ gst_synaesthesia_src_setcaps (GstPad * pad, GstCaps * caps)
       synaesthesia->width, synaesthesia->height,
       synaesthesia->fps_n, synaesthesia->fps_d, synaesthesia->spf);
 
+  res = gst_pad_push_event (synaesthesia->srcpad, gst_event_new_caps (caps));
+
 done:
-  gst_object_unref (synaesthesia);
   return res;
 
   /* Errors */
@@ -319,26 +359,50 @@ missing_caps_details:
   }
 }
 
+/* make sure we are negotiated */
 static GstFlowReturn
-gst_synaesthesia_chain (GstPad * pad, GstBuffer * buffer)
+ensure_negotiated (GstSynaesthesia * synaesthesia)
+{
+  gboolean reconfigure;
+
+  reconfigure = gst_pad_check_reconfigure (synaesthesia->srcpad);
+
+  /* we don't know an output format yet, pick one */
+  if (reconfigure || !gst_pad_has_current_caps (synaesthesia->srcpad)) {
+    if (!gst_synaesthesia_src_negotiate (synaesthesia))
+      return GST_FLOW_NOT_NEGOTIATED;
+  }
+  return GST_FLOW_OK;
+}
+
+static GstFlowReturn
+gst_synaesthesia_chain (GstPad * pad, GstObject * parent, GstBuffer * buffer)
 {
   GstFlowReturn ret = GST_FLOW_OK;
   GstSynaesthesia *synaesthesia;
   guint32 avail, bytesperread;
 
-  synaesthesia = GST_SYNAESTHESIA (gst_pad_get_parent (pad));
+  synaesthesia = GST_SYNAESTHESIA (parent);
 
   GST_LOG_OBJECT (synaesthesia, "chainfunc called");
+
+  if (synaesthesia->rate == 0) {
+    gst_buffer_unref (buffer);
+    ret = GST_FLOW_NOT_NEGOTIATED;
+    goto exit;
+  }
+
+  /* Make sure have an output format */
+  ret = ensure_negotiated (synaesthesia);
+  if (ret != GST_FLOW_OK) {
+    gst_buffer_unref (buffer);
+    goto exit;
+  }
 
   /* resync on DISCONT */
   if (GST_BUFFER_FLAG_IS_SET (buffer, GST_BUFFER_FLAG_DISCONT)) {
     synaesthesia->next_ts = GST_CLOCK_TIME_NONE;
     gst_adapter_clear (synaesthesia->adapter);
-  }
-
-  if (GST_PAD_CAPS (synaesthesia->srcpad) == NULL) {
-    if (!gst_synaesthesia_src_negotiate (synaesthesia))
-      return GST_FLOW_NOT_NEGOTIATED;
   }
 
   /* Match timestamps from the incoming audio */
@@ -356,9 +420,9 @@ gst_synaesthesia_chain (GstPad * pad, GstBuffer * buffer)
   avail = gst_adapter_available (synaesthesia->adapter);
   while (avail > bytesperread) {
     const guint16 *data =
-        (const guint16 *) gst_adapter_peek (synaesthesia->adapter,
+        (const guint16 *) gst_adapter_map (synaesthesia->adapter,
         bytesperread);
-    GstBuffer *outbuf;
+    GstBuffer *outbuf = NULL;
     guchar *out_frame;
     guint i;
 
@@ -368,22 +432,22 @@ gst_synaesthesia_chain (GstPad * pad, GstBuffer * buffer)
       synaesthesia->datain[1][i] = *data++;
     }
 
-    ret =
-        gst_pad_alloc_buffer_and_set_caps (synaesthesia->srcpad,
-        GST_BUFFER_OFFSET_NONE,
-        synaesthesia->width * synaesthesia->height * 4,
-        GST_PAD_CAPS (synaesthesia->srcpad), &outbuf);
-
-    /* no buffer allocated, we don't care why. */
-    if (ret != GST_FLOW_OK)
-      break;
+    /* alloc a buffer */
+    GST_DEBUG_OBJECT (synaesthesia, "allocating output buffer");
+    ret = gst_buffer_pool_acquire_buffer (synaesthesia->pool, &outbuf, NULL);
+    if (ret != GST_FLOW_OK) {
+      gst_adapter_unmap (synaesthesia->adapter);
+      goto exit;
+    }
 
     GST_BUFFER_TIMESTAMP (outbuf) = synaesthesia->next_ts;
     GST_BUFFER_DURATION (outbuf) = synaesthesia->frame_duration;
 
     out_frame = (guchar *)
         synaesthesia_update (synaesthesia->si, synaesthesia->datain);
-    memcpy (GST_BUFFER_DATA (outbuf), out_frame, GST_BUFFER_SIZE (outbuf));
+    gst_buffer_fill (outbuf, 0, out_frame, synaesthesia->outsize);
+
+    gst_adapter_unmap (synaesthesia->adapter);
 
     ret = gst_pad_push (synaesthesia->srcpad, outbuf);
     outbuf = NULL;
@@ -401,15 +465,41 @@ gst_synaesthesia_chain (GstPad * pad, GstBuffer * buffer)
     avail = gst_adapter_available (synaesthesia->adapter);
   }
 
-  gst_object_unref (synaesthesia);
-
+exit:
   return ret;
+}
+
+static gboolean
+gst_synaesthesia_sink_event (GstPad * pad, GstObject * parent, GstEvent * event)
+{
+  gboolean res;
+  GstSynaesthesia *synaesthesia;
+
+  synaesthesia = GST_SYNAESTHESIA (parent);
+
+  switch (GST_EVENT_TYPE (event)) {
+    case GST_EVENT_CAPS:
+    {
+      GstCaps *caps;
+
+      gst_event_parse_caps (event, &caps);
+      res = gst_synaesthesia_sink_setcaps (synaesthesia, caps);
+      gst_event_unref (event);
+      break;
+    }
+    default:
+      res = gst_pad_push_event (synaesthesia->srcpad, event);
+      break;
+  }
+
+  return res;
 }
 
 static GstStateChangeReturn
 gst_synaesthesia_change_state (GstElement * element, GstStateChange transition)
 {
   GstSynaesthesia *synaesthesia;
+  GstStateChangeReturn ret;
 
   synaesthesia = GST_SYNAESTHESIA (element);
 
@@ -417,12 +507,28 @@ gst_synaesthesia_change_state (GstElement * element, GstStateChange transition)
     case GST_STATE_CHANGE_READY_TO_PAUSED:
       synaesthesia->next_ts = GST_CLOCK_TIME_NONE;
       gst_adapter_clear (synaesthesia->adapter);
+      synaesthesia->channels = synaesthesia->rate = 0;
       break;
     default:
       break;
   }
 
-  return GST_ELEMENT_CLASS (parent_class)->change_state (element, transition);
+  ret = GST_ELEMENT_CLASS (parent_class)->change_state (element, transition);
+
+  switch (transition) {
+    case GST_STATE_CHANGE_PAUSED_TO_READY:
+      if (synaesthesia->pool) {
+        gst_buffer_pool_set_active (synaesthesia->pool, FALSE);
+        gst_object_replace ((GstObject **) & synaesthesia->pool, NULL);
+      }
+      break;
+    case GST_STATE_CHANGE_READY_TO_NULL:
+      break;
+    default:
+      break;
+  }
+
+  return ret;
 }
 
 

@@ -59,11 +59,13 @@ struct _GstSynaesthesia
   gint fps_n, fps_d;
   gint width;
   gint height;
-  gint channels;
+  guint outsize;
+  GstBufferPool *pool;
 
   /* Audio state */
   gint sample_rate;
   gint rate;
+  gint channels;
 
   /* Synaesthesia instance */
   syn_instance *si;
