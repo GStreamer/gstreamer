@@ -39,18 +39,22 @@ EXPORTS
 	gst_audio_decoder_get_audio_info
 	gst_audio_decoder_get_byte_time
 	gst_audio_decoder_get_delay
+	gst_audio_decoder_get_drainable
 	gst_audio_decoder_get_latency
 	gst_audio_decoder_get_max_errors
 	gst_audio_decoder_get_min_latency
+	gst_audio_decoder_get_needs_format
 	gst_audio_decoder_get_parse_state
 	gst_audio_decoder_get_plc
 	gst_audio_decoder_get_plc_aware
 	gst_audio_decoder_get_tolerance
 	gst_audio_decoder_get_type
 	gst_audio_decoder_set_byte_time
+	gst_audio_decoder_set_drainable
 	gst_audio_decoder_set_latency
 	gst_audio_decoder_set_max_errors
 	gst_audio_decoder_set_min_latency
+	gst_audio_decoder_set_needs_format
 	gst_audio_decoder_set_output_format
 	gst_audio_decoder_set_plc
 	gst_audio_decoder_set_plc_aware
@@ -59,9 +63,11 @@ EXPORTS
 	gst_audio_downmix_meta_get_info
 	gst_audio_encoder_finish_frame
 	gst_audio_encoder_get_audio_info
+	gst_audio_encoder_get_drainable
 	gst_audio_encoder_get_frame_max
 	gst_audio_encoder_get_frame_samples_max
 	gst_audio_encoder_get_frame_samples_min
+	gst_audio_encoder_get_hard_min
 	gst_audio_encoder_get_hard_resync
 	gst_audio_encoder_get_latency
 	gst_audio_encoder_get_lookahead
@@ -71,9 +77,11 @@ EXPORTS
 	gst_audio_encoder_get_type
 	gst_audio_encoder_merge_tags
 	gst_audio_encoder_proxy_getcaps
+	gst_audio_encoder_set_drainable
 	gst_audio_encoder_set_frame_max
 	gst_audio_encoder_set_frame_samples_max
 	gst_audio_encoder_set_frame_samples_min
+	gst_audio_encoder_set_hard_min
 	gst_audio_encoder_set_hard_resync
 	gst_audio_encoder_set_latency
 	gst_audio_encoder_set_lookahead
