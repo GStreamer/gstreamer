@@ -840,7 +840,8 @@ gst_base_transform_do_bufferpool (GstBaseTransform * trans, GstCaps * outcaps)
 
   GST_DEBUG_OBJECT (trans, "calling decide_allocation");
   if (G_LIKELY (klass->decide_allocation))
-    result = klass->decide_allocation (trans, query);
+    if ((result = klass->decide_allocation (trans, query)) == FALSE)
+      goto no_decide_allocation;
 
   /* we got configuration from our peer, parse them */
   gst_query_parse_allocation_params (query, &size, &min, &max, &prefix,
@@ -874,6 +875,15 @@ gst_base_transform_do_bufferpool (GstBaseTransform * trans, GstCaps * outcaps)
       alignment);
 
   return result;
+
+  /* Errors */
+no_decide_allocation:
+  {
+    GST_WARNING_OBJECT (trans, "Subclass failed to decide allocation");
+    gst_query_unref (query);
+
+    return result;
+  }
 }
 
 /* function triggered when the in and out caps are negotiated and need
