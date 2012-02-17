@@ -22,8 +22,7 @@ ges_la_LDFLAGS = -export-symbols-regex "^(initges|_PyGObject_API).*" \
 	-module -avoid-version $(GST_PLUGIN_LDFLAGS)
 ges_la_LIBADD = $(top_builddir)/ges/libges-@GST_MAJORMINOR@.la \
 		$(GST_PLUGINS_BASE_LIBS) $(GST_BASE_LIBS) \
-		-lges-@GST_MAJORMINOR@ -lges-@GST_MAJORMINOR@ \
-		-lges-@GST_MAJORMINOR@ $(GST_LIBS) $(LIBM)
+		$(GST_LIBS) $(PYGST_LIBS) $(LIBM)
 ges_la_SOURCES = gesmodule.c
 nodist_ges_la_SOURCES = ges.c
 
