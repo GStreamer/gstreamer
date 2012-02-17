@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 0.10.32.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2012-01-05 11:27+0000\n"
+"POT-Creation-Date: 2012-02-17 09:51+0100\n"
 "PO-Revision-Date: 2011-09-05 12:49+0200\n"
 "Last-Translator: Fran Dieguez <frandieguez@ubuntu.com>\n"
 "Language-Team: Galician <proxecto@trasno.net>\n"
@@ -1134,9 +1134,6 @@ msgstr "TIPO1,TIPO2,…"
 msgid "Do not install a fault handler"
 msgstr "Non instalar un manexador predeterminado"
 
-msgid "Print alloc trace (if enabled at compile time)"
-msgstr "Imprimir a traza de asignacións (se foi activada ao compilar)"
-
 msgid "Force EOS on sources before shutting the pipeline down"
 msgstr "Forzar EOS nas orixes antes de pechar a canalización"
 
@@ -1204,6 +1201,9 @@ msgstr "Estabelecendo a tubería a NULL...\n"
 
 msgid "Freeing pipeline ...\n"
 msgstr "Liberando a tubería...\n"
+
+#~ msgid "Print alloc trace (if enabled at compile time)"
+#~ msgstr "Imprimir a traza de asignacións (se foi activada ao compilar)"
 
 #~ msgid "Usage: gst-xmllaunch <file.xml> [ element.property=value ... ]\n"
 #~ msgstr ""

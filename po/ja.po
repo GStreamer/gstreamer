@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 0.10.20.3\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2012-01-05 11:27+0000\n"
+"POT-Creation-Date: 2012-02-17 09:51+0100\n"
 "PO-Revision-Date: 2008-10-16 19:57+0900\n"
 "Last-Translator: Makoto Kato <makoto.kt@gmail.com>\n"
 "Language-Team: Japanese <translation-team-ja@lists.sourceforge.net>\n"
@@ -1111,9 +1111,6 @@ msgstr "TYPE1,TYPE2,..."
 msgid "Do not install a fault handler"
 msgstr "フォールトハンドラをインストールしない"
 
-msgid "Print alloc trace (if enabled at compile time)"
-msgstr "alloc トレースを表示する (コンパイル時に有効にする必要があります)"
-
 msgid "Force EOS on sources before shutting the pipeline down"
 msgstr ""
 
@@ -1183,6 +1180,9 @@ msgstr ""
 #, fuzzy
 msgid "Freeing pipeline ...\n"
 msgstr "パイプラインを解放 (FREEING) しています...\n"
+
+#~ msgid "Print alloc trace (if enabled at compile time)"
+#~ msgstr "alloc トレースを表示する (コンパイル時に有効にする必要があります)"
 
 #~ msgid "Usage: gst-xmllaunch <file.xml> [ element.property=value ... ]\n"
 #~ msgstr "使い方: gst-xmllaunch <file.xml> [ element.property=value ...]\n"

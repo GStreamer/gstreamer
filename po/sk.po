@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 0.10.30.3\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2012-01-05 11:27+0000\n"
+"POT-Creation-Date: 2012-02-17 09:51+0100\n"
 "PO-Revision-Date: 2010-11-08 16:13+0100\n"
 "Last-Translator: Peter Tuhársky <tuharsky@misbb.sk>\n"
 "Language-Team: Slovak <sk-i18n@lists.linux.sk>\n"
@@ -1150,9 +1150,6 @@ msgstr "TYP1,TYP2,..."
 msgid "Do not install a fault handler"
 msgstr "Neinštalovať obsluhu výnimiek"
 
-msgid "Print alloc trace (if enabled at compile time)"
-msgstr "Vypisovať stopu alokácie (ak je to povolené pri kompilácii)"
-
 msgid "Force EOS on sources before shutting the pipeline down"
 msgstr "Vynútiť EOS na zdrojoch pred vypnutím rúry"
 
@@ -1223,6 +1220,9 @@ msgstr "Nastavujem rúru na NULOVÚ ...\n"
 
 msgid "Freeing pipeline ...\n"
 msgstr "Uvoľňujem rúru ...\n"
+
+#~ msgid "Print alloc trace (if enabled at compile time)"
+#~ msgstr "Vypisovať stopu alokácie (ak je to povolené pri kompilácii)"
 
 #~ msgid "Usage: gst-xmllaunch <file.xml> [ element.property=value ... ]\n"
 #~ msgstr ""

@@ -1,5 +1,5 @@
 
-Release notes for GStreamer 0.11.1 "Sweet New Blossom"
+Release notes for GStreamer 0.11.2 "A Shiny White Tooth"
         
 
 
@@ -8,7 +8,8 @@ in the 0.11.x unstable series of the
 core of the GStreamer streaming media framework.
 
 
-The 0.11.x series is an unstable series targeted at developers
+The 0.11.x series is an unstable series targeted at developers and will
+eventually lead up to the stable 1.0 series.
 It is not API or ABI compatible with the stable 0.10.x series.
 It is, however, parallel installable with the 0.10.x series.
 
@@ -37,12 +38,39 @@ contains a set of less supported plug-ins that haven't passed the
 
 Features of this release
     
-      * Parallel installability with 0.10.x series
-      * Remove negotiation from state change in GstBaseSrc
-      * Removed our custom FOURCC type
-      * Updates to the base classes
-There were no bugs fixed in this release
-    
+      * Added pts/dts to buffers
+      * Moved controller into core
+      * Pad probe rewrite
+      * AcceptCaps and GetCaps made as queries
+      * Added parent to pad functions
+      * Sticky events rewrite
+      * New GstSample object
+      * Asynchronous state change support for basesrc
+      * Added new bitmask type
+      * GstMemory updates
+      * Port to gio
+      * Port to newest glib
+      * Add stepped ranges
+      * Do typefind in separate thread
+      * Rework alloc tracing
+      * Added STREAM_CONFIG, GAP and STREAM_START events
+      * Various cleanups and leak fixes
+
+Bugs fixed in this release
+     
+      * 664491 : compiler warnings on OS X 64bit
+      * 402562 : [gst_parse_launch] Requesting pads but not releasing them
+      * 383102 : [0.11] Rethink pad_blocking
+      * 610338 : [0.11] [controller] Triggers should be moved into their own control source
+      * 660300 : gst_memory_alignment undefined if HAVE_POSIX_MEMALIGN isn't defined
+      * 662207 : gst: Fix a lot of GLib deprecations and errors
+      * 664099 : 0.11 new to use new floating ref annotation
+      * 664880 : [0.11] GstBaseParse default caps query implementation broken
+      * 664927 : GST_STATIC_CAPS missing initializer
+      * 666096 : [0.11] encodebin bindings failing to accept None
+      * 666154 : [0.11] Python - query_caps fails to accept 'None'
+      * 666351 : [0.11] Get rid of GST_TYPE_DATE
+      * 666890 : [0.11] controller compiler warning: gsttriggercontrolsource.c:82: control reaches end of non-void function
 
 Download
 
@@ -69,28 +97,38 @@ will create more lists as necessary.
         
 Applications
 
-No applications are ported to 0.11 as of yet. We are looking for more people to
-port plugins and applications.
+Various applications have early ports to GStreamer 0.11 including Totem, RhythmBox,
+Webkit, Jokosher, Transmageddon and others. We're working on porting more applications.
 
   
 Contributors to this release
     
+      * Andoni Morales Alastruey
+      * Antoine Tremblay
+      * Christian Fredrik Kalager Schaller
+      * Colin Walters
       * David Schleef
       * Edward Hervey
-      * Fabrizio (Misto) Milo
-      * Guillaume Desmottes
-      * Josep Torra
+      * Havard Graff
+      * Idar Tollefsen
+      * Jan Schmidt
+      * Jason DeRose
+      * Johan Boulé
+      * Johan Dahlin
       * Mark Nauwelaerts
+      * Matej Knopp
       * Nicolas Dufresne
+      * Olivier Crête
       * Peteris Krisjanis
-      * Piotr Fusik
-      * Raimo Järvi
+      * Philippe Normand
+      * René Stadler
+      * Reynaldo H. Verdejo Pinochet
+      * Robert Swain
       * Sebastian Dröge
-      * Shaun Hoopes
       * Sjoerd Simons
       * Stas Sergeev
-      * Stefan Kost
       * Stefan Sauer
+      * Thiago Santos
       * Thomas Vander Stichele
       * Tim-Philipp Müller
       * Vincent Penquerc'h

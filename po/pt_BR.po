@@ -17,7 +17,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer-0.10.31.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2012-01-05 11:27+0000\n"
+"POT-Creation-Date: 2012-02-17 09:51+0100\n"
 "PO-Revision-Date: 2011-01-08 01:36-0300\n"
 "Last-Translator: Fabrício Godoy <skarllot@gmail.com>\n"
 "Language-Team: Brazilian Portuguese <ldp-br@bazar.conectiva.com.br>\n"
@@ -1152,9 +1152,6 @@ msgstr "TIPO1,TIPO2,..."
 msgid "Do not install a fault handler"
 msgstr "Não instale um manipulador de falhas"
 
-msgid "Print alloc trace (if enabled at compile time)"
-msgstr "Exibir trilha de alocação (se habilitado na compilação)"
-
 msgid "Force EOS on sources before shutting the pipeline down"
 msgstr ""
 "Forçar finalização do fluxo nos elementos fonte antes de desligar a fila de "
@@ -1227,6 +1224,9 @@ msgstr "Definindo a fila de processamento para NULO...\n"
 
 msgid "Freeing pipeline ...\n"
 msgstr "Liberando a fila de processamento...\n"
+
+#~ msgid "Print alloc trace (if enabled at compile time)"
+#~ msgstr "Exibir trilha de alocação (se habilitado na compilação)"
 
 #~ msgid "Usage: gst-xmllaunch <file.xml> [ element.property=value ... ]\n"
 #~ msgstr ""

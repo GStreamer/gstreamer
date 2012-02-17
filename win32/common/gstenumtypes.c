@@ -1055,7 +1055,7 @@ gst_flow_return_get_type (void)
         "custom-success"},
     {C_ENUM (GST_FLOW_OK), "GST_FLOW_OK", "ok"},
     {C_ENUM (GST_FLOW_NOT_LINKED), "GST_FLOW_NOT_LINKED", "not-linked"},
-    {C_ENUM (GST_FLOW_FLUSHING), "GST_FLOW_FLUSHING", "wrong-state"},
+    {C_ENUM (GST_FLOW_FLUSHING), "GST_FLOW_FLUSHING", "flushing"},
     {C_ENUM (GST_FLOW_EOS), "GST_FLOW_EOS", "eos"},
     {C_ENUM (GST_FLOW_NOT_NEGOTIATED), "GST_FLOW_NOT_NEGOTIATED",
         "not-negotiated"},

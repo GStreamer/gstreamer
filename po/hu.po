@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 0.10.30.3\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2012-01-05 11:27+0000\n"
+"POT-Creation-Date: 2012-02-17 09:51+0100\n"
 "PO-Revision-Date: 2010-11-01 13:39+0100\n"
 "Last-Translator: Gabor Kelemen <kelemeng@gnome.hu>\n"
 "Language-Team: Hungarian <translation-team-hu@lists.sourceforge.net>\n"
@@ -1127,9 +1127,6 @@ msgstr "TÍPUS1,TÍPUS2,…"
 msgid "Do not install a fault handler"
 msgstr "Ne telepítsen hibakezelőt"
 
-msgid "Print alloc trace (if enabled at compile time)"
-msgstr "Foglalási nyomkövetés kiírása (ha fordításkor engedélyezték)"
-
 msgid "Force EOS on sources before shutting the pipeline down"
 msgstr "EOS kényszerítése a forrásokra az adatcsatorna leállítása előtt"
 
@@ -1197,6 +1194,9 @@ msgstr "Az adatcsatorna beállítása NULL értékre…\n"
 
 msgid "Freeing pipeline ...\n"
 msgstr "Adatcsatorna felszabadítása…\n"
+
+#~ msgid "Print alloc trace (if enabled at compile time)"
+#~ msgstr "Foglalási nyomkövetés kiírása (ha fordításkor engedélyezték)"
 
 #~ msgid "Usage: gst-xmllaunch <file.xml> [ element.property=value ... ]\n"
 #~ msgstr "Használat: gst-xmllaunch <fájl.xml> [ elem.tulajdonság=érték … ]\n"

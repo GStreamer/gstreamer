@@ -9,7 +9,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer-0.10.32.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2012-01-05 11:27+0000\n"
+"POT-Creation-Date: 2012-02-17 09:51+0100\n"
 "PO-Revision-Date: 2011-04-26 20:25+0400\n"
 "Last-Translator: Yuri Kozlov <yuray@komyakino.ru>\n"
 "Language-Team: Russian <gnu@mx.ru>\n"
@@ -1137,9 +1137,6 @@ msgstr "ТИП1, ТИП2,..."
 msgid "Do not install a fault handler"
 msgstr "Не устанавливать обработчик ошибок"
 
-msgid "Print alloc trace (if enabled at compile time)"
-msgstr "Вывести трассировку выделения памяти (если включено при сборке)"
-
 msgid "Force EOS on sources before shutting the pipeline down"
 msgstr "Выдать EOS в источники перед закрытием конвейера"
 
@@ -1207,6 +1204,9 @@ msgstr "Установка конвейера в состояние NULL...\n"
 
 msgid "Freeing pipeline ...\n"
 msgstr "Освобождение конвейера...\n"
+
+#~ msgid "Print alloc trace (if enabled at compile time)"
+#~ msgstr "Вывести трассировку выделения памяти (если включено при сборке)"
 
 #~ msgid "Usage: gst-xmllaunch <file.xml> [ element.property=value ... ]\n"
 #~ msgstr ""

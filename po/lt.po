@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 0.10.29.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2012-01-05 11:27+0000\n"
+"POT-Creation-Date: 2012-02-17 09:51+0100\n"
 "PO-Revision-Date: 2010-07-16 00:50+0300\n"
 "Last-Translator: Žygimantas Beručka <uid0@akl.lt>\n"
 "Language-Team: Lithuanian <komp_lt@konferencijos.lt>\n"
@@ -1137,9 +1137,6 @@ msgstr "TIPAS1,TIPAS2,..."
 msgid "Do not install a fault handler"
 msgstr "Neįdiegti klaidų apdorojimo posistemės"
 
-msgid "Print alloc trace (if enabled at compile time)"
-msgstr "Išvesti alloc sekimą (jei įjungta kompiliavimo metu)"
-
 msgid "Force EOS on sources before shutting the pipeline down"
 msgstr "Priverstinai naudoti EOS šaltiniuose prie išjungiant konvejerį"
 
@@ -1207,6 +1204,9 @@ msgstr "Nustatomas konvejeris į NULL...\n"
 
 msgid "Freeing pipeline ...\n"
 msgstr "Atlaisvinamas konvejeris...\n"
+
+#~ msgid "Print alloc trace (if enabled at compile time)"
+#~ msgstr "Išvesti alloc sekimą (jei įjungta kompiliavimo metu)"
 
 #~ msgid "Usage: gst-xmllaunch <file.xml> [ element.property=value ... ]\n"
 #~ msgstr ""

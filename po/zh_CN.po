@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 0.10.25.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2012-01-05 11:27+0000\n"
+"POT-Creation-Date: 2012-02-17 09:51+0100\n"
 "PO-Revision-Date: 2010-02-02 18:58+0800\n"
 "Last-Translator: Ji ZhengYu <zhengyuji@gmail.com>\n"
 "Language-Team: Chinese (simplified) <i18n-zh@googlegroups.com>\n"
@@ -1107,9 +1107,6 @@ msgstr "类型1，类型2，..."
 msgid "Do not install a fault handler"
 msgstr "不安装错误的处理程序"
 
-msgid "Print alloc trace (if enabled at compile time)"
-msgstr "打印分配记录(如果在编译时开启的话)"
-
 #, fuzzy
 msgid "Force EOS on sources before shutting the pipeline down"
 msgstr "关闭管道前强制对源发出 EOS 信号"
@@ -1202,6 +1199,9 @@ msgstr "释放管道资源 ...\n"
 
 #~ msgid "FILE"
 #~ msgstr "文件"
+
+#~ msgid "Print alloc trace (if enabled at compile time)"
+#~ msgstr "打印分配记录(如果在编译时开启的话)"
 
 #~ msgid "Error writing registry cache to %s: %s"
 #~ msgstr "寄存器缓存写入 %s 时出错: %s"

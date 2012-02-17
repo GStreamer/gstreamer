@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 0.8.1\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2012-01-05 11:27+0000\n"
+"POT-Creation-Date: 2012-02-17 09:51+0100\n"
 "PO-Revision-Date: 2004-04-26 10:36-0400\n"
 "Last-Translator: Gareth Owen <gowen72@yahoo.com>\n"
 "Language-Team: English (British) <en_gb@li.org>\n"
@@ -1141,9 +1141,6 @@ msgstr "TYPE1,TYPE2,..."
 msgid "Do not install a fault handler"
 msgstr "Do not install a fault handler"
 
-msgid "Print alloc trace (if enabled at compile time)"
-msgstr "Print alloc trace (if enabled at compile time)"
-
 msgid "Force EOS on sources before shutting the pipeline down"
 msgstr ""
 
@@ -1214,6 +1211,9 @@ msgstr ""
 #, fuzzy
 msgid "Freeing pipeline ...\n"
 msgstr "RUNNING pipeline ...\n"
+
+#~ msgid "Print alloc trace (if enabled at compile time)"
+#~ msgstr "Print alloc trace (if enabled at compile time)"
 
 #~ msgid "Usage: gst-xmllaunch <file.xml> [ element.property=value ... ]\n"
 #~ msgstr "Usage: gst-xmllaunch <file.xml> [ element.property=value ... ]\n"

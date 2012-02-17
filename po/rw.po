@@ -15,7 +15,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 0.8.8\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2012-01-05 11:27+0000\n"
+"POT-Creation-Date: 2012-02-17 09:51+0100\n"
 "PO-Revision-Date: 2005-04-04 10:55-0700\n"
 "Last-Translator: Steven Michael Murphy <murf@e-tools.com>\n"
 "Language-Team: Kinyarwanda <translation-team-rw@lists.sourceforge.net>\n"
@@ -1315,10 +1315,6 @@ msgstr ""
 msgid "Do not install a fault handler"
 msgstr "OYA Kwinjiza porogaramu a"
 
-#, fuzzy
-msgid "Print alloc trace (if enabled at compile time)"
-msgstr "NIBA Bikora ku Gukusanya Igihe"
-
 msgid "Force EOS on sources before shutting the pipeline down"
 msgstr ""
 
@@ -1391,6 +1387,10 @@ msgstr ""
 
 msgid "Freeing pipeline ...\n"
 msgstr ""
+
+#, fuzzy
+#~ msgid "Print alloc trace (if enabled at compile time)"
+#~ msgstr "NIBA Bikora ku Gukusanya Igihe"
 
 #, fuzzy
 #~ msgid "Usage: gst-xmllaunch <file.xml> [ element.property=value ... ]\n"

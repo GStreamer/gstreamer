@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 0.9.7\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2012-01-05 11:27+0000\n"
+"POT-Creation-Date: 2012-02-17 09:51+0100\n"
 "PO-Revision-Date: 2006-01-18 22:26+0200\n"
 "Last-Translator: Ales Nyakhaychyk <nab@mail.by>\n"
 "Language-Team: Belarusian <i18n@mova.org>\n"
@@ -1091,9 +1091,6 @@ msgid "TYPE1,TYPE2,..."
 msgstr ""
 
 msgid "Do not install a fault handler"
-msgstr ""
-
-msgid "Print alloc trace (if enabled at compile time)"
 msgstr ""
 
 msgid "Force EOS on sources before shutting the pipeline down"

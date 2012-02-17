@@ -5,7 +5,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 0.10.29.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2012-01-05 11:27+0000\n"
+"POT-Creation-Date: 2012-02-17 09:51+0100\n"
 "PO-Revision-Date: 2010-08-16 01:10+0300\n"
 "Last-Translator: Lucian Adrian Grijincu <lucian.grijincu@gmail.com>\n"
 "Language-Team: Romanian <translation-team-ro@lists.sourceforge.net>\n"
@@ -1156,9 +1156,6 @@ msgstr "TIP1,TIP2,..."
 msgid "Do not install a fault handler"
 msgstr "Nu instala un gestionar de erori"
 
-msgid "Print alloc trace (if enabled at compile time)"
-msgstr "Afișează căile de alocare (dacă s-a activat la momentul compilării)"
-
 msgid "Force EOS on sources before shutting the pipeline down"
 msgstr "Forțează EOS pe surse înainte de a închide linia de asamblare"
 
@@ -1226,6 +1223,9 @@ msgstr "Se setează linia de asamblare pe NULL ...\n"
 
 msgid "Freeing pipeline ...\n"
 msgstr "Se eliberează linia de asamblare...\n"
+
+#~ msgid "Print alloc trace (if enabled at compile time)"
+#~ msgstr "Afișează căile de alocare (dacă s-a activat la momentul compilării)"
 
 #~ msgid "Usage: gst-xmllaunch <file.xml> [ element.property=value ... ]\n"
 #~ msgstr ""

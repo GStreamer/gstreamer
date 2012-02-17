@@ -145,7 +145,7 @@
 <FLAGS>rw</FLAGS>
 <NICK>Silent</NICK>
 <BLURB>Don't produce last_message events.</BLURB>
-<DEFAULT>FALSE</DEFAULT>
+<DEFAULT>TRUE</DEFAULT>
 </ARG>
 
 <ARG>
@@ -255,7 +255,7 @@
 <FLAGS>rw</FLAGS>
 <NICK>Silent</NICK>
 <BLURB>Don't produce last_message events.</BLURB>
-<DEFAULT>FALSE</DEFAULT>
+<DEFAULT>TRUE</DEFAULT>
 </ARG>
 
 <ARG>
@@ -271,7 +271,7 @@
 <ARG>
 <NAME>GstFakeSink::num-buffers</NAME>
 <TYPE>gint</TYPE>
-<RANGE>>= -1</RANGE>
+<RANGE>>= G_MAXULONG</RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>num-buffers</NICK>
 <BLURB>Number of buffers to accept going EOS.</BLURB>
@@ -425,7 +425,7 @@
 <FLAGS>rw</FLAGS>
 <NICK>silent</NICK>
 <BLURB>silent.</BLURB>
-<DEFAULT>FALSE</DEFAULT>
+<DEFAULT>TRUE</DEFAULT>
 </ARG>
 
 <ARG>

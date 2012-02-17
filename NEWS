@@ -1,8 +1,22 @@
-This is GStreamer 0.11.1 "Sweet New Blossom"
+This is GStreamer 0.11.2 "A Shiny white Tooth"
 
-New featues in 0.11.1:
+New featues in 0.11.2:
 
       * Parallel installability with 0.10.x series
-      * Remove negotiation from state change in GstBaseSrc
-      * Removed our custom FOURCC type
-      * Updates to the base classes
+      * Added pts/dts to buffers
+      * Moved controller into core
+      * Pad probe rewrite
+      * AcceptCaps and GetCaps made as queries
+      * Added parent to pad functions
+      * Sticky events rewrite
+      * New GstSample object
+      * Asynchronous state change support for basesrc
+      * Added new bitmask type
+      * GstMemory updates
+      * Port to gio
+      * Port to newest glib
+      * Add stepped ranges
+      * Do typefind in separate thread
+      * Rework alloc tracing
+      * Added STREAM_CONFIG, GAP and STREAM_START events
+      * Various cleanups and leak fixes

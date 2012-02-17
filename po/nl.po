@@ -10,7 +10,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 0.10.32.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2012-01-05 11:27+0000\n"
+"POT-Creation-Date: 2012-02-17 09:51+0100\n"
 "PO-Revision-Date: 2011-04-26 23:10+0200\n"
 "Last-Translator: Freek de Kruijf <f.de.kruijf@gmail.com>\n"
 "Language-Team: Dutch <vertaling@vrijschrift.org>\n"
@@ -1142,9 +1142,6 @@ msgstr "SOORT1,SOORT2,..."
 msgid "Do not install a fault handler"
 msgstr "Geen foutafhandelaar installeren"
 
-msgid "Print alloc trace (if enabled at compile time)"
-msgstr "Toewijzingsspoor weergeven (indien aangezet tijdens compileren)"
-
 msgid "Force EOS on sources before shutting the pipeline down"
 msgstr "Forceer een EOS op de bron bij het afsluiten van de pijplijn"
 
@@ -1212,6 +1209,9 @@ msgstr "Pijplijn gezet op NULL ...\n"
 
 msgid "Freeing pipeline ...\n"
 msgstr "Pijplijn wordt vrijgemaakt ...\n"
+
+#~ msgid "Print alloc trace (if enabled at compile time)"
+#~ msgstr "Toewijzingsspoor weergeven (indien aangezet tijdens compileren)"
 
 #~ msgid "Usage: gst-xmllaunch <file.xml> [ element.property=value ... ]\n"
 #~ msgstr ""

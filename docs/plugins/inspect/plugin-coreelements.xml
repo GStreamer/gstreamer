@@ -3,10 +3,10 @@
   <description>standard GStreamer elements</description>
   <filename>../../plugins/elements/.libs/libgstcoreelements.so</filename>
   <basename>libgstcoreelements.so</basename>
-  <version>0.10.35.1</version>
+  <version>0.11.2</version>
   <license>LGPL</license>
   <source>gstreamer</source>
-  <package>GStreamer git</package>
+  <package>GStreamer source release</package>
   <origin>Unknown package origin</origin>
   <elements>
     <element>
@@ -128,7 +128,7 @@
       <author>Olivier Crete &lt;olivier.crete@collabora.co.uk&gt;</author>
       <pads>
         <caps>
-          <name>sink%d</name>
+          <name>sink_%u</name>
           <direction>sink</direction>
           <presence>request</presence>
           <details>ANY</details>
@@ -170,7 +170,7 @@
       <author>Julien Moutte &lt;julien@moutte.net&gt;, Jan Schmidt &lt;thaytan@mad.scientist.com&gt;, Wim Taymans &lt;wim.taymans@gmail.com&gt;</author>
       <pads>
         <caps>
-          <name>sink%d</name>
+          <name>sink_%u</name>
           <direction>sink</direction>
           <presence>request</presence>
           <details>ANY</details>
@@ -191,13 +191,13 @@
       <author>Edward Hervey &lt;edward@fluendo.com&gt;</author>
       <pads>
         <caps>
-          <name>sink%d</name>
+          <name>sink_%u</name>
           <direction>sink</direction>
           <presence>request</presence>
           <details>ANY</details>
         </caps>
         <caps>
-          <name>src%d</name>
+          <name>src_%u</name>
           <direction>source</direction>
           <presence>sometimes</presence>
           <details>ANY</details>
@@ -218,7 +218,7 @@
           <details>ANY</details>
         </caps>
         <caps>
-          <name>src%d</name>
+          <name>src_%u</name>
           <direction>source</direction>
           <presence>request</presence>
           <details>ANY</details>
@@ -281,7 +281,7 @@
           <details>ANY</details>
         </caps>
         <caps>
-          <name>src%d</name>
+          <name>src_%u</name>
           <direction>source</direction>
           <presence>request</presence>
           <details>ANY</details>

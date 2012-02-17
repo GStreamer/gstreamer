@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 0.10.29.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2012-01-05 11:27+0000\n"
+"POT-Creation-Date: 2012-02-17 09:51+0100\n"
 "PO-Revision-Date: 2010-10-03 19:09+1030\n"
 "Last-Translator: Clytie Siddall <clytie@riverland.net.au>\n"
 "Language-Team: Vietnamese <vi-VN@googlegroups.com>\n"
@@ -1135,9 +1135,6 @@ msgstr "KIỂU1,KIỂU2,..."
 msgid "Do not install a fault handler"
 msgstr "Không cài đặt bộ quản lý lỗi"
 
-msgid "Print alloc trace (if enabled at compile time)"
-msgstr "In ra vết cấp phát (nếu được bật khi biên dich)"
-
 msgid "Force EOS on sources before shutting the pipeline down"
 msgstr "Ép buộc kết thúc luồng trên các nguồn trước khi đóng đường ống"
 
@@ -1207,6 +1204,9 @@ msgstr "Đang lập đường ống thành VÔ GIÁ TRỊ ...\n"
 
 msgid "Freeing pipeline ...\n"
 msgstr "Đang giải phóng đường ống...\n"
+
+#~ msgid "Print alloc trace (if enabled at compile time)"
+#~ msgstr "In ra vết cấp phát (nếu được bật khi biên dich)"
 
 #~ msgid "Usage: gst-xmllaunch <file.xml> [ element.property=value ... ]\n"
 #~ msgstr ""

@@ -10,7 +10,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 0.10.32.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2012-01-05 11:27+0000\n"
+"POT-Creation-Date: 2012-02-17 09:51+0100\n"
 "PO-Revision-Date: 2011-09-22 15:02+0100\n"
 "Last-Translator: Klemen Košir <klemen.kosir@gmx.com>\n"
 "Language-Team: Slovenian <translation-team-sl@lists.sourceforge.net>\n"
@@ -1138,11 +1138,6 @@ msgstr "VRSTA1, VRSTA2 ..."
 msgid "Do not install a fault handler"
 msgstr "Na namesti ročnika napak"
 
-msgid "Print alloc trace (if enabled at compile time)"
-msgstr ""
-"Izpiši zaznavanje dodeljevanja (če je možnost omogočena v trenutku kodnega "
-"prevajanja)"
-
 msgid "Force EOS on sources before shutting the pipeline down"
 msgstr "Viru vsili EOS pred zaustavitvijo cevovoda"
 
@@ -1210,6 +1205,11 @@ msgstr "Nastavljanje cevovoda na NULL ...\n"
 
 msgid "Freeing pipeline ...\n"
 msgstr "Sproščanje cevovoda ...\n"
+
+#~ msgid "Print alloc trace (if enabled at compile time)"
+#~ msgstr ""
+#~ "Izpiši zaznavanje dodeljevanja (če je možnost omogočena v trenutku "
+#~ "kodnega prevajanja)"
 
 #~ msgid "Usage: gst-xmllaunch <file.xml> [ element.property=value ... ]\n"
 #~ msgstr ""

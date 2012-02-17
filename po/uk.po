@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 0.10.32.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2012-01-05 11:27+0000\n"
+"POT-Creation-Date: 2012-02-17 09:51+0100\n"
 "PO-Revision-Date: 2011-04-30 20:26+0300\n"
 "Last-Translator: Yuri Chornoivan <yurchor@ukr.net>\n"
 "Language-Team: Ukrainian <translation-team-uk@lists.sourceforge.net>\n"
@@ -1134,9 +1134,6 @@ msgstr "ТИП1,ТИП2,..."
 msgid "Do not install a fault handler"
 msgstr "Не встановлювати обробник збоїв"
 
-msgid "Print alloc trace (if enabled at compile time)"
-msgstr "Вивести трасування розподілу пам’яті (якщо ввімкнено при компіляції)"
-
 msgid "Force EOS on sources before shutting the pipeline down"
 msgstr "Примусово надіслати EOS до джерел до завершення роботи каналу"
 
@@ -1204,6 +1201,10 @@ msgstr "Канал переводиться у стан NULL ...\n"
 
 msgid "Freeing pipeline ...\n"
 msgstr "Спорожнення каналу...\n"
+
+#~ msgid "Print alloc trace (if enabled at compile time)"
+#~ msgstr ""
+#~ "Вивести трасування розподілу пам’яті (якщо ввімкнено при компіляції)"
 
 #~ msgid "Usage: gst-xmllaunch <file.xml> [ element.property=value ... ]\n"
 #~ msgstr ""

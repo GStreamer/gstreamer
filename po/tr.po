@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 0.8.0\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2012-01-05 11:27+0000\n"
+"POT-Creation-Date: 2012-02-17 09:51+0100\n"
 "PO-Revision-Date: 2004-04-03 03:14+0300\n"
 "Last-Translator: Baris Cicek <baris@teamforce.name.tr>\n"
 "Language-Team: Turkish <gnu-tr-u12a@lists.sourceforge.net>\n"
@@ -1147,9 +1147,6 @@ msgstr "TÜR1,TÜR2,..."
 msgid "Do not install a fault handler"
 msgstr "Hatalı işleticiyi kurma"
 
-msgid "Print alloc trace (if enabled at compile time)"
-msgstr "'alloc' takibini yazdır (derleme sırasında etkinleştirilmişse)"
-
 msgid "Force EOS on sources before shutting the pipeline down"
 msgstr ""
 
@@ -1220,6 +1217,9 @@ msgstr ""
 #, fuzzy
 msgid "Freeing pipeline ...\n"
 msgstr "BORUHATTI çalıştırılıyor ...\n"
+
+#~ msgid "Print alloc trace (if enabled at compile time)"
+#~ msgstr "'alloc' takibini yazdır (derleme sırasında etkinleştirilmişse)"
 
 #~ msgid "Usage: gst-xmllaunch <file.xml> [ element.property=value ... ]\n"
 #~ msgstr "Kullanım: gst-xmllaunch <dosya.xml> [ öğe.özellik=değer ... ]\n"

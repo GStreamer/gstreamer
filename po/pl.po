@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 0.10.32.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2012-01-05 11:27+0000\n"
+"POT-Creation-Date: 2012-02-17 09:51+0100\n"
 "PO-Revision-Date: 2011-04-26 17:54+0200\n"
 "Last-Translator: Jakub Bogusz <qboosh@pld-linux.org>\n"
 "Language-Team: Polish <translation-team-pl@lists.sourceforge.net>\n"
@@ -1138,9 +1138,6 @@ msgstr "RODZAJ1,RODZAJ2,..."
 msgid "Do not install a fault handler"
 msgstr "Nie instalowanie obsługi błędów"
 
-msgid "Print alloc trace (if enabled at compile time)"
-msgstr "Wypisanie śladu alokacji (jeśli został włączony w czasie kompilacji)"
-
 msgid "Force EOS on sources before shutting the pipeline down"
 msgstr "Wymuszanie EOS na źródłach przed zamknięciem potoku"
 
@@ -1208,6 +1205,10 @@ msgstr "Ustawianie potoku na NULL...\n"
 
 msgid "Freeing pipeline ...\n"
 msgstr "Zwalnianie potoku...\n"
+
+#~ msgid "Print alloc trace (if enabled at compile time)"
+#~ msgstr ""
+#~ "Wypisanie śladu alokacji (jeśli został włączony w czasie kompilacji)"
 
 #~ msgid "Usage: gst-xmllaunch <file.xml> [ element.property=value ... ]\n"
 #~ msgstr ""

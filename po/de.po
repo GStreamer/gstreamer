@@ -9,7 +9,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 0.10.32.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2012-01-05 11:27+0000\n"
+"POT-Creation-Date: 2012-02-17 09:51+0100\n"
 "PO-Revision-Date: 2011-04-27 23:44+0200\n"
 "Last-Translator: Christian Kirbach <christian.kirbach@googlemail.com>\n"
 "Language-Team: German <translation-team-de@lists.sourceforge.net>\n"
@@ -1159,10 +1159,6 @@ msgstr "ART1,ART2,..."
 msgid "Do not install a fault handler"
 msgstr "Keine Routine zum Abfangen von Fehlern installieren"
 
-msgid "Print alloc trace (if enabled at compile time)"
-msgstr ""
-"Speicherzuordnungsverfolgung ausgeben (falls zur Kompilierzeit aktiviert)"
-
 msgid "Force EOS on sources before shutting the pipeline down"
 msgstr "EOS auf Quelle vor dem Beenden der Leitung erzwingen"
 
@@ -1231,6 +1227,10 @@ msgstr "Leitung wird auf NULL gesetzt ...\n"
 
 msgid "Freeing pipeline ...\n"
 msgstr "Leitung wird geleert ...\n"
+
+#~ msgid "Print alloc trace (if enabled at compile time)"
+#~ msgstr ""
+#~ "Speicherzuordnungsverfolgung ausgeben (falls zur Kompilierzeit aktiviert)"
 
 #~ msgid "Usage: gst-xmllaunch <file.xml> [ element.property=value ... ]\n"
 #~ msgstr "Aufruf: gst-xmllaunch <file.xml> [ element.eigenschaft=wert ...]\n"

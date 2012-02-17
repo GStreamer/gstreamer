@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 0.8.4\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2012-01-05 11:27+0000\n"
+"POT-Creation-Date: 2012-02-17 09:51+0100\n"
 "PO-Revision-Date: 2004-08-07 23:46+0200\n"
 "Last-Translator: Laurent Dhima <laurenti@alblinux.net>\n"
 "Language-Team: Albanian <begraj@hotmail.com>\n"
@@ -1146,9 +1146,6 @@ msgstr "LLOJI1,LLOJI2,..."
 msgid "Do not install a fault handler"
 msgstr "Mos instalo një ushqyes të dëmtuar"
 
-msgid "Print alloc trace (if enabled at compile time)"
-msgstr "Printo shenjat e alloc (nëse aktivuar në kohën e kompilimit)"
-
 msgid "Force EOS on sources before shutting the pipeline down"
 msgstr ""
 
@@ -1219,6 +1216,9 @@ msgstr ""
 #, fuzzy
 msgid "Freeing pipeline ...\n"
 msgstr "DUKE ZBATUAR pipeline ...\n"
+
+#~ msgid "Print alloc trace (if enabled at compile time)"
+#~ msgstr "Printo shenjat e alloc (nëse aktivuar në kohën e kompilimit)"
 
 #~ msgid "Usage: gst-xmllaunch <file.xml> [ element.property=value ... ]\n"
 #~ msgstr ""

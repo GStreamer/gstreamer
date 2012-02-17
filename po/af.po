@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 0.9.7\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2012-01-05 11:27+0000\n"
+"POT-Creation-Date: 2012-02-17 09:51+0100\n"
 "PO-Revision-Date: 2005-12-05 11:45+0200\n"
 "Last-Translator: Petri Jooste <rkwjpj@puk.ac.za>\n"
 "Language-Team: Afrikaans <i18n@af.org.za>\n"
@@ -1139,9 +1139,6 @@ msgstr "TIPE1, TIPE2,..."
 msgid "Do not install a fault handler"
 msgstr "Moenie 'n fouthanteerder installeer nie"
 
-msgid "Print alloc trace (if enabled at compile time)"
-msgstr "Druk \"alloc trace\" (indien aangeskakel tydens kompilering)"
-
 msgid "Force EOS on sources before shutting the pipeline down"
 msgstr ""
 
@@ -1211,6 +1208,9 @@ msgstr "Pyplyn word gestel na NULL ...\n"
 #, fuzzy
 msgid "Freeing pipeline ...\n"
 msgstr "Pyplyn word gestel na NULL ...\n"
+
+#~ msgid "Print alloc trace (if enabled at compile time)"
+#~ msgstr "Druk \"alloc trace\" (indien aangeskakel tydens kompilering)"
 
 #~ msgid "Usage: gst-xmllaunch <file.xml> [ element.property=value ... ]\n"
 #~ msgstr ""
