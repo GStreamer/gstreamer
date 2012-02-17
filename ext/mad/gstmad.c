@@ -80,7 +80,6 @@ static gboolean gst_mad_parse (GstAudioDecoder * dec, GstAdapter * adapter,
     gint * offset, gint * length);
 static GstFlowReturn gst_mad_handle_frame (GstAudioDecoder * dec,
     GstBuffer * buffer);
-static gboolean gst_mad_event (GstAudioDecoder * dec, GstEvent * event);
 static void gst_mad_flush (GstAudioDecoder * dec, gboolean hard);
 
 static void gst_mad_set_property (GObject * object, guint prop_id,
@@ -109,7 +108,6 @@ gst_mad_class_init (GstMadClass * klass)
   base_class->parse = GST_DEBUG_FUNCPTR (gst_mad_parse);
   base_class->handle_frame = GST_DEBUG_FUNCPTR (gst_mad_handle_frame);
   base_class->flush = GST_DEBUG_FUNCPTR (gst_mad_flush);
-  base_class->event = GST_DEBUG_FUNCPTR (gst_mad_event);
 
   gobject_class->set_property = gst_mad_set_property;
   gobject_class->get_property = gst_mad_get_property;
@@ -282,21 +280,30 @@ gst_mad_parse (GstAudioDecoder * dec, GstAdapter * adapter,
   GstFlowReturn ret = GST_FLOW_EOS;
   gint av, size, offset, prev_offset, consumed = 0;
   const guint8 *data;
+  gboolean eos;
+  guint8 *guard = NULL;
 
   mad = GST_MAD (dec);
 
-  if (mad->eos) {
-    /* This is one steaming hack right there.
+  av = gst_adapter_available (adapter);
+  data = gst_adapter_map (adapter, av);
+
+  gst_audio_decoder_get_parse_state (dec, NULL, &eos);
+  if (eos) {
+    /* This is one streaming hack right there.
      * mad will not decode the last frame if it is not followed by
      * a number of 0 bytes, due to some buffer overflow, which can
      * not be fixed for reasons I did not inquire into, see
      * http://www.mars.org/mailman/public/mad-dev/2001-May/000262.html
      */
-    GstBuffer *guard = gst_buffer_new_and_alloc (MAD_BUFFER_GUARD);
-    gst_buffer_memset (guard, 0, 0, MAD_BUFFER_GUARD);
-    GST_DEBUG_OBJECT (mad, "Discreetly stuffing %u zero bytes in the adapter",
-        MAD_BUFFER_GUARD);
-    gst_adapter_push (adapter, guard);
+    guard = g_malloc (av + MAD_BUFFER_GUARD);
+    /* let's be nice and not mess with baseclass state and keep hacks local */
+    memcpy (guard, data, av);
+    memset (guard + av, 0, MAD_BUFFER_GUARD);
+    GST_DEBUG_OBJECT (mad, "Added %u zero guard bytes in the adapter; "
+        "using fallback buffer of size %u",
+        MAD_BUFFER_GUARD, av + MAD_BUFFER_GUARD);
+    data = guard;
   }
 
   /* we basically let mad library do parsing,
@@ -306,9 +313,6 @@ gst_mad_parse (GstAudioDecoder * dec, GstAdapter * adapter,
 
   prev_offset = -1;
   offset = 0;
-  av = gst_adapter_available (adapter);
-  data = gst_adapter_map (adapter, av);
-
   while (offset < av) {
     size = MIN (MAD_BUFFER_MDLEN * 3, av - offset);
 
@@ -421,13 +425,15 @@ exit:
 
   /* ensure that if we added some dummy guard bytes above, we don't claim
      to have used them as they're unknown to the caller. */
-  if (mad->eos) {
+  if (eos) {
     g_assert (av >= MAD_BUFFER_GUARD);
     av -= MAD_BUFFER_GUARD;
     if (*_offset > av)
       *_offset = av;
     if (*len > av)
       *len = av;
+    g_assert (guard);
+    g_free (guard);
   }
 
   return ret;
@@ -501,21 +507,6 @@ gst_mad_flush (GstAudioDecoder * dec, gboolean hard)
     mad_frame_mute (&mad->frame);
     mad_synth_mute (&mad->synth);
   }
-}
-
-static gboolean
-gst_mad_event (GstAudioDecoder * dec, GstEvent * event)
-{
-  GstMad *mad;
-
-  mad = GST_MAD (dec);
-  if (GST_EVENT_TYPE (event) == GST_EVENT_EOS) {
-    GST_DEBUG_OBJECT (mad, "We got EOS, will pad next time");
-    mad->eos = TRUE;
-  }
-
-  /* Let the base class do its usual thing */
-  return GST_AUDIO_DECODER_CLASS (parent_class)->event (dec, event);
 }
 
 static void
