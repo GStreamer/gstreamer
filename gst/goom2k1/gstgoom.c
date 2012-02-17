@@ -379,6 +379,7 @@ gst_goom_sink_event (GstPad * pad, GstObject * parent, GstEvent * event)
 
       gst_event_parse_caps (event, &caps);
       res = gst_goom_sink_setcaps (goom, caps);
+      gst_event_unref (event);
       break;
     }
     case GST_EVENT_FLUSH_START:
