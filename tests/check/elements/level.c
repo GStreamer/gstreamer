@@ -20,6 +20,10 @@
  * Boston, MA 02111-1307, USA.
  */
 
+/* FIXME 0.11: suppress warnings for deprecated API such as GValueArray
+ * with newer GLib versions (>= 2.31.0) */
+#define GLIB_DISABLE_DEPRECATION_WARNINGS
+
 #include <unistd.h>
 #include <math.h>
 
@@ -154,8 +158,11 @@ GST_START_TEST (test_int16)
   for (i = 0; i < 2; ++i) {
     const gchar *fields[3] = { "rms", "peak", "decay" };
     for (j = 0; j < 3; ++j) {
+      GValueArray *arr;
+
       list = gst_structure_get_value (structure, fields[j]);
-      value = gst_value_list_get_value (list, i);
+      arr = g_value_get_boxed (list);
+      value = g_value_array_get_nth (arr, i);
       dB = g_value_get_double (value);
       GST_DEBUG ("%s is %lf", fields[j], dB);
       fail_if (dB < -6.0);
@@ -254,8 +261,11 @@ GST_START_TEST (test_int16_panned)
 
   /* silence has 0 dB for rms, peak and decay */
   for (j = 0; j < 3; ++j) {
+    GValueArray *arr;
+
     list = gst_structure_get_value (structure, fields[j]);
-    value = gst_value_list_get_value (list, 0);
+    arr = g_value_get_boxed (list);
+    value = g_value_array_get_nth (arr, 0);
     dB = g_value_get_double (value);
     GST_DEBUG ("%s[0] is %lf", fields[j], dB);
 #ifdef HAVE_ISINF
@@ -266,8 +276,11 @@ GST_START_TEST (test_int16_panned)
   }
   /* block wave of half amplitude has -5.94 dB for rms, peak and decay */
   for (j = 0; j < 3; ++j) {
+    GValueArray *arr;
+
     list = gst_structure_get_value (structure, fields[j]);
-    value = gst_value_list_get_value (list, 1);
+    arr = g_value_get_boxed (list);
+    value = g_value_array_get_nth (arr, 1);
     dB = g_value_get_double (value);
     GST_DEBUG ("%s[1] is %lf", fields[j], dB);
     fail_if (dB < -6.0);
