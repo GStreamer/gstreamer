@@ -778,8 +778,8 @@ gst_memory_is_span (GstMemory * mem1, GstMemory * mem2, gsize * offset)
  * All functions in @info are mandatory exept the copy and is_span
  * functions, which will have a default implementation when left NULL.
  *
- * The @user_data will be passed to all calls of the alloc function and the
- * @notify function.
+ * The @user_data will be passed to all calls of the alloc function. @notify
+ * will be called with @user_data when the allocator is freed.
  *
  * Returns: a new #GstAllocator.
  */
@@ -823,7 +823,7 @@ gst_allocator_new (const GstMemoryInfo * info, gpointer user_data,
  *
  * Get the memory type allocated by this allocator
  *
- * Returns: @allocator with increased refcount
+ * Returns: the memory type provided by @allocator
  */
 const gchar *
 gst_allocator_get_memory_type (GstAllocator * allocator)
@@ -858,8 +858,8 @@ gst_allocator_ref (GstAllocator * allocator)
  * gst_allocator_unref:
  * @allocator: a #GstAllocator
  *
- * Decreases the refcount of @allocator. When the refcount reaches 0, the free
- * function of @allocator will be called.
+ * Decreases the refcount of @allocator. When the refcount reaches 0, the notify
+ * function of @allocator will be called and the allocator will be freed.
  */
 void
 gst_allocator_unref (GstAllocator * allocator)
