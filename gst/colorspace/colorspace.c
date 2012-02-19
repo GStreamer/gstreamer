@@ -1823,10 +1823,14 @@ colorspace_dither_verterr (ColorspaceConvert * convert, int j)
   int i;
   guint16 *tmpline = convert->tmpline16;
   guint16 *errline = convert->errline;
+  unsigned int mask = 0xff;
 
   for (i = 0; i < 4 * convert->width; i++) {
-    tmpline[i] += errline[i];
-    errline[i] = tmpline[i] & 0xff;
+    int x = tmpline[i] + errline[i];
+    if (x > 65535)
+      x = 65535;
+    tmpline[i] = x;
+    errline[i] = x & mask;
   }
 }
 
@@ -1847,7 +1851,11 @@ colorspace_dither_halftone (ColorspaceConvert * convert, int j)
   };
 
   for (i = 0; i < convert->width * 4; i++) {
-    tmpline[i] += halftone[(i >> 2) & 7][j & 7];
+    int x;
+    x = tmpline[i] + halftone[(i >> 2) & 7][j & 7];
+    if (x > 65535)
+      x = 65535;
+    tmpline[i] = x;
   }
 }
 
