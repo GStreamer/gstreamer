@@ -104,6 +104,19 @@ gst_riff_create_video_caps (guint32 codec_fcc,
       }
       break;
     }
+    case GST_MAKE_FOURCC ('r', '2', '1', '0'):
+      caps = gst_caps_new_simple ("video/x-raw-rgb",
+          "endianness", G_TYPE_INT, G_BIG_ENDIAN, "depth", G_TYPE_INT, 30,
+          "bpp", G_TYPE_INT, 32,
+          "endianness", G_TYPE_INT, G_BIG_ENDIAN,
+          "red_mask", G_TYPE_INT, 0x3ff00000,
+          "green_mask", G_TYPE_INT, 0x000ffc00,
+          "blue_mask", G_TYPE_INT, 0x000003ff, NULL);
+
+      if (codec_name)
+        *codec_name = g_strdup ("Uncompressed packed RGB 10-bit 4:4:4");
+      break;
+
     case GST_MAKE_FOURCC ('I', '4', '2', '0'):
       caps = gst_caps_new_simple ("video/x-raw-yuv",
           "format", GST_TYPE_FOURCC, codec_fcc, NULL);
@@ -141,6 +154,12 @@ gst_riff_create_video_caps (guint32 codec_fcc,
           "format", GST_TYPE_FOURCC, codec_fcc, NULL);
       if (codec_name)
         *codec_name = g_strdup ("Uncompressed packed YVU 4:2:2");
+      break;
+    case GST_MAKE_FOURCC ('v', '2', '1', '0'):
+      caps = gst_caps_new_simple ("video/x-raw-yuv",
+          "format", GST_TYPE_FOURCC, codec_fcc, NULL);
+      if (codec_name)
+        *codec_name = g_strdup ("Uncompressed packed 10-bit YUV 4:2:2");
       break;
 
     case GST_MAKE_FOURCC ('M', 'J', 'P', 'G'): /* YUY2 MJPEG */
@@ -1828,6 +1847,8 @@ gst_riff_create_video_template_caps (void)
     GST_MAKE_FOURCC ('Y', 'V', '1', '2'),
     GST_MAKE_FOURCC ('L', 'O', 'C', 'O'),
     GST_MAKE_FOURCC ('Z', 'M', 'B', 'V'),
+    GST_MAKE_FOURCC ('v', '2', '1', '0'),
+    GST_MAKE_FOURCC ('r', '2', '1', '0'),
     /* FILL ME */
   };
   guint i;
