@@ -2459,6 +2459,7 @@ msg_clock_lost (GstBus * bus, GstMessage * message, GstPipeline * data)
 
 #if defined (GDK_WINDOWING_X11) || defined (GDK_WINDOWING_WIN32)
 
+static GstElement *xoverlay_element = NULL;
 static gulong embed_xid = 0;
 
 /* We set the xid here in response to the prepare-xwindow-id message via a
@@ -2472,6 +2473,8 @@ bus_sync_handler (GstBus * bus, GstMessage * message, GstPipeline * data)
   if ((GST_MESSAGE_TYPE (message) == GST_MESSAGE_ELEMENT) &&
       gst_structure_has_name (message->structure, "prepare-xwindow-id")) {
     GstElement *element = GST_ELEMENT (GST_MESSAGE_SRC (message));
+
+    xoverlay_element = element;
 
     g_print ("got prepare-xwindow-id, setting XID %lu\n", embed_xid);
 
@@ -2506,6 +2509,10 @@ draw_cb (GtkWidget * widget, cairo_t * cr, gpointer data)
     cairo_fill (cr);
     return TRUE;
   }
+
+  if (xoverlay_element)
+    gst_x_overlay_expose (GST_X_OVERLAY (xoverlay_element));
+
   return FALSE;
 }
 
