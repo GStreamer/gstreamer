@@ -361,7 +361,17 @@ gst_rtp_h264_pay_getcaps (GstBaseRTPPayload * payload, GstPad * pad)
           }
           gst_structure_take_value (new_s, "level", &levels);
         }
+      } else {
+        /* Invalid profile-level-id means baseline */
+
+        gst_structure_set (new_s,
+            "profile", G_TYPE_STRING, "constrained-baseline", NULL);
       }
+    } else {
+      /* No profile-level-id also means baseline */
+
+      gst_structure_set (new_s,
+          "profile", G_TYPE_STRING, "constrained-baseline", NULL);
     }
 
     gst_caps_merge_structure (caps, new_s);
