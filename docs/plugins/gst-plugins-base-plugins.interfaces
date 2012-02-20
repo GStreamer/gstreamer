@@ -3,6 +3,7 @@ GstAlsaSink GstPropertyProbe
 GstAlsaSrc GstImplementsInterface GstMixer GstPropertyProbe
 GstAppSink GstURIHandler
 GstAppSrc GstURIHandler
+GstAudioEncoder GstPreset
 GstBin GstChildProxy
 GstCdParanoiaSrc GstURIHandler
 GstCddaBaseSrc GstURIHandler
@@ -25,6 +26,7 @@ GstURIDecodeBin GstChildProxy
 GstV4lElement GstImplementsInterface GstTuner GstXOverlay GstColorBalance GstPropertyProbe
 GstV4lSrc GstImplementsInterface GstTuner GstXOverlay GstColorBalance GstPropertyProbe
 GstVolume GstImplementsInterface GstMixer GstStreamVolume
+GstVorbisEnc GstPreset GstTagSetter
 GstVorbisEnc GstTagSetter GstPreset
 GstVorbisTag GstTagSetter
 GstXImageSink GstImplementsInterface GstNavigation GstXOverlay

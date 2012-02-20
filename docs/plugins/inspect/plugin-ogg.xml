@@ -3,10 +3,10 @@
   <description>ogg stream manipulation (info about ogg: http://xiph.org)</description>
   <filename>../../ext/ogg/.libs/libgstogg.so</filename>
   <basename>libgstogg.so</basename>
-  <version>0.10.35.1</version>
+  <version>0.10.36</version>
   <license>LGPL</license>
   <source>gst-plugins-base</source>
-  <package>GStreamer Base Plug-ins git</package>
+  <package>GStreamer Base Plug-ins source release</package>
   <origin>Unknown package origin</origin>
   <elements>
     <element>
@@ -62,7 +62,7 @@
           <name>sink_%d</name>
           <direction>sink</direction>
           <presence>request</presence>
-          <details>video/x-theora; audio/x-vorbis; audio/x-flac; audio/x-speex; audio/x-celt; application/x-ogm-video; application/x-ogm-audio; video/x-dirac; video/x-smoke; video/x-vp8; text/x-cmml, encoded=(boolean)true; subtitle/x-kate; application/x-kate</details>
+          <details>video/x-theora; audio/x-vorbis; audio/x-flac; audio/x-speex; audio/x-celt; application/x-ogm-video; application/x-ogm-audio; video/x-dirac; video/x-smoke; video/x-vp8; text/x-cmml, encoded=(boolean)true; subtitle/x-kate; application/x-kate; audio/x-opus</details>
         </caps>
         <caps>
           <name>src</name>
