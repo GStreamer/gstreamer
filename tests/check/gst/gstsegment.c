@@ -243,18 +243,6 @@ GST_START_TEST (segment_seek_size)
   fail_unless (segment.stop == -1);
   fail_unless (update == TRUE);
 
-#if 0
-  /* configure segment to stop relative, does not update stop
-   * since we did not set it before. */
-  gst_segment_do_seek (&segment, 1.0,
-      GST_FORMAT_BYTES,
-      GST_SEEK_FLAG_NONE,
-      GST_SEEK_TYPE_NONE, 200, GST_SEEK_TYPE_CUR, -100, &update);
-  fail_unless (segment.start == 100);
-  fail_unless (segment.stop == -1);
-  fail_unless (update == FALSE);
-#endif
-
   /* do some clipping on the open range */
   /* completely outside */
   res = gst_segment_clip (&segment, GST_FORMAT_BYTES, 0, 50, &cstart, &cstop);
@@ -280,13 +268,6 @@ GST_START_TEST (segment_seek_size)
   /* completely inside */
   res = gst_segment_clip (&segment, GST_FORMAT_BYTES,
       150, 200, &cstart, &cstop);
-  fail_unless (res == TRUE);
-  fail_unless (cstart == 150);
-  fail_unless (cstop == 200);
-
-  /* partially inside, clip to size */
-  res = gst_segment_clip (&segment, GST_FORMAT_BYTES,
-      150, 300, &cstart, &cstop);
   fail_unless (res == TRUE);
   fail_unless (cstart == 150);
   fail_unless (cstop == 200);
