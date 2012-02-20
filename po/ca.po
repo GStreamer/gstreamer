@@ -2,19 +2,22 @@
 # Copyright © 2005, 2010 Free Software Foundation, Inc.
 # This file is put in the public domain.
 # Jordi Mallach <jordi@sindominio.net>, 2005, 2010.
+# Jordi Estrada <jordi.estrada@yamaha-motor.es>, 2011.
+# Gil Forcada <gforcada@gnome.org>, 2012.
 #
 msgid ""
 msgstr ""
-"Project-Id-Version: gst-plugins-base 0.10.30.3\n"
+"Project-Id-Version: gst-plugins-base 0.10.32.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2011-08-20 12:18+0100\n"
-"PO-Revision-Date: 2010-11-04 23:13+0100\n"
-"Last-Translator: Jordi Mallach <jordi@sindominio.net>\n"
+"POT-Creation-Date: 2012-02-05 13:52+0000\n"
+"PO-Revision-Date: 2012-01-01 14:19+0100\n"
+"Last-Translator: Gil Forcada <gforcada@gnome.org>\n"
 "Language-Team: Catalan <ca@dodds.net>\n"
 "Language: ca\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=2; plural=n != 1;\n"
 
 msgid "Master"
 msgstr "Mestre"
@@ -23,7 +26,7 @@ msgid "Bass"
 msgstr "Baixos"
 
 msgid "Treble"
-msgstr "Treble"
+msgstr "Aguts"
 
 msgid "PCM"
 msgstr "PCM"
@@ -41,7 +44,7 @@ msgid "Microphone"
 msgstr "Micròfon"
 
 msgid "PC Speaker"
-msgstr "Altaveu PC"
+msgstr "Altaveu del PC"
 
 msgid "Playback"
 msgstr "Reproducció"
@@ -50,48 +53,51 @@ msgid "Capture"
 msgstr "Captura"
 
 msgid "Could not open device for playback in mono mode."
-msgstr "No s'ha pogut obrir el dispositiu per a reproduir en mode mono."
+msgstr "No s'ha pogut obrir el dispositiu per a la reproducció en mode mono."
 
 msgid "Could not open device for playback in stereo mode."
-msgstr "No s'ha pogut obrir el dispositiu per a reproduir en mode estèreo."
+msgstr ""
+"No s'ha pogut obrir el dispositiu per a la reproducció en mode estèreo."
 
 #, c-format
 msgid "Could not open device for playback in %d-channel mode."
-msgstr "No s'ha pogut obrir el dispositiu per a reproduir en mode %d-canals."
+msgstr ""
+"No s'ha pogut obrir el dispositiu per a la reproducció en mode %d-canals."
 
 msgid ""
 "Could not open audio device for playback. Device is being used by another "
 "application."
 msgstr ""
-"No s'ha pogut obrir el dispositiu d'àudio per a reproduir. El dispositiu "
-"està en ús per una altra aplicació."
+"No s'ha pogut obrir el dispositiu d'àudio per a la reproducció. El "
+"dispositiu està en ús per una altra aplicació."
 
 msgid "Could not open audio device for playback."
-msgstr "No s'ha pogut obrir el dispositiu d'àudio per a reproduir."
+msgstr "No s'ha pogut obrir el dispositiu d'àudio per a la reproducció."
 
 msgid "Could not open device for recording in mono mode."
-msgstr "No s'ha pogut obrir el dispositiu per a enregistrar en mode mono."
+msgstr "No s'ha pogut obrir el dispositiu per a l'enregistrament en mode mono."
 
 msgid "Could not open device for recording in stereo mode."
-msgstr "No s'ha pogut obrir el dispositiu per a enregistrar en mode estèreo."
+msgstr ""
+"No s'ha pogut obrir el dispositiu per a l'enregistrament en mode estèreo."
 
-# FIXME Trailing dot. jm
 #, c-format
 msgid "Could not open device for recording in %d-channel mode"
-msgstr "No s'ha pogut obrir el dispositiu per a enregistrar en mode %d-canals"
+msgstr ""
+"No s'ha pogut obrir el dispositiu per a l'enregistrament en mode %d-canals"
 
 msgid ""
 "Could not open audio device for recording. Device is being used by another "
 "application."
 msgstr ""
-"No s'ha pogut obrir el dispositiu d'àudio per a enregistrar. El dispositiu "
-"està en ús per una altra aplicació."
+"No s'ha pogut obrir el dispositiu d'àudio per a l'enregistrament. El "
+"dispositiu està en ús per una altra aplicació."
 
 msgid "Could not open audio device for recording."
-msgstr "No s'ha pogut obrir el dispositiu d'àudio per a enregistrar."
+msgstr "No s'ha pogut obrir el dispositiu d'àudio per a l'enregistrament."
 
 msgid "Could not open CD device for reading."
-msgstr "No s'ha pogut obrir el dispositiu del CD per a lectura."
+msgstr "No s'ha pogut obrir el dispositiu del CD per a la lectura."
 
 msgid "Could not seek CD."
 msgstr "No s'ha pogut cercar el CD."
@@ -124,21 +130,21 @@ msgstr ""
 "instaŀlat."
 
 msgid "This appears to be a text file"
-msgstr "Açò sembla ser un fitxer de text"
+msgstr "Això sembla ser un fitxer de text"
 
 msgid "Could not determine type of stream"
 msgstr "No s'ha pogut determinar el tipus de flux"
 
 #, c-format
 msgid "Invalid subtitle URI \"%s\", subtitles disabled."
-msgstr "L'URI de subtítols «%s» és invàlida, s'inhabiliten els subtítols."
+msgstr "L'URI de subtítols «%s» no és vàlid, s'inhabiliten els subtítols."
 
 msgid "No URI specified to play from."
-msgstr "No s'ha especificat cap URL des d'on reproduir."
+msgstr "No s'ha especificat cap URI des d'on reproduir."
 
 #, c-format
 msgid "Invalid URI \"%s\"."
-msgstr "L'URI «%s» és invàlid."
+msgstr "L'URI «%s» no és vàlid."
 
 msgid "RTSP streams cannot be played yet."
 msgstr "Encara no es poden reproduir els fluxes RTSP."
@@ -147,7 +153,7 @@ msgid "Could not create \"decodebin\" element."
 msgstr "No s'ha pogut crear l'element «decodebin»."
 
 msgid "Source element is invalid."
-msgstr "L'element font és invàlid."
+msgstr "L'element font no és vàlid."
 
 msgid ""
 "Only a subtitle stream was detected. Either you are loading a subtitle file "
@@ -155,30 +161,30 @@ msgid ""
 msgstr ""
 "Només s'ha detectat un flux de subtítols. O bé esteu carregant un fitxer de "
 "subtítols o qualsevol altre tipus de fitxer de text, o no s'ha reconegut el "
-"fitxer de medi."
+"fitxer multimèdia."
 
 msgid ""
 "You do not have a decoder installed to handle this file. You might need to "
 "install the necessary plugins."
 msgstr ""
-"No teniu un decodificador instaŀlat per a gestionar aquest fitxer. És "
+"No teniu un descodificador instaŀlat per a gestionar aquest fitxer. És "
 "possible que necessiteu instaŀlar els connectors necessaris."
 
 msgid "This is not a media file"
-msgstr "Aquest no és un fitxer de medi"
+msgstr "Això no és un fitxer multimèdia"
 
 msgid "A subtitle stream was detected, but no video stream."
 msgstr "S'ha detectat un flux de subtítols, però no un flux de vídeo."
 
 msgid "Both autovideosink and xvimagesink elements are missing."
-msgstr "Manquen l'element autovideosink i el xvimagesink."
+msgstr "Manquen els elements autovideosink i xvimagesink."
 
 #, c-format
 msgid "Missing element '%s' - check your GStreamer installation."
 msgstr "Manca l'element «%s» - comproveu la vostra instaŀlació del GStreamer."
 
 msgid "Both autoaudiosink and alsasink elements are missing."
-msgstr "Manquen l'element autoaudiosink i l'alsasink."
+msgstr "Manquen els elements autoaudiosink i alsasink."
 
 #, c-format
 msgid "Both autovideosink and %s elements are missing."
@@ -193,13 +199,13 @@ msgstr "El videosink configurat %s no funciona."
 
 #, c-format
 msgid "Both autovideosink and %s elements are not working."
-msgstr "Tant l'element autovideosink com el %s no funcionen."
+msgstr "Els elements autovideosink i %s no funcionen."
 
 msgid "The autovideosink element is not working."
 msgstr "L'element autovideosink no funciona."
 
 msgid "Custom text sink element is not usable."
-msgstr "L'element sortida personalitzat de text no es pot emprar."
+msgstr "L'element sortida de text personalitzat no es pot utilitzar."
 
 msgid "No volume control found"
 msgstr "No s'ha trobat un control de volum"
@@ -217,7 +223,7 @@ msgstr "L'audiosink configurat %s no funciona."
 
 #, c-format
 msgid "Both autoaudiosink and %s elements are not working."
-msgstr "No funcionen tant l'element autoaudiosink com el %s."
+msgstr "Els elements autoaudiosink i %s no funcionen."
 
 msgid "The autoaudiosink element is not working."
 msgstr "L'element autoaudiosink no funciona."
@@ -227,7 +233,7 @@ msgstr "No es pot reproduir un fitxer de text sense vídeo o visualitzacions."
 
 #, c-format
 msgid "No decoder available for type '%s'."
-msgstr "No hi ha un decodificador disponible per al tipus «%s»."
+msgstr "No hi ha cap descodificador disponible per al tipus «%s»."
 
 msgid "This stream type cannot be played yet."
 msgstr "Encara no es pot reproduir aquest tipus de flux."
@@ -290,125 +296,132 @@ msgid "MusicBrainz TRM ID"
 msgstr "ID TRM al MusicBrainz"
 
 msgid "capturing shutter speed"
-msgstr "velocitat de l'obturador de la captura"
+msgstr "velocitat d'obturació de la captura"
 
 msgid "Shutter speed used when capturing an image, in seconds"
-msgstr ""
+msgstr "Velocitat d'obturació utilitzat en capturar una imatge, en segons"
 
 msgid "capturing focal ratio"
-msgstr ""
+msgstr "relació focal de la captura"
 
 msgid "Focal ratio (f-number) used when capturing the image"
-msgstr ""
+msgstr "Relació focal (nombre f) utilitzat en capturar la imatge"
 
 msgid "capturing focal length"
-msgstr ""
+msgstr "longitud focal de la captura"
 
 msgid "Focal length of the lens used capturing the image, in mm"
-msgstr ""
+msgstr "Longitud focal de la lent utilitzada en capturar la imatge, en mm"
 
 msgid "capturing digital zoom ratio"
-msgstr ""
+msgstr "relació de zoom digital de la captura"
 
 msgid "Digital zoom ratio used when capturing an image"
-msgstr ""
+msgstr "Relació de zoom digital utilitzat en capturar una imatge"
 
 msgid "capturing iso speed"
-msgstr ""
+msgstr "velocitat iso de la captura"
 
 msgid "The ISO speed used when capturing an image"
-msgstr ""
+msgstr "La velocitat ISO utilitzada en capturar una imatge"
 
 msgid "capturing exposure program"
-msgstr ""
+msgstr "programa d'exposició de la captura"
 
 msgid "The exposure program used when capturing an image"
-msgstr ""
+msgstr "El programa d'exposició utilitzar en capturar una imatge"
 
 msgid "capturing exposure mode"
-msgstr ""
+msgstr "mode d'exposició de la captura"
 
 msgid "The exposure mode used when capturing an image"
-msgstr ""
+msgstr "El mode d'exposició utilitzat en capturar una imatge"
 
+#, fuzzy
 msgid "capturing exposure compensation"
-msgstr ""
+msgstr "mode d'exposició de la captura"
 
+#, fuzzy
 msgid "The exposure compensation used when capturing an image"
-msgstr ""
+msgstr "El mode d'exposició utilitzat en capturar una imatge"
 
 msgid "capturing scene capture type"
-msgstr ""
+msgstr "tipus de captura d'escena de la captura"
 
 msgid "The scene capture mode used when capturing an image"
-msgstr ""
+msgstr "El mode de captura d'escena utilitzat en capturar una imatge"
 
 msgid "capturing gain adjustment"
-msgstr ""
+msgstr "ajust de guany de la captura"
 
 msgid "The overall gain adjustment applied on an image"
-msgstr ""
+msgstr "L'ajust del guany general aplicat a una imatge"
 
 msgid "capturing white balance"
-msgstr ""
+msgstr "balanç de blancs de la captura"
 
 msgid "The white balance mode set when capturing an image"
-msgstr ""
+msgstr "El mode de balanç de blancs utilitzat en capturar una imatge"
 
 msgid "capturing contrast"
-msgstr ""
+msgstr "contrast de la captura"
 
 msgid "The direction of contrast processing applied when capturing an image"
 msgstr ""
+"La direcció del processament del contrast aplicada en capturar una imatge"
 
 msgid "capturing saturation"
-msgstr ""
+msgstr "saturació de la captura"
 
 msgid "The direction of saturation processing applied when capturing an image"
 msgstr ""
+"La direcció del processament de la saturació aplicada en capturar una imatge"
 
 msgid "capturing sharpness"
-msgstr ""
+msgstr "nitidesa de la captura"
 
 msgid "The direction of sharpness processing applied when capturing an image"
 msgstr ""
+"La direcció del processament de la nitidesa aplicada en capturar una imatge"
 
 msgid "capturing flash fired"
-msgstr ""
+msgstr "flaix de la captura"
 
 msgid "If the flash fired while capturing an image"
-msgstr ""
+msgstr "Si el flaix s'ha disparat en capturar una imatge"
 
 msgid "capturing flash mode"
-msgstr ""
+msgstr "mode de flaix de la captura"
 
 msgid "The selected flash mode while capturing an image"
-msgstr ""
+msgstr "El mode de flaix seleccionat en capturar una imatge"
 
 msgid "capturing metering mode"
-msgstr ""
+msgstr "mode de mesurament de la captura"
 
 msgid ""
 "The metering mode used while determining exposure for capturing an image"
 msgstr ""
+"El mode de mesurament utilitzat en determinar l'exposició per a capturar una "
+"imatge"
 
 msgid "capturing source"
-msgstr ""
+msgstr "font de la captura"
 
 msgid "The source or type of device used for the capture"
-msgstr ""
+msgstr "La font o tipus de dispositiu utilitzat per a la captura"
 
 msgid "image horizontal ppi"
-msgstr "ppi horitzontal de la imatge"
+msgstr "ppp horitzontal de la imatge"
 
 msgid "Media (image/video) intended horizontal pixel density in ppi"
-msgstr "Densitat horitzontal de píxels del medi (imatge/vídeo), en ppi"
+msgstr "Densitat horitzontal de píxels del multimèdia (imatge/vídeo), en ppp"
 
 msgid "image vertical ppi"
-msgstr "ppi vertical de la imatge"
+msgstr "ppp vertical de la imatge"
 
 msgid "Media (image/video) intended vertical pixel density in ppi"
-msgstr "Densitat vertical de píxels del medi (imatge/vídeo), en ppi"
+msgstr "Densitat vertical de píxels del multimèdia (imatge/vídeo), en ppp"
 
 msgid "ID3v2 frame"
 msgstr ""
@@ -426,34 +439,34 @@ msgid "APE tag"
 msgstr "Etiqueta APE"
 
 msgid "ICY internet radio"
-msgstr "Emisora de ràdio per Internet ICY"
+msgstr "Emissora de ràdio per Internet ICY"
 
 msgid "Apple Lossless Audio (ALAC)"
-msgstr "Apple Lossless Audio (ALAC)"
+msgstr "Àudio sense pèrdues d'Apple (ALAC)"
 
 msgid "Free Lossless Audio Codec (FLAC)"
-msgstr "Free Lossless Audio Codec (FLAC)"
+msgstr "Còdec d'àudio sense pèrdues lliure (FLAC)"
 
 msgid "Lossless True Audio (TTA)"
-msgstr "Lossless True Audio (TTA)"
+msgstr "Àudio sense pèrdues real (TTA)"
 
 msgid "Windows Media Speech"
-msgstr "Windows Media Speech"
+msgstr "Parla de Windows Media"
 
 msgid "CYUV Lossless"
-msgstr "CYUV sense pèrdua"
+msgstr "CYUV sense pèrdues"
 
 msgid "FFMpeg v1"
 msgstr "FFMpeg v1"
 
 msgid "Lossless MSZH"
-msgstr "MSZH sense pèrdua"
+msgstr "MSZH sense pèrdues"
 
 msgid "Uncompressed Gray Image"
-msgstr "Imatge en escala de grisos no comprimida"
+msgstr "Imatge en escala de grisos sense comprimir"
 
 msgid "Run-length encoding"
-msgstr ""
+msgstr "Codificació Run-length"
 
 msgid "Sami subtitle format"
 msgstr "Format de subtítols Sami"
@@ -465,41 +478,41 @@ msgid "Kate subtitle format"
 msgstr "Format de subtítols Kate"
 
 msgid "Uncompressed planar YUV 4:2:0"
-msgstr ""
+msgstr "YUV 4:2:0 planar sense comprimir"
 
 msgid "Uncompressed planar YVU 4:2:0"
-msgstr ""
+msgstr "YVU 4:2:0 planar sense comprimir"
 
 msgid "Uncompressed packed YUV 4:2:2"
-msgstr ""
+msgstr "YUV 4:2:2 empaquetat sense comprimir"
 
 msgid "Uncompressed packed YUV 4:1:0"
-msgstr ""
+msgstr "YUV 4:1:0 empaquetat sense comprimir"
 
 msgid "Uncompressed packed YVU 4:1:0"
-msgstr ""
+msgstr "YVU 4:1:0 empaquetat sense comprimir"
 
 msgid "Uncompressed packed YUV 4:1:1"
-msgstr ""
+msgstr "YUV 4:1:1 empaquetat sense comprimir"
 
 msgid "Uncompressed packed YUV 4:4:4"
-msgstr ""
+msgstr "YUV 4:4:4 empaquetat sense comprimir"
 
 msgid "Uncompressed planar YUV 4:2:2"
-msgstr ""
+msgstr "YUV 4:2:2 planar sense comprimir"
 
 msgid "Uncompressed planar YUV 4:1:1"
-msgstr ""
+msgstr "YUV 4:1:1 planar sense comprimir"
 
 msgid "Uncompressed black and white Y-plane"
-msgstr ""
+msgstr "Pla Y blanc i negre sense comprimir"
 
 msgid "Uncompressed YUV"
 msgstr "YUV sense comprimir"
 
 #, c-format
 msgid "Uncompressed palettized %d-bit %s"
-msgstr ""
+msgstr "Paletitzat %d-bit %s sense comprimir"
 
 #, c-format
 msgid "DivX MPEG-4 Version %d"
@@ -507,7 +520,7 @@ msgstr "DivX MPEG-4 versió %d"
 
 #, c-format
 msgid "Raw %d-bit PCM audio"
-msgstr "Àudio en cru de %d-bit"
+msgstr "Àudio PCM en cru de %d-bit"
 
 msgid "Raw PCM audio"
 msgstr "Àudio PCM en cru"
@@ -526,10 +539,10 @@ msgid "DVD source"
 msgstr "Font de DVD"
 
 msgid "Real Time Streaming Protocol (RTSP) source"
-msgstr "Font del Real Time Streaming Protocol (RTSP)"
+msgstr "Font del protocol de transmissió en temps real (RTSP)"
 
 msgid "Microsoft Media Server (MMS) protocol source"
-msgstr "Font del protocol Microsoft Media Server (MMS)"
+msgstr "Font del protocol de servidor Microsoft Media (MMS)"
 
 #, c-format
 msgid "%s protocol source"
@@ -549,11 +562,11 @@ msgstr "Descarregador RTP %s"
 
 #, c-format
 msgid "%s demuxer"
-msgstr "Demultiplexor %s"
+msgstr "Desmultiplexor %s"
 
 #, c-format
 msgid "%s decoder"
-msgstr "Decodificador %s"
+msgstr "Descodificador %s"
 
 #, c-format
 msgid "%s video RTP payloader"
@@ -589,7 +602,7 @@ msgid "Unknown element"
 msgstr "L'element és desconegut"
 
 msgid "Unknown decoder element"
-msgstr "L'element decodificador és desconegut"
+msgstr "L'element descodificador és desconegut"
 
 msgid "Unknown encoder element"
 msgstr "L'element codificador és desconegut"
@@ -610,7 +623,7 @@ msgstr "El dispositiu «%s» ja és en ús."
 
 #, c-format
 msgid "Could not open device \"%s\" for reading and writing."
-msgstr "No s'ha pogut obrir el dispositiu «%s» per a llegir i escriure."
+msgstr "No s'ha pogut obrir el dispositiu «%s» per a lectura o escriptura."
 
 #~ msgid "discid"
 #~ msgstr "id del disc"
