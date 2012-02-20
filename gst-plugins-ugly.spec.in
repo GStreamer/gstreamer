@@ -94,8 +94,8 @@ rm -rf $RPM_BUILD_ROOT
 %doc AUTHORS COPYING README REQUIREMENTS gst-plugins-ugly.doap
 %{_libdir}/gstreamer-%{majorminor}/libgstasf.so
 %{_libdir}/gstreamer-%{majorminor}/libgstdvdlpcmdec.so
-# %{_libdir}/gstreamer-%{majorminor}/libgstxingmux.so
-# %{_libdir}/gstreamer-%{majorminor}/libgstrmdemux.so
+%{_libdir}/gstreamer-%{majorminor}/libgstxingmux.so
+%{_libdir}/gstreamer-%{majorminor}/libgstrmdemux.so
 %{_libdir}/gstreamer-%{majorminor}/libgstdvdsub.so
 
 # plugins with dependencies
