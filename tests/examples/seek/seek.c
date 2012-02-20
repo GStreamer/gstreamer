@@ -40,6 +40,8 @@
 #include <gdk/gdkx.h>
 #elif defined (GDK_WINDOWING_WIN32)
 #include <gdk/gdkwin32.h>
+#elif defined (GDK_WINDOWING_QUARTZ)
+#include <gdk/gdkquartzwindow.h>
 #endif
 
 #include <gst/interfaces/xoverlay.h>
@@ -2457,10 +2459,10 @@ msg_clock_lost (GstBus * bus, GstMessage * message, GstPipeline * data)
   }
 }
 
-#if defined (GDK_WINDOWING_X11) || defined (GDK_WINDOWING_WIN32)
+#if defined (GDK_WINDOWING_X11) || defined (GDK_WINDOWING_WIN32) || defined (GDK_WINDOWING_QUARTZ)
 
 static GstElement *xoverlay_element = NULL;
-static gulong embed_xid = 0;
+static guintptr embed_xid = 0;
 
 /* We set the xid here in response to the prepare-xwindow-id message via a
  * bus sync handler because we don't know the actual videosink used from the
@@ -2529,7 +2531,10 @@ realize_cb (GtkWidget * widget, gpointer data)
 #if defined (GDK_WINDOWING_WIN32)
   embed_xid = GDK_WINDOW_HWND (window);
   g_print ("Window realize: video window HWND = %lu\n", embed_xid);
-#else
+#elif defined (GDK_WINDOWING_QUARTZ)
+  embed_xid = gdk_quartz_window_get_nsview (window);
+  g_print ("Window realize: video window NSView = %p\n", embed_xid);
+#elif defined (GDK_WINDOWING_X11)
   embed_xid = GDK_WINDOW_XID (window);
   g_print ("Window realize: video window XID = %lu\n", embed_xid);
 #endif
@@ -2563,7 +2568,7 @@ connect_bus_signals (GstElement * pipeline)
 {
   GstBus *bus = gst_pipeline_get_bus (GST_PIPELINE (pipeline));
 
-#if defined (GDK_WINDOWING_X11) || defined (GDK_WINDOWING_WIN32)
+#if defined (GDK_WINDOWING_X11) || defined (GDK_WINDOWING_WIN32) || defined (GDK_WINDOWING_QUARTZ)
   /* handle prepare-xwindow-id element message synchronously */
   gst_bus_set_sync_handler (bus, (GstBusSyncHandler) bus_sync_handler,
       pipeline);
@@ -3014,7 +3019,7 @@ main (int argc, char **argv)
    * asks for the XID of the window to render onto */
   gtk_widget_realize (window);
 
-#if defined (GDK_WINDOWING_X11) || defined (GDK_WINDOWING_WIN32)
+#if defined (GDK_WINDOWING_X11) || defined (GDK_WINDOWING_WIN32) || defined (GDK_WINDOWING_QUARTZ)
   /* we should have the XID now */
   g_assert (embed_xid != 0);
 #endif
