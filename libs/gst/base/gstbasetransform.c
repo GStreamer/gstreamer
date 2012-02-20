@@ -1447,7 +1447,7 @@ default_prepare_output_buffer (GstBaseTransform * trans,
   if (priv->pool) {
     GST_DEBUG_OBJECT (trans, "using pool alloc");
     ret = gst_buffer_pool_acquire_buffer (priv->pool, outbuf, NULL);
-    goto done;
+    goto copy_meta;
   }
 
   /* no pool, we need to figure out the size of the output buffer first */
@@ -1483,6 +1483,7 @@ default_prepare_output_buffer (GstBaseTransform * trans,
   GST_DEBUG_OBJECT (trans, "doing alloc of size %" G_GSIZE_FORMAT, outsize);
   *outbuf = gst_buffer_new_allocate (priv->allocator, outsize, priv->alignment);
 
+copy_meta:
   /* copy the metadata */
   if (bclass->copy_metadata)
     if (!bclass->copy_metadata (trans, inbuf, *outbuf)) {
