@@ -2476,7 +2476,9 @@ bus_sync_handler (GstBus * bus, GstMessage * message, GstPipeline * data)
       gst_structure_has_name (message->structure, "prepare-xwindow-id")) {
     GstElement *element = GST_ELEMENT (GST_MESSAGE_SRC (message));
 
-    xoverlay_element = element;
+    if (xoverlay_element)
+      gst_object_unref (xoverlay_element);
+    xoverlay_element = GST_ELEMENT (gst_object_ref (element));
 
     g_print ("got prepare-xwindow-id, setting XID %lu\n", embed_xid);
 
@@ -3034,6 +3036,9 @@ main (int argc, char **argv)
 
   g_print ("NULL pipeline\n");
   gst_element_set_state (pipeline, GST_STATE_NULL);
+
+  if (xoverlay_element)
+    gst_object_unref (xoverlay_element);
 
   g_print ("free pipeline\n");
   gst_object_unref (pipeline);
