@@ -140,6 +140,7 @@
 #define DESC_DVB_EXTENSION      0x7F
 /* 0x80 - 0xFE are user defined */
 #define DESC_DTG_LOGICAL_CHANNEL	0x83 /* from DTG D-Book */
+#define DESC_AC3_AUDIO_STREAM                 0x81
 /* 0xFF is forbidden */
 
 /* common for all descriptors */
@@ -315,14 +316,21 @@
 /* DVB Carousel Identifier Descriptor */
 #define DESC_DVB_CAROUSEL_IDENTIFIER_carousel_id(desc)		(GST_READ_UINT32_BE((desc) + 2))
 
+/* AC3_audio_stream_descriptor */
+#define DESC_AC_AUDIO_STREAM_bsid(desc)             ((desc)[2] & 0x1f)
+
 /* registration_descriptor format IDs */
 #define DRF_ID_HDMV       0x48444d56
 #define DRF_ID_VC1        0x56432D31   /* defined in RP227 */
+#define DRF_ID_DTS1       0x44545331
+#define DRF_ID_DTS2       0x44545332
+#define DRF_ID_DTS3       0x44545333
 
-typedef struct {
-  guint    n_desc;
-  guint8   data_length;
-  guint8  *data;
+typedef struct
+{
+  guint n_desc;
+  guint8 data_length;
+  guint8 *data;
 } GstMPEGDescriptor;
 
 void gst_mpegtsdesc_init_debug (void);

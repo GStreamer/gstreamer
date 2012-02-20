@@ -1020,8 +1020,7 @@ create_pad_for_stream (MpegTSBase * base, MpegTSBaseStream * bstream,
       break;
     case ST_PRIVATE_DATA:
       GST_LOG ("private data");
-      desc =
-          mpegts_get_descriptor_from_stream ((MpegTSBaseStream *) stream,
+      desc = mpegts_get_descriptor_from_stream ((MpegTSBaseStream *) stream,
           DESC_DVB_AC3);
       if (desc) {
         GST_LOG ("ac3 audio");
@@ -1031,8 +1030,8 @@ create_pad_for_stream (MpegTSBase * base, MpegTSBaseStream * bstream,
         g_free (desc);
         break;
       }
-      desc =
-          mpegts_get_descriptor_from_stream ((MpegTSBaseStream *) stream,
+
+      desc = mpegts_get_descriptor_from_stream ((MpegTSBaseStream *) stream,
           DESC_DVB_ENHANCED_AC3);
       if (desc) {
         GST_LOG ("ac3 audio");
@@ -1042,8 +1041,7 @@ create_pad_for_stream (MpegTSBase * base, MpegTSBaseStream * bstream,
         g_free (desc);
         break;
       }
-      desc =
-          mpegts_get_descriptor_from_stream ((MpegTSBaseStream *) stream,
+      desc = mpegts_get_descriptor_from_stream ((MpegTSBaseStream *) stream,
           DESC_DVB_TELETEXT);
       if (desc) {
         GST_LOG ("teletext");
@@ -1064,6 +1062,26 @@ create_pad_for_stream (MpegTSBase * base, MpegTSBaseStream * bstream,
         g_free (desc);
         break;
       }
+
+      desc = mpegts_get_descriptor_from_stream ((MpegTSBaseStream *) stream,
+          DESC_REGISTRATION);
+      if (desc) {
+        switch (DESC_REGISTRATION_format_identifier (desc)) {
+          case DRF_ID_DTS1:
+          case DRF_ID_DTS2:
+          case DRF_ID_DTS3:
+            /* SMPTE registered DTS */
+            GST_LOG ("subtitling");
+            template = gst_static_pad_template_get (&private_template);
+            name = g_strdup_printf ("private_%04x", bstream->pid);
+            caps = gst_caps_new_simple ("audio/x-dts", NULL);
+            break;
+        }
+        g_free (desc);
+      }
+      if (template)
+        break;
+
       /* hack for itv hd (sid 10510, video pid 3401 */
       if (program->program_number == 10510 && bstream->pid == 3401) {
         template = gst_static_pad_template_get (&video_template);
@@ -1167,18 +1185,35 @@ create_pad_for_stream (MpegTSBase * base, MpegTSBaseStream * bstream,
       desc = mpegts_get_descriptor_from_program (program, DESC_REGISTRATION);
       if (desc) {
         if (DESC_REGISTRATION_format_identifier (desc) == DRF_ID_HDMV) {
-          template = gst_static_pad_template_get (&audio_template);
-          name = g_strdup_printf ("audio_%04x", bstream->pid);
-          caps = gst_caps_new_simple ("audio/x-eac3", NULL);
+          guint8 *ac3_desc;
+
+          /* ATSC ac3 audio descriptor */
+          ac3_desc =
+              mpegts_get_descriptor_from_stream ((MpegTSBaseStream *) stream,
+              DESC_AC3_AUDIO_STREAM);
+          if (ac3_desc && DESC_AC_AUDIO_STREAM_bsid (ac3_desc) != 16) {
+            GST_LOG ("ac3 audio");
+            template = gst_static_pad_template_get (&audio_template);
+            name = g_strdup_printf ("audio_%04x", bstream->pid);
+            caps = gst_caps_new_simple ("audio/x-ac3", NULL);
+
+            g_free (ac3_desc);
+          } else {
+            template = gst_static_pad_template_get (&audio_template);
+            name = g_strdup_printf ("audio_%04x", bstream->pid);
+            caps = gst_caps_new_simple ("audio/x-eac3", NULL);
+          }
+
         }
+
         g_free (desc);
       }
       if (template)
         break;
 
+
       /* DVB_ENHANCED_AC3 */
-      desc =
-          mpegts_get_descriptor_from_stream ((MpegTSBaseStream *) stream,
+      desc = mpegts_get_descriptor_from_stream ((MpegTSBaseStream *) stream,
           DESC_DVB_ENHANCED_AC3);
       if (desc) {
         template = gst_static_pad_template_get (&audio_template);
