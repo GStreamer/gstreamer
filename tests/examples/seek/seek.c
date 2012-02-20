@@ -45,6 +45,7 @@
 #endif
 
 #include <gst/interfaces/xoverlay.h>
+#include <gst/interfaces/navigation.h>
 
 GST_DEBUG_CATEGORY_STATIC (seek_debug);
 #define GST_CAT_DEFAULT (seek_debug)
@@ -2462,7 +2463,32 @@ msg_clock_lost (GstBus * bus, GstMessage * message, GstPipeline * data)
 #if defined (GDK_WINDOWING_X11) || defined (GDK_WINDOWING_WIN32) || defined (GDK_WINDOWING_QUARTZ)
 
 static GstElement *xoverlay_element = NULL;
+static GstElement *navigation_element = NULL;
 static guintptr embed_xid = 0;
+
+static void
+find_navigation_element (void)
+{
+  GstElement *video_sink;
+
+  g_object_get (pipeline, "video-sink", &video_sink, NULL);
+  if (!video_sink)
+    return;
+
+  if (navigation_element)
+    gst_object_unref (navigation_element);
+
+  if (GST_IS_NAVIGATION (video_sink)) {
+    navigation_element = gst_object_ref (video_sink);
+  } else if (GST_IS_BIN (video_sink)) {
+    navigation_element =
+        gst_bin_get_by_interface (GST_BIN (video_sink), GST_TYPE_NAVIGATION);
+  } else {
+    navigation_element = NULL;
+  }
+
+  gst_object_unref (video_sink);
+}
 
 /* We set the xid here in response to the prepare-xwindow-id message via a
  * bus sync handler because we don't know the actual videosink used from the
@@ -2495,6 +2521,9 @@ bus_sync_handler (GstBus * bus, GstMessage * message, GstPipeline * data)
     g_assert (embed_xid != 0);
 
     gst_x_overlay_set_window_handle (GST_X_OVERLAY (element), embed_xid);
+    gst_x_overlay_handle_events (GST_X_OVERLAY (element), FALSE);
+
+    find_navigation_element ();
   }
   return GST_BUS_PASS;
 }
@@ -2540,6 +2569,60 @@ realize_cb (GtkWidget * widget, gpointer data)
   embed_xid = GDK_WINDOW_XID (window);
   g_print ("Window realize: video window XID = %lu\n", embed_xid);
 #endif
+}
+
+static gboolean
+button_press_cb (GtkWidget * widget, GdkEventButton * event, gpointer user_data)
+{
+  gtk_widget_grab_focus (widget);
+
+  if (navigation_element)
+    gst_navigation_send_mouse_event (GST_NAVIGATION (navigation_element),
+        "mouse-button-press", event->button, event->x, event->y);
+
+  return FALSE;
+}
+
+static gboolean
+button_release_cb (GtkWidget * widget, GdkEventButton * event,
+    gpointer user_data)
+{
+  if (navigation_element)
+    gst_navigation_send_mouse_event (GST_NAVIGATION (navigation_element),
+        "mouse-button-release", event->button, event->x, event->y);
+
+  return FALSE;
+}
+
+static gboolean
+key_press_cb (GtkWidget * widget, GdkEventKey * event, gpointer user_data)
+{
+  if (navigation_element)
+    gst_navigation_send_key_event (GST_NAVIGATION (navigation_element),
+        "key-press", gdk_keyval_name (event->keyval));
+
+  return FALSE;
+}
+
+static gboolean
+key_release_cb (GtkWidget * widget, GdkEventKey * event, gpointer user_data)
+{
+  if (navigation_element)
+    gst_navigation_send_key_event (GST_NAVIGATION (navigation_element),
+        "key-release", gdk_keyval_name (event->keyval));
+
+  return FALSE;
+}
+
+static gboolean
+motion_notify_cb (GtkWidget * widget, GdkEventMotion * event,
+    gpointer user_data)
+{
+  if (navigation_element)
+    gst_navigation_send_mouse_event (GST_NAVIGATION (navigation_element),
+        "mouse-move", 0, event->x, event->y);
+
+  return FALSE;
 }
 
 static void
@@ -2752,7 +2835,21 @@ main (int argc, char **argv)
   video_window = gtk_drawing_area_new ();
   g_signal_connect (video_window, "draw", G_CALLBACK (draw_cb), NULL);
   g_signal_connect (video_window, "realize", G_CALLBACK (realize_cb), NULL);
+  g_signal_connect (video_window, "button-press-event",
+      G_CALLBACK (button_press_cb), NULL);
+  g_signal_connect (video_window, "button-release-event",
+      G_CALLBACK (button_release_cb), NULL);
+  g_signal_connect (video_window, "key-press-event", G_CALLBACK (key_press_cb),
+      NULL);
+  g_signal_connect (video_window, "key-release-event",
+      G_CALLBACK (key_release_cb), NULL);
+  g_signal_connect (video_window, "motion-notify-event",
+      G_CALLBACK (motion_notify_cb), NULL);
+  gtk_widget_set_can_focus (video_window, TRUE);
   gtk_widget_set_double_buffered (video_window, FALSE);
+  gtk_widget_add_events (video_window,
+      GDK_POINTER_MOTION_MASK | GDK_BUTTON_PRESS_MASK | GDK_BUTTON_RELEASE_MASK
+      | GDK_KEY_PRESS_MASK | GDK_KEY_RELEASE_MASK);
 
   statusbar = gtk_statusbar_new ();
   status_id = gtk_statusbar_get_context_id (GTK_STATUSBAR (statusbar), "seek");
@@ -3039,6 +3136,8 @@ main (int argc, char **argv)
 
   if (xoverlay_element)
     gst_object_unref (xoverlay_element);
+  if (navigation_element)
+    gst_object_unref (navigation_element);
 
   g_print ("free pipeline\n");
   gst_object_unref (pipeline);
