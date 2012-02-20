@@ -132,6 +132,37 @@ gst_video_convert_caps_remove_format_info (GstCaps * caps)
   return res;
 }
 
+static void
+gst_video_convert_fixate_caps (GstBaseTransform * trans,
+    GstPadDirection direction, GstCaps * caps, GstCaps * othercaps)
+{
+  GstStructure *ss, *ds;
+  const gchar *val;
+
+  GST_DEBUG_OBJECT (trans, "fixating caps %" GST_PTR_FORMAT, othercaps);
+
+  ss = gst_caps_get_structure (caps, 0);
+  ds = gst_caps_get_structure (othercaps, 0);
+
+  /* first try to preserve chroma-site and colorimetry */
+  if ((val = gst_structure_get_string (ss, "chroma-site"))) {
+    if (gst_structure_has_field (ds, "chroma-site"))
+      gst_structure_fixate_field_string (ds, "chroma-site", val);
+    else
+      gst_structure_set (ds, "chroma-site", G_TYPE_STRING, val, NULL);
+  }
+
+  if ((val = gst_structure_get_string (ss, "colorimetry"))) {
+    if (gst_structure_has_field (ds, "colorimetry"))
+      gst_structure_fixate_field_string (ds, "colorimetry", val);
+    else
+      gst_structure_set (ds, "colorimetry", G_TYPE_STRING, val, NULL);
+  }
+
+  /* fixate remaining fields */
+  gst_caps_fixate (othercaps);
+}
+
 /* The caps can be transformed into any other caps with format info removed.
  * However, we should prefer passthrough, so if passthrough is possible,
  * put it first in the list. */
@@ -323,6 +354,8 @@ gst_video_convert_class_init (GstVideoConvertClass * klass)
 
   gstbasetransform_class->transform_caps =
       GST_DEBUG_FUNCPTR (gst_video_convert_transform_caps);
+  gstbasetransform_class->fixate_caps =
+      GST_DEBUG_FUNCPTR (gst_video_convert_fixate_caps);
 
   gstbasetransform_class->passthrough_on_same_caps = TRUE;
 
