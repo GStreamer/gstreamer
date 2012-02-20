@@ -192,7 +192,7 @@ make ERROR_CFLAGS='' ERROR_CXXFLAGS=''
 %{_libdir}/gstreamer-%{majorminor}/libgstfaad.so
 %{_libdir}/gstreamer-%{majorminor}/libgstmms.so
 #%{_libdir}/gstreamer-%{majorminor}/libgstmimic.so
-#%{_libdir}/gstreamer-%{majorminor}/libgstmpeg2enc.so
+%{_libdir}/gstreamer-%{majorminor}/libgstmpeg2enc.so
 %{_libdir}/gstreamer-%{majorminor}/libgstmplex.so
 #%{_libdir}/gstreamer-%{majorminor}/libgstxvid.so
 %{_libdir}/gstreamer-%{majorminor}/libgstfaac.so
@@ -206,9 +206,10 @@ make ERROR_CFLAGS='' ERROR_CXXFLAGS=''
 %{_libdir}/libgstsignalprocessor-%{majorminor}.so.*
 %{_libdir}/libgstcodecparsers-%{majorminor}.so.*
 # Plugins without external dependencies
-#%{_libdir}/gstreamer-%{majorminor}/libgstadpcmdec.so
+%{_libdir}/gstreamer-%{majorminor}/libgstadpcmdec.so
+%{_libdir}/gstreamer-%{majorminor}/libgstadpcmenc.so
 # %{_libdir}/gstreamer-%{majorminor}/libgstaiff.so
-# %{_libdir}/gstreamer-%{majorminor}/libgstautoconvert.so
+%{_libdir}/gstreamer-%{majorminor}/libgstautoconvert.so
 %{_libdir}/gstreamer-%{majorminor}/libgstbayer.so
 # %{_libdir}/gstreamer-%{majorminor}/libgstcamerabin.so
 # %{_libdir}/gstreamer-%{majorminor}/libgstcdxaparse.so
@@ -216,7 +217,7 @@ make ERROR_CFLAGS='' ERROR_CXXFLAGS=''
 # %{_libdir}/gstreamer-%{majorminor}/libgstcoloreffects.so
 %{_libdir}/gstreamer-%{majorminor}/libgstdataurisrc.so
 # %{_libdir}/gstreamer-%{majorminor}/libgstdccp.so
-# %{_libdir}/gstreamer-%{majorminor}/libgstdtmf.so
+%{_libdir}/gstreamer-%{majorminor}/libgstdtmf.so
 # %{_libdir}/gstreamer-%{majorminor}/libgstfestival.so
 # %{_libdir}/gstreamer-%{majorminor}/libgstfreeze.so
 # %{_libdir}/gstreamer-%{majorminor}/libgstfrei0r.so
@@ -229,7 +230,7 @@ make ERROR_CFLAGS='' ERROR_CXXFLAGS=''
 # %{_libdir}/gstreamer-%{majorminor}/libgstjpegformat.so
 # %{_libdir}/gstreamer-%{majorminor}/libgstlegacyresample.so
 # %{_libdir}/gstreamer-%{majorminor}/libgstliveadder.so
-# %{_libdir}/gstreamer-%{majorminor}/libgstmpegdemux.so
+%{_libdir}/gstreamer-%{majorminor}/libgstmpegdemux.so
 # %{_libdir}/gstreamer-%{majorminor}/libgstmve.so
 # %{_libdir}/gstreamer-%{majorminor}/libgstmxf.so
 # %{_libdir}/gstreamer-%{majorminor}/libgstnsf.so
@@ -237,7 +238,7 @@ make ERROR_CFLAGS='' ERROR_CXXFLAGS=''
 %{_libdir}/gstreamer-%{majorminor}/libgstpcapparse.so
 # %{_libdir}/gstreamer-%{majorminor}/libgstpnm.so
 # %{_libdir}/gstreamer-%{majorminor}/libgstrfbsrc.so
-# %{_libdir}/gstreamer-%{majorminor}/libgstrtpmux.so
+%{_libdir}/gstreamer-%{majorminor}/libgstrtpmux.so
 # %{_libdir}/gstreamer-%{majorminor}/libgstsegmentclip.so
 # %{_libdir}/gstreamer-%{majorminor}/libgstrawparse.so
 # %{_libdir}/gstreamer-%{majorminor}/libgstscaletempoplugin.so
@@ -263,7 +264,7 @@ make ERROR_CFLAGS='' ERROR_CXXFLAGS=''
 %{_libdir}/gstreamer-%{majorminor}/libgstmpegtsdemux.so
 # %{_libdir}/gstreamer-%{majorminor}/libgstopencv.so
 # %{_libdir}/gstreamer-%{majorminor}/libgstpatchdetect.so
-# %{_libdir}/gstreamer-%{majorminor}/libgstrtpvp8.so
+%{_libdir}/gstreamer-%{majorminor}/libgstrtpvp8.so
 # %{_libdir}/gstreamer-%{majorminor}/libgstsdi.so
 # %{_libdir}/gstreamer-%{majorminor}/libgstvideofiltersbad.so
 %{_libdir}/gstreamer-%{majorminor}/libgstvideoparsersbad.so
@@ -277,7 +278,7 @@ make ERROR_CFLAGS='' ERROR_CXXFLAGS=''
 # %{_libdir}/gstreamer-%{majorminor}/libgstremovesilence.so
 
 # System (Linux) specific plugins
-%{_libdir}/gstreamer-%{majorminor}/libgstdvb.so
+# %{_libdir}/gstreamer-%{majorminor}/libgstdvb.so
 # %{_libdir}/gstreamer-%{majorminor}/libgstvcdsrc.so
 
 # Plugins with external dependencies
@@ -290,12 +291,12 @@ make ERROR_CFLAGS='' ERROR_CXXFLAGS=''
 #%{_libdir}/gstreamer-%{majorminor}/libgstdc1394.so
 #%endif
 #%{_libdir}/gstreamer-%{majorminor}/libgstdirac.so
-#%{_libdir}/gstreamer-%{majorminor}/libgstgsm.so
+%{_libdir}/gstreamer-%{majorminor}/libgstgsm.so
 #%{_libdir}/gstreamer-%{majorminor}/libgstjp2k.so
 #%{_libdir}/gstreamer-%{majorminor}/libgstkate.so
 #%{_libdir}/gstreamer-%{majorminor}/libgstladspa.so
 #%{_libdir}/gstreamer-%{majorminor}/libgstlv2.so
-#%{_libdir}/gstreamer-%{majorminor}/libgstmodplug.so
+%{_libdir}/gstreamer-%{majorminor}/libgstmodplug.so
 #%{_libdir}/gstreamer-%{majorminor}/libgstmusepack.so
 #%{_libdir}/gstreamer-%{majorminor}/libgstofa.so
 # %{_libdir}/gstreamer-%{majorminor}/libresindvd.so
@@ -306,7 +307,7 @@ make ERROR_CFLAGS='' ERROR_CXXFLAGS=''
 %{_datadir}/gstreamer-%{majorminor}/presets/GstVP8Enc.prs
 
 #debugging plugin
-# %{_libdir}/gstreamer-%{majorminor}/libgstdebugutilsbad.so
+%{_libdir}/gstreamer-%{majorminor}/libgstdebugutilsbad.so
 
 #data for plugins
 # %{_datadir}/glib-2.0/schemas/org.freedesktop.gstreamer-0.11.default-elements.gschema.xml
@@ -321,7 +322,7 @@ make ERROR_CFLAGS='' ERROR_CXXFLAGS=''
 # %{_libdir}/gstreamer-%{majorminor}/libgsttimidity.so
 # %{_libdir}/gstreamer-%{majorminor}/libgstwildmidi.so
 %{_libdir}/gstreamer-%{majorminor}/libgstzbar.so
-%{_libdir}/gstreamer-%{majorminor}/libgstmultifdsink.so
+# %{_libdir}/gstreamer-%{majorminor}/libgstmultifdsink.so
 
 # Linux specific plugins
 # %{_libdir}/gstreamer-%{majorminor}/libgstfbdevsink.so
