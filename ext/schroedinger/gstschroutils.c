@@ -72,6 +72,12 @@ gst_schro_buffer_wrap (GstBuffer * buf, GstVideoFormat format, int width,
       frame =
           schro_frame_new_from_data_AYUV (GST_BUFFER_DATA (buf), width, height);
       break;
+#if SCHRO_CHECK_VERSION(1,0,12)
+    case GST_VIDEO_FORMAT_ARGB:
+      frame =
+          schro_frame_new_from_data_ARGB (GST_BUFFER_DATA (buf), width, height);
+      break;
+#endif
 #if SCHRO_CHECK_VERSION(1,0,11)
     case GST_VIDEO_FORMAT_Y42B:
       frame =
@@ -92,27 +98,6 @@ gst_schro_buffer_wrap (GstBuffer * buf, GstVideoFormat format, int width,
     case GST_VIDEO_FORMAT_AYUV64:
       frame =
           schro_frame_new_from_data_AY64 (GST_BUFFER_DATA (buf), width, height);
-      break;
-#endif
-#if 0
-    case GST_VIDEO_FORMAT_ARGB:
-    {
-      SchroFrame *rgbframe =
-          schro_frame_new_from_data_AYUV (GST_BUFFER_DATA (buf), width, height);
-      SchroFrame *vframe1;
-      SchroFrame *vframe2;
-      SchroFrame *vframe3;
-
-      vframe1 = schro_virt_frame_new_unpack (rgbframe);
-      vframe2 = schro_virt_frame_new_color_matrix (vframe1);
-      vframe3 =
-          schro_virt_frame_new_subsample (vframe2, SCHRO_FRAME_FORMAT_U8_420);
-
-      frame = schro_frame_new_and_alloc (NULL, SCHRO_FRAME_FORMAT_U8_420,
-          width, height);
-      schro_virt_frame_render (vframe3, frame);
-      schro_frame_unref (vframe3);
-    }
       break;
 #endif
     default:

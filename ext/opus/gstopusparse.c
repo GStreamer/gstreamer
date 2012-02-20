@@ -154,7 +154,8 @@ gst_opus_parse_check_valid_frame (GstBaseParse * base,
   parse = GST_OPUS_PARSE (base);
 
   data = gst_buffer_map (frame->buffer, &size, NULL, GST_MAP_READ);
-  GST_DEBUG_OBJECT (parse, "Checking for frame, %u bytes in buffer", size);
+  GST_DEBUG_OBJECT (parse,
+      "Checking for frame, %" G_GSIZE_FORMAT " bytes in buffer", size);
 
   /* check for headers */
   is_idheader = gst_opus_header_is_id_header (frame->buffer);

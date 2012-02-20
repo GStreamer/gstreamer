@@ -363,7 +363,7 @@ gst_gme_play (GstPad * pad)
     gst_buffer_unmap (out, &map);
 
     if (gme_err) {
-      GST_ELEMENT_ERROR (gme, STREAM, DEMUX, (NULL), (gme_err));
+      GST_ELEMENT_ERROR (gme, STREAM, DEMUX, (NULL), ("%s", gme_err));
       gst_pad_pause_task (pad);
       gst_pad_push_event (pad, gst_event_new_eos ());
       gst_object_unref (gme);
@@ -433,7 +433,7 @@ gme_setup (GstGmeDec * gme)
       gme->player = NULL;
     }
 
-    GST_ELEMENT_ERROR (gme, STREAM, DEMUX, (NULL), (gme_err));
+    GST_ELEMENT_ERROR (gme, STREAM, DEMUX, (NULL), ("%s", gme_err));
 
     return FALSE;
   }

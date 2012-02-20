@@ -99,10 +99,11 @@ GST_STATIC_PAD_TEMPLATE ("sink",
     );
 
 static GstStaticPadTemplate gst_schro_dec_src_template =
-GST_STATIC_PAD_TEMPLATE ("src",
+    GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS (GST_VIDEO_CAPS_YUV (GST_SCHRO_YUV_LIST))
+    GST_STATIC_CAPS (GST_VIDEO_CAPS_YUV (GST_SCHRO_YUV_LIST) ";"
+        GST_VIDEO_CAPS_ARGB)
     );
 
 GST_BOILERPLATE (GstSchroDec, gst_schro_dec, GstBaseVideoDecoder,
@@ -313,13 +314,15 @@ parse_sequence_header (GstSchroDec * schro_dec, guint8 * data, int size)
   ret = schro_parse_decode_sequence_header (data + 13, size - 13,
       &video_format);
   if (ret) {
-#if SCHRO_CHECK_VERSION(1,0,11)
     int bit_depth;
 
+#if SCHRO_CHECK_VERSION(1,0,11)
     bit_depth = schro_video_format_get_bit_depth (&video_format);
+#else
+    bit_depth = 8;
+#endif
 
     if (bit_depth == 8) {
-#endif
       if (video_format.chroma_format == SCHRO_CHROMA_444) {
         state->format = GST_VIDEO_FORMAT_AYUV;
       } else if (video_format.chroma_format == SCHRO_CHROMA_422) {
@@ -329,14 +332,18 @@ parse_sequence_header (GstSchroDec * schro_dec, guint8 * data, int size)
       }
 #if SCHRO_CHECK_VERSION(1,0,11)
     } else if (bit_depth <= 10) {
-      state->format = GST_VIDEO_FORMAT_v210;
+      if (video_format.colour_matrix == SCHRO_COLOUR_MATRIX_REVERSIBLE) {
+        state->format = GST_VIDEO_FORMAT_ARGB;
+      } else {
+        state->format = GST_VIDEO_FORMAT_v210;
+      }
     } else if (bit_depth <= 16) {
       state->format = GST_VIDEO_FORMAT_AYUV64;
     } else {
       GST_ERROR ("bit depth too large (%d > 16)", bit_depth);
       state->format = GST_VIDEO_FORMAT_AYUV64;
-    }
 #endif
+    }
     state->fps_n = video_format.frame_rate_numerator;
     state->fps_d = video_format.frame_rate_denominator;
     GST_DEBUG_OBJECT (schro_dec, "Frame rate is %d/%d", state->fps_n,

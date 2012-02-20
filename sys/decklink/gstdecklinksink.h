@@ -67,6 +67,7 @@ struct _GstDecklinkSink
   IDeckLinkOutput *output;
   Output *callback;
   BMDDisplayMode display_mode;
+  BMDPixelFormat pixel_format;
   gboolean video_enabled;
   gboolean sched_started;
 
