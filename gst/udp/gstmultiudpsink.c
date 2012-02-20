@@ -477,7 +477,7 @@ gst_multiudpsink_render (GstBaseSink * bsink, GstBuffer * buffer)
   /* grab lock while iterating and sending to clients, this should be
    * fast as UDP never blocks */
   g_mutex_lock (&sink->client_lock);
-  GST_LOG_OBJECT (bsink, "about to send %d bytes", size);
+  GST_LOG_OBJECT (bsink, "about to send %" G_GSIZE_FORMAT " bytes", size);
 
   no_clients = 0;
   num = 0;
@@ -487,7 +487,8 @@ gst_multiudpsink_render (GstBaseSink * bsink, GstBuffer * buffer)
 
     client = (GstUDPClient *) clients->data;
     no_clients++;
-    GST_LOG_OBJECT (sink, "sending %d bytes to client %p", size, client);
+    GST_LOG_OBJECT (sink, "sending %" G_GSIZE_FORMAT " bytes to client %p",
+        size, client);
 
     count = sink->send_duplicates ? client->refcount : 1;
 
@@ -518,8 +519,8 @@ gst_multiudpsink_render (GstBaseSink * bsink, GstBuffer * buffer)
   g_free (vec);
   g_free (map);
 
-  GST_LOG_OBJECT (sink, "sent %d bytes to %d (of %d) clients", size, num,
-      no_clients);
+  GST_LOG_OBJECT (sink, "sent %" G_GSIZE_FORMAT " bytes to %d (of %d) clients",
+      size, num, no_clients);
 
   return GST_FLOW_OK;
 
