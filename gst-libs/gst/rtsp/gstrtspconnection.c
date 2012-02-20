@@ -444,11 +444,13 @@ do_connect (const gchar * ip, guint16 port, GSocket ** socket_out,
   }
   g_socket_set_timeout (socket, 0);
 
-  if (g_socket_check_connect_result (socket, &err))
+  if (!g_socket_check_connect_result (socket, &err))
     goto sys_error;
 
 done:
   g_object_unref (saddr);
+
+  *socket_out = socket;
 
   return GST_RTSP_OK;
 
