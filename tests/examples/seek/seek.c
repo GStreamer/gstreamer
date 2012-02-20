@@ -2535,7 +2535,8 @@ bus_sync_handler (GstBus * bus, GstMessage * message, GstPipeline * data)
       gst_object_unref (xoverlay_element);
     xoverlay_element = GST_ELEMENT (gst_object_ref (element));
 
-    g_print ("got prepare-xwindow-id, setting XID %lu\n", embed_xid);
+    g_print ("got prepare-xwindow-id, setting XID %" G_GUINTPTR_FORMAT "\n",
+        embed_xid);
 
     if (g_object_class_find_property (G_OBJECT_GET_CLASS (element),
             "force-aspect-ratio")) {
@@ -2596,7 +2597,8 @@ realize_cb (GtkWidget * widget, gpointer data)
   g_print ("Window realize: video window NSView = %p\n", embed_xid);
 #elif defined (GDK_WINDOWING_X11)
   embed_xid = GDK_WINDOW_XID (window);
-  g_print ("Window realize: video window XID = %lu\n", embed_xid);
+  g_print ("Window realize: video window XID = %" G_GUINTPTR_FORMAT "\n",
+      embed_xid);
 #endif
 }
 
