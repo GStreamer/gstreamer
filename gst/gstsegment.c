@@ -562,9 +562,6 @@ gst_segment_clip (const GstSegment * segment, GstFormat format, guint64 start,
       *clip_stop = stop;
     else
       *clip_stop = MIN (stop, segment->stop);
-
-    if (segment->duration != -1 && *clip_stop != -1)
-      *clip_stop = MIN (*clip_stop, segment->duration);
   }
 
   return TRUE;
