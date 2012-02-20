@@ -1606,6 +1606,7 @@ stop_cb (GtkButton * button, gpointer data)
       connect_bus_signals (pipeline);
     }
 #endif
+    gtk_widget_set_sensitive (GTK_WIDGET (hscale), TRUE);
   }
   return;
 
@@ -2649,6 +2650,53 @@ msg_step_done (GstBus * bus, GstMessage * message, GstPipeline * data)
 }
 
 static void
+msg (GstBus * bus, GstMessage * message, GstPipeline * data)
+{
+  GstNavigationMessageType nav_type;
+
+  nav_type = gst_navigation_message_get_type (message);
+  switch (nav_type) {
+    case GST_NAVIGATION_MESSAGE_COMMANDS_CHANGED:{
+      GstQuery *query;
+      gboolean res;
+
+      /* Heuristic to detect if we're dealing with a DVD menu */
+      query = gst_navigation_query_new_commands ();
+      res = gst_element_query (GST_ELEMENT (GST_MESSAGE_SRC (message)), query);
+
+      if (res) {
+        gboolean is_menu = FALSE;
+        guint i, n;
+
+        if (gst_navigation_query_parse_commands_length (query, &n)) {
+          for (i = 0; i < n; i++) {
+            GstNavigationCommand cmd;
+
+            if (!gst_navigation_query_parse_commands_nth (query, i, &cmd))
+              break;
+
+            is_menu |= (cmd == GST_NAVIGATION_COMMAND_ACTIVATE);
+            is_menu |= (cmd == GST_NAVIGATION_COMMAND_LEFT);
+            is_menu |= (cmd == GST_NAVIGATION_COMMAND_RIGHT);
+            is_menu |= (cmd == GST_NAVIGATION_COMMAND_UP);
+            is_menu |= (cmd == GST_NAVIGATION_COMMAND_DOWN);
+          }
+        }
+
+        gtk_widget_set_sensitive (GTK_WIDGET (hscale), !is_menu);
+      } else {
+        g_assert_not_reached ();
+      }
+
+      gst_query_unref (query);
+      break;
+    }
+    default:
+      break;
+  }
+}
+
+static void
 connect_bus_signals (GstElement * pipeline)
 {
   GstBus *bus = gst_pipeline_get_bus (GST_PIPELINE (pipeline));
@@ -2692,6 +2740,7 @@ connect_bus_signals (GstElement * pipeline)
       pipeline);
   g_signal_connect (bus, "sync-message::step-done",
       (GCallback) msg_sync_step_done, pipeline);
+  g_signal_connect (bus, "message", (GCallback) msg, pipeline);
 
   gst_object_unref (bus);
 }
