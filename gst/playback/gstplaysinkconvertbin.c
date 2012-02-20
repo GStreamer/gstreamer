@@ -54,13 +54,13 @@ is_raw_caps (GstCaps * caps, gboolean audio)
   gint i, n;
   GstStructure *s;
   const gchar *name;
-  const gchar *prefix = audio ? "audio/x-raw-" : "video/x-raw-";
+  const gchar *prefix = audio ? "audio/x-raw" : "video/x-raw";
 
   n = gst_caps_get_size (caps);
   for (i = 0; i < n; i++) {
     s = gst_caps_get_structure (caps, i);
     name = gst_structure_get_name (s);
-    if (!g_str_has_prefix (name, prefix))
+    if (!g_str_equal (name, prefix))
       return FALSE;
   }
 
@@ -333,9 +333,9 @@ gst_play_sink_convert_bin_sink_setcaps (GstPlaySinkConvertBin * self,
   name = gst_structure_get_name (s);
 
   if (self->audio) {
-    raw = g_str_has_prefix (name, "audio/x-raw-");
+    raw = g_str_equal (name, "audio/x-raw");
   } else {
-    raw = g_str_has_prefix (name, "video/x-raw-");
+    raw = g_str_equal (name, "video/x-raw");
   }
 
   GST_DEBUG_OBJECT (self, "raw %d, self->raw %d, blocked %d",
