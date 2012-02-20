@@ -29,6 +29,7 @@
 #define __GST_MPEG_DESC_H__
 
 #include <glib.h>
+
 /*
  * descriptor_tag TS  PS                      Identification
  *        0       n/a n/a Reserved
@@ -53,94 +54,94 @@
  *      19-63     n/a n/a ITU-T Rec. H.222.0 | ISO/IEC 13818-1 Reserved
  *     64-255     n/a n/a User Private
  */
-#define DESC_VIDEO_STREAM			2
-#define DESC_AUDIO_STREAM			3
-#define DESC_HIERARCHY				4
-#define DESC_REGISTRATION			5
-#define DESC_DATA_STREAM_ALIGNMENT		6
-#define DESC_TARGET_BACKGROUND_GRID		7
-#define DESC_VIDEO_WINDOW			8
-#define DESC_CA					9
-#define DESC_ISO_639_LANGUAGE			10
-#define DESC_SYSTEM_CLOCK			11
-#define DESC_MULTIPLEX_BUFFER_UTILISATION	12
-#define DESC_COPYRIGHT				13
-#define DESC_MAXIMUM_BITRATE			14
-#define DESC_PRIVATE_DATA_INDICATOR		15
-#define DESC_SMOOTHING_BUFFER			16
-#define DESC_STD				17
-#define DESC_IBP				18
+#define DESC_VIDEO_STREAM                     0x02
+#define DESC_AUDIO_STREAM                     0x03
+#define DESC_HIERARCHY                        0x04
+#define DESC_REGISTRATION                     0x05
+#define DESC_DATA_STREAM_ALIGNMENT            0x06
+#define DESC_TARGET_BACKGROUND_GRID           0x07
+#define DESC_VIDEO_WINDOW                     0x08
+#define DESC_CA                               0x09
+#define DESC_ISO_639_LANGUAGE                 0x0A
+#define DESC_SYSTEM_CLOCK                     0x0B
+#define DESC_MULTIPLEX_BUFFER_UTILISATION     0x0C
+#define DESC_COPYRIGHT                        0x0D
+#define DESC_MAXIMUM_BITRATE                  0x0E
+#define DESC_PRIVATE_DATA_INDICATOR           0x0F
+#define DESC_SMOOTHING_BUFFER                 0x10
+#define DESC_STD                              0x11
+#define DESC_IBP                              0x12
 
-#define DESC_DIRAC_TC_PRIVATE			0xAC
+#define DESC_DIRAC_TC_PRIVATE                 0xAC
 
 /* DVB tags */
-#define DESC_DVB_CAROUSEL_IDENTIFIER	0x13
-#define DESC_DVB_NETWORK_NAME   0x40
-#define DESC_DVB_SERVICE_LIST   0x41
-#define DESC_DVB_STUFFING       0x42
+#define DESC_DVB_CAROUSEL_IDENTIFIER          0x13
+#define DESC_DVB_NETWORK_NAME                 0x40
+#define DESC_DVB_SERVICE_LIST                 0x41
+#define DESC_DVB_STUFFING                     0x42
 #define DESC_DVB_SATELLITE_DELIVERY_SYSTEM    0x43
-#define DESC_DVB_CABLE_DELIVERY_SYSTEM    0x44
-#define DESC_DVB_VBI_DATA       0x45
-#define DESC_DVB_VBI_TELETEXT   0x46
-#define DESC_DVB_BOUQUET_NAME   0x47
-#define DESC_DVB_SERVICE        0x48
-#define DESC_DVB_COUNTRY_AVAILABILITY   0x49
-#define DESC_DVB_LINKAGE        0x4A
-#define DESC_DVB_NVOD_REFERENCE 0x4B
-#define DESC_DVB_TIME_SHIFTED_SERVICE   0x4C
-#define DESC_DVB_SHORT_EVENT    0x4D
-#define DESC_DVB_EXTENDED_EVENT 0x4E
-#define DESC_DVB_TIME_SHIFTED_EVENT   0x4F
-#define DESC_DVB_COMPONENT      0x50
-#define DESC_DVB_MOSAIC         0x51
-#define DESC_DVB_STREAM_IDENTIFIER    0x52
-#define DESC_DVB_CA_IDENTIFIER  0x53
-#define DESC_DVB_CONTENT        0x54
-#define DESC_DVB_PARENTAL_RATING    0x55
-#define DESC_DVB_TELETEXT       0x56
-#define DESC_DVB_TELEPHONE      0x57
-#define DESC_DVB_LOCAL_TIME_OFFSET  0x58
-#define DESC_DVB_SUBTITLING     0x59
+#define DESC_DVB_CABLE_DELIVERY_SYSTEM        0x44
+#define DESC_DVB_VBI_DATA                     0x45
+#define DESC_DVB_VBI_TELETEXT                 0x46
+#define DESC_DVB_BOUQUET_NAME                 0x47
+#define DESC_DVB_SERVICE                      0x48
+#define DESC_DVB_COUNTRY_AVAILABILITY         0x49
+#define DESC_DVB_LINKAGE                      0x4A
+#define DESC_DVB_NVOD_REFERENCE               0x4B
+#define DESC_DVB_TIME_SHIFTED_SERVICE         0x4C
+#define DESC_DVB_SHORT_EVENT                  0x4D
+#define DESC_DVB_EXTENDED_EVENT               0x4E
+#define DESC_DVB_TIME_SHIFTED_EVENT           0x4F
+#define DESC_DVB_COMPONENT                    0x50
+#define DESC_DVB_MOSAIC                       0x51
+#define DESC_DVB_STREAM_IDENTIFIER            0x52
+#define DESC_DVB_CA_IDENTIFIER                0x53
+#define DESC_DVB_CONTENT                      0x54
+#define DESC_DVB_PARENTAL_RATING              0x55
+#define DESC_DVB_TELETEXT                     0x56
+#define DESC_DVB_TELEPHONE                    0x57
+#define DESC_DVB_LOCAL_TIME_OFFSET            0x58
+#define DESC_DVB_SUBTITLING                   0x59
 #define DESC_DVB_TERRESTRIAL_DELIVERY_SYSTEM  0x5A
 #define DESC_DVB_MULTILINGUAL_NETWORK_NAME    0x5B
 #define DESC_DVB_MULTILINGUAL_BOUQUET_NAME    0x5C
 #define DESC_DVB_MULTILINGUAL_SERVICE_NAME    0x5D
-#define DESC_DVB_MULTILINGUAL_COMPONENT   0x5E
-#define DESC_DVB_PRIVATE_DATA   0x5F
-#define DESC_DVB_SERVICE_MOVE   0x60
-#define DESC_DVB_SHORT_SMOOTHING_BUFFER   0x61
-#define DESC_DVB_FREQUENCY_LIST 0x62
-#define DESC_DVB_PARTIAL_TRANSPORT_STREAM   0x63
-#define DESC_DVB_DATA_BROADCAST 0x64
-#define DESC_DVB_SCRAMBLING     0x65
-#define DESC_DVB_DATA_BROADCAST_ID    0x66
-#define DESC_DVB_TRANSPORT_STREAM   0x67
-#define DESC_DVB_DSNG           0x68
-#define DESC_DVB_PDC            0x69
-#define DESC_DVB_AC3            0x6A
-#define DESC_DVB_ANCILLARY_DATA 0x6B
-#define DESC_DVB_CELL_LIST          0x6C
-#define DESC_DVB_CELL_FREQUENCY_LINK    0x6D
-#define DESC_DVB_ANNOUNCEMENT_SUPPORT   0x6E
-#define DESC_DVB_APPLICATION_SIGNALLING   0x6F
-#define DESC_DVB_ADAPTATION_FIELD_DATA    0x70
-#define DESC_DVB_SERVICE_IDENTIFIER   0x71
-#define DESC_DVB_SERVICE_AVAILABILITY   0x72
-#define DESC_DVB_DEFAULT_AUTHORITY    0x73
-#define DESC_DVB_RELATED_CONTENT    0x74
-#define DESC_DVB_TVA_ID         0x75
-#define DESC_DVB_CONTENT_IDENTIFIER   0x76
-#define DESC_DVB_TIMESLICE_FEC_IDENTIFIER   0x77
-#define DESC_DVB_ECM_REPETITION_RATE    0x78
-#define DESC_DVB_S2_SATELLITE_DELIVERY_SYSTEM   0x79
-#define DESC_DVB_ENHANCED_AC3   0x7A
-#define DESC_DVB_DTS            0x7B
-#define DESC_DVB_AAC            0x7C
+#define DESC_DVB_MULTILINGUAL_COMPONENT       0x5E
+#define DESC_DVB_PRIVATE_DATA                 0x5F
+#define DESC_DVB_SERVICE_MOVE                 0x60
+#define DESC_DVB_SHORT_SMOOTHING_BUFFER       0x61
+#define DESC_DVB_FREQUENCY_LIST               0x62
+#define DESC_DVB_PARTIAL_TRANSPORT_STREAM     0x63
+#define DESC_DVB_DATA_BROADCAST               0x64
+#define DESC_DVB_SCRAMBLING                   0x65
+#define DESC_DVB_DATA_BROADCAST_ID            0x66
+#define DESC_DVB_TRANSPORT_STREAM             0x67
+#define DESC_DVB_DSNG                         0x68
+#define DESC_DVB_PDC                          0x69
+#define DESC_DVB_AC3                          0x6A
+#define DESC_DVB_ANCILLARY_DATA               0x6B
+#define DESC_DVB_CELL_LIST                    0x6C
+#define DESC_DVB_CELL_FREQUENCY_LINK          0x6D
+#define DESC_DVB_ANNOUNCEMENT_SUPPORT         0x6E
+#define DESC_DVB_APPLICATION_SIGNALLING       0x6F
+#define DESC_DVB_ADAPTATION_FIELD_DATA        0x70
+#define DESC_DVB_SERVICE_IDENTIFIER           0x71
+#define DESC_DVB_SERVICE_AVAILABILITY         0x72
+#define DESC_DVB_DEFAULT_AUTHORITY            0x73
+#define DESC_DVB_RELATED_CONTENT              0x74
+#define DESC_DVB_TVA_ID                       0x75
+#define DESC_DVB_CONTENT_IDENTIFIER           0x76
+#define DESC_DVB_TIMESLICE_FEC_IDENTIFIER     0x77
+#define DESC_DVB_ECM_REPETITION_RATE          0x78
+#define DESC_DVB_S2_SATELLITE_DELIVERY_SYSTEM 0x79
+#define DESC_DVB_ENHANCED_AC3                 0x7A
+#define DESC_DVB_DTS                          0x7B
+#define DESC_DVB_AAC                          0x7C
 /* 0x7D and 0x7E are reserved for future use */
-#define DESC_DVB_EXTENSION      0x7F
+#define DESC_DVB_EXTENSION                    0x7F
 /* 0x80 - 0xFE are user defined */
-#define DESC_DTG_LOGICAL_CHANNEL	0x83 /* from DTG D-Book */
 #define DESC_AC3_AUDIO_STREAM                 0x81
+#define DESC_DTG_LOGICAL_CHANNEL              0x83    /* from DTG D-Book */
 /* 0xFF is forbidden */
 
 /* common for all descriptors */
@@ -197,7 +198,7 @@
 #define DESC_ISO_639_LANGUAGE_language_code_nth(desc,i)		(&(desc[2 + (4*i)]))
 #define DESC_ISO_639_LANGUAGE_audio_type_nth(desc,i)		((desc)[5 + (4*i)])
 
-/* system_clock_descriptor */ 
+/* system_clock_descriptor */
 #define DESC_SYSTEM_CLOCK_external_clock_reference_indicator(desc) (((desc)[2] & 0x80) == 0x80)
 #define DESC_SYSTEM_CLOCK_clock_accuracy_integer(desc)		((desc)[2] & 0x3f)
 #define DESC_SYSTEM_CLOCK_clock_accuracy_exponent(desc)		(((desc)[3] & 0xe0) >> 5)
@@ -214,7 +215,7 @@
 
 /* maximum_bitrate_descriptor */
 #define DESC_MAXIMUM_BITRAT_maximum_bitrate(desc)		(((((guint32)desc[2]) & 0x3f) << 16) | \
-								 GST_READ_UINT16_BE ((desc)+3)) 
+								 GST_READ_UINT16_BE ((desc)+3))
 
 /* private_data_indicator_descriptor */
 #define DESC_PRIVATE_DATA_INDICATOR_indicator(desc)		(GST_READ_UINT32_BE(&desc[2]))
@@ -269,7 +270,7 @@
 #define DESC_DVB_EXTENDED_EVENT_last_descriptor_number(desc) (desc[2] & 0x0F)
 #define DESC_DVB_EXTENDED_EVENT_iso639_language_code(desc) (desc + 3)
 #define DESC_DVB_EXTENDED_EVENT_items_length(desc) (desc[6])
-#define DESC_DVB_EXTENDED_EVENT_items(desc) (desc + 7) 
+#define DESC_DVB_EXTENDED_EVENT_items(desc) (desc + 7)
 #define DESC_DVB_EXTENDED_EVENT_text_length(desc) (desc[7 + DESC_DVB_EXTENDED_EVENT_items_length(desc)])
 #define DESC_DVB_EXTENDED_EVENT_text(desc) (desc + 7 + DESC_DVB_EXTENDED_EVENT_items_length(desc) + 1)
 
@@ -334,13 +335,13 @@ typedef struct
 } GstMPEGDescriptor;
 
 void gst_mpegtsdesc_init_debug (void);
-GstMPEGDescriptor* 	gst_mpeg_descriptor_parse 	(guint8 *data, guint size);
-void		 	gst_mpeg_descriptor_free 	(GstMPEGDescriptor *desc);
+GstMPEGDescriptor *gst_mpeg_descriptor_parse (guint8 * data, guint size);
+void gst_mpeg_descriptor_free                (GstMPEGDescriptor * desc);
 
-guint 			gst_mpeg_descriptor_n_desc	(GstMPEGDescriptor *desc);
-guint8*			gst_mpeg_descriptor_find	(GstMPEGDescriptor *desc, gint tag);
-GArray*         gst_mpeg_descriptor_find_all (GstMPEGDescriptor * desc, gint tag);
+guint gst_mpeg_descriptor_n_desc             (GstMPEGDescriptor * desc);
+guint8 *gst_mpeg_descriptor_find             (GstMPEGDescriptor * desc, gint tag);
+GArray *gst_mpeg_descriptor_find_all         (GstMPEGDescriptor * desc, gint tag);
 
-guint8*			gst_mpeg_descriptor_nth		(GstMPEGDescriptor *desc, guint i);
+guint8 *gst_mpeg_descriptor_nth              (GstMPEGDescriptor * desc, guint i);
 
 #endif /* __GST_MPEG_DESC_H__ */
