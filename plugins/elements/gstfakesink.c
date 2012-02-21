@@ -456,17 +456,24 @@ gst_fake_sink_render (GstBaseSink * bsink, GstBuffer * buf)
     sink->num_buffers_left--;
 
   if (!sink->silent) {
-    gchar ts_str[64], dur_str[64];
+    gchar dts_str[64], pts_str[64], dur_str[64];
     gchar flag_str[100];
 
     GST_OBJECT_LOCK (sink);
     g_free (sink->last_message);
 
-    if (GST_BUFFER_TIMESTAMP (buf) != GST_CLOCK_TIME_NONE) {
-      g_snprintf (ts_str, sizeof (ts_str), "%" GST_TIME_FORMAT,
-          GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (buf)));
+    if (GST_BUFFER_DTS (buf) != GST_CLOCK_TIME_NONE) {
+      g_snprintf (dts_str, sizeof (dts_str), "%" GST_TIME_FORMAT,
+          GST_TIME_ARGS (GST_BUFFER_DTS (buf)));
     } else {
-      g_strlcpy (ts_str, "none", sizeof (ts_str));
+      g_strlcpy (dts_str, "none", sizeof (dts_str));
+    }
+
+    if (GST_BUFFER_PTS (buf) != GST_CLOCK_TIME_NONE) {
+      g_snprintf (pts_str, sizeof (pts_str), "%" GST_TIME_FORMAT,
+          GST_TIME_ARGS (GST_BUFFER_PTS (buf)));
+    } else {
+      g_strlcpy (pts_str, "none", sizeof (pts_str));
     }
 
     if (GST_BUFFER_DURATION (buf) != GST_CLOCK_TIME_NONE) {
@@ -496,11 +503,11 @@ gst_fake_sink_render (GstBaseSink * bsink, GstBuffer * buf)
     }
 
     sink->last_message =
-        g_strdup_printf ("chain   ******* (%s:%s) (%u bytes, timestamp: %s"
+        g_strdup_printf ("chain   ******* (%s:%s) (%u bytes, dts: %s, pts: %s"
         ", duration: %s, offset: %" G_GINT64_FORMAT ", offset_end: %"
         G_GINT64_FORMAT ", flags: %d %s) %p",
         GST_DEBUG_PAD_NAME (GST_BASE_SINK_CAST (sink)->sinkpad),
-        (guint) gst_buffer_get_size (buf), ts_str,
+        (guint) gst_buffer_get_size (buf), dts_str, pts_str,
         dur_str, GST_BUFFER_OFFSET (buf), GST_BUFFER_OFFSET_END (buf),
         GST_MINI_OBJECT_CAST (buf)->flags, flag_str, buf);
     GST_OBJECT_UNLOCK (sink);
