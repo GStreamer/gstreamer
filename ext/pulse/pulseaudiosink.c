@@ -279,7 +279,9 @@ param_spec_copy (GParamSpec * spec)
 
   g_warning ("Unknown param type %ld for '%s'",
       (long) G_PARAM_SPEC_TYPE (spec), name);
-  g_assert_not_reached ();
+
+  /* Make compiler happy */
+  return NULL;
 }
 
 static void
