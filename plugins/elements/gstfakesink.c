@@ -137,34 +137,6 @@ static guint gst_fake_sink_signals[LAST_SIGNAL] = { 0 };
 static GParamSpec *pspec_last_message = NULL;
 
 static void
-marshal_VOID__MINIOBJECT_OBJECT (GClosure * closure, GValue * return_value,
-    guint n_param_values, const GValue * param_values, gpointer invocation_hint,
-    gpointer marshal_data)
-{
-  typedef void (*marshalfunc_VOID__MINIOBJECT_OBJECT) (gpointer obj,
-      gpointer arg1, gpointer arg2, gpointer data2);
-  register marshalfunc_VOID__MINIOBJECT_OBJECT callback;
-  register GCClosure *cc = (GCClosure *) closure;
-  register gpointer data1, data2;
-
-  g_return_if_fail (n_param_values == 3);
-
-  if (G_CCLOSURE_SWAP_DATA (closure)) {
-    data1 = closure->data;
-    data2 = g_value_peek_pointer (param_values + 0);
-  } else {
-    data1 = g_value_peek_pointer (param_values + 0);
-    data2 = closure->data;
-  }
-  callback =
-      (marshalfunc_VOID__MINIOBJECT_OBJECT) (marshal_data ? marshal_data :
-      cc->callback);
-
-  callback (data1, g_value_get_boxed (param_values + 1),
-      g_value_get_object (param_values + 2), data2);
-}
-
-static void
 gst_fake_sink_class_init (GstFakeSinkClass * klass)
 {
   GObjectClass *gobject_class;
@@ -225,8 +197,8 @@ gst_fake_sink_class_init (GstFakeSinkClass * klass)
   gst_fake_sink_signals[SIGNAL_HANDOFF] =
       g_signal_new ("handoff", G_TYPE_FROM_CLASS (klass), G_SIGNAL_RUN_LAST,
       G_STRUCT_OFFSET (GstFakeSinkClass, handoff), NULL, NULL,
-      marshal_VOID__MINIOBJECT_OBJECT, G_TYPE_NONE, 2,
-      GST_TYPE_BUFFER, GST_TYPE_PAD);
+      gst_marshal_VOID__BOXED_OBJECT, G_TYPE_NONE, 2,
+      GST_TYPE_BUFFER | G_SIGNAL_TYPE_STATIC_SCOPE, GST_TYPE_PAD);
 
   /**
    * GstFakeSink::preroll-handoff:
@@ -241,8 +213,8 @@ gst_fake_sink_class_init (GstFakeSinkClass * klass)
   gst_fake_sink_signals[SIGNAL_PREROLL_HANDOFF] =
       g_signal_new ("preroll-handoff", G_TYPE_FROM_CLASS (klass),
       G_SIGNAL_RUN_LAST, G_STRUCT_OFFSET (GstFakeSinkClass, preroll_handoff),
-      NULL, NULL, marshal_VOID__MINIOBJECT_OBJECT, G_TYPE_NONE, 2,
-      GST_TYPE_BUFFER, GST_TYPE_PAD);
+      NULL, NULL, gst_marshal_VOID__BOXED_OBJECT, G_TYPE_NONE, 2,
+      GST_TYPE_BUFFER | G_SIGNAL_TYPE_STATIC_SCOPE, GST_TYPE_PAD);
 
   gst_element_class_set_details_simple (gstelement_class,
       "Fake Sink",
