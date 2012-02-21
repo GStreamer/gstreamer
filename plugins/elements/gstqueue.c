@@ -970,16 +970,6 @@ out_unexpected:
   }
 }
 
-static void
-gst_queue_push_newsegment (GstQueue * queue)
-{
-  GstEvent *event;
-
-  event = gst_event_new_segment (&queue->src_segment);
-  GST_CAT_LOG_OBJECT (queue_dataflow, queue, "pushing real newsegment event");
-  gst_pad_push_event (queue->srcpad, event);
-}
-
 /* dequeue an item from the queue an push it downstream. This functions returns
  * the result of the push. */
 static GstFlowReturn
@@ -1012,9 +1002,6 @@ next:
     }
 
     GST_QUEUE_MUTEX_UNLOCK (queue);
-    if (queue->push_newsegment) {
-      gst_queue_push_newsegment (queue);
-    }
     result = gst_pad_push (queue->srcpad, buffer);
 
     /* need to check for srcresult here as well */
@@ -1060,9 +1047,6 @@ next:
 
     GST_QUEUE_MUTEX_UNLOCK (queue);
 
-    if (queue->push_newsegment && type != GST_EVENT_SEGMENT) {
-      gst_queue_push_newsegment (queue);
-    }
     gst_pad_push_event (queue->srcpad, event);
 
     GST_QUEUE_MUTEX_LOCK_CHECK (queue, out_flushing);
@@ -1123,7 +1107,6 @@ gst_queue_loop (GstPad * pad)
   }
 
   ret = gst_queue_push_one (queue);
-  queue->push_newsegment = FALSE;
   queue->srcresult = ret;
   if (ret != GST_FLOW_OK)
     goto out_flushing;
