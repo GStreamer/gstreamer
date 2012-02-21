@@ -416,7 +416,7 @@ add_image_tag (ID3v2::Tag * id3v2tag, const GstTagList * list,
     val = gst_tag_list_get_value_index (list, tag, n);
     sample = (GstSample *) g_value_get_boxed (val);
 
-    if (GST_IS_SAMPLE (image) && (image = gst_sample_get_buffer (sample)) &&
+    if (GST_IS_SAMPLE (sample) && (image = gst_sample_get_buffer (sample)) &&
         GST_IS_BUFFER (image) && gst_buffer_get_size (image) > 0 &&
         gst_sample_get_caps (sample) != NULL &&
         !gst_caps_is_empty (gst_sample_get_caps (sample))) {
