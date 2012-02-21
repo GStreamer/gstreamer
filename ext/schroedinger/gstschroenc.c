@@ -516,7 +516,6 @@ gst_schro_enc_handle_frame (GstBaseVideoEncoder * base_video_encoder,
     GST_DEBUG ("granule offset %" G_GINT64_FORMAT, schro_enc->granule_offset);
   }
 
-  GST_ERROR ("sink buffer %p", frame->sink_buffer);
   schro_frame = gst_schro_buffer_wrap (gst_buffer_ref (frame->sink_buffer),
       state->format, state->width, state->height);
 
