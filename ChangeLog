@@ -1,9 +1,635 @@
-=== release 0.10.18 ===
+=== release 0.10.19 ===
 
-2011-05-10  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+2012-02-21  Tim-Philipp Müller <tim.muller@collabora.co.uk>
 
 	* configure.ac:
-	  releasing 0.10.18, "Extra Life"
+	  releasing 0.10.19, "Stronger"
+
+2012-02-21 00:56:07 +0000  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+
+	* po/ca.po:
+	* po/id.po:
+	* po/zh_CN.po:
+	  po: update translations
+
+2012-02-05 13:41:08 +0000  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+
+	* configure.ac:
+	* win32/common/config.h:
+	  0.10.18.3 pre-release
+
+2012-01-17 11:55:59 +0100  Mark Nauwelaerts <mark.nauwelaerts@collabora.co.uk>
+
+	* ext/amrwbdec/amrwbdec.c:
+	  amrwbdec: _parse should not return OK if not enough data yet
+
+2012-01-17 11:55:14 +0100  Mark Nauwelaerts <mark.nauwelaerts@collabora.co.uk>
+
+	* ext/amrnb/amrnbdec.c:
+	  amrnbdec: _parse should not return OK if not enough data yet
+
+2012-01-13 15:03:50 +0000  Vincent Penquerc'h <vincent.penquerch@collabora.co.uk>
+
+	* ext/dvdread/dvdreadsrc.c:
+	  dvdreadsrc: fix off by one in cell calculation for the last chapter
+
+2012-01-13 13:46:50 +0000  Vincent Penquerc'h <vincent.penquerch@collabora.co.uk>
+
+	* ext/x264/gstx264enc.c:
+	  x264enc: remove useless and semantically (though not practically) wrong code
+	  The object will be freed, so it's pointless to set the pointers
+	  to NULL anyway.
+
+2012-01-13 13:46:28 +0000  Vincent Penquerc'h <vincent.penquerch@collabora.co.uk>
+
+	* ext/x264/gstx264enc.c:
+	  x264enc: remove leaking "optimization"
+
+2012-01-04 19:41:34 +0000  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+
+	* common:
+	  Automatic update of common submodule
+	  From 11f0cd5 to cb5da59
+
+2012-01-04 17:05:32 +0000  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+
+	* ext/lame/Makefile.am:
+	  lame: fix LIBADD order in Makefile.am
+
+2011-12-27 22:54:34 +0000  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+
+	* ext/lame/gstlame.c:
+	* ext/lame/gstlamemp3enc.c:
+	  lame: fix printf format in debug statements
+	  https://bugzilla.gnome.org/show_bug.cgi?id=666926
+
+2011-12-26 18:24:32 +0100  Mark Nauwelaerts <mark.nauwelaerts@collabora.co.uk>
+
+	* ext/lame/gstlame.c:
+	* ext/lame/gstlame.h:
+	  lame: ensure parsed output
+	  ... by doing some basic parsing of encoded lame data.
+
+2011-12-26 16:34:01 +0100  Mark Nauwelaerts <mark.nauwelaerts@collabora.co.uk>
+
+	* ext/lame/gstlame.h:
+	  lame: cleanup unused instance struct fields
+
+2011-12-26 18:23:52 +0100  Mark Nauwelaerts <mark.nauwelaerts@collabora.co.uk>
+
+	* ext/lame/Makefile.am:
+	* ext/lame/gstlamemp3enc.c:
+	* ext/lame/gstlamemp3enc.h:
+	  lamemp3enc: ensure parsed output
+	  ... by doing some basic parsing of encoded lame data.
+	  Fixes #652150.
+
+2011-12-26 18:15:41 +0100  Mark Nauwelaerts <mark.nauwelaerts@collabora.co.uk>
+
+	* ext/lame/gstlamemp3enc.c:
+	  lamemp3enc: do not leak merged tags
+
+2009-01-25 22:49:11 +0100  Mark Nauwelaerts <mark.nauwelaerts@collabora.co.uk>
+
+	* ext/dvdread/dvdreadsrc.c:
+	  dvdreadsrc: map subtitle language tag to stream indicated in PGC data
+
+2009-01-25 22:49:11 +0100  Mark Nauwelaerts <mark.nauwelaerts@collabora.co.uk>
+
+	* gst/mpegstream/gstdvddemux.c:
+	  dvddemux: tweak subtitle stream setup based on dvd language codes event
+	  ... to allow for non-continuous subtitle stream numbers.
+	  The missing stream numbers tend to come up as subtitle streams anyway
+	  (albeit not with an identified language tag).
+
+2011-12-21 13:56:35 +0100  Mark Nauwelaerts <mark.nauwelaerts@collabora.co.uk>
+
+	* ext/dvdread/dvdreadsrc.c:
+	  dvdreadsrc: minor safety tweak to sector seeking
+
+2011-12-13 14:54:18 +0100  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* ext/a52dec/gsta52dec.c:
+	  a52dec: Don't claim to support upstream renegotiation
+	  and use fixed caps on the srcpad. To correctly support
+	  upstream renegotiation a52dec would need to check if the
+	  caps of the downstream allocated buffer are the requested
+	  caps or if the size is different.
+	  Fixes bug #665989.
+
+2011-12-13 14:52:26 +0100  Julien Isorce <julien.isorce@gmail.com>
+
+	* ext/a52dec/gsta52dec.c:
+	  a52dec: Check that the a52_state is correctly initialized
+
+2011-12-12 11:33:31 +0000  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+
+	* gst-libs/gst/Makefile.am:
+	* gst-libs/gst/glib-compat-private.h:
+	* gst/asfdemux/gstasfdemux.c:
+	* gst/mpegaudioparse/gstmpegaudioparse.c:
+	* gst/realmedia/rademux.c:
+	* gst/realmedia/rdtmanager.c:
+	* gst/realmedia/rmdemux.c:
+	  Work around deprecated thread API in glib master
+	  Add private replacements for deprecated functions such as
+	  g_mutex_new(), g_mutex_free(), g_cond_new() etc., mostly
+	  to avoid the deprecation warnings. We can't change most of
+	  these in 0.10 because they're part of our API and ABI.
+	  Suppress deprecation warnings in selected files, mostly for
+	  g_static_rec_mutex_*. StaticRecMutex is part of our API/ABI,
+	  not much we can do here in 0.10.
+
+2011-12-10 15:23:26 +0000  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+
+	* configure.ac:
+	* win32/common/config.h:
+	  0.10.18.2 pre-release
+
+2011-12-10 15:19:03 +0000  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+
+	* po/LINGUAS:
+	* po/eo.po:
+	* po/es.po:
+	* po/lv.po:
+	* po/sr.po:
+	  po: update translations
+
+2011-12-09 15:25:21 +0000  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+
+	* gst/realmedia/rdtdepay.c:
+	  rdtdepay: make buffer metadata writable before setting caps on it
+	  Fixes issue when the header buffer is being pushed, which was taken
+	  from the caps and is therefore not writable.
+
+2011-11-29 08:49:23 +0100  Руслан Ижбулатов <lrn1986@gmail.com>
+
+	* ext/dvdread/dvdreadsrc.c:
+	  dvdreadsrc: Fix format string compiler warning
+	  Fixes bug #665101.
+
+2011-11-28 13:10:01 +0000  Vincent Penquerc'h <vincent.penquerch@collabora.co.uk>
+
+	* ext/a52dec/gsta52dec.c:
+	* ext/amrnb/amrnbdec.c:
+	* ext/amrnb/amrnbenc.c:
+	* ext/amrwbdec/amrwbdec.c:
+	* ext/dvdread/dvdreadsrc.c:
+	* ext/lame/gstlame.c:
+	* ext/lame/gstlamemp3enc.c:
+	* ext/mad/gstmad.c:
+	* ext/mpeg2dec/gstmpeg2dec.c:
+	* ext/sidplay/gstsiddec.cc:
+	* ext/twolame/gsttwolame.c:
+	* ext/x264/gstx264enc.c:
+	* gst/asfdemux/gstasfdemux.c:
+	* gst/asfdemux/gstrtpasfdepay.c:
+	* gst/dvdlpcmdec/gstdvdlpcmdec.c:
+	* gst/dvdsub/gstdvdsubdec.c:
+	* gst/dvdsub/gstdvdsubparse.c:
+	* gst/iec958/ac3iec.c:
+	* gst/mpegaudioparse/gstmpegaudioparse.c:
+	* gst/mpegaudioparse/gstxingmux.c:
+	* gst/mpegstream/gstdvddemux.c:
+	* gst/mpegstream/gstmpegdemux.c:
+	* gst/mpegstream/gstmpegparse.c:
+	* gst/mpegstream/gstrfc2250enc.c:
+	* gst/realmedia/pnmsrc.c:
+	* gst/realmedia/rademux.c:
+	* gst/realmedia/rdtdepay.c:
+	* gst/realmedia/rdtmanager.c:
+	* gst/realmedia/rmdemux.c:
+	* gst/synaesthesia/gstsynaesthesia.c:
+	  various: fix pad template ref leaks
+	  https://bugzilla.gnome.org/show_bug.cgi?id=662664
+
+2011-10-29 11:57:40 +0200  Edward Hervey <bilboed@bilboed.com>
+
+	* gst/asfdemux/gstasfdemux.c:
+	  asfdemux: Don't leak pending payload buffers
+	  Fixes #662964
+
+2011-10-27 16:53:44 +0200  Stefan Sauer <ensonic@users.sf.net>
+
+	* ext/sidplay/gstsiddec.cc:
+	  siddec: use BOILERPLATE macro and cleanup FIXMEs
+
+2011-10-05 12:05:34 +0200  Mark Nauwelaerts <mark.nauwelaerts@collabora.co.uk>
+
+	* ext/amrwbdec/Makefile.am:
+	* ext/amrwbdec/amrwbdec.c:
+	* ext/amrwbdec/amrwbdec.h:
+	  amrwbdec: port to audiodecoder
+
+2011-10-04 17:00:57 +0200  Mark Nauwelaerts <mark.nauwelaerts@collabora.co.uk>
+
+	* ext/amrnb/Makefile.am:
+	  amrnbdec: fixup build
+
+2011-10-04 17:00:41 +0200  Mark Nauwelaerts <mark.nauwelaerts@collabora.co.uk>
+
+	* ext/amrnb/amrnbdec.c:
+	  amrnbdec: remove leftover extraneous _unref
+
+2011-10-03 17:19:02 +0200  Mark Nauwelaerts <mark.nauwelaerts@collabora.co.uk>
+
+	* ext/amrnb/amrnbdec.c:
+	* ext/amrnb/amrnbdec.h:
+	  amrnbdec: port to audiodecoder
+
+2011-09-05 11:11:52 +0100  Vincent Penquerc'h <vincent.penquerch@collabora.co.uk>
+
+	* ext/mpeg2dec/gstmpeg2dec.c:
+	* ext/mpeg2dec/gstmpeg2dec.h:
+	  mpeg2dec: post QoS messages when dropping a frame due to QoS
+	  https://bugzilla.gnome.org/show_bug.cgi?id=658241
+
+2011-09-27 17:01:59 +0200  Mark Nauwelaerts <mark.nauwelaerts@collabora.co.uk>
+
+	* ext/amrnb/Makefile.am:
+	* ext/amrnb/amrnbenc.c:
+	* ext/amrnb/amrnbenc.h:
+	  amrnbenc: port to audioencoder
+
+2011-09-26 16:29:12 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* ext/twolame/gsttwolame.c:
+	  twolame: Simple fix for GstAudioEncoder API change
+
+2011-09-26 16:28:08 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* ext/twolame/gsttwolame.c:
+	  twolame: Fix variable 'gstelement_class' set but not used compiler warning
+
+2011-09-26 16:08:20 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* ext/lame/gstlame.c:
+	* ext/lame/gstlamemp3enc.c:
+	  lame: Don't get the parent class again, GST_BOILERPLATE does this already
+
+2011-09-26 16:07:54 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* ext/lame/gstlame.c:
+	* ext/lame/gstlamemp3enc.c:
+	  lame: Fix variable 'gstelement_class' set but not used compiler warning
+
+2011-09-26 12:07:15 +0200  Mark Nauwelaerts <mark.nauwelaerts@collabora.co.uk>
+
+	* ext/twolame/gsttwolame.c:
+	  twolame: improve output framing and timestamping
+	  ... which simply comes down to requesting one frame of input data at a time,
+	  since the encoder nicely turns this into 1 encoded frame.
+
+2011-09-26 11:56:23 +0200  Mark Nauwelaerts <mark.nauwelaerts@collabora.co.uk>
+
+	* ext/twolame/Makefile.am:
+	* ext/twolame/gsttwolame.c:
+	* ext/twolame/gsttwolame.h:
+	  twolame: port to audioencoder
+
+2011-09-23 15:32:01 +0200  Mark Nauwelaerts <mark.nauwelaerts@collabora.co.uk>
+
+	* ext/lame/gstlame.c:
+	  lame: use some more boilerplate
+
+2011-09-23 15:26:48 +0200  Mark Nauwelaerts <mark.nauwelaerts@collabora.co.uk>
+
+	* ext/lame/gstlame.c:
+	* ext/lame/gstlame.h:
+	  lame: port to audioencoder
+
+2011-09-23 14:33:55 +0200  Mark Nauwelaerts <mark.nauwelaerts@collabora.co.uk>
+
+	* ext/lame/gstlamemp3enc.c:
+	  lamemp3enc: use some more boilerplate
+
+2011-09-26 14:44:23 +0200  Mark Nauwelaerts <mark.nauwelaerts@collabora.co.uk>
+
+	* ext/lame/gstlamemp3enc.c:
+	  lamemp3enc: really report bitrate rather kbitrate
+
+2011-09-26 14:44:01 +0200  Mark Nauwelaerts <mark.nauwelaerts@collabora.co.uk>
+
+	* ext/lame/Makefile.am:
+	* ext/lame/gstlamemp3enc.c:
+	* ext/lame/gstlamemp3enc.h:
+	  lamemp3enc: port to audioencoder
+
+2011-09-16 15:35:06 +0100  Vincent Penquerc'h <vincent.penquerch@collabora.co.uk>
+
+	* ext/dvdread/dvdreadsrc.c:
+	  dvdreadsrc: take into account first sector of the current title
+	  This fixes seeking on titles which do not start on a new file.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=659252
+
+2011-09-16 15:03:54 +0100  Vincent Penquerc'h <vincent.penquerch@collabora.co.uk>
+
+	* ext/dvdread/dvdreadsrc.c:
+	  dvdreadsrc: fix sector seeking
+	  It was overly complicated, and did not take into account the offset
+	  needed for titles which do not start on a new file.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=659252
+
+2011-09-16 13:42:53 +0100  Vincent Penquerc'h <vincent.penquerch@collabora.co.uk>
+
+	* ext/dvdread/dvdreadsrc.c:
+	  dvdreadsrc: fix sector search for packed titles
+	  Some DVD titles are packed in a single set, and we need to use
+	  the correct table to map times to sectors.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=659252
+
+2011-08-15 16:23:04 +0100  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+
+	* configure.ac:
+	* ext/mad/Makefile.am:
+	* ext/mad/gstmad.c:
+	* gst-plugins-ugly.spec.in:
+	  mad: remove id3tag dependency used by in practice unreachable legacy code
+	  The mad mp3 decoder element shouldn't parse tags at all really, but we
+	  have so far kept this code around for backwards-compatibility reasons
+	  for people building manual pipelines for some reason. However, as it
+	  turns out that code has never actually worked in 0.10 in practice,
+	  since it only gets executed if mad_frame_decode() returns LOSTSYNC,
+	  which doesn't actually seem to happen any more though because of the
+	  preceding mad_header_decode(), which will discover and report the
+	  sync loss if it runs into a tag and make mad_frame_decode() try to
+	  resync right away.
+	  Discovered this while trying to make it use gst_tag_list_from_id3v2_tag().
+
+2011-09-08 17:01:27 +0200  Mark Nauwelaerts <mark.nauwelaerts@collabora.co.uk>
+
+	* gst/asfdemux/asfpacket.c:
+	  asfpacket: skip empty payload packets
+	  ... which also avoids assertion failures and possible segfaults later on
+	  when possibly trying to join 2 empty buffers.
+
+2011-09-08 14:33:00 +0100  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+
+	* gst/realmedia/rmdemux.c:
+	* gst/realmedia/rmdemux.h:
+	  rmdemux: delay announcing container tags until we have pads
+	  Fixes tags when transcoding.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=658297
+
+2011-09-07 14:36:46 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* tests/check/elements/amrnbenc.c:
+	  amrnbenc: Use complete raw audio caps in the test
+
+2011-09-07 14:25:41 +0200  Stefan Sauer <ensonic@users.sf.net>
+
+	* docs/plugins/Makefile.am:
+	  docs: cleanup makefiles
+	  Remove commented out parts that we don't need. Remove "the wingo addition" - no
+	  so useful after all. Narrow down file-globs for plugin docs.
+
+2011-09-06 21:25:13 +0200  Stefan Sauer <ensonic@users.sf.net>
+
+	* common:
+	  Automatic update of common submodule
+	  From a39eb83 to 11f0cd5
+
+2011-09-06 15:40:55 +0200  Stefan Sauer <ensonic@users.sf.net>
+
+	* common:
+	  Automatic update of common submodule
+	  From 605cd9a to a39eb83
+
+2011-08-22 17:49:14 +0100  Vincent Penquerc'h <vincent.penquerch@collabora.co.uk>
+
+	* ext/mpeg2dec/gstmpeg2dec.c:
+	  mpeg2dec: fix spurious failure to decode some files
+	  Parsing can return with an 'invalid' state, but this is not
+	  actually fatal. For one, the mpeg2dec command line tool that
+	  comes with the libmpeg2 library blithely ignores this condition
+	  and merrily goes on. So we do this same, logging the error,
+	  and going on with parsing. This makes something work that did
+	  not use to work, and brings happiness to the world.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=429476
+
+2011-07-30 18:47:44 -0300  Thiago Santos <thiago.sousa.santos@collabora.co.uk>
+
+	* ext/x264/gstx264enc.c:
+	  x264enc: Properly set the stream format in setcaps
+	  Do not forget to set the selected format to the options string
+	  when getting it from caps
+	  https://bugzilla.gnome.org/show_bug.cgi?id=655223
+
+2011-07-19 15:06:49 +0200  Stefan Sauer <ensonic@google.com>
+
+	* ext/x264/gstx264enc.c:
+	  x264enc: fix the build for older x264enc
+	  b_fake_interlaced was introduced in x264 commit 1b48874d06 = X264_BUILD 96.
+
+2011-07-18 20:41:20 -0400  Olivier Crête <olivier.crete@collabora.com>
+
+	* ext/x264/gstx264enc.c:
+	  x264enc: Read stream-format from the right place
+	  Read the stream-format from "stream-format" and not from profile, also rename
+	  the "bytestream" variable to "stream_format" so it's easier to understand.
+
+2011-06-13 23:24:27 -0300  Thiago Santos <thiago.sousa.santos@collabora.co.uk>
+
+	* ext/x264/gstx264enc.c:
+	* ext/x264/gstx264enc.h:
+	  x264enc: Select stream-format based on caps
+	  Makes x264 select its stream-format based on what's available
+	  on caps, the user selected option will be chosen as a fallback
+	  when both options are available.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=644233
+
+2011-07-04 18:03:49 -0400  Olivier Crête <olivier.crete@collabora.com>
+
+	* ext/x264/gstx264enc.c:
+	  x264: Allow renegotiation but prefer current caps
+
+2011-06-09 20:20:27 -0400  Olivier Crête <olivier.crete@collabora.com>
+
+	* tests/check/elements/x264enc.c:
+	  tests: Test x264enc profiles from the caps
+	  https://bugzilla.gnome.org/show_bug.cgi?id=644233
+
+2011-03-07 17:58:34 -0500  Olivier Crête <olivier.crete@collabora.co.uk>
+
+	* ext/x264/Makefile.am:
+	* ext/x264/gstx264enc.c:
+	* ext/x264/gstx264enc.h:
+	  x264: Use profile and level from caps
+	  Enforces the profile and level from the downstream caps, also
+	  sets them on the fixated caps
+	  https://bugzilla.gnome.org/show_bug.cgi?id=644233
+
+2011-06-25 06:29:50 +0300  Brian Gitonga Marete <marete@toshnix.com>
+
+	* ext/x264/gstx264enc.c:
+	  x264enc: fix subme property annotation - subme maximum is 10, not 6.
+	  Although the element accepts subme values > 6, the annotation which is
+	  visible through gst-inspect (for example) erroneously indicates 6 as the
+	  maximum. Fix this by indicating 10 (which is the x264 max) as the maximum.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=653473
+
+2011-06-23 11:28:58 -0700  David Schleef <ds@schleef.org>
+
+	* common:
+	  Automatic update of common submodule
+	  From 69b981f to 605cd9a
+
+2011-06-06 12:41:03 +0200  Mark Nauwelaerts <mark.nauwelaerts@collabora.co.uk>
+
+	* gst/asfdemux/gstrtpasfdepay.c:
+	  rtpasfdepay: fix fragmented packet handling and packet padding
+	  Also remove a bogus assert.
+
+2011-06-03 11:35:55 +0300  Stefan Kost <ensonic@users.sf.net>
+
+	* gst/synaesthesia/gstsynaesthesia.c:
+	  synaesthesia: fix wrong debug log string (copy'n'paste)
+
+2011-05-20 13:32:31 +0300  Stefan Kost <ensonic@users.sf.net>
+
+	* gst/realmedia/rmdemux.c:
+	  rmdemux: target is unsigned and can't be < 0
+
+2011-05-20 13:31:14 +0300  Stefan Kost <ensonic@users.sf.net>
+
+	* ext/mad/gstmad.c:
+	  mad: use signed when caluculating the delta
+	  Avoids a <0 check for an unsigned variable.
+
+2011-05-19 23:55:41 +0300  Stefan Kost <ensonic@users.sf.net>
+
+	* docs/plugins/Makefile.am:
+	  docs: remove obsolete commented out part
+	  We don't have this in the other modules and its not needed.
+
+2011-05-19 23:38:23 +0300  Stefan Kost <ensonic@users.sf.net>
+
+	* docs/plugins/gst-plugins-ugly-plugins.args:
+	* docs/plugins/gst-plugins-ugly-plugins.hierarchy:
+	* docs/plugins/gst-plugins-ugly-plugins.interfaces:
+	  docs: update plugin introspection data
+	  Now more files are merged and produced in a canonical fashion, which hopefully
+	  creates less or no delta in the future.
+
+2011-05-19 22:58:28 +0300  Stefan Kost <ensonic@users.sf.net>
+
+	* common:
+	  Automatic update of common submodule
+	  From 9e5bbd5 to 69b981f
+
+2011-05-18 14:49:17 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* ext/lame/Makefile.am:
+	* ext/lame/gstlamemp3enc.c:
+	  lamemp3enc: Post CODEC and BITRATE tags
+	  Also filter any CODEC/AUDIO_CODEC tags from incoming
+	  tag events.
+	  Fixes bug #391543.
+
+2011-05-18 16:10:55 +0300  Stefan Kost <ensonic@users.sf.net>
+
+	* common:
+	  Automatic update of common submodule
+	  From fd35073 to 9e5bbd5
+
+2011-05-18 12:25:01 +0300  Stefan Kost <ensonic@users.sf.net>
+
+	* common:
+	  Automatic update of common submodule
+	  From 46dfcea to fd35073
+
+2011-04-27 15:20:20 +0200  Mark Nauwelaerts <mark.nauwelaerts@collabora.co.uk>
+
+	* gst/asfdemux/gstrtpasfdepay.c:
+	  rtpasfdepay: simplify and refactor packet parsing
+	  Specifically, refactor buffer padding and consider marker bit for fragment
+	  assembling.
+
+2011-04-27 15:14:00 +0200  Mark Nauwelaerts <mark.nauwelaerts@collabora.co.uk>
+
+	* gst/asfdemux/gstrtpasfdepay.c:
+	  rtpasfdepay: avoid re-sending header
+	  ... e.g. following a seek, which otherwise confuses downstream demuxer
+	  expecting only a flow of data packets at this time.
+
+2011-04-27 15:12:22 +0200  Mark Nauwelaerts <mark.nauwelaerts@collabora.co.uk>
+
+	* gst/asfdemux/gstrtpasfdepay.c:
+	* gst/asfdemux/gstrtpasfdepay.h:
+	  rtpasfdepay: remove unused field
+
+2011-04-29 09:19:19 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* ext/mad/gstmad.c:
+	  mad: Post bitrate tag whenever the bitrate changes
+	  Also send the layer/mode/emphasis/bitrate tags as an event too.
+
+2011-05-14 10:09:16 +0100  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+
+	* configure.ac:
+	* win32/common/config.h:
+	  win32: define GST_PACKAGE_RELEASE_DATETIME in win32 config.h as well
+
+2011-05-14 10:06:31 +0100  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+
+	* configure.ac:
+	* docs/plugins/inspect/plugin-a52dec.xml:
+	* docs/plugins/inspect/plugin-amrnb.xml:
+	* docs/plugins/inspect/plugin-amrwbdec.xml:
+	* docs/plugins/inspect/plugin-asf.xml:
+	* docs/plugins/inspect/plugin-cdio.xml:
+	* docs/plugins/inspect/plugin-dvdlpcmdec.xml:
+	* docs/plugins/inspect/plugin-dvdread.xml:
+	* docs/plugins/inspect/plugin-dvdsub.xml:
+	* docs/plugins/inspect/plugin-iec958.xml:
+	* docs/plugins/inspect/plugin-lame.xml:
+	* docs/plugins/inspect/plugin-mad.xml:
+	* docs/plugins/inspect/plugin-mpeg2dec.xml:
+	* docs/plugins/inspect/plugin-mpegaudioparse.xml:
+	* docs/plugins/inspect/plugin-mpegstream.xml:
+	* docs/plugins/inspect/plugin-realmedia.xml:
+	* docs/plugins/inspect/plugin-siddec.xml:
+	* docs/plugins/inspect/plugin-twolame.xml:
+	* docs/plugins/inspect/plugin-x264.xml:
+	* win32/common/config.h:
+	  Back to development
+
+=== release 0.10.18 ===
+
+2011-05-10 10:26:50 +0100  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+
+	* ChangeLog:
+	* NEWS:
+	* RELEASE:
+	* configure.ac:
+	* docs/plugins/gst-plugins-ugly-plugins.hierarchy:
+	* docs/plugins/inspect/plugin-a52dec.xml:
+	* docs/plugins/inspect/plugin-amrnb.xml:
+	* docs/plugins/inspect/plugin-amrwbdec.xml:
+	* docs/plugins/inspect/plugin-asf.xml:
+	* docs/plugins/inspect/plugin-cdio.xml:
+	* docs/plugins/inspect/plugin-dvdlpcmdec.xml:
+	* docs/plugins/inspect/plugin-dvdread.xml:
+	* docs/plugins/inspect/plugin-dvdsub.xml:
+	* docs/plugins/inspect/plugin-iec958.xml:
+	* docs/plugins/inspect/plugin-lame.xml:
+	* docs/plugins/inspect/plugin-mad.xml:
+	* docs/plugins/inspect/plugin-mpeg2dec.xml:
+	* docs/plugins/inspect/plugin-mpegaudioparse.xml:
+	* docs/plugins/inspect/plugin-mpegstream.xml:
+	* docs/plugins/inspect/plugin-realmedia.xml:
+	* docs/plugins/inspect/plugin-siddec.xml:
+	* docs/plugins/inspect/plugin-twolame.xml:
+	* docs/plugins/inspect/plugin-x264.xml:
+	* gst-plugins-ugly.doap:
+	* win32/common/config.h:
+	  Release 0.10.18
+	  Highlights:
+	  - x264enc: allow changing bitrate and quantizers dynamically at runtime
+	  - x264enc: proxy downstream caps restrictions upstream via get_caps()
+	  - lamemp3enc: proxy downstream rate/channels restrictions upstream via get_caps()
+	  - mad: allow build without libid3tag (which isn't really needed anyway)
+	  - many other fixes and improvements
 
 2011-05-04 12:39:17 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
 

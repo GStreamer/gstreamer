@@ -1,5 +1,5 @@
 
-Release notes for GStreamer Ugly Plug-ins 0.10.18 "Extra Life"
+Release notes for GStreamer Ugly Plug-ins 0.10.19 "Stronger"
         
 
 The GStreamer team is proud to announce a new release
@@ -55,34 +55,35 @@ contains a set of less supported plug-ins that haven't passed the
 
 Features of this release
     
-      * amrwbdec: avoid stalling on invalid frame
-      * asfpacket: don't rely on data from duration extension
-      * dvdsubdec: Implement clipping if the video size is smaller than the subpicture size
-      * dvdsubdec: Output only a single buffer per subpicture and set the correct duration
-      * lamemp3enc: implement sinkpad get_caps() function to proxy rate and channels restrictions from downstream
-      * mad: build the mad plugin even if libid3tag is not available
-      * mpeg2dec: do not fail fatally when downstream is unlinked (let upstream handle that)
-      * mpeg2dec: don't deadlock when setting an index
-      * mpegstream: increase allowable gap between streams
-      * x264enc: allow changing the bitrate and quantitizers dynamically
-      * x264enc: don't register flags with a value of 0
-      * x264enc: implement getcaps function to proxy downstream caps restrictions upstream
-      * x264enc: make tag event writable before modifying tag list in place
-      * x264enc: set max bitrate in quality mode
+      * a52dec: don't claim to support upstream renegotiation
+      * dvddemux: tweak subtitle stream setup based on dvd language codes event
+      * dvdreadsrc: fix off by one in cell calculation for the last chapter
+      * dvdreadsrc: fix sector search for packed titles; fix sector seeking
+      * dvdreadsrc: map subtitle language tag to stream indicated in PGC data
+      * dvdreadsrc: take into account first sector of the current title
+      * lame, lamemp3enc: ensure parsed output (most muxers need framed mp3 as input)
+      * lame, lamemp3enc: post CODEC and BITRATE tags
+      * mad: remove id3tag dependency used by in practice unreachable legacy code
+      * mpeg2dec: don't treat non-fatal errors as fatal and fix spurious failure to decode some files
+      * mpeg2dec: post QoS messages when dropping a frame due to QoS
+      * rtpasfdepay: avoid re-sending header; fix fragmented packet handling and packet padding
+      * twolame: improve output framing and timestamping
+      * x264enc: allow renegotiation but prefer current caps
+      * x264enc: negotiate profile, level and output stream-format from downstream caps where appropriate
 
 Bugs fixed in this release
      
-      * 539708 : [mpegstream] Increase allowable gap between streams
-      * 607698 : asfdemux: fix parsing of packets with padding
-      * 619136 : [dvdsubdec] spits out buffers at video framerate
-      * 621663 : x264enc: support changing bitrate property on the fly
-      * 639291 : [xingmux] Return NULL instead of 0 for a function returning gboolean
-      * 639715 : amrparse: seek error with EOS
-      * 640272 : x264enc: make tag event writable before modifying tag list in place
-      * 641151 : lame: doesn't negotiate sample rate properly
-      * 642360 : x264enc: Don't register flags which have 0 as a value
-      * 644704 : [dvdsubedc] no SPU clipping implemented
-      * 647709 : mpeg2dec: errors out on not-linked flow return
+      * 644233 : Set the H.264 level from the caps for encoding
+      * 391543 : lame should add a tag with the chosen bitrate
+      * 429476 : [mpeg2dec] can't play auge.mpg
+      * 653473 : x264enc: " subme " property value can go up to 10
+      * 655223 : [x264enc] properly handle stream-format from caps
+      * 658297 : rmdemux: tags get lost when transcoding
+      * 659252 : dvdreadsrc: various fixes for titles not starting on a new file
+      * 660562 : mpeg2dec: post QoS messages when dropping a frame due to QoS
+      * 662964 : asfdemux memleak
+      * 664175 : x264enc ! avimux results in not-negotiated flow error
+      * 665101 : Wrong format string in gst_dvd_read_src_do_seek
 
 Download
 
@@ -111,17 +112,17 @@ Applications
   
 Contributors to this release
     
-      * Brendan Le Foll
+      * Brian Gitonga Marete
+      * David Schleef
       * Edward Hervey
-      * Luis de Bethencourt
+      * Julien Isorce
       * Mark Nauwelaerts
-      * Miguel Angel Cabrera Moya
       * Olivier Crête
       * Sebastian Dröge
-      * Sjoerd Simons
       * Stefan Kost
-      * Thibault Saunier
+      * Stefan Sauer
+      * Thiago Santos
       * Tim-Philipp Müller
       * Vincent Penquerc'h
-      * Yang Xichuan
+      * Руслан Ижбулатов
  

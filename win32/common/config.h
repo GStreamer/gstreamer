@@ -46,13 +46,13 @@
 #define GST_LICENSE "LGPL"
 
 /* package name in plugins */
-#define GST_PACKAGE_NAME "GStreamer Ugly Plug-ins prerelease"
+#define GST_PACKAGE_NAME "GStreamer Ugly Plug-ins source release"
 
 /* package origin */
 #define GST_PACKAGE_ORIGIN "Unknown package origin"
 
 /* GStreamer package release date/time for plugins as YYYY-MM-DD */
-#define GST_PACKAGE_RELEASE_DATETIME "2012-02-05T11:36Z"
+#define GST_PACKAGE_RELEASE_DATETIME "2012-02-20"
 
 /* Define to enable a52dec (used by a52dec). */
 #undef HAVE_A52DEC
@@ -233,7 +233,7 @@
 #define PACKAGE_NAME "GStreamer Ugly Plug-ins"
 
 /* Define to the full name and version of this package. */
-#define PACKAGE_STRING "GStreamer Ugly Plug-ins 0.10.18.3"
+#define PACKAGE_STRING "GStreamer Ugly Plug-ins 0.10.19"
 
 /* Define to the one symbol short name of this package. */
 #define PACKAGE_TARNAME "gst-plugins-ugly"
@@ -242,7 +242,7 @@
 #undef PACKAGE_URL
 
 /* Define to the version of this package. */
-#define PACKAGE_VERSION "0.10.18.3"
+#define PACKAGE_VERSION "0.10.19"
 
 /* directory where plugins are located */
 #ifdef _DEBUG
@@ -270,7 +270,7 @@
 #undef STDC_HEADERS
 
 /* Version number of package */
-#define VERSION "0.10.18.3"
+#define VERSION "0.10.19"
 
 /* Define WORDS_BIGENDIAN to 1 if your processor stores words with the most
    significant byte first (like Motorola and SPARC, unlike Intel). */

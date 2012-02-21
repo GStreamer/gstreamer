@@ -35,6 +35,18 @@ might be widely known to present patent problems.
 
  <release>
   <Version>
+   <revision>0.10.19</revision>
+   <branch>0.10</branch>
+   <name>Stronger</name>
+   <created>2012-02-20</created>
+   <file-release rdf:resource="http://gstreamer.freedesktop.org/src/gst-plugins-ugly/gst-plugins-ugly-0.10.19.tar.bz2" />
+   <file-release rdf:resource="http://gstreamer.freedesktop.org/src/gst-plugins-ugly/gst-plugins-ugly-0.10.19.tar.gz" />
+   <file-release rdf:resource="http://gstreamer.freedesktop.org/src/gst-plugins-ugly/gst-plugins-ugly-0.10.19.tar.xz" />
+  </Version>
+ </release>
+
+ <release>
+  <Version>
    <revision>0.10.18</revision>
    <branch>0.10</branch>
    <name>Extra Life</name>
