@@ -1,0 +1,35 @@
+<plugin>
+  <name>removesilence</name>
+  <description>Removes silence from an audio stream</description>
+  <filename>../../gst/removesilence/.libs/libgstremovesilence.so</filename>
+  <basename>libgstremovesilence.so</basename>
+  <version>0.10.23</version>
+  <license>LGPL</license>
+  <source>gst-plugins-bad</source>
+  <package>GStreamer Bad Plug-ins source release</package>
+  <origin>Unknown package origin</origin>
+  <elements>
+    <element>
+      <name>removesilence</name>
+      <longname>RemoveSilence</longname>
+      <class>Filter/Effect/Audio</class>
+      <description>Removes all the silence periods from the audio stream.</description>
+      <author>Tiago Katcipis &lt;tiagokatcipis@gmail.com&gt;
+        Paulo Pizarro  &lt;paulo.pizarro@gmail.com&gt;</author>
+      <pads>
+        <caps>
+          <name>sink</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-int, rate=(int)[ 1, 2147483647 ], channels=(int)1, endianness=(int)1234, width=(int)16, depth=(int)16, signed=(boolean)true</details>
+        </caps>
+        <caps>
+          <name>src</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-int, rate=(int)[ 1, 2147483647 ], channels=(int)1, endianness=(int)1234, width=(int)16, depth=(int)16, signed=(boolean)true</details>
+        </caps>
+      </pads>
+    </element>
+  </elements>
+</plugin>

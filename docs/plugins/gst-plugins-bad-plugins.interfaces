@@ -2,6 +2,7 @@ DvbBaseBin GstChildProxy GstURIHandler
 GstAmrWbEnc GstPreset
 GstApExSink GstImplementsInterface GstMixer
 GstAsfMux GstTagSetter
+GstAudioEncoder GstPreset
 GstAutoConvert GstChildProxy
 GstAutoVideoConvert GstChildProxy
 GstBaseCameraSrc GstChildProxy
@@ -10,6 +11,7 @@ GstBin GstChildProxy
 GstCDAudio GstURIHandler
 GstCameraBin GstChildProxy GstImplementsInterface GstColorBalance GstTagSetter
 GstCameraBin2 GstChildProxy GstTagSetter
+GstCeltEnc GstPreset GstTagSetter
 GstCeltEnc GstTagSetter GstPreset
 GstDataURISrc GstURIHandler
 GstDfbVideoSink GstImplementsInterface GstNavigation GstColorBalance
@@ -17,6 +19,7 @@ GstDiracEnc GstPreset
 GstFPSDisplaySink GstChildProxy
 GstFaac GstPreset
 GstFaceOverlay GstChildProxy
+GstFreeverb GstPreset
 GstGSettingsAudioSink GstChildProxy
 GstGSettingsAudioSrc GstChildProxy
 GstGSettingsSwitchSink GstChildProxy
@@ -38,6 +41,7 @@ GstRTMPSrc GstURIHandler
 GstSDLVideoSink GstImplementsInterface GstXOverlay GstNavigation
 GstSDPDemux GstChildProxy
 GstSchroEnc GstPreset
+GstTagMux GstTagSetter
 GstVCDSrc GstURIHandler
 GstVP8Enc GstPreset GstTagSetter
 GstVP8Enc GstTagSetter GstPreset
