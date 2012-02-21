@@ -472,7 +472,7 @@
 <NAME>GstLameMP3Enc::bitrate</NAME>
 <TYPE>gint</TYPE>
 <RANGE>[8,320]</RANGE>
-<FLAGS>rw</FLAGS>
+<FLAGS>rwx</FLAGS>
 <NICK>Bitrate (kb/s)</NICK>
 <BLURB>Bitrate in kbit/sec (Only valid if target is bitrate, for CBR one of 8, 16, 24, 32, 40, 48, 56, 64, 80, 96, 112, 128, 160, 192, 224, 256 or 320).</BLURB>
 <DEFAULT>128</DEFAULT>
@@ -482,7 +482,7 @@
 <NAME>GstLameMP3Enc::cbr</NAME>
 <TYPE>gboolean</TYPE>
 <RANGE></RANGE>
-<FLAGS>rw</FLAGS>
+<FLAGS>rwx</FLAGS>
 <NICK>CBR</NICK>
 <BLURB>Enforce constant bitrate encoding (Only valid if target is bitrate).</BLURB>
 <DEFAULT>FALSE</DEFAULT>
@@ -492,7 +492,7 @@
 <NAME>GstLameMP3Enc::encoding-engine-quality</NAME>
 <TYPE>GstLameMP3EncEncodingEngineQuality</TYPE>
 <RANGE></RANGE>
-<FLAGS>rw</FLAGS>
+<FLAGS>rwx</FLAGS>
 <NICK>Encoding Engine Quality</NICK>
 <BLURB>Quality/speed of the encoding engine, this does not affect the bitrate!.</BLURB>
 <DEFAULT>Standard</DEFAULT>
@@ -502,7 +502,7 @@
 <NAME>GstLameMP3Enc::mono</NAME>
 <TYPE>gboolean</TYPE>
 <RANGE></RANGE>
-<FLAGS>rw</FLAGS>
+<FLAGS>rwx</FLAGS>
 <NICK>Mono</NICK>
 <BLURB>Enforce mono encoding.</BLURB>
 <DEFAULT>FALSE</DEFAULT>
@@ -512,7 +512,7 @@
 <NAME>GstLameMP3Enc::quality</NAME>
 <TYPE>gfloat</TYPE>
 <RANGE>[0,9.999]</RANGE>
-<FLAGS>rw</FLAGS>
+<FLAGS>rwx</FLAGS>
 <NICK>Quality</NICK>
 <BLURB>VBR Quality from 0 to 10, 0 being the best (Only valid if target is quality).</BLURB>
 <DEFAULT>4</DEFAULT>
@@ -522,7 +522,7 @@
 <NAME>GstLameMP3Enc::target</NAME>
 <TYPE>GstLameMP3EncTarget</TYPE>
 <RANGE></RANGE>
-<FLAGS>rw</FLAGS>
+<FLAGS>rwx</FLAGS>
 <NICK>Target</NICK>
 <BLURB>Optimize for quality or bitrate.</BLURB>
 <DEFAULT>Quality</DEFAULT>
@@ -881,7 +881,7 @@
 <ARG>
 <NAME>GstX264Enc::key-int-max</NAME>
 <TYPE>guint</TYPE>
-<RANGE><= G_MAXLONG</RANGE>
+<RANGE><= G_MAXINT</RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>Key-frame maximal interval</NICK>
 <BLURB>Maximal distance between two key-frames (0 for automatic).</BLURB>
@@ -1011,10 +1011,10 @@
 <ARG>
 <NAME>GstX264Enc::subme</NAME>
 <TYPE>guint</TYPE>
-<RANGE>[1,6]</RANGE>
+<RANGE>[1,10]</RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>Subpixel Motion Estimation</NICK>
-<BLURB>Subpixel motion estimation and partition decision quality: 1=fast, 6=best.</BLURB>
+<BLURB>Subpixel motion estimation and partition decision quality: 1=fast, 10=best.</BLURB>
 <DEFAULT>1</DEFAULT>
 </ARG>
 
@@ -1124,7 +1124,7 @@
 <RANGE></RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>H.264 profile</NICK>
-<BLURB>Apply restrictions to meet H.264 Profile constraints. This will override other properties if necessary.</BLURB>
+<BLURB>Apply restrictions to meet H.264 Profile constraints. This will override other properties if necessary. This will only be used if downstream elements do not specify a profile in their caps (DEPRECATED).</BLURB>
 <DEFAULT>main</DEFAULT>
 </ARG>
 

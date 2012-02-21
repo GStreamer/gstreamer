@@ -6,9 +6,14 @@ GObject
       AC3IEC
       GstA52Dec
       GstASFDemux
-      GstAmrnbDec
-      GstAmrnbEnc
-      GstAmrwbDec
+      GstAudioDecoder
+        GstAmrnbDec
+        GstAmrwbDec
+      GstAudioEncoder
+        GstAmrnbEnc
+        GstLame
+        GstLameMP3Enc
+        GstTwoLame
       GstBaseRTPDepayload
         GstRtpAsfDepay
       GstBaseSrc
@@ -22,8 +27,6 @@ GObject
       GstDvdLpcmDec
       GstDvdSubDec
       GstDvdSubParse
-      GstLame
-      GstLameMP3Enc
       GstMPEGAudioParse
       GstMPEGParse
         GstMPEGDemux
@@ -37,8 +40,6 @@ GObject
       GstRTSPWMS
       GstRealAudioDemux
       GstSidDec
-      GstSynaesthesia
-      GstTwoLame
       GstX264Enc
       GstXingMux
     GstPad
