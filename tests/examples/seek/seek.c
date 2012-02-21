@@ -40,9 +40,12 @@
 #include <gdk/gdkx.h>
 #elif defined (GDK_WINDOWING_WIN32)
 #include <gdk/gdkwin32.h>
+#elif defined (GDK_WINDOWING_QUARTZ)
+#include <gdk/gdkquartzwindow.h>
 #endif
 
 #include <gst/video/videooverlay.h>
+#include <gst/interfaces/navigation.h>
 
 GST_DEBUG_CATEGORY_STATIC (seek_debug);
 #define GST_CAT_DEFAULT (seek_debug)
@@ -119,6 +122,12 @@ static GtkWidget *shuttle_checkbox, *step_button;
 static GtkWidget *shuttle_hscale;
 static GtkAdjustment *shuttle_adjustment;
 
+static struct
+{
+  GstNavigationCommand cmd;
+  GtkWidget *button;
+} navigation_buttons[14];
+
 static GList *paths = NULL, *l = NULL;
 
 /* we keep an array of the visualisation entries so that we can easily switch
@@ -133,6 +142,7 @@ static GArray *vis_entries;
 static void clear_streams (GstElement * pipeline);
 static void volume_notify_cb (GstElement * pipeline, GParamSpec * arg,
     gpointer user_dat);
+static void find_navigation_element (void);
 
 /* pipeline construction */
 
@@ -691,6 +701,7 @@ stop_cb (GtkButton * button, gpointer data)
 {
   if (state != STOP_STATE) {
     GstStateChangeReturn ret;
+    gint i;
 
     g_print ("READY pipeline\n");
     gtk_statusbar_pop (GTK_STATUSBAR (statusbar), status_id);
@@ -731,6 +742,9 @@ stop_cb (GtkButton * button, gpointer data)
       connect_bus_signals (pipeline);
     }
 #endif
+    gtk_widget_set_sensitive (GTK_WIDGET (hscale), TRUE);
+    for (i = 0; i < G_N_ELEMENTS (navigation_buttons); i++)
+      gtk_widget_set_sensitive (navigation_buttons[i].button, FALSE);
   }
   return;
 
@@ -1425,6 +1439,8 @@ msg_async_done (GstBus * bus, GstMessage * message, GstPipeline * pipeline)
 
   /* update the available streams */
   update_streams (pipeline);
+
+  find_navigation_element ();
 }
 
 static void
@@ -1590,9 +1606,51 @@ msg_clock_lost (GstBus * bus, GstMessage * message, GstPipeline * data)
   }
 }
 
-#if defined (GDK_WINDOWING_X11) || defined (GDK_WINDOWING_WIN32)
+static GstElement *navigation_element = NULL;
 
-static gulong embed_xid = 0;
+static void
+find_navigation_element (void)
+{
+  GstElement *video_sink;
+
+  g_object_get (pipeline, "video-sink", &video_sink, NULL);
+  if (!video_sink)
+    return;
+
+  if (navigation_element)
+    gst_object_unref (navigation_element);
+
+  if (GST_IS_NAVIGATION (video_sink)) {
+    navigation_element = gst_object_ref (video_sink);
+  } else if (GST_IS_BIN (video_sink)) {
+    navigation_element =
+        gst_bin_get_by_interface (GST_BIN (video_sink), GST_TYPE_NAVIGATION);
+  } else {
+    navigation_element = NULL;
+  }
+
+  gst_object_unref (video_sink);
+}
+
+/* called when Navigation command button is pressed */
+static void
+navigation_cmd_cb (GtkButton * button, gpointer data)
+{
+  GstNavigationCommand cmd = GPOINTER_TO_INT (data);
+
+  if (!navigation_element) {
+    find_navigation_element ();
+    if (!navigation_element)
+      return;
+  }
+
+  gst_navigation_send_command (GST_NAVIGATION (navigation_element), cmd);
+}
+
+#if defined (GDK_WINDOWING_X11) || defined (GDK_WINDOWING_WIN32) || defined (GDK_WINDOWING_QUARTZ)
+
+static GstElement *overlay_element = NULL;
+static guintptr embed_handle = 0;
 
 /* We set the xid here in response to the prepare-window-handle message via a
  * bus sync handler because we don't know the actual videosink used from the
@@ -1609,7 +1667,9 @@ bus_sync_handler (GstBus * bus, GstMessage * message, GstPipeline * data)
 
   element = GST_ELEMENT (GST_MESSAGE_SRC (message));
 
-  g_print ("got prepare-window-handle, setting XID %lu\n", embed_xid);
+  if (overlay_element)
+    gst_object_unref (overlay_element);
+  overlay_element = GST_ELEMENT (gst_object_ref (element));
 
   if (g_object_class_find_property (G_OBJECT_GET_CLASS (element),
           "force-aspect-ratio")) {
@@ -1621,9 +1681,17 @@ bus_sync_handler (GstBus * bus, GstMessage * message, GstPipeline * data)
    * be called from a streaming thread and GDK_WINDOW_XID maps to more than
    * a simple structure lookup with Gtk+ >= 2.18, where 'more' is stuff that
    * shouldn't be done from a non-GUI thread without explicit locking).  */
-  g_assert (embed_xid != 0);
+  g_assert (embed_handle != 0);
 
-  gst_video_overlay_set_window_handle (GST_VIDEO_OVERLAY (element), embed_xid);
+  g_print ("got prepare-window-handle, setting handle %" G_GUINTPTR_FORMAT "\n",
+      embed_handle);
+
+  gst_video_overlay_set_window_handle (GST_VIDEO_OVERLAY (element),
+      embed_handle);
+  gst_video_overlay_handle_events (GST_VIDEO_OVERLAY (element), FALSE);
+
+  find_navigation_element ();
+
   return GST_BUS_PASS;
 }
 #endif
@@ -1641,6 +1709,10 @@ draw_cb (GtkWidget * widget, cairo_t * cr, gpointer data)
     cairo_fill (cr);
     return TRUE;
   }
+
+  if (overlay_element)
+    gst_video_overlay_expose (GST_VIDEO_OVERLAY (overlay_element));
+
   return FALSE;
 }
 
@@ -1655,12 +1727,70 @@ realize_cb (GtkWidget * widget, gpointer data)
     g_error ("Couldn't create native window needed for GstXOverlay!");
 
 #if defined (GDK_WINDOWING_WIN32)
-  embed_xid = GDK_WINDOW_HWND (window);
-  g_print ("Window realize: video window HWND = %lu\n", embed_xid);
-#else
-  embed_xid = GDK_WINDOW_XID (window);
-  g_print ("Window realize: video window XID = %lu\n", embed_xid);
+  embed_handle = GDK_WINDOW_HWND (window);
+  g_print ("Window realize: video window HWND = %lu\n", embed_handle);
+#elif defined (GDK_WINDOWING_QUARTZ)
+  embed_handle = gdk_quartz_window_get_nsview (window);
+  g_print ("Window realize: video window NSView = %p\n", embed_handle);
+#elif defined (GDK_WINDOWING_X11)
+  embed_handle = GDK_WINDOW_XID (window);
+  g_print ("Window realize: video window XID = %" G_GUINTPTR_FORMAT "\n",
+      embed_handle);
 #endif
+}
+
+static gboolean
+button_press_cb (GtkWidget * widget, GdkEventButton * event, gpointer user_data)
+{
+  gtk_widget_grab_focus (widget);
+
+  if (navigation_element)
+    gst_navigation_send_mouse_event (GST_NAVIGATION (navigation_element),
+        "mouse-button-press", event->button, event->x, event->y);
+
+  return FALSE;
+}
+
+static gboolean
+button_release_cb (GtkWidget * widget, GdkEventButton * event,
+    gpointer user_data)
+{
+  if (navigation_element)
+    gst_navigation_send_mouse_event (GST_NAVIGATION (navigation_element),
+        "mouse-button-release", event->button, event->x, event->y);
+
+  return FALSE;
+}
+
+static gboolean
+key_press_cb (GtkWidget * widget, GdkEventKey * event, gpointer user_data)
+{
+  if (navigation_element)
+    gst_navigation_send_key_event (GST_NAVIGATION (navigation_element),
+        "key-press", gdk_keyval_name (event->keyval));
+
+  return FALSE;
+}
+
+static gboolean
+key_release_cb (GtkWidget * widget, GdkEventKey * event, gpointer user_data)
+{
+  if (navigation_element)
+    gst_navigation_send_key_event (GST_NAVIGATION (navigation_element),
+        "key-release", gdk_keyval_name (event->keyval));
+
+  return FALSE;
+}
+
+static gboolean
+motion_notify_cb (GtkWidget * widget, GdkEventMotion * event,
+    gpointer user_data)
+{
+  if (navigation_element)
+    gst_navigation_send_mouse_event (GST_NAVIGATION (navigation_element),
+        "mouse-move", 0, event->x, event->y);
+
+  return FALSE;
 }
 
 static void
@@ -1687,11 +1817,68 @@ msg_step_done (GstBus * bus, GstMessage * message, GstPipeline * data)
 }
 
 static void
+msg (GstBus * bus, GstMessage * message, GstPipeline * data)
+{
+  GstNavigationMessageType nav_type;
+
+  nav_type = gst_navigation_message_get_type (message);
+  switch (nav_type) {
+    case GST_NAVIGATION_MESSAGE_COMMANDS_CHANGED:{
+      GstQuery *query;
+      gboolean res, j;
+
+      /* Heuristic to detect if we're dealing with a DVD menu */
+      query = gst_navigation_query_new_commands ();
+      res = gst_element_query (GST_ELEMENT (GST_MESSAGE_SRC (message)), query);
+
+      for (j = 0; j < G_N_ELEMENTS (navigation_buttons); j++)
+        gtk_widget_set_sensitive (navigation_buttons[j].button, FALSE);
+
+      if (res) {
+        gboolean is_menu = FALSE;
+        guint i, n;
+
+        if (gst_navigation_query_parse_commands_length (query, &n)) {
+          for (i = 0; i < n; i++) {
+            GstNavigationCommand cmd;
+
+            if (!gst_navigation_query_parse_commands_nth (query, i, &cmd))
+              break;
+
+            is_menu |= (cmd == GST_NAVIGATION_COMMAND_ACTIVATE);
+            is_menu |= (cmd == GST_NAVIGATION_COMMAND_LEFT);
+            is_menu |= (cmd == GST_NAVIGATION_COMMAND_RIGHT);
+            is_menu |= (cmd == GST_NAVIGATION_COMMAND_UP);
+            is_menu |= (cmd == GST_NAVIGATION_COMMAND_DOWN);
+
+            for (j = 0; j < G_N_ELEMENTS (navigation_buttons); j++) {
+              if (navigation_buttons[j].cmd != cmd)
+                continue;
+
+              gtk_widget_set_sensitive (navigation_buttons[j].button, TRUE);
+            }
+          }
+        }
+
+        gtk_widget_set_sensitive (GTK_WIDGET (hscale), !is_menu);
+      } else {
+        g_assert_not_reached ();
+      }
+
+      gst_query_unref (query);
+      break;
+    }
+    default:
+      break;
+  }
+}
+
+static void
 connect_bus_signals (GstElement * pipeline)
 {
   GstBus *bus = gst_pipeline_get_bus (GST_PIPELINE (pipeline));
 
-#if defined (GDK_WINDOWING_X11) || defined (GDK_WINDOWING_WIN32)
+#if defined (GDK_WINDOWING_X11) || defined (GDK_WINDOWING_WIN32) || defined (GDK_WINDOWING_QUARTZ)
   /* handle prepare-window-handle element message synchronously */
   gst_bus_set_sync_handler (bus, (GstBusSyncHandler) bus_sync_handler,
       pipeline);
@@ -1730,6 +1917,7 @@ connect_bus_signals (GstElement * pipeline)
       pipeline);
   g_signal_connect (bus, "sync-message::step-done",
       (GCallback) msg_sync_step_done, pipeline);
+  g_signal_connect (bus, "message", (GCallback) msg, pipeline);
 
   gst_object_unref (bus);
 }
@@ -1792,7 +1980,7 @@ int
 main (int argc, char **argv)
 {
   GtkWidget *window, *hbox, *vbox, *panel, *expander, *pb2vbox, *boxes,
-      *flagtable, *boxes2, *step;
+      *flagtable, *boxes2, *step, *navigation;
   GtkWidget *play_button, *pause_button, *stop_button, *shot_button;
   GtkWidget *accurate_checkbox, *key_checkbox, *loop_checkbox, *flush_checkbox;
   GtkWidget *scrub_checkbox, *play_scrub_checkbox;
@@ -1866,7 +2054,21 @@ main (int argc, char **argv)
   video_window = gtk_drawing_area_new ();
   g_signal_connect (video_window, "draw", G_CALLBACK (draw_cb), NULL);
   g_signal_connect (video_window, "realize", G_CALLBACK (realize_cb), NULL);
+  g_signal_connect (video_window, "button-press-event",
+      G_CALLBACK (button_press_cb), NULL);
+  g_signal_connect (video_window, "button-release-event",
+      G_CALLBACK (button_release_cb), NULL);
+  g_signal_connect (video_window, "key-press-event", G_CALLBACK (key_press_cb),
+      NULL);
+  g_signal_connect (video_window, "key-release-event",
+      G_CALLBACK (key_release_cb), NULL);
+  g_signal_connect (video_window, "motion-notify-event",
+      G_CALLBACK (motion_notify_cb), NULL);
+  gtk_widget_set_can_focus (video_window, TRUE);
   gtk_widget_set_double_buffered (video_window, FALSE);
+  gtk_widget_add_events (video_window,
+      GDK_POINTER_MOTION_MASK | GDK_BUTTON_PRESS_MASK | GDK_BUTTON_RELEASE_MASK
+      | GDK_KEY_PRESS_MASK | GDK_KEY_RELEASE_MASK);
 
   statusbar = gtk_statusbar_new ();
   status_id = gtk_statusbar_get_context_id (GTK_STATUSBAR (statusbar), "seek");
@@ -1964,6 +2166,155 @@ main (int argc, char **argv)
     gtk_box_pack_start (GTK_BOX (hbox), shuttle_hscale, TRUE, TRUE, 2);
 
     gtk_container_add (GTK_CONTAINER (step), hbox);
+  }
+
+  /* navigation command expander */
+  {
+    GtkWidget *navigation_button;
+    GtkWidget *grid;
+    gint i = 0;
+
+    navigation = gtk_expander_new ("navigation commands");
+    grid = gtk_grid_new ();
+    gtk_grid_set_row_spacing (GTK_GRID (grid), 2);
+    gtk_grid_set_row_homogeneous (GTK_GRID (grid), TRUE);
+    gtk_grid_set_column_spacing (GTK_GRID (grid), 2);
+    gtk_grid_set_column_homogeneous (GTK_GRID (grid), TRUE);
+
+    navigation_button = gtk_button_new_with_label ("Menu 1");
+    g_signal_connect (G_OBJECT (navigation_button), "clicked",
+        G_CALLBACK (navigation_cmd_cb),
+        GINT_TO_POINTER (GST_NAVIGATION_COMMAND_MENU1));
+    gtk_grid_attach (GTK_GRID (grid), navigation_button, i, 0, 1, 1);
+    gtk_widget_set_sensitive (navigation_button, FALSE);
+    gtk_widget_set_tooltip_text (navigation_button, "DVD Menu");
+    navigation_buttons[i].button = navigation_button;
+    navigation_buttons[i++].cmd = GST_NAVIGATION_COMMAND_MENU1;
+
+    navigation_button = gtk_button_new_with_label ("Menu 2");
+    g_signal_connect (G_OBJECT (navigation_button), "clicked",
+        G_CALLBACK (navigation_cmd_cb),
+        GINT_TO_POINTER (GST_NAVIGATION_COMMAND_MENU2));
+    gtk_grid_attach (GTK_GRID (grid), navigation_button, i, 0, 1, 1);
+    gtk_widget_set_sensitive (navigation_button, FALSE);
+    gtk_widget_set_tooltip_text (navigation_button, "DVD Title Menu");
+    navigation_buttons[i].button = navigation_button;
+    navigation_buttons[i++].cmd = GST_NAVIGATION_COMMAND_MENU2;
+
+    navigation_button = gtk_button_new_with_label ("Menu 3");
+    g_signal_connect (G_OBJECT (navigation_button), "clicked",
+        G_CALLBACK (navigation_cmd_cb),
+        GINT_TO_POINTER (GST_NAVIGATION_COMMAND_MENU3));
+    gtk_grid_attach (GTK_GRID (grid), navigation_button, i, 0, 1, 1);
+    gtk_widget_set_sensitive (navigation_button, FALSE);
+    gtk_widget_set_tooltip_text (navigation_button, "DVD Root Menu");
+    navigation_buttons[i].button = navigation_button;
+    navigation_buttons[i++].cmd = GST_NAVIGATION_COMMAND_MENU3;
+
+    navigation_button = gtk_button_new_with_label ("Menu 4");
+    g_signal_connect (G_OBJECT (navigation_button), "clicked",
+        G_CALLBACK (navigation_cmd_cb),
+        GINT_TO_POINTER (GST_NAVIGATION_COMMAND_MENU4));
+    gtk_grid_attach (GTK_GRID (grid), navigation_button, i, 0, 1, 1);
+    gtk_widget_set_sensitive (navigation_button, FALSE);
+    gtk_widget_set_tooltip_text (navigation_button, "DVD Subpicture Menu");
+    navigation_buttons[i].button = navigation_button;
+    navigation_buttons[i++].cmd = GST_NAVIGATION_COMMAND_MENU4;
+
+    navigation_button = gtk_button_new_with_label ("Menu 5");
+    g_signal_connect (G_OBJECT (navigation_button), "clicked",
+        G_CALLBACK (navigation_cmd_cb),
+        GINT_TO_POINTER (GST_NAVIGATION_COMMAND_MENU5));
+    gtk_grid_attach (GTK_GRID (grid), navigation_button, i, 0, 1, 1);
+    gtk_widget_set_sensitive (navigation_button, FALSE);
+    gtk_widget_set_tooltip_text (navigation_button, "DVD Audio Menu");
+    navigation_buttons[i].button = navigation_button;
+    navigation_buttons[i++].cmd = GST_NAVIGATION_COMMAND_MENU5;
+
+    navigation_button = gtk_button_new_with_label ("Menu 6");
+    g_signal_connect (G_OBJECT (navigation_button), "clicked",
+        G_CALLBACK (navigation_cmd_cb),
+        GINT_TO_POINTER (GST_NAVIGATION_COMMAND_MENU6));
+    gtk_grid_attach (GTK_GRID (grid), navigation_button, i, 0, 1, 1);
+    gtk_widget_set_sensitive (navigation_button, FALSE);
+    gtk_widget_set_tooltip_text (navigation_button, "DVD Angle Menu");
+    navigation_buttons[i].button = navigation_button;
+    navigation_buttons[i++].cmd = GST_NAVIGATION_COMMAND_MENU6;
+
+    navigation_button = gtk_button_new_with_label ("Menu 7");
+    g_signal_connect (G_OBJECT (navigation_button), "clicked",
+        G_CALLBACK (navigation_cmd_cb),
+        GINT_TO_POINTER (GST_NAVIGATION_COMMAND_MENU7));
+    gtk_grid_attach (GTK_GRID (grid), navigation_button, i, 0, 1, 1);
+    gtk_widget_set_sensitive (navigation_button, FALSE);
+    gtk_widget_set_tooltip_text (navigation_button, "DVD Chapter Menu");
+    navigation_buttons[i].button = navigation_button;
+    navigation_buttons[i++].cmd = GST_NAVIGATION_COMMAND_MENU7;
+
+    navigation_button = gtk_button_new_with_label ("Left");
+    g_signal_connect (G_OBJECT (navigation_button), "clicked",
+        G_CALLBACK (navigation_cmd_cb),
+        GINT_TO_POINTER (GST_NAVIGATION_COMMAND_LEFT));
+    gtk_grid_attach (GTK_GRID (grid), navigation_button, i - 7, 1, 1, 1);
+    gtk_widget_set_sensitive (navigation_button, FALSE);
+    navigation_buttons[i].button = navigation_button;
+    navigation_buttons[i++].cmd = GST_NAVIGATION_COMMAND_LEFT;
+
+    navigation_button = gtk_button_new_with_label ("Right");
+    g_signal_connect (G_OBJECT (navigation_button), "clicked",
+        G_CALLBACK (navigation_cmd_cb),
+        GINT_TO_POINTER (GST_NAVIGATION_COMMAND_RIGHT));
+    gtk_grid_attach (GTK_GRID (grid), navigation_button, i - 7, 1, 1, 1);
+    gtk_widget_set_sensitive (navigation_button, FALSE);
+    navigation_buttons[i].button = navigation_button;
+    navigation_buttons[i++].cmd = GST_NAVIGATION_COMMAND_RIGHT;
+
+    navigation_button = gtk_button_new_with_label ("Up");
+    g_signal_connect (G_OBJECT (navigation_button), "clicked",
+        G_CALLBACK (navigation_cmd_cb),
+        GINT_TO_POINTER (GST_NAVIGATION_COMMAND_UP));
+    gtk_grid_attach (GTK_GRID (grid), navigation_button, i - 7, 1, 1, 1);
+    gtk_widget_set_sensitive (navigation_button, FALSE);
+    navigation_buttons[i].button = navigation_button;
+    navigation_buttons[i++].cmd = GST_NAVIGATION_COMMAND_UP;
+
+    navigation_button = gtk_button_new_with_label ("Down");
+    g_signal_connect (G_OBJECT (navigation_button), "clicked",
+        G_CALLBACK (navigation_cmd_cb),
+        GINT_TO_POINTER (GST_NAVIGATION_COMMAND_DOWN));
+    gtk_grid_attach (GTK_GRID (grid), navigation_button, i - 7, 1, 1, 1);
+    gtk_widget_set_sensitive (navigation_button, FALSE);
+    navigation_buttons[i].button = navigation_button;
+    navigation_buttons[i++].cmd = GST_NAVIGATION_COMMAND_DOWN;
+
+    navigation_button = gtk_button_new_with_label ("Activate");
+    g_signal_connect (G_OBJECT (navigation_button), "clicked",
+        G_CALLBACK (navigation_cmd_cb),
+        GINT_TO_POINTER (GST_NAVIGATION_COMMAND_ACTIVATE));
+    gtk_grid_attach (GTK_GRID (grid), navigation_button, i - 7, 1, 1, 1);
+    gtk_widget_set_sensitive (navigation_button, FALSE);
+    navigation_buttons[i].button = navigation_button;
+    navigation_buttons[i++].cmd = GST_NAVIGATION_COMMAND_ACTIVATE;
+
+    navigation_button = gtk_button_new_with_label ("Prev. Angle");
+    g_signal_connect (G_OBJECT (navigation_button), "clicked",
+        G_CALLBACK (navigation_cmd_cb),
+        GINT_TO_POINTER (GST_NAVIGATION_COMMAND_PREV_ANGLE));
+    gtk_grid_attach (GTK_GRID (grid), navigation_button, i - 7, 1, 1, 1);
+    gtk_widget_set_sensitive (navigation_button, FALSE);
+    navigation_buttons[i].button = navigation_button;
+    navigation_buttons[i++].cmd = GST_NAVIGATION_COMMAND_PREV_ANGLE;
+
+    navigation_button = gtk_button_new_with_label ("Next. Angle");
+    g_signal_connect (G_OBJECT (navigation_button), "clicked",
+        G_CALLBACK (navigation_cmd_cb),
+        GINT_TO_POINTER (GST_NAVIGATION_COMMAND_NEXT_ANGLE));
+    gtk_grid_attach (GTK_GRID (grid), navigation_button, i - 7, 1, 1, 1);
+    gtk_widget_set_sensitive (navigation_button, FALSE);
+    navigation_buttons[i].button = navigation_button;
+    navigation_buttons[i++].cmd = GST_NAVIGATION_COMMAND_NEXT_ANGLE;
+
+    gtk_container_add (GTK_CONTAINER (navigation), grid);
   }
 
   /* seek bar */
@@ -2098,6 +2449,7 @@ main (int argc, char **argv)
     gtk_box_pack_start (GTK_BOX (vbox), expander, FALSE, FALSE, 2);
   }
   gtk_box_pack_start (GTK_BOX (vbox), step, FALSE, FALSE, 2);
+  gtk_box_pack_start (GTK_BOX (vbox), navigation, FALSE, FALSE, 2);
   gtk_box_pack_start (GTK_BOX (vbox), hscale, FALSE, FALSE, 2);
   gtk_box_pack_start (GTK_BOX (vbox), statusbar, FALSE, FALSE, 2);
 
@@ -2135,9 +2487,9 @@ main (int argc, char **argv)
    * asks for the XID of the window to render onto */
   gtk_widget_realize (window);
 
-#if defined (GDK_WINDOWING_X11) || defined (GDK_WINDOWING_WIN32)
-  /* we should have the XID now */
-  g_assert (embed_xid != 0);
+#if defined (GDK_WINDOWING_X11) || defined (GDK_WINDOWING_WIN32) || defined (GDK_WINDOWING_QUARTZ)
+  /* we should have the handle now */
+  g_assert (embed_handle != 0);
 #endif
 
   if (verbose) {
@@ -2150,6 +2502,11 @@ main (int argc, char **argv)
 
   g_print ("NULL pipeline\n");
   gst_element_set_state (pipeline, GST_STATE_NULL);
+
+  if (overlay_element)
+    gst_object_unref (overlay_element);
+  if (navigation_element)
+    gst_object_unref (navigation_element);
 
   g_print ("free pipeline\n");
   gst_object_unref (pipeline);

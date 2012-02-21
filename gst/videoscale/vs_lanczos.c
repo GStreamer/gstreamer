@@ -728,6 +728,9 @@ RESAMPLE_HORIZ_AYUV_FLOAT (resample_horiz_double_ayuv_generic, double, double,
 RESAMPLE_HORIZ_AYUV_FLOAT (resample_horiz_float_ayuv_generic, float, float,
     guint8, n_taps)
 
+RESAMPLE_HORIZ_AYUV_FLOAT (resample_horiz_double_ayuv_generic_s16, double, double,
+    guint16, n_taps)
+
 RESAMPLE_HORIZ (resample_horiz_int32_int32_u8_generic, gint32, gint32,
     guint8, n_taps, shift)
 RESAMPLE_HORIZ (resample_horiz_int16_int16_u8_generic, gint16, gint16,
@@ -1636,7 +1639,7 @@ vs_image_scale_lanczos_AYUV64_double (const VSImage * dest, const VSImage * src,
   scale->dither = dither;
 
   scale->horiz_resample_func =
-      (HorizResampleFunc) resample_horiz_double_ayuv_generic;
+      (HorizResampleFunc) resample_horiz_double_ayuv_generic_s16;
 
   scale->tmpdata =
       g_malloc (sizeof (double) * scale->dest->width * scale->src->height * 4);
