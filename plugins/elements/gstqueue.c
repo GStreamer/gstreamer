@@ -208,8 +208,6 @@ static gboolean gst_queue_handle_src_event (GstPad * pad, GstObject * parent,
 static gboolean gst_queue_handle_src_query (GstPad * pad, GstObject * parent,
     GstQuery * query);
 
-static GstPadLinkReturn gst_queue_link_sink (GstPad * pad, GstPad * peer);
-static GstPadLinkReturn gst_queue_link_src (GstPad * pad, GstPad * peer);
 static void gst_queue_locked_flush (GstQueue * queue);
 
 static gboolean gst_queue_src_activate_mode (GstPad * pad, GstObject * parent,
@@ -375,8 +373,6 @@ gst_queue_class_init (GstQueueClass * klass)
 
   /* Registering debug symbols for function pointers */
   GST_DEBUG_REGISTER_FUNCPTR (gst_queue_src_activate_mode);
-  GST_DEBUG_REGISTER_FUNCPTR (gst_queue_link_sink);
-  GST_DEBUG_REGISTER_FUNCPTR (gst_queue_link_src);
   GST_DEBUG_REGISTER_FUNCPTR (gst_queue_handle_sink_event);
   GST_DEBUG_REGISTER_FUNCPTR (gst_queue_handle_sink_query);
   GST_DEBUG_REGISTER_FUNCPTR (gst_queue_handle_src_event);
@@ -394,7 +390,6 @@ gst_queue_init (GstQueue * queue)
       gst_queue_sink_activate_mode);
   gst_pad_set_event_function (queue->sinkpad, gst_queue_handle_sink_event);
   gst_pad_set_query_function (queue->sinkpad, gst_queue_handle_sink_query);
-  gst_pad_set_link_function (queue->sinkpad, gst_queue_link_sink);
   GST_PAD_SET_PROXY_CAPS (queue->sinkpad);
   GST_PAD_SET_PROXY_ALLOCATION (queue->sinkpad);
   gst_element_add_pad (GST_ELEMENT (queue), queue->sinkpad);
@@ -403,7 +398,6 @@ gst_queue_init (GstQueue * queue)
 
   gst_pad_set_activatemode_function (queue->srcpad,
       gst_queue_src_activate_mode);
-  gst_pad_set_link_function (queue->srcpad, gst_queue_link_src);
   gst_pad_set_event_function (queue->srcpad, gst_queue_handle_src_event);
   gst_pad_set_query_function (queue->srcpad, gst_queue_handle_src_query);
   GST_PAD_SET_PROXY_CAPS (queue->srcpad);
@@ -458,42 +452,6 @@ gst_queue_finalize (GObject * object)
   g_cond_clear (&queue->item_del);
 
   G_OBJECT_CLASS (parent_class)->finalize (object);
-}
-
-static GstPadLinkReturn
-gst_queue_link_sink (GstPad * pad, GstPad * peer)
-{
-  return GST_PAD_LINK_OK;
-}
-
-static GstPadLinkReturn
-gst_queue_link_src (GstPad * pad, GstPad * peer)
-{
-  GstPadLinkReturn result = GST_PAD_LINK_OK;
-  GstQueue *queue;
-
-  queue = GST_QUEUE (GST_PAD_PARENT (pad));
-
-  GST_DEBUG_OBJECT (queue, "queue linking source pad");
-
-  if (GST_PAD_LINKFUNC (peer)) {
-    result = GST_PAD_LINKFUNC (peer) (peer, pad);
-  }
-
-  if (GST_PAD_LINK_SUCCESSFUL (result)) {
-    GST_QUEUE_MUTEX_LOCK (queue);
-    if (queue->srcresult == GST_FLOW_OK) {
-      queue->push_newsegment = TRUE;
-      gst_pad_start_task (pad, (GstTaskFunction) gst_queue_loop, pad);
-      GST_DEBUG_OBJECT (queue, "starting task as pad is linked");
-    } else {
-      GST_DEBUG_OBJECT (queue, "not starting task reason %s",
-          gst_flow_get_name (queue->srcresult));
-    }
-    GST_QUEUE_MUTEX_UNLOCK (queue);
-  }
-
-  return result;
 }
 
 /* calculate the diff between running time on the sink and src of the queue.
@@ -772,12 +730,8 @@ gst_queue_handle_sink_event (GstPad * pad, GstObject * parent, GstEvent * event)
       queue->srcresult = GST_FLOW_OK;
       queue->eos = FALSE;
       queue->unexpected = FALSE;
-      if (gst_pad_is_linked (queue->srcpad)) {
-        gst_pad_start_task (queue->srcpad, (GstTaskFunction) gst_queue_loop,
-            queue->srcpad);
-      } else {
-        GST_INFO_OBJECT (queue, "not re-starting task as pad is not linked");
-      }
+      gst_pad_start_task (queue->srcpad, (GstTaskFunction) gst_queue_loop,
+          queue->srcpad);
       GST_QUEUE_MUTEX_UNLOCK (queue);
 
       STATUS (queue, pad, "after flush");
@@ -1334,14 +1288,8 @@ gst_queue_src_activate_mode (GstPad * pad, GstObject * parent, GstPadMode mode,
         queue->srcresult = GST_FLOW_OK;
         queue->eos = FALSE;
         queue->unexpected = FALSE;
-        /* we do not start the task yet if the pad is not connected */
-        if (gst_pad_is_linked (pad))
-          result =
-              gst_pad_start_task (pad, (GstTaskFunction) gst_queue_loop, pad);
-        else {
-          GST_INFO_OBJECT (queue, "not starting task as pad is not linked");
-          result = TRUE;
-        }
+        result =
+            gst_pad_start_task (pad, (GstTaskFunction) gst_queue_loop, pad);
         GST_QUEUE_MUTEX_UNLOCK (queue);
       } else {
         /* step 1, unblock loop function */
