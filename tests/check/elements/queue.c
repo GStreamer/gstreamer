@@ -36,6 +36,8 @@ static GstElement *queue;
  * get_peer, and then remove references in every test function */
 static GstPad *mysrcpad;
 static GstPad *mysinkpad;
+static GstPad *qsrcpad;
+static gulong probe_id;
 
 static gint overrun_count;
 
@@ -57,16 +59,16 @@ static GstStaticPadTemplate srctemplate = GST_STATIC_PAD_TEMPLATE ("src",
 static void
 queue_overrun (GstElement * queue, gpointer user_data)
 {
-  GST_DEBUG ("queue overrun");
   overrun_count++;
+  GST_DEBUG ("queue overrun %d", overrun_count);
 }
 
 static void
 queue_underrun (GstElement * queue, gpointer user_data)
 {
-  GST_DEBUG ("queue underrun");
   UNDERRUN_LOCK ();
   underrun_count++;
+  GST_DEBUG ("queue underrun %d", underrun_count);
   UNDERRUN_SIGNAL ();
   UNDERRUN_UNLOCK ();
 }
@@ -87,6 +89,21 @@ drop_events (void)
     gst_event_unref (GST_EVENT (events->data));
     events = g_list_delete_link (events, events);
   }
+}
+
+static void
+block_src (void)
+{
+  qsrcpad = gst_element_get_static_pad (queue, "src");
+  probe_id = gst_pad_add_probe (qsrcpad, GST_PAD_PROBE_TYPE_BLOCK_DOWNSTREAM,
+      NULL, NULL, NULL);
+}
+
+static void
+unblock_src (void)
+{
+  gst_pad_remove_probe (qsrcpad, probe_id);
+  gst_object_unref (qsrcpad);
 }
 
 static void
@@ -197,6 +214,8 @@ queue_overrun_link_and_activate (GstElement * queue, gpointer user_data)
 
   /* link the src pad of the queue to make it dequeue buffers */
   mysinkpad = setup_sink_pad (queue, &sinktemplate);
+
+  unblock_src ();
 }
 
 /* set queue size to 2 buffers
@@ -216,13 +235,21 @@ GST_START_TEST (test_non_leaky_overrun)
       G_CALLBACK (queue_overrun_link_and_activate), NULL);
   g_object_set (G_OBJECT (queue), "max-size-buffers", 2, NULL);
 
+  block_src ();
+
   GST_DEBUG ("starting");
 
+  UNDERRUN_LOCK ();
   fail_unless (gst_element_set_state (queue,
           GST_STATE_PLAYING) == GST_STATE_CHANGE_SUCCESS,
       "could not set to playing");
+  UNDERRUN_WAIT ();
+  UNDERRUN_UNLOCK ();
+
+  gst_pad_push_event (mysrcpad, gst_event_new_stream_start ());
+
+  fail_unless (underrun_count == 1);
   fail_unless (overrun_count == 0);
-  fail_unless (underrun_count == 0);
 
   buffer1 = gst_buffer_new_and_alloc (4);
   /* pushing gives away my reference */
@@ -230,18 +257,16 @@ GST_START_TEST (test_non_leaky_overrun)
 
   GST_DEBUG ("added 1st");
   fail_unless (overrun_count == 0);
-  fail_unless (underrun_count == 0);
+  fail_unless (underrun_count == 1);
 
   buffer2 = gst_buffer_new_and_alloc (4);
   gst_pad_push (mysrcpad, buffer2);
 
   GST_DEBUG ("added 2nd");
   fail_unless (overrun_count == 0);
-  fail_unless (underrun_count == 0);
+  fail_unless (underrun_count == 1);
 
   buffer3 = gst_buffer_new_and_alloc (4);
-  /* lock the check_mutex to block the first buffer pushed to mysinkpad */
-  g_mutex_lock (check_mutex);
   /* the next call to gst_pad_push will emit the overrun signal. The signal
    * handler queue_overrun_link_and_activate() (above) increases overrun_count,
    * activates and links mysinkpad. The queue task then dequeues a buffer and
@@ -250,8 +275,9 @@ GST_START_TEST (test_non_leaky_overrun)
 
   GST_DEBUG ("added 3rd");
   fail_unless (overrun_count == 1);
-  fail_unless (underrun_count == 0);
 
+  /* lock the check_mutex to block the first buffer pushed to mysinkpad */
+  g_mutex_lock (check_mutex);
   /* now let the queue push all buffers */
   while (g_list_length (buffers) < 3) {
     g_cond_wait (check_cond, check_mutex);
@@ -261,20 +287,21 @@ GST_START_TEST (test_non_leaky_overrun)
   fail_unless (overrun_count == 1);
   /* make sure we get the underrun signal before we check underrun_count */
   UNDERRUN_LOCK ();
-  while (underrun_count < 1) {
+  while (underrun_count < 2) {
     UNDERRUN_WAIT ();
   }
+  /* we can't check the underrun_count here safely because when adding the 3rd
+   * buffer, the queue lock is released to emit the overrun signal and the
+   * downstream part can then push and empty the queue and signal an additional
+   * underrun */
+  /* fail_unless_equals_int (underrun_count, 2); */
   UNDERRUN_UNLOCK ();
-  fail_unless (underrun_count == 1);
 
   buffer = g_list_nth (buffers, 0)->data;
   fail_unless (buffer == buffer1);
 
   buffer = g_list_nth (buffers, 1)->data;
   fail_unless (buffer == buffer2);
-
-  buffer = g_list_nth (buffers, 2)->data;
-  fail_unless (buffer == buffer3);
 
   GST_DEBUG ("stopping");
   fail_unless (gst_element_set_state (queue,
@@ -302,11 +329,19 @@ GST_START_TEST (test_leaky_upstream)
 
   GST_DEBUG ("starting");
 
+  block_src ();
+
+  UNDERRUN_LOCK ();
   fail_unless (gst_element_set_state (queue,
           GST_STATE_PLAYING) == GST_STATE_CHANGE_SUCCESS,
       "could not set to playing");
+  UNDERRUN_WAIT ();
+  UNDERRUN_UNLOCK ();
+
+  gst_pad_push_event (mysrcpad, gst_event_new_stream_start ());
+
   fail_unless (overrun_count == 0);
-  fail_unless (underrun_count == 0);
+  fail_unless (underrun_count == 1);
 
   buffer1 = gst_buffer_new_and_alloc (4);
   /* pushing gives away my reference */
@@ -314,33 +349,34 @@ GST_START_TEST (test_leaky_upstream)
 
   GST_DEBUG ("added 1st");
   fail_unless (overrun_count == 0);
-  fail_unless (underrun_count == 0);
+  fail_unless (underrun_count == 1);
 
   buffer2 = gst_buffer_new_and_alloc (4);
   gst_pad_push (mysrcpad, buffer2);
 
   GST_DEBUG ("added 2nd");
   fail_unless (overrun_count == 0);
-  fail_unless (underrun_count == 0);
+  fail_unless (underrun_count == 1);
 
   buffer3 = gst_buffer_new_and_alloc (4);
-  /* buffer3 will be leaked, keep a ref so refcount can be checked below */
+  /* buffer4 will be leaked, keep a ref so refcount can be checked below */
   gst_buffer_ref (buffer3);
   gst_pad_push (mysrcpad, buffer3);
 
-  GST_DEBUG ("added 3rd");
+  GST_DEBUG ("added 3nd");
   /* it still triggers overrun when leaking */
   fail_unless (overrun_count == 1);
-  fail_unless (underrun_count == 0);
+  fail_unless (underrun_count == 1);
 
   /* wait for underrun and check that we got buffer1 and buffer2 only */
   UNDERRUN_LOCK ();
   mysinkpad = setup_sink_pad (queue, &sinktemplate);
+  unblock_src ();
   UNDERRUN_WAIT ();
   UNDERRUN_UNLOCK ();
 
   fail_unless (overrun_count == 1);
-  fail_unless (underrun_count == 1);
+  fail_unless (underrun_count == 2);
 
   fail_unless (g_list_length (buffers) == 2);
 
@@ -379,28 +415,36 @@ GST_START_TEST (test_leaky_downstream)
 
   GST_DEBUG ("starting");
 
+  block_src ();
+
+  UNDERRUN_LOCK ();
   fail_unless (gst_element_set_state (queue,
           GST_STATE_PLAYING) == GST_STATE_CHANGE_SUCCESS,
       "could not set to playing");
+  UNDERRUN_WAIT ();
+  UNDERRUN_UNLOCK ();
+
+  gst_pad_push_event (mysrcpad, gst_event_new_stream_start ());
+
   fail_unless (overrun_count == 0);
-  fail_unless (underrun_count == 0);
+  fail_unless (underrun_count == 1);
 
   buffer1 = gst_buffer_new_and_alloc (4);
+  /* pushing gives away one reference */
   /* buffer1 will be leaked, keep a ref so refcount can be checked below */
   gst_buffer_ref (buffer1);
-  /* pushing gives away one reference */
   gst_pad_push (mysrcpad, buffer1);
 
   GST_DEBUG ("added 1st");
   fail_unless (overrun_count == 0);
-  fail_unless (underrun_count == 0);
+  fail_unless (underrun_count == 1);
 
   buffer2 = gst_buffer_new_and_alloc (4);
   gst_pad_push (mysrcpad, buffer2);
 
   GST_DEBUG ("added 2nd");
   fail_unless (overrun_count == 0);
-  fail_unless (underrun_count == 0);
+  fail_unless (underrun_count == 1);
 
   buffer3 = gst_buffer_new_and_alloc (4);
   gst_pad_push (mysrcpad, buffer3);
@@ -408,16 +452,17 @@ GST_START_TEST (test_leaky_downstream)
   GST_DEBUG ("added 3rd");
   /* it still triggers overrun when leaking */
   fail_unless (overrun_count == 1);
-  fail_unless (underrun_count == 0);
+  fail_unless (underrun_count == 1);
 
   /* wait for underrun and check that we got buffer1 and buffer2 only */
   UNDERRUN_LOCK ();
   mysinkpad = setup_sink_pad (queue, &sinktemplate);
+  unblock_src ();
   UNDERRUN_WAIT ();
   UNDERRUN_UNLOCK ();
 
   fail_unless (overrun_count == 1);
-  fail_unless (underrun_count == 1);
+  fail_unless (underrun_count == 2);
 
   fail_unless (g_list_length (buffers) == 2);
 
@@ -453,9 +498,16 @@ GST_START_TEST (test_time_level)
 
   GST_DEBUG ("starting");
 
+  block_src ();
+
+  UNDERRUN_LOCK ();
   fail_unless (gst_element_set_state (queue,
           GST_STATE_PLAYING) == GST_STATE_CHANGE_SUCCESS,
       "could not set to playing");
+  UNDERRUN_WAIT ();
+  UNDERRUN_UNLOCK ();
+
+  gst_pad_push_event (mysrcpad, gst_event_new_stream_start ());
 
   /* push buffer without duration */
   buffer = gst_buffer_new_and_alloc (4);
@@ -545,9 +597,16 @@ GST_START_TEST (test_time_level_task_not_started)
 
   GST_DEBUG ("starting");
 
+  block_src ();
+
+  UNDERRUN_LOCK ();
   fail_unless (gst_element_set_state (queue,
           GST_STATE_PLAYING) == GST_STATE_CHANGE_SUCCESS,
       "could not set to playing");
+  UNDERRUN_WAIT ();
+  UNDERRUN_UNLOCK ();
+
+  gst_pad_push_event (mysrcpad, gst_event_new_stream_start ());
 
   gst_segment_init (&segment, GST_FORMAT_TIME);
   segment.start = 1 * GST_SECOND;
@@ -568,6 +627,8 @@ GST_START_TEST (test_time_level_task_not_started)
   g_object_get (G_OBJECT (queue), "current-level-time", &time, NULL);
   GST_DEBUG ("time now %" GST_TIME_FORMAT, GST_TIME_ARGS (time));
   fail_if (time != 4 * GST_SECOND);
+
+  unblock_src ();
 
   GST_DEBUG ("stopping");
   fail_unless (gst_element_set_state (queue,
