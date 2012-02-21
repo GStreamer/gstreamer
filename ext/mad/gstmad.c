@@ -300,10 +300,11 @@ gst_mad_parse (GstAudioDecoder * dec, GstAdapter * adapter,
     /* let's be nice and not mess with baseclass state and keep hacks local */
     memset (GST_BUFFER_DATA (guard), 0, GST_BUFFER_SIZE (guard));
     memcpy (GST_BUFFER_DATA (guard), data, av);
-    GST_DEBUG_OBJECT (mad, "Added %u zero guard bytes in the adapter; "
+    GST_DEBUG_OBJECT (mad, "added %u zero guard bytes in the adapter; "
         "using fallback buffer of size %u",
         GST_BUFFER_SIZE (guard) - av, GST_BUFFER_SIZE (guard));
     data = GST_BUFFER_DATA (guard);
+    av = GST_BUFFER_SIZE (guard);
   }
 
   /* we basically let mad library do parsing,
