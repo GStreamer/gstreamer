@@ -2849,6 +2849,8 @@ probe_hook_marshal (GHook * hook, ProbeMarshall * data)
       "hook %lu, cookie %u with flags 0x%08x matches", hook->hook_id,
       PROBE_COOKIE (hook), flags);
 
+  data->marshalled = TRUE;
+
   callback = (GstPadProbeCallback) hook->func;
   if (callback == NULL)
     return;
@@ -2860,7 +2862,6 @@ probe_hook_marshal (GHook * hook, ProbeMarshall * data)
   ret = callback (pad, info, hook->data);
 
   GST_OBJECT_LOCK (pad);
-  data->marshalled = TRUE;
 
   switch (ret) {
     case GST_PAD_PROBE_REMOVE:
