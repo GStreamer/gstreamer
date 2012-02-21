@@ -34,6 +34,18 @@ the plug-in code, LGPL or LGPL-compatible for the supporting library).
 
  <release>
   <Version>
+   <revision>0.10.31</revision>
+   <branch>0.10</branch>
+   <name>Faster</name>
+   <created>2012-02-20</created>
+   <file-release rdf:resource="http://gstreamer.freedesktop.org/src/gst-plugins-good/gst-plugins-good-0.10.31.tar.bz2" />
+   <file-release rdf:resource="http://gstreamer.freedesktop.org/src/gst-plugins-good/gst-plugins-good-0.10.31.tar.gz" />
+   <file-release rdf:resource="http://gstreamer.freedesktop.org/src/gst-plugins-good/gst-plugins-good-0.10.31.tar.xz" />
+  </Version>
+ </release>
+
+ <release>
+  <Version>
    <revision>0.10.30</revision>
    <branch>0.10</branch>
    <name>Adagio</name>
