@@ -4,6 +4,8 @@ GObject
   GstCmmlTagHead
   GstCmmlTagStream
   GstColorBalanceChannel
+  GstMixerTrack
+    GstMixerOptions
   GstObject
     GstBus
     GstClock
@@ -244,7 +246,6 @@ GObject
       GstMatroskaMux
         GstWebMMux
       GstMatroskaParse
-      GstMonoscope
       GstMuLawDec
       GstMuLawEnc
       GstMultipartDemux
