@@ -200,6 +200,7 @@ gst_mpeg_audio_parse_reset (GstMpegAudioParse * mp3parse)
   mp3parse->sent_codec_tag = FALSE;
   mp3parse->last_posted_crc = CRC_UNKNOWN;
   mp3parse->last_posted_channel_mode = MPEG_AUDIO_CHANNEL_MODE_UNKNOWN;
+  mp3parse->freerate = 0;
 
   mp3parse->hdr_bitrate = 0;
 
@@ -307,14 +308,16 @@ mp3_type_frame_length_from_header (GstMpegAudioParse * mp3parse, guint32 header,
 
   bitrate = (header >> 12) & 0xF;
   bitrate = mp3types_bitrates[lsf][layer - 1][bitrate] * 1000;
-  /* The caller has ensured we have a valid header, so bitrate can't be
-     zero here. */
-  g_assert (bitrate != 0);
+  if (!bitrate) {
+    GST_LOG_OBJECT (mp3parse, "using freeform bitrate");
+    bitrate = mp3parse->freerate;
+  }
 
   samplerate = (header >> 10) & 0x3;
   samplerate = mp3types_freqs[lsf + mpg25][samplerate];
 
-  padding = (header >> 9) & 0x1;
+  /* force 0 length if 0 bitrate */
+  padding = (bitrate > 0) ? (header >> 9) & 0x1 : 0;
 
   mode = (header >> 6) & 0x3;
   channels = (mode == 3) ? 1 : 2;
@@ -419,8 +422,7 @@ gst_mp3parse_validate_extended (GstMpegAudioParse * mp3parse, GstBuffer * buf,
           (guint) next_header & HDRMASK, bpf);
       *valid = FALSE;
       return TRUE;
-    } else if ((((next_header >> 12) & 0xf) == 0) ||
-        (((next_header >> 12) & 0xf) == 0xf)) {
+    } else if (((next_header >> 12) & 0xf) == 0xf) {
       /* The essential parts were the same, but the bitrate held an
          invalid value - also reject */
       GST_DEBUG_OBJECT (mp3parse, "next header invalid (bitrate)");
@@ -430,6 +432,13 @@ gst_mp3parse_validate_extended (GstMpegAudioParse * mp3parse, GstBuffer * buf,
 
     bpf = mp3_type_frame_length_from_header (mp3parse, next_header,
         NULL, NULL, NULL, NULL, NULL, NULL, NULL);
+
+    /* if no bitrate, and no freeform rate known, then fail */
+    if (G_UNLIKELY (!bpf)) {
+      GST_DEBUG_OBJECT (mp3parse, "next header invalid (bitrate 0)");
+      *valid = FALSE;
+      return TRUE;
+    }
 
     offset += bpf;
     frames_found++;
@@ -461,11 +470,6 @@ gst_mpeg_audio_parse_head_check (GstMpegAudioParse * mp3parse,
     return FALSE;
   }
   /* if it's an invalid bitrate */
-  if (((head >> 12) & 0xf) == 0x0) {
-    GST_WARNING_OBJECT (mp3parse, "invalid bitrate: 0x%lx."
-        "Free format files are not supported yet", (head >> 12) & 0xf);
-    return FALSE;
-  }
   if (((head >> 12) & 0xf) == 0xf) {
     GST_WARNING_OBJECT (mp3parse, "invalid bitrate: 0x%lx", (head >> 12) & 0xf);
     return FALSE;
@@ -481,6 +485,115 @@ gst_mpeg_audio_parse_head_check (GstMpegAudioParse * mp3parse,
     /* Ignore this as there are some files with emphasis 0x2 that can
      * be played fine. See BGO #537235 */
     GST_WARNING_OBJECT (mp3parse, "invalid emphasis: 0x%lx", head & 0x3);
+  }
+
+  return TRUE;
+}
+
+/* Determines possible freeform frame rate/size by looking for next
+ * header with valid bitrate (0 or otherwise valid) (and sufficiently
+ * matching current header).
+ *
+ * Returns TRUE if we've found such one, and *rate then contains rate
+ * (or *rate contains 0 if decided no freeframe size could be determined).
+ * If not enough data, returns FALSE.
+ */
+static gboolean
+gst_mp3parse_find_freerate (GstMpegAudioParse * mp3parse, GstBuffer * buf,
+    guint32 header, gboolean at_eos, gint * _rate)
+{
+  guint32 next_header;
+  const guint8 *data;
+  guint available;
+  int offset = 4;
+  gulong samplerate, rate, layer, padding;
+  gboolean valid;
+  gint lsf, mpg25;
+
+  available = GST_BUFFER_SIZE (buf);
+  data = GST_BUFFER_DATA (buf);
+
+  *_rate = 0;
+
+  /* pick apart header again partially */
+  if (header & (1 << 20)) {
+    lsf = (header & (1 << 19)) ? 0 : 1;
+    mpg25 = 0;
+  } else {
+    lsf = 1;
+    mpg25 = 1;
+  }
+  layer = 4 - ((header >> 17) & 0x3);
+  samplerate = (header >> 10) & 0x3;
+  samplerate = mp3types_freqs[lsf + mpg25][samplerate];
+  padding = (header >> 9) & 0x1;
+
+  for (; offset < available; ++offset) {
+    /* Check if we have enough data for all these frames, plus the next
+       frame header. */
+    if (available < offset + 4) {
+      if (at_eos) {
+        /* Running out of data; failed to determine size */
+        return TRUE;
+      } else {
+        return FALSE;
+      }
+    }
+
+    valid = FALSE;
+    next_header = GST_READ_UINT32_BE (data + offset);
+    if ((next_header & 0xFFE00000) != 0xFFE00000)
+      goto next;
+
+    GST_DEBUG_OBJECT (mp3parse, "At %d: header=%08X, header2=%08X",
+        offset, (unsigned int) header, (unsigned int) next_header);
+
+    if ((next_header & HDRMASK) != (header & HDRMASK)) {
+      /* If any of the unmasked bits don't match, then it's not valid */
+      GST_DEBUG_OBJECT (mp3parse, "next header doesn't match "
+          "(header=%08X (%08X), header2=%08X (%08X))",
+          (guint) header, (guint) header & HDRMASK, (guint) next_header,
+          (guint) next_header & HDRMASK);
+      goto next;
+    } else if (((next_header >> 12) & 0xf) == 0xf) {
+      /* The essential parts were the same, but the bitrate held an
+         invalid value - also reject */
+      GST_DEBUG_OBJECT (mp3parse, "next header invalid (bitrate)");
+      goto next;
+    }
+
+    valid = TRUE;
+
+  next:
+    /* almost accept as free frame */
+    if (layer == 1) {
+      rate = samplerate * (offset - 4 * padding + 4) / 48000;
+    } else {
+      rate = samplerate * (offset - padding + 1) / (144 >> lsf) / 1000;
+    }
+
+    if (valid) {
+      GST_LOG_OBJECT (mp3parse, "calculated rate %d", rate * 1000);
+      if (rate < 8 || (layer == 3 && rate > 640)) {
+        GST_DEBUG_OBJECT (mp3parse, "rate invalid");
+        if (rate < 8) {
+          /* maybe some hope */
+          continue;
+        } else {
+          GST_DEBUG_OBJECT (mp3parse, "aborting");
+          /* give up */
+          break;
+        }
+      }
+      *_rate = rate * 1000;
+      break;
+    } else {
+      /* avoid indefinite searching */
+      if (rate > 1000) {
+        GST_DEBUG_OBJECT (mp3parse, "exceeded sanity rate; aborting");
+        break;
+      }
+    }
   }
 
   return TRUE;
@@ -527,9 +640,14 @@ gst_mpeg_audio_parse_check_valid_frame (GstBaseParse * parse,
 
   GST_LOG_OBJECT (parse, "got frame");
 
+  lost_sync = GST_BASE_PARSE_LOST_SYNC (parse);
+  draining = GST_BASE_PARSE_DRAINING (parse);
+
+  if (G_UNLIKELY (lost_sync))
+    mp3parse->freerate = 0;
+
   bpf = mp3_type_frame_length_from_header (mp3parse, header,
       &version, &layer, &channels, &bitrate, &rate, &mode, &crc);
-  g_assert (bpf != 0);
 
   if (channels != mp3parse->channels || rate != mp3parse->rate ||
       layer != mp3parse->layer || version != mp3parse->version)
@@ -537,8 +655,30 @@ gst_mpeg_audio_parse_check_valid_frame (GstBaseParse * parse,
   else
     caps_change = FALSE;
 
-  lost_sync = GST_BASE_PARSE_LOST_SYNC (parse);
-  draining = GST_BASE_PARSE_DRAINING (parse);
+  /* maybe free format */
+  if (bpf == 0) {
+    GST_LOG_OBJECT (mp3parse, "possibly free format");
+    if (lost_sync || mp3parse->freerate == 0) {
+      GST_DEBUG_OBJECT (mp3parse, "finding free format rate");
+      if (!gst_mp3parse_find_freerate (mp3parse, buf, header, draining, &valid)) {
+        /* not enough data */
+        *framesize = G_MAXUINT;
+        *skipsize = 0;
+        return FALSE;
+      } else {
+        GST_DEBUG_OBJECT (parse, "determined freeform size %d", valid);
+        mp3parse->freerate = valid;
+      }
+    }
+    /* try again */
+    bpf = mp3_type_frame_length_from_header (mp3parse, header,
+        &version, &layer, &channels, &bitrate, &rate, &mode, &crc);
+    if (!bpf) {
+      /* did not come up with valid freeform length, reject after all */
+      *skipsize = 1;
+      return FALSE;
+    }
+  }
 
   if (!draining && (lost_sync || caps_change)) {
     if (!gst_mp3parse_validate_extended (mp3parse, buf, header, bpf, draining,
