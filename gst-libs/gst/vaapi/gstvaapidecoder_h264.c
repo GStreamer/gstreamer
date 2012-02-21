@@ -733,8 +733,10 @@ decode_sei(GstVaapiDecoderH264 *decoder, GstH264NalUnit *nalu)
 
     memset(&sei, 0, sizeof(sei));
     result = gst_h264_parser_parse_sei(priv->parser, nalu, &sei);
-    if (result != GST_H264_PARSER_OK)
+    if (result != GST_H264_PARSER_OK) {
+        GST_WARNING("failed to decode SEI, payload type:%d", sei.payloadType);
         return get_status(result);
+    }
 
     return GST_VAAPI_DECODER_STATUS_SUCCESS;
 }
@@ -2234,6 +2236,10 @@ decode_buffer(GstVaapiDecoderH264 *decoder, GstBuffer *buffer)
             break;
         case GST_H264_NAL_SEQ_END:
             status = decode_sequence_end(decoder);
+            break;
+        case GST_H264_NAL_AU_DELIMITER:
+            /* skip all Access Unit NALs */
+            status = GST_VAAPI_DECODER_STATUS_SUCCESS;
             break;
         default:
             GST_DEBUG("unsupported NAL unit type %d", nalu.type);
