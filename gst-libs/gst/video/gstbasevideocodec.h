@@ -89,6 +89,28 @@ typedef struct _GstVideoFrameState GstVideoFrameState;
 typedef struct _GstBaseVideoCodec GstBaseVideoCodec;
 typedef struct _GstBaseVideoCodecClass GstBaseVideoCodecClass;
 
+/* GstVideoState is only used on the compressed video pad */
+/**
+ * GstVideoState:
+ * @width: Width in pixels (including borders)
+ * @height: Height in pixels (including borders)
+ * @fps_n: Numerator of framerate
+ * @fps_d: Denominator of framerate
+ * @par_n: Numerator of Pixel Aspect Ratio
+ * @par_d: Denominator of Pixel Aspect Ratio
+ * @have_interlaced: The content of the @interlaced field is present and valid
+ * @interlaced: %TRUE if the stream is interlaced
+ * @top_field_first: %TRUE if the interlaced frame is top-field-first
+ * @clean_width: Useful width of video in pixels (i.e. without borders)
+ * @clean_height: Useful height of video in pixels (i.e. without borders)
+ * @clean_offset_left: Horizontal offset (from the left) of useful region in pixels
+ * @clean_offset_top: Vertical offset (from the top) of useful region in pixels
+ * @bytes_per_picture: Size in bytes of each picture
+ * @codec_data: Optional Codec Data for the stream
+ *
+ * Information about compressed video stream.
+ * FIXME: Re-use GstVideoInfo for more fields.
+ */
 struct _GstVideoState
 {
   GstCaps *caps;
@@ -107,13 +129,45 @@ struct _GstVideoState
   int bytes_per_picture;
 
   GstBuffer *codec_data;
-
 };
+
+/**
+ * GstVideoFrameState:
+ * @decode_timestamp: Decoding timestamp (aka DTS)
+ * @presentation_timestamp: Presentation timestamp (aka PTS)
+ * @presentation_duration: Duration of frame
+ * @system_frame_number: unique ID attributed when #GstVideoFrameState is
+ *        created
+ * @decode_frame_number: Decoded frame number, increases in decoding order
+ * @presentation_frame_number: Presentation frame number, increases in
+ *        presentation order.
+ * @distance_from_sync: Distance of the frame from a sync point, in number
+ *        of frames.
+ * @is_sync_point: #TRUE if the frame is a synchronization point (like a
+ *        keyframe)
+ * @is_eos: #TRUE if the frame is the last one of a segment.
+ * @decode_only: If #TRUE, the frame is only meant to be decoded but not
+ *        pushed downstream
+ * @sink_buffer: input buffer
+ * @src_buffer: output buffer
+ * @field_index: Number of fields since beginning of stream
+ * @n_fields: Number of fields present in frame (default 2)
+ * @coder_hook: Private data called with @coder_hook_destroy_notify
+ * @coder_hook_destroy_notify: Called when frame is destroyed
+ * @deadline: Target clock time for display (running time)
+ * @force_keyframe: For encoders, if #TRUE a keyframe must be generated
+ * @force_keyframe_headers: For encoders, if #TRUE new headers must be generated
+ * @events: List of #GstEvent that must be pushed before the next @src_buffer
+ *
+ * State of a video frame going through the codec
+ **/
 
 struct _GstVideoFrameState
 {
+  /*< private >*/
   gint ref_count;
 
+  /*< public >*/
   GstClockTime decode_timestamp;
   GstClockTime presentation_timestamp;
   GstClockTime presentation_duration;
