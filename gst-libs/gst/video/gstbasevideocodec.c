@@ -17,6 +17,12 @@
  * Boston, MA 02111-1307, USA.
  */
 
+/**
+ * SECTION:gstbasevideocodec
+ * @short_description: Base class and objects for video codecs
+ *
+ **/
+
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif
@@ -207,6 +213,15 @@ gst_base_video_codec_change_state (GstElement * element,
   return ret;
 }
 
+/**
+ * gst_base_video_codec_append_frame:
+ * @codec: a #GstBaseVideoCodec
+ * @frame: the #GstVideoFrameState to append
+ *
+ * Appends a frame to the list of frames handled by the codec.
+ *
+ * Note: This should normally not be used by implementations.
+ **/
 void
 gst_base_video_codec_append_frame (GstBaseVideoCodec * codec,
     GstVideoFrameState * frame)
@@ -256,6 +271,15 @@ _gst_video_frame_state_free (GstVideoFrameState * frame)
   g_slice_free (GstVideoFrameState, frame);
 }
 
+/**
+ * gst_base_video_codec_new_frame:
+ * @base_video_codec: a #GstBaseVideoCodec
+ *
+ * Creates a new #GstVideoFrameState for usage in decoders or encoders.
+ *
+ * Returns: (transfer full): The new #GstVideoFrameState, call
+ * #gst_video_frame_state_unref() when done with it.
+ */
 GstVideoFrameState *
 gst_base_video_codec_new_frame (GstBaseVideoCodec * base_video_codec)
 {
