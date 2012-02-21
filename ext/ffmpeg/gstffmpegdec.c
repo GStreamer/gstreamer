@@ -210,7 +210,7 @@ gst_ts_info_get (GstFFMpegDec * dec, gint idx)
 #define DEFAULT_DO_PADDING		TRUE
 #define DEFAULT_DEBUG_MV		FALSE
 #define DEFAULT_CROP			TRUE
-#define DEFAULT_MAX_THREADS		0
+#define DEFAULT_MAX_THREADS		1
 
 enum
 {
@@ -1426,8 +1426,8 @@ gst_ffmpegdec_audio_negotiate (GstFFMpegDec * ffmpegdec, gboolean force)
   memcpy (ffmpegdec->format.audio.gst_layout,
       ffmpegdec->format.audio.ffmpeg_layout,
       sizeof (GstAudioChannelPosition) * ffmpegdec->format.audio.channels);
-  gst_audio_channel_positions_to_valid_order (ffmpegdec->format.
-      audio.gst_layout, ffmpegdec->format.audio.channels);
+  gst_audio_channel_positions_to_valid_order (ffmpegdec->format.audio.
+      gst_layout, ffmpegdec->format.audio.channels);
 
   GST_LOG_OBJECT (ffmpegdec, "output caps %" GST_PTR_FORMAT, caps);
 
@@ -1939,7 +1939,7 @@ gst_ffmpegdec_video_frame (GstFFMpegDec * ffmpegdec,
       GstStructure *s = gst_caps_get_structure (GST_BUFFER_CAPS (buffer), 0);
       gboolean interlaced;
       gboolean found = gst_structure_get_boolean (s, "interlaced", &interlaced);
-      if (!found || (!!interlaced != !!ffmpegdec->format.video.interlaced)) {
+      if (!found || (! !interlaced != ! !ffmpegdec->format.video.interlaced)) {
         GST_DEBUG_OBJECT (ffmpegdec,
             "Buffer interlacing does not match pad, updating");
         buffer = gst_buffer_make_metadata_writable (buffer);
