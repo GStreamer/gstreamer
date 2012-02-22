@@ -1251,19 +1251,62 @@ link_failed:
 }
 
 static gboolean
+is_valid_color_balance_element (GstElement * element)
+{
+  GstColorBalance *bal = GST_COLOR_BALANCE (element);
+  gboolean have_brightness = FALSE;
+  gboolean have_contrast = FALSE;
+  gboolean have_hue = FALSE;
+  gboolean have_saturation = FALSE;
+  const GList *channels, *l;
+
+  channels = gst_color_balance_list_channels (bal);
+  for (l = channels; l; l = l->next) {
+    GstColorBalanceChannel *ch = l->data;
+
+    if (g_strrstr (ch->label, "BRIGHTNESS"))
+      have_brightness = TRUE;
+    else if (g_strrstr (ch->label, "CONTRAST"))
+      have_contrast = TRUE;
+    else if (g_strrstr (ch->label, "HUE"))
+      have_hue = TRUE;
+    else if (g_strrstr (ch->label, "SATURATION"))
+      have_saturation = TRUE;
+  }
+
+  return have_brightness && have_contrast && have_hue && have_saturation;
+}
+
+static void
+iterate_color_balance_elements (gpointer data, gpointer user_data)
+{
+  gboolean valid = is_valid_color_balance_element (data);
+  gboolean *valid_out = user_data;
+
+  *valid_out = *valid_out && valid;
+
+  gst_object_unref (data);
+}
+
+static gboolean
 has_color_balance_element (GstElement * element)
 {
-  GstElement *cb = NULL;
+  GstIterator *it;
+  gboolean valid = FALSE;
 
   if (GST_IS_COLOR_BALANCE (element))
-    return TRUE;
+    return is_valid_color_balance_element (element);
   else if (!GST_IS_BIN (element))
     return FALSE;
 
-  cb = gst_bin_get_by_interface (GST_BIN (element), GST_TYPE_COLOR_BALANCE);
-  gst_object_unref (cb);
+  it = gst_bin_iterate_all_by_interface (GST_BIN (element),
+      GST_TYPE_COLOR_BALANCE);
+  while (gst_iterator_foreach (it, iterate_color_balance_elements,
+          &valid) == GST_ITERATOR_RESYNC)
+    gst_iterator_resync (it);
+  gst_iterator_free (it);
 
-  return (cb != NULL);
+  return valid;
 }
 
 /* make the element (bin) that contains the elements needed to perform
