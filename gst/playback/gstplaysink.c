@@ -1849,10 +1849,10 @@ gen_audio_chain (GstPlaySink * playsink, gboolean raw)
   }
 
   if (!(playsink->flags & GST_PLAY_FLAG_NATIVE_AUDIO) || (!have_volume
-          && playsink->flags & GST_PLAY_FLAG_SOFT_VOLUME)) {
+          && (playsink->flags & GST_PLAY_FLAG_SOFT_VOLUME))) {
     gboolean use_converters = !(playsink->flags & GST_PLAY_FLAG_NATIVE_AUDIO);
     gboolean use_volume =
-        !have_volume && playsink->flags & GST_PLAY_FLAG_SOFT_VOLUME;
+        !have_volume && (playsink->flags & GST_PLAY_FLAG_SOFT_VOLUME);
     GST_DEBUG_OBJECT (playsink,
         "creating audioconvert with use-converters %d, use-volume %d",
         use_converters, use_volume);
@@ -1869,7 +1869,7 @@ gen_audio_chain (GstPlaySink * playsink, gboolean raw)
     }
     prev = chain->conv;
 
-    if (!have_volume && playsink->flags & GST_PLAY_FLAG_SOFT_VOLUME) {
+    if (!have_volume && (playsink->flags & GST_PLAY_FLAG_SOFT_VOLUME)) {
       GstPlaySinkAudioConvert *conv =
           GST_PLAY_SINK_AUDIO_CONVERT_CAST (chain->conv);
 
@@ -2022,13 +2022,14 @@ setup_audio_chain (GstPlaySink * playsink, gboolean raw)
         GST_PLAY_SINK_AUDIO_CONVERT_CAST (chain->conv);
 
     /* no volume, we need to add a volume element when we can */
-    g_object_set (chain->conv, "use-volume", TRUE, NULL);
+    g_object_set (chain->conv, "use-volume",
+        ! !(playsink->flags & GST_PLAY_FLAG_SOFT_VOLUME), NULL);
     GST_DEBUG_OBJECT (playsink, "the sink has no volume property");
 
     /* Disconnect signals */
     disconnect_chain (chain, playsink);
 
-    if (conv->volume) {
+    if (conv->volume && (playsink->flags & GST_PLAY_FLAG_SOFT_VOLUME)) {
       chain->volume = conv->volume;
       chain->mute = chain->volume;
 
