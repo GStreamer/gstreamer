@@ -926,16 +926,19 @@ gst_riff_create_video_caps (guint32 codec_fcc,
 
 #if (G_BYTE_ORDER == G_BIG_ENDIAN)
       {
-        guint8 *data, *p;
+        GstMapInfo palette_mapinfo;
+        guint8 *p;
         gint n;
 
-        data = p = gst_buffer_map (copy, NULL, NULL, GST_MAP_READWRITE);
+        gst_buffer_map (copy, &palette_mapinfo, GST_MAP_READWRITE);
+
         /* own endianness */
+        p = palette_mapinfo.data;
         for (n = 0; n < num_colors; n++) {
           GST_WRITE_UINT32_BE (p, GST_READ_UINT32_LE (p));
           p += sizeof (guint32);
         }
-        gst_buffer_unmap (copy, data, -1);
+        gst_buffer_unmap (copy, &palette_mapinfo);
       }
 #endif
       gst_caps_set_simple (caps, "palette_data", GST_TYPE_BUFFER, copy, NULL);
