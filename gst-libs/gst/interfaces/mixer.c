@@ -134,7 +134,9 @@ gst_mixer_class_init (GstMixerClass * klass)
   }
 #endif
 
+#ifndef GST_REMOVE_DEPRECATED
   klass->mixer_type = GST_MIXER_SOFTWARE;
+#endif
 
   /* default virtual functions */
   klass->list_tracks = NULL;
@@ -355,7 +357,14 @@ gst_mixer_get_mixer_type (GstMixer * mixer)
 {
   GstMixerClass *klass = GST_MIXER_GET_CLASS (mixer);
 
+  if (klass->get_mixer_type)
+    return klass->get_mixer_type (mixer);
+
+#ifndef GST_REMOVE_DEPRECATED
   return klass->mixer_type;
+#else
+  g_return_if_reached (GST_MIXER_TYPE_SOFTWARE);
+#endif
 }
 
 /**

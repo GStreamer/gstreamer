@@ -117,7 +117,10 @@ typedef enum
 struct _GstMixerClass {
   GTypeInterface klass;
 
+/* FIXME 0.11: Remove this */
+#ifndef GST_REMOVE_DEPRECATED
   GstMixerType mixer_type;
+#endif
 
   /* virtual functions */
   const GList *  (* list_tracks)   (GstMixer      *mixer);
@@ -166,8 +169,10 @@ struct _GstMixerClass {
 
   GstMixerFlags (* get_mixer_flags) (GstMixer *mixer);
 
+  GstMixerType  (* get_mixer_type)  (GstMixer *mixer);
+
   /*< private >*/
-  gpointer _gst_reserved[GST_PADDING-1];
+  gpointer _gst_reserved[GST_PADDING];
 };
 
 GType           gst_mixer_get_type      (void);
