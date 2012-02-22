@@ -32,6 +32,7 @@
 #include <gst/gst-i18n-plugin.h>
 #include <gst/pbutils/pbutils.h>
 #include <gst/video/video.h>
+#include <gst/interfaces/streamvolume.h>
 
 #include "gstplaysink.h"
 #include "gststreamsynchronizer.h"
@@ -325,7 +326,18 @@ gst_play_marshal_BUFFER__BOXED (GClosure * closure,
 
 /* static guint gst_play_sink_signals[LAST_SIGNAL] = { 0 }; */
 
-G_DEFINE_TYPE (GstPlaySink, gst_play_sink, GST_TYPE_BIN);
+static void
+_do_init (GType type)
+{
+  static const GInterfaceInfo svol_info = {
+    NULL, NULL, NULL
+  };
+
+  g_type_add_interface_static (type, GST_TYPE_STREAM_VOLUME, &svol_info);
+}
+
+G_DEFINE_TYPE_WITH_CODE (GstPlaySink, gst_play_sink, GST_TYPE_BIN,
+    _do_init (g_define_type_id));
 
 static void
 gst_play_sink_class_init (GstPlaySinkClass * klass)
@@ -479,14 +491,11 @@ gst_play_sink_class_init (GstPlaySinkClass * klass)
 
   gst_element_class_add_static_pad_template (gstelement_klass,
       &audiorawtemplate);
-  gst_element_class_add_static_pad_template (gstelement_klass,
-      &audiotemplate);
+  gst_element_class_add_static_pad_template (gstelement_klass, &audiotemplate);
   gst_element_class_add_static_pad_template (gstelement_klass,
       &videorawtemplate);
-  gst_element_class_add_static_pad_template (gstelement_klass,
-      &videotemplate);
-  gst_element_class_add_static_pad_template (gstelement_klass,
-      &texttemplate);
+  gst_element_class_add_static_pad_template (gstelement_klass, &videotemplate);
+  gst_element_class_add_static_pad_template (gstelement_klass, &texttemplate);
   gst_element_class_set_details_simple (gstelement_klass, "Player Sink",
       "Generic/Bin/Sink",
       "Convenience sink for multiple streams",
@@ -3042,14 +3051,14 @@ caps_notify_cb (GstPad * pad, GParamSpec * unused, GstPlaySink * playsink)
 
   if (pad == playsink->audio_pad) {
     raw = is_raw_pad (pad);
-    reconfigure = (!!playsink->audio_pad_raw != !!raw)
+    reconfigure = (! !playsink->audio_pad_raw != ! !raw)
         && playsink->audiochain;
     GST_DEBUG_OBJECT (pad,
         "Audio caps changed: raw %d reconfigure %d caps %" GST_PTR_FORMAT, raw,
         reconfigure, caps);
   } else if (pad == playsink->video_pad) {
     raw = is_raw_pad (pad);
-    reconfigure = (!!playsink->video_pad_raw != !!raw)
+    reconfigure = (! !playsink->video_pad_raw != ! !raw)
         && playsink->videochain;
     GST_DEBUG_OBJECT (pad,
         "Video caps changed: raw %d reconfigure %d caps %" GST_PTR_FORMAT, raw,
