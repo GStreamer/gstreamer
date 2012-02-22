@@ -85,7 +85,7 @@ gst_play_sink_video_convert_add_conversion_elements (GstPlaySinkVideoConvert *
     prev = el;
 
     el = gst_play_sink_convert_bin_add_conversion_element_factory (cbin,
-        COLORSPACE, "conv");
+        COLORSPACE, "conv2");
     if (prev) {
       if (!gst_element_link_pads_full (prev, "src", el, "sink",
               GST_PAD_LINK_CHECK_TEMPLATE_CAPS))
