@@ -102,13 +102,15 @@ gst_color_balance_class_init (GstColorBalanceClass * klass)
 
     initialized = TRUE;
   }
-
+#ifndef GST_REMOVE_DEPRECATED
   klass->balance_type = GST_COLOR_BALANCE_SOFTWARE;
+#endif
 
   /* default virtual functions */
   klass->list_channels = NULL;
   klass->set_value = NULL;
   klass->get_value = NULL;
+  klass->get_balance_type = NULL;
 }
 
 /**
@@ -212,7 +214,14 @@ gst_color_balance_get_balance_type (GstColorBalance * balance)
 
   klass = GST_COLOR_BALANCE_GET_CLASS (balance);
 
+  if (klass->get_balance_type)
+    return klass->get_balance_type (balance);
+
+#ifndef GST_REMOVE_DEPRECATED
   return klass->balance_type;
+#else
+  g_return_val_if_reached (GST_COLOR_BALANCE_SOFTWARE);
+#endif
 }
 
 /**

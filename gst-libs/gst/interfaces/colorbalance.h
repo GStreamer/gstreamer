@@ -80,7 +80,10 @@ typedef enum
 struct _GstColorBalanceClass {
   GTypeInterface klass;
 
+/* FIXME 0.11: Remove this */
+#ifndef GST_REMOVE_DEPRECATED
   GstColorBalanceType balance_type;
+#endif
 
   /* virtual functions */
   const GList * (* list_channels) (GstColorBalance        *balance);
@@ -95,6 +98,8 @@ struct _GstColorBalanceClass {
   void (* value_changed) (GstColorBalance        *balance,
                           GstColorBalanceChannel *channel,
                           gint                    value);
+
+  GstColorBalanceType (*get_balance_type)  (GstColorBalance *balance);
 
   /*< private >*/
   gpointer _gst_reserved[GST_PADDING];
