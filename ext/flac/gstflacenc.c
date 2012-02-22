@@ -623,19 +623,18 @@ gst_flac_enc_getcaps (GstAudioEncoder * enc, GstCaps * filter)
     g_value_init (&v_list, GST_TYPE_LIST);
     g_value_init (&v, G_TYPE_STRING);
 
-    g_value_set_string (&v, GST_AUDIO_NE (S8));
+    g_value_set_static_string (&v, GST_AUDIO_NE (S8));
     gst_value_list_append_value (&v_list, &v);
-    g_value_set_string (&v, GST_AUDIO_NE (S16));
+    g_value_set_static_string (&v, GST_AUDIO_NE (S16));
     gst_value_list_append_value (&v_list, &v);
-    g_value_set_string (&v, GST_AUDIO_NE (S24));
+    g_value_set_static_string (&v, GST_AUDIO_NE (S24));
     gst_value_list_append_value (&v_list, &v);
-    g_value_set_string (&v, GST_AUDIO_NE (S32));
+    g_value_set_static_string (&v, GST_AUDIO_NE (S32));
     gst_value_list_append_value (&v_list, &v);
     g_value_unset (&v);
 
     s = gst_structure_new_empty ("audio/x-raw");
-    gst_structure_set_value (s, "format", &v_list);
-    g_value_unset (&v_list);
+    gst_structure_take_value (s, "format", &v_list);
 
     gst_structure_set (s, "layout", G_TYPE_STRING, "interleaved",
         "rate", GST_TYPE_INT_RANGE, 1, 655350, NULL);
