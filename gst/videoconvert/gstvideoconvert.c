@@ -136,35 +136,22 @@ static GstCaps *
 gst_video_convert_fixate_caps (GstBaseTransform * trans,
     GstPadDirection direction, GstCaps * caps, GstCaps * othercaps)
 {
-  GstStructure *ss, *ds;
-  const gchar *val;
-
-  othercaps = gst_caps_make_writable (othercaps);
+  GstCaps *result;
 
   GST_DEBUG_OBJECT (trans, "fixating caps %" GST_PTR_FORMAT, othercaps);
 
-  ss = gst_caps_get_structure (caps, 0);
-  ds = gst_caps_get_structure (othercaps, 0);
-
-  /* first try to preserve chroma-site and colorimetry */
-  if ((val = gst_structure_get_string (ss, "chroma-site"))) {
-    if (gst_structure_has_field (ds, "chroma-site"))
-      gst_structure_fixate_field_string (ds, "chroma-site", val);
-    else
-      gst_structure_set (ds, "chroma-site", G_TYPE_STRING, val, NULL);
-  }
-
-  if ((val = gst_structure_get_string (ss, "colorimetry"))) {
-    if (gst_structure_has_field (ds, "colorimetry"))
-      gst_structure_fixate_field_string (ds, "colorimetry", val);
-    else
-      gst_structure_set (ds, "colorimetry", G_TYPE_STRING, val, NULL);
+  result = gst_caps_intersect (othercaps, caps);
+  if (gst_caps_is_empty (result)) {
+    result = othercaps;
+  } else {
+    gst_caps_unref (othercaps);
   }
 
   /* fixate remaining fields */
-  gst_caps_fixate (othercaps);
+  result = gst_caps_make_writable (result);
+  gst_caps_fixate (result);
 
-  return othercaps;
+  return result;
 }
 
 /* The caps can be transformed into any other caps with format info removed.
