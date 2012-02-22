@@ -148,7 +148,9 @@ struct _GstBaseTransform {
  *                  caps, what caps are allowed on the other pad in this
  *                  element ?
  * @fixate_caps:    Optional. Given the pad in this direction and the given
- *                  caps, fixate the caps on the other pad.
+ *                  caps, fixate the caps on the other pad. The function takes
+ *                  ownership of @othercaps and returns a fixated version of
+ *                  @othercaps. @othercaps is not guaranteed to be writable.
  * @accept_caps:    Optional. Since 0.10.30
  *                  Subclasses can override this method to check if @caps can be
  *                  handled by the element. The default implementation might not be
@@ -224,7 +226,7 @@ struct _GstBaseTransformClass {
   GstCaps*	(*transform_caps) (GstBaseTransform *trans,
                                    GstPadDirection direction,
                                    GstCaps *caps, GstCaps *filter);
-  void		(*fixate_caps)	  (GstBaseTransform *trans,
+  GstCaps*	(*fixate_caps)	  (GstBaseTransform *trans,
                                    GstPadDirection direction, GstCaps *caps,
                                    GstCaps *othercaps);
   gboolean      (*accept_caps)    (GstBaseTransform *trans, GstPadDirection direction,
