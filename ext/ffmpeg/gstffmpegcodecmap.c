@@ -906,6 +906,11 @@ gst_ffmpeg_codecid_to_caps (enum CodecID codec_id,
           "indeoversion", G_TYPE_INT, 5, NULL);
       break;
 
+    case CODEC_ID_INDEO4:
+      caps = gst_ff_vid_caps_new (context, codec_id, "video/x-indeo",
+          "indeoversion", G_TYPE_INT, 4, NULL);
+      break;
+
     case CODEC_ID_INDEO3:
       caps = gst_ff_vid_caps_new (context, codec_id, "video/x-indeo",
           "indeoversion", G_TYPE_INT, 3, NULL);
@@ -3161,6 +3166,9 @@ gst_ffmpeg_caps_to_codecid (const GstCaps * caps, AVCodecContext * context)
       switch (indeoversion) {
         case 5:
           id = CODEC_ID_INDEO5;
+          break;
+        case 4:
+          id = CODEC_ID_INDEO4;
           break;
         case 3:
           id = CODEC_ID_INDEO3;
