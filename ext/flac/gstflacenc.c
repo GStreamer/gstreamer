@@ -616,26 +616,26 @@ gst_flac_enc_getcaps (GstAudioEncoder * enc, GstCaps * filter)
     ret = gst_pad_get_current_caps (pad);
   } else {
     gint i;
-    GValue v_arr = { 0, };
+    GValue v_list = { 0, };
     GValue v = { 0, };
     GstStructure *s, *s2;
 
-    g_value_init (&v_arr, GST_TYPE_ARRAY);
+    g_value_init (&v_list, GST_TYPE_LIST);
     g_value_init (&v, G_TYPE_STRING);
 
     g_value_set_string (&v, GST_AUDIO_NE (S8));
-    gst_value_array_append_value (&v_arr, &v);
+    gst_value_list_append_value (&v_list, &v);
     g_value_set_string (&v, GST_AUDIO_NE (S16));
-    gst_value_array_append_value (&v_arr, &v);
+    gst_value_list_append_value (&v_list, &v);
     g_value_set_string (&v, GST_AUDIO_NE (S24));
-    gst_value_array_append_value (&v_arr, &v);
+    gst_value_list_append_value (&v_list, &v);
     g_value_set_string (&v, GST_AUDIO_NE (S32));
-    gst_value_array_append_value (&v_arr, &v);
+    gst_value_list_append_value (&v_list, &v);
     g_value_unset (&v);
 
     s = gst_structure_new_empty ("audio/x-raw");
-    gst_structure_set_value (s, "format", &v_arr);
-    g_value_unset (&v_arr);
+    gst_structure_set_value (s, "format", &v_list);
+    g_value_unset (&v_list);
 
     gst_structure_set (s, "layout", G_TYPE_STRING, "interleaved",
         "rate", GST_TYPE_INT_RANGE, 1, 655350, NULL);
