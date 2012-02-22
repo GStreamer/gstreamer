@@ -612,8 +612,6 @@ gst_flac_enc_getcaps (GstAudioEncoder * enc, GstCaps * filter)
 
   pad = GST_AUDIO_ENCODER_SINK_PAD (enc);
 
-  GST_OBJECT_LOCK (pad);
-
   if (gst_pad_has_current_caps (pad)) {
     ret = gst_pad_get_current_caps (pad);
   } else {
@@ -661,8 +659,6 @@ gst_flac_enc_getcaps (GstAudioEncoder * enc, GstCaps * filter)
     }
     gst_structure_free (s);
   }
-
-  GST_OBJECT_UNLOCK (pad);
 
   GST_DEBUG_OBJECT (pad, "Return caps %" GST_PTR_FORMAT, ret);
 
