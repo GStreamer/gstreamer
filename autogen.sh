@@ -29,6 +29,10 @@ then
     ln -s ../../common/hooks/pre-commit.hook .git/hooks/pre-commit
 fi
 
+# GNU gettext automake support doesn't get along with git.
+# https://bugzilla.gnome.org/show_bug.cgi?id=661128
+touch -t 200001010000 po/$package-0.10.pot
+
 CONFIGURE_DEF_OPT='--enable-maintainer-mode --enable-gtk-doc'
 
 autogen_options $@
