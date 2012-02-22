@@ -65,6 +65,8 @@ gst_play_flags_get_type (void)
         "buffering"},
     {C_FLAGS (GST_PLAY_FLAG_DEINTERLACE), "Deinterlace video if necessary",
         "deinterlace"},
+    {C_FLAGS (GST_PLAY_FLAG_SOFT_COLORBALANCE), "Use software color balance",
+        "soft-colorbalance"},
     {0, NULL, NULL}
   };
   static volatile GType id = 0;

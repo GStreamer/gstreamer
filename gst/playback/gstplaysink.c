@@ -33,6 +33,7 @@
 #include <gst/pbutils/pbutils.h>
 #include <gst/video/video.h>
 #include <gst/interfaces/streamvolume.h>
+#include <gst/interfaces/colorbalance.h>
 
 #include "gstplaysink.h"
 #include "gststreamsynchronizer.h"
@@ -45,7 +46,7 @@ GST_DEBUG_CATEGORY_STATIC (gst_play_sink_debug);
 #define VOLUME_MAX_DOUBLE 10.0
 
 #define DEFAULT_FLAGS             GST_PLAY_FLAG_AUDIO | GST_PLAY_FLAG_VIDEO | GST_PLAY_FLAG_TEXT | \
-                                  GST_PLAY_FLAG_SOFT_VOLUME
+                                  GST_PLAY_FLAG_SOFT_VOLUME | GST_PLAY_FLAG_SOFT_COLORBALANCE
 
 #define GST_PLAY_CHAIN(c) ((GstPlayChain *)(c))
 
@@ -1249,6 +1250,22 @@ link_failed:
   }
 }
 
+static gboolean
+has_color_balance_element (GstElement * element)
+{
+  GstElement *cb = NULL;
+
+  if (GST_IS_COLOR_BALANCE (element))
+    return TRUE;
+  else if (!GST_IS_BIN (element))
+    return FALSE;
+
+  cb = gst_bin_get_by_interface (GST_BIN (element), GST_TYPE_COLOR_BALANCE);
+  gst_object_unref (cb);
+
+  return (cb != NULL);
+}
+
 /* make the element (bin) that contains the elements needed to perform
  * video display.
  *
@@ -1347,10 +1364,17 @@ gen_video_chain (GstPlaySink * playsink, gboolean raw, gboolean async)
     head = prev = chain->queue;
   }
 
-  if (!(playsink->flags & GST_PLAY_FLAG_NATIVE_VIDEO)) {
+  if (!(playsink->flags & GST_PLAY_FLAG_NATIVE_VIDEO)
+      || (!has_color_balance_element (chain->sink)
+          && (playsink->flags & GST_PLAY_FLAG_SOFT_COLORBALANCE))) {
+    gboolean use_converters = !(playsink->flags & GST_PLAY_FLAG_NATIVE_VIDEO);
+    gboolean use_balance = !has_color_balance_element (chain->sink)
+        && (playsink->flags & GST_PLAY_FLAG_SOFT_COLORBALANCE);
+
     GST_DEBUG_OBJECT (playsink, "creating videoconverter");
     chain->conv =
-        g_object_new (GST_TYPE_PLAY_SINK_VIDEO_CONVERT, "name", "vconv", NULL);
+        g_object_new (GST_TYPE_PLAY_SINK_VIDEO_CONVERT, "name", "vconv",
+        "use-converters", use_converters, "use-balance", use_balance, NULL);
     gst_bin_add (bin, chain->conv);
     if (prev) {
       if (!gst_element_link_pads_full (prev, "src", chain->conv, "sink",
@@ -1461,6 +1485,12 @@ setup_video_chain (GstPlaySink * playsink, gboolean raw, gboolean async)
     GST_DEBUG_OBJECT (playsink, "no async property on the sink");
     chain->async = TRUE;
   }
+
+  if (chain->conv)
+    g_object_set (chain->conv, "use-balance",
+        !has_color_balance_element (chain->sink)
+        && (playsink->flags & GST_PLAY_FLAG_SOFT_COLORBALANCE), NULL);
+
   return TRUE;
 }
 
@@ -3752,7 +3782,6 @@ gst_play_sink_get_property (GObject * object, guint prop_id,
       break;
   }
 }
-
 
 gboolean
 gst_play_sink_plugin_init (GstPlugin * plugin)

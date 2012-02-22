@@ -43,6 +43,10 @@ struct _GstPlaySinkVideoConvert
 {
   GstPlaySinkConvertBin parent;
 
+  /* < pseudo public > */
+  GstElement *balance;
+  gboolean use_converters;
+  gboolean use_balance;
 };
 
 struct _GstPlaySinkVideoConvertClass
