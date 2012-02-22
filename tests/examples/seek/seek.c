@@ -2980,7 +2980,7 @@ int
 main (int argc, char **argv)
 {
   GtkWidget *window, *hbox, *vbox, *panel, *expander, *pb2vbox, *boxes,
-      *flagtable, *boxes2, *step, *navigation, *colorbalance;
+      *flagtable, *boxes2, *step, *navigation, *colorbalance = NULL;
   GtkWidget *play_button, *pause_button, *stop_button, *shot_button;
   GtkWidget *accurate_checkbox, *key_checkbox, *loop_checkbox, *flush_checkbox;
   GtkWidget *scrub_checkbox, *play_scrub_checkbox;
@@ -3324,8 +3324,8 @@ main (int argc, char **argv)
     gtk_container_add (GTK_CONTAINER (navigation), grid);
   }
 
-  /* colorbalance expander */
-  {
+  /* colorbalance expander, only for playbin2 */
+  if (pipeline_type == 16) {
     GtkWidget *vbox, *frame;
 
     colorbalance = gtk_expander_new ("color balance options");
@@ -3511,7 +3511,8 @@ main (int argc, char **argv)
   }
   gtk_box_pack_start (GTK_BOX (vbox), step, FALSE, FALSE, 2);
   gtk_box_pack_start (GTK_BOX (vbox), navigation, FALSE, FALSE, 2);
-  gtk_box_pack_start (GTK_BOX (vbox), colorbalance, FALSE, FALSE, 2);
+  if (colorbalance)
+    gtk_box_pack_start (GTK_BOX (vbox), colorbalance, FALSE, FALSE, 2);
   gtk_box_pack_start (GTK_BOX (vbox), gtk_hseparator_new (), FALSE, FALSE, 2);
   gtk_box_pack_start (GTK_BOX (vbox), hscale, FALSE, FALSE, 2);
   gtk_box_pack_start (GTK_BOX (vbox), statusbar, FALSE, FALSE, 2);
