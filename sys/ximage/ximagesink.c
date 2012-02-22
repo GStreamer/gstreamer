@@ -1322,9 +1322,6 @@ gst_ximagesink_show_frame (GstVideoSink * vsink, GstBuffer * buf)
     if (res != GST_FLOW_OK)
       goto no_buffer;
 
-    if (gst_buffer_get_size (to_put) < gst_buffer_get_size (buf))
-      goto wrong_size;
-
     GST_CAT_LOG_OBJECT (GST_CAT_PERFORMANCE, ximagesink,
         "slow copy into bufferpool buffer %p", to_put);
 
@@ -1364,16 +1361,6 @@ no_buffer:
     /* No image available. That's very bad ! */
     GST_WARNING_OBJECT (ximagesink, "could not create image");
     return res;
-  }
-wrong_size:
-  {
-    GST_ELEMENT_ERROR (ximagesink, RESOURCE, WRITE,
-        ("Failed to create output image buffer"),
-        ("XServer allocated buffer size did not match input buffer %"
-            G_GSIZE_FORMAT " - %" G_GSIZE_FORMAT, gst_buffer_get_size (to_put),
-            gst_buffer_get_size (buf)));
-    res = GST_FLOW_ERROR;
-    goto done;
   }
 invalid_buffer:
   {
