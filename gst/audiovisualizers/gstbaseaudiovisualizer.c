@@ -878,8 +878,8 @@ gst_base_audio_visualizer_chain (GstPad * pad, GstObject * parent,
       break;
 
     gst_buffer_take_memory (inbuf, -1,
-        gst_memory_new_wrapped (GST_MEMORY_FLAG_READONLY, adata, NULL, sbpf, 0,
-            sbpf));
+        gst_memory_new_wrapped (GST_MEMORY_FLAG_READONLY, adata, sbpf, 0,
+            sbpf, NULL, NULL));
 
     /* call class->render() vmethod */
     if (render) {
