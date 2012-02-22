@@ -116,7 +116,8 @@ typedef struct
   GstMemory mem;
   gsize slice_size;
   guint8 *data;
-  GFreeFunc free_func;
+  gpointer user_data;
+  GDestroyNotify notify;
 } GstMemoryDefault;
 
 /* the default allocator */
@@ -129,7 +130,8 @@ static GstAllocator *_default_mem_impl;
 static void
 _default_mem_init (GstMemoryDefault * mem, GstMemoryFlags flags,
     GstMemory * parent, gsize slice_size, gpointer data,
-    GFreeFunc free_func, gsize maxsize, gsize offset, gsize size)
+    gsize maxsize, gsize offset, gsize size, gpointer user_data,
+    GDestroyNotify notify)
 {
   mem->mem.allocator = _default_mem_impl;
   mem->mem.flags = flags;
@@ -141,7 +143,8 @@ _default_mem_init (GstMemoryDefault * mem, GstMemoryFlags flags,
   mem->mem.size = size;
   mem->slice_size = slice_size;
   mem->data = data;
-  mem->free_func = free_func;
+  mem->user_data = user_data;
+  mem->notify = notify;
 
   GST_CAT_DEBUG (GST_CAT_MEMORY, "new memory %p", mem);
 }
@@ -149,7 +152,8 @@ _default_mem_init (GstMemoryDefault * mem, GstMemoryFlags flags,
 /* create a new memory block that manages the given memory */
 static GstMemoryDefault *
 _default_mem_new (GstMemoryFlags flags, GstMemory * parent, gpointer data,
-    GFreeFunc free_func, gsize maxsize, gsize offset, gsize size)
+    gsize maxsize, gsize offset, gsize size, gpointer user_data,
+    GDestroyNotify notify)
 {
   GstMemoryDefault *mem;
   gsize slice_size;
@@ -158,7 +162,7 @@ _default_mem_new (GstMemoryFlags flags, GstMemory * parent, gpointer data,
 
   mem = g_slice_alloc (slice_size);
   _default_mem_init (mem, flags, parent, slice_size,
-      data, free_func, maxsize, offset, size);
+      data, maxsize, offset, size, user_data, notify);
 
   return mem;
 }
@@ -187,8 +191,8 @@ _default_mem_new_block (gsize maxsize, gsize align, gsize offset, gsize size)
   if ((aoffset = ((guintptr) data & align)))
     aoffset = (align + 1) - aoffset;
 
-  _default_mem_init (mem, 0, NULL, slice_size, data, NULL, maxsize,
-      aoffset + offset, size);
+  _default_mem_init (mem, 0, NULL, slice_size, data, maxsize,
+      aoffset + offset, size, NULL, NULL);
 
   return mem;
 }
@@ -220,8 +224,8 @@ _default_mem_free (GstMemoryDefault * mem)
   if (mem->mem.parent)
     gst_memory_unref (mem->mem.parent);
 
-  if (mem->free_func)
-    mem->free_func (mem->data);
+  if (mem->notify)
+    mem->notify (mem->user_data);
 
   g_slice_free1 (mem->slice_size, mem);
 }
@@ -257,8 +261,8 @@ _default_mem_share (GstMemoryDefault * mem, gssize offset, gsize size)
     size = mem->mem.size - offset;
 
   sub =
-      _default_mem_new (parent->flags, parent, mem->data, NULL,
-      mem->mem.maxsize, mem->mem.offset + offset, size);
+      _default_mem_new (parent->flags, parent, mem->data,
+      mem->mem.maxsize, mem->mem.offset + offset, size, NULL, NULL);
 
   return sub;
 }
@@ -366,10 +370,11 @@ _priv_gst_memory_initialize (void)
  * gst_memory_new_wrapped:
  * @flags: #GstMemoryFlags
  * @data: data to wrap
- * @free_func: function to free @data
  * @maxsize: allocated size of @data
  * @offset: offset in @data
  * @size: size of valid data
+ * @user_data: user_data
+ * @notify: called with @user_data when the memory is freed
  *
  * Allocate a new memory block that wraps the given @data.
  *
@@ -377,14 +382,17 @@ _priv_gst_memory_initialize (void)
  */
 GstMemory *
 gst_memory_new_wrapped (GstMemoryFlags flags, gpointer data,
-    GFreeFunc free_func, gsize maxsize, gsize offset, gsize size)
+    gsize maxsize, gsize offset, gsize size, gpointer user_data,
+    GDestroyNotify notify)
 {
   GstMemoryDefault *mem;
 
   g_return_val_if_fail (data != NULL, NULL);
   g_return_val_if_fail (offset + size <= maxsize, NULL);
 
-  mem = _default_mem_new (flags, NULL, data, free_func, maxsize, offset, size);
+  mem =
+      _default_mem_new (flags, NULL, data, maxsize, offset, size, user_data,
+      notify);
 
 #ifndef GST_DISABLE_TRACE
   _gst_alloc_trace_new (_gst_memory_trace, mem);

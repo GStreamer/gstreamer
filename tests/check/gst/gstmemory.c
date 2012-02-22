@@ -132,7 +132,8 @@ create_read_only_memory (void)
 
   /* assign some read-only data to the new memory */
   mem = gst_memory_new_wrapped (GST_MEMORY_FLAG_READONLY,
-      (gpointer) ro_memory, NULL, sizeof (ro_memory), 0, sizeof (ro_memory));
+      (gpointer) ro_memory, sizeof (ro_memory), 0, sizeof (ro_memory), NULL,
+      NULL);
   fail_unless (GST_MEMORY_IS_READONLY (mem));
 
   return mem;

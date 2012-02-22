@@ -304,8 +304,9 @@ void           gst_allocator_set_default     (GstAllocator * allocator);
 GstMemory *    gst_allocator_alloc           (GstAllocator * allocator,
                                               gsize maxsize, gsize align);
 
-GstMemory *    gst_memory_new_wrapped  (GstMemoryFlags flags, gpointer data, GFreeFunc free_func,
-                                        gsize maxsize, gsize offset, gsize size);
+GstMemory *    gst_memory_new_wrapped  (GstMemoryFlags flags, gpointer data, gsize maxsize,
+                                        gsize offset, gsize size, gpointer user_data,
+                                        GDestroyNotify notify);
 
 /* refcounting */
 GstMemory *    gst_memory_ref          (GstMemory *mem);

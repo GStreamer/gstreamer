@@ -261,7 +261,7 @@ gst_byte_writer_reset_and_get_buffer (GstByteWriter * writer)
   buffer = gst_buffer_new ();
   if (data != NULL) {
     gst_buffer_take_memory (buffer, -1,
-        gst_memory_new_wrapped (0, data, g_free, size, 0, size));
+        gst_memory_new_wrapped (0, data, size, 0, size, data, g_free));
   }
 
   return buffer;

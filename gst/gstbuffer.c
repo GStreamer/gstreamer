@@ -615,7 +615,7 @@ gst_buffer_new_wrapped_full (gpointer data, GFreeFunc free_func, gsize offset,
   newbuf = gst_buffer_new ();
   gst_buffer_append_memory (newbuf,
       gst_memory_new_wrapped (free_func ? 0 : GST_MEMORY_FLAG_READONLY,
-          data, free_func, offset + size, offset, size));
+          data, offset + size, offset, size, data, free_func));
 
   return newbuf;
 }

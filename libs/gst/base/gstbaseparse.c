@@ -2624,7 +2624,7 @@ gst_base_parse_chain (GstPad * pad, GstObject * parent, GstBuffer * buffer)
     tmpbuf = gst_buffer_new ();
     gst_buffer_take_memory (tmpbuf, -1,
         gst_memory_new_wrapped (GST_MEMORY_FLAG_READONLY |
-            GST_MEMORY_FLAG_NO_SHARE, (gpointer) data, NULL, av, 0, av));
+            GST_MEMORY_FLAG_NO_SHARE, (gpointer) data, av, 0, av, NULL, NULL));
 
     /* keep the adapter mapped, so keep track of what has to be flushed */
     ret = gst_base_parse_handle_buffer (parse, tmpbuf, &skip, &flush);

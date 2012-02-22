@@ -49,7 +49,8 @@ GST_START_TEST (test_initialization)
   GstMapInfo info;
 
   gst_buffer_take_memory (buffer, -1,
-      gst_memory_new_wrapped (GST_MEMORY_FLAG_READONLY, data, NULL, 4, 0, 4));
+      gst_memory_new_wrapped (GST_MEMORY_FLAG_READONLY, data, 4, 0, 4, NULL,
+          NULL));
 
   fail_unless (gst_byte_reader_get_uint8 (&reader, &x));
   fail_unless_equals_int (x, 0x01);
