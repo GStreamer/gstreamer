@@ -1910,7 +1910,8 @@ gst_x264_enc_chain (GstPad * pad, GstObject * parent, GstBuffer * buf)
   }
 
   pic_in.i_type = X264_TYPE_AUTO;
-  pic_in.i_pts = GST_BUFFER_TIMESTAMP (buf);
+  pic_in.i_dts = GST_BUFFER_DTS (buf);
+  pic_in.i_pts = GST_BUFFER_PTS (buf);
 
   ret = gst_x264_enc_encode_frame (encoder, &pic_in, &i_nal, TRUE);
 
@@ -2078,12 +2079,15 @@ gst_x264_enc_encode_frame (GstX264Enc * encoder, x264_picture_t * pic_in,
   out_buf = gst_buffer_new_allocate (NULL, i_size, 0);
   gst_buffer_fill (out_buf, 0, data, i_size);
 
-  /* PTS */
-  /* FIXME ??: maybe use DTS here, since:
-   * - it is so practiced by other encoders,
-   * - downstream (e.g. muxers) might not enjoy non-monotone timestamps,
-   *   whereas a decoder can also deal with DTS */
-  GST_BUFFER_TIMESTAMP (out_buf) = pic_out.i_pts;
+  g_print ("dts %" G_GINT64_FORMAT " pts %" G_GINT64_FORMAT, pic_out.i_dts,
+      pic_out.i_pts);
+
+  if (pic_out.i_dts < 0)
+    GST_BUFFER_DTS (out_buf) = GST_CLOCK_TIME_NONE;
+  else
+    GST_BUFFER_DTS (out_buf) = pic_out.i_dts;
+
+  GST_BUFFER_PTS (out_buf) = pic_out.i_pts;
   GST_BUFFER_DURATION (out_buf) = duration;
 
 #ifdef X264_INTRA_REFRESH
