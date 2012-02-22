@@ -437,10 +437,13 @@ GstBuffer *
 new_aligned_buffer (gint size)
 {
   GstBuffer *buf;
+  guint8 *data;
+
+  data = av_malloc (size);
 
   buf = gst_buffer_new ();
   gst_buffer_take_memory (buf, -1,
-      gst_memory_new_wrapped (0, av_malloc (size), av_free, size, 0, size));
+      gst_memory_new_wrapped (0, data, size, 0, size, data, av_free));
 
   return buf;
 }
