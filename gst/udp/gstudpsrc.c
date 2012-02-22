@@ -459,7 +459,8 @@ no_select:
 
   outbuf = gst_buffer_new ();
   gst_buffer_take_memory (outbuf, -1,
-      gst_memory_new_wrapped (0, pktdata, g_free, pktsize, offset, ret));
+      gst_memory_new_wrapped (0, pktdata, pktsize, offset, ret, pktdata,
+          g_free));
 
   /* use buffer metadata so receivers can also track the address */
   if (saddr) {
@@ -525,7 +526,7 @@ gst_udpsrc_set_uri (GstUDPSrc * src, const gchar * uri, GError ** error)
   if (!gst_udp_parse_uri (uri, &host, &port))
     goto wrong_uri;
 
-  if (port == (guint16) -1)
+  if (port == (guint16) - 1)
     port = UDP_DEFAULT_PORT;
 
   g_free (src->host);

@@ -387,7 +387,7 @@ gst_multi_file_src_create (GstPushSrc * src, GstBuffer ** buffer)
 
   buf = gst_buffer_new ();
   gst_buffer_take_memory (buf, -1,
-      gst_memory_new_wrapped (0, data, g_free, size, 0, size));
+      gst_memory_new_wrapped (0, data, size, 0, size, data, g_free));
   GST_BUFFER_OFFSET (buf) = multifilesrc->offset;
   GST_BUFFER_OFFSET_END (buf) = multifilesrc->offset + size;
   multifilesrc->offset += size;

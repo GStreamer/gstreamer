@@ -182,8 +182,8 @@ flush_data (GstRtpQDM2Depay * depay)
 
     buf = gst_buffer_new ();
     gst_buffer_take_memory (buf, -1,
-        gst_memory_new_wrapped (0, data, g_free, depay->packetsize, 0,
-            depay->packetsize));
+        gst_memory_new_wrapped (0, data, depay->packetsize, 0,
+            depay->packetsize, data, g_free));
 
     gst_adapter_push (depay->adapter, buf);
 

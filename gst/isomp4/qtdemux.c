@@ -548,7 +548,7 @@ _gst_buffer_new_wrapped (gpointer mem, gsize size, GFreeFunc free_func)
   buf = gst_buffer_new ();
   gst_buffer_take_memory (buf, -1,
       gst_memory_new_wrapped (free_func ? 0 : GST_MEMORY_FLAG_READONLY,
-          mem, free_func, size, 0, size));
+          mem, size, 0, size, mem, free_func));
 
   return buf;
 }

@@ -173,7 +173,8 @@ gst_v4l2_buffer_pool_alloc_buffer (GstBufferPool * bpool, GstBuffer ** buffer,
 
       gst_buffer_take_memory (newbuf, -1,
           gst_memory_new_wrapped (0,
-              meta->mem, NULL, meta->vbuffer.length, 0, meta->vbuffer.length));
+              meta->mem, meta->vbuffer.length, 0, meta->vbuffer.length, NULL,
+              NULL));
 
       /* add metadata to raw video buffers */
       if (pool->add_videometa && info->finfo) {

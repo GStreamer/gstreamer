@@ -370,7 +370,7 @@ gst_rtp_vorbis_depay_setcaps (GstRTPBaseDepayload * depayload, GstCaps * caps)
 
     confbuf = gst_buffer_new ();
     gst_buffer_take_memory (confbuf, -1,
-        gst_memory_new_wrapped (0, data, g_free, size, 0, size));
+        gst_memory_new_wrapped (0, data, size, 0, size, data, g_free));
     if (!gst_rtp_vorbis_depay_parse_configuration (rtpvorbisdepay, confbuf))
       goto invalid_configuration;
   } else {
@@ -594,8 +594,9 @@ gst_rtp_vorbis_depay_process (GstRTPBaseDepayload * depayload, GstBuffer * buf)
     if (G_UNLIKELY (to_free)) {
       outbuf = gst_buffer_new ();
       gst_buffer_take_memory (outbuf, -1,
-          gst_memory_new_wrapped (0, to_free, g_free,
-              (payload - to_free) + length, payload - to_free, length));
+          gst_memory_new_wrapped (0, to_free,
+              (payload - to_free) + length, payload - to_free, length, to_free,
+              g_free));
       to_free = NULL;
     } else {
       outbuf = gst_buffer_new_and_alloc (length);

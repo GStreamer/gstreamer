@@ -423,7 +423,7 @@ gst_ximageutil_ximage_new (GstXContext * xcontext,
 
   gst_buffer_take_memory (ximage, -1,
       gst_memory_new_wrapped (GST_MEMORY_FLAG_NO_SHARE, meta->ximage->data,
-          NULL, meta->size, 0, meta->size));
+          meta->size, 0, meta->size, NULL, NULL));
 
   /* Keep a ref to our src */
   meta->parent = gst_object_ref (parent);
