@@ -46,6 +46,7 @@
 
 #include <gst/interfaces/xoverlay.h>
 #include <gst/interfaces/navigation.h>
+#include <gst/interfaces/colorbalance.h>
 
 GST_DEBUG_CATEGORY_STATIC (seek_debug);
 #define GST_CAT_DEFAULT (seek_debug)
@@ -125,6 +126,12 @@ static GtkWidget *shuttle_checkbox, *step_button;
 static GtkWidget *shuttle_hscale;
 static GtkAdjustment *shuttle_adjustment;
 
+static GtkWidget *contrast_scale, *brightness_scale, *hue_scale,
+    *saturation_scale;
+
+static GstElement *navigation_element = NULL;
+static GstElement *colorbalance_element = NULL;
+
 static struct
 {
   GstNavigationCommand cmd;
@@ -145,7 +152,7 @@ static GArray *vis_entries;
 static void clear_streams (GstElement * pipeline);
 static void volume_notify_cb (GstElement * pipeline, GParamSpec * arg,
     gpointer user_dat);
-static void find_navigation_element (void);
+static void find_interface_elements (void);
 
 /* pipeline construction */
 
@@ -1458,7 +1465,7 @@ start_seek (GtkWidget * widget, GdkEventButton * event, gpointer user_data)
 
   if (changed_id == 0 && flush_seek && scrub) {
     changed_id =
-        g_signal_connect (hscale, "value_changed", G_CALLBACK (seek_cb),
+        g_signal_connect (hscale, "value-changed", G_CALLBACK (seek_cb),
         pipeline);
   }
 
@@ -2297,6 +2304,48 @@ shuttle_value_changed (GtkRange * range, GstElement * element)
 }
 
 static void
+colorbalance_value_changed (GtkRange * range, gpointer user_data)
+{
+  const gchar *label = user_data;
+  gdouble val;
+  gint ival;
+  GstColorBalanceChannel *channel = NULL;
+  const GList *channels, *l;
+
+  val = gtk_range_get_value (range);
+
+  g_print ("colorbalance %s value changed %lf\n", label, val / 100.);
+
+  if (!colorbalance_element) {
+    find_interface_elements ();
+    if (!colorbalance_element)
+      return;
+  }
+
+  channels =
+      gst_color_balance_list_channels (GST_COLOR_BALANCE
+      (colorbalance_element));
+  for (l = channels; l; l = l->next) {
+    GstColorBalanceChannel *tmp = l->data;
+
+    if (g_strrstr (tmp->label, label)) {
+      channel = tmp;
+      break;
+    }
+  }
+
+  if (!channel)
+    return;
+
+  ival =
+      (gint) (0.5 + channel->min_value +
+      (val / 100.0) * ((gdouble) channel->max_value -
+          (gdouble) channel->min_value));
+  gst_color_balance_set_value (GST_COLOR_BALANCE (colorbalance_element),
+      channel, ival);
+}
+
+static void
 msg_async_done (GstBus * bus, GstMessage * message, GstPipeline * pipeline)
 {
   GST_DEBUG ("async done");
@@ -2307,7 +2356,7 @@ msg_async_done (GstBus * bus, GstMessage * message, GstPipeline * pipeline)
   /* update the available streams */
   update_streams (pipeline);
 
-  find_navigation_element ();
+  find_interface_elements ();
 }
 
 static void
@@ -2473,12 +2522,40 @@ msg_clock_lost (GstBus * bus, GstMessage * message, GstPipeline * data)
   }
 }
 
-static GstElement *navigation_element = NULL;
+static gboolean
+is_valid_color_balance_element (GstElement * element)
+{
+  GstColorBalance *bal = GST_COLOR_BALANCE (element);
+  gboolean have_brightness = FALSE;
+  gboolean have_contrast = FALSE;
+  gboolean have_hue = FALSE;
+  gboolean have_saturation = FALSE;
+  const GList *channels, *l;
+
+  channels = gst_color_balance_list_channels (bal);
+  for (l = channels; l; l = l->next) {
+    GstColorBalanceChannel *ch = l->data;
+
+    if (g_strrstr (ch->label, "BRIGHTNESS"))
+      have_brightness = TRUE;
+    else if (g_strrstr (ch->label, "CONTRAST"))
+      have_contrast = TRUE;
+    else if (g_strrstr (ch->label, "HUE"))
+      have_hue = TRUE;
+    else if (g_strrstr (ch->label, "SATURATION"))
+      have_saturation = TRUE;
+  }
+
+  return have_brightness && have_contrast && have_hue && have_saturation;
+}
 
 static void
-find_navigation_element (void)
+find_interface_elements (void)
 {
-  GstElement *video_sink;
+  GstElement *video_sink, *playsink;
+  GstIterator *it;
+  gpointer item;
+  gboolean done = FALSE, hardware = FALSE;
 
   g_object_get (pipeline, "video-sink", &video_sink, NULL);
   if (!video_sink)
@@ -2486,6 +2563,10 @@ find_navigation_element (void)
 
   if (navigation_element)
     gst_object_unref (navigation_element);
+
+  if (colorbalance_element)
+    gst_object_unref (colorbalance_element);
+  colorbalance_element = NULL;
 
   if (GST_IS_NAVIGATION (video_sink)) {
     navigation_element = gst_object_ref (video_sink);
@@ -2497,6 +2578,62 @@ find_navigation_element (void)
   }
 
   gst_object_unref (video_sink);
+
+  playsink = gst_bin_get_by_name (GST_BIN (pipeline), "playsink");
+  g_assert (playsink != NULL);
+
+  it = gst_bin_iterate_all_by_interface (GST_BIN (playsink),
+      GST_TYPE_COLOR_BALANCE);
+  while (!done) {
+    switch (gst_iterator_next (it, &item)) {
+      case GST_ITERATOR_OK:{
+        GstElement *element = GST_ELEMENT (item);
+
+        if (is_valid_color_balance_element (element)) {
+          if (!colorbalance_element) {
+            colorbalance_element = GST_ELEMENT_CAST (gst_object_ref (element));
+            hardware =
+                (gst_color_balance_get_balance_type (GST_COLOR_BALANCE
+                    (element)) == GST_COLOR_BALANCE_HARDWARE);
+          } else if (!hardware) {
+            gboolean tmp =
+                (gst_color_balance_get_balance_type (GST_COLOR_BALANCE
+                    (element)) == GST_COLOR_BALANCE_HARDWARE);
+
+            if (tmp) {
+              if (colorbalance_element)
+                gst_object_unref (colorbalance_element);
+              colorbalance_element =
+                  GST_ELEMENT_CAST (gst_object_ref (element));
+              hardware = TRUE;
+            }
+          }
+        }
+
+        gst_object_unref (element);
+
+        if (hardware && colorbalance_element)
+          done = TRUE;
+        break;
+      }
+      case GST_ITERATOR_RESYNC:
+        gst_iterator_resync (it);
+        done = FALSE;
+        hardware = FALSE;
+        if (colorbalance_element)
+          gst_object_unref (colorbalance_element);
+        colorbalance_element = NULL;
+        break;
+      case GST_ITERATOR_DONE:
+      case GST_ITERATOR_ERROR:
+      default:
+        done = TRUE;
+    }
+  }
+
+  gst_iterator_free (it);
+
+  gst_object_unref (playsink);
 }
 
 /* called when Navigation command button is pressed */
@@ -2506,7 +2643,7 @@ navigation_cmd_cb (GtkButton * button, gpointer data)
   GstNavigationCommand cmd = GPOINTER_TO_INT (data);
 
   if (!navigation_element) {
-    find_navigation_element ();
+    find_interface_elements ();
     if (!navigation_element)
       return;
   }
@@ -2553,7 +2690,7 @@ bus_sync_handler (GstBus * bus, GstMessage * message, GstPipeline * data)
     gst_x_overlay_set_window_handle (GST_X_OVERLAY (element), embed_xid);
     gst_x_overlay_handle_events (GST_X_OVERLAY (element), FALSE);
 
-    find_navigation_element ();
+    find_interface_elements ();
   }
   return GST_BUS_PASS;
 }
@@ -2843,7 +2980,7 @@ int
 main (int argc, char **argv)
 {
   GtkWidget *window, *hbox, *vbox, *panel, *expander, *pb2vbox, *boxes,
-      *flagtable, *boxes2, *step, *navigation;
+      *flagtable, *boxes2, *step, *navigation, *colorbalance;
   GtkWidget *play_button, *pause_button, *stop_button, *shot_button;
   GtkWidget *accurate_checkbox, *key_checkbox, *loop_checkbox, *flush_checkbox;
   GtkWidget *scrub_checkbox, *play_scrub_checkbox;
@@ -3028,7 +3165,7 @@ main (int argc, char **argv)
     shuttle_hscale = gtk_hscale_new (shuttle_adjustment);
     gtk_scale_set_digits (GTK_SCALE (shuttle_hscale), 2);
     gtk_scale_set_value_pos (GTK_SCALE (shuttle_hscale), GTK_POS_TOP);
-    g_signal_connect (shuttle_hscale, "value_changed",
+    g_signal_connect (shuttle_hscale, "value-changed",
         G_CALLBACK (shuttle_value_changed), pipeline);
     g_signal_connect (shuttle_hscale, "format_value",
         G_CALLBACK (shuttle_format_value), pipeline);
@@ -3187,6 +3324,60 @@ main (int argc, char **argv)
     gtk_container_add (GTK_CONTAINER (navigation), grid);
   }
 
+  /* colorbalance expander */
+  {
+    GtkWidget *vbox, *frame;
+
+    colorbalance = gtk_expander_new ("color balance options");
+    vbox = gtk_vbox_new (FALSE, 0);
+
+    /* contrast scale */
+    frame = gtk_frame_new ("Contrast");
+    adjustment =
+        GTK_ADJUSTMENT (gtk_adjustment_new (50.0, 0.0, 101.0, 1.0, 1.0, 1.0));
+    contrast_scale = gtk_hscale_new (adjustment);
+    gtk_scale_set_draw_value (GTK_SCALE (contrast_scale), FALSE);
+    g_signal_connect (contrast_scale, "value-changed",
+        G_CALLBACK (colorbalance_value_changed), (gpointer) "CONTRAST");
+    gtk_container_add (GTK_CONTAINER (frame), contrast_scale);
+    gtk_box_pack_start (GTK_BOX (vbox), frame, TRUE, TRUE, 2);
+
+    /* brightness scale */
+    frame = gtk_frame_new ("Brightness");
+    adjustment =
+        GTK_ADJUSTMENT (gtk_adjustment_new (50.0, 0.0, 101.0, 1.0, 1.0, 1.0));
+    brightness_scale = gtk_hscale_new (adjustment);
+    gtk_scale_set_draw_value (GTK_SCALE (brightness_scale), FALSE);
+    g_signal_connect (brightness_scale, "value-changed",
+        G_CALLBACK (colorbalance_value_changed), (gpointer) "BRIGHTNESS");
+    gtk_container_add (GTK_CONTAINER (frame), brightness_scale);
+    gtk_box_pack_start (GTK_BOX (vbox), frame, TRUE, TRUE, 2);
+
+    /* hue scale */
+    frame = gtk_frame_new ("Hue");
+    adjustment =
+        GTK_ADJUSTMENT (gtk_adjustment_new (50.0, 0.0, 101.0, 1.0, 1.0, 1.0));
+    hue_scale = gtk_hscale_new (adjustment);
+    gtk_scale_set_draw_value (GTK_SCALE (hue_scale), FALSE);
+    g_signal_connect (hue_scale, "value-changed",
+        G_CALLBACK (colorbalance_value_changed), (gpointer) "HUE");
+    gtk_container_add (GTK_CONTAINER (frame), hue_scale);
+    gtk_box_pack_start (GTK_BOX (vbox), frame, TRUE, TRUE, 2);
+
+    /* saturation scale */
+    frame = gtk_frame_new ("Saturation");
+    adjustment =
+        GTK_ADJUSTMENT (gtk_adjustment_new (50.0, 0.0, 101.0, 1.0, 1.0, 1.0));
+    saturation_scale = gtk_hscale_new (adjustment);
+    gtk_scale_set_draw_value (GTK_SCALE (saturation_scale), FALSE);
+    g_signal_connect (saturation_scale, "value-changed",
+        G_CALLBACK (colorbalance_value_changed), (gpointer) "SATURATION");
+    gtk_container_add (GTK_CONTAINER (frame), saturation_scale);
+    gtk_box_pack_start (GTK_BOX (vbox), frame, TRUE, TRUE, 2);
+
+    gtk_container_add (GTK_CONTAINER (colorbalance), vbox);
+  }
+
   /* seek bar */
   adjustment =
       GTK_ADJUSTMENT (gtk_adjustment_new (0.0, 0.00, N_GRAD, 0.1, 1.0, 1.0));
@@ -3263,7 +3454,7 @@ main (int argc, char **argv)
         G_CALLBACK (download_toggle_cb), pipeline);
     g_signal_connect (G_OBJECT (buffer_checkbox), "toggled",
         G_CALLBACK (buffer_toggle_cb), pipeline);
-    g_signal_connect (G_OBJECT (volume_spinbutton), "value_changed",
+    g_signal_connect (G_OBJECT (volume_spinbutton), "value-changed",
         G_CALLBACK (volume_spinbutton_changed_cb), pipeline);
     /* playbin2 panel for snapshot */
     boxes2 = gtk_hbox_new (FALSE, 0);
@@ -3320,6 +3511,8 @@ main (int argc, char **argv)
   }
   gtk_box_pack_start (GTK_BOX (vbox), step, FALSE, FALSE, 2);
   gtk_box_pack_start (GTK_BOX (vbox), navigation, FALSE, FALSE, 2);
+  gtk_box_pack_start (GTK_BOX (vbox), colorbalance, FALSE, FALSE, 2);
+  gtk_box_pack_start (GTK_BOX (vbox), gtk_hseparator_new (), FALSE, FALSE, 2);
   gtk_box_pack_start (GTK_BOX (vbox), hscale, FALSE, FALSE, 2);
   gtk_box_pack_start (GTK_BOX (vbox), statusbar, FALSE, FALSE, 2);
 
@@ -3344,7 +3537,7 @@ main (int argc, char **argv)
       G_CALLBACK (play_scrub_toggle_cb), pipeline);
   g_signal_connect (G_OBJECT (skip_checkbox), "toggled",
       G_CALLBACK (skip_toggle_cb), pipeline);
-  g_signal_connect (G_OBJECT (rate_spinbutton), "value_changed",
+  g_signal_connect (G_OBJECT (rate_spinbutton), "value-changed",
       G_CALLBACK (rate_spinbutton_changed_cb), pipeline);
 
   g_signal_connect (G_OBJECT (window), "delete-event", delete_event_cb, NULL);
