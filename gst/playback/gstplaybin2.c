@@ -1259,7 +1259,8 @@ gst_play_bin_init (GstPlayBin * playbin)
   playbin->elements_lock = g_mutex_new ();
 
   /* add sink */
-  playbin->playsink = g_object_new (GST_TYPE_PLAY_SINK, NULL);
+  playbin->playsink =
+      g_object_new (GST_TYPE_PLAY_SINK, "name", "playsink", NULL);
   gst_bin_add (GST_BIN_CAST (playbin), GST_ELEMENT_CAST (playbin->playsink));
   gst_play_sink_set_flags (playbin->playsink, DEFAULT_FLAGS);
   /* Connect to notify::volume and notify::mute signals for proxying */
