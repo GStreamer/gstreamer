@@ -330,6 +330,8 @@ static gboolean gst_base_transform_acceptcaps_default (GstBaseTransform * trans,
     GstPadDirection direction, GstCaps * caps);
 static gboolean gst_base_transform_setcaps (GstBaseTransform * trans,
     GstPad * pad, GstCaps * caps);
+static gboolean gst_base_transform_default_propose_allocation (GstBaseTransform
+    * trans, gboolean passthrough, GstQuery * query);
 static gboolean gst_base_transform_query (GstPad * pad, GstObject * parent,
     GstQuery * query);
 static gboolean gst_base_transform_default_query (GstBaseTransform * trans,
@@ -392,6 +394,8 @@ gst_base_transform_class_init (GstBaseTransformClass * klass)
   klass->accept_caps =
       GST_DEBUG_FUNCPTR (gst_base_transform_acceptcaps_default);
   klass->query = GST_DEBUG_FUNCPTR (gst_base_transform_default_query);
+  klass->propose_allocation =
+      GST_DEBUG_FUNCPTR (gst_base_transform_default_propose_allocation);
   klass->transform_size =
       GST_DEBUG_FUNCPTR (gst_base_transform_default_transform_size);
 
@@ -807,7 +811,7 @@ gst_base_transform_do_bufferpool (GstBaseTransform * trans, GstCaps * outcaps)
    * 2) we need to do a transform, we need to get a bufferpool from downstream
    *    and configure it. When upstream does the ALLOCATION query, the
    *    propose_allocation vmethod will be called and we will configure the
-   *    upstream allocator with our porposed values then.
+   *    upstream allocator with our proposed values then.
    */
 
   /* clear old pool */
@@ -1304,6 +1308,21 @@ failed_configure:
 }
 
 static gboolean
+gst_base_transform_default_propose_allocation (GstBaseTransform * trans,
+    gboolean passthrough, GstQuery * query)
+{
+  gboolean ret;
+
+  if (passthrough) {
+    GST_DEBUG_OBJECT (trans, "doing passthrough query");
+    ret = gst_pad_peer_query (trans->srcpad, query);
+  } else {
+    ret = FALSE;
+  }
+  return ret;
+}
+
+static gboolean
 gst_base_transform_default_query (GstBaseTransform * trans,
     GstPadDirection direction, GstQuery * query)
 {
@@ -1334,16 +1353,15 @@ gst_base_transform_default_query (GstBaseTransform * trans,
       passthrough = trans->passthrough;
       GST_BASE_TRANSFORM_UNLOCK (trans);
 
-      GST_DEBUG_OBJECT (trans, "propose allocation values");
+      GST_DEBUG_OBJECT (trans, "propose %spassthrough allocation values",
+          (passthrough ? "" : "non-"));
+
       /* pass the query to the propose_allocation vmethod if any */
-      if (G_LIKELY (klass->propose_allocation)) {
-        ret = klass->propose_allocation (trans, query);
-      } else if (passthrough) {
-        GST_DEBUG_OBJECT (trans, "doing passthrough query");
-        ret = gst_pad_peer_query (otherpad, query);
-      } else {
+      if (G_LIKELY (klass->propose_allocation))
+        ret = klass->propose_allocation (trans, passthrough, query);
+      else
         ret = FALSE;
-      }
+
       GST_DEBUG_OBJECT (trans, "ALLOCATION ret %d, %" GST_PTR_FORMAT, ret,
           query);
       break;

@@ -162,7 +162,9 @@ struct _GstBaseTransform {
  *                  query
  * @propose_allocation: Propose buffer allocation parameters for upstream elements.
  *                      This function must be implemented if the element reads or
- *                      writes the buffer content. The default implementation is NULL.
+ *                      writes the buffer content. In passthrough mode, the
+ *                      default implementation will forward the ALLOCATION query
+ *                      downstream.
  * @decide_allocation: Setup the allocation parameters for allocating output
  *                    buffers. The passed in query contains the result of the
  *                    downstream allocation query. This function is only called
@@ -237,9 +239,10 @@ struct _GstBaseTransformClass {
                                    GstQuery *query);
 
   /* propose allocation query parameters for input buffers */
-  gboolean      (*propose_allocation) (GstBaseTransform *trans, GstQuery *query);
+  gboolean      (*propose_allocation) (GstBaseTransform *trans, gboolean passthrough,
+                                       GstQuery *query);
   /* decide allocation query for output buffers */
-  gboolean      (*decide_allocation) (GstBaseTransform *trans, GstQuery *query);
+  gboolean      (*decide_allocation)  (GstBaseTransform *trans, GstQuery *query);
 
   /* transform size */
   gboolean      (*transform_size) (GstBaseTransform *trans,
