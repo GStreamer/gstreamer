@@ -25,9 +25,9 @@
 #include <schroedinger/schro.h>
 
 #if SCHRO_CHECK_VERSION(1,0,11)
-#define GST_SCHRO_YUV_LIST "{ I420, YV12, YUY2, UYVY, AYUV, Y42B, Y444, v216, v210, AY64 }"
+#define GST_SCHRO_YUV_LIST "{ I420, YV12, YUY2, UYVY, AYUV, Y42B, Y444, v216, v210, AY64, ARGB }"
 #else
-#define GST_SCHRO_YUV_LIST "{ I420, YV12, YUY2, UYVY, AYUV }"
+#define GST_SCHRO_YUV_LIST "{ I420, YV12, YUY2, UYVY, AYUV, ARGB }"
 #endif
 
 SchroFrame *
