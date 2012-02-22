@@ -51,6 +51,23 @@
 GST_DEBUG_CATEGORY_STATIC (seek_debug);
 #define GST_CAT_DEFAULT (seek_debug)
 
+/* Copied from gst-plugins-base/gst/playback/gstplay-enum.h */
+typedef enum
+{
+  GST_PLAY_FLAG_VIDEO = (1 << 0),
+  GST_PLAY_FLAG_AUDIO = (1 << 1),
+  GST_PLAY_FLAG_TEXT = (1 << 2),
+  GST_PLAY_FLAG_VIS = (1 << 3),
+  GST_PLAY_FLAG_SOFT_VOLUME = (1 << 4),
+  GST_PLAY_FLAG_NATIVE_AUDIO = (1 << 5),
+  GST_PLAY_FLAG_NATIVE_VIDEO = (1 << 6),
+  GST_PLAY_FLAG_DOWNLOAD = (1 << 7),
+  GST_PLAY_FLAG_BUFFERING = (1 << 8),
+  GST_PLAY_FLAG_DEINTERLACE = (1 << 9),
+  GST_PLAY_FLAG_SOFT_COLORBALANCE = (1 << 10)
+} GstPlayFlags;
+
+
 /* configuration */
 
 #define SOURCE "filesrc"
@@ -116,8 +133,11 @@ static gboolean need_streams = TRUE;
 static GtkWidget *video_combo, *audio_combo, *text_combo, *vis_combo;
 static GtkWidget *vis_checkbox, *video_checkbox, *audio_checkbox;
 static GtkWidget *text_checkbox, *mute_checkbox, *volume_spinbutton;
+static GtkWidget *soft_volume_checkbox, *native_audio_checkbox;
+static GtkWidget *native_video_checkbox, *deinterlace_checkbox;
+static GtkWidget *soft_colorbalance_checkbox;
 static GtkWidget *skip_checkbox, *video_window, *download_checkbox;
-static GtkWidget *buffer_checkbox, *rate_spinbutton;
+static GtkWidget *buffering_checkbox, *rate_spinbutton;
 
 static GStaticMutex state_mutex = G_STATIC_MUTEX_INIT;
 
@@ -1727,15 +1747,17 @@ rate_spinbutton_changed_cb (GtkSpinButton * button, GstPipeline * pipeline)
 }
 
 static void
-update_flag (GstPipeline * pipeline, gint num, gboolean state)
+update_flag (GstPipeline * pipeline, GstPlayFlags flag, gboolean state)
 {
   gint flags;
 
+  g_print ("%ssetting flag 0x%08x\n", (state ? "" : "un"), flag);
+
   g_object_get (pipeline, "flags", &flags, NULL);
   if (state)
-    flags |= (1 << num);
+    flags |= flag;
   else
-    flags &= ~(1 << num);
+    flags &= ~(flag);
   g_object_set (pipeline, "flags", flags, NULL);
 }
 
@@ -1745,7 +1767,7 @@ vis_toggle_cb (GtkToggleButton * button, GstPipeline * pipeline)
   gboolean state;
 
   state = gtk_toggle_button_get_active (button);
-  update_flag (pipeline, 3, state);
+  update_flag (pipeline, GST_PLAY_FLAG_VIS, state);
   gtk_widget_set_sensitive (vis_combo, state);
 }
 
@@ -1755,7 +1777,7 @@ audio_toggle_cb (GtkToggleButton * button, GstPipeline * pipeline)
   gboolean state;
 
   state = gtk_toggle_button_get_active (button);
-  update_flag (pipeline, 1, state);
+  update_flag (pipeline, GST_PLAY_FLAG_AUDIO, state);
   gtk_widget_set_sensitive (audio_combo, state);
 }
 
@@ -1765,7 +1787,7 @@ video_toggle_cb (GtkToggleButton * button, GstPipeline * pipeline)
   gboolean state;
 
   state = gtk_toggle_button_get_active (button);
-  update_flag (pipeline, 0, state);
+  update_flag (pipeline, GST_PLAY_FLAG_VIDEO, state);
   gtk_widget_set_sensitive (video_combo, state);
 }
 
@@ -1775,7 +1797,7 @@ text_toggle_cb (GtkToggleButton * button, GstPipeline * pipeline)
   gboolean state;
 
   state = gtk_toggle_button_get_active (button);
-  update_flag (pipeline, 2, state);
+  update_flag (pipeline, GST_PLAY_FLAG_TEXT, state);
   gtk_widget_set_sensitive (text_combo, state);
 }
 
@@ -1794,16 +1816,61 @@ download_toggle_cb (GtkToggleButton * button, GstPipeline * pipeline)
   gboolean state;
 
   state = gtk_toggle_button_get_active (button);
-  update_flag (pipeline, 7, state);
+  update_flag (pipeline, GST_PLAY_FLAG_DOWNLOAD, state);
 }
 
 static void
-buffer_toggle_cb (GtkToggleButton * button, GstPipeline * pipeline)
+buffering_toggle_cb (GtkToggleButton * button, GstPipeline * pipeline)
 {
   gboolean state;
 
   state = gtk_toggle_button_get_active (button);
-  update_flag (pipeline, 8, state);
+  update_flag (pipeline, GST_PLAY_FLAG_BUFFERING, state);
+}
+
+static void
+soft_volume_toggle_cb (GtkToggleButton * button, GstPipeline * pipeline)
+{
+  gboolean state;
+
+  state = gtk_toggle_button_get_active (button);
+  update_flag (pipeline, GST_PLAY_FLAG_SOFT_VOLUME, state);
+}
+
+static void
+native_audio_toggle_cb (GtkToggleButton * button, GstPipeline * pipeline)
+{
+  gboolean state;
+
+  state = gtk_toggle_button_get_active (button);
+  update_flag (pipeline, GST_PLAY_FLAG_NATIVE_AUDIO, state);
+}
+
+static void
+native_video_toggle_cb (GtkToggleButton * button, GstPipeline * pipeline)
+{
+  gboolean state;
+
+  state = gtk_toggle_button_get_active (button);
+  update_flag (pipeline, GST_PLAY_FLAG_NATIVE_VIDEO, state);
+}
+
+static void
+deinterlace_toggle_cb (GtkToggleButton * button, GstPipeline * pipeline)
+{
+  gboolean state;
+
+  state = gtk_toggle_button_get_active (button);
+  update_flag (pipeline, GST_PLAY_FLAG_DEINTERLACE, state);
+}
+
+static void
+soft_colorbalance_toggle_cb (GtkToggleButton * button, GstPipeline * pipeline)
+{
+  gboolean state;
+
+  state = gtk_toggle_button_get_active (button);
+  update_flag (pipeline, GST_PLAY_FLAG_SOFT_COLORBALANCE, state);
 }
 
 static void
@@ -3413,47 +3480,85 @@ main (int argc, char **argv)
     g_signal_connect (G_OBJECT (text_combo), "changed",
         G_CALLBACK (text_combo_cb), pipeline);
     /* playbin2 panel for flag checkboxes and volume/mute */
-    boxes = gtk_hbox_new (FALSE, 0);
-    vis_checkbox = gtk_check_button_new_with_label ("Vis");
+    boxes = gtk_grid_new ();
+    gtk_grid_set_row_spacing (GTK_GRID (boxes), 2);
+    gtk_grid_set_row_homogeneous (GTK_GRID (boxes), TRUE);
+    gtk_grid_set_column_spacing (GTK_GRID (boxes), 2);
+    gtk_grid_set_column_homogeneous (GTK_GRID (boxes), TRUE);
+
     video_checkbox = gtk_check_button_new_with_label ("Video");
     audio_checkbox = gtk_check_button_new_with_label ("Audio");
     text_checkbox = gtk_check_button_new_with_label ("Text");
-    mute_checkbox = gtk_check_button_new_with_label ("Mute");
+    vis_checkbox = gtk_check_button_new_with_label ("Vis");
+    soft_volume_checkbox = gtk_check_button_new_with_label ("Soft Volume");
+    native_audio_checkbox = gtk_check_button_new_with_label ("Native Audio");
+    native_video_checkbox = gtk_check_button_new_with_label ("Native Video");
     download_checkbox = gtk_check_button_new_with_label ("Download");
-    buffer_checkbox = gtk_check_button_new_with_label ("Buffer");
+    buffering_checkbox = gtk_check_button_new_with_label ("Buffering");
+    deinterlace_checkbox = gtk_check_button_new_with_label ("Deinterlace");
+    soft_colorbalance_checkbox =
+        gtk_check_button_new_with_label ("Soft Colorbalance");
+    mute_checkbox = gtk_check_button_new_with_label ("Mute");
     volume_label = gtk_label_new ("Volume");
     volume_spinbutton = gtk_spin_button_new_with_range (0, 10.0, 0.1);
     gtk_spin_button_set_value (GTK_SPIN_BUTTON (volume_spinbutton), 1.0);
-    gtk_box_pack_start (GTK_BOX (boxes), video_checkbox, TRUE, TRUE, 2);
-    gtk_box_pack_start (GTK_BOX (boxes), audio_checkbox, TRUE, TRUE, 2);
-    gtk_box_pack_start (GTK_BOX (boxes), text_checkbox, TRUE, TRUE, 2);
-    gtk_box_pack_start (GTK_BOX (boxes), vis_checkbox, TRUE, TRUE, 2);
-    gtk_box_pack_start (GTK_BOX (boxes), mute_checkbox, TRUE, TRUE, 2);
-    gtk_box_pack_start (GTK_BOX (boxes), download_checkbox, TRUE, TRUE, 2);
-    gtk_box_pack_start (GTK_BOX (boxes), buffer_checkbox, TRUE, TRUE, 2);
-    gtk_box_pack_start (GTK_BOX (boxes), volume_label, TRUE, TRUE, 2);
-    gtk_box_pack_start (GTK_BOX (boxes), volume_spinbutton, TRUE, TRUE, 2);
-    gtk_toggle_button_set_active (GTK_TOGGLE_BUTTON (vis_checkbox), FALSE);
-    gtk_toggle_button_set_active (GTK_TOGGLE_BUTTON (audio_checkbox), TRUE);
+    gtk_grid_attach (GTK_GRID (boxes), video_checkbox, 0, 0, 1, 1);
+    gtk_grid_attach (GTK_GRID (boxes), audio_checkbox, 1, 0, 1, 1);
+    gtk_grid_attach (GTK_GRID (boxes), text_checkbox, 2, 0, 1, 1);
+    gtk_grid_attach (GTK_GRID (boxes), vis_checkbox, 3, 0, 1, 1);
+    gtk_grid_attach (GTK_GRID (boxes), soft_volume_checkbox, 4, 0, 1, 1);
+    gtk_grid_attach (GTK_GRID (boxes), native_audio_checkbox, 5, 0, 1, 1);
+    gtk_grid_attach (GTK_GRID (boxes), native_video_checkbox, 0, 1, 1, 1);
+    gtk_grid_attach (GTK_GRID (boxes), download_checkbox, 1, 1, 1, 1);
+    gtk_grid_attach (GTK_GRID (boxes), buffering_checkbox, 2, 1, 1, 1);
+    gtk_grid_attach (GTK_GRID (boxes), deinterlace_checkbox, 3, 1, 1, 1);
+    gtk_grid_attach (GTK_GRID (boxes), soft_colorbalance_checkbox, 4, 1, 1, 1);
+
+    gtk_grid_attach (GTK_GRID (boxes), mute_checkbox, 7, 0, 2, 1);
+    gtk_grid_attach (GTK_GRID (boxes), volume_label, 6, 1, 1, 1);
+    gtk_grid_attach (GTK_GRID (boxes), volume_spinbutton, 7, 1, 1, 1);
     gtk_toggle_button_set_active (GTK_TOGGLE_BUTTON (video_checkbox), TRUE);
+    gtk_toggle_button_set_active (GTK_TOGGLE_BUTTON (audio_checkbox), TRUE);
     gtk_toggle_button_set_active (GTK_TOGGLE_BUTTON (text_checkbox), TRUE);
-    gtk_toggle_button_set_active (GTK_TOGGLE_BUTTON (mute_checkbox), FALSE);
+    gtk_toggle_button_set_active (GTK_TOGGLE_BUTTON (vis_checkbox), FALSE);
+    gtk_toggle_button_set_active (GTK_TOGGLE_BUTTON (soft_volume_checkbox),
+        TRUE);
+    gtk_toggle_button_set_active (GTK_TOGGLE_BUTTON (native_audio_checkbox),
+        FALSE);
+    gtk_toggle_button_set_active (GTK_TOGGLE_BUTTON (native_video_checkbox),
+        FALSE);
     gtk_toggle_button_set_active (GTK_TOGGLE_BUTTON (download_checkbox), FALSE);
-    gtk_toggle_button_set_active (GTK_TOGGLE_BUTTON (buffer_checkbox), FALSE);
-    g_signal_connect (G_OBJECT (vis_checkbox), "toggled",
-        G_CALLBACK (vis_toggle_cb), pipeline);
-    g_signal_connect (G_OBJECT (audio_checkbox), "toggled",
-        G_CALLBACK (audio_toggle_cb), pipeline);
+    gtk_toggle_button_set_active (GTK_TOGGLE_BUTTON (buffering_checkbox),
+        FALSE);
+    gtk_toggle_button_set_active (GTK_TOGGLE_BUTTON (deinterlace_checkbox),
+        FALSE);
+    gtk_toggle_button_set_active (GTK_TOGGLE_BUTTON
+        (soft_colorbalance_checkbox), TRUE);
+    gtk_toggle_button_set_active (GTK_TOGGLE_BUTTON (mute_checkbox), FALSE);
     g_signal_connect (G_OBJECT (video_checkbox), "toggled",
         G_CALLBACK (video_toggle_cb), pipeline);
+    g_signal_connect (G_OBJECT (audio_checkbox), "toggled",
+        G_CALLBACK (audio_toggle_cb), pipeline);
     g_signal_connect (G_OBJECT (text_checkbox), "toggled",
         G_CALLBACK (text_toggle_cb), pipeline);
-    g_signal_connect (G_OBJECT (mute_checkbox), "toggled",
-        G_CALLBACK (mute_toggle_cb), pipeline);
+    g_signal_connect (G_OBJECT (vis_checkbox), "toggled",
+        G_CALLBACK (vis_toggle_cb), pipeline);
+    g_signal_connect (G_OBJECT (soft_volume_checkbox), "toggled",
+        G_CALLBACK (soft_volume_toggle_cb), pipeline);
+    g_signal_connect (G_OBJECT (native_audio_checkbox), "toggled",
+        G_CALLBACK (native_audio_toggle_cb), pipeline);
+    g_signal_connect (G_OBJECT (native_video_checkbox), "toggled",
+        G_CALLBACK (native_video_toggle_cb), pipeline);
     g_signal_connect (G_OBJECT (download_checkbox), "toggled",
         G_CALLBACK (download_toggle_cb), pipeline);
-    g_signal_connect (G_OBJECT (buffer_checkbox), "toggled",
-        G_CALLBACK (buffer_toggle_cb), pipeline);
+    g_signal_connect (G_OBJECT (buffering_checkbox), "toggled",
+        G_CALLBACK (buffering_toggle_cb), pipeline);
+    g_signal_connect (G_OBJECT (deinterlace_checkbox), "toggled",
+        G_CALLBACK (deinterlace_toggle_cb), pipeline);
+    g_signal_connect (G_OBJECT (soft_colorbalance_checkbox), "toggled",
+        G_CALLBACK (soft_colorbalance_toggle_cb), pipeline);
+    g_signal_connect (G_OBJECT (mute_checkbox), "toggled",
+        G_CALLBACK (mute_toggle_cb), pipeline);
     g_signal_connect (G_OBJECT (volume_spinbutton), "value-changed",
         G_CALLBACK (volume_spinbutton_changed_cb), pipeline);
     /* playbin2 panel for snapshot */
