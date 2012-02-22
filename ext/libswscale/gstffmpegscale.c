@@ -162,7 +162,7 @@ static void gst_ffmpegscale_get_property (GObject * object, guint prop_id,
 static gboolean gst_ffmpegscale_stop (GstBaseTransform * trans);
 static GstCaps *gst_ffmpegscale_transform_caps (GstBaseTransform * trans,
     GstPadDirection direction, GstCaps * caps, GstCaps * filter);
-static void gst_ffmpegscale_fixate_caps (GstBaseTransform * trans,
+static GstCaps *gst_ffmpegscale_fixate_caps (GstBaseTransform * trans,
     GstPadDirection direction, GstCaps * caps, GstCaps * othercaps);
 static gboolean gst_ffmpegscale_get_unit_size (GstBaseTransform * trans,
     GstCaps * caps, gsize * size);
@@ -331,14 +331,14 @@ gst_ffmpegscale_transform_caps (GstBaseTransform * trans,
   return ret;
 }
 
-static void
+static GstCaps *
 gst_ffmpegscale_fixate_caps (GstBaseTransform * trans,
     GstPadDirection direction, GstCaps * caps, GstCaps * othercaps)
 {
   GstStructure *ins, *outs;
   const GValue *from_par, *to_par;
 
-  g_return_if_fail (gst_caps_is_fixed (caps));
+  othercaps = gst_caps_make_writable (othercaps);
 
   GST_DEBUG_OBJECT (trans, "trying to fixate othercaps %" GST_PTR_FORMAT
       " based on caps %" GST_PTR_FORMAT, othercaps, caps);
@@ -356,7 +356,7 @@ gst_ffmpegscale_fixate_caps (GstBaseTransform * trans,
     guint num, den;
 
     /* from_par should be fixed */
-    g_return_if_fail (gst_value_is_fixed (from_par));
+    g_return_val_if_fail (gst_value_is_fixed (from_par), othercaps);
 
     from_par_n = gst_value_get_fraction_numerator (from_par);
     from_par_d = gst_value_get_fraction_denominator (from_par);
@@ -381,7 +381,7 @@ gst_ffmpegscale_fixate_caps (GstBaseTransform * trans,
     if (count == 2) {
       GST_DEBUG_OBJECT (trans, "dimensions already set to %dx%d, not fixating",
           w, h);
-      return;
+      return othercaps;
     }
 
     gst_structure_get_int (ins, "width", &from_w);
@@ -391,7 +391,7 @@ gst_ffmpegscale_fixate_caps (GstBaseTransform * trans,
             from_par_n, from_par_d, to_par_n, to_par_d)) {
       GST_ELEMENT_ERROR (trans, CORE, NEGOTIATION, (NULL),
           ("Error calculating the output scaled size - integer overflow"));
-      return;
+      return othercaps;
     }
 
     GST_DEBUG_OBJECT (trans,
@@ -450,6 +450,8 @@ gst_ffmpegscale_fixate_caps (GstBaseTransform * trans,
   }
 
   GST_DEBUG_OBJECT (trans, "fixated othercaps to %" GST_PTR_FORMAT, othercaps);
+
+  return othercaps;
 }
 
 static gboolean
