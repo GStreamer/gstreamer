@@ -150,7 +150,7 @@ gst_rtp_buffer_new_take_data (gpointer data, gsize len)
 
   result = gst_buffer_new ();
   gst_buffer_take_memory (result, -1,
-      gst_memory_new_wrapped (0, data, g_free, len, 0, len));
+      gst_memory_new_wrapped (0, data, len, 0, len, data, g_free));
 
   return result;
 }

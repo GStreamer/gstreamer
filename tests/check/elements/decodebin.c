@@ -52,8 +52,8 @@ src_need_data_cb (GstElement * src, guint size, gpointer data)
   buf = gst_buffer_new ();
   gst_buffer_take_memory (buf, 0,
       gst_memory_new_wrapped (GST_MEMORY_FLAG_READONLY,
-          (gpointer) dummytext, NULL, sizeof (dummytext), 0,
-          sizeof (dummytext)));
+          (gpointer) dummytext, sizeof (dummytext), 0,
+          sizeof (dummytext), NULL, NULL));
 
   GST_BUFFER_OFFSET (buf) = 0;
 

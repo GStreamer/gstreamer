@@ -71,7 +71,7 @@ gst_rtcp_buffer_new_take_data (gpointer data, guint len)
 
   result = gst_buffer_new ();
   gst_buffer_take_memory (result, -1,
-      gst_memory_new_wrapped (0, data, g_free, len, 0, len));
+      gst_memory_new_wrapped (0, data, len, 0, len, data, g_free));
 
   return result;
 }
@@ -228,12 +228,15 @@ GstBuffer *
 gst_rtcp_buffer_new (guint mtu)
 {
   GstBuffer *result;
+  guint8 *data;
 
   g_return_val_if_fail (mtu > 0, NULL);
 
+  data = g_malloc0 (mtu);
+
   result = gst_buffer_new ();
   gst_buffer_take_memory (result, -1,
-      gst_memory_new_wrapped (0, g_malloc0 (mtu), g_free, mtu, 0, 0));
+      gst_memory_new_wrapped (0, data, mtu, 0, 0, data, g_free));
 
   return result;
 }

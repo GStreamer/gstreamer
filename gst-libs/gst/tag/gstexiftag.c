@@ -1327,7 +1327,7 @@ parse_exif_undefined_tag (GstExifReader * reader, const GstExifTagMatch * tag,
 
     buf = gst_buffer_new ();
     gst_buffer_take_memory (buf, -1,
-        gst_memory_new_wrapped (0, data, g_free, count, 0, count));
+        gst_memory_new_wrapped (0, data, count, 0, count, data, g_free));
     data = NULL;
 
     gst_tag_list_add (reader->taglist, GST_TAG_MERGE_APPEND, tag->gst_tag,

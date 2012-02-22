@@ -253,7 +253,7 @@ gst_buffer_add_xvimage_meta (GstBuffer * buffer, GstXvImageBufferPool * xvpool)
 
   gst_buffer_take_memory (buffer, -1,
       gst_memory_new_wrapped (GST_MEMORY_FLAG_NO_SHARE, meta->xvimage->data,
-          NULL, meta->size, 0, meta->size));
+          meta->size, 0, meta->size, NULL, NULL));
 
   g_mutex_unlock (xvimagesink->x_lock);
 

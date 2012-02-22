@@ -85,7 +85,7 @@ feed_data (GstElement * appsrc, guint size, App * app)
 
   gst_buffer_take_memory (buffer, -1,
       gst_memory_new_wrapped (GST_MEMORY_FLAG_READONLY,
-          app->data, NULL, app->length, app->offset, size));
+          app->data, app->length, app->offset, size, NULL, NULL));
 
   /* we need to set an offset for random access */
   GST_BUFFER_OFFSET (buffer) = app->offset;

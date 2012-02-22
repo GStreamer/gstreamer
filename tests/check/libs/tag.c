@@ -446,8 +446,9 @@ GST_START_TEST (test_vorbis_tags)
     buf = gst_buffer_new ();
     gst_buffer_take_memory (buf, -1,
         gst_memory_new_wrapped (GST_MEMORY_FLAG_READONLY,
-            (gpointer) speex_comments_buf1, NULL,
-            sizeof (speex_comments_buf1), 0, sizeof (speex_comments_buf1)));
+            (gpointer) speex_comments_buf1,
+            sizeof (speex_comments_buf1), 0, sizeof (speex_comments_buf1), NULL,
+            NULL));
 
     /* make sure it doesn't memcmp over the end of the buffer */
     fail_unless (gst_tag_list_from_vorbiscomment_buffer (buf,
@@ -491,8 +492,9 @@ GST_START_TEST (test_vorbis_tags)
     buf = gst_buffer_new ();
     gst_buffer_take_memory (buf, -1,
         gst_memory_new_wrapped (GST_MEMORY_FLAG_READONLY,
-            (gpointer) vorbis_comments_buf, NULL,
-            sizeof (vorbis_comments_buf), 0, sizeof (vorbis_comments_buf)));
+            (gpointer) vorbis_comments_buf,
+            sizeof (vorbis_comments_buf), 0, sizeof (vorbis_comments_buf), NULL,
+            NULL));
 
     /* make sure it doesn't memcmp over the end of the buffer */
     fail_unless (gst_tag_list_from_vorbiscomment_buffer (buf,
@@ -1046,7 +1048,7 @@ GST_START_TEST (test_xmp_parsing)
       buf = gst_buffer_new ();
       len = strlen (text) + 1;
       gst_buffer_take_memory (buf, -1,
-          gst_memory_new_wrapped (0, text, NULL, len, 0, len));
+          gst_memory_new_wrapped (0, text, len, 0, len, NULL, NULL));
 
       list = gst_tag_list_from_xmp_buffer (buf);
       if (test_data[i].result_size >= 0) {
