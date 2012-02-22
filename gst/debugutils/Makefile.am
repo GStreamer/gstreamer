@@ -1,7 +1,8 @@
 if GST_HAVE_MMAP
+#EFENCE_PLUGIN=libgstefence.la
 EFENCE_PLUGIN=
 else
-EFENCE_PLUGIN=libgstefence.la
+EFENCE_PLUGIN=
 endif
 
 plugin_LTLIBRARIES = $(EFENCE_PLUGIN) libgstdebug.la libgstnavigationtest.la 
@@ -18,11 +19,11 @@ noinst_HEADERS = \
 	progressreport.h \
 	tests.h
 
-libgstefence_la_SOURCES = efence.c
-libgstefence_la_CFLAGS = $(GST_CFLAGS)
-libgstefence_la_LIBADD = $(GST_LIBS)
-libgstefence_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
-libgstefence_la_LIBTOOLFLAGS = --tag=disable-static
+#libgstefence_la_SOURCES = efence.c
+#libgstefence_la_CFLAGS = $(GST_CFLAGS)
+#libgstefence_la_LIBADD = $(GST_LIBS)
+#libgstefence_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
+#libgstefence_la_LIBTOOLFLAGS = --tag=disable-static
 
 libgstnavigationtest_la_SOURCES = gstnavigationtest.c
 libgstnavigationtest_la_CFLAGS = $(GST_CFLAGS) $(GST_BASE_CFLAGS) \
