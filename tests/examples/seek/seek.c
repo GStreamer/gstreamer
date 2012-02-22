@@ -2619,37 +2619,22 @@ is_valid_color_balance_element (GstElement * element)
 static void
 find_interface_elements (void)
 {
-  GstElement *video_sink, *playsink;
   GstIterator *it;
   gpointer item;
   gboolean done = FALSE, hardware = FALSE;
 
-  g_object_get (pipeline, "video-sink", &video_sink, NULL);
-  if (!video_sink)
-    return;
-
   if (navigation_element)
     gst_object_unref (navigation_element);
+  navigation_element = NULL;
 
   if (colorbalance_element)
     gst_object_unref (colorbalance_element);
   colorbalance_element = NULL;
 
-  if (GST_IS_NAVIGATION (video_sink)) {
-    navigation_element = gst_object_ref (video_sink);
-  } else if (GST_IS_BIN (video_sink)) {
-    navigation_element =
-        gst_bin_get_by_interface (GST_BIN (video_sink), GST_TYPE_NAVIGATION);
-  } else {
-    navigation_element = NULL;
-  }
+  navigation_element =
+      gst_bin_get_by_interface (GST_BIN (pipeline), GST_TYPE_NAVIGATION);
 
-  gst_object_unref (video_sink);
-
-  playsink = gst_bin_get_by_name (GST_BIN (pipeline), "playsink");
-  g_assert (playsink != NULL);
-
-  it = gst_bin_iterate_all_by_interface (GST_BIN (playsink),
+  it = gst_bin_iterate_all_by_interface (GST_BIN (pipeline),
       GST_TYPE_COLOR_BALANCE);
   while (!done) {
     switch (gst_iterator_next (it, &item)) {
@@ -2699,8 +2684,6 @@ find_interface_elements (void)
   }
 
   gst_iterator_free (it);
-
-  gst_object_unref (playsink);
 }
 
 /* called when Navigation command button is pressed */
@@ -3391,8 +3374,8 @@ main (int argc, char **argv)
     gtk_container_add (GTK_CONTAINER (navigation), grid);
   }
 
-  /* colorbalance expander, only for playbin2 */
-  if (pipeline_type == 16) {
+  /* colorbalance expander */
+  {
     GtkWidget *vbox, *frame;
 
     colorbalance = gtk_expander_new ("color balance options");
@@ -3616,8 +3599,7 @@ main (int argc, char **argv)
   }
   gtk_box_pack_start (GTK_BOX (vbox), step, FALSE, FALSE, 2);
   gtk_box_pack_start (GTK_BOX (vbox), navigation, FALSE, FALSE, 2);
-  if (colorbalance)
-    gtk_box_pack_start (GTK_BOX (vbox), colorbalance, FALSE, FALSE, 2);
+  gtk_box_pack_start (GTK_BOX (vbox), colorbalance, FALSE, FALSE, 2);
   gtk_box_pack_start (GTK_BOX (vbox), gtk_hseparator_new (), FALSE, FALSE, 2);
   gtk_box_pack_start (GTK_BOX (vbox), hscale, FALSE, FALSE, 2);
   gtk_box_pack_start (GTK_BOX (vbox), statusbar, FALSE, FALSE, 2);
