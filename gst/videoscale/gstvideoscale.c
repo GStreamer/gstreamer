@@ -187,7 +187,7 @@ static gboolean gst_video_scale_src_event (GstBaseTransform * trans,
 /* base transform vmethods */
 static GstCaps *gst_video_scale_transform_caps (GstBaseTransform * trans,
     GstPadDirection direction, GstCaps * caps, GstCaps * filter);
-static void gst_video_scale_fixate_caps (GstBaseTransform * base,
+static GstCaps *gst_video_scale_fixate_caps (GstBaseTransform * base,
     GstPadDirection direction, GstCaps * caps, GstCaps * othercaps);
 
 static gboolean gst_video_scale_set_info (GstVideoFilter * filter,
@@ -511,7 +511,7 @@ gst_video_scale_set_info (GstVideoFilter * filter, GstCaps * in,
   return TRUE;
 }
 
-static void
+static GstCaps *
 gst_video_scale_fixate_caps (GstBaseTransform * base, GstPadDirection direction,
     GstCaps * caps, GstCaps * othercaps)
 {
@@ -520,8 +520,7 @@ gst_video_scale_fixate_caps (GstBaseTransform * base, GstPadDirection direction,
   GValue fpar = { 0, }, tpar = {
   0,};
 
-  g_return_if_fail (gst_caps_is_fixed (caps));
-
+  othercaps = gst_caps_make_writable (othercaps);
   gst_caps_truncate (othercaps);
 
   GST_DEBUG_OBJECT (base, "trying to fixate othercaps %" GST_PTR_FORMAT
@@ -572,7 +571,7 @@ gst_video_scale_fixate_caps (GstBaseTransform * base, GstPadDirection direction,
     gint num, den;
 
     /* from_par should be fixed */
-    g_return_if_fail (gst_value_is_fixed (from_par));
+    g_return_val_if_fail (gst_value_is_fixed (from_par), othercaps);
 
     from_par_n = gst_value_get_fraction_numerator (from_par);
     from_par_d = gst_value_get_fraction_denominator (from_par);
@@ -945,6 +944,8 @@ done:
     g_value_unset (&fpar);
   if (to_par == &tpar)
     g_value_unset (&tpar);
+
+  return othercaps;
 }
 
 static void

@@ -132,12 +132,14 @@ gst_video_convert_caps_remove_format_info (GstCaps * caps)
   return res;
 }
 
-static void
+static GstCaps *
 gst_video_convert_fixate_caps (GstBaseTransform * trans,
     GstPadDirection direction, GstCaps * caps, GstCaps * othercaps)
 {
   GstStructure *ss, *ds;
   const gchar *val;
+
+  othercaps = gst_caps_make_writable (othercaps);
 
   GST_DEBUG_OBJECT (trans, "fixating caps %" GST_PTR_FORMAT, othercaps);
 
@@ -161,6 +163,8 @@ gst_video_convert_fixate_caps (GstBaseTransform * trans,
 
   /* fixate remaining fields */
   gst_caps_fixate (othercaps);
+
+  return othercaps;
 }
 
 /* The caps can be transformed into any other caps with format info removed.

@@ -79,7 +79,7 @@ static gboolean gst_audio_convert_get_unit_size (GstBaseTransform * base,
     GstCaps * caps, gsize * size);
 static GstCaps *gst_audio_convert_transform_caps (GstBaseTransform * base,
     GstPadDirection direction, GstCaps * caps, GstCaps * filter);
-static void gst_audio_convert_fixate_caps (GstBaseTransform * base,
+static GstCaps *gst_audio_convert_fixate_caps (GstBaseTransform * base,
     GstPadDirection direction, GstCaps * caps, GstCaps * othercaps);
 static gboolean gst_audio_convert_set_caps (GstBaseTransform * base,
     GstCaps * incaps, GstCaps * outcaps);
@@ -585,7 +585,7 @@ gst_audio_convert_fixate_channels (GstBaseTransform * base, GstStructure * ins,
 /* try to keep as many of the structure members the same by fixating the
  * possible ranges; this way we convert the least amount of things as possible
  */
-static void
+static GstCaps *
 gst_audio_convert_fixate_caps (GstBaseTransform * base,
     GstPadDirection direction, GstCaps * caps, GstCaps * othercaps)
 {
@@ -593,7 +593,7 @@ gst_audio_convert_fixate_caps (GstBaseTransform * base,
   gint rate;
   const gchar *fmt;
 
-  g_return_if_fail (gst_caps_is_fixed (caps));
+  othercaps = gst_caps_make_writable (othercaps);
 
   GST_DEBUG_OBJECT (base, "trying to fixate othercaps %" GST_PTR_FORMAT
       " based on caps %" GST_PTR_FORMAT, othercaps, caps);
@@ -616,6 +616,8 @@ gst_audio_convert_fixate_caps (GstBaseTransform * base,
 
   gst_caps_truncate (othercaps);
   GST_DEBUG_OBJECT (base, "fixated othercaps to %" GST_PTR_FORMAT, othercaps);
+
+  return othercaps;
 }
 
 static gboolean

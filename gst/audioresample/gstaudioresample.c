@@ -106,7 +106,7 @@ static gboolean gst_audio_resample_get_unit_size (GstBaseTransform * base,
     GstCaps * caps, gsize * size);
 static GstCaps *gst_audio_resample_transform_caps (GstBaseTransform * base,
     GstPadDirection direction, GstCaps * caps, GstCaps * filter);
-static void gst_audio_resample_fixate_caps (GstBaseTransform * base,
+static GstCaps *gst_audio_resample_fixate_caps (GstBaseTransform * base,
     GstPadDirection direction, GstCaps * caps, GstCaps * othercaps);
 static gboolean gst_audio_resample_transform_size (GstBaseTransform * trans,
     GstPadDirection direction, GstCaps * incaps, gsize insize,
@@ -307,7 +307,7 @@ gst_audio_resample_transform_caps (GstBaseTransform * base,
 }
 
 /* Fixate rate to the allowed rate that has the smallest difference */
-static void
+static GstCaps *
 gst_audio_resample_fixate_caps (GstBaseTransform * base,
     GstPadDirection direction, GstCaps * caps, GstCaps * othercaps)
 {
@@ -316,11 +316,13 @@ gst_audio_resample_fixate_caps (GstBaseTransform * base,
 
   s = gst_caps_get_structure (caps, 0);
   if (G_UNLIKELY (!gst_structure_get_int (s, "rate", &rate)))
-    return;
+    return othercaps;
 
+  othercaps = gst_caps_make_writable (othercaps);
   gst_caps_truncate (othercaps);
   s = gst_caps_get_structure (othercaps, 0);
   gst_structure_fixate_field_nearest_int (s, "rate", rate);
+  return othercaps;
 }
 
 static const SpeexResampleFuncs *
