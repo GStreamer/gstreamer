@@ -814,7 +814,6 @@ gst_flac_enc_set_format (GstAudioEncoder * enc, GstAudioInfo * info)
 encoder_already_initialized:
   {
     g_warning ("flac already initialized -- fixme allow this");
-    gst_object_unref (flacenc);
     return FALSE;
   }
 setting_src_caps_failed:
@@ -822,14 +821,12 @@ setting_src_caps_failed:
     GST_DEBUG_OBJECT (flacenc,
         "Couldn't set caps on source pad: %" GST_PTR_FORMAT, caps);
     gst_caps_unref (caps);
-    gst_object_unref (flacenc);
     return FALSE;
   }
 failed_to_initialize:
   {
     GST_ELEMENT_ERROR (flacenc, LIBRARY, INIT, (NULL),
         ("could not initialize encoder (wrong parameters?)"));
-    gst_object_unref (flacenc);
     return FALSE;
   }
 }
