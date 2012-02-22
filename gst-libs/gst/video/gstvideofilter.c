@@ -53,7 +53,8 @@ G_DEFINE_ABSTRACT_TYPE (GstVideoFilter, gst_video_filter,
 /* Answer the allocation query downstream. This is only called for
  * non-passthrough cases */
 static gboolean
-gst_video_filter_propose_allocation (GstBaseTransform * trans, GstQuery * query)
+gst_video_filter_propose_allocation (GstBaseTransform * trans,
+    gboolean passthrough, GstQuery * query)
 {
   GstVideoFilter *filter = GST_VIDEO_FILTER_CAST (trans);
   GstVideoInfo info;
@@ -61,6 +62,10 @@ gst_video_filter_propose_allocation (GstBaseTransform * trans, GstQuery * query)
   GstCaps *caps;
   gboolean need_pool;
   guint size;
+
+  if (passthrough)
+    return GST_BASE_TRANSFORM_CLASS (parent_class)->propose_allocation (trans,
+        passthrough, query);
 
   gst_query_parse_allocation (query, &caps, &need_pool);
 
