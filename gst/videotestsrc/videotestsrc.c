@@ -125,8 +125,7 @@ static const struct vts_color_struct vts_colors_bt601_ycbcr_75[] = {
 };
 
 
-static void paint_setup_I420 (paintinfo * p, GstVideoFrame * frame);
-static void paint_setup_YV12 (paintinfo * p, GstVideoFrame * frame);
+static void paint_setup_I420_YV12 (paintinfo * p, GstVideoFrame * frame);
 static void paint_setup_YUY2 (paintinfo * p, GstVideoFrame * frame);
 static void paint_setup_UYVY (paintinfo * p, GstVideoFrame * frame);
 static void paint_setup_YVYU (paintinfo * p, GstVideoFrame * frame);
@@ -236,9 +235,9 @@ struct format_list_struct format_list[] = {
   {VTS_YUV, "YUV9", "YUV9", 9, paint_setup_YUV9, convert_hline_YUV9},
   /* IF09 */
   /* YV12 */
-  {VTS_YUV, "YV12", "YV12", 12, paint_setup_YV12, convert_hline_I420},
+  {VTS_YUV, "YV12", "YV12", 12, paint_setup_I420_YV12, convert_hline_I420},
   /* I420 */
-  {VTS_YUV, "I420", "I420", 12, paint_setup_I420, convert_hline_I420},
+  {VTS_YUV, "I420", "I420", 12, paint_setup_I420_YV12, convert_hline_I420},
   /* NV12 */
   {VTS_YUV, "NV12", "NV12", 12, paint_setup_NV12, convert_hline_NV12},
   /* NV21 */
@@ -1558,19 +1557,6 @@ paint_tmpline_AYUV (paintinfo * p, int x, int w)
   gst_orc_splat_u32 (p->tmpline + offset, value, w);
 }
 
-
-static void
-paint_setup_I420 (paintinfo * p, GstVideoFrame * frame)
-{
-  p->yp = GST_VIDEO_FRAME_PLANE_DATA (frame, 0);
-  p->ystride = GST_VIDEO_FRAME_PLANE_STRIDE (frame, 0);
-  p->up = GST_VIDEO_FRAME_PLANE_DATA (frame, 1);
-  p->ustride = GST_VIDEO_FRAME_PLANE_STRIDE (frame, 1);
-  p->vp = GST_VIDEO_FRAME_PLANE_DATA (frame, 2);
-  p->vstride = GST_VIDEO_FRAME_PLANE_STRIDE (frame, 2);
-  p->size = frame->info.size;
-}
-
 static void
 paint_setup_NV12 (paintinfo * p, GstVideoFrame * frame)
 {
@@ -1649,16 +1635,15 @@ convert_hline_NV21 (paintinfo * p, int y)
   }
 }
 
-
 static void
-paint_setup_YV12 (paintinfo * p, GstVideoFrame * frame)
+paint_setup_I420_YV12 (paintinfo * p, GstVideoFrame * frame)
 {
-  p->yp = GST_VIDEO_FRAME_PLANE_DATA (frame, 0);
-  p->ystride = GST_VIDEO_FRAME_PLANE_STRIDE (frame, 0);
-  p->up = GST_VIDEO_FRAME_PLANE_DATA (frame, 1);
-  p->ustride = GST_VIDEO_FRAME_PLANE_STRIDE (frame, 1);
-  p->vp = GST_VIDEO_FRAME_PLANE_DATA (frame, 2);
-  p->vstride = GST_VIDEO_FRAME_PLANE_STRIDE (frame, 2);
+  p->yp = GST_VIDEO_FRAME_COMP_DATA (frame, GST_VIDEO_COMP_Y);
+  p->ystride = GST_VIDEO_FRAME_COMP_STRIDE (frame, GST_VIDEO_COMP_Y);
+  p->up = GST_VIDEO_FRAME_COMP_DATA (frame, GST_VIDEO_COMP_U);
+  p->ustride = GST_VIDEO_FRAME_COMP_STRIDE (frame, GST_VIDEO_COMP_U);
+  p->vp = GST_VIDEO_FRAME_COMP_DATA (frame, GST_VIDEO_COMP_V);
+  p->vstride = GST_VIDEO_FRAME_COMP_STRIDE (frame, GST_VIDEO_COMP_V);
   p->size = frame->info.size;
 }
 
