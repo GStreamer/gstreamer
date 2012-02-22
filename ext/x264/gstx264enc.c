@@ -2079,7 +2079,8 @@ gst_x264_enc_encode_frame (GstX264Enc * encoder, x264_picture_t * pic_in,
   out_buf = gst_buffer_new_allocate (NULL, i_size, 0);
   gst_buffer_fill (out_buf, 0, data, i_size);
 
-  g_print ("dts %" G_GINT64_FORMAT " pts %" G_GINT64_FORMAT, pic_out.i_dts,
+  GST_LOG_OBJECT (encoder,
+      "output: dts %" G_GINT64_FORMAT " pts %" G_GINT64_FORMAT, pic_out.i_dts,
       pic_out.i_pts);
 
   if (pic_out.i_dts < 0)
