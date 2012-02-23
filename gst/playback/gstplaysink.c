@@ -1376,6 +1376,13 @@ gen_video_chain (GstPlaySink * playsink, gboolean raw, gboolean async)
     chain->async = TRUE;
   }
 
+  /* Make sure the aspect ratio is kept */
+  elem =
+      gst_play_sink_find_property_sinks (playsink, chain->sink,
+      "force-aspect-ratio", G_TYPE_BOOLEAN);
+  if (elem)
+    g_object_set (elem, "force-aspect-ratio", TRUE, NULL);
+
   /* find ts-offset element */
   gst_object_replace ((GstObject **) & chain->ts_offset, (GstObject *)
       gst_play_sink_find_property_sinks (playsink, chain->sink, "ts-offset",
@@ -1528,6 +1535,13 @@ setup_video_chain (GstPlaySink * playsink, gboolean raw, gboolean async)
     GST_DEBUG_OBJECT (playsink, "no async property on the sink");
     chain->async = TRUE;
   }
+
+  /* Make sure the aspect ratio is kept */
+  elem =
+      gst_play_sink_find_property_sinks (playsink, chain->sink,
+      "force-aspect-ratio", G_TYPE_BOOLEAN);
+  if (elem)
+    g_object_set (elem, "force-aspect-ratio", TRUE, NULL);
 
   if (chain->conv)
     g_object_set (chain->conv, "use-balance",
