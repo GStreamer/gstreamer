@@ -234,6 +234,7 @@
 #include <gst/interfaces/streamvolume.h>
 #include <gst/interfaces/xoverlay.h>
 #include <gst/interfaces/navigation.h>
+#include <gst/interfaces/colorbalance.h>
 
 #include "gstplay-enum.h"
 #include "gstplay-marshal.h"
@@ -588,6 +589,8 @@ static void gst_play_bin_xoverlay_init (gpointer g_iface,
     gpointer g_iface_data);
 static void gst_play_bin_navigation_init (gpointer g_iface,
     gpointer g_iface_data);
+static void gst_play_bin_colorbalance_init (gpointer g_iface,
+    gpointer g_iface_data);
 
 static GType
 gst_play_bin_get_type (void)
@@ -622,6 +625,10 @@ gst_play_bin_get_type (void)
       gst_play_bin_navigation_init,
       NULL, NULL
     };
+    static const GInterfaceInfo col_info = {
+      gst_play_bin_colorbalance_init,
+      NULL, NULL
+    };
 
     gst_play_bin_type = g_type_register_static (GST_TYPE_PIPELINE,
         "GstPlayBin2", &gst_play_bin_info, 0);
@@ -634,6 +641,8 @@ gst_play_bin_get_type (void)
         &xov_info);
     g_type_add_interface_static (gst_play_bin_type, GST_TYPE_NAVIGATION,
         &nav_info);
+    g_type_add_interface_static (gst_play_bin_type, GST_TYPE_COLOR_BALANCE,
+        &col_info);
   }
 
   return gst_play_bin_type;
@@ -1243,6 +1252,13 @@ notify_mute_cb (GObject * selector, GParamSpec * pspec, GstPlayBin * playbin)
   g_object_notify (G_OBJECT (playbin), "mute");
 }
 
+static void
+colorbalance_value_changed_cb (GstColorBalance * balance,
+    GstColorBalanceChannel * channel, gint value, GstPlayBin * playbin)
+{
+  gst_color_balance_value_changed (GST_COLOR_BALANCE (playbin), channel, value);
+}
+
 /* Must be called with elements lock! */
 static void
 gst_play_bin_update_elements_list (GstPlayBin * playbin)
@@ -1295,6 +1311,8 @@ gst_play_bin_init (GstPlayBin * playbin)
       G_CALLBACK (notify_volume_cb), playbin);
   g_signal_connect (playbin->playsink, "notify::mute",
       G_CALLBACK (notify_mute_cb), playbin);
+  g_signal_connect (playbin->playsink, "value-changed",
+      G_CALLBACK (colorbalance_value_changed_cb), playbin);
 
   playbin->current_video = DEFAULT_CURRENT_VIDEO;
   playbin->current_audio = DEFAULT_CURRENT_AUDIO;
@@ -4098,7 +4116,7 @@ gst_play_bin_implements_interface_supported (GstImplementsInterface * iface,
     GType type)
 {
   if (type == GST_TYPE_X_OVERLAY || type == GST_TYPE_STREAM_VOLUME ||
-      type == GST_TYPE_NAVIGATION)
+      type == GST_TYPE_NAVIGATION || type == GST_TYPE_COLOR_BALANCE)
     return TRUE;
   else
     return FALSE;
@@ -4126,6 +4144,56 @@ gst_play_bin_navigation_init (gpointer g_iface, gpointer g_iface_data)
   GstNavigationInterface *iface = (GstNavigationInterface *) g_iface;
 
   iface->send_event = gst_play_bin_navigation_send_event;
+}
+
+static const GList *
+gst_play_bin_colorbalance_list_channels (GstColorBalance * balance)
+{
+  GstPlayBin *playbin = GST_PLAY_BIN (balance);
+
+  return
+      gst_color_balance_list_channels (GST_COLOR_BALANCE (playbin->playsink));
+}
+
+static void
+gst_play_bin_colorbalance_set_value (GstColorBalance * balance,
+    GstColorBalanceChannel * channel, gint value)
+{
+  GstPlayBin *playbin = GST_PLAY_BIN (balance);
+
+  gst_color_balance_set_value (GST_COLOR_BALANCE (playbin->playsink), channel,
+      value);
+}
+
+static gint
+gst_play_bin_colorbalance_get_value (GstColorBalance * balance,
+    GstColorBalanceChannel * channel)
+{
+  GstPlayBin *playbin = GST_PLAY_BIN (balance);
+
+  return gst_color_balance_get_value (GST_COLOR_BALANCE (playbin->playsink),
+      channel);
+}
+
+static GstColorBalanceType
+gst_play_bin_colorbalance_get_balance_type (GstColorBalance * balance)
+{
+  GstPlayBin *playbin = GST_PLAY_BIN (balance);
+
+  return
+      gst_color_balance_get_balance_type (GST_COLOR_BALANCE
+      (playbin->playsink));
+}
+
+static void
+gst_play_bin_colorbalance_init (gpointer g_iface, gpointer g_iface_data)
+{
+  GstColorBalanceClass *iface = (GstColorBalanceClass *) g_iface;
+
+  iface->list_channels = gst_play_bin_colorbalance_list_channels;
+  iface->set_value = gst_play_bin_colorbalance_set_value;
+  iface->get_value = gst_play_bin_colorbalance_get_value;
+  iface->get_balance_type = gst_play_bin_colorbalance_get_balance_type;
 }
 
 gboolean
