@@ -2762,6 +2762,8 @@ draw_cb (GtkWidget * widget, cairo_t * cr, gpointer data)
 
   if (xoverlay_element)
     gst_x_overlay_expose (GST_X_OVERLAY (xoverlay_element));
+  else if (pipeline_type == 16)
+    gst_x_overlay_expose (GST_X_OVERLAY (pipeline));
 
   return FALSE;
 }
@@ -2929,9 +2931,11 @@ connect_bus_signals (GstElement * pipeline)
   GstBus *bus = gst_pipeline_get_bus (GST_PIPELINE (pipeline));
 
 #if defined (GDK_WINDOWING_X11) || defined (GDK_WINDOWING_WIN32) || defined (GDK_WINDOWING_QUARTZ)
-  /* handle prepare-xwindow-id element message synchronously */
-  gst_bus_set_sync_handler (bus, (GstBusSyncHandler) bus_sync_handler,
-      pipeline);
+  if (pipeline_type != 16) {
+    /* handle prepare-xwindow-id element message synchronously, but only for non-playbin2 */
+    gst_bus_set_sync_handler (bus, (GstBusSyncHandler) bus_sync_handler,
+        pipeline);
+  }
 #endif
 
   gst_bus_add_signal_watch_full (bus, G_PRIORITY_HIGH);
@@ -3641,6 +3645,11 @@ main (int argc, char **argv)
 #if defined (GDK_WINDOWING_X11) || defined (GDK_WINDOWING_WIN32) || defined (GDK_WINDOWING_QUARTZ)
   /* we should have the XID now */
   g_assert (embed_xid != 0);
+
+  if (pipeline_type == 16) {
+    gst_x_overlay_set_window_handle (GST_X_OVERLAY (pipeline), embed_xid);
+    gst_x_overlay_handle_events (GST_X_OVERLAY (pipeline), FALSE);
+  }
 #endif
 
   if (verbose) {
