@@ -237,13 +237,14 @@ gst_buffer_add_video_meta_full (GstBuffer * buffer, GstVideoFlags flags,
  * @meta: a #GstVideoMeta
  * @plane: a plane
  * @info: a #GstMapInfo
- * @offset: the offset of where the plane starts in @info
+ * @data: the data of @plane
+ * @stride: the stride of @plane
  * @flags: @GstMapFlags
  *
  * Map the video plane with index @plane in @meta and return a pointer to the
  * first byte of the plane and the stride of the plane.
  *
- * Returns: a pointer to the first byte of the plane data
+ * Returns: TRUE if the map operation was successful.
  */
 gboolean
 gst_video_meta_map (GstVideoMeta * meta, guint plane, GstMapInfo * info,
