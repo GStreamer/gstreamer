@@ -420,6 +420,9 @@ gst_vc1_parse_detect (GstBaseParse * parse, GstBuffer * buffer)
   data = GST_BUFFER_DATA (buffer);
   size = GST_BUFFER_SIZE (buffer);
 
+#if 0
+  /* FIXME: disable BDU check for now as BDU parsing needs more work.
+   */
   while (size >= 4) {
     guint32 startcode = GST_READ_UINT32_BE (data);
 
@@ -432,6 +435,7 @@ gst_vc1_parse_detect (GstBaseParse * parse, GstBuffer * buffer)
     data += 4;
     size -= 4;
   }
+#endif
 
   data = GST_BUFFER_DATA (buffer);
   size = GST_BUFFER_SIZE (buffer);
@@ -537,6 +541,9 @@ gst_vc1_parse_check_valid_frame (GstBaseParse * parse,
     GST_DEBUG_OBJECT (vc1parse,
         "Handling buffer of size %u at offset %" G_GUINT64_FORMAT, size,
         GST_BUFFER_OFFSET (buffer));
+    /* XXX: when a buffer contains multiple BDUs, does the first one start with
+     * a startcode?
+     */
     pres = gst_vc1_identify_next_bdu (data, size, &bdu);
     switch (pres) {
       case GST_VC1_PARSER_OK:
