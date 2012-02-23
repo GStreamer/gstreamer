@@ -577,7 +577,6 @@ decode_slice(
     GstVaapiPicture * const picture = priv->current_picture;
     GstVaapiSlice *slice;
     VASliceParameterBufferMPEG2 *slice_param;
-    GstVaapiDecoderStatus status;
     GstBitReader br;
     guint8 slice_vertical_position_extension;
     guint8 quantiser_scale_code;
@@ -633,14 +632,6 @@ decode_slice(
     slice_param->slice_vertical_position   = priv->mb_y;
     slice_param->quantiser_scale_code      = quantiser_scale_code;
     slice_param->intra_slice_flag          = intra_slice;
-
-    /* Commit picture for decoding if we reached the last slice */
-    if (++priv->mb_y >= priv->mb_height) {
-        status = decode_current_picture(decoder);
-        if (status != GST_VAAPI_DECODER_STATUS_SUCCESS)
-            return status;
-        GST_DEBUG("done");
-    }
     return GST_VAAPI_DECODER_STATUS_SUCCESS;
 
 failed:
