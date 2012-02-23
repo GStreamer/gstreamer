@@ -134,6 +134,8 @@ typedef enum {
  * @data: a pointer to the mapped data
  * @size: the valid size in @data
  * @maxsize: the maximum bytes in @data
+ * @user_data: extra private user_data that the implementation of the memory
+ *             can use to store extra info.
  *
  * A structure containing the result of a map operation such as
  * gst_memory_map(). It contains the data and size.
@@ -144,9 +146,11 @@ typedef struct {
   guint8 *data;
   gsize size;
   gsize maxsize;
+  /*< private >*/
+  gpointer user_data[4];
 } GstMapInfo;
 
-#define GST_MAP_INFO_INIT { NULL, 0, NULL, 0, 0 }
+#define GST_MAP_INFO_INIT { NULL, 0, NULL, 0, 0, }
 
 /**
  * GST_MAP_READWRITE:
