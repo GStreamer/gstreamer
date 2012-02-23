@@ -999,10 +999,6 @@ make_playerbin2_pipeline (const gchar * location)
 {
   GstElement *pipeline = construct_playerbin ("playbin2", location);
 
-  /* FIXME: this is not triggered, playbin2 is not forwarding it from the sink */
-  g_signal_connect (pipeline, "notify::volume", G_CALLBACK (volume_notify_cb),
-      NULL);
-
   navigation_element = GST_ELEMENT (gst_object_ref (pipeline));
   colorbalance_element = GST_ELEMENT (gst_object_ref (pipeline));
 
@@ -1300,11 +1296,6 @@ update_scale (gpointer data)
 
   if (duration > 0) {
     set_scale (position * N_GRAD / duration);
-  }
-
-  /* FIXME: see make_playerbin2_pipeline() and volume_notify_cb() */
-  if (pipeline_type == 16) {
-    g_object_notify (G_OBJECT (pipeline), "volume");
   }
 
   return TRUE;
