@@ -53,7 +53,7 @@
  * The call will return a pointer to offset bytes into the region of memory.
  * After the memory access is completed, gst_memory_unmap() should be called.
  *
- * Memory can be copied with gst_memory_copy(), which will returnn a writable
+ * Memory can be copied with gst_memory_copy(), which will return a writable
  * copy. gst_memory_share() will create a new memory block that shares the
  * memory with an existing memory block at a custom offset and with a custom
  * size.
