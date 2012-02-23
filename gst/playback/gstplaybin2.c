@@ -233,6 +233,7 @@
 #include <gst/pbutils/pbutils.h>
 #include <gst/interfaces/streamvolume.h>
 #include <gst/interfaces/xoverlay.h>
+#include <gst/interfaces/navigation.h>
 
 #include "gstplay-enum.h"
 #include "gstplay-marshal.h"
@@ -585,6 +586,8 @@ static void gst_play_bin_implements_interface_init (gpointer g_iface,
     gpointer g_iface_data);
 static void gst_play_bin_xoverlay_init (gpointer g_iface,
     gpointer g_iface_data);
+static void gst_play_bin_navigation_init (gpointer g_iface,
+    gpointer g_iface_data);
 
 static GType
 gst_play_bin_get_type (void)
@@ -615,6 +618,10 @@ gst_play_bin_get_type (void)
       gst_play_bin_xoverlay_init,
       NULL, NULL
     };
+    static const GInterfaceInfo nav_info = {
+      gst_play_bin_navigation_init,
+      NULL, NULL
+    };
 
     gst_play_bin_type = g_type_register_static (GST_TYPE_PIPELINE,
         "GstPlayBin2", &gst_play_bin_info, 0);
@@ -625,6 +632,8 @@ gst_play_bin_get_type (void)
         &svol_info);
     g_type_add_interface_static (gst_play_bin_type, GST_TYPE_X_OVERLAY,
         &xov_info);
+    g_type_add_interface_static (gst_play_bin_type, GST_TYPE_NAVIGATION,
+        &nav_info);
   }
 
   return gst_play_bin_type;
@@ -4088,7 +4097,8 @@ static gboolean
 gst_play_bin_implements_interface_supported (GstImplementsInterface * iface,
     GType type)
 {
-  if (type == GST_TYPE_X_OVERLAY || type == GST_TYPE_STREAM_VOLUME)
+  if (type == GST_TYPE_X_OVERLAY || type == GST_TYPE_STREAM_VOLUME ||
+      type == GST_TYPE_NAVIGATION)
     return TRUE;
   else
     return FALSE;
@@ -4099,6 +4109,23 @@ gst_play_bin_implements_interface_init (gpointer g_iface, gpointer g_iface_data)
 {
   GstImplementsInterfaceClass *iface = (GstImplementsInterfaceClass *) g_iface;
   iface->supported = gst_play_bin_implements_interface_supported;
+}
+
+static void
+gst_play_bin_navigation_send_event (GstNavigation * navigation,
+    GstStructure * structure)
+{
+  GstPlayBin *playbin = GST_PLAY_BIN (navigation);
+
+  gst_navigation_send_event (GST_NAVIGATION (playbin->playsink), structure);
+}
+
+static void
+gst_play_bin_navigation_init (gpointer g_iface, gpointer g_iface_data)
+{
+  GstNavigationInterface *iface = (GstNavigationInterface *) g_iface;
+
+  iface->send_event = gst_play_bin_navigation_send_event;
 }
 
 gboolean
