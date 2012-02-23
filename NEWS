@@ -1,4 +1,186 @@
-This is GStreamer 0.10.35 "Nuclear Fission"
+This is GStreamer 0.10.36 "Harder"
+
+Changes since 0.10.35:
+
+      * bin: Don't interpret pipelines without sink elements as always being in EOS state
+      * bin: Only post EOS messages after reaching the PLAYING state
+      * buffer: add set/get_qdata() to attach arbitrary metadata to buffers
+      * caps, structure, gstvalue: some optimisations and improvements
+      * miniobject: add weak referencing functionality 
+      * gstobject: make gst_object_replace() atomic
+      * pad: Only do the subset check in gst_pad_accept_caps() if the pad claims to accept the caps
+      * pad: make public some ghostpad/proxypad API
+      * preset: allow applications to specify an extra preset directory with application-specific presets
+      * collectpads: add GstCollectPads2 API
+      * basebarse: new detect vfunc so subclassed can do some format detection first
+      * baseparse: new get_sink_caps vfunc so downstream caps restrictions can be propagated upstream
+      * baseparse: answer position query in stream time and try upstream first
+      * baseparse: send duration message when updating internal duration
+      * baseparse: make baseparse-based elements is reusable 
+      * baseparse: provide latency query support 
+      * basesink: don't compensate for render-delay twice
+      * basesink: try harder to arrange increasing position reporting
+      * basesrc: allow for the size to change dynamically
+      * basetransform: add query vfunc
+      * basetransform: caps negotiation improvements
+      * basetransform: delay serialized events when src caps are not set yet
+      * filesrc: do not mistake short reads for EOS
+      * filesrc/fdsrc: indicate dynamic size handling to basesrc
+      * inputselector: add sync mode that syncs inactive pads to the running time of the active pad
+      * queue2: add bufferlist support
+      * queue2: adjust input data rate estimation
+      * multiqueue: add mode to synchronize deactivated/not-linked streams by the running time
+      * multiqueue: check filled state of queues even if another one is empty
+      * outputselector: don't send last segment/buffer when no segment was configured yet
+      * tools: teach gst-launch about missing-plugin messages 
+      * tools: make unversioned wrapper look for -0.10 tools only
+
+Bugs fixed since 0.10.35:
+
+      * 647940 : [basesrc] - fails to send updated segment event when duration changes
+      * 662777 : Caps negotiation got a lot slow since the last release
+      * 647493 : Regression: gstbus: Not getting all messages posted on the bus
+      * 415754 : [API] GstCollectPads2; muxing sparse/subtitle streams
+      * 459466 : double memory usage for pluginfeature names
+      * 546570 : gst_caps_append/merge should not require caps2 to be writable
+      * 609473 : [miniobject] Add support for weak references
+      * 619844 : [basetransform] transform_caps can ignore pass-through
+      * 628021 : [baseaudiosink] position reporting not increasing
+      * 629300 : gstructure: New API for comparing structures
+      * 643269 : dot file flow direction
+      * 645017 : [inputselector] Add mode to drop buffers only after the active sinkpad's running time is after the current buffer
+      * 645107 : [multiqueue] Implement throttling based on stream's running time
+      * 647756 : [bin] Posting EOS message although not reached PLAYING yet
+      * 648025 : parse-launch: don't unescape inside quotes
+      * 650002 : 'No space left on device' message logged continuously, filling /home slice
+      * 650973 : check: add fail_unless_equals_int64
+      * 652037 : basesrc: less persistent caching of size
+      * 652577 : basesink: s/if/is/ 
+      * 653137 : Warnings in Gstreamer (core) with Clang compiler
+      * 653172 : Compilation fails when PR_SET_NAME is not defined in prctl.h
+      * 655155 : Build failure for gstcontroller.c -- (-Wall)  assignment discards qualifiers from pointer target type
+      * 655204 : bad interaction between queue and adder
+      * 655381 : GstBitReader and GstByteReader functions missing out argument annotations
+      * 656193 : don't revalidate utf8 elementfactory metadata all the time
+      * 656265 : Fix compiler warnings reported by ICC
+      * 656557 : Add Farsight and Nice support to gst-uninstalled
+      * 657316 : capsfilter is racy when changing the caps during initial pipeline startup
+      * 657318 : basetranform dosn't allow query handlers to be overridden
+      * 657421 : Fix compiler warnings reported by ICC 
+      * 658076 : setcaps function for ghost pads never called
+      * 658449 : Fix typos in docs and code comments
+      * 658517 : [ghostpad] Peer query does not work with empty GstPlaySinkVideoConvert
+      * 658518 : basesink: Backport query override support
+      * 658541 : [API change] caps negotiation failures
+      * 658918 : [pad] set caps on pad before checking for peer
+      * 659139 : gstpad: make some debug traces more useful
+      * 659571 : basetransform: delay events we cannot send right away
+      * 659606 : Remaining non-subset caps warnings
+      * 660083 : Fix mingw compiler warnings
+      * 660144 : [GstBaseParse] make start/stop methods optional
+      * 660165 : basetransform: send delayed events earlier
+      * 660760 : .prs presets needs to have a per-application option
+      * 660778 : multiqueue: check filled state of queues even if another one is empty
+      * 660955 : gst_type_register_static_full: guard against large instance sizes that don't fit into a guint16
+      * 662091 : plugin loader: spawn new plugin loader helper after loading N plugins
+      * 662199 : [capsfilter] behavior has changed
+      * 662291 : basetransform: cache transformed caps where appropriate
+      * 662664 : API: add gst_element_class_add_static_pad_template() and fix template pad ref leaks
+      * 663333 : basetransfrom cache should be invalidated whenever there is any change in the peer caps
+      * 663643 : gstvalue: consider lists and ranges equal if they hold the same set
+      * 664221 : [baseparse] ::sink_get_caps() vfunc breaks API/ABI
+      * 664720 : API: add gst_buffer_{set,get}_qdata()
+      * 665921 : filesrc: Incorrect EOF detection in create_read
+      * 666174 : [basetransform] causes segfaults because gst_pad_alloc_buffer_and_set_caps return a buffer with a size of 0
+      * 667284 : registry: add missing #ifndef guard
+      * 667286 : gstpoll: Include correct poll.h based on autoconf  test
+      * 667288 : plugins: Explicitly cast initialization values to the correct type.
+      * 667290 : tools: Include locale.h before any i18n headers.
+      * 667298 : basesink: don't compensate for render-delay twice
+      * 667444 : baseparse: clear adapter in reset so no old data is read when re-using elements
+      * 668289 : regression: playbin2: repeat mode only repeats twice in totem
+      * 668764 : collectpads2: move private stuff into private struct
+      * 669036 : Missing include in gstpreset.h causes build error
+      * 669502 : [baseparse] duration msg spam when upstream knows avg bitrate
+
+API additions since 0.10.35:
+
+      * gst_base_parse_set_latency()
+      * GstBaseParse::detect
+      * GstBaseParse::get_sink_caps
+      * gst_base_src_set_dynamic_size()
+      * GstBaseTransform::query
+      * gst_collect_pads2_add_pad() 
+      * gst_collect_pads2_add_pad_full()
+      * gst_collect_pads2_available()
+      * gst_collect_pads2()_collect 
+      * gst_collect_pads2_collect_range()
+      * gst_collect_pads2_flush()
+      * gst_collect_pads2_get_type()
+      * gst_collect_pads2_is_active()
+      * gst_collect_pads2_new() 
+      * gst_collect_pads2_peek() 
+      * gst_collect_pads2_pop()
+      * gst_collect_pads2_read()
+      * gst_collect_pads2_read_buffer()
+      * gst_collect_pads2_remove_pad()
+      * gst_collect_pads2_set_buffer_function()
+      * gst_collect_pads2_set_clip_function()
+      * gst_collect_pads2_set_compare_function()
+      * gst_collect_pads2_set_event_function()
+      * gst_collect_pads2_set_flushing()
+      * gst_collect_pads2_set_function()
+      * gst_collect_pads2_set_waiting()
+      * gst_collect_pads2_start()
+      * gst_collect_pads2_stop()
+      * gst_collect_pads2_take_buffer() 
+      * gst_buffer_get_qdata() 
+      * gst_buffer_set_qdata()
+      * gst_caps_is_strictly_equal()
+      * gst_caps_is_subset_structure
+      * gst_element_class_add_static_pad_template()
+      * GstElement::state_changed
+      * gst_ghost_pad_activate_pull_default()
+      * gst_ghost_pad_activate_push_default()
+      * gst_ghost_pad_internal_activate_pull_default()
+      * gst_ghost_pad_internal_activate_push_default()
+      * gst_ghost_pad_link_default()
+      * gst_ghost_pad_setcaps_default()
+      * gst_ghost_pad_unlink_default()
+      * gst_mini_object_weak_ref()
+      * gst_mini_object_weak_unref()
+      * gst_preset_get_app_dir()
+      * gst_preset_set_app_dir()
+      * gst_proxy_pad_acceptcaps_default()
+      * gst_proxy_pad_bufferalloc_default()
+      * gst_proxy_pad_chain_default()
+      * gst_proxy_pad_chain_list_default()
+      * gst_proxy_pad_checkgetrange_default()
+      * gst_proxy_pad_event_default()
+      * gst_proxy_pad_fixatecaps_default()
+      * gst_proxy_pad_get_internal()
+      * gst_proxy_pad_getcaps_default()
+      * gst_proxy_pad_getrange_default()
+      * gst_proxy_pad_iterate_internal_links_default()
+      * gst_proxy_pad_query_default()
+      * gst_proxy_pad_query_type_default()
+      * gst_proxy_pad_setcaps_default()
+      * gst_proxy_pad_unlink_default()
+      * gst_structure_can_intersect()
+      * gst_structure_intersect()
+      * gst_structure_is_equal()
+      * gst_structure_is_subset()
+      * gst_tag_list_is_equal()
+      * gst_tag_list_new_from_string()
+      * gst_tag_list_to_string()
+      * fail_unless_equals_int64()
+
+API deprecations since 0.10.35:
+
+      * gst_plugin_feature_type_name_filter()
+      * GstTypeNameData
+      * gst_filter_run()
+      * GstFilterFunc
 
 Changes since 0.10.34:
 
