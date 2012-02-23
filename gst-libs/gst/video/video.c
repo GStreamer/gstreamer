@@ -1040,11 +1040,9 @@ gst_video_frame_map_id (GstVideoFrame * frame, GstVideoInfo * info,
     frame->info.height = meta->height;
     frame->id = meta->id;
 
-    for (i = 0; i < info->finfo->n_planes; i++) {
-      gst_video_meta_map (meta, i, &frame->map[i], &frame->info.stride[i],
-          flags);
-      frame->data[i] = frame->map[i].data;
-    }
+    for (i = 0; i < info->finfo->n_planes; i++)
+      gst_video_meta_map (meta, i, &frame->map[i], &frame->data[i],
+          &frame->info.stride[i], flags);
   } else {
     /* no metadata, we really need to have the metadata when the id is
      * specified. */

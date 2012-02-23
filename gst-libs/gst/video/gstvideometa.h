@@ -44,8 +44,10 @@ typedef struct _GstVideoCropMeta GstVideoCropMeta;
  * @width: the video width
  * @height: the video height
  * @n_planes: the number of planes in the image
- * @offset: array of offsets for the planes
- * @stride: array of strides for the planes
+ * @offset: array of offsets for the planes. This field might not always be
+ *          valid, it is used by the default implementation of @map.
+ * @stride: array of strides for the planes. This field might not always be
+ *          valid, it is used by the default implementation of @map.
  * @map: map the memory of a plane
  * @unmap: unmap the memory of a plane
  *
@@ -66,8 +68,8 @@ struct _GstVideoMeta {
   gsize              offset[GST_VIDEO_MAX_PLANES];
   gint               stride[GST_VIDEO_MAX_PLANES];
 
-  gboolean (*map)    (GstVideoMeta *meta, guint plane, GstMapInfo *info, gint *stride,
-                      GstMapFlags flags);
+  gboolean (*map)    (GstVideoMeta *meta, guint plane, GstMapInfo *info,
+                      gpointer *data, gint * stride, GstMapFlags flags);
   gboolean (*unmap)  (GstVideoMeta *meta, guint plane, GstMapInfo *info);
 };
 
@@ -84,7 +86,7 @@ GstVideoMeta * gst_buffer_add_video_meta_full  (GstBuffer *buffer, GstVideoFlags
                                                 gint stride[GST_VIDEO_MAX_PLANES]);
 
 gboolean       gst_video_meta_map        (GstVideoMeta *meta, guint plane, GstMapInfo *info,
-                                          gint *stride, GstMapFlags flags);
+                                          gpointer *data, gint *stride, GstMapFlags flags);
 gboolean       gst_video_meta_unmap      (GstVideoMeta *meta, guint plane, GstMapInfo *info);
 
 /**

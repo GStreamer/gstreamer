@@ -91,6 +91,71 @@ gst_buffer_get_video_meta_id (GstBuffer * buffer, gint id)
   return NULL;
 }
 
+static gboolean
+default_map (GstVideoMeta * meta, guint plane, GstMapInfo * info,
+    gpointer * data, gint * stride, GstMapFlags flags)
+{
+  guint n, i;
+  guint offset;
+  GstBuffer *buffer = meta->buffer;
+
+  if ((n = gst_buffer_n_memory (buffer)) == 0)
+    goto no_memory;
+
+  offset = meta->offset[plane];
+  *stride = meta->stride[plane];
+  /* find the memory block for this plane, this is the memory block containing
+   * the plane offset. @offset will be updated with the offset inside the memory
+   * block where the plane starts. */
+  for (i = 0; i < n; i++) {
+    GstMemory *mem = NULL;
+    gsize size;
+
+    mem = gst_buffer_get_memory (buffer, i);
+    size = gst_memory_get_sizes (mem, NULL, NULL);
+
+    if (offset < size) {
+      GstMemory *mapped;
+
+      if (!(mapped = gst_memory_make_mapped (mem, info, flags)))
+        goto cannot_map;
+
+      /* buffer is writable when WRITE map is requested, we checked this in
+       * _map * */
+      if (mapped != mem && (flags & GST_MAP_WRITE))
+        gst_buffer_replace_memory (buffer, i, gst_memory_ref (mapped));
+
+      *data = (guint8 *) info->data + offset;
+      return TRUE;
+    }
+    offset -= size;
+    gst_memory_unref (mem);
+  }
+  GST_DEBUG ("no memory found for offset %u", meta->offset[plane]);
+  return FALSE;
+
+  /* ERRORS */
+no_memory:
+  {
+    GST_DEBUG ("no memory");
+    return FALSE;
+  }
+cannot_map:
+  {
+    GST_DEBUG ("cannot map memory");
+    return FALSE;
+  }
+}
+
+static gboolean
+default_unmap (GstVideoMeta * meta, guint plane, GstMapInfo * info)
+{
+  gst_memory_unmap (info->memory, info);
+  gst_memory_unref (info->memory);
+
+  return TRUE;
+}
+
 /**
  * gst_buffer_add_video_meta:
  * @buffer: a #GstBuffer
@@ -161,51 +226,10 @@ gst_buffer_add_video_meta_full (GstBuffer * buffer, GstVideoFlags flags,
     meta->offset[i] = offset[i];
     meta->stride[i] = stride[i];
   }
+  meta->map = default_map;
+  meta->unmap = default_unmap;
+
   return meta;
-}
-
-static gboolean
-map_mem_for_offset (GstBuffer * buffer, guint * offset, GstMapInfo * info,
-    GstMapFlags flags)
-{
-  guint n, i;
-
-  if ((n = gst_buffer_n_memory (buffer)) == 0)
-    goto no_memory;
-
-  for (i = 0; i < n; i++) {
-    GstMemory *mem = NULL;
-    gsize size;
-
-    mem = gst_buffer_get_memory (buffer, i);
-    size = gst_memory_get_sizes (mem, NULL, NULL);
-
-    if (*offset < size) {
-      GstMemory *mapped;
-
-      if (!(mapped = gst_memory_make_mapped (mem, info, flags)))
-        goto cannot_map;
-
-      if (mapped != mem && (flags & GST_MAP_WRITE))
-        gst_buffer_replace_memory (buffer, i, gst_memory_ref (mapped));
-      break;
-    }
-    *offset -= size;
-    gst_memory_unref (mem);
-  }
-  return TRUE;
-
-  /* ERRORS */
-no_memory:
-  {
-    GST_DEBUG ("no memory");
-    return FALSE;
-  }
-cannot_map:
-  {
-    GST_DEBUG ("cannot map memory");
-    return FALSE;
-  }
 }
 
 /**
@@ -213,7 +237,7 @@ cannot_map:
  * @meta: a #GstVideoMeta
  * @plane: a plane
  * @info: a #GstMapInfo
- * @stride: result stride
+ * @offset: the offset of where the plane starts in @info
  * @flags: @GstMapFlags
  *
  * Map the video plane with index @plane in @meta and return a pointer to the
@@ -223,36 +247,19 @@ cannot_map:
  */
 gboolean
 gst_video_meta_map (GstVideoMeta * meta, guint plane, GstMapInfo * info,
-    gint * stride, GstMapFlags flags)
+    gpointer * data, gint * stride, GstMapFlags flags)
 {
-  guint offset;
-  gboolean write, res;
-  GstBuffer *buffer;
-
   g_return_val_if_fail (meta != NULL, FALSE);
+  g_return_val_if_fail (meta->map != NULL, FALSE);
   g_return_val_if_fail (plane < meta->n_planes, FALSE);
   g_return_val_if_fail (info != NULL, FALSE);
+  g_return_val_if_fail (data != NULL, FALSE);
   g_return_val_if_fail (stride != NULL, FALSE);
+  g_return_val_if_fail (meta->buffer != NULL, FALSE);
+  g_return_val_if_fail (!(flags & GST_MAP_WRITE)
+      || gst_buffer_is_writable (meta->buffer), FALSE);
 
-  buffer = meta->buffer;
-  g_return_val_if_fail (buffer != NULL, FALSE);
-
-  write = (flags & GST_MAP_WRITE) != 0;
-  g_return_val_if_fail (!write || gst_buffer_is_writable (buffer), FALSE);
-
-  offset = meta->offset[plane];
-  *stride = meta->stride[plane];
-  /* find the memory block for this plane, this is the memory block containing
-   * the plane offset */
-  res = map_mem_for_offset (buffer, &offset, info, flags);
-  if (G_LIKELY (res)) {
-    /* move to the right offset inside the block */
-    info->data += offset;
-    info->size -= offset;
-    info->maxsize -= offset;
-  }
-
-  return res;
+  return meta->map (meta, plane, info, data, stride, flags);
 }
 
 /**
@@ -268,27 +275,12 @@ gst_video_meta_map (GstVideoMeta * meta, guint plane, GstMapInfo * info,
 gboolean
 gst_video_meta_unmap (GstVideoMeta * meta, guint plane, GstMapInfo * info)
 {
-  guint offset;
-  GstBuffer *buffer;
-
   g_return_val_if_fail (meta != NULL, FALSE);
+  g_return_val_if_fail (meta->unmap != NULL, FALSE);
   g_return_val_if_fail (plane < meta->n_planes, FALSE);
   g_return_val_if_fail (info != NULL, FALSE);
 
-  buffer = meta->buffer;
-  g_return_val_if_fail (buffer != NULL, FALSE);
-
-  offset = meta->offset[plane];
-
-  /* move to the right offset inside the block */
-  info->data -= offset;
-  info->size += offset;
-  info->maxsize += offset;
-
-  gst_memory_unmap (info->memory, info);
-  gst_memory_unref (info->memory);
-
-  return TRUE;
+  return meta->unmap (meta, plane, info);
 }
 
 static void
