@@ -2631,8 +2631,9 @@ find_interface_elements (void)
     gst_object_unref (colorbalance_element);
   colorbalance_element = NULL;
 
-  navigation_element =
-      gst_bin_get_by_interface (GST_BIN (pipeline), GST_TYPE_NAVIGATION);
+  if (pipeline_type != 16)
+    navigation_element =
+        gst_bin_get_by_interface (GST_BIN (pipeline), GST_TYPE_NAVIGATION);
 
   it = gst_bin_iterate_all_by_interface (GST_BIN (pipeline),
       GST_TYPE_COLOR_BALANCE);
@@ -2692,13 +2693,17 @@ navigation_cmd_cb (GtkButton * button, gpointer data)
 {
   GstNavigationCommand cmd = GPOINTER_TO_INT (data);
 
-  if (!navigation_element) {
-    find_interface_elements ();
-    if (!navigation_element)
-      return;
-  }
+  if (pipeline_type == 16) {
+    gst_navigation_send_command (GST_NAVIGATION (pipeline), cmd);
+  } else {
+    if (!navigation_element) {
+      find_interface_elements ();
+      if (!navigation_element)
+        return;
+    }
 
-  gst_navigation_send_command (GST_NAVIGATION (navigation_element), cmd);
+    gst_navigation_send_command (GST_NAVIGATION (navigation_element), cmd);
+  }
 }
 
 #if defined (GDK_WINDOWING_X11) || defined (GDK_WINDOWING_WIN32) || defined (GDK_WINDOWING_QUARTZ)
@@ -2799,6 +2804,9 @@ button_press_cb (GtkWidget * widget, GdkEventButton * event, gpointer user_data)
   if (navigation_element)
     gst_navigation_send_mouse_event (GST_NAVIGATION (navigation_element),
         "mouse-button-press", event->button, event->x, event->y);
+  else if (pipeline_type == 16)
+    gst_navigation_send_mouse_event (GST_NAVIGATION (pipeline),
+        "mouse-button-press", event->button, event->x, event->y);
 
   return FALSE;
 }
@@ -2810,6 +2818,9 @@ button_release_cb (GtkWidget * widget, GdkEventButton * event,
   if (navigation_element)
     gst_navigation_send_mouse_event (GST_NAVIGATION (navigation_element),
         "mouse-button-release", event->button, event->x, event->y);
+  else if (pipeline_type == 16)
+    gst_navigation_send_mouse_event (GST_NAVIGATION (pipeline),
+        "mouse-button-release", event->button, event->x, event->y);
 
   return FALSE;
 }
@@ -2819,6 +2830,9 @@ key_press_cb (GtkWidget * widget, GdkEventKey * event, gpointer user_data)
 {
   if (navigation_element)
     gst_navigation_send_key_event (GST_NAVIGATION (navigation_element),
+        "key-press", gdk_keyval_name (event->keyval));
+  else if (pipeline_type == 16)
+    gst_navigation_send_key_event (GST_NAVIGATION (pipeline),
         "key-press", gdk_keyval_name (event->keyval));
 
   return FALSE;
@@ -2830,6 +2844,9 @@ key_release_cb (GtkWidget * widget, GdkEventKey * event, gpointer user_data)
   if (navigation_element)
     gst_navigation_send_key_event (GST_NAVIGATION (navigation_element),
         "key-release", gdk_keyval_name (event->keyval));
+  else if (pipeline_type == 16)
+    gst_navigation_send_key_event (GST_NAVIGATION (pipeline),
+        "key-release", gdk_keyval_name (event->keyval));
 
   return FALSE;
 }
@@ -2840,6 +2857,9 @@ motion_notify_cb (GtkWidget * widget, GdkEventMotion * event,
 {
   if (navigation_element)
     gst_navigation_send_mouse_event (GST_NAVIGATION (navigation_element),
+        "mouse-move", 0, event->x, event->y);
+  else if (pipeline_type == 16)
+    gst_navigation_send_mouse_event (GST_NAVIGATION (pipeline),
         "mouse-move", 0, event->x, event->y);
 
   return FALSE;
