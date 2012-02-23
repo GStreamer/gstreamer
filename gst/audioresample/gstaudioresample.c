@@ -1269,14 +1269,13 @@ gst_audio_resample_set_property (GObject * object, guint prop_id,
 
   switch (prop_id) {
     case PROP_QUALITY:
-      GST_BASE_TRANSFORM_LOCK (resample);
+      /* FIXME locking! */
       quality = g_value_get_int (value);
       GST_DEBUG_OBJECT (resample, "new quality %d", quality);
 
       gst_audio_resample_update_state (resample, resample->width,
           resample->channels, resample->inrate, resample->outrate,
           quality, resample->fp);
-      GST_BASE_TRANSFORM_UNLOCK (resample);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
