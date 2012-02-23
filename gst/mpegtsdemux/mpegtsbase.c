@@ -1258,6 +1258,9 @@ query_upstream_latency (MpegTSBase * base)
     GST_WARNING_OBJECT (base, "Failed to query upstream latency");
   gst_query_unref (query);
   base->query_latency = TRUE;
+
+  /* Calculate clock skew for live streams only */
+  base->packetizer->calculate_skew = base->upstream_live;
 }
 
 static inline GstFlowReturn

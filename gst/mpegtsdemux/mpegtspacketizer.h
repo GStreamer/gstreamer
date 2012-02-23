@@ -28,6 +28,8 @@
 #include <gst/base/gstadapter.h>
 #include <glib.h>
 
+#include "gstmpegdefs.h"
+
 #define MPEGTS_NORMAL_PACKETSIZE  188
 #define MPEGTS_M2TS_PACKETSIZE    192
 #define MPEGTS_DVB_ASI_PACKETSIZE 204
@@ -38,6 +40,8 @@
 
 #define MPEGTS_AFC_PCR_FLAG	0x10
 #define MPEGTS_AFC_OPCR_FLAG	0x08
+
+#define MAX_WINDOW 512
 
 G_BEGIN_DECLS
 
@@ -79,6 +83,21 @@ struct _MpegTSPacketizer2 {
   /* current offset of the tip of the adapter */
   guint64 offset;
   gboolean empty;
+
+  /* clock skew calculation */
+  gboolean       calculate_skew;
+  GstClockTime   base_time;
+  GstClockTime   base_pcrtime;
+  GstClockTime   base_extrtp;
+  GstClockTime   prev_out_time;
+  GstClockTime   last_pcrtime;
+  gint64         window[MAX_WINDOW];
+  guint          window_pos;
+  guint          window_size;
+  gboolean       window_filling;
+  gint64         window_min;
+  gint64         skew;
+  gint64         prev_send_diff;
 };
 
 struct _MpegTSPacketizer2Class {
