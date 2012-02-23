@@ -56,6 +56,7 @@ GstSpeexEnc GstTagSetter GstPreset
 GstSwitchSink GstChildProxy
 GstSwitchSrc GstChildProxy
 GstTagLibMux GstTagSetter
+GstTagMux GstTagSetter
 GstUDPSink GstURIHandler
 GstUDPSrc GstURIHandler
 GstV4l2Radio GstURIHandler GstImplementsInterface GstTuner GstPropertyProbe

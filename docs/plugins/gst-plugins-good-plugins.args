@@ -189,6 +189,16 @@
 </ARG>
 
 <ARG>
+<NAME>GstMultiFileSink::max-file-size</NAME>
+<TYPE>guint64</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Maximum File Size</NICK>
+<BLURB>Maximum file size before starting a new file in max-size mode.</BLURB>
+<DEFAULT>2147483648</DEFAULT>
+</ARG>
+
+<ARG>
 <NAME>GstMultiFileSrc::caps</NAME>
 <TYPE>GstCaps*</TYPE>
 <RANGE></RANGE>
@@ -2484,7 +2494,7 @@
 <RANGE></RANGE>
 <FLAGS>r</FLAGS>
 <NICK>Bytes served</NICK>
-<BLURB>Total number of bytes send to all clients.</BLURB>
+<BLURB>Total number of bytes sent to all clients.</BLURB>
 <DEFAULT>0</DEFAULT>
 </ARG>
 
@@ -19935,7 +19945,7 @@
 <FLAGS>rw</FLAGS>
 <NICK>Client</NICK>
 <BLURB>The PulseAudio client name to use.</BLURB>
-<DEFAULT>"<unknown>"</DEFAULT>
+<DEFAULT>"lt-gst-plugins-good-plugins-scan"</DEFAULT>
 </ARG>
 
 <ARG>
@@ -19995,7 +20005,7 @@
 <FLAGS>rw</FLAGS>
 <NICK>Client</NICK>
 <BLURB>The PulseAudio client_name_to_use.</BLURB>
-<DEFAULT>"<unknown>"</DEFAULT>
+<DEFAULT>"lt-gst-plugins-good-plugins-scan"</DEFAULT>
 </ARG>
 
 <ARG>
@@ -21369,6 +21379,26 @@
 </ARG>
 
 <ARG>
+<NAME>GstJackAudioSrc::client-name</NAME>
+<TYPE>gchar*</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Client name</NICK>
+<BLURB>The client name of the Jack instance (NULL = default).</BLURB>
+<DEFAULT>NULL</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstJackAudioSrc::transport</NAME>
+<TYPE>GstJackTransport</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Transport mode</NICK>
+<BLURB>Jack transport behaviour of the client.</BLURB>
+<DEFAULT>No transport support</DEFAULT>
+</ARG>
+
+<ARG>
 <NAME>GstJackAudioSink::client</NAME>
 <TYPE>JackClient*</TYPE>
 <RANGE></RANGE>
@@ -21396,6 +21426,26 @@
 <NICK>Server</NICK>
 <BLURB>The Jack server to connect to (NULL = default).</BLURB>
 <DEFAULT>NULL</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstJackAudioSink::client-name</NAME>
+<TYPE>gchar*</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Client name</NICK>
+<BLURB>The client name of the Jack instance (NULL = default).</BLURB>
+<DEFAULT>NULL</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstJackAudioSink::transport</NAME>
+<TYPE>GstJackTransport</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Transport mode</NICK>
+<BLURB>Jack transport behaviour of the client.</BLURB>
+<DEFAULT>No transport support</DEFAULT>
 </ARG>
 
 <ARG>
@@ -22085,7 +22135,7 @@
 <FLAGS>rw</FLAGS>
 <NICK>Client</NICK>
 <BLURB>The PulseAudio client name to use.</BLURB>
-<DEFAULT>"<unknown>"</DEFAULT>
+<DEFAULT>"lt-gst-plugins-good-plugins-scan"</DEFAULT>
 </ARG>
 
 <ARG>
@@ -22386,5 +22436,15 @@
 <NICK>user-pw</NICK>
 <BLURB>user password for authentication.</BLURB>
 <DEFAULT>""</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstWavParse::ignore-length</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Ignore length</NICK>
+<BLURB>Ignore length from the Wave header.</BLURB>
+<DEFAULT>FALSE</DEFAULT>
 </ARG>
 
