@@ -35,6 +35,7 @@
 #include <gst/interfaces/streamvolume.h>
 #include <gst/interfaces/colorbalance.h>
 #include <gst/interfaces/xoverlay.h>
+#include <gst/interfaces/navigation.h>
 
 #include "gstplaysink.h"
 #include "gststreamsynchronizer.h"
@@ -341,6 +342,8 @@ static void gst_play_sink_implements_interface_init (gpointer g_iface,
     gpointer g_iface_data);
 static void gst_play_sink_xoverlay_init (gpointer g_iface,
     gpointer g_iface_data);
+static void gst_play_sink_navigation_init (gpointer g_iface,
+    gpointer g_iface_data);
 static void
 _do_init (GType type)
 {
@@ -355,10 +358,15 @@ _do_init (GType type)
     gst_play_sink_xoverlay_init,
     NULL, NULL
   };
+  static const GInterfaceInfo nav_info = {
+    gst_play_sink_navigation_init,
+    NULL, NULL
+  };
 
   g_type_add_interface_static (type, GST_TYPE_IMPLEMENTS_INTERFACE, &impl_info);
   g_type_add_interface_static (type, GST_TYPE_STREAM_VOLUME, &svol_info);
   g_type_add_interface_static (type, GST_TYPE_X_OVERLAY, &xov_info);
+  g_type_add_interface_static (type, GST_TYPE_NAVIGATION, &nav_info);
 }
 
 G_DEFINE_TYPE_WITH_CODE (GstPlaySink, gst_play_sink, GST_TYPE_BIN,
@@ -4063,7 +4071,8 @@ static gboolean
 gst_play_sink_implements_interface_supported (GstImplementsInterface * iface,
     GType type)
 {
-  if (type == GST_TYPE_X_OVERLAY || type == GST_TYPE_STREAM_VOLUME)
+  if (type == GST_TYPE_X_OVERLAY || type == GST_TYPE_STREAM_VOLUME ||
+      type == GST_TYPE_NAVIGATION)
     return TRUE;
   else
     return FALSE;
@@ -4075,6 +4084,42 @@ gst_play_sink_implements_interface_init (gpointer g_iface,
 {
   GstImplementsInterfaceClass *iface = (GstImplementsInterfaceClass *) g_iface;
   iface->supported = gst_play_sink_implements_interface_supported;
+}
+
+static void
+gst_play_sink_navigation_send_event (GstNavigation * navigation,
+    GstStructure * structure)
+{
+  GstPlaySink *playsink = GST_PLAY_SINK (navigation);
+  GstBin *bin = NULL;
+
+  GST_PLAY_SINK_LOCK (playsink);
+  if (playsink->videochain && playsink->videochain->chain.bin)
+    bin = GST_BIN (gst_object_ref (playsink->videochain->chain.bin));
+  GST_PLAY_SINK_UNLOCK (playsink);
+
+  if (bin) {
+    GstElement *nav = gst_bin_get_by_interface (bin, GST_TYPE_NAVIGATION);
+
+    if (nav) {
+      gst_navigation_send_event (GST_NAVIGATION (nav), structure);
+      structure = NULL;
+      gst_object_unref (nav);
+    }
+
+    gst_object_unref (bin);
+  }
+
+  if (structure)
+    gst_structure_free (structure);
+}
+
+static void
+gst_play_sink_navigation_init (gpointer g_iface, gpointer g_iface_data)
+{
+  GstNavigationInterface *iface = (GstNavigationInterface *) g_iface;
+
+  iface->send_event = gst_play_sink_navigation_send_event;
 }
 
 gboolean
