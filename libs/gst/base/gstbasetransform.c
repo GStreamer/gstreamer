@@ -1209,48 +1209,32 @@ no_transform_possible:
   }
 }
 
-/* called when new caps arrive on the sink or source pad,
+/* called when new caps arrive on the sink pad,
  * We try to find the best caps for the other side using our _find_transform()
  * function. If there are caps, we configure the transform for this new
  * transformation.
- *
- * FIXME, this function is currently commutative but this should not really be
- * because we never set caps starting from the srcpad.
  */
 static gboolean
 gst_base_transform_setcaps (GstBaseTransform * trans, GstPad * pad,
-    GstCaps * caps)
+    GstCaps * incaps)
 {
-  GstPad *otherpad, *otherpeer;
-  GstCaps *othercaps = NULL;
+  GstCaps *outcaps;
   gboolean ret = TRUE;
-  GstCaps *incaps, *outcaps;
 
-  otherpad = (pad == trans->srcpad) ? trans->sinkpad : trans->srcpad;
-  otherpeer = gst_pad_get_peer (otherpad);
-
-  GST_DEBUG_OBJECT (pad, "have new caps %p %" GST_PTR_FORMAT, caps, caps);
+  GST_DEBUG_OBJECT (pad, "have new caps %p %" GST_PTR_FORMAT, incaps, incaps);
 
   /* find best possible caps for the other pad */
-  othercaps = gst_base_transform_find_transform (trans, pad, caps);
-  if (!othercaps || gst_caps_is_empty (othercaps))
+  outcaps = gst_base_transform_find_transform (trans, pad, incaps);
+  if (!outcaps || gst_caps_is_empty (outcaps))
     goto no_transform_possible;
 
   /* configure the element now */
-  /* make sure in and out caps are correct */
-  if (pad == trans->sinkpad) {
-    incaps = caps;
-    outcaps = othercaps;
-  } else {
-    incaps = othercaps;
-    outcaps = caps;
-  }
 
   /* if we have the same caps, we can optimize and reuse the input caps */
   if (gst_caps_is_equal (incaps, outcaps)) {
     GST_INFO_OBJECT (trans, "reuse caps");
-    gst_caps_unref (othercaps);
-    outcaps = othercaps = gst_caps_ref (incaps);
+    gst_caps_unref (outcaps);
+    outcaps = gst_caps_ref (incaps);
   }
 
   /* call configure now */
@@ -1263,27 +1247,16 @@ gst_base_transform_setcaps (GstBaseTransform * trans, GstPad * pad,
   GST_OBJECT_UNLOCK (trans->sinkpad);
 
   /* we know this will work, we implement the setcaps */
-  gst_pad_push_event (otherpad, gst_event_new_caps (othercaps));
-
-  if (pad == trans->srcpad && trans->priv->pad_mode == GST_PAD_MODE_PULL) {
-    /* FIXME hm? */
-    ret &= gst_pad_push_event (otherpeer, gst_event_new_caps (othercaps));
-    if (!ret) {
-      GST_INFO_OBJECT (trans, "otherpeer setcaps(%" GST_PTR_FORMAT ") failed",
-          othercaps);
-    }
-  }
+  gst_pad_push_event (trans->srcpad, gst_event_new_caps (outcaps));
 
   if (ret) {
     /* try to get a pool when needed */
-    ret = gst_base_transform_do_bufferpool (trans, othercaps);
+    ret = gst_base_transform_do_bufferpool (trans, outcaps);
   }
 
 done:
-  if (otherpeer)
-    gst_object_unref (otherpeer);
-  if (othercaps)
-    gst_caps_unref (othercaps);
+  if (outcaps)
+    gst_caps_unref (outcaps);
 
   trans->negotiated = ret;
 
@@ -1294,14 +1267,14 @@ no_transform_possible:
   {
     GST_WARNING_OBJECT (trans,
         "transform could not transform %" GST_PTR_FORMAT
-        " in anything we support", caps);
+        " in anything we support", incaps);
     ret = FALSE;
     goto done;
   }
 failed_configure:
   {
-    GST_WARNING_OBJECT (trans, "FAILED to configure caps %" GST_PTR_FORMAT
-        " to accept %" GST_PTR_FORMAT, otherpad, othercaps);
+    GST_WARNING_OBJECT (trans, "FAILED to configure incaps %" GST_PTR_FORMAT
+        " and outcaps %" GST_PTR_FORMAT, incaps, outcaps);
     ret = FALSE;
     goto done;
   }
@@ -1349,9 +1322,7 @@ gst_base_transform_default_query (GstBaseTransform * trans,
       if (direction != GST_PAD_SINK)
         goto done;
 
-      GST_BASE_TRANSFORM_LOCK (trans);
-      passthrough = trans->passthrough;
-      GST_BASE_TRANSFORM_UNLOCK (trans);
+      passthrough = gst_base_transform_is_passthrough (trans);
 
       GST_DEBUG_OBJECT (trans, "propose %spassthrough allocation values",
           (passthrough ? "" : "non-"));
@@ -1775,9 +1746,8 @@ gst_base_transform_handle_buffer (GstBaseTransform * trans, GstBuffer * inbuf,
     if (incaps == NULL)
       goto no_reconfigure;
 
-    /* if we need to reconfigure we pretend a buffer with new caps arrived. This
-     * will reconfigure the transform with the new output format. We can only
-     * do this if the buffer actually has caps. */
+    /* if we need to reconfigure we pretend new caps arrived. This
+     * will reconfigure the transform with the new output format. */
     if (!gst_base_transform_setcaps (trans, trans->sinkpad, incaps)) {
       gst_caps_unref (incaps);
       goto not_negotiated;
