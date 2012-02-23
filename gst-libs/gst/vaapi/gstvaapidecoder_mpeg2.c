@@ -574,12 +574,22 @@ decode_picture_ext(GstVaapiDecoderMpeg2 *decoder, guchar *buf, guint buf_size)
 {
     GstVaapiDecoderMpeg2Private * const priv = decoder->priv;
     GstMpegVideoPictureExt * const pic_ext = &priv->pic_ext;
+    GstVaapiPicture * const picture = priv->current_picture;
 
     if (!gst_mpeg_video_parse_picture_extension(pic_ext, buf, buf_size, 0)) {
         GST_DEBUG("failed to parse picture-extension");
         return GST_VAAPI_DECODER_STATUS_ERROR_BITSTREAM_PARSER;
     }
     priv->has_pic_ext = TRUE;
+
+    switch (pic_ext->picture_structure) {
+    case GST_MPEG_VIDEO_PICTURE_STRUCTURE_TOP_FIELD:
+        GST_VAAPI_PICTURE_FLAG_SET(picture, GST_VAAPI_PICTURE_FLAG_TOP_FIELD);
+        break;
+    case GST_MPEG_VIDEO_PICTURE_STRUCTURE_BOTTOM_FIELD:
+        GST_VAAPI_PICTURE_FLAG_SET(picture, GST_VAAPI_PICTURE_FLAG_BOTTOM_FIELD);
+        break;
+    }
     return GST_VAAPI_DECODER_STATUS_SUCCESS;
 }
 
@@ -700,7 +710,10 @@ decode_slice(
     }
     macroblock_offset = gst_bit_reader_get_pos(&br);
 
-    mb_y = slice_no;
+    mb_y = slice_no << !GST_VAAPI_PICTURE_IS_FRAME(picture);
+    if (GST_VAAPI_PICTURE_IS_BOTTOM_FIELD(picture))
+        mb_y++;
+
     mb_x = -1;
     do {
         if (!decode_vlc(&br, &mb_inc, mpeg2_mbaddr_vlc_table,
