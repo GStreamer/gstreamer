@@ -444,9 +444,6 @@ decode_sequence_end(GstVaapiDecoderMpeg2 *decoder)
         status = decode_current_picture(decoder);
         if (status != GST_VAAPI_DECODER_STATUS_SUCCESS)
             return status;
-        status = render_picture(decoder, priv->current_picture);
-        if (status != GST_VAAPI_DECODER_STATUS_SUCCESS)
-            return status;
     }
 
     if (priv->next_picture) {
