@@ -1,4 +1,36 @@
-This is GStreamer Ugly Plug-ins 0.10.18 "Extra Life"
+This is GStreamer Ugly Plug-ins 0.10.19 "Stronger"
+
+Changes since 0.10.18:
+
+      * a52dec: don't claim to support upstream renegotiation
+      * dvddemux: tweak subtitle stream setup based on dvd language codes event
+      * dvdreadsrc: fix off by one in cell calculation for the last chapter
+      * dvdreadsrc: fix sector search for packed titles; fix sector seeking
+      * dvdreadsrc: map subtitle language tag to stream indicated in PGC data
+      * dvdreadsrc: take into account first sector of the current title
+      * lame, lamemp3enc: ensure parsed output (most muxers need framed mp3 as input)
+      * lame, lamemp3enc: post CODEC and BITRATE tags
+      * mad: remove id3tag dependency used by in practice unreachable legacy code
+      * mpeg2dec: don't treat non-fatal errors as fatal and fix spurious failure to decode some files
+      * mpeg2dec: post QoS messages when dropping a frame due to QoS
+      * rtpasfdepay: avoid re-sending header; fix fragmented packet handling and packet padding
+      * twolame: improve output framing and timestamping
+      * x264enc: allow renegotiation but prefer current caps
+      * x264enc: negotiate profile, level and output stream-format from downstream caps where appropriate
+
+Bugs fixed since 0.10.18:
+
+      * 644233 : Set the H.264 level from the caps for encoding
+      * 391543 : lame should add a tag with the chosen bitrate
+      * 429476 : [mpeg2dec] can't play auge.mpg
+      * 653473 : x264enc: " subme " property value can go up to 10
+      * 655223 : [x264enc] properly handle stream-format from caps
+      * 658297 : rmdemux: tags get lost when transcoding
+      * 659252 : dvdreadsrc: various fixes for titles not starting on a new file
+      * 660562 : mpeg2dec: post QoS messages when dropping a frame due to QoS
+      * 662964 : asfdemux memleak
+      * 664175 : x264enc ! avimux results in not-negotiated flow error
+      * 665101 : Wrong format string in gst_dvd_read_src_do_seek
 
 Changes since 0.10.17:
 
