@@ -351,12 +351,6 @@ static gboolean default_copy_metadata (GstBaseTransform * trans,
 static void
 gst_base_transform_finalize (GObject * object)
 {
-  GstBaseTransform *trans;
-
-  trans = GST_BASE_TRANSFORM (object);
-
-  g_mutex_clear (&trans->transform_lock);
-
   G_OBJECT_CLASS (parent_class)->finalize (object);
 }
 
@@ -444,7 +438,6 @@ gst_base_transform_init (GstBaseTransform * trans,
       GST_DEBUG_FUNCPTR (gst_base_transform_query));
   gst_element_add_pad (GST_ELEMENT (trans), trans->srcpad);
 
-  g_mutex_init (&trans->transform_lock);
   trans->priv->qos_enabled = DEFAULT_PROP_QOS;
   trans->cache_caps1 = NULL;
   trans->cache_caps2 = NULL;
@@ -1937,9 +1930,7 @@ gst_base_transform_getrange (GstPad * pad, GstObject * parent, guint64 offset,
   if (klass->before_transform)
     klass->before_transform (trans, inbuf);
 
-  GST_BASE_TRANSFORM_LOCK (trans);
   ret = gst_base_transform_handle_buffer (trans, inbuf, buffer);
-  GST_BASE_TRANSFORM_UNLOCK (trans);
 
 done:
   return ret;
@@ -1981,9 +1972,7 @@ gst_base_transform_chain (GstPad * pad, GstObject * parent, GstBuffer * buffer)
     klass->before_transform (trans, buffer);
 
   /* protect transform method and concurrent buffer alloc */
-  GST_BASE_TRANSFORM_LOCK (trans);
   ret = gst_base_transform_handle_buffer (trans, buffer, &outbuf);
-  GST_BASE_TRANSFORM_UNLOCK (trans);
 
   /* outbuf can be NULL, this means a dropped buffer, if we have a buffer but
    * GST_BASE_TRANSFORM_FLOW_DROPPED we will not push either. */

@@ -77,26 +77,6 @@ G_BEGIN_DECLS
  */
 #define GST_BASE_TRANSFORM_FLOW_DROPPED   GST_FLOW_CUSTOM_SUCCESS
 
-/**
- * GST_BASE_TRANSFORM_LOCK:
- * @obj: base transform instance
- *
- * Obtain a lock to protect the transform function from concurrent access.
- *
- * Since: 0.10.13
- */
-#define GST_BASE_TRANSFORM_LOCK(obj)   g_mutex_lock (&GST_BASE_TRANSFORM_CAST (obj)->transform_lock)
-
-/**
- * GST_BASE_TRANSFORM_UNLOCK:
- * @obj: base transform instance
- *
- * Release the lock that protects the transform function from concurrent access.
- *
- * Since: 0.10.13
- */
-#define GST_BASE_TRANSFORM_UNLOCK(obj) g_mutex_unlock (&GST_BASE_TRANSFORM_CAST (obj)->transform_lock)
-
 typedef struct _GstBaseTransform GstBaseTransform;
 typedef struct _GstBaseTransformClass GstBaseTransformClass;
 typedef struct _GstBaseTransformPrivate GstBaseTransformPrivate;
@@ -130,8 +110,6 @@ struct _GstBaseTransform {
 
   /* MT-protected (with STREAM_LOCK) */
   GstSegment     segment;
-
-  GMutex	 transform_lock;
 
   /*< private >*/
   GstBaseTransformPrivate *priv;
