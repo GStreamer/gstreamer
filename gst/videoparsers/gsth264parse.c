@@ -845,6 +845,7 @@ gst_h264_parse_make_codec_data (GstH264Parse * h264parse)
   guint8 profile_idc = 0, profile_comp = 0, level_idc = 0;
   gboolean found = FALSE;
   guint8 *data;
+  gint nl;
 
   /* only nal payload in stored nals */
 
@@ -877,12 +878,13 @@ gst_h264_parse_make_codec_data (GstH264Parse * h264parse)
 
   buf = gst_buffer_new_and_alloc (5 + 1 + sps_size + 1 + pps_size);
   data = GST_BUFFER_DATA (buf);
+  nl = h264parse->nal_length_size;
 
   data[0] = 1;                  /* AVC Decoder Configuration Record ver. 1 */
   data[1] = profile_idc;        /* profile_idc                             */
   data[2] = profile_comp;       /* profile_compability                     */
   data[3] = level_idc;          /* level_idc                               */
-  data[4] = 0xfc | (4 - 1);     /* nal_length_size_minus1                  */
+  data[4] = 0xfc | (nl - 1);    /* nal_length_size_minus1                  */
   data[5] = 0xe0 | num_sps;     /* number of SPSs */
 
   data += 6;
