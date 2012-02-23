@@ -78,6 +78,8 @@ struct _GstSpectrum
   guint64 error_per_interval;
   guint64 accumulated_error;
 
+  GMutex lock;
+
   GstSpectrumInputData input_data;
 };
 

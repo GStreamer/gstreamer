@@ -432,7 +432,7 @@ gst_video_balance_transform_frame_ip (GstVideoFilter * vfilter,
     goto not_negotiated;
 
   /* if no change is needed, we are done */
-  if (GST_BASE_TRANSFORM (vfilter)->passthrough)
+  if (gst_base_transform_is_passthrough (GST_BASE_TRANSFORM (vfilter)))
     goto done;
 
   GST_OBJECT_LOCK (videobalance);
@@ -584,7 +584,6 @@ gst_video_balance_colorbalance_set_value (GstColorBalance * balance,
   g_return_if_fail (GST_IS_VIDEO_FILTER (vb));
   g_return_if_fail (channel->label != NULL);
 
-  GST_BASE_TRANSFORM_LOCK (vb);
   GST_OBJECT_LOCK (vb);
   if (!g_ascii_strcasecmp (channel->label, "HUE")) {
     new_val = (value + 1000.0) * 2.0 / 2000.0 - 1.0;
@@ -607,7 +606,6 @@ gst_video_balance_colorbalance_set_value (GstColorBalance * balance,
   if (changed)
     gst_video_balance_update_properties (vb);
   GST_OBJECT_UNLOCK (vb);
-  GST_BASE_TRANSFORM_UNLOCK (vb);
 
   if (changed) {
     gst_color_balance_value_changed (balance, channel,
@@ -670,7 +668,6 @@ gst_video_balance_set_property (GObject * object, guint prop_id,
   gdouble d;
   const gchar *label = NULL;
 
-  GST_BASE_TRANSFORM_LOCK (balance);
   GST_OBJECT_LOCK (balance);
   switch (prop_id) {
     case PROP_CONTRAST:
@@ -712,7 +709,6 @@ gst_video_balance_set_property (GObject * object, guint prop_id,
 
   gst_video_balance_update_properties (balance);
   GST_OBJECT_UNLOCK (balance);
-  GST_BASE_TRANSFORM_UNLOCK (balance);
 
   if (label) {
     GstColorBalanceChannel *channel =

@@ -255,6 +255,8 @@ gst_spectrum_init (GstSpectrum * spectrum)
   spectrum->interval = DEFAULT_INTERVAL;
   spectrum->bands = DEFAULT_BANDS;
   spectrum->threshold = DEFAULT_THRESHOLD;
+
+  g_mutex_init (&spectrum->lock);
 }
 
 static void
@@ -334,6 +336,7 @@ gst_spectrum_finalize (GObject * object)
   GstSpectrum *spectrum = GST_SPECTRUM (object);
 
   gst_spectrum_reset_state (spectrum);
+  g_mutex_clear (&spectrum->lock);
 
   G_OBJECT_CLASS (parent_class)->finalize (object);
 }
@@ -356,37 +359,37 @@ gst_spectrum_set_property (GObject * object, guint prop_id,
       break;
     case PROP_INTERVAL:{
       guint64 interval = g_value_get_uint64 (value);
+      g_mutex_lock (&filter->lock);
       if (filter->interval != interval) {
-        GST_BASE_TRANSFORM_LOCK (filter);
         filter->interval = interval;
         gst_spectrum_reset_state (filter);
-        GST_BASE_TRANSFORM_UNLOCK (filter);
       }
-    }
+      g_mutex_unlock (&filter->lock);
       break;
+    }
     case PROP_BANDS:{
       guint bands = g_value_get_uint (value);
+      g_mutex_lock (&filter->lock);
       if (filter->bands != bands) {
-        GST_BASE_TRANSFORM_LOCK (filter);
         filter->bands = bands;
         gst_spectrum_reset_state (filter);
-        GST_BASE_TRANSFORM_UNLOCK (filter);
       }
-    }
+      g_mutex_unlock (&filter->lock);
       break;
+    }
     case PROP_THRESHOLD:
       filter->threshold = g_value_get_int (value);
       break;
     case PROP_MULTI_CHANNEL:{
       gboolean multi_channel = g_value_get_boolean (value);
+      g_mutex_lock (&filter->lock);
       if (filter->multi_channel != multi_channel) {
-        GST_BASE_TRANSFORM_LOCK (filter);
         filter->multi_channel = multi_channel;
         gst_spectrum_reset_state (filter);
-        GST_BASE_TRANSFORM_UNLOCK (filter);
       }
-    }
+      g_mutex_unlock (&filter->lock);
       break;
+    }
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -622,6 +625,7 @@ gst_spectrum_setup (GstAudioFilter * base, const GstAudioInfo * info)
   gboolean multi_channel = spectrum->multi_channel;
   GstSpectrumInputData input_data = NULL;
 
+  g_mutex_lock (&spectrum->lock);
   switch (GST_AUDIO_INFO_FORMAT (info)) {
     case GST_AUDIO_FORMAT_S16:
       input_data =
@@ -648,6 +652,7 @@ gst_spectrum_setup (GstAudioFilter * base, const GstAudioInfo * info)
   spectrum->input_data = input_data;
 
   gst_spectrum_reset_state (spectrum);
+  g_mutex_unlock (&spectrum->lock);
 
   return TRUE;
 }
@@ -865,6 +870,7 @@ gst_spectrum_transform_ip (GstBaseTransform * trans, GstBuffer * buffer)
   GstSpectrumChannel *cd;
   GstSpectrumInputData input_data;
 
+  g_mutex_lock (&spectrum->lock);
   gst_buffer_map (buffer, &map, GST_MAP_READ);
   data = map.data;
   size = map.size;
@@ -997,6 +1003,7 @@ gst_spectrum_transform_ip (GstBaseTransform * trans, GstBuffer * buffer)
   spectrum->input_pos = input_pos;
 
   gst_buffer_unmap (buffer, &map);
+  g_mutex_unlock (&spectrum->lock);
 
   g_assert (size == 0);
 

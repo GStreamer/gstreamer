@@ -97,6 +97,8 @@ static GstStaticPadTemplate sink_template = GST_STATIC_PAD_TEMPLATE ("sink",
 #define gst_video_crop_parent_class parent_class
 G_DEFINE_TYPE (GstVideoCrop, gst_video_crop, GST_TYPE_BASE_TRANSFORM);
 
+static void gst_video_crop_finalize (GObject * object);
+
 static void gst_video_crop_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec);
 static void gst_video_crop_get_property (GObject * object, guint prop_id,
@@ -155,6 +157,7 @@ gst_video_crop_src_event (GstBaseTransform * trans, GstEvent * event)
   }
 
   GST_OBJECT_UNLOCK (vcrop);
+
   return GST_BASE_TRANSFORM_CLASS (parent_class)->src_event (trans,
       (new_event ? new_event : event));
 }
@@ -170,25 +173,7 @@ gst_video_crop_class_init (GstVideoCropClass * klass)
   element_class = (GstElementClass *) klass;
   basetransform_class = (GstBaseTransformClass *) klass;
 
-  gst_element_class_set_details_simple (element_class, "Crop",
-      "Filter/Effect/Video",
-      "Crops video into a user-defined region",
-      "Tim-Philipp Müller <tim centricular net>");
-
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&sink_template));
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&src_template));
-  gst_element_class_set_details_simple (element_class, "Crop",
-      "Filter/Effect/Video",
-      "Crops video into a user-defined region",
-      "Tim-Philipp Müller <tim centricular net>");
-
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&sink_template));
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&src_template));
-
+  gobject_class->finalize = gst_video_crop_finalize;
   gobject_class->set_property = gst_video_crop_set_property;
   gobject_class->get_property = gst_video_crop_get_property;
 
@@ -204,6 +189,15 @@ gst_video_crop_class_init (GstVideoCropClass * klass)
   g_object_class_install_property (gobject_class, ARG_BOTTOM,
       g_param_spec_int ("bottom", "Bottom", "Pixels to crop at bottom",
           0, G_MAXINT, 0, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
+  gst_element_class_add_pad_template (element_class,
+      gst_static_pad_template_get (&sink_template));
+  gst_element_class_add_pad_template (element_class,
+      gst_static_pad_template_get (&src_template));
+  gst_element_class_set_details_simple (element_class, "Crop",
+      "Filter/Effect/Video",
+      "Crops video into a user-defined region",
+      "Tim-Philipp Müller <tim centricular net>");
 
   basetransform_class->transform = GST_DEBUG_FUNCPTR (gst_video_crop_transform);
   basetransform_class->transform_caps =
@@ -223,6 +217,20 @@ gst_video_crop_init (GstVideoCrop * vcrop)
   vcrop->crop_left = 0;
   vcrop->crop_top = 0;
   vcrop->crop_bottom = 0;
+
+  g_mutex_init (&vcrop->lock);
+}
+
+static void
+gst_video_crop_finalize (GObject * object)
+{
+  GstVideoCrop *vcrop;
+
+  vcrop = GST_VIDEO_CROP (object);
+
+  g_mutex_clear (&vcrop->lock);
+
+  G_OBJECT_CLASS (parent_class)->finalize (object);
 }
 
 static gboolean
@@ -465,6 +473,7 @@ gst_video_crop_transform (GstBaseTransform * trans, GstBuffer * inbuf,
 {
   GstVideoCrop *vcrop = GST_VIDEO_CROP (trans);
 
+  g_mutex_lock (&vcrop->lock);
   switch (vcrop->in.packing) {
     case VIDEO_CROP_PIXEL_FORMAT_PACKED_SIMPLE:
       gst_video_crop_transform_packed_simple (vcrop, inbuf, outbuf);
@@ -478,6 +487,7 @@ gst_video_crop_transform (GstBaseTransform * trans, GstBuffer * inbuf,
     default:
       g_assert_not_reached ();
   }
+  g_mutex_unlock (&vcrop->lock);
 
   return GST_FLOW_OK;
 }
@@ -635,8 +645,8 @@ gst_video_crop_set_caps (GstBaseTransform * trans, GstCaps * incaps,
   GST_LOG_OBJECT (crop, "incaps = %" GST_PTR_FORMAT ", outcaps = %"
       GST_PTR_FORMAT, incaps, outcaps);
 
-  if ((crop->crop_left | crop->crop_right | crop->crop_top | crop->
-          crop_bottom) == 0) {
+  if ((crop->crop_left | crop->crop_right | crop->
+          crop_top | crop->crop_bottom) == 0) {
     GST_LOG_OBJECT (crop, "we are using passthrough");
     gst_base_transform_set_passthrough (GST_BASE_TRANSFORM (crop), TRUE);
   } else {
@@ -675,7 +685,7 @@ gst_video_crop_set_property (GObject * object, guint prop_id,
   video_crop = GST_VIDEO_CROP (object);
 
   /* don't modify while we are transforming */
-  GST_BASE_TRANSFORM_LOCK (GST_BASE_TRANSFORM_CAST (video_crop));
+  g_mutex_lock (&video_crop->lock);
 
   /* protect with the object lock so that we can read them */
   GST_OBJECT_LOCK (video_crop);
@@ -696,14 +706,13 @@ gst_video_crop_set_property (GObject * object, guint prop_id,
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
   }
-  GST_OBJECT_UNLOCK (video_crop);
-
   GST_LOG_OBJECT (video_crop, "l=%d,r=%d,b=%d,t=%d",
       video_crop->crop_left, video_crop->crop_right, video_crop->crop_bottom,
       video_crop->crop_top);
+  GST_OBJECT_UNLOCK (video_crop);
 
   gst_base_transform_reconfigure (GST_BASE_TRANSFORM (video_crop));
-  GST_BASE_TRANSFORM_UNLOCK (GST_BASE_TRANSFORM_CAST (video_crop));
+  g_mutex_unlock (&video_crop->lock);
 }
 
 static void

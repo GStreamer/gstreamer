@@ -68,6 +68,8 @@ struct _GstVideoCrop
 
   GstVideoCropImageDetails in;  /* details of input image */
   GstVideoCropImageDetails out; /* details of output image */
+
+  GMutex lock;
 };
 
 struct _GstVideoCropClass
