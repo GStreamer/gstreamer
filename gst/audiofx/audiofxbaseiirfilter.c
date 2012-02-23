@@ -62,7 +62,7 @@ static void process_32 (GstAudioFXBaseIIRFilter * filter,
 /* GObject vmethod implementations */
 
 static void
-gst_audio_fx_base_iir_filter_dispose (GObject * object)
+gst_audio_fx_base_iir_filter_finalize (GObject * object)
 {
   GstAudioFXBaseIIRFilter *filter = GST_AUDIO_FX_BASE_IIR_FILTER (object);
 
@@ -89,8 +89,9 @@ gst_audio_fx_base_iir_filter_dispose (GObject * object)
     g_free (filter->channels);
     filter->channels = NULL;
   }
+  g_mutex_clear (&filter->lock);
 
-  G_OBJECT_CLASS (parent_class)->dispose (object);
+  G_OBJECT_CLASS (parent_class)->finalize (object);
 }
 
 static void
@@ -104,7 +105,7 @@ gst_audio_fx_base_iir_filter_class_init (GstAudioFXBaseIIRFilterClass * klass)
   GST_DEBUG_CATEGORY_INIT (gst_audio_fx_base_iir_filter_debug,
       "audiofxbaseiirfilter", 0, "Audio IIR Filter Base Class");
 
-  gobject_class->dispose = gst_audio_fx_base_iir_filter_dispose;
+  gobject_class->finalize = gst_audio_fx_base_iir_filter_finalize;
 
   caps = gst_caps_from_string (ALLOWED_CAPS);
   gst_audio_filter_class_add_pad_templates (GST_AUDIO_FILTER_CLASS (klass),
@@ -129,6 +130,8 @@ gst_audio_fx_base_iir_filter_init (GstAudioFXBaseIIRFilter * filter)
   filter->nb = 0;
   filter->channels = NULL;
   filter->nchannels = 0;
+
+  g_mutex_init (&filter->lock);
 }
 
 /* Evaluate the transfer function that corresponds to the IIR
@@ -182,7 +185,7 @@ gst_audio_fx_base_iir_filter_set_coefficients (GstAudioFXBaseIIRFilter * filter,
 
   g_return_if_fail (GST_IS_AUDIO_FX_BASE_IIR_FILTER (filter));
 
-  GST_BASE_TRANSFORM_LOCK (filter);
+  g_mutex_lock (&filter->lock);
 
   g_free (filter->a);
   g_free (filter->b);
@@ -230,7 +233,7 @@ gst_audio_fx_base_iir_filter_set_coefficients (GstAudioFXBaseIIRFilter * filter,
     }
   }
 
-  GST_BASE_TRANSFORM_UNLOCK (filter);
+  g_mutex_unlock (&filter->lock);
 }
 
 /* GstAudioFilter vmethod implementations */
@@ -243,6 +246,7 @@ gst_audio_fx_base_iir_filter_setup (GstAudioFilter * base,
   gboolean ret = TRUE;
   gint channels;
 
+  g_mutex_lock (&filter->lock);
   switch (GST_AUDIO_INFO_FORMAT (info)) {
     case GST_AUDIO_FORMAT_F32:
       filter->process = (GstAudioFXBaseIIRFilterProcessFunc)
@@ -282,6 +286,7 @@ gst_audio_fx_base_iir_filter_setup (GstAudioFilter * base,
     }
     filter->nchannels = channels;
   }
+  g_mutex_unlock (&filter->lock);
 
   return ret;
 }
@@ -374,7 +379,9 @@ gst_audio_fx_base_iir_filter_transform_ip (GstBaseTransform * base,
   gst_buffer_map (buf, &map, GST_MAP_READWRITE);
   num_samples = map.size / GST_AUDIO_FILTER_BPS (filter);
 
+  g_mutex_lock (&filter->lock);
   filter->process (filter, map.data, num_samples);
+  g_mutex_unlock (&filter->lock);
 
   gst_buffer_unmap (buf, &map);
 

@@ -160,6 +160,8 @@ gst_audio_echo_init (GstAudioEcho * self)
   self->intensity = 0.0;
   self->feedback = 0.0;
 
+  g_mutex_init (&self->lock);
+
   gst_base_transform_set_in_place (GST_BASE_TRANSFORM (self), TRUE);
 }
 
@@ -170,6 +172,8 @@ gst_audio_echo_finalize (GObject * object)
 
   g_free (self->buffer);
   self->buffer = NULL;
+
+  g_mutex_clear (&self->lock);
 
   G_OBJECT_CLASS (parent_class)->finalize (object);
 }
@@ -184,7 +188,7 @@ gst_audio_echo_set_property (GObject * object, guint prop_id,
     case PROP_DELAY:{
       guint64 max_delay, delay;
 
-      GST_BASE_TRANSFORM_LOCK (self);
+      g_mutex_lock (&self->lock);
       delay = g_value_get_uint64 (value);
       max_delay = self->max_delay;
 
@@ -197,13 +201,13 @@ gst_audio_echo_set_property (GObject * object, guint prop_id,
         self->delay = delay;
         self->max_delay = MAX (delay, max_delay);
       }
-      GST_BASE_TRANSFORM_UNLOCK (self);
-    }
+      g_mutex_unlock (&self->lock);
       break;
+    }
     case PROP_MAX_DELAY:{
       guint64 max_delay, delay;
 
-      GST_BASE_TRANSFORM_LOCK (self);
+      g_mutex_lock (&self->lock);
       max_delay = g_value_get_uint64 (value);
       delay = self->delay;
 
@@ -214,21 +218,21 @@ gst_audio_echo_set_property (GObject * object, guint prop_id,
         self->delay = delay;
         self->max_delay = max_delay;
       }
-      GST_BASE_TRANSFORM_UNLOCK (self);
-    }
+      g_mutex_unlock (&self->lock);
       break;
+    }
     case PROP_INTENSITY:{
-      GST_BASE_TRANSFORM_LOCK (self);
+      g_mutex_lock (&self->lock);
       self->intensity = g_value_get_float (value);
-      GST_BASE_TRANSFORM_UNLOCK (self);
-    }
+      g_mutex_unlock (&self->lock);
       break;
+    }
     case PROP_FEEDBACK:{
-      GST_BASE_TRANSFORM_LOCK (self);
+      g_mutex_lock (&self->lock);
       self->feedback = g_value_get_float (value);
-      GST_BASE_TRANSFORM_UNLOCK (self);
-    }
+      g_mutex_unlock (&self->lock);
       break;
+    }
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -243,24 +247,24 @@ gst_audio_echo_get_property (GObject * object, guint prop_id,
 
   switch (prop_id) {
     case PROP_DELAY:
-      GST_BASE_TRANSFORM_LOCK (self);
+      g_mutex_lock (&self->lock);
       g_value_set_uint64 (value, self->delay);
-      GST_BASE_TRANSFORM_UNLOCK (self);
+      g_mutex_unlock (&self->lock);
       break;
     case PROP_MAX_DELAY:
-      GST_BASE_TRANSFORM_LOCK (self);
+      g_mutex_lock (&self->lock);
       g_value_set_uint64 (value, self->max_delay);
-      GST_BASE_TRANSFORM_UNLOCK (self);
+      g_mutex_unlock (&self->lock);
       break;
     case PROP_INTENSITY:
-      GST_BASE_TRANSFORM_LOCK (self);
+      g_mutex_lock (&self->lock);
       g_value_set_float (value, self->intensity);
-      GST_BASE_TRANSFORM_UNLOCK (self);
+      g_mutex_unlock (&self->lock);
       break;
     case PROP_FEEDBACK:
-      GST_BASE_TRANSFORM_LOCK (self);
+      g_mutex_lock (&self->lock);
       g_value_set_float (value, self->feedback);
-      GST_BASE_TRANSFORM_UNLOCK (self);
+      g_mutex_unlock (&self->lock);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -361,6 +365,7 @@ gst_audio_echo_transform_ip (GstBaseTransform * base, GstBuffer * buf)
   GstClockTime timestamp, stream_time;
   GstMapInfo map;
 
+  g_mutex_lock (&self->lock);
   timestamp = GST_BUFFER_TIMESTAMP (buf);
   stream_time =
       gst_segment_to_stream_time (&base->segment, GST_FORMAT_TIME, timestamp);
@@ -387,6 +392,7 @@ gst_audio_echo_transform_ip (GstBaseTransform * base, GstBuffer * buf)
     self->buffer_pos = 0;
 
     if (self->buffer == NULL) {
+      g_mutex_unlock (&self->lock);
       GST_ERROR_OBJECT (self, "Failed to allocate %u bytes", self->buffer_size);
       return GST_FLOW_ERROR;
     }
@@ -398,6 +404,7 @@ gst_audio_echo_transform_ip (GstBaseTransform * base, GstBuffer * buf)
   self->process (self, map.data, num_samples);
 
   gst_buffer_unmap (buf, &map);
+  g_mutex_unlock (&self->lock);
 
   return GST_FLOW_OK;
 }

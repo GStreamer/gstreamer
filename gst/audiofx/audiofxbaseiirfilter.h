@@ -61,6 +61,8 @@ struct _GstAudioFXBaseIIRFilter
   guint nb;
   GstAudioFXBaseIIRFilterChannelCtx *channels;
   guint nchannels;
+
+  GMutex lock;
 };
 
 struct _GstAudioFXBaseIIRFilterClass

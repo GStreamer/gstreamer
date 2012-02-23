@@ -72,10 +72,10 @@ static gboolean gst_audio_fx_base_fir_filter_transform_size (GstBaseTransform *
 static gboolean gst_audio_fx_base_fir_filter_setup (GstAudioFilter * base,
     const GstAudioInfo * info);
 
-static gboolean gst_audio_fx_base_fir_filter_query (GstPad * pad,
-    GstObject * parent, GstQuery * query);
+static gboolean gst_audio_fx_base_fir_filter_query (GstBaseTransform * trans,
+    GstPadDirection direction, GstQuery * quer);
 
-/* 
+/*
  * The code below calculates the linear convolution:
  *
  * y[t] = \sum_{u=0}^{M-1} x[t - u] * h[u]
@@ -452,29 +452,19 @@ gst_audio_fx_base_fir_filter_select_process_function (GstAudioFXBaseFIRFilter *
 }
 
 static void
-gst_audio_fx_base_fir_filter_dispose (GObject * object)
+gst_audio_fx_base_fir_filter_finalize (GObject * object)
 {
   GstAudioFXBaseFIRFilter *self = GST_AUDIO_FX_BASE_FIR_FILTER (object);
 
   g_free (self->buffer);
-  self->buffer = NULL;
-  self->buffer_length = 0;
-
   g_free (self->kernel);
-  self->kernel = NULL;
-
   gst_fft_f64_free (self->fft);
-  self->fft = NULL;
   gst_fft_f64_free (self->ifft);
-  self->ifft = NULL;
-
   g_free (self->frequency_response);
-  self->frequency_response = NULL;
-
   g_free (self->fft_buffer);
-  self->fft_buffer = NULL;
+  g_mutex_clear (&self->lock);
 
-  G_OBJECT_CLASS (parent_class)->dispose (object);
+  G_OBJECT_CLASS (parent_class)->finalize (object);
 }
 
 static void
@@ -493,7 +483,8 @@ gst_audio_fx_base_fir_filter_set_property (GObject * object, guint prop_id,
         return;
       }
 
-      GST_BASE_TRANSFORM_LOCK (self);
+
+      g_mutex_lock (&self->lock);
       low_latency = g_value_get_boolean (value);
 
       if (self->low_latency != low_latency) {
@@ -502,13 +493,13 @@ gst_audio_fx_base_fir_filter_set_property (GObject * object, guint prop_id,
         gst_audio_fx_base_fir_filter_select_process_function (self,
             GST_AUDIO_FILTER_FORMAT (self), GST_AUDIO_FILTER_CHANNELS (self));
       }
-      GST_BASE_TRANSFORM_UNLOCK (self);
+      g_mutex_unlock (&self->lock);
       break;
     }
     case PROP_DRAIN_ON_CHANGES:{
-      GST_BASE_TRANSFORM_LOCK (self);
+      g_mutex_lock (&self->lock);
       self->drain_on_changes = g_value_get_boolean (value);
-      GST_BASE_TRANSFORM_UNLOCK (self);
+      g_mutex_unlock (&self->lock);
       break;
     }
     default:
@@ -547,7 +538,7 @@ gst_audio_fx_base_fir_filter_class_init (GstAudioFXBaseFIRFilterClass * klass)
   GST_DEBUG_CATEGORY_INIT (gst_audio_fx_base_fir_filter_debug,
       "audiofxbasefirfilter", 0, "FIR filter base class");
 
-  gobject_class->dispose = gst_audio_fx_base_fir_filter_dispose;
+  gobject_class->finalize = gst_audio_fx_base_fir_filter_finalize;
   gobject_class->set_property = gst_audio_fx_base_fir_filter_set_property;
   gobject_class->get_property = gst_audio_fx_base_fir_filter_get_property;
 
@@ -593,6 +584,7 @@ gst_audio_fx_base_fir_filter_class_init (GstAudioFXBaseFIRFilterClass * klass)
   trans_class->stop = GST_DEBUG_FUNCPTR (gst_audio_fx_base_fir_filter_stop);
   trans_class->sink_event =
       GST_DEBUG_FUNCPTR (gst_audio_fx_base_fir_filter_sink_event);
+  trans_class->query = GST_DEBUG_FUNCPTR (gst_audio_fx_base_fir_filter_query);
   trans_class->transform_size =
       GST_DEBUG_FUNCPTR (gst_audio_fx_base_fir_filter_transform_size);
   filter_class->setup = GST_DEBUG_FUNCPTR (gst_audio_fx_base_fir_filter_setup);
@@ -613,8 +605,7 @@ gst_audio_fx_base_fir_filter_init (GstAudioFXBaseFIRFilter * self)
   self->low_latency = DEFAULT_LOW_LATENCY;
   self->drain_on_changes = DEFAULT_DRAIN_ON_CHANGES;
 
-  gst_pad_set_query_function (GST_BASE_TRANSFORM (self)->srcpad,
-      gst_audio_fx_base_fir_filter_query);
+  g_mutex_init (&self->lock);
 }
 
 void
@@ -745,6 +736,7 @@ gst_audio_fx_base_fir_filter_setup (GstAudioFilter * base,
 {
   GstAudioFXBaseFIRFilter *self = GST_AUDIO_FX_BASE_FIR_FILTER (base);
 
+  g_mutex_lock (&self->lock);
   if (self->buffer) {
     gst_audio_fx_base_fir_filter_push_residue (self);
     g_free (self->buffer);
@@ -759,6 +751,7 @@ gst_audio_fx_base_fir_filter_setup (GstAudioFilter * base,
 
   gst_audio_fx_base_fir_filter_select_process_function (self,
       GST_AUDIO_INFO_FORMAT (info), GST_AUDIO_INFO_CHANNELS (info));
+  g_mutex_unlock (&self->lock);
 
   return (self->process != NULL);
 }
@@ -818,6 +811,7 @@ gst_audio_fx_base_fir_filter_transform (GstBaseTransform * base,
     return GST_FLOW_ERROR;
   }
 
+  g_mutex_lock (&self->lock);
   stream_time =
       gst_segment_to_stream_time (&base->segment, GST_FORMAT_TIME, timestamp);
 
@@ -874,18 +868,20 @@ gst_audio_fx_base_fir_filter_transform (GstBaseTransform * base,
   g_assert (generated_samples <= output_samples);
   self->nsamples_out += generated_samples;
   if (generated_samples == 0)
-    return GST_BASE_TRANSFORM_FLOW_DROPPED;
+    goto no_samples;
 
   /* Calculate the number of samples we can push out now without outputting
    * latency zeros in the beginning */
   diff = ((gint64) self->nsamples_out) - ((gint64) self->latency);
-  if (diff < 0) {
-    return GST_BASE_TRANSFORM_FLOW_DROPPED;
-  } else if (diff < generated_samples) {
+  if (diff < 0)
+    goto no_samples;
+
+  if (diff < generated_samples) {
     gint64 tmp = diff;
     diff = generated_samples - diff;
     generated_samples = tmp;
   }
+
   gst_buffer_resize (outbuf, diff * bps * channels,
       generated_samples * bps * channels);
 
@@ -903,6 +899,7 @@ gst_audio_fx_base_fir_filter_transform (GstBaseTransform * base,
     GST_BUFFER_OFFSET (outbuf) = GST_BUFFER_OFFSET_NONE;
     GST_BUFFER_OFFSET_END (outbuf) = GST_BUFFER_OFFSET_NONE;
   }
+  g_mutex_unlock (&self->lock);
 
   GST_DEBUG_OBJECT (self,
       "Pushing buffer of size %" G_GSIZE_FORMAT " with timestamp: %"
@@ -914,6 +911,12 @@ gst_audio_fx_base_fir_filter_transform (GstBaseTransform * base,
       GST_BUFFER_OFFSET_END (outbuf), generated_samples);
 
   return GST_FLOW_OK;
+
+no_samples:
+  {
+    g_mutex_unlock (&self->lock);
+    return GST_BASE_TRANSFORM_FLOW_DROPPED;
+  }
 }
 
 static gboolean
@@ -945,10 +948,10 @@ gst_audio_fx_base_fir_filter_stop (GstBaseTransform * base)
 }
 
 static gboolean
-gst_audio_fx_base_fir_filter_query (GstPad * pad, GstObject * parent,
-    GstQuery * query)
+gst_audio_fx_base_fir_filter_query (GstBaseTransform * trans,
+    GstPadDirection direction, GstQuery * query)
 {
-  GstAudioFXBaseFIRFilter *self = GST_AUDIO_FX_BASE_FIR_FILTER (parent);
+  GstAudioFXBaseFIRFilter *self = GST_AUDIO_FX_BASE_FIR_FILTER (trans);
   gboolean res = TRUE;
 
   switch (GST_QUERY_TYPE (query)) {
@@ -993,7 +996,9 @@ gst_audio_fx_base_fir_filter_query (GstPad * pad, GstObject * parent,
       break;
     }
     default:
-      res = gst_pad_query_default (pad, parent, query);
+      res =
+          GST_BASE_TRANSFORM_CLASS (parent_class)->query (trans, direction,
+          query);
       break;
   }
   return res;
@@ -1029,7 +1034,7 @@ gst_audio_fx_base_fir_filter_set_kernel (GstAudioFXBaseFIRFilter * self,
   g_return_if_fail (kernel != NULL);
   g_return_if_fail (self != NULL);
 
-  GST_BASE_TRANSFORM_LOCK (self);
+  g_mutex_lock (&self->lock);
 
   latency_changed = (self->latency != latency
       || (!self->low_latency && self->kernel_length < FFT_THRESHOLD
@@ -1069,5 +1074,5 @@ gst_audio_fx_base_fir_filter_set_kernel (GstAudioFXBaseFIRFilter * self,
         gst_message_new_latency (GST_OBJECT (self)));
   }
 
-  GST_BASE_TRANSFORM_UNLOCK (self);
+  g_mutex_unlock (&self->lock);
 }
