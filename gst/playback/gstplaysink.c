@@ -1459,7 +1459,7 @@ update_colorbalance (GstPlaySink * playsink)
   if (!balance)
     return;
 
-  g_signal_handlers_disconnect_by_func (balance,
+  g_signal_handlers_block_by_func (balance,
       G_CALLBACK (colorbalance_value_changed_cb), playsink);
 
   for (i = 0, l = playsink->colorbalance_channels; l; l = l->next, i++) {
@@ -1483,7 +1483,7 @@ update_colorbalance (GstPlaySink * playsink)
         playsink->colorbalance_values[i]);
   }
 
-  g_signal_connect (balance, "value-changed",
+  g_signal_handlers_unblock_by_func (balance,
       G_CALLBACK (colorbalance_value_changed_cb), playsink);
 }
 
