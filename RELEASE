@@ -1,5 +1,5 @@
 
-Release notes for GStreamer Base Plug-ins 0.10.35 "Short Notice"
+Release notes for GStreamer Base Plug-ins 0.10.36 "Better"
         
 
 
@@ -55,13 +55,323 @@ contains a set of less supported plug-ins that haven't passed the
 
 Features of this release
     
-      * work around GLib atomic ops API change
-      * don't use G_CONST_RETURN in public headers
-      * subparse: typefinding fixes for subtitles in non-UTF8 charsets
+      * audio: new IEC 61937 payloading library
+      * audio: new GstAudioFormat, GstAudioFormatInfo and GstAudioInfo API
+      * audio: new GstAudioDecoder and GstAudioEncoder base classes
+      * audio: baseaudiosink: allow subclasses to provide payloaders
+      * audio: baseaudiosink: fix latency calculation for live elements
+      * audio: baseaudiosink: make discont-wait configurable
+      * audio: baseaudiosink: split "drift-tolerance" into "alignment-threshold"
+      * codec-utils: Add method to convert H.264 text level in a level_idc
+      * discoverer: add support for subtitles; try harder to extract language and duration
+      * encoding-profile: add function to create a profile from a discoverer info
+      * ringbuffer: add support for AAC, DTS, E-AC3 and MPEG audio buffers
+      * rtcpbuffer: Add feedback message types from RFC 510
+      * rtcpbuffer: prevent overflow of 16bit header length
+      * rtspconnection: make hostname lookup thread-safe; OSX portability fixes
+      * rtspconnection: only send new data immediately if there are no queued messages
+      * tags: add new GstTagMux base class
+      * tags: add convenience API to handle creative commons licenses
+      * tags: add API to parse ID3v2 tags
+      * tags: various exif and xmp tag writing fixes
+      * tags: xmp: add Iptc4xmpExt schema support
+      * tags: gstvorbistag: map ENCODER Vorbis comment to application-name
+      * video: add video overlay composition API for subtitles
+      * video: fix a RGB ordering mixup in colorspace conversion code
+      * alsasink: fix high sample rates being rejected, and negotiation to "nearest" rate
+      * audioresample: don't emit DISCONT buffers if no discontinuity happened
+      * audioresample: fix quality setting being ignored; use SSE/SSE2 when possible
+      * audiotestsrc: add red (brownian) and blue/violet noise generator
+      * cdparanoiasrc: fix build issue on OSX (caused by broken cdparanoia port and broken system headers)
+      * decodebin2: improve handling of multi-stream chains (e.g. mpeg-ts)
+      * decodebin2: Cache the upstream seekability for demuxer decode chains and use it for the non-preroll multiqueue limits
+      * decodebin2: add support for autoplugging parsers and parser-converters, and negotiate stream-format conversions properly as needed
+      * decodebin2: link elements before testing if they can reach the READY state, so allow hw-accelerated elements can query the video context
+      * decodebin2: use a TIME limit for pre-rolling in live streams and not in non-live streams
+      * decodebin2: fix preroll for HLS streams at low bitrates
+      * decodebin2: add source pads to stream-topology element messages
+      * decodebin, decodebin2: don't plug the same parser multiple times in a row, so we can make parsers accept parsed input as well (and use them to convert to different stream formats)
+      * encodebin: add flags to disable conversion elements
+      * encodebin: autoplug formatters; re-enable parsers
+      * gnomevfssrc: add support for cancelling read operations
+      * oggdemux, oggmux: add support for new Opus audio codec
+      * oggdemux: implement push mode seeking (e.g. for http)
+      * oggdemux: assume input is live stream if byte size cannot be determined
+      * oggdemux: fix hang on small truncated files
+      * oggmux: add skeleton write support
+      * oggmux: sync  input streams and select input buffers based on running time
+      * oggmux: headers should always have granpos 0
+      * oggmux: refactor how EOS is determined
+      * oggmux: support sparse streams as input (e.g. kate subtitle streams)
+      * playbin2: fix decoder-sink compatibility check for raw audio/video formats
+      * playbin2: make sure that the decoders we plug are compatible with the fixed sink
+      * playsink: Add audio and video converter convenience bins
+      * playbin2: improve stream switching
+      * playbin2/playsink: Decide if A/V caps are raw only inside playsink
+      * playbin2/playsink: better support for raw + compressed streams (audio passthrough)
+      * playbin2/playsink: improve handling of "non-raw" formats (for hw-accelerated video decoding)
+      * playsinkconvertbin: Reconfigure if we switch from raw to incompatible raw caps
+      * subparse: subtitle format typefinding improvements
+      * subtitleoverlay: handle non raw video streams (add suport for hardware accelerated videos)
+      * textoverlay: support more video formats
+      * textoverlay: add "outline-color" and "shadow" properties
+      * textoverlay: attach GstVideoOverlayComposition to buffers if input is not raw video
+      * theoraenc: do not automatically override quality when using target bitrate
+      * theoraenc: proxy downstream caps restrictions upstream 
+      * typefinding: extract SOF marker in jpeg typefinder (to distinguish lossless JPEG)
+      * typefinding: add typefinder for WAP WBMP bitmaps (mostly to avoid false positives)
+      * typefinding: typefind UTF-16 and UTF-32 with BOMs (to avoid false positives)
+      * typefinding: recognize Asylum modules
+      * videorate: add a "max-rate" property; optionally ensure maximum average output frame rate
+      * videorate: add "force-fps" property to force an output framerate or change it on the fly
+      * videorate: optionally only drop frames to ensure maximum frame rate
+      * videoscale: add modified Lanczos scaling method
+      * volume: Fix handling of volume>=4.0 for 8 and 16 bit integer formats
+      * vorbisenc: relax overly tight jitter tolerances (make it work better with non-perfect input streams)
+      * xvimagesink, ximagesink: fall back to non-XShm mode if allocating the XShm image failed
 
 Bugs fixed in this release
      
-      * 600043 : subparse: fails to recognise Cyrillic subtitles in windows-1251 encoding
+      * 643202 : [encodebin] streamcombiner not completely implemented
+      * 654270 : oggmux unit test fails after latest changes
+      * 658984 : Fix typos in gst-plugins-base
+      * 555437 : [tag] add GstTagMux base class
+      * 556648 : [typefind] detect lossless jpeg
+      * 563251 : oggmux should have option to create Ogg Skeleton stream
+      * 584811 : playbin2's get-text-tags sometimes fails in text stream 0
+      * 607619 : [typefind] utf-16 text file mistakenly identified as layer 1 mpeg audio
+      * 607742 : API: add gst_event_new_{upstream,downstream}_force_key_unit() etc.
+      * 609918 : [OS X] configure: cdda_interface.h: present but cannot be compiled (if VERSION is defined)
+      * 610443 : baseaudiosink: clock can jump on setcaps
+      * 612443 : oggdemux: only use information from skeleton if we have nothing better
+      * 615131 : playing an ogg over http does not report duration correctly
+      * 615342 : [gstalsamixer] leaks
+      * 621897 : [oggdemux] reports wrong duration, and push mode seeking support
+      * 628337 : [gnomevfssrc] Add support for cancelling read operations
+      * 628764 : [videorate] add new option for max frame rate
+      * 629212 : [oggdemux] Improve support for push mode (seeking, duration)
+      * 630322 : make seek example work with windows
+      * 630442 : xvimagesink, ximagesink: fallback to X*CreateImage() if X*ShmCreateImage() fails
+      * 630497 : [seek] sprinkle GST_DEBUG_BIN_TO_DOT_FILE_WITH_TS to dump pipeline to dot file
+      * 632788 : [playbin2] Doesn't support files with a streams that are supported compressed by a sink and streams that need decoding
+      * 635556 : [oggdemux] bad duration estimate in streaming mode with vertical-overview.ogg
+      * 637812 : vorbisenc: choppy sound due to input timestamp jitter
+      * 638897 : [textrender] allow setting the canvas size using peer caps + bugfixes
+      * 639055 : discoverer: add support for subtitle streams
+      * 640041 : textoverlay: Added parameters to control text outline color and whether shadowing is enabled
+      * 640564 : Remuxing a Theora stream generates a stream that oggz-validate complains about
+      * 640859 : basesink incorrectly categorizes timestamp jitter as drift
+      * 642690 : [baseaudio] GstBaseAudioEncoder and GstBaseAudioDecoder class
+      * 642878 : encoding-profile: add a function to create a profile from a discoverer info
+      * 643578 : [encodebin] - broken remuxing
+      * 644284 : Suspicious max_latency computation in gstbaseaudiosink.c
+      * 647648 : videorate: support for caps modifications in a running pipeline
+      * 647769 : [decodebin2] Fix preroll for streams at low bitrate
+      * 649319 : Add boiler plate code to xvimagesink
+      * 649642 : [volume] Overflows with volume > =4.0 and 8/16 bit integer formats
+      * 649969 : [audiotestsrc] Add more noise variants
+      * 650406 : vorbisdec does not handle headers in caps
+      * 651089 : [xvimagesink/ximagesink] Remove g_assert from Interface query
+      * 651294 : WBMP images are not supported by typefind
+      * 651496 : encodebin seems to fail to pick up container variant
+      * 651615 : [vorbisenc] Too small jitter tolerance
+      * 651788 : [theoraenc] separate encode and push block in theora_enc_chain
+      * 651855 : elements/volume unit test fails
+      * 652342 : encoding-target: set name on audio and video profiles when reading from keyfile
+      * 652642 : typefind: NULL check in degas_type_find
+      * 652838 : gst_discoverer_discover_uri Allow NULL GError* argument
+      * 653461 : [theoraenc] element causes encoder to drop frames?
+      * 654295 : [typefind] audio/x-sap detection doesn't work
+      * 654434 : [basertppayload] RTP timestamps not longer reproducible
+      * 654959 : textoverlay would flicker if it receives not timestampes text on input
+      * 655244 : encodebin has to provide the downstream possible caps to h264parse
+      * 655268 : decodebin2: deadlock after multi-stream chains change
+      * 655279 : [playbin2] Don't reset sinks when not needed
+      * 655347 : theoradec: segfault on 0-byte ogg_packet in _chain_reverse
+      * 655503 : pbutils: Add MPEG-4 SP levels 4a, 5 and 6
+      * 655574 : ogg: crash determining duration of empty vorbis packet
+      * 656022 : volume: fix sample depth typo
+      * 656034 : gstvorbistag: map ENCODER Vorbis comment to application-name
+      * 656392 : audioresample: add FFT based checks
+      * 656715 : playbin2, playsink: reference count ts_offset to avoid crashes
+      * 656775 : oggmux: various cleanups
+      * 656781 : resample.c has warnings treated as errors that prevent compilation
+      * 657049 : textoverlay: buffer leaks
+      * 657062 : oggdemux: do not skip sparse streams when determining start times
+      * 657151 : ogg: another cleanup round
+      * 657257 : discoverer: retrieve audio track language from tags too
+      * 657261 : resindvd: regression in git: no more button highlights in menus
+      * 657319 : videorate should use basetransform
+      * 657333 : theoraenc: fix caps leak
+      * 657504 : gtk-doc distcheck failure: files left in build directory after distclean:
+      * 657872 : [subparse] Doesn't detect some SRT subtitle files
+      * 658294 : gst-inspect videorate hangs
+      * 658416 : decodebin2: refcounting bugs causing criticals
+      * 658443 : theoraenc: do not automatically override quality when using target bitrate
+      * 658514 : typefinding: recognize .amf (Asylum Music File) files for modplug
+      * 658609 : Handle subtitles with non raw caps video streams in subtitle overlay
+      * 658846 : Playbin2 pipeline stuck while prerolling if decoder is missing
+      * 658901 : textoverlay: crash when the video sink pad has no parent
+      * 659562 : videorate: gst_mini_object_unref: assertion `GST_IS_MINI_OBJECT (mini_object)' failed
+      * 660150 : baseaudio: compiler warnings if debugging system is disabled
+      * 660170 : alsasrc: broken timestamps lead to alsasrc ! audiorate endless loop
+      * 660301 : playbin2: Fix mingw compiler warnings
+      * 660304 : videotestsrc: Fix mingw compiler warning
+      * 660598 : playbin2: Make sure that elements that are plugged are compatible with the fixed sink
+      * 660604 : textoverlay: add YV12 support
+      * 660816 : dvd menus got broken
+      * 661105 : audiotestsrc: add missing break
+      * 661106 : tests: actually test what we said we would
+      * 661122 : videotestsrc does not build on Solaris
+      * 661202 : decodebin2: fire drained signal where appropriate
+      * 661738 : Deadlock between threads in gstaudiosink and gstringbuffer
+      * 661897 : oggdemux: do not retry seeking indefinitely
+      * 661983 : Regression: Reverse playback does not work for vorbis
+      * 662049 : oggdemux/oggmux in push mode cause preroll to wedge
+      * 662108 : Assertion in base audio decoder when decoding vorbis
+      * 662330 : [decodebin2] Should link and add elements to the bin before checking if they can reach READY state
+      * 662475 : oggdemux: Improvements on the push mode seeking algorithm.
+      * 662829 : [textoverlay] - silent property looks not well implemented
+      * 663174 : oggmux: set collectpads2 not to wait on sparse streams
+      * 663312 : decodebin2: Post all source pads in stream-topology messages as " element-srcpad " values
+      * 663390 : theoraenc: fix speed level failure test
+      * 663391 : theoraenc: misc small tweaks
+      * 663465 : baseaudiosink: fix late buffers leaking
+      * 663766 : [0.11] oggmux: split request pad templates into audio/video/subtitle
+      * 663892 : [playbin2] visualisation leads to not-negotiated error
+      * 663893 : playbin2: g_object_set_valist: construct property " use-volume " for object `GstPlaySinkAudioConvert' can't be set after construction
+      * 664818 : Autoplugger sink bin receives strange caps while it gets the correct ones in 0.10.35 and earlier
+      * 665004 : audioresample emits spurious disconts
+      * 665074 : [gstfft] headers are not bracketed
+      * 665080 : API: subtitle overlays for raw and non-raw video buffers
+      * 665120 : playbin2: decoder not selected for audio-sink=autoaudiosink
+      * 666395 : playbin2: set uri to a non-existed file in " about-to-finish " causes a CRITICAL warning
+      * 667210 : videotestsrc/generate_sine_table needs to link against glib
+      * 667306 : discoverer: don't use unportable vararg macro
+      * 667311 : fix various unlikely, but still potential memoryleaks
+      * 667312 : appsrc: implement get_caps
+      * 667313 : rtcpbuffer: prevent overflow of 16bit header length.
+      * 667315 : videotestsrc: keep the calculation fixed-point
+      * 667316 : pango: Changes includes from brackets to quotes for local files
+      * 667917 : alsasink: Rate doesn't match (requested 88200Hz, get 0Hz)
+      * 668097 : [subtitleoverlay] fix state change stall on PAUSED- > READY- > PAUSED (patch)
+      * 669039 : gstrtspconnection: new data may get sent even-though there is a queued message in the GstRTSPWatch
+      * 669164 : oggdemux generates invalid granpos which causes asserts in theoraparse
+      * 669167 : vorbisparse drops certain data buffers on the floor mistakenly thinking they're headers
+      * 669203 : playbin2: totem segfaults in gst_stream_get_other_pad_from_pad()
+      * 646868 : tag: Provide Creative Commons helper functions
+      * 654388 : [tags] API: move id3 parsing from id3demux to tag lib
+      * 311486 : [oggmux] theora bos must come before any audio bos pages
+
+API changed in this release
+     
+- API additions:
+    
+      * gst_audio_decoder_finish_frame()
+      * gst_audio_decoder_get_audio_info()
+      * gst_audio_decoder_get_byte_time()
+      * gst_audio_decoder_get_delay()
+      * gst_audio_decoder_get_drainable()
+      * gst_audio_decoder_get_latency()
+      * gst_audio_decoder_get_max_errors()
+      * gst_audio_decoder_get_min_latency()
+      * gst_audio_decoder_get_needs_format()
+      * gst_audio_decoder_get_parse_state()
+      * gst_audio_decoder_get_plc()
+      * gst_audio_decoder_get_plc_aware()
+      * gst_audio_decoder_get_tolerance()
+      * gst_audio_decoder_get_type()
+      * gst_audio_decoder_set_byte_time()
+      * gst_audio_decoder_set_drainable()
+      * gst_audio_decoder_set_latency()
+      * gst_audio_decoder_set_max_errors()
+      * gst_audio_decoder_set_min_latency()
+      * gst_audio_decoder_set_needs_format()
+      * gst_audio_decoder_set_plc()
+      * gst_audio_decoder_set_plc_aware()
+      * gst_audio_decoder_set_tolerance()
+      * gst_audio_encoder_finish_frame()
+      * gst_audio_encoder_get_audio_info()
+      * gst_audio_encoder_get_drainable()
+      * gst_audio_encoder_get_frame_max()
+      * gst_audio_encoder_get_frame_samples_max()
+      * gst_audio_encoder_get_frame_samples_min()
+      * gst_audio_encoder_get_hard_min()
+      * gst_audio_encoder_get_hard_resync()
+      * gst_audio_encoder_get_latency()
+      * gst_audio_encoder_get_lookahead()
+      * gst_audio_encoder_get_mark_granule()
+      * gst_audio_encoder_get_perfect_timestamp()
+      * gst_audio_encoder_get_tolerance()
+      * gst_audio_encoder_get_type()
+      * gst_audio_encoder_merge_tags()
+      * gst_audio_encoder_proxy_getcaps()
+      * gst_audio_encoder_set_drainable()
+      * gst_audio_encoder_set_frame_max()
+      * gst_audio_encoder_set_frame_samples_max()
+      * gst_audio_encoder_set_frame_samples_min()
+      * gst_audio_encoder_set_hard_min()
+      * gst_audio_encoder_set_hard_resync()
+      * gst_audio_encoder_set_latency()
+      * gst_audio_encoder_set_lookahead()
+      * gst_audio_encoder_set_mark_granule()
+      * gst_audio_encoder_set_perfect_timestamp()
+      * gst_audio_encoder_set_tolerance()
+      * gst_audio_iec61937_frame_size()
+      * gst_audio_iec61937_payload()
+      * gst_audio_info_clear()
+      * gst_audio_info_convert()
+      * gst_audio_info_copy()
+      * gst_audio_info_free()
+      * gst_audio_info_from_caps()
+      * gst_audio_info_init()
+      * gst_audio_info_to_caps()
+      * gst_base_audio_sink_get_alignment_threshold()
+      * gst_base_audio_sink_get_discont_wait()
+      * gst_base_audio_sink_set_alignment_threshold()
+      * gst_base_audio_sink_set_discont_wait()
+      * gst_codec_utils_h264_get_level_idc()
+      * gst_discoverer_audio_info_get_language()
+      * gst_discoverer_info_get_subtitle_streams()
+      * gst_discoverer_subtitle_info_get_language()
+      * gst_discoverer_subtitle_info_get_type()
+      * gst_encoding_profile_from_discoverer()
+      * gst_tag_get_license_description()
+      * gst_tag_get_license_flags()
+      * gst_tag_get_license_jurisdiction()
+      * gst_tag_get_license_nick()
+      * gst_tag_get_license_title()
+      * gst_tag_get_license_version()
+      * gst_tag_get_licenses()
+      * gst_tag_license_flags_get_type()
+      * gst_tag_get_id3v2_tag_size()
+      * gst_tag_list_from_id3v2_tag()
+      * gst_tag_mux_get_type()
+      * gst_video_buffer_get_overlay_composition()
+      * gst_video_buffer_set_overlay_composition()
+      * gst_video_event_is_force_key_unit()
+      * gst_video_event_new_downstream_force_key_unit()
+      * gst_video_event_new_upstream_force_key_unit()
+      * gst_video_event_parse_downstream_force_key_unit()
+      * gst_video_event_parse_upstream_force_key_unit()
+      * gst_video_get_size_from_caps()
+      * gst_video_overlay_composition_add_rectangle()
+      * gst_video_overlay_composition_blend()
+      * gst_video_overlay_composition_copy()
+      * gst_video_overlay_composition_get_rectangle()
+      * gst_video_overlay_composition_get_seqnum()
+      * gst_video_overlay_composition_get_type()
+      * gst_video_overlay_composition_make_writable()
+      * gst_video_overlay_composition_n_rectangles()
+      * gst_video_overlay_composition_new()
+      * gst_video_overlay_rectangle_copy()
+      * gst_video_overlay_rectangle_get_pixels_argb()
+      * gst_video_overlay_rectangle_get_pixels_unscaled_argb()
+      * gst_video_overlay_rectangle_get_render_rectangle()
+      * gst_video_overlay_rectangle_get_seqnum()
+      * gst_video_overlay_rectangle_get_type()
+      * gst_video_overlay_rectangle_new_argb()
+      * gst_video_overlay_rectangle_set_render_rectangle()
 
 Download
 
@@ -90,10 +400,65 @@ Applications
   
 Contributors to this release
     
+      * Age Bosma
+      * Alessandro Decina
+      * Alex Lancaster
+      * Alexey Fisher
+      * Andoni Morales Alastruey
+      * Anssi Hannula
+      * Benjamin Otte
+      * Brian Cameron
+      * Christian Fredrik Kalager Schaller
+      * Christophe Fergeau
+      * Colin Walters
       * David Schleef
-      * Debarshi Ray
+      * Edward Hervey
+      * Erich Schubert
+      * Felipe Contreras
+      * Havard Graff
+      * Iago Toral
+      * Idar Tollefsen
+      * James "Doc" Livingston
+      * James Doc Livingston
+      * Jan Schmidt
+      * Jason Kivlighn
+      * Jens Georg
+      * Jonathan Liu
+      * Jonathan Matthew
+      * Josep Torra
+      * Julien Moutte
+      * Kipp Cannon
+      * LoneStar
+      * Luis de Bethencourt
       * Mark Nauwelaerts
+      * Mart Raudsepp
+      * Mersad Jelacic
+      * Michael Smith
+      * Monty Montgomery
+      * Nicolas Dufresne
+      * Ognyan Tonchev
+      * Olivier Crête
+      * Pascal Buhler
+      * Philip Jägenstedt
+      * Philippe Normand
+      * Piotr Fusik
+      * Raimo Järvi
+      * René Stadler
+      * Reynaldo H. Verdejo Pinochet
+      * Robert Swain
       * Sebastian Dröge
+      * Sergey Scobich
+      * Sergey Scobich)
+      * Sjoerd Simons
       * Stefan Kost
+      * Stefan Sauer
+      * Sébastien Moutte
+      * Thiago Santos
+      * Thibault Saunier
+      * Thomas Vander Stichele
       * Tim-Philipp Müller
+      * Tommi Myöhänen
+      * Vincent Penquerc'h
+      * Wim Taymans
+      * Youness Alaoui
  
