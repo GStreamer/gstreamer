@@ -84,6 +84,7 @@ gst_buffer_copy_flags_get_type (void)
     {C_FLAGS (GST_BUFFER_COPY_TIMESTAMPS), "GST_BUFFER_COPY_TIMESTAMPS",
         "timestamps"},
     {C_FLAGS (GST_BUFFER_COPY_CAPS), "GST_BUFFER_COPY_CAPS", "caps"},
+    {C_FLAGS (GST_BUFFER_COPY_QDATA), "GST_BUFFER_COPY_QDATA", "qdata"},
     {0, NULL, NULL}
   };
 
@@ -160,6 +161,7 @@ gst_caps_flags_get_type (void)
 {
   static gsize id = 0;
   static const GFlagsValue values[] = {
+    {C_FLAGS (GST_CAPS_FLAGS_NONE), "GST_CAPS_FLAGS_NONE", "none"},
     {C_FLAGS (GST_CAPS_FLAGS_ANY), "GST_CAPS_FLAGS_ANY", "any"},
     {0, NULL, NULL}
   };
@@ -1475,6 +1477,7 @@ gst_alloc_trace_flags_get_type (void)
 {
   static gsize id = 0;
   static const GFlagsValue values[] = {
+    {C_FLAGS (GST_ALLOC_TRACE_NONE), "GST_ALLOC_TRACE_NONE", "none"},
     {C_FLAGS (GST_ALLOC_TRACE_LIVE), "GST_ALLOC_TRACE_LIVE", "live"},
     {C_FLAGS (GST_ALLOC_TRACE_MEM_LIVE), "GST_ALLOC_TRACE_MEM_LIVE",
         "mem-live"},
@@ -1495,6 +1498,7 @@ gst_type_find_probability_get_type (void)
 {
   static gsize id = 0;
   static const GEnumValue values[] = {
+    {C_ENUM (GST_TYPE_FIND_NONE), "GST_TYPE_FIND_NONE", "none"},
     {C_ENUM (GST_TYPE_FIND_MINIMUM), "GST_TYPE_FIND_MINIMUM", "minimum"},
     {C_ENUM (GST_TYPE_FIND_POSSIBLE), "GST_TYPE_FIND_POSSIBLE", "possible"},
     {C_ENUM (GST_TYPE_FIND_LIKELY), "GST_TYPE_FIND_LIKELY", "likely"},

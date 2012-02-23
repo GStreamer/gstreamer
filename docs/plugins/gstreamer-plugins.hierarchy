@@ -27,6 +27,7 @@ GObject
       GstTypeFindElement
       GstValve
     GstIndex
+      GstFileIndex
       GstMemIndex
     GstPad
     GstPadTemplate
