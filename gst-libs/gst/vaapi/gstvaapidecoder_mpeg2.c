@@ -68,8 +68,6 @@ struct _GstVaapiDecoderMpeg2Private {
     GstVaapiPicture            *next_picture;
     GstVaapiPicture            *prev_picture;
     GstAdapter                 *adapter;
-    guint                       mb_y;
-    guint                       mb_height;
     GstClockTime                seq_pts;
     GstClockTime                gop_pts;
     GstClockTime                pts_diff;
@@ -169,11 +167,6 @@ ensure_context(GstVaapiDecoderMpeg2 *decoder)
         GST_DEBUG("size changed");
         priv->size_changed = FALSE;
         reset_context      = TRUE;
-
-        if (priv->progressive_sequence)
-            priv->mb_height = (priv->height + 15) / 16;
-        else
-            priv->mb_height = (priv->height + 31) / 32 * 2;
     }
 
     if (reset_context) {
@@ -477,8 +470,6 @@ decode_picture(GstVaapiDecoderMpeg2 *decoder, guchar *buf, guint buf_size)
         return GST_VAAPI_DECODER_STATUS_ERROR_UNKNOWN;
     }
 
-    priv->mb_y = 0;
-
     /* Update presentation time */
     pts = priv->gop_pts;
     pts += gst_util_uint64_scale(pic_hdr->tsn, GST_SECOND * priv->fps_d, priv->fps_n);
@@ -593,8 +584,6 @@ decode_slice(
             priv->is_first_field ^= 1;
     }
 
-    priv->mb_y = slice_no;
-
     slice = GST_VAAPI_SLICE_NEW(MPEG2, decoder, buf, buf_size);
     if (!slice) {
         GST_DEBUG("failed to allocate slice");
@@ -629,7 +618,7 @@ decode_slice(
     slice_param                            = slice->param;
     slice_param->macroblock_offset         = gst_bit_reader_get_pos(&br);
     slice_param->slice_horizontal_position = 0;
-    slice_param->slice_vertical_position   = priv->mb_y;
+    slice_param->slice_vertical_position   = slice_no;
     slice_param->quantiser_scale_code      = quantiser_scale_code;
     slice_param->intra_slice_flag          = intra_slice;
     return GST_VAAPI_DECODER_STATUS_SUCCESS;
@@ -824,8 +813,6 @@ gst_vaapi_decoder_mpeg2_init(GstVaapiDecoderMpeg2 *decoder)
     priv->next_picture          = NULL;
     priv->prev_picture          = NULL;
     priv->adapter               = NULL;
-    priv->mb_y                  = 0;
-    priv->mb_height             = 0;
     priv->seq_pts               = GST_CLOCK_TIME_NONE;
     priv->gop_pts               = GST_CLOCK_TIME_NONE;
     priv->pts_diff              = 0;
