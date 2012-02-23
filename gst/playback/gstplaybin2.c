@@ -232,6 +232,7 @@
 #include <gst/gst-i18n-plugin.h>
 #include <gst/pbutils/pbutils.h>
 #include <gst/interfaces/streamvolume.h>
+#include <gst/interfaces/xoverlay.h>
 
 #include "gstplay-enum.h"
 #include "gstplay-marshal.h"
@@ -580,6 +581,11 @@ if (id) {                                \
   id = 0;                                \
 }
 
+static void gst_play_bin_implements_interface_init (gpointer g_iface,
+    gpointer g_iface_data);
+static void gst_play_bin_xoverlay_init (gpointer g_iface,
+    gpointer g_iface_data);
+
 static GType
 gst_play_bin_get_type (void)
 {
@@ -598,15 +604,27 @@ gst_play_bin_get_type (void)
       (GInstanceInitFunc) gst_play_bin_init,
       NULL
     };
+    static const GInterfaceInfo impl_info = {
+      gst_play_bin_implements_interface_init,
+      NULL, NULL
+    };
     static const GInterfaceInfo svol_info = {
       NULL, NULL, NULL
+    };
+    static const GInterfaceInfo xov_info = {
+      gst_play_bin_xoverlay_init,
+      NULL, NULL
     };
 
     gst_play_bin_type = g_type_register_static (GST_TYPE_PIPELINE,
         "GstPlayBin2", &gst_play_bin_info, 0);
 
+    g_type_add_interface_static (gst_play_bin_type,
+        GST_TYPE_IMPLEMENTS_INTERFACE, &impl_info);
     g_type_add_interface_static (gst_play_bin_type, GST_TYPE_STREAM_VOLUME,
         &svol_info);
+    g_type_add_interface_static (gst_play_bin_type, GST_TYPE_X_OVERLAY,
+        &xov_info);
   }
 
   return gst_play_bin_type;
@@ -4018,6 +4036,69 @@ failure:
     }
     return ret;
   }
+}
+
+static void
+gst_play_bin_xoverlay_expose (GstXOverlay * overlay)
+{
+  GstPlayBin *playbin = GST_PLAY_BIN (overlay);
+
+  gst_x_overlay_expose (GST_X_OVERLAY (playbin->playsink));
+}
+
+static void
+gst_play_bin_xoverlay_handle_events (GstXOverlay * overlay,
+    gboolean handle_events)
+{
+  GstPlayBin *playbin = GST_PLAY_BIN (overlay);
+
+  gst_x_overlay_handle_events (GST_X_OVERLAY (playbin->playsink),
+      handle_events);
+}
+
+static void
+gst_play_bin_xoverlay_set_render_rectangle (GstXOverlay * overlay, gint x,
+    gint y, gint width, gint height)
+{
+  GstPlayBin *playbin = GST_PLAY_BIN (overlay);
+
+  gst_x_overlay_set_render_rectangle (GST_X_OVERLAY (playbin->playsink), x, y,
+      width, height);
+}
+
+static void
+gst_play_bin_xoverlay_set_window_handle (GstXOverlay * overlay, guintptr handle)
+{
+  GstPlayBin *playbin = GST_PLAY_BIN (overlay);
+
+  gst_x_overlay_set_window_handle (GST_X_OVERLAY (playbin->playsink), handle);
+}
+
+static void
+gst_play_bin_xoverlay_init (gpointer g_iface, gpointer g_iface_data)
+{
+  GstXOverlayClass *iface = (GstXOverlayClass *) g_iface;
+  iface->expose = gst_play_bin_xoverlay_expose;
+  iface->handle_events = gst_play_bin_xoverlay_handle_events;
+  iface->set_render_rectangle = gst_play_bin_xoverlay_set_render_rectangle;
+  iface->set_window_handle = gst_play_bin_xoverlay_set_window_handle;
+}
+
+static gboolean
+gst_play_bin_implements_interface_supported (GstImplementsInterface * iface,
+    GType type)
+{
+  if (type == GST_TYPE_X_OVERLAY || type == GST_TYPE_STREAM_VOLUME)
+    return TRUE;
+  else
+    return FALSE;
+}
+
+static void
+gst_play_bin_implements_interface_init (gpointer g_iface, gpointer g_iface_data)
+{
+  GstImplementsInterfaceClass *iface = (GstImplementsInterfaceClass *) g_iface;
+  iface->supported = gst_play_bin_implements_interface_supported;
 }
 
 gboolean
