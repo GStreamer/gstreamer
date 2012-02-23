@@ -264,7 +264,6 @@ coverage-report:
 	      coverage/$$dir/index.xml > coverage/$$dir/index.html;	\
 	  fi; \
         done
-	
 	for file in $(COVERAGE_FILES_REL); do				\
 	  echo Generating coverage/$$file.html; 			\
 	  perl $(top_srcdir)/common/coverage/coverage-report-entry.pl   \
