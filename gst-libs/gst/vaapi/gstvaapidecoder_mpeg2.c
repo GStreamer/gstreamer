@@ -53,6 +53,13 @@ G_DEFINE_TYPE(GstVaapiDecoderMpeg2,
   } \
 } G_STMT_END
 
+#define SKIP(reader, nbits) G_STMT_START { \
+  if (!gst_bit_reader_skip (reader, nbits)) { \
+    GST_WARNING ("failed to skip nbits: %d", nbits); \
+    goto failed; \
+  } \
+} G_STMT_END
+
 struct _GstVaapiDecoderMpeg2Private {
     GstVaapiProfile             profile;
     guint                       width;
@@ -84,6 +91,85 @@ struct _GstVaapiDecoderMpeg2Private {
     guint                       progressive_sequence    : 1;
     guint                       closed_gop              : 1;
     guint                       broken_link             : 1;
+};
+
+/* VLC decoder from gst-plugins-bad */
+typedef struct _VLCTable VLCTable;
+struct _VLCTable {
+    gint  value;
+    guint cword;
+    guint cbits;
+};
+
+static gboolean
+decode_vlc(GstBitReader *br, gint *res, const VLCTable *table, guint length)
+{
+    guint8 i;
+    guint cbits = 0;
+    guint32 value = 0;
+
+    for (i = 0; i < length; i++) {
+        if (cbits != table[i].cbits) {
+            cbits = table[i].cbits;
+            if (!gst_bit_reader_peek_bits_uint32(br, &value, cbits)) {
+                goto failed;
+            }
+        }
+
+        if (value == table[i].cword) {
+            SKIP(br, cbits);
+            if (res)
+                *res = table[i].value;
+            return TRUE;
+        }
+    }
+    GST_DEBUG("failed to find VLC code");
+
+failed:
+    GST_WARNING("failed to decode VLC, returning");
+    return FALSE;
+}
+
+enum {
+    GST_MPEG_VIDEO_MACROBLOCK_ESCAPE = -1,
+};
+
+/* Table B-1: Variable length codes for macroblock_address_increment */
+static const VLCTable mpeg2_mbaddr_vlc_table[] = {
+    {  1, 0x01,  1 },
+    {  2, 0x03,  3 },
+    {  3, 0x02,  3 },
+    {  4, 0x03,  4 },
+    {  5, 0x02,  4 },
+    {  6, 0x03,  5 },
+    {  7, 0x02,  5 },
+    {  8, 0x07,  7 },
+    {  9, 0x06,  7 },
+    { 10, 0x0b,  8 },
+    { 11, 0x0a,  8 },
+    { 12, 0x09,  8 },
+    { 13, 0x08,  8 },
+    { 14, 0x07,  8 },
+    { 15, 0x06,  8 },
+    { 16, 0x17, 10 },
+    { 17, 0x16, 10 },
+    { 18, 0x15, 10 },
+    { 19, 0x14, 10 },
+    { 20, 0x13, 10 },
+    { 21, 0x12, 10 },
+    { 22, 0x23, 11 },
+    { 23, 0x22, 11 },
+    { 24, 0x21, 11 },
+    { 25, 0x20, 11 },
+    { 26, 0x1f, 11 },
+    { 27, 0x1e, 11 },
+    { 28, 0x1d, 11 },
+    { 29, 0x1c, 11 },
+    { 30, 0x1b, 11 },
+    { 31, 0x1a, 11 },
+    { 32, 0x19, 11 },
+    { 33, 0x18, 11 },
+    { GST_MPEG_VIDEO_MACROBLOCK_ESCAPE, 0x08, 11 }
 };
 
 static void
@@ -569,6 +655,8 @@ decode_slice(
     GstVaapiSlice *slice;
     VASliceParameterBufferMPEG2 *slice_param;
     GstBitReader br;
+    gint mb_x, mb_y, mb_inc;
+    guint macroblock_offset;
     guint8 slice_vertical_position_extension;
     guint8 quantiser_scale_code;
     guint8 intra_slice_flag, intra_slice = 0;
@@ -613,12 +701,24 @@ decode_slice(
             READ_UINT8(&br, extra_bit_slice, 1);
         }
     }
+    macroblock_offset = gst_bit_reader_get_pos(&br);
+
+    mb_y = slice_no;
+    mb_x = -1;
+    do {
+        if (!decode_vlc(&br, &mb_inc, mpeg2_mbaddr_vlc_table,
+                        G_N_ELEMENTS(mpeg2_mbaddr_vlc_table))) {
+            GST_WARNING("failed to decode first macroblock_address_increment");
+            goto failed;
+        }
+        mb_x += mb_inc == GST_MPEG_VIDEO_MACROBLOCK_ESCAPE ? 33 : mb_inc;
+    } while (mb_inc == GST_MPEG_VIDEO_MACROBLOCK_ESCAPE);
 
     /* Fill in VASliceParameterBufferMPEG2 */
     slice_param                            = slice->param;
-    slice_param->macroblock_offset         = gst_bit_reader_get_pos(&br);
-    slice_param->slice_horizontal_position = 0;
-    slice_param->slice_vertical_position   = slice_no;
+    slice_param->macroblock_offset         = macroblock_offset;
+    slice_param->slice_horizontal_position = mb_x;
+    slice_param->slice_vertical_position   = mb_y;
     slice_param->quantiser_scale_code      = quantiser_scale_code;
     slice_param->intra_slice_flag          = intra_slice;
     return GST_VAAPI_DECODER_STATUS_SUCCESS;
