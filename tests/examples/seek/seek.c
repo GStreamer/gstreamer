@@ -999,6 +999,9 @@ make_playerbin2_pipeline (const gchar * location)
 {
   GstElement *pipeline = construct_playerbin ("playbin2", location);
 
+  g_signal_connect (pipeline, "notify::volume", G_CALLBACK (volume_notify_cb),
+      NULL);
+
   navigation_element = GST_ELEMENT (gst_object_ref (pipeline));
   colorbalance_element = GST_ELEMENT (gst_object_ref (pipeline));
 
