@@ -3,7 +3,7 @@
   <description>plugin for inter-pipeline communication</description>
   <filename>../../gst/inter/.libs/libgstinter.so</filename>
   <basename>libgstinter.so</basename>
-  <version>0.10.22.1</version>
+  <version>0.10.23.1</version>
   <license>LGPL</license>
   <source>gst-plugins-bad</source>
   <package>GStreamer Bad Plug-ins</package>
@@ -36,6 +36,36 @@
           <direction>source</direction>
           <presence>always</presence>
           <details>audio/x-raw-int, endianness=(int)1234, signed=(boolean)true, width=(int)16, depth=(int)16, rate=(int)[ 1, 2147483647 ], channels=(int)[ 1, 2 ]</details>
+        </caps>
+      </pads>
+    </element>
+    <element>
+      <name>intersubsink</name>
+      <longname>FIXME Long name</longname>
+      <class>Generic</class>
+      <description>FIXME Description</description>
+      <author>FIXME &lt;fixme@example.com&gt;</author>
+      <pads>
+        <caps>
+          <name>sink</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>text/plain</details>
+        </caps>
+      </pads>
+    </element>
+    <element>
+      <name>intersubsrc</name>
+      <longname>Inter-pipeline subtitle source</longname>
+      <class>Source/Subtitle</class>
+      <description>Inter-pipeline subtitle source</description>
+      <author>David Schleef &lt;ds@entropywave.com&gt;</author>
+      <pads>
+        <caps>
+          <name>src</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>application/unknown</details>
         </caps>
       </pads>
     </element>

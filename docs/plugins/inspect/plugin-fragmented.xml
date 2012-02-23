@@ -3,7 +3,7 @@
   <description>Fragmented streaming plugins</description>
   <filename>../../gst/hls/.libs/libgstfragmented.so</filename>
   <basename>libgstfragmented.so</basename>
-  <version>0.10.22.1</version>
+  <version>0.10.23.1</version>
   <license>LGPL</license>
   <source>gst-plugins-bad</source>
   <package>GStreamer Bad Plug-ins</package>
@@ -24,9 +24,9 @@ Andoni Morales Alastruey &lt;ylatuya@gmail.com&gt;</author>
           <details>application/x-hls</details>
         </caps>
         <caps>
-          <name>src</name>
+          <name>src%d</name>
           <direction>source</direction>
-          <presence>always</presence>
+          <presence>sometimes</presence>
           <details>ANY</details>
         </caps>
       </pads>

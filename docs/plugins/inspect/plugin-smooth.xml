@@ -1,20 +1,20 @@
 <plugin>
-  <name>patchdetect</name>
-  <description>patchdetect element</description>
-  <filename>../../gst/patchdetect/.libs/libgstpatchdetect.so</filename>
-  <basename>libgstpatchdetect.so</basename>
+  <name>smooth</name>
+  <description>Apply a smooth filter to an image</description>
+  <filename>../../gst/smooth/.libs/libgstsmooth.so</filename>
+  <basename>libgstsmooth.so</basename>
   <version>0.10.23.1</version>
   <license>LGPL</license>
   <source>gst-plugins-bad</source>
-  <package>GStreamer Bad Plug-ins</package>
+  <package>GStreamer Bad Plug-ins git</package>
   <origin>Unknown package origin</origin>
   <elements>
     <element>
-      <name>patchdetect</name>
-      <longname>Color Patch Detector</longname>
-      <class>Video/Analysis</class>
-      <description>Detects color patches from a color calibration chart</description>
-      <author>David Schleef &lt;ds@entropywave.com&gt;</author>
+      <name>smooth</name>
+      <longname>Smooth effect</longname>
+      <class>Filter/Effect/Video</class>
+      <description>Apply a smooth filter to an image</description>
+      <author>Wim Taymans &lt;wim.taymans@chello.be&gt;</author>
       <pads>
         <caps>
           <name>sink</name>

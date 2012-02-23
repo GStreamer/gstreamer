@@ -1,0 +1,34 @@
+<plugin>
+  <name>chromaprint</name>
+  <description>Calculate Chromaprint fingerprint from audio files</description>
+  <filename>../../ext/chromaprint/.libs/libgstchromaprint.so</filename>
+  <basename>libgstchromaprint.so</basename>
+  <version>0.10.23.1</version>
+  <license>LGPL</license>
+  <source>gst-plugins-bad</source>
+  <package>GStreamer Bad Plug-ins git</package>
+  <origin>Unknown package origin</origin>
+  <elements>
+    <element>
+      <name>chromaprint</name>
+      <longname>Chromaprint fingerprinting element</longname>
+      <class>Filter/Analyzer/Audio</class>
+      <description>Find an audio fingerprint using the Chromaprint library</description>
+      <author>Lukáš Lalinský &lt;lalinsky@gmail.com&gt;</author>
+      <pads>
+        <caps>
+          <name>sink</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-int, rate=(int)[ 1, 2147483647 ], channels=(int)[ 1, 2 ], endianness=(int){ 1234 }, width=(int){ 16 }, depth=(int){ 16 }, signed=(boolean)true</details>
+        </caps>
+        <caps>
+          <name>src</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-int, rate=(int)[ 1, 2147483647 ], channels=(int)[ 1, 2 ], endianness=(int){ 1234 }, width=(int){ 16 }, depth=(int){ 16 }, signed=(boolean)true</details>
+        </caps>
+      </pads>
+    </element>
+  </elements>
+</plugin>
