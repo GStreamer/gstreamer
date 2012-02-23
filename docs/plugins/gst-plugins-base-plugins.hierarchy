@@ -11,6 +11,10 @@ GObject
     GstElement
       GstAdder
       GstAlsaMixerElement
+      GstAudioDecoder
+        GstVorbisDec
+      GstAudioEncoder
+        GstVorbisEnc
       GstAudioRate
       GstBaseSink
         GstAppSink
@@ -42,8 +46,6 @@ GObject
             GstCdParanoiaSrc
           GstTCPClientSrc
           GstTCPServerSrc
-          GstV4lElement
-            GstV4lSrc
           GstVideoTestSrc
       GstBaseTransform
         GstAudioConvert
@@ -53,6 +55,7 @@ GObject
         GstVideoFilter
           GstFFMpegCsp
           GstVideoScale
+        GstVideoRate
       GstBin
         GstDecodeBin
         GstDecodeBin2
@@ -84,18 +87,15 @@ GObject
       GstTheoraDec
       GstTheoraEnc
       GstTheoraParse
-      GstVideoRate
       GstVisual
         GstVisualbumpscope
         GstVisualcorona
-        GstVisualgforce
         GstVisualinfinite
         GstVisualjakdaw
         GstVisualjess
+        GstVisuallv_analyzer
         GstVisuallv_scope
         GstVisualoinksie
-      GstVorbisDec
-      GstVorbisEnc
       GstVorbisParse
         GstVorbisTag
     GstPad
@@ -113,8 +113,6 @@ GObject
     GstTaskPool
   GstSignalObject
   GstStreamInfo
-  GstTunerChannel
-  GstTunerNorm
   PangoContext
   PangoFontMap
     PangoFcFontMap
@@ -131,7 +129,6 @@ GInterface
   GstPropertyProbe
   GstStreamVolume
   GstTagSetter
-  GstTuner
   GstURIHandler
   GstXOverlay
   PangoCairoFontMap
