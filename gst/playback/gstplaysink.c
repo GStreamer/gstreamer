@@ -216,6 +216,11 @@ struct _GstPlaySink
   gint xoverlay_x, xoverlay_y, xoverlay_width, xoverlay_height;
   gboolean xoverlay_handle_events_set;
   gboolean xoverlay_handle_events;
+
+  /* colorbalance proxy interface */
+  GstColorBalance *colorbalance_element;
+  GList *colorbalance_channels; /* CONTRAST, BRIGHTNESS, HUE, SATURATION */
+  gint colorbalance_values[4];
 };
 
 struct _GstPlaySinkClass
@@ -344,6 +349,9 @@ static void gst_play_sink_xoverlay_init (gpointer g_iface,
     gpointer g_iface_data);
 static void gst_play_sink_navigation_init (gpointer g_iface,
     gpointer g_iface_data);
+static void gst_play_sink_colorbalance_init (gpointer g_iface,
+    gpointer g_iface_data);
+
 static void
 _do_init (GType type)
 {
@@ -362,11 +370,16 @@ _do_init (GType type)
     gst_play_sink_navigation_init,
     NULL, NULL
   };
+  static const GInterfaceInfo col_info = {
+    gst_play_sink_colorbalance_init,
+    NULL, NULL
+  };
 
   g_type_add_interface_static (type, GST_TYPE_IMPLEMENTS_INTERFACE, &impl_info);
   g_type_add_interface_static (type, GST_TYPE_STREAM_VOLUME, &svol_info);
   g_type_add_interface_static (type, GST_TYPE_X_OVERLAY, &xov_info);
   g_type_add_interface_static (type, GST_TYPE_NAVIGATION, &nav_info);
+  g_type_add_interface_static (type, GST_TYPE_COLOR_BALANCE, &col_info);
 }
 
 G_DEFINE_TYPE_WITH_CODE (GstPlaySink, gst_play_sink, GST_TYPE_BIN,
@@ -553,6 +566,8 @@ gst_play_sink_class_init (GstPlaySinkClass * klass)
 static void
 gst_play_sink_init (GstPlaySink * playsink)
 {
+  GstColorBalanceChannel *channel;
+
   /* init groups */
   playsink->video_sink = NULL;
   playsink->audio_sink = NULL;
@@ -570,6 +585,46 @@ gst_play_sink_init (GstPlaySink * playsink)
 
   g_static_rec_mutex_init (&playsink->lock);
   GST_OBJECT_FLAG_SET (playsink, GST_ELEMENT_IS_SINK);
+
+  channel =
+      GST_COLOR_BALANCE_CHANNEL (g_object_new (GST_TYPE_COLOR_BALANCE_CHANNEL,
+          NULL));
+  channel->label = g_strdup ("CONTRAST");
+  channel->min_value = -1000;
+  channel->max_value = 1000;
+  playsink->colorbalance_channels =
+      g_list_append (playsink->colorbalance_channels, channel);
+  playsink->colorbalance_values[0] = 0;
+
+  channel =
+      GST_COLOR_BALANCE_CHANNEL (g_object_new (GST_TYPE_COLOR_BALANCE_CHANNEL,
+          NULL));
+  channel->label = g_strdup ("BRIGHTNESS");
+  channel->min_value = -1000;
+  channel->max_value = 1000;
+  playsink->colorbalance_channels =
+      g_list_append (playsink->colorbalance_channels, channel);
+  playsink->colorbalance_values[1] = 0;
+
+  channel =
+      GST_COLOR_BALANCE_CHANNEL (g_object_new (GST_TYPE_COLOR_BALANCE_CHANNEL,
+          NULL));
+  channel->label = g_strdup ("HUE");
+  channel->min_value = -1000;
+  channel->max_value = 1000;
+  playsink->colorbalance_channels =
+      g_list_append (playsink->colorbalance_channels, channel);
+  playsink->colorbalance_values[2] = 0;
+
+  channel =
+      GST_COLOR_BALANCE_CHANNEL (g_object_new (GST_TYPE_COLOR_BALANCE_CHANNEL,
+          NULL));
+  channel->label = g_strdup ("SATURATION");
+  channel->min_value = -1000;
+  channel->max_value = 1000;
+  playsink->colorbalance_channels =
+      g_list_append (playsink->colorbalance_channels, channel);
+  playsink->colorbalance_values[3] = 0;
 }
 
 static void
@@ -660,6 +715,11 @@ gst_play_sink_dispose (GObject * object)
   playsink->subtitle_encoding = NULL;
 
   playsink->stream_synchronizer = NULL;
+
+  g_list_foreach (playsink->colorbalance_channels, (GFunc) gst_object_unref,
+      NULL);
+  g_list_free (playsink->colorbalance_channels);
+  playsink->colorbalance_channels = NULL;
 
   G_OBJECT_CLASS (gst_play_sink_parent_class)->dispose (object);
 }
@@ -1314,32 +1374,117 @@ static void
 iterate_color_balance_elements (gpointer data, gpointer user_data)
 {
   gboolean valid = is_valid_color_balance_element (data);
-  gboolean *valid_out = user_data;
+  GstColorBalance **cb_out = user_data;
 
-  *valid_out = *valid_out && valid;
+  if (valid) {
+    if (*cb_out
+        && gst_color_balance_get_balance_type (*cb_out) ==
+        GST_COLOR_BALANCE_SOFTWARE) {
+      gst_object_unref (*cb_out);
+      *cb_out = GST_COLOR_BALANCE (gst_object_ref (data));
+    } else if (!*cb_out) {
+      *cb_out = GST_COLOR_BALANCE (gst_object_ref (data));
+    }
+  }
 
   gst_object_unref (data);
 }
 
-static gboolean
-has_color_balance_element (GstElement * element)
+static GstColorBalance *
+find_color_balance_element (GstElement * element)
 {
   GstIterator *it;
-  gboolean valid = FALSE;
+  GstColorBalance *cb = NULL;
 
-  if (GST_IS_COLOR_BALANCE (element))
-    return is_valid_color_balance_element (element);
+  if (GST_IS_COLOR_BALANCE (element)
+      && is_valid_color_balance_element (element))
+    return GST_COLOR_BALANCE (gst_object_ref (element));
   else if (!GST_IS_BIN (element))
     return FALSE;
 
   it = gst_bin_iterate_all_by_interface (GST_BIN (element),
       GST_TYPE_COLOR_BALANCE);
   while (gst_iterator_foreach (it, iterate_color_balance_elements,
-          &valid) == GST_ITERATOR_RESYNC)
+          &cb) == GST_ITERATOR_RESYNC)
     gst_iterator_resync (it);
   gst_iterator_free (it);
 
-  return valid;
+  return cb;
+}
+
+static void
+colorbalance_value_changed_cb (GstColorBalance * balance,
+    GstColorBalanceChannel * channel, gint value, GstPlaySink * playsink)
+{
+  GList *l;
+  gint i;
+
+  for (i = 0, l = playsink->colorbalance_channels; l; l = l->next, i++) {
+    GstColorBalanceChannel *proxy = l->data;
+
+    if (g_strrstr (channel->label, proxy->label)) {
+      gdouble new_val;
+
+      /* Convert to [0, 1] range */
+      new_val =
+          ((gdouble) value -
+          (gdouble) channel->min_value) / ((gdouble) channel->max_value -
+          (gdouble) channel->min_value);
+      /* Convert to proxy range */
+      new_val =
+          proxy->min_value + new_val * ((gdouble) proxy->max_value -
+          (gdouble) proxy->min_value);
+      playsink->colorbalance_values[i] = (gint) (0.5 + new_val);
+
+      gst_color_balance_value_changed (GST_COLOR_BALANCE (playsink), proxy,
+          playsink->colorbalance_values[i]);
+      break;
+    }
+  }
+}
+
+static void
+update_colorbalance (GstPlaySink * playsink)
+{
+  GstColorBalance *balance = NULL;
+  GList *l;
+  gint i;
+
+  GST_OBJECT_LOCK (playsink);
+  if (playsink->colorbalance_element) {
+    balance =
+        GST_COLOR_BALANCE (gst_object_ref (playsink->colorbalance_element));
+  }
+  GST_OBJECT_UNLOCK (playsink);
+  if (!balance)
+    return;
+
+  g_signal_handlers_disconnect_by_func (balance,
+      G_CALLBACK (colorbalance_value_changed_cb), playsink);
+
+  for (i = 0, l = playsink->colorbalance_channels; l; l = l->next, i++) {
+    GstColorBalanceChannel *proxy = l->data;
+    GstColorBalanceChannel *channel = NULL;
+    const GList *channels, *k;
+
+    channels = gst_color_balance_list_channels (balance);
+    for (k = channels; k; k = k->next) {
+      GstColorBalanceChannel *tmp = k->data;
+
+      if (g_strrstr (tmp->label, proxy->label)) {
+        channel = tmp;
+        break;
+      }
+    }
+
+    g_assert (channel);
+
+    gst_color_balance_set_value (balance, channel,
+        playsink->colorbalance_values[i]);
+  }
+
+  g_signal_connect (balance, "value-changed",
+      G_CALLBACK (colorbalance_value_changed_cb), playsink);
 }
 
 /* make the element (bin) that contains the elements needed to perform
@@ -1475,17 +1620,34 @@ gen_video_chain (GstPlaySink * playsink, gboolean raw, gboolean async)
     head = prev = chain->queue;
   }
 
+  GST_OBJECT_LOCK (playsink);
+  if (playsink->colorbalance_element) {
+    g_signal_handlers_disconnect_by_func (playsink->colorbalance_element,
+        G_CALLBACK (colorbalance_value_changed_cb), playsink);
+    gst_object_unref (playsink->colorbalance_element);
+  }
+  playsink->colorbalance_element = find_color_balance_element (chain->sink);
+  GST_OBJECT_UNLOCK (playsink);
+
   if (!(playsink->flags & GST_PLAY_FLAG_NATIVE_VIDEO)
-      || (!has_color_balance_element (chain->sink)
+      || (!playsink->colorbalance_element
           && (playsink->flags & GST_PLAY_FLAG_SOFT_COLORBALANCE))) {
     gboolean use_converters = !(playsink->flags & GST_PLAY_FLAG_NATIVE_VIDEO);
-    gboolean use_balance = !has_color_balance_element (chain->sink)
+    gboolean use_balance = !playsink->colorbalance_element
         && (playsink->flags & GST_PLAY_FLAG_SOFT_COLORBALANCE);
 
     GST_DEBUG_OBJECT (playsink, "creating videoconverter");
     chain->conv =
         g_object_new (GST_TYPE_PLAY_SINK_VIDEO_CONVERT, "name", "vconv",
         "use-converters", use_converters, "use-balance", use_balance, NULL);
+
+    GST_OBJECT_LOCK (playsink);
+    if (use_balance && GST_PLAY_SINK_VIDEO_CONVERT (chain->conv)->balance)
+      playsink->colorbalance_element =
+          GST_COLOR_BALANCE (gst_object_ref (GST_PLAY_SINK_VIDEO_CONVERT
+              (chain->conv)->balance));
+    GST_OBJECT_UNLOCK (playsink);
+
     gst_bin_add (bin, chain->conv);
     if (prev) {
       if (!gst_element_link_pads_full (prev, "src", chain->conv, "sink",
@@ -1496,6 +1658,8 @@ gen_video_chain (GstPlaySink * playsink, gboolean raw, gboolean async)
     }
     prev = chain->conv;
   }
+
+  update_colorbalance (playsink);
 
   if (prev) {
     GST_DEBUG_OBJECT (playsink, "linking to sink");
@@ -1632,10 +1796,30 @@ setup_video_chain (GstPlaySink * playsink, gboolean raw, gboolean async)
   if (elem)
     g_object_set (elem, "force-aspect-ratio", TRUE, NULL);
 
-  if (chain->conv)
-    g_object_set (chain->conv, "use-balance",
-        !has_color_balance_element (chain->sink)
-        && (playsink->flags & GST_PLAY_FLAG_SOFT_COLORBALANCE), NULL);
+  GST_OBJECT_LOCK (playsink);
+  if (playsink->colorbalance_element) {
+    g_signal_handlers_disconnect_by_func (playsink->colorbalance_element,
+        G_CALLBACK (colorbalance_value_changed_cb), playsink);
+    gst_object_unref (playsink->colorbalance_element);
+  }
+  playsink->colorbalance_element = find_color_balance_element (chain->sink);
+  GST_OBJECT_UNLOCK (playsink);
+
+  if (chain->conv) {
+    gboolean use_balance = !playsink->colorbalance_element
+        && (playsink->flags & GST_PLAY_FLAG_SOFT_COLORBALANCE);
+
+    g_object_set (chain->conv, "use-balance", use_balance, NULL);
+
+    GST_OBJECT_LOCK (playsink);
+    if (use_balance && GST_PLAY_SINK_VIDEO_CONVERT (chain->conv)->balance)
+      playsink->colorbalance_element =
+          GST_COLOR_BALANCE (gst_object_ref (GST_PLAY_SINK_VIDEO_CONVERT
+              (chain->conv)->balance));
+    GST_OBJECT_UNLOCK (playsink);
+  }
+
+  update_colorbalance (playsink);
 
   return TRUE;
 }
@@ -2363,6 +2547,13 @@ gst_play_sink_reconfigure (GstPlaySink * playsink)
   if (playsink->xoverlay_element)
     gst_object_unref (playsink->xoverlay_element);
   playsink->xoverlay_element = NULL;
+
+  if (playsink->colorbalance_element) {
+    g_signal_handlers_disconnect_by_func (playsink->colorbalance_element,
+        G_CALLBACK (colorbalance_value_changed_cb), playsink);
+    gst_object_unref (playsink->colorbalance_element);
+  }
+  playsink->colorbalance_element = NULL;
   GST_OBJECT_UNLOCK (playsink);
 
   if (((flags & GST_PLAY_FLAG_VIDEO)
@@ -3727,6 +3918,13 @@ gst_play_sink_change_state (GstElement * element, GstStateChange transition)
       if (playsink->xoverlay_element)
         gst_object_unref (playsink->xoverlay_element);
       playsink->xoverlay_element = NULL;
+
+      if (playsink->colorbalance_element) {
+        g_signal_handlers_disconnect_by_func (playsink->colorbalance_element,
+            G_CALLBACK (colorbalance_value_changed_cb), playsink);
+        gst_object_unref (playsink->colorbalance_element);
+      }
+      playsink->colorbalance_element = NULL;
       GST_OBJECT_UNLOCK (playsink);
 
       ret = GST_STATE_CHANGE_SUCCESS;
@@ -4072,7 +4270,7 @@ gst_play_sink_implements_interface_supported (GstImplementsInterface * iface,
     GType type)
 {
   if (type == GST_TYPE_X_OVERLAY || type == GST_TYPE_STREAM_VOLUME ||
-      type == GST_TYPE_NAVIGATION)
+      type == GST_TYPE_NAVIGATION || type == GST_TYPE_COLOR_BALANCE)
     return TRUE;
   else
     return FALSE;
@@ -4120,6 +4318,127 @@ gst_play_sink_navigation_init (gpointer g_iface, gpointer g_iface_data)
   GstNavigationInterface *iface = (GstNavigationInterface *) g_iface;
 
   iface->send_event = gst_play_sink_navigation_send_event;
+}
+
+static const GList *
+gst_play_sink_colorbalance_list_channels (GstColorBalance * balance)
+{
+  GstPlaySink *playsink = GST_PLAY_SINK (balance);
+
+  return playsink->colorbalance_channels;
+}
+
+static void
+gst_play_sink_colorbalance_set_value (GstColorBalance * balance,
+    GstColorBalanceChannel * proxy, gint value)
+{
+  GstPlaySink *playsink = GST_PLAY_SINK (balance);
+  GList *l;
+  gint i;
+  GstColorBalance *balance_element = NULL;
+
+  GST_OBJECT_LOCK (playsink);
+  if (playsink->colorbalance_element)
+    balance_element =
+        GST_COLOR_BALANCE (gst_object_ref (playsink->colorbalance_element));
+  GST_OBJECT_UNLOCK (playsink);
+
+  for (i = 0, l = playsink->colorbalance_channels; l; l = l->next, i++) {
+    GstColorBalanceChannel *proxy_tmp = l->data;
+    gdouble new_val;
+
+    if (proxy_tmp != proxy)
+      continue;
+
+    playsink->colorbalance_values[i] = value;
+
+    if (balance_element) {
+      GstColorBalanceChannel *channel = NULL;
+      const GList *channels, *k;
+
+      channels = gst_color_balance_list_channels (balance_element);
+      for (k = channels; k; k = k->next) {
+        GstColorBalanceChannel *tmp = l->data;
+
+        if (g_strrstr (tmp->label, proxy->label)) {
+          channel = tmp;
+          break;
+        }
+      }
+
+      g_assert (channel);
+
+      /* Convert to [0, 1] range */
+      new_val =
+          ((gdouble) value -
+          (gdouble) proxy->min_value) / ((gdouble) proxy->max_value -
+          (gdouble) proxy->min_value);
+      /* Convert to channel range */
+      new_val =
+          channel->min_value + new_val * ((gdouble) channel->max_value -
+          (gdouble) channel->min_value);
+
+      gst_color_balance_set_value (balance_element, channel,
+          (gint) (new_val + 0.5));
+
+      gst_object_unref (balance_element);
+    }
+
+    gst_color_balance_value_changed (balance, proxy, value);
+    break;
+  }
+}
+
+static gint
+gst_play_sink_colorbalance_get_value (GstColorBalance * balance,
+    GstColorBalanceChannel * proxy)
+{
+  GstPlaySink *playsink = GST_PLAY_SINK (balance);
+  GList *l;
+  gint i;
+
+  for (i = 0, l = playsink->colorbalance_channels; l; l = l->next, i++) {
+    GstColorBalanceChannel *proxy_tmp = l->data;
+
+    if (proxy_tmp != proxy)
+      continue;
+
+    return playsink->colorbalance_values[i];
+  }
+
+  g_return_val_if_reached (0);
+}
+
+static GstColorBalanceType
+gst_play_sink_colorbalance_get_balance_type (GstColorBalance * balance)
+{
+  GstPlaySink *playsink = GST_PLAY_SINK (balance);
+  GstColorBalance *balance_element = NULL;
+  GstColorBalanceType t = GST_COLOR_BALANCE_SOFTWARE;
+
+  GST_OBJECT_LOCK (playsink);
+  if (playsink->colorbalance_element)
+    balance_element =
+        GST_COLOR_BALANCE (gst_object_ref (playsink->colorbalance_element));
+  GST_OBJECT_UNLOCK (playsink);
+
+  if (balance_element) {
+    t = gst_color_balance_get_balance_type (balance_element);
+    gst_object_unref (balance_element);
+  }
+
+  return t;
+}
+
+static void
+gst_play_sink_colorbalance_init (gpointer g_iface, gpointer g_iface_data)
+{
+  GstColorBalanceClass *iface = (GstColorBalanceClass *) g_iface;
+
+  iface->list_channels = gst_play_sink_colorbalance_list_channels;
+  iface->set_value = gst_play_sink_colorbalance_set_value;
+  iface->get_value = gst_play_sink_colorbalance_get_value;
+  iface->get_balance_type = gst_play_sink_colorbalance_get_balance_type;
 }
 
 gboolean
