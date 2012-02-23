@@ -225,7 +225,6 @@ static void gst_ts_demux_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec);
 static void gst_ts_demux_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec);
-static void gst_ts_demux_finalize (GObject * object);
 static GstFlowReturn
 process_pcr (MpegTSBase * base, guint64 initoff, TSPcrOffset * pcroffset,
     guint numpcr, gboolean isinitial);
@@ -279,7 +278,6 @@ gst_ts_demux_class_init (GstTSDemuxClass * klass)
   gobject_class = G_OBJECT_CLASS (klass);
   gobject_class->set_property = gst_ts_demux_set_property;
   gobject_class->get_property = gst_ts_demux_get_property;
-  gobject_class->finalize = gst_ts_demux_finalize;
 
   g_object_class_install_property (gobject_class, PROP_PROGRAM_NUMBER,
       g_param_spec_int ("program-number", "Program number",
@@ -343,14 +341,6 @@ gst_ts_demux_reset (MpegTSBase * base)
   demux->last_pcr = (TSPcrOffset) {
   0};
 }
-
-static void
-gst_ts_demux_finalize (GObject * object)
-{
-  if (G_OBJECT_CLASS (parent_class)->finalize)
-    G_OBJECT_CLASS (parent_class)->finalize (object);
-}
-
 
 
 static void
