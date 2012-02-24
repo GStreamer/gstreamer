@@ -172,7 +172,7 @@ struct _GstMixerClass {
   GstMixerType  (* get_mixer_type)  (GstMixer *mixer);
 
   /*< private >*/
-  gpointer _gst_reserved[GST_PADDING];
+  gpointer _gst_reserved[GST_PADDING-2];
 };
 
 GType           gst_mixer_get_type      (void);

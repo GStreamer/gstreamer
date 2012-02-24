@@ -102,7 +102,7 @@ struct _GstColorBalanceClass {
   GstColorBalanceType (*get_balance_type)  (GstColorBalance *balance);
 
   /*< private >*/
-  gpointer _gst_reserved[GST_PADDING];
+  gpointer _gst_reserved[GST_PADDING-1];
 };
 
 GType   gst_color_balance_get_type      (void);
