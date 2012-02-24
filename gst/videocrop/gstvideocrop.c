@@ -711,7 +711,7 @@ gst_video_crop_set_property (GObject * object, guint prop_id,
       video_crop->crop_top);
   GST_OBJECT_UNLOCK (video_crop);
 
-  gst_base_transform_reconfigure (GST_BASE_TRANSFORM (video_crop));
+  gst_base_transform_reconfigure_src (GST_BASE_TRANSFORM (video_crop));
   g_mutex_unlock (&video_crop->lock);
 }
 

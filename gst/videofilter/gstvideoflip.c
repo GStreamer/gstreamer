@@ -965,7 +965,7 @@ gst_video_flip_set_property (GObject * object, guint prop_id,
 
         gst_base_transform_set_passthrough (btrans,
             method == GST_VIDEO_FLIP_METHOD_IDENTITY);
-        gst_base_transform_reconfigure (btrans);
+        gst_base_transform_reconfigure_src (btrans);
       } else {
         GST_OBJECT_UNLOCK (videoflip);
       }
