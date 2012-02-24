@@ -710,10 +710,7 @@ decode_slice(
     }
     macroblock_offset = gst_bit_reader_get_pos(&br);
 
-    mb_y = slice_no << !GST_VAAPI_PICTURE_IS_FRAME(picture);
-    if (GST_VAAPI_PICTURE_IS_BOTTOM_FIELD(picture))
-        mb_y++;
-
+    mb_y = slice_no;
     mb_x = -1;
     do {
         if (!decode_vlc(&br, &mb_inc, mpeg2_mbaddr_vlc_table,
