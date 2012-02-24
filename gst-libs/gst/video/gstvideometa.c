@@ -20,28 +20,30 @@
 #include "gstvideometa.h"
 
 static void
-gst_video_meta_copy (GstBuffer * dest, GstMeta * meta,
-    GstBuffer * buffer, gsize offset, gsize size)
+gst_video_meta_transform (GstBuffer * dest, GstMeta * meta,
+    GstBuffer * buffer, GQuark type, gpointer data)
 {
   GstVideoMeta *dmeta, *smeta;
   guint i;
 
   smeta = (GstVideoMeta *) meta;
 
-  dmeta =
-      (GstVideoMeta *) gst_buffer_add_meta (dest, GST_VIDEO_META_INFO, NULL);
-  dmeta->buffer = dest;
+  if (GST_META_TRANSFORM_IS_COPY (type)) {
+    dmeta =
+        (GstVideoMeta *) gst_buffer_add_meta (dest, GST_VIDEO_META_INFO, NULL);
+    dmeta->buffer = dest;
 
-  dmeta->flags = smeta->flags;
-  dmeta->id = smeta->id;
-  dmeta->format = smeta->format;
-  dmeta->width = smeta->width;
-  dmeta->height = smeta->height;
+    dmeta->flags = smeta->flags;
+    dmeta->id = smeta->id;
+    dmeta->format = smeta->format;
+    dmeta->width = smeta->width;
+    dmeta->height = smeta->height;
 
-  dmeta->n_planes = smeta->n_planes;
-  for (i = 0; i < dmeta->n_planes; i++) {
-    dmeta->offset[i] = smeta->offset[i];
-    dmeta->stride[i] = smeta->stride[i];
+    dmeta->n_planes = smeta->n_planes;
+    for (i = 0; i < dmeta->n_planes; i++) {
+      dmeta->offset[i] = smeta->offset[i];
+      dmeta->stride[i] = smeta->stride[i];
+    }
   }
 }
 
@@ -55,8 +57,7 @@ gst_video_meta_get_info (void)
     video_meta_info = gst_meta_register (GST_VIDEO_META_API, "GstVideoMeta",
         sizeof (GstVideoMeta),
         (GstMetaInitFunction) NULL,
-        (GstMetaFreeFunction) NULL,
-        gst_video_meta_copy, (GstMetaTransformFunction) NULL);
+        (GstMetaFreeFunction) NULL, gst_video_meta_transform);
   }
   return video_meta_info;
 }
@@ -285,18 +286,20 @@ gst_video_meta_unmap (GstVideoMeta * meta, guint plane, GstMapInfo * info)
 }
 
 static void
-gst_video_crop_meta_copy (GstBuffer * dest, GstMeta * meta,
-    GstBuffer * buffer, gsize offset, gsize size)
+gst_video_crop_meta_transform (GstBuffer * dest, GstMeta * meta,
+    GstBuffer * buffer, GQuark type, gpointer data)
 {
   GstVideoCropMeta *dmeta, *smeta;
 
-  smeta = (GstVideoCropMeta *) meta;
-  dmeta = gst_buffer_add_video_crop_meta (dest);
+  if (GST_META_TRANSFORM_IS_COPY (type)) {
+    smeta = (GstVideoCropMeta *) meta;
+    dmeta = gst_buffer_add_video_crop_meta (dest);
 
-  dmeta->x = smeta->x;
-  dmeta->y = smeta->y;
-  dmeta->width = smeta->width;
-  dmeta->height = smeta->height;
+    dmeta->x = smeta->x;
+    dmeta->y = smeta->y;
+    dmeta->width = smeta->width;
+    dmeta->height = smeta->height;
+  }
 }
 
 const GstMetaInfo *
@@ -308,8 +311,7 @@ gst_video_crop_meta_get_info (void)
     video_crop_meta_info =
         gst_meta_register (GST_VIDEO_CROP_META_API, "GstVideoCropMeta",
         sizeof (GstVideoCropMeta), (GstMetaInitFunction) NULL,
-        (GstMetaFreeFunction) NULL, gst_video_crop_meta_copy,
-        (GstMetaTransformFunction) NULL);
+        (GstMetaFreeFunction) NULL, gst_video_crop_meta_transform);
   }
   return video_crop_meta_info;
 }

@@ -47,8 +47,8 @@ gst_audio_downmix_meta_free (GstMeta * meta, GstBuffer * buffer)
 }
 
 static void
-gst_audio_downmix_meta_copy (GstBuffer * dest, GstMeta * meta,
-    GstBuffer * buffer, gsize offset, gsize size)
+gst_audio_downmix_meta_transform (GstBuffer * dest, GstMeta * meta,
+    GstBuffer * buffer, GQuark type, gpointer data)
 {
   GstAudioDownmixMeta *smeta;
 
@@ -158,9 +158,8 @@ gst_audio_downmix_meta_get_info (void)
     audio_downmix_meta_info =
         gst_meta_register (GST_AUDIO_DOWNMIX_META_API, "GstAudioDownmixMeta",
         sizeof (GstAudioDownmixMeta),
-        (GstMetaInitFunction) gst_audio_downmix_meta_init,
-        (GstMetaFreeFunction) gst_audio_downmix_meta_free,
-        gst_audio_downmix_meta_copy, (GstMetaTransformFunction) NULL);
+        gst_audio_downmix_meta_init,
+        gst_audio_downmix_meta_free, gst_audio_downmix_meta_transform);
   }
   return audio_downmix_meta_info;
 }
