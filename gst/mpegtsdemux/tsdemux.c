@@ -315,11 +315,14 @@ gst_ts_demux_reset (MpegTSBase * base)
     demux->index = NULL;
   }
   demux->index_size = 0;
+
   demux->need_newsegment = TRUE;
   demux->program_number = -1;
+
   demux->duration = GST_CLOCK_TIME_NONE;
-  demux->pts_delta = GST_CLOCK_TIME_NONE;
+
   gst_segment_init (&demux->segment, GST_FORMAT_TIME);
+
   demux->first_pcr = (TSPcrOffset) {
   GST_CLOCK_TIME_NONE, 0, 0};
   demux->cur_pcr = (TSPcrOffset) {
@@ -2037,11 +2040,9 @@ gst_ts_demux_parse_pes_header (GstTSDemux * demux, TSDemuxStream * stream)
   guint32 length;
   guint64 bufferoffset;
   PESParsingResult parseres;
-  GstClockTime origts;
 
   data = GST_BUFFER_DATA (stream->pendingbuffers[0]);
   length = GST_BUFFER_SIZE (stream->pendingbuffers[0]);
-  origts = GST_BUFFER_TIMESTAMP (stream->pendingbuffers[0]);
   bufferoffset = GST_BUFFER_OFFSET (stream->pendingbuffers[0]);
 
   GST_MEMDUMP ("Header buffer", data, MIN (length, 32));
@@ -2061,44 +2062,10 @@ gst_ts_demux_parse_pes_header (GstTSDemux * demux, TSDemuxStream * stream)
   if (header.PTS != -1) {
     gst_ts_demux_record_pts (demux, stream, header.PTS, bufferoffset);
 
-#if 0
-    /* WTH IS THIS ??? */
-    if (demux->index_pcr.offset + PCR_WRAP_SIZE_128KBPS + 1000 * 128 < offset
-        || (demux->index_pcr.offset > offset)) {
-      /* find next entry */
-      TSPcrOffset *next;
-      demux->index_pcr.offset = offset;
-      next = gst_util_array_binary_search (demux->index->data,
-          demux->index_size, sizeof (*next), TSPcrOffset_find_offset,
-          GST_SEARCH_MODE_BEFORE, &demux->index_pcr, NULL);
-      if (next) {
-        GST_INFO ("new index_pcr %" GST_TIME_FORMAT " offset: %"
-            G_GINT64_FORMAT, GST_TIME_ARGS (next->gsttime), next->offset);
-
-        demux->index_pcr = *next;
-      }
-    }
-    time = calc_gsttime_from_pts (&demux->index_pcr, pts);
-#endif
-
     GST_DEBUG_OBJECT (base,
         "stream PTS %" GST_TIME_FORMAT " DTS %" GST_TIME_FORMAT,
         GST_TIME_ARGS (stream->pts),
         GST_TIME_ARGS (MPEGTIME_TO_GSTTIME (header.DTS)));
-
-    /* FIXME : This will only work if the PES header is contained
-     * at the beginning of an incoming GstBuffer */
-    if (base->upstream_live && GST_CLOCK_TIME_IS_VALID (origts)
-        && !GST_CLOCK_TIME_IS_VALID (demux->pts_delta)) {
-      if (header.DTS != -1)
-        demux->pts_delta = MPEGTIME_TO_GSTTIME (header.DTS) - origts;
-      else
-        demux->pts_delta = stream->pts - origts;
-      GST_DEBUG_OBJECT (base, "buffer timestamp %" GST_TIME_FORMAT,
-          GST_TIME_ARGS (origts));
-      GST_DEBUG_OBJECT (base, "delta %" GST_TIME_FORMAT,
-          GST_TIME_ARGS (demux->pts_delta));
-    }
 
     /* safe default if insufficient upstream info */
     if (G_UNLIKELY (!GST_CLOCK_TIME_IS_VALID (base->in_gap) &&
@@ -2129,13 +2096,17 @@ gst_ts_demux_parse_pes_header (GstTSDemux * demux, TSDemuxStream * stream)
       base->in_gap = 0;
 
     if (base->upstream_live) {
-      if (GST_CLOCK_TIME_IS_VALID (demux->pts_delta))
+      MpegTSPacketizer2 *packetizer = base->packetizer;
+
+      if (GST_CLOCK_TIME_IS_VALID (packetizer->base_time))
         GST_BUFFER_TIMESTAMP (stream->pendingbuffers[0]) =
-            stream->pts - demux->pts_delta;
+            stream->pts - packetizer->base_pcrtime + packetizer->base_time +
+            packetizer->skew;
       else
         GST_BUFFER_TIMESTAMP (stream->pendingbuffers[0]) = GST_CLOCK_TIME_NONE;
     } else
-      GST_BUFFER_TIMESTAMP (stream->pendingbuffers[0]) = stream->pts + base->in_gap;
+      GST_BUFFER_TIMESTAMP (stream->pendingbuffers[0]) =
+          stream->pts + base->in_gap;
     GST_DEBUG ("buf %" GST_TIME_FORMAT,
         GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (stream->pendingbuffers[0])));
   }
@@ -2317,6 +2288,7 @@ gst_ts_demux_push_pending_data (GstTSDemux * demux, TSDemuxStream * stream)
   MpegTSBaseStream *bs = (MpegTSBaseStream *) stream;
   /* MpegTSBase *base = (MpegTSBase*) demux; */
   GstBuffer *firstbuffer = NULL;
+  MpegTSPacketizer2 *packetizer = ((MpegTSBase *) demux)->packetizer;
 
   GST_DEBUG_OBJECT (stream->pad,
       "stream:%p, pid:0x%04x stream_type:%d state:%d", stream, bs->pid,
@@ -2354,13 +2326,14 @@ gst_ts_demux_push_pending_data (GstTSDemux * demux, TSDemuxStream * stream)
 
   firstbuffer = gst_buffer_list_get (stream->current, 0, 0);
 
-  GST_DEBUG_OBJECT (stream->pad,
-      "delta %" GST_TIME_FORMAT " stream->pts %" GST_TIME_FORMAT,
-      GST_TIME_ARGS (demux->pts_delta), GST_TIME_ARGS (stream->pts));
-  if (GST_CLOCK_TIME_IS_VALID (demux->pts_delta)
-      && GST_CLOCK_TIME_IS_VALID (stream->pts)
-      && !GST_CLOCK_TIME_IS_VALID (GST_BUFFER_TIMESTAMP (firstbuffer))) {
-    GST_BUFFER_TIMESTAMP (firstbuffer) = stream->pts - demux->pts_delta;
+  GST_DEBUG_OBJECT (stream->pad, "stream->pts %" GST_TIME_FORMAT,
+      GST_TIME_ARGS (stream->pts));
+  if (GST_CLOCK_TIME_IS_VALID (stream->pts)
+      && !GST_CLOCK_TIME_IS_VALID (GST_BUFFER_TIMESTAMP (firstbuffer))
+      && GST_CLOCK_TIME_IS_VALID (packetizer->base_time)) {
+    GST_BUFFER_TIMESTAMP (firstbuffer) =
+        stream->pts - packetizer->base_pcrtime + packetizer->base_time +
+        packetizer->skew;
   }
 
   GST_DEBUG_OBJECT (stream->pad,
