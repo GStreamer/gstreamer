@@ -57,6 +57,7 @@ struct _GstAQueueMem
   gpointer *array;
   volatile gint head;
   volatile gint tail;
+  volatile gint tail_read;
   GstAQueueMem *next;
   GstAQueueMem *free;
 };
@@ -84,6 +85,7 @@ new_queue_mem (guint size, gint pos)
   mem->array = g_new0 (gpointer, mem->size + 1);
   mem->head = pos;
   mem->tail = pos;
+  mem->tail_read = pos;
   mem->next = NULL;
   mem->free = NULL;
 
@@ -234,7 +236,7 @@ gst_atomic_queue_peek (GstAtomicQueue * queue)
     head_mem = g_atomic_pointer_get (&queue->head_mem);
 
     head = g_atomic_int_get (&head_mem->head);
-    tail = g_atomic_int_get (&head_mem->tail);
+    tail = g_atomic_int_get (&head_mem->tail_read);
     size = head_mem->size;
 
     /* when we are not empty, we can continue */
@@ -291,7 +293,7 @@ gst_atomic_queue_pop (GstAtomicQueue * queue)
       head_mem = g_atomic_pointer_get (&queue->head_mem);
 
       head = g_atomic_int_get (&head_mem->head);
-      tail = g_atomic_int_get (&head_mem->tail);
+      tail = g_atomic_int_get (&head_mem->tail_read);
       size = head_mem->size;
 
       /* when we are not empty, we can continue */
@@ -380,6 +382,9 @@ gst_atomic_queue_push (GstAtomicQueue * queue, gpointer data)
           tail + 1));
 
   tail_mem->array[tail & size] = data;
+
+  /* and now the readers can read */
+  g_atomic_int_inc (&tail_mem->tail_read);
 }
 
 /**
@@ -408,7 +413,7 @@ gst_atomic_queue_length (GstAtomicQueue * queue)
   head = g_atomic_int_get (&head_mem->head);
 
   tail_mem = g_atomic_pointer_get (&queue->tail_mem);
-  tail = g_atomic_int_get (&tail_mem->tail);
+  tail = g_atomic_int_get (&tail_mem->tail_read);
 
 #ifdef LOW_MEM
   if (g_atomic_int_dec_and_test (&queue->num_readers))
