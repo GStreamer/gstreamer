@@ -277,9 +277,8 @@ gboolean	gst_base_transform_is_qos_enabled   (GstBaseTransform *trans);
 void            gst_base_transform_set_gap_aware    (GstBaseTransform *trans,
                                                      gboolean gap_aware);
 
-void		gst_base_transform_suggest          (GstBaseTransform *trans,
-	                                             GstCaps *caps, gsize size);
-void		gst_base_transform_reconfigure      (GstBaseTransform *trans);
+void		gst_base_transform_reconfigure_sink (GstBaseTransform *trans);
+void		gst_base_transform_reconfigure_src  (GstBaseTransform *trans);
 G_END_DECLS
 
 #endif /* __GST_BASE_TRANSFORM_H__ */

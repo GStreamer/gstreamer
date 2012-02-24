@@ -2415,19 +2415,15 @@ gst_base_transform_set_gap_aware (GstBaseTransform * trans, gboolean gap_aware)
 }
 
 /**
- * gst_base_transform_suggest:
+ * gst_base_transform_reconfigure_sink:
  * @trans: a #GstBaseTransform
- * @caps: (transfer none): caps to suggest
- * @size: buffer size to suggest
  *
- * Instructs @trans to suggest new @caps upstream. A copy of @caps will be
- * taken.
- *
- * Since: 0.10.21
+ * Instructs @trans to request renegotiation upstream. This function is
+ * typically called after properties on the transform were set that
+ * influence the input format.
  */
 void
-gst_base_transform_suggest (GstBaseTransform * trans, GstCaps * caps,
-    gsize size)
+gst_base_transform_reconfigure_sink (GstBaseTransform * trans)
 {
   g_return_if_fail (GST_IS_BASE_TRANSFORM (trans));
 
@@ -2438,7 +2434,7 @@ gst_base_transform_suggest (GstBaseTransform * trans, GstCaps * caps,
 }
 
 /**
- * gst_base_transform_reconfigure:
+ * gst_base_transform_reconfigure_src:
  * @trans: a #GstBaseTransform
  *
  * Instructs @trans to renegotiate a new downstream transform on the next
@@ -2448,7 +2444,7 @@ gst_base_transform_suggest (GstBaseTransform * trans, GstCaps * caps,
  * Since: 0.10.21
  */
 void
-gst_base_transform_reconfigure (GstBaseTransform * trans)
+gst_base_transform_reconfigure_src (GstBaseTransform * trans)
 {
   g_return_if_fail (GST_IS_BASE_TRANSFORM (trans));
 

@@ -80,12 +80,12 @@ EXPORTS
 	gst_base_transform_is_in_place
 	gst_base_transform_is_passthrough
 	gst_base_transform_is_qos_enabled
-	gst_base_transform_reconfigure
+	gst_base_transform_reconfigure_sink
+	gst_base_transform_reconfigure_src
 	gst_base_transform_set_gap_aware
 	gst_base_transform_set_in_place
 	gst_base_transform_set_passthrough
 	gst_base_transform_set_qos_enabled
-	gst_base_transform_suggest
 	gst_base_transform_update_qos
 	gst_bit_reader_free
 	gst_bit_reader_get_bits_uint16
