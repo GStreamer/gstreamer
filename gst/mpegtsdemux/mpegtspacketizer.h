@@ -88,7 +88,6 @@ struct _MpegTSPacketizer2 {
   gboolean       calculate_skew;
   GstClockTime   base_time;
   GstClockTime   base_pcrtime;
-  GstClockTime   base_extrtp;
   GstClockTime   prev_out_time;
   GstClockTime   last_pcrtime;
   gint64         window[MAX_WINDOW];

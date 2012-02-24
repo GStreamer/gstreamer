@@ -81,7 +81,7 @@ static gchar *get_encoding (const gchar * text, guint * start_text,
     gboolean * is_multibyte);
 static gchar *get_encoding_and_convert (const gchar * text, guint length);
 static GstClockTime calculate_skew (MpegTSPacketizer2 * packetizer,
-    guint32 pcrtime, GstClockTime time);
+    guint64 pcrtime, GstClockTime time);
 static void mpegts_packetizer_reset_skew (MpegTSPacketizer2 * packetizer);
 
 #define CONTINUITY_UNSET 255
@@ -270,7 +270,8 @@ mpegts_packetizer_parse_adaptation_field_control (MpegTSPacketizer2 *
   if (afcflags & MPEGTS_AFC_PCR_FLAG) {
     packet->pcr = mpegts_packetizer_compute_pcr (data);
     if (packetizer->calculate_skew)
-      packet->pcr = calculate_skew (packetizer, packet->pcr,
+      GST_BUFFER_TIMESTAMP (packet->buffer) =
+          calculate_skew (packetizer, packet->pcr,
           GST_BUFFER_TIMESTAMP (packet->buffer));
     *data += 6;
   }
@@ -2271,6 +2272,8 @@ mpegts_packetizer_next_packet (MpegTSPacketizer2 * packetizer,
     packetizer->offset += packetizer->packet_size;
     GST_MEMDUMP ("buffer", GST_BUFFER_DATA (packet->buffer), 16);
     GST_MEMDUMP ("data_start", packet->data_start, 16);
+    GST_BUFFER_TIMESTAMP (packet->buffer) =
+        gst_adapter_prev_timestamp (packetizer->adapter, NULL);
 
     /* Check sync byte */
     if (G_UNLIKELY (packet->data_start[0] != 0x47)) {
@@ -2851,7 +2854,7 @@ mpegts_packetizer_resync (MpegTSPacketizer2 * packetizer, GstClockTime time,
  * Returns: @time adjusted with the clock skew.
  */
 static GstClockTime
-calculate_skew (MpegTSPacketizer2 * packetizer, guint32 pcrtime,
+calculate_skew (MpegTSPacketizer2 * packetizer, guint64 pcrtime,
     GstClockTime time)
 {
   guint64 send_diff, recv_diff;
@@ -2895,10 +2898,10 @@ calculate_skew (MpegTSPacketizer2 * packetizer, guint32 pcrtime,
     packetizer->base_time = -1;
   }
 
-  GST_DEBUG ("gstpcr %" GST_TIME_FORMAT ", base %"
+  GST_DEBUG ("gstpcr %" GST_TIME_FORMAT ", buftime %" GST_TIME_FORMAT ", base %"
       GST_TIME_FORMAT ", send_diff %" GST_TIME_FORMAT,
-      GST_TIME_ARGS (gstpcrtime), GST_TIME_ARGS (packetizer->base_pcrtime),
-      GST_TIME_ARGS (send_diff));
+      GST_TIME_ARGS (gstpcrtime), GST_TIME_ARGS (time),
+      GST_TIME_ARGS (packetizer->base_pcrtime), GST_TIME_ARGS (send_diff));
 
   /* we don't have an arrival timestamp so we can't do skew detection. we
    * should still apply a timestamp based on RTP timestamp and base_time */
@@ -3039,7 +3042,7 @@ no_skew:
     }
   } else {
     /* We simply use the pcrtime without applying any skew compensation */
-    out_time = pcrtime;
+    out_time = time;
   }
 
   packetizer->prev_out_time = out_time;
