@@ -680,7 +680,7 @@ gboolean
 mpegts_base_is_psi (MpegTSBase * base, MpegTSPacketizerPacket * packet)
 {
   gboolean retval = FALSE;
-  guint8 table_id;
+  guint8 *data, table_id, pointer;
   int i;
   static const guint8 si_tables[] =
       { 0x00, 0x01, 0x02, 0x03, 0x40, 0x41, 0x42, 0x46, 0x4A,
@@ -699,6 +699,18 @@ mpegts_base_is_psi (MpegTSBase * base, MpegTSPacketizerPacket * packet)
 
   if (!retval) {
     if (packet->payload_unit_start_indicator) {
+      data = packet->data;
+      pointer = *data++;
+      data += pointer;
+      /* 'pointer' value may be invalid on malformed packet
+       * so we need to avoid out of range
+       */
+      if (!(data < packet->data_end)) {
+        GST_WARNING_OBJECT (base,
+            "Wrong offset when retrieving table id: 0x%x", pointer);
+        return FALSE;
+      }
+
       table_id = *(packet->data);
       i = 0;
       while (si_tables[i] != TABLE_ID_UNSET) {
