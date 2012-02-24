@@ -219,10 +219,11 @@ gst_registry_binary_cache_write (BinaryRegistryCache * cache,
 {
   long written;
   if (offset != cache->currentoffset) {
-    if (lseek (cache->cache_fd, offset, SEEK_SET) != 0) {
-      GST_ERROR ("Seeking to new offset failed");
-      return FALSE;
+    if (lseek (cache->cache_fd, offset, SEEK_SET) < 0) {
+      GST_ERROR ("Seeking to new offset failed: %s", g_strerror (errno));
+      return -1;
     }
+    GST_LOG ("Seeked from offset %lu to %lu", offset, cache->currentoffset);
     cache->currentoffset = offset;
   }
 
