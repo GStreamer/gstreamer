@@ -306,23 +306,6 @@ gst_ts_demux_class_init (GstTSDemuxClass * klass)
 }
 
 static void
-gst_ts_demux_init (GstTSDemux * demux, GstTSDemuxClass * klass)
-{
-  demux->need_newsegment = TRUE;
-  demux->program_number = -1;
-  demux->duration = GST_CLOCK_TIME_NONE;
-  demux->pts_delta = GST_CLOCK_TIME_NONE;
-  GST_MPEGTS_BASE (demux)->stream_size = sizeof (TSDemuxStream);
-  gst_segment_init (&demux->segment, GST_FORMAT_TIME);
-  demux->first_pcr = (TSPcrOffset) {
-  GST_CLOCK_TIME_NONE, 0, 0};
-  demux->cur_pcr = (TSPcrOffset) {
-  0};
-  demux->last_pcr = (TSPcrOffset) {
-  0};
-}
-
-static void
 gst_ts_demux_reset (MpegTSBase * base)
 {
   GstTSDemux *demux = (GstTSDemux *) base;
@@ -343,6 +326,14 @@ gst_ts_demux_reset (MpegTSBase * base)
   0};
   demux->last_pcr = (TSPcrOffset) {
   0};
+}
+
+static void
+gst_ts_demux_init (GstTSDemux * demux, GstTSDemuxClass * klass)
+{
+  GST_MPEGTS_BASE (demux)->stream_size = sizeof (TSDemuxStream);
+
+  gst_ts_demux_reset ((MpegTSBase *) demux);
 }
 
 
@@ -477,12 +468,10 @@ gst_ts_demux_srcpad_query (GstPad * pad, GstQuery * query)
 static inline GstClockTime
 calculate_gsttime (TSPcrOffset * start, guint64 pcr)
 {
-
   GstClockTime time = start->gsttime;
 
   if (start->pcr > pcr)
-    time += PCRTIME_TO_GSTTIME (PCR_MAX_VALUE - start->pcr) +
-        PCRTIME_TO_GSTTIME (pcr);
+    time += PCRTIME_TO_GSTTIME (PCR_MAX_VALUE - start->pcr + pcr);
   else
     time += PCRTIME_TO_GSTTIME (pcr - start->pcr);
 
@@ -619,20 +608,13 @@ beach:
 }
 
 static gint
-TSPcrOffset_find (gconstpointer a, gconstpointer b, gpointer user_data)
+TSPcrOffset_find (TSPcrOffset * a, TSPcrOffset * b, gpointer user_data)
 {
-
-/*   GST_INFO ("a: %" GST_TIME_FORMAT " offset: %" G_GINT64_FORMAT, */
-/*       GST_TIME_ARGS (((TSPcrOffset *) a)->gsttime), ((TSPcrOffset *) a)->offset); */
-/*   GST_INFO ("b: %" GST_TIME_FORMAT " offset: %" G_GINT64_FORMAT, */
-/*       GST_TIME_ARGS (((TSPcrOffset *) b)->gsttime), ((TSPcrOffset *) b)->offset); */
-
-  if (((TSPcrOffset *) a)->gsttime < ((TSPcrOffset *) b)->gsttime)
+  if (a->gsttime < b->gsttime)
     return -1;
-  else if (((TSPcrOffset *) a)->gsttime > ((TSPcrOffset *) b)->gsttime)
+  if (a->gsttime > b->gsttime)
     return 1;
-  else
-    return 0;
+  return 0;
 }
 
 static GstFlowReturn
@@ -664,8 +646,8 @@ gst_ts_demux_perform_seek (MpegTSBase * base, GstSegment * segment, guint16 pid)
 
   /* get the first index entry before the seek position */
   tmp = gst_util_array_binary_search (demux->index->data, demux->index_size,
-      sizeof (*tmp), TSPcrOffset_find, GST_SEARCH_MODE_BEFORE, &seekpcroffset,
-      NULL);
+      sizeof (*tmp), (GCompareDataFunc) TSPcrOffset_find,
+      GST_SEARCH_MODE_BEFORE, &seekpcroffset, NULL);
 
   if (G_UNLIKELY (!tmp)) {
     GST_ERROR ("value not found");
@@ -1796,7 +1778,6 @@ process_pcr (MpegTSBase * base, guint64 initoff, TSPcrOffset * pcroffset,
 
     gst_byte_reader_init_from_buffer (&br, buf);
 
-    offset = 0;
     size = GST_BUFFER_SIZE (buf);
 
   resync:
@@ -2044,19 +2025,6 @@ calc_gsttime_from_pts (TSPcrOffset * start, guint64 pts)
 
   return time;
 }
-
-#if 0
-static gint
-TSPcrOffset_find_offset (gconstpointer a, gconstpointer b, gpointer user_data)
-{
-  if (((TSPcrOffset *) a)->offset < ((TSPcrOffset *) b)->offset)
-    return -1;
-  else if (((TSPcrOffset *) a)->offset > ((TSPcrOffset *) b)->offset)
-    return 1;
-  else
-    return 0;
-}
-#endif
 
 static GstFlowReturn
 gst_ts_demux_parse_pes_header (GstTSDemux * demux, TSDemuxStream * stream)
