@@ -56,7 +56,7 @@ struct _GstAQueueMem
   gint size;
   gpointer *array;
   volatile gint head;
-  volatile gint tail;
+  volatile gint tail_write;
   volatile gint tail_read;
   GstAQueueMem *next;
   GstAQueueMem *free;
@@ -84,7 +84,7 @@ new_queue_mem (guint size, gint pos)
   mem->size = clp2 (MAX (size, 16)) - 1;
   mem->array = g_new0 (gpointer, mem->size + 1);
   mem->head = pos;
-  mem->tail = pos;
+  mem->tail_write = pos;
   mem->tail_read = pos;
   mem->next = NULL;
   mem->free = NULL;
@@ -297,8 +297,9 @@ gst_atomic_queue_pop (GstAtomicQueue * queue)
       size = head_mem->size;
 
       /* when we are not empty, we can continue */
-      if (G_LIKELY (head != tail))
-        break;
+      if G_LIKELY
+        (head != tail)
+            break;
 
       /* else array empty, try to take next */
       next = g_atomic_pointer_get (&head_mem->next);
@@ -307,9 +308,10 @@ gst_atomic_queue_pop (GstAtomicQueue * queue)
 
       /* now we try to move the next array as the head memory. If we fail to do that,
        * some other reader managed to do it first and we retry */
-      if (!G_ATOMIC_POINTER_COMPARE_AND_EXCHANGE (&queue->head_mem, head_mem,
-              next))
-        continue;
+      if G_UNLIKELY
+        (!G_ATOMIC_POINTER_COMPARE_AND_EXCHANGE (&queue->head_mem, head_mem,
+                next))
+            continue;
 
       /* when we managed to swing the head pointer the old head is now
        * useless and we add it to the freelist. We can't free the memory yet
@@ -318,8 +320,8 @@ gst_atomic_queue_pop (GstAtomicQueue * queue)
     }
 
     ret = head_mem->array[head & size];
-  } while (!g_atomic_int_compare_and_exchange (&head_mem->head, head,
-          head + 1));
+  } while G_UNLIKELY
+  (!g_atomic_int_compare_and_exchange (&head_mem->head, head, head + 1));
 
 #ifdef LOW_MEM
   /* decrement number of readers, when we reach 0 readers we can be sure that
@@ -354,37 +356,44 @@ gst_atomic_queue_push (GstAtomicQueue * queue, gpointer data)
 
       tail_mem = g_atomic_pointer_get (&queue->tail_mem);
       head = g_atomic_int_get (&tail_mem->head);
-      tail = g_atomic_int_get (&tail_mem->tail);
+      tail = g_atomic_int_get (&tail_mem->tail_write);
       size = tail_mem->size;
 
       /* we're not full, continue */
-      if (tail - head <= size)
-        break;
+      if G_LIKELY
+        (tail - head <= size)
+            break;
 
       /* else we need to grow the array, we store a mask so we have to add 1 */
       mem = new_queue_mem ((size << 1) + 1, tail);
 
       /* try to make our new array visible to other writers */
-      if (!G_ATOMIC_POINTER_COMPARE_AND_EXCHANGE (&queue->tail_mem, tail_mem,
-              mem)) {
+      if G_UNLIKELY
+        (!G_ATOMIC_POINTER_COMPARE_AND_EXCHANGE (&queue->tail_mem, tail_mem,
+                mem)) {
         /* we tried to swap the new writer array but something changed. This is
          * because some other writer beat us to it, we free our memory and try
          * again */
         free_queue_mem (mem);
         continue;
-      }
+        }
       /* make sure that readers can find our new array as well. The one who
        * manages to swap the pointer is the only one who can set the next
        * pointer to the new array */
       g_atomic_pointer_set (&tail_mem->next, mem);
     }
-  } while (!g_atomic_int_compare_and_exchange (&tail_mem->tail, tail,
-          tail + 1));
+  } while G_UNLIKELY
+  (!g_atomic_int_compare_and_exchange (&tail_mem->tail_write, tail, tail + 1));
 
   tail_mem->array[tail & size] = data;
 
-  /* and now the readers can read */
-  g_atomic_int_inc (&tail_mem->tail_read);
+  /* now wait until all writers have completed their write before we move the
+   * tail_read to this new item. It is possible that other writers are still
+   * updating the previous array slots and we don't want to reveal their changes
+   * before they are done. FIXME, it would be nice if we didn't have to busy
+   * wait here. */
+  while G_UNLIKELY
+    (!g_atomic_int_compare_and_exchange (&tail_mem->tail_read, tail, tail + 1));
 }
 
 /**
