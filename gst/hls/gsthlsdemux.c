@@ -1067,6 +1067,8 @@ gst_hls_demux_cache_fragments (GstHLSDemux * demux)
         gst_m3u8_client_get_target_duration (demux->client)
         / GST_SECOND * G_USEC_PER_SEC);
     if (!gst_hls_demux_get_next_fragment (demux)) {
+      if (demux->end_of_playlist)
+        break;
       if (!demux->cancelled)
         GST_ERROR_OBJECT (demux, "Error caching the first fragments");
       return FALSE;
