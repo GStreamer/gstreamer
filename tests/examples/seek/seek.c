@@ -1497,7 +1497,7 @@ colorbalance_value_changed (GtkRange * range, SeekApp * app)
 
   val = gtk_range_get_value (range);
 
-  g_print ("colorbalance %s value changed %lf\n", label, val / 100.);
+  g_print ("colorbalance %s value changed %lf\n", label, val / N_GRAD);
 
   if (!app->colorbalance_element) {
     find_interface_elements (app);
@@ -1522,7 +1522,7 @@ colorbalance_value_changed (GtkRange * range, SeekApp * app)
 
   ival =
       (gint) (0.5 + channel->min_value +
-      (val / 100.0) * ((gdouble) channel->max_value -
+      (val / N_GRAD) * ((gdouble) channel->max_value -
           (gdouble) channel->min_value));
   gst_color_balance_set_value (GST_COLOR_BALANCE (app->colorbalance_element),
       channel, ival);
@@ -2437,7 +2437,8 @@ create_ui (SeekApp * app)
     /* contrast scale */
     frame = gtk_frame_new ("Contrast");
     adjustment =
-        GTK_ADJUSTMENT (gtk_adjustment_new (50.0, 0.0, 101.0, 1.0, 1.0, 1.0));
+        GTK_ADJUSTMENT (gtk_adjustment_new (N_GRAD / 2.0, 0.00, N_GRAD, 0.1,
+            1.0, 1.0));
     app->contrast_scale = gtk_hscale_new (adjustment);
     gtk_scale_set_draw_value (GTK_SCALE (app->contrast_scale), FALSE);
     g_signal_connect (app->contrast_scale, "value-changed",
@@ -2448,7 +2449,8 @@ create_ui (SeekApp * app)
     /* brightness scale */
     frame = gtk_frame_new ("Brightness");
     adjustment =
-        GTK_ADJUSTMENT (gtk_adjustment_new (50.0, 0.0, 101.0, 1.0, 1.0, 1.0));
+        GTK_ADJUSTMENT (gtk_adjustment_new (N_GRAD / 2.0, 0.00, N_GRAD, 0.1,
+            1.0, 1.0));
     app->brightness_scale = gtk_hscale_new (adjustment);
     gtk_scale_set_draw_value (GTK_SCALE (app->brightness_scale), FALSE);
     g_signal_connect (app->brightness_scale, "value-changed",
@@ -2459,7 +2461,8 @@ create_ui (SeekApp * app)
     /* hue scale */
     frame = gtk_frame_new ("Hue");
     adjustment =
-        GTK_ADJUSTMENT (gtk_adjustment_new (50.0, 0.0, 101.0, 1.0, 1.0, 1.0));
+        GTK_ADJUSTMENT (gtk_adjustment_new (N_GRAD / 2.0, 0.00, N_GRAD, 0.1,
+            1.0, 1.0));
     app->hue_scale = gtk_hscale_new (adjustment);
     gtk_scale_set_draw_value (GTK_SCALE (app->hue_scale), FALSE);
     g_signal_connect (app->hue_scale, "value-changed",
@@ -2470,7 +2473,8 @@ create_ui (SeekApp * app)
     /* saturation scale */
     frame = gtk_frame_new ("Saturation");
     adjustment =
-        GTK_ADJUSTMENT (gtk_adjustment_new (50.0, 0.0, 101.0, 1.0, 1.0, 1.0));
+        GTK_ADJUSTMENT (gtk_adjustment_new (N_GRAD / 2.0, 0.00, N_GRAD, 0.1,
+            1.0, 1.0));
     app->saturation_scale = gtk_hscale_new (adjustment);
     gtk_scale_set_draw_value (GTK_SCALE (app->saturation_scale), FALSE);
     g_signal_connect (app->saturation_scale, "value-changed",
