@@ -582,6 +582,14 @@ decode_picture_ext(GstVaapiDecoderMpeg2 *decoder, guchar *buf, guint buf_size)
     }
     priv->has_pic_ext = TRUE;
 
+    if (pic_ext->picture_structure == 0 ||
+        (pic_ext->progressive_frame &&
+         pic_ext->picture_structure != GST_MPEG_VIDEO_PICTURE_STRUCTURE_FRAME)) {
+        GST_WARNING("invalid picture_structure %d, replacing with \"frame\"",
+                    pic_ext->picture_structure);
+        pic_ext->picture_structure = GST_MPEG_VIDEO_PICTURE_STRUCTURE_FRAME;
+    }
+
     switch (pic_ext->picture_structure) {
     case GST_MPEG_VIDEO_PICTURE_STRUCTURE_TOP_FIELD:
         GST_VAAPI_PICTURE_FLAG_SET(picture, GST_VAAPI_PICTURE_FLAG_TOP_FIELD);
