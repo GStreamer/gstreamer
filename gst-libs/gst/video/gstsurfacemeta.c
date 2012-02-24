@@ -54,8 +54,7 @@ gst_surface_meta_get_info (void)
     meta_info = gst_meta_register ("GstSurfaceMeta", "GstSurfaceMeta",
         sizeof (GstSurfaceMeta),
         (GstMetaInitFunction) NULL,
-        (GstMetaFreeFunction) NULL,
-        (GstMetaCopyFunction) NULL, (GstMetaTransformFunction) NULL);
+        (GstMetaFreeFunction) NULL, (GstMetaTransformFunction) NULL);
   }
   return meta_info;
 }
