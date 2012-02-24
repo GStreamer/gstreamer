@@ -2154,7 +2154,7 @@ static void
 create_ui (SeekApp * app)
 {
   GtkWidget *hbox, *vbox, *panel, *expander, *pb2vbox, *boxes,
-      *flagtable, *boxes2, *step, *navigation, *colorbalance = NULL;
+      *flagtable, *boxes2, *seek, *step, *navigation, *colorbalance = NULL;
   GtkWidget *play_button, *pause_button, *stop_button, *shot_button;
   GtkWidget *accurate_checkbox, *key_checkbox, *loop_checkbox, *flush_checkbox;
   GtkWidget *scrub_checkbox, *play_scrub_checkbox;
@@ -2194,7 +2194,6 @@ create_ui (SeekApp * app)
       "Stopped");
   hbox = gtk_hbox_new (FALSE, 0);
   vbox = gtk_vbox_new (FALSE, 0);
-  flagtable = gtk_table_new (4, 2, FALSE);
   gtk_container_set_border_width (GTK_CONTAINER (vbox), 3);
 
   /* media controls */
@@ -2202,35 +2201,57 @@ create_ui (SeekApp * app)
   pause_button = gtk_button_new_from_stock (GTK_STOCK_MEDIA_PAUSE);
   stop_button = gtk_button_new_from_stock (GTK_STOCK_MEDIA_STOP);
 
-  /* seek flags */
-  accurate_checkbox = gtk_check_button_new_with_label ("Accurate Seek");
-  key_checkbox = gtk_check_button_new_with_label ("Key-unit Seek");
-  loop_checkbox = gtk_check_button_new_with_label ("Loop");
-  flush_checkbox = gtk_check_button_new_with_label ("Flush");
-  scrub_checkbox = gtk_check_button_new_with_label ("Scrub");
-  play_scrub_checkbox = gtk_check_button_new_with_label ("Play Scrub");
-  skip_checkbox = gtk_check_button_new_with_label ("Play Skip");
-  rate_spinbutton = gtk_spin_button_new_with_range (-100, 100, 0.1);
-  gtk_spin_button_set_digits (GTK_SPIN_BUTTON (rate_spinbutton), 3);
-  rate_label = gtk_label_new ("Rate");
+  /* seek expander */
+  {
+    seek = gtk_expander_new ("seek options");
+    flagtable = gtk_grid_new ();
+    gtk_grid_set_row_spacing (GTK_GRID (flagtable), 2);
+    gtk_grid_set_row_homogeneous (GTK_GRID (flagtable), TRUE);
+    gtk_grid_set_column_spacing (GTK_GRID (flagtable), 2);
+    gtk_grid_set_column_homogeneous (GTK_GRID (flagtable), TRUE);
 
-  gtk_widget_set_tooltip_text (accurate_checkbox,
-      "accurate position is requested, this might be considerably slower for some formats");
-  gtk_widget_set_tooltip_text (key_checkbox,
-      "seek to the nearest keyframe. This might be faster but less accurate");
-  gtk_widget_set_tooltip_text (loop_checkbox, "loop playback");
-  gtk_widget_set_tooltip_text (flush_checkbox, "flush pipeline after seeking");
-  gtk_widget_set_tooltip_text (rate_spinbutton, "define the playback rate, "
-      "negative value trigger reverse playback");
-  gtk_widget_set_tooltip_text (scrub_checkbox, "show images while seeking");
-  gtk_widget_set_tooltip_text (play_scrub_checkbox, "play video while seeking");
-  gtk_widget_set_tooltip_text (skip_checkbox,
-      "Skip frames while playing at high frame rates");
+    accurate_checkbox = gtk_check_button_new_with_label ("Accurate Seek");
+    key_checkbox = gtk_check_button_new_with_label ("Key-unit Seek");
+    loop_checkbox = gtk_check_button_new_with_label ("Loop");
+    flush_checkbox = gtk_check_button_new_with_label ("Flush");
+    scrub_checkbox = gtk_check_button_new_with_label ("Scrub");
+    play_scrub_checkbox = gtk_check_button_new_with_label ("Play Scrub");
+    skip_checkbox = gtk_check_button_new_with_label ("Play Skip");
+    rate_spinbutton = gtk_spin_button_new_with_range (-100, 100, 0.1);
+    gtk_spin_button_set_digits (GTK_SPIN_BUTTON (rate_spinbutton), 3);
+    rate_label = gtk_label_new ("Rate");
 
-  gtk_toggle_button_set_active (GTK_TOGGLE_BUTTON (flush_checkbox), TRUE);
-  gtk_toggle_button_set_active (GTK_TOGGLE_BUTTON (scrub_checkbox), TRUE);
+    gtk_widget_set_tooltip_text (accurate_checkbox,
+        "accurate position is requested, this might be considerably slower for some formats");
+    gtk_widget_set_tooltip_text (key_checkbox,
+        "seek to the nearest keyframe. This might be faster but less accurate");
+    gtk_widget_set_tooltip_text (loop_checkbox, "loop playback");
+    gtk_widget_set_tooltip_text (flush_checkbox,
+        "flush pipeline after seeking");
+    gtk_widget_set_tooltip_text (rate_spinbutton,
+        "define the playback rate, " "negative value trigger reverse playback");
+    gtk_widget_set_tooltip_text (scrub_checkbox, "show images while seeking");
+    gtk_widget_set_tooltip_text (play_scrub_checkbox,
+        "play video while seeking");
+    gtk_widget_set_tooltip_text (skip_checkbox,
+        "Skip frames while playing at high frame rates");
 
-  gtk_spin_button_set_value (GTK_SPIN_BUTTON (rate_spinbutton), app->rate);
+    gtk_toggle_button_set_active (GTK_TOGGLE_BUTTON (flush_checkbox), TRUE);
+    gtk_toggle_button_set_active (GTK_TOGGLE_BUTTON (scrub_checkbox), TRUE);
+
+    gtk_spin_button_set_value (GTK_SPIN_BUTTON (rate_spinbutton), app->rate);
+
+    gtk_grid_attach (GTK_GRID (flagtable), accurate_checkbox, 0, 0, 1, 1);
+    gtk_grid_attach (GTK_GRID (flagtable), flush_checkbox, 1, 0, 1, 1);
+    gtk_grid_attach (GTK_GRID (flagtable), loop_checkbox, 2, 0, 1, 1);
+    gtk_grid_attach (GTK_GRID (flagtable), key_checkbox, 0, 1, 1, 1);
+    gtk_grid_attach (GTK_GRID (flagtable), scrub_checkbox, 1, 1, 1, 1);
+    gtk_grid_attach (GTK_GRID (flagtable), play_scrub_checkbox, 2, 1, 1, 1);
+    gtk_grid_attach (GTK_GRID (flagtable), skip_checkbox, 3, 0, 1, 1);
+    gtk_grid_attach (GTK_GRID (flagtable), rate_label, 4, 0, 1, 1);
+    gtk_grid_attach (GTK_GRID (flagtable), rate_spinbutton, 4, 1, 1, 1);
+
+  }
 
   /* step expander */
   {
@@ -2288,7 +2309,7 @@ create_ui (SeekApp * app)
 
     gtk_box_pack_start (GTK_BOX (hbox), app->shuttle_scale, TRUE, TRUE, 2);
 
-    gtk_container_add (GTK_CONTAINER (step), hbox);
+    gtk_container_add (GTK_CONTAINER (seek), flagtable);
   }
 
   /* navigation command expander */
@@ -2634,19 +2655,8 @@ create_ui (SeekApp * app)
   gtk_box_pack_start (GTK_BOX (hbox), play_button, FALSE, FALSE, 2);
   gtk_box_pack_start (GTK_BOX (hbox), pause_button, FALSE, FALSE, 2);
   gtk_box_pack_start (GTK_BOX (hbox), stop_button, FALSE, FALSE, 2);
-  gtk_box_pack_start (GTK_BOX (hbox), flagtable, FALSE, FALSE, 2);
-  gtk_table_attach_defaults (GTK_TABLE (flagtable), accurate_checkbox, 0, 1, 0,
-      1);
-  gtk_table_attach_defaults (GTK_TABLE (flagtable), flush_checkbox, 1, 2, 0, 1);
-  gtk_table_attach_defaults (GTK_TABLE (flagtable), loop_checkbox, 2, 3, 0, 1);
-  gtk_table_attach_defaults (GTK_TABLE (flagtable), key_checkbox, 0, 1, 1, 2);
-  gtk_table_attach_defaults (GTK_TABLE (flagtable), scrub_checkbox, 1, 2, 1, 2);
-  gtk_table_attach_defaults (GTK_TABLE (flagtable), play_scrub_checkbox, 2, 3,
-      1, 2);
-  gtk_table_attach_defaults (GTK_TABLE (flagtable), skip_checkbox, 3, 4, 0, 1);
-  gtk_table_attach_defaults (GTK_TABLE (flagtable), rate_label, 4, 5, 0, 1);
-  gtk_table_attach_defaults (GTK_TABLE (flagtable), rate_spinbutton, 4, 5, 1,
-      2);
+
+  gtk_box_pack_start (GTK_BOX (vbox), seek, FALSE, FALSE, 2);
   if (panel && boxes && boxes2) {
     expander = gtk_expander_new ("playbin2 options");
     pb2vbox = gtk_vbox_new (FALSE, 0);
