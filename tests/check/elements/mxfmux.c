@@ -116,7 +116,7 @@ GST_START_TEST (test_mpeg2)
     return;
 
   pipeline = g_strdup_printf ("videotestsrc num-buffers=250 ! "
-      "video/x-raw-yuv,framerate=25/1 ! "
+      "video/x-raw,framerate=25/1 ! "
       "%s ! " "mxfmux name=mux ! " "fakesink", mpeg2enc_name);
 
   run_test (pipeline);
@@ -130,11 +130,11 @@ GST_START_TEST (test_raw_video_raw_audio)
   gchar *pipeline;
 
   pipeline = g_strdup_printf ("videotestsrc num-buffers=250 ! "
-      "video/x-raw-yuv,format=(GstFourcc)v308,width=1920,height=1080,framerate=25/1 ! "
+      "video/x-raw,format=(string)v308,width=1920,height=1080,framerate=25/1 ! "
       "mxfmux name=mux ! "
       "fakesink  "
       "audiotestsrc num-buffers=250 ! "
-      "audioconvert ! " "audio/x-raw-int,rate=48000,channels=2 ! " "mux. ");
+      "audioconvert ! " "audio/x-raw,rate=48000,channels=2 ! " "mux. ");
 
   run_test (pipeline);
   g_free (pipeline);
@@ -147,7 +147,7 @@ GST_START_TEST (test_raw_video_stride_transform)
   gchar *pipeline;
 
   pipeline = g_strdup_printf ("videotestsrc num-buffers=250 ! "
-      "video/x-raw-yuv,format=(GstFourcc)v308,width=1001,height=501,framerate=25/1 ! "
+      "video/x-raw,format=(string)v308,width=1001,height=501,framerate=25/1 ! "
       "mxfmux name=mux ! " "fakesink");
 
   run_test (pipeline);
@@ -169,7 +169,7 @@ GST_START_TEST (test_jpeg2000_alaw)
   gst_object_unref (factory);
 
   pipeline = g_strdup_printf ("videotestsrc num-buffers=250 ! "
-      "video/x-raw-yuv,framerate=25/1 ! "
+      "video/x-raw,framerate=25/1 ! "
       "jp2kenc ! "
       "mxfmux name=mux ! "
       "fakesink  "
@@ -197,13 +197,13 @@ GST_START_TEST (test_dnxhd_mp3)
   gst_object_unref (factory);
 
   pipeline = g_strdup_printf ("videotestsrc num-buffers=250 ! "
-      "video/x-raw-yuv,format=(GstFourcc)Y42B,width=1920,height=1080,framerate=25/1 ! "
+      "video/x-raw,format=(string)Y42B,width=1920,height=1080,framerate=25/1 ! "
       "ffenc_dnxhd bitrate=36000000 ! "
       "mxfmux name=mux ! "
       "fakesink  "
       "audiotestsrc num-buffers=250 ! "
       "audioconvert ! "
-      "audio/x-raw-int,channels=2 ! " "lame ! " "mp3parse ! " "mux. ");
+      "audio/x-raw,channels=2 ! " "lame ! " "mp3parse ! " "mux. ");
 
   run_test (pipeline);
   g_free (pipeline);
@@ -216,22 +216,22 @@ GST_START_TEST (test_multiple_av_streams)
   gchar *pipeline;
 
   pipeline = g_strdup_printf ("videotestsrc num-buffers=250 ! "
-      "video/x-raw-yuv,format=(GstFourcc)v308,width=1920,height=1080,framerate=25/1 ! "
+      "video/x-raw,format=(string)v308,width=1920,height=1080,framerate=25/1 ! "
       "mxfmux name=mux ! "
       "fakesink  "
       "audiotestsrc num-buffers=250 ! "
       "audioconvert ! "
-      "audio/x-raw-int,rate=48000,channels=2 ! "
+      "audio/x-raw,rate=48000,channels=2 ! "
       "mux. "
       "videotestsrc num-buffers=100 ! "
-      "video/x-raw-yuv,format=(GstFourcc)v308,width=1920,height=1080,framerate=25/1 ! "
+      "video/x-raw,format=(string)v308,width=1920,height=1080,framerate=25/1 ! "
       "mux. "
       "audiotestsrc num-buffers=100 ! "
       "audioconvert ! "
-      "audio/x-raw-int,rate=48000,channels=2 ! "
+      "audio/x-raw,rate=48000,channels=2 ! "
       "mux. "
       "audiotestsrc num-buffers=250 ! "
-      "audioconvert ! " "audio/x-raw-int,rate=48000,channels=2 ! " "mux. ");
+      "audioconvert ! " "audio/x-raw,rate=48000,channels=2 ! " "mux. ");
 
   run_test (pipeline);
   g_free (pipeline);
