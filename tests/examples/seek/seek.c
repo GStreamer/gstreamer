@@ -174,9 +174,11 @@ typedef struct
 } SeekApp;
 
 static void clear_streams (SeekApp * app);
+static void find_interface_elements (SeekApp * app);
 static void volume_notify_cb (GstElement * pipeline, GParamSpec * arg,
     SeekApp * app);
-static void find_interface_elements (SeekApp * app);
+static void mute_notify_cb (GstElement * pipeline, GParamSpec * arg,
+    SeekApp * app);
 
 /* pipeline construction */
 
@@ -233,6 +235,7 @@ make_playbin2_pipeline (SeekApp * app, const gchar * location)
 
   g_signal_connect (pipeline, "notify::volume", G_CALLBACK (volume_notify_cb),
       app);
+  g_signal_connect (pipeline, "notify::mute", G_CALLBACK (mute_notify_cb), app);
 
   app->navigation_element = GST_ELEMENT (gst_object_ref (pipeline));
   app->colorbalance_element = GST_ELEMENT (gst_object_ref (pipeline));
@@ -1152,8 +1155,8 @@ volume_spinbutton_changed_cb (GtkSpinButton * button, SeekApp * app)
   g_object_set (app->pipeline, "volume", volume, NULL);
 }
 
-static void
-volume_notify_cb (GstElement * pipeline, GParamSpec * arg, SeekApp * app)
+static gboolean
+volume_notify_idle_cb (SeekApp * app)
 {
   gdouble cur_volume, new_volume;
 
@@ -1168,6 +1171,40 @@ volume_notify_cb (GstElement * pipeline, GParamSpec * arg, SeekApp * app)
     g_signal_handlers_unblock_by_func (app->volume_spinbutton,
         volume_spinbutton_changed_cb, app);
   }
+
+  return FALSE;
+}
+
+static void
+volume_notify_cb (GstElement * pipeline, GParamSpec * arg, SeekApp * app)
+{
+  /* Do this from the main thread */
+  g_idle_add ((GSourceFunc) volume_notify_idle_cb, app);
+}
+
+static gboolean
+mute_notify_idle_cb (SeekApp * app)
+{
+  gboolean cur_mute, new_mute;
+
+  g_object_get (app->pipeline, "mute", &new_mute, NULL);
+  cur_mute =
+      gtk_toggle_button_get_active (GTK_TOGGLE_BUTTON (app->mute_checkbox));
+  if (cur_mute != new_mute) {
+    g_signal_handlers_block_by_func (app->mute_checkbox, mute_toggle_cb, app);
+    gtk_toggle_button_set_active (GTK_TOGGLE_BUTTON (app->mute_checkbox),
+        new_mute);
+    g_signal_handlers_unblock_by_func (app->mute_checkbox, mute_toggle_cb, app);
+  }
+
+  return FALSE;
+}
+
+static void
+mute_notify_cb (GstElement * pipeline, GParamSpec * arg, SeekApp * app)
+{
+  /* Do this from the main thread */
+  g_idle_add ((GSourceFunc) mute_notify_idle_cb, app);
 }
 
 static void
