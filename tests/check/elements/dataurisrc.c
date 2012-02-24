@@ -24,7 +24,7 @@
 
 /* sine wave encoded in ogg/vorbis, created with:
  *   gst-launch-0.10 audiotestsrc num-buffers=110 ! audioconvert ! \
- *                   audio/x-raw-float,channels=1 ! vorbisenc ! oggmux ! \
+ *                   audio/x-raw,channels=1 ! vorbisenc ! oggmux ! \
  *                   filesink location=sine.ogg
  * and then encoded to base64 */
 const gchar data_uri[] = "data:audio/ogg;base64,"
@@ -174,11 +174,11 @@ GST_START_TEST (test_playbin2)
   GstElement *playbin, *sink;
   int loops = 2;
 
-  playbin = gst_element_factory_make ("playbin2", NULL);
+  playbin = gst_element_factory_make ("playbin", NULL);
   sink = gst_element_factory_make ("fakesink", NULL);
 
   if (playbin == NULL || sink == NULL) {
-    GST_WARNING ("skipping test, no playbin2 or fakesink element(s)");
+    GST_WARNING ("skipping test, no playbin or fakesink element(s)");
     return;
   }
 
