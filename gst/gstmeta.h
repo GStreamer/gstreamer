@@ -113,34 +113,45 @@ typedef gboolean (*GstMetaInitFunction) (GstMeta *meta, gpointer params, GstBuff
 typedef void (*GstMetaFreeFunction)     (GstMeta *meta, GstBuffer *buffer);
 
 /**
- * GstMetaCopyFunction:
- * @dest: a destination #GstBuffer
- * @meta: a #GstMeta
- * @buffer: a #GstBuffer
- * @offset: an offset
- * @size: a size
+ * gst_meta_transform_copy:
  *
- * Function called when the region at @offset and @size in @buffer is copied
- * into @dest. The function should update the metadata on @dest using @meta.
+ * GQuark for the "copy" transform.
  */
-typedef void (*GstMetaCopyFunction)     (GstBuffer *dest, GstMeta *meta,
-                                         GstBuffer *buffer, gsize offset, gsize size);
+GST_EXPORT GQuark _gst_meta_transform_copy;
+
+#define GST_META_TRANSFORM_IS_COPY(type) ((type) == _gst_meta_transform_copy)
+
+/**
+ * GstMetaTransformDataCopy:
+ * @offset: the offset to copy
+ * @size: the size to copy
+ *
+ * Extra data passed to a "copy" transform #GstMetaTransformFunction.
+ */
+typedef struct {
+  gsize offset;
+  gsize size;
+} GstMetaTransformCopy;
+
 /**
  * GstMetaTransformFunction:
  * @transbuf: a #GstBuffer
  * @meta: a #GstMeta
  * @buffer: a #GstBuffer
+ * @type: the transform type
  * @data: transform specific data.
  *
  * Function called for each @meta in @buffer as a result of performing a
- * transformation on @transbuf. Additional type specific transform data
- * is passed to the function.
+ * transformation on @transbuf. Additional @type specific transform data
+ * is passed to the function as @data.
  *
- * Implementations should check the type of the transform @data and parse
- * additional type specific field that should be used to perform the transform.
+ * Implementations should check the @type of the transform and parse
+ * additional type specific fields in @data that should be used to update
+ * the metadata on @transbuf.
  */
-typedef void (*GstMetaTransformFunction) (GstBuffer *transbuf, GstMeta *meta,
-                                          GstBuffer *buffer, gpointer data);
+typedef void (*GstMetaTransformFunction) (GstBuffer *transbuf,
+                                          GstMeta *meta, GstBuffer *buffer,
+                                          GQuark type, gpointer data);
 
 /**
  * GstMetaInfo:
@@ -149,7 +160,6 @@ typedef void (*GstMetaTransformFunction) (GstBuffer *transbuf, GstMeta *meta,
  * @size: size of the metadata
  * @init_func: function for initializing the metadata
  * @free_func: function for freeing the metadata
- * @copy_func: function for copying the metadata
  * @transform_func: function for transforming the metadata
  *
  * The #GstMetaInfo provides information about a specific metadata
@@ -162,7 +172,6 @@ struct _GstMetaInfo {
 
   GstMetaInitFunction        init_func;
   GstMetaFreeFunction        free_func;
-  GstMetaCopyFunction        copy_func;
   GstMetaTransformFunction   transform_func;
 
   /*< private >*/
@@ -173,7 +182,6 @@ const GstMetaInfo *  gst_meta_register        (const gchar *api, const gchar *im
                                                gsize size,
                                                GstMetaInitFunction        init_func,
                                                GstMetaFreeFunction        free_func,
-                                               GstMetaCopyFunction        copy_func,
                                                GstMetaTransformFunction   transform_func);
 const GstMetaInfo *  gst_meta_get_info        (const gchar * impl);
 

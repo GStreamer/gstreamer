@@ -43,6 +43,7 @@ EXPORTS
 	_gst_disable_registry_cache DATA
 	_gst_element_error_printf
 	_gst_event_type DATA
+	_gst_meta_transform_copy DATA
 	_gst_plugin_loader_client_run
 	_gst_sample_type DATA
 	_gst_structure_type DATA

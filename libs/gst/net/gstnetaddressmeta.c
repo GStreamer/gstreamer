@@ -42,10 +42,11 @@ net_address_meta_init (GstNetAddressMeta * meta, gpointer params,
 }
 
 static void
-net_address_meta_copy (GstBuffer * copybuf, GstNetAddressMeta * meta,
-    GstBuffer * buffer, gsize offset, gsize size)
+net_address_meta_transform (GstBuffer * transbuf, GstNetAddressMeta * meta,
+    GstBuffer * buffer, GQuark type, gpointer data)
 {
-  gst_buffer_add_net_address_meta (copybuf, meta->addr);
+  /* we always copy no matter what transform */
+  gst_buffer_add_net_address_meta (transbuf, meta->addr);
 }
 
 static void
@@ -66,8 +67,7 @@ gst_net_address_meta_get_info (void)
         sizeof (GstNetAddressMeta),
         (GstMetaInitFunction) net_address_meta_init,
         (GstMetaFreeFunction) net_address_meta_free,
-        (GstMetaCopyFunction) net_address_meta_copy,
-        (GstMetaTransformFunction) NULL);
+        (GstMetaTransformFunction) net_address_meta_transform);
   }
   return meta_info;
 }

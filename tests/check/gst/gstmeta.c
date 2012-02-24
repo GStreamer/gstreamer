@@ -80,32 +80,36 @@ test_free_func (GstMetaTest * meta, GstBuffer * buffer)
 }
 
 static void
-test_copy_func (GstBuffer * copybuf, GstMetaTest * meta,
-    GstBuffer * buffer, gsize offset, gsize size)
+test_transform_func (GstBuffer * transbuf, GstMetaTest * meta,
+    GstBuffer * buffer, GQuark type, gpointer data)
 {
   GstMetaTest *test;
 
-  GST_DEBUG ("copy called from buffer %p to %p, meta %p, %u-%u", buffer,
-      copybuf, meta, offset, size);
+  GST_DEBUG ("transform %s called from buffer %p to %p, meta %p",
+      g_quark_to_string (type), buffer, transbuf, meta);
 
-  test = GST_META_TEST_ADD (copybuf);
-  if (offset == 0) {
-    /* same offset, copy timestamps */
-    test->pts = meta->pts;
-    test->dts = meta->dts;
-    if (size == gst_buffer_get_size (buffer)) {
-      /* same size, copy duration */
-      test->duration = meta->duration;
+  if (GST_META_TRANSFORM_IS_COPY (type)) {
+    GstMetaTransformCopy *copy_data = data;
+
+    test = GST_META_TEST_ADD (transbuf);
+    if (copy_data->offset == 0) {
+      /* same offset, copy timestamps */
+      test->pts = meta->pts;
+      test->dts = meta->dts;
+      if (copy_data->size == gst_buffer_get_size (buffer)) {
+        /* same size, copy duration */
+        test->duration = meta->duration;
+      } else {
+        /* else clear */
+        test->duration = GST_CLOCK_TIME_NONE;
+      }
     } else {
-      /* else clear */
-      test->duration = GST_CLOCK_TIME_NONE;
+      test->pts = -1;
+      test->dts = -1;
+      test->duration = -1;
     }
-  } else {
-    test->pts = -1;
-    test->dts = -1;
-    test->duration = -1;
+    test->clock_rate = meta->clock_rate;
   }
-  test->clock_rate = meta->clock_rate;
 }
 
 static const GstMetaInfo *
@@ -118,7 +122,7 @@ gst_meta_test_get_info (void)
         sizeof (GstMetaTest),
         (GstMetaInitFunction) test_init_func,
         (GstMetaFreeFunction) test_free_func,
-        (GstMetaCopyFunction) test_copy_func, (GstMetaTransformFunction) NULL);
+        (GstMetaTransformFunction) test_transform_func);
   }
   return meta_test_info;
 }

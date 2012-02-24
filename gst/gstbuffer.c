@@ -359,8 +359,15 @@ gst_buffer_copy_into (GstBuffer * dest, GstBuffer * src,
       GstMeta *meta = &walk->meta;
       const GstMetaInfo *info = meta->info;
 
-      if (info->copy_func)
-        info->copy_func (dest, meta, src, offset, size);
+      if (info->transform_func) {
+        GstMetaTransformCopy copy_data;
+
+        copy_data.offset = offset;
+        copy_data.size = size;
+
+        info->transform_func (dest, meta, src,
+            _gst_meta_transform_copy, &copy_data);
+      }
     }
   }
 }

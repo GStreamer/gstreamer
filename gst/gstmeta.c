@@ -35,11 +35,15 @@
 static GHashTable *metainfo = NULL;
 static GRWLock lock;
 
+GQuark _gst_meta_transform_copy;
+
 void
 _priv_gst_meta_initialize (void)
 {
   g_rw_lock_init (&lock);
   metainfo = g_hash_table_new (g_str_hash, g_str_equal);
+
+  _gst_meta_transform_copy = g_quark_from_static_string ("copy");
 }
 
 /**
@@ -49,7 +53,6 @@ _priv_gst_meta_initialize (void)
  * @size: the size of the #GstMeta structure
  * @init_func: a #GstMetaInitFunction
  * @free_func: a #GstMetaFreeFunction
- * @copy_func: a #GstMetaCopyFunction
  * @transform_func: a #GstMetaTransformFunction
  *
  * Register a new #GstMeta implementation.
@@ -63,7 +66,7 @@ _priv_gst_meta_initialize (void)
 const GstMetaInfo *
 gst_meta_register (const gchar * api, const gchar * impl, gsize size,
     GstMetaInitFunction init_func, GstMetaFreeFunction free_func,
-    GstMetaCopyFunction copy_func, GstMetaTransformFunction transform_func)
+    GstMetaTransformFunction transform_func)
 {
   GstMetaInfo *info;
 
@@ -77,7 +80,6 @@ gst_meta_register (const gchar * api, const gchar * impl, gsize size,
   info->size = size;
   info->init_func = init_func;
   info->free_func = free_func;
-  info->copy_func = copy_func;
   info->transform_func = transform_func;
 
   GST_DEBUG ("register \"%s\" implementing \"%s\" of size %" G_GSIZE_FORMAT,
