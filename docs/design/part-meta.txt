@@ -91,6 +91,7 @@ methods.
 
    GstVideoFlags      flags;
    GstVideoFormat     format;
+   guint              id
    guint              width;
    guint              height;
 
@@ -100,13 +101,13 @@ methods.
    gint               stride[GST_VIDEO_MAX_PLANES];   /* stride of the image lines. Can be negative when
                                                        * the image is upside-down */
 
-   gpointer (*map)    (GstMetaVideo *meta, guint plane, gint *stride,
+   gpointer (*map)    (GstMetaVideo *meta, guint plane, gpointer * data, gint *stride,
                        GstMapFlags flags);
    gboolean (*unmap)  (GstMetaVideo *meta, guint plane, gpointer data);
  };
 
- gpointer gst_meta_video_map   (GstMetaVideo *meta, guint plane, gint *stride,
-                                GstMapflags flags);
+ gpointer gst_meta_video_map   (GstMetaVideo *meta, guint plane, gpointer * data,
+                                gint *stride, GstMapflags flags);
  gboolean gst_meta_video_unmap (GstMetaVideo *meta, guint plane, gpointer data);
 
 GstMeta derived structures define the API of the metadata. The API can consist of
@@ -125,7 +126,6 @@ GstMetaInfo will point to more information about the metadata and looks like thi
 
     GstMetaInitFunction        init_func;
     GstMetaFreeFunction        free_func;
-    GstMetaCopyFunction        copy_func;
     GstMetaTransformFunction   transform_func;
   };
 
