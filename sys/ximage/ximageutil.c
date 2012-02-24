@@ -32,8 +32,7 @@ gst_meta_ximage_get_info (void)
     meta_ximage_info =
         gst_meta_register ("GstMetaXImageSrc", "GstMetaXImageSrc",
         sizeof (GstMetaXImage), (GstMetaInitFunction) NULL,
-        (GstMetaFreeFunction) NULL, (GstMetaCopyFunction) NULL,
-        (GstMetaTransformFunction) NULL);
+        (GstMetaFreeFunction) NULL, (GstMetaTransformFunction) NULL);
   }
   return meta_ximage_info;
 }

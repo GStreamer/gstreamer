@@ -66,8 +66,7 @@ gst_v4l2_meta_get_info (void)
     meta_info =
         gst_meta_register ("GstV4l2Meta", "GstV4l2Meta",
         sizeof (GstV4l2Meta), (GstMetaInitFunction) NULL,
-        (GstMetaFreeFunction) NULL, (GstMetaCopyFunction) NULL,
-        (GstMetaTransformFunction) NULL);
+        (GstMetaFreeFunction) NULL, (GstMetaTransformFunction) NULL);
   }
   return meta_info;
 }
