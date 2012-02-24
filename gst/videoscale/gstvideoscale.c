@@ -314,7 +314,7 @@ gst_video_scale_set_property (GObject * object, guint prop_id,
       GST_OBJECT_LOCK (vscale);
       vscale->add_borders = g_value_get_boolean (value);
       GST_OBJECT_UNLOCK (vscale);
-      gst_base_transform_reconfigure (GST_BASE_TRANSFORM_CAST (vscale));
+      gst_base_transform_reconfigure_src (GST_BASE_TRANSFORM_CAST (vscale));
       break;
     case PROP_SHARPNESS:
       GST_OBJECT_LOCK (vscale);

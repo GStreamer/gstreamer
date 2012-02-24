@@ -1168,7 +1168,7 @@ gst_video_rate_set_property (GObject * object,
 
 reconfigure:
   GST_OBJECT_UNLOCK (videorate);
-  gst_base_transform_reconfigure (GST_BASE_TRANSFORM (videorate));
+  gst_base_transform_reconfigure_src (GST_BASE_TRANSFORM (videorate));
 }
 
 static void
