@@ -158,6 +158,7 @@ static gboolean gst_app_sink_unlock_stop (GstBaseSink * bsink);
 static gboolean gst_app_sink_start (GstBaseSink * psink);
 static gboolean gst_app_sink_stop (GstBaseSink * psink);
 static gboolean gst_app_sink_event (GstBaseSink * sink, GstEvent * event);
+static gboolean gst_app_sink_query (GstBaseSink * bsink, GstQuery * query);
 static GstFlowReturn gst_app_sink_preroll (GstBaseSink * psink,
     GstBuffer * buffer);
 static GstFlowReturn gst_app_sink_render_common (GstBaseSink * psink,
@@ -436,6 +437,7 @@ gst_app_sink_class_init (GstAppSinkClass * klass)
   basesink_class->render = gst_app_sink_render;
   basesink_class->render_list = gst_app_sink_render_list;
   basesink_class->get_caps = gst_app_sink_getcaps;
+  basesink_class->query = gst_app_sink_query;
 
   klass->pull_preroll = gst_app_sink_pull_preroll;
   klass->pull_buffer = gst_app_sink_pull_buffer;
@@ -873,6 +875,30 @@ gst_app_sink_getcaps (GstBaseSink * psink)
   GST_OBJECT_UNLOCK (appsink);
 
   return caps;
+}
+
+static gboolean
+gst_app_sink_query (GstBaseSink * bsink, GstQuery * query)
+{
+  gboolean ret;
+
+  switch (GST_QUERY_TYPE (query)) {
+    case GST_QUERY_SEEKING:{
+      GstFormat fmt;
+
+      /* we don't supporting seeking */
+      gst_query_parse_seeking (query, &fmt, NULL, NULL, NULL);
+      gst_query_set_seeking (query, fmt, FALSE, 0, -1);
+      ret = TRUE;
+      break;
+    }
+
+    default:
+      ret = GST_BASE_SINK_CLASS (parent_class)->query (bsink, query);
+      break;
+  }
+
+  return ret;
 }
 
 static GstMiniObject *
