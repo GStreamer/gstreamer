@@ -2355,6 +2355,29 @@ gst_matroska_mux_start (GstMatroskaMux * mux)
   guint32 segment_uid[4];
   GTimeVal time = { 0, 0 };
 
+  /* if not streaming, check if downstream is seekable */
+  if (!mux->streamable) {
+    gboolean seekable;
+    GstQuery *query;
+
+    query = gst_query_new_seeking (GST_FORMAT_BYTES);
+    if (gst_pad_peer_query (mux->srcpad, query)) {
+      gst_query_parse_seeking (query, NULL, &seekable, NULL, NULL);
+      GST_INFO_OBJECT (mux, "downstream is %sseekable", seekable ? "" : "not ");
+      if (!seekable) {
+        mux->streamable = TRUE;
+        g_object_notify (G_OBJECT (mux), "streamable");
+        GST_WARNING_OBJECT (mux, "downstream is not seekable, but "
+            "streamable=false. Will ignore that and create streamable output "
+            "instead");
+      }
+    } else {
+      /* have to assume seeking is supported if query not handled downstream */
+      /* FIXME 0.11: change to query not handled => seeking not supported */
+      GST_WARNING_OBJECT (mux, "downstream did not handle seeking query");
+    }
+  }
+
   if (!strcmp (mux->doctype, GST_MATROSKA_DOCTYPE_WEBM)) {
     ebml->caps = gst_caps_new_simple ("video/webm", NULL);
   } else {
