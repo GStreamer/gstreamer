@@ -139,11 +139,11 @@ run_capsfilter_renegotiation (const gchar * launch_line)
 
 GST_START_TEST (test_capsfilter_renegotiation)
 {
-  run_capsfilter_renegotiation ("videotestsrc num-buffers=200 peer-alloc=true"
+  run_capsfilter_renegotiation ("videotestsrc num-buffers=200 "
       " ! capsfilter caps=\"" FIRST_CAPS "\" name=cf ! fakesink name=sink");
-  run_capsfilter_renegotiation ("videotestsrc num-buffers=200 peer-alloc=false"
+  run_capsfilter_renegotiation ("videotestsrc num-buffers=200 "
       " ! capsfilter caps=\"" FIRST_CAPS "\" name=cf ! fakesink name=sink");
-  run_capsfilter_renegotiation ("videotestsrc num-buffers=200 peer-alloc=false"
+  run_capsfilter_renegotiation ("videotestsrc num-buffers=200 "
       " ! capsfilter caps=\"video/x-raw, format=(string)I420, width=(int)100, height=(int)100\" "
       " ! videoconvert ! videoscale ! capsfilter caps=\"" FIRST_CAPS
       "\" name=cf " " ! fakesink name=sink");
