@@ -222,6 +222,16 @@ gst_fd_sink_query (GstPad * pad, GstQuery * query)
       gst_query_set_uri (query, fdsink->uri);
       return TRUE;
 
+    case GST_QUERY_SEEKING:
+      gst_query_parse_seeking (query, &format, NULL, NULL, NULL);
+      if (format == GST_FORMAT_BYTES || format == GST_FORMAT_DEFAULT) {
+        gst_query_set_seeking (query, GST_FORMAT_BYTES, fdsink->seekable, 0,
+            -1);
+      } else {
+        gst_query_set_seeking (query, format, FALSE, 0, -1);
+      }
+      return TRUE;
+
     default:
       return gst_pad_query_default (pad, query);
   }
@@ -383,6 +393,9 @@ gst_fd_sink_start (GstBaseSink * basesink)
 
   fdsink->bytes_written = 0;
   fdsink->current_pos = 0;
+
+  fdsink->seekable = gst_fd_sink_do_seek (fdsink, 0);
+  GST_INFO_OBJECT (fdsink, "seeking supported: %d", fdsink->seekable);
 
   return TRUE;
 
