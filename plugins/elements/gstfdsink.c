@@ -118,7 +118,7 @@ static void gst_fd_sink_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec);
 static void gst_fd_sink_dispose (GObject * obj);
 
-static gboolean gst_fd_sink_query (GstPad * pad, GstQuery * query);
+static gboolean gst_fd_sink_query (GstBaseSink * bsink, GstQuery * query);
 static GstFlowReturn gst_fd_sink_render (GstBaseSink * sink,
     GstBuffer * buffer);
 static gboolean gst_fd_sink_start (GstBaseSink * basesink);
@@ -161,6 +161,7 @@ gst_fd_sink_class_init (GstFdSinkClass * klass)
   gstbasesink_class->unlock = GST_DEBUG_FUNCPTR (gst_fd_sink_unlock);
   gstbasesink_class->unlock_stop = GST_DEBUG_FUNCPTR (gst_fd_sink_unlock_stop);
   gstbasesink_class->event = GST_DEBUG_FUNCPTR (gst_fd_sink_event);
+  gstbasesink_class->query = GST_DEBUG_FUNCPTR (gst_fd_sink_query);
 
   g_object_class_install_property (gobject_class, ARG_FD,
       g_param_spec_int ("fd", "fd", "An open file descriptor to write to",
@@ -170,11 +171,6 @@ gst_fd_sink_class_init (GstFdSinkClass * klass)
 static void
 gst_fd_sink_init (GstFdSink * fdsink, GstFdSinkClass * klass)
 {
-  GstPad *pad;
-
-  pad = GST_BASE_SINK_PAD (fdsink);
-  gst_pad_set_query_function (pad, GST_DEBUG_FUNCPTR (gst_fd_sink_query));
-
   fdsink->fd = 1;
   fdsink->uri = g_strdup_printf ("fd://%d", fdsink->fd);
   fdsink->bytes_written = 0;
@@ -195,12 +191,12 @@ gst_fd_sink_dispose (GObject * obj)
 }
 
 static gboolean
-gst_fd_sink_query (GstPad * pad, GstQuery * query)
+gst_fd_sink_query (GstBaseSink * bsink, GstQuery * query)
 {
   GstFdSink *fdsink;
   GstFormat format;
 
-  fdsink = GST_FD_SINK (GST_PAD_PARENT (pad));
+  fdsink = GST_FD_SINK (bsink);
 
   switch (GST_QUERY_TYPE (query)) {
     case GST_QUERY_POSITION:
@@ -233,7 +229,7 @@ gst_fd_sink_query (GstPad * pad, GstQuery * query)
       return TRUE;
 
     default:
-      return gst_pad_query_default (pad, query);
+      return GST_BASE_SINK_CLASS (parent_class)->query (bsink, query);
   }
 }
 
