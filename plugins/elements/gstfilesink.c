@@ -495,6 +495,16 @@ gst_file_sink_query (GstBaseSink * bsink, GstQuery * query)
       res = TRUE;
       break;
 
+    case GST_QUERY_SEEKING:
+      gst_query_parse_seeking (query, &format, NULL, NULL, NULL);
+      if (format == GST_FORMAT_BYTES || format == GST_FORMAT_DEFAULT) {
+        gst_query_set_seeking (query, GST_FORMAT_BYTES, self->seekable, 0, -1);
+      } else {
+        gst_query_set_seeking (query, format, FALSE, 0, -1);
+      }
+      res = TRUE;
+      break;
+
     default:
       res = GST_BASE_SINK_CLASS (parent_class)->query (bsink, query);
       break;
