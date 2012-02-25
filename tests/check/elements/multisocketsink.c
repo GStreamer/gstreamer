@@ -46,7 +46,7 @@ setup_multisocketsink (void)
   GST_DEBUG ("setup_multisocketsink");
   multisocketsink = gst_check_setup_element ("multisocketsink");
   mysrcpad = gst_check_setup_src_pad (multisocketsink, &srctemplate);
-  GST_PAD_UNSET_FLUSHING (mysrcpad);
+  gst_pad_set_active (mysrcpad, TRUE);
 
   return multisocketsink;
 }
