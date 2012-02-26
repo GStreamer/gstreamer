@@ -1399,7 +1399,7 @@ theora_enc_encode_and_push (GstTheoraEnc * enc, ogg_packet op,
     GstClockTime next_time, duration;
     GstClockTime timestamp = 0;
     GST_DEBUG_OBJECT (enc, "encoded. granule:%" G_GINT64_FORMAT ", packet:%p, "
-        "bytes:%ld", op.granulepos, op.packet, op.bytes);
+        "bytes:%ld", (gint64) op.granulepos, op.packet, op.bytes);
 
     next_time = th_granule_time (enc->encoder, op.granulepos) * GST_SECOND;
     duration = next_time - enc->next_ts;
