@@ -280,7 +280,7 @@ gst_collect_pads2_finalize (GObject * object)
  *
  * MT safe.
  *
- * Returns: a new #GstCollectPads2, or NULL in case of an error.
+ * Returns: (transfer full): a new #GstCollectPads2, or NULL in case of an error.
  *
  * Since: 0.10.36
  */
@@ -307,7 +307,7 @@ gst_collect_pads2_set_buffer_function_locked (GstCollectPads2 * pads,
  * gst_collect_pads2_set_buffer_function:
  * @pads: the collectpads to use
  * @func: the function to set
- * @user_data: user data passed to the function
+ * @user_data: (closure): user data passed to the function
  *
  * Set the callback function and user data that will be called with
  * the oldest buffer when all pads have been collected.
@@ -332,7 +332,7 @@ gst_collect_pads2_set_buffer_function (GstCollectPads2 * pads,
  * gst_collect_pads2_set_compare_function:
  * @pads: the pads to use
  * @func: the function to set
- * @user_data: user data passed to the function
+ * @user_data: (closure): user data passed to the function
  *
  * Set the timestamp comparison function.
  *
@@ -516,7 +516,7 @@ gst_collect_pads2_set_clip_function (GstCollectPads2 * pads,
 /**
  * gst_collect_pads2_add_pad:
  * @pads: the collectspads to use
- * @pad: the pad to add
+ * @pad: (transfer none): the pad to add
  * @size: the size of the returned #GstCollectData2 structure
  *
  * Add a pad to the collection of collect pads. The pad has to be
@@ -530,7 +530,7 @@ gst_collect_pads2_set_clip_function (GstCollectPads2 * pads,
  * The pad will be automatically activated in push mode when @pads is
  * started.
  *
- * This function calls gst_collect_pads2_add_pad() passing a value of NULL
+ * This function calls gst_collect_pads2_add_pad_full() passing a value of NULL
  * for destroy_notify and TRUE for locked.
  *
  * MT safe.
@@ -549,7 +549,7 @@ gst_collect_pads2_add_pad (GstCollectPads2 * pads, GstPad * pad, guint size)
 /**
  * gst_collect_pads2_add_pad_full:
  * @pads: the collectspads to use
- * @pad: the pad to add
+ * @pad: (transfer none): the pad to add
  * @size: the size of the returned #GstCollectData2 structure
  * @destroy_notify: function to be called before the returned #GstCollectData2
  * structure is freed
@@ -647,7 +647,7 @@ find_pad (GstCollectData2 * data, GstPad * pad)
 /**
  * gst_collect_pads2_remove_pad:
  * @pads: the collectspads to use
- * @pad: the pad to remove
+ * @pad: (transfer none): the pad to remove
  *
  * Remove a pad from the collection of collect pads. This function will also
  * free the #GstCollectData2 and all the resources that were allocated with
@@ -1023,8 +1023,8 @@ gst_collect_pads2_peek (GstCollectPads2 * pads, GstCollectData2 * data)
  *
  * MT safe.
  *
- * Returns: The buffer in @data or NULL if no buffer was queued.
- *   You should unref the buffer after usage.
+ * Returns: (transfer full): The buffer in @data or NULL if no buffer was
+ *   queued. You should unref the buffer after usage.
  *
  * Since: 0.10.36
  */
@@ -1139,7 +1139,7 @@ not_filled:
  * gst_collect_pads2_read:
  * @pads: the collectspads to query
  * @data: the data to use
- * @bytes: a pointer to a byte array
+ * @bytes: (out) (transfer none) (array length=size): a pointer to a byte array
  * @size: the number of bytes to read
  *
  * Get a pointer in @bytes where @size bytes can be read from the
@@ -1239,7 +1239,7 @@ gst_collect_pads2_flush (GstCollectPads2 * pads, GstCollectData2 * data,
  *
  * Since: 0.10.36
  *
- * Returns: A sub buffer. The size of the buffer can be less that requested.
+ * Returns: (transfer full): A sub buffer. The size of the buffer can be less that requested.
  * A return of NULL signals that the pad is end-of-stream.
  * Unref the buffer after use.
  */
