@@ -30,20 +30,20 @@
 #define LINK_CHECK_FLAGS GST_PAD_LINK_CHECK_NOTHING
 
 static GstCaps **
-videoscale_get_allowed_caps (void)
+videoscale_get_allowed_caps_for_method (int method)
 {
-  GstElement *scale = gst_element_factory_make ("videoscale", "scale");
-  GstPadTemplate *templ;
+  GstElement *scale;
   GstCaps *caps, **ret;
+  GstPad *pad;
   GstStructure *s;
   gint i, n;
 
-  templ =
-      gst_element_class_get_pad_template (GST_ELEMENT_GET_CLASS (scale),
-      "sink");
-  fail_unless (templ != NULL);
-
-  caps = gst_pad_template_get_caps (templ);
+  scale = gst_element_factory_make ("videoscale", "vscale");
+  g_object_set (scale, "method", method, NULL);
+  pad = gst_element_get_static_pad (scale, "sink");
+  caps = gst_pad_get_caps (pad);
+  gst_object_unref (pad);
+  gst_object_unref (scale);
 
   n = gst_caps_get_size (caps);
   ret = g_new0 (GstCaps *, n + 1);
@@ -52,10 +52,10 @@ videoscale_get_allowed_caps (void)
     s = gst_caps_get_structure (caps, i);
     ret[i] = gst_caps_new_empty ();
     gst_caps_append_structure (ret[i], gst_structure_copy (s));
+    GST_LOG ("method %d supports: %" GST_PTR_FORMAT, method, s);
   }
 
-  gst_object_unref (scale);
-
+  gst_caps_unref (caps);
   return ret;
 }
 
@@ -206,57 +206,74 @@ on_src_handoff_passthrough (GstElement * element, GstBuffer * buffer,
   *list = g_list_prepend (*list, gst_buffer_ref (buffer));
 }
 
-GST_START_TEST (test_passthrough)
+static void
+test_passthrough (int method)
 {
   GList *l1, *l2, *src_buffers = NULL, *sink_buffers = NULL;
   GstCaps **allowed_caps = NULL, **p;
-  gint method;
   static const gint src_width = 640, src_height = 480;
   static const gint dest_width = 640, dest_height = 480;
 
-  p = allowed_caps = videoscale_get_allowed_caps ();
+  p = allowed_caps = videoscale_get_allowed_caps_for_method (method);
 
   while (*p) {
     GstCaps *caps = *p;
 
-    for (method = 0; method < 3; method++) {
-      /* skip formats that ffmpegcolorspace can't handle */
-      if (caps_are_64bpp (caps))
-        continue;
+    /* skip formats that ffmpegcolorspace can't handle */
+    if (caps_are_64bpp (caps))
+      continue;
 
-      GST_DEBUG ("Running test for caps '%" GST_PTR_FORMAT "'"
-          " from %dx%u to %dx%d with method %d", caps, src_width, src_height,
-          dest_width, dest_height, method);
-      run_test (caps, src_width, src_height,
-          dest_width, dest_height, method,
-          G_CALLBACK (on_src_handoff_passthrough), &src_buffers,
-          G_CALLBACK (on_sink_handoff_passthrough), &sink_buffers);
+    GST_DEBUG ("Running test for caps '%" GST_PTR_FORMAT "'"
+        " from %dx%u to %dx%d with method %d", caps, src_width, src_height,
+        dest_width, dest_height, method);
+    run_test (caps, src_width, src_height,
+        dest_width, dest_height, method,
+        G_CALLBACK (on_src_handoff_passthrough), &src_buffers,
+        G_CALLBACK (on_sink_handoff_passthrough), &sink_buffers);
 
-      fail_unless (src_buffers && sink_buffers);
-      fail_unless_equals_int (g_list_length (src_buffers),
-          g_list_length (sink_buffers));
+    fail_unless (src_buffers && sink_buffers);
+    fail_unless_equals_int (g_list_length (src_buffers),
+        g_list_length (sink_buffers));
 
-      for (l1 = src_buffers, l2 = sink_buffers; l1 && l2;
-          l1 = l1->next, l2 = l2->next) {
-        GstBuffer *a = l1->data;
-        GstBuffer *b = l2->data;
+    for (l1 = src_buffers, l2 = sink_buffers; l1 && l2;
+        l1 = l1->next, l2 = l2->next) {
+      GstBuffer *a = l1->data;
+      GstBuffer *b = l2->data;
 
-        fail_unless_equals_int (GST_BUFFER_SIZE (a), GST_BUFFER_SIZE (b));
-        fail_unless (GST_BUFFER_DATA (a) == GST_BUFFER_DATA (b));
+      fail_unless_equals_int (GST_BUFFER_SIZE (a), GST_BUFFER_SIZE (b));
+      fail_unless (GST_BUFFER_DATA (a) == GST_BUFFER_DATA (b));
 
-        gst_buffer_unref (a);
-        gst_buffer_unref (b);
-      }
-      g_list_free (src_buffers);
-      src_buffers = NULL;
-      g_list_free (sink_buffers);
-      sink_buffers = NULL;
+      gst_buffer_unref (a);
+      gst_buffer_unref (b);
     }
+    g_list_free (src_buffers);
+    src_buffers = NULL;
+    g_list_free (sink_buffers);
+    sink_buffers = NULL;
 
     gst_caps_unref (caps);
     p++;
   }
   g_free (allowed_caps);
+}
+
+GST_START_TEST (test_passthrough_method_0)
+{
+  test_passthrough (0);
+}
+
+GST_END_TEST;
+
+GST_START_TEST (test_passthrough_method_1)
+{
+  test_passthrough (1);
+}
+
+GST_END_TEST;
+
+GST_START_TEST (test_passthrough_method_2)
+{
+  test_passthrough (2);
 }
 
 GST_END_TEST;
@@ -266,7 +283,7 @@ GST_START_TEST (name) \
 { \
   GstCaps **allowed_caps = NULL, **p; \
   \
-  p = allowed_caps = videoscale_get_allowed_caps (); \
+  p = allowed_caps = videoscale_get_allowed_caps_for_method (method); \
   \
   while (*p) { \
     GstCaps *caps = *p; \
@@ -642,8 +659,7 @@ gst_test_reverse_negotiation_sink_base_init (gpointer g_class)
       "Test Reverse Negotiation Sink",
       "Sink",
       "Some test sink", "Sebastian Dröge <sebastian.droege@collabora.co.uk>");
-  gst_element_class_add_static_pad_template (gstelement_class,
-      &sinktemplate);
+  gst_element_class_add_static_pad_template (gstelement_class, &sinktemplate);
 }
 
 static void
@@ -818,7 +834,9 @@ videoscale_suite (void)
 
   suite_add_tcase (s, tc_chain);
   tcase_set_timeout (tc_chain, 180);
-  tcase_add_test (tc_chain, test_passthrough);
+  tcase_add_test (tc_chain, test_passthrough_method_0);
+  tcase_add_test (tc_chain, test_passthrough_method_1);
+  tcase_add_test (tc_chain, test_passthrough_method_2);
   tcase_add_test (tc_chain, test_downscale_640x480_320x240_method_0);
   tcase_add_test (tc_chain, test_downscale_640x480_320x240_method_1);
   tcase_add_test (tc_chain, test_downscale_640x480_320x240_method_2);
