@@ -106,17 +106,10 @@ typedef struct _GstBufferPoolParams {
 struct _GstBufferPool {
   GstObject            object;
 
+  /*< protected >*/
+  gint                 flushing;
+
   /*< private >*/
-  gboolean             active;
-  gboolean             flushing;
-  gboolean             started;
-  gint                 outstanding;
-  GstAtomicQueue      *queue;
-  GstPoll             *poll;
-
-  gboolean             configured;
-  GstStructure        *config;
-
   GstBufferPoolPrivate *priv;
 
   gpointer _gst_reserved[GST_PADDING];

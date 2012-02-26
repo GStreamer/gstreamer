@@ -52,7 +52,18 @@ GST_DEBUG_CATEGORY_STATIC (gst_buffer_pool_debug);
 
 struct _GstBufferPoolPrivate
 {
+  GstAtomicQueue *queue;
+  GstPoll *poll;
+
   GRecMutex rec_lock;
+
+  gboolean started;
+  gboolean active;
+  gint outstanding;
+
+  gboolean configured;
+  GstStructure *config;
+
   guint size;
   guint min_buffers;
   guint max_buffers;
@@ -112,15 +123,16 @@ gst_buffer_pool_init (GstBufferPool * pool)
 
   g_rec_mutex_init (&pool->priv->rec_lock);
 
-  pool->poll = gst_poll_new_timer ();
-  pool->queue = gst_atomic_queue_new (10);
-  pool->flushing = TRUE;
-  pool->active = FALSE;
-  pool->configured = FALSE;
-  pool->started = FALSE;
-  pool->config = gst_structure_new_id_empty (GST_QUARK (BUFFER_POOL_CONFIG));
-  gst_buffer_pool_config_set (pool->config, NULL, 0, 0, 0, 0, 0);
-  gst_poll_write_control (pool->poll);
+  pool->priv->poll = gst_poll_new_timer ();
+  pool->priv->queue = gst_atomic_queue_new (10);
+  pool->flushing = 1;
+  pool->priv->active = FALSE;
+  pool->priv->configured = FALSE;
+  pool->priv->started = FALSE;
+  pool->priv->config =
+      gst_structure_new_id_empty (GST_QUARK (BUFFER_POOL_CONFIG));
+  gst_buffer_pool_config_set (pool->priv->config, NULL, 0, 0, 0, 0, 0);
+  gst_poll_write_control (pool->priv->poll);
 
   GST_DEBUG_OBJECT (pool, "created");
 }
@@ -135,9 +147,9 @@ gst_buffer_pool_finalize (GObject * object)
   GST_DEBUG_OBJECT (pool, "finalize");
 
   gst_buffer_pool_set_active (pool, FALSE);
-  gst_atomic_queue_unref (pool->queue);
-  gst_poll_free (pool->poll);
-  gst_structure_free (pool->config);
+  gst_atomic_queue_unref (pool->priv->queue);
+  gst_poll_free (pool->priv->poll);
+  gst_structure_free (pool->priv->config);
   g_rec_mutex_clear (&pool->priv->rec_lock);
 
   G_OBJECT_CLASS (gst_buffer_pool_parent_class)->finalize (object);
@@ -233,7 +245,7 @@ alloc_failed:
 static gboolean
 do_start (GstBufferPool * pool)
 {
-  if (!pool->started) {
+  if (!pool->priv->started) {
     GstBufferPoolClass *pclass;
 
     pclass = GST_BUFFER_POOL_GET_CLASS (pool);
@@ -245,7 +257,7 @@ do_start (GstBufferPool * pool)
       if (!pclass->start (pool))
         return FALSE;
     }
-    pool->started = TRUE;
+    pool->priv->started = TRUE;
   }
   return TRUE;
 }
@@ -267,9 +279,9 @@ default_stop (GstBufferPool * pool)
   pclass = GST_BUFFER_POOL_GET_CLASS (pool);
 
   /* clear the pool */
-  while ((buffer = gst_atomic_queue_pop (pool->queue))) {
+  while ((buffer = gst_atomic_queue_pop (pool->priv->queue))) {
     GST_LOG_OBJECT (pool, "freeing %p", buffer);
-    gst_poll_read_control (pool->poll);
+    gst_poll_read_control (pool->priv->poll);
 
     if (G_LIKELY (pclass->free_buffer))
       pclass->free_buffer (pool, buffer);
@@ -281,7 +293,7 @@ default_stop (GstBufferPool * pool)
 static gboolean
 do_stop (GstBufferPool * pool)
 {
-  if (pool->started) {
+  if (pool->priv->started) {
     GstBufferPoolClass *pclass;
 
     pclass = GST_BUFFER_POOL_GET_CLASS (pool);
@@ -291,7 +303,7 @@ do_stop (GstBufferPool * pool)
       if (!pclass->stop (pool))
         return FALSE;
     }
-    pool->started = FALSE;
+    pool->priv->started = FALSE;
   }
   return TRUE;
 }
@@ -325,11 +337,11 @@ gst_buffer_pool_set_active (GstBufferPool * pool, gboolean active)
 
   GST_BUFFER_POOL_LOCK (pool);
   /* just return if we are already in the right state */
-  if (pool->active == active)
+  if (pool->priv->active == active)
     goto was_ok;
 
   /* we need to be configured */
-  if (!pool->configured)
+  if (!pool->priv->configured)
     goto not_configured;
 
   if (active) {
@@ -337,25 +349,25 @@ gst_buffer_pool_set_active (GstBufferPool * pool, gboolean active)
       goto start_failed;
 
     /* unset the flushing state now */
-    gst_poll_read_control (pool->poll);
-    g_atomic_int_set (&pool->flushing, FALSE);
+    gst_poll_read_control (pool->priv->poll);
+    g_atomic_int_set (&pool->flushing, 0);
   } else {
     gint outstanding;
 
     /* set to flushing first */
-    g_atomic_int_set (&pool->flushing, TRUE);
-    gst_poll_write_control (pool->poll);
+    g_atomic_int_set (&pool->flushing, 1);
+    gst_poll_write_control (pool->priv->poll);
 
     /* when all buffers are in the pool, free them. Else they will be
      * freed when they are released */
-    outstanding = g_atomic_int_get (&pool->outstanding);
+    outstanding = g_atomic_int_get (&pool->priv->outstanding);
     GST_LOG_OBJECT (pool, "outstanding buffers %d", outstanding);
     if (outstanding == 0) {
       if (!do_stop (pool))
         goto stop_failed;
     }
   }
-  pool->active = active;
+  pool->priv->active = active;
   GST_BUFFER_POOL_UNLOCK (pool);
 
   return res;
@@ -401,7 +413,7 @@ gst_buffer_pool_is_active (GstBufferPool * pool)
   gboolean res;
 
   GST_BUFFER_POOL_LOCK (pool);
-  res = pool->active;
+  res = pool->priv->active;
   GST_BUFFER_POOL_UNLOCK (pool);
 
   return res;
@@ -463,11 +475,11 @@ gst_buffer_pool_set_config (GstBufferPool * pool, GstStructure * config)
 
   GST_BUFFER_POOL_LOCK (pool);
   /* can't change the settings when active */
-  if (pool->active)
+  if (pool->priv->active)
     goto was_active;
 
   /* we can't change when outstanding buffers */
-  if (g_atomic_int_get (&pool->outstanding) != 0)
+  if (g_atomic_int_get (&pool->priv->outstanding) != 0)
     goto have_outstanding;
 
   pclass = GST_BUFFER_POOL_GET_CLASS (pool);
@@ -479,12 +491,12 @@ gst_buffer_pool_set_config (GstBufferPool * pool, GstStructure * config)
     result = FALSE;
 
   if (result) {
-    if (pool->config)
-      gst_structure_free (pool->config);
-    pool->config = config;
+    if (pool->priv->config)
+      gst_structure_free (pool->priv->config);
+    pool->priv->config = config;
 
     /* now we are configured */
-    pool->configured = TRUE;
+    pool->priv->configured = TRUE;
   }
   GST_BUFFER_POOL_UNLOCK (pool);
 
@@ -524,7 +536,7 @@ gst_buffer_pool_get_config (GstBufferPool * pool)
   g_return_val_if_fail (GST_IS_BUFFER_POOL (pool), NULL);
 
   GST_BUFFER_POOL_UNLOCK (pool);
-  result = gst_structure_copy (pool->config);
+  result = gst_structure_copy (pool->priv->config);
   GST_BUFFER_POOL_UNLOCK (pool);
 
   return result;
@@ -785,13 +797,13 @@ default_acquire_buffer (GstBufferPool * pool, GstBuffer ** buffer,
   pclass = GST_BUFFER_POOL_GET_CLASS (pool);
 
   while (TRUE) {
-    if (G_UNLIKELY (g_atomic_int_get (&pool->flushing)))
+    if (G_UNLIKELY (GST_BUFFER_POOL_IS_FLUSHING (pool)))
       goto flushing;
 
     /* try to get a buffer from the queue */
-    *buffer = gst_atomic_queue_pop (pool->queue);
+    *buffer = gst_atomic_queue_pop (pool->priv->queue);
     if (G_LIKELY (*buffer)) {
-      gst_poll_read_control (pool->poll);
+      gst_poll_read_control (pool->priv->poll);
       result = GST_FLOW_OK;
       GST_LOG_OBJECT (pool, "acquired buffer %p", *buffer);
       break;
@@ -821,7 +833,7 @@ default_acquire_buffer (GstBufferPool * pool, GstBuffer ** buffer,
 
     /* now wait */
     GST_LOG_OBJECT (pool, "waiting for free buffers");
-    gst_poll_wait (pool->poll, GST_CLOCK_TIME_NONE);
+    gst_poll_wait (pool->priv->poll, GST_CLOCK_TIME_NONE);
   }
 
   return result;
@@ -837,14 +849,14 @@ flushing:
 static inline void
 dec_outstanding (GstBufferPool * pool)
 {
-  if (g_atomic_int_dec_and_test (&pool->outstanding)) {
+  if (g_atomic_int_dec_and_test (&pool->priv->outstanding)) {
     /* all buffers are returned to the pool, see if we need to free them */
-    if (g_atomic_int_get (&pool->flushing)) {
+    if (GST_BUFFER_POOL_IS_FLUSHING (pool)) {
       /* take the lock so that set_active is not run concurrently */
       GST_BUFFER_POOL_LOCK (pool);
       /* recheck the flushing state in the lock, the pool could have been
        * set to active again */
-      if (g_atomic_int_get (&pool->flushing))
+      if (GST_BUFFER_POOL_IS_FLUSHING (pool))
         do_stop (pool);
 
       GST_BUFFER_POOL_UNLOCK (pool);
@@ -904,7 +916,7 @@ gst_buffer_pool_acquire_buffer (GstBufferPool * pool, GstBuffer ** buffer,
 
   /* assume we'll have one more outstanding buffer we need to do that so
    * that concurrent set_active doesn't clear the buffers */
-  g_atomic_int_inc (&pool->outstanding);
+  g_atomic_int_inc (&pool->priv->outstanding);
 
   if (G_LIKELY (pclass->acquire_buffer))
     result = pclass->acquire_buffer (pool, buffer, params);
@@ -930,8 +942,8 @@ default_release_buffer (GstBufferPool * pool, GstBuffer * buffer)
 {
   /* keep it around in our queue */
   GST_LOG_OBJECT (pool, "released buffer %p", buffer);
-  gst_atomic_queue_push (pool->queue, buffer);
-  gst_poll_write_control (pool->poll);
+  gst_atomic_queue_push (pool->priv->queue, buffer);
+  gst_poll_write_control (pool->priv->poll);
 }
 
 /**
