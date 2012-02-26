@@ -104,6 +104,15 @@ static guint gst_bus_signals[LAST_SIGNAL] = { 0 };
 
 struct _GstBusPrivate
 {
+  GstAtomicQueue *queue;
+  GMutex queue_lock;
+
+  GstBusSyncHandler sync_handler;
+  gpointer sync_handler_data;
+
+  guint signal_watch_id;
+  guint num_signal_watchers;
+
   guint num_sync_message_emitters;
   GSource *watch_id;
 
@@ -210,11 +219,10 @@ gst_bus_class_init (GstBusClass * klass)
 static void
 gst_bus_init (GstBus * bus)
 {
-  bus->queue = gst_atomic_queue_new (32);
-  g_mutex_init (&bus->queue_lock);
-
   bus->priv = G_TYPE_INSTANCE_GET_PRIVATE (bus, GST_TYPE_BUS, GstBusPrivate);
   bus->priv->enable_async = DEFAULT_ENABLE_ASYNC;
+  g_mutex_init (&bus->priv->queue_lock);
+  bus->priv->queue = gst_atomic_queue_new (32);
 
   GST_DEBUG_OBJECT (bus, "created");
 }
@@ -224,19 +232,19 @@ gst_bus_dispose (GObject * object)
 {
   GstBus *bus = GST_BUS (object);
 
-  if (bus->queue) {
+  if (bus->priv->queue) {
     GstMessage *message;
 
-    g_mutex_lock (&bus->queue_lock);
+    g_mutex_lock (&bus->priv->queue_lock);
     do {
-      message = gst_atomic_queue_pop (bus->queue);
+      message = gst_atomic_queue_pop (bus->priv->queue);
       if (message)
         gst_message_unref (message);
     } while (message != NULL);
-    gst_atomic_queue_unref (bus->queue);
-    bus->queue = NULL;
-    g_mutex_unlock (&bus->queue_lock);
-    g_mutex_clear (&bus->queue_lock);
+    gst_atomic_queue_unref (bus->priv->queue);
+    bus->priv->queue = NULL;
+    g_mutex_unlock (&bus->priv->queue_lock);
+    g_mutex_clear (&bus->priv->queue_lock);
 
     if (bus->priv->poll)
       gst_poll_free (bus->priv->poll);
@@ -295,8 +303,8 @@ gst_bus_post (GstBus * bus, GstMessage * message)
   if (GST_OBJECT_FLAG_IS_SET (bus, GST_BUS_FLUSHING))
     goto is_flushing;
 
-  handler = bus->sync_handler;
-  handler_data = bus->sync_handler_data;
+  handler = bus->priv->sync_handler;
+  handler_data = bus->priv->sync_handler_data;
   emit_sync_message = bus->priv->num_sync_message_emitters > 0;
   GST_OBJECT_UNLOCK (bus);
 
@@ -324,7 +332,7 @@ gst_bus_post (GstBus * bus, GstMessage * message)
     case GST_BUS_PASS:
       /* pass the message to the async queue, refcount passed in the queue */
       GST_DEBUG_OBJECT (bus, "[msg %p] pushing on async queue", message);
-      gst_atomic_queue_push (bus->queue, message);
+      gst_atomic_queue_push (bus->priv->queue, message);
       gst_poll_write_control (bus->priv->poll);
       GST_DEBUG_OBJECT (bus, "[msg %p] pushed on async queue", message);
 
@@ -346,7 +354,7 @@ gst_bus_post (GstBus * bus, GstMessage * message)
        * the cond will be signalled and we can continue */
       g_mutex_lock (lock);
 
-      gst_atomic_queue_push (bus->queue, message);
+      gst_atomic_queue_push (bus->priv->queue, message);
       gst_poll_write_control (bus->priv->poll);
 
       /* now block till the message is freed */
@@ -396,7 +404,7 @@ gst_bus_have_pending (GstBus * bus)
   g_return_val_if_fail (GST_IS_BUS (bus), FALSE);
 
   /* see if there is a message on the bus */
-  result = gst_atomic_queue_length (bus->queue) != 0;
+  result = gst_atomic_queue_length (bus->priv->queue) != 0;
 
   return result;
 }
@@ -470,15 +478,15 @@ gst_bus_timed_pop_filtered (GstBus * bus, GstClockTime timeout,
   g_return_val_if_fail (types != 0, NULL);
   g_return_val_if_fail (timeout == 0 || bus->priv->poll != NULL, NULL);
 
-  g_mutex_lock (&bus->queue_lock);
+  g_mutex_lock (&bus->priv->queue_lock);
 
   while (TRUE) {
     gint ret;
 
     GST_LOG_OBJECT (bus, "have %d messages",
-        gst_atomic_queue_length (bus->queue));
+        gst_atomic_queue_length (bus->priv->queue));
 
-    while ((message = gst_atomic_queue_pop (bus->queue))) {
+    while ((message = gst_atomic_queue_pop (bus->priv->queue))) {
       if (bus->priv->poll)
         gst_poll_read_control (bus->priv->poll);
 
@@ -515,9 +523,9 @@ gst_bus_timed_pop_filtered (GstBus * bus, GstClockTime timeout,
 
     /* only here in timeout case */
     g_assert (bus->priv->poll);
-    g_mutex_unlock (&bus->queue_lock);
+    g_mutex_unlock (&bus->priv->queue_lock);
     ret = gst_poll_wait (bus->priv->poll, timeout - elapsed);
-    g_mutex_lock (&bus->queue_lock);
+    g_mutex_lock (&bus->priv->queue_lock);
 
     if (ret == 0) {
       GST_INFO_OBJECT (bus, "timed out, breaking loop");
@@ -529,7 +537,7 @@ gst_bus_timed_pop_filtered (GstBus * bus, GstClockTime timeout,
 
 beach:
 
-  g_mutex_unlock (&bus->queue_lock);
+  g_mutex_unlock (&bus->priv->queue_lock);
 
   return message;
 }
@@ -631,11 +639,11 @@ gst_bus_peek (GstBus * bus)
 
   g_return_val_if_fail (GST_IS_BUS (bus), NULL);
 
-  g_mutex_lock (&bus->queue_lock);
-  message = gst_atomic_queue_peek (bus->queue);
+  g_mutex_lock (&bus->priv->queue_lock);
+  message = gst_atomic_queue_peek (bus->priv->queue);
   if (message)
     gst_message_ref (message);
-  g_mutex_unlock (&bus->queue_lock);
+  g_mutex_unlock (&bus->priv->queue_lock);
 
   GST_DEBUG_OBJECT (bus, "peek on bus, got message %p", message);
 
@@ -667,11 +675,11 @@ gst_bus_set_sync_handler (GstBus * bus, GstBusSyncHandler func, gpointer data)
 
   /* Assert if the user attempts to replace an existing sync_handler,
    * other than to clear it */
-  if (func != NULL && bus->sync_handler != NULL)
+  if (func != NULL && bus->priv->sync_handler != NULL)
     goto no_replace;
 
-  bus->sync_handler = func;
-  bus->sync_handler_data = data;
+  bus->priv->sync_handler = func;
+  bus->priv->sync_handler_data = data;
   GST_OBJECT_UNLOCK (bus);
 
   return;
@@ -1173,7 +1181,7 @@ void
 gst_bus_disable_sync_message_emission (GstBus * bus)
 {
   g_return_if_fail (GST_IS_BUS (bus));
-  g_return_if_fail (bus->num_signal_watchers == 0);
+  g_return_if_fail (bus->priv->num_signal_watchers == 0);
 
   GST_OBJECT_LOCK (bus);
   bus->priv->num_sync_message_emitters--;
@@ -1211,22 +1219,22 @@ gst_bus_add_signal_watch_full (GstBus * bus, gint priority)
   /* I know the callees don't take this lock, so go ahead and abuse it */
   GST_OBJECT_LOCK (bus);
 
-  if (bus->num_signal_watchers > 0)
+  if (bus->priv->num_signal_watchers > 0)
     goto done;
 
   /* this should not fail because the counter above takes care of it */
-  g_assert (bus->signal_watch_id == 0);
+  g_assert (bus->priv->signal_watch_id == 0);
 
-  bus->signal_watch_id =
+  bus->priv->signal_watch_id =
       gst_bus_add_watch_full_unlocked (bus, priority, gst_bus_async_signal_func,
       NULL, NULL);
 
-  if (G_UNLIKELY (bus->signal_watch_id == 0))
+  if (G_UNLIKELY (bus->priv->signal_watch_id == 0))
     goto add_failed;
 
 done:
 
-  bus->num_signal_watchers++;
+  bus->priv->num_signal_watchers++;
 
   GST_OBJECT_UNLOCK (bus);
   return;
@@ -1283,16 +1291,16 @@ gst_bus_remove_signal_watch (GstBus * bus)
   /* I know the callees don't take this lock, so go ahead and abuse it */
   GST_OBJECT_LOCK (bus);
 
-  if (bus->num_signal_watchers == 0)
+  if (bus->priv->num_signal_watchers == 0)
     goto error;
 
-  bus->num_signal_watchers--;
+  bus->priv->num_signal_watchers--;
 
-  if (bus->num_signal_watchers > 0)
+  if (bus->priv->num_signal_watchers > 0)
     goto done;
 
-  id = bus->signal_watch_id;
-  bus->signal_watch_id = 0;
+  id = bus->priv->signal_watch_id;
+  bus->priv->signal_watch_id = 0;
 
   GST_DEBUG_OBJECT (bus, "removing signal watch %u", id);
 

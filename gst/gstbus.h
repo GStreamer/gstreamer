@@ -116,16 +116,6 @@ struct _GstBus
   GstObject         object;
 
   /*< private >*/
-  GstAtomicQueue   *queue;
-  GMutex            queue_lock;
-
-  GstBusSyncHandler sync_handler;
-  gpointer          sync_handler_data;
-
-  guint             signal_watch_id;
-  guint             num_signal_watchers;
-
-  /*< private >*/
   GstBusPrivate    *priv;
 
   gpointer _gst_reserved[GST_PADDING];
