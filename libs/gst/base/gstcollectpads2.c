@@ -278,9 +278,9 @@ gst_collect_pads2_finalize (GObject * object)
  *
  * Create a new instance of #GstCollectsPads.
  *
- * Returns: a new #GstCollectPads2, or NULL in case of an error.
- *
  * MT safe.
+ *
+ * Returns: a new #GstCollectPads2, or NULL in case of an error.
  *
  * Since: 0.10.36
  */
@@ -533,10 +533,10 @@ gst_collect_pads2_set_clip_function (GstCollectPads2 * pads,
  * This function calls gst_collect_pads2_add_pad() passing a value of NULL
  * for destroy_notify and TRUE for locked.
  *
+ * MT safe.
+ *
  * Returns: a new #GstCollectData2 to identify the new pad. Or NULL
  *   if wrong parameters are supplied.
- *
- * MT safe.
  *
  * Since: 0.10.36
  */
@@ -579,12 +579,12 @@ gst_collect_pads2_add_pad (GstCollectPads2 * pads, GstPad * pad, guint size)
  * The pad will be automatically activated in push mode when @pads is
  * started.
  *
+ * MT safe.
+ *
  * Since: 0.10.36
  *
  * Returns: a new #GstCollectData2 to identify the new pad. Or NULL
  *   if wrong parameters are supplied.
- *
- * MT safe.
  */
 GstCollectData2 *
 gst_collect_pads2_add_pad_full (GstCollectPads2 * pads, GstPad * pad,
@@ -655,9 +655,9 @@ find_pad (GstCollectData2 * data, GstPad * pad)
  *
  * The pad will be deactivated automatically when @pads is stopped.
  *
- * Returns: %TRUE if the pad could be removed.
- *
  * MT safe.
+ *
+ * Returns: %TRUE if the pad could be removed.
  *
  * Since: 0.10.36
  */
@@ -742,9 +742,9 @@ unknown_pad:
  *
  * This function is currently not implemented.
  *
- * Returns: %TRUE if the pad is active.
- *
  * MT safe.
+ *
+ * Returns: %TRUE if the pad is active.
  *
  * Since: 0.10.36
  */
@@ -770,9 +770,9 @@ gst_collect_pads2_is_active (GstCollectPads2 * pads, GstPad * pad)
  *
  * This function is currently not implemented.
  *
- * Returns: #GstFlowReturn of the operation.
- *
  * MT safe.
+ *
+ * Returns: #GstFlowReturn of the operation.
  *
  * Since: 0.10.36
  */
@@ -798,9 +798,9 @@ gst_collect_pads2_collect (GstCollectPads2 * pads)
  *
  * This function is currently not implemented.
  *
- * Returns: #GstFlowReturn of the operation.
- *
  * MT safe.
+ *
+ * Returns: #GstFlowReturn of the operation.
  *
  * Since: 0.10.36
  */
@@ -860,7 +860,6 @@ gst_collect_pads2_set_flushing_unlocked (GstCollectPads2 * pads,
  * e.g. by sending a FLUSH_START downstream.
  *
  * MT safe.
- *
  *
  * Since: 0.10.36
  */
@@ -988,10 +987,10 @@ gst_collect_pads2_stop (GstCollectPads2 * pads)
  * should be called with the @pads STREAM_LOCK held, such as in the callback
  * handler.
  *
+ * MT safe.
+ *
  * Returns: The buffer in @data or NULL if no buffer is queued.
  *  should unref the buffer after usage.
- *
- * MT safe.
  *
  * Since: 0.10.36
  */
@@ -1022,10 +1021,10 @@ gst_collect_pads2_peek (GstCollectPads2 * pads, GstCollectData2 * data)
  * should be called with the @pads STREAM_LOCK held, such as in the callback
  * handler.
  *
+ * MT safe.
+ *
  * Returns: The buffer in @data or NULL if no buffer was queued.
  *   You should unref the buffer after usage.
- *
- * MT safe.
  *
  * Since: 0.10.36
  */
@@ -1076,10 +1075,10 @@ gst_collect_pads2_clear (GstCollectPads2 * pads, GstCollectData2 * data)
  * This function should be called with @pads STREAM_LOCK held, such as
  * in the callback.
  *
+ * MT safe.
+ *
  * Returns: The maximum number of bytes queued on all pads. This function
  * returns 0 if a pad has no queued buffer.
- *
- * MT safe.
  *
  * Since: 0.10.36
  */
@@ -1149,11 +1148,11 @@ not_filled:
  * This function should be called with @pads STREAM_LOCK held, such as
  * in the callback.
  *
+ * MT safe.
+ *
  * Returns: The number of bytes available for consumption in the
  * memory pointed to by @bytes. This can be less than @size and
  * is 0 if the pad is end-of-stream.
- *
- * MT safe.
  *
  * Since: 0.10.36
  */
@@ -1191,10 +1190,10 @@ gst_collect_pads2_read (GstCollectPads2 * pads, GstCollectData2 * data,
  * This function should be called with @pads STREAM_LOCK held, such as
  * in the callback.
  *
+ * MT safe.
+ *
  * Returns: The number of bytes flushed This can be less than @size and
  * is 0 if the pad was end-of-stream.
- *
- * MT safe.
  *
  * Since: 0.10.36
  */
@@ -1236,13 +1235,13 @@ gst_collect_pads2_flush (GstCollectPads2 * pads, GstCollectData2 * data,
  * This function should be called with @pads STREAM_LOCK held, such as in the
  * callback.
  *
+ * MT safe.
+ *
  * Since: 0.10.36
  *
  * Returns: A sub buffer. The size of the buffer can be less that requested.
  * A return of NULL signals that the pad is end-of-stream.
  * Unref the buffer after use.
- *
- * MT safe.
  */
 GstBuffer *
 gst_collect_pads2_read_buffer (GstCollectPads2 * pads, GstCollectData2 * data,
@@ -1276,13 +1275,13 @@ gst_collect_pads2_read_buffer (GstCollectPads2 * pads, GstCollectData2 * data,
  * This function should be called with @pads STREAM_LOCK held, such as in the
  * callback.
  *
+ * MT safe.
+ *
  * Since: 0.10.36
  *
  * Returns: A sub buffer. The size of the buffer can be less that requested.
  * A return of NULL signals that the pad is end-of-stream.
  * Unref the buffer after use.
- *
- * MT safe.
  */
 GstBuffer *
 gst_collect_pads2_take_buffer (GstCollectPads2 * pads, GstCollectData2 * data,
