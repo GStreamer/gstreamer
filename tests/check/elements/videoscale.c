@@ -221,7 +221,7 @@ test_passthrough (int method)
 
     /* skip formats that ffmpegcolorspace can't handle */
     if (caps_are_64bpp (caps))
-      continue;
+      goto skip;
 
     GST_DEBUG ("Running test for caps '%" GST_PTR_FORMAT "'"
         " from %dx%u to %dx%d with method %d", caps, src_width, src_height,
@@ -250,6 +250,8 @@ test_passthrough (int method)
     src_buffers = NULL;
     g_list_free (sink_buffers);
     sink_buffers = NULL;
+
+  skip:
 
     gst_caps_unref (caps);
     p++;
