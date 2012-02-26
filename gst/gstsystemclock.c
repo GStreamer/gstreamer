@@ -65,6 +65,10 @@
 
 struct _GstSystemClockPrivate
 {
+  GThread *thread;              /* thread for async notify */
+  gboolean stopping;
+
+
   GstClockType clock_type;
   GstPoll *timer;
   gint wakeup_count;            /* the number of entries with a pending wakeup */
@@ -195,7 +199,7 @@ gst_system_clock_dispose (GObject * object)
 
   /* else we have to stop the thread */
   GST_OBJECT_LOCK (clock);
-  sysclock->stopping = TRUE;
+  sysclock->priv->stopping = TRUE;
   /* unschedule all entries */
   for (entries = clock->entries; entries; entries = g_list_next (entries)) {
     GstClockEntry *entry = (GstClockEntry *) entries->data;
@@ -207,9 +211,9 @@ gst_system_clock_dispose (GObject * object)
   gst_system_clock_add_wakeup (sysclock);
   GST_OBJECT_UNLOCK (clock);
 
-  if (sysclock->thread)
-    g_thread_join (sysclock->thread);
-  sysclock->thread = NULL;
+  if (sysclock->priv->thread)
+    g_thread_join (sysclock->priv->thread);
+  sysclock->priv->thread = NULL;
   GST_CAT_DEBUG (GST_CAT_CLOCK, "joined thread");
 
   g_list_foreach (clock->entries, (GFunc) gst_clock_id_unref, NULL);
@@ -372,7 +376,7 @@ gst_system_clock_async_thread (GstClock * clock)
   /* signal spinup */
   GST_CLOCK_BROADCAST (clock);
   /* now enter our (almost) infinite loop */
-  while (!sysclock->stopping) {
+  while (!sysclock->priv->stopping) {
     GstClockEntry *entry;
     GstClockTime requested;
     GstClockReturn res;
@@ -384,7 +388,7 @@ gst_system_clock_async_thread (GstClock * clock)
       GST_CLOCK_WAIT (clock);
       GST_CAT_DEBUG (GST_CAT_CLOCK, "got signal");
       /* clock was stopping, exit */
-      if (sysclock->stopping)
+      if (sysclock->priv->stopping)
         goto exit;
     }
 
@@ -729,10 +733,10 @@ gst_system_clock_start_async (GstSystemClock * clock)
 {
   GError *error = NULL;
 
-  if (G_LIKELY (clock->thread != NULL))
+  if (G_LIKELY (clock->priv->thread != NULL))
     return TRUE;                /* Thread already running. Nothing to do */
 
-  clock->thread = g_thread_try_new ("GstSystemClock",
+  clock->priv->thread = g_thread_try_new ("GstSystemClock",
       (GThreadFunc) gst_system_clock_async_thread, clock, &error);
 
   if (G_UNLIKELY (error))

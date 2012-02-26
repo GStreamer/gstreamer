@@ -64,10 +64,6 @@ struct _GstSystemClock {
   GstClock       clock;
 
   /*< private >*/
-  GThread       *thread;        /* thread for async notify */
-  gboolean       stopping;
-
-  /* ABI added */
   GstSystemClockPrivate *priv;
 
   gpointer _gst_reserved[GST_PADDING];
