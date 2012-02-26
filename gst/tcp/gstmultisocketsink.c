@@ -613,7 +613,7 @@ gst_multi_socket_sink_handle_client_write (GstMultiSocketSink * sink,
           mhclient->flushcount--;
 
         GST_LOG_OBJECT (sink, "%s client %p at position %d",
-            socket, client, mhclient->bufpos);
+            mhclient->debug, client, mhclient->bufpos);
 
         /* queueing a buffer will ref it */
         mhsinkclass->client_queue_buffer (mhsink, mhclient, buf);

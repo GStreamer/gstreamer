@@ -454,7 +454,7 @@ gst_multi_fd_sink_new_client (GstMultiHandleSink * mhsink,
 
   /* set the socket to non blocking */
   if (fcntl (handle.fd, F_SETFL, O_NONBLOCK) < 0) {
-    GST_ERROR_OBJECT (mhsink, "failed to make socket %d non-blocking: %s",
+    GST_ERROR_OBJECT (mhsink, "failed to make socket %s non-blocking: %s",
         mhclient->debug, g_strerror (errno));
   }
 
@@ -736,7 +736,7 @@ gst_multi_fd_sink_handle_client_write (GstMultiFdSink * sink,
           /* partial write means that the client cannot read more and we should
            * stop sending more */
           GST_LOG_OBJECT (sink,
-              "partial write on %d of %" G_GSSIZE_FORMAT " bytes",
+              "partial write on %s of %" G_GSSIZE_FORMAT " bytes",
               mhclient->debug, wrote);
           mhclient->bufoffset += wrote;
           more = FALSE;

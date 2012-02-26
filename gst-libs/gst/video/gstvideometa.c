@@ -132,7 +132,8 @@ default_map (GstVideoMeta * meta, guint plane, GstMapInfo * info,
     offset -= size;
     gst_memory_unref (mem);
   }
-  GST_DEBUG ("no memory found for offset %u", meta->offset[plane]);
+  GST_DEBUG ("no memory found for offset %" G_GSIZE_FORMAT,
+      meta->offset[plane]);
   return FALSE;
 
   /* ERRORS */

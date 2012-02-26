@@ -363,7 +363,7 @@ vorbis_parse_queue_buffer (GstVorbisParse * parse, GstBuffer * buf)
   gst_buffer_map (buf, &map, GST_MAP_READ);
   packet.packet = map.data;
   packet.bytes = map.size;
-  GST_DEBUG ("%p, %d", map.data, map.size);
+  GST_DEBUG ("%p, %" G_GSIZE_FORMAT, map.data, map.size);
   packet.granulepos = GST_BUFFER_OFFSET_END (buf);
   packet.packetno = parse->packetno + parse->buffer_queue->length;
   packet.e_o_s = 0;
