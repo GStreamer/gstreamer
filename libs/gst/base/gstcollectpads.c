@@ -806,7 +806,7 @@ gst_collect_pads_pop (GstCollectPads * pads, GstCollectData * data)
 }
 
 /* pop and unref the currently queued buffer, should e called with the LOCK
- * helt. */
+ * held. */
 static void
 gst_collect_pads_clear (GstCollectPads * pads, GstCollectData * data)
 {
