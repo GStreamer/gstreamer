@@ -2349,17 +2349,17 @@ gst_matroska_mux_start (GstMatroskaMux * mux)
     if (gst_pad_peer_query (mux->srcpad, query)) {
       gst_query_parse_seeking (query, NULL, &seekable, NULL, NULL);
       GST_INFO_OBJECT (mux, "downstream is %sseekable", seekable ? "" : "not ");
-      if (!seekable) {
-        mux->streamable = TRUE;
-        g_object_notify (G_OBJECT (mux), "streamable");
-        GST_WARNING_OBJECT (mux, "downstream is not seekable, but "
-            "streamable=false. Will ignore that and create streamable output "
-            "instead");
-      }
     } else {
       /* have to assume seeking is supported if query not handled downstream */
-      /* FIXME 0.11: change to query not handled => seeking not supported */
       GST_WARNING_OBJECT (mux, "downstream did not handle seeking query");
+      seekable = FALSE;
+    }
+    if (!seekable) {
+      mux->streamable = TRUE;
+      g_object_notify (G_OBJECT (mux), "streamable");
+      GST_WARNING_OBJECT (mux, "downstream is not seekable, but "
+          "streamable=false. Will ignore that and create streamable output "
+          "instead");
     }
   }
 

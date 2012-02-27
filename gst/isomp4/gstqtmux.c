@@ -1639,17 +1639,17 @@ gst_qt_mux_start_file (GstQTMux * qtmux)
       gst_query_parse_seeking (query, NULL, &seekable, NULL, NULL);
       GST_INFO_OBJECT (qtmux, "downstream is %sseekable",
           seekable ? "" : "not ");
-      if (!seekable) {
-        qtmux->streamable = TRUE;
-        g_object_notify (G_OBJECT (qtmux), "streamable");
-        GST_WARNING_OBJECT (qtmux, "downstream is not seekable, but "
-            "streamable=false. Will ignore that and create streamable output "
-            "instead");
-      }
     } else {
       /* have to assume seeking is supported if query not handled downstream */
-      /* FIXME 0.11: change to query not handled => seeking not supported */
       GST_WARNING_OBJECT (qtmux, "downstream did not handle seeking query");
+      seekable = FALSE;
+    }
+    if (!seekable) {
+      qtmux->streamable = TRUE;
+      g_object_notify (G_OBJECT (qtmux), "streamable");
+      GST_WARNING_OBJECT (qtmux, "downstream is not seekable, but "
+          "streamable=false. Will ignore that and create streamable output "
+          "instead");
     }
   }
 
