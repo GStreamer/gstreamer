@@ -497,7 +497,7 @@ gst_mpeg_audio_parse_head_check (GstMpegAudioParse * mp3parse,
  * If not enough data, returns FALSE.
  */
 static gboolean
-gst_mp3parse_find_freerate (GstMpegAudioParse * mp3parse, GstBuffer * buf,
+gst_mp3parse_find_freerate (GstMpegAudioParse * mp3parse, GstMapInfo * map,
     guint32 header, gboolean at_eos, gint * _rate)
 {
   guint32 next_header;
@@ -508,8 +508,8 @@ gst_mp3parse_find_freerate (GstMpegAudioParse * mp3parse, GstBuffer * buf,
   gboolean valid;
   gint lsf, mpg25;
 
-  available = GST_BUFFER_SIZE (buf);
-  data = GST_BUFFER_DATA (buf);
+  available = map->size;
+  data = map->data;
 
   *_rate = 0;
 
@@ -665,9 +665,10 @@ gst_mpeg_audio_parse_handle_frame (GstBaseParse * parse,
     GST_LOG_OBJECT (mp3parse, "possibly free format");
     if (lost_sync || mp3parse->freerate == 0) {
       GST_DEBUG_OBJECT (mp3parse, "finding free format rate");
-      if (!gst_mp3parse_find_freerate (mp3parse, buf, header, draining, &valid)) {
+      if (!gst_mp3parse_find_freerate (mp3parse, &map, header, draining,
+              &valid)) {
         /* not enough data */
-        *framesize = G_MAXUINT;
+        gst_base_parse_set_min_frame_size (parse, valid);
         *skipsize = 0;
         return FALSE;
       } else {
