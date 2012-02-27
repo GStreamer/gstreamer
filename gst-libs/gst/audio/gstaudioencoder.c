@@ -303,6 +303,8 @@ static gboolean gst_audio_encoder_sink_activate_mode (GstPad * pad,
 static GstCaps *gst_audio_encoder_getcaps_default (GstAudioEncoder * enc,
     GstCaps * filter);
 
+static gboolean gst_audio_encoder_sink_event_default (GstAudioEncoder * enc,
+    GstEvent * event);
 static gboolean gst_audio_encoder_sink_event (GstPad * pad, GstObject * parent,
     GstEvent * event);
 static gboolean gst_audio_encoder_sink_setcaps (GstAudioEncoder * enc,
@@ -352,6 +354,7 @@ gst_audio_encoder_class_init (GstAudioEncoderClass * klass)
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   klass->getcaps = gst_audio_encoder_getcaps_default;
+  klass->event = gst_audio_encoder_sink_event_default;
 }
 
 static void
@@ -1250,10 +1253,10 @@ gst_audio_encoder_getcaps_default (GstAudioEncoder * enc, GstCaps * filter)
 }
 
 static gboolean
-gst_audio_encoder_sink_eventfunc (GstAudioEncoder * enc, GstEvent * event)
+gst_audio_encoder_sink_event_default (GstAudioEncoder * enc, GstEvent * event)
 {
   GstAudioEncoderClass *klass;
-  gboolean handled = FALSE;
+  gboolean res;
 
   klass = GST_AUDIO_ENCODER_GET_CLASS (enc);
 
@@ -1270,6 +1273,7 @@ gst_audio_encoder_sink_eventfunc (GstAudioEncoder * enc, GstEvent * event)
       } else {
         GST_DEBUG_OBJECT (enc, "received SEGMENT %" GST_SEGMENT_FORMAT, &seg);
         GST_DEBUG_OBJECT (enc, "unsupported format; ignoring");
+        res = TRUE;
         break;
       }
 
@@ -1281,10 +1285,13 @@ gst_audio_encoder_sink_eventfunc (GstAudioEncoder * enc, GstEvent * event)
       /* and follow along with segment */
       enc->segment = seg;
       GST_AUDIO_ENCODER_STREAM_UNLOCK (enc);
+
+      res = TRUE;
       break;
     }
 
     case GST_EVENT_FLUSH_START:
+      res = gst_pad_push_event (enc->srcpad, event);
       break;
 
     case GST_EVENT_FLUSH_STOP:
@@ -1301,12 +1308,18 @@ gst_audio_encoder_sink_eventfunc (GstAudioEncoder * enc, GstEvent * event)
       enc->priv->pending_events = NULL;
       GST_AUDIO_ENCODER_STREAM_UNLOCK (enc);
 
+      res = gst_pad_push_event (enc->srcpad, event);
       break;
 
     case GST_EVENT_EOS:
       GST_AUDIO_ENCODER_STREAM_LOCK (enc);
       gst_audio_encoder_drain (enc);
       GST_AUDIO_ENCODER_STREAM_UNLOCK (enc);
+
+      /* forward immediately because no buffer or serialized event
+       * will come after EOS and nothing could trigger another
+       * _finish_frame() call. */
+      res = gst_pad_push_event (enc->srcpad, event);
       break;
 
     case GST_EVENT_TAG:
@@ -1335,7 +1348,7 @@ gst_audio_encoder_sink_eventfunc (GstAudioEncoder * enc, GstEvent * event)
       enc->priv->pending_events =
           g_list_append (enc->priv->pending_events, event);
       GST_AUDIO_ENCODER_STREAM_UNLOCK (enc);
-      handled = TRUE;
+      res = TRUE;
       break;
     }
 
@@ -1344,17 +1357,26 @@ gst_audio_encoder_sink_eventfunc (GstAudioEncoder * enc, GstEvent * event)
       GstCaps *caps;
 
       gst_event_parse_caps (event, &caps);
-      gst_audio_encoder_sink_setcaps (enc, caps);
+      res = gst_audio_encoder_sink_setcaps (enc, caps);
       gst_event_unref (event);
-      handled = TRUE;
       break;
     }
 
     default:
+      /* Forward non-serialized events immediately. */
+      if (!GST_EVENT_IS_SERIALIZED (event)) {
+        res =
+            gst_pad_event_default (enc->sinkpad, GST_OBJECT_CAST (enc), event);
+      } else {
+        GST_AUDIO_ENCODER_STREAM_LOCK (enc);
+        enc->priv->pending_events =
+            g_list_append (enc->priv->pending_events, event);
+        GST_AUDIO_ENCODER_STREAM_UNLOCK (enc);
+        res = TRUE;
+      }
       break;
   }
-
-  return handled;
+  return res;
 }
 
 static gboolean
@@ -1363,8 +1385,7 @@ gst_audio_encoder_sink_event (GstPad * pad, GstObject * parent,
 {
   GstAudioEncoder *enc;
   GstAudioEncoderClass *klass;
-  gboolean handled = FALSE;
-  gboolean ret = TRUE;
+  gboolean ret;
 
   enc = GST_AUDIO_ENCODER (parent);
   klass = GST_AUDIO_ENCODER_GET_CLASS (enc);
@@ -1373,34 +1394,11 @@ gst_audio_encoder_sink_event (GstPad * pad, GstObject * parent,
       GST_EVENT_TYPE_NAME (event));
 
   if (klass->event)
-    handled = klass->event (enc, event);
+    ret = klass->event (enc, event);
+  else
+    ret = FALSE;
 
-  if (!handled)
-    handled = gst_audio_encoder_sink_eventfunc (enc, event);
-
-  if (!handled) {
-    /* Forward non-serialized events and EOS/FLUSH_STOP immediately.
-     * For EOS this is required because no buffer or serialized event
-     * will come after EOS and nothing could trigger another
-     * _finish_frame() call.
-     *
-     * For FLUSH_STOP this is required because it is expected
-     * to be forwarded immediately and no buffers are queued anyway.
-     */
-    if (!GST_EVENT_IS_SERIALIZED (event)
-        || GST_EVENT_TYPE (event) == GST_EVENT_EOS
-        || GST_EVENT_TYPE (event) == GST_EVENT_FLUSH_STOP) {
-      ret = gst_pad_event_default (pad, parent, event);
-    } else {
-      GST_AUDIO_ENCODER_STREAM_LOCK (enc);
-      enc->priv->pending_events =
-          g_list_append (enc->priv->pending_events, event);
-      GST_AUDIO_ENCODER_STREAM_UNLOCK (enc);
-      ret = TRUE;
-    }
-  }
-
-  GST_DEBUG_OBJECT (enc, "event handled");
+  GST_DEBUG_OBJECT (enc, "event result %d", ret);
 
   return ret;
 }
