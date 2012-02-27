@@ -1203,7 +1203,7 @@ gst_adder_collected (GstCollectPads2 * pads, gpointer user_data)
 
     if (event) {
       if (!gst_pad_push_event (adder->srcpad, event)) {
-        GST_WARNING_OBJECT (adder->srcpad, "Sending event failed");
+        GST_WARNING_OBJECT (adder->srcpad, "Sending new segment event failed");
       }
     } else {
       GST_WARNING_OBJECT (adder->srcpad, "Creating new segment event for "
