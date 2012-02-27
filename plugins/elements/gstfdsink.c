@@ -208,7 +208,9 @@ gst_fd_sink_query (GstBaseSink * bsink, GstQuery * query)
       gst_query_set_uri (query, fdsink->uri);
       res = TRUE;
       break;
-    case GST_QUERY_SEEKING:
+    case GST_QUERY_SEEKING:{
+      GstFormat format;
+
       gst_query_parse_seeking (query, &format, NULL, NULL, NULL);
       if (format == GST_FORMAT_BYTES || format == GST_FORMAT_DEFAULT) {
         gst_query_set_seeking (query, GST_FORMAT_BYTES, fdsink->seekable, 0,
@@ -218,6 +220,7 @@ gst_fd_sink_query (GstBaseSink * bsink, GstQuery * query)
       }
       res = TRUE;
       break;
+    }
     default:
       res = GST_BASE_SINK_CLASS (parent_class)->query (bsink, query);
       break;
