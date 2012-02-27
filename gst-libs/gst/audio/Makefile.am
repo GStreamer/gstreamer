@@ -69,7 +69,7 @@ libgstaudio_@GST_MAJORMINOR@_la_CFLAGS = $(GST_PLUGINS_BASE_CFLAGS) $(GST_BASE_C
 libgstaudio_@GST_MAJORMINOR@_la_LIBADD = \
   $(top_builddir)/gst-libs/gst/interfaces/libgstinterfaces-@GST_MAJORMINOR@.la \
   $(top_builddir)/gst-libs/gst/tag/libgsttag-@GST_MAJORMINOR@.la \
-  $(GST_BASE_LIBS) $(GST_LIBS)
+  $(GST_BASE_LIBS) $(GST_LIBS) $(LIBM)
 libgstaudio_@GST_MAJORMINOR@_la_LDFLAGS = $(GST_LIB_LDFLAGS) $(GST_ALL_LDFLAGS) $(GST_LT_LDFLAGS)
 
 include $(top_srcdir)/common/gst-glib-gen.mak
