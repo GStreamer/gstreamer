@@ -322,7 +322,7 @@ gst_wavpack_dec_handle_frame (GstAudioDecoder * bdec, GstBuffer * buf)
   format_changed =
       (dec->sample_rate != WavpackGetSampleRate (dec->context)) ||
       (dec->channels != WavpackGetNumChannels (dec->context)) ||
-      (dec->depth != WavpackGetBitsPerSample (dec->context)) ||
+      (dec->depth != WavpackGetBytesPerSample (dec->context) * 8) ||
 #ifdef WAVPACK_OLD_API
       (dec->channel_mask != dec->context->config.channel_mask);
 #else
@@ -334,7 +334,7 @@ gst_wavpack_dec_handle_frame (GstAudioDecoder * bdec, GstBuffer * buf)
 
     dec->sample_rate = WavpackGetSampleRate (dec->context);
     dec->channels = WavpackGetNumChannels (dec->context);
-    dec->depth = WavpackGetBitsPerSample (dec->context);
+    dec->depth = WavpackGetBytesPerSample (dec->context) * 8;
 
 #ifdef WAVPACK_OLD_API
     channel_mask = dec->context->config.channel_mask;
