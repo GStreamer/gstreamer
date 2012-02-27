@@ -571,7 +571,7 @@ gst_mp3parse_find_freerate (GstMpegAudioParse * mp3parse, GstMapInfo * map,
     }
 
     if (valid) {
-      GST_LOG_OBJECT (mp3parse, "calculated rate %d", rate * 1000);
+      GST_LOG_OBJECT (mp3parse, "calculated rate %lu", rate * 1000);
       if (rate < 8 || (layer == 3 && rate > 640)) {
         GST_DEBUG_OBJECT (mp3parse, "rate invalid");
         if (rate < 8) {
