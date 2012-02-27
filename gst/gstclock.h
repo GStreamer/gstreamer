@@ -35,9 +35,6 @@ G_BEGIN_DECLS
 #define GST_CLOCK_GET_CLASS(clock)      (G_TYPE_INSTANCE_GET_CLASS ((clock), GST_TYPE_CLOCK, GstClockClass))
 #define GST_CLOCK_CAST(clock)           ((GstClock*)(clock))
 
-#define GST_CLOCK_SLAVE_LOCK(clock)     g_mutex_lock (&GST_CLOCK_CAST (clock)->slave_lock)
-#define GST_CLOCK_SLAVE_UNLOCK(clock)   g_mutex_unlock (&GST_CLOCK_CAST (clock)->slave_lock)
-
 /**
  * GstClockTime:
  *
@@ -402,38 +399,6 @@ typedef enum {
 #define GST_CLOCK_FLAGS(clock)  GST_OBJECT_FLAGS(clock)
 
 /**
- * GST_CLOCK_GET_COND:
- * @clock: the clock to query
- *
- * Gets the #GCond that gets signalled when the entries of the clock
- * changed.
- */
-#define GST_CLOCK_GET_COND(clock)        (&GST_CLOCK_CAST(clock)->entries_changed)
-/**
- * GST_CLOCK_WAIT:
- * @clock: the clock to wait on
- *
- * Wait on the clock until the entries changed.
- */
-#define GST_CLOCK_WAIT(clock)            g_cond_wait(GST_CLOCK_GET_COND(clock),GST_OBJECT_GET_LOCK(clock))
-/**
- * GST_CLOCK_TIMED_WAIT:
- * @clock: the clock to wait on
- * @tv: a #GTimeVal to wait.
- *
- * Wait on the clock until the entries changed or the specified timeout
- * occurred.
- */
-#define GST_CLOCK_TIMED_WAIT(clock,tv)   g_cond_timed_wait(GST_CLOCK_GET_COND(clock),GST_OBJECT_GET_LOCK(clock),tv)
-/**
- * GST_CLOCK_BROADCAST:
- * @clock: the clock to broadcast
- *
- * Signal that the entries in the clock have changed.
- */
-#define GST_CLOCK_BROADCAST(clock)       g_cond_broadcast(GST_CLOCK_GET_COND(clock))
-
-/**
  * GstClock:
  *
  * #GstClock base structure. The values of this structure are
@@ -441,32 +406,6 @@ typedef enum {
  */
 struct _GstClock {
   GstObject      object;
-
-  GMutex         slave_lock; /* order: SLAVE_LOCK, OBJECT_LOCK */
-
-  /*< protected >*/ /* with LOCK */
-  GstClockTime   internal_calibration;
-  GstClockTime   external_calibration;
-  GstClockTime   rate_numerator;
-  GstClockTime   rate_denominator;
-  GstClockTime   last_time;
-  GList         *entries;
-  GCond          entries_changed;
-
-  /*< private >*/ /* with LOCK */
-  GstClockTime   resolution;
-
-  /* for master/slave clocks */
-  GstClock      *master;
-
-  /* with SLAVE_LOCK */
-  gboolean       filling;
-  gint           window_size;
-  gint           window_threshold;
-  gint           time_index;
-  GstClockTime   timeout;
-  GstClockTime  *times;
-  GstClockID     clockid;
 
   /*< private >*/
   GstClockPrivate *priv;
@@ -531,6 +470,11 @@ void                    gst_clock_get_calibration       (GstClock *clock, GstClo
 /* master/slave clocks */
 gboolean                gst_clock_set_master            (GstClock *clock, GstClock *master);
 GstClock*               gst_clock_get_master            (GstClock *clock);
+
+void                    gst_clock_set_timeout           (GstClock *clock,
+                                                         GstClockTime timeout);
+GstClockTime            gst_clock_get_timeout           (GstClock *clock);
+
 gboolean                gst_clock_add_observation       (GstClock *clock, GstClockTime slave,
                                                          GstClockTime master, gdouble *r_squared);
 

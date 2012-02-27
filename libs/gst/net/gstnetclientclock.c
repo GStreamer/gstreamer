@@ -128,17 +128,18 @@ static void
 gst_net_client_clock_init (GstNetClientClock * self)
 {
   GstClock *clock = GST_CLOCK_CAST (self);
+  GstNetClientClockPrivate *priv;
 
-  self->priv = GST_NET_CLIENT_CLOCK_GET_PRIVATE (self);
+  self->priv = priv = GST_NET_CLIENT_CLOCK_GET_PRIVATE (self);
 
-  self->priv->port = DEFAULT_PORT;
-  self->priv->address = g_strdup (DEFAULT_ADDRESS);
+  priv->port = DEFAULT_PORT;
+  priv->address = g_strdup (DEFAULT_ADDRESS);
 
-  clock->timeout = DEFAULT_TIMEOUT;
+  gst_clock_set_timeout (clock, DEFAULT_TIMEOUT);
 
-  self->priv->thread = NULL;
+  priv->thread = NULL;
 
-  self->priv->servaddr = NULL;
+  priv->servaddr = NULL;
 }
 
 static void
@@ -224,19 +225,17 @@ gst_net_client_clock_observe_times (GstNetClientClock * self,
 
   clock = GST_CLOCK_CAST (self);
 
-  gst_clock_add_observation (GST_CLOCK (self), local_avg, remote, &r_squared);
-
-  GST_CLOCK_SLAVE_LOCK (self);
-  if (clock->filling) {
-    current_timeout = 0;
-  } else {
+  if (gst_clock_add_observation (GST_CLOCK (self), local_avg, remote,
+          &r_squared)) {
     /* geto formula */
     current_timeout = (1e-3 / (1 - MIN (r_squared, 0.99999))) * GST_SECOND;
-    current_timeout = MIN (current_timeout, clock->timeout);
+    current_timeout = MIN (current_timeout, gst_clock_get_timeout (clock));
+  } else {
+    current_timeout = 0;
   }
+
   GST_INFO ("next timeout: %" GST_TIME_FORMAT, GST_TIME_ARGS (current_timeout));
   self->priv->timeout_expiration = gst_util_get_timestamp () + current_timeout;
-  GST_CLOCK_SLAVE_UNLOCK (clock);
 
   return;
 
@@ -371,7 +370,7 @@ gst_net_client_clock_thread (gpointer data)
 
       /* reset timeout (but are expecting a response sooner anyway) */
       self->priv->timeout_expiration =
-          gst_util_get_timestamp () + clock->timeout;
+          gst_util_get_timestamp () + gst_clock_get_timeout (clock);
       continue;
     }
 

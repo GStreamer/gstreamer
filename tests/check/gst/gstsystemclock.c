@@ -608,7 +608,7 @@ GST_START_TEST (test_async_full)
   /* register a periodic shot on the master to calibrate the slave */
   g_mutex_lock (af_lock);
   clockid = gst_clock_new_periodic_id (master,
-      gst_clock_get_time (master), slave->timeout);
+      gst_clock_get_time (master), gst_clock_get_timeout (slave));
   gst_clock_id_wait_async_full (clockid,
       (GstClockCallback) test_async_full_slave_callback,
       gst_object_ref (slave), (GDestroyNotify) gst_object_unref);

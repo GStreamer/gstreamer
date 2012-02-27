@@ -131,8 +131,35 @@ enum
   PROP_TIMEOUT
 };
 
+#define GST_CLOCK_SLAVE_LOCK(clock)     g_mutex_lock (&GST_CLOCK_CAST (clock)->priv->slave_lock)
+#define GST_CLOCK_SLAVE_UNLOCK(clock)   g_mutex_unlock (&GST_CLOCK_CAST (clock)->priv->slave_lock)
+
 struct _GstClockPrivate
 {
+  GMutex slave_lock;            /* order: SLAVE_LOCK, OBJECT_LOCK */
+
+  /* with LOCK */
+  GstClockTime internal_calibration;
+  GstClockTime external_calibration;
+  GstClockTime rate_numerator;
+  GstClockTime rate_denominator;
+  GstClockTime last_time;
+
+  /* with LOCK */
+  GstClockTime resolution;
+
+  /* for master/slave clocks */
+  GstClock *master;
+
+  /* with SLAVE_LOCK */
+  gboolean filling;
+  gint window_size;
+  gint window_threshold;
+  gint time_index;
+  GstClockTime timeout;
+  GstClockTime *times;
+  GstClockID clockid;
+
   gint pre_count;
   gint post_count;
 };
@@ -679,25 +706,25 @@ gst_clock_class_init (GstClockClass * klass)
 static void
 gst_clock_init (GstClock * clock)
 {
-  clock->last_time = 0;
-  clock->entries = NULL;
-  g_cond_init (&clock->entries_changed);
+  GstClockPrivate *priv;
 
-  clock->priv =
+  clock->priv = priv =
       G_TYPE_INSTANCE_GET_PRIVATE (clock, GST_TYPE_CLOCK, GstClockPrivate);
 
-  clock->internal_calibration = 0;
-  clock->external_calibration = 0;
-  clock->rate_numerator = 1;
-  clock->rate_denominator = 1;
+  priv->last_time = 0;
 
-  g_mutex_init (&clock->slave_lock);
-  clock->window_size = DEFAULT_WINDOW_SIZE;
-  clock->window_threshold = DEFAULT_WINDOW_THRESHOLD;
-  clock->filling = TRUE;
-  clock->time_index = 0;
-  clock->timeout = DEFAULT_TIMEOUT;
-  clock->times = g_new0 (GstClockTime, 4 * clock->window_size);
+  priv->internal_calibration = 0;
+  priv->external_calibration = 0;
+  priv->rate_numerator = 1;
+  priv->rate_denominator = 1;
+
+  g_mutex_init (&priv->slave_lock);
+  priv->window_size = DEFAULT_WINDOW_SIZE;
+  priv->window_threshold = DEFAULT_WINDOW_THRESHOLD;
+  priv->filling = TRUE;
+  priv->time_index = 0;
+  priv->timeout = DEFAULT_TIMEOUT;
+  priv->times = g_new0 (GstClockTime, 4 * priv->window_size);
 }
 
 static void
@@ -707,7 +734,7 @@ gst_clock_dispose (GObject * object)
   GstClock **master_p;
 
   GST_OBJECT_LOCK (clock);
-  master_p = &clock->master;
+  master_p = &clock->priv->master;
   gst_object_replace ((GstObject **) master_p, NULL);
   GST_OBJECT_UNLOCK (clock);
 
@@ -720,17 +747,16 @@ gst_clock_finalize (GObject * object)
   GstClock *clock = GST_CLOCK (object);
 
   GST_CLOCK_SLAVE_LOCK (clock);
-  if (clock->clockid) {
-    gst_clock_id_unschedule (clock->clockid);
-    gst_clock_id_unref (clock->clockid);
-    clock->clockid = NULL;
+  if (clock->priv->clockid) {
+    gst_clock_id_unschedule (clock->priv->clockid);
+    gst_clock_id_unref (clock->priv->clockid);
+    clock->priv->clockid = NULL;
   }
-  g_free (clock->times);
-  clock->times = NULL;
+  g_free (clock->priv->times);
+  clock->priv->times = NULL;
   GST_CLOCK_SLAVE_UNLOCK (clock);
 
-  g_cond_clear (&clock->entries_changed);
-  g_mutex_clear (&clock->slave_lock);
+  g_mutex_clear (&clock->priv->slave_lock);
 
   G_OBJECT_CLASS (parent_class)->finalize (object);
 }
@@ -751,18 +777,20 @@ gst_clock_finalize (GObject * object)
 GstClockTime
 gst_clock_set_resolution (GstClock * clock, GstClockTime resolution)
 {
+  GstClockPrivate *priv;
   GstClockClass *cclass;
 
   g_return_val_if_fail (GST_IS_CLOCK (clock), 0);
   g_return_val_if_fail (resolution != 0, 0);
 
   cclass = GST_CLOCK_GET_CLASS (clock);
+  priv = clock->priv;
 
   if (cclass->change_resolution)
-    clock->resolution =
-        cclass->change_resolution (clock, clock->resolution, resolution);
+    priv->resolution =
+        cclass->change_resolution (clock, priv->resolution, resolution);
 
-  return clock->resolution;
+  return priv->resolution;
 }
 
 /**
@@ -809,12 +837,13 @@ GstClockTime
 gst_clock_adjust_unlocked (GstClock * clock, GstClockTime internal)
 {
   GstClockTime ret, cinternal, cexternal, cnum, cdenom;
+  GstClockPrivate *priv = clock->priv;
 
   /* get calibration values for readability */
-  cinternal = clock->internal_calibration;
-  cexternal = clock->external_calibration;
-  cnum = clock->rate_numerator;
-  cdenom = clock->rate_denominator;
+  cinternal = priv->internal_calibration;
+  cexternal = priv->external_calibration;
+  cnum = priv->rate_numerator;
+  cdenom = priv->rate_denominator;
 
   /* avoid divide by 0 */
   if (G_UNLIKELY (cdenom == 0))
@@ -841,9 +870,9 @@ gst_clock_adjust_unlocked (GstClock * clock, GstClockTime internal)
   }
 
   /* make sure the time is increasing */
-  clock->last_time = MAX (ret, clock->last_time);
+  priv->last_time = MAX (ret, priv->last_time);
 
-  return clock->last_time;
+  return priv->last_time;
 }
 
 /**
@@ -866,12 +895,13 @@ GstClockTime
 gst_clock_unadjust_unlocked (GstClock * clock, GstClockTime external)
 {
   GstClockTime ret, cinternal, cexternal, cnum, cdenom;
+  GstClockPrivate *priv = clock->priv;
 
   /* get calibration values for readability */
-  cinternal = clock->internal_calibration;
-  cexternal = clock->external_calibration;
-  cnum = clock->rate_numerator;
-  cdenom = clock->rate_denominator;
+  cinternal = priv->internal_calibration;
+  cexternal = priv->external_calibration;
+  cnum = priv->rate_numerator;
+  cdenom = priv->rate_denominator;
 
   /* avoid divide by 0 */
   if (G_UNLIKELY (cnum == 0))
@@ -1008,9 +1038,13 @@ void
 gst_clock_set_calibration (GstClock * clock, GstClockTime internal, GstClockTime
     external, GstClockTime rate_num, GstClockTime rate_denom)
 {
+  GstClockPrivate *priv;
+
   g_return_if_fail (GST_IS_CLOCK (clock));
   g_return_if_fail (rate_num != GST_CLOCK_TIME_NONE);
   g_return_if_fail (rate_denom > 0 && rate_denom != GST_CLOCK_TIME_NONE);
+
+  priv = clock->priv;
 
   write_seqlock (clock);
   GST_CAT_DEBUG_OBJECT (GST_CAT_CLOCK, clock,
@@ -1019,10 +1053,10 @@ gst_clock_set_calibration (GstClock * clock, GstClockTime internal, GstClockTime
       GST_TIME_ARGS (external), rate_num, rate_denom,
       gst_guint64_to_gdouble (rate_num) / gst_guint64_to_gdouble (rate_denom));
 
-  clock->internal_calibration = internal;
-  clock->external_calibration = external;
-  clock->rate_numerator = rate_num;
-  clock->rate_denominator = rate_denom;
+  priv->internal_calibration = internal;
+  priv->external_calibration = external;
+  priv->rate_numerator = rate_num;
+  priv->rate_denominator = rate_denom;
   write_sequnlock (clock);
 }
 
@@ -1047,19 +1081,22 @@ gst_clock_get_calibration (GstClock * clock, GstClockTime * internal,
     GstClockTime * external, GstClockTime * rate_num, GstClockTime * rate_denom)
 {
   gint seq;
+  GstClockPrivate *priv;
 
   g_return_if_fail (GST_IS_CLOCK (clock));
+
+  priv = clock->priv;
 
   do {
     seq = read_seqbegin (clock);
     if (rate_num)
-      *rate_num = clock->rate_numerator;
+      *rate_num = priv->rate_numerator;
     if (rate_denom)
-      *rate_denom = clock->rate_denominator;
+      *rate_denom = priv->rate_denominator;
     if (external)
-      *external = clock->external_calibration;
+      *external = priv->external_calibration;
     if (internal)
-      *internal = clock->internal_calibration;
+      *internal = priv->internal_calibration;
   } while (read_seqretry (clock, seq));
 }
 
@@ -1113,6 +1150,7 @@ gboolean
 gst_clock_set_master (GstClock * clock, GstClock * master)
 {
   GstClock **master_p;
+  GstClockPrivate *priv;
 
   g_return_val_if_fail (GST_IS_CLOCK (clock), FALSE);
   g_return_val_if_fail (master != clock, FALSE);
@@ -1125,27 +1163,29 @@ gst_clock_set_master (GstClock * clock, GstClock * master)
       "slaving %p to master clock %p", clock, master);
   GST_OBJECT_UNLOCK (clock);
 
+  priv = clock->priv;
+
   GST_CLOCK_SLAVE_LOCK (clock);
-  if (clock->clockid) {
-    gst_clock_id_unschedule (clock->clockid);
-    gst_clock_id_unref (clock->clockid);
-    clock->clockid = NULL;
+  if (priv->clockid) {
+    gst_clock_id_unschedule (priv->clockid);
+    gst_clock_id_unref (priv->clockid);
+    priv->clockid = NULL;
   }
   if (master) {
-    clock->filling = TRUE;
-    clock->time_index = 0;
+    priv->filling = TRUE;
+    priv->time_index = 0;
     /* use the master periodic id to schedule sampling and
      * clock calibration. */
-    clock->clockid = gst_clock_new_periodic_id (master,
-        gst_clock_get_time (master), clock->timeout);
-    gst_clock_id_wait_async_full (clock->clockid,
+    priv->clockid = gst_clock_new_periodic_id (master,
+        gst_clock_get_time (master), priv->timeout);
+    gst_clock_id_wait_async_full (priv->clockid,
         (GstClockCallback) gst_clock_slave_callback,
         gst_object_ref (clock), (GDestroyNotify) gst_object_unref);
   }
   GST_CLOCK_SLAVE_UNLOCK (clock);
 
   GST_OBJECT_LOCK (clock);
-  master_p = &clock->master;
+  master_p = &priv->master;
   gst_object_replace ((GstObject **) master_p, (GstObject *) master);
   GST_OBJECT_UNLOCK (clock);
 
@@ -1177,12 +1217,15 @@ GstClock *
 gst_clock_get_master (GstClock * clock)
 {
   GstClock *result = NULL;
+  GstClockPrivate *priv;
 
   g_return_val_if_fail (GST_IS_CLOCK (clock), NULL);
 
+  priv = clock->priv;
+
   GST_OBJECT_LOCK (clock);
-  if (clock->master)
-    result = gst_object_ref (clock->master);
+  if (priv->master)
+    result = gst_object_ref (priv->master);
   GST_OBJECT_UNLOCK (clock);
 
   return result;
@@ -1202,12 +1245,15 @@ do_linear_regression (GstClock * clock, GstClockTime * m_num,
   GstClockTime *x, *y;
   gint i, j;
   guint n;
+  GstClockPrivate *priv;
 
   xbar = ybar = sxx = syy = sxy = 0;
 
-  x = clock->times;
-  y = clock->times + 2;
-  n = clock->filling ? clock->time_index : clock->window_size;
+  priv = clock->priv;
+
+  x = priv->times;
+  y = priv->times + 2;
+  n = priv->filling ? priv->time_index : priv->window_size;
 
 #ifdef DEBUGGING_ENABLED
   GST_CAT_DEBUG_OBJECT (GST_CAT_CLOCK, clock, "doing regression on:");
@@ -1229,8 +1275,8 @@ do_linear_regression (GstClock * clock, GstClockTime * m_num,
       ymin);
 #endif
 
-  newx = clock->times + 1;
-  newy = clock->times + 3;
+  newx = priv->times + 1;
+  newy = priv->times + 3;
 
   /* strip off unnecessary bits of precision */
   for (i = j = 0; i < n; i++, j += 4) {
@@ -1339,9 +1385,12 @@ gst_clock_add_observation (GstClock * clock, GstClockTime slave,
     GstClockTime master, gdouble * r_squared)
 {
   GstClockTime m_num, m_denom, b, xbase;
+  GstClockPrivate *priv;
 
   g_return_val_if_fail (GST_IS_CLOCK (clock), FALSE);
   g_return_val_if_fail (r_squared != NULL, FALSE);
+
+  priv = clock->priv;
 
   GST_CLOCK_SLAVE_LOCK (clock);
 
@@ -1349,17 +1398,16 @@ gst_clock_add_observation (GstClock * clock, GstClockTime slave,
       "adding observation slave %" GST_TIME_FORMAT ", master %" GST_TIME_FORMAT,
       GST_TIME_ARGS (slave), GST_TIME_ARGS (master));
 
-  clock->times[(4 * clock->time_index)] = slave;
-  clock->times[(4 * clock->time_index) + 2] = master;
+  priv->times[(4 * priv->time_index)] = slave;
+  priv->times[(4 * priv->time_index) + 2] = master;
 
-  clock->time_index++;
-  if (G_UNLIKELY (clock->time_index == clock->window_size)) {
-    clock->filling = FALSE;
-    clock->time_index = 0;
+  priv->time_index++;
+  if (G_UNLIKELY (priv->time_index == priv->window_size)) {
+    priv->filling = FALSE;
+    priv->time_index = 0;
   }
 
-  if (G_UNLIKELY (clock->filling
-          && clock->time_index < clock->window_threshold))
+  if (G_UNLIKELY (priv->filling && priv->time_index < priv->window_threshold))
     goto filling;
 
   if (!do_linear_regression (clock, &m_num, &m_denom, &b, &xbase, r_squared))
@@ -1389,36 +1437,47 @@ invalid:
   }
 }
 
+void
+gst_clock_set_timeout (GstClock * clock, GstClockTime timeout)
+{
+  clock->priv->timeout = timeout;
+}
+
+GstClockTime
+gst_clock_get_timeout (GstClock * clock)
+{
+  return clock->priv->timeout;
+}
+
 static void
 gst_clock_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec)
 {
   GstClock *clock;
+  GstClockPrivate *priv;
 
   clock = GST_CLOCK (object);
+  priv = clock->priv;
 
   switch (prop_id) {
     case PROP_WINDOW_SIZE:
       GST_CLOCK_SLAVE_LOCK (clock);
-      clock->window_size = g_value_get_int (value);
-      clock->window_threshold =
-          MIN (clock->window_threshold, clock->window_size);
-      clock->times =
-          g_renew (GstClockTime, clock->times, 4 * clock->window_size);
+      priv->window_size = g_value_get_int (value);
+      priv->window_threshold = MIN (priv->window_threshold, priv->window_size);
+      priv->times = g_renew (GstClockTime, priv->times, 4 * priv->window_size);
       /* restart calibration */
-      clock->filling = TRUE;
-      clock->time_index = 0;
+      priv->filling = TRUE;
+      priv->time_index = 0;
       GST_CLOCK_SLAVE_UNLOCK (clock);
       break;
     case PROP_WINDOW_THRESHOLD:
       GST_CLOCK_SLAVE_LOCK (clock);
-      clock->window_threshold =
-          MIN (g_value_get_int (value), clock->window_size);
+      priv->window_threshold = MIN (g_value_get_int (value), priv->window_size);
       GST_CLOCK_SLAVE_UNLOCK (clock);
       break;
     case PROP_TIMEOUT:
       GST_CLOCK_SLAVE_LOCK (clock);
-      clock->timeout = g_value_get_uint64 (value);
+      priv->timeout = g_value_get_uint64 (value);
       GST_CLOCK_SLAVE_UNLOCK (clock);
       break;
     default:
@@ -1432,23 +1491,25 @@ gst_clock_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec)
 {
   GstClock *clock;
+  GstClockPrivate *priv;
 
   clock = GST_CLOCK (object);
+  priv = clock->priv;
 
   switch (prop_id) {
     case PROP_WINDOW_SIZE:
       GST_CLOCK_SLAVE_LOCK (clock);
-      g_value_set_int (value, clock->window_size);
+      g_value_set_int (value, priv->window_size);
       GST_CLOCK_SLAVE_UNLOCK (clock);
       break;
     case PROP_WINDOW_THRESHOLD:
       GST_CLOCK_SLAVE_LOCK (clock);
-      g_value_set_int (value, clock->window_threshold);
+      g_value_set_int (value, priv->window_threshold);
       GST_CLOCK_SLAVE_UNLOCK (clock);
       break;
     case PROP_TIMEOUT:
       GST_CLOCK_SLAVE_LOCK (clock);
-      g_value_set_uint64 (value, clock->timeout);
+      g_value_set_uint64 (value, priv->timeout);
       GST_CLOCK_SLAVE_UNLOCK (clock);
       break;
     default:
