@@ -61,6 +61,11 @@
  * Last reviewed on 2006-02-14 (0.10.4)
  */
 
+
+/* FIXME 0.11: suppress warnings for deprecated API such as GValueArray
+ * with newer GLib versions (>= 2.31.0) */
+#define GLIB_DISABLE_DEPRECATION_WARNINGS
+
 #include "gst_private.h"
 #include "gstinfo.h"
 #include "gstquery.h"
