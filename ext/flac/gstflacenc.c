@@ -1101,43 +1101,9 @@ gst_flac_enc_sink_event (GstAudioEncoder * enc, GstEvent * event)
   GST_DEBUG ("Received %s event on sinkpad", GST_EVENT_TYPE_NAME (event));
 
   switch (GST_EVENT_TYPE (event)) {
-    case GST_EVENT_SEGMENT:{
-      GstSegment seg;
-      gint64 start, stream_time;
-
-      if (flacenc->offset == 0) {
-        gst_event_copy_segment (event, &seg);
-        start = seg.start;
-        stream_time = seg.time;
-      } else {
-        start = -1;
-        stream_time = -1;
-      }
-
-      if (start > 0) {
-        if (flacenc->offset > 0)
-          GST_DEBUG ("Not handling mid-stream newsegment event");
-        else
-          GST_DEBUG ("Not handling newsegment event with non-zero start");
-      } else {
-        GstEvent *e;
-
-        gst_segment_init (&seg, GST_FORMAT_BYTES);
-        e = gst_event_new_segment (&seg);
-        ret = gst_pad_push_event (GST_AUDIO_ENCODER_SRC_PAD (enc), e);
-      }
-
-      if (stream_time > 0) {
-        GST_DEBUG ("Not handling non-zero stream time");
-      }
-
-      /* don't push it downstream, we'll generate our own via seek to 0 */
-      gst_event_unref (event);
-      ret = TRUE;
-      break;
-    }
     case GST_EVENT_EOS:
       flacenc->eos = TRUE;
+      ret = GST_AUDIO_ENCODER_CLASS (parent_class)->event (enc, event);
       break;
     case GST_EVENT_TAG:
       if (flacenc->tags) {
@@ -1147,8 +1113,10 @@ gst_flac_enc_sink_event (GstAudioEncoder * enc, GstEvent * event)
       } else {
         g_assert_not_reached ();
       }
+      ret = GST_AUDIO_ENCODER_CLASS (parent_class)->event (enc, event);
       break;
     default:
+      ret = GST_AUDIO_ENCODER_CLASS (parent_class)->event (enc, event);
       break;
   }
 
