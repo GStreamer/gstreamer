@@ -590,34 +590,30 @@ gst_audio_convert_fixate_caps (GstBaseTransform * base,
     GstPadDirection direction, GstCaps * caps, GstCaps * othercaps)
 {
   GstStructure *ins, *outs;
-  gint rate;
-  const gchar *fmt;
-
-  othercaps = gst_caps_make_writable (othercaps);
+  GstCaps *result;
 
   GST_DEBUG_OBJECT (base, "trying to fixate othercaps %" GST_PTR_FORMAT
       " based on caps %" GST_PTR_FORMAT, othercaps, caps);
 
+  result = gst_caps_intersect (othercaps, caps);
+  if (gst_caps_is_empty (result)) {
+    result = othercaps;
+  } else {
+    gst_caps_unref (othercaps);
+  }
+
+  /* fixate remaining fields */
+  result = gst_caps_make_writable (result);
+
   ins = gst_caps_get_structure (caps, 0);
-  outs = gst_caps_get_structure (othercaps, 0);
+  outs = gst_caps_get_structure (result, 0);
 
   gst_audio_convert_fixate_channels (base, ins, outs);
+  gst_caps_fixate (result);
 
-  if ((fmt = gst_structure_get_string (ins, "format"))) {
-    /* FIXME, find the best format */
-    gst_structure_fixate_field_string (outs, "format", fmt);
-  }
+  GST_DEBUG_OBJECT (base, "fixated othercaps to %" GST_PTR_FORMAT, result);
 
-  if (gst_structure_get_int (ins, "rate", &rate)) {
-    if (gst_structure_has_field (outs, "rate")) {
-      gst_structure_fixate_field_nearest_int (outs, "rate", rate);
-    }
-  }
-
-  gst_caps_truncate (othercaps);
-  GST_DEBUG_OBJECT (base, "fixated othercaps to %" GST_PTR_FORMAT, othercaps);
-
-  return othercaps;
+  return result;
 }
 
 static gboolean
