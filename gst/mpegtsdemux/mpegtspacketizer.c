@@ -2356,6 +2356,12 @@ mpegts_packetizer_push_section (MpegTSPacketizer2 * packetizer,
   if (packet->pid == 0x14) {
     table_id = data[0];
     section->section_length = GST_READ_UINT24_BE (data) & 0x000FFF;
+    if (data - GST_BUFFER_DATA (packet->buffer) + section->section_length + 3 >
+        GST_BUFFER_SIZE (packet->buffer)) {
+      GST_WARNING ("PID %dd PSI section length extends past the end "
+          "of the buffer", packet->pid);
+      goto out;
+    }
     section->buffer = gst_buffer_create_sub (packet->buffer,
         data - GST_BUFFER_DATA (packet->buffer), section->section_length + 3);
     section->table_id = table_id;
