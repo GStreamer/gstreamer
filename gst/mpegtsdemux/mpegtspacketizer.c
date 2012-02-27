@@ -2542,13 +2542,22 @@ get_encoding (const gchar * text, guint * start_text, gboolean * is_multibyte)
     *start_text = 1;
     *is_multibyte = TRUE;
   } else if (firstbyte == 0x12) {
-    /* That's korean encoding.
-     * The spec says it's encoded in KSC 5601, but iconv only knows KSC 5636.
-     * Couldn't find any information about either of them.
-     */
-    encoding = NULL;
+    /*  EUC-KR implements KSX1001 */
+    encoding = g_strdup ("EUC-KR");
     *start_text = 1;
     *is_multibyte = TRUE;
+  } else if (firstbyte == 0x13) {
+    encoding = g_strdup ("GB2312");
+    *start_text = 1;
+    *is_multibyte = FALSE;
+  } else if (firstbyte == 0x14) {
+    encoding = g_strdup ("UTF-16BE");
+    *start_text = 1;
+    *is_multibyte = TRUE;
+  } else if (firstbyte == 0x15) {
+    encoding = g_strdup ("ISO-10646/UTF8");
+    *start_text = 1;
+    *is_multibyte = FALSE;
   } else {
     /* reserved */
     encoding = NULL;
@@ -2600,7 +2609,7 @@ convert_to_utf8 (const gchar * text, gint length, guint start,
             /* skip it */
             break;
           case 0xE08A:{
-            guint8 nl[] = { 0x0A, 0x00 };       /* new line */
+            guint8 nl[] = { 0x00, 0x0A };       /* new line */
             g_byte_array_append (sb, nl, 2);
             break;
           }
@@ -2621,7 +2630,7 @@ convert_to_utf8 (const gchar * text, gint length, guint start,
             /* skip it */
             break;
           case 0xE08A:{
-            guint8 nl[] = { 0x0A, 0x00 };       /* new line */
+            guint8 nl[] = { 0x00, 0x0A };       /* new line */
             g_byte_array_append (sb, nl, 2);
             break;
           }
