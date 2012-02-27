@@ -1395,8 +1395,10 @@ gst_audio_encoder_sink_event (GstPad * pad, GstObject * parent,
 
   if (klass->event)
     ret = klass->event (enc, event);
-  else
+  else {
+    gst_event_unref (event);
     ret = FALSE;
+  }
 
   GST_DEBUG_OBJECT (enc, "event result %d", ret);
 
