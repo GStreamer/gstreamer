@@ -74,6 +74,7 @@
 #endif
 #include <sys/types.h>
 
+#include "gstatomicqueue.h"
 #include "gstinfo.h"
 #include "gstpoll.h"
 

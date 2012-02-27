@@ -24,9 +24,6 @@
 #define __GST_BUFFER_POOL_H__
 
 #include <gst/gstminiobject.h>
-#include <gst/gstatomicqueue.h>
-#include <gst/gstpoll.h>
-#include <gst/gstclock.h>
 #include <gst/gstpad.h>
 #include <gst/gstbuffer.h>
 

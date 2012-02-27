@@ -28,7 +28,6 @@ typedef struct _GstBusClass GstBusClass;
 
 #include <gst/gstmessage.h>
 #include <gst/gstclock.h>
-#include <gst/gstatomicqueue.h>
 
 G_BEGIN_DECLS
 

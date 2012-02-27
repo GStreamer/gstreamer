@@ -35,6 +35,8 @@
 #endif
 #include <sys/types.h>
 
+#include "gstatomicqueue.h"
+#include "gstpoll.h"
 #include "gstinfo.h"
 #include "gstquark.h"
 #include "gstvalue.h"
