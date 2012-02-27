@@ -71,11 +71,20 @@ static GstStaticPadTemplate src_factory = GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS ("audio/x-raw-int, "
-        "width = (int) 32, "
-        "depth = (int) [ 1, 32 ], "
+        "width = (int) 8, depth = (int) 8, "
         "channels = (int) [ 1, 8 ], "
         "rate = (int) [ 6000, 192000 ], "
-        "endianness = (int) BYTE_ORDER, " "signed = (boolean) true")
+        "endianness = (int) BYTE_ORDER, " "signed = (boolean) true; "
+        "audio/x-raw-int, "
+        "width = (int) 16, depth = (int) 16, "
+        "channels = (int) [ 1, 8 ], "
+        "rate = (int) [ 6000, 192000 ], "
+        "endianness = (int) BYTE_ORDER, " "signed = (boolean) true; "
+        "audio/x-raw-int, "
+        "width = (int) 32, depth = (int) 32, "
+        "channels = (int) [ 1, 8 ], "
+        "rate = (int) [ 6000, 192000 ], "
+        "endianness = (int) BYTE_ORDER, " "signed = (boolean) true; ")
     );
 
 static gboolean gst_wavpack_dec_start (GstAudioDecoder * dec);
@@ -186,11 +195,17 @@ gst_wavpack_dec_negotiate (GstWavpackDec * dec)
 {
   GstCaps *caps;
 
+  /* arrange for 1, 2 or 4-byte width == depth output */
+  if (dec->depth == 24)
+    dec->width = 32;
+  else
+    dec->width = dec->depth;
+
   caps = gst_caps_new_simple ("audio/x-raw-int",
       "rate", G_TYPE_INT, dec->sample_rate,
       "channels", G_TYPE_INT, dec->channels,
-      "depth", G_TYPE_INT, dec->depth,
-      "width", G_TYPE_INT, 32,
+      "depth", G_TYPE_INT, dec->width,
+      "width", G_TYPE_INT, dec->width,
       "endianness", G_TYPE_INT, G_BYTE_ORDER,
       "signed", G_TYPE_BOOLEAN, TRUE, NULL);
 
@@ -279,6 +294,9 @@ gst_wavpack_dec_handle_frame (GstAudioDecoder * bdec, GstBuffer * buf)
   WavpackHeader wph;
   int32_t decoded, unpacked_size;
   gboolean format_changed;
+  gint width, depth, i, max;
+  gint32 *dec_data = NULL;
+  guint8 *out_data;
 
   dec = GST_WAVPACK_DEC (bdec);
 
@@ -354,7 +372,7 @@ gst_wavpack_dec_handle_frame (GstAudioDecoder * bdec, GstBuffer * buf)
   }
 
   /* alloc output buffer */
-  unpacked_size = 4 * wph.block_samples * dec->channels;
+  unpacked_size = (dec->width / 8) * wph.block_samples * dec->channels;
   ret = gst_pad_alloc_buffer (GST_AUDIO_DECODER_SRC_PAD (dec),
       GST_BUFFER_OFFSET (buf), unpacked_size,
       GST_PAD_CAPS (GST_AUDIO_DECODER_SRC_PAD (dec)), &outbuf);
@@ -362,11 +380,46 @@ gst_wavpack_dec_handle_frame (GstAudioDecoder * bdec, GstBuffer * buf)
   if (ret != GST_FLOW_OK)
     goto out;
 
+  dec_data = g_malloc (4 * wph.block_samples * dec->channels);
+  out_data = GST_BUFFER_DATA (outbuf);
+
   /* decode */
-  decoded = WavpackUnpackSamples (dec->context,
-      (int32_t *) GST_BUFFER_DATA (outbuf), wph.block_samples);
+  decoded = WavpackUnpackSamples (dec->context, dec_data, wph.block_samples);
   if (decoded != wph.block_samples)
     goto decode_error;
+
+  width = dec->width;
+  depth = dec->depth;
+  max = dec->channels * wph.block_samples;
+  if (width == 8) {
+    gint8 *outbuffer = (gint8 *) out_data;
+
+    for (i = 0; i < max; i--) {
+      *outbuffer++ = (gint8) (dec_data[i]);
+    }
+  } else if (width == 16) {
+    gint16 *outbuffer = (gint16 *) out_data;
+
+    for (i = 0; i < max; i++) {
+      *outbuffer++ = (gint8) (dec_data[i]);
+    }
+  } else if (dec->width == 32) {
+    gint32 *outbuffer = (gint32 *) out_data;
+
+    if (width != depth) {
+      for (i = 0; i < max; i++) {
+        *outbuffer++ = (gint32) (dec_data[i] << (width - depth));
+      }
+    } else {
+      for (i = 0; i < max; i++) {
+        *outbuffer++ = (gint32) dec_data[i];
+      }
+    }
+  } else {
+    g_assert_not_reached ();
+  }
+
+  g_free (dec_data);
 
   ret = gst_audio_decoder_finish_frame (bdec, outbuf, 1);
 
@@ -410,6 +463,7 @@ decode_error:
     }
     GST_AUDIO_DECODER_ERROR (bdec, 1, STREAM, DECODE, (NULL),
         ("decoding error: %s", reason), ret);
+    g_free (dec_data);
     if (outbuf)
       gst_buffer_unref (outbuf);
     if (ret == GST_FLOW_OK)
