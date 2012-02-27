@@ -465,8 +465,9 @@ gst_ffmpegscale_get_unit_size (GstBaseTransform * trans, GstCaps * caps,
 
   *size = info.size;
 
-  GST_DEBUG_OBJECT (trans, "unit size = %d for format %d w %d height %d",
-      *size, GST_VIDEO_INFO_FORMAT (&info), GST_VIDEO_INFO_WIDTH (&info),
+  GST_DEBUG_OBJECT (trans,
+      "unit size = %" G_GSIZE_FORMAT " for format %d w %d height %d", *size,
+      GST_VIDEO_INFO_FORMAT (&info), GST_VIDEO_INFO_WIDTH (&info),
       GST_VIDEO_INFO_HEIGHT (&info));
 
   return TRUE;

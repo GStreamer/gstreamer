@@ -952,7 +952,8 @@ gst_ffmpegenc_chain_audio (GstPad * pad, GstObject * parent, GstBuffer * inbuf)
 
   GST_DEBUG_OBJECT (ffmpegenc,
       "Received time %" GST_TIME_FORMAT ", duration %" GST_TIME_FORMAT
-      ", size %d", GST_TIME_ARGS (timestamp), GST_TIME_ARGS (duration), size);
+      ", size %" G_GSIZE_FORMAT, GST_TIME_ARGS (timestamp),
+      GST_TIME_ARGS (duration), size);
 
   frame_size = ctx->frame_size;
   osize = av_get_bits_per_sample_format (ctx->sample_fmt) / 8;

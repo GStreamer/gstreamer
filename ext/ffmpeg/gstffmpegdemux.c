@@ -1435,7 +1435,7 @@ gst_ffmpegdemux_loop (GstFFMpegDemux * demux)
   }
 
   GST_DEBUG_OBJECT (demux,
-      "Sending out buffer time:%" GST_TIME_FORMAT " size:%d",
+      "Sending out buffer time:%" GST_TIME_FORMAT " size:%" G_GSIZE_FORMAT,
       GST_TIME_ARGS (timestamp), gst_buffer_get_size (outbuf));
 
   ret = stream->last_flow = gst_pad_push (srcpad, outbuf);
@@ -1646,7 +1646,8 @@ gst_ffmpegdemux_chain (GstPad * sinkpad, GstObject * parent, GstBuffer * buffer)
   if (G_UNLIKELY (ffpipe->srcresult != GST_FLOW_OK))
     goto ignore;
 
-  GST_DEBUG ("Giving a buffer of %d bytes", gst_buffer_get_size (buffer));
+  GST_DEBUG ("Giving a buffer of %" G_GSIZE_FORMAT " bytes",
+      gst_buffer_get_size (buffer));
   gst_adapter_push (ffpipe->adapter, buffer);
   buffer = NULL;
   while (gst_adapter_available (ffpipe->adapter) >= ffpipe->needed) {

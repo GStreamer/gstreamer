@@ -360,7 +360,7 @@ gst_ffmpeg_pipe_read (URLContext * h, unsigned char *buf, int size)
     GST_LOG ("Getting %d bytes", size);
     gst_adapter_copy (ffpipe->adapter, buf, 0, size);
     gst_adapter_flush (ffpipe->adapter, size);
-    GST_LOG ("%d bytes left in adapter",
+    GST_LOG ("%" G_GSIZE_FORMAT " bytes left in adapter",
         gst_adapter_available (ffpipe->adapter));
     ffpipe->needed = 0;
   }

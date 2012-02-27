@@ -2247,7 +2247,7 @@ gst_ffmpeg_caps_with_codecid (enum CodecID codec_id,
       context->extradata[0] = (guint8) map.size;
     }
 
-    GST_DEBUG ("have codec data of size %d", map.size);
+    GST_DEBUG ("have codec data of size %" G_GSIZE_FORMAT, map.size);
 
     gst_buffer_unmap (buf, &map);
   } else if (context->extradata == NULL && codec_id != CODEC_ID_AAC_LATM &&
