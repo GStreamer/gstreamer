@@ -304,6 +304,7 @@ gst_mad_parse (GstAudioDecoder * dec, GstAdapter * adapter,
         "using fallback buffer of size %u",
         MAD_BUFFER_GUARD, av + MAD_BUFFER_GUARD);
     data = guard;
+    av = av + MAD_BUFFER_GUARD;
   }
 
   /* we basically let mad library do parsing,
@@ -338,6 +339,22 @@ gst_mad_parse (GstAudioDecoder * dec, GstAdapter * adapter,
 
       GST_LOG_OBJECT (mad, "decoding the header now");
       if (mad_header_decode (&mad->frame.header, &mad->stream) == -1) {
+        /* HACK it seems mad reports wrong error when it is trying to determine
+         * free bitrate and scanning for next header */
+        if (mad->stream.error == MAD_ERROR_LOSTSYNC) {
+          const guint8 *ptr = mad->stream.this_frame;
+          guint32 header;
+
+          if (ptr >= data && ptr < data + av) {
+            header = GST_READ_UINT32_BE (ptr);
+            /* looks like possible freeform header with not much data */
+            if (((header & 0xFFE00000) == 0xFFE00000) &&
+                (((header >> 12) & 0xF) == 0x0) && (av < 4096)) {
+              GST_DEBUG_OBJECT (mad, "overriding freeform LOST_SYNC to BUFLEN");
+              mad->stream.error = MAD_ERROR_BUFLEN;
+            }
+          }
+        }
         if (mad->stream.error == MAD_ERROR_BUFLEN) {
           GST_LOG_OBJECT (mad,
               "not enough data in tempbuffer (%d), breaking to get more", size);
