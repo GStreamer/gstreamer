@@ -708,7 +708,7 @@ gst_opus_enc_sink_event (GstAudioEncoder * benc, GstEvent * event)
       break;
   }
 
-  return FALSE;
+  return GST_AUDIO_ENCODER_CLASS (parent_class)->event (benc, event);
 }
 
 static GstCaps *
