@@ -530,7 +530,7 @@ gst_speex_enc_sink_event (GstAudioEncoder * benc, GstEvent * event)
   }
 
   /* we only peeked, let base class handle it */
-  return FALSE;
+  return GST_AUDIO_ENCODER_CLASS (parent_class)->event (benc, event);
 }
 
 static GstFlowReturn
