@@ -2080,8 +2080,8 @@ gst_x264_enc_encode_frame (GstX264Enc * encoder, x264_picture_t * pic_in,
   gst_buffer_fill (out_buf, 0, data, i_size);
 
   GST_LOG_OBJECT (encoder,
-      "output: dts %" G_GINT64_FORMAT " pts %" G_GINT64_FORMAT, pic_out.i_dts,
-      pic_out.i_pts);
+      "output: dts %" G_GINT64_FORMAT " pts %" G_GINT64_FORMAT,
+      (gint64) pic_out.i_dts, (gint64) pic_out.i_pts);
 
   if (pic_out.i_dts < 0)
     GST_BUFFER_DTS (out_buf) = GST_CLOCK_TIME_NONE;
