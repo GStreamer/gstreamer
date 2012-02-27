@@ -219,10 +219,11 @@ gst_registry_binary_cache_write (BinaryRegistryCache * cache,
 {
   long written;
   if (offset != cache->currentoffset) {
-    if (lseek (cache->cache_fd, offset, SEEK_SET) != 0) {
-      GST_ERROR ("Seeking to new offset failed");
-      return FALSE;
+    if (lseek (cache->cache_fd, offset, SEEK_SET) < 0) {
+      GST_ERROR ("Seeking to new offset failed: %s", g_strerror (errno));
+      return -1;
     }
+    GST_LOG ("Seeked from offset %lu to %lu", offset, cache->currentoffset);
     cache->currentoffset = offset;
   }
 
@@ -245,12 +246,13 @@ gst_registry_binary_cache_finish (BinaryRegistryCache * cache, gboolean success)
   if (close (cache->cache_fd) < 0)
     goto close_failed;
 
-  if (success) {
-    /* Only do the rename if we wrote the entire file successfully */
-    if (g_rename (cache->tmp_location, cache->location) < 0) {
-      GST_ERROR ("g_rename() failed: %s", g_strerror (errno));
-      goto rename_failed;
-    }
+  if (!success)
+    goto fail_after_close;
+
+  /* Only do the rename if we wrote the entire file successfully */
+  if (g_rename (cache->tmp_location, cache->location) < 0) {
+    GST_ERROR ("g_rename() failed: %s", g_strerror (errno));
+    goto rename_failed;
   }
 
   g_free (cache->tmp_location);

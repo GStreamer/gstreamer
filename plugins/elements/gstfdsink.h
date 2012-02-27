@@ -59,6 +59,8 @@ struct _GstFdSink {
   int fd;
   guint64 bytes_written;
   guint64 current_pos;
+
+  gboolean seekable;
 };
 
 struct _GstFdSinkClass {

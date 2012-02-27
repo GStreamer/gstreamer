@@ -131,6 +131,7 @@ static GstFlowReturn gst_fake_sink_preroll (GstBaseSink * bsink,
 static GstFlowReturn gst_fake_sink_render (GstBaseSink * bsink,
     GstBuffer * buffer);
 static gboolean gst_fake_sink_event (GstBaseSink * bsink, GstEvent * event);
+static gboolean gst_fake_sink_query (GstBaseSink * bsink, GstQuery * query);
 
 static guint gst_fake_sink_signals[LAST_SIGNAL] = { 0 };
 
@@ -232,6 +233,7 @@ gst_fake_sink_class_init (GstFakeSinkClass * klass)
   gstbase_sink_class->event = GST_DEBUG_FUNCPTR (gst_fake_sink_event);
   gstbase_sink_class->preroll = GST_DEBUG_FUNCPTR (gst_fake_sink_preroll);
   gstbase_sink_class->render = GST_DEBUG_FUNCPTR (gst_fake_sink_render);
+  gstbase_sink_class->query = GST_DEBUG_FUNCPTR (gst_fake_sink_query);
 }
 
 static void
@@ -508,6 +510,29 @@ eos:
     GST_DEBUG_OBJECT (sink, "we are EOS");
     return GST_FLOW_EOS;
   }
+}
+
+static gboolean
+gst_fake_sink_query (GstBaseSink * bsink, GstQuery * query)
+{
+  gboolean ret;
+
+  switch (GST_QUERY_TYPE (query)) {
+    case GST_QUERY_SEEKING:{
+      GstFormat fmt;
+
+      /* we don't supporting seeking */
+      gst_query_parse_seeking (query, &fmt, NULL, NULL, NULL);
+      gst_query_set_seeking (query, fmt, FALSE, 0, -1);
+      ret = TRUE;
+      break;
+    }
+    default:
+      ret = GST_BASE_SINK_CLASS (parent_class)->query (bsink, query);
+      break;
+  }
+
+  return ret;
 }
 
 static GstStateChangeReturn
