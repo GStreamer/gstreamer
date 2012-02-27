@@ -603,7 +603,7 @@ gst_vorbis_enc_sink_event (GstAudioEncoder * enc, GstEvent * event)
   }
 
   /* we only peeked, let base class handle it */
-  return FALSE;
+  return GST_AUDIO_ENCODER_CLASS (parent_class)->event (enc, event);
 }
 
 /* push out the buffer and do internal bookkeeping */
