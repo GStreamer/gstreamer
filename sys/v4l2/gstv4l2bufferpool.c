@@ -863,6 +863,7 @@ GstBufferPool *
 gst_v4l2_buffer_pool_new (GstV4l2Object * obj, GstCaps * caps)
 {
   GstV4l2BufferPool *pool;
+  GstStructure *s;
   gint fd;
 
   fd = v4l2_dup (obj->video_fd);
@@ -873,8 +874,9 @@ gst_v4l2_buffer_pool_new (GstV4l2Object * obj, GstCaps * caps)
   pool->video_fd = fd;
   pool->obj = obj;
 
-  gst_buffer_pool_config_set (GST_BUFFER_POOL_CAST (pool)->config, caps,
-      obj->sizeimage, 2, 0, 0, 0);
+  s = gst_buffer_pool_get_config (GST_BUFFER_POOL_CAST (pool));
+  gst_buffer_pool_config_set (s, caps, obj->sizeimage, 2, 0, 0, 0);
+  gst_buffer_pool_set_config (GST_BUFFER_POOL_CAST (pool), s);
 
   return GST_BUFFER_POOL (pool);
 
