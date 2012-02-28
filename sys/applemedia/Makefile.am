@@ -2,10 +2,6 @@ plugin_LTLIBRARIES = libgstapplemedia.la
 
 libgstapplemedia_la_SOURCES =			\
 	plugin.m				\
-	vth264decbin.c				\
-	vth264encbin.c				\
-	vtenc.c					\
-	vtdec.c					\
 	vtutil.c				\
 	bufferfactory.m				\
 	corevideobuffer.c			\
@@ -82,8 +78,6 @@ else
 
 libgstapplemedia_la_SOURCES +=			\
 	qtkitvideosrc.m				\
-	miovideosrc.c				\
-	miovideodevice.c			\
 	mioapi.c
 
 libgstapplemedia_la_LDFLAGS +=			\

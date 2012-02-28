@@ -26,32 +26,15 @@
 
 G_BEGIN_DECLS
 
-#define GST_TYPE_CORE_VIDEO_BUFFER (gst_core_video_buffer_get_type ())
-
-#define GST_IS_CORE_VIDEO_BUFFER(obj) (G_TYPE_CHECK_INSTANCE_TYPE ((obj), \
-    GST_TYPE_CORE_VIDEO_BUFFER))
-#define GST_CORE_VIDEO_BUFFER(obj) (G_TYPE_CHECK_INSTANCE_CAST ((obj), \
-    GST_TYPE_CORE_VIDEO_BUFFER, GstCoreVideoBuffer))
-#define GST_CORE_VIDEO_BUFFER_CAST(obj) ((GstCoreVideoBuffer *) (obj))
-
-typedef struct _GstCoreVideoBuffer GstCoreVideoBuffer;
-typedef struct _GstCoreVideoBufferClass GstCoreVideoBufferClass;
-
-struct _GstCoreVideoBuffer
+typedef struct _GstCoreVideoMeta
 {
-  GstBuffer buffer;
+  GstMeta meta;
 
   GstCoreMediaCtx *ctx;
   CVBufferRef cvbuf;
   CVPixelBufferRef pixbuf;
-};
+} GstCoreVideoMeta;
 
-struct _GstCoreVideoBufferClass
-{
-  GstBufferClass parent_class;
-};
-
-GType       gst_core_video_buffer_get_type (void) G_GNUC_CONST;
 GstBuffer * gst_core_video_buffer_new      (GstCoreMediaCtx * ctx,
                                             CVBufferRef cvbuf);
 

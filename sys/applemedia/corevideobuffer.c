@@ -19,31 +19,33 @@
 
 #include "corevideobuffer.h"
 
-G_DEFINE_TYPE (GstCoreVideoBuffer, gst_core_video_buffer, GST_TYPE_BUFFER);
-
 static void
-gst_core_video_buffer_init (GstCoreVideoBuffer * self)
+gst_core_video_meta_free (GstCoreVideoMeta * meta, GstBuffer * buf)
 {
-  GST_BUFFER_FLAG_SET (self, GST_BUFFER_FLAG_READONLY);
-}
+  GstCVApi *cv = meta->ctx->cv;
 
-static void
-gst_core_video_buffer_finalize (GstMiniObject * mini_object)
-{
-  GstCoreVideoBuffer *self = GST_CORE_VIDEO_BUFFER_CAST (mini_object);
-  GstCVApi *cv = self->ctx->cv;
-
-  if (self->pixbuf != NULL) {
-    cv->CVPixelBufferUnlockBaseAddress (self->pixbuf,
+  if (meta->pixbuf != NULL) {
+    cv->CVPixelBufferUnlockBaseAddress (meta->pixbuf,
         kCVPixelBufferLock_ReadOnly);
   }
 
-  cv->CVBufferRelease (self->cvbuf);
+  cv->CVBufferRelease (meta->cvbuf);
+  g_object_unref (meta->ctx);
+}
 
-  g_object_unref (self->ctx);
+static const GstMetaInfo *
+gst_core_video_meta_get_info (void)
+{
+  static const GstMetaInfo *core_video_meta_info = NULL;
 
-  GST_MINI_OBJECT_CLASS (gst_core_video_buffer_parent_class)->finalize
-      (mini_object);
+  if (core_video_meta_info == NULL) {
+    core_video_meta_info = gst_meta_register ("GstCoreVideoeMeta",
+        "GstCoreVideoMeta", sizeof (GstCoreVideoMeta),
+        (GstMetaInitFunction) NULL,
+        (GstMetaFreeFunction) gst_core_video_meta_free,
+        (GstMetaTransformFunction) NULL);
+  }
+  return core_video_meta_info;
 }
 
 GstBuffer *
@@ -53,7 +55,8 @@ gst_core_video_buffer_new (GstCoreMediaCtx * ctx, CVBufferRef cvbuf)
   void *data;
   size_t size;
   CVPixelBufferRef pixbuf = NULL;
-  GstCoreVideoBuffer *buf;
+  GstBuffer *buf;
+  GstCoreVideoMeta *meta;
 
   if (CFGetTypeID (cvbuf) == cv->CVPixelBufferGetTypeID ()) {
     pixbuf = (CVPixelBufferRef) cvbuf;
@@ -70,25 +73,18 @@ gst_core_video_buffer_new (GstCoreMediaCtx * ctx, CVBufferRef cvbuf)
     goto error;
   }
 
-  buf = GST_CORE_VIDEO_BUFFER_CAST (gst_mini_object_new
-      (GST_TYPE_CORE_VIDEO_BUFFER));
-  buf->ctx = g_object_ref (ctx);
-  buf->cvbuf = cv->CVBufferRetain (cvbuf);
-  buf->pixbuf = pixbuf;
+  buf = gst_buffer_new ();
+  meta = (GstCoreVideoMeta *) gst_buffer_add_meta (buf,
+      gst_core_video_meta_get_info (), NULL);
+  meta->ctx = g_object_ref (ctx);
+  meta->cvbuf = cv->CVBufferRetain (cvbuf);
+  meta->pixbuf = pixbuf;
+  gst_buffer_take_memory (buf, -1,
+      gst_memory_new_wrapped (GST_MEMORY_FLAG_NO_SHARE, data,
+          size, 0, size, NULL, NULL));
 
-  GST_BUFFER_DATA (buf) = data;
-  GST_BUFFER_SIZE (buf) = size;
-
-  return GST_BUFFER_CAST (buf);
+  return buf;
 
 error:
   return NULL;
-}
-
-static void
-gst_core_video_buffer_class_init (GstCoreVideoBufferClass * klass)
-{
-  GstMiniObjectClass *miniobject_class = GST_MINI_OBJECT_CLASS (klass);
-
-  miniobject_class->finalize = gst_core_video_buffer_finalize;
 }

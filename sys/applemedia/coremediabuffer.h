@@ -26,38 +26,22 @@
 
 G_BEGIN_DECLS
 
-#define GST_TYPE_CORE_MEDIA_BUFFER (gst_core_media_buffer_get_type ())
-
-#define GST_IS_CORE_MEDIA_BUFFER(obj) (G_TYPE_CHECK_INSTANCE_TYPE ((obj), \
-    GST_TYPE_CORE_MEDIA_BUFFER))
-#define GST_CORE_MEDIA_BUFFER(obj) (G_TYPE_CHECK_INSTANCE_CAST ((obj), \
-    GST_TYPE_CORE_MEDIA_BUFFER, GstCoreMediaBuffer))
-#define GST_CORE_MEDIA_BUFFER_CAST(obj) ((GstCoreMediaBuffer *) (obj))
-
-typedef struct _GstCoreMediaBuffer GstCoreMediaBuffer;
-typedef struct _GstCoreMediaBufferClass GstCoreMediaBufferClass;
-
-struct _GstCoreMediaBuffer
+typedef struct _GstCoreMediaMeta
 {
-  GstBuffer buffer;
+  GstMeta meta;
 
   GstCoreMediaCtx * ctx;
   CMSampleBufferRef sample_buf;
   CVImageBufferRef image_buf;
   CVPixelBufferRef pixel_buf;
   CMBlockBufferRef block_buf;
-};
+} GstCoreMediaMeta;
 
-struct _GstCoreMediaBufferClass
-{
-  GstBufferClass parent_class;
-};
 
-GType       gst_core_media_buffer_get_type (void) G_GNUC_CONST;
 GstBuffer * gst_core_media_buffer_new      (GstCoreMediaCtx * ctx,
                                             CMSampleBufferRef sample_buf);
 CVPixelBufferRef gst_core_media_buffer_get_pixel_buffer
-                                           (GstCoreMediaBuffer * buf);
+                                           (GstBuffer * buf);
 
 G_END_DECLS
 

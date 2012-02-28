@@ -38,36 +38,36 @@ static GstStaticPadTemplate src_template = GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS (
-        "video/x-raw-yuv, "
-            "format = (fourcc) " DEVICE_YUV_FOURCC ", "
+        "video/x-raw, "
+            "format =" DEVICE_YUV_FOURCC ", "
             "width = (int) 640, "
             "height = (int) 480, "
             "framerate = [0/1, 100/1], "
             "pixel-aspect-ratio = (fraction) 1/1"
             "; "
-        "video/x-raw-yuv, "
-            "format = (fourcc) " DEVICE_YUV_FOURCC ", "
+        "video/x-raw, "
+            "format =" DEVICE_YUV_FOURCC ", "
             "width = (int) 160, "
             "height = (int) 120, "
             "framerate = [0/1, 100/1], "
             "pixel-aspect-ratio = (fraction) 1/1"
             "; "
-        "video/x-raw-yuv, "
-            "format = (fourcc) " DEVICE_YUV_FOURCC ", "
+        "video/x-raw, "
+            "format =" DEVICE_YUV_FOURCC ", "
             "width = (int) 176, "
             "height = (int) 144, "
             "framerate = [0/1, 100/1], "
             "pixel-aspect-ratio = (fraction) 12/11"
             "; "
-        "video/x-raw-yuv, "
-            "format = (fourcc) " DEVICE_YUV_FOURCC ", "
+        "video/x-raw, "
+            "format =" DEVICE_YUV_FOURCC ", "
             "width = (int) 320, "
             "height = (int) 240, "
             "framerate = [0/1, 100/1], "
             "pixel-aspect-ratio = (fraction) 1/1"
             "; "
-        "video/x-raw-yuv, "
-            "format = (fourcc) " DEVICE_YUV_FOURCC ", "
+        "video/x-raw, "
+            "format =" DEVICE_YUV_FOURCC ", "
             "width = (int) 352, "
             "height = (int) 288, "
             "framerate = [0/1, 100/1], "
@@ -81,8 +81,7 @@ typedef enum _QueueState {
   HAS_FRAME_OR_STOP_REQUEST,
 } QueueState;
 
-GST_BOILERPLATE (GstQTKitVideoSrc, gst_qtkit_video_src, GstPushSrc,
-    GST_TYPE_PUSH_SRC);
+G_DEFINE_TYPE (GstQTKitVideoSrc, gst_qtkit_video_src, GST_TYPE_PUSH_SRC);
 
 @interface GstQTKitVideoSrcImpl : NSObject {
   GstElement *element;
@@ -239,7 +238,6 @@ openFailed:
   GstStructure *s;
   NSDictionary *outputAttrs;
   BOOL success;
-  NSRunLoop *mainRunLoop;
   NSTimeInterval interval;
 
   g_assert (device != nil);
@@ -293,21 +291,13 @@ openFailed:
   [output setDelegate:self];
   [session startRunning];
 
-  mainRunLoop = [NSRunLoop mainRunLoop];
-  if ([mainRunLoop currentMode] == nil) {
-    /* QTCaptureSession::addInput and QTCaptureSession::addOutput call
-     * NSObject::performSelectorOnMainThread internally. If the mainRunLoop is
-     * not running we need to run it for a while for those methods to complete
-     */
-    GST_INFO ("mainRunLoop not running");
-    [[NSRunLoop mainRunLoop] runUntilDate:[NSDate dateWithTimeIntervalSinceNow:1]];
-  }
-
   return YES;
 }
 
 - (BOOL)start
 {
+  NSRunLoop *mainRunLoop;
+
   queueLock = [[NSConditionLock alloc] initWithCondition:NO_FRAMES];
   queue = [[NSMutableArray alloc] initWithCapacity:FRAME_QUEUE_SIZE];
   stopRequest = NO;
@@ -317,6 +307,21 @@ openFailed:
   fps_n = 0;
   fps_d = 1;
   duration = GST_CLOCK_TIME_NONE;
+
+  /* this will trigger negotiation and open the device in setCaps */
+  gst_base_src_start_complete (baseSrc, GST_FLOW_OK);
+
+  mainRunLoop = [NSRunLoop mainRunLoop];
+  if ([mainRunLoop currentMode] == nil) {
+    /* QTCaptureSession::addInput and QTCaptureSession::addOutput, called from
+     * setCaps, call NSObject::performSelectorOnMainThread internally. If the
+     * mainRunLoop is not running we need to run it for a while for those
+     * methods to complete.
+     */
+    GST_INFO ("mainRunLoop not running");
+    [[NSRunLoop mainRunLoop] runUntilDate:[NSDate dateWithTimeIntervalSinceNow:1]];
+  }
+
 
   return YES;
 }
@@ -351,7 +356,7 @@ openFailed:
       gst_query_set_latency (query, TRUE, min_latency, max_latency);
     }
   } else {
-    result = GST_BASE_SRC_CLASS (parent_class)->query (baseSrc, query);
+    result = GST_BASE_SRC_CLASS (gst_qtkit_video_src_parent_class)->query (baseSrc, query);
   }
 
   return result;
@@ -396,7 +401,7 @@ openFailed:
       return GST_STATE_CHANGE_FAILURE;
   }
 
-  ret = GST_ELEMENT_CLASS (parent_class)->change_state (element, transition);
+  ret = GST_ELEMENT_CLASS (gst_qtkit_video_src_parent_class)->change_state (element, transition);
 
   if (transition == GST_STATE_CHANGE_READY_TO_NULL)
     [self closeDevice];
@@ -515,26 +520,20 @@ static GstFlowReturn gst_qtkit_video_src_create (GstPushSrc * pushsrc,
 static void gst_qtkit_video_src_fixate (GstBaseSrc * basesrc, GstCaps * caps);
 
 static void
-gst_qtkit_video_src_base_init (gpointer gclass)
-{
-  GstElementClass *element_class = GST_ELEMENT_CLASS (gclass);
-
-  gst_element_class_set_details_simple (element_class,
-      "Video Source (QTKit)", "Source/Video",
-      "Reads frames from a Mac OS X QTKit device",
-      "Ole André Vadla Ravnås <oravnas@cisco.com>");
-
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&src_template));
-}
-
-static void
 gst_qtkit_video_src_class_init (GstQTKitVideoSrcClass * klass)
 {
   GObjectClass *gobject_class = G_OBJECT_CLASS (klass);
   GstElementClass *gstelement_class = GST_ELEMENT_CLASS (klass);
   GstBaseSrcClass *gstbasesrc_class = GST_BASE_SRC_CLASS (klass);
   GstPushSrcClass *gstpushsrc_class = GST_PUSH_SRC_CLASS (klass);
+
+  gst_element_class_set_details_simple (gstelement_class,
+      "Video Source (QTKit)", "Source/Video",
+      "Reads frames from a Mac OS X QTKit device",
+      "Ole André Vadla Ravnås <oravnas@cisco.com>");
+
+  gst_element_class_add_pad_template (gstelement_class,
+      gst_static_pad_template_get (&src_template));
 
   gobject_class->finalize = gst_qtkit_video_src_finalize;
   gobject_class->get_property = gst_qtkit_video_src_get_property;
@@ -570,11 +569,15 @@ gst_qtkit_video_src_class_init (GstQTKitVideoSrcClass * klass)
   [pool release]
 
 static void
-gst_qtkit_video_src_init (GstQTKitVideoSrc * src, GstQTKitVideoSrcClass * gclass)
+gst_qtkit_video_src_init (GstQTKitVideoSrc * src)
 {
   OBJC_CALLOUT_BEGIN ();
   src->impl = [[GstQTKitVideoSrcImpl alloc] initWithSrc:GST_PUSH_SRC (src)];
   OBJC_CALLOUT_END ();
+
+  /* pretend to be async so we can spin the mainRunLoop from the main thread if
+   * needed (see ::start) */
+  gst_base_src_set_async (GST_BASE_SRC (src), TRUE);
 }
 
 static void
@@ -584,7 +587,7 @@ gst_qtkit_video_src_finalize (GObject * obj)
   [GST_QTKIT_VIDEO_SRC_IMPL (obj) release];
   OBJC_CALLOUT_END ();
 
-  G_OBJECT_CLASS (parent_class)->finalize (obj);
+  G_OBJECT_CLASS (gst_qtkit_video_src_parent_class)->finalize (obj);
 }
 
 static void

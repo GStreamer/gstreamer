@@ -60,10 +60,13 @@ plugin_init (GstPlugin * plugin)
 
   res = gst_element_register (plugin, "qtkitvideosrc", GST_RANK_PRIMARY,
       GST_TYPE_QTKIT_VIDEO_SRC);
+#if 0
   res &= gst_element_register (plugin, "miovideosrc", GST_RANK_NONE,
       GST_TYPE_MIO_VIDEO_SRC);
 #endif
+#endif
 
+#if 0
   res &= gst_element_register (plugin, "vth264decbin", GST_RANK_NONE,
       GST_TYPE_VT_H264_DEC_BIN);
   res &= gst_element_register (plugin, "vth264encbin", GST_RANK_NONE,
@@ -71,6 +74,7 @@ plugin_init (GstPlugin * plugin)
 
   gst_vtenc_register_elements (plugin);
   gst_vtdec_register_elements (plugin);
+#endif
 
   return res;
 }
