@@ -494,7 +494,7 @@ decode_gop(GstVaapiDecoderMpeg2 *decoder, guchar *buf, guint buf_size)
     if (!priv->pts_diff)
         priv->pts_diff = priv->seq_pts - priv->gop_pts;
 
-    priv->is_first_field = TRUE;
+    priv->is_first_field = FALSE;
     return GST_VAAPI_DECODER_STATUS_SUCCESS;
 }
 
@@ -590,12 +590,16 @@ decode_picture_ext(GstVaapiDecoderMpeg2 *decoder, guchar *buf, guint buf_size)
         pic_ext->picture_structure = GST_MPEG_VIDEO_PICTURE_STRUCTURE_FRAME;
     }
 
+    priv->is_first_field ^= 1;
     switch (pic_ext->picture_structure) {
     case GST_MPEG_VIDEO_PICTURE_STRUCTURE_TOP_FIELD:
         GST_VAAPI_PICTURE_FLAG_SET(picture, GST_VAAPI_PICTURE_FLAG_TOP_FIELD);
         break;
     case GST_MPEG_VIDEO_PICTURE_STRUCTURE_BOTTOM_FIELD:
         GST_VAAPI_PICTURE_FLAG_SET(picture, GST_VAAPI_PICTURE_FLAG_BOTTOM_FIELD);
+        break;
+    case GST_MPEG_VIDEO_PICTURE_STRUCTURE_FRAME:
+        priv->is_first_field = TRUE;
         break;
     }
     return GST_VAAPI_DECODER_STATUS_SUCCESS;
@@ -679,13 +683,8 @@ decode_slice(
 
     GST_DEBUG("slice %d @ %p, %u bytes)", slice_no, buf, buf_size);
 
-    if (picture->slices->len == 0) {
-        if (!fill_picture(decoder, picture))
-            return GST_VAAPI_DECODER_STATUS_ERROR_UNKNOWN;
-
-        if (!priv->pic_ext.progressive_frame)
-            priv->is_first_field ^= 1;
-    }
+    if (picture->slices->len == 0 && !fill_picture(decoder, picture))
+        return GST_VAAPI_DECODER_STATUS_ERROR_UNKNOWN;
 
     slice = GST_VAAPI_SLICE_NEW(MPEG2, decoder, buf, buf_size);
     if (!slice) {
