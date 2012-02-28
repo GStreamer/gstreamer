@@ -3389,7 +3389,7 @@ probe_stopped:
         ret = GST_FLOW_OK;
         break;
       default:
-        GST_DEBUG_OBJECT (pad, "en error occured %s", gst_flow_get_name (ret));
+        GST_DEBUG_OBJECT (pad, "an error occured %s", gst_flow_get_name (ret));
         break;
     }
     return ret;
@@ -3596,7 +3596,7 @@ probe_stopped:
         ret = GST_FLOW_OK;
         break;
       default:
-        GST_DEBUG_OBJECT (pad, "en error occured %s", gst_flow_get_name (ret));
+        GST_DEBUG_OBJECT (pad, "an error occured %s", gst_flow_get_name (ret));
         break;
     }
     return ret;
@@ -4178,7 +4178,7 @@ probe_stopped:
         ret = GST_FLOW_OK;
         break;
       default:
-        GST_DEBUG_OBJECT (pad, "en error occured %s", gst_flow_get_name (ret));
+        GST_DEBUG_OBJECT (pad, "an error occured %s", gst_flow_get_name (ret));
         break;
     }
     return ret;
@@ -4449,7 +4449,7 @@ probe_stopped:
         ret = GST_FLOW_OK;
         break;
       default:
-        GST_DEBUG_OBJECT (pad, "en error occured %s", gst_flow_get_name (ret));
+        GST_DEBUG_OBJECT (pad, "an error occured %s", gst_flow_get_name (ret));
         break;
     }
     return ret;
