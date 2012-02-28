@@ -49,12 +49,13 @@ const GstMetaInfo *
 gst_surface_meta_get_info (void)
 {
   static const GstMetaInfo *meta_info = NULL;
+  static const gchar *tags[] = { "memory" };
 
   if (meta_info == NULL) {
     meta_info = gst_meta_register ("GstSurfaceMeta", "GstSurfaceMeta",
         sizeof (GstSurfaceMeta),
         (GstMetaInitFunction) NULL,
-        (GstMetaFreeFunction) NULL, (GstMetaTransformFunction) NULL);
+        (GstMetaFreeFunction) NULL, (GstMetaTransformFunction) NULL, tags);
   }
   return meta_info;
 }
