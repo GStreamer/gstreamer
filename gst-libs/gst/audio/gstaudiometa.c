@@ -46,7 +46,7 @@ gst_audio_downmix_meta_free (GstMeta * meta, GstBuffer * buffer)
   }
 }
 
-static void
+static gboolean
 gst_audio_downmix_meta_transform (GstBuffer * dest, GstMeta * meta,
     GstBuffer * buffer, GQuark type, gpointer data)
 {
@@ -56,6 +56,8 @@ gst_audio_downmix_meta_transform (GstBuffer * dest, GstMeta * meta,
   gst_buffer_add_audio_downmix_meta (dest, smeta->from_position,
       smeta->from_channels, smeta->to_position, smeta->to_channels,
       (const gfloat **) smeta->matrix);
+
+  return TRUE;
 }
 
 /**

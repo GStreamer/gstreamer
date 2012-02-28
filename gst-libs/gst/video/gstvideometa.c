@@ -19,7 +19,7 @@
 
 #include "gstvideometa.h"
 
-static void
+static gboolean
 gst_video_meta_transform (GstBuffer * dest, GstMeta * meta,
     GstBuffer * buffer, GQuark type, gpointer data)
 {
@@ -45,6 +45,7 @@ gst_video_meta_transform (GstBuffer * dest, GstMeta * meta,
       dmeta->stride[i] = smeta->stride[i];
     }
   }
+  return TRUE;
 }
 
 /* video metadata */
@@ -287,7 +288,7 @@ gst_video_meta_unmap (GstVideoMeta * meta, guint plane, GstMapInfo * info)
   return meta->unmap (meta, plane, info);
 }
 
-static void
+static gboolean
 gst_video_crop_meta_transform (GstBuffer * dest, GstMeta * meta,
     GstBuffer * buffer, GQuark type, gpointer data)
 {
@@ -302,6 +303,7 @@ gst_video_crop_meta_transform (GstBuffer * dest, GstMeta * meta,
     dmeta->width = smeta->width;
     dmeta->height = smeta->height;
   }
+  return TRUE;
 }
 
 const GstMetaInfo *
