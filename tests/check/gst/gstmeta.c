@@ -116,13 +116,14 @@ static const GstMetaInfo *
 gst_meta_test_get_info (void)
 {
   static const GstMetaInfo *meta_test_info = NULL;
+  static const gchar *tags[] = { "timing", NULL };
 
   if (meta_test_info == NULL) {
     meta_test_info = gst_meta_register ("GstMetaTest", "GstMetaTest",
         sizeof (GstMetaTest),
         (GstMetaInitFunction) test_init_func,
         (GstMetaFreeFunction) test_free_func,
-        (GstMetaTransformFunction) test_transform_func);
+        (GstMetaTransformFunction) test_transform_func, tags);
   }
   return meta_test_info;
 }
