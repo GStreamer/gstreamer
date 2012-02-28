@@ -27,12 +27,13 @@ const GstMetaInfo *
 gst_meta_ximage_get_info (void)
 {
   static const GstMetaInfo *meta_ximage_info = NULL;
+  static const gchar *tags[] = { "memory", NULL };
 
   if (meta_ximage_info == NULL) {
     meta_ximage_info =
         gst_meta_register ("GstMetaXImageSrc", "GstMetaXImageSrc",
         sizeof (GstMetaXImage), (GstMetaInitFunction) NULL,
-        (GstMetaFreeFunction) NULL, (GstMetaTransformFunction) NULL);
+        (GstMetaFreeFunction) NULL, (GstMetaTransformFunction) NULL, tags);
   }
   return meta_ximage_info;
 }
