@@ -316,6 +316,8 @@ gst_xvimagesink_xvimage_put (GstXvImageSink * xvimagesink, GstBuffer * xvimage)
     src.y = crop->y + meta->y;
     src.w = crop->width;
     src.h = crop->height;
+    GST_LOG_OBJECT (xvimagesink,
+        "crop %dx%d-%dx%d", crop->x, crop->y, crop->width, crop->height);
   } else {
     src.x = meta->x;
     src.y = meta->y;

@@ -820,6 +820,8 @@ theora_negotiate_pool (GstTheoraDec * dec, GstCaps * caps, GstVideoInfo * info)
   dec->has_cropping =
       gst_query_has_allocation_meta (query, GST_VIDEO_CROP_META_API);
 
+  GST_DEBUG_OBJECT (dec, "downstream cropping %d", dec->has_cropping);
+
   gst_buffer_pool_set_config (pool, config);
   /* and activate */
   gst_buffer_pool_set_active (pool, TRUE);
@@ -899,10 +901,13 @@ theora_handle_type_packet (GstTheoraDec * dec, ogg_packet * packet)
   }
   if (dec->info.pic_width != dec->info.frame_width ||
       dec->info.pic_height != dec->info.frame_height ||
-      dec->info.pic_x != 0 || dec->info.pic_y != 0)
+      dec->info.pic_x != 0 || dec->info.pic_y != 0) {
+    GST_DEBUG_OBJECT (dec, "we need to crop");
     dec->need_cropping = TRUE;
-  else
+  } else {
+    GST_DEBUG_OBJECT (dec, "no cropping needed");
     dec->need_cropping = FALSE;
+  }
 
   /* done */
   dec->decoder = th_decode_alloc (&dec->info, dec->setup);
