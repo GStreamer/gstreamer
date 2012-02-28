@@ -190,6 +190,8 @@ const GstMetaInfo *  gst_meta_register        (const gchar *api, const gchar *im
                                                const gchar **tags);
 const GstMetaInfo *  gst_meta_get_info        (const gchar * impl);
 
+gboolean             gst_meta_info_has_tag    (const GstMetaInfo *info, GQuark tag);
+
 G_END_DECLS
 
 #endif /* __GST_META_H__ */

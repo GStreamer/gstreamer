@@ -586,6 +586,7 @@ EXPORTS
 	gst_message_type_to_quark
 	gst_meta_flags_get_type
 	gst_meta_get_info
+	gst_meta_info_has_tag
 	gst_meta_register
 	gst_mini_object_copy
 	gst_mini_object_flags_get_type

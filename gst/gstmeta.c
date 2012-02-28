@@ -126,3 +126,27 @@ gst_meta_get_info (const gchar * impl)
 
   return info;
 }
+
+/*
+ * gst_meta_info_has_tag:
+ * @info: a #GstMetaInfo
+ * @tag: a #GQuark
+ *
+ * Check if @info contains @tag.
+ *
+ * Returns: %TRUE when @info contains @tag.
+ */
+gboolean
+gst_meta_info_has_tag (const GstMetaInfo * info, GQuark tag)
+{
+  gint i;
+
+  g_return_val_if_fail (info != NULL, FALSE);
+  g_return_val_if_fail (tag != 0, FALSE);
+
+  for (i = 0; info->tags[i]; i++)
+    if (info->tags[i] == tag)
+      return TRUE;
+
+  return FALSE;
+}
