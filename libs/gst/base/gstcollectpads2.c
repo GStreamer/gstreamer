@@ -1328,7 +1328,7 @@ gst_collect_pads2_set_waiting (GstCollectPads2 * pads, GstCollectData2 * data,
   /* Do something only on a change and if not locked */
   if (!GST_COLLECT_PADS2_STATE_IS_SET (data, GST_COLLECT_PADS2_STATE_LOCKED) &&
       (GST_COLLECT_PADS2_STATE_IS_SET (data, GST_COLLECT_PADS2_STATE_WAITING) !=
-          ! !waiting)) {
+          !!waiting)) {
     /* Set waiting state for this pad */
     if (waiting)
       GST_COLLECT_PADS2_STATE_SET (data, GST_COLLECT_PADS2_STATE_WAITING);
@@ -1703,8 +1703,8 @@ gst_collect_pads2_event (GstPad * pad, GstEvent * event)
 
   pads = data->collect;
 
-  GST_DEBUG ("Got %s event on pad %s:%s", GST_EVENT_TYPE_NAME (event),
-      GST_DEBUG_PAD_NAME (data->pad));
+  GST_DEBUG_OBJECT (data->pad, "Got %s event on sink pad from %s",
+      GST_EVENT_TYPE_NAME (event), GST_OBJECT_NAME (GST_EVENT_SRC (event)));
 
   GST_OBJECT_LOCK (pads);
   event_func = pads->priv->event_func;
@@ -1718,8 +1718,10 @@ gst_collect_pads2_event (GstPad * pad, GstEvent * event)
       /* forward event to unblock check_collected */
       if (event_func)
         res = event_func (pads, data, event, event_user_data);
-      if (!res)
+      if (!res) {
+        GST_DEBUG_OBJECT (pad, "forwarding flush start");
         res = gst_pad_event_default (pad, event);
+      }
 
       /* now unblock the chain function.
        * no cond per pad, so they all unblock, 
@@ -1857,8 +1859,10 @@ forward_or_default:
   }
   if (event_func)
     res = event_func (pads, data, event, event_user_data);
-  if (!res)
+  if (!res) {
+    GST_DEBUG_OBJECT (pad, "forwarding %s", GST_EVENT_TYPE_NAME (event));
     res = gst_pad_event_default (pad, event);
+  }
   if (need_unlock)
     GST_COLLECT_PADS2_STREAM_UNLOCK (pads);
   goto done;
