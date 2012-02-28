@@ -61,13 +61,14 @@ const GstMetaInfo *
 gst_net_address_meta_get_info (void)
 {
   static const GstMetaInfo *meta_info = NULL;
+  static const gchar *tags[] = { "origin", NULL };
 
   if (meta_info == NULL) {
     meta_info = gst_meta_register ("GstNetAddressMeta", "GstNetAddressMeta",
         sizeof (GstNetAddressMeta),
         (GstMetaInitFunction) net_address_meta_init,
         (GstMetaFreeFunction) net_address_meta_free,
-        (GstMetaTransformFunction) net_address_meta_transform);
+        (GstMetaTransformFunction) net_address_meta_transform, tags);
   }
   return meta_info;
 }

@@ -54,6 +54,8 @@ _priv_gst_meta_initialize (void)
  * @init_func: a #GstMetaInitFunction
  * @free_func: a #GstMetaFreeFunction
  * @transform_func: a #GstMetaTransformFunction
+ * @tags: a NULL terminated array of strings describing what the metadata
+ *        contains info about.
  *
  * Register a new #GstMeta implementation.
  *
@@ -66,13 +68,16 @@ _priv_gst_meta_initialize (void)
 const GstMetaInfo *
 gst_meta_register (const gchar * api, const gchar * impl, gsize size,
     GstMetaInitFunction init_func, GstMetaFreeFunction free_func,
-    GstMetaTransformFunction transform_func)
+    GstMetaTransformFunction transform_func, const gchar ** tags)
 {
   GstMetaInfo *info;
+  guint len, i;
+  GQuark *qtags;
 
   g_return_val_if_fail (api != NULL, NULL);
   g_return_val_if_fail (impl != NULL, NULL);
   g_return_val_if_fail (size != 0, NULL);
+  g_return_val_if_fail (tags != NULL, NULL);
 
   info = g_slice_new (GstMetaInfo);
   info->api = g_quark_from_string (api);
@@ -81,6 +86,12 @@ gst_meta_register (const gchar * api, const gchar * impl, gsize size,
   info->init_func = init_func;
   info->free_func = free_func;
   info->transform_func = transform_func;
+
+  len = g_strv_length ((gchar **) tags);
+  qtags = g_new0 (GQuark, len);
+  for (i = 0; i < len; i++)
+    qtags[i] = g_quark_from_static_string (tags[i]);
+  info->tags = qtags;
 
   GST_DEBUG ("register \"%s\" implementing \"%s\" of size %" G_GSIZE_FORMAT,
       api, impl, size);

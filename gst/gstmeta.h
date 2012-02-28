@@ -161,6 +161,8 @@ typedef void (*GstMetaTransformFunction) (GstBuffer *transbuf,
  * @init_func: function for initializing the metadata
  * @free_func: function for freeing the metadata
  * @transform_func: function for transforming the metadata
+ * @tags: 0 terminated array of GQuarks describing what the metadata
+ *        contains info about
  *
  * The #GstMetaInfo provides information about a specific metadata
  * structure.
@@ -174,6 +176,8 @@ struct _GstMetaInfo {
   GstMetaFreeFunction        free_func;
   GstMetaTransformFunction   transform_func;
 
+  const GQuark              *tags;
+
   /*< private >*/
   gpointer _gst_reserved[GST_PADDING];
 };
@@ -182,7 +186,8 @@ const GstMetaInfo *  gst_meta_register        (const gchar *api, const gchar *im
                                                gsize size,
                                                GstMetaInitFunction        init_func,
                                                GstMetaFreeFunction        free_func,
-                                               GstMetaTransformFunction   transform_func);
+                                               GstMetaTransformFunction   transform_func,
+                                               const gchar **tags);
 const GstMetaInfo *  gst_meta_get_info        (const gchar * impl);
 
 G_END_DECLS
