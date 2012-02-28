@@ -50,8 +50,7 @@ GST_DEBUG_CATEGORY_STATIC (gst_video_filter_debug);
 G_DEFINE_ABSTRACT_TYPE (GstVideoFilter, gst_video_filter,
     GST_TYPE_BASE_TRANSFORM);
 
-/* Answer the allocation query downstream. This is only called for
- * non-passthrough cases */
+/* Answer the allocation query downstream. */
 static gboolean
 gst_video_filter_propose_allocation (GstBaseTransform * trans,
     gboolean passthrough, GstQuery * query)
@@ -63,6 +62,7 @@ gst_video_filter_propose_allocation (GstBaseTransform * trans,
   gboolean need_pool;
   guint size;
 
+  /* we're passthrough, let the parent implementation hande things */
   if (passthrough)
     return GST_BASE_TRANSFORM_CLASS (parent_class)->propose_allocation (trans,
         passthrough, query);
@@ -106,7 +106,7 @@ config_failed:
 }
 
 /* configure the allocation query that was answered downstream, we can configure
- * some properties on it. Only called in passthrough mode. */
+ * some properties on it. Only called when not in passthrough mode. */
 static gboolean
 gst_video_filter_decide_allocation (GstBaseTransform * trans, GstQuery * query)
 {
