@@ -33,28 +33,35 @@
 #include "gstnetaddressmeta.h"
 
 static gboolean
-net_address_meta_init (GstNetAddressMeta * meta, gpointer params,
-    GstBuffer * buffer)
+net_address_meta_init (GstMeta * meta, gpointer params, GstBuffer * buffer)
 {
-  meta->addr = NULL;
+  GstNetAddressMeta *nmeta = (GstNetAddressMeta *) meta;
+
+  nmeta->addr = NULL;
+
+  return TRUE;
+}
+
+static gboolean
+net_address_meta_transform (GstBuffer * transbuf, GstMeta * meta,
+    GstBuffer * buffer, GQuark type, gpointer data)
+{
+  GstNetAddressMeta *nmeta = (GstNetAddressMeta *) meta;
+
+  /* we always copy no matter what transform */
+  gst_buffer_add_net_address_meta (transbuf, nmeta->addr);
 
   return TRUE;
 }
 
 static void
-net_address_meta_transform (GstBuffer * transbuf, GstNetAddressMeta * meta,
-    GstBuffer * buffer, GQuark type, gpointer data)
+net_address_meta_free (GstMeta * meta, GstBuffer * buffer)
 {
-  /* we always copy no matter what transform */
-  gst_buffer_add_net_address_meta (transbuf, meta->addr);
-}
+  GstNetAddressMeta *nmeta = (GstNetAddressMeta *) meta;
 
-static void
-net_address_meta_free (GstNetAddressMeta * meta, GstBuffer * buffer)
-{
-  if (meta->addr)
-    g_object_unref (meta->addr);
-  meta->addr = NULL;
+  if (nmeta->addr)
+    g_object_unref (nmeta->addr);
+  nmeta->addr = NULL;
 }
 
 const GstMetaInfo *
@@ -66,9 +73,8 @@ gst_net_address_meta_get_info (void)
   if (meta_info == NULL) {
     meta_info = gst_meta_register ("GstNetAddressMeta", "GstNetAddressMeta",
         sizeof (GstNetAddressMeta),
-        (GstMetaInitFunction) net_address_meta_init,
-        (GstMetaFreeFunction) net_address_meta_free,
-        (GstMetaTransformFunction) net_address_meta_transform, tags);
+        net_address_meta_init,
+        net_address_meta_free, net_address_meta_transform, tags);
   }
   return meta_info;
 }

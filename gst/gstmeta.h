@@ -148,10 +148,12 @@ typedef struct {
  * Implementations should check the @type of the transform and parse
  * additional type specific fields in @data that should be used to update
  * the metadata on @transbuf.
+ *
+ * Returns: %TRUE if the transform could be performed
  */
-typedef void (*GstMetaTransformFunction) (GstBuffer *transbuf,
-                                          GstMeta *meta, GstBuffer *buffer,
-                                          GQuark type, gpointer data);
+typedef gboolean (*GstMetaTransformFunction) (GstBuffer *transbuf,
+                                              GstMeta *meta, GstBuffer *buffer,
+                                              GQuark type, gpointer data);
 
 /**
  * GstMetaInfo:

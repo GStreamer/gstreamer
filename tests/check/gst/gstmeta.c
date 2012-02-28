@@ -63,27 +63,28 @@ gst_meta_test_init (GstMetaTest * meta)
 }
 #endif
 
-static void
-test_init_func (GstMetaTest * meta, GstBuffer * buffer)
+static gboolean
+test_init_func (GstMeta * meta, gpointer params, GstBuffer * buffer)
 {
   GST_DEBUG ("init called on buffer %p, meta %p", buffer, meta);
   /* nothing to init really, the init function is mostly for allocating
    * additional memory or doing special setup as part of adding the metadata to
    * the buffer*/
+  return TRUE;
 }
 
 static void
-test_free_func (GstMetaTest * meta, GstBuffer * buffer)
+test_free_func (GstMeta * meta, GstBuffer * buffer)
 {
   GST_DEBUG ("free called on buffer %p, meta %p", buffer, meta);
   /* nothing to free really */
 }
 
-static void
-test_transform_func (GstBuffer * transbuf, GstMetaTest * meta,
+static gboolean
+test_transform_func (GstBuffer * transbuf, GstMeta * meta,
     GstBuffer * buffer, GQuark type, gpointer data)
 {
-  GstMetaTest *test;
+  GstMetaTest *test, *tmeta = (GstMetaTest *) meta;
 
   GST_DEBUG ("transform %s called from buffer %p to %p, meta %p",
       g_quark_to_string (type), buffer, transbuf, meta);
@@ -94,11 +95,11 @@ test_transform_func (GstBuffer * transbuf, GstMetaTest * meta,
     test = GST_META_TEST_ADD (transbuf);
     if (copy_data->offset == 0) {
       /* same offset, copy timestamps */
-      test->pts = meta->pts;
-      test->dts = meta->dts;
+      test->pts = tmeta->pts;
+      test->dts = tmeta->dts;
       if (copy_data->size == gst_buffer_get_size (buffer)) {
         /* same size, copy duration */
-        test->duration = meta->duration;
+        test->duration = tmeta->duration;
       } else {
         /* else clear */
         test->duration = GST_CLOCK_TIME_NONE;
@@ -108,8 +109,9 @@ test_transform_func (GstBuffer * transbuf, GstMetaTest * meta,
       test->dts = -1;
       test->duration = -1;
     }
-    test->clock_rate = meta->clock_rate;
+    test->clock_rate = tmeta->clock_rate;
   }
+  return TRUE;
 }
 
 static const GstMetaInfo *
@@ -121,9 +123,7 @@ gst_meta_test_get_info (void)
   if (meta_test_info == NULL) {
     meta_test_info = gst_meta_register ("GstMetaTest", "GstMetaTest",
         sizeof (GstMetaTest),
-        (GstMetaInitFunction) test_init_func,
-        (GstMetaFreeFunction) test_free_func,
-        (GstMetaTransformFunction) test_transform_func, tags);
+        test_init_func, test_free_func, test_transform_func, tags);
   }
   return meta_test_info;
 }
