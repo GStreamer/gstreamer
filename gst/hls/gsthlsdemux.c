@@ -341,9 +341,8 @@ gst_hls_demux_src_event (GstPad * pad, GstEvent * event)
       GstSeekType start_type, stop_type;
       gint64 start, stop;
       GList *walk;
-      gint current_pos;
+      GstClockTime current_pos, target_pos;
       gint current_sequence;
-      gint target_second;
       GstM3U8MediaFile *file;
 
       GST_INFO_OBJECT (demux, "Received GST_EVENT_SEEK");
@@ -367,14 +366,13 @@ gst_hls_demux_src_event (GstPad * pad, GstEvent * event)
       file = GST_M3U8_MEDIA_FILE (demux->client->current->files->data);
       current_sequence = file->sequence;
       current_pos = 0;
-      target_second = start / GST_SECOND;
-      GST_DEBUG_OBJECT (demux, "Target seek to %d", target_second);
+      target_pos = (GstClockTime) start;
       for (walk = demux->client->current->files; walk; walk = walk->next) {
         file = walk->data;
 
         current_sequence = file->sequence;
-        if (current_pos <= target_second
-            && target_second < current_pos + file->duration) {
+        if (current_pos <= target_pos
+            && target_pos < current_pos + file->duration) {
           break;
         }
         current_pos += file->duration;

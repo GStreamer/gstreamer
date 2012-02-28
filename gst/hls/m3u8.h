@@ -41,7 +41,7 @@ struct _GstM3U8
 
   gboolean endlist;             /* if ENDLIST has been reached */
   gint version;                 /* last EXT-X-VERSION */
-  gint targetduration;          /* last EXT-X-TARGETDURATION */
+  GstClockTime targetduration;  /* last EXT-X-TARGETDURATION */
   gchar *allowcache;            /* last EXT-X-ALLOWCACHE */
 
   gint bandwidth;
@@ -62,7 +62,7 @@ struct _GstM3U8
 struct _GstM3U8MediaFile
 {
   gchar *title;
-  gint duration;
+  GstClockTime duration;
   gchar *uri;
   guint sequence;               /* the sequence nb of this file */
 };
