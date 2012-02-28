@@ -56,13 +56,15 @@ const GstMetaInfo *
 gst_xvimage_meta_get_info (void)
 {
   static const GstMetaInfo *xvimage_meta_info = NULL;
+  static const gchar *tags[] =
+      { "memory", "size", "colorspace", "orientation", NULL };
 
   if (xvimage_meta_info == NULL) {
     xvimage_meta_info = gst_meta_register ("GstXvImageMeta", "GstXvImageMeta",
         sizeof (GstXvImageMeta),
         (GstMetaInitFunction) NULL,
         (GstMetaFreeFunction) gst_xvimage_meta_free,
-        (GstMetaTransformFunction) NULL);
+        (GstMetaTransformFunction) NULL, tags);
   }
   return xvimage_meta_info;
 }

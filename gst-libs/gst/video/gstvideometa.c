@@ -52,12 +52,13 @@ const GstMetaInfo *
 gst_video_meta_get_info (void)
 {
   static const GstMetaInfo *video_meta_info = NULL;
+  static const gchar *tags[] = { "memory", "colorspace", "size", NULL };
 
   if (video_meta_info == NULL) {
     video_meta_info = gst_meta_register (GST_VIDEO_META_API, "GstVideoMeta",
         sizeof (GstVideoMeta),
         (GstMetaInitFunction) NULL,
-        (GstMetaFreeFunction) NULL, gst_video_meta_transform);
+        (GstMetaFreeFunction) NULL, gst_video_meta_transform, tags);
   }
   return video_meta_info;
 }
@@ -307,12 +308,13 @@ const GstMetaInfo *
 gst_video_crop_meta_get_info (void)
 {
   static const GstMetaInfo *video_crop_meta_info = NULL;
+  static const gchar *tags[] = { "size", "orientation", NULL };
 
   if (video_crop_meta_info == NULL) {
     video_crop_meta_info =
         gst_meta_register (GST_VIDEO_CROP_META_API, "GstVideoCropMeta",
         sizeof (GstVideoCropMeta), (GstMetaInitFunction) NULL,
-        (GstMetaFreeFunction) NULL, gst_video_crop_meta_transform);
+        (GstMetaFreeFunction) NULL, gst_video_crop_meta_transform, tags);
   }
   return video_crop_meta_info;
 }

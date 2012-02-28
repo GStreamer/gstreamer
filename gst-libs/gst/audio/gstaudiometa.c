@@ -153,13 +153,14 @@ const GstMetaInfo *
 gst_audio_downmix_meta_get_info (void)
 {
   static const GstMetaInfo *audio_downmix_meta_info = NULL;
+  static const gchar *tags[] = { NULL };
 
   if (audio_downmix_meta_info == NULL) {
     audio_downmix_meta_info =
         gst_meta_register (GST_AUDIO_DOWNMIX_META_API, "GstAudioDownmixMeta",
         sizeof (GstAudioDownmixMeta),
         gst_audio_downmix_meta_init,
-        gst_audio_downmix_meta_free, gst_audio_downmix_meta_transform);
+        gst_audio_downmix_meta_free, gst_audio_downmix_meta_transform, tags);
   }
   return audio_downmix_meta_info;
 }
