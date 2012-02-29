@@ -41,7 +41,6 @@
 #include "gstmpegdesc.h"
 #include "gstmpegdefs.h"
 #include "mpegtspacketizer.h"
-#include "payload_parsers.h"
 #include "pesparse.h"
 
 /*
@@ -65,10 +64,14 @@
 #define PCR_MAX_VALUE (((((guint64)1)<<33) * 300) + 298)
 #define PTS_DTS_MAX_VALUE (((guint64)1) << 33)
 
+/* Seeking/Scanning related variables */
+
 /* seek to SEEK_TIMESTAMP_OFFSET before the desired offset and search then
  * either accurately or for the next timestamp
  */
 #define SEEK_TIMESTAMP_OFFSET (1000 * GST_MSECOND)
+
+
 
 GST_DEBUG_CATEGORY_STATIC (ts_demux_debug);
 #define GST_CAT_DEFAULT ts_demux_debug
@@ -218,19 +221,11 @@ gst_ts_demux_stream_added (MpegTSBase * base, MpegTSBaseStream * stream,
     MpegTSBaseProgram * program);
 static void
 gst_ts_demux_stream_removed (MpegTSBase * base, MpegTSBaseStream * stream);
-static GstFlowReturn gst_ts_demux_do_seek (MpegTSBase * base, GstEvent * event,
-    guint16 pid);
-static GstFlowReturn find_pcr_packet (MpegTSBase * base, guint64 offset,
-    gint64 length, TSPcrOffset * pcroffset);
-static GstFlowReturn find_timestamps (MpegTSBase * base, guint64 initoff,
-    guint64 * offset);
+static GstFlowReturn gst_ts_demux_do_seek (MpegTSBase * base, GstEvent * event);
 static void gst_ts_demux_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec);
 static void gst_ts_demux_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec);
-static GstFlowReturn
-process_pcr (MpegTSBase * base, guint64 initoff, TSPcrOffset * pcroffset,
-    guint numpcr, gboolean isinitial);
 static void gst_ts_demux_flush_streams (GstTSDemux * tsdemux);
 static GstFlowReturn
 gst_ts_demux_push_pending_data (GstTSDemux * demux, TSDemuxStream * stream);
@@ -300,7 +295,6 @@ gst_ts_demux_class_init (GstTSDemuxClass * klass)
   ts_class->program_started = GST_DEBUG_FUNCPTR (gst_ts_demux_program_started);
   ts_class->stream_added = gst_ts_demux_stream_added;
   ts_class->stream_removed = gst_ts_demux_stream_removed;
-  ts_class->find_timestamps = GST_DEBUG_FUNCPTR (find_timestamps);
   ts_class->seek = GST_DEBUG_FUNCPTR (gst_ts_demux_do_seek);
   ts_class->flush = GST_DEBUG_FUNCPTR (gst_ts_demux_flush);
 }
@@ -310,25 +304,12 @@ gst_ts_demux_reset (MpegTSBase * base)
 {
   GstTSDemux *demux = (GstTSDemux *) base;
 
-  if (demux->index) {
-    g_array_free (demux->index, TRUE);
-    demux->index = NULL;
-  }
-  demux->index_size = 0;
-
   demux->need_newsegment = TRUE;
   demux->program_number = -1;
 
   demux->duration = GST_CLOCK_TIME_NONE;
 
   gst_segment_init (&demux->segment, GST_FORMAT_TIME);
-
-  demux->first_pcr = (TSPcrOffset) {
-  GST_CLOCK_TIME_NONE, 0, 0};
-  demux->cur_pcr = (TSPcrOffset) {
-  0};
-  demux->last_pcr = (TSPcrOffset) {
-  0};
 }
 
 static void
@@ -404,6 +385,7 @@ gst_ts_demux_srcpad_query (GstPad * pad, GstQuery * query)
 
   switch (GST_QUERY_TYPE (query)) {
     case GST_QUERY_DURATION:
+    {
       GST_DEBUG ("query duration");
       gst_query_parse_duration (query, &format, NULL);
       if (format == GST_FORMAT_TIME) {
@@ -415,6 +397,7 @@ gst_ts_demux_srcpad_query (GstPad * pad, GstQuery * query)
         res = FALSE;
       }
       break;
+    }
     case GST_QUERY_LATENCY:
     {
       GST_DEBUG ("query latency");
@@ -437,9 +420,10 @@ gst_ts_demux_srcpad_query (GstPad * pad, GstQuery * query)
           max_lat += 700 * GST_MSECOND;
         gst_query_set_latency (query, live, min_lat, max_lat);
       }
-    }
       break;
+    }
     case GST_QUERY_SEEKING:
+    {
       GST_DEBUG ("query seeking");
       gst_query_parse_seeking (query, &format, NULL, NULL, NULL);
       if (format == GST_FORMAT_TIME) {
@@ -459,6 +443,7 @@ gst_ts_demux_srcpad_query (GstPad * pad, GstQuery * query)
         res = FALSE;
       }
       break;
+    }
     default:
       res = gst_pad_query_default (pad, query);
   }
@@ -468,365 +453,15 @@ gst_ts_demux_srcpad_query (GstPad * pad, GstQuery * query)
 
 }
 
-static inline GstClockTime
-calculate_gsttime (TSPcrOffset * start, guint64 pcr)
-{
-  GstClockTime time = start->gsttime;
-
-  if (start->pcr > pcr)
-    time += PCRTIME_TO_GSTTIME (PCR_MAX_VALUE - start->pcr + pcr);
-  else
-    time += PCRTIME_TO_GSTTIME (pcr - start->pcr);
-
-  return time;
-}
-
 static GstFlowReturn
-gst_ts_demux_parse_pes_header_pts (GstTSDemux * demux,
-    MpegTSPacketizerPacket * packet, guint64 * time)
+gst_ts_demux_perform_seek (MpegTSBase * base, GstSegment * segment)
 {
-  PESHeader header;
-  gint offset = 0;
-
-  if (mpegts_parse_pes_header (packet->payload,
-          packet->data_end - packet->payload, &header, &offset))
-    return GST_FLOW_ERROR;
-
-  *time = header.PTS;
-  return GST_FLOW_OK;
-}
-
-/* performs a accurate/key_unit seek */
-static GstFlowReturn
-gst_ts_demux_perform_auxiliary_seek (MpegTSBase * base, GstClockTime seektime,
-    TSPcrOffset * pcroffset, gint64 length, gint16 pid, GstSeekFlags flags,
-    payload_parse_keyframe auxiliary_seek_fn)
-{
-  GstTSDemux *demux = (GstTSDemux *) base;
-  GstFlowReturn res = GST_FLOW_ERROR;
-  gboolean done = FALSE;
-  gboolean found_keyframe = FALSE, found_accurate = FALSE, need_more = TRUE;
-  GstBuffer *buf;
-  MpegTSPacketizerPacket packet;
-  MpegTSPacketizerPacketReturn pret;
-  gint64 offset = pcroffset->offset;
-  gint64 scan_offset = MIN (length, 50 * MPEGTS_MAX_PACKETSIZE);
-  guint32 state = 0xffffffff;
-  TSPcrOffset key_pos = { 0 };
-
-  GST_DEBUG ("auxiliary seek for %" GST_TIME_FORMAT " from offset: %"
-      G_GINT64_FORMAT " in %" G_GINT64_FORMAT " bytes for PID: %d "
-      "%s %s", GST_TIME_ARGS (seektime), pcroffset->offset, length, pid,
-      (flags & GST_SEEK_FLAG_ACCURATE) ? "accurate" : "",
-      (flags & GST_SEEK_FLAG_KEY_UNIT) ? "key_unit" : "");
-
-  mpegts_packetizer_flush (base->packetizer);
-
-  if (base->packetizer->packet_size == MPEGTS_M2TS_PACKETSIZE)
-    offset -= 4;
-
-  while (!done && scan_offset <= length) {
-    res =
-        gst_pad_pull_range (base->sinkpad, offset + scan_offset,
-        50 * MPEGTS_MAX_PACKETSIZE, &buf);
-    if (res != GST_FLOW_OK)
-      goto beach;
-    mpegts_packetizer_push (base->packetizer, buf);
-
-    while ((!done)
-        && ((pret =
-                mpegts_packetizer_next_packet (base->packetizer,
-                    &packet)) != PACKET_NEED_MORE)) {
-      if (G_UNLIKELY (pret == PACKET_BAD))
-        /* bad header, skip the packet */
-        goto next;
-
-      if (packet.payload_unit_start_indicator)
-        GST_DEBUG ("found packet for PID: %d with pcr: %" GST_TIME_FORMAT
-            " at offset: %" G_GINT64_FORMAT, packet.pid,
-            GST_TIME_ARGS (packet.pcr), packet.offset);
-
-      if (packet.payload != NULL && packet.pid == pid) {
-
-        if (packet.payload_unit_start_indicator) {
-          guint64 pts = 0;
-          GstFlowReturn ok =
-              gst_ts_demux_parse_pes_header_pts (demux, &packet, &pts);
-          if (ok == GST_FLOW_OK) {
-            GstClockTime time = calculate_gsttime (pcroffset, pts * 300);
-
-            GST_DEBUG ("packet has PTS: %" GST_TIME_FORMAT,
-                GST_TIME_ARGS (time));
-
-            if (time <= seektime) {
-              pcroffset->gsttime = time;
-              pcroffset->pcr = packet.pcr;
-              pcroffset->offset = packet.offset;
-            } else
-              found_accurate = TRUE;
-          } else
-            goto next;
-          /* reset state for new packet */
-          state = 0xffffffff;
-          need_more = TRUE;
-        }
-
-        if (auxiliary_seek_fn) {
-          if (need_more) {
-            if (auxiliary_seek_fn (&state, &packet, &need_more)) {
-              found_keyframe = TRUE;
-              key_pos = *pcroffset;
-              GST_DEBUG ("found keyframe: time: %" GST_TIME_FORMAT " pcr: %"
-                  GST_TIME_FORMAT " offset %" G_GINT64_FORMAT,
-                  GST_TIME_ARGS (pcroffset->gsttime),
-                  GST_TIME_ARGS (pcroffset->pcr), pcroffset->offset);
-            }
-          }
-        } else {
-          /* if we don't have a payload parsing function
-           * every frame is a keyframe */
-          found_keyframe = TRUE;
-        }
-      }
-      if (flags & GST_SEEK_FLAG_ACCURATE)
-        done = found_accurate && found_keyframe;
-      else
-        done = found_keyframe;
-      if (done)
-        *pcroffset = key_pos;
-    next:
-      mpegts_packetizer_clear_packet (base->packetizer, &packet);
-    }
-    scan_offset += 50 * MPEGTS_MAX_PACKETSIZE;
-  }
-
-beach:
-  if (done)
-    res = GST_FLOW_OK;
-  else if (GST_FLOW_OK == res)
-    res = GST_FLOW_CUSTOM_ERROR_1;
-
-  mpegts_packetizer_flush (base->packetizer);
-  return res;
-}
-
-static gint
-TSPcrOffset_find (TSPcrOffset * a, TSPcrOffset * b, gpointer user_data)
-{
-  if (a->gsttime < b->gsttime)
-    return -1;
-  if (a->gsttime > b->gsttime)
-    return 1;
-  return 0;
-}
-
-static GstFlowReturn
-gst_ts_demux_perform_seek (MpegTSBase * base, GstSegment * segment, guint16 pid)
-{
-  GstTSDemux *demux = (GstTSDemux *) base;
-  GstFlowReturn res = GST_FLOW_ERROR;
-  int max_loop_cnt, loop_cnt = 0;
-  gint64 seekpos = 0;
-  gint64 time_diff;
-  GstClockTime seektime;
-  TSPcrOffset seekpcroffset, pcr_start, pcr_stop, *tmp;
-
-  max_loop_cnt = (segment->flags & GST_SEEK_FLAG_ACCURATE) ? 25 : 10;
-
-  seektime =
-      MAX (0,
-      segment->last_stop - SEEK_TIMESTAMP_OFFSET) + demux->first_pcr.gsttime;
-  seekpcroffset.gsttime = seektime;
-
-  GST_DEBUG ("seeking to %" GST_TIME_FORMAT, GST_TIME_ARGS (seektime));
-
-  gst_ts_demux_flush_streams (demux);
-
-  if (G_UNLIKELY (!demux->index)) {
-    GST_ERROR ("no index");
-    goto done;
-  }
-
-  /* get the first index entry before the seek position */
-  tmp = gst_util_array_binary_search (demux->index->data, demux->index_size,
-      sizeof (*tmp), (GCompareDataFunc) TSPcrOffset_find,
-      GST_SEARCH_MODE_BEFORE, &seekpcroffset, NULL);
-
-  if (G_UNLIKELY (!tmp)) {
-    GST_ERROR ("value not found");
-    goto done;
-  }
-
-  pcr_start = *tmp;
-  pcr_stop = *(++tmp);
-
-  if (G_UNLIKELY (!pcr_stop.offset)) {
-    GST_ERROR ("invalid entry");
-    goto done;
-  }
-
-  /* check if the last recorded pcr can be used */
-  if (pcr_start.offset < demux->cur_pcr.offset
-      && demux->cur_pcr.offset < pcr_stop.offset) {
-    demux->cur_pcr.gsttime = calculate_gsttime (&pcr_start, demux->cur_pcr.pcr);
-    if (demux->cur_pcr.gsttime < seekpcroffset.gsttime)
-      pcr_start = demux->cur_pcr;
-    else
-      pcr_stop = demux->cur_pcr;
-  }
-
-  GST_DEBUG ("start %" GST_TIME_FORMAT " offset: %" G_GINT64_FORMAT,
-      GST_TIME_ARGS (pcr_start.gsttime), pcr_start.offset);
-  GST_DEBUG ("stop  %" GST_TIME_FORMAT " offset: %" G_GINT64_FORMAT,
-      GST_TIME_ARGS (pcr_stop.gsttime), pcr_stop.offset);
-
-  time_diff = seektime - pcr_start.gsttime;
-  seekpcroffset = pcr_start;
-
-  GST_DEBUG ("cur  %" GST_TIME_FORMAT " offset: %" G_GINT64_FORMAT
-      " time diff: %" G_GINT64_FORMAT,
-      GST_TIME_ARGS (demux->cur_pcr.gsttime), demux->cur_pcr.offset, time_diff);
-
-  /* seek loop */
-  while (loop_cnt++ < max_loop_cnt && (time_diff > SEEK_TIMESTAMP_OFFSET >> 1)
-      && (pcr_stop.gsttime - pcr_start.gsttime > SEEK_TIMESTAMP_OFFSET)) {
-    gint64 duration = pcr_stop.gsttime - pcr_start.gsttime;
-    gint64 size = pcr_stop.offset - pcr_start.offset;
-
-    if (loop_cnt & 1)
-      seekpos = pcr_start.offset + (size >> 1);
-    else
-      seekpos =
-          pcr_start.offset + size * ((double) (seektime -
-              pcr_start.gsttime) / duration);
-
-    /* look a litle bit behind */
-    seekpos =
-        MAX (pcr_start.offset + 188, seekpos - 55 * MPEGTS_MAX_PACKETSIZE);
-
-    GST_DEBUG ("looking for time: %" GST_TIME_FORMAT " .. %" GST_TIME_FORMAT
-        " .. %" GST_TIME_FORMAT,
-        GST_TIME_ARGS (pcr_start.gsttime),
-        GST_TIME_ARGS (seektime), GST_TIME_ARGS (pcr_stop.gsttime));
-    GST_DEBUG ("looking in bytes: %" G_GINT64_FORMAT " .. %" G_GINT64_FORMAT
-        " .. %" G_GINT64_FORMAT, pcr_start.offset, seekpos, pcr_stop.offset);
-
-    res =
-        find_pcr_packet (&demux->parent, seekpos, 4000 * MPEGTS_MAX_PACKETSIZE,
-        &seekpcroffset);
-    if (G_UNLIKELY (res == GST_FLOW_UNEXPECTED)) {
-      seekpos =
-          MAX ((gint64) pcr_start.offset,
-          seekpos - 2000 * MPEGTS_MAX_PACKETSIZE) + 188;
-      res =
-          find_pcr_packet (&demux->parent, seekpos,
-          8000 * MPEGTS_MAX_PACKETSIZE, &seekpcroffset);
-    }
-    if (G_UNLIKELY (res != GST_FLOW_OK)) {
-      GST_WARNING ("seeking failed %s", gst_flow_get_name (res));
-      goto done;
-    }
-
-    seekpcroffset.gsttime = calculate_gsttime (&pcr_start, seekpcroffset.pcr);
-
-    /* validate */
-    if (G_UNLIKELY ((seekpcroffset.gsttime < pcr_start.gsttime) ||
-            (seekpcroffset.gsttime > pcr_stop.gsttime))) {
-      GST_ERROR ("Unexpected timestamp found, seeking failed! %"
-          GST_TIME_FORMAT, GST_TIME_ARGS (seekpcroffset.gsttime));
-      res = GST_FLOW_ERROR;
-      goto done;
-    }
-
-    if (seekpcroffset.gsttime > seektime) {
-      pcr_stop = seekpcroffset;
-    } else {
-      pcr_start = seekpcroffset;
-    }
-    time_diff = seektime - pcr_start.gsttime;
-    GST_DEBUG ("seeking: %" GST_TIME_FORMAT " found: %" GST_TIME_FORMAT
-        " diff = %" G_GINT64_FORMAT, GST_TIME_ARGS (seektime),
-        GST_TIME_ARGS (seekpcroffset.gsttime), time_diff);
-  }
-
-  GST_DEBUG ("seeking finished after %d loops", loop_cnt);
-
-  /* use correct seek position for the auxiliary search */
-  seektime += SEEK_TIMESTAMP_OFFSET;
-
-  {
-    payload_parse_keyframe keyframe_seek = NULL;
-    MpegTSBaseProgram *program = demux->program;
-    guint64 avg_bitrate, length;
-
-    if (program->streams[pid]) {
-      switch (program->streams[pid]->stream_type) {
-        case ST_VIDEO_MPEG1:
-        case ST_VIDEO_MPEG2:
-          keyframe_seek = gst_tsdemux_has_mpeg2_keyframe;
-          break;
-        case ST_VIDEO_H264:
-          keyframe_seek = gst_tsdemux_has_h264_keyframe;
-          break;
-        case ST_VIDEO_MPEG4:
-        case ST_VIDEO_DIRAC:
-          GST_WARNING ("no payload parser for stream 0x%04x type: 0x%02x", pid,
-              program->streams[pid]->stream_type);
-          break;
-      }
-    } else
-      GST_WARNING ("no stream info for PID: 0x%04x", pid);
-
-    avg_bitrate =
-        (pcr_stop.offset -
-        pcr_start.offset) * 1000 * GST_MSECOND / (pcr_stop.gsttime -
-        pcr_start.gsttime);
-
-    seekpcroffset = pcr_start;
-    /* search in 2500ms for a keyframe */
-    length =
-        MIN (demux->last_pcr.offset - pcr_start.offset,
-        (avg_bitrate * 25) / 10);
-    res =
-        gst_ts_demux_perform_auxiliary_seek (base, seektime, &seekpcroffset,
-        length, pid, segment->flags, keyframe_seek);
-
-    if (res == GST_FLOW_CUSTOM_ERROR_1) {
-      GST_ERROR ("no keyframe found in %" G_GUINT64_FORMAT
-          " bytes starting from %" G_GUINT64_FORMAT, length,
-          seekpcroffset.offset);
-      res = GST_FLOW_ERROR;
-    }
-    if (res != GST_FLOW_OK)
-      goto done;
-  }
-
-
-  /* update seektime to the actual timestamp of the found keyframe */
-  if (segment->flags & GST_SEEK_FLAG_KEY_UNIT)
-    seektime = seekpcroffset.gsttime;
-
-  seektime -= demux->first_pcr.gsttime;
-
-  segment->last_stop = seektime;
-  segment->time = seektime;
-
-  /* we stop at the end */
-  if (segment->stop == -1)
-    segment->stop = demux->first_pcr.gsttime + segment->duration;
-
-  demux->need_newsegment = TRUE;
-  demux->parent.seek_offset = seekpcroffset.offset;
-  GST_DEBUG ("seeked to postion:%" GST_TIME_FORMAT, GST_TIME_ARGS (seektime));
-  res = GST_FLOW_OK;
-
-done:
-  return res;
+  return GST_FLOW_ERROR;
 }
 
 
 static GstFlowReturn
-gst_ts_demux_do_seek (MpegTSBase * base, GstEvent * event, guint16 pid)
+gst_ts_demux_do_seek (MpegTSBase * base, GstEvent * event)
 {
   GstTSDemux *demux = (GstTSDemux *) base;
   GstFlowReturn res = GST_FLOW_ERROR;
@@ -876,7 +511,7 @@ gst_ts_demux_do_seek (MpegTSBase * base, GstEvent * event, guint16 pid)
       GST_TIME_ARGS (seeksegment.last_stop),
       GST_TIME_ARGS (seeksegment.duration));
 
-  res = gst_ts_demux_perform_seek (base, &seeksegment, pid);
+  res = gst_ts_demux_perform_seek (base, &seeksegment);
   if (G_UNLIKELY (res != GST_FLOW_OK)) {
     GST_WARNING ("seeking failed %s", gst_flow_get_name (res));
     goto done;
@@ -1401,475 +1036,6 @@ gst_ts_demux_program_started (MpegTSBase * base, MpegTSBaseProgram * program)
   }
 }
 
-static gboolean
-process_section (MpegTSBase * base)
-{
-  GstTSDemux *demux = GST_TS_DEMUX (base);
-  gboolean based;
-  gboolean done = FALSE;
-  MpegTSPacketizerPacket packet;
-  MpegTSPacketizerPacketReturn pret;
-
-  while ((!done) &&
-      ((pret = mpegts_packetizer_next_packet (base->packetizer, &packet))
-          != PACKET_NEED_MORE)) {
-
-    if (G_UNLIKELY (pret == PACKET_BAD))
-      /* bad header, skip the packet */
-      goto next;
-
-    /* base PSI data */
-    if (packet.payload != NULL && mpegts_base_is_psi (base, &packet)) {
-      MpegTSPacketizerSection section;
-
-      based = mpegts_packetizer_push_section (base->packetizer, &packet,
-          &section);
-
-      if (G_UNLIKELY (!based))
-        /* bad section data */
-        goto next;
-
-      if (G_LIKELY (section.complete)) {
-        /* section complete */
-        GST_DEBUG ("Section Complete");
-        based = mpegts_base_handle_psi (base, &section);
-        gst_buffer_unref (section.buffer);
-        if (G_UNLIKELY (!based))
-          /* bad PSI table */
-          goto next;
-
-      }
-
-      if (demux->program != NULL) {
-        GST_DEBUG ("Got Program");
-        done = TRUE;
-      }
-    }
-  next:
-    mpegts_packetizer_clear_packet (base->packetizer, &packet);
-  }
-  return done;
-}
-
-static gboolean
-process_pes (MpegTSBase * base, TSPcrOffset * pcroffset)
-{
-  gboolean based, done = FALSE;
-  MpegTSPacketizerPacket packet;
-  MpegTSPacketizerPacketReturn pret;
-  GstTSDemux *demux = GST_TS_DEMUX (base);
-  guint16 pcr_pid = 0;
-
-  while ((!done) &&
-      ((pret = mpegts_packetizer_next_packet (base->packetizer, &packet))
-          != PACKET_NEED_MORE)) {
-    if (G_UNLIKELY (pret == PACKET_BAD))
-      /* bad header, skip the packet */
-      goto next;
-
-    if (demux->program != NULL) {
-      pcr_pid = demux->program->pcr_pid;
-    }
-
-    /* base PSI data */
-    if (packet.payload != NULL && mpegts_base_is_psi (base, &packet)) {
-      MpegTSPacketizerSection section;
-
-      based = mpegts_packetizer_push_section (base->packetizer, &packet,
-          &section);
-
-      if (G_UNLIKELY (!based))
-        /* bad section data */
-        goto next;
-
-      if (G_LIKELY (section.complete)) {
-        /* section complete */
-        GST_DEBUG ("Section Complete");
-        based = mpegts_base_handle_psi (base, &section);
-        gst_buffer_unref (section.buffer);
-        if (G_UNLIKELY (!based))
-          /* bad PSI table */
-          goto next;
-
-      }
-    }
-    if (packet.pid == pcr_pid && (packet.adaptation_field_control & 0x02)
-        && (packet.afc_flags & MPEGTS_AFC_PCR_FLAG)) {
-      GST_DEBUG ("PCR[0x%x]: %" G_GINT64_FORMAT, packet.pid, packet.pcr);
-      pcroffset->pcr = packet.pcr;
-      pcroffset->offset = packet.offset;
-      done = TRUE;
-    }
-  next:
-    mpegts_packetizer_clear_packet (base->packetizer, &packet);
-  }
-  return done;
-}
-
-static GstFlowReturn
-find_pcr_packet (MpegTSBase * base, guint64 offset, gint64 length,
-    TSPcrOffset * pcroffset)
-{
-  GstFlowReturn ret = GST_FLOW_OK;
-  GstTSDemux *demux = GST_TS_DEMUX (base);
-  MpegTSBaseProgram *program;
-  GstBuffer *buf;
-  gboolean done = FALSE;
-  guint64 scan_offset = 0;
-
-  GST_DEBUG ("Scanning for PCR between:%" G_GINT64_FORMAT
-      " and the end:%" G_GINT64_FORMAT, offset, offset + length);
-
-  /* Get the program */
-  program = demux->program;
-  if (G_UNLIKELY (program == NULL))
-    return GST_FLOW_ERROR;
-
-  mpegts_packetizer_flush (base->packetizer);
-  if (offset >= 4 && base->packetizer->packet_size == MPEGTS_M2TS_PACKETSIZE)
-    offset -= 4;
-
-  while (!done && scan_offset < length) {
-    ret =
-        gst_pad_pull_range (base->sinkpad, offset + scan_offset,
-        50 * MPEGTS_MAX_PACKETSIZE, &buf);
-    if (ret != GST_FLOW_OK)
-      goto beach;
-    mpegts_packetizer_push (base->packetizer, buf);
-    done = process_pes (base, pcroffset);
-    scan_offset += 50 * MPEGTS_MAX_PACKETSIZE;
-  }
-
-  if (!done || scan_offset >= length) {
-    GST_WARNING ("No PCR found!");
-    ret = GST_FLOW_ERROR;
-    goto beach;
-  }
-
-beach:
-  mpegts_packetizer_flush (base->packetizer);
-  return ret;
-}
-
-static gboolean
-verify_timestamps (MpegTSBase * base, TSPcrOffset * first, TSPcrOffset * last)
-{
-  GstTSDemux *demux = GST_TS_DEMUX (base);
-  guint64 length = 4000 * MPEGTS_MAX_PACKETSIZE;
-  guint64 offset = PCR_WRAP_SIZE_128KBPS;
-
-  demux->index =
-      g_array_sized_new (TRUE, TRUE, sizeof (*first),
-      2 + 1 + ((last->offset - first->offset) / PCR_WRAP_SIZE_128KBPS));
-
-  first->gsttime = PCRTIME_TO_GSTTIME (first->pcr);
-  demux->index = g_array_append_val (demux->index, *first);
-  demux->index_size++;
-  demux->first_pcr = *first;
-  demux->index_pcr = *first;
-  GST_DEBUG ("first time: %" GST_TIME_FORMAT " pcr: %" GST_TIME_FORMAT
-      " offset: %" G_GINT64_FORMAT
-      " last  pcr: %" GST_TIME_FORMAT " offset: %" G_GINT64_FORMAT,
-      GST_TIME_ARGS (first->gsttime),
-      GST_TIME_ARGS (PCRTIME_TO_GSTTIME (first->pcr)), first->offset,
-      GST_TIME_ARGS (PCRTIME_TO_GSTTIME (last->pcr)), last->offset);
-
-  while (offset + length < last->offset) {
-    TSPcrOffset half;
-    GstFlowReturn ret;
-    gint tries = 0;
-
-  retry:
-    ret = find_pcr_packet (base, offset, length, &half);
-    if (G_UNLIKELY (ret != GST_FLOW_OK)) {
-      GST_WARNING ("no pcr found, retrying");
-      if (tries++ < 3) {
-        offset += length;
-        length *= 2;
-        goto retry;
-      }
-      return FALSE;
-    }
-
-    half.gsttime = calculate_gsttime (first, half.pcr);
-
-    GST_DEBUG ("add half time: %" GST_TIME_FORMAT " pcr: %" GST_TIME_FORMAT
-        " offset: %" G_GINT64_FORMAT,
-        GST_TIME_ARGS (half.gsttime),
-        GST_TIME_ARGS (PCRTIME_TO_GSTTIME (half.pcr)), half.offset);
-    demux->index = g_array_append_val (demux->index, half);
-    demux->index_size++;
-
-    length = 4000 * MPEGTS_MAX_PACKETSIZE;
-    offset += PCR_WRAP_SIZE_128KBPS;
-    *first = half;
-  }
-
-  last->gsttime = calculate_gsttime (first, last->pcr);
-
-  GST_DEBUG ("add last time: %" GST_TIME_FORMAT " pcr: %" GST_TIME_FORMAT
-      " offset: %" G_GINT64_FORMAT,
-      GST_TIME_ARGS (last->gsttime),
-      GST_TIME_ARGS (PCRTIME_TO_GSTTIME (last->pcr)), last->offset);
-
-  demux->index = g_array_append_val (demux->index, *last);
-  demux->index_size++;
-
-  demux->last_pcr = *last;
-  return TRUE;
-}
-
-static GstFlowReturn
-find_timestamps (MpegTSBase * base, guint64 initoff, guint64 * offset)
-{
-
-  GstFlowReturn ret = GST_FLOW_OK;
-  GstBuffer *buf;
-  gboolean done = FALSE;
-  GstFormat format = GST_FORMAT_BYTES;
-  gint64 total_bytes;
-  guint64 scan_offset;
-  guint i = 0;
-  TSPcrOffset initial, final;
-  GstTSDemux *demux = GST_TS_DEMUX (base);
-
-  GST_DEBUG ("Scanning for timestamps");
-
-  /* Start scanning from now PAT offset */
-
-  while (!done) {
-    ret = gst_pad_pull_range (base->sinkpad, i * 50 * MPEGTS_MAX_PACKETSIZE,
-        50 * MPEGTS_MAX_PACKETSIZE, &buf);
-
-    if (ret != GST_FLOW_OK)
-      goto beach;
-
-    mpegts_packetizer_push (base->packetizer, buf);
-    done = process_section (base);
-    i++;
-  }
-  mpegts_packetizer_clear (base->packetizer);
-  done = FALSE;
-  i = 1;
-
-  *offset = base->seek_offset;
-
-  /* Search for the first PCRs */
-  ret = process_pcr (base, base->first_pat_offset, &initial, 10, TRUE);
-
-  if (ret != GST_FLOW_OK && ret != GST_FLOW_UNEXPECTED) {
-    GST_WARNING ("Problem getting initial PCRs");
-    goto beach;
-  }
-
-  mpegts_packetizer_clear (base->packetizer);
-  /* Remove current program so we ensure looking for a PAT when scanning
-   * for the final PCR */
-  gst_structure_free (base->pat);
-  base->pat = NULL;
-  mpegts_base_remove_program (base, demux->current_program_number);
-  demux->program = NULL;
-
-  /* Find end position */
-  if (G_UNLIKELY (!gst_pad_query_peer_duration (base->sinkpad, &format,
-              &total_bytes) || format != GST_FORMAT_BYTES)) {
-    GST_WARNING_OBJECT (base, "Couldn't get upstream size in bytes");
-    mpegts_packetizer_clear (base->packetizer);
-
-    return GST_FLOW_ERROR;
-  }
-  GST_DEBUG ("Upstream is %" G_GINT64_FORMAT " bytes", total_bytes);
-
-
-  /* Let's start scanning 4000 packets from the end */
-  scan_offset = MAX (188, total_bytes - 4000 * MPEGTS_MAX_PACKETSIZE);
-
-  GST_DEBUG ("Scanning for last sync point between:%" G_GINT64_FORMAT
-      " and the end:%" G_GINT64_FORMAT, scan_offset, total_bytes);
-
-  while ((!done) && (scan_offset < total_bytes)) {
-    ret = gst_pad_pull_range (base->sinkpad, scan_offset,
-        50 * MPEGTS_MAX_PACKETSIZE, &buf);
-
-    if (ret != GST_FLOW_OK)
-      goto beach;
-
-    mpegts_packetizer_push (base->packetizer, buf);
-    done = process_section (base);
-    scan_offset += 50 * MPEGTS_MAX_PACKETSIZE;
-  }
-
-  mpegts_packetizer_clear (base->packetizer);
-
-  ret = process_pcr (base, scan_offset - 50 * MPEGTS_MAX_PACKETSIZE, &final,
-      10, FALSE);
-
-  if (ret != GST_FLOW_OK) {
-    GST_DEBUG ("Problem getting last PCRs");
-    goto beach;
-  }
-
-  verify_timestamps (base, &initial, &final);
-
-  gst_segment_set_duration (&demux->segment, GST_FORMAT_TIME,
-      demux->last_pcr.gsttime - demux->first_pcr.gsttime);
-  demux->duration = demux->last_pcr.gsttime - demux->first_pcr.gsttime;
-
-  GST_DEBUG ("Done, duration:%" GST_TIME_FORMAT,
-      GST_TIME_ARGS (demux->duration));
-
-beach:
-
-  mpegts_packetizer_clear (base->packetizer);
-  /* Remove current program */
-  if (base->pat) {
-    gst_structure_free (base->pat);
-    base->pat = NULL;
-  }
-  mpegts_base_remove_program (base, demux->current_program_number);
-  demux->program = NULL;
-
-  return ret;
-}
-
-static GstFlowReturn
-process_pcr (MpegTSBase * base, guint64 initoff, TSPcrOffset * pcroffset,
-    guint numpcr, gboolean isinitial)
-{
-  GstTSDemux *demux = GST_TS_DEMUX (base);
-  GstFlowReturn ret = GST_FLOW_OK;
-  MpegTSBaseProgram *program;
-  GstBuffer *buf;
-  guint i, nbpcr = 0;
-  guint32 pcrmask, pcrpattern;
-  guint64 pcrs[50];
-  guint64 pcroffs[50];
-  GstByteReader br;
-
-  GST_DEBUG ("initoff:%" G_GUINT64_FORMAT ", numpcr:%d, isinitial:%d",
-      initoff, numpcr, isinitial);
-
-  /* Get the program */
-  program = demux->program;
-  if (G_UNLIKELY (program == NULL)) {
-    GST_DEBUG ("No program set, can not keep processing pcr");
-
-    ret = GST_FLOW_ERROR;
-    goto beach;
-  }
-
-  /* First find the first X PCR */
-  nbpcr = 0;
-  /* Mask/pattern is PID:PCR_PID, AFC&0x02 */
-  /* sync_byte (0x47)                   : 8bits => 0xff
-   * transport_error_indicator          : 1bit  ACTIVATE
-   * payload_unit_start_indicator       : 1bit  IGNORE
-   * transport_priority                 : 1bit  IGNORE
-   * PID                                : 13bit => 0x9f 0xff
-   * transport_scrambling_control       : 2bit
-   * adaptation_field_control           : 2bit
-   * continuity_counter                 : 4bit  => 0x30
-   */
-  pcrmask = 0xff9fff20;
-  pcrpattern = 0x47000020 | ((program->pcr_pid & 0x1fff) << 8);
-
-  for (i = 0; (i < 20) && (nbpcr < numpcr); i++) {
-    guint offset, size;
-
-    ret = gst_pad_pull_range (base->sinkpad,
-        initoff + i * 500 * base->packetsize, 500 * base->packetsize, &buf);
-
-    if (G_UNLIKELY (ret != GST_FLOW_OK))
-      goto beach;
-
-    gst_byte_reader_init_from_buffer (&br, buf);
-
-    size = GST_BUFFER_SIZE (buf);
-
-  resync:
-    offset = gst_byte_reader_masked_scan_uint32 (&br, 0xff000000, 0x47000000,
-        0, base->packetsize);
-
-    if (offset == -1)
-      continue;
-
-    while ((nbpcr < numpcr) && (size >= base->packetsize)) {
-
-      guint32 header = GST_READ_UINT32_BE (br.data + offset);
-
-      if ((header >> 24) != 0x47)
-        goto resync;
-
-      if ((header & pcrmask) != pcrpattern) {
-        /* Move offset forward by 1 packet */
-        size -= base->packetsize;
-        offset += base->packetsize;
-        continue;
-      }
-
-      /* Potential PCR */
-/*      GST_DEBUG ("offset %" G_GUINT64_FORMAT, GST_BUFFER_OFFSET (buf) + offset);
-      GST_MEMDUMP ("something", GST_BUFFER_DATA (buf) + offset, 16);*/
-      if ((*(br.data + offset + 5)) & MPEGTS_AFC_PCR_FLAG) {
-        guint64 lpcr = mpegts_packetizer_compute_pcr (br.data + offset + 6);
-
-        GST_INFO ("Found PCR %" G_GUINT64_FORMAT " %" GST_TIME_FORMAT
-            " at offset %" G_GUINT64_FORMAT, lpcr,
-            GST_TIME_ARGS (PCRTIME_TO_GSTTIME (lpcr)),
-            GST_BUFFER_OFFSET (buf) + offset);
-        pcrs[nbpcr] = lpcr;
-        pcroffs[nbpcr] = GST_BUFFER_OFFSET (buf) + offset;
-        /* Safeguard against bogus PCR (by detecting if it's the same as the
-         * previous one or wheter the difference with the previous one is
-         * greater than 10mins */
-        if (nbpcr > 1) {
-          if (pcrs[nbpcr] == pcrs[nbpcr - 1]) {
-            GST_WARNING ("Found same PCR at different offset");
-          } else if (pcrs[nbpcr] < pcrs[nbpcr - 1]) {
-            GST_WARNING ("Found PCR wraparound");
-            nbpcr += 1;
-          } else if ((pcrs[nbpcr] - pcrs[nbpcr - 1]) >
-              (guint64) 10 * 60 * 27000000) {
-            GST_WARNING ("PCR differs with previous PCR by more than 10 mins");
-          } else
-            nbpcr += 1;
-        } else
-          nbpcr += 1;
-      }
-      /* Move offset forward by 1 packet */
-      size -= base->packetsize;
-      offset += base->packetsize;
-    }
-  }
-
-beach:
-  GST_DEBUG ("Found %d PCR", nbpcr);
-  if (nbpcr) {
-    if (isinitial) {
-      pcroffset->pcr = pcrs[0];
-      pcroffset->offset = pcroffs[0];
-    } else {
-      pcroffset->pcr = pcrs[nbpcr - 1];
-      pcroffset->offset = pcroffs[nbpcr - 1];
-    }
-    if (nbpcr > 1) {
-      GST_DEBUG ("pcrdiff:%" GST_TIME_FORMAT " offsetdiff %" G_GUINT64_FORMAT,
-          GST_TIME_ARGS (PCRTIME_TO_GSTTIME (pcrs[nbpcr - 1] - pcrs[0])),
-          pcroffs[nbpcr - 1] - pcroffs[0]);
-      GST_DEBUG ("Estimated bitrate %" G_GUINT64_FORMAT,
-          gst_util_uint64_scale (GST_SECOND, pcroffs[nbpcr - 1] - pcroffs[0],
-              PCRTIME_TO_GSTTIME (pcrs[nbpcr - 1] - pcrs[0])));
-      GST_DEBUG ("Average PCR interval %" G_GUINT64_FORMAT,
-          (pcroffs[nbpcr - 1] - pcroffs[0]) / nbpcr);
-    }
-  }
-  /* Swallow any errors if it happened during the end scanning */
-  if (!isinitial)
-    ret = GST_FLOW_OK;
-  return ret;
-}
-
-
 
 
 static inline void
@@ -1882,17 +1048,7 @@ gst_ts_demux_record_pcr (GstTSDemux * demux, TSDemuxStream * stream,
       G_GUINT64_FORMAT, bs->pid,
       GST_TIME_ARGS (PCRTIME_TO_GSTTIME (pcr)), offset);
 
-  if (G_LIKELY (bs->pid == demux->program->pcr_pid)) {
-    demux->cur_pcr.gsttime = GST_CLOCK_TIME_NONE;
-    demux->cur_pcr.offset = offset;
-    demux->cur_pcr.pcr = pcr;
-    /* set first_pcr in push mode */
-    if (G_UNLIKELY (!demux->first_pcr.gsttime == GST_CLOCK_TIME_NONE)) {
-      demux->first_pcr.gsttime = PCRTIME_TO_GSTTIME (pcr);
-      demux->first_pcr.offset = offset;
-      demux->first_pcr.pcr = pcr;
-    }
-  }
+  /* FIXME : packetizer should record this */
 
   if (G_UNLIKELY (demux->emit_statistics)) {
     GstStructure *st;
@@ -1915,6 +1071,8 @@ gst_ts_demux_record_opcr (GstTSDemux * demux, TSDemuxStream * stream,
   GST_LOG ("pid 0x%04x opcr:%" GST_TIME_FORMAT " at offset %"
       G_GUINT64_FORMAT, bs->pid,
       GST_TIME_ARGS (PCRTIME_TO_GSTTIME (opcr)), offset);
+
+  /* FIXME : packetizer should record this */
 
   if (G_UNLIKELY (demux->emit_statistics)) {
     GstStructure *st;
@@ -2017,19 +1175,6 @@ gst_ts_demux_record_dts (GstTSDemux * demux, TSDemuxStream * stream,
     gst_element_post_message (GST_ELEMENT_CAST (demux),
         gst_message_new_element (GST_OBJECT (demux), st));
   }
-}
-
-static inline GstClockTime
-calc_gsttime_from_pts (TSPcrOffset * start, guint64 pts)
-{
-  GstClockTime time = start->gsttime - PCRTIME_TO_GSTTIME (start->pcr);
-
-  if (start->pcr > pts * 300)
-    time += PCRTIME_TO_GSTTIME (PCR_MAX_VALUE) + MPEGTIME_TO_GSTTIME (pts);
-  else
-    time += MPEGTIME_TO_GSTTIME (pts);
-
-  return time;
 }
 
 static GstFlowReturn
@@ -2261,14 +1406,12 @@ calculate_and_push_newsegment (GstTSDemux * demux, TSDemuxStream * stream)
         GST_TIME_ARGS (demux->segment.duration),
         GST_TIME_ARGS (demux->segment.time));
 
-    GST_DEBUG ("firstpcr gsttime : %" GST_TIME_FORMAT,
-        GST_TIME_ARGS (demux->first_pcr.gsttime));
-
     /* FIXME : This is not entirely correct. We should be using the PTS time
      * realm and not the PCR one. Doesn't matter *too* much if PTS/PCR values
      * aren't too far apart, but still.  */
-    start = demux->first_pcr.gsttime + demux->segment.start;
-    stop = demux->first_pcr.gsttime + demux->segment.duration;
+    /* FIXME : EDWARD : Removed previous first pcr gsttime */
+    start = demux->segment.start;
+    stop = demux->segment.duration;
     position = demux->segment.time;
   }
 
@@ -2291,7 +1434,7 @@ gst_ts_demux_push_pending_data (GstTSDemux * demux, TSDemuxStream * stream)
   MpegTSBaseStream *bs = (MpegTSBaseStream *) stream;
   /* MpegTSBase *base = (MpegTSBase*) demux; */
   GstBuffer *firstbuffer = NULL;
-  MpegTSPacketizer2 *packetizer = ((MpegTSBase *) demux)->packetizer;
+  MpegTSPacketizer2 *packetizer = MPEG_TS_BASE_PACKETIZER (demux);
 
   GST_DEBUG_OBJECT (stream->pad,
       "stream:%p, pid:0x%04x stream_type:%d state:%d", stream, bs->pid,
