@@ -58,7 +58,7 @@ can build simple server applications with it.
    server = gst_rtsp_server_new ();
 
  The server will by default listen on port 8554 for new connections. This can be
- changed by calling gst_rtsp_server_set_port() or with the 'port' GObject
+ changed by calling gst_rtsp_server_set_service() or with the 'service' GObject
  property. This makes it possible to run multiple server instances listening on
  multiple ports on one machine.
 
