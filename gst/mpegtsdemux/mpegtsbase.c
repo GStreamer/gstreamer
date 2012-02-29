@@ -968,8 +968,6 @@ mpegts_base_handle_psi (MpegTSBase * base, MpegTSPacketizerSection * section)
 {
   gboolean res = TRUE;
   GstStructure *structure = NULL;
-  gint program_number;
-  MpegTSBaseProgram *program = NULL;
 
   /* table ids 0x70 - 0x73 do not have a crc */
   if (G_LIKELY (section->table_id < 0x70 || section->table_id > 0x73)) {
@@ -999,22 +997,10 @@ mpegts_base_handle_psi (MpegTSBase * base, MpegTSPacketizerSection * section)
       break;
     case 0x02:
       structure = mpegts_packetizer_parse_pmt (base->packetizer, section);
-      if (G_UNLIKELY (structure == NULL))
-        return FALSE;
-
-      gst_structure_id_get (structure, QUARK_PROGRAM_NUMBER, G_TYPE_UINT,
-          &program_number, NULL);
-      program = mpegts_base_get_program (base, program_number);
-
-      /* We already have the same PMT for the current program in use, so we do
-       * not need to reset it */
-      if (program && program->active && program->pmt_pid == section->pid) {
-        GST_DEBUG ("Already have the PMT %u for program %i, not applying again",
-            program->pmt_pid, program_number);
-        res = TRUE;
-      } else {
+      if (G_LIKELY (structure))
         mpegts_base_apply_pmt (base, section->pid, structure);
-      }
+      else
+        res = FALSE;
 
       break;
     case 0x40:
