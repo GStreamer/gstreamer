@@ -114,6 +114,8 @@ struct _TSDemuxStream
   MpegTSBaseStream stream;
 
   GstPad *pad;
+  /* Whether the pad was added or not */
+  gboolean active;
 
   /* the return of the latest push */
   GstFlowReturn flow_return;
@@ -956,6 +958,7 @@ gst_ts_demux_stream_added (MpegTSBase * base, MpegTSBaseStream * bstream,
     /* Create the pad */
     if (bstream->stream_type != 0xff)
       stream->pad = create_pad_for_stream (base, bstream, program);
+    stream->active = FALSE;
 
     stream->need_newsegment = TRUE;
     stream->pts = GST_CLOCK_TIME_NONE;
@@ -976,7 +979,7 @@ gst_ts_demux_stream_removed (MpegTSBase * base, MpegTSBaseStream * bstream)
   TSDemuxStream *stream = (TSDemuxStream *) bstream;
 
   if (stream->pad) {
-    if (gst_pad_is_active (stream->pad)) {
+    if (stream->active && gst_pad_is_active (stream->pad)) {
       /* Flush out all data */
       GST_DEBUG_OBJECT (stream->pad, "Flushing out pending data");
       gst_ts_demux_push_pending_data ((GstTSDemux *) base, stream);
@@ -986,6 +989,7 @@ gst_ts_demux_stream_removed (MpegTSBase * base, MpegTSBaseStream * bstream)
       GST_DEBUG_OBJECT (stream->pad, "Deactivating and removing pad");
       gst_pad_set_active (stream->pad, FALSE);
       gst_element_remove_pad (GST_ELEMENT_CAST (base), stream->pad);
+      stream->active = FALSE;
     }
     stream->pad = NULL;
   }
@@ -1000,6 +1004,7 @@ activate_pad_for_stream (GstTSDemux * tsdemux, TSDemuxStream * stream)
         GST_DEBUG_PAD_NAME (stream->pad), stream);
     gst_pad_set_active (stream->pad, TRUE);
     gst_element_add_pad ((GstElement *) tsdemux, stream->pad);
+    stream->active = TRUE;
     GST_DEBUG_OBJECT (stream->pad, "done adding pad");
   } else
     GST_WARNING_OBJECT (tsdemux,
@@ -1049,7 +1054,6 @@ gst_ts_demux_program_started (MpegTSBase * base, MpegTSBaseProgram * program)
 
   if (demux->program_number == -1 ||
       demux->program_number == program->program_number) {
-    GList *tmp;
 
     GST_LOG ("program %d started", program->program_number);
     demux->program_number = program->program_number;
@@ -1069,12 +1073,7 @@ gst_ts_demux_program_started (MpegTSBase * base, MpegTSBaseProgram * program)
       GST_EVENT_SRC (demux->segment_event) = gst_object_ref (demux);
     }
 
-    /* Activate all stream pads, pads will already have been created */
-    if (base->mode != BASE_MODE_SCANNING) {
-      for (tmp = program->stream_list; tmp; tmp = tmp->next)
-        activate_pad_for_stream (demux, (TSDemuxStream *) tmp->data);
-      gst_element_no_more_pads ((GstElement *) demux);
-    }
+    /* FIXME : When do we emit no_more_pads ? */
 
     /* Inform scanner we have got our program */
     demux->current_program_number = program->program_number;
@@ -1455,6 +1454,9 @@ gst_ts_demux_push_pending_data (GstTSDemux * demux, TSDemuxStream * stream)
 
   if (G_UNLIKELY (stream->state != PENDING_PACKET_BUFFER))
     goto beach;
+
+  if (G_UNLIKELY (!stream->active))
+    activate_pad_for_stream (demux, stream);
 
   if (G_UNLIKELY (stream->pad == NULL)) {
     g_list_foreach (stream->currentlist, (GFunc) gst_buffer_unref, NULL);
