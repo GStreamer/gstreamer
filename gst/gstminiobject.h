@@ -220,7 +220,7 @@ GstMiniObject * gst_mini_object_steal           (GstMiniObject **olddata);
 #define GST_DEFINE_MINI_OBJECT_TYPE(TypeName,type_name) \
    G_DEFINE_BOXED_TYPE(TypeName,type_name,              \
        (GBoxedCopyFunc) gst_mini_object_ref,            \
-       (GBoxedFreeFunc)gst_mini_object_unref)
+       (GBoxedFreeFunc) gst_mini_object_unref)
 
 G_END_DECLS
 
