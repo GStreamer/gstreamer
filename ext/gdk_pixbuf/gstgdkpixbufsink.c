@@ -103,7 +103,6 @@
 enum
 {
   PROP_0,
-  PROP_SEND_MESSAGES,
   PROP_POST_MESSAGES,
   PROP_LAST_PIXBUF,
   PROP_LAST
@@ -153,12 +152,6 @@ gst_gdk_pixbuf_sink_class_init (GstGdkPixbufSinkClass * klass)
   gobject_class->set_property = gst_gdk_pixbuf_sink_set_property;
   gobject_class->get_property = gst_gdk_pixbuf_sink_get_property;
 
-  /* FIXME 0.11, remove in favour of post-messages */
-  g_object_class_install_property (gobject_class, PROP_SEND_MESSAGES,
-      g_param_spec_boolean ("send-messages", "Send Messages",
-          "Whether to post messages containing pixbufs on the bus "
-          " (deprecated, use post-messages)",
-          DEFAULT_SEND_MESSAGES, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   /**
    * GstGdkPixbuf:post-messages:
    *
@@ -391,7 +384,6 @@ gst_gdk_pixbuf_sink_set_property (GObject * object, guint prop_id,
   sink = GST_GDK_PIXBUF_SINK (object);
 
   switch (prop_id) {
-    case PROP_SEND_MESSAGES:
     case PROP_POST_MESSAGES:
       GST_OBJECT_LOCK (sink);
       sink->post_messages = g_value_get_boolean (value);
@@ -412,7 +404,6 @@ gst_gdk_pixbuf_sink_get_property (GObject * object, guint prop_id,
   sink = GST_GDK_PIXBUF_SINK (object);
 
   switch (prop_id) {
-    case PROP_SEND_MESSAGES:
     case PROP_POST_MESSAGES:
       GST_OBJECT_LOCK (sink);
       g_value_set_boolean (value, sink->post_messages);
