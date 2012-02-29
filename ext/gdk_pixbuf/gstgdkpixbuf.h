@@ -52,7 +52,10 @@ struct _GstGdkPixbuf
   int width;
   int height;
   int rowstride;
-  unsigned int image_size;
+  int channels;
+
+  GstVideoInfo info;
+  GstBufferPool *pool;
 
   gint framerate_numerator;
   gint framerate_denominator;
