@@ -37,11 +37,13 @@ G_BEGIN_DECLS
 typedef struct _GstStreamConsistency GstStreamConsistency;
 
 
-GstStreamConsistency * gst_consistency_checker_new   (GstPad * pad);
+GstStreamConsistency * gst_consistency_checker_new     (GstPad * pad);
+gboolean               gst_consistency_checker_add_pad (GstStreamConsistency * consist,
+                                                        GstPad * pad);
 
-void                   gst_consistency_checker_reset (GstStreamConsistency * consist);
+void                   gst_consistency_checker_reset   (GstStreamConsistency * consist);
 
-void                   gst_consistency_checker_free  (GstStreamConsistency * consist);
+void                   gst_consistency_checker_free    (GstStreamConsistency * consist);
 
 G_END_DECLS
 
