@@ -26,11 +26,11 @@
 
 G_BEGIN_DECLS
 
-#define GST_VIDEO_META_API   "GstVideoMeta"
+#define GST_VIDEO_META_API_TYPE (gst_video_meta_api_get_type())
 #define GST_VIDEO_META_INFO  (gst_video_meta_get_info())
 typedef struct _GstVideoMeta GstVideoMeta;
 
-#define GST_VIDEO_CROP_META_API   "GstVideoCropMeta"
+#define GST_VIDEO_CROP_META_API_TYPE  (gst_video_crop_meta_api_get_type())
 #define GST_VIDEO_CROP_META_INFO  (gst_video_crop_meta_get_info())
 typedef struct _GstVideoCropMeta GstVideoCropMeta;
 
@@ -73,9 +73,10 @@ struct _GstVideoMeta {
   gboolean (*unmap)  (GstVideoMeta *meta, guint plane, GstMapInfo *info);
 };
 
+GType gst_video_meta_api_get_type (void);
 const GstMetaInfo * gst_video_meta_get_info (void);
 
-#define gst_buffer_get_video_meta(b) ((GstVideoMeta*)gst_buffer_get_meta((b),GST_VIDEO_META_INFO))
+#define gst_buffer_get_video_meta(b) ((GstVideoMeta*)gst_buffer_get_meta((b),GST_VIDEO_META_API_TYPE))
 GstVideoMeta * gst_buffer_get_video_meta_id    (GstBuffer *buffer, gint id);
 
 GstVideoMeta * gst_buffer_add_video_meta       (GstBuffer *buffer, GstVideoFlags flags,
@@ -108,9 +109,10 @@ struct _GstVideoCropMeta {
   guint         height;
 };
 
+GType gst_video_crop_meta_api_get_type (void);
 const GstMetaInfo * gst_video_crop_meta_get_info (void);
 
-#define gst_buffer_get_video_crop_meta(b) ((GstVideoCropMeta*)gst_buffer_get_meta((b),GST_VIDEO_CROP_META_INFO))
+#define gst_buffer_get_video_crop_meta(b) ((GstVideoCropMeta*)gst_buffer_get_meta((b),GST_VIDEO_CROP_META_API_TYPE))
 #define gst_buffer_add_video_crop_meta(b) ((GstVideoCropMeta*)gst_buffer_add_meta((b),GST_VIDEO_CROP_META_INFO, NULL))
 
 G_END_DECLS

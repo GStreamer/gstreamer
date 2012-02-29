@@ -151,18 +151,30 @@ gst_buffer_add_audio_downmix_meta (GstBuffer * buffer,
   return meta;
 }
 
+GType
+gst_audio_downmix_meta_api_get_type (void)
+{
+  static volatile GType type;
+  static const gchar *tags[] = { NULL };
+
+  if (g_once_init_enter (&type)) {
+    GType _type = gst_meta_api_type_register ("GstAudioDownmixMetaAPI", tags);
+    g_once_init_leave (&type, _type);
+  }
+  return type;
+}
+
 const GstMetaInfo *
 gst_audio_downmix_meta_get_info (void)
 {
   static const GstMetaInfo *audio_downmix_meta_info = NULL;
-  static const gchar *tags[] = { NULL };
 
   if (audio_downmix_meta_info == NULL) {
     audio_downmix_meta_info =
-        gst_meta_register (GST_AUDIO_DOWNMIX_META_API, "GstAudioDownmixMeta",
-        sizeof (GstAudioDownmixMeta),
-        gst_audio_downmix_meta_init,
-        gst_audio_downmix_meta_free, gst_audio_downmix_meta_transform, tags);
+        gst_meta_register (GST_AUDIO_DOWNMIX_META_API_TYPE,
+        "GstAudioDownmixMeta", sizeof (GstAudioDownmixMeta),
+        gst_audio_downmix_meta_init, gst_audio_downmix_meta_free,
+        gst_audio_downmix_meta_transform);
   }
   return audio_downmix_meta_info;
 }

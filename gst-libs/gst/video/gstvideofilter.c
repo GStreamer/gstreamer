@@ -92,7 +92,7 @@ gst_video_filter_propose_allocation (GstBaseTransform * trans,
   gst_query_set_allocation_params (query, size, 0, 0, 0, 15, pool);
   gst_object_unref (pool);
 
-  gst_query_add_allocation_meta (query, GST_VIDEO_META_API);
+  gst_query_add_allocation_meta (query, GST_VIDEO_META_API_TYPE);
 
   return TRUE;
 

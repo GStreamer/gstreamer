@@ -52,19 +52,31 @@ struct _GstXvImageBufferPoolPrivate
 static void gst_xvimage_meta_free (GstXvImageMeta * meta, GstBuffer * buffer);
 
 /* xvimage metadata */
+GType
+gst_xvimage_meta_api_get_type (void)
+{
+  static volatile GType type;
+  static const gchar *tags[] =
+      { "memory", "size", "colorspace", "orientation", NULL };
+
+  if (g_once_init_enter (&type)) {
+    GType _type = gst_meta_api_type_register ("GstXvImageMetaAPI", tags);
+    g_once_init_leave (&type, _type);
+  }
+  return type;
+}
+
 const GstMetaInfo *
 gst_xvimage_meta_get_info (void)
 {
   static const GstMetaInfo *xvimage_meta_info = NULL;
-  static const gchar *tags[] =
-      { "memory", "size", "colorspace", "orientation", NULL };
 
   if (xvimage_meta_info == NULL) {
-    xvimage_meta_info = gst_meta_register ("GstXvImageMeta", "GstXvImageMeta",
-        sizeof (GstXvImageMeta),
-        (GstMetaInitFunction) NULL,
+    xvimage_meta_info =
+        gst_meta_register (GST_XVIMAGE_META_API_TYPE, "GstXvImageMeta",
+        sizeof (GstXvImageMeta), (GstMetaInitFunction) NULL,
         (GstMetaFreeFunction) gst_xvimage_meta_free,
-        (GstMetaTransformFunction) NULL, tags);
+        (GstMetaTransformFunction) NULL);
   }
   return xvimage_meta_info;
 }

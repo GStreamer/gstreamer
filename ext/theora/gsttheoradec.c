@@ -818,7 +818,7 @@ theora_negotiate_pool (GstTheoraDec * dec, GstCaps * caps, GstVideoInfo * info)
 
   /* check if downstream supports cropping */
   dec->has_cropping =
-      gst_query_has_allocation_meta (query, GST_VIDEO_CROP_META_API);
+      gst_query_has_allocation_meta (query, GST_VIDEO_CROP_META_API_TYPE);
 
   GST_DEBUG_OBJECT (dec, "downstream cropping %d", dec->has_cropping);
 

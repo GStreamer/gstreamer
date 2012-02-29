@@ -26,8 +26,9 @@
 
 G_BEGIN_DECLS
 
-#define GST_AUDIO_DOWNMIX_META_API   "GstAudioDownmixMeta"
+#define GST_AUDIO_DOWNMIX_META_API_TYPE (gst_audio_downmix_meta_api_get_type())
 #define GST_AUDIO_DOWNMIX_META_INFO  (gst_audio_downmix_meta_get_info())
+
 typedef struct _GstAudioDownmixMeta GstAudioDownmixMeta;
 
 /**
@@ -57,6 +58,7 @@ struct _GstAudioDownmixMeta {
   gfloat       **matrix;
 };
 
+GType gst_audio_downmix_meta_api_get_type (void);
 const GstMetaInfo * gst_audio_downmix_meta_get_info (void);
 
 #define gst_buffer_get_audio_downmix_meta(b) ((GstAudioDownmixMeta*)gst_buffer_get_meta((b),GST_AUDIO_DOWNMIX_META_INFO))

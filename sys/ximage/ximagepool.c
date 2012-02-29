@@ -49,19 +49,31 @@ struct _GstXImageBufferPoolPrivate
 static void gst_ximage_meta_free (GstXImageMeta * meta, GstBuffer * buffer);
 
 /* ximage metadata */
+GType
+gst_ximage_meta_api_get_type (void)
+{
+  static volatile GType type;
+  static const gchar *tags[] =
+      { "memory", "size", "colorspace", "orientation", NULL };
+
+  if (g_once_init_enter (&type)) {
+    GType _type = gst_meta_api_type_register ("GstXImageMetaAPI", tags);
+    g_once_init_leave (&type, _type);
+  }
+  return type;
+}
+
 const GstMetaInfo *
 gst_ximage_meta_get_info (void)
 {
   static const GstMetaInfo *ximage_meta_info = NULL;
-  static const gchar *tags[] =
-      { "memory", "size", "colorspace", "orientation", NULL };
 
   if (ximage_meta_info == NULL) {
-    ximage_meta_info = gst_meta_register ("GstXImageMeta", "GstXImageMeta",
-        sizeof (GstXImageMeta),
-        (GstMetaInitFunction) NULL,
+    ximage_meta_info =
+        gst_meta_register (GST_XIMAGE_META_API_TYPE, "GstXImageMeta",
+        sizeof (GstXImageMeta), (GstMetaInitFunction) NULL,
         (GstMetaFreeFunction) gst_ximage_meta_free,
-        (GstMetaTransformFunction) NULL, tags);
+        (GstMetaTransformFunction) NULL);
   }
   return ximage_meta_info;
 }

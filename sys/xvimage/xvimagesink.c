@@ -1980,8 +1980,8 @@ gst_xvimagesink_propose_allocation (GstBaseSink * bsink, GstQuery * query)
   gst_query_set_allocation_params (query, size, 2, 0, 0, 0, pool);
 
   /* we also support various metadata */
-  gst_query_add_allocation_meta (query, GST_VIDEO_META_API);
-  gst_query_add_allocation_meta (query, GST_VIDEO_CROP_META_API);
+  gst_query_add_allocation_meta (query, GST_VIDEO_META_API_TYPE);
+  gst_query_add_allocation_meta (query, GST_VIDEO_CROP_META_API_TYPE);
 
   gst_object_unref (pool);
 

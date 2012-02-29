@@ -48,18 +48,30 @@ gst_video_meta_transform (GstBuffer * dest, GstMeta * meta,
   return TRUE;
 }
 
+GType
+gst_video_meta_api_get_type (void)
+{
+  static volatile GType type = 0;
+  static const gchar *tags[] = { "memory", "colorspace", "size", NULL };
+
+  if (g_once_init_enter (&type)) {
+    GType _type = gst_meta_api_type_register ("GstVideoMetaAPI", tags);
+    g_once_init_leave (&type, _type);
+  }
+  return type;
+}
+
 /* video metadata */
 const GstMetaInfo *
 gst_video_meta_get_info (void)
 {
   static const GstMetaInfo *video_meta_info = NULL;
-  static const gchar *tags[] = { "memory", "colorspace", "size", NULL };
 
   if (video_meta_info == NULL) {
-    video_meta_info = gst_meta_register (GST_VIDEO_META_API, "GstVideoMeta",
-        sizeof (GstVideoMeta),
-        (GstMetaInitFunction) NULL,
-        (GstMetaFreeFunction) NULL, gst_video_meta_transform, tags);
+    video_meta_info =
+        gst_meta_register (GST_VIDEO_META_API_TYPE, "GstVideoMeta",
+        sizeof (GstVideoMeta), (GstMetaInitFunction) NULL,
+        (GstMetaFreeFunction) NULL, gst_video_meta_transform);
   }
   return video_meta_info;
 }
@@ -306,17 +318,29 @@ gst_video_crop_meta_transform (GstBuffer * dest, GstMeta * meta,
   return TRUE;
 }
 
+GType
+gst_video_crop_meta_api_get_type (void)
+{
+  static volatile GType type = 0;
+  static const gchar *tags[] = { "size", "orientation", NULL };
+
+  if (g_once_init_enter (&type)) {
+    GType _type = gst_meta_api_type_register ("GstVideoCropMetaAPI", tags);
+    g_once_init_leave (&type, _type);
+  }
+  return type;
+}
+
 const GstMetaInfo *
 gst_video_crop_meta_get_info (void)
 {
   static const GstMetaInfo *video_crop_meta_info = NULL;
-  static const gchar *tags[] = { "size", "orientation", NULL };
 
   if (video_crop_meta_info == NULL) {
     video_crop_meta_info =
-        gst_meta_register (GST_VIDEO_CROP_META_API, "GstVideoCropMeta",
+        gst_meta_register (GST_VIDEO_CROP_META_API_TYPE, "GstVideoCropMeta",
         sizeof (GstVideoCropMeta), (GstMetaInitFunction) NULL,
-        (GstMetaFreeFunction) NULL, gst_video_crop_meta_transform, tags);
+        (GstMetaFreeFunction) NULL, gst_video_crop_meta_transform);
   }
   return video_crop_meta_info;
 }

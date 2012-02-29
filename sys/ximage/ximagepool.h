@@ -46,11 +46,12 @@ typedef struct _GstXImageBufferPoolClass GstXImageBufferPoolClass;
 typedef struct _GstXImageBufferPoolPrivate GstXImageBufferPoolPrivate;
 
 #include "ximagesink.h"
-
+GType gst_ximage_meta_api_get_type (void);
+#define GST_XIMAGE_META_API_TYPE  (gst_ximage_meta_api_get_type())
 const GstMetaInfo * gst_ximage_meta_get_info (void);
 #define GST_XIMAGE_META_INFO  (gst_ximage_meta_get_info())
 
-#define gst_buffer_get_ximage_meta(b) ((GstXImageMeta*)gst_buffer_get_meta((b),GST_XIMAGE_META_INFO))
+#define gst_buffer_get_ximage_meta(b) ((GstXImageMeta*)gst_buffer_get_meta((b),GST_XIMAGE_META_API_TYPE))
 
 /**
  * GstXImageMeta:
