@@ -1396,14 +1396,18 @@ exec_picture_refs_modification_1(
             if (picNum > CurrPicNum)
                 picNum -= MaxPicNum;
 
+            // (8-37)
             for (j = num_refs; j > ref_list_idx; j--)
                 ref_list[j] = ref_list[j - 1];
             found_ref_idx = find_short_term_reference(decoder, picNum);
             ref_list[ref_list_idx++] =
                 found_ref_idx >= 0 ? priv->short_ref[found_ref_idx] : NULL;
             n = ref_list_idx;
-            for (j = ref_list_idx; j < num_refs; j++) {
-                const gint32 PicNumF = ref_list[j]->is_long_term ?
+            for (j = ref_list_idx; j <= num_refs; j++) {
+                gint32 PicNumF;
+                if (!ref_list[j])
+                    continue;
+                PicNumF = ref_list[j]->is_long_term ?
                     MaxPicNum : ref_list[j]->pic_num;
                 if (PicNumF != picNum)
                     ref_list[n++] = ref_list[j];
@@ -1420,8 +1424,11 @@ exec_picture_refs_modification_1(
             ref_list[ref_list_idx++] =
                 found_ref_idx >= 0 ? priv->long_ref[found_ref_idx] : NULL;
             n = ref_list_idx;
-            for (j = ref_list_idx; j < num_refs; j++) {
-                const gint32 LongTermPicNumF = ref_list[j]->is_long_term ?
+            for (j = ref_list_idx; j <= num_refs; j++) {
+                gint32 LongTermPicNumF;
+                if (!ref_list[j])
+                    continue;
+                LongTermPicNumF = ref_list[j]->is_long_term ?
                     ref_list[j]->long_term_pic_num : INT_MAX;
                 if (LongTermPicNumF != l->value.long_term_pic_num)
                     ref_list[n++] = ref_list[j];
