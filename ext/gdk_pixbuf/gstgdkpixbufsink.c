@@ -110,8 +110,7 @@ enum
 };
 
 
-GST_BOILERPLATE (GstGdkPixbufSink, gst_gdk_pixbuf_sink, GstVideoSink,
-    GST_TYPE_VIDEO_SINK);
+G_DEFINE_TYPE (GstGdkPixbufSink, gst_gdk_pixbuf_sink, GST_TYPE_VIDEO_SINK);
 
 static void gst_gdk_pixbuf_sink_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec);
@@ -129,18 +128,20 @@ static GstFlowReturn gst_gdk_pixbuf_sink_preroll (GstBaseSink * bsink,
 static GdkPixbuf *gst_gdk_pixbuf_sink_get_pixbuf_from_buffer (GstGdkPixbufSink *
     sink, GstBuffer * buf);
 
-#define WxH ", width = (int) [ 16, 4096 ], height = (int) [ 16, 4096 ]"
-
 static GstStaticPadTemplate pixbufsink_sink_factory =
     GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS (GST_VIDEO_CAPS_RGB WxH ";" GST_VIDEO_CAPS_RGBA WxH));
+    GST_STATIC_CAPS (GST_VIDEO_CAPS_MAKE ("RGB") ";"
+        GST_VIDEO_CAPS_MAKE ("RGBA"))
+    );
 
 static void
-gst_gdk_pixbuf_sink_base_init (gpointer g_class)
+gst_gdk_pixbuf_sink_class_init (GstGdkPixbufSinkClass * klass)
 {
-  GstElementClass *element_class = GST_ELEMENT_CLASS (g_class);
+  GstBaseSinkClass *basesink_class = GST_BASE_SINK_CLASS (klass);
+  GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
+  GObjectClass *gobject_class = G_OBJECT_CLASS (klass);
 
   gst_element_class_set_details_simple (element_class, "GdkPixbuf sink",
       "Sink/Video", "Output images as GdkPixbuf objects in bus messages",
@@ -148,13 +149,6 @@ gst_gdk_pixbuf_sink_base_init (gpointer g_class)
 
   gst_element_class_add_pad_template (element_class,
       gst_static_pad_template_get (&pixbufsink_sink_factory));
-}
-
-static void
-gst_gdk_pixbuf_sink_class_init (GstGdkPixbufSinkClass * klass)
-{
-  GstBaseSinkClass *basesink_class = GST_BASE_SINK_CLASS (klass);
-  GObjectClass *gobject_class = G_OBJECT_CLASS (klass);
 
   gobject_class->set_property = gst_gdk_pixbuf_sink_set_property;
   gobject_class->get_property = gst_gdk_pixbuf_sink_get_property;
@@ -190,8 +184,7 @@ gst_gdk_pixbuf_sink_class_init (GstGdkPixbufSinkClass * klass)
 }
 
 static void
-gst_gdk_pixbuf_sink_init (GstGdkPixbufSink * sink,
-    GstGdkPixbufSinkClass * klass)
+gst_gdk_pixbuf_sink_init (GstGdkPixbufSink * sink)
 {
   sink->par_n = 0;
   sink->par_d = 0;
@@ -240,46 +233,51 @@ static gboolean
 gst_gdk_pixbuf_sink_set_caps (GstBaseSink * basesink, GstCaps * caps)
 {
   GstGdkPixbufSink *sink = GST_GDK_PIXBUF_SINK (basesink);
+  GstVideoInfo info;
   GstVideoFormat fmt;
-  gint w, h, par_n, par_d;
+  gint w, h, s, par_n, par_d;
 
   GST_LOG_OBJECT (sink, "caps: %" GST_PTR_FORMAT, caps);
 
-  if (!gst_video_format_parse_caps (caps, &fmt, &w, &h)) {
+  if (!gst_video_info_from_caps (&info, caps)) {
     GST_WARNING_OBJECT (sink, "parse_caps failed");
     return FALSE;
   }
 
-  if (!gst_video_parse_caps_pixel_aspect_ratio (caps, &par_n, &par_d)) {
-    GST_LOG_OBJECT (sink, "no pixel aspect ratio");
-    return FALSE;
-  }
+  fmt = GST_VIDEO_INFO_FORMAT (&info);
+  w = GST_VIDEO_INFO_WIDTH (&info);
+  h = GST_VIDEO_INFO_HEIGHT (&info);
+  s = GST_VIDEO_INFO_COMP_PSTRIDE (&info, 0);
+  par_n = GST_VIDEO_INFO_PAR_N (&info);
+  par_d = GST_VIDEO_INFO_PAR_N (&info);
 
-  g_assert ((fmt == GST_VIDEO_FORMAT_RGB &&
-          gst_video_format_get_pixel_stride (fmt, 0) == 3) ||
-      (fmt == GST_VIDEO_FORMAT_RGBA &&
-          gst_video_format_get_pixel_stride (fmt, 0) == 4));
+  g_assert ((fmt == GST_VIDEO_FORMAT_RGB && s == 3) ||
+      (fmt == GST_VIDEO_FORMAT_RGBA && s == 4));
 
   GST_VIDEO_SINK_WIDTH (sink) = w;
   GST_VIDEO_SINK_HEIGHT (sink) = h;
 
-  sink->rowstride = gst_video_format_get_row_stride (fmt, 0, w);
-  sink->has_alpha = (fmt == GST_VIDEO_FORMAT_RGBA);
-
   sink->par_n = par_n;
   sink->par_d = par_d;
+
+  sink->has_alpha = GST_VIDEO_INFO_HAS_ALPHA (&info);
 
   GST_INFO_OBJECT (sink, "format             : %d", fmt);
   GST_INFO_OBJECT (sink, "width x height     : %d x %d", w, h);
   GST_INFO_OBJECT (sink, "pixel-aspect-ratio : %d/%d", par_n, par_d);
 
+  sink->info = info;
+
   return TRUE;
 }
 
 static void
-gst_gdk_pixbuf_sink_pixbuf_destroy_notify (guchar * pixels, GstBuffer * buf)
+gst_gdk_pixbuf_sink_pixbuf_destroy_notify (guchar * pixels,
+    GstVideoFrame * frame)
 {
-  gst_buffer_unref (buf);
+  gst_video_frame_unmap (frame);
+  gst_buffer_unref (frame->buffer);
+  g_slice_free (GstVideoFrame, frame);
 }
 
 static GdkPixbuf *
@@ -287,24 +285,30 @@ gst_gdk_pixbuf_sink_get_pixbuf_from_buffer (GstGdkPixbufSink * sink,
     GstBuffer * buf)
 {
   GdkPixbuf *pix = NULL;
+  GstVideoFrame *frame;
   gint minsize, bytes_per_pixel;
 
   g_return_val_if_fail (GST_VIDEO_SINK_WIDTH (sink) > 0, NULL);
   g_return_val_if_fail (GST_VIDEO_SINK_HEIGHT (sink) > 0, NULL);
 
+  frame = g_slice_new0 (GstVideoFrame);
+  gst_video_frame_map (frame, &sink->info, buf, GST_MAP_READ);
+
   bytes_per_pixel = (sink->has_alpha) ? 4 : 3;
 
   /* last row needn't have row padding */
-  minsize = (sink->rowstride * (GST_VIDEO_SINK_HEIGHT (sink) - 1)) +
+  minsize = (GST_VIDEO_FRAME_COMP_STRIDE (frame, 0) *
+      (GST_VIDEO_SINK_HEIGHT (sink) - 1)) +
       (bytes_per_pixel * GST_VIDEO_SINK_WIDTH (sink));
 
-  g_return_val_if_fail (GST_BUFFER_SIZE (buf) >= minsize, NULL);
+  g_return_val_if_fail (gst_buffer_get_size (buf) >= minsize, NULL);
 
-  pix = gdk_pixbuf_new_from_data (GST_BUFFER_DATA (buf),
+  gst_buffer_ref (buf);
+  pix = gdk_pixbuf_new_from_data (GST_VIDEO_FRAME_COMP_DATA (frame, 0),
       GDK_COLORSPACE_RGB, sink->has_alpha, 8, GST_VIDEO_SINK_WIDTH (sink),
-      GST_VIDEO_SINK_HEIGHT (sink), sink->rowstride,
+      GST_VIDEO_SINK_HEIGHT (sink), GST_VIDEO_FRAME_COMP_STRIDE (frame, 0),
       (GdkPixbufDestroyNotify) gst_gdk_pixbuf_sink_pixbuf_destroy_notify,
-      gst_buffer_ref (buf));
+      frame);
 
   return pix;
 }
