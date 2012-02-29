@@ -335,7 +335,7 @@ gst_mpeg2dec_negotiate_pool (GstMpeg2dec * dec, GstCaps * caps,
 
   /* check if downstream supports cropping */
   dec->use_cropping =
-      gst_query_has_allocation_meta (query, GST_VIDEO_CROP_META_API);
+      gst_query_has_allocation_meta (query, GST_VIDEO_CROP_META_API_TYPE);
 
   GST_DEBUG_OBJECT (dec, "downstream supports cropping : %d",
       dec->use_cropping);
