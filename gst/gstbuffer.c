@@ -1474,28 +1474,26 @@ gst_buffer_span (GstBuffer * buf1, gsize offset, GstBuffer * buf2, gsize size)
 /**
  * gst_buffer_get_meta:
  * @buffer: a #GstBuffer
- * @info: a #GstMetaInfo
+ * @api: the #GType of an API
  *
- * Get the metadata for the api in @info on buffer. When there is no such
+ * Get the metadata for @api on buffer. When there is no such
  * metadata, NULL is returned.
  *
- * Note that the result metadata might not be of the implementation @info.
- *
- * Returns: the metadata for the api in @info on @buffer.
+ * Returns: the metadata for @api on @buffer.
  */
 GstMeta *
-gst_buffer_get_meta (GstBuffer * buffer, const GstMetaInfo * info)
+gst_buffer_get_meta (GstBuffer * buffer, GType api)
 {
   GstMetaItem *item;
   GstMeta *result = NULL;
 
   g_return_val_if_fail (buffer != NULL, NULL);
-  g_return_val_if_fail (info != NULL, NULL);
+  g_return_val_if_fail (api != 0, NULL);
 
   /* find GstMeta of the requested API */
   for (item = GST_BUFFER_META (buffer); item; item = item->next) {
     GstMeta *meta = &item->meta;
-    if (meta->info->api == info->api) {
+    if (meta->info->api == api) {
       result = meta;
       break;
     }

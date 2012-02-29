@@ -1713,20 +1713,18 @@ gst_query_parse_allocation_params (GstQuery * query, guint * size,
  * Add @api as aone of the supported metadata API to @query.
  */
 void
-gst_query_add_allocation_meta (GstQuery * query, const gchar * api)
+gst_query_add_allocation_meta (GstQuery * query, GType api)
 {
   GArray *array;
   GstStructure *structure;
 
   g_return_if_fail (GST_QUERY_TYPE (query) == GST_QUERY_ALLOCATION);
-  g_return_if_fail (api != NULL);
+  g_return_if_fail (api != 0);
   g_return_if_fail (gst_query_is_writable (query));
 
   structure = GST_QUERY_STRUCTURE (query);
-  array =
-      ensure_array (structure, GST_QUARK (META), sizeof (const gchar *), NULL);
+  array = ensure_array (structure, GST_QUARK (META), sizeof (GType), NULL);
 
-  api = g_intern_string (api);
   g_array_append_val (array, api);
 }
 
@@ -1748,8 +1746,7 @@ gst_query_get_n_allocation_metas (GstQuery * query)
   g_return_val_if_fail (GST_QUERY_TYPE (query) == GST_QUERY_ALLOCATION, 0);
 
   structure = GST_QUERY_STRUCTURE (query);
-  array =
-      ensure_array (structure, GST_QUARK (META), sizeof (const gchar *), NULL);
+  array = ensure_array (structure, GST_QUARK (META), sizeof (GType), NULL);
 
   return array->len;
 }
@@ -1762,23 +1759,22 @@ gst_query_get_n_allocation_metas (GstQuery * query)
  * Parse an available query and get the metadata API
  * at @index of the metadata API array.
  *
- * Returns: a #gchar of the metadata API at @index.
+ * Returns: a #GType of the metadata API at @index.
  */
-const gchar *
+GType
 gst_query_parse_nth_allocation_meta (GstQuery * query, guint index)
 {
   GArray *array;
-  const gchar *ret = NULL;
+  GType ret = 0;
   GstStructure *structure;
 
-  g_return_val_if_fail (GST_QUERY_TYPE (query) == GST_QUERY_ALLOCATION, NULL);
+  g_return_val_if_fail (GST_QUERY_TYPE (query) == GST_QUERY_ALLOCATION, 0);
 
   structure = GST_QUERY_STRUCTURE (query);
-  array =
-      ensure_array (structure, GST_QUARK (META), sizeof (const gchar *), NULL);
+  array = ensure_array (structure, GST_QUARK (META), sizeof (GType), NULL);
 
   if (index < array->len)
-    ret = g_array_index (array, const gchar *, index);
+    ret = g_array_index (array, GType, index);
 
   return ret;
 }
@@ -1793,22 +1789,21 @@ gst_query_parse_nth_allocation_meta (GstQuery * query, guint index)
  * Returns: TRUE when @api is in the list of metadata.
  */
 gboolean
-gst_query_has_allocation_meta (GstQuery * query, const gchar * api)
+gst_query_has_allocation_meta (GstQuery * query, GType api)
 {
   GArray *array;
   GstStructure *structure;
   guint i, len;
 
   g_return_val_if_fail (GST_QUERY_TYPE (query) == GST_QUERY_ALLOCATION, FALSE);
-  g_return_val_if_fail (api != NULL, FALSE);
+  g_return_val_if_fail (api != 0, FALSE);
 
   structure = GST_QUERY_STRUCTURE (query);
-  array =
-      ensure_array (structure, GST_QUARK (META), sizeof (const gchar *), NULL);
+  array = ensure_array (structure, GST_QUARK (META), sizeof (GType), NULL);
 
   len = array->len;
   for (i = 0; i < len; i++) {
-    if (strcmp (api, g_array_index (array, const gchar *, i)) == 0)
+    if (g_array_index (array, GType, i) == api)
       return TRUE;
   }
   return FALSE;

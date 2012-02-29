@@ -64,17 +64,30 @@ net_address_meta_free (GstMeta * meta, GstBuffer * buffer)
   nmeta->addr = NULL;
 }
 
+GType
+gst_net_address_meta_api_get_type (void)
+{
+  static volatile GType type;
+  static const gchar *tags[] = { "origin", NULL };
+
+  if (g_once_init_enter (&type)) {
+    GType _type = gst_meta_api_type_register ("GstNetAddressMetaAPI", tags);
+    g_once_init_leave (&type, _type);
+  }
+  return type;
+}
+
 const GstMetaInfo *
 gst_net_address_meta_get_info (void)
 {
   static const GstMetaInfo *meta_info = NULL;
-  static const gchar *tags[] = { "origin", NULL };
 
   if (meta_info == NULL) {
-    meta_info = gst_meta_register ("GstNetAddressMeta", "GstNetAddressMeta",
+    meta_info = gst_meta_register (GST_NET_ADDRESS_META_API_TYPE,
+        "GstNetAddressMeta",
         sizeof (GstNetAddressMeta),
         net_address_meta_init,
-        net_address_meta_free, net_address_meta_transform, tags);
+        net_address_meta_free, net_address_meta_transform);
   }
   return meta_info;
 }

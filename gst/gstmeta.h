@@ -170,7 +170,7 @@ typedef gboolean (*GstMetaTransformFunction) (GstBuffer *transbuf,
  * structure.
  */
 struct _GstMetaInfo {
-  GQuark                     api;
+  GType                      api;
   GType                      type;
   gsize                      size;
 
@@ -178,21 +178,21 @@ struct _GstMetaInfo {
   GstMetaFreeFunction        free_func;
   GstMetaTransformFunction   transform_func;
 
-  const GQuark              *tags;
-
   /*< private >*/
   gpointer _gst_reserved[GST_PADDING];
 };
 
-const GstMetaInfo *  gst_meta_register        (const gchar *api, const gchar *impl,
-                                               gsize size,
-                                               GstMetaInitFunction        init_func,
-                                               GstMetaFreeFunction        free_func,
-                                               GstMetaTransformFunction   transform_func,
-                                               const gchar **tags);
-const GstMetaInfo *  gst_meta_get_info        (const gchar * impl);
+GType                gst_meta_api_type_register (const gchar *api,
+                                                 const gchar **tags);
+gboolean             gst_meta_api_type_has_tag  (GType api, GQuark tag);
 
-gboolean             gst_meta_info_has_tag    (const GstMetaInfo *info, GQuark tag);
+const GstMetaInfo *  gst_meta_register          (GType api, const gchar *impl,
+                                                 gsize size,
+                                                 GstMetaInitFunction      init_func,
+                                                 GstMetaFreeFunction      free_func,
+                                                 GstMetaTransformFunction transform_func);
+const GstMetaInfo *  gst_meta_get_info          (const gchar * impl);
+
 
 G_END_DECLS
 

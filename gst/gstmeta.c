@@ -47,8 +47,56 @@ _priv_gst_meta_initialize (void)
 }
 
 /**
+ * gst_meta_api_type_register:
+ * @api: an API to register
+ * @tags: tags for @api
+ *
+ * Register and return a GType for the @api and associate it with
+ * @tags.
+ *
+ * Returns: a unique GType for @api.
+ */
+GType
+gst_meta_api_type_register (const gchar * api, const gchar ** tags)
+{
+  GType type;
+
+  g_return_val_if_fail (api != NULL, 0);
+  g_return_val_if_fail (tags != NULL, 0);
+
+  type = g_pointer_type_register_static (api);
+
+  if (type != 0) {
+    gint i;
+
+    for (i = 0; tags[i]; i++)
+      g_type_set_qdata (type, g_quark_from_string (tags[i]),
+          GINT_TO_POINTER (TRUE));
+  }
+  return type;
+}
+
+/**
+ * gst_meta_api_type_has_tag:
+ * @api: an API
+ * @tag: the tag to check
+ *
+ * Check if @api was registered with @tag.
+ *
+ * Returns: %TRUE if @api was registered with @tag.
+ */
+gboolean
+gst_meta_api_type_has_tag (GType api, GQuark tag)
+{
+  g_return_val_if_fail (api != 0, FALSE);
+  g_return_val_if_fail (tag != 0, FALSE);
+
+  return g_type_get_qdata (api, tag) != NULL;
+}
+
+/**
  * gst_meta_register:
- * @api: the name of the #GstMeta API
+ * @api: the type of the #GstMeta API
  * @impl: the name of the #GstMeta implementation
  * @size: the size of the #GstMeta structure
  * @init_func: a #GstMetaInitFunction
@@ -66,32 +114,23 @@ _priv_gst_meta_initialize (void)
  */
 
 const GstMetaInfo *
-gst_meta_register (const gchar * api, const gchar * impl, gsize size,
+gst_meta_register (GType api, const gchar * impl, gsize size,
     GstMetaInitFunction init_func, GstMetaFreeFunction free_func,
-    GstMetaTransformFunction transform_func, const gchar ** tags)
+    GstMetaTransformFunction transform_func)
 {
   GstMetaInfo *info;
-  guint len, i;
-  GQuark *qtags;
 
-  g_return_val_if_fail (api != NULL, NULL);
+  g_return_val_if_fail (api != 0, NULL);
   g_return_val_if_fail (impl != NULL, NULL);
   g_return_val_if_fail (size != 0, NULL);
-  g_return_val_if_fail (tags != NULL, NULL);
 
   info = g_slice_new (GstMetaInfo);
-  info->api = g_quark_from_string (api);
+  info->api = api;
   info->type = g_pointer_type_register_static (impl);
   info->size = size;
   info->init_func = init_func;
   info->free_func = free_func;
   info->transform_func = transform_func;
-
-  len = g_strv_length ((gchar **) tags);
-  qtags = g_new0 (GQuark, len);
-  for (i = 0; i < len; i++)
-    qtags[i] = g_quark_from_static_string (tags[i]);
-  info->tags = qtags;
 
   GST_DEBUG ("register \"%s\" implementing \"%s\" of size %" G_GSIZE_FORMAT,
       api, impl, size);
@@ -125,28 +164,4 @@ gst_meta_get_info (const gchar * impl)
   g_rw_lock_reader_unlock (&lock);
 
   return info;
-}
-
-/*
- * gst_meta_info_has_tag:
- * @info: a #GstMetaInfo
- * @tag: a #GQuark
- *
- * Check if @info contains @tag.
- *
- * Returns: %TRUE when @info contains @tag.
- */
-gboolean
-gst_meta_info_has_tag (const GstMetaInfo * info, GQuark tag)
-{
-  gint i;
-
-  g_return_val_if_fail (info != NULL, FALSE);
-  g_return_val_if_fail (tag != 0, FALSE);
-
-  for (i = 0; info->tags[i]; i++)
-    if (info->tags[i] == tag)
-      return TRUE;
-
-  return FALSE;
 }

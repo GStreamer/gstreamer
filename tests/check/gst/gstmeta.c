@@ -43,10 +43,13 @@ typedef struct
   GstClockTime clock_rate;
 } GstMetaTest;
 
+static GType gst_meta_test_api_get_type (void);
+#define GST_META_TEST_API_TYPE (gst_meta_test_api_get_type())
+
 static const GstMetaInfo *gst_meta_test_get_info (void);
 #define GST_META_TEST_INFO (gst_meta_test_get_info())
 
-#define GST_META_TEST_GET(buf) ((GstMetaTest *)gst_buffer_get_meta(buf,GST_META_TEST_INFO))
+#define GST_META_TEST_GET(buf) ((GstMetaTest *)gst_buffer_get_meta(buf,GST_META_TEST_API_TYPE))
 #define GST_META_TEST_ADD(buf) ((GstMetaTest *)gst_buffer_add_meta(buf,GST_META_TEST_INFO,NULL))
 
 #if 0
@@ -114,16 +117,29 @@ test_transform_func (GstBuffer * transbuf, GstMeta * meta,
   return TRUE;
 }
 
+static GType
+gst_meta_test_api_get_type (void)
+{
+  static volatile GType type;
+  static const gchar *tags[] = { "timing", NULL };
+
+  if (g_once_init_enter (&type)) {
+    GType _type = gst_meta_api_type_register ("GstMetaTestAPI", tags);
+    g_once_init_leave (&type, _type);
+  }
+  return type;
+}
+
 static const GstMetaInfo *
 gst_meta_test_get_info (void)
 {
   static const GstMetaInfo *meta_test_info = NULL;
-  static const gchar *tags[] = { "timing", NULL };
 
   if (meta_test_info == NULL) {
-    meta_test_info = gst_meta_register ("GstMetaTest", "GstMetaTest",
+    meta_test_info = gst_meta_register (GST_META_TEST_API_TYPE,
+        "GstMetaTest",
         sizeof (GstMetaTest),
-        test_init_func, test_free_func, test_transform_func, tags);
+        test_init_func, test_free_func, test_transform_func);
   }
   return meta_test_info;
 }

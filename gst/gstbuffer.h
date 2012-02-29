@@ -506,7 +506,7 @@ GstBuffer*      gst_buffer_span                 (GstBuffer *buf1, gsize offset, 
 typedef gboolean (*GstBufferForeachMetaFunc)    (GstBuffer *buffer, GstMeta **meta,
                                                  gpointer user_data);
 
-GstMeta *       gst_buffer_get_meta             (GstBuffer *buffer, const GstMetaInfo *info);
+GstMeta *       gst_buffer_get_meta             (GstBuffer *buffer, GType api);
 GstMeta *       gst_buffer_add_meta             (GstBuffer *buffer, const GstMetaInfo *info,
                                                  gpointer params);
 gboolean        gst_buffer_remove_meta          (GstBuffer *buffer, GstMeta *meta);

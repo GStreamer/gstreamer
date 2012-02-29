@@ -372,10 +372,10 @@ void            gst_query_parse_allocation_params (GstQuery *query, guint *size,
                                                    guint *max_buffers, guint *prefix, guint *alignment,
                                                    GstBufferPool **pool);
 
-void            gst_query_add_allocation_meta       (GstQuery *query, const gchar *api);
+void            gst_query_add_allocation_meta       (GstQuery *query, GType api);
 guint           gst_query_get_n_allocation_metas    (GstQuery *query);
-const gchar *   gst_query_parse_nth_allocation_meta (GstQuery *query, guint index);
-gboolean        gst_query_has_allocation_meta       (GstQuery *query, const gchar *api);
+GType           gst_query_parse_nth_allocation_meta (GstQuery *query, guint index);
+gboolean        gst_query_has_allocation_meta       (GstQuery *query, GType api);
 
 void            gst_query_add_allocation_memory       (GstQuery *query, GstAllocator *allocator);
 guint           gst_query_get_n_allocation_memories   (GstQuery *query);
