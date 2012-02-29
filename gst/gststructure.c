@@ -183,6 +183,14 @@ gst_structure_validate_name (const gchar * name)
     return FALSE;
   }
 
+  if (strncmp (name, "video/x-raw-", 12) == 0) {
+    g_warning ("0.10-style raw video caps are being created. Should be "
+        "video/x-raw,format=(string).. now.");
+  } else if (strncmp (name, "audio/x-raw-", 12) == 0) {
+    g_warning ("0.10-style raw audio caps are being created. Should be "
+        "audio/x-raw,format=(string).. now.");
+  }
+
   return TRUE;
 }
 #endif
