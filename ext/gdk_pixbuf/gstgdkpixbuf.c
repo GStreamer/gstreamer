@@ -36,7 +36,6 @@ GST_DEBUG_CATEGORY_STATIC (gst_gdk_pixbuf_debug);
 enum
 {
   ARG_0,
-  ARG_SILENT                    /* FIXME 0.11: remove */
 };
 
 static GstStaticPadTemplate gst_gdk_pixbuf_sink_template =
@@ -70,11 +69,6 @@ static GstStaticPadTemplate gst_gdk_pixbuf_src_template =
     GST_STATIC_CAPS (GST_VIDEO_CAPS_MAKE ("RGB") "; "
         GST_VIDEO_CAPS_MAKE ("RGBA"))
     );
-
-static void gst_gdk_pixbuf_set_property (GObject * object, guint prop_id,
-    const GValue * value, GParamSpec * pspec);
-static void gst_gdk_pixbuf_get_property (GObject * object, guint prop_id,
-    GValue * value, GParamSpec * pspec);
 
 static GstStateChangeReturn
 gst_gdk_pixbuf_change_state (GstElement * element, GstStateChange transition);
@@ -187,19 +181,9 @@ gst_gdk_pixbuf_sink_query (GstPad * pad, GstObject * parent, GstQuery * query)
 static void
 gst_gdk_pixbuf_class_init (GstGdkPixbufClass * klass)
 {
-  GObjectClass *gobject_class;
   GstElementClass *gstelement_class;
 
-  gobject_class = (GObjectClass *) klass;
   gstelement_class = (GstElementClass *) klass;
-
-  gobject_class->set_property = gst_gdk_pixbuf_set_property;
-  gobject_class->get_property = gst_gdk_pixbuf_get_property;
-
-  g_object_class_install_property (gobject_class, ARG_SILENT,
-      g_param_spec_boolean ("silent", "Silent",
-          "Produce verbose output ? (deprecated)", FALSE,
-          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   gstelement_class->change_state =
       GST_DEBUG_FUNCPTR (gst_gdk_pixbuf_change_state);
@@ -494,34 +478,6 @@ error:
     gst_buffer_unmap (buf, &map);
     gst_buffer_unref (buf);
     return GST_FLOW_ERROR;
-  }
-}
-
-static void
-gst_gdk_pixbuf_set_property (GObject * object, guint prop_id,
-    const GValue * value, GParamSpec * pspec)
-{
-  switch (prop_id) {
-    case ARG_SILENT:
-      /* filter->silent = g_value_get_boolean (value); */
-      break;
-    default:
-      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
-      break;
-  }
-}
-
-static void
-gst_gdk_pixbuf_get_property (GObject * object, guint prop_id,
-    GValue * value, GParamSpec * pspec)
-{
-  switch (prop_id) {
-    case ARG_SILENT:
-      /* g_value_set_boolean (value, filter->silent); */
-      break;
-    default:
-      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
-      break;
   }
 }
 
