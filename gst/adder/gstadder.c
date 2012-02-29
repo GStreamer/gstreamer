@@ -794,6 +794,8 @@ gst_adder_sink_event (GstCollectPads2 * pads, GstCollectData2 * pad,
          * see FIXME in gst_adder_collected() */
         g_atomic_int_set (&adder->new_segment_pending, TRUE);
       }
+      gst_event_unref (event);
+      res = TRUE;
       break;
     default:
       break;
