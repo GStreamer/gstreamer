@@ -160,8 +160,9 @@ struct _GstMetaXImage {
   BufferReturnFunc return_func;
 };
 
+GType gst_meta_ximage_api_get_type (void);
 const GstMetaInfo * gst_meta_ximage_get_info (void);
-#define GST_META_XIMAGE_GET(buf) ((GstMetaXImage *)gst_buffer_get_meta(buf,gst_meta_ximage_get_info()))
+#define GST_META_XIMAGE_GET(buf) ((GstMetaXImage *)gst_buffer_get_meta(buf,gst_meta_ximage_api_get_type()))
 #define GST_META_XIMAGE_ADD(buf) ((GstMetaXImage *)gst_buffer_add_meta(buf,gst_meta_ximage_get_info(),NULL))
 
 GstBuffer *gst_ximageutil_ximage_new (GstXContext *xcontext,

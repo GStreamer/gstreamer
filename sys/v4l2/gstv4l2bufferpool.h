@@ -79,8 +79,9 @@ struct _GstV4l2Meta {
   struct v4l2_buffer vbuffer;
 };
 
+GType gst_v4l2_meta_api_get_type (void);
 const GstMetaInfo * gst_v4l2_meta_get_info (void);
-#define GST_V4L2_META_GET(buf) ((GstV4l2Meta *)gst_buffer_get_meta(buf,gst_v4l2_meta_get_info()))
+#define GST_V4L2_META_GET(buf) ((GstV4l2Meta *)gst_buffer_get_meta(buf,gst_v4l2_meta_api_get_type()))
 #define GST_V4L2_META_ADD(buf) ((GstV4l2Meta *)gst_buffer_add_meta(buf,gst_v4l2_meta_get_info(),NULL))
 
 GType gst_v4l2_buffer_pool_get_type (void);
