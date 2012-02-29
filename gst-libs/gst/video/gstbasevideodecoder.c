@@ -2075,7 +2075,7 @@ gst_base_video_decoder_set_src_caps (GstBaseVideoDecoder * base_video_decoder)
 
   /* check if downstream supports cropping */
   base_video_decoder->use_cropping =
-      gst_query_has_allocation_meta (query, GST_VIDEO_CROP_META_API);
+      gst_query_has_allocation_meta (query, GST_VIDEO_CROP_META_API_TYPE);
 
   gst_buffer_pool_set_config (pool, config);
   /* and activate */

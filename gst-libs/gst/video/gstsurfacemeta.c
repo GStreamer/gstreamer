@@ -44,18 +44,29 @@
  * </note>
  */
 
+GType
+gst_surface_meta_api_get_type (void)
+{
+  static volatile GType type;
+  static const gchar *tags[] = { "memory", NULL };
+
+  if (g_once_init_enter (&type)) {
+    GType _type = gst_meta_api_type_register ("GstSurfaceMetaAPI", tags);
+    g_once_init_leave (&type, _type);
+  }
+  return type;
+}
 
 const GstMetaInfo *
 gst_surface_meta_get_info (void)
 {
   static const GstMetaInfo *meta_info = NULL;
-  static const gchar *tags[] = { "memory" };
 
   if (meta_info == NULL) {
-    meta_info = gst_meta_register ("GstSurfaceMeta", "GstSurfaceMeta",
+    meta_info = gst_meta_register (GST_SURFACE_META_API_TYPE, "GstSurfaceMeta",
         sizeof (GstSurfaceMeta),
         (GstMetaInitFunction) NULL,
-        (GstMetaFreeFunction) NULL, (GstMetaTransformFunction) NULL, tags);
+        (GstMetaFreeFunction) NULL, (GstMetaTransformFunction) NULL);
   }
   return meta_info;
 }

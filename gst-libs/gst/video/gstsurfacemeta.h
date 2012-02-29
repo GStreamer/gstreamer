@@ -48,11 +48,14 @@ struct _GstSurfaceMeta {
                                              GValue *dest);
 };
 
+GType gst_surface_meta_api_get_type (void);
+#define GST_SURFACE_META_API_TYPE (gst_surface_meta_api_get_type())
+
 const GstMetaInfo *gst_surface_meta_get_info (void);
 #define GST_SURFACE_META_INFO (gst_surface_meta_get_info())
 
 #define gst_buffer_get_surface_meta(b) \
-  ((GstSurfaceMeta*)gst_buffer_get_meta((b),GST_SURFACE_META_INFO))
+  ((GstSurfaceMeta*)gst_buffer_get_meta((b),GST_SURFACE_META_API_TYPE))
 #define gst_buffer_add_surface_meta(b) \
   ((GstSurfaceMeta*)gst_buffer_add_meta((b),GST_SURFACE_META_INFO,NULL))
 
