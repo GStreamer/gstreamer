@@ -25,6 +25,8 @@
 
 #include <gst/gst.h>
 #include <gst/base/gstbasetransform.h>
+#include <gst/video/gstvideofilter.h>
+
 #include <gdk-pixbuf/gdk-pixbuf.h>
 
 G_BEGIN_DECLS
@@ -52,7 +54,7 @@ typedef struct _GstPixbufScale GstPixbufScale;
 typedef struct _GstPixbufScaleClass GstPixbufScaleClass;
 
 struct _GstPixbufScale {
-  GstBaseTransform element;
+  GstVideoFilter element;
 
   /* video state */
   gint to_width;
@@ -72,7 +74,7 @@ struct _GstPixbufScale {
 };
 
 struct _GstPixbufScaleClass {
-  GstBaseTransformClass parent_class;
+  GstVideoFilterClass parent_class;
 };
 
 GType gst_pixbufscale_get_type(void);
