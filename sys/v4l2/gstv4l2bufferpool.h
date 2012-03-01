@@ -70,6 +70,9 @@ struct _GstV4l2Buffer {
   GstBuffer   buffer;
 
   struct v4l2_buffer vbuffer;
+  /* warning: the size of mmap buffer and
+   * the actual frame-buffer can be different. */
+  size_t mmap_length;
 
   /* FIXME: have GstV4l2Src* instead, as this has GstV4l2BufferPool* */
   /* FIXME: do we really want to fix this if GstV4l2Buffer/Pool is shared
