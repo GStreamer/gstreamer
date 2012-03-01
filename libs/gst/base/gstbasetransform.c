@@ -812,8 +812,10 @@ gst_base_transform_default_decide_allocation (GstBaseTransform * trans,
     /* remove all memory dependent metadata because we are going to have to
      * allocate different memory for input and output. */
     if (gst_meta_api_type_has_tag (api, GST_META_TAG_MEMORY)) {
+      GST_LOG_OBJECT (trans, "removing memory metadata %s", g_type_name (api));
       gst_query_remove_nth_allocation_meta (query, i);
       i--;
+      n_metas--;
     }
   }
 
