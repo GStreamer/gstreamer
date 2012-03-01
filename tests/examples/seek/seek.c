@@ -102,9 +102,19 @@ typedef struct
   /* GTK widgets */
   GtkWidget *window;
   GtkWidget *video_combo, *audio_combo, *text_combo, *vis_combo;
+  GtkWidget *video_window;
+
   GtkWidget *vis_checkbox, *video_checkbox, *audio_checkbox;
   GtkWidget *text_checkbox, *mute_checkbox, *volume_spinbutton;
-  GtkWidget *video_window;
+  GtkWidget *soft_volume_checkbox, *native_audio_checkbox,
+      *native_video_checkbox;
+  GtkWidget *download_checkbox, *buffering_checkbox, *deinterlace_checkbox;
+  GtkWidget *soft_colorbalance_checkbox;
+  GtkWidget *video_sink_entry, *audio_sink_entry, *text_sink_entry;
+  GtkWidget *buffer_size_entry, *buffer_duration_entry;
+  GtkWidget *ringbuffer_maxsize_entry, *connection_speed_entry;
+  GtkWidget *av_offset_entry, *subtitle_encoding_entry;
+  GtkWidget *subtitle_fontdesc_button;
 
   GtkWidget *seek_format_combo, *seek_position_label, *seek_duration_label;
   GtkWidget *seek_entry;
@@ -186,9 +196,18 @@ static void volume_notify_cb (GstElement * pipeline, GParamSpec * arg,
 static void mute_notify_cb (GstElement * pipeline, GParamSpec * arg,
     SeekApp * app);
 
+static void video_sink_activate_cb (GtkEntry * entry, SeekApp * app);
+static void text_sink_activate_cb (GtkEntry * entry, SeekApp * app);
+static void audio_sink_activate_cb (GtkEntry * entry, SeekApp * app);
+static void buffer_size_activate_cb (GtkEntry * entry, SeekApp * app);
+static void buffer_duration_activate_cb (GtkEntry * entry, SeekApp * app);
+static void ringbuffer_maxsize_activate_cb (GtkEntry * entry, SeekApp * app);
+static void connection_speed_activate_cb (GtkEntry * entry, SeekApp * app);
+static void av_offset_activate_cb (GtkEntry * entry, SeekApp * app);
+static void subtitle_encoding_activate_cb (GtkEntry * entry, SeekApp * app);
+
 /* pipeline construction */
 
-#if 0
 static GstElement *
 gst_element_factory_make_or_warn (const gchar * type, const gchar * name)
 {
@@ -210,7 +229,6 @@ gst_element_factory_make_or_warn (const gchar * type, const gchar * name)
 
   return element;
 }
-#endif
 
 static void
 playbin_set_uri (GstElement * playbin, const gchar * location)
@@ -656,6 +674,21 @@ play_cb (GtkButton * button, SeekApp * app)
   if (app->state != GST_STATE_PLAYING) {
     g_print ("PLAY pipeline\n");
     gtk_statusbar_pop (GTK_STATUSBAR (app->statusbar), app->status_id);
+
+    if (app->pipeline_type == 0) {
+      video_sink_activate_cb (GTK_ENTRY (app->video_sink_entry), app);
+      audio_sink_activate_cb (GTK_ENTRY (app->audio_sink_entry), app);
+      text_sink_activate_cb (GTK_ENTRY (app->text_sink_entry), app);
+      buffer_size_activate_cb (GTK_ENTRY (app->buffer_size_entry), app);
+      buffer_duration_activate_cb (GTK_ENTRY (app->buffer_duration_entry), app);
+      ringbuffer_maxsize_activate_cb (GTK_ENTRY (app->ringbuffer_maxsize_entry),
+          app);
+      connection_speed_activate_cb (GTK_ENTRY (app->connection_speed_entry),
+          app);
+      av_offset_activate_cb (GTK_ENTRY (app->av_offset_entry), app);
+      subtitle_encoding_activate_cb (GTK_ENTRY (app->subtitle_encoding_entry),
+          app);
+    }
 
     ret = gst_element_set_state (app->pipeline, GST_STATE_PLAYING);
     switch (ret) {
@@ -2290,6 +2323,151 @@ delete_event_cb (GtkWidget * widget, GdkEvent * event, SeekApp * app)
 }
 
 static void
+video_sink_activate_cb (GtkEntry * entry, SeekApp * app)
+{
+  GstElement *sink = NULL;
+  const gchar *text;
+
+  text = gtk_entry_get_text (entry);
+  if (text != NULL && *text != '\0') {
+    sink = gst_element_factory_make_or_warn (text, NULL);
+  }
+
+  g_object_set (app->pipeline, "video-sink", sink, NULL);
+}
+
+static void
+audio_sink_activate_cb (GtkEntry * entry, SeekApp * app)
+{
+  GstElement *sink = NULL;
+  const gchar *text;
+
+  text = gtk_entry_get_text (entry);
+  if (text != NULL && *text != '\0') {
+    sink = gst_element_factory_make_or_warn (text, NULL);
+  }
+
+  g_object_set (app->pipeline, "audio-sink", sink, NULL);
+}
+
+static void
+text_sink_activate_cb (GtkEntry * entry, SeekApp * app)
+{
+  GstElement *sink = NULL;
+  const gchar *text;
+
+  text = gtk_entry_get_text (entry);
+  if (text != NULL && *text != '\0') {
+    sink = gst_element_factory_make_or_warn (text, NULL);
+  }
+
+  g_object_set (app->pipeline, "text-sink", sink, NULL);
+}
+
+static void
+buffer_size_activate_cb (GtkEntry * entry, SeekApp * app)
+{
+  const gchar *text;
+
+  text = gtk_entry_get_text (entry);
+  if (text != NULL && *text != '\0') {
+    gint v;
+    gchar *endptr;
+
+    v = g_ascii_strtoll (text, &endptr, 10);
+    if (endptr != text && v != G_MAXINT64 && v != G_MININT64) {
+      g_object_set (app->pipeline, "buffer-size", v, NULL);
+    }
+  }
+}
+
+static void
+buffer_duration_activate_cb (GtkEntry * entry, SeekApp * app)
+{
+  const gchar *text;
+
+  text = gtk_entry_get_text (entry);
+  if (text != NULL && *text != '\0') {
+    gint64 v;
+    gchar *endptr;
+
+    v = g_ascii_strtoll (text, &endptr, 10);
+    if (endptr != text && v != G_MAXINT64 && v != G_MININT64) {
+      g_object_set (app->pipeline, "buffer-duration", v, NULL);
+    }
+  }
+}
+
+static void
+ringbuffer_maxsize_activate_cb (GtkEntry * entry, SeekApp * app)
+{
+  const gchar *text;
+
+  text = gtk_entry_get_text (entry);
+  if (text != NULL && *text != '\0') {
+    guint64 v;
+    gchar *endptr;
+
+    v = g_ascii_strtoull (text, &endptr, 10);
+    if (endptr != text && v != G_MAXUINT64) {
+      g_object_set (app->pipeline, "ring-buffer-max-size", v, NULL);
+    }
+  }
+}
+
+static void
+connection_speed_activate_cb (GtkEntry * entry, SeekApp * app)
+{
+  const gchar *text;
+
+  text = gtk_entry_get_text (entry);
+  if (text != NULL && *text != '\0') {
+    guint v;
+    gchar *endptr;
+
+    v = g_ascii_strtoll (text, &endptr, 10);
+    if (endptr != text && v != G_MAXINT64 && v != G_MININT64) {
+      g_object_set (app->pipeline, "connection-speed", v, NULL);
+    }
+  }
+}
+
+static void
+subtitle_encoding_activate_cb (GtkEntry * entry, SeekApp * app)
+{
+  const gchar *text;
+
+  text = gtk_entry_get_text (entry);
+  g_object_set (app->pipeline, "subtitle-encoding", text, NULL);
+}
+
+static void
+subtitle_fontdesc_cb (GtkFontButton * button, SeekApp * app)
+{
+  const gchar *text;
+
+  text = gtk_font_button_get_font_name (button);
+  g_object_set (app->pipeline, "subtitle-font-desc", text, NULL);
+}
+
+static void
+av_offset_activate_cb (GtkEntry * entry, SeekApp * app)
+{
+  const gchar *text;
+
+  text = gtk_entry_get_text (entry);
+  if (text != NULL && *text != '\0') {
+    gint64 v;
+    gchar *endptr;
+
+    v = g_ascii_strtoll (text, &endptr, 10);
+    if (endptr != text && v != G_MAXINT64 && v != G_MININT64) {
+      g_object_set (app->pipeline, "av-offset", v, NULL);
+    }
+  }
+}
+
+static void
 print_usage (int argc, char **argv)
 {
   gint i;
@@ -2729,12 +2907,9 @@ create_ui (SeekApp * app)
       app);
 
   if (app->pipeline_type == 0) {
-    GtkWidget *pb2vbox, *boxes, *boxes2, *panel;
+    GtkWidget *pb2vbox, *boxes, *boxes2, *panel, *boxes3;
     GtkWidget *volume_label, *shot_button;
-    GtkWidget *soft_volume_checkbox, *native_audio_checkbox,
-        *native_video_checkbox;
-    GtkWidget *download_checkbox, *buffering_checkbox, *deinterlace_checkbox;
-    GtkWidget *soft_colorbalance_checkbox;
+    GtkWidget *label;
 
     playbin = gtk_expander_new ("playbin2 options");
     /* the playbin2 panel controls for the video/audio/subtitle tracks */
@@ -2765,54 +2940,61 @@ create_ui (SeekApp * app)
     app->audio_checkbox = gtk_check_button_new_with_label ("Audio");
     app->text_checkbox = gtk_check_button_new_with_label ("Text");
     app->vis_checkbox = gtk_check_button_new_with_label ("Vis");
-    soft_volume_checkbox = gtk_check_button_new_with_label ("Soft Volume");
-    native_audio_checkbox = gtk_check_button_new_with_label ("Native Audio");
-    native_video_checkbox = gtk_check_button_new_with_label ("Native Video");
-    download_checkbox = gtk_check_button_new_with_label ("Download");
-    buffering_checkbox = gtk_check_button_new_with_label ("Buffering");
-    deinterlace_checkbox = gtk_check_button_new_with_label ("Deinterlace");
-    soft_colorbalance_checkbox =
+    app->soft_volume_checkbox = gtk_check_button_new_with_label ("Soft Volume");
+    app->native_audio_checkbox =
+        gtk_check_button_new_with_label ("Native Audio");
+    app->native_video_checkbox =
+        gtk_check_button_new_with_label ("Native Video");
+    app->download_checkbox = gtk_check_button_new_with_label ("Download");
+    app->buffering_checkbox = gtk_check_button_new_with_label ("Buffering");
+    app->deinterlace_checkbox = gtk_check_button_new_with_label ("Deinterlace");
+    app->soft_colorbalance_checkbox =
         gtk_check_button_new_with_label ("Soft Colorbalance");
     app->mute_checkbox = gtk_check_button_new_with_label ("Mute");
     volume_label = gtk_label_new ("Volume");
     app->volume_spinbutton = gtk_spin_button_new_with_range (0, 10.0, 0.1);
-    gtk_spin_button_set_value (GTK_SPIN_BUTTON (app->volume_spinbutton), 1.0);
+
     gtk_grid_attach (GTK_GRID (boxes), app->video_checkbox, 0, 0, 1, 1);
     gtk_grid_attach (GTK_GRID (boxes), app->audio_checkbox, 1, 0, 1, 1);
     gtk_grid_attach (GTK_GRID (boxes), app->text_checkbox, 2, 0, 1, 1);
     gtk_grid_attach (GTK_GRID (boxes), app->vis_checkbox, 3, 0, 1, 1);
-    gtk_grid_attach (GTK_GRID (boxes), soft_volume_checkbox, 4, 0, 1, 1);
-    gtk_grid_attach (GTK_GRID (boxes), native_audio_checkbox, 5, 0, 1, 1);
-    gtk_grid_attach (GTK_GRID (boxes), native_video_checkbox, 0, 1, 1, 1);
-    gtk_grid_attach (GTK_GRID (boxes), download_checkbox, 1, 1, 1, 1);
-    gtk_grid_attach (GTK_GRID (boxes), buffering_checkbox, 2, 1, 1, 1);
-    gtk_grid_attach (GTK_GRID (boxes), deinterlace_checkbox, 3, 1, 1, 1);
-    gtk_grid_attach (GTK_GRID (boxes), soft_colorbalance_checkbox, 4, 1, 1, 1);
+    gtk_grid_attach (GTK_GRID (boxes), app->soft_volume_checkbox, 4, 0, 1, 1);
+    gtk_grid_attach (GTK_GRID (boxes), app->native_audio_checkbox, 5, 0, 1, 1);
+    gtk_grid_attach (GTK_GRID (boxes), app->native_video_checkbox, 0, 1, 1, 1);
+    gtk_grid_attach (GTK_GRID (boxes), app->download_checkbox, 1, 1, 1, 1);
+    gtk_grid_attach (GTK_GRID (boxes), app->buffering_checkbox, 2, 1, 1, 1);
+    gtk_grid_attach (GTK_GRID (boxes), app->deinterlace_checkbox, 3, 1, 1, 1);
+    gtk_grid_attach (GTK_GRID (boxes), app->soft_colorbalance_checkbox, 4, 1, 1,
+        1);
 
     gtk_grid_attach (GTK_GRID (boxes), app->mute_checkbox, 7, 0, 2, 1);
     gtk_grid_attach (GTK_GRID (boxes), volume_label, 6, 1, 1, 1);
     gtk_grid_attach (GTK_GRID (boxes), app->volume_spinbutton, 7, 1, 1, 1);
+
     gtk_toggle_button_set_active (GTK_TOGGLE_BUTTON (app->video_checkbox),
         TRUE);
     gtk_toggle_button_set_active (GTK_TOGGLE_BUTTON (app->audio_checkbox),
         TRUE);
     gtk_toggle_button_set_active (GTK_TOGGLE_BUTTON (app->text_checkbox), TRUE);
     gtk_toggle_button_set_active (GTK_TOGGLE_BUTTON (app->vis_checkbox), FALSE);
-    gtk_toggle_button_set_active (GTK_TOGGLE_BUTTON (soft_volume_checkbox),
+    gtk_toggle_button_set_active (GTK_TOGGLE_BUTTON (app->soft_volume_checkbox),
         TRUE);
-    gtk_toggle_button_set_active (GTK_TOGGLE_BUTTON (native_audio_checkbox),
+    gtk_toggle_button_set_active (GTK_TOGGLE_BUTTON
+        (app->native_audio_checkbox), FALSE);
+    gtk_toggle_button_set_active (GTK_TOGGLE_BUTTON
+        (app->native_video_checkbox), FALSE);
+    gtk_toggle_button_set_active (GTK_TOGGLE_BUTTON (app->download_checkbox),
         FALSE);
-    gtk_toggle_button_set_active (GTK_TOGGLE_BUTTON (native_video_checkbox),
+    gtk_toggle_button_set_active (GTK_TOGGLE_BUTTON (app->buffering_checkbox),
         FALSE);
-    gtk_toggle_button_set_active (GTK_TOGGLE_BUTTON (download_checkbox), FALSE);
-    gtk_toggle_button_set_active (GTK_TOGGLE_BUTTON (buffering_checkbox),
-        FALSE);
-    gtk_toggle_button_set_active (GTK_TOGGLE_BUTTON (deinterlace_checkbox),
+    gtk_toggle_button_set_active (GTK_TOGGLE_BUTTON (app->deinterlace_checkbox),
         FALSE);
     gtk_toggle_button_set_active (GTK_TOGGLE_BUTTON
-        (soft_colorbalance_checkbox), TRUE);
+        (app->soft_colorbalance_checkbox), TRUE);
     gtk_toggle_button_set_active (GTK_TOGGLE_BUTTON (app->mute_checkbox),
         FALSE);
+    gtk_spin_button_set_value (GTK_SPIN_BUTTON (app->volume_spinbutton), 1.0);
+
     g_signal_connect (G_OBJECT (app->video_checkbox), "toggled",
         G_CALLBACK (video_toggle_cb), app);
     g_signal_connect (G_OBJECT (app->audio_checkbox), "toggled",
@@ -2821,19 +3003,19 @@ create_ui (SeekApp * app)
         G_CALLBACK (text_toggle_cb), app);
     g_signal_connect (G_OBJECT (app->vis_checkbox), "toggled",
         G_CALLBACK (vis_toggle_cb), app);
-    g_signal_connect (G_OBJECT (soft_volume_checkbox), "toggled",
+    g_signal_connect (G_OBJECT (app->soft_volume_checkbox), "toggled",
         G_CALLBACK (soft_volume_toggle_cb), app);
-    g_signal_connect (G_OBJECT (native_audio_checkbox), "toggled",
+    g_signal_connect (G_OBJECT (app->native_audio_checkbox), "toggled",
         G_CALLBACK (native_audio_toggle_cb), app);
-    g_signal_connect (G_OBJECT (native_video_checkbox), "toggled",
+    g_signal_connect (G_OBJECT (app->native_video_checkbox), "toggled",
         G_CALLBACK (native_video_toggle_cb), app);
-    g_signal_connect (G_OBJECT (download_checkbox), "toggled",
+    g_signal_connect (G_OBJECT (app->download_checkbox), "toggled",
         G_CALLBACK (download_toggle_cb), app);
-    g_signal_connect (G_OBJECT (buffering_checkbox), "toggled",
+    g_signal_connect (G_OBJECT (app->buffering_checkbox), "toggled",
         G_CALLBACK (buffering_toggle_cb), app);
-    g_signal_connect (G_OBJECT (deinterlace_checkbox), "toggled",
+    g_signal_connect (G_OBJECT (app->deinterlace_checkbox), "toggled",
         G_CALLBACK (deinterlace_toggle_cb), app);
-    g_signal_connect (G_OBJECT (soft_colorbalance_checkbox), "toggled",
+    g_signal_connect (G_OBJECT (app->soft_colorbalance_checkbox), "toggled",
         G_CALLBACK (soft_colorbalance_toggle_cb), app);
     g_signal_connect (G_OBJECT (app->mute_checkbox), "toggled",
         G_CALLBACK (mute_toggle_cb), app);
@@ -2856,10 +3038,99 @@ create_ui (SeekApp * app)
     /* fill the vis combo box and the array of factories */
     init_visualization_features (app);
 
+    /* Grid with other properties */
+    boxes3 = gtk_grid_new ();
+    gtk_grid_set_row_spacing (GTK_GRID (boxes3), 2);
+    gtk_grid_set_row_homogeneous (GTK_GRID (boxes3), FALSE);
+    gtk_grid_set_column_spacing (GTK_GRID (boxes3), 2);
+    gtk_grid_set_column_homogeneous (GTK_GRID (boxes3), TRUE);
+
+    label = gtk_label_new ("Video sink");
+    gtk_grid_attach (GTK_GRID (boxes3), label, 0, 0, 1, 1);
+    app->video_sink_entry = gtk_entry_new ();
+    g_signal_connect (app->video_sink_entry, "activate",
+        G_CALLBACK (video_sink_activate_cb), app);
+    gtk_grid_attach (GTK_GRID (boxes3), app->video_sink_entry, 0, 1, 1, 1);
+
+    label = gtk_label_new ("Audio sink");
+    gtk_grid_attach (GTK_GRID (boxes3), label, 1, 0, 1, 1);
+    app->audio_sink_entry = gtk_entry_new ();
+    g_signal_connect (app->audio_sink_entry, "activate",
+        G_CALLBACK (audio_sink_activate_cb), app);
+    gtk_grid_attach (GTK_GRID (boxes3), app->audio_sink_entry, 1, 1, 1, 1);
+
+    label = gtk_label_new ("Text sink");
+    gtk_grid_attach (GTK_GRID (boxes3), label, 2, 0, 1, 1);
+    app->text_sink_entry = gtk_entry_new ();
+    g_signal_connect (app->text_sink_entry, "activate",
+        G_CALLBACK (text_sink_activate_cb), app);
+    gtk_grid_attach (GTK_GRID (boxes3), app->text_sink_entry, 2, 1, 1, 1);
+
+    label = gtk_label_new ("Buffer Size");
+    gtk_grid_attach (GTK_GRID (boxes3), label, 0, 2, 1, 1);
+    app->buffer_size_entry = gtk_entry_new ();
+    gtk_entry_set_text (GTK_ENTRY (app->buffer_size_entry), "-1");
+    g_signal_connect (app->buffer_size_entry, "activate",
+        G_CALLBACK (buffer_size_activate_cb), app);
+    gtk_grid_attach (GTK_GRID (boxes3), app->buffer_size_entry, 0, 3, 1, 1);
+
+    label = gtk_label_new ("Buffer Duration");
+    gtk_grid_attach (GTK_GRID (boxes3), label, 1, 2, 1, 1);
+    app->buffer_duration_entry = gtk_entry_new ();
+    gtk_entry_set_text (GTK_ENTRY (app->buffer_duration_entry), "-1");
+    g_signal_connect (app->buffer_duration_entry, "activate",
+        G_CALLBACK (buffer_duration_activate_cb), app);
+    gtk_grid_attach (GTK_GRID (boxes3), app->buffer_duration_entry, 1, 3, 1, 1);
+
+    label = gtk_label_new ("Ringbuffer Max Size");
+    gtk_grid_attach (GTK_GRID (boxes3), label, 2, 2, 1, 1);
+    app->ringbuffer_maxsize_entry = gtk_entry_new ();
+    gtk_entry_set_text (GTK_ENTRY (app->ringbuffer_maxsize_entry), "0");
+    g_signal_connect (app->ringbuffer_maxsize_entry, "activate",
+        G_CALLBACK (ringbuffer_maxsize_activate_cb), app);
+    gtk_grid_attach (GTK_GRID (boxes3), app->ringbuffer_maxsize_entry, 2, 3, 1,
+        1);
+
+    label = gtk_label_new ("Connection Speed");
+    gtk_grid_attach (GTK_GRID (boxes3), label, 3, 2, 1, 1);
+    app->connection_speed_entry = gtk_entry_new ();
+    gtk_entry_set_text (GTK_ENTRY (app->connection_speed_entry), "0");
+    g_signal_connect (app->connection_speed_entry, "activate",
+        G_CALLBACK (connection_speed_activate_cb), app);
+    gtk_grid_attach (GTK_GRID (boxes3), app->connection_speed_entry, 3, 3, 1,
+        1);
+
+    label = gtk_label_new ("A/V offset");
+    gtk_grid_attach (GTK_GRID (boxes3), label, 4, 2, 1, 1);
+    app->av_offset_entry = gtk_entry_new ();
+    g_signal_connect (app->av_offset_entry, "activate",
+        G_CALLBACK (av_offset_activate_cb), app);
+    gtk_entry_set_text (GTK_ENTRY (app->av_offset_entry), "0");
+    g_signal_connect (app->av_offset_entry, "activate",
+        G_CALLBACK (av_offset_activate_cb), app);
+    gtk_grid_attach (GTK_GRID (boxes3), app->av_offset_entry, 4, 3, 1, 1);
+
+    label = gtk_label_new ("Subtitle Encoding");
+    gtk_grid_attach (GTK_GRID (boxes3), label, 0, 4, 1, 1);
+    app->subtitle_encoding_entry = gtk_entry_new ();
+    g_signal_connect (app->subtitle_encoding_entry, "activate",
+        G_CALLBACK (subtitle_encoding_activate_cb), app);
+    gtk_grid_attach (GTK_GRID (boxes3), app->subtitle_encoding_entry, 0, 5, 1,
+        1);
+
+    label = gtk_label_new ("Subtitle Fontdesc");
+    gtk_grid_attach (GTK_GRID (boxes3), label, 1, 4, 1, 1);
+    app->subtitle_fontdesc_button = gtk_font_button_new ();
+    g_signal_connect (app->subtitle_fontdesc_button, "font-set",
+        G_CALLBACK (subtitle_fontdesc_cb), app);
+    gtk_grid_attach (GTK_GRID (boxes3), app->subtitle_fontdesc_button, 1, 5, 1,
+        1);
+
     pb2vbox = gtk_vbox_new (FALSE, 0);
     gtk_box_pack_start (GTK_BOX (pb2vbox), panel, FALSE, FALSE, 2);
     gtk_box_pack_start (GTK_BOX (pb2vbox), boxes, FALSE, FALSE, 2);
     gtk_box_pack_start (GTK_BOX (pb2vbox), boxes2, FALSE, FALSE, 2);
+    gtk_box_pack_start (GTK_BOX (pb2vbox), boxes3, FALSE, FALSE, 2);
     gtk_container_add (GTK_CONTAINER (playbin), pb2vbox);
   } else {
     playbin = NULL;
