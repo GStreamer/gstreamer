@@ -61,11 +61,18 @@ struct _GstTSDemux
   /*< private >*/
   MpegTSBaseProgram *program;	/* Current program */
   guint	current_program_number;
-  gboolean need_newsegment;
 
-  /* Downstream segment */
+  /* segments to be sent */
   GstSegment segment;
-  GstClockTime duration;	/* Total duration */
+  GstEvent *segment_event;
+
+  /* Set when program change */
+  gboolean calculate_update_segment;
+  /* update segment is */
+  GstEvent *update_segment;
+
+  /* Full stream duration */
+  GstClockTime duration;
 };
 
 struct _GstTSDemuxClass

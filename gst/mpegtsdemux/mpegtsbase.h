@@ -78,6 +78,8 @@ struct _MpegTSBaseProgram
 
   /* TRUE if the program is currently being used */
   gboolean active;
+  /* TRUE if this is the first program created */
+  gboolean initial_program;
 };
 
 typedef enum {
@@ -97,9 +99,6 @@ struct _MpegTSBase {
 
   /* pull-based behaviour */
   MpegTSBaseMode mode;
-
-  /* location of first sync point */
-  guint64	initial_sync_point;
 
   /* Current pull offset (also set by seek handler) */
   guint64	seek_offset;
@@ -131,13 +130,6 @@ struct _MpegTSBase {
 
   /* Whether we saw a PAT yet */
   gboolean seen_pat;
-
-  /* Offset from the origin to the first PAT (pullmode) */
-  guint64    first_pat_offset;
-
-  /* interpolation gap between the upstream timestamp and the pts */
-  GstClockTime in_gap;
-  GstClockTime first_buf_ts;
 
   /* Whether upstream is live or not */
   gboolean upstream_live;

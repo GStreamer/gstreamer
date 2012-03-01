@@ -221,9 +221,7 @@ mpegts_base_reset (MpegTSBase * base)
 
   base->mode = BASE_MODE_STREAMING;
   base->seen_pat = FALSE;
-  base->first_pat_offset = -1;
-  base->in_gap = 0;
-  base->first_buf_ts = GST_CLOCK_TIME_NONE;
+  base->seek_offset = -1;
 
   base->upstream_live = FALSE;
   base->query_latency = FALSE;
@@ -621,7 +619,7 @@ mpegts_base_deactivate_program (MpegTSBase * base, MpegTSBaseProgram * program)
 
 static void
 mpegts_base_activate_program (MpegTSBase * base, MpegTSBaseProgram * program,
-    guint16 pmt_pid, GstStructure * pmt_info)
+    guint16 pmt_pid, GstStructure * pmt_info, gboolean initial_program)
 {
   guint i, nbstreams;
   guint pcr_pid;
@@ -666,8 +664,8 @@ mpegts_base_activate_program (MpegTSBase * base, MpegTSBaseProgram * program,
   mpegts_base_program_add_stream (base, program, (guint16) pcr_pid, -1, NULL);
   MPEGTS_BIT_SET (base->is_pes, pcr_pid);
 
-
   program->active = TRUE;
+  program->initial_program = initial_program;
 
   klass = GST_MPEGTS_BASE_GET_CLASS (base);
   if (klass->program_started != NULL)
@@ -855,6 +853,7 @@ mpegts_base_apply_pmt (MpegTSBase * base,
 {
   MpegTSBaseProgram *program, *old_program;
   guint program_number;
+  gboolean initial_program = TRUE;
 
   /* FIXME : not so sure this is valid anymore */
   if (G_UNLIKELY (base->seen_pat == FALSE)) {
@@ -889,11 +888,13 @@ mpegts_base_apply_pmt (MpegTSBase * base,
     /* Desactivate the old program */
     mpegts_base_deactivate_program (base, old_program);
     mpegts_base_free_program (old_program);
+    initial_program = FALSE;
   } else
     program = old_program;
 
   /* First activate program */
-  mpegts_base_activate_program (base, program, pmt_pid, pmt_info);
+  mpegts_base_activate_program (base, program, pmt_pid, pmt_info,
+      initial_program);
 
   /* if (program->pmt_info) */
   /*   gst_structure_free (program->pmt_info); */
@@ -986,9 +987,10 @@ mpegts_base_handle_psi (MpegTSBase * base, MpegTSPacketizerSection * section)
         mpegts_base_apply_pat (base, structure);
         if (base->seen_pat == FALSE) {
           base->seen_pat = TRUE;
-          base->first_pat_offset = GST_BUFFER_OFFSET (section->buffer);
           GST_DEBUG ("First PAT offset: %" G_GUINT64_FORMAT,
-              base->first_pat_offset);
+              GST_BUFFER_OFFSET (section->buffer));
+          mpegts_packetizer_set_reference_offset (base->packetizer,
+              GST_BUFFER_OFFSET (section->buffer));
         }
 
       } else
@@ -1215,8 +1217,6 @@ mpegts_base_sink_event (GstPad * pad, GstEvent * event)
       gst_segment_set_newsegment_full (&base->segment, update, rate,
           applied_rate, format, start, stop, position);
       gst_event_unref (event);
-      base->in_gap = GST_CLOCK_TIME_NONE;
-      base->first_buf_ts = GST_CLOCK_TIME_NONE;
     }
       break;
     case GST_EVENT_EOS:
@@ -1231,7 +1231,6 @@ mpegts_base_sink_event (GstPad * pad, GstEvent * event)
     case GST_EVENT_FLUSH_STOP:
       gst_segment_init (&base->segment, GST_FORMAT_UNDEFINED);
       base->seen_pat = FALSE;
-      base->first_pat_offset = -1;
       /* Passthrough */
     default:
       res = GST_MPEGTS_BASE_GET_CLASS (base)->push_event (base, event);
@@ -1256,9 +1255,6 @@ query_upstream_latency (MpegTSBase * base)
     GST_WARNING_OBJECT (base, "Failed to query upstream latency");
   gst_query_unref (query);
   base->query_latency = TRUE;
-
-  /* Calculate clock skew for live streams only */
-  base->packetizer->calculate_skew = base->upstream_live;
 }
 
 static inline GstFlowReturn
@@ -1291,13 +1287,6 @@ mpegts_base_chain (GstPad * pad, GstBuffer * buf)
 
   if (G_UNLIKELY (base->query_latency == FALSE)) {
     query_upstream_latency (base);
-  }
-
-  if (G_UNLIKELY (!GST_CLOCK_TIME_IS_VALID (base->first_buf_ts)) &&
-      GST_BUFFER_TIMESTAMP_IS_VALID (buf)) {
-    base->first_buf_ts = GST_BUFFER_TIMESTAMP (buf);
-    GST_DEBUG_OBJECT (base, "first buffer timestamp %" GST_TIME_FORMAT,
-        GST_TIME_ARGS (base->first_buf_ts));
   }
 
   mpegts_packetizer_push (base->packetizer, buf);
@@ -1347,17 +1336,20 @@ mpegts_base_scan (MpegTSBase * base)
   GstFlowReturn ret;
   GstBuffer *buf;
   guint i;
-  MpegTSBaseClass *klass = GST_MPEGTS_BASE_GET_CLASS (base);
+  gboolean done = FALSE;
+  MpegTSPacketizerPacketReturn pret;
+  gint64 tmpval;
+  guint64 upstream_size, seek_pos;
+  GstFormat format;
+  guint initial_pcr_seen;
 
   GST_DEBUG ("Scanning for initial sync point");
 
-  /* Find initial sync point */
-  for (i = 0; i < 10; i++) {
-    GST_DEBUG ("Grabbing %d => %d", i * 50 * MPEGTS_MAX_PACKETSIZE,
-        50 * MPEGTS_MAX_PACKETSIZE);
+  /* Find initial sync point and at least 5 PCR values */
+  for (i = 0; i < 10 && !done; i++) {
+    GST_DEBUG ("Grabbing %d => %d", i * 65536, 65536);
 
-    ret = gst_pad_pull_range (base->sinkpad, i * 50 * MPEGTS_MAX_PACKETSIZE,
-        50 * MPEGTS_MAX_PACKETSIZE, &buf);
+    ret = gst_pad_pull_range (base->sinkpad, i * 65536, 65536, &buf);
     if (G_UNLIKELY (ret != GST_FLOW_OK))
       goto beach;
 
@@ -1365,33 +1357,80 @@ mpegts_base_scan (MpegTSBase * base)
     mpegts_packetizer_push (base->packetizer, buf);
 
     if (mpegts_packetizer_has_packets (base->packetizer)) {
-      /* Mark the initial sync point and remember the packetsize */
-      base->initial_sync_point = base->seek_offset = base->packetizer->offset;
-      GST_DEBUG ("Sync point is now %" G_GUINT64_FORMAT, base->seek_offset);
-      base->packetsize = base->packetizer->packet_size;
-
-      /* If the subclass can seek for timestamps, do that */
-      if (klass->find_timestamps) {
-        guint64 offset;
-        mpegts_packetizer_clear (base->packetizer);
-
-        ret = klass->find_timestamps (base, 0, &offset);
-
-        base->initial_sync_point = base->seek_offset =
-            base->packetizer->offset = base->first_pat_offset;
+      if (base->seek_offset == -1) {
+        /* Mark the initial sync point and remember the packetsize */
+        base->seek_offset = base->packetizer->offset;
         GST_DEBUG ("Sync point is now %" G_GUINT64_FORMAT, base->seek_offset);
+        base->packetsize = base->packetizer->packet_size;
       }
-      goto beach;
+      while (1) {
+        /* Eat up all packets */
+        pret = mpegts_packetizer_process_next_packet (base->packetizer);
+        if (pret == PACKET_NEED_MORE)
+          break;
+        if (pret != PACKET_BAD &&
+            mpegts_packetizer_get_seen_pcr (base->packetizer) >= 5) {
+          GST_DEBUG ("Got enough initial PCR");
+          done = TRUE;
+          break;
+        }
+      }
     }
   }
 
-  GST_WARNING ("Didn't find initial sync point");
-  ret = GST_FLOW_ERROR;
+  initial_pcr_seen = mpegts_packetizer_get_seen_pcr (base->packetizer);
+  if (G_UNLIKELY (initial_pcr_seen == 0))
+    goto no_initial_pcr;
+  GST_DEBUG ("Seen %d initial PCR", initial_pcr_seen);
+
+  /* Now send data from the end */
+  mpegts_packetizer_clear (base->packetizer);
+
+  /* Get the size of upstream */
+  format = GST_FORMAT_BYTES;
+  if (!gst_pad_query_peer_duration (base->sinkpad, &format, &tmpval))
+    goto beach;
+  upstream_size = tmpval;
+  done = FALSE;
+
+  /* Find last PCR value */
+  for (seek_pos = MAX (0, upstream_size - 655360);
+      seek_pos < upstream_size && !done; seek_pos += 65536) {
+    GST_DEBUG ("Grabbing %d => %d", seek_pos, 65536);
+
+    ret = gst_pad_pull_range (base->sinkpad, seek_pos, 65536, &buf);
+    if (G_UNLIKELY (ret != GST_FLOW_OK))
+      goto beach;
+
+    /* Push to packetizer */
+    mpegts_packetizer_push (base->packetizer, buf);
+
+    if (mpegts_packetizer_has_packets (base->packetizer)) {
+      while (1) {
+        /* Eat up all packets */
+        pret = mpegts_packetizer_process_next_packet (base->packetizer);
+        if (pret == PACKET_NEED_MORE)
+          break;
+        if (pret != PACKET_BAD &&
+            mpegts_packetizer_get_seen_pcr (base->packetizer) >
+            initial_pcr_seen) {
+          GST_DEBUG ("Got last PCR");
+          done = TRUE;
+          break;
+        }
+      }
+    }
+  }
 
 beach:
   mpegts_packetizer_clear (base->packetizer);
   return ret;
 
+no_initial_pcr:
+  mpegts_packetizer_clear (base->packetizer);
+  GST_WARNING_OBJECT (base, "Couldn't find any PCR within the first %d bytes",
+      10 * 65536);
+  return GST_FLOW_ERROR;
 }
 
 
@@ -1409,7 +1448,7 @@ mpegts_base_loop (MpegTSBase * base)
       GST_DEBUG ("Changing to Streaming");
       break;
     case BASE_MODE_SEEKING:
-      /* FIXME : yes, we should do something here */
+      /* FIXME : unclear if we still need mode_seeking... */
       base->mode = BASE_MODE_STREAMING;
       break;
     case BASE_MODE_STREAMING:
@@ -1492,6 +1531,8 @@ mpegts_base_handle_seek_event (MpegTSBase * base, GstPad * pad,
   flush = flags & GST_SEEK_FLAG_FLUSH;
 
   if (base->mode == BASE_MODE_PUSHING) {
+    /* FIXME : Actually ... it is supported, we just need to convert
+     * the seek event to BYTES */
     GST_ERROR ("seeking in push mode not supported");
     goto push_mode;
   }
@@ -1505,6 +1546,7 @@ mpegts_base_handle_seek_event (MpegTSBase * base, GstPad * pad,
         gst_event_new_flush_start ());
   } else
     gst_pad_pause_task (base->sinkpad);
+
   /* wait for streaming to finish */
   GST_PAD_STREAM_LOCK (base->sinkpad);
 
@@ -1512,6 +1554,8 @@ mpegts_base_handle_seek_event (MpegTSBase * base, GstPad * pad,
     /* send a FLUSH_STOP for the sinkpad, since we need data for seeking */
     GST_DEBUG_OBJECT (base, "sending flush stop");
     gst_pad_push_event (base->sinkpad, gst_event_new_flush_stop ());
+    /* And actually flush our pending data */
+    mpegts_base_flush (base);
   }
 
   if (flags & (GST_SEEK_FLAG_SEGMENT | GST_SEEK_FLAG_SKIP)) {
@@ -1526,11 +1570,9 @@ mpegts_base_handle_seek_event (MpegTSBase * base, GstPad * pad,
       ret = klass->seek (base, event);
       if (G_UNLIKELY (ret != GST_FLOW_OK)) {
         GST_WARNING ("seeking failed %s", gst_flow_get_name (ret));
-        goto done;
       }
     } else {
       GST_WARNING ("subclass has no seek implementation");
-      goto done;
     }
   }
 
@@ -1568,6 +1610,7 @@ mpegts_base_sink_activate_pull (GstPad * pad, gboolean active)
   MpegTSBase *base = GST_MPEGTS_BASE (GST_OBJECT_PARENT (pad));
   if (active) {
     base->mode = BASE_MODE_SCANNING;
+    base->packetizer->calculate_offset = TRUE;
     return gst_pad_start_task (pad, (GstTaskFunction) mpegts_base_loop, base);
   } else
     return gst_pad_stop_task (pad);
@@ -1578,6 +1621,7 @@ mpegts_base_sink_activate_push (GstPad * pad, gboolean active)
 {
   MpegTSBase *base = GST_MPEGTS_BASE (GST_OBJECT_PARENT (pad));
   base->mode = BASE_MODE_PUSHING;
+  base->packetizer->calculate_skew = TRUE;
   return TRUE;
 }
 
