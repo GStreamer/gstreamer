@@ -168,6 +168,7 @@ GstDebugCategory *GST_CAT_PROBE = NULL;
 GstDebugCategory *GST_CAT_REGISTRY = NULL;
 GstDebugCategory *GST_CAT_QOS = NULL;
 GstDebugCategory *_priv_GST_CAT_POLL = NULL;
+GstDebugCategory *GST_CAT_META = NULL;
 
 
 #endif /* !defined(GST_DISABLE_GST_DEBUG) || !defined(GST_REMOVE_DISABLED) */
@@ -404,6 +405,7 @@ _priv_gst_debug_init (void)
   GST_CAT_REGISTRY = _gst_debug_category_new ("GST_REGISTRY", 0, "registry");
   GST_CAT_QOS = _gst_debug_category_new ("GST_QOS", 0, "QoS");
   _priv_GST_CAT_POLL = _gst_debug_category_new ("GST_POLL", 0, "poll");
+  GST_CAT_META = _gst_debug_category_new ("GST_META", 0, "meta");
 
 
   /* print out the valgrind message if we're in valgrind */

@@ -198,6 +198,7 @@ GST_EXPORT GstDebugCategory *GST_CAT_SIGNAL;
 GST_EXPORT GstDebugCategory *GST_CAT_PROBE;
 GST_EXPORT GstDebugCategory *GST_CAT_REGISTRY;
 GST_EXPORT GstDebugCategory *GST_CAT_QOS;
+GST_EXPORT GstDebugCategory *GST_CAT_META;
 
 /* Categories that should be completely private to
  * libgstreamer should be done like this: */
@@ -238,6 +239,7 @@ extern GstDebugCategory *_priv_GST_CAT_POLL;
 #define GST_CAT_QOS              NULL
 #define GST_CAT_TYPES            NULL
 #define GST_CAT_POLL             NULL
+#define GST_CAT_META             NULL
 
 #endif
 

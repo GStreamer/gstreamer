@@ -66,14 +66,17 @@ gst_meta_api_type_register (const gchar * api, const gchar ** tags)
   g_return_val_if_fail (api != NULL, 0);
   g_return_val_if_fail (tags != NULL, 0);
 
+  GST_CAT_DEBUG (GST_CAT_META, "register API \"%s\"", api);
   type = g_pointer_type_register_static (api);
 
   if (type != 0) {
     gint i;
 
-    for (i = 0; tags[i]; i++)
+    for (i = 0; tags[i]; i++) {
+      GST_CAT_DEBUG (GST_CAT_META, "  adding tag \"%s\"", tags[i]);
       g_type_set_qdata (type, g_quark_from_string (tags[i]),
           GINT_TO_POINTER (TRUE));
+    }
   }
   return type;
 }
@@ -134,8 +137,9 @@ gst_meta_register (GType api, const gchar * impl, gsize size,
   info->free_func = free_func;
   info->transform_func = transform_func;
 
-  GST_DEBUG ("register \"%s\" implementing \"%s\" of size %" G_GSIZE_FORMAT,
-      api, impl, size);
+  GST_CAT_DEBUG (GST_CAT_META,
+      "register \"%s\" implementing \"%s\" of size %" G_GSIZE_FORMAT, impl,
+      g_type_name (api), size);
 
   g_rw_lock_writer_lock (&lock);
   g_hash_table_insert (metainfo, (gpointer) impl, (gpointer) info);
