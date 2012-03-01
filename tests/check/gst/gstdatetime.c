@@ -24,11 +24,13 @@
 #include <time.h>
 #include <gst/check/gstcheck.h>
 
-#define ASSERT_TIME(dt,H,M,S) G_STMT_START { \
-  assert_equals_int ((H), gst_date_time_get_hour ((dt))); \
-  assert_equals_int ((M), gst_date_time_get_minute ((dt))); \
-  assert_equals_int ((S), gst_date_time_get_second ((dt))); \
-} G_STMT_END
+#define assert_almost_equals_int(a, b)                            \
+G_STMT_START {                                                           \
+  int first = a;                                                         \
+  int second = b;                                                        \
+  fail_unless(ABS (first - second) <= 1,                                 \
+    "'" #a "' (%d) is not almost equal to '" #b"' (%d)", first, second); \
+} G_STMT_END;
 
 GST_START_TEST (test_GstDateTime_now)
 {
@@ -49,7 +51,7 @@ GST_START_TEST (test_GstDateTime_now)
   assert_equals_int (gst_date_time_get_day (dt), tm.tm_mday);
   assert_equals_int (gst_date_time_get_hour (dt), tm.tm_hour);
   assert_equals_int (gst_date_time_get_minute (dt), tm.tm_min);
-  assert_equals_int (gst_date_time_get_second (dt), tm.tm_sec);
+  assert_almost_equals_int (gst_date_time_get_second (dt), tm.tm_sec);
   gst_date_time_unref (dt);
 }
 
@@ -177,7 +179,7 @@ GST_START_TEST (test_GstDateTime_get_microsecond)
   g_get_current_time (&tv);
   dt = gst_date_time_new (0, 2010, 7, 15, 11, 12,
       13 + (tv.tv_usec / 1000000.0));
-  assert_equals_int (tv.tv_usec, gst_date_time_get_microsecond (dt));
+  assert_almost_equals_int (tv.tv_usec, gst_date_time_get_microsecond (dt));
   gst_date_time_unref (dt);
 }
 
@@ -252,7 +254,7 @@ GST_START_TEST (test_GstDateTime_utc_now)
   assert_equals_int (tm.tm_mday, gst_date_time_get_day (dt));
   assert_equals_int (tm.tm_hour, gst_date_time_get_hour (dt));
   assert_equals_int (tm.tm_min, gst_date_time_get_minute (dt));
-  assert_equals_int (tm.tm_sec, gst_date_time_get_second (dt));
+  assert_almost_equals_int (tm.tm_sec, gst_date_time_get_second (dt));
   gst_date_time_unref (dt);
 }
 
