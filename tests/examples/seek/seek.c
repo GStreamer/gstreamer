@@ -158,6 +158,7 @@ typedef struct
   const gchar *pipeline_spec;
   gint pipeline_type;
   GList *paths, *current_path;
+  GList *sub_paths, *current_sub_path;
 
   gchar *audiosink_str, *videosink_str;
 
@@ -231,20 +232,30 @@ gst_element_factory_make_or_warn (const gchar * type, const gchar * name)
 }
 
 static void
-playbin_set_uri (GstElement * playbin, const gchar * location)
+set_uri_property (GObject * object, const gchar * property,
+    const gchar * location)
 {
   gchar *uri;
 
   /* Add "file://" prefix for convenience */
-  if (g_str_has_prefix (location, "/") || !gst_uri_is_valid (location)) {
+  if (location && (g_str_has_prefix (location, "/")
+          || !gst_uri_is_valid (location))) {
     uri = gst_filename_to_uri (location, NULL);
     g_print ("Setting URI: %s\n", uri);
-    g_object_set (G_OBJECT (playbin), "uri", uri, NULL);
+    g_object_set (object, property, uri, NULL);
     g_free (uri);
   } else {
     g_print ("Setting URI: %s\n", location);
-    g_object_set (G_OBJECT (playbin), "uri", location, NULL);
+    g_object_set (object, property, location, NULL);
   }
+}
+
+static void
+playbin_set_uri (GstElement * playbin, const gchar * location,
+    const gchar * sub_location)
+{
+  set_uri_property (G_OBJECT (playbin), "uri", location);
+  set_uri_property (G_OBJECT (playbin), "suburi", sub_location);
 }
 
 static void
@@ -255,7 +266,8 @@ make_playbin2_pipeline (SeekApp * app, const gchar * location)
   app->pipeline = pipeline = gst_element_factory_make ("playbin2", "playbin2");
   g_assert (pipeline);
 
-  playbin_set_uri (pipeline, location);
+  playbin_set_uri (pipeline, location,
+      app->current_sub_path ? app->current_sub_path->data : NULL);
 
   g_signal_connect (pipeline, "notify::volume", G_CALLBACK (volume_notify_cb),
       app);
@@ -2161,8 +2173,10 @@ msg_eos (GstBus * bus, GstMessage * message, SeekApp * app)
   if (app->current_path && app->pipeline_type == 0) {
     stop_cb (NULL, app);
     app->current_path = g_list_next (app->current_path);
+    app->current_sub_path = g_list_next (app->current_sub_path);
     if (app->current_path) {
-      playbin_set_uri (app->pipeline, app->current_path->data);
+      playbin_set_uri (app->pipeline, app->current_path->data,
+          app->current_sub_path ? app->current_sub_path->data : NULL);
       play_cb (NULL, app);
     }
   }
@@ -3206,6 +3220,8 @@ reset_app (SeekApp * app)
 
   g_list_foreach (app->paths, (GFunc) g_free, NULL);
   g_list_free (app->paths);
+  g_list_foreach (app->sub_paths, (GFunc) g_free, NULL);
+  g_list_free (app->sub_paths);
 
   g_print ("free pipeline\n");
   gst_object_unref (app->pipeline);
@@ -3244,7 +3260,7 @@ main (int argc, char **argv)
 
   GST_DEBUG_CATEGORY_INIT (seek_debug, "seek", 0, "seek example");
 
-  if (argc != 3) {
+  if (argc < 3) {
     print_usage (argc, argv);
     exit (-1);
   }
@@ -3272,6 +3288,23 @@ main (int argc, char **argv)
   }
 
   app.current_path = app.paths;
+
+  if (argc > 3 && argv[3]) {
+    if (g_path_is_absolute (argv[3]) &&
+        (g_strrstr (argv[3], "*") != NULL ||
+            g_strrstr (argv[3], "?") != NULL)) {
+      app.sub_paths = handle_wildcards (argv[3]);
+    } else {
+      app.sub_paths = g_list_prepend (app.sub_paths, g_strdup (argv[3]));
+    }
+
+    if (!app.sub_paths) {
+      g_print ("opening %s failed\n", argv[3]);
+      exit (-1);
+    }
+
+    app.current_sub_path = app.sub_paths;
+  }
 
   pipelines[app.pipeline_type].func (&app, app.current_path->data);
   g_assert (app.pipeline);
