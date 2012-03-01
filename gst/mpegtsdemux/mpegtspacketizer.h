@@ -86,9 +86,14 @@ struct _MpegTSPacketizer2 {
 
   /* clock skew calculation */
   gboolean       calculate_skew;
+
+  /* Following variables are only active/used when
+   * calculate_skew is TRUE */
+  /* FIXME : These variables should be *per* PCR PID */
   GstClockTime   base_time;
   GstClockTime   base_pcrtime;
   GstClockTime   prev_out_time;
+  GstClockTime   prev_in_time;
   GstClockTime   last_pcrtime;
   gint64         window[MAX_WINDOW];
   guint          window_pos;
@@ -161,6 +166,8 @@ void mpegts_packetizer_push (MpegTSPacketizer2 *packetizer, GstBuffer *buffer);
 gboolean mpegts_packetizer_has_packets (MpegTSPacketizer2 *packetizer);
 MpegTSPacketizerPacketReturn mpegts_packetizer_next_packet (MpegTSPacketizer2 *packetizer,
   MpegTSPacketizerPacket *packet);
+MpegTSPacketizerPacketReturn
+mpegts_packetizer_process_next_packet(MpegTSPacketizer2 * packetizer);
 void mpegts_packetizer_clear_packet (MpegTSPacketizer2 *packetizer,
   MpegTSPacketizerPacket *packet);
 void mpegts_packetizer_remove_stream(MpegTSPacketizer2 *packetizer,

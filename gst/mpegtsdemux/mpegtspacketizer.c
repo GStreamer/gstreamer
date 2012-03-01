@@ -212,7 +212,7 @@ mpegts_packetizer_finalize (GObject * object)
     G_OBJECT_CLASS (mpegts_packetizer_parent_class)->finalize (object);
 }
 
-guint64
+static inline guint64
 mpegts_packetizer_compute_pcr (const guint8 * data)
 {
   guint32 pcr1;
@@ -2318,6 +2318,14 @@ done:
   return PACKET_NEED_MORE;
 }
 
+MpegTSPacketizerPacketReturn
+mpegts_packetizer_process_next_packet (MpegTSPacketizer2 * packetizer)
+{
+  MpegTSPacketizerPacket packet;
+
+  return mpegts_packetizer_next_packet (packetizer, &packet);
+}
+
 void
 mpegts_packetizer_clear_packet (MpegTSPacketizer2 * packetizer,
     MpegTSPacketizerPacket * packet)
@@ -2927,6 +2935,11 @@ calculate_skew (MpegTSPacketizer2 * packetizer, guint64 pcrtime,
   /* elapsed time at receiver, includes the jitter */
   recv_diff = time - packetizer->base_time;
 
+  /* Ignore packets received at 100% the same time (i.e. from the same input buffer) */
+  if (G_UNLIKELY (time == packetizer->prev_in_time
+          && GST_CLOCK_TIME_IS_VALID (packetizer->prev_in_time)))
+    goto no_skew;
+
   /* measure the diff */
   delta = ((gint64) recv_diff) - ((gint64) send_diff);
 
@@ -3061,6 +3074,7 @@ no_skew:
   }
 
   packetizer->prev_out_time = out_time;
+  packetizer->prev_in_time = time;
   packetizer->prev_send_diff = send_diff;
 
   GST_DEBUG ("skew %" G_GINT64_FORMAT ", out %" GST_TIME_FORMAT,
