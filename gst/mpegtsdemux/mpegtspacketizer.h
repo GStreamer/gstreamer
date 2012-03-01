@@ -58,6 +58,7 @@ G_BEGIN_DECLS
 
 typedef struct _MpegTSPacketizer2 MpegTSPacketizer2;
 typedef struct _MpegTSPacketizer2Class MpegTSPacketizer2Class;
+typedef struct _MpegTSPacketizerPrivate MpegTSPacketizerPrivate;
 
 typedef struct
 {
@@ -74,6 +75,7 @@ struct _MpegTSPacketizer2 {
 
   GstAdapter *adapter;
   /* streams hashed by pid */
+  /* FIXME : be more memory efficient (see how it's done in mpegtsbase) */
   MpegTSPacketizerStream **streams;
   gboolean disposed;
   gboolean know_packet_size;
@@ -102,6 +104,11 @@ struct _MpegTSPacketizer2 {
   gint64         window_min;
   gint64         skew;
   gint64         prev_send_diff;
+
+  /* offset/bitrate calculator */
+  gboolean       calculate_offset;
+
+  MpegTSPacketizerPrivate *priv;
 };
 
 struct _MpegTSPacketizer2Class {
@@ -187,8 +194,22 @@ GstStructure *mpegts_packetizer_parse_eit (MpegTSPacketizer2 *packetizer,
   MpegTSPacketizerSection *section);
 GstStructure *mpegts_packetizer_parse_tdt (MpegTSPacketizer2 *packetizer,
   MpegTSPacketizerSection *section);
-guint64 mpegts_packetizer_compute_pcr(const guint8 * data);
 
+/* Only valid if calculate_offset is TRUE */
+guint mpegts_packetizer_get_seen_pcr (MpegTSPacketizer2 *packetizer);
+
+GstClockTime
+mpegts_packetizer_offset_to_ts (MpegTSPacketizer2 * packetizer,
+				guint64 offset);
+guint64
+mpegts_packetizer_ts_to_offset (MpegTSPacketizer2 * packetizer,
+				GstClockTime ts);
+GstClockTime
+mpegts_packetizer_pts_to_ts (MpegTSPacketizer2 * packetizer,
+			     guint64 pcr);
+void
+mpegts_packetizer_set_reference_offset (MpegTSPacketizer2 * packetizer,
+					guint64 refoffset);
 G_END_DECLS
 
 #endif /* GST_MPEGTS_PACKETIZER_H */

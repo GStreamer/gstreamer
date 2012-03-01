@@ -69,9 +69,34 @@ static GQuark QUARK_SEGMENT_LAST_SECTION_NUMBER;
 static GQuark QUARK_LAST_TABLE_ID;
 static GQuark QUARK_EVENTS;
 
+
+#define MPEGTS_PACKETIZER_GET_PRIVATE(obj)  \
+   (G_TYPE_INSTANCE_GET_PRIVATE ((obj), GST_TYPE_MPEGTS_PACKETIZER, MpegTSPacketizerPrivate))
+
 static void _init_local (void);
 G_DEFINE_TYPE_EXTENDED (MpegTSPacketizer2, mpegts_packetizer, G_TYPE_OBJECT, 0,
     _init_local ());
+
+typedef struct
+{
+  guint64 offset;               /* offset in upstream */
+  guint64 pcr;                  /* pcr (wraparound not fixed) */
+} MpegTSPacketizerOffset;
+
+struct _MpegTSPacketizerPrivate
+{
+  /* Used for bitrate calculation */
+  /* FIXME : Replace this later on with a balanced tree or sequence */
+  guint64 first_offset;
+  guint64 first_pcr;
+  guint64 last_offset;
+  guint64 last_pcr;
+
+  /* Reference offset */
+  guint64 refoffset;
+
+  guint nb_seen_offsets;
+};
 
 static void mpegts_packetizer_dispose (GObject * object);
 static void mpegts_packetizer_finalize (GObject * object);
@@ -82,6 +107,8 @@ static gchar *get_encoding (const gchar * text, guint * start_text,
 static gchar *get_encoding_and_convert (const gchar * text, guint length);
 static GstClockTime calculate_skew (MpegTSPacketizer2 * packetizer,
     guint64 pcrtime, GstClockTime time);
+static void record_pcr (MpegTSPacketizer2 * packetizer, guint64 pcr,
+    guint64 offset);
 static void mpegts_packetizer_reset_skew (MpegTSPacketizer2 * packetizer);
 
 #define CONTINUITY_UNSET 255
@@ -156,6 +183,8 @@ mpegts_packetizer_class_init (MpegTSPacketizer2Class * klass)
 {
   GObjectClass *gobject_class;
 
+  g_type_class_add_private (klass, sizeof (MpegTSPacketizerPrivate));
+
   gobject_class = G_OBJECT_CLASS (klass);
 
   gobject_class->dispose = mpegts_packetizer_dispose;
@@ -165,13 +194,22 @@ mpegts_packetizer_class_init (MpegTSPacketizer2Class * klass)
 static void
 mpegts_packetizer_init (MpegTSPacketizer2 * packetizer)
 {
+  packetizer->priv = MPEGTS_PACKETIZER_GET_PRIVATE (packetizer);
   packetizer->adapter = gst_adapter_new ();
   packetizer->offset = 0;
   packetizer->empty = TRUE;
   packetizer->streams = g_new0 (MpegTSPacketizerStream *, 8192);
   packetizer->know_packet_size = FALSE;
   packetizer->calculate_skew = FALSE;
+  packetizer->calculate_offset = FALSE;
   mpegts_packetizer_reset_skew (packetizer);
+
+  packetizer->priv->first_offset = -1;
+  packetizer->priv->first_pcr = -1;
+  packetizer->priv->last_offset = -1;
+  packetizer->priv->last_pcr = -1;
+  packetizer->priv->nb_seen_offsets = 0;
+  packetizer->priv->refoffset = -1;
 }
 
 static void
@@ -269,17 +307,24 @@ mpegts_packetizer_parse_adaptation_field_control (MpegTSPacketizer2 *
   /* PCR */
   if (afcflags & MPEGTS_AFC_PCR_FLAG) {
     packet->pcr = mpegts_packetizer_compute_pcr (data);
+    *data += 6;
+    GST_DEBUG ("pcr %" G_GUINT64_FORMAT " (%" GST_TIME_FORMAT ")",
+        packet->pcr, GST_TIME_ARGS (PCRTIME_TO_GSTTIME (packet->pcr)));
+
     if (packetizer->calculate_skew)
       GST_BUFFER_TIMESTAMP (packet->buffer) =
           calculate_skew (packetizer, packet->pcr,
           GST_BUFFER_TIMESTAMP (packet->buffer));
-    *data += 6;
+    if (packetizer->calculate_offset)
+      record_pcr (packetizer, packet->pcr, packet->offset);
   }
 
   /* OPCR */
   if (afcflags & MPEGTS_AFC_OPCR_FLAG) {
     packet->opcr = mpegts_packetizer_compute_pcr (data);
-    *data += 6;
+    /* *data += 6; */
+    GST_DEBUG ("opcr %" G_GUINT64_FORMAT " (%" GST_TIME_FORMAT ")",
+        packet->pcr, GST_TIME_ARGS (PCRTIME_TO_GSTTIME (packet->pcr)));
   }
 
   return TRUE;
@@ -2782,6 +2827,7 @@ failed:
 static void
 mpegts_packetizer_reset_skew (MpegTSPacketizer2 * packetizer)
 {
+  /* FIXME : These variables should be *per* PCR PID */
   packetizer->base_time = GST_CLOCK_TIME_NONE;
   packetizer->base_pcrtime = GST_CLOCK_TIME_NONE;
   packetizer->last_pcrtime = GST_CLOCK_TIME_NONE;
@@ -2798,6 +2844,7 @@ static void
 mpegts_packetizer_resync (MpegTSPacketizer2 * packetizer, GstClockTime time,
     GstClockTime gstpcrtime, gboolean reset_skew)
 {
+  /* FIXME : These variables should be *per* PCR PID */
   packetizer->base_time = time;
   packetizer->base_pcrtime = gstpcrtime;
   packetizer->prev_out_time = GST_CLOCK_TIME_NONE;
@@ -3081,4 +3128,110 @@ no_skew:
       packetizer->skew, GST_TIME_ARGS (out_time));
 
   return out_time;
+}
+
+static void
+record_pcr (MpegTSPacketizer2 * packetizer, guint64 pcr, guint64 offset)
+{
+  MpegTSPacketizerPrivate *priv = packetizer->priv;
+
+  /* Check against first PCR */
+  if (priv->first_pcr == -1 || priv->first_offset > offset) {
+    GST_DEBUG ("Recording first value. PCR:%" G_GUINT64_FORMAT " offset:%"
+        G_GUINT64_FORMAT, pcr, offset);
+    priv->first_pcr = pcr;
+    priv->first_offset = offset;
+    priv->nb_seen_offsets++;
+  } else
+    /* If we didn't update the first PCR, let's check against last PCR */
+  if (priv->last_pcr == -1 || priv->last_offset < offset) {
+    GST_DEBUG ("Recording last value. PCR:%" G_GUINT64_FORMAT " offset:%"
+        G_GUINT64_FORMAT, pcr, offset);
+    priv->last_pcr = pcr;
+    priv->last_offset = offset;
+    priv->nb_seen_offsets++;
+  }
+}
+
+guint
+mpegts_packetizer_get_seen_pcr (MpegTSPacketizer2 * packetizer)
+{
+  return packetizer->priv->nb_seen_offsets;
+}
+
+GstClockTime
+mpegts_packetizer_offset_to_ts (MpegTSPacketizer2 * packetizer, guint64 offset)
+{
+  MpegTSPacketizerPrivate *priv = packetizer->priv;
+  GstClockTime res;
+
+  if (G_UNLIKELY (!packetizer->calculate_offset))
+    return GST_CLOCK_TIME_NONE;
+
+  if (G_UNLIKELY (priv->refoffset == -1))
+    return GST_CLOCK_TIME_NONE;
+
+  if (G_UNLIKELY (offset < priv->refoffset))
+    return GST_CLOCK_TIME_NONE;
+
+  /* Convert byte difference into time difference */
+  res = PCRTIME_TO_GSTTIME (gst_util_uint64_scale (offset - priv->refoffset,
+          priv->last_pcr - priv->first_pcr,
+          priv->last_offset - priv->first_offset));
+  GST_DEBUG ("Returning timestamp %" GST_TIME_FORMAT " for offset %"
+      G_GUINT64_FORMAT, GST_TIME_ARGS (res), offset);
+
+  return res;
+}
+
+GstClockTime
+mpegts_packetizer_pts_to_ts (MpegTSPacketizer2 * packetizer, guint64 pts)
+{
+  /* Use clock skew if present */
+  if (packetizer->calculate_skew
+      && GST_CLOCK_TIME_IS_VALID (packetizer->base_time)) {
+    GST_DEBUG ("pts %" G_GUINT64_FORMAT " base_pcrtime:%" G_GUINT64_FORMAT
+        " base_time:%" GST_TIME_FORMAT, pts, packetizer->base_pcrtime,
+        GST_TIME_ARGS (packetizer->base_time));
+    return pts - packetizer->base_pcrtime + packetizer->base_time +
+        packetizer->skew;
+  }
+
+  /* If not, use pcr observations */
+  if (packetizer->calculate_offset && packetizer->priv->first_pcr != -1)
+    return pts - PCRTIME_TO_GSTTIME (packetizer->priv->first_pcr);
+
+  return GST_CLOCK_TIME_NONE;
+}
+
+guint64
+mpegts_packetizer_ts_to_offset (MpegTSPacketizer2 * packetizer, GstClockTime ts)
+{
+  MpegTSPacketizerPrivate *priv = packetizer->priv;
+  guint64 res;
+
+  if (!packetizer->calculate_offset || packetizer->priv->first_pcr == -1)
+    return -1;
+
+  GST_DEBUG ("ts(pcr) %" G_GUINT64_FORMAT " first_pcr:%" G_GUINT64_FORMAT,
+      GSTTIME_TO_MPEGTIME (ts), priv->first_pcr);
+
+  /* Convert ts to PCRTIME */
+  res = gst_util_uint64_scale (GSTTIME_TO_PCRTIME (ts),
+      priv->last_offset - priv->first_offset, priv->last_pcr - priv->first_pcr);
+  res += priv->first_offset + priv->refoffset;
+
+  GST_DEBUG ("Returning offset %" G_GUINT64_FORMAT " for ts %" GST_TIME_FORMAT,
+      res, GST_TIME_ARGS (ts));
+
+  return res;
+}
+
+void
+mpegts_packetizer_set_reference_offset (MpegTSPacketizer2 * packetizer,
+    guint64 refoffset)
+{
+  GST_DEBUG ("Setting reference offset to %" G_GUINT64_FORMAT, refoffset);
+
+  packetizer->priv->refoffset = refoffset;
 }
