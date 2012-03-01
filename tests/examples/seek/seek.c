@@ -106,10 +106,13 @@ typedef struct
   GtkWidget *text_checkbox, *mute_checkbox, *volume_spinbutton;
   GtkWidget *video_window;
 
+  GtkWidget *seek_format_combo, *seek_position_label, *seek_duration_label;
+  GtkWidget *seek_entry;
+
   GtkWidget *seek_scale, *statusbar;
   guint status_id;
 
-  GtkWidget *format_combo, *step_amount_spinbutton, *step_rate_spinbutton;
+  GtkWidget *step_format_combo, *step_amount_spinbutton, *step_rate_spinbutton;
   GtkWidget *shuttle_scale;
 
   GtkWidget *contrast_scale, *brightness_scale, *hue_scale, *saturation_scale;
@@ -171,6 +174,9 @@ typedef struct
   gboolean shuttling;
   gdouble shuttle_rate;
   gdouble play_rate;
+
+  const GstFormatDefinition *seek_format;
+  GList *formats;
 } SeekApp;
 
 static void clear_streams (SeekApp * app);
@@ -389,6 +395,8 @@ static gboolean
 update_scale (SeekApp * app)
 {
   GstFormat format = GST_FORMAT_TIME;
+  gint64 seek_pos, seek_dur;
+  gchar *str;
 
   //position = 0;
   //duration = 0;
@@ -404,6 +412,21 @@ update_scale (SeekApp * app)
 
   if (app->duration > 0) {
     set_scale (app, app->position * N_GRAD / app->duration);
+  }
+
+  if (app->seek_format) {
+    format = app->seek_format->value;
+    seek_pos = seek_dur = -1;
+    gst_element_query_position (app->pipeline, &format, &seek_pos);
+    gst_element_query_duration (app->pipeline, &format, &seek_dur);
+
+    str = g_strdup_printf ("%" G_GINT64_FORMAT, seek_pos);
+    gtk_label_set_text (GTK_LABEL (app->seek_position_label), str);
+    g_free (str);
+
+    str = g_strdup_printf ("%" G_GINT64_FORMAT, seek_dur);
+    gtk_label_set_text (GTK_LABEL (app->seek_duration_label), str);
+    g_free (str);
   }
 
   return TRUE;
@@ -434,19 +457,11 @@ send_event (SeekApp * app, GstEvent * event)
 }
 
 static void
-do_seek (SeekApp * app)
+do_seek (SeekApp * app, GstFormat format, gint64 position)
 {
-  gint64 real;
   gboolean res = FALSE;
   GstEvent *s_event;
   GstSeekFlags flags;
-
-  real =
-      gtk_range_get_value (GTK_RANGE (app->seek_scale)) * app->duration /
-      N_GRAD;
-
-  GST_DEBUG ("value=%f, real=%" G_GINT64_FORMAT,
-      gtk_range_get_value (GTK_RANGE (app->seek_scale)), real);
 
   flags = 0;
   if (app->flush_seek)
@@ -462,16 +477,16 @@ do_seek (SeekApp * app)
 
   if (app->rate >= 0) {
     s_event = gst_event_new_seek (app->rate,
-        GST_FORMAT_TIME, flags, GST_SEEK_TYPE_SET, real, GST_SEEK_TYPE_SET,
+        format, flags, GST_SEEK_TYPE_SET, position, GST_SEEK_TYPE_SET,
         GST_CLOCK_TIME_NONE);
     GST_DEBUG ("seek with rate %lf to %" GST_TIME_FORMAT " / %" GST_TIME_FORMAT,
-        app->rate, GST_TIME_ARGS (real), GST_TIME_ARGS (app->duration));
+        app->rate, GST_TIME_ARGS (position), GST_TIME_ARGS (app->duration));
   } else {
     s_event = gst_event_new_seek (app->rate,
-        GST_FORMAT_TIME, flags, GST_SEEK_TYPE_SET, G_GINT64_CONSTANT (0),
-        GST_SEEK_TYPE_SET, real);
+        format, flags, GST_SEEK_TYPE_SET, G_GINT64_CONSTANT (0),
+        GST_SEEK_TYPE_SET, position);
     GST_DEBUG ("seek with rate %lf to %" GST_TIME_FORMAT " / %" GST_TIME_FORMAT,
-        app->rate, GST_TIME_ARGS (0), GST_TIME_ARGS (real));
+        app->rate, GST_TIME_ARGS (0), GST_TIME_ARGS (position));
   }
 
   res = send_event (app, s_event);
@@ -492,14 +507,22 @@ do_seek (SeekApp * app)
 static void
 seek_cb (GtkRange * range, SeekApp * app)
 {
+  gint64 real;
   /* If the timer hasn't expired yet, then the pipeline is running */
   if (app->play_scrub && app->seek_timeout_id != 0) {
     GST_DEBUG ("do scrub seek, PAUSED");
     gst_element_set_state (app->pipeline, GST_STATE_PAUSED);
   }
 
+  real =
+      gtk_range_get_value (GTK_RANGE (app->seek_scale)) * app->duration /
+      N_GRAD;
+
+  GST_DEBUG ("value=%f, real=%" G_GINT64_FORMAT,
+      gtk_range_get_value (GTK_RANGE (app->seek_scale)), real);
+
   GST_DEBUG ("do seek");
-  do_seek (app);
+  do_seek (app, GST_FORMAT_TIME, real);
 
   if (app->play_scrub) {
     GST_DEBUG ("do scrub seek, PLAYING");
@@ -509,6 +532,24 @@ seek_cb (GtkRange * range, SeekApp * app)
       app->seek_timeout_id =
           g_timeout_add (SCRUB_TIME, (GSourceFunc) end_scrub, app);
     }
+  }
+}
+
+static void
+advanced_seek_button_cb (GtkButton * button, SeekApp * app)
+{
+  GstFormat fmt;
+  gint64 pos;
+  const gchar *text;
+  gchar *endptr;
+
+  fmt = app->seek_format->value;
+
+  text = gtk_entry_get_text (GTK_ENTRY (app->seek_entry));
+
+  pos = g_ascii_strtoll (text, &endptr, 10);
+  if (endptr != text && pos != G_MAXINT64 && pos != G_MININT64) {
+    do_seek (app, fmt, pos);
   }
 }
 
@@ -579,8 +620,13 @@ stop_seek (GtkRange * range, GdkEventButton * event, SeekApp * app)
   }
 
   if (!app->flush_seek || !app->scrub) {
+    gint64 real;
+
     GST_DEBUG ("do final seek");
-    do_seek (app);
+    real =
+        gtk_range_get_value (GTK_RANGE (app->seek_scale)) * app->duration /
+        N_GRAD;
+    do_seek (app, GST_FORMAT_TIME, real);
   }
 
   if (app->seek_timeout_id != 0) {
@@ -735,7 +781,12 @@ loop_toggle_cb (GtkToggleButton * button, SeekApp * app)
 {
   app->loop_seek = gtk_toggle_button_get_active (button);
   if (app->state == GST_STATE_PLAYING) {
-    do_seek (app);
+    gint64 real;
+
+    real =
+        gtk_range_get_value (GTK_RANGE (app->seek_scale)) * app->duration /
+        N_GRAD;
+    do_seek (app, GST_FORMAT_TIME, real);
   }
 }
 
@@ -762,7 +813,12 @@ skip_toggle_cb (GtkToggleButton * button, SeekApp * app)
 {
   app->skip_seek = gtk_toggle_button_get_active (button);
   if (app->state == GST_STATE_PLAYING) {
-    do_seek (app);
+    gint64 real;
+
+    real =
+        gtk_range_get_value (GTK_RANGE (app->seek_scale)) * app->duration /
+        N_GRAD;
+    do_seek (app, GST_FORMAT_TIME, real);
   }
 }
 
@@ -1281,7 +1337,7 @@ step_cb (GtkButton * button, SeekApp * app)
   gboolean flush, res;
   gint active;
 
-  active = gtk_combo_box_get_active (GTK_COMBO_BOX (app->format_combo));
+  active = gtk_combo_box_get_active (GTK_COMBO_BOX (app->step_format_combo));
   amount =
       gtk_spin_button_get_value_as_int (GTK_SPIN_BUTTON
       (app->step_amount_spinbutton));
@@ -1529,9 +1585,105 @@ colorbalance_value_changed (GtkRange * range, SeekApp * app)
 }
 
 static void
+seek_format_changed_cb (GtkComboBox * box, SeekApp * app)
+{
+  gchar *format_str;
+  GList *l;
+  const GstFormatDefinition *format = NULL;
+
+  format_str = gtk_combo_box_text_get_active_text (GTK_COMBO_BOX_TEXT (box));
+
+  for (l = app->formats; l; l = l->next) {
+    const GstFormatDefinition *tmp = l->data;
+
+    if (g_strcmp0 (tmp->nick, format_str) == 0) {
+      format = tmp;
+      break;
+    }
+  }
+
+  if (!format)
+    goto done;
+
+  app->seek_format = format;
+  update_scale (app);
+
+done:
+  g_free (format_str);
+}
+
+static void
+update_formats (SeekApp * app)
+{
+  GstIterator *it;
+  gboolean done;
+  GList *l;
+  gpointer item;
+  gchar *selected;
+  gint selected_idx = 0, i;
+
+  selected =
+      gtk_combo_box_text_get_active_text (GTK_COMBO_BOX_TEXT
+      (app->seek_format_combo));
+  if (selected == NULL)
+    selected = g_strdup ("time");
+
+  it = gst_format_iterate_definitions ();
+  done = FALSE;
+
+  g_list_free (app->formats);
+  app->formats = NULL;
+
+  while (!done) {
+    switch (gst_iterator_next (it, &item)) {
+      case GST_ITERATOR_OK:
+        app->formats = g_list_prepend (app->formats, item);
+        break;
+      case GST_ITERATOR_RESYNC:
+        g_list_free (app->formats);
+        app->formats = NULL;
+        gst_iterator_resync (it);
+        break;
+      case GST_ITERATOR_ERROR:
+      case GST_ITERATOR_DONE:
+      default:
+        done = TRUE;
+        break;
+    }
+  }
+
+  app->formats = g_list_reverse (app->formats);
+  gst_iterator_free (it);
+
+  g_signal_handlers_block_by_func (app->seek_format_combo,
+      seek_format_changed_cb, app);
+  gtk_combo_box_text_remove_all (GTK_COMBO_BOX_TEXT (app->seek_format_combo));
+
+  for (i = 0, l = app->formats; l; l = l->next, i++) {
+    const GstFormatDefinition *def = l->data;
+
+    gtk_combo_box_text_append_text (GTK_COMBO_BOX_TEXT (app->seek_format_combo),
+        def->nick);
+    if (g_strcmp0 (def->nick, selected) == 0)
+      selected_idx = i;
+  }
+  g_signal_handlers_unblock_by_func (app->seek_format_combo,
+      seek_format_changed_cb, app);
+
+  gtk_combo_box_set_active (GTK_COMBO_BOX (app->seek_format_combo),
+      selected_idx);
+
+  g_free (selected);
+}
+
+static void
 msg_async_done (GstBus * bus, GstMessage * message, SeekApp * app)
 {
   GST_DEBUG ("async done");
+
+  /* Now query all available GstFormats */
+  update_formats (app);
+
   /* when we get ASYNC_DONE we can query position, duration and other
    * properties */
   update_scale (app);
@@ -2198,12 +2350,13 @@ create_ui (SeekApp * app)
         *flush_checkbox;
     GtkWidget *scrub_checkbox, *play_scrub_checkbox, *rate_label;
     GtkWidget *skip_checkbox, *rate_spinbutton;
-    GtkWidget *flagtable;
+    GtkWidget *flagtable, *advanced_seek, *advanced_seek_grid;
+    GtkWidget *duration_label, *position_label, *seek_button;
 
     seek = gtk_expander_new ("seek options");
     flagtable = gtk_grid_new ();
     gtk_grid_set_row_spacing (GTK_GRID (flagtable), 2);
-    gtk_grid_set_row_homogeneous (GTK_GRID (flagtable), TRUE);
+    gtk_grid_set_row_homogeneous (GTK_GRID (flagtable), FALSE);
     gtk_grid_set_column_spacing (GTK_GRID (flagtable), 2);
     gtk_grid_set_column_homogeneous (GTK_GRID (flagtable), TRUE);
 
@@ -2265,6 +2418,44 @@ create_ui (SeekApp * app)
     gtk_grid_attach (GTK_GRID (flagtable), rate_label, 4, 0, 1, 1);
     gtk_grid_attach (GTK_GRID (flagtable), rate_spinbutton, 4, 1, 1, 1);
 
+    advanced_seek = gtk_frame_new ("Advanced Seek");
+    advanced_seek_grid = gtk_grid_new ();
+    gtk_grid_set_row_spacing (GTK_GRID (advanced_seek_grid), 2);
+    gtk_grid_set_row_homogeneous (GTK_GRID (advanced_seek_grid), FALSE);
+    gtk_grid_set_column_spacing (GTK_GRID (advanced_seek_grid), 5);
+    gtk_grid_set_column_homogeneous (GTK_GRID (advanced_seek_grid), FALSE);
+
+    app->seek_format_combo = gtk_combo_box_text_new ();
+    g_signal_connect (app->seek_format_combo, "changed",
+        G_CALLBACK (seek_format_changed_cb), app);
+    gtk_grid_attach (GTK_GRID (advanced_seek_grid), app->seek_format_combo, 0,
+        0, 1, 1);
+
+    app->seek_entry = gtk_entry_new ();
+    gtk_entry_set_width_chars (GTK_ENTRY (app->seek_entry), 12);
+    gtk_grid_attach (GTK_GRID (advanced_seek_grid), app->seek_entry, 0, 1, 1,
+        1);
+
+    seek_button = gtk_button_new_with_label ("Seek");
+    g_signal_connect (G_OBJECT (seek_button), "clicked",
+        G_CALLBACK (advanced_seek_button_cb), app);
+    gtk_grid_attach (GTK_GRID (advanced_seek_grid), seek_button, 1, 0, 1, 1);
+
+    position_label = gtk_label_new ("Position:");
+    gtk_grid_attach (GTK_GRID (advanced_seek_grid), position_label, 2, 0, 1, 1);
+    duration_label = gtk_label_new ("Duration:");
+    gtk_grid_attach (GTK_GRID (advanced_seek_grid), duration_label, 2, 1, 1, 1);
+
+    app->seek_position_label = gtk_label_new ("-1");
+    gtk_grid_attach (GTK_GRID (advanced_seek_grid), app->seek_position_label, 3,
+        0, 1, 1);
+    app->seek_duration_label = gtk_label_new ("-1");
+    gtk_grid_attach (GTK_GRID (advanced_seek_grid), app->seek_duration_label, 3,
+        1, 1, 1);
+
+    gtk_container_add (GTK_CONTAINER (advanced_seek), advanced_seek_grid);
+    gtk_grid_attach (GTK_GRID (flagtable), advanced_seek, 0, 2, 3, 2);
+    gtk_container_add (GTK_CONTAINER (seek), flagtable);
   }
 
   /* step expander */
@@ -2275,13 +2466,14 @@ create_ui (SeekApp * app)
     step = gtk_expander_new ("step options");
     hbox = gtk_hbox_new (FALSE, 0);
 
-    app->format_combo = gtk_combo_box_text_new ();
-    gtk_combo_box_text_append_text (GTK_COMBO_BOX_TEXT (app->format_combo),
+    app->step_format_combo = gtk_combo_box_text_new ();
+    gtk_combo_box_text_append_text (GTK_COMBO_BOX_TEXT (app->step_format_combo),
         "frames");
-    gtk_combo_box_text_append_text (GTK_COMBO_BOX_TEXT (app->format_combo),
+    gtk_combo_box_text_append_text (GTK_COMBO_BOX_TEXT (app->step_format_combo),
         "time (ms)");
-    gtk_combo_box_set_active (GTK_COMBO_BOX (app->format_combo), 0);
-    gtk_box_pack_start (GTK_BOX (hbox), app->format_combo, FALSE, FALSE, 2);
+    gtk_combo_box_set_active (GTK_COMBO_BOX (app->step_format_combo), 0);
+    gtk_box_pack_start (GTK_BOX (hbox), app->step_format_combo, FALSE, FALSE,
+        2);
 
     app->step_amount_spinbutton = gtk_spin_button_new_with_range (1, 1000, 1);
     gtk_spin_button_set_digits (GTK_SPIN_BUTTON (app->step_amount_spinbutton),
@@ -2336,7 +2528,7 @@ create_ui (SeekApp * app)
     navigation = gtk_expander_new ("navigation commands");
     grid = gtk_grid_new ();
     gtk_grid_set_row_spacing (GTK_GRID (grid), 2);
-    gtk_grid_set_row_homogeneous (GTK_GRID (grid), TRUE);
+    gtk_grid_set_row_homogeneous (GTK_GRID (grid), FALSE);
     gtk_grid_set_column_spacing (GTK_GRID (grid), 2);
     gtk_grid_set_column_homogeneous (GTK_GRID (grid), TRUE);
 
@@ -2565,7 +2757,7 @@ create_ui (SeekApp * app)
     /* playbin2 panel for flag checkboxes and volume/mute */
     boxes = gtk_grid_new ();
     gtk_grid_set_row_spacing (GTK_GRID (boxes), 2);
-    gtk_grid_set_row_homogeneous (GTK_GRID (boxes), TRUE);
+    gtk_grid_set_row_homogeneous (GTK_GRID (boxes), FALSE);
     gtk_grid_set_column_spacing (GTK_GRID (boxes), 2);
     gtk_grid_set_column_homogeneous (GTK_GRID (boxes), TRUE);
 
@@ -2731,6 +2923,8 @@ reset_app (SeekApp * app)
 {
   g_free (app->audiosink_str);
   g_free (app->videosink_str);
+
+  g_list_free (app->formats);
 
   g_static_mutex_free (&app->state_mutex);
 
