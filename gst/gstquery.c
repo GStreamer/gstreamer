@@ -1500,9 +1500,7 @@ gst_query_parse_nth_buffering_range (GstQuery * query, guint index,
 
   array = ensure_array (structure, GST_QUARK (BUFFERING_RANGES),
       sizeof (GstQueryBufferingRange), NULL);
-
-  if (index >= array->len)
-    return FALSE;
+  g_return_val_if_fail (index < array->len, FALSE);
 
   range = &g_array_index (array, GstQueryBufferingRange, index);
 
@@ -1770,7 +1768,6 @@ GType
 gst_query_parse_nth_allocation_meta (GstQuery * query, guint index)
 {
   GArray *array;
-  GType ret = 0;
   GstStructure *structure;
 
   g_return_val_if_fail (GST_QUERY_TYPE (query) == GST_QUERY_ALLOCATION, 0);
@@ -1778,10 +1775,32 @@ gst_query_parse_nth_allocation_meta (GstQuery * query, guint index)
   structure = GST_QUERY_STRUCTURE (query);
   array = ensure_array (structure, GST_QUARK (META), sizeof (GType), NULL);
 
-  if (index < array->len)
-    ret = g_array_index (array, GType, index);
+  g_return_val_if_fail (index < array->len, 0);
 
-  return ret;
+  return g_array_index (array, GType, index);
+}
+
+/**
+ * gst_query_remove_nth_allocation_meta:
+ * @query: a GST_QUERY_ALLOCATION type query #GstQuery
+ * @index: position in the metadata API array to remove
+ *
+ * Remove the metadata API at @index of the metadata API array.
+ */
+void
+gst_query_remove_nth_allocation_meta (GstQuery * query, guint index)
+{
+  GArray *array;
+  GstStructure *structure;
+
+  g_return_if_fail (GST_QUERY_TYPE (query) == GST_QUERY_ALLOCATION);
+  g_return_if_fail (gst_query_is_writable (query));
+
+  structure = GST_QUERY_STRUCTURE (query);
+  array = ensure_array (structure, GST_QUARK (META), sizeof (GType), NULL);
+  g_return_if_fail (index < array->len);
+
+  g_array_remove_index (array, index);
 }
 
 /**
@@ -1882,7 +1901,6 @@ GstAllocator *
 gst_query_parse_nth_allocation_memory (GstQuery * query, guint index)
 {
   GArray *array;
-  GstAllocator *ret = NULL;
   GstStructure *structure;
 
   g_return_val_if_fail (GST_QUERY_TYPE (query) == GST_QUERY_ALLOCATION, NULL);
@@ -1891,11 +1909,9 @@ gst_query_parse_nth_allocation_memory (GstQuery * query, guint index)
   array =
       ensure_array (structure, GST_QUARK (ALLOCATOR), sizeof (GstAllocator *),
       (GDestroyNotify) gst_allocator_unref);
+  g_return_val_if_fail (index < array->len, NULL);
 
-  if (index < array->len)
-    ret = g_array_index (array, GstAllocator *, index);
-
-  return ret;
+  return g_array_index (array, GstAllocator *, index);
 }
 
 /**
@@ -2036,20 +2052,18 @@ gst_query_get_n_scheduling_modes (GstQuery * query)
 GstPadMode
 gst_query_parse_nth_scheduling_mode (GstQuery * query, guint index)
 {
-  GstPadMode ret = GST_PAD_MODE_NONE;
   GstStructure *structure;
   GArray *array;
 
-  g_return_val_if_fail (GST_QUERY_TYPE (query) == GST_QUERY_SCHEDULING, ret);
+  g_return_val_if_fail (GST_QUERY_TYPE (query) == GST_QUERY_SCHEDULING,
+      GST_PAD_MODE_NONE);
 
   structure = GST_QUERY_STRUCTURE (query);
   array =
       ensure_array (structure, GST_QUARK (MODES), sizeof (GstPadMode), NULL);
+  g_return_val_if_fail (index < array->len, GST_PAD_MODE_NONE);
 
-  if (index < array->len)
-    ret = g_array_index (array, GstPadMode, index);
-
-  return ret;
+  return g_array_index (array, GstPadMode, index);
 }
 
 /**
