@@ -1662,8 +1662,8 @@ gst_collect_pads2_event (GstPad * pad, GstObject * parent, GstEvent * event)
 
   pads = data->collect;
 
-  GST_DEBUG_OBJECT (data->pad, "Got %s event on sink pad from %s",
-      GST_EVENT_TYPE_NAME (event), GST_OBJECT_NAME (GST_EVENT_SRC (event)));
+  GST_DEBUG_OBJECT (data->pad, "Got %s event on sink pad",
+      GST_EVENT_TYPE_NAME (event));
 
   GST_OBJECT_LOCK (pads);
   event_func = pads->priv->event_func;

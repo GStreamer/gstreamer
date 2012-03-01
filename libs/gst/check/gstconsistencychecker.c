@@ -37,7 +37,7 @@ struct _GstStreamConsistency
 {
   /* FIXME: do we want to track some states per pad? */
   volatile gboolean flushing;
-  volatile gboolean newsegment;
+  volatile gboolean segment;
   volatile gboolean eos;
   volatile gboolean expect_flush;
   GstObject *parent;
@@ -57,7 +57,7 @@ source_pad_data_cb (GstPad * pad, GstPadProbeInfo * info,
   GstMiniObject *data = GST_PAD_PROBE_INFO_DATA (info);
 
   GST_DEBUG_OBJECT (pad, "%p: %d %d %d %d", consist, consist->flushing,
-      consist->newsegment, consist->eos, consist->expect_flush);
+      consist->segment, consist->eos, consist->expect_flush);
 
   if (GST_IS_BUFFER (data)) {
     GST_DEBUG_OBJECT (pad,
@@ -122,15 +122,15 @@ sink_pad_data_cb (GstPad * pad, GstPadProbeInfo * info,
   GstMiniObject *data = GST_PAD_PROBE_INFO_DATA (info);
 
   GST_DEBUG_OBJECT (pad, "%p: %d %d %d %d", consist, consist->flushing,
-      consist->newsegment, consist->eos, consist->expect_flush);
+      consist->segment, consist->eos, consist->expect_flush);
 
   if (GST_IS_BUFFER (data)) {
     GST_DEBUG_OBJECT (pad, "Buffer %" GST_TIME_FORMAT,
         GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (GST_BUFFER (data))));
     /* If an EOS went through, a buffer would be invalid */
     fail_if (consist->eos, "Buffer received after EOS");
-    /* Buffers need to be preceded by a newsegment event */
-    fail_unless (consist->newsegment, "Buffer received without newsegment");
+    /* Buffers need to be preceded by a segment event */
+    fail_unless (consist->segment, "Buffer received without segment");
   } else if (GST_IS_EVENT (data)) {
     GstEvent *event = (GstEvent *) data;
 
@@ -265,10 +265,6 @@ gst_consistency_checker_free (GstStreamConsistency * consist)
 {
   GList *node;
   GstStreamConsistencyProbe *p;
-
-  /* Remove the data probe */
-  gst_pad_remove_probe (consist->pad, consist->probeid);
-  g_object_unref (consist->pad);
 
   /* Remove the data probes */
   for (node = consist->pads; node; node = g_list_next (node)) {
