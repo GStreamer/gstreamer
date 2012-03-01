@@ -82,8 +82,6 @@ struct _GstTheoraDec
   gint telemetry_qi;
   gint telemetry_bits;
 
-  gboolean crop;
-
   /* list of buffers that need timestamps */
   GList *queued;
   /* list of raw output buffers */

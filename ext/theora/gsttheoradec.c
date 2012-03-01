@@ -50,7 +50,6 @@
 #define GST_CAT_DEFAULT theoradec_debug
 GST_DEBUG_CATEGORY_STATIC (GST_CAT_DEFAULT);
 
-#define THEORA_DEF_CROP         TRUE
 #define THEORA_DEF_TELEMETRY_MV 0
 #define THEORA_DEF_TELEMETRY_MBMODE 0
 #define THEORA_DEF_TELEMETRY_QI 0
@@ -59,7 +58,6 @@ GST_DEBUG_CATEGORY_STATIC (GST_CAT_DEFAULT);
 enum
 {
   PROP_0,
-  PROP_CROP,
   PROP_TELEMETRY_MV,
   PROP_TELEMETRY_MBMODE,
   PROP_TELEMETRY_QI,
@@ -127,11 +125,6 @@ gst_theora_dec_class_init (GstTheoraDecClass * klass)
 
   gobject_class->set_property = theora_dec_set_property;
   gobject_class->get_property = theora_dec_get_property;
-
-  g_object_class_install_property (gobject_class, PROP_CROP,
-      g_param_spec_boolean ("crop", "Crop",
-          "Crop the image to the visible region", THEORA_DEF_CROP,
-          (GParamFlags) G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   if (gst_theora_dec_ctl_is_supported (TH_DECCTL_SET_TELEMETRY_MV)) {
     g_object_class_install_property (gobject_class, PROP_TELEMETRY_MV,
@@ -208,7 +201,6 @@ gst_theora_dec_init (GstTheoraDec * dec)
 
   gst_element_add_pad (GST_ELEMENT (dec), dec->srcpad);
 
-  dec->crop = THEORA_DEF_CROP;
   dec->telemetry_mv = THEORA_DEF_TELEMETRY_MV;
   dec->telemetry_mbmode = THEORA_DEF_TELEMETRY_MBMODE;
   dec->telemetry_qi = THEORA_DEF_TELEMETRY_QI;
@@ -776,12 +768,16 @@ theora_handle_comment_packet (GstTheoraDec * dec, ogg_packet * packet)
 }
 
 static GstFlowReturn
-theora_negotiate_pool (GstTheoraDec * dec, GstCaps * caps, GstVideoInfo * info)
+theora_negotiate_pool (GstTheoraDec * dec)
 {
   GstQuery *query;
-  GstBufferPool *pool = NULL;
+  GstBufferPool *pool;
   guint size, min, max, prefix, alignment;
   GstStructure *config;
+  GstCaps *caps;
+
+  /* find the caps of the output buffer */
+  caps = gst_pad_get_current_caps (dec->srcpad);
 
   /* find a pool for the negotiated caps now */
   query = gst_query_new_allocation (caps, TRUE);
@@ -791,34 +787,44 @@ theora_negotiate_pool (GstTheoraDec * dec, GstCaps * caps, GstVideoInfo * info)
     /* we got configuration from our peer, parse them */
     gst_query_parse_allocation_params (query, &size, &min, &max, &prefix,
         &alignment, &pool);
-    size = MAX (size, info->size);
   } else {
     GST_DEBUG_OBJECT (dec, "didn't get downstream ALLOCATION hints");
-    size = info->size;
+    size = 0;
     min = max = 0;
     prefix = 0;
     alignment = 0;
+    pool = NULL;
   }
 
   if (pool == NULL) {
     /* we did not get a pool, make one ourselves then */
-    pool = gst_buffer_pool_new ();
+    pool = gst_video_buffer_pool_new ();
   }
 
   if (dec->pool)
     gst_object_unref (dec->pool);
   dec->pool = pool;
 
+  /* check if downstream supports cropping */
+  dec->has_cropping =
+      gst_query_has_allocation_meta (query, GST_VIDEO_CROP_META_API_TYPE);
+
+  if (dec->has_cropping) {
+    /* we can crop, configure the pool with buffers of caps and size of the
+     * decoded picture size and then crop them with metadata */
+    size = MAX (size, GST_VIDEO_INFO_SIZE (&dec->vinfo));
+    gst_caps_unref (caps);
+    caps = gst_video_info_to_caps (&dec->vinfo);
+  }
+
   config = gst_buffer_pool_get_config (pool);
   gst_buffer_pool_config_set (config, caps, size, min, max, prefix, alignment);
+  gst_caps_unref (caps);
+
   /* just set the option, if the pool can support it we will transparently use
    * it through the video info API. We could also see if the pool support this
    * option and only activate it then. */
   gst_buffer_pool_config_add_option (config, GST_BUFFER_POOL_OPTION_VIDEO_META);
-
-  /* check if downstream supports cropping */
-  dec->has_cropping =
-      gst_query_has_allocation_meta (query, GST_VIDEO_CROP_META_API_TYPE);
 
   GST_DEBUG_OBJECT (dec, "downstream cropping %d", dec->has_cropping);
 
@@ -836,10 +842,10 @@ theora_handle_type_packet (GstTheoraDec * dec, ogg_packet * packet)
 {
   GstCaps *caps;
   GstVideoFormat format;
-  gint width, height;
   gint par_num, par_den;
   GstFlowReturn ret = GST_FLOW_OK;
   GList *walk;
+  GstVideoInfo info;
 
   GST_DEBUG_OBJECT (dec, "fps %d/%d, PAR %d/%d",
       dec->info.fps_numerator, dec->info.fps_denominator,
@@ -891,14 +897,6 @@ theora_handle_type_packet (GstTheoraDec * dec, ogg_packet * packet)
       goto invalid_format;
   }
 
-  if (dec->crop) {
-    width = dec->info.pic_width;
-    height = dec->info.pic_height;
-  } else {
-    /* no cropping, use the encoded dimensions */
-    width = dec->info.frame_width;
-    height = dec->info.frame_height;
-  }
   if (dec->info.pic_width != dec->info.frame_width ||
       dec->info.pic_height != dec->info.frame_height ||
       dec->info.pic_x != 0 || dec->info.pic_y != 0) {
@@ -929,7 +927,9 @@ theora_handle_type_packet (GstTheoraDec * dec, ogg_packet * packet)
     GST_WARNING_OBJECT (dec, "Could not enable BITS mode visualisation");
   }
 
-  gst_video_info_set_format (&dec->vinfo, format, width, height);
+  /* our info contains the dimensions for the coded picture before cropping */
+  gst_video_info_set_format (&dec->vinfo, format, dec->info.frame_width,
+      dec->info.frame_height);
   dec->vinfo.fps_n = dec->info.fps_numerator;
   dec->vinfo.fps_d = dec->info.fps_denominator;
   dec->vinfo.par_n = par_num;
@@ -953,13 +953,16 @@ theora_handle_type_packet (GstTheoraDec * dec, ogg_packet * packet)
       break;
   }
 
-  caps = gst_video_info_to_caps (&dec->vinfo);
+  /* for the output caps we always take the cropped dimensions */
+  info = dec->vinfo;
+  gst_video_info_set_format (&info, format, dec->info.pic_width,
+      dec->info.pic_height);
+  caps = gst_video_info_to_caps (&info);
   gst_pad_set_caps (dec->srcpad, caps);
   gst_caps_unref (caps);
 
-  /* negotiate a bufferpool */
-  if ((ret = theora_negotiate_pool (dec, caps, &dec->vinfo)) != GST_FLOW_OK)
-    goto no_bufferpool;
+  /* make sure we negotiate a bufferpool */
+  gst_pad_mark_reconfigure (dec->srcpad);
 
   dec->have_header = TRUE;
 
@@ -982,10 +985,6 @@ invalid_format:
   {
     GST_ERROR_OBJECT (dec, "Invalid pixel format %d", dec->info.pixel_fmt);
     return GST_FLOW_ERROR;
-  }
-no_bufferpool:
-  {
-    return ret;
   }
 }
 
@@ -1113,13 +1112,8 @@ theora_handle_image (GstTheoraDec * dec, th_ycbcr_buffer buf, GstBuffer ** out)
   GstVideoCropMeta *crop;
   gint offset_x, offset_y;
 
-  if (gst_pad_check_reconfigure (dec->srcpad)) {
-    GstCaps *caps;
-
-    caps = gst_pad_get_current_caps (dec->srcpad);
-    theora_negotiate_pool (dec, caps, &dec->vinfo);
-    gst_caps_unref (caps);
-  }
+  if (gst_pad_check_reconfigure (dec->srcpad))
+    theora_negotiate_pool (dec);
 
   result = gst_buffer_pool_acquire_buffer (dec->pool, out, NULL);
   if (G_UNLIKELY (result != GST_FLOW_OK))
@@ -1128,7 +1122,7 @@ theora_handle_image (GstTheoraDec * dec, th_ycbcr_buffer buf, GstBuffer ** out)
   if (!gst_video_frame_map (&frame, &dec->vinfo, *out, GST_MAP_WRITE))
     goto invalid_frame;
 
-  if (dec->crop && !dec->has_cropping) {
+  if (!dec->has_cropping) {
     /* we need to crop the hard way */
     offset_x = dec->info.pic_x;
     offset_y = dec->info.pic_y;
@@ -1650,9 +1644,6 @@ theora_dec_set_property (GObject * object, guint prop_id,
   GstTheoraDec *dec = GST_THEORA_DEC (object);
 
   switch (prop_id) {
-    case PROP_CROP:
-      dec->crop = g_value_get_boolean (value);
-      break;
     case PROP_TELEMETRY_MV:
       dec->telemetry_mv = g_value_get_int (value);
       break;
@@ -1678,9 +1669,6 @@ theora_dec_get_property (GObject * object, guint prop_id,
   GstTheoraDec *dec = GST_THEORA_DEC (object);
 
   switch (prop_id) {
-    case PROP_CROP:
-      g_value_set_boolean (value, dec->crop);
-      break;
     case PROP_TELEMETRY_MV:
       g_value_set_int (value, dec->telemetry_mv);
       break;
