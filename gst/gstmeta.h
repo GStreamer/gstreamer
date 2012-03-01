@@ -193,6 +193,16 @@ const GstMetaInfo *  gst_meta_register          (GType api, const gchar *impl,
                                                  GstMetaTransformFunction transform_func);
 const GstMetaInfo *  gst_meta_get_info          (const gchar * impl);
 
+/* some default tags */
+GST_EXPORT GQuark _gst_meta_tag_memory;
+
+/**
+ * GST_META_TAG_MEMORY:
+ *
+ * Metadata tagged with this tag depends on the particular memory
+ * or buffer that it is on.
+ */
+#define GST_META_TAG_MEMORY (_gst_meta_tag_memory)
 
 G_END_DECLS
 
