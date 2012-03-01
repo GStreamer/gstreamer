@@ -323,7 +323,7 @@ gst_rtp_vp8_create_header_buffer (GstRtpVP8Pay * self, guint8 partid,
   if (self->picture_id_mode != VP8_PAY_NO_PICTURE_ID) {
     /* Enable X=1 */
     p[0] |= 0x80;
-    /* X: I=1,L=0,T=0,RSVA=0 */
+    /* X: I=1,L=0,T=0,K=0,RSV=0 */
     p[1] = 0x80;
     if (self->picture_id_mode == VP8_PAY_PICTURE_ID_7BITS) {
       /* I: 7 bit picture_id */

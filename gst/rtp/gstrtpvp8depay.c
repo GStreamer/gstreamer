@@ -153,8 +153,8 @@ gst_rtp_vp8_depay_process (GstRTPBaseDepayload * depay, GstBuffer * buf)
     /* Check L optional header */
     if ((data[1] & 0x40) != 0)
       offset++;
-    /* Check T optional header */
-    if ((data[1] & 0x20) != 0)
+    /* Check T or K optional headers */
+    if ((data[1] & 0x20) != 0 || (data[1] & 0x10) != 0)
       offset++;
   }
 
