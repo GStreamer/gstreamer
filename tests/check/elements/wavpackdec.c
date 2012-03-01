@@ -52,7 +52,7 @@ static GstStaticPadTemplate sinktemplate = GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS ("audio/x-raw-int, "
-        "width = (int) 32, "
+        "width = (int) 16, "
         "depth = (int) 16, "
         "channels = (int) 1, "
         "rate = (int) 44100, "
@@ -112,23 +112,20 @@ GST_START_TEST (test_decode_frame)
   memcpy (GST_BUFFER_DATA (inbuffer), test_frame, sizeof (test_frame));
   ASSERT_BUFFER_REFCOUNT (inbuffer, "inbuffer", 1);
   GST_BUFFER_TIMESTAMP (inbuffer) = 0;
-  gst_buffer_ref (inbuffer);
 
   gst_element_set_bus (wavpackdec, bus);
 
   /* should decode the buffer without problems */
   fail_unless_equals_int (gst_pad_push (mysrcpad, inbuffer), GST_FLOW_OK);
-  ASSERT_BUFFER_REFCOUNT (inbuffer, "inbuffer", 1);
-  gst_buffer_unref (inbuffer);
 
   outbuffer = GST_BUFFER (buffers->data);
 
   fail_if (outbuffer == NULL);
   /* uncompressed data should be 102400 bytes */
-  fail_unless_equals_int (GST_BUFFER_SIZE (outbuffer), 102400);
+  fail_unless_equals_int (GST_BUFFER_SIZE (outbuffer), 51200);
 
-  /* and all 102400 bytes must be 0, i.e. silence */
-  for (i = 0; i < 102400; i++)
+  /* and all bytes must be 0, i.e. silence */
+  for (i = 0; i < 51200; i++)
     fail_unless_equals_int (GST_BUFFER_DATA (outbuffer)[i], 0);
 
   ASSERT_BUFFER_REFCOUNT (outbuffer, "outbuffer", 1);
@@ -166,14 +163,11 @@ GST_START_TEST (test_decode_frame_with_broken_header)
   GST_BUFFER_DATA (inbuffer)[2] = 'e';
   ASSERT_BUFFER_REFCOUNT (inbuffer, "inbuffer", 1);
   GST_BUFFER_TIMESTAMP (inbuffer) = 0;
-  gst_buffer_ref (inbuffer);
 
   gst_element_set_bus (wavpackdec, bus);
 
   /* should fail gracefully */
   fail_unless_equals_int (gst_pad_push (mysrcpad, inbuffer), GST_FLOW_ERROR);
-  ASSERT_BUFFER_REFCOUNT (inbuffer, "inbuffer", 1);
-  gst_buffer_unref (inbuffer);
 
   fail_if ((message = gst_bus_pop (bus)) == NULL);
   fail_unless_message_error (message, STREAM, DECODE);
@@ -204,14 +198,11 @@ GST_START_TEST (test_decode_frame_with_incomplete_frame)
   memcpy (GST_BUFFER_DATA (inbuffer), test_frame, sizeof (test_frame) - 2);
   ASSERT_BUFFER_REFCOUNT (inbuffer, "inbuffer", 1);
   GST_BUFFER_TIMESTAMP (inbuffer) = 0;
-  gst_buffer_ref (inbuffer);
 
   gst_element_set_bus (wavpackdec, bus);
 
   /* should fail gracefully */
   fail_unless_equals_int (gst_pad_push (mysrcpad, inbuffer), GST_FLOW_ERROR);
-  ASSERT_BUFFER_REFCOUNT (inbuffer, "inbuffer", 1);
-  gst_buffer_unref (inbuffer);
 
   fail_if ((message = gst_bus_pop (bus)) == NULL);
   fail_unless_message_error (message, STREAM, DECODE);
