@@ -792,7 +792,7 @@ gst_base_transform_do_bufferpool (GstBaseTransform * trans, GstCaps * outcaps)
 {
   GstQuery *query;
   gboolean result = TRUE;
-  GstBufferPool *pool = NULL, *oldpool;
+  GstBufferPool *pool = NULL;
   guint size, min, max, prefix, alignment;
   GstBaseTransformClass *klass;
   GstAllocator *allocator = NULL;
@@ -807,21 +807,13 @@ gst_base_transform_do_bufferpool (GstBaseTransform * trans, GstCaps * outcaps)
    *    upstream allocator with our proposed values then.
    */
 
-  /* clear old pool */
-  oldpool = trans->priv->pool;
-  if (oldpool) {
-    GST_DEBUG_OBJECT (trans, "unreffing old pool");
-    gst_buffer_pool_set_active (oldpool, FALSE);
-    gst_object_unref (oldpool);
-    trans->priv->pool = oldpool = NULL;
-  }
-
   if (trans->passthrough || trans->always_in_place) {
     /* we are in passthrough, the input buffer is never copied and always passed
      * along. We never allocate an output buffer on the srcpad. What we do is
      * let the upstream element decide if it wants to use a bufferpool and
      * then we will proxy the downstream pool */
     GST_DEBUG_OBJECT (trans, "we're passthough, delay bufferpool");
+    gst_base_transform_set_allocation (trans, NULL, NULL, 0, 0);
     return TRUE;
   }
 
