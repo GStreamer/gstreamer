@@ -802,6 +802,21 @@ static gboolean
 gst_base_transform_default_decide_allocation (GstBaseTransform * trans,
     GstQuery * query)
 {
+  guint i, n_metas;
+
+  n_metas = gst_query_get_n_allocation_metas (query);
+  for (i = 0; i < n_metas; i++) {
+    GType api;
+
+    api = gst_query_parse_nth_allocation_meta (query, i);
+    /* remove all memory dependent metadata because we are going to have to
+     * allocate different memory for input and output. */
+    if (gst_meta_api_type_has_tag (api, GST_META_TAG_MEMORY)) {
+      gst_query_remove_nth_allocation_meta (query, i);
+      i--;
+    }
+  }
+
   return TRUE;
 }
 
