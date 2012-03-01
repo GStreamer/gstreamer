@@ -273,7 +273,7 @@ gst_aasink_init (GstAASink * aasink)
 
 static void
 gst_aasink_scale (GstAASink * aasink, guchar * src, guchar * dest,
-    gint sw, gint sh, gint dw, gint dh)
+    gint sw, gint sh, gint ss, gint dw, gint dh)
 {
   gint ypos, yinc, y;
   gint xpos, xinc, x;
@@ -287,7 +287,7 @@ gst_aasink_scale (GstAASink * aasink, guchar * src, guchar * dest,
   for (y = dh; y; y--) {
     while (ypos > 0x10000) {
       ypos -= 0x10000;
-      src += sw;
+      src += ss;
     }
     xpos = 0x10000;
     {
@@ -334,6 +334,7 @@ gst_aasink_render (GstBaseSink * basesink, GstBuffer * buffer)
       aa_image (aasink->context),       /* dest */
       GST_VIDEO_INFO_WIDTH (&aasink->info),     /* sw */
       GST_VIDEO_INFO_HEIGHT (&aasink->info),    /* sh */
+      GST_VIDEO_FRAME_PLANE_STRIDE (&frame, 0), /* ss */
       aa_imgwidth (aasink->context),    /* dw */
       aa_imgheight (aasink->context));  /* dh */
 
