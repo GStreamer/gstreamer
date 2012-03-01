@@ -1028,7 +1028,7 @@ GST_START_TEST (test_ghost_pads_change_when_linked)
   gst_bin_add (GST_BIN (b1), fmt);
   gst_bin_add (GST_BIN (b1), b2);
 
-  caps = gst_caps_from_string ("audio/x-raw-int, width=16, channels=1");
+  caps = gst_caps_from_string ("audio/x-raw, format=S16LE, channels=1");
   g_object_set (fmt, "caps", caps, NULL);
   gst_caps_unref (caps);
 

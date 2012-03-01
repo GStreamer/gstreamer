@@ -37,7 +37,7 @@ modify_caps (GstObject * pad, GstPadProbeInfo * info, gpointer data)
     return GST_PAD_PROBE_OK;
 
   /* trigger caps negotiation error */
-  caps = gst_caps_new_empty_simple ("video/x-raw-rgb");
+  caps = gst_caps_new_empty_simple ("video/x-raw");
   g_object_set (filter, "caps", caps, NULL);
   gst_caps_unref (caps);
 
@@ -53,7 +53,7 @@ GST_START_TEST (test_queue)
   GstPad *pad;
   guint probe;
   gchar *pipe_desc =
-      g_strdup_printf ("fakesrc num-buffers=1 ! video/x-raw-yuv ! "
+      g_strdup_printf ("fakesrc num-buffers=1 ! video/x-raw ! "
       "queue min-threshold-buffers=2 name=queue ! "
       "capsfilter name=nasty ! fakesink");
 

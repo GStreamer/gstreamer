@@ -849,9 +849,9 @@ GST_START_TEST (test_push_negotiation)
   GstPad *src, *sink;
   GstPadLinkReturn plr;
   GstCaps *srccaps =
-      gst_caps_from_string ("audio/x-raw-int,width={16,32},depth={16,32}");
+      gst_caps_from_string ("audio/x-raw,width={16,32},depth={16,32}");
   GstCaps *sinkcaps =
-      gst_caps_from_string ("audio/x-raw-int,width=32,depth={16,32}");
+      gst_caps_from_string ("audio/x-raw,width=32,depth={16,32}");
   GstPadTemplate *src_template;
   GstPadTemplate *sink_template;
   GstCaps *caps;
@@ -878,7 +878,7 @@ GST_START_TEST (test_push_negotiation)
   gst_pad_set_active (src, TRUE);
   gst_pad_set_active (sink, TRUE);
 
-  caps = gst_caps_from_string ("audio/x-raw-int,width=16,depth=16");
+  caps = gst_caps_from_string ("audio/x-raw,width=16,depth=16");
 
   /* Should fail if src pad caps are incompatible with sink pad caps */
   gst_pad_set_caps (src, caps);

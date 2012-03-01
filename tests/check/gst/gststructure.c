@@ -27,16 +27,16 @@
 GST_START_TEST (test_from_string_int)
 {
   const char *strings[] = {
-    "video/x-raw-rgb, width = (int) 123456",
-    "video/x-raw-rgb, stride = (int) -123456",
-    "video/x-raw-rgb, red_mask = (int) 0xFFFF",
-    "video/x-raw-rgb, red_mask = (int) 0x0000FFFF",
-    "video/x-raw-rgb, red_mask = (int) 0x7FFFFFFF",
-    "video/x-raw-rgb, red_mask = (int) 0x80000000",
-    "video/x-raw-rgb, red_mask = (int) 0xFF000000",
+    "video/x-raw, width = (int) 123456",
+    "video/x-raw, stride = (int) -123456",
+    "video/x-raw, red_mask = (int) 0xFFFF",
+    "video/x-raw, red_mask = (int) 0x0000FFFF",
+    "video/x-raw, red_mask = (int) 0x7FFFFFFF",
+    "video/x-raw, red_mask = (int) 0x80000000",
+    "video/x-raw, red_mask = (int) 0xFF000000",
     /* result from
      * gst-launch ... ! "video/x-raw-rgb, red_mask=(int)0xFF000000" ! ... */
-    "video/x-raw-rgb,\\ red_mask=(int)0xFF000000",
+    "video/x-raw,\\ red_mask=(int)0xFF000000",
   };
   gint results[] = {
     123456,

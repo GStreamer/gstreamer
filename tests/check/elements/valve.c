@@ -29,12 +29,12 @@
 static GstStaticPadTemplate sinktemplate = GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS ("audio/x-raw-int"));
+    GST_STATIC_CAPS ("audio/x-raw"));
 
 static GstStaticPadTemplate srctemplate = GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS ("audio/x-raw-int"));
+    GST_STATIC_CAPS ("audio/x-raw"));
 
 gboolean event_received = FALSE;
 gboolean buffer_allocated = FALSE;

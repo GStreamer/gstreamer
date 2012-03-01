@@ -24,12 +24,12 @@
 static GstStaticPadTemplate sink_template = GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS ("audio/x-raw-int, " "channels = (int) [ 1, 6 ]")
+    GST_STATIC_CAPS ("audio/x-raw, " "channels = (int) [ 1, 6 ]")
     );
 static GstStaticPadTemplate src_template = GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS ("audio/x-raw-int, " "channels = (int) [ 1, 6 ]")
+    GST_STATIC_CAPS ("audio/x-raw, " "channels = (int) [ 1, 6 ]")
     );
 
 static void
@@ -86,7 +86,7 @@ GST_START_TEST (test_can_sink_any_caps)
   factory = setup_factory ();
   fail_if (factory == NULL);
 
-  caps = gst_caps_new_empty_simple ("audio/x-raw-int");
+  caps = gst_caps_new_empty_simple ("audio/x-raw");
   fail_if (caps == NULL);
   res = gst_element_factory_can_sink_any_caps (factory, caps);
   fail_if (!res);
@@ -107,7 +107,7 @@ GST_START_TEST (test_can_sink_all_caps)
   factory = setup_factory ();
   fail_if (factory == NULL);
 
-  caps = gst_caps_new_empty_simple ("audio/x-raw-int");
+  caps = gst_caps_new_empty_simple ("audio/x-raw");
   fail_if (caps == NULL);
   res = gst_element_factory_can_sink_all_caps (factory, caps);
   fail_if (res);

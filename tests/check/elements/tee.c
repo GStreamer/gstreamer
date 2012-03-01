@@ -123,7 +123,7 @@ GST_START_TEST (test_stress)
 
   /* Pump 1000 buffers (10 bytes each) per second through tee for 5 secs */
   desc = "fakesrc datarate=10000 sizemin=10 sizemax=10 num-buffers=5000 ! "
-      "video/x-raw-rgb,framerate=25/1 ! tee name=t ! "
+      "video/x-raw,framerate=25/1 ! tee name=t ! "
       "queue max-size-buffers=2 ! fakesink sync=true";
 
   pipeline = gst_parse_launch (desc, NULL);
@@ -193,7 +193,7 @@ buffer_alloc_harness_setup (BufferAllocHarness * h, gint countdown)
   fail_unless_equals_int (gst_element_set_state (h->tee, GST_STATE_PLAYING),
       TRUE);
 
-  h->caps = gst_caps_new_empty_simple ("video/x-raw-yuv");
+  h->caps = gst_caps_new_empty_simple ("video/x-raw");
 
   h->start_srcpad = gst_pad_new ("src", GST_PAD_SRC);
   fail_if (h->start_srcpad == NULL);
