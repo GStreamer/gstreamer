@@ -138,16 +138,18 @@ struct _GstBaseTransform {
  *                  Handle a requested query. Subclasses that implement this
  *                  should must chain up to the parent if they didn't handle the
  *                  query
- * @propose_allocation: Propose buffer allocation parameters for upstream elements.
- *                      This function must be implemented if the element reads or
- *                      writes the buffer content. In passthrough mode, the
- *                      default implementation will forward the ALLOCATION query
- *                      downstream.
  * @decide_allocation: Setup the allocation parameters for allocating output
  *                    buffers. The passed in query contains the result of the
  *                    downstream allocation query. This function is only called
  *                    when not operating in passthrough mode. The default
  *                    implementation is NULL.
+ * @propose_allocation: Propose buffer allocation parameters for upstream elements.
+ *                      This function must be implemented if the element reads or
+ *                      writes the buffer content. The query that was passed to
+ *                      the decide_allocation is passed in this method (or NULL
+ *                      when the element is in passthrough mode). The default
+ *                      implementation will pass the query downstream when in
+ *                      passthrough mode.
  * @transform_size: Optional. Given the size of a buffer in the given direction
  *                  with the given caps, calculate the size in bytes of a buffer
  *                  on the other pad with the given other caps.
@@ -216,11 +218,11 @@ struct _GstBaseTransformClass {
   gboolean      (*query)          (GstBaseTransform *trans, GstPadDirection direction,
                                    GstQuery *query);
 
-  /* propose allocation query parameters for input buffers */
-  gboolean      (*propose_allocation) (GstBaseTransform *trans, gboolean passthrough,
-                                       GstQuery *query);
   /* decide allocation query for output buffers */
   gboolean      (*decide_allocation)  (GstBaseTransform *trans, GstQuery *query);
+  /* propose allocation query parameters for input buffers */
+  gboolean      (*propose_allocation) (GstBaseTransform *trans, GstQuery *decide_query,
+                                       GstQuery *query);
 
   /* transform size */
   gboolean      (*transform_size) (GstBaseTransform *trans,
