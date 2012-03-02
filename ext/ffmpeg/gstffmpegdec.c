@@ -884,10 +884,15 @@ gst_ffmpegdec_setcaps (GstPad * pad, GstCaps * caps)
    * supports it) */
   ffmpegdec->context->debug_mv = ffmpegdec->debug_mv;
 
-  if (ffmpegdec->max_threads == 0)
-    ffmpegdec->context->thread_count = gst_ffmpeg_auto_max_threads ();
-  else
+  if (ffmpegdec->max_threads == 0) {
+    if (!(oclass->in_plugin->capabilities & CODEC_CAP_AUTO_THREADS))
+      ffmpegdec->context->thread_count = gst_ffmpeg_auto_max_threads ();
+    else
+      ffmpegdec->context->thread_count = 0;
+  } else
     ffmpegdec->context->thread_count = ffmpegdec->max_threads;
+
+  ffmpegdec->context->thread_type = FF_THREAD_SLICE;
 
   /* open codec - we don't select an output pix_fmt yet,
    * simply because we don't know! We only get it
