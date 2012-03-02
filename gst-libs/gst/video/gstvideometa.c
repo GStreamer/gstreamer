@@ -29,20 +29,27 @@ gst_video_meta_transform (GstBuffer * dest, GstMeta * meta,
   smeta = (GstVideoMeta *) meta;
 
   if (GST_META_TRANSFORM_IS_COPY (type)) {
-    dmeta =
-        (GstVideoMeta *) gst_buffer_add_meta (dest, GST_VIDEO_META_INFO, NULL);
-    dmeta->buffer = dest;
+    GstMetaTransformCopy *copy = data;
 
-    dmeta->flags = smeta->flags;
-    dmeta->id = smeta->id;
-    dmeta->format = smeta->format;
-    dmeta->width = smeta->width;
-    dmeta->height = smeta->height;
+    if (!copy->region) {
+      /* only copy if the complete data is copied as well */
+      dmeta =
+          (GstVideoMeta *) gst_buffer_add_meta (dest, GST_VIDEO_META_INFO,
+          NULL);
+      dmeta->buffer = dest;
 
-    dmeta->n_planes = smeta->n_planes;
-    for (i = 0; i < dmeta->n_planes; i++) {
-      dmeta->offset[i] = smeta->offset[i];
-      dmeta->stride[i] = smeta->stride[i];
+      GST_DEBUG ("copy video metadata");
+      dmeta->flags = smeta->flags;
+      dmeta->id = smeta->id;
+      dmeta->format = smeta->format;
+      dmeta->width = smeta->width;
+      dmeta->height = smeta->height;
+
+      dmeta->n_planes = smeta->n_planes;
+      for (i = 0; i < dmeta->n_planes; i++) {
+        dmeta->offset[i] = smeta->offset[i];
+        dmeta->stride[i] = smeta->stride[i];
+      }
     }
   }
   return TRUE;
@@ -310,10 +317,14 @@ gst_video_crop_meta_transform (GstBuffer * dest, GstMeta * meta,
     smeta = (GstVideoCropMeta *) meta;
     dmeta = gst_buffer_add_video_crop_meta (dest);
 
+    GST_DEBUG ("copy crop metadata");
     dmeta->x = smeta->x;
     dmeta->y = smeta->y;
     dmeta->width = smeta->width;
     dmeta->height = smeta->height;
+  } else if (GST_VIDEO_META_TRANSFORM_IS_SCALE (type)) {
+    /* FIXME, do something */
+    GST_DEBUG ("scaling crop metadata");
   }
   return TRUE;
 }
@@ -343,4 +354,22 @@ gst_video_crop_meta_get_info (void)
         (GstMetaFreeFunction) NULL, gst_video_crop_meta_transform);
   }
   return video_crop_meta_info;
+}
+
+/**
+ * gst_video_meta_transform_scale_get_quark:
+ *
+ * Get the #GQuark for the "gst-video-scale" metadata transform operation.
+ *
+ * Returns: a #GQuark
+ */
+GQuark
+gst_video_meta_transform_scale_get_quark (void)
+{
+  static GQuark _value = 0;
+
+  if (_value == 0) {
+    _value = g_quark_from_static_string ("gst-video-scale");
+  }
+  return _value;
 }
