@@ -12,6 +12,7 @@ EXPORTS
 	GST_CAT_GST_INIT DATA
 	GST_CAT_MEMORY DATA
 	GST_CAT_MESSAGE DATA
+	GST_CAT_META DATA
 	GST_CAT_NEGOTIATION DATA
 	GST_CAT_PADS DATA
 	GST_CAT_PARAMS DATA
@@ -43,6 +44,7 @@ EXPORTS
 	_gst_disable_registry_cache DATA
 	_gst_element_error_printf
 	_gst_event_type DATA
+	_gst_meta_tag_memory DATA
 	_gst_meta_transform_copy DATA
 	_gst_plugin_loader_client_run
 	_gst_sample_type DATA
@@ -489,23 +491,6 @@ EXPORTS
 	gst_library_error_get_type
 	gst_library_error_quark
 	gst_map_flags_get_type
-	gst_marshal_BOOLEAN__BOXED
-	gst_marshal_BOOLEAN__POINTER
-	gst_marshal_BOOLEAN__VOID
-	gst_marshal_BOXED__BOXED
-	gst_marshal_POINTER__POINTER
-	gst_marshal_VOID__BOXED_OBJECT
-	gst_marshal_VOID__INT64
-	gst_marshal_VOID__INT_INT
-	gst_marshal_VOID__OBJECT_BOXED
-	gst_marshal_VOID__OBJECT_BOXED_STRING
-	gst_marshal_VOID__OBJECT_OBJECT
-	gst_marshal_VOID__OBJECT_OBJECT_STRING
-	gst_marshal_VOID__OBJECT_PARAM
-	gst_marshal_VOID__OBJECT_POINTER
-	gst_marshal_VOID__OBJECT_STRING
-	gst_marshal_VOID__POINTER_OBJECT
-	gst_marshal_VOID__UINT_BOXED
 	gst_memory_alignment DATA
 	gst_memory_copy
 	gst_memory_flags_get_type
@@ -872,6 +857,7 @@ EXPORTS
 	gst_query_parse_seeking
 	gst_query_parse_segment
 	gst_query_parse_uri
+	gst_query_remove_nth_allocation_meta
 	gst_query_set_accept_caps_result
 	gst_query_set_allocation_params
 	gst_query_set_buffering_percent
