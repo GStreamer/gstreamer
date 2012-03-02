@@ -1634,6 +1634,7 @@ mpegts_base_handle_seek_event (MpegTSBase * base, GstPad * pad,
     gst_pad_push_event (base->sinkpad, gst_event_new_flush_stop ());
     /* And actually flush our pending data */
     mpegts_base_flush (base);
+    mpegts_packetizer_flush (base->packetizer);
   }
 
   if (flags & (GST_SEEK_FLAG_SEGMENT | GST_SEEK_FLAG_SKIP)) {
