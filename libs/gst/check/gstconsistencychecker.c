@@ -71,9 +71,9 @@ source_pad_data_cb (GstPad * pad, GstMiniObject * data,
     GST_DEBUG_OBJECT (pad, "%s", GST_EVENT_TYPE_NAME (event));
     switch (GST_EVENT_TYPE (event)) {
       case GST_EVENT_FLUSH_START:
-        /* FIXME : not 100% sure about whether getting two flush_start in a row
-         * is valid */
-        fail_if (consist->flushing, "Received another FLUSH_START");
+        /* getting two flush_start in a row seems to be okay
+           fail_if (consist->flushing, "Received another FLUSH_START");
+         */
         consist->flushing = TRUE;
         break;
       case GST_EVENT_FLUSH_STOP:
