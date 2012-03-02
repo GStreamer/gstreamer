@@ -569,6 +569,74 @@ mpegts_base_program_remove_stream (MpegTSBase * base,
   program->streams[pid] = NULL;
 }
 
+/* Return TRUE if programs are equal */
+static gboolean
+mpegts_base_is_same_program (MpegTSBase * base, MpegTSBaseProgram * oldprogram,
+    guint16 new_pmt_pid, GstStructure * new_pmt_info)
+{
+  guint i, nbstreams;
+  guint pcr_pid;
+  guint pid;
+  guint stream_type;
+  GstStructure *stream;
+  MpegTSBaseStream *oldstream;
+  gboolean sawpcrpid = FALSE;
+  const GValue *new_streams;
+  const GValue *value;
+
+  if (oldprogram->pmt_pid != new_pmt_pid) {
+    GST_DEBUG ("Different pmt_pid (new:0x%04x, old:0x%04x)", new_pmt_pid,
+        oldprogram->pmt_pid);
+    return FALSE;
+  }
+
+  gst_structure_id_get (new_pmt_info, QUARK_PCR_PID, G_TYPE_UINT, &pcr_pid,
+      NULL);
+  if (oldprogram->pcr_pid != pcr_pid) {
+    GST_DEBUG ("Different pcr_pid (new:0x%04x, old:0x%04x)",
+        pcr_pid, oldprogram->pcr_pid);
+    return FALSE;
+  }
+
+  /* Check the streams */
+  new_streams = gst_structure_id_get_value (new_pmt_info, QUARK_STREAMS);
+  nbstreams = gst_value_list_get_size (new_streams);
+
+  for (i = 0; i < nbstreams; ++i) {
+    value = gst_value_list_get_value (new_streams, i);
+    stream = g_value_get_boxed (value);
+
+    gst_structure_id_get (stream, QUARK_PID, G_TYPE_UINT, &pid,
+        QUARK_STREAM_TYPE, G_TYPE_UINT, &stream_type, NULL);
+    oldstream = oldprogram->streams[pid];
+    if (!oldstream) {
+      GST_DEBUG ("New stream 0x%04x not present in old program", pid);
+      return FALSE;
+    }
+    if (oldstream->stream_type != stream_type) {
+      GST_DEBUG
+          ("New stream 0x%04x has a different stream type (new:%d, old:%d)",
+          pid, stream_type, oldstream->stream_type);
+      return FALSE;
+    }
+    if (pid == oldprogram->pcr_pid)
+      sawpcrpid = TRUE;
+  }
+
+  /* If the pcr is not shared with an existing stream, we'll have one extra stream */
+  if (!sawpcrpid)
+    nbstreams += 1;
+
+  if (nbstreams != g_list_length (oldprogram->stream_list)) {
+    GST_DEBUG ("Different number of streams (new:%d, old:%d)",
+        nbstreams, g_list_length (oldprogram->stream_list));
+    return FALSE;
+  }
+
+  GST_DEBUG ("Programs are equal");
+  return TRUE;
+}
+
 static void
 mpegts_base_deactivate_program (MpegTSBase * base, MpegTSBaseProgram * program)
 {
@@ -878,6 +946,10 @@ mpegts_base_apply_pmt (MpegTSBase * base,
   if (G_UNLIKELY (old_program == NULL))
     goto no_program;
 
+  if (G_UNLIKELY (mpegts_base_is_same_program (base, old_program, pmt_pid,
+              pmt_info)))
+    goto same_program;
+
   /* If the current program is active, this means we have a new program */
   if (old_program->active) {
     old_program = mpegts_base_steal_program (base, program_number);
@@ -909,6 +981,12 @@ mpegts_base_apply_pmt (MpegTSBase * base,
 no_program:
   {
     GST_ERROR ("Attempted to apply a PMT on a program that wasn't created");
+    return;
+  }
+
+same_program:
+  {
+    GST_DEBUG ("Not applying identical program");
     return;
   }
 }
