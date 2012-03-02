@@ -271,6 +271,7 @@ gst_buffer_copy_into (GstBuffer * dest, GstBuffer * src,
 {
   GstMetaItem *walk;
   gsize bufsize;
+  gboolean region = FALSE;
 
   g_return_if_fail (dest != NULL);
   g_return_if_fail (src != NULL);
@@ -283,8 +284,12 @@ gst_buffer_copy_into (GstBuffer * dest, GstBuffer * src,
 
   bufsize = gst_buffer_get_size (src);
   g_return_if_fail (bufsize >= offset);
+  if (offset > 0)
+    region = TRUE;
   if (size == -1)
     size = bufsize - offset;
+  if (size < bufsize)
+    region = TRUE;
   g_return_if_fail (bufsize >= offset + size);
 
   GST_CAT_LOG (GST_CAT_BUFFER, "copy %p to %p, offset %" G_GSIZE_FORMAT
@@ -362,6 +367,7 @@ gst_buffer_copy_into (GstBuffer * dest, GstBuffer * src,
       if (info->transform_func) {
         GstMetaTransformCopy copy_data;
 
+        copy_data.region = region;
         copy_data.offset = offset;
         copy_data.size = size;
 

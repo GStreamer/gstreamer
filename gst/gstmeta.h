@@ -123,12 +123,14 @@ GST_EXPORT GQuark _gst_meta_transform_copy;
 
 /**
  * GstMetaTransformCopy:
- * @offset: the offset to copy
- * @size: the size to copy
+ * @region: %TRUE if only region is copied
+ * @offset: the offset to copy, 0 if @region is %FALSE, otherwise > 0
+ * @size: the size to copy, -1 or the buffer size when @region is %FALSE
  *
  * Extra data passed to a "gst-copy" transform #GstMetaTransformFunction.
  */
 typedef struct {
+  gboolean region;
   gsize offset;
   gsize size;
 } GstMetaTransformCopy;
