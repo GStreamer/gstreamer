@@ -96,18 +96,22 @@ test_transform_func (GstBuffer * transbuf, GstMeta * meta,
     GstMetaTransformCopy *copy_data = data;
 
     test = GST_META_TEST_ADD (transbuf);
+
     if (copy_data->offset == 0) {
       /* same offset, copy timestamps */
       test->pts = tmeta->pts;
       test->dts = tmeta->dts;
-      if (copy_data->size == gst_buffer_get_size (buffer)) {
+      if (!copy_data->region) {
+        fail_unless (gst_buffer_get_size (buffer) == copy_data->size);
         /* same size, copy duration */
         test->duration = tmeta->duration;
       } else {
+        fail_unless (gst_buffer_get_size (buffer) > copy_data->size);
         /* else clear */
         test->duration = GST_CLOCK_TIME_NONE;
       }
     } else {
+      fail_unless (copy_data->region == TRUE);
       test->pts = -1;
       test->dts = -1;
       test->duration = -1;
