@@ -158,6 +158,14 @@ gst_video_convert_fixate_caps (GstBaseTransform * trans,
   return result;
 }
 
+static gboolean
+gst_video_convert_filter_meta (GstBaseTransform * trans, GstQuery * query,
+    GType api)
+{
+  /* propose all metadata upstream */
+  return TRUE;
+}
+
 /* The caps can be transformed into any other caps with format info removed.
  * However, we should prefer passthrough, so if passthrough is possible,
  * put it first in the list. */
@@ -183,6 +191,24 @@ gst_video_convert_transform_caps (GstBaseTransform * btrans,
       GST_PTR_FORMAT, caps, result);
 
   return result;
+}
+
+static gboolean
+gst_video_convert_transform_meta (GstBaseTransform * trans, GstBuffer * outbuf,
+    GstMeta * meta, GstBuffer * inbuf)
+{
+  const GstMetaInfo *info = meta->info;
+  gboolean ret;
+
+  if (gst_meta_api_type_has_tag (info->api, _colorspace_quark)) {
+    /* don't copy colorspace specific metadata, FIXME, we need a MetaTransform
+     * for the colorspace metadata. */
+    ret = FALSE;
+  } else {
+    /* copy other metadata */
+    ret = TRUE;
+  }
+  return ret;
 }
 
 static gboolean
@@ -348,6 +374,10 @@ gst_video_convert_class_init (GstVideoConvertClass * klass)
       GST_DEBUG_FUNCPTR (gst_video_convert_transform_caps);
   gstbasetransform_class->fixate_caps =
       GST_DEBUG_FUNCPTR (gst_video_convert_fixate_caps);
+  gstbasetransform_class->filter_meta =
+      GST_DEBUG_FUNCPTR (gst_video_convert_filter_meta);
+  gstbasetransform_class->transform_meta =
+      GST_DEBUG_FUNCPTR (gst_video_convert_transform_meta);
 
   gstbasetransform_class->passthrough_on_same_caps = TRUE;
 
