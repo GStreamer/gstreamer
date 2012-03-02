@@ -1,4 +1,4 @@
-noinst_PROGRAMS = seek
+noinst_PROGRAMS = playback-test
 
 LDADD = \
 	$(top_builddir)/gst-libs/gst/interfaces/libgstinterfaces-@GST_MAJORMINOR@.la \
