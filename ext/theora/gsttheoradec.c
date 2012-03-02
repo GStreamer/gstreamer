@@ -820,6 +820,7 @@ theora_negotiate (GstTheoraDec * dec)
   }
 
   /* info contains the dimensions for the coded picture before cropping */
+  gst_video_info_init (&info);
   gst_video_info_set_format (&info, format, dec->info.frame_width,
       dec->info.frame_height);
   info.fps_n = dec->info.fps_numerator;
