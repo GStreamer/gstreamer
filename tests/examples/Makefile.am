@@ -8,7 +8,7 @@ if USE_GIO
 GIO_SUBDIRS = gio
 endif
 
-if HAVE_GTK_X11
+if HAVE_GTK
 GTK_SUBDIRS = playback
 endif
 
