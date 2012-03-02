@@ -1169,7 +1169,7 @@ gst_base_transform_acceptcaps_default (GstBaseTransform * trans,
   {
     GstCaps *allowed;
 
-    GST_DEBUG_OBJECT (trans, "non fixed accept caps %" GST_PTR_FORMAT, caps);
+    GST_DEBUG_OBJECT (trans, "accept caps %" GST_PTR_FORMAT, caps);
 
     /* get all the formats we can handle on this pad */
     if (direction == GST_PAD_SRC)
