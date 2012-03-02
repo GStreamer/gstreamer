@@ -712,7 +712,6 @@ static void
 gst_vaapidecode_init(GstVaapiDecode *decode, GstVaapiDecodeClass *klass)
 {
     GstElementClass * const element_class = GST_ELEMENT_CLASS(klass);
-    GstPadTemplate *pad_template;
 
     decode->display             = NULL;
     decode->decoder             = NULL;
@@ -724,9 +723,10 @@ gst_vaapidecode_init(GstVaapiDecode *decode, GstVaapiDecodeClass *klass)
     decode->is_ready            = FALSE;
 
     /* Pad through which data comes in to the element */
-    pad_template = gst_element_class_get_pad_template(element_class, "sink");
-    decode->sinkpad = gst_pad_new_from_template(pad_template, "sink");
-    gst_object_unref(pad_template);
+    decode->sinkpad = gst_pad_new_from_template(
+        gst_element_class_get_pad_template(element_class, "sink"),
+        "sink"
+    );
     decode->sinkpad_caps = NULL;
 
     gst_pad_set_getcaps_function(decode->sinkpad, gst_vaapidecode_get_caps);
@@ -737,9 +737,10 @@ gst_vaapidecode_init(GstVaapiDecode *decode, GstVaapiDecodeClass *klass)
     gst_element_add_pad(GST_ELEMENT(decode), decode->sinkpad);
 
     /* Pad through which data goes out of the element */
-    pad_template = gst_element_class_get_pad_template(element_class, "src");
-    decode->srcpad = gst_pad_new_from_template(pad_template, "src");
-    gst_object_unref(pad_template);
+    decode->srcpad = gst_pad_new_from_template(
+        gst_element_class_get_pad_template(element_class, "src"),
+        "src"
+    );
     decode->srcpad_caps = NULL;
 
     gst_pad_use_fixed_caps(decode->srcpad);
