@@ -90,15 +90,20 @@ interface_as_function ## _color_balance_get_value (GstColorBalance * balance,   
   return gst_v4l2_color_balance_get_value(this->v4l2object, channel);                 \
 }                                                                                     \
                                                                                       \
+static GstColorBalanceType                                                            \
+interface_as_function ## _color_balance_get_balance_type (GstColorBalance * balance)  \
+{                                                                                     \
+  return GST_COLOR_BALANCE_HARDWARE;                                                  \
+}                                                                                     \
+                                                                                      \
 static void                                                                           \
 interface_as_function ## _color_balance_interface_init (GstColorBalanceInterface * iface) \
 {                                                                                     \
-  GST_COLOR_BALANCE_TYPE (iface) = GST_COLOR_BALANCE_HARDWARE;                        \
-                                                                                      \
   /* default virtual functions */                                                     \
   iface->list_channels = interface_as_function ## _color_balance_list_channels;       \
   iface->set_value = interface_as_function ## _color_balance_set_value;               \
   iface->get_value = interface_as_function ## _color_balance_get_value;               \
+  iface->get_balance_type = interface_as_function ## _color_balance_get_balance_type; \
 }                                                                                     \
 
 #endif /* __GST_V4L2_COLOR_BALANCE_H__ */

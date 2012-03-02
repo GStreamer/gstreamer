@@ -92,7 +92,7 @@ void gst_pulsemixer_ctrl_set_record (GstPulseMixerCtrl * mixer,
     GstMixerTrack * track, gboolean record);
 GstMixerFlags gst_pulsemixer_ctrl_get_mixer_flags (GstPulseMixerCtrl * mixer);
 
-#define GST_IMPLEMENT_PULSEMIXER_CTRL_METHODS(Type, interface_as_function)     \
+#define GST_IMPLEMENT_PULSEMIXER_CTRL_METHODS(Type, interface_as_function)      \
 static const GList*                                                             \
 interface_as_function ## _list_tracks (GstMixer * mixer)                        \
 {                                                                               \
@@ -155,19 +155,23 @@ interface_as_function ## _get_mixer_flags (GstMixer * mixer)                    
   g_return_val_if_fail (this != NULL, GST_MIXER_FLAG_NONE);                     \
   g_return_val_if_fail (this->mixer != NULL, GST_MIXER_FLAG_NONE);              \
                                                                                 \
-  return gst_pulsemixer_ctrl_get_mixer_flags (this->mixer);                          \
+  return gst_pulsemixer_ctrl_get_mixer_flags (this->mixer);                     \
 } \
-static void                                                                     \
-interface_as_function ## _mixer_interface_init (GstMixerInterface * iface)          \
+static GstMixerType                                                             \
+interface_as_function ## _get_mixer_type (GstMixer * mixer)                     \
 {                                                                               \
-  GST_MIXER_TYPE (iface) = GST_MIXER_HARDWARE;                                  \
-                                                                                \
+  return GST_MIXER_HARDWARE;                                                    \
+}                                                                               \
+static void                                                                     \
+interface_as_function ## _mixer_interface_init (GstMixerInterface * iface)      \
+{                                                                               \
   iface->list_tracks = interface_as_function ## _list_tracks;                   \
   iface->set_volume  = interface_as_function ## _set_volume;                    \
   iface->get_volume  = interface_as_function ## _get_volume;                    \
   iface->set_mute    = interface_as_function ## _set_mute;                      \
   iface->set_record  = interface_as_function ## _set_record;                    \
-  iface->get_mixer_flags = interface_as_function ## _get_mixer_flags; \
+  iface->get_mixer_flags = interface_as_function ## _get_mixer_flags;           \
+  iface->get_mixer_type = interface_as_function ## _get_mixer_type;             \
 }
 
 G_END_DECLS
