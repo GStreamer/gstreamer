@@ -180,7 +180,7 @@ static GstStaticPadTemplate audio_sink_factory =
         "rate = (int) [ 1000, 96000 ], " "channels = (int) [ 1, 2 ]; "
 #endif*/
         "audio/x-ac3, "
-        "rate = (int) [ 1000, 96000 ], " "channels = (int) [ 1, 2 ]; "
+        "rate = (int) [ 1000, 96000 ], " "channels = (int) [ 1, 6 ]; "
         "audio/x-alaw, "
         "rate = (int) [ 1000, 48000 ], " "channels = (int) [ 1, 2 ]; "
         "audio/x-mulaw, "
