@@ -109,6 +109,10 @@
 
 /* for developers: there are two useful tools : xvinfo and xvattr */
 
+/* FIXME 0.11: suppress warnings for deprecated API such as GValueArray
+ * with newer GLib versions (>= 2.31.0) */
+#define GLIB_DISABLE_DEPRECATION_WARNINGS
+
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif

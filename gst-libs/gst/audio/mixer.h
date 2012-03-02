@@ -37,8 +37,6 @@ G_BEGIN_DECLS
 #define GST_MIXER_GET_INTERFACE(inst) \
   (G_TYPE_INSTANCE_GET_INTERFACE ((inst), GST_TYPE_MIXER, GstMixerInterface))
 
-#define GST_MIXER_TYPE(iface) (iface->mixer_type)
-
 typedef struct _GstMixer GstMixer;
 typedef struct _GstMixerInterface GstMixerInterface;
 
@@ -112,8 +110,6 @@ typedef enum
 struct _GstMixerInterface {
   GTypeInterface iface;
 
-  GstMixerType mixer_type;
-
   /* virtual functions */
   const GList *  (* list_tracks)   (GstMixer      *mixer);
 
@@ -137,6 +133,8 @@ struct _GstMixerInterface {
                                     GstMixerOptions *opts);
 
   GstMixerFlags (* get_mixer_flags) (GstMixer *mixer);
+
+  GstMixerType  (* get_mixer_type)  (GstMixer *mixer);
 };
 
 GType           gst_mixer_get_type      (void);

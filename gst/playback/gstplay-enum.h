@@ -70,7 +70,8 @@ typedef enum {
   GST_PLAY_FLAG_NATIVE_VIDEO  = (1 << 6),
   GST_PLAY_FLAG_DOWNLOAD      = (1 << 7),
   GST_PLAY_FLAG_BUFFERING     = (1 << 8),
-  GST_PLAY_FLAG_DEINTERLACE   = (1 << 9)
+  GST_PLAY_FLAG_DEINTERLACE   = (1 << 9),
+  GST_PLAY_FLAG_SOFT_COLORBALANCE = (1 << 10)
 } GstPlayFlags;
 
 #define GST_TYPE_PLAY_FLAGS (gst_play_flags_get_type())

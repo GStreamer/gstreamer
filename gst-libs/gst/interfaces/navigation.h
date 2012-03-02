@@ -44,7 +44,7 @@ typedef struct _GstNavigationInterface GstNavigationInterface;
  * @iface: the parent interface
  * @send_event: sending a navigation event
  *
- * Color-balance interface.
+ * Navigation interface.
  */
 struct _GstNavigationInterface {
   GTypeInterface iface;

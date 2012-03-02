@@ -65,7 +65,6 @@ struct _GstAdder {
   gint64          offset;
 
   /* sink event handling */
-  GstPadEventFunction  collect_event;
   GstSegment      segment;
   volatile gboolean new_segment_pending;
   volatile gboolean wait_for_new_segment;

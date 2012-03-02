@@ -53,9 +53,6 @@
 /* system wide data directory */
 #define GST_DATADIR PREFIX "\\share"
 
-/* set to disable libxml2-dependent code in subparse */
-#undef GST_DISABLE_XML
-
 /* Extra platform specific plugin suffix */
 #undef GST_EXTRA_MODULE_SUFFIX
 
@@ -151,6 +148,9 @@
 
 /* Define to 1 if you have the <dlfcn.h> header file. */
 #undef HAVE_DLFCN_H
+
+/* Define to 1 if you have the <emmintrin.h> header file. */
+#undef HAVE_EMMINTRIN_H
 
 /* Define to enable building of experimental plug-ins. */
 #undef HAVE_EXPERIMENTAL
@@ -271,6 +271,9 @@
 
 /* Define to enable X libraries and plugins (used by ximagesink). */
 #undef HAVE_X
+
+/* Define to 1 if you have the <xmmintrin.h> header file. */
+#undef HAVE_XMMINTRIN_H
 
 /* Define to enable X Shared Memory extension. */
 #undef HAVE_XSHM

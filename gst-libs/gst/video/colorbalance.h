@@ -36,8 +36,6 @@ G_BEGIN_DECLS
 #define GST_COLOR_BALANCE_GET_INTERFACE(inst) \
   (G_TYPE_INSTANCE_GET_INTERFACE ((inst), GST_TYPE_COLOR_BALANCE, GstColorBalanceInterface))
 
-#define GST_COLOR_BALANCE_TYPE(iface) (iface->balance_type)
-
 typedef struct _GstColorBalance GstColorBalance;
 typedef struct _GstColorBalanceInterface GstColorBalanceInterface;
 
@@ -73,8 +71,6 @@ typedef enum
 struct _GstColorBalanceInterface {
   GTypeInterface iface;
 
-  GstColorBalanceType balance_type;
-
   /* virtual functions */
   const GList * (* list_channels) (GstColorBalance        *balance);
 
@@ -83,11 +79,15 @@ struct _GstColorBalanceInterface {
                                    gint                    value);
   gint          (* get_value)     (GstColorBalance        *balance,
                                    GstColorBalanceChannel *channel);
+  GstColorBalanceType (*get_balance_type)  (GstColorBalance *balance);
 
   /* signals */
   void (* value_changed) (GstColorBalance        *balance,
                           GstColorBalanceChannel *channel,
                           gint                    value);
+
+  /*< private >*/
+  gpointer _gst_reserved[GST_PADDING-1];
 };
 
 GType   gst_color_balance_get_type      (void);

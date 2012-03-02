@@ -106,12 +106,11 @@ gst_color_balance_class_init (GstColorBalanceInterface * iface)
     initialized = TRUE;
   }
 
-  iface->balance_type = GST_COLOR_BALANCE_SOFTWARE;
-
   /* default virtual functions */
   iface->list_channels = NULL;
   iface->set_value = NULL;
   iface->get_value = NULL;
+  iface->get_balance_type = NULL;
 }
 
 /**
@@ -215,7 +214,10 @@ gst_color_balance_get_balance_type (GstColorBalance * balance)
 
   iface = GST_COLOR_BALANCE_GET_INTERFACE (balance);
 
-  return iface->balance_type;
+  g_return_val_if_fail (iface->get_balance_type != NULL,
+      GST_COLOR_BALANCE_SOFTWARE);
+
+  return iface->get_balance_type (balance);
 }
 
 /**

@@ -116,8 +116,8 @@ static gboolean gst_adder_sink_query (GstPad * pad, GstObject * parent,
     GstQuery * query);
 static gboolean gst_adder_src_event (GstPad * pad, GstObject * parent,
     GstEvent * event);
-static gboolean gst_adder_sink_event (GstPad * pad, GstObject * parent,
-    GstEvent * event);
+static gboolean gst_adder_sink_event (GstCollectPads2 * pads,
+    GstCollectData2 * pad, GstEvent * event, gpointer user_data);
 
 static GstPad *gst_adder_request_new_pad (GstElement * element,
     GstPadTemplate * temp, const gchar * unused, const GstCaps * caps);
@@ -131,8 +131,6 @@ static GstFlowReturn gst_adder_do_clip (GstCollectPads2 * pads,
     gpointer user_data);
 static GstFlowReturn gst_adder_collected (GstCollectPads2 * pads,
     gpointer user_data);
-static gboolean gst_adder_event (GstCollectPads2 * pads, GstCollectData2 * pad,
-    GstEvent * event, gpointer user_data);
 
 /* non-clipping versions (for float) */
 #define MAKE_FUNC_NC(name,type)                                 \
@@ -561,6 +559,8 @@ gst_adder_src_query (GstPad * pad, GstObject * parent, GstQuery * query)
   return res;
 }
 
+/* event handling */
+
 typedef struct
 {
   GstEvent *event;
@@ -763,14 +763,13 @@ done:
 }
 
 static gboolean
-gst_adder_sink_event (GstPad * pad, GstObject * parent, GstEvent * event)
+gst_adder_sink_event (GstCollectPads2 * pads, GstCollectData2 * pad,
+    GstEvent * event, gpointer user_data)
 {
-  GstAdder *adder;
-  gboolean ret = TRUE;
+  GstAdder *adder = GST_ADDER (user_data);
+  gboolean res = FALSE;
 
-  adder = GST_ADDER (parent);
-
-  GST_DEBUG_OBJECT (pad, "Got %s event on sink pad",
+  GST_DEBUG_OBJECT (pad->pad, "Got %s event on sink pad",
       GST_EVENT_TYPE_NAME (event));
 
   switch (GST_EVENT_TYPE (event)) {
@@ -779,34 +778,40 @@ gst_adder_sink_event (GstPad * pad, GstObject * parent, GstEvent * event)
       GstCaps *caps;
 
       gst_event_parse_caps (event, &caps);
-      ret = gst_adder_setcaps (adder, pad, caps);
+      res = gst_adder_setcaps (adder, pad->pad, caps);
       gst_event_unref (event);
 
-      goto beach;
+      break;
     }
+    case GST_EVENT_FLUSH_START:
+      res = gst_pad_event_default (pad->pad, GST_OBJECT (adder), event);
+      break;
     case GST_EVENT_FLUSH_STOP:
-      /* we received a flush-stop. The collect_event function will call the
-       * gst_adder_event function we have set on the GstCollectPads2, so we
-       * have control over whether the event is sent past our element.
-       * We will only forward it when flush_stop_pending is set, and we will
-       * unset it then.
+      /* we received a flush-stop. We will only forward it when
+       * flush_stop_pending is set, and we will unset it then.
        */
-      GST_COLLECT_PADS2_STREAM_LOCK (adder->collect);
-      g_atomic_int_set (&adder->new_segment_pending, TRUE);
+      if (g_atomic_int_compare_and_exchange (&adder->flush_stop_pending,
+              TRUE, FALSE)) {
+        g_atomic_int_set (&adder->new_segment_pending, TRUE);
+        GST_DEBUG_OBJECT (pad->pad, "forwarding flush stop");
+      } else {
+        gst_event_unref (event);
+        res = TRUE;
+        GST_DEBUG_OBJECT (pad->pad, "eating flush stop");
+      }
       /* Clear pending tags */
       if (adder->pending_events) {
         g_list_foreach (adder->pending_events, (GFunc) gst_event_unref, NULL);
         g_list_free (adder->pending_events);
         adder->pending_events = NULL;
       }
-      GST_COLLECT_PADS2_STREAM_UNLOCK (adder->collect);
+      res = gst_pad_event_default (pad->pad, GST_OBJECT (adder), event);
       break;
     case GST_EVENT_TAG:
-      GST_COLLECT_PADS2_STREAM_LOCK (adder->collect);
       /* collect tags here so we can push them out when we collect data */
       adder->pending_events = g_list_append (adder->pending_events, event);
-      GST_COLLECT_PADS2_STREAM_UNLOCK (adder->collect);
-      goto beach;
+      res = TRUE;
+      break;
     case GST_EVENT_SEGMENT:
       if (g_atomic_int_compare_and_exchange (&adder->wait_for_new_segment,
               TRUE, FALSE)) {
@@ -814,16 +819,19 @@ gst_adder_sink_event (GstPad * pad, GstObject * parent, GstEvent * event)
          * see FIXME in gst_adder_collected() */
         g_atomic_int_set (&adder->new_segment_pending, TRUE);
       }
+      gst_event_unref (event);
+      res = TRUE;
+      break;
+    case GST_EVENT_EOS:
+      gst_event_unref (event);
+      res = TRUE;
       break;
     default:
+      res = gst_pad_event_default (pad->pad, GST_OBJECT (adder), event);
       break;
   }
 
-  /* now GstCollectPads2 can take care of the rest, e.g. EOS */
-  ret = adder->collect_event (pad, parent, event);
-
-beach:
-  return ret;
+  return res;
 }
 
 static void
@@ -892,7 +900,7 @@ gst_adder_init (GstAdder * adder)
   gst_collect_pads2_set_clip_function (adder->collect,
       GST_DEBUG_FUNCPTR (gst_adder_do_clip), adder);
   gst_collect_pads2_set_event_function (adder->collect,
-      GST_DEBUG_FUNCPTR (gst_adder_event), adder);
+      GST_DEBUG_FUNCPTR (gst_adder_sink_event), adder);
 }
 
 static void
@@ -991,12 +999,6 @@ gst_adder_request_new_pad (GstElement * element, GstPadTemplate * templ,
 
   gst_pad_set_query_function (newpad, GST_DEBUG_FUNCPTR (gst_adder_sink_query));
   gst_collect_pads2_add_pad (adder->collect, newpad, sizeof (GstCollectData2));
-
-  /* FIXME: hacked way to override/extend the event function of
-   * GstCollectPads2; because it sets its own event function giving the
-   * element no access to events */
-  adder->collect_event = (GstPadEventFunction) GST_PAD_EVENTFUNC (newpad);
-  gst_pad_set_event_function (newpad, GST_DEBUG_FUNCPTR (gst_adder_sink_event));
 
   /* takes ownership of the pad */
   if (!gst_element_add_pad (GST_ELEMENT (adder), newpad))
@@ -1218,7 +1220,7 @@ gst_adder_collected (GstCollectPads2 * pads, gpointer user_data)
 
     if (event) {
       if (!gst_pad_push_event (adder->srcpad, event)) {
-        GST_WARNING_OBJECT (adder->srcpad, "Sending event failed");
+        GST_WARNING_OBJECT (adder->srcpad, "Sending new segment event failed");
       }
     } else {
       GST_WARNING_OBJECT (adder->srcpad, "Creating new segment event for "
@@ -1292,32 +1294,6 @@ eos:
   }
 }
 
-static gboolean
-gst_adder_event (GstCollectPads2 * pads, GstCollectData2 * pad,
-    GstEvent * event, gpointer user_data)
-{
-  GstAdder *adder = GST_ADDER (user_data);
-  if (GST_EVENT_TYPE (event) == GST_EVENT_FLUSH_STOP) {
-    if (g_atomic_int_compare_and_exchange (&adder->flush_stop_pending,
-            TRUE, FALSE)) {
-
-      return gst_pad_event_default (pad->pad, GST_OBJECT (user_data), event);
-    } else {
-      gst_event_unref (event);
-      return TRUE;
-    }
-  } else {
-    if (GST_EVENT_TYPE (event) == GST_EVENT_SEGMENT ||
-        GST_EVENT_TYPE (event) == GST_EVENT_CAPS ||
-        GST_EVENT_TYPE (event) == GST_EVENT_EOS) {
-      gst_event_unref (event);
-      return TRUE;
-    } else {
-      return gst_pad_event_default (pad->pad, GST_OBJECT (user_data), event);
-    }
-  }
-}
-
 static GstStateChangeReturn
 gst_adder_change_state (GstElement * element, GstStateChange transition)
 {
@@ -1358,7 +1334,6 @@ gst_adder_change_state (GstElement * element, GstStateChange transition)
 
   return ret;
 }
-
 
 static gboolean
 plugin_init (GstPlugin * plugin)

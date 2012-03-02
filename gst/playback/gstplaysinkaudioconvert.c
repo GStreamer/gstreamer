@@ -64,7 +64,6 @@ gst_play_sink_audio_convert_add_conversion_elements (GstPlaySinkAudioConvert *
     el = gst_play_sink_convert_bin_add_conversion_element_factory (cbin,
         "audioresample", "resample");
     if (el) {
-
       if (prev) {
         if (!gst_element_link_pads_full (prev, "src", el, "sink",
                 GST_PAD_LINK_CHECK_TEMPLATE_CAPS))

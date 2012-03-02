@@ -173,9 +173,11 @@ xmp_tag_type_get_name (GstXmpTagType tagtype)
     case GstXmpTagTypeBag:
       return "rdf:Bag";
     default:
-      g_assert_not_reached ();
+      break;
   }
-  return NULL;                  /* make compiler happy with -DG_DISABLE_ASSERT */
+
+  /* Make compiler happy */
+  g_return_val_if_reached ("");
 }
 
 struct _PendingXmpTag

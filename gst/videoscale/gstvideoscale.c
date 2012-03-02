@@ -395,10 +395,121 @@ gst_video_scale_get_property (GObject * object, guint prop_id, GValue * value,
   }
 }
 
+#define NEAREST  (1 << GST_VIDEO_SCALE_NEAREST)
+#define BILINEAR (1 << GST_VIDEO_SCALE_BILINEAR)
+#define FOURTAP  (1 << GST_VIDEO_SCALE_4TAP)
+#define LANCZOS  (1 << GST_VIDEO_SCALE_LANCZOS)
+
+/* or we could just do lookups via table[format] if we could be bothered..  */
+static const struct
+{
+  GstVideoFormat format;
+  guint8 methods;
+} formats_methods_table[] = {
+  {
+  GST_VIDEO_FORMAT_RGBx, NEAREST | BILINEAR | FOURTAP | LANCZOS}, {
+  GST_VIDEO_FORMAT_xRGB, NEAREST | BILINEAR | FOURTAP | LANCZOS}, {
+  GST_VIDEO_FORMAT_BGRx, NEAREST | BILINEAR | FOURTAP | LANCZOS}, {
+  GST_VIDEO_FORMAT_xBGR, NEAREST | BILINEAR | FOURTAP | LANCZOS}, {
+  GST_VIDEO_FORMAT_RGBA, NEAREST | BILINEAR | FOURTAP | LANCZOS}, {
+  GST_VIDEO_FORMAT_ARGB, NEAREST | BILINEAR | FOURTAP | LANCZOS}, {
+  GST_VIDEO_FORMAT_BGRA, NEAREST | BILINEAR | FOURTAP | LANCZOS}, {
+  GST_VIDEO_FORMAT_ABGR, NEAREST | BILINEAR | FOURTAP | LANCZOS}, {
+  GST_VIDEO_FORMAT_AYUV, NEAREST | BILINEAR | FOURTAP | LANCZOS}, {
+  GST_VIDEO_FORMAT_ARGB64, NEAREST | BILINEAR | FOURTAP | LANCZOS}, {
+  GST_VIDEO_FORMAT_AYUV64, NEAREST | BILINEAR | FOURTAP | LANCZOS}, {
+  GST_VIDEO_FORMAT_RGB, NEAREST | BILINEAR | FOURTAP}, {
+  GST_VIDEO_FORMAT_BGR, NEAREST | BILINEAR | FOURTAP}, {
+  GST_VIDEO_FORMAT_v308, NEAREST | BILINEAR | FOURTAP}, {
+  GST_VIDEO_FORMAT_YUY2, NEAREST | BILINEAR | FOURTAP}, {
+  GST_VIDEO_FORMAT_YVYU, NEAREST | BILINEAR | FOURTAP}, {
+  GST_VIDEO_FORMAT_UYVY, NEAREST | BILINEAR | FOURTAP}, {
+  GST_VIDEO_FORMAT_Y800, NEAREST | BILINEAR | FOURTAP}, {
+  GST_VIDEO_FORMAT_GRAY8, NEAREST | BILINEAR | FOURTAP}, {
+  GST_VIDEO_FORMAT_GRAY16_LE, NEAREST | BILINEAR | FOURTAP}, {
+  GST_VIDEO_FORMAT_GRAY16_BE, NEAREST | BILINEAR | FOURTAP}, {
+  GST_VIDEO_FORMAT_Y16, NEAREST | BILINEAR | FOURTAP}, {
+  GST_VIDEO_FORMAT_I420, NEAREST | BILINEAR | FOURTAP | LANCZOS}, {
+  GST_VIDEO_FORMAT_YV12, NEAREST | BILINEAR | FOURTAP | LANCZOS}, {
+  GST_VIDEO_FORMAT_Y444, NEAREST | BILINEAR | FOURTAP | LANCZOS}, {
+  GST_VIDEO_FORMAT_Y42B, NEAREST | BILINEAR | FOURTAP | LANCZOS}, {
+  GST_VIDEO_FORMAT_Y41B, NEAREST | BILINEAR | FOURTAP | LANCZOS}, {
+  GST_VIDEO_FORMAT_NV12, NEAREST | BILINEAR}, {
+  GST_VIDEO_FORMAT_RGB16, NEAREST | BILINEAR | FOURTAP}, {
+  GST_VIDEO_FORMAT_RGB15, NEAREST | BILINEAR | FOURTAP}
+};
+
+static gboolean
+gst_video_scale_format_supported_for_method (GstVideoFormat format,
+    GstVideoScaleMethod method)
+{
+  int i;
+
+  for (i = 0; i < G_N_ELEMENTS (formats_methods_table); ++i) {
+    if (formats_methods_table[i].format == format)
+      return ((formats_methods_table[i].methods & (1 << method)) != 0);
+  }
+  return FALSE;
+}
+
+static gboolean
+gst_video_scale_transform_supported (GstVideoScale * videoscale,
+    GstVideoScaleMethod method, GstStructure * structure)
+{
+  const GValue *val;
+  GstVideoInfo info;
+  gboolean supported = TRUE;
+  GstStructure *s;
+  GstCaps *c;
+
+  /* we support these methods for all formats */
+  if (method == GST_VIDEO_SCALE_NEAREST || method == GST_VIDEO_SCALE_BILINEAR)
+    return TRUE;
+
+  /* we need fixed caps if we want to use gst_video_parse_caps() */
+  s = gst_structure_new (gst_structure_get_name (structure),
+      "width", G_TYPE_INT, 1, "height", G_TYPE_INT, 1, NULL);
+
+  if ((val = gst_structure_get_value (structure, "format"))) {
+    gst_structure_set_value (s, "format", val);
+  } else {
+    if ((val = gst_structure_get_value (structure, "endianness")))
+      gst_structure_set_value (s, "endianness", val);
+    if ((val = gst_structure_get_value (structure, "red_mask")))
+      gst_structure_set_value (s, "red_mask", val);
+    if ((val = gst_structure_get_value (structure, "blue_mask")))
+      gst_structure_set_value (s, "blue_mask", val);
+    if ((val = gst_structure_get_value (structure, "green_mask")))
+      gst_structure_set_value (s, "green_mask", val);
+    if ((val = gst_structure_get_value (structure, "alpha_mask")))
+      gst_structure_set_value (s, "alpha_mask", val);
+    if ((val = gst_structure_get_value (structure, "depth")))
+      gst_structure_set_value (s, "depth", val);
+    if ((val = gst_structure_get_value (structure, "bpp")))
+      gst_structure_set_value (s, "bpp", val);
+  }
+  c = gst_caps_new_full (s, NULL);
+
+  gst_video_info_init (&info);
+  if (!gst_video_info_from_caps (&info, c)) {
+    GST_ERROR_OBJECT (videoscale, "couldn't parse %" GST_PTR_FORMAT, c);
+  } else if (!gst_video_scale_format_supported_for_method (info.finfo->format,
+          method)) {
+    supported = FALSE;
+  }
+  GST_LOG_OBJECT (videoscale, "method %d %ssupported for format %d",
+      method, (supported) ? "" : "not ", info.finfo->format);
+  gst_caps_unref (c);
+
+  return supported;
+}
+
 static GstCaps *
 gst_video_scale_transform_caps (GstBaseTransform * trans,
     GstPadDirection direction, GstCaps * caps, GstCaps * filter)
 {
+  GstVideoScale *videoscale = GST_VIDEO_SCALE (trans);
+  GstVideoScaleMethod method;
   GstCaps *ret;
   GstStructure *structure;
   gint i, n;
@@ -406,6 +517,10 @@ gst_video_scale_transform_caps (GstBaseTransform * trans,
   GST_DEBUG_OBJECT (trans,
       "Transforming caps %" GST_PTR_FORMAT " in direction %s", caps,
       (direction == GST_PAD_SINK) ? "sink" : "src");
+
+  GST_OBJECT_LOCK (videoscale);
+  method = videoscale->method;
+  GST_OBJECT_UNLOCK (videoscale);
 
   ret = gst_caps_new_empty ();
   n = gst_caps_get_size (caps);
@@ -416,6 +531,9 @@ gst_video_scale_transform_caps (GstBaseTransform * trans,
      * skip this structure */
     if (i > 0 && gst_caps_is_subset_structure (ret, structure))
       continue;
+
+    if (!gst_video_scale_transform_supported (videoscale, method, structure))
+      goto format_not_supported;
 
     structure = gst_structure_copy (structure);
     gst_structure_set (structure,
@@ -439,9 +557,19 @@ gst_video_scale_transform_caps (GstBaseTransform * trans,
     ret = intersection;
   }
 
+done:
+
   GST_DEBUG_OBJECT (trans, "returning caps: %" GST_PTR_FORMAT, ret);
 
   return ret;
+
+format_not_supported:
+  {
+    gst_structure_free (structure);
+    gst_caps_unref (ret);
+    ret = gst_caps_new_empty ();
+    goto done;
+  }
 }
 
 static gboolean

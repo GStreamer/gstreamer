@@ -83,9 +83,8 @@ gst_mixer_get_type (void)
 static void
 gst_mixer_class_init (GstMixerInterface * iface)
 {
-  iface->mixer_type = GST_MIXER_SOFTWARE;
-
   /* default virtual functions */
+  iface->get_mixer_type = NULL;
   iface->list_tracks = NULL;
   iface->set_volume = NULL;
   iface->get_volume = NULL;
@@ -304,7 +303,8 @@ gst_mixer_get_mixer_type (GstMixer * mixer)
 {
   GstMixerInterface *iface = GST_MIXER_GET_INTERFACE (mixer);
 
-  return iface->mixer_type;
+  g_return_val_if_fail (iface->get_mixer_type != NULL, GST_MIXER_SOFTWARE);
+  return iface->get_mixer_type (mixer);
 }
 
 /**

@@ -169,7 +169,7 @@
  * <title>Embedding the video window in your application</title>
  * By default, playbin (or rather the video sinks used) will create their own
  * window. Applications will usually want to force output to a window of their
- * own, however. This can be done using the #GstXOverlay interface, which most
+ * own, however. This can be done using the #GstVideoOverlay interface, which most
  * video sinks implement. See the documentation there for more details.
  * </refsect2>
  * <refsect2>
@@ -229,15 +229,15 @@
 #include <gst/gst-i18n-plugin.h>
 #include <gst/pbutils/pbutils.h>
 #include <gst/audio/streamvolume.h>
-
+#include <gst/video/videooverlay.h>
+#include <gst/interfaces/navigation.h>
+#include <gst/video/colorbalance.h>
 #include "gstplay-enum.h"
 #include "gstplay-marshal.h"
 #include "gstplayback.h"
 #include "gstplaysink.h"
 #include "gstsubtitleoverlay.h"
-
 #include "gst/glib-compat-private.h"
-
 GST_DEBUG_CATEGORY_STATIC (gst_play_bin_debug);
 #define GST_CAT_DEFAULT gst_play_bin_debug
 
@@ -458,7 +458,7 @@ struct _GstPlayBinClass
 #define DEFAULT_SUBURI            NULL
 #define DEFAULT_SOURCE            NULL
 #define DEFAULT_FLAGS             GST_PLAY_FLAG_AUDIO | GST_PLAY_FLAG_VIDEO | GST_PLAY_FLAG_TEXT | \
-                                  GST_PLAY_FLAG_SOFT_VOLUME
+                                  GST_PLAY_FLAG_SOFT_VOLUME | GST_PLAY_FLAG_SOFT_COLORBALANCE
 #define DEFAULT_N_VIDEO           0
 #define DEFAULT_CURRENT_VIDEO     -1
 #define DEFAULT_N_AUDIO           0
@@ -580,6 +580,12 @@ if (id) {                                \
   id = 0;                                \
 }
 
+static void gst_play_bin_overlay_init (gpointer g_iface, gpointer g_iface_data);
+static void gst_play_bin_navigation_init (gpointer g_iface,
+    gpointer g_iface_data);
+static void gst_play_bin_colorbalance_init (gpointer g_iface,
+    gpointer g_iface_data);
+
 static GType
 gst_play_bin_get_type (void)
 {
@@ -601,12 +607,30 @@ gst_play_bin_get_type (void)
     static const GInterfaceInfo svol_info = {
       NULL, NULL, NULL
     };
+    static const GInterfaceInfo ov_info = {
+      gst_play_bin_overlay_init,
+      NULL, NULL
+    };
+    static const GInterfaceInfo nav_info = {
+      gst_play_bin_navigation_init,
+      NULL, NULL
+    };
+    static const GInterfaceInfo col_info = {
+      gst_play_bin_colorbalance_init,
+      NULL, NULL
+    };
 
     gst_play_bin_type = g_type_register_static (GST_TYPE_PIPELINE,
         "GstPlayBin", &gst_play_bin_info, 0);
 
     g_type_add_interface_static (gst_play_bin_type, GST_TYPE_STREAM_VOLUME,
         &svol_info);
+    g_type_add_interface_static (gst_play_bin_type, GST_TYPE_VIDEO_OVERLAY,
+        &ov_info);
+    g_type_add_interface_static (gst_play_bin_type, GST_TYPE_NAVIGATION,
+        &nav_info);
+    g_type_add_interface_static (gst_play_bin_type, GST_TYPE_COLOR_BALANCE,
+        &col_info);
   }
 
   return gst_play_bin_type;
@@ -1217,6 +1241,13 @@ notify_mute_cb (GObject * selector, GParamSpec * pspec, GstPlayBin * playbin)
   g_object_notify (G_OBJECT (playbin), "mute");
 }
 
+static void
+colorbalance_value_changed_cb (GstColorBalance * balance,
+    GstColorBalanceChannel * channel, gint value, GstPlayBin * playbin)
+{
+  gst_color_balance_value_changed (GST_COLOR_BALANCE (playbin), channel, value);
+}
+
 /* Must be called with elements lock! */
 static void
 gst_play_bin_update_elements_list (GstPlayBin * playbin)
@@ -1260,7 +1291,8 @@ gst_play_bin_init (GstPlayBin * playbin)
   g_mutex_init (&playbin->elements_lock);
 
   /* add sink */
-  playbin->playsink = g_object_new (GST_TYPE_PLAY_SINK, NULL);
+  playbin->playsink =
+      g_object_new (GST_TYPE_PLAY_SINK, "name", "playsink", NULL);
   gst_bin_add (GST_BIN_CAST (playbin), GST_ELEMENT_CAST (playbin->playsink));
   gst_play_sink_set_flags (playbin->playsink, DEFAULT_FLAGS);
   /* Connect to notify::volume and notify::mute signals for proxying */
@@ -1268,6 +1300,8 @@ gst_play_bin_init (GstPlayBin * playbin)
       G_CALLBACK (notify_volume_cb), playbin);
   g_signal_connect (playbin->playsink, "notify::mute",
       G_CALLBACK (notify_mute_cb), playbin);
+  g_signal_connect (playbin->playsink, "value-changed",
+      G_CALLBACK (colorbalance_value_changed_cb), playbin);
 
   playbin->current_video = DEFAULT_CURRENT_VIDEO;
   playbin->current_audio = DEFAULT_CURRENT_AUDIO;
@@ -4024,6 +4058,121 @@ failure:
     }
     return ret;
   }
+}
+
+static void
+gst_play_bin_overlay_expose (GstVideoOverlay * overlay)
+{
+  GstPlayBin *playbin = GST_PLAY_BIN (overlay);
+
+  gst_video_overlay_expose (GST_VIDEO_OVERLAY (playbin->playsink));
+}
+
+static void
+gst_play_bin_overlay_handle_events (GstVideoOverlay * overlay,
+    gboolean handle_events)
+{
+  GstPlayBin *playbin = GST_PLAY_BIN (overlay);
+
+  gst_video_overlay_handle_events (GST_VIDEO_OVERLAY (playbin->playsink),
+      handle_events);
+}
+
+static void
+gst_play_bin_overlay_set_render_rectangle (GstVideoOverlay * overlay, gint x,
+    gint y, gint width, gint height)
+{
+  GstPlayBin *playbin = GST_PLAY_BIN (overlay);
+
+  gst_video_overlay_set_render_rectangle (GST_VIDEO_OVERLAY (playbin->playsink),
+      x, y, width, height);
+}
+
+static void
+gst_play_bin_overlay_set_window_handle (GstVideoOverlay * overlay,
+    guintptr handle)
+{
+  GstPlayBin *playbin = GST_PLAY_BIN (overlay);
+
+  gst_video_overlay_set_window_handle (GST_VIDEO_OVERLAY (playbin->playsink),
+      handle);
+}
+
+static void
+gst_play_bin_overlay_init (gpointer g_iface, gpointer g_iface_data)
+{
+  GstVideoOverlayInterface *iface = (GstVideoOverlayInterface *) g_iface;
+  iface->expose = gst_play_bin_overlay_expose;
+  iface->handle_events = gst_play_bin_overlay_handle_events;
+  iface->set_render_rectangle = gst_play_bin_overlay_set_render_rectangle;
+  iface->set_window_handle = gst_play_bin_overlay_set_window_handle;
+}
+
+static void
+gst_play_bin_navigation_send_event (GstNavigation * navigation,
+    GstStructure * structure)
+{
+  GstPlayBin *playbin = GST_PLAY_BIN (navigation);
+
+  gst_navigation_send_event (GST_NAVIGATION (playbin->playsink), structure);
+}
+
+static void
+gst_play_bin_navigation_init (gpointer g_iface, gpointer g_iface_data)
+{
+  GstNavigationInterface *iface = (GstNavigationInterface *) g_iface;
+
+  iface->send_event = gst_play_bin_navigation_send_event;
+}
+
+static const GList *
+gst_play_bin_colorbalance_list_channels (GstColorBalance * balance)
+{
+  GstPlayBin *playbin = GST_PLAY_BIN (balance);
+
+  return
+      gst_color_balance_list_channels (GST_COLOR_BALANCE (playbin->playsink));
+}
+
+static void
+gst_play_bin_colorbalance_set_value (GstColorBalance * balance,
+    GstColorBalanceChannel * channel, gint value)
+{
+  GstPlayBin *playbin = GST_PLAY_BIN (balance);
+
+  gst_color_balance_set_value (GST_COLOR_BALANCE (playbin->playsink), channel,
+      value);
+}
+
+static gint
+gst_play_bin_colorbalance_get_value (GstColorBalance * balance,
+    GstColorBalanceChannel * channel)
+{
+  GstPlayBin *playbin = GST_PLAY_BIN (balance);
+
+  return gst_color_balance_get_value (GST_COLOR_BALANCE (playbin->playsink),
+      channel);
+}
+
+static GstColorBalanceType
+gst_play_bin_colorbalance_get_balance_type (GstColorBalance * balance)
+{
+  GstPlayBin *playbin = GST_PLAY_BIN (balance);
+
+  return
+      gst_color_balance_get_balance_type (GST_COLOR_BALANCE
+      (playbin->playsink));
+}
+
+static void
+gst_play_bin_colorbalance_init (gpointer g_iface, gpointer g_iface_data)
+{
+  GstColorBalanceInterface *iface = (GstColorBalanceInterface *) g_iface;
+
+  iface->list_channels = gst_play_bin_colorbalance_list_channels;
+  iface->set_value = gst_play_bin_colorbalance_set_value;
+  iface->get_value = gst_play_bin_colorbalance_get_value;
+  iface->get_balance_type = gst_play_bin_colorbalance_get_balance_type;
 }
 
 gboolean
