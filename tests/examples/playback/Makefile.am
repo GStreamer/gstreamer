@@ -1,14 +1,4 @@
-if HAVE_GTK_X11
-if HAVE_LINUX_JOYSTICK_HEADERS
-GTK_EXAMPLES=scrubby jsseek
-else
-GTK_EXAMPLES=scrubby
-endif
-endif
-
-examples = $(GTK_EXAMPLES) stepping stepping2
-
-noinst_PROGRAMS = $(examples)
+noinst_PROGRAMS = seek
 
 LDADD = \
 	$(top_builddir)/gst-libs/gst/interfaces/libgstinterfaces-@GST_MAJORMINOR@.la \
