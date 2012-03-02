@@ -62,10 +62,13 @@ gst_video_filter_propose_allocation (GstBaseTransform * trans,
   gboolean need_pool;
   guint size;
 
-  /* we're passthrough, let the parent implementation hande things */
+  if (!GST_BASE_TRANSFORM_CLASS (parent_class)->propose_allocation (trans,
+          decide_query, query))
+    return FALSE;
+
+  /* passthrough, we're done */
   if (decide_query == NULL)
-    return GST_BASE_TRANSFORM_CLASS (parent_class)->propose_allocation (trans,
-        decide_query, query);
+    return TRUE;
 
   gst_query_parse_allocation (query, &caps, &need_pool);
 
