@@ -309,75 +309,6 @@ invalid_palette:
   }
 }
 
-static gboolean
-gst_video_convert_propose_allocation (GstBaseTransform * trans,
-    GstQuery * decide_query, GstQuery * query)
-{
-  gboolean ret;
-  guint i, n_metas;
-
-  /* let parent handle */
-  ret = GST_BASE_TRANSFORM_CLASS (parent_class)->propose_allocation (trans,
-      decide_query, query);
-  /* error or passthrough, we're done */
-  if (!ret || decide_query == NULL)
-    return ret;
-
-  /* non-passthrough, copy all metadata, decide_query does not contain the
-   * metadata anymore that depends on the buffer memory */
-  n_metas = gst_query_get_n_allocation_metas (decide_query);
-  for (i = 0; i < n_metas; i++) {
-    GType api;
-
-    api = gst_query_parse_nth_allocation_meta (decide_query, i);
-    gst_query_add_allocation_meta (query, api);
-  }
-  return ret;
-}
-
-typedef struct
-{
-  GstBaseTransform *trans;
-  GstBuffer *outbuf;
-  GQuark tag;
-} CopyMetaData;
-
-static gboolean
-foreach_metadata (GstBuffer * inbuf, GstMeta ** meta, gpointer user_data)
-{
-  CopyMetaData *data = user_data;
-  const GstMetaInfo *info = (*meta)->info;
-
-  if (info->transform_func) {
-    if (gst_meta_api_type_has_tag (info->api, data->tag)) {
-      /* metadata depends on colorspace. FIXME discard for now until we
-       * have some transform data for it. */
-    } else {
-      GstMetaTransformCopy copy_data = { FALSE, 0, -1 };
-      /* simply copy then */
-      info->transform_func (data->outbuf, *meta, inbuf,
-          _gst_meta_transform_copy, &copy_data);
-    }
-  }
-  return TRUE;
-}
-
-static gboolean
-gst_video_convert_copy_metadata (GstBaseTransform * trans,
-    GstBuffer * inbuf, GstBuffer * outbuf)
-{
-  CopyMetaData data;
-
-  data.trans = trans;
-  data.outbuf = outbuf;
-  data.tag = _colorspace_quark;
-
-  gst_buffer_foreach_meta (inbuf, foreach_metadata, &data);
-
-  return GST_BASE_TRANSFORM_CLASS (parent_class)->copy_metadata (trans, inbuf,
-      outbuf);
-}
-
 static void
 gst_video_convert_finalize (GObject * obj)
 {
@@ -417,10 +348,6 @@ gst_video_convert_class_init (GstVideoConvertClass * klass)
       GST_DEBUG_FUNCPTR (gst_video_convert_transform_caps);
   gstbasetransform_class->fixate_caps =
       GST_DEBUG_FUNCPTR (gst_video_convert_fixate_caps);
-  gstbasetransform_class->propose_allocation =
-      GST_DEBUG_FUNCPTR (gst_video_convert_propose_allocation);
-  gstbasetransform_class->copy_metadata =
-      GST_DEBUG_FUNCPTR (gst_video_convert_copy_metadata);
 
   gstbasetransform_class->passthrough_on_same_caps = TRUE;
 
