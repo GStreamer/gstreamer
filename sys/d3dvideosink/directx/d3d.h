@@ -33,8 +33,8 @@ G_BEGIN_DECLS
 #define WM_DIRECTX_D3D_RESIZE           WM_DIRECTX + 5
 
 #define DIRECTX_D3D_API(version, dispatch_table, init_function, create_function, resize_function, device_lost_function, notify_device_reset_function, release_function) \
-  static gpointer DIRECTX_API_COMPONENT_D3D_ ## version ## _DISPATCH_TABLE = &dispatch_table;                                                                           \
-  static DirectXAPIComponentD3D DIRECTX_API_COMPONENT_D3D_ ## version ## _INIT = {                                                                                      \
+  static gpointer G_GNUC_UNUSED DIRECTX_API_COMPONENT_D3D_ ## version ## _DISPATCH_TABLE = &dispatch_table;                                                                           \
+  static DirectXAPIComponentD3D G_GNUC_UNUSED DIRECTX_API_COMPONENT_D3D_ ## version ## _INIT = {                                                                                      \
       create_function               /*create_function*/                                                                                                                 \
     , resize_function               /*resize_function*/                                                                                                                 \
     , device_lost_function          /*device_lost_function*/                                                                                                            \
@@ -42,7 +42,7 @@ G_BEGIN_DECLS
     , release_function              /*release_function*/                                                                                                                \
     , NULL                          /*private_data*/                                                                                                                    \
   };                                                                                                                                                                    \
-  static void init_directx_api_component_d3d_ ## version ## _(const DirectXAPI* api) {                                                                                  \
+  static void G_GNUC_UNUSED init_directx_api_component_d3d_ ## version ## _(const DirectXAPI* api) {                                                                                  \
     gpointer private_data = &DIRECTX_API_COMPONENT_D3D_ ## version ## _INIT;                                                                                            \
     gpointer vtable = DIRECTX_API_COMPONENT_D3D_ ## version ## _DISPATCH_TABLE;                                                                                         \
     DIRECTX_SET_COMPONENT_INIT(DIRECTX_D3D(api), init_function);                                                                                                        \

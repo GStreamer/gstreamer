@@ -63,7 +63,7 @@ struct _GstD3DVideoSinkHookData
 static GstD3DVideoSinkShared shared;
 /* Define a shared lock to synchronize the creation/destruction of the d3d device */
 static GStaticMutex shared_d3d_lock = G_STATIC_MUTEX_INIT;
-static GStaticMutex shared_d3d_dev_lock = G_STATIC_MUTEX_INIT;
+static G_GNUC_UNUSED GStaticMutex shared_d3d_dev_lock = G_STATIC_MUTEX_INIT;
 static GStaticMutex shared_d3d_hook_lock = G_STATIC_MUTEX_INIT;
 /* Hold a reference to our dll's HINSTANCE */
 static HINSTANCE g_hinstDll = NULL;
@@ -156,7 +156,7 @@ static void gst_d3dvideosink_remove_window_for_renderer (GstD3DVideoSink *
 static gboolean gst_d3dvideosink_initialize_direct3d (GstD3DVideoSink * sink);
 static gboolean gst_d3dvideosink_initialize_d3d_device (GstD3DVideoSink * sink);
 static gboolean gst_d3dvideosink_resize_swap_chain (GstD3DVideoSink * sink,
-    gint width, gint height);
+    gint width, gint height) G_GNUC_UNUSED;
 static gboolean gst_d3dvideosink_notify_device_init (GstD3DVideoSink * sink);
 static gboolean gst_d3dvideosink_notify_device_lost (GstD3DVideoSink * sink);
 static gboolean gst_d3dvideosink_notify_device_reset (GstD3DVideoSink * sink);
@@ -468,10 +468,12 @@ gst_d3dvideosink_get_caps (GstBaseSink * basesink)
         GstStructure *stru = gst_caps_get_structure (c, i);
         if (!gst_structure_has_name (stru, "video/x-raw-rgb")) {
           gst_structure_get_fourcc (stru, "format", (guint32 *) & d3dfourcc);
-          switch (d3dfourcc) {
+          switch ((guint32) d3dfourcc) {
             case GST_MAKE_FOURCC ('Y', 'V', '1', '2'):
             case GST_MAKE_FOURCC ('I', '4', '2', '0'):
               d3dfourcc = (D3DFORMAT) MAKEFOURCC ('Y', 'V', '1', '2');
+              break;
+            default:
               break;
           }
           if (d3dfourcc && SUCCEEDED (IDirect3D9_CheckDeviceFormat (shared.d3d,
@@ -529,10 +531,10 @@ gst_d3dvideosink_create_shared_hidden_window (GstD3DVideoSink * sink)
     goto failed;
 
   CloseHandle (shared.hidden_window_created_signal);
-
+/*
   if (!shared.d3ddev)
      goto failed;
-
+*/
   GST_DEBUG ("Successfully created Direct3D hidden window, handle: %p",
       shared.hidden_window_handle);
 
@@ -1567,7 +1569,7 @@ gst_d3dvideosink_flush_gpu (GstD3DVideoSink * sink)
   }
 }
 
-static void
+static G_GNUC_UNUSED void
 gst_d3dvideosink_wait_for_vsync (GstD3DVideoSink * sink)
 {
   if (sink->d3dpp.PresentationInterval == D3DPRESENT_INTERVAL_IMMEDIATE) {
