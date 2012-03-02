@@ -802,22 +802,41 @@ gst_base_transform_default_decide_allocation (GstBaseTransform * trans,
     GstQuery * query)
 {
   guint i, n_metas;
+  GstBaseTransformClass *klass;
+
+  klass = GST_BASE_TRANSFORM_GET_CLASS (trans);
 
   n_metas = gst_query_get_n_allocation_metas (query);
   for (i = 0; i < n_metas; i++) {
     GType api;
+    gboolean remove;
 
     api = gst_query_parse_nth_allocation_meta (query, i);
-    /* remove all memory dependent metadata because we are going to have to
-     * allocate different memory for input and output. */
+
+    /* by default we remove all metadata, subclasses should implement a
+     * filter_meta function */
     if (gst_meta_api_type_has_tag (api, GST_META_TAG_MEMORY)) {
-      GST_LOG_OBJECT (trans, "removing memory metadata %s", g_type_name (api));
+      /* remove all memory dependent metadata because we are going to have to
+       * allocate different memory for input and output. */
+      GST_LOG_OBJECT (trans, "removing memory specific metadata %s",
+          g_type_name (api));
+      remove = TRUE;
+    } else if (G_LIKELY (klass->filter_meta)) {
+      /* remove if the subclass said so */
+      remove = !klass->filter_meta (trans, query, api);
+      GST_LOG_OBJECT (trans, "filter_meta for api %s returned: %s",
+          g_type_name (api), (remove ? "remove" : "keep"));
+    } else {
+      GST_LOG_OBJECT (trans, "removing metadata %s", g_type_name (api));
+      remove = TRUE;
+    }
+
+    if (remove) {
       gst_query_remove_nth_allocation_meta (query, i);
       i--;
       n_metas--;
     }
   }
-
   return TRUE;
 }
 
@@ -1306,7 +1325,18 @@ gst_base_transform_default_propose_allocation (GstBaseTransform * trans,
     GST_DEBUG_OBJECT (trans, "doing passthrough query");
     ret = gst_pad_peer_query (trans->srcpad, query);
   } else {
-    ret = FALSE;
+    guint i, n_metas;
+    /* non-passthrough, copy all metadata, decide_query does not contain the
+     * metadata anymore that depends on the buffer memory */
+    n_metas = gst_query_get_n_allocation_metas (decide_query);
+    for (i = 0; i < n_metas; i++) {
+      GType api;
+
+      api = gst_query_parse_nth_allocation_meta (decide_query, i);
+      GST_DEBUG_OBJECT (trans, "proposing metadata %s", g_type_name (api));
+      gst_query_add_allocation_meta (query, api);
+    }
+    ret = TRUE;
   }
   return ret;
 }
@@ -1518,11 +1548,62 @@ unknown_size:
   }
 }
 
+typedef struct
+{
+  GstBaseTransform *trans;
+  GstBuffer *outbuf;
+} CopyMetaData;
+
+static gboolean
+foreach_metadata (GstBuffer * inbuf, GstMeta ** meta, gpointer user_data)
+{
+  CopyMetaData *data = user_data;
+  GstBaseTransform *trans = data->trans;
+  GstBaseTransformClass *klass;
+  const GstMetaInfo *info = (*meta)->info;
+  GstBuffer *outbuf = data->outbuf;
+  gboolean do_copy;
+
+  klass = GST_BASE_TRANSFORM_GET_CLASS (trans);
+
+  if (GST_META_FLAG_IS_SET (*meta, GST_META_FLAG_POOLED)) {
+    /* never call the transform_meta with pool private metadata */
+    GST_DEBUG_OBJECT (trans, "not copying pooled metadata %s",
+        g_type_name (info->api));
+    do_copy = FALSE;
+  } else if (gst_meta_api_type_has_tag (info->api, GST_META_TAG_MEMORY)) {
+    /* never call the transform_meta with memory specific metadata */
+    GST_DEBUG_OBJECT (trans, "not copying memory specific metadata %s",
+        g_type_name (info->api));
+    do_copy = FALSE;
+  } else if (klass->transform_meta) {
+    do_copy = klass->transform_meta (trans, outbuf, *meta, inbuf);
+    GST_DEBUG_OBJECT (trans, "transformed metadata %s: copy: %d",
+        g_type_name (info->api), do_copy);
+  } else {
+    do_copy = FALSE;
+    GST_DEBUG_OBJECT (trans, "not copying metadata %s",
+        g_type_name (info->api));
+  }
+
+  /* we only copy metadata when the subclass implemented a transform_meta
+   * function and when it returns TRUE */
+  if (do_copy) {
+    GstMetaTransformCopy copy_data = { FALSE, 0, -1 };
+    GST_DEBUG_OBJECT (trans, "copy metadata %s", g_type_name (info->api));
+    /* simply copy then */
+    info->transform_func (outbuf, *meta, inbuf,
+        _gst_meta_transform_copy, &copy_data);
+  }
+  return TRUE;
+}
+
 static gboolean
 default_copy_metadata (GstBaseTransform * trans,
     GstBuffer * inbuf, GstBuffer * outbuf)
 {
   GstBaseTransformPrivate *priv = trans->priv;
+  CopyMetaData data;
 
   /* now copy the metadata */
   GST_DEBUG_OBJECT (trans, "copying metadata");
@@ -1539,6 +1620,12 @@ default_copy_metadata (GstBaseTransform * trans,
   /* clear the GAP flag when the subclass does not understand it */
   if (!priv->gap_aware)
     GST_BUFFER_FLAG_UNSET (outbuf, GST_BUFFER_FLAG_GAP);
+
+
+  data.trans = trans;
+  data.outbuf = outbuf;
+
+  gst_buffer_foreach_meta (inbuf, foreach_metadata, &data);
 
   return TRUE;
 

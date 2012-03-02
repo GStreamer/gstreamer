@@ -141,16 +141,22 @@ struct _GstBaseTransform {
  * @decide_allocation: Setup the allocation parameters for allocating output
  *                    buffers. The passed in query contains the result of the
  *                    downstream allocation query. This function is only called
- *                    when not operating in passthrough mode. the default
- *                    implementation will remove metadata that depends on the
- *                    memory.
+ *                    when not operating in passthrough mode. The default
+ *                    implementation will remove all memory dependent metadata.
+ *                    If there is ia @filter_meta method implementation, it will
+ *                    be called for all metadata API in the downstream query,
+ *                    otherwise the metadata API is removed.
+ * @filter_meta: Return TRUE if the metadata API should be proposed in the
+ *               upstream allocation query. The default implementation is NULL
+ *               and will cause all metadata to be removed.
  * @propose_allocation: Propose buffer allocation parameters for upstream elements.
  *                      This function must be implemented if the element reads or
  *                      writes the buffer content. The query that was passed to
  *                      the decide_allocation is passed in this method (or NULL
  *                      when the element is in passthrough mode). The default
  *                      implementation will pass the query downstream when in
- *                      passthrough mode.
+ *                      passthrough mode and will copy all the filtered metadata
+ *                      API in non-passthrough mode.
  * @transform_size: Optional. Given the size of a buffer in the given direction
  *                  with the given caps, calculate the size in bytes of a buffer
  *                  on the other pad with the given other caps.
@@ -183,6 +189,10 @@ struct _GstBaseTransform {
  *                 Copy the metadata from the input buffer to the output buffer.
  *                 The default implementation will copy the flags, timestamps and
  *                 offsets of the buffer.
+ * @transform_meta: Optional. Transform the metadata on the input buffer to the
+ *                  output buffer. By default this method is NULL and no
+ *                  metadata is copied. subclasses can implement this method and
+ *                  return TRUE if the metadata is to be copied.
  * @before_transform: Optional. Since 0.10.22
  *                    This method is called right before the base class will
  *                    start processing. Dynamic properties or other delayed
@@ -221,6 +231,8 @@ struct _GstBaseTransformClass {
 
   /* decide allocation query for output buffers */
   gboolean      (*decide_allocation)  (GstBaseTransform *trans, GstQuery *query);
+  gboolean      (*filter_meta)        (GstBaseTransform *trans, GstQuery *query, GType api);
+
   /* propose allocation query parameters for input buffers */
   gboolean      (*propose_allocation) (GstBaseTransform *trans, GstQuery *decide_query,
                                        GstQuery *query);
@@ -245,8 +257,11 @@ struct _GstBaseTransformClass {
   GstFlowReturn (*prepare_output_buffer) (GstBaseTransform * trans,
                                           GstBuffer *input, GstBuffer **outbuf);
 
-  gboolean      (*copy_metadata)     (GstBaseTransform * trans, GstBuffer *input,
+  /* metadata */
+  gboolean      (*copy_metadata)     (GstBaseTransform *trans, GstBuffer *input,
                                       GstBuffer *outbuf);
+  gboolean      (*transform_meta)    (GstBaseTransform *trans, GstBuffer *outbuf,
+                                      GstMeta *meta, GstBuffer *inbuf);
 
   void          (*before_transform)  (GstBaseTransform *trans, GstBuffer *buffer);
 
