@@ -52,7 +52,6 @@
 #include <string.h>
 
 #include "gstfakesrc.h"
-#include <gst/gstmarshal.h>
 
 static GstStaticPadTemplate srctemplate = GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
@@ -335,7 +334,7 @@ gst_fake_src_class_init (GstFakeSrcClass * klass)
   gst_fake_src_signals[SIGNAL_HANDOFF] =
       g_signal_new ("handoff", G_TYPE_FROM_CLASS (klass), G_SIGNAL_RUN_LAST,
       G_STRUCT_OFFSET (GstFakeSrcClass, handoff), NULL, NULL,
-      gst_marshal_VOID__BOXED_OBJECT, G_TYPE_NONE, 2,
+      g_cclosure_marshal_generic, G_TYPE_NONE, 2,
       GST_TYPE_BUFFER | G_SIGNAL_TYPE_STATIC_SCOPE, GST_TYPE_PAD);
 
   gst_element_class_set_details_simple (gstelement_class,

@@ -45,7 +45,6 @@ IGNORE_HFILES= \
 	gst-i18n-lib.h \
 	gst_private.h \
 	gstelementdetails.h \
-	gstmarshal.h \
 	gstmacros.h \
 	\
 	grammar.tab.h \

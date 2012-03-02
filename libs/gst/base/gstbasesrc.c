@@ -164,7 +164,6 @@
 
 #include "gstbasesrc.h"
 #include "gsttypefindhelper.h"
-#include <gst/gstmarshal.h>
 #include <gst/gst-i18n-lib.h>
 
 GST_DEBUG_CATEGORY_STATIC (gst_base_src_debug);

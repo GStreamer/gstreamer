@@ -44,7 +44,6 @@
 #include "gst_private.h"
 #include "gsturi.h"
 #include "gstinfo.h"
-#include "gstmarshal.h"
 #include "gstregistry.h"
 
 #include "gst-i18n-lib.h"

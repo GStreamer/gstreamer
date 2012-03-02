@@ -209,7 +209,6 @@
 #include "../../../gst/gst-i18n-lib.h"
 #include "../../../gst/glib-compat-private.h"
 #include "gstbasetransform.h"
-#include <gst/gstmarshal.h>
 
 GST_DEBUG_CATEGORY_STATIC (gst_base_transform_debug);
 #define GST_CAT_DEFAULT gst_base_transform_debug

@@ -36,7 +36,6 @@
 
 #include "../../gst/gst-i18n-lib.h"
 #include "gstidentity.h"
-#include <gst/gstmarshal.h>
 
 static GstStaticPadTemplate sinktemplate = GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
@@ -223,7 +222,7 @@ gst_identity_class_init (GstIdentityClass * klass)
   gst_identity_signals[SIGNAL_HANDOFF] =
       g_signal_new ("handoff", G_TYPE_FROM_CLASS (klass), G_SIGNAL_RUN_LAST,
       G_STRUCT_OFFSET (GstIdentityClass, handoff), NULL, NULL,
-      g_cclosure_marshal_VOID__BOXED, G_TYPE_NONE, 1,
+      g_cclosure_marshal_generic, G_TYPE_NONE, 1,
       GST_TYPE_BUFFER | G_SIGNAL_TYPE_STATIC_SCOPE);
 
   gobject_class->finalize = gst_identity_finalize;

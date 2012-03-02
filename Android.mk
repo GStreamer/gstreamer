@@ -8,8 +8,6 @@ gstreamer_TOP := $(LOCAL_PATH)
 GST_BUILT_SOURCES := 		\
 	gst/gstenumtypes.h 		\
 	gst/gstenumtypes.c 		\
-	gst/gstmarshal.h 		\
-	gst/gstmarshal.c 		\
 	gst/parse/grammar.tab.h	\
 	gst/parse/grammar.tab.c	\
 	gst/parse/grammar.output	\

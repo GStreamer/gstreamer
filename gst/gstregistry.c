@@ -127,7 +127,6 @@
 #include "gstinfo.h"
 #include "gsterror.h"
 #include "gstregistry.h"
-#include "gstmarshal.h"
 
 #include "gstpluginloader.h"
 
@@ -229,7 +228,7 @@ gst_registry_class_init (GstRegistryClass * klass)
    */
   gst_registry_signals[PLUGIN_ADDED] =
       g_signal_new ("plugin-added", G_TYPE_FROM_CLASS (klass),
-      G_SIGNAL_RUN_LAST, 0, NULL, NULL, gst_marshal_VOID__OBJECT,
+      G_SIGNAL_RUN_LAST, 0, NULL, NULL, g_cclosure_marshal_generic,
       G_TYPE_NONE, 1, GST_TYPE_PLUGIN);
 
   /**
@@ -242,7 +241,7 @@ gst_registry_class_init (GstRegistryClass * klass)
    */
   gst_registry_signals[FEATURE_ADDED] =
       g_signal_new ("feature-added", G_TYPE_FROM_CLASS (klass),
-      G_SIGNAL_RUN_LAST, 0, NULL, NULL, gst_marshal_VOID__OBJECT,
+      G_SIGNAL_RUN_LAST, 0, NULL, NULL, g_cclosure_marshal_generic,
       G_TYPE_NONE, 1, GST_TYPE_PLUGIN_FEATURE);
 
   gobject_class->finalize = gst_registry_finalize;

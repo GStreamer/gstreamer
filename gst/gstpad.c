@@ -65,7 +65,6 @@
 #include "gstpad.h"
 #include "gstpadtemplate.h"
 #include "gstenumtypes.h"
-#include "gstmarshal.h"
 #include "gstutils.h"
 #include "gstinfo.h"
 #include "gsterror.h"
@@ -268,7 +267,7 @@ gst_pad_class_init (GstPadClass * klass)
   gst_pad_signals[PAD_LINKED] =
       g_signal_new ("linked", G_TYPE_FROM_CLASS (klass), G_SIGNAL_RUN_LAST,
       G_STRUCT_OFFSET (GstPadClass, linked), NULL, NULL,
-      gst_marshal_VOID__OBJECT, G_TYPE_NONE, 1, GST_TYPE_PAD);
+      g_cclosure_marshal_generic, G_TYPE_NONE, 1, GST_TYPE_PAD);
   /**
    * GstPad::unlinked:
    * @pad: the pad that emitted the signal
@@ -279,7 +278,7 @@ gst_pad_class_init (GstPadClass * klass)
   gst_pad_signals[PAD_UNLINKED] =
       g_signal_new ("unlinked", G_TYPE_FROM_CLASS (klass), G_SIGNAL_RUN_LAST,
       G_STRUCT_OFFSET (GstPadClass, unlinked), NULL, NULL,
-      gst_marshal_VOID__OBJECT, G_TYPE_NONE, 1, GST_TYPE_PAD);
+      g_cclosure_marshal_generic, G_TYPE_NONE, 1, GST_TYPE_PAD);
 
   pspec_caps = g_param_spec_boxed ("caps", "Caps",
       "The capabilities of the pad", GST_TYPE_CAPS,

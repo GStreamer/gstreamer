@@ -161,7 +161,6 @@
 
 #include "gstevent.h"
 #include "gstbin.h"
-#include "gstmarshal.h"
 #include "gstinfo.h"
 #include "gsterror.h"
 
@@ -406,7 +405,7 @@ gst_bin_class_init (GstBinClass * klass)
   gst_bin_signals[ELEMENT_ADDED] =
       g_signal_new ("element-added", G_TYPE_FROM_CLASS (klass),
       G_SIGNAL_RUN_FIRST, G_STRUCT_OFFSET (GstBinClass, element_added), NULL,
-      NULL, gst_marshal_VOID__OBJECT, G_TYPE_NONE, 1, GST_TYPE_ELEMENT);
+      NULL, g_cclosure_marshal_generic, G_TYPE_NONE, 1, GST_TYPE_ELEMENT);
   /**
    * GstBin::element-removed:
    * @bin: the #GstBin
@@ -417,7 +416,7 @@ gst_bin_class_init (GstBinClass * klass)
   gst_bin_signals[ELEMENT_REMOVED] =
       g_signal_new ("element-removed", G_TYPE_FROM_CLASS (klass),
       G_SIGNAL_RUN_FIRST, G_STRUCT_OFFSET (GstBinClass, element_removed), NULL,
-      NULL, gst_marshal_VOID__OBJECT, G_TYPE_NONE, 1, GST_TYPE_ELEMENT);
+      NULL, g_cclosure_marshal_generic, G_TYPE_NONE, 1, GST_TYPE_ELEMENT);
   /**
    * GstBin::do-latency:
    * @bin: the #GstBin
@@ -439,7 +438,7 @@ gst_bin_class_init (GstBinClass * klass)
   gst_bin_signals[DO_LATENCY] =
       g_signal_new ("do-latency", G_TYPE_FROM_CLASS (klass),
       G_SIGNAL_RUN_LAST, G_STRUCT_OFFSET (GstBinClass, do_latency),
-      _gst_boolean_accumulator, NULL, gst_marshal_BOOLEAN__VOID,
+      _gst_boolean_accumulator, NULL, g_cclosure_marshal_generic,
       G_TYPE_BOOLEAN, 0, G_TYPE_NONE);
 
   /**

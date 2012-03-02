@@ -53,7 +53,6 @@
 #include <gst/gstghostpad.h>
 #include <gst/gstinfo.h>
 #include <gst/gstiterator.h>
-#include <gst/gstmarshal.h>
 #include <gst/gstmessage.h>
 #include <gst/gstmemory.h>
 #include <gst/gstminiobject.h>
