@@ -134,7 +134,7 @@ struct _GstCMApi
       CFDictionaryRef extensions, CMFormatDescriptionRef * desc);
   OSStatus (* FigVideoFormatDescriptionCreateWithSampleDescriptionExtensionAtom)
       (CFAllocatorRef allocator, UInt32 formatId, UInt32 width, UInt32 height,
-      UInt32 atomId, const UInt8 * data, CFIndex len,
+      UInt32 atomId, const UInt8 * data, CFIndex len, void *unk1,
       CMFormatDescriptionRef * formatDesc);
   CMVideoDimensions (* CMVideoFormatDescriptionGetDimensions) (
       const CMFormatDescriptionRef desc);
