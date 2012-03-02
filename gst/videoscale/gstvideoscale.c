@@ -472,27 +472,13 @@ gst_video_scale_transform_supported (GstVideoScale * videoscale,
 
   if ((val = gst_structure_get_value (structure, "format"))) {
     gst_structure_set_value (s, "format", val);
-  } else {
-    if ((val = gst_structure_get_value (structure, "endianness")))
-      gst_structure_set_value (s, "endianness", val);
-    if ((val = gst_structure_get_value (structure, "red_mask")))
-      gst_structure_set_value (s, "red_mask", val);
-    if ((val = gst_structure_get_value (structure, "blue_mask")))
-      gst_structure_set_value (s, "blue_mask", val);
-    if ((val = gst_structure_get_value (structure, "green_mask")))
-      gst_structure_set_value (s, "green_mask", val);
-    if ((val = gst_structure_get_value (structure, "alpha_mask")))
-      gst_structure_set_value (s, "alpha_mask", val);
-    if ((val = gst_structure_get_value (structure, "depth")))
-      gst_structure_set_value (s, "depth", val);
-    if ((val = gst_structure_get_value (structure, "bpp")))
-      gst_structure_set_value (s, "bpp", val);
   }
   c = gst_caps_new_full (s, NULL);
 
   gst_video_info_init (&info);
   if (!gst_video_info_from_caps (&info, c)) {
     GST_ERROR_OBJECT (videoscale, "couldn't parse %" GST_PTR_FORMAT, c);
+    supported = FALSE;
   } else if (!gst_video_scale_format_supported_for_method (info.finfo->format,
           method)) {
     supported = FALSE;
