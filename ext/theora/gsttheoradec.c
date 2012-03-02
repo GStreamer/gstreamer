@@ -768,122 +768,26 @@ theora_handle_comment_packet (GstTheoraDec * dec, ogg_packet * packet)
 }
 
 static GstFlowReturn
-theora_negotiate_pool (GstTheoraDec * dec)
+theora_negotiate (GstTheoraDec * dec)
 {
+  GstVideoFormat format;
   GstQuery *query;
   GstBufferPool *pool;
   guint size, min, max, prefix, alignment;
   GstStructure *config;
   GstCaps *caps;
-  GstVideoInfo info;
+  GstVideoInfo info, cinfo;
 
-  /* for the output caps we always take the cropped dimensions */
-  info = dec->vinfo;
-  gst_video_info_set_format (&info, GST_VIDEO_INFO_FORMAT (&info),
-      dec->info.pic_width, dec->info.pic_height);
-  caps = gst_video_info_to_caps (&info);
-  gst_pad_set_caps (dec->srcpad, caps);
-
-  /* find a pool for the negotiated caps now */
-  query = gst_query_new_allocation (caps, TRUE);
-
-  if (gst_pad_peer_query (dec->srcpad, query)) {
-    GST_DEBUG_OBJECT (dec, "got downstream ALLOCATION hints");
-    /* we got configuration from our peer, parse them */
-    gst_query_parse_allocation_params (query, &size, &min, &max, &prefix,
-        &alignment, &pool);
-
-    /* check if downstream supports cropping */
-    dec->has_cropping =
-        gst_query_has_allocation_meta (query, GST_VIDEO_CROP_META_API_TYPE);
-  } else {
-    GST_DEBUG_OBJECT (dec, "didn't get downstream ALLOCATION hints");
-    size = 0;
-    min = max = 0;
-    prefix = 0;
-    alignment = 0;
-    pool = NULL;
-    dec->has_cropping = FALSE;
-  }
-
-  if (pool == NULL) {
-    /* we did not get a pool, make one ourselves then */
-    pool = gst_video_buffer_pool_new ();
-  }
-
-  if (dec->pool)
-    gst_object_unref (dec->pool);
-  dec->pool = pool;
-
-  if (dec->has_cropping) {
-    dec->outinfo = dec->vinfo;
-    /* we can crop, configure the pool with buffers of caps and size of the
-     * decoded picture size and then crop them with metadata */
-    gst_caps_unref (caps);
-    caps = gst_video_info_to_caps (&dec->vinfo);
-  } else {
-    /* no cropping, use cropped videoinfo */
-    dec->outinfo = info;
-  }
-  size = MAX (size, GST_VIDEO_INFO_SIZE (&dec->outinfo));
-
-  config = gst_buffer_pool_get_config (pool);
-  gst_buffer_pool_config_set (config, caps, size, min, max, prefix, alignment);
-  gst_caps_unref (caps);
-
-  /* just set the option, if the pool can support it we will transparently use
-   * it through the video info API. We could also see if the pool support this
-   * option and only activate it then. */
-  gst_buffer_pool_config_add_option (config, GST_BUFFER_POOL_OPTION_VIDEO_META);
-
-  GST_DEBUG_OBJECT (dec, "downstream cropping %d", dec->has_cropping);
-
-  gst_buffer_pool_set_config (pool, config);
-  /* and activate */
-  gst_buffer_pool_set_active (pool, TRUE);
-
-  gst_query_unref (query);
-
-  return GST_FLOW_OK;
-}
-
-static GstFlowReturn
-theora_handle_type_packet (GstTheoraDec * dec, ogg_packet * packet)
-{
-  GstVideoFormat format;
-  gint par_num, par_den;
-  GstFlowReturn ret = GST_FLOW_OK;
-  GList *walk;
-
-  GST_DEBUG_OBJECT (dec, "fps %d/%d, PAR %d/%d",
-      dec->info.fps_numerator, dec->info.fps_denominator,
-      dec->info.aspect_numerator, dec->info.aspect_denominator);
-
-  /* calculate par
-   * the info.aspect_* values reflect PAR;
-   * 0:x and x:0 are allowed and can be interpreted as 1:1.
-   */
-  if (dec->have_par) {
-    /* we had a par on the sink caps, override the encoded par */
-    GST_DEBUG_OBJECT (dec, "overriding with input PAR");
-    par_num = dec->par_num;
-    par_den = dec->par_den;
-  } else {
-    /* take encoded par */
-    par_num = dec->info.aspect_numerator;
-    par_den = dec->info.aspect_denominator;
-  }
-  if (par_num == 0 || par_den == 0) {
-    par_num = par_den = 1;
-  }
   /* theora has:
    *
    *  frame_width/frame_height : dimension of the encoded frame
    *  pic_width/pic_height : dimension of the visible part
    *  pic_x/pic_y : offset in encoded frame where visible part starts
    */
-  GST_DEBUG_OBJECT (dec, "frame dimension %dx%d, PAR %d/%d",
-      dec->info.frame_width, dec->info.frame_height, par_num, par_den);
+  GST_DEBUG_OBJECT (dec, "frame dimension %dx%d, PAR %d/%d, fps %d/%d",
+      dec->info.frame_width, dec->info.frame_height,
+      dec->info.aspect_numerator, dec->info.aspect_denominator,
+      dec->info.fps_numerator, dec->info.fps_denominator);
   GST_DEBUG_OBJECT (dec, "picture dimension %dx%d, offset %d:%d",
       dec->info.pic_width, dec->info.pic_height, dec->info.pic_x,
       dec->info.pic_y);
@@ -915,36 +819,135 @@ theora_handle_type_packet (GstTheoraDec * dec, ogg_packet * packet)
     dec->need_cropping = FALSE;
   }
 
-  /* our info contains the dimensions for the coded picture before cropping */
-  gst_video_info_set_format (&dec->vinfo, format, dec->info.frame_width,
+  /* info contains the dimensions for the coded picture before cropping */
+  gst_video_info_set_format (&info, format, dec->info.frame_width,
       dec->info.frame_height);
-  dec->vinfo.fps_n = dec->info.fps_numerator;
-  dec->vinfo.fps_d = dec->info.fps_denominator;
-  dec->vinfo.par_n = par_num;
-  dec->vinfo.par_d = par_den;
+  info.fps_n = dec->info.fps_numerator;
+  info.fps_d = dec->info.fps_denominator;
+  /* calculate par
+   * the info.aspect_* values reflect PAR;
+   * 0:x and x:0 are allowed and can be interpreted as 1:1.
+   */
+  if (dec->have_par) {
+    /* we had a par on the sink caps, override the encoded par */
+    GST_DEBUG_OBJECT (dec, "overriding with input PAR %dx%d", dec->par_num,
+        dec->par_den);
+    info.par_n = dec->par_num;
+    info.par_d = dec->par_den;
+  } else {
+    /* take encoded par */
+    info.par_n = dec->info.aspect_numerator;
+    info.par_d = dec->info.aspect_denominator;
+  }
+  if (info.par_n == 0 || info.par_d == 0) {
+    info.par_n = info.par_d = 1;
+  }
 
   /* these values are for all versions of the colorspace specified in the
    * theora info */
-  dec->vinfo.chroma_site = GST_VIDEO_CHROMA_SITE_JPEG;
-  dec->vinfo.colorimetry.range = GST_VIDEO_COLOR_RANGE_16_235;
-  dec->vinfo.colorimetry.matrix = GST_VIDEO_COLOR_MATRIX_BT601;
-  dec->vinfo.colorimetry.transfer = GST_VIDEO_TRANSFER_BT709;
+  info.chroma_site = GST_VIDEO_CHROMA_SITE_JPEG;
+  info.colorimetry.range = GST_VIDEO_COLOR_RANGE_16_235;
+  info.colorimetry.matrix = GST_VIDEO_COLOR_MATRIX_BT601;
+  info.colorimetry.transfer = GST_VIDEO_TRANSFER_BT709;
   switch (dec->info.colorspace) {
     case TH_CS_ITU_REC_470M:
-      dec->vinfo.colorimetry.primaries = GST_VIDEO_COLOR_PRIMARIES_BT470M;
+      info.colorimetry.primaries = GST_VIDEO_COLOR_PRIMARIES_BT470M;
       break;
     case TH_CS_ITU_REC_470BG:
-      dec->vinfo.colorimetry.primaries = GST_VIDEO_COLOR_PRIMARIES_BT470BG;
+      info.colorimetry.primaries = GST_VIDEO_COLOR_PRIMARIES_BT470BG;
       break;
     default:
-      dec->vinfo.colorimetry.primaries = GST_VIDEO_COLOR_PRIMARIES_UNKNOWN;
+      info.colorimetry.primaries = GST_VIDEO_COLOR_PRIMARIES_UNKNOWN;
       break;
   }
 
   /* remove reconfigure flag now */
   gst_pad_check_reconfigure (dec->srcpad);
 
-  theora_negotiate_pool (dec);
+  /* for the output caps we always take the cropped dimensions */
+  cinfo = info;
+  gst_video_info_set_format (&cinfo, GST_VIDEO_INFO_FORMAT (&info),
+      dec->info.pic_width, dec->info.pic_height);
+  caps = gst_video_info_to_caps (&cinfo);
+  gst_pad_set_caps (dec->srcpad, caps);
+
+  /* find a pool for the negotiated caps now */
+  query = gst_query_new_allocation (caps, TRUE);
+
+  if (gst_pad_peer_query (dec->srcpad, query)) {
+    GST_DEBUG_OBJECT (dec, "got downstream ALLOCATION hints");
+    /* we got configuration from our peer, parse them */
+    gst_query_parse_allocation_params (query, &size, &min, &max, &prefix,
+        &alignment, &pool);
+
+    /* check if downstream supports cropping */
+    dec->has_cropping =
+        gst_query_has_allocation_meta (query, GST_VIDEO_CROP_META_API_TYPE);
+  } else {
+    GST_DEBUG_OBJECT (dec, "didn't get downstream ALLOCATION hints");
+    size = 0;
+    min = max = 0;
+    prefix = 0;
+    alignment = 0;
+    pool = NULL;
+    dec->has_cropping = FALSE;
+  }
+  GST_DEBUG_OBJECT (dec, "downstream cropping %d", dec->has_cropping);
+
+  if (pool == NULL) {
+    /* we did not get a pool, make one ourselves then */
+    pool = gst_video_buffer_pool_new ();
+  }
+
+  if (dec->pool)
+    gst_object_unref (dec->pool);
+  dec->pool = pool;
+
+  if (dec->has_cropping) {
+    dec->vinfo = info;
+    /* we can crop, configure the pool with buffers of caps and size of the
+     * decoded picture size and then crop them with metadata */
+    gst_caps_unref (caps);
+    caps = gst_video_info_to_caps (&info);
+  } else {
+    /* no cropping, use cropped videoinfo */
+    dec->vinfo = cinfo;
+  }
+  size = MAX (size, GST_VIDEO_INFO_SIZE (&dec->vinfo));
+
+  config = gst_buffer_pool_get_config (pool);
+  gst_buffer_pool_config_set (config, caps, size, min, max, prefix, alignment);
+  gst_caps_unref (caps);
+
+  /* just set the option, if the pool can support it we will transparently use
+   * it through the video info API. We could also see if the pool support this
+   * option and only activate it then. */
+  gst_buffer_pool_config_add_option (config, GST_BUFFER_POOL_OPTION_VIDEO_META);
+
+  gst_buffer_pool_set_config (pool, config);
+  /* and activate */
+  gst_buffer_pool_set_active (pool, TRUE);
+
+  gst_query_unref (query);
+
+  return GST_FLOW_OK;
+
+  /* ERRORS */
+invalid_format:
+  {
+    GST_ERROR_OBJECT (dec, "Invalid pixel format %d", dec->info.pixel_fmt);
+    return GST_FLOW_ERROR;
+  }
+}
+
+static GstFlowReturn
+theora_handle_type_packet (GstTheoraDec * dec, ogg_packet * packet)
+{
+  GstFlowReturn ret = GST_FLOW_OK;
+  GList *walk;
+
+  if ((ret = theora_negotiate (dec)) != GST_FLOW_OK)
+    goto negotiate_failed;
 
   /* done */
   dec->decoder = th_decode_alloc (&dec->info, dec->setup);
@@ -983,10 +986,10 @@ theora_handle_type_packet (GstTheoraDec * dec, ogg_packet * packet)
   return ret;
 
   /* ERRORS */
-invalid_format:
+negotiate_failed:
   {
-    GST_ERROR_OBJECT (dec, "Invalid pixel format %d", dec->info.pixel_fmt);
-    return GST_FLOW_ERROR;
+    GST_ERROR_OBJECT (dec, "failed to negotiate");
+    return ret;
   }
 }
 
@@ -1114,15 +1117,19 @@ theora_handle_image (GstTheoraDec * dec, th_ycbcr_buffer buf, GstBuffer ** out)
   GstVideoCropMeta *crop;
   gint offset_x, offset_y;
 
-  if (gst_pad_check_reconfigure (dec->srcpad))
-    theora_negotiate_pool (dec);
+  if G_UNLIKELY
+    (gst_pad_check_reconfigure (dec->srcpad))
+        if G_UNLIKELY
+      ((result = theora_negotiate (dec)) != GST_FLOW_OK)
+          goto negotiate_failed;
 
   result = gst_buffer_pool_acquire_buffer (dec->pool, out, NULL);
   if (G_UNLIKELY (result != GST_FLOW_OK))
     goto no_buffer;
 
-  if (!gst_video_frame_map (&frame, &dec->outinfo, *out, GST_MAP_WRITE))
-    goto invalid_frame;
+  if G_UNLIKELY
+    (!gst_video_frame_map (&frame, &dec->vinfo, *out, GST_MAP_WRITE))
+        goto invalid_frame;
 
   if (!dec->has_cropping) {
     /* we need to crop the hard way */
@@ -1180,6 +1187,12 @@ theora_handle_image (GstTheoraDec * dec, th_ycbcr_buffer buf, GstBuffer ** out)
   return GST_FLOW_OK;
 
   /* ERRORS */
+negotiate_failed:
+  {
+    GST_DEBUG_OBJECT (dec, "could not negotiate, reason: %s",
+        gst_flow_get_name (result));
+    return result;
+  }
 no_buffer:
   {
     GST_DEBUG_OBJECT (dec, "could not get buffer, reason: %s",
