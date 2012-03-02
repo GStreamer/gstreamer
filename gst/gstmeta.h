@@ -115,18 +115,18 @@ typedef void (*GstMetaFreeFunction)     (GstMeta *meta, GstBuffer *buffer);
 /**
  * gst_meta_transform_copy:
  *
- * GQuark for the "copy" transform.
+ * GQuark for the "gst-copy" transform.
  */
 GST_EXPORT GQuark _gst_meta_transform_copy;
 
 #define GST_META_TRANSFORM_IS_COPY(type) ((type) == _gst_meta_transform_copy)
 
 /**
- * GstMetaTransformDataCopy:
+ * GstMetaTransformCopy:
  * @offset: the offset to copy
  * @size: the size to copy
  *
- * Extra data passed to a "copy" transform #GstMetaTransformFunction.
+ * Extra data passed to a "gst-copy" transform #GstMetaTransformFunction.
  */
 typedef struct {
   gsize offset;

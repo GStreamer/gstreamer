@@ -44,7 +44,7 @@ _priv_gst_meta_initialize (void)
   g_rw_lock_init (&lock);
   metainfo = g_hash_table_new (g_str_hash, g_str_equal);
 
-  _gst_meta_transform_copy = g_quark_from_static_string ("copy");
+  _gst_meta_transform_copy = g_quark_from_static_string ("gst-copy");
   _gst_meta_tag_memory = g_quark_from_static_string ("memory");
 }
 
