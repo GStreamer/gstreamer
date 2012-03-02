@@ -353,7 +353,7 @@ foreach_metadata (GstBuffer * inbuf, GstMeta ** meta, gpointer user_data)
       /* metadata depends on colorspace. FIXME discard for now until we
        * have some transform data for it. */
     } else {
-      GstMetaTransformCopy copy_data = { 0, -1 };
+      GstMetaTransformCopy copy_data = { FALSE, 0, -1 };
       /* simply copy then */
       info->transform_func (data->outbuf, *meta, inbuf,
           _gst_meta_transform_copy, &copy_data);
