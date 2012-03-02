@@ -167,6 +167,7 @@ typedef struct
   const guint8 *data;
   guint size;
 
+  guint n_epb;                  /* Number of emulation prevention bytes */
   guint byte;                   /* Byte position */
   guint bits_in_cache;          /* bitpos in the cache of next bit */
   guint8 first_byte;
@@ -178,6 +179,7 @@ nal_reader_init (NalReader * nr, const guint8 * data, guint size)
 {
   nr->data = data;
   nr->size = size;
+  nr->n_epb = 0;
 
   nr->byte = 0;
   nr->bits_in_cache = 0;
@@ -211,6 +213,7 @@ nal_reader_read (NalReader * nr, guint nbits)
         ((nr->cache & 0xff) == 0)) {
       /* next byte goes unconditionally to the cache, even if it's 0x03 */
       check_three_byte = FALSE;
+      nr->n_epb++;
       goto next_byte;
     }
     nr->cache = (nr->cache << 8) | nr->first_byte;
@@ -261,6 +264,12 @@ static inline guint
 nal_reader_get_remaining (const NalReader * nr)
 {
   return (nr->size - nr->byte) * 8 + nr->bits_in_cache;
+}
+
+static inline guint
+nal_reader_get_epb_count (const NalReader * nr)
+{
+  return nr->n_epb;
 }
 
 #define GST_NAL_READER_READ_BITS(bits) \
@@ -1882,6 +1891,7 @@ gst_h264_parser_parse_slice_hdr (GstH264NalParser * nalparser,
   }
 
   slice->header_size = nal_reader_get_pos (&nr);
+  slice->n_emulation_prevention_bytes = nal_reader_get_epb_count (&nr);
 
   return GST_H264_PARSER_OK;
 
