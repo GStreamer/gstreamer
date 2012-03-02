@@ -38,7 +38,6 @@
 #include <gst/gst-i18n-plugin.h>
 #include <gst/pbutils/missing-plugins.h>
 
-#include "gstplay-marshal.h"
 #include "gstplay-enum.h"
 #include "gstrawcaps.h"
 #include "gstplayback.h"
@@ -473,7 +472,7 @@ gst_uri_decode_bin_class_init (GstURIDecodeBinClass * klass)
   gst_uri_decode_bin_signals[SIGNAL_UNKNOWN_TYPE] =
       g_signal_new ("unknown-type", G_TYPE_FROM_CLASS (klass),
       G_SIGNAL_RUN_LAST, G_STRUCT_OFFSET (GstURIDecodeBinClass, unknown_type),
-      NULL, NULL, gst_marshal_VOID__OBJECT_BOXED, G_TYPE_NONE, 2,
+      NULL, NULL, g_cclosure_marshal_generic, G_TYPE_NONE, 2,
       GST_TYPE_PAD, GST_TYPE_CAPS);
 
   /**
@@ -500,7 +499,7 @@ gst_uri_decode_bin_class_init (GstURIDecodeBinClass * klass)
       g_signal_new ("autoplug-continue", G_TYPE_FROM_CLASS (klass),
       G_SIGNAL_RUN_LAST, G_STRUCT_OFFSET (GstURIDecodeBinClass,
           autoplug_continue), _gst_boolean_accumulator, NULL,
-      gst_play_marshal_BOOLEAN__OBJECT_BOXED, G_TYPE_BOOLEAN, 2, GST_TYPE_PAD,
+      g_cclosure_marshal_generic, G_TYPE_BOOLEAN, 2, GST_TYPE_PAD,
       GST_TYPE_CAPS);
 
   /**
@@ -532,7 +531,7 @@ gst_uri_decode_bin_class_init (GstURIDecodeBinClass * klass)
       g_signal_new ("autoplug-factories", G_TYPE_FROM_CLASS (klass),
       G_SIGNAL_RUN_LAST, G_STRUCT_OFFSET (GstURIDecodeBinClass,
           autoplug_factories), _gst_array_accumulator, NULL,
-      gst_play_marshal_BOXED__OBJECT_BOXED, G_TYPE_VALUE_ARRAY, 2,
+      g_cclosure_marshal_generic, G_TYPE_VALUE_ARRAY, 2,
       GST_TYPE_PAD, GST_TYPE_CAPS);
 
   /**
@@ -566,7 +565,7 @@ gst_uri_decode_bin_class_init (GstURIDecodeBinClass * klass)
       g_signal_new ("autoplug-sort", G_TYPE_FROM_CLASS (klass),
       G_SIGNAL_RUN_LAST, G_STRUCT_OFFSET (GstURIDecodeBinClass, autoplug_sort),
       _gst_array_hasvalue_accumulator, NULL,
-      gst_play_marshal_BOXED__OBJECT_BOXED_BOXED, G_TYPE_VALUE_ARRAY, 3,
+      g_cclosure_marshal_generic, G_TYPE_VALUE_ARRAY, 3,
       GST_TYPE_PAD, GST_TYPE_CAPS, G_TYPE_VALUE_ARRAY);
 
   /**
@@ -606,7 +605,7 @@ gst_uri_decode_bin_class_init (GstURIDecodeBinClass * klass)
       g_signal_new ("autoplug-select", G_TYPE_FROM_CLASS (klass),
       G_SIGNAL_RUN_LAST, G_STRUCT_OFFSET (GstURIDecodeBinClass,
           autoplug_select), _gst_select_accumulator, NULL,
-      gst_play_marshal_ENUM__OBJECT_BOXED_OBJECT,
+      g_cclosure_marshal_generic,
       GST_TYPE_AUTOPLUG_SELECT_RESULT, 3, GST_TYPE_PAD, GST_TYPE_CAPS,
       GST_TYPE_ELEMENT_FACTORY);
 
@@ -619,7 +618,7 @@ gst_uri_decode_bin_class_init (GstURIDecodeBinClass * klass)
       g_signal_new ("drained", G_TYPE_FROM_CLASS (klass),
       G_SIGNAL_RUN_LAST,
       G_STRUCT_OFFSET (GstURIDecodeBinClass, drained), NULL, NULL,
-      gst_marshal_VOID__VOID, G_TYPE_NONE, 0, G_TYPE_NONE);
+      g_cclosure_marshal_generic, G_TYPE_NONE, 0, G_TYPE_NONE);
 
   /**
    * GstURIDecodeBin::source-setup:
@@ -637,7 +636,7 @@ gst_uri_decode_bin_class_init (GstURIDecodeBinClass * klass)
   gst_uri_decode_bin_signals[SIGNAL_SOURCE_SETUP] =
       g_signal_new ("source-setup", G_TYPE_FROM_CLASS (klass),
       G_SIGNAL_RUN_LAST, 0, NULL, NULL,
-      gst_marshal_VOID__OBJECT, G_TYPE_NONE, 1, GST_TYPE_ELEMENT);
+      g_cclosure_marshal_generic, G_TYPE_NONE, 1, GST_TYPE_ELEMENT);
 
   gst_element_class_add_pad_template (gstelement_class,
       gst_static_pad_template_get (&srctemplate));

@@ -1,11 +1,3 @@
-# variables used for enum/marshal generation
-glib_enum_define = GST_PLAY
-glib_gen_prefix = gst_play
-glib_gen_basename = gstplay
-
-built_sources = gstplay-marshal.c
-built_headers = gstplay-marshal.h
-
 plugin_LTLIBRARIES = libgstplayback.la
 
 csp_cflags = -DCOLORSPACE=\"videoconvert\"
@@ -46,11 +38,7 @@ noinst_HEADERS = \
 
 BUILT_SOURCES = $(built_headers) $(built_sources)
 
-EXTRA_DIST = gstplay-marshal.list
-
 CLEANFILES = $(BUILT_SOURCES)
-
-include $(top_srcdir)/common/gst-glib-gen.mak
 
 Android.mk: Makefile.am $(BUILT_SOURCES)
 	androgenizer \

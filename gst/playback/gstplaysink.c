@@ -309,37 +309,6 @@ static void notify_mute_cb (GObject * object, GParamSpec * pspec,
 
 static void update_av_offset (GstPlaySink * playsink);
 
-void
-gst_play_marshal_SAMPLE__BOXED (GClosure * closure,
-    GValue * return_value G_GNUC_UNUSED,
-    guint n_param_values,
-    const GValue * param_values,
-    gpointer invocation_hint G_GNUC_UNUSED, gpointer marshal_data)
-{
-  typedef GstSample *(*GMarshalFunc_OBJECT__BOXED) (gpointer data1,
-      gpointer arg_1, gpointer data2);
-  register GMarshalFunc_OBJECT__BOXED callback;
-  register GCClosure *cc = (GCClosure *) closure;
-  register gpointer data1, data2;
-  GstSample *v_return;
-  g_return_if_fail (return_value != NULL);
-  g_return_if_fail (n_param_values == 2);
-
-  if (G_CCLOSURE_SWAP_DATA (closure)) {
-    data1 = closure->data;
-    data2 = g_value_peek_pointer (param_values + 0);
-  } else {
-    data1 = g_value_peek_pointer (param_values + 0);
-    data2 = closure->data;
-  }
-  callback =
-      (GMarshalFunc_OBJECT__BOXED) (marshal_data ? marshal_data : cc->callback);
-
-  v_return = callback (data1, g_value_get_boxed (param_values + 1), data2);
-
-  gst_value_take_sample (return_value, v_return);
-}
-
 /* static guint gst_play_sink_signals[LAST_SIGNAL] = { 0 }; */
 
 static void gst_play_sink_overlay_init (gpointer g_iface,
@@ -502,7 +471,7 @@ gst_play_sink_class_init (GstPlaySinkClass * klass)
 
   g_signal_new ("reconfigure", G_TYPE_FROM_CLASS (klass),
       G_SIGNAL_RUN_LAST | G_SIGNAL_ACTION, G_STRUCT_OFFSET (GstPlaySinkClass,
-          reconfigure), NULL, NULL, gst_marshal_BOOLEAN__VOID, G_TYPE_BOOLEAN,
+          reconfigure), NULL, NULL, g_cclosure_marshal_generic, G_TYPE_BOOLEAN,
       0, G_TYPE_NONE);
   /**
    * GstPlaySink::convert-sample
@@ -522,7 +491,7 @@ gst_play_sink_class_init (GstPlaySinkClass * klass)
   g_signal_new ("convert-sample", G_TYPE_FROM_CLASS (klass),
       G_SIGNAL_RUN_LAST | G_SIGNAL_ACTION,
       G_STRUCT_OFFSET (GstPlaySinkClass, convert_sample), NULL, NULL,
-      gst_play_marshal_SAMPLE__BOXED, GST_TYPE_SAMPLE, 1, GST_TYPE_CAPS);
+      g_cclosure_marshal_generic, GST_TYPE_SAMPLE, 1, GST_TYPE_CAPS);
 
   gst_element_class_add_pad_template (gstelement_klass,
       gst_static_pad_template_get (&audiorawtemplate));
