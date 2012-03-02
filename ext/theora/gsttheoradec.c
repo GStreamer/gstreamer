@@ -915,26 +915,6 @@ theora_handle_type_packet (GstTheoraDec * dec, ogg_packet * packet)
     dec->need_cropping = FALSE;
   }
 
-  /* done */
-  dec->decoder = th_decode_alloc (&dec->info, dec->setup);
-
-  if (th_decode_ctl (dec->decoder, TH_DECCTL_SET_TELEMETRY_MV,
-          &dec->telemetry_mv, sizeof (dec->telemetry_mv)) != TH_EIMPL) {
-    GST_WARNING_OBJECT (dec, "Could not enable MV visualisation");
-  }
-  if (th_decode_ctl (dec->decoder, TH_DECCTL_SET_TELEMETRY_MBMODE,
-          &dec->telemetry_mbmode, sizeof (dec->telemetry_mbmode)) != TH_EIMPL) {
-    GST_WARNING_OBJECT (dec, "Could not enable MB mode visualisation");
-  }
-  if (th_decode_ctl (dec->decoder, TH_DECCTL_SET_TELEMETRY_QI,
-          &dec->telemetry_qi, sizeof (dec->telemetry_qi)) != TH_EIMPL) {
-    GST_WARNING_OBJECT (dec, "Could not enable QI mode visualisation");
-  }
-  if (th_decode_ctl (dec->decoder, TH_DECCTL_SET_TELEMETRY_BITS,
-          &dec->telemetry_bits, sizeof (dec->telemetry_bits)) != TH_EIMPL) {
-    GST_WARNING_OBJECT (dec, "Could not enable BITS mode visualisation");
-  }
-
   /* our info contains the dimensions for the coded picture before cropping */
   gst_video_info_set_format (&dec->vinfo, format, dec->info.frame_width,
       dec->info.frame_height);
@@ -965,6 +945,26 @@ theora_handle_type_packet (GstTheoraDec * dec, ogg_packet * packet)
   gst_pad_check_reconfigure (dec->srcpad);
 
   theora_negotiate_pool (dec);
+
+  /* done */
+  dec->decoder = th_decode_alloc (&dec->info, dec->setup);
+
+  if (th_decode_ctl (dec->decoder, TH_DECCTL_SET_TELEMETRY_MV,
+          &dec->telemetry_mv, sizeof (dec->telemetry_mv)) != TH_EIMPL) {
+    GST_WARNING_OBJECT (dec, "Could not enable MV visualisation");
+  }
+  if (th_decode_ctl (dec->decoder, TH_DECCTL_SET_TELEMETRY_MBMODE,
+          &dec->telemetry_mbmode, sizeof (dec->telemetry_mbmode)) != TH_EIMPL) {
+    GST_WARNING_OBJECT (dec, "Could not enable MB mode visualisation");
+  }
+  if (th_decode_ctl (dec->decoder, TH_DECCTL_SET_TELEMETRY_QI,
+          &dec->telemetry_qi, sizeof (dec->telemetry_qi)) != TH_EIMPL) {
+    GST_WARNING_OBJECT (dec, "Could not enable QI mode visualisation");
+  }
+  if (th_decode_ctl (dec->decoder, TH_DECCTL_SET_TELEMETRY_BITS,
+          &dec->telemetry_bits, sizeof (dec->telemetry_bits)) != TH_EIMPL) {
+    GST_WARNING_OBJECT (dec, "Could not enable BITS mode visualisation");
+  }
 
   dec->have_header = TRUE;
 
