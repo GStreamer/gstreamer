@@ -2309,13 +2309,19 @@ gst_xvimagesink_colorbalance_get_value (GstColorBalance * balance,
   return value;
 }
 
+static GstColorBalanceType
+gst_xvimagesink_colorbalance_get_balance_type (GstColorBalance * balance)
+{
+  return GST_COLOR_BALANCE_HARDWARE;
+}
+
 static void
 gst_xvimagesink_colorbalance_init (GstColorBalanceInterface * iface)
 {
-  GST_COLOR_BALANCE_TYPE (iface) = GST_COLOR_BALANCE_HARDWARE;
   iface->list_channels = gst_xvimagesink_colorbalance_list_channels;
   iface->set_value = gst_xvimagesink_colorbalance_set_value;
   iface->get_value = gst_xvimagesink_colorbalance_get_value;
+  iface->get_balance_type = gst_xvimagesink_colorbalance_get_balance_type;
 }
 
 #if 0

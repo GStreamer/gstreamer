@@ -332,16 +332,21 @@ gst_volume_set_mute (GstMixer * mixer, GstMixerTrack * track, gboolean mute)
   GST_OBJECT_UNLOCK (self);
 }
 
+static GstMixerType
+gst_volume_get_mixer_type (GstMixer * mixer)
+{
+  return GST_MIXER_SOFTWARE;
+}
+
 static void
 gst_volume_mixer_init (GstMixerInterface * iface)
 {
-  GST_MIXER_TYPE (iface) = GST_MIXER_SOFTWARE;
-
   /* default virtual functions */
   iface->list_tracks = gst_volume_list_tracks;
   iface->set_volume = gst_volume_set_volume;
   iface->get_volume = gst_volume_get_volume;
   iface->set_mute = gst_volume_set_mute;
+  iface->get_mixer_type = gst_volume_get_mixer_type;
 }
 
 /* Element class */

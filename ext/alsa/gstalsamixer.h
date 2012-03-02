@@ -189,11 +189,15 @@ interface_as_function ## _get_mixer_flags (GstMixer * mixer)                    
   return gst_alsa_mixer_get_mixer_flags (this->mixer);                          \
 }                                                                               \
                                                                                 \
+static GstMixerType                                                             \
+interface_as_function ## _get_mixer_type (GstMixer * mixer)                     \
+{                                                                               \
+  return GST_MIXER_HARDWARE;                                                    \
+}                                                                               \
+                                                                                \
 static void                                                                     \
 interface_as_function ## _interface_init (GstMixerInterface * iface)            \
 {                                                                               \
-  GST_MIXER_TYPE (iface) = GST_MIXER_HARDWARE;                                  \
-                                                                                \
   /* set up the interface hooks */                                              \
   iface->list_tracks = interface_as_function ## _list_tracks;                   \
   iface->set_volume = interface_as_function ## _set_volume;                     \
@@ -203,6 +207,7 @@ interface_as_function ## _interface_init (GstMixerInterface * iface)            
   iface->set_option = interface_as_function ## _set_option;                     \
   iface->get_option = interface_as_function ## _get_option;                     \
   iface->get_mixer_flags = interface_as_function ## _get_mixer_flags;           \
+  iface->get_mixer_type = interface_as_function ## _get_mixer_type;             \
 }
 
 
