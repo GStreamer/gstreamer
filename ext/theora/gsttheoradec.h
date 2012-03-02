@@ -70,6 +70,7 @@ struct _GstTheoraDec
   guint64 frame_nr;
   gboolean need_keyframe;
   GstVideoInfo vinfo;
+  GstVideoInfo outinfo;
 
   gint output_bpp;
   GstBufferPool *pool;
