@@ -893,6 +893,7 @@ tests/examples/gio/Makefile
 tests/examples/overlay/Makefile
 tests/examples/seek/Makefile
 tests/examples/snapshot/Makefile
+tests/examples/playback/Makefile
 tests/examples/playrec/Makefile
 tests/files/Makefile
 tests/icles/Makefile

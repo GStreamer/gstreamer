@@ -1,8 +1,8 @@
 if HAVE_GTK_X11
 if HAVE_LINUX_JOYSTICK_HEADERS
-GTK_EXAMPLES=seek scrubby jsseek
+GTK_EXAMPLES=scrubby jsseek
 else
-GTK_EXAMPLES=seek scrubby
+GTK_EXAMPLES=scrubby
 endif
 endif
 

@@ -1,6 +1,6 @@
 /* GStreamer
  *
- * seek.c: seeking sample application
+ * playback-test.c: playback sample application
  *
  * Copyright (C) 2005 Wim Taymans <wim@fluendo.com>
  *               2006 Stefan Kost <ensonic@users.sf.net>
@@ -51,8 +51,8 @@
 #include <gst/video/colorbalance.h>
 #include <gst/interfaces/navigation.h>
 
-GST_DEBUG_CATEGORY_STATIC (seek_debug);
-#define GST_CAT_DEFAULT (seek_debug)
+GST_DEBUG_CATEGORY_STATIC (playback_debug);
+#define GST_CAT_DEFAULT (playback_debug)
 
 /* Copied from gst-plugins-base/gst/playback/gstplay-enum.h */
 typedef enum
@@ -188,24 +188,25 @@ typedef struct
 
   const GstFormatDefinition *seek_format;
   GList *formats;
-} SeekApp;
+} PlaybackApp;
 
-static void clear_streams (SeekApp * app);
-static void find_interface_elements (SeekApp * app);
+static void clear_streams (PlaybackApp * app);
+static void find_interface_elements (PlaybackApp * app);
 static void volume_notify_cb (GstElement * pipeline, GParamSpec * arg,
-    SeekApp * app);
+    PlaybackApp * app);
 static void mute_notify_cb (GstElement * pipeline, GParamSpec * arg,
-    SeekApp * app);
+    PlaybackApp * app);
 
-static void video_sink_activate_cb (GtkEntry * entry, SeekApp * app);
-static void text_sink_activate_cb (GtkEntry * entry, SeekApp * app);
-static void audio_sink_activate_cb (GtkEntry * entry, SeekApp * app);
-static void buffer_size_activate_cb (GtkEntry * entry, SeekApp * app);
-static void buffer_duration_activate_cb (GtkEntry * entry, SeekApp * app);
-static void ringbuffer_maxsize_activate_cb (GtkEntry * entry, SeekApp * app);
-static void connection_speed_activate_cb (GtkEntry * entry, SeekApp * app);
-static void av_offset_activate_cb (GtkEntry * entry, SeekApp * app);
-static void subtitle_encoding_activate_cb (GtkEntry * entry, SeekApp * app);
+static void video_sink_activate_cb (GtkEntry * entry, PlaybackApp * app);
+static void text_sink_activate_cb (GtkEntry * entry, PlaybackApp * app);
+static void audio_sink_activate_cb (GtkEntry * entry, PlaybackApp * app);
+static void buffer_size_activate_cb (GtkEntry * entry, PlaybackApp * app);
+static void buffer_duration_activate_cb (GtkEntry * entry, PlaybackApp * app);
+static void ringbuffer_maxsize_activate_cb (GtkEntry * entry,
+    PlaybackApp * app);
+static void connection_speed_activate_cb (GtkEntry * entry, PlaybackApp * app);
+static void av_offset_activate_cb (GtkEntry * entry, PlaybackApp * app);
+static void subtitle_encoding_activate_cb (GtkEntry * entry, PlaybackApp * app);
 
 /* pipeline construction */
 
@@ -259,7 +260,7 @@ playbin_set_uri (GstElement * playbin, const gchar * location,
 }
 
 static void
-make_playbin_pipeline (SeekApp * app, const gchar * location)
+make_playbin_pipeline (PlaybackApp * app, const gchar * location)
 {
   GstElement *pipeline;
 
@@ -279,7 +280,7 @@ make_playbin_pipeline (SeekApp * app, const gchar * location)
 
 #ifndef GST_DISABLE_PARSE
 static void
-make_parselaunch_pipeline (SeekApp * app, const gchar * description)
+make_parselaunch_pipeline (PlaybackApp * app, const gchar * description)
 {
   app->pipeline = gst_parse_launch (description, NULL);
 }
@@ -288,7 +289,7 @@ make_parselaunch_pipeline (SeekApp * app, const gchar * description)
 typedef struct
 {
   const gchar *name;
-  void (*func) (SeekApp * app, const gchar * location);
+  void (*func) (PlaybackApp * app, const gchar * location);
 }
 Pipeline;
 
@@ -302,7 +303,7 @@ static const Pipeline pipelines[] = {
 /* ui callbacks and helpers */
 
 static gchar *
-format_value (GtkScale * scale, gdouble value, SeekApp * app)
+format_value (GtkScale * scale, gdouble value, PlaybackApp * app)
 {
   gint64 real;
   gint64 seconds;
@@ -338,7 +339,7 @@ static seek_format seek_formats[] = {
 };
 
 static void
-query_positions (SeekApp * app)
+query_positions (PlaybackApp * app)
 {
   gint i = 0;
 
@@ -362,13 +363,13 @@ query_positions (SeekApp * app)
 }
 
 static gboolean start_seek (GtkRange * range, GdkEventButton * event,
-    SeekApp * app);
+    PlaybackApp * app);
 static gboolean stop_seek (GtkRange * range, GdkEventButton * event,
-    SeekApp * app);
-static void seek_cb (GtkRange * range, SeekApp * app);
+    PlaybackApp * app);
+static void seek_cb (GtkRange * range, PlaybackApp * app);
 
 static void
-set_scale (SeekApp * app, gdouble value)
+set_scale (PlaybackApp * app, gdouble value)
 {
   g_signal_handlers_block_by_func (app->seek_scale, start_seek, app);
   g_signal_handlers_block_by_func (app->seek_scale, stop_seek, app);
@@ -381,7 +382,7 @@ set_scale (SeekApp * app, gdouble value)
 }
 
 static gboolean
-update_fill (SeekApp * app)
+update_fill (PlaybackApp * app)
 {
   GstQuery *query;
 
@@ -422,7 +423,7 @@ update_fill (SeekApp * app)
 }
 
 static gboolean
-update_scale (SeekApp * app)
+update_scale (PlaybackApp * app)
 {
   GstFormat format = GST_FORMAT_TIME;
   gint64 seek_pos, seek_dur;
@@ -462,11 +463,11 @@ update_scale (SeekApp * app)
   return TRUE;
 }
 
-static void set_update_scale (SeekApp * app, gboolean active);
-static void set_update_fill (SeekApp * app, gboolean active);
+static void set_update_scale (PlaybackApp * app, gboolean active);
+static void set_update_fill (PlaybackApp * app, gboolean active);
 
 static gboolean
-end_scrub (SeekApp * app)
+end_scrub (PlaybackApp * app)
 {
   GST_DEBUG ("end scrub, PAUSE");
   gst_element_set_state (app->pipeline, GST_STATE_PAUSED);
@@ -476,7 +477,7 @@ end_scrub (SeekApp * app)
 }
 
 static gboolean
-send_event (SeekApp * app, GstEvent * event)
+send_event (PlaybackApp * app, GstEvent * event)
 {
   gboolean res = FALSE;
 
@@ -487,7 +488,7 @@ send_event (SeekApp * app, GstEvent * event)
 }
 
 static void
-do_seek (SeekApp * app, GstFormat format, gint64 position)
+do_seek (PlaybackApp * app, GstFormat format, gint64 position)
 {
   gboolean res = FALSE;
   GstEvent *s_event;
@@ -535,7 +536,7 @@ do_seek (SeekApp * app, GstFormat format, gint64 position)
 }
 
 static void
-seek_cb (GtkRange * range, SeekApp * app)
+seek_cb (GtkRange * range, PlaybackApp * app)
 {
   gint64 real;
   /* If the timer hasn't expired yet, then the pipeline is running */
@@ -566,7 +567,7 @@ seek_cb (GtkRange * range, SeekApp * app)
 }
 
 static void
-advanced_seek_button_cb (GtkButton * button, SeekApp * app)
+advanced_seek_button_cb (GtkButton * button, PlaybackApp * app)
 {
   GstFormat fmt;
   gint64 pos;
@@ -584,7 +585,7 @@ advanced_seek_button_cb (GtkButton * button, SeekApp * app)
 }
 
 static void
-set_update_fill (SeekApp * app, gboolean active)
+set_update_fill (PlaybackApp * app, gboolean active)
 {
   GST_DEBUG ("fill scale is %d", active);
 
@@ -602,7 +603,7 @@ set_update_fill (SeekApp * app, gboolean active)
 }
 
 static void
-set_update_scale (SeekApp * app, gboolean active)
+set_update_scale (PlaybackApp * app, gboolean active)
 {
   GST_DEBUG ("update scale is %d", active);
 
@@ -620,7 +621,7 @@ set_update_scale (SeekApp * app, gboolean active)
 }
 
 static gboolean
-start_seek (GtkRange * range, GdkEventButton * event, SeekApp * app)
+start_seek (GtkRange * range, GdkEventButton * event, PlaybackApp * app)
 {
   if (event->type != GDK_BUTTON_PRESS)
     return FALSE;
@@ -642,7 +643,7 @@ start_seek (GtkRange * range, GdkEventButton * event, SeekApp * app)
 }
 
 static gboolean
-stop_seek (GtkRange * range, GdkEventButton * event, SeekApp * app)
+stop_seek (GtkRange * range, GdkEventButton * event, PlaybackApp * app)
 {
   if (app->changed_id) {
     g_signal_handler_disconnect (app->seek_scale, app->changed_id);
@@ -679,7 +680,7 @@ stop_seek (GtkRange * range, GdkEventButton * event, SeekApp * app)
 }
 
 static void
-play_cb (GtkButton * button, SeekApp * app)
+play_cb (GtkButton * button, PlaybackApp * app)
 {
   GstStateChangeReturn ret;
 
@@ -728,7 +729,7 @@ failed:
 }
 
 static void
-pause_cb (GtkButton * button, SeekApp * app)
+pause_cb (GtkButton * button, PlaybackApp * app)
 {
   g_mutex_lock (&app->state_mutex);
   if (app->state != GST_STATE_PAUSED) {
@@ -765,7 +766,7 @@ failed:
 }
 
 static void
-stop_cb (GtkButton * button, SeekApp * app)
+stop_cb (GtkButton * button, PlaybackApp * app)
 {
   if (app->state != STOP_STATE) {
     GstStateChangeReturn ret;
@@ -810,19 +811,19 @@ failed:
 }
 
 static void
-accurate_toggle_cb (GtkToggleButton * button, SeekApp * app)
+accurate_toggle_cb (GtkToggleButton * button, PlaybackApp * app)
 {
   app->accurate_seek = gtk_toggle_button_get_active (button);
 }
 
 static void
-key_toggle_cb (GtkToggleButton * button, SeekApp * app)
+key_toggle_cb (GtkToggleButton * button, PlaybackApp * app)
 {
   app->keyframe_seek = gtk_toggle_button_get_active (button);
 }
 
 static void
-loop_toggle_cb (GtkToggleButton * button, SeekApp * app)
+loop_toggle_cb (GtkToggleButton * button, PlaybackApp * app)
 {
   app->loop_seek = gtk_toggle_button_get_active (button);
   if (app->state == GST_STATE_PLAYING) {
@@ -836,25 +837,25 @@ loop_toggle_cb (GtkToggleButton * button, SeekApp * app)
 }
 
 static void
-flush_toggle_cb (GtkToggleButton * button, SeekApp * app)
+flush_toggle_cb (GtkToggleButton * button, PlaybackApp * app)
 {
   app->flush_seek = gtk_toggle_button_get_active (button);
 }
 
 static void
-scrub_toggle_cb (GtkToggleButton * button, SeekApp * app)
+scrub_toggle_cb (GtkToggleButton * button, PlaybackApp * app)
 {
   app->scrub = gtk_toggle_button_get_active (button);
 }
 
 static void
-play_scrub_toggle_cb (GtkToggleButton * button, SeekApp * app)
+play_scrub_toggle_cb (GtkToggleButton * button, PlaybackApp * app)
 {
   app->play_scrub = gtk_toggle_button_get_active (button);
 }
 
 static void
-skip_toggle_cb (GtkToggleButton * button, SeekApp * app)
+skip_toggle_cb (GtkToggleButton * button, PlaybackApp * app)
 {
   app->skip_seek = gtk_toggle_button_get_active (button);
   if (app->state == GST_STATE_PLAYING) {
@@ -868,7 +869,7 @@ skip_toggle_cb (GtkToggleButton * button, SeekApp * app)
 }
 
 static void
-rate_spinbutton_changed_cb (GtkSpinButton * button, SeekApp * app)
+rate_spinbutton_changed_cb (GtkSpinButton * button, PlaybackApp * app)
 {
   gboolean res = FALSE;
   GstEvent *s_event;
@@ -927,7 +928,7 @@ update_flag (GstElement * pipeline, GstPlayFlags flag, gboolean state)
 }
 
 static void
-vis_toggle_cb (GtkToggleButton * button, SeekApp * app)
+vis_toggle_cb (GtkToggleButton * button, PlaybackApp * app)
 {
   gboolean state;
 
@@ -937,7 +938,7 @@ vis_toggle_cb (GtkToggleButton * button, SeekApp * app)
 }
 
 static void
-audio_toggle_cb (GtkToggleButton * button, SeekApp * app)
+audio_toggle_cb (GtkToggleButton * button, PlaybackApp * app)
 {
   gboolean state;
 
@@ -947,7 +948,7 @@ audio_toggle_cb (GtkToggleButton * button, SeekApp * app)
 }
 
 static void
-video_toggle_cb (GtkToggleButton * button, SeekApp * app)
+video_toggle_cb (GtkToggleButton * button, PlaybackApp * app)
 {
   gboolean state;
 
@@ -957,7 +958,7 @@ video_toggle_cb (GtkToggleButton * button, SeekApp * app)
 }
 
 static void
-text_toggle_cb (GtkToggleButton * button, SeekApp * app)
+text_toggle_cb (GtkToggleButton * button, PlaybackApp * app)
 {
   gboolean state;
 
@@ -967,7 +968,7 @@ text_toggle_cb (GtkToggleButton * button, SeekApp * app)
 }
 
 static void
-mute_toggle_cb (GtkToggleButton * button, SeekApp * app)
+mute_toggle_cb (GtkToggleButton * button, PlaybackApp * app)
 {
   gboolean mute;
 
@@ -976,7 +977,7 @@ mute_toggle_cb (GtkToggleButton * button, SeekApp * app)
 }
 
 static void
-download_toggle_cb (GtkToggleButton * button, SeekApp * app)
+download_toggle_cb (GtkToggleButton * button, PlaybackApp * app)
 {
   gboolean state;
 
@@ -985,7 +986,7 @@ download_toggle_cb (GtkToggleButton * button, SeekApp * app)
 }
 
 static void
-buffering_toggle_cb (GtkToggleButton * button, SeekApp * app)
+buffering_toggle_cb (GtkToggleButton * button, PlaybackApp * app)
 {
   gboolean state;
 
@@ -994,7 +995,7 @@ buffering_toggle_cb (GtkToggleButton * button, SeekApp * app)
 }
 
 static void
-soft_volume_toggle_cb (GtkToggleButton * button, SeekApp * app)
+soft_volume_toggle_cb (GtkToggleButton * button, PlaybackApp * app)
 {
   gboolean state;
 
@@ -1003,7 +1004,7 @@ soft_volume_toggle_cb (GtkToggleButton * button, SeekApp * app)
 }
 
 static void
-native_audio_toggle_cb (GtkToggleButton * button, SeekApp * app)
+native_audio_toggle_cb (GtkToggleButton * button, PlaybackApp * app)
 {
   gboolean state;
 
@@ -1012,7 +1013,7 @@ native_audio_toggle_cb (GtkToggleButton * button, SeekApp * app)
 }
 
 static void
-native_video_toggle_cb (GtkToggleButton * button, SeekApp * app)
+native_video_toggle_cb (GtkToggleButton * button, PlaybackApp * app)
 {
   gboolean state;
 
@@ -1021,7 +1022,7 @@ native_video_toggle_cb (GtkToggleButton * button, SeekApp * app)
 }
 
 static void
-deinterlace_toggle_cb (GtkToggleButton * button, SeekApp * app)
+deinterlace_toggle_cb (GtkToggleButton * button, PlaybackApp * app)
 {
   gboolean state;
 
@@ -1030,7 +1031,7 @@ deinterlace_toggle_cb (GtkToggleButton * button, SeekApp * app)
 }
 
 static void
-soft_colorbalance_toggle_cb (GtkToggleButton * button, SeekApp * app)
+soft_colorbalance_toggle_cb (GtkToggleButton * button, PlaybackApp * app)
 {
   gboolean state;
 
@@ -1039,7 +1040,7 @@ soft_colorbalance_toggle_cb (GtkToggleButton * button, SeekApp * app)
 }
 
 static void
-clear_streams (SeekApp * app)
+clear_streams (PlaybackApp * app)
 {
   gint i;
 
@@ -1060,7 +1061,7 @@ clear_streams (SeekApp * app)
 }
 
 static void
-update_streams (SeekApp * app)
+update_streams (PlaybackApp * app)
 {
   gint i;
 
@@ -1155,7 +1156,7 @@ update_streams (SeekApp * app)
 }
 
 static void
-video_combo_cb (GtkComboBox * combo, SeekApp * app)
+video_combo_cb (GtkComboBox * combo, PlaybackApp * app)
 {
   gint active;
 
@@ -1166,7 +1167,7 @@ video_combo_cb (GtkComboBox * combo, SeekApp * app)
 }
 
 static void
-audio_combo_cb (GtkComboBox * combo, SeekApp * app)
+audio_combo_cb (GtkComboBox * combo, PlaybackApp * app)
 {
   gint active;
 
@@ -1177,7 +1178,7 @@ audio_combo_cb (GtkComboBox * combo, SeekApp * app)
 }
 
 static void
-text_combo_cb (GtkComboBox * combo, SeekApp * app)
+text_combo_cb (GtkComboBox * combo, PlaybackApp * app)
 {
   gint active;
 
@@ -1202,7 +1203,7 @@ filter_vis_features (GstPluginFeature * feature, gpointer data)
 }
 
 static void
-init_visualization_features (SeekApp * app)
+init_visualization_features (PlaybackApp * app)
 {
   GList *list, *walk;
 
@@ -1225,7 +1226,7 @@ init_visualization_features (SeekApp * app)
 }
 
 static void
-vis_combo_cb (GtkComboBox * combo, SeekApp * app)
+vis_combo_cb (GtkComboBox * combo, PlaybackApp * app)
 {
   guint index;
   VisEntry *entry;
@@ -1247,7 +1248,7 @@ vis_combo_cb (GtkComboBox * combo, SeekApp * app)
 }
 
 static void
-volume_spinbutton_changed_cb (GtkSpinButton * button, SeekApp * app)
+volume_spinbutton_changed_cb (GtkSpinButton * button, PlaybackApp * app)
 {
   gdouble volume;
 
@@ -1257,7 +1258,7 @@ volume_spinbutton_changed_cb (GtkSpinButton * button, SeekApp * app)
 }
 
 static gboolean
-volume_notify_idle_cb (SeekApp * app)
+volume_notify_idle_cb (PlaybackApp * app)
 {
   gdouble cur_volume, new_volume;
 
@@ -1277,14 +1278,14 @@ volume_notify_idle_cb (SeekApp * app)
 }
 
 static void
-volume_notify_cb (GstElement * pipeline, GParamSpec * arg, SeekApp * app)
+volume_notify_cb (GstElement * pipeline, GParamSpec * arg, PlaybackApp * app)
 {
   /* Do this from the main thread */
   g_idle_add ((GSourceFunc) volume_notify_idle_cb, app);
 }
 
 static gboolean
-mute_notify_idle_cb (SeekApp * app)
+mute_notify_idle_cb (PlaybackApp * app)
 {
   gboolean cur_mute, new_mute;
 
@@ -1302,14 +1303,14 @@ mute_notify_idle_cb (SeekApp * app)
 }
 
 static void
-mute_notify_cb (GstElement * pipeline, GParamSpec * arg, SeekApp * app)
+mute_notify_cb (GstElement * pipeline, GParamSpec * arg, PlaybackApp * app)
 {
   /* Do this from the main thread */
   g_idle_add ((GSourceFunc) mute_notify_idle_cb, app);
 }
 
 static void
-shot_cb (GtkButton * button, SeekApp * app)
+shot_cb (GtkButton * button, PlaybackApp * app)
 {
   GstSample *sample = NULL;
   GstCaps *caps;
@@ -1375,7 +1376,7 @@ shot_cb (GtkButton * button, SeekApp * app)
 
 /* called when the Step button is pressed */
 static void
-step_cb (GtkButton * button, SeekApp * app)
+step_cb (GtkButton * button, PlaybackApp * app)
 {
   GstEvent *event;
   GstFormat format;
@@ -1415,7 +1416,7 @@ step_cb (GtkButton * button, SeekApp * app)
 }
 
 static void
-message_received (GstBus * bus, GstMessage * message, SeekApp * app)
+message_received (GstBus * bus, GstMessage * message, PlaybackApp * app)
 {
   const GstStructure *s;
 
@@ -1448,7 +1449,7 @@ message_received (GstBus * bus, GstMessage * message, SeekApp * app)
 }
 
 static void
-do_shuttle (SeekApp * app)
+do_shuttle (PlaybackApp * app)
 {
   guint64 duration;
 
@@ -1463,7 +1464,7 @@ do_shuttle (SeekApp * app)
 }
 
 static void
-msg_sync_step_done (GstBus * bus, GstMessage * message, SeekApp * app)
+msg_sync_step_done (GstBus * bus, GstMessage * message, PlaybackApp * app)
 {
   GstFormat format;
   guint64 amount;
@@ -1492,7 +1493,7 @@ msg_sync_step_done (GstBus * bus, GstMessage * message, SeekApp * app)
 }
 
 static void
-shuttle_toggled (GtkToggleButton * button, SeekApp * app)
+shuttle_toggled (GtkToggleButton * button, PlaybackApp * app)
 {
   gboolean active;
 
@@ -1511,7 +1512,7 @@ shuttle_toggled (GtkToggleButton * button, SeekApp * app)
 }
 
 static void
-shuttle_rate_switch (SeekApp * app)
+shuttle_rate_switch (PlaybackApp * app)
 {
   GstSeekFlags flags;
   GstEvent *s_event;
@@ -1552,7 +1553,7 @@ shuttle_rate_switch (SeekApp * app)
 }
 
 static void
-shuttle_value_changed (GtkRange * range, SeekApp * app)
+shuttle_value_changed (GtkRange * range, PlaybackApp * app)
 {
   gdouble rate;
 
@@ -1579,7 +1580,7 @@ shuttle_value_changed (GtkRange * range, SeekApp * app)
 }
 
 static void
-colorbalance_value_changed (GtkRange * range, SeekApp * app)
+colorbalance_value_changed (GtkRange * range, PlaybackApp * app)
 {
   const gchar *label;
   gdouble val;
@@ -1632,7 +1633,7 @@ colorbalance_value_changed (GtkRange * range, SeekApp * app)
 }
 
 static void
-seek_format_changed_cb (GtkComboBox * box, SeekApp * app)
+seek_format_changed_cb (GtkComboBox * box, PlaybackApp * app)
 {
   gchar *format_str;
   GList *l;
@@ -1660,7 +1661,7 @@ done:
 }
 
 static void
-update_formats (SeekApp * app)
+update_formats (PlaybackApp * app)
 {
   GstIterator *it;
   gboolean done;
@@ -1729,7 +1730,7 @@ update_formats (SeekApp * app)
 }
 
 static void
-msg_async_done (GstBus * bus, GstMessage * message, SeekApp * app)
+msg_async_done (GstBus * bus, GstMessage * message, PlaybackApp * app)
 {
   GST_DEBUG ("async done");
 
@@ -1747,7 +1748,7 @@ msg_async_done (GstBus * bus, GstMessage * message, SeekApp * app)
 }
 
 static void
-msg_state_changed (GstBus * bus, GstMessage * message, SeekApp * app)
+msg_state_changed (GstBus * bus, GstMessage * message, PlaybackApp * app)
 {
   const GstStructure *s;
 
@@ -1782,7 +1783,7 @@ msg_state_changed (GstBus * bus, GstMessage * message, SeekApp * app)
 }
 
 static void
-msg_segment_done (GstBus * bus, GstMessage * message, SeekApp * app)
+msg_segment_done (GstBus * bus, GstMessage * message, PlaybackApp * app)
 {
   GstEvent *s_event;
   GstSeekFlags flags;
@@ -1817,7 +1818,7 @@ msg_segment_done (GstBus * bus, GstMessage * message, SeekApp * app)
 /* in stream buffering mode we PAUSE the pipeline until we receive a 100%
  * message */
 static void
-do_stream_buffering (SeekApp * app, gint percent)
+do_stream_buffering (PlaybackApp * app, gint percent)
 {
   gchar *bufstr;
 
@@ -1854,7 +1855,7 @@ do_stream_buffering (SeekApp * app, gint percent)
 }
 
 static void
-do_download_buffering (SeekApp * app, gint percent)
+do_download_buffering (PlaybackApp * app, gint percent)
 {
   if (!app->buffering && percent < 100) {
     gchar *bufstr;
@@ -1878,7 +1879,7 @@ do_download_buffering (SeekApp * app, gint percent)
 }
 
 static void
-msg_buffering (GstBus * bus, GstMessage * message, SeekApp * app)
+msg_buffering (GstBus * bus, GstMessage * message, PlaybackApp * app)
 {
   gint percent;
 
@@ -1902,7 +1903,7 @@ msg_buffering (GstBus * bus, GstMessage * message, SeekApp * app)
 }
 
 static void
-msg_clock_lost (GstBus * bus, GstMessage * message, SeekApp * app)
+msg_clock_lost (GstBus * bus, GstMessage * message, PlaybackApp * app)
 {
   g_print ("clock lost! PAUSE and PLAY to select a new clock\n");
   if (app->state == GST_STATE_PLAYING) {
@@ -1939,7 +1940,7 @@ is_valid_color_balance_element (GstElement * element)
 }
 
 static void
-find_interface_elements (SeekApp * app)
+find_interface_elements (PlaybackApp * app)
 {
   GstIterator *it;
   GValue item = { 0, };
@@ -2015,7 +2016,7 @@ find_interface_elements (SeekApp * app)
 
 /* called when Navigation command button is pressed */
 static void
-navigation_cmd_cb (GtkButton * button, SeekApp * app)
+navigation_cmd_cb (GtkButton * button, PlaybackApp * app)
 {
   GstNavigationCommand cmd = GST_NAVIGATION_COMMAND_INVALID;
   gint i;
@@ -2044,7 +2045,7 @@ navigation_cmd_cb (GtkButton * button, SeekApp * app)
  * or gconfvideosink may be used which create the actual videosink only once
  * the pipeline is started) */
 static GstBusSyncReply
-bus_sync_handler (GstBus * bus, GstMessage * message, SeekApp * app)
+bus_sync_handler (GstBus * bus, GstMessage * message, PlaybackApp * app)
 {
   if (gst_is_video_overlay_prepare_window_handle_message (message)) {
     GstElement *element = GST_ELEMENT (GST_MESSAGE_SRC (message));
@@ -2078,7 +2079,7 @@ bus_sync_handler (GstBus * bus, GstMessage * message, SeekApp * app)
 #endif
 
 static gboolean
-draw_cb (GtkWidget * widget, cairo_t * cr, SeekApp * app)
+draw_cb (GtkWidget * widget, cairo_t * cr, PlaybackApp * app)
 {
   if (app->state < GST_STATE_PAUSED) {
     int width, height;
@@ -2098,7 +2099,7 @@ draw_cb (GtkWidget * widget, cairo_t * cr, SeekApp * app)
 }
 
 static void
-realize_cb (GtkWidget * widget, SeekApp * app)
+realize_cb (GtkWidget * widget, PlaybackApp * app)
 {
   GdkWindow *window = gtk_widget_get_window (widget);
 
@@ -2121,7 +2122,7 @@ realize_cb (GtkWidget * widget, SeekApp * app)
 }
 
 static gboolean
-button_press_cb (GtkWidget * widget, GdkEventButton * event, SeekApp * app)
+button_press_cb (GtkWidget * widget, GdkEventButton * event, PlaybackApp * app)
 {
   gtk_widget_grab_focus (widget);
 
@@ -2133,7 +2134,8 @@ button_press_cb (GtkWidget * widget, GdkEventButton * event, SeekApp * app)
 }
 
 static gboolean
-button_release_cb (GtkWidget * widget, GdkEventButton * event, SeekApp * app)
+button_release_cb (GtkWidget * widget, GdkEventButton * event,
+    PlaybackApp * app)
 {
   if (app->navigation_element)
     gst_navigation_send_mouse_event (GST_NAVIGATION (app->navigation_element),
@@ -2143,7 +2145,7 @@ button_release_cb (GtkWidget * widget, GdkEventButton * event, SeekApp * app)
 }
 
 static gboolean
-key_press_cb (GtkWidget * widget, GdkEventKey * event, SeekApp * app)
+key_press_cb (GtkWidget * widget, GdkEventKey * event, PlaybackApp * app)
 {
   if (app->navigation_element)
     gst_navigation_send_key_event (GST_NAVIGATION (app->navigation_element),
@@ -2153,7 +2155,7 @@ key_press_cb (GtkWidget * widget, GdkEventKey * event, SeekApp * app)
 }
 
 static gboolean
-key_release_cb (GtkWidget * widget, GdkEventKey * event, SeekApp * app)
+key_release_cb (GtkWidget * widget, GdkEventKey * event, PlaybackApp * app)
 {
   if (app->navigation_element)
     gst_navigation_send_key_event (GST_NAVIGATION (app->navigation_element),
@@ -2163,7 +2165,7 @@ key_release_cb (GtkWidget * widget, GdkEventKey * event, SeekApp * app)
 }
 
 static gboolean
-motion_notify_cb (GtkWidget * widget, GdkEventMotion * event, SeekApp * app)
+motion_notify_cb (GtkWidget * widget, GdkEventMotion * event, PlaybackApp * app)
 {
   if (app->navigation_element)
     gst_navigation_send_mouse_event (GST_NAVIGATION (app->navigation_element),
@@ -2173,7 +2175,7 @@ motion_notify_cb (GtkWidget * widget, GdkEventMotion * event, SeekApp * app)
 }
 
 static void
-msg_eos (GstBus * bus, GstMessage * message, SeekApp * app)
+msg_eos (GstBus * bus, GstMessage * message, PlaybackApp * app)
 {
   message_received (bus, message, app);
 
@@ -2191,14 +2193,14 @@ msg_eos (GstBus * bus, GstMessage * message, SeekApp * app)
 }
 
 static void
-msg_step_done (GstBus * bus, GstMessage * message, SeekApp * app)
+msg_step_done (GstBus * bus, GstMessage * message, PlaybackApp * app)
 {
   if (!app->shuttling)
     message_received (bus, message, app);
 }
 
 static void
-msg (GstBus * bus, GstMessage * message, SeekApp * app)
+msg (GstBus * bus, GstMessage * message, PlaybackApp * app)
 {
   GstNavigationMessageType nav_type;
 
@@ -2257,7 +2259,7 @@ msg (GstBus * bus, GstMessage * message, SeekApp * app)
 }
 
 static void
-connect_bus_signals (SeekApp * app)
+connect_bus_signals (PlaybackApp * app)
 {
   GstBus *bus = gst_pipeline_get_bus (GST_PIPELINE (app->pipeline));
 
@@ -2338,14 +2340,14 @@ out:
 }
 
 static void
-delete_event_cb (GtkWidget * widget, GdkEvent * event, SeekApp * app)
+delete_event_cb (GtkWidget * widget, GdkEvent * event, PlaybackApp * app)
 {
   stop_cb (NULL, app);
   gtk_main_quit ();
 }
 
 static void
-video_sink_activate_cb (GtkEntry * entry, SeekApp * app)
+video_sink_activate_cb (GtkEntry * entry, PlaybackApp * app)
 {
   GstElement *sink = NULL;
   const gchar *text;
@@ -2359,7 +2361,7 @@ video_sink_activate_cb (GtkEntry * entry, SeekApp * app)
 }
 
 static void
-audio_sink_activate_cb (GtkEntry * entry, SeekApp * app)
+audio_sink_activate_cb (GtkEntry * entry, PlaybackApp * app)
 {
   GstElement *sink = NULL;
   const gchar *text;
@@ -2373,7 +2375,7 @@ audio_sink_activate_cb (GtkEntry * entry, SeekApp * app)
 }
 
 static void
-text_sink_activate_cb (GtkEntry * entry, SeekApp * app)
+text_sink_activate_cb (GtkEntry * entry, PlaybackApp * app)
 {
   GstElement *sink = NULL;
   const gchar *text;
@@ -2387,7 +2389,7 @@ text_sink_activate_cb (GtkEntry * entry, SeekApp * app)
 }
 
 static void
-buffer_size_activate_cb (GtkEntry * entry, SeekApp * app)
+buffer_size_activate_cb (GtkEntry * entry, PlaybackApp * app)
 {
   const gchar *text;
 
@@ -2404,7 +2406,7 @@ buffer_size_activate_cb (GtkEntry * entry, SeekApp * app)
 }
 
 static void
-buffer_duration_activate_cb (GtkEntry * entry, SeekApp * app)
+buffer_duration_activate_cb (GtkEntry * entry, PlaybackApp * app)
 {
   const gchar *text;
 
@@ -2421,7 +2423,7 @@ buffer_duration_activate_cb (GtkEntry * entry, SeekApp * app)
 }
 
 static void
-ringbuffer_maxsize_activate_cb (GtkEntry * entry, SeekApp * app)
+ringbuffer_maxsize_activate_cb (GtkEntry * entry, PlaybackApp * app)
 {
   const gchar *text;
 
@@ -2438,7 +2440,7 @@ ringbuffer_maxsize_activate_cb (GtkEntry * entry, SeekApp * app)
 }
 
 static void
-connection_speed_activate_cb (GtkEntry * entry, SeekApp * app)
+connection_speed_activate_cb (GtkEntry * entry, PlaybackApp * app)
 {
   const gchar *text;
 
@@ -2455,7 +2457,7 @@ connection_speed_activate_cb (GtkEntry * entry, SeekApp * app)
 }
 
 static void
-subtitle_encoding_activate_cb (GtkEntry * entry, SeekApp * app)
+subtitle_encoding_activate_cb (GtkEntry * entry, PlaybackApp * app)
 {
   const gchar *text;
 
@@ -2464,7 +2466,7 @@ subtitle_encoding_activate_cb (GtkEntry * entry, SeekApp * app)
 }
 
 static void
-subtitle_fontdesc_cb (GtkFontButton * button, SeekApp * app)
+subtitle_fontdesc_cb (GtkFontButton * button, PlaybackApp * app)
 {
   const gchar *text;
 
@@ -2473,7 +2475,7 @@ subtitle_fontdesc_cb (GtkFontButton * button, SeekApp * app)
 }
 
 static void
-av_offset_activate_cb (GtkEntry * entry, SeekApp * app)
+av_offset_activate_cb (GtkEntry * entry, PlaybackApp * app)
 {
   const gchar *text;
 
@@ -2503,7 +2505,7 @@ print_usage (int argc, char **argv)
 }
 
 static void
-create_ui (SeekApp * app)
+create_ui (PlaybackApp * app)
 {
   GtkWidget *hbox, *vbox, *seek, *playbin, *step, *navigation, *colorbalance;
   GtkWidget *play_button, *pause_button, *stop_button;
@@ -2532,7 +2534,8 @@ create_ui (SeekApp * app)
 
   app->statusbar = gtk_statusbar_new ();
   app->status_id =
-      gtk_statusbar_get_context_id (GTK_STATUSBAR (app->statusbar), "seek");
+      gtk_statusbar_get_context_id (GTK_STATUSBAR (app->statusbar),
+      "playback-test");
   gtk_statusbar_push (GTK_STATUSBAR (app->statusbar), app->status_id,
       "Stopped");
   hbox = gtk_hbox_new (FALSE, 0);
@@ -2560,8 +2563,8 @@ create_ui (SeekApp * app)
     gtk_grid_set_column_spacing (GTK_GRID (flagtable), 2);
     gtk_grid_set_column_homogeneous (GTK_GRID (flagtable), TRUE);
 
-    accurate_checkbox = gtk_check_button_new_with_label ("Accurate Seek");
-    key_checkbox = gtk_check_button_new_with_label ("Key-unit Seek");
+    accurate_checkbox = gtk_check_button_new_with_label ("Accurate Playback");
+    key_checkbox = gtk_check_button_new_with_label ("Key-unit Playback");
     loop_checkbox = gtk_check_button_new_with_label ("Loop");
     flush_checkbox = gtk_check_button_new_with_label ("Flush");
     scrub_checkbox = gtk_check_button_new_with_label ("Scrub");
@@ -2618,7 +2621,7 @@ create_ui (SeekApp * app)
     gtk_grid_attach (GTK_GRID (flagtable), rate_label, 4, 0, 1, 1);
     gtk_grid_attach (GTK_GRID (flagtable), rate_spinbutton, 4, 1, 1, 1);
 
-    advanced_seek = gtk_frame_new ("Advanced Seek");
+    advanced_seek = gtk_frame_new ("Advanced Playback");
     advanced_seek_grid = gtk_grid_new ();
     gtk_grid_set_row_spacing (GTK_GRID (advanced_seek_grid), 2);
     gtk_grid_set_row_homogeneous (GTK_GRID (advanced_seek_grid), FALSE);
@@ -2636,7 +2639,7 @@ create_ui (SeekApp * app)
     gtk_grid_attach (GTK_GRID (advanced_seek_grid), app->seek_entry, 0, 1, 1,
         1);
 
-    seek_button = gtk_button_new_with_label ("Seek");
+    seek_button = gtk_button_new_with_label ("Playback");
     g_signal_connect (G_OBJECT (seek_button), "clicked",
         G_CALLBACK (advanced_seek_button_cb), app);
     gtk_grid_attach (GTK_GRID (advanced_seek_grid), seek_button, 1, 0, 1, 1);
@@ -3193,9 +3196,9 @@ create_ui (SeekApp * app)
 }
 
 static void
-set_defaults (SeekApp * app)
+set_defaults (PlaybackApp * app)
 {
-  memset (app, 0, sizeof (SeekApp));
+  memset (app, 0, sizeof (PlaybackApp));
 
   app->flush_seek = TRUE;
   app->scrub = TRUE;
@@ -3212,7 +3215,7 @@ set_defaults (SeekApp * app)
 }
 
 static void
-reset_app (SeekApp * app)
+reset_app (PlaybackApp * app)
 {
   g_free (app->audiosink_str);
   g_free (app->videosink_str);
@@ -3238,7 +3241,7 @@ reset_app (SeekApp * app)
 int
 main (int argc, char **argv)
 {
-  SeekApp app;
+  PlaybackApp app;
   GOptionEntry options[] = {
     {"stats", 's', 0, G_OPTION_ARG_NONE, &app.stats,
         "Show pad stats", NULL},
@@ -3251,7 +3254,7 @@ main (int argc, char **argv)
 
   set_defaults (&app);
 
-  ctx = g_option_context_new ("- test seeking in gsteamer");
+  ctx = g_option_context_new ("- playback testing in gsteamer");
   g_option_context_add_main_entries (ctx, options, NULL);
   g_option_context_add_group (ctx, gst_init_get_option_group ());
   g_option_context_add_group (ctx, gtk_get_option_group (TRUE));
@@ -3261,7 +3264,8 @@ main (int argc, char **argv)
     exit (1);
   }
 
-  GST_DEBUG_CATEGORY_INIT (seek_debug, "seek", 0, "seek example");
+  GST_DEBUG_CATEGORY_INIT (playback_debug, "playback-test", 0,
+      "playback example");
 
   if (argc < 3) {
     print_usage (argc, argv);
