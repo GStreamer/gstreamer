@@ -1357,7 +1357,7 @@ calculate_and_push_newsegment (GstTSDemux * demux, TSDemuxStream * stream)
 {
   MpegTSBase *base = (MpegTSBase *) demux;
   GstClockTime lowest_pts = GST_CLOCK_TIME_NONE;
-  GstClockTime firstts = GST_CLOCK_TIME_NONE;
+  GstClockTime firstts = 0;
   GList *tmp;
 
   GST_DEBUG ("Creating new newsegment for stream %p", stream);
