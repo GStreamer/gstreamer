@@ -53,7 +53,7 @@ G_DEFINE_ABSTRACT_TYPE (GstVideoFilter, gst_video_filter,
 /* Answer the allocation query downstream. */
 static gboolean
 gst_video_filter_propose_allocation (GstBaseTransform * trans,
-    gboolean passthrough, GstQuery * query)
+    GstQuery * decide_query, GstQuery * query)
 {
   GstVideoFilter *filter = GST_VIDEO_FILTER_CAST (trans);
   GstVideoInfo info;
@@ -63,9 +63,9 @@ gst_video_filter_propose_allocation (GstBaseTransform * trans,
   guint size;
 
   /* we're passthrough, let the parent implementation hande things */
-  if (passthrough)
+  if (decide_query == NULL)
     return GST_BASE_TRANSFORM_CLASS (parent_class)->propose_allocation (trans,
-        passthrough, query);
+        decide_query, query);
 
   gst_query_parse_allocation (query, &caps, &need_pool);
 
@@ -124,7 +124,8 @@ gst_video_filter_decide_allocation (GstBaseTransform * trans, GstQuery * query)
         GST_BUFFER_POOL_OPTION_VIDEO_META);
     gst_buffer_pool_set_config (pool, config);
   }
-  return TRUE;
+  return GST_BASE_TRANSFORM_CLASS (parent_class)->decide_allocation (trans,
+      query);
 }
 
 
