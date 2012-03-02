@@ -247,6 +247,30 @@ AC_DEFINE_UNQUOTED(USE_CODEC_PARSERS, $USE_CODEC_PARSERS,
     [Defined to 1 if GStreamer codec parsers are used])
 AM_CONDITIONAL(USE_CODEC_PARSERS, test $USE_CODEC_PARSERS -eq 1)
 
+if test "$enable_codecparsers" = "yes"; then
+AC_CACHE_CHECK([for GstH264SliceHdr::n_emulation_prevention_bytes],
+    ac_cv_have_gst_h264_slice_hdr_epb_count, [
+    saved_CFLAGS="$CFLAGS"
+    CFLAGS="$CFLAGS $GST_CFLAGS $GST_CODEC_PARSERS_CFLAGS"
+    saved_LIBS="$LIBS"
+    LIBS="$LIBS $GST_LIBS $GST_CODEC_PARSERS_LIBS"
+    AC_TRY_COMPILE(
+        [#include <gst/codecparsers/gsth264parser.h>],
+        [GstH264SliceHdr slice_hdr;
+         slice_hdr.n_emulation_prevention_bytes = 0;],
+        [ac_cv_have_gst_h264_slice_hdr_epb_count="yes"],
+        [ac_cv_have_gst_h264_slice_hdr_epb_count="no"]
+    )
+    CFLAGS="$saved_CFLAGS"
+    LIBS="$saved_LIBS"
+])
+fi
+
+if test "$ac_cv_have_gst_h264_slice_hdr_epb_count" = "yes"; then
+    AC_DEFINE_UNQUOTED(HAVE_GST_H264_SLICE_HDR_EPB_COUNT, 1,
+        [Defined to 1 if GstH264SliceHdr::n_emulation_prevention_bytes exists.])
+fi
+
 dnl Check for GStreamer interfaces
 PKG_CHECK_MODULES([GST_INTERFACES],
     [gstreamer-interfaces-$GST_MAJORMINOR >= $GST_PLUGINS_BASE_VERSION_REQUIRED]

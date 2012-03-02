@@ -1965,6 +1965,40 @@ decode_picture_end(GstVaapiDecoderH264 *decoder, GstVaapiPictureH264 *picture)
     return TRUE;
 }
 
+#ifndef HAVE_GST_H264_SLICE_HDR_EPB_COUNT
+static guint
+get_epb_count(const guint8 *buf, guint buf_size, guint header_size)
+{
+    guint i, n = 0;
+
+    if (buf_size > header_size)
+        buf_size = header_size;
+
+    for (i = 2; i < buf_size; i++) {
+        if (!buf[i - 2] && !buf[i - 1] && buf[i] == 0x03)
+            i += 2, n++;
+    }
+    return n;
+}
+#endif
+
+static inline guint
+get_slice_data_bit_offset(GstH264SliceHdr *slice_hdr, GstH264NalUnit *nalu)
+{
+    guint epb_count;
+
+#ifdef HAVE_GST_H264_SLICE_HDR_EPB_COUNT
+    epb_count = slice_hdr->n_emulation_prevention_bytes;
+#else
+    epb_count = get_epb_count(
+        nalu->data + nalu->offset,
+        nalu->size,
+        slice_hdr->header_size / 8
+    );
+#endif
+    return 8 /* nal_unit_type */ + slice_hdr->header_size - epb_count * 8;
+}
+
 static gboolean
 fill_pred_weight_table(GstVaapiDecoderH264 *decoder, GstVaapiSliceH264 *slice)
 {
@@ -2074,13 +2108,17 @@ fill_RefPicList(GstVaapiDecoderH264 *decoder, GstVaapiSliceH264 *slice)
 }
 
 static gboolean
-fill_slice(GstVaapiDecoderH264 *decoder, GstVaapiSliceH264 *slice)
+fill_slice(
+    GstVaapiDecoderH264 *decoder,
+    GstVaapiSliceH264   *slice,
+    GstH264NalUnit      *nalu
+)
 {
     GstH264SliceHdr * const slice_hdr = &slice->slice_hdr;
     VASliceParameterBufferH264 * const slice_param = slice->base.param;
 
     /* Fill in VASliceParameterBufferH264 */
-    slice_param->slice_data_bit_offset          = 8 /* nal_unit_type */ + slice_hdr->header_size;
+    slice_param->slice_data_bit_offset          = get_slice_data_bit_offset(slice_hdr, nalu);
     slice_param->first_mb_in_slice              = slice_hdr->first_mb_in_slice;
     slice_param->slice_type                     = slice_hdr->type % 5;
     slice_param->direct_spatial_mv_pred_flag    = slice_hdr->direct_spatial_mv_pred_flag;
@@ -2137,7 +2175,7 @@ decode_slice(GstVaapiDecoderH264 *decoder, GstH264NalUnit *nalu)
     priv->mb_x = slice_hdr->first_mb_in_slice % priv->mb_width;
     priv->mb_y = slice_hdr->first_mb_in_slice / priv->mb_width; // FIXME: MBAFF or field
 
-    if (!fill_slice(decoder, slice)) {
+    if (!fill_slice(decoder, slice, nalu)) {
         status = GST_VAAPI_DECODER_STATUS_ERROR_UNKNOWN;
         goto error;
     }
