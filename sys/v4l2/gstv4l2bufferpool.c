@@ -98,6 +98,7 @@ gst_v4l2_buffer_finalize (GstV4l2Buffer * buffer)
     GST_LOG_OBJECT (pool->v4l2elem, "reviving buffer %p, %d", buffer, index);
     gst_buffer_ref (GST_BUFFER (buffer));
     GST_BUFFER_SIZE (buffer) = 0;
+    GST_BUFFER_FLAG_UNSET (buffer, GST_BUFFER_FLAG_DISCONT);
     pool->buffers[index] = buffer;
   }
 
