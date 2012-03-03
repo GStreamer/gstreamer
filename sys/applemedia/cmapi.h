@@ -142,9 +142,13 @@ struct _GstCMApi
   CMTime (* CMTimeMake) (int64_t value, int32_t timescale);
 
   OSStatus (* CMSampleBufferCreate) (CFAllocatorRef allocator,
-      CMBlockBufferRef blockBuf, Boolean unkBool, UInt32 unkDW1, UInt32 unkDW2,
-      CMFormatDescriptionRef fmtDesc, UInt32 unkCountA, UInt32 unkCountB,
-      const void * unkTimeData, UInt32 unkCountC, const void * unkDWordData,
+      CMBlockBufferRef blockBuf, Boolean dataReady,
+      void *makeDataReadyCallback,
+      void *makeDataReadyRefcon,
+      CMFormatDescriptionRef fmtDesc, size_t numSamples,
+      size_t numSampleTimingEntries,
+      const void *sampleTimingArray,
+      size_t numSampleSizeEntries, const size_t *sampleSizeArray,
       CMSampleBufferRef * sampleBuffer);
   Boolean (* CMSampleBufferDataIsReady) (
       const CMSampleBufferRef buf);
@@ -164,9 +168,10 @@ struct _GstCMApi
   CMSampleBufferRef (* FigSampleBufferRetain) (CMSampleBufferRef buf);
 
   OSStatus (* CMBlockBufferCreateWithMemoryBlock)
-      (CFAllocatorRef allocator, Byte * data, UInt32 size,
-      CFAllocatorRef dataAllocator, void *unk1, UInt32 sizeA, UInt32 sizeB,
-      Boolean unkBool, CMBlockBufferRef * blockBuffer);
+      (CFAllocatorRef allocator, void * memoryBlock, size_t blockLength,
+      CFAllocatorRef dataAllocator, void *customBlockSource,
+      size_t offsetToData, size_t dataLength,
+      int flags, CMBlockBufferRef * blockBuffer);
   SInt32 (* CMBlockBufferGetDataLength) (const CMBlockBufferRef buf);
   OSStatus (* CMBlockBufferGetDataPointer) (
       const CMBlockBufferRef buf, UInt32 unk1, UInt32 unk2, UInt32 unk3,
