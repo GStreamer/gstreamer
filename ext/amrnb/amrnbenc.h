@@ -21,8 +21,13 @@
 #define __GST_AMRNBENC_H__
 
 #include <gst/gst.h>
-#include <interf_enc.h>
 #include <gst/audio/gstaudioencoder.h>
+
+#ifdef HAVE_OPENCORE_AMRNB_0_1_3_OR_LATER
+#include <opencore-amrnb/interf_enc.h>
+#else
+#include <interf_enc.h>
+#endif
 
 G_BEGIN_DECLS
 
