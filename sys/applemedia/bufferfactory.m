@@ -50,7 +50,7 @@
 
 - (GstBuffer *)createGstBufferForCoreVideoBuffer:(CFTypeRef)cvbuf
 {
-  return gst_core_video_buffer_new (coreMediaCtx, (CVBufferRef) cvbuf);
+  return gst_core_video_buffer_new (coreMediaCtx, (CVBufferRef) cvbuf, NULL);
 }
 
 - (GstBuffer *)createGstBufferForSampleBuffer:(CFTypeRef)sbuf

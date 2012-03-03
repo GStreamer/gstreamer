@@ -32,8 +32,9 @@ static GstElementClass *parent_class = NULL;
 
 static GstStateChangeReturn gst_vtdec_change_state (GstElement * element,
     GstStateChange transition);
-static gboolean gst_vtdec_sink_setcaps (GstPad * pad, GstCaps * caps);
-static GstFlowReturn gst_vtdec_chain (GstPad * pad, GstBuffer * buf);
+static gboolean gst_vtdec_sink_setcaps (GstVTDec * dec, GstCaps * caps);
+static GstFlowReturn gst_vtdec_chain (GstPad * pad, GstObject * parent,
+    GstBuffer * buf);
 
 static CMFormatDescriptionRef gst_vtdec_create_format_description
     (GstVTDec * self);
@@ -47,6 +48,8 @@ static void gst_vtdec_destroy_session (GstVTDec * self,
 static GstFlowReturn gst_vtdec_decode_buffer (GstVTDec * self, GstBuffer * buf);
 static void gst_vtdec_enqueue_frame (void *data, gsize unk1, VTStatus result,
     gsize unk2, CVBufferRef cvbuf);
+static gboolean gst_vtdec_sink_event (GstPad * pad, GstObject * parent,
+    GstEvent * event);
 
 static CMSampleBufferRef gst_vtdec_sample_buffer_from (GstVTDec * self,
     GstBuffer * buf);
@@ -63,19 +66,17 @@ gst_vtdec_base_init (GstVTDecClass * klass)
   const int min_fps_d = 1, max_fps_d = 1;
   GstPadTemplate *sink_template, *src_template;
   GstCaps *sink_caps;
-  GstElementDetails details;
+  gchar *longname, *description;
 
-  details.longname = g_strdup_printf ("%s decoder", codec_details->name);
-  details.klass = g_strdup_printf ("Codec/Decoder/Video");
-  details.description = g_strdup_printf ("%s decoder", codec_details->name);
+  longname = g_strdup_printf ("%s decoder", codec_details->name);
+  description = g_strdup_printf ("%s decoder", codec_details->name);
 
-  gst_element_class_set_details_simple (element_class,
-      details.longname, details.klass, details.description,
+  gst_element_class_set_metadata (element_class, longname,
+      "Codec/Decoder/Video", description,
       "Ole André Vadla Ravnås <oravnas@cisco.com>");
 
-  g_free (details.longname);
-  g_free (details.klass);
-  g_free (details.description);
+  g_free (longname);
+  g_free (description);
 
   sink_caps = gst_caps_new_simple (codec_details->mimetype,
       "width", GST_TYPE_INT_RANGE, min_width, max_width,
@@ -93,8 +94,8 @@ gst_vtdec_base_init (GstVTDecClass * klass)
   src_template = gst_pad_template_new ("src",
       GST_PAD_SRC,
       GST_PAD_ALWAYS,
-      gst_caps_new_simple ("video/x-raw-yuv",
-          "format", GST_TYPE_FOURCC, GST_MAKE_FOURCC ('N', 'V', '1', '2'),
+      gst_caps_new_simple ("video/x-raw",
+          "format", G_TYPE_STRING, "NV12",
           "width", GST_TYPE_INT_RANGE, min_width, max_width,
           "height", GST_TYPE_INT_RANGE, min_height, max_height,
           "framerate", GST_TYPE_FRACTION_RANGE,
@@ -126,7 +127,7 @@ gst_vtdec_init (GstVTDec * self)
   self->sinkpad = gst_pad_new_from_template
       (gst_element_class_get_pad_template (element_klass, "sink"), "sink");
   gst_element_add_pad (element, self->sinkpad);
-  gst_pad_set_setcaps_function (self->sinkpad, gst_vtdec_sink_setcaps);
+  gst_pad_set_event_function (self->sinkpad, gst_vtdec_sink_event);
   gst_pad_set_chain_function (self->sinkpad, gst_vtdec_chain);
 
   self->srcpad = gst_pad_new_from_template
@@ -158,10 +159,7 @@ gst_vtdec_change_state (GstElement * element, GstStateChange transition)
     self->ctx->cm->FigFormatDescriptionRelease (self->fmt_desc);
     self->fmt_desc = NULL;
 
-    self->negotiated_width = self->negotiated_height = 0;
-    self->negotiated_fps_n = self->negotiated_fps_d = 0;
-    self->caps_width = self->caps_height = 0;
-    self->caps_fps_n = self->caps_fps_d = 0;
+    gst_video_info_init (&self->vinfo);
 
     g_ptr_array_free (self->cur_outbufs, TRUE);
     self->cur_outbufs = NULL;
@@ -182,25 +180,69 @@ api_error:
 }
 
 static gboolean
-gst_vtdec_sink_setcaps (GstPad * pad, GstCaps * caps)
+gst_vtdec_sink_event (GstPad * pad, GstObject * parent, GstEvent * event)
 {
-  GstVTDec *self = GST_VTDEC_CAST (GST_PAD_PARENT (pad));
+  GstVTDec *self = GST_VTDEC_CAST (parent);
+  gboolean forward = TRUE;
+  gboolean res = TRUE;
+
+  switch (GST_EVENT_TYPE (event)) {
+    case GST_EVENT_CAPS:
+    {
+      GstCaps *caps;
+
+      gst_event_parse_caps (event, &caps);
+      res = gst_vtdec_sink_setcaps (self, caps);
+    }
+    default:
+      break;
+  }
+
+  if (forward)
+    res = gst_pad_event_default (pad, parent, event);
+  return res;
+}
+
+static gboolean
+gst_vtdec_sink_setcaps (GstVTDec * self, GstCaps * caps)
+{
   GstStructure *structure;
   CMFormatDescriptionRef fmt_desc = NULL;
+  GstVideoFormat format = GST_VIDEO_FORMAT_NV12;
+  gint width, height;
+  gint fps_n, fps_d;
+  gint par_n, par_d;
 
   structure = gst_caps_get_structure (caps, 0);
-  if (!gst_structure_get_int (structure, "width", &self->negotiated_width))
+  if (!gst_structure_get_int (structure, "width", &width))
     goto incomplete_caps;
-  if (!gst_structure_get_int (structure, "height", &self->negotiated_height))
+  if (!gst_structure_get_int (structure, "height", &height))
     goto incomplete_caps;
-  gst_structure_get_fraction (structure, "framerate",
-      &self->negotiated_fps_n, &self->negotiated_fps_d);
 
-  /* FIXME */
-  if (self->negotiated_fps_n == 0)
-    self->negotiated_fps_n = 30;
-  if (self->negotiated_fps_d == 0)
-    self->negotiated_fps_d = 1;
+  gst_video_info_set_format (&self->vinfo, format, width, height);
+
+  if (gst_structure_get_fraction (structure, "framerate", &fps_n, &fps_d)) {
+    if (fps_n == 0) {
+      /* variable framerate */
+      self->vinfo.flags |= GST_VIDEO_FLAG_VARIABLE_FPS;
+      /* see if we have a max-framerate */
+      gst_structure_get_fraction (structure, "max-framerate", &fps_n, &fps_d);
+    }
+    self->vinfo.fps_n = fps_n;
+    self->vinfo.fps_d = fps_d;
+  } else {
+    /* unspecified is variable framerate */
+    self->vinfo.fps_n = 0;
+    self->vinfo.fps_d = 1;
+  }
+  if (gst_structure_get_fraction (structure, "pixel-aspect-ratio",
+          &par_n, &par_d)) {
+    self->vinfo.par_n = par_n;
+    self->vinfo.par_d = par_d;
+  } else {
+    self->vinfo.par_n = 1;
+    self->vinfo.par_d = 1;
+  }
 
   if (self->details->format_id == kVTFormatH264) {
     const GValue *codec_data_value;
@@ -226,12 +268,14 @@ gst_vtdec_sink_setcaps (GstPad * pad, GstCaps * caps)
       goto session_create_error;
   }
 
+  /* renegotiate when upstream caps change */
+  gst_pad_mark_reconfigure (self->srcpad);
+
   return TRUE;
 
   /* ERRORS */
 incomplete_caps:
   {
-    self->negotiated_width = self->negotiated_height = -1;
     return TRUE;
   }
 session_create_error:
@@ -245,7 +289,7 @@ session_create_error:
 static gboolean
 gst_vtdec_is_negotiated (GstVTDec * self)
 {
-  return self->negotiated_width != 0;
+  return self->vinfo.width != 0;
 }
 
 static gboolean
@@ -253,42 +297,26 @@ gst_vtdec_negotiate_downstream (GstVTDec * self)
 {
   gboolean result;
   GstCaps *caps;
-  GstStructure *s;
 
-  if (self->caps_width == self->negotiated_width &&
-      self->caps_height == self->negotiated_height &&
-      self->caps_fps_n == self->negotiated_fps_n &&
-      self->caps_fps_d == self->negotiated_fps_d) {
+  if (!gst_pad_check_reconfigure (self->srcpad))
     return TRUE;
-  }
 
-  caps = gst_caps_copy (gst_pad_get_pad_template_caps (self->srcpad));
-  s = gst_caps_get_structure (caps, 0);
-  gst_structure_set (s,
-      "width", G_TYPE_INT, self->negotiated_width,
-      "height", G_TYPE_INT, self->negotiated_height,
-      "framerate", GST_TYPE_FRACTION,
-      self->negotiated_fps_n, self->negotiated_fps_d, NULL);
+  caps = gst_video_info_to_caps (&self->vinfo);
   result = gst_pad_set_caps (self->srcpad, caps);
   gst_caps_unref (caps);
-
-  self->caps_width = self->negotiated_width;
-  self->caps_height = self->negotiated_height;
-  self->caps_fps_n = self->negotiated_fps_n;
-  self->caps_fps_d = self->negotiated_fps_d;
 
   return result;
 }
 
 static GstFlowReturn
-gst_vtdec_chain (GstPad * pad, GstBuffer * buf)
+gst_vtdec_chain (GstPad * pad, GstObject * parent, GstBuffer * buf)
 {
-  GstVTDec *self = GST_VTDEC_CAST (GST_PAD_PARENT (pad));
+  GstVTDec *self = GST_VTDEC_CAST (parent);
 
   if (!gst_vtdec_is_negotiated (self))
     goto not_negotiated;
 
-  if (self->session == NULL || self->negotiated_width < 0)
+  if (self->session == NULL)
     goto pending_caps;
 
   return gst_vtdec_decode_buffer (self, buf);
@@ -311,7 +339,7 @@ gst_vtdec_create_format_description (GstVTDec * self)
   OSStatus status;
 
   status = self->ctx->cm->CMVideoFormatDescriptionCreate (NULL,
-      self->details->format_id, self->negotiated_width, self->negotiated_height,
+      self->details->format_id, self->vinfo.width, self->vinfo.height,
       NULL, &fmt_desc);
   if (status == noErr)
     return fmt_desc;
@@ -325,13 +353,18 @@ gst_vtdec_create_format_description_from_codec_data (GstVTDec * self,
 {
   CMFormatDescriptionRef fmt_desc;
   OSStatus status;
+  GstMapInfo map;
+
+  gst_buffer_map (codec_data, &map, GST_MAP_READ);
 
   status =
       self->ctx->cm->
       FigVideoFormatDescriptionCreateWithSampleDescriptionExtensionAtom (NULL,
-      self->details->format_id, self->negotiated_width, self->negotiated_height,
-      'avcC', GST_BUFFER_DATA (codec_data), GST_BUFFER_SIZE (codec_data),
-      &fmt_desc);
+      self->details->format_id, self->vinfo.width, self->vinfo.height,
+      'avcC', map.data, map.size, NULL, &fmt_desc);
+
+  gst_buffer_unmap (codec_data, &map);
+
   if (status == noErr)
     return fmt_desc;
   else
@@ -352,11 +385,11 @@ gst_vtdec_create_session (GstVTDec * self, CMFormatDescriptionRef fmt_desc)
   gst_vtutil_dict_set_i32 (pb_attrs, *(cv->kCVPixelBufferPixelFormatTypeKey),
       kCVPixelFormatType_420YpCbCr8BiPlanarVideoRange);
   gst_vtutil_dict_set_i32 (pb_attrs, *(cv->kCVPixelBufferWidthKey),
-      self->negotiated_width);
+      self->vinfo.width);
   gst_vtutil_dict_set_i32 (pb_attrs, *(cv->kCVPixelBufferHeightKey),
-      self->negotiated_height);
+      self->vinfo.height);
   gst_vtutil_dict_set_i32 (pb_attrs,
-      *(cv->kCVPixelBufferBytesPerRowAlignmentKey), 2 * self->negotiated_width);
+      *(cv->kCVPixelBufferBytesPerRowAlignmentKey), 2 * self->vinfo.width);
 
   callback.func = gst_vtdec_enqueue_frame;
   callback.data = self;
@@ -364,7 +397,7 @@ gst_vtdec_create_session (GstVTDec * self, CMFormatDescriptionRef fmt_desc)
   status = self->ctx->vt->VTDecompressionSessionCreate (NULL, fmt_desc,
       NULL, pb_attrs, &callback, &session);
   GST_INFO_OBJECT (self, "VTDecompressionSessionCreate for %d x %d => %d",
-      self->negotiated_width, self->negotiated_height, status);
+      self->vinfo.width, self->vinfo.height, status);
 
   CFRelease (pb_attrs);
 
@@ -416,7 +449,6 @@ gst_vtdec_decode_buffer (GstVTDec * self, GstBuffer * buf)
     GstBuffer *buf = g_ptr_array_index (self->cur_outbufs, i);
 
     if (ret == GST_FLOW_OK) {
-      gst_buffer_set_caps (buf, GST_PAD_CAPS (self->srcpad));
       ret = gst_pad_push (self->srcpad, buf);
     } else {
       gst_buffer_unref (buf);
@@ -437,9 +469,8 @@ gst_vtdec_enqueue_frame (void *data, gsize unk1, VTStatus result, gsize unk2,
   if (result != kVTSuccess)
     goto beach;
 
-  buf = gst_core_video_buffer_new (self->ctx, cvbuf);
-  gst_buffer_copy_metadata (buf, self->cur_inbuf,
-      GST_BUFFER_COPY_FLAGS | GST_BUFFER_COPY_TIMESTAMPS);
+  buf = gst_core_video_buffer_new (self->ctx, cvbuf, &self->vinfo);
+  gst_buffer_copy_into (buf, self->cur_inbuf, GST_BUFFER_COPY_METADATA, 0, -1);
 
   g_ptr_array_add (self->cur_outbufs, buf);
 
@@ -454,23 +485,33 @@ gst_vtdec_sample_buffer_from (GstVTDec * self, GstBuffer * buf)
   OSStatus status;
   CMBlockBufferRef bbuf = NULL;
   CMSampleBufferRef sbuf = NULL;
+  GstMapInfo map;
 
   g_assert (self->fmt_desc != NULL);
 
+  gst_buffer_map (buf, &map, GST_MAP_READ);
+
   status = cm->CMBlockBufferCreateWithMemoryBlock (NULL,
-      GST_BUFFER_DATA (buf), GST_BUFFER_SIZE (buf), kCFAllocatorNull, NULL,
-      0, GST_BUFFER_SIZE (buf), FALSE, &bbuf);
+      map.data, (gint64) map.size, kCFAllocatorNull, NULL, 0, (gint64) map.size,
+      FALSE, &bbuf);
+
+  gst_buffer_unmap (buf, &map);
+
   if (status != noErr)
-    goto beach;
+    goto error;
 
   status = cm->CMSampleBufferCreate (NULL, bbuf, TRUE, 0, 0, self->fmt_desc,
       1, 0, NULL, 0, NULL, &sbuf);
   if (status != noErr)
-    goto beach;
+    goto error;
 
 beach:
   cm->FigBlockBufferRelease (bbuf);
   return sbuf;
+
+error:
+  GST_ERROR_OBJECT (self, "err %d", status);
+  goto beach;
 }
 
 static void

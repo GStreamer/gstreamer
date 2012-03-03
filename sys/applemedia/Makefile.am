@@ -78,6 +78,7 @@ else
 
 libgstapplemedia_la_SOURCES +=			\
 	qtkitvideosrc.m				\
+	vtdec.c 				\
 	mioapi.c
 
 libgstapplemedia_la_LDFLAGS +=			\

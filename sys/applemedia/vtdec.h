@@ -21,6 +21,7 @@
 #define __GST_VTDEC_H__
 
 #include <gst/gst.h>
+#include <gst/video/video.h>
 
 #include "coremediactx.h"
 
@@ -62,10 +63,7 @@ struct _GstVTDec
 
   GstCoreMediaCtx * ctx;
 
-  gint negotiated_width, negotiated_height;
-  gint negotiated_fps_n, negotiated_fps_d;
-  gint caps_width, caps_height;
-  gint caps_fps_n, caps_fps_d;
+  GstVideoInfo vinfo;
   CMFormatDescriptionRef fmt_desc;
   VTDecompressionSessionRef session;
 

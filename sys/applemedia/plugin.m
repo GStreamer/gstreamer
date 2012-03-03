@@ -73,8 +73,8 @@ plugin_init (GstPlugin * plugin)
       GST_TYPE_VT_H264_ENC_BIN);
 
   gst_vtenc_register_elements (plugin);
-  gst_vtdec_register_elements (plugin);
 #endif
+  gst_vtdec_register_elements (plugin);
 
   return res;
 }

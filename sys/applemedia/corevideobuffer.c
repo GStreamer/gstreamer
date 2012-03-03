@@ -49,7 +49,8 @@ gst_core_video_meta_get_info (void)
 }
 
 GstBuffer *
-gst_core_video_buffer_new (GstCoreMediaCtx * ctx, CVBufferRef cvbuf)
+gst_core_video_buffer_new (GstCoreMediaCtx * ctx, CVBufferRef cvbuf,
+    GstVideoInfo * vinfo)
 {
   GstCVApi *cv = ctx->cv;
   void *data;
@@ -57,31 +58,64 @@ gst_core_video_buffer_new (GstCoreMediaCtx * ctx, CVBufferRef cvbuf)
   CVPixelBufferRef pixbuf = NULL;
   GstBuffer *buf;
   GstCoreVideoMeta *meta;
+  guint width, height, n_planes, i;
+  gsize offset[GST_VIDEO_MAX_PLANES];
+  gint stride[GST_VIDEO_MAX_PLANES];
 
-  if (CFGetTypeID (cvbuf) == cv->CVPixelBufferGetTypeID ()) {
-    pixbuf = (CVPixelBufferRef) cvbuf;
-
-    if (cv->CVPixelBufferLockBaseAddress (pixbuf,
-            kCVPixelBufferLock_ReadOnly) != kCVReturnSuccess) {
-      goto error;
-    }
-    data = cv->CVPixelBufferGetBaseAddress (pixbuf);
-    size = cv->CVPixelBufferGetBytesPerRow (pixbuf) *
-        cv->CVPixelBufferGetHeight (pixbuf);
-  } else {
+  if (CFGetTypeID (cvbuf) != cv->CVPixelBufferGetTypeID ())
     /* TODO: Do we need to handle other buffer types? */
+    goto error;
+
+  pixbuf = (CVPixelBufferRef) cvbuf;
+
+  if (cv->CVPixelBufferLockBaseAddress (pixbuf,
+          kCVPixelBufferLock_ReadOnly) != kCVReturnSuccess) {
     goto error;
   }
 
   buf = gst_buffer_new ();
+
+  /* add the corevideo meta to free the underlying corevideo buffer */
   meta = (GstCoreVideoMeta *) gst_buffer_add_meta (buf,
       gst_core_video_meta_get_info (), NULL);
   meta->ctx = g_object_ref (ctx);
   meta->cvbuf = cv->CVBufferRetain (cvbuf);
   meta->pixbuf = pixbuf;
+
+  /* set stride, offset and size */
+  memset (&offset, 0, sizeof (offset));
+  memset (&stride, 0, sizeof (stride));
+
+  data = cv->CVPixelBufferGetBaseAddress (pixbuf);
+  height = cv->CVPixelBufferGetHeight (pixbuf);
+  if (cv->CVPixelBufferIsPlanar (pixbuf)) {
+    GstVideoInfo tmp_vinfo;
+
+    n_planes = cv->CVPixelBufferGetPlaneCount (pixbuf);
+    for (i = 0; i < n_planes; ++i)
+      stride[i] = cv->CVPixelBufferGetBytesPerRowOfPlane (pixbuf, i);
+
+    /* FIXME: don't hardcode NV12 */
+    gst_video_info_set_format (&tmp_vinfo,
+        GST_VIDEO_FORMAT_NV12, stride[0], height);
+    offset[1] = tmp_vinfo.offset[1];
+    size = tmp_vinfo.size;
+  } else {
+    n_planes = 1;
+    size = cv->CVPixelBufferGetBytesPerRow (pixbuf) * height;
+  }
+
   gst_buffer_take_memory (buf, -1,
       gst_memory_new_wrapped (GST_MEMORY_FLAG_NO_SHARE, data,
           size, 0, size, NULL, NULL));
+
+  if (vinfo) {
+    GstVideoMeta *video_meta;
+
+    width = vinfo->width;
+    video_meta = gst_buffer_add_video_meta_full (buf, GST_VIDEO_FLAG_NONE,
+        GST_VIDEO_FORMAT_NV12, width, height, n_planes, offset, stride);
+  }
 
   return buf;
 

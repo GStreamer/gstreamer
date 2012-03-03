@@ -21,6 +21,8 @@
 #define __GST_CORE_VIDEO_BUFFER_H__
 
 #include <gst/gst.h>
+#include <gst/video/video.h>
+#include <gst/video/gstvideometa.h>
 
 #include "coremediactx.h"
 
@@ -36,7 +38,8 @@ typedef struct _GstCoreVideoMeta
 } GstCoreVideoMeta;
 
 GstBuffer * gst_core_video_buffer_new      (GstCoreMediaCtx * ctx,
-                                            CVBufferRef cvbuf);
+                                            CVBufferRef cvbuf,
+                                            GstVideoInfo *info);
 
 G_END_DECLS
 
