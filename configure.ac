@@ -41,6 +41,14 @@ dnl we override it here if we need to for the release candidate of new series
 GST_MAJORMINOR=0.10
 AC_SUBST(GST_MAJORMINOR)
 
+dnl CURRENT, REVISION, AGE
+dnl - library source changed -> increment REVISION
+dnl - interfaces added/removed/changed -> increment CURRENT, REVISION = 0
+dnl - interfaces added -> increment AGE
+dnl - interfaces removed -> AGE = 0
+dnl sets GST_LT_LDFLAGS
+AS_LIBTOOL(GST, 24, 0, 0)
+
 AG_GST_LIBTOOL_PREPARE
 
 dnl FIXME: this macro doesn't actually work;
