@@ -250,12 +250,11 @@ AG_GST_CHECK_FEATURE(A52DEC, [a52dec], a52dec, [
 dnl *** amr-nb ***
 translit(dnm, m, l) AM_CONDITIONAL(USE_AMRNB, true)
 AG_GST_CHECK_FEATURE(AMRNB, [amrnb library], amrnb, [
-  PKG_CHECK_MODULES(AMRNB, opencore-amrnb, HAVE_AMRNB="yes",
-      [ AG_GST_CHECK_LIBHEADER(AMRNB, opencore-amrnb,
-		           Decoder_Interface_init, $LIBM,
-		           opencore-amrnb/interf_dec.h,
-			   AMRNB_LIBS="-lopencore-amrnb")
-      ])
+  PKG_CHECK_MODULES(AMRNB, opencore-amrnb, [
+    HAVE_AMRNB="yes"
+  ], [
+    HAVE_AMRNB="no"
+  ])
   AC_SUBST(AMRNB_CFLAGS)
   AC_SUBST(AMRNB_LIBS)
 ])
@@ -263,12 +262,11 @@ AG_GST_CHECK_FEATURE(AMRNB, [amrnb library], amrnb, [
 dnl *** amr-wb dec ***
 translit(dnm, m, l) AM_CONDITIONAL(USE_AMRWB, true)
 AG_GST_CHECK_FEATURE(AMRWB, [amrwb library], amrwbdec, [
-  PKG_CHECK_MODULES(AMRWB, opencore-amrwb, HAVE_AMRWB="yes",
-      [ AG_GST_CHECK_LIBHEADER(AMRWB, opencore-amrwb,
-			   D_IF_decode, ,
-			   opencore-amrwb/dec_if.h,
-			   AMRWB_LIBS="-lopencore-amrwb")
-      ])
+  PKG_CHECK_MODULES(AMRWB, opencore-amrwb, [
+    HAVE_AMRWB="yes"
+  ], [
+    HAVE_AMRWB="no"
+  ])
   AC_SUBST(AMRWB_CFLAGS)
   AC_SUBST(AMRWB_LIBS)
 ])
