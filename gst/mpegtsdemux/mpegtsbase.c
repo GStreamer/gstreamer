@@ -224,7 +224,7 @@ mpegts_base_reset (MpegTSBase * base)
   base->seek_offset = -1;
 
   base->upstream_live = FALSE;
-  base->query_latency = FALSE;
+  base->queried_latency = FALSE;
 
   if (klass->reset)
     klass->reset (base);
@@ -1332,7 +1332,7 @@ query_upstream_latency (MpegTSBase * base)
   } else
     GST_WARNING_OBJECT (base, "Failed to query upstream latency");
   gst_query_unref (query);
-  base->query_latency = TRUE;
+  base->queried_latency = TRUE;
 }
 
 static inline GstFlowReturn
@@ -1363,7 +1363,7 @@ mpegts_base_chain (GstPad * pad, GstBuffer * buf)
   base = GST_MPEGTS_BASE (gst_object_get_parent (GST_OBJECT (pad)));
   packetizer = base->packetizer;
 
-  if (G_UNLIKELY (base->query_latency == FALSE)) {
+  if (G_UNLIKELY (base->queried_latency == FALSE)) {
     query_upstream_latency (base);
   }
 
