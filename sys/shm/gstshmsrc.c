@@ -18,6 +18,20 @@
  * Free Software Foundation, Inc., 59 Temple Place - Suite 330,
  * Boston, MA 02111-1307, USA.
  */
+/**
+ * SECTION:element-shmsrc
+ *
+ * Receive data from the shared memory sink.
+ *
+ * <refsect2>
+ * <title>Example launch lines</title>
+ * |[
+ * gst-launch shmsrc socket-path=/tmp/blah ! \
+ * "video/x-raw-yuv, format=(fourcc)YUY2, color-matrix=(string)sdtv, \
+ * chroma-site=(string)mpeg2, width=(int)320, height=(int)240, framerate=(fraction)30/1" ! autovideosink
+ * ]| Render video from shm buffers.
+ * </refsect2>
+ */
 
 #ifdef HAVE_CONFIG_H
 #include "config.h"
@@ -90,7 +104,7 @@ gst_shm_src_base_init (gpointer g_class)
   gst_element_class_set_details_simple (element_class,
       "Shared Memory Source",
       "Source",
-      "Receive data from the sharem memory sink",
+      "Receive data from the shared memory sink",
       "Olivier Crete <olivier.crete@collabora.co.uk>");
 }
 
