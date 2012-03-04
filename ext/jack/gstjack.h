@@ -53,9 +53,9 @@ typedef enum {
  * client behaviour regarding to the transport mechanism.
  */
 typedef enum {
-  GST_JACK_TRANSPORT_AUTONOMOUS,
-  GST_JACK_TRANSPORT_MASTER,
-  GST_JACK_TRANSPORT_SLAVE
+  GST_JACK_TRANSPORT_AUTONOMOUS = 0,
+  GST_JACK_TRANSPORT_MASTER = (0 << 1),
+  GST_JACK_TRANSPORT_SLAVE = (1 << 1),
 } GstJackTransport;
 
 typedef jack_default_audio_sample_t sample_t;

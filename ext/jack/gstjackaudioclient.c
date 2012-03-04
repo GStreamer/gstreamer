@@ -88,10 +88,10 @@ static gboolean
 jack_handle_transport_change (GstJackAudioClient * client, GstState state)
 {
   GstObject *obj = GST_OBJECT_PARENT (client->user_data);
-  GstJackTransport mode;
+  guint mode;
 
   g_object_get (obj, "transport", &mode, NULL);
-  if ((mode == GST_JACK_TRANSPORT_SLAVE) && (GST_STATE (obj) != state)) {
+  if ((mode & GST_JACK_TRANSPORT_SLAVE) && (GST_STATE (obj) != state)) {
     GST_INFO_OBJECT (obj, "requesting state change: %s",
         gst_element_state_get_name (state));
     gst_element_post_message (GST_ELEMENT (obj),

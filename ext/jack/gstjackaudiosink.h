@@ -59,7 +59,7 @@ struct _GstJackAudioSink {
   gchar           *server;
   jack_client_t   *jclient;
   gchar           *client_name;
-  GstJackTransport transport;
+  guint            transport;
 
   /* our client */
   GstJackAudioClient *client;
