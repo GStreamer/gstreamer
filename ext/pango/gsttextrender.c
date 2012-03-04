@@ -203,7 +203,7 @@ gst_text_render_class_init (GstTextRenderClass * klass)
 
   fontmap = pango_cairo_font_map_get_default ();
   klass->pango_context =
-      pango_cairo_font_map_create_context (PANGO_CAIRO_FONT_MAP (fontmap));
+      pango_font_map_create_context (PANGO_FONT_MAP (fontmap));
   g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_FONT_DESC,
       g_param_spec_string ("font-desc", "font description",
           "Pango font description of font "

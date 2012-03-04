@@ -375,7 +375,7 @@ gst_text_overlay_base_init (gpointer g_class)
     g_mutex_lock (klass->pango_lock);
   fontmap = pango_cairo_font_map_get_default ();
   klass->pango_context =
-      pango_cairo_font_map_create_context (PANGO_CAIRO_FONT_MAP (fontmap));
+      pango_font_map_create_context (PANGO_FONT_MAP (fontmap));
   if (klass->pango_lock)
     g_mutex_unlock (klass->pango_lock);
 }
