@@ -376,7 +376,7 @@ static gboolean
 gst_gdk_pixbuf_sink_event (GstPad * pad, GstObject * parent, GstEvent * event)
 {
   GstFlowReturn res = GST_FLOW_OK;
-  gboolean ret = TRUE;
+  gboolean ret = TRUE, forward = TRUE;
   GstGdkPixbuf *pixbuf;
 
   pixbuf = GST_GDK_PIXBUF (parent);
@@ -387,8 +387,8 @@ gst_gdk_pixbuf_sink_event (GstPad * pad, GstObject * parent, GstEvent * event)
       GstCaps *caps;
 
       gst_event_parse_caps (event, &caps);
-      res = gst_gdk_pixbuf_sink_setcaps (pixbuf, caps);
-      gst_event_unref (event);
+      ret = gst_gdk_pixbuf_sink_setcaps (pixbuf, caps);
+      forward = FALSE;
       break;
     }
     case GST_EVENT_EOS:
@@ -403,6 +403,8 @@ gst_gdk_pixbuf_sink_event (GstPad * pad, GstObject * parent, GstEvent * event)
         if (res != GST_FLOW_OK && res != GST_FLOW_FLUSHING) {
           GST_ELEMENT_ERROR (pixbuf, STREAM, FAILED, (NULL),
               ("Flow: %s", gst_flow_get_name (res)));
+          forward = FALSE;
+          ret = FALSE;
         }
       }
       break;
@@ -417,13 +419,11 @@ gst_gdk_pixbuf_sink_event (GstPad * pad, GstObject * parent, GstEvent * event)
     default:
       break;
   }
-
-  if (res == GST_FLOW_OK) {
+  if (forward) {
     ret = gst_pad_event_default (pad, parent, event);
   } else {
-    ret = FALSE;
+    gst_event_unref (event);
   }
-
   return ret;
 }
 
