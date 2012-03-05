@@ -460,6 +460,14 @@ gst_base_parse_clear_queues (GstBaseParse * parse)
   g_queue_foreach (&parse->priv->queued_frames,
       (GFunc) gst_base_parse_frame_free, NULL);
   g_queue_clear (&parse->priv->queued_frames);
+
+  gst_buffer_replace (&parse->priv->cache, NULL);
+
+  g_list_foreach (parse->priv->pending_events, (GFunc) gst_event_unref, NULL);
+  g_list_free (parse->priv->pending_events);
+  parse->priv->pending_seeks = NULL;
+
+  gst_event_replace (&parse->priv->pending_segment, NULL);
 }
 
 static void
