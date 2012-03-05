@@ -121,8 +121,7 @@ gst_wavpack_parse_base_init (gpointer klass)
   GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
 
   gst_element_class_add_static_pad_template (element_class, &src_factory);
-  gst_element_class_add_static_pad_template (element_class,
-      &wvc_src_factory);
+  gst_element_class_add_static_pad_template (element_class, &wvc_src_factory);
   gst_element_class_add_static_pad_template (element_class, &sink_factory);
 
   gst_element_class_set_details_simple (element_class, "Wavpack parser",
@@ -144,7 +143,6 @@ static void
 gst_wavpack_parse_class_init (GstWavpackParseClass * klass)
 {
   GObjectClass *gobject_class;
-
   GstElementClass *gstelement_class;
 
   gobject_class = (GObjectClass *) klass;
@@ -168,7 +166,6 @@ gst_wavpack_parse_index_get_entry_from_sample (GstWavpackParse * wvparse,
     gint64 sample_offset)
 {
   gint i;
-
   GSList *node;
 
   if (wvparse->entries == NULL)
@@ -289,9 +286,7 @@ static gboolean
 gst_wavpack_parse_src_query (GstPad * pad, GstQuery * query)
 {
   GstWavpackParse *parse = GST_WAVPACK_PARSE (gst_pad_get_parent (pad));
-
   GstFormat format;
-
   gboolean ret = FALSE;
 
   switch (GST_QUERY_TYPE (query)) {
@@ -411,9 +406,7 @@ gst_wavpack_parse_scan_to_find_sample (GstWavpackParse * parse,
     gint64 sample, gint64 * byte_offset, gint64 * start_sample)
 {
   GstWavpackParseIndexEntry *entry;
-
   GstFlowReturn ret;
-
   gint64 off = 0;
 
   /* first, check if we have to scan at all */
@@ -441,7 +434,6 @@ gst_wavpack_parse_scan_to_find_sample (GstWavpackParse * parse,
   /* now scan forward until we find the chunk we're looking for or hit EOS */
   do {
     WavpackHeader header;
-
     GstBuffer *buf;
 
     buf = gst_wavpack_parse_pull_buffer (parse, off, sizeof (WavpackHeader),
@@ -481,13 +473,9 @@ gst_wavpack_parse_send_newsegment (GstWavpackParse * wvparse, gboolean update)
   GstSegment *s = &wvparse->segment;
 
   gboolean ret;
-
   gint64 stop_time = -1;
-
   gint64 start_time = 0;
-
   gint64 cur_pos_time;
-
   gint64 diff;
 
   /* segment is in DEFAULT format, but we want to send a TIME newsegment */
@@ -524,31 +512,18 @@ gst_wavpack_parse_handle_seek_event (GstWavpackParse * wvparse,
     GstEvent * event)
 {
   GstSeekFlags seek_flags;
-
   GstSeekType start_type;
-
   GstSeekType stop_type;
-
   GstSegment segment;
-
   GstFormat format;
-
   gboolean only_update;
-
   gboolean flush, ret;
-
   gdouble speed;
-
   gint64 stop;
-
   gint64 start;                 /* sample we want to seek to                  */
-
   gint64 byte_offset;           /* byte offset the chunk we seek to starts at */
-
   gint64 chunk_start;           /* first sample in chunk we seek to           */
-
   guint rate;
-
   gint64 last_stop;
 
   if (wvparse->adapter) {
@@ -674,7 +649,6 @@ static gboolean
 gst_wavpack_parse_sink_event (GstPad * pad, GstEvent * event)
 {
   GstWavpackParse *parse;
-
   gboolean ret = TRUE;
 
   parse = GST_WAVPACK_PARSE (gst_pad_get_parent (pad));
@@ -733,7 +707,6 @@ static gboolean
 gst_wavpack_parse_src_event (GstPad * pad, GstEvent * event)
 {
   GstWavpackParse *parse;
-
   gboolean ret;
 
   parse = GST_WAVPACK_PARSE (gst_pad_get_parent (pad));
@@ -755,7 +728,6 @@ static void
 gst_wavpack_parse_init (GstWavpackParse * parse, GstWavpackParseClass * gclass)
 {
   GstElementClass *klass = GST_ELEMENT_GET_CLASS (parse);
-
   GstPadTemplate *tmpl;
 
   tmpl = gst_element_class_get_pad_template (klass, "sink");
@@ -780,7 +752,6 @@ static gint64
 gst_wavpack_parse_get_upstream_length (GstWavpackParse * parse)
 {
   gint64 length = -1;
-
   GstFormat format = GST_FORMAT_BYTES;
 
   if (!gst_pad_query_peer_duration (parse->sinkpad, &format, &length)) {
@@ -796,7 +767,6 @@ gst_wavpack_parse_pull_buffer (GstWavpackParse * wvparse, gint64 offset,
     guint size, GstFlowReturn * flow)
 {
   GstFlowReturn flow_ret;
-
   GstBuffer *buf = NULL;
 
   if (offset + size > wvparse->upstream_length) {
@@ -837,9 +807,7 @@ gst_wavpack_parse_create_src_pad (GstWavpackParse * wvparse, GstBuffer * buf,
     WavpackHeader * header)
 {
   GstWavpackMetadata meta;
-
   GstCaps *caps = NULL;
-
   guchar *bufptr;
 
   g_assert (wvparse->srcpad == NULL);
@@ -954,8 +922,8 @@ gst_wavpack_parse_push_buffer (GstWavpackParse * wvparse, GstBuffer * buf,
     WavpackHeader * header)
 {
   GstFlowReturn ret;
-  wvparse->current_offset += header->ckSize + 8;
 
+  wvparse->current_offset += header->ckSize + 8;
   wvparse->segment.last_stop = header->block_index;
 
   if (wvparse->need_newsegment) {
@@ -1021,8 +989,7 @@ gst_wavpack_parse_push_buffer (GstWavpackParse * wvparse, GstBuffer * buf,
 static guint8 *
 gst_wavpack_parse_find_marker (guint8 * buf, guint size)
 {
-  int i;
-
+  gint i;
   guint8 *ret = NULL;
 
   if (G_UNLIKELY (size < 4))
@@ -1041,7 +1008,6 @@ static GstFlowReturn
 gst_wavpack_parse_resync_loop (GstWavpackParse * parse, WavpackHeader * header)
 {
   GstFlowReturn flow_ret = GST_FLOW_UNEXPECTED;
-
   GstBuffer *buf = NULL;
 
   /* loop until we have a frame header or reach the end of the stream */
@@ -1108,7 +1074,6 @@ static void
 gst_wavpack_parse_loop (GstElement * element)
 {
   GstWavpackParse *parse = GST_WAVPACK_PARSE (element);
-
   GstFlowReturn flow_ret;
   WavpackHeader header = { {0,}, 0, };
   GstBuffer *buf = NULL;
@@ -1183,7 +1148,6 @@ static gboolean
 gst_wavpack_parse_resync_adapter (GstAdapter * adapter)
 {
   const guint8 *buf, *marker;
-
   guint avail = gst_adapter_available (adapter);
 
   if (avail < 4)
@@ -1215,11 +1179,8 @@ static GstFlowReturn
 gst_wavpack_parse_chain (GstPad * pad, GstBuffer * buf)
 {
   GstWavpackParse *wvparse = GST_WAVPACK_PARSE (GST_PAD_PARENT (pad));
-
   GstFlowReturn ret = GST_FLOW_OK;
-
   WavpackHeader wph;
-
   const guint8 *tmp_buf;
 
   if (!wvparse->adapter) {
@@ -1279,7 +1240,6 @@ static GstStateChangeReturn
 gst_wavpack_parse_change_state (GstElement * element, GstStateChange transition)
 {
   GstWavpackParse *wvparse = GST_WAVPACK_PARSE (element);
-
   GstStateChangeReturn ret = GST_STATE_CHANGE_SUCCESS;
 
   switch (transition) {
