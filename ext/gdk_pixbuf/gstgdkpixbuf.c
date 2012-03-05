@@ -93,14 +93,13 @@ gst_gdk_pixbuf_sink_setcaps (GstGdkPixbuf * filter, GstCaps * caps)
   s = gst_caps_get_structure (caps, 0);
 
   if ((framerate = gst_structure_get_value (s, "framerate")) != NULL) {
-    filter->framerate_numerator = gst_value_get_fraction_numerator (framerate);
-    filter->framerate_denominator =
-        gst_value_get_fraction_denominator (framerate);
+    filter->in_fps_n = gst_value_get_fraction_numerator (framerate);
+    filter->in_fps_d = gst_value_get_fraction_denominator (framerate);
     GST_DEBUG_OBJECT (filter, "got framerate of %d/%d fps => packetized mode",
-        filter->framerate_numerator, filter->framerate_denominator);
+        filter->in_fps_n, filter->in_fps_d);
   } else {
-    filter->framerate_numerator = 0;
-    filter->framerate_denominator = 1;
+    filter->in_fps_n = 0;
+    filter->in_fps_d = 1;
     GST_DEBUG_OBJECT (filter, "no framerate, assuming single image");
   }
 
@@ -277,9 +276,10 @@ gst_gdk_pixbuf_flush (GstGdkPixbuf * filter)
   int y;
   guint8 *out_pix;
   guint8 *in_pix;
-  int in_rowstride;
+  int in_rowstride, out_rowstride;
   GstFlowReturn ret;
   GstCaps *caps = NULL;
+  gint width, height;
   gint n_channels;
   GstVideoFrame frame;
 
@@ -287,13 +287,14 @@ gst_gdk_pixbuf_flush (GstGdkPixbuf * filter)
   if (pixbuf == NULL)
     goto no_pixbuf;
 
-  if (filter->width == 0) {
+  width = gdk_pixbuf_get_width (pixbuf);
+  height = gdk_pixbuf_get_height (pixbuf);
+
+  if (GST_VIDEO_INFO_FORMAT (&filter->info) == GST_VIDEO_FORMAT_UNKNOWN) {
     GstVideoInfo info;
     GstVideoFormat fmt;
 
-    filter->width = gdk_pixbuf_get_width (pixbuf);
-    filter->height = gdk_pixbuf_get_height (pixbuf);
-    GST_DEBUG ("Set size to %dx%d", filter->width, filter->height);
+    GST_DEBUG ("Set size to %dx%d", width, height);
 
     n_channels = gdk_pixbuf_get_n_channels (pixbuf);
     switch (n_channels) {
@@ -309,13 +310,11 @@ gst_gdk_pixbuf_flush (GstGdkPixbuf * filter)
 
 
     gst_video_info_init (&info);
-    gst_video_info_set_format (&info, fmt, filter->width, filter->height);
-    info.fps_n = filter->framerate_numerator;
-    info.fps_d = filter->framerate_denominator;
+    gst_video_info_set_format (&info, fmt, width, height);
+    info.fps_n = filter->in_fps_n;
+    info.fps_d = filter->in_fps_d;
     caps = gst_video_info_to_caps (&info);
 
-    filter->channels = n_channels;
-    filter->rowstride = GST_VIDEO_INFO_COMP_STRIDE (&info, 0);
     filter->info = info;
 
     gst_pad_set_caps (filter->srcpad, caps);
@@ -335,12 +334,13 @@ gst_gdk_pixbuf_flush (GstGdkPixbuf * filter)
   in_rowstride = gdk_pixbuf_get_rowstride (pixbuf);
 
   gst_video_frame_map (&frame, &filter->info, outbuf, GST_MAP_WRITE);
-  out_pix = GST_VIDEO_FRAME_COMP_DATA (&frame, 0);
+  out_pix = GST_VIDEO_FRAME_PLANE_DATA (&frame, 0);
+  out_rowstride = GST_VIDEO_FRAME_PLANE_STRIDE (&frame, 0);
 
-  for (y = 0; y < filter->height; y++) {
-    memcpy (out_pix, in_pix, filter->width * filter->channels);
+  for (y = 0; y < height; y++) {
+    memcpy (out_pix, in_pix, width * GST_VIDEO_FRAME_COMP_PSTRIDE (&frame, 0));
     in_pix += in_rowstride;
-    out_pix += filter->rowstride;
+    out_pix += out_rowstride;
   }
 
   gst_video_frame_unmap (&frame);
@@ -457,7 +457,7 @@ gst_gdk_pixbuf_chain (GstPad * pad, GstObject * parent, GstBuffer * buf)
     goto error;
 
   /* packetised mode? */
-  if (filter->framerate_numerator != 0) {
+  if (filter->in_fps_n != 0) {
     gdk_pixbuf_loader_close (filter->pixbuf_loader, NULL);
     ret = gst_gdk_pixbuf_flush (filter);
     g_object_unref (filter->pixbuf_loader);
@@ -490,8 +490,9 @@ gst_gdk_pixbuf_change_state (GstElement * element, GstStateChange transition)
   switch (transition) {
     case GST_STATE_CHANGE_READY_TO_PAUSED:
       /* default to single image mode, setcaps function might not be called */
-      dec->framerate_numerator = 0;
-      dec->framerate_denominator = 1;
+      dec->in_fps_n = 0;
+      dec->in_fps_d = 1;
+      gst_video_info_init (&dec->info);
       break;
     default:
       break;
@@ -503,8 +504,8 @@ gst_gdk_pixbuf_change_state (GstElement * element, GstStateChange transition)
 
   switch (transition) {
     case GST_STATE_CHANGE_PAUSED_TO_READY:
-      dec->framerate_numerator = 0;
-      dec->framerate_denominator = 0;
+      dec->in_fps_n = 0;
+      dec->in_fps_d = 0;
       if (dec->pool) {
         gst_buffer_pool_set_active (dec->pool, FALSE);
         gst_object_replace ((GstObject **) & dec->pool, NULL);
