@@ -54,7 +54,7 @@ typedef enum {
  */
 typedef enum {
   GST_JACK_TRANSPORT_AUTONOMOUS = 0,
-  GST_JACK_TRANSPORT_MASTER = (0 << 1),
+  GST_JACK_TRANSPORT_MASTER = (1 << 0),
   GST_JACK_TRANSPORT_SLAVE = (1 << 1),
 } GstJackTransport;
 
