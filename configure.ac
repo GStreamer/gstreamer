@@ -316,7 +316,6 @@ GST_PLUGINS_NONPORTED="deinterlace interleave flx \
  videobox \
  cairo cairo_gobject dv1394 \
  oss oss4 \
- wavpack \
  osx_video osx_audio "
 AC_SUBST(GST_PLUGINS_NONPORTED)
 
