@@ -206,7 +206,7 @@ mpegts_packetizer_ts_to_offset (MpegTSPacketizer2 * packetizer,
 				GstClockTime ts);
 GstClockTime
 mpegts_packetizer_pts_to_ts (MpegTSPacketizer2 * packetizer,
-			     guint64 pcr);
+			     GstClockTime pts);
 void
 mpegts_packetizer_set_reference_offset (MpegTSPacketizer2 * packetizer,
 					guint64 refoffset);
