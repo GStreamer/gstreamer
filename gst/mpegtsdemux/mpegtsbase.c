@@ -1474,7 +1474,7 @@ mpegts_base_scan (MpegTSBase * base)
   /* Find last PCR value */
   for (seek_pos = MAX (0, upstream_size - 655360);
       seek_pos < upstream_size && !done; seek_pos += 65536) {
-    GST_DEBUG ("Grabbing %d => %d", seek_pos, 65536);
+    GST_DEBUG ("Grabbing %" G_GUINT64_FORMAT " => %d", seek_pos, 65536);
 
     ret = gst_pad_pull_range (base->sinkpad, seek_pos, 65536, &buf);
     if (G_UNLIKELY (ret != GST_FLOW_OK))
