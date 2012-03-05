@@ -32,6 +32,8 @@
 #include <X11/extensions/Xv.h>
 #include <X11/extensions/Xvlib.h>
 #include <sys/stat.h>
+/* for XkbKeycodeToKeysym */
+#include <X11/XKBlib.h>
 
 #include <gst/interfaces/navigation.h>
 
@@ -323,7 +325,7 @@ event_refresh (gpointer data)
           case KeyPress:
           case KeyRelease:
             g_mutex_lock (v4l2xv->mutex);
-            keysym = XKeycodeToKeysym (v4l2xv->dpy, e.xkey.keycode, 0);
+            keysym = XkbKeycodeToKeysym (v4l2xv->dpy, e.xkey.keycode, 0, 0);
             if (keysym != NoSymbol) {
               key_str = XKeysymToString (keysym);
             } else {
