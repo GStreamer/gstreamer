@@ -54,6 +54,8 @@
 #include <string.h>
 
 #include <gst/glib-compat-private.h>
+#include <gst/audio/audio.h>
+
 #include "gstmplex.hh"
 #include "gstmplexoutputstream.hh"
 #include "gstmplexibitstream.hh"
@@ -93,11 +95,8 @@ static GstStaticPadTemplate audio_sink_templ =
         "audio/x-ac3, "
         COMMON_AUDIO_CAPS "; "
         "audio/x-dts; "
-        "audio/x-raw-int, "
-        "endianness = (int) BIG_ENDIAN, "
-        "signed = (boolean) TRUE, "
-        "width = (int) { 16, 20, 24 }, "
-        "depth = (int) { 16, 20, 24 }, "
+        "audio/x-raw, "
+        "format = (string) { S16BE, S20BE, S24BE }, "
         "rate = (int) { 48000, 96000 }, " "channels = (int) [ 1, 6 ]")
     );
 
@@ -324,20 +323,22 @@ gst_mplex_setcaps (GstPad * pad, GstCaps * caps)
       type = AC3_AUDIO;
     } else if (!strcmp (mime, "audio/x-dts")) {
       type = DTS_AUDIO;
-    } else if (!strcmp (mime, "audio/x-raw-int")) {
+    } else if (!strcmp (mime, "audio/x-raw")) {
       LpcmParams *params;
       gint bits, chans, rate;
-      gboolean result = TRUE;
+      GstAudioInfo info;
 
       type = LPCM_AUDIO;
 
-      /* set LPCM params */
-      result &= gst_structure_get_int (structure, "depth", &bits);
-      result &= gst_structure_get_int (structure, "rate", &rate);
-      result &= gst_structure_get_int (structure, "channels", &chans);
-      if (!result)
+      gst_audio_info_init (&info);
+      if (!gst_audio_info_from_caps (&info, caps))
         goto refuse_caps;
 
+      rate = GST_AUDIO_INFO_RATE (&info);
+      chans = GST_AUDIO_INFO_CHANNELS (&info);
+      bits = GST_AUDIO_INFO_DEPTH (&info);
+
+      /* set LPCM params */
       params = LpcmParams::Checked (rate, chans, bits);
 
       mplex->job->lpcm_param.push_back (params);
