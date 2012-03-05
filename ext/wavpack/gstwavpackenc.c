@@ -616,6 +616,13 @@ gst_wavpack_enc_push_block (void *id, void *data, int32_t count)
       }
     }
     samples = wph.block_samples;
+
+    /* decorate buffer */
+    /* NOTE: this will get overwritten by baseclass, but stay for those
+     * that are pushed directly
+     * FIXME: add setting to baseclass to avoid overwriting it ?? */
+    GST_BUFFER_OFFSET (buffer) = wph.block_index;
+    GST_BUFFER_OFFSET_END (buffer) = wph.block_index + wph.block_samples;
   } else {
     /* if it's something else set no timestamp and duration on the buffer */
     GST_DEBUG_OBJECT (enc, "got %d bytes of unknown data", count);
