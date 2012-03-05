@@ -991,7 +991,7 @@ gst_audio_decoder_push_buffers (GstAudioDecoder * dec, gboolean force)
         g_assert (offset <= av);
         if (offset) {
           /* jumped a bit */
-          GST_DEBUG_OBJECT (dec, "setting DISCONT");
+          GST_DEBUG_OBJECT (dec, "skipped %d; setting DISCONT", offset);
           gst_adapter_flush (priv->adapter, offset);
           flush = offset;
           /* avoid parsing indefinitely */
