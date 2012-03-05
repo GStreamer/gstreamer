@@ -25,7 +25,6 @@
 
 #include <gst/gst-i18n-plugin.h>
 
-#include "gstwavpackparse.h"
 #include "gstwavpackdec.h"
 #include "gstwavpackenc.h"
 
@@ -44,8 +43,7 @@ plugin_init (GstPlugin * plugin)
   bind_textdomain_codeset (GETTEXT_PACKAGE, "UTF-8");
 #endif
 
-  return (gst_wavpack_parse_plugin_init (plugin)
-      && gst_wavpack_dec_plugin_init (plugin)
+  return (gst_wavpack_dec_plugin_init (plugin)
       && gst_wavpack_enc_plugin_init (plugin));
 }
 
