@@ -910,9 +910,10 @@ gst_base_parse_sink_event (GstPad * pad, GstEvent * event)
   GST_DEBUG_OBJECT (parse, "handling event %d, %s", GST_EVENT_TYPE (event),
       GST_EVENT_TYPE_NAME (event));
 
-  /* Cache all events except EOS, NEWSEGMENT and FLUSH_STOP if we have a
+  /* Cache all serialized events except EOS, NEWSEGMENT and FLUSH_STOP if we have a
    * pending segment */
-  if (parse->priv->pending_segment && GST_EVENT_TYPE (event) != GST_EVENT_EOS
+  if (parse->priv->pending_segment && GST_EVENT_IS_SERIALIZED (event)
+      && GST_EVENT_TYPE (event) != GST_EVENT_EOS
       && GST_EVENT_TYPE (event) != GST_EVENT_NEWSEGMENT
       && GST_EVENT_TYPE (event) != GST_EVENT_FLUSH_START
       && GST_EVENT_TYPE (event) != GST_EVENT_FLUSH_STOP) {
