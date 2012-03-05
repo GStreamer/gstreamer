@@ -596,7 +596,8 @@ unknown_format:
         GST_PTR_FORMAT, caps);
     GST_ELEMENT_ERROR (xvpool->sink, RESOURCE, WRITE,
         ("Failed to create output image buffer of %dx%d pixels",
-            priv->info.width, priv->info.height), ("Invalid input caps"));
+            priv->info.width, priv->info.height),
+        ("Invalid input caps %" GST_PTR_FORMAT, caps));
     return FALSE;;
   }
 }
