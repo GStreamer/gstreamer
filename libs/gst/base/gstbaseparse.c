@@ -465,9 +465,10 @@ gst_base_parse_clear_queues (GstBaseParse * parse)
 
   g_list_foreach (parse->priv->pending_events, (GFunc) gst_event_unref, NULL);
   g_list_free (parse->priv->pending_events);
-  parse->priv->pending_seeks = NULL;
+  parse->priv->pending_events = NULL;
 
   gst_event_replace (&parse->priv->pending_segment, NULL);
+  gst_event_replace (&parse->priv->close_segment, NULL);
 }
 
 static void
@@ -774,6 +775,8 @@ gst_base_parse_reset (GstBaseParse * parse)
       NULL);
   g_list_free (parse->priv->pending_events);
   parse->priv->pending_events = NULL;
+
+  gst_event_replace (&parse->priv->close_segment, NULL);
 
   if (parse->priv->cache) {
     gst_buffer_unref (parse->priv->cache);
