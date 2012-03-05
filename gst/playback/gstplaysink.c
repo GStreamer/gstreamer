@@ -3748,6 +3748,9 @@ gst_play_sink_handle_message (GstBin * bin, GstMessage * message)
         gst_object_unref (xoverlay);
         gst_message_unref (message);
         gst_x_overlay_prepare_xwindow_id (GST_X_OVERLAY (playsink));
+      } else {
+        GST_BIN_CLASS (gst_play_sink_parent_class)->handle_message (bin,
+            message);
       }
       break;
     }
