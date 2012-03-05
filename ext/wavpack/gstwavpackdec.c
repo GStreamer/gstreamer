@@ -169,6 +169,8 @@ gst_wavpack_dec_start (GstAudioDecoder * dec)
   gst_audio_decoder_set_max_errors (dec, 16);
   /* don't bother us with flushing */
   gst_audio_decoder_set_drainable (dec, FALSE);
+  /* aim for some perfect timestamping */
+  gst_audio_decoder_set_tolerance (dec, 10 * GST_MSECOND);
 
   return TRUE;
 }
