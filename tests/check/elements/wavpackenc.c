@@ -30,13 +30,17 @@
 static GstPad *mysrcpad, *mysinkpad;
 static GstBus *bus;
 
-#define RAW_CAPS_STRING "audio/x-raw-int, " \
-                        "width = (int) 32, " \
-                        "depth = (int) 32, " \
+#if G_BYTE_ORDER == G_BIG_ENDIAN
+#define AUDIO_FORMAT "S32BE"
+#else
+#define AUDIO_FORMAT "S32LE"
+#endif
+
+#define RAW_CAPS_STRING "audio/x-raw, " \
+                        "format = (string) " AUDIO_FORMAT ", " \
+                        "layout = (string) interleaved, " \
                         "channels = (int) 1, " \
-                        "rate = (int) 44100, " \
-                        "endianness = (int) BYTE_ORDER, " \
-                        "signed = (boolean) true"
+                        "rate = (int) 44100"
 
 #define WAVPACK_CAPS_STRING "audio/x-wavpack, " \
                             "width = (int) 32, " \
@@ -55,12 +59,10 @@ static GstStaticPadTemplate sinktemplate = GST_STATIC_PAD_TEMPLATE ("sink",
 static GstStaticPadTemplate srctemplate = GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS ("audio/x-raw-int, "
-        "width = (int) 32, "
-        "depth = (int) 32, "
-        "channels = (int) 1, "
-        "rate = (int) 44100, "
-        "endianness = (int) BYTE_ORDER, " "signed = (boolean) true"));
+    GST_STATIC_CAPS ("audio/x-raw, "
+        "format = (string) " AUDIO_FORMAT ", "
+        "layout = (string) interleaved, "
+        "channels = (int) 1, " "rate = (int) 44100"));
 
 static GstElement *
 setup_wavpackenc (void)
@@ -69,8 +71,8 @@ setup_wavpackenc (void)
 
   GST_DEBUG ("setup_wavpackenc");
   wavpackenc = gst_check_setup_element ("wavpackenc");
-  mysrcpad = gst_check_setup_src_pad (wavpackenc, &srctemplate, NULL);
-  mysinkpad = gst_check_setup_sink_pad (wavpackenc, &sinktemplate, NULL);
+  mysrcpad = gst_check_setup_src_pad (wavpackenc, &srctemplate);
+  mysinkpad = gst_check_setup_sink_pad (wavpackenc, &sinktemplate);
   gst_pad_set_active (mysrcpad, TRUE);
   gst_pad_set_active (mysinkpad, TRUE);
 
@@ -111,10 +113,9 @@ GST_START_TEST (test_encode_silence)
   wavpackenc = setup_wavpackenc ();
 
   inbuffer = gst_buffer_new_and_alloc (1000);
-  for (i = 0; i < 1000; i++)
-    GST_BUFFER_DATA (inbuffer)[i] = 0;
+  gst_buffer_memset (inbuffer, 0, 0, 1000);
   caps = gst_caps_from_string (RAW_CAPS_STRING);
-  gst_buffer_set_caps (inbuffer, caps);
+  fail_unless (gst_pad_set_caps (mysrcpad, caps));
   gst_caps_unref (caps);
   GST_BUFFER_TIMESTAMP (inbuffer) = 0;
   ASSERT_BUFFER_REFCOUNT (inbuffer, "inbuffer", 1);
@@ -133,7 +134,7 @@ GST_START_TEST (test_encode_silence)
   fail_unless_equals_int (GST_BUFFER_TIMESTAMP (outbuffer), 0);
   fail_unless_equals_int (GST_BUFFER_DURATION (outbuffer), 5668934);
 
-  fail_unless (memcmp (GST_BUFFER_DATA (outbuffer), "wvpk", 4) == 0,
+  fail_unless (gst_buffer_memcmp (outbuffer, 0, "wvpk", 4) == 0,
       "Failed to encode to valid Wavpack frames");
 
   /* free all buffers */

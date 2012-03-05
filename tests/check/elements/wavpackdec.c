@@ -29,6 +29,12 @@
  * get_peer, and then remove references in every test function */
 static GstPad *mysrcpad, *mysinkpad;
 
+#if G_BYTE_ORDER == G_BIG_ENDIAN
+#define AUDIO_FORMAT "S16BE"
+#else
+#define AUDIO_FORMAT "S16LE"
+#endif
+
 guint8 test_frame[] = {
   0x77, 0x76, 0x70, 0x6B,       /* "wvpk" */
   0x2E, 0x00, 0x00, 0x00,       /* ckSize */
@@ -51,13 +57,12 @@ guint8 test_frame[] = {
 static GstStaticPadTemplate sinktemplate = GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS ("audio/x-raw-int, "
-        "width = (int) 16, "
-        "depth = (int) 16, "
-        "channels = (int) 1, "
-        "rate = (int) 44100, "
-        "endianness = (int) BYTE_ORDER, " "signed = (boolean) true")
+    GST_STATIC_CAPS ("audio/x-raw, "
+        "format = (string) " AUDIO_FORMAT ", "
+        "layout = (string) interleaved, "
+        "channels = (int) 1, " "rate = (int) 44100")
     );
+
 static GstStaticPadTemplate srctemplate = GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
     GST_PAD_ALWAYS,
@@ -73,8 +78,8 @@ setup_wavpackdec (void)
 
   GST_DEBUG ("setup_wavpackdec");
   wavpackdec = gst_check_setup_element ("wavpackdec");
-  mysrcpad = gst_check_setup_src_pad (wavpackdec, &srctemplate, NULL);
-  mysinkpad = gst_check_setup_sink_pad (wavpackdec, &sinktemplate, NULL);
+  mysrcpad = gst_check_setup_src_pad (wavpackdec, &srctemplate);
+  mysinkpad = gst_check_setup_sink_pad (wavpackdec, &sinktemplate);
   gst_pad_set_active (mysrcpad, TRUE);
   gst_pad_set_active (mysinkpad, TRUE);
 
@@ -100,6 +105,7 @@ GST_START_TEST (test_decode_frame)
   GstBuffer *inbuffer, *outbuffer;
   GstBus *bus;
   int i;
+  GstMapInfo map;
 
   wavpackdec = setup_wavpackdec ();
 
@@ -109,7 +115,7 @@ GST_START_TEST (test_decode_frame)
   bus = gst_bus_new ();
 
   inbuffer = gst_buffer_new_and_alloc (sizeof (test_frame));
-  memcpy (GST_BUFFER_DATA (inbuffer), test_frame, sizeof (test_frame));
+  gst_buffer_fill (inbuffer, 0, test_frame, sizeof (test_frame));
   ASSERT_BUFFER_REFCOUNT (inbuffer, "inbuffer", 1);
   GST_BUFFER_TIMESTAMP (inbuffer) = 0;
 
@@ -121,12 +127,17 @@ GST_START_TEST (test_decode_frame)
   outbuffer = GST_BUFFER (buffers->data);
 
   fail_if (outbuffer == NULL);
+
+  gst_buffer_map (outbuffer, &map, GST_MAP_READ);
+
   /* uncompressed data should be 102400 bytes */
-  fail_unless_equals_int (GST_BUFFER_SIZE (outbuffer), 51200);
+  fail_unless_equals_int (map.size, 51200);
 
   /* and all bytes must be 0, i.e. silence */
   for (i = 0; i < 51200; i++)
-    fail_unless_equals_int (GST_BUFFER_DATA (outbuffer)[i], 0);
+    fail_unless_equals_int (map.data[i], 0);
+
+  gst_buffer_unmap (outbuffer, &map);
 
   ASSERT_BUFFER_REFCOUNT (outbuffer, "outbuffer", 1);
   gst_buffer_unref (outbuffer);
@@ -158,9 +169,9 @@ GST_START_TEST (test_decode_frame_with_broken_header)
   bus = gst_bus_new ();
 
   inbuffer = gst_buffer_new_and_alloc (sizeof (test_frame));
-  memcpy (GST_BUFFER_DATA (inbuffer), test_frame, sizeof (test_frame));
+  gst_buffer_fill (inbuffer, 0, test_frame, sizeof (test_frame));
   /* break header */
-  GST_BUFFER_DATA (inbuffer)[2] = 'e';
+  gst_buffer_memset (inbuffer, 2, 'e', 1);
   ASSERT_BUFFER_REFCOUNT (inbuffer, "inbuffer", 1);
   GST_BUFFER_TIMESTAMP (inbuffer) = 0;
 
@@ -195,7 +206,7 @@ GST_START_TEST (test_decode_frame_with_incomplete_frame)
   bus = gst_bus_new ();
 
   inbuffer = gst_buffer_new_and_alloc (sizeof (test_frame) - 2);
-  memcpy (GST_BUFFER_DATA (inbuffer), test_frame, sizeof (test_frame) - 2);
+  gst_buffer_fill (inbuffer, 0, test_frame, sizeof (test_frame) - 2);
   ASSERT_BUFFER_REFCOUNT (inbuffer, "inbuffer", 1);
   GST_BUFFER_TIMESTAMP (inbuffer) = 0;
 
