@@ -572,19 +572,8 @@ gst_audio_info_from_caps (GstAudioInfo * info, const GstCaps * caps)
     for (i = 0; i < MIN (64, channels); i++)
       position[i] = GST_AUDIO_CHANNEL_POSITION_NONE;
   } else {
-    gint j;
-
-    j = 0;
-    for (i = 0; i < 64; i++) {
-      if ((channel_mask & (G_GUINT64_CONSTANT (1) << i))) {
-        position[j] = default_channel_order[i];
-        if (default_channel_order[i] == GST_AUDIO_CHANNEL_POSITION_INVALID)
-          goto invalid_channel_mask;
-        j++;
-      }
-    }
-
-    if (j != channels)
+    if (!gst_audio_channel_positions_from_mask (channels, channel_mask,
+            position))
       goto invalid_channel_mask;
   }
 
@@ -1120,6 +1109,74 @@ gst_audio_channel_positions_to_mask (const GstAudioChannelPosition * position,
   return check_valid_channel_positions (position, channels, FALSE,
       channel_mask);
 }
+
+/**
+ * gst_audio_channel_positions_from_mask:
+ * @channels: The number of channels
+ * @channel_mask: The input channel_mask
+ * @position: The %GstAudioChannelPositions
+ * @caps: a #GstCaps
+ *
+ * Convert the @channels present in @channel_mask to a @position array
+ * (which should have at least @channels entries ensured by caller).
+ * If @channel_mask is set to 0, it is considered as 'not present' for purpose
+ * of conversion.
+ *
+ * Returns: %TRUE if channel and channel mask are valid and could be converted
+ */
+gboolean
+gst_audio_channel_positions_from_mask (gint channels, guint64 channel_mask,
+    GstAudioChannelPosition * position)
+{
+  g_return_val_if_fail (position != NULL, FALSE);
+  g_return_val_if_fail (channels != 0, FALSE);
+
+  GST_DEBUG ("converting %d channels for "
+      " channel mask 0x%016" G_GINT64_MODIFIER "x");
+
+  if (!channel_mask) {
+    if (channels == 1) {
+      position[0] = GST_AUDIO_CHANNEL_POSITION_MONO;
+    } else if (channels == 2) {
+      position[0] = GST_AUDIO_CHANNEL_POSITION_FRONT_LEFT;
+      position[1] = GST_AUDIO_CHANNEL_POSITION_FRONT_RIGHT;
+    } else {
+      goto no_channel_mask;
+    }
+  } else {
+    gint i, j;
+
+    j = 0;
+    for (i = 0; i < 64; i++) {
+      if ((channel_mask & (G_GUINT64_CONSTANT (1) << i))) {
+        if (j < channels)
+          position[j] = default_channel_order[i];
+        if (default_channel_order[i] == GST_AUDIO_CHANNEL_POSITION_INVALID)
+          goto invalid_channel_mask;
+        j++;
+      }
+    }
+
+    if (j != channels)
+      goto invalid_channel_mask;
+  }
+
+  return TRUE;
+
+  /* ERROR */
+no_channel_mask:
+  {
+    GST_ERROR ("no channel-mask property given");
+    return FALSE;
+  }
+invalid_channel_mask:
+  {
+    GST_ERROR ("Invalid channel mask 0x%016" G_GINT64_MODIFIER
+        "x for %d channels", channel_mask, channels);
+    return FALSE;
+  }
+}
+
 
 /**
  * gst_audio_get_channel_reorder_map:

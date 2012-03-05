@@ -556,6 +556,9 @@ gboolean       gst_audio_check_valid_channel_positions (const GstAudioChannelPos
 gboolean       gst_audio_channel_positions_to_mask  (const GstAudioChannelPosition *position,
                                                      gint channels, guint64 *channel_mask);
 
+gboolean       gst_audio_channel_positions_from_mask (gint channels, guint64 channel_mask,
+                                                      GstAudioChannelPosition * position);
+
 gboolean       gst_audio_get_channel_reorder_map (gint channels,
                                                   const GstAudioChannelPosition * from,
                                                   const GstAudioChannelPosition * to,
