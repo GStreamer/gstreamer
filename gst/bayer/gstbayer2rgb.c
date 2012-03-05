@@ -128,7 +128,7 @@ struct _GstBayer2RGBClass
 #define	SRC_CAPS                                 \
   GST_VIDEO_CAPS_MAKE ("{ RGBx, xRGB, BGRx, xBGR, RGBA, ARGB, BGRA, ABGR }")
 
-#define SINK_CAPS "video/x-raw-bayer,format=(string){bggr,grbg,gbrg,rggb}," \
+#define SINK_CAPS "video/x-bayer,format=(string){bggr,grbg,gbrg,rggb}," \
   "width=(int)[1,MAX],height=(int)[1,MAX],framerate=(fraction)[0/1,MAX]"
 
 enum
@@ -171,7 +171,7 @@ gst_bayer2rgb_class_init (GstBayer2RGBClass * klass)
 
   gst_element_class_set_details_simple (gstelement_class,
       "Bayer to RGB decoder for cameras", "Filter/Converter/Video",
-      "Converts video/x-raw-bayer to video/x-raw",
+      "Converts video/x-bayer to video/x-raw",
       "William Brack <wbrack@mmm.com.hk>");
 
   gst_element_class_add_pad_template (gstelement_class,
@@ -291,7 +291,7 @@ gst_bayer2rgb_transform_caps (GstBaseTransform * base,
   structure = gst_caps_get_structure (caps, 0);
 
   if (direction == GST_PAD_SRC) {
-    newcaps = gst_caps_from_string ("video/x-raw-bayer,"
+    newcaps = gst_caps_from_string ("video/x-bayer,"
         "format=(string){bggr,grbg,gbrg,rggb}");
   } else {
     newcaps = gst_caps_new_empty_simple ("video/x-raw");
@@ -324,7 +324,7 @@ gst_bayer2rgb_get_unit_size (GstBaseTransform * base, GstCaps * caps,
   if (gst_structure_get_int (structure, "width", &width) &&
       gst_structure_get_int (structure, "height", &height)) {
     name = gst_structure_get_name (structure);
-    /* Our name must be either video/x-raw-bayer video/x-raw-rgb */
+    /* Our name must be either video/x-bayer video/x-raw */
     if (strcmp (name, "video/x-raw")) {
       *size = GST_ROUND_UP_4 (width) * height;
       return TRUE;

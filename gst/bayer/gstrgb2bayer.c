@@ -67,7 +67,7 @@ static GstStaticPadTemplate gst_rgb2bayer_src_template =
 GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS ("video/x-raw-bayer,"
+    GST_STATIC_CAPS ("video/x-bayer,"
         "format=(string){bggr,gbrg,grbg,rggb},"
         "width=[1,MAX],height=[1,MAX]," "framerate=(fraction)[0/1,MAX]")
     );
@@ -95,7 +95,7 @@ gst_rgb2bayer_class_init (GstRGB2BayerClass * klass)
   gst_element_class_set_details_simple (element_class,
       "RGB to Bayer converter",
       "Filter/Converter/Video",
-      "Converts video/x-raw to video/x-raw-bayer",
+      "Converts video/x-raw to video/x-bayer",
       "David Schleef <ds@entropywave.com>");
 
   base_transform_class->transform_caps =
@@ -138,7 +138,7 @@ gst_rgb2bayer_transform_caps (GstBaseTransform * trans,
   if (direction == GST_PAD_SRC) {
     newcaps = gst_caps_new_empty_simple ("video/x-raw");
   } else {
-    newcaps = gst_caps_new_empty_simple ("video/x-raw-bayer");
+    newcaps = gst_caps_new_empty_simple ("video/x-bayer");
   }
   new_structure = gst_caps_get_structure (newcaps, 0);
 
@@ -177,8 +177,8 @@ gst_rgb2bayer_get_unit_size (GstBaseTransform * trans, GstCaps * caps,
   if (gst_structure_get_int (structure, "width", &width) &&
       gst_structure_get_int (structure, "height", &height)) {
     name = gst_structure_get_name (structure);
-    /* Our name must be either video/x-raw-bayer video/x-raw */
-    if (g_str_equal (name, "video/x-raw-bayer")) {
+    /* Our name must be either video/x-bayer video/x-raw */
+    if (g_str_equal (name, "video/x-bayer")) {
       *size = width * height;
       return TRUE;
     } else {
