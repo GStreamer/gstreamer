@@ -133,6 +133,9 @@
 
 #include "gst/glib-compat-private.h"
 
+/* for XkbKeycodeToKeysym */
+#include <X11/XKBlib.h>
+
 GST_DEBUG_CATEGORY_STATIC (gst_debug_xvimagesink);
 #define GST_CAT_DEFAULT gst_debug_xvimagesink
 GST_DEBUG_CATEGORY_STATIC (GST_CAT_PERFORMANCE);
@@ -1236,6 +1239,7 @@ gst_xvimagesink_handle_xevents (GstXvImageSink * xvimagesink)
           KeyPressMask | KeyReleaseMask | ButtonPressMask | ButtonReleaseMask,
           &e)) {
     KeySym keysym;
+    const char *key_str = NULL;
 
     /* We lock only for the X function call */
     g_mutex_unlock (xvimagesink->x_lock);
@@ -1262,24 +1266,20 @@ gst_xvimagesink_handle_xevents (GstXvImageSink * xvimagesink)
       case KeyRelease:
         /* Key pressed/released over our window. We send upstream
            events for interactivity/navigation */
-        GST_DEBUG ("xvimagesink key %d pressed over window at %d,%d",
-            e.xkey.keycode, e.xkey.x, e.xkey.y);
         g_mutex_lock (xvimagesink->x_lock);
-        keysym = XKeycodeToKeysym (xvimagesink->xcontext->disp,
-            e.xkey.keycode, 0);
-        g_mutex_unlock (xvimagesink->x_lock);
+        keysym = XkbKeycodeToKeysym (xvimagesink->xcontext->disp,
+            e.xkey.keycode, 0, 0);
         if (keysym != NoSymbol) {
-          char *key_str = NULL;
-
-          g_mutex_lock (xvimagesink->x_lock);
           key_str = XKeysymToString (keysym);
-          g_mutex_unlock (xvimagesink->x_lock);
-          gst_navigation_send_key_event (GST_NAVIGATION (xvimagesink),
-              e.type == KeyPress ? "key-press" : "key-release", key_str);
         } else {
-          gst_navigation_send_key_event (GST_NAVIGATION (xvimagesink),
-              e.type == KeyPress ? "key-press" : "key-release", "unknown");
+          key_str = "unknown";
         }
+        g_mutex_unlock (xvimagesink->x_lock);
+        GST_DEBUG_OBJECT (xvimagesink,
+            "key %d pressed over window at %d,%d (%s)",
+            e.xkey.keycode, e.xkey.x, e.xkey.y, key_str);
+        gst_navigation_send_key_event (GST_NAVIGATION (xvimagesink),
+            e.type == KeyPress ? "key-press" : "key-release", key_str);
         break;
       default:
         GST_DEBUG ("xvimagesink unhandled X event (%d)", e.type);
