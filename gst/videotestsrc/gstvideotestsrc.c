@@ -646,7 +646,7 @@ gst_video_test_src_setcaps (GstBaseSrc * bsrc, GstCaps * caps)
     if (!gst_video_info_from_caps (&info, caps))
       goto parse_failed;
 
-  } else if (gst_structure_has_name (structure, "video/x-raw-bayer")) {
+  } else if (gst_structure_has_name (structure, "video/x-bayer")) {
     if (!gst_video_test_src_parse_caps (caps, &info.width, &info.height,
             &info.fps_n, &info.fps_d, &info.colorimetry))
       goto parse_failed;

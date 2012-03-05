@@ -331,7 +331,7 @@ paintinfo_find_by_structure (const GstStructure * structure)
       }
     }
     return NULL;
-  } else if (strcmp (media_type, "video/x-raw-bayer") == 0) {
+  } else if (strcmp (media_type, "video/x-bayer") == 0) {
     const gchar *format;
 
     format = gst_structure_get_string (structure, "format");
@@ -432,7 +432,7 @@ paint_get_structure (struct format_list_struct * format)
       break;
     }
     case VTS_BAYER:
-      structure = gst_structure_new ("video/x-raw-bayer",
+      structure = gst_structure_new ("video/x-bayer",
           "format", G_TYPE_STRING, format->format, NULL);
       break;
     default:
