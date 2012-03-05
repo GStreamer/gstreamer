@@ -171,6 +171,8 @@ gst_wavpack_dec_start (GstAudioDecoder * dec)
   gst_audio_decoder_set_max_errors (dec, 16);
   /* don't bother us with flushing */
   gst_audio_decoder_set_drainable (dec, FALSE);
+  /* aim for some perfect timestamping */
+  gst_audio_decoder_set_tolerance (dec, 10 * GST_MSECOND);
 
   return TRUE;
 }
@@ -396,14 +398,14 @@ gst_wavpack_dec_handle_frame (GstAudioDecoder * bdec, GstBuffer * buf)
   if (width == 8) {
     gint8 *outbuffer = (gint8 *) out_data;
 
-    for (i = 0; i < max; i--) {
+    for (i = 0; i < max; i++) {
       *outbuffer++ = (gint8) (dec_data[i]);
     }
   } else if (width == 16) {
     gint16 *outbuffer = (gint16 *) out_data;
 
     for (i = 0; i < max; i++) {
-      *outbuffer++ = (gint8) (dec_data[i]);
+      *outbuffer++ = (gint16) (dec_data[i]);
     }
   } else if (dec->width == 32) {
     gint32 *outbuffer = (gint32 *) out_data;

@@ -72,11 +72,11 @@ struct _GstJackAudioSrc
     GstCaps         *caps;
 
     /* properties */
-    GstJackConnect connect;
+    GstJackConnect   connect;
     gchar           *server;
     jack_client_t   *jclient;
     gchar           *client_name;
-    GstJackTransport transport;
+    guint            transport;
 
     /* our client */
     GstJackAudioClient *client;

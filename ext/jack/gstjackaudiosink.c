@@ -564,7 +564,7 @@ gst_jack_ring_buffer_start (GstAudioRingBuffer * buf)
 
   GST_DEBUG_OBJECT (sink, "start");
 
-  if (sink->transport == GST_JACK_TRANSPORT_MASTER) {
+  if (sink->transport & GST_JACK_TRANSPORT_MASTER) {
     jack_client_t *client;
 
     client = gst_jack_audio_client_get_client (sink->client);
@@ -583,7 +583,7 @@ gst_jack_ring_buffer_pause (GstAudioRingBuffer * buf)
 
   GST_DEBUG_OBJECT (sink, "pause");
 
-  if (sink->transport == GST_JACK_TRANSPORT_MASTER) {
+  if (sink->transport & GST_JACK_TRANSPORT_MASTER) {
     jack_client_t *client;
 
     client = gst_jack_audio_client_get_client (sink->client);
@@ -602,7 +602,7 @@ gst_jack_ring_buffer_stop (GstAudioRingBuffer * buf)
 
   GST_DEBUG_OBJECT (sink, "stop");
 
-  if (sink->transport == GST_JACK_TRANSPORT_MASTER) {
+  if (sink->transport & GST_JACK_TRANSPORT_MASTER) {
     jack_client_t *client;
 
     client = gst_jack_audio_client_get_client (sink->client);
@@ -761,7 +761,7 @@ gst_jack_audio_sink_class_init (GstJackAudioSinkClass * klass)
    * Since: 0.10.31
    */
   g_object_class_install_property (gobject_class, PROP_TRANSPORT,
-      g_param_spec_enum ("transport", "Transport mode",
+      g_param_spec_flags ("transport", "Transport mode",
           "Jack transport behaviour of the client",
           GST_TYPE_JACK_TRANSPORT, DEFAULT_PROP_TRANSPORT,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
@@ -840,7 +840,7 @@ gst_jack_audio_sink_set_property (GObject * object, guint prop_id,
       }
       break;
     case PROP_TRANSPORT:
-      sink->transport = g_value_get_enum (value);
+      sink->transport = g_value_get_flags (value);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -870,7 +870,7 @@ gst_jack_audio_sink_get_property (GObject * object, guint prop_id,
       g_value_set_boxed (value, sink->jclient);
       break;
     case PROP_TRANSPORT:
-      g_value_set_enum (value, sink->transport);
+      g_value_set_flags (value, sink->transport);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
