@@ -1836,76 +1836,6 @@ gst_base_parse_push_frame (GstBaseParse * parse, GstBaseParseFrame * frame)
   /* should have caps by now */
   g_return_val_if_fail (GST_PAD_CAPS (parse->srcpad), GST_FLOW_ERROR);
 
-  /* segment adjustment magic; only if we are running the whole show */
-  if (!parse->priv->passthrough && parse->segment.rate > 0.0 &&
-      (parse->priv->pad_mode == GST_ACTIVATE_PULL ||
-          parse->priv->upstream_seekable)) {
-    /* segment times are typically estimates,
-     * actual frame data might lead subclass to different timestamps,
-     * so override segment start from what is supplied there */
-    if (G_UNLIKELY (parse->priv->pending_segment && !parse->priv->exact_position
-            && GST_CLOCK_TIME_IS_VALID (last_start))) {
-      gst_event_unref (parse->priv->pending_segment);
-      parse->segment.start =
-          MIN ((guint64) last_start, (guint64) parse->segment.stop);
-      GST_DEBUG_OBJECT (parse,
-          "adjusting pending segment start to %" GST_TIME_FORMAT,
-          GST_TIME_ARGS (parse->segment.start));
-      parse->priv->pending_segment =
-          gst_event_new_new_segment (FALSE, parse->segment.rate,
-          parse->segment.format, parse->segment.start,
-          parse->segment.stop, parse->segment.start);
-    }
-    /* handle gaps, e.g. non-zero start-time, in as much not handled by above */
-    if (GST_CLOCK_TIME_IS_VALID (parse->segment.last_stop) &&
-        GST_CLOCK_TIME_IS_VALID (last_start)) {
-      GstClockTimeDiff diff;
-
-      /* only send newsegments with increasing start times,
-       * otherwise if these go back and forth downstream (sinks) increase
-       * accumulated time and running_time */
-      diff = GST_CLOCK_DIFF (parse->segment.last_stop, last_start);
-      if (G_UNLIKELY (diff > 2 * GST_SECOND
-              && last_start > parse->segment.start
-              && (!GST_CLOCK_TIME_IS_VALID (parse->segment.stop)
-                  || last_start < parse->segment.stop))) {
-        GST_DEBUG_OBJECT (parse,
-            "Gap of %" G_GINT64_FORMAT " ns detected in stream " "(%"
-            GST_TIME_FORMAT " -> %" GST_TIME_FORMAT "). "
-            "Sending updated NEWSEGMENT events", diff,
-            GST_TIME_ARGS (parse->segment.last_stop),
-            GST_TIME_ARGS (last_start));
-        if (G_UNLIKELY (parse->priv->pending_segment)) {
-          gst_event_unref (parse->priv->pending_segment);
-          parse->segment.start = last_start;
-          parse->priv->pending_segment =
-              gst_event_new_new_segment (FALSE, parse->segment.rate,
-              parse->segment.format, parse->segment.start,
-              parse->segment.stop, parse->segment.start);
-        } else {
-          /* send newsegment events such that the gap is not accounted in
-           * accum time, hence running_time */
-          /* close ahead of gap */
-          gst_pad_push_event (parse->srcpad,
-              gst_event_new_new_segment (TRUE, parse->segment.rate,
-                  parse->segment.format, parse->segment.last_stop,
-                  parse->segment.last_stop, parse->segment.last_stop));
-          /* skip gap */
-          gst_pad_push_event (parse->srcpad,
-              gst_event_new_new_segment (FALSE, parse->segment.rate,
-                  parse->segment.format, last_start,
-                  parse->segment.stop, last_start));
-        }
-        /* align segment view with downstream,
-         * prevents double-counting accum when closing segment */
-        gst_segment_set_newsegment (&parse->segment, FALSE,
-            parse->segment.rate, parse->segment.format, last_start,
-            parse->segment.stop, last_start);
-        parse->segment.last_stop = last_start;
-      }
-    }
-  }
-
   /* and should then also be linked downstream, so safe to send some events */
   if (G_UNLIKELY (parse->priv->close_segment)) {
     /* only set up by loop */
@@ -1927,10 +1857,6 @@ gst_base_parse_push_frame (GstBaseParse * parse, GstBaseParseFrame * frame)
     gst_base_parse_check_media (parse);
   }
 
-  /* update bitrates and optionally post corresponding tags
-   * (following newsegment) */
-  gst_base_parse_update_bitrates (parse, frame);
-
   if (G_UNLIKELY (parse->priv->pending_events)) {
     GList *l;
 
@@ -1940,6 +1866,57 @@ gst_base_parse_push_frame (GstBaseParse * parse, GstBaseParseFrame * frame)
     g_list_free (parse->priv->pending_events);
     parse->priv->pending_events = NULL;
   }
+
+  /* segment adjustment magic; only if we are running the whole show */
+  if (!parse->priv->passthrough && parse->segment.rate > 0.0 &&
+      (parse->priv->pad_mode == GST_ACTIVATE_PULL ||
+          parse->priv->upstream_seekable)) {
+    /* handle gaps */
+    if (GST_CLOCK_TIME_IS_VALID (parse->segment.last_stop) &&
+        GST_CLOCK_TIME_IS_VALID (last_start)) {
+      GstClockTimeDiff diff;
+
+      /* only send newsegments with increasing start times,
+       * otherwise if these go back and forth downstream (sinks) increase
+       * accumulated time and running_time */
+      diff = GST_CLOCK_DIFF (parse->segment.last_stop, last_start);
+      if (G_UNLIKELY (diff > 2 * GST_SECOND
+              && last_start > parse->segment.start
+              && (!GST_CLOCK_TIME_IS_VALID (parse->segment.stop)
+                  || last_start < parse->segment.stop))) {
+        GST_DEBUG_OBJECT (parse,
+            "Gap of %" G_GINT64_FORMAT " ns detected in stream " "(%"
+            GST_TIME_FORMAT " -> %" GST_TIME_FORMAT "). "
+            "Sending updated NEWSEGMENT events", diff,
+            GST_TIME_ARGS (parse->segment.last_stop),
+            GST_TIME_ARGS (last_start));
+
+        /* send newsegment events such that the gap is not accounted in
+         * accum time, hence running_time */
+        /* close ahead of gap */
+        gst_pad_push_event (parse->srcpad,
+            gst_event_new_new_segment (TRUE, parse->segment.rate,
+                parse->segment.format, parse->segment.last_stop,
+                parse->segment.last_stop, parse->segment.last_stop));
+        /* skip gap */
+        gst_pad_push_event (parse->srcpad,
+            gst_event_new_new_segment (FALSE, parse->segment.rate,
+                parse->segment.format, last_start,
+                parse->segment.stop, last_start));
+
+        /* align segment view with downstream,
+         * prevents double-counting accum when closing segment */
+        gst_segment_set_newsegment (&parse->segment, FALSE,
+            parse->segment.rate, parse->segment.format, last_start,
+            parse->segment.stop, last_start);
+        parse->segment.last_stop = last_start;
+      }
+    }
+  }
+
+  /* update bitrates and optionally post corresponding tags
+   * (following newsegment) */
+  gst_base_parse_update_bitrates (parse, frame);
 
   if (klass->pre_push_frame) {
     ret = klass->pre_push_frame (parse, frame);
