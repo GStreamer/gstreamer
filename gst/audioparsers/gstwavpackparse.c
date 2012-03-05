@@ -42,7 +42,7 @@
 #include "gstwavpackparse.h"
 
 #include <gst/base/gstbytereader.h>
-#include <gst/audio/multichannel.h>
+#include <gst/audio/audio.h>
 
 GST_DEBUG_CATEGORY_STATIC (wavpack_parse_debug);
 #define GST_CAT_DEFAULT wavpack_parse_debug
@@ -51,7 +51,7 @@ static GstStaticPadTemplate src_template = GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS ("audio/x-wavpack, "
-        "width = (int) [ 1, 32 ], "
+        "depth = (int) [ 1, 32 ], "
         "channels = (int) [ 1, 8 ], "
         "rate = (int) [ 6000, 192000 ], " "framed = (boolean) TRUE; "
         "audio/x-wavpack-correction, " "framed = (boolean) TRUE")
@@ -66,36 +66,19 @@ static void gst_wavpack_parse_finalize (GObject * object);
 
 static gboolean gst_wavpack_parse_start (GstBaseParse * parse);
 static gboolean gst_wavpack_parse_stop (GstBaseParse * parse);
-static gboolean gst_wavpack_parse_check_valid_frame (GstBaseParse * parse,
-    GstBaseParseFrame * frame, guint * size, gint * skipsize);
-static GstFlowReturn gst_wavpack_parse_parse_frame (GstBaseParse * parse,
-    GstBaseParseFrame * frame);
-static GstCaps *gst_wavpack_parse_get_sink_caps (GstBaseParse * parse);
+static GstFlowReturn gst_wavpack_parse_handle_frame (GstBaseParse * parse,
+    GstBaseParseFrame * frame, gint * skipsize);
+static GstCaps *gst_wavpack_parse_get_sink_caps (GstBaseParse * parse,
+    GstCaps * filter);
 
-/* FIXME remove when all properly renamed */
-typedef GstWavpackParse GstWavpackParse2;
-typedef GstWavpackParseClass GstWavpackParse2Class;
-
-GST_BOILERPLATE (GstWavpackParse2, gst_wavpack_parse, GstBaseParse,
-    GST_TYPE_BASE_PARSE);
-
-static void
-gst_wavpack_parse_base_init (gpointer klass)
-{
-  GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
-
-  gst_element_class_add_static_pad_template (element_class, &sink_template);
-  gst_element_class_add_static_pad_template (element_class, &src_template);
-
-  gst_element_class_set_details_simple (element_class,
-      "Wavpack audio stream parser", "Codec/Parser/Audio",
-      "Wavpack parser", "Mark Nauwelaerts <mark.nauwelaerts@collabora.co.uk>");
-}
+#define gst_wavpack_parse_parent_class parent_class
+G_DEFINE_TYPE (GstWavpackParse, gst_wavpack_parse, GST_TYPE_BASE_PARSE);
 
 static void
 gst_wavpack_parse_class_init (GstWavpackParseClass * klass)
 {
   GstBaseParseClass *parse_class = GST_BASE_PARSE_CLASS (klass);
+  GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
   GObjectClass *object_class = G_OBJECT_CLASS (klass);
 
   GST_DEBUG_CATEGORY_INIT (wavpack_parse_debug, "wavpackparse", 0,
@@ -105,11 +88,19 @@ gst_wavpack_parse_class_init (GstWavpackParseClass * klass)
 
   parse_class->start = GST_DEBUG_FUNCPTR (gst_wavpack_parse_start);
   parse_class->stop = GST_DEBUG_FUNCPTR (gst_wavpack_parse_stop);
-  parse_class->check_valid_frame =
-      GST_DEBUG_FUNCPTR (gst_wavpack_parse_check_valid_frame);
-  parse_class->parse_frame = GST_DEBUG_FUNCPTR (gst_wavpack_parse_parse_frame);
+  parse_class->handle_frame =
+      GST_DEBUG_FUNCPTR (gst_wavpack_parse_handle_frame);
   parse_class->get_sink_caps =
       GST_DEBUG_FUNCPTR (gst_wavpack_parse_get_sink_caps);
+
+  gst_element_class_add_pad_template (element_class,
+      gst_static_pad_template_get (&sink_template));
+  gst_element_class_add_pad_template (element_class,
+      gst_static_pad_template_get (&src_template));
+
+  gst_element_class_set_details_simple (element_class,
+      "Wavpack audio stream parser", "Codec/Parser/Audio",
+      "Wavpack parser", "Mark Nauwelaerts <mark.nauwelaerts@collabora.co.uk>");
 }
 
 static void
@@ -123,7 +114,7 @@ gst_wavpack_parse_reset (GstWavpackParse * wvparse)
 }
 
 static void
-gst_wavpack_parse_init (GstWavpackParse * wvparse, GstWavpackParseClass * klass)
+gst_wavpack_parse_init (GstWavpackParse * wvparse)
 {
   gst_wavpack_parse_reset (wvparse);
 }
@@ -209,7 +200,7 @@ static const struct
   0x00001, GST_AUDIO_CHANNEL_POSITION_FRONT_LEFT}, {
   0x00002, GST_AUDIO_CHANNEL_POSITION_FRONT_RIGHT}, {
   0x00004, GST_AUDIO_CHANNEL_POSITION_FRONT_CENTER}, {
-  0x00008, GST_AUDIO_CHANNEL_POSITION_LFE}, {
+  0x00008, GST_AUDIO_CHANNEL_POSITION_LFE1}, {
   0x00010, GST_AUDIO_CHANNEL_POSITION_REAR_LEFT}, {
   0x00020, GST_AUDIO_CHANNEL_POSITION_REAR_RIGHT}, {
   0x00040, GST_AUDIO_CHANNEL_POSITION_FRONT_LEFT_OF_CENTER}, {
@@ -217,37 +208,25 @@ static const struct
   0x00100, GST_AUDIO_CHANNEL_POSITION_REAR_CENTER}, {
   0x00200, GST_AUDIO_CHANNEL_POSITION_SIDE_LEFT}, {
   0x00400, GST_AUDIO_CHANNEL_POSITION_SIDE_RIGHT}, {
-  0x00800, GST_AUDIO_CHANNEL_POSITION_INVALID}, /* TOP_CENTER       */
-  {
-  0x01000, GST_AUDIO_CHANNEL_POSITION_INVALID}, /* TOP_FRONT_LEFT   */
-  {
-  0x02000, GST_AUDIO_CHANNEL_POSITION_INVALID}, /* TOP_FRONT_CENTER */
-  {
-  0x04000, GST_AUDIO_CHANNEL_POSITION_INVALID}, /* TOP_FRONT_RIGHT  */
-  {
-  0x08000, GST_AUDIO_CHANNEL_POSITION_INVALID}, /* TOP_BACK_LEFT    */
-  {
-  0x10000, GST_AUDIO_CHANNEL_POSITION_INVALID}, /* TOP_BACK_CENTER  */
-  {
-  0x20000, GST_AUDIO_CHANNEL_POSITION_INVALID}  /* TOP_BACK_RIGHT   */
+  0x00800, GST_AUDIO_CHANNEL_POSITION_TOP_CENTER}, {
+  0x01000, GST_AUDIO_CHANNEL_POSITION_TOP_FRONT_LEFT}, {
+  0x02000, GST_AUDIO_CHANNEL_POSITION_TOP_FRONT_CENTER}, {
+  0x04000, GST_AUDIO_CHANNEL_POSITION_TOP_FRONT_RIGHT}, {
+  0x08000, GST_AUDIO_CHANNEL_POSITION_TOP_REAR_LEFT}, {
+  0x10000, GST_AUDIO_CHANNEL_POSITION_TOP_REAR_CENTER}, {
+  0x20000, GST_AUDIO_CHANNEL_POSITION_TOP_REAR_RIGHT}
 };
 
 #define MAX_CHANNEL_POSITIONS G_N_ELEMENTS (layout_mapping)
 
 static gboolean
-gst_wavpack_set_channel_layout (GstCaps * caps, gint layout)
+gst_wavpack_get_channel_positions (gint num_channels, gint layout,
+    GstAudioChannelPosition * pos)
 {
-  GstAudioChannelPosition pos[MAX_CHANNEL_POSITIONS];
-  GstStructure *s;
-  gint num_channels, i, p;
-
-  s = gst_caps_get_structure (caps, 0);
-  if (!gst_structure_get_int (s, "channels", &num_channels))
-    g_return_val_if_reached (FALSE);
+  gint i, p;
 
   if (num_channels == 1 && layout == 0x00004) {
-    pos[0] = GST_AUDIO_CHANNEL_POSITION_FRONT_MONO;
-    gst_audio_set_channel_positions (s, pos);
+    pos[0] = GST_AUDIO_CHANNEL_POSITION_MONO;
     return TRUE;
   }
 
@@ -276,7 +255,6 @@ gst_wavpack_set_channel_layout (GstCaps * caps, gint layout)
     return FALSE;
   }
 
-  gst_audio_set_channel_positions (s, pos);
   return TRUE;
 }
 
@@ -297,12 +275,15 @@ gst_wavpack_parse_frame_metadata (GstWavpackParse * parse, GstBuffer * buf,
 {
   GstByteReader br;
   gint i;
+  GstMapInfo map;
 
   g_return_val_if_fail (wph != NULL || wpi != NULL, FALSE);
-  g_return_val_if_fail (GST_BUFFER_SIZE (buf) >= skip + sizeof (WavpackHeader),
-      FALSE);
+  g_return_val_if_fail (gst_buffer_get_size (buf) >=
+      skip + sizeof (WavpackHeader), FALSE);
 
-  gst_byte_reader_init (&br, GST_BUFFER_DATA (buf) + skip, wph->ckSize + 8);
+  gst_buffer_map (buf, &map, GST_MAP_READ);
+
+  gst_byte_reader_init (&br, map.data + skip, wph->ckSize + 8);
   /* skip past header */
   gst_byte_reader_skip_unchecked (&br, sizeof (WavpackHeader));
 
@@ -382,11 +363,14 @@ gst_wavpack_parse_frame_metadata (GstWavpackParse * parse, GstBuffer * buf,
     }
   }
 
+  gst_buffer_unmap (buf, &map);
+
   return TRUE;
 
   /* ERRORS */
 read_failed:
   {
+    gst_buffer_unmap (buf, &map);
     GST_DEBUG_OBJECT (parse, "short read while parsing metadata");
     /* let's look the other way anyway */
     return TRUE;
@@ -398,11 +382,15 @@ static gboolean
 gst_wavpack_parse_frame_header (GstWavpackParse * parse, GstBuffer * buf,
     gint skip, WavpackHeader * _wph)
 {
-  GstByteReader br = GST_BYTE_READER_INIT_FROM_BUFFER (buf);
-  WavpackHeader wph = { {0,}, 0, };
+  GstByteReader br;
+  WavpackHeader wph;
+  GstMapInfo map;
 
-  g_return_val_if_fail (GST_BUFFER_SIZE (buf) >= skip + sizeof (WavpackHeader),
-      FALSE);
+  g_return_val_if_fail (gst_buffer_get_size (buf) >=
+      skip + sizeof (WavpackHeader), FALSE);
+
+  gst_buffer_map (buf, &map, GST_MAP_READ);
+  gst_byte_reader_init (&br, map.data, map.size);
 
   /* marker */
   gst_byte_reader_skip_unchecked (&br, skip + 4);
@@ -436,34 +424,41 @@ gst_wavpack_parse_frame_header (GstWavpackParse * parse, GstBuffer * buf,
   if (_wph)
     *_wph = wph;
 
+  gst_buffer_unmap (buf, &map);
+
   return TRUE;
 }
 
-static gboolean
-gst_wavpack_parse_check_valid_frame (GstBaseParse * parse,
-    GstBaseParseFrame * frame, guint * framesize, gint * skipsize)
+static GstFlowReturn
+gst_wavpack_parse_handle_frame (GstBaseParse * parse,
+    GstBaseParseFrame * frame, gint * skipsize)
 {
   GstWavpackParse *wvparse = GST_WAVPACK_PARSE (parse);
   GstBuffer *buf = frame->buffer;
-  GstByteReader reader = GST_BYTE_READER_INIT_FROM_BUFFER (buf);
+  GstByteReader reader;
   gint off;
+  guint rate, chans, width, mask;
   gboolean lost_sync, draining, final;
   guint frmsize = 0;
   WavpackHeader wph;
   WavpackInfo wpi = { 0, };
+  GstMapInfo map;
 
-  if (G_UNLIKELY (GST_BUFFER_SIZE (buf) < sizeof (WavpackHeader)))
+  if (G_UNLIKELY (gst_buffer_get_size (buf) < sizeof (WavpackHeader)))
     return FALSE;
+
+  gst_buffer_map (buf, &map, GST_MAP_READ);
+  gst_byte_reader_init (&reader, map.data, map.size);
 
   /* scan for 'wvpk' marker */
   off = gst_byte_reader_masked_scan_uint32 (&reader, 0xffffffff, 0x7776706b,
-      0, GST_BUFFER_SIZE (buf));
+      0, map.size);
 
   GST_LOG_OBJECT (parse, "possible sync at buffer offset %d", off);
 
   /* didn't find anything that looks like a sync word, skip */
   if (off < 0) {
-    *skipsize = GST_BUFFER_SIZE (buf) - 3;
+    *skipsize = map.size - 3;
     goto skip;
   }
 
@@ -530,71 +525,50 @@ gst_wavpack_parse_check_valid_frame (GstBaseParse * parse,
     lost_sync = FALSE;
   }
 
-  /* found frame (up to final), record gathered metadata */
-  wvparse->wpi = wpi;
-  wvparse->wph = wph;
-
-  *framesize = frmsize;
-  gst_base_parse_set_min_frame_size (parse, sizeof (WavpackHeader));
-
-  return TRUE;
-
-skip:
-  GST_LOG_OBJECT (wvparse, "skipping %d", *skipsize);
-  return FALSE;
-
-more:
-  GST_LOG_OBJECT (wvparse, "need at least %u", frmsize);
-  gst_base_parse_set_min_frame_size (parse, frmsize);
-  *skipsize = 0;
-  return FALSE;
-}
-
-static GstFlowReturn
-gst_wavpack_parse_parse_frame (GstBaseParse * parse, GstBaseParseFrame * frame)
-{
-  GstWavpackParse *wvparse = GST_WAVPACK_PARSE (parse);
-  GstBuffer *buf = frame->buffer;
-  guint rate, chans, width, mask;
-
-  /* re-use previously parsed data */
-  rate = wvparse->wpi.rate;
-  width = wvparse->wpi.width;
-  chans = wvparse->wpi.channels;
-  mask = wvparse->wpi.channel_mask;
+  rate = wpi.rate;
+  width = wpi.width;
+  chans = wpi.channels;
+  mask = wpi.channel_mask;
 
   GST_LOG_OBJECT (parse, "rate: %u, width: %u, chans: %u", rate, width, chans);
 
   GST_BUFFER_TIMESTAMP (buf) =
-      gst_util_uint64_scale_int (wvparse->wph.block_index, GST_SECOND, rate);
+      gst_util_uint64_scale_int (wph.block_index, GST_SECOND, rate);
   GST_BUFFER_DURATION (buf) =
-      gst_util_uint64_scale_int (wvparse->wph.block_index +
-      wvparse->wph.block_samples, GST_SECOND, rate) -
-      GST_BUFFER_TIMESTAMP (buf);
+      gst_util_uint64_scale_int (wph.block_index + wph.block_samples,
+      GST_SECOND, rate) - GST_BUFFER_TIMESTAMP (buf);
 
   if (G_UNLIKELY (wvparse->sample_rate != rate || wvparse->channels != chans
           || wvparse->width != width || wvparse->channel_mask != mask)) {
     GstCaps *caps;
 
-    if (wvparse->wpi.correction) {
+    if (wpi.correction) {
       caps = gst_caps_new_simple ("audio/x-wavpack-correction",
           "framed", G_TYPE_BOOLEAN, TRUE, NULL);
     } else {
       caps = gst_caps_new_simple ("audio/x-wavpack",
           "channels", G_TYPE_INT, chans,
           "rate", G_TYPE_INT, rate,
-          "width", G_TYPE_INT, width, "framed", G_TYPE_BOOLEAN, TRUE, NULL);
+          "depth", G_TYPE_INT, width, "framed", G_TYPE_BOOLEAN, TRUE, NULL);
 
       if (!mask)
         mask = gst_wavpack_get_default_channel_mask (wvparse->channels);
       if (mask != 0) {
-        if (!gst_wavpack_set_channel_layout (caps, mask)) {
-          GST_WARNING_OBJECT (wvparse, "Failed to set channel layout");
+        GstAudioChannelPosition pos[64] =
+            { GST_AUDIO_CHANNEL_POSITION_INVALID, };
+        guint64 gmask;
+
+        if (!gst_wavpack_get_channel_positions (chans, mask, pos)) {
+          GST_WARNING_OBJECT (wvparse, "Failed to determine channel layout");
+        } else {
+          gst_audio_channel_positions_to_mask (pos, chans, &gmask);
+          if (gmask)
+            gst_caps_set_simple (caps,
+                "channel-mask", GST_TYPE_BITMASK, gmask, NULL);
         }
       }
     }
 
-    gst_buffer_set_caps (buf, caps);
     gst_pad_set_caps (GST_BASE_PARSE_SRC_PAD (parse), caps);
     gst_caps_unref (caps);
 
@@ -611,14 +585,32 @@ gst_wavpack_parse_parse_frame (GstBaseParse * parse, GstBaseParseFrame * frame)
     }
   }
 
+  /* return to normal size */
+  gst_base_parse_set_min_frame_size (parse, sizeof (WavpackHeader));
+  gst_buffer_unmap (buf, &map);
+
+  return gst_base_parse_finish_frame (parse, frame, frmsize);
+
+skip:
+  gst_buffer_unmap (buf, &map);
+  GST_LOG_OBJECT (wvparse, "skipping %d", *skipsize);
+  return GST_FLOW_OK;
+
+more:
+  gst_buffer_unmap (buf, &map);
+  GST_LOG_OBJECT (wvparse, "need at least %u", frmsize);
+  gst_base_parse_set_min_frame_size (parse, frmsize);
+  *skipsize = 0;
   return GST_FLOW_OK;
 }
 
 static GstCaps *
-gst_wavpack_parse_get_sink_caps (GstBaseParse * parse)
+gst_wavpack_parse_get_sink_caps (GstBaseParse * parse, GstCaps * filter)
 {
   GstCaps *peercaps;
   GstCaps *res;
+
+  /* FIXME: handle filter caps */
 
   peercaps = gst_pad_get_allowed_caps (GST_BASE_PARSE_SRC_PAD (parse));
   if (peercaps) {

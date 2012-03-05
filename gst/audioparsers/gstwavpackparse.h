@@ -112,9 +112,6 @@ struct _GstWavpackParse {
   gint          channel_mask;
 
   guint         total_samples;
-
-  WavpackHeader wph;
-  WavpackInfo   wpi;
 };
 
 /**

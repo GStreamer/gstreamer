@@ -3,7 +3,7 @@ plugin_LTLIBRARIES = libgstaudioparsers.la
 libgstaudioparsers_la_SOURCES = \
 	gstaacparse.c gstamrparse.c gstac3parse.c \
 	gstdcaparse.c gstflacparse.c gstmpegaudioparse.c \
-	plugin.c
+	gstwavpackparse.c plugin.c
 
 libgstaudioparsers_la_CFLAGS = \
 	$(GST_PLUGINS_BASE_CFLAGS) $(GST_BASE_CFLAGS) $(GST_CFLAGS)
