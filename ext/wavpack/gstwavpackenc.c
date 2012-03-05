@@ -31,7 +31,7 @@
  * |[
  * gst-launch audiotestsrc num-buffers=500 ! audioconvert ! wavpackenc ! filesink location=sinewave.wv
  * ]| This pipeline encodes audio from audiotestsrc into a Wavpack file. The audioconvert element is needed
- * as the Wavpack encoder only accepts input with 32 bit width (and every depth between 1 and 32 bits).
+ * as the Wavpack encoder only accepts input with 32 bit width.
  * |[
  * gst-launch cdda://1 ! audioconvert ! wavpackenc ! filesink location=track1.wv
  * ]| This pipeline encodes audio from an audio CD into a Wavpack file using
@@ -90,19 +90,17 @@ GST_DEBUG_CATEGORY_STATIC (gst_wavpack_enc_debug);
 static GstStaticPadTemplate sink_factory = GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS ("audio/x-raw-int, "
-        "width = (int) 32, "
-        "depth = (int) { 24, 32 }, "
-        "endianness = (int) BYTE_ORDER, "
-        "channels = (int) [ 1, 8 ], "
-        "rate = (int) [ 6000, 192000 ]," "signed = (boolean) TRUE")
+    GST_STATIC_CAPS ("audio/x-raw, "
+        "format = (string) " GST_AUDIO_NE (S32) ", "
+        "layout = (string) interleaved, "
+        "channels = (int) [ 1, 8 ], " "rate = (int) [ 6000, 192000 ]")
     );
 
 static GstStaticPadTemplate src_factory = GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS ("audio/x-wavpack, "
-        "width = (int) [ 1, 32 ], "
+        "depth = (int) [ 1, 32 ], "
         "channels = (int) [ 1, 8 ], "
         "rate = (int) [ 6000, 192000 ], " "framed = (boolean) TRUE")
     );
@@ -202,13 +200,15 @@ gst_wavpack_enc_joint_stereo_mode_get_type (void)
   return qtype;
 }
 
-GST_BOILERPLATE (GstWavpackEnc, gst_wavpack_enc, GstAudioEncoder,
-    GST_TYPE_AUDIO_ENCODER);
+#define gst_wavpack_enc_parent_class parent_class
+G_DEFINE_TYPE (GstWavpackEnc, gst_wavpack_enc, GST_TYPE_AUDIO_ENCODER);
 
 static void
-gst_wavpack_enc_base_init (gpointer klass)
+gst_wavpack_enc_class_init (GstWavpackEncClass * klass)
 {
-  GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
+  GObjectClass *gobject_class = (GObjectClass *) klass;
+  GstElementClass *element_class = (GstElementClass *) (klass);
+  GstAudioEncoderClass *base_class = (GstAudioEncoderClass *) (klass);
 
   /* add pad templates */
   gst_element_class_add_pad_template (element_class,
@@ -223,15 +223,6 @@ gst_wavpack_enc_base_init (gpointer klass)
       "Codec/Encoder/Audio",
       "Encodes audio with the Wavpack lossless/lossy audio codec",
       "Sebastian Dröge <slomo@circular-chaos.org>");
-}
-
-static void
-gst_wavpack_enc_class_init (GstWavpackEncClass * klass)
-{
-  GObjectClass *gobject_class = (GObjectClass *) klass;
-  GstAudioEncoderClass *base_class = (GstAudioEncoderClass *) (klass);
-
-  parent_class = g_type_class_peek_parent (klass);
 
   /* set property handlers */
   gobject_class->set_property = gst_wavpack_enc_set_property;
@@ -327,7 +318,7 @@ gst_wavpack_enc_reset (GstWavpackEnc * enc)
 }
 
 static void
-gst_wavpack_enc_init (GstWavpackEnc * enc, GstWavpackEncClass * gclass)
+gst_wavpack_enc_init (GstWavpackEnc * enc)
 {
   GstAudioEncoder *benc = GST_AUDIO_ENCODER (enc);
 
@@ -383,7 +374,9 @@ gst_wavpack_enc_set_format (GstAudioEncoder * benc, GstAudioInfo * info)
 {
   GstWavpackEnc *enc = GST_WAVPACK_ENC (benc);
   GstAudioChannelPosition *pos;
+  GstAudioChannelPosition opos[64] = { GST_AUDIO_CHANNEL_POSITION_INVALID, };
   GstCaps *caps;
+  guint64 mask = 0;
 
   /* we may be configured again, but that change should have cleanup context */
   g_assert (enc->wp_context == NULL);
@@ -406,14 +399,17 @@ gst_wavpack_enc_set_format (GstAudioEncoder * benc, GstAudioInfo * info)
       gst_wavpack_set_channel_mapping (pos, enc->channels,
       enc->channel_mapping);
 
+  /* wavpack caps hold gst mask, not wavpack mask */
+  gst_audio_channel_positions_to_mask (opos, enc->channels, &mask);
+
   /* set fixed src pad caps now that we know what we will get */
   caps = gst_caps_new_simple ("audio/x-wavpack",
       "channels", G_TYPE_INT, enc->channels,
       "rate", G_TYPE_INT, enc->samplerate,
-      "width", G_TYPE_INT, enc->depth, "framed", G_TYPE_BOOLEAN, TRUE, NULL);
+      "depth", G_TYPE_INT, enc->depth, "framed", G_TYPE_BOOLEAN, TRUE, NULL);
 
-  if (!gst_wavpack_set_channel_layout (caps, enc->channel_mask))
-    GST_WARNING_OBJECT (enc, "setting channel layout failed");
+  if (mask)
+    gst_caps_set_simple (caps, "channel-mask", GST_TYPE_BITMASK, mask, NULL);
 
   if (!gst_pad_set_caps (GST_AUDIO_ENCODER_SRC_PAD (enc), caps))
     goto setting_src_caps_failed;
@@ -562,11 +558,11 @@ gst_wavpack_enc_push_block (void *id, void *data, int32_t count)
 
   pad = (wid->correction) ? enc->wvcsrcpad : GST_AUDIO_ENCODER_SRC_PAD (enc);
   flow =
-      (wid->correction) ? &enc->wvcsrcpad_last_return : &enc->
-      srcpad_last_return;
+      (wid->correction) ? &enc->
+      wvcsrcpad_last_return : &enc->srcpad_last_return;
 
   buffer = gst_buffer_new_and_alloc (count);
-  g_memmove (GST_BUFFER_DATA (buffer), block, count);
+  gst_buffer_fill (buffer, 0, data, count);
 
   if (count > sizeof (WavpackHeader) && memcmp (block, "wvpk", 4) == 0) {
     /* if it's a Wavpack block set buffer timestamp and duration, etc */
@@ -612,9 +608,12 @@ gst_wavpack_enc_push_block (void *id, void *data, int32_t count)
         /* save header for later reference, so we can re-send it later on
          * EOS with fixed up values for total sample count etc. */
         if (enc->first_block == NULL && !wid->correction) {
-          enc->first_block =
-              g_memdup (GST_BUFFER_DATA (buffer), GST_BUFFER_SIZE (buffer));
-          enc->first_block_size = GST_BUFFER_SIZE (buffer);
+          GstMapInfo map;
+
+          gst_buffer_map (buffer, &map, GST_MAP_READ);
+          enc->first_block = g_memdup (map.data, map.size);
+          enc->first_block_size = map.size;
+          gst_buffer_unmap (buffer, &map);
         }
       }
     }
@@ -634,11 +633,11 @@ gst_wavpack_enc_push_block (void *id, void *data, int32_t count)
   if (wid->correction || wid->passthrough) {
     /* push the buffer and forward errors */
     GST_DEBUG_OBJECT (enc, "pushing buffer with %d bytes",
-        GST_BUFFER_SIZE (buffer));
+        gst_buffer_get_size (buffer));
     *flow = gst_pad_push (pad, buffer);
   } else {
     GST_DEBUG_OBJECT (enc, "handing frame of %d bytes",
-        GST_BUFFER_SIZE (buffer));
+        gst_buffer_get_size (buffer));
     *flow = gst_audio_encoder_finish_frame (GST_AUDIO_ENCODER (enc), buffer,
         samples);
   }
@@ -676,6 +675,7 @@ gst_wavpack_enc_handle_frame (GstAudioEncoder * benc, GstBuffer * buf)
   GstWavpackEnc *enc = GST_WAVPACK_ENC (benc);
   uint32_t sample_count;
   GstFlowReturn ret;
+  GstMapInfo map;
 
   /* base class ensures configuration */
   g_return_val_if_fail (enc->depth != 0, GST_FLOW_NOT_NEGOTIATED);
@@ -688,7 +688,7 @@ gst_wavpack_enc_handle_frame (GstAudioEncoder * benc, GstBuffer * buf)
   if (G_UNLIKELY (!buf))
     return gst_wavpack_enc_drain (enc);
 
-  sample_count = GST_BUFFER_SIZE (buf) / 4;
+  sample_count = gst_buffer_get_size (buf) / 4;
   GST_DEBUG_OBJECT (enc, "got %u raw samples", sample_count);
 
   /* check if we already have a valid WavpackContext, otherwise make one */
@@ -716,27 +716,28 @@ gst_wavpack_enc_handle_frame (GstAudioEncoder * benc, GstBuffer * buf)
 
   if (enc->need_channel_remap) {
     buf = gst_buffer_make_writable (buf);
-    gst_wavpack_enc_fix_channel_order (enc, (gint32 *) GST_BUFFER_DATA (buf),
-        sample_count);
+    gst_buffer_map (buf, &map, GST_MAP_WRITE);
+    gst_wavpack_enc_fix_channel_order (enc, (gint32 *) map.data, sample_count);
+    gst_buffer_unmap (buf, &map);
   }
+
+  gst_buffer_map (buf, &map, GST_MAP_READ);
 
   /* if we want to append the MD5 sum to the stream update it here
    * with the current raw samples */
   if (enc->md5) {
-    g_checksum_update (enc->md5_context, GST_BUFFER_DATA (buf),
-        GST_BUFFER_SIZE (buf));
+    g_checksum_update (enc->md5_context, map.data, map.size);
   }
 
   /* encode and handle return values from encoding */
-  if (WavpackPackSamples (enc->wp_context, (int32_t *) GST_BUFFER_DATA (buf),
+  if (WavpackPackSamples (enc->wp_context, (int32_t *) map.data,
           sample_count / enc->channels)) {
     GST_DEBUG_OBJECT (enc, "encoding samples successful");
+    gst_buffer_unmap (buf, &map);
     ret = GST_FLOW_OK;
   } else {
-    if ((enc->srcpad_last_return == GST_FLOW_RESEND) ||
-        (enc->wvcsrcpad_last_return == GST_FLOW_RESEND)) {
-      ret = GST_FLOW_RESEND;
-    } else if ((enc->srcpad_last_return == GST_FLOW_OK) ||
+    gst_buffer_unmap (buf, &map);
+    if ((enc->srcpad_last_return == GST_FLOW_OK) ||
         (enc->wvcsrcpad_last_return == GST_FLOW_OK)) {
       ret = GST_FLOW_OK;
     } else if ((enc->srcpad_last_return == GST_FLOW_NOT_LINKED) &&
@@ -780,8 +781,7 @@ context_failed:
 static void
 gst_wavpack_enc_rewrite_first_block (GstWavpackEnc * enc)
 {
-  GstEvent *event = gst_event_new_new_segment (TRUE, 1.0, GST_FORMAT_BYTES,
-      0, GST_BUFFER_OFFSET_NONE, 0);
+  GstSegment segment;
   gboolean ret;
 
   g_return_if_fail (enc);
@@ -791,7 +791,9 @@ gst_wavpack_enc_rewrite_first_block (GstWavpackEnc * enc)
   WavpackUpdateNumSamples (enc->wp_context, enc->first_block);
 
   /* try to seek to the beginning of the output */
-  ret = gst_pad_push_event (GST_AUDIO_ENCODER_SRC_PAD (enc), event);
+  gst_segment_init (&segment, GST_FORMAT_BYTES);
+  ret = gst_pad_push_event (GST_AUDIO_ENCODER_SRC_PAD (enc),
+      gst_event_new_segment (&segment));
   if (ret) {
     /* try to rewrite the first block */
     GST_DEBUG_OBJECT (enc, "rewriting first block ...");
@@ -861,7 +863,7 @@ gst_wavpack_enc_sink_event (GstAudioEncoder * benc, GstEvent * event)
       GST_EVENT_TYPE_NAME (event));
 
   switch (GST_EVENT_TYPE (event)) {
-    case GST_EVENT_NEWSEGMENT:
+    case GST_EVENT_SEGMENT:
       if (enc->wp_context) {
         GST_WARNING_OBJECT (enc, "got NEWSEGMENT after encoding "
             "already started");
@@ -876,7 +878,7 @@ gst_wavpack_enc_sink_event (GstAudioEncoder * benc, GstEvent * event)
   }
 
   /* baseclass handles rest */
-  return FALSE;
+  return GST_AUDIO_ENCODER_CLASS (parent_class)->event (benc, event);
 }
 
 static void
@@ -980,7 +982,7 @@ gst_wavpack_enc_plugin_init (GstPlugin * plugin)
           GST_RANK_NONE, GST_TYPE_WAVPACK_ENC))
     return FALSE;
 
-  GST_DEBUG_CATEGORY_INIT (gst_wavpack_enc_debug, "wavpack_enc", 0,
+  GST_DEBUG_CATEGORY_INIT (gst_wavpack_enc_debug, "wavpackenc", 0,
       "Wavpack encoder");
 
   return TRUE;
