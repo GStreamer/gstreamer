@@ -1311,7 +1311,7 @@ gst_v4l2_object_v4l2fourcc_to_structure (guint32 fourcc)
       break;
 #ifdef V4L2_PIX_FMT_SBGGR8
     case V4L2_PIX_FMT_SBGGR8:
-      structure = gst_structure_new_empty ("video/x-raw-bayer");
+      structure = gst_structure_new_empty ("video/x-bayer");
       break;
 #endif
 #ifdef V4L2_PIX_FMT_SN9C10X
@@ -1472,7 +1472,7 @@ gst_v4l2_object_get_caps_info (GstV4l2Object * v4l2object, GstCaps * caps,
     } else if (g_str_equal (mimetype, "image/jpeg")) {
       fourcc = V4L2_PIX_FMT_JPEG;
 #ifdef V4L2_PIX_FMT_SBGGR8
-    } else if (g_str_equal (mimetype, "video/x-raw-bayer")) {
+    } else if (g_str_equal (mimetype, "video/x-bayer")) {
       fourcc = V4L2_PIX_FMT_SBGGR8;
 #endif
 #ifdef V4L2_PIX_FMT_SN9C10X
