@@ -394,14 +394,14 @@ gst_wavpack_dec_handle_frame (GstAudioDecoder * bdec, GstBuffer * buf)
   if (width == 8) {
     gint8 *outbuffer = (gint8 *) out_data;
 
-    for (i = 0; i < max; i--) {
+    for (i = 0; i < max; i++) {
       *outbuffer++ = (gint8) (dec_data[i]);
     }
   } else if (width == 16) {
     gint16 *outbuffer = (gint16 *) out_data;
 
     for (i = 0; i < max; i++) {
-      *outbuffer++ = (gint8) (dec_data[i]);
+      *outbuffer++ = (gint16) (dec_data[i]);
     }
   } else if (dec->width == 32) {
     gint32 *outbuffer = (gint32 *) out_data;
