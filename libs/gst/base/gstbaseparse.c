@@ -276,8 +276,6 @@ struct _GstBaseParsePrivate
   guint max_bitrate;
   guint posted_avg_bitrate;
 
-  GList *pending_events;
-
   /* frames/buffers that are queued and ready to go on OK */
   GQueue queued_frames;
 
@@ -316,9 +314,10 @@ struct _GstBaseParsePrivate
   GstClockTime last_ts;
   gint64 last_offset;
 
+  /* Pending serialized events */
+  GList *pending_events;
   /* Newsegment event to be sent after SEEK */
-  GstEvent *pending_segment;
-
+  gboolean pending_segment;
   /* Segment event that closes the running segment prior to SEEK */
   GstEvent *close_segment;
 
@@ -466,8 +465,8 @@ gst_base_parse_clear_queues (GstBaseParse * parse)
   g_list_foreach (parse->priv->pending_events, (GFunc) gst_event_unref, NULL);
   g_list_free (parse->priv->pending_events);
   parse->priv->pending_events = NULL;
+  parse->priv->pending_segment = FALSE;
 
-  gst_event_replace (&parse->priv->pending_segment, NULL);
   gst_event_replace (&parse->priv->close_segment, NULL);
 }
 
@@ -479,10 +478,6 @@ gst_base_parse_finalize (GObject * object)
 
   g_object_unref (parse->priv->adapter);
 
-  if (parse->priv->pending_segment) {
-    p_ev = &parse->priv->pending_segment;
-    gst_event_replace (p_ev, NULL);
-  }
   if (parse->priv->close_segment) {
     p_ev = &parse->priv->close_segment;
     gst_event_replace (p_ev, NULL);
@@ -497,6 +492,7 @@ gst_base_parse_finalize (GObject * object)
       NULL);
   g_list_free (parse->priv->pending_events);
   parse->priv->pending_events = NULL;
+  parse->priv->pending_segment = FALSE;
 
   if (parse->priv->index) {
     gst_object_unref (parse->priv->index);
@@ -766,15 +762,11 @@ gst_base_parse_reset (GstBaseParse * parse)
   parse->priv->last_ts = GST_CLOCK_TIME_NONE;
   parse->priv->last_offset = 0;
 
-  if (parse->priv->pending_segment) {
-    gst_event_unref (parse->priv->pending_segment);
-    parse->priv->pending_segment = NULL;
-  }
-
   g_list_foreach (parse->priv->pending_events, (GFunc) gst_mini_object_unref,
       NULL);
   g_list_free (parse->priv->pending_events);
   parse->priv->pending_events = NULL;
+  parse->priv->pending_segment = FALSE;
 
   gst_event_replace (&parse->priv->close_segment, NULL);
 
@@ -937,7 +929,6 @@ gst_base_parse_sink_event (GstPad * pad, GstEvent * event)
         g_list_append (parse->priv->pending_events, event);
     ret = TRUE;
   } else {
-
     if (GST_EVENT_TYPE (event) == GST_EVENT_EOS &&
         parse->priv->framecount < MIN_FRAMES_TO_POST_BITRATE)
       /* We've not posted bitrate tags yet - do so now */
@@ -974,7 +965,6 @@ static gboolean
 gst_base_parse_sink_eventfunc (GstBaseParse * parse, GstEvent * event)
 {
   gboolean handled = FALSE;
-  GstEvent **eventp;
 
   switch (GST_EVENT_TYPE (event)) {
     case GST_EVENT_NEWSEGMENT:
@@ -1065,9 +1055,9 @@ gst_base_parse_sink_eventfunc (GstBaseParse * parse, GstEvent * event)
       /* save the segment for later, right before we push a new buffer so that
        * the caps are fixed and the next linked element can receive
        * the segment. */
-      eventp = &parse->priv->pending_segment;
-      gst_event_replace (eventp, event);
-      gst_event_unref (event);
+      parse->priv->pending_events =
+          g_list_append (parse->priv->pending_events, event);
+      parse->priv->pending_segment = TRUE;
       handled = TRUE;
 
       /* but finish the current segment */
@@ -1119,10 +1109,16 @@ gst_base_parse_sink_eventfunc (GstBaseParse * parse, GstEvent * event)
         GST_ELEMENT_ERROR (parse, STREAM, WRONG_TYPE,
             ("No valid frames found before end of stream"), (NULL));
       }
-      /* newsegment before eos */
-      if (parse->priv->pending_segment) {
-        gst_pad_push_event (parse->srcpad, parse->priv->pending_segment);
-        parse->priv->pending_segment = NULL;
+      /* newsegment and other serialized events before eos */
+      if (G_UNLIKELY (parse->priv->pending_events)) {
+        GList *l;
+
+        for (l = parse->priv->pending_events; l != NULL; l = l->next) {
+          gst_pad_push_event (parse->srcpad, GST_EVENT (l->data));
+        }
+        g_list_free (parse->priv->pending_events);
+        parse->priv->pending_events = NULL;
+        parse->priv->pending_segment = FALSE;
       }
       break;
 
@@ -1839,6 +1835,11 @@ gst_base_parse_push_frame (GstBaseParse * parse, GstBaseParseFrame * frame)
   /* should have caps by now */
   g_return_val_if_fail (GST_PAD_CAPS (parse->srcpad), GST_FLOW_ERROR);
 
+  if (G_UNLIKELY (parse->priv->pending_segment)) {
+    /* have caps; check identity */
+    gst_base_parse_check_media (parse);
+  }
+
   /* and should then also be linked downstream, so safe to send some events */
   if (G_UNLIKELY (parse->priv->close_segment)) {
     /* only set up by loop */
@@ -1846,20 +1847,8 @@ gst_base_parse_push_frame (GstBaseParse * parse, GstBaseParseFrame * frame)
     gst_pad_push_event (parse->srcpad, parse->priv->close_segment);
     parse->priv->close_segment = NULL;
   }
-  if (G_UNLIKELY (parse->priv->pending_segment)) {
-    GstEvent *pending_segment;
 
-    pending_segment = parse->priv->pending_segment;
-    parse->priv->pending_segment = NULL;
-
-    GST_DEBUG_OBJECT (parse, "%s push pending segment",
-        parse->priv->pad_mode == GST_ACTIVATE_PULL ? "loop" : "chain");
-    gst_pad_push_event (parse->srcpad, pending_segment);
-
-    /* have caps; check identity */
-    gst_base_parse_check_media (parse);
-  }
-
+  /* Push pending events, including NEWSEGMENT events */
   if (G_UNLIKELY (parse->priv->pending_events)) {
     GList *l;
 
@@ -1868,6 +1857,7 @@ gst_base_parse_push_frame (GstBaseParse * parse, GstBaseParseFrame * frame)
     }
     g_list_free (parse->priv->pending_events);
     parse->priv->pending_events = NULL;
+    parse->priv->pending_segment = FALSE;
   }
 
   /* segment adjustment magic; only if we are running the whole show */
@@ -2880,11 +2870,18 @@ pause:
       push_eos = TRUE;
     }
     if (push_eos) {
-      /* newsegment before eos */
-      if (parse->priv->pending_segment) {
-        gst_pad_push_event (parse->srcpad, parse->priv->pending_segment);
-        parse->priv->pending_segment = NULL;
+      /* Push pending events, including NEWSEGMENT events */
+      if (G_UNLIKELY (parse->priv->pending_events)) {
+        GList *l;
+
+        for (l = parse->priv->pending_events; l != NULL; l = l->next) {
+          gst_pad_push_event (parse->srcpad, GST_EVENT (l->data));
+        }
+        g_list_free (parse->priv->pending_events);
+        parse->priv->pending_events = NULL;
+        parse->priv->pending_segment = FALSE;
       }
+
       gst_pad_push_event (parse->srcpad, gst_event_new_eos ());
     }
     gst_object_unref (parse);
@@ -2981,9 +2978,15 @@ gst_base_parse_sink_activate_pull (GstPad * sinkpad, gboolean active)
 
   if (result) {
     if (active) {
-      parse->priv->pending_segment = gst_event_new_new_segment (FALSE,
+      GstEvent *event;
+
+      event = gst_event_new_new_segment (FALSE,
           parse->segment.rate, parse->segment.format,
           parse->segment.start, parse->segment.stop, parse->segment.last_stop);
+      parse->priv->pending_events =
+          g_list_append (parse->priv->pending_events, event);
+      parse->priv->pending_segment = TRUE;
+
       result &=
           gst_pad_start_task (sinkpad, (GstTaskFunction) gst_base_parse_loop,
           sinkpad);
@@ -3834,14 +3837,11 @@ gst_base_parse_handle_seek (GstBaseParse * parse, GstEvent * event)
     memcpy (&parse->segment, &seeksegment, sizeof (GstSegment));
 
     /* store the newsegment event so it can be sent from the streaming thread. */
-    if (parse->priv->pending_segment)
-      gst_event_unref (parse->priv->pending_segment);
-
-    /* This will be sent later in _loop() */
-    parse->priv->pending_segment =
+    parse->priv->pending_segment = TRUE;
+    parse->priv->pending_events = g_list_append (parse->priv->pending_events,
         gst_event_new_new_segment (FALSE, parse->segment.rate,
-        parse->segment.format, parse->segment.start,
-        parse->segment.stop, parse->segment.start);
+            parse->segment.format, parse->segment.start,
+            parse->segment.stop, parse->segment.start));
 
     GST_DEBUG_OBJECT (parse, "Created newseg format %d, "
         "start = %" GST_TIME_FORMAT ", stop = %" GST_TIME_FORMAT
