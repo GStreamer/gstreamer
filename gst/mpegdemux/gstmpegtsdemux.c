@@ -3551,7 +3551,7 @@ gboolean
 gst_mpegts_demux_plugin_init (GstPlugin * plugin)
 {
   if (!gst_element_register (plugin, "mpegtsdemux",
-          GST_RANK_PRIMARY, GST_TYPE_MPEGTS_DEMUX))
+          GST_RANK_SECONDARY, GST_TYPE_MPEGTS_DEMUX))
     return FALSE;
 
   return TRUE;

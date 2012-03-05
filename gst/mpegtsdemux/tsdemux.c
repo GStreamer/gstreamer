@@ -1603,5 +1603,5 @@ gst_ts_demux_plugin_init (GstPlugin * plugin)
   init_pes_parser ();
 
   return gst_element_register (plugin, "tsdemux",
-      GST_RANK_SECONDARY, GST_TYPE_TS_DEMUX);
+      GST_RANK_PRIMARY, GST_TYPE_TS_DEMUX);
 }
