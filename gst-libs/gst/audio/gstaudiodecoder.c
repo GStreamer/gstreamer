@@ -552,6 +552,7 @@ gst_audio_decoder_set_output_format (GstAudioDecoder * dec,
   GST_AUDIO_DECODER_STREAM_UNLOCK (dec);
 
   res = gst_pad_set_caps (dec->srcpad, caps);
+  gst_caps_unref (caps);
 
 done:
   return res;
