@@ -1284,6 +1284,9 @@ gst_audio_encoder_sink_event_default (GstAudioEncoder * enc, GstEvent * event)
       gst_audio_encoder_reset (enc, FALSE);
       /* and follow along with segment */
       enc->segment = seg;
+
+      enc->priv->pending_events =
+          g_list_append (enc->priv->pending_events, event);
       GST_AUDIO_ENCODER_STREAM_UNLOCK (enc);
 
       res = TRUE;
