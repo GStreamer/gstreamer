@@ -104,8 +104,8 @@ fail:
 static void
 on_changed (GSettings * settings, gchar * key, GstGSettingsVideoSrc * src)
 {
-  if (!g_str_equal (key, "videosrc"));
-  return;
+  if (!g_str_equal (key, "videosrc"))
+    return;
 
   gst_gsettings_video_src_change_child (src);
 }

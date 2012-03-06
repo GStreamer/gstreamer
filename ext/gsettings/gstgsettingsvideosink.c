@@ -104,8 +104,8 @@ fail:
 static void
 on_changed (GSettings * settings, gchar * key, GstGSettingsVideoSink * sink)
 {
-  if (!g_str_has_suffix (key, "videosink"));
-  return;
+  if (!g_str_has_suffix (key, "videosink"))
+    return;
 
   gst_gsettings_video_sink_change_child (sink);
 }
