@@ -305,6 +305,9 @@ void              gst_audio_decoder_set_needs_format (GstAudioDecoder * dec,
 
 gboolean          gst_audio_decoder_get_needs_format (GstAudioDecoder * dec);
 
+void              gst_audio_decoder_merge_tags (GstAudioDecoder * dec,
+                                                const GstTagList * tags, GstTagMergeMode mode);
+
 G_END_DECLS
 
 #endif /* _GST_AUDIO_DECODER_H_ */

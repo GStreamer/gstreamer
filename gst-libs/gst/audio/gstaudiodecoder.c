@@ -2585,3 +2585,40 @@ gst_audio_decoder_get_needs_format (GstAudioDecoder * dec)
 
   return result;
 }
+
+/**
+ * gst_audio_decoder_merge_tags:
+ * @dec: a #GstAudioDecoder
+ * @tags: a #GstTagList to merge
+ * @mode: the #GstTagMergeMode to use
+ *
+ * Adds tags to so-called pending tags, which will be processed
+ * before pushing out data downstream.
+ *
+ * Note that this is provided for convenience, and the subclass is
+ * not required to use this and can still do tag handling on its own,
+ * although it should be aware that baseclass already takes care
+ * of the usual CODEC/AUDIO_CODEC tags.
+ *
+ * MT safe.
+ *
+ * Since: 0.10.37
+ */
+void
+gst_audio_decoder_merge_tags (GstAudioDecoder * dec,
+    const GstTagList * tags, GstTagMergeMode mode)
+{
+  GstTagList *otags;
+
+  g_return_if_fail (GST_IS_AUDIO_DECODER (dec));
+  g_return_if_fail (tags == NULL || GST_IS_TAG_LIST (tags));
+
+  GST_AUDIO_DECODER_STREAM_LOCK (dec);
+  if (tags)
+    GST_DEBUG_OBJECT (dec, "merging tags %" GST_PTR_FORMAT, tags);
+  otags = dec->priv->taglist;
+  dec->priv->taglist = gst_tag_list_merge (dec->priv->taglist, tags, mode);
+  if (otags)
+    gst_tag_list_free (otags);
+  GST_AUDIO_DECODER_STREAM_UNLOCK (dec);
+}
