@@ -283,7 +283,7 @@ gst_gl_filtershader_load_file (char *filename, char **storage)
 
   fseek (f, 0, SEEK_SET);
   bytes = fread ((void *) *storage, sizeof (char), count, f);
-  if (bytes < 0 || bytes != count) {
+  if (bytes != count) {
     GST_ERROR ("read failed: %u/%u", bytes, count);
     return -1;
   }
@@ -338,14 +338,15 @@ gst_gl_filtershader_init_shader (GstGLFilter * filter)
 
   //blocking call, wait the opengl thread has compiled the shader
   if (!gst_gl_display_gen_shader (filter->display, 0, hfilter_fragment_source,
-          &filtershader->shader0));
-  return FALSE;
+          &filtershader->shader0))
+    return FALSE;
 
   filtershader->compiled = 1;
 
   gst_gl_filtershader_load_variables (filtershader->presetfile,
       &hfilter_fragment_variables[0]);
 
+  return TRUE;
 }
 
 static gboolean

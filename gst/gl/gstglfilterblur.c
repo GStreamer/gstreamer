@@ -174,13 +174,15 @@ gst_gl_filterblur_init_shader (GstGLFilter * filter)
 
   //blocking call, wait the opengl thread has compiled the shader
   if (!gst_gl_display_gen_shader (filter->display, 0, hconv7_fragment_source,
-          &blur_filter->shader0));
-  return FALSE;
+          &blur_filter->shader0))
+    return FALSE;
 
   //blocking call, wait the opengl thread has compiled the shader
   if (!gst_gl_display_gen_shader (filter->display, 0, vconv7_fragment_source,
-          &blur_filter->shader1));
-  return FALSE;
+          &blur_filter->shader1))
+    return FALSE;
+
+  return TRUE;
 }
 
 static gboolean
