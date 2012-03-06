@@ -569,7 +569,7 @@ gst_install_plugins_return_from_status (gint status)
     ret = (GstInstallPluginsReturn) WEXITSTATUS (status);
 
     /* did the helper return an invalid status code? */
-    if ((ret < 0 || ret >= GST_INSTALL_PLUGINS_STARTED_OK) &&
+    if (((guint) ret) >= GST_INSTALL_PLUGINS_STARTED_OK &&
         ret != GST_INSTALL_PLUGINS_INTERNAL_FAILURE) {
       ret = GST_INSTALL_PLUGINS_INVALID;
     }
