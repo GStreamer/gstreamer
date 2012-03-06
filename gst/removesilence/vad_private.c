@@ -74,7 +74,7 @@ vad_new (guint64 hysteresis)
 void
 vad_reset (VADFilter * vad)
 {
-  memset (vad, 0, sizeof (vad));
+  memset (vad, 0, sizeof (*vad));
   vad->cqueue.base.s = vad->vad_buffer;
   vad->cqueue.tail.a = vad->cqueue.head.a = 0;
   vad->cqueue.size = VAD_BUFFER_SIZE;
