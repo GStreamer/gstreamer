@@ -536,7 +536,7 @@ gst_dvd_read_src_goto_title (GstDvdReadSrc * src, gint title, gint angle)
 
     sid = i;
     if (pgc0 != NULL) {
-      if (v->display_aspect_ratio == 0)         /* 4:3 */
+      if (v->display_aspect_ratio == 0) /* 4:3 */
         sid = (pgc0->subp_control[i] >> 24) & 0x1f;
       else if (v->display_aspect_ratio == 3)    /* 16:9 */
         sid = (pgc0->subp_control[i] >> 8) & 0x1f;
@@ -1073,7 +1073,7 @@ gst_dvd_read_src_get_size (GstDvdReadSrc * src, gint64 * size)
   gboolean ret = FALSE;
 
   if (src->dvd_title) {
-    gsize blocks;
+    gssize blocks;
 
     blocks = DVDFileSize (src->dvd_title);
     if (blocks >= 0) {
