@@ -743,7 +743,8 @@ gst_text_overlay_update_render_mode (GstTextOverlay * overlay)
   } else {
     pango_context_set_base_gravity (context, PANGO_GRAVITY_SOUTH);
     pango_context_set_matrix (context, &matrix);
-    pango_layout_set_alignment (overlay->layout, overlay->line_align);
+    pango_layout_set_alignment (overlay->layout,
+        (PangoAlignment) overlay->line_align);
   }
 }
 
