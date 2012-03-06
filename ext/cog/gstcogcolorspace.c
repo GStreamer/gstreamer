@@ -372,7 +372,7 @@ gst_cogcolorspace_caps_get_chroma_site (GstCaps * caps)
   s = gst_video_parse_caps_chroma_site (caps);
 
   if (s == NULL)
-    return COG_COLOR_MATRIX_SDTV;
+    return COG_CHROMA_SITE_MPEG2;
 
   if (strcmp (s, "jpeg") == 0) {
     return COG_CHROMA_SITE_JPEG;
