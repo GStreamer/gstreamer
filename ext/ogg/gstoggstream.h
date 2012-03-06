@@ -108,6 +108,8 @@ struct _GstOggStream
 };
 
 
+void gst_ogg_stream_clear (GstOggStream *pad);
+
 gboolean gst_ogg_stream_setup_map (GstOggStream * pad, ogg_packet *packet);
 gboolean gst_ogg_stream_setup_map_from_caps_headers (GstOggStream * pad,
     const GstCaps * caps);

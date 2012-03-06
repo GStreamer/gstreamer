@@ -643,6 +643,7 @@ setup_vp8_mapper (GstOggStream * pad, ogg_packet * packet)
   pad->granulerate_d = fps_d;
   pad->n_header_packets = 2;
   pad->frame_size = 1;
+  pad->granuleshift = 0;
 
   pad->caps = gst_caps_new_simple ("video/x-vp8",
       "width", G_TYPE_INT, width,
@@ -1207,7 +1208,7 @@ gst_ogg_map_add_fisbone (GstOggStream * pad, GstOggStream * skel_pad,
     pad->granulerate_n = GST_READ_UINT64_LE (data);
     pad->granulerate_d = GST_READ_UINT64_LE (data + 8);
   }
-  if (pad->granuleshift < 0) {
+  if (pad->granuleshift == -1) {
     pad->granuleshift = GST_READ_UINT8 (data + 28);
   }
 
@@ -1479,6 +1480,7 @@ setup_ogmaudio_mapper (GstOggStream * pad, ogg_packet * packet)
 
   pad->granulerate_n = GST_READ_UINT64_LE (data + 25);
   pad->granulerate_d = 1;
+  pad->granuleshift = 0;
 
   fourcc = GST_READ_UINT32_LE (data + 9);
   GST_DEBUG ("fourcc: %" GST_FOURCC_FORMAT, GST_FOURCC_ARGS (fourcc));
@@ -1522,6 +1524,7 @@ setup_ogmvideo_mapper (GstOggStream * pad, ogg_packet * packet)
     GST_WARNING ("timeunit is out of range");
   }
   pad->granulerate_d = (gint) CLAMP (time_unit, G_MININT, G_MAXINT);
+  pad->granuleshift = 0;
 
   GST_LOG ("fps = %d/%d = %.3f",
       pad->granulerate_n, pad->granulerate_d,
@@ -1566,6 +1569,7 @@ setup_ogmtext_mapper (GstOggStream * pad, ogg_packet * packet)
     GST_WARNING ("timeunit is out of range");
   }
   pad->granulerate_d = (gint) CLAMP (time_unit, G_MININT, G_MAXINT);
+  pad->granuleshift = 0;
 
   GST_LOG ("fps = %d/%d = %.3f",
       pad->granulerate_n, pad->granulerate_d,
@@ -1614,6 +1618,7 @@ setup_pcm_mapper (GstOggStream * pad, ogg_packet * packet)
 
   pad->granulerate_n = GST_READ_UINT32_LE (data + 16);
   pad->granulerate_d = 1;
+  pad->granuleshift = 0;
   GST_LOG ("sample rate: %d", pad->granulerate_n);
 
   format = GST_READ_UINT32_LE (data + 12);
@@ -2232,10 +2237,12 @@ gst_ogg_stream_setup_map (GstOggStream * pad, ogg_packet * packet)
 
       GST_DEBUG ("found mapper for '%s'", mappers[i].id);
 
-      if (mappers[i].setup_func)
+      if (mappers[i].setup_func) {
+        gst_ogg_stream_clear (pad);
         ret = mappers[i].setup_func (pad, packet);
-      else
+      } else {
         continue;
+      }
 
       if (ret) {
         GST_DEBUG ("got stream type %" GST_PTR_FORMAT, pad->caps);
@@ -2304,4 +2311,40 @@ gst_ogg_stream_setup_map_from_caps_headers (GstOggStream * pad,
 
   GST_INFO ("Found headers on caps, using those to determine type");
   return gst_ogg_stream_setup_map (pad, &packet);
+}
+
+static void
+_ogg_packet_free (ogg_packet * packet)
+{
+  g_free (packet->packet);
+  g_slice_free (ogg_packet, packet);
+}
+
+void
+gst_ogg_stream_clear (GstOggStream * pad)
+{
+  g_list_foreach (pad->headers, (GFunc) _ogg_packet_free, NULL);
+  g_list_free (pad->headers);
+  pad->headers = NULL;
+  g_list_foreach (pad->queued, (GFunc) _ogg_packet_free, NULL);
+  g_list_free (pad->queued);
+  pad->queued = NULL;
+
+  g_free (pad->index);
+  pad->index = NULL;
+
+  if (pad->caps) {
+    gst_caps_unref (pad->caps);
+    pad->caps = NULL;
+  }
+
+  if (pad->taglist) {
+    gst_tag_list_free (pad->taglist);
+    pad->taglist = NULL;
+  }
+
+  ogg_stream_reset (&pad->stream);
+
+  memset (pad, 0, sizeof (GstOggStream));
+  pad->granuleshift = -1;
 }
