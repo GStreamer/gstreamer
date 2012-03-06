@@ -366,7 +366,7 @@ gst_dccp_socket_write (GstElement * element, int socket, const void *buf,
     bytes_written += wrote;
   }
 
-  if (bytes_written < 0)
+  if (wrote < 0)
     GST_WARNING ("Error while writing.");
   else
     GST_LOG_OBJECT (element, "Wrote %" G_GSIZE_FORMAT " bytes succesfully.",
