@@ -64,8 +64,6 @@ struct _GstVorbisDec {
   gboolean          initialized;
   guint             width;
 
-  GstTagList       *taglist;
-
   CopySampleFunc    copy_samples;
 };
 
