@@ -3995,17 +3995,17 @@ no_protocols:
         ("Could not receive any UDP packets for %.4f seconds, maybe your "
             "firewall is blocking it. No other protocols to try.",
             gst_guint64_to_gdouble (src->udp_timeout / 1000000.0)));
-    return GST_FLOW_ERROR;
+    return GST_RTSP_ERROR;
   }
 open_failed:
   {
     GST_DEBUG_OBJECT (src, "open failed");
-    return GST_FLOW_OK;
+    return GST_RTSP_OK;
   }
 play_failed:
   {
     GST_DEBUG_OBJECT (src, "play failed");
-    return GST_FLOW_OK;
+    return GST_RTSP_OK;
   }
 }
 
