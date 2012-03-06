@@ -294,6 +294,7 @@ gst_base_video_encoder_get_oldest_frame
 gst_base_video_encoder_finish_frame
 gst_base_video_encoder_set_latency
 gst_base_video_encoder_set_latency_fields
+gst_base_video_encoder_set_headers
 <SUBSECTION Standard>
 GST_BASE_VIDEO_ENCODER
 GST_IS_BASE_VIDEO_ENCODER
@@ -326,6 +327,7 @@ gst_base_video_decoder_alloc_src_buffer
 gst_base_video_decoder_alloc_src_frame
 gst_base_video_decoder_get_state
 gst_base_video_decoder_get_max_decode_time
+gst_base_video_decoder_drop_frame
 gst_base_video_decoder_finish_frame
 <SUBSECTION Standard>
 GST_BASE_VIDEO_DECODER
@@ -336,10 +338,17 @@ GST_BASE_VIDEO_DECODER_CLASS
 GST_IS_BASE_VIDEO_DECODER_CLASS
 GST_BASE_VIDEO_DECODER_GET_CLASS
 </SECTION>
-
+yes
 <SECTION>
 <FILE>gstbasevideocodec</FILE>
 <TITLE>GstBaseVideoCodec</TITLE>
+GstBaseVideoCodec
+GstVideoFrame
+gst_video_frame_ref
+gst_video_frame_unref
+gst_base_video_codec_new_frame
+GstVideoState
+gst_video_state_get_timestamp
 GST_BASE_VIDEO_CODEC_SINK_NAME
 GST_BASE_VIDEO_CODEC_SRC_NAME
 GST_BASE_VIDEO_CODEC_SRC_PAD
@@ -347,13 +356,8 @@ GST_BASE_VIDEO_CODEC_SINK_PAD
 GST_BASE_VIDEO_CODEC_FLOW_NEED_DATA
 GST_BASE_VIDEO_CODEC_STREAM_LOCK
 GST_BASE_VIDEO_CODEC_STREAM_UNLOCK
-GstVideoState
-GstVideoFrame
-GstBaseVideoCodec
-GstBaseVideoCodecClass
-gst_base_video_codec_new_frame
-gst_base_video_codec_free_frame
 <SUBSECTION Standard>
+GstBaseVideoCodecClass
 GST_BASE_VIDEO_CODEC
 GST_IS_BASE_VIDEO_CODEC
 GST_TYPE_BASE_VIDEO_CODEC
@@ -361,6 +365,7 @@ gst_base_video_codec_get_type
 GST_BASE_VIDEO_CODEC_CLASS
 GST_IS_BASE_VIDEO_CODEC_CLASS
 GST_BASE_VIDEO_CODEC_GET_CLASS
+gst_video_frame_get_type
 </SECTION>
 
 <SECTION>
@@ -437,7 +442,6 @@ gst_camerabin_preview_set_caps
 <FILE>gstbasevideoutils</FILE>
 gst_base_video_rawvideo_convert
 gst_base_video_encoded_video_convert
-gst_video_state_get_timestamp
 </SECTION>
 
 <SECTION>

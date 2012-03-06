@@ -21,6 +21,12 @@
 #include "config.h"
 #endif
 
+/**
+ * SECTION:gstbasevideocodec
+ * @short_description: Base class for video codecs
+ * @see_also: #GstBaseVideoDecoder , #GstBaseVideoEncoder
+ */
+
 /* FIXME 0.11: suppress warnings for deprecated API such as GStaticRecMutex
  * with newer GLib versions (>= 2.31.0) */
 #define GLIB_DISABLE_DEPRECATION_WARNINGS
@@ -189,6 +195,14 @@ gst_base_video_codec_change_state (GstElement * element,
   return ret;
 }
 
+/**
+ * gst_base_video_codec_new_frame:
+ * @base_video_codec: a #GstBaseVideoCodec
+ *
+ * Create a new blank #GstVideoFrame.
+ * 
+ * Returns: (transfer full): a new #GstVideoFrame
+ */
 GstVideoFrame *
 gst_base_video_codec_new_frame (GstBaseVideoCodec * base_video_codec)
 {
@@ -231,6 +245,14 @@ _gst_video_frame_free (GstVideoFrame * frame)
   g_slice_free (GstVideoFrame, frame);
 }
 
+/**
+ * gst_video_frame_ref:
+ * @frame: a #GstVideoFrame
+ *
+ * Increases the refcount of the given frame by one.
+ *
+ * Returns: @buf
+ */
 GstVideoFrame *
 gst_video_frame_ref (GstVideoFrame * frame)
 {
@@ -241,6 +263,13 @@ gst_video_frame_ref (GstVideoFrame * frame)
   return frame;
 }
 
+/**
+ * gst_video_frame_unref:
+ * @frame: a #GstVideoFrame
+ *
+ * Decreases the refcount of the frame. If the refcount reaches 0, the frame
+ * will be freed.
+ */
 void
 gst_video_frame_unref (GstVideoFrame * frame)
 {

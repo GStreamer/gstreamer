@@ -95,7 +95,7 @@ GstFlowReturn _gst_base_video_decoder_error (GstBaseVideoDecoder *dec, gint weig
  *          enclosed in parentheses)
  * @ret:    variable to receive return value
  *
- * Utility function that audio decoder elements can use in case they encountered
+ * Utility function that video decoder elements can use in case they encountered
  * a data processing error that may be fatal for the current "data unit" but
  * need not prevent subsequent decoding.  Such errors are counted and if there
  * are too many, as configured in the context's max_errors, the pipeline will
@@ -104,7 +104,7 @@ GstFlowReturn _gst_base_video_decoder_error (GstBaseVideoDecoder *dec, gint weig
  * is logged. In either case, @ret is set to the proper value to
  * return to upstream/caller (indicating either GST_FLOW_ERROR or GST_FLOW_OK).
  */
-#define GST_BASE_AUDIO_DECODER_ERROR(el, w, domain, code, text, debug, ret) \
+#define GST_BASE_VIDEO_DECODER_ERROR(el, w, domain, code, text, debug, ret) \
 G_STMT_START {                                                              \
   gchar *__txt = _gst_element_error_printf text;                            \
   gchar *__dbg = _gst_element_error_printf debug;                           \
@@ -122,6 +122,7 @@ G_STMT_START {                                                              \
  */
 struct _GstBaseVideoDecoder
 {
+  /*< private >*/
   GstBaseVideoCodec base_video_codec;
 
   /*< protected >*/
@@ -220,8 +221,10 @@ struct _GstBaseVideoDecoder
  */
 struct _GstBaseVideoDecoderClass
 {
+  /*< private >*/
   GstBaseVideoCodecClass base_video_codec_class;
 
+  /*< public >*/
   gboolean      (*start)          (GstBaseVideoDecoder *coder);
 
   gboolean      (*stop)           (GstBaseVideoDecoder *coder);
@@ -248,12 +251,12 @@ struct _GstBaseVideoDecoderClass
   void         *padding[GST_PADDING_LARGE];
 };
 
-void             gst_base_video_decoder_class_set_capture_pattern (GstBaseVideoDecoderClass *klass,
+void             gst_base_video_decoder_class_set_capture_pattern (GstBaseVideoDecoderClass *base_video_decoder_class,
                                     guint32 mask, guint32 pattern);
 
-GstVideoFrame   *gst_base_video_decoder_get_frame (GstBaseVideoDecoder *coder,
+GstVideoFrame   *gst_base_video_decoder_get_frame (GstBaseVideoDecoder *base_video_decoder,
                                     int frame_number);
-GstVideoFrame   *gst_base_video_decoder_get_oldest_frame (GstBaseVideoDecoder *coder);
+GstVideoFrame   *gst_base_video_decoder_get_oldest_frame (GstBaseVideoDecoder *base_video_decoder);
 
 void             gst_base_video_decoder_add_to_frame (GstBaseVideoDecoder *base_video_decoder,
                                     int n_bytes);

@@ -1690,7 +1690,7 @@ done:
 }
 
 /**
- * gst_base_video_decoder_finish_frame:
+ * gst_base_video_decoder_add_to_frame:
  * @base_video_decoder: a #GstBaseVideoDecoder
  * @n_bytes: an encoded #GstVideoFrame
  *
@@ -1886,11 +1886,15 @@ exit:
  * gst_base_video_decoder_get_state:
  * @base_video_decoder: a #GstBaseVideoDecoder
  *
+ * Get the current #GstVideoState
+ *
  * Returns: #GstVideoState describing format of video data.
  */
 GstVideoState *
 gst_base_video_decoder_get_state (GstBaseVideoDecoder * base_video_decoder)
 {
+  /* FIXME : Move to base codec class */
+
   return &GST_BASE_VIDEO_CODEC (base_video_decoder)->state;
 }
 
@@ -1939,6 +1943,8 @@ gst_base_video_decoder_set_sync_point (GstBaseVideoDecoder * base_video_decoder)
  * gst_base_video_decoder_get_oldest_frame:
  * @base_video_decoder: a #GstBaseVideoDecoder
  *
+ * Get the oldest pending unfinished #GstVideoFrame
+ *
  * Returns: oldest pending unfinished #GstVideoFrame.
  */
 GstVideoFrame *
@@ -1946,6 +1952,8 @@ gst_base_video_decoder_get_oldest_frame (GstBaseVideoDecoder *
     base_video_decoder)
 {
   GList *g;
+
+  /* FIXME : Move to base codec class */
 
   GST_BASE_VIDEO_CODEC_STREAM_LOCK (base_video_decoder);
   g = g_list_first (GST_BASE_VIDEO_CODEC (base_video_decoder)->frames);
@@ -1961,6 +1969,8 @@ gst_base_video_decoder_get_oldest_frame (GstBaseVideoDecoder *
  * @base_video_decoder: a #GstBaseVideoDecoder
  * @frame_number: system_frame_number of a frame
  *
+ * Get a pending unfinished #GstVideoFrame
+ * 
  * Returns: pending unfinished #GstVideoFrame identified by @frame_number.
  */
 GstVideoFrame *
@@ -1991,6 +2001,7 @@ gst_base_video_decoder_get_frame (GstBaseVideoDecoder * base_video_decoder,
  *
  * Sets src pad caps according to currently configured #GstVideoState.
  *
+ * Returns: #TRUE if the caps were accepted downstream, else #FALSE.
  */
 gboolean
 gst_base_video_decoder_set_src_caps (GstBaseVideoDecoder * base_video_decoder)
@@ -2042,11 +2053,11 @@ gst_base_video_decoder_set_src_caps (GstBaseVideoDecoder * base_video_decoder)
  * gst_base_video_decoder_alloc_src_buffer:
  * @base_video_decoder: a #GstBaseVideoDecoder
  *
- * Helper function that uses gst_pad_alloc_buffer_and_set_caps
+ * Helper function that uses @gst_pad_alloc_buffer_and_set_caps()
  * to allocate a buffer to hold a video frame for @base_video_decoder's
  * current #GstVideoState.
  *
- * Returns: allocated buffer
+ * Returns: (transfer full): allocated buffer
  */
 GstBuffer *
 gst_base_video_decoder_alloc_src_buffer (GstBaseVideoDecoder *
@@ -2075,6 +2086,7 @@ gst_base_video_decoder_alloc_src_buffer (GstBaseVideoDecoder *
   }
 
   GST_BASE_VIDEO_CODEC_STREAM_UNLOCK (base_video_decoder);
+
   return buffer;
 }
 
@@ -2083,7 +2095,7 @@ gst_base_video_decoder_alloc_src_buffer (GstBaseVideoDecoder *
  * @base_video_decoder: a #GstBaseVideoDecoder
  * @frame: a #GstVideoFrame
  *
- * Helper function that uses gst_pad_alloc_buffer_and_set_caps
+ * Helper function that uses @gst_pad_alloc_buffer_and_set_caps()
  * to allocate a buffer to hold a video frame for @base_video_decoder's
  * current #GstVideoState.  Subclass should already have configured video state
  * and set src pad caps.
@@ -2158,8 +2170,10 @@ gst_base_video_decoder_get_max_decode_time (GstBaseVideoDecoder *
 }
 
 /**
- * gst_base_video_decoder_get_oldest_frame:
+ * gst_base_video_decoder_class_set_capture_pattern:
  * @base_video_decoder_class: a #GstBaseVideoDecoderClass
+ * @mask: The mask used for scanning
+ * @pattern: The pattern used for matching
  *
  * Sets the mask and pattern that will be scanned for to obtain parse sync.
  * Note that a non-zero @mask implies that @scan_for_sync will be ignored.
