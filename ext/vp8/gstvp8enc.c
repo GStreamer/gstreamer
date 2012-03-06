@@ -843,7 +843,7 @@ gst_vp8_enc_set_format (GstBaseVideoEncoder * base_video_encoder,
 
   /* prepare cached image buffer setup */
   image = &encoder->image;
-  memset (image, 0, sizeof (image));
+  memset (image, 0, sizeof (*image));
 
   image->fmt = VPX_IMG_FMT_I420;
   image->bps = 12;
