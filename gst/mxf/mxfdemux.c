@@ -2383,7 +2383,7 @@ gst_mxf_demux_find_essence_element (GstMXFDemux * demux,
   GstFlowReturn ret = GST_FLOW_OK;
   guint64 old_offset = demux->offset;
   GstMXFDemuxPartition *old_partition = demux->current_partition;
-  guint i;
+  gint i;
 
   GST_DEBUG_OBJECT (demux, "Trying to find essence element %" G_GINT64_FORMAT
       " of track %u with body_sid %u (keyframe %d)", *position,
@@ -3966,10 +3966,8 @@ gst_mxf_demux_base_init (gpointer g_class)
 {
   GstElementClass *element_class = GST_ELEMENT_CLASS (g_class);
 
-  gst_element_class_add_static_pad_template (element_class,
-      &mxf_sink_template);
-  gst_element_class_add_static_pad_template (element_class,
-      &mxf_src_template);
+  gst_element_class_add_static_pad_template (element_class, &mxf_sink_template);
+  gst_element_class_add_static_pad_template (element_class, &mxf_src_template);
   gst_element_class_set_details_simple (element_class, "MXF Demuxer",
       "Codec/Demuxer",
       "Demux MXF files", "Sebastian Dröge <sebastian.droege@collabora.co.uk>");
