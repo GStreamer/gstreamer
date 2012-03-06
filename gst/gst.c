@@ -913,7 +913,7 @@ parse_one_option (gint opt, const gchar * arg, GError ** err)
       GstDebugLevel tmp = GST_LEVEL_NONE;
 
       tmp = (GstDebugLevel) strtol (arg, NULL, 0);
-      if (tmp >= 0 && tmp < GST_LEVEL_COUNT) {
+      if (((guint) tmp) < GST_LEVEL_COUNT) {
         gst_debug_set_default_threshold (tmp);
       }
       break;
