@@ -859,7 +859,7 @@ gst_tee_sink_activate_push (GstPad * pad, gboolean active)
   tee = GST_TEE (GST_OBJECT_PARENT (pad));
 
   GST_OBJECT_LOCK (tee);
-  tee->sink_mode = active && GST_ACTIVATE_PUSH;
+  tee->sink_mode = (active ? GST_ACTIVATE_PUSH : GST_ACTIVATE_NONE);
 
   if (active && !tee->has_chain)
     goto no_chain;
@@ -912,7 +912,7 @@ gst_tee_src_activate_pull (GstPad * pad, gboolean active)
     if (pad == tee->pull_pad)
       tee->pull_pad = NULL;
   }
-  tee->sink_mode = active && GST_ACTIVATE_PULL;
+  tee->sink_mode = (active ? GST_ACTIVATE_PULL : GST_ACTIVATE_NONE);
   GST_OBJECT_UNLOCK (tee);
 
   gst_object_unref (tee);
