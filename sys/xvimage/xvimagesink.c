@@ -1426,7 +1426,7 @@ gst_xvimagesink_get_xv_support (GstXvImageSink * xvimagesink,
     xcontext->adaptors[i] = g_strdup (adaptors[i].name);
   }
 
-  if (xvimagesink->adaptor_no >= 0 &&
+  if (xvimagesink->adaptor_no != -1 &&
       xvimagesink->adaptor_no < xcontext->nb_adaptors) {
     /* Find xv port from user defined adaptor */
     gst_lookup_xv_port_from_adaptor (xcontext, adaptors,
