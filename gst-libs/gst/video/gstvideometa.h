@@ -115,7 +115,7 @@ const GstMetaInfo * gst_video_crop_meta_get_info (void);
 #define gst_buffer_get_video_crop_meta(b) ((GstVideoCropMeta*)gst_buffer_get_meta((b),GST_VIDEO_CROP_META_API_TYPE))
 #define gst_buffer_add_video_crop_meta(b) ((GstVideoCropMeta*)gst_buffer_add_meta((b),GST_VIDEO_CROP_META_INFO, NULL))
 
-/* metadata transforms */
+/* video metadata transforms */
 
 GQuark gst_video_meta_transform_scale_get_quark (void);
 /**
@@ -126,20 +126,17 @@ GQuark gst_video_meta_transform_scale_get_quark (void);
 #define GST_VIDEO_META_TRANSFORM_IS_SCALE(type) ((type) == gst_video_meta_transform_scale_get_quark())
 
 /**
- * GstVideoMetaTransformScale:
- * @old_width: the old width
- * @old_height: the old height
- * @new_width: the new width
- * @new_height: the new height
+ * GstVideoMetaTransform:
+ * @old_info: the old #GstVideoInfo
+ * @new_info: the new #GstVideoInfo
  *
- * Extra data passed to a video "scale" transform #GstMetaTransformFunction.
+ * Extra data passed to a video transform #GstMetaTransformFunction such as:
+ * "gst-video-scale".
  */
 typedef struct {
-  gint old_width;
-  gint old_height;
-  gint new_width;
-  gint new_height;
-} GstVideoMetaTransformScale;
+  GstVideoInfo *in_info;
+  GstVideoInfo *out_info;
+} GstVideoMetaTransform;
 
 G_END_DECLS
 

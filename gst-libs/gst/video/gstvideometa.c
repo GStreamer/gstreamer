@@ -323,8 +323,26 @@ gst_video_crop_meta_transform (GstBuffer * dest, GstMeta * meta,
     dmeta->width = smeta->width;
     dmeta->height = smeta->height;
   } else if (GST_VIDEO_META_TRANSFORM_IS_SCALE (type)) {
-    /* FIXME, do something */
-    GST_DEBUG ("scaling crop metadata");
+    GstVideoMetaTransform *trans = data;
+    gint ow, oh, nw, nh;
+
+    smeta = (GstVideoCropMeta *) meta;
+    dmeta = gst_buffer_add_video_crop_meta (dest);
+
+    ow = GST_VIDEO_INFO_WIDTH (trans->in_info);
+    nw = GST_VIDEO_INFO_WIDTH (trans->out_info);
+    oh = GST_VIDEO_INFO_HEIGHT (trans->in_info);
+    nh = GST_VIDEO_INFO_HEIGHT (trans->out_info);
+
+    GST_DEBUG ("scaling crop metadata %dx%d -> %dx%d", ow, oh, nw, nh);
+    dmeta->x = (smeta->x * nw) / ow;
+    dmeta->y = (smeta->y * nh) / oh;
+    dmeta->width = (smeta->width * nw) / ow;
+    dmeta->height = (smeta->height * nh) / oh;
+    GST_DEBUG ("crop offset %dx%d -> %dx%d", smeta->x, smeta->y, dmeta->x,
+        dmeta->y);
+    GST_DEBUG ("crop size   %dx%d -> %dx%d", smeta->width, smeta->height,
+        dmeta->width, dmeta->height);
   }
   return TRUE;
 }
