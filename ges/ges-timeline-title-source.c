@@ -49,8 +49,8 @@ struct _GESTimelineTitleSourcePrivate
   gboolean mute;
   gchar *text;
   gchar *font_desc;
-  GESTextVAlign halign;
-  GESTextHAlign valign;
+  GESTextHAlign halign;
+  GESTextVAlign valign;
   GSList *track_titles;
   guint32 color;
   gdouble xpos;
