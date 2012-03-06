@@ -96,8 +96,6 @@ static gboolean gst_a52dec_parse (GstAudioDecoder * dec, GstAdapter * adapter,
     gint * offset, gint * length);
 static GstFlowReturn gst_a52dec_handle_frame (GstAudioDecoder * dec,
     GstBuffer * buffer);
-static GstFlowReturn gst_a52dec_pre_push (GstAudioDecoder * bdec,
-    GstBuffer ** buffer);
 
 static GstFlowReturn gst_a52dec_chain (GstPad * pad, GstBuffer * buffer);
 
@@ -163,7 +161,6 @@ gst_a52dec_class_init (GstA52DecClass * klass)
   gstbase_class->set_format = GST_DEBUG_FUNCPTR (gst_a52dec_set_format);
   gstbase_class->parse = GST_DEBUG_FUNCPTR (gst_a52dec_parse);
   gstbase_class->handle_frame = GST_DEBUG_FUNCPTR (gst_a52dec_handle_frame);
-  gstbase_class->pre_push = GST_DEBUG_FUNCPTR (gst_a52dec_pre_push);
 
   /**
    * GstA52Dec::drc
@@ -281,10 +278,6 @@ gst_a52dec_stop (GstAudioDecoder * dec)
   if (a52dec->state) {
     a52_free (a52dec->state);
     a52dec->state = NULL;
-  }
-  if (a52dec->pending_tags) {
-    gst_tag_list_free (a52dec->pending_tags);
-    a52dec->pending_tags = NULL;
   }
 
   return TRUE;
@@ -463,26 +456,9 @@ gst_a52dec_update_streaminfo (GstA52Dec * a52dec)
   gst_tag_list_add (taglist, GST_TAG_MERGE_APPEND, GST_TAG_BITRATE,
       (guint) a52dec->bit_rate, NULL);
 
-  if (a52dec->pending_tags) {
-    gst_tag_list_free (a52dec->pending_tags);
-    a52dec->pending_tags = NULL;
-  }
-
-  a52dec->pending_tags = taglist;
-}
-
-static GstFlowReturn
-gst_a52dec_pre_push (GstAudioDecoder * bdec, GstBuffer ** buffer)
-{
-  GstA52Dec *a52dec = GST_A52DEC (bdec);
-
-  if (G_UNLIKELY (a52dec->pending_tags)) {
-    gst_element_found_tags_for_pad (GST_ELEMENT (a52dec),
-        GST_AUDIO_DECODER_SRC_PAD (a52dec), a52dec->pending_tags);
-    a52dec->pending_tags = NULL;
-  }
-
-  return GST_FLOW_OK;
+  gst_audio_decoder_merge_tags (GST_AUDIO_DECODER (a52dec), taglist,
+      GST_TAG_MERGE_REPLACE);
+  gst_tag_list_free (taglist);
 }
 
 static GstFlowReturn

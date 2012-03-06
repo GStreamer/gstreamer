@@ -62,8 +62,6 @@ struct _GstA52Dec {
   gboolean       dynamic_range_compression;
   sample_t      *samples;
   a52_state_t   *state;
-
-  GstTagList    *pending_tags;
 };
 
 struct _GstA52DecClass {
