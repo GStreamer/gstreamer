@@ -137,8 +137,6 @@ static gboolean gst_dtsdec_parse (GstAudioDecoder * dec, GstAdapter * adapter,
     gint * offset, gint * length);
 static GstFlowReturn gst_dtsdec_handle_frame (GstAudioDecoder * dec,
     GstBuffer * buffer);
-static GstFlowReturn gst_dtsdec_pre_push (GstAudioDecoder * bdec,
-    GstBuffer ** buffer);
 
 static GstFlowReturn gst_dtsdec_chain (GstPad * pad, GstBuffer * buf);
 
@@ -182,7 +180,6 @@ gst_dtsdec_class_init (GstDtsDecClass * klass)
   gstbase_class->set_format = GST_DEBUG_FUNCPTR (gst_dtsdec_set_format);
   gstbase_class->parse = GST_DEBUG_FUNCPTR (gst_dtsdec_parse);
   gstbase_class->handle_frame = GST_DEBUG_FUNCPTR (gst_dtsdec_handle_frame);
-  gstbase_class->pre_push = GST_DEBUG_FUNCPTR (gst_dtsdec_pre_push);
 
   /**
    * GstDtsDec::drc
@@ -265,10 +262,6 @@ gst_dtsdec_stop (GstAudioDecoder * dec)
   if (dts->state) {
     dca_free (dts->state);
     dts->state = NULL;
-  }
-  if (dts->pending_tags) {
-    gst_tag_list_free (dts->pending_tags);
-    dts->pending_tags = NULL;
   }
 
   return TRUE;
@@ -459,28 +452,9 @@ gst_dtsdec_update_streaminfo (GstDtsDec * dts)
     /* 1 => open bitrate, 2 => variable bitrate, 3 => lossless */
     gst_tag_list_add (taglist, GST_TAG_MERGE_APPEND, GST_TAG_BITRATE,
         (guint) dts->bit_rate, NULL);
-
-    if (dts->pending_tags) {
-      gst_tag_list_free (dts->pending_tags);
-      dts->pending_tags = NULL;
-    }
-
-    dts->pending_tags = taglist;
+    gst_audio_decoder_merge_tags (GST_AUDIO_DECODER (dts), taglist,
+        GST_TAG_MERGE_REPLACE);
   }
-}
-
-static GstFlowReturn
-gst_dtsdec_pre_push (GstAudioDecoder * bdec, GstBuffer ** buffer)
-{
-  GstDtsDec *dts = GST_DTSDEC (bdec);
-
-  if (G_UNLIKELY (dts->pending_tags)) {
-    gst_element_found_tags_for_pad (GST_ELEMENT (dts),
-        GST_AUDIO_DECODER_SRC_PAD (dts), dts->pending_tags);
-    dts->pending_tags = NULL;
-  }
-
-  return GST_FLOW_OK;
 }
 
 static GstFlowReturn
