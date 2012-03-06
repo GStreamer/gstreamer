@@ -253,6 +253,7 @@ struct _GstBaseTransformPrivate
   GstClockTime position_out;
 
   GstBufferPool *pool;
+  gboolean pool_active;
   GstAllocator *allocator;
   guint prefix;
   guint alignment;
@@ -758,16 +759,10 @@ gst_base_transform_set_allocation (GstBaseTransform * trans,
   GstQuery *oldquery;
   GstBaseTransformPrivate *priv = trans->priv;
 
-  /* activate */
-  if (pool) {
-    GST_DEBUG_OBJECT (trans, "setting pool %p active", pool);
-    if (!gst_buffer_pool_set_active (pool, TRUE))
-      goto activate_failed;
-  }
-
   GST_OBJECT_LOCK (trans);
   oldpool = priv->pool;
   priv->pool = pool;
+  priv->pool_active = FALSE;
   oldalloc = priv->allocator;
   priv->allocator = allocator;
   oldquery = priv->query;
@@ -789,12 +784,6 @@ gst_base_transform_set_allocation (GstBaseTransform * trans,
   }
   return TRUE;
 
-  /* ERRORS */
-activate_failed:
-  {
-    GST_ERROR_OBJECT (trans, "failed to activate bufferpool.");
-    return FALSE;
-  }
 }
 
 static gboolean
@@ -1497,6 +1486,12 @@ default_prepare_output_buffer (GstBaseTransform * trans,
 
   /* we can't reuse the input buffer */
   if (priv->pool) {
+    if (!priv->pool_active) {
+      GST_DEBUG_OBJECT (trans, "setting pool %p active", priv->pool);
+      if (!gst_buffer_pool_set_active (priv->pool, TRUE))
+        goto activate_failed;
+      priv->pool_active = TRUE;
+    }
     GST_DEBUG_OBJECT (trans, "using pool alloc");
     ret = gst_buffer_pool_acquire_buffer (priv->pool, outbuf, NULL);
     goto copy_meta;
@@ -1548,6 +1543,13 @@ done:
   return ret;
 
   /* ERRORS */
+  /* ERRORS */
+activate_failed:
+  {
+    GST_ELEMENT_ERROR (trans, RESOURCE, SETTINGS,
+        ("failed to activate bufferpool"), ("failed to activate bufferpool"));
+    return GST_FLOW_ERROR;
+  }
 unknown_size:
   {
     GST_ERROR_OBJECT (trans, "unknown output size");
@@ -2011,7 +2013,7 @@ not_negotiated:
   {
     gst_buffer_unref (inbuf);
     *outbuf = NULL;
-    GST_ELEMENT_ERROR (trans, STREAM, NOT_IMPLEMENTED,
+    GST_ELEMENT_ERROR (trans, STREAM, FORMAT,
         ("not negotiated"), ("not negotiated"));
     return GST_FLOW_NOT_NEGOTIATED;
   }
