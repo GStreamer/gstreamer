@@ -1319,7 +1319,7 @@ gst_ximagesink_show_frame (GstVideoSink * vsink, GstBuffer * buf)
     if (!gst_buffer_pool_set_active (ximagesink->pool, TRUE))
       goto activate_failed;
 
-    /* take a buffer form our pool */
+    /* take a buffer from our pool */
     res = gst_buffer_pool_acquire_buffer (ximagesink->pool, &to_put, NULL);
     if (res != GST_FLOW_OK)
       goto no_buffer;
