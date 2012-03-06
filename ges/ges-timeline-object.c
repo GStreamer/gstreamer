@@ -1566,8 +1566,7 @@ track_object_priority_changed_cb (GESTrackObject * child,
   } else if (tck_priority < layer_min_gnl_prio + object->priority) {
     /* Or update the parent priority, the object priority is always the
      * highest priority (smaller number) */
-    if (tck_priority - layer_min_gnl_prio < 0 ||
-        layer_max_gnl_prio - tck_priority < 0) {
+    if (tck_priority < layer_min_gnl_prio || layer_max_gnl_prio < tck_priority) {
 
       GST_WARNING ("%p priority of %i, is outside of its containing "
           "layer space. (%d/%d). This is a bug in the program.", object,
