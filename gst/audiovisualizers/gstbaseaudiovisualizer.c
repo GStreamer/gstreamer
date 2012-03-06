@@ -828,7 +828,7 @@ gst_base_audio_visualizer_chain (GstPad * pad, GstBuffer * buffer)
     /* we want to take less or more, depending on spf : req_spf */
     if (avail - sbpf >= sbpf) {
       gst_adapter_flush (scope->adapter, sbpf);
-    } else if (avail - sbpf >= 0) {
+    } else if (avail >= sbpf) {
       /* just flush a bit and stop */
       gst_adapter_flush (scope->adapter, (avail - sbpf));
       break;
