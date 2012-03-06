@@ -309,8 +309,9 @@ gst_speex_dec_parse_comments (GstSpeexDec * dec, GstBuffer * buf)
 
   GST_INFO_OBJECT (dec, "tags: %" GST_PTR_FORMAT, list);
 
-  gst_element_found_tags_for_pad (GST_ELEMENT (dec),
-      GST_AUDIO_DECODER_SRC_PAD (dec), list);
+  gst_audio_decoder_merge_tags (GST_AUDIO_DECODER (dec), list,
+      GST_TAG_MERGE_REPLACE);
+  gst_tag_list_free (list);
 
   g_free (encoder);
   g_free (ver);
