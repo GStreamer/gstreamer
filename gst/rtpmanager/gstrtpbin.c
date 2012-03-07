@@ -305,6 +305,10 @@ static GstCaps *pt_map_requested (GstElement * element, guint pt,
     GstRtpBinSession * session);
 static void payload_type_change (GstElement * element, guint pt,
     GstRtpBinSession * session);
+static void remove_recv_rtp (GstRtpBin * rtpbin, GstRtpBinSession * session);
+static void remove_recv_rtcp (GstRtpBin * rtpbin, GstRtpBinSession * session);
+static void remove_send_rtp (GstRtpBin * rtpbin, GstRtpBinSession * session);
+static void remove_rtcp (GstRtpBin * rtpbin, GstRtpBinSession * session);
 static void free_client (GstRtpBinClient * client, GstRtpBin * bin);
 static void free_stream (GstRtpBinStream * stream);
 
@@ -641,28 +645,12 @@ free_session (GstRtpBinSession * sess, GstRtpBin * bin)
   gst_element_set_state (sess->demux, GST_STATE_NULL);
   gst_element_set_state (sess->session, GST_STATE_NULL);
 
-  if (sess->recv_rtp_sink != NULL) {
-    gst_element_release_request_pad (sess->session, sess->recv_rtp_sink);
-    gst_object_unref (sess->recv_rtp_sink);
-  }
-  if (sess->recv_rtp_src != NULL)
-    gst_object_unref (sess->recv_rtp_src);
-  if (sess->recv_rtcp_sink != NULL) {
-    gst_element_release_request_pad (sess->session, sess->recv_rtcp_sink);
-    gst_object_unref (sess->recv_rtcp_sink);
-  }
-  if (sess->sync_src != NULL)
-    gst_object_unref (sess->sync_src);
-  if (sess->send_rtp_sink != NULL) {
-    gst_element_release_request_pad (sess->session, sess->send_rtp_sink);
-    gst_object_unref (sess->send_rtp_sink);
-  }
-  if (sess->send_rtp_src != NULL)
-    gst_object_unref (sess->send_rtp_src);
-  if (sess->send_rtcp_src != NULL) {
-    gst_element_release_request_pad (sess->session, sess->send_rtcp_src);
-    gst_object_unref (sess->send_rtcp_src);
-  }
+  GST_RTP_BIN_LOCK (bin);
+  remove_recv_rtp (bin, sess);
+  remove_recv_rtcp (bin, sess);
+  remove_send_rtp (bin, sess);
+  remove_rtcp (bin, sess);
+  GST_RTP_BIN_UNLOCK (bin);
 
   gst_bin_remove (GST_BIN_CAST (bin), sess->session);
   gst_bin_remove (GST_BIN_CAST (bin), sess->demux);
