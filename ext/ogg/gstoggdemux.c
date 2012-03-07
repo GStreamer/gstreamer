@@ -194,8 +194,12 @@ gst_ogg_pad_init (GstOggPad * pad)
 
   pad->have_type = FALSE;
   pad->continued = NULL;
+  pad->map.headers = NULL;
+  pad->map.queued = NULL;
 
-  gst_ogg_stream_clear (&pad->map);
+  pad->map.granulerate_n = 0;
+  pad->map.granulerate_d = 0;
+  pad->map.granuleshift = -1;
 }
 
 static void
@@ -206,12 +210,32 @@ gst_ogg_pad_dispose (GObject * object)
   pad->chain = NULL;
   pad->ogg = NULL;
 
+  g_list_foreach (pad->map.headers, (GFunc) _ogg_packet_free, NULL);
+  g_list_free (pad->map.headers);
+  pad->map.headers = NULL;
+  g_list_foreach (pad->map.queued, (GFunc) _ogg_packet_free, NULL);
+  g_list_free (pad->map.queued);
+  pad->map.queued = NULL;
+
+  g_free (pad->map.index);
+  pad->map.index = NULL;
+
   /* clear continued pages */
   g_list_foreach (pad->continued, (GFunc) gst_ogg_page_free, NULL);
   g_list_free (pad->continued);
   pad->continued = NULL;
 
-  gst_ogg_stream_clear (&pad->map);
+  if (pad->map.caps) {
+    gst_caps_unref (pad->map.caps);
+    pad->map.caps = NULL;
+  }
+
+  if (pad->map.taglist) {
+    gst_tag_list_free (pad->map.taglist);
+    pad->map.taglist = NULL;
+  }
+
+  ogg_stream_reset (&pad->map.stream);
 
   G_OBJECT_CLASS (gst_ogg_pad_parent_class)->dispose (object);
 }

@@ -296,7 +296,8 @@ gst_ogg_mux_ogg_pad_destroy_notify (GstCollectData2 * data)
   GstOggPadData *oggpad = (GstOggPadData *) data;
   GstBuffer *buf;
 
-  gst_ogg_stream_clear (&oggpad->map);
+  ogg_stream_clear (&oggpad->map.stream);
+  gst_caps_replace (&oggpad->map.caps, NULL);
 
   if (oggpad->pagebuffers) {
     while ((buf = g_queue_pop_head (oggpad->pagebuffers)) != NULL) {
@@ -465,7 +466,6 @@ gst_ogg_mux_request_new_pad (GstElement * element,
           sizeof (GstOggPadData), gst_ogg_mux_ogg_pad_destroy_notify, FALSE);
       ogg_mux->active_pads++;
 
-      gst_ogg_stream_clear (&oggpad->map);
       oggpad->map.serialno = serial;
       oggpad->packetno = 0;
       oggpad->pageno = 0;
@@ -476,6 +476,8 @@ gst_ogg_mux_request_new_pad (GstElement * element,
       oggpad->first_delta = FALSE;
       oggpad->prev_delta = FALSE;
       oggpad->data_pushed = FALSE;
+      oggpad->map.headers = NULL;
+      oggpad->map.queued = NULL;
       oggpad->next_granule = 0;
       oggpad->keyframe_granule = -1;
 
