@@ -127,11 +127,11 @@ _gst_caps_set_buffer_array (GstCaps * caps, const gchar * field,
     g_assert (gst_buffer_is_writable (buf));
 
     /* mark buffer */
-    GST_BUFFER_FLAG_SET (buf, GST_BUFFER_FLAG_IN_CAPS);
+    GST_BUFFER_FLAG_SET (buf, GST_BUFFER_FLAG_HEADER);
 
     g_value_init (&value, GST_TYPE_BUFFER);
     buf = gst_buffer_copy (buf);
-    GST_BUFFER_FLAG_SET (buf, GST_BUFFER_FLAG_IN_CAPS);
+    GST_BUFFER_FLAG_SET (buf, GST_BUFFER_FLAG_HEADER);
     gst_value_set_buffer (&value, buf);
     gst_buffer_unref (buf);
     gst_value_array_append_value (&array, &value);
@@ -152,14 +152,15 @@ gst_opus_header_create_caps_from_headers (GstCaps ** caps, GSList ** headers,
 {
   int n_streams, family;
   gboolean multistream;
+  GstMapInfo map;
   guint8 *data;
-  gsize size;
 
   g_return_if_fail (caps);
   g_return_if_fail (headers && !*headers);
   g_return_if_fail (gst_buffer_get_size (buf1) >= 19);
 
-  data = gst_buffer_map (buf1, &size, NULL, GST_MAP_READ);
+  gst_buffer_map (buf1, &map, GST_MAP_READ);
+  data = map.data;
 
   /* work out the number of streams */
   family = data[18];
@@ -167,16 +168,16 @@ gst_opus_header_create_caps_from_headers (GstCaps ** caps, GSList ** headers,
     n_streams = 1;
   } else {
     /* only included in the header for family > 0 */
-    if (size >= 20)
+    if (map.size >= 20)
       n_streams = data[19];
     else {
       g_warning ("family > 0 but header buffer size < 20");
-      gst_buffer_unmap (buf1, data, size);
+      gst_buffer_unmap (buf1, &map);
       return;
     }
   }
 
-  gst_buffer_unmap (buf1, data, size);
+  gst_buffer_unmap (buf1, &map);
 
   /* mark and put on caps */
   multistream = n_streams > 1;
@@ -228,13 +229,16 @@ gst_opus_header_is_id_header (GstBuffer * buf)
   guint8 *data = NULL;
   guint8 channels, channel_mapping_family, n_streams, n_stereo_streams;
   gboolean ret = FALSE;
+  GstMapInfo map;
 
   if (size < 19)
     goto beach;
   if (!gst_opus_header_is_header (buf, "OpusHead", 8))
     goto beach;
 
-  data = gst_buffer_map (buf, &size, NULL, GST_MAP_READ);
+  gst_buffer_map (buf, &map, GST_MAP_READ);
+  data = map.data;
+  size = map.size;
 
   channels = data[9];
 
@@ -263,7 +267,7 @@ gst_opus_header_is_id_header (GstBuffer * buf)
 
 beach:
   if (data)
-    gst_buffer_unmap (buf, data, size);
+    gst_buffer_unmap (buf, &map);
   return ret;
 }
 

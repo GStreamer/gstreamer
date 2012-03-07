@@ -22,7 +22,7 @@
 #define __GST_OPUS_COMMON_H__
 
 #include <gst/gst.h>
-#include <gst/audio/multichannel.h>
+#include <gst/audio/audio.h>
 
 G_BEGIN_DECLS
 
