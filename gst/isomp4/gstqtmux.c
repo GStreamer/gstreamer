@@ -648,23 +648,27 @@ gst_qt_mux_add_mp4_cover (GstQTMux * qtmux, const GstTagList * list,
 {
   GValue value = { 0, };
   GstBuffer *buf;
+  GstSample *sample;
   GstCaps *caps;
   GstStructure *structure;
   gint flags = 0;
   GstMapInfo map;
 
-  g_return_if_fail (gst_tag_get_type (tag) == GST_TYPE_BUFFER);
+  g_return_if_fail (gst_tag_get_type (tag) == GST_TYPE_SAMPLE);
 
   if (!gst_tag_list_copy_value (&value, list, tag))
     return;
 
-  buf = gst_value_get_buffer (&value);
+  sample = gst_value_get_sample (&value);
+
+  if (!sample)
+    goto done;
+
+  buf = gst_sample_get_buffer (sample);
   if (!buf)
     goto done;
 
-  /* FIXME-0.11 caps metadata ? */
-  /* caps = gst_buffer_get_caps (buf); */
-  caps = NULL;
+  caps = gst_sample_get_caps (sample);
   if (!caps) {
     GST_WARNING_OBJECT (qtmux, "preview image without caps");
     goto done;
