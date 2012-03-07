@@ -116,10 +116,10 @@ G_BEGIN_DECLS
 typedef enum {
   GST_BASE_PARSE_FRAME_FLAG_NONE         = 0,
   GST_BASE_PARSE_FRAME_FLAG_NEW_FRAME    = (1 << 0),
-  GST_BASE_PARSE_FRAME_FLAG_NO_FRAME     = (1 << 0),
-  GST_BASE_PARSE_FRAME_FLAG_CLIP         = (1 << 1),
-  GST_BASE_PARSE_FRAME_FLAG_DROP         = (1 << 2),
-  GST_BASE_PARSE_FRAME_FLAG_QUEUE        = (1 << 3)
+  GST_BASE_PARSE_FRAME_FLAG_NO_FRAME     = (1 << 1),
+  GST_BASE_PARSE_FRAME_FLAG_CLIP         = (1 << 2),
+  GST_BASE_PARSE_FRAME_FLAG_DROP         = (1 << 3),
+  GST_BASE_PARSE_FRAME_FLAG_QUEUE        = (1 << 4)
 } GstBaseParseFrameFlags;
 
 /**
