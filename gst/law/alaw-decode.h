@@ -21,6 +21,7 @@
 #define __GST_ALAW_DECODE_H__
 
 #include <gst/gst.h>
+#include <gst/audio/audio.h>
 
 G_BEGIN_DECLS
 
@@ -42,8 +43,7 @@ struct _GstALawDec {
   GstElement element;
 
   GstPad *sinkpad,*srcpad;
-  gint rate;
-  gint channels;
+  GstAudioInfo info;
 };
 
 struct _GstALawDecClass {

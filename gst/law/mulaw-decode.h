@@ -21,6 +21,7 @@
 #define __GST_MULAWDECODE_H__
 
 #include <gst/gst.h>
+#include <gst/audio/audio.h>
 
 G_BEGIN_DECLS
 
@@ -43,8 +44,7 @@ struct _GstMuLawDec {
 
   GstPad *sinkpad,*srcpad;
 
-  gint rate;
-  gint channels;
+  GstAudioInfo info;
 };
 
 struct _GstMuLawDecClass {

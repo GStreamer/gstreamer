@@ -26,7 +26,6 @@
 #include "config.h"
 #endif
 #include <gst/gst.h>
-#include <gst/audio/audio.h>
 
 #include "mulaw-decode.h"
 #include "mulaw-conversion.h"
@@ -64,6 +63,7 @@ mulawdec_setcaps (GstMuLawDec * mulawdec, GstCaps * caps)
   int rate, channels;
   gboolean ret;
   GstCaps *outcaps;
+  GstAudioInfo info;
 
   structure = gst_caps_get_structure (caps, 0);
   ret = gst_structure_get_int (structure, "rate", &rate);
@@ -71,16 +71,16 @@ mulawdec_setcaps (GstMuLawDec * mulawdec, GstCaps * caps)
   if (!ret)
     return FALSE;
 
-  outcaps = gst_caps_new_simple ("audio/x-raw",
-      "format", G_TYPE_STRING, GST_AUDIO_NE (S16),
-      "rate", G_TYPE_INT, rate, "channels", G_TYPE_INT, channels, NULL);
+  gst_audio_info_init (&info);
+  gst_audio_info_set_format (&info, GST_AUDIO_FORMAT_S16, rate, channels, NULL);
+
+  outcaps = gst_audio_info_to_caps (&info);
   ret = gst_pad_set_caps (mulawdec->srcpad, outcaps);
   gst_caps_unref (outcaps);
 
   if (ret) {
     GST_DEBUG_OBJECT (mulawdec, "rate=%d, channels=%d", rate, channels);
-    mulawdec->rate = rate;
-    mulawdec->channels = channels;
+    mulawdec->info = info;
   }
   return ret;
 }
@@ -249,7 +249,7 @@ gst_mulawdec_chain (GstPad * pad, GstObject * parent, GstBuffer * buffer)
 
   mulawdec = GST_MULAWDEC (parent);
 
-  if (G_UNLIKELY (mulawdec->rate == 0))
+  if (G_UNLIKELY (!GST_AUDIO_INFO_IS_VALID (&mulawdec->info)))
     goto not_negotiated;
 
   gst_buffer_map (buffer, &inmap, GST_MAP_READ);
@@ -267,11 +267,13 @@ gst_mulawdec_chain (GstPad * pad, GstObject * parent, GstBuffer * buffer)
     GST_BUFFER_FLAG_SET (outbuf, GST_BUFFER_FLAG_DISCONT);
 
   GST_BUFFER_TIMESTAMP (outbuf) = GST_BUFFER_TIMESTAMP (buffer);
-  if (GST_BUFFER_DURATION (outbuf) == GST_CLOCK_TIME_NONE)
-    GST_BUFFER_DURATION (outbuf) = gst_util_uint64_scale_int (GST_SECOND,
-        linear_size, 2 * mulawdec->rate * mulawdec->channels);
-  else
+  if (GST_BUFFER_DURATION_IS_VALID (buffer)) {
     GST_BUFFER_DURATION (outbuf) = GST_BUFFER_DURATION (buffer);
+  } else {
+    GST_BUFFER_DURATION (outbuf) = gst_util_uint64_scale_int (GST_SECOND,
+        linear_size, GST_AUDIO_INFO_RATE (&mulawdec->info) *
+        GST_AUDIO_INFO_BPF (&mulawdec->info));
+  }
 
   mulaw_decode (mulaw_data, linear_data, mulaw_size);
 
@@ -309,8 +311,7 @@ gst_mulawdec_change_state (GstElement * element, GstStateChange transition)
 
   switch (transition) {
     case GST_STATE_CHANGE_PAUSED_TO_READY:
-      dec->rate = 0;
-      dec->channels = 0;
+      gst_audio_info_init (&dec->info);
       break;
     default:
       break;

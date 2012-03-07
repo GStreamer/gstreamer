@@ -26,8 +26,6 @@
 #include "config.h"
 #endif
 
-#include <gst/audio/audio.h>
-
 #include "alaw-decode.h"
 
 extern GstStaticPadTemplate alaw_dec_src_factory;
@@ -123,6 +121,7 @@ gst_alaw_dec_setcaps (GstALawDec * alawdec, GstCaps * caps)
   int rate, channels;
   gboolean ret;
   GstCaps *outcaps;
+  GstAudioInfo info;
 
   structure = gst_caps_get_structure (caps, 0);
 
@@ -131,17 +130,16 @@ gst_alaw_dec_setcaps (GstALawDec * alawdec, GstCaps * caps)
   if (!ret)
     return FALSE;
 
-  outcaps = gst_caps_new_simple ("audio/x-raw",
-      "format", G_TYPE_STRING, GST_AUDIO_NE (S16),
-      "rate", G_TYPE_INT, rate, "channels", G_TYPE_INT, channels, NULL);
+  gst_audio_info_init (&info);
+  gst_audio_info_set_format (&info, GST_AUDIO_FORMAT_S16, rate, channels, NULL);
 
+  outcaps = gst_audio_info_to_caps (&info);
   ret = gst_pad_set_caps (alawdec->srcpad, outcaps);
   gst_caps_unref (outcaps);
 
   if (ret) {
     GST_DEBUG_OBJECT (alawdec, "rate=%d, channels=%d", rate, channels);
-    alawdec->rate = rate;
-    alawdec->channels = channels;
+    alawdec->info = info;
   }
   return ret;
 }
@@ -310,14 +308,14 @@ gst_alaw_dec_chain (GstPad * pad, GstObject * parent, GstBuffer * buffer)
   GstMapInfo inmap, outmap;
   gint16 *linear_data;
   guint8 *alaw_data;
-  gsize alaw_size;
+  gsize alaw_size, linear_size;
   GstBuffer *outbuf;
   gint i;
   GstFlowReturn ret;
 
   alawdec = GST_ALAW_DEC (parent);
 
-  if (G_UNLIKELY (alawdec->rate == 0))
+  if (G_UNLIKELY (!GST_AUDIO_INFO_IS_VALID (&alawdec->info)))
     goto not_negotiated;
 
   GST_LOG_OBJECT (alawdec, "buffer with ts=%" GST_TIME_FORMAT,
@@ -327,7 +325,9 @@ gst_alaw_dec_chain (GstPad * pad, GstObject * parent, GstBuffer * buffer)
   alaw_data = inmap.data;
   alaw_size = inmap.size;
 
-  outbuf = gst_buffer_new_allocate (NULL, alaw_size * 2, 0);
+  linear_size = alaw_size * 2;
+
+  outbuf = gst_buffer_new_allocate (NULL, linear_size, 0);
 
   gst_buffer_map (outbuf, &outmap, GST_MAP_WRITE);
   linear_data = (gint16 *) outmap.data;
@@ -337,7 +337,13 @@ gst_alaw_dec_chain (GstPad * pad, GstObject * parent, GstBuffer * buffer)
     GST_BUFFER_FLAG_SET (outbuf, GST_BUFFER_FLAG_DISCONT);
 
   GST_BUFFER_TIMESTAMP (outbuf) = GST_BUFFER_TIMESTAMP (buffer);
-  GST_BUFFER_DURATION (outbuf) = GST_BUFFER_DURATION (buffer);
+  if (GST_BUFFER_DURATION_IS_VALID (buffer)) {
+    GST_BUFFER_DURATION (outbuf) = GST_BUFFER_DURATION (buffer);
+  } else {
+    GST_BUFFER_DURATION (outbuf) = gst_util_uint64_scale_int (GST_SECOND,
+        linear_size, GST_AUDIO_INFO_RATE (&alawdec->info) *
+        GST_AUDIO_INFO_BPF (&alawdec->info));
+  }
 
   for (i = 0; i < alaw_size; i++) {
     linear_data[i] = alaw_to_s16 (alaw_data[i]);
@@ -376,8 +382,7 @@ gst_alaw_dec_change_state (GstElement * element, GstStateChange transition)
 
   switch (transition) {
     case GST_STATE_CHANGE_PAUSED_TO_READY:
-      dec->rate = 0;
-      dec->channels = 0;
+      gst_audio_info_init (&dec->info);
       break;
     default:
       break;
