@@ -20,13 +20,17 @@ CLEANFILES = $(BUILT_SOURCES)
 # video-blend.h should be disted but not installed into the includedir
 libgstvideo_@GST_MAJORMINOR@_la_SOURCES = \
 	video.c gstvideosink.c gstvideofilter.c convertframe.c \
-	video-blend.c video-blend.h video-overlay-composition.c
+	video-blend.c video-blend.h video-overlay-composition.c \
+	gstvideodecoder.c gstvideoencoder.c \
+	gstvideoutils.c
 nodist_libgstvideo_@GST_MAJORMINOR@_la_SOURCES = \
 	$(built_sources) $(built_headers) \
 	$(ORC_NODIST_SOURCES)
 libgstvideo_@GST_MAJORMINOR@includedir = $(includedir)/gstreamer-@GST_MAJORMINOR@/gst/video
 libgstvideo_@GST_MAJORMINOR@include_HEADERS = \
-	video.h gstvideosink.h gstvideofilter.h video-overlay-composition.h
+	video.h gstvideosink.h gstvideofilter.h video-overlay-composition.h \
+	gstvideodecoder.h gstvideoencoder.h \
+	gstvideoutils.h
 nodist_libgstvideo_@GST_MAJORMINOR@include_HEADERS = $(built_headers)
 
 libgstvideo_@GST_MAJORMINOR@_la_CFLAGS = \
@@ -63,6 +67,7 @@ GstVideo-@GST_MAJORMINOR@.gir: $(INTROSPECTION_SCANNER) libgstvideo-@GST_MAJORMI
 		$(INTROSPECTION_SCANNER) -v --namespace GstVideo \
 		--nsversion=@GST_MAJORMINOR@ \
 		--strip-prefix=Gst \
+		--warn-all \
 		$(gir_cincludes) \
 		-I$(top_srcdir)/gst-libs \
 		-I$(top_builddir)/gst-libs \
