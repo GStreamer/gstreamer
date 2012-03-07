@@ -900,7 +900,7 @@ data_probe_callback_marshal(GstPad *pad, GstMiniObject *obj, gpointer user_data)
     }
 
     if (args == NULL) {
-        ret = NULL;
+        ret = FALSE;
         goto beach;
     }
 
@@ -1401,7 +1401,7 @@ pad_block_callback_marshal(GstPad *pad, gboolean blocked, gpointer user_data)
         Py_DECREF (tmp);
     }
 
-    if (args != NULL)
+    if (args == NULL)
         goto beach;
 
     ret = PyObject_CallObject(callback, args);
