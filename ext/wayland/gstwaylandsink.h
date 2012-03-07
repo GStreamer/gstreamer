@@ -21,6 +21,19 @@
 #ifndef __GST_WAYLAND_VIDEO_SINK_H__
 #define __GST_WAYLAND_VIDEO_SINK_H__
 
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <math.h>
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <sys/time.h>
+#include <sys/ioctl.h>
+#include <sys/mman.h>
+#include <fcntl.h>
+#include <assert.h>
+#include <unistd.h>
+
 #include <gst/gst.h>
 #include <gst/video/video.h>
 #include <gst/video/gstvideosink.h>
@@ -67,6 +80,7 @@ typedef struct _GstWaylandSinkClass GstWaylandSinkClass;
 #define GST_WLBUFFER (obj) (G_TYPE_CHECK_INSTANCE_CAST ((obj), GST_TYPE_WLBUFFER, GstWlBuffer))
 
 typedef struct _GstWlBuffer GstWlBuffer;
+typedef struct _GstWlBufferClass GstWlBufferClass;
 
 struct _GstWlBuffer {
   GstBuffer buffer; /* Extending GstBuffer */
@@ -74,6 +88,11 @@ struct _GstWlBuffer {
   struct wl_buffer *wbuffer;
   
   GstWaylandSink *wlsink;
+};
+
+struct _GstWlBufferClass
+{
+  GstBufferClass parent_class;
 };
 
 struct _GstWaylandSink
@@ -103,11 +122,10 @@ struct _GstWaylandSink
 struct _GstWaylandSinkClass
 {
   GstVideoSinkClass parent; 
-
 };
 
 GType gst_wayland_sink_get_type (void) G_GNUC_CONST;
-GType gst_dfbsurface_get_type (void);
+GType gst_wlbuffer_get_type (void);
 
 G_END_DECLS
 #endif /* __GST_WAYLAND_VIDEO_SINK_H__ */
