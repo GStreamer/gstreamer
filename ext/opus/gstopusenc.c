@@ -382,10 +382,8 @@ gst_opus_enc_setup_base_class (GstOpusEnc * enc, GstAudioEncoder * benc)
 {
   gst_audio_encoder_set_latency (benc,
       gst_opus_enc_get_latency (enc), gst_opus_enc_get_latency (enc));
-  gst_audio_encoder_set_frame_samples_min (benc,
-      enc->frame_samples * enc->n_channels * 2);
-  gst_audio_encoder_set_frame_samples_max (benc,
-      enc->frame_samples * enc->n_channels * 2);
+  gst_audio_encoder_set_frame_samples_min (benc, enc->frame_samples);
+  gst_audio_encoder_set_frame_samples_max (benc, enc->frame_samples);
   gst_audio_encoder_set_frame_max (benc, 0);
 }
 
