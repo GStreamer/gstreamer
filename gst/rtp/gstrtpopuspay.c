@@ -114,17 +114,16 @@ gst_rtp_opus_pay_handle_buffer (GstRTPBasePayload * basepayload,
 {
   GstRTPBuffer rtpbuf = { NULL, };
   GstBuffer *outbuf;
-  gsize size;
-  gpointer *data;
+  GstMapInfo map;
 
   /* Copy data and timestamp to a new output buffer
    * FIXME : Don't we have a convenience function for this ? */
-  data = gst_buffer_map (buffer, &size, NULL, GST_MAP_READ);
-  outbuf = gst_rtp_buffer_new_copy_data (data, size);
+  gst_buffer_map (buffer, &map, GST_MAP_READ);
+  outbuf = gst_rtp_buffer_new_copy_data (map.data, map.size);
   GST_BUFFER_TIMESTAMP (outbuf) = GST_BUFFER_TIMESTAMP (buffer);
 
   /* Unmap and free input buffer */
-  gst_buffer_unmap (buffer, data, size);
+  gst_buffer_unmap (buffer, &map);
   gst_buffer_unref (buffer);
 
   /* Remove marker from RTP buffer */
