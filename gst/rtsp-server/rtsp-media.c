@@ -851,7 +851,8 @@ alloc_udp_ports (GstRTSPMedia * media, GstRTSPMediaStream * stream)
   GstElement *udpsink0, *udpsink1;
   gint tmp_rtp, tmp_rtcp;
   guint count;
-  gint rtpport, rtcpport, sockfd;
+  gint rtpport, rtcpport;
+  GSocket *socket;
   const gchar *host;
 
   udpsrc0 = NULL;
@@ -944,9 +945,9 @@ again:
   if (!udpsink0)
     goto no_udp_protocol;
 
-  g_object_get (G_OBJECT (udpsrc0), "sock", &sockfd, NULL);
-  g_object_set (G_OBJECT (udpsink0), "sockfd", sockfd, NULL);
-  g_object_set (G_OBJECT (udpsink0), "closefd", FALSE, NULL);
+  g_object_get (G_OBJECT (udpsrc0), "socket", &socket, NULL);
+  g_object_set (G_OBJECT (udpsink0), "socket", socket, NULL);
+  g_object_set (G_OBJECT (udpsink0), "close-socket", FALSE, NULL);
 
   udpsink1 = gst_element_factory_make ("multiudpsink", NULL);
   if (!udpsink1)
@@ -968,9 +969,9 @@ again:
     GST_WARNING ("multiudpsink version found without buffer-size property");
   }
 
-  g_object_get (G_OBJECT (udpsrc1), "sock", &sockfd, NULL);
-  g_object_set (G_OBJECT (udpsink1), "sockfd", sockfd, NULL);
-  g_object_set (G_OBJECT (udpsink1), "closefd", FALSE, NULL);
+  g_object_get (G_OBJECT (udpsrc1), "socket", &socket, NULL);
+  g_object_set (G_OBJECT (udpsink1), "socket", socket, NULL);
+  g_object_set (G_OBJECT (udpsink1), "close-socket", FALSE, NULL);
   g_object_set (G_OBJECT (udpsink1), "sync", FALSE, NULL);
   g_object_set (G_OBJECT (udpsink1), "async", FALSE, NULL);
 

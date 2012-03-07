@@ -166,7 +166,7 @@ gst_rtsp_media_factory_uri_init (GstRTSPMediaFactoryURI * factory)
   factory->use_gstpay = DEFAULT_USE_GSTPAY;
 
   /* get the feature list using the filter */
-  gst_default_registry_feature_filter ((GstPluginFeatureFilter)
+  gst_registry_feature_filter (gst_registry_get (), (GstPluginFeatureFilter)
       payloader_filter, FALSE, &data);
   /* sort */
   factory->demuxers =

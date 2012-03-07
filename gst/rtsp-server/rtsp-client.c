@@ -1435,7 +1435,7 @@ handle_data (GstRTSPClient * client, GstRTSPMessage * message)
 
   buffer = gst_buffer_new ();
   gst_buffer_take_memory (buffer, -1,
-      gst_memory_new_wrapped (0, data, g_free, size, 0, size));
+      gst_memory_new_wrapped (0, data, size, 0, size, data, g_free));
 
   handled = FALSE;
   for (walk = client->streams; walk; walk = g_list_next (walk)) {
@@ -1890,9 +1890,11 @@ client_watch_notify (GstRTSPClient * client)
 /**
  * gst_rtsp_client_attach:
  * @client: a #GstRTSPClient
- * @channel: a #GIOChannel
+ * @socket: a #GSocket
+ * @cancellable: a #GCancellable
+ * @error: a #GError
  *
- * Accept a new connection for @client on the socket in @channel. 
+ * Accept a new connection for @client on @socket.
  *
  * This function should be called when the client properties and urls are fully
  * configured and the client is ready to start.
@@ -1900,11 +1902,13 @@ client_watch_notify (GstRTSPClient * client)
  * Returns: %TRUE if the client could be accepted.
  */
 gboolean
-gst_rtsp_client_accept (GstRTSPClient * client, GIOChannel * channel)
+gst_rtsp_client_accept (GstRTSPClient * client, GSocket * socket,
+    GCancellable * cancellable, GError ** error)
 {
-  int sock, fd;
   GstRTSPConnection *conn;
   GstRTSPResult res;
+  GSocket *read_socket;
+  GSocketAddress *addres;
   GSource *source;
   GMainContext *context;
   GstRTSPUrl *url;
@@ -1913,17 +1917,18 @@ gst_rtsp_client_accept (GstRTSPClient * client, GIOChannel * channel)
   gchar ip[INET6_ADDRSTRLEN];
 
   /* a new client connected. */
-  sock = g_io_channel_unix_get_fd (channel);
+  GST_RTSP_CHECK (gst_rtsp_connection_accept (socket, &conn, cancellable),
+      accept_failed);
 
-  GST_RTSP_CHECK (gst_rtsp_connection_accept (sock, &conn), accept_failed);
+  read_socket = gst_rtsp_connection_get_read_socket (conn);
+  client->is_ipv6 = g_socket_get_family (socket) == G_SOCKET_FAMILY_IPV6;
 
-  fd = gst_rtsp_connection_get_readfd (conn);
+  if (!(addres = g_socket_get_remote_address (read_socket, error)))
+    goto no_address;
 
   addrlen = sizeof (addr);
-  if (getsockname (fd, (struct sockaddr *) &addr, &addrlen) < 0)
-    goto getpeername_failed;
-
-  client->is_ipv6 = addr.ss_family == AF_INET6;
+  if (!g_socket_address_to_native (addres, &addr, addrlen, error))
+    goto native_failed;
 
   if (getnameinfo ((struct sockaddr *) &addr, addrlen, ip, sizeof (ip), NULL, 0,
           NI_NUMERICHOST) != 0)
@@ -1963,13 +1968,18 @@ accept_failed:
   {
     gchar *str = gst_rtsp_strresult (res);
 
-    GST_ERROR ("Could not accept client on server socket %d: %s", sock, str);
+    GST_ERROR ("Could not accept client on server socket %p: %s", socket, str);
     g_free (str);
     return FALSE;
   }
-getpeername_failed:
+no_address:
   {
-    GST_ERROR ("getpeername failed: %s", g_strerror (errno));
+    GST_ERROR ("could not get remote address %s", (*error)->message);
+    return FALSE;
+  }
+native_failed:
+  {
+    GST_ERROR ("could not get native address %s", (*error)->message);
     return FALSE;
   }
 getnameinfo_failed:

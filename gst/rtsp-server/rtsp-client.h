@@ -132,7 +132,9 @@ GstRTSPAuth *         gst_rtsp_client_get_auth          (GstRTSPClient *client);
 
 
 gboolean              gst_rtsp_client_accept            (GstRTSPClient *client,
-                                                         GIOChannel *channel);
+                                                         GSocket *socket,
+                                                         GCancellable *cancellable,
+                                                         GError **error);
 
 G_END_DECLS
 

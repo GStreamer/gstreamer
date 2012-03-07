@@ -79,7 +79,7 @@ struct _GstRTSPServer {
  * GstRTSPServerClass:
  *
  * @create_client: Create, configure a new GstRTSPClient
- *          object that handles the new connection on @channel.
+ *          object that handles the new connection on @socket.
  * @accept_client: accept a new GstRTSPClient
  *
  * The RTSP server class structure
@@ -88,8 +88,8 @@ struct _GstRTSPServerClass {
   GObjectClass  parent_class;
 
   GstRTSPClient * (*create_client)      (GstRTSPServer *server);
-  gboolean        (*accept_client)      (GstRTSPServer *server, GstRTSPClient *client, GIOChannel *channel);
-
+  gboolean        (*accept_client)      (GstRTSPServer *server, GstRTSPClient *client,
+                                         GSocket *socket, GError **error);
   /* signals */
   void            (*client_connected)   (GstRTSPServer *server, GstRTSPClient *client);
 };
@@ -116,11 +116,15 @@ GstRTSPMediaMapping * gst_rtsp_server_get_media_mapping    (GstRTSPServer *serve
 void                  gst_rtsp_server_set_auth             (GstRTSPServer *server, GstRTSPAuth *auth);
 GstRTSPAuth *         gst_rtsp_server_get_auth             (GstRTSPServer *server);
 
-gboolean              gst_rtsp_server_io_func              (GIOChannel *channel, GIOCondition condition,
+gboolean              gst_rtsp_server_io_func              (GSocket *socket, GIOCondition condition,
                                                             GstRTSPServer *server);
 
-GIOChannel *          gst_rtsp_server_get_io_channel       (GstRTSPServer *server);
-GSource *             gst_rtsp_server_create_watch         (GstRTSPServer *server);
+GSocket *             gst_rtsp_server_create_socket        (GstRTSPServer *server,
+                                                            GCancellable  *cancellable,
+                                                            GError **error);
+GSource *             gst_rtsp_server_create_source        (GstRTSPServer *server,
+                                                            GCancellable * cancellable,
+                                                            GError **error);
 guint                 gst_rtsp_server_attach               (GstRTSPServer *server,
                                                             GMainContext *context);
 
