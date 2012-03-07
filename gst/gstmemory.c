@@ -439,6 +439,7 @@ gst_memory_unref (GstMemory * mem)
       mem->refcount - 1);
 
   if (g_atomic_int_dec_and_test (&mem->refcount)) {
+    /* there should be no outstanding mappings */
     g_return_if_fail (g_atomic_int_get (&mem->state) < 4);
 #ifndef GST_DISABLE_TRACE
     _gst_alloc_trace_free (_gst_memory_trace, mem);
