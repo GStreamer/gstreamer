@@ -56,6 +56,7 @@ GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS ("audio/x-raw, "
         "format = (string) { " GST_AUDIO_NE (S16) " }, "
+        "layout = (string) interleaved, "
         "rate = (int) { 48000, 24000, 16000, 12000, 8000 }, "
         "channels = (int) [ 1, 8 ] ")
     );
@@ -206,11 +207,12 @@ gst_opus_dec_get_r128_volume (gint16 r128_gain)
   return DB_TO_LINEAR (gst_opus_dec_get_r128_gain (r128_gain));
 }
 
-static GstCaps *
-gst_opus_dec_negotiate (GstOpusDec * dec)
+static void
+gst_opus_dec_negotiate (GstOpusDec * dec, const GstAudioChannelPosition * pos)
 {
   GstCaps *caps = gst_pad_get_allowed_caps (GST_AUDIO_DECODER_SRC_PAD (dec));
   GstStructure *s;
+  GstAudioInfo info;
 
   caps = gst_caps_make_writable (caps);
   gst_caps_truncate (caps);
@@ -224,19 +226,41 @@ gst_opus_dec_negotiate (GstOpusDec * dec)
   GST_INFO_OBJECT (dec, "Negotiated %d channels, %d Hz", dec->n_channels,
       dec->sample_rate);
 
-  return caps;
+  /* pass valid order to audio info */
+  if (pos) {
+    memcpy (dec->opus_pos, pos, sizeof (pos[0]) * dec->n_channels);
+    gst_audio_channel_positions_to_valid_order (dec->opus_pos, dec->n_channels);
+  }
+
+  /* set up source format */
+  gst_audio_info_init (&info);
+  gst_audio_info_set_format (&info, GST_AUDIO_FORMAT_S16,
+      dec->sample_rate, dec->n_channels, pos ? dec->opus_pos : NULL);
+  gst_audio_decoder_set_output_format (GST_AUDIO_DECODER (dec), &info);
+
+  /* but we still need the opus order for later reordering */
+  if (pos) {
+    memcpy (dec->opus_pos, pos, sizeof (pos[0]) * dec->n_channels);
+    gst_audio_channel_positions_to_valid_order (dec->opus_pos, dec->n_channels);
+  } else {
+    dec->opus_pos[0] = GST_AUDIO_CHANNEL_POSITION_INVALID;
+  }
+
+  dec->info = info;
 }
 
 static GstFlowReturn
 gst_opus_dec_parse_header (GstOpusDec * dec, GstBuffer * buf)
 {
   const guint8 *data;
-  GstCaps *caps;
-  const GstAudioChannelPosition *pos = NULL;
+  GstAudioChannelPosition pos[64];
+  const GstAudioChannelPosition *posn = NULL;
+  GstMapInfo map;
 
   g_return_val_if_fail (gst_opus_header_is_id_header (buf), GST_FLOW_ERROR);
 
-  data = gst_buffer_map (buf, NULL, NULL, GST_MAP_READ);
+  gst_buffer_map (buf, &map, GST_MAP_READ);
+  data = map.data;
 
   g_return_val_if_fail (dec->n_channels == 0
       || dec->n_channels == data[9], GST_FLOW_ERROR);
@@ -274,20 +298,18 @@ gst_opus_dec_parse_header (GstOpusDec * dec, GstBuffer * buf)
         case 6:
         case 7:
         case 8:
-          pos = gst_opus_channel_positions[dec->n_channels - 1];
+          posn = gst_opus_channel_positions[dec->n_channels - 1];
           break;
         default:{
           gint i;
-          GstAudioChannelPosition *posn =
-              g_new (GstAudioChannelPosition, dec->n_channels);
 
           GST_ELEMENT_WARNING (GST_ELEMENT (dec), STREAM, DECODE,
               (NULL), ("Using NONE channel layout for more than 8 channels"));
 
           for (i = 0; i < dec->n_channels; i++)
-            posn[i] = GST_AUDIO_CHANNEL_POSITION_NONE;
+            pos[i] = GST_AUDIO_CHANNEL_POSITION_NONE;
 
-          pos = posn;
+          posn = pos;
         }
       }
     } else {
@@ -296,22 +318,9 @@ gst_opus_dec_parse_header (GstOpusDec * dec, GstBuffer * buf)
     }
   }
 
-  caps = gst_opus_dec_negotiate (dec);
+  gst_opus_dec_negotiate (dec, posn);
 
-  if (pos) {
-    GST_DEBUG_OBJECT (dec, "Setting channel positions on caps");
-    gst_audio_set_channel_positions (gst_caps_get_structure (caps, 0), pos);
-  }
-
-  if (dec->n_channels > 8) {
-    g_free ((GstAudioChannelPosition *) pos);
-  }
-
-  GST_INFO_OBJECT (dec, "Setting src caps to %" GST_PTR_FORMAT, caps);
-  gst_pad_set_caps (GST_AUDIO_DECODER_SRC_PAD (dec), caps);
-  gst_caps_unref (caps);
-
-  gst_buffer_unmap (buf, (guint8 *) data, -1);
+  gst_buffer_unmap (buf, &map);
 
   return GST_FLOW_OK;
 }
@@ -327,7 +336,7 @@ static GstFlowReturn
 opus_dec_chain_parse_data (GstOpusDec * dec, GstBuffer * buffer)
 {
   GstFlowReturn res = GST_FLOW_OK;
-  gsize size, out_size;
+  gsize size;
   guint8 *data;
   GstBuffer *outbuf;
   gint16 *out_data;
@@ -335,24 +344,22 @@ opus_dec_chain_parse_data (GstOpusDec * dec, GstBuffer * buffer)
   int samples;
   unsigned int packet_size;
   GstBuffer *buf;
+  GstMapInfo map, omap;
 
   if (dec->state == NULL) {
     /* If we did not get any headers, default to 2 channels */
     if (dec->n_channels == 0) {
-      GstCaps *caps;
       GST_INFO_OBJECT (dec, "No header, assuming single stream");
       dec->n_channels = 2;
       dec->sample_rate = 48000;
-      caps = gst_opus_dec_negotiate (dec);
-      GST_INFO_OBJECT (dec, "Setting src caps to %" GST_PTR_FORMAT, caps);
-      gst_pad_set_caps (GST_AUDIO_DECODER_SRC_PAD (dec), caps);
-      gst_caps_unref (caps);
       /* default stereo mapping */
       dec->channel_mapping_family = 0;
       dec->channel_mapping[0] = 0;
       dec->channel_mapping[1] = 1;
       dec->n_streams = 1;
       dec->n_stereo_streams = 1;
+
+      gst_opus_dec_negotiate (dec, NULL);
     }
 
     GST_DEBUG_OBJECT (dec, "Creating decoder with %d channels, %d Hz",
@@ -389,7 +396,9 @@ opus_dec_chain_parse_data (GstOpusDec * dec, GstBuffer * buffer)
   buf = dec->use_inband_fec && dec->last_buffer ? dec->last_buffer : buffer;
 
   if (buf) {
-    data = gst_buffer_map (buf, &size, NULL, GST_MAP_READ);
+    gst_buffer_map (buf, &map, GST_MAP_READ);
+    data = map.data;
+    size = map.size;
 
     GST_DEBUG_OBJECT (dec, "Using buffer of size %u", size);
   } else {
@@ -409,7 +418,8 @@ opus_dec_chain_parse_data (GstOpusDec * dec, GstBuffer * buffer)
     goto buffer_failed;
   }
 
-  out_data = (gint16 *) gst_buffer_map (outbuf, &out_size, NULL, GST_MAP_WRITE);
+  gst_buffer_map (outbuf, &omap, GST_MAP_WRITE);
+  out_data = (gint16 *) omap.data;
 
   if (dec->use_inband_fec) {
     if (dec->last_buffer) {
@@ -425,8 +435,9 @@ opus_dec_chain_parse_data (GstOpusDec * dec, GstBuffer * buffer)
     /* normal decode */
     n = opus_multistream_decode (dec->state, data, size, out_data, samples, 0);
   }
-  gst_buffer_unmap (buf, data, size);
-  gst_buffer_unmap (outbuf, out_data, out_size);
+  gst_buffer_unmap (outbuf, &omap);
+  if (buf)
+    gst_buffer_unmap (buf, &map);
 
   if (n < 0) {
     GST_ELEMENT_ERROR (dec, STREAM, DECODE, ("Decoding error: %d", n), (NULL));
@@ -451,6 +462,9 @@ opus_dec_chain_parse_data (GstOpusDec * dec, GstBuffer * buffer)
   if (gst_buffer_get_size (outbuf) == 0) {
     gst_buffer_unref (outbuf);
     outbuf = NULL;
+  } else if (dec->opus_pos[0] != GST_AUDIO_CHANNEL_POSITION_INVALID) {
+    gst_audio_buffer_reorder_channels (outbuf, GST_AUDIO_FORMAT_S16,
+        dec->n_channels, dec->opus_pos, dec->info.position);
   }
 
   /* Apply gain */
@@ -463,16 +477,18 @@ opus_dec_chain_parse_data (GstOpusDec * dec, GstBuffer * buffer)
     gsize rsize;
     unsigned int i, nsamples;
     double volume = dec->r128_gain_volume;
-    gint16 *samples =
-        (gint16 *) gst_buffer_map (outbuf, &rsize, NULL, GST_MAP_READWRITE);
+    gint16 *samples;
 
+    gst_buffer_map (outbuf, &omap, GST_MAP_READWRITE);
+    samples = (gint16 *) omap.data;
+    rsize = omap.size;
     GST_DEBUG_OBJECT (dec, "Applying gain: volume %f", volume);
     nsamples = rsize / 2;
     for (i = 0; i < nsamples; ++i) {
       int sample = (int) (samples[i] * volume + 0.5);
       samples[i] = sample < -32768 ? -32768 : sample > 32767 ? 32767 : sample;
     }
-    gst_buffer_unmap (outbuf, samples, rsize);
+    gst_buffer_unmap (outbuf, &omap);
   }
 
   res = gst_audio_decoder_finish_frame (GST_AUDIO_DECODER (dec), outbuf, 1);
@@ -542,8 +558,8 @@ static gboolean
 memcmp_buffers (GstBuffer * buf1, GstBuffer * buf2)
 {
   gsize size1, size2;
-  gpointer data1;
   gboolean res;
+  GstMapInfo map;
 
   size1 = gst_buffer_get_size (buf1);
   size2 = gst_buffer_get_size (buf2);
@@ -551,9 +567,9 @@ memcmp_buffers (GstBuffer * buf1, GstBuffer * buf2)
   if (size1 != size2)
     return FALSE;
 
-  data1 = gst_buffer_map (buf1, NULL, NULL, GST_MAP_READ);
-  res = gst_buffer_memcmp (buf2, 0, data1, size1) == 0;
-  gst_buffer_unmap (buf1, data1, size1);
+  gst_buffer_map (buf1, &map, GST_MAP_READ);
+  res = gst_buffer_memcmp (buf2, 0, map.data, map.size) == 0;
+  gst_buffer_unmap (buf1, &map);
 
   return res;
 }

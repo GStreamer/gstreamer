@@ -25,7 +25,7 @@
 /* copy of the same structure in the vorbis plugin */
 const GstAudioChannelPosition gst_opus_channel_positions[][8] = {
   {                             /* Mono */
-      GST_AUDIO_CHANNEL_POSITION_FRONT_MONO},
+      GST_AUDIO_CHANNEL_POSITION_MONO},
   {                             /* Stereo */
         GST_AUDIO_CHANNEL_POSITION_FRONT_LEFT,
       GST_AUDIO_CHANNEL_POSITION_FRONT_RIGHT},
@@ -52,7 +52,7 @@ const GstAudioChannelPosition gst_opus_channel_positions[][8] = {
         GST_AUDIO_CHANNEL_POSITION_FRONT_RIGHT,
         GST_AUDIO_CHANNEL_POSITION_REAR_LEFT,
         GST_AUDIO_CHANNEL_POSITION_REAR_RIGHT,
-        GST_AUDIO_CHANNEL_POSITION_LFE,
+        GST_AUDIO_CHANNEL_POSITION_LFE1,
       },
   {                             /* 6.1 Surround, in Vorbis spec since 2010-01-13 */
         GST_AUDIO_CHANNEL_POSITION_FRONT_LEFT,
@@ -61,7 +61,7 @@ const GstAudioChannelPosition gst_opus_channel_positions[][8] = {
         GST_AUDIO_CHANNEL_POSITION_SIDE_LEFT,
         GST_AUDIO_CHANNEL_POSITION_SIDE_RIGHT,
         GST_AUDIO_CHANNEL_POSITION_REAR_CENTER,
-      GST_AUDIO_CHANNEL_POSITION_LFE},
+      GST_AUDIO_CHANNEL_POSITION_LFE1},
   {                             /* 7.1 Surround, in Vorbis spec since 2010-01-13 */
         GST_AUDIO_CHANNEL_POSITION_FRONT_LEFT,
         GST_AUDIO_CHANNEL_POSITION_FRONT_CENTER,
@@ -70,7 +70,7 @@ const GstAudioChannelPosition gst_opus_channel_positions[][8] = {
         GST_AUDIO_CHANNEL_POSITION_SIDE_RIGHT,
         GST_AUDIO_CHANNEL_POSITION_REAR_LEFT,
         GST_AUDIO_CHANNEL_POSITION_REAR_RIGHT,
-      GST_AUDIO_CHANNEL_POSITION_LFE},
+      GST_AUDIO_CHANNEL_POSITION_LFE1},
 };
 
 const char *gst_opus_channel_names[] = {

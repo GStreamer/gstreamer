@@ -65,8 +65,8 @@ G_DEFINE_TYPE (GstOpusParse, gst_opus_parse, GST_TYPE_BASE_PARSE);
 
 static gboolean gst_opus_parse_start (GstBaseParse * parse);
 static gboolean gst_opus_parse_stop (GstBaseParse * parse);
-static gboolean gst_opus_parse_check_valid_frame (GstBaseParse * base,
-    GstBaseParseFrame * frame, guint * frame_size, gint * skip);
+static GstFlowReturn gst_opus_parse_handle_frame (GstBaseParse * base,
+    GstBaseParseFrame * frame, gint * skip);
 static GstFlowReturn gst_opus_parse_parse_frame (GstBaseParse * base,
     GstBaseParseFrame * frame);
 
@@ -81,9 +81,7 @@ gst_opus_parse_class_init (GstOpusParseClass * klass)
 
   bpclass->start = GST_DEBUG_FUNCPTR (gst_opus_parse_start);
   bpclass->stop = GST_DEBUG_FUNCPTR (gst_opus_parse_stop);
-  bpclass->check_valid_frame =
-      GST_DEBUG_FUNCPTR (gst_opus_parse_check_valid_frame);
-  bpclass->parse_frame = GST_DEBUG_FUNCPTR (gst_opus_parse_parse_frame);
+  bpclass->handle_frame = GST_DEBUG_FUNCPTR (gst_opus_parse_handle_frame);
 
   gst_element_class_add_pad_template (element_class,
       gst_static_pad_template_get (&opus_parse_src_factory));
@@ -134,13 +132,13 @@ gst_opus_parse_stop (GstBaseParse * base)
   return TRUE;
 }
 
-static gboolean
-gst_opus_parse_check_valid_frame (GstBaseParse * base,
-    GstBaseParseFrame * frame, guint * frame_size, gint * skip)
+static GstFlowReturn
+gst_opus_parse_handle_frame (GstBaseParse * base,
+    GstBaseParseFrame * frame, gint * skip)
 {
   GstOpusParse *parse;
   guint8 *data;
-  gsize size;
+  gint size;
   guint32 packet_size;
   int ret = FALSE;
   const unsigned char *frames[48];
@@ -150,10 +148,15 @@ gst_opus_parse_check_valid_frame (GstBaseParse * base,
   int nframes;
   int packet_offset = 0;
   gboolean is_header, is_idheader, is_commentheader;
+  GstMapInfo map;
 
   parse = GST_OPUS_PARSE (base);
 
-  data = gst_buffer_map (frame->buffer, &size, NULL, GST_MAP_READ);
+  *skip = -1;
+
+  gst_buffer_map (frame->buffer, &map, GST_MAP_READ);
+  data = map.data;
+  size = map.size;
   GST_DEBUG_OBJECT (parse,
       "Checking for frame, %" G_GSIZE_FORMAT " bytes in buffer", size);
 
@@ -201,18 +204,53 @@ gst_opus_parse_check_valid_frame (GstBaseParse * base,
 
   if (is_header) {
     *skip = 0;
-    *frame_size = size;
   } else {
     *skip = packet_offset;
-    *frame_size = payload_offset;
+    size = payload_offset;
   }
 
   GST_DEBUG_OBJECT (parse, "Got Opus packet at offset %d, %d bytes", *skip,
-      *frame_size);
+      size);
   ret = TRUE;
 
 beach:
-  gst_buffer_unmap (frame->buffer, data, size);
+  gst_buffer_unmap (frame->buffer, &map);
+
+  /* convert old style result to new one */
+  if (!ret) {
+    if (*skip < 0)
+      *skip = 1;
+    return GST_FLOW_OK;
+  }
+
+  /* always skip first if needed */
+  if (*skip > 0)
+    return GST_FLOW_OK;
+
+  /* normalize again */
+  if (*skip < 0)
+    *skip = 0;
+
+  /* not enough */
+  if (size > map.size)
+    return GST_FLOW_OK;
+
+  /* FIXME some day ... should not mess with buffer itself */
+  if (!parse->header_sent) {
+    gst_buffer_replace (&frame->buffer,
+        gst_buffer_copy_region (frame->buffer, GST_BUFFER_COPY_ALL, 0, size));
+    gst_buffer_unref (frame->buffer);
+  }
+
+  ret = gst_opus_parse_parse_frame (base, frame);
+
+  if (ret == GST_BASE_PARSE_FLOW_DROPPED) {
+    frame->flags |= GST_BASE_PARSE_FRAME_FLAG_DROP;
+    ret = GST_FLOW_OK;
+  }
+  if (ret == GST_FLOW_OK)
+    ret = gst_base_parse_finish_frame (base, frame, size);
+
   return ret;
 }
 
@@ -278,8 +316,7 @@ gst_opus_parse_parse_frame (GstBaseParse * base, GstBaseParseFrame * frame)
   guint64 duration;
   GstOpusParse *parse;
   gboolean is_idheader, is_commentheader;
-  guint8 *data;
-  gsize size;
+  GstMapInfo map;
 
   parse = GST_OPUS_PARSE (base);
 
@@ -331,9 +368,9 @@ gst_opus_parse_parse_frame (GstBaseParse * base, GstBaseParseFrame * frame)
 
   GST_BUFFER_TIMESTAMP (frame->buffer) = parse->next_ts;
 
-  data = gst_buffer_map (frame->buffer, &size, NULL, GST_MAP_READ);
-  duration = packet_duration_opus (data, size);
-  gst_buffer_unmap (frame->buffer, data, size);
+  gst_buffer_map (frame->buffer, &map, GST_MAP_READ);
+  duration = packet_duration_opus (map.data, map.size);
+  gst_buffer_unmap (frame->buffer, &map);
   parse->next_ts += duration;
 
   GST_BUFFER_DURATION (frame->buffer) = duration;
