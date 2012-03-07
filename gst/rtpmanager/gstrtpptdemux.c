@@ -383,11 +383,6 @@ gst_rtp_pt_demux_chain (GstPad * pad, GstObject * parent, GstBuffer * buf)
     g_free (padname);
     gst_pad_set_event_function (srcpad, gst_rtp_pt_demux_src_event);
 
-    caps = gst_caps_make_writable (caps);
-    gst_caps_set_simple (caps, "payload", G_TYPE_INT, pt, NULL);
-    gst_pad_set_caps (srcpad, caps);
-    gst_caps_unref (caps);
-
     GST_DEBUG ("Adding pt=%d to the list.", pt);
     rtpdemuxpad = g_slice_new0 (GstRtpPtDemuxPad);
     rtpdemuxpad->pt = pt;
@@ -399,6 +394,12 @@ gst_rtp_pt_demux_chain (GstPad * pad, GstObject * parent, GstBuffer * buf)
     GST_OBJECT_UNLOCK (rtpdemux);
 
     gst_pad_set_active (srcpad, TRUE);
+
+    caps = gst_caps_make_writable (caps);
+    gst_caps_set_simple (caps, "payload", G_TYPE_INT, pt, NULL);
+    gst_pad_set_caps (srcpad, caps);
+    gst_caps_unref (caps);
+
     gst_pad_sticky_events_foreach (rtpdemux->sink, forward_sticky_events,
         srcpad);
     gst_element_add_pad (GST_ELEMENT_CAST (rtpdemux), srcpad);
@@ -491,6 +492,8 @@ gst_rtp_pt_demux_sink_event (GstPad * pad, GstObject * parent, GstEvent * event)
     case GST_EVENT_CAPS:
     {
       gst_rtp_pt_demux_clear_pt_map (rtpdemux);
+      /* don't forward the event, we cleared the ptmap and on the next buffer we
+       * will add the pt to the caps and push a new caps event */
       gst_event_unref (event);
       res = TRUE;
       break;
