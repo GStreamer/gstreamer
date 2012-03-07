@@ -87,7 +87,8 @@ static GstStaticPadTemplate gst_pngdec_src_pad_template =
     GST_PAD_SRC,
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS (GST_VIDEO_CAPS_RGBA ";" GST_VIDEO_CAPS_RGB ";"
-        GST_VIDEO_CAPS_ARGB_64)
+        GST_VIDEO_CAPS_ARGB_64 ";"
+        GST_VIDEO_CAPS_GRAY8 ";" GST_VIDEO_CAPS_GRAY16 ("BIG_ENDIAN"))
     );
 
 static GstStaticPadTemplate gst_pngdec_sink_pad_template =
@@ -371,15 +372,15 @@ gst_pngdec_caps_create_and_set (GstPngDec * pngdec)
 
   /* Get bits per channel */
   bpc = png_get_bit_depth (pngdec->png, pngdec->info);
-  if (bpc > 8) {
-    /* Add alpha channel if 16-bit depth */
-    png_set_add_alpha (pngdec->png, 0xffff, PNG_FILLER_BEFORE);
-    png_set_swap (pngdec->png);
-  }
 
   /* Get Color type */
   color_type = png_get_color_type (pngdec->png, pngdec->info);
 
+  /* Add alpha channel if 16-bit depth, but not for GRAY images */
+  if ((bpc > 8) && (color_type != PNG_COLOR_TYPE_GRAY)) {
+    png_set_add_alpha (pngdec->png, 0xffff, PNG_FILLER_BEFORE);
+    png_set_swap (pngdec->png);
+  }
 #if 0
   /* We used to have this HACK to reverse the outgoing bytes, but the problem
    * that originally required the hack seems to have been in ffmpegcolorspace's
@@ -389,11 +390,16 @@ gst_pngdec_caps_create_and_set (GstPngDec * pngdec)
     png_set_bgr (pngdec->png);
 #endif
 
-  /* Gray scale converted to RGB and upscaled to 8 bits */
+  /* Gray scale with alpha channel converted to RGB */
+  if (color_type == PNG_COLOR_TYPE_GRAY_ALPHA) {
+    GST_LOG_OBJECT (pngdec,
+        "converting grayscale png with alpha channel to RGB");
+    png_set_gray_to_rgb (pngdec->png);
+  }
+
+  /* Gray scale converted to upscaled to 8 bits */
   if ((color_type == PNG_COLOR_TYPE_GRAY_ALPHA) ||
       (color_type == PNG_COLOR_TYPE_GRAY)) {
-    GST_LOG_OBJECT (pngdec, "converting grayscale png to RGB");
-    png_set_gray_to_rgb (pngdec->png);
     if (bpc < 8) {              /* Convert to 8 bits */
       GST_LOG_OBJECT (pngdec, "converting grayscale image to 8 bits");
 #if PNG_LIBPNG_VER < 10400
@@ -430,8 +436,14 @@ gst_pngdec_caps_create_and_set (GstPngDec * pngdec)
       pngdec->bpp = 3 * bpc;
       break;
     case PNG_COLOR_TYPE_RGB_ALPHA:
-      GST_LOG_OBJECT (pngdec, "we have an alpha channel, depth is 32 bits");
+      GST_LOG_OBJECT (pngdec,
+          "we have an alpha channel, depth is 32 or 64 bits");
       pngdec->bpp = 4 * bpc;
+      break;
+    case PNG_COLOR_TYPE_GRAY:
+      GST_LOG_OBJECT (pngdec,
+          "We have an gray image, depth is 8 or 16 (be) bits");
+      pngdec->bpp = bpc;
       break;
     default:
       GST_ELEMENT_ERROR (pngdec, STREAM, NOT_IMPLEMENTED, (NULL),
@@ -440,11 +452,28 @@ gst_pngdec_caps_create_and_set (GstPngDec * pngdec)
       goto beach;
   }
 
-  caps = gst_caps_new_simple ("video/x-raw-rgb",
-      "width", G_TYPE_INT, pngdec->width,
-      "height", G_TYPE_INT, pngdec->height,
-      "bpp", G_TYPE_INT, pngdec->bpp,
-      "framerate", GST_TYPE_FRACTION, pngdec->fps_n, pngdec->fps_d, NULL);
+  if (pngdec->color_type == PNG_COLOR_TYPE_GRAY) {
+    if (pngdec->bpp < 16) {
+      caps = gst_caps_new_simple ("video/x-raw-gray",
+          "width", G_TYPE_INT, pngdec->width,
+          "height", G_TYPE_INT, pngdec->height,
+          "bpp", G_TYPE_INT, pngdec->bpp,
+          "framerate", GST_TYPE_FRACTION, pngdec->fps_n, pngdec->fps_d, NULL);
+    } else {
+      caps = gst_caps_new_simple ("video/x-raw-gray",
+          "width", G_TYPE_INT, pngdec->width,
+          "height", G_TYPE_INT, pngdec->height,
+          "bpp", G_TYPE_INT, pngdec->bpp,
+          "endianness", G_TYPE_INT, G_BIG_ENDIAN,
+          "framerate", GST_TYPE_FRACTION, pngdec->fps_n, pngdec->fps_d, NULL);
+    }
+  } else {
+    caps = gst_caps_new_simple ("video/x-raw-rgb",
+        "width", G_TYPE_INT, pngdec->width,
+        "height", G_TYPE_INT, pngdec->height,
+        "bpp", G_TYPE_INT, pngdec->bpp,
+        "framerate", GST_TYPE_FRACTION, pngdec->fps_n, pngdec->fps_d, NULL);
+  }
 
   templ = gst_static_pad_template_get (&gst_pngdec_src_pad_template);
 
