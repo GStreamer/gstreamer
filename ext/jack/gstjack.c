@@ -52,16 +52,14 @@ gst_jack_transport_get_type (void)
   static volatile gsize type = 0;
 
   if (g_once_init_enter (&type)) {
-    static const GEnumValue enum_values[] = {
-      {GST_JACK_TRANSPORT_AUTONOMOUS,
-          "No transport support", "autonomous"},
+    static const GFlagsValue flag_values[] = {
       {GST_JACK_TRANSPORT_MASTER,
           "Start and stop transport with state changes", "master"},
       {GST_JACK_TRANSPORT_SLAVE,
           "Follow transport state changes", "slave"},
       {0, NULL, NULL},
     };
-    GType tmp = g_enum_register_static ("GstJackTransport", enum_values);
+    GType tmp = g_flags_register_static ("GstJackTransport", flag_values);
     g_once_init_leave (&type, tmp);
   }
   return (GType) type;

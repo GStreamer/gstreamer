@@ -761,7 +761,6 @@ gst_flac_enc_set_format (GstAudioEncoder * enc, GstAudioInfo * info)
 encoder_already_initialized:
   {
     g_warning ("flac already initialized -- fixme allow this");
-    gst_object_unref (flacenc);
     return FALSE;
   }
 setting_src_caps_failed:
@@ -769,14 +768,12 @@ setting_src_caps_failed:
     GST_DEBUG_OBJECT (flacenc,
         "Couldn't set caps on source pad: %" GST_PTR_FORMAT, caps);
     gst_caps_unref (caps);
-    gst_object_unref (flacenc);
     return FALSE;
   }
 failed_to_initialize:
   {
     GST_ELEMENT_ERROR (flacenc, LIBRARY, INIT, (NULL),
         ("could not initialize encoder (wrong parameters?)"));
-    gst_object_unref (flacenc);
     return FALSE;
   }
 }
@@ -1104,43 +1101,9 @@ gst_flac_enc_sink_event (GstAudioEncoder * enc, GstEvent * event)
   GST_DEBUG ("Received %s event on sinkpad", GST_EVENT_TYPE_NAME (event));
 
   switch (GST_EVENT_TYPE (event)) {
-    case GST_EVENT_SEGMENT:{
-      GstSegment seg;
-      gint64 start, stream_time;
-
-      if (flacenc->offset == 0) {
-        gst_event_copy_segment (event, &seg);
-        start = seg.start;
-        stream_time = seg.time;
-      } else {
-        start = -1;
-        stream_time = -1;
-      }
-
-      if (start > 0) {
-        if (flacenc->offset > 0)
-          GST_DEBUG ("Not handling mid-stream newsegment event");
-        else
-          GST_DEBUG ("Not handling newsegment event with non-zero start");
-      } else {
-        GstEvent *e;
-
-        gst_segment_init (&seg, GST_FORMAT_BYTES);
-        e = gst_event_new_segment (&seg);
-        ret = gst_pad_push_event (GST_AUDIO_ENCODER_SRC_PAD (enc), e);
-      }
-
-      if (stream_time > 0) {
-        GST_DEBUG ("Not handling non-zero stream time");
-      }
-
-      /* don't push it downstream, we'll generate our own via seek to 0 */
-      gst_event_unref (event);
-      ret = TRUE;
-      break;
-    }
     case GST_EVENT_EOS:
       flacenc->eos = TRUE;
+      ret = GST_AUDIO_ENCODER_CLASS (parent_class)->event (enc, event);
       break;
     case GST_EVENT_TAG:
       if (flacenc->tags) {
@@ -1150,8 +1113,10 @@ gst_flac_enc_sink_event (GstAudioEncoder * enc, GstEvent * event)
       } else {
         g_assert_not_reached ();
       }
+      ret = GST_AUDIO_ENCODER_CLASS (parent_class)->event (enc, event);
       break;
     default:
+      ret = GST_AUDIO_ENCODER_CLASS (parent_class)->event (enc, event);
       break;
   }
 

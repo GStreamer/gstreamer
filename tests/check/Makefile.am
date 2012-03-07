@@ -83,7 +83,6 @@ endif
 
 if USE_WAVPACK
 check_wavpack = \
-       elements/wavpackparse \
        elements/wavpackdec \
        elements/wavpackenc \
        pipelines/wavpack
@@ -150,6 +149,7 @@ check_PROGRAMS = \
 	elements/udpsrc \
 	elements/videocrop \
 	elements/videofilter \
+	elements/wavpackparse \
 	elements/y4menc \
 	pipelines/simple-launch-lines \
 	pipelines/effectv \

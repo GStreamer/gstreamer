@@ -36,7 +36,6 @@ GST_DEBUG_CATEGORY_STATIC (gst_gdk_pixbuf_debug);
 enum
 {
   ARG_0,
-  ARG_SILENT                    /* FIXME 0.11: remove */
 };
 
 static GstStaticPadTemplate gst_gdk_pixbuf_sink_template =
@@ -67,44 +66,40 @@ static GstStaticPadTemplate gst_gdk_pixbuf_src_template =
     GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS (GST_VIDEO_CAPS_RGB "; " GST_VIDEO_CAPS_RGBA)
+    GST_STATIC_CAPS (GST_VIDEO_CAPS_MAKE ("RGB") "; "
+        GST_VIDEO_CAPS_MAKE ("RGBA"))
     );
-
-static void gst_gdk_pixbuf_set_property (GObject * object, guint prop_id,
-    const GValue * value, GParamSpec * pspec);
-static void gst_gdk_pixbuf_get_property (GObject * object, guint prop_id,
-    GValue * value, GParamSpec * pspec);
 
 static GstStateChangeReturn
 gst_gdk_pixbuf_change_state (GstElement * element, GstStateChange transition);
-static GstFlowReturn gst_gdk_pixbuf_chain (GstPad * pad, GstBuffer * buffer);
-static gboolean gst_gdk_pixbuf_sink_event (GstPad * pad, GstEvent * event);
+static GstFlowReturn gst_gdk_pixbuf_chain (GstPad * pad, GstObject * parent,
+    GstBuffer * buffer);
+static gboolean gst_gdk_pixbuf_sink_event (GstPad * pad, GstObject * parent,
+    GstEvent * event);
 
 #ifdef enable_typefind
 static void gst_gdk_pixbuf_type_find (GstTypeFind * tf, gpointer ignore);
 #endif
 
-GST_BOILERPLATE (GstGdkPixbuf, gst_gdk_pixbuf, GstElement, GST_TYPE_ELEMENT);
+#define gst_gdk_pixbuf_parent_class parent_class
+G_DEFINE_TYPE (GstGdkPixbuf, gst_gdk_pixbuf, GST_TYPE_ELEMENT);
 
 static gboolean
-gst_gdk_pixbuf_sink_setcaps (GstPad * pad, GstCaps * caps)
+gst_gdk_pixbuf_sink_setcaps (GstGdkPixbuf * filter, GstCaps * caps)
 {
-  GstGdkPixbuf *filter;
   const GValue *framerate;
   GstStructure *s;
 
-  filter = GST_GDK_PIXBUF (GST_PAD_PARENT (pad));
   s = gst_caps_get_structure (caps, 0);
 
   if ((framerate = gst_structure_get_value (s, "framerate")) != NULL) {
-    filter->framerate_numerator = gst_value_get_fraction_numerator (framerate);
-    filter->framerate_denominator =
-        gst_value_get_fraction_denominator (framerate);
+    filter->in_fps_n = gst_value_get_fraction_numerator (framerate);
+    filter->in_fps_d = gst_value_get_fraction_denominator (framerate);
     GST_DEBUG_OBJECT (filter, "got framerate of %d/%d fps => packetized mode",
-        filter->framerate_numerator, filter->framerate_denominator);
+        filter->in_fps_n, filter->in_fps_d);
   } else {
-    filter->framerate_numerator = 0;
-    filter->framerate_denominator = 1;
+    filter->in_fps_n = 0;
+    filter->in_fps_d = 1;
     GST_DEBUG_OBJECT (filter, "no framerate, assuming single image");
   }
 
@@ -112,7 +107,7 @@ gst_gdk_pixbuf_sink_setcaps (GstPad * pad, GstCaps * caps)
 }
 
 static GstCaps *
-gst_gdk_pixbuf_get_capslist (void)
+gst_gdk_pixbuf_get_capslist (GstCaps * filter)
 {
   GSList *slist;
   GSList *slist0;
@@ -132,7 +127,7 @@ gst_gdk_pixbuf_get_capslist (void)
     mimetypes = gdk_pixbuf_format_get_mime_types (pixbuf_format);
 
     for (mimetype = mimetypes; *mimetype; mimetype++) {
-      gst_caps_append_structure (capslist, gst_structure_new (*mimetype, NULL));
+      gst_caps_append_structure (capslist, gst_structure_new_empty (*mimetype));
     }
     g_strfreev (mimetypes);
   }
@@ -143,61 +138,72 @@ gst_gdk_pixbuf_get_capslist (void)
 
   gst_caps_unref (tmpl_caps);
   gst_caps_unref (capslist);
+
+  if (filter && return_caps) {
+    GstCaps *temp;
+
+    temp = gst_caps_intersect (return_caps, filter);
+    gst_caps_unref (return_caps);
+    return_caps = temp;
+  }
+
   return return_caps;
 }
 
-static GstCaps *
-gst_gdk_pixbuf_sink_getcaps (GstPad * pad)
+static gboolean
+gst_gdk_pixbuf_sink_query (GstPad * pad, GstObject * parent, GstQuery * query)
 {
-  return gst_gdk_pixbuf_get_capslist ();
+  gboolean res;
+
+  switch (GST_QUERY_TYPE (query)) {
+    case GST_QUERY_CAPS:
+    {
+      GstCaps *filter, *caps;
+
+      gst_query_parse_caps (query, &filter);
+      caps = gst_gdk_pixbuf_get_capslist (filter);
+      gst_query_set_caps_result (query, caps);
+      gst_caps_unref (caps);
+
+      res = TRUE;
+      break;
+    }
+    default:
+      res = gst_pad_query_default (pad, parent, query);
+      break;
+  }
+  return res;
 }
 
-static void
-gst_gdk_pixbuf_base_init (gpointer g_class)
-{
-  GstElementClass *element_class = GST_ELEMENT_CLASS (g_class);
-
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&gst_gdk_pixbuf_src_template));
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&gst_gdk_pixbuf_sink_template));
-  gst_element_class_set_details_simple (element_class,
-      "GdkPixbuf image decoder", "Codec/Decoder/Image",
-      "Decodes images in a video stream using GdkPixbuf",
-      "David A. Schleef <ds@schleef.org>, Renato Filho <renato.filho@indt.org.br>");
-}
 
 /* initialize the plugin's class */
 static void
 gst_gdk_pixbuf_class_init (GstGdkPixbufClass * klass)
 {
-  GObjectClass *gobject_class;
   GstElementClass *gstelement_class;
 
-  gobject_class = (GObjectClass *) klass;
   gstelement_class = (GstElementClass *) klass;
-
-  gobject_class->set_property = gst_gdk_pixbuf_set_property;
-  gobject_class->get_property = gst_gdk_pixbuf_get_property;
-
-  g_object_class_install_property (gobject_class, ARG_SILENT,
-      g_param_spec_boolean ("silent", "Silent",
-          "Produce verbose output ? (deprecated)", FALSE,
-          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   gstelement_class->change_state =
       GST_DEBUG_FUNCPTR (gst_gdk_pixbuf_change_state);
+
+  gst_element_class_add_pad_template (gstelement_class,
+      gst_static_pad_template_get (&gst_gdk_pixbuf_src_template));
+  gst_element_class_add_pad_template (gstelement_class,
+      gst_static_pad_template_get (&gst_gdk_pixbuf_sink_template));
+  gst_element_class_set_details_simple (gstelement_class,
+      "GdkPixbuf image decoder", "Codec/Decoder/Image",
+      "Decodes images in a video stream using GdkPixbuf",
+      "David A. Schleef <ds@schleef.org>, Renato Filho <renato.filho@indt.org.br>");
 }
 
 static void
-gst_gdk_pixbuf_init (GstGdkPixbuf * filter, GstGdkPixbufClass * klass)
+gst_gdk_pixbuf_init (GstGdkPixbuf * filter)
 {
   filter->sinkpad =
       gst_pad_new_from_static_template (&gst_gdk_pixbuf_sink_template, "sink");
-  gst_pad_set_setcaps_function (filter->sinkpad,
-      GST_DEBUG_FUNCPTR (gst_gdk_pixbuf_sink_setcaps));
-  gst_pad_set_getcaps_function (filter->sinkpad,
-      GST_DEBUG_FUNCPTR (gst_gdk_pixbuf_sink_getcaps));
+  gst_pad_set_query_function (filter->sinkpad,
+      GST_DEBUG_FUNCPTR (gst_gdk_pixbuf_sink_query));
   gst_pad_set_chain_function (filter->sinkpad,
       GST_DEBUG_FUNCPTR (gst_gdk_pixbuf_chain));
   gst_pad_set_event_function (filter->sinkpad,
@@ -213,6 +219,55 @@ gst_gdk_pixbuf_init (GstGdkPixbuf * filter, GstGdkPixbufClass * klass)
   filter->pixbuf_loader = NULL;
 }
 
+static gboolean
+gst_gdk_pixbuf_setup_pool (GstGdkPixbuf * filter, GstVideoInfo * info)
+{
+  GstCaps *target;
+  GstQuery *query;
+  GstBufferPool *pool = NULL;
+  guint size, min, max, prefix, alignment;
+
+  target = gst_pad_get_current_caps (filter->srcpad);
+
+  /* try to get a bufferpool now */
+  /* find a pool for the negotiated caps now */
+  query = gst_query_new_allocation (target, TRUE);
+
+  if (gst_pad_peer_query (filter->srcpad, query)) {
+    /* we got configuration from our peer, parse them */
+    gst_query_parse_allocation_params (query, &size, &min, &max, &prefix,
+        &alignment, &pool);
+  } else {
+    size = info->size;
+    min = max = 0;
+    prefix = 0;
+    alignment = 0;
+  }
+
+  if (pool == NULL) {
+    GstStructure *config;
+
+    /* we did not get a pool, make one ourselves then */
+    pool = gst_buffer_pool_new ();
+
+    config = gst_buffer_pool_get_config (pool);
+    gst_buffer_pool_config_set (config, target, size, min, max, prefix,
+        alignment);
+    gst_buffer_pool_set_config (pool, config);
+  }
+
+  if (filter->pool)
+    gst_object_unref (filter->pool);
+  filter->pool = pool;
+
+  /* and activate */
+  gst_buffer_pool_set_active (filter->pool, TRUE);
+
+  gst_caps_unref (target);
+
+  return TRUE;
+}
+
 static GstFlowReturn
 gst_gdk_pixbuf_flush (GstGdkPixbuf * filter)
 {
@@ -221,48 +276,54 @@ gst_gdk_pixbuf_flush (GstGdkPixbuf * filter)
   int y;
   guint8 *out_pix;
   guint8 *in_pix;
-  int in_rowstride;
+  int in_rowstride, out_rowstride;
   GstFlowReturn ret;
   GstCaps *caps = NULL;
+  gint width, height;
   gint n_channels;
+  GstVideoFrame frame;
 
   pixbuf = gdk_pixbuf_loader_get_pixbuf (filter->pixbuf_loader);
   if (pixbuf == NULL)
     goto no_pixbuf;
 
-  if (filter->image_size == 0) {
-    filter->width = gdk_pixbuf_get_width (pixbuf);
-    filter->height = gdk_pixbuf_get_height (pixbuf);
-    filter->rowstride = gdk_pixbuf_get_rowstride (pixbuf);
-    filter->image_size = filter->rowstride * filter->height;
+  width = gdk_pixbuf_get_width (pixbuf);
+  height = gdk_pixbuf_get_height (pixbuf);
+
+  if (GST_VIDEO_INFO_FORMAT (&filter->info) == GST_VIDEO_FORMAT_UNKNOWN) {
+    GstVideoInfo info;
+    GstVideoFormat fmt;
+
+    GST_DEBUG ("Set size to %dx%d", width, height);
 
     n_channels = gdk_pixbuf_get_n_channels (pixbuf);
     switch (n_channels) {
       case 3:
-        caps = gst_caps_from_string (GST_VIDEO_CAPS_RGB);
+        fmt = GST_VIDEO_FORMAT_RGB;
         break;
       case 4:
-        caps = gst_caps_from_string (GST_VIDEO_CAPS_RGBA);
+        fmt = GST_VIDEO_FORMAT_RGBA;
         break;
       default:
         goto channels_not_supported;
     }
 
-    gst_caps_set_simple (caps,
-        "width", G_TYPE_INT, filter->width,
-        "height", G_TYPE_INT, filter->height,
-        "framerate", GST_TYPE_FRACTION, filter->framerate_numerator,
-        filter->framerate_denominator, NULL);
 
-    GST_DEBUG ("Set size to %dx%d", filter->width, filter->height);
+    gst_video_info_init (&info);
+    gst_video_info_set_format (&info, fmt, width, height);
+    info.fps_n = filter->in_fps_n;
+    info.fps_d = filter->in_fps_d;
+    caps = gst_video_info_to_caps (&info);
+
+    filter->info = info;
+
     gst_pad_set_caps (filter->srcpad, caps);
     gst_caps_unref (caps);
+
+    gst_gdk_pixbuf_setup_pool (filter, &info);
   }
 
-  ret = gst_pad_alloc_buffer_and_set_caps (filter->srcpad,
-      GST_BUFFER_OFFSET_NONE,
-      filter->image_size, GST_PAD_CAPS (filter->srcpad), &outbuf);
-
+  ret = gst_buffer_pool_acquire_buffer (filter->pool, &outbuf, NULL);
   if (ret != GST_FLOW_OK)
     goto no_buffer;
 
@@ -271,16 +332,20 @@ gst_gdk_pixbuf_flush (GstGdkPixbuf * filter)
 
   in_pix = gdk_pixbuf_get_pixels (pixbuf);
   in_rowstride = gdk_pixbuf_get_rowstride (pixbuf);
-  out_pix = GST_BUFFER_DATA (outbuf);
 
-  /* FIXME, last line might not have rowstride pixels */
-  for (y = 0; y < filter->height; y++) {
-    memcpy (out_pix, in_pix, filter->rowstride);
+  gst_video_frame_map (&frame, &filter->info, outbuf, GST_MAP_WRITE);
+  out_pix = GST_VIDEO_FRAME_PLANE_DATA (&frame, 0);
+  out_rowstride = GST_VIDEO_FRAME_PLANE_STRIDE (&frame, 0);
+
+  for (y = 0; y < height; y++) {
+    memcpy (out_pix, in_pix, width * GST_VIDEO_FRAME_COMP_PSTRIDE (&frame, 0));
     in_pix += in_rowstride;
-    out_pix += filter->rowstride;
+    out_pix += out_rowstride;
   }
 
-  GST_DEBUG ("pushing... %d bytes", GST_BUFFER_SIZE (outbuf));
+  gst_video_frame_unmap (&frame);
+
+  GST_DEBUG ("pushing... %d bytes", gst_buffer_get_size (outbuf));
   ret = gst_pad_push (filter->srcpad, outbuf);
 
   if (ret != GST_FLOW_OK)
@@ -308,15 +373,24 @@ no_buffer:
 }
 
 static gboolean
-gst_gdk_pixbuf_sink_event (GstPad * pad, GstEvent * event)
+gst_gdk_pixbuf_sink_event (GstPad * pad, GstObject * parent, GstEvent * event)
 {
   GstFlowReturn res = GST_FLOW_OK;
-  gboolean ret = TRUE;
+  gboolean ret = TRUE, forward = TRUE;
   GstGdkPixbuf *pixbuf;
 
-  pixbuf = GST_GDK_PIXBUF (gst_pad_get_parent (pad));
+  pixbuf = GST_GDK_PIXBUF (parent);
 
   switch (GST_EVENT_TYPE (event)) {
+    case GST_EVENT_CAPS:
+    {
+      GstCaps *caps;
+
+      gst_event_parse_caps (event, &caps);
+      ret = gst_gdk_pixbuf_sink_setcaps (pixbuf, caps);
+      forward = FALSE;
+      break;
+    }
     case GST_EVENT_EOS:
       if (pixbuf->pixbuf_loader != NULL) {
         gdk_pixbuf_loader_close (pixbuf->pixbuf_loader, NULL);
@@ -329,10 +403,12 @@ gst_gdk_pixbuf_sink_event (GstPad * pad, GstEvent * event)
         if (res != GST_FLOW_OK && res != GST_FLOW_FLUSHING) {
           GST_ELEMENT_ERROR (pixbuf, STREAM, FAILED, (NULL),
               ("Flow: %s", gst_flow_get_name (res)));
+          forward = FALSE;
+          ret = FALSE;
         }
       }
       break;
-    case GST_EVENT_NEWSEGMENT:
+    case GST_EVENT_SEGMENT:
     case GST_EVENT_FLUSH_STOP:
       if (pixbuf->pixbuf_loader != NULL) {
         gdk_pixbuf_loader_close (pixbuf->pixbuf_loader, NULL);
@@ -343,29 +419,24 @@ gst_gdk_pixbuf_sink_event (GstPad * pad, GstEvent * event)
     default:
       break;
   }
-
-  if (res == GST_FLOW_OK) {
-    ret = gst_pad_event_default (pad, event);
+  if (forward) {
+    ret = gst_pad_event_default (pad, parent, event);
   } else {
-    ret = FALSE;
+    gst_event_unref (event);
   }
-
-  gst_object_unref (pixbuf);
-
   return ret;
 }
 
 static GstFlowReturn
-gst_gdk_pixbuf_chain (GstPad * pad, GstBuffer * buf)
+gst_gdk_pixbuf_chain (GstPad * pad, GstObject * parent, GstBuffer * buf)
 {
   GstGdkPixbuf *filter;
   GstFlowReturn ret = GST_FLOW_OK;
   GError *error = NULL;
   GstClockTime timestamp;
-  guint8 *data;
-  guint size;
+  GstMapInfo map;
 
-  filter = GST_GDK_PIXBUF (gst_pad_get_parent (pad));
+  filter = GST_GDK_PIXBUF (parent);
 
   timestamp = GST_BUFFER_TIMESTAMP (buf);
 
@@ -378,23 +449,23 @@ gst_gdk_pixbuf_chain (GstPad * pad, GstBuffer * buf)
   if (filter->pixbuf_loader == NULL)
     filter->pixbuf_loader = gdk_pixbuf_loader_new ();
 
-  data = GST_BUFFER_DATA (buf);
-  size = GST_BUFFER_SIZE (buf);
+  gst_buffer_map (buf, &map, GST_MAP_READ);
 
-  GST_LOG_OBJECT (filter, "Writing buffer size %d", size);
-  if (!gdk_pixbuf_loader_write (filter->pixbuf_loader, data, size, &error))
+  GST_LOG_OBJECT (filter, "Writing buffer size %d", (gint) map.size);
+  if (!gdk_pixbuf_loader_write (filter->pixbuf_loader, map.data, map.size,
+          &error))
     goto error;
 
   /* packetised mode? */
-  if (filter->framerate_numerator != 0) {
+  if (filter->in_fps_n != 0) {
     gdk_pixbuf_loader_close (filter->pixbuf_loader, NULL);
     ret = gst_gdk_pixbuf_flush (filter);
     g_object_unref (filter->pixbuf_loader);
     filter->pixbuf_loader = NULL;
   }
 
+  gst_buffer_unmap (buf, &map);
   gst_buffer_unref (buf);
-  gst_object_unref (filter);
 
   return ret;
 
@@ -404,37 +475,9 @@ error:
     GST_ELEMENT_ERROR (filter, STREAM, DECODE, (NULL),
         ("gdk_pixbuf_loader_write error: %s", error->message));
     g_error_free (error);
+    gst_buffer_unmap (buf, &map);
     gst_buffer_unref (buf);
-    gst_object_unref (filter);
     return GST_FLOW_ERROR;
-  }
-}
-
-static void
-gst_gdk_pixbuf_set_property (GObject * object, guint prop_id,
-    const GValue * value, GParamSpec * pspec)
-{
-  switch (prop_id) {
-    case ARG_SILENT:
-      /* filter->silent = g_value_get_boolean (value); */
-      break;
-    default:
-      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
-      break;
-  }
-}
-
-static void
-gst_gdk_pixbuf_get_property (GObject * object, guint prop_id,
-    GValue * value, GParamSpec * pspec)
-{
-  switch (prop_id) {
-    case ARG_SILENT:
-      /* g_value_set_boolean (value, filter->silent); */
-      break;
-    default:
-      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
-      break;
   }
 }
 
@@ -447,8 +490,9 @@ gst_gdk_pixbuf_change_state (GstElement * element, GstStateChange transition)
   switch (transition) {
     case GST_STATE_CHANGE_READY_TO_PAUSED:
       /* default to single image mode, setcaps function might not be called */
-      dec->framerate_numerator = 0;
-      dec->framerate_denominator = 1;
+      dec->in_fps_n = 0;
+      dec->in_fps_d = 1;
+      gst_video_info_init (&dec->info);
       break;
     default:
       break;
@@ -460,8 +504,12 @@ gst_gdk_pixbuf_change_state (GstElement * element, GstStateChange transition)
 
   switch (transition) {
     case GST_STATE_CHANGE_PAUSED_TO_READY:
-      dec->framerate_numerator = 0;
-      dec->framerate_denominator = 0;
+      dec->in_fps_n = 0;
+      dec->in_fps_d = 0;
+      if (dec->pool) {
+        gst_buffer_pool_set_active (dec->pool, FALSE);
+        gst_object_replace ((GstObject **) & dec->pool, NULL);
+      }
       break;
     default:
       break;

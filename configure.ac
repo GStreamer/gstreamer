@@ -314,9 +314,8 @@ dnl Make sure you have a space before and after all plugins
 GST_PLUGINS_NONPORTED="deinterlace interleave flx \
  imagefreeze smpte \
  videobox \
- cairo cairo_gobject dv1394 gdk_pixbuf \
+ cairo cairo_gobject dv1394 \
  oss oss4 \
- wavpack \
  osx_video osx_audio "
 AC_SUBST(GST_PLUGINS_NONPORTED)
 

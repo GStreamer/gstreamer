@@ -21,6 +21,10 @@
  * by transforming the frequency response to the filter kernel.
  */
 
+/* FIXME 0.11: suppress warnings for deprecated API such as GValueArray
+ * with newer GLib versions (>= 2.31.0) */
+#define GLIB_DISABLE_DEPRECATION_WARNINGS
+
 #include <string.h>
 #include <math.h>
 

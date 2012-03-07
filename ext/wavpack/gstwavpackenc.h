@@ -23,6 +23,7 @@
 #define __GST_WAVPACK_ENC_H__
 
 #include <gst/gst.h>
+#include <gst/audio/gstaudioencoder.h>
 
 #include <wavpack/wavpack.h>
 
@@ -50,10 +51,9 @@ typedef struct
 
 struct _GstWavpackEnc
 {
-  GstElement element;
+  GstAudioEncoder element;
 
   /*< private > */
-  GstPad *sinkpad, *srcpad;
   GstPad *wvcsrcpad;
 
   GstFlowReturn srcpad_last_return;
@@ -86,6 +86,7 @@ struct _GstWavpackEnc
 
   GstBuffer *pending_buffer;
   gint32 pending_offset;
+  GstEvent *pending_segment;
 
   GstClockTime timestamp_offset;
   GstClockTime next_ts;
@@ -93,7 +94,7 @@ struct _GstWavpackEnc
 
 struct _GstWavpackEncClass
 {
-  GstElementClass parent;
+  GstAudioEncoderClass parent;
 };
 
 GType gst_wavpack_enc_get_type (void);

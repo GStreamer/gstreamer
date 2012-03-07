@@ -23,6 +23,19 @@
 
 #include "ximageutil.h"
 
+GType
+gst_meta_ximage_api_get_type (void)
+{
+  static volatile GType type;
+  static const gchar *tags[] = { "memory", NULL };
+
+  if (g_once_init_enter (&type)) {
+    GType _type = gst_meta_api_type_register ("GstMetaXImageSrcAPI", tags);
+    g_once_init_leave (&type, _type);
+  }
+  return type;
+}
+
 const GstMetaInfo *
 gst_meta_ximage_get_info (void)
 {
@@ -30,10 +43,9 @@ gst_meta_ximage_get_info (void)
 
   if (meta_ximage_info == NULL) {
     meta_ximage_info =
-        gst_meta_register ("GstMetaXImageSrc", "GstMetaXImageSrc",
+        gst_meta_register (gst_meta_ximage_api_get_type (), "GstMetaXImageSrc",
         sizeof (GstMetaXImage), (GstMetaInitFunction) NULL,
-        (GstMetaFreeFunction) NULL, (GstMetaCopyFunction) NULL,
-        (GstMetaTransformFunction) NULL);
+        (GstMetaFreeFunction) NULL, (GstMetaTransformFunction) NULL);
   }
   return meta_ximage_info;
 }

@@ -28,8 +28,6 @@
  * src and sink pads we create; otherwise we always have to do get_pad,
  * get_peer, and then remove references in every test function */
 static GstPad *mysrcpad, *mysinkpad;
-static GstBus *bus;
-static GstElement *wavpackparse;
 
 /* Wavpack file with 2 frames of silence */
 guint8 test_file[] = {
@@ -69,99 +67,53 @@ static GstStaticPadTemplate srctemplate = GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS ("audio/x-wavpack"));
 
-static void
-wavpackparse_found_pad (GstElement * src, GstPad * pad, gpointer data)
-{
-  GstPad *srcpad;
-
-  mysinkpad = gst_pad_new_from_static_template (&sinktemplate, "sink");
-  fail_if (mysinkpad == NULL, "Couldn't create sinkpad");
-  srcpad = gst_element_get_static_pad (wavpackparse, "src");
-  fail_if (srcpad == NULL, "Failed to get srcpad from wavpackparse");
-  gst_pad_set_chain_function (mysinkpad, gst_check_chain_func);
-  fail_unless (gst_pad_link (srcpad, mysinkpad) == GST_PAD_LINK_OK,
-      "Failed to link pads");
-  gst_pad_set_active (mysinkpad, TRUE);
-  gst_object_unref (srcpad);
-}
-
-static void
+static GstElement *
 setup_wavpackparse (void)
 {
-  GstPad *sinkpad;
+  GstElement *wavpackparse;
 
   GST_DEBUG ("setup_wavpackparse");
 
-  wavpackparse = gst_element_factory_make ("wavpackparse", "wavpackparse");
-  fail_if (wavpackparse == NULL, "Could not create wavpackparse");
+  wavpackparse = gst_check_setup_element ("wavpackparse");
+  mysrcpad = gst_check_setup_src_pad (wavpackparse, &srctemplate);
+  mysinkpad = gst_check_setup_sink_pad (wavpackparse, &sinktemplate);
+  gst_pad_set_active (mysrcpad, TRUE);
+  gst_pad_set_active (mysinkpad, TRUE);
 
-  mysrcpad = gst_pad_new_from_static_template (&srctemplate, "src");
-  fail_if (mysrcpad == NULL, "Could not create srcpad");
-
-  sinkpad = gst_element_get_static_pad (wavpackparse, "sink");
-  fail_if (sinkpad == NULL, "Failed to get sinkpad from wavpackparse");
-  fail_unless (gst_pad_link (mysrcpad, sinkpad) == GST_PAD_LINK_OK,
-      "Failed to link pads");
-  gst_object_unref (sinkpad);
-
-  g_signal_connect (wavpackparse, "pad-added",
-      G_CALLBACK (wavpackparse_found_pad), NULL);
-
-  bus = gst_bus_new ();
-  gst_element_set_bus (wavpackparse, bus);
-
-  fail_unless (gst_element_set_state (wavpackparse,
-          GST_STATE_PLAYING) == GST_STATE_CHANGE_SUCCESS,
-      "could not set to playing");
+  return wavpackparse;
 }
 
 static void
-cleanup_wavpackparse (void)
+cleanup_wavpackparse (GstElement * wavpackparse)
 {
-  GstPad *sinkpad, *srcpad;
-
   GST_DEBUG ("cleanup_wavpackparse");
+  gst_element_set_state (wavpackparse, GST_STATE_NULL);
 
-  gst_bus_set_flushing (bus, TRUE);
-  gst_element_set_bus (wavpackparse, NULL);
-  gst_object_unref (GST_OBJECT (bus));
-
-  sinkpad = gst_element_get_static_pad (wavpackparse, "sink");
-  fail_if (sinkpad == NULL, "Failed to get sinkpad from wavpackparse");
-  fail_unless (gst_pad_unlink (mysrcpad, sinkpad), "Failed to unlink pads");
-  gst_pad_set_caps (mysrcpad, NULL);
-  gst_object_unref (sinkpad);
-  gst_object_unref (mysrcpad);
-
-  srcpad = gst_element_get_static_pad (wavpackparse, "src");
-  fail_if (srcpad == NULL, "Failed to get srcpad from wavpackparse");
-  fail_unless (gst_pad_unlink (srcpad, mysinkpad), "Failed to unlink pads");
-  gst_pad_set_caps (mysinkpad, NULL);
-  gst_object_unref (srcpad);
-  gst_object_unref (mysinkpad);
-
-  fail_unless (gst_element_set_state (wavpackparse, GST_STATE_NULL) ==
-      GST_STATE_CHANGE_SUCCESS, "could not set to null");
-
-  gst_object_unref (wavpackparse);
+  gst_pad_set_active (mysrcpad, FALSE);
+  gst_pad_set_active (mysinkpad, FALSE);
+  gst_check_teardown_src_pad (wavpackparse);
+  gst_check_teardown_sink_pad (wavpackparse);
+  gst_check_teardown_element (wavpackparse);
 }
 
 GST_START_TEST (test_parsing_valid_frames)
 {
+  GstElement *wavpackparse;
   GstBuffer *inbuffer, *outbuffer;
   int i, num_buffers;
-  GstFormat format = GST_FORMAT_DEFAULT;
+  GstFormat format = GST_FORMAT_TIME;
   gint64 pos;
 
-  setup_wavpackparse ();
+  wavpackparse = setup_wavpackparse ();
+  fail_unless (gst_element_set_state (wavpackparse,
+          GST_STATE_PLAYING) == GST_STATE_CHANGE_SUCCESS,
+      "could not set to playing");
 
   inbuffer = gst_buffer_new_and_alloc (sizeof (test_file));
-  memcpy (GST_BUFFER_DATA (inbuffer), test_file, sizeof (test_file));
-  gst_buffer_ref (inbuffer);
+  gst_buffer_fill (inbuffer, 0, test_file, sizeof (test_file));
 
   /* should decode the buffer without problems */
   fail_unless_equals_int (gst_pad_push (mysrcpad, inbuffer), GST_FLOW_OK);
-  gst_buffer_unref (inbuffer);
 
   num_buffers = g_list_length (buffers);
   /* should get 2 buffers, each one complete wavpack frame */
@@ -171,21 +123,17 @@ GST_START_TEST (test_parsing_valid_frames)
     outbuffer = GST_BUFFER (buffers->data);
     fail_if (outbuffer == NULL);
 
-    fail_unless (memcmp (GST_BUFFER_DATA (outbuffer), "wvpk", 4) == 0,
+    fail_unless (gst_buffer_memcmp (outbuffer, 0, "wvpk", 4) == 0,
         "Buffer contains no Wavpack frame");
     fail_unless_equals_int (GST_BUFFER_DURATION (outbuffer), 580498866);
 
     switch (i) {
       case 0:{
         fail_unless_equals_int (GST_BUFFER_TIMESTAMP (outbuffer), 0);
-        fail_unless_equals_int (GST_BUFFER_OFFSET (outbuffer), 0);
-        fail_unless_equals_int (GST_BUFFER_OFFSET_END (outbuffer), 25600);
         break;
       }
       case 1:{
         fail_unless_equals_int (GST_BUFFER_TIMESTAMP (outbuffer), 580498866);
-        fail_unless_equals_int (GST_BUFFER_OFFSET (outbuffer), 25600);
-        fail_unless_equals_int (GST_BUFFER_OFFSET_END (outbuffer), 51200);
         break;
       }
     }
@@ -196,35 +144,37 @@ GST_START_TEST (test_parsing_valid_frames)
     outbuffer = NULL;
   }
 
-  fail_unless (gst_element_query_position (wavpackparse, &format, &pos),
+  fail_unless (gst_element_query_position (wavpackparse, format, &pos),
       "Position query failed");
-  fail_unless_equals_int (pos, 51200);
-  fail_unless (gst_element_query_duration (wavpackparse, &format, NULL),
+  fail_unless_equals_int64 (pos, 580498866 * 2);
+  fail_unless (gst_element_query_duration (wavpackparse, format, NULL),
       "Duration query failed");
 
   g_list_free (buffers);
   buffers = NULL;
 
-  cleanup_wavpackparse ();
+  cleanup_wavpackparse (wavpackparse);
 }
 
 GST_END_TEST;
 
 GST_START_TEST (test_parsing_invalid_first_header)
 {
+  GstElement *wavpackparse;
   GstBuffer *inbuffer, *outbuffer;
   int i, num_buffers;
 
-  setup_wavpackparse ();
+  wavpackparse = setup_wavpackparse ();
+  fail_unless (gst_element_set_state (wavpackparse,
+          GST_STATE_PLAYING) == GST_STATE_CHANGE_SUCCESS,
+      "could not set to playing");
 
   inbuffer = gst_buffer_new_and_alloc (sizeof (test_file));
-  memcpy (GST_BUFFER_DATA (inbuffer), test_file, sizeof (test_file));
-  GST_BUFFER_DATA (inbuffer)[0] = 'k';
-  gst_buffer_ref (inbuffer);
+  gst_buffer_fill (inbuffer, 0, test_file, sizeof (test_file));
+  gst_buffer_memset (inbuffer, 0, 'k', 1);
 
   /* should decode the buffer without problems */
   fail_unless_equals_int (gst_pad_push (mysrcpad, inbuffer), GST_FLOW_OK);
-  gst_buffer_unref (inbuffer);
 
   num_buffers = g_list_length (buffers);
 
@@ -235,14 +185,13 @@ GST_START_TEST (test_parsing_invalid_first_header)
     outbuffer = GST_BUFFER (buffers->data);
     fail_if (outbuffer == NULL);
 
-    fail_unless (memcmp (GST_BUFFER_DATA (outbuffer), "wvpk", 4) == 0,
+    fail_unless (gst_buffer_memcmp (outbuffer, 0, "wvpk", 4) == 0,
         "Buffer contains no Wavpack frame");
     fail_unless_equals_int (GST_BUFFER_DURATION (outbuffer), 580498866);
 
     switch (i) {
       case 0:{
         fail_unless_equals_int (GST_BUFFER_TIMESTAMP (outbuffer), 580498866);
-        fail_unless_equals_int (GST_BUFFER_OFFSET (outbuffer), 25600);
         break;
       }
     }
@@ -256,7 +205,7 @@ GST_START_TEST (test_parsing_invalid_first_header)
   g_list_free (buffers);
   buffers = NULL;
 
-  cleanup_wavpackparse ();
+  cleanup_wavpackparse (wavpackparse);
 }
 
 GST_END_TEST;

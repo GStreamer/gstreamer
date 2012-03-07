@@ -1629,6 +1629,30 @@ gst_qt_mux_start_file (GstQTMux * qtmux)
   gst_pad_set_caps (qtmux->srcpad, caps);
   gst_caps_unref (caps);
 
+  /* if not streaming, check if downstream is seekable */
+  if (!qtmux->streamable) {
+    gboolean seekable;
+    GstQuery *query;
+
+    query = gst_query_new_seeking (GST_FORMAT_BYTES);
+    if (gst_pad_peer_query (qtmux->srcpad, query)) {
+      gst_query_parse_seeking (query, NULL, &seekable, NULL, NULL);
+      GST_INFO_OBJECT (qtmux, "downstream is %sseekable",
+          seekable ? "" : "not ");
+    } else {
+      /* have to assume seeking is supported if query not handled downstream */
+      GST_WARNING_OBJECT (qtmux, "downstream did not handle seeking query");
+      seekable = FALSE;
+    }
+    if (!seekable) {
+      qtmux->streamable = TRUE;
+      g_object_notify (G_OBJECT (qtmux), "streamable");
+      GST_WARNING_OBJECT (qtmux, "downstream is not seekable, but "
+          "streamable=false. Will ignore that and create streamable output "
+          "instead");
+    }
+  }
+
   /* let downstream know we think in BYTES and expect to do seeking later on */
   gst_segment_init (&segment, GST_FORMAT_BYTES);
   gst_pad_push_event (qtmux->srcpad, gst_event_new_segment (&segment));

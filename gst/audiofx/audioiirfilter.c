@@ -41,6 +41,10 @@
  * </refsect2>
  */
 
+/* FIXME 0.11: suppress warnings for deprecated API such as GValueArray
+ * with newer GLib versions (>= 2.31.0) */
+#define GLIB_DISABLE_DEPRECATION_WARNINGS
+
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif
@@ -128,7 +132,7 @@ gst_audio_iir_filter_class_init (GstAudioIIRFilterClass * klass)
   gst_audio_iir_filter_signals[SIGNAL_RATE_CHANGED] =
       g_signal_new ("rate-changed", G_TYPE_FROM_CLASS (klass),
       G_SIGNAL_RUN_LAST, G_STRUCT_OFFSET (GstAudioIIRFilterClass, rate_changed),
-      NULL, NULL, gst_marshal_VOID__INT, G_TYPE_NONE, 1, G_TYPE_INT);
+      NULL, NULL, NULL, G_TYPE_NONE, 1, G_TYPE_INT);
 
   gst_element_class_set_details_simple (gstelement_class,
       "Audio IIR filter", "Filter/Effect/Audio",

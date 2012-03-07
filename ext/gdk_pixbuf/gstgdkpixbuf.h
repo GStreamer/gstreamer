@@ -49,13 +49,10 @@ struct _GstGdkPixbuf
   GstClockTime    last_timestamp;
   GdkPixbufLoader *pixbuf_loader;
 
-  int width;
-  int height;
-  int rowstride;
-  unsigned int image_size;
+  gint in_fps_n, in_fps_d;
 
-  gint framerate_numerator;
-  gint framerate_denominator;
+  GstVideoInfo info;
+  GstBufferPool *pool;
 };
 
 struct _GstGdkPixbufClass 

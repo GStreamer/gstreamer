@@ -576,7 +576,7 @@ gst_jack_ring_buffer_start (GstAudioRingBuffer * buf)
 
   GST_DEBUG_OBJECT (src, "start");
 
-  if (src->transport == GST_JACK_TRANSPORT_MASTER) {
+  if (src->transport & GST_JACK_TRANSPORT_MASTER) {
     jack_client_t *client;
 
     client = gst_jack_audio_client_get_client (src->client);
@@ -595,7 +595,7 @@ gst_jack_ring_buffer_pause (GstAudioRingBuffer * buf)
 
   GST_DEBUG_OBJECT (src, "pause");
 
-  if (src->transport == GST_JACK_TRANSPORT_MASTER) {
+  if (src->transport & GST_JACK_TRANSPORT_MASTER) {
     jack_client_t *client;
 
     client = gst_jack_audio_client_get_client (src->client);
@@ -614,7 +614,7 @@ gst_jack_ring_buffer_stop (GstAudioRingBuffer * buf)
 
   GST_DEBUG_OBJECT (src, "stop");
 
-  if (src->transport == GST_JACK_TRANSPORT_MASTER) {
+  if (src->transport & GST_JACK_TRANSPORT_MASTER) {
     jack_client_t *client;
 
     client = gst_jack_audio_client_get_client (src->client);
@@ -782,7 +782,7 @@ gst_jack_audio_src_class_init (GstJackAudioSrcClass * klass)
    * Since: 0.10.31
    */
   g_object_class_install_property (gobject_class, PROP_TRANSPORT,
-      g_param_spec_enum ("transport", "Transport mode",
+      g_param_spec_flags ("transport", "Transport mode",
           "Jack transport behaviour of the client",
           GST_TYPE_JACK_TRANSPORT, DEFAULT_PROP_TRANSPORT,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
@@ -859,7 +859,7 @@ gst_jack_audio_src_set_property (GObject * object, guint prop_id,
       }
       break;
     case PROP_TRANSPORT:
-      src->transport = g_value_get_enum (value);
+      src->transport = g_value_get_flags (value);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -887,7 +887,7 @@ gst_jack_audio_src_get_property (GObject * object, guint prop_id,
       g_value_set_boxed (value, src->jclient);
       break;
     case PROP_TRANSPORT:
-      g_value_set_enum (value, src->transport);
+      g_value_set_flags (value, src->transport);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);

@@ -393,7 +393,7 @@ gst_alpha_set_property (GObject * object, guint prop_id,
   }
 
   if (reconfigure)
-    gst_base_transform_reconfigure (GST_BASE_TRANSFORM_CAST (alpha));
+    gst_base_transform_reconfigure_src (GST_BASE_TRANSFORM_CAST (alpha));
 
   GST_ALPHA_UNLOCK (alpha);
 }

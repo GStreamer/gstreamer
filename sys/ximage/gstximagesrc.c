@@ -30,7 +30,7 @@
  * <refsect2>
  * <title>Example pipelines</title>
  * |[
- * gst-launch ximagesrc ! video/x-raw-rgb,framerate=5/1 ! ffmpegcolorspace ! theoraenc ! oggmux ! filesink location=desktop.ogg
+ * gst-launch ximagesrc ! video/x-raw,framerate=5/1 ! ffmpegcolorspace ! theoraenc ! oggmux ! filesink location=desktop.ogg
  * ]| Encodes your X display to an Ogg theora video at 5 frames per second.
  * </refsect2>
  */
@@ -48,6 +48,7 @@
 
 #include <gst/gst.h>
 #include <gst/gst-i18n-plugin.h>
+#include <gst/video/video.h>
 
 #include "gst/glib-compat-private.h"
 
@@ -56,7 +57,7 @@ GST_DEBUG_CATEGORY_STATIC (gst_debug_ximage_src);
 
 static GstStaticPadTemplate t =
 GST_STATIC_PAD_TEMPLATE ("src", GST_PAD_SRC, GST_PAD_ALWAYS,
-    GST_STATIC_CAPS ("video/x-raw-rgb, "
+    GST_STATIC_CAPS ("video/x-raw, "
         "framerate = (fraction) [ 0, MAX ], "
         "width = (int) [ 1, MAX ], " "height = (int) [ 1, MAX ], "
         "pixel-aspect-ratio = (fraction) [ 0, MAX ]"));
@@ -1018,6 +1019,7 @@ gst_ximage_src_get_caps (GstBaseSrc * bs, GstCaps * filter)
   GstXImageSrc *s = GST_XIMAGE_SRC (bs);
   GstXContext *xcontext;
   gint width, height;
+  GstVideoFormat format;
 
   if ((!s->xcontext) && (!gst_ximage_src_open_display (s, s->display_name)))
     return
@@ -1072,13 +1074,14 @@ gst_ximage_src_get_caps (GstBaseSrc * bs, GstCaps * filter)
     s->endy = height - 1;
   }
   GST_DEBUG ("width = %d, height=%d", width, height);
-  return gst_caps_new_simple ("video/x-raw-rgb",
-      "bpp", G_TYPE_INT, xcontext->bpp,
-      "depth", G_TYPE_INT, xcontext->depth,
-      "endianness", G_TYPE_INT, xcontext->endianness,
-      "red_mask", G_TYPE_INT, xcontext->r_mask_output,
-      "green_mask", G_TYPE_INT, xcontext->g_mask_output,
-      "blue_mask", G_TYPE_INT, xcontext->b_mask_output,
+
+  format =
+      gst_video_format_from_masks (xcontext->depth, xcontext->bpp,
+      xcontext->endianness, xcontext->r_mask_output, xcontext->g_mask_output,
+      xcontext->b_mask_output, 0);
+
+  return gst_caps_new_simple ("video/x-raw",
+      "format", G_TYPE_STRING, gst_video_format_to_string (format),
       "width", G_TYPE_INT, width,
       "height", G_TYPE_INT, height,
       "framerate", GST_TYPE_FRACTION_RANGE, 1, G_MAXINT, G_MAXINT, 1,

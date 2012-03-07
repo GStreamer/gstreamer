@@ -57,6 +57,19 @@ GST_DEBUG_CATEGORY_EXTERN (v4l2_debug);
 /*
  * GstV4l2Buffer:
  */
+GType
+gst_v4l2_meta_api_get_type (void)
+{
+  static volatile GType type;
+  static const gchar *tags[] = { "memory", NULL };
+
+  if (g_once_init_enter (&type)) {
+    GType _type = gst_meta_api_type_register ("GstV4l2MetaAPI", tags);
+    g_once_init_leave (&type, _type);
+  }
+  return type;
+}
+
 const GstMetaInfo *
 gst_v4l2_meta_get_info (void)
 {
@@ -64,10 +77,9 @@ gst_v4l2_meta_get_info (void)
 
   if (meta_info == NULL) {
     meta_info =
-        gst_meta_register ("GstV4l2Meta", "GstV4l2Meta",
+        gst_meta_register (gst_v4l2_meta_api_get_type (), "GstV4l2Meta",
         sizeof (GstV4l2Meta), (GstMetaInitFunction) NULL,
-        (GstMetaFreeFunction) NULL, (GstMetaCopyFunction) NULL,
-        (GstMetaTransformFunction) NULL);
+        (GstMetaFreeFunction) NULL, (GstMetaTransformFunction) NULL);
   }
   return meta_info;
 }
@@ -864,6 +876,7 @@ GstBufferPool *
 gst_v4l2_buffer_pool_new (GstV4l2Object * obj, GstCaps * caps)
 {
   GstV4l2BufferPool *pool;
+  GstStructure *s;
   gint fd;
 
   fd = v4l2_dup (obj->video_fd);
@@ -874,8 +887,9 @@ gst_v4l2_buffer_pool_new (GstV4l2Object * obj, GstCaps * caps)
   pool->video_fd = fd;
   pool->obj = obj;
 
-  gst_buffer_pool_config_set (GST_BUFFER_POOL_CAST (pool)->config, caps,
-      obj->sizeimage, 2, 0, 0, 0);
+  s = gst_buffer_pool_get_config (GST_BUFFER_POOL_CAST (pool));
+  gst_buffer_pool_config_set (s, caps, obj->sizeimage, 2, 0, 0, 0);
+  gst_buffer_pool_set_config (GST_BUFFER_POOL_CAST (pool), s);
 
   return GST_BUFFER_POOL (pool);
 

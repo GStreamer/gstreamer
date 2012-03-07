@@ -24,6 +24,7 @@
 #define __GST_WAVPACK_DEC_H__
 
 #include <gst/gst.h>
+#include <gst/audio/gstaudiodecoder.h>
 
 #include <wavpack/wavpack.h>
 
@@ -45,31 +46,28 @@ typedef struct _GstWavpackDecClass GstWavpackDecClass;
 
 struct _GstWavpackDec
 {
-  GstElement element;
+  GstAudioDecoder element;
 
   /*< private > */
-  GstPad *sinkpad;
-  GstPad *srcpad;
 
   WavpackContext *context;
   WavpackStreamReader *stream_reader;
 
   read_id wv_id;
 
-  GstSegment segment;           /* used for clipping, TIME format */
-  guint32 next_block_index;
-
   gint sample_rate;
   gint depth;
+  gint width;
   gint channels;
   gint channel_mask;
 
-  gint error_count;
+  gint channel_reorder_map[64];
+
 };
 
 struct _GstWavpackDecClass
 {
-  GstElementClass parent;
+  GstAudioDecoderClass parent;
 };
 
 GType gst_wavpack_dec_get_type (void);

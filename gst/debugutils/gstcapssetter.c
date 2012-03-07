@@ -294,7 +294,7 @@ gst_caps_setter_set_property (GObject * object, guint prop_id,
       }
 
       /* try to activate these new caps next time around */
-      gst_base_transform_reconfigure (GST_BASE_TRANSFORM (filter));
+      gst_base_transform_reconfigure_src (GST_BASE_TRANSFORM (filter));
       break;
     }
     case PROP_JOIN:
