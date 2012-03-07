@@ -221,7 +221,7 @@ dnl default vars for all internal objects built on libgstrtspserver
 dnl includes GST_ALL_*
 GST_OBJ_CFLAGS="\$(GST_ALL_CFLAGS)"
 AC_SUBST([GST_OBJ_CFLAGS])
-GST_OBJ_LIBS="\$(top_builddir)/gst/rtsp-server/libgstrtspserver-@GST_MAJORMINOR@.la \$(GST_ALL_LIBS)"
+GST_OBJ_LIBS="\$(top_builddir)/gst/rtsp-server/libgstrtspserver-$GST_MAJORMINOR.la \$(GST_ALL_LIBS)"
 AC_SUBST([GST_OBJ_LIBS])
 
 dnl this really should only contain flags, not libs - they get added before
