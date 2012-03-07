@@ -4,7 +4,7 @@ ext/jpeg/gstjpegdec.c
 ext/libpng/gstpngdec.c
 ext/shout2/gstshout2.c
 ext/soup/gstsouphttpsrc.c
-ext/wavpack/gstwavpackparse.c
+gst/audioparsers/gstwavpackparse.c
 gst/avi/gstavidemux.c
 gst/avi/gstavimux.c
 gst/isomp4/qtdemux.c
