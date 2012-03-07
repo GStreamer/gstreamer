@@ -80,11 +80,10 @@ gst_celt_enc_prediction_get_type (void)
 static GstStaticPadTemplate sink_factory = GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS ("audio/x-raw-int, "
-        "rate = (int) [ 32000, 64000 ], "
-        "channels = (int) [ 1, 2 ], "
-        "endianness = (int) BYTE_ORDER, "
-        "signed = (boolean) TRUE, " "width = (int) 16, " "depth = (int) 16")
+    GST_STATIC_CAPS ("audio/x-raw, "
+        "format = (string) " GST_AUDIO_NE (S16) ", "
+        "layout = (string) interleaved, "
+        "rate = (int) [ 32000, 64000 ], " "channels = (int) [ 1, 2 ]")
     );
 
 static GstStaticPadTemplate src_factory = GST_STATIC_PAD_TEMPLATE ("src",
@@ -131,42 +130,19 @@ static gboolean gst_celt_enc_sink_event (GstAudioEncoder * enc,
 static GstFlowReturn gst_celt_enc_pre_push (GstAudioEncoder * benc,
     GstBuffer ** buffer);
 
-static void
-gst_celt_enc_setup_interfaces (GType celtenc_type)
-{
-  static const GInterfaceInfo tag_setter_info = { NULL, NULL, NULL };
-
-  g_type_add_interface_static (celtenc_type, GST_TYPE_TAG_SETTER,
-      &tag_setter_info);
-
-  GST_DEBUG_CATEGORY_INIT (celtenc_debug, "celtenc", 0, "Celt encoder");
-}
-
-GST_BOILERPLATE_FULL (GstCeltEnc, gst_celt_enc, GstAudioEncoder,
-    GST_TYPE_AUDIO_ENCODER, gst_celt_enc_setup_interfaces);
-
-static void
-gst_celt_enc_base_init (gpointer g_class)
-{
-  GstElementClass *element_class = GST_ELEMENT_CLASS (g_class);
-
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&src_factory));
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&sink_factory));
-  gst_element_class_set_details_simple (element_class, "Celt audio encoder",
-      "Codec/Encoder/Audio",
-      "Encodes audio in Celt format",
-      "Sebastian Dröge <sebastian.droege@collabora.co.uk>");
-}
+#define gst_celt_enc_parent_class parent_class
+G_DEFINE_TYPE_WITH_CODE (GstCeltEnc, gst_celt_enc, GST_TYPE_AUDIO_ENCODER,
+    G_IMPLEMENT_INTERFACE (GST_TYPE_TAG_SETTER, NULL));
 
 static void
 gst_celt_enc_class_init (GstCeltEncClass * klass)
 {
   GObjectClass *gobject_class;
+  GstElementClass *gstelement_class;
   GstAudioEncoderClass *gstbase_class;
 
   gobject_class = (GObjectClass *) klass;
+  gstelement_class = (GstElementClass *) klass;
   gstbase_class = (GstAudioEncoderClass *) klass;
 
   gobject_class->set_property = gst_celt_enc_set_property;
@@ -211,10 +187,21 @@ gst_celt_enc_class_init (GstCeltEncClass * klass)
           "Controls the start band that should be used",
           0, G_MAXINT, DEFAULT_START_BAND,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
+  gst_element_class_add_pad_template (gstelement_class,
+      gst_static_pad_template_get (&src_factory));
+  gst_element_class_add_pad_template (gstelement_class,
+      gst_static_pad_template_get (&sink_factory));
+  gst_element_class_set_details_simple (gstelement_class, "Celt audio encoder",
+      "Codec/Encoder/Audio",
+      "Encodes audio in Celt format",
+      "Sebastian Dröge <sebastian.droege@collabora.co.uk>");
+
+  GST_DEBUG_CATEGORY_INIT (celtenc_debug, "celtenc", 0, "Celt encoder");
 }
 
 static void
-gst_celt_enc_init (GstCeltEnc * enc, GstCeltEncClass * klass)
+gst_celt_enc_init (GstCeltEnc * enc)
 {
   enc->bitrate = DEFAULT_BITRATE;
   enc->frame_size = DEFAULT_FRAMESIZE;
@@ -433,7 +420,7 @@ gst_celt_enc_create_metadata_buffer (GstCeltEnc * enc)
   if (tags == NULL) {
     /* FIXME: better fix chain of callers to not write metadata at all,
      * if there is none */
-    empty_tags = gst_tag_list_new ();
+    empty_tags = gst_tag_list_new_empty ();
     tags = empty_tags;
   }
   comments = gst_tag_list_to_vorbiscomment_buffer (tags, NULL,
@@ -458,16 +445,19 @@ gst_celt_enc_encode (GstCeltEnc * enc, GstBuffer * buf)
   gint16 *data, *data0 = NULL;
   gint outsize, size;
   GstBuffer *outbuf;
+  GstMapInfo map, omap;
 
   if (G_LIKELY (buf)) {
-    data = (gint16 *) GST_BUFFER_DATA (buf);
-    size = GST_BUFFER_SIZE (buf);
+    gst_buffer_map (buf, &map, GST_MAP_READ);
+    data = (gint16 *) map.data;
+    size = map.size;
 
-    if (G_UNLIKELY (size % bytes)) {
+    if (G_UNLIKELY (map.size % bytes)) {
       GST_DEBUG_OBJECT (enc, "draining; adding silence samples");
       size = ((size / bytes) + 1) * bytes;
-      data0 = data = g_malloc0 (size);
-      memcpy (data, GST_BUFFER_DATA (buf), GST_BUFFER_SIZE (buf));
+      data0 = g_malloc0 (size);
+      memcpy (data0, data, size);
+      data = data0;
     }
   } else {
     GST_DEBUG_OBJECT (enc, "nothing to drain");
@@ -481,24 +471,20 @@ gst_celt_enc_encode (GstCeltEnc * enc, GstBuffer * buf)
     bytes_per_packet = (enc->max_bitrate * frame_size / enc->rate + 4) / 8;
   }
 
-  ret = gst_pad_alloc_buffer_and_set_caps (GST_AUDIO_ENCODER_SRC_PAD (enc),
-      GST_BUFFER_OFFSET_NONE, bytes_per_packet,
-      GST_PAD_CAPS (GST_AUDIO_ENCODER_SRC_PAD (enc)), &outbuf);
-
-  if (GST_FLOW_OK != ret)
-    goto done;
-
+  outbuf = gst_buffer_new_and_alloc (bytes_per_packet);
   GST_DEBUG_OBJECT (enc, "encoding %d samples (%d bytes)", frame_size, bytes);
+
+  gst_buffer_map (outbuf, &omap, GST_MAP_WRITE);
 
 #ifdef HAVE_CELT_0_8
   outsize =
-      celt_encode (enc->state, data, frame_size,
-      GST_BUFFER_DATA (outbuf), bytes_per_packet);
+      celt_encode (enc->state, data, frame_size, omap.data, bytes_per_packet);
 #else
-  outsize =
-      celt_encode (enc->state, data, NULL,
-      GST_BUFFER_DATA (outbuf), bytes_per_packet);
+  outsize = celt_encode (enc->state, data, NULL, omap.data, bytes_per_packet);
 #endif
+
+  gst_buffer_unmap (outbuf, &omap);
+  gst_buffer_unmap (buf, &map);
 
   if (outsize < 0) {
     GST_ELEMENT_ERROR (enc, STREAM, ENCODE, (NULL),
@@ -552,14 +538,14 @@ _gst_caps_set_buffer_array (GstCaps * caps, const gchar * field,
   va_start (va, buf);
   /* put buffers in a fixed list */
   while (buf) {
-    g_assert (gst_buffer_is_metadata_writable (buf));
+    g_assert (gst_buffer_is_writable (buf));
 
     /* mark buffer */
-    GST_BUFFER_FLAG_SET (buf, GST_BUFFER_FLAG_IN_CAPS);
+    GST_BUFFER_FLAG_SET (buf, GST_BUFFER_FLAG_HEADER);
 
     g_value_init (&value, GST_TYPE_BUFFER);
     buf = gst_buffer_copy (buf);
-    GST_BUFFER_FLAG_SET (buf, GST_BUFFER_FLAG_IN_CAPS);
+    GST_BUFFER_FLAG_SET (buf, GST_BUFFER_FLAG_HEADER);
     gst_value_set_buffer (&value, buf);
     gst_buffer_unref (buf);
     gst_value_array_append_value (&array, &value);
@@ -601,9 +587,7 @@ gst_celt_enc_handle_frame (GstAudioEncoder * benc, GstBuffer * buf)
       g_free (data);
       goto no_header;
     }
-    buf1 = gst_buffer_new ();
-    GST_BUFFER_DATA (buf1) = GST_BUFFER_MALLOCDATA (buf1) = data;
-    GST_BUFFER_SIZE (buf1) = header_size;
+    buf1 = gst_buffer_new_wrapped (data, header_size);
     GST_BUFFER_OFFSET_END (buf1) = 0;
     GST_BUFFER_OFFSET (buf1) = 0;
 
@@ -611,8 +595,7 @@ gst_celt_enc_handle_frame (GstAudioEncoder * benc, GstBuffer * buf)
     buf2 = gst_celt_enc_create_metadata_buffer (enc);
 
     /* mark and put on caps */
-    caps = gst_pad_get_caps (GST_AUDIO_ENCODER_SRC_PAD (enc));
-    gst_caps_set_simple (caps,
+    caps = gst_caps_new_simple ("audio/x-celt",
         "rate", G_TYPE_INT, enc->rate,
         "channels", G_TYPE_INT, enc->channels,
         "frame-size", G_TYPE_INT, enc->frame_size, NULL);
@@ -622,10 +605,7 @@ gst_celt_enc_handle_frame (GstAudioEncoder * benc, GstBuffer * buf)
     GST_DEBUG_OBJECT (enc, "here are the caps: %" GST_PTR_FORMAT, caps);
     GST_LOG_OBJECT (enc, "rate=%d channels=%d frame-size=%d",
         enc->rate, enc->channels, enc->frame_size);
-    gst_pad_set_caps (GST_AUDIO_ENCODER_SRC_PAD (enc), caps);
-
-    gst_buffer_set_caps (buf1, caps);
-    gst_buffer_set_caps (buf2, caps);
+    gst_audio_encoder_set_output_format (GST_AUDIO_ENCODER (enc), caps);
     gst_caps_unref (caps);
 
     /* push out buffers */
@@ -640,7 +620,7 @@ gst_celt_enc_handle_frame (GstAudioEncoder * benc, GstBuffer * buf)
   }
 
   GST_DEBUG_OBJECT (enc, "received buffer %p of %u bytes", buf,
-      buf ? GST_BUFFER_SIZE (buf) : 0);
+      buf ? gst_buffer_get_size (buf) : 0);
 
   ret = gst_celt_enc_encode (enc, buf);
 
@@ -663,10 +643,9 @@ gst_celt_enc_push_buffer (GstCeltEnc * enc, GstBuffer * buffer)
 {
   guint size;
 
-  size = GST_BUFFER_SIZE (buffer);
+  size = gst_buffer_get_size (buffer);
   GST_DEBUG_OBJECT (enc, "pushing output buffer of size %u", size);
 
-  gst_buffer_set_caps (buffer, GST_PAD_CAPS (GST_AUDIO_ENCODER_SRC_PAD (enc)));
   return gst_pad_push (GST_AUDIO_ENCODER_SRC_PAD (enc), buffer);
 }
 

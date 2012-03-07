@@ -57,6 +57,7 @@ GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS ("audio/x-raw, "
         "format = (string) " GST_AUDIO_NE (S16) ", "
+        "layout = (string) interleaved, "
         "rate = (int) [ 32000, 64000 ], " "channels = (int) [ 1, 2 ]")
     );
 
@@ -80,8 +81,10 @@ static GstFlowReturn gst_celt_dec_handle_frame (GstAudioDecoder * dec,
 static void
 gst_celt_dec_class_init (GstCeltDecClass * klass)
 {
+  GstElementClass *gstelement_class;
   GstAudioDecoderClass *gstbase_class;
 
+  gstelement_class = (GstElementClass *) klass;
   gstbase_class = (GstAudioDecoderClass *) klass;
 
   gstbase_class->start = GST_DEBUG_FUNCPTR (gst_celt_dec_start);
@@ -161,13 +164,16 @@ gst_celt_dec_stop (GstAudioDecoder * dec)
 static GstFlowReturn
 gst_celt_dec_parse_header (GstCeltDec * dec, GstBuffer * buf)
 {
-  GstCaps *caps;
   gint error = CELT_OK;
+  GstMapInfo map;
+  GstAudioInfo info;
 
   /* get the header */
+  gst_buffer_map (buf, &map, GST_MAP_READ);
   error =
-      celt_header_from_packet ((const unsigned char *) GST_BUFFER_DATA (buf),
-      GST_BUFFER_SIZE (buf), &dec->header);
+      celt_header_from_packet ((const unsigned char *) map.data,
+      map.size, &dec->header);
+  gst_buffer_unmap (buf, &map);
   if (error < 0)
     goto invalid_header;
 
@@ -206,21 +212,15 @@ gst_celt_dec_parse_header (GstCeltDec * dec, GstBuffer * buf)
   celt_mode_info (dec->mode, CELT_GET_FRAME_SIZE, &dec->frame_size);
 #endif
 
-  /* set caps */
-  caps = gst_caps_new_simple ("audio/x-raw-int",
-      "rate", G_TYPE_INT, dec->header.sample_rate,
-      "channels", G_TYPE_INT, dec->header.nb_channels,
-      "signed", G_TYPE_BOOLEAN, TRUE,
-      "endianness", G_TYPE_INT, G_BYTE_ORDER,
-      "width", G_TYPE_INT, 16, "depth", G_TYPE_INT, 16, NULL);
-
   GST_DEBUG_OBJECT (dec, "rate=%d channels=%d frame-size=%d",
       dec->header.sample_rate, dec->header.nb_channels, dec->frame_size);
 
-  if (!gst_pad_set_caps (GST_AUDIO_DECODER_SRC_PAD (dec), caps))
+  gst_audio_info_init (&info);
+  gst_audio_info_set_format (&info, GST_AUDIO_FORMAT_S16,
+      dec->header.sample_rate, dec->header.nb_channels, NULL);
+  if (!gst_audio_decoder_set_output_format (GST_AUDIO_DECODER (dec), &info))
     goto nego_failed;
 
-  gst_caps_unref (caps);
   return GST_FLOW_OK;
 
   /* ERRORS */
@@ -251,7 +251,6 @@ nego_failed:
   {
     GST_ELEMENT_ERROR (GST_ELEMENT (dec), STREAM, DECODE,
         (NULL), ("couldn't negotiate format"));
-    gst_caps_unref (caps);
     return GST_FLOW_NOT_NEGOTIATED;
   }
 }
@@ -266,7 +265,7 @@ gst_celt_dec_parse_comments (GstCeltDec * dec, GstBuffer * buf)
 
   if (!list) {
     GST_WARNING_OBJECT (dec, "couldn't decode comments");
-    list = gst_tag_list_new ();
+    list = gst_tag_list_new_empty ();
   }
 
   if (encoder) {
@@ -292,8 +291,8 @@ gst_celt_dec_parse_comments (GstCeltDec * dec, GstBuffer * buf)
 
   GST_INFO_OBJECT (dec, "tags: %" GST_PTR_FORMAT, list);
 
-  gst_element_found_tags_for_pad (GST_ELEMENT (dec),
-      GST_AUDIO_DECODER_SRC_PAD (dec), list);
+  gst_pad_push_event (GST_AUDIO_DECODER_SRC_PAD (dec),
+      gst_event_new_tag (list));
 
   g_free (encoder);
   g_free (ver);
@@ -311,13 +310,15 @@ gst_celt_dec_parse_data (GstCeltDec * dec, GstBuffer * buf)
   gint16 *out_data;
   gint error = CELT_OK;
   int skip = 0;
+  GstMapInfo map, omap;
 
   if (!dec->frame_size)
     goto not_negotiated;
 
-  if (G_LIKELY (GST_BUFFER_SIZE (buf))) {
-    data = GST_BUFFER_DATA (buf);
-    size = GST_BUFFER_SIZE (buf);
+  if (G_LIKELY (buf && gst_buffer_get_size (buf))) {
+    gst_buffer_map (buf, &map, GST_MAP_READ);
+    data = map.data;
+    size = map.size;
   } else {
     /* FIXME ? actually consider how much concealment is needed */
     /* concealment data, pass NULL as the bits parameters */
@@ -337,16 +338,10 @@ gst_celt_dec_parse_data (GstCeltDec * dec, GstBuffer * buf)
 #endif
   }
 
-  res = gst_pad_alloc_buffer_and_set_caps (GST_AUDIO_DECODER_SRC_PAD (dec),
-      GST_BUFFER_OFFSET_NONE, dec->frame_size * dec->header.nb_channels * 2,
-      GST_PAD_CAPS (GST_AUDIO_DECODER_SRC_PAD (dec)), &outbuf);
-
-  if (res != GST_FLOW_OK) {
-    GST_DEBUG_OBJECT (dec, "buf alloc flow: %s", gst_flow_get_name (res));
-    return res;
-  }
-
-  out_data = (gint16 *) GST_BUFFER_DATA (outbuf);
+  outbuf =
+      gst_buffer_new_and_alloc (dec->frame_size * dec->header.nb_channels * 2);
+  gst_buffer_map (outbuf, &omap, GST_MAP_WRITE);
+  out_data = (gint16 *) omap.data;
 
   GST_LOG_OBJECT (dec, "decoding frame");
 
@@ -355,6 +350,11 @@ gst_celt_dec_parse_data (GstCeltDec * dec, GstBuffer * buf)
 #else
   error = celt_decode (dec->state, data, size, out_data);
 #endif
+
+  gst_buffer_unmap (outbuf, &omap);
+  if (buf)
+    gst_buffer_unmap (buf, &map);
+
 #ifdef HAVE_CELT_0_11
   if (error < 0) {
 #else
@@ -366,10 +366,7 @@ gst_celt_dec_parse_data (GstCeltDec * dec, GstBuffer * buf)
 
   if (skip > 0) {
     GST_ERROR_OBJECT (dec, "skipping %d samples", skip);
-    GST_BUFFER_DATA (outbuf) = GST_BUFFER_DATA (outbuf) +
-        skip * dec->header.nb_channels * 2;
-    GST_BUFFER_SIZE (outbuf) = GST_BUFFER_SIZE (outbuf) -
-        skip * dec->header.nb_channels * 2;
+    gst_buffer_resize (outbuf, skip * dec->header.nb_channels * 2, -1);
   }
 
   res = gst_audio_decoder_finish_frame (GST_AUDIO_DECODER (dec), outbuf, 1);
@@ -443,6 +440,22 @@ done:
   return ret;
 }
 
+static gint
+_gst_buffer_memcmp (GstBuffer * buf1, GstBuffer * buf2)
+{
+  GstMapInfo map;
+  gint ret;
+
+  if (gst_buffer_get_size (buf1) == gst_buffer_get_size (buf2))
+    return 1;
+
+  gst_buffer_map (buf1, &map, GST_MAP_READ);
+  ret = gst_buffer_memcmp (buf2, 0, map.data, map.size);
+  gst_buffer_unmap (buf1, &map);
+
+  return ret;
+}
+
 static GstFlowReturn
 gst_celt_dec_handle_frame (GstAudioDecoder * bdec, GstBuffer * buf)
 {
@@ -458,15 +471,11 @@ gst_celt_dec_handle_frame (GstAudioDecoder * bdec, GstBuffer * buf)
   /* If we have the streamheader and vorbiscomment from the caps already
    * ignore them here */
   if (dec->streamheader && dec->vorbiscomment) {
-    if (GST_BUFFER_SIZE (dec->streamheader) == GST_BUFFER_SIZE (buf)
-        && memcmp (GST_BUFFER_DATA (dec->streamheader), GST_BUFFER_DATA (buf),
-            GST_BUFFER_SIZE (buf)) == 0) {
+    if (_gst_buffer_memcmp (dec->streamheader, buf) == 0) {
       GST_DEBUG_OBJECT (dec, "found streamheader");
       gst_audio_decoder_finish_frame (bdec, NULL, 1);
       res = GST_FLOW_OK;
-    } else if (GST_BUFFER_SIZE (dec->vorbiscomment) == GST_BUFFER_SIZE (buf)
-        && memcmp (GST_BUFFER_DATA (dec->vorbiscomment), GST_BUFFER_DATA (buf),
-            GST_BUFFER_SIZE (buf)) == 0) {
+    } else if (_gst_buffer_memcmp (dec->vorbiscomment, buf) == 0) {
       GST_DEBUG_OBJECT (dec, "found vorbiscomments");
       gst_audio_decoder_finish_frame (bdec, NULL, 1);
       res = GST_FLOW_OK;
@@ -475,9 +484,7 @@ gst_celt_dec_handle_frame (GstAudioDecoder * bdec, GstBuffer * buf)
 
       for (l = dec->extra_headers; l; l = l->next) {
         GstBuffer *header = l->data;
-        if (GST_BUFFER_SIZE (header) == GST_BUFFER_SIZE (buf) &&
-            memcmp (GST_BUFFER_DATA (header), GST_BUFFER_DATA (buf),
-                GST_BUFFER_SIZE (buf)) == 0) {
+        if (_gst_buffer_memcmp (header, buf) == 0) {
           GST_DEBUG_OBJECT (dec, "found extra header buffer");
           gst_audio_decoder_finish_frame (bdec, NULL, 1);
           res = GST_FLOW_OK;
