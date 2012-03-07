@@ -30,6 +30,7 @@ GstStaticPadTemplate alaw_dec_src_factory = GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS ("audio/x-raw, "
         "format = (string) " GST_AUDIO_NE (S16) ", "
+        "layout = (string) interleaved, "
         "rate = (int) [ 8000, 192000 ], " "channels = (int) [ 1, 2 ]")
     );
 
@@ -45,6 +46,7 @@ GstStaticPadTemplate alaw_enc_sink_factory = GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS ("audio/x-raw, "
         "format = (string) " GST_AUDIO_NE (S16) ", "
+        "layout = (string) interleaved, "
         "rate = (int) [ 8000, 192000 ], " "channels = (int) [ 1, 2 ]")
     );
 

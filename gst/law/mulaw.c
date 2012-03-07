@@ -33,6 +33,7 @@ GstStaticPadTemplate mulaw_dec_src_factory = GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS ("audio/x-raw, "
         "format = (string) " INT_FORMAT ", "
+        "layout = (string) interleaved, "
         "rate = (int) [ 8000, 192000 ], " "channels = (int) [ 1, 2 ]")
     );
 
@@ -48,6 +49,7 @@ GstStaticPadTemplate mulaw_enc_sink_factory = GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS ("audio/x-raw, "
         "format = (string) " INT_FORMAT ", "
+        "layout = (string) interleaved, "
         "rate = (int) [ 8000, 192000 ], " "channels = (int) [ 1, 2 ]")
     );
 
