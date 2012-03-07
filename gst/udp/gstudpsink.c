@@ -38,7 +38,7 @@
 #include "gstudpsink.h"
 
 #define UDP_DEFAULT_HOST        "localhost"
-#define UDP_DEFAULT_PORT        4951
+#define UDP_DEFAULT_PORT        5004
 
 /* UDPSink signals and args */
 enum

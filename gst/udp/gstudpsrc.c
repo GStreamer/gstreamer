@@ -120,7 +120,7 @@ static GstStaticPadTemplate src_template = GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS_ANY);
 
-#define UDP_DEFAULT_PORT                4951
+#define UDP_DEFAULT_PORT                5004
 #define UDP_DEFAULT_MULTICAST_GROUP     "0.0.0.0"
 #define UDP_DEFAULT_MULTICAST_IFACE     NULL
 #define UDP_DEFAULT_URI                 "udp://"UDP_DEFAULT_MULTICAST_GROUP":"G_STRINGIFY(UDP_DEFAULT_PORT)
