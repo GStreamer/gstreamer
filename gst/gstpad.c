@@ -454,6 +454,7 @@ schedule_events (GstPad * srcpad, GstPad * sinkpad)
 typedef gboolean (*PadEventFunction) (GstPad * pad, PadEvent * ev,
     gpointer user_data);
 
+/* should be called with pad LOCK */
 static void
 events_foreach (GstPad * pad, PadEventFunction func, gpointer user_data)
 {
@@ -2268,14 +2269,12 @@ gst_pad_set_caps (GstPad * pad, GstCaps * caps)
 GstCaps *
 gst_pad_get_pad_template_caps (GstPad * pad)
 {
-  static GstStaticCaps anycaps = GST_STATIC_CAPS ("ANY");
-
   g_return_val_if_fail (GST_IS_PAD (pad), NULL);
 
   if (GST_PAD_PAD_TEMPLATE (pad))
     return gst_pad_template_get_caps (GST_PAD_PAD_TEMPLATE (pad));
 
-  return gst_static_caps_get (&anycaps);
+  return gst_caps_ref (GST_CAPS_ANY);
 }
 
 /**
