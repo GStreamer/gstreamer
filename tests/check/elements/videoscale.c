@@ -45,6 +45,7 @@ videoscale_get_allowed_caps_for_method (int method)
   gst_object_unref (pad);
   gst_object_unref (scale);
 
+  caps = gst_caps_normalize (caps);
   n = gst_caps_get_size (caps);
   ret = g_new0 (GstCaps *, n + 1);
 
