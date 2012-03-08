@@ -89,6 +89,7 @@ REGISTRY_CHECKS =				\
 	libs/basesink				\
 	libs/controller				\
 	libs/typefindhelper			\
+	pipelines/seek				\
 	pipelines/stress			\
 	pipelines/queue-error
 endif
