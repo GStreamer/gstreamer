@@ -909,7 +909,7 @@ videoscale_suite (void)
   tcase_add_test (tc_chain, test_downscale_640x480_1x240_method_0);
   tcase_add_test (tc_chain, test_downscale_640x480_1x240_method_1);
   tcase_add_test (tc_chain, test_downscale_640x480_1x240_method_2);
-  tcase_add_test (tc_chain, test_downscale_640x480_1x240_method_3);
+  tcase_skip_broken_test (tc_chain, test_downscale_640x480_1x240_method_3);
   tcase_add_test (tc_chain, test_upscale_1x240_640x480_method_0);
   tcase_add_test (tc_chain, test_upscale_1x240_640x480_method_1);
   tcase_add_test (tc_chain, test_upscale_1x240_640x480_method_2);
