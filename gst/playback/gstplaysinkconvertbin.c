@@ -194,6 +194,7 @@ gst_play_sink_convert_bin_remove_element (GstElement * element,
     GstPlaySinkConvertBin * self)
 {
   gst_element_set_state (element, GST_STATE_NULL);
+  gst_object_unref (element);
   gst_bin_remove (GST_BIN_CAST (self), element);
 }
 
