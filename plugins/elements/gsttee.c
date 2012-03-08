@@ -795,7 +795,7 @@ gst_tee_src_activate_mode (GstPad * pad, GstObject * parent, GstPadMode mode,
         if (pad == tee->pull_pad)
           tee->pull_pad = NULL;
       }
-      tee->sink_mode = active & GST_PAD_MODE_PULL;
+      tee->sink_mode = (active ? GST_PAD_MODE_PULL : GST_PAD_MODE_NONE);
       GST_OBJECT_UNLOCK (tee);
       break;
     }
@@ -803,6 +803,10 @@ gst_tee_src_activate_mode (GstPad * pad, GstObject * parent, GstPadMode mode,
       res = TRUE;
       break;
   }
+  GST_OBJECT_UNLOCK (tee);
+
+  gst_object_unref (tee);
+
   return res;
 
   /* ERRORS */
