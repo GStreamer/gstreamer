@@ -101,7 +101,7 @@ GST_START_TEST (test_autovideoconvert_rbg2bayer)
 
   pipeline =
       g_strdup_printf
-      ("videotestsrc num-buffers=1 ! video/x-raw,format=ARGB,depth=32,width=100,height=100,framerate=10/1 ! autovideoconvert ! video/x-raw-bayer,width=100,height=100,format=bggr,framerate=10/1 ! fakesink");
+      ("videotestsrc num-buffers=1 ! video/x-raw,format=ARGB,depth=32,width=100,height=100,framerate=10/1 ! autovideoconvert ! video/x-bayer,width=100,height=100,format=bggr,framerate=10/1 ! fakesink");
 
   run_test (pipeline);
   g_free (pipeline);

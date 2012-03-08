@@ -39,8 +39,8 @@
 #define CAPTURE_COUNT 3
 #define VIDEO_DURATION 5
 
-#define VIDEO_PAD_SUPPORTED_CAPS "video/x-raw, format=rgb, width=600, height=480"
-#define IMAGE_PAD_SUPPORTED_CAPS "video/x-raw, format=rgb, width=800, height=600"
+#define VIDEO_PAD_SUPPORTED_CAPS "video/x-raw, format=RGB, width=600, height=480"
+#define IMAGE_PAD_SUPPORTED_CAPS "video/x-raw, format=RGB, width=800, height=600"
 
 /* custom test camera src element */
 #define GST_TYPE_TEST_CAMERA_SRC \
@@ -390,10 +390,10 @@ setup_wrappercamerabinsrc_videotestsrc (void)
   testsrc = gst_element_factory_make ("videotestsrc", NULL);
   audiosrc = gst_element_factory_make ("audiotestsrc", NULL);
 
-  preview_caps = gst_caps_new_simple ("video/x-raw-rgb", "width", G_TYPE_INT,
+  preview_caps = gst_caps_new_simple ("video/x-raw", "width", G_TYPE_INT,
       320, "height", G_TYPE_INT, 240, NULL);
 
-  g_object_set (G_OBJECT (testsrc), "is-live", TRUE, "peer-alloc", FALSE, NULL);
+  g_object_set (G_OBJECT (testsrc), "is-live", TRUE, NULL);
   g_object_set (G_OBJECT (audiosrc), "is-live", TRUE, NULL);
   g_object_set (G_OBJECT (src), "video-source", testsrc, NULL);
   g_object_set (G_OBJECT (camera), "camera-source", src, "preview-caps",
@@ -739,7 +739,7 @@ GST_START_TEST (test_multiple_image_captures)
     GstMessage *msg;
     GstCaps *caps;
 
-    caps = gst_caps_new_simple ("video/x-raw-rgb", "width", G_TYPE_INT,
+    caps = gst_caps_new_simple ("video/x-raw", "width", G_TYPE_INT,
         widths[i], "height", G_TYPE_INT, heights[i], NULL);
 
     g_object_set (camera, "image-capture-caps", caps, NULL);
@@ -845,7 +845,7 @@ GST_START_TEST (test_multiple_video_recordings)
     GstMessage *msg;
     GstCaps *caps;
 
-    caps = gst_caps_new_simple ("video/x-raw-rgb", "width", G_TYPE_INT,
+    caps = gst_caps_new_simple ("video/x-raw", "width", G_TYPE_INT,
         widths[i], "height", G_TYPE_INT, heights[i], "framerate",
         GST_TYPE_FRACTION, fr[i], 1, NULL);
 
@@ -982,7 +982,7 @@ GST_START_TEST (test_image_capture_previews)
     GstMessage *msg;
     GstCaps *caps;
 
-    caps = gst_caps_new_simple ("video/x-raw-rgb", "width", G_TYPE_INT,
+    caps = gst_caps_new_simple ("video/x-raw", "width", G_TYPE_INT,
         widths[i], "height", G_TYPE_INT, heights[i], NULL);
 
     g_object_set (camera, "preview-caps", caps, NULL);
@@ -1474,7 +1474,7 @@ GST_START_TEST (test_image_location_switching)
 
   /* set still image mode */
   g_object_set (camera, "mode", 1, NULL);
-  caps = gst_caps_new_simple ("video/x-raw-rgb", "width", G_TYPE_INT,
+  caps = gst_caps_new_simple ("video/x-raw", "width", G_TYPE_INT,
       800, "height", G_TYPE_INT, 600, NULL);
   g_object_set (camera, "image-capture-caps", caps, NULL);
   gst_caps_unref (caps);

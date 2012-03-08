@@ -228,8 +228,7 @@ GST_START_TEST (test_opus_encode_samples)
   ASSERT_BUFFER_REFCOUNT (inbuffer, "inbuffer", 1);
 
   caps =
-      gst_caps_from_string
-      ("audio/x-raw-int,rate=48000,channels=1,signed=true,width=16,depth=16,endianness=1234");
+      gst_caps_from_string ("audio/x-raw,format=S16LE,rate=48000,channels=1");
   fail_unless (caps != NULL);
   gst_buffer_set_caps (inbuffer, caps);
   gst_caps_unref (caps);
@@ -301,8 +300,7 @@ GST_START_TEST (test_opus_encode_properties)
       "could not set to playing");
 
   caps =
-      gst_caps_from_string
-      ("audio/x-raw-int,rate=48000,channels=1,signed=true,width=16,depth=16,endianness=1234");
+      gst_caps_from_string ("audio/x-raw,format=S16LE,rate=48000,channels=1");
   fail_unless (caps != NULL);
 
   for (step = 0; step < steps; ++step) {
