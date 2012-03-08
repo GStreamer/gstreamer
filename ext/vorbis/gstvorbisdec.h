@@ -64,8 +64,6 @@ struct _GstVorbisDec {
   gboolean          initialized;
   GstAudioInfo      info;
 
-  GstTagList       *taglist;
-
   CopySampleFunc    copy_samples;
 };
 

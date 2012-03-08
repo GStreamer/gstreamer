@@ -41,6 +41,8 @@ G_BEGIN_DECLS
   (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_AUDIO_DECODER))
 #define GST_IS_AUDIO_DECODER_CLASS(obj) \
   (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_AUDIO_DECODER))
+#define GST_AUDIO_DECODER_CAST(obj) \
+  ((GstAudioDecoder *)(obj))
 
 /**
  * GST_AUDIO_DECODER_SINK_NAME:
@@ -305,6 +307,9 @@ void              gst_audio_decoder_set_needs_format (GstAudioDecoder * dec,
                                                       gboolean enabled);
 
 gboolean          gst_audio_decoder_get_needs_format (GstAudioDecoder * dec);
+
+void              gst_audio_decoder_merge_tags (GstAudioDecoder * dec,
+                                                const GstTagList * tags, GstTagMergeMode mode);
 
 G_END_DECLS
 

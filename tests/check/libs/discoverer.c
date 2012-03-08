@@ -142,6 +142,46 @@ GST_START_TEST (test_disco_sync_reuse_timeout)
 
 GST_END_TEST;
 
+GST_START_TEST (test_disco_missing_plugins)
+{
+  const gchar *files[] = { "test.mkv", "test.mp3", "partialframe.mjpeg" };
+  GError *err = NULL;
+  GstDiscoverer *dc;
+  GstDiscovererInfo *info;
+  GstDiscovererResult result;
+  gchar *uri, *path;
+  int i;
+
+  for (i = 0; i < G_N_ELEMENTS (files); ++i) {
+    dc = gst_discoverer_new (5 * GST_SECOND, &err);
+    fail_unless (dc != NULL);
+    fail_unless (err == NULL);
+
+    /* GST_TEST_FILE comes from makefile CFLAGS */
+    path = g_build_filename (GST_TEST_FILES_PATH, files[i], NULL);
+    uri = gst_filename_to_uri (path, &err);
+    g_free (path);
+    fail_unless (err == NULL);
+
+    GST_INFO ("discovering uri '%s'", uri);
+    info = gst_discoverer_discover_uri (dc, uri, &err);
+    fail_unless (info != NULL);
+    fail_unless (err != NULL);
+    result = gst_discoverer_info_get_result (info);
+    GST_INFO ("result: %d, error message: %s", result, err->message);
+    fail_unless_equals_int (result, GST_DISCOVERER_MISSING_PLUGINS);
+    GST_INFO ("misc: %" GST_PTR_FORMAT, gst_discoverer_info_get_misc (info));
+
+    gst_discoverer_info_unref (info);
+    g_error_free (err);
+    err = NULL;
+    g_free (uri);
+    g_object_unref (dc);
+  }
+}
+
+GST_END_TEST;
+
 static Suite *
 discoverer_suite (void)
 {
@@ -154,6 +194,7 @@ discoverer_suite (void)
   tcase_add_test (tc_chain, test_disco_sync_reuse_ogg);
   tcase_add_test (tc_chain, test_disco_sync_reuse_mp3);
   tcase_add_test (tc_chain, test_disco_sync_reuse_timeout);
+  tcase_add_test (tc_chain, test_disco_missing_plugins);
   return s;
 }
 

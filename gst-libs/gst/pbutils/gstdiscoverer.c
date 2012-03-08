@@ -1157,8 +1157,15 @@ handle_message (GstDiscoverer * dc, GstMessage * msg)
       /* We need to stop */
       done = TRUE;
 
-      GST_DEBUG ("Setting result to ERROR");
-      dc->priv->current_info->result = GST_DISCOVERER_ERROR;
+      /* Don't override missing plugin result code for missing plugin errors */
+      if (dc->priv->current_info->result != GST_DISCOVERER_MISSING_PLUGINS ||
+          (!g_error_matches (gerr, GST_CORE_ERROR,
+                  GST_CORE_ERROR_MISSING_PLUGIN) &&
+              !g_error_matches (gerr, GST_STREAM_ERROR,
+                  GST_STREAM_ERROR_CODEC_NOT_FOUND))) {
+        GST_DEBUG ("Setting result to ERROR");
+        dc->priv->current_info->result = GST_DISCOVERER_ERROR;
+      }
     }
       break;
 

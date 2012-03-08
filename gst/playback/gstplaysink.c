@@ -2252,8 +2252,10 @@ setup_audio_chain (GstPlaySink * playsink, gboolean raw)
   GstElement *elem;
   GstPlayAudioChain *chain;
   GstStateChangeReturn ret;
+  GstPlaySinkAudioConvert *conv;
 
   chain = playsink->audiochain;
+  conv = GST_PLAY_SINK_AUDIO_CONVERT_CAST (chain->conv);
 
   chain->chain.raw = raw;
 
@@ -2302,10 +2304,7 @@ setup_audio_chain (GstPlaySink * playsink, gboolean raw)
     }
 
     g_object_set (chain->conv, "use-volume", FALSE, NULL);
-  } else {
-    GstPlaySinkAudioConvert *conv =
-        GST_PLAY_SINK_AUDIO_CONVERT_CAST (chain->conv);
-
+  } else if (conv) {
     /* no volume, we need to add a volume element when we can */
     g_object_set (chain->conv, "use-volume",
         ! !(playsink->flags & GST_PLAY_FLAG_SOFT_VOLUME), NULL);
@@ -3737,6 +3736,9 @@ gst_play_sink_handle_message (GstBin * bin, GstMessage * message)
         gst_object_unref (overlay);
         gst_message_unref (message);
         gst_video_overlay_prepare_window_handle (GST_VIDEO_OVERLAY (playsink));
+      } else {
+        GST_BIN_CLASS (gst_play_sink_parent_class)->handle_message (bin,
+            message);
       }
       break;
     }

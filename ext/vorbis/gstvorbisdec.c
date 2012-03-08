@@ -124,14 +124,6 @@ vorbis_dec_finalize (GObject * object)
   G_OBJECT_CLASS (parent_class)->finalize (object);
 }
 
-static void
-gst_vorbis_dec_reset (GstVorbisDec * dec)
-{
-  if (dec->taglist)
-    gst_tag_list_free (dec->taglist);
-  dec->taglist = NULL;
-}
-
 static gboolean
 vorbis_dec_start (GstAudioDecoder * dec)
 {
@@ -141,7 +133,6 @@ vorbis_dec_start (GstAudioDecoder * dec)
   vorbis_info_init (&vd->vi);
   vorbis_comment_init (&vd->vc);
   vd->initialized = FALSE;
-  gst_vorbis_dec_reset (vd);
 
   return TRUE;
 }
@@ -159,7 +150,6 @@ vorbis_dec_stop (GstAudioDecoder * dec)
   vorbis_dsp_clear (&vd->vd);
   vorbis_comment_clear (&vd->vc);
   vorbis_info_clear (&vd->vi);
-  gst_vorbis_dec_reset (vd);
 
   return TRUE;
 }
@@ -216,7 +206,7 @@ vorbis_handle_comment_packet (GstVorbisDec * vd, ogg_packet * packet)
 {
   guint bitrate = 0;
   gchar *encoder = NULL;
-  GstTagList *list, *old_list;
+  GstTagList *list;
   guint8 *data;
   gsize size;
 
@@ -229,57 +219,51 @@ vorbis_handle_comment_packet (GstVorbisDec * vd, ogg_packet * packet)
       gst_tag_list_from_vorbiscomment (data, size, (guint8 *) "\003vorbis", 7,
       &encoder);
 
-  old_list = vd->taglist;
-  vd->taglist = gst_tag_list_merge (vd->taglist, list, GST_TAG_MERGE_REPLACE);
-
-  if (old_list)
-    gst_tag_list_free (old_list);
-  gst_tag_list_free (list);
-
-  if (!vd->taglist) {
+  if (!list) {
     GST_ERROR_OBJECT (vd, "couldn't decode comments");
-    vd->taglist = gst_tag_list_new_empty ();
+    list = gst_tag_list_new ();
   }
+
   if (encoder) {
     if (encoder[0])
-      gst_tag_list_add (vd->taglist, GST_TAG_MERGE_REPLACE,
+      gst_tag_list_add (list, GST_TAG_MERGE_REPLACE,
           GST_TAG_ENCODER, encoder, NULL);
     g_free (encoder);
   }
-  gst_tag_list_add (vd->taglist, GST_TAG_MERGE_REPLACE,
+  gst_tag_list_add (list, GST_TAG_MERGE_REPLACE,
       GST_TAG_ENCODER_VERSION, vd->vi.version,
       GST_TAG_AUDIO_CODEC, "Vorbis", NULL);
   if (vd->vi.bitrate_nominal > 0 && vd->vi.bitrate_nominal <= 0x7FFFFFFF) {
-    gst_tag_list_add (vd->taglist, GST_TAG_MERGE_REPLACE,
+    gst_tag_list_add (list, GST_TAG_MERGE_REPLACE,
         GST_TAG_NOMINAL_BITRATE, (guint) vd->vi.bitrate_nominal, NULL);
     bitrate = vd->vi.bitrate_nominal;
   }
   if (vd->vi.bitrate_upper > 0 && vd->vi.bitrate_upper <= 0x7FFFFFFF) {
-    gst_tag_list_add (vd->taglist, GST_TAG_MERGE_REPLACE,
+    gst_tag_list_add (list, GST_TAG_MERGE_REPLACE,
         GST_TAG_MAXIMUM_BITRATE, (guint) vd->vi.bitrate_upper, NULL);
     if (!bitrate)
       bitrate = vd->vi.bitrate_upper;
   }
   if (vd->vi.bitrate_lower > 0 && vd->vi.bitrate_lower <= 0x7FFFFFFF) {
-    gst_tag_list_add (vd->taglist, GST_TAG_MERGE_REPLACE,
+    gst_tag_list_add (list, GST_TAG_MERGE_REPLACE,
         GST_TAG_MINIMUM_BITRATE, (guint) vd->vi.bitrate_lower, NULL);
     if (!bitrate)
       bitrate = vd->vi.bitrate_lower;
   }
   if (bitrate) {
-    gst_tag_list_add (vd->taglist, GST_TAG_MERGE_REPLACE,
+    gst_tag_list_add (list, GST_TAG_MERGE_REPLACE,
         GST_TAG_BITRATE, (guint) bitrate, NULL);
   }
 
+  gst_audio_decoder_merge_tags (GST_AUDIO_DECODER_CAST (vd), list,
+      GST_TAG_MERGE_REPLACE);
   if (vd->initialized) {
-    gst_pad_push_event (GST_AUDIO_DECODER_SRC_PAD (vd),
-        gst_event_new_tag (vd->taglist));
-    vd->taglist = NULL;
+    gst_tag_list_free (list);
   } else {
     /* Only post them as messages for the time being. *
      * They will be pushed on the pad once the decoder is initialized */
     gst_element_post_message (GST_ELEMENT_CAST (vd),
-        gst_message_new_tag (GST_OBJECT (vd), gst_tag_list_copy (vd->taglist)));
+        gst_message_new_tag (GST_OBJECT (vd), list));
   }
 
   return GST_FLOW_OK;
@@ -305,12 +289,6 @@ vorbis_handle_type_packet (GstVorbisDec * vd)
 
   vd->initialized = TRUE;
 
-  if (vd->taglist) {
-    /* The tags have already been sent on the bus as messages. */
-    gst_pad_push_event (GST_AUDIO_DECODER_SRC_PAD (vd),
-        gst_event_new_tag (vd->taglist));
-    vd->taglist = NULL;
-  }
   return GST_FLOW_OK;
 
   /* ERRORS */
@@ -650,7 +628,4 @@ vorbis_dec_flush (GstAudioDecoder * dec, gboolean hard)
 #ifdef HAVE_VORBIS_SYNTHESIS_RESTART
   vorbis_synthesis_restart (&vd->vd);
 #endif
-
-  if (hard)
-    gst_vorbis_dec_reset (vd);
 }
