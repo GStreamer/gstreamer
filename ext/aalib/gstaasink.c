@@ -40,6 +40,7 @@
 #include <string.h>
 #include <sys/time.h>
 
+#include <gst/video/gstvideometa.h>
 #include "gstaasink.h"
 
 /* aasink signals and args */
@@ -75,7 +76,9 @@ static void gst_aasink_fixate (GstBaseSink * bsink, GstCaps * caps);
 static gboolean gst_aasink_setcaps (GstBaseSink * bsink, GstCaps * caps);
 static void gst_aasink_get_times (GstBaseSink * bsink, GstBuffer * buffer,
     GstClockTime * start, GstClockTime * end);
-static GstFlowReturn gst_aasink_render (GstBaseSink * basesink,
+static gboolean gst_aasink_propose_allocation (GstBaseSink * bsink,
+    GstQuery * query);
+static GstFlowReturn gst_aasink_show_frame (GstVideoSink * videosink,
     GstBuffer * buffer);
 
 static void gst_aasink_set_property (GObject * object, guint prop_id,
@@ -87,7 +90,7 @@ static GstStateChangeReturn gst_aasink_change_state (GstElement * element,
     GstStateChange transition);
 
 #define gst_aasink_parent_class parent_class
-G_DEFINE_TYPE (GstAASink, gst_aasink, GST_TYPE_BASE_SINK);
+G_DEFINE_TYPE (GstAASink, gst_aasink, GST_TYPE_VIDEO_SINK);
 
 #define GST_TYPE_AADRIVERS (gst_aasink_drivers_get_type())
 static GType
@@ -160,10 +163,12 @@ gst_aasink_class_init (GstAASinkClass * klass)
   GObjectClass *gobject_class;
   GstElementClass *gstelement_class;
   GstBaseSinkClass *gstbasesink_class;
+  GstVideoSinkClass *gstvideosink_class;
 
   gobject_class = (GObjectClass *) klass;
   gstelement_class = (GstElementClass *) klass;
   gstbasesink_class = (GstBaseSinkClass *) klass;
+  gstvideosink_class = (GstVideoSinkClass *) klass;
 
   gobject_class->set_property = gst_aasink_set_property;
   gobject_class->get_property = gst_aasink_get_property;
@@ -216,8 +221,10 @@ gst_aasink_class_init (GstAASinkClass * klass)
   gstbasesink_class->fixate = GST_DEBUG_FUNCPTR (gst_aasink_fixate);
   gstbasesink_class->set_caps = GST_DEBUG_FUNCPTR (gst_aasink_setcaps);
   gstbasesink_class->get_times = GST_DEBUG_FUNCPTR (gst_aasink_get_times);
-  gstbasesink_class->preroll = GST_DEBUG_FUNCPTR (gst_aasink_render);
-  gstbasesink_class->render = GST_DEBUG_FUNCPTR (gst_aasink_render);
+  gstbasesink_class->propose_allocation =
+      GST_DEBUG_FUNCPTR (gst_aasink_propose_allocation);
+
+  gstvideosink_class->show_frame = GST_DEBUG_FUNCPTR (gst_aasink_show_frame);
 }
 
 static void
@@ -317,15 +324,53 @@ gst_aasink_get_times (GstBaseSink * sink, GstBuffer * buffer,
     *end = *start + GST_BUFFER_DURATION (buffer);
 }
 
+static gboolean
+gst_aasink_propose_allocation (GstBaseSink * bsink, GstQuery * query)
+{
+  GstCaps *caps;
+  GstVideoInfo info;
+  guint size;
+
+  gst_query_parse_allocation (query, &caps, NULL);
+
+  if (caps == NULL)
+    goto no_caps;
+
+  if (!gst_video_info_from_caps (&info, caps))
+    goto invalid_caps;
+
+  size = GST_VIDEO_INFO_SIZE (&info);
+
+  /* we need at least 2 buffer because we hold on to the last one */
+  gst_query_set_allocation_params (query, size, 2, 0, 0, 0, NULL);
+
+  /* we support various metadata */
+  gst_query_add_allocation_meta (query, GST_VIDEO_META_API_TYPE);
+
+  return TRUE;
+
+  /* ERRORS */
+no_caps:
+  {
+    GST_DEBUG_OBJECT (bsink, "no caps specified");
+    return FALSE;
+  }
+invalid_caps:
+  {
+    GST_DEBUG_OBJECT (bsink, "invalid caps specified");
+    return FALSE;
+  }
+}
+
 static GstFlowReturn
-gst_aasink_render (GstBaseSink * basesink, GstBuffer * buffer)
+gst_aasink_show_frame (GstVideoSink * videosink, GstBuffer * buffer)
 {
   GstAASink *aasink;
   GstVideoFrame frame;
 
-  aasink = GST_AASINK (basesink);
+  aasink = GST_AASINK (videosink);
 
-  GST_DEBUG ("render");
+  GST_DEBUG ("show frame");
 
   if (!gst_video_frame_map (&frame, &aasink->info, buffer, GST_MAP_READ))
     goto invalid_frame;

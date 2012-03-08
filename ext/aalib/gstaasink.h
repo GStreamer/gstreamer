@@ -22,8 +22,8 @@
 #define __GST_AASINK_H__
 
 #include <gst/gst.h>
-#include <gst/base/gstbasesink.h>
 #include <gst/video/video.h>
+#include <gst/video/gstvideosink.h>
 
 #include <aalib.h>
 
@@ -47,7 +47,7 @@ typedef struct _GstAASink GstAASink;
 typedef struct _GstAASinkClass GstAASinkClass;
 
 struct _GstAASink {
-  GstBaseSink parent;
+  GstVideoSink parent;
 
   GstVideoInfo info;
 
@@ -62,7 +62,7 @@ struct _GstAASink {
 };
 
 struct _GstAASinkClass {
-  GstBaseSinkClass parent_class;
+  GstVideoSinkClass parent_class;
 };
 
 GType gst_aasink_get_type(void);
