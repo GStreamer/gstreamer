@@ -395,43 +395,40 @@ GST_START_TEST (test_cropping)
     s = gst_caps_get_structure (caps, 0);
     fail_unless (s != NULL);
 
-    /* videotestsrc does not support this format, so ignore it */
-    if (!g_str_equal (gst_structure_get_name (s), "video/x-raw-gray")) {
-      GST_INFO ("testing format: %" GST_PTR_FORMAT, caps);
+    GST_INFO ("testing format: %" GST_PTR_FORMAT, caps);
 
-      for (i = 0; i < G_N_ELEMENTS (sizes_to_try); ++i) {
-        GstCaps *in_caps;
+    for (i = 0; i < G_N_ELEMENTS (sizes_to_try); ++i) {
+      GstCaps *in_caps;
 
-        GST_INFO (" - %d x %d", sizes_to_try[i].width, sizes_to_try[i].height);
+      GST_INFO (" - %d x %d", sizes_to_try[i].width, sizes_to_try[i].height);
 
-        gst_structure_set (s, "width", G_TYPE_INT, sizes_to_try[i].width,
-            "height", G_TYPE_INT, sizes_to_try[i].height, NULL);
-        in_caps = gst_caps_copy (caps);
+      gst_structure_set (s, "width", G_TYPE_INT, sizes_to_try[i].width,
+          "height", G_TYPE_INT, sizes_to_try[i].height, NULL);
+      in_caps = gst_caps_copy (caps);
 
-        videocrop_test_cropping (&ctx, in_caps, 0, 0, 0, 0, NULL);
-        videocrop_test_cropping (&ctx, in_caps, 1, 0, 0, 0, NULL);
-        videocrop_test_cropping (&ctx, in_caps, 0, 1, 0, 0, NULL);
-        videocrop_test_cropping (&ctx, in_caps, 0, 0, 1, 0, NULL);
-        videocrop_test_cropping (&ctx, in_caps, 0, 0, 0, 1, NULL);
-        videocrop_test_cropping (&ctx, in_caps, 63, 0, 0, 0, NULL);
-        videocrop_test_cropping (&ctx, in_caps, 0, 63, 0, 0, NULL);
-        videocrop_test_cropping (&ctx, in_caps, 0, 0, 63, 0, NULL);
-        videocrop_test_cropping (&ctx, in_caps, 0, 0, 0, 63, NULL);
-        videocrop_test_cropping (&ctx, in_caps, 63, 0, 0, 1, NULL);
-        videocrop_test_cropping (&ctx, in_caps, 0, 63, 1, 0, NULL);
-        videocrop_test_cropping (&ctx, in_caps, 0, 1, 63, 0, NULL);
-        videocrop_test_cropping (&ctx, in_caps, 1, 0, 0, 63, NULL);
-        videocrop_test_cropping (&ctx, in_caps, 0, 0, 0, 0, NULL);
-        videocrop_test_cropping (&ctx, in_caps, 32, 0, 0, 128, NULL);
-        videocrop_test_cropping (&ctx, in_caps, 0, 32, 128, 0, NULL);
-        videocrop_test_cropping (&ctx, in_caps, 0, 128, 32, 0, NULL);
-        videocrop_test_cropping (&ctx, in_caps, 128, 0, 0, 32, NULL);
-        videocrop_test_cropping (&ctx, in_caps, 1, 1, 1, 1, NULL);
-        videocrop_test_cropping (&ctx, in_caps, 63, 63, 63, 63, NULL);
-        videocrop_test_cropping (&ctx, in_caps, 64, 64, 64, 64, NULL);
+      videocrop_test_cropping (&ctx, in_caps, 0, 0, 0, 0, NULL);
+      videocrop_test_cropping (&ctx, in_caps, 1, 0, 0, 0, NULL);
+      videocrop_test_cropping (&ctx, in_caps, 0, 1, 0, 0, NULL);
+      videocrop_test_cropping (&ctx, in_caps, 0, 0, 1, 0, NULL);
+      videocrop_test_cropping (&ctx, in_caps, 0, 0, 0, 1, NULL);
+      videocrop_test_cropping (&ctx, in_caps, 63, 0, 0, 0, NULL);
+      videocrop_test_cropping (&ctx, in_caps, 0, 63, 0, 0, NULL);
+      videocrop_test_cropping (&ctx, in_caps, 0, 0, 63, 0, NULL);
+      videocrop_test_cropping (&ctx, in_caps, 0, 0, 0, 63, NULL);
+      videocrop_test_cropping (&ctx, in_caps, 63, 0, 0, 1, NULL);
+      videocrop_test_cropping (&ctx, in_caps, 0, 63, 1, 0, NULL);
+      videocrop_test_cropping (&ctx, in_caps, 0, 1, 63, 0, NULL);
+      videocrop_test_cropping (&ctx, in_caps, 1, 0, 0, 63, NULL);
+      videocrop_test_cropping (&ctx, in_caps, 0, 0, 0, 0, NULL);
+      videocrop_test_cropping (&ctx, in_caps, 32, 0, 0, 128, NULL);
+      videocrop_test_cropping (&ctx, in_caps, 0, 32, 128, 0, NULL);
+      videocrop_test_cropping (&ctx, in_caps, 0, 128, 32, 0, NULL);
+      videocrop_test_cropping (&ctx, in_caps, 128, 0, 0, 32, NULL);
+      videocrop_test_cropping (&ctx, in_caps, 1, 1, 1, 1, NULL);
+      videocrop_test_cropping (&ctx, in_caps, 63, 63, 63, 63, NULL);
+      videocrop_test_cropping (&ctx, in_caps, 64, 64, 64, 64, NULL);
 
-        gst_caps_unref (in_caps);
-      }
+      gst_caps_unref (in_caps);
     }
 
     gst_caps_unref (caps);

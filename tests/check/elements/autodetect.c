@@ -84,7 +84,7 @@ GST_START_TEST (test_autoaudiosink_ghostpad_error_case)
   filter = gst_element_factory_make ("capsfilter", NULL);
   sink = gst_element_factory_make ("autoaudiosink", NULL);
 
-  caps = gst_caps_new_simple ("audio/x-raw-int", "width", G_TYPE_INT, 42, NULL);
+  caps = gst_caps_new_simple ("audio/x-raw", "width", G_TYPE_INT, 42, NULL);
 
   g_object_set (filter, "caps", caps, NULL);
   gst_caps_unref (caps);
