@@ -369,6 +369,7 @@ GST_START_TEST (test_video_formats)
   guint i;
 
   for (i = 0; i < G_N_ELEMENTS (fourcc_list); ++i) {
+    const GstVideoFormatInfo *vf_info;
     GstVideoFormat fmt;
     const gchar *s;
     guint32 fourcc;
@@ -378,8 +379,15 @@ GST_START_TEST (test_video_formats)
     fourcc = GST_MAKE_FOURCC (s[0], s[1], s[2], s[3]);
     fmt = gst_video_format_from_fourcc (fourcc);
 
-    if (fmt == GST_VIDEO_FORMAT_UNKNOWN)
+    if (fmt == GST_VIDEO_FORMAT_UNKNOWN) {
+      GST_DEBUG ("Unknown format %s, skipping tests", fourcc_list[i].fourcc);
       continue;
+    }
+
+    vf_info = gst_video_format_get_info (fmt);
+    fail_unless (vf_info != NULL);
+
+    fail_unless_equals_int (GST_VIDEO_FORMAT_INFO_FORMAT (vf_info), fmt);
 
     GST_INFO ("Fourcc %s, packed=%d", fourcc_list[i].fourcc,
         gst_video_format_is_packed (fmt));
@@ -410,8 +418,8 @@ GST_START_TEST (test_video_formats)
         fourcc_list[i].paint_setup (&paintinfo, NULL);
         fail_unless_equals_int (gst_video_format_get_row_stride (fmt, 0, w),
             paintinfo.ystride);
-        if (!gst_video_format_is_packed (fmt)
-            && !gst_video_format_is_gray (fmt)) {
+        if (GST_VIDEO_FORMAT_INFO_N_COMPONENTS (vf_info) > 1 &&
+            !gst_video_format_is_packed (fmt)) {
           /* planar */
           fail_unless_equals_int (gst_video_format_get_row_stride (fmt, 1, w),
               paintinfo.ustride);
