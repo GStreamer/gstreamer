@@ -260,7 +260,7 @@ typedef GstFlowReturn (*GstCollectPads2ClipFunction) (GstCollectPads2 *pads, Gst
  *
  * Since: 0.10.36
  */
-#define GST_COLLECT_PADS2_STREAM_LOCK(pads)     (g_static_rec_mutex_lock(GST_COLLECT_PADS2_GET_STREAM_LOCK (pads)))
+#define GST_COLLECT_PADS2_STREAM_LOCK(pads)     g_static_rec_mutex_lock(GST_COLLECT_PADS2_GET_STREAM_LOCK (pads))
 /**
  * GST_COLLECT_PADS2_STREAM_UNLOCK:
  * @pads: a #GstCollectPads2
@@ -269,7 +269,7 @@ typedef GstFlowReturn (*GstCollectPads2ClipFunction) (GstCollectPads2 *pads, Gst
  *
  * Since: 0.10.36
  */
-#define GST_COLLECT_PADS2_STREAM_UNLOCK(pads)   (g_static_rec_mutex_unlock(GST_COLLECT_PADS2_GET_STREAM_LOCK (pads)))
+#define GST_COLLECT_PADS2_STREAM_UNLOCK(pads)   g_static_rec_mutex_unlock(GST_COLLECT_PADS2_GET_STREAM_LOCK (pads))
 
 /**
  * GstCollectPads2:
