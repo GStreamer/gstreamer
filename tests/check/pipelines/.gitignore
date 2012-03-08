@@ -1,5 +1,6 @@
 .dirstamp
 cleanup
+seek
 simple-launch-lines
 stress
 parse-launch

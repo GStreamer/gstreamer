@@ -777,7 +777,7 @@ struct _GstPadClass {
  *
  * Lock the stream lock of @pad.
  */
-#define GST_PAD_STREAM_LOCK(pad)        (g_rec_mutex_lock(GST_PAD_GET_STREAM_LOCK(pad)))
+#define GST_PAD_STREAM_LOCK(pad)        g_rec_mutex_lock(GST_PAD_GET_STREAM_LOCK(pad))
 /**
  * GST_PAD_STREAM_TRYLOCK:
  * @pad: a #GstPad
@@ -785,14 +785,14 @@ struct _GstPadClass {
  * Try to Lock the stream lock of the pad, return TRUE if the lock could be
  * taken.
  */
-#define GST_PAD_STREAM_TRYLOCK(pad)     (g_rec_mutex_trylock(GST_PAD_GET_STREAM_LOCK(pad)))
+#define GST_PAD_STREAM_TRYLOCK(pad)     g_rec_mutex_trylock(GST_PAD_GET_STREAM_LOCK(pad))
 /**
  * GST_PAD_STREAM_UNLOCK:
  * @pad: a #GstPad
  *
  * Unlock the stream lock of @pad.
  */
-#define GST_PAD_STREAM_UNLOCK(pad)      (g_rec_mutex_unlock(GST_PAD_GET_STREAM_LOCK(pad)))
+#define GST_PAD_STREAM_UNLOCK(pad)      g_rec_mutex_unlock(GST_PAD_GET_STREAM_LOCK(pad))
 
 #define GST_PAD_BLOCK_GET_COND(pad)     (&GST_PAD_CAST(pad)->block_cond)
 #define GST_PAD_BLOCK_WAIT(pad)         (g_cond_wait(GST_PAD_BLOCK_GET_COND (pad), GST_OBJECT_GET_LOCK (pad)))

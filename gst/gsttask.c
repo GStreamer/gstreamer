@@ -426,6 +426,7 @@ gst_task_set_lock (GstTask * task, GRecMutex * mutex)
   GST_OBJECT_LOCK (task);
   if (G_UNLIKELY (task->running))
     goto is_running;
+  GST_INFO ("setting stream lock %p on task %p", mutex, task);
   GST_TASK_GET_LOCK (task) = mutex;
   GST_OBJECT_UNLOCK (task);
 
