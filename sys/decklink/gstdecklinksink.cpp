@@ -189,7 +189,8 @@ gst_decklink_sink_class_init (GstDecklinkSinkClass * klass)
   element_class->query = GST_DEBUG_FUNCPTR (gst_decklink_sink_query);
 
   g_object_class_install_property (gobject_class, PROP_MODE,
-      g_param_spec_enum ("mode", "Mode", "Mode",
+      g_param_spec_enum ("mode", "Playback Mode",
+          "Video Mode to use for playback",
           GST_TYPE_DECKLINK_MODE, GST_DECKLINK_MODE_NTSC,
           (GParamFlags) (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS |
               G_PARAM_CONSTRUCT)));

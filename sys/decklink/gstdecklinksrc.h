@@ -73,7 +73,7 @@ struct _GstDecklinkSrc
   GstDecklinkModeEnum mode;
   GstDecklinkConnectionEnum connection;
   GstDecklinkAudioConnectionEnum audio_connection;
-  int subdevice;
+  int device;
 
 #ifdef _MSC_VER
   gboolean comInitialized;

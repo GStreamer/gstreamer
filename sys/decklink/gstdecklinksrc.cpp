@@ -45,6 +45,8 @@
 #include "gstdecklinksrc.h"
 #include "capture.h"
 #include <string.h>
+#include <gst/interfaces/propertyprobe.h>
+
 
 GST_DEBUG_CATEGORY (gst_decklink_src_debug_category);
 #define GST_CAT_DEFAULT gst_decklink_src_debug_category
@@ -118,6 +120,10 @@ static gboolean gst_decklink_src_video_src_query (GstPad * pad,
     GstQuery * query);
 static GstIterator *gst_decklink_src_video_src_iterintlink (GstPad * pad);
 
+static void
+gst_decklinksrc_property_probe_interface_init (GstPropertyProbeInterface *
+    iface);
+
 static void gst_decklink_src_task (void *priv);
 
 #ifdef _MSC_VER
@@ -131,7 +137,7 @@ enum
   PROP_MODE,
   PROP_CONNECTION,
   PROP_AUDIO_INPUT,
-  PROP_SUBDEVICE
+  PROP_DEVICE
 };
 
 /* pad templates */
@@ -147,12 +153,24 @@ GST_STATIC_PAD_TEMPLATE ("audiosrc",
 
 /* class initialization */
 
-#define DEBUG_INIT(bla) \
-  GST_DEBUG_CATEGORY_INIT (gst_decklink_src_debug_category, "decklinksrc", 0, \
+static void
+gst_decklinksrc_init_interfaces (GType type)
+{
+  static const GInterfaceInfo decklinksrc_propertyprobe_info = {
+    (GInterfaceInitFunc) gst_decklinksrc_property_probe_interface_init,
+    NULL,
+    NULL,
+  };
+
+  GST_DEBUG_CATEGORY_INIT (gst_decklink_src_debug_category, "decklinksrc", 0,
       "debug category for decklinksrc element");
 
+  g_type_add_interface_static (type, GST_TYPE_PROPERTY_PROBE,
+      &decklinksrc_propertyprobe_info);
+}
+
 GST_BOILERPLATE_FULL (GstDecklinkSrc, gst_decklink_src, GstElement,
-    GST_TYPE_ELEMENT, DEBUG_INIT);
+    GST_TYPE_ELEMENT, gst_decklinksrc_init_interfaces);
 
 static void
 gst_decklink_src_base_init (gpointer g_class)
@@ -196,27 +214,29 @@ gst_decklink_src_class_init (GstDecklinkSrcClass * klass)
   element_class->query = GST_DEBUG_FUNCPTR (gst_decklink_src_query);
 
   g_object_class_install_property (gobject_class, PROP_MODE,
-      g_param_spec_enum ("mode", "Mode", "Mode",
+      g_param_spec_enum ("mode", "Mode", "Video Mode to use for capture",
           GST_TYPE_DECKLINK_MODE, GST_DECKLINK_MODE_NTSC,
           (GParamFlags) (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS |
               G_PARAM_CONSTRUCT)));
 
   g_object_class_install_property (gobject_class, PROP_CONNECTION,
-      g_param_spec_enum ("connection", "Connection", "Connection",
+      g_param_spec_enum ("connection", "Connection",
+          "Video Input Connection to use",
           GST_TYPE_DECKLINK_CONNECTION, GST_DECKLINK_CONNECTION_SDI,
           (GParamFlags) (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS |
               G_PARAM_CONSTRUCT)));
 
   g_object_class_install_property (gobject_class, PROP_AUDIO_INPUT,
-      g_param_spec_enum ("audio-input", "Audio Input", "Audio Input Connection",
+      g_param_spec_enum ("audio-input", "Audio Input",
+          "Audio Input Connection",
           GST_TYPE_DECKLINK_AUDIO_CONNECTION,
           GST_DECKLINK_AUDIO_CONNECTION_AUTO,
           (GParamFlags) (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS |
               G_PARAM_CONSTRUCT)));
 
-  g_object_class_install_property (gobject_class, PROP_SUBDEVICE,
-      g_param_spec_int ("subdevice", "Subdevice", "Subdevice",
-          0, 3, 0,
+  g_object_class_install_property (gobject_class, PROP_DEVICE,
+      g_param_spec_int ("device", "Device", "Capture device instance to use",
+          0, G_MAXINT, 0,
           (GParamFlags) (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS |
               G_PARAM_CONSTRUCT)));
 }
@@ -297,7 +317,7 @@ gst_decklink_src_init (GstDecklinkSrc * decklinksrc,
   decklinksrc->mode = GST_DECKLINK_MODE_NTSC;
   decklinksrc->connection = GST_DECKLINK_CONNECTION_SDI;
   decklinksrc->audio_connection = GST_DECKLINK_AUDIO_CONNECTION_AUTO;
-  decklinksrc->subdevice = 0;
+  decklinksrc->device = 0;
 
   decklinksrc->stop = FALSE;
   decklinksrc->dropped_frames = 0;
@@ -344,8 +364,8 @@ gst_decklink_src_set_property (GObject * object, guint property_id,
       decklinksrc->audio_connection =
           (GstDecklinkAudioConnectionEnum) g_value_get_enum (value);
       break;
-    case PROP_SUBDEVICE:
-      decklinksrc->subdevice = g_value_get_int (value);
+    case PROP_DEVICE:
+      decklinksrc->device = g_value_get_int (value);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, property_id, pspec);
@@ -372,8 +392,8 @@ gst_decklink_src_get_property (GObject * object, guint property_id,
     case PROP_AUDIO_INPUT:
       g_value_set_enum (value, decklinksrc->audio_connection);
       break;
-    case PROP_SUBDEVICE:
-      g_value_set_int (value, decklinksrc->subdevice);
+    case PROP_DEVICE:
+      g_value_set_int (value, decklinksrc->device);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, property_id, pspec);
@@ -516,7 +536,7 @@ gst_decklink_src_start (GstElement * element)
     GST_ERROR ("no card");
     return FALSE;
   }
-  for (i = 0; i < decklinksrc->subdevice; i++) {
+  for (i = 0; i < decklinksrc->device; i++) {
     ret = iterator->Next (&decklinksrc->decklink);
     if (ret != S_OK) {
       GST_ERROR ("no card");
@@ -1284,4 +1304,125 @@ gst_decklink_src_task (void *priv)
     }
   }
   audio_frame->Release ();
+}
+
+
+static const GList *
+gst_decklinksrc_probe_get_properties (GstPropertyProbe * probe)
+{
+  GObjectClass *klass = G_OBJECT_GET_CLASS (probe);
+  static GList *list = NULL;
+  static gsize init = 0;
+
+  if (g_once_init_enter (&init)) {
+    list =
+        g_list_append (NULL, g_object_class_find_property (klass, "device"));
+
+    g_once_init_leave (&init, 1);
+  }
+
+  return list;
+}
+
+static gboolean probed = FALSE;
+int n_devices;
+
+static void
+gst_decklinksrc_class_probe_devices (GstElementClass * klass)
+{
+  IDeckLinkIterator *iterator;
+  IDeckLink *decklink;
+
+  n_devices = 0;
+  iterator = CreateDeckLinkIteratorInstance ();
+  if (iterator) {
+    while (iterator->Next (&decklink) == S_OK) {
+      n_devices++;
+    }
+  }
+
+  probed = TRUE;
+}
+
+static void
+gst_decklinksrc_probe_probe_property (GstPropertyProbe * probe,
+    guint prop_id, const GParamSpec * pspec)
+{
+  GstElementClass *klass = GST_ELEMENT_GET_CLASS (probe);
+
+  switch (prop_id) {
+    case PROP_DEVICE:
+      gst_decklinksrc_class_probe_devices (klass);
+      break;
+    default:
+      G_OBJECT_WARN_INVALID_PROPERTY_ID (probe, prop_id, pspec);
+      break;
+  }
+}
+
+static gboolean
+gst_decklinksrc_probe_needs_probe (GstPropertyProbe * probe,
+    guint prop_id, const GParamSpec * pspec)
+{
+  gboolean ret = FALSE;
+
+  switch (prop_id) {
+    case PROP_DEVICE:
+      ret = !probed;
+      break;
+    default:
+      G_OBJECT_WARN_INVALID_PROPERTY_ID (probe, prop_id, pspec);
+      break;
+  }
+  return ret;
+}
+
+static GValueArray *
+gst_decklinksrc_class_list_devices (GstElementClass * klass)
+{
+  GValueArray *array;
+  GValue value = { 0 };
+  GList *item;
+  int i;
+
+  array = g_value_array_new (n_devices);
+  g_value_init (&value, G_TYPE_INT);
+  for (i = 0; i < n_devices; i++) {
+    g_value_set_int (&value, i);
+    g_value_array_append (array, &value);
+
+    item = item->next;
+  }
+  g_value_unset (&value);
+
+  return array;
+}
+
+static GValueArray *
+gst_decklinksrc_probe_get_values (GstPropertyProbe * probe,
+    guint prop_id, const GParamSpec * pspec)
+{
+  GstElementClass *klass = GST_ELEMENT_GET_CLASS (probe);
+  GValueArray *array = NULL;
+
+  switch (prop_id) {
+    case PROP_DEVICE:
+      array = gst_decklinksrc_class_list_devices (klass);
+      break;
+    default:
+      G_OBJECT_WARN_INVALID_PROPERTY_ID (probe, prop_id, pspec);
+      break;
+  }
+
+  return array;
+}
+
+static void
+gst_decklinksrc_property_probe_interface_init (GstPropertyProbeInterface *
+    iface)
+{
+  iface->get_properties = gst_decklinksrc_probe_get_properties;
+  iface->probe_property = gst_decklinksrc_probe_probe_property;
+  iface->needs_probe = gst_decklinksrc_probe_needs_probe;
+  iface->get_values = gst_decklinksrc_probe_get_values;
 }
