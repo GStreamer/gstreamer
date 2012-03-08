@@ -2297,8 +2297,10 @@ setup_audio_chain (GstPlaySink * playsink, gboolean raw)
   GstElement *elem;
   GstPlayAudioChain *chain;
   GstStateChangeReturn ret;
+  GstPlaySinkAudioConvert *conv;
 
   chain = playsink->audiochain;
+  conv = GST_PLAY_SINK_AUDIO_CONVERT_CAST (chain->conv);
 
   chain->chain.raw = raw;
 
@@ -2347,10 +2349,7 @@ setup_audio_chain (GstPlaySink * playsink, gboolean raw)
     }
 
     g_object_set (chain->conv, "use-volume", FALSE, NULL);
-  } else {
-    GstPlaySinkAudioConvert *conv =
-        GST_PLAY_SINK_AUDIO_CONVERT_CAST (chain->conv);
-
+  } else if (conv) {
     /* no volume, we need to add a volume element when we can */
     g_object_set (chain->conv, "use-volume",
         ! !(playsink->flags & GST_PLAY_FLAG_SOFT_VOLUME), NULL);
