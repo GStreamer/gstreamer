@@ -681,7 +681,6 @@ gst_qt_mux_add_mp4_cover (GstQTMux * qtmux, const GstTagList * list,
     flags = 13;
   else if (gst_structure_has_name (structure, "image/png"))
     flags = 14;
-  gst_caps_unref (caps);
 
   if (!flags) {
     GST_WARNING_OBJECT (qtmux, "preview image format not supported");
