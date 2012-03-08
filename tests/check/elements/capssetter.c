@@ -119,7 +119,7 @@ push_and_test (GstCaps * prop_caps, gboolean join, gboolean replace,
 static GstCaps *
 make_src_caps (void)
 {
-  return gst_caps_new_simple ("video/x-raw-yuv", "width", G_TYPE_INT, SRC_WIDTH,
+  return gst_caps_new_simple ("video/x-foo", "width", G_TYPE_INT, SRC_WIDTH,
       "height", G_TYPE_INT, SRC_HEIGHT, NULL);
 }
 
@@ -130,9 +130,9 @@ GST_START_TEST (test_n_join_n_replace)
   GstCaps *in_caps, *prop_caps, *out_caps;
 
   in_caps = make_src_caps ();
-  prop_caps = gst_caps_new_simple ("video/x-raw-rgb",
+  prop_caps = gst_caps_new_simple ("video/x-bar",
       "width", G_TYPE_INT, 2 * SRC_WIDTH, NULL);
-  out_caps = gst_caps_new_simple ("video/x-raw-rgb",
+  out_caps = gst_caps_new_simple ("video/x-bar",
       "width", G_TYPE_INT, 2 * SRC_WIDTH,
       "height", G_TYPE_INT, SRC_HEIGHT, NULL);
   push_and_test (prop_caps, FALSE, FALSE, in_caps, out_caps);
@@ -145,7 +145,7 @@ GST_START_TEST (test_n_join_replace)
   GstCaps *in_caps, *prop_caps, *out_caps;
 
   in_caps = make_src_caps ();
-  prop_caps = gst_caps_new_simple ("video/x-raw-rgb",
+  prop_caps = gst_caps_new_simple ("video/x-bar",
       "width", G_TYPE_INT, 2 * SRC_WIDTH, NULL);
   out_caps = gst_caps_copy (prop_caps);
   push_and_test (prop_caps, FALSE, TRUE, in_caps, out_caps);
@@ -159,7 +159,7 @@ GST_START_TEST (test_join_n_replace_n_match)
 
   /* non joining caps */
   in_caps = make_src_caps ();
-  prop_caps = gst_caps_new_simple ("video/x-raw-rgb",
+  prop_caps = gst_caps_new_simple ("video/x-bar",
       "width", G_TYPE_INT, 2 * SRC_WIDTH, NULL);
   out_caps = gst_caps_copy (in_caps);
   push_and_test (prop_caps, TRUE, FALSE, in_caps, out_caps);
@@ -173,9 +173,9 @@ GST_START_TEST (test_join_n_replace_match)
 
   /* joining caps */
   in_caps = make_src_caps ();
-  prop_caps = gst_caps_new_simple ("video/x-raw-yuv",
+  prop_caps = gst_caps_new_simple ("video/x-foo",
       "width", G_TYPE_INT, 2 * SRC_WIDTH, NULL);
-  out_caps = gst_caps_new_simple ("video/x-raw-yuv",
+  out_caps = gst_caps_new_simple ("video/x-foo",
       "width", G_TYPE_INT, 2 * SRC_WIDTH,
       "height", G_TYPE_INT, SRC_HEIGHT, NULL);
   push_and_test (prop_caps, TRUE, FALSE, in_caps, out_caps);
@@ -189,7 +189,7 @@ GST_START_TEST (test_join_replace_n_match)
 
   /* non joining caps */
   in_caps = make_src_caps ();
-  prop_caps = gst_caps_new_simple ("video/x-raw-rgb",
+  prop_caps = gst_caps_new_simple ("video/x-bar",
       "width", G_TYPE_INT, 2 * SRC_WIDTH, NULL);
   out_caps = gst_caps_copy (in_caps);
   push_and_test (prop_caps, TRUE, TRUE, in_caps, out_caps);
@@ -203,7 +203,7 @@ GST_START_TEST (test_join_replace_match)
 
   /* joining caps */
   in_caps = make_src_caps ();
-  prop_caps = gst_caps_new_simple ("video/x-raw-yuv",
+  prop_caps = gst_caps_new_simple ("video/x-foo",
       "width", G_TYPE_INT, 2 * SRC_WIDTH, NULL);
   out_caps = gst_caps_copy (prop_caps);
   push_and_test (prop_caps, TRUE, TRUE, in_caps, out_caps);
