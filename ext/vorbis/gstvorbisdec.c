@@ -221,7 +221,7 @@ vorbis_handle_comment_packet (GstVorbisDec * vd, ogg_packet * packet)
 
   if (!list) {
     GST_ERROR_OBJECT (vd, "couldn't decode comments");
-    list = gst_tag_list_new ();
+    list = gst_tag_list_new_empty ();
   }
 
   if (encoder) {
