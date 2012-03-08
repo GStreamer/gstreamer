@@ -306,7 +306,8 @@ gst_task_func (GstTask * task)
 
         t = g_static_rec_mutex_unlock_full (lock);
         if (t <= 0) {
-          g_warning ("wrong STREAM_LOCK count %d", t);
+          g_warning ("wrong STREAM_LOCK count %d for lock %p on task %p", t,
+              lock, task);
         }
         GST_TASK_SIGNAL (task);
         GST_TASK_WAIT (task);
@@ -443,6 +444,7 @@ gst_task_set_lock (GstTask * task, GStaticRecMutex * mutex)
   GST_OBJECT_LOCK (task);
   if (G_UNLIKELY (task->running))
     goto is_running;
+  GST_INFO ("setting stream lock %p on task %p", mutex, task);
   GST_TASK_GET_LOCK (task) = mutex;
   GST_OBJECT_UNLOCK (task);
 
