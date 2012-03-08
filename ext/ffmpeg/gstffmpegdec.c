@@ -32,6 +32,7 @@
 
 #include <gst/gst.h>
 #include <gst/video/video.h>
+#include <gst/video/gstvideometa.h>
 #include <gst/video/gstvideopool.h>
 
 #include "gstffmpeg.h"
@@ -1118,6 +1119,7 @@ gst_ffmpegdec_bufferpool (GstFFMpegDec * ffmpegdec, GstCaps * caps)
   GstStructure *config;
   guint edge;
   AVCodecContext *context = ffmpegdec->context;
+  gboolean have_videometa, have_alignment;
 
   GST_DEBUG_OBJECT (ffmpegdec, "setting up bufferpool");
 
@@ -1129,26 +1131,35 @@ gst_ffmpegdec_bufferpool (GstFFMpegDec * ffmpegdec, GstCaps * caps)
     gst_query_parse_allocation_params (query, &size, &min, &max, &prefix,
         &alignment, &pool);
     size = MAX (size, ffmpegdec->out_info.size);
+
+    have_videometa =
+        gst_query_has_allocation_meta (query, GST_VIDEO_META_API_TYPE);
   } else {
     GST_DEBUG_OBJECT (ffmpegdec, "peer query failed, using defaults");
     size = ffmpegdec->out_info.size;
     min = max = 0;
     prefix = 0;
     alignment = 15;
+    have_videometa = FALSE;
   }
 
   gst_query_unref (query);
 
   if (pool == NULL) {
     /* we did not get a pool, make one ourselves then */
-    pool = gst_buffer_pool_new ();
+    pool = gst_video_buffer_pool_new ();
   }
 
   config = gst_buffer_pool_get_config (pool);
   gst_buffer_pool_config_set (config, caps, size, min, max, prefix,
       alignment | 15);
 
-  if (gst_buffer_pool_has_option (pool, GST_BUFFER_POOL_OPTION_VIDEO_ALIGNMENT)) {
+  have_alignment =
+      gst_buffer_pool_has_option (pool, GST_BUFFER_POOL_OPTION_VIDEO_ALIGNMENT);
+
+  /* we can only enable the alignment if downstream supports the
+   * videometa api */
+  if (have_alignment && have_videometa) {
     GstVideoAlignment align;
     gint width, height;
     gint linesize_align[4];
@@ -1179,11 +1190,13 @@ gst_ffmpegdec_bufferpool (GstFFMpegDec * ffmpegdec, GstCaps * caps)
         align.stride_align[2], align.stride_align[3]);
 
     gst_buffer_pool_config_add_option (config,
+        GST_BUFFER_POOL_OPTION_VIDEO_META);
+    gst_buffer_pool_config_add_option (config,
         GST_BUFFER_POOL_OPTION_VIDEO_ALIGNMENT);
     gst_buffer_pool_config_set_video_alignment (config, &align);
   } else {
     GST_DEBUG_OBJECT (ffmpegdec,
-        "alignment not supported, disable direct rendering");
+        "alignment or videometa not supported, disable direct rendering");
     /* disable direct rendering. This will make us use the fallback ffmpeg
      * picture allocation code with padding etc. We will then do the final
      * copy (with cropping) into a buffer from our pool */
@@ -1426,8 +1439,8 @@ gst_ffmpegdec_audio_negotiate (GstFFMpegDec * ffmpegdec, gboolean force)
   memcpy (ffmpegdec->format.audio.gst_layout,
       ffmpegdec->format.audio.ffmpeg_layout,
       sizeof (GstAudioChannelPosition) * ffmpegdec->format.audio.channels);
-  gst_audio_channel_positions_to_valid_order (ffmpegdec->format.audio.
-      gst_layout, ffmpegdec->format.audio.channels);
+  gst_audio_channel_positions_to_valid_order (ffmpegdec->format.
+      audio.gst_layout, ffmpegdec->format.audio.channels);
 
   GST_LOG_OBJECT (ffmpegdec, "output caps %" GST_PTR_FORMAT, caps);
 
