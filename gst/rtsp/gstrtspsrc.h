@@ -204,6 +204,7 @@ struct _GstRTSPSrc {
   guint             connection_speed;
   GstRTSPNatMethod  nat_method;
   gboolean          do_rtcp;
+  gboolean          do_rtsp_keep_alive;
   gchar            *proxy_host;
   guint             proxy_port;
   gchar            *proxy_user;

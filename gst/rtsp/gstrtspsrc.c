@@ -178,6 +178,7 @@ gst_rtsp_src_buffer_mode_get_type (void)
 #define DEFAULT_CONNECTION_SPEED 0
 #define DEFAULT_NAT_METHOD       GST_RTSP_NAT_DUMMY
 #define DEFAULT_DO_RTCP          TRUE
+#define DEFAULT_DO_RTSP_KEEP_ALIVE       TRUE
 #define DEFAULT_PROXY            NULL
 #define DEFAULT_RTP_BLOCKSIZE    0
 #define DEFAULT_USER_ID          NULL
@@ -199,6 +200,7 @@ enum
   PROP_CONNECTION_SPEED,
   PROP_NAT_METHOD,
   PROP_DO_RTCP,
+  PROP_DO_RTSP_KEEP_ALIVE,
   PROP_PROXY,
   PROP_RTP_BLOCKSIZE,
   PROP_USER_ID,
@@ -409,6 +411,20 @@ gst_rtspsrc_class_init (GstRTSPSrcClass * klass)
           DEFAULT_DO_RTCP, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   /**
+   * GstRTSPSrc::do-rtsp-keep-alive
+   *
+   * Enable RTSP keep laive support. Some old server don't like RTSP
+   * keep alive and then this property needs to be set to FALSE.
+   *
+   * Since: 0.10.32
+   */
+  g_object_class_install_property (gobject_class, PROP_DO_RTSP_KEEP_ALIVE,
+      g_param_spec_boolean ("do-rtsp-keep-alive", "Do RTSP Keep Alive",
+          "Send RTSP keep alive packets, disable for old incompatible server.",
+          DEFAULT_DO_RTSP_KEEP_ALIVE,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
+  /**
    * GstRTSPSrc::proxy
    *
    * Set the proxy parameters. This has to be a string of the format
@@ -526,6 +542,7 @@ gst_rtspsrc_init (GstRTSPSrc * src, GstRTSPSrcClass * g_class)
   src->connection_speed = DEFAULT_CONNECTION_SPEED;
   src->nat_method = DEFAULT_NAT_METHOD;
   src->do_rtcp = DEFAULT_DO_RTCP;
+  src->do_rtsp_keep_alive = DEFAULT_DO_RTSP_KEEP_ALIVE;
   gst_rtspsrc_set_proxy (src, DEFAULT_PROXY);
   src->rtp_blocksize = DEFAULT_RTP_BLOCKSIZE;
   src->user_id = g_strdup (DEFAULT_USER_ID);
@@ -692,6 +709,9 @@ gst_rtspsrc_set_property (GObject * object, guint prop_id, const GValue * value,
     case PROP_DO_RTCP:
       rtspsrc->do_rtcp = g_value_get_boolean (value);
       break;
+    case PROP_DO_RTSP_KEEP_ALIVE:
+      rtspsrc->do_rtsp_keep_alive = g_value_get_boolean (value);
+      break;
     case PROP_PROXY:
       gst_rtspsrc_set_proxy (rtspsrc, g_value_get_string (value));
       break;
@@ -781,6 +801,9 @@ gst_rtspsrc_get_property (GObject * object, guint prop_id, GValue * value,
       break;
     case PROP_DO_RTCP:
       g_value_set_boolean (value, rtspsrc->do_rtcp);
+      break;
+    case PROP_DO_RTSP_KEEP_ALIVE:
+      g_value_set_boolean (value, rtspsrc->do_rtsp_keep_alive);
       break;
     case PROP_PROXY:
     {
@@ -3485,6 +3508,12 @@ gst_rtspsrc_send_keep_alive (GstRTSPSrc * src)
   GstRTSPMethod method;
   gchar *control;
 
+  if (src->do_rtsp_keep_alive == FALSE) {
+    GST_DEBUG_OBJECT (src, "do-rtsp-keep-alive is FALSE, not sending.");
+    gst_rtsp_connection_reset_timeout (src->conninfo.connection);
+    return GST_RTSP_OK;
+  }
+
   GST_DEBUG_OBJECT (src, "creating server keep-alive");
 
   /* find a method to use for keep-alive */
@@ -3836,7 +3865,11 @@ gst_rtspsrc_loop_udp (GstRTSPSrc * src)
           goto connect_error;
 
         continue;
+      case GST_RTSP_ENET:
+        GST_DEBUG_OBJECT (src, "An ethernet problem occured.");
       default:
+        GST_ELEMENT_WARNING (src, RESOURCE, READ, (NULL),
+            ("Unhandled return value %d.", res));
         goto receive_error;
     }
 
