@@ -476,15 +476,12 @@ gst_base_parse_clear_queues (GstBaseParse * parse)
   g_list_free (parse->priv->pending_events);
   parse->priv->pending_events = NULL;
   parse->priv->pending_segment = FALSE;
-
-  gst_event_replace (&parse->priv->close_segment, NULL);
 }
 
 static void
 gst_base_parse_finalize (GObject * object)
 {
   GstBaseParse *parse = GST_BASE_PARSE (object);
-  GstEvent **p_ev;
 
   g_object_unref (parse->priv->adapter);
 
@@ -749,8 +746,6 @@ gst_base_parse_reset (GstBaseParse * parse)
   g_list_free (parse->priv->pending_events);
   parse->priv->pending_events = NULL;
   parse->priv->pending_segment = FALSE;
-
-  gst_event_replace (&parse->priv->close_segment, NULL);
 
   if (parse->priv->cache) {
     gst_buffer_unref (parse->priv->cache);
@@ -1985,14 +1980,6 @@ gst_base_parse_push_frame (GstBaseParse * parse, GstBaseParseFrame * frame)
   if (G_UNLIKELY (parse->priv->pending_segment)) {
     /* have caps; check identity */
     gst_base_parse_check_media (parse);
-  }
-
-  /* and should then also be linked downstream, so safe to send some events */
-  if (G_UNLIKELY (parse->priv->close_segment)) {
-    /* only set up by loop */
-    GST_DEBUG_OBJECT (parse, "loop sending close segment");
-    gst_pad_push_event (parse->srcpad, parse->priv->close_segment);
-    parse->priv->close_segment = NULL;
   }
 
   /* Push pending events, including NEWSEGMENT events */
