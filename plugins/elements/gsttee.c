@@ -805,8 +805,6 @@ gst_tee_src_activate_mode (GstPad * pad, GstObject * parent, GstPadMode mode,
   }
   GST_OBJECT_UNLOCK (tee);
 
-  gst_object_unref (tee);
-
   return res;
 
   /* ERRORS */
