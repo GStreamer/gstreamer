@@ -54,10 +54,9 @@ GST_STATIC_PAD_TEMPLATE ("src",
 
 static GType timed_test_src_get_type (void);
 
-GST_BOILERPLATE (TimedTestSrc, timed_test_src, GstBaseSrc, GST_TYPE_BASE_SRC);
+G_DEFINE_TYPE (TimedTestSrc, timed_test_src, GST_TYPE_BASE_SRC);
 
 static gboolean timed_test_src_is_seekable (GstBaseSrc * basesrc);
-static gboolean timed_test_src_check_get_range (GstBaseSrc * basesrc);
 static gboolean timed_test_src_do_seek (GstBaseSrc * basesrc,
     GstSegment * segment);
 static gboolean timed_test_src_start (GstBaseSrc * basesrc);
@@ -66,27 +65,22 @@ static GstFlowReturn timed_test_src_create (GstBaseSrc * basesrc,
     guint64 offset, guint length, GstBuffer ** buffer);
 
 static void
-timed_test_src_base_init (gpointer g_class)
-{
-  gst_element_class_add_static_pad_template (GST_ELEMENT_CLASS (g_class),
-      &timed_test_src_src_template);
-}
-
-static void
 timed_test_src_class_init (TimedTestSrcClass * klass)
 {
   GstBaseSrcClass *gstbasesrc_class = (GstBaseSrcClass *) klass;
 
   gstbasesrc_class->is_seekable = timed_test_src_is_seekable;
-  gstbasesrc_class->check_get_range = timed_test_src_check_get_range;
   gstbasesrc_class->do_seek = timed_test_src_do_seek;
   gstbasesrc_class->start = timed_test_src_start;
   gstbasesrc_class->stop = timed_test_src_stop;
   gstbasesrc_class->create = timed_test_src_create;
+
+  gst_element_class_add_pad_template (GST_ELEMENT_CLASS (klass),
+      gst_static_pad_template_get (&timed_test_src_src_template));
 }
 
 static void
-timed_test_src_init (TimedTestSrc * src, TimedTestSrcClass * g_class)
+timed_test_src_init (TimedTestSrc * src)
 {
   gst_base_src_set_format (GST_BASE_SRC (src), GST_FORMAT_TIME);
   gst_base_src_set_live (GST_BASE_SRC (src), FALSE);
@@ -112,7 +106,7 @@ timed_test_src_do_seek (GstBaseSrc * basesrc, GstSegment * segment)
 {
   TimedTestSrc *src = (TimedTestSrc *) basesrc;
 
-  src->next_time = segment->last_stop;
+  src->next_time = segment->position;
   return TRUE;
 }
 
@@ -120,12 +114,6 @@ static gboolean
 timed_test_src_is_seekable (GstBaseSrc * basesrc)
 {
   return TRUE;
-}
-
-static gboolean
-timed_test_src_check_get_range (GstBaseSrc * basesrc)
-{
-  return FALSE;
 }
 
 static GstFlowReturn
@@ -145,7 +133,6 @@ timed_test_src_create (GstBaseSrc * basesrc, guint64 offset, guint length,
 
 GST_START_TEST (test_seek)
 {
-  GstStreamConsistency *consist;
   GstMessage *msg;
   GstElement *bin, *src1, *sink;
   gboolean res;
@@ -168,7 +155,6 @@ GST_START_TEST (test_seek)
   fail_unless (res == TRUE, NULL);
 
   srcpad = gst_element_get_static_pad (src1, "src");
-  consist = gst_consistency_checker_new (srcpad);
   gst_object_unref (srcpad);
 
   GST_INFO ("starting test");
@@ -204,7 +190,6 @@ GST_START_TEST (test_seek)
   fail_unless (res != GST_STATE_CHANGE_FAILURE, NULL);
 
   /* cleanup */
-  gst_consistency_checker_free (consist);
   gst_object_unref (bus);
   gst_object_unref (bin);
 }
