@@ -39,6 +39,9 @@ G_BEGIN_DECLS
  *
  * A bufferpool option to enable extra padding. When a bufferpool supports this
  * option, gst_buffer_pool_config_set_video_alignment() can be called.
+ *
+ * When this option is enabled on the bufferpool,
+ * #GST_BUFFER_POOL_OPTION_VIDEO_META should also be enabled.
  */
 #define GST_BUFFER_POOL_OPTION_VIDEO_ALIGNMENT "GstBufferPoolOptionVideoAlignment"
 

@@ -142,7 +142,7 @@ struct _GstVideoBufferPoolPrivate
   GstCaps *caps;
   GstVideoInfo info;
   GstVideoAlignment video_align;
-  gboolean add_metavideo;
+  gboolean add_videometa;
   gboolean need_alignment;
   guint prefix;
   guint align;
@@ -198,7 +198,7 @@ video_buffer_pool_set_config (GstBufferPool * pool, GstStructure * config)
   priv->align = align;
 
   /* enable metadata based on config of the pool */
-  priv->add_metavideo =
+  priv->add_videometa =
       gst_buffer_pool_config_has_option (config,
       GST_BUFFER_POOL_OPTION_VIDEO_META);
 
@@ -206,13 +206,10 @@ video_buffer_pool_set_config (GstBufferPool * pool, GstStructure * config)
   priv->need_alignment = gst_buffer_pool_config_has_option (config,
       GST_BUFFER_POOL_OPTION_VIDEO_ALIGNMENT);
 
-  if (priv->need_alignment) {
+  if (priv->need_alignment && priv->add_videometa) {
     /* get an apply the alignment to the info */
     gst_buffer_pool_config_get_video_alignment (config, &priv->video_align);
     gst_video_info_align (&info, &priv->video_align);
-
-    /* we need the video metadata too now */
-    priv->add_metavideo = TRUE;
   }
   priv->info = info;
 
@@ -260,7 +257,7 @@ video_buffer_pool_alloc (GstBufferPool * pool, GstBuffer ** buffer,
   gst_memory_resize (mem, priv->prefix, info->size);
   gst_buffer_take_memory (*buffer, -1, mem);
 
-  if (priv->add_metavideo) {
+  if (priv->add_videometa) {
     GST_DEBUG_OBJECT (pool, "adding GstVideoMeta");
 
     gst_buffer_add_video_meta_full (*buffer, 0, GST_VIDEO_INFO_FORMAT (info),
