@@ -2722,13 +2722,10 @@ gst_pad_query_caps_default (GstPad * pad, GstQuery * query)
     if ((result = get_pad_caps (pad)))
       goto filter_done_unlock;
   }
-  GST_OBJECT_UNLOCK (pad);
 
   /* this almost never happens */
   GST_CAT_DEBUG_OBJECT (GST_CAT_CAPS, pad, "pad has no caps");
-  result = gst_caps_new_empty ();
-
-  goto done;
+  result = GST_CAPS_ANY;
 
 filter_done_unlock:
   GST_OBJECT_UNLOCK (pad);
@@ -2748,7 +2745,6 @@ filter_done:
     result = gst_caps_ref (result);
   }
 
-done:
   gst_query_set_caps_result (query, result);
   gst_caps_unref (result);
 

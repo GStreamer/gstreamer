@@ -41,11 +41,11 @@ GST_START_TEST (test_link)
   sink = gst_pad_new ("sink", GST_PAD_SINK);
   fail_if (sink == NULL);
 
-  /* linking without templates or caps should fail */
+  /* linking without templates or caps should work */
   ret = gst_pad_link (src, sink);
   ASSERT_OBJECT_REFCOUNT (src, "source pad", 1);
   ASSERT_OBJECT_REFCOUNT (sink, "sink pad", 1);
-  fail_unless (ret == GST_PAD_LINK_NOFORMAT);
+  fail_unless (ret == GST_PAD_LINK_OK);
 
   ASSERT_CRITICAL (gst_pad_get_pad_template (NULL));
 
