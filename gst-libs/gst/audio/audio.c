@@ -832,7 +832,7 @@ gst_audio_buffer_clip (GstBuffer * buffer, GstSegment * segment, gint rate,
   GstBuffer *ret;
   GstClockTime timestamp = GST_CLOCK_TIME_NONE, duration = GST_CLOCK_TIME_NONE;
   guint64 offset = GST_BUFFER_OFFSET_NONE, offset_end = GST_BUFFER_OFFSET_NONE;
-  gsize trim, size;
+  gsize trim, size, osize;
   gboolean change_duration = TRUE, change_offset = TRUE, change_offset_end =
       TRUE;
 
@@ -849,7 +849,7 @@ gst_audio_buffer_clip (GstBuffer * buffer, GstSegment * segment, gint rate,
    * they won't be changed later though. */
 
   trim = 0;
-  size = gst_buffer_get_size (buffer);
+  osize = size = gst_buffer_get_size (buffer);
 
   timestamp = GST_BUFFER_TIMESTAMP (buffer);
   GST_DEBUG ("timestamp %" GST_TIME_FORMAT, GST_TIME_ARGS (timestamp));
@@ -953,21 +953,25 @@ gst_audio_buffer_clip (GstBuffer * buffer, GstSegment * segment, gint rate,
     }
   }
 
-  /* Get a writable buffer and apply all changes */
-  GST_DEBUG ("trim %" G_GSIZE_FORMAT " size %" G_GSIZE_FORMAT, trim, size);
-  ret = gst_buffer_copy_region (buffer, GST_BUFFER_COPY_ALL, trim, size);
-  gst_buffer_unref (buffer);
+  if (trim == 0 && size == osize) {
+    /* nothing changed */
+    ret = buffer;
+  } else {
+    /* Get a writable buffer and apply all changes */
+    GST_DEBUG ("trim %" G_GSIZE_FORMAT " size %" G_GSIZE_FORMAT, trim, size);
+    ret = gst_buffer_copy_region (buffer, GST_BUFFER_COPY_ALL, trim, size);
+    gst_buffer_unref (buffer);
 
-  GST_DEBUG ("timestamp %" GST_TIME_FORMAT, GST_TIME_ARGS (timestamp));
-  GST_BUFFER_TIMESTAMP (ret) = timestamp;
+    GST_DEBUG ("timestamp %" GST_TIME_FORMAT, GST_TIME_ARGS (timestamp));
+    GST_BUFFER_TIMESTAMP (ret) = timestamp;
 
-  if (change_duration)
-    GST_BUFFER_DURATION (ret) = duration;
-  if (change_offset)
-    GST_BUFFER_OFFSET (ret) = offset;
-  if (change_offset_end)
-    GST_BUFFER_OFFSET_END (ret) = offset_end;
-
+    if (change_duration)
+      GST_BUFFER_DURATION (ret) = duration;
+    if (change_offset)
+      GST_BUFFER_OFFSET (ret) = offset;
+    if (change_offset_end)
+      GST_BUFFER_OFFSET_END (ret) = offset_end;
+  }
   return ret;
 }
 
