@@ -173,7 +173,7 @@ _span_memory (GstBuffer * buffer, gsize offset, gsize size, gboolean writable)
 }
 
 static GstMemory *
-_get_merged_memory (GstBuffer * buffer)
+_get_merged_memory (GstBuffer * buffer, gboolean * merged)
 {
   guint len;
   GstMemory *mem;
@@ -187,9 +187,11 @@ _get_merged_memory (GstBuffer * buffer)
     /* we can take the first one */
     mem = GST_BUFFER_MEM_PTR (buffer, 0);
     gst_memory_ref (mem);
+    *merged = FALSE;
   } else {
     /* we need to span memory */
     mem = _span_memory (buffer, 0, -1, FALSE);
+    *merged = TRUE;
   }
   return mem;
 }
@@ -722,13 +724,14 @@ GstMemory *
 gst_buffer_get_memory (GstBuffer * buffer, gint idx)
 {
   GstMemory *mem;
+  gboolean merged;
 
   g_return_val_if_fail (GST_IS_BUFFER (buffer), NULL);
   g_return_val_if_fail (idx == -1 ||
       (idx >= 0 && idx <= GST_BUFFER_MEM_LEN (buffer)), NULL);
 
   if (idx == -1) {
-    mem = _get_merged_memory (buffer);
+    mem = _get_merged_memory (buffer, &merged);
   } else if ((mem = GST_BUFFER_MEM_PTR (buffer, idx))) {
     gst_memory_ref (mem);
   }
@@ -898,6 +901,10 @@ gst_buffer_resize (GstBuffer * buffer, gssize offset, gssize size)
   }
   g_return_if_fail (bufmax >= bufoffs + offset + size);
 
+  /* no change */
+  if (offset == 0 && size == bufsize)
+    return;
+
   len = GST_BUFFER_MEM_LEN (buffer);
 
   /* copy and trim */
@@ -961,14 +968,16 @@ gst_buffer_resize (GstBuffer * buffer, gssize offset, gssize size)
  * When the buffer contains multiple memory blocks, the returned pointer will be
  * a concatenation of the memory blocks.
  *
+ * The memory in @info should be unmapped with gst_buffer_unmap() after usage.
+ *
  * Returns: (transfer full): %TRUE if the map succeeded and @info contains valid
  * data.
  */
 gboolean
 gst_buffer_map (GstBuffer * buffer, GstMapInfo * info, GstMapFlags flags)
 {
-  GstMemory *mem;
-  gboolean write, writable;
+  GstMemory *mem, *nmem;
+  gboolean write, writable, merged;
 
   g_return_val_if_fail (GST_IS_BUFFER (buffer), FALSE);
   g_return_val_if_fail (info != NULL, FALSE);
@@ -980,25 +989,28 @@ gst_buffer_map (GstBuffer * buffer, GstMapInfo * info, GstMapFlags flags)
   if (G_UNLIKELY (write && !writable))
     goto not_writable;
 
-  mem = _get_merged_memory (buffer);
+  mem = _get_merged_memory (buffer, &merged);
   if (G_UNLIKELY (mem == NULL))
     goto no_memory;
 
   /* now try to map */
-  mem = gst_memory_make_mapped (mem, info, flags);
-  if (G_UNLIKELY (mem == NULL))
+  nmem = gst_memory_make_mapped (mem, info, flags);
+  if (G_UNLIKELY (nmem == NULL))
     goto cannot_map;
 
-  /* if the buffer is writable, replace the memory */
-  if (writable) {
-    _replace_all_memory (buffer, gst_memory_ref (mem));
-  } else {
-    if (GST_BUFFER_MEM_LEN (buffer) > 1) {
-      GST_CAT_DEBUG (GST_CAT_PERFORMANCE,
-          "temporary mapping for memory %p in buffer %p", mem, buffer);
+  /* if we merged or when the map returned a different memory, we try to replace
+   * the memory in the buffer */
+  if (G_UNLIKELY (merged || nmem != mem)) {
+    /* if the buffer is writable, replace the memory */
+    if (writable) {
+      _replace_all_memory (buffer, gst_memory_ref (nmem));
+    } else {
+      if (GST_BUFFER_MEM_LEN (buffer) > 1) {
+        GST_CAT_DEBUG (GST_CAT_PERFORMANCE,
+            "temporary mapping for memory %p in buffer %p", nmem, buffer);
+      }
     }
   }
-
   return TRUE;
 
   /* ERROR */
@@ -1038,7 +1050,9 @@ gst_buffer_unmap (GstBuffer * buffer, GstMapInfo * info)
   g_return_if_fail (GST_IS_BUFFER (buffer));
   g_return_if_fail (info != NULL);
 
-  if (info->memory) {
+  /* we need to check for NULL, it is possible that we tried to map a buffer
+   * without memory and we should be able to unmap that fine */
+  if (G_LIKELY (info->memory)) {
     gst_memory_unmap (info->memory, info);
     gst_memory_unref (info->memory);
   }
