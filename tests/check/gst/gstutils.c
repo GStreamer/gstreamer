@@ -119,7 +119,7 @@ GST_START_TEST (test_buffer_probe_n_times)
   gst_object_unref (bus);
 
   g_assert (n_buffer_probes == 10);     /* one for every buffer */
-  g_assert (n_event_probes == 4);       /* start-start, new segment, latency and eos */
+  g_assert (n_event_probes == 4);       /* stream-start, new segment, latency and eos */
   g_assert (n_data_probes == 14);       /* duh */
 
   gst_element_set_state (pipeline, GST_STATE_NULL);
