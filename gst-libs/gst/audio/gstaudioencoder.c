@@ -301,6 +301,9 @@ static void gst_audio_encoder_set_property (GObject * object,
 static void gst_audio_encoder_get_property (GObject * object,
     guint prop_id, GValue * value, GParamSpec * pspec);
 
+static GstStateChangeReturn gst_audio_encoder_change_state (GstElement *
+    element, GstStateChange transition);
+
 static gboolean gst_audio_encoder_sink_activate_push (GstPad * pad,
     gboolean active);
 
@@ -317,8 +320,10 @@ static void
 gst_audio_encoder_class_init (GstAudioEncoderClass * klass)
 {
   GObjectClass *gobject_class;
+  GstElementClass *gstelement_class;
 
   gobject_class = G_OBJECT_CLASS (klass);
+  gstelement_class = GST_ELEMENT_CLASS (klass);
   parent_class = g_type_class_peek_parent (klass);
 
   GST_DEBUG_CATEGORY_INIT (gst_audio_encoder_debug, "audioencoder", 0,
@@ -349,6 +354,9 @@ gst_audio_encoder_class_init (GstAudioEncoderClass * klass)
           "Consider discontinuity if timestamp jitter/imperfection exceeds tolerance (ns)",
           0, G_MAXINT64, DEFAULT_TOLERANCE,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
+  gstelement_class->change_state =
+      GST_DEBUG_FUNCPTR (gst_audio_encoder_change_state);
 }
 
 static void
@@ -458,6 +466,49 @@ gst_audio_encoder_finalize (GObject * object)
   g_static_rec_mutex_free (&enc->stream_lock);
 
   G_OBJECT_CLASS (parent_class)->finalize (object);
+}
+
+static GstStateChangeReturn
+gst_audio_encoder_change_state (GstElement * element, GstStateChange transition)
+{
+  GstStateChangeReturn ret = GST_STATE_CHANGE_SUCCESS;
+  GstAudioEncoder *enc = GST_AUDIO_ENCODER (element);
+  GstAudioEncoderClass *klass = GST_AUDIO_ENCODER_GET_CLASS (enc);
+
+  switch (transition) {
+    case GST_STATE_CHANGE_NULL_TO_READY:
+      if (klass->open) {
+        if (!klass->open (enc))
+          goto open_failed;
+      }
+    default:
+      break;
+  }
+
+  ret = GST_ELEMENT_CLASS (parent_class)->change_state (element, transition);
+
+  switch (transition) {
+    case GST_STATE_CHANGE_READY_TO_NULL:
+      if (klass->close) {
+        if (!klass->close (enc))
+          goto close_failed;
+      }
+    default:
+      break;
+  }
+
+  return ret;
+
+open_failed:
+  {
+    GST_ELEMENT_ERROR (enc, LIBRARY, INIT, (NULL), ("Failed to open codec"));
+    return GST_STATE_CHANGE_FAILURE;
+  }
+close_failed:
+  {
+    GST_ELEMENT_ERROR (enc, LIBRARY, INIT, (NULL), ("Failed to close codec"));
+    return GST_STATE_CHANGE_FAILURE;
+  }
 }
 
 /**
