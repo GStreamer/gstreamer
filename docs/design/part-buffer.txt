@@ -74,7 +74,7 @@ Data access
 
  The _map and _unmap function will always return the memory of all blocks as one
  large contiguous region of memory. Using the _map and _unmap function might be
- more convenient that accessing the individual memory blocks at the expense of
+ more convenient than accessing the individual memory blocks at the expense of
  being more expensive because it might perform memcpy operations.
 
  For buffers with only one GstMemory object (the most common case), _map and

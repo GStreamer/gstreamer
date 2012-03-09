@@ -17,25 +17,27 @@ Requirements
 Allocators
 ~~~~~~~~~~
 
- GstMemory objects are created by allocators. Allocators are registered to the
- memory system with a set of methods contained in a GstMemoryInfo structure.
+ GstMemory objects are created by allocators. Allocators are created from
+ a GstMemoryInfo structure.
 
   struct _GstMemoryInfo {
-    GstMemoryAllocFunction    alloc;
-    GstMemoryGetSizesFunction get_sizes;
-    GstMemoryResizeFunction   resize;
-    GstMemoryMapFunction      map;
-    GstMemoryUnmapFunction    unmap;
-    GstMemoryFreeFunction     free;
+    const gchar              *mem_type;
 
-    GstMemoryCopyFunction     copy;
-    GstMemoryShareFunction    share;
-    GstMemoryIsSpanFunction   is_span;
+    GstAllocatorAllocFunction alloc;
 
-    gpointer user_data;
+    GstMemoryMapFunction      mem_map;
+    GstMemoryUnmapFunction    mem_unmap;
+    GstMemoryFreeFunction     mem_free;
+
+    GstMemoryCopyFunction     mem_copy;
+    GstMemoryShareFunction    mem_share;
+    GstMemoryIsSpanFunction   mem_is_span;
   };
 
- After an allocator is registerd, new GstMemory can be created with 
+ Allocators are refcounted. It is also possible to register the allocator to the
+ GStreamer system. This way, the allocator can be retrieved by name.
+
+ After an allocator is created, new GstMemory can be created with 
 
    GstMemory * gst_allocator_alloc (const GstAllocator * allocator,
                                     gsize maxsize, gsize align);
@@ -46,9 +48,11 @@ Allocators
  It is also possible to create a new GstMemory object that wraps existing
  memory with:
   
-   GstMemory * gst_memory_new_wrapped  (GstMemoryFlags flags, gpointer data,
-                                        GFreeFunc free_func, gsize maxsize,
-                                        gsize offset, gsize size);
+   GstMemory * gst_memory_new_wrapped  (GstMemoryFlags flags,
+                                        gpointer data, gsize maxsize,
+                                        gsize offset, gsize size,
+                                        gpointer user_data,
+                                        GDestroyNotify notify);
 
 Lifecycle
 ~~~~~~~~~
@@ -58,9 +62,6 @@ has a refcount of 1.
 
 Each variable holding a reference to the GstMemory object is responsible for
 updating the refcount.
-
-The refcount determines the writability of the object. If the refcount > 1, it is
-by definition used by multipled objects and thus cannot be safely written to.
 
 When the refcount reaches 0, and thus no objects hold a reference anymore, we
 can free the memory. The GstMemoryFreeFunction of the allocator will be called
@@ -93,13 +94,6 @@ Memory layout
 
    void        gst_memory_resize     (GstMemory *mem, gssize offset, gsize size);
 
- The memory object is always readable. The memory block is writable when:
-
-  - the refcount is exactly 1
-  - the memory object has no parent, or if it has a parent, the parent is
-    writable.
-  - the memory object is not marked as READONLY.
-
 
 Data Access
 ~~~~~~~~~~~
@@ -109,10 +103,10 @@ Data Access
  the required memory mappings when needed.
 
  Mapping a memory region requires the caller to specify the access method: READ
- and/or WRITE. For write access, the GstMemory object must be writable.
+ and/or WRITE.
 
  After the data has been accessed in the object, the unmap call must be
- performed. The call will update the new memory size with the specified size.
+ performed.
 
  It is allowed to map multiple times with different access modes. for each of
  the map calls, an corresponding unmap call needs to be made. WRITE-only memory
@@ -127,11 +121,9 @@ Data Access
  is valid until the last unmap call is done.
 
  When the final reference on a memory object is dropped, all outstanding
- mappings are automatically unmapped.
+ mappings should have been unmapped.
 
- Resizing a GstMemory does not influence any current mappings an any way. Note
- however that the unmap call can resize the buffer again.
-
+ Resizing a GstMemory does not influence any current mappings an any way.
 
 Copy
 ~~~~

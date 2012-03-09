@@ -60,7 +60,7 @@ A sinkpad can ask the upstream srcpad for its scheduling attributes. It does
 this with the SCHEDULING query.
 
 
- (out) "modes", G_TYPE_VALUE_ARRAY (default NULL)
+ (out) "modes", G_TYPE_ARRAY (default NULL)
        - an array of GST_TYPE_PAD_MODE enums. Contains all the supported
          scheduling modes.
 

@@ -186,8 +186,8 @@ The most common dataflow is the push model. The pull model can be used in specif
 circumstances by demuxer elements. The pull model can also be used by low latency
 audio applications.
 
-The data passed between pads is encapsulated in Buffers. The buffer contains a
-pointer to the actual data and also metadata describing the data. This metadata
+The data passed between pads is encapsulated in Buffers. The buffer contains 
+pointers to the actual memory and also metadata describing the memory. This metadata
 includes:
  
   - timestamp of the data, this is the time instance at which the data was captured
@@ -208,8 +208,7 @@ Before an element pushes out a buffer, it should make sure that the peer element
 can understand the buffer contents.  It does this by querying the peer element
 for the supported formats and by selecting a suitable common format. The selected
 format is then first sent to the peer element with a CAPS event before pushing
-the buffer.
-
+the buffer (see part-negotiation.txt).
 
 When an element pad receives a CAPS event, it has to check if it understand the
 media type. The element must refuse following buffers if the media type
