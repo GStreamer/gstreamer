@@ -416,18 +416,18 @@ AG_GST_CHECK_FEATURE(DIRECTSOUND, [DirectSound plug-in], directsoundsink, [
   LDFLAGS="$LDFLAGS $DIRECTSOUND_LDFLAGS"
   LIBS="$LIBS -ldsound -ldxerr9 -luser32"
   AC_MSG_CHECKING(for DirectSound LDFLAGS)
-  AC_LINK_IFELSE([
+  AC_LINK_IFELSE([AC_LANG_PROGRAM([[
 #include <windows.h>
 #include <dxerr9.h>
 #include <dsound.h>
-
+]], [[
 int main ()
 {
   DXGetErrorString9 (0);
   DirectSoundCreate(NULL, NULL, NULL);
 
   return 0;
-}
+}]])
 ],
     [HAVE_DIRECTSOUND="yes"],
     [HAVE_DIRECTSOUND="no"])
