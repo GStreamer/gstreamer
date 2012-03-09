@@ -493,6 +493,9 @@ restart:
       goto restart;
     }
 
+    /* store the received state */
+    ev->received = ev_ret.received;
+
     /* if the event changed, we need to do something */
     if (G_UNLIKELY (ev->event != ev_ret.event)) {
       if (G_UNLIKELY (ev_ret.event == NULL)) {
