@@ -1386,6 +1386,94 @@ GST_START_TEST (test_block_async_replace_callback_no_flush)
 
 GST_END_TEST;
 
+static gint sticky_count;
+
+static gboolean
+test_sticky_events_handler (GstPad * pad, GstObject * parent, GstEvent * event)
+{
+  GST_DEBUG_OBJECT (pad, "received event %" GST_PTR_FORMAT, event);
+
+  switch (sticky_count) {
+    case 0:
+      fail_unless (GST_EVENT_TYPE (event) == GST_EVENT_STREAM_START);
+      break;
+    case 1:
+    {
+      GstCaps *caps;
+      GstStructure *s;
+
+      fail_unless (GST_EVENT_TYPE (event) == GST_EVENT_CAPS);
+
+      gst_event_parse_caps (event, &caps);
+      fail_unless (gst_caps_get_size (caps) == 1);
+      s = gst_caps_get_structure (caps, 0);
+      fail_unless (gst_structure_has_name (s, "foo/baz"));
+      break;
+    }
+    case 2:
+      fail_unless (GST_EVENT_TYPE (event) == GST_EVENT_SEGMENT);
+      break;
+    default:
+      fail_unless (FALSE);
+      break;
+  }
+
+  gst_event_unref (event);
+  sticky_count++;
+
+  return TRUE;
+}
+
+GST_START_TEST (test_sticky_events)
+{
+  GstPad *srcpad, *sinkpad;
+  GstCaps *caps;
+  GstSegment seg;
+
+  /* make unlinked srcpad */
+  srcpad = gst_pad_new ("src", GST_PAD_SRC);
+  fail_unless (srcpad != NULL);
+  gst_pad_set_active (srcpad, TRUE);
+
+  /* push an event, it should be sticky on the srcpad */
+  gst_pad_push_event (srcpad, gst_event_new_stream_start ());
+
+  /* make a caps event */
+  caps = gst_caps_new_empty_simple ("foo/bar");
+  gst_pad_push_event (srcpad, gst_event_new_caps (caps));
+  gst_caps_unref (caps);
+
+  /* make segment event */
+  gst_segment_init (&seg, GST_FORMAT_TIME);
+  gst_pad_push_event (srcpad, gst_event_new_segment (&seg));
+
+  /* now make a sinkpad */
+  sinkpad = gst_pad_new ("sink", GST_PAD_SINK);
+  fail_unless (sinkpad != NULL);
+  sticky_count = 0;
+  gst_pad_set_event_function (sinkpad, test_sticky_events_handler);
+  fail_unless (sticky_count == 0);
+  gst_pad_set_active (sinkpad, TRUE);
+
+  /* link the pads */
+  gst_pad_link (srcpad, sinkpad);
+  /* should not trigger events */
+  fail_unless (sticky_count == 0);
+
+  /* caps replaces old caps event at position 2, the pushes all
+   * pending events */
+  caps = gst_caps_new_empty_simple ("foo/baz");
+  gst_pad_push_event (srcpad, gst_event_new_caps (caps));
+  gst_caps_unref (caps);
+
+  /* should have triggered 2 events */
+  fail_unless (sticky_count == 3);
+
+  gst_object_unref (srcpad);
+  gst_object_unref (sinkpad);
+}
+
+GST_END_TEST;
 
 static Suite *
 gst_pad_suite (void)
@@ -1424,6 +1512,7 @@ gst_pad_suite (void)
   tcase_add_test (tc_chain, test_block_async_full_destroy);
   tcase_add_test (tc_chain, test_block_async_full_destroy_dispose);
   tcase_add_test (tc_chain, test_block_async_replace_callback_no_flush);
+  tcase_add_test (tc_chain, test_sticky_events);
 
   return s;
 }
