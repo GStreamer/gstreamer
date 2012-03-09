@@ -147,7 +147,7 @@ static GstFlowReturn gst_pad_chain_list_default (GstPad * pad,
 static GstFlowReturn gst_pad_send_event_unchecked (GstPad * pad,
     GstEvent * event, GstPadProbeType type);
 static GstFlowReturn gst_pad_push_event_unchecked (GstPad * pad,
-    GstEvent * event, GstPadProbeType type, gboolean * stored);
+    GstEvent * event, GstPadProbeType type);
 
 static guint gst_pad_signals[LAST_SIGNAL] = { 0 };
 
@@ -3274,24 +3274,56 @@ probe_stopped:
  * Data passing functions
  */
 
+/* should be called with pad LOCK */
 static gboolean
 push_sticky (GstPad * pad, PadEvent * ev, gpointer user_data)
 {
   GstFlowReturn *data = user_data;
-  gboolean stored;
+  GstEvent *event = ev->event;
 
   if (ev->received) {
     GST_DEBUG_OBJECT (pad, "event %s was already received",
-        GST_EVENT_TYPE_NAME (ev->event));
+        GST_EVENT_TYPE_NAME (event));
     return TRUE;
   }
-  GST_OBJECT_UNLOCK (pad);
 
-  *data = gst_pad_push_event_unchecked (pad, gst_event_ref (ev->event),
-      GST_PAD_PROBE_TYPE_EVENT_DOWNSTREAM, &stored);
+  *data = gst_pad_push_event_unchecked (pad, gst_event_ref (event),
+      GST_PAD_PROBE_TYPE_EVENT_DOWNSTREAM);
 
-  GST_OBJECT_LOCK (pad);
+  switch (*data) {
+    case GST_FLOW_OK:
+      ev->received = TRUE;
+      GST_DEBUG_OBJECT (pad, "event %s marked received",
+          GST_EVENT_TYPE_NAME (event));
+      break;
+    case GST_FLOW_NOT_LINKED:
+      /* not linked is not a problem, we are sticky so the event will be
+       * sent later */
+      GST_DEBUG_OBJECT (pad, "pad was not linked");
+      *data = GST_FLOW_OK;
+      /* fallthrough */
+    default:
+      GST_DEBUG_OBJECT (pad, "mark pending events");
+      GST_OBJECT_FLAG_SET (pad, GST_PAD_FLAG_PENDING_EVENTS);
+      break;
+  }
   return *data == GST_FLOW_OK;
+}
+
+/* check sticky events and push them when needed. should be called
+ * with pad LOCK */
+static inline GstFlowReturn
+check_sticky (GstPad * pad)
+{
+  GstFlowReturn ret = GST_FLOW_OK;
+
+  if (G_UNLIKELY (GST_PAD_HAS_PENDING_EVENTS (pad))) {
+    GST_OBJECT_FLAG_UNSET (pad, GST_PAD_FLAG_PENDING_EVENTS);
+
+    GST_DEBUG_OBJECT (pad, "pushing all sticky events");
+    events_foreach (pad, push_sticky, &ret);
+  }
+  return ret;
 }
 
 /* this is the chain function that does not perform the additional argument
@@ -3521,16 +3553,8 @@ gst_pad_push_data (GstPad * pad, GstPadProbeType type, void *data)
   if (G_UNLIKELY (GST_PAD_MODE (pad) != GST_PAD_MODE_PUSH))
     goto wrong_mode;
 
-  if (G_UNLIKELY (GST_PAD_HAS_PENDING_EVENTS (pad))) {
-    GST_OBJECT_FLAG_UNSET (pad, GST_PAD_FLAG_PENDING_EVENTS);
-
-    GST_DEBUG_OBJECT (pad, "pushing all sticky events");
-
-    ret = GST_FLOW_OK;
-    events_foreach (pad, push_sticky, &ret);
-    if (ret != GST_FLOW_OK)
-      goto events_error;
-  }
+  if (G_UNLIKELY ((ret = check_sticky (pad))) != GST_FLOW_OK)
+    goto events_error;
 
   /* do block probes */
   PROBE_PUSH (pad, type | GST_PAD_PROBE_TYPE_BLOCK, data, probe_stopped);
@@ -3700,16 +3724,8 @@ gst_pad_get_range_unchecked (GstPad * pad, guint64 offset, guint size,
   if (G_UNLIKELY (GST_PAD_MODE (pad) != GST_PAD_MODE_PULL))
     goto wrong_mode;
 
-  if (G_UNLIKELY (GST_PAD_HAS_PENDING_EVENTS (pad))) {
-    GST_OBJECT_FLAG_UNSET (pad, GST_PAD_FLAG_PENDING_EVENTS);
-
-    GST_DEBUG_OBJECT (pad, "pushing all sticky events");
-
-    ret = GST_FLOW_OK;
-    events_foreach (pad, push_sticky, &ret);
-    if (ret != GST_FLOW_OK)
-      goto events_error;
-  }
+  if (G_UNLIKELY ((ret = check_sticky (pad))) != GST_FLOW_OK)
+    goto events_error;
 
   /* when one of the probes returns a buffer, probed_data will be called and we
    * skip calling the getrange function */
@@ -4040,24 +4056,19 @@ gst_pad_store_sticky_event (GstPad * pad, GstEvent * event, gboolean locked)
   return res;
 }
 
+/* should be called with pad LOCK */
 static GstFlowReturn
 gst_pad_push_event_unchecked (GstPad * pad, GstEvent * event,
-    GstPadProbeType type, gboolean * stored)
+    GstPadProbeType type)
 {
   GstFlowReturn ret;
   GstPad *peerpad;
   GstEventType event_type;
-  gboolean sticky;
-
-  sticky = GST_EVENT_IS_STICKY (event);
-
-  GST_OBJECT_LOCK (pad);
 
   /* Two checks to be made:
    * . (un)set the FLUSHING flag for flushing events,
    * . handle pad blocking */
   event_type = GST_EVENT_TYPE (event);
-  *stored = FALSE;
   switch (event_type) {
     case GST_EVENT_FLUSH_START:
       GST_PAD_SET_FLUSHING (pad);
@@ -4078,19 +4089,6 @@ gst_pad_push_event_unchecked (GstPad * pad, GstEvent * event,
     {
       if (G_UNLIKELY (GST_PAD_IS_FLUSHING (pad)))
         goto flushed;
-
-      /* store the event on the pad, but only on srcpads. We always store the
-       * event exactly how it was sent */
-      if (sticky) {
-        /* srcpad sticky events are store immediately, the received flag is set
-         * to FALSE and will be set to TRUE when we can successfully push the
-         * event to the peer pad */
-        if (gst_pad_store_sticky_event (pad, event, TRUE)) {
-          GST_DEBUG_OBJECT (pad, "event %s updated",
-              GST_EVENT_TYPE_NAME (event));
-        }
-        *stored = TRUE;
-      }
 
       switch (GST_EVENT_TYPE (event)) {
         case GST_EVENT_SEGMENT:
@@ -4137,41 +4135,24 @@ gst_pad_push_event_unchecked (GstPad * pad, GstEvent * event,
   gst_object_unref (peerpad);
 
   GST_OBJECT_LOCK (pad);
-  if (sticky) {
-    if (ret == GST_FLOW_OK) {
-      PadEvent *ev;
-
-      if ((ev = find_event (pad, event)))
-        ev->received = TRUE;
-
-      GST_DEBUG_OBJECT (pad, "event marked received");
-    } else {
-      GST_OBJECT_FLAG_SET (pad, GST_PAD_FLAG_PENDING_EVENTS);
-      GST_DEBUG_OBJECT (pad, "mark pending events");
-    }
-  }
   pad->priv->using--;
   if (pad->priv->using == 0) {
     /* pad is not active anymore, trigger idle callbacks */
     PROBE_NO_DATA (pad, GST_PAD_PROBE_TYPE_PUSH | GST_PAD_PROBE_TYPE_IDLE,
         idle_probe_stopped, ret);
   }
-  GST_OBJECT_UNLOCK (pad);
-
   return ret;
 
   /* ERROR handling */
 flushed:
   {
     GST_DEBUG_OBJECT (pad, "We're flushing");
-    GST_OBJECT_UNLOCK (pad);
     gst_event_unref (event);
     return GST_FLOW_FLUSHING;
   }
 probe_stopped:
   {
     GST_OBJECT_FLAG_SET (pad, GST_PAD_FLAG_PENDING_EVENTS);
-    GST_OBJECT_UNLOCK (pad);
     gst_event_unref (event);
 
     switch (ret) {
@@ -4189,14 +4170,12 @@ not_linked:
   {
     GST_DEBUG_OBJECT (pad, "Dropping event because pad is not linked");
     GST_OBJECT_FLAG_SET (pad, GST_PAD_FLAG_PENDING_EVENTS);
-    GST_OBJECT_UNLOCK (pad);
     gst_event_unref (event);
-    return sticky ? GST_FLOW_OK : GST_FLOW_NOT_LINKED;
+    return GST_FLOW_NOT_LINKED;
   }
 idle_probe_stopped:
   {
     GST_DEBUG_OBJECT (pad, "Idle probe returned %s", gst_flow_get_name (ret));
-    GST_OBJECT_UNLOCK (pad);
     return ret;
   }
 }
@@ -4222,7 +4201,7 @@ gst_pad_push_event (GstPad * pad, GstEvent * event)
 {
   gboolean res;
   GstPadProbeType type;
-  gboolean stored;
+  gboolean sticky, serialized;
 
   g_return_val_if_fail (GST_IS_PAD (pad), FALSE);
   g_return_val_if_fail (event != NULL, FALSE);
@@ -4240,10 +4219,35 @@ gst_pad_push_event (GstPad * pad, GstEvent * event)
   } else
     goto unknown_direction;
 
-  if (gst_pad_push_event_unchecked (pad, event, type, &stored) != GST_FLOW_OK)
-    res = stored ? TRUE : FALSE;
-  else
+  GST_OBJECT_LOCK (pad);
+  sticky = GST_EVENT_IS_STICKY (event);
+  serialized = GST_EVENT_IS_SERIALIZED (event);
+
+  if (sticky) {
+    /* can't store on flushing pads */
+    if (G_UNLIKELY (GST_PAD_IS_FLUSHING (pad)))
+      goto flushed;
+
+    /* srcpad sticky events are store immediately, the received flag is set
+     * to FALSE and will be set to TRUE when we can successfully push the
+     * event to the peer pad */
+    if (gst_pad_store_sticky_event (pad, event, TRUE)) {
+      GST_DEBUG_OBJECT (pad, "event %s updated", GST_EVENT_TYPE_NAME (event));
+    }
+  }
+  if (GST_PAD_IS_SRC (pad) && (serialized || sticky)) {
+    /* all serialized or sticky events on the srcpad trigger push of
+     * sticky events */
+    res = (check_sticky (pad) == GST_FLOW_OK);
+  }
+  if (!sticky) {
+    /* other events are pushed right away */
+    res = (gst_pad_push_event_unchecked (pad, event, type) == GST_FLOW_OK);
+  } else {
+    gst_event_unref (event);
     res = TRUE;
+  }
+  GST_OBJECT_UNLOCK (pad);
 
   return res;
 
@@ -4258,6 +4262,13 @@ wrong_direction:
 unknown_direction:
   {
     g_warning ("pad %s:%s has invalid direction", GST_DEBUG_PAD_NAME (pad));
+    gst_event_unref (event);
+    return FALSE;
+  }
+flushed:
+  {
+    GST_DEBUG_OBJECT (pad, "We're flushing");
+    GST_OBJECT_UNLOCK (pad);
     gst_event_unref (event);
     return FALSE;
   }
