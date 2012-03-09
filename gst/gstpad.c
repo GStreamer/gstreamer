@@ -426,6 +426,9 @@ remove_event_by_type (GstPad * pad, GstEventType type)
   }
 }
 
+/* check all events on srcpad against those on sinkpad. All events that are not
+ * on sinkpad are marked as received=FALSE and the PENDING_EVENTS is set on the
+ * srcpad so that the events will be sent next time */
 static void
 schedule_events (GstPad * srcpad, GstPad * sinkpad)
 {
