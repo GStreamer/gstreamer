@@ -1670,7 +1670,7 @@ gst_audio_base_sink_render (GstBaseSink * bsink, GstBuffer * buf)
 
   /* compensate for ts-offset and device-delay when negative we need to
    * clip. */
-  if (sync_offset < 0) {
+  if (G_UNLIKELY (sync_offset < 0)) {
     clip_seg.start += -sync_offset;
     if (clip_seg.stop != -1)
       clip_seg.stop += -sync_offset;
@@ -1680,13 +1680,13 @@ gst_audio_base_sink_render (GstBaseSink * bsink, GstBuffer * buf)
    * arriving before the segment.start or after segment.stop are to be
    * thrown away. All samples should also be clipped to the segment
    * boundaries */
-  if (!gst_segment_clip (&clip_seg, GST_FORMAT_TIME, time, stop, &ctime,
-          &cstop))
+  if (G_UNLIKELY (!gst_segment_clip (&clip_seg, GST_FORMAT_TIME, time, stop,
+              &ctime, &cstop)))
     goto out_of_segment;
 
   /* see if some clipping happened */
   diff = ctime - time;
-  if (diff > 0) {
+  if (G_UNLIKELY (diff > 0)) {
     /* bring clipped time to samples */
     diff = gst_util_uint64_scale_int (diff, rate, GST_SECOND);
     GST_DEBUG_OBJECT (sink, "clipping start to %" GST_TIME_FORMAT " %"
@@ -1696,7 +1696,7 @@ gst_audio_base_sink_render (GstBaseSink * bsink, GstBuffer * buf)
     time = ctime;
   }
   diff = stop - cstop;
-  if (diff > 0) {
+  if (G_UNLIKELY (diff > 0)) {
     /* bring clipped time to samples */
     diff = gst_util_uint64_scale_int (diff, rate, GST_SECOND);
     GST_DEBUG_OBJECT (sink, "clipping stop to %" GST_TIME_FORMAT " %"
@@ -1706,12 +1706,12 @@ gst_audio_base_sink_render (GstBaseSink * bsink, GstBuffer * buf)
   }
 
   /* figure out how to sync */
-  if ((clock = GST_ELEMENT_CLOCK (bsink)))
+  if (G_LIKELY ((clock = GST_ELEMENT_CLOCK (bsink))))
     sync = bsink->sync;
   else
     sync = FALSE;
 
-  if (!sync) {
+  if (G_UNLIKELY (!sync)) {
     /* no sync needed, play sample ASAP */
     render_start = gst_audio_base_sink_get_offset (sink);
     render_stop = render_start + samples;
@@ -1732,32 +1732,32 @@ gst_audio_base_sink_render (GstBaseSink * bsink, GstBuffer * buf)
 
   /* store the time of the last sample, we'll use this to perform sync on the
    * last sample when draining the buffer */
-  if (bsink->segment.rate >= 0.0) {
+  if (G_LIKELY (bsink->segment.rate >= 0.0)) {
     sink->priv->eos_time = render_stop;
   } else {
     sink->priv->eos_time = render_start;
   }
 
-  /* compensate for ts-offset and delay we know this will not underflow because we
-   * clipped above. */
-  GST_DEBUG_OBJECT (sink,
-      "compensating for sync-offset %" GST_TIME_FORMAT,
-      GST_TIME_ARGS (sync_offset));
-  render_start += sync_offset;
-  render_stop += sync_offset;
+  if (G_UNLIKELY (sync_offset != 0)) {
+    /* compensate for ts-offset and delay we know this will not underflow because we
+     * clipped above. */
+    GST_DEBUG_OBJECT (sink,
+        "compensating for sync-offset %" GST_TIME_FORMAT,
+        GST_TIME_ARGS (sync_offset));
+    render_start += sync_offset;
+    render_stop += sync_offset;
+  }
 
-  GST_DEBUG_OBJECT (sink, "adding base_time %" GST_TIME_FORMAT,
-      GST_TIME_ARGS (base_time));
+  if (base_time != 0) {
+    GST_DEBUG_OBJECT (sink, "adding base_time %" GST_TIME_FORMAT,
+        GST_TIME_ARGS (base_time));
 
-  /* add base time to sync against the clock */
-  render_start += base_time;
-  render_stop += base_time;
+    /* add base time to sync against the clock */
+    render_start += base_time;
+    render_stop += base_time;
+  }
 
-  GST_DEBUG_OBJECT (sink,
-      "after compensation: start %" GST_TIME_FORMAT " - stop %" GST_TIME_FORMAT,
-      GST_TIME_ARGS (render_start), GST_TIME_ARGS (render_stop));
-
-  if ((slaved = clock != sink->provided_clock)) {
+  if (G_UNLIKELY ((slaved = (clock != sink->provided_clock)))) {
     /* handle clock slaving */
     gst_audio_base_sink_handle_slaving (sink, render_start, render_stop,
         &render_start, &render_stop);
@@ -1774,16 +1774,20 @@ gst_audio_base_sink_render (GstBaseSink * bsink, GstBuffer * buf)
 
   /* bring to position in the ringbuffer */
   time_offset = GST_AUDIO_CLOCK_CAST (sink->provided_clock)->time_offset;
-  GST_DEBUG_OBJECT (sink,
-      "time offset %" GST_TIME_FORMAT, GST_TIME_ARGS (time_offset));
-  if (render_start > time_offset)
-    render_start -= time_offset;
-  else
-    render_start = 0;
-  if (render_stop > time_offset)
-    render_stop -= time_offset;
-  else
-    render_stop = 0;
+
+  if (G_UNLIKELY (time_offset != 0)) {
+    GST_DEBUG_OBJECT (sink,
+        "apply time offset %" GST_TIME_FORMAT, GST_TIME_ARGS (time_offset));
+
+    if (render_start > time_offset)
+      render_start -= time_offset;
+    else
+      render_start = 0;
+    if (render_stop > time_offset)
+      render_stop -= time_offset;
+    else
+      render_stop = 0;
+  }
 
   /* in some clock slaving cases, all late samples end up at 0 first,
    * and subsequent ones align with that until threshold exceeded,
@@ -1798,9 +1802,9 @@ gst_audio_base_sink_render (GstBaseSink * bsink, GstBuffer * buf)
   /* positive playback rate, first sample is render_start, negative rate, first
    * sample is render_stop. When no rate conversion is active, render exactly
    * the amount of input samples to avoid aligning to rounding errors. */
-  if (bsink->segment.rate >= 0.0) {
+  if (G_LIKELY (bsink->segment.rate >= 0.0)) {
     sample_offset = render_start;
-    if (bsink->segment.rate == 1.0)
+    if (G_LIKELY (bsink->segment.rate == 1.0))
       render_stop = sample_offset + samples;
   } else {
     sample_offset = render_stop;
@@ -1828,7 +1832,8 @@ gst_audio_base_sink_render (GstBaseSink * bsink, GstBuffer * buf)
   render_start += align;
 
   /* only align stop if we are not slaved to resample */
-  if (slaved && sink->priv->slave_method == GST_AUDIO_BASE_SINK_SLAVE_RESAMPLE) {
+  if (G_UNLIKELY (slaved
+          && sink->priv->slave_method == GST_AUDIO_BASE_SINK_SLAVE_RESAMPLE)) {
     GST_DEBUG_OBJECT (sink, "no stop time align needed: we are slaved");
     goto no_align;
   }
@@ -1839,7 +1844,7 @@ no_align:
   out_samples = render_stop - render_start;
 
   /* we render the first or last sample first, depending on the rate */
-  if (bsink->segment.rate >= 0.0)
+  if (G_LIKELY (bsink->segment.rate >= 0.0))
     sample_offset = render_start;
   else
     sample_offset = render_stop;
@@ -1858,7 +1863,7 @@ no_align:
 
     GST_DEBUG_OBJECT (sink, "wrote %u of %u", written, samples);
     /* if we wrote all, we're done */
-    if (written == samples)
+    if (G_LIKELY (written == samples))
       break;
 
     /* else something interrupted us and we wait for preroll. */
@@ -1882,7 +1887,7 @@ no_align:
   } while (TRUE);
   gst_buffer_unmap (buf, &info);
 
-  if (align_next)
+  if (G_LIKELY (align_next))
     sink->next_sample = sample_offset;
   else
     sink->next_sample = -1;
@@ -1890,7 +1895,8 @@ no_align:
   GST_DEBUG_OBJECT (sink, "next sample expected at %" G_GUINT64_FORMAT,
       sink->next_sample);
 
-  if (GST_CLOCK_TIME_IS_VALID (stop) && stop >= bsink->segment.stop) {
+  if (G_UNLIKELY (GST_CLOCK_TIME_IS_VALID (stop)
+          && stop >= bsink->segment.stop)) {
     GST_DEBUG_OBJECT (sink,
         "start playback because we are at the end of segment");
     gst_audio_ring_buffer_start (ringbuf);
