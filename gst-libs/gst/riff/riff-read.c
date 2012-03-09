@@ -632,6 +632,9 @@ gst_riff_parse_info (GstElement * element,
       tsize = size;
     }
 
+    /* make uppercase */
+    tag = tag & 0xDFDFDFDF;
+
     /* find out the type of metadata */
     switch (tag) {
       case GST_RIFF_INFO_IARL:
