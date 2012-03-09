@@ -421,13 +421,9 @@ AG_GST_CHECK_FEATURE(DIRECTSOUND, [DirectSound plug-in], directsoundsink, [
 #include <dxerr9.h>
 #include <dsound.h>
 ]], [[
-int main ()
-{
   DXGetErrorString9 (0);
   DirectSoundCreate(NULL, NULL, NULL);
-
-  return 0;
-}]])
+]])
 ],
     [HAVE_DIRECTSOUND="yes"],
     [HAVE_DIRECTSOUND="no"])
