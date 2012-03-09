@@ -437,19 +437,14 @@ AG_GST_CHECK_FEATURE(DIRECTSOUND, [DirectSound], directsoundsrc, [
   LDFLAGS="$LDFLAGS $DIRECTX_LDFLAGS"
   LIBS="$LIBS -ldsound -ldxerr9 -luser32"
   AC_MSG_CHECKING(for DirectSound LDFLAGS)
-  AC_LINK_IFELSE([
+  AC_LINK_IFELSE([AC_LANG_PROGRAM([[
 #include <windows.h>
 #include <dxerr9.h>
 #include <dsound.h>
-
-int main ()
-{
+]], [[
   DXGetErrorString9 (0);
   DirectSoundCreate(NULL, NULL, NULL);
-
-  return 0;
-}
-],
+]])],
     [HAVE_DIRECTSOUND="yes"],
     [HAVE_DIRECTSOUND="no"])
   AC_MSG_RESULT($HAVE_DIRECTSOUND)
@@ -478,17 +473,12 @@ AG_GST_CHECK_FEATURE(DIRECT3D, [Direct3D plug-in], direct3dsink, [
   LDFLAGS="$LDFLAGS $DIRECTX_LDFLAGS"
   LIBS="$LIBS -ld3d9 -lgdi32"
   AC_MSG_CHECKING(for Direct3D LDFLAGS)
-  AC_LINK_IFELSE([
+  AC_LINK_IFELSE([AC_LANG_PROGRAM([[
 #include <windows.h>
 #include <d3d9.h>
-
-int main ()
-{
+]], [[
   Direct3DCreate9(D3D_SDK_VERSION);
-
-  return 0;
-}
-],
+]])],
     [HAVE_DIRECT3D="yes"],
     [HAVE_DIRECT3D="no"])
   AC_MSG_RESULT($HAVE_DIRECT3D)
@@ -514,18 +504,13 @@ AG_GST_CHECK_FEATURE(DIRECTDRAW, [DirectDraw plug-in], directdrawsink, [
   LDFLAGS="$LDFLAGS $DIRECTX_LDFLAGS"
   LIBS="$LIBS -lddraw -lgdi32"
   AC_MSG_CHECKING(for DirectDraw LDFLAGS)
-  AC_LINK_IFELSE([
+  AC_LINK_IFELSE([AC_LANG_PROGRAM([[
 #include <windows.h>
 #include <ddraw.h>
-
-int main ()
-{
+]], [[
   GetStockObject(0);
   DirectDrawCreate(NULL, NULL, NULL);
-
-  return 0;
-}
-],
+]])],
     [HAVE_DIRECTDRAW="yes"],
     [HAVE_DIRECTDRAW="no"])
   AC_MSG_RESULT($HAVE_DIRECTDRAW)
