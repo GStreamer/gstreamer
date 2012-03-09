@@ -110,10 +110,10 @@ Allocation query
         - a buffer pool when need-pool was TRUE and the peer can provide a pool.
           This pool is inactive and can be configured when needed.
 
-  (out) "metadata", G_TYPE_ARRAY of G_TYPE_STRING
-        - an array of metadata API strings that can be accepted.
+  (out) "metadata", G_TYPE_ARRAY of GType
+        - an array of metadata API types that can be accepted.
 
-  (out) "allocator", G_TYPE_ARRAY of G_TYPE_STRING
+  (out) "allocator", G_TYPE_ARRAY of GstAllocator *
         - an array of allocators that can be used.
 
 
