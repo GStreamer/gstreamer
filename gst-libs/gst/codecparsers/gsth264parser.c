@@ -1309,7 +1309,8 @@ gst_h264_parser_identify_nalu_avc (GstH264NalParser * nalparser,
   size = size - offset;
   gst_bit_reader_init (&br, data + offset, size);
 
-  gst_bit_reader_get_bits_uint32 (&br, &nalu->size, nal_length_size * 8);
+  nalu->size = gst_bit_reader_get_bits_uint32_unchecked (&br,
+      nal_length_size * 8);
   nalu->sc_offset = offset;
   nalu->offset = offset + nal_length_size;
 

@@ -1491,30 +1491,30 @@ gst_h264_parse_pre_push_frame (GstBaseParse * parse, GstBaseParseFrame * frame)
           const gboolean bs = h264parse->format == GST_H264_PARSE_FORMAT_BYTE;
 
           gst_byte_writer_init_with_size (&bw, GST_BUFFER_SIZE (buffer), FALSE);
-          gst_byte_writer_put_data (&bw, GST_BUFFER_DATA (buffer),
+          gst_byte_writer_put_data_unchecked (&bw, GST_BUFFER_DATA (buffer),
               h264parse->idr_pos);
           GST_DEBUG_OBJECT (h264parse, "- inserting SPS/PPS");
           for (i = 0; i < GST_H264_MAX_SPS_COUNT; i++) {
             if ((codec_nal = h264parse->sps_nals[i])) {
               GST_DEBUG_OBJECT (h264parse, "inserting SPS nal");
-              gst_byte_writer_put_uint32_be (&bw,
+              gst_byte_writer_put_uint32_be_unchecked (&bw,
                   bs ? 1 : GST_BUFFER_SIZE (codec_nal));
-              gst_byte_writer_put_data (&bw, GST_BUFFER_DATA (codec_nal),
-                  GST_BUFFER_SIZE (codec_nal));
+              gst_byte_writer_put_data_unchecked (&bw,
+                  GST_BUFFER_DATA (codec_nal), GST_BUFFER_SIZE (codec_nal));
               h264parse->last_report = new_ts;
             }
           }
           for (i = 0; i < GST_H264_MAX_PPS_COUNT; i++) {
             if ((codec_nal = h264parse->pps_nals[i])) {
               GST_DEBUG_OBJECT (h264parse, "inserting PPS nal");
-              gst_byte_writer_put_uint32_be (&bw,
+              gst_byte_writer_put_uint32_be_unchecked (&bw,
                   bs ? 1 : GST_BUFFER_SIZE (codec_nal));
-              gst_byte_writer_put_data (&bw, GST_BUFFER_DATA (codec_nal),
-                  GST_BUFFER_SIZE (codec_nal));
+              gst_byte_writer_put_data_unchecked (&bw,
+                  GST_BUFFER_DATA (codec_nal), GST_BUFFER_SIZE (codec_nal));
               h264parse->last_report = new_ts;
             }
           }
-          gst_byte_writer_put_data (&bw,
+          gst_byte_writer_put_data_unchecked (&bw,
               GST_BUFFER_DATA (buffer) + h264parse->idr_pos,
               GST_BUFFER_SIZE (buffer) - h264parse->idr_pos);
           /* collect result and push */

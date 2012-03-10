@@ -441,7 +441,7 @@ mxf_mpeg_is_mpeg2_keyframe (GstBuffer * buffer)
       guint8 type = 0;
 
       /* Found sync code */
-      gst_byte_reader_skip (&reader, 3);
+      gst_byte_reader_skip_unchecked (&reader, 3);
 
       if (!gst_byte_reader_get_uint8 (&reader, &type))
         break;
@@ -465,9 +465,8 @@ mxf_mpeg_is_mpeg2_keyframe (GstBuffer * buffer)
           return FALSE;
         }
       }
-    } else {
-      gst_byte_reader_skip (&reader, 1);
-    }
+    } else if (gst_byte_reader_skip (&reader, 1) == FALSE)
+      break;
   }
 
   return FALSE;
@@ -484,7 +483,7 @@ mxf_mpeg_is_mpeg4_keyframe (GstBuffer * buffer)
       guint8 type = 0;
 
       /* Found sync code */
-      gst_byte_reader_skip (&reader, 3);
+      gst_byte_reader_skip_unchecked (&reader, 3);
 
       if (!gst_byte_reader_get_uint8 (&reader, &type))
         break;
@@ -502,9 +501,8 @@ mxf_mpeg_is_mpeg4_keyframe (GstBuffer * buffer)
           return FALSE;
         }
       }
-    } else {
-      gst_byte_reader_skip (&reader, 1);
-    }
+    } else if (gst_byte_reader_skip (&reader, 1) == FALSE)
+      break;
   }
 
   return FALSE;
@@ -1024,7 +1022,7 @@ mxf_mpeg_is_mpeg2_frame (GstBuffer * buffer)
       guint8 type = 0;
 
       /* Found sync code */
-      gst_byte_reader_skip (&reader, 3);
+      gst_byte_reader_skip_unchecked (&reader, 3);
 
       if (!gst_byte_reader_get_uint8 (&reader, &type))
         break;
@@ -1034,7 +1032,8 @@ mxf_mpeg_is_mpeg2_frame (GstBuffer * buffer)
         return TRUE;
       }
     } else {
-      gst_byte_reader_skip (&reader, 1);
+      if (gst_byte_reader_skip (&reader, 1) == FALSE)
+        break;
     }
   }
 
@@ -1052,7 +1051,7 @@ mxf_mpeg_is_mpeg4_frame (GstBuffer * buffer)
       guint8 type = 0;
 
       /* Found sync code */
-      gst_byte_reader_skip (&reader, 3);
+      gst_byte_reader_skip_unchecked (&reader, 3);
 
       if (!gst_byte_reader_get_uint8 (&reader, &type))
         break;
@@ -1062,7 +1061,8 @@ mxf_mpeg_is_mpeg4_frame (GstBuffer * buffer)
         return TRUE;
       }
     } else {
-      gst_byte_reader_skip (&reader, 1);
+      if (gst_byte_reader_skip (&reader, 1) == FALSE)
+        break;
     }
   }
 

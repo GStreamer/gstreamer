@@ -692,7 +692,7 @@ get_unary (GstBitReader * br, gint stop, gint len)
   guint8 current = 0xff;
 
   for (i = 0; i < len; i++) {
-    gst_bit_reader_get_bits_uint8 (br, &current, 1);
+    current = gst_bit_reader_get_bits_uint8_unchecked (br, 1);
     if (current == stop)
       return i;
   }

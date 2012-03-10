@@ -65,10 +65,8 @@ gst_h263_parse_base_init (gpointer g_class)
 {
   GstElementClass *gstelement_class = GST_ELEMENT_CLASS (g_class);
 
-  gst_element_class_add_static_pad_template (gstelement_class,
-      &srctemplate);
-  gst_element_class_add_static_pad_template (gstelement_class,
-      &sinktemplate);
+  gst_element_class_add_static_pad_template (gstelement_class, &srctemplate);
+  gst_element_class_add_static_pad_template (gstelement_class, &sinktemplate);
   gst_element_class_set_details_simple (gstelement_class, "H.263 parser",
       "Codec/Parser/Video",
       "Parses H.263 streams",
@@ -163,7 +161,8 @@ find_psc (GstBuffer * buffer, guint skip)
   if (!gst_byte_reader_set_pos (&br, skip))
     goto out;
 
-  gst_byte_reader_peek_uint24_be (&br, &psc);
+  if (gst_byte_reader_peek_uint24_be (&br, &psc) == FALSE)
+    goto out;
 
   /* Scan for the picture start code (22 bits - 0x0020) */
   while ((gst_byte_reader_get_remaining (&br) >= 3)) {
@@ -171,8 +170,8 @@ find_psc (GstBuffer * buffer, guint skip)
         ((psc & 0xffffc0) == 0x000080)) {
       psc_pos = gst_byte_reader_get_pos (&br);
       break;
-    } else
-      gst_byte_reader_skip (&br, 1);
+    } else if (gst_byte_reader_skip (&br, 1) == FALSE)
+      break;
   }
 
 out:

@@ -895,10 +895,8 @@ gst_h264_parse_base_init (gpointer g_class)
 {
   GstElementClass *gstelement_class = GST_ELEMENT_CLASS (g_class);
 
-  gst_element_class_add_static_pad_template (gstelement_class,
-      &srctemplate);
-  gst_element_class_add_static_pad_template (gstelement_class,
-      &sinktemplate);
+  gst_element_class_add_static_pad_template (gstelement_class, &srctemplate);
+  gst_element_class_add_static_pad_template (gstelement_class, &sinktemplate);
   gst_element_class_set_details_simple (gstelement_class, "H264Parse",
       "Codec/Parser/Video",
       "Parses raw h264 stream",
@@ -1732,7 +1730,7 @@ gst_h264_parse_push_buffer (GstH264Parse * h264parse, GstBuffer * buf)
           GstBuffer *codec_nal, *new_buf;
 
           gst_byte_writer_init_with_size (&bw, GST_BUFFER_SIZE (buf), FALSE);
-          gst_byte_writer_put_data (&bw, GST_BUFFER_DATA (buf),
+          gst_byte_writer_put_data_unchecked (&bw, GST_BUFFER_DATA (buf),
               h264parse->idr_offset);
           GST_DEBUG_OBJECT (h264parse, "- inserting SPS/PPS");
           for (i = 0; i < MAX_SPS_COUNT; i++) {
@@ -1741,8 +1739,8 @@ gst_h264_parse_push_buffer (GstH264Parse * h264parse, GstBuffer * buf)
               codec_nal = gst_buffer_copy (h264parse->sps_nals[i]);
               codec_nal =
                   gst_h264_parse_write_nal_prefix (h264parse, codec_nal);
-              gst_byte_writer_put_data (&bw, GST_BUFFER_DATA (codec_nal),
-                  GST_BUFFER_SIZE (codec_nal));
+              gst_byte_writer_put_data_unchecked (&bw,
+                  GST_BUFFER_DATA (codec_nal), GST_BUFFER_SIZE (codec_nal));
               h264parse->last_report = timestamp;
             }
           }
@@ -1752,12 +1750,12 @@ gst_h264_parse_push_buffer (GstH264Parse * h264parse, GstBuffer * buf)
               codec_nal = gst_buffer_copy (h264parse->pps_nals[i]);
               codec_nal =
                   gst_h264_parse_write_nal_prefix (h264parse, codec_nal);
-              gst_byte_writer_put_data (&bw, GST_BUFFER_DATA (codec_nal),
-                  GST_BUFFER_SIZE (codec_nal));
+              gst_byte_writer_put_data_unchecked (&bw,
+                  GST_BUFFER_DATA (codec_nal), GST_BUFFER_SIZE (codec_nal));
               h264parse->last_report = timestamp;
             }
           }
-          gst_byte_writer_put_data (&bw,
+          gst_byte_writer_put_data_unchecked (&bw,
               GST_BUFFER_DATA (buf) + h264parse->idr_offset,
               GST_BUFFER_SIZE (buf) - h264parse->idr_offset);
           /* collect result and push */
