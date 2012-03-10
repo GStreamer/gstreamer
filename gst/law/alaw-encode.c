@@ -306,7 +306,7 @@ gst_alaw_enc_getcaps (GstPad * pad, GstCaps * filter)
   GstALawEnc *alawenc;
   GstPad *otherpad;
   GstCaps *othercaps, *result;
-  const GstCaps *templ;
+  GstCaps *templ;
   const gchar *name;
   gint i;
 
@@ -350,10 +350,11 @@ gst_alaw_enc_getcaps (GstPad * pad, GstCaps * filter)
     }
     /* filter against the allowed caps of the pad to return our result */
     result = gst_caps_intersect (othercaps, templ);
+    gst_caps_unref (templ);
     gst_caps_unref (othercaps);
   } else {
     /* there was no peer, return the template caps */
-    result = gst_caps_copy (templ);
+    result = templ;
   }
   if (filter && result) {
     GstCaps *temp;

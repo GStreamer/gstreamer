@@ -110,7 +110,7 @@ static GstCaps *
 gst_alpha_color_transform_caps (GstBaseTransform * btrans,
     GstPadDirection direction, GstCaps * caps, GstCaps * filter)
 {
-  const GstCaps *tmpl_caps = NULL;
+  GstCaps *tmpl_caps = NULL;
   GstCaps *result = NULL, *local_caps = NULL;
   guint i;
 
@@ -138,6 +138,7 @@ gst_alpha_color_transform_caps (GstBaseTransform * btrans,
 
   /* Intersect with our template caps */
   result = gst_caps_intersect (local_caps, tmpl_caps);
+  gst_caps_unref (tmpl_caps);
 
   gst_caps_unref (local_caps);
   gst_caps_do_simplify (result);

@@ -733,6 +733,7 @@ gst_jpeg_dec_getcaps (GstPad * pad, GstCaps * filter)
   GstJpegDec *dec;
   GstCaps *caps;
   GstPad *peer;
+  GstCaps *templ_caps;
 
   dec = GST_JPEG_DEC (GST_OBJECT_PARENT (pad));
 
@@ -741,9 +742,10 @@ gst_jpeg_dec_getcaps (GstPad * pad, GstCaps * filter)
 
   peer = gst_pad_get_peer (dec->srcpad);
 
+  templ_caps = gst_pad_get_pad_template_caps (pad);
+
   if (peer) {
     GstCaps *peer_caps;
-    const GstCaps *templ_caps;
     GstStructure *s;
     guint i, n;
 
@@ -758,13 +760,13 @@ gst_jpeg_dec_getcaps (GstPad * pad, GstCaps * filter)
       gst_structure_set_name (s, "image/jpeg");
     }
 
-    templ_caps = gst_pad_get_pad_template_caps (pad);
     caps = gst_caps_intersect_full (peer_caps, templ_caps,
         GST_CAPS_INTERSECT_FIRST);
     gst_caps_unref (peer_caps);
+    gst_caps_unref (templ_caps);
     gst_object_unref (peer);
   } else {
-    caps = gst_caps_copy (gst_pad_get_pad_template_caps (pad));
+    caps = templ_caps;
   }
 
   return caps;

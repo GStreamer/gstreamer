@@ -348,7 +348,7 @@ gst_au_parse_parse_header (GstAuParse * auparse)
         "channels", G_TYPE_INT, auparse->channels, NULL);
     auparse->sample_size = auparse->channels;
   } else if (format != GST_AUDIO_FORMAT_UNKNOWN) {
-    const GstCaps *templ_caps = gst_pad_get_pad_template_caps (auparse->srcpad);
+    GstCaps *templ_caps = gst_pad_get_pad_template_caps (auparse->srcpad);
     GstCaps *intersection;
 
     tempcaps = gst_caps_new_simple ("audio/x-raw",
@@ -358,6 +358,7 @@ gst_au_parse_parse_header (GstAuParse * auparse)
 
     intersection = gst_caps_intersect (tempcaps, templ_caps);
     gst_caps_unref (tempcaps);
+    gst_caps_unref (templ_caps);
     tempcaps = intersection;
   } else if (layout[0]) {
     tempcaps = gst_caps_new_simple ("audio/x-adpcm",

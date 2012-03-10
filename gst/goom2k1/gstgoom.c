@@ -249,7 +249,7 @@ gst_goom_src_negotiate (GstGoom * goom)
 {
   GstCaps *othercaps, *target;
   GstStructure *structure;
-  const GstCaps *templ;
+  GstCaps *templ;
   GstQuery *query;
   GstBufferPool *pool = NULL;
   guint size, min, max, prefix, alignment;
@@ -262,14 +262,16 @@ gst_goom_src_negotiate (GstGoom * goom)
   othercaps = gst_pad_peer_query_caps (goom->srcpad, NULL);
   if (othercaps) {
     target = gst_caps_intersect (othercaps, templ);
+    gst_caps_unref (templ);
     gst_caps_unref (othercaps);
 
     if (gst_caps_is_empty (target))
       goto no_format;
 
+    target = gst_caps_make_writable (target);
     gst_caps_truncate (target);
   } else {
-    target = gst_caps_ref ((GstCaps *) templ);
+    target = gst_caps_copy (templ);
   }
 
   structure = gst_caps_get_structure (target, 0);
