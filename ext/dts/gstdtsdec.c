@@ -286,7 +286,7 @@ gst_dtsdec_parse (GstAudioDecoder * bdec, GstAdapter * adapter,
   bit_rate = dts->bit_rate;
   sample_rate = dts->sample_rate;
   flags = 0;
-  while (av >= 7) {
+  while (size >= 7) {
     length = dca_syncinfo (dts->state, data, &flags,
         &sample_rate, &bit_rate, &frame_length);
 
