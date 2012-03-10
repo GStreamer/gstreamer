@@ -97,7 +97,7 @@ find_start_code (GstBitReader * b)
   while (gst_bit_reader_peek_bits_uint32 (b, &bits, 32)) {
     if (bits >> 8 == 0x1) {
       return TRUE;
-    } else if (!gst_bit_reader_skip (b, 8) == FALSE)
+    } else if (gst_bit_reader_skip (b, 8) == FALSE)
       break;
   }
 
