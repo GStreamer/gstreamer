@@ -43,7 +43,7 @@
 /* ********************** typefinding in pull mode ************************ */
 
 static void
-helper_find_suggest (gpointer data, guint probability, const GstCaps * caps);
+helper_find_suggest (gpointer data, guint probability, GstCaps * caps);
 
 typedef struct
 {
@@ -201,7 +201,7 @@ error:
  */
 static void
 helper_find_suggest (gpointer data, GstTypeFindProbability probability,
-    const GstCaps * caps)
+    GstCaps * caps)
 {
   GstTypeFindHelper *helper = (GstTypeFindHelper *) data;
 
@@ -210,9 +210,7 @@ helper_find_suggest (gpointer data, GstTypeFindProbability probability,
       GST_OBJECT_NAME (helper->factory), probability, caps);
 
   if (probability > helper->best_probability) {
-    GstCaps *copy = gst_caps_copy (caps);
-
-    gst_caps_take (&helper->caps, copy);
+    gst_caps_replace (&helper->caps, caps);
     helper->best_probability = probability;
   }
 }
@@ -445,7 +443,7 @@ buf_helper_find_peek (gpointer data, gint64 off, guint size)
  */
 static void
 buf_helper_find_suggest (gpointer data, GstTypeFindProbability probability,
-    const GstCaps * caps)
+    GstCaps * caps)
 {
   GstTypeFindBufHelper *helper = (GstTypeFindBufHelper *) data;
 
@@ -455,10 +453,7 @@ buf_helper_find_suggest (gpointer data, GstTypeFindProbability probability,
 
   /* Note: not >= as we call typefinders in order of rank, highest first */
   if (probability > helper->best_probability) {
-    GstCaps *copy = gst_caps_copy (caps);
-
-    gst_caps_replace (&helper->caps, copy);
-    gst_caps_unref (copy);
+    gst_caps_replace (&helper->caps, caps);
     helper->best_probability = probability;
   }
 }

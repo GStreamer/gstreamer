@@ -145,8 +145,7 @@ gst_type_find_peek (GstTypeFind * find, gint64 offset, guint size)
  * It is up to the caller of the #GstTypeFindFunction to interpret these values.
  */
 void
-gst_type_find_suggest (GstTypeFind * find, guint probability,
-    const GstCaps * caps)
+gst_type_find_suggest (GstTypeFind * find, guint probability, GstCaps * caps)
 {
   g_return_if_fail (find->suggest != NULL);
   g_return_if_fail (probability <= 100);

@@ -175,10 +175,8 @@ static guint gst_type_find_element_signals[LAST_SIGNAL] = { 0 };
 
 static void
 gst_type_find_element_have_type (GstTypeFindElement * typefind,
-    guint probability, const GstCaps * caps)
+    guint probability, GstCaps * caps)
 {
-  GstCaps *copy;
-
   g_assert (caps != NULL);
 
   GST_INFO_OBJECT (typefind, "found caps %" GST_PTR_FORMAT ", probability=%u",
@@ -187,12 +185,10 @@ gst_type_find_element_have_type (GstTypeFindElement * typefind,
   GST_OBJECT_LOCK (typefind);
   if (typefind->caps)
     gst_caps_unref (typefind->caps);
-  typefind->caps = gst_caps_copy (caps);
-  copy = gst_caps_ref (typefind->caps);
+  typefind->caps = gst_caps_ref (caps);
   GST_OBJECT_UNLOCK (typefind);
 
-  gst_pad_push_event (typefind->src, gst_event_new_caps (copy));
-  gst_caps_unref (copy);
+  gst_pad_push_event (typefind->src, gst_event_new_caps (caps));
 }
 
 static void
