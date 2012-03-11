@@ -591,15 +591,14 @@ same_clock_rate_fold (const GValue * item, GValue * ret, gpointer user_data)
   GstPad *mypad = user_data;
   GstPad *pad = g_value_get_object (item);
   GstCaps *peercaps;
-  const GstCaps *accumcaps;
+  GstCaps *accumcaps;
   GstCaps *intersect;
 
-  if (pad == mypad) {
+  if (pad == mypad)
     return TRUE;
-  }
 
-  accumcaps = gst_value_get_caps (ret);
-  peercaps = gst_pad_peer_query_caps (pad, (GstCaps *) accumcaps);
+  accumcaps = g_value_get_boxed (ret);
+  peercaps = gst_pad_peer_query_caps (pad, accumcaps);
   if (!peercaps) {
     g_warning ("no peercaps");
     return TRUE;
