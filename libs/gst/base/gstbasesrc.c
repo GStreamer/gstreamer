@@ -285,8 +285,8 @@ gst_base_src_get_type (void)
 
 static GstCaps *gst_base_src_default_get_caps (GstBaseSrc * bsrc,
     GstCaps * filter);
-static void gst_base_src_default_fixate (GstBaseSrc * src, GstCaps * caps);
-static void gst_base_src_fixate (GstBaseSrc * src, GstCaps * caps);
+static GstCaps *gst_base_src_default_fixate (GstBaseSrc * src, GstCaps * caps);
+static GstCaps *gst_base_src_fixate (GstBaseSrc * src, GstCaps * caps);
 
 static gboolean gst_base_src_is_random_access (GstBaseSrc * src);
 static gboolean gst_base_src_activate_mode (GstPad * pad, GstObject * parent,
@@ -898,14 +898,14 @@ gst_base_src_default_get_caps (GstBaseSrc * bsrc, GstCaps * filter)
   return caps;
 }
 
-static void
+static GstCaps *
 gst_base_src_default_fixate (GstBaseSrc * bsrc, GstCaps * caps)
 {
   GST_DEBUG_OBJECT (bsrc, "using default caps fixate function");
-  gst_caps_fixate (caps);
+  return gst_caps_fixate (caps);
 }
 
-static void
+static GstCaps *
 gst_base_src_fixate (GstBaseSrc * bsrc, GstCaps * caps)
 {
   GstBaseSrcClass *bclass;
@@ -913,7 +913,9 @@ gst_base_src_fixate (GstBaseSrc * bsrc, GstCaps * caps)
   bclass = GST_BASE_SRC_GET_CLASS (bsrc);
 
   if (bclass->fixate)
-    bclass->fixate (bsrc, caps);
+    caps = bclass->fixate (bsrc, caps);
+
+  return caps;
 }
 
 static gboolean
@@ -2866,8 +2868,7 @@ gst_base_src_default_negotiate (GstBaseSrc * basesrc)
        * nego is not needed */
       result = TRUE;
     } else {
-      caps = gst_caps_make_writable (caps);
-      gst_base_src_fixate (basesrc, caps);
+      caps = gst_base_src_fixate (basesrc, caps);
       GST_DEBUG_OBJECT (basesrc, "fixated to: %" GST_PTR_FORMAT, caps);
       if (gst_caps_is_fixed (caps)) {
         /* yay, fixed caps, use those then, it's possible that the subclass does

@@ -839,7 +839,7 @@ void                    gst_object_default_error        (GstObject    * source,
 /* element functions */
 void                    gst_element_create_all_pads     (GstElement *element);
 GstPad*                 gst_element_get_compatible_pad  (GstElement *element, GstPad *pad,
-                                                         const GstCaps *caps);
+                                                         GstCaps *caps);
 
 GstPadTemplate*         gst_element_get_compatible_pad_template (GstElement *element, GstPadTemplate *compattempl);
 

@@ -172,7 +172,7 @@ struct _GstBaseSrcClass {
   /* decide on caps */
   gboolean      (*negotiate)    (GstBaseSrc *src);
   /* called if, in negotiation, caps need fixating */
-  void          (*fixate)       (GstBaseSrc *src, GstCaps *caps);
+  GstCaps *     (*fixate)       (GstBaseSrc *src, GstCaps *caps);
   /* notify the subclass of new caps */
   gboolean      (*set_caps)     (GstBaseSrc *src, GstCaps *caps);
 

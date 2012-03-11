@@ -720,8 +720,7 @@ gst_base_transform_query_caps (GstBaseTransform * trans, GstPad * pad,
     /* Now try if we can put the untransformed downstream caps first */
     temp = gst_caps_intersect_full (peercaps, caps, GST_CAPS_INTERSECT_FIRST);
     if (!gst_caps_is_empty (temp)) {
-      gst_caps_merge (temp, caps);
-      caps = temp;
+      caps = gst_caps_merge (temp, caps);
     } else {
       gst_caps_unref (temp);
     }
@@ -963,8 +962,7 @@ static GstCaps *
 gst_base_transform_default_fixate_caps (GstBaseTransform * trans,
     GstPadDirection direction, GstCaps * caps, GstCaps * othercaps)
 {
-  othercaps = gst_caps_make_writable (othercaps);
-  gst_caps_fixate (othercaps);
+  othercaps = gst_caps_fixate (othercaps);
   GST_DEBUG_OBJECT (trans, "fixated to %" GST_PTR_FORMAT, othercaps);
 
   return othercaps;

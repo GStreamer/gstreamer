@@ -333,7 +333,7 @@ init_factories (void)
       which will continue with the above approach.
     </para>
     <programlisting><!-- example-begin dynamic.c c -->
-static void try_to_plug (GstPad *pad, const GstCaps *caps);
+static void try_to_plug (GstPad *pad, GstCaps *caps);
 
 static GstElement *audiosink;
 
@@ -413,7 +413,7 @@ close_link (GstPad      *srcpad,
 
 static void
 try_to_plug (GstPad        *pad,
-	     const GstCaps *caps)
+	     GstCaps       *caps)
 {
   GstObject *parent = GST_OBJECT (GST_OBJECT_PARENT (pad));
   const gchar *mime;

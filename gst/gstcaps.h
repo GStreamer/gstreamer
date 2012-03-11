@@ -384,20 +384,20 @@ void              gst_static_caps_cleanup          (GstStaticCaps *static_caps);
 /* manipulation */
 void              gst_caps_append                  (GstCaps       *caps1,
                                                     GstCaps       *caps2);
-void              gst_caps_merge                   (GstCaps       *caps1,
-                                                    GstCaps       *caps2);
 void              gst_caps_append_structure        (GstCaps       *caps,
                                                     GstStructure  *structure);
 void              gst_caps_remove_structure        (GstCaps       *caps, guint idx);
-void              gst_caps_merge_structure         (GstCaps       *caps,
-                                                    GstStructure  *structure);
+GstCaps *         gst_caps_merge                   (GstCaps       *caps1,
+                                                    GstCaps       *caps2) G_GNUC_WARN_UNUSED_RESULT;
+GstCaps *         gst_caps_merge_structure         (GstCaps       *caps,
+                                                    GstStructure  *structure) G_GNUC_WARN_UNUSED_RESULT;
 guint             gst_caps_get_size                (const GstCaps *caps);
 GstStructure *    gst_caps_get_structure           (const GstCaps *caps,
                                                     guint          index);
-GstStructure *    gst_caps_steal_structure         (GstCaps *caps,
+GstStructure *    gst_caps_steal_structure         (GstCaps       *caps,
                                                     guint          index) G_GNUC_WARN_UNUSED_RESULT;
 GstCaps *         gst_caps_copy_nth                (const GstCaps *caps, guint nth) G_GNUC_WARN_UNUSED_RESULT;
-void              gst_caps_truncate                (GstCaps       *caps);
+GstCaps *         gst_caps_truncate                (GstCaps       *caps) G_GNUC_WARN_UNUSED_RESULT;
 void              gst_caps_set_value               (GstCaps       *caps,
                                                     const char    *field,
                                                     const GValue  *value);
@@ -428,19 +428,19 @@ gboolean          gst_caps_is_strictly_equal	   (const GstCaps *caps1,
 
 
 /* operations */
-GstCaps *         gst_caps_intersect               (const GstCaps *caps1,
-						    const GstCaps *caps2) G_GNUC_WARN_UNUSED_RESULT;
-GstCaps *         gst_caps_intersect_full          (const GstCaps *caps1,
-						    const GstCaps *caps2,
+GstCaps *         gst_caps_intersect               (GstCaps *caps1,
+						    GstCaps *caps2) G_GNUC_WARN_UNUSED_RESULT;
+GstCaps *         gst_caps_intersect_full          (GstCaps *caps1,
+						    GstCaps *caps2,
                                                     GstCapsIntersectMode mode) G_GNUC_WARN_UNUSED_RESULT;
-GstCaps *         gst_caps_subtract		   (const GstCaps *minuend,
-						    const GstCaps *subtrahend) G_GNUC_WARN_UNUSED_RESULT;
-GstCaps *         gst_caps_union                   (const GstCaps *caps1,
-						    const GstCaps *caps2) G_GNUC_WARN_UNUSED_RESULT;
-GstCaps *         gst_caps_normalize               (const GstCaps *caps) G_GNUC_WARN_UNUSED_RESULT;
-gboolean          gst_caps_do_simplify             (GstCaps       *caps);
+GstCaps *         gst_caps_subtract		   (GstCaps *minuend,
+						    GstCaps *subtrahend) G_GNUC_WARN_UNUSED_RESULT;
+GstCaps *         gst_caps_union                   (GstCaps *caps1,
+						    GstCaps *caps2) G_GNUC_WARN_UNUSED_RESULT;
+GstCaps *         gst_caps_normalize               (GstCaps *caps) G_GNUC_WARN_UNUSED_RESULT;
+gboolean          gst_caps_do_simplify             (GstCaps *caps);
 
-void              gst_caps_fixate                  (GstCaps       *caps);
+GstCaps *         gst_caps_fixate                  (GstCaps *caps) G_GNUC_WARN_UNUSED_RESULT;
 
 /* utility */
 gchar *           gst_caps_to_string               (const GstCaps *caps) G_GNUC_MALLOC;

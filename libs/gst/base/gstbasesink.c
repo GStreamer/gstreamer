@@ -388,8 +388,9 @@ static gboolean gst_base_sink_default_query (GstBaseSink * sink,
     GstQuery * query);
 
 static gboolean gst_base_sink_negotiate_pull (GstBaseSink * basesink);
-static void gst_base_sink_default_fixate (GstBaseSink * bsink, GstCaps * caps);
-static void gst_base_sink_fixate (GstBaseSink * bsink, GstCaps * caps);
+static GstCaps *gst_base_sink_default_fixate (GstBaseSink * bsink,
+    GstCaps * caps);
+static GstCaps *gst_base_sink_fixate (GstBaseSink * bsink, GstCaps * caps);
 
 /* check if an object was too late */
 static gboolean gst_base_sink_is_too_late (GstBaseSink * basesink,
@@ -593,14 +594,14 @@ gst_base_sink_query_caps (GstBaseSink * bsink, GstPad * pad, GstCaps * filter)
   return caps;
 }
 
-static void
+static GstCaps *
 gst_base_sink_default_fixate (GstBaseSink * bsink, GstCaps * caps)
 {
   GST_DEBUG_OBJECT (bsink, "using default caps fixate function");
-  gst_caps_fixate (caps);
+  return gst_caps_fixate (caps);
 }
 
-static void
+static GstCaps *
 gst_base_sink_fixate (GstBaseSink * bsink, GstCaps * caps)
 {
   GstBaseSinkClass *bclass;
@@ -608,7 +609,9 @@ gst_base_sink_fixate (GstBaseSink * bsink, GstCaps * caps)
   bclass = GST_BASE_SINK_GET_CLASS (bsink);
 
   if (bclass->fixate)
-    bclass->fixate (bsink, caps);
+    caps = bclass->fixate (bsink, caps);
+
+  return caps;
 }
 
 static void
@@ -2000,8 +2003,8 @@ gst_base_sink_wait_clock (GstBaseSink * sink, GstClockTime time,
   /* FIXME: Casting to GstClockEntry only works because the types
    * are the same */
   if (G_LIKELY (sink->priv->cached_clock_id != NULL
-          && GST_CLOCK_ENTRY_CLOCK ((GstClockEntry *) sink->
-              priv->cached_clock_id) == clock)) {
+          && GST_CLOCK_ENTRY_CLOCK ((GstClockEntry *) sink->priv->
+              cached_clock_id) == clock)) {
     if (!gst_clock_single_shot_id_reinit (clock, sink->priv->cached_clock_id,
             time)) {
       gst_clock_id_unref (sink->priv->cached_clock_id);
@@ -3922,9 +3925,8 @@ gst_base_sink_negotiate_pull (GstBaseSink * basesink)
        pull() without setcaps() */
     result = TRUE;
   } else {
-    caps = gst_caps_make_writable (caps);
     /* try to fixate */
-    gst_base_sink_fixate (basesink, caps);
+    caps = gst_base_sink_fixate (basesink, caps);
     GST_DEBUG_OBJECT (basesink, "fixated to: %" GST_PTR_FORMAT, caps);
 
     if (gst_caps_is_fixed (caps)) {

@@ -1083,7 +1083,7 @@ gst_pad_check_link (GstPad * srcpad, GstPad * sinkpad)
  */
 GstPad *
 gst_element_get_compatible_pad (GstElement * element, GstPad * pad,
-    const GstCaps * caps)
+    GstCaps * caps)
 {
   GstIterator *pads;
   GstPadTemplate *templ;

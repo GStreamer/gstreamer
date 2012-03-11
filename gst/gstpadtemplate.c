@@ -356,7 +356,7 @@ gst_static_pad_template_get_caps (GstStaticPadTemplate * templ)
 {
   g_return_val_if_fail (templ, NULL);
 
-  return (GstCaps *) gst_static_caps_get (&templ->static_caps);
+  return gst_static_caps_get (&templ->static_caps);
 }
 
 /**

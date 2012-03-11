@@ -208,6 +208,7 @@ gst_caps_init (GstCaps * caps, gsize size)
  *
  * Creates a new #GstCaps that is empty.  That is, the returned
  * #GstCaps contains no media formats.
+ * The #GstCaps is guaranteed to be writable.
  * Caller is responsible for unreffing the returned caps.
  *
  * Returns: (transfer full): the new #GstCaps
@@ -485,64 +486,60 @@ gst_caps_append (GstCaps * caps1, GstCaps * caps2)
   g_return_if_fail (GST_IS_CAPS (caps2));
   g_return_if_fail (IS_WRITABLE (caps1));
 
-  caps2 = gst_caps_make_writable (caps2);
-
   if (G_UNLIKELY (CAPS_IS_ANY (caps1) || CAPS_IS_ANY (caps2))) {
-    /* FIXME: this leaks */
     GST_CAPS_FLAGS (caps1) |= GST_CAPS_FLAG_ANY;
-    for (i = GST_CAPS_LEN (caps2) - 1; i >= 0; i--) {
-      structure = gst_caps_remove_and_get_structure (caps2, i);
-      gst_structure_free (structure);
-    }
+    gst_caps_unref (caps2);
   } else {
+    caps2 = gst_caps_make_writable (caps2);
+
     for (i = GST_CAPS_LEN (caps2); i; i--) {
       structure = gst_caps_remove_and_get_structure (caps2, 0);
       gst_caps_append_structure_unchecked (caps1, structure);
     }
+    gst_caps_unref (caps2);     /* guaranteed to free it */
   }
-  gst_caps_unref (caps2);       /* guaranteed to free it */
 }
 
 /**
  * gst_caps_merge:
- * @caps1: the #GstCaps that will take the new entries
+ * @caps1: (transfer full): the #GstCaps that will take the new entries
  * @caps2: (transfer full): the #GstCaps to merge in
  *
  * Appends the structures contained in @caps2 to @caps1 if they are not yet
  * expressed by @caps1. The structures in @caps2 are not copied -- they are
- * transferred to @caps1, and then @caps2 is freed.
+ * transferred to a writable copy of @caps1, and then @caps2 is freed.
  * If either caps is ANY, the resulting caps will be ANY.
+ *
+ * Returns: (transfer full): the merged caps.
  *
  * Since: 0.10.10
  */
-void
+GstCaps *
 gst_caps_merge (GstCaps * caps1, GstCaps * caps2)
 {
   GstStructure *structure;
   int i;
+  GstCaps *result;
 
-  g_return_if_fail (GST_IS_CAPS (caps1));
-  g_return_if_fail (GST_IS_CAPS (caps2));
-  g_return_if_fail (IS_WRITABLE (caps1));
-
-  caps2 = gst_caps_make_writable (caps2);
+  g_return_val_if_fail (GST_IS_CAPS (caps1), NULL);
+  g_return_val_if_fail (GST_IS_CAPS (caps2), NULL);
 
   if (G_UNLIKELY (CAPS_IS_ANY (caps1))) {
-    for (i = GST_CAPS_LEN (caps2) - 1; i >= 0; i--) {
-      structure = gst_caps_remove_and_get_structure (caps2, i);
-      gst_structure_free (structure);
-    }
+    gst_caps_unref (caps2);
+    result = caps1;
   } else if (G_UNLIKELY (CAPS_IS_ANY (caps2))) {
-    GST_CAPS_FLAGS (caps1) |= GST_CAPS_FLAG_ANY;
-    for (i = GST_CAPS_LEN (caps1) - 1; i >= 0; i--) {
-      structure = gst_caps_remove_and_get_structure (caps1, i);
-      gst_structure_free (structure);
-    }
+    gst_caps_unref (caps1);
+    result = caps2;
   } else {
+    caps2 = gst_caps_make_writable (caps2);
+
     for (i = GST_CAPS_LEN (caps2); i; i--) {
       structure = gst_caps_remove_and_get_structure (caps2, 0);
-      gst_caps_merge_structure (caps1, structure);
+      caps1 = gst_caps_merge_structure (caps1, structure);
     }
+    gst_caps_unref (caps2);
+    result = caps1;
+
     /* this is too naive
        GstCaps *com = gst_caps_intersect (caps1, caps2);
        GstCaps *add = gst_caps_subtract (caps2, com);
@@ -553,7 +550,8 @@ gst_caps_merge (GstCaps * caps1, GstCaps * caps2)
        gst_caps_unref (com);
      */
   }
-  gst_caps_unref (caps2);       /* guaranteed to free it */
+
+  return result;
 }
 
 /**
@@ -598,17 +596,17 @@ gst_caps_remove_structure (GstCaps * caps, guint idx)
 
 /**
  * gst_caps_merge_structure:
- * @caps: the #GstCaps that will the new structure
+ * @caps: (transfer full): the #GstCaps to merge into
  * @structure: (transfer full): the #GstStructure to merge
  *
- * Appends @structure to @caps if its not already expressed by @caps.  The
- * structure is not copied; @caps becomes the owner of @structure.
+ * Appends @structure to @caps if its not already expressed by @caps.
+ *
+ * Returns: (transfer full): the merged caps.
  */
-void
+GstCaps *
 gst_caps_merge_structure (GstCaps * caps, GstStructure * structure)
 {
-  g_return_if_fail (GST_IS_CAPS (caps));
-  g_return_if_fail (IS_WRITABLE (caps));
+  g_return_val_if_fail (GST_IS_CAPS (caps), NULL);
 
   if (G_LIKELY (structure)) {
     GstStructure *structure1;
@@ -625,11 +623,13 @@ gst_caps_merge_structure (GstCaps * caps, GstStructure * structure)
       }
     }
     if (unique) {
+      caps = gst_caps_make_writable (caps);
       gst_caps_append_structure_unchecked (caps, structure);
     } else {
       gst_structure_free (structure);
     }
   }
+  return caps;
 }
 
 /**
@@ -712,23 +712,29 @@ gst_caps_copy_nth (const GstCaps * caps, guint nth)
 
 /**
  * gst_caps_truncate:
- * @caps: the #GstCaps to truncate
+ * @caps: (transfer full): the #GstCaps to truncate
  *
- * Destructively discard all but the first structure from @caps. Useful when
- * fixating. @caps must be writable.
+ * Discard all but the first structure from @caps. Useful when
+ * fixating.
+ *
+ * Returns: (transfer full): truncated caps
  */
-void
+GstCaps *
 gst_caps_truncate (GstCaps * caps)
 {
   gint i;
 
-  g_return_if_fail (GST_IS_CAPS (caps));
-  g_return_if_fail (IS_WRITABLE (caps));
+  g_return_val_if_fail (GST_IS_CAPS (caps), NULL);
 
   i = GST_CAPS_LEN (caps) - 1;
+  if (i == 0)
+    return caps;
 
+  caps = gst_caps_make_writable (caps);
   while (i > 0)
     gst_caps_remove_structure (caps, i--);
+
+  return caps;
 }
 
 /**
@@ -1183,7 +1189,7 @@ gst_caps_can_intersect (const GstCaps * caps1, const GstCaps * caps2)
 }
 
 static GstCaps *
-gst_caps_intersect_zig_zag (const GstCaps * caps1, const GstCaps * caps2)
+gst_caps_intersect_zig_zag (GstCaps * caps1, GstCaps * caps2)
 {
   guint64 i;                    /* index can be up to 2 * G_MAX_UINT */
   guint j, k, len1, len2;
@@ -1195,17 +1201,17 @@ gst_caps_intersect_zig_zag (const GstCaps * caps1, const GstCaps * caps2)
 
   /* caps are exactly the same pointers, just copy one caps */
   if (G_UNLIKELY (caps1 == caps2))
-    return _gst_caps_copy (caps1);
+    return gst_caps_ref (caps1);
 
   /* empty caps on either side, return empty */
   if (G_UNLIKELY (CAPS_IS_EMPTY (caps1) || CAPS_IS_EMPTY (caps2)))
-    return gst_caps_new_empty ();
+    return gst_caps_ref (GST_CAPS_NONE);
 
   /* one of the caps is any, just copy the other caps */
   if (G_UNLIKELY (CAPS_IS_ANY (caps1)))
-    return _gst_caps_copy (caps2);
+    return gst_caps_ref (caps2);
   if (G_UNLIKELY (CAPS_IS_ANY (caps2)))
-    return _gst_caps_copy (caps1);
+    return gst_caps_ref (caps1);
 
   dest = gst_caps_new_empty ();
 
@@ -1242,7 +1248,7 @@ gst_caps_intersect_zig_zag (const GstCaps * caps1, const GstCaps * caps2)
 
       istruct = gst_structure_intersect (struct1, struct2);
 
-      gst_caps_merge_structure (dest, istruct);
+      dest = gst_caps_merge_structure (dest, istruct);
       /* move down left */
       k++;
       if (G_UNLIKELY (j == 0))
@@ -1267,7 +1273,7 @@ gst_caps_intersect_zig_zag (const GstCaps * caps1, const GstCaps * caps2)
  * Returns: the new #GstCaps
  */
 static GstCaps *
-gst_caps_intersect_first (const GstCaps * caps1, const GstCaps * caps2)
+gst_caps_intersect_first (GstCaps * caps1, GstCaps * caps2)
 {
   guint i;
   guint j, len1, len2;
@@ -1279,17 +1285,17 @@ gst_caps_intersect_first (const GstCaps * caps1, const GstCaps * caps2)
 
   /* caps are exactly the same pointers, just copy one caps */
   if (G_UNLIKELY (caps1 == caps2))
-    return gst_caps_copy (caps1);
+    return gst_caps_ref (caps1);
 
   /* empty caps on either side, return empty */
   if (G_UNLIKELY (CAPS_IS_EMPTY (caps1) || CAPS_IS_EMPTY (caps2)))
-    return gst_caps_new_empty ();
+    return gst_caps_ref (GST_CAPS_NONE);
 
   /* one of the caps is any, just copy the other caps */
   if (G_UNLIKELY (CAPS_IS_ANY (caps1)))
-    return gst_caps_copy (caps2);
+    return gst_caps_ref (caps2);
   if (G_UNLIKELY (CAPS_IS_ANY (caps2)))
-    return gst_caps_copy (caps1);
+    return gst_caps_ref (caps1);
 
   dest = gst_caps_new_empty ();
 
@@ -1301,7 +1307,7 @@ gst_caps_intersect_first (const GstCaps * caps1, const GstCaps * caps2)
       struct2 = gst_caps_get_structure_unchecked (caps2, j);
       istruct = gst_structure_intersect (struct1, struct2);
       if (istruct)
-        gst_caps_merge_structure (dest, istruct);
+        dest = gst_caps_merge_structure (dest, istruct);
     }
   }
 
@@ -1322,7 +1328,7 @@ gst_caps_intersect_first (const GstCaps * caps1, const GstCaps * caps2)
  * Since: 0.10.33
  */
 GstCaps *
-gst_caps_intersect_full (const GstCaps * caps1, const GstCaps * caps2,
+gst_caps_intersect_full (GstCaps * caps1, GstCaps * caps2,
     GstCapsIntersectMode mode)
 {
   g_return_val_if_fail (GST_IS_CAPS (caps1), NULL);
@@ -1350,7 +1356,7 @@ gst_caps_intersect_full (const GstCaps * caps1, const GstCaps * caps2,
  * Returns: the new #GstCaps
  */
 GstCaps *
-gst_caps_intersect (const GstCaps * caps1, const GstCaps * caps2)
+gst_caps_intersect (GstCaps * caps1, GstCaps * caps2)
 {
   return gst_caps_intersect_full (caps1, caps2, GST_CAPS_INTERSECT_ZIG_ZAG);
 }
@@ -1429,7 +1435,7 @@ gst_caps_structure_subtract (GSList ** into, const GstStructure * minuend,
  * Returns: the resulting caps
  */
 GstCaps *
-gst_caps_subtract (const GstCaps * minuend, const GstCaps * subtrahend)
+gst_caps_subtract (GstCaps * minuend, GstCaps * subtrahend)
 {
   guint i, j, sublen;
   GstStructure *min;
@@ -1443,7 +1449,7 @@ gst_caps_subtract (const GstCaps * minuend, const GstCaps * subtrahend)
     return gst_caps_new_empty ();
   }
   if (CAPS_IS_EMPTY_SIMPLE (subtrahend))
-    return _gst_caps_copy (minuend);
+    return gst_caps_ref (minuend);
 
   /* FIXME: Do we want this here or above?
      The reason we need this is that there is no definition about what
@@ -1549,27 +1555,25 @@ gst_caps_structure_union (const GstStructure * struct1,
  * Returns: the new #GstCaps
  */
 GstCaps *
-gst_caps_union (const GstCaps * caps1, const GstCaps * caps2)
+gst_caps_union (GstCaps * caps1, GstCaps * caps2)
 {
   GstCaps *dest1;
-  GstCaps *dest2;
 
   /* NULL pointers are no correct GstCaps */
   g_return_val_if_fail (caps1 != NULL, NULL);
   g_return_val_if_fail (caps2 != NULL, NULL);
 
   if (CAPS_IS_EMPTY (caps1))
-    return _gst_caps_copy (caps2);
+    return gst_caps_ref (caps2);
 
   if (CAPS_IS_EMPTY (caps2))
-    return _gst_caps_copy (caps1);
+    return gst_caps_ref (caps1);
 
   if (CAPS_IS_ANY (caps1) || CAPS_IS_ANY (caps2))
-    return gst_caps_new_any ();
+    return gst_caps_ref (caps1);
 
   dest1 = _gst_caps_copy (caps1);
-  dest2 = _gst_caps_copy (caps2);
-  gst_caps_append (dest1, dest2);
+  gst_caps_append (dest1, gst_caps_ref (caps2));
 
   gst_caps_do_simplify (dest1);
   return dest1;
@@ -1621,7 +1625,7 @@ gst_caps_normalize_foreach (GQuark field_id, const GValue * value, gpointer ptr)
  * Returns: the new #GstCaps
  */
 GstCaps *
-gst_caps_normalize (const GstCaps * caps)
+gst_caps_normalize (GstCaps * caps)
 {
   NormalizeForeach nf;
   GstCaps *newcaps;
@@ -1823,24 +1827,28 @@ gst_caps_do_simplify (GstCaps * caps)
 
 /**
  * gst_caps_fixate:
- * @caps: a #GstCaps to fixate
+ * @caps: (transfer full): a #GstCaps to fixate
  *
- * Modifies the given @caps inplace into a representation with only fixed
+ * Modifies the given @caps into a representation with only fixed
  * values. First the caps will be truncated and then the first structure will be
- * fixated with gst_structure_fixate(). @caps should be writable.
+ * fixated with gst_structure_fixate().
+ *
+ * Returns: (transfer full): the fixated caps
  */
-void
+GstCaps *
 gst_caps_fixate (GstCaps * caps)
 {
   GstStructure *s;
 
-  g_return_if_fail (GST_IS_CAPS (caps));
-  g_return_if_fail (IS_WRITABLE (caps));
+  g_return_val_if_fail (GST_IS_CAPS (caps), NULL);
 
   /* default fixation */
-  gst_caps_truncate (caps);
+  caps = gst_caps_truncate (caps);
+  caps = gst_caps_make_writable (caps);
   s = gst_caps_get_structure (caps, 0);
   gst_structure_fixate (s);
+
+  return caps;
 }
 
 /* utility */

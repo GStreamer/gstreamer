@@ -109,8 +109,7 @@ struct _GstBaseSink {
  * @parent_class: Element parent class
  * @get_caps: Called to get sink pad caps from the subclass
  * @set_caps: Notify subclass of changed caps
- * @fixate: Only useful in pull mode, this vmethod will be called in response to
- *     gst_pad_fixate_caps() being called on the sink pad. Implement if you have
+ * @fixate: Only useful in pull mode. Implement if you have
  *     ideas about what should be the default values for the caps you support.
  * @activate_pull: Subclasses should override this when they can provide an
  *     alternate method of spawning a thread to drive the pipeline in pull mode.
@@ -149,7 +148,7 @@ struct _GstBaseSinkClass {
   gboolean      (*set_caps)     (GstBaseSink *sink, GstCaps *caps);
 
   /* fixate sink caps during pull-mode negotiation */
-  void          (*fixate)       (GstBaseSink *sink, GstCaps *caps);
+  GstCaps *     (*fixate)       (GstBaseSink *sink, GstCaps *caps);
   /* start or stop a pulling thread */
   gboolean      (*activate_pull)(GstBaseSink *sink, gboolean active);
 
