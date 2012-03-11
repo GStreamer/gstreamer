@@ -904,7 +904,8 @@ gst_rtp_dtmf_src_negotiate (GstBaseSrc * basesrc)
     }
 
     /* now fixate, start by taking the first caps */
-    gst_caps_truncate (temp);
+    temp = gst_caps_truncate (temp);
+    temp = gst_caps_make_writable (temp);
     srccaps = temp;
 
     /* get first structure */
