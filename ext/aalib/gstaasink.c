@@ -72,7 +72,7 @@ static GstStaticPadTemplate sink_template = GST_STATIC_PAD_TEMPLATE ("sink",
     GST_STATIC_CAPS (GST_VIDEO_CAPS_MAKE ("I420"))
     );
 
-static void gst_aasink_fixate (GstBaseSink * bsink, GstCaps * caps);
+static GstCaps *gst_aasink_fixate (GstBaseSink * bsink, GstCaps * caps);
 static gboolean gst_aasink_setcaps (GstBaseSink * bsink, GstCaps * caps);
 static void gst_aasink_get_times (GstBaseSink * bsink, GstBuffer * buffer,
     GstClockTime * start, GstClockTime * end);
@@ -227,10 +227,12 @@ gst_aasink_class_init (GstAASinkClass * klass)
   gstvideosink_class->show_frame = GST_DEBUG_FUNCPTR (gst_aasink_show_frame);
 }
 
-static void
+static GstCaps *
 gst_aasink_fixate (GstBaseSink * bsink, GstCaps * caps)
 {
   GstStructure *structure;
+
+  caps = gst_caps_make_writable (caps);
 
   structure = gst_caps_get_structure (caps, 0);
 
@@ -238,7 +240,9 @@ gst_aasink_fixate (GstBaseSink * bsink, GstCaps * caps)
   gst_structure_fixate_field_nearest_int (structure, "height", 240);
   gst_structure_fixate_field_nearest_fraction (structure, "framerate", 30, 1);
 
-  GST_BASE_SINK_CLASS (parent_class)->fixate (bsink, caps);
+  caps = GST_BASE_SINK_CLASS (parent_class)->fixate (bsink, caps);
+
+  return caps;
 }
 
 static gboolean

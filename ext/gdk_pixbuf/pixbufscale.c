@@ -270,8 +270,8 @@ gst_pixbufscale_fixate_caps (GstBaseTransform * base, GstPadDirection direction,
   GstStructure *ins, *outs;
   const GValue *from_par, *to_par;
 
+  othercaps = gst_caps_truncate (othercaps);
   othercaps = gst_caps_make_writable (othercaps);
-  gst_caps_truncate (othercaps);
 
   GST_DEBUG_OBJECT (base, "trying to fixate othercaps %" GST_PTR_FORMAT
       " based on caps %" GST_PTR_FORMAT, othercaps, caps);

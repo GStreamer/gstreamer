@@ -1294,12 +1294,11 @@ gst_pulsesrc_negotiate (GstBaseSrc * basesrc)
   }
   if (caps) {
     /* take first (and best, since they are sorted) possibility */
-    caps = gst_caps_make_writable (caps);
-    gst_caps_truncate (caps);
+    caps = gst_caps_truncate (caps);
 
     /* now fixate */
     if (!gst_caps_is_empty (caps)) {
-      GST_BASE_SRC_CLASS (parent_class)->fixate (basesrc, caps);
+      caps = GST_BASE_SRC_CLASS (parent_class)->fixate (basesrc, caps);
       GST_DEBUG_OBJECT (basesrc, "fixated to: %" GST_PTR_FORMAT, caps);
 
       if (gst_caps_is_any (caps)) {

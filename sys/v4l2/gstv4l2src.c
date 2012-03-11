@@ -122,7 +122,7 @@ static gboolean gst_v4l2src_query (GstBaseSrc * bsrc, GstQuery * query);
 static gboolean gst_v4l2src_decide_allocation (GstBaseSrc * src,
     GstQuery * query);
 static GstFlowReturn gst_v4l2src_fill (GstPushSrc * src, GstBuffer * out);
-static void gst_v4l2src_fixate (GstBaseSrc * basesrc, GstCaps * caps);
+static GstCaps *gst_v4l2src_fixate (GstBaseSrc * basesrc, GstCaps * caps);
 static gboolean gst_v4l2src_negotiate (GstBaseSrc * basesrc);
 
 static void gst_v4l2src_set_property (GObject * object, guint prop_id,
@@ -280,13 +280,15 @@ gst_v4l2src_get_property (GObject * object,
 }
 
 /* this function is a bit of a last resort */
-static void
+static GstCaps *
 gst_v4l2src_fixate (GstBaseSrc * basesrc, GstCaps * caps)
 {
   GstStructure *structure;
   gint i;
 
   GST_DEBUG_OBJECT (basesrc, "fixating caps %" GST_PTR_FORMAT, caps);
+
+  caps = gst_caps_make_writable (caps);
 
   for (i = 0; i < gst_caps_get_size (caps); ++i) {
     structure = gst_caps_get_structure (caps, i);
@@ -302,7 +304,9 @@ gst_v4l2src_fixate (GstBaseSrc * basesrc, GstCaps * caps)
 
   GST_DEBUG_OBJECT (basesrc, "fixated caps %" GST_PTR_FORMAT, caps);
 
-  GST_BASE_SRC_CLASS (parent_class)->fixate (basesrc, caps);
+  caps = GST_BASE_SRC_CLASS (parent_class)->fixate (basesrc, caps);
+
+  return caps;
 }
 
 
@@ -395,12 +399,11 @@ gst_v4l2src_negotiate (GstBaseSrc * basesrc)
   if (peercaps)
     gst_caps_unref (peercaps);
   if (caps) {
-    caps = gst_caps_make_writable (caps);
-    gst_caps_truncate (caps);
+    caps = gst_caps_truncate (caps);
 
     /* now fixate */
     if (!gst_caps_is_empty (caps)) {
-      gst_v4l2src_fixate (basesrc, caps);
+      caps = gst_v4l2src_fixate (basesrc, caps);
       GST_DEBUG_OBJECT (basesrc, "fixated to: %" GST_PTR_FORMAT, caps);
       LOG_CAPS (basesrc, caps);
 

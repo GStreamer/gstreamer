@@ -271,7 +271,7 @@ gst_goom_src_negotiate (GstGoom * goom)
     if (gst_caps_is_empty (target))
       goto no_format;
 
-    gst_caps_truncate (target);
+    target = gst_caps_truncate (target);
   } else {
     target = templ;
   }

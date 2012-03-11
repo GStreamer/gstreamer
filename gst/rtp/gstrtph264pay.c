@@ -370,7 +370,7 @@ gst_rtp_h264_pay_getcaps (GstRTPBasePayload * payload, GstPad * pad,
           "profile", G_TYPE_STRING, "constrained-baseline", NULL);
     }
 
-    gst_caps_merge_structure (caps, new_s);
+    caps = gst_caps_merge_structure (caps, new_s);
   }
 
   icaps = gst_caps_intersect (caps, template_caps);

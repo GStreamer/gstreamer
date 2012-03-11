@@ -256,7 +256,7 @@ gst_videomixer2_update_src_caps (GstVideoMixer2 * mix)
         goto done;
       }
 
-      gst_caps_truncate (caps);
+      caps = gst_caps_truncate (caps);
       s = gst_caps_get_structure (caps, 0);
       gst_structure_fixate_field_nearest_int (s, "width", best_width);
       gst_structure_fixate_field_nearest_int (s, "height", best_height);

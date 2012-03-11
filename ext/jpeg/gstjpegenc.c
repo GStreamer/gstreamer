@@ -334,7 +334,7 @@ gst_jpegenc_getcaps (GstPad * pad, GstCaps * filter)
       if ((val = gst_structure_get_value (s, "framerate")))
         gst_structure_set_value (structure, "framerate", val);
 
-      gst_caps_merge_structure (caps, structure);
+      caps = gst_caps_merge_structure (caps, structure);
     }
   }
 

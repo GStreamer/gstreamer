@@ -81,7 +81,7 @@ enum
 #define gst_ximage_src_parent_class parent_class
 G_DEFINE_TYPE (GstXImageSrc, gst_ximage_src, GST_TYPE_PUSH_SRC);
 
-static void gst_ximage_src_fixate (GstBaseSrc * bsrc, GstCaps * caps);
+static GstCaps *gst_ximage_src_fixate (GstBaseSrc * bsrc, GstCaps * caps);
 static void gst_ximage_src_clear_bufpool (GstXImageSrc * ximagesrc);
 
 /* Called when a buffer is returned from the pipeline */
@@ -1115,18 +1115,22 @@ gst_ximage_src_set_caps (GstBaseSrc * bs, GstCaps * caps)
   return TRUE;
 }
 
-static void
+static GstCaps *
 gst_ximage_src_fixate (GstBaseSrc * bsrc, GstCaps * caps)
 {
   gint i;
   GstStructure *structure;
+
+  caps = gst_caps_make_writable (caps);
 
   for (i = 0; i < gst_caps_get_size (caps); ++i) {
     structure = gst_caps_get_structure (caps, i);
 
     gst_structure_fixate_field_nearest_fraction (structure, "framerate", 25, 1);
   }
-  GST_BASE_SRC_CLASS (parent_class)->fixate (bsrc, caps);
+  caps = GST_BASE_SRC_CLASS (parent_class)->fixate (bsrc, caps);
+
+  return caps;
 }
 
 static void

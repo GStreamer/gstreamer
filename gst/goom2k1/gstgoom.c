@@ -268,8 +268,7 @@ gst_goom_src_negotiate (GstGoom * goom)
     if (gst_caps_is_empty (target))
       goto no_format;
 
-    target = gst_caps_make_writable (target);
-    gst_caps_truncate (target);
+    target = gst_caps_truncate (target);
   } else {
     target = gst_caps_copy (templ);
   }
