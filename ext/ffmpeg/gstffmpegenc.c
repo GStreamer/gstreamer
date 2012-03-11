@@ -315,7 +315,7 @@ gst_ffmpegenc_finalize (GObject * object)
 
 static GstCaps *
 gst_ffmpegenc_get_possible_sizes (GstFFMpegEnc * ffmpegenc, GstPad * pad,
-    const GstCaps * caps)
+    GstCaps * caps)
 {
   GstCaps *othercaps = NULL;
   GstCaps *tmpcaps = NULL;
@@ -357,7 +357,8 @@ gst_ffmpegenc_get_possible_sizes (GstFFMpegEnc * ffmpegenc, GstPad * pad,
       gst_structure_set_value (tmps, "height", height);
     if (framerate)
       gst_structure_set_value (tmps, "framerate", framerate);
-    gst_caps_merge_structure (tmpcaps, tmps);
+
+    tmpcaps = gst_caps_merge_structure (tmpcaps, tmps);
   }
   gst_caps_unref (intersect);
 

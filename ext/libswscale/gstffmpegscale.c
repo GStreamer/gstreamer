@@ -311,14 +311,14 @@ gst_ffmpegscale_transform_caps (GstBaseTransform * trans,
       "width", GST_TYPE_INT_RANGE, 1, G_MAXINT,
       "height", GST_TYPE_INT_RANGE, 1, G_MAXINT, NULL);
 
-  gst_caps_merge_structure (ret, gst_structure_copy (structure));
+  ret = gst_caps_merge_structure (ret, gst_structure_copy (structure));
 
   /* if pixel aspect ratio, make a range of it */
   if ((par = gst_structure_get_value (structure, "pixel-aspect-ratio"))) {
     gst_structure_set (structure,
         "pixel-aspect-ratio", GST_TYPE_FRACTION_RANGE, 0, 1, G_MAXINT, 1, NULL);
 
-    gst_caps_merge_structure (ret, structure);
+    ret = gst_caps_merge_structure (ret, structure);
   } else {
     gst_structure_free (structure);
   }
