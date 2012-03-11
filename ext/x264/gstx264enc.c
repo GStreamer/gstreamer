@@ -1494,7 +1494,6 @@ gst_x264_enc_sink_set_caps (GstPad * pad, GstCaps * caps)
   gint fps_n, fps_d;
   gint par_n, par_d;
   GstCaps *peer_caps;
-  const GstCaps *template_caps;
   GstCaps *allowed_caps = NULL;
   gboolean level_ok = TRUE;
 
@@ -1552,9 +1551,12 @@ gst_x264_enc_sink_set_caps (GstPad * pad, GstCaps * caps)
     }
 
     if (has_profile_or_level_or_format) {
+      GstCaps *template_caps;
+
       template_caps = gst_pad_get_pad_template_caps (encoder->srcpad);
 
       allowed_caps = gst_caps_intersect (peer_caps, template_caps);
+      gst_caps_unref (template_caps);
     }
 
     gst_caps_unref (peer_caps);
@@ -1575,8 +1577,9 @@ gst_x264_enc_sink_set_caps (GstPad * pad, GstCaps * caps)
       return FALSE;
     }
 
+    allowed_caps = gst_caps_fixate (allowed_caps);
+
     allowed_caps = gst_caps_make_writable (allowed_caps);
-    gst_caps_fixate (allowed_caps);
     s = gst_caps_get_structure (allowed_caps, 0);
 
     profile = gst_structure_get_string (s, "profile");
@@ -1681,14 +1684,16 @@ gst_x264_enc_sink_get_caps (GstPad * pad, GstCaps * filter)
   GstX264Enc *encoder;
   GstPad *peer;
   GstCaps *caps, *current;
+  GstCaps *templcaps;
 
   encoder = GST_X264_ENC (gst_pad_get_parent (pad));
   if (!encoder)
     return gst_caps_new_empty ();
 
+  templcaps = gst_pad_get_pad_template_caps (pad);
+
   peer = gst_pad_get_peer (encoder->srcpad);
   if (peer) {
-    const GstCaps *templcaps;
     GstCaps *peercaps;
     guint i, n;
 
@@ -1705,26 +1710,23 @@ gst_x264_enc_sink_get_caps (GstPad * pad, GstCaps * filter)
       gst_structure_remove_field (s, "alignment");
     }
 
-    templcaps = gst_pad_get_pad_template_caps (pad);
-
     caps = gst_caps_intersect (peercaps, templcaps);
     gst_caps_unref (peercaps);
+    gst_caps_unref (templcaps);
     gst_object_unref (peer);
     peer = NULL;
   } else {
-    caps = gst_caps_copy (gst_pad_get_pad_template_caps (pad));
+    caps = templcaps;
   }
 
   /* If we already have caps return them */
   current = gst_pad_get_current_caps (pad);
   if (current) {
     if (gst_caps_can_intersect (current, caps)) {
-      GstCaps *tmpcaps = gst_caps_copy (current);
-
-      gst_caps_merge (tmpcaps, caps);
-      caps = tmpcaps;
+      caps = gst_caps_merge (current, caps);
+    } else {
+      gst_caps_unref (current);
     }
-    gst_caps_unref (current);
   }
 
   gst_object_unref (encoder);
