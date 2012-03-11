@@ -92,7 +92,8 @@ static void gst_video_test_src_get_property (GObject * object, guint prop_id,
 static GstCaps *gst_video_test_src_getcaps (GstBaseSrc * bsrc,
     GstCaps * filter);
 static gboolean gst_video_test_src_setcaps (GstBaseSrc * bsrc, GstCaps * caps);
-static void gst_video_test_src_src_fixate (GstBaseSrc * bsrc, GstCaps * caps);
+static GstCaps *gst_video_test_src_src_fixate (GstBaseSrc * bsrc,
+    GstCaps * caps);
 
 static gboolean gst_video_test_src_is_seekable (GstBaseSrc * psrc);
 static gboolean gst_video_test_src_do_seek (GstBaseSrc * bsrc,
@@ -301,10 +302,12 @@ gst_video_test_src_init (GstVideoTestSrc * src)
   gst_base_src_set_live (GST_BASE_SRC (src), DEFAULT_IS_LIVE);
 }
 
-static void
+static GstCaps *
 gst_video_test_src_src_fixate (GstBaseSrc * bsrc, GstCaps * caps)
 {
   GstStructure *structure;
+
+  caps = gst_caps_make_writable (caps);
 
   structure = gst_caps_get_structure (caps, 0);
 
@@ -322,7 +325,9 @@ gst_video_test_src_src_fixate (GstBaseSrc * bsrc, GstCaps * caps)
   if (gst_structure_has_field (structure, "interlaced"))
     gst_structure_fixate_field_boolean (structure, "interlaced", FALSE);
 
-  GST_BASE_SRC_CLASS (parent_class)->fixate (bsrc, caps);
+  caps = GST_BASE_SRC_CLASS (parent_class)->fixate (bsrc, caps);
+
+  return caps;
 }
 
 static void

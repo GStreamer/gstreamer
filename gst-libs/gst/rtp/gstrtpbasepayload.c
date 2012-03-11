@@ -607,7 +607,7 @@ gst_rtp_base_payload_set_outcaps (GstRTPBasePayload * payload,
     }
 
     /* now fixate, start by taking the first caps */
-    gst_caps_truncate (temp);
+    temp = gst_caps_truncate (temp);
 
     /* get first structure */
     s = gst_caps_get_structure (temp, 0);

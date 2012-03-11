@@ -846,7 +846,7 @@ gst_encoding_profile_get_input_caps (GstEncodingProfile * profile)
     for (ltmp = GST_ENCODING_CONTAINER_PROFILE (profile)->encodingprofiles;
         ltmp; ltmp = ltmp->next) {
       GstEncodingProfile *sprof = (GstEncodingProfile *) ltmp->data;
-      gst_caps_merge (res, gst_encoding_profile_get_input_caps (sprof));
+      res = gst_caps_merge (res, gst_encoding_profile_get_input_caps (sprof));
     }
     return res;
   }

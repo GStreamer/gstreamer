@@ -364,13 +364,13 @@ _factory_filter (GstPluginFeature * feature, GstCaps ** subcaps)
     GST_DEBUG ("Found renderer element %s (%s) with caps %" GST_PTR_FORMAT,
         gst_element_factory_get_longname (factory),
         gst_plugin_feature_get_name (feature), templ_caps);
-    gst_caps_merge (*subcaps, templ_caps);
+    *subcaps = gst_caps_merge (*subcaps, templ_caps);
     return TRUE;
   } else if (!is_renderer && !have_video_sink && templ_caps) {
     GST_DEBUG ("Found parser element %s (%s) with caps %" GST_PTR_FORMAT,
         gst_element_factory_get_longname (factory),
         gst_plugin_feature_get_name (feature), templ_caps);
-    gst_caps_merge (*subcaps, templ_caps);
+    *subcaps = gst_caps_merge (*subcaps, templ_caps);
     return TRUE;
   } else {
     if (templ_caps)

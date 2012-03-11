@@ -376,12 +376,14 @@ gst_text_render_src_setcaps (GstTextRender * render, GstCaps * caps)
   return ret;
 }
 
-static void
+static GstCaps *
 gst_text_render_fixate_caps (GstTextRender * render, GstCaps * caps)
 {
   GstStructure *s;
 
-  gst_caps_truncate (caps);
+  caps = gst_caps_truncate (caps);
+
+  caps = gst_caps_make_writable (caps);
   s = gst_caps_get_structure (caps, 0);
 
   GST_DEBUG ("Fixating caps %" GST_PTR_FORMAT, caps);
@@ -390,6 +392,8 @@ gst_text_render_fixate_caps (GstTextRender * render, GstCaps * caps)
   gst_structure_fixate_field_nearest_int (s, "height",
       MAX (render->image_height + render->ypad, DEFAULT_RENDER_HEIGHT));
   GST_DEBUG ("Fixated to    %" GST_PTR_FORMAT, caps);
+
+  return caps;
 }
 
 #define CAIRO_UNPREMULTIPLY(a,r,g,b) G_STMT_START { \
@@ -508,7 +512,7 @@ gst_text_render_chain (GstPad * pad, GstObject * parent, GstBuffer * inbuf)
     goto done;
   }
 
-  gst_text_render_fixate_caps (render, caps);
+  caps = gst_text_render_fixate_caps (render, caps);
 
   if (!gst_text_render_src_setcaps (render, caps)) {
     GST_ELEMENT_ERROR (render, CORE, NEGOTIATION, (NULL), (NULL));

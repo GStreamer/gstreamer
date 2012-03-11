@@ -289,7 +289,7 @@ resync:
     if (res) {
       GstCaps *peercaps = gst_pad_peer_query_caps (srcpad, filter);
       if (peercaps)
-        gst_caps_merge (res, gst_caps_make_writable (peercaps));
+        res = gst_caps_merge (res, peercaps);
     } else {
       res = gst_pad_peer_query_caps (srcpad, filter);
     }

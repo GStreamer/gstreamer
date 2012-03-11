@@ -152,8 +152,7 @@ gst_video_convert_fixate_caps (GstBaseTransform * trans,
   }
 
   /* fixate remaining fields */
-  result = gst_caps_make_writable (result);
-  gst_caps_fixate (result);
+  result = gst_caps_fixate (result);
 
   return result;
 }

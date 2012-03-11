@@ -584,7 +584,7 @@ theora_enc_sink_getcaps (GstPad * pad, GstCaps * filter)
 
   peer = gst_pad_get_peer (encoder->srcpad);
   if (peer) {
-    const GstCaps *templ_caps;
+    GstCaps *templ_caps;
     GstCaps *peer_caps, *tmp_caps;
     GstStructure *s;
     guint i, n;

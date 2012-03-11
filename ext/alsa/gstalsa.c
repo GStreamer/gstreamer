@@ -101,7 +101,7 @@ static const struct
   32, 32, SND_PCM_FORMAT_S32, SND_PCM_FORMAT_U32}
 };
 
-static void
+static GstCaps *
 add_format (const gchar * str, GstStructure * s, snd_pcm_format_mask_t * mask,
     GstCaps * caps)
 {
@@ -112,7 +112,7 @@ add_format (const gchar * str, GstStructure * s, snd_pcm_format_mask_t * mask,
 
   format = gst_audio_format_from_string (str);
   if (format == GST_AUDIO_FORMAT_UNKNOWN)
-    return;
+    return caps;
 
   finfo = gst_audio_format_get_info (format);
 
@@ -123,7 +123,7 @@ add_format (const gchar * str, GstStructure * s, snd_pcm_format_mask_t * mask,
     if (pcmformats[w].width == width && pcmformats[w].depth == depth)
       break;
   if (w == G_N_ELEMENTS (pcmformats))
-    return;                     /* Unknown format */
+    return caps;                /* Unknown format */
 
   if (snd_pcm_format_mask_test (mask, pcmformats[w].sformat) &&
       snd_pcm_format_mask_test (mask, pcmformats[w].uformat)) {
@@ -138,8 +138,9 @@ add_format (const gchar * str, GstStructure * s, snd_pcm_format_mask_t * mask,
     scopy = NULL;
   }
   if (scopy) {
-    gst_caps_merge_structure (caps, scopy);
+    caps = gst_caps_merge_structure (caps, scopy);
   }
+  return caps;
 }
 
 
@@ -179,10 +180,10 @@ gst_alsa_detect_formats (GstObject * obj, snd_pcm_hw_params_t * hw_params,
 
         val = gst_value_list_get_value (format, i);
         if (G_VALUE_HOLDS_STRING (val))
-          add_format (g_value_get_string (val), s, mask, caps);
+          caps = add_format (g_value_get_string (val), s, mask, caps);
       }
     } else if (G_VALUE_HOLDS_STRING (format)) {
-      add_format (g_value_get_string (format), s, mask, caps);
+      caps = add_format (g_value_get_string (format), s, mask, caps);
     } else
       continue;
   }
@@ -211,7 +212,7 @@ get_channel_free_structure (const GstStructure * in_structure)
 #define CHANNEL_MASK_5_1    (CHANNEL_MASK_4_0 | (ONE_64<<GST_AUDIO_CHANNEL_POSITION_FRONT_CENTER) | (ONE_64<<GST_AUDIO_CHANNEL_POSITION_LFE1))
 #define CHANNEL_MASK_7_1    (CHANNEL_MASK_5_1 | (ONE_64<<GST_AUDIO_CHANNEL_POSITION_SIDE_LEFT) | (ONE_64<<GST_AUDIO_CHANNEL_POSITION_SIDE_RIGHT))
 
-static void
+static GstCaps *
 caps_add_channel_configuration (GstCaps * caps,
     const GstStructure * in_structure, gint min_chans, gint max_chans)
 {
@@ -221,8 +222,8 @@ caps_add_channel_configuration (GstCaps * caps,
   if (min_chans == max_chans && max_chans == 1) {
     s = get_channel_free_structure (in_structure);
     gst_structure_set (s, "channels", G_TYPE_INT, 1, NULL);
-    gst_caps_merge_structure (caps, s);
-    return;
+    caps = gst_caps_merge_structure (caps, s);
+    return caps;
   }
 
   g_assert (min_chans >= 1);
@@ -232,15 +233,15 @@ caps_add_channel_configuration (GstCaps * caps,
     s = get_channel_free_structure (in_structure);
     gst_structure_set (s, "channels", G_TYPE_INT, 2, "channel-mask",
         GST_TYPE_BITMASK, CHANNEL_MASK_STEREO, NULL);
-    gst_caps_merge_structure (caps, s);
+    caps = gst_caps_merge_structure (caps, s);
   } else if (min_chans == 1 && max_chans >= 2) {
     s = get_channel_free_structure (in_structure);
     gst_structure_set (s, "channels", G_TYPE_INT, 2, "channel-mask",
         GST_TYPE_BITMASK, CHANNEL_MASK_STEREO, NULL);
-    gst_caps_merge_structure (caps, s);
+    caps = gst_caps_merge_structure (caps, s);
     s = get_channel_free_structure (in_structure);
     gst_structure_set (s, "channels", G_TYPE_INT, 1, NULL);
-    gst_caps_merge_structure (caps, s);
+    caps = gst_caps_merge_structure (caps, s);
   }
 
   /* don't know whether to use 2.1 or 3.0 here - but I suspect
@@ -250,7 +251,7 @@ caps_add_channel_configuration (GstCaps * caps,
     s = get_channel_free_structure (in_structure);
     gst_structure_set (s, "channels", G_TYPE_INT, 3, "channel-mask",
         GST_TYPE_BITMASK, CHANNEL_MASK_2_1, NULL);
-    gst_caps_merge_structure (caps, s);
+    caps = gst_caps_merge_structure (caps, s);
   }
 
   /* everything else (4, 6, 8 channels) needs a channel layout */
@@ -275,7 +276,7 @@ caps_add_channel_configuration (GstCaps * caps,
       }
       gst_structure_set (s, "channels", G_TYPE_INT, c, "channel-mask",
           GST_TYPE_BITMASK, channel_mask, NULL);
-      gst_caps_merge_structure (caps, s);
+      caps = gst_caps_merge_structure (caps, s);
     }
   }
 
@@ -284,8 +285,9 @@ caps_add_channel_configuration (GstCaps * caps,
     s = get_channel_free_structure (in_structure);
     gst_structure_set (s, "channels", G_TYPE_INT, c, "channel-mask",
         GST_TYPE_BITMASK, G_GUINT64_CONSTANT (0), NULL);
-    gst_caps_merge_structure (caps, s);
+    caps = gst_caps_merge_structure (caps, s);
   }
+  return caps;
 }
 
 static GstCaps *
@@ -373,7 +375,7 @@ gst_alsa_detect_channels (GstObject * obj, snd_pcm_hw_params_t * hw_params,
       c_max = max_chans;
     }
 
-    caps_add_channel_configuration (caps, s, c_min, c_max);
+    caps = caps_add_channel_configuration (caps, s, c_min, c_max);
   }
 
   gst_caps_unref (in_caps);

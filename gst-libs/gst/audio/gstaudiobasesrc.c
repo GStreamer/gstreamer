@@ -142,7 +142,7 @@ static void gst_audio_base_src_get_times (GstBaseSrc * bsrc,
     GstBuffer * buffer, GstClockTime * start, GstClockTime * end);
 static gboolean gst_audio_base_src_setcaps (GstBaseSrc * bsrc, GstCaps * caps);
 static gboolean gst_audio_base_src_query (GstBaseSrc * bsrc, GstQuery * query);
-static void gst_audio_base_src_fixate (GstBaseSrc * bsrc, GstCaps * caps);
+static GstCaps *gst_audio_base_src_fixate (GstBaseSrc * bsrc, GstCaps * caps);
 
 /* static guint gst_audio_base_src_signals[LAST_SIGNAL] = { 0 }; */
 
@@ -512,10 +512,12 @@ gst_audio_base_src_get_property (GObject * object, guint prop_id,
   }
 }
 
-static void
+static GstCaps *
 gst_audio_base_src_fixate (GstBaseSrc * bsrc, GstCaps * caps)
 {
   GstStructure *s;
+
+  caps = gst_caps_make_writable (caps);
 
   s = gst_caps_get_structure (caps, 0);
 
@@ -525,7 +527,9 @@ gst_audio_base_src_fixate (GstBaseSrc * bsrc, GstCaps * caps)
       GST_AUDIO_DEF_CHANNELS);
   gst_structure_fixate_field_string (s, "format", GST_AUDIO_DEF_FORMAT);
 
-  GST_BASE_SRC_CLASS (parent_class)->fixate (bsrc, caps);
+  caps = GST_BASE_SRC_CLASS (parent_class)->fixate (bsrc, caps);
+
+  return caps;
 }
 
 static gboolean

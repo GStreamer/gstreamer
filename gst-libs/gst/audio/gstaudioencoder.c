@@ -1217,7 +1217,7 @@ gst_audio_encoder_proxy_getcaps (GstAudioEncoder * enc, GstCaps * caps)
       if ((val = gst_structure_get_value (allowed_s, "channel-mask")))
         gst_structure_set_value (s, "channel-mask", val);
 
-      gst_caps_merge_structure (filter_caps, s);
+      filter_caps = gst_caps_merge_structure (filter_caps, s);
     }
   }
 

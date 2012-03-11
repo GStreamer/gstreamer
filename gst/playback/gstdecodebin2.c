@@ -1558,13 +1558,13 @@ analyze_new_pad (GstDecodeBin * dbin, GstElement * src, GstPad * pad,
         tcaps = gst_static_pad_template_get_caps (st);
         intersection =
             gst_caps_intersect_full (tcaps, caps, GST_CAPS_INTERSECT_FIRST);
-        gst_caps_merge (filter_caps, intersection);
+        filter_caps = gst_caps_merge (filter_caps, intersection);
         gst_caps_unref (tcaps);
       }
     }
 
     /* Append the parser caps to prevent any not-negotiated errors */
-    gst_caps_merge (filter_caps, gst_caps_copy (caps));
+    filter_caps = gst_caps_merge (filter_caps, gst_caps_ref (caps));
 
     delem->capsfilter = gst_element_factory_make ("capsfilter", NULL);
     g_object_set (G_OBJECT (delem->capsfilter), "caps", filter_caps, NULL);

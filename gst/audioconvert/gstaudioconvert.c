@@ -609,7 +609,7 @@ gst_audio_convert_fixate_caps (GstBaseTransform * base,
   outs = gst_caps_get_structure (result, 0);
 
   gst_audio_convert_fixate_channels (base, ins, outs);
-  gst_caps_fixate (result);
+  result = gst_caps_fixate (result);
 
   GST_DEBUG_OBJECT (base, "fixated othercaps to %" GST_PTR_FORMAT, result);
 

@@ -180,7 +180,8 @@ static void gst_audio_base_sink_get_times (GstBaseSink * bsink,
     GstBuffer * buffer, GstClockTime * start, GstClockTime * end);
 static gboolean gst_audio_base_sink_setcaps (GstBaseSink * bsink,
     GstCaps * caps);
-static void gst_audio_base_sink_fixate (GstBaseSink * bsink, GstCaps * caps);
+static GstCaps *gst_audio_base_sink_fixate (GstBaseSink * bsink,
+    GstCaps * caps);
 
 static gboolean gst_audio_base_sink_query_pad (GstBaseSink * bsink,
     GstQuery * query);
@@ -940,11 +941,13 @@ acquire_error:
   }
 }
 
-static void
+static GstCaps *
 gst_audio_base_sink_fixate (GstBaseSink * bsink, GstCaps * caps)
 {
   GstStructure *s;
   gint width, depth;
+
+  caps = gst_caps_make_writable (caps);
 
   s = gst_caps_get_structure (caps, 0);
 
@@ -965,7 +968,9 @@ gst_audio_base_sink_fixate (GstBaseSink * bsink, GstCaps * caps)
   if (gst_structure_has_field (s, "endianness"))
     gst_structure_fixate_field_nearest_int (s, "endianness", G_BYTE_ORDER);
 
-  GST_BASE_SINK_CLASS (parent_class)->fixate (bsink, caps);
+  caps = GST_BASE_SINK_CLASS (parent_class)->fixate (bsink, caps);
+
+  return caps;
 }
 
 static void

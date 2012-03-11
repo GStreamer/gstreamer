@@ -141,7 +141,7 @@ static void gst_audio_test_src_get_property (GObject * object,
 
 static gboolean gst_audio_test_src_setcaps (GstBaseSrc * basesrc,
     GstCaps * caps);
-static void gst_audio_test_src_fixate (GstBaseSrc * bsrc, GstCaps * caps);
+static GstCaps *gst_audio_test_src_fixate (GstBaseSrc * bsrc, GstCaps * caps);
 
 static gboolean gst_audio_test_src_is_seekable (GstBaseSrc * basesrc);
 static gboolean gst_audio_test_src_do_seek (GstBaseSrc * basesrc,
@@ -262,11 +262,13 @@ gst_audio_test_src_finalize (GObject * object)
   G_OBJECT_CLASS (parent_class)->finalize (object);
 }
 
-static void
+static GstCaps *
 gst_audio_test_src_fixate (GstBaseSrc * bsrc, GstCaps * caps)
 {
   GstAudioTestSrc *src = GST_AUDIO_TEST_SRC (bsrc);
   GstStructure *structure;
+
+  caps = gst_caps_make_writable (caps);
 
   structure = gst_caps_get_structure (caps, 0);
 
@@ -280,7 +282,9 @@ gst_audio_test_src_fixate (GstBaseSrc * bsrc, GstCaps * caps)
   /* fixate to mono unless downstream requires stereo, for backwards compat */
   gst_structure_fixate_field_nearest_int (structure, "channels", 1);
 
-  GST_BASE_SRC_CLASS (parent_class)->fixate (bsrc, caps);
+  caps = GST_BASE_SRC_CLASS (parent_class)->fixate (bsrc, caps);
+
+  return caps;
 }
 
 static gboolean

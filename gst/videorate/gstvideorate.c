@@ -438,10 +438,10 @@ gst_video_rate_transform_caps (GstBaseTransform * trans,
           G_MAXINT, 1, NULL);
     }
     if (s1 != NULL)
-      gst_caps_merge_structure (ret, s1);
-    gst_caps_merge_structure (ret, s2);
+      ret = gst_caps_merge_structure (ret, s1);
+    ret = gst_caps_merge_structure (ret, s2);
     if (s3 != NULL)
-      gst_caps_merge_structure (ret, s3);
+      ret = gst_caps_merge_structure (ret, s3);
   }
   if (filter) {
     GstCaps *intersection;
@@ -465,8 +465,8 @@ gst_video_rate_fixate_caps (GstBaseTransform * trans,
   if (G_UNLIKELY (!gst_structure_get_fraction (s, "framerate", &num, &denom)))
     return othercaps;
 
+  othercaps = gst_caps_truncate (othercaps);
   othercaps = gst_caps_make_writable (othercaps);
-  gst_caps_truncate (othercaps);
   s = gst_caps_get_structure (othercaps, 0);
   gst_structure_fixate_field_nearest_fraction (s, "framerate", num, denom);
 

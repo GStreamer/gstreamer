@@ -435,15 +435,14 @@ gst_vis_src_negotiate (GstVisual * visual)
     if (gst_caps_is_empty (target))
       goto no_format;
 
-    target = gst_caps_make_writable (target);
-    gst_caps_truncate (target);
+    target = gst_caps_truncate (target);
   } else {
     /* need a copy, we'll be modifying it when fixating */
-    target = gst_caps_copy (caps);
-    gst_caps_unref (caps);
+    target = gst_caps_ref (caps);
   }
   GST_DEBUG_OBJECT (visual, "before fixate caps %" GST_PTR_FORMAT, target);
 
+  target = gst_caps_make_writable (target);
   /* fixate in case something is not fixed. This does nothing if the value is
    * already fixed. For video we always try to fixate to something like
    * 320x240x25 by convention. */
@@ -452,7 +451,7 @@ gst_vis_src_negotiate (GstVisual * visual)
   gst_structure_fixate_field_nearest_int (structure, "height", DEFAULT_HEIGHT);
   gst_structure_fixate_field_nearest_fraction (structure, "framerate",
       DEFAULT_FPS_N, DEFAULT_FPS_D);
-  gst_caps_fixate (target);
+  target = gst_caps_fixate (target);
 
   GST_DEBUG_OBJECT (visual, "after fixate caps %" GST_PTR_FORMAT, target);
 

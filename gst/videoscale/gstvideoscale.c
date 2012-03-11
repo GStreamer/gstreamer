@@ -118,9 +118,8 @@ enum
     "v308, Y800, Y16, RGB16, RGB15, ARGB64, AYUV64, NV12 } "
 
 
-static GstStaticCaps gst_video_scale_format_caps[] = {
-  GST_STATIC_CAPS (GST_VIDEO_CAPS_MAKE (GST_VIDEO_FORMATS))
-};
+static GstStaticCaps gst_video_scale_format_caps =
+GST_STATIC_CAPS (GST_VIDEO_CAPS_MAKE (GST_VIDEO_FORMATS));
 
 #define GST_TYPE_VIDEO_SCALE_METHOD (gst_video_scale_method_get_type())
 static GType
@@ -150,18 +149,9 @@ gst_video_scale_get_capslist (void)
   static volatile gsize inited = 0;
 
   if (g_once_init_enter (&inited)) {
-    gint i;
-
-    g_assert (caps == NULL);
-
-    caps = gst_caps_new_empty ();
-    for (i = 0; i < G_N_ELEMENTS (gst_video_scale_format_caps); i++)
-      gst_caps_append (caps,
-          gst_caps_make_writable
-          (gst_static_caps_get (&gst_video_scale_format_caps[i])));
+    caps = gst_static_caps_get (&gst_video_scale_format_caps);
     g_once_init_leave (&inited, 1);
   }
-
   return caps;
 }
 
@@ -570,8 +560,8 @@ gst_video_scale_fixate_caps (GstBaseTransform * base, GstPadDirection direction,
   GValue fpar = { 0, }, tpar = {
   0,};
 
+  othercaps = gst_caps_truncate (othercaps);
   othercaps = gst_caps_make_writable (othercaps);
-  gst_caps_truncate (othercaps);
 
   GST_DEBUG_OBJECT (base, "trying to fixate othercaps %" GST_PTR_FORMAT
       " based on caps %" GST_PTR_FORMAT, othercaps, caps);
