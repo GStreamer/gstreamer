@@ -138,6 +138,8 @@ gst_structure_new_id_empty_with_size (GQuark quark, guint prealloc)
   GST_STRUCTURE_FIELDS (structure) =
       g_array_sized_new (FALSE, FALSE, sizeof (GstStructureField), prealloc);
 
+  GST_TRACE ("created structure %p", structure);
+
   return GST_STRUCTURE_CAST (structure);
 }
 
@@ -340,6 +342,8 @@ gst_structure_copy (const GstStructure * structure)
     gst_value_init_and_copy (&new_field.value, &field->value);
     g_array_append_val (GST_STRUCTURE_FIELDS (new_structure), new_field);
   }
+  GST_CAT_TRACE (GST_CAT_PERFORMANCE, "doing copy %p -> %p",
+      structure, new_structure);
 
   return new_structure;
 }
@@ -372,6 +376,8 @@ gst_structure_free (GstStructure * structure)
 #ifdef USE_POISONING
   memset (structure, 0xff, sizeof (GstStructure));
 #endif
+  GST_TRACE ("free structure %p", structure);
+
   g_slice_free1 (sizeof (GstStructureImpl), structure);
 }
 
