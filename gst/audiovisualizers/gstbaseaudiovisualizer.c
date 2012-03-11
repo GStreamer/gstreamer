@@ -685,11 +685,12 @@ gst_base_audio_visualizer_src_negotiate (GstBaseAudioVisualizer * scope)
     if (gst_caps_is_empty (target))
       goto no_format;
 
-    gst_caps_truncate (target);
+    target = gst_caps_truncate (target);
   } else {
-    target = gst_caps_ref ((GstCaps *) templ);
+    target = templ;
   }
 
+  target = gst_caps_make_writable (target);
   structure = gst_caps_get_structure (target, 0);
   gst_structure_fixate_field_nearest_int (structure, "width", scope->width);
   gst_structure_fixate_field_nearest_int (structure, "height", scope->height);

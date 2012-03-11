@@ -58,7 +58,7 @@ colorspace_compare (gint width, gint height, gboolean comp)
   GstElement *pipeline, *src, *filter1, *filter2, *csp, *fcsp, *fakesink;
   GstElement *queue1, *queue2, *tee, *compare;
   GstCaps *caps, *tcaps, *rcaps, *fcaps;
-  const GstCaps *ccaps;
+  GstCaps *ccaps;
   GstPad *pad;
 
   gint i, j;
@@ -122,7 +122,7 @@ colorspace_compare (gint width, gint height, gboolean comp)
     fail_unless (pad != NULL);
     ccaps = gst_pad_get_pad_template_caps (pad);
     fail_unless (ccaps != NULL);
-    fcaps = gst_caps_copy (ccaps);
+    fcaps = ccaps;
     gst_object_unref (pad);
   } else {
     fcaps = gst_caps_new_any ();
@@ -163,6 +163,7 @@ colorspace_compare (gint width, gint height, gboolean comp)
 
   tcaps = gst_caps_intersect (fcaps, ccaps);
   gst_caps_unref (fcaps);
+  gst_caps_unref (ccaps);
   caps = gst_caps_intersect (tcaps, caps);
   gst_caps_unref (tcaps);
   tcaps = caps;

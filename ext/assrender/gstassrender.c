@@ -430,27 +430,29 @@ gst_ass_render_getcaps (GstPad * pad, GstCaps * filter)
   GstAssRender *render = GST_ASS_RENDER (gst_pad_get_parent (pad));
   GstPad *otherpad;
   GstCaps *caps;
+  GstCaps *templ;
 
   if (pad == render->srcpad)
     otherpad = render->video_sinkpad;
   else
     otherpad = render->srcpad;
 
+  templ = gst_pad_get_pad_template_caps (otherpad);
+
   /* we can do what the peer can */
   caps = gst_pad_peer_query_caps (otherpad, filter);
   if (caps) {
     GstCaps *temp;
-    const GstCaps *templ;
 
     /* filtered against our padtemplate */
-    templ = gst_pad_get_pad_template_caps (otherpad);
     temp = gst_caps_intersect (caps, templ);
     gst_caps_unref (caps);
+    gst_caps_unref (templ);
     /* this is what we can do */
     caps = temp;
   } else {
     /* no peer, our padtemplate is enough then */
-    caps = gst_caps_copy (gst_pad_get_pad_template_caps (pad));
+    caps = templ;
   }
 
   gst_object_unref (render);

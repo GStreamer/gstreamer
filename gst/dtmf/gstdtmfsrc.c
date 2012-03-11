@@ -852,14 +852,16 @@ gst_dtmf_src_negotiate (GstBaseSrc * basesrc)
   caps = gst_pad_get_allowed_caps (GST_BASE_SRC_PAD (basesrc));
 
   if (!caps)
-    caps =
-        gst_caps_copy (gst_pad_get_pad_template_caps (GST_BASE_SRC_PAD
-            (basesrc)));
+    caps = gst_pad_get_pad_template_caps (GST_BASE_SRC_PAD (basesrc));
 
-  if (gst_caps_is_empty (caps))
+  if (gst_caps_is_empty (caps)) {
+    gst_caps_unref (caps);
     return FALSE;
+  }
 
-  gst_caps_truncate (caps);
+  caps = gst_caps_truncate (caps);
+
+  caps = gst_caps_make_writable (caps);
   s = gst_caps_get_structure (caps, 0);
 
   gst_structure_fixate_field_nearest_int (s, "rate", DEFAULT_SAMPLE_RATE);

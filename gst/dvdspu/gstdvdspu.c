@@ -363,15 +363,15 @@ gst_dvd_spu_video_proxy_getcaps (GstPad * pad, GstCaps * filter)
 
   caps = gst_pad_peer_query_caps (otherpad, filter);
   if (caps) {
-    GstCaps *temp;
-    const GstCaps *templ;
+    GstCaps *temp, *templ;
 
     templ = gst_pad_get_pad_template_caps (otherpad);
     temp = gst_caps_intersect (caps, templ);
+    gst_caps_unref (templ);
     gst_caps_unref (caps);
     caps = temp;
   } else {
-    caps = gst_caps_copy (gst_pad_get_pad_template_caps (pad));
+    caps = gst_pad_get_pad_template_caps (pad);
   }
 
   gst_object_unref (dvdspu);

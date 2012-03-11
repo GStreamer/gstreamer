@@ -474,7 +474,7 @@ gst_modplug_load_song (GstModPlug * modplug)
 
   GST_DEBUG_OBJECT (modplug, "normalized caps %"GST_PTR_FORMAT, newcaps);
 
-  gst_caps_fixate (newcaps);
+  newcaps = gst_caps_fixate (newcaps);
 
   GST_DEBUG_OBJECT (modplug, "fixated caps %"GST_PTR_FORMAT, newcaps);
 

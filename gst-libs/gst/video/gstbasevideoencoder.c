@@ -384,7 +384,7 @@ static GstCaps *
 gst_base_video_encoder_sink_getcaps (GstPad * pad, GstCaps * filter)
 {
   GstBaseVideoEncoder *base_video_encoder;
-  const GstCaps *templ_caps;
+  GstCaps *templ_caps;
   GstCaps *allowed;
   GstCaps *fcaps, *filter_caps;
   gint i, j;
@@ -403,7 +403,7 @@ gst_base_video_encoder_sink_getcaps (GstPad * pad, GstCaps * filter)
       gst_pad_get_allowed_caps (GST_BASE_VIDEO_CODEC_SRC_PAD
       (base_video_encoder));
   if (!allowed || gst_caps_is_empty (allowed) || gst_caps_is_any (allowed)) {
-    fcaps = gst_caps_copy (templ_caps);
+    fcaps = templ_caps;
     goto done;
   }
 
@@ -432,7 +432,7 @@ gst_base_video_encoder_sink_getcaps (GstPad * pad, GstCaps * filter)
       if ((val = gst_structure_get_value (allowed_s, "pixel-aspect-ratio")))
         gst_structure_set_value (s, "pixel-aspect-ratio", val);
 
-      gst_caps_merge_structure (filter_caps, s);
+      filter_caps = gst_caps_merge_structure (filter_caps, s);
     }
   }
 
@@ -440,6 +440,7 @@ gst_base_video_encoder_sink_getcaps (GstPad * pad, GstCaps * filter)
       filter_caps);
 
   fcaps = gst_caps_intersect (filter_caps, templ_caps);
+  gst_caps_unref (templ_caps);
   gst_caps_unref (filter_caps);
 
   if (filter) {
