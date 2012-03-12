@@ -1688,7 +1688,7 @@ gst_caps_structure_figure_out_union (GQuark field_id, const GValue * value,
 
 static gboolean
 gst_caps_structure_simplify (GstStructure ** result,
-    const GstStructure * simplify, GstStructure * compare)
+    GstStructure * simplify, GstStructure * compare)
 {
   GSList *list;
   UnionField field = { 0, {0,}, NULL };
@@ -1711,7 +1711,7 @@ gst_caps_structure_simplify (GstStructure ** result,
 
   /* try to union both structs */
   field.compare = compare;
-  if (gst_structure_foreach ((GstStructure *) simplify,
+  if (gst_structure_foreach (simplify,
           gst_caps_structure_figure_out_union, &field)) {
     gboolean ret = FALSE;
 
