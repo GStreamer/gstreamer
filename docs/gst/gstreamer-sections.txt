@@ -257,8 +257,9 @@ GST_META_FLAG_UNSET
 GstMetaInfo
 GstMetaInitFunction
 GstMetaFreeFunction
-GstMetaCopyFunction
 GstMetaTransformFunction
+gst_meta_api_type_register
+gst_meta_api_type_has_tag
 gst_meta_register
 gst_meta_get_info
 <SUBSECTION Standard>
@@ -397,7 +398,7 @@ gst_caps_intersect
 gst_caps_intersect_full
 gst_caps_union
 gst_caps_normalize
-gst_caps_do_simplify
+gst_caps_simplify
 gst_caps_replace
 gst_caps_to_string
 gst_caps_from_string
@@ -504,10 +505,6 @@ GST_CLOCK_ENTRY_STATUS
 GstClockReturn
 GstClockFlags
 GST_CLOCK_FLAGS
-GST_CLOCK_BROADCAST
-GST_CLOCK_GET_COND
-GST_CLOCK_TIMED_WAIT
-GST_CLOCK_WAIT
 gst_clock_add_observation
 gst_clock_set_master
 gst_clock_get_master

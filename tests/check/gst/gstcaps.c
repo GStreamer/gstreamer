@@ -196,8 +196,8 @@ GST_START_TEST (test_simplify)
   fail_unless (caps != NULL,
       "gst_caps_from_string (non_simple_caps_string) failed");
 
-  caps = gst_caps_do_simplify (caps);
-  fail_unless (caps != NULL, "gst_caps_do_simplify() should have worked");
+  caps = gst_caps_simplify (caps);
+  fail_unless (caps != NULL, "gst_caps_simplify() should have worked");
 
   /* check simplified caps, should be:
    *

@@ -107,8 +107,6 @@ gst_meta_api_type_has_tag (GType api, GQuark tag)
  * @init_func: a #GstMetaInitFunction
  * @free_func: a #GstMetaFreeFunction
  * @transform_func: a #GstMetaTransformFunction
- * @tags: a NULL terminated array of strings describing what the metadata
- *        contains info about.
  *
  * Register a new #GstMeta implementation.
  *

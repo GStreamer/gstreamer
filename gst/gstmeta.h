@@ -165,8 +165,6 @@ typedef gboolean (*GstMetaTransformFunction) (GstBuffer *transbuf,
  * @init_func: function for initializing the metadata
  * @free_func: function for freeing the metadata
  * @transform_func: function for transforming the metadata
- * @tags: 0 terminated array of GQuarks describing what the metadata
- *        contains info about
  *
  * The #GstMetaInfo provides information about a specific metadata
  * structure.

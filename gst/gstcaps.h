@@ -438,7 +438,7 @@ GstCaps *         gst_caps_subtract		   (GstCaps *minuend,
 GstCaps *         gst_caps_union                   (GstCaps *caps1,
 						    GstCaps *caps2) G_GNUC_WARN_UNUSED_RESULT;
 GstCaps *         gst_caps_normalize               (GstCaps *caps) G_GNUC_WARN_UNUSED_RESULT;
-GstCaps *         gst_caps_do_simplify             (GstCaps *caps) G_GNUC_WARN_UNUSED_RESULT;
+GstCaps *         gst_caps_simplify                (GstCaps *caps) G_GNUC_WARN_UNUSED_RESULT;
 
 GstCaps *         gst_caps_fixate                  (GstCaps *caps) G_GNUC_WARN_UNUSED_RESULT;
 

@@ -435,7 +435,7 @@ gst_static_caps_cleanup (GstStaticCaps * static_caps)
 static GstStructure *
 gst_caps_remove_and_get_structure (GstCaps * caps, guint idx)
 {
-  /* don't use index_fast, gst_caps_do_simplify relies on the order */
+  /* don't use index_fast, gst_caps_simplify relies on the order */
   GstStructure *s = g_ptr_array_remove_index (GST_CAPS_ARRAY (caps), idx);
 
   gst_structure_set_parent_refcount (s, NULL);
@@ -1498,7 +1498,7 @@ gst_caps_subtract (GstCaps * minuend, GstCaps * subtrahend)
   }
 
   gst_caps_unref (src);
-  dest = gst_caps_do_simplify (dest);
+  dest = gst_caps_simplify (dest);
   return dest;
 }
 
@@ -1575,7 +1575,7 @@ gst_caps_union (GstCaps * caps1, GstCaps * caps2)
   dest1 = _gst_caps_copy (caps1);
   gst_caps_append (dest1, gst_caps_ref (caps2));
 
-  dest1 = gst_caps_do_simplify (dest1);
+  dest1 = gst_caps_simplify (dest1);
   return dest1;
 }
 
@@ -1764,7 +1764,7 @@ gst_caps_switch_structures (GstCaps * caps, GstStructure * old,
 }
 
 /**
- * gst_caps_do_simplify:
+ * gst_caps_simplify:
  * @caps: (transfer full): a #GstCaps to simplify
  *
  * Modifies the given @caps inplace into a representation that represents the
@@ -1775,7 +1775,7 @@ gst_caps_switch_structures (GstCaps * caps, GstStructure * old,
  * Returns: The simplified caps.
  */
 GstCaps *
-gst_caps_do_simplify (GstCaps * caps)
+gst_caps_simplify (GstCaps * caps)
 {
   GstStructure *simplify, *compare, *result = NULL;
   gint i, j, start;

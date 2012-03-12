@@ -298,7 +298,7 @@ gst_capsfilter_prepare_buf (GstBaseTransform * trans, GstBuffer * input,
       g_return_val_if_fail (out_caps != NULL, GST_FLOW_ERROR);
     }
 
-    out_caps = gst_caps_do_simplify (out_caps);
+    out_caps = gst_caps_simplify (out_caps);
 
     if (gst_caps_is_fixed (out_caps) && !gst_caps_is_empty (out_caps)) {
       GST_DEBUG_OBJECT (trans, "Have fixed output caps %"

@@ -324,7 +324,7 @@ gst_registry_chunks_save_feature (GList ** list, GstPluginFeature * feature)
       GstCaps *fcaps = gst_caps_ref (factory->caps);
       /* we simplify the caps before saving. This is a lot faster
        * when loading them later on */
-      fcaps = gst_caps_do_simplify (fcaps);
+      fcaps = gst_caps_simplify (fcaps);
       str = gst_caps_to_string (fcaps);
       gst_caps_unref (fcaps);
 
