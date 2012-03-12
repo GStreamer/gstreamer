@@ -239,6 +239,8 @@ static gboolean gst_ffmpegdec_src_event (GstPad * pad, GstObject * parent,
 
 static gboolean gst_ffmpegdec_sink_event (GstPad * pad, GstObject * parent,
     GstEvent * event);
+static gboolean gst_ffmpegdec_sink_query (GstPad * pad, GstObject * parent,
+    GstQuery * query);
 static GstFlowReturn gst_ffmpegdec_chain (GstPad * pad, GstObject * parent,
     GstBuffer * buf);
 
@@ -430,6 +432,8 @@ gst_ffmpegdec_init (GstFFMpegDec * ffmpegdec)
   ffmpegdec->sinkpad = gst_pad_new_from_template (oclass->sinktempl, "sink");
   gst_pad_set_event_function (ffmpegdec->sinkpad,
       GST_DEBUG_FUNCPTR (gst_ffmpegdec_sink_event));
+  gst_pad_set_query_function (ffmpegdec->sinkpad,
+      GST_DEBUG_FUNCPTR (gst_ffmpegdec_sink_query));
   gst_pad_set_chain_function (ffmpegdec->sinkpad,
       GST_DEBUG_FUNCPTR (gst_ffmpegdec_chain));
   gst_element_add_pad (GST_ELEMENT (ffmpegdec), ffmpegdec->sinkpad);
@@ -2686,6 +2690,44 @@ invalid_format:
     gst_event_unref (event);
     goto done;
   }
+}
+
+static gboolean
+gst_ffmpegdec_sink_query (GstPad * pad, GstObject * parent, GstQuery * query)
+{
+  GstFFMpegDec *ffmpegdec;
+  gboolean ret = FALSE;
+
+  ffmpegdec = (GstFFMpegDec *) parent;
+
+  GST_DEBUG_OBJECT (ffmpegdec, "Handling %s query",
+      GST_QUERY_TYPE_NAME (query));
+
+  switch (GST_QUERY_TYPE (query)) {
+    case GST_QUERY_ACCEPT_CAPS:
+    {
+      GstPadTemplate *templ;
+
+      ret = FALSE;
+      if ((templ = GST_PAD_PAD_TEMPLATE (pad))) {
+        GstCaps *tcaps;
+
+        if ((tcaps = GST_PAD_TEMPLATE_CAPS (templ))) {
+          GstCaps *caps;
+
+          gst_query_parse_accept_caps (query, &caps);
+          gst_query_set_accept_caps_result (query,
+              gst_caps_is_subset (caps, tcaps));
+          ret = TRUE;
+        }
+      }
+      break;
+    }
+    default:
+      ret = gst_pad_query_default (pad, parent, query);
+      break;
+  }
+  return ret;
 }
 
 static GstFlowReturn
