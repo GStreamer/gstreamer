@@ -1774,14 +1774,15 @@ gst_caps_simplify (GstCaps * caps)
 
   g_return_val_if_fail (GST_IS_CAPS (caps), NULL);
 
-  if (gst_caps_is_fixed (caps))
+  start = GST_CAPS_LEN (caps) - 1;
+  /* one caps, already as simple as can be */
+  if (start == 0)
     return caps;
 
   caps = gst_caps_make_writable (caps);
 
   g_ptr_array_sort (GST_CAPS_ARRAY (caps), gst_caps_compare_structures);
 
-  start = GST_CAPS_LEN (caps) - 1;
   for (i = start; i >= 0; i--) {
     simplify = gst_caps_get_structure_unchecked (caps, i);
     compare = gst_caps_get_structure_unchecked (caps, start);
