@@ -214,9 +214,9 @@ gst_opus_dec_negotiate (GstOpusDec * dec, const GstAudioChannelPosition * pos)
   GstStructure *s;
   GstAudioInfo info;
 
-  caps = gst_caps_make_writable (caps);
-  gst_caps_truncate (caps);
+  caps = gst_caps_truncate (caps);
 
+  caps = gst_caps_make_writable (caps);
   s = gst_caps_get_structure (caps, 0);
   gst_structure_fixate_field_nearest_int (s, "rate", 48000);
   gst_structure_get_int (s, "rate", &dec->sample_rate);
