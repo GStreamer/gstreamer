@@ -201,7 +201,7 @@ dnl *** checks for dependency libraries ***
 
 
 dnl GLib
-GLIB_REQ=2.31.10
+GLIB_REQ=2.31.14
 AG_GST_GLIB_CHECK([$GLIB_REQ])
 
 dnl Orc
