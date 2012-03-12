@@ -1,3 +1,11 @@
+#include <libxml/xmlreader.h>
+#include <libxml/tree.h>
+#include <libxml/parser.h>
+#include <libxml/xpath.h>
+#include <libxml/xpathInternals.h>
+#include "libxml/encoding.h"
+#include "libxml/xmlwriter.h"
+
 #include <ges/ges.h>
 #include <inttypes.h>
 #include <unistd.h>

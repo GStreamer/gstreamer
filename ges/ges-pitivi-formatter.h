@@ -1,13 +1,5 @@
 #ifndef _GES_PITIVI_FORMATTER
 #define _GES_PITIVI_FORMATTER
-#include <libxml/xmlreader.h>
-#include <libxml/tree.h>
-#include <libxml/parser.h>
-#include <libxml/xpath.h>
-#include <libxml/xpathInternals.h>
-#include "libxml/encoding.h"
-#include "libxml/xmlwriter.h"
-
 
 #define GES_TYPE_PITIVI_FORMATTER ges_pitivi_formatter_get_type()
 
