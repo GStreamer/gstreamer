@@ -1758,7 +1758,7 @@ gst_caps_switch_structures (GstCaps * caps, GstStructure * old,
  * gst_caps_simplify:
  * @caps: (transfer full): a #GstCaps to simplify
  *
- * Modifies the given @caps inplace into a representation that represents the
+ * Converts the given @caps into a representation that represents the
  * same set of formats, but in a simpler form.  Component structures that are
  * identical are merged.  Component structures that have values that can be
  * merged are also merged.
