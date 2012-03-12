@@ -224,7 +224,7 @@ gst_monoscope_src_negotiate (GstMonoscope * monoscope)
 {
   GstCaps *othercaps, *target;
   GstStructure *structure;
-  const GstCaps *templ;
+  GstCaps *templ;
   GstQuery *query;
   GstBufferPool *pool = NULL;
   guint size, min, max, prefix, alignment;
@@ -238,15 +238,17 @@ gst_monoscope_src_negotiate (GstMonoscope * monoscope)
   if (othercaps) {
     target = gst_caps_intersect (othercaps, templ);
     gst_caps_unref (othercaps);
+    gst_caps_unref (templ);
 
     if (gst_caps_is_empty (target))
       goto no_format;
 
-    gst_caps_truncate (target);
+    target = gst_caps_truncate (target);
   } else {
-    target = gst_caps_ref ((GstCaps *) templ);
+    target = templ;
   }
 
+  target = gst_caps_make_writable (target);
   structure = gst_caps_get_structure (target, 0);
   gst_structure_fixate_field_nearest_int (structure, "width", 320);
   gst_structure_fixate_field_nearest_int (structure, "height", 240);
