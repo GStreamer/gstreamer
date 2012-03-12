@@ -1616,13 +1616,15 @@ gst_caps_normalize_foreach (GQuark field_id, const GValue * value, gpointer ptr)
 
 /**
  * gst_caps_normalize:
- * @caps: a #GstCaps to normalize
+ * @caps: (transfer full): a #GstCaps to normalize
  *
- * Creates a new #GstCaps that represents the same set of formats as
+ * Returns a #GstCaps that represents the same set of formats as
  * @caps, but contains no lists.  Each list is expanded into separate
  * @GstStructures.
  *
- * Returns: the new #GstCaps
+ * This function takes ownership of @caps.
+ *
+ * Returns: (transfer full): the normalized #GstCaps
  */
 GstCaps *
 gst_caps_normalize (GstCaps * caps)
@@ -1633,7 +1635,7 @@ gst_caps_normalize (GstCaps * caps)
 
   g_return_val_if_fail (GST_IS_CAPS (caps), NULL);
 
-  newcaps = _gst_caps_copy (caps);
+  newcaps = gst_caps_make_writable (caps);
   nf.caps = newcaps;
 
   for (i = 0; i < gst_caps_get_size (newcaps); i++) {

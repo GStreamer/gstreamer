@@ -839,7 +839,6 @@ GST_START_TEST (test_normalize)
     fail_unless (gst_structure_foreach (st, _caps_is_fixed_foreach, NULL));
   }
 
-  gst_caps_unref (in);
   gst_caps_unref (out);
   gst_caps_unref (norm);
 
@@ -858,7 +857,6 @@ GST_START_TEST (test_normalize)
     fail_unless (gst_structure_foreach (st, _caps_is_fixed_foreach, NULL));
   }
 
-  gst_caps_unref (in);
   gst_caps_unref (out);
   gst_caps_unref (norm);
 
@@ -876,7 +874,6 @@ GST_START_TEST (test_normalize)
     fail_unless (gst_structure_foreach (st, _caps_is_fixed_foreach, NULL));
   }
 
-  gst_caps_unref (in);
   gst_caps_unref (out);
   gst_caps_unref (norm);
 }
