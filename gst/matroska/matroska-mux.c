@@ -2376,6 +2376,7 @@ gst_matroska_mux_start (GstMatroskaMux * mux)
       /* FIXME 0.11: change to query not handled => seeking not supported */
       GST_WARNING_OBJECT (mux, "downstream did not handle seeking query");
     }
+    gst_query_unref (query);
   }
 
   if (!strcmp (mux->doctype, GST_MATROSKA_DOCTYPE_WEBM)) {

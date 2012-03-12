@@ -140,10 +140,8 @@ gst_flv_mux_base_init (gpointer g_class)
 {
   GstElementClass *element_class = GST_ELEMENT_CLASS (g_class);
 
-  gst_element_class_add_static_pad_template (element_class,
-      &videosink_templ);
-  gst_element_class_add_static_pad_template (element_class,
-      &audiosink_templ);
+  gst_element_class_add_static_pad_template (element_class, &videosink_templ);
+  gst_element_class_add_static_pad_template (element_class, &audiosink_templ);
   gst_element_class_add_static_pad_template (element_class, &src_templ);
   gst_element_class_set_details_simple (element_class, "FLV muxer",
       "Codec/Muxer",
@@ -1127,6 +1125,7 @@ gst_flv_mux_write_header (GstFlvMux * mux)
       /* FIXME 0.11: change to query not handled => seeking not supported */
       GST_WARNING_OBJECT (mux, "downstream did not handle seeking query");
     }
+    gst_query_unref (query);
   }
 
   header = gst_flv_mux_create_header (mux);

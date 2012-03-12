@@ -1635,6 +1635,7 @@ gst_qt_mux_start_file (GstQTMux * qtmux)
       /* FIXME 0.11: change to query not handled => seeking not supported */
       GST_WARNING_OBJECT (qtmux, "downstream did not handle seeking query");
     }
+    gst_query_unref (query);
   }
 
   /* let downstream know we think in BYTES and expect to do seeking later on */
