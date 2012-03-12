@@ -414,8 +414,7 @@ gst_fake_h264_parser_sink_setcaps (GstPad * pad, GstCaps * caps)
   const gchar *stream_format;
 
   accepted_caps = gst_pad_get_allowed_caps (otherpad);
-  accepted_caps = gst_caps_make_writable (accepted_caps);
-  gst_caps_truncate (accepted_caps);
+  accepted_caps = gst_caps_truncate (accepted_caps);
 
   s = gst_caps_get_structure (accepted_caps, 0);
   stream_format = gst_structure_get_string (s, "stream-format");
