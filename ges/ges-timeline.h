@@ -89,6 +89,7 @@ gboolean ges_timeline_load_from_uri (GESTimeline *timeline, const gchar *uri);
 gboolean ges_timeline_save_to_uri (GESTimeline *timeline, const gchar *uri);
 
 gboolean ges_timeline_add_layer (GESTimeline *timeline, GESTimelineLayer *layer);
+gboolean ges_timeline_append_layer (GESTimeline * timeline, GESTimelineLayer * layer);
 gboolean ges_timeline_remove_layer (GESTimeline *timeline, GESTimelineLayer *layer);
 GList* ges_timeline_get_layers (GESTimeline *timeline);
 
@@ -97,6 +98,8 @@ gboolean ges_timeline_remove_track (GESTimeline *timeline, GESTrack *track);
 
 GESTrack * ges_timeline_get_track_for_pad (GESTimeline *timeline, GstPad *pad);
 GList *ges_timeline_get_tracks (GESTimeline *timeline);
+
+gboolean ges_timeline_enable_update(GESTimeline * timeline, gboolean enabled);
 
 G_END_DECLS
 

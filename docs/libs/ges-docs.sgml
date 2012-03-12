@@ -88,6 +88,7 @@ platform as well as Windows. It is released under the GNU Library General Public
     <title>Serialization Classes</title>
     <xi:include href="xml/ges-formatter.xml"/>
     <xi:include href="xml/ges-keyfile-formatter.xml"/>
+    <xi:include href="xml/ges-pitivi-formatter.xml"/>
   </chapter>
 
   <chapter id="ges-hierarchy">

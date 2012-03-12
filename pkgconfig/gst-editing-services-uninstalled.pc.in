@@ -1,12 +1,12 @@
 # the standard variables don't make sense for an uninstalled copy
 prefix=
 exec_prefix=
-libdir=${pcfiledir}/../ges
-includedir=${pcfiledir}/..
+libdir=@abs_top_builddir@/ges
+includedir=@abs_top_builddir@
 
 Name: gst-editing-services
 Description: GStreamer Editing Services
 Version: @VERSION@
 Requires: gstreamer-@GST_MAJORMINOR@ gstreamer-base-@GST_MAJORMINOR@ gstreamer-controller-@GST_MAJORMINOR@ gstreamer-pbutils-@GST_MAJORMINOR@
-Libs: ${libdir}/libges-@GST_MAJORMINOR@
-Cflags: -I${includedir} -I@srcdir@/..
+Libs: @abs_top_builddir@/ges/libges-@GST_MAJORMINOR@.la
+Cflags: -I@abs_top_srcdir@ -I@abs_top_builddir@

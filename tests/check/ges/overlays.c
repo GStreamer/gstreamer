@@ -71,6 +71,7 @@ GST_START_TEST (test_overlay_properties)
   assert_equals_uint64 (GES_TIMELINE_OBJECT_INPOINT (object), 12);
 
   trackobject = ges_timeline_object_create_track_object (object, track);
+  ges_timeline_object_add_track_object (object, trackobject);
   fail_unless (trackobject != NULL);
   fail_unless (ges_track_object_set_track (trackobject, track));
 

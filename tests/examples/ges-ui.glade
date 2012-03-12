@@ -90,6 +90,16 @@
                         <signal name="activate" handler="save_as_activate_cb"/>
                       </object>
                     </child>
+                    <child>
+                      <object class="GtkImageMenuItem" id="launch_pitivi_project">
+                        <property name="label" translatable="yes">Preview Pitivi Project</property>
+                        <property name="visible">True</property>
+                        <property name="tooltip_text" translatable="yes">Launches a .xptv project</property>
+                        <property name="image">image1</property>
+                        <property name="use_stock">False</property>
+                        <signal name="activate" handler="launch_pitivi_project_activate_cb"/>
+                      </object>
+                    </child>
                   </object>
                 </child>
               </object>
@@ -271,8 +281,8 @@
             <child>
               <object class="GtkToolButton" id="play_button">
                 <property name="visible">True</property>
-                <property name="related_action">play</property>
                 <property name="use_action_appearance">True</property>
+                <property name="related_action">play</property>
                 <property name="label" translatable="yes">toolbutton1</property>
                 <property name="use_underline">True</property>
               </object>
@@ -284,8 +294,8 @@
             <child>
               <object class="GtkToolButton" id="toolbutton6">
                 <property name="visible">True</property>
-                <property name="related_action">stop</property>
                 <property name="use_action_appearance">True</property>
+                <property name="related_action">stop</property>
                 <property name="label" translatable="yes">toolbutton6</property>
                 <property name="use_underline">True</property>
               </object>
@@ -306,8 +316,8 @@
             <child>
               <object class="GtkToolButton" id="delete_button">
                 <property name="visible">True</property>
-                <property name="related_action">delete</property>
                 <property name="use_action_appearance">True</property>
+                <property name="related_action">delete</property>
                 <property name="label" translatable="yes">Delete</property>
                 <property name="use_underline">True</property>
               </object>
@@ -328,8 +338,8 @@
             <child>
               <object class="GtkToolButton" id="add_button">
                 <property name="visible">True</property>
-                <property name="related_action">add_file</property>
                 <property name="use_action_appearance">True</property>
+                <property name="related_action">add_file</property>
                 <property name="label" translatable="yes">toolbutton1</property>
                 <property name="use_underline">True</property>
               </object>
@@ -341,8 +351,8 @@
             <child>
               <object class="GtkToolButton" id="toolbutton2">
                 <property name="visible">True</property>
-                <property name="related_action">add_text</property>
                 <property name="use_action_appearance">True</property>
+                <property name="related_action">add_text</property>
                 <property name="label" translatable="yes">toolbutton2</property>
                 <property name="use_underline">True</property>
               </object>
@@ -354,8 +364,8 @@
             <child>
               <object class="GtkToolButton" id="toolbutton4">
                 <property name="visible">True</property>
-                <property name="related_action">add_test</property>
                 <property name="use_action_appearance">True</property>
+                <property name="related_action">add_test</property>
                 <property name="label" translatable="yes">toolbutton4</property>
                 <property name="use_underline">True</property>
               </object>
@@ -367,8 +377,8 @@
             <child>
               <object class="GtkToolButton" id="toolbutton5">
                 <property name="visible">True</property>
-                <property name="related_action">add_transition</property>
                 <property name="use_action_appearance">True</property>
+                <property name="related_action">add_transition</property>
                 <property name="label" translatable="yes">toolbutton5</property>
                 <property name="use_underline">True</property>
               </object>
@@ -402,8 +412,8 @@
             <child>
               <object class="GtkToolButton" id="toolbutton8">
                 <property name="visible">True</property>
-                <property name="related_action">move_up</property>
                 <property name="use_action_appearance">True</property>
+                <property name="related_action">move_up</property>
                 <property name="label" translatable="yes">toolbutton8</property>
                 <property name="use_underline">True</property>
               </object>
@@ -415,8 +425,8 @@
             <child>
               <object class="GtkToolButton" id="toolbutton9">
                 <property name="visible">True</property>
-                <property name="related_action">move_down</property>
                 <property name="use_action_appearance">True</property>
+                <property name="related_action">move_down</property>
                 <property name="label" translatable="yes">toolbutton9</property>
                 <property name="use_underline">True</property>
               </object>
@@ -437,8 +447,8 @@
             <child>
               <object class="GtkToggleToolButton" id="toolbutton11">
                 <property name="visible">True</property>
-                <property name="related_action">audio_track</property>
                 <property name="use_action_appearance">True</property>
+                <property name="related_action">audio_track</property>
                 <property name="label" translatable="yes">toolbutton11</property>
                 <property name="use_underline">True</property>
               </object>
@@ -450,8 +460,8 @@
             <child>
               <object class="GtkToggleToolButton" id="toolbutton12">
                 <property name="visible">True</property>
-                <property name="related_action">video_track</property>
                 <property name="use_action_appearance">True</property>
+                <property name="related_action">video_track</property>
                 <property name="label" translatable="yes">toolbutton12</property>
                 <property name="use_underline">True</property>
               </object>
@@ -1012,6 +1022,10 @@
       <action-widget response="0">button2</action-widget>
       <action-widget response="0">button1</action-widget>
     </action-widgets>
+  </object>
+  <object class="GtkImage" id="image1">
+    <property name="visible">True</property>
+    <property name="stock">gtk-floppy</property>
   </object>
   <object class="GtkSizeGroup" id="LabelSizeGroup">
     <widgets>

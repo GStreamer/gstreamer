@@ -46,6 +46,7 @@ libges_@GST_MAJORMINOR@_la_SOURCES = 		\
 	ges-screenshot.c			\
 	ges-formatter.c				\
 	ges-keyfile-formatter.c			\
+	ges-pitivi-formatter.c			\
 	ges-utils.c
 
 libges_@GST_MAJORMINOR@includedir = $(includedir)/gstreamer-@GST_MAJORMINOR@/ges/
@@ -89,13 +90,14 @@ libges_@GST_MAJORMINOR@include_HEADERS = 	\
 	ges-screenshot.h			\
 	ges-formatter.h				\
 	ges-keyfile-formatter.h			\
+	ges-pitivi-formatter.h			\
 	ges-utils.h
 
 noinst_HEADERS = \
 	ges-internal.h
 
-libges_@GST_MAJORMINOR@_la_CFLAGS = -I$(top_srcdir) $(GST_PBUTILS_CFLAGS) $(GST_VIDEO_CFLAGS) $(GST_CONTROLLER_CFLAGS) $(GST_PLUGINS_BASE_CFLAGS) $(GST_CFLAGS)
-libges_@GST_MAJORMINOR@_la_LIBADD = $(GST_PBUTILS_LIBS) $(GST_VIDEO_LIBS) $(GST_CONTROLLER_LIBS) $(GST_PLUGINS_BASE_LIBS) $(GST_BASE_LIBS) $(GST_LIBS) 
+libges_@GST_MAJORMINOR@_la_CFLAGS = -I$(top_srcdir) $(GST_PBUTILS_CFLAGS) $(GST_VIDEO_CFLAGS) $(GST_CONTROLLER_CFLAGS) $(GST_PLUGINS_BASE_CFLAGS) $(GST_CFLAGS) $(XML_CFLAGS)
+libges_@GST_MAJORMINOR@_la_LIBADD = $(GST_PBUTILS_LIBS) $(GST_VIDEO_LIBS) $(GST_CONTROLLER_LIBS) $(GST_PLUGINS_BASE_LIBS) $(GST_BASE_LIBS) $(GST_LIBS) $(XML_LIBS)
 libges_@GST_MAJORMINOR@_la_LDFLAGS = $(GST_LIB_LDFLAGS) $(GST_ALL_LDFLAGS) $(GST_LT_LDFLAGS) -export-symbols-regex \^_*\(ges_\|GES_\).*
 
 DISTCLEANFILE = $(CLEANFILES)

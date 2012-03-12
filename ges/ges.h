@@ -20,7 +20,6 @@
 
 #ifndef __GES_H__
 #define __GES_H__
-
 #include <glib.h>
 #include <gst/gst.h>
 
@@ -63,15 +62,22 @@
 #include <ges/ges-track-audio-transition.h>
 #include <ges/ges-track-effect.h>
 #include <ges/ges-track-parse-launch-effect.h>
-
 #include <ges/ges-formatter.h>
 #include <ges/ges-keyfile-formatter.h>
-
+#include <ges/ges-pitivi-formatter.h>
 #include <ges/ges-utils.h>
 
 G_BEGIN_DECLS
 
-gboolean ges_init (void);
+#define GES_VERSION_MAJOR (0)
+#define GES_VERSION_MINOR (10)
+#define GES_VERSION_MICRO (1)
+#define GES_VERSION_NANO (1)
+
+gboolean ges_init    (void);
+
+void     ges_version (guint * major, guint * minor, guint * micro,
+                      guint * nano);
 
 G_END_DECLS
 

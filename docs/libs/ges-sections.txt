@@ -4,6 +4,11 @@
 <FILE>ges-common</FILE>
 <TITLE>Initialization</TITLE>
 ges_init
+ges_version
+GES_VERSION_MAJOR
+GES_VERSION_MICRO
+GES_VERSION_MINOR
+GES_VERSION_NANO
 <SUBSECTION Standard>
 GES_PADDING
 </SECTION>
@@ -51,6 +56,8 @@ ges_track_add_object
 ges_track_remove_object
 ges_track_set_caps
 ges_track_get_caps
+ges_track_enable_update
+ges_track_get_objects
 <SUBSECTION Standard>
 GESTrackClass
 GESTrackPrivate
@@ -236,11 +243,13 @@ ges_timeline_new
 ges_timeline_new_audio_video
 ges_timeline_new_from_uri
 ges_timeline_add_layer
+ges_timeline_append_layer
 ges_timeline_remove_layer
 ges_timeline_add_track
 ges_timeline_remove_track
 ges_timeline_load_from_uri
 ges_timeline_save_to_uri
+ges_timeline_enable_update
 <SUBSECTION usage>
 ges_timeline_get_tracks
 ges_timeline_get_layers
@@ -269,6 +278,8 @@ ges_timeline_layer_remove_object
 ges_timeline_layer_set_priority
 ges_timeline_layer_get_priority
 ges_timeline_layer_get_objects
+ges_timeline_layer_get_auto_transition
+ges_timeline_layer_set_auto_transition
 <SUBSECTION Standard>
 GESTimelineLayerPrivate
 ges_timeline_layer_set_timeline
@@ -298,7 +309,11 @@ ges_timeline_object_find_track_object
 ges_timeline_object_add_track_object
 ges_timeline_object_get_top_effects
 ges_timeline_object_get_top_effect_position
+ges_timeline_object_move_to_layer
 ges_timeline_object_set_top_effect_priority
+ges_timeline_object_set_supported_formats
+ges_timeline_object_get_supported_formats
+ges_timeline_object_split
 <SUBSECTION Standard>
 GES_TIMELINE_OBJECT_DURATION
 GES_TIMELINE_OBJECT_INPOINT
@@ -308,10 +323,13 @@ GES_TIMELINE_OBJECT_HEIGHT
 ges_timeline_object_create_track_objects
 ges_timeline_object_create_track_object
 ges_timeline_object_fill_track_object
+ges_timeline_object_is_moving_from_layer
 ges_timeline_object_release_track_object
 ges_timeline_object_get_track_objects
 ges_timeline_object_set_layer
+ges_timeline_object_set_moving_from_layer
 ges_timeline_object_set_priority
+ges_timeline_object_lock_track_objects
 GESTimelineObjectPrivate
 GES_IS_TIMELINE_OBJECT
 GES_IS_TIMELINE_OBJECT_CLASS
@@ -331,6 +349,10 @@ ges_timeline_pipeline_new
 ges_timeline_pipeline_add_timeline
 ges_timeline_pipeline_set_mode
 ges_timeline_pipeline_set_render_settings
+ges_timeline_pipeline_preview_get_audio_sink
+ges_timeline_pipeline_preview_get_video_sink
+ges_timeline_pipeline_preview_set_audio_sink
+ges_timeline_pipeline_preview_set_video_sink
 ges_timeline_pipeline_get_thumbnail_buffer
 ges_timeline_pipeline_get_thumbnail_rgb24
 ges_timeline_pipeline_save_thumbnail
@@ -732,12 +754,15 @@ GESFormatter
 GESFormatterClass
 GESFormatterLoadFromURIMethod
 GESFormatterSaveToURIMethod
+GESFormatterSourceMovedMethod
+GESFormatterLoadedMethod
 ges_default_formatter_new
 ges_formatter_load_from_uri
 ges_formatter_save_to_uri
 ges_formatter_new_for_uri
 ges_formatter_can_load_uri
 ges_formatter_can_save_uri
+ges_formatter_update_source_uri
 <SUBSECTION Standard>
 ges_formatter_get_type
 GES_FORMATTER
@@ -773,6 +798,26 @@ GES_KEYFILE_FORMATTER_CLASS
 GES_KEYFILE_FORMATTER_GET_CLASS
 GES_TYPE_KEYFILE_FORMATTER
 ges_keyfile_formatter_get_type
+</SECTION>
+
+<SECTION>
+<FILE>ges-pitivi-formatter</FILE>
+<TITLE>GESPitiviFormatter</TITLE>
+GESPitiviFormatter
+ges_pitivi_formatter_new
+ges_pitivi_formatter_set_sources
+ges_pitivi_formatter_get_sources
+<SUBSECTION Standard>
+GESPitiviFormatterClass
+GESPitiviFormatterPrivate
+GES_TYPE_PITIVI_FORMATTER
+GES_IS_PITIVI_FORMATTER
+GES_IS_PITIVI_FORMATTER_CLASS
+GES_PITIVI_FORMATTER
+GES_PITIVI_FORMATTER_CLASS
+GES_PITIVI_FORMATTER_GET_CLASS
+GES_TYPE_PITIVIFORMATTER
+ges_pitivi_formatter_get_type
 </SECTION>
 
 <SECTION>

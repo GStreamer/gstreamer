@@ -193,6 +193,14 @@ AC_SUBST(GLIB_PREFIX)
 AC_SUBST(GST_PREFIX)
 AC_SUBST(GSTPB_PREFIX)
 
+dnl pitivi formatter needs libxml
+PKG_CHECK_MODULES(XML, libxml-2.0, HAVE_LIBXML="yes", HAVE_LIBXML="no")
+if test "x$HAVE_LIBXML" != "xyes"; then
+  AC_ERROR([libxml2 is required])
+fi
+AC_SUBST(XML_LIBS)
+AC_SUBST(XML_CFLAGS)
+
 dnl GTK is optional and only used in examples
 HAVE_GTK=no
 HAVE_GTK_X11=no

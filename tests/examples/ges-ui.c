@@ -112,6 +112,7 @@ gboolean window_delete_event_cb (GtkObject * window, GdkEvent * event,
 void new_activate_cb (GtkMenuItem * item, App * app);
 void open_activate_cb (GtkMenuItem * item, App * app);
 void save_as_activate_cb (GtkMenuItem * item, App * app);
+void launch_pitivi_project_activate_cb (GtkMenuItem * item, App * app);
 void quit_item_activate_cb (GtkMenuItem * item, App * app);
 void delete_activate_cb (GtkAction * item, App * app);
 void play_activate_cb (GtkAction * item, App * app);
@@ -449,6 +450,24 @@ pipeline_state_changed_cb (App * app)
   gtk_action_set_sensitive ((GtkAction *) app->video_track_action,
       !playing_or_paused);
   gtk_widget_set_sensitive (app->properties, !playing_or_paused);
+}
+
+static void
+project_bus_message_cb (GstBus * bus, GstMessage * message,
+    GMainLoop * mainloop)
+{
+  switch (GST_MESSAGE_TYPE (message)) {
+    case GST_MESSAGE_ERROR:
+      g_printerr ("ERROR\n");
+      g_main_loop_quit (mainloop);
+      break;
+    case GST_MESSAGE_EOS:
+      g_printerr ("Done\n");
+      g_main_loop_quit (mainloop);
+      break;
+    default:
+      break;
+  }
 }
 
 static void
@@ -1149,6 +1168,33 @@ app_add_file (App * app, gchar * uri)
 }
 
 static void
+app_launch_project (App * app, gchar * uri)
+{
+  GESTimeline *timeline;
+  GMainLoop *mainloop;
+  GESTimelinePipeline *pipeline;
+  GstBus *bus;
+  GESFormatter *formatter;
+
+  uri = g_strsplit (uri, "//", 2)[1];
+  printf ("we will launch this uri : %s\n", uri);
+  formatter = GES_FORMATTER (ges_pitivi_formatter_new ());
+  timeline = ges_timeline_new ();
+  pipeline = ges_timeline_pipeline_new ();
+  bus = gst_pipeline_get_bus (GST_PIPELINE (pipeline));
+  mainloop = g_main_loop_new (NULL, FALSE);
+
+  ges_timeline_pipeline_add_timeline (pipeline, timeline);
+  ges_formatter_load_from_uri (formatter, timeline, uri);
+  ges_timeline_pipeline_set_mode (pipeline, TIMELINE_MODE_PREVIEW_VIDEO);
+  gst_element_set_state (GST_ELEMENT (pipeline), GST_STATE_PLAYING);
+  gst_bus_add_signal_watch (bus);
+  g_signal_connect (bus, "message", G_CALLBACK (project_bus_message_cb),
+      mainloop);
+  g_main_loop_run (mainloop);
+}
+
+static void
 app_add_title (App * app)
 {
   GESTimelineObject *obj;
@@ -1369,6 +1415,35 @@ void
 new_activate_cb (GtkMenuItem * item, App * app)
 {
   app_new ();
+}
+
+void
+launch_pitivi_project_activate_cb (GtkMenuItem * item, App * app)
+{
+  GtkFileChooserDialog *dlg;
+  GtkFileFilter *filter;
+
+  GST_DEBUG ("add file signal handler");
+
+  filter = gtk_file_filter_new ();
+  gtk_file_filter_set_name (filter, "pitivi projects");
+  gtk_file_filter_add_pattern (filter, "*.xptv");
+  dlg = (GtkFileChooserDialog *)
+      gtk_file_chooser_dialog_new ("Preview Project...",
+      GTK_WINDOW (app->main_window),
+      GTK_FILE_CHOOSER_ACTION_OPEN,
+      GTK_STOCK_CANCEL,
+      GTK_RESPONSE_CANCEL, GTK_STOCK_OK, GTK_RESPONSE_OK, NULL);
+  gtk_file_chooser_add_filter (GTK_FILE_CHOOSER (dlg), filter);
+
+  g_object_set (G_OBJECT (dlg), "select-multiple", FALSE, NULL);
+
+  if (gtk_dialog_run ((GtkDialog *) dlg) == GTK_RESPONSE_OK) {
+    gchar *uri;
+    uri = gtk_file_chooser_get_uri (GTK_FILE_CHOOSER (dlg));
+    gtk_widget_destroy ((GtkWidget *) dlg);
+    app_launch_project (app, uri);
+  }
 }
 
 void

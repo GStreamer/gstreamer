@@ -72,6 +72,7 @@ GST_START_TEST (test_test_source_properties)
   assert_equals_uint64 (GES_TIMELINE_OBJECT_INPOINT (object), 12);
 
   trackobject = ges_timeline_object_create_track_object (object, track);
+  ges_timeline_object_add_track_object (object, trackobject);
   fail_unless (trackobject != NULL);
   fail_unless (ges_track_object_set_track (trackobject, track));
 
@@ -169,10 +170,12 @@ GST_START_TEST (test_test_source_in_layer)
   assert_equals_float (volume, 0);
 
 
-  freq = ges_track_audio_test_source_get_freq (
-      GES_TRACK_AUDIO_TEST_SOURCE (trobj));
-  volume = ges_track_audio_test_source_get_volume (
-      GES_TRACK_AUDIO_TEST_SOURCE (trobj));
+  freq =
+      ges_track_audio_test_source_get_freq (GES_TRACK_AUDIO_TEST_SOURCE
+      (trobj));
+  volume =
+      ges_track_audio_test_source_get_volume (GES_TRACK_AUDIO_TEST_SOURCE
+      (trobj));
   g_assert (freq == 440);
   g_assert (volume == 0);
 
@@ -183,10 +186,12 @@ GST_START_TEST (test_test_source_in_layer)
   assert_equals_float (freq, 2000);
   assert_equals_float (volume, 0.5);
 
-  freq = ges_track_audio_test_source_get_freq (
-      GES_TRACK_AUDIO_TEST_SOURCE (trobj));
-  volume = ges_track_audio_test_source_get_volume (
-      GES_TRACK_AUDIO_TEST_SOURCE (trobj));
+  freq =
+      ges_track_audio_test_source_get_freq (GES_TRACK_AUDIO_TEST_SOURCE
+      (trobj));
+  volume =
+      ges_track_audio_test_source_get_volume (GES_TRACK_AUDIO_TEST_SOURCE
+      (trobj));
   g_assert (freq == 2000);
   g_assert (volume == 0.5);
 

@@ -163,7 +163,7 @@ static void
 gstl_recalculate (GESSimpleTimelineLayer * self)
 {
   GList *tmp;
-  GstClockTime pos = 0;
+  gint64 pos = 0;
   gint priority = 0;
   gint transition_priority = 0;
   gint height;
@@ -210,9 +210,11 @@ gstl_recalculate (GESSimpleTimelineLayer * self)
     } else if (GES_IS_TIMELINE_TRANSITION (obj)) {
 
       pos -= dur;
+      if (pos < 0)
+        pos = 0;
 
-      GST_LOG ("%p obj: height: %d: trans_priority %d", obj, height,
-          transition_priority);
+      GST_LOG ("%p obj: height: %d: trans_priority %d Position: %d, "
+          "duration %d", obj, height, transition_priority, pos);
 
       g_assert (transition_priority != -1);
 

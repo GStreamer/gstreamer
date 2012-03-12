@@ -32,6 +32,7 @@
 #include "ges-internal.h"
 #include "ges-track.h"
 #include "ges-track-object.h"
+#include "gesmarshal.h"
 
 G_DEFINE_TYPE (GESTrack, ges_track, GST_TYPE_BIN);
 
@@ -45,6 +46,7 @@ struct _GESTrackPrivate
   GstCaps *caps;
 
   GstElement *composition;      /* The composition associated with this track */
+  GstElement *background;       /* The backgrond, handle the gaps in the track */
   GstPad *srcpad;               /* The source GhostPad */
 };
 
@@ -54,8 +56,13 @@ enum
   ARG_CAPS,
   ARG_TYPE,
   ARG_DURATION,
-  ARG_LAST
+  ARG_LAST,
+  TRACK_OBJECT_ADDED,
+  TRACK_OBJECT_REMOVED,
+  LAST_SIGNAL
 };
+
+static guint ges_track_signals[LAST_SIGNAL] = { 0 };
 
 static GParamSpec *properties[ARG_LAST];
 
@@ -64,6 +71,12 @@ static void
 pad_removed_cb (GstElement * element, GstPad * pad, GESTrack * track);
 static void composition_duration_cb (GstElement * composition, GParamSpec * arg
     G_GNUC_UNUSED, GESTrack * obj);
+static void
+sort_track_objects_cb (GESTrackObject * child,
+    GParamSpec * arg G_GNUC_UNUSED, GESTrack * track);
+
+static void timeline_duration_cb (GESTimeline * timeline,
+    GParamSpec * arg G_GNUC_UNUSED, GESTrack * track);
 
 static void
 ges_track_get_property (GObject * object, guint property_id,
@@ -131,6 +144,48 @@ ges_track_dispose (GObject * object)
 }
 
 static void
+ges_track_constructed (GObject * object)
+{
+  GObjectClass *parent_class;
+  GstElement *background = NULL;
+  GESTrack *self = GES_TRACK (object);
+  GESTrackPrivate *priv = self->priv;
+
+  if ((priv->background = gst_element_factory_make ("gnlsource", "background"))) {
+    g_object_set (priv->background, "priority", G_MAXUINT, NULL);
+
+    switch (self->type) {
+      case GES_TRACK_TYPE_VIDEO:
+        background = gst_element_factory_make ("videotestsrc", "background");
+        g_object_set (background, "pattern", 2, NULL);
+        break;
+      case GES_TRACK_TYPE_AUDIO:
+        background = gst_element_factory_make ("audiotestsrc", "background");
+        g_object_set (background, "wave", 4, NULL);
+        break;
+      default:
+        break;
+    }
+
+    if (background) {
+      if (!gst_bin_add (GST_BIN (priv->background), background))
+        GST_ERROR ("Couldn't add background");
+      else {
+        if (!gst_bin_add (GST_BIN (priv->composition), priv->background))
+          GST_ERROR ("Couldn't add background");
+      }
+
+    }
+  }
+
+  parent_class = ges_track_parent_class;
+  if (parent_class->constructed)
+    parent_class->constructed (object);
+
+  G_OBJECT_CLASS (parent_class)->constructed (object);
+}
+
+static void
 ges_track_finalize (GObject * object)
 {
   G_OBJECT_CLASS (ges_track_parent_class)->finalize (object);
@@ -147,6 +202,7 @@ ges_track_class_init (GESTrackClass * klass)
   object_class->set_property = ges_track_set_property;
   object_class->dispose = ges_track_dispose;
   object_class->finalize = ges_track_finalize;
+  object_class->constructed = ges_track_constructed;
 
   /**
    * GESTrack:caps
@@ -191,6 +247,34 @@ ges_track_class_init (GESTrackClass * klass)
       G_PARAM_READWRITE | G_PARAM_CONSTRUCT_ONLY);
   g_object_class_install_property (object_class, ARG_TYPE,
       properties[ARG_TYPE]);
+
+  /**
+   * GESTrack::track-object-added
+   * @object: the #GESTrack
+   * @effect: the #GESTrackObject that was added.
+   *
+   * Will be emitted after a track object was added to the track.
+   *
+   * Since: 0.10.2
+   */
+  ges_track_signals[TRACK_OBJECT_ADDED] =
+      g_signal_new ("track-object-added", G_TYPE_FROM_CLASS (klass),
+      G_SIGNAL_RUN_FIRST, 0, NULL, NULL, ges_marshal_VOID__OBJECT,
+      G_TYPE_NONE, 1, GES_TYPE_TRACK_OBJECT);
+
+  /**
+   * GESTrack::track-object-removed
+   * @object: the #GESTrack
+   * @effect: the #GESTrackObject that was removed.
+   *
+   * Will be emitted after a track object was removed from the track.
+   *
+   * Since: 0.10.2
+   */
+  ges_track_signals[TRACK_OBJECT_REMOVED] =
+      g_signal_new ("track-object-removed", G_TYPE_FROM_CLASS (klass),
+      G_SIGNAL_RUN_FIRST, 0, NULL, NULL, ges_marshal_VOID__OBJECT,
+      G_TYPE_NONE, 1, GES_TYPE_TRACK_OBJECT);
 }
 
 static void
@@ -285,6 +369,14 @@ ges_track_set_timeline (GESTrack * track, GESTimeline * timeline)
 {
   GST_DEBUG ("track:%p, timeline:%p", track, timeline);
 
+  if (track->priv->timeline)
+    g_signal_handlers_disconnect_by_func (track,
+        timeline_duration_cb, track->priv->timeline);
+
+  if (timeline)
+    g_signal_connect (G_OBJECT (timeline), "notify::duration",
+        G_CALLBACK (timeline_duration_cb), track);
+
   track->priv->timeline = timeline;
 }
 
@@ -313,6 +405,26 @@ ges_track_set_caps (GESTrack * track, const GstCaps * caps)
 
   g_object_set (priv->composition, "caps", caps, NULL);
   /* FIXME : update all trackobjects ? */
+}
+
+
+/* FIXME : put the compare function in the utils */
+
+static gint
+objects_start_compare (GESTrackObject * a, GESTrackObject * b)
+{
+  if (a->start == b->start) {
+    if (a->priority < b->priority)
+      return -1;
+    if (a->priority > b->priority)
+      return 1;
+    return 0;
+  }
+  if (a->start < b->start)
+    return -1;
+  if (a->start > b->start)
+    return 1;
+  return 0;
 }
 
 /**
@@ -354,7 +466,9 @@ ges_track_add_object (GESTrack * track, GESTrackObject * object)
     return FALSE;
   }
 
-  GST_DEBUG ("Adding object to ourself");
+  GST_DEBUG ("Adding object %s to ourself %s",
+      GST_OBJECT_NAME (ges_track_object_get_gnlobject (object)),
+      GST_OBJECT_NAME (track->priv->composition));
 
   if (G_UNLIKELY (!gst_bin_add (GST_BIN (track->priv->composition),
               ges_track_object_get_gnlobject (object)))) {
@@ -363,10 +477,46 @@ ges_track_add_object (GESTrack * track, GESTrackObject * object)
   }
 
   g_object_ref_sink (object);
+  track->priv->trackobjects =
+      g_list_insert_sorted (track->priv->trackobjects, object,
+      (GCompareFunc) objects_start_compare);
 
-  track->priv->trackobjects = g_list_append (track->priv->trackobjects, object);
+  g_signal_emit (track, ges_track_signals[TRACK_OBJECT_ADDED], 0,
+      GES_TRACK_OBJECT (object));
+
+  g_signal_connect (GES_TRACK_OBJECT (object), "notify::start",
+      G_CALLBACK (sort_track_objects_cb), track);
+
+  g_signal_connect (GES_TRACK_OBJECT (object), "notify::priority",
+      G_CALLBACK (sort_track_objects_cb), track);
 
   return TRUE;
+}
+
+/**
+ * ges_track_get_objects:
+ * @track: a #GESTrack
+ *
+ * Gets the #GESTrackObject contained in @track
+ *
+ * Returns: (transfer full) (element-type GESTrackObject): the list of
+ * #GESTrackObject present in the Track sorted by priority and start.
+ */
+GList *
+ges_track_get_objects (GESTrack * track)
+{
+  GList *ret = NULL;
+  GList *tmp;
+
+  g_return_val_if_fail (GES_IS_TRACK (track), NULL);
+
+  for (tmp = track->priv->trackobjects; tmp; tmp = tmp->next) {
+    ret = g_list_prepend (ret, tmp->data);
+    g_object_ref (tmp->data);
+  }
+
+  ret = g_list_reverse (ret);
+  return ret;
 }
 
 /**
@@ -409,7 +559,13 @@ ges_track_remove_object (GESTrack * track, GESTrackObject * object)
     }
   }
 
+  g_signal_handlers_disconnect_by_func (object, sort_track_objects_cb, NULL);
+
   ges_track_object_set_track (object, NULL);
+
+  g_signal_emit (track, ges_track_signals[TRACK_OBJECT_REMOVED], 0,
+      GES_TRACK_OBJECT (object));
+
   priv->trackobjects = g_list_remove (priv->trackobjects, object);
 
   g_object_unref (object);
@@ -474,6 +630,29 @@ composition_duration_cb (GstElement * composition,
   }
 }
 
+static void
+sort_track_objects_cb (GESTrackObject * child,
+    GParamSpec * arg G_GNUC_UNUSED, GESTrack * track)
+{
+  track->priv->trackobjects =
+      g_list_sort (track->priv->trackobjects,
+      (GCompareFunc) objects_start_compare);
+}
+
+static void
+timeline_duration_cb (GESTimeline * timeline,
+    GParamSpec * arg G_GNUC_UNUSED, GESTrack * track)
+{
+  guint64 duration;
+
+  g_object_get (timeline, "duration", &duration, NULL);
+  g_object_set (GES_TRACK (track)->priv->background, "duration", duration,
+      NULL);
+
+  GST_DEBUG_OBJECT (track, "Updating background duration to %" GST_TIME_FORMAT,
+      GST_TIME_ARGS (duration));
+}
+
 /**
  * ges_track_get_caps:
  * @track: a #GESTrack
@@ -504,4 +683,32 @@ ges_track_get_timeline (GESTrack * track)
   g_return_val_if_fail (GES_IS_TRACK (track), NULL);
 
   return track->priv->timeline;
+}
+
+/**
+ * ges_track_enable_update:
+ * @track: a #GESTrack
+ * @enabled: Whether the track should update on every change or not.
+ *
+ * Control whether the track is updated for every change happening within.
+ *
+ * Users will want to use this method with %FALSE before doing lots of changes,
+ * and then call again with %TRUE for the changes to take effect in one go.
+ *
+ * Returns: %TRUE if the update status could be changed, else %FALSE.
+ */
+gboolean
+ges_track_enable_update (GESTrack * track, gboolean enabled)
+{
+  gboolean update;
+
+  g_object_set (track->priv->composition, "update", enabled, NULL);
+
+  g_object_get (track->priv->composition, "update", &update, NULL);
+
+  if (update == enabled) {
+    return TRUE;
+  } else {
+    return FALSE;
+  }
 }
