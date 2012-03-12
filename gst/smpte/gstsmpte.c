@@ -408,8 +408,7 @@ gst_smpte_blend_i420 (guint8 * in1, guint8 * in2, guint8 * out, GstMask * mask,
   gint i, j;
   gint min, max;
   guint8 *in1u, *in1v, *in2u, *in2v, *outu, *outv;
-  gint lumsize = width * height;
-  gint chromsize = lumsize >> 2;
+  gint uoffset, voffset, ystr, ustr, vstr;
 
   if (border == 0)
     border++;
@@ -417,12 +416,19 @@ gst_smpte_blend_i420 (guint8 * in1, guint8 * in2, guint8 * out, GstMask * mask,
   min = pos - border;
   max = pos;
 
-  in1u = in1 + lumsize;
-  in1v = in1u + chromsize;
-  in2u = in2 + lumsize;
-  in2v = in2u + chromsize;
-  outu = out + lumsize;
-  outv = outu + chromsize;
+  uoffset = I420_U_OFFSET (width, height);
+  voffset = I420_V_OFFSET (width, height);
+
+  ystr = I420_Y_ROWSTRIDE (width);
+  ustr = I420_U_ROWSTRIDE (width);
+  vstr = I420_V_ROWSTRIDE (width);
+
+  in1u = in1 + uoffset;
+  in1v = in1 + voffset;
+  in2u = in2 + uoffset;
+  in2v = in2 + voffset;
+  outu = out + uoffset;
+  outv = out + voffset;
 
   maskp = mask->data;
 
@@ -431,11 +437,24 @@ gst_smpte_blend_i420 (guint8 * in1, guint8 * in2, guint8 * out, GstMask * mask,
       value = *maskp++;
       value = ((CLAMP (value, min, max) - min) << 8) / border;
 
-      *out++ = ((*in1++ * value) + (*in2++ * (256 - value))) >> 8;
+      out[j] = ((in1[j] * value) + (in2[j] * (256 - value))) >> 8;
       if (!(i & 1) && !(j & 1)) {
-        *outu++ = ((*in1u++ * value) + (*in2u++ * (256 - value))) >> 8;
-        *outv++ = ((*in1v++ * value) + (*in2v++ * (256 - value))) >> 8;
+        outu[j / 2] =
+            ((in1u[j / 2] * value) + (in2u[j / 2] * (256 - value))) >> 8;
+        outv[j / 2] =
+            ((in1v[j / 2] * value) + (in2v[j / 2] * (256 - value))) >> 8;
       }
+    }
+    out += ystr;
+    in1 += ystr;
+    in2 += ystr;
+    if (!(i & 1)) {
+      outu += ustr;
+      in1u += ustr;
+      in2u += ustr;
+      outv += vstr;
+      in1v += vstr;
+      in2v += vstr;
     }
   }
 }
