@@ -143,9 +143,10 @@ gst_geometric_transform_generate_map (GstGeometricTransform * gt)
   }
 
 end:
-  if (!ret)
+  if (!ret) {
     g_free (gt->map);
-  else
+    gt->map = NULL;
+  } else
     gt->needs_remap = FALSE;
   return ret;
 }
@@ -348,6 +349,7 @@ gst_geometric_transform_stop (GstBaseTransform * trans)
   GstGeometricTransform *gt = GST_GEOMETRIC_TRANSFORM_CAST (trans);
 
   g_free (gt->map);
+  gt->map = NULL;
 
   return TRUE;
 }
