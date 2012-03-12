@@ -276,7 +276,7 @@ gst_cogcolorspace_caps_remove_format_info (GstCaps * caps)
     gst_structure_remove_field (structure, "chroma-site");
   }
 
-  gst_caps_do_simplify (caps);
+  caps = gst_caps_do_simplify (caps);
   rgbcaps = gst_caps_copy (caps);
 
   for (i = 0; i < gst_caps_get_size (rgbcaps); i++) {
