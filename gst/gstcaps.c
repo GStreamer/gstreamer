@@ -1047,17 +1047,11 @@ gst_caps_is_subset_structure (const GstCaps * caps,
 gboolean
 gst_caps_is_equal (const GstCaps * caps1, const GstCaps * caps2)
 {
-  /* FIXME 0.11: NULL pointers are no valid Caps but indicate an error
-   * So there should be an assertion that caps1 and caps2 != NULL */
+  g_return_val_if_fail (GST_IS_CAPS (caps1), FALSE);
+  g_return_val_if_fail (GST_IS_CAPS (caps2), FALSE);
 
-  /* NULL <-> NULL is allowed here */
   if (G_UNLIKELY (caps1 == caps2))
     return TRUE;
-
-  /* one of them NULL => they are different (can't be both NULL because
-   * we checked that above) */
-  if (G_UNLIKELY (caps1 == NULL || caps2 == NULL))
-    return FALSE;
 
   if (G_UNLIKELY (gst_caps_is_fixed (caps1) && gst_caps_is_fixed (caps2)))
     return gst_caps_is_equal_fixed (caps1, caps2);
@@ -1082,17 +1076,12 @@ gboolean
 gst_caps_is_strictly_equal (const GstCaps * caps1, const GstCaps * caps2)
 {
   int i;
-  /* FIXME 0.11: NULL pointers are no valid Caps but indicate an error
-   * So there should be an assertion that caps1 and caps2 != NULL */
 
-  /* NULL <-> NULL is allowed here */
+  g_return_val_if_fail (GST_IS_CAPS (caps1), FALSE);
+  g_return_val_if_fail (GST_IS_CAPS (caps2), FALSE);
+
   if (G_UNLIKELY (caps1 == caps2))
     return TRUE;
-
-  /* one of them NULL => they are different (can't be both NULL because
-   * we checked that above) */
-  if (G_UNLIKELY (caps1 == NULL || caps2 == NULL))
-    return FALSE;
 
   if (GST_CAPS_LEN (caps1) != GST_CAPS_LEN (caps2))
     return FALSE;
