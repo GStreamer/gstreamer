@@ -88,7 +88,7 @@ clear_caps (GstCaps * caps, GstCaps * rescaps)
 static GstCaps *
 get_all_caps (GList * elements, GstPadDirection direction)
 {
-  GstCaps *res = NULL, *res2;
+  GstCaps *res;
   GList *tmp;
 
   res = gst_caps_new_empty ();
@@ -106,9 +106,9 @@ get_all_caps (GList * elements, GstPadDirection direction)
     }
   }
 
-  res2 = gst_caps_normalize (res);
-  gst_caps_unref (res);
-  return res2;
+  res = gst_caps_normalize (res);
+
+  return res;
 }
 
 /**
@@ -278,8 +278,7 @@ beach:
   if (!hadcodecs)
     gst_caps_unref (codecformats);
 
-  tmpcaps = gst_caps_normalize (res);
-  gst_caps_unref (res);
+  res = gst_caps_normalize (res);
 
-  return tmpcaps;
+  return res;
 }
