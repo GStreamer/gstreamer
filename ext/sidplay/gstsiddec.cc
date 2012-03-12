@@ -279,7 +279,7 @@ update_tags (GstSidDec * siddec)
 static gboolean
 siddec_negotiate (GstSidDec * siddec)
 {
-  GstCaps *allowed, *tmp;
+  GstCaps *allowed;
   GstStructure *structure;
   int rate = 44100;
   int channels = 1;
@@ -293,9 +293,7 @@ siddec_negotiate (GstSidDec * siddec)
 
   GST_DEBUG_OBJECT (siddec, "allowed caps: %" GST_PTR_FORMAT, allowed);
 
-  tmp = gst_caps_normalize (allowed);
-  gst_caps_unref (allowed);
-  allowed = tmp;
+  allowed = gst_caps_normalize (allowed);
 
   structure = gst_caps_get_structure (allowed, 0);
 
@@ -338,6 +336,8 @@ siddec_negotiate (GstSidDec * siddec)
   gst_pad_set_caps (siddec->srcpad, caps);
   gst_caps_unref (caps);
 
+  gst_caps_unref (allowed);
+
   siddec->engine->setConfig (*siddec->config);
 
   return TRUE;
@@ -351,6 +351,7 @@ nothing_allowed:
 invalid_format:
   {
     GST_DEBUG_OBJECT (siddec, "invalid audio caps");
+    gst_caps_unref (allowed);
     return FALSE;
   }
 }
