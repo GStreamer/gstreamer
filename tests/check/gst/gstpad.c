@@ -200,7 +200,7 @@ GST_START_TEST (test_get_allowed_caps)
   fail_if (gotcaps == NULL);
   fail_unless (gst_caps_is_equal (gotcaps, caps));
 
-  ASSERT_CAPS_REFCOUNT (gotcaps, "gotcaps", 1);
+  ASSERT_CAPS_REFCOUNT (gotcaps, "gotcaps", 4);
   gst_caps_unref (gotcaps);
 
   gst_pad_unlink (src, sink);
