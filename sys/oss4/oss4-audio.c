@@ -458,7 +458,7 @@ gst_oss4_audio_probe_caps (GstObject * obj, int fd)
     }
   }
 
-  gst_caps_do_simplify (caps);
+  caps = gst_caps_do_simplify (caps);
   GST_LOG_OBJECT (obj, "formats: %" GST_PTR_FORMAT, caps);
 
   if (!gst_oss4_audio_detect_rates (obj, &ai, caps))
@@ -505,7 +505,7 @@ gst_oss4_audio_get_template_caps (void)
     gst_oss4_append_format_to_caps (&fmt_map[i], caps);
   }
 
-  gst_caps_do_simplify (caps);
+  caps = gst_caps_do_simplify (caps);
 
   for (i = 0; i < gst_caps_get_size (caps); ++i) {
     GstStructure *s;
