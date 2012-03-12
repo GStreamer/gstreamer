@@ -1575,6 +1575,7 @@ typedef struct _NormalizeForeach
 {
   GstCaps *caps;
   GstStructure *structure;
+  gboolean writable;
 }
 NormalizeForeach;
 
@@ -1592,6 +1593,10 @@ gst_caps_normalize_foreach (GQuark field_id, const GValue * value, gpointer ptr)
       GstStructure *structure = gst_structure_copy (nf->structure);
 
       gst_structure_id_set_value (structure, field_id, v);
+      if (G_UNLIKELY (!nf->writable)) {
+        nf->caps = gst_caps_make_writable (nf->caps);
+        nf->writable = TRUE;
+      }
       gst_caps_append_structure_unchecked (nf->caps, structure);
     }
 
@@ -1620,22 +1625,21 @@ GstCaps *
 gst_caps_normalize (GstCaps * caps)
 {
   NormalizeForeach nf;
-  GstCaps *newcaps;
   guint i;
 
   g_return_val_if_fail (GST_IS_CAPS (caps), NULL);
 
-  newcaps = gst_caps_make_writable (caps);
-  nf.caps = newcaps;
+  nf.caps = caps;
+  nf.writable = FALSE;
 
-  for (i = 0; i < gst_caps_get_size (newcaps); i++) {
-    nf.structure = gst_caps_get_structure_unchecked (newcaps, i);
+  for (i = 0; i < gst_caps_get_size (nf.caps); i++) {
+    nf.structure = gst_caps_get_structure_unchecked (nf.caps, i);
 
     while (!gst_structure_foreach (nf.structure,
             gst_caps_normalize_foreach, &nf));
   }
 
-  return newcaps;
+  return nf.caps;
 }
 
 static gint
