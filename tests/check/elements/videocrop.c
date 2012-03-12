@@ -47,7 +47,6 @@ video_crop_get_test_caps (GstElement * videocrop)
   fail_unless (templ != NULL);
 
   allowed_caps = gst_caps_normalize (templ);
-  gst_caps_unref (templ);
 
   for (i = 0; i < gst_caps_get_size (allowed_caps); ++i) {
     GstStructure *new_structure;

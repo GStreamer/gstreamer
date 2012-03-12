@@ -1258,11 +1258,10 @@ gst_jpeg_dec_negotiate (GstJpegDec * dec, gint width, gint height, gint clrspc)
       GST_DEBUG_OBJECT (dec, "... but no peer, using template caps");
       /* need to copy because get_allowed_caps returns a ref,
        * and get_pad_template_caps doesn't */
-      caps = gst_caps_copy (gst_pad_get_pad_template_caps (dec->srcpad));
+      caps = gst_pad_get_pad_template_caps (dec->srcpad);
     }
     /* avoid lists of formats, etc */
     allowed_caps = gst_caps_normalize (caps);
-    gst_caps_unref (caps);
     caps = NULL;
     GST_LOG_OBJECT (dec, "allowed source caps %" GST_PTR_FORMAT, allowed_caps);
 

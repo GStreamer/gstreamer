@@ -141,7 +141,6 @@ check_filter (const gchar * name, gint num_buffers, const gchar * prop, ...)
   va_list varargs;
 
   allcaps = gst_caps_normalize (templ);
-  gst_caps_unref (templ);
 
   n = gst_caps_get_size (allcaps);
 
