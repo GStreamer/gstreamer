@@ -631,6 +631,9 @@ gst_video_test_src_decide_allocation (GstBaseSrc * bsrc, GstQuery * query)
   gst_query_set_allocation_params (query, size, min, max, prefix,
       alignment, pool);
 
+  if (pool)
+    gst_object_unref (pool);
+
   return TRUE;
 }
 
