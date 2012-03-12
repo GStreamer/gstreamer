@@ -172,9 +172,8 @@ colorspace_compare (gint width, gint height, gboolean comp)
   gst_caps_unref (rcaps);
 
   /* normalize to finally have a list of acceptable fixed formats */
-  tcaps = gst_caps_simplify (caps);
-  caps = gst_caps_normalize (tcaps);
-  gst_caps_unref (tcaps);
+  caps = gst_caps_simplify (caps);
+  caps = gst_caps_normalize (caps);
 
   /* set up for running stuff */
   loop = g_main_loop_new (NULL, FALSE);

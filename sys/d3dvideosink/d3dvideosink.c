@@ -447,7 +447,7 @@ static GstCaps *
 gst_d3dvideosink_get_caps (GstBaseSink * basesink)
 {
   GstD3DVideoSink *sink = GST_D3DVIDEOSINK (basesink);
-  GstCaps *caps = gst_caps_new_empty ();
+  GstCaps *caps;
   const GstCaps *tempCaps =
       gst_pad_get_pad_template_caps (GST_VIDEO_SINK_PAD (sink));
 
@@ -457,11 +457,13 @@ gst_d3dvideosink_get_caps (GstBaseSink * basesink)
     if (FAILED (IDirect3D9_GetAdapterDisplayMode (shared.d3d,
                 D3DADAPTER_DEFAULT, &d3ddm))) {
       GST_WARNING ("Unable to request adapter display mode");
-      gst_caps_unref (caps);
-      caps = gst_caps_copy (tempCaps);
+      caps = tempCaps;
     } else {
       gint i;
-      GstCaps *c = gst_caps_normalize (tempCaps);
+      GstCaps *c;
+
+      caps = gst_caps_new_empty ();
+      c = gst_caps_normalize (tempCaps);
 
       for (i = 0; i < gst_caps_get_size (c); i++) {
         D3DFORMAT d3dfourcc = 0;
@@ -489,8 +491,7 @@ gst_d3dvideosink_get_caps (GstBaseSink * basesink)
       gst_caps_unref (c);
     }
   } else {
-    gst_caps_unref (caps);
-    caps = gst_caps_copy (tempCaps);
+    caps = tempCaps;
   }
   return caps;
 }

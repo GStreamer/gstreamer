@@ -324,7 +324,6 @@ gst_jasper_dec_negotiate (GstJasperDec * dec, jas_image_t * image)
   }
   /* avoid lists of fourcc, etc */
   allowed_caps = gst_caps_normalize (caps);
-  gst_caps_unref (caps);
   caps = NULL;
   GST_LOG_OBJECT (dec, "allowed source caps %" GST_PTR_FORMAT, allowed_caps);
 
