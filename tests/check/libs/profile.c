@@ -39,7 +39,8 @@
   fail_unless (gst_caps_is_equal (gst_encoding_profile_get_format (profile), format)); \
   fail_unless_equals_string (gst_encoding_profile_get_preset (profile), preset); \
   fail_unless_equals_int (gst_encoding_profile_get_presence (profile), presence); \
-  fail_unless (gst_caps_is_equal (gst_encoding_profile_get_restriction (profile), restriction)); \
+  if (restriction) \
+    fail_unless (gst_caps_is_equal (gst_encoding_profile_get_restriction (profile), restriction)); \
   }
 
 GST_START_TEST (test_profile_creation)
