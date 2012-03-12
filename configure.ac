@@ -182,7 +182,7 @@ AC_CHECK_FUNC(socket,,[AC_CHECK_LIB(socket,socket)])
 AC_CHECK_FUNC(gethostbyname,,[AC_CHECK_LIB(nsl,gethostbyname)])
 
 dnl GLib is required
-GLIB_REQ=2.31.10
+GLIB_REQ=2.31.14
 AG_GST_GLIB_CHECK([$GLIB_REQ])
 
 dnl checks for gstreamer
