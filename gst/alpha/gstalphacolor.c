@@ -141,7 +141,7 @@ gst_alpha_color_transform_caps (GstBaseTransform * btrans,
   gst_caps_unref (tmpl_caps);
   gst_caps_unref (local_caps);
 
-  result = gst_caps_do_simplify (result);
+  result = gst_caps_simplify (result);
 
   GST_LOG_OBJECT (btrans, "transformed %" GST_PTR_FORMAT " to %" GST_PTR_FORMAT,
       caps, result);

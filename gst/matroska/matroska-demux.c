@@ -5074,7 +5074,7 @@ gst_matroska_demux_video_caps (GstMatroskaTrackVideoContext *
         gst_structure_set (structure, "interlaced", G_TYPE_BOOLEAN, TRUE, NULL);
     }
 
-    caps = gst_caps_do_simplify (caps);
+    caps = gst_caps_simplify (caps);
   }
 
   return caps;
@@ -5443,7 +5443,7 @@ gst_matroska_demux_audio_caps (GstMatroskaTrackAudioContext *
       }
     }
 
-    caps = gst_caps_do_simplify (caps);
+    caps = gst_caps_simplify (caps);
   }
 
   return caps;
