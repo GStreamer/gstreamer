@@ -606,28 +606,29 @@ gst_caps_remove_structure (GstCaps * caps, guint idx)
 GstCaps *
 gst_caps_merge_structure (GstCaps * caps, GstStructure * structure)
 {
+  GstStructure *structure1;
+  int i;
+  gboolean unique = TRUE;
+
   g_return_val_if_fail (GST_IS_CAPS (caps), NULL);
 
-  if (G_LIKELY (structure)) {
-    GstStructure *structure1;
-    int i;
-    gboolean unique = TRUE;
+  if (G_UNLIKELY (structure == NULL))
+    return caps;
 
-    /* check each structure */
-    for (i = GST_CAPS_LEN (caps) - 1; i >= 0; i--) {
-      structure1 = gst_caps_get_structure_unchecked (caps, i);
-      /* if structure is a subset of structure1, then skip it */
-      if (gst_structure_is_subset (structure, structure1)) {
-        unique = FALSE;
-        break;
-      }
+  /* check each structure */
+  for (i = GST_CAPS_LEN (caps) - 1; i >= 0; i--) {
+    structure1 = gst_caps_get_structure_unchecked (caps, i);
+    /* if structure is a subset of structure1, then skip it */
+    if (gst_structure_is_subset (structure, structure1)) {
+      unique = FALSE;
+      break;
     }
-    if (unique) {
-      caps = gst_caps_make_writable (caps);
-      gst_caps_append_structure_unchecked (caps, structure);
-    } else {
-      gst_structure_free (structure);
-    }
+  }
+  if (unique) {
+    caps = gst_caps_make_writable (caps);
+    gst_caps_append_structure_unchecked (caps, structure);
+  } else {
+    gst_structure_free (structure);
   }
   return caps;
 }
