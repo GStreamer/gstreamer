@@ -45,6 +45,7 @@ typedef struct
   GstPad *playsinkpad;
   GstPad *encodebinpad;
   GstPad *blocked_pad;
+  gulong probe_id;
 } OutputChain;
 
 G_DEFINE_TYPE (GESTimelinePipeline, ges_timeline_pipeline, GST_TYPE_PIPELINE);
@@ -381,11 +382,12 @@ no_pad:
   }
 }
 
-static void
-pad_blocked (GstPad * pad, gboolean blocked, gpointer user_data)
+static GstPadProbeReturn
+pad_blocked (GstPad * pad, GstPadProbeInfo * info, gpointer user_data)
 {
   /* no nothing */
-  GST_DEBUG_OBJECT (pad, "blocked callback, blocked: %d", blocked);
+  GST_DEBUG_OBJECT (pad, "blocked callback, blocked");
+  return GST_PAD_PROBE_OK;
 }
 
 static void
@@ -479,8 +481,9 @@ pad_added_cb (GstElement * timeline, GstPad * pad, GESTimelinePipeline * self)
       goto error;
     }
     chain->blocked_pad = tmppad;
-    GST_DEBUG ("blocking pad %" GST_PTR_FORMAT, tmppad);
-    gst_pad_set_blocked_async (tmppad, TRUE, pad_blocked, NULL);
+    GST_DEBUG_OBJECT (tmppad, "blocking pad");
+    chain->probe_id = gst_pad_add_probe (tmppad, GST_PAD_PROBE_TYPE_BLOCK,
+        pad_blocked, NULL, NULL);
 
     GST_DEBUG ("Reconfiguring playsink");
 
@@ -585,10 +588,11 @@ pad_removed_cb (GstElement * timeline, GstPad * pad, GESTimelinePipeline * self)
   }
 
   if (chain->blocked_pad) {
-    GST_DEBUG ("unblocking pad %" GST_PTR_FORMAT, chain->blocked_pad);
-    gst_pad_set_blocked_async (chain->blocked_pad, FALSE, pad_blocked, NULL);
+    GST_DEBUG_OBJECT (chain->blocked_pad, "unblocking pad");
+    gst_pad_remove_probe (chain->blocked_pad, chain->probe_id);
     gst_object_unref (chain->blocked_pad);
     chain->blocked_pad = NULL;
+    chain->probe_id = 0;
   }
 
   /* Unlike/remove tee */
@@ -614,8 +618,10 @@ no_more_pads_cb (GstElement * timeline, GESTimelinePipeline * self)
     OutputChain *chain = (OutputChain *) tmp->data;
 
     if (chain->blocked_pad) {
-      GST_DEBUG ("unblocking pad %" GST_PTR_FORMAT, chain->blocked_pad);
-      gst_pad_set_blocked_async (chain->blocked_pad, FALSE, pad_blocked, NULL);
+      GST_DEBUG_OBJECT (chain->blocked_pad, "unblocking pad");
+      gst_pad_remove_probe (chain->blocked_pad, chain->probe_id);
+      chain->probe_id = 0;
+      /* do we need to unref and NULL the pad here? */
     }
   }
 }
