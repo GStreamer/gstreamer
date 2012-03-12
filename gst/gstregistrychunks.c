@@ -321,16 +321,13 @@ gst_registry_chunks_save_feature (GList ** list, GstPluginFeature * feature)
     }
     /* save caps */
     if (factory->caps) {
-      /* we copy the caps here so we can simplify them before saving. This
-       * is a lot faster when loading them later on */
-      if (!gst_caps_is_fixed (factory->caps)) {
-        GstCaps *copy = gst_caps_copy (factory->caps);
-        gst_caps_do_simplify (copy);
-        str = gst_caps_to_string (copy);
-        gst_caps_unref (copy);
-      } else {
-        str = gst_caps_to_string (factory->caps);
-      }
+      GstCaps *fcaps = gst_caps_ref (factory->caps);
+      /* we simplify the caps before saving. This is a lot faster
+       * when loading them later on */
+      fcaps = gst_caps_do_simplify (fcaps);
+      str = gst_caps_to_string (fcaps);
+      gst_caps_unref (fcaps);
+
       gst_registry_chunks_save_string (list, str);
     } else {
       gst_registry_chunks_save_const_string (list, "");

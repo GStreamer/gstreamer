@@ -1498,7 +1498,7 @@ gst_caps_subtract (GstCaps * minuend, GstCaps * subtrahend)
   }
 
   gst_caps_unref (src);
-  gst_caps_do_simplify (dest);
+  dest = gst_caps_do_simplify (dest);
   return dest;
 }
 
@@ -1575,7 +1575,7 @@ gst_caps_union (GstCaps * caps1, GstCaps * caps2)
   dest1 = _gst_caps_copy (caps1);
   gst_caps_append (dest1, gst_caps_ref (caps2));
 
-  gst_caps_do_simplify (dest1);
+  dest1 = gst_caps_do_simplify (dest1);
   return dest1;
 }
 
@@ -1765,36 +1765,36 @@ gst_caps_switch_structures (GstCaps * caps, GstStructure * old,
 
 /**
  * gst_caps_do_simplify:
- * @caps: a #GstCaps to simplify
+ * @caps: (transfer full): a #GstCaps to simplify
  *
  * Modifies the given @caps inplace into a representation that represents the
  * same set of formats, but in a simpler form.  Component structures that are
  * identical are merged.  Component structures that have values that can be
  * merged are also merged.
  *
- * Returns: TRUE, if the caps could be simplified
+ * Returns: The simplified caps.
  */
-gboolean
+GstCaps *
 gst_caps_do_simplify (GstCaps * caps)
 {
   GstStructure *simplify, *compare, *result = NULL;
   gint i, j, start;
-  gboolean changed = FALSE;
 
-  g_return_val_if_fail (caps != NULL, FALSE);
-  g_return_val_if_fail (IS_WRITABLE (caps), FALSE);
+  g_return_val_if_fail (GST_IS_CAPS (caps), NULL);
 
-  if (gst_caps_get_size (caps) < 2)
-    return FALSE;
+  if (gst_caps_is_fixed (caps))
+    return caps;
+
+  caps = gst_caps_make_writable (caps);
 
   g_ptr_array_sort (GST_CAPS_ARRAY (caps), gst_caps_compare_structures);
 
   start = GST_CAPS_LEN (caps) - 1;
-  for (i = GST_CAPS_LEN (caps) - 1; i >= 0; i--) {
+  for (i = start; i >= 0; i--) {
     simplify = gst_caps_get_structure_unchecked (caps, i);
+    compare = gst_caps_get_structure_unchecked (caps, start);
     if (gst_structure_get_name_id (simplify) !=
-        gst_structure_get_name_id (gst_caps_get_structure_unchecked (caps,
-                start)))
+        gst_structure_get_name_id (compare))
       start = i;
     for (j = start; j >= 0; j--) {
       if (j == i)
@@ -1813,16 +1813,10 @@ gst_caps_do_simplify (GstCaps * caps)
           start--;
           break;
         }
-        changed = TRUE;
       }
     }
   }
-
-  if (!changed)
-    return FALSE;
-
-  /* gst_caps_do_simplify (caps); */
-  return TRUE;
+  return caps;
 }
 
 /**

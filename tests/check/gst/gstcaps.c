@@ -190,16 +190,14 @@ check_string_list (const GValue * format_value)
 GST_START_TEST (test_simplify)
 {
   GstStructure *s1;
-  gboolean did_simplify;
   GstCaps *caps;
 
   caps = gst_caps_from_string (non_simple_caps_string);
   fail_unless (caps != NULL,
       "gst_caps_from_string (non_simple_caps_string) failed");
 
-  did_simplify = gst_caps_do_simplify (caps);
-  fail_unless (did_simplify == TRUE,
-      "gst_caps_do_simplify() should have worked");
+  caps = gst_caps_do_simplify (caps);
+  fail_unless (caps != NULL, "gst_caps_do_simplify() should have worked");
 
   /* check simplified caps, should be:
    *
