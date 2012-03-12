@@ -1,9 +1,7 @@
-built_header_make = gesmarshal.h
-built_source_make = gesmarshal.c
+built_header_make =
+built_source_make =
 
 lib_LTLIBRARIES = libges-@GST_MAJORMINOR@.la
-
-EXTRA_libges_@GST_MAJORMINOR@_la_SOURCES = gesmarshal.list 
 
 CLEANFILES = $(BUILT_SOURCES) $(built_header_make) $(built_source_make)
 
@@ -107,15 +105,6 @@ BUILT_SOURCES =			\
 	$(built_header_make)	\
 	$(built_source_make)
 
-gesmarshal.h: gesmarshal.list
-	glib-genmarshal --header --prefix=ges_marshal $^ > gesmarshal.h.tmp
-	mv gesmarshal.h.tmp gesmarshal.h
-
-gesmarshal.c: gesmarshal.list
-	echo "#include \"glib-object.h\"" >gesmarshal.c.tmp
-	echo "#include \"gesmarshal.h\"" >> gesmarshal.c.tmp
-	glib-genmarshal --body --prefix=ges_marshal $^ >> gesmarshal.c.tmp
-	mv gesmarshal.c.tmp gesmarshal.c
 include $(top_srcdir)/common/gst-glib-gen.mak
 
 if HAVE_INTROSPECTION

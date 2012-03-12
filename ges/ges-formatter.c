@@ -46,7 +46,6 @@
 #include <gst/gst.h>
 #include <stdlib.h>
 
-#include "gesmarshal.h"
 #include "ges-formatter.h"
 #include "ges-keyfile-formatter.h"
 #include "ges-internal.h"
@@ -102,7 +101,7 @@ ges_formatter_class_init (GESFormatterClass * klass)
    */
   ges_formatter_signals[SOURCE_MOVED_SIGNAL] =
       g_signal_new ("source-moved", G_TYPE_FROM_CLASS (klass),
-      G_SIGNAL_RUN_LAST, 0, NULL, NULL, ges_marshal_VOID__OBJECT, G_TYPE_NONE,
+      G_SIGNAL_RUN_LAST, 0, NULL, NULL, g_cclosure_marshal_generic, G_TYPE_NONE,
       1, GES_TYPE_TIMELINE_FILE_SOURCE);
 
   /**
@@ -111,7 +110,7 @@ ges_formatter_class_init (GESFormatterClass * klass)
    */
   ges_formatter_signals[LOADED_SIGNAL] =
       g_signal_new ("loaded", G_TYPE_FROM_CLASS (klass),
-      G_SIGNAL_RUN_LAST, 0, NULL, NULL, ges_marshal_VOID__OBJECT, G_TYPE_NONE,
+      G_SIGNAL_RUN_LAST, 0, NULL, NULL, g_cclosure_marshal_generic, G_TYPE_NONE,
       1, GES_TYPE_TIMELINE);
 
   object_class->dispose = ges_formatter_dispose;

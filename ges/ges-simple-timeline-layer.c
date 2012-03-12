@@ -35,7 +35,6 @@
 
 #include <ges/ges.h>
 #include "ges-internal.h"
-#include "gesmarshal.h"
 
 static void
 ges_simple_timeline_layer_object_removed (GESTimelineLayer * layer,
@@ -145,8 +144,7 @@ ges_simple_timeline_layer_class_init (GESSimpleTimelineLayerClass * klass)
       g_signal_new ("object-moved", G_TYPE_FROM_CLASS (klass),
       G_SIGNAL_RUN_FIRST, G_STRUCT_OFFSET (GESSimpleTimelineLayerClass,
           object_moved),
-      NULL, NULL,
-      ges_marshal_VOID__OBJECT_INT_INT, G_TYPE_NONE, 3,
+      NULL, NULL, g_cclosure_marshal_generic, G_TYPE_NONE, 3,
       GES_TYPE_TIMELINE_OBJECT, G_TYPE_INT, G_TYPE_INT);
 }
 

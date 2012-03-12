@@ -32,7 +32,6 @@
 #include "ges-internal.h"
 #include "ges-track.h"
 #include "ges-track-object.h"
-#include "gesmarshal.h"
 
 G_DEFINE_TYPE (GESTrack, ges_track, GST_TYPE_BIN);
 
@@ -259,7 +258,7 @@ ges_track_class_init (GESTrackClass * klass)
    */
   ges_track_signals[TRACK_OBJECT_ADDED] =
       g_signal_new ("track-object-added", G_TYPE_FROM_CLASS (klass),
-      G_SIGNAL_RUN_FIRST, 0, NULL, NULL, ges_marshal_VOID__OBJECT,
+      G_SIGNAL_RUN_FIRST, 0, NULL, NULL, g_cclosure_marshal_generic,
       G_TYPE_NONE, 1, GES_TYPE_TRACK_OBJECT);
 
   /**
@@ -273,7 +272,7 @@ ges_track_class_init (GESTrackClass * klass)
    */
   ges_track_signals[TRACK_OBJECT_REMOVED] =
       g_signal_new ("track-object-removed", G_TYPE_FROM_CLASS (klass),
-      G_SIGNAL_RUN_FIRST, 0, NULL, NULL, ges_marshal_VOID__OBJECT,
+      G_SIGNAL_RUN_FIRST, 0, NULL, NULL, g_cclosure_marshal_generic,
       G_TYPE_NONE, 1, GES_TYPE_TRACK_OBJECT);
 }
 

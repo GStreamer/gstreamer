@@ -31,8 +31,9 @@
 
 #include "ges-timeline-object.h"
 #include "ges.h"
-#include "gesmarshal.h"
 #include "ges-internal.h"
+
+#include <string.h>
 
 gboolean
 ges_timeline_object_fill_track_object_func (GESTimelineObject * object,
@@ -327,7 +328,7 @@ ges_timeline_object_class_init (GESTimelineObjectClass * klass)
    */
   ges_timeline_object_signals[EFFECT_ADDED] =
       g_signal_new ("effect-added", G_TYPE_FROM_CLASS (klass),
-      G_SIGNAL_RUN_FIRST, 0, NULL, NULL, ges_marshal_VOID__OBJECT,
+      G_SIGNAL_RUN_FIRST, 0, NULL, NULL, g_cclosure_marshal_generic,
       G_TYPE_NONE, 1, GES_TYPE_TRACK_EFFECT);
 
   /**
@@ -341,7 +342,7 @@ ges_timeline_object_class_init (GESTimelineObjectClass * klass)
    */
   ges_timeline_object_signals[EFFECT_REMOVED] =
       g_signal_new ("effect-removed", G_TYPE_FROM_CLASS (klass),
-      G_SIGNAL_RUN_FIRST, 0, NULL, NULL, ges_marshal_VOID__OBJECT,
+      G_SIGNAL_RUN_FIRST, 0, NULL, NULL, g_cclosure_marshal_generic,
       G_TYPE_NONE, 1, GES_TYPE_TRACK_EFFECT);
 
   /**
@@ -355,7 +356,7 @@ ges_timeline_object_class_init (GESTimelineObjectClass * klass)
    */
   ges_timeline_object_signals[TRACK_OBJECT_ADDED] =
       g_signal_new ("track-object-added", G_TYPE_FROM_CLASS (klass),
-      G_SIGNAL_RUN_FIRST, 0, NULL, NULL, ges_marshal_VOID__OBJECT,
+      G_SIGNAL_RUN_FIRST, 0, NULL, NULL, g_cclosure_marshal_generic,
       G_TYPE_NONE, 1, GES_TYPE_TRACK_OBJECT);
 
   /**
@@ -369,7 +370,7 @@ ges_timeline_object_class_init (GESTimelineObjectClass * klass)
    */
   ges_timeline_object_signals[TRACK_OBJECT_REMOVED] =
       g_signal_new ("track-object-removed", G_TYPE_FROM_CLASS (klass),
-      G_SIGNAL_RUN_FIRST, 0, NULL, NULL, ges_marshal_VOID__OBJECT,
+      G_SIGNAL_RUN_FIRST, 0, NULL, NULL, g_cclosure_marshal_generic,
       G_TYPE_NONE, 1, GES_TYPE_TRACK_OBJECT);
 
   klass->need_fill_track = TRUE;

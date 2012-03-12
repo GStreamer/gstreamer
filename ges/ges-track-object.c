@@ -31,7 +31,6 @@
  */
 
 #include "ges-internal.h"
-#include "gesmarshal.h"
 #include "ges-track-object.h"
 #include "ges-timeline-object.h"
 #include <gobject/gvaluecollector.h>
@@ -305,7 +304,7 @@ ges_track_object_class_init (GESTrackObjectClass * klass)
   ges_track_object_signals[DEEP_NOTIFY] =
       g_signal_new ("deep-notify", G_TYPE_FROM_CLASS (klass),
       G_SIGNAL_RUN_FIRST | G_SIGNAL_NO_RECURSE | G_SIGNAL_DETAILED |
-      G_SIGNAL_NO_HOOKS, 0, NULL, NULL, gst_marshal_VOID__OBJECT_PARAM,
+      G_SIGNAL_NO_HOOKS, 0, NULL, NULL, g_cclosure_marshal_generic,
       G_TYPE_NONE, 2, GST_TYPE_ELEMENT, G_TYPE_PARAM);
 
   klass->create_gnl_object = ges_track_object_create_gnl_object_func;

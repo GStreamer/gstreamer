@@ -36,7 +36,6 @@
  * documentation about #GESFormatter.
  */
 
-#include "gesmarshal.h"
 #include "ges-internal.h"
 #include "ges-timeline.h"
 #include "ges-track.h"
@@ -225,7 +224,7 @@ ges_timeline_class_init (GESTimelineClass * klass)
   ges_timeline_signals[TRACK_ADDED] =
       g_signal_new ("track-added", G_TYPE_FROM_CLASS (klass),
       G_SIGNAL_RUN_FIRST, G_STRUCT_OFFSET (GESTimelineClass, track_added), NULL,
-      NULL, ges_marshal_VOID__OBJECT, G_TYPE_NONE, 1, GES_TYPE_TRACK);
+      NULL, g_cclosure_marshal_generic, G_TYPE_NONE, 1, GES_TYPE_TRACK);
 
   /**
    * GESTimeline::track-removed
@@ -237,7 +236,7 @@ ges_timeline_class_init (GESTimelineClass * klass)
   ges_timeline_signals[TRACK_REMOVED] =
       g_signal_new ("track-removed", G_TYPE_FROM_CLASS (klass),
       G_SIGNAL_RUN_FIRST, G_STRUCT_OFFSET (GESTimelineClass, track_removed),
-      NULL, NULL, ges_marshal_VOID__OBJECT, G_TYPE_NONE, 1, GES_TYPE_TRACK);
+      NULL, NULL, g_cclosure_marshal_generic, G_TYPE_NONE, 1, GES_TYPE_TRACK);
 
   /**
    * GESTimeline::layer-added
@@ -249,7 +248,8 @@ ges_timeline_class_init (GESTimelineClass * klass)
   ges_timeline_signals[LAYER_ADDED] =
       g_signal_new ("layer-added", G_TYPE_FROM_CLASS (klass),
       G_SIGNAL_RUN_FIRST, G_STRUCT_OFFSET (GESTimelineClass, layer_added), NULL,
-      NULL, ges_marshal_VOID__OBJECT, G_TYPE_NONE, 1, GES_TYPE_TIMELINE_LAYER);
+      NULL, g_cclosure_marshal_generic, G_TYPE_NONE, 1,
+      GES_TYPE_TIMELINE_LAYER);
 
   /**
    * GESTimeline::layer-removed
@@ -261,7 +261,7 @@ ges_timeline_class_init (GESTimelineClass * klass)
   ges_timeline_signals[LAYER_REMOVED] =
       g_signal_new ("layer-removed", G_TYPE_FROM_CLASS (klass),
       G_SIGNAL_RUN_FIRST, G_STRUCT_OFFSET (GESTimelineClass, layer_removed),
-      NULL, NULL, ges_marshal_VOID__OBJECT, G_TYPE_NONE, 1,
+      NULL, NULL, g_cclosure_marshal_generic, G_TYPE_NONE, 1,
       GES_TYPE_TIMELINE_LAYER);
 
   /**
@@ -273,8 +273,8 @@ ges_timeline_class_init (GESTimelineClass * klass)
    */
   ges_timeline_signals[DISCOVERY_ERROR] =
       g_signal_new ("discovery-error", G_TYPE_FROM_CLASS (klass),
-      G_SIGNAL_RUN_FIRST, 0, NULL, NULL, gst_marshal_VOID__OBJECT_BOXED,
-      G_TYPE_NONE, 2, GES_TYPE_TIMELINE_FILE_SOURCE, GST_TYPE_G_ERROR);
+      G_SIGNAL_RUN_FIRST, 0, NULL, NULL, g_cclosure_marshal_generic,
+      G_TYPE_NONE, 2, GES_TYPE_TIMELINE_FILE_SOURCE, G_TYPE_ERROR);
 }
 
 static void

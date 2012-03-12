@@ -30,7 +30,6 @@
  */
 
 #include "ges-internal.h"
-#include "gesmarshal.h"
 #include "ges-timeline-layer.h"
 #include "ges.h"
 #include "ges-timeline-source.h"
@@ -187,7 +186,7 @@ ges_timeline_layer_class_init (GESTimelineLayerClass * klass)
   ges_timeline_layer_signals[OBJECT_ADDED] =
       g_signal_new ("object-added", G_TYPE_FROM_CLASS (klass),
       G_SIGNAL_RUN_FIRST, G_STRUCT_OFFSET (GESTimelineLayerClass, object_added),
-      NULL, NULL, ges_marshal_VOID__OBJECT, G_TYPE_NONE, 1,
+      NULL, NULL, g_cclosure_marshal_generic, G_TYPE_NONE, 1,
       GES_TYPE_TIMELINE_OBJECT);
 
   /**
@@ -200,8 +199,8 @@ ges_timeline_layer_class_init (GESTimelineLayerClass * klass)
   ges_timeline_layer_signals[OBJECT_REMOVED] =
       g_signal_new ("object-removed", G_TYPE_FROM_CLASS (klass),
       G_SIGNAL_RUN_FIRST, G_STRUCT_OFFSET (GESTimelineLayerClass,
-          object_removed), NULL, NULL, ges_marshal_VOID__OBJECT, G_TYPE_NONE, 1,
-      GES_TYPE_TIMELINE_OBJECT);
+          object_removed), NULL, NULL, g_cclosure_marshal_generic, G_TYPE_NONE,
+      1, GES_TYPE_TIMELINE_OBJECT);
 }
 
 static void
