@@ -34,13 +34,10 @@ enum
 
 
 #define RAW_VIDEO_CAPS \
-    "video/x-raw-yuv; " \
-    "video/x-raw-rgb; " \
-    "video/x-raw-gray"
+    "video/x-raw"
 
 #define RAW_AUDIO_CAPS \
-    "audio/x-raw-int; " \
-    "audio/x-raw-float"
+    "audio/x-raw"
 
 static GstStaticCaps raw_video_caps = GST_STATIC_CAPS (RAW_VIDEO_CAPS);
 static GstStaticCaps raw_audio_caps = GST_STATIC_CAPS (RAW_AUDIO_CAPS);
