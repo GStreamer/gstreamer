@@ -118,9 +118,6 @@ struct _QtDemuxSample
 /* timestamp + duration - dts is the duration */
 #define QTSAMPLE_DUR_DTS(stream,sample,dts) (gst_util_uint64_scale ((sample)->timestamp + \
     (sample)->duration, GST_SECOND, (stream)->timescale) - (dts));
-/* timestamp + offset + duration - pts is the duration */
-#define QTSAMPLE_DUR_PTS(stream,sample,pts) (gst_util_uint64_scale ((sample)->timestamp + \
-    (sample)->pts_offset + (sample)->duration, GST_SECOND, (stream)->timescale) - (pts));
 
 #define QTSAMPLE_KEYFRAME(stream,sample) ((stream)->all_keyframe || (sample)->keyframe)
 
@@ -3170,8 +3167,8 @@ gst_qtdemux_activate_segment (GstQTDemux * qtdemux, QtDemuxStream * stream,
  */
 static gboolean
 gst_qtdemux_prepare_current_sample (GstQTDemux * qtdemux,
-    QtDemuxStream * stream, guint64 * offset, guint * size, guint64 * timestamp,
-    guint64 * duration, gboolean * keyframe)
+    QtDemuxStream * stream, guint64 * offset, guint * size, guint64 * dts,
+    guint64 * pts, guint64 * duration, gboolean * keyframe)
 {
   QtDemuxSample *sample;
   guint64 time_position;
@@ -3213,10 +3210,11 @@ gst_qtdemux_prepare_current_sample (GstQTDemux * qtdemux,
   /* now get the info for the sample we're at */
   sample = &stream->samples[stream->sample_index];
 
-  *timestamp = QTSAMPLE_PTS (stream, sample);
+  *dts = QTSAMPLE_DTS (stream, sample);
+  *pts = QTSAMPLE_PTS (stream, sample);
   *offset = sample->offset;
   *size = sample->size;
-  *duration = QTSAMPLE_DUR_PTS (stream, sample, *timestamp);
+  *duration = QTSAMPLE_DUR_DTS (stream, sample, *dts);
   *keyframe = QTSAMPLE_KEYFRAME (stream, sample);
 
   return TRUE;
@@ -3410,14 +3408,14 @@ gst_qtdemux_clip_buffer (GstQTDemux * qtdemux, QtDemuxStream * stream,
     GstBuffer * buf)
 {
   guint64 start, stop, cstart, cstop, diff;
-  GstClockTime timestamp = GST_CLOCK_TIME_NONE, duration = GST_CLOCK_TIME_NONE;
-  guint size;
+  GstClockTime pts, dts, duration;
+  gsize size, osize;
   gint num_rate, denom_rate;
   gint frame_size;
   gboolean clip_data;
   guint offset;
 
-  size = gst_buffer_get_size (buf);
+  osize = size = gst_buffer_get_size (buf);
   offset = 0;
 
   /* depending on the type, setup the clip parameters */
@@ -3434,19 +3432,20 @@ gst_qtdemux_clip_buffer (GstQTDemux * qtdemux, QtDemuxStream * stream,
   } else
     goto wrong_type;
 
-  /* we can only clip if we have a valid timestamp */
-  timestamp = GST_BUFFER_TIMESTAMP (buf);
-  if (G_UNLIKELY (!GST_CLOCK_TIME_IS_VALID (timestamp)))
-    goto no_timestamp;
+  /* we can only clip if we have a valid pts */
+  pts = GST_BUFFER_PTS (buf);
+  if (G_UNLIKELY (!GST_CLOCK_TIME_IS_VALID (pts)))
+    goto no_pts;
 
-  if (G_LIKELY (GST_BUFFER_DURATION_IS_VALID (buf))) {
-    duration = GST_BUFFER_DURATION (buf);
-  } else {
+  dts = GST_BUFFER_DTS (buf);
+  duration = GST_BUFFER_DURATION (buf);
+
+  if (G_UNLIKELY (!GST_CLOCK_TIME_IS_VALID (duration))) {
     duration =
         gst_util_uint64_scale_int (size / frame_size, num_rate, denom_rate);
   }
 
-  start = timestamp;
+  start = pts;
   stop = start + duration;
 
   if (G_UNLIKELY (!gst_segment_clip (&stream->segment,
@@ -3456,7 +3455,8 @@ gst_qtdemux_clip_buffer (GstQTDemux * qtdemux, QtDemuxStream * stream,
   /* see if some clipping happened */
   diff = cstart - start;
   if (diff > 0) {
-    timestamp = cstart;
+    pts += diff;
+    dts += diff;
     duration -= diff;
 
     if (clip_data) {
@@ -3487,8 +3487,11 @@ gst_qtdemux_clip_buffer (GstQTDemux * qtdemux, QtDemuxStream * stream,
     }
   }
 
-  gst_buffer_resize (buf, offset, size);
-  GST_BUFFER_TIMESTAMP (buf) = timestamp;
+  if (offset != 0 || size != osize)
+    gst_buffer_resize (buf, offset, size);
+
+  GST_BUFFER_DTS (buf) = dts;
+  GST_BUFFER_PTS (buf) = pts;
   GST_BUFFER_DURATION (buf) = duration;
 
   return buf;
@@ -3499,9 +3502,9 @@ wrong_type:
     GST_DEBUG_OBJECT (qtdemux, "unknown stream type");
     return buf;
   }
-no_timestamp:
+no_pts:
   {
-    GST_DEBUG_OBJECT (qtdemux, "no timestamp on buffer");
+    GST_DEBUG_OBJECT (qtdemux, "no pts on buffer");
     return buf;
   }
 clipped:
@@ -3570,8 +3573,8 @@ gst_qtdemux_process_buffer (GstQTDemux * qtdemux, QtDemuxStream * stream,
 static gboolean
 gst_qtdemux_decorate_and_push_buffer (GstQTDemux * qtdemux,
     QtDemuxStream * stream, GstBuffer * buf,
-    guint64 timestamp, guint64 duration, gboolean keyframe, guint64 position,
-    guint64 byte_position)
+    guint64 dts, guint64 pts, guint64 duration, gboolean keyframe,
+    guint64 position, guint64 byte_position)
 {
   GstFlowReturn ret = GST_FLOW_OK;
 
@@ -3629,7 +3632,8 @@ gst_qtdemux_decorate_and_push_buffer (GstQTDemux * qtdemux,
   if (G_UNLIKELY (stream->need_process))
     buf = gst_qtdemux_process_buffer (qtdemux, stream, buf);
 
-  GST_BUFFER_TIMESTAMP (buf) = timestamp;
+  GST_BUFFER_DTS (buf) = dts;
+  GST_BUFFER_PTS (buf) = pts;
   GST_BUFFER_DURATION (buf) = duration;
   GST_BUFFER_OFFSET (buf) = -1;
   GST_BUFFER_OFFSET_END (buf) = -1;
@@ -3673,9 +3677,10 @@ gst_qtdemux_decorate_and_push_buffer (GstQTDemux * qtdemux,
     GST_BUFFER_FLAG_SET (buf, GST_BUFFER_FLAG_DELTA_UNIT);
 
   GST_LOG_OBJECT (qtdemux,
-      "Pushing buffer with time %" GST_TIME_FORMAT ", duration %"
-      GST_TIME_FORMAT " on pad %s", GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (buf)),
-      GST_TIME_ARGS (GST_BUFFER_DURATION (buf)), GST_PAD_NAME (stream->pad));
+      "Pushing buffer with dts %" GST_TIME_FORMAT ", pts %" GST_TIME_FORMAT
+      ", duration %" GST_TIME_FORMAT " on pad %s", GST_TIME_ARGS (dts),
+      GST_TIME_ARGS (pts), GST_TIME_ARGS (duration),
+      GST_PAD_NAME (stream->pad));
 
   ret = gst_pad_push (stream->pad, buf);
 
@@ -3691,7 +3696,8 @@ gst_qtdemux_loop_state_movie (GstQTDemux * qtdemux)
   QtDemuxStream *stream;
   guint64 min_time;
   guint64 offset = 0;
-  guint64 timestamp = GST_CLOCK_TIME_NONE;
+  guint64 dts = GST_CLOCK_TIME_NONE;
+  guint64 pts = GST_CLOCK_TIME_NONE;
   guint64 duration = 0;
   gboolean keyframe = FALSE;
   guint size = 0;
@@ -3733,13 +3739,14 @@ gst_qtdemux_loop_state_movie (GstQTDemux * qtdemux)
 
   /* fetch info for the current sample of this stream */
   if (G_UNLIKELY (!gst_qtdemux_prepare_current_sample (qtdemux, stream, &offset,
-              &size, &timestamp, &duration, &keyframe)))
+              &size, &dts, &pts, &duration, &keyframe)))
     goto eos_stream;
 
   GST_LOG_OBJECT (qtdemux,
       "pushing from stream %d, offset %" G_GUINT64_FORMAT
-      ", size %d, timestamp=%" GST_TIME_FORMAT ", duration %" GST_TIME_FORMAT,
-      index, offset, size, GST_TIME_ARGS (timestamp), GST_TIME_ARGS (duration));
+      ", size %d, dts=%" GST_TIME_FORMAT ", pts=%" GST_TIME_FORMAT
+      ", duration %" GST_TIME_FORMAT, index, offset, size,
+      GST_TIME_ARGS (dts), GST_TIME_ARGS (pts), GST_TIME_ARGS (duration));
 
   /* hmm, empty sample, skip and move to next sample */
   if (G_UNLIKELY (size <= 0))
@@ -3757,7 +3764,7 @@ gst_qtdemux_loop_state_movie (GstQTDemux * qtdemux)
     goto beach;
 
   ret = gst_qtdemux_decorate_and_push_buffer (qtdemux, stream, buf,
-      timestamp, duration, keyframe, min_time, offset);
+      dts, pts, duration, keyframe, min_time, offset);
 
   /* combine flows */
   ret = gst_qtdemux_combine_flows (qtdemux, stream, ret);
@@ -4270,7 +4277,7 @@ gst_qtdemux_chain (GstPad * sinkpad, GstObject * parent, GstBuffer * inbuf)
         QtDemuxStream *stream = NULL;
         QtDemuxSample *sample;
         int i = -1;
-        guint64 timestamp, duration, position;
+        guint64 dts, pts, duration;
         gboolean keyframe;
 
         GST_DEBUG_OBJECT (demux,
@@ -4349,13 +4356,13 @@ gst_qtdemux_chain (GstPad * sinkpad, GstObject * parent, GstBuffer * inbuf)
 
         sample = &stream->samples[stream->sample_index];
 
-        position = QTSAMPLE_DTS (stream, sample);
-        timestamp = QTSAMPLE_PTS (stream, sample);
-        duration = QTSAMPLE_DUR_DTS (stream, sample, position);
+        dts = QTSAMPLE_DTS (stream, sample);
+        pts = QTSAMPLE_PTS (stream, sample);
+        duration = QTSAMPLE_DUR_DTS (stream, sample, dts);
         keyframe = QTSAMPLE_KEYFRAME (stream, sample);
 
         ret = gst_qtdemux_decorate_and_push_buffer (demux, stream, outbuf,
-            timestamp, duration, keyframe, position, demux->offset);
+            dts, pts, duration, keyframe, dts, demux->offset);
 
         /* combine flows */
         ret = gst_qtdemux_combine_flows (demux, stream, ret);
