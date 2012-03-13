@@ -453,8 +453,6 @@ gst_rtp_mp4g_depay_process (GstRTPBaseDepayload * depayload, GstBuffer * buf)
     rtptime = gst_rtp_buffer_get_timestamp (&rtp);
     M = gst_rtp_buffer_get_marker (&rtp);
 
-    gst_rtp_buffer_unmap (&rtp);
-
     if (rtpmp4gdepay->sizelength > 0) {
       gint num_AU_headers, AU_headers_bytes, i;
       GstBsParse bs;

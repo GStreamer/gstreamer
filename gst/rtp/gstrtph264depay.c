@@ -558,6 +558,8 @@ gst_rtp_h264_depay_handle_nal (GstRtpH264Depay * rtph264depay, GstBuffer * nal,
           &out_keyframe);
 
     /* add to adapter */
+    gst_buffer_unmap (nal, &map);
+
     GST_DEBUG_OBJECT (depayload, "adding NAL to picture adapter");
     gst_adapter_push (rtph264depay->picture_adapter, nal);
     rtph264depay->last_ts = in_timestamp;
@@ -571,8 +573,8 @@ gst_rtp_h264_depay_handle_nal (GstRtpH264Depay * rtph264depay, GstBuffer * nal,
     /* no merge, output is input nal */
     GST_DEBUG_OBJECT (depayload, "using NAL as output");
     outbuf = nal;
+    gst_buffer_unmap (nal, &map);
   }
-  gst_buffer_unmap (nal, &map);
 
   if (outbuf) {
     /* prepend codec_data */
