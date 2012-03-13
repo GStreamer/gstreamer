@@ -2538,6 +2538,8 @@ gst_ffmpeg_formatid_to_caps (const gchar * format_name)
     caps = gst_caps_from_string ("audio/x-amr-nb-sh");
   } else if (!strcmp (format_name, "webm")) {
     caps = gst_caps_from_string ("video/webm");
+  } else if (!strcmp (format_name, "voc")) {
+    caps = gst_caps_from_string ("audio/x-voc");
   } else {
     gchar *name;
 
