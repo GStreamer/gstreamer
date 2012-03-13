@@ -684,7 +684,7 @@ gst_rtp_h264_depay_process (GstRTPBaseDepayload * depayload, GstBuffer * buf)
     GST_DEBUG_OBJECT (rtph264depay, "receiving %d bytes", payload_len);
 
     if (payload_len == 0)
-      return NULL;
+      goto empty_packet;
 
     /* +---------------+
      * |0|1|2|3|4|5|6|7|
@@ -899,6 +899,12 @@ gst_rtp_h264_depay_process (GstRTPBaseDepayload * depayload, GstBuffer * buf)
   return outbuf;
 
   /* ERRORS */
+empty_packet:
+  {
+    GST_DEBUG_OBJECT (rtph264depay, "empty packet");
+    gst_rtp_buffer_unmap (&rtp);
+    return NULL;
+  }
 undefined_type:
   {
     GST_ELEMENT_WARNING (rtph264depay, STREAM, DECODE,
