@@ -40,8 +40,8 @@ gst_video_meta_transform (GstBuffer * dest, GstMeta * meta,
 
       GST_DEBUG ("copy video metadata");
       dmeta->flags = smeta->flags;
-      dmeta->id = smeta->id;
       dmeta->format = smeta->format;
+      dmeta->id = smeta->id;
       dmeta->width = smeta->width;
       dmeta->height = smeta->height;
 
@@ -50,6 +50,8 @@ gst_video_meta_transform (GstBuffer * dest, GstMeta * meta,
         dmeta->offset[i] = smeta->offset[i];
         dmeta->stride[i] = smeta->stride[i];
       }
+      dmeta->map = smeta->map;
+      dmeta->unmap = smeta->unmap;
     }
   }
   return TRUE;
