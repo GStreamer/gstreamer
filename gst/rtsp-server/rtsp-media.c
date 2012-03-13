@@ -1636,6 +1636,7 @@ pad_added_cb (GstElement * element, GstPad * pad, GstRTSPMedia * media)
   for (i = 0; i < 2; i++) {
     gst_element_set_state (stream->udpsink[i], GST_STATE_PAUSED);
     gst_element_set_state (stream->appsink[i], GST_STATE_PAUSED);
+    gst_element_set_state (stream->appqueue[i], GST_STATE_PAUSED);
     gst_element_set_state (stream->tee[i], GST_STATE_PAUSED);
     gst_element_set_state (stream->selector[i], GST_STATE_PAUSED);
     gst_element_set_state (stream->appsrc[i], GST_STATE_PAUSED);
@@ -2055,6 +2056,7 @@ gst_rtsp_media_remove_elements (GstRTSPMedia * media)
       gst_element_set_state (stream->udpsink[j], GST_STATE_NULL);
       gst_element_set_state (stream->appsrc[j], GST_STATE_NULL);
       gst_element_set_state (stream->appsink[j], GST_STATE_NULL);
+      gst_element_set_state (stream->appqueue[j], GST_STATE_NULL);
       gst_element_set_state (stream->tee[j], GST_STATE_NULL);
       gst_element_set_state (stream->selector[j], GST_STATE_NULL);
 
@@ -2062,6 +2064,7 @@ gst_rtsp_media_remove_elements (GstRTSPMedia * media)
       gst_bin_remove (GST_BIN (media->pipeline), stream->udpsink[j]);
       gst_bin_remove (GST_BIN (media->pipeline), stream->appsrc[j]);
       gst_bin_remove (GST_BIN (media->pipeline), stream->appsink[j]);
+      gst_bin_remove (GST_BIN (media->pipeline), stream->appqueue[j]);
       gst_bin_remove (GST_BIN (media->pipeline), stream->tee[j]);
       gst_bin_remove (GST_BIN (media->pipeline), stream->selector[j]);
     }
