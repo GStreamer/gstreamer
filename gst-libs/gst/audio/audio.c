@@ -1136,7 +1136,7 @@ gst_audio_channel_positions_from_mask (gint channels, guint64 channel_mask,
   g_return_val_if_fail (channels != 0, FALSE);
 
   GST_DEBUG ("converting %d channels for "
-      " channel mask 0x%016" G_GINT64_MODIFIER "x");
+      " channel mask 0x%016" G_GINT64_MODIFIER "x", channels, channel_mask);
 
   if (!channel_mask) {
     if (channels == 1) {
