@@ -66,7 +66,7 @@ static GstStaticPadTemplate pngenc_sink_template =
     GST_PAD_SINK,
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS (GST_VIDEO_CAPS_RGBA ";" GST_VIDEO_CAPS_RGB ";"
-        GST_VIDEO_CAPS_GRAY8)
+        GST_VIDEO_CAPS_GRAY8 ";" GST_VIDEO_CAPS_GRAY16 ("BIG_ENDIAN"))
     );
 
 /* static GstElementClass *parent_class = NULL; */
@@ -167,11 +167,21 @@ gst_pngenc_setcaps (GstPad * pad, GstCaps * caps)
       pngenc->png_color_type = PNG_COLOR_TYPE_RGB;
       break;
     case GST_VIDEO_FORMAT_GRAY8:
+    case GST_VIDEO_FORMAT_GRAY16_BE:
       pngenc->png_color_type = PNG_COLOR_TYPE_GRAY;
       break;
     default:
       ret = FALSE;
       goto done;
+  }
+
+  switch (format) {
+    case GST_VIDEO_FORMAT_GRAY16_BE:
+      pngenc->depth = 16;
+      break;
+    default:                   /* GST_VIDEO_FORMAT_RGB and GST_VIDEO_FORMAT_GRAY8 */
+      pngenc->depth = 8;
+      break;
   }
 
   if (G_UNLIKELY (pngenc->width < 16 || pngenc->width > 1000000 ||
@@ -321,7 +331,7 @@ gst_pngenc_chain (GstPad * pad, GstBuffer * buf)
       pngenc->png_info_ptr,
       pngenc->width,
       pngenc->height,
-      8,
+      pngenc->depth,
       pngenc->png_color_type,
       PNG_INTERLACE_NONE,
       PNG_COMPRESSION_TYPE_DEFAULT, PNG_FILTER_TYPE_DEFAULT);

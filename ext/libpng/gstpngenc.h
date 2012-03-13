@@ -50,6 +50,7 @@ struct _GstPngEnc
   png_infop png_info_ptr;
 
   gint png_color_type;
+  gint depth;
   gint width;
   gint height;
   gint stride;
