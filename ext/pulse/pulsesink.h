@@ -92,10 +92,10 @@ GType gst_pulsesink_get_type (void);
 
 #if (G_BYTE_ORDER == G_LITTLE_ENDIAN)
 # define FORMATS   "{ S16LE, S16BE, F32LE, F32BE, S32LE, S32BE, " \
-                     "S24LE, S24BE, S24_32LE, S24_32BE, S8 }"
+                     "S24LE, S24BE, S24_32LE, S24_32BE, U8 }"
 #else
 # define FORMATS   "{ S16BE, S16LE, F32BE, F32LE, S32BE, S32LE, " \
-                     "S24BE, S24LE, S24_32BE, S24_32LE, S8 }"
+                     "S24BE, S24LE, S24_32BE, S24_32LE, U8 }"
 #endif
 
 #define _PULSE_SINK_CAPS_COMMON \
