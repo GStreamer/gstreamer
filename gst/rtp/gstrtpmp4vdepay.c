@@ -163,8 +163,9 @@ static GstBuffer *
 gst_rtp_mp4v_depay_process (GstRTPBaseDepayload * depayload, GstBuffer * buf)
 {
   GstRtpMP4VDepay *rtpmp4vdepay;
-  GstBuffer *outbuf = NULL;
+  GstBuffer *pbuf, *outbuf = NULL;
   GstRTPBuffer rtp = { NULL };
+  gboolean marker;
 
   rtpmp4vdepay = GST_RTP_MP4V_DEPAY (depayload);
 
@@ -173,23 +174,22 @@ gst_rtp_mp4v_depay_process (GstRTPBaseDepayload * depayload, GstBuffer * buf)
     gst_adapter_clear (rtpmp4vdepay->adapter);
 
   gst_rtp_buffer_map (buf, GST_MAP_READ, &rtp);
-  outbuf = gst_rtp_buffer_get_payload_buffer (&rtp);
-  gst_adapter_push (rtpmp4vdepay->adapter, outbuf);
+  pbuf = gst_rtp_buffer_get_payload_buffer (&rtp);
+  marker = gst_rtp_buffer_get_marker (&rtp);
+  gst_rtp_buffer_unmap (&rtp);
+
+  gst_adapter_push (rtpmp4vdepay->adapter, pbuf);
 
   /* if this was the last packet of the VOP, create and push a buffer */
-  if (gst_rtp_buffer_get_marker (&rtp)) {
+  if (marker) {
     guint avail;
 
     avail = gst_adapter_available (rtpmp4vdepay->adapter);
-
     outbuf = gst_adapter_take_buffer (rtpmp4vdepay->adapter, avail);
 
     GST_DEBUG ("gst_rtp_mp4v_depay_chain: pushing buffer of size %"
         G_GSIZE_FORMAT, gst_buffer_get_size (outbuf));
   }
-
-  gst_rtp_buffer_unmap (&rtp);
-
   return outbuf;
 }
 
