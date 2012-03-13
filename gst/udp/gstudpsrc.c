@@ -112,6 +112,8 @@
 
 #include <gst/net/gstnetaddressmeta.h>
 
+#include <sys/socket.h>
+
 GST_DEBUG_CATEGORY_STATIC (udpsrc_debug);
 #define GST_CAT_DEFAULT (udpsrc_debug)
 
@@ -785,9 +787,10 @@ gst_udpsrc_start (GstBaseSrc * bsrc)
   if (src->timeout)
     g_socket_set_timeout (src->used_socket, src->timeout / GST_SECOND);
 
-#ifdef SO_RECVBUF
+#ifdef SO_RCVBUF
   {
     gint rcvsize, ret;
+    socklen_t len;
 
     len = sizeof (rcvsize);
     if (src->buffer_size != 0) {
