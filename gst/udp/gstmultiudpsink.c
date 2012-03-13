@@ -40,6 +40,7 @@
 #include "gstmultiudpsink.h"
 
 #include <string.h>
+#include <sys/socket.h>
 
 #include "gst/glib-compat-private.h"
 
@@ -821,7 +822,6 @@ gst_multiudpsink_start (GstBaseSink * bsink)
   }
 
 #ifdef SO_SNDBUF
-
   {
     socklen_t len;
     gint sndsize, ret;
