@@ -1674,6 +1674,13 @@ update_arrival_stats (RTPSession * sess, RTPArrivalStats * arrival,
   }
 }
 
+static void
+clean_arrival_stats (RTPArrivalStats * arrival)
+{
+  if (arrival->address)
+    g_object_unref (arrival->address);
+}
+
 /**
  * rtp_session_process_rtp:
  * @sess: and #RTPSession
@@ -1790,6 +1797,8 @@ rtp_session_process_rtp (RTPSession * sess, GstBuffer * buffer,
 
   RTP_SESSION_UNLOCK (sess);
 
+  clean_arrival_stats (&arrival);
+
   return result;
 
   /* ERRORS */
@@ -1801,15 +1810,17 @@ invalid_packet:
   }
 ignore:
   {
-    gst_buffer_unref (buffer);
     RTP_SESSION_UNLOCK (sess);
+    gst_buffer_unref (buffer);
+    clean_arrival_stats (&arrival);
     GST_DEBUG ("ignoring RTP packet because we are leaving");
     return GST_FLOW_OK;
   }
 collision:
   {
-    gst_buffer_unref (buffer);
     RTP_SESSION_UNLOCK (sess);
+    gst_buffer_unref (buffer);
+    clean_arrival_stats (&arrival);
     GST_DEBUG ("ignoring packet because its collisioning");
     return GST_FLOW_OK;
   }
@@ -2391,8 +2402,7 @@ rtp_session_process_rtcp (RTPSession * sess, GstBuffer * buffer,
       sess->stats.avg_rtcp_packet_size, arrival.bytes);
   RTP_SESSION_UNLOCK (sess);
 
-  if (arrival.address)
-    g_object_unref (arrival.address);
+  clean_arrival_stats (&arrival);
 
   /* notify caller of sr packets in the callback */
   if (do_sync && sess->callbacks.sync_rtcp) {
@@ -2415,9 +2425,10 @@ invalid_packet:
   }
 ignore:
   {
-    gst_buffer_unref (buffer);
     RTP_SESSION_UNLOCK (sess);
-    GST_DEBUG ("ignoring RTP packet because we left");
+    gst_buffer_unref (buffer);
+    clean_arrival_stats (&arrival);
+    GST_DEBUG ("ignoring RTCP packet because we left");
     return GST_FLOW_OK;
   }
 }
