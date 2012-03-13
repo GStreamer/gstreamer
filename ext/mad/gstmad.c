@@ -278,9 +278,9 @@ gst_mad_parse (GstAudioDecoder * dec, GstAdapter * adapter,
 {
   GstMad *mad;
   GstFlowReturn ret = GST_FLOW_UNEXPECTED;
-  gint av, size, offset, prev_offset, consumed = 0;
+  gint av, size, offset;
   const guint8 *data;
-  gboolean eos;
+  gboolean eos, sync;
   GstBuffer *guard = NULL;
 
   mad = GST_MAD (dec);
@@ -288,7 +288,9 @@ gst_mad_parse (GstAudioDecoder * dec, GstAdapter * adapter,
   av = gst_adapter_available (adapter);
   data = gst_adapter_peek (adapter, av);
 
-  gst_audio_decoder_get_parse_state (dec, NULL, &eos);
+  gst_audio_decoder_get_parse_state (dec, &sync, &eos);
+  GST_LOG_OBJECT (mad, "parse state sync %d, eos %d", sync, eos);
+
   if (eos) {
     /* This is one streaming hack right there.
      * mad will not decode the last frame if it is not followed by
@@ -312,130 +314,99 @@ gst_mad_parse (GstAudioDecoder * dec, GstAdapter * adapter,
    * if a frame is found (and also decoded), subsequent handle_frame
    * only needs to synthesize it */
 
-  prev_offset = -1;
   offset = 0;
-  while (offset < av) {
-    size = MIN (MAD_BUFFER_MDLEN * 3, av - offset);
+  size = 0;
 
-    /* check for mad asking too much */
-    if (offset == prev_offset) {
-      if (G_UNLIKELY (offset + size < av)) {
-        /* mad should not do this, so really fatal */
-        GST_ELEMENT_ERROR (mad, STREAM, DECODE, (NULL),
-            ("mad claims to need more data than %u bytes", size));
-        ret = GST_FLOW_ERROR;
-        goto exit;
-      } else {
+resume:
+  if (G_UNLIKELY (offset + MAD_BUFFER_GUARD > av))
+    goto exit;
+
+  GST_LOG_OBJECT (mad, "setup mad stream at offset %d (of av %d)", offset, av);
+  mad_stream_buffer (&mad->stream, data + offset, av - offset);
+  /* convey sync idea to mad */
+  mad->stream.sync = sync;
+  /* if we get back here, lost sync anyway */
+  sync = FALSE;
+
+  while (TRUE) {
+    GST_LOG_OBJECT (mad, "decoding the header now");
+    if (mad_header_decode (&mad->frame.header, &mad->stream) == -1) {
+      /* HACK it seems mad reports wrong error when it is trying to determine
+       * free bitrate and scanning for next header */
+      if (mad->stream.error == MAD_ERROR_LOSTSYNC) {
+        const guint8 *ptr = mad->stream.this_frame;
+        guint32 header;
+
+        if (ptr >= data && ptr < data + av) {
+          header = GST_READ_UINT32_BE (ptr);
+          /* looks like possible freeform header with not much data */
+          if (((header & 0xFFE00000) == 0xFFE00000) &&
+              (((header >> 12) & 0xF) == 0x0) && (av < 4096)) {
+            GST_DEBUG_OBJECT (mad, "overriding freeform LOST_SYNC to BUFLEN");
+            mad->stream.error = MAD_ERROR_BUFLEN;
+          }
+        }
+      }
+      if (mad->stream.error == MAD_ERROR_BUFLEN) {
+        GST_LOG_OBJECT (mad, "not enough data, getting more");
+        offset = mad->stream.next_frame - data;
         break;
-      }
-    }
-
-    /* only feed that much to mad at a time */
-    mad_stream_buffer (&mad->stream, data + offset, size);
-    prev_offset = offset;
-
-    while (offset - prev_offset < size) {
-      consumed = 0;
-
-      GST_LOG_OBJECT (mad, "decoding the header now");
-      if (mad_header_decode (&mad->frame.header, &mad->stream) == -1) {
-        /* HACK it seems mad reports wrong error when it is trying to determine
-         * free bitrate and scanning for next header */
-        if (mad->stream.error == MAD_ERROR_LOSTSYNC) {
-          const guint8 *ptr = mad->stream.this_frame;
-          guint32 header;
-
-          if (ptr >= data && ptr < data + av) {
-            header = GST_READ_UINT32_BE (ptr);
-            /* looks like possible freeform header with not much data */
-            if (((header & 0xFFE00000) == 0xFFE00000) &&
-                (((header >> 12) & 0xF) == 0x0) && (av < 4096)) {
-              GST_DEBUG_OBJECT (mad, "overriding freeform LOST_SYNC to BUFLEN");
-              mad->stream.error = MAD_ERROR_BUFLEN;
-            }
-          }
-        }
-        if (mad->stream.error == MAD_ERROR_BUFLEN) {
-          GST_LOG_OBJECT (mad,
-              "not enough data in tempbuffer (%d), breaking to get more", size);
-          break;
-        } else {
-          GST_WARNING_OBJECT (mad, "mad_header_decode had an error: %s",
-              mad_stream_errorstr (&mad->stream));
-        }
-      }
-
-      GST_LOG_OBJECT (mad, "parsing and decoding one frame now");
-      if (mad_frame_decode (&mad->frame, &mad->stream) == -1) {
-        GST_LOG_OBJECT (mad, "got error %d", mad->stream.error);
-
-        /* not enough data, need to wait for next buffer? */
-        if (mad->stream.error == MAD_ERROR_BUFLEN) {
-          if (mad->stream.next_frame == data) {
-            GST_LOG_OBJECT (mad,
-                "not enough data in tempbuffer (%d), breaking to get more",
-                size);
-            break;
-          } else {
-            GST_LOG_OBJECT (mad, "sync error, flushing unneeded data");
-            goto flush;
-          }
-        } else if (mad->stream.error == MAD_ERROR_BADDATAPTR) {
-          /* Flush data */
-          goto flush;
-        } else {
-          GST_WARNING_OBJECT (mad, "mad_frame_decode had an error: %s",
-              mad_stream_errorstr (&mad->stream));
-          if (!MAD_RECOVERABLE (mad->stream.error)) {
-            /* well, all may be well enough bytes later on ... */
-            GST_AUDIO_DECODER_ERROR (mad, 1, STREAM, DECODE, (NULL),
-                ("mad error: %s", mad_stream_errorstr (&mad->stream)), ret);
-            /* so make sure we really move along ... */
-            if (!offset)
-              offset++;
-            goto exit;
-          } else {
-            const guint8 *before_sync, *after_sync;
-
-            mad_frame_mute (&mad->frame);
-            mad_synth_mute (&mad->synth);
-            before_sync = mad->stream.ptr.byte;
-            if (mad_stream_sync (&mad->stream) != 0)
-              GST_WARNING_OBJECT (mad, "mad_stream_sync failed");
-            after_sync = mad->stream.ptr.byte;
-            /* a succesful resync should make us drop bytes as consumed, so
-             * calculate from the byte pointers before and after resync */
-            consumed = after_sync - before_sync;
-            GST_DEBUG_OBJECT (mad, "resynchronization consumes %d bytes",
-                consumed);
-            GST_DEBUG_OBJECT (mad, "synced to data: 0x%0x 0x%0x",
-                *mad->stream.ptr.byte, *(mad->stream.ptr.byte + 1));
-
-            mad_stream_sync (&mad->stream);
-            /* recoverable errors pass */
-            goto flush;
-          }
-        }
+      } else if (mad->stream.error == MAD_ERROR_LOSTSYNC) {
+        GST_LOG_OBJECT (mad, "lost sync");
+        continue;
       } else {
-        /* decoding ok; found frame */
-        ret = GST_FLOW_OK;
+        /* probably some bogus header, basically also lost sync */
+        GST_DEBUG_OBJECT (mad, "mad_header_decode had an error: %s",
+            mad_stream_errorstr (&mad->stream));
+        continue;
       }
-    flush:
-      if (consumed == 0) {
-        consumed = mad->stream.next_frame - (data + offset);
-        g_assert (consumed >= 0);
-      }
-
-      if (ret == GST_FLOW_OK)
-        goto exit;
-
-      offset += consumed;
     }
+
+    /* could have a frame now, subsequent will confirm */
+    offset = mad->stream.this_frame - data;
+    size = mad->stream.next_frame - mad->stream.this_frame;
+    g_assert (size);
+
+    GST_LOG_OBJECT (mad, "parsing and decoding one frame now "
+        "(offset %d, size %d)", offset, size);
+    if (mad_frame_decode (&mad->frame, &mad->stream) == -1) {
+      GST_LOG_OBJECT (mad, "got error %d", mad->stream.error);
+
+      /* not enough data, need to wait for next buffer? */
+      if (mad->stream.error == MAD_ERROR_BUFLEN) {
+        /* not really expect this error at this stage anymore
+         * assume bogus frame and bad sync and move along a bit */
+        GST_WARNING_OBJECT (mad, "not enough data (unexpected), moving along");
+        offset++;
+        goto resume;
+      } else if (mad->stream.error == MAD_ERROR_BADDATAPTR) {
+        GST_DEBUG_OBJECT (mad, "bad data ptr, skipping presumed frame");
+        /* flush past presumed frame */
+        offset += size;
+        goto resume;
+      } else {
+        GST_WARNING_OBJECT (mad, "mad_frame_decode had an error: %s",
+            mad_stream_errorstr (&mad->stream));
+        if (!MAD_RECOVERABLE (mad->stream.error)) {
+          /* well, all may be well enough bytes later on ... */
+          GST_AUDIO_DECODER_ERROR (mad, 1, STREAM, DECODE, (NULL),
+              ("mad error: %s", mad_stream_errorstr (&mad->stream)), ret);
+        }
+        /* move along and try again */
+        offset++;
+        goto resume;
+      }
+      g_assert_not_reached ();
+    }
+
+    /* so decoded ok, got a frame now */
+    ret = GST_FLOW_OK;
+    break;
   }
 
 exit:
   *_offset = offset;
-  *len = consumed;
+  *len = size;
 
   /* ensure that if we added some dummy guard bytes above, we don't claim
      to have used them as they're unknown to the caller. */
