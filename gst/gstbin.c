@@ -167,12 +167,6 @@
 #include "gstutils.h"
 #include "gstchildproxy.h"
 
-/* latency is by default enabled now.
- * live-preroll and no-live-preroll in the environment var GST_COMPAT
- * to enables or disable it respectively.
- */
-static gboolean enable_latency = TRUE;
-
 GST_DEBUG_CATEGORY_STATIC (bin_debug);
 #define GST_CAT_DEFAULT bin_debug
 
@@ -285,7 +279,6 @@ static guint gst_bin_signals[LAST_SIGNAL] = { 0 };
 
 #define _do_init \
 { \
-  const gchar *compat; \
   static const GInterfaceInfo iface_info = { \
     gst_bin_child_proxy_init, \
     NULL, \
@@ -296,14 +289,6 @@ static guint gst_bin_signals[LAST_SIGNAL] = { 0 };
   GST_DEBUG_CATEGORY_INIT (bin_debug, "bin", GST_DEBUG_BOLD, \
       "debugging info for the 'bin' container element"); \
   \
-  /* compatibility stuff */ \
-  compat = g_getenv ("GST_COMPAT"); \
-  if (compat != NULL) { \
-    if (strstr (compat, "no-live-preroll")) \
-      enable_latency = FALSE; \
-    else if (strstr (compat, "live-preroll")) \
-      enable_latency = TRUE; \
-  } \
 }
 
 #define gst_bin_parent_class parent_class
@@ -2221,18 +2206,9 @@ gst_bin_element_set_state (GstBin * bin, GstElement * element,
     if (next > current) {
       /* We found an async element check if we can force its state to change or
        * if we have to wait for it to preroll. */
-      if (G_UNLIKELY (!enable_latency)) {
-        g_warning ("Future versions of GStreamer will wait for element \"%s\"\n"
-            "\tto preroll in order to perform correct latency calculations.\n"
-            "\tPlease verify that the application continues to work correctly by\n"
-            "\tsetting the environment variable GST_COMPAT to a value containing\n"
-            "\tthe string 'live-preroll'.", GST_ELEMENT_NAME (element));
-        goto no_latency;
-      }
       goto was_busy;
     }
   }
-no_latency:
   GST_OBJECT_UNLOCK (bin);
 
 no_preroll:
