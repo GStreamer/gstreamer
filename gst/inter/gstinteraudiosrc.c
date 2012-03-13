@@ -159,11 +159,12 @@ gst_inter_audio_src_class_init (GstInterAudioSrcClass * klass)
     base_src_class->prepare_seek_segment =
         GST_DEBUG_FUNCPTR (gst_inter_audio_src_prepare_seek_segment);
 
+#if 0
   g_object_class_install_property (gobject_class, PROP_CHANNEL,
       g_param_spec_string ("channel", "Channel",
           "Channel name to match inter src and sink elements",
           "default", G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
-
+#endif
 }
 
 static void
