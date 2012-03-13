@@ -636,9 +636,7 @@ GST_START_TEST (test_pitivi_file_load)
   GESFormatter *formatter;
   GESTimeline *timeline, *expected;
   GMainLoop *mainloop;
-  char cCurrentPath[FILENAME_MAX];
-  char *a;
-  gchar *uri, *save_uri;
+  gchar *uri, *save_uri, *cur_dir;
 
   /*create the expected timeline */
   timeline = ges_timeline_new ();
@@ -647,9 +645,11 @@ GST_START_TEST (test_pitivi_file_load)
 
   /* create the timeline from formatter */
   formatter = GES_FORMATTER (ges_pitivi_formatter_new ());
-  a = GetCurrentDir (cCurrentPath, sizeof (cCurrentPath));
-  uri = g_strconcat (a, "/test.xptv", NULL);
-  save_uri = g_strconcat (a, "/testsave.xptv", NULL);
+  cur_dir = g_get_current_dir ();
+  uri = g_build_filename (cur_dir, "test.xptv", NULL);
+  save_uri = g_build_filename (cur_dir, "testsave.xptv", NULL);
+  g_free (cur_dir);
+
   if (g_file_test (uri, G_FILE_TEST_EXISTS) == FALSE) {
     GST_ERROR ("Could not test GESPitiviFormatter as no project file found");
     return;
