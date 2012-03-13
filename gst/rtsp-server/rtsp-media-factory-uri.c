@@ -397,7 +397,7 @@ pad_added_cb (GstElement * uribin, GstPad * pad, GstElement * element)
   /* check for raw caps */
   if (gst_caps_can_intersect (caps, urifact->raw_vcaps)) {
     /* we have raw video caps, insert converter */
-    convert = gst_element_factory_make ("ffmpegcolorspace", NULL);
+    convert = gst_element_factory_make ("videoconvert", NULL);
   } else if (gst_caps_can_intersect (caps, urifact->raw_acaps)) {
     /* we have raw audio caps, insert converter */
     convert = gst_element_factory_make ("audioconvert", NULL);
