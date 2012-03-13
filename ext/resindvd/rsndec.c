@@ -201,14 +201,11 @@ rsndec_factory_filter (GstPluginFeature * feature, RsnDecFactoryFilterCtx * ctx)
 
       /* check if the intersection is empty */
       if (!gst_caps_is_empty (intersect)) {
-        GstCaps *new_dec_caps;
         /* non empty intersection, we can use this element */
         can_sink = TRUE;
-        new_dec_caps = gst_caps_union (ctx->decoder_caps, intersect);
-        gst_caps_unref (ctx->decoder_caps);
-        ctx->decoder_caps = new_dec_caps;
-      }
-      gst_caps_unref (intersect);
+        ctx->decoder_caps = gst_caps_merge (ctx->decoder_caps, intersect);
+      } else
+        gst_caps_unref (intersect);
     }
   }
 
