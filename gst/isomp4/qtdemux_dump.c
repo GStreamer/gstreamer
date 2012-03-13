@@ -742,6 +742,8 @@ qtdemux_dump_sdtp (GstQTDemux * qtdemux, GstByteReader * data, int depth)
         ((guint16) (val >> 2)) & 0x3);
     GST_LOG ("%*s     sample_has_redundancy: %d", depth, "",
         ((guint16) (val >> 4)) & 0x3);
+    GST_LOG ("%*s     early display: %d", depth, "",
+        ((guint16) (val >> 6)) & 0x1);
     ++i;
   }
   return TRUE;
