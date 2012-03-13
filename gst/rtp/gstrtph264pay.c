@@ -697,7 +697,7 @@ next_start_code (const guint8 * data, guint size)
 
 static gboolean
 gst_rtp_h264_pay_decode_nal (GstRtpH264Pay * payloader,
-    const guint8 * data, guint size, GstClockTime timestamp)
+    const guint8 * data, guint size, GstClockTime dts, GstClockTime pts)
 {
   const guint8 *sps = NULL, *pps = NULL;
   guint sps_len = 0, pps_len = 0;
@@ -725,8 +725,8 @@ gst_rtp_h264_pay_decode_nal (GstRtpH264Pay * payloader,
     sps = data;
     sps_len = len;
     /* remember when we last saw SPS */
-    if (timestamp != -1)
-      payloader->last_spspps = timestamp;
+    if (pts != -1)
+      payloader->last_spspps = pts;
   } else if (PPS_TYPE_ID == type) {
     /* encoder the entire PPS NAL in base64 */
     GST_DEBUG ("Found PPS %x %x %x Len = %u",
@@ -735,8 +735,8 @@ gst_rtp_h264_pay_decode_nal (GstRtpH264Pay * payloader,
     pps = data;
     pps_len = len;
     /* remember when we last saw PPS */
-    if (timestamp != -1)
-      payloader->last_spspps = timestamp;
+    if (pts != -1)
+      payloader->last_spspps = pts;
   } else {
     GST_DEBUG ("NAL: %x %x %x Len = %u", (header >> 7),
         (header >> 5) & 3, type, len);
@@ -812,12 +812,12 @@ gst_rtp_h264_pay_decode_nal (GstRtpH264Pay * payloader,
 
 static GstFlowReturn
 gst_rtp_h264_pay_payload_nal (GstRTPBasePayload * basepayload,
-    const guint8 * data, guint size, GstClockTime timestamp,
+    const guint8 * data, guint size, GstClockTime dts, GstClockTime pts,
     GstBuffer * buffer_orig, gboolean end_of_au);
 
 static GstFlowReturn
 gst_rtp_h264_pay_send_sps_pps (GstRTPBasePayload * basepayload,
-    GstRtpH264Pay * rtph264pay, GstClockTime timestamp)
+    GstRtpH264Pay * rtph264pay, GstClockTime dts, GstClockTime pts)
 {
   GstFlowReturn ret = GST_FLOW_OK;
   GList *walk;
@@ -830,7 +830,7 @@ gst_rtp_h264_pay_send_sps_pps (GstRTPBasePayload * basepayload,
     /* resend SPS */
     gst_buffer_map (sps_buf, &map, GST_MAP_READ);
     ret = gst_rtp_h264_pay_payload_nal (basepayload,
-        map.data, map.size, timestamp, sps_buf, FALSE);
+        map.data, map.size, dts, pts, sps_buf, FALSE);
     gst_buffer_unmap (sps_buf, &map);
     /* Not critical here; but throw a warning */
     if (ret != GST_FLOW_OK)
@@ -843,22 +843,22 @@ gst_rtp_h264_pay_send_sps_pps (GstRTPBasePayload * basepayload,
     /* resend PPS */
     gst_buffer_map (pps_buf, &map, GST_MAP_READ);
     ret = gst_rtp_h264_pay_payload_nal (basepayload,
-        map.data, map.size, timestamp, pps_buf, FALSE);
+        map.data, map.size, dts, pts, pps_buf, FALSE);
     gst_buffer_unmap (pps_buf, &map);
     /* Not critical here; but throw a warning */
     if (ret != GST_FLOW_OK)
       GST_WARNING ("Problem pushing PPS");
   }
 
-  if (timestamp != -1)
-    rtph264pay->last_spspps = timestamp;
+  if (pts != -1)
+    rtph264pay->last_spspps = pts;
 
   return ret;
 }
 
 static GstFlowReturn
 gst_rtp_h264_pay_payload_nal (GstRTPBasePayload * basepayload,
-    const guint8 * data, guint size, GstClockTime timestamp,
+    const guint8 * data, guint size, GstClockTime dts, GstClockTime pts,
     GstBuffer * buffer_orig, gboolean end_of_au)
 {
   GstRtpH264Pay *rtph264pay;
@@ -888,11 +888,11 @@ gst_rtp_h264_pay_payload_nal (GstRTPBasePayload * basepayload,
 
       GST_LOG_OBJECT (rtph264pay,
           "now %" GST_TIME_FORMAT ", last SPS/PPS %" GST_TIME_FORMAT,
-          GST_TIME_ARGS (timestamp), GST_TIME_ARGS (rtph264pay->last_spspps));
+          GST_TIME_ARGS (pts), GST_TIME_ARGS (rtph264pay->last_spspps));
 
       /* calculate diff between last SPS/PPS in milliseconds */
-      if (timestamp > rtph264pay->last_spspps)
-        diff = timestamp - rtph264pay->last_spspps;
+      if (pts > rtph264pay->last_spspps)
+        diff = pts - rtph264pay->last_spspps;
       else
         diff = 0;
 
@@ -913,10 +913,10 @@ gst_rtp_h264_pay_payload_nal (GstRTPBasePayload * basepayload,
   }
 
   if (send_spspps || rtph264pay->send_spspps) {
-    /* we need to send SPS/PPS now first. FIXME, don't use the timestamp for
+    /* we need to send SPS/PPS now first. FIXME, don't use the pts for
      * checking when we need to send SPS/PPS but convert to running_time first. */
     rtph264pay->send_spspps = FALSE;
-    ret = gst_rtp_h264_pay_send_sps_pps (basepayload, rtph264pay, timestamp);
+    ret = gst_rtp_h264_pay_send_sps_pps (basepayload, rtph264pay, dts, pts);
     if (ret != GST_FLOW_OK)
       return ret;
   }
@@ -950,7 +950,8 @@ gst_rtp_h264_pay_payload_nal (GstRTPBasePayload * basepayload,
     }
 
     /* timestamp the outbuffer */
-    GST_BUFFER_TIMESTAMP (outbuf) = timestamp;
+    GST_BUFFER_PTS (outbuf) = pts;
+    GST_BUFFER_DTS (outbuf) = dts;
 
 #if 0
     if (rtph264pay->buffer_list) {
@@ -1034,7 +1035,8 @@ gst_rtp_h264_pay_payload_nal (GstRTPBasePayload * basepayload,
 
       gst_rtp_buffer_map (outbuf, GST_MAP_WRITE, &rtp);
 
-      GST_BUFFER_TIMESTAMP (outbuf) = timestamp;
+      GST_BUFFER_DTS (outbuf) = dts;
+      GST_BUFFER_PTS (outbuf) = pts;
       payload = gst_rtp_buffer_get_payload (&rtp);
 
       if (limitedSize == size) {
@@ -1112,7 +1114,7 @@ gst_rtp_h264_pay_handle_buffer (GstRTPBasePayload * basepayload,
   guint nal_len, i;
   GstMapInfo map;
   const guint8 *data, *nal_data;
-  GstClockTime timestamp;
+  GstClockTime dts, pts;
   GArray *nal_queue;
   guint pushed = 0;
   gboolean bytestream;
@@ -1124,7 +1126,8 @@ gst_rtp_h264_pay_handle_buffer (GstRTPBasePayload * basepayload,
   bytestream = (rtph264pay->scan_mode == GST_H264_SCAN_MODE_BYTESTREAM);
 
   if (bytestream) {
-    timestamp = gst_adapter_prev_timestamp (rtph264pay->adapter, NULL);
+    dts = gst_adapter_prev_dts (rtph264pay->adapter, NULL);
+    pts = gst_adapter_prev_pts (rtph264pay->adapter, NULL);
     gst_adapter_push (rtph264pay->adapter, buffer);
     size = gst_adapter_available (rtph264pay->adapter);
     data = gst_adapter_map (rtph264pay->adapter, size);
@@ -1132,13 +1135,16 @@ gst_rtp_h264_pay_handle_buffer (GstRTPBasePayload * basepayload,
         "got %" G_GSIZE_FORMAT " bytes (%" G_GSIZE_FORMAT ")", size,
         gst_buffer_get_size (buffer));
 
-    if (!GST_CLOCK_TIME_IS_VALID (timestamp))
-      timestamp = GST_BUFFER_TIMESTAMP (buffer);
+    if (!GST_CLOCK_TIME_IS_VALID (dts))
+      dts = GST_BUFFER_DTS (buffer);
+    if (!GST_CLOCK_TIME_IS_VALID (pts))
+      pts = GST_BUFFER_PTS (buffer);
   } else {
     gst_buffer_map (buffer, &map, GST_MAP_READ);
     data = map.data;
     size = map.size;
-    timestamp = GST_BUFFER_TIMESTAMP (buffer);
+    pts = GST_BUFFER_PTS (buffer);
+    dts = GST_BUFFER_DTS (buffer);
     GST_DEBUG_OBJECT (basepayload, "got %" G_GSIZE_FORMAT " bytes", size);
   }
 
@@ -1182,7 +1188,7 @@ gst_rtp_h264_pay_handle_buffer (GstRTPBasePayload * basepayload,
       }
 
       ret =
-          gst_rtp_h264_pay_payload_nal (basepayload, data, nal_len, timestamp,
+          gst_rtp_h264_pay_payload_nal (basepayload, data, nal_len, dts, pts,
           buffer, end_of_au);
       if (ret != GST_FLOW_OK)
         break;
@@ -1264,7 +1270,7 @@ gst_rtp_h264_pay_handle_buffer (GstRTPBasePayload * basepayload,
          * go parse it for SPS/PPS to enrich the caps */
         /* order: make sure to check nal */
         update =
-            gst_rtp_h264_pay_decode_nal (rtph264pay, data, nal_len, timestamp)
+            gst_rtp_h264_pay_decode_nal (rtph264pay, data, nal_len, dts, pts)
             || update;
       }
       /* move to next NAL packet */
@@ -1315,7 +1321,7 @@ gst_rtp_h264_pay_handle_buffer (GstRTPBasePayload * basepayload,
 
       /* put the data in one or more RTP packets */
       ret =
-          gst_rtp_h264_pay_payload_nal (basepayload, data, size, timestamp,
+          gst_rtp_h264_pay_payload_nal (basepayload, data, size, dts, pts,
           buffer, end_of_au);
       if (ret != GST_FLOW_OK) {
         break;
