@@ -724,7 +724,8 @@ typedef struct
   guint32 ssrc;
   guint16 seqnum;
   guint8 pt;
-  GstClockTime timestamp;
+  GstClockTime dts;
+  GstClockTime pts;
   guint64 offset;
   guint32 rtptime;
 } HeaderData;
@@ -733,12 +734,13 @@ static gboolean
 find_timestamp (GstBuffer ** buffer, guint idx, gpointer user_data)
 {
   HeaderData *data = user_data;
-  data->timestamp = GST_BUFFER_TIMESTAMP (*buffer);
+  data->dts = GST_BUFFER_DTS (*buffer);
+  data->pts = GST_BUFFER_PTS (*buffer);
   data->offset = GST_BUFFER_OFFSET (*buffer);
 
   /* stop when we find a timestamp. We take whatever offset is associated with
    * the timestamp (if any) to do perfect timestamps when we need to. */
-  if (data->timestamp != -1)
+  if (data->pts != -1)
     return FALSE;
   else
     return TRUE;
@@ -789,11 +791,13 @@ gst_rtp_base_payload_prepare_push (GstRTPBasePayload * payload,
 
   /* find the first buffer with a timestamp */
   if (is_list) {
-    data.timestamp = -1;
+    data.dts = -1;
+    data.pts = -1;
     data.offset = GST_BUFFER_OFFSET_NONE;
     gst_buffer_list_foreach (GST_BUFFER_LIST_CAST (obj), find_timestamp, &data);
   } else {
-    data.timestamp = GST_BUFFER_TIMESTAMP (GST_BUFFER_CAST (obj));
+    data.dts = GST_BUFFER_DTS (GST_BUFFER_CAST (obj));
+    data.pts = GST_BUFFER_PTS (GST_BUFFER_CAST (obj));
     data.offset = GST_BUFFER_OFFSET (GST_BUFFER_CAST (obj));
   }
 
@@ -805,15 +809,15 @@ gst_rtp_base_payload_prepare_push (GstRTPBasePayload * payload,
         data.offset - priv->base_offset;
     GST_LOG_OBJECT (payload,
         "Using offset %" G_GUINT64_FORMAT " for RTP timestamp", data.offset);
-  } else if (GST_CLOCK_TIME_IS_VALID (data.timestamp)) {
+  } else if (GST_CLOCK_TIME_IS_VALID (data.pts)) {
     gint64 rtime;
 
-    /* no offset, use the gstreamer timestamp */
+    /* no offset, use the gstreamer pts */
     rtime = gst_segment_to_running_time (&payload->segment, GST_FORMAT_TIME,
-        data.timestamp);
+        data.pts);
 
     if (rtime == -1) {
-      GST_LOG_OBJECT (payload, "Clipped timestamp, using base RTP timestamp");
+      GST_LOG_OBJECT (payload, "Clipped pts, using base RTP timestamp");
       rtime = 0;
     } else {
       GST_LOG_OBJECT (payload,
@@ -845,9 +849,9 @@ gst_rtp_base_payload_prepare_push (GstRTPBasePayload * payload,
   payload->timestamp = data.rtptime;
 
   GST_LOG_OBJECT (payload, "Preparing to push packet with size %"
-      G_GSIZE_FORMAT ", seq=%d, rtptime=%u, timestamp %" GST_TIME_FORMAT,
+      G_GSIZE_FORMAT ", seq=%d, rtptime=%u, pts %" GST_TIME_FORMAT,
       (is_list) ? -1 : gst_buffer_get_size (GST_BUFFER (obj)),
-      payload->seqnum, data.rtptime, GST_TIME_ARGS (data.timestamp));
+      payload->seqnum, data.rtptime, GST_TIME_ARGS (data.pts));
 
   if (g_atomic_int_compare_and_exchange (&payload->
           priv->notified_first_timestamp, 1, 0)) {
