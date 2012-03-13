@@ -91,9 +91,9 @@ static const GstAudioChannelPosition channel_positions[8][8] = {
 };
 
 #if G_BYTE_ORDER == G_LITTLE_ENDIAN
-#define FORMATS "{ S8LE, S16LE, S24LE, S32LE } "
+#define FORMATS "{ S8LE, S16LE, S24LE, S24_32LE } "
 #else
-#define FORMATS "{ S8BE, S16BE, S24BE, S32BE } "
+#define FORMATS "{ S8BE, S16BE, S24BE, S24_32BE } "
 #endif
 
 #define FLAC_SINK_CAPS                                    \
@@ -629,7 +629,7 @@ gst_flac_enc_getcaps (GstAudioEncoder * enc, GstCaps * filter)
     gst_value_list_append_value (&v_list, &v);
     g_value_set_static_string (&v, GST_AUDIO_NE (S24));
     gst_value_list_append_value (&v_list, &v);
-    g_value_set_static_string (&v, GST_AUDIO_NE (S32));
+    g_value_set_static_string (&v, GST_AUDIO_NE (S24_32));
     gst_value_list_append_value (&v_list, &v);
     g_value_unset (&v);
 
@@ -773,7 +773,7 @@ setting_src_caps_failed:
 failed_to_initialize:
   {
     GST_ELEMENT_ERROR (flacenc, LIBRARY, INIT, (NULL),
-        ("could not initialize encoder (wrong parameters?)"));
+        ("could not initialize encoder (wrong parameters?) %d", init_status));
     return FALSE;
   }
 }
@@ -989,6 +989,7 @@ gst_flac_enc_process_stream_headers (GstFlacEnc * enc)
   g_value_unset (&array);
 
 push_headers:
+  gst_audio_encoder_set_output_format (GST_AUDIO_ENCODER (enc), caps);
 
   /* push header buffers; update caps, so when we push the first buffer the
    * negotiated caps will change to caps that include the streamheader field */
