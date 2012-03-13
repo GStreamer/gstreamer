@@ -397,7 +397,7 @@ gst_play_sink_convert_bin_getcaps (GstPad * pad)
       gst_object_unref (peer);
       if (self->converter_caps && is_raw_caps (peer_caps, self->audio)) {
         peer_caps = gst_caps_make_writable (peer_caps);
-        gst_caps_merge (peer_caps, gst_caps_ref (self->converter_caps));
+        gst_caps_merge (peer_caps, gst_caps_copy (self->converter_caps));
         ret = peer_caps;
       } else {
         ret = peer_caps;
