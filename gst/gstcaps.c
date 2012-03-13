@@ -1691,6 +1691,8 @@ gst_caps_switch_structures (GstCaps * caps, GstStructure * old,
  * identical are merged.  Component structures that have values that can be
  * merged are also merged.
  *
+ * This method does not preserve the original order of @caps.
+ *
  * Returns: The simplified caps.
  */
 GstCaps *
