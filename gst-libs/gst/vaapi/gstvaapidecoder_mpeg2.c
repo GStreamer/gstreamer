@@ -798,6 +798,8 @@ decode_buffer(GstVaapiDecoderMpeg2 *decoder, GstBuffer *buffer)
         type = start_code & 0xff;
         switch (type) {
         case GST_MPEG_VIDEO_PACKET_PICTURE:
+            if (!priv->width || !priv->height)
+                break;
             status = decode_picture(decoder, buf, buf_size);
             break;
         case GST_MPEG_VIDEO_PACKET_SEQUENCE:
@@ -813,6 +815,8 @@ decode_buffer(GstVaapiDecoderMpeg2 *decoder, GstBuffer *buffer)
                 status = decode_quant_matrix_ext(decoder, buf, buf_size);
                 break;
             case GST_MPEG_VIDEO_PACKET_EXT_PICTURE:
+                if (!priv->width || !priv->height)
+                    break;
                 status = decode_picture_ext(decoder, buf, buf_size);
                 break;
             default:
@@ -835,6 +839,8 @@ decode_buffer(GstVaapiDecoderMpeg2 *decoder, GstBuffer *buffer)
         default:
             if (type >= GST_MPEG_VIDEO_PACKET_SLICE_MIN &&
                 type <= GST_MPEG_VIDEO_PACKET_SLICE_MAX) {
+                if (!priv->current_picture)
+                    break;
                 status = decode_slice(
                     decoder,
                     type - GST_MPEG_VIDEO_PACKET_SLICE_MIN,
