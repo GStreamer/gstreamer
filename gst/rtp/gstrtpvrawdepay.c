@@ -118,7 +118,7 @@ gst_rtp_vraw_depay_negotiate_pool (GstRtpVRawDepay * depay, GstCaps * caps,
 {
   GstQuery *query;
   GstBufferPool *pool = NULL;
-  guint size, min, max, prefix, alignment;
+  guint size, min, max, prefix, padding, alignment;
   GstStructure *config;
 
   /* find a pool for the negotiated caps now */
@@ -128,12 +128,13 @@ gst_rtp_vraw_depay_negotiate_pool (GstRtpVRawDepay * depay, GstCaps * caps,
     GST_DEBUG_OBJECT (depay, "got downstream ALLOCATION hints");
     /* we got configuration from our peer, parse them */
     gst_query_parse_allocation_params (query, &size, &min, &max, &prefix,
-        &alignment, &pool);
+        &padding, &alignment, &pool);
   } else {
     GST_DEBUG_OBJECT (depay, "didn't get downstream ALLOCATION hints");
     size = info->size;
     min = max = 0;
     prefix = 0;
+    padding = 0;
     alignment = 0;
   }
 
@@ -147,7 +148,8 @@ gst_rtp_vraw_depay_negotiate_pool (GstRtpVRawDepay * depay, GstCaps * caps,
   depay->pool = pool;
 
   config = gst_buffer_pool_get_config (pool);
-  gst_buffer_pool_config_set (config, caps, size, min, max, prefix, alignment);
+  gst_buffer_pool_config_set (config, caps, size, min, max, prefix, padding,
+      alignment);
   /* just set the metadata, if the pool can support it we will transparently use
    * it through the video info API. We could also see if the pool support this
    * metadata and only activate it then. */

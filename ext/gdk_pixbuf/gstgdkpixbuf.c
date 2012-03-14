@@ -225,7 +225,7 @@ gst_gdk_pixbuf_setup_pool (GstGdkPixbuf * filter, GstVideoInfo * info)
   GstCaps *target;
   GstQuery *query;
   GstBufferPool *pool = NULL;
-  guint size, min, max, prefix, alignment;
+  guint size, min, max, prefix, padding, alignment;
 
   target = gst_pad_get_current_caps (filter->srcpad);
 
@@ -236,11 +236,12 @@ gst_gdk_pixbuf_setup_pool (GstGdkPixbuf * filter, GstVideoInfo * info)
   if (gst_pad_peer_query (filter->srcpad, query)) {
     /* we got configuration from our peer, parse them */
     gst_query_parse_allocation_params (query, &size, &min, &max, &prefix,
-        &alignment, &pool);
+        &padding, &alignment, &pool);
   } else {
     size = info->size;
     min = max = 0;
     prefix = 0;
+    padding = 0;
     alignment = 0;
   }
 
@@ -252,7 +253,7 @@ gst_gdk_pixbuf_setup_pool (GstGdkPixbuf * filter, GstVideoInfo * info)
 
     config = gst_buffer_pool_get_config (pool);
     gst_buffer_pool_config_set (config, target, size, min, max, prefix,
-        alignment);
+        padding, alignment);
     gst_buffer_pool_set_config (pool, config);
   }
 

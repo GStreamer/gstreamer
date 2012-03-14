@@ -1164,7 +1164,7 @@ gst_jpeg_dec_buffer_pool (GstJpegDec * dec, GstCaps * caps)
 {
   GstQuery *query;
   GstBufferPool *pool = NULL;
-  guint size, min, max, prefix, alignment;
+  guint size, min, max, prefix, padding, alignment;
   GstStructure *config;
 
   GST_DEBUG_OBJECT (dec, "setting up bufferpool");
@@ -1175,13 +1175,14 @@ gst_jpeg_dec_buffer_pool (GstJpegDec * dec, GstCaps * caps)
   if (gst_pad_peer_query (dec->srcpad, query)) {
     /* we got configuration from our peer, parse them */
     gst_query_parse_allocation_params (query, &size, &min, &max, &prefix,
-        &alignment, &pool);
+        &padding, &alignment, &pool);
     size = MAX (size, dec->info.size);
   } else {
     GST_DEBUG_OBJECT (dec, "peer query failed, using defaults");
     size = dec->info.size;
     min = max = 0;
     prefix = 0;
+    padding = 0;
     alignment = 15;
   }
   gst_query_unref (query);
@@ -1193,7 +1194,7 @@ gst_jpeg_dec_buffer_pool (GstJpegDec * dec, GstCaps * caps)
 
   config = gst_buffer_pool_get_config (pool);
   gst_buffer_pool_config_set (config, caps, size, min, max, prefix,
-      alignment | 15);
+      padding, alignment | 15);
   /* and store */
   gst_buffer_pool_set_config (pool, config);
 

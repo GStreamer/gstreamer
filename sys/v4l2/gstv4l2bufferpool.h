@@ -56,6 +56,7 @@ struct _GstV4l2BufferPool
   guint min_buffers;
   guint max_buffers;
   guint prefix;
+  guint padding;
   guint align;
   gboolean add_videometa;
 

@@ -640,7 +640,8 @@ gst_v4l2sink_propose_allocation (GstBaseSink * bsink, GstQuery * query)
 
     /* we had a pool, check caps */
     config = gst_buffer_pool_get_config (pool);
-    gst_buffer_pool_config_get (config, &pcaps, &size, NULL, NULL, NULL, NULL);
+    gst_buffer_pool_config_get (config, &pcaps, &size, NULL, NULL, NULL, NULL,
+        NULL);
 
     GST_DEBUG_OBJECT (v4l2sink,
         "we had a pool with caps %" GST_PTR_FORMAT, pcaps);
@@ -650,7 +651,7 @@ gst_v4l2sink_propose_allocation (GstBaseSink * bsink, GstQuery * query)
     }
   }
   /* we need at least 2 buffers to operate */
-  gst_query_set_allocation_params (query, size, 2, 0, 0, 0, pool);
+  gst_query_set_allocation_params (query, size, 2, 0, 0, 0, 0, pool);
 
   /* we also support various metadata */
   gst_query_add_allocation_meta (query, GST_VIDEO_META_API_TYPE);

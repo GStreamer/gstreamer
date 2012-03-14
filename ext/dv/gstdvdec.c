@@ -253,7 +253,7 @@ gst_dvdec_negotiate_pool (GstDVDec * dec, GstCaps * caps, GstVideoInfo * info)
 {
   GstQuery *query;
   GstBufferPool *pool = NULL;
-  guint size, min, max, prefix, alignment;
+  guint size, min, max, prefix, padding, alignment;
   GstStructure *config;
 
   /* find a pool for the negotiated caps now */
@@ -263,13 +263,14 @@ gst_dvdec_negotiate_pool (GstDVDec * dec, GstCaps * caps, GstVideoInfo * info)
     GST_DEBUG_OBJECT (dec, "got downstream ALLOCATION hints");
     /* we got configuration from our peer, parse them */
     gst_query_parse_allocation_params (query, &size, &min, &max, &prefix,
-        &alignment, &pool);
+        &padding, &alignment, &pool);
     size = MAX (size, info->size);
   } else {
     GST_DEBUG_OBJECT (dec, "didn't get downstream ALLOCATION hints");
     size = info->size;
     min = max = 0;
     prefix = 0;
+    padding = 0;
     alignment = 0;
   }
 
@@ -283,7 +284,8 @@ gst_dvdec_negotiate_pool (GstDVDec * dec, GstCaps * caps, GstVideoInfo * info)
   dec->pool = pool;
 
   config = gst_buffer_pool_get_config (pool);
-  gst_buffer_pool_config_set (config, caps, size, min, max, prefix, alignment);
+  gst_buffer_pool_config_set (config, caps, size, min, max, prefix, padding,
+      alignment);
   /* just set the option, if the pool can support it we will transparently use
    * it through the video info API. We could also see if the pool support this
    * option and only activate it then. */

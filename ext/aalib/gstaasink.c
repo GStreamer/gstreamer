@@ -346,7 +346,7 @@ gst_aasink_propose_allocation (GstBaseSink * bsink, GstQuery * query)
   size = GST_VIDEO_INFO_SIZE (&info);
 
   /* we need at least 2 buffer because we hold on to the last one */
-  gst_query_set_allocation_params (query, size, 2, 0, 0, 0, NULL);
+  gst_query_set_allocation_params (query, size, 2, 0, 0, 0, 0, NULL);
 
   /* we support various metadata */
   gst_query_add_allocation_meta (query, GST_VIDEO_META_API_TYPE);

@@ -511,17 +511,17 @@ gst_v4l2src_decide_allocation (GstBaseSrc * bsrc, GstQuery * query)
   GstV4l2Src *src;
   GstV4l2Object *obj;
   GstBufferPool *pool;
-  guint size, min, max, prefix, alignment;
+  guint size, min, max, prefix, padding, alignment;
 
   src = GST_V4L2SRC (bsrc);
   obj = src->v4l2object;
 
   gst_query_parse_allocation_params (query, &size, &min, &max, &prefix,
-      &alignment, &pool);
+      &padding, &alignment, &pool);
 
   GST_DEBUG_OBJECT (src, "allocation: size:%u min:%u max:%u prefix:%u "
-      "align:%u pool:%" GST_PTR_FORMAT, size, min, max, prefix, alignment,
-      pool);
+      "padding: %u align:%u pool:%" GST_PTR_FORMAT, size, min, max,
+      prefix, padding, alignment, pool);
 
   if (min != 0) {
     /* if there is a min-buffers suggestion, use it. We add 1 because we need 1
@@ -569,8 +569,9 @@ gst_v4l2src_decide_allocation (GstBaseSrc * bsrc, GstQuery * query)
     const GstCaps *caps;
 
     config = gst_buffer_pool_get_config (pool);
-    gst_buffer_pool_config_get (config, &caps, NULL, NULL, NULL, NULL, NULL);
-    gst_buffer_pool_config_set (config, caps, size, min, max, prefix,
+    gst_buffer_pool_config_get (config, &caps, NULL, NULL, NULL, NULL, NULL,
+        NULL);
+    gst_buffer_pool_config_set (config, caps, size, min, max, prefix, padding,
         alignment);
 
     /* if downstream supports video metadata, add this to the pool config */
@@ -581,7 +582,7 @@ gst_v4l2src_decide_allocation (GstBaseSrc * bsrc, GstQuery * query)
     gst_buffer_pool_set_config (pool, config);
   }
 
-  gst_query_set_allocation_params (query, size, min, max, prefix,
+  gst_query_set_allocation_params (query, size, min, max, prefix, padding,
       alignment, pool);
 
   return TRUE;
