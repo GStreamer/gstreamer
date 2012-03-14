@@ -773,7 +773,7 @@ theora_negotiate (GstTheoraDec * dec)
   GstVideoFormat format;
   GstQuery *query;
   GstBufferPool *pool;
-  guint size, min, max, prefix, alignment;
+  guint size, min, max, prefix, padding, alignment;
   GstStructure *config;
   GstCaps *caps;
   GstVideoInfo info, cinfo;
@@ -879,7 +879,7 @@ theora_negotiate (GstTheoraDec * dec)
     GST_DEBUG_OBJECT (dec, "got downstream ALLOCATION hints");
     /* we got configuration from our peer, parse them */
     gst_query_parse_allocation_params (query, &size, &min, &max, &prefix,
-        &alignment, &pool);
+        &padding, &alignment, &pool);
 
     /* check if downstream supports cropping */
     dec->has_cropping =
@@ -889,6 +889,7 @@ theora_negotiate (GstTheoraDec * dec)
     size = 0;
     min = max = 0;
     prefix = 0;
+    padding = 0;
     alignment = 0;
     pool = NULL;
     dec->has_cropping = FALSE;
@@ -917,7 +918,8 @@ theora_negotiate (GstTheoraDec * dec)
   size = MAX (size, GST_VIDEO_INFO_SIZE (&dec->vinfo));
 
   config = gst_buffer_pool_get_config (pool);
-  gst_buffer_pool_config_set (config, caps, size, min, max, prefix, alignment);
+  gst_buffer_pool_config_set (config, caps, size, min, max, prefix, padding,
+      alignment);
   gst_caps_unref (caps);
 
   /* just set the option, if the pool can support it we will transparently use

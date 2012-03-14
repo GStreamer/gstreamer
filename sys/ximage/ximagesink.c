@@ -1148,12 +1148,16 @@ gst_ximagesink_setcaps (GstBaseSink * bsink, GstCaps * caps)
   newpool = gst_ximage_buffer_pool_new (ximagesink);
 
   structure = gst_buffer_pool_get_config (newpool);
-  gst_buffer_pool_config_set (structure, caps, size, 2, 0, 0, 15);
+  gst_buffer_pool_config_set (structure, caps, size, 2, 0, 0, 0, 15);
   if (!gst_buffer_pool_set_config (newpool, structure))
     goto config_failed;
 
   oldpool = ximagesink->pool;
+  /* we don't activate the pool yet, this will be done by downstream after it
+   * has configured the pool. If downstream does not want our pool we will
+   * activate it when we render into it */
   ximagesink->pool = newpool;
+  g_mutex_unlock (ximagesink->flow_lock);
 
   /* unref the old sink */
   if (oldpool) {
@@ -1161,7 +1165,6 @@ gst_ximagesink_setcaps (GstBaseSink * bsink, GstCaps * caps)
      * deactivated when the last ref is gone */
     gst_object_unref (oldpool);
   }
-  g_mutex_unlock (ximagesink->flow_lock);
 
   return TRUE;
 
@@ -1439,7 +1442,8 @@ gst_ximagesink_propose_allocation (GstBaseSink * bsink, GstQuery * query)
 
     /* we had a pool, check caps */
     config = gst_buffer_pool_get_config (pool);
-    gst_buffer_pool_config_get (config, &pcaps, &size, NULL, NULL, NULL, NULL);
+    gst_buffer_pool_config_get (config, &pcaps, &size, NULL, NULL, NULL, NULL,
+        NULL);
 
     GST_DEBUG_OBJECT (ximagesink,
         "we had a pool with caps %" GST_PTR_FORMAT, pcaps);
@@ -1463,12 +1467,12 @@ gst_ximagesink_propose_allocation (GstBaseSink * bsink, GstQuery * query)
     size = info.size;
 
     config = gst_buffer_pool_get_config (pool);
-    gst_buffer_pool_config_set (config, caps, size, 0, 0, 0, 0);
+    gst_buffer_pool_config_set (config, caps, size, 0, 0, 0, 0, 0);
     if (!gst_buffer_pool_set_config (pool, config))
       goto config_failed;
   }
   /* we need at least 2 buffer because we hold on to the last one */
-  gst_query_set_allocation_params (query, size, 2, 0, 0, 0, pool);
+  gst_query_set_allocation_params (query, size, 2, 0, 0, 0, 0, pool);
 
   /* we also support various metadata */
   gst_query_add_allocation_meta (query, GST_VIDEO_META_API_TYPE);

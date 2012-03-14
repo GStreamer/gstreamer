@@ -422,7 +422,7 @@ gst_vis_src_negotiate (GstVisual * visual)
   GstCaps *caps;
   GstQuery *query;
   GstBufferPool *pool = NULL;
-  guint size, min, max, prefix, alignment;
+  guint size, min, max, prefix, padding, alignment;
 
   caps = gst_pad_query_caps (visual->srcpad, NULL);
 
@@ -464,11 +464,12 @@ gst_vis_src_negotiate (GstVisual * visual)
   if (gst_pad_peer_query (visual->srcpad, query)) {
     /* we got configuration from our peer, parse them */
     gst_query_parse_allocation_params (query, &size, &min, &max, &prefix,
-        &alignment, &pool);
+        &padding, &alignment, &pool);
   } else {
     size = visual->outsize;
     min = max = 0;
     prefix = 0;
+    padding = 0;
     alignment = 0;
   }
 
@@ -480,7 +481,7 @@ gst_vis_src_negotiate (GstVisual * visual)
 
     config = gst_buffer_pool_get_config (pool);
     gst_buffer_pool_config_set (config, target, size, min, max, prefix,
-        alignment);
+        padding, alignment);
     gst_buffer_pool_set_config (pool, config);
   }
 

@@ -611,12 +611,12 @@ gst_video_test_src_decide_allocation (GstBaseSrc * bsrc, GstQuery * query)
 {
   GstVideoTestSrc *videotestsrc;
   GstBufferPool *pool;
-  guint size, min, max, prefix, alignment;
+  guint size, min, max, prefix, padding, alignment;
 
   videotestsrc = GST_VIDEO_TEST_SRC (bsrc);
 
   gst_query_parse_allocation_params (query, &size, &min, &max, &prefix,
-      &alignment, &pool);
+      &padding, &alignment, &pool);
   /* adjust size */
   size = MAX (size, videotestsrc->info.size);
 
@@ -629,7 +629,7 @@ gst_video_test_src_decide_allocation (GstBaseSrc * bsrc, GstQuery * query)
     gst_buffer_pool_set_config (pool, config);
   }
   gst_query_set_allocation_params (query, size, min, max, prefix,
-      alignment, pool);
+      padding, alignment, pool);
 
   if (pool)
     gst_object_unref (pool);
