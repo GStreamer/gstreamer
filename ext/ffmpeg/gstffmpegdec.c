@@ -39,6 +39,8 @@
 #include "gstffmpegcodecmap.h"
 #include "gstffmpegutils.h"
 
+GST_DEBUG_CATEGORY_EXTERN (GST_CAT_PERFORMANCE);
+
 typedef struct _GstFFMpegDec GstFFMpegDec;
 
 #define MAX_TS_MASK 0xff
@@ -1741,8 +1743,8 @@ get_output_buffer (GstFFMpegDec * ffmpegdec, GstBuffer ** outbuf)
     src = (AVPicture *) ffmpegdec->picture;
     dest = (AVPicture *) & pic;
 
-    GST_LOG_OBJECT (ffmpegdec, "copy picture to output buffer %dx%d", width,
-        height);
+    GST_CAT_LOG_OBJECT (GST_CAT_PERFORMANCE, ffmpegdec,
+        "copy picture to output buffer %dx%d", width, height);
     av_picture_copy (dest, src, ffmpegdec->context->pix_fmt, width, height);
 
     gst_video_frame_unmap (&frame);
@@ -2853,6 +2855,8 @@ gst_ffmpegdec_chain (GstPad * pad, GstObject * parent, GstBuffer * inbuf)
       GST_LOG_OBJECT (ffmpegdec, "resized padding buffer to %d",
           ffmpegdec->padded_size);
     }
+    GST_CAT_LOG_OBJECT (GST_CAT_PERFORMANCE, ffmpegdec,
+        "Copy input to add padding");
     memcpy (ffmpegdec->padded, bdata, bsize);
     memset (ffmpegdec->padded + bsize, 0, FF_INPUT_BUFFER_PADDING_SIZE);
 
