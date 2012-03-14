@@ -503,6 +503,8 @@ gst_buffer_pool_set_config (GstBufferPool * pool, GstStructure * config)
 
     /* now we are configured */
     pool->priv->configured = TRUE;
+  } else {
+    gst_structure_free (config);
   }
   GST_BUFFER_POOL_UNLOCK (pool);
 
@@ -511,12 +513,14 @@ gst_buffer_pool_set_config (GstBufferPool * pool, GstStructure * config)
   /* ERRORS */
 was_active:
   {
+    gst_structure_free (config);
     GST_WARNING_OBJECT (pool, "can't change config, we are active");
     GST_BUFFER_POOL_UNLOCK (pool);
     return FALSE;
   }
 have_outstanding:
   {
+    gst_structure_free (config);
     GST_WARNING_OBJECT (pool, "can't change config, have outstanding buffers");
     GST_BUFFER_POOL_UNLOCK (pool);
     return FALSE;
