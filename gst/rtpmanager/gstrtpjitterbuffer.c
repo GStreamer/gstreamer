@@ -2110,10 +2110,14 @@ gst_rtp_jitter_buffer_sink_query (GstPad * pad, GstObject * parent,
       break;
     }
     default:
-      res = gst_pad_query_default (pad, parent, query);
+      if (GST_QUERY_IS_SERIALIZED (query)) {
+        GST_WARNING_OBJECT (pad, "unhandled serialized query");
+        res = FALSE;
+      } else {
+        res = gst_pad_query_default (pad, parent, query);
+      }
       break;
   }
-
   return res;
 }
 
