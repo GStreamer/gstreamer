@@ -825,6 +825,7 @@ EXPORTS
 	gst_query_new_caps
 	gst_query_new_convert
 	gst_query_new_custom
+	gst_query_new_drain
 	gst_query_new_duration
 	gst_query_new_formats
 	gst_query_new_latency

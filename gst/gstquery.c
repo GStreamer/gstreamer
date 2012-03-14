@@ -121,6 +121,7 @@ static GstQueryQuarks query_quarks[] = {
   {GST_QUERY_SCHEDULING, "scheduling", 0},
   {GST_QUERY_ACCEPT_CAPS, "accept-caps", 0},
   {GST_QUERY_CAPS, "caps", 0},
+  {GST_QUERY_DRAIN, "drain", 0},
 
   {0, NULL, 0}
 };
@@ -2146,4 +2147,25 @@ gst_query_intersect_caps_result (GstQuery * query, GstCaps * filter,
   res = gst_caps_intersect_full (filter, caps, GST_CAPS_INTERSECT_FIRST);
   gst_query_set_caps_result (query, res);
   gst_caps_unref (res);
+}
+
+/**
+ * gst_query_new_drain:
+ *
+ * Constructs a new query object for querying the drain state.
+ *
+ * Free-function: gst_query_unref
+ *
+ * Returns: (transfer full): a new #GstQuery
+ */
+GstQuery *
+gst_query_new_drain (void)
+{
+  GstQuery *query;
+  GstStructure *structure;
+
+  structure = gst_structure_new_id_empty (GST_QUARK (QUERY_DRAIN));
+  query = gst_query_new_custom (GST_QUERY_DRAIN, structure);
+
+  return query;
 }

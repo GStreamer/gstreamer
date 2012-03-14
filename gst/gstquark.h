@@ -162,7 +162,8 @@ typedef enum _GstQuarkId
   GST_QUARK_SETUP_DATA = 133,
   GST_QUARK_STREAM_HEADERS = 134,
   GST_QUARK_EVENT_GAP = 135,
-  GST_QUARK_MAX = 136
+  GST_QUARK_QUERY_DRAIN = 136,
+  GST_QUARK_MAX = 137
 } GstQuarkId;
 
 extern GQuark _priv_gst_quark_table[GST_QUARK_MAX];

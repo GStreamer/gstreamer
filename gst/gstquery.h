@@ -101,6 +101,7 @@ typedef enum {
  * @GST_QUERY_SCHEDULING: the scheduling properties
  * @GST_QUERY_ACCEPT_CAPS: the accept caps query
  * @GST_QUERY_CAPS: the caps query
+ * @GST_QUERY_DRAIN: wait till all serialized data is consumed downstream
  *
  * Standard predefined Query types
  */
@@ -123,7 +124,8 @@ typedef enum {
   GST_QUERY_ALLOCATION   = GST_QUERY_MAKE_TYPE (140, FLAG(DOWNSTREAM) | FLAG(SERIALIZED)),
   GST_QUERY_SCHEDULING   = GST_QUERY_MAKE_TYPE (150, FLAG(UPSTREAM)),
   GST_QUERY_ACCEPT_CAPS  = GST_QUERY_MAKE_TYPE (160, FLAG(BOTH)),
-  GST_QUERY_CAPS         = GST_QUERY_MAKE_TYPE (170, FLAG(BOTH))
+  GST_QUERY_CAPS         = GST_QUERY_MAKE_TYPE (170, FLAG(BOTH)),
+  GST_QUERY_DRAIN        = GST_QUERY_MAKE_TYPE (180, FLAG(DOWNSTREAM) | FLAG(SERIALIZED))
 } GstQueryType;
 #undef FLAG
 
@@ -456,6 +458,8 @@ void            gst_query_parse_caps_result        (GstQuery *query, GstCaps **c
 
 void            gst_query_intersect_caps_result    (GstQuery *query, GstCaps *filter,
                                                     GstCapsIntersectMode mode);
+/* drain query */
+GstQuery *      gst_query_new_drain                (void) G_GNUC_MALLOC;
 
 G_END_DECLS
 
