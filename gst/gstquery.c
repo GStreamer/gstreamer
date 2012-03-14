@@ -220,8 +220,13 @@ static GstQuery *
 _gst_query_copy (GstQuery * query)
 {
   GstQuery *copy;
+  GstStructure *s;
 
-  copy = gst_query_new_custom (query->type, GST_QUERY_STRUCTURE (query));
+  s = GST_QUERY_STRUCTURE (query);
+  if (s) {
+    s = gst_structure_copy (s);
+  }
+  copy = gst_query_new_custom (query->type, s);
 
   return copy;
 }
