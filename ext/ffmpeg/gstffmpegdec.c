@@ -822,18 +822,6 @@ gst_ffmpegdec_setcaps (GstFFMpegDec * ffmpegdec, GstCaps * caps)
     ffmpegdec->in_fps_d = 0;
   }
 
-  /* figure out if we can use direct rendering */
-  ffmpegdec->current_dr = FALSE;
-  if (ffmpegdec->direct_rendering) {
-    GST_DEBUG_OBJECT (ffmpegdec, "trying to enable direct rendering");
-    if (oclass->in_plugin->capabilities & CODEC_CAP_DR1) {
-      GST_DEBUG_OBJECT (ffmpegdec, "enabled direct rendering");
-      ffmpegdec->current_dr = TRUE;
-    } else {
-      GST_DEBUG_OBJECT (ffmpegdec, "direct rendering not supported");
-    }
-  }
-
   /* for AAC we only use av_parse if not on stream-format==raw or ==loas */
   if (oclass->in_plugin->id == CODEC_ID_AAC
       || oclass->in_plugin->id == CODEC_ID_AAC_LATM) {
@@ -1200,6 +1188,21 @@ gst_ffmpegdec_bufferpool (GstFFMpegDec * ffmpegdec, GstCaps * caps)
     gst_buffer_pool_config_add_option (config,
         GST_BUFFER_POOL_OPTION_VIDEO_ALIGNMENT);
     gst_buffer_pool_config_set_video_alignment (config, &align);
+
+    if (ffmpegdec->direct_rendering) {
+      GstFFMpegDecClass *oclass;
+
+      GST_DEBUG_OBJECT (ffmpegdec, "trying to enable direct rendering");
+
+      oclass = (GstFFMpegDecClass *) (G_OBJECT_GET_CLASS (ffmpegdec));
+
+      if (oclass->in_plugin->capabilities & CODEC_CAP_DR1) {
+        GST_DEBUG_OBJECT (ffmpegdec, "enabled direct rendering");
+        ffmpegdec->current_dr = TRUE;
+      } else {
+        GST_DEBUG_OBJECT (ffmpegdec, "direct rendering not supported");
+      }
+    }
   } else {
     GST_DEBUG_OBJECT (ffmpegdec,
         "alignment or videometa not supported, disable direct rendering");
@@ -1208,6 +1211,7 @@ gst_ffmpegdec_bufferpool (GstFFMpegDec * ffmpegdec, GstCaps * caps)
      * copy (with cropping) into a buffer from our pool */
     ffmpegdec->current_dr = FALSE;
   }
+
   /* and store */
   gst_buffer_pool_set_config (pool, config);
 
