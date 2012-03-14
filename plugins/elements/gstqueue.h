@@ -131,6 +131,8 @@ struct _GstQueue {
 
   /* whether the first new segment has been applied to src */
   gboolean newseg_applied_to_src;
+
+  gboolean last_query;
 };
 
 struct _GstQueueClass {
