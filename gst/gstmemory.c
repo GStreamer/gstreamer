@@ -146,7 +146,9 @@ _default_mem_init (GstMemoryDefault * mem, GstMemoryFlags flags,
   mem->user_data = user_data;
   mem->notify = notify;
 
-  GST_CAT_DEBUG (GST_CAT_MEMORY, "new memory %p", mem);
+  GST_CAT_DEBUG (GST_CAT_MEMORY, "new memory %p, maxsize:%" G_GSIZE_FORMAT
+      " offset:%" G_GSIZE_FORMAT " size:%" G_GSIZE_FORMAT, mem, maxsize,
+      offset, size);
 }
 
 /* create a new memory block that manages the given memory */
@@ -189,8 +191,11 @@ _default_mem_new_block (GstMemoryFlags flags, gsize maxsize, gsize align,
 
   data = (guint8 *) mem + sizeof (GstMemoryDefault);
 
-  if ((aoffset = ((guintptr) data & align)))
-    data += (align + 1) - aoffset;
+  if ((aoffset = ((guintptr) data & align))) {
+    aoffset = (align + 1) - aoffset;
+    data += aoffset;
+    maxsize -= aoffset;
+  }
 
   if (offset && (flags & GST_MEMORY_FLAG_ZERO_PREFIXED))
     memset (data, 0, offset);
