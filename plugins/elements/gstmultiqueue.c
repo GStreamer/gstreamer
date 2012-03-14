@@ -1518,11 +1518,14 @@ gst_multi_queue_sink_query (GstPad * pad, GstObject * parent, GstQuery * query)
   gboolean res;
 
   switch (GST_QUERY_TYPE (query)) {
-    case GST_QUERY_ACCEPT_CAPS:
-    case GST_QUERY_CAPS:
     default:
-      /* default handling */
-      res = gst_pad_query_default (pad, parent, query);
+      if (GST_QUERY_IS_SERIALIZED (query)) {
+        GST_WARNING_OBJECT (pad, "unhandled serialized query");
+        res = FALSE;
+      } else {
+        /* default handling */
+        res = gst_pad_query_default (pad, parent, query);
+      }
       break;
   }
   return res;

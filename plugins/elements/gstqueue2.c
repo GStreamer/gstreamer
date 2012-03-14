@@ -2181,7 +2181,12 @@ gst_queue2_handle_sink_query (GstPad * pad, GstObject * parent,
 
   switch (GST_QUERY_TYPE (query)) {
     default:
-      res = gst_pad_query_default (pad, parent, query);
+      if (GST_QUERY_IS_SERIALIZED (query)) {
+        GST_WARNING_OBJECT (pad, "unhandled serialized query");
+        res = FALSE;
+      } else {
+        res = gst_pad_query_default (pad, parent, query);
+      }
       break;
   }
   return res;
