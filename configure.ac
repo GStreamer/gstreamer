@@ -312,7 +312,7 @@ dnl *** plug-ins to include ***
 dnl Non ported plugins (non-dependant, then dependant)
 dnl Make sure you have a space before and after all plugins
 GST_PLUGINS_NONPORTED="deinterlace interleave flx \
- imagefreeze smpte \
+ smpte \
  videobox \
  cairo cairo_gobject dv1394 \
  oss oss4 \

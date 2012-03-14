@@ -47,13 +47,12 @@ struct _GstImageFreeze
   GstPad *sinkpad;
   GstPad *srcpad;
 
-  GMutex *lock;
+  GMutex lock;
   GstBuffer *buffer;
   gint fps_n, fps_d;
 
   GstSegment segment;
   gboolean need_segment;
-  GstEvent *close_segment;
 
   guint64 offset;
 
