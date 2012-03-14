@@ -37,7 +37,6 @@ struct _GstUriDownloaderPrivate
   GstElement *urisrc;
   GstBus *bus;
   GstPad *pad;
-  GstTask *task;
   GTimeVal *timeout;
   GstFragment *download;
   GMutex *lock;
@@ -126,11 +125,6 @@ gst_uri_downloader_dispose (GObject * object)
     downloader->priv->download = NULL;
   }
 
-  if (downloader->priv->task) {
-    g_object_unref (downloader->priv->task);
-    downloader->priv->download = NULL;
-  }
-
   G_OBJECT_CLASS (gst_uri_downloader_parent_class)->dispose (object);
 }
 
@@ -168,6 +162,7 @@ gst_uri_downloader_sink_event (GstPad * pad, GstEvent * event)
         GST_OBJECT_UNLOCK (downloader);
         GST_DEBUG_OBJECT (downloader, "Signaling chain funtion");
         g_cond_signal (downloader->priv->cond);
+
       } else {
         GST_OBJECT_UNLOCK (downloader);
       }
