@@ -114,6 +114,7 @@ static GstEventQuarks event_quarks[] = {
   {GST_EVENT_EOS, "eos", 0},
   {GST_EVENT_NEWSEGMENT, "newsegment", 0},
   {GST_EVENT_TAG, "tag", 0},
+  {GST_EVENT_TOC, "toc", 0},
   {GST_EVENT_BUFFERSIZE, "buffersize", 0},
   {GST_EVENT_SINK_MESSAGE, "sink-message", 0},
   {GST_EVENT_QOS, "qos", 0},
@@ -121,6 +122,7 @@ static GstEventQuarks event_quarks[] = {
   {GST_EVENT_NAVIGATION, "navigation", 0},
   {GST_EVENT_LATENCY, "latency", 0},
   {GST_EVENT_STEP, "step", 0},
+  {GST_EVENT_TOC_SELECT, "toc-select", 0},
   {GST_EVENT_CUSTOM_UPSTREAM, "custom-upstream", 0},
   {GST_EVENT_CUSTOM_DOWNSTREAM, "custom-downstream", 0},
   {GST_EVENT_CUSTOM_DOWNSTREAM_OOB, "custom-downstream-oob", 0},
@@ -1302,4 +1304,113 @@ gst_event_parse_sink_message (GstEvent * event, GstMessage ** msg)
     *msg =
         GST_MESSAGE (gst_value_dup_mini_object (gst_structure_id_get_value
             (event->structure, GST_QUARK (MESSAGE))));
+}
+
+/**
+ * gst_event_new_toc:
+ * @toc: #GstToc structure.
+ * @updated: whether @toc was updated or not.
+ *
+ * Generate a TOC event from the given @toc. The purpose of the TOC event is to
+ * inform elements that some kind of the TOC was found.
+ *
+ * Returns: a new #GstEvent.
+ *
+ * Since: 0.10.37
+ */
+GstEvent *
+gst_event_new_toc (GstToc * toc, gboolean updated)
+{
+  GstStructure *toc_struct;
+
+  g_return_val_if_fail (toc != NULL, NULL);
+
+  GST_CAT_INFO (GST_CAT_EVENT, "creating toc event");
+
+  toc_struct = _gst_toc_to_structure (toc);
+
+  if (G_LIKELY (toc_struct != NULL)) {
+    _gst_toc_structure_set_updated (toc_struct, updated);
+    return gst_event_new_custom (GST_EVENT_TOC, toc_struct);
+  } else
+    return NULL;
+}
+
+/**
+ * gst_event_parse_toc:
+ * @event: a TOC event.
+ * @toc: (out): pointer to #GstToc structure.
+ * @updated: (out): pointer to store TOC updated flag.
+ *
+ * Parse a TOC @event and store the results in the given @toc and @updated locations.
+ *
+ * Since: 0.10.37
+ */
+void
+gst_event_parse_toc (GstEvent * event, GstToc ** toc, gboolean * updated)
+{
+  const GstStructure *structure;
+
+  g_return_if_fail (event != NULL);
+  g_return_if_fail (GST_EVENT_TYPE (event) == GST_EVENT_TOC);
+  g_return_if_fail (toc != NULL);
+
+  structure = gst_event_get_structure (event);
+  *toc = _gst_toc_from_structure (structure);
+
+  if (updated != NULL)
+    *updated = _gst_toc_structure_get_updated (structure);
+}
+
+/**
+ * gst_event_new_toc_select:
+ * @uid: UID in the TOC to start playback from.
+ *
+ * Generate a TOC select event with the given @uid. The purpose of the
+ * TOC select event is to start playback based on the TOC's entry with the
+ * given @uid.
+ *
+ * Returns: a new #GstEvent.
+ *
+ * Since: 0.10.37
+ */
+GstEvent *
+gst_event_new_toc_select (const gchar * uid)
+{
+  GstStructure *structure;
+
+  g_return_val_if_fail (uid != NULL, NULL);
+
+  GST_CAT_INFO (GST_CAT_EVENT, "creating toc select event for UID: %s", uid);
+
+  structure = gst_structure_id_new (GST_QUARK (EVENT_TOC_SELECT),
+      GST_QUARK (UID), G_TYPE_STRING, uid, NULL);
+
+  return gst_event_new_custom (GST_EVENT_TOC_SELECT, structure);
+}
+
+/**
+ * gst_event_parse_toc_select:
+ * @event: a TOC select event.
+ * @uid: (out): storage for the selection UID.
+ *
+ * Parse a TOC select @event and store the results in the given @uid location.
+ *
+ * Since: 0.10.37
+ */
+void
+gst_event_parse_toc_select (GstEvent * event, gchar ** uid)
+{
+  const GstStructure *structure;
+  const GValue *val;
+
+  g_return_if_fail (event != NULL);
+  g_return_if_fail (GST_EVENT_TYPE (event) == GST_EVENT_TOC_SELECT);
+
+  structure = gst_event_get_structure (event);
+  val = gst_structure_id_get_value (structure, GST_QUARK (UID));
+
+  if (uid != NULL)
+    *uid = g_strdup (g_value_get_string (val));
+
 }
