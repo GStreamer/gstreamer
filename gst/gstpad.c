@@ -2757,6 +2757,29 @@ filter_done:
   return TRUE;
 }
 
+typedef struct
+{
+  GstQuery *query;
+  gboolean result;
+  gboolean dispatched;
+} QueryData;
+
+static gboolean
+query_forward_func (GstPad * pad, QueryData * data)
+{
+  /* for each pad we send to, we should ref the query; it's up
+   * to downstream to unref again when handled. */
+  GST_LOG_OBJECT (pad, "query peer %p (%s) of %s:%s",
+      data->query, GST_EVENT_TYPE_NAME (data->query), GST_DEBUG_PAD_NAME (pad));
+
+  data->result |= gst_pad_peer_query (pad, data->query);
+
+  data->dispatched = TRUE;
+
+  /* stop on first successful reply */
+  return data->result;
+}
+
 /**
  * gst_pad_query_default:
  * @pad: a #GstPad to call the default query handler on.
@@ -2804,8 +2827,23 @@ gst_pad_query_default (GstPad * pad, GstObject * parent, GstQuery * query)
   }
 
   if (forward) {
-    ret = gst_pad_forward
-        (pad, (GstPadForwardFunction) gst_pad_peer_query, query);
+    QueryData data;
+
+    data.query = query;
+    data.dispatched = FALSE;
+    data.result = FALSE;
+
+    gst_pad_forward (pad, (GstPadForwardFunction) query_forward_func, &data);
+
+    if (data.dispatched) {
+      ret = data.result;
+    } else {
+      /* nothing dispatched, could be drained */
+      if (GST_QUERY_TYPE (query) == GST_QUERY_DRAIN)
+        ret = TRUE;
+      else
+        ret = FALSE;
+    }
   }
   return ret;
 }
