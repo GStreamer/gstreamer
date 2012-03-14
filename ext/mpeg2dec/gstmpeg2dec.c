@@ -292,7 +292,7 @@ gst_mpeg2dec_negotiate_pool (GstMpeg2dec * dec, GstCaps * caps,
 {
   GstQuery *query;
   GstBufferPool *pool = NULL;
-  guint size, min, max, prefix, alignment;
+  guint size, min, max, prefix, padding, alignment;
   GstStructure *config;
 
   /* find a pool for the negotiated caps now */
@@ -302,7 +302,7 @@ gst_mpeg2dec_negotiate_pool (GstMpeg2dec * dec, GstCaps * caps,
     GST_DEBUG_OBJECT (dec, "got downstream ALLOCATION hints");
     /* we got configuration from our peer, parse them */
     gst_query_parse_allocation_params (query, &size, &min, &max, &prefix,
-        &alignment, &pool);
+        &padding, &alignment, &pool);
     size = MAX (size, info->size);
     alignment |= 15;
   } else {
@@ -310,12 +310,13 @@ gst_mpeg2dec_negotiate_pool (GstMpeg2dec * dec, GstCaps * caps,
     size = info->size;
     min = max = 0;
     prefix = 0;
+    padding = 0;
     alignment = 15;
   }
 
   GST_DEBUG_OBJECT (dec,
-      "size:%d, min:%d, max:%d, prefix:%d, alignment:%d, pool:%p", size, min,
-      max, prefix, alignment, pool);
+      "size:%d, min:%d, max:%d, prefix:%d, padding:%d, alignment:%d, pool:%p",
+      size, min, max, prefix, padding, alignment, pool);
 
   if (pool == NULL) {
     /* we did not get a pool, make one ourselves then */
@@ -327,7 +328,8 @@ gst_mpeg2dec_negotiate_pool (GstMpeg2dec * dec, GstCaps * caps,
   dec->pool = pool;
 
   config = gst_buffer_pool_get_config (pool);
-  gst_buffer_pool_config_set (config, caps, size, min, max, prefix, alignment);
+  gst_buffer_pool_config_set (config, caps, size, min, max, prefix, padding,
+      alignment);
   /* just set the option, if the pool can support it we will transparently use
    * it through the video info API. We could also see if the pool support this
    * option and only activate it then. */
