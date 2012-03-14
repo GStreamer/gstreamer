@@ -44,7 +44,7 @@ G_BEGIN_DECLS
 #define GST_IS_ENCODING_PROFILE(obj)                    \
   (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_ENCODING_PROFILE))
 typedef struct _GstEncodingProfile GstEncodingProfile;
-typedef GObjectClass GstEncodingProfileClass;
+typedef struct _GstEncodingProfileClass GstEncodingProfileClass;
 GType gst_encoding_profile_get_type (void);
 
 
@@ -63,7 +63,7 @@ GType gst_encoding_profile_get_type (void);
 #define GST_IS_ENCODING_CONTAINER_PROFILE(obj)                  \
   (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_ENCODING_CONTAINER_PROFILE))
 typedef struct _GstEncodingContainerProfile GstEncodingContainerProfile;
-typedef GstEncodingProfileClass GstEncodingContainerProfileClass;
+typedef struct _GstEncodingContainerProfileClass GstEncodingContainerProfileClass;
 GType gst_encoding_container_profile_get_type (void);
 
 
@@ -82,7 +82,7 @@ GType gst_encoding_container_profile_get_type (void);
 #define GST_IS_ENCODING_VIDEO_PROFILE(obj)                      \
   (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_ENCODING_VIDEO_PROFILE))
 typedef struct _GstEncodingVideoProfile GstEncodingVideoProfile;
-typedef GstEncodingProfileClass GstEncodingVideoProfileClass;
+typedef struct _GstEncodingVideoProfileClass GstEncodingVideoProfileClass;
 GType gst_encoding_video_profile_get_type (void);
 
 
@@ -101,7 +101,7 @@ GType gst_encoding_video_profile_get_type (void);
 #define GST_IS_ENCODING_AUDIO_PROFILE(obj)                      \
   (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_ENCODING_AUDIO_PROFILE))
 typedef struct _GstEncodingAudioProfile GstEncodingAudioProfile;
-typedef GstEncodingProfileClass GstEncodingAudioProfileClass;
+typedef struct _GstEncodingAudioProfileClass GstEncodingAudioProfileClass;
 GType gst_encoding_audio_profile_get_type (void);
 
 

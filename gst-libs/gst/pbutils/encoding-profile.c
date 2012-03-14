@@ -144,6 +144,11 @@ struct _GstEncodingProfile
   GstCaps *restriction;
 };
 
+struct _GstEncodingProfileClass
+{
+  GObjectClass parent_class;
+};
+
 static void string_to_profile_transform (const GValue * src_value,
     GValue * dest_value);
 static gboolean gst_encoding_profile_deserialize_valfunc (GValue * value,
@@ -209,9 +214,11 @@ gst_encoding_profile_finalize (GObject * object)
 }
 
 static void
-gst_encoding_profile_class_init (GObjectClass * klass)
+gst_encoding_profile_class_init (GstEncodingProfileClass * klass)
 {
-  klass->finalize = gst_encoding_profile_finalize;
+  GObjectClass *gobject_class = (GObjectClass *) klass;
+
+  gobject_class->finalize = gst_encoding_profile_finalize;
 }
 
 /**
@@ -422,6 +429,11 @@ struct _GstEncodingContainerProfile
   GList *encodingprofiles;
 };
 
+struct _GstEncodingContainerProfileClass
+{
+  GstEncodingProfileClass parent;
+};
+
 G_DEFINE_TYPE (GstEncodingContainerProfile, gst_encoding_container_profile,
     GST_TYPE_ENCODING_PROFILE);
 
@@ -444,9 +456,11 @@ gst_encoding_container_profile_finalize (GObject * object)
 }
 
 static void
-gst_encoding_container_profile_class_init (GObjectClass * klass)
+gst_encoding_container_profile_class_init (GstEncodingContainerProfileClass * k)
 {
-  klass->finalize = gst_encoding_container_profile_finalize;
+  GObjectClass *gobject_class = (GObjectClass *) k;
+
+  gobject_class->finalize = gst_encoding_container_profile_finalize;
 }
 
 /**
@@ -473,6 +487,11 @@ struct _GstEncodingVideoProfile
   gboolean variableframerate;
 };
 
+struct _GstEncodingVideoProfileClass
+{
+  GstEncodingProfileClass parent;
+};
+
 G_DEFINE_TYPE (GstEncodingVideoProfile, gst_encoding_video_profile,
     GST_TYPE_ENCODING_PROFILE);
 
@@ -483,7 +502,7 @@ gst_encoding_video_profile_init (GstEncodingVideoProfile * prof)
 }
 
 static void
-gst_encoding_video_profile_class_init (GObjectClass * klass)
+gst_encoding_video_profile_class_init (GstEncodingVideoProfileClass * klass)
 {
 }
 
@@ -562,6 +581,11 @@ struct _GstEncodingAudioProfile
   GstEncodingProfile parent;
 };
 
+struct _GstEncodingAudioProfileClass
+{
+  GstEncodingProfileClass parent;
+};
+
 G_DEFINE_TYPE (GstEncodingAudioProfile, gst_encoding_audio_profile,
     GST_TYPE_ENCODING_PROFILE);
 
@@ -572,7 +596,7 @@ gst_encoding_audio_profile_init (GstEncodingAudioProfile * prof)
 }
 
 static void
-gst_encoding_audio_profile_class_init (GObjectClass * klass)
+gst_encoding_audio_profile_class_init (GstEncodingAudioProfileClass * klass)
 {
 }
 
