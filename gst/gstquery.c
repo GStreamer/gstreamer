@@ -96,30 +96,33 @@ typedef struct
   gint64 stop;
 } GstQueryBufferingRange;
 
-static GMutex mutex;
-static GList *_gst_queries = NULL;
-static GHashTable *_nick_to_query = NULL;
-static GHashTable *_query_type_to_nick = NULL;
-static guint32 _n_values = 1;   /* we start from 1 because 0 reserved for NONE */
+typedef struct
+{
+  const gint type;
+  const gchar *name;
+  GQuark quark;
+} GstQueryQuarks;
 
-static GstQueryTypeDefinition standard_definitions[] = {
-  {GST_QUERY_POSITION, "position", "Current position", 0},
-  {GST_QUERY_DURATION, "duration", "Total duration", 0},
-  {GST_QUERY_LATENCY, "latency", "Latency", 0},
-  {GST_QUERY_JITTER, "jitter", "Jitter", 0},
-  {GST_QUERY_RATE, "rate", "Configured rate 1000000 = 1", 0},
-  {GST_QUERY_SEEKING, "seeking", "Seeking capabilities and parameters", 0},
-  {GST_QUERY_SEGMENT, "segment", "currently configured segment", 0},
-  {GST_QUERY_CONVERT, "convert", "Converting between formats", 0},
-  {GST_QUERY_FORMATS, "formats", "Supported formats for conversion", 0},
-  {GST_QUERY_BUFFERING, "buffering", "Buffering status", 0},
-  {GST_QUERY_CUSTOM, "custom", "Custom query", 0},
-  {GST_QUERY_URI, "uri", "URI of the source or sink", 0},
-  {GST_QUERY_ALLOCATION, "allocation", "Allocation properties", 0},
-  {GST_QUERY_SCHEDULING, "scheduling", "Scheduling properties", 0},
-  {GST_QUERY_ACCEPT_CAPS, "accept-caps", "Accept caps", 0},
-  {GST_QUERY_CAPS, "caps", "Caps", 0},
-  {GST_QUERY_NONE, NULL, NULL, 0}
+static GstQueryQuarks query_quarks[] = {
+  {GST_QUERY_UNKNOWN, "unknown", 0},
+  {GST_QUERY_POSITION, "position", 0},
+  {GST_QUERY_DURATION, "duration", 0},
+  {GST_QUERY_LATENCY, "latency", 0},
+  {GST_QUERY_JITTER, "jitter", 0},
+  {GST_QUERY_RATE, "rate", 0},
+  {GST_QUERY_SEEKING, "seeking", 0},
+  {GST_QUERY_SEGMENT, "segment", 0},
+  {GST_QUERY_CONVERT, "convert", 0},
+  {GST_QUERY_FORMATS, "formats", 0},
+  {GST_QUERY_BUFFERING, "buffering", 0},
+  {GST_QUERY_CUSTOM, "custom", 0},
+  {GST_QUERY_URI, "uri", 0},
+  {GST_QUERY_ALLOCATION, "allocation", 0},
+  {GST_QUERY_SCHEDULING, "scheduling", 0},
+  {GST_QUERY_ACCEPT_CAPS, "accept-caps", 0},
+  {GST_QUERY_CAPS, "caps", 0},
+
+  {0, NULL, 0}
 };
 
 GST_DEFINE_MINI_OBJECT_TYPE (GstQuery, gst_query);
@@ -127,205 +130,73 @@ GST_DEFINE_MINI_OBJECT_TYPE (GstQuery, gst_query);
 void
 _priv_gst_query_initialize (void)
 {
-  GstQueryTypeDefinition *standards = standard_definitions;
+  gint i;
 
-  GST_CAT_INFO (GST_CAT_GST_INIT, "init queries");
+  _gst_query_type = gst_query_get_type ();
 
   GST_DEBUG_CATEGORY_INIT (gst_query_debug, "query", 0, "query system");
 
-  g_mutex_lock (&mutex);
-  if (_nick_to_query == NULL) {
-    _nick_to_query = g_hash_table_new (g_str_hash, g_str_equal);
-    _query_type_to_nick = g_hash_table_new (NULL, NULL);
+  for (i = 0; query_quarks[i].name; i++) {
+    query_quarks[i].quark = g_quark_from_static_string (query_quarks[i].name);
   }
-
-  while (standards->nick) {
-    standards->quark = g_quark_from_static_string (standards->nick);
-    g_hash_table_insert (_nick_to_query, (gpointer) standards->nick, standards);
-    g_hash_table_insert (_query_type_to_nick,
-        GINT_TO_POINTER (standards->value), standards);
-
-    _gst_queries = g_list_append (_gst_queries, standards);
-    standards++;
-    _n_values++;
-  }
-  g_mutex_unlock (&mutex);
-
-  _gst_query_type = gst_query_get_type ();
 }
 
 /**
  * gst_query_type_get_name:
- * @query: the query type
+ * @type: the query type
  *
  * Get a printable name for the given query type. Do not modify or free.
  *
  * Returns: a reference to the static name of the query.
  */
 const gchar *
-gst_query_type_get_name (GstQueryType query)
+gst_query_type_get_name (GstQueryType type)
 {
-  const GstQueryTypeDefinition *def;
+  gint i;
 
-  def = gst_query_type_get_details (query);
-  g_return_val_if_fail (def != NULL, NULL);
-
-  return def->nick;
+  for (i = 0; query_quarks[i].name; i++) {
+    if (type == query_quarks[i].type)
+      return query_quarks[i].name;
+  }
+  return "unknown";
 }
 
 /**
  * gst_query_type_to_quark:
- * @query: the query type
+ * @type: the query type
  *
  * Get the unique quark for the given query type.
  *
  * Returns: the quark associated with the query type
  */
 GQuark
-gst_query_type_to_quark (GstQueryType query)
+gst_query_type_to_quark (GstQueryType type)
 {
-  const GstQueryTypeDefinition *def;
+  gint i;
 
-  def = gst_query_type_get_details (query);
-  g_return_val_if_fail (def != NULL, 0);
-
-  return def->quark;
-}
-
-/**
- * gst_query_type_register:
- * @nick: The nick of the new query
- * @description: The description of the new query
- *
- * Create a new GstQueryType based on the nick or return an
- * already registered query with that nick
- *
- * Returns: A new GstQueryType or an already registered query
- * with the same nick.
- */
-GstQueryType
-gst_query_type_register (const gchar * nick, const gchar * description)
-{
-  GstQueryTypeDefinition *query;
-  GstQueryType lookup;
-
-  g_return_val_if_fail (nick != NULL, GST_QUERY_NONE);
-  g_return_val_if_fail (description != NULL, GST_QUERY_NONE);
-
-  lookup = gst_query_type_get_by_nick (nick);
-  if (lookup != GST_QUERY_NONE)
-    return lookup;
-
-  query = g_slice_new (GstQueryTypeDefinition);
-  query->value = (GstQueryType) _n_values;
-  query->nick = g_strdup (nick);
-  query->description = g_strdup (description);
-  query->quark = g_quark_from_static_string (query->nick);
-
-  g_mutex_lock (&mutex);
-  g_hash_table_insert (_nick_to_query, (gpointer) query->nick, query);
-  g_hash_table_insert (_query_type_to_nick, GINT_TO_POINTER (query->value),
-      query);
-  _gst_queries = g_list_append (_gst_queries, query);
-  _n_values++;
-  g_mutex_unlock (&mutex);
-
-  return query->value;
-}
-
-/**
- * gst_query_type_get_by_nick:
- * @nick: The nick of the query
- *
- * Get the query type registered with @nick.
- *
- * Returns: The query registered with @nick or #GST_QUERY_NONE
- * if the query was not registered.
- */
-GstQueryType
-gst_query_type_get_by_nick (const gchar * nick)
-{
-  GstQueryTypeDefinition *query;
-
-  g_return_val_if_fail (nick != NULL, GST_QUERY_NONE);
-
-  g_mutex_lock (&mutex);
-  query = g_hash_table_lookup (_nick_to_query, nick);
-  g_mutex_unlock (&mutex);
-
-  if (query != NULL)
-    return query->value;
-  else
-    return GST_QUERY_NONE;
-}
-
-/**
- * gst_query_types_contains:
- * @types: The query array to search
- * @type: the #GstQueryType to find
- *
- * See if the given #GstQueryType is inside the @types query types array.
- *
- * Returns: TRUE if the type is found inside the array
- */
-gboolean
-gst_query_types_contains (const GstQueryType * types, GstQueryType type)
-{
-  if (!types)
-    return FALSE;
-
-  while (*types) {
-    if (*types == type)
-      return TRUE;
-
-    types++;
+  for (i = 0; query_quarks[i].name; i++) {
+    if (type == query_quarks[i].type)
+      return query_quarks[i].quark;
   }
-  return FALSE;
+  return 0;
 }
 
-
 /**
- * gst_query_type_get_details:
+ * gst_query_type_get_flags:
  * @type: a #GstQueryType
  *
- * Get details about the given #GstQueryType.
+ * Gets the #GstQueryTypeFlags associated with @type.
  *
- * Returns: The #GstQueryTypeDefinition for @type or NULL on failure.
+ * Returns: a #GstQueryTypeFlags.
  */
-const GstQueryTypeDefinition *
-gst_query_type_get_details (GstQueryType type)
+GstQueryTypeFlags
+gst_query_type_get_flags (GstQueryType type)
 {
-  const GstQueryTypeDefinition *result;
+  GstQueryTypeFlags ret;
 
-  g_mutex_lock (&mutex);
-  result = g_hash_table_lookup (_query_type_to_nick, GINT_TO_POINTER (type));
-  g_mutex_unlock (&mutex);
+  ret = type & ((1 << GST_EVENT_NUM_SHIFT) - 1);
 
-  return result;
-}
-
-/**
- * gst_query_type_iterate_definitions:
- *
- * Get a #GstIterator of all the registered query types. The definitions
- * iterated over are read only.
- *
- * Free-function: gst_iterator_free
- *
- * Returns: (transfer full): a #GstIterator of #GstQueryTypeDefinition.
- */
-GstIterator *
-gst_query_type_iterate_definitions (void)
-{
-  GstIterator *result;
-
-  g_mutex_lock (&mutex);
-  /* FIXME: register a boxed type for GstQueryTypeDefinition */
-  result = gst_iterator_new_list (G_TYPE_POINTER,
-      &mutex, &_n_values, &_gst_queries, NULL, NULL);
-  g_mutex_unlock (&mutex);
-
-  return result;
+  return ret;
 }
 
 static void

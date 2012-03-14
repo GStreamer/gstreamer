@@ -206,7 +206,6 @@ EXPORTS
 	gst_caps_subtract
 	gst_caps_to_string
 	gst_caps_truncate
-	gst_caps_union
 	gst_child_proxy_child_added
 	gst_child_proxy_child_removed
 	gst_child_proxy_get
@@ -874,14 +873,11 @@ EXPORTS
 	gst_query_set_seeking
 	gst_query_set_segment
 	gst_query_set_uri
-	gst_query_type_get_by_nick
-	gst_query_type_get_details
+	gst_query_type_flags_get_type
+	gst_query_type_get_flags
 	gst_query_type_get_name
 	gst_query_type_get_type
-	gst_query_type_iterate_definitions
-	gst_query_type_register
 	gst_query_type_to_quark
-	gst_query_types_contains
 	gst_query_writable_structure
 	gst_rank_get_type
 	gst_registry_add_feature

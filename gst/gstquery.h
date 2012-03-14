@@ -36,9 +36,53 @@
 
 G_BEGIN_DECLS
 
+typedef struct _GstQuery GstQuery;
+
+/**
+ * GstQueryTypeFlags:
+ * @GST_QUERY_TYPE_UPSTREAM:     Set if the query can travel upstream.
+ * @GST_QUERY_TYPE_DOWNSTREAM:   Set if the query can travel downstream.
+ * @GST_QUERY_TYPE_SERIALIZED:   Set if the query should be serialized with data
+ *                               flow.
+ *
+ * #GstQueryTypeFlags indicate the aspects of the different #GstQueryType
+ * values. You can get the type flags of a #GstQueryType with the
+ * gst_query_type_get_flags() function.
+ */
+typedef enum {
+  GST_QUERY_TYPE_UPSTREAM       = 1 << 0,
+  GST_QUERY_TYPE_DOWNSTREAM     = 1 << 1,
+  GST_QUERY_TYPE_SERIALIZED     = 1 << 2
+} GstQueryTypeFlags;
+
+/**
+ * GST_QUERY_TYPE_BOTH:
+ *
+ * The same thing as #GST_QUERY_TYPE_UPSTREAM | #GST_QUERY_TYPE_DOWNSTREAM.
+ */
+#define GST_QUERY_TYPE_BOTH \
+    (GST_QUERY_TYPE_UPSTREAM | GST_QUERY_TYPE_DOWNSTREAM)
+
+#define GST_QUERY_NUM_SHIFT     (8)
+
+/**
+ * GST_QUERY_MAKE_TYPE:
+ * @num: the query number to create
+ * @idx: the index in the sticky array
+ * @flags: the query flags
+ *
+ * when making custom query types, use this macro with the num and
+ * the given flags
+ */
+#define GST_QUERY_MAKE_TYPE(num,flags) \
+    (((num) << GST_QUERY_NUM_SHIFT) | (flags))
+
+#define FLAG(name) GST_QUERY_TYPE_##name
+
+
 /**
  * GstQueryType:
- * @GST_QUERY_NONE: invalid query type
+ * @GST_QUERY_UNKNOWN: unknown query type
  * @GST_QUERY_POSITION: current position in stream
  * @GST_QUERY_DURATION: total duration of the stream
  * @GST_QUERY_LATENCY: latency of stream
@@ -63,50 +107,30 @@ G_BEGIN_DECLS
 /* NOTE: don't forget to update the table in gstquery.c when changing
  * this enum */
 typedef enum {
-  GST_QUERY_NONE = 0,
-  GST_QUERY_POSITION,
-  GST_QUERY_DURATION,
-  GST_QUERY_LATENCY,
-  GST_QUERY_JITTER,     /* not in draft-query, necessary? */
-  GST_QUERY_RATE,
-  GST_QUERY_SEEKING,
-  GST_QUERY_SEGMENT,
-  GST_QUERY_CONVERT,
-  GST_QUERY_FORMATS,
-  GST_QUERY_BUFFERING,
-  GST_QUERY_CUSTOM,
-  GST_QUERY_URI,
-  GST_QUERY_ALLOCATION,
-  GST_QUERY_SCHEDULING,
-  GST_QUERY_ACCEPT_CAPS,
-  GST_QUERY_CAPS
+  GST_QUERY_UNKNOWN      = GST_QUERY_MAKE_TYPE (0, 0),
+  GST_QUERY_POSITION     = GST_QUERY_MAKE_TYPE (10, FLAG(BOTH)),
+  GST_QUERY_DURATION     = GST_QUERY_MAKE_TYPE (20, FLAG(BOTH)),
+  GST_QUERY_LATENCY      = GST_QUERY_MAKE_TYPE (30, FLAG(BOTH)),
+  GST_QUERY_JITTER       = GST_QUERY_MAKE_TYPE (40, FLAG(BOTH)),
+  GST_QUERY_RATE         = GST_QUERY_MAKE_TYPE (50, FLAG(BOTH)),
+  GST_QUERY_SEEKING      = GST_QUERY_MAKE_TYPE (60, FLAG(BOTH)),
+  GST_QUERY_SEGMENT      = GST_QUERY_MAKE_TYPE (70, FLAG(BOTH)),
+  GST_QUERY_CONVERT      = GST_QUERY_MAKE_TYPE (80, FLAG(BOTH)),
+  GST_QUERY_FORMATS      = GST_QUERY_MAKE_TYPE (90, FLAG(BOTH)),
+  GST_QUERY_BUFFERING    = GST_QUERY_MAKE_TYPE (110, FLAG(BOTH)),
+  GST_QUERY_CUSTOM       = GST_QUERY_MAKE_TYPE (120, FLAG(BOTH)),
+  GST_QUERY_URI          = GST_QUERY_MAKE_TYPE (130, FLAG(BOTH)),
+  GST_QUERY_ALLOCATION   = GST_QUERY_MAKE_TYPE (140, FLAG(DOWNSTREAM) | FLAG(SERIALIZED)),
+  GST_QUERY_SCHEDULING   = GST_QUERY_MAKE_TYPE (150, FLAG(UPSTREAM)),
+  GST_QUERY_ACCEPT_CAPS  = GST_QUERY_MAKE_TYPE (160, FLAG(BOTH)),
+  GST_QUERY_CAPS         = GST_QUERY_MAKE_TYPE (170, FLAG(BOTH))
 } GstQueryType;
-
-typedef struct _GstQueryTypeDefinition GstQueryTypeDefinition;
-typedef struct _GstQuery GstQuery;
-
-/**
- * GstQueryTypeDefinition:
- * @value: the unique id of the Query type
- * @nick: a short nick
- * @description: a longer description of the query type
- * @quark: the quark for the nick
- *
- * A Query Type definition
- */
-struct _GstQueryTypeDefinition
-{
-  GstQueryType   value;
-  const gchar   *nick;
-  const gchar   *description;
-  GQuark         quark;
-};
+#undef FLAG
 
 #define GST_TYPE_QUERY                         (gst_query_get_type())
 #define GST_IS_QUERY(obj)                      (GST_IS_MINI_OBJECT_TYPE (obj, GST_TYPE_QUERY))
 #define GST_QUERY_CAST(obj)                    ((GstQuery*)(obj))
 #define GST_QUERY(obj)                         (GST_QUERY_CAST(obj))
-
 
 /**
  * GST_QUERY_TYPE:
@@ -126,6 +150,28 @@ struct _GstQueryTypeDefinition
  */
 #define GST_QUERY_TYPE_NAME(query) (gst_query_type_get_name(GST_QUERY_TYPE(query)))
 
+/**
+ * GST_QUERY_IS_UPSTREAM:
+ * @ev: the query to query
+ *
+ * Check if an query can travel upstream.
+ */
+#define GST_QUERY_IS_UPSTREAM(ev)       !!(GST_QUERY_TYPE (ev) & GST_QUERY_TYPE_UPSTREAM)
+/**
+ * GST_QUERY_IS_DOWNSTREAM:
+ * @ev: the query to query
+ *
+ * Check if an query can travel downstream.
+ */
+#define GST_QUERY_IS_DOWNSTREAM(ev)     !!(GST_QUERY_TYPE (ev) & GST_QUERY_TYPE_DOWNSTREAM)
+/**
+ * GST_QUERY_IS_SERIALIZED:
+ * @ev: the query to query
+ *
+ * Check if an query is serialized with the data stream.
+ */
+#define GST_QUERY_IS_SERIALIZED(ev)     !!(GST_QUERY_TYPE (ev) & GST_QUERY_TYPE_SERIALIZED)
+
 
 /**
  * GstQuery:
@@ -142,25 +188,13 @@ struct _GstQuery
   GstQueryType type;
 };
 
-const gchar*    gst_query_type_get_name        (GstQueryType query);
-GQuark          gst_query_type_to_quark        (GstQueryType query);
+const gchar*    gst_query_type_get_name        (GstQueryType type);
+GQuark          gst_query_type_to_quark        (GstQueryType type);
+GstQueryTypeFlags
+                gst_query_type_get_flags       (GstQueryType type);
+
 
 GType           gst_query_get_type             (void);
-
-/* register a new query */
-GstQueryType    gst_query_type_register        (const gchar *nick,
-                                                const gchar *description);
-GstQueryType    gst_query_type_get_by_nick     (const gchar *nick);
-
-/* check if a query is in an array of querys */
-gboolean        gst_query_types_contains       (const GstQueryType *types,
-                                                GstQueryType type);
-
-/* query for query details */
-
-const GstQueryTypeDefinition*
-                gst_query_type_get_details         (GstQueryType type);
-GstIterator*    gst_query_type_iterate_definitions (void) G_GNUC_MALLOC;
 
 /* refcounting */
 /**
