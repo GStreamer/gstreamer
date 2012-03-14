@@ -1960,6 +1960,7 @@ gst_xvimagesink_propose_allocation (GstBaseSink * bsink, GstQuery * query)
       GST_DEBUG_OBJECT (xvimagesink, "pool has different caps");
       /* different caps, we can't use this pool */
       gst_object_unref (pool);
+      gst_structure_free (config);
       pool = NULL;
     }
   }
