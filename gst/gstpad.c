@@ -3130,13 +3130,19 @@ gst_pad_query (GstPad * pad, GstQuery * query)
   g_return_val_if_fail (GST_IS_PAD (pad), FALSE);
   g_return_val_if_fail (GST_IS_QUERY (query), FALSE);
 
-  GST_DEBUG_OBJECT (pad, "sending query %p (%s)", query,
-      GST_QUERY_TYPE_NAME (query));
-
-  if (GST_PAD_IS_SRC (pad))
+  if (GST_PAD_IS_SRC (pad)) {
+    if (G_UNLIKELY (!GST_QUERY_IS_UPSTREAM (query)))
+      goto wrong_direction;
     type = GST_PAD_PROBE_TYPE_QUERY_UPSTREAM;
-  else
+  } else if (GST_PAD_IS_SINK (pad)) {
+    if (G_UNLIKELY (!GST_QUERY_IS_DOWNSTREAM (query)))
+      goto wrong_direction;
     type = GST_PAD_PROBE_TYPE_QUERY_DOWNSTREAM;
+  } else
+    goto unknown_direction;
+
+  GST_DEBUG_OBJECT (pad, "doing query %p (%s)", query,
+      GST_QUERY_TYPE_NAME (query));
 
   GST_OBJECT_LOCK (pad);
   PROBE_PUSH (pad, type | GST_PAD_PROBE_TYPE_PUSH |
@@ -3166,6 +3172,17 @@ gst_pad_query (GstPad * pad, GstQuery * query)
   return res;
 
   /* ERRORS */
+wrong_direction:
+  {
+    g_warning ("pad %s:%s query %s in wrong direction",
+        GST_DEBUG_PAD_NAME (pad), GST_QUERY_TYPE_NAME (query));
+    return FALSE;
+  }
+unknown_direction:
+  {
+    g_warning ("pad %s:%s has invalid direction", GST_DEBUG_PAD_NAME (pad));
+    return FALSE;
+  }
 no_parent:
   {
     GST_DEBUG_OBJECT (pad, "had no parent");
@@ -3217,10 +3234,16 @@ gst_pad_peer_query (GstPad * pad, GstQuery * query)
   g_return_val_if_fail (GST_IS_PAD (pad), FALSE);
   g_return_val_if_fail (GST_IS_QUERY (query), FALSE);
 
-  if (GST_PAD_IS_SRC (pad))
+  if (GST_PAD_IS_SRC (pad)) {
+    if (G_UNLIKELY (!GST_QUERY_IS_DOWNSTREAM (query)))
+      goto wrong_direction;
     type = GST_PAD_PROBE_TYPE_QUERY_DOWNSTREAM;
-  else
+  } else if (GST_PAD_IS_SINK (pad)) {
+    if (G_UNLIKELY (!GST_QUERY_IS_UPSTREAM (query)))
+      goto wrong_direction;
     type = GST_PAD_PROBE_TYPE_QUERY_UPSTREAM;
+  } else
+    goto unknown_direction;
 
   GST_DEBUG_OBJECT (pad, "peer query %p (%s)", query,
       GST_QUERY_TYPE_NAME (query));
@@ -3251,6 +3274,17 @@ gst_pad_peer_query (GstPad * pad, GstQuery * query)
   return res;
 
   /* ERRORS */
+wrong_direction:
+  {
+    g_warning ("pad %s:%s query %s in wrong direction",
+        GST_DEBUG_PAD_NAME (pad), GST_QUERY_TYPE_NAME (query));
+    return FALSE;
+  }
+unknown_direction:
+  {
+    g_warning ("pad %s:%s has invalid direction", GST_DEBUG_PAD_NAME (pad));
+    return FALSE;
+  }
 no_peer:
   {
     GST_WARNING_OBJECT (pad, "pad has no peer");
@@ -4204,7 +4238,6 @@ gst_pad_push_event (GstPad * pad, GstEvent * event)
   gboolean sticky, serialized;
 
   g_return_val_if_fail (GST_IS_PAD (pad), FALSE);
-  g_return_val_if_fail (event != NULL, FALSE);
   g_return_val_if_fail (GST_IS_EVENT (event), FALSE);
 
   if (GST_PAD_IS_SRC (pad)) {
