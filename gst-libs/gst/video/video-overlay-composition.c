@@ -869,6 +869,19 @@ gst_video_overlay_rectangle_set_render_rectangle (GstVideoOverlayRectangle *
   rectangle->render_height = render_height;
 }
 
+#if G_BYTE_ORDER == G_LITTLE_ENDIAN
+# define ARGB_A 3
+# define ARGB_R 2
+# define ARGB_G 1
+# define ARGB_B 0
+#else
+# define ARGB_A 0
+# define ARGB_R 1
+# define ARGB_G 2
+# define ARGB_B 3
+#endif
+
+/* FIXME: orc-ify */
 static void
 gst_video_overlay_rectangle_premultiply (GstBlendVideoFormatInfo * info)
 {
@@ -876,15 +889,16 @@ gst_video_overlay_rectangle_premultiply (GstBlendVideoFormatInfo * info)
   for (j = 0; j < info->height; ++j) {
     guint8 *line = info->pixels + info->stride[0] * j;
     for (i = 0; i < info->width; ++i) {
-      int a = line[0];
-      line[1] = line[1] * a / 255;
-      line[2] = line[2] * a / 255;
-      line[3] = line[3] * a / 255;
+      int a = line[ARGB_A];
+      line[ARGB_R] = line[ARGB_R] * a / 255;
+      line[ARGB_G] = line[ARGB_G] * a / 255;
+      line[ARGB_B] = line[ARGB_B] * a / 255;
       line += 4;
     }
   }
 }
 
+/* FIXME: orc-ify */
 static void
 gst_video_overlay_rectangle_unpremultiply (GstBlendVideoFormatInfo * info)
 {
@@ -892,11 +906,11 @@ gst_video_overlay_rectangle_unpremultiply (GstBlendVideoFormatInfo * info)
   for (j = 0; j < info->height; ++j) {
     guint8 *line = info->pixels + info->stride[0] * j;
     for (i = 0; i < info->width; ++i) {
-      int a = line[0];
+      int a = line[ARGB_A];
       if (a) {
-        line[1] = MIN ((line[1] * 255 + a / 2) / a, 255);
-        line[2] = MIN ((line[2] * 255 + a / 2) / a, 255);
-        line[3] = MIN ((line[3] * 255 + a / 2) / a, 255);
+        line[ARGB_R] = MIN ((line[ARGB_R] * 255 + a / 2) / a, 255);
+        line[ARGB_G] = MIN ((line[ARGB_G] * 255 + a / 2) / a, 255);
+        line[ARGB_B] = MIN ((line[ARGB_B] * 255 + a / 2) / a, 255);
       }
       line += 4;
     }
