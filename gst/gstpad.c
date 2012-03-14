@@ -3099,6 +3099,58 @@ done:
   GST_OBJECT_UNLOCK (pad);
 }
 
+/* should be called with pad LOCK */
+static gboolean
+push_sticky (GstPad * pad, PadEvent * ev, gpointer user_data)
+{
+  GstFlowReturn *data = user_data;
+  GstEvent *event = ev->event;
+
+  if (ev->received) {
+    GST_DEBUG_OBJECT (pad, "event %s was already received",
+        GST_EVENT_TYPE_NAME (event));
+    return TRUE;
+  }
+
+  *data = gst_pad_push_event_unchecked (pad, gst_event_ref (event),
+      GST_PAD_PROBE_TYPE_EVENT_DOWNSTREAM);
+
+  switch (*data) {
+    case GST_FLOW_OK:
+      ev->received = TRUE;
+      GST_DEBUG_OBJECT (pad, "event %s marked received",
+          GST_EVENT_TYPE_NAME (event));
+      break;
+    case GST_FLOW_NOT_LINKED:
+      /* not linked is not a problem, we are sticky so the event will be
+       * sent later */
+      GST_DEBUG_OBJECT (pad, "pad was not linked");
+      *data = GST_FLOW_OK;
+      /* fallthrough */
+    default:
+      GST_DEBUG_OBJECT (pad, "mark pending events");
+      GST_OBJECT_FLAG_SET (pad, GST_PAD_FLAG_PENDING_EVENTS);
+      break;
+  }
+  return *data == GST_FLOW_OK;
+}
+
+/* check sticky events and push them when needed. should be called
+ * with pad LOCK */
+static inline GstFlowReturn
+check_sticky (GstPad * pad)
+{
+  GstFlowReturn ret = GST_FLOW_OK;
+
+  if (G_UNLIKELY (GST_PAD_HAS_PENDING_EVENTS (pad))) {
+    GST_OBJECT_FLAG_UNSET (pad, GST_PAD_FLAG_PENDING_EVENTS);
+
+    GST_DEBUG_OBJECT (pad, "pushing all sticky events");
+    events_foreach (pad, push_sticky, &ret);
+  }
+  return ret;
+}
+
 
 /**
  * gst_pad_query:
@@ -3243,7 +3295,7 @@ gst_pad_peer_query (GstPad * pad, GstQuery * query)
 {
   GstPad *peerpad;
   GstPadProbeType type;
-  gboolean res;
+  gboolean res, serialized;
   GstFlowReturn ret;
 
   g_return_val_if_fail (GST_IS_PAD (pad), FALSE);
@@ -3263,7 +3315,16 @@ gst_pad_peer_query (GstPad * pad, GstQuery * query)
   GST_DEBUG_OBJECT (pad, "peer query %p (%s)", query,
       GST_QUERY_TYPE_NAME (query));
 
+  serialized = GST_QUERY_IS_SERIALIZED (query);
+
   GST_OBJECT_LOCK (pad);
+  if (GST_PAD_IS_SRC (pad) && serialized) {
+    /* all serialized queries on the srcpad trigger push of
+     * sticky events */
+    if (!check_sticky (pad) == GST_FLOW_OK)
+      goto sticky_failed;
+  }
+
   PROBE_PUSH (pad, type | GST_PAD_PROBE_TYPE_PUSH |
       GST_PAD_PROBE_TYPE_BLOCK, query, probe_stopped);
   PROBE_PUSH (pad, type | GST_PAD_PROBE_TYPE_PUSH, query, probe_stopped);
@@ -3300,6 +3361,12 @@ unknown_direction:
     g_warning ("pad %s:%s has invalid direction", GST_DEBUG_PAD_NAME (pad));
     return FALSE;
   }
+sticky_failed:
+  {
+    GST_WARNING_OBJECT (pad, "could not send sticky events");
+    GST_OBJECT_UNLOCK (pad);
+    return FALSE;
+  }
 no_peer:
   {
     GST_WARNING_OBJECT (pad, "pad has no peer");
@@ -3322,58 +3389,6 @@ probe_stopped:
 /**********************************************************************
  * Data passing functions
  */
-
-/* should be called with pad LOCK */
-static gboolean
-push_sticky (GstPad * pad, PadEvent * ev, gpointer user_data)
-{
-  GstFlowReturn *data = user_data;
-  GstEvent *event = ev->event;
-
-  if (ev->received) {
-    GST_DEBUG_OBJECT (pad, "event %s was already received",
-        GST_EVENT_TYPE_NAME (event));
-    return TRUE;
-  }
-
-  *data = gst_pad_push_event_unchecked (pad, gst_event_ref (event),
-      GST_PAD_PROBE_TYPE_EVENT_DOWNSTREAM);
-
-  switch (*data) {
-    case GST_FLOW_OK:
-      ev->received = TRUE;
-      GST_DEBUG_OBJECT (pad, "event %s marked received",
-          GST_EVENT_TYPE_NAME (event));
-      break;
-    case GST_FLOW_NOT_LINKED:
-      /* not linked is not a problem, we are sticky so the event will be
-       * sent later */
-      GST_DEBUG_OBJECT (pad, "pad was not linked");
-      *data = GST_FLOW_OK;
-      /* fallthrough */
-    default:
-      GST_DEBUG_OBJECT (pad, "mark pending events");
-      GST_OBJECT_FLAG_SET (pad, GST_PAD_FLAG_PENDING_EVENTS);
-      break;
-  }
-  return *data == GST_FLOW_OK;
-}
-
-/* check sticky events and push them when needed. should be called
- * with pad LOCK */
-static inline GstFlowReturn
-check_sticky (GstPad * pad)
-{
-  GstFlowReturn ret = GST_FLOW_OK;
-
-  if (G_UNLIKELY (GST_PAD_HAS_PENDING_EVENTS (pad))) {
-    GST_OBJECT_FLAG_UNSET (pad, GST_PAD_FLAG_PENDING_EVENTS);
-
-    GST_DEBUG_OBJECT (pad, "pushing all sticky events");
-    events_foreach (pad, push_sticky, &ret);
-  }
-  return ret;
-}
 
 /* this is the chain function that does not perform the additional argument
  * checking for that little extra speed.
