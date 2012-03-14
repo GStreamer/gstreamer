@@ -781,9 +781,6 @@ GST_START_TEST (test_video_size_from_caps)
 
 GST_END_TEST;
 
-#undef ASSERT_CRITICAL
-#define ASSERT_CRITICAL(code) while(0){}        /* nothing */
-
 GST_START_TEST (test_overlay_composition)
 {
   GstVideoOverlayComposition *comp1, *comp2;
@@ -907,6 +904,7 @@ GST_START_TEST (test_overlay_composition)
   fail_unless (gst_video_buffer_get_overlay_composition (buf) == NULL);
 
   gst_buffer_ref (buf);
+  /* buffer now has refcount of 2, so its metadata is not writable */
   ASSERT_CRITICAL (gst_video_buffer_set_overlay_composition (buf, comp1));
   gst_buffer_unref (buf);
   gst_video_buffer_set_overlay_composition (buf, comp1);
