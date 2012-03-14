@@ -324,13 +324,14 @@ gst_adapter_push (GstAdapter * adapter, GstBuffer * buf)
 
   /* Note: merging buffers at this point is premature. */
   if (G_UNLIKELY (adapter->buflist == NULL)) {
-    GST_LOG_OBJECT (adapter, "pushing first %" G_GSIZE_FORMAT " bytes", size);
+    GST_LOG_OBJECT (adapter, "pushing %p first %" G_GSIZE_FORMAT " bytes",
+        buf, size);
     adapter->buflist = adapter->buflist_end = g_slist_append (NULL, buf);
     update_timestamps (adapter, buf);
   } else {
     /* Otherwise append to the end, and advance our end pointer */
-    GST_LOG_OBJECT (adapter, "pushing %" G_GSIZE_FORMAT " bytes at end, "
-        "size now %" G_GSIZE_FORMAT, size, adapter->size);
+    GST_LOG_OBJECT (adapter, "pushing %p %" G_GSIZE_FORMAT " bytes at end, "
+        "size now %" G_GSIZE_FORMAT, buf, size, adapter->size);
     adapter->buflist_end = g_slist_append (adapter->buflist_end, buf);
     adapter->buflist_end = g_slist_next (adapter->buflist_end);
   }
@@ -505,6 +506,7 @@ gst_adapter_unmap (GstAdapter * adapter)
 
   if (priv->info.memory) {
     GstBuffer *cur = adapter->buflist->data;
+    GST_LOG_OBJECT (adapter, "unmap memory buffer %p", cur);
     gst_buffer_unmap (cur, &priv->info);
     priv->info.memory = NULL;
   }
