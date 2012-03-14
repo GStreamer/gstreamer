@@ -313,8 +313,8 @@ gst_base_video_decoder_setcaps (GstBaseVideoDecoder * base_video_decoder,
   }
 
   if (ret) {
-    gst_buffer_replace (&GST_BASE_VIDEO_CODEC (base_video_decoder)->state.
-        codec_data, NULL);
+    gst_buffer_replace (&GST_BASE_VIDEO_CODEC (base_video_decoder)->
+        state.codec_data, NULL);
     gst_caps_replace (&GST_BASE_VIDEO_CODEC (base_video_decoder)->state.caps,
         NULL);
     GST_BASE_VIDEO_CODEC (base_video_decoder)->state = state;
@@ -1992,7 +1992,7 @@ gst_base_video_decoder_set_src_caps (GstBaseVideoDecoder * base_video_decoder)
   GstQuery *query;
   GstBufferPool *pool = NULL;
   GstStructure *config;
-  guint size, min, max, prefix, alignment;
+  guint size, min, max, prefix, padding, alignment;
   gboolean ret;
 
   /* minimum sense */
@@ -2045,13 +2045,14 @@ gst_base_video_decoder_set_src_caps (GstBaseVideoDecoder * base_video_decoder)
     GST_DEBUG_OBJECT (codec, "got downstream ALLOCATION hints");
     /* we got configuration from our peer, parse them */
     gst_query_parse_allocation_params (query, &size, &min, &max, &prefix,
-        &alignment, &pool);
+        &padding, &alignment, &pool);
     size = MAX (size, info->size);
   } else {
     GST_DEBUG_OBJECT (codec, "didn't get downstream ALLOCATION hints");
     size = info->size;
     min = max = 0;
     prefix = 0;
+    padding = 0;
     alignment = 0;
   }
 
@@ -2065,7 +2066,8 @@ gst_base_video_decoder_set_src_caps (GstBaseVideoDecoder * base_video_decoder)
   base_video_decoder->pool = pool;
 
   config = gst_buffer_pool_get_config (pool);
-  gst_buffer_pool_config_set (config, caps, size, min, max, prefix, alignment);
+  gst_buffer_pool_config_set (config, caps, size, min, max, prefix, padding,
+      alignment);
   state->bytes_per_picture = size;
 
   /* just set the option, if the pool can support it we will transparently use

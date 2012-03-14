@@ -669,7 +669,7 @@ gst_base_audio_visualizer_src_negotiate (GstBaseAudioVisualizer * scope)
   GstCaps *templ;
   GstQuery *query;
   GstBufferPool *pool = NULL;
-  guint size, min, max, prefix, alignment;
+  guint size, min, max, prefix, padding, alignment;
 
   templ = gst_pad_get_pad_template_caps (scope->srcpad);
 
@@ -708,11 +708,12 @@ gst_base_audio_visualizer_src_negotiate (GstBaseAudioVisualizer * scope)
   if (gst_pad_peer_query (scope->srcpad, query)) {
     /* we got configuration from our peer, parse them */
     gst_query_parse_allocation_params (query, &size, &min, &max, &prefix,
-        &alignment, &pool);
+        &padding, &alignment, &pool);
   } else {
     size = scope->bpf;
     min = max = 0;
     prefix = 0;
+    padding = 0;
     alignment = 0;
   }
 
@@ -724,7 +725,7 @@ gst_base_audio_visualizer_src_negotiate (GstBaseAudioVisualizer * scope)
 
     config = gst_buffer_pool_get_config (pool);
     gst_buffer_pool_config_set (config, target, size, min, max, prefix,
-        alignment);
+        padding, alignment);
     gst_buffer_pool_set_config (pool, config);
   }
 
