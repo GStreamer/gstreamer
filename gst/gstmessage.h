@@ -89,6 +89,8 @@ typedef struct _GstMessageClass GstMessageClass;
  * @GST_MESSAGE_QOS: A buffer was dropped or an element changed its processing
  * strategy for Quality of Service reasons. Since: 0.10.29
  * @GST_MESSAGE_PROGRESS: A progress message. Since: 0.10.33
+ * @GST_MESSAGE_TOC: A new table of contents (TOC) was found or previously found TOC
+ * was updated. Since: 0.10.37
  * @GST_MESSAGE_ANY: mask for all of the above messages.
  *
  * The different message types that are available.
@@ -125,6 +127,7 @@ typedef enum
   GST_MESSAGE_STEP_START        = (1 << 23),
   GST_MESSAGE_QOS               = (1 << 24),
   GST_MESSAGE_PROGRESS          = (1 << 25),
+  GST_MESSAGE_TOC               = (1 << 26),
   GST_MESSAGE_ANY               = ~0
 } GstMessageType;
 
@@ -133,6 +136,7 @@ typedef enum
 #include <gst/gstelement.h>
 #include <gst/gsttaglist.h>
 #include <gst/gststructure.h>
+#include <gst/gsttoc.h>
 
 /**
  * GST_MESSAGE_TRACE_NAME:
@@ -522,6 +526,9 @@ GstMessage *    gst_message_new_progress           (GstObject * src, GstProgress
 void            gst_message_parse_progress         (GstMessage * message, GstProgressType * type, gchar ** code,
                                                     gchar ** text);
 
+/* TOC */
+GstMessage *    gst_message_new_toc             (GstObject *src, GstToc *toc, gboolean updated);
+void            gst_message_parse_toc           (GstMessage *message, GstToc **toc, gboolean *updated);
 
 /* custom messages */
 GstMessage *    gst_message_new_custom          (GstMessageType type,

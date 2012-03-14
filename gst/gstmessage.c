@@ -113,6 +113,7 @@ static GstMessageQuarks message_quarks[] = {
   {GST_MESSAGE_STEP_START, "step-start", 0},
   {GST_MESSAGE_QOS, "qos", 0},
   {GST_MESSAGE_PROGRESS, "progress", 0},
+  {GST_MESSAGE_TOC, "toc", 0},
   {0, NULL, 0}
 };
 
@@ -2153,4 +2154,62 @@ gst_message_parse_progress (GstMessage * message, GstProgressType * type,
       GST_QUARK (TYPE), GST_TYPE_PROGRESS_TYPE, type,
       GST_QUARK (CODE), G_TYPE_STRING, code,
       GST_QUARK (TEXT), G_TYPE_STRING, text, NULL);
+}
+
+/**
+ * gst_message_new_toc:
+ * @src: the object originating the message.
+ * @toc: #GstToc structure for the message.
+ * @updated: whether TOC was updated or not.
+ *
+ * Create a new TOC message. The message is posted by elements
+ * that discovered or updated a TOC.
+ *
+ * Returns: a new TOC message.
+ *
+ * MT safe.
+ *
+ * Since: 0.10.37
+ */
+GstMessage *
+gst_message_new_toc (GstObject * src, GstToc * toc, gboolean updated)
+{
+  GstStructure *toc_struct;
+
+  g_return_val_if_fail (toc != NULL, NULL);
+
+  toc_struct = _gst_toc_to_structure (toc);
+
+  if (G_LIKELY (toc_struct != NULL)) {
+    _gst_toc_structure_set_updated (toc_struct, updated);
+    return gst_message_new_custom (GST_MESSAGE_TOC, src, toc_struct);
+  } else
+    return NULL;
+}
+
+/**
+ * gst_message_parse_toc:
+ * @message: a valid #GstMessage of type GST_MESSAGE_TOC.
+ * @toc: (out): return location for the TOC.
+ * @updated: (out): return location for the updated flag.
+ *
+ * Extract the TOC from the #GstMessage. The TOC returned in the
+ * output argument is a copy; the caller must free it with
+ * gst_toc_free() when done.
+ *
+ * MT safe.
+ *
+ * Since: 0.10.37
+ */
+void
+gst_message_parse_toc (GstMessage * message, GstToc ** toc, gboolean * updated)
+{
+  g_return_if_fail (GST_IS_MESSAGE (message));
+  g_return_if_fail (GST_MESSAGE_TYPE (message) == GST_MESSAGE_TOC);
+  g_return_if_fail (toc != NULL);
+
+  *toc = _gst_toc_from_structure (message->structure);
+
+  if (updated != NULL)
+    *updated = _gst_toc_structure_get_updated (message->structure);
 }
