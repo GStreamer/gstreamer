@@ -1354,9 +1354,23 @@ gst_base_src_default_alloc (GstBaseSrc * src, guint64 offset,
   if (priv->pool) {
     ret = gst_buffer_pool_acquire_buffer (priv->pool, buffer, NULL);
   } else if (size != -1) {
-    *buffer = gst_buffer_new_allocate (priv->allocator, size, priv->alignment);
-    if (G_UNLIKELY (*buffer == NULL))
+    GstMemory *mem;
+    guint maxsize;
+
+    maxsize = size + priv->prefix;
+
+    mem = gst_allocator_alloc (priv->allocator, maxsize, priv->alignment);
+    if (G_UNLIKELY (mem == NULL))
       goto alloc_failed;
+
+    if (priv->prefix != 0)
+      gst_memory_resize (mem, priv->prefix, size);
+
+    *buffer = gst_buffer_new ();
+    if (G_UNLIKELY (*buffer == NULL))
+      goto buffer_failed;
+
+    gst_buffer_take_memory (*buffer, -1, mem);
 
     ret = GST_FLOW_OK;
   } else {
@@ -1370,6 +1384,11 @@ gst_base_src_default_alloc (GstBaseSrc * src, guint64 offset,
 alloc_failed:
   {
     GST_ERROR_OBJECT (src, "Failed to allocate %u bytes", size);
+    return GST_FLOW_ERROR;
+  }
+buffer_failed:
+  {
+    GST_ERROR_OBJECT (src, "Failed to allocate buffer");
     return GST_FLOW_ERROR;
   }
 }
