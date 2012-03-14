@@ -3122,7 +3122,7 @@ gboolean
 gst_pad_query (GstPad * pad, GstQuery * query)
 {
   GstObject *parent;
-  gboolean res;
+  gboolean res, serialized;
   GstPadQueryFunction func;
   GstPadProbeType type;
   GstFlowReturn ret;
@@ -3143,6 +3143,10 @@ gst_pad_query (GstPad * pad, GstQuery * query)
 
   GST_DEBUG_OBJECT (pad, "doing query %p (%s)", query,
       GST_QUERY_TYPE_NAME (query));
+
+  serialized = GST_QUERY_IS_SERIALIZED (query);
+  if (G_UNLIKELY (serialized))
+    GST_PAD_STREAM_LOCK (pad);
 
   GST_OBJECT_LOCK (pad);
   PROBE_PUSH (pad, type | GST_PAD_PROBE_TYPE_PUSH |
@@ -3169,6 +3173,9 @@ gst_pad_query (GstPad * pad, GstQuery * query)
   PROBE_PUSH (pad, type | GST_PAD_PROBE_TYPE_PULL, query, probe_stopped);
   GST_OBJECT_UNLOCK (pad);
 
+  if (G_UNLIKELY (serialized))
+    GST_PAD_STREAM_UNLOCK (pad);
+
   return res;
 
   /* ERRORS */
@@ -3187,23 +3194,31 @@ no_parent:
   {
     GST_DEBUG_OBJECT (pad, "had no parent");
     GST_OBJECT_UNLOCK (pad);
+    if (G_UNLIKELY (serialized))
+      GST_PAD_STREAM_UNLOCK (pad);
     return FALSE;
   }
 no_func:
   {
     GST_DEBUG_OBJECT (pad, "had no query function");
     RELEASE_PARENT (parent);
+    if (G_UNLIKELY (serialized))
+      GST_PAD_STREAM_UNLOCK (pad);
     return FALSE;
   }
 query_failed:
   {
     GST_DEBUG_OBJECT (pad, "query failed");
+    if (G_UNLIKELY (serialized))
+      GST_PAD_STREAM_UNLOCK (pad);
     return FALSE;
   }
 probe_stopped:
   {
     GST_DEBUG_OBJECT (pad, "probe stopped: %s", gst_flow_get_name (ret));
     GST_OBJECT_UNLOCK (pad);
+    if (G_UNLIKELY (serialized))
+      GST_PAD_STREAM_UNLOCK (pad);
     return FALSE;
   }
 }
