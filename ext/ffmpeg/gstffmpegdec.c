@@ -136,7 +136,6 @@ struct _GstFFMpegDec
   gboolean direct_rendering;
   gboolean do_padding;
   gboolean debug_mv;
-  gboolean crop;
   int max_threads;
 
   /* QoS stuff *//* with LOCK */
@@ -211,7 +210,6 @@ gst_ts_info_get (GstFFMpegDec * dec, gint idx)
 #define DEFAULT_SKIPFRAME		0
 #define DEFAULT_DIRECT_RENDERING	TRUE
 #define DEFAULT_DEBUG_MV		FALSE
-#define DEFAULT_CROP			TRUE
 #define DEFAULT_MAX_THREADS		1
 
 enum
@@ -221,7 +219,6 @@ enum
   PROP_SKIPFRAME,
   PROP_DIRECT_RENDERING,
   PROP_DEBUG_MV,
-  PROP_CROP,
   PROP_MAX_THREADS,
   PROP_LAST
 };
@@ -452,7 +449,6 @@ gst_ffmpegdec_init (GstFFMpegDec * ffmpegdec)
   ffmpegdec->skip_frame = ffmpegdec->lowres = 0;
   ffmpegdec->direct_rendering = DEFAULT_DIRECT_RENDERING;
   ffmpegdec->debug_mv = DEFAULT_DEBUG_MV;
-  ffmpegdec->crop = DEFAULT_CROP;
   ffmpegdec->max_threads = DEFAULT_MAX_THREADS;
 
   gst_segment_init (&ffmpegdec->segment, GST_FORMAT_TIME);
@@ -3082,9 +3078,6 @@ gst_ffmpegdec_set_property (GObject * object,
       ffmpegdec->debug_mv = ffmpegdec->context->debug_mv =
           g_value_get_boolean (value);
       break;
-    case PROP_CROP:
-      ffmpegdec->crop = g_value_get_boolean (value);
-      break;
     case PROP_MAX_THREADS:
       ffmpegdec->max_threads = g_value_get_int (value);
       break;
@@ -3112,9 +3105,6 @@ gst_ffmpegdec_get_property (GObject * object,
       break;
     case PROP_DEBUG_MV:
       g_value_set_boolean (value, ffmpegdec->context->debug_mv);
-      break;
-    case PROP_CROP:
-      g_value_set_boolean (value, ffmpegdec->crop);
       break;
     case PROP_MAX_THREADS:
       g_value_set_int (value, ffmpegdec->max_threads);
