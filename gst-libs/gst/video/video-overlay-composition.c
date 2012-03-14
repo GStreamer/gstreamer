@@ -954,6 +954,10 @@ gst_video_overlay_rectangle_get_pixels_argb_internal (GstVideoOverlayRectangle *
 
   if (wanted_width != rectangle->width || wanted_height != rectangle->height) {
     video_blend_scale_linear_RGBA (&info, wanted_height, wanted_width);
+  } else {
+    /* if we don't have to scale, we have to modify the alpha values, so we
+     * need to make a copy of the pixel memory (and we take ownership below) */
+    info.pixels = g_memdup (info.pixels, info.size);
   }
 
   if (!gst_video_overlay_rectangle_is_same_alpha_type (rectangle->flags, flags)) {
