@@ -935,8 +935,7 @@ gst_video_overlay_rectangle_get_pixels_argb_internal (GstVideoOverlayRectangle *
 
     if (r->width == wanted_width &&
         r->height == wanted_height &&
-        gst_video_overlay_rectangle_is_same_alpha_type (rectangle->flags,
-            flags)) {
+        gst_video_overlay_rectangle_is_same_alpha_type (r->flags, flags)) {
       /* we'll keep these rectangles around until finalize, so it's ok not
        * to take our own ref here */
       scaled_rect = r;
