@@ -152,6 +152,8 @@ gst_mpeg2enc_finalize (GObject * object)
   delete enc->options;
 
   g_queue_free (enc->time);
+  g_mutex_clear (&enc->tlock);
+  g_cond_clear (&enc->cond);
 
   G_OBJECT_CLASS (parent_class)->finalize (object);
 }
