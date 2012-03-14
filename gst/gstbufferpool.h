@@ -128,7 +128,7 @@ struct _GstBufferPool {
  *        be released when there are no buffers available.
  * @alloc_buffer: allocate a buffer. the default implementation allocates
  *        buffers from the default memory allocator and with the configured
- *        size, prefix and alignment. All metadata that is present on the
+ *        size, prefix, padding and alignment. All metadata that is present on the
  *        allocated buffer will be marked as #GST_META_FLAG_POOLED and will not
  *        be removed from the buffer in @reset_buffer.
  * @reset_buffer: reset the buffer to its state when it was freshly allocated.
@@ -182,10 +182,10 @@ gboolean         gst_buffer_pool_has_option      (GstBufferPool *pool, const gch
 /* helpers for configuring the config structure */
 void             gst_buffer_pool_config_set      (GstStructure *config, const GstCaps *caps,
                                                   guint size, guint min_buffers, guint max_buffers,
-                                                  guint prefix, guint align);
+                                                  guint prefix, guint padding, guint align);
 gboolean         gst_buffer_pool_config_get      (GstStructure *config, const GstCaps **caps,
                                                   guint *size, guint *min_buffers, guint *max_buffers,
-                                                  guint *prefix, guint *align);
+                                                  guint *prefix, guint *padding, guint *align);
 
 /* options */
 guint            gst_buffer_pool_config_n_options   (GstStructure *config);

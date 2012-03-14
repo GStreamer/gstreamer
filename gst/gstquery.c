@@ -1484,6 +1484,7 @@ gst_query_new_allocation (GstCaps * caps, gboolean need_pool)
       GST_QUARK (MIN_BUFFERS), G_TYPE_UINT, 0,
       GST_QUARK (MAX_BUFFERS), G_TYPE_UINT, 0,
       GST_QUARK (PREFIX), G_TYPE_UINT, 0,
+      GST_QUARK (PADDING), G_TYPE_UINT, 0,
       GST_QUARK (ALIGN), G_TYPE_UINT, 0,
       GST_QUARK (POOL), GST_TYPE_BUFFER_POOL, NULL, NULL);
 
@@ -1523,6 +1524,7 @@ gst_query_parse_allocation (GstQuery * query, GstCaps ** caps,
  * @min_buffers: the min buffers
  * @max_buffers: the max buffers
  * @prefix: the prefix
+ * @padding: the padding
  * @alignment: the alignment
  * @pool: the #GstBufferPool
  *
@@ -1530,7 +1532,7 @@ gst_query_parse_allocation (GstQuery * query, GstCaps ** caps,
  */
 void
 gst_query_set_allocation_params (GstQuery * query, guint size,
-    guint min_buffers, guint max_buffers, guint prefix,
+    guint min_buffers, guint max_buffers, guint prefix, guint padding,
     guint alignment, GstBufferPool * pool)
 {
   GstStructure *structure;
@@ -1546,6 +1548,7 @@ gst_query_set_allocation_params (GstQuery * query, guint size,
       GST_QUARK (MIN_BUFFERS), G_TYPE_UINT, min_buffers,
       GST_QUARK (MAX_BUFFERS), G_TYPE_UINT, max_buffers,
       GST_QUARK (PREFIX), G_TYPE_UINT, prefix,
+      GST_QUARK (PADDING), G_TYPE_UINT, padding,
       GST_QUARK (ALIGN), G_TYPE_UINT, alignment,
       GST_QUARK (POOL), GST_TYPE_BUFFER_POOL, pool, NULL);
 }
@@ -1557,6 +1560,7 @@ gst_query_set_allocation_params (GstQuery * query, guint size,
  * @min_buffers: (out) (allow-none): the min buffers
  * @max_buffers: (out) (allow-none): the max buffers
  * @prefix: (out) (allow-none): the prefix
+ * @padding: (out) (allow-none): the padding
  * @alignment: (out) (allow-none): the alignment
  * @pool: (out) (allow-none) (transfer full): the #GstBufferPool
  *
@@ -1565,7 +1569,7 @@ gst_query_set_allocation_params (GstQuery * query, guint size,
 void
 gst_query_parse_allocation_params (GstQuery * query, guint * size,
     guint * min_buffers, guint * max_buffers, guint * prefix,
-    guint * alignment, GstBufferPool ** pool)
+    guint * padding, guint * alignment, GstBufferPool ** pool)
 {
   GstStructure *structure;
 
@@ -1577,6 +1581,7 @@ gst_query_parse_allocation_params (GstQuery * query, guint * size,
       GST_QUARK (MIN_BUFFERS), G_TYPE_UINT, min_buffers,
       GST_QUARK (MAX_BUFFERS), G_TYPE_UINT, max_buffers,
       GST_QUARK (PREFIX), G_TYPE_UINT, prefix,
+      GST_QUARK (PADDING), G_TYPE_UINT, padding,
       GST_QUARK (ALIGN), G_TYPE_UINT, alignment,
       GST_QUARK (POOL), GST_TYPE_BUFFER_POOL, pool, NULL);
 }

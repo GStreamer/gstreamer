@@ -247,6 +247,7 @@ struct _GstBaseSrcPrivate
   GstBufferPool *pool;
   GstAllocator *allocator;
   guint prefix;
+  guint padding;
   guint alignment;
 };
 
@@ -1357,13 +1358,13 @@ gst_base_src_default_alloc (GstBaseSrc * src, guint64 offset,
     GstMemory *mem;
     guint maxsize;
 
-    maxsize = size + priv->prefix;
+    maxsize = size + priv->prefix + priv->padding;
 
     mem = gst_allocator_alloc (priv->allocator, maxsize, priv->alignment);
     if (G_UNLIKELY (mem == NULL))
       goto alloc_failed;
 
-    if (priv->prefix != 0)
+    if (priv->prefix != 0 || priv->padding != 0)
       gst_memory_resize (mem, priv->prefix, size);
 
     *buffer = gst_buffer_new ();
@@ -2722,7 +2723,7 @@ null_buffer:
 
 static gboolean
 gst_base_src_set_allocation (GstBaseSrc * basesrc, GstBufferPool * pool,
-    GstAllocator * allocator, guint prefix, guint alignment)
+    GstAllocator * allocator, guint prefix, guint padding, guint alignment)
 {
   GstAllocator *oldalloc;
   GstBufferPool *oldpool;
@@ -2742,6 +2743,7 @@ gst_base_src_set_allocation (GstBaseSrc * basesrc, GstBufferPool * pool,
   priv->allocator = allocator;
 
   priv->prefix = prefix;
+  priv->padding = padding;
   priv->alignment = alignment;
   GST_OBJECT_UNLOCK (basesrc);
 
@@ -2793,7 +2795,7 @@ gst_base_src_prepare_allocation (GstBaseSrc * basesrc, GstCaps * caps)
   GstQuery *query;
   GstBufferPool *pool = NULL;
   GstAllocator *allocator = NULL;
-  guint size, min, max, prefix, alignment;
+  guint size, min, max, prefix, padding, alignment;
 
   bclass = GST_BASE_SRC_GET_CLASS (basesrc);
 
@@ -2812,7 +2814,7 @@ gst_base_src_prepare_allocation (GstBaseSrc * basesrc, GstCaps * caps)
   GST_DEBUG_OBJECT (basesrc, "ALLOCATION (%d) params: %" GST_PTR_FORMAT, result,
       query);
   gst_query_parse_allocation_params (query, &size, &min, &max, &prefix,
-      &alignment, &pool);
+      &padding, &alignment, &pool);
 
   if (size == 0) {
     /* no size, we have variable size buffers */
@@ -2831,14 +2833,15 @@ gst_base_src_prepare_allocation (GstBaseSrc * basesrc, GstCaps * caps)
 
     config = gst_buffer_pool_get_config (pool);
     gst_buffer_pool_config_set (config, caps, size, min, max, prefix,
-        alignment);
+        padding, alignment);
     gst_buffer_pool_set_config (pool, config);
   }
 
   gst_query_unref (query);
 
   result =
-      gst_base_src_set_allocation (basesrc, pool, allocator, prefix, alignment);
+      gst_base_src_set_allocation (basesrc, pool, allocator, prefix, padding,
+      alignment);
 
   return result;
 
@@ -3195,7 +3198,7 @@ gst_base_src_stop (GstBaseSrc * basesrc)
   if (bclass->stop)
     result = bclass->stop (basesrc);
 
-  gst_base_src_set_allocation (basesrc, NULL, NULL, 0, 0);
+  gst_base_src_set_allocation (basesrc, NULL, NULL, 0, 0, 0);
 
   return result;
 

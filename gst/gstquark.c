@@ -51,7 +51,7 @@ static const gchar *_quark_strings[] = {
   "message", "GstMessageQOS", "running-time", "stream-time", "jitter",
   "quality", "processed", "dropped", "buffering-ranges", "GstMessageProgress",
   "code", "text", "percent", "timeout", "GstBufferPoolConfig", "caps", "size",
-  "min-buffers", "max-buffers", "prefix", "postfix", "align", "time",
+  "min-buffers", "max-buffers", "prefix", "padding", "align", "time",
   "GstQueryAllocation", "need-pool", "meta", "pool", "GstEventCaps",
   "GstEventReconfigure", "segment", "GstQueryScheduling", "pull-mode",
   "allocator", "GstEventFlushStop", "options", "GstQueryAcceptCaps",

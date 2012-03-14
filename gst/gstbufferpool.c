@@ -70,6 +70,7 @@ struct _GstBufferPoolPrivate
   guint min_buffers;
   guint max_buffers;
   guint prefix;
+  guint padding;
   guint align;
 };
 
@@ -133,7 +134,7 @@ gst_buffer_pool_init (GstBufferPool * pool)
   pool->priv->started = FALSE;
   pool->priv->config =
       gst_structure_new_id_empty (GST_QUARK (BUFFER_POOL_CONFIG));
-  gst_buffer_pool_config_set (pool->priv->config, NULL, 0, 0, 0, 0, 0);
+  gst_buffer_pool_config_set (pool->priv->config, NULL, 0, 0, 0, 0, 0, 0);
   gst_poll_write_control (pool->priv->poll);
 
   GST_DEBUG_OBJECT (pool, "created");
@@ -184,7 +185,9 @@ default_alloc_buffer (GstBufferPool * pool, GstBuffer ** buffer,
 
   *buffer = gst_buffer_new ();
 
-  mem = gst_allocator_alloc (NULL, priv->size + priv->prefix, priv->align);
+  mem =
+      gst_allocator_alloc (NULL, priv->size + priv->prefix + priv->padding,
+      priv->align);
   gst_memory_resize (mem, priv->prefix, priv->size);
   gst_buffer_take_memory (*buffer, -1, mem);
 
@@ -431,11 +434,11 @@ default_set_config (GstBufferPool * pool, GstStructure * config)
   GstBufferPoolPrivate *priv = pool->priv;
   const GstCaps *caps;
   guint size, min_buffers, max_buffers;
-  guint prefix, align;
+  guint prefix, padding, align;
 
   /* parse the config and keep around */
   if (!gst_buffer_pool_config_get (config, &caps, &size, &min_buffers,
-          &max_buffers, &prefix, &align))
+          &max_buffers, &prefix, &padding, &align))
     goto wrong_config;
 
   GST_DEBUG_OBJECT (pool, "config %" GST_PTR_FORMAT, config);
@@ -444,6 +447,7 @@ default_set_config (GstBufferPool * pool, GstStructure * config)
   priv->min_buffers = min_buffers;
   priv->max_buffers = max_buffers;
   priv->prefix = prefix;
+  priv->padding = padding;
   priv->align = align;
 
   return TRUE;
@@ -621,17 +625,19 @@ gst_buffer_pool_has_option (GstBufferPool * pool, const gchar * option)
  * gst_buffer_pool_config_set:
  * @config: a #GstBufferPool configuration
  * @caps: caps for the buffers
- * @size: the size of each buffer, not including prefix
+ * @size: the size of each buffer, not including prefix and padding
  * @min_buffers: the minimum amount of buffers to allocate.
  * @max_buffers: the maximum amount of buffers to allocate or 0 for unlimited.
  * @prefix: prefix each buffer with this many bytes
+ * @padding: pad each buffer with this many bytes
  * @align: alignment of the buffer data.
  *
  * Configure @config with the given parameters.
  */
 void
 gst_buffer_pool_config_set (GstStructure * config, const GstCaps * caps,
-    guint size, guint min_buffers, guint max_buffers, guint prefix, guint align)
+    guint size, guint min_buffers, guint max_buffers, guint prefix,
+    guint padding, guint align)
 {
   g_return_if_fail (config != NULL);
 
@@ -641,6 +647,7 @@ gst_buffer_pool_config_set (GstStructure * config, const GstCaps * caps,
       GST_QUARK (MIN_BUFFERS), G_TYPE_UINT, min_buffers,
       GST_QUARK (MAX_BUFFERS), G_TYPE_UINT, max_buffers,
       GST_QUARK (PREFIX), G_TYPE_UINT, prefix,
+      GST_QUARK (PADDING), G_TYPE_UINT, padding,
       GST_QUARK (ALIGN), G_TYPE_UINT, align, NULL);
 }
 
@@ -772,10 +779,11 @@ gst_buffer_pool_config_has_option (GstStructure * config, const gchar * option)
  * gst_buffer_pool_config_get:
  * @config: (transfer none): a #GstBufferPool configuration
  * @caps: (out): the caps of buffers
- * @size: (out): the size of each buffer, not including prefix
+ * @size: (out): the size of each buffer, not including prefix and padding
  * @min_buffers: (out): the minimum amount of buffers to allocate.
  * @max_buffers: (out): the maximum amount of buffers to allocate or 0 for unlimited.
  * @prefix: (out): prefix each buffer with this many bytes
+ * @padding: (out): pad each buffer with this many bytes
  * @align: (out): alignment of the buffer data.
  *
  * Get the configuration values from @config.
@@ -783,7 +791,7 @@ gst_buffer_pool_config_has_option (GstStructure * config, const gchar * option)
 gboolean
 gst_buffer_pool_config_get (GstStructure * config, const GstCaps ** caps,
     guint * size, guint * min_buffers, guint * max_buffers, guint * prefix,
-    guint * align)
+    guint * padding, guint * align)
 {
   g_return_val_if_fail (config != NULL, FALSE);
 
@@ -793,6 +801,7 @@ gst_buffer_pool_config_get (GstStructure * config, const GstCaps ** caps,
       GST_QUARK (MIN_BUFFERS), G_TYPE_UINT, min_buffers,
       GST_QUARK (MAX_BUFFERS), G_TYPE_UINT, max_buffers,
       GST_QUARK (PREFIX), G_TYPE_UINT, prefix,
+      GST_QUARK (PADDING), G_TYPE_UINT, padding,
       GST_QUARK (ALIGN), G_TYPE_UINT, align, NULL);
 }
 
