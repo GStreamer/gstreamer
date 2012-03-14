@@ -908,6 +908,7 @@ gst_video_overlay_rectangle_get_pixels_argb_internal (GstVideoOverlayRectangle *
     rectangle, guint * stride, GstVideoOverlayFormatFlags flags,
     gboolean unscaled)
 {
+  GstVideoOverlayFormatFlags new_flags;
   GstVideoOverlayRectangle *scaled_rect = NULL;
   GstBlendVideoFormatInfo info;
   GstBuffer *buf;
@@ -960,11 +961,14 @@ gst_video_overlay_rectangle_get_pixels_argb_internal (GstVideoOverlayRectangle *
     info.pixels = g_memdup (info.pixels, info.size);
   }
 
+  new_flags = rectangle->flags;
   if (!gst_video_overlay_rectangle_is_same_alpha_type (rectangle->flags, flags)) {
     if (rectangle->flags & GST_VIDEO_OVERLAY_FORMAT_FLAG_PREMULTIPLIED_ALPHA) {
       gst_video_overlay_rectangle_unpremultiply (&info);
+      new_flags &= ~GST_VIDEO_OVERLAY_FORMAT_FLAG_PREMULTIPLIED_ALPHA;
     } else {
       gst_video_overlay_rectangle_premultiply (&info);
+      new_flags |= GST_VIDEO_OVERLAY_FORMAT_FLAG_PREMULTIPLIED_ALPHA;
     }
   }
 
@@ -975,7 +979,7 @@ gst_video_overlay_rectangle_get_pixels_argb_internal (GstVideoOverlayRectangle *
 
   scaled_rect = gst_video_overlay_rectangle_new_argb (buf,
       wanted_width, wanted_height, info.stride[0],
-      0, 0, wanted_width, wanted_height, rectangle->flags);
+      0, 0, wanted_width, wanted_height, new_flags);
 
   gst_buffer_unref (buf);
 
