@@ -98,6 +98,7 @@ libgstreamer_@GST_MAJORMINOR@_la_SOURCES = \
 	gsttagsetter.c		\
 	gsttask.c		\
 	gsttaskpool.c		\
+	gsttoc.c		\
 	$(GST_TRACE_SRC)	\
 	gsttypefind.c		\
 	gsttypefindfactory.c	\
@@ -188,6 +189,7 @@ gst_headers =			\
 	gsttagsetter.h		\
 	gsttask.h		\
 	gsttaskpool.h		\
+	gsttoc.h		\
 	gsttrace.h		\
 	gsttypefind.h		\
 	gsttypefindfactory.h	\
