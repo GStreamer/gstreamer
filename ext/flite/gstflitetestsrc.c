@@ -104,7 +104,7 @@ static GstFlowReturn gst_flite_test_src_create (GstBaseSrc * basesrc,
     guint64 offset, guint length, GstBuffer ** buffer);
 static gboolean
 gst_flite_test_src_set_caps (GstBaseSrc * basesrc, GstCaps * caps);
-static void gst_flite_test_src_fixate (GstBaseSrc * bsrc, GstCaps * caps);
+static GstCaps *gst_flite_test_src_fixate (GstBaseSrc * bsrc, GstCaps * caps);
 
 static void
 gst_flite_test_src_class_init (GstFliteTestSrcClass * klass)
@@ -171,7 +171,7 @@ n_bits_set (guint64 x)
   return c;
 }
 
-static void
+static GstCaps *
 gst_flite_test_src_fixate (GstBaseSrc * bsrc, GstCaps * caps)
 {
   GstStructure *structure;
@@ -262,7 +262,7 @@ gst_flite_test_src_fixate (GstBaseSrc * bsrc, GstCaps * caps)
         channel_mask, NULL);
   }
 
-  GST_BASE_SRC_CLASS (parent_class)->fixate (bsrc, caps);
+  return GST_BASE_SRC_CLASS (parent_class)->fixate (bsrc, caps);
 }
 
 static gboolean
