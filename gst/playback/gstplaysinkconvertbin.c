@@ -254,8 +254,7 @@ pad_blocked_cb (GstPad * pad, gboolean blocked, GstPlaySinkConvertBin * self)
 
 unblock:
   gst_pad_set_blocked_async_full (self->sink_proxypad, FALSE,
-      (GstPadBlockCallback) pad_blocked_cb, gst_object_ref (self),
-      (GDestroyNotify) gst_object_unref);
+      (GstPadBlockCallback) pad_blocked_cb, self, NULL);
 
 done:
   GST_PLAY_SINK_CONVERT_BIN_UNLOCK (self);
@@ -338,8 +337,7 @@ gst_play_sink_convert_bin_sink_setcaps (GstPad * pad, GstCaps * caps)
 
         reconfigure = TRUE;
         gst_pad_set_blocked_async_full (self->sink_proxypad, TRUE,
-            (GstPadBlockCallback) pad_blocked_cb, gst_object_ref (self),
-            (GDestroyNotify) gst_object_unref);
+            (GstPadBlockCallback) pad_blocked_cb, self, NULL);
       }
 
       if (target)
@@ -350,8 +348,7 @@ gst_play_sink_convert_bin_sink_setcaps (GstPad * pad, GstCaps * caps)
       GST_DEBUG_OBJECT (self, "Changing caps from raw to non-raw");
       reconfigure = TRUE;
       gst_pad_set_blocked_async_full (self->sink_proxypad, TRUE,
-          (GstPadBlockCallback) pad_blocked_cb, gst_object_ref (self),
-          (GDestroyNotify) gst_object_unref);
+          (GstPadBlockCallback) pad_blocked_cb, self, NULL);
     }
   }
 
@@ -509,8 +506,7 @@ gst_play_sink_convert_bin_change_state (GstElement * element,
       GST_PLAY_SINK_CONVERT_BIN_LOCK (self);
       if (gst_pad_is_blocked (self->sink_proxypad))
         gst_pad_set_blocked_async_full (self->sink_proxypad, FALSE,
-            (GstPadBlockCallback) pad_blocked_cb, gst_object_ref (self),
-            (GDestroyNotify) gst_object_unref);
+            (GstPadBlockCallback) pad_blocked_cb, self, NULL);
       GST_PLAY_SINK_CONVERT_BIN_UNLOCK (self);
       break;
     case GST_STATE_CHANGE_READY_TO_PAUSED:
@@ -540,8 +536,7 @@ gst_play_sink_convert_bin_change_state (GstElement * element,
       GST_PLAY_SINK_CONVERT_BIN_LOCK (self);
       if (!gst_pad_is_blocked (self->sink_proxypad))
         gst_pad_set_blocked_async_full (self->sink_proxypad, TRUE,
-            (GstPadBlockCallback) pad_blocked_cb, gst_object_ref (self),
-            (GDestroyNotify) gst_object_unref);
+            (GstPadBlockCallback) pad_blocked_cb, self, NULL);
       GST_PLAY_SINK_CONVERT_BIN_UNLOCK (self);
       break;
     default:
