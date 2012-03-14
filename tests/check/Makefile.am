@@ -63,7 +63,7 @@ REGISTRY_CHECKS =				\
 	gst/gstevent				\
 	gst/gstghostpad				\
 	gst/gstindex				\
-	gst/gstinterface				\
+	gst/gstinterface			\
 	gst/gstplugin				\
 	gst/gstpreset				\
 	gst/gstquery				\
@@ -118,6 +118,7 @@ check_PROGRAMS =				\
 	gst/gsttag				\
 	gst/gsttagsetter			\
 	gst/gsttask				\
+	gst/gsttoc				\
 	gst/gstvalue				\
 	generic/states				\
 	$(PARSE_CHECKS)				\
