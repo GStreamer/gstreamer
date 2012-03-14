@@ -251,13 +251,12 @@ video_buffer_pool_alloc (GstBufferPool * pool, GstBuffer ** buffer,
   GST_DEBUG_OBJECT (pool, "alloc %" G_GSIZE_FORMAT, info->size);
 
   maxsize = info->size + priv->prefix + priv->padding;
-  mem = gst_allocator_alloc (priv->allocator, maxsize, priv->align);
+  mem = gst_allocator_alloc (priv->allocator, 0, maxsize, priv->prefix,
+      info->size, priv->align);
   if (mem == NULL)
     goto no_memory;
 
   *buffer = gst_buffer_new ();
-  if (priv->prefix != 0 || priv->padding != 0)
-    gst_memory_resize (mem, priv->prefix, info->size);
   gst_buffer_take_memory (*buffer, -1, mem);
 
   if (priv->add_videometa) {
