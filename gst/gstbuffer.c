@@ -536,7 +536,7 @@ gst_buffer_new_allocate (GstAllocator * allocator, gsize size, gsize align)
 
 #if 1
   if (size > 0) {
-    mem = gst_allocator_alloc (allocator, size, align);
+    mem = gst_allocator_alloc (allocator, 0, size, 0, size, align);
     if (G_UNLIKELY (mem == NULL))
       goto no_memory;
   } else {
@@ -1343,7 +1343,7 @@ _gst_buffer_arr_span (GstMemory ** mem[], gsize len[], guint n, gsize offset,
     GstMapInfo dinfo;
     guint8 *ptr;
 
-    span = gst_allocator_alloc (NULL, size, 0);
+    span = gst_allocator_alloc (NULL, 0, size, 0, size, 0);
     gst_memory_map (span, &dinfo, GST_MAP_WRITE);
 
     ptr = dinfo.data;

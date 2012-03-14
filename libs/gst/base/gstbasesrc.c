@@ -1360,12 +1360,10 @@ gst_base_src_default_alloc (GstBaseSrc * src, guint64 offset,
 
     maxsize = size + priv->prefix + priv->padding;
 
-    mem = gst_allocator_alloc (priv->allocator, maxsize, priv->alignment);
+    mem = gst_allocator_alloc (priv->allocator, 0, maxsize, priv->prefix,
+        size, priv->alignment);
     if (G_UNLIKELY (mem == NULL))
       goto alloc_failed;
-
-    if (priv->prefix != 0 || priv->padding != 0)
-      gst_memory_resize (mem, priv->prefix, size);
 
     *buffer = gst_buffer_new ();
     if (G_UNLIKELY (*buffer == NULL))

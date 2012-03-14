@@ -1523,9 +1523,8 @@ default_prepare_output_buffer (GstBaseTransform * trans,
 
   GST_DEBUG_OBJECT (trans, "doing alloc of size %" G_GSIZE_FORMAT, outsize);
   maxsize = outsize + priv->prefix + priv->padding;
-  mem = gst_allocator_alloc (priv->allocator, maxsize, priv->alignment);
-  if (priv->prefix != 0 || priv->padding != 0)
-    gst_memory_resize (mem, priv->prefix, outsize);
+  mem = gst_allocator_alloc (priv->allocator, 0, maxsize, priv->prefix,
+      outsize, priv->alignment);
 
   *outbuf = gst_buffer_new ();
   gst_buffer_take_memory (*outbuf, -1, mem);

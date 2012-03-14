@@ -182,13 +182,13 @@ default_alloc_buffer (GstBufferPool * pool, GstBuffer ** buffer,
 {
   GstBufferPoolPrivate *priv = pool->priv;
   GstMemory *mem;
+  gsize maxsize;
 
   *buffer = gst_buffer_new ();
 
-  mem =
-      gst_allocator_alloc (NULL, priv->size + priv->prefix + priv->padding,
-      priv->align);
-  gst_memory_resize (mem, priv->prefix, priv->size);
+  maxsize = priv->size + priv->prefix + priv->padding;
+  mem = gst_allocator_alloc (NULL, 0, maxsize, priv->prefix,
+      priv->size, priv->align);
   gst_buffer_take_memory (*buffer, -1, mem);
 
   return GST_FLOW_OK;

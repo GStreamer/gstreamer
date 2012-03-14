@@ -49,15 +49,19 @@ GST_EXPORT gsize gst_memory_alignment;
  * memory with #GST_MAP_WRITE.
  * @GST_MEMORY_FLAG_NO_SHARE: memory must not be shared. Copies will have to be
  * made when this memory needs to be shared between buffers.
+ * @GST_MEMORY_FLAG_ZERO_PREFIXED: the memory prefix is filled with 0 bytes
+ * @GST_MEMORY_FLAG_ZERO_PADDED: the memory padding is filled with 0 bytes
  * @GST_MEMORY_FLAG_LAST: first flag that can be used for custom purposes
  *
  * Flags for wrapped memory.
  */
 typedef enum {
-  GST_MEMORY_FLAG_READONLY = (1 << 0),
-  GST_MEMORY_FLAG_NO_SHARE = (1 << 1),
+  GST_MEMORY_FLAG_READONLY      = (1 << 0),
+  GST_MEMORY_FLAG_NO_SHARE      = (1 << 1),
+  GST_MEMORY_FLAG_ZERO_PREFIXED = (1 << 2),
+  GST_MEMORY_FLAG_ZERO_PADDED   = (1 << 3),
 
-  GST_MEMORY_FLAG_LAST     = (1 << 16)
+  GST_MEMORY_FLAG_LAST          = (1 << 16)
 } GstMemoryFlags;
 
 /**
@@ -75,6 +79,14 @@ typedef enum {
  * Gives the status of a specific flag on a @mem.
  */
 #define GST_MEMORY_FLAG_IS_SET(mem,flag)   !!(GST_MEMORY_FLAGS (mem) & (flag))
+/**
+ * GST_MEMORY_FLAG_UNSET:
+ * @mem: a #GstMemory.
+ * @flag: the #GstMemoryFlags to clear.
+ *
+ * Clear a specific flag on a @mem.
+ */
+#define GST_MEMORY_FLAG_UNSET(mem,flag)   (GST_MEMORY_FLAGS (mem) &= ~(flag))
 
 /**
  * GST_MEMORY_IS_READONLY:
@@ -83,6 +95,21 @@ typedef enum {
  * Check if @mem is readonly.
  */
 #define GST_MEMORY_IS_READONLY(mem)        GST_MEMORY_FLAG_IS_SET(mem,GST_MEMORY_FLAG_READONLY)
+/**
+ * GST_MEMORY_IS_ZERO_PREFIXED:
+ * @mem: a #GstMemory.
+ *
+ * Check if the prefix in @mem is 0 filled.
+ */
+#define GST_MEMORY_IS_ZERO_PREFIXED(mem)   GST_MEMORY_FLAG_IS_SET(mem,GST_MEMORY_FLAG_ZERO_PREFIXED)
+/**
+ * GST_MEMORY_IS_ZERO_PADDED:
+ * @mem: a #GstMemory.
+ *
+ * Check if the padding in @mem is 0 filled.
+ */
+#define GST_MEMORY_IS_ZERO_PADDED(mem)     GST_MEMORY_FLAG_IS_SET(mem,GST_MEMORY_FLAG_ZERO_PADDED)
+
 
 /**
  * GstMemory:
@@ -169,19 +196,28 @@ typedef struct {
 /**
  * GstAllocatorAllocFunction:
  * @allocator: a #GstAllocator
+ * @flags: the flags
  * @maxsize: the maxsize
+ * @offset: the offset
+ * @size: the size
  * @align: the alignment
  * @user_data: user data
  *
  * Allocate a new #GstMemory from @allocator that can hold at least @maxsize bytes
  * and is aligned to (@align + 1) bytes.
  *
+ * The offset and size of the memory should be set and the prefix/padding must
+ * be filled with 0 if @flags contains #GST_MEMORY_FLAG_ZERO_PREFIXED and
+ * #GST_MEMORY_FLAG_ZERO_PADDED respectively.
+ *
  * @user_data is the data that was used when creating @allocator.
  *
  * Returns: a newly allocated #GstMemory. Free with gst_memory_unref()
  */
 typedef GstMemory *  (*GstAllocatorAllocFunction)  (GstAllocator *allocator,
-                                                    gsize maxsize, gsize align,
+                                                    GstMemoryFlags flags,
+                                                    gsize maxsize, gsize offset,
+                                                    gsize size, gsize align,
                                                     gpointer user_data);
 
 /**
@@ -305,8 +341,9 @@ GstAllocator * gst_allocator_find            (const gchar *name);
 void           gst_allocator_set_default     (GstAllocator * allocator);
 
 /* allocating memory blocks */
-GstMemory *    gst_allocator_alloc           (GstAllocator * allocator,
-                                              gsize maxsize, gsize align);
+GstMemory *    gst_allocator_alloc           (GstAllocator * allocator, GstMemoryFlags flags,
+                                              gsize maxsize, gsize offset, gsize size,
+                                              gsize align);
 
 GstMemory *    gst_memory_new_wrapped  (GstMemoryFlags flags, gpointer data, gsize maxsize,
                                         gsize offset, gsize size, gpointer user_data,

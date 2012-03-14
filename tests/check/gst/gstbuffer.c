@@ -460,7 +460,7 @@ GST_START_TEST (test_size)
   fail_unless (maxsize == maxalloc);
 
   /* new memory */
-  mem = gst_allocator_alloc (NULL, 100, 0);
+  mem = gst_allocator_alloc (NULL, 0, 100, 0, 100, 0);
   size = gst_memory_get_sizes (mem, &offset, &maxalloc2);
   fail_unless (size == 100);
   fail_unless (offset == 0);
@@ -483,7 +483,7 @@ GST_START_TEST (test_size)
   fail_unless (maxalloc == 80 + (maxalloc2 - 20));
 
   /* appending an empty block */
-  mem = gst_allocator_alloc (NULL, 100, 0);
+  mem = gst_allocator_alloc (NULL, 0, 100, 0, 100, 0);
   size = gst_memory_get_sizes (mem, &offset, &maxalloc3);
   gst_memory_resize (mem, 0, 0);
   gst_buffer_take_memory (buf, -1, mem);
@@ -496,7 +496,7 @@ GST_START_TEST (test_size)
   fail_unless (maxalloc == 80 + (maxalloc2 - 20) + maxalloc3);
 
   /* prepending an empty block */
-  mem = gst_allocator_alloc (NULL, 100, 0);
+  mem = gst_allocator_alloc (NULL, 0, 100, 0, 100, 0);
   size = gst_memory_get_sizes (mem, &offset, &maxalloc4);
   gst_memory_resize (mem, 0, 0);
   gst_buffer_take_memory (buf, 0, mem);
@@ -619,8 +619,8 @@ GST_START_TEST (test_map)
   gsize size, offset;
 
   buf = gst_buffer_new ();
-  gst_buffer_take_memory (buf, -1, gst_allocator_alloc (NULL, 50, 0));
-  gst_buffer_take_memory (buf, -1, gst_allocator_alloc (NULL, 50, 0));
+  gst_buffer_take_memory (buf, -1, gst_allocator_alloc (NULL, 0, 50, 0, 50, 0));
+  gst_buffer_take_memory (buf, -1, gst_allocator_alloc (NULL, 0, 50, 0, 50, 0));
 
   size = gst_buffer_get_sizes (buf, &offset, &maxalloc);
   fail_unless (size == 100);
