@@ -490,6 +490,12 @@ decode_gop(GstVaapiDecoderMpeg2 *decoder, guchar *buf, guint buf_size)
 
     pts = GST_SECOND * (gop.hour * 3600 + gop.minute * 60 + gop.second);
     pts += gst_util_uint64_scale(gop.frame, GST_SECOND * priv->fps_d, priv->fps_n);
+    if (priv->gop_pts != GST_CLOCK_TIME_NONE && pts <= priv->gop_pts) {
+        /* Try to fix GOP timestamps, based on demux timestamps */
+        pts = gst_adapter_prev_timestamp(priv->adapter, NULL);
+        if (pts != GST_CLOCK_TIME_NONE)
+            pts -= priv->pts_diff;
+    }
     priv->gop_pts = pts;
     if (!priv->pts_diff)
         priv->pts_diff = priv->seq_pts - priv->gop_pts;
