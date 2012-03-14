@@ -369,7 +369,8 @@ gst_file_src_fill (GstBaseSrc * basesrc, guint64 offset, guint length,
   }
 
   gst_buffer_unmap (buf, &info);
-  gst_buffer_resize (buf, 0, bytes_read);
+  if (bytes_read != length)
+    gst_buffer_resize (buf, 0, bytes_read);
 
   GST_BUFFER_OFFSET (buf) = offset;
   GST_BUFFER_OFFSET_END (buf) = offset + bytes_read;
