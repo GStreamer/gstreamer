@@ -1440,8 +1440,8 @@ gst_ffmpegdec_audio_negotiate (GstFFMpegDec * ffmpegdec, gboolean force)
   memcpy (ffmpegdec->format.audio.gst_layout,
       ffmpegdec->format.audio.ffmpeg_layout,
       sizeof (GstAudioChannelPosition) * ffmpegdec->format.audio.channels);
-  gst_audio_channel_positions_to_valid_order (ffmpegdec->format.
-      audio.gst_layout, ffmpegdec->format.audio.channels);
+  gst_audio_channel_positions_to_valid_order (ffmpegdec->format.audio.
+      gst_layout, ffmpegdec->format.audio.channels);
 
   GST_LOG_OBJECT (ffmpegdec, "output caps %" GST_PTR_FORMAT, caps);
 
@@ -2720,6 +2720,14 @@ gst_ffmpegdec_sink_query (GstPad * pad, GstObject * parent, GstQuery * query)
       }
       break;
     }
+    case GST_QUERY_ALLOCATION:
+      /* we would like to have some padding so that we don't have to memcpy,
+       * since we have variable sized input, set size to 0, min/max buffers and
+       * a pool are not useful for us. */
+      gst_query_set_allocation_params (query, 0, 0, 0, 0,
+          FF_INPUT_BUFFER_PADDING_SIZE, 0, NULL);
+      ret = TRUE;
+      break;
     default:
       ret = gst_pad_query_default (pad, parent, query);
       break;
