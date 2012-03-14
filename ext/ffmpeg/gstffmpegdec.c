@@ -1099,7 +1099,7 @@ gst_ffmpegdec_bufferpool (GstFFMpegDec * ffmpegdec, GstCaps * caps)
 {
   GstQuery *query;
   GstBufferPool *pool = NULL;
-  guint size, min, max, prefix, alignment;
+  guint size, min, max, prefix, padding, alignment;
   GstStructure *config;
   guint edge;
   AVCodecContext *context = ffmpegdec->context;
@@ -1113,7 +1113,7 @@ gst_ffmpegdec_bufferpool (GstFFMpegDec * ffmpegdec, GstCaps * caps)
   if (gst_pad_peer_query (ffmpegdec->srcpad, query)) {
     /* we got configuration from our peer, parse them */
     gst_query_parse_allocation_params (query, &size, &min, &max, &prefix,
-        &alignment, &pool);
+        &padding, &alignment, &pool);
     size = MAX (size, ffmpegdec->out_info.size);
 
     have_videometa =
@@ -1123,6 +1123,7 @@ gst_ffmpegdec_bufferpool (GstFFMpegDec * ffmpegdec, GstCaps * caps)
     size = ffmpegdec->out_info.size;
     min = max = 0;
     prefix = 0;
+    padding = 0;
     alignment = 15;
     have_videometa = FALSE;
   }
@@ -1136,7 +1137,7 @@ gst_ffmpegdec_bufferpool (GstFFMpegDec * ffmpegdec, GstCaps * caps)
 
   config = gst_buffer_pool_get_config (pool);
   gst_buffer_pool_config_set (config, caps, size, min, max, prefix,
-      alignment | 15);
+      padding, alignment | 15);
 
   have_alignment =
       gst_buffer_pool_has_option (pool, GST_BUFFER_POOL_OPTION_VIDEO_ALIGNMENT);
@@ -1737,7 +1738,7 @@ get_output_buffer (GstFFMpegDec * ffmpegdec, GstBuffer ** outbuf)
     src = (AVPicture *) ffmpegdec->picture;
     dest = (AVPicture *) & pic;
 
-    GST_CAT_LOG_OBJECT (GST_CAT_PERFORMANCE, ffmpegdec,
+    GST_CAT_TRACE_OBJECT (GST_CAT_PERFORMANCE, ffmpegdec,
         "copy picture to output buffer %dx%d", width, height);
     av_picture_copy (dest, src, ffmpegdec->context->pix_fmt, width, height);
 
@@ -2849,7 +2850,7 @@ gst_ffmpegdec_chain (GstPad * pad, GstObject * parent, GstBuffer * inbuf)
       GST_LOG_OBJECT (ffmpegdec, "resized padding buffer to %d",
           ffmpegdec->padded_size);
     }
-    GST_CAT_LOG_OBJECT (GST_CAT_PERFORMANCE, ffmpegdec,
+    GST_CAT_TRACE_OBJECT (GST_CAT_PERFORMANCE, ffmpegdec,
         "Copy input to add padding");
     memcpy (ffmpegdec->padded, bdata, bsize);
     memset (ffmpegdec->padded + bsize, 0, FF_INPUT_BUFFER_PADDING_SIZE);
