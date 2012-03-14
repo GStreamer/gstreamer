@@ -411,7 +411,7 @@ gst_wavpack_enc_set_format (GstAudioEncoder * benc, GstAudioInfo * info)
   if (mask)
     gst_caps_set_simple (caps, "channel-mask", GST_TYPE_BITMASK, mask, NULL);
 
-  if (!gst_pad_set_caps (GST_AUDIO_ENCODER_SRC_PAD (enc), caps))
+  if (!gst_audio_encoder_set_output_format (benc, caps))
     goto setting_src_caps_failed;
 
   gst_caps_unref (caps);
