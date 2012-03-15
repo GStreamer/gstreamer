@@ -2067,7 +2067,7 @@ gst_base_video_decoder_set_src_caps (GstBaseVideoDecoder * base_video_decoder)
   base_video_decoder->pool = pool;
 
   config = gst_buffer_pool_get_config (pool);
-  gst_buffer_pool_config_set (config, caps, size, min, max, 0, 0, 0);
+  gst_buffer_pool_config_set_params (config, caps, size, min, max);
   state->bytes_per_picture = size;
 
   if (gst_query_has_allocation_meta (query, GST_VIDEO_META_API_TYPE)) {
