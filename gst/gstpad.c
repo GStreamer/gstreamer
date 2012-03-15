@@ -2767,8 +2767,6 @@ typedef struct
 static gboolean
 query_forward_func (GstPad * pad, QueryData * data)
 {
-  /* for each pad we send to, we should ref the query; it's up
-   * to downstream to unref again when handled. */
   GST_LOG_OBJECT (pad, "query peer %p (%s) of %s:%s",
       data->query, GST_EVENT_TYPE_NAME (data->query), GST_DEBUG_PAD_NAME (pad));
 
@@ -2826,6 +2824,9 @@ gst_pad_query_default (GstPad * pad, GstObject * parent, GstQuery * query)
       break;
   }
 
+  GST_DEBUG_OBJECT (pad, "%sforwarding %p (%s) query", (forward ? "" : "not "),
+      query, GST_QUERY_TYPE_NAME (query));
+
   if (forward) {
     QueryData data;
 
@@ -2838,7 +2839,7 @@ gst_pad_query_default (GstPad * pad, GstObject * parent, GstQuery * query)
     if (data.dispatched) {
       ret = data.result;
     } else {
-      /* nothing dispatched, could be drained */
+      /* nothing dispatched, assume drained */
       if (GST_QUERY_TYPE (query) == GST_QUERY_DRAIN)
         ret = TRUE;
       else
