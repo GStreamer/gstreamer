@@ -917,7 +917,7 @@ theora_negotiate (GstTheoraDec * dec)
   size = MAX (size, GST_VIDEO_INFO_SIZE (&dec->vinfo));
 
   config = gst_buffer_pool_get_config (pool);
-  gst_buffer_pool_config_set (config, caps, size, min, max, 0, 0, 0);
+  gst_buffer_pool_config_set_params (config, caps, size, min, max);
   gst_caps_unref (caps);
 
   if (gst_query_has_allocation_meta (query, GST_VIDEO_META_API_TYPE)) {

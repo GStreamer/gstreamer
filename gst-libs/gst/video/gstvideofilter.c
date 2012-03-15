@@ -82,11 +82,14 @@ gst_video_filter_propose_allocation (GstBaseTransform * trans,
 
   if (need_pool) {
     GstStructure *structure;
+    static GstAllocationParams params = { 0, 0, 0, 15, };
 
     pool = gst_video_buffer_pool_new ();
 
     structure = gst_buffer_pool_get_config (pool);
-    gst_buffer_pool_config_set (structure, caps, size, 0, 0, 0, 0, 15);
+    gst_buffer_pool_config_set_params (structure, caps, size, 0, 0);
+    gst_buffer_pool_config_set_allocator (structure, NULL, &params);
+
     if (!gst_buffer_pool_set_config (pool, structure))
       goto config_failed;
   } else

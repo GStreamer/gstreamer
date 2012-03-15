@@ -1548,6 +1548,7 @@ gst_xvimagesink_setcaps (GstBaseSink * bsink, GstCaps * caps)
   gint display_par_n, display_par_d;    /* display's PAR */
   guint num, den;
   gint size;
+  static GstAllocationParams params = { 0, 0, 0, 15, };
 
   xvimagesink = GST_XVIMAGESINK (bsink);
 
@@ -1656,7 +1657,8 @@ gst_xvimagesink_setcaps (GstBaseSink * bsink, GstCaps * caps)
   newpool = gst_xvimage_buffer_pool_new (xvimagesink);
 
   structure = gst_buffer_pool_get_config (newpool);
-  gst_buffer_pool_config_set (structure, caps, size, 2, 0, 0, 0, 15);
+  gst_buffer_pool_config_set_params (structure, caps, size, 2, 0);
+  gst_buffer_pool_config_set_allocator (structure, NULL, &params);
   if (!gst_buffer_pool_set_config (newpool, structure))
     goto config_failed;
 
@@ -1957,8 +1959,7 @@ gst_xvimagesink_propose_allocation (GstBaseSink * bsink, GstQuery * query)
     /* we had a pool, check caps */
     GST_DEBUG_OBJECT (xvimagesink, "check existing pool caps");
     config = gst_buffer_pool_get_config (pool);
-    gst_buffer_pool_config_get (config, &pcaps, &size, NULL, NULL, NULL, NULL,
-        NULL);
+    gst_buffer_pool_config_get_params (config, &pcaps, &size, NULL, NULL);
 
     if (!gst_caps_is_equal (caps, pcaps)) {
       GST_DEBUG_OBJECT (xvimagesink, "pool has different caps");
@@ -1981,7 +1982,7 @@ gst_xvimagesink_propose_allocation (GstBaseSink * bsink, GstQuery * query)
     size = info.size;
 
     config = gst_buffer_pool_get_config (pool);
-    gst_buffer_pool_config_set (config, caps, size, 0, 0, 0, 0, 0);
+    gst_buffer_pool_config_set_params (config, caps, size, 0, 0);
     if (!gst_buffer_pool_set_config (pool, config))
       goto config_failed;
   }

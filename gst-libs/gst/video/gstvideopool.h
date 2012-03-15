@@ -100,10 +100,6 @@ GType             gst_video_buffer_pool_get_type      (void);
 
 GstBufferPool *   gst_video_buffer_pool_new           (void);
 
-GstAllocator *    gst_video_buffer_pool_get_allocator (GstVideoBufferPool *pool);
-void              gst_video_buffer_pool_set_allocator (GstVideoBufferPool *pool,
-                                                       GstAllocator *allocator);
-
 G_END_DECLS
 
 #endif /* __GST_VIDEO_POOL_H__ */
