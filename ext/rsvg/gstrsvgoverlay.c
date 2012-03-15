@@ -336,7 +336,7 @@ gst_rsvg_overlay_data_sink_event (GstPad * pad, GstEvent * event)
       GST_RSVG_UNLOCK (overlay);
     }
 
-    case GST_EVENT_FLUSH_START:
+    case GST_EVENT_FLUSH_STOP:
       gst_adapter_clear (overlay->adapter);
       break;
 
@@ -436,9 +436,10 @@ gst_rsvg_overlay_stop (GstBaseTransform * btrans)
 
   if (overlay->handle) {
     g_object_unref (overlay->handle);
-    g_object_unref (overlay->adapter);
     overlay->handle = NULL;
   }
+
+  gst_adapter_clear (overlay->adapter);
 
   return TRUE;
 }
