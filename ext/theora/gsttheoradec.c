@@ -773,7 +773,7 @@ theora_negotiate (GstTheoraDec * dec)
   GstVideoFormat format;
   GstQuery *query;
   GstBufferPool *pool;
-  guint size, min, max, prefix, padding, alignment;
+  guint size, min, max;
   GstStructure *config;
   GstCaps *caps;
   GstVideoInfo info, cinfo;
@@ -876,23 +876,22 @@ theora_negotiate (GstTheoraDec * dec)
   query = gst_query_new_allocation (caps, TRUE);
 
   if (gst_pad_peer_query (dec->srcpad, query)) {
-    GST_DEBUG_OBJECT (dec, "got downstream ALLOCATION hints");
-    /* we got configuration from our peer, parse them */
-    gst_query_parse_allocation_params (query, &size, &min, &max, &prefix,
-        &padding, &alignment, &pool);
-
     /* check if downstream supports cropping */
     dec->has_cropping =
         gst_query_has_allocation_meta (query, GST_VIDEO_CROP_META_API_TYPE);
   } else {
+    /* not a problem, deal with defaults */
     GST_DEBUG_OBJECT (dec, "didn't get downstream ALLOCATION hints");
+    dec->has_cropping = FALSE;
+  }
+
+  if (gst_query_get_n_allocation_pools (query) > 0) {
+    /* we got configuration from our peer, parse them */
+    gst_query_parse_nth_allocation_pool (query, 0, &pool, &size, &min, &max);
+  } else {
+    pool = NULL;
     size = 0;
     min = max = 0;
-    prefix = 0;
-    padding = 0;
-    alignment = 0;
-    pool = NULL;
-    dec->has_cropping = FALSE;
   }
   GST_DEBUG_OBJECT (dec, "downstream cropping %d", dec->has_cropping);
 
@@ -918,14 +917,16 @@ theora_negotiate (GstTheoraDec * dec)
   size = MAX (size, GST_VIDEO_INFO_SIZE (&dec->vinfo));
 
   config = gst_buffer_pool_get_config (pool);
-  gst_buffer_pool_config_set (config, caps, size, min, max, prefix, padding,
-      alignment);
+  gst_buffer_pool_config_set (config, caps, size, min, max, 0, 0, 0);
   gst_caps_unref (caps);
 
-  /* just set the option, if the pool can support it we will transparently use
-   * it through the video info API. We could also see if the pool support this
-   * option and only activate it then. */
-  gst_buffer_pool_config_add_option (config, GST_BUFFER_POOL_OPTION_VIDEO_META);
+  if (gst_query_has_allocation_meta (query, GST_VIDEO_META_API_TYPE)) {
+    /* just set the option, if the pool can support it we will transparently use
+     * it through the video info API. We could also see if the pool support this
+     * option and only activate it then. */
+    gst_buffer_pool_config_add_option (config,
+        GST_BUFFER_POOL_OPTION_VIDEO_META);
+  }
 
   gst_buffer_pool_set_config (pool, config);
   /* and activate */
