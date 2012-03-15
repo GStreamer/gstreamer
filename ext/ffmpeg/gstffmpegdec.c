@@ -1104,6 +1104,7 @@ gst_ffmpegdec_bufferpool (GstFFMpegDec * ffmpegdec, GstCaps * caps)
   guint edge;
   AVCodecContext *context = ffmpegdec->context;
   gboolean have_videometa, have_alignment;
+  GstAllocationParams params = { 0, 0, 0, 15, };
 
   GST_DEBUG_OBJECT (ffmpegdec, "setting up bufferpool");
 
@@ -1138,7 +1139,10 @@ gst_ffmpegdec_bufferpool (GstFFMpegDec * ffmpegdec, GstCaps * caps)
   }
 
   config = gst_buffer_pool_get_config (pool);
-  gst_buffer_pool_config_set (config, caps, size, min, max, 0, 0, 15);
+  gst_buffer_pool_config_set_params (config, caps, size, min, max);
+  /* we are happy with the default allocator but we would like to have 16 bytes
+   * aligned memory */
+  gst_buffer_pool_config_set_allocator (config, NULL, &params);
 
   have_alignment =
       gst_buffer_pool_has_option (pool, GST_BUFFER_POOL_OPTION_VIDEO_ALIGNMENT);
