@@ -559,6 +559,7 @@ gst_base_parse_init (GstBaseParse * parse, GstBaseParseClass * bclass)
       GST_DEBUG_FUNCPTR (gst_base_parse_sink_activate));
   gst_pad_set_activatemode_function (parse->sinkpad,
       GST_DEBUG_FUNCPTR (gst_base_parse_sink_activate_mode));
+  GST_PAD_SET_PROXY_ALLOCATION (parse->sinkpad);
   gst_element_add_pad (GST_ELEMENT (parse), parse->sinkpad);
 
   GST_DEBUG_OBJECT (parse, "sinkpad created");

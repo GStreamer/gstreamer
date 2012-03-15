@@ -89,12 +89,6 @@ typedef struct
 
 #define GST_QUERY_STRUCTURE(q)  (((GstQueryImpl *)(q))->structure)
 
-/* GstQueryBufferingRange: internal struct for GArray */
-typedef struct
-{
-  gint64 start;
-  gint64 stop;
-} GstQueryBufferingRange;
 
 typedef struct
 {
@@ -1277,6 +1271,13 @@ gst_query_parse_buffering_range (GstQuery * query, GstFormat * format,
             GST_QUARK (ESTIMATED_TOTAL)));
 }
 
+/* GstQueryBufferingRange: internal struct for GArray */
+typedef struct
+{
+  gint64 start;
+  gint64 stop;
+} GstQueryBufferingRange;
+
 /**
  * gst_query_add_buffering_range:
  * @query: a GST_QUERY_BUFFERING type query #GstQuery
@@ -1484,14 +1485,7 @@ gst_query_new_allocation (GstCaps * caps, gboolean need_pool)
 
   structure = gst_structure_new_id (GST_QUARK (QUERY_ALLOCATION),
       GST_QUARK (CAPS), GST_TYPE_CAPS, caps,
-      GST_QUARK (NEED_POOL), G_TYPE_BOOLEAN, need_pool,
-      GST_QUARK (SIZE), G_TYPE_UINT, 0,
-      GST_QUARK (MIN_BUFFERS), G_TYPE_UINT, 0,
-      GST_QUARK (MAX_BUFFERS), G_TYPE_UINT, 0,
-      GST_QUARK (PREFIX), G_TYPE_UINT, 0,
-      GST_QUARK (PADDING), G_TYPE_UINT, 0,
-      GST_QUARK (ALIGN), G_TYPE_UINT, 0,
-      GST_QUARK (POOL), GST_TYPE_BUFFER_POOL, NULL, NULL);
+      GST_QUARK (NEED_POOL), G_TYPE_BOOLEAN, need_pool, NULL);
 
   query = gst_query_new_custom (GST_QUERY_ALLOCATION, structure);
 
@@ -1522,73 +1516,155 @@ gst_query_parse_allocation (GstQuery * query, GstCaps ** caps,
       GST_QUARK (NEED_POOL), G_TYPE_BOOLEAN, need_pool, NULL);
 }
 
-/**
- * gst_query_set_allocation_params:
- * @query: A valid #GstQuery of type GST_QUERY_ALLOCATION.
- * @size: the size
- * @min_buffers: the min buffers
- * @max_buffers: the max buffers
- * @prefix: the prefix
- * @padding: the padding
- * @alignment: the alignment
- * @pool: the #GstBufferPool
- *
- * Set the allocation parameters in @query.
- */
-void
-gst_query_set_allocation_params (GstQuery * query, guint size,
-    guint min_buffers, guint max_buffers, guint prefix, guint padding,
-    guint alignment, GstBufferPool * pool)
+typedef struct
 {
-  GstStructure *structure;
+  GstBufferPool *pool;
+  guint size;
+  guint min_buffers;
+  guint max_buffers;
+} AllocationPool;
 
-  g_return_if_fail (GST_QUERY_TYPE (query) == GST_QUERY_ALLOCATION);
-  g_return_if_fail (gst_query_is_writable (query));
-  g_return_if_fail (((alignment + 1) & alignment) == 0);
-  g_return_if_fail (size != 0 || pool == NULL);
-
-  structure = GST_QUERY_STRUCTURE (query);
-  gst_structure_id_set (structure,
-      GST_QUARK (SIZE), G_TYPE_UINT, size,
-      GST_QUARK (MIN_BUFFERS), G_TYPE_UINT, min_buffers,
-      GST_QUARK (MAX_BUFFERS), G_TYPE_UINT, max_buffers,
-      GST_QUARK (PREFIX), G_TYPE_UINT, prefix,
-      GST_QUARK (PADDING), G_TYPE_UINT, padding,
-      GST_QUARK (ALIGN), G_TYPE_UINT, alignment,
-      GST_QUARK (POOL), GST_TYPE_BUFFER_POOL, pool, NULL);
+static void
+allocation_pool_free (AllocationPool * ap)
+{
+  if (ap->pool)
+    gst_object_unref (ap->pool);
 }
 
 /**
- * gst_query_parse_allocation_params:
+ * gst_query_add_allocation_pool:
  * @query: A valid #GstQuery of type GST_QUERY_ALLOCATION.
+ * @pool: the #GstBufferPool
+ * @size: the size
+ * @min_buffers: the min buffers
+ * @max_buffers: the max buffers
+ *
+ * Set the pool parameters in @query.
+ */
+void
+gst_query_add_allocation_pool (GstQuery * query, GstBufferPool * pool,
+    guint size, guint min_buffers, guint max_buffers)
+{
+  GArray *array;
+  GstStructure *structure;
+  AllocationPool ap;
+
+  g_return_if_fail (GST_QUERY_TYPE (query) == GST_QUERY_ALLOCATION);
+  g_return_if_fail (gst_query_is_writable (query));
+  g_return_if_fail (size != 0);
+
+  structure = GST_QUERY_STRUCTURE (query);
+  array = ensure_array (structure, GST_QUARK (POOL),
+      sizeof (AllocationPool), (GDestroyNotify) allocation_pool_free);
+
+  if ((ap.pool = pool))
+    gst_object_ref (pool);
+  ap.size = size;
+  ap.min_buffers = min_buffers;
+  ap.max_buffers = max_buffers;
+
+  g_array_append_val (array, ap);
+}
+
+
+/**
+ * gst_query_get_n_allocation_pools:
+ * @query: a GST_QUERY_ALLOCATION type query #GstQuery
+ *
+ * Retrieve the number of values currently stored in the
+ * pool array of the query's structure.
+ *
+ * Returns: the pool array size as a #guint.
+ */
+guint
+gst_query_get_n_allocation_pools (GstQuery * query)
+{
+  GArray *array;
+  GstStructure *structure;
+
+  g_return_val_if_fail (GST_QUERY_TYPE (query) == GST_QUERY_ALLOCATION, 0);
+
+  structure = GST_QUERY_STRUCTURE (query);
+  array = ensure_array (structure, GST_QUARK (POOL),
+      sizeof (AllocationPool), (GDestroyNotify) allocation_pool_free);
+
+  return array->len;
+}
+
+/**
+ * gst_query_parse_nth_allocation_pool:
+ * @query: A valid #GstQuery of type GST_QUERY_ALLOCATION.
+ * @pool: (out) (allow-none) (transfer none): the #GstBufferPool
  * @size: (out) (allow-none): the size
  * @min_buffers: (out) (allow-none): the min buffers
  * @max_buffers: (out) (allow-none): the max buffers
- * @prefix: (out) (allow-none): the prefix
- * @padding: (out) (allow-none): the padding
- * @alignment: (out) (allow-none): the alignment
- * @pool: (out) (allow-none) (transfer full): the #GstBufferPool
  *
- * Get the allocation parameters in @query.
+ * Get the pool parameters in @query.
  */
 void
-gst_query_parse_allocation_params (GstQuery * query, guint * size,
-    guint * min_buffers, guint * max_buffers, guint * prefix,
-    guint * padding, guint * alignment, GstBufferPool ** pool)
+gst_query_parse_nth_allocation_pool (GstQuery * query, guint index,
+    GstBufferPool ** pool, guint * size, guint * min_buffers,
+    guint * max_buffers)
 {
+  GArray *array;
   GstStructure *structure;
+  AllocationPool *ap;
 
   g_return_if_fail (GST_QUERY_TYPE (query) == GST_QUERY_ALLOCATION);
 
   structure = GST_QUERY_STRUCTURE (query);
-  gst_structure_id_get (structure,
-      GST_QUARK (SIZE), G_TYPE_UINT, size,
-      GST_QUARK (MIN_BUFFERS), G_TYPE_UINT, min_buffers,
-      GST_QUARK (MAX_BUFFERS), G_TYPE_UINT, max_buffers,
-      GST_QUARK (PREFIX), G_TYPE_UINT, prefix,
-      GST_QUARK (PADDING), G_TYPE_UINT, padding,
-      GST_QUARK (ALIGN), G_TYPE_UINT, alignment,
-      GST_QUARK (POOL), GST_TYPE_BUFFER_POOL, pool, NULL);
+  array = ensure_array (structure, GST_QUARK (POOL),
+      sizeof (AllocationPool), (GDestroyNotify) allocation_pool_free);
+  g_return_if_fail (index < array->len);
+
+  ap = &g_array_index (array, AllocationPool, index);
+
+  if (pool)
+    if ((*pool = ap->pool))
+      gst_object_ref (*pool);
+  if (size)
+    *size = ap->size;
+  if (min_buffers)
+    *min_buffers = ap->min_buffers;
+  if (max_buffers)
+    *max_buffers = ap->max_buffers;
+}
+
+/**
+ * gst_query_set_nth_allocation_pool:
+ * @index: index to modify
+ * @query: A valid #GstQuery of type GST_QUERY_ALLOCATION.
+ * @pool: the #GstBufferPool
+ * @size: the size
+ * @min_buffers: the min buffers
+ * @max_buffers: the max buffers
+ *
+ * Set the pool parameters in @query.
+ */
+void
+gst_query_set_nth_allocation_pool (GstQuery * query, guint index,
+    GstBufferPool * pool, guint size, guint min_buffers, guint max_buffers)
+{
+  GArray *array;
+  GstStructure *structure;
+  AllocationPool *oldap, ap;
+
+  g_return_if_fail (GST_QUERY_TYPE (query) == GST_QUERY_ALLOCATION);
+
+  structure = GST_QUERY_STRUCTURE (query);
+  array = ensure_array (structure, GST_QUARK (POOL),
+      sizeof (AllocationPool), (GDestroyNotify) allocation_pool_free);
+  g_return_if_fail (index < array->len);
+
+  oldap = &g_array_index (array, AllocationPool, index);
+  allocation_pool_free (oldap);
+
+  if ((ap.pool = pool))
+    gst_object_ref (pool);
+  ap.size = size;
+  ap.min_buffers = min_buffers;
+  ap.max_buffers = max_buffers;
+  g_array_index (array, AllocationPool, index) = ap;
 }
 
 /**
@@ -1716,37 +1792,59 @@ gst_query_has_allocation_meta (GstQuery * query, GType api)
   return FALSE;
 }
 
-/**
- * gst_query_add_allocation_memory:
- * @query: a GST_QUERY_ALLOCATION type query #GstQuery
- * @allocator: the memory allocator
- *
- * Add @allocator as a supported memory allocator.
- */
-void
-gst_query_add_allocation_memory (GstQuery * query, GstAllocator * allocator)
+typedef struct
 {
-  GArray *array;
-  GstStructure *structure;
+  GstAllocator *allocator;
+  GstAllocationParams params;
+} AllocationParam;
 
-  g_return_if_fail (GST_QUERY_TYPE (query) == GST_QUERY_ALLOCATION);
-  g_return_if_fail (gst_query_is_writable (query));
-  g_return_if_fail (allocator != NULL);
-
-  structure = GST_QUERY_STRUCTURE (query);
-  array =
-      ensure_array (structure, GST_QUARK (ALLOCATOR), sizeof (GstAllocator *),
-      (GDestroyNotify) gst_allocator_unref);
-
-  g_array_append_val (array, allocator);
+static void
+allocation_param_free (AllocationParam * ap)
+{
+  if (ap->allocator)
+    gst_allocator_unref (ap->allocator);
 }
 
 /**
- * gst_query_get_n_allocation_memories:
+ * gst_query_add_allocation_param:
+ * @query: a GST_QUERY_ALLOCATION type query #GstQuery
+ * @allocator: the memory allocator
+ * @params: a #GstAllocationParams
+ *
+ * Add @allocator and its @params as a supported memory allocator.
+ */
+void
+gst_query_add_allocation_param (GstQuery * query, GstAllocator * allocator,
+    const GstAllocationParams * params)
+{
+  GArray *array;
+  GstStructure *structure;
+  AllocationParam ap;
+
+  g_return_if_fail (GST_QUERY_TYPE (query) == GST_QUERY_ALLOCATION);
+  g_return_if_fail (gst_query_is_writable (query));
+  g_return_if_fail (allocator != NULL || params != NULL);
+
+  structure = GST_QUERY_STRUCTURE (query);
+  array = ensure_array (structure, GST_QUARK (ALLOCATOR),
+      sizeof (AllocationParam), (GDestroyNotify) allocation_param_free);
+
+  if ((ap.allocator = allocator))
+    gst_allocator_ref (allocator);
+  if (params)
+    ap.params = *params;
+  else
+    gst_allocation_params_init (&ap.params);
+
+  g_array_append_val (array, ap);
+}
+
+/**
+ * gst_query_get_n_allocation_params:
  * @query: a GST_QUERY_ALLOCATION type query #GstQuery
  *
  * Retrieve the number of values currently stored in the
- * allocator array of the query's structure.
+ * allocator params array of the query's structure.
  *
  * If no memory allocator is specified, the downstream element can handle
  * the default memory allocator.
@@ -1754,7 +1852,7 @@ gst_query_add_allocation_memory (GstQuery * query, GstAllocator * allocator)
  * Returns: the allocator array size as a #guint.
  */
 guint
-gst_query_get_n_allocation_memories (GstQuery * query)
+gst_query_get_n_allocation_params (GstQuery * query)
 {
   GArray *array;
   GstStructure *structure;
@@ -1762,39 +1860,82 @@ gst_query_get_n_allocation_memories (GstQuery * query)
   g_return_val_if_fail (GST_QUERY_TYPE (query) == GST_QUERY_ALLOCATION, 0);
 
   structure = GST_QUERY_STRUCTURE (query);
-  array =
-      ensure_array (structure, GST_QUARK (ALLOCATOR), sizeof (GstAllocator *),
-      (GDestroyNotify) gst_allocator_unref);
+  array = ensure_array (structure, GST_QUARK (ALLOCATOR),
+      sizeof (AllocationParam), (GDestroyNotify) allocation_param_free);
 
   return array->len;
 }
 
 /**
- * gst_query_parse_nth_allocation_memory:
+ * gst_query_parse_nth_allocation_param:
  * @query: a GST_QUERY_ALLOCATION type query #GstQuery
  * @index: position in the allocator array to read
+ * @allocator: (transfer none): variable to hold the result
+ * @params: parameters for the allocator
  *
- * Parse an available query and get the alloctor
+ * Parse an available query and get the alloctor and its params
  * at @index of the allocator array.
- *
- * Returns: (transfer none): the allocator at @index. The allocator remains
- * valid for as long as @query is valid.
  */
-GstAllocator *
-gst_query_parse_nth_allocation_memory (GstQuery * query, guint index)
+void
+gst_query_parse_nth_allocation_param (GstQuery * query, guint index,
+    GstAllocator ** allocator, GstAllocationParams * params)
 {
   GArray *array;
   GstStructure *structure;
+  AllocationParam *ap;
 
-  g_return_val_if_fail (GST_QUERY_TYPE (query) == GST_QUERY_ALLOCATION, NULL);
+  g_return_if_fail (GST_QUERY_TYPE (query) == GST_QUERY_ALLOCATION);
 
   structure = GST_QUERY_STRUCTURE (query);
-  array =
-      ensure_array (structure, GST_QUARK (ALLOCATOR), sizeof (GstAllocator *),
-      (GDestroyNotify) gst_allocator_unref);
-  g_return_val_if_fail (index < array->len, NULL);
+  array = ensure_array (structure, GST_QUARK (ALLOCATOR),
+      sizeof (AllocationParam), (GDestroyNotify) allocation_param_free);
+  g_return_if_fail (index < array->len);
 
-  return g_array_index (array, GstAllocator *, index);
+  ap = &g_array_index (array, AllocationParam, index);
+
+  if (allocator)
+    if ((*allocator = ap->allocator))
+      gst_allocator_ref (*allocator);
+  if (params)
+    *params = ap->params;
+}
+
+/**
+ * gst_query_set_nth_allocation_param:
+ * @query: a GST_QUERY_ALLOCATION type query #GstQuery
+ * @index: position in the allocator array to set
+ * @allocator: (transfer full): new allocator to set
+ * @params: parameters for the allocator
+ *
+ * Parse an available query and get the alloctor and its params
+ * at @index of the allocator array.
+ */
+void
+gst_query_set_nth_allocation_param (GstQuery * query, guint index,
+    GstAllocator * allocator, const GstAllocationParams * params)
+{
+  GArray *array;
+  GstStructure *structure;
+  AllocationParam *old, ap;
+
+  g_return_if_fail (GST_QUERY_TYPE (query) == GST_QUERY_ALLOCATION);
+
+  structure = GST_QUERY_STRUCTURE (query);
+  array = ensure_array (structure, GST_QUARK (ALLOCATOR),
+      sizeof (AllocationParam), (GDestroyNotify) allocation_param_free);
+  g_return_if_fail (index < array->len);
+
+  old = &g_array_index (array, AllocationParam, index);
+  allocation_param_free (old);
+
+  if ((ap.allocator = allocator))
+    gst_allocator_ref (allocator);
+  if (params)
+    ap.params = *params;
+  else
+    gst_allocation_params_init (&ap.params);
+
+  g_array_index (array, AllocationParam, index) = ap;
 }
 
 /**

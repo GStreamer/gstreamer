@@ -666,7 +666,6 @@ EXPORTS
 	gst_pad_probe_return_get_type
 	gst_pad_probe_type_get_type
 	gst_pad_proxy_query_accept_caps
-	gst_pad_proxy_query_allocation
 	gst_pad_proxy_query_caps
 	gst_pad_pull_range
 	gst_pad_push
@@ -811,12 +810,14 @@ EXPORTS
 	gst_proxy_pad_query_default
 	gst_proxy_pad_unlink_default
 	gst_qos_type_get_type
-	gst_query_add_allocation_memory
 	gst_query_add_allocation_meta
+	gst_query_add_allocation_param
+	gst_query_add_allocation_pool
 	gst_query_add_buffering_range
 	gst_query_add_scheduling_mode
-	gst_query_get_n_allocation_memories
 	gst_query_get_n_allocation_metas
+	gst_query_get_n_allocation_params
+	gst_query_get_n_allocation_pools
 	gst_query_get_n_buffering_ranges
 	gst_query_get_n_scheduling_modes
 	gst_query_get_structure
@@ -842,7 +843,6 @@ EXPORTS
 	gst_query_parse_accept_caps
 	gst_query_parse_accept_caps_result
 	gst_query_parse_allocation
-	gst_query_parse_allocation_params
 	gst_query_parse_buffering_percent
 	gst_query_parse_buffering_range
 	gst_query_parse_buffering_stats
@@ -852,8 +852,9 @@ EXPORTS
 	gst_query_parse_duration
 	gst_query_parse_latency
 	gst_query_parse_n_formats
-	gst_query_parse_nth_allocation_memory
 	gst_query_parse_nth_allocation_meta
+	gst_query_parse_nth_allocation_param
+	gst_query_parse_nth_allocation_pool
 	gst_query_parse_nth_buffering_range
 	gst_query_parse_nth_format
 	gst_query_parse_nth_scheduling_mode
@@ -864,7 +865,6 @@ EXPORTS
 	gst_query_parse_uri
 	gst_query_remove_nth_allocation_meta
 	gst_query_set_accept_caps_result
-	gst_query_set_allocation_params
 	gst_query_set_buffering_percent
 	gst_query_set_buffering_range
 	gst_query_set_buffering_stats
@@ -874,6 +874,8 @@ EXPORTS
 	gst_query_set_formats
 	gst_query_set_formatsv
 	gst_query_set_latency
+	gst_query_set_nth_allocation_param
+	gst_query_set_nth_allocation_pool
 	gst_query_set_position
 	gst_query_set_scheduling
 	gst_query_set_seeking

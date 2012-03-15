@@ -742,8 +742,8 @@ done:
 /* takes ownership of the pool, allocator and query */
 static gboolean
 gst_base_transform_set_allocation (GstBaseTransform * trans,
-    GstBufferPool * pool, GstAllocator * allocator, guint prefix,
-    guint padding, guint alignment, GstQuery * query)
+    GstBufferPool * pool, GstAllocator * allocator,
+    GstAllocationParams * params, GstQuery * query)
 {
   GstAllocator *oldalloc;
   GstBufferPool *oldpool;
@@ -754,14 +754,17 @@ gst_base_transform_set_allocation (GstBaseTransform * trans,
   oldpool = priv->pool;
   priv->pool = pool;
   priv->pool_active = FALSE;
+
   oldalloc = priv->allocator;
   priv->allocator = allocator;
+
   oldquery = priv->query;
   priv->query = query;
-  gst_allocation_params_init (&priv->params);
-  priv->params.prefix = prefix;
-  priv->params.padding = padding;
-  priv->params.align = alignment;
+
+  if (params)
+    priv->params = *params;
+  else
+    gst_allocation_params_init (&priv->params);
   GST_OBJECT_UNLOCK (trans);
 
   if (oldpool) {
@@ -827,10 +830,11 @@ gst_base_transform_do_bufferpool (GstBaseTransform * trans, GstCaps * outcaps)
 {
   GstQuery *query;
   gboolean result = TRUE;
-  GstBufferPool *pool = NULL;
-  guint size, min, max, prefix, padding, alignment;
+  GstBufferPool *pool;
+  guint size, min, max;
   GstBaseTransformClass *klass;
-  GstAllocator *allocator = NULL;
+  GstAllocator *allocator;
+  GstAllocationParams params;
 
   /* there are these possibilities:
    *
@@ -847,7 +851,7 @@ gst_base_transform_do_bufferpool (GstBaseTransform * trans, GstCaps * outcaps)
      * let the upstream element decide if it wants to use a bufferpool and
      * then we will proxy the downstream pool */
     GST_DEBUG_OBJECT (trans, "we're passthough, delay bufferpool");
-    gst_base_transform_set_allocation (trans, NULL, NULL, 0, 0, 0, NULL);
+    gst_base_transform_set_allocation (trans, NULL, NULL, NULL, NULL);
     return TRUE;
   }
 
@@ -867,34 +871,42 @@ gst_base_transform_do_bufferpool (GstBaseTransform * trans, GstCaps * outcaps)
     if ((result = klass->decide_allocation (trans, query)) == FALSE)
       goto no_decide_allocation;
 
-  /* we got configuration from our peer, parse them */
-  gst_query_parse_allocation_params (query, &size, &min, &max, &prefix,
-      &padding, &alignment, &pool);
-
-  if (size == 0) {
-    /* no size, we have variable size buffers */
-    if (gst_query_get_n_allocation_memories (query) > 0) {
-      if ((allocator = gst_query_parse_nth_allocation_memory (query, 0)))
-        gst_allocator_ref (allocator);
-    }
-    GST_DEBUG_OBJECT (trans, "no size, using allocator %p", allocator);
-  } else if (pool == NULL) {
-    GstStructure *config;
-
-    /* we did not get a pool, make one ourselves then */
-    pool = gst_buffer_pool_new ();
-
-    GST_DEBUG_OBJECT (trans, "no pool, making one");
-    config = gst_buffer_pool_get_config (pool);
-    gst_buffer_pool_config_set (config, outcaps, size, min, max, prefix,
-        padding, alignment);
-    gst_buffer_pool_set_config (pool, config);
+  /* we got configuration from our peer or the decide_allocation method,
+   * parse them */
+  if (gst_query_get_n_allocation_params (query) > 0) {
+    /* try the allocator */
+    gst_query_parse_nth_allocation_param (query, 0, &allocator, &params);
+  } else {
+    allocator = NULL;
+    gst_allocation_params_init (&params);
   }
 
+  if (gst_query_get_n_allocation_pools (query) > 0) {
+    gst_query_parse_nth_allocation_pool (query, 0, &pool, &size, &min, &max);
+
+    if (pool == NULL) {
+      /* no pool, just parameters, we can make our own */
+      GST_DEBUG_OBJECT (trans, "no pool, making new pool");
+      pool = gst_buffer_pool_new ();
+    }
+  } else {
+    pool = NULL;
+    size = min = max = 0;
+  }
+
+  /* now configure */
+  if (pool) {
+    GstStructure *config;
+
+    config = gst_buffer_pool_get_config (pool);
+    gst_buffer_pool_config_set (config, outcaps, size, min, max, params.prefix,
+        params.padding, params.align);
+    gst_buffer_pool_set_config (pool, config);
+  }
   /* and store */
   result =
-      gst_base_transform_set_allocation (trans, pool, allocator, prefix,
-      padding, alignment, query);
+      gst_base_transform_set_allocation (trans, pool, allocator, &params,
+      query);
 
   return result;
 
@@ -2237,7 +2249,7 @@ gst_base_transform_activate (GstBaseTransform * trans, gboolean active)
     if (trans->priv->pad_mode != GST_PAD_MODE_NONE && bclass->stop)
       result &= bclass->stop (trans);
 
-    gst_base_transform_set_allocation (trans, NULL, NULL, 0, 0, 0, NULL);
+    gst_base_transform_set_allocation (trans, NULL, NULL, NULL, NULL);
   }
 
   return result;

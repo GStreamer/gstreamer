@@ -2702,7 +2702,7 @@ null_buffer:
 
 static gboolean
 gst_base_src_set_allocation (GstBaseSrc * basesrc, GstBufferPool * pool,
-    GstAllocator * allocator, guint prefix, guint padding, guint alignment)
+    GstAllocator * allocator, GstAllocationParams * params)
 {
   GstAllocator *oldalloc;
   GstBufferPool *oldpool;
@@ -2721,10 +2721,10 @@ gst_base_src_set_allocation (GstBaseSrc * basesrc, GstBufferPool * pool,
   oldalloc = priv->allocator;
   priv->allocator = allocator;
 
-  gst_allocation_params_init (&priv->params);
-  priv->params.prefix = prefix;
-  priv->params.padding = padding;
-  priv->params.align = alignment;
+  if (params)
+    priv->params = *params;
+  else
+    gst_allocation_params_init (&priv->params);
   GST_OBJECT_UNLOCK (basesrc);
 
   if (oldpool) {
@@ -2775,7 +2775,8 @@ gst_base_src_prepare_allocation (GstBaseSrc * basesrc, GstCaps * caps)
   GstQuery *query;
   GstBufferPool *pool = NULL;
   GstAllocator *allocator = NULL;
-  guint size, min, max, prefix, padding, alignment;
+  guint size, min, max;
+  GstAllocationParams params;
 
   bclass = GST_BASE_SRC_GET_CLASS (basesrc);
 
@@ -2793,35 +2794,41 @@ gst_base_src_prepare_allocation (GstBaseSrc * basesrc, GstCaps * caps)
 
   GST_DEBUG_OBJECT (basesrc, "ALLOCATION (%d) params: %" GST_PTR_FORMAT, result,
       query);
-  gst_query_parse_allocation_params (query, &size, &min, &max, &prefix,
-      &padding, &alignment, &pool);
 
-  if (size == 0) {
-    /* no size, we have variable size buffers */
-    if (gst_query_get_n_allocation_memories (query) > 0) {
-      if ((allocator = gst_query_parse_nth_allocation_memory (query, 0)))
-        gst_allocator_ref (allocator);
+  if (gst_query_get_n_allocation_params (query) > 0) {
+    /* try the allocator */
+    gst_query_parse_nth_allocation_param (query, 0, &allocator, &params);
+  } else {
+    allocator = NULL;
+    gst_allocation_params_init (&params);
+  }
+
+  if (gst_query_get_n_allocation_pools (query) > 0) {
+    gst_query_parse_nth_allocation_pool (query, 0, &pool, &size, &min, &max);
+
+    if (pool == NULL) {
+      /* no pool, just parameters, we can make our own */
+      GST_DEBUG_OBJECT (basesrc, "no pool, making new pool");
+      pool = gst_buffer_pool_new ();
     }
-    GST_DEBUG_OBJECT (basesrc, "0 size, using allocator %p", allocator);
-  } else if (pool == NULL) {
-    /* fixed size, we can use a bufferpool */
+  } else {
+    pool = NULL;
+    size = min = max = 0;
+  }
+
+  /* now configure */
+  if (pool) {
     GstStructure *config;
 
-    /* we did not get a pool, make one ourselves then */
-    pool = gst_buffer_pool_new ();
-    GST_DEBUG_OBJECT (basesrc, "no pool, making new pool");
-
     config = gst_buffer_pool_get_config (pool);
-    gst_buffer_pool_config_set (config, caps, size, min, max, prefix,
-        padding, alignment);
+    gst_buffer_pool_config_set (config, caps, size, min, max, params.prefix,
+        params.padding, params.align);
     gst_buffer_pool_set_config (pool, config);
   }
 
-  gst_query_unref (query);
+  result = gst_base_src_set_allocation (basesrc, pool, allocator, &params);
 
-  result =
-      gst_base_src_set_allocation (basesrc, pool, allocator, prefix, padding,
-      alignment);
+  gst_query_unref (query);
 
   return result;
 
@@ -3178,7 +3185,7 @@ gst_base_src_stop (GstBaseSrc * basesrc)
   if (bclass->stop)
     result = bclass->stop (basesrc);
 
-  gst_base_src_set_allocation (basesrc, NULL, NULL, 0, 0, 0);
+  gst_base_src_set_allocation (basesrc, NULL, NULL, NULL);
 
   return result;
 

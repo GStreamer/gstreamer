@@ -393,30 +393,46 @@ gboolean        gst_query_parse_nth_buffering_range (GstQuery *query,
                                                      gint64 *stop);
 
 /* URI query */
-GstQuery *      gst_query_new_uri                 (void) G_GNUC_MALLOC;
-void            gst_query_parse_uri               (GstQuery *query, gchar **uri);
-void            gst_query_set_uri                 (GstQuery *query, const gchar *uri);
+GstQuery *      gst_query_new_uri                    (void) G_GNUC_MALLOC;
+void            gst_query_parse_uri                  (GstQuery *query, gchar **uri);
+void            gst_query_set_uri                    (GstQuery *query, const gchar *uri);
 
 /* allocation query */
-GstQuery *      gst_query_new_allocation          (GstCaps *caps, gboolean need_pool) G_GNUC_MALLOC;
-void            gst_query_parse_allocation        (GstQuery *query, GstCaps **caps, gboolean *need_pool);
+GstQuery *      gst_query_new_allocation             (GstCaps *caps, gboolean need_pool) G_GNUC_MALLOC;
+void            gst_query_parse_allocation           (GstQuery *query, GstCaps **caps, gboolean *need_pool);
 
-void            gst_query_set_allocation_params   (GstQuery *query, guint size, guint min_buffers,
-                                                   guint max_buffers, guint prefix, guint padding,
-                                                   guint alignment, GstBufferPool *pool);
-void            gst_query_parse_allocation_params (GstQuery *query, guint *size, guint *min_buffers,
-                                                   guint *max_buffers, guint *prefix, guint *padding,
-                                                   guint *alignment, GstBufferPool **pool);
+/* pools */
+void            gst_query_add_allocation_pool        (GstQuery *query, GstBufferPool *pool,
+                                                      guint size, guint min_buffers,
+                                                      guint max_buffers);
+guint           gst_query_get_n_allocation_pools     (GstQuery *query);
+void            gst_query_parse_nth_allocation_pool  (GstQuery *query, guint index,
+                                                      GstBufferPool **pool,
+                                                      guint *size, guint *min_buffers,
+                                                      guint *max_buffers);
+void            gst_query_set_nth_allocation_pool    (GstQuery *query, guint index,
+                                                      GstBufferPool *pool,
+                                                      guint size, guint min_buffers,
+                                                      guint max_buffers);
 
+/* allocators */
+void            gst_query_add_allocation_param       (GstQuery *query, GstAllocator *allocator,
+                                                      const GstAllocationParams *params);
+guint           gst_query_get_n_allocation_params    (GstQuery *query);
+void            gst_query_parse_nth_allocation_param (GstQuery *query, guint index,
+                                                      GstAllocator **allocator,
+                                                      GstAllocationParams *params);
+void            gst_query_set_nth_allocation_param   (GstQuery *query, guint index,
+                                                      GstAllocator *allocator,
+                                                      const GstAllocationParams *params);
+
+/* metadata */
 void            gst_query_add_allocation_meta        (GstQuery *query, GType api);
 guint           gst_query_get_n_allocation_metas     (GstQuery *query);
 GType           gst_query_parse_nth_allocation_meta  (GstQuery *query, guint index);
 void            gst_query_remove_nth_allocation_meta (GstQuery *query, guint index);
 gboolean        gst_query_has_allocation_meta        (GstQuery *query, GType api);
 
-void            gst_query_add_allocation_memory       (GstQuery *query, GstAllocator *allocator);
-guint           gst_query_get_n_allocation_memories   (GstQuery *query);
-GstAllocator *  gst_query_parse_nth_allocation_memory (GstQuery *query, guint index);
 
 /* scheduling query */
 /**
