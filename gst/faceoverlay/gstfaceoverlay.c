@@ -211,9 +211,14 @@ gst_face_overlay_handle_faces (GstFaceOverlay * filter, GstStructure * s)
   face_count = gst_value_list_get_size (faces_list);
   GST_LOG_OBJECT (filter, "face count: %d", face_count);
 
-  /* FIXME: should we clear the overlay in this case? */
-  if (face_count == 0)
+  if (face_count == 0) {
+    GST_DEBUG_OBJECT (filter, "no face, clearing overlay");
+    g_object_set (filter->svg_overlay, "location", NULL, NULL);
+    GST_OBJECT_LOCK (filter);
+    filter->update_svg = TRUE;
+    GST_OBJECT_UNLOCK (filter);
     return;
+  }
 
   /* The last face in the list seems to be the right one, objects mistakenly
    * detected as faces for a couple of frames seem to be in the list
