@@ -122,13 +122,13 @@ EXPORTS
 	gst_buffer_new_wrapped
 	gst_buffer_new_wrapped_full
 	gst_buffer_pool_acquire_buffer
+	gst_buffer_pool_acquire_flags_get_type
 	gst_buffer_pool_config_add_option
 	gst_buffer_pool_config_get
 	gst_buffer_pool_config_get_option
 	gst_buffer_pool_config_has_option
 	gst_buffer_pool_config_n_options
 	gst_buffer_pool_config_set
-	gst_buffer_pool_flags_get_type
 	gst_buffer_pool_get_config
 	gst_buffer_pool_get_options
 	gst_buffer_pool_get_type
@@ -666,6 +666,7 @@ EXPORTS
 	gst_pad_probe_return_get_type
 	gst_pad_probe_type_get_type
 	gst_pad_proxy_query_accept_caps
+	gst_pad_proxy_query_allocation
 	gst_pad_proxy_query_caps
 	gst_pad_pull_range
 	gst_pad_push
