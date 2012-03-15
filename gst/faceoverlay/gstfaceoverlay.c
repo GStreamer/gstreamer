@@ -194,11 +194,11 @@ static void
 gst_face_overlay_handle_faces (GstFaceOverlay * filter, const GstStructure * s)
 {
   guint x, y, width, height;
-  int delta_x, delta_y, svg_x, svg_y, svg_width, svg_height;
+  gint svg_x, svg_y, svg_width, svg_height;
   const GstStructure *face;
   const GValue *faces_list, *face_val;
   gchar *new_location = NULL;
-  int face_count;
+  gint face_count;
 
 #if 0
   /* optionally draw the image once every two messages for better performance */
@@ -237,14 +237,11 @@ gst_face_overlay_handle_faces (GstFaceOverlay * filter, const GstStructure * s)
 
   GST_OBJECT_LOCK (filter);
 
-  delta_x = (int) (filter->x * (int) width);
-  svg_x = (int) x + delta_x;
+  svg_x = (gint) x + (gint) (filter->x * width);
+  svg_y = (gint) y + (gint) (filter->y * height);
 
-  delta_y = (int) (filter->y * (int) height);
-  svg_y = (int) y + delta_y;
-
-  svg_width = (int) width *filter->w;
-  svg_height = (int) height *filter->h;
+  svg_width = (gint) (filter->w * width);
+  svg_height = (gint) (filter->h * height);
 
   if (filter->update_svg) {
     new_location = g_strdup (filter->location);
