@@ -328,7 +328,7 @@ gst_mpeg2dec_negotiate_pool (GstMpeg2dec * dec, GstCaps * caps,
   dec->pool = pool;
 
   config = gst_buffer_pool_get_config (pool);
-  gst_buffer_pool_config_set (config, caps, size, min, max, 0, 0, 0);
+  gst_buffer_pool_config_set_params (config, caps, size, min, max);
 
   if (gst_query_has_allocation_meta (query, GST_VIDEO_META_API_TYPE)) {
     /* just set the option, if the pool can support it we will transparently use
