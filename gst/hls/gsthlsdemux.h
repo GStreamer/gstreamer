@@ -51,8 +51,6 @@ struct _GstHLSDemux
 {
   GstElement parent;
 
-  GstTask *task;
-  GStaticRecMutex task_lock;
   GstPad *srcpad;
   GstPad *sinkpad;
   GstBuffer *playlist;
@@ -67,13 +65,10 @@ struct _GstHLSDemux
   guint fragments_cache;        /* number of fragments needed to be cached to start playing */
   gfloat bitrate_switch_tol;    /* tolerance with respect to the fragment duration to switch the bitarate*/
 
-  /* Updates thread */
-  GThread *updates_thread;      /* Thread handling the playlist and fragments updates */
-  GMutex *thread_lock;          /* Thread lock */
-  GCond *thread_cond;           /* Signals the thread to quit */
-  gboolean thread_return;       /* Instructs the thread to return after the thread_quit condition is meet */
-  GTimeVal next_update;         /* Time of the next update */
-  gint64 accumulated_delay;     /* Delay accumulated fetching fragments, used to decide a playlist switch */
+  /* Streaming task */
+  GstTask *stream_task;
+  GStaticRecMutex stream_lock;
+  gboolean stop_stream_task;
 
   /* Fragments fetcher */
   GstElement *fetcher;
@@ -86,6 +81,13 @@ struct _GstHLSDemux
   gboolean stopping_fetcher;
   gboolean cancelled;
   GstAdapter *download;
+
+  /* Updates task */
+  GstTask *updates_task;
+  GStaticRecMutex updates_lock;
+  GMutex *updates_timed_lock;
+  GTimeVal next_update;         /* Time of the next update */
+  gint64 accumulated_delay;     /* Delay accumulated fetching fragments, used to decide a playlist switch */
 
   /* Position in the stream */
   GstClockTime position;
