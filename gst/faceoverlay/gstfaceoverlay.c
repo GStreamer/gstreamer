@@ -190,57 +190,67 @@ gst_face_overlay_change_state (GstElement * element, GstStateChange transition)
 }
 
 static void
+gst_face_overlay_handle_faces (GstFaceOverlay * filter, GstStructure * s)
+{
+  guint x, y, width, height;
+  int delta_x, delta_y, svg_x, svg_y, svg_width, svg_height;
+  const GstStructure *face;
+  const GValue *faces_list, *face_val;
+  int face_count;
+
+#if 0
+  /* optionally draw the image once every two messages for better performance */
+  filter->process_message = !filter->process_message;
+  if (!filter->process_message)
+    return;
+#endif
+
+  faces_list = gst_structure_get_value (s, "faces");
+  face_count = gst_value_list_get_size (faces_list);
+  GST_LOG_OBJECT (filter, "face count: %d", face_count);
+
+  /* FIXME: should we clear the overlay in this case? */
+  if (face_count == 0)
+    return;
+
+  /* The last face in the list seems to be the right one, objects mistakenly
+   * detected as faces for a couple of frames seem to be in the list
+   * beginning. TODO: needs confirmation. */
+  face_val = gst_value_list_get_value (faces_list, face_count - 1);
+  face = gst_value_get_structure (face_val);
+  gst_structure_get_uint (face, "x", &x);
+  gst_structure_get_uint (face, "y", &y);
+  gst_structure_get_uint (face, "width", &width);
+  gst_structure_get_uint (face, "height", &height);
+
+  /* Apply x and y offsets relative to face position and size.
+   * Set image width and height as a fraction of face width and height.
+   * Cast to int since face position and size will never be bigger than
+   * G_MAX_INT and we may have negative values as svg_x or svg_y */
+
+  delta_x = (int) (filter->x * (int) width);
+  svg_x = (int) x + delta_x;
+
+  delta_y = (int) (filter->y * (int) height);
+  svg_y = (int) y + delta_y;
+
+  svg_width = (int) width *filter->w;
+  svg_height = (int) height *filter->h;
+
+  GST_LOG_OBJECT (filter, "setting overlay to %d x %d @ %d,%d (file: %s)",
+      svg_width, svg_height, svg_x, svg_y, GST_STR_NULL (filter->location));
+
+  g_object_set (filter->svg_overlay,
+      "location", filter->location,
+      "x", svg_x, "y", svg_y, "width", svg_width, "height", svg_height, NULL);
+}
+
+static void
 gst_face_overlay_message_handler (GstBin * bin, GstMessage * message)
 {
   if (GST_MESSAGE_TYPE (message) == GST_MESSAGE_ELEMENT &&
-      strcmp (gst_structure_get_name (message->structure), "facedetect") == 0) {
-    GstFaceOverlay *filter = GST_FACEOVERLAY (bin);
-
-    /* optionally draw the image once every two messages for better performance
-     * filter->process_message = !filter->process_message;
-     *  if(!filter->process_message)
-     *    return;
-     */
-
-    guint x, y, width, height;
-    int delta_x, delta_y, svg_x, svg_y, svg_width, svg_height;
-    const GstStructure *face;
-    int face_count;
-
-    face_count =
-        gst_value_list_get_size (gst_structure_get_value (message->structure,
-            "faces"));
-
-    /* The last face in the list seems to be the right one, objects mistakenly
-     * detected as faces for a couple of frames seem to be in the list
-     * beginning. TODO: needs confirmation. */
-    face =
-        gst_value_get_structure (gst_value_list_get_value
-        (gst_structure_get_value (message->structure, "faces"),
-            face_count - 1));
-    gst_structure_get_uint (face, "x", &x);
-    gst_structure_get_uint (face, "y", &y);
-    gst_structure_get_uint (face, "width", &width);
-    gst_structure_get_uint (face, "height", &height);
-
-    /* Apply x and y offsets relative to face position and size.
-     * Set image width and height as a fraction of face width and height.
-     * Cast to int since face position and size will never be bigger than
-     * G_MAX_INT and we may have negative values as svg_x or svg_y */
-
-    delta_x = (int) (filter->x * (int) width);
-    svg_x = (int) x + delta_x;
-
-    delta_y = (int) (filter->y * (int) height);
-    svg_y = (int) y + delta_y;
-
-    svg_width = (int) width *filter->w;
-    svg_height = (int) height *filter->h;
-
-    g_object_set (filter->svg_overlay,
-        "location", filter->location,
-        "x", svg_x, "y", svg_y, "width", svg_width, "height", svg_height, NULL);
-
+      gst_structure_has_name (message->structure, "facedetect")) {
+    gst_face_overlay_handle_faces (GST_FACEOVERLAY (bin), message->structure);
   }
 
   GST_BIN_CLASS (parent_class)->handle_message (bin, message);
