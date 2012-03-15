@@ -144,9 +144,7 @@ struct _GstVideoBufferPoolPrivate
   GstVideoAlignment video_align;
   gboolean add_videometa;
   gboolean need_alignment;
-  guint prefix;
-  guint padding;
-  guint align;
+  GstAllocationParams params;
 };
 
 static void gst_video_buffer_pool_finalize (GObject * object);
@@ -195,9 +193,10 @@ video_buffer_pool_set_config (GstBufferPool * pool, GstStructure * config)
   if (priv->caps)
     gst_caps_unref (priv->caps);
   priv->caps = gst_caps_copy (caps);
-  priv->prefix = prefix;
-  priv->padding = padding;
-  priv->align = align;
+  gst_allocation_params_init (&priv->params);
+  priv->params.prefix = prefix;
+  priv->params.padding = padding;
+  priv->params.align = align;
 
   /* enable metadata based on config of the pool */
   priv->add_videometa =
@@ -243,21 +242,15 @@ video_buffer_pool_alloc (GstBufferPool * pool, GstBuffer ** buffer,
   GstVideoBufferPool *vpool = GST_VIDEO_BUFFER_POOL_CAST (pool);
   GstVideoBufferPoolPrivate *priv = vpool->priv;
   GstVideoInfo *info;
-  GstMemory *mem;
-  gint maxsize;
 
   info = &priv->info;
 
   GST_DEBUG_OBJECT (pool, "alloc %" G_GSIZE_FORMAT, info->size);
 
-  maxsize = info->size + priv->prefix + priv->padding;
-  mem = gst_allocator_alloc (priv->allocator, 0, maxsize, priv->prefix,
-      info->size, priv->align);
-  if (mem == NULL)
+  *buffer =
+      gst_buffer_new_allocate (priv->allocator, info->size, &priv->params);
+  if (*buffer == NULL)
     goto no_memory;
-
-  *buffer = gst_buffer_new ();
-  gst_buffer_take_memory (*buffer, -1, mem);
 
   if (priv->add_videometa) {
     GST_DEBUG_OBJECT (pool, "adding GstVideoMeta");
