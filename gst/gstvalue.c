@@ -1997,7 +1997,7 @@ gst_value_deserialize_buffer (GValue * dest, const gchar * s)
   if (len & 1)
     goto wrong_length;
 
-  buffer = gst_buffer_new_allocate (NULL, len / 2, 0);
+  buffer = gst_buffer_new_allocate (NULL, len / 2, NULL);
   if (!gst_buffer_map (buffer, &info, GST_MAP_WRITE))
     goto map_failed;
   data = info.data;

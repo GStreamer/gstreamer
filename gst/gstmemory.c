@@ -82,6 +82,10 @@ G_DEFINE_BOXED_TYPE (GstMemory, gst_memory, (GBoxedCopyFunc) gst_memory_ref,
 G_DEFINE_BOXED_TYPE (GstAllocator, gst_allocator,
     (GBoxedCopyFunc) gst_allocator_ref, (GBoxedFreeFunc) gst_allocator_unref);
 
+G_DEFINE_BOXED_TYPE (GstAllocationParams, gst_allocation_params,
+    (GBoxedCopyFunc) gst_allocation_params_copy,
+    (GBoxedFreeFunc) gst_allocation_params_free);
+
 /**
  * gst_memory_alignment:
  *
@@ -130,8 +134,8 @@ static GstAllocator *_default_mem_impl;
 static void
 _default_mem_init (GstMemoryDefault * mem, GstMemoryFlags flags,
     GstMemory * parent, gsize slice_size, gpointer data,
-    gsize maxsize, gsize offset, gsize size, gpointer user_data,
-    GDestroyNotify notify)
+    gsize maxsize, gsize offset, gsize size, gsize align,
+    gpointer user_data, GDestroyNotify notify)
 {
   mem->mem.allocator = _default_mem_impl;
   mem->mem.flags = flags;
@@ -139,6 +143,7 @@ _default_mem_init (GstMemoryDefault * mem, GstMemoryFlags flags,
   mem->mem.parent = parent ? gst_memory_ref (parent) : NULL;
   mem->mem.state = (flags & GST_MEMORY_FLAG_READONLY ? 0x1 : 0);
   mem->mem.maxsize = maxsize;
+  mem->mem.align = align;
   mem->mem.offset = offset;
   mem->mem.size = size;
   mem->slice_size = slice_size;
@@ -154,7 +159,7 @@ _default_mem_init (GstMemoryDefault * mem, GstMemoryFlags flags,
 /* create a new memory block that manages the given memory */
 static GstMemoryDefault *
 _default_mem_new (GstMemoryFlags flags, GstMemory * parent, gpointer data,
-    gsize maxsize, gsize offset, gsize size, gpointer user_data,
+    gsize maxsize, gsize offset, gsize size, gsize align, gpointer user_data,
     GDestroyNotify notify)
 {
   GstMemoryDefault *mem;
@@ -164,7 +169,7 @@ _default_mem_new (GstMemoryFlags flags, GstMemory * parent, gpointer data,
 
   mem = g_slice_alloc (slice_size);
   _default_mem_init (mem, flags, parent, slice_size,
-      data, maxsize, offset, size, user_data, notify);
+      data, maxsize, offset, size, align, user_data, notify);
 
   return mem;
 }
@@ -191,6 +196,7 @@ _default_mem_new_block (GstMemoryFlags flags, gsize maxsize, gsize align,
 
   data = (guint8 *) mem + sizeof (GstMemoryDefault);
 
+  /* do alignment */
   if ((aoffset = ((guintptr) data & align))) {
     aoffset = (align + 1) - aoffset;
     data += aoffset;
@@ -205,17 +211,19 @@ _default_mem_new_block (GstMemoryFlags flags, gsize maxsize, gsize align,
     memset (data + offset + size, 0, padding);
 
   _default_mem_init (mem, flags, NULL, slice_size, data, maxsize,
-      offset, size, NULL, NULL);
+      offset, size, align, NULL, NULL);
 
   return mem;
 }
 
 static GstMemory *
-_default_alloc_alloc (GstAllocator * allocator, GstMemoryFlags flags,
-    gsize maxsize, gsize offset, gsize size, gsize align, gpointer user_data)
+_default_alloc_alloc (GstAllocator * allocator, gsize size,
+    GstAllocationParams * params, gpointer user_data)
 {
-  return (GstMemory *) _default_mem_new_block (flags, maxsize, align, offset,
-      size);
+  gsize maxsize = size + params->prefix + params->padding;
+
+  return (GstMemory *) _default_mem_new_block (params->flags,
+      maxsize, params->align, params->prefix, size);
 }
 
 static gpointer
@@ -276,7 +284,8 @@ _default_mem_share (GstMemoryDefault * mem, gssize offset, gsize size)
 
   sub =
       _default_mem_new (parent->flags, parent, mem->data,
-      mem->mem.maxsize, mem->mem.offset + offset, size, NULL, NULL);
+      mem->mem.maxsize, mem->mem.offset + offset, size, mem->mem.align, NULL,
+      NULL);
 
   return sub;
 }
@@ -304,6 +313,7 @@ _fallback_mem_copy (GstMemory * mem, gssize offset, gssize size)
 {
   GstMemory *copy;
   GstMapInfo sinfo, dinfo;
+  GstAllocationParams params = { 0, 0, 0, mem->align, };
 
   if (!gst_memory_map (mem, &sinfo, GST_MAP_READ))
     return NULL;
@@ -312,7 +322,7 @@ _fallback_mem_copy (GstMemory * mem, gssize offset, gssize size)
     size = sinfo.size > offset ? sinfo.size - offset : 0;
 
   /* use the same allocator as the memory we copy  */
-  copy = gst_allocator_alloc (mem->allocator, 0, size, 0, size, mem->align);
+  copy = gst_allocator_alloc (mem->allocator, size, &params);
   if (!gst_memory_map (copy, &dinfo, GST_MAP_WRITE)) {
     GST_CAT_WARNING (GST_CAT_MEMORY, "could not write map memory %p", copy);
     gst_memory_unmap (mem, &sinfo);
@@ -408,7 +418,7 @@ gst_memory_new_wrapped (GstMemoryFlags flags, gpointer data,
   g_return_val_if_fail (offset + size <= maxsize, NULL);
 
   mem =
-      _default_mem_new (flags, NULL, data, maxsize, offset, size, user_data,
+      _default_mem_new (flags, NULL, data, maxsize, offset, size, 0, user_data,
       notify);
 
 #ifndef GST_DISABLE_TRACE
@@ -988,42 +998,97 @@ gst_allocator_set_default (GstAllocator * allocator)
 }
 
 /**
+ * gst_allocation_params_init:
+ * @params: a #GstAllocationParams
+ *
+ * Initialize @params to its default values
+ */
+void
+gst_allocation_params_init (GstAllocationParams * params)
+{
+  g_return_if_fail (params != NULL);
+
+  memset (params, 0, sizeof (GstAllocationParams));
+}
+
+/**
+ * gst_allocation_params_copy:
+ * @params: (transfer none): a #GstAllocationParams
+ *
+ * Create a copy of @params.
+ *
+ * Free-function: gst_allocation_params_free
+ *
+ * Returns: (transfer full): a new ##GstAllocationParams, free with
+ * gst_allocation_params_free().
+ */
+GstAllocationParams *
+gst_allocation_params_copy (const GstAllocationParams * params)
+{
+  GstAllocationParams *result = NULL;
+
+  if (params) {
+    result =
+        (GstAllocationParams *) g_slice_copy (sizeof (GstAllocationParams),
+        params);
+  }
+  return result;
+}
+
+/**
+ * gst_allocation_params_free:
+ * @params: (in) (transfer full): a #GstAllocationParams
+ *
+ * Free @params
+ */
+void
+gst_allocation_params_free (GstAllocationParams * params)
+{
+  g_slice_free (GstAllocationParams, params);
+}
+
+/**
  * gst_allocator_alloc:
  * @allocator: (transfer none) (allow-none): a #GstAllocator to use
- * @flags: the flags
- * @maxsize: allocated size of @data
- * @offset: offset in allocated memory
- * @size: size of visible
- * @align: alignment for the data
+ * @size: size of the visible memory area
+ * @params: (transfer none) (allow-none): optional parameters
  *
  * Use @allocator to allocate a new memory block with memory that is at least
- * @maxsize big and has the given alignment.
+ * @size big.
  *
- * @offset and @size describe the start and size of the accessible memory.
+ * The optional @params can specify the prefix and padding for the memory. If
+ * NULL is passed, no flags, no extra prefix/padding and a default alignment is
+ * used.
  *
- * The prefix/padding will be filled with 0 if @flags contains
+ * The prefix/padding will be filled with 0 if flags contains
  * #GST_MEMORY_FLAG_ZERO_PREFIXED and #GST_MEMORY_FLAG_ZERO_PADDED respectively.
  *
  * When @allocator is NULL, the default allocator will be used.
  *
- * @align is given as a bitmask so that @align + 1 equals the amount of bytes to
- * align to. For example, to align to 8 bytes, use an alignment of 7.
+ * The alignment in @params is given as a bitmask so that @align + 1 equals
+ * the amount of bytes to align to. For example, to align to 8 bytes,
+ * use an alignment of 7.
  *
  * Returns: (transfer full): a new #GstMemory.
  */
 GstMemory *
-gst_allocator_alloc (GstAllocator * allocator, GstMemoryFlags flags,
-    gsize maxsize, gsize offset, gsize size, gsize align)
+gst_allocator_alloc (GstAllocator * allocator, gsize size,
+    GstAllocationParams * params)
 {
   GstMemory *mem;
+  static GstAllocationParams defparams = { 0, 0, 0, 0, };
 
-  g_return_val_if_fail (((align + 1) & align) == 0, NULL);
+  if (params) {
+    g_return_val_if_fail (((params->align + 1) & params->align) == 0, NULL);
+  } else {
+    params = &defparams;
+  }
 
   if (allocator == NULL)
     allocator = _default_allocator;
 
-  mem = allocator->info.alloc (allocator, flags, maxsize, offset, size,
-      align, allocator->user_data);
+  mem = allocator->info.alloc (allocator, size, params, allocator->user_data);
+
 #ifndef GST_DISABLE_TRACE
   _gst_alloc_trace_new (_gst_memory_trace, mem);
 #endif

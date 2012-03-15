@@ -44,7 +44,7 @@
  *   ...
  *   size = width * height * bpp;
  *   buffer = gst_buffer_new ();
- *   memory = gst_allocator_alloc (NULL, size, 0);
+ *   memory = gst_allocator_alloc (NULL, size, NULL);
  *   gst_buffer_take_memory (buffer, -1, memory);
  *   ...
  *   </programlisting>
@@ -504,18 +504,16 @@ gst_buffer_new (void)
 
 /**
  * gst_buffer_new_allocate:
- * @allocator: (allow-none): the #GstAllocator to use, or NULL to use the
+ * @allocator: (transfer none) (allow-none): the #GstAllocator to use, or NULL to use the
  *     default allocator
  * @size: the size in bytes of the new buffer's data.
- * @align: the alignment of the buffer memory
+ * @params: (transfer none) (allow-none): optional parameters
  *
  * Tries to create a newly allocated buffer with data of the given size and
- * alignment from @allocator. If the requested amount of memory can't be
+ * extra parameters from @allocator. If the requested amount of memory can't be
  * allocated, NULL will be returned. The allocated buffer memory is not cleared.
  *
  * When @allocator is NULL, the default memory allocator will be used.
- *
- * Allocator buffer memory will be aligned to multiples of (@align + 1) bytes.
  *
  * Note that when @size == 0, the buffer will not have memory associated with it.
  *
@@ -525,7 +523,8 @@ gst_buffer_new (void)
  *     be allocated.
  */
 GstBuffer *
-gst_buffer_new_allocate (GstAllocator * allocator, gsize size, gsize align)
+gst_buffer_new_allocate (GstAllocator * allocator, gsize size,
+    GstAllocationParams * params)
 {
   GstBuffer *newbuf;
   GstMemory *mem;
@@ -536,7 +535,7 @@ gst_buffer_new_allocate (GstAllocator * allocator, gsize size, gsize align)
 
 #if 1
   if (size > 0) {
-    mem = gst_allocator_alloc (allocator, 0, size, 0, size, align);
+    mem = gst_allocator_alloc (allocator, size, params);
     if (G_UNLIKELY (mem == NULL))
       goto no_memory;
   } else {
@@ -1343,7 +1342,7 @@ _gst_buffer_arr_span (GstMemory ** mem[], gsize len[], guint n, gsize offset,
     GstMapInfo dinfo;
     guint8 *ptr;
 
-    span = gst_allocator_alloc (NULL, 0, size, 0, size, 0);
+    span = gst_allocator_alloc (NULL, size, NULL);
     gst_memory_map (span, &dinfo, GST_MAP_WRITE);
 
     ptr = dinfo.data;

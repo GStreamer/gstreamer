@@ -255,9 +255,7 @@ struct _GstBaseTransformPrivate
   GstBufferPool *pool;
   gboolean pool_active;
   GstAllocator *allocator;
-  guint prefix;
-  guint padding;
-  guint alignment;
+  GstAllocationParams params;
   GstQuery *query;
 };
 
@@ -760,9 +758,10 @@ gst_base_transform_set_allocation (GstBaseTransform * trans,
   priv->allocator = allocator;
   oldquery = priv->query;
   priv->query = query;
-  priv->prefix = prefix;
-  priv->padding = padding;
-  priv->alignment = alignment;
+  gst_allocation_params_init (&priv->params);
+  priv->params.prefix = prefix;
+  priv->params.padding = padding;
+  priv->params.align = alignment;
   GST_OBJECT_UNLOCK (trans);
 
   if (oldpool) {
@@ -1462,8 +1461,7 @@ default_prepare_output_buffer (GstBaseTransform * trans,
   GstFlowReturn ret = GST_FLOW_OK;
   GstBaseTransformClass *bclass;
   GstCaps *incaps, *outcaps;
-  gsize insize, outsize, maxsize;
-  GstMemory *mem;
+  gsize insize, outsize;
   gboolean res;
 
   priv = trans->priv;
@@ -1522,12 +1520,7 @@ default_prepare_output_buffer (GstBaseTransform * trans,
     goto unknown_size;
 
   GST_DEBUG_OBJECT (trans, "doing alloc of size %" G_GSIZE_FORMAT, outsize);
-  maxsize = outsize + priv->prefix + priv->padding;
-  mem = gst_allocator_alloc (priv->allocator, 0, maxsize, priv->prefix,
-      outsize, priv->alignment);
-
-  *outbuf = gst_buffer_new ();
-  gst_buffer_take_memory (*outbuf, -1, mem);
+  *outbuf = gst_buffer_new_allocate (priv->allocator, outsize, &priv->params);
 
 copy_meta:
   /* copy the metadata */

@@ -37,7 +37,7 @@ GST_START_TEST (test_submemory)
   GstMemory *memory, *sub;
   GstMapInfo info, sinfo;
 
-  memory = gst_allocator_alloc (NULL, 0, 4, 0, 4, 0);
+  memory = gst_allocator_alloc (NULL, 4, NULL);
 
   /* check sizes, memory starts out empty */
   fail_unless (gst_memory_map (memory, &info, GST_MAP_WRITE));
@@ -98,7 +98,7 @@ GST_START_TEST (test_is_span)
 {
   GstMemory *memory, *sub1, *sub2;
 
-  memory = gst_allocator_alloc (NULL, 0, 4, 0, 4, 0);
+  memory = gst_allocator_alloc (NULL, 4, NULL);
 
   sub1 = gst_memory_share (memory, 0, 2);
   fail_if (sub1 == NULL, "share of memory returned NULL");
@@ -196,7 +196,7 @@ GST_START_TEST (test_copy)
   GstMemory *memory, *copy;
   GstMapInfo info, sinfo;
 
-  memory = gst_allocator_alloc (NULL, 0, 4, 0, 4, 0);
+  memory = gst_allocator_alloc (NULL, 4, NULL);
   ASSERT_MEMORY_REFCOUNT (memory, "memory", 1);
 
   copy = gst_memory_copy (memory, 0, -1);
@@ -217,7 +217,7 @@ GST_START_TEST (test_copy)
   gst_memory_unref (copy);
   gst_memory_unref (memory);
 
-  memory = gst_allocator_alloc (NULL, 0, 0, 0, 0, 0);
+  memory = gst_allocator_alloc (NULL, 0, NULL);
   fail_unless (gst_memory_map (memory, &info, GST_MAP_READ));
   fail_unless (info.size == 0);
   gst_memory_unmap (memory, &info);
@@ -240,7 +240,7 @@ GST_START_TEST (test_try_new_and_alloc)
   GstMapInfo info;
   gsize size;
 
-  mem = gst_allocator_alloc (NULL, 0, 0, 0, 0, 0);
+  mem = gst_allocator_alloc (NULL, 0, NULL);
   fail_unless (mem != NULL);
   fail_unless (gst_memory_map (mem, &info, GST_MAP_READ));
   fail_unless (info.size == 0);
@@ -249,7 +249,7 @@ GST_START_TEST (test_try_new_and_alloc)
 
   /* normal alloc should still work */
   size = 640 * 480 * 4;
-  mem = gst_allocator_alloc (NULL, 0, size, 0, size, 0);
+  mem = gst_allocator_alloc (NULL, size, NULL);
   fail_unless (mem != NULL);
   fail_unless (gst_memory_map (mem, &info, GST_MAP_WRITE));
   fail_unless (info.data != NULL);
@@ -283,7 +283,7 @@ GST_START_TEST (test_resize)
   gsize size, maxsize, offset;
 
   /* one memory block */
-  mem = gst_allocator_alloc (NULL, 0, 100, 0, 100, 0);
+  mem = gst_allocator_alloc (NULL, 100, NULL);
 
   size = gst_memory_get_sizes (mem, &offset, &maxalloc);
   fail_unless (size == 100);
@@ -382,7 +382,7 @@ GST_START_TEST (test_map)
   gsize size, offset;
 
   /* one memory block */
-  mem = gst_allocator_alloc (NULL, 0, 100, 0, 100, 0);
+  mem = gst_allocator_alloc (NULL, 100, NULL);
 
   size = gst_memory_get_sizes (mem, &offset, &maxalloc);
   fail_unless (size == 100);
@@ -406,7 +406,7 @@ GST_START_TEST (test_map_nested)
   GstMemory *mem;
   GstMapInfo info1, info2;
 
-  mem = gst_allocator_alloc (NULL, 0, 100, 0, 100, 0);
+  mem = gst_allocator_alloc (NULL, 100, NULL);
 
   /* nested mapping */
   fail_unless (gst_memory_map (mem, &info1, GST_MAP_READ));
@@ -460,7 +460,7 @@ GST_START_TEST (test_map_resize)
   GstMapInfo info;
   gsize size, maxalloc, offset;
 
-  mem = gst_allocator_alloc (NULL, 0, 100, 0, 100, 0);
+  mem = gst_allocator_alloc (NULL, 100, NULL);
 
   /* do mapping */
   fail_unless (gst_memory_map (mem, &info, GST_MAP_READ));

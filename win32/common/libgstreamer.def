@@ -50,6 +50,10 @@ EXPORTS
 	_gst_sample_type DATA
 	_gst_structure_type DATA
 	_gst_trace_mutex DATA
+	gst_allocation_params_copy
+	gst_allocation_params_free
+	gst_allocation_params_get_type
+	gst_allocation_params_init
 	gst_allocator_alloc
 	gst_allocator_find
 	gst_allocator_get_memory_type

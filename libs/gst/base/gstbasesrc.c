@@ -246,9 +246,7 @@ struct _GstBaseSrcPrivate
 
   GstBufferPool *pool;
   GstAllocator *allocator;
-  guint prefix;
-  guint padding;
-  guint alignment;
+  GstAllocationParams params;
 };
 
 static GstElementClass *parent_class = NULL;
@@ -1355,21 +1353,9 @@ gst_base_src_default_alloc (GstBaseSrc * src, guint64 offset,
   if (priv->pool) {
     ret = gst_buffer_pool_acquire_buffer (priv->pool, buffer, NULL);
   } else if (size != -1) {
-    GstMemory *mem;
-    guint maxsize;
-
-    maxsize = size + priv->prefix + priv->padding;
-
-    mem = gst_allocator_alloc (priv->allocator, 0, maxsize, priv->prefix,
-        size, priv->alignment);
-    if (G_UNLIKELY (mem == NULL))
-      goto alloc_failed;
-
-    *buffer = gst_buffer_new ();
+    *buffer = gst_buffer_new_allocate (priv->allocator, size, &priv->params);
     if (G_UNLIKELY (*buffer == NULL))
-      goto buffer_failed;
-
-    gst_buffer_take_memory (*buffer, -1, mem);
+      goto alloc_failed;
 
     ret = GST_FLOW_OK;
   } else {
@@ -1383,11 +1369,6 @@ gst_base_src_default_alloc (GstBaseSrc * src, guint64 offset,
 alloc_failed:
   {
     GST_ERROR_OBJECT (src, "Failed to allocate %u bytes", size);
-    return GST_FLOW_ERROR;
-  }
-buffer_failed:
-  {
-    GST_ERROR_OBJECT (src, "Failed to allocate buffer");
     return GST_FLOW_ERROR;
   }
 }
@@ -2740,9 +2721,10 @@ gst_base_src_set_allocation (GstBaseSrc * basesrc, GstBufferPool * pool,
   oldalloc = priv->allocator;
   priv->allocator = allocator;
 
-  priv->prefix = prefix;
-  priv->padding = padding;
-  priv->alignment = alignment;
+  gst_allocation_params_init (&priv->params);
+  priv->params.prefix = prefix;
+  priv->params.padding = padding;
+  priv->params.align = alignment;
   GST_OBJECT_UNLOCK (basesrc);
 
   if (oldpool) {

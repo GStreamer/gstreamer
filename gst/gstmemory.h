@@ -35,9 +35,13 @@ GType gst_memory_get_type(void);
 #define GST_TYPE_ALLOCATOR (gst_allocator_get_type())
 GType gst_allocator_get_type(void);
 
+#define GST_TYPE_ALLOCATOR_PARAMS (gst_allocation_params_get_type())
+GType gst_allocation_params_get_type(void);
+
 typedef struct _GstMemory GstMemory;
 typedef struct _GstMemoryInfo GstMemoryInfo;
 typedef struct _GstAllocator GstAllocator;
+typedef struct _GstAllocationParams GstAllocationParams;
 
 GST_EXPORT gsize gst_memory_alignment;
 
@@ -194,20 +198,36 @@ typedef struct {
 #define GST_ALLOCATOR_SYSMEM   "SystemMemory"
 
 /**
+ * GstAllocationParams:
+ * @flags: flags to control allocation
+ * @align: the desired alignment of the memory
+ * @prefix: the disired prefix
+ * @padding: the desired padding
+ *
+ * Parameters to control the allocation of memory
+ */
+struct _GstAllocationParams {
+  GstMemoryFlags flags;
+  gsize          align;
+  gsize          prefix;
+  gsize          padding;
+
+  /*< private >*/
+  gpointer _gst_reserved[GST_PADDING];
+};
+
+/**
  * GstAllocatorAllocFunction:
  * @allocator: a #GstAllocator
- * @flags: the flags
- * @maxsize: the maxsize
- * @offset: the offset
  * @size: the size
- * @align: the alignment
+ * @params: allocator params
  * @user_data: user data
  *
- * Allocate a new #GstMemory from @allocator that can hold at least @maxsize bytes
- * and is aligned to (@align + 1) bytes.
+ * Allocate a new #GstMemory from @allocator that can hold at least @size
+ * bytes (+ padding) and is aligned to (@align + 1) bytes.
  *
  * The offset and size of the memory should be set and the prefix/padding must
- * be filled with 0 if @flags contains #GST_MEMORY_FLAG_ZERO_PREFIXED and
+ * be filled with 0 if @params flags contains #GST_MEMORY_FLAG_ZERO_PREFIXED and
  * #GST_MEMORY_FLAG_ZERO_PADDED respectively.
  *
  * @user_data is the data that was used when creating @allocator.
@@ -215,9 +235,7 @@ typedef struct {
  * Returns: a newly allocated #GstMemory. Free with gst_memory_unref()
  */
 typedef GstMemory *  (*GstAllocatorAllocFunction)  (GstAllocator *allocator,
-                                                    GstMemoryFlags flags,
-                                                    gsize maxsize, gsize offset,
-                                                    gsize size, gsize align,
+                                                    gsize size, GstAllocationParams *params,
                                                     gpointer user_data);
 
 /**
@@ -341,9 +359,13 @@ GstAllocator * gst_allocator_find            (const gchar *name);
 void           gst_allocator_set_default     (GstAllocator * allocator);
 
 /* allocating memory blocks */
-GstMemory *    gst_allocator_alloc           (GstAllocator * allocator, GstMemoryFlags flags,
-                                              gsize maxsize, gsize offset, gsize size,
-                                              gsize align);
+void           gst_allocation_params_init     (GstAllocationParams *params);
+GstAllocationParams *
+               gst_allocation_params_copy     (const GstAllocationParams *params) G_GNUC_MALLOC;
+void           gst_allocation_params_free     (GstAllocationParams *params);
+
+GstMemory *    gst_allocator_alloc           (GstAllocator * allocator, gsize size,
+                                              GstAllocationParams *params);
 
 GstMemory *    gst_memory_new_wrapped  (GstMemoryFlags flags, gpointer data, gsize maxsize,
                                         gsize offset, gsize size, gpointer user_data,

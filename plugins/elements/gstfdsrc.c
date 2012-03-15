@@ -441,7 +441,7 @@ gst_fd_src_create (GstPushSrc * psrc, GstBuffer ** outbuf)
   blocksize = GST_BASE_SRC (src)->blocksize;
 
   /* create the buffer */
-  buf = gst_buffer_new_allocate (NULL, blocksize, 0);
+  buf = gst_buffer_new_allocate (NULL, blocksize, NULL);
   if (G_UNLIKELY (buf == NULL))
     goto alloc_failed;
 

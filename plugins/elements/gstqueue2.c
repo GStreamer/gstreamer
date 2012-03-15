@@ -1161,7 +1161,7 @@ gst_queue2_create_read (GstQueue2 * queue, guint64 offset, guint length,
   GstFlowReturn ret = GST_FLOW_OK;
 
   /* allocate the output buffer of the requested size */
-  buf = gst_buffer_new_allocate (NULL, length, 0);
+  buf = gst_buffer_new_allocate (NULL, length, NULL);
   gst_buffer_map (buf, &info, GST_MAP_WRITE);
   data = info.data;
 

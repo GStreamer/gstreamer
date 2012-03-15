@@ -258,7 +258,8 @@ GType       gst_buffer_get_type            (void);
 
 /* allocation */
 GstBuffer * gst_buffer_new                 (void);
-GstBuffer * gst_buffer_new_allocate        (GstAllocator * allocator, gsize size, gsize align);
+GstBuffer * gst_buffer_new_allocate        (GstAllocator * allocator, gsize size,
+                                            GstAllocationParams * params);
 GstBuffer * gst_buffer_new_wrapped_full    (gpointer data, GFreeFunc free_func, gsize offset, gsize size);
 GstBuffer * gst_buffer_new_wrapped         (gpointer data, gsize size);
 

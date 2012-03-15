@@ -69,9 +69,7 @@ struct _GstBufferPoolPrivate
   guint size;
   guint min_buffers;
   guint max_buffers;
-  guint prefix;
-  guint padding;
-  guint align;
+  GstAllocationParams params;
 };
 
 enum
@@ -181,15 +179,8 @@ default_alloc_buffer (GstBufferPool * pool, GstBuffer ** buffer,
     GstBufferPoolParams * params)
 {
   GstBufferPoolPrivate *priv = pool->priv;
-  GstMemory *mem;
-  gsize maxsize;
 
-  *buffer = gst_buffer_new ();
-
-  maxsize = priv->size + priv->prefix + priv->padding;
-  mem = gst_allocator_alloc (NULL, 0, maxsize, priv->prefix,
-      priv->size, priv->align);
-  gst_buffer_take_memory (*buffer, -1, mem);
+  *buffer = gst_buffer_new_allocate (NULL, priv->size, &priv->params);
 
   return GST_FLOW_OK;
 }
@@ -446,9 +437,10 @@ default_set_config (GstBufferPool * pool, GstStructure * config)
   priv->size = size;
   priv->min_buffers = min_buffers;
   priv->max_buffers = max_buffers;
-  priv->prefix = prefix;
-  priv->padding = padding;
-  priv->align = align;
+  gst_allocation_params_init (&priv->params);
+  priv->params.prefix = prefix;
+  priv->params.padding = padding;
+  priv->params.align = align;
 
   return TRUE;
 
