@@ -279,7 +279,7 @@ gst_monoscope_src_negotiate (GstMonoscope * monoscope)
   }
 
   config = gst_buffer_pool_get_config (pool);
-  gst_buffer_pool_config_set (config, target, size, min, max, 0, 0, 0);
+  gst_buffer_pool_config_set_params (config, target, size, min, max);
   gst_buffer_pool_set_config (pool, config);
 
   if (monoscope->pool) {
