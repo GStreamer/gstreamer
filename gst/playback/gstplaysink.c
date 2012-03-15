@@ -4295,6 +4295,10 @@ gst_play_sink_navigation_send_event (GstNavigation * navigation,
       gst_navigation_send_event (GST_NAVIGATION (nav), structure);
       structure = NULL;
       gst_object_unref (nav);
+    } else {
+      GstEvent *event = gst_event_new_navigation (structure);
+      structure = NULL;
+      gst_element_send_event (GST_ELEMENT (bin), event);
     }
 
     gst_object_unref (bin);
