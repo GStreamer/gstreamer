@@ -1,5 +1,4 @@
-/*
- * GStreamer faceoverlay plugin
+/* GStreamer faceoverlay plugin
  * Copyright (C) 2011 Laura Lucas Alday <lauralucas@gmail.com>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
@@ -75,13 +74,6 @@ GST_DEBUG_CATEGORY_STATIC (gst_face_overlay_debug);
 #else
 #define GST_STR_VIDEO_CAPS GST_VIDEO_CAPS_ARGB
 #endif
-
-/* Filter signals and args */
-enum
-{
-  /* FILL ME */
-  LAST_SIGNAL
-};
 
 enum
 {
@@ -319,9 +311,6 @@ gst_face_overlay_message_handler (GstBin * bin, GstMessage * message)
   GST_BIN_CLASS (parent_class)->handle_message (bin, message);
 }
 
-/* GObject vmethod implementations */
-/* the _base_init() function is meant to initialize class and child class
- * properties during each new child class creation */
 static void
 gst_face_overlay_base_init (gpointer gclass)
 {
@@ -337,10 +326,6 @@ gst_face_overlay_base_init (gpointer gclass)
   gst_element_class_add_static_pad_template (element_class, &sink_factory);
 }
 
-/* initialize the faceoverlay's class */
-/* the _class_init() function is used to initialise the class only once
- * (specifying what signals, arguments and virtual functions the class has and
- * setting up global state) */
 static void
 gst_face_overlay_class_init (GstFaceOverlayClass * klass)
 {
@@ -380,15 +365,8 @@ gst_face_overlay_class_init (GstFaceOverlayClass * klass)
       GST_DEBUG_FUNCPTR (gst_face_overlay_message_handler);
   gstelement_class->change_state =
       GST_DEBUG_FUNCPTR (gst_face_overlay_change_state);
-
 }
 
-/* initialize the new element
- * instantiate pads and add them to element
- * set pad calback functions
- * initialize instance structure
- * the _init() function is used to initialise a specific instance of this type.
- */
 static void
 gst_face_overlay_init (GstFaceOverlay * filter, GstFaceOverlayClass * gclass)
 {
@@ -407,7 +385,6 @@ gst_face_overlay_init (GstFaceOverlay * filter, GstFaceOverlayClass * gclass)
 
   filter->srcpad = gst_pad_new_from_static_template (&src_factory, "src");
   gst_element_add_pad (GST_ELEMENT (filter), filter->srcpad);
-
 }
 
 static void
@@ -466,14 +443,9 @@ gst_face_overlay_get_property (GObject * object, guint prop_id,
   }
 }
 
-/* entry point to initialize the plug-in
- * initialize the plug-in itself
- * register the element factories and other features
- */
 static gboolean
 faceoverlay_init (GstPlugin * faceoverlay)
 {
-  /* debug category for fltering log messages */
   GST_DEBUG_CATEGORY_INIT (gst_face_overlay_debug, "faceoverlay",
       0, "SVG Face Overlay");
 
@@ -481,18 +453,8 @@ faceoverlay_init (GstPlugin * faceoverlay)
       GST_TYPE_FACEOVERLAY);
 }
 
-/* PACKAGE: this is usually set by autotools depending on some _INIT macro
- * in configure.ac and then written into and defined in config.h, but we can
- * just set it ourselves here in case someone doesn't use autotools to
- * compile this code. GST_PLUGIN_DEFINE needs PACKAGE to be defined.
- */
-#ifndef PACKAGE
-#define PACKAGE "faceoverlay"
-#endif
-
-/* gstreamer looks for this structure to register plugins */
 GST_PLUGIN_DEFINE (GST_VERSION_MAJOR,
     GST_VERSION_MINOR,
     "faceoverlay",
     "SVG Face Overlay",
-    faceoverlay_init, VERSION, "LGPL", "GStreamer", "http://gstreamer.net/")
+    faceoverlay_init, VERSION, "LGPL", GST_PACKAGE_NAME, GST_PACKAGE_ORIGIN)
