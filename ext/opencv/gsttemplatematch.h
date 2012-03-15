@@ -48,7 +48,11 @@
 
 #include <gst/gst.h>
 #include <cv.h>
-#include <highgui.h>
+#ifndef __OPENCV_OLD_CV_H__
+#include <highgui.h>            // includes highGUI definitions
+#else
+#include <opencv2/highgui/highgui.hpp>            // includes highGUI definitions
+#endif
 
 G_BEGIN_DECLS
 /* #defines don't like whitespacey bits */

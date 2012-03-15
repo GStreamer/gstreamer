@@ -1432,15 +1432,11 @@ AG_GST_CHECK_FEATURE(OPENCV, [opencv plugins], opencv, [
     AC_LANG_CPLUSPLUS
     OLD_CPPFLAGS=$CPPFLAGS
     CPPFLAGS=$OPENCV_CFLAGS
-    AC_CHECK_HEADER(highgui.h, HAVE_HIGHGUI="yes", HAVE_HIGHGUI="no")
-    AC_CHECK_HEADER(cvaux.h, HAVE_CVAUX="yes", HAVE_CVAUX="no")
+    AC_CHECK_HEADERS(highgui.h opencv2/highgui/highgui.hpp, HAVE_HIGHGUI="yes", HAVE_HIGHGUI="no")
     CPPFLAGS=$OLD_CPPFLAGS
     AC_LANG_C
     if test "x$HAVE_HIGHGUI" = "xno"; then
       AC_MSG_RESULT(highgui.h could not be found.)
-      HAVE_OPENCV="no"
-    elif test "x$HAVE_CVAUX" = "xno"; then
-      AC_MSG_RESULT(cvaux.h could not be found.)
       HAVE_OPENCV="no"
     else
       HAVE_OPENCV="yes"
