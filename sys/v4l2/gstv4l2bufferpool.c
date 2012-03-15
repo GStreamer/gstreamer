@@ -131,7 +131,7 @@ gst_v4l2_buffer_pool_free_buffer (GstBufferPool * bpool, GstBuffer * buffer)
 
 static GstFlowReturn
 gst_v4l2_buffer_pool_alloc_buffer (GstBufferPool * bpool, GstBuffer ** buffer,
-    GstBufferPoolParams * params)
+    GstBufferPoolAcquireParams * params)
 {
   GstV4l2BufferPool *pool = GST_V4L2_BUFFER_POOL (bpool);
   GstBuffer *newbuf;
@@ -689,7 +689,7 @@ no_buffer:
 
 static GstFlowReturn
 gst_v4l2_buffer_pool_acquire_buffer (GstBufferPool * bpool, GstBuffer ** buffer,
-    GstBufferPoolParams * params)
+    GstBufferPoolAcquireParams * params)
 {
   GstFlowReturn ret;
   GstV4l2BufferPool *pool = GST_V4L2_BUFFER_POOL (bpool);
