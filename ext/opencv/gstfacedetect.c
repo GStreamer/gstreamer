@@ -469,6 +469,19 @@ gst_face_detect_message_new (GstFaceDetect * filter, GstBuffer * buf)
   return gst_message_new_element (GST_OBJECT (filter), s);
 }
 
+static CvSeq *
+gst_face_detect_run_detector (GstFaceDetect * filter,
+    CvHaarClassifierCascade * detector, gint min_size_width,
+    gint min_size_height)
+{
+  return cvHaarDetectObjects (filter->cvGray, detector,
+      filter->cvStorage, filter->scale_factor, filter->min_neighbors,
+      filter->flags, cvSize (min_size_width, min_size_height)
+#if (CV_MAJOR_VERSION >= 2) && (CV_MINOR_VERSION >= 2)
+      , cvSize (min_size_width + 2, min_size_height + 2)
+#endif
+      );
+}
 
 /* 
  * Performs the face detection
@@ -500,14 +513,8 @@ gst_face_detect_transform_ip (GstOpencvVideoFilter * base, GstBuffer * buf,
     cvCvtColor (img, filter->cvGray, CV_RGB2GRAY);
     cvClearMemStorage (filter->cvStorage);
 
-    faces =
-        cvHaarDetectObjects (filter->cvGray, filter->cvFaceDetect,
-        filter->cvStorage, filter->scale_factor, filter->min_neighbors,
-        filter->flags, cvSize (filter->min_size_width, filter->min_size_height)
-#if (CV_MAJOR_VERSION >= 2) && (CV_MINOR_VERSION >= 2)
-        , cvSize (filter->min_size_width + 2, filter->min_size_height + 2)
-#endif
-        );
+    faces = gst_face_detect_run_detector (filter, filter->cvFaceDetect,
+        filter->min_size_width, filter->min_size_height);
 
     msg = gst_face_detect_message_new (filter, buf);
     g_value_init (&facelist, GST_TYPE_LIST);
@@ -529,13 +536,7 @@ gst_face_detect_transform_ip (GstOpencvVideoFilter * base, GstBuffer * buf,
       rnh = r->height / 2;
       cvSetImageROI (filter->cvGray, cvRect (rnx, rny, rnw, rnh));
       nose =
-          cvHaarDetectObjects (filter->cvGray, filter->cvNoseDetect,
-          filter->cvStorage, filter->scale_factor, filter->min_neighbors,
-          filter->flags, cvSize (mw, mh)
-#if (CV_MAJOR_VERSION >= 2) && (CV_MINOR_VERSION >= 2)
-          , cvSize (mw + 2, mh + 2)
-#endif
-          );
+          gst_face_detect_run_detector (filter, filter->cvNoseDetect, mw, mh);
       have_nose = (nose && nose->total);
       cvResetImageROI (filter->cvGray);
 
@@ -545,13 +546,7 @@ gst_face_detect_transform_ip (GstOpencvVideoFilter * base, GstBuffer * buf,
       rmh = r->height / 2;
       cvSetImageROI (filter->cvGray, cvRect (rmx, rmy, rmw, rmh));
       mouth =
-          cvHaarDetectObjects (filter->cvGray, filter->cvMouthDetect,
-          filter->cvStorage, filter->scale_factor, filter->min_neighbors,
-          filter->flags, cvSize (mw, mh)
-#if (CV_MAJOR_VERSION >= 2) && (CV_MINOR_VERSION >= 2)
-          , cvSize (mw + 2, mh + 2)
-#endif
-          );
+          gst_face_detect_run_detector (filter, filter->cvMouthDetect, mw, mh);
       have_mouth = (mouth && mouth->total);
       cvResetImageROI (filter->cvGray);
 
@@ -561,13 +556,7 @@ gst_face_detect_transform_ip (GstOpencvVideoFilter * base, GstBuffer * buf,
       reh = r->height / 2;
       cvSetImageROI (filter->cvGray, cvRect (rex, rey, rew, reh));
       eyes =
-          cvHaarDetectObjects (filter->cvGray, filter->cvEyesDetect,
-          filter->cvStorage, filter->scale_factor, filter->min_neighbors,
-          filter->flags, cvSize (mw, mh)
-#if (CV_MAJOR_VERSION >= 2) && (CV_MINOR_VERSION >= 2)
-          , cvSize (mw + 2, mh + 2)
-#endif
-          );
+          gst_face_detect_run_detector (filter, filter->cvEyesDetect, mw, mh);
       have_eyes = (eyes && eyes->total);
       cvResetImageROI (filter->cvGray);
 
