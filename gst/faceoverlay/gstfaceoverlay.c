@@ -69,12 +69,6 @@
 GST_DEBUG_CATEGORY_STATIC (gst_face_overlay_debug);
 #define GST_CAT_DEFAULT gst_face_overlay_debug
 
-#if G_BYTE_ORDER == G_LITTLE_ENDIAN
-#define GST_STR_VIDEO_CAPS GST_VIDEO_CAPS_BGRA
-#else
-#define GST_STR_VIDEO_CAPS GST_VIDEO_CAPS_ARGB
-#endif
-
 enum
 {
   PROP_0,
@@ -85,17 +79,16 @@ enum
   PROP_H
 };
 
-/* the capabilities of the inputs and outputs. */
 static GstStaticPadTemplate sink_factory = GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS (GST_STR_VIDEO_CAPS)
+    GST_STATIC_CAPS ("video/x-raw-rgb; video/x-raw-yuv")
     );
 
 static GstStaticPadTemplate src_factory = GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS (GST_STR_VIDEO_CAPS)
+    GST_STATIC_CAPS ("video/x-raw-rgb; video/x-raw-yuv")
     );
 
 GST_BOILERPLATE (GstFaceOverlay, gst_face_overlay, GstBin, GST_TYPE_BIN);
