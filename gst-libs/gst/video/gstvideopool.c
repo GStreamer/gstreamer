@@ -237,7 +237,7 @@ wrong_caps:
 
 static GstFlowReturn
 video_buffer_pool_alloc (GstBufferPool * pool, GstBuffer ** buffer,
-    GstBufferPoolParams * params)
+    GstBufferPoolAcquireParams * params)
 {
   GstVideoBufferPool *vpool = GST_VIDEO_BUFFER_POOL_CAST (pool);
   GstVideoBufferPoolPrivate *priv = vpool->priv;

@@ -606,7 +606,7 @@ unknown_format:
 /* This function handles GstXImageBuffer creation depending on XShm availability */
 static GstFlowReturn
 xvimage_buffer_pool_alloc (GstBufferPool * pool, GstBuffer ** buffer,
-    GstBufferPoolParams * params)
+    GstBufferPoolAcquireParams * params)
 {
   GstXvImageBufferPool *xvpool = GST_XVIMAGE_BUFFER_POOL_CAST (pool);
   GstXvImageBufferPoolPrivate *priv = xvpool->priv;

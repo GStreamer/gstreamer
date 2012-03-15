@@ -558,7 +558,7 @@ wrong_caps:
 /* This function handles GstXImageBuffer creation depending on XShm availability */
 static GstFlowReturn
 ximage_buffer_pool_alloc (GstBufferPool * pool, GstBuffer ** buffer,
-    GstBufferPoolParams * params)
+    GstBufferPoolAcquireParams * params)
 {
   GstXImageBufferPool *xpool = GST_XIMAGE_BUFFER_POOL_CAST (pool);
   GstXImageBufferPoolPrivate *priv = xpool->priv;
