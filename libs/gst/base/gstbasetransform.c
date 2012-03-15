@@ -899,8 +899,8 @@ gst_base_transform_do_bufferpool (GstBaseTransform * trans, GstCaps * outcaps)
     GstStructure *config;
 
     config = gst_buffer_pool_get_config (pool);
-    gst_buffer_pool_config_set (config, outcaps, size, min, max, params.prefix,
-        params.padding, params.align);
+    gst_buffer_pool_config_set_params (config, outcaps, size, min, max);
+    gst_buffer_pool_config_set_allocator (config, allocator, &params);
     gst_buffer_pool_set_config (pool, config);
   }
   /* and store */

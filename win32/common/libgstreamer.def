@@ -124,11 +124,13 @@ EXPORTS
 	gst_buffer_pool_acquire_buffer
 	gst_buffer_pool_acquire_flags_get_type
 	gst_buffer_pool_config_add_option
-	gst_buffer_pool_config_get
+	gst_buffer_pool_config_get_allocator
 	gst_buffer_pool_config_get_option
+	gst_buffer_pool_config_get_params
 	gst_buffer_pool_config_has_option
 	gst_buffer_pool_config_n_options
-	gst_buffer_pool_config_set
+	gst_buffer_pool_config_set_allocator
+	gst_buffer_pool_config_set_params
 	gst_buffer_pool_get_config
 	gst_buffer_pool_get_options
 	gst_buffer_pool_get_type

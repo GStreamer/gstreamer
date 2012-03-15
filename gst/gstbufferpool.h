@@ -179,13 +179,16 @@ GstStructure *   gst_buffer_pool_get_config      (GstBufferPool *pool);
 const gchar **   gst_buffer_pool_get_options     (GstBufferPool *pool);
 gboolean         gst_buffer_pool_has_option      (GstBufferPool *pool, const gchar *option);
 
+
 /* helpers for configuring the config structure */
-void             gst_buffer_pool_config_set      (GstStructure *config, const GstCaps *caps,
-                                                  guint size, guint min_buffers, guint max_buffers,
-                                                  guint prefix, guint padding, guint align);
-gboolean         gst_buffer_pool_config_get      (GstStructure *config, const GstCaps **caps,
-                                                  guint *size, guint *min_buffers, guint *max_buffers,
-                                                  guint *prefix, guint *padding, guint *align);
+void             gst_buffer_pool_config_set_params    (GstStructure *config, const GstCaps *caps,
+                                                       guint size, guint min_buffers, guint max_buffers);
+gboolean         gst_buffer_pool_config_get_params    (GstStructure *config, const GstCaps **caps,
+                                                       guint *size, guint *min_buffers, guint *max_buffers);
+void             gst_buffer_pool_config_set_allocator (GstStructure *config, GstAllocator *allocator,
+                                                       const GstAllocationParams *params);
+gboolean         gst_buffer_pool_config_get_allocator (GstStructure *config, GstAllocator **allocator,
+                                                       GstAllocationParams *params);
 
 /* options */
 guint            gst_buffer_pool_config_n_options   (GstStructure *config);

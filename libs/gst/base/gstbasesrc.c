@@ -2821,8 +2821,8 @@ gst_base_src_prepare_allocation (GstBaseSrc * basesrc, GstCaps * caps)
     GstStructure *config;
 
     config = gst_buffer_pool_get_config (pool);
-    gst_buffer_pool_config_set (config, caps, size, min, max, params.prefix,
-        params.padding, params.align);
+    gst_buffer_pool_config_set_params (config, caps, size, min, max);
+    gst_buffer_pool_config_set_allocator (config, allocator, &params);
     gst_buffer_pool_set_config (pool, config);
   }
 

@@ -69,6 +69,7 @@ struct _GstBufferPoolPrivate
   guint size;
   guint min_buffers;
   guint max_buffers;
+  GstAllocator *allocator;
   GstAllocationParams params;
 };
 
@@ -120,20 +121,25 @@ gst_buffer_pool_class_init (GstBufferPoolClass * klass)
 static void
 gst_buffer_pool_init (GstBufferPool * pool)
 {
-  pool->priv = GST_BUFFER_POOL_GET_PRIVATE (pool);
+  GstBufferPoolPrivate *priv;
 
-  g_rec_mutex_init (&pool->priv->rec_lock);
+  priv = pool->priv = GST_BUFFER_POOL_GET_PRIVATE (pool);
 
-  pool->priv->poll = gst_poll_new_timer ();
-  pool->priv->queue = gst_atomic_queue_new (10);
+  g_rec_mutex_init (&priv->rec_lock);
+
+  priv->poll = gst_poll_new_timer ();
+  priv->queue = gst_atomic_queue_new (10);
   pool->flushing = 1;
-  pool->priv->active = FALSE;
-  pool->priv->configured = FALSE;
-  pool->priv->started = FALSE;
-  pool->priv->config =
-      gst_structure_new_id_empty (GST_QUARK (BUFFER_POOL_CONFIG));
-  gst_buffer_pool_config_set (pool->priv->config, NULL, 0, 0, 0, 0, 0, 0);
-  gst_poll_write_control (pool->priv->poll);
+  priv->active = FALSE;
+  priv->configured = FALSE;
+  priv->started = FALSE;
+  priv->config = gst_structure_new_id_empty (GST_QUARK (BUFFER_POOL_CONFIG));
+  gst_buffer_pool_config_set_params (priv->config, NULL, 0, 0, 0);
+  priv->allocator = NULL;
+  gst_allocation_params_init (&priv->params);
+  gst_buffer_pool_config_set_allocator (priv->config, priv->allocator,
+      &priv->params);
+  gst_poll_write_control (priv->poll);
 
   GST_DEBUG_OBJECT (pool, "created");
 }
@@ -142,16 +148,20 @@ static void
 gst_buffer_pool_finalize (GObject * object)
 {
   GstBufferPool *pool;
+  GstBufferPoolPrivate *priv;
 
   pool = GST_BUFFER_POOL_CAST (object);
+  priv = pool->priv;
 
   GST_DEBUG_OBJECT (pool, "finalize");
 
   gst_buffer_pool_set_active (pool, FALSE);
-  gst_atomic_queue_unref (pool->priv->queue);
-  gst_poll_free (pool->priv->poll);
-  gst_structure_free (pool->priv->config);
-  g_rec_mutex_clear (&pool->priv->rec_lock);
+  gst_atomic_queue_unref (priv->queue);
+  gst_poll_free (priv->poll);
+  gst_structure_free (priv->config);
+  g_rec_mutex_clear (&priv->rec_lock);
+  if (priv->allocator)
+    gst_allocator_unref (priv->allocator);
 
   G_OBJECT_CLASS (gst_buffer_pool_parent_class)->finalize (object);
 }
@@ -180,7 +190,8 @@ default_alloc_buffer (GstBufferPool * pool, GstBuffer ** buffer,
 {
   GstBufferPoolPrivate *priv = pool->priv;
 
-  *buffer = gst_buffer_new_allocate (NULL, priv->size, &priv->params);
+  *buffer =
+      gst_buffer_new_allocate (priv->allocator, priv->size, &priv->params);
 
   return GST_FLOW_OK;
 }
@@ -425,11 +436,15 @@ default_set_config (GstBufferPool * pool, GstStructure * config)
   GstBufferPoolPrivate *priv = pool->priv;
   const GstCaps *caps;
   guint size, min_buffers, max_buffers;
-  guint prefix, padding, align;
+  GstAllocator *allocator;
+  GstAllocationParams params;
 
   /* parse the config and keep around */
-  if (!gst_buffer_pool_config_get (config, &caps, &size, &min_buffers,
-          &max_buffers, &prefix, &padding, &align))
+  if (!gst_buffer_pool_config_get_params (config, &caps, &size, &min_buffers,
+          &max_buffers))
+    goto wrong_config;
+
+  if (!gst_buffer_pool_config_get_allocator (config, &allocator, &params))
     goto wrong_config;
 
   GST_DEBUG_OBJECT (pool, "config %" GST_PTR_FORMAT, config);
@@ -437,10 +452,12 @@ default_set_config (GstBufferPool * pool, GstStructure * config)
   priv->size = size;
   priv->min_buffers = min_buffers;
   priv->max_buffers = max_buffers;
-  gst_allocation_params_init (&priv->params);
-  priv->params.prefix = prefix;
-  priv->params.padding = padding;
-  priv->params.align = align;
+
+  if (priv->allocator)
+    gst_allocator_unref (priv->allocator);
+  if ((priv->allocator = allocator))
+    gst_allocator_ref (allocator);
+  priv->params = params;
 
   return TRUE;
 
@@ -614,22 +631,18 @@ gst_buffer_pool_has_option (GstBufferPool * pool, const gchar * option)
 }
 
 /**
- * gst_buffer_pool_config_set:
+ * gst_buffer_pool_config_set_params:
  * @config: a #GstBufferPool configuration
  * @caps: caps for the buffers
  * @size: the size of each buffer, not including prefix and padding
  * @min_buffers: the minimum amount of buffers to allocate.
  * @max_buffers: the maximum amount of buffers to allocate or 0 for unlimited.
- * @prefix: prefix each buffer with this many bytes
- * @padding: pad each buffer with this many bytes
- * @align: alignment of the buffer data.
  *
  * Configure @config with the given parameters.
  */
 void
-gst_buffer_pool_config_set (GstStructure * config, const GstCaps * caps,
-    guint size, guint min_buffers, guint max_buffers, guint prefix,
-    guint padding, guint align)
+gst_buffer_pool_config_set_params (GstStructure * config, const GstCaps * caps,
+    guint size, guint min_buffers, guint max_buffers)
 {
   g_return_if_fail (config != NULL);
 
@@ -637,10 +650,38 @@ gst_buffer_pool_config_set (GstStructure * config, const GstCaps * caps,
       GST_QUARK (CAPS), GST_TYPE_CAPS, caps,
       GST_QUARK (SIZE), G_TYPE_UINT, size,
       GST_QUARK (MIN_BUFFERS), G_TYPE_UINT, min_buffers,
-      GST_QUARK (MAX_BUFFERS), G_TYPE_UINT, max_buffers,
-      GST_QUARK (PREFIX), G_TYPE_UINT, prefix,
-      GST_QUARK (PADDING), G_TYPE_UINT, padding,
-      GST_QUARK (ALIGN), G_TYPE_UINT, align, NULL);
+      GST_QUARK (MAX_BUFFERS), G_TYPE_UINT, max_buffers, NULL);
+}
+
+/**
+ * gst_buffer_pool_config_set_allocator:
+ * @config: a #GstBufferPool configuration
+ * @allocator: a #GstAllocator
+ * @params: #GstAllocationParams
+ *
+ * Set the @allocator and @params on @config.
+ *
+ * One of @allocator and @params can be NULL, but not both. When @allocator
+ * is NULL, the default allocator of the pool will use the values in @param
+ * to perform its allocation. When @param is NULL, the pool will use the
+ * provided allocator with its default #GstAllocationParams.
+ *
+ * A call to gst_buffer_pool_set_config() can update the allocator and params
+ * with the values that it is able to do. Some pools are, for example, not able
+ * to operate with different allocators or cannot allocate with the values
+ * specified in @params. Use gst_buffer_pool_get_config() to get the currently
+ * used values.
+ */
+void
+gst_buffer_pool_config_set_allocator (GstStructure * config,
+    GstAllocator * allocator, const GstAllocationParams * params)
+{
+  g_return_if_fail (config != NULL);
+  g_return_if_fail (allocator != NULL || params != NULL);
+
+  gst_structure_id_set (config,
+      GST_QUARK (ALLOCATOR), GST_TYPE_ALLOCATOR, allocator,
+      GST_QUARK (PARAMS), GST_TYPE_ALLOCATION_PARAMS, params, NULL);
 }
 
 /**
@@ -768,22 +809,18 @@ gst_buffer_pool_config_has_option (GstStructure * config, const gchar * option)
 }
 
 /**
- * gst_buffer_pool_config_get:
+ * gst_buffer_pool_config_get_params:
  * @config: (transfer none): a #GstBufferPool configuration
  * @caps: (out): the caps of buffers
  * @size: (out): the size of each buffer, not including prefix and padding
  * @min_buffers: (out): the minimum amount of buffers to allocate.
  * @max_buffers: (out): the maximum amount of buffers to allocate or 0 for unlimited.
- * @prefix: (out): prefix each buffer with this many bytes
- * @padding: (out): pad each buffer with this many bytes
- * @align: (out): alignment of the buffer data.
  *
  * Get the configuration values from @config.
  */
 gboolean
-gst_buffer_pool_config_get (GstStructure * config, const GstCaps ** caps,
-    guint * size, guint * min_buffers, guint * max_buffers, guint * prefix,
-    guint * padding, guint * align)
+gst_buffer_pool_config_get_params (GstStructure * config, const GstCaps ** caps,
+    guint * size, guint * min_buffers, guint * max_buffers)
 {
   g_return_val_if_fail (config != NULL, FALSE);
 
@@ -791,10 +828,38 @@ gst_buffer_pool_config_get (GstStructure * config, const GstCaps ** caps,
       GST_QUARK (CAPS), GST_TYPE_CAPS, caps,
       GST_QUARK (SIZE), G_TYPE_UINT, size,
       GST_QUARK (MIN_BUFFERS), G_TYPE_UINT, min_buffers,
-      GST_QUARK (MAX_BUFFERS), G_TYPE_UINT, max_buffers,
-      GST_QUARK (PREFIX), G_TYPE_UINT, prefix,
-      GST_QUARK (PADDING), G_TYPE_UINT, padding,
-      GST_QUARK (ALIGN), G_TYPE_UINT, align, NULL);
+      GST_QUARK (MAX_BUFFERS), G_TYPE_UINT, max_buffers, NULL);
+}
+
+/**
+ * gst_buffer_pool_config_get_allocator:
+ * @config: (transfer none): a #GstBufferPool configuration
+ * @allocator: (transfer none): a #GstAllocator
+ * @params: #GstAllocationParams
+ *
+ * Get the allocator and params from @config.
+ */
+gboolean
+gst_buffer_pool_config_get_allocator (GstStructure * config,
+    GstAllocator ** allocator, GstAllocationParams * params)
+{
+  g_return_val_if_fail (config != NULL, FALSE);
+
+  if (allocator)
+    *allocator = g_value_get_boxed (gst_structure_id_get_value (config,
+            GST_QUARK (ALLOCATOR)));
+  if (params) {
+    GstAllocationParams *p;
+
+    p = g_value_get_boxed (gst_structure_id_get_value (config,
+            GST_QUARK (PARAMS)));
+    if (p) {
+      *params = *p;
+    } else {
+      gst_allocation_params_init (params);
+    }
+  }
+  return TRUE;
 }
 
 static GstFlowReturn

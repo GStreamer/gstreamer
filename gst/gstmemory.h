@@ -35,7 +35,7 @@ GType gst_memory_get_type(void);
 #define GST_TYPE_ALLOCATOR (gst_allocator_get_type())
 GType gst_allocator_get_type(void);
 
-#define GST_TYPE_ALLOCATOR_PARAMS (gst_allocation_params_get_type())
+#define GST_TYPE_ALLOCATION_PARAMS (gst_allocation_params_get_type())
 GType gst_allocation_params_get_type(void);
 
 typedef struct _GstMemory GstMemory;
