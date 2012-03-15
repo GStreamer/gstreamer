@@ -313,8 +313,8 @@ gst_base_video_decoder_setcaps (GstBaseVideoDecoder * base_video_decoder,
   }
 
   if (ret) {
-    gst_buffer_replace (&GST_BASE_VIDEO_CODEC (base_video_decoder)->
-        state.codec_data, NULL);
+    gst_buffer_replace (&GST_BASE_VIDEO_CODEC (base_video_decoder)->state.
+        codec_data, NULL);
     gst_caps_replace (&GST_BASE_VIDEO_CODEC (base_video_decoder)->state.caps,
         NULL);
     GST_BASE_VIDEO_CODEC (base_video_decoder)->state = state;
@@ -1990,9 +1990,9 @@ gst_base_video_decoder_set_src_caps (GstBaseVideoDecoder * base_video_decoder)
   GstVideoState *state = &codec->state;
   GstVideoInfo *info = &codec->info;
   GstQuery *query;
-  GstBufferPool *pool = NULL;
+  GstBufferPool *pool;
   GstStructure *config;
-  guint size, min, max, prefix, padding, alignment;
+  guint size, min, max;
   gboolean ret;
 
   /* minimum sense */
@@ -2041,39 +2041,42 @@ gst_base_video_decoder_set_src_caps (GstBaseVideoDecoder * base_video_decoder)
   /* Negotiate pool */
   query = gst_query_new_allocation (caps, TRUE);
 
-  if (gst_pad_peer_query (codec->srcpad, query)) {
-    GST_DEBUG_OBJECT (codec, "got downstream ALLOCATION hints");
+  if (!gst_pad_peer_query (codec->srcpad, query)) {
+    GST_DEBUG_OBJECT (codec, "didn't get downstream ALLOCATION hints");
+  }
+
+  if (gst_query_get_n_allocation_pools (query) > 0) {
     /* we got configuration from our peer, parse them */
-    gst_query_parse_allocation_params (query, &size, &min, &max, &prefix,
-        &padding, &alignment, &pool);
+    gst_query_parse_nth_allocation_pool (query, 0, &pool, &size, &min, &max);
     size = MAX (size, info->size);
   } else {
-    GST_DEBUG_OBJECT (codec, "didn't get downstream ALLOCATION hints");
+    pool = NULL;
     size = info->size;
     min = max = 0;
-    prefix = 0;
-    padding = 0;
-    alignment = 0;
   }
 
   if (pool == NULL) {
     /* we did not get a pool, make one ourselves then */
-    pool = gst_buffer_pool_new ();
+    pool = gst_video_buffer_pool_new ();
   }
 
-  if (base_video_decoder->pool)
+  if (base_video_decoder->pool) {
+    gst_buffer_pool_set_active (base_video_decoder->pool, FALSE);
     gst_object_unref (base_video_decoder->pool);
+  }
   base_video_decoder->pool = pool;
 
   config = gst_buffer_pool_get_config (pool);
-  gst_buffer_pool_config_set (config, caps, size, min, max, prefix, padding,
-      alignment);
+  gst_buffer_pool_config_set (config, caps, size, min, max, 0, 0, 0);
   state->bytes_per_picture = size;
 
-  /* just set the option, if the pool can support it we will transparently use
-   * it through the video info API. We could also see if the pool support this
-   * option and only activate it then. */
-  gst_buffer_pool_config_add_option (config, GST_BUFFER_POOL_OPTION_VIDEO_META);
+  if (gst_query_has_allocation_meta (query, GST_VIDEO_META_API_TYPE)) {
+    /* just set the option, if the pool can support it we will transparently use
+     * it through the video info API. We could also see if the pool support this
+     * option and only activate it then. */
+    gst_buffer_pool_config_add_option (config,
+        GST_BUFFER_POOL_OPTION_VIDEO_META);
+  }
 
   /* check if downstream supports cropping */
   base_video_decoder->use_cropping =
