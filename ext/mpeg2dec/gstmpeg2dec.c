@@ -1144,7 +1144,8 @@ gst_mpeg2dec_chain (GstPad * pad, GstObject * parent, GstBuffer * buf)
      */
 #ifdef enable_user_data
     if (info->user_data_len > 0) {
-      GstBuffer *udbuf = gst_buffer_new_allocate (NULL, info->user_data_len, 0);
+      GstBuffer *udbuf =
+          gst_buffer_new_allocate (NULL, info->user_data_len, NULL);
 
       gst_buffer_fill (udbuf, 0, info->user_data, info->user_data_len);
 

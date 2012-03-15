@@ -648,7 +648,7 @@ gst_dvdlpcmdec_chain_raw (GstPad * pad, GstObject * parent, GstBuffer * buf)
       if (samples < 1)
         goto drop;
 
-      outbuf = gst_buffer_new_allocate (NULL, samples * 3, 0);
+      outbuf = gst_buffer_new_allocate (NULL, samples * 3, NULL);
       gst_buffer_copy_into (outbuf, buf, GST_BUFFER_COPY_TIMESTAMPS, 0, -1);
 
       /* adjust samples so we can calc the new timestamp */

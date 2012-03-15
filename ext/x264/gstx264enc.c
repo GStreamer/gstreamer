@@ -2078,7 +2078,7 @@ gst_x264_enc_encode_frame (GstX264Enc * encoder, x264_picture_t * pic_in,
     goto out;
   }
 
-  out_buf = gst_buffer_new_allocate (NULL, i_size, 0);
+  out_buf = gst_buffer_new_allocate (NULL, i_size, NULL);
   gst_buffer_fill (out_buf, 0, data, i_size);
 
   GST_LOG_OBJECT (encoder,

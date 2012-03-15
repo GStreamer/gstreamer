@@ -686,6 +686,7 @@ gst_send_subtitle_frame (GstDvdSubDec * dec, GstClockTime end_ts)
   GstVideoFrame frame;
   guint8 *data;
   gint x, y;
+  static GstAllocationParams params = { 0, 0, 0, 3, };
 
   g_assert (dec->have_title);
   g_assert (dec->next_ts <= end_ts);
@@ -697,7 +698,8 @@ gst_send_subtitle_frame (GstDvdSubDec * dec, GstClockTime end_ts)
   }
 
   out_buf =
-      gst_buffer_new_allocate (NULL, 4 * GST_VIDEO_INFO_SIZE (&dec->info), 3);
+      gst_buffer_new_allocate (NULL, 4 * GST_VIDEO_INFO_SIZE (&dec->info),
+      &params);
   gst_video_frame_map (&frame, &dec->info, out_buf, GST_MAP_READWRITE);
 
   data = GST_VIDEO_FRAME_PLANE_DATA (&frame, 0);

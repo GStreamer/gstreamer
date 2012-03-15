@@ -771,7 +771,7 @@ gst_lamemp3enc_handle_frame (GstAudioEncoder * enc, GstBuffer * in_buf)
 
   /* allocate space for output */
   mp3_buffer_size = 1.25 * num_samples + 7200;
-  mp3_buf = gst_buffer_new_allocate (NULL, mp3_buffer_size, 0);
+  mp3_buf = gst_buffer_new_allocate (NULL, mp3_buffer_size, NULL);
   gst_buffer_map (mp3_buf, &mp3_map, GST_MAP_WRITE);
 
   /* lame seems to be too stupid to get mono interleaved going */

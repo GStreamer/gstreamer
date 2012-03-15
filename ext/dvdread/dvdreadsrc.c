@@ -844,7 +844,8 @@ nav_retry:
   g_assert (cur_output_size < 1024);
 
   /* create the buffer (TODO: use buffer pool?) */
-  buf = gst_buffer_new_allocate (NULL, cur_output_size * DVD_VIDEO_LB_LEN, 0);
+  buf =
+      gst_buffer_new_allocate (NULL, cur_output_size * DVD_VIDEO_LB_LEN, NULL);
 
   GST_LOG_OBJECT (src, "Going to read %u sectors @ pack %d", cur_output_size,
       src->cur_pack);
