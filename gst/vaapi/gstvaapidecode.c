@@ -457,6 +457,11 @@ gst_vaapidecode_finalize(GObject *object)
         decode->allowed_caps = NULL;
     }
 
+    if (decode->delayed_new_seg) {
+        gst_event_unref(decode->delayed_new_seg);
+        decode->delayed_new_seg = NULL;
+    }
+
     G_OBJECT_CLASS(parent_class)->finalize(object);
 }
 
@@ -654,7 +659,16 @@ gst_vaapidecode_set_caps(GstPad *pad, GstCaps *caps)
         return FALSE;
     if (!gst_vaapidecode_update_src_caps(decode, caps))
         return FALSE;
-    return gst_vaapidecode_reset(decode, decode->sinkpad_caps);
+    if (!gst_vaapidecode_reset(decode, decode->sinkpad_caps))
+        return FALSE;
+
+    /* Propagate NEWSEGMENT event downstream, now that pads are linked */
+    if (decode->delayed_new_seg) {
+        if (gst_pad_push_event(decode->srcpad, decode->delayed_new_seg))
+            gst_event_unref(decode->delayed_new_seg);
+        decode->delayed_new_seg = NULL;
+    }
+    return TRUE;
 }
 
 static GstFlowReturn
@@ -685,6 +699,20 @@ gst_vaapidecode_sink_event(GstPad *pad, GstEvent *event)
     GST_DEBUG("handle sink event '%s'", GST_EVENT_TYPE_NAME(event));
 
     /* Propagate event downstream */
+    switch (GST_EVENT_TYPE(event)) {
+    case GST_EVENT_NEWSEGMENT:
+        if (decode->delayed_new_seg) {
+            gst_event_unref(decode->delayed_new_seg);
+            decode->delayed_new_seg = NULL;
+        }
+        if (!GST_PAD_PEER(decode->srcpad)) {
+            decode->delayed_new_seg = gst_event_ref(event);
+            return TRUE;
+        }
+        break;
+    default:
+        break;
+    }
     return gst_pad_push_event(decode->srcpad, event);
 }
 
@@ -726,6 +754,7 @@ gst_vaapidecode_init(GstVaapiDecode *decode, GstVaapiDecodeClass *klass)
     decode->decoder_ready       = NULL;
     decode->decoder_caps        = NULL;
     decode->allowed_caps        = NULL;
+    decode->delayed_new_seg     = NULL;
     decode->use_ffmpeg          = USE_FFMPEG_DEFAULT;
     decode->is_ready            = FALSE;
 
