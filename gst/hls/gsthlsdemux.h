@@ -27,6 +27,8 @@
 #include <gst/gst.h>
 #include <gst/base/gstadapter.h>
 #include "m3u8.h"
+#include "gstfragmented.h"
+#include "gsturidownloader.h"
 
 G_BEGIN_DECLS
 #define GST_TYPE_HLS_DEMUX \
@@ -53,8 +55,10 @@ struct _GstHLSDemux
 
   GstPad *srcpad;
   GstPad *sinkpad;
+
   GstBuffer *playlist;
   GstCaps *input_caps;
+  GstUriDownloader *downloader;
   GstM3U8Client *client;        /* M3U8 client */
   GQueue *queue;                /* Queue storing the fetched fragments */
   gboolean need_cache;          /* Wheter we need to cache some fragments before starting to push data */
@@ -70,24 +74,13 @@ struct _GstHLSDemux
   GStaticRecMutex stream_lock;
   gboolean stop_stream_task;
 
-  /* Fragments fetcher */
-  GstElement *fetcher;
-  GstBus *fetcher_bus;
-  GstPad *fetcherpad;
-  GMutex *fetcher_lock;
-  GCond *fetcher_cond;
-  GTimeVal *timeout;
-  gboolean fetcher_error;
-  gboolean stopping_fetcher;
-  gboolean cancelled;
-  GstAdapter *download;
-
   /* Updates task */
   GstTask *updates_task;
   GStaticRecMutex updates_lock;
   GMutex *updates_timed_lock;
   GTimeVal next_update;         /* Time of the next update */
   gint64 accumulated_delay;     /* Delay accumulated fetching fragments, used to decide a playlist switch */
+  gboolean cancelled;
 
   /* Position in the stream */
   GstClockTime position;
