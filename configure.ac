@@ -123,6 +123,9 @@ AG_GST_CHECK_DOWHILE_MACROS
 AC_PATH_PROG(VALGRIND_PATH, valgrind, no)
 AM_CONDITIONAL(HAVE_VALGRIND, test ! "x$VALGRIND_PATH" = "xno")
 
+dnl check for gobject-introspection
+GOBJECT_INTROSPECTION_CHECK([1.31.1])
+
 dnl check for documentation tools
 GTK_DOC_CHECK([1.12])
 AG_GST_PLUGIN_DOCS([1.12])
@@ -2257,6 +2260,7 @@ gst/y4m/Makefile
 gst-libs/Makefile
 gst-libs/gst/Makefile
 gst-libs/gst/basecamerabinsrc/Makefile
+gst-libs/gst/insertbin/Makefile
 gst-libs/gst/interfaces/Makefile
 gst-libs/gst/signalprocessor/Makefile
 gst-libs/gst/codecparsers/Makefile
@@ -2371,6 +2375,8 @@ pkgconfig/gstreamer-plugins-bad.pc
 pkgconfig/gstreamer-plugins-bad-uninstalled.pc
 pkgconfig/gstreamer-codecparsers.pc
 pkgconfig/gstreamer-codecparsers-uninstalled.pc
+pkgconfig/gstreamer-insertbin.pc
+pkgconfig/gstreamer-insertbin-uninstalled.pc
 pkgconfig/gstreamer-basevideo.pc
 pkgconfig/gstreamer-basevideo-uninstalled.pc
 tools/Makefile

@@ -2,3 +2,6 @@
 
 #include <gst/codecparsers/gsth264parser.h>
 #include <gst/codecparsers/gstmpegvideoparser.h>
+#include <gst/insertbin/gstinsertbin.h>
+
+gst_insert_bin_get_type

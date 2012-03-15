@@ -2,11 +2,13 @@
 pcverfiles =  \
 	gstreamer-plugins-bad-@GST_API_VERSION@.pc \
 	gstreamer-codecparsers-@GST_API_VERSION@.pc \
+	gstreamer-insertbin-@GST_API_VERSION@.pc \
 	gstreamer-basevideo-@GST_API_VERSION@.pc
 
 pcverfiles_uninstalled = \
 	gstreamer-plugins-bad-@GST_API_VERSION@-uninstalled.pc \
 	gstreamer-codecparsers-@GST_API_VERSION@-uninstalled.pc \
+	gstreamer-insertbin-@GST_API_VERSION@-uninstalled.pc \
 	gstreamer-basevideo-@GST_API_VERSION@-uninstalled.pc
 
 all-local: $(pcverfiles) $(pcverfiles_uninstalled)
@@ -28,6 +30,7 @@ CLEANFILES = $(pcverfiles) $(pcverfiles_uninstalled)
 pcinfiles = \
            gstreamer-plugins-bad.pc.in gstreamer-plugins-bad-uninstalled.pc.in \
            gstreamer-codecparsers.pc.in gstreamer-codecparsers-uninstalled.pc.in \
+           gstreamer-insertbin.pc.in gstreamer-insertbin-uninstalled.pc.in \
            gstreamer-basevideo.pc.in gstreamer-basevideo-uninstalled.pc.in
 
 DISTCLEANFILES = $(pcinfiles:.in=)

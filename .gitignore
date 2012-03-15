@@ -38,6 +38,8 @@ gst-plugins-bad-*.tar.*
 /m4
 Makefile.in
 Makefile
+*.gir
+*.typelib
 
 tmp-orc.c
 gst*orc.h

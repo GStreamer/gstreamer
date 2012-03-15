@@ -486,3 +486,27 @@ GstSurfaceConverterInterface
 gst_surface_converter_get_type
 gst_surface_converter_upload
 </SECTION>
+
+<SECTION>
+<FILE>gstinsertbin</FILE>
+<TITLE>GstInsertbin</TITLE>
+GstInsertBin
+GstInsertBinClass
+GstInsertBinCallback
+gst_insert_bin_new
+gst_insert_bin_append
+gst_insert_bin_prepend
+gst_insert_bin_insert_after
+gst_insert_bin_insert_before
+gst_insert_bin_remove
+<SUBSECTION Standard>
+GST_INSERT_BIN
+GST_INSERT_BIN_CLASS
+GST_INSERT_BIN_GET_CLASS
+GST_IS_INSERT_BIN
+GST_IS_INSERT_BIN_CLASS
+GST_TYPE_INSERT_BIN
+gst_insert_bin_get_type
+<SUBSECTION Private>
+GstInsertBinPrivate
+</SECTION>
