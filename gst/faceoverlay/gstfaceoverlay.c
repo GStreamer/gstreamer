@@ -197,6 +197,7 @@ gst_face_overlay_handle_faces (GstFaceOverlay * filter, GstStructure * s)
   int delta_x, delta_y, svg_x, svg_y, svg_width, svg_height;
   const GstStructure *face;
   const GValue *faces_list, *face_val;
+  gchar *new_location = NULL;
   int face_count;
 
 #if 0
@@ -229,6 +230,8 @@ gst_face_overlay_handle_faces (GstFaceOverlay * filter, GstStructure * s)
    * Cast to int since face position and size will never be bigger than
    * G_MAX_INT and we may have negative values as svg_x or svg_y */
 
+  GST_OBJECT_LOCK (filter);
+
   delta_x = (int) (filter->x * (int) width);
   svg_x = (int) x + delta_x;
 
@@ -239,9 +242,15 @@ gst_face_overlay_handle_faces (GstFaceOverlay * filter, GstStructure * s)
   svg_height = (int) height *filter->h;
 
   if (filter->update_svg) {
-    GST_DEBUG_OBJECT (filter, "set rsvgoverlay location=%s", filter->location);
-    g_object_set (filter->svg_overlay, "location", filter->location, NULL);
+    new_location = g_strdup (filter->location);
     filter->update_svg = FALSE;
+  }
+  GST_OBJECT_UNLOCK (filter);
+
+  if (new_location != NULL) {
+    GST_DEBUG_OBJECT (filter, "set rsvgoverlay location=%s", new_location);
+    g_object_set (filter->svg_overlay, "location", new_location, NULL);
+    g_free (new_location);
   }
 
   GST_LOG_OBJECT (filter, "overlay dimensions: %d x %d @ %d,%d",
@@ -352,20 +361,31 @@ gst_face_overlay_set_property (GObject * object, guint prop_id,
 
   switch (prop_id) {
     case PROP_LOCATION:
+      GST_OBJECT_LOCK (filter);
+      g_free (filter->location);
       filter->location = g_value_dup_string (value);
       filter->update_svg = TRUE;
+      GST_OBJECT_UNLOCK (filter);
       break;
     case PROP_X:
+      GST_OBJECT_LOCK (filter);
       filter->x = g_value_get_float (value);
+      GST_OBJECT_UNLOCK (filter);
       break;
     case PROP_Y:
+      GST_OBJECT_LOCK (filter);
       filter->y = g_value_get_float (value);
+      GST_OBJECT_UNLOCK (filter);
       break;
     case PROP_W:
+      GST_OBJECT_LOCK (filter);
       filter->w = g_value_get_float (value);
+      GST_OBJECT_UNLOCK (filter);
       break;
     case PROP_H:
+      GST_OBJECT_LOCK (filter);
       filter->h = g_value_get_float (value);
+      GST_OBJECT_UNLOCK (filter);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -381,19 +401,29 @@ gst_face_overlay_get_property (GObject * object, guint prop_id,
 
   switch (prop_id) {
     case PROP_LOCATION:
+      GST_OBJECT_LOCK (filter);
       g_value_set_string (value, filter->location);
+      GST_OBJECT_UNLOCK (filter);
       break;
     case PROP_X:
+      GST_OBJECT_LOCK (filter);
       g_value_set_float (value, filter->x);
+      GST_OBJECT_UNLOCK (filter);
       break;
     case PROP_Y:
+      GST_OBJECT_LOCK (filter);
       g_value_set_float (value, filter->y);
+      GST_OBJECT_UNLOCK (filter);
       break;
     case PROP_W:
+      GST_OBJECT_LOCK (filter);
       g_value_set_float (value, filter->w);
+      GST_OBJECT_UNLOCK (filter);
       break;
     case PROP_H:
+      GST_OBJECT_LOCK (filter);
       g_value_set_float (value, filter->h);
+      GST_OBJECT_UNLOCK (filter);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
