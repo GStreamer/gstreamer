@@ -547,11 +547,12 @@ gst_dtmf_src_generate_tone (GstDTMFSrcEvent * event, DTMF_KEY key,
   double i = 0;
   double amplitude, f1, f2;
   double volume_factor;
+  static GstAllocationParams params = { 0, 0, 0, 1, };
 
   /* Create a buffer for the tone */
   tone_size = ((duration / 1000) * sample_rate * SAMPLE_SIZE * CHANNELS) / 8;
 
-  buffer = gst_buffer_new_allocate (NULL, tone_size, 1);
+  buffer = gst_buffer_new_allocate (NULL, tone_size, &params);
 
   gst_buffer_map (buffer, &map, GST_MAP_READWRITE);
   p = (gint16 *) map.data;
