@@ -1166,6 +1166,7 @@ gst_jpeg_dec_buffer_pool (GstJpegDec * dec, GstCaps * caps)
   GstBufferPool *pool;
   guint size, min, max;
   GstStructure *config;
+  static GstAllocationParams params = { 0, 0, 0, 15, };
 
   GST_DEBUG_OBJECT (dec, "setting up bufferpool");
 
@@ -1193,7 +1194,8 @@ gst_jpeg_dec_buffer_pool (GstJpegDec * dec, GstCaps * caps)
   }
 
   config = gst_buffer_pool_get_config (pool);
-  gst_buffer_pool_config_set (config, caps, size, min, max, 0, 0, 15);
+  gst_buffer_pool_config_set_params (config, caps, size, min, max);
+  gst_buffer_pool_config_set_allocator (config, NULL, &params);
   /* and store */
   gst_buffer_pool_set_config (pool, config);
 

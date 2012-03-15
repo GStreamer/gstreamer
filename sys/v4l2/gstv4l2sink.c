@@ -640,8 +640,7 @@ gst_v4l2sink_propose_allocation (GstBaseSink * bsink, GstQuery * query)
 
     /* we had a pool, check caps */
     config = gst_buffer_pool_get_config (pool);
-    gst_buffer_pool_config_get (config, &pcaps, &size, NULL, NULL, NULL, NULL,
-        NULL);
+    gst_buffer_pool_config_get_params (config, &pcaps, &size, NULL, NULL);
 
     GST_DEBUG_OBJECT (v4l2sink,
         "we had a pool with caps %" GST_PTR_FORMAT, pcaps);

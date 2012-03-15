@@ -244,7 +244,8 @@ gst_v4l2_buffer_pool_set_config (GstBufferPool * bpool, GstStructure * config)
   GstV4l2Object *obj = pool->obj;
   const GstCaps *caps;
   guint size, min_buffers, max_buffers;
-  guint prefix, padding, align;
+  GstAllocator *allocator;
+  GstAllocationParams params;
 
   GST_DEBUG_OBJECT (pool, "set config");
 
@@ -266,8 +267,11 @@ gst_v4l2_buffer_pool_set_config (GstBufferPool * bpool, GstStructure * config)
   }
 
   /* parse the config and keep around */
-  if (!gst_buffer_pool_config_get (config, &caps, &size, &min_buffers,
-          &max_buffers, &prefix, &padding, &align))
+  if (!gst_buffer_pool_config_get_params (config, &caps, &size, &min_buffers,
+          &max_buffers))
+    goto wrong_config;
+
+  if (!gst_buffer_pool_config_get_allocator (config, &allocator, &params))
     goto wrong_config;
 
   GST_DEBUG_OBJECT (pool, "config %" GST_PTR_FORMAT, config);
@@ -275,13 +279,10 @@ gst_v4l2_buffer_pool_set_config (GstBufferPool * bpool, GstStructure * config)
   pool->size = size;
   pool->max_buffers = MAX (min_buffers, max_buffers);
   pool->min_buffers = MIN (pool->max_buffers, min_buffers);
-  gst_allocation_params_init (&pool->params);
-  pool->params.prefix = prefix;
-  pool->params.padding = padding;
-  pool->params.align = align;
+  pool->params = params;
 
-  gst_buffer_pool_config_set (config, caps, size, min_buffers,
-      max_buffers, prefix, padding, align);
+  gst_buffer_pool_config_set_params (config, caps, size, min_buffers,
+      max_buffers);
 
   return GST_BUFFER_POOL_CLASS (parent_class)->set_config (bpool, config);
 
@@ -890,7 +891,7 @@ gst_v4l2_buffer_pool_new (GstV4l2Object * obj, GstCaps * caps)
   pool->obj = obj;
 
   s = gst_buffer_pool_get_config (GST_BUFFER_POOL_CAST (pool));
-  gst_buffer_pool_config_set (s, caps, obj->sizeimage, 2, 0, 0, 0, 0);
+  gst_buffer_pool_config_set_params (s, caps, obj->sizeimage, 2, 0);
   gst_buffer_pool_set_config (GST_BUFFER_POOL_CAST (pool), s);
 
   return GST_BUFFER_POOL (pool);
