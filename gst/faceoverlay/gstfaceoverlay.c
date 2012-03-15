@@ -109,121 +109,62 @@ static void gst_face_overlay_message_handler (GstBin * bin,
 static GstStateChangeReturn gst_face_overlay_change_state (GstElement * element,
     GstStateChange transition);
 static gboolean gst_face_overlay_create_children (GstFaceOverlay * filter);
-static gboolean gst_face_overlay_reset (GstFaceOverlay * filter);
-static gboolean gst_face_overlay_create_pad (GstFaceOverlay * filter,
-    GstPad * filter_pad, const char *pad_name, GstElement * child_element);
-static gboolean toggle_pads_link_state (GstPad * pad1, GstPad * pad2);
-
-
-static gboolean
-toggle_pads_link_state (GstPad * pad1, GstPad * pad2)
-{
-  gboolean ok = TRUE;
-
-  if (gst_pad_is_linked (pad1)) {
-    if (gst_pad_get_direction (pad1) == GST_PAD_SINK)
-      gst_pad_unlink (pad2, pad1);
-    else
-      gst_pad_unlink (pad1, pad2);
-  } else {
-    if (gst_pad_get_direction (pad1) == GST_PAD_SINK)
-      ok &= (gst_pad_link (pad2, pad1) == 0);
-    else
-      ok &= (gst_pad_link (pad1, pad2) == 0);
-  }
-
-  return ok;
-}
-
-/* Unlinks and removes the pad that was created in gst_face_overlay_init ()
- * and adds the internal element ghost pad instead  */
-static gboolean
-gst_face_overlay_create_pad (GstFaceOverlay * filter, GstPad * filter_pad,
-    const char *pad_name, GstElement * child_element)
-{
-  GstPad *peer = NULL;
-  GstPad *pad = NULL;
-  gboolean ok = TRUE;
-
-  /* get the outside world pad connected to faceoverlay src/sink pad */
-  peer = gst_pad_get_peer (filter_pad);
-
-  /* unlink and remove the faceoverlay src/sink pad */
-  toggle_pads_link_state (peer, filter_pad);
-
-  gst_element_remove_pad (GST_ELEMENT (filter), filter_pad);
-
-  /* add a ghost pad pointing to the child element pad (facedetect sink or
-   * svg_overlay src depending on filter_pad direction) and add it to
-   * faceoverlay bin */
-  pad = gst_element_get_static_pad (child_element, pad_name);
-  filter_pad = gst_ghost_pad_new (pad_name, pad);
-  gst_object_unref (GST_OBJECT (pad));
-
-  gst_element_add_pad (GST_ELEMENT (filter), filter_pad);
-
-  /* link the child element pad to the outside world thru the ghost pad */
-  toggle_pads_link_state (peer, filter_pad);
-
-  g_object_unref (peer);
-
-  return ok;
-}
-
-static gboolean
-gst_face_overlay_reset (GstFaceOverlay * filter)
-{
-  gst_element_set_state (filter->face_detect, GST_STATE_NULL);
-  gst_bin_remove (GST_BIN (filter), filter->face_detect);
-  filter->face_detect = NULL;
-
-  gst_element_set_state (filter->svg_overlay, GST_STATE_NULL);
-  gst_bin_remove (GST_BIN (filter), filter->svg_overlay);
-  filter->svg_overlay = NULL;
-
-  gst_element_set_state (filter->colorspace, GST_STATE_NULL);
-  gst_bin_remove (GST_BIN (filter), filter->colorspace);
-  filter->colorspace = NULL;
-
-  return TRUE;
-}
 
 static gboolean
 gst_face_overlay_create_children (GstFaceOverlay * filter)
 {
-  gboolean ret = TRUE;
+  GstElement *csp, *face_detect, *overlay;
+  GstPad *pad;
 
-  if ((filter->colorspace = gst_element_factory_make ("ffmpegcolorspace",
-              NULL)) == NULL) {
+  csp = gst_element_factory_make ("ffmpegcolorspace", NULL);
+  face_detect = gst_element_factory_make ("facedetect", NULL);
+  overlay = gst_element_factory_make ("rsvgoverlay", NULL);
+
+  /* FIXME: post missing-plugin messages on NULL->READY if needed */
+  if (csp == NULL || face_detect == NULL || overlay == NULL)
+    goto missing_element;
+
+  g_object_set (face_detect, "display", FALSE, NULL);
+
+  gst_bin_add_many (GST_BIN (filter), face_detect, csp, overlay, NULL);
+  filter->svg_overlay = overlay;
+
+  if (!gst_element_link_many (face_detect, csp, overlay, NULL))
+    GST_ERROR_OBJECT (filter, "couldn't link elements");
+
+  pad = gst_element_get_static_pad (face_detect, "sink");
+  if (!gst_ghost_pad_set_target (GST_GHOST_PAD (filter->sinkpad), pad))
+    GST_ERROR_OBJECT (filter->sinkpad, "couldn't set sinkpad target");
+  gst_object_unref (pad);
+
+  pad = gst_element_get_static_pad (overlay, "src");
+  if (!gst_ghost_pad_set_target (GST_GHOST_PAD (filter->srcpad), pad))
+    GST_ERROR_OBJECT (filter->srcpad, "couldn't set srcpad target");
+  gst_object_unref (pad);
+
+  return TRUE;
+
+/* ERRORS */
+missing_element:
+  {
+    /* clean up */
+    if (csp == NULL)
+      GST_ERROR_OBJECT (filter, "ffmpegcolorspace element not found");
+    else
+      gst_object_unref (csp);
+
+    if (face_detect == NULL)
+      GST_ERROR_OBJECT (filter, "facedetect element not found (opencv plugin)");
+    else
+      gst_object_unref (face_detect);
+
+    if (overlay == NULL)
+      GST_ERROR_OBJECT (filter, "rsvgoverlay element not found (rsvg plugin)");
+    else
+      gst_object_unref (overlay);
+
     return FALSE;
   }
-
-  if ((filter->face_detect = gst_element_factory_make ("facedetect",
-              NULL)) == NULL) {
-    return FALSE;
-  }
-  g_object_set (filter->face_detect, "display", 0, NULL);
-
-  if ((filter->svg_overlay = gst_element_factory_make ("rsvgoverlay",
-              NULL)) == NULL) {
-    return FALSE;
-  }
-
-  gst_bin_add_many (GST_BIN (filter),
-      filter->face_detect, filter->colorspace, filter->svg_overlay, NULL);
-
-  ret &= gst_element_link_pads (filter->face_detect, "src",
-      filter->colorspace, "sink");
-  ret &= gst_element_link_pads (filter->colorspace, "src",
-      filter->svg_overlay, "sink");
-
-  ret &= gst_face_overlay_create_pad (filter, filter->sinkpad, "sink",
-      filter->face_detect);
-  ret &= gst_face_overlay_create_pad (filter, filter->srcpad, "src",
-      filter->svg_overlay);
-
-  return ret;
-
 }
 
 static GstStateChangeReturn
@@ -234,8 +175,12 @@ gst_face_overlay_change_state (GstElement * element, GstStateChange transition)
 
   switch (transition) {
     case GST_STATE_CHANGE_NULL_TO_READY:
-      if (!gst_face_overlay_create_children (filter))
+      if (filter->svg_overlay == NULL) {
+        GST_ELEMENT_ERROR (filter, CORE, MISSING_PLUGIN, (NULL),
+            ("Some required plugins are missing, probably either the opencv "
+                "facedetect element or rsvgoverlay"));
         return GST_STATE_CHANGE_FAILURE;
+      }
       break;
     default:
       break;
@@ -244,9 +189,6 @@ gst_face_overlay_change_state (GstElement * element, GstStateChange transition)
   ret = GST_ELEMENT_CLASS (parent_class)->change_state (element, transition);
 
   switch (transition) {
-    case GST_STATE_CHANGE_READY_TO_NULL:
-      gst_face_overlay_reset (filter);
-      break;
     default:
       break;
   }
@@ -370,21 +312,27 @@ gst_face_overlay_class_init (GstFaceOverlayClass * klass)
 static void
 gst_face_overlay_init (GstFaceOverlay * filter, GstFaceOverlayClass * gclass)
 {
+  GstPadTemplate *tmpl;
+
   filter->x = 0;
   filter->y = 0;
   filter->w = 1;
   filter->h = 1;
-  filter->colorspace = NULL;
   filter->svg_overlay = NULL;
-  filter->face_detect = NULL;
   filter->location = NULL;
   filter->process_message = TRUE;
 
-  filter->sinkpad = gst_pad_new_from_static_template (&sink_factory, "sink");
+  tmpl = gst_static_pad_template_get (&sink_factory);
+  filter->sinkpad = gst_ghost_pad_new_no_target_from_template ("sink", tmpl);
+  gst_object_unref (tmpl);
   gst_element_add_pad (GST_ELEMENT (filter), filter->sinkpad);
 
-  filter->srcpad = gst_pad_new_from_static_template (&src_factory, "src");
+  tmpl = gst_static_pad_template_get (&src_factory);
+  filter->srcpad = gst_ghost_pad_new_no_target_from_template ("src", tmpl);
+  gst_object_unref (tmpl);
   gst_element_add_pad (GST_ELEMENT (filter), filter->srcpad);
+
+  gst_face_overlay_create_children (filter);
 }
 
 static void
