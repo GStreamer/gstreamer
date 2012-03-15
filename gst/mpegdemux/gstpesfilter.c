@@ -472,7 +472,7 @@ push_out:
     }
 
     if (datalen > 0) {
-      out = gst_buffer_new_allocate (NULL, datalen, 0);
+      out = gst_buffer_new_allocate (NULL, datalen, NULL);
       gst_buffer_fill (out, 0, data, datalen);
       ret = gst_pes_filter_data_push (filter, TRUE, out);
       filter->first = FALSE;

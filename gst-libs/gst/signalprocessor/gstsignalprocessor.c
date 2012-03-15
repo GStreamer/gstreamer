@@ -740,7 +740,7 @@ gst_signal_processor_prepare (GstSignalProcessor * self, guint nframes)
 
     srcpad->pen =
         gst_buffer_new_allocate (NULL,
-        samples_avail * srcpad->channels * sizeof (gfloat), 0);
+        samples_avail * srcpad->channels * sizeof (gfloat), NULL);
 
     if (srcpad->channels > 1) {
       GstSignalProcessorGroup *group = &self->group_out[out_group_index++];

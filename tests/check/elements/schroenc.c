@@ -112,7 +112,7 @@ GST_START_TEST (test_encode_simple)
 
   fail_unless (gst_pad_push_event (srcpad, gst_event_new_segment (&seg)));
 
-  buffer = gst_buffer_new_allocate (NULL, 320 * 240 + 2 * 160 * 120, 0);
+  buffer = gst_buffer_new_allocate (NULL, 320 * 240 + 2 * 160 * 120, NULL);
   gst_buffer_memset (buffer, 0, 0, -1);
 
   for (i = 0; i < 20; i++) {

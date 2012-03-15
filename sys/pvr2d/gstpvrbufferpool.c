@@ -186,7 +186,8 @@ pvr_buffer_pool_set_config (GstBufferPool * pool, GstStructure * config)
   pvrpool->caps = gst_caps_copy (caps);
   pvrpool->info = info;
   pvrpool->size = size;
-  pvrpool->align = align;
+  gst_allocation_params_init (&pvrpool->params);
+  pvrpool->params.align = align;
   pvrpool->padded_width = GST_VIDEO_INFO_WIDTH (&info);
   pvrpool->padded_height = GST_VIDEO_INFO_HEIGHT (&info);
 
@@ -259,7 +260,7 @@ pvr_buffer_pool_alloc (GstBufferPool * pool, GstBuffer ** buffer,
 
   info = &pvrpool->info;
 
-  pvr = gst_buffer_new_allocate (NULL, pvrpool->size, pvrpool->align);
+  pvr = gst_buffer_new_allocate (NULL, pvrpool->size, &pvrpool->params);
   meta = gst_buffer_add_pvr_meta (pvr, pvrpool->pvrsink);
   if (meta == NULL) {
     gst_buffer_unref (pvr);

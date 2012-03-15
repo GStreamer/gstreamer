@@ -670,7 +670,7 @@ gst_jif_mux_recombine_image (GstJifMux * self, GstBuffer ** new_buf,
       gst_buffer_get_size (old_buf), size);
 
   /* allocate new buffer */
-  buf = gst_buffer_new_allocate (NULL, size, 0);
+  buf = gst_buffer_new_allocate (NULL, size, NULL);
 
   /* copy buffer metadata */
   gst_buffer_copy_into (buf, old_buf,

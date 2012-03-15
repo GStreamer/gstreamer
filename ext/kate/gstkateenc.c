@@ -391,7 +391,7 @@ gst_kate_enc_create_buffer (GstKateEnc * ke, kate_packet * kp,
   g_return_val_if_fail (kp != NULL, NULL);
   g_return_val_if_fail (kp->data != NULL, NULL);
 
-  buffer = gst_buffer_new_allocate (NULL, kp->nbytes, 0);
+  buffer = gst_buffer_new_allocate (NULL, kp->nbytes, NULL);
   if (G_UNLIKELY (!buffer)) {
     GST_WARNING_OBJECT (ke, "Failed to allocate buffer for %u bytes",
         (guint) kp->nbytes);

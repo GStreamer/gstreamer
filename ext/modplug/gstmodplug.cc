@@ -722,7 +722,7 @@ gst_modplug_loop (GstModPlug * modplug)
   }
 
   /* read and output a buffer */
-  out = gst_buffer_new_allocate (NULL, modplug->read_bytes, 0);
+  out = gst_buffer_new_allocate (NULL, modplug->read_bytes, NULL);
 
   gst_buffer_map (out, &map, GST_MAP_WRITE);
   if (!modplug->mSoundFile->Read (map.data, modplug->read_bytes)) {

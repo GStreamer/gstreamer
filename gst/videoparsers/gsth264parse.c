@@ -375,7 +375,7 @@ gst_h264_parse_wrap_nal (GstH264Parse * h264parse, guint format, guint8 * data,
 
   GST_DEBUG_OBJECT (h264parse, "nal length %d", size);
 
-  buf = gst_buffer_new_allocate (NULL, nl + size, 0);
+  buf = gst_buffer_new_allocate (NULL, nl + size, NULL);
   if (format == GST_H264_PARSE_FORMAT_AVC) {
     tmp = GUINT32_TO_BE (size << (32 - 8 * nl));
   } else {
@@ -415,7 +415,7 @@ gst_h264_parser_store_nal (GstH264Parse * h264parse, guint id,
     return;
   }
 
-  buf = gst_buffer_new_allocate (NULL, size, 0);
+  buf = gst_buffer_new_allocate (NULL, size, NULL);
   gst_buffer_fill (buf, 0, nalu->data + nalu->offset, size);
 
   if (store[id])
@@ -953,7 +953,7 @@ gst_h264_parse_make_codec_data (GstH264Parse * h264parse)
   if (!found || !num_pps)
     return NULL;
 
-  buf = gst_buffer_new_allocate (NULL, 5 + 1 + sps_size + 1 + pps_size, 0);
+  buf = gst_buffer_new_allocate (NULL, 5 + 1 + sps_size + 1 + pps_size, NULL);
   gst_buffer_map (buf, &map, GST_MAP_WRITE);
   data = map.data;
 

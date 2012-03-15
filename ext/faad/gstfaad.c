@@ -755,7 +755,7 @@ init:
 
       /* note: info.samples is total samples, not per channel */
       /* FIXME, add bufferpool and allocator support to the base class */
-      outbuf = gst_buffer_new_allocate (NULL, info.samples * faad->bps, 0);
+      outbuf = gst_buffer_new_allocate (NULL, info.samples * faad->bps, NULL);
       gst_buffer_fill (outbuf, 0, out, info.samples * faad->bps);
       gst_audio_buffer_reorder_channels (outbuf, GST_AUDIO_FORMAT_S16,
           faad->channels, faad->aac_positions, faad->gst_positions);

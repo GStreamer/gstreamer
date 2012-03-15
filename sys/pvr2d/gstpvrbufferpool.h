@@ -60,7 +60,8 @@ struct _GstPVRBufferPool
 
   /* output (padded) size including any codec padding: */
   gint padded_width, padded_height;
-  guint size, align;
+  guint size;
+  GstAllocationParams params;
 
   GstElement *pvrsink;
 

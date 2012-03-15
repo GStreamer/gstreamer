@@ -316,7 +316,7 @@ gst_rtmp_src_create (GstPushSrc * pushsrc, GstBuffer ** buffer)
   GST_DEBUG ("reading from %" G_GUINT64_FORMAT
       ", size %u", src->cur_offset, size);
 
-  buf = gst_buffer_new_allocate (NULL, size, 0);
+  buf = gst_buffer_new_allocate (NULL, size, NULL);
   if (G_UNLIKELY (buf == NULL)) {
     GST_ERROR_OBJECT (src, "Failed to allocate %u bytes", size);
     return GST_FLOW_ERROR;
