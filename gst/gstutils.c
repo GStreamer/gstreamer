@@ -2615,8 +2615,8 @@ gst_pad_proxy_query_accept_caps (GstPad * pad, GstQuery * query)
   g_return_val_if_fail (GST_IS_QUERY (query), FALSE);
   g_return_val_if_fail (GST_QUERY_TYPE (query) == GST_QUERY_ACCEPT_CAPS, FALSE);
 
-  GST_CAT_DEBUG (GST_CAT_PADS, "proxying accept caps query for %s:%s",
-      GST_DEBUG_PAD_NAME (pad));
+  GST_CAT_DEBUG_OBJECT (GST_CAT_PADS, pad,
+      "proxying accept caps query for %s:%s", GST_DEBUG_PAD_NAME (pad));
 
   data.query = query;
   /* value to hold the return, by default it holds TRUE */
@@ -2680,7 +2680,7 @@ gst_pad_proxy_query_caps (GstPad * pad, GstQuery * query)
   g_return_val_if_fail (GST_IS_QUERY (query), FALSE);
   g_return_val_if_fail (GST_QUERY_TYPE (query) == GST_QUERY_CAPS, FALSE);
 
-  GST_CAT_DEBUG (GST_CAT_PADS, "proxying caps query for %s:%s",
+  GST_CAT_DEBUG_OBJECT (GST_CAT_PADS, pad, "proxying caps query for %s:%s",
       GST_DEBUG_PAD_NAME (pad));
 
   data.query = query;
@@ -2690,14 +2690,11 @@ gst_pad_proxy_query_caps (GstPad * pad, GstQuery * query)
   gst_pad_forward (pad, (GstPadForwardFunction) query_caps_func, &data);
 
   templ = gst_pad_get_pad_template_caps (pad);
-  if (data.ret) {
-    intersected = gst_caps_intersect (data.ret, templ);
-    gst_caps_unref (data.ret);
-  } else {
-    intersected = templ;
-  }
-  gst_query_set_caps_result (query, intersected);
+  intersected = gst_caps_intersect (data.ret, templ);
+  gst_caps_unref (data.ret);
   gst_caps_unref (templ);
+
+  gst_query_set_caps_result (query, intersected);
   gst_caps_unref (intersected);
 
   return TRUE;
