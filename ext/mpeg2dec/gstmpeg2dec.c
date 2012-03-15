@@ -291,49 +291,52 @@ gst_mpeg2dec_negotiate_pool (GstMpeg2dec * dec, GstCaps * caps,
     GstVideoInfo * info)
 {
   GstQuery *query;
-  GstBufferPool *pool = NULL;
-  guint size, min, max, prefix, padding, alignment;
+  GstBufferPool *pool;
+  guint size, min, max;
   GstStructure *config;
 
   /* find a pool for the negotiated caps now */
   query = gst_query_new_allocation (caps, TRUE);
 
-  if (gst_pad_peer_query (dec->srcpad, query)) {
-    GST_DEBUG_OBJECT (dec, "got downstream ALLOCATION hints");
-    /* we got configuration from our peer, parse them */
-    gst_query_parse_allocation_params (query, &size, &min, &max, &prefix,
-        &padding, &alignment, &pool);
-    size = MAX (size, info->size);
-    alignment |= 15;
-  } else {
+  if (!gst_pad_peer_query (dec->srcpad, query)) {
+    /* use the query default then */
     GST_DEBUG_OBJECT (dec, "didn't get downstream ALLOCATION hints");
+  }
+
+  if (gst_query_get_n_allocation_pools (query) > 0) {
+    /* we got configuration from our peer, parse them */
+    gst_query_parse_nth_allocation_pool (query, 0, &pool, &size, &min, &max);
+    size = MAX (size, info->size);
+  } else {
+    pool = NULL;
     size = info->size;
     min = max = 0;
-    prefix = 0;
-    padding = 0;
-    alignment = 15;
   }
 
   GST_DEBUG_OBJECT (dec,
-      "size:%d, min:%d, max:%d, prefix:%d, padding:%d, alignment:%d, pool:%p",
-      size, min, max, prefix, padding, alignment, pool);
+      "size:%d, min:%d, max:%d,pool:%p", size, min, max, pool);
 
   if (pool == NULL) {
     /* we did not get a pool, make one ourselves then */
-    pool = gst_buffer_pool_new ();
+    pool = gst_video_buffer_pool_new ();
   }
 
-  if (dec->pool)
+  if (dec->pool) {
+    gst_buffer_pool_set_active (dec->pool, FALSE);
     gst_object_unref (dec->pool);
+  }
   dec->pool = pool;
 
   config = gst_buffer_pool_get_config (pool);
-  gst_buffer_pool_config_set (config, caps, size, min, max, prefix, padding,
-      alignment);
-  /* just set the option, if the pool can support it we will transparently use
-   * it through the video info API. We could also see if the pool support this
-   * option and only activate it then. */
-  gst_buffer_pool_config_add_option (config, GST_BUFFER_POOL_OPTION_VIDEO_META);
+  gst_buffer_pool_config_set (config, caps, size, min, max, 0, 0, 0);
+
+  if (gst_query_has_allocation_meta (query, GST_VIDEO_META_API_TYPE)) {
+    /* just set the option, if the pool can support it we will transparently use
+     * it through the video info API. We could also see if the pool support this
+     * option and only activate it then. */
+    gst_buffer_pool_config_add_option (config,
+        GST_BUFFER_POOL_OPTION_VIDEO_META);
+  }
 
   /* check if downstream supports cropping */
   dec->use_cropping =
