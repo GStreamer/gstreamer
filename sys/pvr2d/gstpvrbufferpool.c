@@ -251,7 +251,7 @@ wrong_caps:
 /* This function handles GstXImageBuffer creation depending on XShm availability */
 static GstFlowReturn
 pvr_buffer_pool_alloc (GstBufferPool * pool, GstBuffer ** buffer,
-    GstBufferPoolParams * params)
+    GstBufferPoolAcquireParams * params)
 {
   GstPVRBufferPool *pvrpool = GST_PVR_BUFFER_POOL_CAST (pool);
   GstVideoInfo *info;
