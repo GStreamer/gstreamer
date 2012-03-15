@@ -87,11 +87,11 @@ static gboolean default_stop (GstBufferPool * pool);
 static gboolean default_set_config (GstBufferPool * pool,
     GstStructure * config);
 static GstFlowReturn default_alloc_buffer (GstBufferPool * pool,
-    GstBuffer ** buffer, GstBufferPoolParams * params);
+    GstBuffer ** buffer, GstBufferPoolAcquireParams * params);
 static GstFlowReturn default_acquire_buffer (GstBufferPool * pool,
-    GstBuffer ** buffer, GstBufferPoolParams * params);
+    GstBuffer ** buffer, GstBufferPoolAcquireParams * params);
 static void default_reset_buffer (GstBufferPool * pool, GstBuffer * buffer,
-    GstBufferPoolParams * params);
+    GstBufferPoolAcquireParams * params);
 static void default_free_buffer (GstBufferPool * pool, GstBuffer * buffer);
 static void default_release_buffer (GstBufferPool * pool, GstBuffer * buffer);
 
@@ -176,7 +176,7 @@ gst_buffer_pool_new (void)
 
 static GstFlowReturn
 default_alloc_buffer (GstBufferPool * pool, GstBuffer ** buffer,
-    GstBufferPoolParams * params)
+    GstBufferPoolAcquireParams * params)
 {
   GstBufferPoolPrivate *priv = pool->priv;
 
@@ -799,7 +799,7 @@ gst_buffer_pool_config_get (GstStructure * config, const GstCaps ** caps,
 
 static GstFlowReturn
 default_acquire_buffer (GstBufferPool * pool, GstBuffer ** buffer,
-    GstBufferPoolParams * params)
+    GstBufferPoolAcquireParams * params)
 {
   GstFlowReturn result;
   GstBufferPoolClass *pclass;
@@ -836,7 +836,7 @@ default_acquire_buffer (GstBufferPool * pool, GstBuffer ** buffer,
     }
 
     /* check if we need to wait */
-    if (params && (params->flags & GST_BUFFER_POOL_FLAG_DONTWAIT)) {
+    if (params && (params->flags & GST_BUFFER_POOL_ACQUIRE_FLAG_DONTWAIT)) {
       GST_LOG_OBJECT (pool, "no more buffers");
       result = GST_FLOW_EOS;
       break;
@@ -885,7 +885,7 @@ remove_meta_unpooled (GstBuffer * buffer, GstMeta ** meta, gpointer user_data)
 
 static void
 default_reset_buffer (GstBufferPool * pool, GstBuffer * buffer,
-    GstBufferPoolParams * params)
+    GstBufferPoolAcquireParams * params)
 {
   GST_BUFFER_FLAGS (buffer) = 0;
 
@@ -915,7 +915,7 @@ default_reset_buffer (GstBufferPool * pool, GstBuffer * buffer,
  */
 GstFlowReturn
 gst_buffer_pool_acquire_buffer (GstBufferPool * pool, GstBuffer ** buffer,
-    GstBufferPoolParams * params)
+    GstBufferPoolAcquireParams * params)
 {
   GstBufferPoolClass *pclass;
   GstFlowReturn result;

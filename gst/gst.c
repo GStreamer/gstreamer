@@ -720,7 +720,7 @@ init_post (GOptionContext * context, GOptionGroup * group, gpointer data,
   g_type_class_ref (gst_parse_flags_get_type ());
   g_type_class_ref (gst_search_mode_get_type ());
   g_type_class_ref (gst_progress_type_get_type ());
-  g_type_class_ref (gst_buffer_pool_flags_get_type ());
+  g_type_class_ref (gst_buffer_pool_acquire_flags_get_type ());
   g_type_class_ref (gst_memory_flags_get_type ());
   g_type_class_ref (gst_map_flags_get_type ());
   g_type_class_ref (gst_caps_intersect_mode_get_type ());
@@ -1083,7 +1083,8 @@ gst_deinit (void)
   g_type_class_unref (g_type_class_peek (gst_parse_error_get_type ()));
   g_type_class_unref (g_type_class_peek (gst_param_spec_fraction_get_type ()));
   g_type_class_unref (g_type_class_peek (gst_progress_type_get_type ()));
-  g_type_class_unref (g_type_class_peek (gst_buffer_pool_flags_get_type ()));
+  g_type_class_unref (g_type_class_peek (gst_buffer_pool_acquire_flags_get_type
+          ()));
   g_type_class_unref (g_type_class_peek (gst_memory_flags_get_type ()));
   g_type_class_unref (g_type_class_peek (gst_map_flags_get_type ()));
   g_type_class_unref (g_type_class_peek (gst_caps_intersect_mode_get_type ()));

@@ -41,27 +41,27 @@ typedef struct _GstBufferPoolClass GstBufferPoolClass;
 #define GST_BUFFER_POOL_CAST(obj)            ((GstBufferPool *)(obj))
 
 /**
- * GstBufferPoolFlags:
- * @GST_BUFFER_POOL_FLAG_NONE: no flags
- * @GST_BUFFER_POOL_FLAG_KEY_UNIT: buffer is keyframe
- * @GST_BUFFER_POOL_FLAG_DONTWAIT: don't wait for buffer. This makes the
+ * GstBufferPoolAcquireFlags:
+ * @GST_BUFFER_POOL_ACQUIRE_FLAG_NONE: no flags
+ * @GST_BUFFER_POOL_ACQUIRE_FLAG_KEY_UNIT: buffer is keyframe
+ * @GST_BUFFER_POOL_ACQUIRE_FLAG_DONTWAIT: don't wait for buffer. This makes the
  * acquire_buffer method return GST_FLOW_UNEXPECTED.
- * @GST_BUFFER_POOL_FLAG_DISCONT: buffer is discont
- * @GST_BUFFER_POOL_FLAG_LAST: last flag, subclasses can use private flags
+ * @GST_BUFFER_POOL_ACQUIRE_FLAG_DISCONT: buffer is discont
+ * @GST_BUFFER_POOL_ACQUIRE_FLAG_LAST: last flag, subclasses can use private flags
  *    starting from this value.
  *
  * Additional flags to control the allocation of a buffer
  */
 typedef enum {
-  GST_BUFFER_POOL_FLAG_NONE     = 0,
-  GST_BUFFER_POOL_FLAG_KEY_UNIT = (1 << 0),
-  GST_BUFFER_POOL_FLAG_DONTWAIT = (1 << 1),
-  GST_BUFFER_POOL_FLAG_DISCONT  = (1 << 2),
-  GST_BUFFER_POOL_FLAG_LAST     = (1 << 16),
-} GstBufferPoolFlags;
+  GST_BUFFER_POOL_ACQUIRE_FLAG_NONE     = 0,
+  GST_BUFFER_POOL_ACQUIRE_FLAG_KEY_UNIT = (1 << 0),
+  GST_BUFFER_POOL_ACQUIRE_FLAG_DONTWAIT = (1 << 1),
+  GST_BUFFER_POOL_ACQUIRE_FLAG_DISCONT  = (1 << 2),
+  GST_BUFFER_POOL_ACQUIRE_FLAG_LAST     = (1 << 16),
+} GstBufferPoolAcquireFlags;
 
 /**
- * GstBufferPoolParams:
+ * GstBufferPoolAcquireParams:
  * @format: the format of @start and @stop
  * @start: the start position
  * @stop: the stop position
@@ -74,15 +74,15 @@ typedef enum {
  * implementations can use this extra information to decide what buffer to
  * return.
  */
-typedef struct _GstBufferPoolParams {
-  GstFormat          format;
-  gint64             start;
-  gint64             stop;
-  GstBufferPoolFlags flags;
+typedef struct _GstBufferPoolAcquireParams {
+  GstFormat                 format;
+  gint64                    start;
+  gint64                    stop;
+  GstBufferPoolAcquireFlags flags;
 
   /*< private >*/
   gpointer _gst_reserved[GST_PADDING];
-} GstBufferPoolParams;
+} GstBufferPoolAcquireParams;
 
 /**
  * GST_BUFFER_POOL_IS_FLUSHING:
@@ -152,11 +152,11 @@ struct _GstBufferPoolClass {
   gboolean       (*stop)           (GstBufferPool *pool);
 
   GstFlowReturn  (*acquire_buffer) (GstBufferPool *pool, GstBuffer **buffer,
-                                    GstBufferPoolParams *params);
+                                    GstBufferPoolAcquireParams *params);
   GstFlowReturn  (*alloc_buffer)   (GstBufferPool *pool, GstBuffer **buffer,
-                                    GstBufferPoolParams *params);
+                                    GstBufferPoolAcquireParams *params);
   void           (*reset_buffer)   (GstBufferPool *pool, GstBuffer *buffer,
-                                    GstBufferPoolParams *params);
+                                    GstBufferPoolAcquireParams *params);
   void           (*release_buffer) (GstBufferPool *pool, GstBuffer *buffer);
   void           (*free_buffer)    (GstBufferPool *pool, GstBuffer *buffer);
 
@@ -195,7 +195,7 @@ gboolean         gst_buffer_pool_config_has_option  (GstStructure *config, const
 
 /* buffer management */
 GstFlowReturn    gst_buffer_pool_acquire_buffer  (GstBufferPool *pool, GstBuffer **buffer,
-                                                  GstBufferPoolParams *params);
+                                                  GstBufferPoolAcquireParams *params);
 void             gst_buffer_pool_release_buffer  (GstBufferPool *pool, GstBuffer *buffer);
 
 G_END_DECLS
