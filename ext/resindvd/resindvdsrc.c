@@ -2427,6 +2427,53 @@ rsn_dvdsrc_src_event (GstBaseSrc * basesrc, GstEvent * event)
   return res;
 }
 
+static void
+rsn_dvdsrc_post_title_info (GstElement * element)
+{
+  resinDvdSrc *src = RESINDVDSRC (element);
+  GstMessage *message;
+  GstStructure *s;
+  int32_t n, ntitles;
+  int res;
+  GValue array = { 0 };
+
+  res = dvdnav_get_number_of_titles (src->dvdnav, &ntitles);
+  if (res != DVDNAV_STATUS_OK) {
+    GST_WARNING_OBJECT (src, "Failed to get number of titles: %d", res);
+    return;
+  }
+
+  g_value_init (&array, GST_TYPE_ARRAY);
+
+  s = gst_structure_new ("application/x-gst-dvd", "event",
+      G_TYPE_STRING, "dvd-title-info", NULL);
+
+  for (n = 0; n < ntitles; ++n) {
+    uint64_t *times, duration;
+    uint32_t nchapters;
+    GValue item = { 0 };
+
+    g_value_init (&item, G_TYPE_UINT64);
+
+    nchapters =
+        dvdnav_describe_title_chapters (src->dvdnav, n, &times, &duration);
+    if (nchapters == 0) {
+      GST_WARNING_OBJECT (src, "Failed to get title %d info", n);
+      g_value_set_uint64 (&item, GST_CLOCK_TIME_NONE);
+    } else {
+      g_value_set_uint64 (&item, gst_util_uint64_scale (duration, GST_SECOND,
+              90000));
+    }
+    gst_value_array_append_value (&array, &item);
+    g_value_unset (&item);
+  }
+  gst_structure_set_value (s, "title-durations", &array);
+  g_value_unset (&array);
+
+  message = gst_message_new_element (GST_OBJECT (src), s);
+  gst_element_post_message (GST_ELEMENT_CAST (src), message);
+}
+
 static GstStateChangeReturn
 rsn_dvdsrc_change_state (GstElement * element, GstStateChange transition)
 {
@@ -2462,6 +2509,9 @@ rsn_dvdsrc_change_state (GstElement * element, GstStateChange transition)
       src->in_playing = TRUE;
       rsn_dvdsrc_check_nav_blocks (src);
       g_mutex_unlock (src->dvd_lock);
+      break;
+    case GST_STATE_CHANGE_READY_TO_PAUSED:
+      rsn_dvdsrc_post_title_info (element);
       break;
     default:
       break;
