@@ -191,7 +191,7 @@ gst_face_overlay_change_state (GstElement * element, GstStateChange transition)
 }
 
 static void
-gst_face_overlay_handle_faces (GstFaceOverlay * filter, GstStructure * s)
+gst_face_overlay_handle_faces (GstFaceOverlay * filter, const GstStructure * s)
 {
   guint x, y, width, height;
   int delta_x, delta_y, svg_x, svg_y, svg_width, svg_height;
@@ -268,9 +268,12 @@ gst_face_overlay_handle_faces (GstFaceOverlay * filter, GstStructure * s)
 static void
 gst_face_overlay_message_handler (GstBin * bin, GstMessage * message)
 {
-  if (GST_MESSAGE_TYPE (message) == GST_MESSAGE_ELEMENT &&
-      gst_structure_has_name (message->structure, "facedetect")) {
-    gst_face_overlay_handle_faces (GST_FACEOVERLAY (bin), message->structure);
+  if (GST_MESSAGE_TYPE (message) == GST_MESSAGE_ELEMENT) {
+    const GstStructure *s = gst_message_get_structure (message);
+
+    if (gst_structure_has_name (s, "facedetect")) {
+      gst_face_overlay_handle_faces (GST_FACEOVERLAY (bin), s);
+    }
   }
 
   GST_BIN_CLASS (parent_class)->handle_message (bin, message);
