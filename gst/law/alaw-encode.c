@@ -520,7 +520,7 @@ gst_alaw_enc_chain (GstPad * pad, GstObject * parent, GstBuffer * buffer)
   GST_LOG_OBJECT (alawenc, "buffer with ts=%" GST_TIME_FORMAT,
       GST_TIME_ARGS (timestamp));
 
-  outbuf = gst_buffer_new_allocate (NULL, alaw_size, 0);
+  outbuf = gst_buffer_new_allocate (NULL, alaw_size, NULL);
 
   if (duration == GST_CLOCK_TIME_NONE) {
     duration = gst_util_uint64_scale_int (alaw_size,

@@ -598,7 +598,7 @@ gst_speex_enc_encode (GstSpeexEnc * enc, GstBuffer * buf)
   if ((GST_FLOW_OK != ret))
     goto done;
 #endif
-  outbuf = gst_buffer_new_allocate (NULL, outsize, 0);
+  outbuf = gst_buffer_new_allocate (NULL, outsize, NULL);
   gst_buffer_map (outbuf, &map, GST_MAP_WRITE);
 
   written = speex_bits_write (&enc->bits, (gchar *) map.data, outsize);

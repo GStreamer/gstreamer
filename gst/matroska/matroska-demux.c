@@ -2744,7 +2744,7 @@ gst_matroska_demux_add_wvpk_header (GstElement * element,
     wvh.ck_size = size + sizeof (Wavpack4Header) - 20;
 
     /* block_samples, flags and crc are already in the buffer */
-    newbuf = gst_buffer_new_allocate (NULL, sizeof (Wavpack4Header) - 12, 0);
+    newbuf = gst_buffer_new_allocate (NULL, sizeof (Wavpack4Header) - 12, NULL);
 
     gst_buffer_map (newbuf, &outmap, GST_MAP_WRITE);
     data = outmap.data;
@@ -2807,7 +2807,7 @@ gst_matroska_demux_add_wvpk_header (GstElement * element,
 
       if (newbuf == NULL) {
         out_size = sizeof (Wavpack4Header) + blocksize;
-        newbuf = gst_buffer_new_allocate (NULL, out_size, 0);
+        newbuf = gst_buffer_new_allocate (NULL, out_size, NULL);
 
         gst_buffer_copy_into (newbuf, *buf,
             GST_BUFFER_COPY_TIMESTAMPS | GST_BUFFER_COPY_FLAGS, 0, -1);
@@ -3031,9 +3031,10 @@ gst_matroska_demux_align_buffer (GstMatroskaDemux * demux,
 
   if (((guintptr) map.data) & (alignment - 1)) {
     GstBuffer *new_buffer;
+    GstAllocationParams params = { 0, 0, 0, alignment - 1, };
 
     new_buffer = gst_buffer_new_allocate (NULL,
-        gst_buffer_get_size (buffer), alignment - 1);
+        gst_buffer_get_size (buffer), &params);
 
     /* Copy data "by hand", so ensure alignment is kept: */
     gst_buffer_fill (new_buffer, 0, map.data, map.size);
@@ -5309,7 +5310,7 @@ gst_matroska_demux_audio_caps (GstMatroskaTrackAudioContext *
     if (priv == NULL) {
       GstMapInfo map;
 
-      priv = gst_buffer_new_allocate (NULL, 5, 0);
+      priv = gst_buffer_new_allocate (NULL, 5, NULL);
       gst_buffer_map (priv, &map, GST_MAP_WRITE);
       data = map.data;
       rate_idx = aac_rate_idx (audiocontext->samplerate);

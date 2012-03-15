@@ -8411,7 +8411,7 @@ qtdemux_tag_add_id32 (GstQTDemux * demux, const char *tag,
   if (len < 12 + 2)
     return;
 
-  buf = gst_buffer_new_allocate (NULL, len - 14, 0);
+  buf = gst_buffer_new_allocate (NULL, len - 14, NULL);
   gst_buffer_fill (buf, 0, data + 14, len - 14);
 
   taglist = gst_tag_list_from_id3v2_tag (buf);

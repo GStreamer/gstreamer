@@ -162,6 +162,7 @@ ensure_memory (GstJpegEnc * jpegenc)
   GstMapInfo map;
   gsize old_size, desired_size, new_size;
   guint8 *new_data;
+  static GstAllocationParams params = { 0, 0, 0, 3, };
 
   old_size = jpegenc->output_map.size;
   if (old_size == 0)
@@ -171,7 +172,7 @@ ensure_memory (GstJpegEnc * jpegenc)
 
   /* Our output memory wasn't big enough.
    * Make a new memory that's twice the size, */
-  new_memory = gst_allocator_alloc (NULL, 0, desired_size, 0, desired_size, 3);
+  new_memory = gst_allocator_alloc (NULL, desired_size, &params);
   gst_memory_map (new_memory, &map, GST_MAP_READWRITE);
   new_data = map.data;
   new_size = map.size;
@@ -546,6 +547,7 @@ gst_jpegenc_chain (GstPad * pad, GstObject * parent, GstBuffer * buf)
   gint i, j, k;
   GstBuffer *outbuf;
   GstVideoFrame frame;
+  static GstAllocationParams params = { 0, 0, 0, 3, };
 
   jpegenc = GST_JPEGENC (parent);
 
@@ -567,8 +569,7 @@ gst_jpegenc_chain (GstPad * pad, GstObject * parent, GstBuffer * buf)
     end[i] = base[i] + GST_VIDEO_FRAME_COMP_HEIGHT (&frame, i) * stride[i];
   }
 
-  jpegenc->output_mem =
-      gst_allocator_alloc (NULL, 0, jpegenc->bufsize, 0, jpegenc->bufsize, 3);
+  jpegenc->output_mem = gst_allocator_alloc (NULL, jpegenc->bufsize, &params);
   gst_memory_map (jpegenc->output_mem, &jpegenc->output_map, GST_MAP_READWRITE);
 
   jpegenc->jdest.next_output_byte = jpegenc->output_map.data;

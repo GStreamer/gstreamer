@@ -294,7 +294,7 @@ gst_cmml_enc_new_buffer (GstCmmlEnc * enc,
 {
   GstFlowReturn res;
 
-  *buffer = gst_buffer_new_allocate (NULL, size, 0);
+  *buffer = gst_buffer_new_allocate (NULL, size, NULL);
   if (*buffer != NULL) {
     if (data)
       gst_buffer_fill (*buffer, 0, data, size);

@@ -395,6 +395,7 @@ gst_multipart_mux_collected (GstCollectPads2 * pads, GstMultipartMux * mux)
   GstStructure *structure = NULL;
   GstCaps *caps;
   const gchar *mime;
+  static GstAllocationParams params = { 0, 0, 0, 1, };
 
   GST_DEBUG_OBJECT (mux, "all pads are collected");
 
@@ -461,7 +462,7 @@ gst_multipart_mux_collected (GstCollectPads2 * pads, GstMultipartMux * mux)
       mux->boundary, mime, gst_buffer_get_size (best->buffer));
   headerlen = strlen (header);
 
-  headerbuf = gst_buffer_new_allocate (NULL, headerlen, 1);
+  headerbuf = gst_buffer_new_allocate (NULL, headerlen, &params);
   gst_buffer_fill (headerbuf, 0, header, headerlen);
   g_free (header);
 
@@ -501,7 +502,7 @@ gst_multipart_mux_collected (GstCollectPads2 * pads, GstMultipartMux * mux)
      * don't need to unref headerbuf here. */
     goto beach;
 
-  footerbuf = gst_buffer_new_allocate (NULL, 2, 1);
+  footerbuf = gst_buffer_new_allocate (NULL, 2, &params);
   gst_buffer_fill (footerbuf, 0, "\r\n", 2);
 
   /* the footer has the same timestamp as the data buffer and has a

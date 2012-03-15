@@ -1199,7 +1199,7 @@ gst_interleave_collected (GstCollectPads2 * pads, GstInterleave * self)
 
   nsamples = size / width;
 
-  outbuf = gst_buffer_new_allocate (NULL, size * self->channels, 0);
+  outbuf = gst_buffer_new_allocate (NULL, size * self->channels, NULL);
 
   if (outbuf == NULL || gst_buffer_get_size (outbuf) < size * self->channels) {
     gst_buffer_unref (outbuf);

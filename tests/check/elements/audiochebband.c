@@ -123,7 +123,7 @@ GST_START_TEST (test_type1_32_bp_0hz)
       44100 / 4.0 - 1000, NULL);
   g_object_set (G_OBJECT (audiochebband), "upper-frequency",
       44100 / 4.0 + 1000, NULL);
-  inbuffer = gst_buffer_new_allocate (NULL, 1024 * sizeof (gfloat), 0);
+  inbuffer = gst_buffer_new_allocate (NULL, 1024 * sizeof (gfloat), NULL);
   gst_buffer_map (inbuffer, &map, GST_MAP_WRITE);
   in = (gfloat *) map.data;
   for (i = 0; i < 1024; i++)
@@ -185,7 +185,7 @@ GST_START_TEST (test_type1_32_bp_11025hz)
       44100 / 4.0 - 1000, NULL);
   g_object_set (G_OBJECT (audiochebband), "upper-frequency",
       44100 / 4.0 + 1000, NULL);
-  inbuffer = gst_buffer_new_allocate (NULL, 1024 * sizeof (gfloat), 0);
+  inbuffer = gst_buffer_new_allocate (NULL, 1024 * sizeof (gfloat), NULL);
   gst_buffer_map (inbuffer, &map, GST_MAP_WRITE);
   in = (gfloat *) map.data;
   for (i = 0; i < 1024; i += 4) {
@@ -251,7 +251,7 @@ GST_START_TEST (test_type1_32_bp_22050hz)
       44100 / 4.0 - 1000, NULL);
   g_object_set (G_OBJECT (audiochebband), "upper-frequency",
       44100 / 4.0 + 1000, NULL);
-  inbuffer = gst_buffer_new_allocate (NULL, 1024 * sizeof (gfloat), 0);
+  inbuffer = gst_buffer_new_allocate (NULL, 1024 * sizeof (gfloat), NULL);
   gst_buffer_map (inbuffer, &map, GST_MAP_WRITE);
   in = (gfloat *) map.data;
   for (i = 0; i < 1024; i += 2) {
@@ -315,7 +315,7 @@ GST_START_TEST (test_type1_32_br_0hz)
       44100 / 4.0 - 1000, NULL);
   g_object_set (G_OBJECT (audiochebband), "upper-frequency",
       44100 / 4.0 + 1000, NULL);
-  inbuffer = gst_buffer_new_allocate (NULL, 1024 * sizeof (gfloat), 0);
+  inbuffer = gst_buffer_new_allocate (NULL, 1024 * sizeof (gfloat), NULL);
   gst_buffer_map (inbuffer, &map, GST_MAP_WRITE);
   in = (gfloat *) map.data;
   for (i = 0; i < 1024; i++)
@@ -377,7 +377,7 @@ GST_START_TEST (test_type1_32_br_11025hz)
       44100 / 4.0 - 1000, NULL);
   g_object_set (G_OBJECT (audiochebband), "upper-frequency",
       44100 / 4.0 + 1000, NULL);
-  inbuffer = gst_buffer_new_allocate (NULL, 1024 * sizeof (gfloat), 0);
+  inbuffer = gst_buffer_new_allocate (NULL, 1024 * sizeof (gfloat), NULL);
   gst_buffer_map (inbuffer, &map, GST_MAP_WRITE);
   in = (gfloat *) map.data;
   for (i = 0; i < 1024; i += 4) {
@@ -443,7 +443,7 @@ GST_START_TEST (test_type1_32_br_22050hz)
       44100 / 4.0 - 1000, NULL);
   g_object_set (G_OBJECT (audiochebband), "upper-frequency",
       44100 / 4.0 + 1000, NULL);
-  inbuffer = gst_buffer_new_allocate (NULL, 1024 * sizeof (gfloat), 0);
+  inbuffer = gst_buffer_new_allocate (NULL, 1024 * sizeof (gfloat), NULL);
   gst_buffer_map (inbuffer, &map, GST_MAP_WRITE);
   in = (gfloat *) map.data;
   for (i = 0; i < 1024; i += 2) {
@@ -891,7 +891,7 @@ GST_START_TEST (test_type2_32_bp_0hz)
       44100 / 4.0 - 1000, NULL);
   g_object_set (G_OBJECT (audiochebband), "upper-frequency",
       44100 / 4.0 + 1000, NULL);
-  inbuffer = gst_buffer_new_allocate (NULL, 1024 * sizeof (gfloat), 0);
+  inbuffer = gst_buffer_new_allocate (NULL, 1024 * sizeof (gfloat), NULL);
   gst_buffer_map (inbuffer, &map, GST_MAP_WRITE);
   in = (gfloat *) map.data;
   for (i = 0; i < 1024; i++)
@@ -953,7 +953,7 @@ GST_START_TEST (test_type2_32_bp_11025hz)
       44100 / 4.0 - 1000, NULL);
   g_object_set (G_OBJECT (audiochebband), "upper-frequency",
       44100 / 4.0 + 1000, NULL);
-  inbuffer = gst_buffer_new_allocate (NULL, 1024 * sizeof (gfloat), 0);
+  inbuffer = gst_buffer_new_allocate (NULL, 1024 * sizeof (gfloat), NULL);
   gst_buffer_map (inbuffer, &map, GST_MAP_WRITE);
   in = (gfloat *) map.data;
   for (i = 0; i < 1024; i += 4) {
@@ -1019,7 +1019,7 @@ GST_START_TEST (test_type2_32_bp_22050hz)
       44100 / 4.0 - 1000, NULL);
   g_object_set (G_OBJECT (audiochebband), "upper-frequency",
       44100 / 4.0 + 1000, NULL);
-  inbuffer = gst_buffer_new_allocate (NULL, 1024 * sizeof (gfloat), 0);
+  inbuffer = gst_buffer_new_allocate (NULL, 1024 * sizeof (gfloat), NULL);
   gst_buffer_map (inbuffer, &map, GST_MAP_WRITE);
   in = (gfloat *) map.data;
   for (i = 0; i < 1024; i += 2) {
@@ -1083,7 +1083,7 @@ GST_START_TEST (test_type2_32_br_0hz)
       44100 / 4.0 - 1000, NULL);
   g_object_set (G_OBJECT (audiochebband), "upper-frequency",
       44100 / 4.0 + 1000, NULL);
-  inbuffer = gst_buffer_new_allocate (NULL, 1024 * sizeof (gfloat), 0);
+  inbuffer = gst_buffer_new_allocate (NULL, 1024 * sizeof (gfloat), NULL);
   gst_buffer_map (inbuffer, &map, GST_MAP_WRITE);
   in = (gfloat *) map.data;
   for (i = 0; i < 1024; i++)
@@ -1145,7 +1145,7 @@ GST_START_TEST (test_type2_32_br_11025hz)
       44100 / 4.0 - 1000, NULL);
   g_object_set (G_OBJECT (audiochebband), "upper-frequency",
       44100 / 4.0 + 1000, NULL);
-  inbuffer = gst_buffer_new_allocate (NULL, 1024 * sizeof (gfloat), 0);
+  inbuffer = gst_buffer_new_allocate (NULL, 1024 * sizeof (gfloat), NULL);
   gst_buffer_map (inbuffer, &map, GST_MAP_WRITE);
   in = (gfloat *) map.data;
   for (i = 0; i < 1024; i += 4) {
@@ -1211,7 +1211,7 @@ GST_START_TEST (test_type2_32_br_22050hz)
       44100 / 4.0 - 1000, NULL);
   g_object_set (G_OBJECT (audiochebband), "upper-frequency",
       44100 / 4.0 + 1000, NULL);
-  inbuffer = gst_buffer_new_allocate (NULL, 1024 * sizeof (gfloat), 0);
+  inbuffer = gst_buffer_new_allocate (NULL, 1024 * sizeof (gfloat), NULL);
   gst_buffer_map (inbuffer, &map, GST_MAP_WRITE);
   in = (gfloat *) map.data;
   for (i = 0; i < 1024; i += 2) {

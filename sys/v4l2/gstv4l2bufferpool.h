@@ -52,12 +52,10 @@ struct _GstV4l2BufferPool
   gint video_fd;             /* a dup(2) of the v4l2object's video_fd */
 
   GstAllocator *allocator;
+  GstAllocationParams params;
   guint size;
   guint min_buffers;
   guint max_buffers;
-  guint prefix;
-  guint padding;
-  guint align;
   gboolean add_videometa;
 
   guint num_allocated;       /* number of buffers allocated by the driver */

@@ -487,7 +487,7 @@ gst_split_file_src_create (GstBaseSrc * basesrc, guint64 offset, guint size,
       "%" G_GUINT64_FORMAT ", %s)", src->cur_part, cur_part.start,
       cur_part.stop, cur_part.path);
 
-  buf = gst_buffer_new_allocate (NULL, size, 0);
+  buf = gst_buffer_new_allocate (NULL, size, NULL);
 
   GST_BUFFER_OFFSET (buf) = offset;
 

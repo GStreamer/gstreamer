@@ -872,7 +872,7 @@ gst_shape_wipe_video_sink_chain (GstPad * pad, GstObject * parent,
   /* Try to blend inplace, if it's not possible
    * get a new buffer from downstream. */
   if (!gst_buffer_is_writable (buffer)) {
-    outbuf = gst_buffer_new_allocate (NULL, gst_buffer_get_size (buffer), 0);
+    outbuf = gst_buffer_new_allocate (NULL, gst_buffer_get_size (buffer), NULL);
     gst_buffer_copy_into (outbuf, buffer, GST_BUFFER_COPY_METADATA, 0, -1);
     new_outbuf = TRUE;
   } else {

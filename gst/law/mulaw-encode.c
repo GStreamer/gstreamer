@@ -263,7 +263,7 @@ gst_mulawenc_chain (GstPad * pad, GstObject * parent, GstBuffer * buffer)
   timestamp = GST_BUFFER_TIMESTAMP (buffer);
   duration = GST_BUFFER_DURATION (buffer);
 
-  outbuf = gst_buffer_new_allocate (NULL, mulaw_size, 0);
+  outbuf = gst_buffer_new_allocate (NULL, mulaw_size, NULL);
 
   if (duration == -1) {
     duration = gst_util_uint64_scale_int (mulaw_size,

@@ -410,7 +410,7 @@ gst_speex_dec_parse_data (GstSpeexDec * dec, GstBuffer * buf)
      * could also use an allocator */
     outbuf =
         gst_buffer_new_allocate (NULL,
-        dec->frame_size * dec->header->nb_channels * 2, 0);
+        dec->frame_size * dec->header->nb_channels * 2, NULL);
 
     gst_buffer_map (outbuf, &map, GST_MAP_WRITE);
     ret = speex_decode_int (dec->state, bits, (spx_int16_t *) map.data);

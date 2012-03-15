@@ -259,7 +259,7 @@ gst_mulawdec_chain (GstPad * pad, GstObject * parent, GstBuffer * buffer)
 
   linear_size = mulaw_size * 2;
 
-  outbuf = gst_buffer_new_allocate (NULL, linear_size, 0);
+  outbuf = gst_buffer_new_allocate (NULL, linear_size, NULL);
   gst_buffer_map (outbuf, &outmap, GST_MAP_WRITE);
   linear_data = (gint16 *) outmap.data;
 

@@ -120,7 +120,7 @@ GST_START_TEST (test_type1_32_lp_0hz)
       "could not set to playing");
 
   g_object_set (G_OBJECT (audiocheblimit), "cutoff", 44100 / 4.0, NULL);
-  inbuffer = gst_buffer_new_allocate (NULL, 128 * sizeof (gfloat), 0);
+  inbuffer = gst_buffer_new_allocate (NULL, 128 * sizeof (gfloat), NULL);
   gst_buffer_map (inbuffer, &map, GST_MAP_WRITE);
   in = (gfloat *) map.data;
   for (i = 0; i < 128; i++)
@@ -179,7 +179,7 @@ GST_START_TEST (test_type1_32_lp_22050hz)
       "could not set to playing");
 
   g_object_set (G_OBJECT (audiocheblimit), "cutoff", 44100 / 4.0, NULL);
-  inbuffer = gst_buffer_new_allocate (NULL, 128 * sizeof (gfloat), 0);
+  inbuffer = gst_buffer_new_allocate (NULL, 128 * sizeof (gfloat), NULL);
   gst_buffer_map (inbuffer, &map, GST_MAP_WRITE);
   in = (gfloat *) map.data;
   for (i = 0; i < 128; i += 2) {
@@ -240,7 +240,7 @@ GST_START_TEST (test_type1_32_hp_0hz)
       "could not set to playing");
 
   g_object_set (G_OBJECT (audiocheblimit), "cutoff", 44100 / 4.0, NULL);
-  inbuffer = gst_buffer_new_allocate (NULL, 128 * sizeof (gfloat), 0);
+  inbuffer = gst_buffer_new_allocate (NULL, 128 * sizeof (gfloat), NULL);
   gst_buffer_map (inbuffer, &map, GST_MAP_WRITE);
   in = (gfloat *) map.data;
   for (i = 0; i < 128; i++)
@@ -299,7 +299,7 @@ GST_START_TEST (test_type1_32_hp_22050hz)
       "could not set to playing");
 
   g_object_set (G_OBJECT (audiocheblimit), "cutoff", 44100 / 4.0, NULL);
-  inbuffer = gst_buffer_new_allocate (NULL, 128 * sizeof (gfloat), 0);
+  inbuffer = gst_buffer_new_allocate (NULL, 128 * sizeof (gfloat), NULL);
   gst_buffer_map (inbuffer, &map, GST_MAP_WRITE);
   in = (gfloat *) map.data;
   for (i = 0; i < 128; i += 2) {
@@ -360,7 +360,7 @@ GST_START_TEST (test_type1_64_lp_0hz)
       "could not set to playing");
 
   g_object_set (G_OBJECT (audiocheblimit), "cutoff", 44100 / 4.0, NULL);
-  inbuffer = gst_buffer_new_allocate (NULL, 128 * sizeof (gdouble), 0);
+  inbuffer = gst_buffer_new_allocate (NULL, 128 * sizeof (gdouble), NULL);
   gst_buffer_map (inbuffer, &map, GST_MAP_WRITE);
   in = (gdouble *) map.data;
   for (i = 0; i < 128; i++)
@@ -419,7 +419,7 @@ GST_START_TEST (test_type1_64_lp_22050hz)
       "could not set to playing");
 
   g_object_set (G_OBJECT (audiocheblimit), "cutoff", 44100 / 4.0, NULL);
-  inbuffer = gst_buffer_new_allocate (NULL, 128 * sizeof (gdouble), 0);
+  inbuffer = gst_buffer_new_allocate (NULL, 128 * sizeof (gdouble), NULL);
   gst_buffer_map (inbuffer, &map, GST_MAP_WRITE);
   in = (gdouble *) map.data;
   for (i = 0; i < 128; i += 2) {
@@ -480,7 +480,7 @@ GST_START_TEST (test_type1_64_hp_0hz)
       "could not set to playing");
 
   g_object_set (G_OBJECT (audiocheblimit), "cutoff", 44100 / 4.0, NULL);
-  inbuffer = gst_buffer_new_allocate (NULL, 128 * sizeof (gdouble), 0);
+  inbuffer = gst_buffer_new_allocate (NULL, 128 * sizeof (gdouble), NULL);
   gst_buffer_map (inbuffer, &map, GST_MAP_WRITE);
   in = (gdouble *) map.data;
   for (i = 0; i < 128; i++)
@@ -539,7 +539,7 @@ GST_START_TEST (test_type1_64_hp_22050hz)
       "could not set to playing");
 
   g_object_set (G_OBJECT (audiocheblimit), "cutoff", 44100 / 4.0, NULL);
-  inbuffer = gst_buffer_new_allocate (NULL, 128 * sizeof (gdouble), 0);
+  inbuffer = gst_buffer_new_allocate (NULL, 128 * sizeof (gdouble), NULL);
   gst_buffer_map (inbuffer, &map, GST_MAP_WRITE);
   in = (gdouble *) map.data;
   for (i = 0; i < 128; i += 2) {
@@ -600,7 +600,7 @@ GST_START_TEST (test_type2_32_lp_0hz)
       "could not set to playing");
 
   g_object_set (G_OBJECT (audiocheblimit), "cutoff", 44100 / 4.0, NULL);
-  inbuffer = gst_buffer_new_allocate (NULL, 128 * sizeof (gfloat), 0);
+  inbuffer = gst_buffer_new_allocate (NULL, 128 * sizeof (gfloat), NULL);
   gst_buffer_map (inbuffer, &map, GST_MAP_WRITE);
   in = (gfloat *) map.data;
   for (i = 0; i < 128; i++)
@@ -659,7 +659,7 @@ GST_START_TEST (test_type2_32_lp_22050hz)
       "could not set to playing");
 
   g_object_set (G_OBJECT (audiocheblimit), "cutoff", 44100 / 4.0, NULL);
-  inbuffer = gst_buffer_new_allocate (NULL, 128 * sizeof (gfloat), 0);
+  inbuffer = gst_buffer_new_allocate (NULL, 128 * sizeof (gfloat), NULL);
   gst_buffer_map (inbuffer, &map, GST_MAP_WRITE);
   in = (gfloat *) map.data;
   for (i = 0; i < 128; i += 2) {
@@ -720,7 +720,7 @@ GST_START_TEST (test_type2_32_hp_0hz)
       "could not set to playing");
 
   g_object_set (G_OBJECT (audiocheblimit), "cutoff", 44100 / 4.0, NULL);
-  inbuffer = gst_buffer_new_allocate (NULL, 128 * sizeof (gfloat), 0);
+  inbuffer = gst_buffer_new_allocate (NULL, 128 * sizeof (gfloat), NULL);
   gst_buffer_map (inbuffer, &map, GST_MAP_WRITE);
   in = (gfloat *) map.data;
   for (i = 0; i < 128; i++)
@@ -779,7 +779,7 @@ GST_START_TEST (test_type2_32_hp_22050hz)
       "could not set to playing");
 
   g_object_set (G_OBJECT (audiocheblimit), "cutoff", 44100 / 4.0, NULL);
-  inbuffer = gst_buffer_new_allocate (NULL, 128 * sizeof (gfloat), 0);
+  inbuffer = gst_buffer_new_allocate (NULL, 128 * sizeof (gfloat), NULL);
   gst_buffer_map (inbuffer, &map, GST_MAP_WRITE);
   in = (gfloat *) map.data;
   for (i = 0; i < 128; i += 2) {

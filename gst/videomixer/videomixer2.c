@@ -818,10 +818,11 @@ gst_videomixer2_blend_buffers (GstVideoMixer2 * mix,
   guint outsize;
   BlendFunction composite;
   GstVideoFrame outframe;
+  static GstAllocationParams params = { 0, 0, 0, 15, };
 
   outsize = GST_VIDEO_INFO_SIZE (&mix->info);
 
-  *outbuf = gst_buffer_new_allocate (NULL, outsize, 15);
+  *outbuf = gst_buffer_new_allocate (NULL, outsize, &params);
   GST_BUFFER_TIMESTAMP (*outbuf) = output_start_time;
   GST_BUFFER_DURATION (*outbuf) = output_end_time - output_start_time;
 

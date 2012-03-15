@@ -438,7 +438,7 @@ gst_cmml_dec_new_buffer (GstCmmlDec * dec,
 {
   GstFlowReturn res;
 
-  *buffer = gst_buffer_new_allocate (NULL, size, 0);
+  *buffer = gst_buffer_new_allocate (NULL, size, NULL);
   if (*buffer != NULL) {
     if (data)
       gst_buffer_fill (*buffer, 0, data, size);

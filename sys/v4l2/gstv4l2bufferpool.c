@@ -147,7 +147,7 @@ gst_v4l2_buffer_pool_alloc_buffer (GstBufferPool * bpool, GstBuffer ** buffer,
     case GST_V4L2_IO_RW:
     {
       newbuf =
-          gst_buffer_new_allocate (pool->allocator, pool->size, pool->align);
+          gst_buffer_new_allocate (pool->allocator, pool->size, &pool->params);
       break;
     }
     case GST_V4L2_IO_MMAP:
@@ -275,9 +275,10 @@ gst_v4l2_buffer_pool_set_config (GstBufferPool * bpool, GstStructure * config)
   pool->size = size;
   pool->max_buffers = MAX (min_buffers, max_buffers);
   pool->min_buffers = MIN (pool->max_buffers, min_buffers);
-  pool->prefix = prefix;
-  pool->padding = padding;
-  pool->align = align;
+  gst_allocation_params_init (&pool->params);
+  pool->params.prefix = prefix;
+  pool->params.padding = padding;
+  pool->params.align = align;
 
   gst_buffer_pool_config_set (config, caps, size, min_buffers,
       max_buffers, prefix, padding, align);

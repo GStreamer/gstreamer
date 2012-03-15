@@ -702,7 +702,7 @@ gst_deinterleave_process (GstDeinterleave * self, GstBuffer * buf)
 
   /* Allocate buffers */
   for (srcs = self->srcpads, i = 0; srcs; srcs = srcs->next, i++) {
-    buffers_out[i] = gst_buffer_new_allocate (NULL, bufsize, 0);
+    buffers_out[i] = gst_buffer_new_allocate (NULL, bufsize, NULL);
 
     /* Make sure we got a correct buffer. The only other case we allow
      * here is an unliked pad */
