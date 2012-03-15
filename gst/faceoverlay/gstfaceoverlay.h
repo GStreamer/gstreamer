@@ -73,6 +73,8 @@ struct _GstFaceOverlay
 
   gboolean process_message;
 
+  gboolean update_svg;
+
   gchar *location;
   gfloat x;
   gfloat y;

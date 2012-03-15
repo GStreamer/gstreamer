@@ -174,6 +174,7 @@ gst_face_overlay_change_state (GstElement * element, GstStateChange transition)
                 "facedetect element or rsvgoverlay"));
         return GST_STATE_CHANGE_FAILURE;
       }
+      filter->update_svg = TRUE;
       break;
     default:
       break;
@@ -237,11 +238,16 @@ gst_face_overlay_handle_faces (GstFaceOverlay * filter, GstStructure * s)
   svg_width = (int) width *filter->w;
   svg_height = (int) height *filter->h;
 
-  GST_LOG_OBJECT (filter, "setting overlay to %d x %d @ %d,%d (file: %s)",
-      svg_width, svg_height, svg_x, svg_y, GST_STR_NULL (filter->location));
+  if (filter->update_svg) {
+    GST_DEBUG_OBJECT (filter, "set rsvgoverlay location=%s", filter->location);
+    g_object_set (filter->svg_overlay, "location", filter->location, NULL);
+    filter->update_svg = FALSE;
+  }
+
+  GST_LOG_OBJECT (filter, "overlay dimensions: %d x %d @ %d,%d",
+      svg_width, svg_height, svg_x, svg_y);
 
   g_object_set (filter->svg_overlay,
-      "location", filter->location,
       "x", svg_x, "y", svg_y, "width", svg_width, "height", svg_height, NULL);
 }
 
@@ -347,6 +353,7 @@ gst_face_overlay_set_property (GObject * object, guint prop_id,
   switch (prop_id) {
     case PROP_LOCATION:
       filter->location = g_value_dup_string (value);
+      filter->update_svg = TRUE;
       break;
     case PROP_X:
       filter->x = g_value_get_float (value);
