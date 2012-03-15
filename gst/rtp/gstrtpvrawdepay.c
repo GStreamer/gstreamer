@@ -118,29 +118,29 @@ gst_rtp_vraw_depay_negotiate_pool (GstRtpVRawDepay * depay, GstCaps * caps,
 {
   GstQuery *query;
   GstBufferPool *pool = NULL;
-  guint size, min, max, prefix, padding, alignment;
+  guint size, min, max;
   GstStructure *config;
 
   /* find a pool for the negotiated caps now */
   query = gst_query_new_allocation (caps, TRUE);
 
-  if (gst_pad_peer_query (GST_RTP_BASE_DEPAYLOAD_SRCPAD (depay), query)) {
-    GST_DEBUG_OBJECT (depay, "got downstream ALLOCATION hints");
+  if (!gst_pad_peer_query (GST_RTP_BASE_DEPAYLOAD_SRCPAD (depay), query)) {
+    /* not a problem, we use the defaults of query */
+    GST_DEBUG_OBJECT (depay, "could not get downstream ALLOCATION hints");
+  }
+
+  if (gst_query_get_n_allocation_pools (query) > 0) {
     /* we got configuration from our peer, parse them */
-    gst_query_parse_allocation_params (query, &size, &min, &max, &prefix,
-        &padding, &alignment, &pool);
+    gst_query_parse_nth_allocation_pool (query, 0, &pool, &size, &min, &max);
   } else {
-    GST_DEBUG_OBJECT (depay, "didn't get downstream ALLOCATION hints");
+    GST_DEBUG_OBJECT (depay, "didn't get downstream pool hints");
     size = info->size;
     min = max = 0;
-    prefix = 0;
-    padding = 0;
-    alignment = 0;
   }
 
   if (pool == NULL) {
     /* we did not get a pool, make one ourselves then */
-    pool = gst_buffer_pool_new ();
+    pool = gst_video_buffer_pool_new ();
   }
 
   if (depay->pool)
@@ -148,12 +148,14 @@ gst_rtp_vraw_depay_negotiate_pool (GstRtpVRawDepay * depay, GstCaps * caps,
   depay->pool = pool;
 
   config = gst_buffer_pool_get_config (pool);
-  gst_buffer_pool_config_set (config, caps, size, min, max, prefix, padding,
-      alignment);
-  /* just set the metadata, if the pool can support it we will transparently use
-   * it through the video info API. We could also see if the pool support this
-   * metadata and only activate it then. */
-  gst_buffer_pool_config_add_option (config, GST_BUFFER_POOL_OPTION_VIDEO_META);
+  gst_buffer_pool_config_set (config, caps, size, min, max, 0, 0, 0);
+  if (gst_query_has_allocation_meta (query, GST_VIDEO_META_API_TYPE)) {
+    /* just set the metadata, if the pool can support it we will transparently use
+     * it through the video info API. We could also see if the pool support this
+     * metadata and only activate it then. */
+    gst_buffer_pool_config_add_option (config,
+        GST_BUFFER_POOL_OPTION_VIDEO_META);
+  }
 
   gst_buffer_pool_set_config (pool, config);
   /* and activate */

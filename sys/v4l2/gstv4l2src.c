@@ -511,17 +511,24 @@ gst_v4l2src_decide_allocation (GstBaseSrc * bsrc, GstQuery * query)
   GstV4l2Src *src;
   GstV4l2Object *obj;
   GstBufferPool *pool;
-  guint size, min, max, prefix, padding, alignment;
+  guint size, min, max;
+  gboolean update;
 
   src = GST_V4L2SRC (bsrc);
   obj = src->v4l2object;
 
-  gst_query_parse_allocation_params (query, &size, &min, &max, &prefix,
-      &padding, &alignment, &pool);
+  if (gst_query_get_n_allocation_pools (query) > 0) {
+    gst_query_parse_nth_allocation_pool (query, 0, &pool, &size, &min, &max);
+    update = TRUE;
+  } else {
+    pool = NULL;
+    min = max = 0;
+    size = 0;
+    update = FALSE;
+  }
 
-  GST_DEBUG_OBJECT (src, "allocation: size:%u min:%u max:%u prefix:%u "
-      "padding: %u align:%u pool:%" GST_PTR_FORMAT, size, min, max,
-      prefix, padding, alignment, pool);
+  GST_DEBUG_OBJECT (src, "allocation: size:%u min:%u max:%u pool:%"
+      GST_PTR_FORMAT, size, min, max, pool);
 
   if (min != 0) {
     /* if there is a min-buffers suggestion, use it. We add 1 because we need 1
@@ -571,8 +578,7 @@ gst_v4l2src_decide_allocation (GstBaseSrc * bsrc, GstQuery * query)
     config = gst_buffer_pool_get_config (pool);
     gst_buffer_pool_config_get (config, &caps, NULL, NULL, NULL, NULL, NULL,
         NULL);
-    gst_buffer_pool_config_set (config, caps, size, min, max, prefix, padding,
-        alignment);
+    gst_buffer_pool_config_set (config, caps, size, min, max, 0, 0, 0);
 
     /* if downstream supports video metadata, add this to the pool config */
     if (gst_query_has_allocation_meta (query, GST_VIDEO_META_API_TYPE))
@@ -582,8 +588,10 @@ gst_v4l2src_decide_allocation (GstBaseSrc * bsrc, GstQuery * query)
     gst_buffer_pool_set_config (pool, config);
   }
 
-  gst_query_set_allocation_params (query, size, min, max, prefix, padding,
-      alignment, pool);
+  if (update)
+    gst_query_set_nth_allocation_pool (query, 0, pool, size, min, max);
+  else
+    gst_query_add_allocation_pool (query, pool, size, min, max);
 
   return TRUE;
 }

@@ -252,7 +252,8 @@ gst_goom_src_negotiate (GstGoom * goom)
   GstCaps *templ;
   GstQuery *query;
   GstBufferPool *pool = NULL;
-  guint size, min, max, prefix, padding, alignment;
+  GstStructure *config;
+  guint size, min, max;
 
   templ = gst_pad_get_pad_template_caps (goom->srcpad);
 
@@ -281,36 +282,36 @@ gst_goom_src_negotiate (GstGoom * goom)
 
   gst_goom_src_setcaps (goom, target);
 
-  /* try to get a bufferpool now */
   /* find a pool for the negotiated caps now */
   query = gst_query_new_allocation (target, TRUE);
 
-  if (gst_pad_peer_query (goom->srcpad, query)) {
+  if (!gst_pad_peer_query (goom->srcpad, query)) {
+    /* no problem, we use the query defaults */
+    GST_DEBUG_OBJECT (goom, "ALLOCATION query failed");
+  }
+
+  if (gst_query_get_n_allocation_pools (query) > 0) {
     /* we got configuration from our peer, parse them */
-    gst_query_parse_allocation_params (query, &size, &min, &max, &prefix,
-        &padding, &alignment, &pool);
+    gst_query_parse_nth_allocation_pool (query, 0, &pool, &size, &min, &max);
   } else {
+    pool = NULL;
     size = goom->outsize;
     min = max = 0;
-    prefix = 0;
-    padding = 0;
-    alignment = 0;
   }
 
   if (pool == NULL) {
-    GstStructure *config;
-
     /* we did not get a pool, make one ourselves then */
     pool = gst_buffer_pool_new ();
-
-    config = gst_buffer_pool_get_config (pool);
-    gst_buffer_pool_config_set (config, target, size, min, max, prefix,
-        padding, alignment);
-    gst_buffer_pool_set_config (pool, config);
   }
 
-  if (goom->pool)
+  config = gst_buffer_pool_get_config (pool);
+  gst_buffer_pool_config_set (config, target, size, min, max, 0, 0, 0);
+  gst_buffer_pool_set_config (pool, config);
+
+  if (goom->pool) {
+    gst_buffer_pool_set_active (goom->pool, FALSE);
     gst_object_unref (goom->pool);
+  }
   goom->pool = pool;
 
   /* and activate */

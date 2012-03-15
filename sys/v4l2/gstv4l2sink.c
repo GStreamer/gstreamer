@@ -651,7 +651,7 @@ gst_v4l2sink_propose_allocation (GstBaseSink * bsink, GstQuery * query)
     }
   }
   /* we need at least 2 buffers to operate */
-  gst_query_set_allocation_params (query, size, 2, 0, 0, 0, 0, pool);
+  gst_query_add_allocation_pool (query, pool, size, 2, 0);
 
   /* we also support various metadata */
   gst_query_add_allocation_meta (query, GST_VIDEO_META_API_TYPE);

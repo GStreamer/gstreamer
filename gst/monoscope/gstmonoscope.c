@@ -226,8 +226,9 @@ gst_monoscope_src_negotiate (GstMonoscope * monoscope)
   GstStructure *structure;
   GstCaps *templ;
   GstQuery *query;
-  GstBufferPool *pool = NULL;
-  guint size, min, max, prefix, alignment;
+  GstBufferPool *pool;
+  GstStructure *config;
+  guint size, min, max;
 
   templ = gst_pad_get_pad_template_caps (monoscope->srcpad);
 
@@ -260,31 +261,31 @@ gst_monoscope_src_negotiate (GstMonoscope * monoscope)
   /* find a pool for the negotiated caps now */
   query = gst_query_new_allocation (target, TRUE);
 
-  if (gst_pad_peer_query (monoscope->srcpad, query)) {
+  if (!gst_pad_peer_query (monoscope->srcpad, query)) {
+  }
+
+  if (gst_query_get_n_allocation_pools (query) > 0) {
     /* we got configuration from our peer, parse them */
-    gst_query_parse_allocation_params (query, &size, &min, &max, &prefix,
-        &alignment, &pool);
+    gst_query_parse_nth_allocation_pool (query, 0, &pool, &size, &min, &max);
   } else {
+    pool = NULL;
     size = monoscope->outsize;
     min = max = 0;
-    prefix = 0;
-    alignment = 0;
   }
 
   if (pool == NULL) {
-    GstStructure *config;
-
     /* we did not get a pool, make one ourselves then */
     pool = gst_buffer_pool_new ();
-
-    config = gst_buffer_pool_get_config (pool);
-    gst_buffer_pool_config_set (config, target, size, min, max, prefix,
-        alignment);
-    gst_buffer_pool_set_config (pool, config);
   }
 
-  if (monoscope->pool)
+  config = gst_buffer_pool_get_config (pool);
+  gst_buffer_pool_config_set (config, target, size, min, max, 0, 0, 0);
+  gst_buffer_pool_set_config (pool, config);
+
+  if (monoscope->pool) {
+    gst_buffer_pool_set_active (monoscope->pool, TRUE);
     gst_object_unref (monoscope->pool);
+  }
   monoscope->pool = pool;
 
   /* and activate */
