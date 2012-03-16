@@ -64,6 +64,7 @@ gst_riff_read_chunk (GstElement * element,
 
 skip_junk:
   size = 8;
+  buf = NULL;
   if ((res = gst_pad_pull_range (pad, offset, size, &buf)) != GST_FLOW_OK)
     return res;
   else if (gst_buffer_get_size (buf) < size)
@@ -87,6 +88,7 @@ skip_junk:
     goto skip_junk;
   }
 
+  buf = NULL;
   if ((res = gst_pad_pull_range (pad, offset + 8, size, &buf)) != GST_FLOW_OK)
     return res;
   else if (gst_buffer_get_size (buf) < size)

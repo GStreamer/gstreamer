@@ -1999,7 +1999,7 @@ gst_audio_base_sink_callback (GstAudioRingBuffer * rbuf, guint8 * data,
 {
   GstBaseSink *basesink;
   GstAudioBaseSink *sink;
-  GstBuffer *buf;
+  GstBuffer *buf = NULL;
   GstFlowReturn ret;
   gsize size;
 

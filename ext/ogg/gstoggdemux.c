@@ -2183,7 +2183,7 @@ static GstFlowReturn
 gst_ogg_demux_get_data (GstOggDemux * ogg, gint64 end_offset)
 {
   GstFlowReturn ret;
-  GstBuffer *buffer;
+  GstBuffer *buffer = NULL;
 
   GST_LOG_OBJECT (ogg,
       "get data %" G_GINT64_FORMAT " %" G_GINT64_FORMAT " %" G_GINT64_FORMAT,
@@ -4202,7 +4202,7 @@ static GstFlowReturn
 gst_ogg_demux_loop_forward (GstOggDemux * ogg)
 {
   GstFlowReturn ret;
-  GstBuffer *buffer;
+  GstBuffer *buffer = NULL;
 
   if (ogg->offset == ogg->length) {
     GST_LOG_OBJECT (ogg, "no more data to pull %" G_GINT64_FORMAT
