@@ -959,8 +959,6 @@ gst_base_transform_configure_caps (GstBaseTransform * trans, GstCaps * in,
     ret = klass->set_caps (trans, in, out);
   }
 
-  trans->negotiated = ret;
-
   return ret;
 }
 
@@ -1274,7 +1272,7 @@ gst_base_transform_setcaps (GstBaseTransform * trans, GstPad * pad,
   trans->priv->reconfigure = FALSE;
   GST_OBJECT_UNLOCK (trans->sinkpad);
 
-  /* we know this will work, we implement the setcaps */
+  /* let downstream know about our caps */
   gst_pad_push_event (trans->srcpad, gst_event_new_caps (outcaps));
 
   if (ret) {
@@ -1286,7 +1284,9 @@ done:
   if (outcaps)
     gst_caps_unref (outcaps);
 
+  GST_OBJECT_LOCK (trans);
   trans->negotiated = ret;
+  GST_OBJECT_UNLOCK (trans);
 
   return ret;
 
