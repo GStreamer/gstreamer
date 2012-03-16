@@ -499,7 +499,7 @@ gst_face_detect_transform_ip (GstOpencvVideoFilter * base, GstBuffer * buf,
     GValue facelist = { 0 };
     GValue facedata = { 0 };
     CvSeq *faces;
-    CvSeq *mouth, *nose, *eyes;
+    CvSeq *mouth = NULL, *nose = NULL, *eyes = NULL;
     gint i;
     gboolean do_display = FALSE;
 
@@ -524,9 +524,9 @@ gst_face_detect_transform_ip (GstOpencvVideoFilter * base, GstBuffer * buf,
       CvRect *r = (CvRect *) cvGetSeqElem (faces, i);
       guint mw = filter->min_size_width / 8;
       guint mh = filter->min_size_height / 8;
-      guint rnx, rny, rnw, rnh;
-      guint rmx, rmy, rmw, rmh;
-      guint rex, rey, rew, reh;
+      guint rnx = 0, rny = 0, rnw, rnh;
+      guint rmx = 0, rmy = 0, rmw, rmh;
+      guint rex = 0, rey = 0, rew, reh;
       gboolean have_nose, have_mouth, have_eyes;
 
       /* detect face features */
