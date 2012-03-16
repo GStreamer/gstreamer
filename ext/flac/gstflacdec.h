@@ -88,6 +88,8 @@ struct _GstFlacDec {
   guint16        max_blocksize;
 
   gint64         cur_granulepos; /* only used in framed mode (flac-in-ogg) */
+
+  gint           error_count;
 };
 
 struct _GstFlacDecClass {

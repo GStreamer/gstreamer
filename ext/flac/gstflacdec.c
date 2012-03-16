@@ -542,6 +542,26 @@ gst_flac_dec_scan_for_last_block (GstFlacDec * flacdec, gint64 * samples)
   }
 }
 
+static gboolean
+gst_flac_dec_handle_decoder_error (GstFlacDec * dec, gboolean msg)
+{
+  gboolean ret;
+
+  dec->error_count++;
+  if (dec->error_count > 10) {
+    if (msg)
+      GST_ELEMENT_ERROR (dec, STREAM, DECODE, (NULL), (NULL));
+    dec->last_flow = GST_FLOW_ERROR;
+    ret = TRUE;
+  } else {
+    GST_DEBUG_OBJECT (dec, "ignoring error for now at count %d",
+        dec->error_count);
+    ret = FALSE;
+  }
+
+  return ret;
+}
+
 static void
 gst_flac_extract_picture_buffer (GstFlacDec * dec,
     const FLAC__StreamMetadata * metadata)
@@ -672,8 +692,8 @@ gst_flac_dec_error_cb (const FLAC__StreamDecoder * d,
       break;
   }
 
-  GST_ELEMENT_ERROR (dec, STREAM, DECODE, (NULL), ("%s (%d)", error, status));
-  dec->last_flow = GST_FLOW_ERROR;
+  if (gst_flac_dec_handle_decoder_error (dec, FALSE))
+    GST_ELEMENT_ERROR (dec, STREAM, DECODE, (NULL), ("%s (%d)", error, status));
 }
 
 static FLAC__StreamDecoderSeekStatus
@@ -1022,6 +1042,9 @@ gst_flac_dec_write (GstFlacDec * flacdec, const FLAC__Frame * frame,
   } else {
     g_assert_not_reached ();
   }
+
+  if (flacdec->error_count)
+    flacdec->error_count--;
 
   if (!flacdec->seeking) {
     GST_DEBUG_OBJECT (flacdec, "pushing %d samples at offset %" G_GINT64_FORMAT
@@ -1502,6 +1525,15 @@ gst_flac_dec_chain (GstPad * pad, GstBuffer * buf)
     }
     if (!FLAC__stream_decoder_process_single (dec->decoder)) {
       GST_DEBUG_OBJECT (dec, "process_single failed");
+    }
+
+    if (FLAC__stream_decoder_get_state (dec->decoder) ==
+        FLAC__STREAM_DECODER_ABORTED) {
+      GST_WARNING_OBJECT (dec, "Read callback caused internal abort");
+      /* allow recovery */
+      gst_adapter_clear (dec->adapter);
+      FLAC__stream_decoder_flush (dec->decoder);
+      gst_flac_dec_handle_decoder_error (dec, TRUE);
     }
   } else {
     GST_DEBUG_OBJECT (dec, "don't have all headers yet");
@@ -2154,6 +2186,7 @@ gst_flac_dec_change_state (GstElement * element, GstStateChange transition)
       flacdec->width = 0;
       flacdec->sample_rate = 0;
       gst_segment_init (&flacdec->segment, GST_FORMAT_DEFAULT);
+      flacdec->error_count = 0;
       break;
     default:
       break;
