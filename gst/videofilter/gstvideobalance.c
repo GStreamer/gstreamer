@@ -159,7 +159,7 @@ gst_video_balance_update_properties (GstVideoBalance * videobalance)
   gboolean passthrough = gst_video_balance_is_passthrough (videobalance);
   GstBaseTransform *base = GST_BASE_TRANSFORM (videobalance);
 
-  base->passthrough = passthrough;
+  gst_base_transform_set_passthrough (base, passthrough);
 
   if (!passthrough)
     gst_video_balance_update_tables (videobalance);

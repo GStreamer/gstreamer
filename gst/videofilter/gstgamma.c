@@ -196,10 +196,10 @@ gst_gamma_calculate_tables (GstGamma * gamma)
   gdouble exp;
 
   if (gamma->gamma == 1.0) {
-    GST_BASE_TRANSFORM (gamma)->passthrough = TRUE;
+    gst_base_transform_set_passthrough (GST_BASE_TRANSFORM (gamma), TRUE);
     return;
   }
-  GST_BASE_TRANSFORM (gamma)->passthrough = FALSE;
+  gst_base_transform_set_passthrough (GST_BASE_TRANSFORM (gamma), FALSE);
 
   exp = 1.0 / gamma->gamma;
   for (n = 0; n < 256; n++) {
@@ -397,7 +397,7 @@ gst_gamma_transform_frame_ip (GstVideoFilter * vfilter, GstVideoFrame * frame)
   if (!gamma->process)
     goto not_negotiated;
 
-  if (GST_BASE_TRANSFORM (vfilter)->passthrough)
+  if (gst_base_transform_is_passthrough (GST_BASE_TRANSFORM (vfilter)))
     goto done;
 
   GST_OBJECT_LOCK (gamma);

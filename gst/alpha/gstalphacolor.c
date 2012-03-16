@@ -103,7 +103,7 @@ gst_alpha_color_init (GstAlphaColor * alpha)
 {
   GstBaseTransform *btrans = GST_BASE_TRANSFORM (alpha);
 
-  btrans->always_in_place = TRUE;
+  gst_base_transform_set_in_place (btrans, TRUE);
 }
 
 static GstCaps *
