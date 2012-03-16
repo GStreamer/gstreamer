@@ -677,6 +677,8 @@ struct _GstGhostPadPrivate
 {
   /* with PROXY_LOCK */
   gulong notify_id;
+  gulong target_caps_notify_id;
+  gulong target_unlinked_id;
 
   gboolean constructed;
 };
@@ -941,10 +943,22 @@ done:
 }
 
 static void
-on_src_target_unlinked (GstPad * pad, GstPad * peer, gpointer user_data)
+on_src_target_unlinked (GstPad * pad, GstPad * peer, GstGhostPad * gpad)
 {
-  g_signal_handlers_disconnect_by_func (pad,
-      (gpointer) on_src_target_notify, NULL);
+  GST_DEBUG_OBJECT (pad, "unlinked");
+  GST_DEBUG_OBJECT (gpad, "unlinked");
+
+  if (GST_GHOST_PAD_PRIVATE (gpad)->target_caps_notify_id) {
+    g_signal_handler_disconnect (pad,
+        GST_GHOST_PAD_PRIVATE (gpad)->target_caps_notify_id);
+    GST_GHOST_PAD_PRIVATE (gpad)->target_caps_notify_id = 0;
+  }
+  /* And remove our signal */
+  if (GST_GHOST_PAD_PRIVATE (gpad)->target_unlinked_id) {
+    g_signal_handler_disconnect (pad,
+        GST_GHOST_PAD_PRIVATE (gpad)->target_unlinked_id);
+    GST_GHOST_PAD_PRIVATE (gpad)->target_unlinked_id = 0;
+  }
 }
 
 /**
@@ -1399,20 +1413,27 @@ gst_ghost_pad_set_target (GstGhostPad * gpad, GstPad * newtarget)
     GST_OBJECT_UNLOCK (gpad);
 
     /* unlink internal pad */
-    if (GST_PAD_IS_SRC (internal))
+    if (GST_PAD_IS_SRC (internal)) {
+      GST_DEBUG_OBJECT (gpad, "Unlinking %s:%s from oldtarget %s:%s",
+          GST_DEBUG_PAD_NAME (internal), GST_DEBUG_PAD_NAME (oldtarget));
       gst_pad_unlink (internal, oldtarget);
-    else
+    } else {
+      GST_DEBUG_OBJECT (gpad, "Unlinking oldtarget %s:%s from internal %s:%s",
+          GST_DEBUG_PAD_NAME (oldtarget), GST_DEBUG_PAD_NAME (internal));
       gst_pad_unlink (oldtarget, internal);
+    }
   } else {
     GST_OBJECT_UNLOCK (gpad);
   }
 
   if (newtarget) {
     if (GST_PAD_IS_SRC (newtarget)) {
-      g_signal_connect (newtarget, "notify::caps",
+      GST_GHOST_PAD_PRIVATE (gpad)->target_caps_notify_id =
+          g_signal_connect (newtarget, "notify::caps",
           G_CALLBACK (on_src_target_notify), NULL);
-      g_signal_connect (newtarget, "unlinked",
-          G_CALLBACK (on_src_target_unlinked), NULL);
+      GST_GHOST_PAD_PRIVATE (gpad)->target_unlinked_id =
+          g_signal_connect (newtarget, "unlinked",
+          G_CALLBACK (on_src_target_unlinked), gpad);
     }
 
     /* and link to internal pad without any checks */
