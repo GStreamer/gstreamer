@@ -475,9 +475,6 @@ gst_face_detect_run_detector (GstFaceDetect * filter,
     CvHaarClassifierCascade * detector, gint min_size_width,
     gint min_size_height)
 {
-  if (!detector)
-    return NULL;
-
   return cvHaarDetectObjects (filter->cvGray, detector,
       filter->cvStorage, filter->scale_factor, filter->min_neighbors,
       filter->flags, cvSize (min_size_width, min_size_height)
@@ -534,35 +531,48 @@ gst_face_detect_transform_ip (GstOpencvVideoFilter * base, GstBuffer * buf,
 
       /* detect face features */
 
-      rnx = r->x + r->width / 4;
-      rny = r->y + r->height / 4;
-      rnw = r->width / 2;
-      rnh = r->height / 2;
-      cvSetImageROI (filter->cvGray, cvRect (rnx, rny, rnw, rnh));
-      nose =
-          gst_face_detect_run_detector (filter, filter->cvNoseDetect, mw, mh);
-      have_nose = (nose && nose->total);
-      cvResetImageROI (filter->cvGray);
+      if (filter->cvNoseDetect) {
+        rnx = r->x + r->width / 4;
+        rny = r->y + r->height / 4;
+        rnw = r->width / 2;
+        rnh = r->height / 2;
+        cvSetImageROI (filter->cvGray, cvRect (rnx, rny, rnw, rnh));
+        nose =
+            gst_face_detect_run_detector (filter, filter->cvNoseDetect, mw, mh);
+        have_nose = (nose && nose->total);
+        cvResetImageROI (filter->cvGray);
+      } else {
+        have_nose = FALSE;
+      }
 
-      rmx = r->x;
-      rmy = r->y + r->height / 2;
-      rmw = r->width;
-      rmh = r->height / 2;
-      cvSetImageROI (filter->cvGray, cvRect (rmx, rmy, rmw, rmh));
-      mouth =
-          gst_face_detect_run_detector (filter, filter->cvMouthDetect, mw, mh);
-      have_mouth = (mouth && mouth->total);
-      cvResetImageROI (filter->cvGray);
+      if (filter->cvMouthDetect) {
+        rmx = r->x;
+        rmy = r->y + r->height / 2;
+        rmw = r->width;
+        rmh = r->height / 2;
+        cvSetImageROI (filter->cvGray, cvRect (rmx, rmy, rmw, rmh));
+        mouth =
+            gst_face_detect_run_detector (filter, filter->cvMouthDetect, mw,
+            mh);
+        have_mouth = (mouth && mouth->total);
+        cvResetImageROI (filter->cvGray);
+      } else {
+        have_mouth = FALSE;
+      }
 
-      rex = r->x;
-      rey = r->y;
-      rew = r->width;
-      reh = r->height / 2;
-      cvSetImageROI (filter->cvGray, cvRect (rex, rey, rew, reh));
-      eyes =
-          gst_face_detect_run_detector (filter, filter->cvEyesDetect, mw, mh);
-      have_eyes = (eyes && eyes->total);
-      cvResetImageROI (filter->cvGray);
+      if (filter->cvEyesDetect) {
+        rex = r->x;
+        rey = r->y;
+        rew = r->width;
+        reh = r->height / 2;
+        cvSetImageROI (filter->cvGray, cvRect (rex, rey, rew, reh));
+        eyes =
+            gst_face_detect_run_detector (filter, filter->cvEyesDetect, mw, mh);
+        have_eyes = (eyes && eyes->total);
+        cvResetImageROI (filter->cvGray);
+      } else {
+        have_eyes = FALSE;
+      }
 
       GST_LOG_OBJECT (filter,
           "%2d/%2d: x,y = %4u,%4u: w.h = %4u,%4u : features(e,n,m) = %d,%d,%d",
@@ -574,7 +584,7 @@ gst_face_detect_transform_ip (GstOpencvVideoFilter * base, GstBuffer * buf,
           "y", G_TYPE_UINT, r->y,
           "width", G_TYPE_UINT, r->width,
           "height", G_TYPE_UINT, r->height, NULL);
-      if (nose && nose->total) {
+      if (have_nose) {
         CvRect *sr = (CvRect *) cvGetSeqElem (nose, 0);
         GST_LOG_OBJECT (filter, "nose/%d: x,y = %4u,%4u: w.h = %4u,%4u",
             nose->total, rnx + sr->x, rny + sr->y, sr->width, sr->height);
@@ -584,7 +594,7 @@ gst_face_detect_transform_ip (GstOpencvVideoFilter * base, GstBuffer * buf,
             "nose->width", G_TYPE_UINT, sr->width,
             "nose->height", G_TYPE_UINT, sr->height, NULL);
       }
-      if (mouth && mouth->total) {
+      if (have_mouth) {
         CvRect *sr = (CvRect *) cvGetSeqElem (mouth, 0);
         GST_LOG_OBJECT (filter, "mouth/%d: x,y = %4u,%4u: w.h = %4u,%4u",
             mouth->total, rmx + sr->x, rmy + sr->y, sr->width, sr->height);
@@ -594,7 +604,7 @@ gst_face_detect_transform_ip (GstOpencvVideoFilter * base, GstBuffer * buf,
             "mouth->width", G_TYPE_UINT, sr->width,
             "mouth->height", G_TYPE_UINT, sr->height, NULL);
       }
-      if (eyes && eyes->total) {
+      if (have_eyes) {
         CvRect *sr = (CvRect *) cvGetSeqElem (eyes, 0);
         GST_LOG_OBJECT (filter, "eyes/%d: x,y = %4u,%4u: w.h = %4u,%4u",
             eyes->total, rex + sr->x, rey + sr->y, sr->width, sr->height);
@@ -627,7 +637,7 @@ gst_face_detect_transform_ip (GstOpencvVideoFilter * base, GstBuffer * buf,
         cvEllipse (img, center, axes, 0.0, 0.0, 360.0, CV_RGB (cr, cg, cb),
             3, 8, 0);
 
-        if (nose && nose->total) {
+        if (have_nose) {
           CvRect *sr = (CvRect *) cvGetSeqElem (nose, 0);
 
           w = sr->width / 2;
@@ -639,7 +649,7 @@ gst_face_detect_transform_ip (GstOpencvVideoFilter * base, GstBuffer * buf,
           cvEllipse (img, center, axes, 0.0, 0.0, 360.0, CV_RGB (cr, cg, cb),
               1, 8, 0);
         }
-        if (mouth && mouth->total) {
+        if (have_mouth) {
           CvRect *sr = (CvRect *) cvGetSeqElem (mouth, 0);
 
           w = sr->width / 2;
@@ -651,7 +661,7 @@ gst_face_detect_transform_ip (GstOpencvVideoFilter * base, GstBuffer * buf,
           cvEllipse (img, center, axes, 0.0, 0.0, 360.0, CV_RGB (cr, cg, cb),
               1, 8, 0);
         }
-        if (eyes && eyes->total) {
+        if (have_eyes) {
           CvRect *sr = (CvRect *) cvGetSeqElem (eyes, 0);
 
           w = sr->width / 2;
