@@ -629,6 +629,7 @@ gst_real_audio_demux_loop (GstRealAudioDemux * demux)
   if (demux->upstream_size > 0 && demux->offset >= demux->upstream_size)
     goto eos;
 
+  buf = NULL;
   ret = gst_pad_pull_range (demux->sinkpad, demux->offset, bytes_needed, &buf);
 
   if (ret != GST_FLOW_OK)

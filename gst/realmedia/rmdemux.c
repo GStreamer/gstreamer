@@ -345,6 +345,7 @@ gst_rmdemux_validate_offset (GstRMDemux * rmdemux)
   gboolean ret = TRUE;
   GstMapInfo map;
 
+  buffer = NULL;
   flowret = gst_pad_pull_range (rmdemux->sinkpad, rmdemux->offset, 4, &buffer);
 
   if (flowret != GST_FLOW_OK) {
@@ -837,6 +838,7 @@ gst_rmdemux_loop (GstPad * pad)
       size = rmdemux->size;
   }
 
+  buffer = NULL;
   ret = gst_pad_pull_range (pad, rmdemux->offset, size, &buffer);
   if (ret != GST_FLOW_OK) {
     if (rmdemux->offset == rmdemux->index_offset) {
