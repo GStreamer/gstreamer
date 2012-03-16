@@ -2080,6 +2080,7 @@ gst_flv_demux_pull_tag (GstPad * pad, GstFlvDemux * demux)
   demux->offset += FLV_TAG_TYPE_SIZE;
 
   /* Pull the whole tag */
+  buffer = NULL;
   if (G_UNLIKELY ((ret = gst_flv_demux_pull_range (demux, pad, demux->offset,
                   demux->tag_size, &buffer)) != GST_FLOW_OK))
     goto beach;
@@ -2241,12 +2242,14 @@ gst_flv_demux_create_index (GstFlvDemux * demux, gint64 pos, GstClockTime ts)
   old_offset = demux->offset;
   demux->offset = pos;
 
+  buffer = NULL;
   while ((ret = gst_flv_demux_pull_range (demux, demux->sinkpad, demux->offset,
               12, &buffer)) == GST_FLOW_OK) {
     tag_time =
         gst_flv_demux_parse_tag_timestamp (demux, TRUE, buffer, &tag_size);
 
     gst_buffer_unref (buffer);
+    buffer = NULL;
 
     if (G_UNLIKELY (tag_time == GST_CLOCK_TIME_NONE || tag_time > ts))
       goto exit;

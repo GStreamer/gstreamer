@@ -2682,7 +2682,7 @@ gst_qtdemux_loop_state_header (GstQTDemux * qtdemux)
     }
     case FOURCC_moov:
     {
-      GstBuffer *moov;
+      GstBuffer *moov = NULL;
 
       if (qtdemux->got_moov) {
         GST_DEBUG_OBJECT (qtdemux, "Skipping moov atom as we have one already");
@@ -2745,7 +2745,7 @@ gst_qtdemux_loop_state_header (GstQTDemux * qtdemux)
     }
     case FOURCC_ftyp:
     {
-      GstBuffer *ftyp;
+      GstBuffer *ftyp = NULL;
 
       /* extract major brand; might come in handy for ISO vs QT issues */
       ret = gst_qtdemux_pull_atom (qtdemux, cur_offset, length, &ftyp);
@@ -2760,7 +2760,7 @@ gst_qtdemux_loop_state_header (GstQTDemux * qtdemux)
     }
     case FOURCC_uuid:
     {
-      GstBuffer *uuid;
+      GstBuffer *uuid = NULL;
 
       /* uuid are extension atoms */
       ret = gst_qtdemux_pull_atom (qtdemux, cur_offset, length, &uuid);
@@ -2775,7 +2775,7 @@ gst_qtdemux_loop_state_header (GstQTDemux * qtdemux)
     }
     default:
     {
-      GstBuffer *unknown;
+      GstBuffer *unknown = NULL;
 
       GST_LOG_OBJECT (qtdemux,
           "unknown %08x '%" GST_FOURCC_FORMAT "' of size %" G_GUINT64_FORMAT
@@ -5179,6 +5179,7 @@ qtdemux_find_atom (GstQTDemux * qtdemux, guint64 * offset,
   while (TRUE) {
     GstMapInfo map;
 
+    buf = NULL;
     ret = gst_pad_pull_range (qtdemux->sinkpad, *offset, 16, &buf);
     if (G_UNLIKELY (ret != GST_FLOW_OK))
       goto locate_failed;

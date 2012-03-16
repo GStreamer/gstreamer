@@ -2658,7 +2658,7 @@ gst_avi_demux_stream_index (GstAviDemux * avi)
 {
   GstFlowReturn res;
   guint64 offset = avi->offset;
-  GstBuffer *buf;
+  GstBuffer *buf = NULL;
   guint32 tag;
   guint32 size;
   GstMapInfo map;
@@ -2685,6 +2685,7 @@ gst_avi_demux_stream_index (GstAviDemux * avi)
     gst_buffer_unmap (buf, &map);
     gst_buffer_unref (buf);
 
+    buf = NULL;
     res = gst_pad_pull_range (avi->sinkpad, offset, 8, &buf);
     if (res != GST_FLOW_OK)
       goto pull_failed;
@@ -3719,6 +3720,7 @@ gst_avi_demux_stream_header_pull (GstAviDemux * avi)
     guint size;
     guint32 tag, ltag;
 
+    buf = NULL;
     res = gst_pad_pull_range (avi->sinkpad, avi->offset, 12, &buf);
     if (res != GST_FLOW_OK) {
       GST_DEBUG_OBJECT (avi, "pull_range failure while looking for tags");
@@ -3800,6 +3802,7 @@ gst_avi_demux_stream_header_pull (GstAviDemux * avi)
       case GST_MAKE_FOURCC ('J', 'U', 'N', 'K'):
         /* Only get buffer for debugging if the memdump is needed  */
         if (gst_debug_category_get_threshold (GST_CAT_DEFAULT) >= 9) {
+          buf = NULL;
           res = gst_pad_pull_range (avi->sinkpad, avi->offset, size, &buf);
           if (res != GST_FLOW_OK) {
             GST_DEBUG_OBJECT (avi, "couldn't read INFO chunk");
@@ -4708,6 +4711,7 @@ gst_avi_demux_loop_data (GstAviDemux * avi)
     /* FIXME, check large chunks and cut them up */
 
     /* pull in the data */
+    buf = NULL;
     ret = gst_pad_pull_range (avi->sinkpad, offset, size, &buf);
     if (ret != GST_FLOW_OK)
       goto pull_failed;

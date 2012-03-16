@@ -1229,7 +1229,7 @@ gst_matroska_parse_search_cluster (GstMatroskaParse * parse, gint64 * pos)
   gint64 orig_offset;
   GstFlowReturn ret = GST_FLOW_OK;
   const guint chunk = 64 * 1024;
-  GstBuffer *buf = NULL;
+  GstBuffer *buf;
   GstMapInfo map;
   gpointer data;
   gsize size;
@@ -1244,6 +1244,7 @@ gst_matroska_parse_search_cluster (GstMatroskaParse * parse, gint64 * pos)
     GstByteReader reader;
     gint cluster_pos;
 
+    buf = NULL;
     ret = gst_pad_pull_range (parse->common.sinkpad, newpos, chunk, &buf);
     if (ret != GST_FLOW_OK)
       break;

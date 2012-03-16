@@ -282,7 +282,7 @@ static void
 user_read_data (png_structp png_ptr, png_bytep data, png_size_t length)
 {
   GstPngDec *pngdec;
-  GstBuffer *buffer;
+  GstBuffer *buffer = NULL;
   GstFlowReturn ret = GST_FLOW_OK;
   guint size;
 
