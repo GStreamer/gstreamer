@@ -927,6 +927,7 @@ gst_signal_processor_do_pulls (GstSignalProcessor * self, guint nframes)
       continue;
     }
 
+    buf = NULL;
     ret =
         gst_pad_pull_range (GST_PAD (spad), -1, nframes * sizeof (gfloat),
         &buf);

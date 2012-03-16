@@ -226,12 +226,13 @@ gst_asf_parse_pull_packets (GstAsfParse * asfparse)
   GstFlowReturn ret;
   while (asfparse->asfinfo->broadcast ||
       asfparse->parsed_packets < asfparse->asfinfo->packets_count) {
-    GstBuffer *packet = NULL;
+    GstBuffer *packet;
 
     GST_DEBUG_OBJECT (asfparse, "Parsing packet %" G_GUINT64_FORMAT,
         asfparse->parsed_packets);
 
     /* get the packet */
+    packet = NULL;
     ret = gst_pad_pull_range (asfparse->sinkpad, asfparse->offset,
         asfparse->asfinfo->packet_size, &packet);
     if (ret != GST_FLOW_OK)
@@ -250,11 +251,12 @@ gst_asf_parse_pull_packets (GstAsfParse * asfparse)
 static GstFlowReturn
 gst_asf_parse_pull_indexes (GstAsfParse * asfparse)
 {
-  GstBuffer *guid_and_size = NULL;
-  GstBuffer *buf = NULL;
+  GstBuffer *guid_and_size;
+  GstBuffer *buf;
   guint64 obj_size;
   GstFlowReturn ret = GST_FLOW_OK;
   while (1) {
+    guid_and_size = NULL;
     ret = gst_pad_pull_range (asfparse->sinkpad, asfparse->offset,
         ASF_GUID_OBJSIZE_SIZE, &guid_and_size);
     if (ret != GST_FLOW_OK)
@@ -271,6 +273,7 @@ gst_asf_parse_pull_indexes (GstAsfParse * asfparse)
     asfparse->offset += ASF_GUID_OBJSIZE_SIZE;
 
     /* pull the rest of the object */
+    buf = NULL;
     ret = gst_pad_pull_range (asfparse->sinkpad, asfparse->offset, obj_size,
         &buf);
     if (ret != GST_FLOW_OK) {

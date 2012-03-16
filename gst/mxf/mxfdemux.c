@@ -2032,6 +2032,7 @@ gst_mxf_demux_pull_random_index_pack (GstMXFDemux * demux)
 
   g_assert (filesize > 4);
 
+  buffer = NULL;
   if ((ret =
           gst_mxf_demux_pull_range (demux, filesize - 4, 4,
               &buffer)) != GST_FLOW_OK) {
@@ -2051,6 +2052,7 @@ gst_mxf_demux_pull_random_index_pack (GstMXFDemux * demux)
     return;
   }
 
+  buffer = NULL;
   if ((ret =
           gst_mxf_demux_pull_range (demux, filesize - pack_size, 16,
               &buffer)) != GST_FLOW_OK) {
@@ -2692,7 +2694,7 @@ gst_mxf_demux_loop (GstPad * pad)
     /* Skip run-in, which is at most 64K and is finished
      * by a header partition pack */
     while (demux->offset < 64 * 1024) {
-      GstBuffer *buffer;
+      GstBuffer *buffer = NULL;
 
       if ((ret =
               gst_mxf_demux_pull_range (demux, demux->offset, 16,

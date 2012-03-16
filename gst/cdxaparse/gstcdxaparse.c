@@ -292,6 +292,7 @@ gst_cdxa_parse_loop (GstPad * sinkpad)
 
     req = 8 + GST_CDXA_SECTOR_SIZE;     /* riff chunk header = 8 bytes */
 
+    buf = NULL;
     flow_ret = gst_pad_pull_range (cdxa->sinkpad, cdxa->offset, req, &buf);
 
     if (flow_ret != GST_FLOW_OK) {
@@ -330,6 +331,7 @@ gst_cdxa_parse_loop (GstPad * sinkpad)
   GST_DEBUG_OBJECT (cdxa, "pulling buffer at offset 0x%" G_GINT64_MODIFIER "x",
       cdxa->offset);
 
+  buf = NULL;
   flow_ret = gst_pad_pull_range (cdxa->sinkpad, cdxa->offset,
       GST_CDXA_SECTOR_SIZE, &buf);
 

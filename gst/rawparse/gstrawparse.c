@@ -366,6 +366,7 @@ gst_raw_parse_loop (GstElement * element)
     rp->offset -= size;
   }
 
+  buffer = NULL;
   ret = gst_pad_pull_range (rp->sinkpad, rp->offset, size, &buffer);
 
   if (ret != GST_FLOW_OK) {

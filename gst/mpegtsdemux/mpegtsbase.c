@@ -1373,6 +1373,7 @@ mpegts_base_scan (MpegTSBase * base)
     GST_DEBUG ("Grabbing %d => %d", i * 50 * MPEGTS_MAX_PACKETSIZE,
         50 * MPEGTS_MAX_PACKETSIZE);
 
+    buf = NULL;
     ret = gst_pad_pull_range (base->sinkpad, i * 50 * MPEGTS_MAX_PACKETSIZE,
         50 * MPEGTS_MAX_PACKETSIZE, &buf);
     if (G_UNLIKELY (ret != GST_FLOW_OK))
@@ -1433,7 +1434,7 @@ mpegts_base_loop (MpegTSBase * base)
       break;
     case BASE_MODE_STREAMING:
     {
-      GstBuffer *buf;
+      GstBuffer *buf = NULL;
 
       GST_DEBUG ("Pulling data from %" G_GUINT64_FORMAT, base->seek_offset);
 

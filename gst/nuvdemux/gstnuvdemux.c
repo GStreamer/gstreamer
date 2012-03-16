@@ -544,6 +544,7 @@ gst_nuv_demux_stream_mpeg_data (GstNuvDemux * nuv)
   GstFlowReturn ret = GST_FLOW_OK;
 
   /* ffmpeg extra data */
+  nuv->mpeg_buffer = NULL;
   ret =
       gst_nuv_demux_read_bytes (nuv, nuv->mpeg_data_size, TRUE,
       &nuv->mpeg_buffer);

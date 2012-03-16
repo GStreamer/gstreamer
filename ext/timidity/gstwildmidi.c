@@ -809,7 +809,7 @@ gst_wildmidi_loop (GstPad * sinkpad)
   switch (wildmidi->state) {
     case GST_WILDMIDI_STATE_LOAD:
     {
-      GstBuffer *buffer;
+      GstBuffer *buffer = NULL;
 
       GST_DEBUG_OBJECT (wildmidi, "loading song");
 

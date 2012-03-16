@@ -582,7 +582,7 @@ gst_timidity_loop (GstPad * sinkpad)
   }
 
   if (timidity->mididata_offset < timidity->mididata_size) {
-    GstBuffer *buffer;
+    GstBuffer *buffer = NULL;
     gint64 size;
 
     GST_DEBUG_OBJECT (timidity, "loading song");

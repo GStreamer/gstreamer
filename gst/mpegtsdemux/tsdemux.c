@@ -523,6 +523,7 @@ gst_ts_demux_perform_auxiliary_seek (MpegTSBase * base, GstClockTime seektime,
     offset -= 4;
 
   while (!done && scan_offset <= length) {
+    buf = NULL;
     res =
         gst_pad_pull_range (base->sinkpad, offset + scan_offset,
         50 * MPEGTS_MAX_PACKETSIZE, &buf);
@@ -1497,6 +1498,7 @@ find_pcr_packet (MpegTSBase * base, guint64 offset, gint64 length,
     offset -= 4;
 
   while (!done && scan_offset < length) {
+    buf = NULL;
     ret =
         gst_pad_pull_range (base->sinkpad, offset + scan_offset,
         50 * MPEGTS_MAX_PACKETSIZE, &buf);
@@ -1604,6 +1606,7 @@ find_timestamps (MpegTSBase * base, guint64 initoff, guint64 * offset)
   /* Start scanning from now PAT offset */
 
   while (!done) {
+    buf = NULL;
     ret = gst_pad_pull_range (base->sinkpad, i * 50 * MPEGTS_MAX_PACKETSIZE,
         50 * MPEGTS_MAX_PACKETSIZE, &buf);
 
@@ -1654,6 +1657,7 @@ find_timestamps (MpegTSBase * base, guint64 initoff, guint64 * offset)
       " and the end:%" G_GINT64_FORMAT, scan_offset, total_bytes);
 
   while ((!done) && (scan_offset < total_bytes)) {
+    buf = NULL;
     ret = gst_pad_pull_range (base->sinkpad, scan_offset,
         50 * MPEGTS_MAX_PACKETSIZE, &buf);
 
@@ -1742,6 +1746,7 @@ process_pcr (MpegTSBase * base, guint64 initoff, TSPcrOffset * pcroffset,
     GstMapInfo map;
     gsize size;
 
+    buf = NULL;
     ret = gst_pad_pull_range (base->sinkpad,
         initoff + i * 500 * base->packetsize, 500 * base->packetsize, &buf);
 

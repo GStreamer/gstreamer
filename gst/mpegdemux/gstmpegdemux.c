@@ -2472,7 +2472,7 @@ gst_flups_demux_scan_forward_ts (GstFluPSDemux * demux, guint64 * pos,
     SCAN_MODE mode, guint64 * rts, gint limit)
 {
   GstFlowReturn ret = GST_FLOW_OK;
-  GstBuffer *buffer = NULL;
+  GstBuffer *buffer;
   guint64 offset = *pos;
   gboolean found = FALSE;
   guint64 ts = 0;
@@ -2492,6 +2492,7 @@ gst_flups_demux_scan_forward_ts (GstFluPSDemux * demux, guint64 * pos,
       to_read = demux->sink_segment.stop - offset;
 
     /* read some data */
+    buffer = NULL;
     ret = gst_pad_pull_range (demux->sinkpad, offset, to_read, &buffer);
     if (G_UNLIKELY (ret != GST_FLOW_OK))
       return FALSE;
@@ -2531,7 +2532,7 @@ gst_flups_demux_scan_backward_ts (GstFluPSDemux * demux, guint64 * pos,
     SCAN_MODE mode, guint64 * rts, gint limit)
 {
   GstFlowReturn ret = GST_FLOW_OK;
-  GstBuffer *buffer = NULL;
+  GstBuffer *buffer;
   guint64 offset = *pos;
   gboolean found = FALSE;
   guint64 ts = 0;
@@ -2555,6 +2556,7 @@ gst_flups_demux_scan_backward_ts (GstFluPSDemux * demux, guint64 * pos,
       offset = 0;
     }
     /* read some data */
+    buffer = NULL;
     ret = gst_pad_pull_range (demux->sinkpad, offset, to_read, &buffer);
     if (G_UNLIKELY (ret != GST_FLOW_OK))
       return FALSE;
@@ -2712,7 +2714,8 @@ gst_flups_demux_pull_block (GstPad * pad, GstFluPSDemux * demux,
     guint64 offset, guint size)
 {
   GstFlowReturn ret = GST_FLOW_OK;
-  GstBuffer *buffer;
+  GstBuffer *buffer = NULL;
+
   ret = gst_pad_pull_range (pad, offset, size, &buffer);
   if (G_UNLIKELY (ret != GST_FLOW_OK)) {
     GST_DEBUG_OBJECT (demux, "pull range at %" G_GUINT64_FORMAT
