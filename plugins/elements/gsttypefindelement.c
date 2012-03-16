@@ -267,6 +267,7 @@ gst_type_find_element_init (GstTypeFindElement * typefind)
       GST_DEBUG_FUNCPTR (gst_type_find_element_chain));
   gst_pad_set_event_function (typefind->sink,
       GST_DEBUG_FUNCPTR (gst_type_find_element_sink_event));
+  GST_PAD_SET_PROXY_ALLOCATION (typefind->sink);
   gst_element_add_pad (GST_ELEMENT (typefind), typefind->sink);
 
   /* srcpad */
