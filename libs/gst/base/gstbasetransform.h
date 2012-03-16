@@ -94,21 +94,8 @@ struct _GstBaseTransform {
   GstPad	*sinkpad;
   GstPad	*srcpad;
 
-  /* Set by sub-class */
-  gboolean	 passthrough;
-  gboolean	 always_in_place;
-
-  GstCaps	*cache_caps1;
-  gsize		 cache_caps1_size;
-  GstCaps	*cache_caps2;
-  gsize		 cache_caps2_size;
-  gboolean	 have_same_caps;
-
-  gboolean	 negotiated;
-
-  gboolean       have_segment;
-
   /* MT-protected (with STREAM_LOCK) */
+  gboolean       have_segment;
   GstSegment     segment;
 
   /*< private >*/
