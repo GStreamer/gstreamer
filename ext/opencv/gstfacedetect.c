@@ -474,6 +474,9 @@ gst_face_detect_run_detector (GstFaceDetect * filter,
     CvHaarClassifierCascade * detector, gint min_size_width,
     gint min_size_height)
 {
+  if (!detector)
+    return NULL;
+
   return cvHaarDetectObjects (filter->cvGray, detector,
       filter->cvStorage, filter->scale_factor, filter->min_neighbors,
       filter->flags, cvSize (min_size_width, min_size_height)
