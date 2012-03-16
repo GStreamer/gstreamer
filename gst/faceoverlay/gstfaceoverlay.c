@@ -51,7 +51,6 @@
  * <title>Example launch line</title>
  * |[
  * gst-launch autovideosrc ! ffmpegcolorspace ! faceoverlay location=/path/to/gnome-video-effects/pixmaps/bow.svg x=-5 y=-15 w=0.3 h=0.1 ! ffmpegcolorspace ! autovideosink
-
  * ]|
  * </refsect2>
  */
