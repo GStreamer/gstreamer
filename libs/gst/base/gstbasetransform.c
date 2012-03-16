@@ -2048,7 +2048,7 @@ gst_base_transform_getrange (GstPad * pad, GstObject * parent, guint64 offset,
   GstBaseTransform *trans;
   GstBaseTransformClass *klass;
   GstFlowReturn ret;
-  GstBuffer *inbuf;
+  GstBuffer *inbuf = NULL;
 
   trans = GST_BASE_TRANSFORM (parent);
 

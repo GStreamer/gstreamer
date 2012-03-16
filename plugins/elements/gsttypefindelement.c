@@ -1064,7 +1064,7 @@ gst_type_find_element_loop (GstPad * pad)
         0, probability, found_caps);
     typefind->mode = MODE_NORMAL;
   } else if (typefind->mode == MODE_NORMAL) {
-    GstBuffer *outbuf;
+    GstBuffer *outbuf = NULL;
 
     if (typefind->need_segment) {
       typefind->need_segment = FALSE;

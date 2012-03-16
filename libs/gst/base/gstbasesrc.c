@@ -1387,9 +1387,13 @@ gst_base_src_default_create (GstBaseSrc * src, guint64 offset,
   if (G_UNLIKELY (!bclass->fill))
     goto no_function;
 
-  ret = bclass->alloc (src, offset, size, buffer);
-  if (G_UNLIKELY (ret != GST_FLOW_OK))
-    goto alloc_failed;
+  if (*buffer == NULL) {
+    /* downstream did not provide us with a buffer to fill, allocate one
+     * ourselves */
+    ret = bclass->alloc (src, offset, size, buffer);
+    if (G_UNLIKELY (ret != GST_FLOW_OK))
+      goto alloc_failed;
+  }
 
   if (G_LIKELY (size > 0)) {
     /* only call fill when there is a size */

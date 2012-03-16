@@ -206,11 +206,13 @@ GST_START_TEST (test_pull)
   gst_query_unref (seeking_query);
 
   /* do some pulls */
+  buffer1 = NULL;
   ret = gst_pad_get_range (pad, 0, 100, &buffer1);
   fail_unless (ret == GST_FLOW_OK);
   fail_unless (buffer1 != NULL);
   fail_unless (gst_buffer_get_size (buffer1) == 100);
 
+  buffer2 = NULL;
   ret = gst_pad_get_range (pad, 0, 50, &buffer2);
   fail_unless (ret == GST_FLOW_OK);
   fail_unless (buffer2 != NULL);
@@ -225,6 +227,7 @@ GST_START_TEST (test_pull)
   gst_buffer_unref (buffer2);
 
   /* read next 50 bytes */
+  buffer2 = NULL;
   ret = gst_pad_get_range (pad, 50, 50, &buffer2);
   fail_unless (ret == GST_FLOW_OK);
   fail_unless (buffer2 != NULL);
@@ -240,6 +243,7 @@ GST_START_TEST (test_pull)
   gst_buffer_unref (buffer2);
 
   /* read 10 bytes at end-10 should give exactly 10 bytes */
+  buffer1 = NULL;
   ret = gst_pad_get_range (pad, stop - 10, 10, &buffer1);
   fail_unless (ret == GST_FLOW_OK);
   fail_unless (buffer1 != NULL);
@@ -247,6 +251,7 @@ GST_START_TEST (test_pull)
   gst_buffer_unref (buffer1);
 
   /* read 20 bytes at end-10 should give exactly 10 bytes */
+  buffer1 = NULL;
   ret = gst_pad_get_range (pad, stop - 10, 20, &buffer1);
   fail_unless (ret == GST_FLOW_OK);
   fail_unless (buffer1 != NULL);
@@ -254,6 +259,7 @@ GST_START_TEST (test_pull)
   gst_buffer_unref (buffer1);
 
   /* read 0 bytes at end-1 should return 0 bytes */
+  buffer1 = NULL;
   ret = gst_pad_get_range (pad, stop - 1, 0, &buffer1);
   fail_unless (ret == GST_FLOW_OK);
   fail_unless (buffer1 != NULL);
@@ -261,6 +267,7 @@ GST_START_TEST (test_pull)
   gst_buffer_unref (buffer1);
 
   /* read 10 bytes at end-1 should return 1 byte */
+  buffer1 = NULL;
   ret = gst_pad_get_range (pad, stop - 1, 10, &buffer1);
   fail_unless (ret == GST_FLOW_OK);
   fail_unless (buffer1 != NULL);
@@ -268,18 +275,22 @@ GST_START_TEST (test_pull)
   gst_buffer_unref (buffer1);
 
   /* read 0 bytes at end should EOS */
+  buffer1 = NULL;
   ret = gst_pad_get_range (pad, stop, 0, &buffer1);
   fail_unless (ret == GST_FLOW_EOS);
 
   /* read 10 bytes before end should EOS */
+  buffer1 = NULL;
   ret = gst_pad_get_range (pad, stop, 10, &buffer1);
   fail_unless (ret == GST_FLOW_EOS);
 
   /* read 0 bytes after end should EOS */
+  buffer1 = NULL;
   ret = gst_pad_get_range (pad, stop + 10, 0, &buffer1);
   fail_unless (ret == GST_FLOW_EOS);
 
   /* read 10 bytes after end should EOS too */
+  buffer1 = NULL;
   ret = gst_pad_get_range (pad, stop + 10, 10, &buffer1);
   fail_unless (ret == GST_FLOW_EOS);
 
