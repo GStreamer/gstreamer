@@ -610,31 +610,46 @@ static gboolean
 gst_video_test_src_decide_allocation (GstBaseSrc * bsrc, GstQuery * query)
 {
   GstVideoTestSrc *videotestsrc;
+  GstBufferPool *pool;
+  gboolean update;
+  guint size, min, max;
+  GstStructure *config;
 
   videotestsrc = GST_VIDEO_TEST_SRC (bsrc);
 
   if (gst_query_get_n_allocation_pools (query) > 0) {
-    GstBufferPool *pool;
-    guint size, min, max;
-
     gst_query_parse_nth_allocation_pool (query, 0, &pool, &size, &min, &max);
 
     /* adjust size */
     size = MAX (size, videotestsrc->info.size);
-
-    if (pool) {
-      GstStructure *config;
-
-      config = gst_buffer_pool_get_config (pool);
-      gst_buffer_pool_config_add_option (config,
-          GST_BUFFER_POOL_OPTION_VIDEO_META);
-      gst_buffer_pool_set_config (pool, config);
-    }
-    gst_query_set_nth_allocation_pool (query, 0, pool, size, min, max);
-
-    if (pool)
-      gst_object_unref (pool);
+    update = TRUE;
+  } else {
+    pool = NULL;
+    size = videotestsrc->info.size;
+    min = max = 0;
+    update = FALSE;
   }
+
+  /* no downstream pool, make our own */
+  if (pool == NULL) {
+    pool = gst_video_buffer_pool_new ();
+  }
+
+  config = gst_buffer_pool_get_config (pool);
+  if (gst_query_has_allocation_meta (query, GST_VIDEO_META_API_TYPE)) {
+    gst_buffer_pool_config_add_option (config,
+        GST_BUFFER_POOL_OPTION_VIDEO_META);
+  }
+  gst_buffer_pool_set_config (pool, config);
+
+  if (update)
+    gst_query_set_nth_allocation_pool (query, 0, pool, size, min, max);
+  else
+    gst_query_add_allocation_pool (query, pool, size, min, max);
+
+  if (pool)
+    gst_object_unref (pool);
+
   return TRUE;
 }
 
