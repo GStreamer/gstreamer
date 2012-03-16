@@ -82,10 +82,11 @@
 GST_DEBUG_CATEGORY_STATIC (gst_face_detect_debug);
 #define GST_CAT_DEFAULT gst_face_detect_debug
 
-#define DEFAULT_FACE_PROFILE "/usr/share/opencv/haarcascades/haarcascade_frontalface_default.xml"
-#define DEFAULT_NOSE_PROFILE "/usr/share/opencv/haarcascades/haarcascade_mcs_nose.xml"
-#define DEFAULT_MOUTH_PROFILE "/usr/share/opencv/haarcascades/haarcascade_mcs_mouth.xml"
-#define DEFAULT_EYES_PROFILE "/usr/share/opencv/haarcascades/haarcascade_mcs_eyepair_small.xml"
+#define HAAR_CASCADES_DIR OPENCV_PREFIX "/share/opencv/haarcascades/"
+#define DEFAULT_FACE_PROFILE HAAR_CASCADES_DIR "haarcascade_frontalface_default.xml"
+#define DEFAULT_NOSE_PROFILE HAAR_CASCADES_DIR "haarcascade_mcs_nose.xml"
+#define DEFAULT_MOUTH_PROFILE HAAR_CASCADES_DIR "haarcascade_mcs_mouth.xml"
+#define DEFAULT_EYES_PROFILE HAAR_CASCADES_DIR "haarcascade_mcs_eyepair_small.xml"
 #define DEFAULT_SCALE_FACTOR 1.1
 #define DEFAULT_FLAGS 0
 #define DEFAULT_MIN_NEIGHBORS 3

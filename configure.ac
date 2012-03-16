@@ -1444,6 +1444,9 @@ AG_GST_CHECK_FEATURE(OPENCV, [opencv plugins], opencv, [
   ], [
     HAVE_OPENCV="no"
   ])
+  OPENCV_PREFIX="`$PKG_CONFIG --variable=prefix opencv`"
+  AC_DEFINE_UNQUOTED(OPENCV_PREFIX, "$OPENCV_PREFIX", [opencv install prefix])
+  AC_SUBST(OPENCV_PREFIX)
   AC_SUBST(OPENCV_CFLAGS)
   AC_SUBST(OPENCV_LIBS)
 ])

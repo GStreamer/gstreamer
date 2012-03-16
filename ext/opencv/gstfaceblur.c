@@ -68,7 +68,8 @@
 GST_DEBUG_CATEGORY_STATIC (gst_face_blur_debug);
 #define GST_CAT_DEFAULT gst_face_blur_debug
 
-#define DEFAULT_PROFILE "/usr/share/opencv/haarcascades/haarcascade_frontalface_default.xml"
+#define HAAR_CASCADES_DIR OPENCV_PREFIX "/share/opencv/haarcascades/"
+#define DEFAULT_PROFILE HAAR_CASCADES_DIR "haarcascade_frontalface_default.xml"
 
 /* Filter signals and args */
 enum
