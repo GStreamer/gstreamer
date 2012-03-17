@@ -695,6 +695,9 @@ gst_decklink_src_stop (GstElement * element)
   decklinksrc->input->Release ();
   decklinksrc->input = NULL;
 
+  decklinksrc->decklink->Release ();
+  decklinksrc->decklink = NULL;
+
   return TRUE;
 }
 
@@ -782,8 +785,18 @@ gst_decklink_src_send_event (GstElement * element, GstEvent * event)
 static gboolean
 gst_decklink_src_query (GstElement * element, GstQuery * query)
 {
+  GstDecklinkSrc *decklinksrc = GST_DECKLINK_SRC (element);
+  gboolean ret;
 
-  return FALSE;
+  GST_DEBUG_OBJECT (decklinksrc, "query");
+
+  switch (GST_QUERY_TYPE (query)) {
+    default:
+      ret = GST_ELEMENT_CLASS (parent_class)->query (element, query);
+      break;
+  }
+
+  return ret;
 }
 
 static GstCaps *
@@ -1138,7 +1151,7 @@ gst_decklink_src_video_src_event (GstPad * pad, GstEvent * event)
 static gboolean
 gst_decklink_src_video_src_query (GstPad * pad, GstQuery * query)
 {
-  gboolean res;
+  gboolean ret;
   GstDecklinkSrc *decklinksrc;
 
   decklinksrc = GST_DECKLINK_SRC (gst_pad_get_parent (pad));
@@ -1146,13 +1159,45 @@ gst_decklink_src_video_src_query (GstPad * pad, GstQuery * query)
   GST_DEBUG_OBJECT (decklinksrc, "query");
 
   switch (GST_QUERY_TYPE (query)) {
+    case GST_QUERY_LATENCY:{
+      GstClockTime min_latency, max_latency;
+      const GstDecklinkMode *mode;
+
+      /* device must be open */
+      if (decklinksrc->decklink == NULL) {
+        GST_WARNING_OBJECT (decklinksrc,
+            "Can't give latency since device isn't open !");
+        goto done;
+      }
+
+      mode = gst_decklink_get_mode (decklinksrc->mode);
+
+      /* min latency is the time to capture one frame */
+      min_latency =
+          gst_util_uint64_scale_int (GST_SECOND, mode->fps_d, mode->fps_n);
+
+      /* max latency is total duration of the frame buffer */
+      max_latency = 2 * min_latency;
+
+      GST_DEBUG_OBJECT (decklinksrc,
+          "report latency min %" GST_TIME_FORMAT " max %" GST_TIME_FORMAT,
+          GST_TIME_ARGS (min_latency), GST_TIME_ARGS (max_latency));
+
+      /* we are always live, the min latency is 1 frame and the max latency is
+       * the complete buffer of frames. */
+      gst_query_set_latency (query, TRUE, min_latency, max_latency);
+
+      ret = TRUE;
+      break;
+    }
     default:
-      res = gst_pad_query_default (pad, query);
+      ret = gst_pad_query_default (pad, query);
       break;
   }
 
+done:
   gst_object_unref (decklinksrc);
-  return res;
+  return ret;
 }
 
 static GstIterator *
