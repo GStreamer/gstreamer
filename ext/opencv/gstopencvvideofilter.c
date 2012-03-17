@@ -122,6 +122,8 @@ gst_opencv_video_filter_finalize (GObject * obj)
 
   if (transform->cvImage)
     cvReleaseImage (&transform->cvImage);
+  if (transform->out_cvImage)
+    cvReleaseImage (&transform->out_cvImage);
 
   G_OBJECT_CLASS (parent_class)->finalize (obj);
 }
