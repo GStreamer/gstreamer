@@ -40,6 +40,7 @@ struct _GstInterSubSrc
 
   GstPad *srcpad;
   GstInterSurface *surface;
+  char *channel;
 
   int rate;
   int n_frames;

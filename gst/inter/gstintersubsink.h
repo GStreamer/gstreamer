@@ -40,6 +40,7 @@ struct _GstInterSubSink
 
   GstPad *sinkpad;
   GstInterSurface *surface;
+  char *channel;
 
   int fps_n;
   int fps_d;

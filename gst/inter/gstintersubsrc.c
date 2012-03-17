@@ -31,6 +31,8 @@
  * 
  * The intersubsrc element cannot be used effectively with gst-launch,
  * as it requires a second pipeline in the application to send subtitles.
+ * See the gstintertest.c example in the gst-plugins-bad source code for
+ * more details.
  * </refsect2>
  */
 
@@ -82,7 +84,8 @@ gst_inter_sub_src_prepare_seek_segment (GstBaseSrc * src, GstEvent * seek,
 
 enum
 {
-  PROP_0
+  PROP_0,
+  PROP_CHANNEL
 };
 
 /* pad templates */
@@ -113,9 +116,10 @@ gst_inter_sub_src_base_init (gpointer g_class)
       gst_static_pad_template_get (&gst_inter_sub_src_src_template));
 
   gst_element_class_set_details_simple (element_class,
-      "Inter-pipeline subtitle source",
-      "Source/Subtitle", "Inter-pipeline subtitle source",
-      "David Schleef <ds@entropywave.com>");
+      "Internal subtitle source",
+      "Source/Subtitle",
+      "Virtual subtitle source for internal process communication",
+      "David Schleef <ds@schleef.org>");
 }
 
 static void
@@ -159,7 +163,10 @@ gst_inter_sub_src_class_init (GstInterSubSrcClass * klass)
     base_src_class->prepare_seek_segment =
         GST_DEBUG_FUNCPTR (gst_inter_sub_src_prepare_seek_segment);
 
-
+  g_object_class_install_property (gobject_class, PROP_CHANNEL,
+      g_param_spec_string ("channel", "Channel",
+          "Channel name to match inter src and sink elements",
+          "default", G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 }
 
 static void
@@ -173,16 +180,20 @@ gst_inter_sub_src_init (GstInterSubSrc * intersubsrc,
   gst_base_src_set_format (GST_BASE_SRC (intersubsrc), GST_FORMAT_TIME);
   gst_base_src_set_live (GST_BASE_SRC (intersubsrc), TRUE);
 
-  intersubsrc->surface = gst_inter_surface_get ("default");
+  intersubsrc->channel = g_strdup ("default");
 }
 
 void
 gst_inter_sub_src_set_property (GObject * object, guint property_id,
     const GValue * value, GParamSpec * pspec)
 {
-  /* GstInterSubSrc *intersubsrc = GST_INTER_SUB_SRC (object); */
+  GstInterSubSrc *intersubsrc = GST_INTER_SUB_SRC (object);
 
   switch (property_id) {
+    case PROP_CHANNEL:
+      g_free (intersubsrc->channel);
+      intersubsrc->channel = g_value_dup_string (value);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, property_id, pspec);
       break;
@@ -193,9 +204,12 @@ void
 gst_inter_sub_src_get_property (GObject * object, guint property_id,
     GValue * value, GParamSpec * pspec)
 {
-  /* GstInterSubSrc *intersubsrc = GST_INTER_SUB_SRC (object); */
+  GstInterSubSrc *intersubsrc = GST_INTER_SUB_SRC (object);
 
   switch (property_id) {
+    case PROP_CHANNEL:
+      g_value_set_string (value, intersubsrc->channel);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, property_id, pspec);
       break;
@@ -270,6 +284,8 @@ gst_inter_sub_src_start (GstBaseSrc * src)
 
   GST_DEBUG_OBJECT (intersubsrc, "start");
 
+  intersubsrc->surface = gst_inter_surface_get (intersubsrc->channel);
+
   return TRUE;
 }
 
@@ -279,6 +295,9 @@ gst_inter_sub_src_stop (GstBaseSrc * src)
   GstInterSubSrc *intersubsrc = GST_INTER_SUB_SRC (src);
 
   GST_DEBUG_OBJECT (intersubsrc, "stop");
+
+  gst_inter_surface_unref (intersubsrc->surface);
+  intersubsrc->surface = NULL;
 
   return TRUE;
 }
@@ -334,10 +353,16 @@ static gboolean
 gst_inter_sub_src_event (GstBaseSrc * src, GstEvent * event)
 {
   GstInterSubSrc *intersubsrc = GST_INTER_SUB_SRC (src);
+  gboolean ret;
 
   GST_DEBUG_OBJECT (intersubsrc, "event");
 
-  return TRUE;
+  switch (GST_EVENT_TYPE (event)) {
+    default:
+      ret = GST_BASE_SRC_CLASS (parent_class)->event (src, event);
+  }
+
+  return ret;
 }
 
 static GstFlowReturn
@@ -409,10 +434,16 @@ static gboolean
 gst_inter_sub_src_query (GstBaseSrc * src, GstQuery * query)
 {
   GstInterSubSrc *intersubsrc = GST_INTER_SUB_SRC (src);
+  gboolean ret;
 
   GST_DEBUG_OBJECT (intersubsrc, "query");
 
-  return TRUE;
+  switch (GST_QUERY_TYPE (query)) {
+    default:
+      ret = GST_BASE_SRC_CLASS (parent_class)->query (src, query);
+  }
+
+  return ret;
 }
 
 static gboolean

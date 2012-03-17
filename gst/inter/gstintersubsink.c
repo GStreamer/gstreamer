@@ -19,14 +19,19 @@
 /**
  * SECTION:element-gstintersubsink
  *
- * The intersubsink element does FIXME stuff.
+ * The intersubsink element is a subtitle sink element.  It is used
+ * in connection with a intersubsrc element in a different pipeline.
  *
  * <refsect2>
  * <title>Example launch line</title>
  * |[
- * gst-launch -v fakesrc ! intersubsink ! FIXME ! fakesink
+ * gst-launch -v ... ! intersubsink
  * ]|
- * FIXME Describe what the pipeline does.
+ * 
+ * The intersubsink element cannot be used effectively with gst-launch,
+ * as it requires a second pipeline in the application to send audio.
+ * See the gstintertest.c example in the gst-plugins-bad source code for
+ * more details.
  * </refsect2>
  */
 
@@ -73,7 +78,8 @@ static gboolean gst_inter_sub_sink_unlock_stop (GstBaseSink * sink);
 
 enum
 {
-  PROP_0
+  PROP_0,
+  PROP_CHANNEL
 };
 
 /* pad templates */
@@ -103,8 +109,11 @@ gst_inter_sub_sink_base_init (gpointer g_class)
   gst_element_class_add_pad_template (element_class,
       gst_static_pad_template_get (&gst_inter_sub_sink_sink_template));
 
-  gst_element_class_set_details_simple (element_class, "FIXME Long name",
-      "Generic", "FIXME Description", "FIXME <fixme@example.com>");
+  gst_element_class_set_details_simple (element_class,
+      "Internal subtitle sink",
+      "Sink/Subtitle",
+      "Virtual subtitle sink for internal process communication",
+      "David Schleef <ds@schleef.org>");
 }
 
 static void
@@ -139,6 +148,11 @@ gst_inter_sub_sink_class_init (GstInterSubSinkClass * klass)
   base_sink_class->unlock_stop =
       GST_DEBUG_FUNCPTR (gst_inter_sub_sink_unlock_stop);
 
+  g_object_class_install_property (gobject_class, PROP_CHANNEL,
+      g_param_spec_string ("channel", "Channel",
+          "Channel name to match inter src and sink elements",
+          "default", G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
 }
 
 static void
@@ -146,7 +160,7 @@ gst_inter_sub_sink_init (GstInterSubSink * intersubsink,
     GstInterSubSinkClass * intersubsink_class)
 {
 
-  intersubsink->surface = gst_inter_surface_get ("default");
+  intersubsink->channel = g_strdup ("default");
 
   intersubsink->fps_n = 1;
   intersubsink->fps_d = 1;
@@ -156,9 +170,13 @@ void
 gst_inter_sub_sink_set_property (GObject * object, guint property_id,
     const GValue * value, GParamSpec * pspec)
 {
-  /* GstInterSubSink *intersubsink = GST_INTER_SUB_SINK (object); */
+  GstInterSubSink *intersubsink = GST_INTER_SUB_SINK (object);
 
   switch (property_id) {
+    case PROP_CHANNEL:
+      g_free (intersubsink->channel);
+      intersubsink->channel = g_value_dup_string (value);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, property_id, pspec);
       break;
@@ -169,9 +187,12 @@ void
 gst_inter_sub_sink_get_property (GObject * object, guint property_id,
     GValue * value, GParamSpec * pspec)
 {
-  /* GstInterSubSink *intersubsink = GST_INTER_SUB_SINK (object); */
+  GstInterSubSink *intersubsink = GST_INTER_SUB_SINK (object);
 
   switch (property_id) {
+    case PROP_CHANNEL:
+      g_value_set_string (value, intersubsink->channel);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, property_id, pspec);
       break;
@@ -247,6 +268,9 @@ gst_inter_sub_sink_get_times (GstBaseSink * sink, GstBuffer * buffer,
 static gboolean
 gst_inter_sub_sink_start (GstBaseSink * sink)
 {
+  GstInterSubSink *intersubsink = GST_INTER_SUB_SINK (sink);
+
+  intersubsink->surface = gst_inter_surface_get (intersubsink->channel);
 
   return TRUE;
 }
@@ -262,6 +286,9 @@ gst_inter_sub_sink_stop (GstBaseSink * sink)
   }
   intersubsink->surface->sub_buffer = NULL;
   g_mutex_unlock (intersubsink->surface->mutex);
+
+  gst_inter_surface_unref (intersubsink->surface);
+  intersubsink->surface = NULL;
 
   return TRUE;
 }
