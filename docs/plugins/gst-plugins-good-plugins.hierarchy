@@ -17,9 +17,11 @@ GObject
       GstAuParse
       GstAudioDecoder
         GstSpeexDec
+        GstWavpackDec
       GstAudioEncoder
         GstFlacEnc
         GstSpeexEnc
+        GstWavpackEnc
       GstAviDemux
       GstAviMux
       GstAviSubtitle
@@ -30,6 +32,7 @@ GObject
         GstDcaParse
         GstFlacParse
         GstMpegAudioParse
+        GstWavpackParse2
       GstBaseRTPDepayload
         GstRTPBVDepay
         GstRTPDVDepay
@@ -178,6 +181,7 @@ GObject
           GstDiceTV
           GstEdgeTV
           GstGamma
+          GstGdkPixbufOverlay
           GstNavigationtest
           GstOpTV
           GstQuarkTV
@@ -277,8 +281,6 @@ GObject
       GstVideoMixer2
       GstWavEnc
       GstWavParse
-      GstWavpackDec
-      GstWavpackEnc
       GstWavpackParse
       GstY4mEncode
     GstPad

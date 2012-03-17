@@ -135,5 +135,26 @@
         </caps>
       </pads>
     </element>
+    <element>
+      <name>wavpackparse2</name>
+      <longname>Wavpack audio stream parser</longname>
+      <class>Codec/Parser/Audio</class>
+      <description>Wavpack parser</description>
+      <author>Mark Nauwelaerts &lt;mark.nauwelaerts@collabora.co.uk&gt;</author>
+      <pads>
+        <caps>
+          <name>sink</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>audio/x-wavpack</details>
+        </caps>
+        <caps>
+          <name>src</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>audio/x-wavpack, width=(int)[ 1, 32 ], channels=(int)[ 1, 8 ], rate=(int)[ 6000, 192000 ], framed=(boolean)true; audio/x-wavpack-correction, framed=(boolean)true</details>
+        </caps>
+      </pads>
+    </element>
   </elements>
 </plugin>

@@ -37,6 +37,11 @@ G_BEGIN_DECLS
 typedef struct _GstGdkPixbufOverlay GstGdkPixbufOverlay;
 typedef struct _GstGdkPixbufOverlayClass GstGdkPixbufOverlayClass;
 
+/**
+ * GstGdkPixbufOverlay:
+ *
+ * The opaque element instance structure.
+ */
 struct _GstGdkPixbufOverlay
 {
   GstVideoFilter               videofilter;

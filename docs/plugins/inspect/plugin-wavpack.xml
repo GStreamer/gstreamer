@@ -26,7 +26,7 @@
           <name>src</name>
           <direction>source</direction>
           <presence>always</presence>
-          <details>audio/x-raw-int, width=(int)32, depth=(int)[ 1, 32 ], channels=(int)[ 1, 8 ], rate=(int)[ 6000, 192000 ], endianness=(int)1234, signed=(boolean)true</details>
+          <details>audio/x-raw-int, width=(int)8, depth=(int)8, channels=(int)[ 1, 8 ], rate=(int)[ 6000, 192000 ], endianness=(int)1234, signed=(boolean)true; audio/x-raw-int, width=(int)16, depth=(int)16, channels=(int)[ 1, 8 ], rate=(int)[ 6000, 192000 ], endianness=(int)1234, signed=(boolean)true; audio/x-raw-int, width=(int)32, depth=(int)32, channels=(int)[ 1, 8 ], rate=(int)[ 6000, 192000 ], endianness=(int)1234, signed=(boolean)true</details>
         </caps>
       </pads>
     </element>
@@ -41,13 +41,13 @@
           <name>sink</name>
           <direction>sink</direction>
           <presence>always</presence>
-          <details>audio/x-raw-int, width=(int)32, depth=(int)[ 1, 32 ], endianness=(int)1234, channels=(int)[ 1, 8 ], rate=(int)[ 6000, 192000 ], signed=(boolean)true</details>
+          <details>audio/x-raw-int, width=(int)32, depth=(int){ 24, 32 }, endianness=(int)1234, channels=(int)[ 1, 8 ], rate=(int)[ 6000, 192000 ], signed=(boolean)true</details>
         </caps>
         <caps>
           <name>src</name>
           <direction>source</direction>
           <presence>always</presence>
-          <details>audio/x-wavpack, width=(int)[ 1, 32 ], channels=(int)[ 1, 2 ], rate=(int)[ 6000, 192000 ], framed=(boolean)true</details>
+          <details>audio/x-wavpack, width=(int)[ 1, 32 ], channels=(int)[ 1, 8 ], rate=(int)[ 6000, 192000 ], framed=(boolean)true</details>
         </caps>
         <caps>
           <name>wvcsrc</name>

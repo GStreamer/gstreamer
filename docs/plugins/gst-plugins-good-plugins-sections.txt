@@ -984,6 +984,20 @@ gst_gconf_video_sink_get_type
 </SECTION>
 
 <SECTION>
+<FILE>element-gdkpixbufoverlay</FILE>
+<TITLE>gdkpixbufoverlay</TITLE>
+GstGdkPixbufOverlay
+<SUBSECTION Standard>
+GstGdkPixbufOverlayClass
+GST_TYPE_GDK_PIXBUF_OVERLAY
+GST_GDK_PIXBUF_OVERLAY
+GST_GDK_PIXBUF_OVERLAY_CLASS
+GST_IS_GDK_PIXBUF_OVERLAY
+GST_IS_GDK_PIXBUF_OVERLAY_CLASS
+gst_gdk_pixbuf_overlay_get_type
+</SECTION>
+
+<SECTION>
 <FILE>element-gdkpixbufsink</FILE>
 <TITLE>gdkpixbufsink</TITLE>
 GstGdkPixbufSink
