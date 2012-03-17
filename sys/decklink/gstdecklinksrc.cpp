@@ -510,7 +510,6 @@ static gboolean
 gst_decklink_src_start (GstElement * element)
 {
   GstDecklinkSrc *decklinksrc = GST_DECKLINK_SRC (element);
-  IDeckLinkIterator *iterator;
   DeckLinkCaptureDelegate *delegate;
   //IDeckLinkDisplayModeIterator *mode_iterator;
   //IDeckLinkDisplayMode *mode;
@@ -521,33 +520,18 @@ gst_decklink_src_start (GstElement * element)
   IDeckLinkConfiguration *config;
   BMDVideoConnection conn;
   BMDAudioConnection aconn;
-  int i;
 
   GST_DEBUG_OBJECT (decklinksrc, "start");
 
-  iterator = CreateDeckLinkIteratorInstance ();
-  if (iterator == NULL) {
-    GST_ERROR ("no driver");
+  decklinksrc->decklink = gst_decklink_get_nth_device (decklinksrc->device);
+  if (decklinksrc->decklink == NULL) {
     return FALSE;
-  }
-
-  ret = iterator->Next (&decklinksrc->decklink);
-  if (ret != S_OK) {
-    GST_ERROR ("no card");
-    return FALSE;
-  }
-  for (i = 0; i < decklinksrc->device; i++) {
-    ret = iterator->Next (&decklinksrc->decklink);
-    if (ret != S_OK) {
-      GST_ERROR ("no card");
-      return FALSE;
-    }
   }
 
   ret = decklinksrc->decklink->QueryInterface (IID_IDeckLinkInput,
       (void **) &decklinksrc->input);
   if (ret != S_OK) {
-    GST_ERROR ("query interface failed");
+    GST_ERROR ("selected device does not have input interface");
     return FALSE;
   }
 
@@ -1401,8 +1385,7 @@ gst_decklinksrc_probe_get_properties (GstPropertyProbe * probe)
   static gsize init = 0;
 
   if (g_once_init_enter (&init)) {
-    list =
-        g_list_append (NULL, g_object_class_find_property (klass, "device"));
+    list = g_list_append (NULL, g_object_class_find_property (klass, "device"));
 
     g_once_init_leave (&init, 1);
   }
@@ -1411,7 +1394,7 @@ gst_decklinksrc_probe_get_properties (GstPropertyProbe * probe)
 }
 
 static gboolean probed = FALSE;
-int n_devices;
+static int n_devices;
 
 static void
 gst_decklinksrc_class_probe_devices (GstElementClass * klass)

@@ -95,7 +95,7 @@ gst_decklink_audio_connection_get_type (void)
     static const GEnumValue connections[] = {
       {GST_DECKLINK_AUDIO_CONNECTION_AUTO, "auto", "Automatic"},
       {GST_DECKLINK_AUDIO_CONNECTION_EMBEDDED, "embedded",
-            "SDI/HDMI embedded audio"},
+          "SDI/HDMI embedded audio"},
       {GST_DECKLINK_AUDIO_CONNECTION_AES_EBU, "aes", "AES/EBU input"},
       {GST_DECKLINK_AUDIO_CONNECTION_ANALOG, "analog", "Analog input"},
       {0, NULL, NULL}
@@ -184,6 +184,36 @@ gst_decklink_mode_get_template_caps (void)
   }
 
   return caps;
+}
+
+IDeckLink *
+gst_decklink_get_nth_device (int n)
+{
+  IDeckLinkIterator *iterator;
+  IDeckLink *decklink = NULL;
+  HRESULT ret;
+  int i;
+
+  iterator = CreateDeckLinkIteratorInstance ();
+  if (iterator == NULL) {
+    GST_ERROR ("no driver");
+    return NULL;
+  }
+
+  ret = iterator->Next (&decklink);
+  if (ret != S_OK) {
+    GST_ERROR ("no card");
+    return NULL;
+  }
+  for (i = 0; i < n; i++) {
+    ret = iterator->Next (&decklink);
+    if (ret != S_OK) {
+      GST_ERROR ("no card");
+      return NULL;
+    }
+  }
+
+  return decklink;
 }
 
 static gboolean
