@@ -41,12 +41,24 @@ struct _GstGdkPixbufOverlay
 {
   GstVideoFilter               videofilter;
 
+  /* negotiated format */
   GstVideoFormat               format;
   gint                         width;
   gint                         height;
 
+  /* properties */
   gchar                      * location;
 
+  gint                         offset_x;
+  gint                         offset_y;
+
+  gdouble                      relative_x;
+  gdouble                      relative_y;
+
+  gint                         overlay_width;
+  gint                         overlay_height;
+
+  /* the loaded image */
   GstBuffer                  * pixels;
   guint                        pixels_width;
   guint                        pixels_height;

@@ -18,9 +18,19 @@
  */
 /**
  * SECTION:element-gdkpixbufoverlay
+ * @see_also:
  *
  * The gdkpixbufoverlay element overlays an image loaded from file onto
  * a video stream.
+ *
+ * Changing the positioning or overlay width and height properties at runtime
+ * is supported, but it might be prudent to to protect the property setting
+ * code with GST_BASE_TRANSFORM_LOCK and GST_BASE_TRANSFORM_UNLOCK, as
+ * g_object_set() is not atomic for multiple properties passed in one go.
+ *
+ * Changing the image at runtime is currently not supported.
+ *
+ * Negative offsets are also not yet supported.
  *
  * <refsect2>
  * <title>Example launch line</title>
@@ -30,6 +40,8 @@
  * Overlays the image in image.png onto the test video picture produced by
  * videotestsrc.
  * </refsect2>
+ *
+ * Since: 0.10.33
  */
 
 #ifdef HAVE_CONFIG_H
@@ -60,7 +72,13 @@ gst_gdk_pixbuf_overlay_set_caps (GstBaseTransform * trans, GstCaps * incaps,
 enum
 {
   PROP_0,
-  PROP_LOCATION
+  PROP_LOCATION,
+  PROP_OFFSET_X,
+  PROP_OFFSET_Y,
+  PROP_RELATIVE_X,
+  PROP_RELATIVE_Y,
+  PROP_OVERLAY_WIDTH,
+  PROP_OVERLAY_HEIGHT
 };
 
 #define VIDEO_CAPS \
@@ -126,8 +144,36 @@ gst_gdk_pixbuf_overlay_class_init (GstGdkPixbufOverlayClass * klass)
 
   g_object_class_install_property (gobject_class, PROP_LOCATION,
       g_param_spec_string ("location", "location",
-          "location of image file to overlay", "",
+          "location of image file to overlay", NULL,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+  g_object_class_install_property (gobject_class, PROP_OFFSET_X,
+      g_param_spec_int ("offset-x", "X Offset",
+          "horizontal offset of overlay image in pixels from top-left corner "
+          "of video image", G_MININT, G_MAXINT, 0,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+  g_object_class_install_property (gobject_class, PROP_OFFSET_Y,
+      g_param_spec_int ("offset-y", "Y Offset",
+          "vertical offset of overlay image in pixels from top-left corner "
+          "of video image", G_MININT, G_MAXINT, 0,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+  g_object_class_install_property (gobject_class, PROP_RELATIVE_X,
+      g_param_spec_double ("relative-x", "Relative X Offset",
+          "horizontal offset of overlay image in fractions of video image "
+          "width, from top-left corner of video image",
+          0.0, 1.0, 0.0, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+  g_object_class_install_property (gobject_class, PROP_RELATIVE_Y,
+      g_param_spec_double ("relative-y", "Relative Y Offset",
+          "vertical offset of overlay image in fractions of video image "
+          "height, from top-left corner of video image",
+          0.0, 1.0, 0.0, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+  g_object_class_install_property (gobject_class, PROP_OVERLAY_WIDTH,
+      g_param_spec_int ("overlay-width", "Overlay Width",
+          "width of overlay image in pixels (0 = same as overlay image)",
+          0, G_MAXINT, 0, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+  g_object_class_install_property (gobject_class, PROP_OVERLAY_HEIGHT,
+      g_param_spec_int ("overlay-height", "Overlay Height",
+          "height of overlay image in pixels (0 = same as overlay image)",
+          0, G_MAXINT, 0, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   GST_DEBUG_CATEGORY_INIT (gdkpixbufoverlay_debug, "gdkpixbufoverlay", 0,
       "debug category for gdkpixbufoverlay element");
@@ -137,7 +183,14 @@ static void
 gst_gdk_pixbuf_overlay_init (GstGdkPixbufOverlay * overlay,
     GstGdkPixbufOverlayClass * overlay_class)
 {
-  /* nothing to do here for now */
+  overlay->offset_x = 0;
+  overlay->offset_y = 0;
+
+  overlay->relative_x = 0.0;
+  overlay->relative_y = 0.0;
+
+  overlay->overlay_width = 0;
+  overlay->overlay_height = 0;
 }
 
 void
@@ -146,15 +199,43 @@ gst_gdk_pixbuf_overlay_set_property (GObject * object, guint property_id,
 {
   GstGdkPixbufOverlay *overlay = GST_GDK_PIXBUF_OVERLAY (object);
 
+  GST_OBJECT_LOCK (overlay);
+
   switch (property_id) {
     case PROP_LOCATION:
       g_free (overlay->location);
       overlay->location = g_value_dup_string (value);
       break;
+    case PROP_OFFSET_X:
+      overlay->offset_x = g_value_get_int (value);
+      overlay->update_composition = TRUE;
+      break;
+    case PROP_OFFSET_Y:
+      overlay->offset_y = g_value_get_int (value);
+      overlay->update_composition = TRUE;
+      break;
+    case PROP_RELATIVE_X:
+      overlay->relative_x = g_value_get_double (value);
+      overlay->update_composition = TRUE;
+      break;
+    case PROP_RELATIVE_Y:
+      overlay->relative_y = g_value_get_double (value);
+      overlay->update_composition = TRUE;
+      break;
+    case PROP_OVERLAY_WIDTH:
+      overlay->overlay_width = g_value_get_int (value);
+      overlay->update_composition = TRUE;
+      break;
+    case PROP_OVERLAY_HEIGHT:
+      overlay->overlay_height = g_value_get_int (value);
+      overlay->update_composition = TRUE;
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, property_id, pspec);
       break;
   }
+
+  GST_OBJECT_UNLOCK (overlay);
 }
 
 void
@@ -163,14 +244,36 @@ gst_gdk_pixbuf_overlay_get_property (GObject * object, guint property_id,
 {
   GstGdkPixbufOverlay *overlay = GST_GDK_PIXBUF_OVERLAY (object);
 
+  GST_OBJECT_LOCK (overlay);
+
   switch (property_id) {
     case PROP_LOCATION:
       g_value_set_string (value, overlay->location);
+      break;
+    case PROP_OFFSET_X:
+      g_value_set_int (value, overlay->offset_x);
+      break;
+    case PROP_OFFSET_Y:
+      g_value_set_int (value, overlay->offset_y);
+      break;
+    case PROP_RELATIVE_X:
+      g_value_set_double (value, overlay->relative_x);
+      break;
+    case PROP_RELATIVE_Y:
+      g_value_set_double (value, overlay->relative_y);
+      break;
+    case PROP_OVERLAY_WIDTH:
+      g_value_set_int (value, overlay->overlay_width);
+      break;
+    case PROP_OVERLAY_HEIGHT:
+      g_value_set_int (value, overlay->overlay_height);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, property_id, pspec);
       break;
   }
+
+  GST_OBJECT_UNLOCK (overlay);
 }
 
 void
@@ -319,12 +422,37 @@ gst_gdk_pixbuf_overlay_update_composition (GstGdkPixbufOverlay * overlay)
 {
   GstVideoOverlayComposition *comp;
   GstVideoOverlayRectangle *rect;
+  gint x, y, width, height;
 
-  /* FIXME: add properties for position and render width and height */
+  x = overlay->offset_x + (overlay->relative_x * overlay->pixels_width);
+  y = overlay->offset_y + (overlay->relative_y * overlay->pixels_height);
+
+  /* FIXME: this should work, but seems to crash */
+  if (x < 0)
+    x = 0;
+  if (y < 0)
+    y = 0;
+
+  width = overlay->overlay_width;
+  if (width == 0)
+    width = overlay->pixels_width;
+
+  height = overlay->overlay_height;
+  if (height == 0)
+    height = overlay->pixels_height;
+
+  GST_DEBUG_OBJECT (overlay, "overlay image dimensions: %d x %d",
+      overlay->pixels_width, overlay->pixels_height);
+  GST_DEBUG_OBJECT (overlay, "properties: x,y: %d,%d (%g%%,%g%%) - WxH: %dx%d",
+      overlay->offset_x, overlay->offset_y,
+      overlay->relative_x * 100.0, overlay->relative_y * 100.0,
+      overlay->overlay_height, overlay->overlay_width);
+  GST_DEBUG_OBJECT (overlay, "overlay rendered: %d x %d @ %d,%d (onto %d x %d)",
+      width, height, x, y, overlay->width, overlay->height);
+
   rect = gst_video_overlay_rectangle_new_argb (overlay->pixels,
       overlay->pixels_width, overlay->pixels_height, overlay->pixels_stride,
-      0, 0, overlay->pixels_width, overlay->pixels_height,
-      GST_VIDEO_OVERLAY_FORMAT_FLAG_NONE);
+      x, y, width, height, GST_VIDEO_OVERLAY_FORMAT_FLAG_NONE);
 
   comp = gst_video_overlay_composition_new (rect);
   gst_video_overlay_rectangle_unref (rect);
@@ -341,10 +469,14 @@ gst_gdk_pixbuf_overlay_transform_ip (GstBaseTransform * trans, GstBuffer * buf)
 
   overlay = GST_GDK_PIXBUF_OVERLAY (trans);
 
+  GST_OBJECT_LOCK (overlay);
+
   if (G_UNLIKELY (overlay->update_composition)) {
     gst_gdk_pixbuf_overlay_update_composition (overlay);
     overlay->update_composition = FALSE;
   }
+
+  GST_OBJECT_UNLOCK (overlay);
 
   gst_video_overlay_composition_blend (overlay->comp, buf);
 
