@@ -161,10 +161,16 @@ static gboolean
 gst_replace_event (GstBaseSrc * src, GstEvent * event)
 {
   GstReplace *replace = GST_REPLACE (src);
+  gboolean ret;
 
   GST_DEBUG_OBJECT (replace, "event");
 
-  return TRUE;
+  switch (GST_EVENT_TYPE (event)) {
+    default:
+      ret = GST_BASE_SRC_CLASS (parent_class)->event (src, event);
+  }
+
+  return ret;
 }
 
 static GstFlowReturn
@@ -192,10 +198,16 @@ static gboolean
 gst_replace_query (GstBaseSrc * src, GstQuery * query)
 {
   GstReplace *replace = GST_REPLACE (src);
+  gboolean ret;
 
   GST_DEBUG_OBJECT (replace, "query");
 
-  return TRUE;
+  switch (GST_QUERY_TYPE (query)) {
+    default:
+      ret = GST_BASE_SRC_CLASS (parent_class)->query (src, query);
+  }
+
+  return ret;
 }
 
 static gboolean
