@@ -4,7 +4,7 @@ GstVideoFilter
 % TYPE_CLASS_NAME
 GST_TYPE_VIDEO_FILTER
 % pads
-sinkpad-simple srcpad-simple
+sinkpad-template srcpad-template
 % pkg-config
 gstreamer-video-0.10
 % includes
