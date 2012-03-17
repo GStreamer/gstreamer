@@ -43,11 +43,11 @@ IDeckLink *deckLink;
 IDeckLinkInput *deckLinkInput;
 IDeckLinkDisplayModeIterator *displayModeIterator;
 
-static BMDTimecodeFormat g_timecodeFormat = (BMDTimecodeFormat)0;
+static BMDTimecodeFormat g_timecodeFormat = (BMDTimecodeFormat) 0;
 
 DeckLinkCaptureDelegate::DeckLinkCaptureDelegate ():m_refCount (0)
 {
-  m_mutex = g_mutex_new();
+  m_mutex = g_mutex_new ();
 }
 
 DeckLinkCaptureDelegate::~DeckLinkCaptureDelegate ()
@@ -55,8 +55,7 @@ DeckLinkCaptureDelegate::~DeckLinkCaptureDelegate ()
   g_mutex_free (m_mutex);
 }
 
-ULONG
-DeckLinkCaptureDelegate::AddRef (void)
+ULONG DeckLinkCaptureDelegate::AddRef (void)
 {
   g_mutex_lock (m_mutex);
   m_refCount++;
@@ -65,15 +64,15 @@ DeckLinkCaptureDelegate::AddRef (void)
   return (ULONG) m_refCount;
 }
 
-ULONG
-DeckLinkCaptureDelegate::Release (void)
+ULONG DeckLinkCaptureDelegate::Release (void)
 {
   g_mutex_lock (m_mutex);
   m_refCount--;
   g_mutex_unlock (m_mutex);
 
   if (m_refCount == 0) {
-    delete this;
+    delete
+        this;
     return 0;
   }
 

@@ -322,20 +322,20 @@ gst_decklink_src_init (GstDecklinkSrc * decklinksrc,
   decklinksrc->stop = FALSE;
   decklinksrc->dropped_frames = 0;
   decklinksrc->dropped_frames_old = 0;
-  decklinksrc->frame_num = -1; /* -1 so will be 0 after incrementing */
+  decklinksrc->frame_num = -1;  /* -1 so will be 0 after incrementing */
 
 #ifdef _MSC_VER
-  decklinksrc->com_init_lock = g_mutex_new();
-  decklinksrc->com_deinit_lock = g_mutex_new();
-  decklinksrc->com_initialized = g_cond_new();
-  decklinksrc->com_uninitialize = g_cond_new();
-  decklinksrc->com_uninitialized = g_cond_new();
+  decklinksrc->com_init_lock = g_mutex_new ();
+  decklinksrc->com_deinit_lock = g_mutex_new ();
+  decklinksrc->com_initialized = g_cond_new ();
+  decklinksrc->com_uninitialize = g_cond_new ();
+  decklinksrc->com_uninitialized = g_cond_new ();
 
   g_mutex_lock (decklinksrc->com_init_lock);
 
   /* create the COM initialization thread */
-  g_thread_create ((GThreadFunc)gst_decklink_src_com_thread,
-    decklinksrc, FALSE, NULL);
+  g_thread_create ((GThreadFunc) gst_decklink_src_com_thread,
+      decklinksrc, FALSE, NULL);
 
   /* wait until the COM thread signals that COM has been initialized */
   g_cond_wait (decklinksrc->com_initialized, decklinksrc->com_init_lock);
@@ -415,7 +415,8 @@ gst_decklink_src_com_thread (GstDecklinkSrc * src)
 
   res = CoInitializeEx (0, COINIT_MULTITHREADED);
   if (res == S_FALSE)
-    GST_WARNING_OBJECT (src, "COM has been already initialized in the same process");
+    GST_WARNING_OBJECT (src,
+        "COM has been already initialized in the same process");
   else if (res == RPC_E_CHANGED_MODE)
     GST_WARNING_OBJECT (src, "The concurrency model of COM has changed.");
   else
@@ -470,7 +471,6 @@ gst_decklink_src_finalize (GObject * object)
   if (decklinksrc->video_caps) {
     gst_caps_unref (decklinksrc->video_caps);
   }
-
 #ifdef _MSC_VER
   /* signal the COM thread that it should uninitialize COM */
   if (decklinksrc->comInitialized) {
@@ -1213,10 +1213,9 @@ gst_decklink_src_task (void *priv)
   /* warning on dropped frames */
   if (decklinksrc->dropped_frames - decklinksrc->dropped_frames_old > 0) {
     GST_ELEMENT_WARNING (decklinksrc, RESOURCE, READ,
-                         ("Dropped %d frame(s), for a total of %d frame(s)",
-                          decklinksrc->dropped_frames - decklinksrc->dropped_frames_old,
-                          decklinksrc->dropped_frames),
-                         (NULL));
+        ("Dropped %d frame(s), for a total of %d frame(s)",
+            decklinksrc->dropped_frames - decklinksrc->dropped_frames_old,
+            decklinksrc->dropped_frames), (NULL));
     decklinksrc->dropped_frames_old = decklinksrc->dropped_frames;
   }
 
@@ -1269,12 +1268,11 @@ gst_decklink_src_task (void *priv)
   gst_buffer_set_caps (buffer, decklinksrc->video_caps);
 
   ret = gst_pad_push (decklinksrc->videosrcpad, buffer);
-  if (! (ret == GST_FLOW_OK || ret == GST_FLOW_NOT_LINKED ||
-         ret == GST_FLOW_WRONG_STATE)) {
+  if (!(ret == GST_FLOW_OK || ret == GST_FLOW_NOT_LINKED ||
+          ret == GST_FLOW_WRONG_STATE)) {
     GST_ELEMENT_ERROR (decklinksrc, STREAM, FAILED,
-                       ("Internal data stream error."),
-                       ("stream stopped, reason %s",
-                        gst_flow_get_name (ret)));
+        ("Internal data stream error."),
+        ("stream stopped, reason %s", gst_flow_get_name (ret)));
   }
 
   if (gst_pad_is_linked (decklinksrc->audiosrcpad)) {
@@ -1287,9 +1285,7 @@ gst_decklink_src_task (void *priv)
         gst_util_uint64_scale_int (decklinksrc->num_audio_samples * GST_SECOND,
         1, 48000);
     GST_BUFFER_DURATION (audio_buffer) =
-        gst_util_uint64_scale_int ((decklinksrc->num_audio_samples +
-            n_samples) * GST_SECOND, 1,
-        48000) - GST_BUFFER_TIMESTAMP (audio_buffer);
+        gst_util_uint64_scale_int (n_samples * GST_SECOND, 1, 48000);
     decklinksrc->num_audio_samples += n_samples;
 
     if (decklinksrc->audio_caps == NULL) {
@@ -1303,12 +1299,11 @@ gst_decklink_src_task (void *priv)
     gst_buffer_set_caps (audio_buffer, decklinksrc->audio_caps);
 
     ret = gst_pad_push (decklinksrc->audiosrcpad, audio_buffer);
-    if (! (ret == GST_FLOW_OK || ret == GST_FLOW_NOT_LINKED ||
-           ret == GST_FLOW_WRONG_STATE)) {
+    if (!(ret == GST_FLOW_OK || ret == GST_FLOW_NOT_LINKED ||
+            ret == GST_FLOW_WRONG_STATE)) {
       GST_ELEMENT_ERROR (decklinksrc, STREAM, FAILED,
-                         ("Internal data stream error."),
-                         ("stream stopped, reason %s",
-                          gst_flow_get_name (ret)));
+          ("Internal data stream error."),
+          ("stream stopped, reason %s", gst_flow_get_name (ret)));
     }
   }
   audio_frame->Release ();

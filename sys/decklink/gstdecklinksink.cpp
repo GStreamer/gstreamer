@@ -277,17 +277,17 @@ gst_decklink_sink_init (GstDecklinkSink * decklinksink,
   decklinksink->callback->decklinksink = decklinksink;
 
 #ifdef _MSC_VER
-  decklinksink->com_init_lock = g_mutex_new();
-  decklinksink->com_deinit_lock = g_mutex_new();
-  decklinksink->com_initialized = g_cond_new();
-  decklinksink->com_uninitialize = g_cond_new();
-  decklinksink->com_uninitialized = g_cond_new();
+  decklinksink->com_init_lock = g_mutex_new ();
+  decklinksink->com_deinit_lock = g_mutex_new ();
+  decklinksink->com_initialized = g_cond_new ();
+  decklinksink->com_uninitialize = g_cond_new ();
+  decklinksink->com_uninitialized = g_cond_new ();
 
   g_mutex_lock (decklinksink->com_init_lock);
 
   /* create the COM initialization thread */
-  g_thread_create ((GThreadFunc)gst_decklink_sink_com_thread,
-    decklinksink, FALSE, NULL);
+  g_thread_create ((GThreadFunc) gst_decklink_sink_com_thread,
+      decklinksink, FALSE, NULL);
 
   /* wait until the COM thread signals that COM has been initialized */
   g_cond_wait (decklinksink->com_initialized, decklinksink->com_init_lock);
@@ -347,7 +347,8 @@ gst_decklink_sink_com_thread (GstDecklinkSink * src)
 
   res = CoInitializeEx (0, COINIT_MULTITHREADED);
   if (res == S_FALSE)
-    GST_WARNING_OBJECT (src, "COM has been already initialized in the same process");
+    GST_WARNING_OBJECT (src,
+        "COM has been already initialized in the same process");
   else if (res == RPC_E_CHANGED_MODE)
     GST_WARNING_OBJECT (src, "The concurrency model of COM has changed.");
   else
@@ -402,7 +403,8 @@ gst_decklink_sink_finalize (GObject * object)
   if (decklinksink->comInitialized) {
     g_mutex_lock (decklinksink->com_deinit_lock);
     g_cond_signal (decklinksink->com_uninitialize);
-    g_cond_wait (decklinksink->com_uninitialized, decklinksink->com_deinit_lock);
+    g_cond_wait (decklinksink->com_uninitialized,
+        decklinksink->com_deinit_lock);
     g_mutex_unlock (decklinksink->com_deinit_lock);
   }
 
@@ -455,8 +457,8 @@ gst_decklink_sink_start (GstDecklinkSink * decklinksink)
   }
   //decklinksink->video_enabled = TRUE;
 
-  decklinksink->output->
-      SetScheduledFrameCompletionCallback (decklinksink->callback);
+  decklinksink->output->SetScheduledFrameCompletionCallback (decklinksink->
+      callback);
 
   sample_depth = bmdAudioSampleType16bitInteger;
   ret = decklinksink->output->EnableAudioOutput (bmdAudioSampleRate48kHz,
@@ -1089,16 +1091,18 @@ HRESULT
   return S_OK;
 }
 
-HRESULT Output::ScheduledPlaybackHasStopped ()
+HRESULT
+Output::ScheduledPlaybackHasStopped ()
 {
   GST_ERROR ("ScheduledPlaybackHasStopped");
   return S_OK;
 }
 
-HRESULT Output::RenderAudioSamples (bool preroll)
+HRESULT
+Output::RenderAudioSamples (bool preroll)
 {
   uint32_t samplesWritten;
-  GstBuffer * buffer;
+  GstBuffer *buffer;
 
   // guint64 samplesToWrite;
 
@@ -1108,9 +1112,7 @@ HRESULT Output::RenderAudioSamples (bool preroll)
     // running = true;
   } else {
     g_mutex_lock (decklinksink->audio_mutex);
-    decklinksink->output->ScheduleAudioSamples (
-        GST_BUFFER_DATA (decklinksink->audio_buffer),
-        GST_BUFFER_SIZE (decklinksink->audio_buffer) / 4, // 2 bytes per sample, stereo
+    decklinksink->output->ScheduleAudioSamples (GST_BUFFER_DATA (decklinksink->audio_buffer), GST_BUFFER_SIZE (decklinksink->audio_buffer) / 4, // 2 bytes per sample, stereo
         0, 0, &samplesWritten);
 
     buffer =
