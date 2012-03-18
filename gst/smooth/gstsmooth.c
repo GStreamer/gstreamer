@@ -41,7 +41,7 @@ static GstStaticPadTemplate gst_smooth_src_template =
 GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS (GST_VIDEO_CAPS_YUV ("I420")
+    GST_STATIC_CAPS (GST_VIDEO_CAPS_MAKE ("I420")
     )
     );
 
@@ -49,46 +49,28 @@ static GstStaticPadTemplate gst_smooth_sink_template =
 GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS (GST_VIDEO_CAPS_YUV ("I420")
+    GST_STATIC_CAPS (GST_VIDEO_CAPS_MAKE ("I420")
     )
     );
 
-
-static gboolean gst_smooth_set_caps (GstBaseTransform * btrans,
-    GstCaps * incaps, GstCaps * outcaps);
-
-static GstFlowReturn gst_smooth_transform (GstBaseTransform * btrans,
-    GstBuffer * inbuf, GstBuffer * outbuf);
-static void smooth_filter (unsigned char *dest, unsigned char *src,
-    int width, int height, int tolerance, int filtersize);
+static gboolean gst_smooth_set_info (GstVideoFilter * filter, GstCaps * incaps,
+    GstVideoInfo * in_info, GstCaps * outcaps, GstVideoInfo * out_info);
+static GstFlowReturn gst_smooth_transform_frame (GstVideoFilter * vfilter,
+    GstVideoFrame * in_frame, GstVideoFrame * out_frame);
 
 static void gst_smooth_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec);
 static void gst_smooth_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec);
 
-GST_BOILERPLATE (GstSmooth, gst_smooth, GstVideoFilter, GST_TYPE_VIDEO_FILTER);
-
-static void
-gst_smooth_base_init (gpointer g_class)
-{
-  GstElementClass *element_class = GST_ELEMENT_CLASS (g_class);
-
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&gst_smooth_sink_template));
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&gst_smooth_src_template));
-  gst_element_class_set_details_simple (element_class, "Smooth effect",
-      "Filter/Effect/Video",
-      "Apply a smooth filter to an image",
-      "Wim Taymans <wim.taymans@chello.be>");
-}
+G_DEFINE_TYPE (GstSmooth, gst_smooth, GST_TYPE_VIDEO_FILTER);
 
 static void
 gst_smooth_class_init (GstSmoothClass * klass)
 {
   GObjectClass *gobject_class = (GObjectClass *) klass;
-  GstBaseTransformClass *btrans_class = (GstBaseTransformClass *) klass;
+  GstElementClass *gstelement_class = (GstElementClass *) klass;
+  GstVideoFilterClass *vfilter_class = (GstVideoFilterClass *) klass;
 
   gobject_class->set_property = gst_smooth_set_property;
   gobject_class->get_property = gst_smooth_get_property;
@@ -107,29 +89,36 @@ gst_smooth_class_init (GstSmoothClass * klass)
       g_param_spec_boolean ("luma-only", "luma-only", "only filter luma part",
           TRUE, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
-  btrans_class->transform = GST_DEBUG_FUNCPTR (gst_smooth_transform);
-  btrans_class->set_caps = GST_DEBUG_FUNCPTR (gst_smooth_set_caps);
+  gst_element_class_add_pad_template (gstelement_class,
+      gst_static_pad_template_get (&gst_smooth_sink_template));
+  gst_element_class_add_pad_template (gstelement_class,
+      gst_static_pad_template_get (&gst_smooth_src_template));
+  gst_element_class_set_details_simple (gstelement_class, "Smooth effect",
+      "Filter/Effect/Video",
+      "Apply a smooth filter to an image",
+      "Wim Taymans <wim.taymans@chello.be>");
+
+  vfilter_class->transform_frame =
+      GST_DEBUG_FUNCPTR (gst_smooth_transform_frame);
+  vfilter_class->set_info = GST_DEBUG_FUNCPTR (gst_smooth_set_info);
 }
 
 static gboolean
-gst_smooth_set_caps (GstBaseTransform * btrans, GstCaps * incaps,
-    GstCaps * outcaps)
+gst_smooth_set_info (GstVideoFilter * filter, GstCaps * incaps,
+    GstVideoInfo * in_info, GstCaps * outcaps, GstVideoInfo * out_info)
 {
-  GstSmooth *filter;
-  GstStructure *structure;
-  gboolean ret;
+  GstSmooth *smooth;
 
-  filter = GST_SMOOTH (btrans);
+  smooth = GST_SMOOTH (filter);
 
-  structure = gst_caps_get_structure (incaps, 0);
-  ret = gst_structure_get_int (structure, "width", &filter->width);
-  ret &= gst_structure_get_int (structure, "height", &filter->height);
+  smooth->width = GST_VIDEO_INFO_WIDTH (in_info);
+  smooth->height = GST_VIDEO_INFO_HEIGHT (in_info);
 
-  return ret;
+  return TRUE;
 }
 
 static void
-gst_smooth_init (GstSmooth * smooth, GstSmoothClass * klass)
+gst_smooth_init (GstSmooth * smooth)
 {
   smooth->active = TRUE;
   smooth->tolerance = 8;
@@ -139,20 +128,20 @@ gst_smooth_init (GstSmooth * smooth, GstSmoothClass * klass)
 
 static void
 smooth_filter (guchar * dest, guchar * src, gint width, gint height,
-    gint tolerance, gint filtersize)
+    gint stride, gint dstride, gint tolerance, gint filtersize)
 {
   gint refval, aktval, upperval, lowerval, numvalues, sum;
   gint x, y, fx, fy, fy1, fy2, fx1, fx2;
-  guchar *srcp = src;
+  guchar *srcp = src, *destp = dest;
 
   fy1 = 0;
-  fy2 = MIN (filtersize + 1, height) * width;
+  fy2 = MIN (filtersize + 1, height) * stride;
 
   for (y = 0; y < height; y++) {
     if (y > (filtersize + 1))
-      fy1 += width;
+      fy1 += stride;
     if (y < height - (filtersize + 1))
-      fy2 += width;
+      fy2 += stride;
 
     for (x = 0; x < width; x++) {
       refval = *src;
@@ -165,7 +154,7 @@ smooth_filter (guchar * dest, guchar * src, gint width, gint height,
       fx1 = MAX (x - filtersize, 0) + fy1;
       fx2 = MIN (x + filtersize + 1, width) + fy1;
 
-      for (fy = fy1; fy < fy2; fy += width) {
+      for (fy = fy1; fy < fy2; fy += stride) {
         for (fx = fx1; fx < fx2; fx++) {
           aktval = srcp[fx];
           if ((lowerval - aktval) * (upperval - aktval) < 0) {
@@ -173,50 +162,57 @@ smooth_filter (guchar * dest, guchar * src, gint width, gint height,
             sum += aktval;
           }
         }                       /*for fx */
-        fx1 += width;
-        fx2 += width;
+        fx1 += stride;
+        fx2 += stride;
       }                         /*for fy */
 
       src++;
       *dest++ = sum / numvalues;
     }
+
+    src = srcp + stride * y;
+    dest = destp + dstride * y;
   }
 }
 
 static GstFlowReturn
-gst_smooth_transform (GstBaseTransform * btrans, GstBuffer * inbuf,
-    GstBuffer * outbuf)
+gst_smooth_transform_frame (GstVideoFilter * vfilter, GstVideoFrame * in_frame,
+    GstVideoFrame * out_frame)
 {
   GstSmooth *smooth;
-  guint8 *idata, *odata;
-  guint size, lumsize, chromsize;
 
-  smooth = GST_SMOOTH (btrans);
-  idata = GST_BUFFER_DATA (inbuf);
-  odata = GST_BUFFER_DATA (outbuf);
-  size = GST_BUFFER_SIZE (inbuf);
+  smooth = GST_SMOOTH (vfilter);
 
   if (!smooth->active) {
-    memcpy (odata, idata, size);
+    gst_video_frame_copy (out_frame, in_frame);
     return GST_FLOW_OK;
   }
 
-  GST_DEBUG_OBJECT (smooth, "smooth: have buffer of %d", size);
-
-  lumsize = smooth->width * smooth->height;
-  chromsize = lumsize / 4;
-
-  smooth_filter (odata, idata, smooth->width, smooth->height,
+  smooth_filter (GST_VIDEO_FRAME_COMP_DATA (out_frame, 0),
+      GST_VIDEO_FRAME_COMP_DATA (in_frame, 0),
+      GST_VIDEO_FRAME_COMP_WIDTH (in_frame, 0),
+      GST_VIDEO_FRAME_COMP_HEIGHT (in_frame, 0),
+      GST_VIDEO_FRAME_COMP_STRIDE (in_frame, 0),
+      GST_VIDEO_FRAME_COMP_STRIDE (out_frame, 0),
       smooth->tolerance, smooth->filtersize);
   if (!smooth->luma_only) {
-    smooth_filter (odata + lumsize, idata + lumsize,
-        smooth->width / 2, smooth->height / 2, smooth->tolerance,
-        smooth->filtersize / 2);
-    smooth_filter (odata + lumsize + chromsize,
-        idata + lumsize + chromsize, smooth->width / 2, smooth->height / 2,
-        smooth->tolerance, smooth->filtersize / 2);
+    smooth_filter (GST_VIDEO_FRAME_COMP_DATA (out_frame, 1),
+        GST_VIDEO_FRAME_COMP_DATA (in_frame, 1),
+        GST_VIDEO_FRAME_COMP_WIDTH (in_frame, 1),
+        GST_VIDEO_FRAME_COMP_HEIGHT (in_frame, 1),
+        GST_VIDEO_FRAME_COMP_STRIDE (in_frame, 1),
+        GST_VIDEO_FRAME_COMP_STRIDE (out_frame, 1),
+        smooth->tolerance, smooth->filtersize);
+    smooth_filter (GST_VIDEO_FRAME_COMP_DATA (out_frame, 2),
+        GST_VIDEO_FRAME_COMP_DATA (in_frame, 2),
+        GST_VIDEO_FRAME_COMP_WIDTH (in_frame, 2),
+        GST_VIDEO_FRAME_COMP_HEIGHT (in_frame, 2),
+        GST_VIDEO_FRAME_COMP_STRIDE (in_frame, 2),
+        GST_VIDEO_FRAME_COMP_STRIDE (out_frame, 2),
+        smooth->tolerance, smooth->filtersize);
   } else {
-    memcpy (odata + lumsize, idata + lumsize, chromsize * 2);
+    gst_video_frame_copy_plane (out_frame, in_frame, 1);
+    gst_video_frame_copy_plane (out_frame, in_frame, 2);
   }
 
   return GST_FLOW_OK;
