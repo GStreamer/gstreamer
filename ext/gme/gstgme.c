@@ -23,6 +23,7 @@
 #endif
 
 #include "gstgme.h"
+#include <gst/audio/audio.h>
 
 #include <string.h>
 #include <glib/gprintf.h>
@@ -39,11 +40,10 @@ static GstStaticPadTemplate sink_factory =
 
 static GstStaticPadTemplate src_factory =
 GST_STATIC_PAD_TEMPLATE ("src", GST_PAD_SRC, GST_PAD_ALWAYS,
-    GST_STATIC_CAPS ("audio/x-raw-int, "
-        "endianness = (int) BYTE_ORDER, "
-        "signed = (boolean) TRUE, "
-        "width = (int) 16, "
-        "depth = (int) 16, " "rate = (int) 32000, " "channels = (int) 2"));
+    GST_STATIC_CAPS ("audio/x-raw, "
+        "format = (string) " GST_AUDIO_NE (S16) ", "
+        "layout = (string) interleaved, "
+        "rate = (int) 32000, " "channels = (int) 2"));
 
 #define gst_gme_dec_parent_class parent_class
 G_DEFINE_TYPE (GstGmeDec, gst_gme_dec, GST_TYPE_ELEMENT);
@@ -65,45 +65,11 @@ static gboolean gme_setup (GstGmeDec * gme);
 static gboolean
 gme_negotiate (GstGmeDec * gme)
 {
-  GstCaps *allowed, *caps;
-  GstStructure *structure;
-  gint width = 16, depth = 16;
-  gboolean sign;
-  int rate = 32000;
-  int channels = 2;
+  GstCaps *caps;
 
-  allowed = gst_pad_get_allowed_caps (gme->srcpad);
-  if (!allowed) {
-    GST_DEBUG_OBJECT (gme, "couldn't get allowed caps");
-    return FALSE;
-  }
-
-  GST_DEBUG_OBJECT (gme, "allowed caps: %" GST_PTR_FORMAT, allowed);
-
-  structure = gst_caps_get_structure (allowed, 0);
-  gst_structure_get_int (structure, "width", &width);
-  gst_structure_get_int (structure, "depth", &depth);
-
-  if (width && depth && width != depth) {
-    GST_DEBUG_OBJECT (gme, "width %d and depth %d are different", width, depth);
-    gst_caps_unref (allowed);
-    return FALSE;
-  }
-
-  gst_structure_get_boolean (structure, "signed", &sign);
-  gst_structure_get_int (structure, "rate", &rate);
-  gst_structure_get_int (structure, "channels", &channels);
-
-  caps = gst_caps_new_simple ("audio/x-raw-int",
-      "endianness", G_TYPE_INT, G_BYTE_ORDER,
-      "signed", G_TYPE_BOOLEAN, TRUE,
-      "width", G_TYPE_INT, width,
-      "depth", G_TYPE_INT, depth,
-      "rate", G_TYPE_INT, rate, "channels", G_TYPE_INT, channels, NULL);
+  caps = gst_pad_get_pad_template_caps (gme->srcpad);
   gst_pad_set_caps (gme->srcpad, caps);
-
   gst_caps_unref (caps);
-  gst_caps_unref (allowed);
 
   return TRUE;
 }
