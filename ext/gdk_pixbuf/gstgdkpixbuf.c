@@ -23,6 +23,7 @@
 #endif
 #include <gst/gst.h>
 #include <gst/video/video.h>
+#include <gst/controller/gstcontroller.h>
 #include <gdk-pixbuf/gdk-pixbuf.h>
 #include <string.h>
 
@@ -548,6 +549,8 @@ plugin_init (GstPlugin * plugin)
 
   if (!pixbufscale_init (plugin))
     return FALSE;
+
+  gst_controller_init (NULL, NULL);
 
   /* plugin initialisation succeeded */
   return TRUE;

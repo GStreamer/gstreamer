@@ -49,6 +49,7 @@
 #endif
 
 #include <gst/gst.h>
+#include <gst/controller/gstcontroller.h>
 
 #include "gstgdkpixbufoverlay.h"
 
@@ -65,6 +66,8 @@ static gboolean gst_gdk_pixbuf_overlay_start (GstBaseTransform * trans);
 static gboolean gst_gdk_pixbuf_overlay_stop (GstBaseTransform * trans);
 static GstFlowReturn
 gst_gdk_pixbuf_overlay_transform_ip (GstBaseTransform * trans, GstBuffer * buf);
+static void gst_gdk_pixbuf_overlay_before_transform (GstBaseTransform * trans,
+    GstBuffer * outbuf);
 static gboolean
 gst_gdk_pixbuf_overlay_set_caps (GstBaseTransform * trans, GstCaps * incaps,
     GstCaps * outcaps);
@@ -141,39 +144,49 @@ gst_gdk_pixbuf_overlay_class_init (GstGdkPixbufOverlayClass * klass)
       GST_DEBUG_FUNCPTR (gst_gdk_pixbuf_overlay_set_caps);
   basetrans_class->transform_ip =
       GST_DEBUG_FUNCPTR (gst_gdk_pixbuf_overlay_transform_ip);
+  basetrans_class->before_transform =
+      GST_DEBUG_FUNCPTR (gst_gdk_pixbuf_overlay_before_transform);
 
   g_object_class_install_property (gobject_class, PROP_LOCATION,
       g_param_spec_string ("location", "location",
-          "location of image file to overlay", NULL,
+          "Location of image file to overlay", NULL,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (gobject_class, PROP_OFFSET_X,
       g_param_spec_int ("offset-x", "X Offset",
-          "horizontal offset of overlay image in pixels from top-left corner "
+          "Horizontal offset of overlay image in pixels from top-left corner "
           "of video image", G_MININT, G_MAXINT, 0,
-          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+          GST_PARAM_CONTROLLABLE | GST_PARAM_MUTABLE_PLAYING | G_PARAM_READWRITE
+          | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (gobject_class, PROP_OFFSET_Y,
       g_param_spec_int ("offset-y", "Y Offset",
-          "vertical offset of overlay image in pixels from top-left corner "
+          "Vertical offset of overlay image in pixels from top-left corner "
           "of video image", G_MININT, G_MAXINT, 0,
-          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+          GST_PARAM_CONTROLLABLE | GST_PARAM_MUTABLE_PLAYING | G_PARAM_READWRITE
+          | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (gobject_class, PROP_RELATIVE_X,
       g_param_spec_double ("relative-x", "Relative X Offset",
-          "horizontal offset of overlay image in fractions of video image "
-          "width, from top-left corner of video image",
-          0.0, 1.0, 0.0, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+          "Horizontal offset of overlay image in fractions of video image "
+          "width, from top-left corner of video image", 0.0, 1.0, 0.0,
+          GST_PARAM_CONTROLLABLE | GST_PARAM_MUTABLE_PLAYING | G_PARAM_READWRITE
+          | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (gobject_class, PROP_RELATIVE_Y,
       g_param_spec_double ("relative-y", "Relative Y Offset",
-          "vertical offset of overlay image in fractions of video image "
-          "height, from top-left corner of video image",
-          0.0, 1.0, 0.0, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+          "Vertical offset of overlay image in fractions of video image "
+          "height, from top-left corner of video image", 0.0, 1.0, 0.0,
+          GST_PARAM_CONTROLLABLE | GST_PARAM_MUTABLE_PLAYING | G_PARAM_READWRITE
+          | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (gobject_class, PROP_OVERLAY_WIDTH,
       g_param_spec_int ("overlay-width", "Overlay Width",
-          "width of overlay image in pixels (0 = same as overlay image)",
-          0, G_MAXINT, 0, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+          "Width of overlay image in pixels (0 = same as overlay image)", 0,
+          G_MAXINT, 0,
+          GST_PARAM_CONTROLLABLE | GST_PARAM_MUTABLE_PLAYING | G_PARAM_READWRITE
+          | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (gobject_class, PROP_OVERLAY_HEIGHT,
       g_param_spec_int ("overlay-height", "Overlay Height",
-          "height of overlay image in pixels (0 = same as overlay image)",
-          0, G_MAXINT, 0, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+          "Height of overlay image in pixels (0 = same as overlay image)", 0,
+          G_MAXINT, 0,
+          GST_PARAM_CONTROLLABLE | GST_PARAM_MUTABLE_PLAYING | G_PARAM_READWRITE
+          | G_PARAM_STATIC_STRINGS));
 
   GST_DEBUG_CATEGORY_INIT (gdkpixbufoverlay_debug, "gdkpixbufoverlay", 0,
       "debug category for gdkpixbufoverlay element");
@@ -462,12 +475,23 @@ gst_gdk_pixbuf_overlay_update_composition (GstGdkPixbufOverlay * overlay)
   overlay->comp = comp;
 }
 
+static void
+gst_gdk_pixbuf_overlay_before_transform (GstBaseTransform * trans,
+    GstBuffer * outbuf)
+{
+  GstClockTime stream_time;
+
+  stream_time = gst_segment_to_stream_time (&trans->segment, GST_FORMAT_TIME,
+      GST_BUFFER_TIMESTAMP (outbuf));
+
+  if (GST_CLOCK_TIME_IS_VALID (stream_time))
+    gst_object_sync_values (G_OBJECT (trans), stream_time);
+}
+
 static GstFlowReturn
 gst_gdk_pixbuf_overlay_transform_ip (GstBaseTransform * trans, GstBuffer * buf)
 {
-  GstGdkPixbufOverlay *overlay;
-
-  overlay = GST_GDK_PIXBUF_OVERLAY (trans);
+  GstGdkPixbufOverlay *overlay = GST_GDK_PIXBUF_OVERLAY (trans);
 
   GST_OBJECT_LOCK (overlay);
 
