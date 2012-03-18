@@ -616,9 +616,10 @@ gst_face_detect_transform_ip (GstOpencvVideoFilter * base, GstBuffer * buf,
       }
 
       g_value_init (&facedata, GST_TYPE_STRUCTURE);
-      gst_value_set_structure (&facedata, s);
+      g_value_take_boxed (&facedata, s);
       gst_value_list_append_value (&facelist, &facedata);
       g_value_unset (&facedata);
+      s = NULL;
 
       if (do_display) {
         CvPoint center;
