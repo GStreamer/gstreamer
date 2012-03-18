@@ -27,19 +27,12 @@
 #include "gstvideosegmentclip.h"
 
 static GstStaticPadTemplate sink_pad_template =
-    GST_STATIC_PAD_TEMPLATE ("sink", GST_PAD_SINK, GST_PAD_ALWAYS,
-    GST_STATIC_CAPS
-    ("video/x-raw-yuv, framerate=" GST_VIDEO_FPS_RANGE "; "
-        "video/x-raw-rgb, framerate=" GST_VIDEO_FPS_RANGE "; "
-        "video/x-raw-grey, framerate=" GST_VIDEO_FPS_RANGE));
-
+GST_STATIC_PAD_TEMPLATE ("sink", GST_PAD_SINK, GST_PAD_ALWAYS,
+    GST_STATIC_CAPS ("video/x-raw, framerate=" GST_VIDEO_FPS_RANGE));
 
 static GstStaticPadTemplate src_pad_template =
-    GST_STATIC_PAD_TEMPLATE ("src", GST_PAD_SRC, GST_PAD_ALWAYS,
-    GST_STATIC_CAPS
-    ("video/x-raw-yuv, framerate=" GST_VIDEO_FPS_RANGE "; "
-        "video/x-raw-rgb, framerate=" GST_VIDEO_FPS_RANGE "; "
-        "video/x-raw-grey, framerate=" GST_VIDEO_FPS_RANGE));
+GST_STATIC_PAD_TEMPLATE ("src", GST_PAD_SRC, GST_PAD_ALWAYS,
+    GST_STATIC_CAPS ("video/x-raw, framerate=" GST_VIDEO_FPS_RANGE));
 
 static void gst_video_segment_clip_reset (GstSegmentClip * self);
 static GstFlowReturn gst_video_segment_clip_clip_buffer (GstSegmentClip * self,
@@ -50,13 +43,17 @@ static gboolean gst_video_segment_clip_set_caps (GstSegmentClip * self,
 GST_DEBUG_CATEGORY_STATIC (gst_video_segment_clip_debug);
 #define GST_CAT_DEFAULT gst_video_segment_clip_debug
 
-GST_BOILERPLATE (GstVideoSegmentClip, gst_video_segment_clip, GstSegmentClip,
+G_DEFINE_TYPE (GstVideoSegmentClip, gst_video_segment_clip,
     GST_TYPE_SEGMENT_CLIP);
 
 static void
-gst_video_segment_clip_base_init (gpointer g_class)
+gst_video_segment_clip_class_init (GstVideoSegmentClipClass * klass)
 {
-  GstElementClass *element_class = GST_ELEMENT_CLASS (g_class);
+  GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
+  GstSegmentClipClass *segment_clip_klass = GST_SEGMENT_CLIP_CLASS (klass);
+
+  GST_DEBUG_CATEGORY_INIT (gst_video_segment_clip_debug, "videosegmentclip", 0,
+      "videosegmentclip element");
 
   gst_element_class_set_details_simple (element_class,
       "Video buffer segment clipper",
@@ -68,15 +65,6 @@ gst_video_segment_clip_base_init (gpointer g_class)
       gst_static_pad_template_get (&sink_pad_template));
   gst_element_class_add_pad_template (element_class,
       gst_static_pad_template_get (&src_pad_template));
-}
-
-static void
-gst_video_segment_clip_class_init (GstVideoSegmentClipClass * klass)
-{
-  GstSegmentClipClass *segment_clip_klass = GST_SEGMENT_CLIP_CLASS (klass);
-
-  GST_DEBUG_CATEGORY_INIT (gst_video_segment_clip_debug, "videosegmentclip", 0,
-      "videosegmentclip element");
 
   segment_clip_klass->reset = GST_DEBUG_FUNCPTR (gst_video_segment_clip_reset);
   segment_clip_klass->set_caps =
@@ -86,8 +74,7 @@ gst_video_segment_clip_class_init (GstVideoSegmentClipClass * klass)
 }
 
 static void
-gst_video_segment_clip_init (GstVideoSegmentClip * self,
-    GstVideoSegmentClipClass * g_class)
+gst_video_segment_clip_init (GstVideoSegmentClip * self)
 {
 }
 
@@ -109,7 +96,7 @@ gst_video_segment_clip_clip_buffer (GstSegmentClip * base, GstBuffer * buffer,
   GstVideoSegmentClip *self = GST_VIDEO_SEGMENT_CLIP (base);
   GstSegment *segment = &base->segment;
   GstClockTime timestamp, duration;
-  gint64 cstart, cstop;
+  guint64 cstart, cstop;
   gboolean in_seg;
 
   if (!self->fps_d) {
@@ -146,7 +133,7 @@ gst_video_segment_clip_clip_buffer (GstSegmentClip * base, GstBuffer * buffer,
       timestamp + duration, &cstart, &cstop);
   if (in_seg) {
     if (timestamp != cstart || timestamp + duration != cstop) {
-      *outbuf = gst_buffer_make_metadata_writable (buffer);
+      *outbuf = gst_buffer_make_writable (buffer);
 
       GST_BUFFER_TIMESTAMP (*outbuf) = cstart;
       GST_BUFFER_DURATION (*outbuf) = cstop - cstart;
@@ -158,10 +145,10 @@ gst_video_segment_clip_clip_buffer (GstSegmentClip * base, GstBuffer * buffer,
 
     if (segment->rate >= 0) {
       if (segment->stop != -1 && timestamp >= segment->stop)
-        return GST_FLOW_UNEXPECTED;
+        return GST_FLOW_EOS;
     } else {
       if (segment->start != -1 && timestamp + duration <= segment->start)
-        return GST_FLOW_UNEXPECTED;
+        return GST_FLOW_EOS;
     }
     gst_buffer_unref (buffer);
   }

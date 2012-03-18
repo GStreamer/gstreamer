@@ -307,7 +307,7 @@ GST_PLUGINS_NONPORTED=" aiff asfmux \
  kate liveadder legacyresample librfb mpegtsmux \
  mpegpsmux mve mxf mythtv nsf nuvdemux \
  patchdetect pnm rawparse real scaletempo \
- sdi segmentclip siren speed subenc stereo tta videofilters \
+ sdi siren speed subenc stereo tta videofilters \
  videomeasure videosignal vmnc \
  decklink fbdev linsys shm vcd \
  apexsink cdaudio cog curl dc1394 dirac directfb resindvd \
