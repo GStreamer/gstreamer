@@ -37,7 +37,7 @@
 
 #include <gst/gst.h>
 #include <gst/base/gstbasetransform.h>
-#include <gst/controller/gstcontroller.h>
+#include <gst/audio/audio.h>
 
 #include "gstremovesilence.h"
 
@@ -64,26 +64,26 @@ enum
 static GstStaticPadTemplate sink_template = GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS
-    ("audio/x-raw-int, "
-        "rate=[1, MAX], channels=1, endianness=BYTE_ORDER, "
-        "width=16, depth=16, signed=true"));
+    GST_STATIC_CAPS ("audio/x-raw, "
+        "format = (string) " GST_AUDIO_NE (S16) ", "
+        "layout = (string) interleaved, "
+        "rate = (int) [ 1, MAX ], " "channels = (int) 1"));
 
 static GstStaticPadTemplate src_template = GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS
-    ("audio/x-raw-int, "
-        "rate=[1, MAX], channels=1, endianness=BYTE_ORDER, "
-        "width=16, depth=16, signed=true"));
+    GST_STATIC_CAPS ("audio/x-raw, "
+        "format = (string) " GST_AUDIO_NE (S16) ", "
+        "layout = (string) interleaved, "
+        "rate = (int) [ 1, MAX ], " "channels = (int) 1"));
 
 
 #define DEBUG_INIT(bla) \
   GST_DEBUG_CATEGORY_INIT (gst_remove_silence_debug, "removesilence", 0, "removesilence element")
 
-GST_BOILERPLATE_FULL (GstRemoveSilence, gst_remove_silence, GstBaseTransform,
-    GST_TYPE_BASE_TRANSFORM, DEBUG_INIT);
-
+#define gst_remove_silence_parent_class parent_class
+G_DEFINE_TYPE_WITH_CODE (GstRemoveSilence, gst_remove_silence,
+    GST_TYPE_BASE_TRANSFORM, DEBUG_INIT (0));
 
 static void gst_remove_silence_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec);
@@ -97,31 +97,16 @@ static void gst_remove_silence_reset (GstRemoveSilence * filter);
 
 /* GObject vmethod implementations */
 
-static void
-gst_remove_silence_base_init (gpointer gclass)
-{
-  GstElementClass *element_class = GST_ELEMENT_CLASS (gclass);
-
-  gst_element_class_set_details_simple (element_class,
-      "RemoveSilence",
-      "Filter/Effect/Audio",
-      "Removes all the silence periods from the audio stream.",
-      "Tiago Katcipis <tiagokatcipis@gmail.com>\n \
-       Paulo Pizarro  <paulo.pizarro@gmail.com>");
-
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&src_template));
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&sink_template));
-}
-
 /* initialize the removesilence's class */
 static void
 gst_remove_silence_class_init (GstRemoveSilenceClass * klass)
 {
   GObjectClass *gobject_class;
+  GstElementClass *gstelement_class;
 
   gobject_class = (GObjectClass *) klass;
+  gstelement_class = (GstElementClass *) klass;
+
   gobject_class->finalize = gst_remove_silence_finalize;
   gobject_class->set_property = gst_remove_silence_set_property;
   gobject_class->get_property = gst_remove_silence_get_property;
@@ -137,6 +122,17 @@ gst_remove_silence_class_init (GstRemoveSilenceClass * klass)
           "Set the hysteresis (on samples) used on the internal VAD",
           1, G_MAXUINT64, DEFAULT_VAD_HYSTERESIS, G_PARAM_READWRITE));
 
+  gst_element_class_set_details_simple (gstelement_class,
+      "RemoveSilence",
+      "Filter/Effect/Audio",
+      "Removes all the silence periods from the audio stream.",
+      "Tiago Katcipis <tiagokatcipis@gmail.com>\n \
+       Paulo Pizarro  <paulo.pizarro@gmail.com>");
+
+  gst_element_class_add_pad_template (gstelement_class,
+      gst_static_pad_template_get (&src_template));
+  gst_element_class_add_pad_template (gstelement_class,
+      gst_static_pad_template_get (&sink_template));
 
   GST_BASE_TRANSFORM_CLASS (klass)->transform_ip =
       GST_DEBUG_FUNCPTR (gst_remove_silence_transform_ip);
@@ -148,8 +144,7 @@ gst_remove_silence_class_init (GstRemoveSilenceClass * klass)
  * initialize instance structure
  */
 static void
-gst_remove_silence_init (GstRemoveSilence * filter,
-    GstRemoveSilenceClass * gclass)
+gst_remove_silence_init (GstRemoveSilence * filter)
 {
   filter->vad = vad_new (DEFAULT_VAD_HYSTERESIS);
   filter->remove = FALSE;
@@ -226,12 +221,14 @@ gst_remove_silence_transform_ip (GstBaseTransform * trans, GstBuffer * inbuf)
 {
   GstRemoveSilence *filter = NULL;
   int frame_type;
+  GstMapInfo map;
 
   filter = GST_REMOVE_SILENCE (trans);
 
+  gst_buffer_map (inbuf, &map, GST_MAP_READ);
   frame_type =
-      vad_update (filter->vad, (gint16 *) GST_BUFFER_DATA (inbuf),
-      GST_BUFFER_SIZE (inbuf) / sizeof (gint16));
+      vad_update (filter->vad, (gint16 *) map.data, map.size / sizeof (gint16));
+  gst_buffer_unmap (inbuf, &map);
 
   if (frame_type == VAD_SILENCE) {
 
