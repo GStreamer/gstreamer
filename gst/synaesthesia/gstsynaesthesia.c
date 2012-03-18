@@ -228,10 +228,10 @@ gst_synaesthesia_src_negotiate (GstSynaesthesia * synaesthesia)
 {
   GstCaps *othercaps, *target, *intersect;
   GstStructure *structure;
-  const GstCaps *templ;
+  GstCaps *templ;
   GstQuery *query;
   GstBufferPool *pool = NULL;
-  guint size, min, max, prefix, alignment;
+  guint size, min, max;
 
   templ = gst_pad_get_pad_template_caps (synaesthesia->srcpad);
 
@@ -242,6 +242,7 @@ gst_synaesthesia_src_negotiate (GstSynaesthesia * synaesthesia)
   if (othercaps) {
     intersect = gst_caps_intersect (othercaps, templ);
     gst_caps_unref (othercaps);
+    gst_caps_unref (templ);
 
     if (gst_caps_is_empty (intersect))
       goto no_format;
@@ -249,7 +250,7 @@ gst_synaesthesia_src_negotiate (GstSynaesthesia * synaesthesia)
     target = gst_caps_copy_nth (intersect, 0);
     gst_caps_unref (intersect);
   } else {
-    target = gst_caps_ref ((GstCaps *) templ);
+    target = templ;
   }
 
   structure = gst_caps_get_structure (target, 0);
@@ -268,15 +269,13 @@ gst_synaesthesia_src_negotiate (GstSynaesthesia * synaesthesia)
   /* find a pool for the negotiated caps now */
   query = gst_query_new_allocation (target, TRUE);
 
-  if (gst_pad_peer_query (synaesthesia->srcpad, query)) {
+  if (gst_pad_peer_query (synaesthesia->srcpad, query) &&
+      gst_query_get_n_allocation_pools (query) > 0) {
     /* we got configuration from our peer, parse them */
-    gst_query_parse_allocation_params (query, &size, &min, &max, &prefix,
-        &alignment, &pool);
+    gst_query_parse_nth_allocation_pool (query, 0, &pool, &size, &min, &max);
   } else {
     size = synaesthesia->outsize;
     min = max = 0;
-    prefix = 0;
-    alignment = 0;
   }
 
   if (pool == NULL) {
@@ -286,8 +285,7 @@ gst_synaesthesia_src_negotiate (GstSynaesthesia * synaesthesia)
     pool = gst_buffer_pool_new ();
 
     config = gst_buffer_pool_get_config (pool);
-    gst_buffer_pool_config_set (config, target, size, min, max, prefix,
-        alignment);
+    gst_buffer_pool_config_set_params (config, target, size, min, max);
     gst_buffer_pool_set_config (pool, config);
   }
 
