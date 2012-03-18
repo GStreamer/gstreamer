@@ -692,7 +692,7 @@ gst_riff_parse_info (GstElement * element,
         type = NULL;            /*"Palette"; */
         break;
       case GST_RIFF_INFO_IPRD:
-        type = NULL;            /*"Product"; */
+        type = GST_TAG_ALBUM;
         break;
       case GST_RIFF_INFO_ISBJ:
         type = NULL;            /*"Subject"; */
