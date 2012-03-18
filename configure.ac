@@ -310,7 +310,7 @@ GST_PLUGINS_NONPORTED=" aiff asfmux \
  sdi segmentclip siren speed subenc stereo tta videofilters \
  videomeasure videosignal vmnc \
  decklink fbdev linsys shm vcd \
- apexsink bz2 cdaudio cog curl dc1394 dirac directfb resindvd \
+ apexsink cdaudio cog curl dc1394 dirac directfb resindvd \
  gsettings jp2k ladspa mimic \
  musepack musicbrainz nas neon ofa openal opencv rsvg sdl smooth sndfile soundtouch spandsp spc timidity \
  wildmidi xvid lv2 teletextdec dvb"

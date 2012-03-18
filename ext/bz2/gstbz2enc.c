@@ -65,7 +65,8 @@ struct _GstBz2encClass
   GstElementClass parent_class;
 };
 
-GST_BOILERPLATE (GstBz2enc, gst_bz2enc, GstElement, GST_TYPE_ELEMENT);
+#define gst_bz2enc_parent_class parent_class
+G_DEFINE_TYPE (GstBz2enc, gst_bz2enc, GST_TYPE_ELEMENT);
 
 static void
 gst_bz2enc_compress_end (GstBz2enc * b)
@@ -99,12 +100,12 @@ gst_bz2enc_compress_init (GstBz2enc * b)
 }
 
 static gboolean
-gst_bz2enc_event (GstPad * pad, GstEvent * e)
+gst_bz2enc_event (GstPad * pad, GstObject * parent, GstEvent * e)
 {
   GstBz2enc *b;
   gboolean ret;
 
-  b = GST_BZ2ENC (gst_pad_get_parent (pad));
+  b = GST_BZ2ENC (parent);
   switch (GST_EVENT_TYPE (e)) {
     case GST_EVENT_EOS:{
       GstFlowReturn flow;
@@ -112,19 +113,16 @@ gst_bz2enc_event (GstPad * pad, GstEvent * e)
 
       do {
         GstBuffer *out;
+        GstMapInfo omap;
+        guint n;
 
-        flow = gst_pad_alloc_buffer (b->src, b->offset, b->buffer_size,
-            GST_PAD_CAPS (b->src), &out);
+        out = gst_buffer_new_and_alloc (b->buffer_size);
 
-        if (flow != GST_FLOW_OK) {
-          GST_DEBUG_OBJECT (b, "pad alloc on EOS failed: %s",
-              gst_flow_get_name (flow));
-          break;
-        }
-
-        b->stream.next_out = (char *) GST_BUFFER_DATA (out);
-        b->stream.avail_out = GST_BUFFER_SIZE (out);
+        gst_buffer_map (out, &omap, GST_MAP_WRITE);
+        b->stream.next_out = (char *) omap.data;
+        b->stream.avail_out = omap.size;
         r = BZ2_bzCompress (&b->stream, BZ_FINISH);
+        gst_buffer_unmap (out, &omap);
         if ((r != BZ_FINISH_OK) && (r != BZ_STREAM_END)) {
           GST_ELEMENT_ERROR (b, STREAM, ENCODE, (NULL),
               ("Failed to finish to compress (error code %i).", r));
@@ -132,14 +130,15 @@ gst_bz2enc_event (GstPad * pad, GstEvent * e)
           break;
         }
 
-        if (b->stream.avail_out >= GST_BUFFER_SIZE (out)) {
+        n = gst_buffer_get_size (out);
+        if (b->stream.avail_out >= n) {
           gst_buffer_unref (out);
           break;
         }
 
-        GST_BUFFER_SIZE (out) -= b->stream.avail_out;
-        GST_BUFFER_OFFSET (out) =
-            b->stream.total_out_lo32 - GST_BUFFER_SIZE (out);
+        gst_buffer_resize (out, 0, n - b->stream.avail_out);
+        n = gst_buffer_get_size (out);
+        GST_BUFFER_OFFSET (out) = b->stream.total_out_lo32 - n;
 
         flow = gst_pad_push (b->src, out);
 
@@ -150,7 +149,7 @@ gst_bz2enc_event (GstPad * pad, GstEvent * e)
         }
       } while (r != BZ_STREAM_END);
 
-      ret = gst_pad_event_default (pad, e);
+      ret = gst_pad_event_default (pad, parent, e);
 
       if (r != BZ_STREAM_END || flow != GST_FLOW_OK)
         ret = FALSE;
@@ -159,54 +158,51 @@ gst_bz2enc_event (GstPad * pad, GstEvent * e)
       break;
     }
     default:
-      ret = gst_pad_event_default (pad, e);
+      ret = gst_pad_event_default (pad, parent, e);
       break;
   }
-
-  gst_object_unref (b);
 
   return ret;
 }
 
 static GstFlowReturn
-gst_bz2enc_chain (GstPad * pad, GstBuffer * in)
+gst_bz2enc_chain (GstPad * pad, GstObject * parent, GstBuffer * in)
 {
   GstFlowReturn flow = GST_FLOW_OK;
   GstBuffer *out;
   GstBz2enc *b;
   guint n;
   int bz2_ret;
+  GstMapInfo map, omap;
 
-  b = GST_BZ2ENC (GST_PAD_PARENT (pad));
+  b = GST_BZ2ENC (parent);
 
   if (!b->ready)
     goto not_ready;
 
-  b->stream.next_in = (char *) GST_BUFFER_DATA (in);
-  b->stream.avail_in = GST_BUFFER_SIZE (in);
+  gst_buffer_map (in, &map, GST_MAP_READ);
+  b->stream.next_in = (char *) map.data;
+  b->stream.avail_in = map.size;
   while (b->stream.avail_in) {
-    flow = gst_pad_alloc_buffer (b->src, b->offset, b->buffer_size,
-        GST_PAD_CAPS (pad), &out);
+    out = gst_buffer_new_and_alloc (b->buffer_size);
 
-    if (flow != GST_FLOW_OK) {
-      gst_bz2enc_compress_init (b);
-      break;
-    }
-
-    b->stream.next_out = (char *) GST_BUFFER_DATA (out);
-    b->stream.avail_out = GST_BUFFER_SIZE (out);
+    gst_buffer_map (out, &omap, GST_MAP_WRITE);
+    b->stream.next_out = (char *) omap.data;
+    b->stream.avail_out = omap.size;
     bz2_ret = BZ2_bzCompress (&b->stream, BZ_RUN);
+    gst_buffer_unmap (out, &omap);
     if (bz2_ret != BZ_RUN_OK)
       goto compress_error;
 
-    if (b->stream.avail_out >= GST_BUFFER_SIZE (out)) {
+    n = gst_buffer_get_size (out);
+    if (b->stream.avail_out >= n) {
       gst_buffer_unref (out);
       break;
     }
 
-    GST_BUFFER_SIZE (out) -= b->stream.avail_out;
-    GST_BUFFER_OFFSET (out) = b->stream.total_out_lo32 - GST_BUFFER_SIZE (out);
-    n = GST_BUFFER_SIZE (out);
+    gst_buffer_resize (out, 0, n - b->stream.avail_out);
+    n = gst_buffer_get_size (out);
+    GST_BUFFER_OFFSET (out) = b->stream.total_out_lo32 - n;
 
     flow = gst_pad_push (b->src, out);
 
@@ -218,6 +214,7 @@ gst_bz2enc_chain (GstPad * pad, GstBuffer * in)
 
 done:
 
+  gst_buffer_unmap (in, &map);
   gst_buffer_unref (in);
   return flow;
 
@@ -240,7 +237,7 @@ compress_error:
 }
 
 static void
-gst_bz2enc_init (GstBz2enc * b, GstBz2encClass * klass)
+gst_bz2enc_init (GstBz2enc * b)
 {
   b->sink = gst_pad_new_from_static_template (&sink_template, "sink");
   gst_pad_set_chain_function (b->sink, GST_DEBUG_FUNCPTR (gst_bz2enc_chain));
@@ -255,20 +252,6 @@ gst_bz2enc_init (GstBz2enc * b, GstBz2encClass * klass)
   b->block_size = DEFAULT_BLOCK_SIZE;
   b->buffer_size = DEFAULT_BUFFER_SIZE;
   gst_bz2enc_compress_init (b);
-}
-
-static void
-gst_bz2enc_base_init (gpointer g_class)
-{
-  GstElementClass *ec = GST_ELEMENT_CLASS (g_class);
-
-  gst_element_class_add_pad_template (ec,
-      gst_static_pad_template_get (&sink_template));
-  gst_element_class_add_pad_template (ec,
-      gst_static_pad_template_get (&src_template));
-  gst_element_class_set_details_simple (ec, "BZ2 encoder",
-      "Codec/Encoder", "Compresses streams",
-      "Lutz Mueller <lutz@users.sourceforge.net>");
 }
 
 static void
@@ -322,6 +305,7 @@ static void
 gst_bz2enc_class_init (GstBz2encClass * klass)
 {
   GObjectClass *gobject_class = G_OBJECT_CLASS (klass);
+  GstElementClass *gstelement_class = GST_ELEMENT_CLASS (klass);
 
   gobject_class->finalize = gst_bz2enc_finalize;
   gobject_class->set_property = gst_bz2enc_set_property;
@@ -335,6 +319,14 @@ gst_bz2enc_class_init (GstBz2encClass * klass)
       g_param_spec_uint ("buffer-size", "Buffer size", "Buffer size",
           1, G_MAXUINT, DEFAULT_BUFFER_SIZE,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
+  gst_element_class_add_pad_template (gstelement_class,
+      gst_static_pad_template_get (&sink_template));
+  gst_element_class_add_pad_template (gstelement_class,
+      gst_static_pad_template_get (&src_template));
+  gst_element_class_set_details_simple (gstelement_class, "BZ2 encoder",
+      "Codec/Encoder", "Compresses streams",
+      "Lutz Mueller <lutz@users.sourceforge.net>");
 
   GST_DEBUG_CATEGORY_INIT (bz2enc_debug, "bz2enc", 0, "BZ2 compressor");
 }
