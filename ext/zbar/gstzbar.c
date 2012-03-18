@@ -253,7 +253,7 @@ gst_zbar_transform_frame_ip (GstVideoFilter * vfilter, GstVideoFrame * frame)
   const zbar_symbol_t *symbol;
   int n;
 
-  if (GST_BASE_TRANSFORM (vfilter)->passthrough)
+  if (gst_base_transform_is_passthrough (GST_BASE_TRANSFORM (vfilter)))
     goto done;
 
   image = zbar_image_create ();
