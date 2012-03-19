@@ -691,6 +691,15 @@ gst_flac_parse_frame_is_valid (GstFlacParse * flacparse,
     }
   }
 
+  /* so we searched to expected end and found nothing,
+   * give up on this frame (start) */
+  if (flacparse->max_framesize && i > 2 * flacparse->max_framesize) {
+    GST_LOG_OBJECT (flacparse,
+        "could not determine valid frame end, discarding frame (start)");
+    *ret = 1;
+    return FALSE;
+  }
+
 need_more:
   max = flacparse->max_framesize + 16;
   if (max == 16)
