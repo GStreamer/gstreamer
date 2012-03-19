@@ -26,6 +26,8 @@
 
 G_BEGIN_DECLS
 
+#include <gst/audio/audio-enumtypes.h>
+
 #if G_BYTE_ORDER == G_BIG_ENDIAN
 #define _GST_AUDIO_FORMAT_NE(fmt) GST_AUDIO_FORMAT_ ## fmt ## BE
 #elif G_BYTE_ORDER == G_LITTLE_ENDIAN
