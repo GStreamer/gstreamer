@@ -1443,8 +1443,8 @@ gst_ffmpegdec_audio_negotiate (GstFFMpegDec * ffmpegdec, gboolean force)
   memcpy (ffmpegdec->format.audio.gst_layout,
       ffmpegdec->format.audio.ffmpeg_layout,
       sizeof (GstAudioChannelPosition) * ffmpegdec->format.audio.channels);
-  gst_audio_channel_positions_to_valid_order (ffmpegdec->format.audio.
-      gst_layout, ffmpegdec->format.audio.channels);
+  gst_audio_channel_positions_to_valid_order (ffmpegdec->format.
+      audio.gst_layout, ffmpegdec->format.audio.channels);
 
   GST_LOG_OBJECT (ffmpegdec, "output caps %" GST_PTR_FORMAT, caps);
 
@@ -2858,7 +2858,8 @@ gst_ffmpegdec_chain (GstPad * pad, GstObject * parent, GstBuffer * inbuf)
       bsize, in_offset, GST_TIME_ARGS (in_timestamp),
       GST_TIME_ARGS (in_duration), in_info->idx);
 
-  if (!GST_MEMORY_IS_ZERO_PADDED (map.memory)) {
+  if (!GST_MEMORY_IS_ZERO_PADDED (map.memory)
+      || (map.maxsize - map.size) < FF_INPUT_BUFFER_PADDING_SIZE) {
     /* add padding */
     if (ffmpegdec->padded_size < bsize + FF_INPUT_BUFFER_PADDING_SIZE) {
       ffmpegdec->padded_size = bsize + FF_INPUT_BUFFER_PADDING_SIZE;
