@@ -1133,6 +1133,56 @@ gst_video_frame_unmap (GstVideoFrame * frame)
  * gst_video_frame_copy:
  * @dest: a #GstVideoFrame
  * @src: a #GstVideoFrame
+ * @plane: a plane
+ *
+ * Copy the plane with index @plane from @src to @dest.
+ *
+ * Returns: TRUE if the contents could be copied.
+ */
+gboolean
+gst_video_frame_copy_plane (GstVideoFrame * dest, const GstVideoFrame * src,
+    guint plane)
+{
+  const GstVideoInfo *sinfo;
+  GstVideoInfo *dinfo;
+  guint w, h, j;
+  guint8 *sp, *dp;
+  gint ss, ds;
+
+  g_return_val_if_fail (dest != NULL, FALSE);
+  g_return_val_if_fail (src != NULL, FALSE);
+
+  sinfo = &src->info;
+  dinfo = &dest->info;
+
+  g_return_val_if_fail (dinfo->finfo->format == sinfo->finfo->format, FALSE);
+  g_return_val_if_fail (dinfo->width == sinfo->width
+      && dinfo->height == sinfo->height, FALSE);
+  g_return_val_if_fail (dinfo->finfo->n_planes < plane, FALSE);
+
+  sp = src->data[plane];
+  dp = dest->data[plane];
+
+  ss = sinfo->stride[plane];
+  ds = dinfo->stride[plane];
+
+  w = MIN (ABS (ss), ABS (ds));
+  h = GST_VIDEO_FRAME_COMP_HEIGHT (dest, plane);
+
+  GST_CAT_DEBUG (GST_CAT_PERFORMANCE, "copy plane %d, w:%d h:%d ", plane, w, h);
+
+  for (j = 0; j < h; j++) {
+    memcpy (dp, sp, w);
+    dp += ds;
+    sp += ss;
+  }
+  return TRUE;
+}
+
+/**
+ * gst_video_frame_copy:
+ * @dest: a #GstVideoFrame
+ * @src: a #GstVideoFrame
  *
  * Copy the contents from @src to @dest.
  *
@@ -1145,6 +1195,9 @@ gst_video_frame_copy (GstVideoFrame * dest, const GstVideoFrame * src)
   const GstVideoInfo *sinfo;
   GstVideoInfo *dinfo;
 
+  g_return_val_if_fail (dest != NULL, FALSE);
+  g_return_val_if_fail (src != NULL, FALSE);
+
   sinfo = &src->info;
   dinfo = &dest->info;
 
@@ -1154,30 +1207,9 @@ gst_video_frame_copy (GstVideoFrame * dest, const GstVideoFrame * src)
 
   n_planes = dinfo->finfo->n_planes;
 
-  GST_CAT_DEBUG (GST_CAT_PERFORMANCE, "doing video frame copy");
+  for (i = 0; i < n_planes; i++)
+    gst_video_frame_copy_plane (dest, src, i);
 
-  for (i = 0; i < n_planes; i++) {
-    guint w, h, j;
-    guint8 *sp, *dp;
-    gint ss, ds;
-
-    sp = src->data[i];
-    dp = dest->data[i];
-
-    ss = sinfo->stride[i];
-    ds = dinfo->stride[i];
-
-    w = MIN (ABS (ss), ABS (ds));
-    h = GST_VIDEO_FRAME_COMP_HEIGHT (dest, i);
-
-    GST_DEBUG ("w %d h %d", w, h);
-
-    for (j = 0; j < h; j++) {
-      memcpy (dp, sp, w);
-      dp += ds;
-      sp += ss;
-    }
-  }
   return TRUE;
 }
 

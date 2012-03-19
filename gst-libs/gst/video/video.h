@@ -632,6 +632,8 @@ gboolean    gst_video_frame_map_id        (GstVideoFrame *frame, GstVideoInfo *i
 void        gst_video_frame_unmap         (GstVideoFrame *frame);
 
 gboolean    gst_video_frame_copy          (GstVideoFrame *dest, const GstVideoFrame *src);
+gboolean    gst_video_frame_copy_plane    (GstVideoFrame *dest, const GstVideoFrame *src,
+                                           guint plane);
 
 /* general info */
 #define GST_VIDEO_FRAME_FORMAT(f)         (GST_VIDEO_INFO_FORMAT(&(f)->info))
