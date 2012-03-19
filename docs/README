@@ -117,7 +117,7 @@ can build simple server applications with it.
  
  The object that can create such pipeline is called a GstRTSPMediaFactory object. 
  The default implementation of GstRTSPMediaFactory allows you to easily create
- GStreamer pipelines using the gst-launch syntax. It possible to create a
+ GStreamer pipelines using the gst-launch syntax. It is possible to create a
  GstRTSPMediaFactory subclass that uses different methods for constructing
  pipelines.
 
@@ -171,7 +171,7 @@ can build simple server applications with it.
  The GstRTSPMediaFactory is responsible for creating and caching GstRTSPMedia
  objects. 
 
- A freshly created GstRTSPMedia object from the factory initialy only contains a
+ A freshly created GstRTSPMedia object from the factory initially only contains a
  GstElement containing the elements to produce the RTP streams for the media and
  a GArray of GstRTSPMediaStream objects describing the payloader and its source
  pad. The media is unprepared in this state.
