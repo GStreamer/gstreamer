@@ -248,6 +248,11 @@ struct _QtDemuxStream
   guint bytes_per_frame;
   guint compression;
 
+  /* allocation */
+  gboolean use_allocator;
+  GstAllocator *allocator;
+  GstAllocationParams params;
+
   /* when a discontinuity is pending */
   gboolean discont;
 
@@ -1782,6 +1787,8 @@ gst_qtdemux_stbl_free (QtDemuxStream * stream)
 static void
 gst_qtdemux_stream_free (GstQTDemux * qtdemux, QtDemuxStream * stream)
 {
+  if (stream->allocator)
+    gst_allocator_unref (stream->allocator);
   while (stream->buffers) {
     gst_buffer_unref (GST_BUFFER_CAST (stream->buffers->data));
     stream->buffers = g_slist_delete_link (stream->buffers, stream->buffers);
@@ -3759,6 +3766,11 @@ gst_qtdemux_loop_state_movie (GstQTDemux * qtdemux)
   GST_LOG_OBJECT (qtdemux, "reading %d bytes @ %" G_GUINT64_FORMAT, size,
       offset);
 
+  if (stream->use_allocator) {
+    /* if we have a per-stream allocator, use it */
+    buf = gst_buffer_new_allocate (stream->allocator, size, &stream->params);
+  }
+
   ret = gst_qtdemux_pull_atom (qtdemux, offset, size, &buf);
   if (G_UNLIKELY (ret != GST_FLOW_OK))
     goto beach;
@@ -4989,6 +5001,34 @@ qtdemux_tree_get_sibling_by_type (GNode * node, guint32 fourcc)
   return qtdemux_tree_get_sibling_by_type_full (node, fourcc, NULL);
 }
 
+static void
+qtdemux_do_allocation (GstQTDemux * qtdemux, QtDemuxStream * stream)
+{
+  GstQuery *query;
+
+  query = gst_query_new_allocation (stream->caps, FALSE);
+
+  if (!gst_pad_peer_query (stream->pad, query)) {
+    /* not a problem, just debug a little */
+    GST_DEBUG_OBJECT (qtdemux, "peer ALLOCATION query failed");
+  }
+
+  if (stream->allocator)
+    gst_allocator_unref (stream->allocator);
+
+  if (gst_query_get_n_allocation_params (query) > 0) {
+    /* try the allocator */
+    gst_query_parse_nth_allocation_param (query, 0, &stream->allocator,
+        &stream->params);
+    stream->use_allocator = TRUE;
+  } else {
+    stream->allocator = NULL;
+    gst_allocation_params_init (&stream->params);
+    stream->use_allocator = FALSE;
+  }
+  gst_query_unref (query);
+}
+
 static gboolean
 gst_qtdemux_add_stream (GstQTDemux * qtdemux,
     QtDemuxStream * stream, GstTagList * list)
@@ -5159,6 +5199,8 @@ gst_qtdemux_add_stream (GstQTDemux * qtdemux,
     stream->pending_tags = list;
     /* global tags go on each pad anyway */
     stream->send_global_tags = TRUE;
+
+    qtdemux_do_allocation (qtdemux, stream);
   }
 done:
   return TRUE;
