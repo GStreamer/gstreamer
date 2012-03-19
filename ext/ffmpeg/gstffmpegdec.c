@@ -134,7 +134,6 @@ struct _GstFFMpegDec
   enum AVDiscard skip_frame;
   gint lowres;
   gboolean direct_rendering;
-  gboolean do_padding;
   gboolean debug_mv;
   int max_threads;
 
@@ -646,7 +645,6 @@ gst_ffmpegdec_open (GstFFMpegDec * ffmpegdec)
       oclass->in_plugin->name, oclass->in_plugin->id);
 
   /* open a parser if we can */
-  ffmpegdec->do_padding = TRUE;
   switch (oclass->in_plugin->id) {
     case CODEC_ID_MPEG4:
     case CODEC_ID_MJPEG:
@@ -1445,8 +1443,8 @@ gst_ffmpegdec_audio_negotiate (GstFFMpegDec * ffmpegdec, gboolean force)
   memcpy (ffmpegdec->format.audio.gst_layout,
       ffmpegdec->format.audio.ffmpeg_layout,
       sizeof (GstAudioChannelPosition) * ffmpegdec->format.audio.channels);
-  gst_audio_channel_positions_to_valid_order (ffmpegdec->format.
-      audio.gst_layout, ffmpegdec->format.audio.channels);
+  gst_audio_channel_positions_to_valid_order (ffmpegdec->format.audio.
+      gst_layout, ffmpegdec->format.audio.channels);
 
   GST_LOG_OBJECT (ffmpegdec, "output caps %" GST_PTR_FORMAT, caps);
 
@@ -2756,7 +2754,7 @@ gst_ffmpegdec_chain (GstPad * pad, GstObject * parent, GstBuffer * inbuf)
   GstFlowReturn ret = GST_FLOW_OK;
   GstClockTime in_timestamp;
   GstClockTime in_duration;
-  gboolean discont;
+  gboolean discont, do_padding;
   gint64 in_offset;
   const GstTSInfo *in_info;
   const GstTSInfo *dec_info;
@@ -2860,7 +2858,7 @@ gst_ffmpegdec_chain (GstPad * pad, GstObject * parent, GstBuffer * inbuf)
       bsize, in_offset, GST_TIME_ARGS (in_timestamp),
       GST_TIME_ARGS (in_duration), in_info->idx);
 
-  if (ffmpegdec->do_padding) {
+  if (!GST_MEMORY_IS_ZERO_PADDED (map.memory)) {
     /* add padding */
     if (ffmpegdec->padded_size < bsize + FF_INPUT_BUFFER_PADDING_SIZE) {
       ffmpegdec->padded_size = bsize + FF_INPUT_BUFFER_PADDING_SIZE;
@@ -2883,6 +2881,7 @@ gst_ffmpegdec_chain (GstPad * pad, GstObject * parent, GstBuffer * inbuf)
     if (ffmpegdec->pctx) {
       gint res;
 
+      do_padding = TRUE;
       GST_LOG_OBJECT (ffmpegdec,
           "Calling av_parser_parse2 with offset %" G_GINT64_FORMAT ", ts:%"
           GST_TIME_FORMAT " size %d", in_offset, GST_TIME_ARGS (in_timestamp),
@@ -2930,14 +2929,17 @@ gst_ffmpegdec_chain (GstPad * pad, GstObject * parent, GstBuffer * inbuf)
           break;
       }
     } else {
+      do_padding = FALSE;
       data = bdata;
       size = bsize;
 
       dec_info = in_info;
     }
 
-    if (ffmpegdec->do_padding) {
+    if (do_padding) {
       /* add temporary padding */
+      GST_CAT_TRACE_OBJECT (GST_CAT_PERFORMANCE, ffmpegdec,
+          "Add temporary input padding");
       memcpy (tmp_padding, data + size, FF_INPUT_BUFFER_PADDING_SIZE);
       memset (data + size, 0, FF_INPUT_BUFFER_PADDING_SIZE);
     }
@@ -2946,14 +2948,14 @@ gst_ffmpegdec_chain (GstPad * pad, GstObject * parent, GstBuffer * inbuf)
     len =
         gst_ffmpegdec_frame (ffmpegdec, data, size, &have_data, dec_info, &ret);
 
-    if (ffmpegdec->do_padding) {
+    if (do_padding) {
       memcpy (data + size, tmp_padding, FF_INPUT_BUFFER_PADDING_SIZE);
     }
 
     if (ret != GST_FLOW_OK) {
       GST_LOG_OBJECT (ffmpegdec, "breaking because of flow ret %s",
           gst_flow_get_name (ret));
-      /* bad flow retun, make sure we discard all data and exit */
+      /* bad flow return, make sure we discard all data and exit */
       bsize = 0;
       break;
     }
@@ -2999,6 +3001,7 @@ gst_ffmpegdec_chain (GstPad * pad, GstObject * parent, GstBuffer * inbuf)
       ffmpegdec->clear_ts = TRUE;
     }
     ffmpegdec->last_frames++;
+    do_padding = TRUE;
 
     GST_LOG_OBJECT (ffmpegdec, "Before (while bsize>0).  bsize:%d , bdata:%p",
         bsize, bdata);
