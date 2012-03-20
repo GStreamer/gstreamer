@@ -277,11 +277,19 @@ gst_mad_parse (GstAudioDecoder * dec, GstAdapter * adapter,
     gint * _offset, gint * len)
 {
   GstMad *mad;
+<<<<<<< HEAD
   GstFlowReturn ret = GST_FLOW_EOS;
+  gint av, size, offset, prev_offset, consumed = 0;
+  const guint8 *data;
+  gboolean eos;
+  guint8 *guard = NULL;
+=======
+  GstFlowReturn ret = GST_FLOW_UNEXPECTED;
   gint av, size, offset;
   const guint8 *data;
   gboolean eos, sync;
-  guint8 *guard = NULL;
+  GstBuffer *guard = NULL;
+>>>>>>> origin/master
 
   mad = GST_MAD (dec);
 

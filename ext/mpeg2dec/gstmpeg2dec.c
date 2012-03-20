@@ -269,10 +269,20 @@ gst_mpeg2dec_crop_buffer (GstMpeg2dec * dec, GstBuffer ** buf)
         gst_video_format_get_component_height (dec->format, c, dec->height);
     c_width = gst_video_format_get_component_width (dec->format, c, dec->width);
 
-    for (line = 0; line < c_height; line++) {
-      memcpy (dest, src, c_width);
-      dest += stride_out;
-      src += stride_in;
+    GST_DEBUG ("stride_in:%d _out:%d c_width:%d c_height:%d",
+        stride_in, stride_out, c_width, c_height);
+
+    if (stride_in == stride_out && stride_in == c_width) {
+      /* FAST PATH */
+      memcpy (dest, src, c_height * stride_out);
+      dest += stride_out * c_height;
+      src += stride_out * c_height;
+    } else {
+      for (line = 0; line < c_height; line++) {
+        memcpy (dest, src, c_width);
+        dest += stride_out;
+        src += stride_in;
+      }
     }
   }
 

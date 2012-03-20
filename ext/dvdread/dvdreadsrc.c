@@ -1082,7 +1082,7 @@ gst_dvd_read_src_get_size (GstDvdReadSrc * src, gint64 * size)
   gboolean ret = FALSE;
 
   if (src->dvd_title) {
-    gsize blocks;
+    gssize blocks;
 
     blocks = DVDFileSize (src->dvd_title);
     if (blocks >= 0) {
