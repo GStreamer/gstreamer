@@ -2596,10 +2596,8 @@ gst_base_parse_chain (GstPad * pad, GstObject * parent, GstBuffer * buffer)
     data = gst_adapter_map (parse->priv->adapter, av);
     /* arrange for actual data to be copied if subclass tries to,
      * since what is passed is tied to the adapter */
-    tmpbuf = gst_buffer_new ();
-    gst_buffer_take_memory (tmpbuf, -1,
-        gst_memory_new_wrapped (GST_MEMORY_FLAG_READONLY |
-            GST_MEMORY_FLAG_NO_SHARE, (gpointer) data, av, 0, av, NULL, NULL));
+    tmpbuf = gst_buffer_new_wrapped_full (GST_MEMORY_FLAG_READONLY |
+        GST_MEMORY_FLAG_NO_SHARE, (gpointer) data, av, 0, av, NULL, NULL);
 
     /* keep the adapter mapped, so keep track of what has to be flushed */
     ret = gst_base_parse_handle_buffer (parse, tmpbuf, &skip, &flush);
@@ -2727,7 +2725,7 @@ gst_base_parse_handle_previous_fragment (GstBaseParse * parse)
   if (parse->priv->exact_position) {
     offset = gst_base_parse_find_offset (parse, ts, TRUE, NULL);
   } else {
-    if (!gst_pad_query_convert (parse->srcpad, GST_FORMAT_TIME, ts,
+    if (!gst_base_parse_convert (parse, GST_FORMAT_TIME, ts,
             GST_FORMAT_BYTES, &offset)) {
       GST_DEBUG_OBJECT (parse, "conversion failed, only BYTE based");
     }
@@ -3819,10 +3817,10 @@ gst_base_parse_handle_seek (GstBaseParse * parse, GstEvent * event)
         NULL);
   } else {
     start_ts = seeksegment.position;
-    if (!gst_pad_query_convert (parse->srcpad, format, seeksegment.position,
+    if (!gst_base_parse_convert (parse, format, seeksegment.position,
             GST_FORMAT_BYTES, &seekpos))
       goto convert_failed;
-    if (!gst_pad_query_convert (parse->srcpad, format, seeksegment.stop,
+    if (!gst_base_parse_convert (parse, format, seeksegment.stop,
             GST_FORMAT_BYTES, &seekstop))
       goto convert_failed;
   }
