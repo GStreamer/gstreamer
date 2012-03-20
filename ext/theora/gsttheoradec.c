@@ -49,6 +49,7 @@
 
 #define GST_CAT_DEFAULT theoradec_debug
 GST_DEBUG_CATEGORY_STATIC (GST_CAT_DEFAULT);
+GST_DEBUG_CATEGORY_EXTERN (GST_CAT_PERFORMANCE);
 
 #define THEORA_DEF_TELEMETRY_MV 0
 #define THEORA_DEF_TELEMETRY_MBMODE 0
@@ -1165,6 +1166,10 @@ theora_handle_image (GstTheoraDec * dec, th_ycbcr_buffer buf, GstBuffer ** out)
       crop->height = dec->info.pic_height;
     }
   }
+
+  /* if only libtheora would allow us to give it a destination frame */
+  GST_CAT_TRACE_OBJECT (GST_CAT_PERFORMANCE, dec,
+      "doing unavoidable video frame copy");
 
   for (comp = 0; comp < 3; comp++) {
     width =
