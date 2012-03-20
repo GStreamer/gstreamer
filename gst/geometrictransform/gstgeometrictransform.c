@@ -113,6 +113,8 @@ gst_geometric_transform_generate_map (GstGeometricTransform * gt)
   GstGeometricTransformClass *klass;
   gdouble *ptr;
 
+  GST_INFO_OBJECT (gt, "Generating new transform map");
+
   /* cleanup old map */
   g_free (gt->map);
   gt->map = NULL;
@@ -144,6 +146,7 @@ gst_geometric_transform_generate_map (GstGeometricTransform * gt)
 
 end:
   if (!ret) {
+    GST_WARNING_OBJECT (gt, "Generating transform map failed");
     g_free (gt->map);
     gt->map = NULL;
   } else
@@ -348,6 +351,7 @@ gst_geometric_transform_stop (GstBaseTransform * trans)
 {
   GstGeometricTransform *gt = GST_GEOMETRIC_TRANSFORM_CAST (trans);
 
+  GST_INFO_OBJECT (gt, "Deleting transform map");
   g_free (gt->map);
   gt->map = NULL;
 
