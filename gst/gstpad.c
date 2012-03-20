@@ -3818,6 +3818,7 @@ gst_pad_get_range_unchecked (GstPad * pad, guint64 offset, guint size,
   GstFlowReturn ret;
   GstPadGetRangeFunction getrangefunc;
   GstObject *parent;
+  GstBuffer *res_buf;
 
   GST_PAD_STREAM_LOCK (pad);
 
@@ -3831,11 +3832,13 @@ gst_pad_get_range_unchecked (GstPad * pad, guint64 offset, guint size,
   if (G_UNLIKELY ((ret = check_sticky (pad))) != GST_FLOW_OK)
     goto events_error;
 
+  res_buf = *buffer;
+
   /* when one of the probes returns DROPPED, probe_stopped will be called
-   * and we skip calling the getrange function, *buffer should then contain a
+   * and we skip calling the getrange function, res_buf should then contain a
    * valid result buffer */
   PROBE_PULL (pad, GST_PAD_PROBE_TYPE_PULL | GST_PAD_PROBE_TYPE_BLOCK,
-      *buffer, offset, size, probe_stopped);
+      res_buf, offset, size, probe_stopped);
 
   ACQUIRE_PARENT (pad, parent, no_parent);
   GST_OBJECT_UNLOCK (pad);
@@ -3848,7 +3851,7 @@ gst_pad_get_range_unchecked (GstPad * pad, guint64 offset, guint size,
       G_GUINT64_FORMAT ", size %u",
       GST_DEBUG_FUNCPTR_NAME (getrangefunc), offset, size);
 
-  ret = getrangefunc (pad, parent, offset, size, buffer);
+  ret = getrangefunc (pad, parent, offset, size, &res_buf);
 
   RELEASE_PARENT (parent);
 
@@ -3859,10 +3862,12 @@ gst_pad_get_range_unchecked (GstPad * pad, guint64 offset, guint size,
   GST_OBJECT_LOCK (pad);
 probed_data:
   PROBE_PULL (pad, GST_PAD_PROBE_TYPE_PULL | GST_PAD_PROBE_TYPE_BUFFER,
-      *buffer, offset, size, probe_stopped_unref);
+      res_buf, offset, size, probe_stopped_unref);
   GST_OBJECT_UNLOCK (pad);
 
   GST_PAD_STREAM_UNLOCK (pad);
+
+  *buffer = res_buf;
 
   return ret;
 
@@ -3910,7 +3915,7 @@ probe_stopped:
     GST_CAT_LOG_OBJECT (GST_CAT_SCHEDULING, pad,
         "probe returned %s", gst_flow_get_name (ret));
     if (ret == GST_FLOW_CUSTOM_SUCCESS) {
-      if (*buffer) {
+      if (res_buf) {
         /* the probe filled the buffer and asks us to not call the getrange
          * anymore, we continue with the post probes then. */
         GST_DEBUG_OBJECT (pad, "handled buffer");
@@ -3936,14 +3941,13 @@ probe_stopped_unref:
       ret = GST_FLOW_EOS;
     GST_OBJECT_UNLOCK (pad);
     GST_PAD_STREAM_UNLOCK (pad);
-    gst_buffer_unref (*buffer);
-    *buffer = NULL;
+    if (*buffer == NULL)
+      gst_buffer_unref (res_buf);
     return ret;
   }
 get_range_failed:
   {
     GST_PAD_STREAM_UNLOCK (pad);
-    *buffer = NULL;
     GST_CAT_LEVEL_LOG (GST_CAT_SCHEDULING,
         (ret >= GST_FLOW_EOS) ? GST_LEVEL_INFO : GST_LEVEL_WARNING,
         pad, "getrange failed, flow: %s", gst_flow_get_name (ret));
@@ -3967,8 +3971,22 @@ get_range_failed:
  * installed (see gst_pad_set_getrange_function()) this function returns
  * #GST_FLOW_NOT_SUPPORTED.
  *
- * @buffer must point to a variable holding NULL or a variable that
- * points to a #GstBuffer that will be filled with the result data.
+ * If @buffer points to a variable holding NULL, a valid new #GstBuffer will be
+ * placed in @buffer when this function returns #GST_FLOW_OK. The new buffer
+ * must be freed with gst_buffer_unref() after usage.
+ *
+ * When @buffer points to a variable that points to a valid #GstBuffer, the
+ * buffer will be filled with the result data when this function returns
+ * #GST_FLOW_OK. If the provided buffer is larger than @size, only
+ * @size bytes will be filled in the result buffer and its size will be updated
+ * accordingly.
+ *
+ * Note that less than @size bytes can be returned in @buffer when, for example,
+ * an EOS condition is near or when @buffer is not large enough to hold @size
+ * bytes. The caller should check the result buffer size to get the result size.
+ *
+ * When this function returns any other result value than #GST_FLOW_OK, @buffer
+ * will be unchanged.
  *
  * This is a lowlevel function. Usualy gst_pad_pull_range() is used.
  *
@@ -3997,7 +4015,7 @@ gst_pad_get_range (GstPad * pad, guint64 offset, guint size,
  * @buffer: (out callee-allocates): a pointer to hold the #GstBuffer, returns
  *     GST_FLOW_ERROR if %NULL.
  *
- * Pulls a @buffer from the peer pad.
+ * Pulls a @buffer from the peer pad or fills up a provided buffer.
  *
  * This function will first trigger the pad block signal if it was
  * installed.
@@ -4007,14 +4025,23 @@ gst_pad_get_range (GstPad * pad, guint64 offset, guint size,
  * See gst_pad_get_range() for a list of return values and for the
  * semantics of the arguments of this function.
  *
- * @buffer must point to a variable holding NULL or a variable that
- * points to a #GstBuffer that will be filled with the result data.
+ * If @buffer points to a variable holding NULL, a valid new #GstBuffer will be
+ * placed in @buffer when this function returns #GST_FLOW_OK. The new buffer
+ * must be freed with gst_buffer_unref() after usage. When this function
+ * returns any other result value, @buffer will still point to NULL.
+ *
+ * When @buffer points to a variable that points to a valid #GstBuffer, the
+ * buffer will be filled with the result data when this function returns
+ * #GST_FLOW_OK. When this function returns any other result value,
+ * @buffer will be unchanged. If the provided buffer is larger than @size, only
+ * @size bytes will be filled in the result buffer and its size will be updated
+ * accordingly.
+ *
+ * Note that less than @size bytes can be returned in @buffer when, for example,
+ * an EOS condition is near or when @buffer is not large enough to hold @size
+ * bytes. The caller should check the result buffer size to get the result size.
  *
  * Returns: a #GstFlowReturn from the peer pad.
- * When this function returns #GST_FLOW_OK, @buffer will contain a valid
- * #GstBuffer that should be freed with gst_buffer_unref() after usage.
- * @buffer may not be used or freed when any other return value than
- * #GST_FLOW_OK is returned.
  *
  * MT safe.
  */
@@ -4024,6 +4051,7 @@ gst_pad_pull_range (GstPad * pad, guint64 offset, guint size,
 {
   GstPad *peer;
   GstFlowReturn ret;
+  GstBuffer *res_buf;
 
   g_return_val_if_fail (GST_IS_PAD (pad), GST_FLOW_ERROR);
   g_return_val_if_fail (GST_PAD_IS_SINK (pad), GST_FLOW_ERROR);
@@ -4038,11 +4066,13 @@ gst_pad_pull_range (GstPad * pad, guint64 offset, guint size,
   if (G_UNLIKELY (GST_PAD_MODE (pad) != GST_PAD_MODE_PULL))
     goto wrong_mode;
 
+  res_buf = *buffer;
+
   /* when one of the probes returns DROPPED, probe_stopped will be
    * called and we skip calling the peer getrange function. *buffer should then
    * contain a valid buffer */
   PROBE_PULL (pad, GST_PAD_PROBE_TYPE_PULL | GST_PAD_PROBE_TYPE_BLOCK,
-      *buffer, offset, size, probe_stopped);
+      res_buf, offset, size, probe_stopped);
 
   if (G_UNLIKELY ((peer = GST_PAD_PEER (pad)) == NULL))
     goto not_linked;
@@ -4051,7 +4081,7 @@ gst_pad_pull_range (GstPad * pad, guint64 offset, guint size,
   pad->priv->using++;
   GST_OBJECT_UNLOCK (pad);
 
-  ret = gst_pad_get_range_unchecked (peer, offset, size, buffer);
+  ret = gst_pad_get_range_unchecked (peer, offset, size, &res_buf);
 
   gst_object_unref (peer);
 
@@ -4068,9 +4098,11 @@ gst_pad_pull_range (GstPad * pad, guint64 offset, guint size,
 
 probed_data:
   PROBE_PULL (pad, GST_PAD_PROBE_TYPE_PULL | GST_PAD_PROBE_TYPE_BUFFER,
-      *buffer, offset, size, probe_stopped_unref);
+      res_buf, offset, size, probe_stopped_unref);
 
   GST_OBJECT_UNLOCK (pad);
+
+  *buffer = res_buf;
 
   return ret;
 
@@ -4094,7 +4126,7 @@ probe_stopped:
     GST_CAT_LOG_OBJECT (GST_CAT_SCHEDULING, pad, "pre probe returned %s",
         gst_flow_get_name (ret));
     if (ret == GST_FLOW_CUSTOM_SUCCESS) {
-      if (*buffer) {
+      if (res_buf) {
         /* the probe filled the buffer and asks us to not forward to the peer
          * anymore, we continue with the post probes then */
         GST_DEBUG_OBJECT (pad, "handled buffer");
@@ -4118,7 +4150,6 @@ not_linked:
   }
 pull_range_failed:
   {
-    *buffer = NULL;
     GST_OBJECT_UNLOCK (pad);
     GST_CAT_LEVEL_LOG (GST_CAT_SCHEDULING,
         (ret >= GST_FLOW_EOS) ? GST_LEVEL_INFO : GST_LEVEL_WARNING,
@@ -4131,12 +4162,10 @@ probe_stopped_unref:
         "post probe returned %s", gst_flow_get_name (ret));
     GST_OBJECT_UNLOCK (pad);
     /* if we drop here, it signals EOS */
-    if (ret == GST_FLOW_CUSTOM_SUCCESS) {
+    if (ret == GST_FLOW_CUSTOM_SUCCESS)
       ret = GST_FLOW_EOS;
-      gst_buffer_unref (*buffer);
-    } else if (ret == GST_FLOW_OK)
-      gst_buffer_unref (*buffer);
-    *buffer = NULL;
+    if (*buffer == NULL)
+      gst_buffer_unref (res_buf);
     return ret;
   }
 }

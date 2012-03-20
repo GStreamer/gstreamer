@@ -1161,7 +1161,11 @@ gst_queue2_create_read (GstQueue2 * queue, guint64 offset, guint length,
   GstFlowReturn ret = GST_FLOW_OK;
 
   /* allocate the output buffer of the requested size */
-  buf = gst_buffer_new_allocate (NULL, length, NULL);
+  if (*buffer == NULL)
+    buf = gst_buffer_new_allocate (NULL, length, NULL);
+  else
+    buf = *buffer;
+
   gst_buffer_map (buf, &info, GST_MAP_WRITE);
   data = info.data;
 
@@ -1289,21 +1293,24 @@ hit_eos:
   {
     GST_DEBUG_OBJECT (queue, "EOS hit and we don't have any requested data");
     gst_buffer_unmap (buf, &info);
-    gst_buffer_unref (buf);
+    if (*buffer == NULL)
+      gst_buffer_unref (buf);
     return GST_FLOW_EOS;
   }
 out_flushing:
   {
     GST_DEBUG_OBJECT (queue, "we are flushing");
     gst_buffer_unmap (buf, &info);
-    gst_buffer_unref (buf);
+    if (*buffer == NULL)
+      gst_buffer_unref (buf);
     return GST_FLOW_FLUSHING;
   }
 read_error:
   {
     GST_DEBUG_OBJECT (queue, "we have a read error");
     gst_buffer_unmap (buf, &info);
-    gst_buffer_unref (buf);
+    if (*buffer == NULL)
+      gst_buffer_unref (buf);
     return ret;
   }
 }
@@ -1322,7 +1329,7 @@ gst_queue2_read_item_from_file (GstQueue2 * queue)
     queue->starting_segment = NULL;
   } else {
     GstFlowReturn ret;
-    GstBuffer *buffer;
+    GstBuffer *buffer = NULL;
     guint64 reading_pos;
 
     reading_pos = queue->current->reading_pos;

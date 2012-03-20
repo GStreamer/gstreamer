@@ -1379,6 +1379,7 @@ gst_base_src_default_create (GstBaseSrc * src, guint64 offset,
 {
   GstBaseSrcClass *bclass;
   GstFlowReturn ret;
+  GstBuffer *res_buf;
 
   bclass = GST_BASE_SRC_GET_CLASS (src);
 
@@ -1390,17 +1391,21 @@ gst_base_src_default_create (GstBaseSrc * src, guint64 offset,
   if (*buffer == NULL) {
     /* downstream did not provide us with a buffer to fill, allocate one
      * ourselves */
-    ret = bclass->alloc (src, offset, size, buffer);
+    ret = bclass->alloc (src, offset, size, &res_buf);
     if (G_UNLIKELY (ret != GST_FLOW_OK))
       goto alloc_failed;
+  } else {
+    res_buf = *buffer;
   }
 
   if (G_LIKELY (size > 0)) {
     /* only call fill when there is a size */
-    ret = bclass->fill (src, offset, size, *buffer);
+    ret = bclass->fill (src, offset, size, res_buf);
     if (G_UNLIKELY (ret != GST_FLOW_OK))
       goto not_ok;
   }
+
+  *buffer = res_buf;
 
   return GST_FLOW_OK;
 
@@ -1419,7 +1424,8 @@ not_ok:
   {
     GST_DEBUG_OBJECT (src, "fill returned %d (%s)", ret,
         gst_flow_get_name (ret));
-    gst_buffer_unref (*buffer);
+    if (*buffer == NULL)
+      gst_buffer_unref (res_buf);
     return ret;
   }
 }
@@ -2242,6 +2248,7 @@ gst_base_src_get_range (GstBaseSrc * src, guint64 offset, guint length,
   GstFlowReturn ret;
   GstBaseSrcClass *bclass;
   GstClockReturn status;
+  GstBuffer *res_buf;
 
   bclass = GST_BASE_SRC_GET_CLASS (src);
 
@@ -2287,15 +2294,17 @@ again:
       "calling create offset %" G_GUINT64_FORMAT " length %u, time %"
       G_GINT64_FORMAT, offset, length, src->segment.time);
 
-  ret = bclass->create (src, offset, length, buf);
+  res_buf = *buf;
+
+  ret = bclass->create (src, offset, length, &res_buf);
 
   /* The create function could be unlocked because we have a pending EOS. It's
    * possible that we have a valid buffer from create that we need to
    * discard when the create function returned _OK. */
   if (G_UNLIKELY (g_atomic_int_get (&src->priv->pending_eos))) {
     if (ret == GST_FLOW_OK) {
-      gst_buffer_unref (*buf);
-      *buf = NULL;
+      if (*buf == NULL)
+        gst_buffer_unref (res_buf);
     }
     goto eos;
   }
@@ -2305,14 +2314,14 @@ again:
 
   /* no timestamp set and we are at offset 0, we can timestamp with 0 */
   if (offset == 0 && src->segment.time == 0
-      && GST_BUFFER_TIMESTAMP (*buf) == -1 && !src->is_live) {
+      && GST_BUFFER_TIMESTAMP (res_buf) == -1 && !src->is_live) {
     GST_DEBUG_OBJECT (src, "setting first timestamp to 0");
-    *buf = gst_buffer_make_writable (*buf);
-    GST_BUFFER_TIMESTAMP (*buf) = 0;
+    res_buf = gst_buffer_make_writable (res_buf);
+    GST_BUFFER_TIMESTAMP (res_buf) = 0;
   }
 
   /* now sync before pushing the buffer */
-  status = gst_base_src_do_sync (src, *buf);
+  status = gst_base_src_do_sync (src, res_buf);
 
   /* waiting for the clock could have made us flushing */
   if (G_UNLIKELY (src->priv->flushing))
@@ -2331,8 +2340,9 @@ again:
       /* this case is triggered when we were waiting for the clock and
        * it got unlocked because we did a state change. In any case, get rid of
        * the buffer. */
-      gst_buffer_unref (*buf);
-      *buf = NULL;
+      if (*buf == NULL)
+        gst_buffer_unref (res_buf);
+
       if (!src->live_running) {
         /* We return WRONG_STATE when we are not running to stop the dataflow also
          * get rid of the produced buffer. */
@@ -2352,11 +2362,14 @@ again:
       GST_ELEMENT_ERROR (src, CORE, CLOCK,
           (_("Internal clock error.")),
           ("clock returned unexpected return value %d", status));
-      gst_buffer_unref (*buf);
-      *buf = NULL;
+      if (*buf == NULL)
+        gst_buffer_unref (res_buf);
       ret = GST_FLOW_ERROR;
       break;
   }
+  if (G_LIKELY (ret == GST_FLOW_OK))
+    *buf = res_buf;
+
   return ret;
 
   /* ERROR */
@@ -2396,8 +2409,8 @@ reached_num_buffers:
 flushing:
   {
     GST_DEBUG_OBJECT (src, "we are flushing");
-    gst_buffer_unref (*buf);
-    *buf = NULL;
+    if (*buf == NULL)
+      gst_buffer_unref (res_buf);
     return GST_FLOW_FLUSHING;
   }
 eos:
