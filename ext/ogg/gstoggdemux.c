@@ -2183,7 +2183,9 @@ static GstFlowReturn
 gst_ogg_demux_get_data (GstOggDemux * ogg, gint64 end_offset)
 {
   GstFlowReturn ret;
-  GstBuffer *buffer = NULL;
+  GstBuffer *buffer;
+  gchar *oggbuffer;
+  gsize size;
 
   GST_LOG_OBJECT (ogg,
       "get data %" G_GINT64_FORMAT " %" G_GINT64_FORMAT " %" G_GINT64_FORMAT,
@@ -2195,13 +2197,25 @@ gst_ogg_demux_get_data (GstOggDemux * ogg, gint64 end_offset)
   if (ogg->read_offset == ogg->length)
     goto eos;
 
+  oggbuffer = ogg_sync_buffer (&ogg->sync, CHUNKSIZE);
+  if (G_UNLIKELY (oggbuffer == NULL))
+    goto no_buffer;
+
+  buffer =
+      gst_buffer_new_wrapped_full (0, oggbuffer, CHUNKSIZE, 0, CHUNKSIZE, NULL,
+      NULL);
+
   ret = gst_pad_pull_range (ogg->sinkpad, ogg->read_offset, CHUNKSIZE, &buffer);
   if (ret != GST_FLOW_OK)
     goto error;
 
-  ogg->read_offset += gst_buffer_get_size (buffer);
+  size = gst_buffer_get_size (buffer);
 
-  ret = gst_ogg_demux_submit_buffer (ogg, buffer);
+  if (G_UNLIKELY (ogg_sync_wrote (&ogg->sync, size) < 0))
+    goto write_failed;
+
+  ogg->read_offset += size;
+  gst_buffer_unref (buffer);
 
   return ret;
 
@@ -2216,11 +2230,25 @@ eos:
     GST_LOG_OBJECT (ogg, "reached EOS");
     return GST_FLOW_EOS;
   }
+no_buffer:
+  {
+    GST_ELEMENT_ERROR (ogg, STREAM, DECODE,
+        (NULL), ("failed to get ogg sync buffer"));
+    return GST_FLOW_ERROR;
+  }
 error:
   {
     GST_WARNING_OBJECT (ogg, "got %d (%s) from pull range", ret,
         gst_flow_get_name (ret));
+    gst_buffer_unref (buffer);
     return ret;
+  }
+write_failed:
+  {
+    GST_ELEMENT_ERROR (ogg, STREAM, DECODE, (NULL),
+        ("failed to write %" G_GSIZE_FORMAT " bytes to the sync buffer", size));
+    gst_buffer_unref (buffer);
+    return GST_FLOW_ERROR;
   }
 }
 
