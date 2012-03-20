@@ -1158,7 +1158,7 @@ gst_video_frame_copy_plane (GstVideoFrame * dest, const GstVideoFrame * src,
   g_return_val_if_fail (dinfo->finfo->format == sinfo->finfo->format, FALSE);
   g_return_val_if_fail (dinfo->width == sinfo->width
       && dinfo->height == sinfo->height, FALSE);
-  g_return_val_if_fail (dinfo->finfo->n_planes < plane, FALSE);
+  g_return_val_if_fail (dinfo->finfo->n_planes > plane, FALSE);
 
   sp = src->data[plane];
   dp = dest->data[plane];
