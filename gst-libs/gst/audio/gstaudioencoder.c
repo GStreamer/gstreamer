@@ -784,8 +784,8 @@ gst_audio_encoder_push_buffers (GstAudioEncoder * enc, gboolean force)
 
       data = gst_adapter_map (priv->adapter, priv->offset + need);
       buf =
-          gst_buffer_new_wrapped_full ((gpointer) data, NULL, priv->offset,
-          need);
+          gst_buffer_new_wrapped_full (GST_MEMORY_FLAG_READONLY,
+          (gpointer) data, priv->offset + need, priv->offset, need, NULL, NULL);
     } else if (!priv->drainable) {
       GST_DEBUG_OBJECT (enc, "non-drainable and no more data");
       goto finish;

@@ -557,8 +557,8 @@ GST_START_TEST (test_multichannel_reorder)
 
   for (i = 0; i < G_N_ELEMENTS (tests); i++) {
     buf =
-        gst_buffer_new_wrapped_full (tests[i].in, NULL, 0,
-        sizeof (tests[i].in));
+        gst_buffer_new_wrapped_full (GST_MEMORY_FLAG_READONLY, tests[i].in,
+        sizeof (tests[i].in), 0, sizeof (tests[i].in), NULL, NULL);
 
     if (tests[i].fail) {
       fail_if (gst_audio_buffer_reorder_channels (buf, GST_AUDIO_FORMAT_S32,
