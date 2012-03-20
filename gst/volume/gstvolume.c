@@ -958,8 +958,6 @@ volume_get_property (GObject * object, guint prop_id, GValue * value,
 static gboolean
 plugin_init (GstPlugin * plugin)
 {
-  gst_volume_orc_init ();
-
   GST_DEBUG_CATEGORY_INIT (GST_CAT_DEFAULT, "volume", 0, "Volume gain");
 
   /* ref class from a thread-safe context to work around missing bit of

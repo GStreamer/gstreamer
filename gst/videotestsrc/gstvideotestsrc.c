@@ -891,8 +891,6 @@ gst_video_test_src_stop (GstBaseSrc * basesrc)
 static gboolean
 plugin_init (GstPlugin * plugin)
 {
-  gst_videotestsrc_orc_init ();
-
   GST_DEBUG_CATEGORY_INIT (video_test_src_debug, "videotestsrc", 0,
       "Video Test Source");
 
