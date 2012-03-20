@@ -41,20 +41,23 @@
 
 static void gst_raw_parse_dispose (GObject * object);
 
-static gboolean gst_raw_parse_sink_activate (GstPad * sinkpad);
-static gboolean gst_raw_parse_sink_activatepull (GstPad * sinkpad,
-    gboolean active);
+static gboolean gst_raw_parse_sink_activate (GstPad * sinkpad,
+    GstObject * parent);
+static gboolean gst_raw_parse_sink_activatemode (GstPad * sinkpad,
+    GstObject * parent, GstPadMode mode, gboolean active);
 static void gst_raw_parse_loop (GstElement * element);
 static GstStateChangeReturn gst_raw_parse_change_state (GstElement * element,
     GstStateChange transition);
-static GstFlowReturn gst_raw_parse_chain (GstPad * pad, GstBuffer * buffer);
-static gboolean gst_raw_parse_sink_event (GstPad * pad, GstEvent * event);
-static gboolean gst_raw_parse_src_event (GstPad * pad, GstEvent * event);
-static const GstQueryType *gst_raw_parse_src_query_type (GstPad * pad);
-static gboolean gst_raw_parse_src_query (GstPad * pad, GstQuery * query);
-static gboolean gst_raw_parse_convert (GstRawParse * rp,
-    GstFormat src_format, gint64 src_value,
-    GstFormat dest_format, gint64 * dest_value);
+static GstFlowReturn gst_raw_parse_chain (GstPad * pad, GstObject * parent,
+    GstBuffer * buffer);
+static gboolean gst_raw_parse_sink_event (GstPad * pad, GstObject * parent,
+    GstEvent * event);
+static gboolean gst_raw_parse_src_event (GstPad * pad, GstObject * parent,
+    GstEvent * event);
+static gboolean gst_raw_parse_src_query (GstPad * pad, GstObject * parent,
+    GstQuery * query);
+static gboolean gst_raw_parse_convert (GstRawParse * rp, GstFormat src_format,
+    gint64 src_value, GstFormat dest_format, gint64 * dest_value);
 static gboolean gst_raw_parse_handle_seek_pull (GstRawParse * rp,
     GstEvent * event);
 
@@ -69,18 +72,29 @@ GST_STATIC_PAD_TEMPLATE ("sink",
 GST_DEBUG_CATEGORY_STATIC (gst_raw_parse_debug);
 #define GST_CAT_DEFAULT gst_raw_parse_debug
 
-GST_BOILERPLATE (GstRawParse, gst_raw_parse, GstElement, GST_TYPE_ELEMENT);
+static void gst_raw_parse_class_init (GstRawParseClass * klass);
+static void gst_raw_parse_init (GstRawParse * clip, GstRawParseClass * g_class);
 
-static void
-gst_raw_parse_base_init (gpointer g_class)
+static GstElementClass *parent_class;
+
+/* we can't use G_DEFINE_ABSTRACT_TYPE because we need the klass in the _init
+ * method to get to the padtemplates */
+GType
+gst_raw_parse_get_type (void)
 {
-  GstElementClass *gstelement_class = GST_ELEMENT_CLASS (g_class);
+  static volatile gsize raw_parse_type = 0;
 
-  GST_DEBUG_CATEGORY_INIT (gst_raw_parse_debug, "rawparse", 0,
-      "rawparse element");
+  if (g_once_init_enter (&raw_parse_type)) {
+    GType _type;
 
-  gst_element_class_add_pad_template (gstelement_class,
-      gst_static_pad_template_get (&gst_raw_parse_sink_pad_template));
+    _type = g_type_register_static_simple (GST_TYPE_ELEMENT,
+        "GstRawParse", sizeof (GstRawParseClass),
+        (GClassInitFunc) gst_raw_parse_class_init, sizeof (GstRawParse),
+        (GInstanceInitFunc) gst_raw_parse_init, G_TYPE_FLAG_ABSTRACT);
+
+    g_once_init_leave (&raw_parse_type, _type);
+  }
+  return raw_parse_type;
 }
 
 static void
@@ -89,10 +103,18 @@ gst_raw_parse_class_init (GstRawParseClass * klass)
   GObjectClass *gobject_class = G_OBJECT_CLASS (klass);
   GstElementClass *gstelement_class = GST_ELEMENT_CLASS (klass);
 
+  parent_class = g_type_class_peek_parent (klass);
+
   gobject_class->dispose = gst_raw_parse_dispose;
 
   gstelement_class->change_state =
       GST_DEBUG_FUNCPTR (gst_raw_parse_change_state);
+
+  gst_element_class_add_pad_template (gstelement_class,
+      gst_static_pad_template_get (&gst_raw_parse_sink_pad_template));
+
+  GST_DEBUG_CATEGORY_INIT (gst_raw_parse_debug, "rawparse", 0,
+      "rawparse element");
 }
 
 static void
@@ -110,8 +132,8 @@ gst_raw_parse_init (GstRawParse * rp, GstRawParseClass * g_class)
       GST_DEBUG_FUNCPTR (gst_raw_parse_sink_event));
   gst_pad_set_activate_function (rp->sinkpad,
       GST_DEBUG_FUNCPTR (gst_raw_parse_sink_activate));
-  gst_pad_set_activatepull_function (rp->sinkpad,
-      GST_DEBUG_FUNCPTR (gst_raw_parse_sink_activatepull));
+  gst_pad_set_activatemode_function (rp->sinkpad,
+      GST_DEBUG_FUNCPTR (gst_raw_parse_sink_activatemode));
   gst_element_add_pad (GST_ELEMENT (rp), rp->sinkpad);
 
   src_pad_template = gst_element_class_get_pad_template (element_class, "src");
@@ -125,8 +147,6 @@ gst_raw_parse_init (GstRawParse * rp, GstRawParseClass * g_class)
 
   gst_pad_set_event_function (rp->srcpad,
       GST_DEBUG_FUNCPTR (gst_raw_parse_src_event));
-  gst_pad_set_query_type_function (rp->srcpad,
-      GST_DEBUG_FUNCPTR (gst_raw_parse_src_query_type));
   gst_pad_set_query_function (rp->srcpad,
       GST_DEBUG_FUNCPTR (gst_raw_parse_src_query));
   gst_element_add_pad (GST_ELEMENT (rp), rp->srcpad);
@@ -218,7 +238,7 @@ gst_raw_parse_push_buffer (GstRawParse * rp, GstBuffer * buffer)
 
   rpclass = GST_RAW_PARSE_GET_CLASS (rp);
 
-  nframes = GST_BUFFER_SIZE (buffer) / rp->framesize;
+  nframes = gst_buffer_get_size (buffer) / rp->framesize;
 
   if (rp->segment.rate < 0) {
     rp->n_frames -= nframes;
@@ -238,7 +258,6 @@ gst_raw_parse_push_buffer (GstRawParse * rp, GstBuffer * buffer)
     GST_BUFFER_TIMESTAMP (buffer) = rp->segment.start;
     GST_BUFFER_DURATION (buffer) = GST_CLOCK_TIME_NONE;
   }
-  gst_buffer_set_caps (buffer, GST_PAD_CAPS (rp->srcpad));
 
   if (rpclass->set_buffer_flags) {
     rpclass->set_buffer_flags (rp, buffer);
@@ -250,11 +269,11 @@ gst_raw_parse_push_buffer (GstRawParse * rp, GstBuffer * buffer)
   }
 
   if (rp->segment.rate >= 0) {
-    rp->offset += GST_BUFFER_SIZE (buffer);
+    rp->offset += gst_buffer_get_size (buffer);
     rp->n_frames += nframes;
   }
 
-  rp->segment.last_stop = GST_BUFFER_TIMESTAMP (buffer);
+  rp->segment.position = GST_BUFFER_TIMESTAMP (buffer);
 
   GST_LOG_OBJECT (rp, "Pushing buffer with time %" GST_TIME_FORMAT,
       GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (buffer)));
@@ -265,9 +284,9 @@ gst_raw_parse_push_buffer (GstRawParse * rp, GstBuffer * buffer)
 }
 
 static GstFlowReturn
-gst_raw_parse_chain (GstPad * pad, GstBuffer * buffer)
+gst_raw_parse_chain (GstPad * pad, GstObject * parent, GstBuffer * buffer)
 {
-  GstRawParse *rp = GST_RAW_PARSE (gst_pad_get_parent (pad));
+  GstRawParse *rp = GST_RAW_PARSE (parent);
   GstFlowReturn ret = GST_FLOW_OK;
   GstRawParseClass *rp_class = GST_RAW_PARSE_GET_CLASS (rp);
   guint buffersize;
@@ -298,7 +317,6 @@ gst_raw_parse_chain (GstPad * pad, GstBuffer * buffer)
       break;
   }
 done:
-  gst_object_unref (rp);
 
   return ret;
 
@@ -323,11 +341,6 @@ gst_raw_parse_loop (GstElement * element)
   if (!gst_raw_parse_set_src_caps (rp))
     goto no_caps;
 
-  if (rp->close_segment) {
-    GST_DEBUG_OBJECT (rp, "sending close segment");
-    gst_pad_push_event (rp->srcpad, rp->close_segment);
-    rp->close_segment = NULL;
-  }
   if (rp->start_segment) {
     GST_DEBUG_OBJECT (rp, "sending start segment");
     gst_pad_push_event (rp->srcpad, rp->start_segment);
@@ -343,13 +356,12 @@ gst_raw_parse_loop (GstElement * element)
     if (rp->offset + size > rp->upstream_length) {
       GstFormat fmt = GST_FORMAT_BYTES;
 
-      if (!gst_pad_query_peer_duration (rp->sinkpad, &fmt,
-              &rp->upstream_length)) {
+      if (!gst_pad_peer_query_duration (rp->sinkpad, fmt, &rp->upstream_length)) {
         GST_WARNING_OBJECT (rp,
             "Could not get upstream duration, trying to pull frame by frame");
         size = rp->framesize;
       } else if (rp->upstream_length < rp->offset + rp->framesize) {
-        ret = GST_FLOW_UNEXPECTED;
+        ret = GST_FLOW_EOS;
         goto pause;
       } else if (rp->offset + size > rp->upstream_length) {
         size = rp->upstream_length - rp->offset;
@@ -358,7 +370,7 @@ gst_raw_parse_loop (GstElement * element)
     }
   } else {
     if (rp->offset == 0) {
-      ret = GST_FLOW_UNEXPECTED;
+      ret = GST_FLOW_EOS;
       goto pause;
     } else if (rp->offset < size) {
       size -= rp->offset;
@@ -376,17 +388,18 @@ gst_raw_parse_loop (GstElement * element)
     goto pause;
   }
 
-  if (GST_BUFFER_SIZE (buffer) < size) {
+  if (gst_buffer_get_size (buffer) < size) {
     GST_DEBUG_OBJECT (rp, "Short read at offset %" G_GINT64_FORMAT
-        ", got only %u of %u bytes", rp->offset, GST_BUFFER_SIZE (buffer),
+        ", got only %u of %u bytes", rp->offset, gst_buffer_get_size (buffer),
         size);
 
     if (size > rp->framesize) {
-      GST_BUFFER_SIZE (buffer) -= GST_BUFFER_SIZE (buffer) % rp->framesize;
+      gst_buffer_set_size (buffer, gst_buffer_get_size (buffer) -
+          gst_buffer_get_size (buffer) % rp->framesize);
     } else {
       gst_buffer_unref (buffer);
       buffer = NULL;
-      ret = GST_FLOW_UNEXPECTED;
+      ret = GST_FLOW_EOS;
       goto pause;
     }
   }
@@ -411,7 +424,7 @@ pause:
     GST_LOG_OBJECT (rp, "pausing task, reason %s", reason);
     gst_pad_pause_task (rp->sinkpad);
 
-    if (ret == GST_FLOW_UNEXPECTED) {
+    if (ret == GST_FLOW_EOS) {
       if (rp->segment.flags & GST_SEEK_FLAG_SEGMENT) {
         GstClockTime stop;
 
@@ -427,7 +440,7 @@ pause:
         GST_LOG_OBJECT (rp, "Sending EOS, at end of stream");
         gst_pad_push_event (rp->srcpad, gst_event_new_eos ());
       }
-    } else if (ret == GST_FLOW_NOT_LINKED || ret < GST_FLOW_UNEXPECTED) {
+    } else if (ret == GST_FLOW_NOT_LINKED || ret < GST_FLOW_EOS) {
       GST_ELEMENT_ERROR (rp, STREAM, FAILED,
           ("Internal data stream error."),
           ("stream stopped, reason %s", reason));
@@ -438,50 +451,68 @@ pause:
 }
 
 static gboolean
-gst_raw_parse_sink_activate (GstPad * sinkpad)
+gst_raw_parse_sink_activate (GstPad * sinkpad, GstObject * parent)
 {
-  if (gst_pad_check_pull_range (sinkpad)) {
-    GST_RAW_PARSE (GST_PAD_PARENT (sinkpad))->mode = GST_PAD_ACTIVATE_PULL;
-    return gst_pad_activate_pull (sinkpad, TRUE);
+  GstQuery *query;
+  gboolean pull_mode = FALSE;
+
+  query = gst_query_new_scheduling ();
+
+  if (gst_pad_peer_query (sinkpad, query))
+    pull_mode = gst_query_has_scheduling_mode (query, GST_PAD_MODE_PULL);
+
+  gst_query_unref (query);
+
+  if (pull_mode) {
+    GST_DEBUG ("going to pull mode");
+    return gst_pad_activate_mode (sinkpad, GST_PAD_MODE_PULL, TRUE);
   } else {
-    GST_RAW_PARSE (GST_PAD_PARENT (sinkpad))->mode = GST_PAD_ACTIVATE_PUSH;
-    return gst_pad_activate_push (sinkpad, TRUE);
+    GST_DEBUG ("going to push (streaming) mode");
+    return gst_pad_activate_mode (sinkpad, GST_PAD_MODE_PUSH, TRUE);
   }
 }
 
 static gboolean
-gst_raw_parse_sink_activatepull (GstPad * sinkpad, gboolean active)
+gst_raw_parse_sink_activatemode (GstPad * sinkpad, GstObject * parent,
+    GstPadMode mode, gboolean active)
 {
-  GstRawParse *rp = GST_RAW_PARSE (gst_pad_get_parent (sinkpad));
+  GstRawParse *rp = GST_RAW_PARSE (parent);
   gboolean result;
 
-  if (active) {
-    GstFormat format;
-    gint64 duration;
+  switch (mode) {
+    case GST_PAD_MODE_PULL:
+      if (active) {
+        GstFormat format;
+        gint64 duration;
 
-    /* get the duration in bytes */
-    format = GST_FORMAT_BYTES;
-    result = gst_pad_query_peer_duration (sinkpad, &format, &duration);
-    if (result) {
-      GST_DEBUG_OBJECT (rp, "got duration %" GST_TIME_FORMAT,
-          GST_TIME_ARGS (duration));
-      rp->upstream_length = duration;
-      /* convert to time */
-      gst_raw_parse_convert (rp, format, duration, GST_FORMAT_TIME, &duration);
-    } else {
-      rp->upstream_length = -1;
-      duration = -1;
-    }
-    gst_segment_set_duration (&rp->segment, GST_FORMAT_TIME, duration);
+        /* get the duration in bytes */
+        format = GST_FORMAT_BYTES;
+        result = gst_pad_peer_query_duration (sinkpad, format, &duration);
+        if (result) {
+          GST_DEBUG_OBJECT (rp, "got duration %" GST_TIME_FORMAT,
+              GST_TIME_ARGS (duration));
+          rp->upstream_length = duration;
+          /* convert to time */
+          gst_raw_parse_convert (rp, format, duration, GST_FORMAT_TIME,
+              &duration);
+        } else {
+          rp->upstream_length = -1;
+          duration = -1;
+        }
+        rp->segment.duration = duration;
 
-    result = gst_raw_parse_handle_seek_pull (rp, NULL);
-  } else {
-    result = gst_pad_stop_task (sinkpad);
+        result = gst_raw_parse_handle_seek_pull (rp, NULL);
+        rp->mode = mode;
+      } else {
+        result = gst_pad_stop_task (sinkpad);
+      }
+      return result;
+    case GST_PAD_MODE_PUSH:
+      rp->mode = mode;
+      return TRUE;
+    default:
+      return FALSE;
   }
-
-  gst_object_unref (rp);
-
-  return result;
 }
 
 static GstStateChangeReturn
@@ -493,7 +524,7 @@ gst_raw_parse_change_state (GstElement * element, GstStateChange transition)
   switch (transition) {
     case GST_STATE_CHANGE_READY_TO_PAUSED:
       gst_segment_init (&rp->segment, GST_FORMAT_TIME);
-      rp->segment.last_stop = 0;
+      rp->segment.position = 0;
     default:
       break;
   }
@@ -614,9 +645,9 @@ done:
 
 
 static gboolean
-gst_raw_parse_sink_event (GstPad * pad, GstEvent * event)
+gst_raw_parse_sink_event (GstPad * pad, GstObject * parent, GstEvent * event)
 {
-  GstRawParse *rp = GST_RAW_PARSE (gst_pad_get_parent (pad));
+  GstRawParse *rp = GST_RAW_PARSE (parent);
   gboolean ret;
 
   switch (GST_EVENT_TYPE (event)) {
@@ -626,53 +657,43 @@ gst_raw_parse_sink_event (GstPad * pad, GstEvent * event)
       gst_raw_parse_reset (rp);
       ret = gst_pad_push_event (rp->srcpad, event);
       break;
-    case GST_EVENT_NEWSEGMENT:
+    case GST_EVENT_SEGMENT:
     {
-      GstClockTimeDiff start, stop, time;
-      gdouble rate, arate;
-      gboolean update;
-      GstFormat format;
+      GstSegment segment;
 
       /* Only happens in push mode */
 
-      gst_event_parse_new_segment_full (event, &update, &rate, &arate, &format,
-          &start, &stop, &time);
+      gst_event_copy_segment (event, &segment);
 
-      if (format == GST_FORMAT_TIME) {
-        gst_segment_set_newsegment_full (&rp->segment, update, rate, arate,
-            GST_FORMAT_TIME, start, stop, time);
-        ret = gst_pad_push_event (rp->srcpad, event);
-      } else {
-
+      if (segment.format != GST_FORMAT_TIME) {
         gst_event_unref (event);
 
         ret =
-            gst_raw_parse_convert (rp, format, start, GST_FORMAT_TIME, &start);
-        ret &= gst_raw_parse_convert (rp, format, time, GST_FORMAT_TIME, &time);
-        ret &= gst_raw_parse_convert (rp, format, stop, GST_FORMAT_TIME, &stop);
+            gst_raw_parse_convert (rp, segment.format, segment.start,
+            GST_FORMAT_TIME, (gint64 *) & segment.start);
+        ret &= gst_raw_parse_convert (rp, segment.format, segment.time,
+            GST_FORMAT_TIME, (gint64 *) & segment.time);
+        ret &= gst_raw_parse_convert (rp, segment.format, segment.stop,
+            GST_FORMAT_TIME, (gint64 *) & segment.stop);
         if (!ret) {
           GST_ERROR_OBJECT (rp,
-              "Failed converting to GST_FORMAT_TIME format (%d)", format);
+              "Failed converting to GST_FORMAT_TIME format (%d)",
+              segment.format);
           break;
         }
 
-        gst_segment_set_newsegment_full (&rp->segment, update, rate, arate,
-            GST_FORMAT_TIME, start, stop, time);
-
-        /* create new segment with the fields converted to time */
-        event = gst_event_new_new_segment_full (update, rate, arate,
-            GST_FORMAT_TIME, start, stop, time);
-
-        ret = gst_pad_push_event (rp->srcpad, event);
+        event = gst_event_new_segment (&segment);
       }
+
+      gst_segment_copy_into (&segment, &rp->segment);
+
+      ret = gst_pad_push_event (rp->srcpad, event);
       break;
     }
     default:
-      ret = gst_pad_event_default (rp->sinkpad, event);
+      ret = gst_pad_event_default (rp->sinkpad, parent, event);
       break;
   }
-
-  gst_object_unref (rp);
 
   return ret;
 }
@@ -785,12 +806,12 @@ gst_raw_parse_handle_seek_pull (GstRawParse * rp, GstEvent * event)
 
   if (event) {
     /* configure the seek values */
-    gst_segment_set_seek (&seeksegment, rate, format, flags,
+    gst_segment_do_seek (&seeksegment, rate, format, flags,
         start_type, start, stop_type, stop, NULL);
   }
 
   /* get the desired position */
-  last_stop = seeksegment.last_stop;
+  last_stop = seeksegment.position;
 
   GST_LOG_OBJECT (rp, "seeking to %" GST_TIME_FORMAT,
       GST_TIME_ARGS (last_stop));
@@ -803,21 +824,8 @@ gst_raw_parse_handle_seek_pull (GstRawParse * rp, GstEvent * event)
   /* prepare for streaming */
   if (flush) {
     GST_LOG_OBJECT (rp, "stop flush");
-    gst_pad_push_event (rp->sinkpad, gst_event_new_flush_stop ());
-    gst_pad_push_event (rp->srcpad, gst_event_new_flush_stop ());
-  } else if (ret && rp->running) {
-    /* we are running the current segment and doing a non-flushing seek, 
-     * close the segment first based on the last_stop. */
-    GST_DEBUG_OBJECT (rp, "prepare close segment %" G_GINT64_FORMAT
-        " to %" G_GINT64_FORMAT, rp->segment.start, rp->segment.last_stop);
-
-    /* queue the segment for sending in the stream thread */
-    if (rp->close_segment)
-      gst_event_unref (rp->close_segment);
-    rp->close_segment =
-        gst_event_new_new_segment_full (TRUE,
-        rp->segment.rate, rp->segment.applied_rate, rp->segment.format,
-        rp->segment.start, rp->segment.last_stop, rp->segment.time);
+    gst_pad_push_event (rp->sinkpad, gst_event_new_flush_stop (TRUE));
+    gst_pad_push_event (rp->srcpad, gst_event_new_flush_stop (TRUE));
   }
 
   if (ret) {
@@ -836,7 +844,7 @@ gst_raw_parse_handle_seek_pull (GstRawParse * rp, GstEvent * event)
     if (rp->segment.flags & GST_SEEK_FLAG_SEGMENT) {
       gst_element_post_message (GST_ELEMENT_CAST (rp),
           gst_message_new_segment_start (GST_OBJECT_CAST (rp),
-              rp->segment.format, rp->segment.last_stop));
+              rp->segment.format, rp->segment.position));
     }
 
     /* for deriving a stop position for the playback segment from the seek
@@ -851,25 +859,11 @@ gst_raw_parse_handle_seek_pull (GstRawParse * rp, GstEvent * event)
      * next time it is scheduled. */
     if (rp->start_segment)
       gst_event_unref (rp->start_segment);
-
-    if (rp->segment.rate >= 0.0) {
-      /* forward, we send data from last_stop to stop */
-      rp->start_segment =
-          gst_event_new_new_segment_full (FALSE,
-          rp->segment.rate, rp->segment.applied_rate, rp->segment.format,
-          rp->segment.last_stop, stop, rp->segment.time);
-    } else {
-      /* reverse, we send data from last_stop to start */
-      rp->start_segment =
-          gst_event_new_new_segment_full (FALSE,
-          rp->segment.rate, rp->segment.applied_rate, rp->segment.format,
-          rp->segment.start, rp->segment.last_stop, rp->segment.time);
-    }
+    rp->start_segment = gst_event_new_segment (&rp->segment);
   }
   rp->discont = TRUE;
 
   GST_LOG_OBJECT (rp, "start streaming");
-  rp->running = TRUE;
   gst_pad_start_task (rp->sinkpad, (GstTaskFunction) gst_raw_parse_loop, rp);
 
   GST_PAD_STREAM_UNLOCK (rp->sinkpad);
@@ -885,46 +879,30 @@ convert_failed:
 }
 
 static gboolean
-gst_raw_parse_src_event (GstPad * pad, GstEvent * event)
+gst_raw_parse_src_event (GstPad * pad, GstObject * parent, GstEvent * event)
 {
-  GstRawParse *rp = GST_RAW_PARSE (gst_pad_get_parent (pad));
+  GstRawParse *rp = GST_RAW_PARSE (parent);
   gboolean ret;
 
   switch (GST_EVENT_TYPE (event)) {
     case GST_EVENT_SEEK:
-      if (rp->mode == GST_PAD_ACTIVATE_PUSH)
+      if (rp->mode == GST_PAD_MODE_PUSH)
         ret = gst_raw_parse_handle_seek_push (rp, event);
       else
         ret = gst_raw_parse_handle_seek_pull (rp, event);
       break;
     default:
-      ret = gst_pad_event_default (rp->srcpad, event);
+      ret = gst_pad_event_default (rp->srcpad, parent, event);
       break;
   }
-
-  gst_object_unref (rp);
 
   return ret;
 }
 
-static const GstQueryType *
-gst_raw_parse_src_query_type (GstPad * pad)
-{
-  static const GstQueryType types[] = {
-    GST_QUERY_POSITION,
-    GST_QUERY_DURATION,
-    GST_QUERY_CONVERT,
-    GST_QUERY_SEEKING,
-    0
-  };
-
-  return types;
-}
-
 static gboolean
-gst_raw_parse_src_query (GstPad * pad, GstQuery * query)
+gst_raw_parse_src_query (GstPad * pad, GstObject * parent, GstQuery * query)
 {
-  GstRawParse *rp = GST_RAW_PARSE (gst_pad_get_parent (pad));
+  GstRawParse *rp = GST_RAW_PARSE (parent);
   gboolean ret = FALSE;
 
   GST_DEBUG ("src_query %s", gst_query_type_get_name (GST_QUERY_TYPE (query)));
@@ -939,7 +917,7 @@ gst_raw_parse_src_query (GstPad * pad, GstQuery * query)
 
       gst_query_parse_position (query, &format, NULL);
 
-      time = rp->segment.last_stop;
+      time = rp->segment.position;
       ret = gst_raw_parse_convert (rp, GST_FORMAT_TIME, time, format, &value);
 
       gst_query_set_position (query, format, value);
@@ -1001,7 +979,7 @@ gst_raw_parse_src_query (GstPad * pad, GstQuery * query)
       if (fmt != GST_FORMAT_TIME && fmt != GST_FORMAT_DEFAULT
           && fmt != GST_FORMAT_BYTES) {
         gst_query_set_seeking (query, fmt, FALSE, -1, -1);
-      } else if (rp->mode == GST_PAD_ACTIVATE_PUSH) {
+      } else if (rp->mode == GST_PAD_MODE_PUSH) {
         GstQuery *peerquery = gst_query_new_seeking (GST_FORMAT_BYTES);
         gboolean seekable;
 
@@ -1018,12 +996,11 @@ gst_raw_parse_src_query (GstPad * pad, GstQuery * query)
     }
     default:
       /* else forward upstream */
-      ret = gst_pad_peer_query (rp->sinkpad, query);
+      ret = gst_pad_query_default (rp->sinkpad, parent, query);
       break;
   }
 
 done:
-  gst_object_unref (rp);
   return ret;
 
   /* ERRORS */
@@ -1040,6 +1017,7 @@ gst_raw_parse_set_framesize (GstRawParse * rp, int framesize)
   g_return_if_fail (GST_IS_RAW_PARSE (rp));
   g_return_if_fail (!rp->negotiated);
 
+  GST_DEBUG_OBJECT (rp, "framesize %d", framesize);
   rp->framesize = framesize;
 }
 

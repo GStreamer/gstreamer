@@ -57,39 +57,16 @@ enum
   PROP_TOP_FIELD_FIRST
 };
 
-GST_BOILERPLATE (GstVideoParse, gst_video_parse, GstRawParse,
-    GST_TYPE_RAW_PARSE);
-
-static void
-gst_video_parse_base_init (gpointer g_class)
-{
-  GstRawParseClass *rp_class = GST_RAW_PARSE_CLASS (g_class);
-  GstElementClass *gstelement_class = GST_ELEMENT_CLASS (g_class);
-  GstCaps *caps;
-
-  GST_DEBUG_CATEGORY_INIT (gst_video_parse_debug, "videoparse", 0,
-      "videoparse element");
-
-  gst_element_class_set_details_simple (gstelement_class, "Video Parse",
-      "Filter/Video",
-      "Converts stream into video frames",
-      "David Schleef <ds@schleef.org>, "
-      "Sebastian Dröge <sebastian.droege@collabora.co.uk>");
-
-  caps =
-      gst_caps_from_string
-      ("video/x-raw-rgb; video/x-raw-yuv; video/x-raw-gray; video/x-raw-bayer");
-
-  gst_raw_parse_class_set_src_pad_template (rp_class, caps);
-  gst_raw_parse_class_set_multiple_frames_per_buffer (rp_class, FALSE);
-  gst_caps_unref (caps);
-}
+#define gst_video_parse_parent_class parent_class
+G_DEFINE_TYPE (GstVideoParse, gst_video_parse, GST_TYPE_RAW_PARSE);
 
 static void
 gst_video_parse_class_init (GstVideoParseClass * klass)
 {
   GObjectClass *gobject_class = G_OBJECT_CLASS (klass);
+  GstElementClass *gstelement_class = GST_ELEMENT_CLASS (klass);
   GstRawParseClass *rp_class = GST_RAW_PARSE_CLASS (klass);
+  GstCaps *caps;
 
   gobject_class->set_property = gst_video_parse_set_property;
   gobject_class->get_property = gst_video_parse_get_property;
@@ -123,10 +100,25 @@ gst_video_parse_class_init (GstVideoParseClass * klass)
       g_param_spec_boolean ("top-field-first", "Top field first",
           "True if top field is earlier than bottom field", TRUE,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
+  gst_element_class_set_details_simple (gstelement_class, "Video Parse",
+      "Filter/Video",
+      "Converts stream into video frames",
+      "David Schleef <ds@schleef.org>, "
+      "Sebastian Dröge <sebastian.droege@collabora.co.uk>");
+
+  caps = gst_caps_from_string ("video/x-raw; video/x-raw-bayer");
+
+  gst_raw_parse_class_set_src_pad_template (rp_class, caps);
+  gst_raw_parse_class_set_multiple_frames_per_buffer (rp_class, FALSE);
+  gst_caps_unref (caps);
+
+  GST_DEBUG_CATEGORY_INIT (gst_video_parse_debug, "videoparse", 0,
+      "videoparse element");
 }
 
 static void
-gst_video_parse_init (GstVideoParse * vp, GstVideoParseClass * g_class)
+gst_video_parse_init (GstVideoParse * vp)
 {
   vp->width = 320;
   vp->height = 240;
@@ -221,8 +213,11 @@ void
 gst_video_parse_update_frame_size (GstVideoParse * vp)
 {
   gint framesize;
+  GstVideoInfo info;
 
-  framesize = gst_video_format_get_size (vp->format, vp->width, vp->height);
+  gst_video_info_init (&info);
+  gst_video_info_set_format (&info, vp->format, vp->width, vp->height);
+  framesize = GST_VIDEO_INFO_SIZE (&info);
 
   gst_raw_parse_set_framesize (GST_RAW_PARSE (vp), framesize);
 }
@@ -231,15 +226,23 @@ static GstCaps *
 gst_video_parse_get_caps (GstRawParse * rp)
 {
   GstVideoParse *vp = GST_VIDEO_PARSE (rp);
+  GstVideoInfo info;
   GstCaps *caps;
-
   gint fps_n, fps_d;
 
   gst_raw_parse_get_fps (rp, &fps_n, &fps_d);
 
-  caps =
-      gst_video_format_new_caps_interlaced (vp->format, vp->width, vp->height,
-      fps_n, fps_d, vp->par_n, vp->par_d, vp->interlaced);
+  gst_video_info_init (&info);
+  gst_video_info_set_format (&info, vp->format, vp->width, vp->height);
+  info.fps_n = fps_n;
+  info.fps_d = fps_d;
+  info.par_n = vp->par_n;
+  info.par_d = vp->par_d;
+  info.interlace_mode = vp->interlaced ?
+      GST_VIDEO_INTERLACE_MODE_INTERLEAVED :
+      GST_VIDEO_INTERLACE_MODE_PROGRESSIVE;
+
+  caps = gst_video_info_to_caps (&info);
 
   return caps;
 }
@@ -251,9 +254,9 @@ gst_video_parse_set_buffer_flags (GstRawParse * rp, GstBuffer * buffer)
 
   if (vp->interlaced) {
     if (vp->top_field_first) {
-      GST_BUFFER_FLAG_SET (buffer, GST_VIDEO_BUFFER_TFF);
+      GST_BUFFER_FLAG_SET (buffer, GST_VIDEO_BUFFER_FLAG_TFF);
     } else {
-      GST_BUFFER_FLAG_UNSET (buffer, GST_VIDEO_BUFFER_TFF);
+      GST_BUFFER_FLAG_UNSET (buffer, GST_VIDEO_BUFFER_FLAG_TFF);
     }
   }
 }

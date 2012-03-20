@@ -306,7 +306,7 @@ GST_PLUGINS_NONPORTED=" aiff asfmux \
  hdvparse hls id3tag inter interlace ivfparse jpegformat jp2kdecimator \
  kate liveadder legacyresample librfb mpegtsmux \
  mpegpsmux mve mxf mythtv nsf nuvdemux \
- patchdetect pnm rawparse real \
+ patchdetect pnm real \
  sdi siren speed subenc stereo tta videofilters \
  videomeasure videosignal vmnc \
  decklink fbdev linsys shm vcd \

@@ -52,7 +52,7 @@ struct _GstRawParse
   GstPad *sinkpad;
   GstPad *srcpad;
 
-  GstPadActivateMode mode;
+  GstPadMode mode;
   GstAdapter *adapter;
 
   gint framesize;
@@ -66,8 +66,6 @@ struct _GstRawParse
   gint64 offset;
 
   GstSegment segment;
-  gboolean running;
-  GstEvent *close_segment;
   GstEvent *start_segment;
 
   gboolean negotiated;
