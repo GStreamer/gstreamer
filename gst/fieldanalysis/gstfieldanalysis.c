@@ -1601,7 +1601,7 @@ gst_field_analysis_process_buffer (GstFieldAnalysis * filter,
                 && telecine_matches & FIELD_ANALYSIS_BOTTOM_TOP)) {
           /* held is opposite to matched => need both field from prev */
           /* if t_b, hold bottom from prev and top from current, else vice-versa */
-          res1->holding = 1 + !!(telecine_matches & FIELD_ANALYSIS_TOP_BOTTOM);
+          res1->holding = 1 + ! !(telecine_matches & FIELD_ANALYSIS_TOP_BOTTOM);
           res0->holding = 1 + !(telecine_matches & FIELD_ANALYSIS_TOP_BOTTOM);
           /* push prev TCM */
           outbuf =
@@ -1800,8 +1800,6 @@ fieldanalysis_init (GstPlugin * fieldanalysis)
 {
   GST_DEBUG_CATEGORY_INIT (gst_field_analysis_debug, "fieldanalysis",
       0, "Video field analysis");
-
-  gst_fieldanalysis_orc_init ();
 
   return gst_element_register (fieldanalysis, "fieldanalysis", GST_RANK_NONE,
       GST_TYPE_FIELDANALYSIS);

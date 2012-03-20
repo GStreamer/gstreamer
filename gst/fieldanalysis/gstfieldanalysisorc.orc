@@ -1,7 +1,4 @@
 
-.init gst_fieldanalysis_orc_init
-
-
 .function orc_same_parity_sad_planar_yuv
 .accumulator 4 a1 guint32
 .source 1 s1
