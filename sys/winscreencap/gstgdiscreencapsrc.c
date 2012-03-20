@@ -315,7 +315,8 @@ gst_gdiscreencapsrc_set_caps (GstBaseSrc * bsrc, GstCaps * caps)
     src->src_rect.bottom = src->src_rect.top + src->capture_h;
   }
 
-  if (framerate = gst_structure_get_value (structure, "framerate")) {
+  framerate = gst_structure_get_value (structure, "framerate");
+  if (framerate) {
     src->rate_numerator = gst_value_get_fraction_numerator (framerate);
     src->rate_denominator = gst_value_get_fraction_denominator (framerate);
   }
@@ -349,8 +350,8 @@ gst_gdiscreencapsrc_set_caps (GstBaseSrc * bsrc, GstCaps * caps)
   ReleaseDC (capture, device);
 
   GST_DEBUG_OBJECT (src, "size %dx%d, %d/%d fps",
-      src->info.bmiHeader.biWidth,
-      -src->info.bmiHeader.biHeight,
+      (gint) src->info.bmiHeader.biWidth,
+      (gint) (-src->info.bmiHeader.biHeight),
       src->rate_numerator, src->rate_denominator);
 
   return TRUE;
@@ -378,7 +379,8 @@ gst_gdiscreencapsrc_get_caps (GstBaseSrc * bsrc)
   }
 
   GST_DEBUG ("width = %d, height=%d",
-      rect_dst.right - rect_dst.left, rect_dst.bottom - rect_dst.top);
+      (gint) (rect_dst.right - rect_dst.left),
+      (gint) (rect_dst.bottom - rect_dst.top));
 
   return gst_caps_new_simple ("video/x-raw-rgb",
       "bpp", G_TYPE_INT, 24,
@@ -416,7 +418,6 @@ static void
 gst_gdiscreencapsrc_get_times (GstBaseSrc * basesrc, GstBuffer * buffer,
     GstClockTime * start, GstClockTime * end)
 {
-  GstGDIScreenCapSrc *src = GST_GDISCREENCAPSRC (basesrc);
   GstClockTime timestamp;
 
   timestamp = GST_BUFFER_TIMESTAMP (buffer);
@@ -438,7 +439,7 @@ gst_gdiscreencapsrc_create (GstPushSrc * push_src, GstBuffer ** buf)
   GstFlowReturn res;
   gint new_buf_size;
   GstClock *clock;
-  GstClockTime time;
+  GstClockTime time = GST_CLOCK_TIME_NONE;
   GstClockTime base_time;
 
   if (G_UNLIKELY (!src->info.bmiHeader.biWidth ||
@@ -455,9 +456,9 @@ gst_gdiscreencapsrc_create (GstPushSrc * push_src, GstBuffer ** buf)
       (-src->info.bmiHeader.biHeight);
 
   GST_LOG_OBJECT (src,
-      "creating buffer of %lu bytes with %dx%d image for frame %d",
-      new_buf_size, src->info.bmiHeader.biWidth,
-      -src->info.bmiHeader.biHeight, (gint) src->frames);
+      "creating buffer of %d bytes with %dx%d image for frame %d",
+      new_buf_size, (gint) src->info.bmiHeader.biWidth,
+      (gint) (-src->info.bmiHeader.biHeight), (gint) src->frames);
 
   res =
       gst_pad_alloc_buffer_and_set_caps (GST_BASE_SRC_PAD (src),
