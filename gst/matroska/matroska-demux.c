@@ -5255,7 +5255,8 @@ gst_matroska_demux_audio_caps (GstMatroskaTrackAudioContext *
       auds.size = GST_READ_UINT16_LE (data + 16);
 
       /* 18 is the waveformatex size */
-      codec_data = gst_buffer_new_wrapped_full (data + 18, NULL, 0, auds.size);
+      codec_data = gst_buffer_new_wrapped_full (GST_MEMORY_FLAG_READONLY,
+          data + 18, auds.size, 0, auds.size, NULL, NULL);
 
       if (riff_audio_fmt)
         *riff_audio_fmt = auds.format;
