@@ -285,6 +285,8 @@ copy_into_unchecked (GstAdapter * adapter, guint8 * dest, gsize skip,
   csize = MIN (bsize - skip, size);
   GST_DEBUG ("bsize %" G_GSIZE_FORMAT ", skip %" G_GSIZE_FORMAT ", csize %"
       G_GSIZE_FORMAT, bsize, skip, csize);
+  GST_CAT_LOG_OBJECT (GST_CAT_PERFORMANCE, adapter, "extract %" G_GSIZE_FORMAT
+      " bytes", csize);
   gst_buffer_extract (buf, skip, dest, csize);
   size -= csize;
   dest += csize;
@@ -296,6 +298,8 @@ copy_into_unchecked (GstAdapter * adapter, guint8 * dest, gsize skip,
     bsize = gst_buffer_get_size (buf);
     if (G_LIKELY (bsize > 0)) {
       csize = MIN (bsize, size);
+      GST_CAT_LOG_OBJECT (GST_CAT_PERFORMANCE, adapter,
+          "extract %" G_GSIZE_FORMAT " bytes", csize);
       gst_buffer_extract (buf, 0, dest, csize);
       size -= csize;
       dest += csize;
@@ -649,6 +653,8 @@ gst_adapter_take_internal (GstAdapter * adapter, gsize nbytes)
     /* reuse what we can from the already assembled data */
     if (toreuse) {
       GST_LOG_OBJECT (adapter, "reusing %" G_GSIZE_FORMAT " bytes", toreuse);
+      GST_CAT_LOG_OBJECT (GST_CAT_PERFORMANCE, adapter,
+          "memcpy %" G_GSIZE_FORMAT " bytes", toreuse);
       memcpy (data, adapter->assembled_data, toreuse);
     }
   }
