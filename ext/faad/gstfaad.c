@@ -525,9 +525,9 @@ gst_faad_update_caps (GstFaad * faad, faacDecFrameInfo * info)
   if (gst_audio_get_channel_reorder_map (faad->channels, faad->aac_positions,
           faad->gst_positions, faad->reorder_map)) {
     for (i = 0; i < faad->channels; i++) {
+      GST_DEBUG_OBJECT (faad, "remap %d -> %d", i, faad->reorder_map[i]);
       if (faad->reorder_map[i] != i) {
         faad->need_reorder = TRUE;
-        break;
       }
     }
   }
