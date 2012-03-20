@@ -473,14 +473,13 @@ gst_faad_update_caps (GstFaad * faad, faacDecFrameInfo * info)
   gboolean ret;
   gboolean fmt_change = FALSE;
   GstAudioInfo ainfo;
+  gint i;
 
   /* see if we need to renegotiate */
   if (info->samplerate != faad->samplerate ||
       info->channels != faad->channels || !faad->channel_positions) {
     fmt_change = TRUE;
   } else {
-    gint i;
-
     for (i = 0; i < info->channels; i++) {
       if (info->channel_position[i] != faad->channel_positions[i]) {
         fmt_change = TRUE;
@@ -519,6 +518,19 @@ gst_faad_update_caps (GstFaad * faad, faacDecFrameInfo * info)
   /* Unset UNPOSITIONED flag */
   if (ainfo.position[0] != GST_AUDIO_CHANNEL_POSITION_NONE)
     ainfo.flags &= ~GST_AUDIO_FLAG_UNPOSITIONED;
+
+  /* get the remap table */
+  memset (faad->reorder_map, 0, sizeof (faad->reorder_map));
+  faad->need_reorder = FALSE;
+  if (gst_audio_get_channel_reorder_map (faad->channels, faad->aac_positions,
+          faad->gst_positions, faad->reorder_map)) {
+    for (i = 0; i < faad->channels; i++) {
+      if (faad->reorder_map[i] != i) {
+        faad->need_reorder = TRUE;
+        break;
+      }
+    }
+  }
 
   ret = gst_audio_decoder_set_output_format (GST_AUDIO_DECODER (faad), &ainfo);
 
@@ -720,6 +732,7 @@ init:
   info.error = 0;
 
   do {
+    GstMapInfo map;
 
     if (!faad->packetised) {
       /* faad only really parses ADTS header at Init time, not when decoding,
@@ -746,6 +759,8 @@ init:
         (guint) info.bytesconsumed, (guint) info.samples);
 
     if (out && info.samples > 0) {
+      guint channels, samples;
+
       if (!gst_faad_update_caps (faad, &info))
         goto negotiation_failed;
 
@@ -753,12 +768,30 @@ init:
       if (info.samples > G_MAXUINT / faad->bps)
         goto sample_overflow;
 
+      channels = faad->channels;
       /* note: info.samples is total samples, not per channel */
+      samples = info.samples / channels;
+
       /* FIXME, add bufferpool and allocator support to the base class */
       outbuf = gst_buffer_new_allocate (NULL, info.samples * faad->bps, NULL);
-      gst_buffer_fill (outbuf, 0, out, info.samples * faad->bps);
-      gst_audio_buffer_reorder_channels (outbuf, GST_AUDIO_FORMAT_S16,
-          faad->channels, faad->aac_positions, faad->gst_positions);
+
+      gst_buffer_map (outbuf, &map, GST_MAP_READWRITE);
+      if (faad->need_reorder) {
+        gint16 *dest, *src, i, j;
+
+        dest = (gint16 *) map.data;
+        src = (gint16 *) out;
+
+        for (i = 0; i < samples; i++) {
+          for (j = 0; j < channels; j++) {
+            dest[faad->reorder_map[j]] = *src++;
+          }
+          dest += channels;
+        }
+      } else {
+        memcpy (map.data, out, map.size);
+      }
+      gst_buffer_unmap (outbuf, &map);
 
       ret = gst_audio_decoder_finish_frame (dec, outbuf, 1);
     }

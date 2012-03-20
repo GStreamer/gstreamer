@@ -50,6 +50,8 @@ typedef struct _GstFaad {
   guint      bps;        /* bytes per sample                      */
   guchar    *channel_positions;
   GstAudioChannelPosition aac_positions[6], gst_positions[6];
+  gboolean   need_reorder;
+  gint       reorder_map[64];
 
   guint8     fake_codec_data[2];
   guint32    last_header;
