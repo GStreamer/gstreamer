@@ -70,7 +70,8 @@ static GstStaticPadTemplate sinktemplate = GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS_ANY);
 
-GST_BOILERPLATE (GstShmSink, gst_shm_sink, GstBaseSink, GST_TYPE_BASE_SINK);
+#define gst_shm_sink_parent_class parent_class
+G_DEFINE_TYPE (GstShmSink, gst_shm_sink, GST_TYPE_BASE_SINK);
 
 static void gst_shm_sink_finalize (GObject * object);
 static void gst_shm_sink_set_property (GObject * object, guint prop_id,
@@ -81,8 +82,6 @@ static void gst_shm_sink_get_property (GObject * object, guint prop_id,
 static gboolean gst_shm_sink_start (GstBaseSink * bsink);
 static gboolean gst_shm_sink_stop (GstBaseSink * bsink);
 static GstFlowReturn gst_shm_sink_render (GstBaseSink * bsink, GstBuffer * buf);
-static GstFlowReturn gst_shm_sink_buffer_alloc (GstBaseSink * sink,
-    guint64 offset, guint size, GstCaps * caps, GstBuffer ** out_buf);
 
 static gboolean gst_shm_sink_event (GstBaseSink * bsink, GstEvent * event);
 static gboolean gst_shm_sink_unlock (GstBaseSink * bsink);
@@ -93,22 +92,7 @@ static gpointer pollthread_func (gpointer data);
 static guint signals[LAST_SIGNAL] = { 0 };
 
 static void
-gst_shm_sink_base_init (gpointer g_class)
-{
-  GstElementClass *element_class = GST_ELEMENT_CLASS (g_class);
-
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&sinktemplate));
-
-  gst_element_class_set_details_simple (element_class,
-      "Shared Memory Sink",
-      "Sink",
-      "Send data over shared memory to the matching source",
-      "Olivier Crete <olivier.crete@collabora.co.uk>");
-}
-
-static void
-gst_shm_sink_init (GstShmSink * self, GstShmSinkClass * g_class)
+gst_shm_sink_init (GstShmSink * self)
 {
   self->cond = g_cond_new ();
   self->size = DEFAULT_SIZE;
@@ -120,9 +104,11 @@ static void
 gst_shm_sink_class_init (GstShmSinkClass * klass)
 {
   GObjectClass *gobject_class;
+  GstElementClass *gstelement_class;
   GstBaseSinkClass *gstbasesink_class;
 
   gobject_class = (GObjectClass *) klass;
+  gstelement_class = (GstElementClass *) klass;
   gstbasesink_class = (GstBaseSinkClass *) klass;
 
   gobject_class->finalize = gst_shm_sink_finalize;
@@ -135,8 +121,6 @@ gst_shm_sink_class_init (GstShmSinkClass * klass)
   gstbasesink_class->event = GST_DEBUG_FUNCPTR (gst_shm_sink_event);
   gstbasesink_class->unlock = GST_DEBUG_FUNCPTR (gst_shm_sink_unlock);
   gstbasesink_class->unlock_stop = GST_DEBUG_FUNCPTR (gst_shm_sink_unlock_stop);
-  gstbasesink_class->buffer_alloc =
-      GST_DEBUG_FUNCPTR (gst_shm_sink_buffer_alloc);
 
   g_object_class_install_property (gobject_class, PROP_SOCKET_PATH,
       g_param_spec_string ("socket-path",
@@ -178,6 +162,15 @@ gst_shm_sink_class_init (GstShmSinkClass * klass)
   signals[SIGNAL_CLIENT_DISCONNECTED] = g_signal_new ("client-disconnected",
       GST_TYPE_SHM_SINK, G_SIGNAL_RUN_LAST, 0, NULL, NULL,
       g_cclosure_marshal_VOID__INT, G_TYPE_NONE, 1, G_TYPE_INT);
+
+  gst_element_class_add_pad_template (gstelement_class,
+      gst_static_pad_template_get (&sinktemplate));
+
+  gst_element_class_set_details_simple (gstelement_class,
+      "Shared Memory Sink",
+      "Sink",
+      "Send data over shared memory to the matching source",
+      "Olivier Crete <olivier.crete@collabora.co.uk>");
 
   GST_DEBUG_CATEGORY_INIT (shmsink_debug, "shmsink", 0, "Shared Memory Sink");
 }
@@ -399,6 +392,7 @@ gst_shm_sink_render (GstBaseSink * bsink, GstBuffer * buf)
 {
   GstShmSink *self = GST_SHM_SINK (bsink);
   int rv;
+  GstMapInfo map;
 
   GST_OBJECT_LOCK (self);
   while (self->wait_for_connection && !self->clients) {
@@ -417,14 +411,16 @@ gst_shm_sink_render (GstBaseSink * bsink, GstBuffer * buf)
     }
   }
 
-  rv = sp_writer_send_buf (self->pipe, (char *) GST_BUFFER_DATA (buf),
-      GST_BUFFER_SIZE (buf), GST_BUFFER_TIMESTAMP (buf));
+  gst_buffer_map (buf, &map, GST_MAP_READ);
+  rv = sp_writer_send_buf (self->pipe, (char *) map.data, map.size,
+      GST_BUFFER_TIMESTAMP (buf));
+  gst_buffer_unmap (buf, &map);
 
   if (rv == -1) {
     ShmBlock *block = NULL;
     gchar *shmbuf = NULL;
     while ((block = sp_writer_alloc_block (self->pipe,
-                GST_BUFFER_SIZE (buf))) == NULL) {
+                gst_buffer_get_size (buf))) == NULL) {
       g_cond_wait (self->cond, GST_OBJECT_GET_LOCK (self));
       if (self->unlock) {
         GST_OBJECT_UNLOCK (self);
@@ -441,8 +437,8 @@ gst_shm_sink_render (GstBaseSink * bsink, GstBuffer * buf)
     }
 
     shmbuf = sp_writer_block_get_buf (block);
-    memcpy (shmbuf, GST_BUFFER_DATA (buf), GST_BUFFER_SIZE (buf));
-    sp_writer_send_buf (self->pipe, shmbuf, GST_BUFFER_SIZE (buf),
+    gst_buffer_extract (buf, 0, shmbuf, gst_buffer_get_size (buf));
+    sp_writer_send_buf (self->pipe, shmbuf, gst_buffer_get_size (buf),
         GST_BUFFER_TIMESTAMP (buf));
     sp_writer_free_block (block);
   }
@@ -451,6 +447,10 @@ gst_shm_sink_render (GstBaseSink * bsink, GstBuffer * buf)
 
   return GST_FLOW_OK;
 }
+
+#if 0
+
+/* FIXME 0.11 implement some bufferpool support */
 
 static void
 gst_shm_sink_free_buffer (gpointer data)
@@ -507,6 +507,7 @@ gst_shm_sink_buffer_alloc (GstBaseSink * sink, guint64 offset, guint size,
 
   return GST_FLOW_OK;
 }
+#endif
 
 static gpointer
 pollthread_func (gpointer data)

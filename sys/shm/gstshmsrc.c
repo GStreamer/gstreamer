@@ -58,7 +58,8 @@ static GstStaticPadTemplate srctemplate = GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS_ANY);
 
-GST_BOILERPLATE (GstShmSrc, gst_shm_src, GstPushSrc, GST_TYPE_PUSH_SRC);
+#define gst_shm_src_parent_class parent_class
+G_DEFINE_TYPE (GstShmSrc, gst_shm_src, GST_TYPE_PUSH_SRC);
 
 static void gst_shm_src_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec);
@@ -78,22 +79,6 @@ static void gst_shm_pipe_inc (GstShmPipe * pipe);
 static void gst_shm_pipe_dec (GstShmPipe * pipe);
 
 // static guint gst_shm_src_signals[LAST_SIGNAL] = { 0 };
-
-
-static void
-gst_shm_src_base_init (gpointer g_class)
-{
-  GstElementClass *element_class = GST_ELEMENT_CLASS (g_class);
-
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&srctemplate));
-
-  gst_element_class_set_details_simple (element_class,
-      "Shared Memory Source",
-      "Source",
-      "Receive data from the sharem memory sink",
-      "Olivier Crete <olivier.crete@collabora.co.uk>");
-}
 
 static void
 gst_shm_src_class_init (GstShmSrcClass * klass)
@@ -132,11 +117,20 @@ gst_shm_src_class_init (GstShmSrcClass * klass)
           "True if the element cannot produce data in PAUSED", FALSE,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
+  gst_element_class_add_pad_template (gstelement_class,
+      gst_static_pad_template_get (&srctemplate));
+
+  gst_element_class_set_details_simple (gstelement_class,
+      "Shared Memory Source",
+      "Source",
+      "Receive data from the sharem memory sink",
+      "Olivier Crete <olivier.crete@collabora.co.uk>");
+
   GST_DEBUG_CATEGORY_INIT (shmsrc_debug, "shmsrc", 0, "Shared Memory Source");
 }
 
 static void
-gst_shm_src_init (GstShmSrc * self, GstShmSrcClass * g_class)
+gst_shm_src_init (GstShmSrc * self)
 {
   self->poll = gst_poll_new (TRUE);
   gst_poll_fd_init (&self->pollfd);
@@ -349,11 +343,9 @@ gst_shm_src_create (GstPushSrc * psrc, GstBuffer ** outbuf)
   gst_shm_pipe_inc (self->pipe);
 
   *outbuf = gst_buffer_new ();
-  GST_BUFFER_FLAG_SET (*outbuf, GST_BUFFER_FLAG_READONLY);
-  GST_BUFFER_DATA (*outbuf) = (guint8 *) buf;
-  GST_BUFFER_SIZE (*outbuf) = rv;
-  GST_BUFFER_MALLOCDATA (*outbuf) = (guint8 *) gsb;
-  GST_BUFFER_FREE_FUNC (*outbuf) = free_buffer;
+  gst_buffer_append_memory (*outbuf,
+      gst_memory_new_wrapped (GST_MEMORY_FLAG_READONLY,
+          buf, rv, 0, rv, gsb, free_buffer));
 
   return GST_FLOW_OK;
 }
