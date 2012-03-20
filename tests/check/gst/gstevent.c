@@ -138,7 +138,8 @@ GST_START_TEST (create_events)
     ASSERT_CRITICAL (gst_event_set_stream_config_setup_data (event, NULL));
     ASSERT_CRITICAL (gst_event_add_stream_config_header (event, NULL));
 
-    cd = gst_buffer_new_wrapped_full ((gpointer) "SetMeUpScottie", NULL, 0, 14);
+    cd = gst_buffer_new_wrapped_full (0, (gpointer) "SetMeUpScottie", 14, 0, 14,
+        NULL, NULL);
     gst_event_set_stream_config_setup_data (event, cd);
     gst_buffer_unref (cd);
 
@@ -153,11 +154,15 @@ GST_START_TEST (create_events)
 
     event = gst_event_new_stream_config (GST_STREAM_CONFIG_FLAG_NONE);
     fail_unless_equals_int (gst_event_get_n_stream_config_headers (event), 0);
-    sh1 = gst_buffer_new_wrapped_full ((gpointer) "Strea", NULL, 0, 5);
+    sh1 =
+        gst_buffer_new_wrapped_full (0, (gpointer) "Strea", 5, 0, 5, NULL,
+        NULL);
     gst_event_add_stream_config_header (event, sh1);
     gst_buffer_unref (sh1);
     fail_unless_equals_int (gst_event_get_n_stream_config_headers (event), 1);
-    sh2 = gst_buffer_new_wrapped_full ((gpointer) "mHeader", NULL, 0, 7);
+    sh2 =
+        gst_buffer_new_wrapped_full (0, (gpointer) "mHeader", 7, 0, 7, NULL,
+        NULL);
     gst_event_add_stream_config_header (event, sh2);
     gst_buffer_unref (sh2);
     fail_unless_equals_int (gst_event_get_n_stream_config_headers (event), 2);

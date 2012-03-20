@@ -607,29 +607,36 @@ no_memory:
 
 /**
  * gst_buffer_new_wrapped_full:
+ * @flags: #GstMemoryFlags
  * @data: data to wrap
- * @free_func: function to free @data
- * @offset: offset in @data of valid data
- * @size: size of valid data in @data starting at @offset
+ * @maxsize: allocated size of @data
+ * @offset: offset in @data
+ * @size: size of valid data
+ * @user_data: user_data
+ * @notify: called with @user_data when the memory is freed
  *
- * Creates a new buffer that wraps the given @data.  Valid data is set
- * to start at @offset and up to @size.  If no @free_func is provided,
- * buffer memory is marked READONLY.
+ * Allocate a new buffer that wraps the given memory. @data must point to
+ * @maxsize of memory, the wrapped buffer will have the region from @offset and
+ * @size visible.
  *
- * MT safe.
+ * When the buffer is destroyed, @notify will be called with @user_data.
+ *
+ * The prefix/padding must be filled with 0 if @flags contains
+ * #GST_MEMORY_FLAG_ZERO_PREFIXED and #GST_MEMORY_FLAG_ZERO_PADDED respectively.
  *
  * Returns: (transfer full): a new #GstBuffer
  */
 GstBuffer *
-gst_buffer_new_wrapped_full (gpointer data, GFreeFunc free_func, gsize offset,
-    gsize size)
+gst_buffer_new_wrapped_full (GstMemoryFlags flags, gpointer data,
+    gsize maxsize, gsize offset, gsize size, gpointer user_data,
+    GDestroyNotify notify)
 {
   GstBuffer *newbuf;
 
   newbuf = gst_buffer_new ();
   gst_buffer_append_memory (newbuf,
-      gst_memory_new_wrapped (free_func ? 0 : GST_MEMORY_FLAG_READONLY,
-          data, offset + size, offset, size, data, free_func));
+      gst_memory_new_wrapped (flags, data, maxsize, offset, size,
+          user_data, notify));
 
   return newbuf;
 }
@@ -649,7 +656,7 @@ gst_buffer_new_wrapped_full (gpointer data, GFreeFunc free_func, gsize offset,
 GstBuffer *
 gst_buffer_new_wrapped (gpointer data, gsize size)
 {
-  return gst_buffer_new_wrapped_full (data, g_free, 0, size);
+  return gst_buffer_new_wrapped_full (0, data, size, 0, size, data, g_free);
 }
 
 /**

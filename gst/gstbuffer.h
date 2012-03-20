@@ -260,7 +260,9 @@ GType       gst_buffer_get_type            (void);
 GstBuffer * gst_buffer_new                 (void);
 GstBuffer * gst_buffer_new_allocate        (GstAllocator * allocator, gsize size,
                                             GstAllocationParams * params);
-GstBuffer * gst_buffer_new_wrapped_full    (gpointer data, GFreeFunc free_func, gsize offset, gsize size);
+GstBuffer * gst_buffer_new_wrapped_full    (GstMemoryFlags flags, gpointer data, gsize maxsize,
+                                            gsize offset, gsize size, gpointer user_data,
+                                            GDestroyNotify notify);
 GstBuffer * gst_buffer_new_wrapped         (gpointer data, gsize size);
 
 /* memory blocks */
