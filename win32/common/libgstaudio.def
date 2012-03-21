@@ -26,6 +26,7 @@ EXPORTS
 	gst_audio_cd_src_get_type
 	gst_audio_cd_src_mode_get_type
 	gst_audio_channel_position_get_type
+	gst_audio_channel_positions_from_mask
 	gst_audio_channel_positions_to_mask
 	gst_audio_channel_positions_to_valid_order
 	gst_audio_check_valid_channel_positions
@@ -61,6 +62,7 @@ EXPORTS
 	gst_audio_decoder_set_plc_aware
 	gst_audio_decoder_set_tolerance
 	gst_audio_default_registry_mixer_filter
+	gst_audio_downmix_meta_api_get_type
 	gst_audio_downmix_meta_get_info
 	gst_audio_encoder_finish_frame
 	gst_audio_encoder_get_audio_info

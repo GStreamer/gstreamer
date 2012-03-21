@@ -15,10 +15,8 @@ EXPORTS
 	gst_is_video_overlay_prepare_window_handle_message
 	gst_video_alignment_reset
 	gst_video_buffer_flags_get_type
-	gst_video_buffer_pool_get_allocator
 	gst_video_buffer_pool_get_type
 	gst_video_buffer_pool_new
-	gst_video_buffer_pool_set_allocator
 	gst_video_calculate_display_ratio
 	gst_video_chroma_site_get_type
 	gst_video_color_matrix_get_type
@@ -28,6 +26,7 @@ EXPORTS
 	gst_video_colorimetry_matches
 	gst_video_convert_sample
 	gst_video_convert_sample_async
+	gst_video_crop_meta_api_get_type
 	gst_video_crop_meta_get_info
 	gst_video_event_is_force_key_unit
 	gst_video_event_new_downstream_force_key_unit
@@ -47,6 +46,7 @@ EXPORTS
 	gst_video_format_to_fourcc
 	gst_video_format_to_string
 	gst_video_frame_copy
+	gst_video_frame_copy_plane
 	gst_video_frame_map
 	gst_video_frame_map_id
 	gst_video_frame_unmap
@@ -57,8 +57,10 @@ EXPORTS
 	gst_video_info_to_caps
 	gst_video_interlace_mode_get_type
 	gst_video_marshal_VOID__OBJECT_INT
+	gst_video_meta_api_get_type
 	gst_video_meta_get_info
 	gst_video_meta_map
+	gst_video_meta_transform_scale_get_quark
 	gst_video_meta_unmap
 	gst_video_orientation_get_hcenter
 	gst_video_orientation_get_hflip
