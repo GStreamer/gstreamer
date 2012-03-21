@@ -1386,8 +1386,8 @@ GST_START_TEST (test_decode_stream1)
   bus = gst_bus_new ();
 
   inbuffer =
-      gst_buffer_new_wrapped_full (test_stream1, NULL, 0,
-      sizeof (test_stream1));
+      gst_buffer_new_wrapped_full (GST_MEMORY_FLAG_READONLY, test_stream1,
+      sizeof (test_stream1), 0, sizeof (test_stream1), NULL, NULL);
   ASSERT_BUFFER_REFCOUNT (inbuffer, "inbuffer", 1);
   gst_buffer_ref (inbuffer);
 
@@ -1457,8 +1457,8 @@ GST_START_TEST (test_decode_stream2)
   bus = gst_bus_new ();
 
   inbuffer =
-      gst_buffer_new_wrapped_full (test_stream2, NULL, 0,
-      sizeof (test_stream2));
+      gst_buffer_new_wrapped_full (GST_MEMORY_FLAG_READONLY, test_stream2,
+      sizeof (test_stream2), 0, sizeof (test_stream2), NULL, NULL);
   ASSERT_BUFFER_REFCOUNT (inbuffer, "inbuffer", 1);
   gst_buffer_ref (inbuffer);
 
@@ -1484,6 +1484,7 @@ GST_START_TEST (test_decode_stream2)
 
   caps = gst_pad_get_current_caps (mysinkpad);
   GST_LOG ("output caps %" GST_PTR_FORMAT, caps);
+  GST_LOG ("expected caps %" GST_PTR_FORMAT, out_caps);
   fail_unless (gst_caps_is_equal_fixed (caps, out_caps), "Incorrect out caps");
   gst_caps_unref (caps);
 
