@@ -26,9 +26,6 @@
 
 #include <gst/check/gstcheck.h>
 
-/* FIXME: remove this header once formats are refactored */
-#include "gst/tcp/gstmultifdsink.h"
-
 static GstPad *mysrcpad;
 
 static GstStaticPadTemplate srctemplate = GST_STATIC_PAD_TEMPLATE ("src",
@@ -509,9 +506,9 @@ GST_START_TEST (test_burst_client_bytes)
   fail_unless_num_handles (sink, 0);
   g_signal_emit_by_name (sink, "add", pfd1[1]);
   fail_unless_num_handles (sink, 1);
-  g_signal_emit_by_name (sink, "add_full", pfd2[1], GST_SYNC_METHOD_BURST,
+  g_signal_emit_by_name (sink, "add_full", pfd2[1], 3,
       GST_FORMAT_BYTES, (guint64) 50, GST_FORMAT_BYTES, (guint64) 200);
-  g_signal_emit_by_name (sink, "add_full", pfd3[1], GST_SYNC_METHOD_BURST,
+  g_signal_emit_by_name (sink, "add_full", pfd3[1], 3,
       GST_FORMAT_BYTES, (guint64) 50, GST_FORMAT_BYTES, (guint64) 50);
   fail_unless_num_handles (sink, 3);
 
@@ -601,11 +598,9 @@ GST_START_TEST (test_burst_client_bytes_keyframe)
   /* now add the clients */
   g_signal_emit_by_name (sink, "add", pfd1[1]);
   g_signal_emit_by_name (sink, "add_full", pfd2[1],
-      GST_SYNC_METHOD_BURST_KEYFRAME, GST_FORMAT_BYTES, (guint64) 50,
-      GST_FORMAT_BYTES, (guint64) 90);
+      4, GST_FORMAT_BYTES, (guint64) 50, GST_FORMAT_BYTES, (guint64) 90);
   g_signal_emit_by_name (sink, "add_full", pfd3[1],
-      GST_SYNC_METHOD_BURST_KEYFRAME, GST_FORMAT_BYTES, (guint64) 50,
-      GST_FORMAT_BYTES, (guint64) 50);
+      4, GST_FORMAT_BYTES, (guint64) 50, GST_FORMAT_BYTES, (guint64) 50);
 
   /* push last buffer to make client fds ready for reading */
   for (i = 9; i < 10; i++) {
@@ -694,11 +689,9 @@ GST_START_TEST (test_burst_client_bytes_with_keyframe)
   /* now add the clients */
   g_signal_emit_by_name (sink, "add", pfd1[1]);
   g_signal_emit_by_name (sink, "add_full", pfd2[1],
-      GST_SYNC_METHOD_BURST_WITH_KEYFRAME, GST_FORMAT_BYTES,
-      (guint64) 50, GST_FORMAT_BYTES, (guint64) 90);
+      5, GST_FORMAT_BYTES, (guint64) 50, GST_FORMAT_BYTES, (guint64) 90);
   g_signal_emit_by_name (sink, "add_full", pfd3[1],
-      GST_SYNC_METHOD_BURST_WITH_KEYFRAME, GST_FORMAT_BYTES,
-      (guint64) 50, GST_FORMAT_BYTES, (guint64) 50);
+      5, GST_FORMAT_BYTES, (guint64) 50, GST_FORMAT_BYTES, (guint64) 50);
 
   /* push last buffer to make client fds ready for reading */
   for (i = 9; i < 10; i++) {
