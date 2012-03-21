@@ -2122,7 +2122,7 @@ gst_query_has_scheduling_mode (GstQuery * query, GstPadMode mode)
 
 /**
  * gst_query_new_accept_caps:
- * @caps: a #GstCaps
+ * @caps: a fixed #GstCaps
  *
  * Constructs a new query object for querying if @caps are accepted.
  *
@@ -2135,6 +2135,8 @@ gst_query_new_accept_caps (GstCaps * caps)
 {
   GstQuery *query;
   GstStructure *structure;
+
+  g_return_val_if_fail (gst_caps_is_fixed (caps), NULL);
 
   structure = gst_structure_new_id (GST_QUARK (QUERY_ACCEPT_CAPS),
       GST_QUARK (CAPS), GST_TYPE_CAPS, caps,
