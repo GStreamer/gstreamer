@@ -93,7 +93,6 @@ struct _GstX264Enc
   gint psy_tune;
   guint tune;
   GString *tunings;
-  gint profile;
   GString *option_string_prop; /* option-string property */
   GString *option_string; /* used by set prop */
 

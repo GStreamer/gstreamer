@@ -146,7 +146,6 @@ enum
   ARG_SYNC_LOOKAHEAD,
   ARG_PASS,
   ARG_QUANTIZER,
-  ARG_STATS_FILE,
   ARG_MULTIPASS_CACHE_FILE,
   ARG_BYTE_STREAM,
   ARG_BITRATE,
@@ -176,7 +175,6 @@ enum
   ARG_NR,
   ARG_INTERLACED,
   ARG_OPTION_STRING,
-  ARG_PROFILE,
   ARG_SPEED_PRESET,
   ARG_PSY_TUNE,
   ARG_TUNE,
@@ -186,7 +184,6 @@ enum
 #define ARG_PASS_DEFAULT               0
 #define ARG_QUANTIZER_DEFAULT          21
 #define ARG_MULTIPASS_CACHE_FILE_DEFAULT "x264.log"
-#define ARG_STATS_FILE_DEFAULT         ARG_MULTIPASS_CACHE_FILE_DEFAULT
 #define ARG_BYTE_STREAM_DEFAULT        FALSE
 #define ARG_BITRATE_DEFAULT            (2 * 1024)
 #define ARG_VBV_BUF_CAPACITY_DEFAULT   600
@@ -216,7 +213,6 @@ enum
 #define ARG_RC_MB_TREE_DEFAULT         TRUE
 #define ARG_RC_LOOKAHEAD_DEFAULT       40
 #define ARG_INTRA_REFRESH_DEFAULT      FALSE
-#define ARG_PROFILE_DEFAULT            2        /* 'Main Profile' - matches profile of property defaults */
 #define ARG_OPTION_STRING_DEFAULT      ""
 static GString *x264enc_defaults;
 #define ARG_SPEED_PRESET_DEFAULT       6        /* 'medium' preset - matches x264 CLI default */
@@ -311,38 +307,6 @@ gst_x264_enc_analyse_get_type (void)
 }
 
 #ifdef X264_PRESETS
-
-#define GST_X264_ENC_PROFILE_TYPE (gst_x264_enc_profile_get_type())
-static GType
-gst_x264_enc_profile_get_type (void)
-{
-  static GType profile_type = 0;
-  static GEnumValue *profile_types;
-  int n, i;
-
-  if (profile_type != 0)
-    return profile_type;
-
-  n = 0;
-  while (x264_profile_names[n] != NULL)
-    n++;
-
-  profile_types = g_new0 (GEnumValue, n + 2);
-
-  i = 0;
-  profile_types[i].value = i;
-  profile_types[i].value_name = "No profile";
-  profile_types[i].value_nick = "None";
-  for (i = 1; i <= n; i++) {
-    profile_types[i].value = i;
-    profile_types[i].value_name = x264_profile_names[i - 1];
-    profile_types[i].value_nick = x264_profile_names[i - 1];
-  }
-
-  profile_type = g_enum_register_static ("GstX264EncProfile", profile_types);
-
-  return profile_type;
-}
 
 #define GST_X264_ENC_SPEED_PRESET_TYPE (gst_x264_enc_speed_preset_get_type())
 static GType
@@ -593,13 +557,6 @@ gst_x264_enc_class_init (GstX264EncClass * klass)
           "Preset name for non-psychovisual tuning options",
           GST_X264_ENC_TUNE_TYPE, ARG_TUNE_DEFAULT,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
-  g_object_class_install_property (gobject_class, ARG_PROFILE,
-      g_param_spec_enum ("profile", "H.264 profile",
-          "Apply restrictions to meet H.264 Profile constraints. This will "
-          "override other properties if necessary. This will only be used "
-          "if downstream elements do not specify a profile in their caps (DEPRECATED)",
-          GST_X264_ENC_PROFILE_TYPE, ARG_PROFILE_DEFAULT,
-          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 #endif /* X264_PRESETS */
   g_object_class_install_property (gobject_class, ARG_OPTION_STRING,
       g_param_spec_string ("option-string", "Option string",
@@ -632,10 +589,6 @@ gst_x264_enc_class_init (GstX264EncClass * klass)
   g_string_append_printf (x264enc_defaults, ":sync-lookahead=%d",
       ARG_SYNC_LOOKAHEAD_DEFAULT);
 #endif
-  g_object_class_install_property (gobject_class, ARG_STATS_FILE,
-      g_param_spec_string ("stats-file", "Stats File",
-          "Filename for multipass statistics (deprecated, use multipass-cache-file)",
-          ARG_STATS_FILE_DEFAULT, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (gobject_class, ARG_MULTIPASS_CACHE_FILE,
       g_param_spec_string ("multipass-cache-file", "Multipass Cache File",
           "Filename for multipass cache file",
@@ -909,7 +862,6 @@ gst_x264_enc_init (GstX264Enc * encoder)
   encoder->rc_lookahead = ARG_RC_LOOKAHEAD_DEFAULT;
   encoder->noise_reduction = ARG_NR_DEFAULT;
   encoder->interlaced = ARG_INTERLACED_DEFAULT;
-  encoder->profile = ARG_PROFILE_DEFAULT;
   encoder->option_string = g_string_new (NULL);
   encoder->option_string_prop = g_string_new (ARG_OPTION_STRING_DEFAULT);
   encoder->speed_preset = ARG_SPEED_PRESET_DEFAULT;
@@ -1223,11 +1175,6 @@ gst_x264_enc_init_encoder (GstX264Enc * encoder)
     if (x264_param_apply_profile (&encoder->x264param, encoder->peer_profile))
       GST_WARNING_OBJECT (encoder, "Bad downstream profile name: %s",
           encoder->peer_profile);
-  } else if (encoder->profile) {
-    if (x264_param_apply_profile (&encoder->x264param,
-            x264_profile_names[encoder->profile - 1]))
-      GST_WARNING_OBJECT (encoder, "Bad profile name: %s",
-          x264_profile_names[encoder->profile - 1]);
   }
 #endif /* X264_PRESETS */
 
@@ -2245,9 +2192,6 @@ gst_x264_enc_set_property (GObject * object, guint prop_id,
     case ARG_TUNE:
       encoder->tune = g_value_get_flags (value);
       break;
-    case ARG_PROFILE:
-      encoder->profile = g_value_get_enum (value);
-      break;
     case ARG_OPTION_STRING:
       g_string_assign (encoder->option_string_prop, g_value_get_string (value));
       break;
@@ -2266,7 +2210,6 @@ gst_x264_enc_set_property (GObject * object, guint prop_id,
       g_string_append_printf (encoder->option_string, ":sync-lookahead=%d",
           encoder->sync_lookahead);
       break;
-    case ARG_STATS_FILE:
     case ARG_MULTIPASS_CACHE_FILE:
       if (encoder->mp_cache_file)
         g_free (encoder->mp_cache_file);
@@ -2447,7 +2390,6 @@ gst_x264_enc_get_property (GObject * object, guint prop_id,
     case ARG_QUANTIZER:
       g_value_set_uint (value, encoder->quantizer);
       break;
-    case ARG_STATS_FILE:
     case ARG_MULTIPASS_CACHE_FILE:
       g_value_set_string (value, encoder->mp_cache_file);
       break;
@@ -2540,9 +2482,6 @@ gst_x264_enc_get_property (GObject * object, guint prop_id,
       break;
     case ARG_TUNE:
       g_value_set_flags (value, encoder->tune);
-      break;
-    case ARG_PROFILE:
-      g_value_set_enum (value, encoder->profile);
       break;
     case ARG_OPTION_STRING:
       g_value_set_string (value, encoder->option_string_prop->str);
