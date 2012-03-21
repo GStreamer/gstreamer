@@ -107,7 +107,7 @@ gst_video_parse_class_init (GstVideoParseClass * klass)
       "David Schleef <ds@schleef.org>, "
       "Sebastian Dröge <sebastian.droege@collabora.co.uk>");
 
-  caps = gst_caps_from_string ("video/x-raw; video/x-raw-bayer");
+  caps = gst_caps_from_string ("video/x-raw; video/x-bayer");
 
   gst_raw_parse_class_set_src_pad_template (rp_class, caps);
   gst_raw_parse_class_set_multiple_frames_per_buffer (rp_class, FALSE);
