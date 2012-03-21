@@ -134,8 +134,8 @@ _src_getrange (GstPad * pad, GstObject * parent, guint64 offset, guint length,
   if (offset + length > sizeof (mxf_file))
     return GST_FLOW_EOS;
 
-  *buffer = gst_buffer_new_wrapped_full ((guint8 *) (mxf_file + offset), NULL,
-      0, length);
+  *buffer = gst_buffer_new_wrapped_full (GST_MEMORY_FLAG_READONLY,
+      (guint8 *) (mxf_file + offset), length, 0, length, NULL, NULL);
 
   return GST_FLOW_OK;
 }
@@ -229,8 +229,8 @@ GST_START_TEST (test_push)
   fail_unless (sinkpad != NULL);
 
   buffer =
-      gst_buffer_new_wrapped_full ((guint8 *) mxf_file, NULL, 0,
-      sizeof (mxf_file));
+      gst_buffer_new_wrapped_full (GST_MEMORY_FLAG_READONLY,
+      (guint8 *) mxf_file, sizeof (mxf_file), 0, sizeof (mxf_file), NULL, NULL);
   GST_BUFFER_OFFSET (buffer) = 0;
 
   mysinkpad = _create_sink_pad ();

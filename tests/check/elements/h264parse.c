@@ -292,8 +292,8 @@ GST_START_TEST (test_parse_packetized)
   /* some caps messing */
   caps = gst_caps_from_string (SRC_CAPS_TMPL);
   cdata =
-      gst_buffer_new_wrapped_full (h264_codec_data, NULL, 0,
-      sizeof (h264_codec_data));
+      gst_buffer_new_wrapped_full (GST_MEMORY_FLAG_READONLY, h264_codec_data,
+      sizeof (h264_codec_data), 0, sizeof (h264_codec_data), NULL, NULL);
   gst_caps_set_simple (caps, "codec_data", GST_TYPE_BUFFER, cdata, NULL);
   gst_buffer_unref (cdata);
   desc = gst_caps_to_string (caps);

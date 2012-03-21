@@ -157,7 +157,9 @@ _make_buffers_in (GList * buffer_in, guint8 * test_data, gsize test_data_size)
   gsize i;
 
   for (i = 0; i < test_data_size; i++) {
-    buffer = gst_buffer_new_wrapped_full (test_data + i, NULL, 0, 1);
+    buffer =
+        gst_buffer_new_wrapped_full (GST_MEMORY_FLAG_READONLY, test_data + i, 1,
+        0, 1, NULL, NULL);
     buffer_in = g_list_append (buffer_in, buffer);
   }
   return buffer_in;
@@ -171,7 +173,9 @@ _make_buffers_out (GList * buffer_out, guint8 * test_data, gsize test_data_size)
 {
   GstBuffer *buffer;
 
-  buffer = gst_buffer_new_wrapped_full (test_data, NULL, 0, test_data_size);
+  buffer =
+      gst_buffer_new_wrapped_full (GST_MEMORY_FLAG_READONLY, test_data,
+      test_data_size, 0, test_data_size, NULL, NULL);
   buffer_out = g_list_append (buffer_out, buffer);
 
   return buffer_out;
