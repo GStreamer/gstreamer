@@ -103,7 +103,9 @@ GST_START_TEST (test_passthrough)
   fail_unless (gst_pad_set_caps (mysrcpad, caps));
   gst_caps_unref (caps);
 
-  inbuffer = gst_buffer_new_wrapped_full (in, NULL, 0, sizeof (in));
+  inbuffer =
+      gst_buffer_new_wrapped_full (GST_MEMORY_FLAG_READONLY, in, sizeof (in), 0,
+      sizeof (in), NULL, NULL);
   fail_unless (gst_buffer_memcmp (inbuffer, 0, in, sizeof (in)) == 0);
   ASSERT_BUFFER_REFCOUNT (inbuffer, "inbuffer", 1);
 
@@ -147,7 +149,9 @@ GST_START_TEST (test_echo)
   fail_unless (gst_pad_set_caps (mysrcpad, caps));
   gst_caps_unref (caps);
 
-  inbuffer = gst_buffer_new_wrapped_full (in, NULL, 0, sizeof (in));
+  inbuffer =
+      gst_buffer_new_wrapped_full (GST_MEMORY_FLAG_READONLY, in, sizeof (in), 0,
+      sizeof (in), NULL, NULL);
   fail_unless (gst_buffer_memcmp (inbuffer, 0, in, sizeof (in)) == 0);
   ASSERT_BUFFER_REFCOUNT (inbuffer, "inbuffer", 1);
 
@@ -192,7 +196,9 @@ GST_START_TEST (test_feedback)
   fail_unless (gst_pad_set_caps (mysrcpad, caps));
   gst_caps_unref (caps);
 
-  inbuffer = gst_buffer_new_wrapped_full (in, NULL, 0, sizeof (in));
+  inbuffer =
+      gst_buffer_new_wrapped_full (GST_MEMORY_FLAG_READONLY, in, sizeof (in), 0,
+      sizeof (in), NULL, NULL);
   fail_unless (gst_buffer_memcmp (inbuffer, 0, in, sizeof (in)) == 0);
   ASSERT_BUFFER_REFCOUNT (inbuffer, "inbuffer", 1);
 

@@ -253,8 +253,9 @@ rtp_pipeline_run (rtp_pipeline * p)
       GstBuffer *buf;
 
       buf =
-          gst_buffer_new_wrapped_full ((guint8 *) data, NULL, 0,
-          p->frame_data_size);
+          gst_buffer_new_wrapped_full (GST_MEMORY_FLAG_READONLY,
+          (guint8 *) data, p->frame_data_size, 0, p->frame_data_size, NULL,
+          NULL);
 
       g_signal_emit_by_name (p->appsrc, "push-buffer", buf, &flow_ret);
       fail_unless_equals_int (flow_ret, GST_FLOW_OK);

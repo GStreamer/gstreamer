@@ -105,7 +105,9 @@ GST_START_TEST (test_passthrough)
           GST_STATE_PLAYING) == GST_STATE_CHANGE_SUCCESS,
       "could not set to playing");
 
-  inbuffer = gst_buffer_new_wrapped_full (in, NULL, 0, 12);
+  inbuffer =
+      gst_buffer_new_wrapped_full (GST_MEMORY_FLAG_READONLY, in, 12, 0, 12,
+      NULL, NULL);
   fail_unless (gst_buffer_memcmp (inbuffer, 0, in, 12) == 0);
   caps = gst_caps_from_string (DYNAMIC_CAPS_STRING);
   fail_unless (gst_pad_set_caps (mysrcpad, caps));
@@ -148,7 +150,9 @@ GST_START_TEST (test_compress_hard_50_50)
           GST_STATE_PLAYING) == GST_STATE_CHANGE_SUCCESS,
       "could not set to playing");
 
-  inbuffer = gst_buffer_new_wrapped_full (in, NULL, 0, 16);
+  inbuffer =
+      gst_buffer_new_wrapped_full (GST_MEMORY_FLAG_READONLY, in, 16, 0, 16,
+      NULL, NULL);
   fail_unless (gst_buffer_memcmp (inbuffer, 0, in, 16) == 0);
   caps = gst_caps_from_string (DYNAMIC_CAPS_STRING);
   fail_unless (gst_pad_set_caps (mysrcpad, caps));
@@ -195,7 +199,9 @@ GST_START_TEST (test_compress_soft_50_50)
           GST_STATE_PLAYING) == GST_STATE_CHANGE_SUCCESS,
       "could not set to playing");
 
-  inbuffer = gst_buffer_new_wrapped_full (in, NULL, 0, 16);
+  inbuffer =
+      gst_buffer_new_wrapped_full (GST_MEMORY_FLAG_READONLY, in, 16, 0, 16,
+      NULL, NULL);
   fail_unless (gst_buffer_memcmp (inbuffer, 0, in, 16) == 0);
   caps = gst_caps_from_string (DYNAMIC_CAPS_STRING);
   fail_unless (gst_pad_set_caps (mysrcpad, caps));
@@ -242,7 +248,9 @@ GST_START_TEST (test_compress_hard_100_50)
           GST_STATE_PLAYING) == GST_STATE_CHANGE_SUCCESS,
       "could not set to playing");
 
-  inbuffer = gst_buffer_new_wrapped_full (in, NULL, 0, 16);
+  inbuffer =
+      gst_buffer_new_wrapped_full (GST_MEMORY_FLAG_READONLY, in, 16, 0, 16,
+      NULL, NULL);
   fail_unless (gst_buffer_memcmp (inbuffer, 0, in, 16) == 0);
   caps = gst_caps_from_string (DYNAMIC_CAPS_STRING);
   fail_unless (gst_pad_set_caps (mysrcpad, caps));
@@ -290,7 +298,9 @@ GST_START_TEST (test_expand_hard_50_200)
           GST_STATE_PLAYING) == GST_STATE_CHANGE_SUCCESS,
       "could not set to playing");
 
-  inbuffer = gst_buffer_new_wrapped_full (in, NULL, 0, 16);
+  inbuffer =
+      gst_buffer_new_wrapped_full (GST_MEMORY_FLAG_READONLY, in, 16, 0, 16,
+      NULL, NULL);
   fail_unless (gst_buffer_memcmp (inbuffer, 0, in, 16) == 0);
   caps = gst_caps_from_string (DYNAMIC_CAPS_STRING);
   fail_unless (gst_pad_set_caps (mysrcpad, caps));
@@ -337,7 +347,9 @@ GST_START_TEST (test_expand_soft_50_200)
           GST_STATE_PLAYING) == GST_STATE_CHANGE_SUCCESS,
       "could not set to playing");
 
-  inbuffer = gst_buffer_new_wrapped_full (in, NULL, 0, 16);
+  inbuffer =
+      gst_buffer_new_wrapped_full (GST_MEMORY_FLAG_READONLY, in, 16, 0, 16,
+      NULL, NULL);
   fail_unless (gst_buffer_memcmp (inbuffer, 0, in, 16) == 0);
   caps = gst_caps_from_string (DYNAMIC_CAPS_STRING);
   fail_unless (gst_pad_set_caps (mysrcpad, caps));
@@ -384,7 +396,9 @@ GST_START_TEST (test_expand_hard_0_200)
           GST_STATE_PLAYING) == GST_STATE_CHANGE_SUCCESS,
       "could not set to playing");
 
-  inbuffer = gst_buffer_new_wrapped_full (in, NULL, 0, 16);
+  inbuffer =
+      gst_buffer_new_wrapped_full (GST_MEMORY_FLAG_READONLY, in, 16, 0, 16,
+      NULL, NULL);
   fail_unless (gst_buffer_memcmp (inbuffer, 0, in, 16) == 0);
   caps = gst_caps_from_string (DYNAMIC_CAPS_STRING);
   fail_unless (gst_pad_set_caps (mysrcpad, caps));
