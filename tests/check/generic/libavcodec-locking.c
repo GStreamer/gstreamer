@@ -103,7 +103,7 @@ GST_START_TEST (test_libavcodec_locks)
   for (i = 0; i < NUM_SINKS; i++)
     sink[i] =
         g_strdup_printf
-        (" t.src%d ! queue ! ffenc_mpeg4 ! ffdec_mpeg4 ! fakesink sync=true",
+        (" t.src_%u ! queue ! ffenc_mpeg4 ! ffdec_mpeg4 ! fakesink sync=true",
         i);
 
   sink[NUM_SINKS] = NULL;
