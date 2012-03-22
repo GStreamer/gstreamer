@@ -63,6 +63,7 @@ struct _GstWrapperCameraBinSrc
 
   GstCameraBinMode mode;
 
+  GstPad *srcfilter_pad;
   GstPad *vfsrc;
   GstPad *imgsrc;
   GstPad *vidsrc;

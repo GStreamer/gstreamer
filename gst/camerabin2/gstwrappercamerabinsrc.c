@@ -92,6 +92,10 @@ gst_wrapper_camera_bin_src_dispose (GObject * object)
     gst_object_unref (self->app_vid_filter);
     self->app_vid_filter = NULL;
   }
+  if (self->srcfilter_pad) {
+    gst_object_unref (self->srcfilter_pad);
+    self->srcfilter_pad = NULL;
+  }
   gst_caps_replace (&self->image_capture_caps, NULL);
 
   G_OBJECT_CLASS (parent_class)->dispose (object);
@@ -169,23 +173,45 @@ gst_wrapper_camera_bin_src_get_property (GObject * object,
 
 static void
 gst_wrapper_camera_bin_reset_video_src_caps (GstWrapperCameraBinSrc * self,
-    GstCaps * caps)
+    GstCaps * new_filter_caps)
 {
-  GST_DEBUG_OBJECT (self, "Resetting src caps to %" GST_PTR_FORMAT, caps);
+  GST_DEBUG_OBJECT (self, "Resetting src caps to %" GST_PTR_FORMAT,
+      new_filter_caps);
   if (self->src_vid_src) {
-    GstCaps *old_caps;
+    GstCaps *src_neg_caps;      /* negotiated caps on src_filter */
+    gboolean ret = FALSE;
 
-    g_object_get (G_OBJECT (self->src_filter), "caps", &old_caps, NULL);
-    if (gst_caps_is_equal (caps, old_caps)) {
-      GST_DEBUG_OBJECT (self, "old and new caps are same, do not reset it");
-      if (old_caps)
-        gst_caps_unref (old_caps);
+    /* After pipe was negotiated src_filter do not have any filter caps.
+     * In this situation we should compare neogotiated caps on capsfilter pad
+     * with requested range of caps. If one of this caps intersect,
+     * then we can avoid reseting.
+     */
+    src_neg_caps = gst_pad_get_current_caps (self->srcfilter_pad);
+    if (src_neg_caps && new_filter_caps && gst_caps_is_fixed (new_filter_caps))
+      ret = gst_caps_can_intersect (src_neg_caps, new_filter_caps);
+    else if (new_filter_caps == NULL) {
+      /* If new_filter_caps = NULL, then some body wont to empty
+       * capsfilter (set to ANY). In this case we will need to reset pipe,
+       * but if capsfilter is actually empthy, then we can avoid
+       * one more reseting.
+       */
+      GstCaps *old_filter_caps; /* range of caps on capsfilter */
+
+      g_object_get (G_OBJECT (self->src_filter),
+          "caps", &old_filter_caps, NULL);
+      ret = gst_caps_is_any (old_filter_caps);
+      gst_caps_unref (old_filter_caps);
+    }
+    if (src_neg_caps)
+      gst_caps_unref (src_neg_caps);
+
+    if (ret) {
+      GST_DEBUG_OBJECT (self, "Negotiated caps on srcfilter intersect "
+          "with requested caps, do not reset it.");
       return;
     }
-    if (old_caps)
-      gst_caps_unref (old_caps);
 
-    set_capsfilter_caps (self, caps);
+    set_capsfilter_caps (self, new_filter_caps);
   }
 }
 
@@ -537,7 +563,6 @@ gst_wrapper_camera_bin_src_construct_pipeline (GstBaseCameraSrc * bcamsrc)
   gboolean ret = FALSE;
   GstPad *vf_pad;
   GstPad *tee_capture_pad;
-  GstPad *src_caps_src_pad;
 
   /* checks and adds a new video src if needed */
   if (!check_and_replace_src (self))
@@ -569,10 +594,9 @@ gst_wrapper_camera_bin_src_construct_pipeline (GstBaseCameraSrc * bcamsrc)
     /* attach to notify::caps on the first capsfilter and use a callback
      * to recalculate the zoom properties when these caps change and to
      * propagate the caps to the second capsfilter */
-    src_caps_src_pad = gst_element_get_static_pad (self->src_filter, "src");
-    g_signal_connect (src_caps_src_pad, "notify::caps",
+    self->srcfilter_pad = gst_element_get_static_pad (self->src_filter, "src");
+    g_signal_connect (self->srcfilter_pad, "notify::caps",
         G_CALLBACK (gst_wrapper_camera_bin_src_caps_cb), self);
-    gst_object_unref (src_caps_src_pad);
 
     if (!(self->src_zoom_crop =
             gst_camerabin_create_and_add_element (cbin, "videocrop",
