@@ -465,7 +465,7 @@
 <FLAGS>rw</FLAGS>
 <NICK>port</NICK>
 <BLURB>The port to send the packets to.</BLURB>
-<DEFAULT>4951</DEFAULT>
+<DEFAULT>5004</DEFAULT>
 </ARG>
 
 <ARG>
@@ -495,7 +495,7 @@
 <FLAGS>rw</FLAGS>
 <NICK>Port</NICK>
 <BLURB>The port to receive the packets from, 0=allocate.</BLURB>
-<DEFAULT>4951</DEFAULT>
+<DEFAULT>5004</DEFAULT>
 </ARG>
 
 <ARG>
@@ -505,7 +505,7 @@
 <FLAGS>rw</FLAGS>
 <NICK>URI</NICK>
 <BLURB>URI in the form of udp://multicast_group:port.</BLURB>
-<DEFAULT>"udp://0.0.0.0:4951"</DEFAULT>
+<DEFAULT>"udp://0.0.0.0:5004"</DEFAULT>
 </ARG>
 
 <ARG>

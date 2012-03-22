@@ -3,7 +3,7 @@
   <description>Parsers for various audio formats</description>
   <filename>../../gst/audioparsers/.libs/libgstaudioparsers.so</filename>
   <basename>libgstaudioparsers.so</basename>
-  <version>0.11.1</version>
+  <version>0.11.2</version>
   <license>LGPL</license>
   <source>gst-plugins-good</source>
   <package>GStreamer Good Plug-ins source release</package>
@@ -136,7 +136,7 @@
       </pads>
     </element>
     <element>
-      <name>wavpackparse2</name>
+      <name>wavpackparse</name>
       <longname>Wavpack audio stream parser</longname>
       <class>Codec/Parser/Audio</class>
       <description>Wavpack parser</description>
@@ -152,7 +152,7 @@
           <name>src</name>
           <direction>source</direction>
           <presence>always</presence>
-          <details>audio/x-wavpack, width=(int)[ 1, 32 ], channels=(int)[ 1, 8 ], rate=(int)[ 6000, 192000 ], framed=(boolean)true; audio/x-wavpack-correction, framed=(boolean)true</details>
+          <details>audio/x-wavpack, depth=(int)[ 1, 32 ], channels=(int)[ 1, 8 ], rate=(int)[ 6000, 192000 ], framed=(boolean)true; audio/x-wavpack-correction, framed=(boolean)true</details>
         </caps>
       </pads>
     </element>

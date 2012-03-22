@@ -3,7 +3,7 @@
   <description>X11 video input plugin using standard Xlib calls</description>
   <filename>../../sys/ximage/.libs/libgstximagesrc.so</filename>
   <basename>libgstximagesrc.so</basename>
-  <version>0.11.1</version>
+  <version>0.11.2</version>
   <license>LGPL</license>
   <source>gst-plugins-good</source>
   <package>GStreamer Good Plug-ins source release</package>
@@ -20,7 +20,7 @@
           <name>src</name>
           <direction>source</direction>
           <presence>always</presence>
-          <details>video/x-raw-rgb, framerate=(fraction)[ 0/1, 2147483647/1 ], width=(int)[ 1, 2147483647 ], height=(int)[ 1, 2147483647 ], pixel-aspect-ratio=(fraction)[ 0/1, 2147483647/1 ]</details>
+          <details>video/x-raw, framerate=(fraction)[ 0/1, 2147483647/1 ], width=(int)[ 1, 2147483647 ], height=(int)[ 1, 2147483647 ], pixel-aspect-ratio=(fraction)[ 0/1, 2147483647/1 ]</details>
         </caps>
       </pads>
     </element>

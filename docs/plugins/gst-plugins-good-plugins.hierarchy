@@ -20,9 +20,11 @@ GObject
         GstAudioDecoder
           GstFlacDec
           GstSpeexDec
+          GstWavpackDec
         GstAudioEncoder
           GstFlacEnc
           GstSpeexEnc
+          GstWavpackEnc
         GstAviDemux
         GstAviMux
         GstAviSubtitle
@@ -33,8 +35,8 @@ GObject
           GstDcaParse
           GstFlacParse
           GstMpegAudioParse
+          GstWavpackParse
         GstBaseSink
-          GstAASink
           GstAudioBaseSink
             GstJackAudioSink
             GstPulseSink
@@ -44,7 +46,9 @@ GObject
             GstUDPSink
           GstShout2send
           GstSoupHttpClientSink
+          GstTest
           GstVideoSink
+            GstAASink
             GstV4l2Sink
         GstBaseSrc
           GstPushSrc
@@ -79,9 +83,15 @@ GObject
               GstIirEqualizerNBands
             GstSpectrum
           GstAudioPanorama
+          GstBreakMyData
+          GstCapsSetter
+          GstCpuReport
           GstLevel
+          GstNavSeek
+          GstProgressReport
           GstRgAnalysis
           GstRgLimiter
+          GstTagInject
           GstVideoCrop
           GstVideoFilter
             GstAgingTV
@@ -90,6 +100,7 @@ GObject
             GstDiceTV
             GstEdgeTV
             GstGamma
+            GstNavigationtest
             GstOpTV
             GstQuarkTV
             GstRadioacTV
@@ -109,6 +120,7 @@ GObject
           GstAutoVideoSrc
           GstPipeline
             GstQTMoovRecover
+          GstPushFileSrc
           GstRTSPSrc
           GstRgVolume
           GstRtpBin
@@ -125,6 +137,7 @@ GObject
         GstGoom2k1
         GstICYDemux
         GstISMLMux
+        GstImageFreeze
         GstJpegDec
         GstJpegEnc
         GstMJ2Mux
@@ -214,6 +227,7 @@ GObject
           GstRtpVRawPay
           GstRtpVorbisPay
         GstRTPDec
+        GstRndBufferSize
         GstRtpJitterBuffer
         GstRtpPtDemux
         GstRtpSession

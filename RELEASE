@@ -1,5 +1,5 @@
 
-Release notes for GStreamer Good Plug-ins 0.11.1 "The Leper Affinity"
+Release notes for GStreamer Good Plug-ins 0.11.2 "Rite of Devastation"
         
 
 
@@ -57,10 +57,27 @@ Features of this release
     
       * Many cleanups
       * Ported to new 0.11 core API changes
-      * v4l2 major improvements
-      * Ported network elements to GIO
-There were no bugs fixed in this release
-    
+      * flacenc: various fixes
+      * gdkpixbuf: port to 0.11
+      * wavpack: port to 0.11
+      * rtpbin: many fixes
+      * qtdemux: use PTS and DTS
+      * imagefreeze: port to 0.11
+      * qtdemux: negotiate allocators
+
+Bugs fixed in this release
+     
+      * 670623 : [0.11] flacenc not working
+      * 628773 : [0.11] rtp -- match properties and caps fields
+      * 658357 : [0.11] pulse: build fails with recent pulseaudio
+      * 662615 : [0.11] build failure due to printf format compiler warnings on OSX 64 bit
+      * 667085 : [0.11] dcaparse: uses uninitialized variable
+      * 669607 : [0.11] directsoundsink: Fix compiling
+      * 669612 : [0.11] waveformsink: Port to 0.11
+      * 669643 : [0.11] interleave port
+      * 670320 : gst-plugins-good 0.11.1 fails to build due to missing gstsmokedec.h
+      * 671534 : [0.11] qtmux: cover art tag is GstSample now
+      * 670303 : [0.11] Can't access " rms " , " peak " and " decay " keys from GstLevel bus message trough PyGI
 
 Download
 
@@ -90,67 +107,24 @@ Applications
 Contributors to this release
     
       * Alessandro Decina
-      * Alexey Fisher
-      * Andoni Morales Alastruey
-      * Antoine Jacoutot
-      * Arun Raghavan
-      * Branko Subasic
-      * Brian Li
-      * Chad
-      * Christian Fredrik Kalager Schaller
-      * David Henningsson
+      * Andrej Gelenberg
+      * Antoine Tremblay
       * David Schleef
-      * David Svensson Fors
-      * Debarshi Ray
+      * Dominique Leuenberger
       * Edward Hervey
-      * Gary Ching-Pang Lin
-      * Guillaume Desmottes
-      * Ha Nguyen
-      * Havard Graff
-      * Jan Schmidt
-      * Jayakrishnan M
-      * John Ogness
-      * Jonas Larsson
-      * Jonny Lamb
-      * Julien Isorce
-      * Konstantin Miller
-      * Lasse Laukkanen
-      * Leo Singer
-      * Luis de Bethencourt
       * Marc Leeman
       * Mark Nauwelaerts
-      * Mart Raudsepp
       * Matej Knopp
-      * Miguel Angel Cabrera Moya
-      * Monty Montgomery
       * Nicola Murino
-      * Nicolas Baron
       * Oleksij Rempel (Alexey Fisher)
       * Olivier Crête
-      * Pascal Buhler
-      * Peter Korsgaard
-      * Peter Seiderer
-      * Philip Jägenstedt
-      * Philippe Normand
-      * Raimo Järvi
-      * Ralph Giles
-      * Raul Gutierrez Segales
-      * René Stadler
-      * Reynaldo H. Verdejo Pinochet
-      * Robert Krakora
+      * Peteris Krisjanis
+      * Ross Burton
       * Sebastian Dröge
-      * Sebastian Rasmussen
-      * Sjoerd Simons
-      * Stas Sergeev
-      * Stefan Kost
+      * Sreerenj Balachandran
       * Stefan Sauer
-      * Stig Sandnes
-      * Thiago Santos
-      * Thomas Vander Stichele
       * Tim-Philipp Müller
-      * Tristan Matthews
-      * Tuukka Pasanen
       * Vincent Penquerc'h
+      * Vincent Untz
       * Wim Taymans
-      * Yaakov Selkowitz
  

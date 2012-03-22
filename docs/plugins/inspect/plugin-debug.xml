@@ -3,10 +3,10 @@
   <description>elements for testing and debugging</description>
   <filename>../../gst/debugutils/.libs/libgstdebug.so</filename>
   <basename>libgstdebug.so</basename>
-  <version>0.10.30.1</version>
+  <version>0.11.2</version>
   <license>LGPL</license>
   <source>gst-plugins-good</source>
-  <package>GStreamer Good Plug-ins git</package>
+  <package>GStreamer Good Plug-ins source release</package>
   <origin>Unknown package origin</origin>
   <elements>
     <element>
@@ -15,27 +15,6 @@
       <class>Testing</class>
       <description>randomly change data in the stream</description>
       <author>Benjamin Otte &lt;otte@gnome&gt;</author>
-      <pads>
-        <caps>
-          <name>sink</name>
-          <direction>sink</direction>
-          <presence>always</presence>
-          <details>ANY</details>
-        </caps>
-        <caps>
-          <name>src</name>
-          <direction>source</direction>
-          <presence>always</presence>
-          <details>ANY</details>
-        </caps>
-      </pads>
-    </element>
-    <element>
-      <name>capsdebug</name>
-      <longname>Caps debug</longname>
-      <class>Generic</class>
-      <description>Debug caps negotiation</description>
-      <author>David Schleef &lt;ds@schleef.org&gt;</author>
       <pads>
         <caps>
           <name>sink</name>
