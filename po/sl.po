@@ -1,17 +1,17 @@
 # Slovenian translation of gstreamer.
 # This file is distributed under the same license as the gstreamer package.
-# Copyright (C) 2005 - 2011 Free Software Foundation, Inc.
+# Copyright (C) 2005 - 2012 Free Software Foundation, Inc.
 #
 # Matej Urbančič <matej.urban@gmail.com>, 2010 - 2011.
 # Martin Srebotnjak <miles@filmsi.net>, 2011.
-# Klemen Košir <klemen.kosir@gmx.com>, 2011.
+# Klemen Košir <klemen.kosir@gmx.com>, 2012.
 #
 msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 0.10.32.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2012-02-17 09:51+0100\n"
-"PO-Revision-Date: 2011-09-22 15:02+0100\n"
+"POT-Creation-Date: 2012-03-22 12:55+0100\n"
+"PO-Revision-Date: 2012-03-01 14:05+0100\n"
 "Last-Translator: Klemen Košir <klemen.kosir@gmx.com>\n"
 "Language-Team: Slovenian <translation-team-sl@lists.sourceforge.net>\n"
 "Language: sl\n"
@@ -20,6 +20,9 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=4; plural=(n%100==1 ? 1 : n%100==2 ? 2 : n%100==3 || n"
 "%100==4 ? 3 : 0);\n"
+"X-Poedit-Language: Slovenian\n"
+"X-Poedit-Country: SLOVENIA\n"
+"X-Poedit-SourceCharset: utf-8\n"
 
 msgid "Print the GStreamer version"
 msgstr "Izpiše različico programa GStreamer"
@@ -554,12 +557,11 @@ msgstr "jezikovna koda"
 msgid "language code for this stream, conforming to ISO-639-1 or ISO-639-2"
 msgstr "koda jezika pretoka v skladu z ISO-639-1"
 
-#, fuzzy
 msgid "language name"
-msgstr "jezikovna koda"
+msgstr "ime jezika"
 
 msgid "freeform name of the language this stream is in"
-msgstr ""
+msgstr "prosto ime jezika tega pretoka"
 
 msgid "image"
 msgstr "slika"
@@ -789,7 +791,7 @@ msgstr ", "
 
 #, c-format
 msgid "ERROR: from element %s: %s\n"
-msgstr "NAPAKA: predmeta %s: %s\n"
+msgstr "NAPAKA: predmet %s: %s\n"
 
 #, c-format
 msgid ""
@@ -818,7 +820,7 @@ msgstr ""
 
 #, c-format
 msgid "could not link %s to %s"
-msgstr "povezati %s in %s ni mogoče povezati"
+msgstr "%s in %s ni mogoče povezati"
 
 #, c-format
 msgid "no element \"%s\""
@@ -1113,7 +1115,7 @@ msgstr "Nastavljanje stanja na %s, kot to zahteva %s ...\n"
 msgid "Interrupt: Stopping pipeline ...\n"
 msgstr "Prekinitev: zaustavljanje cevovoda ... \n"
 
-#, fuzzy, c-format
+#, c-format
 msgid "Missing element: %s\n"
 msgstr "Manjkajoči element: %s\n"
 
@@ -1206,11 +1208,6 @@ msgstr "Nastavljanje cevovoda na NULL ...\n"
 msgid "Freeing pipeline ...\n"
 msgstr "Sproščanje cevovoda ...\n"
 
-#~ msgid "Print alloc trace (if enabled at compile time)"
-#~ msgstr ""
-#~ "Izpiši zaznavanje dodeljevanja (če je možnost omogočena v trenutku "
-#~ "kodnega prevajanja)"
-
 #~ msgid "Usage: gst-xmllaunch <file.xml> [ element.property=value ... ]\n"
 #~ msgstr ""
 #~ "Uporaba: gst-xmllaunch <datoteka.xml> [ predmet.lastnost=vrednost ... ]\n"
@@ -1238,3 +1235,8 @@ msgstr "Sproščanje cevovoda ...\n"
 
 #~ msgid "Do not install signal handlers for SIGUSR1 and SIGUSR2"
 #~ msgstr "Ne namesti ročnikov signalov za SIGUSR1 in SIGUSR2"
+
+#~ msgid "Print alloc trace (if enabled at compile time)"
+#~ msgstr ""
+#~ "Izpiši zaznavanje dodeljevanja (če je možnost omogočena v trenutku "
+#~ "kodnega prevajanja)"

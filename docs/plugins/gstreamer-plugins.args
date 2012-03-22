@@ -1085,6 +1085,6 @@
 <FLAGS>rw</FLAGS>
 <NICK>Sync Streams</NICK>
 <BLURB>Synchronize inactive streams to the running time of the active stream.</BLURB>
-<DEFAULT>FALSE</DEFAULT>
+<DEFAULT>TRUE</DEFAULT>
 </ARG>
 

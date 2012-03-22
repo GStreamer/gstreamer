@@ -23,8 +23,8 @@ GType gst_buffer_copy_flags_get_type (void);
 #define GST_TYPE_BUFFER_COPY_FLAGS (gst_buffer_copy_flags_get_type())
 
 /* enumerations from "gstbufferpool.h" */
-GType gst_buffer_pool_flags_get_type (void);
-#define GST_TYPE_BUFFER_POOL_FLAGS (gst_buffer_pool_flags_get_type())
+GType gst_buffer_pool_acquire_flags_get_type (void);
+#define GST_TYPE_BUFFER_POOL_ACQUIRE_FLAGS (gst_buffer_pool_acquire_flags_get_type())
 
 /* enumerations from "gstbus.h" */
 GType gst_bus_flags_get_type (void);
@@ -161,6 +161,8 @@ GType gst_rank_get_type (void);
 #define GST_TYPE_RANK (gst_rank_get_type())
 
 /* enumerations from "gstquery.h" */
+GType gst_query_type_flags_get_type (void);
+#define GST_TYPE_QUERY_TYPE_FLAGS (gst_query_type_flags_get_type())
 GType gst_query_type_get_type (void);
 #define GST_TYPE_QUERY_TYPE (gst_query_type_get_type())
 GType gst_buffering_mode_get_type (void);

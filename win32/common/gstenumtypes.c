@@ -100,23 +100,25 @@ gst_buffer_copy_flags_get_type (void)
 
 /* enumerations from "gstbufferpool.h" */
 GType
-gst_buffer_pool_flags_get_type (void)
+gst_buffer_pool_acquire_flags_get_type (void)
 {
   static gsize id = 0;
   static const GFlagsValue values[] = {
-    {C_FLAGS (GST_BUFFER_POOL_FLAG_NONE), "GST_BUFFER_POOL_FLAG_NONE", "none"},
-    {C_FLAGS (GST_BUFFER_POOL_FLAG_KEY_UNIT), "GST_BUFFER_POOL_FLAG_KEY_UNIT",
-        "key-unit"},
-    {C_FLAGS (GST_BUFFER_POOL_FLAG_DONTWAIT), "GST_BUFFER_POOL_FLAG_DONTWAIT",
-        "dontwait"},
-    {C_FLAGS (GST_BUFFER_POOL_FLAG_DISCONT), "GST_BUFFER_POOL_FLAG_DISCONT",
-        "discont"},
-    {C_FLAGS (GST_BUFFER_POOL_FLAG_LAST), "GST_BUFFER_POOL_FLAG_LAST", "last"},
+    {C_FLAGS (GST_BUFFER_POOL_ACQUIRE_FLAG_NONE),
+        "GST_BUFFER_POOL_ACQUIRE_FLAG_NONE", "none"},
+    {C_FLAGS (GST_BUFFER_POOL_ACQUIRE_FLAG_KEY_UNIT),
+        "GST_BUFFER_POOL_ACQUIRE_FLAG_KEY_UNIT", "key-unit"},
+    {C_FLAGS (GST_BUFFER_POOL_ACQUIRE_FLAG_DONTWAIT),
+        "GST_BUFFER_POOL_ACQUIRE_FLAG_DONTWAIT", "dontwait"},
+    {C_FLAGS (GST_BUFFER_POOL_ACQUIRE_FLAG_DISCONT),
+        "GST_BUFFER_POOL_ACQUIRE_FLAG_DISCONT", "discont"},
+    {C_FLAGS (GST_BUFFER_POOL_ACQUIRE_FLAG_LAST),
+        "GST_BUFFER_POOL_ACQUIRE_FLAG_LAST", "last"},
     {0, NULL, NULL}
   };
 
   if (g_once_init_enter (&id)) {
-    GType tmp = g_flags_register_static ("GstBufferPoolFlags", values);
+    GType tmp = g_flags_register_static ("GstBufferPoolAcquireFlags", values);
     g_once_init_leave (&id, tmp);
   }
 
@@ -929,6 +931,10 @@ gst_memory_flags_get_type (void)
         "readonly"},
     {C_FLAGS (GST_MEMORY_FLAG_NO_SHARE), "GST_MEMORY_FLAG_NO_SHARE",
         "no-share"},
+    {C_FLAGS (GST_MEMORY_FLAG_ZERO_PREFIXED), "GST_MEMORY_FLAG_ZERO_PREFIXED",
+        "zero-prefixed"},
+    {C_FLAGS (GST_MEMORY_FLAG_ZERO_PADDED), "GST_MEMORY_FLAG_ZERO_PADDED",
+        "zero-padded"},
     {C_FLAGS (GST_MEMORY_FLAG_LAST), "GST_MEMORY_FLAG_LAST", "last"},
     {0, NULL, NULL}
   };
@@ -1337,11 +1343,32 @@ gst_rank_get_type (void)
 
 /* enumerations from "gstquery.h" */
 GType
+gst_query_type_flags_get_type (void)
+{
+  static gsize id = 0;
+  static const GFlagsValue values[] = {
+    {C_FLAGS (GST_QUERY_TYPE_UPSTREAM), "GST_QUERY_TYPE_UPSTREAM", "upstream"},
+    {C_FLAGS (GST_QUERY_TYPE_DOWNSTREAM), "GST_QUERY_TYPE_DOWNSTREAM",
+        "downstream"},
+    {C_FLAGS (GST_QUERY_TYPE_SERIALIZED), "GST_QUERY_TYPE_SERIALIZED",
+        "serialized"},
+    {0, NULL, NULL}
+  };
+
+  if (g_once_init_enter (&id)) {
+    GType tmp = g_flags_register_static ("GstQueryTypeFlags", values);
+    g_once_init_leave (&id, tmp);
+  }
+
+  return (GType) id;
+}
+
+GType
 gst_query_type_get_type (void)
 {
   static gsize id = 0;
   static const GEnumValue values[] = {
-    {C_ENUM (GST_QUERY_NONE), "GST_QUERY_NONE", "none"},
+    {C_ENUM (GST_QUERY_UNKNOWN), "GST_QUERY_UNKNOWN", "unknown"},
     {C_ENUM (GST_QUERY_POSITION), "GST_QUERY_POSITION", "position"},
     {C_ENUM (GST_QUERY_DURATION), "GST_QUERY_DURATION", "duration"},
     {C_ENUM (GST_QUERY_LATENCY), "GST_QUERY_LATENCY", "latency"},
@@ -1358,6 +1385,7 @@ gst_query_type_get_type (void)
     {C_ENUM (GST_QUERY_SCHEDULING), "GST_QUERY_SCHEDULING", "scheduling"},
     {C_ENUM (GST_QUERY_ACCEPT_CAPS), "GST_QUERY_ACCEPT_CAPS", "accept-caps"},
     {C_ENUM (GST_QUERY_CAPS), "GST_QUERY_CAPS", "caps"},
+    {C_ENUM (GST_QUERY_DRAIN), "GST_QUERY_DRAIN", "drain"},
     {0, NULL, NULL}
   };
 
