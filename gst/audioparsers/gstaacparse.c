@@ -1093,7 +1093,7 @@ gst_aac_parse_sink_getcaps (GstBaseParse * parse, GstCaps * filter)
 
   /* FIXME: handle filter caps */
 
-  templ = gst_pad_get_pad_template_caps (GST_BASE_PARSE_SRC_PAD (parse)),
+  templ = gst_pad_get_pad_template_caps (GST_BASE_PARSE_SINK_PAD (parse)),
       peercaps = gst_pad_get_allowed_caps (GST_BASE_PARSE_SRC_PAD (parse));
   if (peercaps) {
     guint i, n;
