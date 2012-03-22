@@ -957,12 +957,6 @@ gst_base_transform_configure_caps (GstBaseTransform * trans, GstCaps * in,
   priv->have_same_caps = gst_caps_is_equal (in, out);
   GST_DEBUG_OBJECT (trans, "have_same_caps: %d", priv->have_same_caps);
 
-  /* If we've a transform_ip method and same input/output caps, set in_place
-   * by default. If for some reason the sub-class prefers using a transform
-   * function, it can clear the in place flag in the set_caps */
-  gst_base_transform_set_in_place (trans,
-      klass->transform_ip && priv->have_same_caps);
-
   /* Set the passthrough if the class wants passthrough_on_same_caps
    * and we have the same caps on each pad */
   if (klass->passthrough_on_same_caps)
