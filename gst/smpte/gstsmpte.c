@@ -44,7 +44,6 @@
 #endif
 #include <string.h>
 #include "gstsmpte.h"
-#include <gst/video/video.h>
 #include "paint.h"
 
 GST_DEBUG_CATEGORY_STATIC (gst_smpte_debug);
@@ -54,7 +53,7 @@ static GstStaticPadTemplate gst_smpte_src_template =
 GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS (GST_VIDEO_CAPS_YUV ("I420")
+    GST_STATIC_CAPS (GST_VIDEO_CAPS_MAKE ("I420")
     )
     );
 
@@ -62,7 +61,7 @@ static GstStaticPadTemplate gst_smpte_sink1_template =
 GST_STATIC_PAD_TEMPLATE ("sink1",
     GST_PAD_SINK,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS (GST_VIDEO_CAPS_YUV ("I420")
+    GST_STATIC_CAPS (GST_VIDEO_CAPS_MAKE ("I420")
     )
     );
 
@@ -70,7 +69,7 @@ static GstStaticPadTemplate gst_smpte_sink2_template =
 GST_STATIC_PAD_TEMPLATE ("sink2",
     GST_PAD_SINK,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS (GST_VIDEO_CAPS_YUV ("I420")
+    GST_STATIC_CAPS (GST_VIDEO_CAPS_MAKE ("I420")
     )
     );
 
@@ -148,7 +147,6 @@ gst_smpte_transition_type_get_type (void)
 
 
 static void gst_smpte_class_init (GstSMPTEClass * klass);
-static void gst_smpte_base_init (GstSMPTEClass * klass);
 static void gst_smpte_init (GstSMPTE * smpte);
 static void gst_smpte_finalize (GstSMPTE * smpte);
 
@@ -175,7 +173,7 @@ gst_smpte_get_type (void)
   if (!smpte_type) {
     static const GTypeInfo smpte_info = {
       sizeof (GstSMPTEClass),
-      (GBaseInitFunc) gst_smpte_base_init,
+      NULL,
       NULL,
       (GClassInitFunc) gst_smpte_class_init,
       NULL,
@@ -189,23 +187,6 @@ gst_smpte_get_type (void)
         g_type_register_static (GST_TYPE_ELEMENT, "GstSMPTE", &smpte_info, 0);
   }
   return smpte_type;
-}
-
-static void
-gst_smpte_base_init (GstSMPTEClass * klass)
-{
-  GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
-
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&gst_smpte_sink1_template));
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&gst_smpte_sink2_template));
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&gst_smpte_src_template));
-  gst_element_class_set_details_simple (element_class, "SMPTE transitions",
-      "Filter/Editor/Video",
-      "Apply the standard SMPTE transitions on video images",
-      "Wim Taymans <wim.taymans@chello.be>");
 }
 
 static void
@@ -251,6 +232,17 @@ gst_smpte_class_init (GstSMPTEClass * klass)
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   gstelement_class->change_state = GST_DEBUG_FUNCPTR (gst_smpte_change_state);
+
+  gst_element_class_add_pad_template (gstelement_class,
+      gst_static_pad_template_get (&gst_smpte_sink1_template));
+  gst_element_class_add_pad_template (gstelement_class,
+      gst_static_pad_template_get (&gst_smpte_sink2_template));
+  gst_element_class_add_pad_template (gstelement_class,
+      gst_static_pad_template_get (&gst_smpte_src_template));
+  gst_element_class_set_details_simple (gstelement_class, "SMPTE transitions",
+      "Filter/Editor/Video",
+      "Apply the standard SMPTE transitions on video images",
+      "Wim Taymans <wim.taymans@chello.be>");
 }
 
 /*                              wht  yel  cya  grn  mag  red  blu  blk   -I    Q */
@@ -307,19 +299,19 @@ static gboolean
 gst_smpte_setcaps (GstPad * pad, GstCaps * caps)
 {
   GstSMPTE *smpte;
-  GstStructure *structure;
   gboolean ret;
+  GstVideoInfo vinfo;
 
   smpte = GST_SMPTE (GST_PAD_PARENT (pad));
 
-  structure = gst_caps_get_structure (caps, 0);
-
-  ret = gst_structure_get_int (structure, "width", &smpte->width);
-  ret &= gst_structure_get_int (structure, "height", &smpte->height);
-  ret &= gst_structure_get_fraction (structure, "framerate",
-      &smpte->fps_num, &smpte->fps_denom);
-  if (!ret)
+  gst_video_info_init (&vinfo);
+  if (!gst_video_info_from_caps (&vinfo, caps))
     return FALSE;
+
+  smpte->width = GST_VIDEO_INFO_WIDTH (&vinfo);
+  smpte->height = GST_VIDEO_INFO_HEIGHT (&vinfo);
+  smpte->fps_num = GST_VIDEO_INFO_FPS_N (&vinfo);
+  smpte->fps_denom = GST_VIDEO_INFO_FPS_D (&vinfo);
 
   /* for backward compat, we store these here */
   smpte->fps = ((gdouble) smpte->fps_num) / smpte->fps_denom;
@@ -334,6 +326,42 @@ gst_smpte_setcaps (GstPad * pad, GstCaps * caps)
       gst_smpte_update_mask (smpte, smpte->type, smpte->invert, smpte->depth,
       smpte->width, smpte->height);
 
+  if (pad == smpte->sinkpad1) {
+    GST_DEBUG_OBJECT (smpte, "setting pad1 info");
+    smpte->vinfo1 = vinfo;
+  } else {
+    GST_DEBUG_OBJECT (smpte, "setting pad2 info");
+    smpte->vinfo2 = vinfo;
+  }
+
+  return ret;
+}
+
+static gboolean
+gst_smpte_sink_event (GstCollectPads2 * pads,
+    GstCollectData2 * data, GstEvent * event, gpointer user_data)
+{
+  GstPad *pad;
+  gboolean ret = FALSE;
+
+  pad = data->pad;
+
+  switch (GST_EVENT_TYPE (event)) {
+    case GST_EVENT_CAPS:
+    {
+      GstCaps *caps;
+
+      gst_event_parse_caps (event, &caps);
+      ret = gst_smpte_setcaps (pad, caps);
+      gst_event_unref (event);
+      event = NULL;
+      break;
+    }
+    default:
+      ret = gst_pad_event_default (pad,
+          GST_OBJECT_CAST (GST_PAD_PARENT (pad)), event);
+  }
+
   return ret;
 }
 
@@ -342,18 +370,12 @@ gst_smpte_init (GstSMPTE * smpte)
 {
   smpte->sinkpad1 =
       gst_pad_new_from_static_template (&gst_smpte_sink1_template, "sink1");
-  gst_pad_set_setcaps_function (smpte->sinkpad1,
-      GST_DEBUG_FUNCPTR (gst_smpte_setcaps));
-  gst_pad_set_getcaps_function (smpte->sinkpad1,
-      GST_DEBUG_FUNCPTR (gst_pad_proxy_getcaps));
+  GST_PAD_SET_PROXY_CAPS (smpte->sinkpad1);
   gst_element_add_pad (GST_ELEMENT (smpte), smpte->sinkpad1);
 
   smpte->sinkpad2 =
       gst_pad_new_from_static_template (&gst_smpte_sink2_template, "sink2");
-  gst_pad_set_setcaps_function (smpte->sinkpad2,
-      GST_DEBUG_FUNCPTR (gst_smpte_setcaps));
-  gst_pad_set_getcaps_function (smpte->sinkpad2,
-      GST_DEBUG_FUNCPTR (gst_pad_proxy_getcaps));
+  GST_PAD_SET_PROXY_CAPS (smpte->sinkpad2);
   gst_element_add_pad (GST_ELEMENT (smpte), smpte->sinkpad2);
 
   smpte->srcpad =
@@ -363,6 +385,8 @@ gst_smpte_init (GstSMPTE * smpte)
   smpte->collect = gst_collect_pads2_new ();
   gst_collect_pads2_set_function (smpte->collect,
       (GstCollectPads2Function) GST_DEBUG_FUNCPTR (gst_smpte_collected), smpte);
+  gst_collect_pads2_set_event_function (smpte->collect,
+      GST_DEBUG_FUNCPTR (gst_smpte_sink_event), smpte);
 
   gst_collect_pads2_add_pad (smpte->collect, smpte->sinkpad1,
       sizeof (GstCollectData2));
@@ -399,15 +423,15 @@ gst_smpte_reset (GstSMPTE * smpte)
 }
 
 static void
-gst_smpte_blend_i420 (guint8 * in1, guint8 * in2, guint8 * out, GstMask * mask,
-    gint width, gint height, gint border, gint pos)
+gst_smpte_blend_i420 (GstVideoFrame * frame1, GstVideoFrame * frame2,
+    GstVideoFrame * oframe, GstMask * mask, gint border, gint pos)
 {
   guint32 *maskp;
   gint value;
   gint i, j;
   gint min, max;
-  guint8 *in1u, *in1v, *in2u, *in2v, *outu, *outv;
-  gint uoffset, voffset, ystr, ustr, vstr;
+  guint8 *in1, *in2, *out, *in1u, *in1v, *in2u, *in2v, *outu, *outv;
+  gint width, height;
 
   if (border == 0)
     border++;
@@ -415,19 +439,19 @@ gst_smpte_blend_i420 (guint8 * in1, guint8 * in2, guint8 * out, GstMask * mask,
   min = pos - border;
   max = pos;
 
-  uoffset = I420_U_OFFSET (width, height);
-  voffset = I420_V_OFFSET (width, height);
+  width = GST_VIDEO_FRAME_WIDTH (frame1);
+  height = GST_VIDEO_FRAME_HEIGHT (frame1);
 
-  ystr = I420_Y_ROWSTRIDE (width);
-  ustr = I420_U_ROWSTRIDE (width);
-  vstr = I420_V_ROWSTRIDE (width);
+  in1 = GST_VIDEO_FRAME_COMP_DATA (frame1, 0);
+  in2 = GST_VIDEO_FRAME_COMP_DATA (frame2, 0);
+  out = GST_VIDEO_FRAME_COMP_DATA (oframe, 0);
 
-  in1u = in1 + uoffset;
-  in1v = in1 + voffset;
-  in2u = in2 + uoffset;
-  in2v = in2 + voffset;
-  outu = out + uoffset;
-  outv = out + voffset;
+  in1u = GST_VIDEO_FRAME_COMP_DATA (frame1, 1);
+  in1v = GST_VIDEO_FRAME_COMP_DATA (frame1, 2);
+  in2u = GST_VIDEO_FRAME_COMP_DATA (frame2, 1);
+  in2v = GST_VIDEO_FRAME_COMP_DATA (frame2, 2);
+  outu = GST_VIDEO_FRAME_COMP_DATA (oframe, 1);
+  outv = GST_VIDEO_FRAME_COMP_DATA (oframe, 2);
 
   maskp = mask->data;
 
@@ -444,16 +468,18 @@ gst_smpte_blend_i420 (guint8 * in1, guint8 * in2, guint8 * out, GstMask * mask,
             ((in1v[j / 2] * value) + (in2v[j / 2] * (256 - value))) >> 8;
       }
     }
-    out += ystr;
-    in1 += ystr;
-    in2 += ystr;
+
+    in1 += GST_VIDEO_FRAME_COMP_STRIDE (frame1, 0);
+    in2 += GST_VIDEO_FRAME_COMP_STRIDE (frame2, 0);
+    out += GST_VIDEO_FRAME_COMP_STRIDE (oframe, 0);
+
     if (!(i & 1)) {
-      outu += ustr;
-      in1u += ustr;
-      in2u += ustr;
-      outv += vstr;
-      in1v += vstr;
-      in2v += vstr;
+      in1u += GST_VIDEO_FRAME_COMP_STRIDE (frame1, 1);
+      in2u += GST_VIDEO_FRAME_COMP_STRIDE (frame2, 1);
+      in1v += GST_VIDEO_FRAME_COMP_STRIDE (frame1, 2);
+      in2v += GST_VIDEO_FRAME_COMP_STRIDE (frame1, 2);
+      outu += GST_VIDEO_FRAME_COMP_STRIDE (oframe, 1);
+      outv += GST_VIDEO_FRAME_COMP_STRIDE (oframe, 2);
     }
   }
 }
@@ -465,11 +491,14 @@ gst_smpte_collected (GstCollectPads2 * pads, GstSMPTE * smpte)
   GstClockTime ts;
   GstBuffer *in1 = NULL, *in2 = NULL;
   GSList *collected;
+  GstMapInfo map;
+  GstVideoFrame frame1, frame2, oframe;
 
   if (G_UNLIKELY (smpte->fps_num == 0))
     goto not_negotiated;
 
-  if (!GST_PAD_CAPS (smpte->sinkpad1) || !GST_PAD_CAPS (smpte->sinkpad2))
+  if (!gst_pad_has_current_caps (smpte->sinkpad1) ||
+      !gst_pad_has_current_caps (smpte->sinkpad2))
     goto not_negotiated;
 
   ts = gst_util_uint64_scale_int (smpte->position * GST_SECOND,
@@ -489,23 +518,31 @@ gst_smpte_collected (GstCollectPads2 * pads, GstSMPTE * smpte)
   if (in1 == NULL) {
     /* if no input, make picture black */
     in1 = gst_buffer_new_and_alloc (I420_SIZE (smpte->width, smpte->height));
-    fill_i420 (GST_BUFFER_DATA (in1), smpte->width, smpte->height, 7);
+    gst_buffer_map (in1, &map, GST_MAP_WRITE);
+    fill_i420 (map.data, smpte->width, smpte->height, 7);
+    gst_buffer_unmap (in1, &map);
   }
   if (in2 == NULL) {
     /* if no input, make picture white */
     in2 = gst_buffer_new_and_alloc (I420_SIZE (smpte->width, smpte->height));
-    fill_i420 (GST_BUFFER_DATA (in2), smpte->width, smpte->height, 0);
+    gst_buffer_map (in2, &map, GST_MAP_WRITE);
+    fill_i420 (map.data, smpte->width, smpte->height, 0);
+    gst_buffer_unmap (in1, &map);
   }
 
-  if (GST_BUFFER_SIZE (in1) != GST_BUFFER_SIZE (in2))
+  if (GST_VIDEO_INFO_WIDTH (&smpte->vinfo1) !=
+      GST_VIDEO_INFO_WIDTH (&smpte->vinfo2) ||
+      GST_VIDEO_INFO_HEIGHT (&smpte->vinfo1) !=
+      GST_VIDEO_INFO_HEIGHT (&smpte->vinfo2))
     goto input_formats_do_not_match;
 
   if (smpte->position < smpte->end_position) {
     outbuf = gst_buffer_new_and_alloc (I420_SIZE (smpte->width, smpte->height));
 
     /* set caps if not done yet */
-    if (!GST_PAD_CAPS (smpte->srcpad)) {
+    if (!gst_pad_has_current_caps (smpte->srcpad)) {
       GstCaps *caps;
+      GstSegment segment;
 
       caps =
           gst_caps_copy (gst_static_caps_get
@@ -516,21 +553,20 @@ gst_smpte_collected (GstCollectPads2 * pads, GstSMPTE * smpte)
 
       gst_pad_set_caps (smpte->srcpad, caps);
 
-      gst_pad_push_event (smpte->srcpad,
-          gst_event_new_new_segment_full (FALSE,
-              1.0, 1.0, GST_FORMAT_TIME, 0, -1, 0));
-
+      gst_segment_init (&segment, GST_FORMAT_TIME);
+      gst_pad_push_event (smpte->srcpad, gst_event_new_segment (&segment));
     }
-    gst_buffer_set_caps (outbuf, GST_PAD_CAPS (smpte->srcpad));
 
-    gst_smpte_blend_i420 (GST_BUFFER_DATA (in1),
-        GST_BUFFER_DATA (in2),
-        GST_BUFFER_DATA (outbuf),
-        smpte->mask, smpte->width, smpte->height,
-        smpte->border,
+    gst_video_frame_map (&frame1, &smpte->vinfo1, in1, GST_MAP_READ);
+    gst_video_frame_map (&frame2, &smpte->vinfo2, in2, GST_MAP_READ);
+    /* re-use either info, now know they are essentially identical */
+    gst_video_frame_map (&oframe, &smpte->vinfo1, outbuf, GST_MAP_WRITE);
+    gst_smpte_blend_i420 (&frame1, &frame2, &oframe, smpte->mask, smpte->border,
         ((1 << smpte->depth) + smpte->border) *
         smpte->position / smpte->end_position);
-
+    gst_video_frame_unmap (&frame1);
+    gst_video_frame_unmap (&frame2);
+    gst_video_frame_unmap (&oframe);
   } else {
     outbuf = in2;
     gst_buffer_ref (in2);
@@ -556,9 +592,15 @@ not_negotiated:
   }
 input_formats_do_not_match:
   {
+    GstCaps *caps1, *caps2;
+
+    caps1 = gst_pad_get_current_caps (smpte->sinkpad1);
+    caps2 = gst_pad_get_current_caps (smpte->sinkpad2);
     GST_ELEMENT_ERROR (smpte, CORE, NEGOTIATION, (NULL),
         ("input formats don't match: %" GST_PTR_FORMAT " vs. %" GST_PTR_FORMAT,
-            GST_PAD_CAPS (smpte->sinkpad1), GST_PAD_CAPS (smpte->sinkpad2)));
+            caps1, caps2));
+    gst_caps_unref (caps1);
+    gst_caps_unref (caps2);
     return GST_FLOW_ERROR;
   }
 }

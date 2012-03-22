@@ -63,8 +63,8 @@ struct _GstSMPTEAlpha {
   GstMask       *mask;
 
   /* processing function */
-  void (*process) (GstSMPTEAlpha * smpte, const guint8 * in, guint8 * out,
-    GstMask * mask, gint width, gint height, gint border, gint pos);
+  void (*process) (GstSMPTEAlpha * smpte, const GstVideoFrame * in, GstVideoFrame * out,
+    GstMask * mask, gint border, gint pos);
 };
 
 struct _GstSMPTEAlphaClass {
