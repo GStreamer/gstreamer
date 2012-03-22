@@ -3,7 +3,7 @@
   <description>Elements to convert Bayer images</description>
   <filename>../../gst/bayer/.libs/libgstbayer.so</filename>
   <basename>libgstbayer.so</basename>
-  <version>0.11.1</version>
+  <version>0.11.2</version>
   <license>LGPL</license>
   <source>gst-plugins-bad</source>
   <package>GStreamer Bad Plug-ins source release</package>
@@ -13,14 +13,14 @@
       <name>bayer2rgb</name>
       <longname>Bayer to RGB decoder for cameras</longname>
       <class>Filter/Converter/Video</class>
-      <description>Converts video/x-raw-bayer to video/x-raw</description>
+      <description>Converts video/x-bayer to video/x-raw</description>
       <author>William Brack &lt;wbrack@mmm.com.hk&gt;</author>
       <pads>
         <caps>
           <name>sink</name>
           <direction>sink</direction>
           <presence>always</presence>
-          <details>video/x-raw-bayer, format=(string){ bggr, grbg, gbrg, rggb }, width=(int)[ 1, 2147483647 ], height=(int)[ 1, 2147483647 ], framerate=(fraction)[ 0/1, 2147483647/1 ]</details>
+          <details>video/x-bayer, format=(string){ bggr, grbg, gbrg, rggb }, width=(int)[ 1, 2147483647 ], height=(int)[ 1, 2147483647 ], framerate=(fraction)[ 0/1, 2147483647/1 ]</details>
         </caps>
         <caps>
           <name>src</name>
@@ -34,7 +34,7 @@
       <name>rgb2bayer</name>
       <longname>RGB to Bayer converter</longname>
       <class>Filter/Converter/Video</class>
-      <description>Converts video/x-raw to video/x-raw-bayer</description>
+      <description>Converts video/x-raw to video/x-bayer</description>
       <author>David Schleef &lt;ds@entropywave.com&gt;</author>
       <pads>
         <caps>
@@ -47,7 +47,7 @@
           <name>src</name>
           <direction>source</direction>
           <presence>always</presence>
-          <details>video/x-raw-bayer, format=(string){ bggr, gbrg, grbg, rggb }, width=(int)[ 1, 2147483647 ], height=(int)[ 1, 2147483647 ], framerate=(fraction)[ 0/1, 2147483647/1 ]</details>
+          <details>video/x-bayer, format=(string){ bggr, gbrg, grbg, rggb }, width=(int)[ 1, 2147483647 ], height=(int)[ 1, 2147483647 ], framerate=(fraction)[ 0/1, 2147483647/1 ]</details>
         </caps>
       </pads>
     </element>

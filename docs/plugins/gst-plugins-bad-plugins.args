@@ -18041,7 +18041,7 @@
 <ARG>
 <NAME>GstAudioParse::channels</NAME>
 <TYPE>gint</TYPE>
-<RANGE>>= 1</RANGE>
+<RANGE>[1,64]</RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>Channels</NICK>
 <BLURB>Number of channels in raw stream.</BLURB>
@@ -18075,7 +18075,7 @@
 <FLAGS>rw</FLAGS>
 <NICK>Format</NICK>
 <BLURB>Format of audio samples in raw stream.</BLURB>
-<DEFAULT>Integer</DEFAULT>
+<DEFAULT>Raw</DEFAULT>
 </ARG>
 
 <ARG>
@@ -18116,6 +18116,26 @@
 <NICK>Channel positions</NICK>
 <BLURB>Channel positions used on the output.</BLURB>
 <DEFAULT></DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstAudioParse::interleaved</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Interleaved Layout</NICK>
+<BLURB>True if audio has interleaved layout.</BLURB>
+<DEFAULT>TRUE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstAudioParse::raw-format</NAME>
+<TYPE>GstAudioFormat</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Raw Format</NICK>
+<BLURB>Format of audio samples in raw stream.</BLURB>
+<DEFAULT>GST_AUDIO_FORMAT_S16LE</DEFAULT>
 </ARG>
 
 <ARG>
@@ -27960,7 +27980,7 @@
 <FLAGS>rw</FLAGS>
 <NICK>bitrate</NICK>
 <BLURB>bitrate.</BLURB>
-<DEFAULT>13824000</DEFAULT>
+<DEFAULT>0</DEFAULT>
 </ARG>
 
 <ARG>
@@ -28060,7 +28080,7 @@
 <FLAGS>rw</FLAGS>
 <NICK>enable_multiquant</NICK>
 <BLURB>enable_multiquant.</BLURB>
-<DEFAULT>TRUE</DEFAULT>
+<DEFAULT>FALSE</DEFAULT>
 </ARG>
 
 <ARG>
@@ -28146,11 +28166,11 @@
 <ARG>
 <NAME>GstSchroEnc::horiz-slices</NAME>
 <TYPE>gint</TYPE>
-<RANGE>>= 1</RANGE>
+<RANGE>>= 0</RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>horiz_slices</NICK>
 <BLURB>horiz_slices.</BLURB>
-<DEFAULT>8</DEFAULT>
+<DEFAULT>0</DEFAULT>
 </ARG>
 
 <ARG>
@@ -28160,7 +28180,7 @@
 <FLAGS>rw</FLAGS>
 <NICK>inter_wavelet</NICK>
 <BLURB>inter_wavelet.</BLURB>
-<DEFAULT>le_gall_5_3</DEFAULT>
+<DEFAULT>desl_dubuc_9_7</DEFAULT>
 </ARG>
 
 <ARG>
@@ -28250,7 +28270,7 @@
 <FLAGS>rw</FLAGS>
 <NICK>magic_chroma_lambda_scale</NICK>
 <BLURB>magic_chroma_lambda_scale.</BLURB>
-<DEFAULT>0.01</DEFAULT>
+<DEFAULT>0.1</DEFAULT>
 </ARG>
 
 <ARG>
@@ -28350,7 +28370,7 @@
 <FLAGS>rw</FLAGS>
 <NICK>magic_scene_change_threshold</NICK>
 <BLURB>magic_scene_change_threshold.</BLURB>
-<DEFAULT>0.2</DEFAULT>
+<DEFAULT>3</DEFAULT>
 </ARG>
 
 <ARG>
@@ -28520,17 +28540,17 @@
 <FLAGS>rw</FLAGS>
 <NICK>transform_depth</NICK>
 <BLURB>transform_depth.</BLURB>
-<DEFAULT>4</DEFAULT>
+<DEFAULT>3</DEFAULT>
 </ARG>
 
 <ARG>
 <NAME>GstSchroEnc::vert-slices</NAME>
 <TYPE>gint</TYPE>
-<RANGE>>= 1</RANGE>
+<RANGE>>= 0</RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>vert_slices</NICK>
 <BLURB>vert_slices.</BLURB>
-<DEFAULT>6</DEFAULT>
+<DEFAULT>0</DEFAULT>
 </ARG>
 
 <ARG>
@@ -46294,6 +46314,16 @@
 </ARG>
 
 <ARG>
+<NAME>GstShmSink::buffer-time</NAME>
+<TYPE>guint64</TYPE>
+<RANGE></RANGE>
+<FLAGS>rwx</FLAGS>
+<NICK>Buffer Time of the shm buffer</NICK>
+<BLURB>Maximum Size of the shm buffer in nanoseconds (-1 to disable).</BLURB>
+<DEFAULT>18446744073709551615</DEFAULT>
+</ARG>
+
+<ARG>
 <NAME>GstRTMPSrc::location</NAME>
 <TYPE>gchar*</TYPE>
 <RANGE></RANGE>
@@ -57840,6 +57870,66 @@
 <FLAGS>rw</FLAGS>
 <NICK>channel-id</NICK>
 <BLURB>Channel Identifier.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstRemoveSilence::hysteresis</NAME>
+<TYPE>guint64</TYPE>
+<RANGE>>= 1</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Hysteresis</NICK>
+<BLURB>Set the hysteresis (on samples) used on the internal VAD.</BLURB>
+<DEFAULT>480</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstRemoveSilence::remove</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Remove</NICK>
+<BLURB>Set to true to remove silence from the stream, false otherwhise.</BLURB>
+<DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstSmooth::active</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>active</NICK>
+<BLURB>process video.</BLURB>
+<DEFAULT>TRUE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstSmooth::filter-size</NAME>
+<TYPE>gint</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>filter-size</NICK>
+<BLURB>size of media filter.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstSmooth::luma-only</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>luma-only</NICK>
+<BLURB>only filter luma part.</BLURB>
+<DEFAULT>TRUE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstSmooth::tolerance</NAME>
+<TYPE>gint</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>tolerance</NICK>
+<BLURB>contrast tolerance for smoothing.</BLURB>
 <DEFAULT>0</DEFAULT>
 </ARG>
 

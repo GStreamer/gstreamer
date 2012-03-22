@@ -3,10 +3,10 @@
   <description>CELT plugin library</description>
   <filename>../../ext/celt/.libs/libgstcelt.so</filename>
   <basename>libgstcelt.so</basename>
-  <version>0.10.22.1</version>
+  <version>0.11.2</version>
   <license>LGPL</license>
   <source>gst-plugins-bad</source>
-  <package>GStreamer Bad Plug-ins git</package>
+  <package>GStreamer Bad Plug-ins source release</package>
   <origin>Unknown package origin</origin>
   <elements>
     <element>
@@ -26,7 +26,7 @@
           <name>src</name>
           <direction>source</direction>
           <presence>always</presence>
-          <details>audio/x-raw-int, rate=(int)[ 32000, 64000 ], channels=(int)[ 1, 2 ], endianness=(int)1234, signed=(boolean)true, width=(int)16, depth=(int)16</details>
+          <details>audio/x-raw, format=(string)S16LE, layout=(string)interleaved, rate=(int)[ 32000, 64000 ], channels=(int)[ 1, 2 ]</details>
         </caps>
       </pads>
     </element>
@@ -41,7 +41,7 @@
           <name>sink</name>
           <direction>sink</direction>
           <presence>always</presence>
-          <details>audio/x-raw-int, rate=(int)[ 32000, 64000 ], channels=(int)[ 1, 2 ], endianness=(int)1234, signed=(boolean)true, width=(int)16, depth=(int)16</details>
+          <details>audio/x-raw, format=(string)S16LE, layout=(string)interleaved, rate=(int)[ 32000, 64000 ], channels=(int)[ 1, 2 ]</details>
         </caps>
         <caps>
           <name>src</name>

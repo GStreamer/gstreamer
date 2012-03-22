@@ -9,11 +9,13 @@ GObject
         GstAssRender
         GstAudioDecoder
           ADPCMDec
+          GstCeltDec
           GstDtsDec
           GstFaad
           GstGSMDec
         GstAudioEncoder
           ADPCMEnc
+          GstCeltEnc
           GstFaac
           GstGSMEnc
         GstBaseAudioVisualizer
@@ -30,21 +32,29 @@ GObject
           GstMpegvParse
         GstBaseSink
           GstChecksumSink
+          GstShmSink
         GstBaseSrc
           GstDTMFSrc
           GstDataURISrc
           GstPushSrc
             GstMMS
+            GstShmSrc
           GstRTPDTMFSrc
         GstBaseTransform
           GstBayer2RGB
           GstDebugSpy
           GstDtmfDetect
           GstRGB2Bayer
+          GstRemoveSilence
+          GstScaletempo
+          GstVideoFilter
+            GstSmooth
         GstBaseVideoCodec
           GstBaseVideoDecoder
+            GstSchroDec
             GstVP8Dec
           GstBaseVideoEncoder
+            GstSchroEnc
             GstVP8Enc
         GstBin
           GstAutoConvert
@@ -56,6 +66,8 @@ GObject
             GstCameraBin2
           GstSDPDemux
           GstViewfinderBin
+        GstBz2dec
+        GstBz2enc
         GstChopMyData
         GstCompare
         GstDVBSubOverlay
@@ -72,6 +84,12 @@ GObject
           GstRtpVP8Pay
         GstRTPMux
           GstRTPDTMFMux
+        GstRawParse
+          GstAudioParse
+          GstVideoParse
+        GstSegmentClip
+          GstAudioSegmentClip
+          GstVideoSegmentClip
         GstY4mDec
         MpegTSBase
           GstTSDemux

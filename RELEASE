@@ -1,5 +1,5 @@
 
-Release notes for GStreamer Bad Plug-ins 0.11.1 "Forest of October"
+Release notes for GStreamer Bad Plug-ins 0.11.2 "Crossthreaded"
         
 
 
@@ -61,13 +61,26 @@ contains a set of well-supported plug-ins, but might pose problems for
 
 Features of this release
     
-      * Parallel installability with 0.10.x series
       * Many cleanups
       * Ported to new 0.11 core API changes
+      * schro: Ported to 0.11
+      * qtkitvideosrc: Ported to 0.11
+      * vtdec: Ported to 0.11
+      * celt: Ported to 0.11
+      * removesilence: Ported to 0.11
+      * bz2: Ported to 0.11
+      * segmentclip: Ported to 0.11
+      * smooth: Ported to 0.11
+      * scaletempo: Ported to 0.11
+      * rawparse: Ported to 0.11
+      * shm: Ported to 0.11
 
 Bugs fixed in this release
      
-      * 665677 : [0.11] tsdemux sets pad caps before activating
+      * 658438 : [0.11][h263parse] Make h263 profiles/levels string fields in the caps
+      * 662618 : [gst-plugins-bad]compiler warnings due to printf format mismatch
+      * 665355 : [basevideodecoder] deletes frame but keeps it in list
+      * 670367 : Build failures for gst-plugins-bad
 
 Download
 
@@ -97,85 +110,14 @@ Applications
 Contributors to this release
     
       * Alessandro Decina
-      * Alexey Fisher
-      * Andoni Morales Alastruey
-      * Andreas Frisch
-      * Arun Raghavan
-      * Brad Smith
-      * Brian Gitonga Marete
-      * Carsten Kroll
       * Christian Fredrik Kalager Schaller
-      * Danilo Cesar Lemes de Paula
-      * David Biomech360
-      * David King
       * David Schleef
-      * Debarshi Ray
       * Edward Hervey
-      * Felipe Contreras
-      * Gabriel Strimtu
-      * George Kiagiadakis
-      * Guillaume Emont
-      * Gwenole Beauchesne
-      * Götz Waschk
-      * Jan Schmidt
-      * Janne Grunau
-      * Jonas Larsson
-      * Josep Torra
-      * Joshua M. Doe
-      * Julien Isorce
-      * Julien MOUTTE
-      * Krzysztof Krakowiak
-      * Lasse Laukkanen
-      * Laura Lucas Alday
-      * Lauri Lehtinen
-      * Levente Farkas
-      * Luciana Fujii Pontello
-      * Luis de Bethencourt
-      * Lukáš Lalinský
-      * Marc-André Lureau
       * Mark Nauwelaerts
-      * Mart Raudsepp
-      * Martin Storsjo
       * Matej Knopp
-      * Mukul Majmudar
-      * Nicola Murino
-      * Nicolas Dufresne
-      * Olaf Seibert
-      * Oleksij Rempel (Alexey Fisher)
-      * Olivier Crête
-      * Pino Toscano
-      * Quentin Smith
-      * Rafael Diniz
-      * Raimo Järvi
-      * Raluca Elena Podiuc
-      * René Stadler
-      * Reynaldo H. Verdejo Pinochet
-      * Rob Clark
-      * Robert Jobbagy
-      * Robert Swain
-      * Sameer Naik
       * Sebastian Dröge
-      * Sebastian Pölsterl
-      * Sjoerd Simons
       * Sreerenj Balachandran
-      * Stefan Kost
-      * Stefan Sauer
-      * Teemu Katajisto
-      * Thiago Santos
       * Thibault Saunier
-      * Thijs Vermeir
-      * Thomas Vander Stichele
-      * Tiago César Katcipis
-      * Tim 'mithro' Ansell
       * Tim-Philipp Müller
-      * Tom Deseyn
-      * Tommi Myöhänen
-      * Vincent Génieux
-      * Vincent Penquerc'h
-      * Víctor Manuel Jáquez Leal
-      * W. Michael Petullo
       * Wim Taymans
-      * Youness Alaoui
-      * Zhao Halley
-      * benjamin gaignard
  

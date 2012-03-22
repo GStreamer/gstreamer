@@ -1,9 +1,582 @@
-=== release 0.11.1 ===
+=== release 0.11.2 ===
 
-2012-02-17  Wim Taymans <wim.taymans@collabora.co.uk>
+2012-03-22  Wim Taymans <wim.taymans@collabora.co.uk>
 
 	* configure.ac:
-	  releasing 0.11.1, "Forest of October"
+	  releasing 0.11.2, "Crossthreaded"
+
+2012-03-21 13:23:42 +0100  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* tests/check/elements/h264parse.c:
+	* tests/check/elements/jpegparse.c:
+	* tests/check/elements/mxfdemux.c:
+	  tests: update for memory api changes
+
+2012-03-21 09:41:08 +0100  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* gst/rawparse/gstvideoparse.c:
+	  rawparse: fix bayer caps
+
+2012-03-20 20:21:42 +0100  Mark Nauwelaerts <mark.nauwelaerts@collabora.co.uk>
+
+	* configure.ac:
+	* sys/shm/gstshmsink.c:
+	* sys/shm/gstshmsrc.c:
+	  shm: port to 0.11
+
+2012-03-20 20:21:37 +0100  Mark Nauwelaerts <mark.nauwelaerts@collabora.co.uk>
+
+	* configure.ac:
+	* gst/rawparse/gstaudioparse.c:
+	* gst/rawparse/gstaudioparse.h:
+	* gst/rawparse/gstrawparse.c:
+	* gst/rawparse/gstrawparse.h:
+	* gst/rawparse/gstvideoparse.c:
+	  rawparse: port to 0.11
+
+2012-03-20 16:44:17 +0100  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* ext/faad/gstfaad.c:
+	  faad: add some channel map debug
+
+2012-03-20 16:34:33 +0100  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* ext/faad/gstfaad.c:
+	* ext/faad/gstfaad.h:
+	  faad: optimize channel remap, avoid potential memcpy
+	  Combine the channel remap and copy in one operation. Calculate the channel remap
+	  table only once, make a shortcut when we are not doing any remapping.
+
+2012-03-20 15:38:33 +0100  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* gst/fieldanalysis/gstfieldanalysis.c:
+	* gst/fieldanalysis/gstfieldanalysisorc.orc:
+	  orc: don't compile everything at startup
+
+2012-03-18 18:33:00 +0100  Mark Nauwelaerts <mark.nauwelaerts@collabora.co.uk>
+
+	* ext/gme/Makefile.am:
+	* ext/gme/gstgme.c:
+	  gme: use new style audio caps
+	  Also do not pretend to negotiate output caps when there
+	  is not much in output to begin with.
+
+2012-03-18 18:32:55 +0100  Mark Nauwelaerts <mark.nauwelaerts@collabora.co.uk>
+
+	* configure.ac:
+	* gst/scaletempo/Makefile.am:
+	* gst/scaletempo/gstscaletempo.c:
+	  scaletempo: port to 0.11
+
+2012-03-18 18:32:51 +0100  Mark Nauwelaerts <mark.nauwelaerts@collabora.co.uk>
+
+	* configure.ac:
+	* gst/smooth/gstsmooth.c:
+	  smooth: port to 0.11
+
+2012-03-18 18:32:46 +0100  Mark Nauwelaerts <mark.nauwelaerts@collabora.co.uk>
+
+	* configure.ac:
+	* gst/segmentclip/gstaudiosegmentclip.c:
+	* gst/segmentclip/gstsegmentclip.c:
+	* gst/segmentclip/gstvideosegmentclip.c:
+	  segmentclip: port to 0.11
+
+2012-03-18 18:32:41 +0100  Mark Nauwelaerts <mark.nauwelaerts@collabora.co.uk>
+
+	* configure.ac:
+	* ext/bz2/gstbz2dec.c:
+	* ext/bz2/gstbz2enc.c:
+	  bz2: port to 0.11
+
+2012-03-18 18:32:36 +0100  Mark Nauwelaerts <mark.nauwelaerts@collabora.co.uk>
+
+	* configure.ac:
+	* gst/removesilence/Makefile.am:
+	* gst/removesilence/gstremovesilence.c:
+	  removesilence: port to 0.11
+
+2012-03-18 01:18:26 +0000  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+
+	* ext/zbar/gstzbar.c:
+	  zbar: fix build after base transform changes
+
+2012-03-16 21:47:39 +0100  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* ext/timidity/gsttimidity.c:
+	* ext/timidity/gstwildmidi.c:
+	* gst-libs/gst/signalprocessor/gstsignalprocessor.c:
+	* gst/asfmux/gstasfparse.c:
+	* gst/cdxaparse/gstcdxaparse.c:
+	* gst/mpegdemux/gstmpegdemux.c:
+	* gst/mpegtsdemux/mpegtsbase.c:
+	* gst/mpegtsdemux/tsdemux.c:
+	* gst/mxf/mxfdemux.c:
+	* gst/nuvdemux/gstnuvdemux.c:
+	* gst/rawparse/gstrawparse.c:
+	  don't pass random pointers to pull_range
+
+2012-03-15 22:11:32 +0100  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* gst-libs/gst/video/gstbasevideodecoder.c:
+	* gst/audiovisualizers/gstbaseaudiovisualizer.c:
+	  update for bufferpool changes
+
+2012-03-15 20:38:27 +0100  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* gst-libs/gst/video/gstbasevideodecoder.c:
+	* gst/audiovisualizers/gstbaseaudiovisualizer.c:
+	  update for allocation query changes
+
+2012-03-15 14:08:29 +0100  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* sys/pvr2d/gstpvrbufferpool.c:
+	  update for bufferpool api change
+
+2012-03-15 13:37:36 +0100  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* ext/faad/gstfaad.c:
+	* ext/kate/gstkateenc.c:
+	* ext/modplug/gstmodplug.cc:
+	* ext/rtmp/gstrtmpsrc.c:
+	* gst-libs/gst/signalprocessor/gstsignalprocessor.c:
+	* gst/dtmf/gstdtmfsrc.c:
+	* gst/dtmf/gstrtpdtmfdepay.c:
+	* gst/jpegformat/gstjifmux.c:
+	* gst/mpegdemux/gstpesfilter.c:
+	* gst/videoparsers/gsth264parse.c:
+	* sys/pvr2d/gstpvrbufferpool.c:
+	* sys/pvr2d/gstpvrbufferpool.h:
+	* tests/check/elements/schroenc.c:
+	  update for memory api changes
+
+2012-03-14 19:52:31 +0100  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* gst-libs/gst/video/gstbasevideodecoder.c:
+	* gst/audiovisualizers/gstbaseaudiovisualizer.c:
+	  take padding into account
+
+2012-03-14 17:48:40 +0100  Mark Nauwelaerts <mark.nauwelaerts@collabora.co.uk>
+
+	* ext/mpeg2enc/gstmpeg2enc.cc:
+	  mpeg2enc: also clear initialized mutex and cond
+
+2012-03-14 11:20:18 +0100  Mark Nauwelaerts <mark.nauwelaerts@collabora.co.uk>
+
+	* ext/flite/gstflitetestsrc.c:
+	  flite: adjust to some modified caps related API changes
+
+2012-03-13 13:02:54 +0200  Sreerenj Balachandran <sreerenj.balachandran@intel.com>
+
+	* configure.ac:
+	  configure.ac: move spc plugin to NON_PORTED list(Fix build error)
+
+2012-03-13 09:54:14 +0100  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* ext/resindvd/rsndec.c:
+	  use gst_caps_merge instead of gst_caps_union
+
+2012-03-12 17:06:11 +0100  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* ext/opus/gstopusdec.c:
+	  opusdec: fix for caps api change
+
+2012-03-12 16:51:19 +0200  Sreerenj Balachandran <sreerenj.balachandran@intel.com>
+
+	* configure.ac:
+	  configure.ac: bump GLib requirement to 2.31.14
+	  Fixes https://bugzilla.gnome.org/show_bug.cgi?id=671911
+
+2012-03-12 12:23:34 +0100  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* ext/jp2k/gstjasperdec.c:
+	* sys/d3dvideosink/d3dvideosink.c:
+	* tests/check/pipelines/colorspace.c:
+	  fix for caps _normalize changes
+
+2012-03-12 11:40:20 +0100  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* tests/check/pipelines/colorspace.c:
+	  tests: fix for caps API change
+
+2012-03-12 10:44:22 +0100  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* ext/cog/gstcogcolorspace.c:
+	* tests/check/pipelines/colorspace.c:
+	  fix for _do_simplify changes
+
+2012-03-11 19:06:59 +0100  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* ext/assrender/gstassrender.c:
+	* ext/modplug/gstmodplug.cc:
+	* gst-libs/gst/video/gstbasevideoencoder.c:
+	* gst/audiovisualizers/gstbaseaudiovisualizer.c:
+	* gst/autoconvert/gstautoconvert.c:
+	* gst/dtmf/gstdtmfsrc.c:
+	* gst/dtmf/gstrtpdtmfsrc.c:
+	* gst/dvbsuboverlay/gstdvbsuboverlay.c:
+	* gst/dvdspu/gstdvdspu.c:
+	* gst/rtpmux/gstrtpmux.c:
+	* gst/videoparsers/gsth264parse.c:
+	* tests/check/pipelines/colorspace.c:
+	  fix for caps api changes
+
+2012-03-08 11:32:27 +0100  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* tests/check/elements/autovideoconvert.c:
+	* tests/check/elements/camerabin2.c:
+	* tests/check/elements/opus.c:
+	  tests: fix more caps
+
+2012-03-07 17:14:29 +0100  Mark Nauwelaerts <mark.nauwelaerts@collabora.co.uk>
+
+	* configure.ac:
+	* ext/opus/gstopuscommon.c:
+	* ext/opus/gstopuscommon.h:
+	* ext/opus/gstopusdec.c:
+	* ext/opus/gstopusdec.h:
+	* ext/opus/gstopusenc.c:
+	* ext/opus/gstopusheader.c:
+	* ext/opus/gstopusparse.c:
+	* ext/opus/gstrtpopuspay.c:
+	  opus: port to updated 0.11
+
+2012-03-07 10:18:31 +0100  Mark Nauwelaerts <mark.nauwelaerts@collabora.co.uk>
+
+	* configure.ac:
+	* ext/celt/gstceltdec.c:
+	* ext/celt/gstceltenc.c:
+	  celt: port to 0.11
+
+2012-03-05 12:43:42 +0100  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* gst/bayer/gstbayer2rgb.c:
+	* gst/bayer/gstrgb2bayer.c:
+	  x-raw-bayer -> x-bayer
+
+2012-03-05 12:03:23 +0100  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* ext/mplex/Makefile.am:
+	* ext/mplex/gstmplex.cc:
+	* gst/camerabin2/gstviewfinderbin.c:
+	  use new style caps
+
+2012-03-03 19:03:11 +0100  Alessandro Decina <alessandro.d@gmail.com>
+
+	* sys/applemedia/Makefile.am:
+	* sys/applemedia/bufferfactory.m:
+	* sys/applemedia/corevideobuffer.c:
+	* sys/applemedia/corevideobuffer.h:
+	* sys/applemedia/plugin.m:
+	* sys/applemedia/vtdec.c:
+	* sys/applemedia/vtdec.h:
+	  applemedia: port vtdec
+
+2012-03-03 18:57:07 +0100  Alessandro Decina <alessandro.d@gmail.com>
+
+	* sys/applemedia/cmapi.h:
+	  applemedia: update signature of CMSampleBufferCreate and CMBlockBufferCreateWithMemoryBlock
+	  Change data type for counters passed on the stack from UInt32 to size_t. Fixes
+	  64bit builds.
+
+2012-03-02 08:13:10 +0100  Alessandro Decina <alessandro.d@gmail.com>
+
+	* sys/applemedia/cmapi.h:
+	  applemedia: update format description helper signature
+	  Update the FigVideoFormatDescriptionCreateWithSampleDescriptionExtensionAtom
+	  signature to match the implementation on OSX Lion.
+
+2012-02-29 17:26:28 +0100  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* gst-libs/gst/video/gstbasevideodecoder.c:
+	* gst-libs/gst/video/gstsurfacemeta.c:
+	* gst-libs/gst/video/gstsurfacemeta.h:
+	  update for metadata API changes
+
+2012-02-28 11:39:18 +0100  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* gst-libs/gst/video/gstsurfacemeta.c:
+	  update for metadata tags
+
+2012-02-28 08:13:04 +0100  Alessandro Decina <alessandro.d@gmail.com>
+
+	* configure.ac:
+	* sys/applemedia/Makefile.am:
+	* sys/applemedia/coremediabuffer.c:
+	* sys/applemedia/coremediabuffer.h:
+	* sys/applemedia/corevideobuffer.c:
+	* sys/applemedia/corevideobuffer.h:
+	* sys/applemedia/plugin.m:
+	* sys/applemedia/qtkitvideosrc.m:
+	  applemedia: port qtkitvideosrc
+
+2012-02-27 13:13:14 +0100  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* ext/celt/gstceltenc.c:
+	* ext/opus/gstopusenc.c:
+	  audioencoders: chain up to parent event handler
+
+2012-02-26 20:43:32 +0100  Alessandro Decina <alessandro.d@gmail.com>
+
+	* gst/adpcmdec/Makefile.am:
+	  adpcmdec: link to libgstbase
+
+2012-02-24 12:53:52 +0100  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* gst/dataurisrc/gstdataurisrc.c:
+	* tests/check/elements/dataurisrc.c:
+	  dataurisrc: fix docs and unit test
+
+2012-02-24 10:26:44 +0100  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* gst-libs/gst/video/gstsurfacemeta.c:
+	  update for metadata changes
+
+2012-02-24 10:21:31 +0100  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* tests/check/elements/mxfmux.c:
+	* tests/check/pipelines/mxf.c:
+	  tests: fix some caps
+
+2012-02-22 15:41:42 +0100  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* tests/check/elements/schroenc.c:
+	  test: port schroenc unit test
+
+2012-02-22 11:44:23 +0100  Edward Hervey <edward.hervey@collabora.co.uk>
+
+	* configure.ac:
+	* ext/schroedinger/gstschrodec.c:
+	* ext/schroedinger/gstschroenc.c:
+	* ext/schroedinger/gstschroutils.c:
+	* ext/schroedinger/gstschroutils.h:
+	  schro: Port to 0.11
+	  Works with some sample files. There seems to be some timestamping issue though,
+	  but the 0.10 version also complains about that too.
+
+2012-02-22 02:06:38 +0100  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* gst/audiovisualizers/gstbaseaudiovisualizer.c:
+	  update for new memory api
+
+2012-02-21 16:53:37 +0100  Edward Hervey <edward.hervey@collabora.co.uk>
+
+	* docs/libs/gst-plugins-bad-libs-sections.txt:
+	* gst-libs/gst/video/gstbasevideocodec.c:
+	  video: More documentation
+
+2012-02-21 16:52:49 +0100  Edward Hervey <edward.hervey@collabora.co.uk>
+
+	* gst-libs/gst/video/gstbasevideocodec.h:
+	  basevideocodec: Document structures
+
+2012-02-21 10:06:16 +0100  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	  Merge branch 'master' into 0.11
+	  Conflicts:
+	  gst/colorspace/colorspace.c
+
+2012-02-20 20:11:13 -0800  David Schleef <ds@schleef.org>
+
+	* gst/colorspace/colorspace.c:
+	  colorspace: Fix v210 writing out of bounds
+
+2012-02-20 18:43:51 -0800  David Schleef <ds@schleef.org>
+
+	* ext/schroedinger/gstschroenc.c:
+	  schroenc: remove GST_ERROR
+
+2012-02-20 11:42:23 -0800  David Schleef <ds@schleef.org>
+
+	* tools/gst-project-maker:
+	  gst-project-maker: Create tools, pass make distcheck
+	  Create a tools directory for an application.  Add source code
+	  stubs to allow the project to compile and pass make distcheck.
+	  Add notes in source code to tell the user how to create plugin
+	  or app code using the other -maker scripts.
+
+2012-01-26 06:58:46 -0500  Matej Knopp <matej.knopp@gmail.com>
+
+	* ext/voaacenc/gstvoaacenc.c:
+	* gst/dtmf/gstdtmfsrc.c:
+	* gst/rtpmux/gstrtpmux.c:
+	  Fix compiler warnings
+
+2012-02-20 16:07:50 +0100  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	  Merge branch 'master' into 0.11
+	  Conflicts:
+	  ext/opus/gstopusparse.c
+	  gst/colorspace/colorspace.c
+
+2012-01-26 16:32:17 -0500  Matej Knopp <matej.knopp@gmail.com>
+
+	* gst/dvdspu/gstdvdspu.c:
+	  dvdspu should forward video caps event
+
+2012-02-20 14:32:12 +0000  Christian Fredrik Kalager Schaller <christian.schaller@collabora.co.uk>
+
+	* gst-plugins-bad.spec.in:
+	  Add latest files to spec
+
+2012-02-20 12:42:47 +0100  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* sys/decklink/Makefile.am:
+	  decklink: Add $(GST_PLUGINS_BASE_CFLAGS) and $(GST_PLUGINS_BASE_LIBS) to fix the build
+
+2012-02-20 10:58:09 +0100  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* gst-libs/gst/Makefile.am:
+	  glib-compat-private.h to dist
+
+2012-02-19 15:54:39 -0800  David Schleef <ds@schleef.org>
+
+	* tools/gst-project-maker:
+	  gst-project-maker: Create autotools project
+	  This is a replacement for gst-template that creates an entire
+	  autotools project (customized to package name), and populates
+	  it with the source for a GStreamer plugin (but no plugin features,
+	  those come from gst-element-maker).  Fixes: #665727.
+
+2012-02-19 12:57:39 -0800  David Schleef <ds@schleef.org>
+
+	* ext/gme/gstgme.c:
+	* ext/opus/gstopusparse.c:
+	  printf format fixes
+
+2012-02-19 00:15:47 -0800  David Schleef <ds@schleef.org>
+
+	* gst/colorspace/colorspace.c:
+	  colorspace: clamp intermediates when dithering
+
+2012-01-23 09:05:21 -0800  David Schleef <ds@schleef.org>
+
+	* sys/decklink/Makefile.am:
+	* sys/decklink/gstdecklink.h:
+	* sys/decklink/gstdecklinksink.cpp:
+	* sys/decklink/gstdecklinksink.h:
+	  decklink: Add 10-bit support
+
+2012-01-23 09:02:37 -0800  David Schleef <ds@schleef.org>
+
+	* ext/schroedinger/gstschrodec.c:
+	* ext/schroedinger/gstschroenc.c:
+	* ext/schroedinger/gstschroutils.c:
+	  schro: Add RGB support
+	  This uses the automatic YCoCg conversion inside Schroedinger to
+	  encode/decode RGB.  Only works in intra-only mode, similar to 10-
+	  and 16-bit, since RGB is technically a >8-bit format for Dirac
+	  purposes.  This depends on schroedinger-1.0.12, which is unreleased.
+
+2012-02-18 00:01:55 +0100  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* win32/common/config.h:
+	  win32: back to development
+
+2012-02-17 12:15:27 -0300  Thibault Saunier <thibault.saunier@collabora.com>
+
+	* gst/mpegtsdemux/mpegtsbase.c:
+	  mpegtsdemux: Not apply various time the same PMT to a program when repetead
+	  Sometimes their are several times the same PMT applying to a same program in a stream,
+	  tsdemux was totally baffled when this was happening, we now keep the one we
+	  already applied so it works properly.
+
+2012-02-16 09:54:24 -0300  Thibault Saunier <thibault.saunier@collabora.com>
+
+	* gst/mpegtsdemux/mpegtspacketizer.c:
+	  tsdemux: fix glib deprecation
+
+2012-02-17 11:06:05 +0100  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* configure.ac:
+	  back to development
+
+=== release 0.11.1 ===
+
+2012-02-17 11:05:37 +0100  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* ChangeLog:
+	* NEWS:
+	* RELEASE:
+	* configure.ac:
+	* docs/plugins/gst-plugins-bad-plugins.args:
+	* docs/plugins/gst-plugins-bad-plugins.hierarchy:
+	* docs/plugins/gst-plugins-bad-plugins.interfaces:
+	* docs/plugins/inspect/plugin-adpcmdec.xml:
+	* docs/plugins/inspect/plugin-adpcmenc.xml:
+	* docs/plugins/inspect/plugin-assrender.xml:
+	* docs/plugins/inspect/plugin-audiovisualizers.xml:
+	* docs/plugins/inspect/plugin-autoconvert.xml:
+	* docs/plugins/inspect/plugin-bayer.xml:
+	* docs/plugins/inspect/plugin-camerabin2.xml:
+	* docs/plugins/inspect/plugin-dataurisrc.xml:
+	* docs/plugins/inspect/plugin-debugutilsbad.xml:
+	* docs/plugins/inspect/plugin-dtmf.xml:
+	* docs/plugins/inspect/plugin-dtsdec.xml:
+	* docs/plugins/inspect/plugin-dvbsuboverlay.xml:
+	* docs/plugins/inspect/plugin-dvdspu.xml:
+	* docs/plugins/inspect/plugin-faac.xml:
+	* docs/plugins/inspect/plugin-faad.xml:
+	* docs/plugins/inspect/plugin-gsm.xml:
+	* docs/plugins/inspect/plugin-mms.xml:
+	* docs/plugins/inspect/plugin-modplug.xml:
+	* docs/plugins/inspect/plugin-mpeg2enc.xml:
+	* docs/plugins/inspect/plugin-mpegdemux2.xml:
+	* docs/plugins/inspect/plugin-mpegtsdemux.xml:
+	* docs/plugins/inspect/plugin-mplex.xml:
+	* docs/plugins/inspect/plugin-pcapparse.xml:
+	* docs/plugins/inspect/plugin-rtpmux.xml:
+	* docs/plugins/inspect/plugin-rtpvp8.xml:
+	* docs/plugins/inspect/plugin-sdp.xml:
+	* docs/plugins/inspect/plugin-videoparsersbad.xml:
+	* docs/plugins/inspect/plugin-vp8.xml:
+	* docs/plugins/inspect/plugin-y4mdec.xml:
+	* ext/cog/gstcogorc-dist.c:
+	* ext/cog/gstcogorc-dist.h:
+	* gst-plugins-bad.doap:
+	* gst/fieldanalysis/gstfieldanalysisorc-dist.c:
+	* gst/fieldanalysis/gstfieldanalysisorc-dist.h:
+	* po/af.po:
+	* po/az.po:
+	* po/bg.po:
+	* po/ca.po:
+	* po/cs.po:
+	* po/da.po:
+	* po/de.po:
+	* po/el.po:
+	* po/en_GB.po:
+	* po/eo.po:
+	* po/es.po:
+	* po/eu.po:
+	* po/fi.po:
+	* po/fr.po:
+	* po/gl.po:
+	* po/hu.po:
+	* po/id.po:
+	* po/it.po:
+	* po/ja.po:
+	* po/ky.po:
+	* po/lt.po:
+	* po/lv.po:
+	* po/mt.po:
+	* po/nb.po:
+	* po/nl.po:
+	* po/or.po:
+	* po/pl.po:
+	* po/pt_BR.po:
+	* po/ro.po:
+	* po/ru.po:
+	* po/sk.po:
+	* po/sl.po:
+	* po/sq.po:
+	* po/sr.po:
+	* po/sv.po:
+	* po/tr.po:
+	* po/uk.po:
+	* po/vi.po:
+	* po/zh_CN.po:
+	* win32/common/config.h:
+	  RELEASE 0.11.1
 
 2012-02-17 09:01:56 +0100  Wim Taymans <wim.taymans@collabora.co.uk>
 

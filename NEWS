@@ -1,4 +1,27 @@
-This is GStreamer Bad Plug-ins 0.11.1, "Forest of October"
+This is GStreamer Bad Plug-ins 0.11.2, "Crossthreaded"
+
+New in 0.11.2:
+
+      * Many cleanups
+      * Ported to new 0.11 core API changes
+      * schro: Ported to 0.11
+      * qtkitvideosrc: Ported to 0.11
+      * vtdec: Ported to 0.11
+      * celt: Ported to 0.11
+      * removesilence: Ported to 0.11
+      * bz2: Ported to 0.11
+      * segmentclip: Ported to 0.11
+      * smooth: Ported to 0.11
+      * scaletempo: Ported to 0.11
+      * rawparse: Ported to 0.11
+      * shm: Ported to 0.11
+
+Bugs fixed in this release
+
+      * 658438 : [0.11][h263parse] Make h263 profiles/levels string fields in the caps
+      * 662618 : [gst-plugins-bad]compiler warnings due to printf format mismatch
+      * 665355 : [basevideodecoder] deletes frame but keeps it in list
+      * 670367 : Build failures for gst-plugins-bad
 
 New in 0.11.1:
 
