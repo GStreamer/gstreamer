@@ -1,5 +1,5 @@
 
-Release notes for GStreamer 0.11.2 "A Shiny White Tooth"
+Release notes for GStreamer 0.11.3 "Thrill of the Hunt"
         
 
 
@@ -38,39 +38,24 @@ contains a set of less supported plug-ins that haven't passed the
 
 Features of this release
     
-      * Added pts/dts to buffers
-      * Moved controller into core
-      * Pad probe rewrite
-      * AcceptCaps and GetCaps made as queries
-      * Added parent to pad functions
-      * Sticky events rewrite
-      * New GstSample object
-      * Asynchronous state change support for basesrc
-      * Added new bitmask type
-      * GstMemory updates
-      * Port to gio
-      * Port to newest glib
-      * Add stepped ranges
-      * Do typefind in separate thread
-      * Rework alloc tracing
-      * Added STREAM_CONFIG, GAP and STREAM_START events
-      * Various cleanups and leak fixes
-
-Bugs fixed in this release
-     
-      * 664491 : compiler warnings on OS X 64bit
-      * 402562 : [gst_parse_launch] Requesting pads but not releasing them
-      * 383102 : [0.11] Rethink pad_blocking
-      * 610338 : [0.11] [controller] Triggers should be moved into their own control source
-      * 660300 : gst_memory_alignment undefined if HAVE_POSIX_MEMALIGN isn't defined
-      * 662207 : gst: Fix a lot of GLib deprecations and errors
-      * 664099 : 0.11 new to use new floating ref annotation
-      * 664880 : [0.11] GstBaseParse default caps query implementation broken
-      * 664927 : GST_STATIC_CAPS missing initializer
-      * 666096 : [0.11] encodebin bindings failing to accept None
-      * 666154 : [0.11] Python - query_caps fails to accept 'None'
-      * 666351 : [0.11] Get rid of GST_TYPE_DATE
-      * 666890 : [0.11] controller compiler warning: gsttriggercontrolsource.c:82: control reaches end of non-void function
+      * Various bug fixes and improvements
+      * Input-selector defaults to sync-streams=true
+      * Queue don't just start the thread on linking
+      * Add user_data and notify to gst_memory_new_wrapped()
+      * Rework caps function for performance
+      * Improve basetransform allocator handling
+      * Implement metadata transforms
+      * Metadata registration improvements
+      * Use generic marshallers everywhere
+      * Push Sticky events in more cases
+      * Register queries like events
+      * Add DRAIN serialized query
+      * Add 0-padding and prefix to GstMemory
+      * Rework the ALLOCATION query
+      * Allow setting the allocator in a bufferpool
+      * Improve pull/get_range
+There were no bugs fixed in this release
+    
 
 Download
 
@@ -103,34 +88,15 @@ Webkit, Jokosher, Transmageddon and others. We're working on porting more applic
   
 Contributors to this release
     
-      * Andoni Morales Alastruey
-      * Antoine Tremblay
       * Christian Fredrik Kalager Schaller
-      * Colin Walters
       * David Schleef
       * Edward Hervey
-      * Havard Graff
-      * Idar Tollefsen
-      * Jan Schmidt
-      * Jason DeRose
-      * Johan Boulé
-      * Johan Dahlin
       * Mark Nauwelaerts
       * Matej Knopp
-      * Nicolas Dufresne
-      * Olivier Crête
-      * Peteris Krisjanis
-      * Philippe Normand
-      * René Stadler
-      * Reynaldo H. Verdejo Pinochet
-      * Robert Swain
+      * Ryan Lortie
       * Sebastian Dröge
-      * Sjoerd Simons
-      * Stas Sergeev
+      * Sreerenj Balachandran
       * Stefan Sauer
-      * Thiago Santos
-      * Thomas Vander Stichele
       * Tim-Philipp Müller
-      * Vincent Penquerc'h
       * Wim Taymans
  

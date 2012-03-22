@@ -1,6 +1,25 @@
-This is GStreamer 0.11.2 "A Shiny white Tooth"
+This is GStreamer 0.11.3 "Thrill of the Hunt"
 
-New featues in 0.11.2:
+New features in 0.11.3:
+
+      * Various bug fixes and improvements
+      * Input-selector defaults to sync-streams=true
+      * Queue don't just start the thread on linking
+      * Add user_data and notify to gst_memory_new_wrapped()
+      * Rework caps function for performance
+      * Improve basetransform allocator handling
+      * Implement metadata transforms
+      * Metadata registration improvements
+      * Use generic marshallers everywhere
+      * Push Sticky events in more cases
+      * Register queries like events
+      * Add DRAIN serialized query
+      * Add 0-padding and prefix to GstMemory
+      * Rework the ALLOCATION query
+      * Allow setting the allocator in a bufferpool
+      * Improve pull/get_range
+
+New features in 0.11.2:
 
       * Parallel installability with 0.10.x series
       * Added pts/dts to buffers
