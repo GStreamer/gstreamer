@@ -449,9 +449,9 @@ gst_collect_pads2_set_event_function (GstCollectPads2 * pads,
 }
 
 /**
-* gst_collect_pads2_clip_running:
+* gst_collect_pads2_clip_running_time:
 * @pads: the collectspads to use
-* @cdata: collect data of corrsponding pad
+* @cdata: collect data of corresponding pad
 * @buf: buffer being clipped
 * @outbuf: output buffer with running time, or NULL if clipped
 * @user_data: user data (unused)

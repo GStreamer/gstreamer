@@ -99,7 +99,7 @@ What are the exact licensing terms for GStreamer and its plugins ?
       <answer>
         <para>
 All of GStreamer, including our own plugin code, is licensed under the 
-<ulink url="http://www.gnu.org/licenses/lgpl.html">GNU LGPL</ulink> license.
+<ulink url="http://www.gnu.org/licenses/lgpl-2.1.html">GNU LGPL 2.1</ulink> license.
 Some of the libraries we use for some of the plugins are however under the 
 GPL, which means that those plugins can not be used by a non-GPL-compatible 
 application. 
