@@ -3535,7 +3535,10 @@ activate_group (GstPlayBin * playbin, GstSourceGroup * group, GstState target)
     GST_DEBUG_OBJECT (playbin, "reusing existing uridecodebin");
     uridecodebin = group->uridecodebin;
     gst_element_set_state (uridecodebin, GST_STATE_READY);
-    gst_bin_add (GST_BIN_CAST (playbin), gst_object_ref (uridecodebin));
+    /* no need to take extra ref, we already have one
+     * and the bin will add one since it is no longer floating,
+     * as it was at least added once before (below) */
+    gst_bin_add (GST_BIN_CAST (playbin), uridecodebin);
   } else {
     GST_DEBUG_OBJECT (playbin, "making new uridecodebin");
     uridecodebin = gst_element_factory_make ("uridecodebin", NULL);
@@ -3598,7 +3601,10 @@ activate_group (GstPlayBin * playbin, GstSourceGroup * group, GstState target)
       GST_DEBUG_OBJECT (playbin, "reusing existing suburidecodebin");
       suburidecodebin = group->suburidecodebin;
       gst_element_set_state (suburidecodebin, GST_STATE_READY);
-      gst_bin_add (GST_BIN_CAST (playbin), gst_object_ref (suburidecodebin));
+      /* no need to take extra ref, we already have one
+       * and the bin will add one since it is no longer floating,
+       * as it was at least added once before (below) */
+      gst_bin_add (GST_BIN_CAST (playbin), suburidecodebin);
     } else {
       GST_DEBUG_OBJECT (playbin, "making new suburidecodebin");
       suburidecodebin = gst_element_factory_make ("uridecodebin", NULL);

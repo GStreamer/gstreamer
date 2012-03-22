@@ -176,14 +176,18 @@ AC_HEADER_STDC
 
 ac_cppflags_save="$CPPFLAGS"
 CPPFLAGS="`$PKG_CONFIG --cflags libxml-2.0`"
-AC_COMPILE_IFELSE(
-  AC_LANG_PROGRAM([
+AC_COMPILE_IFELSE([
+  AC_LANG_PROGRAM([[
 #include <libxml/HTMLparser.h>
-                     ],[
+]],[[
 #ifndef LIBXML_HTML_ENABLED
 #error libxml2 has no HTML support
 #endif /* LIBXML_HTML_ENABLED */
-                   ]), HAVE_LIBXML_HTML="yes", HAVE_LIBXML_HTML="no")
+]])], [
+  HAVE_LIBXML_HTML="yes"
+], [
+  HAVE_LIBXML_HTML="no"
+])
 CPPFLAGS="$ac_cppflags_save"
 AM_CONDITIONAL(HAVE_LIBXML_HTML, test "x$HAVE_LIBXML_HTML" = "xyes")
 
@@ -694,14 +698,14 @@ AG_GST_CHECK_FEATURE(VORBIS, [Xiph Vorbis audio codec], vorbis, [
 
 if test "x$HAVE_VORBIS" = "xyes"; then
   ac_cflags_save="$CFLAGS"
-  AC_COMPILE_IFELSE(
-    AC_LANG_PROGRAM([
+  AC_COMPILE_IFELSE([
+    AC_LANG_PROGRAM([[
 #include <vorbis/codec.h>
-                     ],[
+                     ]],[[
 vorbis_dsp_state *v;
 
 vorbis_synthesis_restart (v);
-                     ]), HAVE_VSR=yes, HAVE_VSR=no)
+                     ]])], HAVE_VSR=yes, HAVE_VSR=no)
   if test "x$HAVE_VSR" = "xyes"; then
     AC_DEFINE_UNQUOTED(HAVE_VORBIS_SYNTHESIS_RESTART, 1,
                        [defined if vorbis_synthesis_restart is present])

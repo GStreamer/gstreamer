@@ -96,13 +96,16 @@ G_BEGIN_DECLS
 #define GST_RIFF_INFO_IMED GST_MAKE_FOURCC ('I','M','E','D') /* medium */
 #define GST_RIFF_INFO_INAM GST_MAKE_FOURCC ('I','N','A','M') /* name */
 #define GST_RIFF_INFO_IPLT GST_MAKE_FOURCC ('I','P','L','T') /* palette setting */
-#define GST_RIFF_INFO_IPRD GST_MAKE_FOURCC ('I','P','R','D') /* product */
+#define GST_RIFF_INFO_IPRD GST_MAKE_FOURCC ('I','P','R','D') /* product (album) */
 #define GST_RIFF_INFO_ISBJ GST_MAKE_FOURCC ('I','S','B','J') /* subject */
 #define GST_RIFF_INFO_ISFT GST_MAKE_FOURCC ('I','S','F','T') /* software */
 #define GST_RIFF_INFO_ISHP GST_MAKE_FOURCC ('I','S','H','P') /* sharpness */
 #define GST_RIFF_INFO_ISRC GST_MAKE_FOURCC ('I','S','R','C') /* source */
 #define GST_RIFF_INFO_ISRF GST_MAKE_FOURCC ('I','S','R','F') /* source form */
 #define GST_RIFF_INFO_ITCH GST_MAKE_FOURCC ('I','T','C','H') /* technician(s) */
+
+#define GST_RIFF_INFO_IAAR GST_MAKE_FOURCC ('I','A','A','R') /* album artist */
+#define GST_RIFF_INFO_ITRK GST_MAKE_FOURCC ('I','T','R','K') /* track number */
 
 /*********Chunk Names***************/
 #define GST_RIFF_FF00 GST_MAKE_FOURCC (0xFF,0xFF,0x00,0x00)

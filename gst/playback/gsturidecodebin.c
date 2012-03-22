@@ -1528,6 +1528,8 @@ remove_decoders (GstURIDecodeBin * bin, gboolean force)
       caps = DEFAULT_CAPS;
       g_object_set (decoder, "caps", caps, NULL);
       gst_caps_unref (caps);
+      /* make it freshly floating again */
+      g_object_force_floating (G_OBJECT (decoder));
 
       bin->pending_decodebins =
           g_slist_prepend (bin->pending_decodebins, decoder);

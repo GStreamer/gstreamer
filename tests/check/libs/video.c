@@ -3,6 +3,7 @@
  * Copyright (C) <2003> David A. Schleef <ds@schleef.org>
  * Copyright (C) <2006> Jan Schmidt <thaytan@mad.scientist.com>
  * Copyright (C) <2008,2011> Tim-Philipp Müller <tim centricular net>
+ * Copyright (C) <2012> Collabora Ltd. <tim.muller@collabora.co.uk>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -858,9 +859,6 @@ GST_START_TEST (test_video_size_from_caps)
 
 GST_END_TEST;
 
-#undef ASSERT_CRITICAL
-#define ASSERT_CRITICAL(code) while(0){}        /* nothing */
-
 #if 0
 /* FIXME 0.11: port overlay composition to buffer meta */
 GST_START_TEST (test_overlay_composition)
@@ -986,6 +984,7 @@ GST_START_TEST (test_overlay_composition)
   fail_unless (gst_video_buffer_get_overlay_composition (buf) == NULL);
 
   gst_buffer_ref (buf);
+  /* buffer now has refcount of 2, so its metadata is not writable */
   ASSERT_CRITICAL (gst_video_buffer_set_overlay_composition (buf, comp1));
   gst_buffer_unref (buf);
   gst_video_buffer_set_overlay_composition (buf, comp1);
@@ -1001,6 +1000,118 @@ GST_START_TEST (test_overlay_composition)
 
   gst_video_overlay_composition_unref (comp2);
   gst_video_overlay_composition_unref (comp1);
+}
+
+GST_END_TEST;
+
+GST_START_TEST (test_overlay_composition_premultiplied_alpha)
+{
+  GstVideoOverlayRectangle *rect1;
+  GstBuffer *pix1, *pix2, *pix3, *pix4, *pix5;
+  GstBuffer *pix6, *pix7, *pix8, *pix9, *pix10;
+  guint8 *data5, *data7;
+  guint w, h, stride, w2, h2, stride2;
+
+  pix1 = gst_buffer_new_and_alloc (200 * sizeof (guint32) * 50);
+  memset (GST_BUFFER_DATA (pix1), 0x80, GST_BUFFER_SIZE (pix1));
+
+  rect1 = gst_video_overlay_rectangle_new_argb (pix1, 200, 50, 200 * 4,
+      600, 50, 300, 50, GST_VIDEO_OVERLAY_FORMAT_FLAG_NONE);
+  gst_buffer_unref (pix1);
+
+  /* same flags, unscaled, should be the same buffer */
+  pix2 = gst_video_overlay_rectangle_get_pixels_unscaled_argb (rect1, &w, &h,
+      &stride, GST_VIDEO_OVERLAY_FORMAT_FLAG_NONE);
+  fail_unless (pix1 == pix2);
+
+  /* same flags, but scaled */
+  pix3 = gst_video_overlay_rectangle_get_pixels_argb (rect1, &stride,
+      GST_VIDEO_OVERLAY_FORMAT_FLAG_NONE);
+  fail_if (pix3 == pix1 || pix3 == pix2);
+
+  /* same again, should hopefully get the same (cached) buffer as before */
+  pix4 = gst_video_overlay_rectangle_get_pixels_argb (rect1, &stride,
+      GST_VIDEO_OVERLAY_FORMAT_FLAG_NONE);
+  fail_unless (pix4 == pix3);
+
+  /* just to update the vars */
+  pix2 = gst_video_overlay_rectangle_get_pixels_unscaled_argb (rect1, &w, &h,
+      &stride, GST_VIDEO_OVERLAY_FORMAT_FLAG_NONE);
+
+  /* now, let's try to get premultiplied alpha from the unpremultiplied input */
+  pix5 = gst_video_overlay_rectangle_get_pixels_unscaled_argb (rect1, &w2, &h2,
+      &stride2, GST_VIDEO_OVERLAY_FORMAT_FLAG_PREMULTIPLIED_ALPHA);
+  fail_if (pix5 == pix1 || pix5 == pix2 || pix5 == pix3);
+  fail_unless_equals_int (stride, stride2);
+  fail_unless_equals_int (w, w2);
+  fail_unless_equals_int (h, h2);
+  fail_unless_equals_int (GST_BUFFER_SIZE (pix2), GST_BUFFER_SIZE (pix5));
+  data5 = GST_BUFFER_DATA (pix5);
+  fail_if (memcmp (data5, GST_BUFFER_DATA (pix2), GST_BUFFER_SIZE (pix5)) == 0);
+
+  /* make sure it actually did what we expected it to do (input=0x80808080) */
+#if G_BYTE_ORDER == G_LITTLE_ENDIAN
+  /* B - G - R - A */
+  fail_unless_equals_int (data5[0], 0x40);
+  fail_unless_equals_int (data5[1], 0x40);
+  fail_unless_equals_int (data5[2], 0x40);
+  fail_unless_equals_int (data5[3], 0x80);
+#else
+  /* A - R - G - B */
+  fail_unless_equals_int (data5[0], 0x40);
+  fail_unless_equals_int (data5[1], 0x40);
+  fail_unless_equals_int (data5[2], 0x40);
+  fail_unless_equals_int (data5[3], 0x80);
+#endif
+
+  /* same again, now we should be getting back the same buffer as before,
+   * as it should have been cached */
+  pix6 = gst_video_overlay_rectangle_get_pixels_unscaled_argb (rect1, &w2, &h2,
+      &stride2, GST_VIDEO_OVERLAY_FORMAT_FLAG_PREMULTIPLIED_ALPHA);
+  fail_unless (pix6 == pix5);
+
+  /* just to update the stride var */
+  pix3 = gst_video_overlay_rectangle_get_pixels_argb (rect1, &stride,
+      GST_VIDEO_OVERLAY_FORMAT_FLAG_NONE);
+  fail_unless (pix3 == pix4);
+
+  /* now try to get scaled premultiplied alpha from unpremultiplied input */
+  pix7 = gst_video_overlay_rectangle_get_pixels_argb (rect1, &stride2,
+      GST_VIDEO_OVERLAY_FORMAT_FLAG_PREMULTIPLIED_ALPHA);
+  fail_if (pix7 == pix1 || pix7 == pix2 || pix7 == pix3 || pix7 == pix5);
+  fail_unless_equals_int (stride, stride2);
+
+  data7 = GST_BUFFER_DATA (pix7);
+  /* make sure it actually did what we expected it to do (input=0x80808080)
+   * hoping that the scaling didn't mess up our values */
+#if G_BYTE_ORDER == G_LITTLE_ENDIAN
+  /* B - G - R - A */
+  fail_unless_equals_int (data7[0], 0x40);
+  fail_unless_equals_int (data7[1], 0x40);
+  fail_unless_equals_int (data7[2], 0x40);
+  fail_unless_equals_int (data7[3], 0x80);
+#else
+  /* A - R - G - B */
+  fail_unless_equals_int (data7[0], 0x40);
+  fail_unless_equals_int (data7[1], 0x40);
+  fail_unless_equals_int (data7[2], 0x40);
+  fail_unless_equals_int (data7[3], 0x80);
+#endif
+
+  /* and the same again, it should be cached now */
+  pix8 = gst_video_overlay_rectangle_get_pixels_argb (rect1, &stride2,
+      GST_VIDEO_OVERLAY_FORMAT_FLAG_PREMULTIPLIED_ALPHA);
+  fail_unless (pix8 == pix7);
+
+  /* make sure other cached stuff is still there */
+  pix9 = gst_video_overlay_rectangle_get_pixels_argb (rect1, &stride,
+      GST_VIDEO_OVERLAY_FORMAT_FLAG_NONE);
+  fail_unless (pix9 == pix3);
+  pix10 = gst_video_overlay_rectangle_get_pixels_unscaled_argb (rect1, &w2, &h2,
+      &stride2, GST_VIDEO_OVERLAY_FORMAT_FLAG_PREMULTIPLIED_ALPHA);
+  fail_unless (pix10 == pix5);
+
+  gst_video_overlay_rectangle_unref (rect1);
 }
 
 GST_END_TEST;
@@ -1025,6 +1136,7 @@ video_suite (void)
 #if 0
   /* FIXME 0.11: port overlay compositions */
   tcase_add_test (tc_chain, test_overlay_composition);
+  tcase_add_test (tc_chain, test_overlay_composition_premultiplied_alpha);
 #endif
 
   return s;

@@ -657,6 +657,9 @@ gst_riff_parse_info (GstElement * element,
   while (left > 8) {
     tag = GST_READ_UINT32_LE (ptr);
     tsize = GST_READ_UINT32_LE (ptr + 4);
+
+    GST_MEMDUMP_OBJECT (element, "tag chunk", ptr, MIN (tsize + 8, left));
+
     left -= 8;
     ptr += 8;
 
@@ -670,10 +673,16 @@ gst_riff_parse_info (GstElement * element,
       tsize = left;
     }
 
+    /* make uppercase */
+    tag = tag & 0xDFDFDFDF;
+
     /* find out the type of metadata */
     switch (tag) {
       case GST_RIFF_INFO_IARL:
         type = GST_TAG_LOCATION;
+        break;
+      case GST_RIFF_INFO_IAAR:
+        type = GST_TAG_ALBUM_ARTIST;
         break;
       case GST_RIFF_INFO_IART:
         type = GST_TAG_ARTIST;
@@ -721,7 +730,7 @@ gst_riff_parse_info (GstElement * element,
         type = NULL;            /*"Palette"; */
         break;
       case GST_RIFF_INFO_IPRD:
-        type = NULL;            /*"Product"; */
+        type = GST_TAG_ALBUM;
         break;
       case GST_RIFF_INFO_ISBJ:
         type = NULL;            /*"Subject"; */
@@ -741,6 +750,9 @@ gst_riff_parse_info (GstElement * element,
       case GST_RIFF_INFO_ITCH:
         type = NULL;            /*"Technician"; */
         break;
+      case GST_RIFF_INFO_ITRK:
+        type = GST_TAG_TRACK_NUMBER;
+        break;
       default:
         type = NULL;
         GST_WARNING_OBJECT (element,
@@ -753,12 +765,31 @@ gst_riff_parse_info (GstElement * element,
       static const gchar *env_vars[] = { "GST_AVI_TAG_ENCODING",
         "GST_RIFF_TAG_ENCODING", "GST_TAG_ENCODING", NULL
       };
+      GType tag_type;
       gchar *val;
 
+      GST_DEBUG_OBJECT (element, "mapped tag %" GST_FOURCC_FORMAT " to tag %s",
+          GST_FOURCC_ARGS (tag), type);
+
+      tag_type = gst_tag_get_type (type);
       val = gst_tag_freeform_string_to_utf8 ((gchar *) ptr, tsize, env_vars);
 
-      if (val) {
-        gst_tag_list_add (taglist, GST_TAG_MERGE_APPEND, type, val, NULL);
+      if (val != NULL) {
+        if (tag_type == G_TYPE_STRING) {
+          gst_tag_list_add (taglist, GST_TAG_MERGE_APPEND, type, val, NULL);
+        } else {
+          GValue tag_val = { 0, };
+
+          g_value_init (&tag_val, tag_type);
+          if (gst_value_deserialize (&tag_val, val)) {
+            gst_tag_list_add_value (taglist, GST_TAG_MERGE_APPEND, type,
+                &tag_val);
+          } else {
+            GST_WARNING_OBJECT (element, "could not deserialize '%s' into a "
+                "tag %s of type %s", val, type, g_type_name (tag_type));
+          }
+          g_value_unset (&tag_val);
+        }
         g_free (val);
       } else {
         GST_WARNING_OBJECT (element, "could not extract %s tag", type);
@@ -776,6 +807,7 @@ gst_riff_parse_info (GstElement * element,
   }
 
   if (!gst_tag_list_is_empty (taglist)) {
+    GST_INFO_OBJECT (element, "extracted tags: %" GST_PTR_FORMAT, taglist);
     *_taglist = taglist;
   } else {
     *_taglist = NULL;

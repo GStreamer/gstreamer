@@ -30,11 +30,6 @@
 
 #ifndef TREMOR
 
-#include <vorbis/codec.h>
-
-typedef float                          vorbis_sample_t;
-typedef ogg_packet                     ogg_packet_wrapper;
-
 #define GST_VORBIS_DEC_DESCRIPTION "decode raw vorbis streams to float audio"
 
 #define GST_VORBIS_AUDIO_FORMAT     GST_AUDIO_FORMAT_F32
@@ -49,6 +44,42 @@ typedef ogg_packet                     ogg_packet_wrapper;
 #define GST_VORBIS_DEC_DEFAULT_SAMPLE_WIDTH           (32)
 
 #define GST_VORBIS_DEC_GLIB_TYPE_NAME      GstVorbisDec
+
+#else /* TREMOR */
+
+#define GST_VORBIS_DEC_DESCRIPTION "decode raw vorbis streams to integer audio"
+
+#define GST_VORBIS_AUDIO_FORMAT GST_AUDIO_FORMAT_S16
+#define GST_VORBIS_AUDIO_FORMAT_STR GST_AUDIO_NE (S16)
+
+#define GST_VORBIS_DEC_SRC_CAPS        \
+    GST_STATIC_CAPS ("audio/x-raw, "   \
+        "format = (string) " GST_VORBIS_AUDIO_FORMAT_STR ", "      \
+        "rate = (int) [ 1, MAX ], "    \
+        "channels = (int) [ 1, 6 ]")
+
+#define GST_VORBIS_DEC_DEFAULT_SAMPLE_WIDTH           (16)
+
+/* we need a different type name here */
+#define GST_VORBIS_DEC_GLIB_TYPE_NAME      GstIVorbisDec
+
+/* and still have it compile */
+typedef struct _GstVorbisDec               GstIVorbisDec;
+typedef struct _GstVorbisDecClass          GstIVorbisDecClass;
+
+#endif /* TREMOR */
+
+#ifndef USE_TREMOLO
+
+#ifdef TREMOR
+ #include <tremor/ivorbiscodec.h>
+ typedef ogg_int32_t                    vorbis_sample_t;
+#else
+ #include <vorbis/codec.h>
+ typedef float                          vorbis_sample_t;
+#endif
+
+typedef ogg_packet                     ogg_packet_wrapper;
 
 static inline guint8 *
 gst_ogg_packet_data (ogg_packet * p)
@@ -84,17 +115,11 @@ gst_ogg_packet_from_wrapper (ogg_packet_wrapper * packet)
   return packet;
 }
 
-#else
+#else /* USE_TREMOLO */
 
-#ifdef USE_TREMOLO
-  #include <Tremolo/ivorbiscodec.h>
-  #include <Tremolo/codec_internal.h>
-  typedef ogg_int16_t                    vorbis_sample_t;
-#else
-  #include <tremor/ivorbiscodec.h>
-  typedef ogg_int32_t                    vorbis_sample_t;
-#endif
-
+#include <Tremolo/ivorbiscodec.h>
+#include <Tremolo/codec_internal.h>
+typedef ogg_int16_t                    vorbis_sample_t;
 typedef struct _ogg_packet_wrapper     ogg_packet_wrapper;
 
 struct _ogg_packet_wrapper {
@@ -102,24 +127,6 @@ struct _ogg_packet_wrapper {
   ogg_reference       ref;
   ogg_buffer          buf;
 };
-
-#define GST_VORBIS_DEC_DESCRIPTION "decode raw vorbis streams to integer audio"
-
-#define GST_VORBIS_AUDIO_FORMAT GST_AUDIO_FORMAT_S16
-#define GST_VORBIS_AUDIO_FORMAT_STR GST_AUDIO_NE (S16)
-
-#define GST_VORBIS_DEC_SRC_CAPS        \
-    GST_STATIC_CAPS ("audio/x-raw, "   \
-        "format = (string) " GST_VORBIS_AUDIO_FORMAT_STR ", "      \
-        "rate = (int) [ 1, MAX ], "    \
-        "channels = (int) [ 1, 6 ]")
-
-/* we need a different type name here */
-#define GST_VORBIS_DEC_GLIB_TYPE_NAME      GstIVorbisDec
-
-/* and still have it compile */
-typedef struct _GstVorbisDec               GstIVorbisDec;
-typedef struct _GstVorbisDecClass          GstIVorbisDecClass;
 
 /* compensate minor variation */
 #define vorbis_synthesis(a, b)             vorbis_synthesis (a, b, 1)
@@ -179,7 +186,7 @@ gst_ogg_packet_from_wrapper (ogg_packet_wrapper * packet)
   return &(packet->packet);
 }
 
-#endif
+#endif /* USE_TREMOLO */
 
 typedef void (*CopySampleFunc)(vorbis_sample_t *out, vorbis_sample_t **in,
                            guint samples, gint channels);

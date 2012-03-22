@@ -201,6 +201,12 @@ struct _GstAudioDecoder
  *                  Called just prior to pushing (encoded data) buffer downstream.
  *                  Subclass has full discretionary access to buffer,
  *                  and a not OK flow return will abort downstream pushing.
+ * @open:           Optional.
+ *                  Called when the element changes to GST_STATE_READY.
+ *                  Allows opening external resources. Since: 0.10.37.
+ * @close:          Optional.
+ *                  Called when the element changes to GST_STATE_NULL.
+ *                  Allows closing external resources. Since: 0.10.37.
  *
  * Subclasses can override any of the available virtual methods or not, as
  * needed. At minimum @handle_frame (and likely @set_format) needs to be
@@ -237,8 +243,12 @@ struct _GstAudioDecoderClass
   gboolean      (*event)              (GstAudioDecoder *dec,
                                        GstEvent *event);
 
+  gboolean      (*open)               (GstAudioDecoder *dec);
+  
+  gboolean      (*close)              (GstAudioDecoder *dec);
+
   /*< private >*/
-  gpointer       _gst_reserved[GST_PADDING_LARGE];
+  gpointer       _gst_reserved[GST_PADDING_LARGE-2];
 };
 
 GType             gst_audio_decoder_get_type (void);

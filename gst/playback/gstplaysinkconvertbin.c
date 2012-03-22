@@ -304,8 +304,7 @@ block_proxypad (GstPlaySinkConvertBin * self)
   if (self->sink_proxypad_block_id == 0) {
     self->sink_proxypad_block_id =
         gst_pad_add_probe (self->sink_proxypad,
-        GST_PAD_PROBE_TYPE_BLOCK_DOWNSTREAM, pad_blocked_cb,
-        gst_object_ref (self), (GDestroyNotify) gst_object_unref);
+        GST_PAD_PROBE_TYPE_BLOCK_DOWNSTREAM, pad_blocked_cb, self, NULL);
   }
 }
 

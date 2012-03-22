@@ -152,6 +152,12 @@ struct _GstAudioEncoder {
  *                  for multichannel input specification).  If not implemented,
  *                  default returns gst_audio_encoder_proxy_getcaps
  *                  applied to sink template caps.
+ * @open:           Optional.
+ *                  Called when the element changes to GST_STATE_READY.
+ *                  Allows opening external resources. Since: 0.10.37.
+ * @close:          Optional.
+ *                  Called when the element changes to GST_STATE_NULL.
+ *                  Allows closing external resources. Since: 0.10.37.
  *
  * Subclasses can override any of the available virtual methods or not, as
  * needed. At minimum @set_format and @handle_frame needs to be overridden.
@@ -184,8 +190,12 @@ struct _GstAudioEncoderClass {
 
   GstCaps *     (*getcaps)            (GstAudioEncoder *enc, GstCaps *filter);
 
+  gboolean      (*open)               (GstAudioEncoder *enc);
+
+  gboolean      (*close)              (GstAudioEncoder *enc);
+
   /*< private >*/
-  gpointer       _gst_reserved[GST_PADDING_LARGE];
+  gpointer       _gst_reserved[GST_PADDING_LARGE-2];
 };
 
 GType           gst_audio_encoder_get_type         (void);

@@ -2087,12 +2087,18 @@ static GstStateChangeReturn
 gst_audio_decoder_change_state (GstElement * element, GstStateChange transition)
 {
   GstAudioDecoder *codec;
+  GstAudioDecoderClass *klass;
   GstStateChangeReturn ret;
 
   codec = GST_AUDIO_DECODER (element);
+  klass = GST_AUDIO_DECODER_GET_CLASS (codec);
 
   switch (transition) {
     case GST_STATE_CHANGE_NULL_TO_READY:
+      if (klass->open) {
+        if (!klass->open (codec))
+          goto open_failed;
+      }
       break;
     case GST_STATE_CHANGE_READY_TO_PAUSED:
       if (!gst_audio_decoder_start (codec)) {
@@ -2116,6 +2122,10 @@ gst_audio_decoder_change_state (GstElement * element, GstStateChange transition)
       }
       break;
     case GST_STATE_CHANGE_READY_TO_NULL:
+      if (klass->close) {
+        if (!klass->close (codec))
+          goto close_failed;
+      }
       break;
     default:
       break;
@@ -2131,6 +2141,16 @@ start_failed:
 stop_failed:
   {
     GST_ELEMENT_ERROR (codec, LIBRARY, INIT, (NULL), ("Failed to stop codec"));
+    return GST_STATE_CHANGE_FAILURE;
+  }
+open_failed:
+  {
+    GST_ELEMENT_ERROR (codec, LIBRARY, INIT, (NULL), ("Failed to open codec"));
+    return GST_STATE_CHANGE_FAILURE;
+  }
+close_failed:
+  {
+    GST_ELEMENT_ERROR (codec, LIBRARY, INIT, (NULL), ("Failed to close codec"));
     return GST_STATE_CHANGE_FAILURE;
   }
 }

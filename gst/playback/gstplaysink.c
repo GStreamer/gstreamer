@@ -3298,8 +3298,7 @@ video_set_blocked (GstPlaySink * playsink, gboolean blocked)
     if (blocked && playsink->video_block_id == 0) {
       playsink->video_block_id =
           gst_pad_add_probe (opad, GST_PAD_PROBE_TYPE_BLOCK_DOWNSTREAM,
-          sinkpad_blocked_cb, gst_object_ref (playsink),
-          (GDestroyNotify) gst_object_unref);
+          sinkpad_blocked_cb, playsink, NULL);
     } else if (!blocked && playsink->video_block_id) {
       gst_pad_remove_probe (opad, playsink->video_block_id);
       PENDING_FLAG_UNSET (playsink, GST_PLAY_SINK_TYPE_VIDEO_RAW);
@@ -3321,8 +3320,7 @@ audio_set_blocked (GstPlaySink * playsink, gboolean blocked)
     if (blocked && playsink->audio_block_id == 0) {
       playsink->audio_block_id =
           gst_pad_add_probe (opad, GST_PAD_PROBE_TYPE_BLOCK_DOWNSTREAM,
-          sinkpad_blocked_cb, gst_object_ref (playsink),
-          (GDestroyNotify) gst_object_unref);
+          sinkpad_blocked_cb, playsink, NULL);
     } else if (!blocked && playsink->audio_block_id) {
       gst_pad_remove_probe (opad, playsink->audio_block_id);
       PENDING_FLAG_UNSET (playsink, GST_PLAY_SINK_TYPE_AUDIO_RAW);
@@ -3344,8 +3342,7 @@ text_set_blocked (GstPlaySink * playsink, gboolean blocked)
     if (blocked && playsink->text_block_id == 0) {
       playsink->text_block_id =
           gst_pad_add_probe (opad, GST_PAD_PROBE_TYPE_BLOCK_DOWNSTREAM,
-          sinkpad_blocked_cb, gst_object_ref (playsink),
-          (GDestroyNotify) gst_object_unref);
+          sinkpad_blocked_cb, playsink, NULL);
     } else if (!blocked && playsink->text_block_id) {
       gst_pad_remove_probe (opad, playsink->text_block_id);
       PENDING_FLAG_UNSET (playsink, GST_PLAY_SINK_TYPE_TEXT);
@@ -3567,8 +3564,7 @@ gst_play_sink_request_pad (GstPlaySink * playsink, GstPlaySinkType type)
 
       *block_id =
           gst_pad_add_probe (blockpad, GST_PAD_PROBE_TYPE_BLOCK_DOWNSTREAM,
-          sinkpad_blocked_cb, gst_object_ref (playsink),
-          (GDestroyNotify) gst_object_unref);
+          sinkpad_blocked_cb, playsink, NULL);
       PENDING_FLAG_SET (playsink, type);
       gst_object_unref (blockpad);
     }
@@ -4248,6 +4244,10 @@ gst_play_sink_navigation_send_event (GstNavigation * navigation,
       gst_navigation_send_event (GST_NAVIGATION (nav), structure);
       structure = NULL;
       gst_object_unref (nav);
+    } else {
+      GstEvent *event = gst_event_new_navigation (structure);
+      structure = NULL;
+      gst_element_send_event (GST_ELEMENT (bin), event);
     }
 
     gst_object_unref (bin);

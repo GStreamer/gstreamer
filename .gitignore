@@ -49,6 +49,7 @@ Makefile
 
 /gst-libs/gst/audio/audio-marshal.[ch]
 /gst-libs/gst/video/video-marshal.[ch]
+/tests/examples/playback/playback-test
 
 tmp-orc.c
 gst*orc.h
