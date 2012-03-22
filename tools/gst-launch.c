@@ -689,7 +689,7 @@ event_loop (GstElement * pipeline, gboolean blocking, GstState target_state)
       }
       case GST_MESSAGE_TAG:
         if (tags) {
-          GstTagList *tags;
+          GstTagList *tag_list;
 
           if (GST_IS_ELEMENT (GST_MESSAGE_SRC (message))) {
             PRINT (_("FOUND TAG      : found by element \"%s\".\n"),
@@ -704,9 +704,9 @@ event_loop (GstElement * pipeline, gboolean blocking, GstState target_state)
             PRINT (_("FOUND TAG\n"));
           }
 
-          gst_message_parse_tag (message, &tags);
-          gst_tag_list_foreach (tags, print_tag, NULL);
-          gst_tag_list_free (tags);
+          gst_message_parse_tag (message, &tag_list);
+          gst_tag_list_foreach (tag_list, print_tag, NULL);
+          gst_tag_list_free (tag_list);
         }
         break;
       case GST_MESSAGE_INFO:{
