@@ -724,9 +724,12 @@ decode_packet(GstVaapiDecoderMpeg4 *decoder, GstMpeg4Packet packet)
     GstMpeg4Packet *tos = &packet;
     GstVaapiDecoderStatus status;
 
-    status = GST_VAAPI_DECODER_STATUS_SUCCESS;
     if (tos->size < 0)
         return GST_VAAPI_DECODER_STATUS_ERROR_NO_DATA;
+
+    status = gst_vaapi_decoder_check_status(GST_VAAPI_DECODER(decoder));
+    if (status != GST_VAAPI_DECODER_STATUS_SUCCESS)
+        return status;
 
     // packet.size is the size from current marker to the next.
     if (tos->type == GST_MPEG4_VISUAL_OBJ_SEQ_START) {
@@ -823,7 +826,7 @@ static GstVaapiDecoderStatus
 decode_buffer(GstVaapiDecoderMpeg4 *decoder, GstBuffer *buffer)
 {
     GstVaapiDecoderMpeg4Private * const priv = decoder->priv;
-    GstVaapiDecoderStatus status;
+    GstVaapiDecoderStatus status = GST_VAAPI_DECODER_STATUS_ERROR_UNKNOWN;
     guchar *buf;
     guint pos, buf_size;
 
@@ -899,7 +902,10 @@ decode_buffer(GstVaapiDecoderMpeg4 *decoder, GstBuffer *buffer)
         }
     }
 
-    if ((result == GST_MPEG4_PARSER_NO_PACKET || result == GST_MPEG4_PARSER_NO_PACKET_END) && pos < buf_size) {
+    if ((result == GST_MPEG4_PARSER_NO_PACKET ||
+         result == GST_MPEG4_PARSER_NO_PACKET_END ||
+         status == GST_VAAPI_DECODER_STATUS_ERROR_NO_SURFACE) &&
+        pos < buf_size) {
         priv->sub_buffer = gst_buffer_create_sub(buffer, pos, buf_size-pos);
         status = GST_VAAPI_DECODER_STATUS_ERROR_NO_DATA;
     }
