@@ -826,11 +826,23 @@ AG_GST_CHECK_FEATURE(DECKLINK, [decklink], decklink, [
            ])
        fi
        ;;
+     *-*darwin*)
+       if test "x$HAVE_PTHREAD_H" = "xyes"; then
+         AC_CHECK_LIB(dl, dlopen,
+           [
+            HAVE_DECKLINK=yes
+            DECKLINK_CXXFLAGS=
+            DECKLINK_LIBS="-lpthread -ldl"
+	    HAVE_DECKLINK_OSX=yes
+           ])
+       fi
+       ;;
      *)
        HAVE_DECKLINK=no
        ;;
    esac
 
+   AM_CONDITIONAL(DECKLINK_OSX, test "x$HAVE_DECKLINK_OSX" = xyes)
    AC_SUBST(DECKLINK_CXXFLAGS)
    AC_SUBST(DECKLINK_LIBS)
 ])
