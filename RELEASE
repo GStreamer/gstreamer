@@ -1,5 +1,5 @@
 
-Release notes for GStreamer FFmpeg Plug-ins 0.11.1 "Serpentine Sibilance"
+Release notes for GStreamer FFmpeg Plug-ins 0.11.2 "Sadistic Symphony"
         
 
 The GStreamer team is proud to announce a new release
@@ -35,14 +35,16 @@ contains a set of less supported plug-ins that haven't passed the
 
 Features of this release
     
-      * Parallel installability with 0.10.x series
-      * Threadsafe design and API
       * Many cleanups
       * Ported to new 0.11 core API changes
+      * Disable ffmpeg multithreading
+      * Add support for the VOC format
+      * Improve memory allocation
+      * Optimize for 0-padded input buffers
 
 Bugs fixed in this release
      
-      * 667539 : [0.11] ffdec doesn't reorder channels if necessary
+      * 664687 : CPU count detection fails on OS X
 
 Download
 
@@ -71,13 +73,9 @@ Applications
   
 Contributors to this release
     
+      * Alessandro Decina
       * Edward Hervey
-      * Mark Nauwelaerts
       * Matej Knopp
       * Sebastian Dröge
-      * Stefan Sauer
-      * Thomas Vander Stichele
-      * Tim-Philipp Müller
-      * Vincent Penquerc'h
       * Wim Taymans
  

@@ -1,9 +1,175 @@
-=== release 0.11.1 ===
+=== release 0.11.2 ===
 
-2012-02-17  Wim Taymans <wim.taymans@collabora.co.uk>
+2012-03-22  Wim Taymans <wim.taymans@collabora.co.uk>
 
 	* configure.ac:
-	  releasing 0.11.1, "Serpentine Sibilance"
+	  releasing 0.11.2, "Sadistic Symphony"
+
+2012-03-22 15:31:40 +0100  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	  Merge branch 'master' into 0.11
+	  Conflicts:
+	  gst-libs/ext/libav
+
+2012-03-21 12:54:44 +0100  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* tests/check/generic/libavcodec-locking.c:
+	  test: fix unit test
+
+2012-03-19 11:06:40 +0100  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* ext/ffmpeg/gstffmpegdec.c:
+	  ffdec: ensure padding is big enough
+
+2012-03-19 10:29:34 +0100  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* ext/ffmpeg/gstffmpegdec.c:
+	  ffdec: check if input is already 0-padded
+	  When the input buffer is already 0-padded we don't need to copy. This can happen
+	  because in the ALLOCATION query we suggest this.
+	  Only do temporary padding when we are using a parser.
+
+2012-03-15 22:11:54 +0100  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* ext/ffmpeg/gstffmpegdec.c:
+	  update for bufferpool changes
+
+2012-03-15 20:39:10 +0100  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* ext/ffmpeg/gstffmpegdec.c:
+	  update for allocation query changes
+
+2012-03-14 20:04:53 +0100  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* ext/ffmpeg/gstffmpegdec.c:
+	  ffdec: propose some padding in the allocation query
+	  Hopefully upstream can add some padding and then we don't have to memcpy.
+
+2012-03-14 19:53:06 +0100  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* ext/ffmpeg/gstffmpegdec.c:
+	  take padding into account
+
+2012-03-14 17:35:28 +0100  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* ext/ffmpeg/gstffmpegdec.c:
+	  ffdec: remove unused crop property
+
+2012-03-14 17:33:40 +0100  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* ext/ffmpeg/gstffmpegdec.c:
+	  ffdec: remove padding property
+	  Users should not mess with this
+
+2012-03-14 12:58:38 +0100  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* ext/ffmpeg/gstffmpegdec.c:
+	  ffdec: make bufferpool setup recalculate direct rendering
+	  We need to recalculate if we can use direct rendering after we have setup the
+	  bufferpool.
+
+2012-03-14 11:53:42 +0100  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* ext/ffmpeg/gstffmpegdec.c:
+	  ffdec: add some PERFORMANCE logging
+
+2012-03-13 13:24:39 +0100  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* ext/ffmpeg/gstffmpegcodecmap.c:
+	  ffcodec: add voc demuxer
+
+2012-03-13 13:24:23 +0100  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* ext/ffmpeg/gstffmpegdemux.c:
+	  ffdemux: activate pad before setting caps
+
+2012-03-12 13:50:46 +0100  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* ext/ffmpeg/gstffmpegdec.c:
+	  ffdec: implement accept-caps
+	  Implement a potentially faster accept-caps function
+
+2012-03-11 19:07:31 +0100  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* ext/ffmpeg/gstffmpegenc.c:
+	* ext/libswscale/gstffmpegscale.c:
+	  fix for caps api changes
+
+2012-03-08 13:04:57 +0100  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* ext/ffmpeg/gstffmpegdec.c:
+	  ffmpegdec: enable alignment if videometa is allowed
+	  Use the videobufferpool when downstream didn't suggest one.
+	  Only enable video alignment in the bufferpool when downstream supports video
+	  metadata.
+
+2012-03-06 15:27:22 +0100  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* ext/ffmpeg/gstffmpegmux.c:
+	  ffmux: Use correct enum type for return value
+
+2012-03-02 17:27:30 +0100  Edward Hervey <edward.hervey@collabora.co.uk>
+
+	* ext/ffmpeg/gstffmpegdec.c:
+	  ffmpegdec: Use auto-threads if available, and only slice-threading
+	  Slice threading causes less latency (and corruption)
+
+2012-02-27 06:26:02 +0100  Alessandro Decina <alessandro.d@gmail.com>
+
+	* ext/ffmpeg/gstffmpegcodecmap.c:
+	* ext/ffmpeg/gstffmpegdec.c:
+	* ext/ffmpeg/gstffmpegdemux.c:
+	* ext/ffmpeg/gstffmpegenc.c:
+	* ext/ffmpeg/gstffmpegprotocol.c:
+	* ext/libswscale/gstffmpegscale.c:
+	  Fix compiler warnings
+
+2012-02-22 12:28:49 +0100  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* ext/libswscale/gstffmpegscale.c:
+	  update for fixate_caps change
+
+2012-02-22 12:14:21 +0100  Edward Hervey <edward.hervey@collabora.co.uk>
+
+	* ext/ffmpeg/gstffmpegcodecmap.c:
+	  codecmap: Add mapping for Indeo 4 video codec
+
+2012-02-22 11:53:35 +0100  Edward Hervey <edward.hervey@collabora.co.uk>
+
+	* gst-libs/ext/libav:
+	  libav: Switch to tracking 0.8 release branch
+
+2012-02-22 02:08:06 +0100  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* ext/ffmpeg/gstffmpegutils.c:
+	  update for new memory api
+
+2012-02-21 18:02:56 +0100  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* ext/ffmpeg/gstffmpegdec.c:
+	  ffdec: disable multithreading
+	  It causes refcounting problems.
+
+2011-12-11 06:25:23 +0100  Matej Knopp <matej.knopp@gmail.com>
+
+	* ext/ffmpeg/gstffmpegdec.c:
+	  only reopen decoder when new caps are different
+
+2012-02-17 11:07:33 +0100  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* configure.ac:
+	  back to development
+
+=== release 0.11.1 ===
+
+2012-02-17 11:07:09 +0100  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* ChangeLog:
+	* NEWS:
+	* RELEASE:
+	* configure.ac:
+	* gst-ffmpeg.doap:
+	  RELEASE 0.11.1
 
 2012-02-08 16:41:19 +0100  Wim Taymans <wim.taymans@collabora.co.uk>
 

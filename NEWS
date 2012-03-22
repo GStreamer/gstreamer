@@ -1,4 +1,17 @@
-This is GStreamer FFmpeg Plug-ins  0.11.1, "Serpentine Sibilance"
+This is GStreamer FFmpeg Plug-ins 0.11.2 "Sadistic Symphony"
+
+New in 0.11.2:
+
+      * Many cleanups
+      * Ported to new 0.11 core API changes
+      * Disable ffmpeg multithreading
+      * Add support for the VOC format
+      * Improve memory allocation
+      * Optimize for 0-padded input buffers
+
+Bugs fixed in this release
+
+      * 664687 : CPU count detection fails on OS X
 
 New in 0.11.1:
 
