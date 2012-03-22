@@ -2,20 +2,22 @@
 # Copyright (C) 2009 gst-plugins-ugly's COPYRIGHT HOLDER
 # This file is distributed under the same license as the gst-plugins-ugly package.
 # Fran Diéguez <frandieguez@ubuntu.com>, 2009, 2010.
+# Fran Dieguez <frandieguez@gnome.org>, 2012.
+# Francisco Diéguez <frandieguez@ubuntu.com>, 2012.
 #
 msgid ""
 msgstr ""
-"Project-Id-Version: gst-plugins-ugly 0.10.14.2\n"
+"Project-Id-Version: gst-plugins-ugly 0.10.17.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2012-02-17 10:49+0100\n"
-"PO-Revision-Date: 2010-05-30 15:49+0200\n"
-"Last-Translator: Fran Diéguez <frandieguez@ubuntu.com>\n"
+"POT-Creation-Date: 2012-03-22 15:24+0100\n"
+"PO-Revision-Date: 2012-02-24 12:48+0100\n"
+"Last-Translator: Francisco Diéguez <frandieguez@ubuntu.com>\n"
 "Language-Team: Galician <proxecto@trasno.net>\n"
 "Language: gl\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"Plural-Forms: nplurals=2; plural=(n!=1);\\\n"
+"Plural-Forms: nplurals=2; plural=(n!=1);\n"
 
 msgid "Could not read from CD."
 msgstr "Non foi posíbel ler desde o CD."
@@ -49,16 +51,17 @@ msgid ""
 "Could not read DVD. This may be because the DVD is encrypted and a DVD "
 "decryption library is not installed."
 msgstr ""
+"Non foi posíbel ler o DVD. Isto pode ser porque o DVD está cifrado e non ten "
+"instalada unha biblioteca de descifrado de DVD."
 
-#, fuzzy
 msgid "Could not read DVD."
-msgstr "Non foi posíbel abrir o DVD"
+msgstr "Non foi posíbel ler o DVD"
 
 #, fuzzy
 msgid ""
 "Failed to configure LAME mp3 audio encoder. Check your encoding parameters."
 msgstr ""
-"Produciuse un fallo ao configurar o codificador TwoLAME. Comprobe os seus "
+"Produciuse un erro ao configurar o codificador LAME. Comprobe os seus "
 "parámetros de codificación."
 
 #, c-format
@@ -79,10 +82,3 @@ msgstr "Este fluxo non contén datos."
 
 msgid "Internal data stream error."
 msgstr "Erro de fluxo de datos interno."
-
-#, fuzzy
-#~ msgid ""
-#~ "Failed to configure LAMEMP3ENC encoder. Check your encoding parameters."
-#~ msgstr ""
-#~ "Produciuse un erro ao configurar o codificador LAME. Comprobe os seus "
-#~ "parámetros de codificación."

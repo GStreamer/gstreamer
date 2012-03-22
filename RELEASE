@@ -1,5 +1,5 @@
 
-Release notes for GStreamer Ugly Plug-ins 0.11.1 "Moonlapse Vertigo"
+Release notes for GStreamer Ugly Plug-ins 0.11.2 "Savior from Anger"
         
 
 The GStreamer team is proud to announce a new release
@@ -56,11 +56,16 @@ contains a set of less supported plug-ins that haven't passed the
 
 Features of this release
     
-      * Parallel installability with 0.10.x series
       * Many cleanups
       * Ported to new 0.11 core API changes
-There were no bugs fixed in this release
-    
+      * xingmux: port to 0.11
+      * synaesthesia: port to 0.11
+      * x264enc: handle PTS and DTS
+
+Bugs fixed in this release
+     
+      * 662617 : compiler warnings due to printf format mismatches
+      * 669863 : [0.11] [x264enc] X264 encoder doesn't unmap input frame
 
 Download
 
@@ -90,23 +95,12 @@ Applications
 Contributors to this release
     
       * Alessandro Decina
-      * Brian Gitonga Marete
       * Christian Fredrik Kalager Schaller
+      * Christian Morales Vega
       * David Schleef
       * Edward Hervey
-      * Julien Isorce
       * Mark Nauwelaerts
-      * Matej Knopp
-      * Olivier Crête
-      * René Stadler
-      * Robert Swain
       * Sebastian Dröge
-      * Stefan Kost
-      * Stefan Sauer
-      * Thiago Santos
-      * Thomas Vander Stichele
       * Tim-Philipp Müller
-      * Vincent Penquerc'h
       * Wim Taymans
-      * Руслан Ижбулатов
  

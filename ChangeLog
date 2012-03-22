@@ -1,9 +1,309 @@
-=== release 0.11.1 ===
+=== release 0.11.2 ===
 
-2012-02-17  Wim Taymans <wim.taymans@collabora.co.uk>
+2012-03-22  Wim Taymans <wim.taymans@collabora.co.uk>
 
 	* configure.ac:
-	  releasing 0.11.1, "Moonlapse Vertigo"
+	  releasing 0.11.2, "Savior from Anger"
+
+2012-03-21 13:18:35 +0100  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* tests/check/elements/mpeg2dec.c:
+	  tests: fix after memory changes
+
+2012-03-21 13:18:11 +0100  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* ext/x264/gstx264enc.c:
+	* ext/x264/gstx264enc.h:
+	  x264enc: remove deprecated properties
+
+2012-03-20 12:08:23 +0000  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+
+	  Merge remote-tracking branch 'origin/master' into 0.11
+	  So 0.11 folks also get amr include fixes.
+	  Conflicts:
+	  ext/a52dec/gsta52dec.c
+	  ext/mad/gstmad.c
+
+2012-03-18 18:56:16 +0100  Mark Nauwelaerts <mark.nauwelaerts@collabora.co.uk>
+
+	* gst/synaesthesia/gstsynaesthesia.c:
+	  synaesthesia: fixup for bufferpool api changes
+	  ... as well as some caps ref handling.
+
+2012-03-16 21:48:02 +0100  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* gst/realmedia/rademux.c:
+	* gst/realmedia/rmdemux.c:
+	  don't pass random pointers to pull_range
+
+2012-03-15 22:11:41 +0100  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* ext/mpeg2dec/gstmpeg2dec.c:
+	  update for bufferpool changes
+
+2012-03-15 20:38:50 +0100  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* ext/mpeg2dec/gstmpeg2dec.c:
+	  update for allocation query changes
+
+2012-03-15 13:38:16 +0100  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* ext/dvdread/dvdreadsrc.c:
+	* ext/lame/gstlamemp3enc.c:
+	* ext/mpeg2dec/gstmpeg2dec.c:
+	* ext/x264/gstx264enc.c:
+	* gst/dvdlpcmdec/gstdvdlpcmdec.c:
+	* gst/dvdsub/gstdvdsubdec.c:
+	  update for memory api changes
+
+2012-03-14 19:52:52 +0100  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* ext/mpeg2dec/gstmpeg2dec.c:
+	  take padding into account
+
+2012-03-13 18:27:51 +0100  Mark Nauwelaerts <mark.nauwelaerts@collabora.co.uk>
+
+	* ext/mad/gstmad.c:
+	  mad: simplify parsing code
+	  Also fixes #671455 (expected at least).
+
+2012-03-12 16:16:17 +0100  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* configure.ac:
+	  configure.ac: bump required GLib to 2.31.14
+	  Fixes https://bugzilla.gnome.org/show_bug.cgi?id=671911
+
+2012-03-12 12:23:43 +0100  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* ext/sidplay/gstsiddec.cc:
+	  fix for caps _normalize changes
+
+2012-03-11 19:07:19 +0100  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* ext/x264/gstx264enc.c:
+	  fix for caps api changes
+
+2012-03-06 16:08:23 +0100  Mark Nauwelaerts <mark.nauwelaerts@collabora.co.uk>
+
+	* ext/a52dec/gsta52dec.c:
+	* ext/a52dec/gsta52dec.h:
+	  a52dec: use base class tag handling helper
+	  ... so as to ensure these to be handled and sent at proper time.
+
+2012-03-06 14:28:15 +0100  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* ext/dvdread/dvdreadsrc.c:
+	  dvdreadsrc: Use variable type with correct signedness
+
+2011-01-14 18:50:41 +0100  Edward Hervey <edward.hervey@collabora.co.uk>
+
+	* ext/mpeg2dec/gstmpeg2dec.c:
+	  mpeg2dec: Copy planes in one go when possible
+
+2012-03-03 17:17:31 +0000  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+
+	* configure.ac:
+	* ext/amrnb/amrnbdec.h:
+	* ext/amrnb/amrnbenc.h:
+	* ext/amrwbdec/amrwbdec.h:
+	  amrnb, amrwbdec: fix build with opencore-amr >= 0.1.3
+	  In previous versions, the opencore-amr include sub-directory
+	  would be specified in the include path in the CFLAGS, but this
+	  is no longer the case in newer versions, so we need to add those
+	  to our include directives.
+	  Based on patch by: Christian Morales Vega
+	  https://bugzilla.gnome.org/show_bug.cgi?id=671123
+
+2012-03-03 16:56:13 +0000  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+
+	* configure.ac:
+	  configure: get rid of non-pkg-config ways to check for opencore-amr
+
+2012-02-29 17:26:42 +0100  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* ext/mpeg2dec/gstmpeg2dec.c:
+	  update for metadata API changes
+
+2012-02-27 06:35:01 +0100  Alessandro Decina <alessandro.d@gmail.com>
+
+	* ext/amrwbdec/Makefile.am:
+	* ext/lame/Makefile.am:
+	* ext/mad/Makefile.am:
+	  amrwbdec, lame, mad: link to libgstbase
+
+2012-02-27 06:33:48 +0100  Alessandro Decina <alessandro.d@gmail.com>
+
+	* ext/x264/gstx264enc.c:
+	  x264enc: fix compiler warning
+
+2012-02-27 00:36:46 +0000  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+
+	  Merge remote-tracking branch 'origin/master' into 0.11
+
+2012-02-27 00:34:09 +0000  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+
+	  Merge commit '02f5d72a0519bcbe8f6958fab6dd998fc8ccda6b' into 0.11
+	  Conflicts:
+	  ext/mad/gstmad.c
+
+2012-02-23 11:20:33 +0000  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+
+	* NEWS:
+	* RELEASE:
+	* configure.ac:
+	* docs/plugins/gst-plugins-ugly-plugins.args:
+	* docs/plugins/gst-plugins-ugly-plugins.hierarchy:
+	* docs/plugins/gst-plugins-ugly-plugins.interfaces:
+	* docs/plugins/inspect/plugin-a52dec.xml:
+	* docs/plugins/inspect/plugin-amrnb.xml:
+	* docs/plugins/inspect/plugin-amrwbdec.xml:
+	* docs/plugins/inspect/plugin-asf.xml:
+	* docs/plugins/inspect/plugin-cdio.xml:
+	* docs/plugins/inspect/plugin-dvdlpcmdec.xml:
+	* docs/plugins/inspect/plugin-dvdread.xml:
+	* docs/plugins/inspect/plugin-dvdsub.xml:
+	* docs/plugins/inspect/plugin-iec958.xml:
+	* docs/plugins/inspect/plugin-lame.xml:
+	* docs/plugins/inspect/plugin-mad.xml:
+	* docs/plugins/inspect/plugin-mpeg2dec.xml:
+	* docs/plugins/inspect/plugin-mpegaudioparse.xml:
+	* docs/plugins/inspect/plugin-mpegstream.xml:
+	* docs/plugins/inspect/plugin-realmedia.xml:
+	* docs/plugins/inspect/plugin-siddec.xml:
+	* docs/plugins/inspect/plugin-twolame.xml:
+	* docs/plugins/inspect/plugin-x264.xml:
+	* win32/common/config.h:
+	  Bump version after release
+
+2012-02-21 18:58:06 -0800  David Schleef <ds@schleef.org>
+
+	* autogen.sh:
+	  autogen.sh: avoid touching .po files during 'make'
+	  A simple workaround to deal with GNU gettext automake integration
+	  failing to deal with git.  Fixes: #669207
+
+2012-02-22 02:17:55 +0100  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* ext/x264/gstx264enc.c:
+	  x264: convert g_print to LOG
+
+2012-02-22 02:07:49 +0100  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* gst/asfdemux/gstrtpasfdepay.c:
+	  update for new memory api
+
+2012-02-22 02:07:29 +0100  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* ext/x264/gstx264enc.c:
+	  x264enc: handle pts and dts
+
+2012-02-21 18:53:57 +0100  Mark Nauwelaerts <mark.nauwelaerts@collabora.co.uk>
+
+	* ext/mad/gstmad.c:
+	  mad: handle libmad freeform parsing quirk
+
+2012-02-21 18:49:50 +0100  Mark Nauwelaerts <mark.nauwelaerts@collabora.co.uk>
+
+	* ext/mad/gstmad.c:
+	  mad: fixup unhacking last frame coaxing
+	  ... so as to not only replace the data pointer but also available size.
+
+2012-02-20 14:27:49 +0000  Christian Fredrik Kalager Schaller <christian.schaller@collabora.co.uk>
+
+	* gst-plugins-ugly.spec.in:
+	  Add latest plugins
+
+2012-02-18 00:02:20 +0100  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* win32/common/config.h:
+	  win32: back to development
+
+2012-02-17 17:53:34 +0100  Mark Nauwelaerts <mark.nauwelaerts@collabora.co.uk>
+
+	* configure.ac:
+	* gst/synaesthesia/gstsynaesthesia.c:
+	* gst/synaesthesia/gstsynaesthesia.h:
+	  synaesthesia: port to 0.11
+
+2012-02-17 17:53:28 +0100  Mark Nauwelaerts <mark.nauwelaerts@collabora.co.uk>
+
+	* configure.ac:
+	* gst/xingmux/gstxingmux.c:
+	  xingmux: port to 0.11
+
+2012-02-17 11:06:59 +0100  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* configure.ac:
+	  back to development
+
+=== release 0.11.1 ===
+
+2012-02-17 11:06:27 +0100  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* ChangeLog:
+	* NEWS:
+	* RELEASE:
+	* configure.ac:
+	* docs/plugins/gst-plugins-ugly-plugins.args:
+	* docs/plugins/gst-plugins-ugly-plugins.hierarchy:
+	* docs/plugins/gst-plugins-ugly-plugins.interfaces:
+	* docs/plugins/inspect/plugin-a52dec.xml:
+	* docs/plugins/inspect/plugin-amrnb.xml:
+	* docs/plugins/inspect/plugin-amrwbdec.xml:
+	* docs/plugins/inspect/plugin-asf.xml:
+	* docs/plugins/inspect/plugin-cdio.xml:
+	* docs/plugins/inspect/plugin-dvdlpcmdec.xml:
+	* docs/plugins/inspect/plugin-dvdread.xml:
+	* docs/plugins/inspect/plugin-dvdsub.xml:
+	* docs/plugins/inspect/plugin-lame.xml:
+	* docs/plugins/inspect/plugin-mad.xml:
+	* docs/plugins/inspect/plugin-mpeg2dec.xml:
+	* docs/plugins/inspect/plugin-realmedia.xml:
+	* docs/plugins/inspect/plugin-siddec.xml:
+	* docs/plugins/inspect/plugin-twolame.xml:
+	* docs/plugins/inspect/plugin-x264.xml:
+	* gst-plugins-ugly.doap:
+	* po/af.po:
+	* po/az.po:
+	* po/bg.po:
+	* po/ca.po:
+	* po/cs.po:
+	* po/da.po:
+	* po/de.po:
+	* po/el.po:
+	* po/en_GB.po:
+	* po/eo.po:
+	* po/es.po:
+	* po/eu.po:
+	* po/fi.po:
+	* po/fr.po:
+	* po/gl.po:
+	* po/hu.po:
+	* po/id.po:
+	* po/it.po:
+	* po/ja.po:
+	* po/lt.po:
+	* po/lv.po:
+	* po/ms.po:
+	* po/mt.po:
+	* po/nb.po:
+	* po/nl.po:
+	* po/or.po:
+	* po/pl.po:
+	* po/pt_BR.po:
+	* po/ro.po:
+	* po/ru.po:
+	* po/sk.po:
+	* po/sl.po:
+	* po/sq.po:
+	* po/sr.po:
+	* po/sv.po:
+	* po/tr.po:
+	* po/uk.po:
+	* po/vi.po:
+	* po/zh_CN.po:
+	* win32/common/config.h:
+	  RELEASE 0.11.1
 
 2012-02-17 09:16:32 +0100  Wim Taymans <wim.taymans@collabora.co.uk>
 

@@ -38,6 +38,7 @@ GObject
         GstRealAudioDemux
         GstSidDec
         GstX264Enc
+        GstXingMux
       GstPad
       GstPadTemplate
       GstPlugin
