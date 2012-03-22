@@ -27,6 +27,7 @@
 #include <string.h>
 
 #include "gstgdkpixbuf.h"
+#include "gstgdkpixbufoverlay.h"
 #include "gstgdkpixbufsink.h"
 #include "pixbufscale.h"
 
@@ -588,6 +589,10 @@ plugin_init (GstPlugin * plugin)
   gst_type_find_register (plugin, "image/*", GST_RANK_MARGINAL,
       gst_gdk_pixbuf_type_find, NULL, GST_CAPS_ANY, NULL);
 #endif
+
+  if (!gst_element_register (plugin, "gdkpixbufoverlay", GST_RANK_NONE,
+          GST_TYPE_GDK_PIXBUF_OVERLAY))
+    return FALSE;
 
   if (!gst_element_register (plugin, "gdkpixbufsink", GST_RANK_NONE,
           GST_TYPE_GDK_PIXBUF_SINK))

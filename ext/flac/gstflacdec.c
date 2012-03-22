@@ -415,6 +415,26 @@ gst_flac_dec_scan_got_frame (GstFlacDec * flacdec, guint8 * data, guint size,
   return TRUE;
 }
 
+static gboolean
+gst_flac_dec_handle_decoder_error (GstFlacDec * dec, gboolean msg)
+{
+  gboolean ret;
+
+  dec->error_count++;
+  if (dec->error_count > 10) {
+    if (msg)
+      GST_ELEMENT_ERROR (dec, STREAM, DECODE, (NULL), (NULL));
+    dec->last_flow = GST_FLOW_ERROR;
+    ret = TRUE;
+  } else {
+    GST_DEBUG_OBJECT (dec, "ignoring error for now at count %d",
+        dec->error_count);
+    ret = FALSE;
+  }
+
+  return ret;
+}
+
 static void
 gst_flac_dec_metadata_cb (const FLAC__StreamDecoder * decoder,
     const FLAC__StreamMetadata * metadata, void *client_data)
@@ -495,8 +515,8 @@ gst_flac_dec_error_cb (const FLAC__StreamDecoder * d,
       break;
   }
 
-  GST_ELEMENT_ERROR (dec, STREAM, DECODE, (NULL), ("%s (%d)", error, status));
-  dec->last_flow = GST_FLOW_ERROR;
+  if (gst_flac_dec_handle_decoder_error (dec, FALSE))
+    GST_ELEMENT_ERROR (dec, STREAM, DECODE, (NULL), ("%s (%d)", error, status));
 }
 
 static FLAC__StreamDecoderReadStatus
@@ -674,6 +694,8 @@ gst_flac_dec_write (GstFlacDec * flacdec, const FLAC__Frame * frame,
   gst_buffer_unmap (outbuf, &map);
 
   GST_DEBUG_OBJECT (flacdec, "pushing %d samples", samples);
+  if (flacdec->error_count)
+    flacdec->error_count--;
 
   ret = gst_audio_decoder_finish_frame (GST_AUDIO_DECODER (flacdec), outbuf, 1);
 

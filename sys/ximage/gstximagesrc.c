@@ -1053,8 +1053,7 @@ gst_ximage_src_get_caps (GstBaseSrc * bs, GstCaps * filter)
   if (s->endx >= s->startx && s->endy >= s->starty) {
     /* this means user has put in values */
     if (s->startx < xcontext->width && s->endx < xcontext->width &&
-        s->starty < xcontext->height && s->endy < xcontext->height &&
-        s->startx >= 0 && s->starty >= 0) {
+        s->starty < xcontext->height && s->endy < xcontext->height) {
       /* values are fine */
       s->width = width = s->endx - s->startx + 1;
       s->height = height = s->endy - s->starty + 1;

@@ -314,7 +314,7 @@ dnl Make sure you have a space before and after all plugins
 GST_PLUGINS_NONPORTED="deinterlace interleave flx \
  smpte \
  videobox \
- cairo cairo_gobject dv1394 \
+ cairo cairo_gobject dv1394 gdk_pixbuf \
  oss oss4 \
  osx_video osx_audio "
 AC_SUBST(GST_PLUGINS_NONPORTED)
@@ -386,18 +386,14 @@ AG_GST_CHECK_FEATURE(DIRECTSOUND, [DirectSound plug-in], directsoundsink, [
   LDFLAGS="$LDFLAGS $DIRECTSOUND_LDFLAGS"
   LIBS="$LIBS -ldsound -ldxerr9 -luser32"
   AC_MSG_CHECKING(for DirectSound LDFLAGS)
-  AC_LINK_IFELSE([
+  AC_LINK_IFELSE([AC_LANG_PROGRAM([[
 #include <windows.h>
 #include <dxerr9.h>
 #include <dsound.h>
-
-int main ()
-{
+]], [[
   DXGetErrorString9 (0);
   DirectSoundCreate(NULL, NULL, NULL);
-
-  return 0;
-}
+]])
 ],
     [HAVE_DIRECTSOUND="yes"],
     [HAVE_DIRECTSOUND="no"])

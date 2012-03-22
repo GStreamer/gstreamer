@@ -2361,6 +2361,7 @@ gst_matroska_mux_start (GstMatroskaMux * mux)
           "streamable=false. Will ignore that and create streamable output "
           "instead");
     }
+    gst_query_unref (query);
   }
 
   if (!strcmp (mux->doctype, GST_MATROSKA_DOCTYPE_WEBM)) {

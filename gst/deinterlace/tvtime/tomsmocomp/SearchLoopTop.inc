@@ -92,7 +92,7 @@ long     Last8;
           int64_t Max_Vals  = 0x0000000000000000ull;
           int64_t ShiftMask = 0xfefffefffefffeffull;
 
-          long oldbx;
+          long oldbx = 0;
 
 		// pretend it's indented -->>
         __asm__ __volatile__

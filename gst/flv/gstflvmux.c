@@ -1165,6 +1165,7 @@ gst_flv_mux_write_header (GstFlvMux * mux)
           "streamable=false. Will ignore that and create streamable output "
           "instead");
     }
+    gst_query_unref (query);
   }
 
   header = gst_flv_mux_create_header (mux);

@@ -1903,6 +1903,7 @@ gst_matroska_demux_handle_seek_event (GstMatroskaDemux * demux,
   GstMatroskaTrackContext *track = NULL;
   GstSegment seeksegment = { 0, };
   gboolean update = TRUE;
+  gboolean pad_locked = FALSE;
 
   if (pad)
     track = gst_pad_get_element_private (pad);
@@ -2001,6 +2002,7 @@ next:
    * forever. */
   GST_DEBUG_OBJECT (demux, "Waiting for streaming to stop");
   GST_PAD_STREAM_LOCK (demux->common.sinkpad);
+  pad_locked = TRUE;
 
   /* pull mode without index can do some scanning */
   if (!demux->streaming && !entry) {
@@ -2069,13 +2071,17 @@ exit:
       (GstTaskFunction) gst_matroska_demux_loop, demux->common.sinkpad);
 
   /* streaming can continue now */
-  GST_PAD_STREAM_UNLOCK (demux->common.sinkpad);
+  if (pad_locked) {
+    GST_PAD_STREAM_UNLOCK (demux->common.sinkpad);
+  }
 
   return TRUE;
 
 seek_error:
   {
-    GST_PAD_STREAM_UNLOCK (demux->common.sinkpad);
+    if (pad_locked) {
+      GST_PAD_STREAM_UNLOCK (demux->common.sinkpad);
+    }
     GST_ELEMENT_ERROR (demux, STREAM, DEMUX, (NULL), ("Got a seek error"));
     return FALSE;
   }

@@ -203,7 +203,7 @@ static const GstFlacEncParams flacenc_params[] = {
 
 #define DEFAULT_QUALITY 5
 #define DEFAULT_PADDING 0
-#define DEFAULT_SEEKPOINTS 0
+#define DEFAULT_SEEKPOINTS -10
 
 #define GST_TYPE_FLAC_ENC_QUALITY (gst_flac_enc_quality_get_type ())
 static GType

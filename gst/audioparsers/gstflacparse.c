@@ -378,7 +378,8 @@ typedef enum
 
 static FrameHeaderCheckReturn
 gst_flac_parse_frame_header_is_valid (GstFlacParse * flacparse,
-    const guint8 * data, guint size, gboolean set, guint16 * block_size_ret)
+    const guint8 * data, guint size, gboolean set, guint16 * block_size_ret,
+    gboolean * suspect)
 {
   GstBitReader reader = GST_BIT_READER_INIT (data, size);
   guint8 blocking_strategy;
@@ -572,6 +573,8 @@ gst_flac_parse_frame_header_is_valid (GstFlacParse * flacparse,
         /* TODO: can we know we're on the last frame, to avoid warning ? */
         GST_WARNING_OBJECT (flacparse, "Block size is not constant");
         block_size = flacparse->block_size;
+        if (suspect)
+          *suspect = TRUE;
       }
     }
   }
@@ -620,6 +623,7 @@ gst_flac_parse_frame_is_valid (GstFlacParse * flacparse,
   guint i, search_start, search_end;
   FrameHeaderCheckReturn header_ret;
   guint16 block_size;
+  gboolean suspect_start = FALSE, suspect_end = FALSE;
   gboolean result = FALSE;
 
   buffer = frame->buffer;
@@ -630,7 +634,7 @@ gst_flac_parse_frame_is_valid (GstFlacParse * flacparse,
 
   header_ret =
       gst_flac_parse_frame_header_is_valid (flacparse, map.data, map.size, TRUE,
-      &block_size);
+      &block_size, &suspect_start);
   if (header_ret == FRAME_HEADER_INVALID) {
     *ret = 0;
     goto cleanup;
@@ -650,16 +654,23 @@ gst_flac_parse_frame_is_valid (GstFlacParse * flacparse,
 
   for (i = search_start; i < search_end; i++, remaining--) {
     if ((GST_READ_UINT16_BE (map.data + i) & 0xfffe) == 0xfff8) {
+      GST_LOG_OBJECT (flacparse, "possible frame end at offset %d", i);
+      suspect_end = FALSE;
       header_ret =
           gst_flac_parse_frame_header_is_valid (flacparse, map.data + i,
-          remaining, FALSE, NULL);
+          remaining, FALSE, NULL, &suspect_end);
       if (header_ret == FRAME_HEADER_VALID) {
         if (flacparse->check_frame_checksums) {
           guint16 actual_crc = gst_flac_calculate_crc16 (map.data, i - 2);
           guint16 expected_crc = GST_READ_UINT16_BE (map.data + i - 2);
 
-          if (actual_crc != expected_crc)
+          GST_LOG_OBJECT (flacparse,
+              "checking checksum, frame suspect (%d, %d)",
+              suspect_start, suspect_end);
+          if (actual_crc != expected_crc) {
+            GST_DEBUG_OBJECT (flacparse, "checksum did not match");
             continue;
+          }
         }
         *ret = i;
         flacparse->block_size = block_size;
@@ -689,6 +700,15 @@ gst_flac_parse_frame_is_valid (GstFlacParse * flacparse,
       result = TRUE;
       goto cleanup;
     }
+  }
+
+  /* so we searched to expected end and found nothing,
+   * give up on this frame (start) */
+  if (flacparse->max_framesize && i > 2 * flacparse->max_framesize) {
+    GST_LOG_OBJECT (flacparse,
+        "could not determine valid frame end, discarding frame (start)");
+    *ret = 1;
+    return FALSE;
   }
 
 need_more:
@@ -1397,7 +1417,7 @@ gst_flac_parse_parse_frame (GstBaseParse * parse, GstBaseParseFrame * frame,
       flacparse->offset = GST_BUFFER_OFFSET (buffer);
       ret =
           gst_flac_parse_frame_header_is_valid (flacparse,
-          map.data, map.size, TRUE, NULL);
+          map.data, map.size, TRUE, NULL, NULL);
       if (ret != FRAME_HEADER_VALID) {
         GST_ERROR_OBJECT (flacparse,
             "Baseclass didn't provide a complete frame");

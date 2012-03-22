@@ -869,6 +869,16 @@
 </ARG>
 
 <ARG>
+<NAME>GstRTSPSrc::do-rtsp-keep-alive</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Do RTSP Keep Alive</NICK>
+<BLURB>Send RTSP keep alive packets, disable for old incompatible server.</BLURB>
+<DEFAULT>TRUE</DEFAULT>
+</ARG>
+
+<ARG>
 <NAME>GstRTPDec::skip</NAME>
 <TYPE>gint</TYPE>
 <RANGE></RANGE>
@@ -1925,7 +1935,7 @@
 <FLAGS>rwx</FLAGS>
 <NICK>Seekpoints</NICK>
 <BLURB>Add SEEKTABLE metadata (if > 0, number of entries, if < 0, interval in sec).</BLURB>
-<DEFAULT>0</DEFAULT>
+<DEFAULT>-10</DEFAULT>
 </ARG>
 
 <ARG>
@@ -21525,7 +21535,7 @@
 <FLAGS>rw</FLAGS>
 <NICK>Transport mode</NICK>
 <BLURB>Jack transport behaviour of the client.</BLURB>
-<DEFAULT>No transport support</DEFAULT>
+<DEFAULT></DEFAULT>
 </ARG>
 
 <ARG>
@@ -21575,7 +21585,7 @@
 <FLAGS>rw</FLAGS>
 <NICK>Transport mode</NICK>
 <BLURB>Jack transport behaviour of the client.</BLURB>
-<DEFAULT>No transport support</DEFAULT>
+<DEFAULT></DEFAULT>
 </ARG>
 
 <ARG>
@@ -22576,5 +22586,75 @@
 <NICK>Ignore length</NICK>
 <BLURB>Ignore length from the Wave header.</BLURB>
 <DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstGdkPixbufOverlay::location</NAME>
+<TYPE>gchar*</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>location</NICK>
+<BLURB>Location of image file to overlay.</BLURB>
+<DEFAULT>NULL</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstGdkPixbufOverlay::offset-x</NAME>
+<TYPE>gint</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>X Offset</NICK>
+<BLURB>Horizontal offset of overlay image in pixels from top-left corner of video image.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstGdkPixbufOverlay::offset-y</NAME>
+<TYPE>gint</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Y Offset</NICK>
+<BLURB>Vertical offset of overlay image in pixels from top-left corner of video image.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstGdkPixbufOverlay::overlay-height</NAME>
+<TYPE>gint</TYPE>
+<RANGE>>= 0</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Overlay Height</NICK>
+<BLURB>Height of overlay image in pixels (0 = same as overlay image).</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstGdkPixbufOverlay::overlay-width</NAME>
+<TYPE>gint</TYPE>
+<RANGE>>= 0</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Overlay Width</NICK>
+<BLURB>Width of overlay image in pixels (0 = same as overlay image).</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstGdkPixbufOverlay::relative-x</NAME>
+<TYPE>gdouble</TYPE>
+<RANGE>[0,1]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Relative X Offset</NICK>
+<BLURB>Horizontal offset of overlay image in fractions of video image width, from top-left corner of video image.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstGdkPixbufOverlay::relative-y</NAME>
+<TYPE>gdouble</TYPE>
+<RANGE>[0,1]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Relative Y Offset</NICK>
+<BLURB>Vertical offset of overlay image in fractions of video image height, from top-left corner of video image.</BLURB>
+<DEFAULT>0</DEFAULT>
 </ARG>
 

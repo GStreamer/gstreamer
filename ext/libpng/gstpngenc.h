@@ -52,6 +52,7 @@ struct _GstPngEnc
 
   GstVideoInfo info;
   gint png_color_type;
+  gint depth;
   gint width;
   gint height;
   guint compression_level;

@@ -1654,6 +1654,7 @@ gst_qt_mux_start_file (GstQTMux * qtmux)
           "streamable=false. Will ignore that and create streamable output "
           "instead");
     }
+    gst_query_unref (query);
   }
 
   /* let downstream know we think in BYTES and expect to do seeking later on */

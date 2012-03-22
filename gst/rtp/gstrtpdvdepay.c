@@ -336,12 +336,14 @@ gst_rtp_dv_depay_process (GstRTPBaseDepayload * base, GstBuffer * in)
       GST_LOG_OBJECT (dvdepay, "got block at location %d", location);
     }
 
-    /* get the byte offset of the dif block */
-    offset = location * 80;
+    if (location != -1) {
+      /* get the byte offset of the dif block */
+      offset = location * 80;
 
-    /* And copy it in, provided the location is sane. */
-    if (offset >= 0 && offset <= dvdepay->frame_size - 80)
-      gst_buffer_fill (dvdepay->acc, offset, payload, 80);
+      /* And copy it in, provided the location is sane. */
+      if (offset <= dvdepay->frame_size - 80)
+        gst_buffer_fill (dvdepay->acc, offset, payload, 80);
+    }
 
     payload += 80;
     payload_len -= 80;

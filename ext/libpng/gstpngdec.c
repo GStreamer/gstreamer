@@ -61,7 +61,8 @@ static GstStaticPadTemplate gst_pngdec_src_pad_template =
 GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS (GST_VIDEO_CAPS_MAKE ("{ RGBA, RGB }"))
+    GST_STATIC_CAPS (GST_VIDEO_CAPS_MAKE
+        ("{ RGBA, RGB, ARGB64, GRAY8, GRAY16_BE }"))
     );
 
 static GstStaticPadTemplate gst_pngdec_sink_pad_template =
@@ -406,15 +407,15 @@ gst_pngdec_caps_create_and_set (GstPngDec * pngdec)
 
   /* Get bits per channel */
   bpc = png_get_bit_depth (pngdec->png, pngdec->info);
-  if (bpc > 8) {
-    /* Add alpha channel if 16-bit depth */
-    png_set_add_alpha (pngdec->png, 0xffff, PNG_FILLER_BEFORE);
-    png_set_swap (pngdec->png);
-  }
 
   /* Get Color type */
   color_type = png_get_color_type (pngdec->png, pngdec->info);
 
+  /* Add alpha channel if 16-bit depth, but not for GRAY images */
+  if ((bpc > 8) && (color_type != PNG_COLOR_TYPE_GRAY)) {
+    png_set_add_alpha (pngdec->png, 0xffff, PNG_FILLER_BEFORE);
+    png_set_swap (pngdec->png);
+  }
 #if 0
   /* We used to have this HACK to reverse the outgoing bytes, but the problem
    * that originally required the hack seems to have been in ffmpegcolorspace's
@@ -424,11 +425,16 @@ gst_pngdec_caps_create_and_set (GstPngDec * pngdec)
     png_set_bgr (pngdec->png);
 #endif
 
-  /* Gray scale converted to RGB and upscaled to 8 bits */
+  /* Gray scale with alpha channel converted to RGB */
+  if (color_type == PNG_COLOR_TYPE_GRAY_ALPHA) {
+    GST_LOG_OBJECT (pngdec,
+        "converting grayscale png with alpha channel to RGB");
+    png_set_gray_to_rgb (pngdec->png);
+  }
+
+  /* Gray scale converted to upscaled to 8 bits */
   if ((color_type == PNG_COLOR_TYPE_GRAY_ALPHA) ||
       (color_type == PNG_COLOR_TYPE_GRAY)) {
-    GST_LOG_OBJECT (pngdec, "converting grayscale png to RGB");
-    png_set_gray_to_rgb (pngdec->png);
     if (bpc < 8) {              /* Convert to 8 bits */
       GST_LOG_OBJECT (pngdec, "converting grayscale image to 8 bits");
 #if PNG_LIBPNG_VER < 10400
@@ -466,7 +472,18 @@ gst_pngdec_caps_create_and_set (GstPngDec * pngdec)
       break;
     case PNG_COLOR_TYPE_RGB_ALPHA:
       GST_LOG_OBJECT (pngdec, "we have an alpha channel, depth is 32 bits");
-      format = GST_VIDEO_FORMAT_RGBA;
+      if (bpc == 1)
+        format = GST_VIDEO_FORMAT_RGBA;
+      else
+        format = GST_VIDEO_FORMAT_ARGB64;
+      break;
+    case PNG_COLOR_TYPE_GRAY:
+      GST_LOG_OBJECT (pngdec,
+          "We have an gray image, depth is 8 or 16 (be) bits");
+      if (bpc == 1)
+        format = GST_VIDEO_FORMAT_GRAY8;
+      else
+        format = GST_VIDEO_FORMAT_GRAY16_BE;
       break;
     default:
       GST_ELEMENT_ERROR (pngdec, STREAM, NOT_IMPLEMENTED, (NULL),

@@ -1984,7 +1984,8 @@ gst_deinterlace_chain (GstPad * pad, GstBuffer * buf)
       self->fields = self->new_fields;
     if (self->new_mode != -1)
       self->mode = self->new_mode;
-    self->new_mode = self->new_fields = -1;
+    self->new_mode = -1;
+    self->new_fields = -1;
 
     self->reconfigure = FALSE;
     GST_OBJECT_UNLOCK (self);

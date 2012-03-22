@@ -64,7 +64,7 @@ static GstStaticPadTemplate pngenc_sink_template =
 GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS (GST_VIDEO_CAPS_MAKE ("{ RGBA, RGB, GRAY8 }"))
+    GST_STATIC_CAPS (GST_VIDEO_CAPS_MAKE ("{ RGBA, RGB, GRAY8, GRAY16_BE }"))
     );
 
 /* static GstElementClass *parent_class = NULL; */
@@ -153,12 +153,19 @@ gst_pngenc_setcaps (GstPngEnc * pngenc, GstCaps * caps)
   switch (GST_VIDEO_INFO_FORMAT (&info)) {
     case GST_VIDEO_FORMAT_RGBA:
       pngenc->png_color_type = PNG_COLOR_TYPE_RGBA;
+      pngenc->depth = 8;
       break;
     case GST_VIDEO_FORMAT_RGB:
       pngenc->png_color_type = PNG_COLOR_TYPE_RGB;
+      pngenc->depth = 8;
       break;
     case GST_VIDEO_FORMAT_GRAY8:
       pngenc->png_color_type = PNG_COLOR_TYPE_GRAY;
+      pngenc->depth = 8;
+      break;
+    case GST_VIDEO_FORMAT_GRAY16_BE:
+      pngenc->png_color_type = PNG_COLOR_TYPE_GRAY;
+      pngenc->depth = 16;
       break;
     default:
       ret = FALSE;
@@ -314,7 +321,7 @@ gst_pngenc_chain (GstPad * pad, GstObject * parent, GstBuffer * buf)
       pngenc->png_info_ptr,
       pngenc->width,
       pngenc->height,
-      8,
+      pngenc->depth,
       pngenc->png_color_type,
       PNG_INTERLACE_NONE,
       PNG_COMPRESSION_TYPE_DEFAULT, PNG_FILTER_TYPE_DEFAULT);

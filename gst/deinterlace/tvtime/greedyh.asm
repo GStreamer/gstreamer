@@ -43,7 +43,7 @@ FUNCT_NAME_YUY2 (GstDeinterlaceMethodGreedyH *self, const guint8 * L1, const gui
   gint64 MotionSense;
   gint64 i;
   glong LoopCtr;
-  glong oldbx;
+  glong oldbx = 0;
 
   gint64 QW256B;
   gint64 LastAvg = 0;          //interp value from left qword
@@ -262,7 +262,7 @@ FUNCT_NAME_UYVY (GstDeinterlaceMethodGreedyH *self, const guint8 * L1, const gui
   gint64 MotionSense;
   gint64 i;
   glong LoopCtr;
-  glong oldbx;
+  glong oldbx = 0;
 
   gint64 QW256B;
   gint64 LastAvg = 0;          //interp value from left qword
