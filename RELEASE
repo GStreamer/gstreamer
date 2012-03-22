@@ -1,5 +1,5 @@
 
-Release notes for GStreamer Base Plug-ins 0.11.2 "Drool Pool"
+Release notes for GStreamer Base Plug-ins 0.11.3 "Axe and Smash"
         
 
 
@@ -8,10 +8,10 @@ in the 0.11.x unstable series of the
 GStreamer Base Plug-ins.
 
 
-The 0.11.x series is an unstable series targeted at developers and will
-eventually lead up to the stable 1.0 series.
+The 0.11.x series is an unstable series targeted at developers.
 It is not API or ABI compatible with the stable 0.10.x series.
 It is, however, parallel installable with the 0.10.x series.
+
 
 
 This module contains a set of reference plugins, base classes for other
@@ -23,18 +23,18 @@ their development.
 
 This module contains elements for, among others:
 
-  device plugins: x(v)imagesink, alsa, cdparanoia
+  device plugins: x(v)imagesink, alsa, v4lsrc, cdparanoia
   containers: ogg
   codecs: vorbis, theora
   text: textoverlay, subparse
-  sources: audiotestsrc, videotestsrc, giosrc
+  sources: audiotestsrc, videotestsrc, gnomevfssrc, giosrc
   network: tcp
   typefind functions
   audio processing: audioconvert, adder, audiorate, audioresample, volume
   visualisation: libvisual
   video processing: videoconvert
   aggregate elements: uridecodebin, playbin, decodebin, encodebin
-  libraries: app, audio, cdda, fft, interfaces, pbutils, riff, rtp, rtsp, sdp, tag, video
+  libraries: app, audio, cdda, fft, interfaces, netbuffer, pbutils, riff, rtp, rtsp, sdp, tag, video
 
 
 Other modules containing plug-ins are:
@@ -55,24 +55,17 @@ contains a set of less supported plug-ins that haven't passed the
 
 Features of this release
     
-      * Parallel installability with 0.10.x series
       * Many API cleanups
       * Ported to new 0.11 core API changes
-      * Use new GstSample for snapshots
-      * Improved video filter base class
-      * New multichannel caps with mask
-      * Port network elements to GIO
       * Many fixes and improvements
+      * video: Improve video frame map/unmap
+      * theora: Improve video negotiation
+      * Various performance improvements
 
 Bugs fixed in this release
      
-      * 651222 : [0.11] [playbin(2)/uridecodebin] " connection-speed " should be a guint64 instead of a guint
-      * 656264 : tag: no-return-in-nonvoid-function compiler warning gstxmptag.c:178
-      * 659692 : [0.11] circular dependency between libgstpbutils and libgstaudio
-      * 661911 : Audiotestsrc segfaults when trying to changing 'wave' parameter
-      * 662607 : printf format mismatch causes compiler warnings
-      * 663689 : Missing DiscoverInfo API in 0.11
-      * 669328 : [0.11] Remove deprecated theoraenc properties
+      * 668343 : [0.11] - segfault when using missing plugin support in 0.11
+      * 668542 : [0.11] EncodingProfileClass is missing from GstPbutils-0.11.gir
 
 Download
 
@@ -102,53 +95,20 @@ Applications
 Contributors to this release
     
       * Alessandro Decina
-      * Alexey Fisher
-      * Andoni Morales Alastruey
-      * Andy Wingo
-      * Anssi Hannula
-      * Benjamin Otte
-      * Brian Cameron
-      * Christian Fredrik Kalager Schaller
-      * Colin Walters
-      * Damien Lespiau
       * David Schleef
       * Edward Hervey
-      * Felipe Contreras
-      * George Kiagiadakis
-      * Havard Graff
-      * Idar Tollefsen
-      * Jan Schmidt
-      * Jason DeRose
+      * Holger Kaelberer
       * Jonathan Matthew
-      * Josep Torra
-      * Kipp Cannon
       * Mark Nauwelaerts
-      * Mart Raudsepp
-      * Matej Knopp
-      * Mersad Jelacic
-      * Michael Smith
-      * Nicolas Dufresne
+      * Ognyan Tonchev
       * Oleksij Rempel (Alexey Fisher)
-      * Olivier Aubert
-      * Olivier Crête
-      * Pascal Buhler
-      * Philip Flarsheim
-      * Philip Jägenstedt
+      * Peter Korsgaard
       * Philippe Normand
-      * Piotr Fusik
-      * René Stadler
-      * Reynaldo H. Verdejo Pinochet
-      * Robert Swain
-      * Ryan Lortie
       * Sebastian Dröge
-      * Stefan Kost
+      * Sreerenj Balachandran
       * Stefan Sauer
-      * Thiago Santos
-      * Thibault Saunier
-      * Thomas Vander Stichele
       * Tim-Philipp Müller
       * Vincent Penquerc'h
+      * Vincent Untz
       * Wim Taymans
-      * Youness Alaoui
-      * Zaheer Abbas Merali
  

@@ -87,8 +87,6 @@ void gst_orc_splat_s16 (gint8 * ORC_RESTRICT d1, int p1, int n);
 void gst_orc_splat_u16 (guint8 * ORC_RESTRICT d1, int p1, int n);
 void gst_orc_splat_u32 (guint8 * ORC_RESTRICT d1, int p1, int n);
 
-void gst_videotestsrc_orc_init (void);
-
 
 /* begin Orc C target preamble */
 #define ORC_CLAMP(x,a,b) ((x)<(a) ? (a) : ((x)>(b) ? (b) : (x)))
@@ -182,14 +180,32 @@ _backup_gst_orc_splat_u8 (OrcExecutor * ORC_RESTRICT ex)
 
 }
 
-static OrcProgram *_orc_program_gst_orc_splat_u8;
 void
 gst_orc_splat_u8 (guint8 * ORC_RESTRICT d1, int p1, int n)
 {
   OrcExecutor _ex, *ex = &_ex;
-  OrcProgram *p = _orc_program_gst_orc_splat_u8;
+  static volatile int p_inited = 0;
+  static OrcProgram *p = 0;
   void (*func) (OrcExecutor *);
 
+  if (!p_inited) {
+    orc_once_mutex_lock ();
+    if (!p_inited) {
+
+      p = orc_program_new ();
+      orc_program_set_name (p, "gst_orc_splat_u8");
+      orc_program_set_backup_function (p, _backup_gst_orc_splat_u8);
+      orc_program_add_destination (p, 1, "d1");
+      orc_program_add_parameter (p, 1, "p1");
+
+      orc_program_append_2 (p, "copyb", 0, ORC_VAR_D1, ORC_VAR_P1, ORC_VAR_D1,
+          ORC_VAR_D1);
+
+      orc_program_compile (p);
+    }
+    p_inited = TRUE;
+    orc_once_mutex_unlock ();
+  }
   ex->program = p;
 
   ex->n = n;
@@ -250,14 +266,32 @@ _backup_gst_orc_splat_s16 (OrcExecutor * ORC_RESTRICT ex)
 
 }
 
-static OrcProgram *_orc_program_gst_orc_splat_s16;
 void
 gst_orc_splat_s16 (gint8 * ORC_RESTRICT d1, int p1, int n)
 {
   OrcExecutor _ex, *ex = &_ex;
-  OrcProgram *p = _orc_program_gst_orc_splat_s16;
+  static volatile int p_inited = 0;
+  static OrcProgram *p = 0;
   void (*func) (OrcExecutor *);
 
+  if (!p_inited) {
+    orc_once_mutex_lock ();
+    if (!p_inited) {
+
+      p = orc_program_new ();
+      orc_program_set_name (p, "gst_orc_splat_s16");
+      orc_program_set_backup_function (p, _backup_gst_orc_splat_s16);
+      orc_program_add_destination (p, 2, "d1");
+      orc_program_add_parameter (p, 2, "p1");
+
+      orc_program_append_2 (p, "copyw", 0, ORC_VAR_D1, ORC_VAR_P1, ORC_VAR_D1,
+          ORC_VAR_D1);
+
+      orc_program_compile (p);
+    }
+    p_inited = TRUE;
+    orc_once_mutex_unlock ();
+  }
   ex->program = p;
 
   ex->n = n;
@@ -318,14 +352,32 @@ _backup_gst_orc_splat_u16 (OrcExecutor * ORC_RESTRICT ex)
 
 }
 
-static OrcProgram *_orc_program_gst_orc_splat_u16;
 void
 gst_orc_splat_u16 (guint8 * ORC_RESTRICT d1, int p1, int n)
 {
   OrcExecutor _ex, *ex = &_ex;
-  OrcProgram *p = _orc_program_gst_orc_splat_u16;
+  static volatile int p_inited = 0;
+  static OrcProgram *p = 0;
   void (*func) (OrcExecutor *);
 
+  if (!p_inited) {
+    orc_once_mutex_lock ();
+    if (!p_inited) {
+
+      p = orc_program_new ();
+      orc_program_set_name (p, "gst_orc_splat_u16");
+      orc_program_set_backup_function (p, _backup_gst_orc_splat_u16);
+      orc_program_add_destination (p, 2, "d1");
+      orc_program_add_parameter (p, 2, "p1");
+
+      orc_program_append_2 (p, "copyw", 0, ORC_VAR_D1, ORC_VAR_P1, ORC_VAR_D1,
+          ORC_VAR_D1);
+
+      orc_program_compile (p);
+    }
+    p_inited = TRUE;
+    orc_once_mutex_unlock ();
+  }
   ex->program = p;
 
   ex->n = n;
@@ -386,14 +438,32 @@ _backup_gst_orc_splat_u32 (OrcExecutor * ORC_RESTRICT ex)
 
 }
 
-static OrcProgram *_orc_program_gst_orc_splat_u32;
 void
 gst_orc_splat_u32 (guint8 * ORC_RESTRICT d1, int p1, int n)
 {
   OrcExecutor _ex, *ex = &_ex;
-  OrcProgram *p = _orc_program_gst_orc_splat_u32;
+  static volatile int p_inited = 0;
+  static OrcProgram *p = 0;
   void (*func) (OrcExecutor *);
 
+  if (!p_inited) {
+    orc_once_mutex_lock ();
+    if (!p_inited) {
+
+      p = orc_program_new ();
+      orc_program_set_name (p, "gst_orc_splat_u32");
+      orc_program_set_backup_function (p, _backup_gst_orc_splat_u32);
+      orc_program_add_destination (p, 4, "d1");
+      orc_program_add_parameter (p, 4, "p1");
+
+      orc_program_append_2 (p, "copyl", 0, ORC_VAR_D1, ORC_VAR_P1, ORC_VAR_D1,
+          ORC_VAR_D1);
+
+      orc_program_compile (p);
+    }
+    p_inited = TRUE;
+    orc_once_mutex_unlock ();
+  }
   ex->program = p;
 
   ex->n = n;
@@ -404,79 +474,3 @@ gst_orc_splat_u32 (guint8 * ORC_RESTRICT d1, int p1, int n)
   func (ex);
 }
 #endif
-
-
-void
-gst_videotestsrc_orc_init (void)
-{
-#ifndef DISABLE_ORC
-  {
-    /* gst_orc_splat_u8 */
-    OrcProgram *p;
-
-    p = orc_program_new ();
-    orc_program_set_name (p, "gst_orc_splat_u8");
-    orc_program_set_backup_function (p, _backup_gst_orc_splat_u8);
-    orc_program_add_destination (p, 1, "d1");
-    orc_program_add_parameter (p, 1, "p1");
-
-    orc_program_append_2 (p, "copyb", 0, ORC_VAR_D1, ORC_VAR_P1, ORC_VAR_D1,
-        ORC_VAR_D1);
-
-    orc_program_compile (p);
-
-    _orc_program_gst_orc_splat_u8 = p;
-  }
-  {
-    /* gst_orc_splat_s16 */
-    OrcProgram *p;
-
-    p = orc_program_new ();
-    orc_program_set_name (p, "gst_orc_splat_s16");
-    orc_program_set_backup_function (p, _backup_gst_orc_splat_s16);
-    orc_program_add_destination (p, 2, "d1");
-    orc_program_add_parameter (p, 2, "p1");
-
-    orc_program_append_2 (p, "copyw", 0, ORC_VAR_D1, ORC_VAR_P1, ORC_VAR_D1,
-        ORC_VAR_D1);
-
-    orc_program_compile (p);
-
-    _orc_program_gst_orc_splat_s16 = p;
-  }
-  {
-    /* gst_orc_splat_u16 */
-    OrcProgram *p;
-
-    p = orc_program_new ();
-    orc_program_set_name (p, "gst_orc_splat_u16");
-    orc_program_set_backup_function (p, _backup_gst_orc_splat_u16);
-    orc_program_add_destination (p, 2, "d1");
-    orc_program_add_parameter (p, 2, "p1");
-
-    orc_program_append_2 (p, "copyw", 0, ORC_VAR_D1, ORC_VAR_P1, ORC_VAR_D1,
-        ORC_VAR_D1);
-
-    orc_program_compile (p);
-
-    _orc_program_gst_orc_splat_u16 = p;
-  }
-  {
-    /* gst_orc_splat_u32 */
-    OrcProgram *p;
-
-    p = orc_program_new ();
-    orc_program_set_name (p, "gst_orc_splat_u32");
-    orc_program_set_backup_function (p, _backup_gst_orc_splat_u32);
-    orc_program_add_destination (p, 4, "d1");
-    orc_program_add_parameter (p, 4, "p1");
-
-    orc_program_append_2 (p, "copyl", 0, ORC_VAR_D1, ORC_VAR_P1, ORC_VAR_D1,
-        ORC_VAR_D1);
-
-    orc_program_compile (p);
-
-    _orc_program_gst_orc_splat_u32 = p;
-  }
-#endif
-}

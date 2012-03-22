@@ -24,8 +24,10 @@ GstPipeline GstChildProxy
 GstPlayBaseBin GstChildProxy
 GstPlayBin GstChildProxy
 GstPlayBin GstChildProxy GstStreamVolume
+GstPlayBin GstChildProxy GstStreamVolume GstVideoOverlay GstNavigation GstColorBalance
 GstPlayBin2 GstChildProxy GstStreamVolume
 GstPlaySink GstChildProxy
+GstPlaySink GstChildProxy GstStreamVolume GstVideoOverlay GstNavigation GstColorBalance
 GstSubtitleOverlay GstChildProxy
 GstTheoraEnc GstPreset
 GstURIDecodeBin GstChildProxy

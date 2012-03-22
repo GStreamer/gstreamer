@@ -53,6 +53,9 @@
 /* system wide data directory */
 #define GST_DATADIR PREFIX "\\share"
 
+/* set to disable libxml2-dependent code in subparse */
+#undef GST_DISABLE_XML
+
 /* Extra platform specific plugin suffix */
 #undef GST_EXTRA_MODULE_SUFFIX
 
@@ -78,13 +81,13 @@
 #define GST_MAJORMINOR "0.11"
 
 /* package name in plugins */
-#define GST_PACKAGE_NAME "GStreamer Base Plug-ins git"
+#define GST_PACKAGE_NAME "GStreamer Base Plug-ins source release"
 
 /* package origin */
 #define GST_PACKAGE_ORIGIN "Unknown package origin"
 
 /* GStreamer package release date/time for plugins as YYYY-MM-DD */
-#define GST_PACKAGE_RELEASE_DATETIME "2012-02-17T22:57Z"
+#define GST_PACKAGE_RELEASE_DATETIME "2012-03-22"
 
 /* Define to enable ALSA (used by alsa). */
 #undef HAVE_ALSA
@@ -148,9 +151,6 @@
 
 /* Define to 1 if you have the <dlfcn.h> header file. */
 #undef HAVE_DLFCN_H
-
-/* Define to 1 if you have the <emmintrin.h> header file. */
-#undef HAVE_EMMINTRIN_H
 
 /* Define to enable building of experimental plug-ins. */
 #undef HAVE_EXPERIMENTAL
@@ -272,9 +272,6 @@
 /* Define to enable X libraries and plugins (used by ximagesink). */
 #undef HAVE_X
 
-/* Define to 1 if you have the <xmmintrin.h> header file. */
-#undef HAVE_XMMINTRIN_H
-
 /* Define to enable X Shared Memory extension. */
 #undef HAVE_XSHM
 
@@ -316,7 +313,7 @@
 #define PACKAGE_NAME "GStreamer Base Plug-ins"
 
 /* Define to the full name and version of this package. */
-#define PACKAGE_STRING "GStreamer Base Plug-ins 0.11.2.1"
+#define PACKAGE_STRING "GStreamer Base Plug-ins 0.11.3"
 
 /* Define to the one symbol short name of this package. */
 #define PACKAGE_TARNAME "gst-plugins-base"
@@ -325,7 +322,7 @@
 #undef PACKAGE_URL
 
 /* Define to the version of this package. */
-#define PACKAGE_VERSION "0.11.2.1"
+#define PACKAGE_VERSION "0.11.3"
 
 /* directory where plugins are located */
 #ifdef _DEBUG
@@ -356,7 +353,7 @@
 #undef USE_TREMOLO
 
 /* Version number of package */
-#define VERSION "0.11.2.1"
+#define VERSION "0.11.3"
 
 /* Define WORDS_BIGENDIAN to 1 if your processor stores words with the most
    significant byte first (like Motorola and SPARC, unlike Intel). */

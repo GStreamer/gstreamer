@@ -36,6 +36,17 @@ A wide range of video and audio decoders, encoders, and filters are included.
 
  <release>
   <Version>
+   <revision>0.11.3</revision>
+   <branch>0.11</branch>
+   <name>Axe and Smash</name>
+   <created>2012-03-22</created>
+   <file-release rdf:resource="http://gstreamer.freedesktop.org/src/gst-plugins-base/gst-plugins-base-0.11.3.tar.bz2" />
+   <file-release rdf:resource="http://gstreamer.freedesktop.org/src/gst-plugins-base/gst-plugins-base-0.11.3.tar.gz" />
+  </Version>
+ </release>
+
+ <release>
+  <Version>
    <revision>0.11.2</revision>
    <branch>0.11</branch>
    <name>Drool Pool</name>

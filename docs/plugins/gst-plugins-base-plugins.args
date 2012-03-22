@@ -1195,7 +1195,7 @@
 <FLAGS>rw</FLAGS>
 <NICK>Flags</NICK>
 <BLURB>Flags to control behaviour.</BLURB>
-<DEFAULT>Render the video stream|Render the audio stream|Render subtitles|Use software volume</DEFAULT>
+<DEFAULT>Render the video stream|Render the audio stream|Render subtitles|Use software volume|Use software color balance</DEFAULT>
 </ARG>
 
 <ARG>
@@ -3705,7 +3705,7 @@
 <FLAGS>rw</FLAGS>
 <NICK>Flags</NICK>
 <BLURB>Flags to control behaviour.</BLURB>
-<DEFAULT>Render the video stream|Render the audio stream|Render subtitles|Use software volume</DEFAULT>
+<DEFAULT>Render the video stream|Render the audio stream|Render subtitles|Use software volume|Use software color balance</DEFAULT>
 </ARG>
 
 <ARG>

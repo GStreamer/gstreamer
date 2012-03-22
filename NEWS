@@ -1,4 +1,17 @@
-This is GStreamer Base Plug-ins 0.11.2, "Drool Pool"
+This is GStreamer Base Plug-ins 0.11.3, "Axe and Smash"
+
+New in 0.11.3:
+
+      * Many fixes and improvements
+      * video: Improve video frame map/unmap
+      * theora: Improve video negotiation
+      * Various performance improvements
+
+Bugs fixed in this release
+
+      * 668343 : [0.11] - segfault when using missing plugin support in 0.11
+      * 668542 : [0.11] EncodingProfileClass is missing from GstPbutils-0.11.gir
+
 
 New in 0.11.2:
 
