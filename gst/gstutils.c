@@ -2917,13 +2917,15 @@ gst_pad_query_caps (GstPad * pad, GstCaps * filter)
   g_return_val_if_fail (GST_IS_PAD (pad), NULL);
   g_return_val_if_fail (filter == NULL || GST_IS_CAPS (filter), NULL);
 
-  GST_CAT_DEBUG_OBJECT (GST_CAT_CAPS, pad, "get pad caps");
+  GST_CAT_DEBUG_OBJECT (GST_CAT_CAPS, pad,
+      "get pad caps with filter %" GST_PTR_FORMAT, filter);
 
   query = gst_query_new_caps (filter);
   if (gst_pad_query (pad, query)) {
     gst_query_parse_caps_result (query, &result);
     gst_caps_ref (result);
-    GST_DEBUG_OBJECT (pad, "query returned %" GST_PTR_FORMAT, result);
+    GST_CAT_DEBUG_OBJECT (GST_CAT_CAPS, pad,
+        "query returned %" GST_PTR_FORMAT, result);
   } else if (filter) {
     result = gst_caps_ref (filter);
   } else {
@@ -2960,11 +2962,15 @@ gst_pad_peer_query_caps (GstPad * pad, GstCaps * filter)
   g_return_val_if_fail (GST_IS_PAD (pad), NULL);
   g_return_val_if_fail (filter == NULL || GST_IS_CAPS (filter), NULL);
 
+  GST_CAT_DEBUG_OBJECT (GST_CAT_CAPS, pad,
+      "get pad peer caps with filter %" GST_PTR_FORMAT, filter);
+
   query = gst_query_new_caps (filter);
   if (gst_pad_peer_query (pad, query)) {
     gst_query_parse_caps_result (query, &result);
     gst_caps_ref (result);
-    GST_DEBUG_OBJECT (pad, "peer query returned %" GST_PTR_FORMAT, result);
+    GST_CAT_DEBUG_OBJECT (GST_CAT_CAPS, pad,
+        "peer query returned %" GST_PTR_FORMAT, result);
   } else if (filter) {
     result = gst_caps_ref (filter);
   } else {
