@@ -223,6 +223,9 @@ check_qtmux_pad (GstStaticPadTemplate * srctemplate, const gchar * sinkname,
   /* at least expect ftyp, mdat header, buffer chunk and moov */
   fail_unless (num_buffers >= 4);
 
+  /* clean up first to clear any pending refs in sticky caps */
+  cleanup_qtmux (qtmux, sinkname);
+
   for (i = 0; i < num_buffers; ++i) {
     outbuffer = GST_BUFFER (buffers->data);
     fail_if (outbuffer == NULL);
@@ -262,8 +265,6 @@ check_qtmux_pad (GstStaticPadTemplate * srctemplate, const gchar * sinkname,
 
   g_list_free (buffers);
   buffers = NULL;
-
-  cleanup_qtmux (qtmux, sinkname);
 }
 
 static void
@@ -310,6 +311,9 @@ check_qtmux_pad_fragmented (GstStaticPadTemplate * srctemplate,
   /* at least expect ftyp, moov, moof, mdat header, buffer chunk
    * and optionally mfra */
   fail_unless (num_buffers >= 5);
+
+  /* clean up first to clear any pending refs in sticky caps */
+  cleanup_qtmux (qtmux, sinkname);
 
   for (i = 0; i < num_buffers; ++i) {
     outbuffer = GST_BUFFER (buffers->data);
@@ -360,8 +364,6 @@ check_qtmux_pad_fragmented (GstStaticPadTemplate * srctemplate,
 
   g_list_free (buffers);
   buffers = NULL;
-
-  cleanup_qtmux (qtmux, sinkname);
 }
 
 /* dts-method dd */
