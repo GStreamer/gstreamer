@@ -108,6 +108,7 @@ GST_START_TEST (test_32_lp_0hz)
   gint i;
   GstMapInfo map;
   GList *node;
+  GstSegment segment;
 
   audiowsinclimit = setup_audiowsinclimit ();
   /* Set to lowpass */
@@ -127,6 +128,10 @@ GST_START_TEST (test_32_lp_0hz)
   for (i = 0; i < 128; i++)
     in[i] = 1.0;
   gst_buffer_unmap (inbuffer, &map);
+
+  /* ensure segment (format) properly setup */
+  gst_segment_init (&segment, GST_FORMAT_TIME);
+  fail_unless (gst_pad_push_event (mysrcpad, gst_event_new_segment (&segment)));
 
   caps = gst_caps_from_string (AUDIO_WSINC_LIMIT_CAPS_STRING_32);
   gst_pad_set_caps (mysrcpad, caps);
@@ -173,6 +178,7 @@ GST_START_TEST (test_32_lp_22050hz)
   gint i;
   GstMapInfo map;
   GList *node;
+  GstSegment segment;
 
   audiowsinclimit = setup_audiowsinclimit ();
   /* Set to lowpass */
@@ -193,6 +199,10 @@ GST_START_TEST (test_32_lp_22050hz)
     in[i + 1] = -1.0;
   }
   gst_buffer_unmap (inbuffer, &map);
+
+  /* ensure segment (format) properly setup */
+  gst_segment_init (&segment, GST_FORMAT_TIME);
+  fail_unless (gst_pad_push_event (mysrcpad, gst_event_new_segment (&segment)));
 
   caps = gst_caps_from_string (AUDIO_WSINC_LIMIT_CAPS_STRING_32);
   gst_pad_set_caps (mysrcpad, caps);
@@ -239,6 +249,7 @@ GST_START_TEST (test_32_hp_0hz)
   gint i;
   GstMapInfo map;
   GList *node;
+  GstSegment segment;
 
   audiowsinclimit = setup_audiowsinclimit ();
   /* Set to highpass */
@@ -257,6 +268,10 @@ GST_START_TEST (test_32_hp_0hz)
   for (i = 0; i < 128; i++)
     in[i] = 1.0;
   gst_buffer_unmap (inbuffer, &map);
+
+  /* ensure segment (format) properly setup */
+  gst_segment_init (&segment, GST_FORMAT_TIME);
+  fail_unless (gst_pad_push_event (mysrcpad, gst_event_new_segment (&segment)));
 
   caps = gst_caps_from_string (AUDIO_WSINC_LIMIT_CAPS_STRING_32);
   gst_pad_set_caps (mysrcpad, caps);
@@ -303,6 +318,7 @@ GST_START_TEST (test_32_hp_22050hz)
   gint i;
   GstMapInfo map;
   GList *node;
+  GstSegment segment;
 
   audiowsinclimit = setup_audiowsinclimit ();
   /* Set to highpass */
@@ -323,6 +339,10 @@ GST_START_TEST (test_32_hp_22050hz)
     in[i + 1] = -1.0;
   }
   gst_buffer_unmap (inbuffer, &map);
+
+  /* ensure segment (format) properly setup */
+  gst_segment_init (&segment, GST_FORMAT_TIME);
+  fail_unless (gst_pad_push_event (mysrcpad, gst_event_new_segment (&segment)));
 
   caps = gst_caps_from_string (AUDIO_WSINC_LIMIT_CAPS_STRING_32);
   gst_pad_set_caps (mysrcpad, caps);
@@ -368,6 +388,7 @@ GST_START_TEST (test_32_small_buffer)
   gfloat *in;
   gint i;
   GstMapInfo map;
+  GstSegment segment;
 
   audiowsinclimit = setup_audiowsinclimit ();
   /* Set to lowpass */
@@ -386,6 +407,10 @@ GST_START_TEST (test_32_small_buffer)
   for (i = 0; i < 20; i++)
     in[i] = 1.0;
   gst_buffer_unmap (inbuffer, &map);
+
+  /* ensure segment (format) properly setup */
+  gst_segment_init (&segment, GST_FORMAT_TIME);
+  fail_unless (gst_pad_push_event (mysrcpad, gst_event_new_segment (&segment)));
 
   caps = gst_caps_from_string (AUDIO_WSINC_LIMIT_CAPS_STRING_32);
   gst_pad_set_caps (mysrcpad, caps);
@@ -417,6 +442,7 @@ GST_START_TEST (test_64_lp_0hz)
   gint i;
   GstMapInfo map;
   GList *node;
+  GstSegment segment;
 
   audiowsinclimit = setup_audiowsinclimit ();
   /* Set to lowpass */
@@ -436,6 +462,10 @@ GST_START_TEST (test_64_lp_0hz)
   for (i = 0; i < 128; i++)
     in[i] = 1.0;
   gst_buffer_unmap (inbuffer, &map);
+
+  /* ensure segment (format) properly setup */
+  gst_segment_init (&segment, GST_FORMAT_TIME);
+  fail_unless (gst_pad_push_event (mysrcpad, gst_event_new_segment (&segment)));
 
   caps = gst_caps_from_string (AUDIO_WSINC_LIMIT_CAPS_STRING_64);
   gst_pad_set_caps (mysrcpad, caps);
@@ -482,6 +512,7 @@ GST_START_TEST (test_64_lp_22050hz)
   gint i;
   GstMapInfo map;
   GList *node;
+  GstSegment segment;
 
   audiowsinclimit = setup_audiowsinclimit ();
   /* Set to lowpass */
@@ -502,6 +533,10 @@ GST_START_TEST (test_64_lp_22050hz)
     in[i + 1] = -1.0;
   }
   gst_buffer_unmap (inbuffer, &map);
+
+  /* ensure segment (format) properly setup */
+  gst_segment_init (&segment, GST_FORMAT_TIME);
+  fail_unless (gst_pad_push_event (mysrcpad, gst_event_new_segment (&segment)));
 
   caps = gst_caps_from_string (AUDIO_WSINC_LIMIT_CAPS_STRING_64);
   gst_pad_set_caps (mysrcpad, caps);
@@ -548,6 +583,7 @@ GST_START_TEST (test_64_hp_0hz)
   gint i;
   GstMapInfo map;
   GList *node;
+  GstSegment segment;
 
   audiowsinclimit = setup_audiowsinclimit ();
   /* Set to highpass */
@@ -566,6 +602,10 @@ GST_START_TEST (test_64_hp_0hz)
   for (i = 0; i < 128; i++)
     in[i] = 1.0;
   gst_buffer_unmap (inbuffer, &map);
+
+  /* ensure segment (format) properly setup */
+  gst_segment_init (&segment, GST_FORMAT_TIME);
+  fail_unless (gst_pad_push_event (mysrcpad, gst_event_new_segment (&segment)));
 
   caps = gst_caps_from_string (AUDIO_WSINC_LIMIT_CAPS_STRING_64);
   gst_pad_set_caps (mysrcpad, caps);
@@ -612,6 +652,7 @@ GST_START_TEST (test_64_hp_22050hz)
   gint i;
   GstMapInfo map;
   GList *node;
+  GstSegment segment;
 
   audiowsinclimit = setup_audiowsinclimit ();
   /* Set to highpass */
@@ -632,6 +673,10 @@ GST_START_TEST (test_64_hp_22050hz)
     in[i + 1] = -1.0;
   }
   gst_buffer_unmap (inbuffer, &map);
+
+  /* ensure segment (format) properly setup */
+  gst_segment_init (&segment, GST_FORMAT_TIME);
+  fail_unless (gst_pad_push_event (mysrcpad, gst_event_new_segment (&segment)));
 
   caps = gst_caps_from_string (AUDIO_WSINC_LIMIT_CAPS_STRING_64);
   gst_pad_set_caps (mysrcpad, caps);
@@ -677,6 +722,7 @@ GST_START_TEST (test_64_small_buffer)
   gdouble *in;
   gint i;
   GstMapInfo map;
+  GstSegment segment;
 
   audiowsinclimit = setup_audiowsinclimit ();
   /* Set to lowpass */
@@ -695,6 +741,10 @@ GST_START_TEST (test_64_small_buffer)
   for (i = 0; i < 20; i++)
     in[i] = 1.0;
   gst_buffer_unmap (inbuffer, &map);
+
+  /* ensure segment (format) properly setup */
+  gst_segment_init (&segment, GST_FORMAT_TIME);
+  fail_unless (gst_pad_push_event (mysrcpad, gst_event_new_segment (&segment)));
 
   caps = gst_caps_from_string (AUDIO_WSINC_LIMIT_CAPS_STRING_64);
   gst_pad_set_caps (mysrcpad, caps);

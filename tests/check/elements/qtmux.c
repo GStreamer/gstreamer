@@ -195,12 +195,17 @@ check_qtmux_pad (GstStaticPadTemplate * srctemplate, const gchar * sinkname,
   guint8 data0[12] = "\000\000\000\024ftypqt  ";
   guint8 data1[8] = "\000\000\000\001mdat";
   guint8 data2[4] = "moov";
+  GstSegment segment;
 
   qtmux = setup_qtmux (srctemplate, sinkname);
   g_object_set (qtmux, "dts-method", dts_method, NULL);
   fail_unless (gst_element_set_state (qtmux,
           GST_STATE_PLAYING) == GST_STATE_CHANGE_SUCCESS,
       "could not set to playing");
+
+  /* ensure segment (format) properly setup */
+  gst_segment_init (&segment, GST_FORMAT_TIME);
+  fail_unless (gst_pad_push_event (mysrcpad, gst_event_new_segment (&segment)));
 
   inbuffer = gst_buffer_new_and_alloc (1);
   caps = gst_caps_copy (gst_pad_get_pad_template_caps (mysrcpad));
@@ -275,6 +280,7 @@ check_qtmux_pad_fragmented (GstStaticPadTemplate * srctemplate,
   guint8 data2[4] = "moov";
   guint8 data3[4] = "moof";
   guint8 data4[4] = "mfra";
+  GstSegment segment;
 
   qtmux = setup_qtmux (srctemplate, sinkname);
   g_object_set (qtmux, "dts-method", dts_method, NULL);
@@ -283,6 +289,10 @@ check_qtmux_pad_fragmented (GstStaticPadTemplate * srctemplate,
   fail_unless (gst_element_set_state (qtmux,
           GST_STATE_PLAYING) == GST_STATE_CHANGE_SUCCESS,
       "could not set to playing");
+
+  /* ensure segment (format) properly setup */
+  gst_segment_init (&segment, GST_FORMAT_TIME);
+  fail_unless (gst_pad_push_event (mysrcpad, gst_event_new_segment (&segment)));
 
   inbuffer = gst_buffer_new_and_alloc (1);
   caps = gst_caps_copy (gst_pad_get_pad_template_caps (mysrcpad));
@@ -500,12 +510,17 @@ GST_START_TEST (test_reuse)
   GstElement *qtmux = setup_qtmux (&srcvideotemplate, "video_%u");
   GstBuffer *inbuffer;
   GstCaps *caps;
+  GstSegment segment;
 
   gst_element_set_state (qtmux, GST_STATE_PLAYING);
   gst_element_set_state (qtmux, GST_STATE_NULL);
   gst_element_set_state (qtmux, GST_STATE_PLAYING);
   gst_pad_set_active (mysrcpad, TRUE);
   gst_pad_set_active (mysinkpad, TRUE);
+
+  /* ensure segment (format) properly setup */
+  gst_segment_init (&segment, GST_FORMAT_TIME);
+  fail_unless (gst_pad_push_event (mysrcpad, gst_event_new_segment (&segment)));
 
   inbuffer = gst_buffer_new_and_alloc (1);
   fail_unless (inbuffer != NULL);
@@ -774,6 +789,7 @@ test_average_bitrate_custom (const gchar * elementname,
   gint64 durations[] = { GST_SECOND * 3, GST_SECOND * 5, GST_SECOND * 2 };
   gint64 total_bytes = 0;
   GstClockTime total_duration = 0;
+  GstSegment segment;
 
   location = g_strdup_printf ("%s/%s-%d", g_get_tmp_dir (), "qtmuxtest",
       g_random_int ());
@@ -792,6 +808,10 @@ test_average_bitrate_custom (const gchar * elementname,
   fail_unless (gst_element_set_state (qtmux,
           GST_STATE_PLAYING) == GST_STATE_CHANGE_SUCCESS,
       "could not set to playing");
+
+  /* ensure segment (format) properly setup */
+  gst_segment_init (&segment, GST_FORMAT_TIME);
+  fail_unless (gst_pad_push_event (mysrcpad, gst_event_new_segment (&segment)));
 
   for (i = 0; i < 3; i++) {
     inbuffer = gst_buffer_new_and_alloc (bytes[i]);
