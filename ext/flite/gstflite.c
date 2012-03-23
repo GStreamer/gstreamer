@@ -24,7 +24,6 @@
 #include <gst/gst.h>
 #include <flite/flite.h>
 
-GType gst_flite_synth_get_type (void);
 GType gst_flite_test_src_get_type (void);
 
 
@@ -33,8 +32,6 @@ plugin_init (GstPlugin * plugin)
 {
   flite_init ();
 
-//  gst_element_register (plugin, "flitesynth", GST_RANK_NONE,
-//      gst_flite_synth_get_type ());
   gst_element_register (plugin, "flitetestsrc", GST_RANK_NONE,
       gst_flite_test_src_get_type ());
 

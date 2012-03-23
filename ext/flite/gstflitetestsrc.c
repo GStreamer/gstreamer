@@ -298,9 +298,8 @@ gst_flite_test_src_get_times (GstBaseSrc * basesrc, GstBuffer * buffer,
 }
 #endif
 
+/* there is no header for libflite_cmu_us_kal */
 cst_voice *register_cmu_us_kal ();
-
-
 
 static gboolean
 gst_flite_test_src_start (GstBaseSrc * basesrc)
