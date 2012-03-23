@@ -687,7 +687,7 @@ gst_image_freeze_sink_chain (GstPad * pad, GstObject * parent,
   gst_pad_start_task (self->srcpad, (GstTaskFunction) gst_image_freeze_src_loop,
       self->srcpad);
   g_mutex_unlock (&self->lock);
-  return GST_FLOW_OK;
+  return GST_FLOW_EOS;
 }
 
 static void
