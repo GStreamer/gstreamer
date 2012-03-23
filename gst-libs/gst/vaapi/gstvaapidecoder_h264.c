@@ -2279,6 +2279,10 @@ decode_buffer(GstVaapiDecoderH264 *decoder, GstBuffer *buffer)
             /* skip all Access Unit NALs */
             status = GST_VAAPI_DECODER_STATUS_SUCCESS;
             break;
+        case GST_H264_NAL_FILLER_DATA:
+            /* skip all Filler Data NALs */
+            status = GST_VAAPI_DECODER_STATUS_SUCCESS;
+            break;
         default:
             GST_DEBUG("unsupported NAL unit type %d", nalu.type);
             status = GST_VAAPI_DECODER_STATUS_ERROR_BITSTREAM_PARSER;
