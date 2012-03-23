@@ -43,7 +43,6 @@ bus_handler (GstBus * bus, GstMessage * message, gpointer data)
       g_error ("error from %s: %s (%s)\n",
           GST_ELEMENT_NAME (GST_MESSAGE_SRC (message)), gerror->message,
           GST_STR_NULL (debug));
-      gst_message_unref (message);
       g_error_free (gerror);
       g_free (debug);
       g_main_loop_quit (loop);
