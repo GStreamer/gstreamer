@@ -61,7 +61,7 @@ struct _GstShmSink
   gboolean wait_for_connection;
   gboolean stop;
   gboolean unlock;
-  GstClockTime buffer_time;
+  GstClockTimeDiff buffer_time;
 
   GCond *cond;
 };
