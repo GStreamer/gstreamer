@@ -149,10 +149,10 @@ gst_shm_sink_class_init (GstShmSinkClass * klass)
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   g_object_class_install_property (gobject_class, PROP_BUFFER_TIME,
-      g_param_spec_uint64 ("buffer-time",
+      g_param_spec_int64 ("buffer-time",
           "Buffer Time of the shm buffer",
           "Maximum Size of the shm buffer in nanoseconds (-1 to disable)",
-          0, G_MAXUINT64, GST_CLOCK_TIME_NONE,
+          -1, G_MAXINT64, -1,
           G_PARAM_CONSTRUCT | G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   signals[SIGNAL_CLIENT_CONNECTED] = g_signal_new ("client-connected",
@@ -233,7 +233,7 @@ gst_shm_sink_set_property (GObject * object, guint prop_id,
       break;
     case PROP_BUFFER_TIME:
       GST_OBJECT_LOCK (object);
-      self->buffer_time = g_value_get_uint64 (value);
+      self->buffer_time = g_value_get_int64 (value);
       GST_OBJECT_UNLOCK (object);
       g_cond_broadcast (self->cond);
       break;
@@ -272,7 +272,7 @@ gst_shm_sink_get_property (GObject * object, guint prop_id,
       g_value_set_boolean (value, self->wait_for_connection);
       break;
     case PROP_BUFFER_TIME:
-      g_value_set_uint64 (value, self->buffer_time);
+      g_value_set_int64 (value, self->buffer_time);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
