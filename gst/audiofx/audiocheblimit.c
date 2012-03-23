@@ -343,9 +343,19 @@ generate_biquad_coefficients (GstAudioChebLimit * filter,
 }
 
 static void
-generate_coefficients (GstAudioChebLimit * filter)
+generate_coefficients (GstAudioChebLimit * filter, const GstAudioInfo * info)
 {
-  if (GST_AUDIO_FILTER_RATE (filter) == 0) {
+  gint rate;
+
+  if (info) {
+    rate = GST_AUDIO_INFO_RATE (info);
+  } else {
+    rate = GST_AUDIO_FILTER_RATE (filter);
+  }
+
+  GST_LOG_OBJECT (filter, "cutoff %f", filter->cutoff);
+
+  if (rate == 0) {
     gdouble *a = g_new0 (gdouble, 1);
     gdouble *b = g_new0 (gdouble, 1);
 
@@ -358,7 +368,7 @@ generate_coefficients (GstAudioChebLimit * filter)
     return;
   }
 
-  if (filter->cutoff >= GST_AUDIO_FILTER_RATE (filter) / 2.0) {
+  if (filter->cutoff >= rate / 2.0) {
     gdouble *a = g_new0 (gdouble, 1);
     gdouble *b = g_new0 (gdouble, 1);
 
@@ -492,31 +502,31 @@ gst_audio_cheb_limit_set_property (GObject * object, guint prop_id,
     case PROP_MODE:
       g_mutex_lock (&filter->lock);
       filter->mode = g_value_get_enum (value);
-      generate_coefficients (filter);
+      generate_coefficients (filter, NULL);
       g_mutex_unlock (&filter->lock);
       break;
     case PROP_TYPE:
       g_mutex_lock (&filter->lock);
       filter->type = g_value_get_int (value);
-      generate_coefficients (filter);
+      generate_coefficients (filter, NULL);
       g_mutex_unlock (&filter->lock);
       break;
     case PROP_CUTOFF:
       g_mutex_lock (&filter->lock);
       filter->cutoff = g_value_get_float (value);
-      generate_coefficients (filter);
+      generate_coefficients (filter, NULL);
       g_mutex_unlock (&filter->lock);
       break;
     case PROP_RIPPLE:
       g_mutex_lock (&filter->lock);
       filter->ripple = g_value_get_float (value);
-      generate_coefficients (filter);
+      generate_coefficients (filter, NULL);
       g_mutex_unlock (&filter->lock);
       break;
     case PROP_POLES:
       g_mutex_lock (&filter->lock);
       filter->poles = GST_ROUND_UP_2 (g_value_get_int (value));
-      generate_coefficients (filter);
+      generate_coefficients (filter, NULL);
       g_mutex_unlock (&filter->lock);
       break;
     default:
@@ -560,7 +570,7 @@ gst_audio_cheb_limit_setup (GstAudioFilter * base, const GstAudioInfo * info)
 {
   GstAudioChebLimit *filter = GST_AUDIO_CHEB_LIMIT (base);
 
-  generate_coefficients (filter);
+  generate_coefficients (filter, info);
 
   return GST_AUDIO_FILTER_CLASS (parent_class)->setup (base, info);
 }

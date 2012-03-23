@@ -93,7 +93,8 @@ struct _GstAudioFXBaseFIRFilterClass {
 };
 
 GType gst_audio_fx_base_fir_filter_get_type (void);
-void gst_audio_fx_base_fir_filter_set_kernel (GstAudioFXBaseFIRFilter *filter, gdouble *kernel, guint kernel_length, guint64 latency);
+void gst_audio_fx_base_fir_filter_set_kernel (GstAudioFXBaseFIRFilter *filter, gdouble *kernel,
+                                              guint kernel_length, guint64 latency, const GstAudioInfo * info);
 void gst_audio_fx_base_fir_filter_push_residue (GstAudioFXBaseFIRFilter *filter);
 
 G_END_DECLS

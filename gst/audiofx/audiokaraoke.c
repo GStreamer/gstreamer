@@ -161,12 +161,17 @@ gst_audio_karaoke_init (GstAudioKaraoke * filter)
 }
 
 static void
-update_filter (GstAudioKaraoke * filter)
+update_filter (GstAudioKaraoke * filter, const GstAudioInfo * info)
 {
   gfloat A, B, C;
   gint rate;
 
-  rate = GST_AUDIO_FILTER_RATE (filter);
+  if (info) {
+    rate = GST_AUDIO_INFO_RATE (info);
+  } else {
+    rate = GST_AUDIO_FILTER_RATE (filter);
+  }
+
   if (rate == 0)
     return;
 
@@ -198,11 +203,11 @@ gst_audio_karaoke_set_property (GObject * object, guint prop_id,
       break;
     case PROP_FILTER_BAND:
       filter->filter_band = g_value_get_float (value);
-      update_filter (filter);
+      update_filter (filter, NULL);
       break;
     case PROP_FILTER_WIDTH:
       filter->filter_width = g_value_get_float (value);
-      update_filter (filter);
+      update_filter (filter, NULL);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -258,7 +263,7 @@ gst_audio_karaoke_setup (GstAudioFilter * base, const GstAudioInfo * info)
       ret = FALSE;
       break;
   }
-  update_filter (filter);
+  update_filter (filter, info);
 
   return ret;
 }

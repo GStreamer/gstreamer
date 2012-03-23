@@ -880,6 +880,8 @@ gst_audio_fx_base_fir_filter_transform (GstBaseTransform * base,
     gint64 tmp = diff;
     diff = generated_samples - diff;
     generated_samples = tmp;
+  } else {
+    diff = 0;
   }
 
   gst_buffer_resize (outbuf, diff * bps * channels,
@@ -1027,9 +1029,12 @@ gst_audio_fx_base_fir_filter_sink_event (GstBaseTransform * base,
 
 void
 gst_audio_fx_base_fir_filter_set_kernel (GstAudioFXBaseFIRFilter * self,
-    gdouble * kernel, guint kernel_length, guint64 latency)
+    gdouble * kernel, guint kernel_length, guint64 latency,
+    const GstAudioInfo * info)
 {
   gboolean latency_changed;
+  GstAudioFormat format;
+  gint channels;
 
   g_return_if_fail (kernel != NULL);
   g_return_if_fail (self != NULL);
@@ -1064,9 +1069,16 @@ gst_audio_fx_base_fir_filter_set_kernel (GstAudioFXBaseFIRFilter * self,
   self->kernel = kernel;
   self->kernel_length = kernel_length;
 
+  if (info) {
+    format = GST_AUDIO_INFO_FORMAT (info);
+    channels = GST_AUDIO_INFO_CHANNELS (info);
+  } else {
+    format = GST_AUDIO_FILTER_FORMAT (self);
+    channels = GST_AUDIO_FILTER_CHANNELS (self);
+  }
+
   gst_audio_fx_base_fir_filter_calculate_frequency_response (self);
-  gst_audio_fx_base_fir_filter_select_process_function (self,
-      GST_AUDIO_FILTER_FORMAT (self), GST_AUDIO_FILTER_CHANNELS (self));
+  gst_audio_fx_base_fir_filter_select_process_function (self, format, channels);
 
   if (latency_changed) {
     self->latency = latency;

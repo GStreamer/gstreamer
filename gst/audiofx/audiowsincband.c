@@ -220,7 +220,8 @@ gst_audio_wsincband_init (GstAudioWSincBand * self)
 }
 
 static void
-gst_audio_wsincband_build_kernel (GstAudioWSincBand * self)
+gst_audio_wsincband_build_kernel (GstAudioWSincBand * self,
+    const GstAudioInfo * info)
 {
   gint i = 0;
   gdouble sum = 0.0;
@@ -232,8 +233,13 @@ gst_audio_wsincband_build_kernel (GstAudioWSincBand * self)
 
   len = self->kernel_length;
 
-  rate = GST_AUDIO_FILTER_RATE (self);
-  channels = GST_AUDIO_FILTER_CHANNELS (self);
+  if (info) {
+    rate = GST_AUDIO_INFO_RATE (info);
+    channels = GST_AUDIO_INFO_CHANNELS (info);
+  } else {
+    rate = GST_AUDIO_FILTER_RATE (self);
+    channels = GST_AUDIO_FILTER_CHANNELS (self);
+  }
 
   if (rate == 0) {
     GST_DEBUG ("rate not set yet");
@@ -365,7 +371,7 @@ gst_audio_wsincband_build_kernel (GstAudioWSincBand * self)
   }
 
   gst_audio_fx_base_fir_filter_set_kernel (GST_AUDIO_FX_BASE_FIR_FILTER (self),
-      kernel, self->kernel_length, (len - 1) / 2);
+      kernel, self->kernel_length, (len - 1) / 2, info);
 }
 
 /* GstAudioFilter vmethod implementations */
@@ -376,7 +382,7 @@ gst_audio_wsincband_setup (GstAudioFilter * base, const GstAudioInfo * info)
 {
   GstAudioWSincBand *self = GST_AUDIO_WSINC_BAND (base);
 
-  gst_audio_wsincband_build_kernel (self);
+  gst_audio_wsincband_build_kernel (self, info);
 
   return GST_AUDIO_FILTER_CLASS (parent_class)->setup (base, info);
 }
@@ -412,7 +418,7 @@ gst_audio_wsincband_set_property (GObject * object, guint prop_id,
         gst_audio_fx_base_fir_filter_push_residue (GST_AUDIO_FX_BASE_FIR_FILTER
             (self));
         self->kernel_length = val;
-        gst_audio_wsincband_build_kernel (self);
+        gst_audio_wsincband_build_kernel (self, NULL);
       }
       g_mutex_unlock (&self->lock);
       break;
@@ -420,25 +426,25 @@ gst_audio_wsincband_set_property (GObject * object, guint prop_id,
     case PROP_LOWER_FREQUENCY:
       g_mutex_lock (&self->lock);
       self->lower_frequency = g_value_get_float (value);
-      gst_audio_wsincband_build_kernel (self);
+      gst_audio_wsincband_build_kernel (self, NULL);
       g_mutex_unlock (&self->lock);
       break;
     case PROP_UPPER_FREQUENCY:
       g_mutex_lock (&self->lock);
       self->upper_frequency = g_value_get_float (value);
-      gst_audio_wsincband_build_kernel (self);
+      gst_audio_wsincband_build_kernel (self, NULL);
       g_mutex_unlock (&self->lock);
       break;
     case PROP_MODE:
       g_mutex_lock (&self->lock);
       self->mode = g_value_get_enum (value);
-      gst_audio_wsincband_build_kernel (self);
+      gst_audio_wsincband_build_kernel (self, NULL);
       g_mutex_unlock (&self->lock);
       break;
     case PROP_WINDOW:
       g_mutex_lock (&self->lock);
       self->window = g_value_get_enum (value);
-      gst_audio_wsincband_build_kernel (self);
+      gst_audio_wsincband_build_kernel (self, NULL);
       g_mutex_unlock (&self->lock);
       break;
     default:
