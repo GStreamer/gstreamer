@@ -467,6 +467,8 @@ static void
 gst_modplug_fixate (GstPad * pad, GstCaps * caps)
 {
   GstStructure *structure;
+  
+  GST_DEBUG_OBJECT (pad, "Fixating caps: %"GST_PTR_FORMAT, caps);
 
   structure = gst_caps_get_structure (caps, 0);
   if (!gst_structure_fixate_field_nearest_int (structure, "rate", 44100))
@@ -500,6 +502,10 @@ gst_modplug_load_song (GstModPlug * modplug)
   gst_structure_get_int (structure, "depth", &modplug->bits);
   gst_structure_get_int (structure, "channels", &modplug->channel);
   gst_structure_get_int (structure, "rate", &modplug->frequency);
+  
+  GST_DEBUG_OBJECT (modplug, 
+      "Audio settings: %d bits, %d channel(s), %d Hz sampling rate",
+      modplug->bits, modplug->channel, modplug->frequency);
 
   gst_pad_set_caps (modplug->srcpad, newcaps);
   gst_caps_unref (newcaps);
@@ -667,7 +673,6 @@ gst_modplug_loop (GstModPlug * modplug)
             GST_TAG_COMMENT, comment, NULL);
       }
 
-
       gst_element_found_tags (GST_ELEMENT (modplug), tags);
     } else {
       /* not fully loaded yet */
@@ -682,7 +687,7 @@ gst_modplug_loop (GstModPlug * modplug)
     gfloat temp;
 
     temp = (gfloat) modplug->song_length / modplug->seek_at;
-    seek_to_pos = (int) (modplug->mSoundFile->GetMaxPosition () / temp);
+    seek_to_pos = (gint) (modplug->mSoundFile->GetMaxPosition () / temp);
 
     GST_DEBUG_OBJECT (modplug, "Seeking to row %d", seek_to_pos);
 
@@ -691,9 +696,12 @@ gst_modplug_loop (GstModPlug * modplug)
   }
 
   /* read and output a buffer */
+  GST_LOG_OBJECT (modplug, "Read %d bytes", (gint)modplug->read_bytes);
+  /* libmodplug 0.8.7 trashes memory */
   flow = gst_pad_alloc_buffer_and_set_caps (modplug->srcpad,
-      GST_BUFFER_OFFSET_NONE, modplug->read_bytes,
+      GST_BUFFER_OFFSET_NONE, modplug->read_bytes * 2,
       GST_PAD_CAPS (modplug->srcpad), &out);
+  GST_BUFFER_SIZE (out) = modplug->read_bytes;
 
   if (flow != GST_FLOW_OK) {
     GST_LOG_OBJECT (modplug, "pad alloc flow: %s", gst_flow_get_name (flow));
