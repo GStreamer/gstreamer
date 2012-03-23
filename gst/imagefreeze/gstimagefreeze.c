@@ -248,11 +248,26 @@ done:
   return ret;
 }
 
+/* remove framerate in writable @caps */
+static void
+gst_image_freeze_remove_fps (GstImageFreeze * self, GstCaps * caps)
+{
+  gint i, n;
+
+  n = gst_caps_get_size (caps);
+  for (i = 0; i < n; i++) {
+    GstStructure *s = gst_caps_get_structure (caps, i);
+
+    gst_structure_remove_field (s, "framerate");
+    gst_structure_set (s, "framerate", GST_TYPE_FRACTION_RANGE, 0, 1, G_MAXINT,
+        1, NULL);
+  }
+}
+
 static GstCaps *
 gst_image_freeze_sink_getcaps (GstImageFreeze * self, GstCaps * filter)
 {
-  GstCaps *ret, *tmp;
-  guint i, n;
+  GstCaps *ret, *tmp, *templ;
   GstPad *pad;
 
   pad = self->sinkpad;
@@ -263,22 +278,24 @@ gst_image_freeze_sink_getcaps (GstImageFreeze * self, GstCaps * filter)
     goto done;
   }
 
+  if (filter) {
+    filter = gst_caps_copy (filter);
+    gst_image_freeze_remove_fps (self, filter);
+  }
+  templ = gst_pad_get_pad_template_caps (pad);
   tmp = gst_pad_peer_query_caps (self->srcpad, filter);
   if (tmp) {
-    ret = gst_caps_intersect (tmp, gst_pad_get_pad_template_caps (pad));
+    GST_LOG_OBJECT (self, "peer caps %" GST_PTR_FORMAT, tmp);
+    ret = gst_caps_intersect (tmp, templ);
     gst_caps_unref (tmp);
   } else {
-    ret = gst_caps_copy (gst_pad_get_pad_template_caps (pad));
+    GST_LOG_OBJECT (self, "going to copy");
+    ret = gst_caps_copy (templ);
   }
+  gst_caps_unref (templ);
 
-  n = gst_caps_get_size (ret);
-  for (i = 0; i < n; i++) {
-    GstStructure *s = gst_caps_get_structure (ret, i);
-
-    gst_structure_remove_field (s, "framerate");
-    gst_structure_set (s, "framerate", GST_TYPE_FRACTION_RANGE, 0, 1, G_MAXINT,
-        1, NULL);
-  }
+  ret = gst_caps_make_writable (ret);
+  gst_image_freeze_remove_fps (self, ret);
 
 done:
   GST_LOG_OBJECT (pad, "Returning caps: %" GST_PTR_FORMAT, ret);
@@ -291,31 +308,24 @@ gst_image_freeze_sink_query (GstPad * pad, GstObject * parent, GstQuery * query)
 {
   GstImageFreeze *self = GST_IMAGE_FREEZE (parent);
   gboolean ret;
-  GstPad *peer = gst_pad_get_peer (self->srcpad);
 
   GST_LOG_OBJECT (pad, "Handling query of type '%s'",
       gst_query_type_get_name (GST_QUERY_TYPE (query)));
 
-  if (!peer) {
-    GST_INFO_OBJECT (pad, "No peer yet, dropping query");
-    ret = FALSE;
-  } else {
-    switch (GST_QUERY_TYPE (query)) {
-      case GST_QUERY_CAPS:
-      {
-        GstCaps *caps;
+  switch (GST_QUERY_TYPE (query)) {
+    case GST_QUERY_CAPS:
+    {
+      GstCaps *caps;
 
-        gst_query_parse_caps (query, &caps);
-        caps = gst_image_freeze_sink_getcaps (self, caps);
-        gst_query_set_caps_result (query, caps);
-        gst_caps_unref (caps);
-        ret = TRUE;
-        break;
-      }
-      default:
-        ret = gst_pad_query_default (peer, parent, query);
+      gst_query_parse_caps (query, &caps);
+      caps = gst_image_freeze_sink_getcaps (self, caps);
+      gst_query_set_caps_result (query, caps);
+      gst_caps_unref (caps);
+      ret = TRUE;
+      break;
     }
-    gst_object_unref (peer);
+    default:
+      ret = gst_pad_query_default (pad, parent, query);
   }
 
   return ret;
