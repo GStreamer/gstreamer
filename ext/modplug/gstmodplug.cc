@@ -646,7 +646,8 @@ gst_modplug_loop (GstModPlug * modplug)
       GstEvent *newsegment;
       GstTagList *tags;
       gboolean ok;
-      gchar comment[16384];
+      #define COMMENT_SIZE 16384
+      gchar comment[COMMENT_SIZE];
 
       ok = gst_modplug_load_song (modplug);
       gst_buffer_unref (modplug->buffer);
@@ -668,7 +669,9 @@ gst_modplug_loop (GstModPlug * modplug)
           GST_TAG_BEATS_PER_MINUTE,
           (gdouble) modplug->mSoundFile->GetMusicTempo (), NULL);
 
-      if (modplug->mSoundFile->GetSongComments ((gchar *) & comment, 16384, 32)) {
+      if (modplug->mSoundFile->GetSongComments ((gchar *) & comment,
+          COMMENT_SIZE, 32)) {
+        comment[COMMENT_SIZE - 1] = '\0';
         gst_tag_list_add (tags, GST_TAG_MERGE_APPEND,
             GST_TAG_COMMENT, comment, NULL);
       }
@@ -777,6 +780,7 @@ gst_modplug_change_state (GstElement * element, GstStateChange transition)
       }
       if (modplug->mSoundFile) {
         modplug->mSoundFile->Destroy ();
+        delete modplug->mSoundFile;
         modplug->mSoundFile = NULL;
       }
       break;
