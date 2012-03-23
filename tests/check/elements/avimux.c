@@ -90,9 +90,8 @@ teardown_src_pad (GstElement * element, const gchar * sinkname)
   gchar *padname;
 
   /* clean up floating src pad */
-  /* hm, avimux uses _00 as suffixes for padnames */
   padname = g_strdup (sinkname);
-  memcpy (strchr (padname, '%'), "00", 2);
+  memcpy (strchr (padname, '%'), "0", 2);
   if (!(sinkpad = gst_element_get_static_pad (element, padname)))
     sinkpad = gst_element_get_request_pad (element, padname);
   g_free (padname);
