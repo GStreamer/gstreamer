@@ -941,7 +941,7 @@ gst_video_overlay_rectangle_unpremultiply (GstBlendVideoFormatInfo * info)
 }
 
 
-static gboolean
+static void
 gst_video_overlay_rectangle_extract_alpha (GstVideoOverlayRectangle * rect)
 {
   guint8 *src, *dst;
@@ -954,30 +954,29 @@ gst_video_overlay_rectangle_extract_alpha (GstVideoOverlayRectangle * rect)
   rect->initial_alpha = g_malloc (alpha_size);
   src = GST_BUFFER_DATA (rect->pixels);
   dst = rect->initial_alpha;
+  /* FIXME we're accessing possibly uninitialised bytes from the row padding */
   while (offset < alpha_size) {
     dst[offset] = src[offset * 4 + ARGB_A];
     ++offset;
   }
-  return TRUE;
 }
 
 
-static gboolean
+static void
 gst_video_overlay_rectangle_apply_global_alpha (GstVideoOverlayRectangle * rect,
     float global_alpha)
 {
   guint8 *src, *dst;
   guint offset = 0;
 
-  g_return_val_if_fail (!(rect->applied_global_alpha != 1.0
-          && rect->initial_alpha == NULL), FALSE);
+  g_assert (!(rect->applied_global_alpha != 1.0
+          && rect->initial_alpha == NULL));
 
   if (global_alpha == rect->applied_global_alpha)
-    return TRUE;
+    return;
 
-  if (rect->initial_alpha == NULL &&
-      !gst_video_overlay_rectangle_extract_alpha (rect))
-    return FALSE;
+  if (rect->initial_alpha == NULL)
+    gst_video_overlay_rectangle_extract_alpha (rect);
 
   src = rect->initial_alpha;
   rect->pixels = gst_buffer_make_writable (rect->pixels);
@@ -1001,7 +1000,6 @@ gst_video_overlay_rectangle_apply_global_alpha (GstVideoOverlayRectangle * rect,
   }
 
   rect->applied_global_alpha = global_alpha;
-  return TRUE;
 }
 
 static GstBuffer *
@@ -1112,17 +1110,18 @@ gst_video_overlay_rectangle_get_pixels_argb_internal (GstVideoOverlayRectangle *
   GST_RECTANGLE_UNLOCK (rectangle);
 
 done:
+
+  GST_RECTANGLE_LOCK (rectangle);
   if (apply_global_alpha
       && scaled_rect->applied_global_alpha != rectangle->global_alpha) {
-    if (!gst_video_overlay_rectangle_apply_global_alpha (scaled_rect,
-            rectangle->global_alpha))
-      return NULL;              /* return original data? */
+    gst_video_overlay_rectangle_apply_global_alpha (scaled_rect,
+        rectangle->global_alpha);
     gst_video_overlay_rectangle_set_global_alpha (scaled_rect,
         rectangle->global_alpha);
   } else if (revert_global_alpha && scaled_rect->applied_global_alpha != 1.0) {
-    if (!gst_video_overlay_rectangle_apply_global_alpha (scaled_rect, 1.0))
-      return NULL;              /* return original data? */
+    gst_video_overlay_rectangle_apply_global_alpha (scaled_rect, 1.0);
   }
+  GST_RECTANGLE_UNLOCK (rectangle);
 
   *stride = scaled_rect->stride;
   return scaled_rect->pixels;
