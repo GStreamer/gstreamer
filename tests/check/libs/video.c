@@ -1037,6 +1037,386 @@ GST_START_TEST (test_overlay_composition_premultiplied_alpha)
 
 GST_END_TEST;
 
+
+GST_START_TEST (test_overlay_composition_global_alpha)
+{
+  GstVideoOverlayRectangle *rect1;
+  GstBuffer *pix1, *pix2, *pix3, *pix4, *pix5;
+  guint8 *data2, *data4, *data5;
+  guint w, h, stride, stride3, w4, h4, stride4, stride5;
+  guint seq1, seq2;
+  gfloat ga1, ga2;
+  GstVideoOverlayFormatFlags flags1;
+
+  pix1 = gst_buffer_new_and_alloc (200 * sizeof (guint32) * 50);
+  memset (GST_BUFFER_DATA (pix1), 0x80, GST_BUFFER_SIZE (pix1));
+
+  rect1 = gst_video_overlay_rectangle_new_argb (pix1, 200, 50, 200 * 4,
+      600, 50, 300, 50, GST_VIDEO_OVERLAY_FORMAT_FLAG_NONE);
+  gst_buffer_unref (pix1);
+
+  /* same flags, unscaled, should be the same buffer */
+  pix2 = gst_video_overlay_rectangle_get_pixels_unscaled_argb (rect1, &w, &h,
+      &stride, GST_VIDEO_OVERLAY_FORMAT_FLAG_NONE);
+  fail_unless (pix1 == pix2);
+
+  /* same flags, but scaled */
+  pix3 = gst_video_overlay_rectangle_get_pixels_argb (rect1, &stride3,
+      GST_VIDEO_OVERLAY_FORMAT_FLAG_NONE);
+  fail_if (pix3 == pix1 || pix3 == pix2);
+
+  /* get unscaled premultiplied data, new cached rectangle should be created */
+  pix4 = gst_video_overlay_rectangle_get_pixels_unscaled_argb (rect1, &w4, &h4,
+      &stride4, GST_VIDEO_OVERLAY_FORMAT_FLAG_PREMULTIPLIED_ALPHA);
+  fail_if (pix4 == pix2 || pix4 == pix3);
+  fail_unless_equals_int (stride, stride4);
+  fail_unless_equals_int (w, w4);
+  fail_unless_equals_int (h, h4);
+  fail_unless_equals_int (GST_BUFFER_SIZE (pix2), GST_BUFFER_SIZE (pix4));
+  data4 = GST_BUFFER_DATA (pix4);
+  fail_if (memcmp (data4, GST_BUFFER_DATA (pix1), GST_BUFFER_SIZE (pix1)) == 0);
+  /* make sure it actually did what we expected it to do (input=0x80808080) */
+#if G_BYTE_ORDER == G_LITTLE_ENDIAN
+  /* B - G - R - A */
+  fail_unless_equals_int (data4[0], 0x40);
+  fail_unless_equals_int (data4[1], 0x40);
+  fail_unless_equals_int (data4[2], 0x40);
+  fail_unless_equals_int (data4[3], 0x80);
+#else
+  /* A - R - G - B */
+  fail_unless_equals_int (data4[0], 0x80);
+  fail_unless_equals_int (data4[1], 0x40);
+  fail_unless_equals_int (data4[2], 0x40);
+  fail_unless_equals_int (data4[3], 0x40);
+#endif
+
+  /* now premultiplied and scaled, again a new cached rectangle should be cached */
+  pix5 = gst_video_overlay_rectangle_get_pixels_argb (rect1, &stride5,
+      GST_VIDEO_OVERLAY_FORMAT_FLAG_PREMULTIPLIED_ALPHA);
+  fail_if (pix5 == pix2 || pix5 == pix3 || pix5 == pix4);
+  /* stride and size should be equal to the first scaled rect */
+  fail_unless_equals_int (stride5, stride3);
+  fail_unless_equals_int (GST_BUFFER_SIZE (pix3), GST_BUFFER_SIZE (pix3));
+  data5 = GST_BUFFER_DATA (pix5);
+  /* data should be different (premutliplied) though */
+  fail_if (memcmp (data5, GST_BUFFER_DATA (pix3), GST_BUFFER_SIZE (pix3)) == 0);
+  /* make sure it actually did what we expected it to do (input=0x80808080) */
+#if G_BYTE_ORDER == G_LITTLE_ENDIAN
+  /* B - G - R - A */
+  fail_unless_equals_int (data5[0], 0x40);
+  fail_unless_equals_int (data5[1], 0x40);
+  fail_unless_equals_int (data5[2], 0x40);
+  fail_unless_equals_int (data5[3], 0x80);
+#else
+  /* A - R - G - B */
+  fail_unless_equals_int (data5[0], 0x80);
+  fail_unless_equals_int (data5[1], 0x40);
+  fail_unless_equals_int (data5[2], 0x40);
+  fail_unless_equals_int (data5[3], 0x40);
+#endif
+
+  /* global_alpha should initially be 1.0 */
+  ga1 = gst_video_overlay_rectangle_get_global_alpha (rect1);
+  fail_unless_equals_float (ga1, 1.0);
+
+  /* now set global_alpha */
+  seq1 = gst_video_overlay_rectangle_get_seqnum (rect1);
+  gst_video_overlay_rectangle_set_global_alpha (rect1, 0.5);
+  ga2 = gst_video_overlay_rectangle_get_global_alpha (rect1);
+  fail_unless_equals_float (ga2, 0.5);
+
+  /* seqnum should have changed */
+  seq2 = gst_video_overlay_rectangle_get_seqnum (rect1);
+  fail_unless (seq1 < seq2);
+
+  /* internal flags should have been set */
+  flags1 = gst_video_overlay_rectangle_get_flags (rect1);
+  fail_unless_equals_int (flags1, GST_VIDEO_OVERLAY_FORMAT_FLAG_GLOBAL_ALPHA);
+
+  /* request unscaled pixel-data, global-alpha not applied */
+  pix2 = gst_video_overlay_rectangle_get_pixels_unscaled_argb (rect1, &w, &h,
+      &stride, GST_VIDEO_OVERLAY_FORMAT_FLAG_GLOBAL_ALPHA);
+  /* this should just return the same buffer */
+  fail_unless (pix2 == pix1);
+  data2 = GST_BUFFER_DATA (pix2);
+  fail_unless (memcmp (data2, GST_BUFFER_DATA (pix1),
+          GST_BUFFER_SIZE (pix1)) == 0);
+  /* make sure we got the initial data (input=0x80808080) */
+#if G_BYTE_ORDER == G_LITTLE_ENDIAN
+  /* B - G - R - A */
+  fail_unless_equals_int (data2[0], 0x80);
+  fail_unless_equals_int (data2[1], 0x80);
+  fail_unless_equals_int (data2[2], 0x80);
+  fail_unless_equals_int (data2[3], 0x80);
+#else
+  /* A - R - G - B */
+  fail_unless_equals_int (data2[0], 0x80);
+  fail_unless_equals_int (data2[1], 0x80);
+  fail_unless_equals_int (data2[2], 0x80);
+  fail_unless_equals_int (data2[3], 0x80);
+#endif
+
+  /* unscaled pixel-data, global-alpha applied */
+  pix2 = gst_video_overlay_rectangle_get_pixels_unscaled_argb (rect1, &w, &h,
+      &stride, GST_VIDEO_OVERLAY_FORMAT_FLAG_NONE);
+  /* this should be the same buffer with on-the-fly modified alpha-channel */
+  fail_unless (pix2 == pix1);
+  data2 = GST_BUFFER_DATA (pix2);
+  fail_unless (memcmp (data2, GST_BUFFER_DATA (pix1),
+          GST_BUFFER_SIZE (pix1)) == 0);
+  /* make sure we got the initial data with adjusted alpha-channel */
+#if G_BYTE_ORDER == G_LITTLE_ENDIAN
+  /* B - G - R - A */
+  fail_unless_equals_int (data2[0], 0x80);
+  fail_unless_equals_int (data2[1], 0x80);
+  fail_unless_equals_int (data2[2], 0x80);
+  fail_unless_equals_int (data2[3], 0x40);
+#else
+  /* A - R - G - B */
+  fail_unless_equals_int (data2[0], 0x40);
+  fail_unless_equals_int (data2[1], 0x80);
+  fail_unless_equals_int (data2[2], 0x80);
+  fail_unless_equals_int (data2[3], 0x80);
+#endif
+
+  /* adjust global_alpha once more */
+  gst_video_overlay_rectangle_set_global_alpha (rect1, 0.25);
+  ga2 = gst_video_overlay_rectangle_get_global_alpha (rect1);
+  fail_unless_equals_float (ga2, 0.25);
+  /* and again request unscaled pixel-data, global-alpha applied */
+  pix2 = gst_video_overlay_rectangle_get_pixels_unscaled_argb (rect1, &w, &h,
+      &stride, GST_VIDEO_OVERLAY_FORMAT_FLAG_NONE);
+  fail_unless (pix2 == pix1);
+  data2 = GST_BUFFER_DATA (pix2);
+  fail_unless (memcmp (data2, GST_BUFFER_DATA (pix1),
+          GST_BUFFER_SIZE (pix1)) == 0);
+  /* make sure we got the initial data with adjusted alpha-channel */
+#if G_BYTE_ORDER == G_LITTLE_ENDIAN
+  /* B - G - R - A */
+  fail_unless_equals_int (data2[0], 0x80);
+  fail_unless_equals_int (data2[1], 0x80);
+  fail_unless_equals_int (data2[2], 0x80);
+  fail_unless_equals_int (data2[3], 0x20);
+#else
+  /* A - R - G - B */
+  fail_unless_equals_int (data2[0], 0x20);
+  fail_unless_equals_int (data2[1], 0x80);
+  fail_unless_equals_int (data2[2], 0x80);
+  fail_unless_equals_int (data2[3], 0x80);
+#endif
+
+  /* again: unscaled pixel-data, global-alpha not applied,
+   * this should revert alpha-channel to initial values */
+  pix2 = gst_video_overlay_rectangle_get_pixels_unscaled_argb (rect1, &w, &h,
+      &stride, GST_VIDEO_OVERLAY_FORMAT_FLAG_GLOBAL_ALPHA);
+  fail_unless (pix2 == pix1);
+  data2 = GST_BUFFER_DATA (pix2);
+  fail_unless (memcmp (data2, GST_BUFFER_DATA (pix1),
+          GST_BUFFER_SIZE (pix1)) == 0);
+  /* make sure we got the initial data (input=0x80808080) */
+#if G_BYTE_ORDER == G_LITTLE_ENDIAN
+  /* B - G - R - A */
+  fail_unless_equals_int (data2[0], 0x80);
+  fail_unless_equals_int (data2[1], 0x80);
+  fail_unless_equals_int (data2[2], 0x80);
+  fail_unless_equals_int (data2[3], 0x80);
+#else
+  /* A - R - G - B */
+  fail_unless_equals_int (data2[0], 0x80);
+  fail_unless_equals_int (data2[1], 0x80);
+  fail_unless_equals_int (data2[2], 0x80);
+  fail_unless_equals_int (data2[3], 0x80);
+#endif
+
+  /* now scaled, global-alpha not applied */
+  pix2 = gst_video_overlay_rectangle_get_pixels_argb (rect1, &stride,
+      GST_VIDEO_OVERLAY_FORMAT_FLAG_GLOBAL_ALPHA);
+  /* this should just return the rect/buffer, that was cached for these
+   * scaling dimensions */
+  fail_unless (pix2 == pix3);
+  data2 = GST_BUFFER_DATA (pix2);
+  fail_unless (memcmp (data2, GST_BUFFER_DATA (pix3),
+          GST_BUFFER_SIZE (pix3)) == 0);
+  /* make sure we got the initial data (input=0x80808080) */
+#if G_BYTE_ORDER == G_LITTLE_ENDIAN
+  /* B - G - R - A */
+  fail_unless_equals_int (data2[0], 0x80);
+  fail_unless_equals_int (data2[1], 0x80);
+  fail_unless_equals_int (data2[2], 0x80);
+  fail_unless_equals_int (data2[3], 0x80);
+#else
+  /* A - R - G - B */
+  fail_unless_equals_int (data2[0], 0x80);
+  fail_unless_equals_int (data2[1], 0x80);
+  fail_unless_equals_int (data2[2], 0x80);
+  fail_unless_equals_int (data2[3], 0x80);
+#endif
+
+  /* scaled, global-alpha (0.25) applied */
+  pix2 = gst_video_overlay_rectangle_get_pixels_argb (rect1, &stride,
+      GST_VIDEO_OVERLAY_FORMAT_FLAG_NONE);
+  /* this should just return the rect/buffer, that was cached for these
+   * scaling dimensions with modified alpha channel */
+  fail_unless (pix2 == pix3);
+  data2 = GST_BUFFER_DATA (pix2);
+  fail_unless (memcmp (data2, GST_BUFFER_DATA (pix3),
+          GST_BUFFER_SIZE (pix3)) == 0);
+  /* make sure we got the data we expect for global-alpha=0.25 */
+#if G_BYTE_ORDER == G_LITTLE_ENDIAN
+  /* B - G - R - A */
+  fail_unless_equals_int (data2[0], 0x80);
+  fail_unless_equals_int (data2[1], 0x80);
+  fail_unless_equals_int (data2[2], 0x80);
+  fail_unless_equals_int (data2[3], 0x20);
+#else
+  /* A - R - G - B */
+  fail_unless_equals_int (data2[0], 0x20);
+  fail_unless_equals_int (data2[1], 0x80);
+  fail_unless_equals_int (data2[2], 0x80);
+  fail_unless_equals_int (data2[3], 0x80);
+#endif
+
+  /* now unscaled premultiplied data, global-alpha not applied,
+   * is this really a valid use case?*/
+  pix2 = gst_video_overlay_rectangle_get_pixels_unscaled_argb (rect1, &w, &h,
+      &stride, GST_VIDEO_OVERLAY_FORMAT_FLAG_PREMULTIPLIED_ALPHA |
+      GST_VIDEO_OVERLAY_FORMAT_FLAG_GLOBAL_ALPHA);
+  /* this should just return the rect/buffer, that was cached for the
+   * premultiplied data */
+  fail_unless (pix2 == pix4);
+  data2 = GST_BUFFER_DATA (pix2);
+  fail_unless (memcmp (data2, GST_BUFFER_DATA (pix4),
+          GST_BUFFER_SIZE (pix4)) == 0);
+  /* make sure we got what we expected */
+#if G_BYTE_ORDER == G_LITTLE_ENDIAN
+  /* B - G - R - A */
+  fail_unless_equals_int (data2[0], 0x40);
+  fail_unless_equals_int (data2[1], 0x40);
+  fail_unless_equals_int (data2[2], 0x40);
+  fail_unless_equals_int (data2[3], 0x80);
+#else
+  /* A - R - G - B */
+  fail_unless_equals_int (data2[0], 0x80);
+  fail_unless_equals_int (data2[1], 0x40);
+  fail_unless_equals_int (data2[2], 0x40);
+  fail_unless_equals_int (data2[3], 0x40);
+#endif
+
+  /* unscaled premultiplied data, global-alpha (0.25) applied */
+  pix2 = gst_video_overlay_rectangle_get_pixels_unscaled_argb (rect1, &w, &h,
+      &stride, GST_VIDEO_OVERLAY_FORMAT_FLAG_PREMULTIPLIED_ALPHA);
+  /* this should just return the rect/buffer, that was cached for the
+   * premultiplied data */
+  fail_unless (pix2 == pix4);
+  data2 = GST_BUFFER_DATA (pix2);
+  fail_unless (memcmp (data2, GST_BUFFER_DATA (pix4),
+          GST_BUFFER_SIZE (pix4)) == 0);
+  /* make sure we got what we expected:
+   * (0x40 / (0x80/0xFF) * (0x20/0xFF) = 0x10
+   * NOTE: unless we are using round() for the premultiplied case
+   * in gst_video_overlay_rectangle_apply_global_alpha() we get rounding
+   * error, i.e. 0x0F here */
+#if G_BYTE_ORDER == G_LITTLE_ENDIAN
+  /* B - G - R - A */
+  fail_unless_equals_int (data2[0], 0x0F);
+  fail_unless_equals_int (data2[1], 0x0F);
+  fail_unless_equals_int (data2[2], 0x0F);
+  fail_unless_equals_int (data2[3], 0x20);
+#else
+  /* A - R - G - B */
+  fail_unless_equals_int (data2[0], 0x20);
+  fail_unless_equals_int (data2[1], 0x0F);
+  fail_unless_equals_int (data2[2], 0x0F);
+  fail_unless_equals_int (data2[3], 0x0F);
+#endif
+
+  /* set global_alpha once more */
+  gst_video_overlay_rectangle_set_global_alpha (rect1, 0.75);
+  /* and verify that also premultiplied data is adjusted
+   * correspondingly (though with increasing rounding errors) */
+  pix2 = gst_video_overlay_rectangle_get_pixels_unscaled_argb (rect1, &w, &h,
+      &stride, GST_VIDEO_OVERLAY_FORMAT_FLAG_PREMULTIPLIED_ALPHA);
+  /* this should just return the rect/buffer, that was cached for the
+   * premultiplied data */
+  fail_unless (pix2 == pix4);
+  data2 = GST_BUFFER_DATA (pix2);
+  fail_unless (memcmp (data2, GST_BUFFER_DATA (pix4),
+          GST_BUFFER_SIZE (pix4)) == 0);
+  /* make sure we got what we expected:
+   * (0x0F / (0x20/0xFF) * (0x60/0xFF) = 0x2D
+   * NOTE: using floats everywhere we would get 0x30
+   * here we will actually end up with 0x2C */
+#if G_BYTE_ORDER == G_LITTLE_ENDIAN
+  /* B - G - R - A */
+  fail_unless_equals_int (data2[0], 0x2C);
+  fail_unless_equals_int (data2[1], 0x2C);
+  fail_unless_equals_int (data2[2], 0x2C);
+  fail_unless_equals_int (data2[3], 0x60);
+#else
+  /* A - R - G - B */
+  fail_unless_equals_int (data2[0], 0x60);
+  fail_unless_equals_int (data2[1], 0x2C);
+  fail_unless_equals_int (data2[2], 0x2C);
+  fail_unless_equals_int (data2[3], 0x2C);
+#endif
+
+  /* now scaled and premultiplied data, global-alpha not applied,
+   * is this really a valid use case?*/
+  pix2 = gst_video_overlay_rectangle_get_pixels_argb (rect1, &stride,
+      GST_VIDEO_OVERLAY_FORMAT_FLAG_PREMULTIPLIED_ALPHA |
+      GST_VIDEO_OVERLAY_FORMAT_FLAG_GLOBAL_ALPHA);
+  /* this should just return the rect/buffer, that was cached for the
+   * first premultiplied+scaled rect*/
+  fail_unless (pix2 == pix5);
+  fail_unless (stride == stride5);
+  data2 = GST_BUFFER_DATA (pix2);
+  fail_unless (memcmp (data2, GST_BUFFER_DATA (pix5),
+          GST_BUFFER_SIZE (pix5)) == 0);
+  /* make sure we got what we expected */
+#if G_BYTE_ORDER == G_LITTLE_ENDIAN
+  /* B - G - R - A */
+  fail_unless_equals_int (data2[0], 0x40);
+  fail_unless_equals_int (data2[1], 0x40);
+  fail_unless_equals_int (data2[2], 0x40);
+  fail_unless_equals_int (data2[3], 0x80);
+#else
+  /* A - R - G - B */
+  fail_unless_equals_int (data2[0], 0x80);
+  fail_unless_equals_int (data2[1], 0x40);
+  fail_unless_equals_int (data2[2], 0x40);
+  fail_unless_equals_int (data2[3], 0x40);
+#endif
+
+  /* scaled and premultiplied data, global-alpha applied */
+  pix2 = gst_video_overlay_rectangle_get_pixels_argb (rect1, &stride,
+      GST_VIDEO_OVERLAY_FORMAT_FLAG_PREMULTIPLIED_ALPHA);
+  /* this should just return the rect/buffer, that was cached for the
+   * first premultiplied+scaled rect*/
+  fail_unless (pix2 == pix5);
+  fail_unless (stride == stride5);
+  data2 = GST_BUFFER_DATA (pix2);
+  fail_unless (memcmp (data2, GST_BUFFER_DATA (pix5),
+          GST_BUFFER_SIZE (pix5)) == 0);
+  /* make sure we got what we expected; see above note about rounding errors! */
+#if G_BYTE_ORDER == G_LITTLE_ENDIAN
+  /* B - G - R - A */
+  fail_unless_equals_int (data2[0], 0x2F);
+  fail_unless_equals_int (data2[1], 0x2F);
+  fail_unless_equals_int (data2[2], 0x2F);
+  fail_unless_equals_int (data2[3], 0x60);
+#else
+  /* A - R - G - B */
+  fail_unless_equals_int (data2[0], 0x60);
+  fail_unless_equals_int (data2[1], 0x2F);
+  fail_unless_equals_int (data2[2], 0x2F);
+  fail_unless_equals_int (data2[3], 0x2F);
+#endif
+
+  gst_video_overlay_rectangle_unref (rect1);
+}
+
+GST_END_TEST;
+
 static Suite *
 video_suite (void)
 {
@@ -1055,6 +1435,7 @@ video_suite (void)
   tcase_add_test (tc_chain, test_video_size_from_caps);
   tcase_add_test (tc_chain, test_overlay_composition);
   tcase_add_test (tc_chain, test_overlay_composition_premultiplied_alpha);
+  tcase_add_test (tc_chain, test_overlay_composition_global_alpha);
 
   return s;
 }
