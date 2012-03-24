@@ -1333,12 +1333,14 @@ video_blend_scale_linear_RGBA (GstBlendVideoFormatInfo * src,
  * @dest
  * @x: The x offset in pixel where the @src image should be blended
  * @y: the y offset in pixel where the @src image should be blended
+ * @global_alpha: the global_alpha each per-pixel alpha value is multiplied
+ *                with
  *
  * Lets you blend the @src image into the @dest image
  */
 gboolean
 video_blend (GstBlendVideoFormatInfo * dest,
-    GstBlendVideoFormatInfo * src, gint x, gint y)
+    GstBlendVideoFormatInfo * src, guint x, guint y, gfloat global_alpha)
 {
   guint i, j;
   guint8 alpha;
@@ -1349,6 +1351,7 @@ video_blend (GstBlendVideoFormatInfo * dest,
 
   g_return_val_if_fail (dest, FALSE);
   g_return_val_if_fail (src, FALSE);
+  g_return_val_if_fail (global_alpha >= 0 && global_alpha <= 1, FALSE);
 
   /* we do no support writing to premultiplied alpha, though that should
      just be a matter of adding blenders below (BLEND01 and BLEND11) */
@@ -1414,7 +1417,7 @@ video_blend (GstBlendVideoFormatInfo * dest,
 #define BLENDLOOP(blender)                                                        \
   do {                                                                            \
     for (j = 0; j < src->width * 4; j += 4) {                                     \
-      alpha = tmpsrcline[j];                                                      \
+      alpha = (guint8) tmpsrcline[j] * global_alpha;                              \
                                                                                   \
       blender (tmpdestline[j + 1], alpha, tmpsrcline[j + 1], tmpdestline[j + 1]); \
       blender (tmpdestline[j + 2], alpha, tmpsrcline[j + 2], tmpdestline[j + 2]); \

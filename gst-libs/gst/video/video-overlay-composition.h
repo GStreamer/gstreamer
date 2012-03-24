@@ -96,6 +96,7 @@ gst_video_overlay_rectangle_unref (GstVideoOverlayRectangle * comp)
  * GstVideoOverlayFormatFlags:
  * @GST_VIDEO_OVERLAY_FORMAT_FLAG_NONE: no flags
  * @GST_VIDEO_OVERLAY_FORMAT_FLAG_PREMULTIPLIED_ALPHA: RGB are premultiplied by A/255. Since: 0.10.37
+ * @GST_VIDEO_OVERLAY_FORMAT_FLAG_GLOBAL_ALPHA: a global-alpha value != 1 is set. Since: 0.10.37
  *
  * Overlay format flags.
  *
@@ -103,7 +104,8 @@ gst_video_overlay_rectangle_unref (GstVideoOverlayRectangle * comp)
  */
 typedef enum {
   GST_VIDEO_OVERLAY_FORMAT_FLAG_NONE = 0,
-  GST_VIDEO_OVERLAY_FORMAT_FLAG_PREMULTIPLIED_ALPHA = 1
+  GST_VIDEO_OVERLAY_FORMAT_FLAG_PREMULTIPLIED_ALPHA = 1,
+  GST_VIDEO_OVERLAY_FORMAT_FLAG_GLOBAL_ALPHA = 2
 } GstVideoOverlayFormatFlags;
 
 GType                        gst_video_overlay_rectangle_get_type (void);
@@ -141,6 +143,10 @@ GstBuffer *                  gst_video_overlay_rectangle_get_pixels_unscaled_arg
                                                                                    GstVideoOverlayFormatFlags  flags);
 
 GstVideoOverlayFormatFlags   gst_video_overlay_rectangle_get_flags                (GstVideoOverlayRectangle  * rectangle);
+
+gfloat                       gst_video_overlay_rectangle_get_global_alpha         (GstVideoOverlayRectangle  * rectangle);
+void                         gst_video_overlay_rectangle_set_global_alpha         (GstVideoOverlayRectangle  * rectangle,
+                                                                                   gfloat                      global_alpha);
 
 /**
  * GstVideoOverlayComposition:
