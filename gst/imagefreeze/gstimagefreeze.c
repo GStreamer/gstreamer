@@ -293,6 +293,8 @@ gst_image_freeze_sink_getcaps (GstImageFreeze * self, GstCaps * filter)
     ret = gst_caps_copy (templ);
   }
   gst_caps_unref (templ);
+  if (filter)
+    gst_caps_unref (filter);
 
   ret = gst_caps_make_writable (ret);
   gst_image_freeze_remove_fps (self, ret);
