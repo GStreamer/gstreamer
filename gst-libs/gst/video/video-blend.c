@@ -1342,16 +1342,16 @@ gboolean
 video_blend (GstBlendVideoFormatInfo * dest,
     GstBlendVideoFormatInfo * src, guint x, guint y, gfloat global_alpha)
 {
-  guint i, j;
-  guint8 alpha;
+  guint i, j, global_alpha_val;
   GetPutLine getputdest, getputsrc;
   gint src_stride;
   guint8 *tmpdestline = NULL, *tmpsrcline = NULL;
   gboolean src_premultiplied_alpha;
 
-  g_return_val_if_fail (dest, FALSE);
-  g_return_val_if_fail (src, FALSE);
-  g_return_val_if_fail (global_alpha >= 0 && global_alpha <= 1, FALSE);
+  g_assert (dest != NULL);
+  g_assert (src != NULL);
+
+  global_alpha_val = 256.0 * global_alpha;
 
   /* we do no support writing to premultiplied alpha, though that should
      just be a matter of adding blenders below (BLEND01 and BLEND11) */
@@ -1414,10 +1414,12 @@ video_blend (GstBlendVideoFormatInfo * dest,
 
     /* Here dest and src are both either in AYUV or ARGB
      * TODO: Make the orc version working properly*/
-#define BLENDLOOP(blender)                                                        \
+#define BLENDLOOP(blender,alpha_val,alpha_scale)                                  \
   do {                                                                            \
     for (j = 0; j < src->width * 4; j += 4) {                                     \
-      alpha = (guint8) tmpsrcline[j] * global_alpha;                              \
+      guint8 alpha;                                                               \
+                                                                                  \
+      alpha = (tmpsrcline[j] * alpha_val) / alpha_scale;                          \
                                                                                   \
       blender (tmpdestline[j + 1], alpha, tmpsrcline[j + 1], tmpdestline[j + 1]); \
       blender (tmpdestline[j + 2], alpha, tmpsrcline[j + 2], tmpdestline[j + 2]); \
@@ -1425,14 +1427,26 @@ video_blend (GstBlendVideoFormatInfo * dest,
     }                                                                             \
   } while(0)
 
-    if (src_premultiplied_alpha && dest->premultiplied_alpha) {
-      /* BLENDLOOP (BLEND11); */
-    } else if (!src_premultiplied_alpha && dest->premultiplied_alpha) {
-      /* BLENDLOOP (BLEND01); */
-    } else if (src_premultiplied_alpha && !dest->premultiplied_alpha) {
-      BLENDLOOP (BLEND10);
+    if (G_LIKELY (global_alpha == 1.0)) {
+      if (src_premultiplied_alpha && dest->premultiplied_alpha) {
+        /* BLENDLOOP (BLEND11, 1, 1); */
+      } else if (!src_premultiplied_alpha && dest->premultiplied_alpha) {
+        /* BLENDLOOP (BLEND01, 1, 1); */
+      } else if (src_premultiplied_alpha && !dest->premultiplied_alpha) {
+        BLENDLOOP (BLEND10, 1, 1);
+      } else {
+        BLENDLOOP (BLEND00, 1, 1);
+      }
     } else {
-      BLENDLOOP (BLEND00);
+      if (src_premultiplied_alpha && dest->premultiplied_alpha) {
+        /* BLENDLOOP (BLEND11, global_alpha_val, 256); */
+      } else if (!src_premultiplied_alpha && dest->premultiplied_alpha) {
+        /* BLENDLOOP (BLEND01, global_alpha_val, 256); */
+      } else if (src_premultiplied_alpha && !dest->premultiplied_alpha) {
+        BLENDLOOP (BLEND10, global_alpha_val, 256);
+      } else {
+        BLENDLOOP (BLEND00, global_alpha_val, 256);
+      }
     }
 
 #undef BLENDLOOP
