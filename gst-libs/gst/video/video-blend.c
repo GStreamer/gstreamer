@@ -1259,6 +1259,7 @@ G_STMT_START { \
   ret = v0 + (v1 * (255 - alpha)) / 255; \
 } G_STMT_END
 
+/* returns newly-allocated pixels in src->pixels, which caller must g_free() */
 void
 video_blend_scale_linear_RGBA (GstBlendVideoFormatInfo * src,
     gint dest_height, gint dest_width)

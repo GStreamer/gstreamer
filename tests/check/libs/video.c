@@ -25,6 +25,10 @@
 #include "config.h"
 #endif
 
+#ifdef HAVE_VALGRIND
+# include <valgrind/valgrind.h>
+#endif
+
 #include <unistd.h>
 
 #include <gst/check/gstcheck.h>
@@ -905,8 +909,13 @@ GST_START_TEST (test_overlay_composition)
   fail_unless (gst_video_buffer_get_overlay_composition (buf) == NULL);
 
   gst_buffer_ref (buf);
-  /* buffer now has refcount of 2, so its metadata is not writable */
-  ASSERT_CRITICAL (gst_video_buffer_set_overlay_composition (buf, comp1));
+  /* buffer now has refcount of 2, so its metadata is not writable.
+   * only check this if we are not running in valgrind, as it leaks */
+#ifdef HAVE_VALGRIND
+  if (!RUNNING_ON_VALGRIND) {
+    ASSERT_CRITICAL (gst_video_buffer_set_overlay_composition (buf, comp1));
+  }
+#endif
   gst_buffer_unref (buf);
   gst_video_buffer_set_overlay_composition (buf, comp1);
   fail_unless (gst_video_buffer_get_overlay_composition (buf) == comp1);
