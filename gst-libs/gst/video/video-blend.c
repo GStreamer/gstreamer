@@ -1263,6 +1263,7 @@ void
 video_blend_scale_linear_RGBA (GstBlendVideoFormatInfo * src,
     gint dest_height, gint dest_width)
 {
+  const guint8 *src_pixels;
   int acc;
   int y_increment;
   int x_increment;
@@ -1293,8 +1294,10 @@ video_blend_scale_linear_RGBA (GstBlendVideoFormatInfo * src,
 
 #define LINE(x) ((tmpbuf) + (dest_size)*((x)&1))
 
+  src_pixels = src->pixels;
+
   acc = 0;
-  orc_resample_bilinear_u32 (LINE (0), src->pixels, 0, x_increment, dest_width);
+  orc_resample_bilinear_u32 (LINE (0), src_pixels, 0, x_increment, dest_width);
   y1 = 0;
   for (i = 0; i < dest_height; i++) {
     j = acc >> 16;
@@ -1305,12 +1308,12 @@ video_blend_scale_linear_RGBA (GstBlendVideoFormatInfo * src,
     } else {
       if (j > y1) {
         orc_resample_bilinear_u32 (LINE (j),
-            src->pixels + j * src_stride, 0, x_increment, dest_width);
+            src_pixels + j * src_stride, 0, x_increment, dest_width);
         y1++;
       }
       if (j >= y1) {
         orc_resample_bilinear_u32 (LINE (j + 1),
-            src->pixels + (j + 1) * src_stride, 0, x_increment, dest_width);
+            src_pixels + (j + 1) * src_stride, 0, x_increment, dest_width);
         y1++;
       }
       orc_merge_linear_u8 (dest_pixels + i * dest_stride,
@@ -1342,7 +1345,7 @@ gboolean
 video_blend (GstBlendVideoFormatInfo * dest,
     GstBlendVideoFormatInfo * src, guint x, guint y, gfloat global_alpha)
 {
-  guint i, j, global_alpha_val;
+  guint i, j, global_alpha_val, src_width, src_height;
   GetPutLine getputdest, getputsrc;
   gint src_stride;
   guint8 *tmpdestline = NULL, *tmpsrcline = NULL;
@@ -1404,19 +1407,22 @@ video_blend (GstBlendVideoFormatInfo * dest,
   if (y + src->height > dest->height)
     src->height = dest->height - y;
 
+  src_width = src->width;
+  src_height = src->height;
+
   /* Mainloop doing the needed conversions, and blending */
-  for (i = y; i < y + src->height; i++) {
+  for (i = y; i < y + src_height; i++) {
 
     getputdest.getline (tmpdestline, dest, x, i);
     getputsrc.getline (tmpsrcline, src, 0, (i - y));
 
-    getputsrc.matrix (tmpsrcline, src->width);
+    getputsrc.matrix (tmpsrcline, src_width);
 
     /* Here dest and src are both either in AYUV or ARGB
      * TODO: Make the orc version working properly*/
 #define BLENDLOOP(blender,alpha_val,alpha_scale)                                  \
   do {                                                                            \
-    for (j = 0; j < src->width * 4; j += 4) {                                     \
+    for (j = 0; j < src_width * 4; j += 4) {                                      \
       guint8 alpha;                                                               \
                                                                                   \
       alpha = (tmpsrcline[j] * alpha_val) / alpha_scale;                          \
