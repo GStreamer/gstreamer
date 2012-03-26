@@ -81,11 +81,16 @@ check_filter_caps (const gchar * name, GstCaps * caps, gint size,
   GstElement *filter;
   GstBuffer *inbuffer, *outbuffer;
   gint i;
+  GstSegment segment;
 
   filter = setup_filter (name, prop, varargs);
   fail_unless (gst_element_set_state (filter,
           GST_STATE_PLAYING) == GST_STATE_CHANGE_SUCCESS,
       "could not set to playing");
+
+  /* ensure segment (format) properly setup */
+  gst_segment_init (&segment, GST_FORMAT_TIME);
+  fail_unless (gst_pad_push_event (mysrcpad, gst_event_new_segment (&segment)));
 
   gst_pad_set_caps (mysrcpad, caps);
 
