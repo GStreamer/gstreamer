@@ -162,8 +162,8 @@ gst_gamma_set_property (GObject * object, guint prop_id, const GValue * value,
           val);
       GST_OBJECT_LOCK (gamma);
       gamma->gamma = val;
-      gst_gamma_calculate_tables (gamma);
       GST_OBJECT_UNLOCK (gamma);
+      gst_gamma_calculate_tables (gamma);
       break;
     }
     default:
@@ -194,20 +194,23 @@ gst_gamma_calculate_tables (GstGamma * gamma)
   gint n;
   gdouble val;
   gdouble exp;
+  gboolean passthrough = FALSE;
 
+  GST_OBJECT_LOCK (gamma);
   if (gamma->gamma == 1.0) {
-    gst_base_transform_set_passthrough (GST_BASE_TRANSFORM (gamma), TRUE);
-    return;
+    passthrough = TRUE;
+  } else {
+    exp = 1.0 / gamma->gamma;
+    for (n = 0; n < 256; n++) {
+      val = n / 255.0;
+      val = pow (val, exp);
+      val = 255.0 * val;
+      gamma->gamma_table[n] = (guint8) floor (val + 0.5);
+    }
   }
-  gst_base_transform_set_passthrough (GST_BASE_TRANSFORM (gamma), FALSE);
+  GST_OBJECT_UNLOCK (gamma);
 
-  exp = 1.0 / gamma->gamma;
-  for (n = 0; n < 256; n++) {
-    val = n / 255.0;
-    val = pow (val, exp);
-    val = 255.0 * val;
-    gamma->gamma_table[n] = (guint8) floor (val + 0.5);
-  }
+  gst_base_transform_set_passthrough (GST_BASE_TRANSFORM (gamma), passthrough);
 }
 
 static void

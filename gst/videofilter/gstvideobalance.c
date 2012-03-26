@@ -156,13 +156,16 @@ gst_video_balance_is_passthrough (GstVideoBalance * videobalance)
 static void
 gst_video_balance_update_properties (GstVideoBalance * videobalance)
 {
-  gboolean passthrough = gst_video_balance_is_passthrough (videobalance);
+  gboolean passthrough;
   GstBaseTransform *base = GST_BASE_TRANSFORM (videobalance);
 
-  gst_base_transform_set_passthrough (base, passthrough);
-
+  GST_OBJECT_LOCK (videobalance);
+  passthrough = gst_video_balance_is_passthrough (videobalance);
   if (!passthrough)
     gst_video_balance_update_tables (videobalance);
+  GST_OBJECT_UNLOCK (videobalance);
+
+  gst_base_transform_set_passthrough (base, passthrough);
 }
 
 static void
@@ -713,8 +716,8 @@ gst_video_balance_set_property (GObject * object, guint prop_id,
       break;
   }
 
-  gst_video_balance_update_properties (balance);
   GST_OBJECT_UNLOCK (balance);
+  gst_video_balance_update_properties (balance);
 
   if (label) {
     GstColorBalanceChannel *channel =
