@@ -277,8 +277,7 @@ gst_v4l2_buffer_pool_set_config (GstBufferPool * bpool, GstStructure * config)
   GST_DEBUG_OBJECT (pool, "config %" GST_PTR_FORMAT, config);
 
   pool->size = size;
-  pool->max_buffers = MAX (min_buffers, max_buffers);
-  pool->min_buffers = MIN (pool->max_buffers, min_buffers);
+  pool->max_buffers = max_buffers;
   pool->params = params;
 
   gst_buffer_pool_config_set_params (config, caps, size, min_buffers,
@@ -338,11 +337,9 @@ gst_v4l2_buffer_pool_start (GstBufferPool * bpool)
 {
   GstV4l2BufferPool *pool = GST_V4L2_BUFFER_POOL (bpool);
   GstV4l2Object *obj = pool->obj;
-  gint n;
   struct v4l2_requestbuffers breq;
-  gint min_buffers, max_buffers;
+  gint max_buffers;
 
-  min_buffers = pool->min_buffers;
   max_buffers = pool->max_buffers;
 
   switch (obj->mode) {
@@ -392,14 +389,8 @@ gst_v4l2_buffer_pool_start (GstBufferPool * bpool)
   pool->num_allocated = 0;
 
   /* now, allocate the buffers: */
-  for (n = 0; n < min_buffers; n++) {
-    GstBuffer *buffer;
-
-    if (gst_v4l2_buffer_pool_alloc_buffer (bpool, &buffer, NULL) != GST_FLOW_OK)
-      goto buffer_new_failed;
-
-    gst_v4l2_buffer_pool_release_buffer (bpool, buffer);
-  }
+  if (!GST_BUFFER_POOL_CLASS (parent_class)->start (bpool))
+    goto start_failed;
 
   /* we can start capturing now, we wait for the playback case until we queued
    * the first buffer */
@@ -423,11 +414,6 @@ no_buffers:
     GST_ERROR_OBJECT (pool,
         "we received %d from device '%s', we want at least %d",
         breq.count, obj->videodev, GST_V4L2_MIN_BUFFERS);
-    return FALSE;
-  }
-buffer_new_failed:
-  {
-    GST_ERROR_OBJECT (pool, "failed to create a buffer");
     return FALSE;
   }
 start_failed:

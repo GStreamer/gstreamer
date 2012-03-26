@@ -54,7 +54,6 @@ struct _GstV4l2BufferPool
   GstAllocator *allocator;
   GstAllocationParams params;
   guint size;
-  guint min_buffers;
   guint max_buffers;
   gboolean add_videometa;
 
