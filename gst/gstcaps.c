@@ -1552,6 +1552,8 @@ gst_caps_normalize (GstCaps * caps)
 
   g_return_val_if_fail (GST_IS_CAPS (caps), NULL);
 
+  caps = gst_caps_make_writable (caps);
+
   nf.caps = caps;
   nf.writable = FALSE;
 
