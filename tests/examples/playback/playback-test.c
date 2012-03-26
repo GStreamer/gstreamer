@@ -2984,9 +2984,9 @@ create_ui (PlaybackApp * app)
     gtk_grid_attach (GTK_GRID (boxes), app->soft_colorbalance_checkbox, 4, 1, 1,
         1);
 
-    gtk_grid_attach (GTK_GRID (boxes), app->mute_checkbox, 7, 0, 2, 1);
-    gtk_grid_attach (GTK_GRID (boxes), volume_label, 6, 1, 1, 1);
-    gtk_grid_attach (GTK_GRID (boxes), app->volume_spinbutton, 7, 1, 1, 1);
+    gtk_grid_attach (GTK_GRID (boxes), app->mute_checkbox, 6, 0, 1, 1);
+    gtk_grid_attach (GTK_GRID (boxes), volume_label, 5, 1, 1, 1);
+    gtk_grid_attach (GTK_GRID (boxes), app->volume_spinbutton, 6, 1, 1, 1);
 
     gtk_toggle_button_set_active (GTK_TOGGLE_BUTTON (app->video_checkbox),
         TRUE);
