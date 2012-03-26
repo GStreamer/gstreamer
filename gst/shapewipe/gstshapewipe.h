@@ -59,7 +59,8 @@ struct _GstShapeWipe
   GCond mask_cond;
   gint mask_bpp;
 
-  GstVideoInfo info;
+  GstVideoInfo vinfo;
+  GstVideoInfo minfo;
 
   gboolean shutdown;
 

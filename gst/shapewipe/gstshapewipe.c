@@ -272,7 +272,8 @@ gst_shape_wipe_reset (GstShapeWipe * self)
   g_cond_signal (&self->mask_cond);
   g_mutex_unlock (&self->mask_mutex);
 
-  gst_video_info_init (&self->info);
+  gst_video_info_init (&self->vinfo);
+  gst_video_info_init (&self->minfo);
   self->mask_bpp = 0;
 
   gst_segment_init (&self->segment, GST_FORMAT_TIME);
@@ -292,9 +293,9 @@ gst_shape_wipe_video_sink_setcaps (GstShapeWipe * self, GstCaps * caps)
   if (!gst_video_info_from_caps (&info, caps))
     goto invalid_caps;
 
-  if (self->info.width != info.width || self->info.height != info.height) {
+  if ((self->vinfo.width != info.width || self->vinfo.height != info.height) &&
+      self->vinfo.width > 0 && self->vinfo.height > 0) {
     g_mutex_lock (&self->mask_mutex);
-    self->info = info;
     if (self->mask)
       gst_buffer_unref (self->mask);
     self->mask = NULL;
@@ -307,6 +308,8 @@ gst_shape_wipe_video_sink_setcaps (GstShapeWipe * self, GstCaps * caps)
         gst_util_uint64_scale (GST_SECOND, info.fps_d, info.fps_n);
   else
     self->frame_duration = 0;
+
+  self->vinfo = info;
 
   ret = gst_pad_set_caps (self->srcpad, caps);
 
@@ -359,15 +362,15 @@ gst_shape_wipe_video_sink_getcaps (GstPad * pad, GstCaps * filter)
   if (gst_caps_is_empty (ret))
     goto done;
 
-  if (self->info.height && self->info.width) {
+  if (self->vinfo.height && self->vinfo.width) {
     guint i, n;
 
     n = gst_caps_get_size (ret);
     for (i = 0; i < n; i++) {
       GstStructure *s = gst_caps_get_structure (ret, i);
 
-      gst_structure_set (s, "width", G_TYPE_INT, self->info.width, "height",
-          G_TYPE_INT, self->info.height, NULL);
+      gst_structure_set (s, "width", G_TYPE_INT, self->vinfo.width, "height",
+          G_TYPE_INT, self->vinfo.height, NULL);
     }
   }
 
@@ -414,32 +417,30 @@ static gboolean
 gst_shape_wipe_mask_sink_setcaps (GstShapeWipe * self, GstCaps * caps)
 {
   gboolean ret = TRUE;
-  GstStructure *s;
   gint width, height, bpp;
+  GstVideoInfo info;
 
   GST_DEBUG_OBJECT (self, "Setting caps: %" GST_PTR_FORMAT, caps);
 
-  s = gst_caps_get_structure (caps, 0);
-
-  if (!gst_structure_get_int (s, "width", &width) ||
-      !gst_structure_get_int (s, "height", &height) ||
-      !gst_structure_get_int (s, "bpp", &bpp)) {
+  if (!gst_video_info_from_caps (&info, caps)) {
     ret = FALSE;
     goto done;
   }
 
-  if ((self->info.width != width || self->info.height != height) &&
-      self->info.width > 0 && self->info.height > 0) {
+  width = GST_VIDEO_INFO_WIDTH (&info);
+  height = GST_VIDEO_INFO_HEIGHT (&info);
+  bpp = GST_VIDEO_INFO_COMP_DEPTH (&info, 0);
+
+  if ((self->vinfo.width != width || self->vinfo.height != height) &&
+      self->vinfo.width > 0 && self->vinfo.height > 0) {
     GST_ERROR_OBJECT (self, "Mask caps must have the same width/height "
         "as the video caps");
     ret = FALSE;
     goto done;
-  } else {
-    self->info.width = width;
-    self->info.height = height;
   }
 
   self->mask_bpp = bpp;
+  self->minfo = info;
 
 done:
   return ret;
@@ -496,9 +497,9 @@ gst_shape_wipe_mask_sink_getcaps (GstPad * pad, GstCaps * filter)
     gst_structure_set_name (s, "video/x-raw");
     gst_structure_remove_fields (s, "format", "framerate", NULL);
 
-    if (self->info.width && self->info.height)
-      gst_structure_set (s, "width", G_TYPE_INT, self->info.width, "height",
-          G_TYPE_INT, self->info.height, NULL);
+    if (self->vinfo.width && self->vinfo.height)
+      gst_structure_set (s, "width", G_TYPE_INT, self->vinfo.width, "height",
+          G_TYPE_INT, self->vinfo.height, NULL);
 
     gst_structure_set (s, "framerate", GST_TYPE_FRACTION, 0, 1, NULL);
 
@@ -573,15 +574,15 @@ gst_shape_wipe_src_getcaps (GstPad * pad, GstCaps * filter)
   if (gst_caps_is_empty (ret))
     goto done;
 
-  if (self->info.height && self->info.width) {
+  if (self->vinfo.height && self->vinfo.width) {
     guint i, n;
 
     n = gst_caps_get_size (ret);
     for (i = 0; i < n; i++) {
       GstStructure *s = gst_caps_get_structure (ret, i);
 
-      gst_structure_set (s, "width", G_TYPE_INT, self->info.width, "height",
-          G_TYPE_INT, self->info.height, NULL);
+      gst_structure_set (s, "width", G_TYPE_INT, self->vinfo.width, "height",
+          G_TYPE_INT, self->vinfo.height, NULL);
     }
   }
 
@@ -764,13 +765,14 @@ gst_shape_wipe_blend_##name##_##depth (GstShapeWipe * self, GstVideoFrame * infr
   const guint8 *input = (const guint8 *) GST_VIDEO_FRAME_PLANE_DATA (inframe, 0); \
   guint8 *output = (guint8 *) GST_VIDEO_FRAME_PLANE_DATA (outframe, 0); \
   guint i, j; \
-  guint mask_increment = ((depth == 16) ? GST_ROUND_UP_2 (self->info.width) : \
-                           GST_ROUND_UP_4 (self->info.width)) - self->info.width; \
+  gint width = GST_VIDEO_FRAME_WIDTH (inframe); \
+  gint height = GST_VIDEO_FRAME_HEIGHT (inframe); \
+  guint mask_increment = ((depth == 16) ? GST_ROUND_UP_2 (width) : \
+                           GST_ROUND_UP_4 (width)) - width; \
   gfloat position = self->mask_position; \
   gfloat low = position - (self->mask_border / 2.0f); \
   gfloat high = position + (self->mask_border / 2.0f); \
   guint32 low_i, high_i, round_i; \
-  gint width = self->info.width, height = self->info.height; \
   \
   if (low < 0.0f) { \
     high = 0.0f; \
@@ -837,7 +839,7 @@ gst_shape_wipe_video_sink_chain (GstPad * pad, GstObject * parent,
   gboolean new_outbuf = FALSE;
   GstVideoFrame inframe, outframe, maskframe;
 
-  if (G_UNLIKELY (GST_VIDEO_INFO_FORMAT (&self->info) ==
+  if (G_UNLIKELY (GST_VIDEO_INFO_FORMAT (&self->vinfo) ==
           GST_VIDEO_FORMAT_UNKNOWN))
     goto not_negotiated;
 
@@ -879,11 +881,14 @@ gst_shape_wipe_video_sink_chain (GstPad * pad, GstObject * parent,
     outbuf = buffer;
   }
 
-  gst_video_frame_map (&inframe, &self->info, buffer, GST_MAP_READ);
-  gst_video_frame_map (&maskframe, &self->info, mask, GST_MAP_READ);
-  gst_video_frame_map (&outframe, &self->info, outbuf, GST_MAP_WRITE);
+  gst_video_frame_map (&inframe, &self->vinfo, buffer,
+      new_outbuf ? GST_MAP_READ : GST_MAP_READWRITE);
+  gst_video_frame_map (&outframe, &self->vinfo, outbuf,
+      new_outbuf ? GST_MAP_WRITE : GST_MAP_READWRITE);
 
-  switch (GST_VIDEO_INFO_FORMAT (&self->info)) {
+  gst_video_frame_map (&maskframe, &self->minfo, mask, GST_MAP_READ);
+
+  switch (GST_VIDEO_INFO_FORMAT (&self->vinfo)) {
     case GST_VIDEO_FORMAT_AYUV:
     case GST_VIDEO_FORMAT_ARGB:
     case GST_VIDEO_FORMAT_ABGR:
@@ -905,8 +910,9 @@ gst_shape_wipe_video_sink_chain (GstPad * pad, GstObject * parent,
   }
 
   gst_video_frame_unmap (&outframe);
-  gst_video_frame_unmap (&maskframe);
   gst_video_frame_unmap (&inframe);
+
+  gst_video_frame_unmap (&maskframe);
 
   gst_buffer_unref (mask);
   if (new_outbuf)
