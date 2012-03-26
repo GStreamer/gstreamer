@@ -58,7 +58,13 @@ static gboolean
 event_func (GstPad * pad, GstObject * parent, GstEvent * event)
 {
   GST_DEBUG ("received event %p", event);
-  events = g_list_append (events, event);
+  /* not interested in caps event */
+  if (GST_EVENT_TYPE (event) == GST_EVENT_CAPS) {
+    GST_DEBUG ("dropping caps event");
+    gst_event_unref (event);
+  } else {
+    events = g_list_append (events, event);
+  }
 
   return TRUE;
 }
@@ -109,12 +115,9 @@ send_newsegment_and_empty_buffer (void)
   GST_BUFFER_OFFSET_END (buf) = GST_BUFFER_OFFSET (buf);
   fail_unless (gst_pad_push (mysrcpad, buf) == GST_FLOW_OK);
 
-  fail_unless (g_list_length (events) == 2);
+  fail_unless (g_list_length (events) == 1);
   fail_unless (events->data == ev);
   gst_mini_object_unref ((GstMiniObject *) events->data);
-  events = g_list_remove (events, ev);
-  ev = events->data;
-  gst_mini_object_unref ((GstMiniObject *) ev);
   events = g_list_remove (events, ev);
   fail_unless (g_list_length (events) == 0);
 

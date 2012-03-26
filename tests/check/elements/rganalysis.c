@@ -921,107 +921,6 @@ GST_START_TEST (test_peak_int16_16)
 
 GST_END_TEST;
 
-/* Same as the test before, but with 8 bits (packed into 16 bits). */
-
-GST_START_TEST (test_peak_int16_8)
-{
-  GstElement *element = setup_rganalysis ();
-  GstTagList *tag_list;
-
-  set_playing_state (element);
-
-  /* Half amplitude. */
-  push_buffer (test_buffer_const_int16_stereo (8000, 8, 512, 1 << 6, 0));
-  send_eos_event (element);
-  tag_list = poll_tags (element);
-  fail_unless_track_peak (tag_list, 0.5);
-  gst_tag_list_free (tag_list);
-
-  /* Swapped channels. */
-  push_buffer (test_buffer_const_int16_stereo (8000, 8, 512, 0, 1 << 6));
-  send_eos_event (element);
-  tag_list = poll_tags (element);
-  fail_unless_track_peak (tag_list, 0.5);
-  gst_tag_list_free (tag_list);
-
-  /* Mono. */
-  push_buffer (test_buffer_const_int16_mono (8000, 8, 512, 1 << 6));
-  send_eos_event (element);
-  tag_list = poll_tags (element);
-  fail_unless_track_peak (tag_list, 0.5);
-  gst_tag_list_free (tag_list);
-
-
-  /* Half amplitude, negative variant. */
-  push_buffer (test_buffer_const_int16_stereo (8000, 8, 512, -1 << 6, 0));
-  send_eos_event (element);
-  tag_list = poll_tags (element);
-  fail_unless_track_peak (tag_list, 0.5);
-  gst_tag_list_free (tag_list);
-
-  /* Swapped channels. */
-  push_buffer (test_buffer_const_int16_stereo (8000, 8, 512, 0, -1 << 6));
-  send_eos_event (element);
-  tag_list = poll_tags (element);
-  fail_unless_track_peak (tag_list, 0.5);
-  gst_tag_list_free (tag_list);
-
-  /* Mono. */
-  push_buffer (test_buffer_const_int16_mono (8000, 8, 512, -1 << 6));
-  send_eos_event (element);
-  tag_list = poll_tags (element);
-  fail_unless_track_peak (tag_list, 0.5);
-  gst_tag_list_free (tag_list);
-
-
-  /* Almost full amplitude (maximum positive value). */
-  push_buffer (test_buffer_const_int16_stereo (8000, 8, 512, (1 << 7) - 1, 0));
-  send_eos_event (element);
-  tag_list = poll_tags (element);
-  fail_unless_track_peak (tag_list, 0.9921875);
-  gst_tag_list_free (tag_list);
-
-  /* Swapped channels. */
-  push_buffer (test_buffer_const_int16_stereo (8000, 8, 512, 0, (1 << 7) - 1));
-  send_eos_event (element);
-  tag_list = poll_tags (element);
-  fail_unless_track_peak (tag_list, 0.9921875);
-  gst_tag_list_free (tag_list);
-
-  /* Mono. */
-  push_buffer (test_buffer_const_int16_mono (8000, 8, 512, (1 << 7) - 1));
-  send_eos_event (element);
-  tag_list = poll_tags (element);
-  fail_unless_track_peak (tag_list, 0.9921875);
-  gst_tag_list_free (tag_list);
-
-
-  /* Full amplitude (maximum negative value). */
-  push_buffer (test_buffer_const_int16_stereo (8000, 8, 512, -1 << 7, 0));
-  send_eos_event (element);
-  tag_list = poll_tags (element);
-  fail_unless_track_peak (tag_list, 1.0);
-  gst_tag_list_free (tag_list);
-
-  /* Swapped channels. */
-  push_buffer (test_buffer_const_int16_stereo (8000, 8, 512, 0, -1 << 7));
-  send_eos_event (element);
-  tag_list = poll_tags (element);
-  fail_unless_track_peak (tag_list, 1.0);
-  gst_tag_list_free (tag_list);
-
-  /* Mono. */
-  push_buffer (test_buffer_const_int16_mono (8000, 8, 512, -1 << 7));
-  send_eos_event (element);
-  tag_list = poll_tags (element);
-  fail_unless_track_peak (tag_list, 1.0);
-  gst_tag_list_free (tag_list);
-
-  cleanup_rganalysis (element);
-}
-
-GST_END_TEST;
-
 GST_START_TEST (test_peak_album)
 {
   GstElement *element = setup_rganalysis ();
@@ -1617,12 +1516,6 @@ GST_START_TEST (test_all_formats)
     for (j = 0; j < 3; j++)
       push_buffer (test_buffer_square_int16_mono (&accumulator,
               supported_rates[i].sample_rate, 16, 512, 1 << 13));
-    for (j = 0; j < 3; j++)
-      push_buffer (test_buffer_square_int16_stereo (&accumulator,
-              supported_rates[i].sample_rate, 8, 512, 1 << 5, 1 << 5));
-    for (j = 0; j < 3; j++)
-      push_buffer (test_buffer_square_int16_mono (&accumulator,
-              supported_rates[i].sample_rate, 8, 512, 1 << 5));
     send_eos_event (element);
     tag_list = poll_tags (element);
     fail_unless_track_peak (tag_list, 0.25);
@@ -1782,26 +1675,6 @@ MAKE_GAIN_TEST_INT16_STEREO (32000, 16);
 MAKE_GAIN_TEST_INT16_STEREO (44100, 16);
 MAKE_GAIN_TEST_INT16_STEREO (48000, 16);
 
-MAKE_GAIN_TEST_INT16_MONO (8000, 8);
-MAKE_GAIN_TEST_INT16_MONO (11025, 8);
-MAKE_GAIN_TEST_INT16_MONO (12000, 8);
-MAKE_GAIN_TEST_INT16_MONO (16000, 8);
-MAKE_GAIN_TEST_INT16_MONO (22050, 8);
-MAKE_GAIN_TEST_INT16_MONO (24000, 8);
-MAKE_GAIN_TEST_INT16_MONO (32000, 8);
-MAKE_GAIN_TEST_INT16_MONO (44100, 8);
-MAKE_GAIN_TEST_INT16_MONO (48000, 8);
-
-MAKE_GAIN_TEST_INT16_STEREO (8000, 8);
-MAKE_GAIN_TEST_INT16_STEREO (11025, 8);
-MAKE_GAIN_TEST_INT16_STEREO (12000, 8);
-MAKE_GAIN_TEST_INT16_STEREO (16000, 8);
-MAKE_GAIN_TEST_INT16_STEREO (22050, 8);
-MAKE_GAIN_TEST_INT16_STEREO (24000, 8);
-MAKE_GAIN_TEST_INT16_STEREO (32000, 8);
-MAKE_GAIN_TEST_INT16_STEREO (44100, 8);
-MAKE_GAIN_TEST_INT16_STEREO (48000, 8);
-
 static Suite *
 rganalysis_suite (void)
 {
@@ -1817,7 +1690,6 @@ rganalysis_suite (void)
 
   tcase_add_test (tc_chain, test_peak_float);
   tcase_add_test (tc_chain, test_peak_int16_16);
-  tcase_add_test (tc_chain, test_peak_int16_8);
 
   tcase_add_test (tc_chain, test_peak_album);
   tcase_add_test (tc_chain, test_peak_track_album);
@@ -1876,26 +1748,6 @@ rganalysis_suite (void)
   tcase_add_test (tc_chain, test_gain_int16_16_stereo_32000);
   tcase_add_test (tc_chain, test_gain_int16_16_stereo_44100);
   tcase_add_test (tc_chain, test_gain_int16_16_stereo_48000);
-
-  tcase_add_test (tc_chain, test_gain_int16_8_mono_8000);
-  tcase_add_test (tc_chain, test_gain_int16_8_mono_11025);
-  tcase_add_test (tc_chain, test_gain_int16_8_mono_12000);
-  tcase_add_test (tc_chain, test_gain_int16_8_mono_16000);
-  tcase_add_test (tc_chain, test_gain_int16_8_mono_22050);
-  tcase_add_test (tc_chain, test_gain_int16_8_mono_24000);
-  tcase_add_test (tc_chain, test_gain_int16_8_mono_32000);
-  tcase_add_test (tc_chain, test_gain_int16_8_mono_44100);
-  tcase_add_test (tc_chain, test_gain_int16_8_mono_48000);
-
-  tcase_add_test (tc_chain, test_gain_int16_8_stereo_8000);
-  tcase_add_test (tc_chain, test_gain_int16_8_stereo_11025);
-  tcase_add_test (tc_chain, test_gain_int16_8_stereo_12000);
-  tcase_add_test (tc_chain, test_gain_int16_8_stereo_16000);
-  tcase_add_test (tc_chain, test_gain_int16_8_stereo_22050);
-  tcase_add_test (tc_chain, test_gain_int16_8_stereo_24000);
-  tcase_add_test (tc_chain, test_gain_int16_8_stereo_32000);
-  tcase_add_test (tc_chain, test_gain_int16_8_stereo_44100);
-  tcase_add_test (tc_chain, test_gain_int16_8_stereo_48000);
 
   return s;
 }
