@@ -427,13 +427,17 @@ gst_rtp_h264_pay_set_sps_pps (GstRTPBasePayload * basepayload)
     count++;
   }
 
-  /* profile is 24 bit. Force it to respect the limit */
-  profile = g_strdup_printf ("%06x", payloader->profile & 0xffffff);
-  /* combine into output caps */
-  res = gst_rtp_base_payload_set_outcaps (basepayload,
-      "sprop-parameter-sets", G_TYPE_STRING, sprops->str, NULL);
+  if (G_LIKELY (count)) {
+    /* profile is 24 bit. Force it to respect the limit */
+    profile = g_strdup_printf ("%06x", payloader->profile & 0xffffff);
+    /* combine into output caps */
+    res = gst_rtp_base_payload_set_outcaps (basepayload,
+        "sprop-parameter-sets", G_TYPE_STRING, sprops->str, NULL);
+    g_free (profile);
+  } else {
+    res = gst_rtp_base_payload_set_outcaps (basepayload, NULL);
+  }
   g_string_free (sprops, TRUE);
-  g_free (profile);
 
   return res;
 }
@@ -878,6 +882,12 @@ gst_rtp_h264_pay_payload_nal (GstRTPBasePayload * basepayload,
 
   nalType = data[0] & 0x1f;
   GST_DEBUG_OBJECT (rtph264pay, "Processing Buffer with NAL TYPE=%d", nalType);
+
+  /* should set src caps before pushing stuff,
+   * and if we did not see enough SPS/PPS, that may not be the case */
+  if (G_UNLIKELY (!gst_pad_has_current_caps (GST_RTP_BASE_PAYLOAD_SRCPAD
+              (basepayload))))
+    gst_rtp_h264_pay_set_sps_pps (basepayload);
 
   send_spspps = FALSE;
 
