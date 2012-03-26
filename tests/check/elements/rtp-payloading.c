@@ -177,7 +177,8 @@ rtp_pipeline_create (const guint8 * frame_data, int frame_data_size,
 
   /* Set src properties. */
   caps = gst_caps_from_string (filtercaps);
-  g_object_set (p->appsrc, "do-timestamp", TRUE, "caps", caps, NULL);
+  g_object_set (p->appsrc, "do-timestamp", TRUE, "caps", caps,
+      "format", GST_FORMAT_TIME, NULL);
   gst_caps_unref (caps);
 
   /* Add elements to the pipeline. */
@@ -443,8 +444,8 @@ static int rtp_mpa_frame_count = 1;
 GST_START_TEST (rtp_mpa)
 {
   rtp_pipeline_test (rtp_mpa_frame_data, rtp_mpa_frame_data_size,
-      rtp_mpa_frame_count, "audio/mpeg", "rtpmpapay", "rtpmpadepay", 0, 0,
-      FALSE);
+      rtp_mpa_frame_count, "audio/mpeg,mpegversion=1", "rtpmpapay",
+      "rtpmpadepay", 0, 0, FALSE);
 }
 
 GST_END_TEST;
@@ -495,8 +496,9 @@ GST_START_TEST (rtp_h264)
 {
   /* FIXME 0.11: fully specify h264 caps (and make payloader check) */
   rtp_pipeline_test (rtp_h264_frame_data, rtp_h264_frame_data_size,
-      rtp_h264_frame_count, "video/x-h264", "rtph264pay", "rtph264depay",
-      0, 0, FALSE);
+      rtp_h264_frame_count,
+      "video/x-h264,stream-format=(string)byte-stream,alignment=(string)nal",
+      "rtph264pay", "rtph264depay", 0, 0, FALSE);
 }
 
 GST_END_TEST;
@@ -521,7 +523,8 @@ GST_START_TEST (rtp_h264_list_lt_mtu)
   /* FIXME 0.11: fully specify h264 caps (and make payloader check) */
   rtp_pipeline_test (rtp_h264_list_lt_mtu_frame_data,
       rtp_h264_list_lt_mtu_frame_data_size, rtp_h264_list_lt_mtu_frame_count,
-      "video/x-h264", "rtph264pay", "rtph264depay",
+      "video/x-h264,stream-format=(string)byte-stream,alignment=(string)nal",
+      "rtph264pay", "rtph264depay",
       rtp_h264_list_lt_mtu_bytes_sent, rtp_h264_list_lt_mtu_mtu_size, TRUE);
 }
 
@@ -550,7 +553,8 @@ GST_START_TEST (rtp_h264_list_gt_mtu)
   /* FIXME 0.11: fully specify h264 caps (and make payloader check) */
   rtp_pipeline_test (rtp_h264_list_gt_mtu_frame_data,
       rtp_h264_list_gt_mtu_frame_data_size, rtp_h264_list_gt_mtu_frame_count,
-      "video/x-h264", "rtph264pay", "rtph264depay",
+      "video/x-h264,stream-format=(string)byte-stream,alignment=(string)nal",
+      "rtph264pay", "rtph264depay",
       rtp_h264_list_gt_mtu_bytes_sent, rtp_h264_list_gt_mtu_mty_size, TRUE);
 }
 
@@ -568,7 +572,7 @@ GST_START_TEST (rtp_L16)
 {
   rtp_pipeline_test (rtp_L16_frame_data, rtp_L16_frame_data_size,
       rtp_L16_frame_count,
-      "audio/x-raw,format=S16_BE,rate=1,channels=1",
+      "audio/x-raw,format=S16BE,rate=1,channels=1,layout=(string)interleaved",
       "rtpL16pay", "rtpL16depay", 0, 0, FALSE);
 }
 
@@ -747,7 +751,7 @@ static int rtp_g729_frame_count = 1;
 GST_START_TEST (rtp_g729)
 {
   rtp_pipeline_test (rtp_g729_frame_data, rtp_g729_frame_data_size,
-      rtp_g729_frame_count, "audio/G729", "rtpg729pay",
+      rtp_g729_frame_count, "audio/G729,rate=8000,channels=1", "rtpg729pay",
       "rtpg729depay", 0, 0, FALSE);
 }
 

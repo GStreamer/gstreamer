@@ -137,8 +137,9 @@ chain_rtp_packet (GstPad * pad, CleanupData * data)
         "media=(string)audio, clock-rate=(int)44100, "
         "encoding-name=(string)L16, encoding-params=(string)1, channels=(int)1");
     data->seqnum = 0;
-    gst_pad_set_caps (pad, caps);
   }
+
+  gst_pad_set_caps (pad, caps);
 
   buffer = gst_buffer_new_and_alloc (sizeof (rtp_packet));
   gst_buffer_map (buffer, &map, GST_MAP_WRITE);
