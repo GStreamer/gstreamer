@@ -189,7 +189,7 @@ gst_query_type_get_flags (GstQueryType type)
 {
   GstQueryTypeFlags ret;
 
-  ret = type & ((1 << GST_EVENT_NUM_SHIFT) - 1);
+  ret = type & ((1 << GST_QUERY_NUM_SHIFT) - 1);
 
   return ret;
 }
@@ -233,7 +233,7 @@ gst_query_init (GstQueryImpl * query, gsize size, GstQueryType type)
   query->query.mini_object.copy = (GstMiniObjectCopyFunction) _gst_query_copy;
   query->query.mini_object.free = (GstMiniObjectFreeFunction) _gst_query_free;
 
-  GST_EVENT_TYPE (query) = type;
+  GST_QUERY_TYPE (query) = type;
 }
 
 /**
