@@ -145,6 +145,12 @@ gst_vaapi_video_buffer_set_surface_proxy(
     GstVaapiSurfaceProxy *proxy
 );
 
+guint
+gst_vaapi_video_buffer_get_render_flags(GstVaapiVideoBuffer *buffer);
+
+void
+gst_vaapi_video_buffer_set_render_flags(GstVaapiVideoBuffer *buffer, guint flags);
+
 G_END_DECLS
 
 #endif /* GST_VAAPI_VIDEO_BUFFER_H */

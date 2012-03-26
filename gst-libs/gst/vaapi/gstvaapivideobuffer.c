@@ -50,6 +50,7 @@ struct _GstVaapiVideoBufferPrivate {
     GstVaapiSurface            *surface;
     GstVaapiSurfaceProxy       *proxy;
     GstBuffer                  *buffer;
+    guint                       render_flags;
 };
 
 static void
@@ -168,6 +169,7 @@ gst_vaapi_video_buffer_init(GstVaapiVideoBuffer *buffer)
     priv->surface       = NULL;
     priv->proxy         = NULL;
     priv->buffer        = NULL;
+    priv->render_flags  = 0;
 }
 
 /**
@@ -596,4 +598,37 @@ gst_vaapi_video_buffer_set_buffer(
 {
   g_return_if_fail (buffer->priv->buffer == NULL);
   buffer->priv->buffer = gst_buffer_ref (other_buffer);
+}
+
+/**
+ * gst_vaapi_video_buffer_get_render_flags:
+ * @buffer: a #GstVaapiVideoBuffer
+ *
+ * Retrieves the surface render flags bound to the @buffer.
+ *
+ * Return value: a combination for #GstVaapiSurfaceRenderFlags
+ */
+guint
+gst_vaapi_video_buffer_get_render_flags(GstVaapiVideoBuffer *buffer)
+{
+    g_return_val_if_fail(GST_VAAPI_IS_VIDEO_BUFFER(buffer), 0);
+    g_return_val_if_fail(GST_VAAPI_IS_SURFACE(buffer->priv->surface), 0);
+
+    return buffer->priv->render_flags;
+}
+
+/**
+ * gst_vaapi_video_buffer_set_render_flags:
+ * @buffer: a #GstVaapiVideoBuffer
+ * @flags: a set of surface render flags
+ *
+ * Sets #GstVaapiSurfaceRenderFlags to the @buffer.
+ */
+void
+gst_vaapi_video_buffer_set_render_flags(GstVaapiVideoBuffer *buffer, guint flags)
+{
+    g_return_if_fail(GST_VAAPI_IS_VIDEO_BUFFER(buffer));
+    g_return_if_fail(GST_VAAPI_IS_SURFACE(buffer->priv->surface));
+
+    buffer->priv->render_flags = flags;
 }
