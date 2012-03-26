@@ -824,7 +824,8 @@ gst_v4l2src_fill (GstPushSrc * src, GstBuffer * buf)
   /* ERROR */
 error:
   {
-    GST_ERROR_OBJECT (src, "error processing buffer");
+    GST_DEBUG_OBJECT (src, "error processing buffer %d (%s)", ret,
+        gst_flow_get_name (ret));
     return ret;
   }
 }
