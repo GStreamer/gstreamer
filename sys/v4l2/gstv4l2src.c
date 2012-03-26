@@ -609,6 +609,7 @@ gst_v4l2src_query (GstBaseSrc * bsrc, GstQuery * query)
     case GST_QUERY_LATENCY:{
       GstClockTime min_latency, max_latency;
       guint32 fps_n, fps_d;
+      guint max_buffers;
 
       /* device must be open */
       if (!GST_V4L2_IS_OPEN (obj)) {
@@ -631,8 +632,12 @@ gst_v4l2src_query (GstBaseSrc * bsrc, GstQuery * query)
       min_latency = gst_util_uint64_scale_int (GST_SECOND, fps_d, fps_n);
 
       /* max latency is total duration of the frame buffer */
-      max_latency =
-          GST_V4L2_BUFFER_POOL_CAST (obj->pool)->max_buffers * min_latency;
+      max_buffers = GST_V4L2_BUFFER_POOL_CAST (obj->pool)->max_buffers;
+
+      if (max_buffers == 0)
+        max_latency = -1;
+      else
+        max_latency = max_buffers * min_latency;
 
       GST_DEBUG_OBJECT (bsrc,
           "report latency min %" GST_TIME_FORMAT " max %" GST_TIME_FORMAT,
