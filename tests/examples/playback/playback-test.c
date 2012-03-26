@@ -2613,7 +2613,7 @@ create_ui (PlaybackApp * app)
     gtk_grid_attach (GTK_GRID (flagtable), rate_label, 4, 0, 1, 1);
     gtk_grid_attach (GTK_GRID (flagtable), rate_spinbutton, 4, 1, 1, 1);
 
-    advanced_seek = gtk_frame_new ("Advanced Playback");
+    advanced_seek = gtk_frame_new ("Advanced Seeking");
     advanced_seek_grid = gtk_grid_new ();
     gtk_grid_set_row_spacing (GTK_GRID (advanced_seek_grid), 2);
     gtk_grid_set_row_homogeneous (GTK_GRID (advanced_seek_grid), FALSE);
@@ -2631,7 +2631,7 @@ create_ui (PlaybackApp * app)
     gtk_grid_attach (GTK_GRID (advanced_seek_grid), app->seek_entry, 0, 1, 1,
         1);
 
-    seek_button = gtk_button_new_with_label ("Playback");
+    seek_button = gtk_button_new_with_label ("Seek");
     g_signal_connect (G_OBJECT (seek_button), "clicked",
         G_CALLBACK (advanced_seek_button_cb), app);
     gtk_grid_attach (GTK_GRID (advanced_seek_grid), seek_button, 1, 0, 1, 1);
