@@ -234,13 +234,18 @@ static const FormatInfo formats[] = {
   {"image/vnd.wap.wbmp", "Wireless Bitmap", 0},
 
   /* subtitle formats with static descriptions */
-  {"application/x-ass", "ASS", 0},
+  {"application/x-ssa", "SubStation Alpha", 0},
+  {"application/x-ass", "Advanced SubStation Alpha", 0},
+  /* FIXME: add variant field to typefinder? */
+  {"application/x-subtitle", N_("Subtitle"), 0},
+  {"application/x-subtitle-mpl2", N_("MPL2 subtitle format"), 0},
+  {"application/x-subtitle-dks", N_("DKS subtitle format"), 0},
+  {"application/x-subtitle-qttext", N_("QTtext subtitle format"), 0},
   {"application/x-subtitle-sami", N_("Sami subtitle format"), 0},
   {"application/x-subtitle-tmplayer", N_("TMPlayer subtitle format"), 0},
   {"application/x-kate", "Kate", 0},
   {"subtitle/x-kate", N_("Kate subtitle format"), 0},
   {"subpicture/x-dvb", "DVB subtitles", 0},
-  /* add variant field to typefinder? { "application/x-subtitle", N_("subtitle"), 0}, */
 
   /* non-audio/video/container formats */
   {"hdv/aux-v", "HDV AUX-V", 0},
