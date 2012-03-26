@@ -2553,7 +2553,7 @@ create_ui (PlaybackApp * app)
     gtk_grid_set_row_spacing (GTK_GRID (flagtable), 2);
     gtk_grid_set_row_homogeneous (GTK_GRID (flagtable), FALSE);
     gtk_grid_set_column_spacing (GTK_GRID (flagtable), 2);
-    gtk_grid_set_column_homogeneous (GTK_GRID (flagtable), TRUE);
+    gtk_grid_set_column_homogeneous (GTK_GRID (flagtable), FALSE);
 
     accurate_checkbox = gtk_check_button_new_with_label ("Accurate Playback");
     key_checkbox = gtk_check_button_new_with_label ("Key-unit Playback");
@@ -2725,7 +2725,7 @@ create_ui (PlaybackApp * app)
     gtk_grid_set_row_spacing (GTK_GRID (grid), 2);
     gtk_grid_set_row_homogeneous (GTK_GRID (grid), FALSE);
     gtk_grid_set_column_spacing (GTK_GRID (grid), 2);
-    gtk_grid_set_column_homogeneous (GTK_GRID (grid), TRUE);
+    gtk_grid_set_column_homogeneous (GTK_GRID (grid), FALSE);
 
     navigation_button = gtk_button_new_with_label ("Menu 1");
     g_signal_connect (G_OBJECT (navigation_button), "clicked",
@@ -2951,7 +2951,7 @@ create_ui (PlaybackApp * app)
     gtk_grid_set_row_spacing (GTK_GRID (boxes), 2);
     gtk_grid_set_row_homogeneous (GTK_GRID (boxes), FALSE);
     gtk_grid_set_column_spacing (GTK_GRID (boxes), 2);
-    gtk_grid_set_column_homogeneous (GTK_GRID (boxes), TRUE);
+    gtk_grid_set_column_homogeneous (GTK_GRID (boxes), FALSE);
 
     app->video_checkbox = gtk_check_button_new_with_label ("Video");
     app->audio_checkbox = gtk_check_button_new_with_label ("Audio");
@@ -3060,7 +3060,7 @@ create_ui (PlaybackApp * app)
     gtk_grid_set_row_spacing (GTK_GRID (boxes3), 2);
     gtk_grid_set_row_homogeneous (GTK_GRID (boxes3), FALSE);
     gtk_grid_set_column_spacing (GTK_GRID (boxes3), 2);
-    gtk_grid_set_column_homogeneous (GTK_GRID (boxes3), TRUE);
+    gtk_grid_set_column_homogeneous (GTK_GRID (boxes3), FALSE);
 
     label = gtk_label_new ("Video sink");
     gtk_grid_attach (GTK_GRID (boxes3), label, 0, 0, 1, 1);
