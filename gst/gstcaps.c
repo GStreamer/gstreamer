@@ -1498,7 +1498,6 @@ typedef struct _NormalizeForeach
 {
   GstCaps *caps;
   GstStructure *structure;
-  gboolean writable;
 }
 NormalizeForeach;
 
@@ -1516,10 +1515,6 @@ gst_caps_normalize_foreach (GQuark field_id, const GValue * value, gpointer ptr)
       GstStructure *structure = gst_structure_copy (nf->structure);
 
       gst_structure_id_set_value (structure, field_id, v);
-      if (G_UNLIKELY (!nf->writable)) {
-        nf->caps = gst_caps_make_writable (nf->caps);
-        nf->writable = TRUE;
-      }
       gst_caps_append_structure_unchecked (nf->caps, structure);
     }
 
@@ -1555,7 +1550,6 @@ gst_caps_normalize (GstCaps * caps)
   caps = gst_caps_make_writable (caps);
 
   nf.caps = caps;
-  nf.writable = FALSE;
 
   for (i = 0; i < gst_caps_get_size (nf.caps); i++) {
     nf.structure = gst_caps_get_structure_unchecked (nf.caps, i);
