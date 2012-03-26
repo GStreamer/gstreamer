@@ -154,6 +154,9 @@ AX_CREATE_STDINT_H
 dnl used in gst/udp
 AC_CHECK_HEADERS([sys/time.h])
 
+dnl used in gst/udp
+AC_CHECK_HEADERS([sys/socket.h])
+
 dnl *** checks for types/defines ***
 
 dnl Check for FIONREAD ioctl declaration.  This check is needed

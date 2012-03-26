@@ -40,7 +40,9 @@
 #include "gstmultiudpsink.h"
 
 #include <string.h>
+#ifdef HAVE_SYS_SOCKET_H
 #include <sys/socket.h>
+#endif
 
 #include "gst/glib-compat-private.h"
 
