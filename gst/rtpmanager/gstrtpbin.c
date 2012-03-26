@@ -632,6 +632,7 @@ no_demux:
   }
 }
 
+/* called with RTP_BIN_LOCK */
 static void
 free_session (GstRtpBinSession * sess, GstRtpBin * bin)
 {
@@ -645,12 +646,10 @@ free_session (GstRtpBinSession * sess, GstRtpBin * bin)
   gst_element_set_state (sess->demux, GST_STATE_NULL);
   gst_element_set_state (sess->session, GST_STATE_NULL);
 
-  GST_RTP_BIN_LOCK (bin);
   remove_recv_rtp (bin, sess);
   remove_recv_rtcp (bin, sess);
   remove_send_rtp (bin, sess);
   remove_rtcp (bin, sess);
-  GST_RTP_BIN_UNLOCK (bin);
 
   gst_bin_remove (GST_BIN_CAST (bin), sess->session);
   gst_bin_remove (GST_BIN_CAST (bin), sess->demux);
@@ -1902,6 +1901,7 @@ gst_rtp_bin_dispose (GObject * object)
 
   rtpbin = GST_RTP_BIN (object);
 
+  GST_RTP_BIN_LOCK (rtpbin);
   GST_DEBUG_OBJECT (object, "freeing sessions");
   g_slist_foreach (rtpbin->sessions, (GFunc) free_session, rtpbin);
   g_slist_free (rtpbin->sessions);
@@ -1910,6 +1910,7 @@ gst_rtp_bin_dispose (GObject * object)
   g_slist_foreach (rtpbin->clients, (GFunc) free_client, rtpbin);
   g_slist_free (rtpbin->clients);
   rtpbin->clients = NULL;
+  GST_RTP_BIN_UNLOCK (rtpbin);
 
   G_OBJECT_CLASS (parent_class)->dispose (object);
 }
