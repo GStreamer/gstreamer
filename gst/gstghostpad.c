@@ -233,7 +233,7 @@ gst_proxy_pad_query_default (GstPad * pad, GstObject * parent, GstQuery * query)
 }
 
 /**
- * gst_proyx_pad_iterate_internal_links_default:
+ * gst_proxy_pad_iterate_internal_links_default:
  * @pad: the #GstPad to get the internal links of.
  * @parent: the parent of @pad or NULL
  *
