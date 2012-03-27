@@ -495,6 +495,7 @@ subroutine_error:
   {
     GST_ERROR_OBJECT (obj, "failed to query formats");
     snd_pcm_hw_params_free (hw_params);
+    gst_caps_unref (caps);
     return NULL;
   }
 }
