@@ -1440,7 +1440,7 @@ gst_ximagesink_propose_allocation (GstBaseSink * bsink, GstQuery * query)
   g_mutex_unlock (ximagesink->flow_lock);
 
   if (pool != NULL) {
-    const GstCaps *pcaps;
+    GstCaps *pcaps;
 
     /* we had a pool, check caps */
     config = gst_buffer_pool_get_config (pool);
@@ -1454,6 +1454,7 @@ gst_ximagesink_propose_allocation (GstBaseSink * bsink, GstQuery * query)
       gst_object_unref (pool);
       pool = NULL;
     }
+    gst_structure_free (config);
   }
   if (pool == NULL && need_pool) {
     GstVideoInfo info;

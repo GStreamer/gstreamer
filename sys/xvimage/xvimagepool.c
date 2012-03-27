@@ -517,7 +517,7 @@ xvimage_buffer_pool_set_config (GstBufferPool * pool, GstStructure * config)
   GstXvImageBufferPool *xvpool = GST_XVIMAGE_BUFFER_POOL_CAST (pool);
   GstXvImageBufferPoolPrivate *priv = xvpool->priv;
   GstVideoInfo info;
-  const GstCaps *caps;
+  GstCaps *caps;
 
   if (!gst_buffer_pool_config_get_params (config, &caps, NULL, NULL, NULL))
     goto wrong_config;

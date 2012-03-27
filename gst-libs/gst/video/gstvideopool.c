@@ -170,7 +170,7 @@ video_buffer_pool_set_config (GstBufferPool * pool, GstStructure * config)
   GstVideoBufferPool *vpool = GST_VIDEO_BUFFER_POOL_CAST (pool);
   GstVideoBufferPoolPrivate *priv = vpool->priv;
   GstVideoInfo info;
-  const GstCaps *caps;
+  GstCaps *caps;
   gint width, height;
   GstAllocator *allocator;
   GstAllocationParams params;

@@ -481,7 +481,7 @@ ximage_buffer_pool_set_config (GstBufferPool * pool, GstStructure * config)
   GstXImageBufferPool *xpool = GST_XIMAGE_BUFFER_POOL_CAST (pool);
   GstXImageBufferPoolPrivate *priv = xpool->priv;
   GstVideoInfo info;
-  const GstCaps *caps;
+  GstCaps *caps;
 
   if (!gst_buffer_pool_config_get_params (config, &caps, NULL, NULL, NULL))
     goto wrong_config;
