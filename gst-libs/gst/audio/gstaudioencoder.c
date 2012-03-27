@@ -1237,7 +1237,7 @@ gst_audio_encoder_proxy_getcaps (GstAudioEncoder * enc, GstCaps * caps)
       caps ? gst_caps_ref (caps) : gst_pad_get_pad_template_caps (enc->sinkpad);
   allowed = gst_pad_get_allowed_caps (enc->srcpad);
   if (!allowed || gst_caps_is_empty (allowed) || gst_caps_is_any (allowed)) {
-    fcaps = gst_caps_copy (templ_caps);
+    fcaps = templ_caps;
     goto done;
   }
 
@@ -1273,9 +1273,9 @@ gst_audio_encoder_proxy_getcaps (GstAudioEncoder * enc, GstCaps * caps)
 
   fcaps = gst_caps_intersect (filter_caps, templ_caps);
   gst_caps_unref (filter_caps);
+  gst_caps_unref (templ_caps);
 
 done:
-  gst_caps_replace (&templ_caps, NULL);
   gst_caps_replace (&allowed, NULL);
 
   GST_LOG_OBJECT (enc, "proxy caps %" GST_PTR_FORMAT, fcaps);
