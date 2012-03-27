@@ -80,7 +80,7 @@ cleanup_x264enc (GstElement * x264enc)
 }
 
 static void
-check_caps (GstCaps * caps)
+check_caps (GstCaps * caps, gint profile_id)
 {
   GstStructure *s;
   const GValue *sf, *avcc;
@@ -108,9 +108,7 @@ check_caps (GstCaps * caps)
     fail_unless (buf != NULL);
     gst_buffer_map (buf, &map, GST_MAP_READ);
     fail_unless_equals_int (map.data[0], 1);
-    /* should be either baseline, main profile or extended profile */
-    fail_unless (map.data[1] == 0x42 || map.data[1] == 0x4D
-        || map.data[1] == 0x58);
+    fail_unless (map.data[1] == profile_id);
     gst_buffer_unmap (buf, &map);
   } else if (strcmp (stream_format, "byte-stream") == 0) {
     fail_if (gst_structure_get_value (s, "codec_data") != NULL);
@@ -119,7 +117,8 @@ check_caps (GstCaps * caps)
   }
 }
 
-GST_START_TEST (test_video_pad)
+static void
+test_video_profile (const gchar * profile, gint profile_id)
 {
   GstElement *x264enc;
   GstBuffer *inbuffer, *outbuffer;
@@ -133,6 +132,13 @@ GST_START_TEST (test_video_pad)
   fail_unless (gst_element_set_state (x264enc,
           GST_STATE_PLAYING) == GST_STATE_CHANGE_SUCCESS,
       "could not set to playing");
+
+  caps = gst_caps_from_string (MPEG_CAPS_STRING);
+  gst_caps_set_simple (caps, "profile", G_TYPE_STRING, profile, NULL);
+  /* code below assumes avc */
+  gst_caps_set_simple (caps, "stream-format", G_TYPE_STRING, "avc", NULL);
+  gst_pad_set_caps (mysinkpad, caps);
+  gst_pad_use_fixed_caps (mysinkpad);
 
   caps = gst_caps_from_string (VIDEO_CAPS_STRING);
   fail_unless (gst_pad_push_event (mysrcpad, gst_event_new_caps (caps)));
@@ -157,7 +163,7 @@ GST_START_TEST (test_video_pad)
     GstCaps *outcaps;
 
     outcaps = gst_pad_get_current_caps (mysinkpad);
-    check_caps (outcaps);
+    check_caps (outcaps, profile_id);
     gst_caps_unref (outcaps);
   }
 
@@ -230,131 +236,23 @@ GST_START_TEST (test_video_pad)
   buffers = NULL;
 }
 
+GST_START_TEST (test_video_baseline)
+{
+  test_video_profile ("baseline", 0x42);
+}
+
 GST_END_TEST;
 
-GstCaps *pad_caps;
-
-#if 0
-GstCaps *
-getcaps_test (GstPad * pad, GstCaps * filter)
+GST_START_TEST (test_video_main)
 {
-  if (filter == NULL)
-    return gst_caps_ref (pad_caps);
-  else
-    return gst_caps_intersect (pad_caps, filter);
+  test_video_profile ("main", 0x4d);
 }
-#endif
 
-GST_START_TEST (test_profile_in_caps)
+GST_END_TEST;
+
+GST_START_TEST (test_video_high)
 {
-  GstElement *x264enc;
-  GstPad *srcpad;
-  GstPad *sinkpad;
-  GstStructure *s;
-  GstCaps *caps;
-
-  pad_caps = gst_caps_from_string (MPEG_CAPS_STRING);
-
-  x264enc = setup_x264enc ();
-  gst_pad_set_caps (mysinkpad, pad_caps);
-  gst_pad_use_fixed_caps (mysinkpad);
-
-  srcpad = gst_element_get_static_pad (x264enc, "src");
-  sinkpad = gst_element_get_static_pad (x264enc, "sink");
-  fail_unless (gst_element_set_state (x264enc,
-          GST_STATE_PLAYING) == GST_STATE_CHANGE_SUCCESS,
-      "could not set to playing");
-
-  fail_unless (gst_pad_set_caps (sinkpad,
-          (GstCaps *) gst_pad_get_pad_template_caps (mysrcpad)));
-  caps = gst_pad_get_current_caps (srcpad);
-  s = gst_caps_get_structure (caps, 0);
-  fail_unless (!g_strcmp0 (gst_structure_get_string (s, "profile"), "main"));
-  gst_caps_unref (caps);
-
-  fail_unless (gst_element_set_state (x264enc,
-          GST_STATE_READY) == GST_STATE_CHANGE_SUCCESS,
-      "could not set to ready");
-  g_object_set (x264enc, "profile", 1, NULL);
-  fail_unless (gst_element_set_state (x264enc,
-          GST_STATE_PLAYING) == GST_STATE_CHANGE_SUCCESS,
-      "could not set to playing");
-  fail_unless (gst_pad_set_caps (sinkpad,
-          (GstCaps *) gst_pad_get_pad_template_caps (mysrcpad)));
-
-  caps = gst_pad_get_current_caps (srcpad);
-  s = gst_caps_get_structure (caps, 0);
-  fail_unless (!g_strcmp0 (gst_structure_get_string (s, "profile"),
-          "constrained-baseline"));
-  gst_caps_unref (caps);
-
-  fail_unless (gst_element_set_state (x264enc,
-          GST_STATE_READY) == GST_STATE_CHANGE_SUCCESS,
-      "could not set to ready");
-  g_object_set (x264enc, "profile", 3, NULL);
-  fail_unless (gst_element_set_state (x264enc,
-          GST_STATE_PLAYING) == GST_STATE_CHANGE_SUCCESS,
-      "could not set to playing");
-  fail_unless (gst_pad_set_caps (sinkpad,
-          (GstCaps *) gst_pad_get_pad_template_caps (mysrcpad)));
-
-  caps = gst_pad_get_current_caps (srcpad);
-  s = gst_caps_get_structure (caps, 0);
-  fail_unless (!g_strcmp0 (gst_structure_get_string (s, "profile"), "high"));
-  gst_caps_unref (caps);
-
-  fail_unless (gst_element_set_state (x264enc,
-          GST_STATE_READY) == GST_STATE_CHANGE_SUCCESS,
-      "could not set to ready");
-  g_object_set (x264enc, "profile", 2, NULL);
-  fail_unless (gst_element_set_state (x264enc,
-          GST_STATE_PLAYING) == GST_STATE_CHANGE_SUCCESS,
-      "could not set to playing");
-  fail_unless (gst_pad_set_caps (sinkpad,
-          (GstCaps *) gst_pad_get_pad_template_caps (mysrcpad)));
-
-  caps = gst_pad_get_current_caps (srcpad);
-  s = gst_caps_get_structure (caps, 0);
-  fail_unless (!g_strcmp0 (gst_structure_get_string (s, "profile"), "main"));
-  gst_caps_unref (caps);
-
-  s = gst_caps_get_structure (pad_caps, 0);
-  gst_structure_set (s, "profile", G_TYPE_STRING, "constrained-baseline", NULL);
-  fail_unless (gst_element_set_state (x264enc,
-          GST_STATE_READY) == GST_STATE_CHANGE_SUCCESS,
-      "could not set to ready");
-  fail_unless (gst_element_set_state (x264enc,
-          GST_STATE_PLAYING) == GST_STATE_CHANGE_SUCCESS,
-      "could not set to playing");
-  fail_unless (gst_pad_set_caps (sinkpad,
-          (GstCaps *) gst_pad_get_pad_template_caps (mysrcpad)));
-
-  caps = gst_pad_get_current_caps (srcpad);
-  s = gst_caps_get_structure (caps, 0);
-  fail_unless (!g_strcmp0 (gst_structure_get_string (s, "profile"),
-          "constrained-baseline"));
-  gst_caps_unref (caps);
-
-  s = gst_caps_get_structure (pad_caps, 0);
-  gst_structure_set (s, "profile", G_TYPE_STRING, "high", NULL);
-  fail_unless (gst_element_set_state (x264enc,
-          GST_STATE_READY) == GST_STATE_CHANGE_SUCCESS,
-      "could not set to ready");
-  fail_unless (gst_element_set_state (x264enc,
-          GST_STATE_PLAYING) == GST_STATE_CHANGE_SUCCESS,
-      "could not set to playing");
-  fail_unless (gst_pad_set_caps (sinkpad,
-          (GstCaps *) gst_pad_get_pad_template_caps (mysrcpad)));
-
-  caps = gst_pad_get_current_caps (srcpad);
-  s = gst_caps_get_structure (caps, 0);
-  fail_unless (!g_strcmp0 (gst_structure_get_string (s, "profile"), "high"));
-  gst_caps_unref (caps);
-
-  gst_object_unref (srcpad);
-  gst_object_unref (sinkpad);
-  cleanup_x264enc (x264enc);
-  gst_caps_unref (pad_caps);
+  test_video_profile ("high", 0x64);
 }
 
 GST_END_TEST;
@@ -366,8 +264,9 @@ x264enc_suite (void)
   TCase *tc_chain = tcase_create ("general");
 
   suite_add_tcase (s, tc_chain);
-  tcase_add_test (tc_chain, test_video_pad);
-  tcase_add_test (tc_chain, test_profile_in_caps);
+  tcase_add_test (tc_chain, test_video_baseline);
+  tcase_add_test (tc_chain, test_video_main);
+  tcase_add_test (tc_chain, test_video_high);
 
   return s;
 }
