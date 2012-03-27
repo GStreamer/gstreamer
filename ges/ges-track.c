@@ -302,7 +302,7 @@ ges_track_init (GESTrack * self)
  *
  * Creates a new #GESTrack with the given @type and @caps.
  *
- * The newly created track will steal a reference to the caps. If you wish to 
+ * The newly created track will steal a reference to the caps. If you wish to
  * use those caps elsewhere, you will have to take an extra reference.
  *
  * Returns: A new #GESTrack.
@@ -552,10 +552,19 @@ ges_track_remove_object (GESTrack * track, GESTrackObject * object)
   if ((gnlobject = ges_track_object_get_gnlobject (object))) {
     GST_DEBUG ("Removing GnlObject '%s' from composition '%s'",
         GST_ELEMENT_NAME (gnlobject), GST_ELEMENT_NAME (priv->composition));
+    /* We can't just set state of gnlobject to GST_STATE_NULL, because it will
+     * result in deadlock. Adding a ref to the gnlobj so we finalize it after
+     * removing it from the composition */
+    gst_object_ref (gnlobject);
     if (!gst_bin_remove (GST_BIN (priv->composition), gnlobject)) {
       GST_WARNING ("Failed to remove gnlobject from composition");
       return FALSE;
     }
+
+    gst_element_set_state (gnlobject, GST_STATE_NULL);
+    /* Wait for the state change to actually happen */
+    gst_element_get_state (gnlobject, NULL, NULL, GST_CLOCK_TIME_NONE);
+    gst_object_unref (gnlobject);
   }
 
   g_signal_handlers_disconnect_by_func (object, sort_track_objects_cb, NULL);
