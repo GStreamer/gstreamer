@@ -175,8 +175,7 @@ gst_asteriskh263_chain (GstPad * pad, GstObject * parent, GstBuffer * buf)
     if (!gst_pad_has_current_caps (asteriskh263->srcpad)) {
       GstCaps *caps;
 
-      caps = gst_caps_copy
-          (gst_pad_get_pad_template_caps (asteriskh263->srcpad));
+      caps = gst_pad_get_pad_template_caps (asteriskh263->srcpad);
       gst_pad_set_caps (asteriskh263->srcpad, caps);
       gst_caps_unref (caps);
     }

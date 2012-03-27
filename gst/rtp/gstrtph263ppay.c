@@ -235,7 +235,7 @@ gst_rtp_h263p_pay_sink_getcaps (GstRTPBasePayload * payload, GstPad * pad,
     GstCaps * filter)
 {
   GstRtpH263PPay *rtph263ppay;
-  GstCaps *caps = NULL;
+  GstCaps *caps = NULL, *templ;
   GstCaps *peercaps = NULL;
   GstCaps *intersect = NULL;
   guint i;
@@ -246,12 +246,12 @@ gst_rtp_h263p_pay_sink_getcaps (GstRTPBasePayload * payload, GstPad * pad,
       gst_pad_peer_query_caps (GST_RTP_BASE_PAYLOAD_SRCPAD (payload), filter);
   if (!peercaps)
     return
-        gst_caps_copy (gst_pad_get_pad_template_caps
-        (GST_RTP_BASE_PAYLOAD_SINKPAD (payload)));
+        gst_pad_get_pad_template_caps (GST_RTP_BASE_PAYLOAD_SINKPAD (payload));
 
-  intersect = gst_caps_intersect (peercaps,
-      gst_pad_get_pad_template_caps (GST_RTP_BASE_PAYLOAD_SRCPAD (payload)));
+  templ = gst_pad_get_pad_template_caps (GST_RTP_BASE_PAYLOAD_SRCPAD (payload));
+  intersect = gst_caps_intersect (peercaps, templ);
   gst_caps_unref (peercaps);
+  gst_caps_unref (templ);
 
   if (gst_caps_is_empty (intersect))
     return intersect;

@@ -1701,7 +1701,7 @@ gst_avi_mux_start_file (GstAviMux * avimux)
     }
   }
 
-  caps = gst_caps_copy (gst_pad_get_pad_template_caps (avimux->srcpad));
+  caps = gst_pad_get_pad_template_caps (avimux->srcpad);
   gst_pad_set_caps (avimux->srcpad, caps);
   gst_caps_unref (caps);
 

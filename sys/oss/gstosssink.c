@@ -294,14 +294,13 @@ gst_oss_sink_getcaps (GstBaseSink * bsink)
   osssink = GST_OSSSINK (bsink);
 
   if (osssink->fd == -1) {
-    caps = gst_caps_copy (gst_pad_get_pad_template_caps (GST_BASE_SINK_PAD
-            (bsink)));
+    caps = gst_pad_get_pad_template_caps (GST_BASE_SINK_PAD (bsink));
   } else if (osssink->probed_caps) {
-    caps = gst_caps_copy (osssink->probed_caps);
+    caps = gst_caps_ref (osssink->probed_caps);
   } else {
     caps = gst_oss_helper_probe_caps (osssink->fd);
     if (caps && !gst_caps_is_empty (caps)) {
-      osssink->probed_caps = gst_caps_copy (caps);
+      osssink->probed_caps = gst_caps_ref (caps);
     }
   }
 

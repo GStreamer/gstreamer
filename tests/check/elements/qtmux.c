@@ -208,7 +208,7 @@ check_qtmux_pad (GstStaticPadTemplate * srctemplate, const gchar * sinkname,
   fail_unless (gst_pad_push_event (mysrcpad, gst_event_new_segment (&segment)));
 
   inbuffer = gst_buffer_new_and_alloc (1);
-  caps = gst_caps_copy (gst_pad_get_pad_template_caps (mysrcpad));
+  caps = gst_pad_get_pad_template_caps (mysrcpad);
   gst_pad_set_caps (mysrcpad, caps);
   gst_caps_unref (caps);
   GST_BUFFER_TIMESTAMP (inbuffer) = 0;
@@ -296,7 +296,7 @@ check_qtmux_pad_fragmented (GstStaticPadTemplate * srctemplate,
   fail_unless (gst_pad_push_event (mysrcpad, gst_event_new_segment (&segment)));
 
   inbuffer = gst_buffer_new_and_alloc (1);
-  caps = gst_caps_copy (gst_pad_get_pad_template_caps (mysrcpad));
+  caps = gst_pad_get_pad_template_caps (mysrcpad);
   gst_pad_set_caps (mysrcpad, caps);
   gst_caps_unref (caps);
   GST_BUFFER_TIMESTAMP (inbuffer) = 0;
@@ -526,7 +526,7 @@ GST_START_TEST (test_reuse)
 
   inbuffer = gst_buffer_new_and_alloc (1);
   fail_unless (inbuffer != NULL);
-  caps = gst_caps_copy (gst_pad_get_pad_template_caps (mysrcpad));
+  caps = gst_pad_get_pad_template_caps (mysrcpad);
   gst_pad_set_caps (mysrcpad, caps);
   gst_caps_unref (caps);
   GST_BUFFER_TIMESTAMP (inbuffer) = 0;
@@ -817,7 +817,7 @@ test_average_bitrate_custom (const gchar * elementname,
 
   for (i = 0; i < 3; i++) {
     inbuffer = gst_buffer_new_and_alloc (bytes[i]);
-    caps = gst_caps_copy (gst_pad_get_pad_template_caps (mysrcpad));
+    caps = gst_pad_get_pad_template_caps (mysrcpad);
     gst_pad_set_caps (mysrcpad, caps);
     gst_caps_unref (caps);
     GST_BUFFER_TIMESTAMP (inbuffer) = total_duration;

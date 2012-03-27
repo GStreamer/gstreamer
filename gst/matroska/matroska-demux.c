@@ -3000,20 +3000,17 @@ gst_matroska_demux_check_aac (GstElement * element,
   size = gst_buffer_get_size (*buf);
 
   if (size > 2 && data[0] == 0xff && (data[1] >> 4 == 0x0f)) {
-    GstCaps *new_caps;
     GstStructure *s;
 
     /* tss, ADTS data, remove codec_data
      * still assume it is at least parsed */
-    new_caps = gst_caps_copy (stream->caps);
-    s = gst_caps_get_structure (new_caps, 0);
+    stream->caps = gst_caps_make_writable (stream->caps);
+    s = gst_caps_get_structure (stream->caps, 0);
     g_assert (s);
     gst_structure_remove_field (s, "codec_data");
-    gst_caps_replace (&stream->caps, new_caps);
-    gst_pad_set_caps (stream->pad, new_caps);
+    gst_pad_set_caps (stream->pad, stream->caps);
     GST_DEBUG_OBJECT (element, "ADTS AAC audio data; removing codec-data, "
-        "new caps: %" GST_PTR_FORMAT, new_caps);
-    gst_caps_unref (new_caps);
+        "new caps: %" GST_PTR_FORMAT, stream->caps);
   }
 
   /* disable subsequent checking */

@@ -403,7 +403,8 @@ gst_alaw_enc_setcaps (GstALawEnc * alawenc, GstCaps * caps)
   gst_structure_get_int (structure, "channels", &alawenc->channels);
   gst_structure_get_int (structure, "rate", &alawenc->rate);
 
-  base_caps = gst_caps_copy (gst_pad_get_pad_template_caps (alawenc->srcpad));
+  base_caps = gst_pad_get_pad_template_caps (alawenc->srcpad);
+  base_caps = gst_caps_make_writable (base_caps);
   structure = gst_caps_get_structure (base_caps, 0);
   gst_structure_set (structure, "rate", G_TYPE_INT, alawenc->rate, NULL);
   gst_structure_set (structure, "channels", G_TYPE_INT, alawenc->channels,

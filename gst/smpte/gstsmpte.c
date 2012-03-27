@@ -545,13 +545,14 @@ gst_smpte_collected (GstCollectPads2 * pads, GstSMPTE * smpte)
       GstSegment segment;
 
       caps =
-          gst_caps_copy (gst_static_caps_get
+          gst_caps_make_writable (gst_static_caps_get
           (&gst_smpte_src_template.static_caps));
       gst_caps_set_simple (caps, "width", G_TYPE_INT, smpte->width, "height",
           G_TYPE_INT, smpte->height, "framerate", GST_TYPE_FRACTION,
           smpte->fps_num, smpte->fps_denom, NULL);
 
       gst_pad_set_caps (smpte->srcpad, caps);
+      gst_caps_unref (caps);
 
       gst_segment_init (&segment, GST_FORMAT_TIME);
       gst_pad_push_event (smpte->srcpad, gst_event_new_segment (&segment));

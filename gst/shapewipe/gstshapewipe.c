@@ -327,17 +327,19 @@ static GstCaps *
 gst_shape_wipe_video_sink_getcaps (GstPad * pad, GstCaps * filter)
 {
   GstShapeWipe *self = GST_SHAPE_WIPE (gst_pad_get_parent (pad));
-  GstCaps *ret, *tmp;
+  GstCaps *templ, *ret, *tmp;
 
   if (gst_pad_has_current_caps (pad))
     return gst_pad_get_current_caps (pad);
 
+  templ = gst_pad_get_pad_template_caps (pad);
   tmp = gst_pad_peer_query_caps (self->srcpad, NULL);
   if (tmp) {
-    ret = gst_caps_intersect (tmp, gst_pad_get_pad_template_caps (pad));
+    ret = gst_caps_intersect (tmp, templ);
+    gst_caps_unref (templ);
     gst_caps_unref (tmp);
   } else {
-    ret = gst_caps_copy (gst_pad_get_pad_template_caps (pad));
+    ret = templ;
   }
 
   GST_LOG_OBJECT (pad, "srcpad accepted caps: %" GST_PTR_FORMAT, ret);
@@ -365,6 +367,7 @@ gst_shape_wipe_video_sink_getcaps (GstPad * pad, GstCaps * filter)
   if (self->vinfo.height && self->vinfo.width) {
     guint i, n;
 
+    ret = gst_caps_make_writable (ret);
     n = gst_caps_get_size (ret);
     for (i = 0; i < n; i++) {
       GstStructure *s = gst_caps_get_structure (ret, i);
@@ -381,15 +384,13 @@ gst_shape_wipe_video_sink_getcaps (GstPad * pad, GstCaps * filter)
     GstCaps *intersection, *tmp2;
     guint i, n;
 
-    tmp = gst_caps_make_writable (tmp);
-
-    tmp2 = gst_caps_copy (gst_pad_get_pad_template_caps (self->mask_sinkpad));
-
+    tmp2 = gst_pad_get_pad_template_caps (self->mask_sinkpad);
     intersection = gst_caps_intersect (tmp, tmp2);
     gst_caps_unref (tmp);
     gst_caps_unref (tmp2);
     tmp = intersection;
 
+    tmp = gst_caps_make_writable (tmp);
     n = gst_caps_get_size (tmp);
 
     for (i = 0; i < n; i++) {
@@ -463,7 +464,7 @@ gst_shape_wipe_mask_sink_getcaps (GstPad * pad, GstCaps * filter)
         gst_pad_get_pad_template_caps (self->video_sinkpad));
     gst_caps_unref (tmp);
   } else {
-    ret = gst_caps_copy (gst_pad_get_pad_template_caps (self->video_sinkpad));
+    ret = gst_pad_get_pad_template_caps (self->video_sinkpad);
   }
 
   GST_LOG_OBJECT (pad, "video sink accepted caps: %" GST_PTR_FORMAT, ret);
@@ -536,21 +537,21 @@ static GstCaps *
 gst_shape_wipe_src_getcaps (GstPad * pad, GstCaps * filter)
 {
   GstShapeWipe *self = GST_SHAPE_WIPE (gst_pad_get_parent (pad));
-  GstCaps *ret, *tmp;
+  GstCaps *templ, *ret, *tmp;
 
   if (gst_pad_has_current_caps (pad))
     return gst_pad_get_current_caps (pad);
   else if (gst_pad_has_current_caps (self->video_sinkpad))
     return gst_pad_get_current_caps (self->video_sinkpad);
 
+  templ = gst_pad_get_pad_template_caps (self->video_sinkpad);
   tmp = gst_pad_peer_query_caps (self->video_sinkpad, NULL);
   if (tmp) {
-    ret =
-        gst_caps_intersect (tmp,
-        gst_pad_get_pad_template_caps (self->video_sinkpad));
+    ret = gst_caps_intersect (tmp, templ);
+    gst_caps_unref (templ);
     gst_caps_unref (tmp);
   } else {
-    ret = gst_caps_copy (gst_pad_get_pad_template_caps (self->video_sinkpad));
+    ret = templ;
   }
 
   GST_LOG_OBJECT (pad, "video sink accepted caps: %" GST_PTR_FORMAT, ret);
@@ -577,6 +578,7 @@ gst_shape_wipe_src_getcaps (GstPad * pad, GstCaps * filter)
   if (self->vinfo.height && self->vinfo.width) {
     guint i, n;
 
+    ret = gst_caps_make_writable (ret);
     n = gst_caps_get_size (ret);
     for (i = 0; i < n; i++) {
       GstStructure *s = gst_caps_get_structure (ret, i);
@@ -592,14 +594,12 @@ gst_shape_wipe_src_getcaps (GstPad * pad, GstCaps * filter)
     GstCaps *intersection, *tmp2;
     guint i, n;
 
-    tmp = gst_caps_make_writable (tmp);
-    tmp2 = gst_caps_copy (gst_pad_get_pad_template_caps (self->mask_sinkpad));
-
+    tmp2 = gst_pad_get_pad_template_caps (self->mask_sinkpad);
     intersection = gst_caps_intersect (tmp, tmp2);
     gst_caps_unref (tmp);
     gst_caps_unref (tmp2);
 
-    tmp = intersection;
+    tmp = gst_caps_make_writable (intersection);
     n = gst_caps_get_size (tmp);
 
     for (i = 0; i < n; i++) {

@@ -183,7 +183,7 @@ gst_rtp_ilbc_pay_sink_getcaps (GstRTPBasePayload * rtppayload, GstPad * pad,
   GstCaps *caps;
 
   otherpadcaps = gst_pad_get_allowed_caps (rtppayload->srcpad);
-  caps = gst_caps_copy (gst_pad_get_pad_template_caps (pad));
+  caps = gst_pad_get_pad_template_caps (pad);
 
   if (otherpadcaps) {
     if (!gst_caps_is_empty (otherpadcaps)) {
@@ -198,6 +198,7 @@ gst_rtp_ilbc_pay_sink_getcaps (GstRTPBasePayload * rtppayload, GstPad * pad,
       if (mode_str) {
         mode = strtol (mode_str, NULL, 10);
         if (mode == 20 || mode == 30) {
+          caps = gst_caps_make_writable (caps);
           structure = gst_caps_get_structure (caps, 0);
           gst_structure_set (structure, "mode", G_TYPE_INT, mode, NULL);
         }

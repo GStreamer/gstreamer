@@ -513,9 +513,7 @@ gst_v4l2sink_get_caps (GstBaseSink * bsink, GstCaps * filter)
   if (!GST_V4L2_IS_OPEN (v4l2sink->v4l2object)) {
     /* FIXME: copy? */
     GST_DEBUG_OBJECT (v4l2sink, "device is not open");
-    return
-        gst_caps_copy (gst_pad_get_pad_template_caps (GST_BASE_SINK_PAD
-            (v4l2sink)));
+    return gst_pad_get_pad_template_caps (GST_BASE_SINK_PAD (v4l2sink));
   }
 
   if (v4l2sink->probed_caps == NULL) {

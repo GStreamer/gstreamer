@@ -1022,14 +1022,10 @@ gst_ximage_src_get_caps (GstBaseSrc * bs, GstCaps * filter)
   GstVideoFormat format;
 
   if ((!s->xcontext) && (!gst_ximage_src_open_display (s, s->display_name)))
-    return
-        gst_caps_copy (gst_pad_get_pad_template_caps (GST_BASE_SRC
-            (s)->srcpad));
+    return gst_pad_get_pad_template_caps (GST_BASE_SRC (s)->srcpad);
 
   if (!gst_ximage_src_recalc (s))
-    return
-        gst_caps_copy (gst_pad_get_pad_template_caps (GST_BASE_SRC
-            (s)->srcpad));
+    return gst_pad_get_pad_template_caps (GST_BASE_SRC (s)->srcpad);
 
   xcontext = s->xcontext;
   width = s->xcontext->width;

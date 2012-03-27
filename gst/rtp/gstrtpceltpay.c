@@ -164,14 +164,19 @@ gst_rtp_celt_pay_getcaps (GstRTPBasePayload * payload, GstPad * pad,
   GstCaps *caps;
   const gchar *params;
 
-  otherpadcaps = gst_pad_get_allowed_caps (payload->srcpad);
-  caps = gst_caps_copy (gst_pad_get_pad_template_caps (pad));
+  caps = gst_pad_get_pad_template_caps (pad);
 
+  otherpadcaps = gst_pad_get_allowed_caps (payload->srcpad);
   if (otherpadcaps) {
     if (!gst_caps_is_empty (otherpadcaps)) {
-      GstStructure *ps = gst_caps_get_structure (otherpadcaps, 0);
-      GstStructure *s = gst_caps_get_structure (caps, 0);
+      GstStructure *ps;
+      GstStructure *s;
       gint clock_rate = 0, frame_size = 0, channels = 1;
+
+      caps = gst_caps_make_writable (caps);
+
+      ps = gst_caps_get_structure (otherpadcaps, 0);
+      s = gst_caps_get_structure (caps, 0);
 
       if (gst_structure_get_int (ps, "clock-rate", &clock_rate)) {
         gst_structure_fixate_field_nearest_int (s, "rate", clock_rate);

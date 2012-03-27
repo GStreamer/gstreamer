@@ -196,10 +196,11 @@ gst_rtp_g722_pay_getcaps (GstRTPBasePayload * rtppayload, GstPad * pad,
   GstCaps *caps;
 
   otherpadcaps = gst_pad_get_allowed_caps (rtppayload->srcpad);
-  caps = gst_caps_copy (gst_pad_get_pad_template_caps (pad));
+  caps = gst_pad_get_pad_template_caps (pad);
 
   if (otherpadcaps) {
     if (!gst_caps_is_empty (otherpadcaps)) {
+      caps = gst_caps_make_writable (caps);
       gst_caps_set_simple (caps, "channels", G_TYPE_INT, 1, NULL);
       gst_caps_set_simple (caps, "rate", G_TYPE_INT, 16000, NULL);
     }

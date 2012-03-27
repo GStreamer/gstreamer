@@ -176,9 +176,9 @@ gst_rtp_L16_pay_getcaps (GstRTPBasePayload * rtppayload, GstPad * pad,
   GstCaps *otherpadcaps;
   GstCaps *caps;
 
-  otherpadcaps = gst_pad_get_allowed_caps (rtppayload->srcpad);
-  caps = gst_caps_copy (gst_pad_get_pad_template_caps (pad));
+  caps = gst_pad_get_pad_template_caps (pad);
 
+  otherpadcaps = gst_pad_get_allowed_caps (rtppayload->srcpad);
   if (otherpadcaps) {
     if (!gst_caps_is_empty (otherpadcaps)) {
       GstStructure *structure;
@@ -187,6 +187,7 @@ gst_rtp_L16_pay_getcaps (GstRTPBasePayload * rtppayload, GstPad * pad,
       gint rate;
 
       structure = gst_caps_get_structure (otherpadcaps, 0);
+      caps = gst_caps_make_writable (caps);
 
       if (gst_structure_get_int (structure, "channels", &channels)) {
         gst_caps_set_simple (caps, "channels", G_TYPE_INT, channels, NULL);

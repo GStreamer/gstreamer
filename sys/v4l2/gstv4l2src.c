@@ -442,10 +442,7 @@ gst_v4l2src_get_caps (GstBaseSrc * src, GstCaps * filter)
   obj = v4l2src->v4l2object;
 
   if (!GST_V4L2_IS_OPEN (obj)) {
-    /* FIXME: copy? */
-    return
-        gst_caps_copy (gst_pad_get_pad_template_caps (GST_BASE_SRC_PAD
-            (v4l2src)));
+    return gst_pad_get_pad_template_caps (GST_BASE_SRC_PAD (v4l2src));
   }
 
   if (v4l2src->probed_caps)
