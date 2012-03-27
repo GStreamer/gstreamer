@@ -20,7 +20,7 @@ libgstbasecamerabinsrc_@GST_MAJORMINOR@_la_CFLAGS = \
 	-DGST_USE_UNSTABLE_API \
 	$(GST_CFLAGS)
 libgstbasecamerabinsrc_@GST_MAJORMINOR@_la_LIBADD = \
-	-lgstapp-$(GST_MAJORMINOR) $(GST_BASE_LIBS) $(GST_LIBS)
+	-lgstapp-$(GST_MAJORMINOR) $(GST_PLUGINS_BASE_LIBS) $(GST_BASE_LIBS) $(GST_LIBS)
 
 libgstbasecamerabinsrc_@GST_MAJORMINOR@_la_LDFLAGS = $(GST_LIB_LDFLAGS) $(GST_ALL_LDFLAGS) $(GST_LT_LDFLAGS)
 
