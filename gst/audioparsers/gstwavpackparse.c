@@ -383,7 +383,7 @@ gst_wavpack_parse_frame_header (GstWavpackParse * parse, GstBuffer * buf,
     gint skip, WavpackHeader * _wph)
 {
   GstByteReader br;
-  WavpackHeader wph;
+  WavpackHeader wph = { {0,}, 0, };
   GstMapInfo map;
 
   g_return_val_if_fail (gst_buffer_get_size (buf) >=
