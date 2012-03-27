@@ -181,9 +181,9 @@ gboolean         gst_buffer_pool_has_option      (GstBufferPool *pool, const gch
 
 
 /* helpers for configuring the config structure */
-void             gst_buffer_pool_config_set_params    (GstStructure *config, const GstCaps *caps,
+void             gst_buffer_pool_config_set_params    (GstStructure *config, GstCaps *caps,
                                                        guint size, guint min_buffers, guint max_buffers);
-gboolean         gst_buffer_pool_config_get_params    (GstStructure *config, const GstCaps **caps,
+gboolean         gst_buffer_pool_config_get_params    (GstStructure *config, GstCaps **caps,
                                                        guint *size, guint *min_buffers, guint *max_buffers);
 void             gst_buffer_pool_config_set_allocator (GstStructure *config, GstAllocator *allocator,
                                                        const GstAllocationParams *params);

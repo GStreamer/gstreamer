@@ -434,7 +434,7 @@ static gboolean
 default_set_config (GstBufferPool * pool, GstStructure * config)
 {
   GstBufferPoolPrivate *priv = pool->priv;
-  const GstCaps *caps;
+  GstCaps *caps;
   guint size, min_buffers, max_buffers;
   GstAllocator *allocator;
   GstAllocationParams params;
@@ -641,7 +641,7 @@ gst_buffer_pool_has_option (GstBufferPool * pool, const gchar * option)
  * Configure @config with the given parameters.
  */
 void
-gst_buffer_pool_config_set_params (GstStructure * config, const GstCaps * caps,
+gst_buffer_pool_config_set_params (GstStructure * config, GstCaps * caps,
     guint size, guint min_buffers, guint max_buffers)
 {
   g_return_if_fail (config != NULL);
@@ -812,21 +812,26 @@ gst_buffer_pool_config_has_option (GstStructure * config, const gchar * option)
 /**
  * gst_buffer_pool_config_get_params:
  * @config: (transfer none): a #GstBufferPool configuration
- * @caps: (out): the caps of buffers
- * @size: (out): the size of each buffer, not including prefix and padding
- * @min_buffers: (out): the minimum amount of buffers to allocate.
- * @max_buffers: (out): the maximum amount of buffers to allocate or 0 for unlimited.
+ * @caps: (out) (transfer none) (allow-none): the caps of buffers
+ * @size: (out) (allow-none): the size of each buffer, not including prefix and padding
+ * @min_buffers: (out) (allow-none): the minimum amount of buffers to allocate.
+ * @max_buffers: (out) (allow-none): the maximum amount of buffers to allocate or 0 for unlimited.
  *
  * Get the configuration values from @config.
+ *
+ * Returns: %TRUE if all parameters could be fetched.
  */
 gboolean
-gst_buffer_pool_config_get_params (GstStructure * config, const GstCaps ** caps,
+gst_buffer_pool_config_get_params (GstStructure * config, GstCaps ** caps,
     guint * size, guint * min_buffers, guint * max_buffers)
 {
   g_return_val_if_fail (config != NULL, FALSE);
 
+  if (caps) {
+    *caps = g_value_get_boxed (gst_structure_id_get_value (config,
+            GST_QUARK (CAPS)));
+  }
   return gst_structure_id_get (config,
-      GST_QUARK (CAPS), GST_TYPE_CAPS, caps,
       GST_QUARK (SIZE), G_TYPE_UINT, size,
       GST_QUARK (MIN_BUFFERS), G_TYPE_UINT, min_buffers,
       GST_QUARK (MAX_BUFFERS), G_TYPE_UINT, max_buffers, NULL);
