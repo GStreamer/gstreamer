@@ -1026,7 +1026,7 @@ default_release_buffer (GstBufferPool * pool, GstBuffer * buffer)
 /**
  * gst_buffer_pool_release_buffer:
  * @pool: a #GstBufferPool
- * @buffer: (transfer none): a #GstBuffer
+ * @buffer: (transfer full): a #GstBuffer
  *
  * Release @buffer to @pool. @buffer should have previously been allocated from
  * @pool with gst_buffer_pool_acquire_buffer().
