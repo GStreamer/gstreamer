@@ -573,7 +573,7 @@ gst_v4l2src_decide_allocation (GstBaseSrc * bsrc, GstQuery * query)
 
   if (pool) {
     GstStructure *config;
-    const GstCaps *caps;
+    GstCaps *caps;
 
     config = gst_buffer_pool_get_config (pool);
     gst_buffer_pool_config_get_params (config, &caps, NULL, NULL, NULL);

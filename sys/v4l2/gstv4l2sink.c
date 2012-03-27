@@ -635,7 +635,7 @@ gst_v4l2sink_propose_allocation (GstBaseSink * bsink, GstQuery * query)
     gst_object_ref (pool);
 
   if (pool != NULL) {
-    const GstCaps *pcaps;
+    GstCaps *pcaps;
     GstStructure *config;
 
     /* we had a pool, check caps */
@@ -645,9 +645,11 @@ gst_v4l2sink_propose_allocation (GstBaseSink * bsink, GstQuery * query)
     GST_DEBUG_OBJECT (v4l2sink,
         "we had a pool with caps %" GST_PTR_FORMAT, pcaps);
     if (!gst_caps_is_equal (caps, pcaps)) {
+      gst_structure_free (config);
       gst_object_unref (pool);
       goto different_caps;
     }
+    gst_structure_free (config);
   }
   /* we need at least 2 buffers to operate */
   gst_query_add_allocation_pool (query, pool, size, 2, 0);

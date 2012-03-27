@@ -242,7 +242,7 @@ gst_v4l2_buffer_pool_set_config (GstBufferPool * bpool, GstStructure * config)
 {
   GstV4l2BufferPool *pool = GST_V4L2_BUFFER_POOL (bpool);
   GstV4l2Object *obj = pool->obj;
-  const GstCaps *caps;
+  GstCaps *caps;
   guint size, min_buffers, max_buffers;
   GstAllocator *allocator;
   GstAllocationParams params;
