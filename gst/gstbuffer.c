@@ -1445,19 +1445,19 @@ gst_buffer_span (GstBuffer * buf1, gsize offset, GstBuffer * buf2, gsize size)
   GstBuffer *newbuf;
   GstMemory *span;
   GstMemory **mem[2];
-  gsize len[2], len1, len2;
+  gsize len[2], size1, size2;
 
   g_return_val_if_fail (GST_IS_BUFFER (buf1), NULL);
   g_return_val_if_fail (GST_IS_BUFFER (buf2), NULL);
   g_return_val_if_fail (buf1->mini_object.refcount > 0, NULL);
   g_return_val_if_fail (buf2->mini_object.refcount > 0, NULL);
-  len1 = gst_buffer_get_size (buf1);
-  len2 = gst_buffer_get_size (buf2);
-  g_return_val_if_fail (len1 + len2 > offset, NULL);
+  size1 = gst_buffer_get_size (buf1);
+  size2 = gst_buffer_get_size (buf2);
+  g_return_val_if_fail (size1 + size2 > offset, NULL);
   if (size == -1)
-    size = len1 + len2 - offset;
+    size = size1 + size2 - offset;
   else
-    g_return_val_if_fail (size <= len1 + len2 - offset, NULL);
+    g_return_val_if_fail (size <= size1 + size2 - offset, NULL);
 
   mem[0] = GST_BUFFER_MEM_ARRAY (buf1);
   len[0] = GST_BUFFER_MEM_LEN (buf1);
@@ -1469,7 +1469,6 @@ gst_buffer_span (GstBuffer * buf1, gsize offset, GstBuffer * buf2, gsize size)
   newbuf = gst_buffer_new ();
   _memory_add (newbuf, -1, span);
 
-#if 0
   /* if the offset is 0, the new buffer has the same timestamp as buf1 */
   if (offset == 0) {
     GST_BUFFER_OFFSET (newbuf) = GST_BUFFER_OFFSET (buf1);
@@ -1479,7 +1478,7 @@ gst_buffer_span (GstBuffer * buf1, gsize offset, GstBuffer * buf2, gsize size)
     /* if we completely merged the two buffers (appended), we can
      * calculate the duration too. Also make sure we's not messing with
      * invalid DURATIONS */
-    if (buf1->size + buf2->size == len) {
+    if (size1 + size2 == size) {
       if (GST_BUFFER_DURATION_IS_VALID (buf1) &&
           GST_BUFFER_DURATION_IS_VALID (buf2)) {
         /* add duration */
@@ -1492,7 +1491,6 @@ gst_buffer_span (GstBuffer * buf1, gsize offset, GstBuffer * buf2, gsize size)
       }
     }
   }
-#endif
 
   return newbuf;
 }
