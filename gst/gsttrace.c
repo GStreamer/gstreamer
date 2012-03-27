@@ -168,11 +168,13 @@ gst_alloc_trace_print (const GstAllocTrace * trace)
       gpointer data = mem_live->data;
       const gchar *type_name;
       gchar *extra = NULL;
+      gint refcount = -1;
 
       if (trace->offset == -2) {
-        if (G_IS_OBJECT (data))
+        if (G_IS_OBJECT (data)) {
           type_name = G_OBJECT_TYPE_NAME (data);
-        else
+          refcount = G_OBJECT (data)->ref_count;
+        } else
           type_name = "<invalid>";
       } else if (trace->offset == -1) {
         type_name = "<unknown>";
@@ -182,15 +184,18 @@ gst_alloc_trace_print (const GstAllocTrace * trace)
         type = G_STRUCT_MEMBER (GType, data, trace->offset);
         type_name = g_type_name (type);
 
-        if (type == GST_TYPE_CAPS)
+        if (type == GST_TYPE_CAPS) {
           extra = gst_caps_to_string (data);
+          refcount = GST_MINI_OBJECT_REFCOUNT_VALUE (data);
+        }
       }
 
       if (extra) {
-        g_print ("  %-20.20s : %p (\"%s\")\n", type_name, data, extra);
+        g_print ("  %-20.20s : (%d) %p (\"%s\")\n", type_name, refcount, data,
+            extra);
         g_free (extra);
       } else
-        g_print ("  %-20.20s : %p\n", type_name, data);
+        g_print ("  %-20.20s : (%d) %p\n", type_name, refcount, data);
 
       mem_live = mem_live->next;
     }
