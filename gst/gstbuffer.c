@@ -1547,6 +1547,7 @@ gst_buffer_add_meta (GstBuffer * buffer, const GstMetaInfo * info,
 
   g_return_val_if_fail (buffer != NULL, NULL);
   g_return_val_if_fail (info != NULL, NULL);
+  g_return_val_if_fail (gst_buffer_is_writable (buffer), NULL);
 
   /* create a new slice */
   size = ITEM_SIZE (info);
@@ -1594,6 +1595,7 @@ gst_buffer_remove_meta (GstBuffer * buffer, GstMeta * meta)
 
   g_return_val_if_fail (buffer != NULL, FALSE);
   g_return_val_if_fail (meta != NULL, FALSE);
+  g_return_val_if_fail (gst_buffer_is_writable (buffer), FALSE);
 
   /* find the metadata and delete */
   prev = GST_BUFFER_META (buffer);
@@ -1691,6 +1693,8 @@ gst_buffer_foreach_meta (GstBuffer * buffer, GstBufferForeachMetaFunc func,
 
       GST_CAT_DEBUG (GST_CAT_BUFFER, "remove metadata %p (%s)", m,
           g_type_name (info->type));
+
+      g_return_if_fail (gst_buffer_is_writable (buffer));
 
       /* remove from list */
       if (GST_BUFFER_META (buffer) == walk)
