@@ -307,7 +307,8 @@ static void gst_base_text_overlay_init (GstBaseTextOverlay * overlay,
 static GstStateChangeReturn gst_base_text_overlay_change_state (GstElement *
     element, GstStateChange transition);
 
-static GstCaps *gst_base_text_overlay_getcaps (GstPad * pad, GstCaps * filter);
+static GstCaps *gst_base_text_overlay_getcaps (GstPad * pad,
+    GstBaseTextOverlay * overlay, GstCaps * filter);
 static gboolean gst_base_text_overlay_setcaps (GstBaseTextOverlay * overlay,
     GstCaps * caps);
 static gboolean gst_base_text_overlay_setcaps_txt (GstBaseTextOverlay * overlay,
@@ -996,7 +997,7 @@ gst_base_text_overlay_src_query (GstPad * pad, GstObject * parent,
     GstQuery * query)
 {
   gboolean ret = FALSE;
-  GstBaseTextOverlay *overlay = NULL;
+  GstBaseTextOverlay *overlay;
 
   overlay = GST_BASE_TEXT_OVERLAY (parent);
 
@@ -1006,7 +1007,7 @@ gst_base_text_overlay_src_query (GstPad * pad, GstObject * parent,
       GstCaps *filter, *caps;
 
       gst_query_parse_caps (query, &filter);
-      caps = gst_base_text_overlay_getcaps (pad, filter);
+      caps = gst_base_text_overlay_getcaps (pad, overlay, filter);
       gst_query_set_caps_result (query, caps);
       gst_caps_unref (caps);
       ret = TRUE;
@@ -1082,15 +1083,14 @@ beach:
 }
 
 static GstCaps *
-gst_base_text_overlay_getcaps (GstPad * pad, GstCaps * filter)
+gst_base_text_overlay_getcaps (GstPad * pad, GstBaseTextOverlay * overlay,
+    GstCaps * filter)
 {
-  GstBaseTextOverlay *overlay;
   GstPad *otherpad;
   GstCaps *caps;
 
-  overlay = GST_BASE_TEXT_OVERLAY (gst_pad_get_parent (pad));
   if (G_UNLIKELY (!overlay))
-    return gst_caps_copy (gst_pad_get_pad_template_caps (pad));
+    return gst_pad_get_pad_template_caps (pad);
 
   if (pad == overlay->srcpad)
     otherpad = overlay->video_sinkpad;
@@ -1127,8 +1127,6 @@ gst_base_text_overlay_getcaps (GstPad * pad, GstCaps * filter)
   }
 
   GST_DEBUG_OBJECT (overlay, "returning  %" GST_PTR_FORMAT, caps);
-
-  gst_object_unref (overlay);
 
   return caps;
 }
@@ -2312,6 +2310,9 @@ gst_base_text_overlay_video_query (GstPad * pad, GstObject * parent,
     GstQuery * query)
 {
   gboolean ret = FALSE;
+  GstBaseTextOverlay *overlay;
+
+  overlay = GST_BASE_TEXT_OVERLAY (parent);
 
   switch (GST_QUERY_TYPE (query)) {
     case GST_QUERY_CAPS:
@@ -2319,7 +2320,7 @@ gst_base_text_overlay_video_query (GstPad * pad, GstObject * parent,
       GstCaps *filter, *caps;
 
       gst_query_parse_caps (query, &filter);
-      caps = gst_base_text_overlay_getcaps (pad, filter);
+      caps = gst_base_text_overlay_getcaps (pad, overlay, filter);
       gst_query_set_caps_result (query, caps);
       gst_caps_unref (caps);
       ret = TRUE;
