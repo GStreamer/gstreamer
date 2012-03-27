@@ -166,7 +166,7 @@ gst_proxy_pad_query_default (GstPad * pad, GstQuery * query)
 }
 
 /**
- * gst_proyx_pad_iterate_internal_links_default:
+ * gst_proxy_pad_iterate_internal_links_default:
  * @pad: the #GstPad to get the internal links of.
  *
  * Invoke the default iterate internal links function of the proxy pad.
