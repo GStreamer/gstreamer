@@ -538,7 +538,7 @@ xvimage_buffer_pool_set_config (GstBufferPool * pool, GstStructure * config)
 
   if (priv->caps)
     gst_caps_unref (priv->caps);
-  priv->caps = gst_caps_copy (caps);
+  priv->caps = gst_caps_ref (caps);
   priv->info = info;
 
   /* enable metadata based on config of the pool */

@@ -501,7 +501,7 @@ ximage_buffer_pool_set_config (GstBufferPool * pool, GstStructure * config)
   /* keep track of the width and height and caps */
   if (priv->caps)
     gst_caps_unref (priv->caps);
-  priv->caps = gst_caps_copy (caps);
+  priv->caps = gst_caps_ref (caps);
 
   /* check for the configured metadata */
   priv->add_metavideo =

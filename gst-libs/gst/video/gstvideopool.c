@@ -195,7 +195,7 @@ video_buffer_pool_set_config (GstBufferPool * pool, GstStructure * config)
 
   if (priv->caps)
     gst_caps_unref (priv->caps);
-  priv->caps = gst_caps_copy (caps);
+  priv->caps = gst_caps_ref (caps);
 
   priv->params = params;
   if (priv->allocator)
