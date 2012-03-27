@@ -1030,9 +1030,6 @@ gst_video_frame_map_id (GstVideoFrame * frame, GstVideoInfo * info,
   else
     meta = gst_buffer_get_video_meta_id (buffer, id);
 
-  frame->buffer = buffer;
-  frame->meta = meta;
-
   if (meta) {
     frame->info.flags = meta->flags;
     frame->info.finfo = &formats[meta->format].info;
@@ -1064,6 +1061,9 @@ gst_video_frame_map_id (GstVideoFrame * frame, GstVideoInfo * info,
       frame->data[i] = frame->map[0].data + info->offset[i];
     }
   }
+  frame->buffer = gst_buffer_ref (buffer);
+  frame->meta = meta;
+
   return TRUE;
 
   /* ERRORS */
@@ -1127,6 +1127,7 @@ gst_video_frame_unmap (GstVideoFrame * frame)
   } else {
     gst_buffer_unmap (buffer, &frame->map[0]);
   }
+  gst_buffer_unref (buffer);
 }
 
 /**
