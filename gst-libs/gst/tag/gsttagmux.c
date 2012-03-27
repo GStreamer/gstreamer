@@ -460,6 +460,9 @@ gst_tag_mux_sink_event (GstPad * pad, GstObject * parent, GstEvent * event)
         GST_WARNING_OBJECT (mux, "dropping newsegment event in %s format",
             gst_format_get_name (segment.format));
         gst_event_unref (event);
+        /* drop it quietly, so it is not seen as a failure to push event,
+         * which will turn into failure to push data as it is sticky */
+        result = TRUE;
         break;
       }
 
