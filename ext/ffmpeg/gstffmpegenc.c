@@ -317,7 +317,7 @@ static GstCaps *
 gst_ffmpegenc_get_possible_sizes (GstFFMpegEnc * ffmpegenc, GstPad * pad,
     GstCaps * caps)
 {
-  GstCaps *othercaps = NULL;
+  GstCaps *templ, *othercaps = NULL;
   GstCaps *tmpcaps = NULL;
   GstCaps *intersect = NULL;
   guint i;
@@ -325,17 +325,18 @@ gst_ffmpegenc_get_possible_sizes (GstFFMpegEnc * ffmpegenc, GstPad * pad,
   othercaps = gst_pad_peer_query_caps (ffmpegenc->srcpad, NULL);
 
   if (!othercaps)
-    return gst_caps_copy (caps);
+    return gst_caps_ref (caps);
 
-  intersect = gst_caps_intersect (othercaps,
-      gst_pad_get_pad_template_caps (ffmpegenc->srcpad));
+  templ = gst_pad_get_pad_template_caps (ffmpegenc->srcpad);
+  intersect = gst_caps_intersect (othercaps, templ);
   gst_caps_unref (othercaps);
+  gst_caps_unref (templ);
 
   if (gst_caps_is_empty (intersect))
     return intersect;
 
   if (gst_caps_is_any (intersect))
-    return gst_caps_copy (caps);
+    return gst_caps_ref (caps);
 
   tmpcaps = gst_caps_new_empty ();
 
@@ -377,7 +378,7 @@ gst_ffmpegenc_getcaps (GstPad * pad, GstCaps * filter)
       (GstFFMpegEncClass *) G_OBJECT_GET_CLASS (ffmpegenc);
   AVCodecContext *ctx = NULL;
   enum PixelFormat pixfmt;
-  GstCaps *caps = NULL;
+  GstCaps *templ, *caps = NULL;
   GstCaps *finalcaps = NULL;
   gint i;
 
@@ -385,11 +386,12 @@ gst_ffmpegenc_getcaps (GstPad * pad, GstCaps * filter)
 
   /* audio needs no special care */
   if (oclass->in_plugin->type == AVMEDIA_TYPE_AUDIO) {
-    caps = gst_pad_get_pad_template_caps (pad);
-    if (filter)
-      caps = gst_caps_intersect_full (filter, caps, GST_CAPS_INTERSECT_FIRST);
-    else
-      caps = gst_caps_copy (caps);
+    templ = gst_pad_get_pad_template_caps (pad);
+    if (filter) {
+      caps = gst_caps_intersect_full (filter, templ, GST_CAPS_INTERSECT_FIRST);
+      gst_caps_unref (templ);
+    } else
+      caps = templ;
 
     GST_DEBUG_OBJECT (ffmpegenc, "audio caps, return intersected template %"
         GST_PTR_FORMAT, caps);
@@ -506,8 +508,9 @@ gst_ffmpegenc_getcaps (GstPad * pad, GstCaps * filter)
 
   /* make sure we have something */
   if (!caps) {
-    caps = gst_ffmpegenc_get_possible_sizes (ffmpegenc, pad,
-        gst_pad_get_pad_template_caps (pad));
+    templ = gst_pad_get_pad_template_caps (pad);
+    caps = gst_ffmpegenc_get_possible_sizes (ffmpegenc, pad, templ);
+    gst_caps_unref (templ);
     if (filter) {
       finalcaps =
           gst_caps_intersect_full (filter, caps, GST_CAPS_INTERSECT_FIRST);
@@ -521,10 +524,10 @@ gst_ffmpegenc_getcaps (GstPad * pad, GstCaps * filter)
   }
 
   GST_DEBUG_OBJECT (ffmpegenc, "probed caps gave %" GST_PTR_FORMAT, caps);
-  oclass->sinkcaps = gst_caps_copy (caps);
+  oclass->sinkcaps = caps;
 
-  finalcaps = gst_ffmpegenc_get_possible_sizes (ffmpegenc, pad, caps);
-  gst_caps_unref (caps);
+  finalcaps =
+      gst_ffmpegenc_get_possible_sizes (ffmpegenc, pad, oclass->sinkcaps);
 
   if (filter) {
     caps = finalcaps;
@@ -706,8 +709,7 @@ gst_ffmpegenc_setcaps (GstFFMpegEnc * ffmpegenc, GstCaps * caps)
     GST_DEBUG_OBJECT (ffmpegenc, "... but no peer, using template caps");
     /* we need to copy because get_allowed_caps returns a ref, and
      * get_pad_template_caps doesn't */
-    allowed_caps =
-        gst_caps_copy (gst_pad_get_pad_template_caps (ffmpegenc->srcpad));
+    allowed_caps = gst_pad_get_pad_template_caps (ffmpegenc->srcpad);
   }
   GST_DEBUG_OBJECT (ffmpegenc, "chose caps %" GST_PTR_FORMAT, allowed_caps);
   gst_ffmpeg_caps_with_codecid (oclass->in_plugin->id,
@@ -718,6 +720,7 @@ gst_ffmpegenc_setcaps (GstFFMpegEnc * ffmpegenc, GstCaps * caps)
       ffmpegenc->context, TRUE);
 
   if (!other_caps) {
+    gst_caps_unref (allowed_caps);
     gst_ffmpeg_avcodec_close (ffmpegenc->context);
     GST_DEBUG ("Unsupported codec - no caps found");
     return FALSE;
