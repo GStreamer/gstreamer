@@ -991,7 +991,7 @@ poll_destroy_timeout (GstBusPollData * poll_data)
  * @bus: a #GstBus
  * @events: a mask of #GstMessageType, representing the set of message types to
  * poll for.
- * @timeout: the poll timeout, as a #GstClockTimeDiff, or -1 to poll
+ * @timeout: the poll timeout, as a #GstClockTime, or #GST_CLOCK_TIME_NONE to poll
  * indefinitely.
  *
  * Poll the bus for messages. Will block while waiting for messages to come.
@@ -1031,7 +1031,7 @@ poll_destroy_timeout (GstBusPollData * poll_data)
  *     unreffed with gst_message_unref() after usage.
  */
 GstMessage *
-gst_bus_poll (GstBus * bus, GstMessageType events, GstClockTimeDiff timeout)
+gst_bus_poll (GstBus * bus, GstMessageType events, GstClockTime timeout)
 {
   GstBusPollData *poll_data;
   GstMessage *ret;
@@ -1043,7 +1043,7 @@ gst_bus_poll (GstBus * bus, GstMessageType events, GstClockTimeDiff timeout)
   poll_data->events = events;
   poll_data->message = NULL;
 
-  if (timeout >= 0)
+  if (timeout != GST_CLOCK_TIME_NONE)
     poll_data->timeout_id = g_timeout_add_full (G_PRIORITY_DEFAULT_IDLE,
         timeout / GST_MSECOND, (GSourceFunc) poll_timeout, poll_data,
         (GDestroyNotify) poll_destroy_timeout);

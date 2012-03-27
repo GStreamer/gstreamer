@@ -162,7 +162,7 @@ guint                   gst_bus_add_watch               (GstBus * bus,
 
 /* polling the bus */
 GstMessage*             gst_bus_poll                    (GstBus *bus, GstMessageType events,
-                                                         GstClockTimeDiff timeout);
+                                                         GstClockTime timeout);
 
 /* signal based dispatching helper functions. */
 gboolean                gst_bus_async_signal_func       (GstBus *bus, GstMessage *message,
