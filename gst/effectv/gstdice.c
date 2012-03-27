@@ -139,6 +139,7 @@ gst_dicetv_transform_frame (GstVideoFilter * vfilter, GstVideoFrame * in_frame,
   g_map_width = filter->g_map_width;
 
   dicemap = filter->dicemap;
+  video_stride /= 4;
 
   map_i = 0;
   for (map_y = 0; map_y < g_map_height; map_y++) {

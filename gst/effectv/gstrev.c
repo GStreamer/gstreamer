@@ -129,7 +129,7 @@ gst_revtv_transform_frame (GstVideoFilter * vfilter, GstVideoFrame * in_frame,
   height = GST_VIDEO_FRAME_HEIGHT (in_frame);
 
   /* Clear everything to black */
-  memset (dest, 0, dstride * height * sizeof (guint32));
+  memset (dest, 0, dstride * height);
 
   GST_OBJECT_LOCK (filter);
   linespace = filter->linespace;
@@ -138,7 +138,7 @@ gst_revtv_transform_frame (GstVideoFilter * vfilter, GstVideoFrame * in_frame,
   /* draw the offset lines */
   for (y = 0; y < height; y += linespace) {
     for (x = 0; x <= width; x++) {
-      nsrc = src + (y * sstride) + x;
+      nsrc = src + (y * sstride / 4) + x;
 
       /* Calc Y Value for curpix */
       R = ((*nsrc) & 0xff0000) >> (16 - 1);
@@ -148,7 +148,7 @@ gst_revtv_transform_frame (GstVideoFilter * vfilter, GstVideoFrame * in_frame,
       yval = y - ((short) (R + G + B) / vscale);
 
       if (yval > 0) {
-        dest[x + (yval * dstride)] = THE_COLOR;
+        dest[x + (yval * dstride / 4)] = THE_COLOR;
       }
     }
   }

@@ -154,8 +154,8 @@ gst_warptv_transform_frame (GstVideoFilter * filter, GstVideoFrame * in_frame,
   src = GST_VIDEO_FRAME_PLANE_DATA (in_frame, 0);
   dest = GST_VIDEO_FRAME_PLANE_DATA (out_frame, 0);
 
-  sstride = GST_VIDEO_FRAME_PLANE_STRIDE (in_frame, 0) / 4;
-  dstride = GST_VIDEO_FRAME_PLANE_STRIDE (out_frame, 0) / 4;
+  sstride = GST_VIDEO_FRAME_PLANE_STRIDE (in_frame, 0);
+  dstride = GST_VIDEO_FRAME_PLANE_STRIDE (out_frame, 0);
 
   width = GST_VIDEO_FRAME_WIDTH (in_frame);
   height = GST_VIDEO_FRAME_HEIGHT (in_frame);
@@ -198,9 +198,9 @@ gst_warptv_transform_frame (GstVideoFilter * filter, GstVideoFrame * in_frame,
       else if (dy > maxy)
         dy = maxy;
 
-      dest[x] = src[dy * sstride + dx];
+      dest[x] = src[dy * sstride / 4 + dx];
     }
-    dest += dstride;
+    dest += dstride / 4;
   }
 
   warptv->tval = (warptv->tval + 1) & 511;

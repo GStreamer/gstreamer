@@ -322,7 +322,7 @@ gst_agingtv_transform_frame (GstVideoFilter * filter, GstVideoFrame * in_frame,
   width = GST_VIDEO_FRAME_WIDTH (in_frame);
   height = GST_VIDEO_FRAME_HEIGHT (in_frame);
   stride = GST_VIDEO_FRAME_PLANE_STRIDE (in_frame, 0);
-  video_size = stride * height;
+  video_size = stride * height / 4;
 
   src = GST_VIDEO_FRAME_PLANE_DATA (in_frame, 0);
   dest = GST_VIDEO_FRAME_PLANE_DATA (out_frame, 0);
