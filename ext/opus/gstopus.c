@@ -46,11 +46,11 @@ plugin_init (GstPlugin * plugin)
           GST_TYPE_OPUS_PARSE))
     return FALSE;
 
-  if (!gst_element_register (plugin, "rtpopusdepay", GST_RANK_NONE,
+  if (!gst_element_register (plugin, "rtpopusdepay", GST_RANK_SECONDARY,
           GST_TYPE_RTP_OPUS_DEPAY))
     return FALSE;
 
-  if (!gst_element_register (plugin, "rtpopuspay", GST_RANK_NONE,
+  if (!gst_element_register (plugin, "rtpopuspay", GST_RANK_SECONDARY,
           GST_TYPE_RTP_OPUS_PAY))
     return FALSE;
 
