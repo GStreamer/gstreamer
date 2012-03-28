@@ -783,6 +783,8 @@ gst_wavpack_enc_rewrite_first_block (GstWavpackEnc * enc)
 {
   GstSegment segment;
   gboolean ret;
+  GstQuery *query;
+  gboolean seekable = FALSE;
 
   g_return_if_fail (enc);
   g_return_if_fail (enc->first_block);
@@ -791,6 +793,23 @@ gst_wavpack_enc_rewrite_first_block (GstWavpackEnc * enc)
   WavpackUpdateNumSamples (enc->wp_context, enc->first_block);
 
   /* try to seek to the beginning of the output */
+  query = gst_query_new_seeking (GST_FORMAT_BYTES);
+  if (gst_pad_peer_query (GST_AUDIO_ENCODER_SRC_PAD (enc), query)) {
+    GstFormat format;
+
+    gst_query_parse_seeking (query, &format, &seekable, NULL, NULL);
+    if (format != GST_FORMAT_BYTES)
+      seekable = FALSE;
+  } else {
+    GST_LOG_OBJECT (enc, "SEEKING query not handled");
+  }
+  gst_query_unref (query);
+
+  if (!seekable) {
+    GST_DEBUG_OBJECT (enc, "downstream not seekable; not rewriting");
+    return;
+  }
+
   gst_segment_init (&segment, GST_FORMAT_BYTES);
   ret = gst_pad_push_event (GST_AUDIO_ENCODER_SRC_PAD (enc),
       gst_event_new_segment (&segment));
