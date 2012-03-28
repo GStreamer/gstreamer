@@ -71,7 +71,8 @@ GST_START_TEST (test_decode)
   gchar *path =
       g_build_filename (GST_TEST_FILES_PATH, "audiotestsrc.flac", NULL);
   gchar *pipe_desc =
-      g_strdup_printf ("filesrc location=\"%s\" ! flacdec ! appsink name=sink",
+      g_strdup_printf
+      ("filesrc location=\"%s\" ! flacparse ! flacdec ! appsink name=sink",
       path);
 
   pipeline = gst_parse_launch (pipe_desc, NULL);
@@ -121,7 +122,8 @@ GST_START_TEST (test_decode_seek_full)
   gchar *path =
       g_build_filename (GST_TEST_FILES_PATH, "audiotestsrc.flac", NULL);
   gchar *pipe_desc =
-      g_strdup_printf ("filesrc location=\"%s\" ! flacdec ! appsink name=sink",
+      g_strdup_printf
+      ("filesrc location=\"%s\" ! flacparse ! flacdec ! appsink name=sink",
       path);
 
   pipeline = gst_parse_launch (pipe_desc, NULL);
@@ -180,7 +182,8 @@ GST_START_TEST (test_decode_seek_partial)
   gchar *path =
       g_build_filename (GST_TEST_FILES_PATH, "audiotestsrc.flac", NULL);
   gchar *pipe_desc =
-      g_strdup_printf ("filesrc location=\"%s\" ! flacdec ! appsink name=sink",
+      g_strdup_printf
+      ("filesrc location=\"%s\" ! flacparse ! flacdec ! appsink name=sink",
       path);
 
   pipeline = gst_parse_launch (pipe_desc, NULL);
@@ -211,7 +214,6 @@ GST_START_TEST (test_decode_seek_partial)
     if (sample == NULL)
       break;
     if (first_sample == 0) {
-//      fail_unless_equals_int (GST_BUFFER_OFFSET (buffer), 0L);
       first_sample = _get_first_sample (sample);
     }
     size += gst_buffer_get_size (gst_sample_get_buffer (sample));
@@ -221,7 +223,8 @@ GST_START_TEST (test_decode_seek_partial)
   }
   while (TRUE);
 
-  fail_unless_equals_int (size, 2048);
+  /* allow for sample round-up clipping effect */
+  fail_unless (size == 2048 || size == 2050);
   fail_unless_equals_int (first_sample, 0x066a);
 
   gst_element_set_state (pipeline, GST_STATE_NULL);
@@ -231,7 +234,6 @@ GST_START_TEST (test_decode_seek_partial)
 }
 
 GST_END_TEST;
-
 
 static Suite *
 flacdec_suite (void)
