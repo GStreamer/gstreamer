@@ -30,6 +30,7 @@
 #include <gst/codecparsers/gstmpegvideoparser.h>
 #include "gstvaapidecoder_mpeg2.h"
 #include "gstvaapidecoder_objects.h"
+#include "gstvaapidecoder_dpb.h"
 #include "gstvaapidecoder_priv.h"
 #include "gstvaapidisplay_priv.h"
 #include "gstvaapiobject_priv.h"
@@ -72,8 +73,7 @@ struct _GstVaapiDecoderMpeg2Private {
     GstMpegVideoPictureExt      pic_ext;
     GstMpegVideoQuantMatrixExt  quant_matrix_ext;
     GstVaapiPicture            *current_picture;
-    GstVaapiPicture            *next_picture;
-    GstVaapiPicture            *prev_picture;
+    GstVaapiDpb                *dpb;
     GstAdapter                 *adapter;
     GstClockTime                seq_pts;
     GstClockTime                gop_pts;
@@ -177,8 +177,11 @@ gst_vaapi_decoder_mpeg2_close(GstVaapiDecoderMpeg2 *decoder)
     GstVaapiDecoderMpeg2Private * const priv = decoder->priv;
 
     gst_vaapi_picture_replace(&priv->current_picture, NULL);
-    gst_vaapi_picture_replace(&priv->next_picture,    NULL);
-    gst_vaapi_picture_replace(&priv->prev_picture,    NULL);
+
+    if (priv->dpb) {
+        gst_vaapi_dpb_unref(priv->dpb);
+        priv->dpb = NULL;
+    }
 
     if (priv->adapter) {
         gst_adapter_clear(priv->adapter);
@@ -197,6 +200,10 @@ gst_vaapi_decoder_mpeg2_open(GstVaapiDecoderMpeg2 *decoder, GstBuffer *buffer)
     priv->adapter = gst_adapter_new();
     if (!priv->adapter)
 	return FALSE;
+
+    priv->dpb = gst_vaapi_dpb_mpeg2_new();
+    if (!priv->dpb)
+        return FALSE;
     return TRUE;
 }
 
@@ -324,32 +331,20 @@ ensure_quant_matrix(GstVaapiDecoderMpeg2 *decoder, GstVaapiPicture *picture)
     return GST_VAAPI_DECODER_STATUS_SUCCESS;
 }
 
-static inline GstVaapiDecoderStatus
-render_picture(GstVaapiDecoderMpeg2 *decoder, GstVaapiPicture *picture)
-{
-    if (!gst_vaapi_picture_output(picture))
-        return GST_VAAPI_DECODER_STATUS_ERROR_ALLOCATION_FAILED;
-    return GST_VAAPI_DECODER_STATUS_SUCCESS;
-}
-
-static GstVaapiDecoderStatus
+static gboolean
 decode_current_picture(GstVaapiDecoderMpeg2 *decoder)
 {
     GstVaapiDecoderMpeg2Private * const priv = decoder->priv;
     GstVaapiPicture * const picture = priv->current_picture;
-    GstVaapiDecoderStatus status = GST_VAAPI_DECODER_STATUS_SUCCESS;
 
     if (picture) {
         if (!gst_vaapi_picture_decode(picture))
-            status = GST_VAAPI_DECODER_STATUS_ERROR_UNKNOWN;
-        if (!GST_VAAPI_PICTURE_IS_REFERENCE(picture)) {
-            if ((priv->prev_picture && priv->next_picture) ||
-                (priv->closed_gop && priv->next_picture))
-                status = render_picture(decoder, picture);
-        }
+            return FALSE;
+        if (!gst_vaapi_dpb_add(priv->dpb, picture))
+            return FALSE;
         gst_vaapi_picture_replace(&priv->current_picture, NULL);
     }
-    return status;
+    return TRUE;
 }
 
 static GstVaapiDecoderStatus
@@ -437,19 +432,11 @@ static GstVaapiDecoderStatus
 decode_sequence_end(GstVaapiDecoderMpeg2 *decoder)
 {
     GstVaapiDecoderMpeg2Private * const priv = decoder->priv;
-    GstVaapiDecoderStatus status;
 
-    if (priv->current_picture) {
-        status = decode_current_picture(decoder);
-        if (status != GST_VAAPI_DECODER_STATUS_SUCCESS)
-            return status;
-    }
+    if (priv->current_picture && !decode_current_picture(decoder))
+        return GST_VAAPI_DECODER_STATUS_ERROR_UNKNOWN;
 
-    if (priv->next_picture) {
-        status = render_picture(decoder, priv->next_picture);
-        if (status != GST_VAAPI_DECODER_STATUS_SUCCESS)
-            return status;
-    }
+    gst_vaapi_dpb_flush(priv->dpb);
     return GST_VAAPI_DECODER_STATUS_END_OF_STREAM;
 }
 
@@ -516,11 +503,8 @@ decode_picture(GstVaapiDecoderMpeg2 *decoder, guchar *buf, guint buf_size)
         return status;
     }
 
-    if (priv->current_picture) {
-        status = decode_current_picture(decoder);
-        if (status != GST_VAAPI_DECODER_STATUS_SUCCESS)
-            return status;
-    }
+    if (priv->current_picture && !decode_current_picture(decoder))
+        return GST_VAAPI_DECODER_STATUS_ERROR_UNKNOWN;
 
     priv->current_picture = GST_VAAPI_PICTURE_NEW(MPEG2, decoder);
     if (!priv->current_picture) {
@@ -543,9 +527,11 @@ decode_picture(GstVaapiDecoderMpeg2 *decoder, guchar *buf, guint buf_size)
 
     switch (pic_hdr->pic_type) {
     case GST_MPEG_VIDEO_PICTURE_TYPE_I:
+        GST_VAAPI_PICTURE_FLAG_SET(picture, GST_VAAPI_PICTURE_FLAG_REFERENCE);
         picture->type = GST_VAAPI_PICTURE_TYPE_I;
         break;
     case GST_MPEG_VIDEO_PICTURE_TYPE_P:
+        GST_VAAPI_PICTURE_FLAG_SET(picture, GST_VAAPI_PICTURE_FLAG_REFERENCE);
         picture->type = GST_VAAPI_PICTURE_TYPE_P;
         break;
     case GST_MPEG_VIDEO_PICTURE_TYPE_B:
@@ -560,15 +546,6 @@ decode_picture(GstVaapiDecoderMpeg2 *decoder, guchar *buf, guint buf_size)
     pts = priv->gop_pts;
     pts += gst_util_uint64_scale(pic_hdr->tsn, GST_SECOND * priv->fps_d, priv->fps_n);
     picture->pts = pts + priv->pts_diff;
-
-    /* Update reference pictures */
-    if (pic_hdr->pic_type != GST_MPEG_VIDEO_PICTURE_TYPE_B) {
-        GST_VAAPI_PICTURE_FLAG_SET(picture, GST_VAAPI_PICTURE_FLAG_REFERENCE);
-        if (priv->next_picture)
-            status = render_picture(decoder, priv->next_picture);
-        gst_vaapi_picture_replace(&priv->prev_picture, priv->next_picture);
-        gst_vaapi_picture_replace(&priv->next_picture, picture);
-    }
     return status;
 }
 
@@ -623,6 +600,7 @@ fill_picture(GstVaapiDecoderMpeg2 *decoder, GstVaapiPicture *picture)
     VAPictureParameterBufferMPEG2 * const pic_param = picture->param;
     GstMpegVideoPictureHdr * const pic_hdr = &priv->pic_hdr;
     GstMpegVideoPictureExt * const pic_ext = &priv->pic_ext;
+    GstVaapiPicture *prev_picture, *next_picture;
 
     if (!priv->has_pic_ext)
         return FALSE;
@@ -650,14 +628,25 @@ fill_picture(GstVaapiDecoderMpeg2 *decoder, GstVaapiPicture *picture)
     COPY_FIELD(picture_coding_extension, bits, repeat_first_field);
     COPY_FIELD(picture_coding_extension, bits, progressive_frame);
 
+    gst_vaapi_dpb_mpeg2_get_references(
+        priv->dpb,
+        picture,
+        &prev_picture,
+        &next_picture
+    );
+
     switch (pic_hdr->pic_type) {
     case GST_MPEG_VIDEO_PICTURE_TYPE_B:
-        if (priv->next_picture)
-            pic_param->backward_reference_picture = priv->next_picture->surface_id;
-        // fall-through
+        if (next_picture)
+            pic_param->backward_reference_picture = next_picture->surface_id;
+        if (prev_picture)
+            pic_param->forward_reference_picture = prev_picture->surface_id;
+        else if (!priv->closed_gop)
+            GST_VAAPI_PICTURE_FLAG_SET(picture, GST_VAAPI_PICTURE_FLAG_SKIPPED);
+        break;
     case GST_MPEG_VIDEO_PICTURE_TYPE_P:
-        if (priv->prev_picture)
-            pic_param->forward_reference_picture = priv->prev_picture->surface_id;
+        if (prev_picture)
+            pic_param->forward_reference_picture = prev_picture->surface_id;
         break;
     }
     return TRUE;
@@ -932,8 +921,6 @@ gst_vaapi_decoder_mpeg2_init(GstVaapiDecoderMpeg2 *decoder)
     priv->fps_d                 = 0;
     priv->profile               = GST_VAAPI_PROFILE_MPEG2_SIMPLE;
     priv->current_picture       = NULL;
-    priv->next_picture          = NULL;
-    priv->prev_picture          = NULL;
     priv->adapter               = NULL;
     priv->seq_pts               = GST_CLOCK_TIME_NONE;
     priv->gop_pts               = GST_CLOCK_TIME_NONE;
