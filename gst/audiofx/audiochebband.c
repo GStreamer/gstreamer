@@ -209,12 +209,11 @@ gst_audio_cheb_band_init (GstAudioChebBand * filter)
 
 static void
 generate_biquad_coefficients (GstAudioChebBand * filter,
-    gint p, gdouble * b0, gdouble * b1, gdouble * b2, gdouble * b3,
+    gint p, gint rate, gdouble * b0, gdouble * b1, gdouble * b2, gdouble * b3,
     gdouble * b4, gdouble * a1, gdouble * a2, gdouble * a3, gdouble * a4)
 {
   gint np = filter->poles / 2;
   gdouble ripple = filter->ripple;
-  gint rate = GST_AUDIO_FILTER_RATE (filter);
 
   /* pole location in s-plane */
   gdouble rp, ip;
@@ -452,8 +451,8 @@ generate_coefficients (GstAudioChebBand * filter, const GstAudioInfo * info)
       gdouble *ta = g_new0 (gdouble, np + 5);
       gdouble *tb = g_new0 (gdouble, np + 5);
 
-      generate_biquad_coefficients (filter, p, &b0, &b1, &b2, &b3, &b4, &a1,
-          &a2, &a3, &a4);
+      generate_biquad_coefficients (filter, p, rate,
+          &b0, &b1, &b2, &b3, &b4, &a1, &a2, &a3, &a4);
 
       memcpy (ta, a, sizeof (gdouble) * (np + 5));
       memcpy (tb, b, sizeof (gdouble) * (np + 5));

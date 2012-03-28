@@ -201,7 +201,7 @@ gst_audio_cheb_limit_init (GstAudioChebLimit * filter)
 
 static void
 generate_biquad_coefficients (GstAudioChebLimit * filter,
-    gint p, gdouble * b0, gdouble * b1, gdouble * b2,
+    gint p, gint rate, gdouble * b0, gdouble * b1, gdouble * b2,
     gdouble * a1, gdouble * a2)
 {
   gint np = filter->poles;
@@ -320,8 +320,7 @@ generate_biquad_coefficients (GstAudioChebLimit * filter,
    */
   {
     gdouble k, d;
-    gdouble omega =
-        2.0 * G_PI * (filter->cutoff / GST_AUDIO_FILTER_RATE (filter));
+    gdouble omega = 2.0 * G_PI * (filter->cutoff / rate);
 
     if (filter->mode == MODE_LOW_PASS)
       k = sin ((1.0 - omega) / 2.0) / sin ((1.0 + omega) / 2.0);
@@ -408,7 +407,7 @@ generate_coefficients (GstAudioChebLimit * filter, const GstAudioInfo * info)
       gdouble *ta = g_new0 (gdouble, np + 3);
       gdouble *tb = g_new0 (gdouble, np + 3);
 
-      generate_biquad_coefficients (filter, p, &b0, &b1, &b2, &a1, &a2);
+      generate_biquad_coefficients (filter, p, rate, &b0, &b1, &b2, &a1, &a2);
 
       memcpy (ta, a, sizeof (gdouble) * (np + 3));
       memcpy (tb, b, sizeof (gdouble) * (np + 3));
@@ -466,8 +465,7 @@ generate_coefficients (GstAudioChebLimit * filter, const GstAudioInfo * info)
 
 #ifndef GST_DISABLE_GST_DEBUG
     {
-      gdouble wc =
-          2.0 * G_PI * (filter->cutoff / GST_AUDIO_FILTER_RATE (filter));
+      gdouble wc = 2.0 * G_PI * (filter->cutoff / rate);
       gdouble zr = cos (wc), zi = sin (wc);
 
       GST_LOG_OBJECT (filter, "%.2f dB gain @ %d Hz",
@@ -478,7 +476,7 @@ generate_coefficients (GstAudioChebLimit * filter, const GstAudioInfo * info)
 
     GST_LOG_OBJECT (filter, "%.2f dB gain @ %d Hz",
         20.0 * log10 (gst_audio_fx_base_iir_filter_calculate_gain (a, np + 1, b,
-                np + 1, -1.0, 0.0)), GST_AUDIO_FILTER_RATE (filter) / 2);
+                np + 1, -1.0, 0.0)), rate);
   }
 }
 
