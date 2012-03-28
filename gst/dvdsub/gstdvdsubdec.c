@@ -833,11 +833,8 @@ gst_dvd_sub_dec_chain (GstPad * pad, GstObject * parent, GstBuffer * buf)
 
   /* deal with partial frame from previous buffer */
   if (dec->partialbuf) {
-    GstBuffer *merge;
-
     gst_buffer_unmap (dec->partialbuf, &dec->partialmap);
-    merge = gst_buffer_join (dec->partialbuf, buf);
-    dec->partialbuf = merge;
+    dec->partialbuf = gst_buffer_append (dec->partialbuf, buf);
   } else {
     dec->partialbuf = buf;
   }

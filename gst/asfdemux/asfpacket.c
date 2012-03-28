@@ -396,7 +396,7 @@ gst_asf_demux_parse_payload (GstASFDemux * demux, AsfPacket * packet,
             GST_WARNING_OBJECT (demux, "Offset doesn't match previous data?!");
           }
           /* note: buffer join/merge might not preserve buffer flags */
-          prev->buf = gst_buffer_join (prev->buf, payload.buf);
+          prev->buf = gst_buffer_append (prev->buf, payload.buf);
           GST_LOG_OBJECT (demux,
               "Merged fragments, merged size: %" G_GSIZE_FORMAT,
               gst_buffer_get_size (prev->buf));

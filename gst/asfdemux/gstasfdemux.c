@@ -3783,7 +3783,7 @@ gst_asf_demux_descramble_buffer (GstASFDemux * demux, AsfStream * stream,
     if (!offset) {
       descrambled_buffer = sub_buffer;
     } else {
-      descrambled_buffer = gst_buffer_join (descrambled_buffer, sub_buffer);
+      descrambled_buffer = gst_buffer_append (descrambled_buffer, sub_buffer);
     }
   }
 
