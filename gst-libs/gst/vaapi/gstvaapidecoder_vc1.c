@@ -933,8 +933,6 @@ decode_frame(GstVaapiDecoderVC1 *decoder, GstVC1BDU *rbdu, GstVC1BDU *ebdu)
         GST_VAAPI_PICTURE_FLAG_SET(picture, GST_VAAPI_PICTURE_FLAG_REFERENCE);
         break;
     case GST_VC1_PICTURE_TYPE_SKIPPED:
-        GST_VAAPI_PICTURE_FLAG_SET(picture, GST_VAAPI_PICTURE_FLAG_SKIPPED);
-        // fall-through
     case GST_VC1_PICTURE_TYPE_P:
         picture->type   = GST_VAAPI_PICTURE_TYPE_P;
         GST_VAAPI_PICTURE_FLAG_SET(picture, GST_VAAPI_PICTURE_FLAG_REFERENCE);

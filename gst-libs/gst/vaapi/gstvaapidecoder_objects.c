@@ -250,9 +250,11 @@ gst_vaapi_picture_output(GstVaapiPicture *picture)
     if (!picture->proxy)
         return FALSE;
 
-    proxy = g_object_ref(picture->proxy);
-    gst_vaapi_surface_proxy_set_timestamp(proxy, picture->pts);
-    gst_vaapi_decoder_push_surface_proxy(GET_DECODER(picture), proxy);
+    if (!GST_VAAPI_PICTURE_IS_SKIPPED(picture)) {
+        proxy = g_object_ref(picture->proxy);
+        gst_vaapi_surface_proxy_set_timestamp(proxy, picture->pts);
+        gst_vaapi_decoder_push_surface_proxy(GET_DECODER(picture), proxy);
+    }
     return TRUE;
 }
 
