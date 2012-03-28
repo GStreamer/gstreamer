@@ -247,7 +247,7 @@ gst_parser_test_run (GstParserTest * test, GstCaps ** out_caps)
         if (!k)
           buffer = buffer_new (test->series[j].data, test->series[j].size);
         else {
-          buffer = gst_buffer_join (buffer,
+          buffer = gst_buffer_append (buffer,
               buffer_new (test->series[j].data, test->series[j].size));
         }
       }

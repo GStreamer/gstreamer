@@ -36,7 +36,7 @@ gst_vdp_mpeg_frame_add_slice (GstVdpMpegFrame * mpeg_frame, GstBuffer * buf)
   if (!mpeg_frame->slices)
     mpeg_frame->slices = buf;
   else
-    mpeg_frame->slices = gst_buffer_join (mpeg_frame->slices, buf);
+    mpeg_frame->slices = gst_buffer_append (mpeg_frame->slices, buf);
   mpeg_frame->n_slices++;
 }
 

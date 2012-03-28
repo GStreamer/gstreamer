@@ -425,7 +425,7 @@ gst_rtp_asf_pay_handle_buffer (GstBaseRTPPayload * rtppay, GstBuffer * buffer)
     if (gst_asf_match_guid (GST_BUFFER_DATA (buffer),
             &(guids[ASF_DATA_OBJECT_INDEX]))) {
       GST_DEBUG_OBJECT (rtpasfpay, "Received data object header");
-      rtpasfpay->headers = gst_buffer_join (rtpasfpay->headers, buffer);
+      rtpasfpay->headers = gst_buffer_append (rtpasfpay->headers, buffer);
       rtpasfpay->state = ASF_PACKETS;
 
       return gst_rtp_asf_pay_parse_headers (rtpasfpay);

@@ -451,7 +451,7 @@ gst_nsfdec_chain (GstPad * pad, GstBuffer * buffer)
   /* collect all data, we start doing something when we get an EOS
    * event */
   if (nsfdec->tune_buffer) {
-    nsfdec->tune_buffer = gst_buffer_join (nsfdec->tune_buffer, buffer);
+    nsfdec->tune_buffer = gst_buffer_append (nsfdec->tune_buffer, buffer);
   } else {
     nsfdec->tune_buffer = buffer;
   }

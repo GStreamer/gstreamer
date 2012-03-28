@@ -973,7 +973,7 @@ gst_decklink_sink_audiosink_chain (GstPad * pad, GstBuffer * buffer)
   // concatenate both buffers
   g_mutex_lock (decklinksink->audio_mutex);
   decklinksink->audio_buffer =
-      gst_buffer_join (decklinksink->audio_buffer, buffer);
+      gst_buffer_append (decklinksink->audio_buffer, buffer);
   g_mutex_unlock (decklinksink->audio_mutex);
 
   // GST_DEBUG("Audio Buffer Size: %d", GST_BUFFER_SIZE (decklinksink->audio_buffer));

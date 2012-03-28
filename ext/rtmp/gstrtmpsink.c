@@ -232,7 +232,7 @@ gst_rtmp_sink_render (GstBaseSink * bsink, GstBuffer * buf)
     GST_LOG_OBJECT (sink, "Joining 2nd buffer of size %" G_GSIZE_FORMAT
         " to cached buf", gst_buffer_get_size (buf));
     gst_buffer_ref (buf);
-    reffed_buf = buf = gst_buffer_join (sink->cache, buf);
+    reffed_buf = buf = gst_buffer_append (sink->cache, buf);
     sink->cache = NULL;
   }
 

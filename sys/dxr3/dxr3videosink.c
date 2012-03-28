@@ -599,7 +599,6 @@ dxr3videosink_chain (GstPad * pad, GstData * _data)
 {
   GstBuffer *buf = GST_BUFFER (_data);
   Dxr3VideoSink *sink;
-  GstBuffer *merged;
 
   g_return_if_fail (pad != NULL);
   g_return_if_fail (GST_IS_PAD (pad));
@@ -617,10 +616,7 @@ dxr3videosink_chain (GstPad * pad, GstData * _data)
   if (sink->cur_buf == NULL) {
     sink->cur_buf = buf;
   } else {
-    merged = gst_buffer_merge (sink->cur_buf, buf);
-    gst_buffer_unref (sink->cur_buf);
-    gst_buffer_unref (buf);
-    sink->cur_buf = merged;
+    sink->cur_buf = gst_buffer_append (sink->cur_buf, buf);
   }
 
   sink->last_ts = GST_BUFFER_TIMESTAMP (buf);

@@ -696,7 +696,9 @@ gst_mpeg4vparse_pre_push_frame (GstBaseParse * parse, GstBaseParseFrame * frame)
           GstBuffer *superbuf;
 
           /* insert header */
-          superbuf = gst_buffer_merge (mp4vparse->config, buffer);
+          superbuf =
+              gst_buffer_append (gst_buffer_ref (mp4vparse->config),
+              gst_buffer_ref (buffer));
           gst_buffer_copy_into (superbuf, buffer, GST_BUFFER_COPY_METADATA, 0,
               csize);
           gst_buffer_replace (&frame->out_buffer, superbuf);

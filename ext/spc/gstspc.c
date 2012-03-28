@@ -179,7 +179,7 @@ gst_spc_dec_chain (GstPad * pad, GstBuffer * buffer)
   GstSpcDec *spc = GST_SPC_DEC (gst_pad_get_parent (pad));
 
   if (spc->buf) {
-    spc->buf = gst_buffer_join (spc->buf, buffer);
+    spc->buf = gst_buffer_append (spc->buf, buffer);
   } else {
     spc->buf = buffer;
   }

@@ -603,7 +603,7 @@ gst_hls_demux_chain (GstPad * pad, GstBuffer * buf)
   if (demux->playlist == NULL)
     demux->playlist = buf;
   else
-    demux->playlist = gst_buffer_join (demux->playlist, buf);
+    demux->playlist = gst_buffer_append (demux->playlist, buf);
 
   gst_object_unref (demux);
 

@@ -181,7 +181,7 @@ gst_asf_parse_pull_headers (GstAsfParse * asfparse)
     GST_ERROR_OBJECT (asfparse, "Failed to pull data from headers");
     goto leave;
   }
-  headers = gst_buffer_join (guid_and_size, headers);
+  headers = gst_buffer_append (guid_and_size, headers);
   guid_and_size = NULL;
   asfparse->offset += size - ASF_GUID_OBJSIZE_SIZE;
   if (!gst_asf_parse_headers (headers, asfparse->asfinfo)) {
@@ -282,7 +282,7 @@ gst_asf_parse_pull_indexes (GstAsfParse * asfparse)
     }
     asfparse->offset += obj_size - ASF_GUID_OBJSIZE_SIZE;
 
-    buf = gst_buffer_join (guid_and_size, buf);
+    buf = gst_buffer_append (guid_and_size, buf);
     ret = gst_asf_parse_push (asfparse, buf);
     if (ret != GST_FLOW_OK)
       break;

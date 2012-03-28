@@ -912,7 +912,7 @@ gst_dvd_spu_subpic_chain (GstPad * pad, GstObject * parent, GstBuffer * buf)
     if (GST_BUFFER_TIMESTAMP_IS_VALID (buf))
       GST_WARNING_OBJECT (dvdspu,
           "Joining subpicture buffer with timestamp to previous");
-    dvdspu->partial_spu = gst_buffer_join (dvdspu->partial_spu, buf);
+    dvdspu->partial_spu = gst_buffer_append (dvdspu->partial_spu, buf);
   } else {
     /* If we don't yet have a buffer, wait for one with a timestamp,
      * since that will avoid collecting the 2nd half of a partial buf */

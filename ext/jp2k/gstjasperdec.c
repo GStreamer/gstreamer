@@ -635,7 +635,9 @@ gst_jasper_dec_chain (GstPad * pad, GstBuffer * buf)
   if (dec->codec_data) {
     GstBuffer *tmp;
 
-    tmp = gst_buffer_merge (dec->codec_data, buf);
+    tmp =
+        gst_buffer_append (gst_buffer_ref (dec->codec_data),
+        gst_buffer_ref (buf));
     gst_buffer_copy_metadata (tmp, buf, GST_BUFFER_COPY_TIMESTAMPS);
     gst_buffer_unref (buf);
     buf = tmp;

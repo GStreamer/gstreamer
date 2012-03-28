@@ -159,7 +159,7 @@ GST_START_TEST (test_adts)
   buf = gst_buffer_new_and_alloc (size);
   gst_buffer_fill (buf, 0, raw_data_block, size);
 
-  buf = gst_buffer_join (header_buf, buf);
+  buf = gst_buffer_append (header_buf, buf);
   caps = gst_caps_from_string (AAC_CAPS_STRING);
   do_test (buf, caps);
   gst_caps_unref (caps);

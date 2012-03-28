@@ -2360,7 +2360,7 @@ gst_ts_demux_push_pending_data (GstTSDemux * demux, TSDemuxStream * stream)
   }
 
   for (tmp = stream->currentlist->next; tmp; tmp = tmp->next) {
-    buf = gst_buffer_join (buf, (GstBuffer *) tmp->data);
+    buf = gst_buffer_append (buf, (GstBuffer *) tmp->data);
   }
 
   GST_BUFFER_TIMESTAMP (buf) = ts;
