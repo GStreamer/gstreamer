@@ -118,9 +118,6 @@
 
 GType _gst_buffer_type = 0;
 
-static GstMemory *_gst_buffer_arr_span (GstMemory ** mem[], gsize len[],
-    guint n, gsize size);
-
 typedef struct _GstMetaItem GstMetaItem;
 
 struct _GstMetaItem
@@ -154,6 +151,95 @@ typedef struct
   GstMetaItem *item;
 } GstBufferImpl;
 
+
+static gboolean
+_is_span_fast (GstMemory ** mem[], gsize len[], guint n,
+    gsize * offset, GstMemory ** parent)
+{
+  GstMemory *mcur, *mprv;
+  gboolean have_offset = FALSE;
+  guint count, i;
+
+  mcur = mprv = NULL;
+  for (count = 0; count < n; count++) {
+    gsize offs, clen;
+    GstMemory **cmem;
+
+    cmem = mem[count];
+    clen = len[count];
+
+    for (i = 0; i < clen; i++) {
+      if (mcur)
+        mprv = mcur;
+      mcur = cmem[i];
+
+      if (mprv && mcur) {
+        /* check if memory is contiguous */
+        if (!gst_memory_is_span (mprv, mcur, &offs))
+          return FALSE;
+
+        if (!have_offset) {
+          if (offset)
+            *offset = offs;
+          if (parent)
+            *parent = mprv->parent;
+
+          have_offset = TRUE;
+        }
+      }
+    }
+  }
+  return have_offset;
+}
+
+static GstMemory *
+_arr_span (GstMemory ** mem[], gsize len[], guint n, gsize size)
+{
+  GstMemory *span, *parent = NULL;
+  gsize poffset = 0;
+
+  if (_is_span_fast (mem, len, n, &poffset, &parent)) {
+    if (parent->flags & GST_MEMORY_FLAG_NO_SHARE) {
+      GST_CAT_DEBUG (GST_CAT_PERFORMANCE, "copy for span %p", parent);
+      span = gst_memory_copy (parent, poffset, size);
+    } else {
+      span = gst_memory_share (parent, poffset, size);
+    }
+  } else {
+    gsize count, left;
+    GstMapInfo dinfo;
+    guint8 *ptr;
+
+    span = gst_allocator_alloc (NULL, size, NULL);
+    gst_memory_map (span, &dinfo, GST_MAP_WRITE);
+
+    ptr = dinfo.data;
+    left = size;
+
+    for (count = 0; count < n; count++) {
+      GstMapInfo sinfo;
+      gsize i, tocopy, clen;
+      GstMemory **cmem;
+
+      cmem = mem[count];
+      clen = len[count];
+
+      for (i = 0; i < clen && left > 0; i++) {
+        gst_memory_map (cmem[i], &sinfo, GST_MAP_READ);
+        tocopy = MIN (sinfo.size, left);
+        GST_CAT_DEBUG (GST_CAT_PERFORMANCE,
+            "memcpy for span %p from memory %p", span, cmem[i]);
+        memcpy (ptr, (guint8 *) sinfo.data, tocopy);
+        left -= tocopy;
+        ptr += tocopy;
+        gst_memory_unmap (cmem[i], &sinfo);
+      }
+    }
+    gst_memory_unmap (span, &dinfo);
+  }
+  return span;
+}
+
 static GstMemory *
 _span_memory (GstBuffer * buffer, gsize size)
 {
@@ -167,7 +253,7 @@ _span_memory (GstBuffer * buffer, gsize size)
   if (size == -1)
     size = gst_buffer_get_size (buffer);
 
-  span = _gst_buffer_arr_span (mem, len, 1, size);
+  span = _arr_span (mem, len, 1, size);
 
   return span;
 }
@@ -1290,94 +1376,6 @@ gst_buffer_copy_region (GstBuffer * buffer, GstBufferCopyFlags flags,
   gst_buffer_copy_into (copy, buffer, flags, offset, size);
 
   return copy;
-}
-
-static gboolean
-_gst_buffer_arr_is_span_fast (GstMemory ** mem[], gsize len[], guint n,
-    gsize * offset, GstMemory ** parent)
-{
-  GstMemory *mcur, *mprv;
-  gboolean have_offset = FALSE;
-  guint count, i;
-
-  mcur = mprv = NULL;
-  for (count = 0; count < n; count++) {
-    gsize offs, clen;
-    GstMemory **cmem;
-
-    cmem = mem[count];
-    clen = len[count];
-
-    for (i = 0; i < clen; i++) {
-      if (mcur)
-        mprv = mcur;
-      mcur = cmem[i];
-
-      if (mprv && mcur) {
-        /* check if memory is contiguous */
-        if (!gst_memory_is_span (mprv, mcur, &offs))
-          return FALSE;
-
-        if (!have_offset) {
-          if (offset)
-            *offset = offs;
-          if (parent)
-            *parent = mprv->parent;
-
-          have_offset = TRUE;
-        }
-      }
-    }
-  }
-  return have_offset;
-}
-
-static GstMemory *
-_gst_buffer_arr_span (GstMemory ** mem[], gsize len[], guint n, gsize size)
-{
-  GstMemory *span, *parent = NULL;
-  gsize poffset = 0;
-
-  if (_gst_buffer_arr_is_span_fast (mem, len, n, &poffset, &parent)) {
-    if (parent->flags & GST_MEMORY_FLAG_NO_SHARE) {
-      GST_CAT_DEBUG (GST_CAT_PERFORMANCE, "copy for span %p", parent);
-      span = gst_memory_copy (parent, poffset, size);
-    } else {
-      span = gst_memory_share (parent, poffset, size);
-    }
-  } else {
-    gsize count, left;
-    GstMapInfo dinfo;
-    guint8 *ptr;
-
-    span = gst_allocator_alloc (NULL, size, NULL);
-    gst_memory_map (span, &dinfo, GST_MAP_WRITE);
-
-    ptr = dinfo.data;
-    left = size;
-
-    for (count = 0; count < n; count++) {
-      GstMapInfo sinfo;
-      gsize i, tocopy, clen;
-      GstMemory **cmem;
-
-      cmem = mem[count];
-      clen = len[count];
-
-      for (i = 0; i < clen && left > 0; i++) {
-        gst_memory_map (cmem[i], &sinfo, GST_MAP_READ);
-        tocopy = MIN (sinfo.size, left);
-        GST_CAT_DEBUG (GST_CAT_PERFORMANCE,
-            "memcpy for span %p from memory %p", span, cmem[i]);
-        memcpy (ptr, (guint8 *) sinfo.data, tocopy);
-        left -= tocopy;
-        ptr += tocopy;
-        gst_memory_unmap (cmem[i], &sinfo);
-      }
-    }
-    gst_memory_unmap (span, &dinfo);
-  }
-  return span;
 }
 
 /**
