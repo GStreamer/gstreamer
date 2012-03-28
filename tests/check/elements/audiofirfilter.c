@@ -113,7 +113,8 @@ on_handoff (GstElement * object, GstBuffer * buffer, GstPad * pad,
 
 GST_START_TEST (test_pipeline)
 {
-  GstElement *pipeline, *src, *filter, *sink;
+  GstElement *pipeline, *src, *cfilter, *filter, *sink;
+  GstCaps *caps;
   GstBus *bus;
   GMainLoop *loop;
 
@@ -127,6 +128,18 @@ GST_START_TEST (test_pipeline)
   fail_unless (src != NULL);
   g_object_set (G_OBJECT (src), "num-buffers", 1000, NULL);
 
+  cfilter = gst_element_factory_make ("capsfilter", NULL);
+  fail_unless (cfilter != NULL);
+#if G_BYTE_ORDER == G_BIG_ENDIAN
+  caps = gst_caps_new_simple ("audio/x-raw",
+      "format", G_TYPE_STRING, "F64BE", NULL);
+#else
+  caps = gst_caps_new_simple ("audio/x-raw",
+      "format", G_TYPE_STRING, "F64LE", NULL);
+#endif
+  g_object_set (G_OBJECT (cfilter), "caps", caps, NULL);
+  gst_caps_unref (caps);
+
   filter = gst_element_factory_make ("audiofirfilter", NULL);
   fail_unless (filter != NULL);
   g_signal_connect (G_OBJECT (filter), "rate-changed",
@@ -137,8 +150,8 @@ GST_START_TEST (test_pipeline)
   g_object_set (G_OBJECT (sink), "signal-handoffs", TRUE, NULL);
   g_signal_connect (G_OBJECT (sink), "handoff", G_CALLBACK (on_handoff), NULL);
 
-  gst_bin_add_many (GST_BIN (pipeline), src, filter, sink, NULL);
-  fail_unless (gst_element_link_many (src, filter, sink, NULL));
+  gst_bin_add_many (GST_BIN (pipeline), src, cfilter, filter, sink, NULL);
+  fail_unless (gst_element_link_many (src, cfilter, filter, sink, NULL));
 
   loop = g_main_loop_new (NULL, FALSE);
 
