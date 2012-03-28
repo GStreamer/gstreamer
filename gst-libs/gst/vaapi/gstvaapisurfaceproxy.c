@@ -43,7 +43,8 @@ struct _GstVaapiSurfaceProxyPrivate {
     GstVaapiContext    *context;
     GstVaapiSurface    *surface;
     GstClockTime        timestamp;
-    gboolean            tff;
+    guint               is_interlaced   : 1;
+    guint               tff             : 1;
 };
 
 enum {
@@ -52,6 +53,7 @@ enum {
     PROP_CONTEXT,
     PROP_SURFACE,
     PROP_TIMESTAMP,
+    PROP_INTERLACED,
     PROP_TFF
 };
 
@@ -86,6 +88,9 @@ gst_vaapi_surface_proxy_set_property(
     case PROP_TIMESTAMP:
         gst_vaapi_surface_proxy_set_timestamp(proxy, g_value_get_uint64(value));
         break;
+    case PROP_INTERLACED:
+        gst_vaapi_surface_proxy_set_interlaced(proxy, g_value_get_boolean(value));
+        break;
     case PROP_TFF:
         gst_vaapi_surface_proxy_set_tff(proxy, g_value_get_boolean(value));
         break;
@@ -114,6 +119,9 @@ gst_vaapi_surface_proxy_get_property(
         break;
     case PROP_TIMESTAMP:
         g_value_set_uint64(value, gst_vaapi_surface_proxy_get_timestamp(proxy));
+        break;
+    case PROP_INTERLACED:
+        g_value_set_boolean(value, gst_vaapi_surface_proxy_get_interlaced(proxy));
         break;
     case PROP_TFF:
         g_value_set_boolean(value, gst_vaapi_surface_proxy_get_tff(proxy));
@@ -162,6 +170,15 @@ gst_vaapi_surface_proxy_class_init(GstVaapiSurfaceProxyClass *klass)
 
     g_object_class_install_property
         (object_class,
+         PROP_INTERLACED,
+         g_param_spec_boolean("interlaced",
+                              "Interlaced",
+                              "Flag indicating whether surface is interlaced",
+                              FALSE,
+                              G_PARAM_READWRITE));
+
+    g_object_class_install_property
+        (object_class,
          PROP_TFF,
          g_param_spec_boolean("tff",
                               "Top-Field-First",
@@ -180,6 +197,7 @@ gst_vaapi_surface_proxy_init(GstVaapiSurfaceProxy *proxy)
     priv->context       = NULL;
     priv->surface       = NULL;
     priv->timestamp     = GST_CLOCK_TIME_NONE;
+    priv->is_interlaced = FALSE;
     priv->tff           = FALSE;
 }
 
@@ -352,6 +370,39 @@ gst_vaapi_surface_proxy_set_timestamp(
 }
 
 /**
+ * gst_vaapi_surface_proxy_get_interlaced:
+ * @proxy: a #GstVaapiSurfaceProxy
+ *
+ * Returns whether the @proxy holds an interlaced #GstVaapiSurface or not.
+ *
+ * Return value: %TRUE if the underlying surface is interlaced, %FALSE
+ *     otherwise.
+ */
+gboolean
+gst_vaapi_surface_proxy_get_interlaced(GstVaapiSurfaceProxy *proxy)
+{
+    g_return_val_if_fail(GST_VAAPI_IS_SURFACE_PROXY(proxy), FALSE);
+
+    return proxy->priv->is_interlaced;
+}
+
+/**
+ * gst_vaapi_surface_proxy_set_interlaced:
+ * @proxy: a #GstVaapiSurfaceProxy
+ * @b: a boolean value
+ *
+ * Sets whether the underlying #GstVaapiSurface for @proxy is interlaced
+ * or not.
+ */
+void
+gst_vaapi_surface_proxy_set_interlaced(GstVaapiSurfaceProxy *proxy, gboolean b)
+{
+    g_return_if_fail(GST_VAAPI_IS_SURFACE_PROXY(proxy));
+
+    proxy->priv->is_interlaced = b;
+}
+
+/**
  * gst_vaapi_surface_proxy_get_tff:
  * @proxy: a #GstVaapiSurfaceProxy
  *
@@ -364,7 +415,7 @@ gst_vaapi_surface_proxy_get_tff(GstVaapiSurfaceProxy *proxy)
 {
     g_return_val_if_fail(GST_VAAPI_IS_SURFACE_PROXY(proxy), FALSE);
 
-    return proxy->priv->tff;
+    return proxy->priv->is_interlaced && proxy->priv->tff;
 }
 
 /**

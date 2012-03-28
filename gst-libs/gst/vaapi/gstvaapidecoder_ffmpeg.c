@@ -496,8 +496,8 @@ render_frame(GstVaapiDecoderFfmpeg *decoder, AVFrame *frame)
         return GST_VAAPI_DECODER_STATUS_ERROR_INVALID_SURFACE;
 
     gst_vaapi_surface_proxy_set_timestamp(proxy, frame->pts);
-    if (frame->interlaced_frame)
-        gst_vaapi_surface_proxy_set_tff(proxy, frame->top_field_first);
+    gst_vaapi_surface_proxy_set_interlaced(proxy, !!frame->interlaced_frame);
+    gst_vaapi_surface_proxy_set_tff(proxy, frame->top_field_first);
     gst_vaapi_decoder_push_surface_proxy(base_decoder, g_object_ref(proxy));
     return GST_VAAPI_DECODER_STATUS_SUCCESS;
 }

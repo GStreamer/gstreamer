@@ -73,6 +73,15 @@ G_BEGIN_DECLS
     gst_vaapi_surface_proxy_get_timestamp(surface)
 
 /**
+ * GST_VAAPI_SURFACE_PROXY_INTERLACED:
+ * @surface: a #GstVaapiSurfaceProxy
+ *
+ * Macro that evaluates to %TRUE if the @surface is interlaced.
+ */
+#define GST_VAAPI_SURFACE_PROXY_INTERLACED(surface) \
+    gst_vaapi_surface_proxy_get_interlaced(surface)
+
+/**
  * GST_VAAPI_SURFACE_PROXY_TFF:
  * @surface: a #GstVaapiSurfaceProxy
  *
@@ -142,6 +151,12 @@ gst_vaapi_surface_proxy_set_timestamp(
     GstVaapiSurfaceProxy *proxy,
     GstClockTime          timestamp
 );
+
+gboolean
+gst_vaapi_surface_proxy_get_interlaced(GstVaapiSurfaceProxy *proxy);
+
+void
+gst_vaapi_surface_proxy_set_interlaced(GstVaapiSurfaceProxy *proxy, gboolean b);
 
 gboolean
 gst_vaapi_surface_proxy_get_tff(GstVaapiSurfaceProxy *proxy);

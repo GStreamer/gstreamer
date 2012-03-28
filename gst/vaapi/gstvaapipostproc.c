@@ -239,8 +239,10 @@ gst_vaapipostproc_process(GstVaapiPostproc *postproc, GstBuffer *buf)
     GstClockTime timestamp;
     GstFlowReturn ret;
     GstBuffer *outbuf = NULL;
-    guint outbuf_flags, flags = 0;
-    gboolean tff;
+    guint outbuf_flags, flags;
+    gboolean interlaced, tff;
+
+    flags = gst_vaapi_video_buffer_get_render_flags(vbuf);
 
     /* Deinterlacing disabled, push frame */
     if (!postproc->deinterlace) {
@@ -251,9 +253,13 @@ gst_vaapipostproc_process(GstVaapiPostproc *postproc, GstBuffer *buf)
         return GST_FLOW_OK;
     }
 
-    timestamp = GST_BUFFER_TIMESTAMP(buf);
-    proxy     = gst_vaapi_video_buffer_get_surface_proxy(vbuf);
-    tff       = gst_vaapi_surface_proxy_get_tff(proxy);
+    timestamp  = GST_BUFFER_TIMESTAMP(buf);
+    proxy      = gst_vaapi_video_buffer_get_surface_proxy(vbuf);
+    interlaced = gst_vaapi_surface_proxy_get_interlaced(proxy);
+    tff        = gst_vaapi_surface_proxy_get_tff(proxy);
+
+    flags &= ~(GST_VAAPI_PICTURE_STRUCTURE_TOP_FIELD|
+               GST_VAAPI_PICTURE_STRUCTURE_BOTTOM_FIELD);
 
     /* First field */
     outbuf = gst_vaapi_video_buffer_new_with_surface_proxy(proxy);
@@ -262,9 +268,11 @@ gst_vaapipostproc_process(GstVaapiPostproc *postproc, GstBuffer *buf)
 
     vbuf = GST_VAAPI_VIDEO_BUFFER(outbuf);
     outbuf_flags = flags;
-    outbuf_flags |= tff ?
+    outbuf_flags |= interlaced ? (
+        tff ?
         GST_VAAPI_PICTURE_STRUCTURE_TOP_FIELD :
-        GST_VAAPI_PICTURE_STRUCTURE_BOTTOM_FIELD;
+        GST_VAAPI_PICTURE_STRUCTURE_BOTTOM_FIELD) :
+        GST_VAAPI_PICTURE_STRUCTURE_FRAME;
     gst_vaapi_video_buffer_set_render_flags(vbuf, outbuf_flags);
 
     GST_BUFFER_TIMESTAMP(outbuf) = timestamp;
@@ -281,9 +289,11 @@ gst_vaapipostproc_process(GstVaapiPostproc *postproc, GstBuffer *buf)
 
     vbuf = GST_VAAPI_VIDEO_BUFFER(outbuf);
     outbuf_flags = flags;
-    outbuf_flags |= tff ?
+    outbuf_flags |= interlaced ? (
+        tff ?
         GST_VAAPI_PICTURE_STRUCTURE_BOTTOM_FIELD :
-        GST_VAAPI_PICTURE_STRUCTURE_TOP_FIELD;
+        GST_VAAPI_PICTURE_STRUCTURE_TOP_FIELD) :
+        GST_VAAPI_PICTURE_STRUCTURE_FRAME;
     gst_vaapi_video_buffer_set_render_flags(vbuf, outbuf_flags);
 
     GST_BUFFER_TIMESTAMP(outbuf) = timestamp + postproc->field_duration;
