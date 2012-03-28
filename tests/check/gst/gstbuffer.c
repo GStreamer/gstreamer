@@ -115,35 +115,6 @@ GST_START_TEST (test_subbuffer)
 
 GST_END_TEST;
 
-GST_START_TEST (test_is_span_fast)
-{
-  GstBuffer *buffer, *sub1, *sub2;
-
-  buffer = gst_buffer_new_and_alloc (4);
-
-  sub1 = gst_buffer_copy_region (buffer, GST_BUFFER_COPY_ALL, 0, 2);
-  fail_if (sub1 == NULL, "copy_region of buffer returned NULL");
-
-  sub2 = gst_buffer_copy_region (buffer, GST_BUFFER_COPY_ALL, 2, 2);
-  fail_if (sub2 == NULL, "copy_region of buffer returned NULL");
-
-  fail_if (gst_buffer_is_span_fast (buffer, sub2) == TRUE,
-      "a parent buffer can't be span_fasted");
-
-  fail_if (gst_buffer_is_span_fast (sub1, buffer) == TRUE,
-      "a parent buffer can't be span_fasted");
-
-  fail_if (gst_buffer_is_span_fast (sub1, sub2) == FALSE,
-      "two subbuffers next to each other should be span_fast");
-
-  /* clean up */
-  gst_buffer_unref (sub1);
-  gst_buffer_unref (sub2);
-  gst_buffer_unref (buffer);
-}
-
-GST_END_TEST;
-
 GST_START_TEST (test_span)
 {
   GstBuffer *buffer, *sub1, *sub2, *span;
@@ -155,10 +126,9 @@ GST_START_TEST (test_span)
   memcpy (info.data, "data", 4);
   gst_buffer_unmap (buffer, &info);
 
-  ASSERT_CRITICAL (gst_buffer_span (NULL, 1, NULL, 2));
-  ASSERT_CRITICAL (gst_buffer_span (buffer, 1, NULL, 2));
-  ASSERT_CRITICAL (gst_buffer_span (NULL, 1, buffer, 2));
-  ASSERT_CRITICAL (gst_buffer_span (buffer, 0, buffer, 10));
+  ASSERT_CRITICAL (gst_buffer_append (NULL, NULL));
+  ASSERT_CRITICAL (gst_buffer_append (buffer, NULL));
+  ASSERT_CRITICAL (gst_buffer_append (NULL, buffer));
 
   sub1 = gst_buffer_copy_region (buffer, GST_BUFFER_COPY_ALL, 0, 2);
   fail_if (sub1 == NULL, "copy_region of buffer returned NULL");
@@ -171,7 +141,9 @@ GST_START_TEST (test_span)
   ASSERT_BUFFER_REFCOUNT (sub2, "sub2", 1);
 
   /* span will create a new subbuffer from the parent */
-  span = gst_buffer_span (sub1, 0, sub2, 4);
+  gst_buffer_ref (sub1);
+  gst_buffer_ref (sub2);
+  span = gst_buffer_append (sub1, sub2);
   fail_unless (gst_buffer_map (span, &info, GST_MAP_READ));
   fail_unless (info.size == 4, "spanned buffer is wrong size");
   ASSERT_BUFFER_REFCOUNT (buffer, "parent", 1);
@@ -185,7 +157,9 @@ GST_START_TEST (test_span)
   ASSERT_BUFFER_REFCOUNT (buffer, "parent", 1);
 
   /* span from non-contiguous buffers will create new buffers */
-  span = gst_buffer_span (sub2, 0, sub1, 4);
+  gst_buffer_ref (sub1);
+  gst_buffer_ref (sub2);
+  span = gst_buffer_append (sub2, sub1);
   fail_unless (gst_buffer_map (span, &info, GST_MAP_READ));
   fail_unless (info.size == 4, "spanned buffer is wrong size");
   ASSERT_BUFFER_REFCOUNT (buffer, "parent", 1);
@@ -193,33 +167,6 @@ GST_START_TEST (test_span)
   ASSERT_BUFFER_REFCOUNT (sub2, "sub2", 1);
   ASSERT_BUFFER_REFCOUNT (span, "span", 1);
   fail_unless (memcmp (info.data, "tada", 4) == 0,
-      "spanned buffer contains the wrong data");
-  gst_buffer_unmap (span, &info);
-  gst_buffer_unref (span);
-  ASSERT_BUFFER_REFCOUNT (buffer, "parent", 1);
-
-  /* span with different sizes */
-  span = gst_buffer_span (sub1, 1, sub2, 3);
-  fail_unless (gst_buffer_map (span, &info, GST_MAP_READ));
-  fail_unless (info.size == 3, "spanned buffer is wrong size");
-  ASSERT_BUFFER_REFCOUNT (buffer, "parent", 1);
-  ASSERT_BUFFER_REFCOUNT (sub1, "sub1", 1);
-  ASSERT_BUFFER_REFCOUNT (sub2, "sub2", 1);
-  ASSERT_BUFFER_REFCOUNT (span, "span", 1);
-  fail_unless (memcmp (info.data, "ata", 3) == 0,
-      "spanned buffer contains the wrong data");
-  gst_buffer_unmap (span, &info);
-  gst_buffer_unref (span);
-  ASSERT_BUFFER_REFCOUNT (buffer, "parent", 1);
-
-  span = gst_buffer_span (sub2, 0, sub1, 3);
-  fail_unless (gst_buffer_map (span, &info, GST_MAP_READ));
-  fail_unless (info.size == 3, "spanned buffer is wrong size");
-  ASSERT_BUFFER_REFCOUNT (buffer, "parent", 1);
-  ASSERT_BUFFER_REFCOUNT (sub1, "sub1", 1);
-  ASSERT_BUFFER_REFCOUNT (sub2, "sub2", 1);
-  ASSERT_BUFFER_REFCOUNT (span, "span", 1);
-  fail_unless (memcmp (info.data, "tad", 3) == 0,
       "spanned buffer contains the wrong data");
   gst_buffer_unmap (span, &info);
   gst_buffer_unref (span);
@@ -667,7 +614,6 @@ gst_buffer_suite (void)
   tcase_add_test (tc_chain, test_subbuffer);
   tcase_add_test (tc_chain, test_subbuffer_make_writable);
   tcase_add_test (tc_chain, test_make_writable);
-  tcase_add_test (tc_chain, test_is_span_fast);
   tcase_add_test (tc_chain, test_span);
   tcase_add_test (tc_chain, test_metadata_writable);
   tcase_add_test (tc_chain, test_copy);

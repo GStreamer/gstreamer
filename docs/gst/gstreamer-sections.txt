@@ -202,9 +202,6 @@ gst_buffer_remove_all_memory
 gst_buffer_replace_all_memory
 gst_buffer_replace_memory
 
-gst_buffer_join
-gst_buffer_merge
-
 gst_buffer_map
 gst_buffer_unmap
 
@@ -223,8 +220,7 @@ gst_buffer_is_writable
 gst_buffer_make_writable
 gst_buffer_replace
 
-gst_buffer_is_span_fast
-gst_buffer_span
+gst_buffer_append
 
 gst_buffer_get_meta
 gst_buffer_add_meta

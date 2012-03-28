@@ -342,8 +342,7 @@ gst_adapter_push (GstAdapter * adapter, GstBuffer * buf)
 }
 
 /* Internal method only. Tries to merge buffers at the head of the queue
- * to form a single larger buffer of size 'size'. Only merges buffers that
- * where 'gst_buffer_is_span_fast' returns TRUE.
+ * to form a single larger buffer of size 'size'.
  *
  * Returns TRUE if it managed to merge anything.
  */
@@ -369,15 +368,12 @@ gst_adapter_try_to_merge_up (GstAdapter * adapter, gsize size)
 
   while (g != NULL && hsize < size) {
     cur = g->data;
-    if (!gst_buffer_is_span_fast (head, cur))
-      return ret;
-
     /* Merge the head buffer and the next in line */
     GST_LOG_OBJECT (adapter, "Merging buffers of size %" G_GSIZE_FORMAT " & %"
         G_GSIZE_FORMAT " in search of target %" G_GSIZE_FORMAT,
         hsize, gst_buffer_get_size (cur), size);
 
-    head = gst_buffer_join (head, cur);
+    head = gst_buffer_append (head, cur);
     hsize = gst_buffer_get_size (head);
     ret = TRUE;
 

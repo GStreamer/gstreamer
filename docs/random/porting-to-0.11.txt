@@ -248,6 +248,20 @@ The 0.11 porting guide
     Likewise GST_BUFFER_TIMESTAMP_IS_VALID() was changed to
     GST_BUFFER_PTS_IS_VALID and GST_BUFFER_DTS_IS_VALID
 
+    gst_buffer_join() was renamed to gst_buffer_append() and the memory is not
+    directly merged but appended.
+
+    gst_buffer_merge() was removed, it is the same as gst_buffer_join() but
+    without taking ownership of the arguments. Caller code should ref themselves
+    when needed. Note that the extra refs might force slower paths in
+    gst_buffer_join().
+
+    gst_buffer_is_span() and gst_buffer_span() are removed, use
+    gst_buffer_merge() and gst_buffer_resize() for the same effect. Merging and
+    spanning is delayed until the buffer is mapped and in some cases no merging
+    of memory is needed at all when the element can deal with individual memory
+    chunks.
+
 * GstBufferList
     The GstBufferList object is much simplified because most of the
     functionality in the groups is now part of the GstMemory in buffers.

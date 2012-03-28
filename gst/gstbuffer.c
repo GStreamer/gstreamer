@@ -88,8 +88,8 @@
  * GST_BUFFER_FLAG_IS_SET() to test if a certain #GstBufferFlag is set.
  *
  * Buffers can be efficiently merged into a larger buffer with
- * gst_buffer_span(), which avoids memory copies when the gst_buffer_is_span_fast()
- * function returns TRUE.
+ * gst_buffer_append(). Copying of memory will only be done when absolutely
+ * needed.
  *
  * An element should either unref the buffer or push it out on a src pad
  * using gst_pad_push() (see #GstPad).
@@ -1311,7 +1311,7 @@ _gst_buffer_arr_is_span_fast (GstMemory ** mem[], gsize len[], guint n,
       mcur = cmem[i];
 
       if (mprv && mcur) {
-        /* check is memory is contiguous */
+        /* check if memory is contiguous */
         if (!gst_memory_is_span (mprv, mcur, &offs))
           return FALSE;
 
@@ -1385,114 +1385,50 @@ _gst_buffer_arr_span (GstMemory ** mem[], gsize len[], guint n, gsize offset,
 }
 
 /**
- * gst_buffer_is_span_fast:
- * @buf1: the first #GstBuffer.
- * @buf2: the second #GstBuffer.
+ * gst_buffer_append:
+ * @buf1: (transfer full): the first source #GstBuffer to append.
+ * @buf2: (transfer full): the second source #GstBuffer to append.
  *
- * Determines whether a gst_buffer_span() can be done without copying
- * the contents, that is, whether the data areas are contiguous sub-buffers of
- * the same buffer.
+ * Append all the memory from @buf2 to @buf1. The result buffer will contain a
+ * concatenation of the memory of @buf1 and @buf2.
  *
- * MT safe.
- * Returns: TRUE if the buffers are contiguous,
- * FALSE if a copy would be required.
- */
-gboolean
-gst_buffer_is_span_fast (GstBuffer * buf1, GstBuffer * buf2)
-{
-  GstMemory **mem[2];
-  gsize len[2];
-
-  g_return_val_if_fail (GST_IS_BUFFER (buf1), FALSE);
-  g_return_val_if_fail (GST_IS_BUFFER (buf2), FALSE);
-  g_return_val_if_fail (buf1->mini_object.refcount > 0, FALSE);
-  g_return_val_if_fail (buf2->mini_object.refcount > 0, FALSE);
-
-  mem[0] = GST_BUFFER_MEM_ARRAY (buf1);
-  len[0] = GST_BUFFER_MEM_LEN (buf1);
-  mem[1] = GST_BUFFER_MEM_ARRAY (buf2);
-  len[1] = GST_BUFFER_MEM_LEN (buf2);
-
-  return _gst_buffer_arr_is_span_fast (mem, len, 2, NULL, NULL);
-}
-
-/**
- * gst_buffer_span:
- * @buf1: the first source #GstBuffer to merge.
- * @offset: the offset in the first buffer from where the new
- * buffer should start.
- * @buf2: the second source #GstBuffer to merge.
- * @size: the total size of the new buffer.
- *
- * Creates a new buffer that consists of part of buf1 and buf2.
- * Logically, buf1 and buf2 are concatenated into a single larger
- * buffer, and a new buffer is created at the given offset inside
- * this space, with a given length.
- *
- * If the two source buffers are children of the same larger buffer,
- * and are contiguous, the new buffer will be a child of the shared
- * parent, and thus no copying is necessary. you can use
- * gst_buffer_is_span_fast() to determine if a memcpy will be needed.
- *
- * MT safe.
- *
- * Returns: (transfer full): the new #GstBuffer that spans the two source
- *     buffers, or NULL if the arguments are invalid.
+ * Returns: (transfer full): the new #GstBuffer that contains the memory
+ *     of the two source buffers.
  */
 GstBuffer *
-gst_buffer_span (GstBuffer * buf1, gsize offset, GstBuffer * buf2, gsize size)
+gst_buffer_append (GstBuffer * buf1, GstBuffer * buf2)
 {
-  GstBuffer *newbuf;
-  GstMemory *span;
-  GstMemory **mem[2];
-  gsize len[2], size1, size2;
+  gsize i, len;
 
   g_return_val_if_fail (GST_IS_BUFFER (buf1), NULL);
   g_return_val_if_fail (GST_IS_BUFFER (buf2), NULL);
-  g_return_val_if_fail (buf1->mini_object.refcount > 0, NULL);
-  g_return_val_if_fail (buf2->mini_object.refcount > 0, NULL);
-  size1 = gst_buffer_get_size (buf1);
-  size2 = gst_buffer_get_size (buf2);
-  g_return_val_if_fail (size1 + size2 > offset, NULL);
-  if (size == -1)
-    size = size1 + size2 - offset;
-  else
-    g_return_val_if_fail (size <= size1 + size2 - offset, NULL);
 
-  mem[0] = GST_BUFFER_MEM_ARRAY (buf1);
-  len[0] = GST_BUFFER_MEM_LEN (buf1);
-  mem[1] = GST_BUFFER_MEM_ARRAY (buf2);
-  len[1] = GST_BUFFER_MEM_LEN (buf2);
+  buf1 = gst_buffer_make_writable (buf1);
+  buf2 = gst_buffer_make_writable (buf2);
 
-  span = _gst_buffer_arr_span (mem, len, 2, offset, size, FALSE);
+  len = GST_BUFFER_MEM_LEN (buf2);
+  for (i = 0; i < len; i++) {
+    GstMemory *mem;
 
-  newbuf = gst_buffer_new ();
-  _memory_add (newbuf, -1, span);
-
-  /* if the offset is 0, the new buffer has the same timestamp as buf1 */
-  if (offset == 0) {
-    GST_BUFFER_OFFSET (newbuf) = GST_BUFFER_OFFSET (buf1);
-    GST_BUFFER_PTS (newbuf) = GST_BUFFER_PTS (buf1);
-    GST_BUFFER_DTS (newbuf) = GST_BUFFER_DTS (buf1);
-
-    /* if we completely merged the two buffers (appended), we can
-     * calculate the duration too. Also make sure we's not messing with
-     * invalid DURATIONS */
-    if (size1 + size2 == size) {
-      if (GST_BUFFER_DURATION_IS_VALID (buf1) &&
-          GST_BUFFER_DURATION_IS_VALID (buf2)) {
-        /* add duration */
-        GST_BUFFER_DURATION (newbuf) = GST_BUFFER_DURATION (buf1) +
-            GST_BUFFER_DURATION (buf2);
-      }
-      if (GST_BUFFER_OFFSET_END_IS_VALID (buf2)) {
-        /* add offset_end */
-        GST_BUFFER_OFFSET_END (newbuf) = GST_BUFFER_OFFSET_END (buf2);
-      }
-    }
+    mem = GST_BUFFER_MEM_PTR (buf2, i);
+    GST_BUFFER_MEM_PTR (buf2, i) = NULL;
+    _memory_add (buf1, -1, mem);
   }
+  GST_BUFFER_MEM_LEN (buf2) = 0;
+  gst_buffer_unref (buf2);
 
-  return newbuf;
+  /* we can calculate the duration too. Also make sure we's not messing
+   * with invalid DURATIONS */
+  if (GST_BUFFER_DURATION_IS_VALID (buf1) &&
+      GST_BUFFER_DURATION_IS_VALID (buf2)) {
+    /* add duration */
+    GST_BUFFER_DURATION (buf1) += GST_BUFFER_DURATION (buf2);
+  }
+  if (GST_BUFFER_OFFSET_END_IS_VALID (buf2)) {
+    /* set offset_end */
+    GST_BUFFER_OFFSET_END (buf1) = GST_BUFFER_OFFSET_END (buf2);
+  }
+  return buf1;
 }
 
 /**

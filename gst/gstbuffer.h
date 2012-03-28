@@ -481,9 +481,8 @@ gst_buffer_replace (GstBuffer **obuf, GstBuffer *nbuf)
 GstBuffer*      gst_buffer_copy_region          (GstBuffer *parent, GstBufferCopyFlags flags,
                                                  gsize offset, gsize size);
 
-/* span, two buffers, intelligently */
-gboolean        gst_buffer_is_span_fast         (GstBuffer *buf1, GstBuffer *buf2);
-GstBuffer*      gst_buffer_span                 (GstBuffer *buf1, gsize offset, GstBuffer *buf2, gsize size) G_GNUC_MALLOC;
+/* append two buffers */
+GstBuffer*      gst_buffer_append               (GstBuffer *buf1, GstBuffer *buf2);
 
 /* metadata */
 #include <gst/gstmeta.h>
