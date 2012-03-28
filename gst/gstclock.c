@@ -99,7 +99,7 @@
  * number of samples to use when calibrating and #GstClock:window-threshold
  * defines the minimum number of samples before the calibration is performed.
  *
- * Last reviewed on 2009-05-21 (0.10.24)
+ * Last reviewed on 2012-03-28 (0.11.3)
  */
 
 

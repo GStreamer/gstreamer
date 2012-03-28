@@ -24,6 +24,45 @@
  * @short_description: Pool for buffers
  * @see_also: #GstBuffer
  *
+ * a #GstBufferPool is an object that can be used to pre-allocate and recycle
+ * buffers of the same size and with the same properties.
+ *
+ * A #GstBufferPool is created with gst_buffer_pool_new().
+ *
+ * After the buffer is created, it needs to be configured.
+ * gst_buffer_pool_get_config() get the current configuration structure from the
+ * pool. With gst_buffer_pool_config_set_params() and
+ * gst_buffer_pool_config_set_allocator() the bufferpool parameters and allocator
+ * can be configured. Other properties can be configured in the pool depending
+ * on the pool implementation.
+ *
+ * A bufferpool can have extra options that can be enabled with
+ * gst_buffer_pool_config_add_option(). The available options can be retrieved
+ * with gst_buffer_pool_get_options(). Some options allow for additional
+ * configuration properties to be set.
+ *
+ * After the configuration structure has been configured,
+ * gst_buffer_pool_set_config() updates the configuration in the pool. This can
+ * fail when the configuration structure is not accepted.
+ *
+ * After the a pool has been configured, it can be activated with
+ * gst_buffer_pool_set_active(). This will preallocate the configured resources
+ * in the pool.
+ *
+ * When the pool is active, gst_buffer_pool_acquire_buffer() can be used to
+ * retrieve a buffer from the pool.
+ *
+ * Buffer allocated from a bufferpool will automatically be returned to the pool
+ * with gst_buffer_pool_release_buffer() when their refcount drops to 0.
+ *
+ * The bufferpool can be deactivated again with gst_buffer_pool_set_active().
+ * All further gst_buffer_pool_acquire_buffer() calls will return an error. When
+ * all buffers are returned to the pool they will be freed.
+ *
+ * Use gst_object_unref() to release the reference to a bufferpool. If the
+ * refcount of the pool reaches 0, the pool will be freed.
+ *
+ * Last reviewed on 2012-03-28 (0.11.3)
  */
 
 #include "gst_private.h"

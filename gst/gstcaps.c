@@ -20,9 +20,9 @@
 /**
  * SECTION:gstcaps
  * @short_description: Structure describing sets of media formats
- * @see_also: #GstStructure
+ * @see_also: #GstStructure, #GstMiniObject
  *
- * Caps (capabilities) are lighweight refcounted objects describing media types.
+ * Caps (capabilities) are lightweight refcounted objects describing media types.
  * They are composed of an array of #GstStructure.
  *
  * Caps are exposed on #GstPadTemplate to describe all possible types a
@@ -32,10 +32,6 @@
  * Caps are exposed on the element pads using the gst_pad_get_caps() pad
  * function. This function describes the possible types that the pad can
  * handle or produce at runtime.
- *
- * Caps are also attached to buffers to describe to content of the data
- * pointed to by the buffer with gst_buffer_set_caps(). Caps attached to
- * a #GstBuffer allow for format negotiation upstream and downstream.
  *
  * A #GstCaps can be constructed with the following code fragment:
  *
@@ -54,13 +50,13 @@
  * </example>
  *
  * A #GstCaps is fixed when it has no properties with ranges or lists. Use
- * gst_caps_is_fixed() to test for fixed caps. Only fixed caps can be
- * set on a #GstPad or #GstBuffer.
+ * gst_caps_is_fixed() to test for fixed caps. Fixed caps can be used in a
+ * caps event to notify downstream elements of the current media type.
  *
  * Various methods exist to work with the media types such as subtracting
  * or intersecting.
  *
- * Last reviewed on 2007-02-13 (0.10.10)
+ * Last reviewed on 2011-03-28 (0.11.3)
  */
 
 #ifdef HAVE_CONFIG_H

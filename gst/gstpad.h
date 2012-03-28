@@ -325,7 +325,7 @@ typedef GstFlowReturn		(*GstPadChainListFunction)	(GstPad *pad, GstObject *paren
  * #GST_QUERY_SEEKING.
  *
  * Any @offset larger or equal than the length will make the function return
- * #GST_FLOW_UNEXPECTED, which corresponds to EOS. In this case @buffer does not
+ * #GST_FLOW_EOS, which corresponds to EOS. In this case @buffer does not
  * contain a valid buffer.
  *
  * The buffer size of @buffer will only be smaller than @length when @offset is

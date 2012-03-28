@@ -149,7 +149,7 @@ struct _GstBaseSrc {
  *   When the subclass returns GST_FLOW_OK, it MUST return a buffer of the
  *   requested size unless fewer bytes are available because an EOS condition
  *   is near. No buffer should be returned when the return value is different
- *   from GST_FLOW_OK. A return value of GST_FLOW_UNEXPECTED signifies that the
+ *   from GST_FLOW_OK. A return value of GST_FLOW_EOS signifies that the
  *   end of stream is reached. The default implementation will call @alloc and
  *   then call @fill.
  * @alloc: Ask the subclass to allocate a buffer with for offset and size. The

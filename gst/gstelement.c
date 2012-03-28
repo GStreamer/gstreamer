@@ -34,7 +34,7 @@
  * core when using the appropriate locking. Do not use this in plug-ins or
  * applications in order to retain ABI compatibility.
  *
- * All elements have pads (of the type #GstPad).  These pads link to pads on
+ * Elements can have pads (of the type #GstPad).  These pads link to pads on
  * other elements.  #GstBuffer flow between these linked pads.
  * A #GstElement has a #GList of #GstPad structures for all their input (or sink)
  * and output (or source) pads.
@@ -44,7 +44,7 @@
  * An existing pad of an element can be retrieved by name with
  * gst_element_get_static_pad(). A new dynamic pad can be created using
  * gst_element_request_pad() with a #GstPadTemplate or 
- * gst_element_get_request_pad() with the template name such as "src_\%d".
+ * gst_element_get_request_pad() with the template name such as "src_\%u".
  * An iterator of all pads can be retrieved with gst_element_iterate_pads().
  *
  * Elements can be linked through their pads.
@@ -65,18 +65,18 @@
  * You can get and set a #GstClock on an element using gst_element_get_clock()
  * and gst_element_set_clock().
  * Some elements can provide a clock for the pipeline if
- * gst_element_provides_clock() returns %TRUE. With the
+ * the #GST_ELEMENT_FLAG_PROVIDE_CLOCK flag is set. With the
  * gst_element_provide_clock() method one can retrieve the clock provided by
  * such an element.
- * Not all elements require a clock to operate correctly. If
- * gst_element_requires_clock() returns %TRUE, a clock should be set on the
+ * Not all elements require a clock to operate correctly. If the
+ * #GST_ELEMENT_FLAG_REQUIRE_CLOCK() flag is set, a clock should be set on the
  * element with gst_element_set_clock().
  *
  * Note that clock slection and distribution is normally handled by the
  * toplevel #GstPipeline so the clock functions are only to be used in very
  * specific situations.
  *
- * Last reviewed on 2009-05-29 (0.10.24)
+ * Last reviewed on 2012-03-28 (0.11.3)
  */
 
 #include "gst_private.h"

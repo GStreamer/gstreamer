@@ -111,9 +111,8 @@ gst_mini_object_copy (const GstMiniObject * mini_object)
  * @mini_object: the mini-object to check
  *
  * Checks if a mini-object is writable.  A mini-object is writable
- * if the reference count is one and the #GST_MINI_OBJECT_FLAG_READONLY
- * flag is not set.  Modification of a mini-object should only be
- * done after verifying that it is writable.
+ * if the reference count is one. Modification of a mini-object should
+ * only be done after verifying that it is writable.
  *
  * MT safe
  *

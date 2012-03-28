@@ -210,13 +210,13 @@ gst_my_filter_sink_event (GstPad  *pad, GstEvent * event)
         It is important to note that <emphasis>only elements driving the
         pipeline should ever send an EOS event</emphasis>. If your element
         is chain-based, it is not driving the pipeline. Chain-based elements
-        should just return GST_FLOW_UNEXPECTED from their chain function at
+        should just return GST_FLOW_EOS from their chain function at
         the end of the stream (or the configured segment), the upstream
         element that is driving the pipeline will then take care of
         sending the EOS event (or alternatively post a SEGMENT_DONE message
         on the bus depending on the mode of operation). If you are implementing
         your own source element, you also do not need to ever manually send
-        an EOS event, you should also just return GST_FLOW_UNEXPECTED in
+        an EOS event, you should also just return GST_FLOW_EOS in
         your create function (assuming your element derives from GstBaseSrc
         or GstPushSrc).
       </para>

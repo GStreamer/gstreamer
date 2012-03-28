@@ -36,19 +36,19 @@
  * elements will use gst_pad_send_event() or gst_pad_push_event().
  * The event should be unreffed with gst_event_unref() if it has not been sent.
  *
- * Events that have been received can be parsed with their respective 
+ * Events that have been received can be parsed with their respective
  * gst_event_parse_*() functions. It is valid to pass %NULL for unwanted details.
  *
  * Events are passed between elements in parallel to the data stream. Some events
  * are serialized with buffers, others are not. Some events only travel downstream,
- * others only upstream. Some events can travel both upstream and downstream. 
- * 
+ * others only upstream. Some events can travel both upstream and downstream.
+ *
  * The events are used to signal special conditions in the datastream such as
  * EOS (end of stream) or the start of a new stream-segment.
  * Events are also used to flush the pipeline of any pending data.
  *
- * Most of the event API is used inside plugins. Applications usually only 
- * construct and use seek events. 
+ * Most of the event API is used inside plugins. Applications usually only
+ * construct and use seek events.
  * To do that gst_event_new_seek() is used to create a seek event. It takes
  * the needed parameters to specify seeking time and mode.
  * <example>
@@ -72,7 +72,7 @@
  *   </programlisting>
  * </example>
  *
- * Last reviewed on 2006-09-6 (0.10.10)
+ * Last reviewed on 2012-03-28 (0.11.3)
  */
 
 
@@ -452,10 +452,6 @@ gst_event_set_seqnum (GstEvent * event, guint32 seqnum)
   GST_EVENT_SEQNUM (event) = seqnum;
 }
 
-/* FIXME 0.11: It would be nice to have flush events
- * that don't reset the running time in the sinks
- */
-
 /**
  * gst_event_new_flush_start:
  *
@@ -540,7 +536,7 @@ gst_event_parse_flush_stop (GstEvent * event, gboolean * reset_time)
  *
  * Create a new EOS event. The eos event can only travel downstream
  * synchronized with the buffer flow. Elements that receive the EOS
- * event on a pad can return #GST_FLOW_UNEXPECTED as a #GstFlowReturn
+ * event on a pad can return #GST_FLOW_EOS as a #GstFlowReturn
  * when data after the EOS event arrives.
  *
  * The EOS event will travel down to the sink elements in the pipeline

@@ -22,14 +22,12 @@
 
 /**
  * SECTION:gstbuffer
- * @short_description: Data-passing buffer type, supporting sub-buffers.
- * @see_also: #GstPad, #GstMiniObject, #GstBufferPool
+ * @short_description: Data-passing buffer type
+ * @see_also: #GstPad, #GstMiniObject, #GstMemory, #GstMeta, #GstBufferPool
  *
- * Buffers are the basic unit of data transfer in GStreamer.  The #GstBuffer
- * type provides all the state necessary to define the regions of memory as
- * part of a stream. Region copies are also supported, allowing a smaller
- * region of a buffer to become its own buffer, with mechanisms in place to
- * ensure that neither memory space goes away prematurely.
+ * Buffers are the basic unit of data transfer in GStreamer. They contain the
+ * timing and offset along with other arbitrary metadata that is associated
+ * with the #GstMemory blocks that the buffer contains.
  *
  * Buffers are usually created with gst_buffer_new(). After a buffer has been
  * created one will typically allocate memory for it and add it to the buffer.
@@ -62,21 +60,29 @@
  * meaningful value can be given for these, they should be set. The timestamps
  * and duration are measured in nanoseconds (they are #GstClockTime values).
  *
+ * The buffer DTS refers to the timestamp when the buffer should be decoded and
+ * is usually monotonically increasing. The buffer PTS refers to the timestamp when
+ * the buffer content should be presented to the user and is not always
+ * monotonically increasing.
+ *
  * A buffer can also have one or both of a start and an end offset. These are
  * media-type specific. For video buffers, the start offset will generally be
  * the frame number. For audio buffers, it will be the number of samples
  * produced so far. For compressed data, it could be the byte offset in a
  * source or destination file. Likewise, the end offset will be the offset of
  * the end of the buffer. These can only be meaningfully interpreted if you
- * know the media type of the buffer (the #GstCaps set on it). Either or both
+ * know the media type of the buffer (the preceeding CAPS event). Either or both
  * can be set to #GST_BUFFER_OFFSET_NONE.
  *
  * gst_buffer_ref() is used to increase the refcount of a buffer. This must be
  * done when you want to keep a handle to the buffer after pushing it to the
- * next element.
+ * next element. The buffer refcount determines the writability of the buffer, a
+ * buffer is only writable when the refcount is exactly 1, i.e. when the caller
+ * has the only reference to the buffer.
  *
  * To efficiently create a smaller buffer out of an existing one, you can
- * use gst_buffer_copy_region().
+ * use gst_buffer_copy_region(). This method tries to share the memory objects
+ * between the two buffers.
  *
  * If a plug-in wants to modify the buffer data or metadata in-place, it should
  * first obtain a buffer that is safe to modify by using
@@ -91,14 +97,18 @@
  * gst_buffer_append(). Copying of memory will only be done when absolutely
  * needed.
  *
+ * Arbitrary extra metadata can be set on a buffer with gst_buffer_add_meta().
+ * Metadata can be retrieved with gst_buffer_get_meta(). See also #GstMeta
+ *
  * An element should either unref the buffer or push it out on a src pad
  * using gst_pad_push() (see #GstPad).
  *
  * Buffers are usually freed by unreffing them with gst_buffer_unref(). When
- * the refcount drops to 0, any data pointed to by the buffer is unreffed as
- * well.
+ * the refcount drops to 0, any memory and metadata pointed to by the buffer is
+ * unreffed as well. Buffers allocated from a #GstBufferPool will be returned to
+ * the pool when the refcount drops to 0.
  *
- * Last reviewed on November 8, 2011 (0.11.2)
+ * Last reviewed on 2012-03-28 (0.11.3)
  */
 #include "gst_private.h"
 

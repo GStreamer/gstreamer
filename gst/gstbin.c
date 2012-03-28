@@ -154,7 +154,7 @@
  * </para>
  * </refsect2>
  *
- * Last reviewed on 2006-04-28 (0.10.6)
+ * Last reviewed on 2012-03-28 (0.11.3)
  */
 
 #include "gst_private.h"
