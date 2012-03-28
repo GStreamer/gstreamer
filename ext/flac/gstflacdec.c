@@ -630,7 +630,6 @@ gst_flac_dec_write (GstFlacDec * flacdec, const FLAC__Frame * frame,
         &flacdec->info);
   }
 
-  GST_LOG_OBJECT (flacdec, "alloc_buffer_and_set_caps");
   outbuf =
       gst_buffer_new_allocate (NULL, samples * channels * (width / 8), NULL);
 
