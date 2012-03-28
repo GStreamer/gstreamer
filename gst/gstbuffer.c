@@ -119,7 +119,7 @@
 GType _gst_buffer_type = 0;
 
 static GstMemory *_gst_buffer_arr_span (GstMemory ** mem[], gsize len[],
-    guint n, gsize offset, gsize size, gboolean writable);
+    guint n, gsize offset, gsize size);
 
 typedef struct _GstMetaItem GstMetaItem;
 
@@ -155,7 +155,7 @@ typedef struct
 } GstBufferImpl;
 
 static GstMemory *
-_span_memory (GstBuffer * buffer, gsize offset, gsize size, gboolean writable)
+_span_memory (GstBuffer * buffer, gsize offset, gsize size)
 {
   GstMemory *span, **mem[1];
   gsize len[1];
@@ -167,7 +167,7 @@ _span_memory (GstBuffer * buffer, gsize offset, gsize size, gboolean writable)
   if (size == -1)
     size = gst_buffer_get_size (buffer);
 
-  span = _gst_buffer_arr_span (mem, len, 1, offset, size, writable);
+  span = _gst_buffer_arr_span (mem, len, 1, offset, size);
 
   return span;
 }
@@ -190,7 +190,7 @@ _get_merged_memory (GstBuffer * buffer, gboolean * merged)
     *merged = FALSE;
   } else {
     /* we need to span memory */
-    mem = _span_memory (buffer, 0, -1, FALSE);
+    mem = _span_memory (buffer, 0, -1);
     *merged = TRUE;
   }
   return mem;
@@ -230,7 +230,7 @@ _memory_add (GstBuffer * buffer, guint idx, GstMemory * mem)
      * could try to only merge the two smallest buffers to avoid memcpy, etc. */
     GST_CAT_DEBUG (GST_CAT_PERFORMANCE, "memory array overflow in buffer %p",
         buffer);
-    _replace_all_memory (buffer, _span_memory (buffer, 0, -1, FALSE));
+    _replace_all_memory (buffer, _span_memory (buffer, 0, -1));
     /* we now have 1 single spanned buffer */
     len = 1;
   }
@@ -357,7 +357,7 @@ gst_buffer_copy_into (GstBuffer * dest, GstBuffer * src,
       }
     }
     if (flags & GST_BUFFER_COPY_MERGE) {
-      _replace_all_memory (dest, _span_memory (dest, 0, size, FALSE));
+      _replace_all_memory (dest, _span_memory (dest, 0, size));
     }
   }
 
@@ -1331,13 +1331,12 @@ _gst_buffer_arr_is_span_fast (GstMemory ** mem[], gsize len[], guint n,
 
 static GstMemory *
 _gst_buffer_arr_span (GstMemory ** mem[], gsize len[], guint n, gsize offset,
-    gsize size, gboolean writable)
+    gsize size)
 {
   GstMemory *span, *parent = NULL;
   gsize poffset = 0;
 
-  if (!writable
-      && _gst_buffer_arr_is_span_fast (mem, len, n, &poffset, &parent)) {
+  if (_gst_buffer_arr_is_span_fast (mem, len, n, &poffset, &parent)) {
     if (parent->flags & GST_MEMORY_FLAG_NO_SHARE) {
       GST_CAT_DEBUG (GST_CAT_PERFORMANCE, "copy for span %p", parent);
       span = gst_memory_copy (parent, offset + poffset, size);
