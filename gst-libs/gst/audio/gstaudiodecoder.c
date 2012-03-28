@@ -1839,6 +1839,8 @@ gst_audio_decoder_sink_query (GstPad * pad, GstObject * parent,
 
   dec = GST_AUDIO_DECODER (parent);
 
+  GST_LOG_OBJECT (dec, "handling query: %" GST_PTR_FORMAT, query);
+
   switch (GST_QUERY_TYPE (query)) {
     case GST_QUERY_FORMATS:
     {
@@ -1858,6 +1860,19 @@ gst_audio_decoder_sink_query (GstPad * pad, GstObject * parent,
         goto error;
       gst_query_set_convert (query, src_fmt, src_val, dest_fmt, dest_val);
       break;
+    }
+    case GST_QUERY_SEEKING:
+    {
+      GstFormat format;
+
+      /* non-TIME segments are discarded, so we won't seek that way either */
+      gst_query_parse_seeking (query, &format, NULL, NULL, NULL);
+      if (format != GST_FORMAT_TIME) {
+        GST_DEBUG_OBJECT (dec, "discarding non-TIME SEEKING query");
+        res = FALSE;
+        break;
+      }
+      /* fall-through */
     }
     default:
       res = gst_pad_query_default (pad, parent, query);
