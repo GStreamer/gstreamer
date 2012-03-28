@@ -91,8 +91,8 @@ test_mux_tags (const gchar * tag_str, const gchar * caps,
 
   GST_DEBUG ("testing xmp muxing on : %s", muxer);
 
-  launch_str = g_strdup_printf ("fakesrc num-buffers=1 ! %s ! %s name=mux ! "
-      "filesink location=%s name=sink", caps, muxer, file);
+  launch_str = g_strdup_printf ("fakesrc num-buffers=1 format=time ! "
+      "%s ! %s name=mux ! filesink location=%s name=sink", caps, muxer, file);
   pipeline = gst_parse_launch (launch_str, NULL);
   g_free (launch_str);
   fail_unless (pipeline != NULL);
