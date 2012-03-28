@@ -119,7 +119,7 @@
 GType _gst_buffer_type = 0;
 
 static GstMemory *_gst_buffer_arr_span (GstMemory ** mem[], gsize len[],
-    guint n, gsize offset, gsize size);
+    guint n, gsize size);
 
 typedef struct _GstMetaItem GstMetaItem;
 
@@ -155,7 +155,7 @@ typedef struct
 } GstBufferImpl;
 
 static GstMemory *
-_span_memory (GstBuffer * buffer, gsize offset, gsize size)
+_span_memory (GstBuffer * buffer, gsize size)
 {
   GstMemory *span, **mem[1];
   gsize len[1];
@@ -167,7 +167,7 @@ _span_memory (GstBuffer * buffer, gsize offset, gsize size)
   if (size == -1)
     size = gst_buffer_get_size (buffer);
 
-  span = _gst_buffer_arr_span (mem, len, 1, offset, size);
+  span = _gst_buffer_arr_span (mem, len, 1, size);
 
   return span;
 }
@@ -190,7 +190,7 @@ _get_merged_memory (GstBuffer * buffer, gboolean * merged)
     *merged = FALSE;
   } else {
     /* we need to span memory */
-    mem = _span_memory (buffer, 0, -1);
+    mem = _span_memory (buffer, -1);
     *merged = TRUE;
   }
   return mem;
@@ -230,7 +230,7 @@ _memory_add (GstBuffer * buffer, guint idx, GstMemory * mem)
      * could try to only merge the two smallest buffers to avoid memcpy, etc. */
     GST_CAT_DEBUG (GST_CAT_PERFORMANCE, "memory array overflow in buffer %p",
         buffer);
-    _replace_all_memory (buffer, _span_memory (buffer, 0, -1));
+    _replace_all_memory (buffer, _span_memory (buffer, -1));
     /* we now have 1 single spanned buffer */
     len = 1;
   }
@@ -264,6 +264,9 @@ _priv_gst_buffer_initialize (void)
  * @size: total size to copy. If -1, all data is copied.
  *
  * Copies the information from @src into @dest.
+ *
+ * If @dest already contains memory and @flags contains GST_BUFFER_COPY_MEMORY,
+ * the memory from @src will be appended to @dest.
  *
  * @flags indicate which fields will be copied.
  */
@@ -357,7 +360,7 @@ gst_buffer_copy_into (GstBuffer * dest, GstBuffer * src,
       }
     }
     if (flags & GST_BUFFER_COPY_MERGE) {
-      _replace_all_memory (dest, _span_memory (dest, 0, size));
+      _replace_all_memory (dest, _span_memory (dest, size));
     }
   }
 
@@ -1330,8 +1333,7 @@ _gst_buffer_arr_is_span_fast (GstMemory ** mem[], gsize len[], guint n,
 }
 
 static GstMemory *
-_gst_buffer_arr_span (GstMemory ** mem[], gsize len[], guint n, gsize offset,
-    gsize size)
+_gst_buffer_arr_span (GstMemory ** mem[], gsize len[], guint n, gsize size)
 {
   GstMemory *span, *parent = NULL;
   gsize poffset = 0;
@@ -1339,9 +1341,9 @@ _gst_buffer_arr_span (GstMemory ** mem[], gsize len[], guint n, gsize offset,
   if (_gst_buffer_arr_is_span_fast (mem, len, n, &poffset, &parent)) {
     if (parent->flags & GST_MEMORY_FLAG_NO_SHARE) {
       GST_CAT_DEBUG (GST_CAT_PERFORMANCE, "copy for span %p", parent);
-      span = gst_memory_copy (parent, offset + poffset, size);
+      span = gst_memory_copy (parent, poffset, size);
     } else {
-      span = gst_memory_share (parent, offset + poffset, size);
+      span = gst_memory_share (parent, poffset, size);
     }
   } else {
     gsize count, left;
@@ -1365,16 +1367,11 @@ _gst_buffer_arr_span (GstMemory ** mem[], gsize len[], guint n, gsize offset,
       for (i = 0; i < clen && left > 0; i++) {
         gst_memory_map (cmem[i], &sinfo, GST_MAP_READ);
         tocopy = MIN (sinfo.size, left);
-        if (tocopy > offset) {
-          GST_CAT_DEBUG (GST_CAT_PERFORMANCE,
-              "memcpy for span %p from memory %p", span, cmem[i]);
-          memcpy (ptr, (guint8 *) sinfo.data + offset, tocopy - offset);
-          left -= tocopy;
-          ptr += tocopy;
-          offset = 0;
-        } else {
-          offset -= tocopy;
-        }
+        GST_CAT_DEBUG (GST_CAT_PERFORMANCE,
+            "memcpy for span %p from memory %p", span, cmem[i]);
+        memcpy (ptr, (guint8 *) sinfo.data, tocopy);
+        left -= tocopy;
+        ptr += tocopy;
         gst_memory_unmap (cmem[i], &sinfo);
       }
     }
@@ -1414,7 +1411,7 @@ gst_buffer_append (GstBuffer * buf1, GstBuffer * buf2)
     _memory_add (buf1, -1, mem);
   }
 
-  /* we can calculate the duration too. Also make sure we's not messing
+  /* we can calculate the duration too. Also make sure we're not messing
    * with invalid DURATIONS */
   if (GST_BUFFER_DURATION_IS_VALID (buf1) &&
       GST_BUFFER_DURATION_IS_VALID (buf2)) {
