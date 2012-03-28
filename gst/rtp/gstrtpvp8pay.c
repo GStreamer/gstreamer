@@ -372,7 +372,7 @@ gst_rtp_vp8_payload_next (GstRtpVP8Pay * self,
       offset == self->partition_offset[partition], mark, buffer);
   sub = gst_buffer_copy_region (buffer, GST_BUFFER_COPY_ALL, offset, available);
 
-  out = gst_buffer_join (header, sub);
+  out = gst_buffer_append (header, sub);
 
   gst_buffer_list_insert (list, -1, out);
 
