@@ -80,6 +80,7 @@ typedef struct {
     guint                       param_size;
     gconstpointer               data;
     guint                       data_size;
+    guint                       flags;
 } GstVaapiCodecObjectConstructorArgs;
 
 /**

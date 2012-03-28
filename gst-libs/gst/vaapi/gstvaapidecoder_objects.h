@@ -126,6 +126,7 @@ struct _GstVaapiPicture {
     GstVaapiSurface            *surface;
     GstVaapiSurfaceProxy       *proxy;
     VABufferID                  param_id;
+    guint                       param_size;
 
     /*< public >*/
     GstVaapiPictureType         type;
@@ -158,6 +159,10 @@ gst_vaapi_picture_new(
     gconstpointer    param,
     guint            param_size
 ) attribute_hidden;
+
+GstVaapiPicture *
+gst_vaapi_picture_new_field(GstVaapiPicture *picture)
+    attribute_hidden;
 
 void
 gst_vaapi_picture_add_slice(GstVaapiPicture *picture, GstVaapiSlice *slice)

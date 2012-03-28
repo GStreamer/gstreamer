@@ -94,6 +94,7 @@ gst_vaapi_codec_object_new(
     args.param_size = param_size;
     args.data       = data;
     args.data_size  = data_size;
+    args.flags      = 0;
     if (gst_vaapi_codec_object_construct(va_obj, &args))
         return va_obj;
 
