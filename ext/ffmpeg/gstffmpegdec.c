@@ -2805,7 +2805,7 @@ gst_ffmpegdec_chain (GstPad * pad, GstObject * parent, GstBuffer * inbuf)
   if (ffmpegdec->pcache) {
     /* join with previous data */
     GST_LOG_OBJECT (ffmpegdec, "join parse cache");
-    inbuf = gst_buffer_join (ffmpegdec->pcache, inbuf);
+    inbuf = gst_buffer_append (ffmpegdec->pcache, inbuf);
     /* no more cached data, we assume we can consume the complete cache */
     ffmpegdec->pcache = NULL;
   }
