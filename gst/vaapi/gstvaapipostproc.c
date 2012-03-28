@@ -489,8 +489,7 @@ gst_vaapipostproc_process_vpp(GstBaseTransform *trans, GstBuffer *inbuf,
     ds->tff = tff;
 
     flags = gst_vaapi_video_meta_get_render_flags(inbuf_meta) &
-        ~(GST_VAAPI_PICTURE_STRUCTURE_TOP_FIELD|
-          GST_VAAPI_PICTURE_STRUCTURE_BOTTOM_FIELD);
+        ~GST_VAAPI_PICTURE_STRUCTURE_MASK;
 
     /* First field */
     deint_method = postproc->deinterlace_method;
@@ -652,8 +651,7 @@ gst_vaapipostproc_process(GstBaseTransform *trans, GstBuffer *inbuf,
     deint      = is_interlaced_buffer(postproc, inbuf);
 
     flags = gst_vaapi_video_meta_get_render_flags(meta) &
-        ~(GST_VAAPI_PICTURE_STRUCTURE_TOP_FIELD|
-          GST_VAAPI_PICTURE_STRUCTURE_BOTTOM_FIELD);
+        ~GST_VAAPI_PICTURE_STRUCTURE_MASK;
 
     /* First field */
     fieldbuf = create_output_buffer(postproc);

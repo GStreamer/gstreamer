@@ -110,19 +110,32 @@ typedef enum {
  *   uses ITU-R BT.601 standard for color space conversion
  * @GST_VAAPI_COLOR_STANDARD_ITUR_BT_709:
  *   uses ITU-R BT.709 standard for color space conversion
+ * @GST_VAAPI_COLOR_STANDARD_ITUR_BT_470M:
+ *   uses ITU-R BT.470-2 System M standard for color space conversion
+ * @GST_VAAPI_COLOR_STANDARD_ITUR_BT_470BG:
+ *   uses ITU-R BT.470-2 System B, G standard for color space conversion
+ * @GST_VAAPI_COLOR_STANDARD_SMPTE_170M:
+ *   uses SMPTE-170M standard for color space conversion
+ * @GST_VAAPI_COLOR_STANDARD_SMPTE_240M:
+ *   uses SMPTE-240M standard for color space conversion
  *
  * The set of all render flags for gst_vaapi_window_put_surface().
  */
 typedef enum {
-    GST_VAAPI_PICTURE_STRUCTURE_TOP_FIELD       = 1 << 0,
-    GST_VAAPI_PICTURE_STRUCTURE_BOTTOM_FIELD    = 1 << 1,
-    GST_VAAPI_PICTURE_STRUCTURE_FRAME           =
-    (
-        GST_VAAPI_PICTURE_STRUCTURE_TOP_FIELD |
-        GST_VAAPI_PICTURE_STRUCTURE_BOTTOM_FIELD
-    ),
-    GST_VAAPI_COLOR_STANDARD_ITUR_BT_601        = 1 << 2,
-    GST_VAAPI_COLOR_STANDARD_ITUR_BT_709        = 1 << 3,
+    /* Picture structure */
+    GST_VAAPI_PICTURE_STRUCTURE_TOP_FIELD       = 0x01 << 0,
+    GST_VAAPI_PICTURE_STRUCTURE_BOTTOM_FIELD    = 0x02 << 0,
+    GST_VAAPI_PICTURE_STRUCTURE_FRAME           = 0x03 << 0,
+    GST_VAAPI_PICTURE_STRUCTURE_MASK            = 0x00000003, /* 2 bits */
+
+    /* Color standard */
+    GST_VAAPI_COLOR_STANDARD_ITUR_BT_601        = 0x01 << 2,
+    GST_VAAPI_COLOR_STANDARD_ITUR_BT_709        = 0x02 << 2,
+    GST_VAAPI_COLOR_STANDARD_ITUR_BT_470M       = 0x03 << 2,
+    GST_VAAPI_COLOR_STANDARD_ITUR_BT_470BG      = 0x04 << 2,
+    GST_VAAPI_COLOR_STANDARD_SMPTE_170M         = 0x05 << 2,
+    GST_VAAPI_COLOR_STANDARD_SMPTE_240M         = 0x06 << 2,
+    GST_VAAPI_COLOR_STANDARD_MASK               = 0x0000003c, /* 4 bits */
 } GstVaapiSurfaceRenderFlags;
 
 #define GST_VAAPI_SURFACE(obj) \

@@ -366,24 +366,42 @@ to_GstVideoOverlayFormatFlags(guint flags)
 guint
 from_GstVaapiSurfaceRenderFlags(guint flags)
 {
-    guint va_fields = 0, va_csc = 0;
+    guint va_fields, va_csc;
 
-    if (flags & GST_VAAPI_PICTURE_STRUCTURE_TOP_FIELD)
-        va_fields |= VA_TOP_FIELD;
-    if (flags & GST_VAAPI_PICTURE_STRUCTURE_BOTTOM_FIELD)
-        va_fields |= VA_BOTTOM_FIELD;
-    if ((va_fields ^ (VA_TOP_FIELD|VA_BOTTOM_FIELD)) == 0)
-        va_fields  = VA_FRAME_PICTURE;
+    /* Picture structure */
+    switch (flags & GST_VAAPI_PICTURE_STRUCTURE_MASK) {
+    case GST_VAAPI_PICTURE_STRUCTURE_TOP_FIELD:
+        va_fields = VA_TOP_FIELD;
+        break;
+    case GST_VAAPI_PICTURE_STRUCTURE_BOTTOM_FIELD:
+        va_fields = VA_BOTTOM_FIELD;
+        break;
+    default:
+        va_fields = VA_FRAME_PICTURE;
+        break;
+    }
 
+    /* Color standard */
+    switch (flags & GST_VAAPI_COLOR_STANDARD_MASK) {
 #ifdef VA_SRC_BT601
-    if (flags & GST_VAAPI_COLOR_STANDARD_ITUR_BT_601)
+    case GST_VAAPI_COLOR_STANDARD_ITUR_BT_601:
         va_csc = VA_SRC_BT601;
+        break;
 #endif
 #ifdef VA_SRC_BT709
-    if (flags & GST_VAAPI_COLOR_STANDARD_ITUR_BT_709)
+    case GST_VAAPI_COLOR_STANDARD_ITUR_BT_709:
         va_csc = VA_SRC_BT709;
+        break;
 #endif
-
+#ifdef VA_SRC_SMPTE_240
+    case GST_VAAPI_COLOR_STANDARD_SMPTE_240M:
+        va_csc = VA_SRC_SMPTE_240;
+        break;
+#endif
+    default:
+        va_csc = 0;
+        break;
+    }
     return va_fields|va_csc;
 }
 
