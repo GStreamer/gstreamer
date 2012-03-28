@@ -426,7 +426,7 @@ gst_icydemux_typefind_or_forward (GstICYDemux * icydemux, GstBuffer * buf)
     }
 
     if (icydemux->typefind_buf) {
-      icydemux->typefind_buf = gst_buffer_join (icydemux->typefind_buf, buf);
+      icydemux->typefind_buf = gst_buffer_append (icydemux->typefind_buf, buf);
     } else {
       icydemux->typefind_buf = buf;
     }

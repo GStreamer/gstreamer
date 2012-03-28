@@ -1912,10 +1912,10 @@ gst_avi_mux_do_buffer (GstAviMux * avimux, GstAviPad * avipad)
     GstAviVideoPad *vidpad = (GstAviVideoPad *) avipad;
 
     if (vidpad->prepend_buffer) {
-      GstBuffer *newdata = gst_buffer_merge (vidpad->prepend_buffer, data);
+      GstBuffer *newdata =
+          gst_buffer_append (vidpad->prepend_buffer, gst_buffer_ref (data));
       gst_buffer_copy_into (newdata, data, GST_BUFFER_COPY_TIMESTAMPS, 0, -1);
       gst_buffer_unref (data);
-      gst_buffer_unref (vidpad->prepend_buffer);
 
       data = newdata;
       vidpad->prepend_buffer = NULL;

@@ -304,12 +304,7 @@ gst_mikmod_loop (GstElement * element)
           break;
       } else {
         if (mikmod->Buffer) {
-          GstBuffer *merge;
-
-          merge = gst_buffer_merge (mikmod->Buffer, buffer_in);
-          gst_buffer_unref (buffer_in);
-          gst_buffer_unref (mikmod->Buffer);
-          mikmod->Buffer = merge;
+          mikmod->Buffer = gst_buffer_append (mikmod->Buffer, buffer_in);
         } else {
           mikmod->Buffer = buffer_in;
         }

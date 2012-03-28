@@ -283,12 +283,13 @@ gst_y4m_encode_chain (GstPad * pad, GstObject * parent, GstBuffer * buf)
     }
     outbuf = gst_y4m_encode_get_stream_header (filter, tff);
     filter->header = TRUE;
-    outbuf = gst_buffer_join (outbuf, gst_y4m_encode_get_frame_header (filter));
+    outbuf =
+        gst_buffer_append (outbuf, gst_y4m_encode_get_frame_header (filter));
   } else {
     outbuf = gst_y4m_encode_get_frame_header (filter);
   }
   /* join with data, FIXME, strides are all wrong etc */
-  outbuf = gst_buffer_join (outbuf, buf);
+  outbuf = gst_buffer_append (outbuf, buf);
   /* decorate */
   outbuf = gst_buffer_make_writable (outbuf);
 

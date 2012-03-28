@@ -4274,7 +4274,7 @@ gst_qtdemux_chain (GstPad * sinkpad, GstObject * parent, GstBuffer * inbuf)
         GST_DEBUG_OBJECT (demux, "mdatbuffer starts with %" GST_FOURCC_FORMAT,
             GST_FOURCC_ARGS (QT_FOURCC (fourcc)));
         if (demux->mdatbuffer)
-          demux->mdatbuffer = gst_buffer_join (demux->mdatbuffer, buf);
+          demux->mdatbuffer = gst_buffer_append (demux->mdatbuffer, buf);
         else
           demux->mdatbuffer = buf;
         demux->offset += demux->neededbytes;

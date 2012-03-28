@@ -814,7 +814,7 @@ gst_rtp_jpeg_pay_handle_buffer (GstRTPBasePayload * basepayload,
         jpeg_header_size + offset, payload_size);
 
     /* join memory parts */
-    outbuf = gst_buffer_join (outbuf, paybuf);
+    outbuf = gst_buffer_append (outbuf, paybuf);
 
     GST_BUFFER_TIMESTAMP (outbuf) = timestamp;
 

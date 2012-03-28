@@ -582,7 +582,7 @@ gst_wavpack_enc_push_block (void *id, void *data, int32_t count)
         enc->pending_buffer = buffer;
         enc->pending_offset = wph.block_index;
       } else if (enc->pending_offset == wph.block_index) {
-        enc->pending_buffer = gst_buffer_join (enc->pending_buffer, buffer);
+        enc->pending_buffer = gst_buffer_append (enc->pending_buffer, buffer);
       } else {
         GST_ERROR ("Got incomplete block, dropping");
         gst_buffer_unref (enc->pending_buffer);

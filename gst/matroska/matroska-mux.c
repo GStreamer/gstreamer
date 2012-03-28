@@ -2836,7 +2836,7 @@ gst_matroska_mux_handle_dirac_packet (GstMatroskaMux * mux,
   }
 
   if (ctx->dirac_unit)
-    ctx->dirac_unit = gst_buffer_join (ctx->dirac_unit, gst_buffer_ref (buf));
+    ctx->dirac_unit = gst_buffer_append (ctx->dirac_unit, gst_buffer_ref (buf));
   else
     ctx->dirac_unit = gst_buffer_ref (buf);
 

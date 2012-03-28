@@ -303,7 +303,7 @@ gst_rtp_mp4v_pay_flush (GstRtpMP4VPay * rtpmp4vpay)
     gst_rtp_buffer_set_marker (&rtp, avail == 0);
     gst_rtp_buffer_unmap (&rtp);
 
-    outbuf = gst_buffer_join (outbuf, outbuf_data);
+    outbuf = gst_buffer_append (outbuf, outbuf_data);
 
     GST_BUFFER_TIMESTAMP (outbuf) = rtpmp4vpay->first_timestamp;
 
@@ -533,17 +533,12 @@ gst_rtp_mp4v_pay_handle_buffer (GstRTPBasePayload * basepayload,
 
     if (send_config) {
       /* we need to send config now first */
-      GstBuffer *superbuf;
-
       GST_LOG_OBJECT (rtpmp4vpay, "inserting config in stream");
 
       /* insert header */
-      superbuf = gst_buffer_merge (rtpmp4vpay->config, buffer);
+      buffer = gst_buffer_append (gst_buffer_ref (rtpmp4vpay->config), buffer);
 
-      GST_BUFFER_TIMESTAMP (superbuf) = timestamp;
-      gst_buffer_unref (buffer);
-      buffer = superbuf;
-
+      GST_BUFFER_TIMESTAMP (buffer) = timestamp;
       size = gst_buffer_get_size (buffer);
 
       if (timestamp != -1) {

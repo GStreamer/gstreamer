@@ -711,13 +711,13 @@ gst_flv_mux_create_metadata (GstFlvMux * mux, gboolean full)
   data[2] = 10;                 /* length 10 */
   memcpy (&data[3], "onMetaData", 10);
 
-  script_tag = gst_buffer_join (script_tag, tmp);
+  script_tag = gst_buffer_append (script_tag, tmp);
 
   n_tags = (tags) ? gst_structure_n_fields ((GstStructure *) tags) : 0;
   _gst_buffer_new_and_alloc (5, &tmp, &data);
   data[0] = 8;                  /* ECMA array */
   GST_WRITE_UINT32_BE (data + 1, n_tags);
-  script_tag = gst_buffer_join (script_tag, tmp);
+  script_tag = gst_buffer_append (script_tag, tmp);
 
   if (!full)
     goto tags;
@@ -726,18 +726,18 @@ gst_flv_mux_create_metadata (GstFlvMux * mux, gboolean full)
      after querying the pads or after getting EOS */
   if (!mux->streamable) {
     tmp = gst_flv_mux_create_number_script_value ("duration", 86400);
-    script_tag = gst_buffer_join (script_tag, tmp);
+    script_tag = gst_buffer_append (script_tag, tmp);
     tags_written++;
 
     /* Sometimes the information about the total file size is useful for the
        player. It will be filled later, after getting EOS */
     tmp = gst_flv_mux_create_number_script_value ("filesize", 0);
-    script_tag = gst_buffer_join (script_tag, tmp);
+    script_tag = gst_buffer_append (script_tag, tmp);
     tags_written++;
 
     /* Preallocate space for the index to be written at EOS */
     tmp = gst_flv_mux_preallocate_index (mux);
-    script_tag = gst_buffer_join (script_tag, tmp);
+    script_tag = gst_buffer_append (script_tag, tmp);
   } else {
     GST_DEBUG_OBJECT (mux, "not preallocating index, streamable mode");
   }
@@ -774,7 +774,7 @@ tags:
       data[3 + strlen (t)] = (strlen (s) >> 8) & 0xff;
       data[4 + strlen (t)] = (strlen (s)) & 0xff;
       memcpy (&data[5 + strlen (t)], s, strlen (s));
-      script_tag = gst_buffer_join (script_tag, tmp);
+      script_tag = gst_buffer_append (script_tag, tmp);
 
       g_free (s);
       tags_written++;
@@ -838,7 +838,7 @@ tags:
 
       tmp = gst_flv_mux_create_number_script_value ("videocodecid",
           cpad->video_codec);
-      script_tag = gst_buffer_join (script_tag, tmp);
+      script_tag = gst_buffer_append (script_tag, tmp);
       tags_written++;
 
       caps = gst_pad_get_current_caps (video_pad);
@@ -849,7 +849,7 @@ tags:
         GST_DEBUG_OBJECT (mux, "putting width %d in the metadata", size);
 
         tmp = gst_flv_mux_create_number_script_value ("width", size);
-        script_tag = gst_buffer_join (script_tag, tmp);
+        script_tag = gst_buffer_append (script_tag, tmp);
         tags_written++;
       }
 
@@ -857,7 +857,7 @@ tags:
         GST_DEBUG_OBJECT (mux, "putting height %d in the metadata", size);
 
         tmp = gst_flv_mux_create_number_script_value ("height", size);
-        script_tag = gst_buffer_join (script_tag, tmp);
+        script_tag = gst_buffer_append (script_tag, tmp);
         tags_written++;
       }
 
@@ -868,14 +868,14 @@ tags:
         GST_DEBUG_OBJECT (mux, "putting AspectRatioX %f in the metadata", d);
 
         tmp = gst_flv_mux_create_number_script_value ("AspectRatioX", d);
-        script_tag = gst_buffer_join (script_tag, tmp);
+        script_tag = gst_buffer_append (script_tag, tmp);
         tags_written++;
 
         d = den;
         GST_DEBUG_OBJECT (mux, "putting AspectRatioY %f in the metadata", d);
 
         tmp = gst_flv_mux_create_number_script_value ("AspectRatioY", d);
-        script_tag = gst_buffer_join (script_tag, tmp);
+        script_tag = gst_buffer_append (script_tag, tmp);
         tags_written++;
       }
 
@@ -886,7 +886,7 @@ tags:
         GST_DEBUG_OBJECT (mux, "putting framerate %f in the metadata", d);
 
         tmp = gst_flv_mux_create_number_script_value ("framerate", d);
-        script_tag = gst_buffer_join (script_tag, tmp);
+        script_tag = gst_buffer_append (script_tag, tmp);
         tags_written++;
       }
     }
@@ -911,7 +911,7 @@ tags:
 
       tmp = gst_flv_mux_create_number_script_value ("audiocodecid",
           cpad->audio_codec);
-      script_tag = gst_buffer_join (script_tag, tmp);
+      script_tag = gst_buffer_append (script_tag, tmp);
       tags_written++;
     }
   }
@@ -927,7 +927,7 @@ tags:
     data[18] = (strlen (s) >> 8) & 0xff;
     data[19] = (strlen (s)) & 0xff;
     memcpy (&data[20], s, strlen (s));
-    script_tag = gst_buffer_join (script_tag, tmp);
+    script_tag = gst_buffer_append (script_tag, tmp);
 
     tags_written++;
   }
@@ -961,7 +961,7 @@ tags:
     data[15] = (strlen (s) >> 8) & 0xff;
     data[16] = (strlen (s)) & 0xff;
     memcpy (&data[17], s, strlen (s));
-    script_tag = gst_buffer_join (script_tag, tmp);
+    script_tag = gst_buffer_append (script_tag, tmp);
 
     g_free (s);
     tags_written++;
@@ -979,12 +979,12 @@ end:
   data[0] = 0;                  /* 0 byte size */
   data[1] = 0;
   data[2] = 9;                  /* end marker */
-  script_tag = gst_buffer_join (script_tag, tmp);
+  script_tag = gst_buffer_append (script_tag, tmp);
   tags_written++;
 
   _gst_buffer_new_and_alloc (4, &tmp, &data);
   GST_WRITE_UINT32_BE (data, gst_buffer_get_size (script_tag));
-  script_tag = gst_buffer_join (script_tag, tmp);
+  script_tag = gst_buffer_append (script_tag, tmp);
 
   gst_buffer_map (script_tag, &map, GST_MAP_WRITE);
   map.data[1] = ((gst_buffer_get_size (script_tag) - 11 - 4) >> 16) & 0xff;
@@ -1363,7 +1363,7 @@ gst_flv_mux_rewrite_header (GstFlvMux * mux)
   GST_DEBUG_OBJECT (mux, "putting total filesize %f in the metadata", d);
 
   tmp = gst_flv_mux_create_number_script_value ("filesize", d);
-  rewrite = gst_buffer_join (rewrite, tmp);
+  rewrite = gst_buffer_append (rewrite, tmp);
 
   if (!mux->index) {
     /* no index, so push buffer and return */
@@ -1447,10 +1447,10 @@ gst_flv_mux_rewrite_header (GstFlvMux * mux)
     GST_DEBUG_OBJECT (mux, "Remaining filler size is %d bytes",
         remaining_filler_size);
     GST_WRITE_UINT16_BE (data + 12, remaining_filler_size);
-    index = gst_buffer_join (index, tmp);
+    index = gst_buffer_append (index, tmp);
   }
 
-  rewrite = gst_buffer_join (rewrite, index);
+  rewrite = gst_buffer_append (rewrite, index);
 
   return gst_flv_mux_push (mux, rewrite);
 }

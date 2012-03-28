@@ -2501,13 +2501,8 @@ gst_matroska_parse_accumulate_streamheader (GstMatroskaParse * parse,
   }
 
   if (parse->streamheader) {
-    GstBuffer *buf;
-
-    buf = gst_buffer_span (parse->streamheader, 0, buffer,
-        gst_buffer_get_size (parse->streamheader) +
-        gst_buffer_get_size (buffer));
-    gst_buffer_unref (parse->streamheader);
-    parse->streamheader = buf;
+    parse->streamheader = gst_buffer_append (parse->streamheader,
+        gst_buffer_ref (buffer));
   } else {
     parse->streamheader = gst_buffer_ref (buffer);
   }
