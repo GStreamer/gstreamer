@@ -98,6 +98,7 @@ gst_vaapi_picture_create(
     if (!picture->surface)
         return FALSE;
     picture->surface_id = gst_vaapi_surface_get_id(picture->surface);
+    picture->structure  = GST_VAAPI_PICTURE_STRUCTURE_FRAME;
 
     picture->proxy =
         gst_vaapi_surface_proxy_new(GET_CONTEXT(picture), picture->surface);
@@ -253,6 +254,10 @@ gst_vaapi_picture_output(GstVaapiPicture *picture)
     if (!GST_VAAPI_PICTURE_IS_SKIPPED(picture)) {
         proxy = g_object_ref(picture->proxy);
         gst_vaapi_surface_proxy_set_timestamp(proxy, picture->pts);
+        if (GST_VAAPI_PICTURE_IS_INTERLACED(picture))
+            gst_vaapi_surface_proxy_set_interlaced(proxy, TRUE);
+        if (GST_VAAPI_PICTURE_IS_TFF(picture))
+            gst_vaapi_surface_proxy_set_tff(proxy, TRUE);
         gst_vaapi_decoder_push_surface_proxy(GET_DECODER(picture), proxy);
     }
     GST_VAAPI_PICTURE_FLAG_SET(picture, GST_VAAPI_PICTURE_FLAG_OUTPUT);

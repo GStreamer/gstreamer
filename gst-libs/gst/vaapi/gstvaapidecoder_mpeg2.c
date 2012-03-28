@@ -599,12 +599,13 @@ decode_picture_ext(GstVaapiDecoderMpeg2 *decoder, guchar *buf, guint buf_size)
     priv->is_first_field ^= 1;
     switch (pic_ext->picture_structure) {
     case GST_MPEG_VIDEO_PICTURE_STRUCTURE_TOP_FIELD:
-        GST_VAAPI_PICTURE_FLAG_SET(picture, GST_VAAPI_PICTURE_FLAG_TOP_FIELD);
+        picture->structure = GST_VAAPI_PICTURE_STRUCTURE_TOP_FIELD;
         break;
     case GST_MPEG_VIDEO_PICTURE_STRUCTURE_BOTTOM_FIELD:
-        GST_VAAPI_PICTURE_FLAG_SET(picture, GST_VAAPI_PICTURE_FLAG_BOTTOM_FIELD);
+        picture->structure = GST_VAAPI_PICTURE_STRUCTURE_BOTTOM_FIELD;
         break;
     case GST_MPEG_VIDEO_PICTURE_STRUCTURE_FRAME:
+        picture->structure = GST_VAAPI_PICTURE_STRUCTURE_FRAME;
         priv->is_first_field = TRUE;
         break;
     }
