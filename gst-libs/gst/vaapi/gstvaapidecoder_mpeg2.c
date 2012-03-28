@@ -80,7 +80,6 @@ struct _GstVaapiDecoderMpeg2Private {
     GstClockTime                pts_diff;
     guint                       is_constructed          : 1;
     guint                       is_opened               : 1;
-    guint                       is_first_field          : 1;
     guint                       has_seq_ext             : 1;
     guint                       has_seq_scalable_ext    : 1;
     guint                       has_pic_ext             : 1;
@@ -499,8 +498,6 @@ decode_gop(GstVaapiDecoderMpeg2 *decoder, guchar *buf, guint buf_size)
     priv->gop_pts = pts;
     if (!priv->pts_diff)
         priv->pts_diff = priv->seq_pts - priv->gop_pts;
-
-    priv->is_first_field = FALSE;
     return GST_VAAPI_DECODER_STATUS_SUCCESS;
 }
 
@@ -596,7 +593,6 @@ decode_picture_ext(GstVaapiDecoderMpeg2 *decoder, guchar *buf, guint buf_size)
         pic_ext->picture_structure = GST_MPEG_VIDEO_PICTURE_STRUCTURE_FRAME;
     }
 
-    priv->is_first_field ^= 1;
     switch (pic_ext->picture_structure) {
     case GST_MPEG_VIDEO_PICTURE_STRUCTURE_TOP_FIELD:
         picture->structure = GST_VAAPI_PICTURE_STRUCTURE_TOP_FIELD;
@@ -606,7 +602,6 @@ decode_picture_ext(GstVaapiDecoderMpeg2 *decoder, guchar *buf, guint buf_size)
         break;
     case GST_MPEG_VIDEO_PICTURE_STRUCTURE_FRAME:
         picture->structure = GST_VAAPI_PICTURE_STRUCTURE_FRAME;
-        priv->is_first_field = TRUE;
         break;
     }
     return GST_VAAPI_DECODER_STATUS_SUCCESS;
@@ -643,7 +638,7 @@ fill_picture(GstVaapiDecoderMpeg2 *decoder, GstVaapiPicture *picture)
 #define COPY_FIELD(a, b, f) \
     pic_param->a.b.f = pic_ext->f
     pic_param->picture_coding_extension.value                           = 0;
-    pic_param->picture_coding_extension.bits.is_first_field             = priv->is_first_field;
+    pic_param->picture_coding_extension.bits.is_first_field             = GST_VAAPI_PICTURE_IS_FIRST_FIELD(picture);
     COPY_FIELD(picture_coding_extension, bits, intra_dc_precision);
     COPY_FIELD(picture_coding_extension, bits, picture_structure);
     COPY_FIELD(picture_coding_extension, bits, top_field_first);
@@ -945,7 +940,6 @@ gst_vaapi_decoder_mpeg2_init(GstVaapiDecoderMpeg2 *decoder)
     priv->pts_diff              = 0;
     priv->is_constructed        = FALSE;
     priv->is_opened             = FALSE;
-    priv->is_first_field        = FALSE;
     priv->has_seq_ext           = FALSE;
     priv->has_seq_scalable_ext  = FALSE;
     priv->has_pic_ext           = FALSE;

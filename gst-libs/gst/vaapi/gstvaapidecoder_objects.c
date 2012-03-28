@@ -114,6 +114,7 @@ gst_vaapi_picture_create(
             (GST_VAAPI_PICTURE_FLAG_SKIPPED     |
              GST_VAAPI_PICTURE_FLAG_REFERENCE   |
              GST_VAAPI_PICTURE_FLAG_INTERLACED  |
+             GST_VAAPI_PICTURE_FLAG_FF          |
              GST_VAAPI_PICTURE_FLAG_TFF)
         );
 
@@ -128,6 +129,7 @@ gst_vaapi_picture_create(
                 picture->structure = GST_VAAPI_PICTURE_STRUCTURE_TOP_FIELD;
                 break;
             }
+            GST_VAAPI_PICTURE_FLAG_UNSET(picture, GST_VAAPI_PICTURE_FLAG_FF);
         }
     }
     else {
@@ -141,6 +143,7 @@ gst_vaapi_picture_create(
             return FALSE;
 
         picture->structure = GST_VAAPI_PICTURE_STRUCTURE_FRAME;
+        GST_VAAPI_PICTURE_FLAG_SET(picture, GST_VAAPI_PICTURE_FLAG_FF);
     }
     picture->surface_id = gst_vaapi_surface_get_id(picture->surface);
 
