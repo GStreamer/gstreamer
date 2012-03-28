@@ -1414,8 +1414,6 @@ gst_buffer_append (GstBuffer * buf1, GstBuffer * buf2)
     GST_BUFFER_MEM_PTR (buf2, i) = NULL;
     _memory_add (buf1, -1, mem);
   }
-  GST_BUFFER_MEM_LEN (buf2) = 0;
-  gst_buffer_unref (buf2);
 
   /* we can calculate the duration too. Also make sure we's not messing
    * with invalid DURATIONS */
@@ -1428,6 +1426,10 @@ gst_buffer_append (GstBuffer * buf1, GstBuffer * buf2)
     /* set offset_end */
     GST_BUFFER_OFFSET_END (buf1) = GST_BUFFER_OFFSET_END (buf2);
   }
+
+  GST_BUFFER_MEM_LEN (buf2) = 0;
+  gst_buffer_unref (buf2);
+
   return buf1;
 }
 
