@@ -235,7 +235,7 @@ gst_gdp_buffer_from_caps (GstGDPPay * this, GstCaps * caps)
   gst_buffer_take_memory (payloadbuf, -1,
       gst_memory_new_wrapped (0, payload, plen, 0, plen, payload, g_free));
 
-  return gst_buffer_join (headerbuf, payloadbuf);
+  return gst_buffer_append (headerbuf, payloadbuf);
 
   /* ERRORS */
 packet_failed:
@@ -264,7 +264,7 @@ gst_gdp_pay_buffer_from_buffer (GstGDPPay * this, GstBuffer * buffer)
   /* we do not want to lose the ref on the incoming buffer */
   gst_buffer_ref (buffer);
 
-  return gst_buffer_join (headerbuf, buffer);
+  return gst_buffer_append (headerbuf, buffer);
 
   /* ERRORS */
 no_buffer:
@@ -301,7 +301,7 @@ gst_gdp_buffer_from_event (GstGDPPay * this, GstEvent * event)
         gst_memory_new_wrapped (0, payload, plen, 0, plen, payload, g_free));
   }
 
-  return gst_buffer_join (headerbuf, payloadbuf);
+  return gst_buffer_append (headerbuf, payloadbuf);
 
   /* ERRORS */
 no_event:
