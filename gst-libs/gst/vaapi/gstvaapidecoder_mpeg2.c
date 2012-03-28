@@ -577,6 +577,11 @@ decode_picture_ext(GstVaapiDecoderMpeg2 *decoder, guchar *buf, guint buf_size)
     }
     priv->has_pic_ext = TRUE;
 
+    if (priv->progressive_sequence && !pic_ext->progressive_frame) {
+        GST_WARNING("invalid interlaced frame in progressive sequence, fixing");
+        pic_ext->progressive_frame = 1;
+    }
+
     if (pic_ext->picture_structure == 0 ||
         (pic_ext->progressive_frame &&
          pic_ext->picture_structure != GST_MPEG_VIDEO_PICTURE_STRUCTURE_FRAME)) {
