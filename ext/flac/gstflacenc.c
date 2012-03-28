@@ -842,6 +842,26 @@ gst_flac_enc_seek_callback (const FLAC__StreamEncoder * encoder,
   if ((peerpad = gst_pad_get_peer (GST_AUDIO_ENCODER_SRC_PAD (flacenc)))) {
     GstEvent *event;
     gboolean ret;
+    GstQuery *query;
+    gboolean seekable = FALSE;
+
+    /* try to seek to the beginning of the output */
+    query = gst_query_new_seeking (GST_FORMAT_BYTES);
+    if (gst_pad_query (peerpad, query)) {
+      GstFormat format;
+
+      gst_query_parse_seeking (query, &format, &seekable, NULL, NULL);
+      if (format != GST_FORMAT_BYTES)
+        seekable = FALSE;
+    } else {
+      GST_LOG_OBJECT (flacenc, "SEEKING query not handled");
+    }
+    gst_query_unref (query);
+
+    if (!seekable) {
+      GST_DEBUG_OBJECT (flacenc, "downstream not seekable; not rewriting");
+      return FLAC__STREAM_ENCODER_SEEK_STATUS_UNSUPPORTED;
+    }
 
     gst_segment_init (&seg, GST_FORMAT_BYTES);
     seg.start = absolute_byte_offset;
