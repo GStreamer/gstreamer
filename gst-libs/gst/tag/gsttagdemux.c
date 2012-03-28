@@ -573,7 +573,7 @@ gst_tag_demux_chain (GstPad * pad, GstObject * parent, GstBuffer * buf)
   if (demux->priv->collect == NULL) {
     demux->priv->collect = buf;
   } else {
-    demux->priv->collect = gst_buffer_join (demux->priv->collect, buf);
+    demux->priv->collect = gst_buffer_append (demux->priv->collect, buf);
   }
   demux->priv->collect_size += size;
   buf = NULL;

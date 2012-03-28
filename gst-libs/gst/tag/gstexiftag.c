@@ -550,7 +550,7 @@ gst_exif_writer_reset_and_get_buffer (GstExifWriter * writer)
   header = gst_byte_writer_reset_and_get_buffer (&writer->tagwriter);
   data = gst_byte_writer_reset_and_get_buffer (&writer->datawriter);
 
-  return gst_buffer_join (header, data);
+  return gst_buffer_append (header, data);
 }
 
 /*
