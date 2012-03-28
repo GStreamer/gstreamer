@@ -241,17 +241,16 @@ _arr_span (GstMemory ** mem[], gsize len[], guint n, gsize size)
 }
 
 static GstMemory *
-_span_memory (GstBuffer * buffer, gsize size)
+_span_memory (GstBuffer * buffer)
 {
   GstMemory *span, **mem[1];
-  gsize len[1];
+  gsize size, len[1];
 
   /* not enough room, span buffers */
   mem[0] = GST_BUFFER_MEM_ARRAY (buffer);
   len[0] = GST_BUFFER_MEM_LEN (buffer);
 
-  if (size == -1)
-    size = gst_buffer_get_size (buffer);
+  size = gst_buffer_get_size (buffer);
 
   span = _arr_span (mem, len, 1, size);
 
@@ -276,7 +275,7 @@ _get_merged_memory (GstBuffer * buffer, gboolean * merged)
     *merged = FALSE;
   } else {
     /* we need to span memory */
-    mem = _span_memory (buffer, -1);
+    mem = _span_memory (buffer);
     *merged = TRUE;
   }
   return mem;
@@ -316,7 +315,7 @@ _memory_add (GstBuffer * buffer, guint idx, GstMemory * mem)
      * could try to only merge the two smallest buffers to avoid memcpy, etc. */
     GST_CAT_DEBUG (GST_CAT_PERFORMANCE, "memory array overflow in buffer %p",
         buffer);
-    _replace_all_memory (buffer, _span_memory (buffer, -1));
+    _replace_all_memory (buffer, _span_memory (buffer));
     /* we now have 1 single spanned buffer */
     len = 1;
   }
@@ -446,7 +445,7 @@ gst_buffer_copy_into (GstBuffer * dest, GstBuffer * src,
       }
     }
     if (flags & GST_BUFFER_COPY_MERGE) {
-      _replace_all_memory (dest, _span_memory (dest, size));
+      _replace_all_memory (dest, _span_memory (dest));
     }
   }
 
