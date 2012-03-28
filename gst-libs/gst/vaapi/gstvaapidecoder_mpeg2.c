@@ -340,9 +340,11 @@ decode_current_picture(GstVaapiDecoderMpeg2 *decoder)
     if (picture) {
         if (!gst_vaapi_picture_decode(picture))
             return FALSE;
-        if (!gst_vaapi_dpb_add(priv->dpb, picture))
-            return FALSE;
-        gst_vaapi_picture_replace(&priv->current_picture, NULL);
+        if (GST_VAAPI_PICTURE_IS_COMPLETE(picture)) {
+            if (!gst_vaapi_dpb_add(priv->dpb, picture))
+                return FALSE;
+            gst_vaapi_picture_replace(&priv->current_picture, NULL);
+        }
     }
     return TRUE;
 }
@@ -389,6 +391,7 @@ decode_sequence_ext(GstVaapiDecoderMpeg2 *decoder, guchar *buf, guint buf_size)
     }
     priv->has_seq_ext = TRUE;
     priv->progressive_sequence = seq_ext->progressive;
+    gst_vaapi_decoder_set_interlaced(base_decoder, !priv->progressive_sequence);
 
     width  = (priv->width  & 0x0fff) | ((guint32)seq_ext->horiz_size_ext << 12);
     height = (priv->height & 0x0fff) | ((guint32)seq_ext->vert_size_ext  << 12);
@@ -506,12 +509,24 @@ decode_picture(GstVaapiDecoderMpeg2 *decoder, guchar *buf, guint buf_size)
     if (priv->current_picture && !decode_current_picture(decoder))
         return GST_VAAPI_DECODER_STATUS_ERROR_UNKNOWN;
 
-    priv->current_picture = GST_VAAPI_PICTURE_NEW(MPEG2, decoder);
-    if (!priv->current_picture) {
-        GST_DEBUG("failed to allocate picture");
-        return GST_VAAPI_DECODER_STATUS_ERROR_ALLOCATION_FAILED;
+    if (priv->current_picture) {
+        /* Re-use current picture where the first field was decoded */
+        picture = gst_vaapi_picture_new_field(priv->current_picture);
+        if (!picture) {
+            GST_ERROR("failed to allocate field picture");
+            return GST_VAAPI_DECODER_STATUS_ERROR_ALLOCATION_FAILED;
+        }
     }
-    picture = priv->current_picture;
+    else {
+        /* Create new picture */
+        picture = GST_VAAPI_PICTURE_NEW(MPEG2, decoder);
+        if (!picture) {
+            GST_ERROR("failed to allocate picture");
+            return GST_VAAPI_DECODER_STATUS_ERROR_ALLOCATION_FAILED;
+        }
+    }
+    gst_vaapi_picture_replace(&priv->current_picture, picture);
+    gst_vaapi_picture_unref(picture);
 
     status = ensure_quant_matrix(decoder, picture);
     if (status != GST_VAAPI_DECODER_STATUS_SUCCESS) {
@@ -568,6 +583,12 @@ decode_picture_ext(GstVaapiDecoderMpeg2 *decoder, guchar *buf, guint buf_size)
         GST_WARNING("invalid picture_structure %d, replacing with \"frame\"",
                     pic_ext->picture_structure);
         pic_ext->picture_structure = GST_MPEG_VIDEO_PICTURE_STRUCTURE_FRAME;
+    }
+
+    if (!priv->progressive_sequence && !pic_ext->progressive_frame) {
+        GST_VAAPI_PICTURE_FLAG_SET(picture, GST_VAAPI_PICTURE_FLAG_INTERLACED);
+        if (pic_ext->top_field_first)
+            GST_VAAPI_PICTURE_FLAG_SET(picture, GST_VAAPI_PICTURE_FLAG_TFF);
     }
 
     switch (pic_ext->picture_structure) {

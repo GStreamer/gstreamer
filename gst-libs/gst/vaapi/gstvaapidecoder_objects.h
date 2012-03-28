@@ -120,6 +120,13 @@ enum {
 #define GST_VAAPI_PICTURE_IS_TFF(picture) \
     GST_VAAPI_PICTURE_FLAG_IS_SET(picture, GST_VAAPI_PICTURE_FLAG_TFF)
 
+#define GST_VAAPI_PICTURE_IS_FRAME(picture) \
+    (GST_VAAPI_PICTURE(picture)->structure == GST_VAAPI_PICTURE_STRUCTURE_FRAME)
+
+#define GST_VAAPI_PICTURE_IS_COMPLETE(picture)          \
+    (GST_VAAPI_PICTURE_IS_FRAME(picture) ||             \
+     !GST_VAAPI_PICTURE_IS_FIRST_FIELD(picture))
+
 /**
  * GstVaapiPicture:
  *
