@@ -153,39 +153,33 @@ typedef struct
 
 
 static gboolean
-_is_span_fast (GstMemory ** mem[], gsize len[], guint n,
-    gsize * offset, GstMemory ** parent)
+_is_span (GstMemory ** mem, gsize len, gsize * poffset, GstMemory ** parent)
 {
   GstMemory *mcur, *mprv;
   gboolean have_offset = FALSE;
-  guint count, i;
+  gsize i;
 
   mcur = mprv = NULL;
-  for (count = 0; count < n; count++) {
-    gsize offs, clen;
-    GstMemory **cmem;
 
-    cmem = mem[count];
-    clen = len[count];
+  for (i = 0; i < len; i++) {
+    if (mcur)
+      mprv = mcur;
+    mcur = mem[i];
 
-    for (i = 0; i < clen; i++) {
-      if (mcur)
-        mprv = mcur;
-      mcur = cmem[i];
+    if (mprv && mcur) {
+      gsize poffs;
 
-      if (mprv && mcur) {
-        /* check if memory is contiguous */
-        if (!gst_memory_is_span (mprv, mcur, &offs))
-          return FALSE;
+      /* check if memory is contiguous */
+      if (!gst_memory_is_span (mprv, mcur, &poffs))
+        return FALSE;
 
-        if (!have_offset) {
-          if (offset)
-            *offset = offs;
-          if (parent)
-            *parent = mprv->parent;
+      if (!have_offset) {
+        if (poffset)
+          *poffset = poffs;
+        if (parent)
+          *parent = mprv->parent;
 
-          have_offset = TRUE;
-        }
+        have_offset = TRUE;
       }
     }
   }
@@ -193,92 +187,60 @@ _is_span_fast (GstMemory ** mem[], gsize len[], guint n,
 }
 
 static GstMemory *
-_arr_span (GstMemory ** mem[], gsize len[], guint n, gsize size)
-{
-  GstMemory *span, *parent = NULL;
-  gsize poffset = 0;
-
-  if (_is_span_fast (mem, len, n, &poffset, &parent)) {
-    if (parent->flags & GST_MEMORY_FLAG_NO_SHARE) {
-      GST_CAT_DEBUG (GST_CAT_PERFORMANCE, "copy for span %p", parent);
-      span = gst_memory_copy (parent, poffset, size);
-    } else {
-      span = gst_memory_share (parent, poffset, size);
-    }
-  } else {
-    gsize count, left;
-    GstMapInfo dinfo;
-    guint8 *ptr;
-
-    span = gst_allocator_alloc (NULL, size, NULL);
-    gst_memory_map (span, &dinfo, GST_MAP_WRITE);
-
-    ptr = dinfo.data;
-    left = size;
-
-    for (count = 0; count < n; count++) {
-      GstMapInfo sinfo;
-      gsize i, tocopy, clen;
-      GstMemory **cmem;
-
-      cmem = mem[count];
-      clen = len[count];
-
-      for (i = 0; i < clen && left > 0; i++) {
-        gst_memory_map (cmem[i], &sinfo, GST_MAP_READ);
-        tocopy = MIN (sinfo.size, left);
-        GST_CAT_DEBUG (GST_CAT_PERFORMANCE,
-            "memcpy for span %p from memory %p", span, cmem[i]);
-        memcpy (ptr, (guint8 *) sinfo.data, tocopy);
-        left -= tocopy;
-        ptr += tocopy;
-        gst_memory_unmap (cmem[i], &sinfo);
-      }
-    }
-    gst_memory_unmap (span, &dinfo);
-  }
-  return span;
-}
-
-static GstMemory *
-_span_memory (GstBuffer * buffer)
-{
-  GstMemory *span, **mem[1];
-  gsize size, len[1];
-
-  /* not enough room, span buffers */
-  mem[0] = GST_BUFFER_MEM_ARRAY (buffer);
-  len[0] = GST_BUFFER_MEM_LEN (buffer);
-
-  size = gst_buffer_get_size (buffer);
-
-  span = _arr_span (mem, len, 1, size);
-
-  return span;
-}
-
-static GstMemory *
 _get_merged_memory (GstBuffer * buffer, gboolean * merged)
 {
-  guint len;
-  GstMemory *mem;
+  GstMemory **mem, *result;
+  gsize len;
 
+  mem = GST_BUFFER_MEM_ARRAY (buffer);
   len = GST_BUFFER_MEM_LEN (buffer);
 
   if (G_UNLIKELY (len == 0)) {
-    /* no memory */
-    mem = NULL;
+    result = NULL;
+    *merged = FALSE;
   } else if (G_LIKELY (len == 1)) {
-    /* we can take the first one */
-    mem = GST_BUFFER_MEM_PTR (buffer, 0);
-    gst_memory_ref (mem);
+    result = gst_memory_ref (mem[0]);
     *merged = FALSE;
   } else {
-    /* we need to span memory */
-    mem = _span_memory (buffer);
+    GstMemory *parent = NULL;
+    gsize size, poffset;
+
+    size = gst_buffer_get_size (buffer);
+
+    if (G_UNLIKELY (_is_span (mem, len, &poffset, &parent))) {
+
+      if (parent->flags & GST_MEMORY_FLAG_NO_SHARE) {
+        GST_CAT_DEBUG (GST_CAT_PERFORMANCE, "copy for merge %p", parent);
+        result = gst_memory_copy (parent, poffset, size);
+      } else {
+        result = gst_memory_share (parent, poffset, size);
+      }
+    } else {
+      gsize i, tocopy, left;
+      GstMapInfo sinfo, dinfo;
+      guint8 *ptr;
+
+      result = gst_allocator_alloc (NULL, size, NULL);
+      gst_memory_map (result, &dinfo, GST_MAP_WRITE);
+
+      ptr = dinfo.data;
+      left = size;
+
+      for (i = 0; i < len && left > 0; i++) {
+        gst_memory_map (mem[i], &sinfo, GST_MAP_READ);
+        tocopy = MIN (sinfo.size, left);
+        GST_CAT_DEBUG (GST_CAT_PERFORMANCE,
+            "memcpy for merge %p from memory %p", result, mem[i]);
+        memcpy (ptr, (guint8 *) sinfo.data, tocopy);
+        left -= tocopy;
+        ptr += tocopy;
+        gst_memory_unmap (mem[i], &sinfo);
+      }
+      gst_memory_unmap (result, &dinfo);
+    }
     *merged = TRUE;
   }
-  return mem;
+  return result;
 }
 
 static void
@@ -286,14 +248,9 @@ _replace_all_memory (GstBuffer * buffer, GstMemory * mem)
 {
   gsize len, i;
 
-  len = GST_BUFFER_MEM_LEN (buffer);
-
-  if (G_LIKELY (len == 1 && GST_BUFFER_MEM_PTR (buffer, 0) == mem)) {
-    gst_memory_unref (mem);
-    return;
-  }
-
   GST_LOG ("buffer %p replace with memory %p", buffer, mem);
+
+  len = GST_BUFFER_MEM_LEN (buffer);
 
   /* unref old memory */
   for (i = 0; i < len; i++)
@@ -309,13 +266,14 @@ _memory_add (GstBuffer * buffer, guint idx, GstMemory * mem)
   guint i, len = GST_BUFFER_MEM_LEN (buffer);
 
   if (G_UNLIKELY (len >= GST_BUFFER_MEM_MAX)) {
+    gboolean merged;
     /* too many buffer, span them. */
     /* FIXME, there is room for improvement here: We could only try to merge
      * 2 buffers to make some room. If we can't efficiently merge 2 buffers we
      * could try to only merge the two smallest buffers to avoid memcpy, etc. */
     GST_CAT_DEBUG (GST_CAT_PERFORMANCE, "memory array overflow in buffer %p",
         buffer);
-    _replace_all_memory (buffer, _span_memory (buffer));
+    _replace_all_memory (buffer, _get_merged_memory (buffer, &merged));
     /* we now have 1 single spanned buffer */
     len = 1;
   }
@@ -445,7 +403,8 @@ gst_buffer_copy_into (GstBuffer * dest, GstBuffer * src,
       }
     }
     if (flags & GST_BUFFER_COPY_MERGE) {
-      _replace_all_memory (dest, _span_memory (dest));
+      gboolean merged;
+      _replace_all_memory (dest, _get_merged_memory (dest, &merged));
     }
   }
 
@@ -818,13 +777,13 @@ GstMemory *
 gst_buffer_get_memory (GstBuffer * buffer, gint idx)
 {
   GstMemory *mem;
-  gboolean merged;
 
   g_return_val_if_fail (GST_IS_BUFFER (buffer), NULL);
   g_return_val_if_fail (idx == -1 ||
       (idx >= 0 && idx <= GST_BUFFER_MEM_LEN (buffer)), NULL);
 
   if (idx == -1) {
+    gboolean merged;
     mem = _get_merged_memory (buffer, &merged);
   } else if ((mem = GST_BUFFER_MEM_PTR (buffer, idx))) {
     gst_memory_ref (mem);
