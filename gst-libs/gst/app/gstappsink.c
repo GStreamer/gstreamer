@@ -697,6 +697,15 @@ restart:
   if (priv->flushing)
     goto flushing;
 
+  /* queue holding caps event might have been FLUSHed,
+   * but caps state still present in pad caps */
+  if (G_UNLIKELY (!priv->last_caps &&
+          gst_pad_has_current_caps (GST_BASE_SINK_PAD (psink)))) {
+    priv->last_caps = gst_pad_get_current_caps (GST_BASE_SINK_PAD (psink));
+    GST_DEBUG_OBJECT (appsink, "activating pad caps %" GST_PTR_FORMAT,
+        priv->last_caps);
+  }
+
   GST_DEBUG_OBJECT (appsink, "pushing render buffer %p on queue (%d)",
       buffer, priv->num_buffers);
 
