@@ -126,7 +126,7 @@ gst_alpha_color_transform_caps (GstBaseTransform * btrans,
     gst_structure_remove_field (structure, "chroma-site");
 
     gst_structure_set_name (structure, "video/x-raw");
-    gst_caps_append_structure (local_caps, gst_structure_copy (structure));
+    gst_caps_append_structure (local_caps, structure);
   }
 
   /* Get the appropriate template */
