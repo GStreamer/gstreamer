@@ -335,7 +335,7 @@ typedef enum
   GST_ELEMENT_FLAG_REQUIRE_CLOCK  = (GST_OBJECT_FLAG_LAST << 5),
   GST_ELEMENT_FLAG_INDEXABLE      = (GST_OBJECT_FLAG_LAST << 6),
   /* padding */
-  GST_ELEMENT_FLAG_LAST           = (GST_OBJECT_FLAG_LAST << 16)
+  GST_ELEMENT_FLAG_LAST           = (GST_OBJECT_FLAG_LAST << 10)
 } GstElementFlags;
 
 /**
