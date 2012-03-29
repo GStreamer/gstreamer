@@ -81,7 +81,8 @@ enum
   PROP_RELATIVE_X,
   PROP_RELATIVE_Y,
   PROP_OVERLAY_WIDTH,
-  PROP_OVERLAY_HEIGHT
+  PROP_OVERLAY_HEIGHT,
+  PROP_ALPHA
 };
 
 #define VIDEO_CAPS \
@@ -187,6 +188,10 @@ gst_gdk_pixbuf_overlay_class_init (GstGdkPixbufOverlayClass * klass)
           G_MAXINT, 0,
           GST_PARAM_CONTROLLABLE | GST_PARAM_MUTABLE_PLAYING | G_PARAM_READWRITE
           | G_PARAM_STATIC_STRINGS));
+  g_object_class_install_property (gobject_class, PROP_ALPHA,
+      g_param_spec_double ("alpha", "Alpha", "Global alpha of overlay image",
+          0.0, 1.0, 1.0, GST_PARAM_CONTROLLABLE | GST_PARAM_MUTABLE_PLAYING
+          | G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   GST_DEBUG_CATEGORY_INIT (gdkpixbufoverlay_debug, "gdkpixbufoverlay", 0,
       "debug category for gdkpixbufoverlay element");
@@ -204,6 +209,8 @@ gst_gdk_pixbuf_overlay_init (GstGdkPixbufOverlay * overlay,
 
   overlay->overlay_width = 0;
   overlay->overlay_height = 0;
+
+  overlay->alpha = 1.0;
 }
 
 void
@@ -243,6 +250,10 @@ gst_gdk_pixbuf_overlay_set_property (GObject * object, guint property_id,
       overlay->overlay_height = g_value_get_int (value);
       overlay->update_composition = TRUE;
       break;
+    case PROP_ALPHA:
+      overlay->alpha = g_value_get_double (value);
+      overlay->update_composition = TRUE;
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, property_id, pspec);
       break;
@@ -280,6 +291,9 @@ gst_gdk_pixbuf_overlay_get_property (GObject * object, guint property_id,
       break;
     case PROP_OVERLAY_HEIGHT:
       g_value_set_int (value, overlay->overlay_height);
+      break;
+    case PROP_ALPHA:
+      g_value_set_double (value, overlay->alpha);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, property_id, pspec);
@@ -437,6 +451,14 @@ gst_gdk_pixbuf_overlay_update_composition (GstGdkPixbufOverlay * overlay)
   GstVideoOverlayRectangle *rect;
   gint x, y, width, height;
 
+  if (overlay->comp) {
+    gst_video_overlay_composition_unref (overlay->comp);
+    overlay->comp = NULL;
+  }
+
+  if (overlay->alpha == 0.0)
+    return;
+
   x = overlay->offset_x + (overlay->relative_x * overlay->pixels_width);
   y = overlay->offset_y + (overlay->relative_y * overlay->pixels_height);
 
@@ -454,8 +476,8 @@ gst_gdk_pixbuf_overlay_update_composition (GstGdkPixbufOverlay * overlay)
   if (height == 0)
     height = overlay->pixels_height;
 
-  GST_DEBUG_OBJECT (overlay, "overlay image dimensions: %d x %d",
-      overlay->pixels_width, overlay->pixels_height);
+  GST_DEBUG_OBJECT (overlay, "overlay image dimensions: %d x %d, alpha=%.2f",
+      overlay->pixels_width, overlay->pixels_height, overlay->alpha);
   GST_DEBUG_OBJECT (overlay, "properties: x,y: %d,%d (%g%%,%g%%) - WxH: %dx%d",
       overlay->offset_x, overlay->offset_y,
       overlay->relative_x * 100.0, overlay->relative_y * 100.0,
@@ -467,11 +489,12 @@ gst_gdk_pixbuf_overlay_update_composition (GstGdkPixbufOverlay * overlay)
       overlay->pixels_width, overlay->pixels_height, overlay->pixels_stride,
       x, y, width, height, GST_VIDEO_OVERLAY_FORMAT_FLAG_NONE);
 
+  if (overlay->alpha != 1.0)
+    gst_video_overlay_rectangle_set_global_alpha (rect, overlay->alpha);
+
   comp = gst_video_overlay_composition_new (rect);
   gst_video_overlay_rectangle_unref (rect);
 
-  if (overlay->comp)
-    gst_video_overlay_composition_unref (overlay->comp);
   overlay->comp = comp;
 }
 
@@ -502,7 +525,8 @@ gst_gdk_pixbuf_overlay_transform_ip (GstBaseTransform * trans, GstBuffer * buf)
 
   GST_OBJECT_UNLOCK (overlay);
 
-  gst_video_overlay_composition_blend (overlay->comp, buf);
+  if (overlay->comp != NULL)
+    gst_video_overlay_composition_blend (overlay->comp, buf);
 
   return GST_FLOW_OK;
 }

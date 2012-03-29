@@ -63,6 +63,8 @@ struct _GstGdkPixbufOverlay
   gint                         overlay_width;
   gint                         overlay_height;
 
+  gdouble                      alpha;
+
   /* the loaded image */
   GstBuffer                  * pixels;
   guint                        pixels_width;
