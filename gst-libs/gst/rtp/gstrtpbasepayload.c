@@ -428,6 +428,7 @@ gst_rtp_base_payload_query_default (GstRTPBasePayload * rtpbasepayload,
       if (rtpbasepayload_class->get_caps) {
         caps = rtpbasepayload_class->get_caps (rtpbasepayload, pad, filter);
         gst_query_set_caps_result (query, caps);
+        gst_caps_unref (caps);
         res = TRUE;
       }
       break;
