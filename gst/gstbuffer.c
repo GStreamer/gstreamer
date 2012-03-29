@@ -213,7 +213,7 @@ _get_merged_memory (GstBuffer * buffer, gboolean * merged)
     *merged = FALSE;
   } else {
     GstMemory *parent = NULL;
-    gsize size, poffset;
+    gsize size, poffset = 0;
 
     size = gst_buffer_get_size (buffer);
 
