@@ -300,6 +300,49 @@ _gst_byte_writer_fill_inline (GstByteWriter * writer, guint8 value, guint size)
   return TRUE;
 }
 
+static inline void
+gst_byte_writer_put_buffer_unchecked (GstByteWriter * writer, GstBuffer * buffer,
+    gsize offset, gssize size)
+{
+  if (size == -1) {
+    size = gst_buffer_get_size (buffer);
+
+    if (offset >= (gsize) size)
+      return;
+
+    size -= offset;
+  }
+
+  gst_buffer_extract (buffer, offset,
+      (guint8 *) & writer->parent.data[writer->parent.byte], size);
+  writer->parent.byte += size;
+  writer->parent.size = MAX (writer->parent.size, writer->parent.byte);
+}
+
+static inline gboolean
+_gst_byte_writer_put_buffer_inline (GstByteWriter * writer, GstBuffer * buffer,
+    gsize offset, gssize size)
+{
+  g_return_val_if_fail (writer != NULL, FALSE);
+  g_return_val_if_fail (size >= -1, FALSE);
+
+  if (size == -1) {
+    size = gst_buffer_get_size (buffer);
+
+    if (offset >= (gsize) size)
+      return TRUE;
+
+    size -= offset;
+  }
+
+  if (G_UNLIKELY (!_gst_byte_writer_ensure_free_space_inline (writer, size)))
+    return FALSE;
+
+  gst_byte_writer_put_buffer_unchecked (writer, buffer, offset, size);
+
+  return TRUE;
+}
+
 #ifndef GST_BYTE_WRITER_DISABLE_INLINES
 
 /* we use defines here so we can add the G_LIKELY() */
@@ -356,6 +399,8 @@ _gst_byte_writer_fill_inline (GstByteWriter * writer, guint8 value, guint size)
     G_LIKELY (_gst_byte_writer_put_data_inline (writer, data, size))
 #define gst_byte_writer_fill(writer, val, size) \
     G_LIKELY (_gst_byte_writer_fill_inline (writer, val, size))
+#define gst_byte_writer_put_buffer(writer, buffer, offset, size) \
+    G_LIKELY (_gst_byte_writer_put_buffer_inline (writer, buffer, offset, size))
 
 #endif
 
