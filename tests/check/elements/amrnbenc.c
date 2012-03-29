@@ -112,6 +112,8 @@ push_data (gint size, GstFlowReturn expected_return)
   GstFlowReturn res;
 
   buffer = gst_buffer_new_and_alloc (size);
+  /* make valgrind happier */
+  gst_buffer_memset (buffer, 0, 0, size);
 
   res = gst_pad_push (srcpad, buffer);
   fail_unless (res == expected_return,

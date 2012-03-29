@@ -138,6 +138,7 @@ test_video_profile (const gchar * profile, gint profile_id)
   /* code below assumes avc */
   gst_caps_set_simple (caps, "stream-format", G_TYPE_STRING, "avc", NULL);
   gst_pad_set_caps (mysinkpad, caps);
+  gst_caps_unref (caps);
   gst_pad_use_fixed_caps (mysinkpad);
 
   caps = gst_caps_from_string (VIDEO_CAPS_STRING);
