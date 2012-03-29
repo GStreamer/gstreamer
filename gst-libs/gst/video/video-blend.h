@@ -71,6 +71,7 @@ void       video_blend_scale_linear_RGBA  (GstBlendVideoFormatInfo * src,
 
 gboolean   video_blend                    (GstBlendVideoFormatInfo * dest,
                                            GstBlendVideoFormatInfo * src,
-                                           gint x, gint y);
+                                           guint x, guint y,
+                                           gfloat global_alpha);
 
 #endif

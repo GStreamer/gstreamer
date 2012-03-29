@@ -69,6 +69,7 @@
 
 #include "video-overlay-composition.h"
 #include "video-blend.h"
+#include <string.h>
 
 struct _GstVideoOverlayComposition
 {
@@ -133,6 +134,19 @@ struct _GstVideoOverlayRectangle
    * the min_seq_num_used in the composition tells the renderer which
    * rectangles have expired. */
   guint seq_num;
+
+  /* global alpha: global alpha value of the rectangle. Each each per-pixel
+   * alpha value of image-data will be multiplied with the global alpha value
+   * during blending.
+   * Can be used for efficient fading in/out of overlay rectangles.
+   * GstElements that render OverlayCompositions and don't support global alpha
+   * should simply ignore it.*/
+  gfloat global_alpha;
+
+  /* track alpha-values already applied: */
+  gfloat applied_global_alpha;
+  /* store initial per-pixel alpha values: */
+  guint8 *initial_alpha;
 
   /* FIXME: we may also need a (private) way to cache converted/scaled
    * pixel blobs */
@@ -517,7 +531,8 @@ gst_video_overlay_composition_blend (GstVideoOverlayComposition * comp,
           rect->render_width);
     }
 
-    ret = video_blend (&video_info, &rectangle_info, rect->x, rect->y);
+    ret = video_blend (&video_info, &rectangle_info, rect->x, rect->y,
+        rect->global_alpha);
     if (!ret) {
       GST_WARNING ("Could not blend overlay rectangle onto video buffer");
     }
@@ -670,6 +685,8 @@ gst_video_overlay_rectangle_finalize (GstMiniObject * mini_obj)
     rect->scaled_rectangles =
         g_list_delete_link (rect->scaled_rectangles, rect->scaled_rectangles);
   }
+
+  g_free (rect->initial_alpha);
   g_mutex_clear (&rect->lock);
 
   /* not chaining up to GstMiniObject's finalize for now, we know it's empty */
@@ -694,7 +711,8 @@ static inline gboolean
 gst_video_overlay_rectangle_check_flags (GstVideoOverlayFormatFlags flags)
 {
   /* Check flags only contains flags we know about */
-  return (flags & ~(GST_VIDEO_OVERLAY_FORMAT_FLAG_PREMULTIPLIED_ALPHA)) == 0;
+  return (flags & ~(GST_VIDEO_OVERLAY_FORMAT_FLAG_PREMULTIPLIED_ALPHA |
+          GST_VIDEO_OVERLAY_FORMAT_FLAG_GLOBAL_ALPHA)) == 0;
 }
 
 static gboolean
@@ -770,13 +788,18 @@ gst_video_overlay_rectangle_new_argb (GstBuffer * pixels,
   rect->render_width = render_width;
   rect->render_height = render_height;
 
+  rect->global_alpha = 1.0;
+  rect->applied_global_alpha = 1.0;
+  rect->initial_alpha = NULL;
+
   rect->flags = flags;
 
   rect->seq_num = gst_video_overlay_get_seqnum ();
 
   GST_LOG ("new rectangle %p: %ux%u => %ux%u @ %u,%u, seq_num %u, format %u, "
-      "flags %x, pixels %p", rect, width, height, render_width, render_height,
-      render_x, render_y, rect->seq_num, rect->format, rect->flags, pixels);
+      "flags %x, pixels %p, global_alpha=%f", rect, width, height, render_width,
+      render_height, render_x, render_y, rect->seq_num, rect->format,
+      rect->flags, pixels, rect->global_alpha);
 
   return rect;
 }
@@ -897,6 +920,68 @@ gst_video_overlay_rectangle_unpremultiply (GstBlendVideoFormatInfo * info)
   }
 }
 
+
+static void
+gst_video_overlay_rectangle_extract_alpha (GstVideoOverlayRectangle * rect)
+{
+  guint8 *src, *dst;
+  int offset = 0;
+  int alpha_size = rect->stride * rect->height / 4;
+
+  g_free (rect->initial_alpha);
+  rect->initial_alpha = NULL;
+
+  rect->initial_alpha = g_malloc (alpha_size);
+  src = GST_BUFFER_DATA (rect->pixels);
+  dst = rect->initial_alpha;
+  /* FIXME we're accessing possibly uninitialised bytes from the row padding */
+  while (offset < alpha_size) {
+    dst[offset] = src[offset * 4 + ARGB_A];
+    ++offset;
+  }
+}
+
+
+static void
+gst_video_overlay_rectangle_apply_global_alpha (GstVideoOverlayRectangle * rect,
+    float global_alpha)
+{
+  guint8 *src, *dst;
+  guint offset = 0;
+
+  g_assert (!(rect->applied_global_alpha != 1.0
+          && rect->initial_alpha == NULL));
+
+  if (global_alpha == rect->applied_global_alpha)
+    return;
+
+  if (rect->initial_alpha == NULL)
+    gst_video_overlay_rectangle_extract_alpha (rect);
+
+  src = rect->initial_alpha;
+  rect->pixels = gst_buffer_make_writable (rect->pixels);
+  dst = GST_BUFFER_DATA (rect->pixels);
+  while (offset < (rect->height * rect->stride / 4)) {
+    guint doff = offset * 4;
+    guint8 na = (guint8) src[offset] * global_alpha;
+    if (! !(rect->flags & GST_VIDEO_OVERLAY_FORMAT_FLAG_PREMULTIPLIED_ALPHA)) {
+      dst[doff + ARGB_R] =
+          (guint8) ((double) (dst[doff + ARGB_R] * 255) / (double) dst[doff +
+              ARGB_A]) * na / 255;
+      dst[doff + ARGB_G] =
+          (guint8) ((double) (dst[doff + ARGB_G] * 255) / (double) dst[doff +
+              ARGB_A]) * na / 255;
+      dst[doff + ARGB_B] =
+          (guint8) ((double) (dst[doff + ARGB_B] * 255) / (double) dst[doff +
+              ARGB_A]) * na / 255;
+    }
+    dst[doff + ARGB_A] = na;
+    ++offset;
+  }
+
+  rect->applied_global_alpha = global_alpha;
+}
+
 static GstBuffer *
 gst_video_overlay_rectangle_get_pixels_argb_internal (GstVideoOverlayRectangle *
     rectangle, guint * stride, GstVideoOverlayFormatFlags flags,
@@ -909,18 +994,36 @@ gst_video_overlay_rectangle_get_pixels_argb_internal (GstVideoOverlayRectangle *
   GList *l;
   guint wanted_width = unscaled ? rectangle->width : rectangle->render_width;
   guint wanted_height = unscaled ? rectangle->height : rectangle->render_height;
+  gboolean apply_global_alpha;
+  gboolean revert_global_alpha;
 
   g_return_val_if_fail (GST_IS_VIDEO_OVERLAY_RECTANGLE (rectangle), NULL);
   g_return_val_if_fail (stride != NULL, NULL);
   g_return_val_if_fail (gst_video_overlay_rectangle_check_flags (flags), NULL);
+
+  apply_global_alpha =
+      (! !(rectangle->flags & GST_VIDEO_OVERLAY_FORMAT_FLAG_GLOBAL_ALPHA)
+      && !(flags & GST_VIDEO_OVERLAY_FORMAT_FLAG_GLOBAL_ALPHA));
+  revert_global_alpha =
+      (! !(rectangle->flags & GST_VIDEO_OVERLAY_FORMAT_FLAG_GLOBAL_ALPHA)
+      && ! !(flags & GST_VIDEO_OVERLAY_FORMAT_FLAG_GLOBAL_ALPHA));
 
   /* This assumes we don't need to adjust the format */
   if (wanted_width == rectangle->width &&
       wanted_height == rectangle->height &&
       gst_video_overlay_rectangle_is_same_alpha_type (rectangle->flags,
           flags)) {
-    *stride = rectangle->stride;
-    return rectangle->pixels;
+    /* don't need to apply/revert global-alpha either: */
+    if ((!apply_global_alpha
+            || rectangle->applied_global_alpha == rectangle->global_alpha)
+        && (!revert_global_alpha || rectangle->applied_global_alpha == 1.0)) {
+      *stride = rectangle->stride;
+      return rectangle->pixels;
+    } else {
+      /* only apply/revert global-alpha */
+      scaled_rect = rectangle;
+      goto done;
+    }
   }
 
   /* see if we've got one cached already */
@@ -942,13 +1045,14 @@ gst_video_overlay_rectangle_get_pixels_argb_internal (GstVideoOverlayRectangle *
   if (scaled_rect != NULL)
     goto done;
 
-  /* not cached yet, do the scaling and put the result into our cache */
+  /* not cached yet, do the preprocessing and put the result into our cache */
   video_blend_format_info_init (&info, GST_BUFFER_DATA (rectangle->pixels),
       rectangle->height, rectangle->width, rectangle->format,
       ! !(rectangle->flags &
           GST_VIDEO_OVERLAY_FORMAT_FLAG_PREMULTIPLIED_ALPHA));
 
   if (wanted_width != rectangle->width || wanted_height != rectangle->height) {
+    /* we could check the cache for a scaled rect with global_alpha == 1 here */
     video_blend_scale_linear_RGBA (&info, wanted_height, wanted_width);
   } else {
     /* if we don't have to scale, we have to modify the alpha values, so we
@@ -975,7 +1079,9 @@ gst_video_overlay_rectangle_get_pixels_argb_internal (GstVideoOverlayRectangle *
   scaled_rect = gst_video_overlay_rectangle_new_argb (buf,
       wanted_width, wanted_height, info.stride[0],
       0, 0, wanted_width, wanted_height, new_flags);
-
+  if (rectangle->global_alpha != 1.0)
+    gst_video_overlay_rectangle_set_global_alpha (scaled_rect,
+        rectangle->global_alpha);
   gst_buffer_unref (buf);
 
   GST_RECTANGLE_LOCK (rectangle);
@@ -985,9 +1091,22 @@ gst_video_overlay_rectangle_get_pixels_argb_internal (GstVideoOverlayRectangle *
 
 done:
 
+  GST_RECTANGLE_LOCK (rectangle);
+  if (apply_global_alpha
+      && scaled_rect->applied_global_alpha != rectangle->global_alpha) {
+    gst_video_overlay_rectangle_apply_global_alpha (scaled_rect,
+        rectangle->global_alpha);
+    gst_video_overlay_rectangle_set_global_alpha (scaled_rect,
+        rectangle->global_alpha);
+  } else if (revert_global_alpha && scaled_rect->applied_global_alpha != 1.0) {
+    gst_video_overlay_rectangle_apply_global_alpha (scaled_rect, 1.0);
+  }
+  GST_RECTANGLE_UNLOCK (rectangle);
+
   *stride = scaled_rect->stride;
   return scaled_rect->pixels;
 }
+
 
 /**
  * gst_video_overlay_rectangle_get_pixels_argb:
@@ -995,6 +1114,10 @@ done:
  * @stride: (out) (allow-none): address of guint variable where to store the
  *    row stride of the ARGB pixel data in the buffer
  * @flags: flags
+ *    If a global_alpha value != 1 is set for the rectangle, the caller
+ *    should set the #GST_VIDEO_OVERLAY_FORMAT_FLAG_GLOBAL_ALPHA flag
+ *    if he wants to apply global-alpha himself. If the flag is not set
+ *    global_alpha is applied internally before returning the pixel-data.
  *
  * Returns: (transfer none): a #GstBuffer holding the ARGB pixel data with
  *    row stride @stride and width and height of the render dimensions as per
@@ -1021,7 +1144,11 @@ gst_video_overlay_rectangle_get_pixels_argb (GstVideoOverlayRectangle *
  *    rectangle in pixels
  * @stride: (out): address of guint variable where to store the row
  *    stride of the ARGB pixel data in the buffer
- * @flags: flags
+ * @flags: flags.
+ *    If a global_alpha value != 1 is set for the rectangle, the caller
+ *    should set the #GST_VIDEO_OVERLAY_FORMAT_FLAG_GLOBAL_ALPHA flag
+ *    if he wants to apply global-alpha himself. If the flag is not set
+ *    global_alpha is applied internally before returning the pixel-data.
  *
  * Retrieves the pixel data as it is. This is useful if the caller can
  * do the scaling itself when handling the overlaying. The rectangle will
@@ -1074,6 +1201,61 @@ gst_video_overlay_rectangle_get_flags (GstVideoOverlayRectangle * rectangle)
 }
 
 /**
+ * gst_video_overlay_rectangle_get_global_alpha:
+ * @rectangle: a #GstVideoOverlayRectangle
+ *
+ * Retrieves the global-alpha value associated with a #GstVideoOverlayRectangle.
+ *
+ * Returns: the global-alpha value associated with the rectangle.
+ *
+ * Since: 0.10.37
+ */
+gfloat
+gst_video_overlay_rectangle_get_global_alpha (GstVideoOverlayRectangle *
+    rectangle)
+{
+  g_return_val_if_fail (GST_IS_VIDEO_OVERLAY_RECTANGLE (rectangle), -1);
+
+  return rectangle->global_alpha;
+}
+
+/**
+ * gst_video_overlay_rectangle_set_global_alpha:
+ * @rectangle: a #GstVideoOverlayRectangle
+ *
+ * Sets the global alpha value associated with a #GstVideoOverlayRectangle. Per-
+ * pixel alpha values are multiplied with this value. Valid
+ * values: 0 <= global_alpha <= 1; 1 to deactivate.
+ *
+ # @rectangle must be writable, meaning its refcount must be 1. You can
+ * make the rectangles inside a #GstVideoOverlayComposition writable using
+ * gst_video_overlay_composition_make_writable() or
+ * gst_video_overlay_composition_copy().
+ *
+ * Since: 0.10.37
+ */
+void
+gst_video_overlay_rectangle_set_global_alpha (GstVideoOverlayRectangle *
+    rectangle, gfloat global_alpha)
+{
+  g_return_if_fail (GST_IS_VIDEO_OVERLAY_RECTANGLE (rectangle));
+  g_return_if_fail (global_alpha >= 0 && global_alpha <= 1);
+
+  if (rectangle->global_alpha != global_alpha) {
+    rectangle->global_alpha = global_alpha;
+    if (global_alpha != 1)
+      rectangle->flags |= GST_VIDEO_OVERLAY_FORMAT_FLAG_GLOBAL_ALPHA;
+    else
+      rectangle->flags &= ~GST_VIDEO_OVERLAY_FORMAT_FLAG_GLOBAL_ALPHA;
+    /* update seq_num automatically to signal the consumer, that data has changed
+     * note, that this might mislead renderers, that can handle global-alpha
+     * themselves, because what they want to know is whether the actual pixel data
+     * has changed. */
+    rectangle->seq_num = gst_video_overlay_get_seqnum ();
+  }
+}
+
+/**
  * gst_video_overlay_rectangle_copy:
  * @rectangle: (transfer none): a #GstVideoOverlayRectangle to copy
  *
@@ -1098,6 +1280,9 @@ gst_video_overlay_rectangle_copy (GstVideoOverlayRectangle * rectangle)
       rectangle->width, rectangle->height, rectangle->stride,
       rectangle->x, rectangle->y,
       rectangle->render_width, rectangle->render_height, rectangle->flags);
+  if (rectangle->global_alpha != 1)
+    gst_video_overlay_rectangle_set_global_alpha (copy,
+        rectangle->global_alpha);
 
   return copy;
 }
@@ -1110,6 +1295,16 @@ gst_video_overlay_rectangle_copy (GstVideoOverlayRectangle * rectangle)
  * monotonically increasing and unique for overlay compositions and rectangles
  * (meaning there will never be a rectangle with the same sequence number as
  * a composition).
+ *
+ * Using the sequence number of a rectangle as an indicator for changed
+ * pixel-data of a rectangle is dangereous. Some API calls, like e.g.
+ * gst_video_overlay_rectangle_set_global_alpha(), automatically update
+ * the per rectangle sequence number, which is misleading for renderers/
+ * consumers, that handle global-alpha themselves. For them  the
+ * pixel-data returned by gst_video_overlay_rectangle_get_pixels_*()
+ * wont be different for different global-alpha values. In this case a
+ * renderer could also use the GstBuffer pointers as a hint for changed
+ * pixel-data.
  *
  * Returns: the sequence number of @rectangle
  *

@@ -733,7 +733,7 @@ gst_riff_parse_info (GstElement * element,
         type = GST_TAG_ALBUM;
         break;
       case GST_RIFF_INFO_ISBJ:
-        type = NULL;            /*"Subject"; */
+        type = GST_TAG_ALBUM_ARTIST;
         break;
       case GST_RIFF_INFO_ISFT:
         type = GST_TAG_ENCODER;

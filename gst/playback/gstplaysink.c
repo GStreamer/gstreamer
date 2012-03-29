@@ -2538,7 +2538,7 @@ gst_play_sink_reconfigure (GstPlaySink * playsink)
 
   /* we have a text_pad and we need text rendering, in this case we need a
    * video_pad to combine the video with the text or visualizations */
-  if (need_text && !need_video) {
+  if (need_text && !need_video && !playsink->text_sink) {
     if (playsink->video_pad) {
       need_video = TRUE;
     } else if (need_audio) {
@@ -2909,25 +2909,27 @@ gst_play_sink_reconfigure (GstPlaySink * playsink)
             playsink->textchain->textsinkpad, GST_PAD_LINK_CHECK_NOTHING);
       }
 
-      if (need_vis) {
-        GstPad *srcpad;
+      if (need_vis || need_video) {
+        if (need_vis) {
+          GstPad *srcpad;
 
-        srcpad =
-            gst_element_get_static_pad (playsink->vischain->chain.bin, "src");
-        gst_pad_unlink (srcpad, playsink->videochain->sinkpad);
-        gst_pad_link_full (srcpad, playsink->textchain->videosinkpad,
-            GST_PAD_LINK_CHECK_NOTHING);
-        gst_object_unref (srcpad);
-      } else {
-        if (need_deinterlace)
-          gst_pad_link_full (playsink->videodeinterlacechain->srcpad,
-              playsink->textchain->videosinkpad, GST_PAD_LINK_CHECK_NOTHING);
-        else
-          gst_pad_link_full (playsink->video_srcpad_stream_synchronizer,
-              playsink->textchain->videosinkpad, GST_PAD_LINK_CHECK_NOTHING);
+          srcpad =
+              gst_element_get_static_pad (playsink->vischain->chain.bin, "src");
+          gst_pad_unlink (srcpad, playsink->videochain->sinkpad);
+          gst_pad_link_full (srcpad, playsink->textchain->videosinkpad,
+              GST_PAD_LINK_CHECK_NOTHING);
+          gst_object_unref (srcpad);
+        } else {
+          if (need_deinterlace)
+            gst_pad_link_full (playsink->videodeinterlacechain->srcpad,
+                playsink->textchain->videosinkpad, GST_PAD_LINK_CHECK_NOTHING);
+          else
+            gst_pad_link_full (playsink->video_srcpad_stream_synchronizer,
+                playsink->textchain->videosinkpad, GST_PAD_LINK_CHECK_NOTHING);
+        }
+        gst_pad_link_full (playsink->textchain->srcpad,
+            playsink->videochain->sinkpad, GST_PAD_LINK_CHECK_NOTHING);
       }
-      gst_pad_link_full (playsink->textchain->srcpad,
-          playsink->videochain->sinkpad, GST_PAD_LINK_CHECK_NOTHING);
 
       activate_chain (GST_PLAY_CHAIN (playsink->textchain), TRUE);
     }
