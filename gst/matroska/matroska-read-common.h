@@ -59,11 +59,17 @@ typedef struct _GstMatroskaReadCommon {
   /* state */
   GstMatroskaReadState     state;
 
+
   /* did we parse cues/tracks/segmentinfo already? */
   gboolean                 index_parsed;
   gboolean                 segmentinfo_parsed;
   gboolean                 attachments_parsed;
+  gboolean                 chapters_parsed;
   GList                   *tags_parsed;
+
+  /* chapters stuff */
+  GstToc                  *toc;
+  gboolean                toc_updated;
 
   /* start-of-segment */
   guint64                  ebml_segment_start;
@@ -80,7 +86,7 @@ typedef struct _GstMatroskaReadCommon {
   GstTagList              *global_tags;
 
   /* pull mode caching */
-  GstBuffer *cached_buffer;
+  GstBuffer               *cached_buffer;
 
   /* push and pull mode */
   guint64                  offset;
