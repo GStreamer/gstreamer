@@ -94,11 +94,11 @@ static GstStaticPadTemplate sink_template = GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS ("audio/x-raw, "
-        "format = (string) { " GST_AUDIO_NE (S32) ", " GST_AUDIO_NE (S16) "}, "
+        "format = (string) { " GST_AUDIO_NE (F32) ", " GST_AUDIO_NE (S16) "}, "
         "rate = (int) [ 1, MAX ], " "channels = (int) 1, "
         "layout = (string) interleaved;"
         "audio/x-raw, "
-        "format = (string) { " GST_AUDIO_NE (S32) ", " GST_AUDIO_NE (S16) "}, "
+        "format = (string) { " GST_AUDIO_NE (F32) ", " GST_AUDIO_NE (S16) "}, "
         "rate = (int) [ 1, MAX ], " "channels = (int) 2, "
         "layout = (string) interleaved, " "channel-mask = (bitmask) 0x3")
     );
@@ -645,7 +645,9 @@ gst_audio_panorama_transform (GstBaseTransform * base, GstBuffer * inbuf,
     GST_BUFFER_FLAG_SET (outbuf, GST_BUFFER_FLAG_GAP);
     memset (outmap.data, 0, outmap.size);
   } else {
-    guint num_samples = outmap.size / GST_AUDIO_INFO_BPF (&filter->info);
+    /* output always stereo, input mono or stereo,
+     * and info describes input format */
+    guint num_samples = outmap.size / (2 * GST_AUDIO_INFO_BPS (&filter->info));
 
     filter->process (filter, inmap.data, outmap.data, num_samples);
   }
