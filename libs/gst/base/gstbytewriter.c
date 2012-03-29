@@ -763,29 +763,3 @@ CREATE_WRITE_STRING_FUNC (32, guint32);
  * Returns: %TRUE if the data could be written
  *
  */
-gboolean
-gst_byte_writer_put_buffer (GstByteWriter * writer, GstBuffer * buffer,
-    gsize offset, gssize size)
-{
-  g_return_val_if_fail (writer != NULL, FALSE);
-  g_return_val_if_fail (size >= -1, FALSE);
-
-  if (size == -1) {
-    size = gst_buffer_get_size (buffer);
-
-    if (offset >= (gsize) size)
-      return TRUE;
-
-    size -= offset;
-  }
-
-  if (G_UNLIKELY (!_gst_byte_writer_ensure_free_space_inline (writer, size)))
-    return FALSE;
-
-  gst_buffer_extract (buffer, offset,
-      (guint8 *) & writer->parent.data[writer->parent.byte], size);
-  writer->parent.byte += size;
-  writer->parent.size = MAX (writer->parent.size, writer->parent.byte);
-
-  return TRUE;
-}
