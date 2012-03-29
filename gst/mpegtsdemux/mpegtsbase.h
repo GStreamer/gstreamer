@@ -136,11 +136,6 @@ struct _MpegTSBase {
   /* Whether we queried the upstream latency or not */
   gboolean queried_latency;
 
-  /* Whether upstream is live or not */
-  gboolean upstream_live;
-  /* Whether we queried the upstream latency or not */
-  gboolean query_latency;
-
   /* Upstream segment */
   GstSegment segment;
 };

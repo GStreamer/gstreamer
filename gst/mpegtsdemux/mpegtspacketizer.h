@@ -124,12 +124,9 @@ typedef struct
   guint8 continuity_counter;
   guint8 *payload;
 
-  /* gst_buffer_map */
-  GstMapInfo bufmap;
-
-  guint8 *data_start;		/* Location of 0x47 marker byte */
+  guint8 *data_start;
   guint8 *data_end;
-  guint8 *data;			/* Location of post-TS-header data */
+  guint8 *data;
 
   guint8 afc_flags;
   guint64 pcr;
@@ -179,7 +176,7 @@ MpegTSPacketizerPacketReturn mpegts_packetizer_next_packet (MpegTSPacketizer2 *p
 MpegTSPacketizerPacketReturn
 mpegts_packetizer_process_next_packet(MpegTSPacketizer2 * packetizer);
 void mpegts_packetizer_clear_packet (MpegTSPacketizer2 *packetizer,
-				     MpegTSPacketizerPacket *packet);
+  MpegTSPacketizerPacket *packet);
 void mpegts_packetizer_remove_stream(MpegTSPacketizer2 *packetizer,
   gint16 pid);
 
