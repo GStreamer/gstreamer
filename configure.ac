@@ -60,13 +60,8 @@ AC_LIBTOOL_WIN32_DLL
 AM_PROG_LIBTOOL
 
 dnl *** required versions of GStreamer stuff ***
-<<<<<<< HEAD
 GST_REQ=0.11.3
 GSTPB_REQ=0.11.3
-=======
-GST_REQ=0.10.36
-GSTPB_REQ=0.10.36
->>>>>>> origin/0.10
 
 dnl *** autotools stuff ****
 
@@ -855,10 +850,10 @@ AG_GST_CHECK_FEATURE(DECKLINK, [decklink], decklink, [
        ;;
    esac
 
-   AM_CONDITIONAL(DECKLINK_OSX, test "x$HAVE_DECKLINK_OSX" = xyes)
    AC_SUBST(DECKLINK_CXXFLAGS)
    AC_SUBST(DECKLINK_LIBS)
 ])
+AM_CONDITIONAL(DECKLINK_OSX, test "x$HAVE_DECKLINK_OSX" = xyes)
 
 dnl **** DirectFB ****
 translit(dnm, m, l) AM_CONDITIONAL(USE_DIRECTFB, true)
