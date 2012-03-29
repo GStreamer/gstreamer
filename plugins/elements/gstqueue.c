@@ -442,8 +442,10 @@ gst_queue_finalize (GObject * object)
 
   GST_DEBUG_OBJECT (queue, "finalizing queue");
 
-  while ((data = g_queue_pop_head (&queue->queue)))
-    gst_mini_object_unref (data);
+  while ((data = g_queue_pop_head (&queue->queue))) {
+    if (!GST_IS_QUERY (data))
+      gst_mini_object_unref (data);
+  }
 
   g_queue_clear (&queue->queue);
   g_mutex_clear (&queue->qlock);
@@ -557,7 +559,8 @@ gst_queue_locked_flush (GstQueue * queue)
   while ((data = g_queue_pop_head (&queue->queue))) {
     /* Then lose another reference because we are supposed to destroy that
        data when flushing */
-    gst_mini_object_unref (data);
+    if (!GST_IS_QUERY (data))
+      gst_mini_object_unref (data);
   }
   GST_QUEUE_CLEAR_LEVEL (queue->cur_level);
   queue->min_threshold.buffers = queue->orig_min_threshold.buffers;
@@ -853,7 +856,8 @@ gst_queue_leak_downstream (GstQueue * queue)
 
     GST_CAT_DEBUG_OBJECT (queue_dataflow, queue,
         "queue is full, leaking item %p on downstream end", leak);
-    gst_mini_object_unref (leak);
+    if (!GST_IS_QUERY (leak))
+      gst_mini_object_unref (leak);
 
     /* last buffer needs to get a DISCONT flag */
     queue->head_needs_discont = TRUE;
