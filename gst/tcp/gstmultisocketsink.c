@@ -656,8 +656,8 @@ gst_multi_socket_sink_handle_client_write (GstMultiSocketSink * sink,
           /* partial write means that the client cannot read more and we should
            * stop sending more */
           GST_LOG_OBJECT (sink,
-              "partial write on %p of %" G_GSSIZE_FORMAT " bytes", socket,
-              wrote);
+              "partial write on %p of %" G_GSSIZE_FORMAT " bytes",
+              mhclient->handle.socket, wrote);
           mhclient->bufoffset += wrote;
           more = FALSE;
         } else {
