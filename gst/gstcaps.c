@@ -193,7 +193,7 @@ gst_caps_init (GstCaps * caps, gsize size)
 
   /* the 32 has been determined by logging caps sizes in _gst_caps_free
    * but g_ptr_array uses 16 anyway if it expands once, so this does not help
-   * in practise
+   * in practice
    * GST_CAPS_ARRAY (caps) = g_ptr_array_sized_new (32);
    */
   GST_CAPS_ARRAY (caps) = g_ptr_array_new ();
@@ -443,7 +443,7 @@ gst_caps_remove_and_get_structure (GstCaps * caps, guint idx)
  * @caps: the #GstCaps to retrieve from
  * @index: Index of the structure to retrieve
  *
- * Retrieves the stucture with the given index from the list of structures
+ * Retrieves the structure with the given index from the list of structures
  * contained in @caps. The caller becomes the owner of the returned structure.
  *
  * Returns: (transfer full): a pointer to the #GstStructure corresponding
@@ -1133,7 +1133,7 @@ gst_caps_can_intersect (const GstCaps * caps1, const GstCaps * caps2)
    * much better than a simple loop.
    *
    * This algorithm zigzags over the caps structures as demonstrated in
-   * the folowing matrix:
+   * the following matrix:
    *
    *          caps1                              0  1  2  3
    *       +-------------     total distance:  +-------------
@@ -1205,7 +1205,7 @@ gst_caps_intersect_zig_zag (GstCaps * caps1, GstCaps * caps2)
    * much better than a simple loop.
    *
    * This algorithm zigzags over the caps structures as demonstrated in
-   * the folowing matrix:
+   * the following matrix:
    *
    *          caps1
    *       +-------------
@@ -1772,7 +1772,7 @@ gst_caps_fixate (GstCaps * caps)
  * |[
  * GST_LOG ("caps are %" GST_PTR_FORMAT, caps);
  * ]|
- * This prints the caps in human readble form.
+ * This prints the caps in human readable form.
  *
  * Returns: (transfer full): a newly allocated string representing @caps.
  */
