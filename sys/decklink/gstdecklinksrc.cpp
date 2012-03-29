@@ -1153,7 +1153,7 @@ gst_decklink_src_video_src_event (GstPad * pad, GstEvent * event)
 static gboolean
 gst_decklink_src_video_src_query (GstPad * pad, GstQuery * query)
 {
-  gboolean ret;
+  gboolean ret = FALSE;
   GstDecklinkSrc *decklinksrc;
 
   decklinksrc = GST_DECKLINK_SRC (gst_pad_get_parent (pad));
