@@ -217,6 +217,7 @@ videocrop_test_cropping_deinit_context (GstVideoCropTestContext * ctx)
   gst_element_set_state (ctx->pipeline, GST_STATE_NULL);
   gst_object_unref (ctx->pipeline);
   gst_buffer_replace (&ctx->last_buf, NULL);
+  gst_caps_replace (&ctx->last_caps, NULL);
   memset (ctx, 0x00, sizeof (GstVideoCropTestContext));
 }
 
@@ -315,6 +316,8 @@ check_1x1_buffer (GstBuffer * buf, GstCaps * caps)
     } else {
     }
   }
+
+  gst_video_frame_unmap (&frame);
 
   /*
      fail_unless_equals_int ((pixel & rmask) >> rshift, 0xff);
