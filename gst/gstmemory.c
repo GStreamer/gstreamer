@@ -38,7 +38,8 @@
  *
  * New allocators can be registered with gst_allocator_register().
  * Allocators are identified by name and can be retrieved with
- * gst_allocator_find().
+ * gst_allocator_find(). gst_allocator_set_default() can be used to change the
+ * default allocator.
  *
  * New memory can be created with gst_memory_new_wrapped() that wraps the memory
  * allocated elsewhere.
@@ -60,7 +61,7 @@
  *
  * Memory can be efficiently merged when gst_memory_is_span() returns TRUE.
  *
- * Last reviewed on 2011-06-08 (0.11.0)
+ * Last reviewed on 2012-03-28 (0.11.3)
  */
 
 #ifdef HAVE_CONFIG_H
@@ -86,12 +87,6 @@ G_DEFINE_BOXED_TYPE (GstAllocationParams, gst_allocation_params,
     (GBoxedCopyFunc) gst_allocation_params_copy,
     (GBoxedFreeFunc) gst_allocation_params_free);
 
-/**
- * gst_memory_alignment:
- *
- * The default memory alignment in bytes - 1
- * an alignment of 7 would be the same as what malloc() guarantees.
- */
 #if defined(MEMORY_ALIGNMENT_MALLOC)
 size_t gst_memory_alignment = 7;
 #elif defined(MEMORY_ALIGNMENT_PAGESIZE)
@@ -815,7 +810,7 @@ gst_memory_is_span (GstMemory * mem1, GstMemory * mem2, gsize * offset)
 }
 
 /**
- * gst_allocator_register:
+ * gst_allocator_new:
  * @info: a #GstMemoryInfo
  * @user_data: user data
  * @notify: a #GDestroyNotify for @user_data
@@ -865,7 +860,7 @@ gst_allocator_new (const GstMemoryInfo * info, gpointer user_data,
 }
 
 /**
- * gst_alocator_get_memory_type:
+ * gst_allocator_get_memory_type:
  * @allocator: a #GstAllocator
  *
  * Get the memory type allocated by this allocator
@@ -881,7 +876,7 @@ gst_allocator_get_memory_type (GstAllocator * allocator)
 }
 
 /**
- * gst_alocator_ref:
+ * gst_allocator_ref:
  * @allocator: a #GstAllocator
  *
  * Increases the refcount of @allocator.
@@ -893,7 +888,7 @@ gst_allocator_ref (GstAllocator * allocator)
 {
   g_return_val_if_fail (allocator != NULL, NULL);
 
-  GST_CAT_TRACE (GST_CAT_MEMORY, "alocator %p, %d->%d", allocator,
+  GST_CAT_TRACE (GST_CAT_MEMORY, "allocator %p, %d->%d", allocator,
       allocator->refcount, allocator->refcount + 1);
 
   g_atomic_int_inc (&allocator->refcount);

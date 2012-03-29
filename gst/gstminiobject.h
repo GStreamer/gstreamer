@@ -84,10 +84,10 @@ typedef void (*GstMiniObjectWeakNotify) (gpointer data,
     GstMiniObject * where_the_mini_object_was);
 
 /**
- * GST_MINI_OBJECT_FLAGS:
- * @obj: MiniObject to return flags for.
+ * GST_MINI_OBJECT_TYPE:
+ * @obj: MiniObject to return type for.
  *
- * This macro returns the entire set of flags for the mini-object.
+ * This macro returns the type of the mini-object.
  */
 #define GST_MINI_OBJECT_TYPE(obj)  (GST_MINI_OBJECT_CAST(obj)->type)
 /**
@@ -217,6 +217,13 @@ gboolean        gst_mini_object_replace         (GstMiniObject **olddata, GstMin
 gboolean        gst_mini_object_take            (GstMiniObject **olddata, GstMiniObject *newdata);
 GstMiniObject * gst_mini_object_steal           (GstMiniObject **olddata);
 
+/**
+ * GST_DEFINE_MINI_OBJECT_TYPE:
+ * @TypeName: name of the new type in CamelCase
+ * @type_name: name of the new type
+ *
+ * Define a new mini-object type with the given name
+ */
 #define GST_DEFINE_MINI_OBJECT_TYPE(TypeName,type_name) \
    G_DEFINE_BOXED_TYPE(TypeName,type_name,              \
        (GBoxedCopyFunc) gst_mini_object_ref,            \

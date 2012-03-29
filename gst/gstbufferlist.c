@@ -280,6 +280,15 @@ gst_buffer_list_insert (GstBufferList * list, guint idx, GstBuffer * buffer)
   }
 }
 
+/**
+ * gst_buffer_list_remove:
+ * @list: a #GstBufferList
+ * @idx: the index
+ * @length: the amount to remove
+ *
+ * Remove @length buffers starting from @idx in @list. The following buffers are
+ * moved to close the gap.
+ */
 void
 gst_buffer_list_remove (GstBufferList * list, guint idx, guint length)
 {

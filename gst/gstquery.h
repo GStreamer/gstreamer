@@ -68,7 +68,6 @@ typedef enum {
 /**
  * GST_QUERY_MAKE_TYPE:
  * @num: the query number to create
- * @idx: the index in the sticky array
  * @flags: the query flags
  *
  * when making custom query types, use this macro with the num and

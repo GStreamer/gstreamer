@@ -119,6 +119,12 @@ typedef void (*GstMetaFreeFunction)     (GstMeta *meta, GstBuffer *buffer);
  */
 GST_EXPORT GQuark _gst_meta_transform_copy;
 
+/**
+ * GST_META_TRANSFORM_IS_COPY:
+ * @type: a transform type
+ *
+ * Check if the transform type is a copy transform
+ */
 #define GST_META_TRANSFORM_IS_COPY(type) ((type) == _gst_meta_transform_copy)
 
 /**

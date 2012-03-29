@@ -28,13 +28,14 @@
  * as GQuarks and the values can be of any GType.
  *
  * In addition to the key/value pairs, a #GstStructure also has a name. The name
- * starts with a letter and can be folled by letters, numbers and any of "/-_.:".
+ * starts with a letter and can be filled by letters, numbers and any of "/-_.:".
  *
  * #GstStructure is used by various GStreamer subsystems to store information
  * in a flexible and extensible way. A #GstStructure does not have a refcount
- * because it usually is part of a higher level object such as #GstCaps. It
- * provides a means to enforce mutability using the refcount of the parent
- * with the gst_structure_set_parent_refcount() method.
+ * because it usually is part of a higher level object such as #GstCaps,
+ * #GstMessage, #GstEvent, #GstQuery. It provides a means to enforce mutability
+ * using the refcount of the parent with the gst_structure_set_parent_refcount()
+ * method.
  *
  * A #GstStructure can be created with gst_structure_new_empty() or
  * gst_structure_new(), which both take a name and an optional set of
@@ -52,7 +53,7 @@
  * Strings in structures must be ASCII or UTF-8 encoded. Other encodings are
  * not allowed. Strings must not be empty either, but may be NULL.
  *
- * Last reviewed on 2009-06-08 (0.10.23)
+ * Last reviewed on 2012-03-29 (0.11.3)
  */
 
 #ifdef HAVE_CONFIG_H

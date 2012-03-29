@@ -22,12 +22,25 @@
  * SECTION:gstminiobject
  * @short_description: Lightweight base class for the GStreamer object hierarchy
  *
- * #GstMiniObject is a baseclass like #GObject, but has been stripped down of
- * features to be fast and small.
- * It offers sub-classing and ref-counting in the same way as #GObject does.
- * It has no properties and no signal-support though.
+ * #GstMiniObject is a simple structure that can be used to implement refcounted
+ * types.
  *
- * Last reviewed on 2005-11-23 (0.9.5)
+ * Subclasses will include #GstMiniObject as the first member in their structure
+ * and then call gst_mini_object_init() to initialize the #GstMiniObject fields.
+ *
+ * gst_mini_object_ref() and gst_mini_object_unref() increment and decrement the
+ * refcount respectively. When the refcount of a mini-object reaches 0, the
+ * dispose function is called first and when this returns %TRUE, the free
+ * function of the miniobject is called.
+ *
+ * A copy can be made with gst_mini_object_copy().
+ *
+ * gst_mini_object_is_writable() will return %TRUE when the refcount of the
+ * object is exactly 1, meaning the current caller has the only reference to the
+ * object. gst_mini_object_make_writable() will return a writable version of the
+ * object, which might be a new copy when the refcount was not 1.
+ *
+ * Last reviewed on 2012-03-28 (0.11.3)
  */
 #ifdef HAVE_CONFIG_H
 #include "config.h"

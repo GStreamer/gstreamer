@@ -2861,6 +2861,15 @@ gst_value_is_subset_int64_range_int64_range (const GValue * value1,
   return TRUE;
 }
 
+/**
+ * gst_value_is_subset:
+ * @value1: a #GValue
+ * @value2: a #GValue
+ *
+ * Check that @value1 is a subset of @value2.
+ *
+ * Return: %TRUE is @value1 is a subset of @value2
+ */
 gboolean
 gst_value_is_subset (const GValue * value1, const GValue * value2)
 {

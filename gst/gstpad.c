@@ -23,41 +23,69 @@
  * SECTION:gstpad
  * @short_description: Object contained by elements that allows links to
  *                     other elements
- * @see_also: #GstPadTemplate, #GstElement, #GstEvent
+ * @see_also: #GstPadTemplate, #GstElement, #GstEvent, #GstQuery, #GstBuffer
  *
  * A #GstElement is linked to other elements via "pads", which are extremely
  * light-weight generic link points.
- * After two pads are retrieved from an element with gst_element_get_pad(),
- * the pads can be link with gst_pad_link(). (For quick links,
- * you can also use gst_element_link(), which will make the obvious
- * link for you if it's straightforward.)
+ *
+ * Pads have a #GstPadDirection, source pads produce data, sink pads consume
+ * data.
  *
  * Pads are typically created from a #GstPadTemplate with
- * gst_pad_new_from_template().
- *
- * Pads have #GstCaps attached to it to describe the media type they are
- * capable of dealing with.  gst_pad_query_caps() and gst_pad_set_caps() are
- * used to manipulate the caps of the pads.
- * Pads created from a pad template cannot set capabilities that are
- * incompatible with the pad template capabilities.
+ * gst_pad_new_from_template() and are then added to a #GstElement. This usually
+ * happens when the element is created but it can also happen dynamically based
+ * on the data that the element is processing or based on the pads that the
+ * application requests.
  *
  * Pads without pad templates can be created with gst_pad_new(),
  * which takes a direction and a name as an argument.  If the name is NULL,
  * then a guaranteed unique name will be assigned to it.
  *
+ * A #GstElement creating a pad will typically use the various
+ * gst_pad_set_*_function() calls to register callbacks for events, queries or
+ * dataflow on the pads.
+ *
  * gst_pad_get_parent() will retrieve the #GstElement that owns the pad.
  *
- * A #GstElement creating a pad will typically use the various
- * gst_pad_set_*_function() calls to register callbacks for various events
- * on the pads.
+ * After two pads are retrieved from an element with gst_element_get_pad(),
+ * the pads can be linked with gst_pad_link(). (For quick links,
+ * you can also use gst_element_link(), which will make the obvious
+ * link for you if it's straightforward.). Pads can be unlinked again with
+ * gst_pad_unlink(). gst_pad_get_peer() can be used to check what the pad is
+ * linked to.
+ *
+ * Before dataflow is possible on the pads, they need to be activated with
+ * gst_pad_set_active().
+ *
+ * gst_pad_query() and gst_pad_peer_query() can be used to query various
+ * properties of the pad and the stream.
+ *
+ * To send a #GstEvent on a pad, use gst_pad_send_event() and
+ * gst_pad_push_event(). Some events will be sticky on the pad, meaning that
+ * after they pass on the pad they can be queried later with
+ * gst_pad_get_sticky_event() and gst_pad_sticky_events_foreach().
+ * gst_pad_get_current_caps() and gst_pad_has_current_caps() are convenience
+ * functions to query the current sticky CAPS event on a pad.
  *
  * GstElements will use gst_pad_push() and gst_pad_pull_range() to push out
  * or pull in a buffer.
  *
- * To send a #GstEvent on a pad, use gst_pad_send_event() and
- * gst_pad_push_event().
+ * The dataflow, events and queries that happen on a pad can be monitored with
+ * probes that can be installed with gst_pad_add_probe(). gst_pad_is_blocked()
+ * can be used to check if a block probe is installed on the pad.
+ * gst_pad_is_blocking() checks if the blocking probe is currently blocking the
+ * pad. gst_pad_remove_probe() is used to remove a previously installed probe
+ * and unblock blocking probes if any.
  *
- * Last reviewed on 2006-07-06 (0.10.9)
+ * Pad have an offset that can be retrieved with gst_pad_get_offset(). This
+ * offset will be applied to the running_time of all data passing over the pad.
+ * gst_pad_set_offset() can be used to change the offset.
+ *
+ * Convenience functions exist to start, pause and stop the task on a pad with
+ * gst_pad_start_task(), gst_pad_pause_task() and gst_pad_stop_task()
+ * respectively.
+ *
+ * Last reviewed on 2012-03-29 (0.11.3)
  */
 
 #include "gst_private.h"

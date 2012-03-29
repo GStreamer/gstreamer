@@ -36,6 +36,8 @@ GST_QUARK
 GstQuarkId
 GstPluginLoader
 GstPluginLoaderFuncs
+GstAllocTrace
+GstAllocTraceFlags
 </SECTION>
 
 <SECTION>
@@ -158,7 +160,6 @@ GstBusPrivate
 <TITLE>GstBuffer</TITLE>
 GstBuffer
 GstBufferFlags
-GstBufferCopyFlags
 GST_BUFFER_FLAGS
 GST_BUFFER_FLAG_IS_SET
 GST_BUFFER_FLAG_SET
@@ -178,7 +179,6 @@ GST_BUFFER_OFFSET_END_IS_VALID
 GST_BUFFER_IS_DISCONT
 
 gst_buffer_new
-gst_buffer_new_and_alloc
 gst_buffer_new_allocate
 gst_buffer_new_wrapped
 gst_buffer_new_wrapped_full
@@ -210,6 +210,7 @@ gst_buffer_extract
 gst_buffer_fill
 gst_buffer_memset
 
+GstBufferCopyFlags
 GST_BUFFER_COPY_METADATA
 GST_BUFFER_COPY_ALL
 gst_buffer_copy
@@ -226,6 +227,8 @@ gst_buffer_get_meta
 gst_buffer_add_meta
 gst_buffer_remove_meta
 gst_buffer_iterate_meta
+GstBufferForeachMetaFunc
+gst_buffer_foreach_meta
 
 <SUBSECTION Standard>
 GstBufferClass
@@ -239,6 +242,8 @@ GST_BUFFER_CAST
 gst_buffer_get_type
 gst_buffer_flags_get_type
 gst_buffer_copy_flags_get_type
+GST_BUFFER_TIMESTAMP
+GST_BUFFER_TIMESTAMP_IS_VALID
 </SECTION>
 
 <SECTION>
@@ -254,8 +259,11 @@ GstMetaInfo
 GstMetaInitFunction
 GstMetaFreeFunction
 GstMetaTransformFunction
+GstMetaTransformCopy
+GST_META_TRANSFORM_IS_COPY
 gst_meta_api_type_register
 gst_meta_api_type_has_tag
+GST_META_TAG_MEMORY
 gst_meta_register
 gst_meta_get_info
 <SUBSECTION Standard>
@@ -271,18 +279,19 @@ gst_meta_flags_get_type
 <TITLE>GstBufferPool</TITLE>
 GstBufferPool
 GstBufferPoolClass
-GstBufferPoolFlags
 GST_BUFFER_POOL_IS_FLUSHING
-GstBufferPoolParams
 gst_buffer_pool_new
 
-gst_buffer_pool_config_get
-gst_buffer_pool_config_set
+gst_buffer_pool_config_get_params
+gst_buffer_pool_config_set_params
+gst_buffer_pool_config_get_allocator
+gst_buffer_pool_config_set_allocator
 
+gst_buffer_pool_config_n_options
 gst_buffer_pool_config_add_option
 gst_buffer_pool_config_get_option
 gst_buffer_pool_config_has_option
-gst_buffer_pool_config_n_options
+
 gst_buffer_pool_get_options
 gst_buffer_pool_has_option
 
@@ -292,6 +301,8 @@ gst_buffer_pool_set_config
 gst_buffer_pool_set_active
 gst_buffer_pool_is_active
 
+GstBufferPoolAcquireFlags
+GstBufferPoolAcquireParams
 gst_buffer_pool_acquire_buffer
 gst_buffer_pool_release_buffer
 <SUBSECTION Standard>
@@ -302,8 +313,8 @@ GST_BUFFER_POOL
 GST_IS_BUFFER_POOL
 GST_TYPE_BUFFER_POOL
 gst_buffer_pool_get_type
-GST_TYPE_BUFFER_POOL_FLAGS
-gst_buffer_pool_flags_get_type
+GST_TYPE_BUFFER_POOL_ACQUIRE_FLAGS
+gst_buffer_pool_acquire_flags_get_type
 GST_IS_BUFFER_POOL_CLASS
 GST_BUFFER_POOL_GET_CLASS
 </SECTION>
@@ -361,6 +372,7 @@ GST_CAPS_FLAG_SET
 GST_CAPS_FLAG_UNSET
 
 gst_caps_new_empty
+gst_caps_new_empty_simple
 gst_caps_new_any
 gst_caps_new_simple
 gst_caps_new_full
@@ -386,23 +398,24 @@ gst_caps_is_empty
 gst_caps_is_fixed
 gst_caps_is_equal
 gst_caps_is_equal_fixed
+gst_caps_is_strictly_equal
 gst_caps_is_always_compatible
 gst_caps_is_subset
 gst_caps_is_subset_structure
 gst_caps_can_intersect
 gst_caps_intersect
 gst_caps_intersect_full
-gst_caps_union
 gst_caps_normalize
 gst_caps_simplify
 gst_caps_replace
+gst_caps_take
 gst_caps_to_string
 gst_caps_from_string
 gst_caps_subtract
 gst_caps_make_writable
-gst_caps_ref
 gst_caps_truncate
 gst_caps_fixate
+gst_caps_ref
 gst_caps_unref
 <SUBSECTION Standard>
 GST_CAPS
@@ -428,9 +441,6 @@ gst_sample_get_segment
 gst_sample_new
 gst_sample_ref
 gst_sample_unref
-gst_value_get_sample
-gst_value_set_sample
-gst_value_take_sample
 <SUBSECTION Standard>
 GST_IS_SAMPLE
 GST_SAMPLE
@@ -516,6 +526,8 @@ gst_clock_adjust_unlocked
 gst_clock_unadjust_unlocked
 gst_clock_get_calibration
 gst_clock_set_calibration
+gst_clock_get_timeout
+gst_clock_set_timeout
 gst_clock_id_get_time
 gst_clock_id_wait
 gst_clock_id_wait_async
@@ -558,6 +570,12 @@ gst_element_factory_get_documentation_uri
 gst_element_factory_get_icon_name
 gst_element_factory_get_klass
 gst_element_factory_get_longname
+gst_pad_get_caps_reffed
+gst_pad_peer_get_caps_reffed
+gst_buffer_new_and_alloc
+GST_BUFFER_TIMESTAMP
+GST_BUFFER_TIMESTAMP_IS_VALID
+gst_adapter_prev_timestamp
 <SUBSECTION Private>
 </SECTION>
 
@@ -608,6 +626,7 @@ gst_control_binding_get_type
 <SECTION>
 <FILE>gstcontrolsource</FILE>
 <TITLE>GstControlSource</TITLE>
+GstValueArray
 GstControlSource
 GstControlSourceClass
 GstControlSourceGetValue
@@ -767,7 +786,7 @@ GST_STATE_UNLOCK
 GST_STATE_UNLOCK_FULL
 GST_STATE_LOCK_FULL
 GST_STATE_WAIT
-GST_STATE_TIMED_WAIT
+GST_STATE_WAIT_UNTIL
 GST_STATE_SIGNAL
 GST_STATE_BROADCAST
 
@@ -1009,6 +1028,8 @@ gst_seek_type_get_type
 gst_seek_flags_get_type
 gst_qos_type_get_type
 gst_event_type_flags_get_type
+GST_TYPE_STREAM_CONFIG_FLAGS
+gst_stream_config_flags_get_type
 </SECTION>
 
 <SECTION>
@@ -1170,6 +1191,8 @@ GST_DEBUG_BIN_TO_DOT_FILE_WITH_TS
 gst_debug_print_stack_trace
 GST_TIME_FORMAT
 GST_TIME_ARGS
+gst_debug_bin_to_dot_file
+gst_debug_bin_to_dot_file_with_ts
 <SUBSECTION Standard>
 GST_TYPE_DEBUG_COLOR_FLAGS
 GST_TYPE_DEBUG_LEVEL
@@ -1236,17 +1259,26 @@ gst_iterator_result_get_type
 <SECTION>
 <FILE>gstmemory</FILE>
 <TITLE>GstMemory</TITLE>
-GstMemory
-GstMemoryInfo
-GstAllocator
+
+gst_memory_alignment
+
 GstMemoryFlags
-GstMapInfo
-GST_MAP_INFO_INIT
-GstMapFlags
 GST_MEMORY_FLAGS
 GST_MEMORY_FLAG_IS_SET
+GST_MEMORY_FLAG_UNSET
 GST_MEMORY_IS_READONLY
+GST_MEMORY_IS_ZERO_PADDED
+GST_MEMORY_IS_ZERO_PREFIXED
+
+GstMemory
+
+GstMapFlags
+GstMapInfo
+GST_MAP_INFO_INIT
 GST_MAP_READWRITE
+
+GstAllocationParams
+
 GstAllocatorAllocFunction
 GstMemoryMapFunction
 GstMemoryUnmapFunction
@@ -1255,20 +1287,37 @@ GstMemoryCopyFunction
 GstMemoryShareFunction
 GstMemoryIsSpanFunction
 
-gst_memory_alignment
+GstMemoryInfo
+
+GstAllocator
+
+gst_allocator_new
+gst_allocator_get_memory_type
+gst_allocator_ref
+gst_allocator_unref
+
+GST_ALLOCATOR_SYSMEM
+gst_allocator_find
+gst_allocator_register
+gst_allocator_set_default
+
+gst_allocation_params_init
+gst_allocation_params_copy
+gst_allocation_params_free
 
 gst_allocator_alloc
+
 gst_memory_new_wrapped
-gst_memory_make_mapped
 
 gst_memory_ref
 gst_memory_unref
 
+gst_memory_is_exclusive
+
 gst_memory_get_sizes
 gst_memory_resize
 
-gst_memory_is_exclusive
-
+gst_memory_make_mapped
 gst_memory_map
 gst_memory_unmap
 
@@ -1276,19 +1325,18 @@ gst_memory_copy
 gst_memory_share
 
 gst_memory_is_span
-
-GST_ALLOCATOR_SYSMEM
-gst_allocator_find
-gst_allocator_register
-gst_allocator_set_default
 <SUBSECTION Standard>
 GST_TYPE_MEMORY
+gst_memory_get_type
 GST_MEMORY_CAST
 GST_TYPE_MAP_FLAGS
-GST_TYPE_MEMORY_FLAGS
 gst_map_flags_get_type
+GST_TYPE_MEMORY_FLAGS
 gst_memory_flags_get_type
-gst_memory_get_type
+GST_TYPE_ALLOCATION_PARAMS
+gst_allocation_params_get_type
+GST_TYPE_ALLOCATOR
+gst_allocator_get_type
 </SECTION>
 
 <SECTION>
@@ -1396,7 +1444,7 @@ gst_message_type_get_type
 gst_structure_change_type_get_type
 gst_stream_status_type_get_type
 gst_progress_type_get_type
-GST_MESSAGE_COND
+GST_MESSAGE_GET_COND
 GST_MESSAGE_GET_LOCK
 GST_MESSAGE_LOCK
 GST_MESSAGE_SIGNAL
@@ -1530,18 +1578,6 @@ GstPadLinkCheck
 GST_PAD_LINK_CHECK_DEFAULT
 GstFlowReturn
 GstPadMode
-GstPadProbeReturn
-GstPadProbeType
-GST_PAD_PROBE_TYPE_BLOCKING
-GST_PAD_PROBE_TYPE_SCHEDULING
-GST_PAD_PROBE_TYPE_ALL_BOTH
-GST_PAD_PROBE_TYPE_BLOCK_DOWNSTREAM
-GST_PAD_PROBE_TYPE_BLOCK_UPSTREAM
-GST_PAD_PROBE_TYPE_DATA_BOTH
-GST_PAD_PROBE_TYPE_DATA_DOWNSTREAM
-GST_PAD_PROBE_TYPE_DATA_UPSTREAM
-GST_PAD_PROBE_TYPE_EVENT_BOTH
-GST_PAD_PROBE_TYPE_QUERY_BOTH
 
 <SUBSECTION Application>
 gst_pad_get_name
@@ -1571,15 +1607,44 @@ gst_pad_sticky_events_foreach
 
 gst_pad_is_active
 
-gst_pad_is_blocked
-gst_pad_is_blocking
+<SUBSECTION probes>
+GstPadProbeReturn
+GstPadProbeType
+GST_PAD_PROBE_TYPE_BLOCKING
+GST_PAD_PROBE_TYPE_BLOCK_DOWNSTREAM
+GST_PAD_PROBE_TYPE_BLOCK_UPSTREAM
+GST_PAD_PROBE_TYPE_DATA_DOWNSTREAM
+GST_PAD_PROBE_TYPE_DATA_UPSTREAM
+GST_PAD_PROBE_TYPE_DATA_BOTH
+GST_PAD_PROBE_TYPE_EVENT_BOTH
+GST_PAD_PROBE_TYPE_QUERY_BOTH
+GST_PAD_PROBE_TYPE_ALL_BOTH
+GST_PAD_PROBE_TYPE_SCHEDULING
+
+GstPadProbeInfo
+GST_PAD_PROBE_INFO_TYPE
+GST_PAD_PROBE_INFO_ID
+GST_PAD_PROBE_INFO_DATA
+
+GST_PAD_PROBE_INFO_BUFFER
+GST_PAD_PROBE_INFO_BUFFER_LIST
+GST_PAD_PROBE_INFO_EVENT
+GST_PAD_PROBE_INFO_QUERY
+
+GST_PAD_PROBE_INFO_OFFSET
+GST_PAD_PROBE_INFO_SIZE
 
 GstPadProbeCallback
 gst_pad_add_probe
 gst_pad_remove_probe
 
+gst_pad_is_blocked
+gst_pad_is_blocking
+
+<SUBSECTION offset>
 gst_pad_get_offset
 gst_pad_set_offset
+
 <SUBSECTION Element>
 gst_pad_new
 gst_pad_new_from_template
@@ -1692,8 +1757,8 @@ GST_TYPE_PAD_LINK_CHECK
 GST_TYPE_PAD_PRESENCE
 GST_TYPE_PAD_MODE
 GST_TYPE_FLOW_RETURN
-GST_TYPE_PROBE_RETURN
-GST_TYPE_PROBE_TYPE
+GST_TYPE_PAD_PROBE_RETURN
+GST_TYPE_PAD_PROBE_TYPE
 
 <SUBSECTION Private>
 gst_pad_get_type
@@ -1704,8 +1769,8 @@ gst_pad_link_check_get_type
 gst_pad_presence_get_type
 gst_flow_return_get_type
 gst_pad_mode_get_type
-gst_probe_return_get_type
-gst_probe_type_get_type
+gst_pad_probe_return_get_type
+gst_pad_probe_type_get_type
 
 GST_PAD_NAME
 GST_PAD_PARENT
@@ -1717,8 +1782,15 @@ GST_PAD_IS_LINKED
 GST_PAD_IS_SRC
 GST_PAD_IS_SINK
 GST_PAD_IS_FIXED_CAPS
-GST_PAD_NEEDS_EVENTS
 GST_PAD_NEEDS_RECONFIGURE
+GST_PAD_HAS_PENDING_EVENTS
+GST_PAD_IS_PROXY_ALLOCATION
+GST_PAD_IS_PROXY_CAPS
+GST_PAD_NEEDS_PARENT
+GST_PAD_SET_PROXY_ALLOCATION
+GST_PAD_UNSET_PROXY_ALLOCATION
+GST_PAD_SET_PROXY_CAPS
+GST_PAD_UNSET_PROXY_CAPS
 
 GST_PAD_IS_IN_GETCAPS
 GST_PAD_MODE_ACTIVATE
@@ -2032,17 +2104,23 @@ gst_preset_get_type
 <FILE>gstquery</FILE>
 <TITLE>GstQuery</TITLE>
 GstQuery
-GstQueryType
-GST_QUERY_TYPE_NAME
-GstQueryTypeDefinition
 
+GstQueryTypeFlags
+GST_QUERY_TYPE_BOTH
+GST_QUERY_MAKE_TYPE
+
+GstQueryType
+
+GST_QUERY_TYPE
+GST_QUERY_TYPE_NAME
+
+GST_QUERY_IS_UPSTREAM
+GST_QUERY_IS_DOWNSTREAM
+GST_QUERY_IS_SERIALIZED
+
+gst_query_type_get_flags
 gst_query_type_get_name
 gst_query_type_to_quark
-gst_query_type_register
-gst_query_type_get_by_nick
-gst_query_types_contains
-gst_query_type_get_details
-gst_query_type_iterate_definitions
 
 gst_query_ref
 gst_query_unref
@@ -2087,10 +2165,13 @@ gst_query_parse_segment
 
 gst_query_new_caps
 gst_query_parse_caps
+gst_query_set_caps_result
 gst_query_parse_caps_result
+gst_query_intersect_caps_result
 
 gst_query_new_accept_caps
 gst_query_parse_accept_caps
+gst_query_set_accept_caps_result
 gst_query_parse_accept_caps_result
 
 GstBufferingMode
@@ -2111,19 +2192,34 @@ gst_query_set_uri
 
 gst_query_new_allocation
 gst_query_parse_allocation
-gst_query_parse_allocation_params
-gst_query_parse_nth_allocation_memory
-gst_query_parse_nth_allocation_meta
-gst_query_set_allocation_params
-gst_query_add_allocation_memory
-gst_query_add_allocation_meta
-gst_query_has_allocation_meta
-gst_query_get_n_allocation_memories
-gst_query_get_n_allocation_metas
 
+gst_query_add_allocation_pool
+gst_query_get_n_allocation_pools
+gst_query_parse_nth_allocation_pool
+gst_query_set_nth_allocation_pool
+
+gst_query_add_allocation_param
+gst_query_get_n_allocation_params
+gst_query_parse_nth_allocation_param
+gst_query_set_nth_allocation_param
+
+gst_query_add_allocation_meta
+gst_query_get_n_allocation_metas
+gst_query_parse_nth_allocation_meta
+gst_query_remove_nth_allocation_meta
+gst_query_has_allocation_meta
+
+GstSchedulingFlags
 gst_query_new_scheduling
 gst_query_parse_scheduling
 gst_query_set_scheduling
+gst_query_add_scheduling_mode
+gst_query_get_n_scheduling_modes
+gst_query_parse_nth_scheduling_mode
+gst_query_has_scheduling_mode
+
+gst_query_new_drain
+
 <SUBSECTION Standard>
 GstQueryClass
 GST_QUERY
@@ -2134,12 +2230,16 @@ GST_IS_QUERY_CLASS
 GST_TYPE_QUERY
 GST_TYPE_QUERY_TYPE
 GST_QUERY_GET_CLASS
-GST_QUERY_TYPE
+GST_TYPE_QUERY_TYPE_FLAGS
+gst_query_type_flags_get_type
 GST_TYPE_BUFFERING_MODE
+gst_buffering_mode_get_type
+GST_TYPE_SCHEDULING_FLAGS
+gst_scheduling_flags_get_type
 <SUBSECTION Private>
+GST_QUERY_NUM_SHIFT
 gst_query_get_type
 gst_query_type_get_type
-gst_buffering_mode_get_type
 </SECTION>
 
 
@@ -2615,6 +2715,8 @@ gst_type_find_factory_get_type
 GstURIHandler
 GstURIHandlerInterface
 GstURIType
+GstURIError
+gst_uri_error_quark
 GST_URI_TYPE_IS_VALID
 gst_uri_protocol_is_valid
 gst_uri_protocol_is_supported
@@ -2635,6 +2737,9 @@ GST_IS_URI_HANDLER
 GST_URI_HANDLER_GET_INTERFACE
 GST_TYPE_URI_HANDLER
 GST_TYPE_URI_TYPE
+gst_uri_error_get_type
+GST_TYPE_URI_ERROR
+GST_URI_ERROR
 <SUBSECTION Private>
 gst_uri_handler_get_type
 gst_uri_type_get_type
@@ -2710,6 +2815,7 @@ gst_util_uint64_scale_int
 gst_util_uint64_scale_int_round
 gst_util_uint64_scale_int_ceil
 gst_util_greatest_common_divisor
+gst_util_greatest_common_divisor_int64
 gst_util_fraction_to_double
 gst_util_double_to_fraction
 gst_util_fraction_multiply
@@ -2769,6 +2875,14 @@ GST_TYPE_INT_RANGE
 gst_value_set_int_range
 gst_value_get_int_range_min
 gst_value_get_int_range_max
+gst_value_set_int_range_step
+gst_value_get_int_range_step
+
+<SUBSECTION bitmask>
+GST_VALUE_HOLDS_BITMASK
+GST_TYPE_BITMASK
+gst_value_set_bitmask
+gst_value_get_bitmask
 
 <SUBSECTION int64range>
 GST_VALUE_HOLDS_INT64_RANGE
@@ -2776,6 +2890,8 @@ GST_TYPE_INT64_RANGE
 gst_value_set_int64_range
 gst_value_get_int64_range_min
 gst_value_get_int64_range_max
+gst_value_set_int64_range_step
+gst_value_get_int64_range_step
 
 <SUBSECTION doublerange>
 GST_VALUE_HOLDS_DOUBLE_RANGE
@@ -2832,6 +2948,12 @@ gst_value_get_buffer
 gst_value_set_buffer
 gst_value_take_buffer
 
+<SUBSECTION sample>
+GST_VALUE_HOLDS_SAMPLE
+gst_value_get_sample
+gst_value_set_sample
+gst_value_take_sample
+
 <SUBSECTION>
 GST_VALUE_LESS_THAN
 GST_VALUE_EQUAL
@@ -2856,6 +2978,7 @@ gst_value_subtract
 gst_value_can_subtract
 gst_value_intersect
 gst_value_can_intersect
+gst_value_is_subset
 gst_value_array_append_value
 gst_value_array_get_size
 gst_value_array_get_value
@@ -2873,6 +2996,7 @@ gst_int_range_get_type
 gst_int64_range_get_type
 gst_value_array_get_type
 gst_value_list_get_type
+gst_bitmask_get_type
 </SECTION>
 
 <SECTION>

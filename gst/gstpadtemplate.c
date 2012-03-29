@@ -63,7 +63,7 @@
  *     GST_PAD_SINK,    // the direction of the pad
  *     GST_PAD_ALWAYS,  // when this pad will be present
  *     GST_STATIC_CAPS (        // the capabilities of the padtemplate
- *       "audio/x-raw-int, "
+ *       "audio/x-raw, "
  *         "channels = (int) [ 1, 6 ]"
  *     )
  *   );

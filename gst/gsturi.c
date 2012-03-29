@@ -25,7 +25,7 @@
  * SECTION:gsturihandler
  * @short_description: Interface to ease URI handling in plugins.
  *
- * The URIHandler is an interface that is implemented by Source and Sink 
+ * The URIHandler is an interface that is implemented by Source and Sink
  * #GstElement to simplify then handling of URI.
  *
  * An application can use the following functions to quickly get an element

@@ -1437,16 +1437,44 @@ invalid:
   }
 }
 
+/**
+ * gst_clock_set_timeout:
+ * @clock: a #GstClock
+ * @timeout: a timeout
+ *
+ * Set the amount of time, in nanoseconds, to sample master and slave
+ * clocks
+ */
 void
 gst_clock_set_timeout (GstClock * clock, GstClockTime timeout)
 {
+  g_return_if_fail (GST_IS_CLOCK (clock));
+
+  GST_CLOCK_SLAVE_LOCK (clock);
   clock->priv->timeout = timeout;
+  GST_CLOCK_SLAVE_UNLOCK (clock);
 }
 
+/**
+ * gst_clock_get_timeout:
+ * @clock: a #GstClock
+ *
+ * Get the amount of time that master and slave clocks are sampled.
+ *
+ * Returns: the interval between samples.
+ */
 GstClockTime
 gst_clock_get_timeout (GstClock * clock)
 {
-  return clock->priv->timeout;
+  GstClockTime result;
+
+  g_return_val_if_fail (GST_IS_CLOCK (clock), GST_CLOCK_TIME_NONE);
+
+  GST_CLOCK_SLAVE_LOCK (clock);
+  result = clock->priv->timeout;
+  GST_CLOCK_SLAVE_UNLOCK (clock);
+
+  return result;
 }
 
 static void
@@ -1476,9 +1504,7 @@ gst_clock_set_property (GObject * object, guint prop_id,
       GST_CLOCK_SLAVE_UNLOCK (clock);
       break;
     case PROP_TIMEOUT:
-      GST_CLOCK_SLAVE_LOCK (clock);
-      priv->timeout = g_value_get_uint64 (value);
-      GST_CLOCK_SLAVE_UNLOCK (clock);
+      gst_clock_set_timeout (clock, g_value_get_uint64 (value));
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -1508,9 +1534,7 @@ gst_clock_get_property (GObject * object, guint prop_id,
       GST_CLOCK_SLAVE_UNLOCK (clock);
       break;
     case PROP_TIMEOUT:
-      GST_CLOCK_SLAVE_LOCK (clock);
-      g_value_set_uint64 (value, priv->timeout);
-      GST_CLOCK_SLAVE_UNLOCK (clock);
+      g_value_set_uint64 (value, gst_clock_get_timeout (clock));
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);

@@ -32,13 +32,7 @@
  *
  * The #GstRegistry object is a list of plugins and some functions for dealing
  * with them. Each #GstPlugin is matched 1-1 with a file on disk, and may or may
- * not be loaded at a given time. There may be multiple #GstRegistry objects,
- * but the "default registry" is the only object that has any meaning to the
- * core.
- *
- * The registry file is actually a cache of plugin information. This is
- * unlike versions prior to 0.10, where the registry file was the primary source
- * of plugin information, and was created by the gst-register command.
+ * not be loaded at a given time.
  *
  * The primary source, at all times, of plugin information is each plugin file
  * itself. Thus, if an application wants information about a particular plugin,
@@ -99,11 +93,13 @@
  *
  * <emphasis role="bold">Implementation notes:</emphasis>
  *
- * The "cache" and "default registry" are different concepts and can represent
+ * The "cache" and "registry" are different concepts and can represent
  * different sets of plugins. For various reasons, at init time, the cache is
  * stored in the default registry, and plugins not relevant to the current
  * process are marked with the %GST_PLUGIN_FLAG_CACHED bit. These plugins are
  * removed at the end of initialization.
+ *
+ * Last reviewed on 2012-03-29 (0.11.3)
  */
 
 #ifdef HAVE_CONFIG_H

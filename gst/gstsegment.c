@@ -58,30 +58,30 @@
  * normally be left to their default 0 value. The stop position is left to -1 unless
  * explicitly configured to a different value after a seek event.
  *
- * The current position in the segment should be set with the gst_segment_set_last_stop().
- * The public last_stop field contains the last set stop position in the segment.
+ * The current position in the segment should be set by changing the position
+ * member in the structure.
  *
  * For elements that perform seeks, the current segment should be updated with the
- * gst_segment_set_seek() and the values from the seek event. This method will update
- * all the segment fields. The last_stop field will contain the new playback position.
+ * gst_segment_do_seek() and the values from the seek event. This method will update
+ * all the segment fields. The position field will contain the new playback position.
  * If the cur_type was different from GST_SEEK_TYPE_NONE, playback continues from
- * the last_stop position, possibly with updated flags or rate.
+ * the position position, possibly with updated flags or rate.
  *
- * For elements that want to use #GstSegment to track the playback region, use
- * gst_segment_set_newsegment() to update the segment fields with the information from
- * the newsegment event. The gst_segment_clip() method can be used to check and clip
+ * For elements that want to use #GstSegment to track the playback region,
+ * update the segment fields with the information from the newsegment event.
+ * The gst_segment_clip() method can be used to check and clip
  * the media data to the segment boundaries.
  *
  * For elements that want to synchronize to the pipeline clock, gst_segment_to_running_time()
  * can be used to convert a timestamp to a value that can be used to synchronize
- * to the clock. This function takes into account all accumulated segments as well as
+ * to the clock. This function takes into account the base as well as
  * any rate or applied_rate conversions.
  *
  * For elements that need to perform operations on media data in stream_time,
  * gst_segment_to_stream_time() can be used to convert a timestamp and the segment
  * info to stream time (which is always between 0 and the duration of the stream).
  *
- * Last reviewed on 2007-05-17 (0.10.13)
+ * Last reviewed on 2012-03-29 (0.11.3)
  */
 
 /**
@@ -107,6 +107,13 @@ gst_segment_copy (const GstSegment * segment)
   return result;
 }
 
+/**
+ * gst_segment_copy_into:
+ * @src: (transfer none): a #GstSegment
+ * @dest: (transfer none): a #GstSegment
+ *
+ * Copy the contents of @src into @dest.
+ */
 void
 gst_segment_copy_into (const GstSegment * src, GstSegment * dest)
 {

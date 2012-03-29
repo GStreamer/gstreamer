@@ -29,6 +29,7 @@
 typedef struct _GstPad GstPad;
 typedef struct _GstPadPrivate GstPadPrivate;
 typedef struct _GstPadClass GstPadClass;
+typedef struct _GstPadProbeInfo GstPadProbeInfo;
 
 /**
  * GstPadDirection:
@@ -527,7 +528,7 @@ typedef enum
  *
  * Info passed in the #GstPadProbeCallback.
  */
-typedef struct
+struct _GstPadProbeInfo
 {
   GstPadProbeType type;
   gulong id;
@@ -535,8 +536,9 @@ typedef struct
   guint64 offset;
   guint size;
 
+  /*< private >*/
   gpointer _gst_reserved[GST_PADDING];
-} GstPadProbeInfo;
+};
 
 #define GST_PAD_PROBE_INFO_TYPE(d)         ((d)->type)
 #define GST_PAD_PROBE_INFO_ID(d)           ((d)->id)

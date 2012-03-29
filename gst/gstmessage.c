@@ -32,7 +32,7 @@
  *
  * Messages are posted by objects in the pipeline and are passed to the
  * application using the #GstBus.
-
+ *
  * The basic use pattern of posting a message on a #GstBus is as follows:
  *
  * <example>

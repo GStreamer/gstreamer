@@ -27,54 +27,16 @@
  *
  * #GstObject provides a root for the object hierarchy tree filed in by the
  * GStreamer library.  It is currently a thin wrapper on top of
- * #GObject. It is an abstract class that is not very usable on its own.
+ * #GInitiallyUnowned. It is an abstract class that is not very usable on its own.
  *
  * #GstObject gives us basic refcounting, parenting functionality and locking.
  * Most of the function are just extended for special GStreamer needs and can be
  * found under the same name in the base class of #GstObject which is #GObject
  * (e.g. g_object_ref() becomes gst_object_ref()).
  *
- * The most interesting difference between #GstObject and #GObject is the
- * "floating" reference count. A #GObject is created with a reference count of
- * 1, owned by the creator of the #GObject. (The owner of a reference is the
- * code section that has the right to call gst_object_unref() in order to
- * remove that reference.) A #GstObject is created with a reference count of 1
- * also, but it isn't owned by anyone; Instead, the initial reference count
- * of a #GstObject is "floating". The floating reference can be removed by
- * anyone at any time, by calling gst_object_sink().  gst_object_sink() does
- * nothing if an object is already sunk (has no floating reference).
- *
- * When you add a #GstElement to its parent container, the parent container will
- * do this:
- * <informalexample>
- * <programlisting>
- *   gst_object_ref (GST_OBJECT (child_element));
- *   gst_object_sink (GST_OBJECT (child_element));
- * </programlisting>
- * </informalexample>
- * This means that the container now owns a reference to the child element
- * (since it called gst_object_ref()), and the child element has no floating
- * reference.
- *
- * The purpose of the floating reference is to keep the child element alive
- * until you add it to a parent container, which then manages the lifetime of
- * the object itself:
- * <informalexample>
- * <programlisting>
- *    element = gst_element_factory_make (factoryname, name);
- *    // element has one floating reference to keep it alive
- *    gst_bin_add (GST_BIN (bin), element);
- *    // element has one non-floating reference owned by the container
- * </programlisting>
- * </informalexample>
- *
- * Another effect of this is, that calling gst_object_unref() on a bin object,
- * will also destoy all the #GstElement objects in it. The same is true for
- * calling gst_bin_remove().
- *
- * Special care has to be taken for all methods that gst_object_sink() an object
- * since if the caller of those functions had a floating reference to the object,
- * the object reference is now invalid.
+ * Since #GstObject dereives from #GInitiallyUnowned, it also inherits the
+ * floating reference. Be aware that functions such as gst_bin_add() and
+ * gst_element_add_pad() take ownership of the floating reference.
  *
  * In contrast to #GObject instances, #GstObject adds a name property. The functions
  * gst_object_set_name() and gst_object_get_name() are used to set/get the name
@@ -131,7 +93,7 @@
  * </para>
  * </refsect2>
  *
- * Last reviewed on 2005-11-09 (0.9.4)
+ * Last reviewed on 2012-03-29 (0.11.3)
  */
 
 #include "gst_private.h"

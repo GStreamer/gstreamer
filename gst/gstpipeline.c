@@ -29,8 +29,7 @@
  * A #GstPipeline is a special #GstBin used as the toplevel container for
  * the filter graph. The #GstPipeline will manage the selection and
  * distribution of a global #GstClock as well as provide a #GstBus to the
- * application. It will also implement a default behaviour for managing
- * seek events (see gst_element_seek()).
+ * application.
  *
  * gst_pipeline_new() is used to create a pipeline. when you are done with
  * the pipeline, use gst_object_unref() to free its resources including all
@@ -73,12 +72,7 @@
  * in the PLAYING state. This default behaviour can be changed with the
  * gst_element_set_start_time() method.
  *
- * When sending a flushing seek event to a GstPipeline (see
- * gst_element_seek()), it will make sure that the pipeline is properly
- * PAUSED and resumed as well as set the new running time to 0 when the
- * seek succeeded.
- *
- * Last reviewed on 2009-05-29 (0.10.24)
+ * Last reviewed on 2012-03-29 (0.11.3)
  */
 
 #include "gst_private.h"

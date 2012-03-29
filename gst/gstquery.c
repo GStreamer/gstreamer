@@ -23,12 +23,10 @@
 
 /**
  * SECTION:gstquery
- * @short_description: Dynamically register new query types. Provide functions
- *                     to create queries, and to set and parse values in them.
+ * @short_description: Provide functions to create queries, and to set and parse
+ *                     values in them.
  * @see_also: #GstPad, #GstElement
  *
- * GstQuery functions are used to register new query types to the gstreamer
- * core and use them.
  * Queries can be performed on pads (gst_pad_query()) and elements
  * (gst_element_query()). Please note that some queries might need a running
  * pipeline to work.
@@ -58,13 +56,9 @@
  *  </programlisting>
  * </example>
  *
- * Last reviewed on 2006-02-14 (0.10.4)
+ * Last reviewed on 2012-03-29 (0.11.3)
  */
 
-
-/* FIXME 0.11: suppress warnings for deprecated API such as GValueArray
- * with newer GLib versions (>= 2.31.0) */
-#define GLIB_DISABLE_DEPRECATION_WARNINGS
 
 #include "gst_private.h"
 #include "gstinfo.h"
@@ -1594,6 +1588,7 @@ gst_query_get_n_allocation_pools (GstQuery * query)
 /**
  * gst_query_parse_nth_allocation_pool:
  * @query: A valid #GstQuery of type GST_QUERY_ALLOCATION.
+ * @index: index to parse
  * @pool: (out) (allow-none) (transfer none): the #GstBufferPool
  * @size: (out) (allow-none): the size
  * @min_buffers: (out) (allow-none): the min buffers

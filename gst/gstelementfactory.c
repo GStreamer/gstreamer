@@ -492,6 +492,16 @@ gst_element_factory_get_element_type (GstElementFactory * factory)
   return factory->type;
 }
 
+/**
+ * gst_element_factory_get_metadata:
+ * @factory,: a #GstElementFactory
+ * @key: a key
+ *
+ * Get the metadata on @factory with @key.
+ *
+ * Returns: the metadata with @key on @factory or %NULL when there was no
+ * metadata with the given @key.
+ */
 const gchar *
 gst_element_factory_get_metadata (GstElementFactory * factory,
     const gchar * key)

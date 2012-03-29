@@ -592,6 +592,7 @@ gst_event_new_gap (GstClockTime timestamp, GstClockTime duration)
 
 /**
  * gst_event_parse_gap:
+ * @event: a #GstEvent of type #GST_EVENT_GAP
  * @timestamp: (out) (allow-none): location where to store the
  *     start time (pts) of the gap, or %NULL
  * @duration: (out) (allow-none): location where to store the duration of
@@ -738,7 +739,7 @@ gst_event_set_stream_config_setup_data (GstEvent * event, GstBuffer * buf)
 }
 
 /**
- * gst_event_set_stream_config_setup_data:
+ * gst_event_parse_stream_config_setup_data:
  * @event: a stream config event
  * @buf: (out) (transfer none): location where to store the #GstBuffer with setup data
  *

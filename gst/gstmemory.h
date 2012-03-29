@@ -43,6 +43,12 @@ typedef struct _GstMemoryInfo GstMemoryInfo;
 typedef struct _GstAllocator GstAllocator;
 typedef struct _GstAllocationParams GstAllocationParams;
 
+/**
+ * gst_memory_alignment:
+ *
+ * The default memory alignment in bytes - 1
+ * an alignment of 7 would be the same as what malloc() guarantees.
+ */
 GST_EXPORT gsize gst_memory_alignment;
 
 #define GST_MEMORY_CAST(mem)   ((GstMemory *)(mem))
@@ -181,6 +187,11 @@ typedef struct {
   gpointer user_data[4];
 } GstMapInfo;
 
+/**
+ * GST_MAP_INFO_INIT:
+ *
+ * Initializer for #GstMapInfo
+ */
 #define GST_MAP_INFO_INIT { NULL, 0, NULL, 0, 0, }
 
 /**
@@ -344,6 +355,13 @@ struct _GstMemoryInfo {
   /*< private >*/
   gpointer _gst_reserved[GST_PADDING];
 };
+
+/**
+ * GstAllocator:
+ *
+ * An opaque type returned from gst_allocator_new() or gst_allocator_find()
+ * that can be used to allocator memory.
+ */
 
 /* allocators */
 GstAllocator * gst_allocator_new             (const GstMemoryInfo * info,

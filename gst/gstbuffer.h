@@ -488,7 +488,7 @@ GstBuffer*      gst_buffer_append               (GstBuffer *buf1, GstBuffer *buf
 #include <gst/gstmeta.h>
 
 /**
- * GstBufferMetaFunc:
+ * GstBufferForeachMetaFunc:
  * @buffer: a #GstBuffer
  * @meta: a pointer to a #GstMeta
  * @user_data: user data passed to gst_buffer_foreach_meta()

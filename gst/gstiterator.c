@@ -73,6 +73,14 @@
 #include "gst_private.h"
 #include <gst/gstiterator.h>
 
+/**
+ * gst_iterator_copy:
+ * @it: a #GstIterator
+ *
+ * Copy the iterator and its state.
+ *
+ * Returns: a new copy of @it.
+ */
 GstIterator *
 gst_iterator_copy (const GstIterator * it)
 {

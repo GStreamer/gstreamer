@@ -62,7 +62,6 @@ typedef enum {
 /**
  * GST_EVENT_MAKE_TYPE:
  * @num: the event number to create
- * @idx: the index in the sticky array
  * @flags: the event flags
  *
  * when making custom event types, use this macro with the num and

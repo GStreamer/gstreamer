@@ -54,18 +54,18 @@
  * stopped and the thread is stopped.
  *
  * After creating a #GstTask, use gst_object_unref() to free its resources. This can
- * only be done it the task is not running anymore.
+ * only be done when the task is not running anymore.
  *
  * Task functions can send a #GstMessage to send out-of-band data to the
  * application. The application can receive messages from the #GstBus in its
  * mainloop.
  *
- * For debugging perposes, the task will configure its object name as the thread
+ * For debugging purposes, the task will configure its object name as the thread
  * name on Linux. Please note that the object name should be configured before the
  * task is started; changing the object name after the task has been started, has
  * no effect on the thread name.
  *
- * Last reviewed on 2010-03-15 (0.10.29)
+ * Last reviewed on 2012-03-29 (0.11.3)
  */
 
 #include "gst_private.h"

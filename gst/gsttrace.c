@@ -20,31 +20,6 @@
  * Boston, MA 02111-1307, USA.
  */
 
-/**
- * SECTION:gsttrace
- * @short_description: Tracing functionality
- *
- * Traces allows to track object allocation. They provide a instance counter per
- * #GType. The counter is incremented for each object allocated and decremented
- * it when it's freed.
- *
- * <example>
- * <title>Tracing object instances</title>
- *   <programlisting>
- *     // trace un-freed object instances
- *     gst_alloc_trace_set_flags_all (GST_ALLOC_TRACE_LIVE);
- *     if (!gst_alloc_trace_available ()) {
- *       g_warning ("Trace not available (recompile with trace enabled).");
- *     }
- *     gst_alloc_trace_print_live ();
- *     // do something here
- *     gst_alloc_trace_print_live ();
- *   </programlisting>
- * </example>
- *
- * Last reviewed on 2005-11-21 (0.9.5)
- */
-
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif
