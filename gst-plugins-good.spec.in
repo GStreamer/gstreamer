@@ -90,7 +90,7 @@ rm -rf $RPM_BUILD_ROOT
 %{_libdir}/gstreamer-%{majorminor}/libgstrtp.so
 %{_libdir}/gstreamer-%{majorminor}/libgstrtpmanager.so
 %{_libdir}/gstreamer-%{majorminor}/libgstrtsp.so
-# %{_libdir}/gstreamer-%{majorminor}/libgstsmpte.so
+%{_libdir}/gstreamer-%{majorminor}/libgstsmpte.so
 %{_libdir}/gstreamer-%{majorminor}/libgstudp.so
 # %{_libdir}/gstreamer-%{majorminor}/libgstvideobox.so
 %{_libdir}/gstreamer-%{majorminor}/libgstwavenc.so
@@ -117,14 +117,14 @@ rm -rf $RPM_BUILD_ROOT
 %{_libdir}/gstreamer-%{majorminor}/libgstequalizer.so
 %{_libdir}/gstreamer-%{majorminor}/libgstmultifile.so
 %{_libdir}/gstreamer-%{majorminor}/libgstspectrum.so
-# %{_libdir}/gstreamer-%{majorminor}/libgstgoom2k1.so
+%{_libdir}/gstreamer-%{majorminor}/libgstgoom2k1.so
 # %{_libdir}/gstreamer-%{majorminor}/libgstinterleave.so
 %{_libdir}/gstreamer-%{majorminor}/libgstreplaygain.so
 # %{_libdir}/gstreamer-%{majorminor}/libgstdeinterlace.so
 %{_libdir}/gstreamer-%{majorminor}/libgstflv.so
 %{_libdir}/gstreamer-%{majorminor}/libgsty4menc.so
 # %{_libdir}/gstreamer-%{majorminor}/libgstoss4audio.so
-# %{_libdir}/gstreamer-%{majorminor}/libgstimagefreeze.so
+%{_libdir}/gstreamer-%{majorminor}/libgstimagefreeze.so
 %{_libdir}/gstreamer-%{majorminor}/libgstshapewipe.so
 %{_libdir}/gstreamer-%{majorminor}/libgstvideofilter.so
 %{_libdir}/gstreamer-%{majorminor}/libgstaudioparsers.so
