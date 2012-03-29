@@ -1489,7 +1489,7 @@ gst_query_new_allocation (GstCaps * caps, gboolean need_pool)
 /**
  * gst_query_parse_allocation:
  * @query: a #GstQuery
- * @caps: (out callee-allocates) (allow-none): The #GstCaps
+ * @caps: (out transfer none) (allow-none): The #GstCaps
  * @need_pool: (out) (allow-none): Whether a #GstBufferPool is needed
  *
  * Parse an allocation query, writing the requested caps in @caps and
@@ -1505,8 +1505,11 @@ gst_query_parse_allocation (GstQuery * query, GstCaps ** caps,
   g_return_if_fail (GST_QUERY_TYPE (query) == GST_QUERY_ALLOCATION);
 
   structure = GST_QUERY_STRUCTURE (query);
+  if (caps) {
+    *caps = g_value_get_boxed (gst_structure_id_get_value (structure,
+            GST_QUARK (CAPS)));
+  }
   gst_structure_id_get (structure,
-      GST_QUARK (CAPS), GST_TYPE_CAPS, caps,
       GST_QUARK (NEED_POOL), G_TYPE_BOOLEAN, need_pool, NULL);
 }
 
