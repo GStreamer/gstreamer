@@ -497,7 +497,6 @@ ges_timeline_object_create_track_objects_func (GESTimelineObject * object,
     GESTrack * track)
 {
   GESTrackObject *result;
-  gboolean ret;
 
   result = ges_timeline_object_create_track_object (object, track);
   if (!result) {
@@ -505,10 +504,10 @@ ges_timeline_object_create_track_objects_func (GESTimelineObject * object,
     return FALSE;
   }
 
-  ret = ges_track_add_object (track, result);
-  ges_timeline_object_add_track_object (object, result);
+  if (ges_timeline_object_add_track_object (object, result) == FALSE)
+    return FALSE;
 
-  return ret;
+  return ges_track_add_object (track, result);
 }
 
 /**
