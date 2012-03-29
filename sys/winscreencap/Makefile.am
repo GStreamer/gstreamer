@@ -1,8 +1,11 @@
-# This plugin isn't buildable with autotools at this point in time, so just
-# ensure everything's listed in EXTRA_DIST
+plugin_LTLIBRARIES = libgstwinscreencap.la
 
-EXTRA_DIST = \
-	gstdx9screencapsrc.c gstdx9screencapsrc.h \
-	gstgdiscreencapsrc.c gstgdiscreencapsrc.h \
-	gstwinscreencap.c gstwinscreencap.h
+libgstwinscreencap_la_SOURCES = gstdx9screencapsrc.c  gstgdiscreencapsrc.c  gstwinscreencap.c
+libgstwinscreencap_la_CFLAGS = $(GST_CFLAGS) $(GST_BASE_CFLAGS) \
+	$(GST_PLUGINS_BASE_CFLAGS)
+libgstwinscreencap_la_LIBADD = $(GST_BASE_LIBS) $(GST_PLUGINS_BASE_LIBS) \
+	$(DIRECT3D9_LIBS)
+libgstwinscreencap_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
+libgstwinscreencap_la_LIBTOOLFLAGS = --tag=disable-static
 
+noinst_HEADERS= gstwinscreencap.h

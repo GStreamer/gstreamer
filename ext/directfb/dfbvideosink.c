@@ -1658,7 +1658,7 @@ gst_dfbvideosink_show_frame (GstBaseSink * bsink, GstBuffer * buf)
 
     res = dest->Unlock (dest);
 
-    res = dest->Release (dest);
+    dest->Release (dest);
 
     if (dfbvideosink->backbuffer) {
       if (dfbvideosink->vsync) {

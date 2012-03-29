@@ -28,6 +28,8 @@
 #include <gst/base/gstadapter.h>
 #include <glib.h>
 
+#include "gstmpegdefs.h"
+
 #define MPEGTS_NORMAL_PACKETSIZE  188
 #define MPEGTS_M2TS_PACKETSIZE    192
 #define MPEGTS_DVB_ASI_PACKETSIZE 204
@@ -38,6 +40,8 @@
 
 #define MPEGTS_AFC_PCR_FLAG	0x10
 #define MPEGTS_AFC_OPCR_FLAG	0x08
+
+#define MAX_WINDOW 512
 
 G_BEGIN_DECLS
 
@@ -54,6 +58,7 @@ G_BEGIN_DECLS
 
 typedef struct _MpegTSPacketizer2 MpegTSPacketizer2;
 typedef struct _MpegTSPacketizer2Class MpegTSPacketizer2Class;
+typedef struct _MpegTSPacketizerPrivate MpegTSPacketizerPrivate;
 
 typedef struct
 {
@@ -70,6 +75,7 @@ struct _MpegTSPacketizer2 {
 
   GstAdapter *adapter;
   /* streams hashed by pid */
+  /* FIXME : be more memory efficient (see how it's done in mpegtsbase) */
   MpegTSPacketizerStream **streams;
   gboolean disposed;
   gboolean know_packet_size;
@@ -79,6 +85,30 @@ struct _MpegTSPacketizer2 {
   /* current offset of the tip of the adapter */
   guint64 offset;
   gboolean empty;
+
+  /* clock skew calculation */
+  gboolean       calculate_skew;
+
+  /* Following variables are only active/used when
+   * calculate_skew is TRUE */
+  /* FIXME : These variables should be *per* PCR PID */
+  GstClockTime   base_time;
+  GstClockTime   base_pcrtime;
+  GstClockTime   prev_out_time;
+  GstClockTime   prev_in_time;
+  GstClockTime   last_pcrtime;
+  gint64         window[MAX_WINDOW];
+  guint          window_pos;
+  guint          window_size;
+  gboolean       window_filling;
+  gint64         window_min;
+  gint64         skew;
+  gint64         prev_send_diff;
+
+  /* offset/bitrate calculator */
+  gboolean       calculate_offset;
+
+  MpegTSPacketizerPrivate *priv;
 };
 
 struct _MpegTSPacketizer2Class {
@@ -146,6 +176,8 @@ void mpegts_packetizer_push (MpegTSPacketizer2 *packetizer, GstBuffer *buffer);
 gboolean mpegts_packetizer_has_packets (MpegTSPacketizer2 *packetizer);
 MpegTSPacketizerPacketReturn mpegts_packetizer_next_packet (MpegTSPacketizer2 *packetizer,
   MpegTSPacketizerPacket *packet);
+MpegTSPacketizerPacketReturn
+mpegts_packetizer_process_next_packet(MpegTSPacketizer2 * packetizer);
 void mpegts_packetizer_clear_packet (MpegTSPacketizer2 *packetizer,
 				     MpegTSPacketizerPacket *packet);
 void mpegts_packetizer_remove_stream(MpegTSPacketizer2 *packetizer,
@@ -165,8 +197,22 @@ GstStructure *mpegts_packetizer_parse_eit (MpegTSPacketizer2 *packetizer,
   MpegTSPacketizerSection *section);
 GstStructure *mpegts_packetizer_parse_tdt (MpegTSPacketizer2 *packetizer,
   MpegTSPacketizerSection *section);
-guint64 mpegts_packetizer_compute_pcr(const guint8 * data);
 
+/* Only valid if calculate_offset is TRUE */
+guint mpegts_packetizer_get_seen_pcr (MpegTSPacketizer2 *packetizer);
+
+GstClockTime
+mpegts_packetizer_offset_to_ts (MpegTSPacketizer2 * packetizer,
+				guint64 offset);
+guint64
+mpegts_packetizer_ts_to_offset (MpegTSPacketizer2 * packetizer,
+				GstClockTime ts);
+GstClockTime
+mpegts_packetizer_pts_to_ts (MpegTSPacketizer2 * packetizer,
+			     GstClockTime pts);
+void
+mpegts_packetizer_set_reference_offset (MpegTSPacketizer2 * packetizer,
+					guint64 refoffset);
 G_END_DECLS
 
 #endif /* GST_MPEGTS_PACKETIZER_H */

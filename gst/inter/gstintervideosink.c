@@ -19,14 +19,20 @@
 /**
  * SECTION:element-gstintervideosink
  *
- * The intervideosink element does FIXME stuff.
+ * The intervideosink element is a video sink element.  It is used
+ * in connection with an intervideosrc element in a different pipeline,
+ * similar to interaudiosink and interaudiosrc.
  *
  * <refsect2>
  * <title>Example launch line</title>
  * |[
- * gst-launch -v fakesrc ! intervideosink ! FIXME ! fakesink
+ * gst-launch -v videotestsrc ! intervideosink
  * ]|
- * FIXME Describe what the pipeline does.
+ * 
+ * The intervideosink element cannot be used effectively with gst-launch,
+ * as it requires a second pipeline in the application to send video to.
+ * See the gstintertest.c example in the gst-plugins-bad source code for
+ * more details.
  * </refsect2>
  */
 
@@ -107,8 +113,11 @@ gst_inter_video_sink_base_init (gpointer g_class)
   gst_element_class_add_pad_template (element_class,
       gst_static_pad_template_get (&gst_inter_video_sink_sink_template));
 
-  gst_element_class_set_details_simple (element_class, "FIXME Long name",
-      "Generic", "FIXME Description", "FIXME <fixme@example.com>");
+  gst_element_class_set_details_simple (element_class,
+      "Internal video sink",
+      "Sink/Video",
+      "Virtual video sink for internal process communication",
+      "David Schleef <ds@schleef.org>");
 }
 
 static void
@@ -155,8 +164,6 @@ static void
 gst_inter_video_sink_init (GstInterVideoSink * intervideosink,
     GstInterVideoSinkClass * intervideosink_class)
 {
-  intervideosink->surface = gst_inter_surface_get ("default");
-
   intervideosink->channel = g_strdup ("default");
 }
 

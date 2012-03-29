@@ -104,8 +104,8 @@ fail:
 static void
 on_changed (GSettings * settings, gchar * key, GstGSettingsAudioSrc * src)
 {
-  if (!g_str_equal (key, "audiosrc"));
-  return;
+  if (!g_str_equal (key, "audiosrc"))
+    return;
 
   gst_gsettings_audio_src_change_child (src);
 }

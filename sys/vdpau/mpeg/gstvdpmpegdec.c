@@ -415,12 +415,14 @@ gst_vdp_mpeg_dec_parse_data (GstBaseVideoDecoder * base_video_decoder,
   GstBitReader b_reader = GST_BIT_READER_INIT_FROM_BUFFER (buf);
   guint8 start_code;
 
+  if (gst_bit_reader_get_remaining (&b_reader) < 8 * 3 + 8)
+    return GST_FLOW_ERROR;
+
   /* skip sync_code */
-  gst_bit_reader_skip (&b_reader, 8 * 3);
+  gst_bit_reader_skip_unchecked (&b_reader, 8 * 3);
 
   /* start_code */
-  if (!gst_bit_reader_get_bits_uint8 (&b_reader, &start_code, 8))
-    return GST_FLOW_ERROR;
+  start_code = gst_bit_reader_get_bits_uint8_unchecked (&b_reader, 8);
 
   mpeg_frame = GST_VDP_MPEG_FRAME_CAST (frame);
 

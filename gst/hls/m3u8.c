@@ -20,6 +20,7 @@
  */
 
 #include <stdlib.h>
+#include <math.h>
 #include <errno.h>
 #include <glib.h>
 
@@ -34,7 +35,7 @@ static void gst_m3u8_free (GstM3U8 * m3u8);
 static gboolean gst_m3u8_update (GstM3U8 * m3u8, gchar * data,
     gboolean * updated);
 static GstM3U8MediaFile *gst_m3u8_media_file_new (gchar * uri,
-    gchar * title, gint duration, guint sequence);
+    gchar * title, GstClockTime duration, guint sequence);
 static void gst_m3u8_media_file_free (GstM3U8MediaFile * self);
 
 static GstM3U8 *
@@ -77,7 +78,7 @@ gst_m3u8_free (GstM3U8 * self)
 }
 
 static GstM3U8MediaFile *
-gst_m3u8_media_file_new (gchar * uri, gchar * title, gint duration,
+gst_m3u8_media_file_new (gchar * uri, gchar * title, GstClockTime duration,
     guint sequence)
 {
   GstM3U8MediaFile *file;
@@ -119,6 +120,36 @@ int_from_string (gchar * ptr, gchar ** endptr, gint * val)
   }
 
   if (ret > G_MAXINT) {
+    GST_WARNING ("%s", g_strerror (ERANGE));
+    return FALSE;
+  }
+
+  if (endptr)
+    *endptr = end;
+
+  *val = (gint) ret;
+
+  return end != ptr;
+}
+
+static gboolean
+double_from_string (gchar * ptr, gchar ** endptr, gdouble * val)
+{
+  gchar *end;
+  gdouble ret;
+
+  g_return_val_if_fail (ptr != NULL, FALSE);
+  g_return_val_if_fail (val != NULL, FALSE);
+
+  errno = 0;
+  ret = strtod (ptr, &end);
+  if ((errno == ERANGE && (ret == HUGE_VAL || ret == -HUGE_VAL))
+      || (errno != 0 && ret == 0)) {
+    GST_WARNING ("%s", g_strerror (errno));
+    return FALSE;
+  }
+
+  if (!isfinite (ret)) {
     GST_WARNING ("%s", g_strerror (ERANGE));
     return FALSE;
   }
@@ -186,7 +217,8 @@ gst_m3u8_compare_playlist_by_bitrate (gconstpointer a, gconstpointer b)
 static gboolean
 gst_m3u8_update (GstM3U8 * self, gchar * data, gboolean * updated)
 {
-  gint val, duration;
+  gint val;
+  GstClockTime duration;
   gchar *title, *end;
 //  gboolean discontinuity;
   GstM3U8 *list;
@@ -222,7 +254,7 @@ gst_m3u8_update (GstM3U8 * self, gchar * data, gboolean * updated)
   }
 
   list = NULL;
-  duration = -1;
+  duration = 0;
   title = NULL;
   data += 7;
   while (TRUE) {
@@ -233,7 +265,7 @@ gst_m3u8_update (GstM3U8 * self, gchar * data, gboolean * updated)
     if (data[0] != '#') {
       gchar *r;
 
-      if (duration < 0 && list == NULL) {
+      if (duration <= 0 && list == NULL) {
         GST_LOG ("%s: got line without EXTINF or EXTSTREAMINF, dropping", data);
         goto next_line;
       }
@@ -277,7 +309,7 @@ gst_m3u8_update (GstM3U8 * self, gchar * data, gboolean * updated)
         file =
             gst_m3u8_media_file_new (data, title, duration,
             self->mediasequence++);
-        duration = -1;
+        duration = 0;
         title = NULL;
         self->files = g_list_append (self->files, file);
       }
@@ -321,7 +353,7 @@ gst_m3u8_update (GstM3U8 * self, gchar * data, gboolean * updated)
       }
     } else if (g_str_has_prefix (data, "#EXT-X-TARGETDURATION:")) {
       if (int_from_string (data + 22, &data, &val))
-        self->targetduration = val;
+        self->targetduration = val * GST_SECOND;
     } else if (g_str_has_prefix (data, "#EXT-X-MEDIA-SEQUENCE:")) {
       if (int_from_string (data + 22, &data, &val))
         self->mediasequence = val;
@@ -334,11 +366,12 @@ gst_m3u8_update (GstM3U8 * self, gchar * data, gboolean * updated)
       g_free (self->allowcache);
       self->allowcache = g_strdup (data + 19);
     } else if (g_str_has_prefix (data, "#EXTINF:")) {
-      if (!int_from_string (data + 8, &data, &val)) {
+      gdouble fval;
+      if (!double_from_string (data + 8, &data, &fval)) {
         GST_WARNING ("Can't read EXTINF duration");
         goto next_line;
       }
-      duration = val;
+      duration = fval * (gdouble) GST_SECOND;
       if (duration > self->targetduration)
         GST_WARNING ("EXTINF duration > TARGETDURATION");
       if (!data || *data != ',')
@@ -485,7 +518,6 @@ gst_m3u8_client_get_current_position (GstM3U8Client * client,
       break;
     *timestamp += GST_M3U8_MEDIA_FILE (walk->data)->duration;
   }
-  *timestamp *= GST_SECOND;
 }
 
 gboolean
@@ -517,7 +549,7 @@ gst_m3u8_client_get_next_fragment (GstM3U8Client * client,
   client->sequence = file->sequence + 1;
 
   *uri = file->uri;
-  *duration = file->duration * GST_SECOND;
+  *duration = file->duration;
 
   GST_M3U8_CLIENT_UNLOCK (client);
   return TRUE;
@@ -545,7 +577,7 @@ gst_m3u8_client_get_duration (GstM3U8Client * client)
 
   g_list_foreach (client->current->files, (GFunc) _sum_duration, &duration);
   GST_M3U8_CLIENT_UNLOCK (client);
-  return duration * GST_SECOND;
+  return duration;
 }
 
 GstClockTime
@@ -558,7 +590,7 @@ gst_m3u8_client_get_target_duration (GstM3U8Client * client)
   GST_M3U8_CLIENT_LOCK (client);
   duration = client->current->targetduration;
   GST_M3U8_CLIENT_UNLOCK (client);
-  return duration * GST_SECOND;
+  return duration;
 }
 
 const gchar *

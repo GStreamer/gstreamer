@@ -1,0 +1,34 @@
+<plugin>
+  <name>smooth</name>
+  <description>Apply a smooth filter to an image</description>
+  <filename>../../gst/smooth/.libs/libgstsmooth.so</filename>
+  <basename>libgstsmooth.so</basename>
+  <version>0.10.23.1</version>
+  <license>LGPL</license>
+  <source>gst-plugins-bad</source>
+  <package>GStreamer Bad Plug-ins git</package>
+  <origin>Unknown package origin</origin>
+  <elements>
+    <element>
+      <name>smooth</name>
+      <longname>Smooth effect</longname>
+      <class>Filter/Effect/Video</class>
+      <description>Apply a smooth filter to an image</description>
+      <author>Wim Taymans &lt;wim.taymans@chello.be&gt;</author>
+      <pads>
+        <caps>
+          <name>sink</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>video/x-raw-yuv, format=(fourcc)I420, width=(int)[ 1, 2147483647 ], height=(int)[ 1, 2147483647 ], framerate=(fraction)[ 0/1, 2147483647/1 ]</details>
+        </caps>
+        <caps>
+          <name>src</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>video/x-raw-yuv, format=(fourcc)I420, width=(int)[ 1, 2147483647 ], height=(int)[ 1, 2147483647 ], framerate=(fraction)[ 0/1, 2147483647/1 ]</details>
+        </caps>
+      </pads>
+    </element>
+  </elements>
+</plugin>

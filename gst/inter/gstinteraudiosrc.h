@@ -39,6 +39,7 @@ struct _GstInterAudioSrc
   GstBaseSrc base_interaudiosrc;
 
   GstInterSurface *surface;
+  char *channel;
 
   guint64 n_samples;
   int sample_rate;

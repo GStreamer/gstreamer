@@ -113,6 +113,8 @@ gst_geometric_transform_generate_map (GstGeometricTransform * gt)
   GstGeometricTransformClass *klass;
   gdouble *ptr;
 
+  GST_INFO_OBJECT (gt, "Generating new transform map");
+
   /* cleanup old map */
   g_free (gt->map);
   gt->map = NULL;
@@ -143,9 +145,11 @@ gst_geometric_transform_generate_map (GstGeometricTransform * gt)
   }
 
 end:
-  if (!ret)
+  if (!ret) {
+    GST_WARNING_OBJECT (gt, "Generating transform map failed");
     g_free (gt->map);
-  else
+    gt->map = NULL;
+  } else
     gt->needs_remap = FALSE;
   return ret;
 }
@@ -174,8 +178,8 @@ gst_geometric_transform_set_caps (GstBaseTransform * btrans, GstCaps * incaps,
 
     /* regenerate the map */
     GST_OBJECT_LOCK (gt);
-    if (old_width == 0 || old_height == 0 || gt->width != old_width ||
-        gt->height != old_height) {
+    if (gt->map == NULL || old_width == 0 || old_height == 0
+        || gt->width != old_width || gt->height != old_height) {
       if (klass->prepare_func)
         if (!klass->prepare_func (gt)) {
           GST_OBJECT_UNLOCK (gt);
@@ -347,7 +351,13 @@ gst_geometric_transform_stop (GstBaseTransform * trans)
 {
   GstGeometricTransform *gt = GST_GEOMETRIC_TRANSFORM_CAST (trans);
 
+  GST_INFO_OBJECT (gt, "Deleting transform map");
+
+  gt->width = 0;
+  gt->height = 0;
+
   g_free (gt->map);
+  gt->map = NULL;
 
   return TRUE;
 }

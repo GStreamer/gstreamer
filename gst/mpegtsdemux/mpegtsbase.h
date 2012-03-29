@@ -48,6 +48,8 @@ G_BEGIN_DECLS
 #define GST_MPEGTS_BASE_GET_CLASS(obj) \
   (G_TYPE_INSTANCE_GET_CLASS ((obj), GST_TYPE_MPEGTS_BASE, MpegTSBaseClass))
 
+#define MPEG_TS_BASE_PACKETIZER(b) (((MpegTSBase*)b)->packetizer)
+
 typedef struct _MpegTSBase MpegTSBase;
 typedef struct _MpegTSBaseClass MpegTSBaseClass;
 typedef struct _MpegTSBaseStream MpegTSBaseStream;
@@ -76,6 +78,8 @@ struct _MpegTSBaseProgram
 
   /* TRUE if the program is currently being used */
   gboolean active;
+  /* TRUE if this is the first program created */
+  gboolean initial_program;
 };
 
 typedef enum {
@@ -95,9 +99,6 @@ struct _MpegTSBase {
 
   /* pull-based behaviour */
   MpegTSBaseMode mode;
-
-  /* location of first sync point */
-  guint64	initial_sync_point;
 
   /* Current pull offset (also set by seek handler) */
   guint64	seek_offset;
@@ -130,12 +131,10 @@ struct _MpegTSBase {
   /* Whether we saw a PAT yet */
   gboolean seen_pat;
 
-  /* Offset from the origin to the first PAT (pullmode) */
-  guint64    first_pat_offset;
-
-  /* interpolation gap between the upstream timestamp and the pts */
-  GstClockTime in_gap;
-  GstClockTime first_buf_ts;
+  /* Whether upstream is live or not */
+  gboolean upstream_live;
+  /* Whether we queried the upstream latency or not */
+  gboolean queried_latency;
 
   /* Whether upstream is live or not */
   gboolean upstream_live;
@@ -168,7 +167,7 @@ struct _MpegTSBaseClass {
   GstFlowReturn (*find_timestamps) (MpegTSBase * base, guint64 initoff, guint64 *offset);
 
   /* seek is called to wait for seeking */
-  GstFlowReturn (*seek) (MpegTSBase * base, GstEvent * event, guint16 pid);
+  GstFlowReturn (*seek) (MpegTSBase * base, GstEvent * event);
 
   /* flush all streams */
   void (*flush) (MpegTSBase * base);

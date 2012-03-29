@@ -1037,6 +1037,7 @@ rsn_dvdsrc_step (resinDvdSrc * src, gboolean have_dvd_lock)
       break;
     case DVDNAV_CELL_CHANGE:{
       dvdnav_cell_change_event_t *event = (dvdnav_cell_change_event_t *) data;
+      GstMessage *message;
 
       src->pgc_duration = MPEGTIME_TO_GSTTIME (event->pgc_length);
       /* event->cell_start has the wrong time - it doesn't handle
@@ -1049,6 +1050,10 @@ rsn_dvdsrc_step (resinDvdSrc * src, gboolean have_dvd_lock)
           "CELL change dur now %" GST_TIME_FORMAT " position now %"
           GST_TIME_FORMAT, GST_TIME_ARGS (src->pgc_duration),
           GST_TIME_ARGS (src->cur_position));
+
+      message = gst_message_new_duration (GST_OBJECT (src), GST_FORMAT_TIME,
+          src->pgc_duration);
+      gst_element_post_message (GST_ELEMENT (src), message);
 
       rsn_dvdsrc_prepare_streamsinfo_event (src);
       src->need_tag_update = TRUE;
@@ -2423,6 +2428,53 @@ rsn_dvdsrc_src_event (GstBaseSrc * basesrc, GstEvent * event)
   return res;
 }
 
+static void
+rsn_dvdsrc_post_title_info (GstElement * element)
+{
+  resinDvdSrc *src = RESINDVDSRC (element);
+  GstMessage *message;
+  GstStructure *s;
+  int32_t n, ntitles;
+  int res;
+  GValue array = { 0 };
+
+  res = dvdnav_get_number_of_titles (src->dvdnav, &ntitles);
+  if (res != DVDNAV_STATUS_OK) {
+    GST_WARNING_OBJECT (src, "Failed to get number of titles: %d", res);
+    return;
+  }
+
+  g_value_init (&array, GST_TYPE_ARRAY);
+
+  s = gst_structure_new ("application/x-gst-dvd", "event",
+      G_TYPE_STRING, "dvd-title-info", NULL);
+
+  for (n = 0; n < ntitles; ++n) {
+    uint64_t *times, duration;
+    uint32_t nchapters;
+    GValue item = { 0 };
+
+    g_value_init (&item, G_TYPE_UINT64);
+
+    nchapters =
+        dvdnav_describe_title_chapters (src->dvdnav, n, &times, &duration);
+    if (nchapters == 0) {
+      GST_WARNING_OBJECT (src, "Failed to get title %d info", n);
+      g_value_set_uint64 (&item, GST_CLOCK_TIME_NONE);
+    } else {
+      g_value_set_uint64 (&item, gst_util_uint64_scale (duration, GST_SECOND,
+              90000));
+    }
+    gst_value_array_append_value (&array, &item);
+    g_value_unset (&item);
+  }
+  gst_structure_set_value (s, "title-durations", &array);
+  g_value_unset (&array);
+
+  message = gst_message_new_element (GST_OBJECT (src), s);
+  gst_element_post_message (GST_ELEMENT_CAST (src), message);
+}
+
 static GstStateChangeReturn
 rsn_dvdsrc_change_state (GstElement * element, GstStateChange transition)
 {
@@ -2459,6 +2511,9 @@ rsn_dvdsrc_change_state (GstElement * element, GstStateChange transition)
       rsn_dvdsrc_check_nav_blocks (src);
       g_mutex_unlock (src->dvd_lock);
       break;
+    case GST_STATE_CHANGE_READY_TO_PAUSED:
+      rsn_dvdsrc_post_title_info (element);
+      break;
     default:
       break;
   }
@@ -2486,6 +2541,9 @@ rsn_dvdsrc_src_query (GstBaseSrc * basesrc, GstQuery * query)
       if (format == GST_FORMAT_TIME) {
         if (src->pgc_duration != GST_CLOCK_TIME_NONE) {
           val = src->pgc_duration;
+
+          GST_DEBUG_OBJECT (src, "duration : %" GST_TIME_FORMAT,
+              GST_TIME_ARGS (val));
           gst_query_set_duration (query, format, val);
           res = TRUE;
         }

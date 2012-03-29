@@ -206,6 +206,8 @@
             GST_MSECOND/10, CLOCK_BASE))
 #define GSTTIME_TO_MPEGTIME(time) (gst_util_uint64_scale ((time), \
             CLOCK_BASE, GST_MSECOND/10))
+#define GSTTIME_TO_PCRTIME(time) (gst_util_uint64_scale ((time), \
+            300 * CLOCK_BASE, GST_MSECOND/10))
 
 #define MPEG_MUX_RATE_MULT      50
 

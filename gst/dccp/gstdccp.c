@@ -333,7 +333,7 @@ gst_dccp_socket_write (GstElement * element, int socket, const void *buf,
     size_t size, int packet_size)
 {
   size_t bytes_written = 0;
-  ssize_t wrote;
+  ssize_t wrote = 0;
 
 #ifndef G_OS_WIN32
   struct iovec iov;
@@ -362,11 +362,14 @@ gst_dccp_socket_write (GstElement * element, int socket, const void *buf,
     } while (wrote == SOCKET_ERROR && errorCode == EAGAIN);
 #endif
 
-    /* TODO print the send error */
-    bytes_written += wrote;
+    /* give up on error */
+    if (wrote >= 0)
+      bytes_written += wrote;
+    else
+      break;
   }
 
-  if (bytes_written < 0)
+  if (wrote < 0)
     GST_WARNING ("Error while writing.");
   else
     GST_LOG_OBJECT (element, "Wrote %" G_GSIZE_FORMAT " bytes succesfully.",

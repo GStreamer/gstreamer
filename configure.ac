@@ -41,6 +41,14 @@ dnl we override it here if we need to for the release candidate of new series
 GST_MAJORMINOR=0.11
 AC_SUBST(GST_MAJORMINOR)
 
+dnl CURRENT, REVISION, AGE
+dnl - library source changed -> increment REVISION
+dnl - interfaces added/removed/changed -> increment CURRENT, REVISION = 0
+dnl - interfaces added -> increment AGE
+dnl - interfaces removed -> AGE = 0
+dnl sets GST_LT_LDFLAGS
+AS_LIBTOOL(GST, 24, 0, 0)
+
 AG_GST_LIBTOOL_PREPARE
 
 dnl FIXME: this macro doesn't actually work;
@@ -52,8 +60,13 @@ AC_LIBTOOL_WIN32_DLL
 AM_PROG_LIBTOOL
 
 dnl *** required versions of GStreamer stuff ***
+<<<<<<< HEAD
 GST_REQ=0.11.3
 GSTPB_REQ=0.11.3
+=======
+GST_REQ=0.10.36
+GSTPB_REQ=0.10.36
+>>>>>>> origin/0.10
 
 dnl *** autotools stuff ****
 
@@ -437,19 +450,14 @@ AG_GST_CHECK_FEATURE(DIRECTSOUND, [DirectSound], directsoundsrc, [
   LDFLAGS="$LDFLAGS $DIRECTX_LDFLAGS"
   LIBS="$LIBS -ldsound -ldxerr9 -luser32"
   AC_MSG_CHECKING(for DirectSound LDFLAGS)
-  AC_LINK_IFELSE([
+  AC_LINK_IFELSE([AC_LANG_PROGRAM([[
 #include <windows.h>
 #include <dxerr9.h>
 #include <dsound.h>
-
-int main ()
-{
+]], [[
   DXGetErrorString9 (0);
   DirectSoundCreate(NULL, NULL, NULL);
-
-  return 0;
-}
-],
+]])],
     [HAVE_DIRECTSOUND="yes"],
     [HAVE_DIRECTSOUND="no"])
   AC_MSG_RESULT($HAVE_DIRECTSOUND)
@@ -478,17 +486,12 @@ AG_GST_CHECK_FEATURE(DIRECT3D, [Direct3D plug-in], direct3dsink, [
   LDFLAGS="$LDFLAGS $DIRECTX_LDFLAGS"
   LIBS="$LIBS -ld3d9 -lgdi32"
   AC_MSG_CHECKING(for Direct3D LDFLAGS)
-  AC_LINK_IFELSE([
+  AC_LINK_IFELSE([AC_LANG_PROGRAM([[
 #include <windows.h>
 #include <d3d9.h>
-
-int main ()
-{
+]], [[
   Direct3DCreate9(D3D_SDK_VERSION);
-
-  return 0;
-}
-],
+]])],
     [HAVE_DIRECT3D="yes"],
     [HAVE_DIRECT3D="no"])
   AC_MSG_RESULT($HAVE_DIRECT3D)
@@ -514,18 +517,13 @@ AG_GST_CHECK_FEATURE(DIRECTDRAW, [DirectDraw plug-in], directdrawsink, [
   LDFLAGS="$LDFLAGS $DIRECTX_LDFLAGS"
   LIBS="$LIBS -lddraw -lgdi32"
   AC_MSG_CHECKING(for DirectDraw LDFLAGS)
-  AC_LINK_IFELSE([
+  AC_LINK_IFELSE([AC_LANG_PROGRAM([[
 #include <windows.h>
 #include <ddraw.h>
-
-int main ()
-{
+]], [[
   GetStockObject(0);
   DirectDrawCreate(NULL, NULL, NULL);
-
-  return 0;
-}
-],
+]])],
     [HAVE_DIRECTDRAW="yes"],
     [HAVE_DIRECTDRAW="no"])
   AC_MSG_RESULT($HAVE_DIRECTDRAW)
@@ -541,6 +539,36 @@ int main ()
     AC_SUBST(DIRECTDRAW_LIBS)
   fi
   AC_SUBST(HAVE_DIRECTDRAW)
+])
+
+dnl Direct3D9
+AM_CONDITIONAL(USE_DIRECT3D9, true)
+AG_GST_CHECK_FEATURE(DIRECT3D9, [Direct3D9], winscreencap, [
+  HAVE_DIRECT3D="no"
+
+  save_LIBS="$LIBS"
+
+  LIBS="$LIBS -ld3d9 -lgdi32"
+  AC_MSG_CHECKING(for Direct3D9 LDFLAGS)
+
+  AC_LINK_IFELSE([AC_LANG_PROGRAM([[
+#include <windows.h>
+#include <d3d9.h>
+]], [[
+  Direct3DCreate9(D3D_SDK_VERSION);
+]])],
+    [HAVE_DIRECT3D9="yes"],
+    [HAVE_DIRECT3D9="no"])
+  AC_MSG_RESULT($HAVE_DIRECT3D9)
+
+  LIBS=$save_LIBS
+
+  if test "x$HAVE_DIRECT3D9" = "xyes";  then
+
+    DIRECT3D9_LIBS="-ld3d9 -lgdi32"
+    AC_SUBST(DIRECT3D9_LIBS)
+  fi
+  AC_SUBST(HAVE_DIRECT3D9)
 ])
 
 dnl *** AppleMedia (OS X and iOS) ***
@@ -811,11 +839,23 @@ AG_GST_CHECK_FEATURE(DECKLINK, [decklink], decklink, [
            ])
        fi
        ;;
+     *-*darwin*)
+       if test "x$HAVE_PTHREAD_H" = "xyes"; then
+         AC_CHECK_LIB(dl, dlopen,
+           [
+            HAVE_DECKLINK=yes
+            DECKLINK_CXXFLAGS=
+            DECKLINK_LIBS="-lpthread -ldl"
+	    HAVE_DECKLINK_OSX=yes
+           ])
+       fi
+       ;;
      *)
        HAVE_DECKLINK=no
        ;;
    esac
 
+   AM_CONDITIONAL(DECKLINK_OSX, test "x$HAVE_DECKLINK_OSX" = xyes)
    AC_SUBST(DECKLINK_CXXFLAGS)
    AC_SUBST(DECKLINK_LIBS)
 ])
@@ -826,6 +866,31 @@ AG_GST_CHECK_FEATURE(DIRECTFB, [directfb], dfbvideosink , [
   PKG_CHECK_MODULES(DIRECTFB, directfb >= 0.9.24, HAVE_DIRECTFB="yes", [
     HAVE_DIRECTFB="no"
   ])
+])
+
+dnl **** Wayland ****
+translit(dnm, m, l) AM_CONDITIONAL(USE_WAYLAND, true)
+AG_GST_CHECK_FEATURE(WAYLAND, [wayland sink], wayland , [
+  PKG_CHECK_MODULES(WAYLAND, wayland-client >= 0.1, [
+    AC_CHECK_HEADER(wayland-client.h, HAVE_WAYLAND_CLIENT="yes", HAVE_WAYLAND_CLIENT="no")
+    AC_CHECK_HEADER(wayland-client-protocol.h, HAVE_WAYLAND_CLIENT_PROTOCOL="yes", HAVE_WAYLAND_CLIENT_PROTOCOL="no")
+    if test "x$HAVE_WAYLAND_CLIENT" = "xno"; then
+      AC_MSG_RESULT(wayland-client.h could not be found.)
+      HAVE_WAYLAND="no"
+    elif test "x$HAVE_WAYLAND_CLIENT_PROTOCOL" = "xno"; then
+      AC_MSG_RESULT(wayland-client-protocol.h could not be found.)
+      HAVE_WAYLAND="no"
+    else
+      HAVE_WAYLAND="yes"
+      WAYLAND_LIBS="-lwayland-client"
+    fi
+  ], [
+    AC_MSG_RESULT(no wayland.)
+    HAVE_WAYLAND="no"
+  ])
+WAYLAND_CFLAGS=""
+AC_SUBST(WAYLAND_CFLAGS)
+AC_SUBST(WAYLAND_LIBS)
 ])
 
 dnl **** Dirac ****
@@ -1392,22 +1457,22 @@ AG_GST_CHECK_FEATURE(OPENCV, [opencv plugins], opencv, [
     AC_LANG_CPLUSPLUS
     OLD_CPPFLAGS=$CPPFLAGS
     CPPFLAGS=$OPENCV_CFLAGS
-    AC_CHECK_HEADER(highgui.h, HAVE_HIGHGUI="yes", HAVE_HIGHGUI="no")
-    AC_CHECK_HEADER(cvaux.h, HAVE_CVAUX="yes", HAVE_CVAUX="no")
+    AC_CHECK_HEADERS([highgui.h opencv2/highgui/highgui_c.h])
     CPPFLAGS=$OLD_CPPFLAGS
     AC_LANG_C
-    if test "x$HAVE_HIGHGUI" = "xno"; then
-      AC_MSG_RESULT(highgui.h could not be found.)
-      HAVE_OPENCV="no"
-    elif test "x$HAVE_CVAUX" = "xno"; then
-      AC_MSG_RESULT(cvaux.h could not be found.)
-      HAVE_OPENCV="no"
-    else
+
+    if test $ac_cv_header_highgui_h = "yes" -o $ac_cv_header_opencv2_highgui_highgui_c_h = "yes" ; then
       HAVE_OPENCV="yes"
+    else
+      AC_MSG_RESULT([neither highgui.h nor opencv2/highgui/highgui_c.h could not be found])
+      HAVE_OPENCV="no"
     fi
   ], [
     HAVE_OPENCV="no"
   ])
+  OPENCV_PREFIX="`$PKG_CONFIG --variable=prefix opencv`"
+  AC_DEFINE_UNQUOTED(OPENCV_PREFIX, "$OPENCV_PREFIX", [opencv install prefix])
+  AC_SUBST(OPENCV_PREFIX)
   AC_SUBST(OPENCV_CFLAGS)
   AC_SUBST(OPENCV_LIBS)
 ])
@@ -1804,6 +1869,7 @@ AM_CONDITIONAL(USE_CURL, false)
 AM_CONDITIONAL(USE_DC1394, false)
 AM_CONDITIONAL(USE_DECKLINK, false)
 AM_CONDITIONAL(USE_DIRECTFB, false)
+AM_CONDITIONAL(USE_WAYLAND, false)
 AM_CONDITIONAL(USE_DIRAC, false)
 AM_CONDITIONAL(USE_DTS, false)
 AM_CONDITIONAL(USE_DIVX, false)
@@ -2059,6 +2125,7 @@ ext/curl/Makefile
 ext/dc1394/Makefile
 ext/dirac/Makefile
 ext/directfb/Makefile
+ext/wayland/Makefile
 ext/divx/Makefile
 ext/dts/Makefile
 ext/faac/Makefile

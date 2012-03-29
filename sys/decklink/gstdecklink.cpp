@@ -94,7 +94,8 @@ gst_decklink_audio_connection_get_type (void)
   if (!type) {
     static const GEnumValue connections[] = {
       {GST_DECKLINK_AUDIO_CONNECTION_AUTO, "auto", "Automatic"},
-      {GST_DECKLINK_AUDIO_CONNECTION_EMBEDDED, "embedded", "SDI/HDMI embedded audio"},
+      {GST_DECKLINK_AUDIO_CONNECTION_EMBEDDED, "embedded",
+          "SDI/HDMI embedded audio"},
       {GST_DECKLINK_AUDIO_CONNECTION_AES_EBU, "aes", "AES/EBU input"},
       {GST_DECKLINK_AUDIO_CONNECTION_ANALOG, "analog", "Analog input"},
       {0, NULL, NULL}
@@ -110,29 +111,29 @@ gst_decklink_audio_connection_get_type (void)
 #define HD 1, 1, false, true
 
 static const GstDecklinkMode modes[] = {
-  {bmdModeNTSC, 720, 486, 30000, 1001, true, NTSC },
-  {bmdModeNTSC2398, 720, 486, 24000, 1001, true, NTSC },
-  {bmdModePAL, 720, 576, 25, 1, true, PAL },
-  {bmdModeNTSCp, 720, 486, 30000, 1001, false, NTSC },
-  {bmdModePALp, 720, 576, 25, 1, false, PAL },
+  {bmdModeNTSC, 720, 486, 30000, 1001, true, NTSC},
+  {bmdModeNTSC2398, 720, 486, 24000, 1001, true, NTSC},
+  {bmdModePAL, 720, 576, 25, 1, true, PAL},
+  {bmdModeNTSCp, 720, 486, 30000, 1001, false, NTSC},
+  {bmdModePALp, 720, 576, 25, 1, false, PAL},
 
-  {bmdModeHD1080p2398, 1920, 1080, 24000, 1001, false, HD },
-  {bmdModeHD1080p24, 1920, 1080, 24, 1, false, HD },
-  {bmdModeHD1080p25, 1920, 1080, 25, 1, false, HD },
-  {bmdModeHD1080p2997, 1920, 1080, 30000, 1001, false, HD },
-  {bmdModeHD1080p30, 1920, 1080, 30, 1, false, HD },
+  {bmdModeHD1080p2398, 1920, 1080, 24000, 1001, false, HD},
+  {bmdModeHD1080p24, 1920, 1080, 24, 1, false, HD},
+  {bmdModeHD1080p25, 1920, 1080, 25, 1, false, HD},
+  {bmdModeHD1080p2997, 1920, 1080, 30000, 1001, false, HD},
+  {bmdModeHD1080p30, 1920, 1080, 30, 1, false, HD},
 
-  {bmdModeHD1080i50, 1920, 1080, 25, 1, true, HD },
-  {bmdModeHD1080i5994, 1920, 1080, 30000, 1001, true, HD },
-  {bmdModeHD1080i6000, 1920, 1080, 30, 1, true, HD },
+  {bmdModeHD1080i50, 1920, 1080, 25, 1, true, HD},
+  {bmdModeHD1080i5994, 1920, 1080, 30000, 1001, true, HD},
+  {bmdModeHD1080i6000, 1920, 1080, 30, 1, true, HD},
 
-  {bmdModeHD1080p50, 1920, 1080, 50, 1, false, HD },
-  {bmdModeHD1080p5994, 1920, 1080, 30000, 1001, false, HD },
-  {bmdModeHD1080p6000, 1920, 1080, 60, 1, false, HD },
+  {bmdModeHD1080p50, 1920, 1080, 50, 1, false, HD},
+  {bmdModeHD1080p5994, 1920, 1080, 30000, 1001, false, HD},
+  {bmdModeHD1080p6000, 1920, 1080, 60, 1, false, HD},
 
-  {bmdModeHD720p50, 1280, 720, 50, 1, false, HD },
-  {bmdModeHD720p5994, 1280, 720, 60000, 1001, false, HD },
-  {bmdModeHD720p60, 1280, 720, 60, 1, false, HD }
+  {bmdModeHD720p50, 1280, 720, 50, 1, false, HD},
+  {bmdModeHD720p5994, 1280, 720, 60000, 1001, false, HD},
+  {bmdModeHD720p60, 1280, 720, 60, 1, false, HD}
 
 };
 
@@ -155,8 +156,7 @@ gst_decklink_mode_get_structure (GstDecklinkModeEnum e)
       "interlaced", G_TYPE_BOOLEAN, mode->interlaced,
       "pixel-aspect-ratio", GST_TYPE_FRACTION, mode->par_n, mode->par_d,
       "color-matrix", G_TYPE_STRING, mode->is_hdtv ? "hdtv" : "sdtv",
-      "chroma-site", G_TYPE_STRING, "mpeg2",
-      NULL);
+      "chroma-site", G_TYPE_STRING, "mpeg2", NULL);
 }
 
 GstCaps *
@@ -178,12 +178,42 @@ gst_decklink_mode_get_template_caps (void)
   GstStructure *s;
 
   caps = gst_caps_new_empty ();
-  for(i=0;i<(int)G_N_ELEMENTS(modes);i++) {
-    s = gst_decklink_mode_get_structure ((GstDecklinkModeEnum)i);
+  for (i = 0; i < (int) G_N_ELEMENTS (modes); i++) {
+    s = gst_decklink_mode_get_structure ((GstDecklinkModeEnum) i);
     gst_caps_append_structure (caps, s);
   }
 
   return caps;
+}
+
+IDeckLink *
+gst_decklink_get_nth_device (int n)
+{
+  IDeckLinkIterator *iterator;
+  IDeckLink *decklink = NULL;
+  HRESULT ret;
+  int i;
+
+  iterator = CreateDeckLinkIteratorInstance ();
+  if (iterator == NULL) {
+    GST_ERROR ("no driver");
+    return NULL;
+  }
+
+  ret = iterator->Next (&decklink);
+  if (ret != S_OK) {
+    GST_ERROR ("no card");
+    return NULL;
+  }
+  for (i = 0; i < n; i++) {
+    ret = iterator->Next (&decklink);
+    if (ret != S_OK) {
+      GST_ERROR ("no card");
+      return NULL;
+    }
+  }
+
+  return decklink;
 }
 
 static gboolean

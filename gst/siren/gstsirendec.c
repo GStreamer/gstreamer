@@ -69,14 +69,14 @@ enum
   ARG_0,
 };
 
-static void gst_siren_dec_finalize (GObject * object);
-
-static GstStateChangeReturn
-gst_siren_change_state (GstElement * element, GstStateChange transition);
-
-static gboolean gst_siren_dec_sink_setcaps (GstPad * pad, GstCaps * caps);
-static gboolean gst_siren_dec_sink_event (GstPad * pad, GstEvent * event);
-static GstFlowReturn gst_siren_dec_chain (GstPad * pad, GstBuffer * buf);
+static gboolean gst_siren_dec_start (GstAudioDecoder * dec);
+static gboolean gst_siren_dec_stop (GstAudioDecoder * dec);
+static gboolean gst_siren_dec_set_format (GstAudioDecoder * dec,
+    GstCaps * caps);
+static gboolean gst_siren_dec_parse (GstAudioDecoder * dec,
+    GstAdapter * adapter, gint * offset, gint * length);
+static GstFlowReturn gst_siren_dec_handle_frame (GstAudioDecoder * dec,
+    GstBuffer * buffer);
 
 static void
 _do_init (GType type)
@@ -84,8 +84,8 @@ _do_init (GType type)
   GST_DEBUG_CATEGORY_INIT (sirendec_debug, "sirendec", 0, "sirendec");
 }
 
-GST_BOILERPLATE_FULL (GstSirenDec, gst_siren_dec, GstElement,
-    GST_TYPE_ELEMENT, _do_init);
+GST_BOILERPLATE_FULL (GstSirenDec, gst_siren_dec, GstAudioDecoder,
+    GST_TYPE_AUDIO_DECODER, _do_init);
 
 static void
 gst_siren_dec_base_init (gpointer klass)
@@ -106,17 +106,15 @@ gst_siren_dec_base_init (gpointer klass)
 static void
 gst_siren_dec_class_init (GstSirenDecClass * klass)
 {
-  GObjectClass *gobject_class;
-  GstElementClass *gstelement_class;
-
-  gobject_class = (GObjectClass *) klass;
-  gstelement_class = (GstElementClass *) klass;
+  GstAudioDecoderClass *base_class = GST_AUDIO_DECODER_CLASS (klass);
 
   GST_DEBUG ("Initializing Class");
 
-  gobject_class->finalize = GST_DEBUG_FUNCPTR (gst_siren_dec_finalize);
-
-  gstelement_class->change_state = GST_DEBUG_FUNCPTR (gst_siren_change_state);
+  base_class->start = GST_DEBUG_FUNCPTR (gst_siren_dec_start);
+  base_class->stop = GST_DEBUG_FUNCPTR (gst_siren_dec_stop);
+  base_class->set_format = GST_DEBUG_FUNCPTR (gst_siren_dec_set_format);
+  base_class->parse = GST_DEBUG_FUNCPTR (gst_siren_dec_parse);
+  base_class->handle_frame = GST_DEBUG_FUNCPTR (gst_siren_dec_handle_frame);
 
   GST_DEBUG ("Class Init done");
 }
@@ -124,118 +122,102 @@ gst_siren_dec_class_init (GstSirenDecClass * klass)
 static void
 gst_siren_dec_init (GstSirenDec * dec, GstSirenDecClass * klass)
 {
-
-  GST_DEBUG_OBJECT (dec, "Initializing");
-  dec->decoder = Siren7_NewDecoder (16000);;
-
-  dec->sinkpad = gst_pad_new_from_static_template (&sinktemplate, "sink");
-  dec->srcpad = gst_pad_new_from_static_template (&srctemplate, "src");
-
-  gst_pad_set_setcaps_function (dec->sinkpad,
-      GST_DEBUG_FUNCPTR (gst_siren_dec_sink_setcaps));
-  gst_pad_set_event_function (dec->sinkpad,
-      GST_DEBUG_FUNCPTR (gst_siren_dec_sink_event));
-  gst_pad_set_chain_function (dec->sinkpad,
-      GST_DEBUG_FUNCPTR (gst_siren_dec_chain));
-
-  gst_element_add_pad (GST_ELEMENT (dec), dec->sinkpad);
-  gst_element_add_pad (GST_ELEMENT (dec), dec->srcpad);
-
-  dec->adapter = gst_adapter_new ();
-
-  GST_DEBUG_OBJECT (dec, "Init done");
-}
-
-static void
-gst_siren_dec_finalize (GObject * object)
-{
-  GstSirenDec *dec = GST_SIREN_DEC (object);
-
-  GST_DEBUG_OBJECT (dec, "Finalize");
-
-  Siren7_CloseDecoder (dec->decoder);
-  g_object_unref (dec->adapter);
-
-  G_OBJECT_CLASS (parent_class)->finalize (object);
 }
 
 static gboolean
-gst_siren_dec_sink_setcaps (GstPad * pad, GstCaps * caps)
+gst_siren_dec_start (GstAudioDecoder * dec)
 {
-  GstSirenDec *dec;
+  GstSirenDec *sdec = GST_SIREN_DEC (dec);
+
+  GST_DEBUG_OBJECT (dec, "start");
+
+  sdec->decoder = Siren7_NewDecoder (16000);;
+
+  /* no flushing please */
+  gst_audio_decoder_set_drainable (dec, FALSE);
+
+  return TRUE;
+}
+
+static gboolean
+gst_siren_dec_stop (GstAudioDecoder * dec)
+{
+  GstSirenDec *sdec = GST_SIREN_DEC (dec);
+
+  GST_DEBUG_OBJECT (dec, "stop");
+
+  Siren7_CloseDecoder (sdec->decoder);
+
+  return TRUE;
+}
+
+static gboolean
+gst_siren_dec_negotiate (GstSirenDec * dec)
+{
   gboolean res;
   GstCaps *outcaps;
 
-  dec = GST_SIREN_DEC (GST_PAD_PARENT (pad));
-
   outcaps = gst_static_pad_template_get_caps (&srctemplate);
-  res = gst_pad_set_caps (dec->srcpad, outcaps);
+  res = gst_pad_set_caps (GST_AUDIO_DECODER_SRC_PAD (dec), outcaps);
   gst_caps_unref (outcaps);
 
   return res;
 }
 
 static gboolean
-gst_siren_dec_sink_event (GstPad * pad, GstEvent * event)
+gst_siren_dec_set_format (GstAudioDecoder * bdec, GstCaps * caps)
 {
   GstSirenDec *dec;
-  gboolean res;
 
-  dec = GST_SIREN_DEC (GST_PAD_PARENT (pad));
+  dec = GST_SIREN_DEC (bdec);
 
-  switch (GST_EVENT_TYPE (event)) {
-    case GST_EVENT_EOS:
-      gst_adapter_clear (dec->adapter);
-      res = gst_pad_push_event (dec->srcpad, event);
-      break;
-    case GST_EVENT_FLUSH_STOP:
-      gst_adapter_clear (dec->adapter);
-      res = gst_pad_push_event (dec->srcpad, event);
-      break;
-    default:
-      res = gst_pad_push_event (dec->srcpad, event);
-      break;
-  }
-  return res;
+  return gst_siren_dec_negotiate (dec);
 }
 
 static GstFlowReturn
-gst_siren_dec_chain (GstPad * pad, GstBuffer * buf)
+gst_siren_dec_parse (GstAudioDecoder * dec, GstAdapter * adapter,
+    gint * offset, gint * length)
+{
+  gint size;
+  GstFlowReturn ret;
+
+  size = gst_adapter_available (adapter);
+  g_return_val_if_fail (size > 0, GST_FLOW_ERROR);
+
+  /* accept any multiple of frames */
+  if (size > 40) {
+    ret = GST_FLOW_OK;
+    *offset = 0;
+    *length = size - (size % 40);
+  } else {
+    ret = GST_FLOW_UNEXPECTED;
+  }
+
+  return ret;
+}
+
+static GstFlowReturn
+gst_siren_dec_handle_frame (GstAudioDecoder * bdec, GstBuffer * buf)
 {
   GstSirenDec *dec;
   GstFlowReturn ret = GST_FLOW_OK;
   GstBuffer *out_buf;
   guint8 *in_data, *out_data;
-  guint8 *to_free = NULL;
   guint i, size, num_frames;
   gint out_size, in_size;
   gint decode_ret;
-  gboolean discont;
-  GstClockTime timestamp;
-  guint64 distance;
-  GstCaps *outcaps;
 
-  dec = GST_SIREN_DEC (GST_PAD_PARENT (pad));
+  dec = GST_SIREN_DEC (bdec);
 
-  discont = GST_BUFFER_IS_DISCONT (buf);
-  if (discont) {
-    GST_DEBUG_OBJECT (dec, "received DISCONT, flush adapter");
-    gst_adapter_clear (dec->adapter);
-    dec->discont = TRUE;
-  }
+  size = GST_BUFFER_SIZE (buf);
 
-  gst_adapter_push (dec->adapter, buf);
+  GST_LOG_OBJECT (dec, "Received buffer of size %u", size);
 
-  size = gst_adapter_available (dec->adapter);
-
-  GST_LOG_OBJECT (dec, "Received buffer of size %u with adapter of size : %u",
-      GST_BUFFER_SIZE (buf), size);
+  g_return_val_if_fail (size % 40 == 0, GST_FLOW_ERROR);
+  g_return_val_if_fail (size > 0, GST_FLOW_ERROR);
 
   /* process 40 input bytes into 640 output bytes */
   num_frames = size / 40;
-
-  if (num_frames == 0)
-    goto done;
 
   /* this is the input/output size */
   in_size = num_frames * 40;
@@ -244,32 +226,19 @@ gst_siren_dec_chain (GstPad * pad, GstBuffer * buf)
   GST_LOG_OBJECT (dec, "we have %u frames, %u in, %u out", num_frames, in_size,
       out_size);
 
-  /* set output caps when needed */
-  if ((outcaps = GST_PAD_CAPS (dec->srcpad)) == NULL) {
-    outcaps = gst_static_pad_template_get_caps (&srctemplate);
-    gst_pad_set_caps (dec->srcpad, outcaps);
-    gst_caps_unref (outcaps);
+  /* allow and handle un-negotiated input */
+  if (G_UNLIKELY (GST_PAD_CAPS (GST_AUDIO_DECODER_SRC_PAD (dec)) == NULL)) {
+    gst_siren_dec_negotiate (dec);
   }
 
   /* get a buffer */
-  ret = gst_pad_alloc_buffer_and_set_caps (dec->srcpad, -1,
-      out_size, outcaps, &out_buf);
+  ret = gst_pad_alloc_buffer_and_set_caps (GST_AUDIO_DECODER_SRC_PAD (dec), -1,
+      out_size, GST_PAD_CAPS (GST_AUDIO_DECODER_SRC_PAD (dec)), &out_buf);
   if (ret != GST_FLOW_OK)
     goto alloc_failed;
 
-  /* get the timestamp for the output buffer */
-  timestamp = gst_adapter_prev_timestamp (dec->adapter, &distance);
-
-  /* add the amount of time taken by the distance, each frame is 20ms */
-  if (timestamp != -1)
-    timestamp += (distance / 40) * FRAME_DURATION;
-
-  GST_LOG_OBJECT (dec,
-      "timestamp %" GST_TIME_FORMAT ", distance %" G_GUINT64_FORMAT,
-      GST_TIME_ARGS (timestamp), distance);
-
   /* get the input data for all the frames */
-  to_free = in_data = gst_adapter_take (dec->adapter, in_size);
+  in_data = GST_BUFFER_DATA (buf);
   out_data = GST_BUFFER_DATA (out_buf);
 
   for (i = 0; i < num_frames; i++) {
@@ -287,21 +256,11 @@ gst_siren_dec_chain (GstPad * pad, GstBuffer * buf)
 
   GST_LOG_OBJECT (dec, "Finished decoding");
 
-  /* mark discont */
-  if (dec->discont) {
-    GST_BUFFER_FLAG_SET (out_buf, GST_BUFFER_FLAG_DISCONT);
-    dec->discont = FALSE;
-  }
-
-  GST_BUFFER_TIMESTAMP (out_buf) = timestamp;
-  GST_BUFFER_DURATION (out_buf) = num_frames * FRAME_DURATION;
-
-  ret = gst_pad_push (dec->srcpad, out_buf);
+  /* might really be multiple frames,
+   * but was treated as one for all purposes here */
+  ret = gst_audio_decoder_finish_frame (bdec, out_buf, 1);
 
 done:
-  if (to_free)
-    g_free (to_free);
-
   return ret;
 
   /* ERRORS */
@@ -313,39 +272,13 @@ alloc_failed:
   }
 decode_error:
   {
-    GST_ELEMENT_ERROR (dec, STREAM, DECODE, (NULL),
-        ("Error decoding frame: %d", decode_ret));
-    ret = GST_FLOW_ERROR;
+    GST_AUDIO_DECODER_ERROR (bdec, 1, STREAM, DECODE, (NULL),
+        ("Error decoding frame: %d", decode_ret), ret);
+    if (ret == GST_FLOW_OK)
+      gst_audio_decoder_finish_frame (bdec, NULL, 1);
     gst_buffer_unref (out_buf);
     goto done;
   }
-}
-
-static GstStateChangeReturn
-gst_siren_change_state (GstElement * element, GstStateChange transition)
-{
-  GstStateChangeReturn ret = GST_STATE_CHANGE_SUCCESS;
-  GstSirenDec *dec = GST_SIREN_DEC (element);
-
-  switch (transition) {
-    case GST_STATE_CHANGE_READY_TO_PAUSED:
-      dec->discont = FALSE;
-      break;
-    default:
-      break;
-  }
-
-  ret = GST_ELEMENT_CLASS (parent_class)->change_state (element, transition);
-
-  switch (transition) {
-    case GST_STATE_CHANGE_PAUSED_TO_READY:
-      gst_adapter_clear (dec->adapter);
-      break;
-    default:
-      break;
-  }
-
-  return ret;
 }
 
 gboolean

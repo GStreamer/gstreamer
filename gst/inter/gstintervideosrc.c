@@ -19,14 +19,18 @@
 /**
  * SECTION:element-gstintervideosrc
  *
- * The intervideosrc element does FIXME stuff.
+ * The intervideosrc element is a video source element.  It is used
+ * in connection with a intervideosink element in a different pipeline,
+ * similar to interaudiosink and interaudiosrc.
  *
  * <refsect2>
  * <title>Example launch line</title>
  * |[
- * gst-launch -v fakesrc ! intervideosrc ! FIXME ! fakesink
+ * gst-launch -v intervideosrc ! queue ! xvimagesink
  * ]|
- * FIXME Describe what the pipeline does.
+ * 
+ * The intersubsrc element cannot be used effectively with gst-launch,
+ * as it requires a second pipeline in the application to send subtitles.
  * </refsect2>
  */
 
@@ -111,8 +115,11 @@ gst_inter_video_src_base_init (gpointer g_class)
   gst_element_class_add_pad_template (element_class,
       gst_static_pad_template_get (&gst_inter_video_src_src_template));
 
-  gst_element_class_set_details_simple (element_class, "FIXME Long name",
-      "Generic", "FIXME Description", "FIXME <fixme@example.com>");
+  gst_element_class_set_details_simple (element_class,
+      "Internal video source",
+      "Source/Video",
+      "Virtual video source for internal process communication",
+      "David Schleef <ds@schleef.org>");
 }
 
 static void
@@ -361,10 +368,16 @@ static gboolean
 gst_inter_video_src_event (GstBaseSrc * src, GstEvent * event)
 {
   GstInterVideoSrc *intervideosrc = GST_INTER_VIDEO_SRC (src);
+  gboolean ret;
 
   GST_DEBUG_OBJECT (intervideosrc, "event");
 
-  return TRUE;
+  switch (GST_EVENT_TYPE (event)) {
+    default:
+      ret = GST_BASE_SRC_CLASS (parent_class)->event (src, event);
+  }
+
+  return ret;
 }
 
 static GstFlowReturn
@@ -450,10 +463,16 @@ static gboolean
 gst_inter_video_src_query (GstBaseSrc * src, GstQuery * query)
 {
   GstInterVideoSrc *intervideosrc = GST_INTER_VIDEO_SRC (src);
+  gboolean ret;
 
   GST_DEBUG_OBJECT (intervideosrc, "query");
 
-  return TRUE;
+  switch (GST_QUERY_TYPE (query)) {
+    default:
+      ret = GST_BASE_SRC_CLASS (parent_class)->query (src, query);
+  }
+
+  return ret;
 }
 
 static gboolean

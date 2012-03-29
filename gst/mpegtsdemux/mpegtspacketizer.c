@@ -28,6 +28,12 @@
  * with newer GLib versions (>= 2.31.0) */
 #define GLIB_DISABLE_DEPRECATION_WARNINGS
 
+/* Skew calculation pameters */
+#define MAX_TIME	(2 * GST_SECOND)
+
+/* maximal PCR time */
+#define PCR_MAX_VALUE (((((guint64)1)<<33) * 300) + 298)
+#define PTS_DTS_MAX_VALUE (((guint64)1) << 33)
 
 #include "mpegtspacketizer.h"
 #include "gstmpegdesc.h"
@@ -67,9 +73,36 @@ static GQuark QUARK_SEGMENT_LAST_SECTION_NUMBER;
 static GQuark QUARK_LAST_TABLE_ID;
 static GQuark QUARK_EVENTS;
 
+
+#define MPEGTS_PACKETIZER_GET_PRIVATE(obj)  \
+   (G_TYPE_INSTANCE_GET_PRIVATE ((obj), GST_TYPE_MPEGTS_PACKETIZER, MpegTSPacketizerPrivate))
+
 static void _init_local (void);
 G_DEFINE_TYPE_EXTENDED (MpegTSPacketizer2, mpegts_packetizer, G_TYPE_OBJECT, 0,
     _init_local ());
+
+typedef struct
+{
+  guint64 offset;               /* offset in upstream */
+  guint64 pcr;                  /* pcr (wraparound not fixed) */
+} MpegTSPacketizerOffset;
+
+struct _MpegTSPacketizerPrivate
+{
+  /* Used for bitrate calculation */
+  /* FIXME : Replace this later on with a balanced tree or sequence */
+  guint64 first_offset;
+  guint64 first_pcr;
+  GstClockTime first_pcr_ts;
+  guint64 last_offset;
+  guint64 last_pcr;
+  GstClockTime last_pcr_ts;
+
+  /* Reference offset */
+  guint64 refoffset;
+
+  guint nb_seen_offsets;
+};
 
 static void mpegts_packetizer_dispose (GObject * object);
 static void mpegts_packetizer_finalize (GObject * object);
@@ -78,6 +111,11 @@ static gchar *convert_to_utf8 (const gchar * text, gint length, guint start,
 static gchar *get_encoding (const gchar * text, guint * start_text,
     gboolean * is_multibyte);
 static gchar *get_encoding_and_convert (const gchar * text, guint length);
+static GstClockTime calculate_skew (MpegTSPacketizer2 * packetizer,
+    guint64 pcrtime, GstClockTime time);
+static void record_pcr (MpegTSPacketizer2 * packetizer, guint64 pcr,
+    guint64 offset);
+static void mpegts_packetizer_reset_skew (MpegTSPacketizer2 * packetizer);
 
 #define CONTINUITY_UNSET 255
 #define MAX_CONTINUITY 15
@@ -151,6 +189,8 @@ mpegts_packetizer_class_init (MpegTSPacketizer2Class * klass)
 {
   GObjectClass *gobject_class;
 
+  g_type_class_add_private (klass, sizeof (MpegTSPacketizerPrivate));
+
   gobject_class = G_OBJECT_CLASS (klass);
 
   gobject_class->dispose = mpegts_packetizer_dispose;
@@ -160,11 +200,24 @@ mpegts_packetizer_class_init (MpegTSPacketizer2Class * klass)
 static void
 mpegts_packetizer_init (MpegTSPacketizer2 * packetizer)
 {
+  packetizer->priv = MPEGTS_PACKETIZER_GET_PRIVATE (packetizer);
   packetizer->adapter = gst_adapter_new ();
   packetizer->offset = 0;
   packetizer->empty = TRUE;
   packetizer->streams = g_new0 (MpegTSPacketizerStream *, 8192);
   packetizer->know_packet_size = FALSE;
+  packetizer->calculate_skew = FALSE;
+  packetizer->calculate_offset = FALSE;
+  mpegts_packetizer_reset_skew (packetizer);
+
+  packetizer->priv->first_offset = -1;
+  packetizer->priv->first_pcr = -1;
+  packetizer->priv->first_pcr_ts = GST_CLOCK_TIME_NONE;
+  packetizer->priv->last_offset = -1;
+  packetizer->priv->last_pcr = -1;
+  packetizer->priv->last_pcr_ts = GST_CLOCK_TIME_NONE;
+  packetizer->priv->nb_seen_offsets = 0;
+  packetizer->priv->refoffset = -1;
 }
 
 static void
@@ -205,7 +258,7 @@ mpegts_packetizer_finalize (GObject * object)
     G_OBJECT_CLASS (mpegts_packetizer_parent_class)->finalize (object);
 }
 
-guint64
+static inline guint64
 mpegts_packetizer_compute_pcr (const guint8 * data)
 {
   guint32 pcr1;
@@ -263,12 +316,23 @@ mpegts_packetizer_parse_adaptation_field_control (MpegTSPacketizer2 *
   if (afcflags & MPEGTS_AFC_PCR_FLAG) {
     packet->pcr = mpegts_packetizer_compute_pcr (data);
     *data += 6;
+    GST_DEBUG ("pcr %" G_GUINT64_FORMAT " (%" GST_TIME_FORMAT ")",
+        packet->pcr, GST_TIME_ARGS (PCRTIME_TO_GSTTIME (packet->pcr)));
+
+    if (packetizer->calculate_skew)
+      GST_BUFFER_TIMESTAMP (packet->buffer) =
+          calculate_skew (packetizer, packet->pcr,
+          GST_BUFFER_TIMESTAMP (packet->buffer));
+    if (packetizer->calculate_offset)
+      record_pcr (packetizer, packet->pcr, packet->offset);
   }
 
   /* OPCR */
   if (afcflags & MPEGTS_AFC_OPCR_FLAG) {
     packet->opcr = mpegts_packetizer_compute_pcr (data);
-    *data += 6;
+    /* *data += 6; */
+    GST_DEBUG ("opcr %" G_GUINT64_FORMAT " (%" GST_TIME_FORMAT ")",
+        packet->pcr, GST_TIME_ARGS (PCRTIME_TO_GSTTIME (packet->pcr)));
   }
 
   return TRUE;
@@ -2316,6 +2380,8 @@ mpegts_packetizer_next_packet (MpegTSPacketizer2 * packetizer,
     packetizer->offset += packetizer->packet_size;
     GST_MEMDUMP ("buffer", bufdata, 16);
     GST_MEMDUMP ("data_start", packet->data_start, 16);
+    GST_BUFFER_TIMESTAMP (packet->buffer) =
+        gst_adapter_prev_timestamp (packetizer->adapter, NULL);
 
     /* Check sync byte */
     if (G_LIKELY (packet->data_start[0] == 0x47))
@@ -2360,6 +2426,14 @@ got_valid_packet:
   return mpegts_packetizer_parse_packet (packetizer, packet);
 }
 
+MpegTSPacketizerPacketReturn
+mpegts_packetizer_process_next_packet (MpegTSPacketizer2 * packetizer)
+{
+  MpegTSPacketizerPacket packet;
+
+  return mpegts_packetizer_next_packet (packetizer, &packet);
+}
+
 void
 mpegts_packetizer_clear_packet (MpegTSPacketizer2 * packetizer,
     MpegTSPacketizerPacket * packet)
@@ -2400,6 +2474,12 @@ mpegts_packetizer_push_section (MpegTSPacketizer2 * packetizer,
   if (packet->pid == 0x14) {
     table_id = data[0];
     section->section_length = GST_READ_UINT24_BE (data) & 0x000FFF;
+    if (data - packet->bufmap.data + section->section_length + 3 >
+        packet->bufmap.size) {
+      GST_WARNING ("PID %dd PSI section length extends past the end "
+          "of the buffer", packet->pid);
+      goto out;
+    }
     section->buffer =
         gst_buffer_copy_region (packet->buffer, GST_BUFFER_COPY_ALL,
         data - packet->bufmap.data, section->section_length + 3);
@@ -2588,13 +2668,22 @@ get_encoding (const gchar * text, guint * start_text, gboolean * is_multibyte)
     *start_text = 1;
     *is_multibyte = TRUE;
   } else if (firstbyte == 0x12) {
-    /* That's korean encoding.
-     * The spec says it's encoded in KSC 5601, but iconv only knows KSC 5636.
-     * Couldn't find any information about either of them.
-     */
-    encoding = NULL;
+    /*  EUC-KR implements KSX1001 */
+    encoding = g_strdup ("EUC-KR");
     *start_text = 1;
     *is_multibyte = TRUE;
+  } else if (firstbyte == 0x13) {
+    encoding = g_strdup ("GB2312");
+    *start_text = 1;
+    *is_multibyte = FALSE;
+  } else if (firstbyte == 0x14) {
+    encoding = g_strdup ("UTF-16BE");
+    *start_text = 1;
+    *is_multibyte = TRUE;
+  } else if (firstbyte == 0x15) {
+    encoding = g_strdup ("ISO-10646/UTF8");
+    *start_text = 1;
+    *is_multibyte = FALSE;
   } else {
     /* reserved */
     encoding = NULL;
@@ -2646,7 +2735,7 @@ convert_to_utf8 (const gchar * text, gint length, guint start,
             /* skip it */
             break;
           case 0xE08A:{
-            guint8 nl[] = { 0x0A, 0x00 };       /* new line */
+            guint8 nl[] = { 0x00, 0x0A };       /* new line */
             g_byte_array_append (sb, nl, 2);
             break;
           }
@@ -2667,7 +2756,7 @@ convert_to_utf8 (const gchar * text, gint length, guint start,
             /* skip it */
             break;
           case 0xE08A:{
-            guint8 nl[] = { 0x0A, 0x00 };       /* new line */
+            guint8 nl[] = { 0x00, 0x0A };       /* new line */
             g_byte_array_append (sb, nl, 2);
             break;
           }
@@ -2794,4 +2883,435 @@ failed:
     text += start_text;
     return g_strndup (text, length - start_text);
   }
+}
+
+/**
+ * mpegts_packetizer_reset_skew:
+ * @packetizer: an #MpegTSPacketizer2
+ *
+ * Reset the skew calculations in @packetizer.
+ */
+static void
+mpegts_packetizer_reset_skew (MpegTSPacketizer2 * packetizer)
+{
+  /* FIXME : These variables should be *per* PCR PID */
+  packetizer->base_time = GST_CLOCK_TIME_NONE;
+  packetizer->base_pcrtime = GST_CLOCK_TIME_NONE;
+  packetizer->last_pcrtime = GST_CLOCK_TIME_NONE;
+  packetizer->window_pos = 0;
+  packetizer->window_filling = TRUE;
+  packetizer->window_min = 0;
+  packetizer->skew = 0;
+  packetizer->prev_send_diff = GST_CLOCK_TIME_NONE;
+  packetizer->prev_out_time = GST_CLOCK_TIME_NONE;
+  GST_DEBUG ("reset skew correction");
+}
+
+static void
+mpegts_packetizer_resync (MpegTSPacketizer2 * packetizer, GstClockTime time,
+    GstClockTime gstpcrtime, gboolean reset_skew)
+{
+  /* FIXME : These variables should be *per* PCR PID */
+  packetizer->base_time = time;
+  packetizer->base_pcrtime = gstpcrtime;
+  packetizer->prev_out_time = GST_CLOCK_TIME_NONE;
+  packetizer->prev_send_diff = GST_CLOCK_TIME_NONE;
+  if (reset_skew) {
+    packetizer->window_filling = TRUE;
+    packetizer->window_pos = 0;
+    packetizer->window_min = 0;
+    packetizer->window_size = 0;
+    packetizer->skew = 0;
+  }
+}
+
+
+/* Code mostly copied from -good/gst/rtpmanager/rtpjitterbuffer.c */
+
+/* For the clock skew we use a windowed low point averaging algorithm as can be
+ * found in Fober, Orlarey and Letz, 2005, "Real Time Clock Skew Estimation
+ * over Network Delays":
+ * http://www.grame.fr/Ressources/pub/TR-050601.pdf
+ * http://citeseerx.ist.psu.edu/viewdoc/summary?doi=10.1.1.102.1546
+ *
+ * The idea is that the jitter is composed of:
+ *
+ *  J = N + n
+ *
+ *   N   : a constant network delay.
+ *   n   : random added noise. The noise is concentrated around 0
+ *
+ * In the receiver we can track the elapsed time at the sender with:
+ *
+ *  send_diff(i) = (Tsi - Ts0);
+ *
+ *   Tsi : The time at the sender at packet i
+ *   Ts0 : The time at the sender at the first packet
+ *
+ * This is the difference between the RTP timestamp in the first received packet
+ * and the current packet.
+ *
+ * At the receiver we have to deal with the jitter introduced by the network.
+ *
+ *  recv_diff(i) = (Tri - Tr0)
+ *
+ *   Tri : The time at the receiver at packet i
+ *   Tr0 : The time at the receiver at the first packet
+ *
+ * Both of these values contain a jitter Ji, a jitter for packet i, so we can
+ * write:
+ *
+ *  recv_diff(i) = (Cri + D + ni) - (Cr0 + D + n0))
+ *
+ *    Cri    : The time of the clock at the receiver for packet i
+ *    D + ni : The jitter when receiving packet i
+ *
+ * We see that the network delay is irrelevant here as we can elliminate D:
+ *
+ *  recv_diff(i) = (Cri + ni) - (Cr0 + n0))
+ *
+ * The drift is now expressed as:
+ *
+ *  Drift(i) = recv_diff(i) - send_diff(i);
+ *
+ * We now keep the W latest values of Drift and find the minimum (this is the
+ * one with the lowest network jitter and thus the one which is least affected
+ * by it). We average this lowest value to smooth out the resulting network skew.
+ *
+ * Both the window and the weighting used for averaging influence the accuracy
+ * of the drift estimation. Finding the correct parameters turns out to be a
+ * compromise between accuracy and inertia.
+ *
+ * We use a 2 second window or up to 512 data points, which is statistically big
+ * enough to catch spikes (FIXME, detect spikes).
+ * We also use a rather large weighting factor (125) to smoothly adapt. During
+ * startup, when filling the window, we use a parabolic weighting factor, the
+ * more the window is filled, the faster we move to the detected possible skew.
+ *
+ * Returns: @time adjusted with the clock skew.
+ */
+static GstClockTime
+calculate_skew (MpegTSPacketizer2 * packetizer, guint64 pcrtime,
+    GstClockTime time)
+{
+  guint64 send_diff, recv_diff;
+  gint64 delta;
+  gint64 old;
+  gint pos, i;
+  GstClockTime gstpcrtime, out_time;
+  guint64 slope;
+
+  gstpcrtime = PCRTIME_TO_GSTTIME (pcrtime);
+
+  /* keep track of the last extended pcrtime */
+  packetizer->last_pcrtime = gstpcrtime;
+
+  /* first time, lock on to time and gstpcrtime */
+  if (G_UNLIKELY (!GST_CLOCK_TIME_IS_VALID (packetizer->base_time))) {
+    packetizer->base_time = time;
+    packetizer->prev_out_time = GST_CLOCK_TIME_NONE;
+    GST_DEBUG ("Taking new base time %" GST_TIME_FORMAT, GST_TIME_ARGS (time));
+  }
+
+  if (G_UNLIKELY (!GST_CLOCK_TIME_IS_VALID (packetizer->base_pcrtime))) {
+    packetizer->base_pcrtime = gstpcrtime;
+    packetizer->prev_send_diff = -1;
+    GST_DEBUG ("Taking new base pcrtime %" GST_TIME_FORMAT,
+        GST_TIME_ARGS (gstpcrtime));
+  }
+
+  if (G_LIKELY (gstpcrtime >= packetizer->base_pcrtime))
+    send_diff = gstpcrtime - packetizer->base_pcrtime;
+  else if (GST_CLOCK_TIME_IS_VALID (time)) {
+    /* elapsed time at sender, timestamps can go backwards and thus be smaller
+     * than our base time, take a new base time in that case. */
+    GST_WARNING ("backward timestamps at server, taking new base time");
+    mpegts_packetizer_resync (packetizer, time, gstpcrtime, FALSE);
+    send_diff = 0;
+  } else {
+    GST_WARNING ("backward timestamps at server but no timestamps");
+    send_diff = 0;
+    /* at least try to get a new timestamp.. */
+    packetizer->base_time = -1;
+  }
+
+  GST_DEBUG ("gstpcr %" GST_TIME_FORMAT ", buftime %" GST_TIME_FORMAT ", base %"
+      GST_TIME_FORMAT ", send_diff %" GST_TIME_FORMAT,
+      GST_TIME_ARGS (gstpcrtime), GST_TIME_ARGS (time),
+      GST_TIME_ARGS (packetizer->base_pcrtime), GST_TIME_ARGS (send_diff));
+
+  /* we don't have an arrival timestamp so we can't do skew detection. we
+   * should still apply a timestamp based on RTP timestamp and base_time */
+  if (!GST_CLOCK_TIME_IS_VALID (time)
+      || !GST_CLOCK_TIME_IS_VALID (packetizer->base_time))
+    goto no_skew;
+
+  /* elapsed time at receiver, includes the jitter */
+  recv_diff = time - packetizer->base_time;
+
+  /* Ignore packets received at 100% the same time (i.e. from the same input buffer) */
+  if (G_UNLIKELY (time == packetizer->prev_in_time
+          && GST_CLOCK_TIME_IS_VALID (packetizer->prev_in_time)))
+    goto no_skew;
+
+  /* measure the diff */
+  delta = ((gint64) recv_diff) - ((gint64) send_diff);
+
+  /* measure the slope, this gives a rought estimate between the sender speed
+   * and the receiver speed. This should be approximately 8, higher values
+   * indicate a burst (especially when the connection starts) */
+  slope = recv_diff > 0 ? (send_diff * 8) / recv_diff : 8;
+
+  GST_DEBUG ("time %" GST_TIME_FORMAT ", base %" GST_TIME_FORMAT ", recv_diff %"
+      GST_TIME_FORMAT ", slope %" G_GUINT64_FORMAT, GST_TIME_ARGS (time),
+      GST_TIME_ARGS (packetizer->base_time), GST_TIME_ARGS (recv_diff), slope);
+
+  /* if the difference between the sender timeline and the receiver timeline
+   * changed too quickly we have to resync because the server likely restarted
+   * its timestamps. */
+  if (ABS (delta - packetizer->skew) > GST_SECOND) {
+    GST_WARNING ("delta - skew: %" GST_TIME_FORMAT " too big, reset skew",
+        GST_TIME_ARGS (delta - packetizer->skew));
+    mpegts_packetizer_resync (packetizer, time, gstpcrtime, TRUE);
+    send_diff = 0;
+    delta = 0;
+  }
+
+  pos = packetizer->window_pos;
+
+  if (G_UNLIKELY (packetizer->window_filling)) {
+    /* we are filling the window */
+    GST_DEBUG ("filling %d, delta %" G_GINT64_FORMAT, pos, delta);
+    packetizer->window[pos++] = delta;
+    /* calc the min delta we observed */
+    if (G_UNLIKELY (pos == 1 || delta < packetizer->window_min))
+      packetizer->window_min = delta;
+
+    if (G_UNLIKELY (send_diff >= MAX_TIME || pos >= MAX_WINDOW)) {
+      packetizer->window_size = pos;
+
+      /* window filled */
+      GST_DEBUG ("min %" G_GINT64_FORMAT, packetizer->window_min);
+
+      /* the skew is now the min */
+      packetizer->skew = packetizer->window_min;
+      packetizer->window_filling = FALSE;
+    } else {
+      gint perc_time, perc_window, perc;
+
+      /* figure out how much we filled the window, this depends on the amount of
+       * time we have or the max number of points we keep. */
+      perc_time = send_diff * 100 / MAX_TIME;
+      perc_window = pos * 100 / MAX_WINDOW;
+      perc = MAX (perc_time, perc_window);
+
+      /* make a parabolic function, the closer we get to the MAX, the more value
+       * we give to the scaling factor of the new value */
+      perc = perc * perc;
+
+      /* quickly go to the min value when we are filling up, slowly when we are
+       * just starting because we're not sure it's a good value yet. */
+      packetizer->skew =
+          (perc * packetizer->window_min + ((10000 -
+                  perc) * packetizer->skew)) / 10000;
+      packetizer->window_size = pos + 1;
+    }
+  } else {
+    /* pick old value and store new value. We keep the previous value in order
+     * to quickly check if the min of the window changed */
+    old = packetizer->window[pos];
+    packetizer->window[pos++] = delta;
+
+    if (G_UNLIKELY (delta <= packetizer->window_min)) {
+      /* if the new value we inserted is smaller or equal to the current min,
+       * it becomes the new min */
+      packetizer->window_min = delta;
+    } else if (G_UNLIKELY (old == packetizer->window_min)) {
+      gint64 min = G_MAXINT64;
+
+      /* if we removed the old min, we have to find a new min */
+      for (i = 0; i < packetizer->window_size; i++) {
+        /* we found another value equal to the old min, we can stop searching now */
+        if (packetizer->window[i] == old) {
+          min = old;
+          break;
+        }
+        if (packetizer->window[i] < min)
+          min = packetizer->window[i];
+      }
+      packetizer->window_min = min;
+    }
+    /* average the min values */
+    packetizer->skew =
+        (packetizer->window_min + (124 * packetizer->skew)) / 125;
+    GST_DEBUG ("delta %" G_GINT64_FORMAT ", new min: %" G_GINT64_FORMAT, delta,
+        packetizer->window_min);
+  }
+  /* wrap around in the window */
+  if (G_UNLIKELY (pos >= packetizer->window_size))
+    pos = 0;
+
+  packetizer->window_pos = pos;
+
+no_skew:
+  /* the output time is defined as the base timestamp plus the PCR time
+   * adjusted for the clock skew .*/
+  if (packetizer->base_time != -1) {
+    out_time = packetizer->base_time + send_diff;
+    /* skew can be negative and we don't want to make invalid timestamps */
+    if (packetizer->skew < 0 && out_time < -packetizer->skew) {
+      out_time = 0;
+    } else {
+      out_time += packetizer->skew;
+    }
+    /* check if timestamps are not going backwards, we can only check this if we
+     * have a previous out time and a previous send_diff */
+    if (G_LIKELY (packetizer->prev_out_time != -1
+            && packetizer->prev_send_diff != -1)) {
+      /* now check for backwards timestamps */
+      if (G_UNLIKELY (
+              /* if the server timestamps went up and the out_time backwards */
+              (send_diff > packetizer->prev_send_diff
+                  && out_time < packetizer->prev_out_time) ||
+              /* if the server timestamps went backwards and the out_time forwards */
+              (send_diff < packetizer->prev_send_diff
+                  && out_time > packetizer->prev_out_time) ||
+              /* if the server timestamps did not change */
+              send_diff == packetizer->prev_send_diff)) {
+        GST_DEBUG ("backwards timestamps, using previous time");
+        out_time = GSTTIME_TO_MPEGTIME (out_time);
+      }
+    }
+  } else {
+    /* We simply use the pcrtime without applying any skew compensation */
+    out_time = time;
+  }
+
+  packetizer->prev_out_time = out_time;
+  packetizer->prev_in_time = time;
+  packetizer->prev_send_diff = send_diff;
+
+  GST_DEBUG ("skew %" G_GINT64_FORMAT ", out %" GST_TIME_FORMAT,
+      packetizer->skew, GST_TIME_ARGS (out_time));
+
+  return out_time;
+}
+
+static void
+record_pcr (MpegTSPacketizer2 * packetizer, guint64 pcr, guint64 offset)
+{
+  MpegTSPacketizerPrivate *priv = packetizer->priv;
+
+  /* Check against first PCR */
+  if (priv->first_pcr == -1 || priv->first_offset > offset) {
+    GST_DEBUG ("Recording first value. PCR:%" G_GUINT64_FORMAT " offset:%"
+        G_GUINT64_FORMAT, pcr, offset);
+    priv->first_pcr = pcr;
+    priv->first_pcr_ts = PCRTIME_TO_GSTTIME (pcr);
+    priv->first_offset = offset;
+    priv->nb_seen_offsets++;
+  } else
+    /* If we didn't update the first PCR, let's check against last PCR */
+  if (priv->last_pcr == -1 || priv->last_offset < offset) {
+    GST_DEBUG ("Recording last value. PCR:%" G_GUINT64_FORMAT " offset:%"
+        G_GUINT64_FORMAT, pcr, offset);
+    if (G_UNLIKELY (priv->first_pcr != -1 && pcr < priv->first_pcr)) {
+      GST_DEBUG ("rollover detected");
+      pcr += PCR_MAX_VALUE;
+    }
+    priv->last_pcr = pcr;
+    priv->last_pcr_ts = PCRTIME_TO_GSTTIME (pcr);
+    priv->last_offset = offset;
+    priv->nb_seen_offsets++;
+  }
+}
+
+guint
+mpegts_packetizer_get_seen_pcr (MpegTSPacketizer2 * packetizer)
+{
+  return packetizer->priv->nb_seen_offsets;
+}
+
+GstClockTime
+mpegts_packetizer_offset_to_ts (MpegTSPacketizer2 * packetizer, guint64 offset)
+{
+  MpegTSPacketizerPrivate *priv = packetizer->priv;
+  GstClockTime res;
+
+  if (G_UNLIKELY (!packetizer->calculate_offset))
+    return GST_CLOCK_TIME_NONE;
+
+  if (G_UNLIKELY (priv->refoffset == -1))
+    return GST_CLOCK_TIME_NONE;
+
+  if (G_UNLIKELY (offset < priv->refoffset))
+    return GST_CLOCK_TIME_NONE;
+
+  /* Convert byte difference into time difference */
+  res = PCRTIME_TO_GSTTIME (gst_util_uint64_scale (offset - priv->refoffset,
+          priv->last_pcr - priv->first_pcr,
+          priv->last_offset - priv->first_offset));
+  GST_DEBUG ("Returning timestamp %" GST_TIME_FORMAT " for offset %"
+      G_GUINT64_FORMAT, GST_TIME_ARGS (res), offset);
+
+  return res;
+}
+
+GstClockTime
+mpegts_packetizer_pts_to_ts (MpegTSPacketizer2 * packetizer, GstClockTime pts)
+{
+  GstClockTime res = GST_CLOCK_TIME_NONE;
+
+  /* Use clock skew if present */
+  if (packetizer->calculate_skew
+      && GST_CLOCK_TIME_IS_VALID (packetizer->base_time)) {
+    GST_DEBUG ("pts %" G_GUINT64_FORMAT " base_pcrtime:%" G_GUINT64_FORMAT
+        " base_time:%" GST_TIME_FORMAT, pts, packetizer->base_pcrtime,
+        GST_TIME_ARGS (packetizer->base_time));
+    res = pts - packetizer->base_pcrtime + packetizer->base_time +
+        packetizer->skew;
+  } else
+    /* If not, use pcr observations */
+  if (packetizer->calculate_offset && packetizer->priv->first_pcr != -1) {
+    /* Rollover */
+    if (G_UNLIKELY (pts < packetizer->priv->first_pcr_ts))
+      pts += MPEGTIME_TO_GSTTIME (PTS_DTS_MAX_VALUE);
+    res = pts - packetizer->priv->first_pcr_ts;
+  }
+
+  GST_DEBUG ("Returning timestamp %" GST_TIME_FORMAT " for pts %"
+      GST_TIME_FORMAT, GST_TIME_ARGS (res), GST_TIME_ARGS (pts));
+  return res;
+}
+
+guint64
+mpegts_packetizer_ts_to_offset (MpegTSPacketizer2 * packetizer, GstClockTime ts)
+{
+  MpegTSPacketizerPrivate *priv = packetizer->priv;
+  guint64 res;
+
+  if (!packetizer->calculate_offset || packetizer->priv->first_pcr == -1)
+    return -1;
+
+  GST_DEBUG ("ts(pcr) %" G_GUINT64_FORMAT " first_pcr:%" G_GUINT64_FORMAT,
+      GSTTIME_TO_MPEGTIME (ts), priv->first_pcr);
+
+  /* Convert ts to PCRTIME */
+  res = gst_util_uint64_scale (GSTTIME_TO_PCRTIME (ts),
+      priv->last_offset - priv->first_offset, priv->last_pcr - priv->first_pcr);
+  res += priv->first_offset + priv->refoffset;
+
+  GST_DEBUG ("Returning offset %" G_GUINT64_FORMAT " for ts %" GST_TIME_FORMAT,
+      res, GST_TIME_ARGS (ts));
+
+  return res;
+}
+
+void
+mpegts_packetizer_set_reference_offset (MpegTSPacketizer2 * packetizer,
+    guint64 refoffset)
+{
+  GST_DEBUG ("Setting reference offset to %" G_GUINT64_FORMAT, refoffset);
+
+  packetizer->priv->refoffset = refoffset;
 }

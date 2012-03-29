@@ -828,6 +828,8 @@ decode_failed:
   {
     GST_AUDIO_DECODER_ERROR (faad, 1, STREAM, DECODE, (NULL),
         ("decoding error: %s", faacDecGetErrorMessage (info.error)), ret);
+    if (ret == GST_FLOW_OK)
+      gst_audio_decoder_finish_frame (dec, NULL, 1);
     goto out;
   }
 negotiation_failed:

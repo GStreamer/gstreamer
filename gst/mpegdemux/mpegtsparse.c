@@ -1042,7 +1042,7 @@ mpegts_parse_apply_pmt (MpegTSParse * parse,
   MpegTSParseProgram *program;
   guint program_number;
   guint pcr_pid;
-  guint pid;
+  guint pid = 0;
   guint stream_type;
   GstStructure *stream;
   gint i;

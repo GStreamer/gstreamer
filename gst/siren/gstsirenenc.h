@@ -24,7 +24,7 @@
 #define __GST_SIREN_ENC_H__
 
 #include <gst/gst.h>
-#include <gst/base/gstadapter.h>
+#include <gst/audio/gstaudioencoder.h>
 
 #include "siren7.h"
 
@@ -48,21 +48,15 @@ typedef struct _GstSirenEncPrivate GstSirenEncPrivate;
 
 struct _GstSirenEnc
 {
-  GstElement parent;
+  GstAudioEncoder parent;
 
   /* protected by the stream lock */
   SirenEncoder encoder;
-  GstAdapter *adapter;
-
-  gboolean discont;
-
-  GstPad *srcpad;
-  GstPad *sinkpad;
 };
 
 struct _GstSirenEncClass
 {
-  GstElementClass parent_class;
+  GstAudioEncoderClass parent_class;
 };
 
 GType gst_siren_enc_get_type (void);

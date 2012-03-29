@@ -27,6 +27,12 @@
 #include "config.h"
 #endif
 
+/**
+ * SECTION:gstbasevideocodec
+ * @short_description: Base class for video codecs
+ * @see_also: #GstBaseVideoDecoder , #GstBaseVideoEncoder
+ */
+
 /* FIXME 0.11: suppress warnings for deprecated API such as GStaticRecMutex
  * with newer GLib versions (>= 2.31.0) */
 #define GLIB_DISABLE_DEPRECATION_WARNINGS
@@ -300,6 +306,14 @@ gst_base_video_codec_new_frame (GstBaseVideoCodec * base_video_codec)
   return frame;
 }
 
+/**
+ * gst_video_frame_state_ref:
+ * @frame: a #GstVideoFrameState
+ *
+ * Increases the refcount of the given frame by one.
+ *
+ * Returns: @buf
+ */
 GstVideoFrameState *
 gst_video_frame_state_ref (GstVideoFrameState * frame)
 {
@@ -310,6 +324,13 @@ gst_video_frame_state_ref (GstVideoFrameState * frame)
   return frame;
 }
 
+/**
+ * gst_video_frame_state_unref:
+ * @frame: a #GstVideoFrameState
+ *
+ * Decreases the refcount of the frame. If the refcount reaches 0, the frame
+ * will be freed.
+ */
 void
 gst_video_frame_state_unref (GstVideoFrameState * frame)
 {

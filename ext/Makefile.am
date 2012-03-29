@@ -94,6 +94,12 @@ else
 DIRECTFB_DIR=
 endif
 
+if USE_WAYLAND
+WAYLAND_DIR=wayland
+else
+WAYLAND_DIR=
+endif
+
 if USE_DIVX
 DIVX_DIR=divx
 else
@@ -409,6 +415,7 @@ SUBDIRS=\
 	$(DC1394_DIR) \
 	$(DIRAC_DIR) \
 	$(DIRECTFB_DIR) \
+	$(WAYLAND_DIR) \
 	$(DIVX_DIR) \
 	$(DTS_DIR) \
 	$(RESINDVD_DIR) \
@@ -469,6 +476,7 @@ DIST_SUBDIRS = \
 	dc1394 \
 	dirac \
 	directfb \
+        wayland \
 	faac \
 	faad \
 	flite \

@@ -1,0 +1,78 @@
+/* vim: set filetype=c: */
+% ClassName
+GstVideoFilter
+% TYPE_CLASS_NAME
+GST_TYPE_VIDEO_FILTER
+% pads
+sinkpad-template-video srcpad-template-video
+% pkg-config
+gstreamer-video-0.10
+% includes
+#include <gst/video/video.h>
+#include <gst/video/gstvideofilter.h>
+% prototypes
+static gboolean
+gst_replace_start (GstBaseTransform * trans);
+static gboolean
+gst_replace_stop (GstBaseTransform * trans);
+static GstFlowReturn
+gst_replace_transform_ip (GstBaseTransform * trans, GstBuffer * buf);
+static gboolean
+gst_replace_set_caps (GstBaseTransform * trans, GstCaps * incaps,
+  GstCaps * outcaps);
+% declare-class
+  GstBaseTransformClass *base_transform_class = GST_BASE_TRANSFORM_CLASS (klass);
+% set-methods
+  base_transform_class->start = GST_DEBUG_FUNCPTR (gst_replace_start);
+  base_transform_class->stop = GST_DEBUG_FUNCPTR (gst_replace_stop);
+  base_transform_class->set_caps = GST_DEBUG_FUNCPTR (gst_replace_set_caps);
+  base_transform_class->transform_ip = GST_DEBUG_FUNCPTR (gst_replace_transform_ip);
+% methods
+
+static gboolean
+gst_replace_start (GstBaseTransform * trans)
+{
+  /* GstReplace *replace = GST_REPLACE (trans); */
+
+  /* initialize processing */
+  return TRUE;
+}
+
+static gboolean
+gst_replace_stop (GstBaseTransform * trans)
+{
+  /* GstReplace *replace = GST_REPLACE (trans); */
+
+  /* finalize processing */
+  return TRUE;
+}
+
+static gboolean
+gst_replace_set_caps (GstBaseTransform * trans, GstCaps * incaps,
+  GstCaps * outcaps)
+{
+  /* GstReplace *replace = GST_REPLACE (trans); */
+  GstVideoFormat video_format;
+  int w, h;
+
+  /* parse input caps, output caps are the same so we ignore them */
+  if (!gst_video_format_parse_caps (incaps, &video_format, &w, &h))
+    return FALSE;
+
+  /* You'll need to add those fields to the instance struct first */
+  /* replace->video_format = video_format; */
+  /* replace->width = w; */
+  /* replace->height = h; */
+  return TRUE;
+}
+
+static GstFlowReturn
+gst_replace_transform_ip (GstBaseTransform * trans, GstBuffer * buf)
+{
+  /* GstReplace *replace = GST_REPLACE (trans); */
+
+  /* process the video data in the buffer in-place */
+  return GST_FLOW_OK;
+}
+
+% end

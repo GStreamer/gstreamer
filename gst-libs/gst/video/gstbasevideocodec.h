@@ -78,10 +78,27 @@ G_BEGIN_DECLS
 /**
  * GST_BASE_VIDEO_CODEC_FLOW_NEED_DATA:
  *
+ * Returned while parsing to indicate more data is needed.
  */
 #define GST_BASE_VIDEO_CODEC_FLOW_NEED_DATA GST_FLOW_CUSTOM_SUCCESS
 
+/**
+ * GST_BASE_VIDEO_CODEC_STREAM_LOCK:
+ * @codec: video codec instance
+ *
+ * Obtain a lock to protect the codec function from concurrent access.
+ *
+ * Since: 0.10.22
+ */
 #define GST_BASE_VIDEO_CODEC_STREAM_LOCK(codec) g_rec_mutex_lock (&GST_BASE_VIDEO_CODEC (codec)->stream_lock)
+/**
+ * GST_BASE_VIDEO_CODEC_STREAM_UNLOCK:
+ * @codec: video codec instance
+ *
+ * Release the lock that protects the codec function from concurrent access.
+ *
+ * Since: 0.10.22
+ */
 #define GST_BASE_VIDEO_CODEC_STREAM_UNLOCK(codec) g_rec_mutex_unlock (&GST_BASE_VIDEO_CODEC (codec)->stream_lock)
 
 typedef struct _GstVideoState GstVideoState;
@@ -203,39 +220,52 @@ struct _GstVideoFrameState
   GList *events;
 };
 
+/**
+ * GstBaseVideoCodec:
+ *
+ * The opaque #GstBaseVideoCodec data structure.
+ */
 struct _GstBaseVideoCodec
 {
-  GstElement element;
-
   /*< private >*/
-  GstPad *sinkpad;
-  GstPad *srcpad;
+  GstElement      element;
+
+  /*< protected >*/
+  GstPad         *sinkpad;
+  GstPad         *srcpad;
 
   /* protects all data processing, i.e. is locked
    * in the chain function, finish_frame and when
    * processing serialized events */
   GRecMutex stream_lock;
 
-  guint64 system_frame_number;
+  guint64         system_frame_number;
 
   GList *frames;  /* Protected with OBJECT_LOCK */
   GstVideoState state;		/* Compressed video pad */
   GstVideoInfo info;		/* Raw video pad */
   GstSegment segment;
 
-  gdouble proportion;
-  GstClockTime earliest_time;
-  gboolean discont;
+  /* QoS properties */
+  gdouble         proportion;
+  GstClockTime    earliest_time;
+  gboolean        discont;
 
-  gint64 bytes;
-  gint64 time;
+  gint64          bytes;
+  gint64          time;
 
   /* FIXME before moving to base */
-  void *padding[GST_PADDING_LARGE];
+  void           *padding[GST_PADDING_LARGE];
 };
 
+/**
+ * GstBaseVideoCodecClass:
+ *
+ * The opaque #GstBaseVideoCodecClass data structure.
+ */
 struct _GstBaseVideoCodecClass
 {
+  /*< private >*/
   GstElementClass element_class;
 
   /* FIXME before moving to base */

@@ -1,5 +1,4 @@
-/*
- * GStreamer faceoverlay plugin
+/* GStreamer faceoverlay plugin
  * Copyright (C) 2011 Laura Lucas Alday <lauralucas@gmail.com>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
@@ -47,7 +46,7 @@
 #include <gst/gst.h>
 
 G_BEGIN_DECLS
-/* #defines don't like whitespacey bits */
+
 #define GST_TYPE_FACEOVERLAY \
   (gst_face_overlay_get_type())
 #define GST_FACEOVERLAY(obj) \
@@ -58,6 +57,7 @@ G_BEGIN_DECLS
   (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_FACEOVERLAY))
 #define GST_IS_FACEOVERLAY_CLASS(klass) \
   (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_FACEOVERLAY))
+
 typedef struct _GstFaceOverlay GstFaceOverlay;
 typedef struct _GstFaceOverlayClass GstFaceOverlayClass;
 
@@ -72,6 +72,8 @@ struct _GstFaceOverlay
   GstElement *svg_overlay;
 
   gboolean process_message;
+
+  gboolean update_svg;
 
   gchar *location;
   gfloat x;
@@ -88,4 +90,5 @@ struct _GstFaceOverlayClass
 GType gst_face_overlay_get_type (void);
 
 G_END_DECLS
+
 #endif /* __GST_FACEOVERLAY_H__ */

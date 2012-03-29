@@ -123,7 +123,17 @@ gst_replace_send_event (GstElement * element, GstEvent * event)
 static gboolean
 gst_replace_query (GstElement * element, GstQuery * query)
 {
+  GstReplace *replace = GST_REPLACE (element);
+  gboolean ret;
 
-  return FALSE;
+  GST_DEBUG_OBJECT (replace, "query");
+
+  switch (GST_QUERY_TYPE (query)) {
+    default:
+      ret = GST_ELEMENT_CLASS (parent_class)->query (element, query);
+      break;
+  }
+
+  return ret;
 }
 % end

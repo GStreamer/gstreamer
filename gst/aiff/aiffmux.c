@@ -165,11 +165,14 @@ gst_aiff_mux_write_form_header (GstAiffMux * aiffmux, guint32 audio_data_size,
     GstByteWriter * writer)
 {
   /* ckID == 'FORM' */
-  gst_byte_writer_put_uint32_le (writer, GST_MAKE_FOURCC ('F', 'O', 'R', 'M'));
+  gst_byte_writer_put_uint32_le_unchecked (writer,
+      GST_MAKE_FOURCC ('F', 'O', 'R', 'M'));
   /* ckSize is currently bogus but we'll know what it is later */
-  gst_byte_writer_put_uint32_be (writer, audio_data_size + AIFF_HEADER_LEN - 8);
+  gst_byte_writer_put_uint32_be_unchecked (writer,
+      audio_data_size + AIFF_HEADER_LEN - 8);
   /* formType == 'AIFF' */
-  gst_byte_writer_put_uint32_le (writer, GST_MAKE_FOURCC ('A', 'I', 'F', 'F'));
+  gst_byte_writer_put_uint32_le_unchecked (writer,
+      GST_MAKE_FOURCC ('A', 'I', 'F', 'F'));
 }
 
 /*
@@ -220,8 +223,8 @@ gst_aiff_mux_write_ext (GstByteWriter * writer, double d)
   if (d < 0)
     ext.exponent[0] |= 0x80;
 
-  gst_byte_writer_put_data (writer, ext.exponent, 2);
-  gst_byte_writer_put_data (writer, ext.mantissa, 8);
+  gst_byte_writer_put_data_unchecked (writer, ext.exponent, 2);
+  gst_byte_writer_put_data_unchecked (writer, ext.mantissa, 8);
 }
 
 /*
@@ -232,13 +235,14 @@ static void
 gst_aiff_mux_write_comm_header (GstAiffMux * aiffmux, guint32 audio_data_size,
     GstByteWriter * writer)
 {
-  gst_byte_writer_put_uint32_le (writer, GST_MAKE_FOURCC ('C', 'O', 'M', 'M'));
-  gst_byte_writer_put_uint32_be (writer, 18);
-  gst_byte_writer_put_uint16_be (writer, aiffmux->channels);
+  gst_byte_writer_put_uint32_le_unchecked (writer,
+      GST_MAKE_FOURCC ('C', 'O', 'M', 'M'));
+  gst_byte_writer_put_uint32_be_unchecked (writer, 18);
+  gst_byte_writer_put_uint16_be_unchecked (writer, aiffmux->channels);
   /* numSampleFrames value will be overwritten when known */
-  gst_byte_writer_put_uint32_be (writer,
+  gst_byte_writer_put_uint32_be_unchecked (writer,
       audio_data_size / (aiffmux->width / 8 * aiffmux->channels));
-  gst_byte_writer_put_uint16_be (writer, aiffmux->depth);
+  gst_byte_writer_put_uint16_be_unchecked (writer, aiffmux->depth);
   gst_aiff_mux_write_ext (writer, aiffmux->rate);
 }
 
@@ -246,13 +250,14 @@ static void
 gst_aiff_mux_write_ssnd_header (GstAiffMux * aiffmux, guint32 audio_data_size,
     GstByteWriter * writer)
 {
-  gst_byte_writer_put_uint32_le (writer, GST_MAKE_FOURCC ('S', 'S', 'N', 'D'));
+  gst_byte_writer_put_uint32_le_unchecked (writer,
+      GST_MAKE_FOURCC ('S', 'S', 'N', 'D'));
   /* ckSize will be overwritten when known */
-  gst_byte_writer_put_uint32_be (writer,
+  gst_byte_writer_put_uint32_be_unchecked (writer,
       audio_data_size + AIFF_SSND_HEADER_LEN - 8);
   /* offset and blockSize are set to 0 as we don't support block-aligned sample data yet */
-  gst_byte_writer_put_uint32_be (writer, 0);
-  gst_byte_writer_put_uint32_be (writer, 0);
+  gst_byte_writer_put_uint32_be_unchecked (writer, 0);
+  gst_byte_writer_put_uint32_be_unchecked (writer, 0);
 }
 
 static GstFlowReturn

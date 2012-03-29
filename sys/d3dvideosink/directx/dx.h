@@ -111,7 +111,7 @@ typedef enum
     , &DIRECTX_ ## version ## _DIRECTCOMPUTE_COMPONENT                                                                                            \
     , {NULL, NULL, NULL} /*reserved*/                                                                                                             \
   };                                                                                                                                              \
-  static void init_directx_ ## version ## _supported_api(void) {                                                                                  \
+  static void G_GNUC_UNUSED init_directx_ ## version ## _supported_api(void) {                                                                                  \
     DirectXAPI* api;                                                                                                                              \
     api = &DIRECTX_ ## version ## _API;                                                                                                           \
     api->d3d->api      = api;                                                                                                                     \

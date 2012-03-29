@@ -45,6 +45,10 @@
 #include "config.h"
 #endif
 
+/* FIXME 0.11: suppress warnings for deprecated API such as GStaticRecMutex
+ * with newer GLib versions (>= 2.31.0) */
+#define GLIB_DISABLE_DEPRECATION_WARNINGS
+
 #include <string.h>
 #include <stdlib.h>
 
@@ -3547,7 +3551,7 @@ gboolean
 gst_mpegts_demux_plugin_init (GstPlugin * plugin)
 {
   if (!gst_element_register (plugin, "mpegtsdemux",
-          GST_RANK_PRIMARY, GST_TYPE_MPEGTS_DEMUX))
+          GST_RANK_SECONDARY, GST_TYPE_MPEGTS_DEMUX))
     return FALSE;
 
   return TRUE;

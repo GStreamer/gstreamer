@@ -850,7 +850,7 @@ gst_curl_sink_handle_transfer (GstCurlSink * sink)
     if (!proxy_conn_established && (resp_proxy != RESPONSE_CONNECT_PROXY)
         && proxy_auth) {
       curl_easy_getinfo (sink->curl, CURLINFO_HTTP_CONNECTCODE, &resp_proxy);
-      if ((resp_proxy == RESPONSE_CONNECT_PROXY)) {
+      if (resp_proxy == RESPONSE_CONNECT_PROXY) {
         GST_LOG ("received HTTP/1.0 200 Connection Established");
         /* Workaround: redefine HTTP headers before connecting to HTTP server.
          * When talking to proxy, the Content-Length: 0 is send with the request.

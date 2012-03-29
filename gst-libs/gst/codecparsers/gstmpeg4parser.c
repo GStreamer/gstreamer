@@ -277,7 +277,7 @@ find_psc (GstByteReader * br)
       psc_pos = gst_byte_reader_get_pos (br);
       break;
     } else
-      gst_byte_reader_skip (br, 1);
+      gst_byte_reader_skip_unchecked (br, 1);
   }
 
 failed:
@@ -543,7 +543,7 @@ gst_h263_parse (GstMpeg4Packet * packet,
   packet->offset = off1 + offset;
   packet->data = data;
 
-  gst_byte_reader_skip (&br, 3);
+  gst_byte_reader_skip_unchecked (&br, 3);
   off2 = find_psc (&br);
 
   if (off2 == -1) {

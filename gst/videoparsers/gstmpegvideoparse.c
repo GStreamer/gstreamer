@@ -655,7 +655,7 @@ gst_mpegv_parse_update_src_caps (GstMpegvParse * mpvparse)
       profile = profiles[profile_c - 1];
 
     if ((level_c > 3) && (level_c < 11) && (level_c % 2 == 0))
-      level = levels[(level_c >> 1) - 1];
+      level = levels[(level_c >> 1) - 2];
 
     if (profile_c == 8) {
       /* Non-hierarchical profile */
@@ -682,6 +682,8 @@ gst_mpegv_parse_update_src_caps (GstMpegvParse * mpvparse)
     }
 
     /* FIXME does it make sense to expose profile/level in the caps ? */
+
+    GST_DEBUG_OBJECT (mpvparse, "profile:'%s' level:'%s'", profile, level);
 
     if (profile)
       gst_caps_set_simple (caps, "profile", G_TYPE_STRING, profile, NULL);

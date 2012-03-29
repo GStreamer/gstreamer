@@ -35,8 +35,8 @@
 #endif
 
 #include <gst/gst.h>
-#include <gst/glib-compat-private.h>
 #include <gst/video/video.h>
+#include <gst/interfaces/propertyprobe.h>
 #include "gstdecklink.h"
 #include "gstdecklinksink.h"
 #include <string.h>
@@ -118,24 +118,25 @@ static GstFlowReturn gst_decklink_sink_audiosink_bufferalloc (GstPad * pad,
     guint64 offset, guint size, GstCaps * caps, GstBuffer ** buf);
 static GstIterator *gst_decklink_sink_audiosink_iterintlink (GstPad * pad);
 
+static void
+gst_decklink_sink_property_probe_interface_init (GstPropertyProbeInterface *
+    iface);
+
 #ifdef _MSC_VER
 /* COM initialization/uninitialization thread */
-static void gst_decklink_sink_com_thread (GstDecklinkSink * src);
+static void gst_decklink_sink_com_thread (GstDecklinkSink * sink);
 #endif /* _MSC_VER */
 
 enum
 {
   PROP_0,
-  PROP_MODE
+  PROP_MODE,
+  PROP_DEVICE
 };
 
 /* pad templates */
 
-static GstStaticPadTemplate gst_decklink_sink_videosink_template =
-GST_STATIC_PAD_TEMPLATE ("videosink",
-    GST_PAD_SINK,
-    GST_PAD_ALWAYS,
-    GST_STATIC_CAPS (GST_DECKLINK_CAPS));
+/* the video sink pad template is created on the fly */
 
 static GstStaticPadTemplate gst_decklink_sink_audiosink_template =
 GST_STATIC_PAD_TEMPLATE ("audiosink",
@@ -151,16 +152,37 @@ GST_STATIC_PAD_TEMPLATE ("audiosink",
   GST_DEBUG_CATEGORY_INIT (gst_decklink_sink_debug_category, "decklinksink", 0, \
       "debug category for decklinksink element");
 
+static void
+gst_decklink_sink_init_interfaces (GType type)
+{
+  static const GInterfaceInfo decklink_sink_propertyprobe_info = {
+    (GInterfaceInitFunc) gst_decklink_sink_property_probe_interface_init,
+    NULL,
+    NULL,
+  };
+
+  GST_DEBUG_CATEGORY_INIT (gst_decklink_sink_debug_category, "decklinksink", 0,
+      "debug category for decklinksink element");
+
+  g_type_add_interface_static (type, GST_TYPE_PROPERTY_PROBE,
+      &decklink_sink_propertyprobe_info);
+}
+
+
 GST_BOILERPLATE_FULL (GstDecklinkSink, gst_decklink_sink, GstElement,
-    GST_TYPE_ELEMENT, DEBUG_INIT);
+    GST_TYPE_ELEMENT, gst_decklink_sink_init_interfaces);
 
 static void
 gst_decklink_sink_base_init (gpointer g_class)
 {
   GstElementClass *element_class = GST_ELEMENT_CLASS (g_class);
+  GstPadTemplate *pad_template;
 
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&gst_decklink_sink_videosink_template));
+  pad_template =
+      gst_pad_template_new ("videosink", GST_PAD_SINK, GST_PAD_ALWAYS,
+      gst_decklink_mode_get_template_caps ());
+  gst_element_class_add_pad_template (element_class, pad_template);
+  gst_object_unref (pad_template);
   gst_element_class_add_pad_template (element_class,
       gst_static_pad_template_get (&gst_decklink_sink_audiosink_template));
 
@@ -189,8 +211,15 @@ gst_decklink_sink_class_init (GstDecklinkSinkClass * klass)
   element_class->query = GST_DEBUG_FUNCPTR (gst_decklink_sink_query);
 
   g_object_class_install_property (gobject_class, PROP_MODE,
-      g_param_spec_enum ("mode", "Mode", "Mode",
+      g_param_spec_enum ("mode", "Playback Mode",
+          "Video Mode to use for playback",
           GST_TYPE_DECKLINK_MODE, GST_DECKLINK_MODE_NTSC,
+          (GParamFlags) (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS |
+              G_PARAM_CONSTRUCT)));
+
+  g_object_class_install_property (gobject_class, PROP_DEVICE,
+      g_param_spec_int ("device", "Device", "Capture device instance to use",
+          0, G_MAXINT, 0,
           (GParamFlags) (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS |
               G_PARAM_CONSTRUCT)));
 
@@ -202,8 +231,8 @@ gst_decklink_sink_init (GstDecklinkSink * decklinksink,
 {
 
   decklinksink->videosinkpad =
-      gst_pad_new_from_static_template (&gst_decklink_sink_videosink_template,
-      "sink");
+      gst_pad_new_from_template (gst_element_class_get_pad_template
+      (GST_ELEMENT_CLASS (decklinksink_class), "videosink"), "videosink");
   gst_pad_set_getcaps_function (decklinksink->videosinkpad,
       GST_DEBUG_FUNCPTR (gst_decklink_sink_videosink_getcaps));
   gst_pad_set_setcaps_function (decklinksink->videosinkpad,
@@ -271,22 +300,23 @@ gst_decklink_sink_init (GstDecklinkSink * decklinksink,
   decklinksink->audio_mutex = g_mutex_new ();
 
   decklinksink->mode = GST_DECKLINK_MODE_NTSC;
+  decklinksink->device = 0;
 
   decklinksink->callback = new Output;
   decklinksink->callback->decklinksink = decklinksink;
 
 #ifdef _MSC_VER
-  decklinksink->com_init_lock = g_mutex_new();
-  decklinksink->com_deinit_lock = g_mutex_new();
-  decklinksink->com_initialized = g_cond_new();
-  decklinksink->com_uninitialize = g_cond_new();
-  decklinksink->com_uninitialized = g_cond_new();
+  decklinksink->com_init_lock = g_mutex_new ();
+  decklinksink->com_deinit_lock = g_mutex_new ();
+  decklinksink->com_initialized = g_cond_new ();
+  decklinksink->com_uninitialize = g_cond_new ();
+  decklinksink->com_uninitialized = g_cond_new ();
 
   g_mutex_lock (decklinksink->com_init_lock);
 
   /* create the COM initialization thread */
-  g_thread_create ((GThreadFunc)gst_decklink_sink_com_thread,
-    decklinksink, FALSE, NULL);
+  g_thread_create ((GThreadFunc) gst_decklink_sink_com_thread,
+      decklinksink, FALSE, NULL);
 
   /* wait until the COM thread signals that COM has been initialized */
   g_cond_wait (decklinksink->com_initialized, decklinksink->com_init_lock);
@@ -307,6 +337,9 @@ gst_decklink_sink_set_property (GObject * object, guint property_id,
     case PROP_MODE:
       decklinksink->mode = (GstDecklinkModeEnum) g_value_get_enum (value);
       break;
+    case PROP_DEVICE:
+      decklinksink->device = g_value_get_int (value);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, property_id, pspec);
       break;
@@ -326,6 +359,9 @@ gst_decklink_sink_get_property (GObject * object, guint property_id,
     case PROP_MODE:
       g_value_set_enum (value, decklinksink->mode);
       break;
+    case PROP_DEVICE:
+      g_value_set_int (value, decklinksink->device);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, property_id, pspec);
       break;
@@ -334,11 +370,11 @@ gst_decklink_sink_get_property (GObject * object, guint property_id,
 
 #ifdef _MSC_VER
 static void
-gst_decklink_sink_com_thread (GstDecklinkSink * src)
+gst_decklink_sink_com_thread (GstDecklinkSink * sink)
 {
   HRESULT res;
 
-  g_mutex_lock (src->com_init_lock);
+  g_mutex_lock (sink->com_init_lock);
 
   /* Initialize COM with a MTA for this process. This thread will
    * be the first one to enter the apartement and the last one to leave
@@ -346,28 +382,29 @@ gst_decklink_sink_com_thread (GstDecklinkSink * src)
 
   res = CoInitializeEx (0, COINIT_MULTITHREADED);
   if (res == S_FALSE)
-    GST_WARNING_OBJECT (src, "COM has been already initialized in the same process");
+    GST_WARNING_OBJECT (sink,
+        "COM has been already initialized in the same process");
   else if (res == RPC_E_CHANGED_MODE)
-    GST_WARNING_OBJECT (src, "The concurrency model of COM has changed.");
+    GST_WARNING_OBJECT (sink, "The concurrency model of COM has changed.");
   else
-    GST_INFO_OBJECT (src, "COM intialized succesfully");
+    GST_INFO_OBJECT (sink, "COM intialized succesfully");
 
-  src->comInitialized = TRUE;
+  sink->comInitialized = TRUE;
 
   /* Signal other threads waiting on this condition that COM was initialized */
-  g_cond_signal (src->com_initialized);
+  g_cond_signal (sink->com_initialized);
 
-  g_mutex_unlock (src->com_init_lock);
+  g_mutex_unlock (sink->com_init_lock);
 
   /* Wait until the unitialize condition is met to leave the COM apartement */
-  g_mutex_lock (src->com_deinit_lock);
-  g_cond_wait (src->com_uninitialize, src->com_deinit_lock);
+  g_mutex_lock (sink->com_deinit_lock);
+  g_cond_wait (sink->com_uninitialize, sink->com_deinit_lock);
 
   CoUninitialize ();
-  GST_INFO_OBJECT (src, "COM unintialized succesfully");
-  src->comInitialized = FALSE;
-  g_cond_signal (src->com_uninitialized);
-  g_mutex_unlock (src->com_deinit_lock);
+  GST_INFO_OBJECT (sink, "COM unintialized succesfully");
+  sink->comInitialized = FALSE;
+  g_cond_signal (sink->com_uninitialized);
+  g_mutex_unlock (sink->com_deinit_lock);
 }
 #endif /* _MSC_VER */
 
@@ -401,7 +438,8 @@ gst_decklink_sink_finalize (GObject * object)
   if (decklinksink->comInitialized) {
     g_mutex_lock (decklinksink->com_deinit_lock);
     g_cond_signal (decklinksink->com_uninitialize);
-    g_cond_wait (decklinksink->com_uninitialized, decklinksink->com_deinit_lock);
+    g_cond_wait (decklinksink->com_uninitialized,
+        decklinksink->com_deinit_lock);
     g_mutex_unlock (decklinksink->com_deinit_lock);
   }
 
@@ -418,27 +456,19 @@ gst_decklink_sink_finalize (GObject * object)
 static gboolean
 gst_decklink_sink_start (GstDecklinkSink * decklinksink)
 {
-  IDeckLinkIterator *iterator;
   HRESULT ret;
   const GstDecklinkMode *mode;
   BMDAudioSampleType sample_depth;
 
-  iterator = CreateDeckLinkIteratorInstance ();
-  if (iterator == NULL) {
-    GST_ERROR ("no driver");
-    return FALSE;
-  }
-
-  ret = iterator->Next (&decklinksink->decklink);
-  if (ret != S_OK) {
-    GST_ERROR ("no card");
+  decklinksink->decklink = gst_decklink_get_nth_device (decklinksink->device);
+  if (decklinksink->decklink) {
     return FALSE;
   }
 
   ret = decklinksink->decklink->QueryInterface (IID_IDeckLinkOutput,
       (void **) &decklinksink->output);
   if (ret != S_OK) {
-    GST_ERROR ("no output");
+    GST_ERROR ("selected device does not have output interface");
     return FALSE;
   }
 
@@ -454,8 +484,8 @@ gst_decklink_sink_start (GstDecklinkSink * decklinksink)
   }
   //decklinksink->video_enabled = TRUE;
 
-  decklinksink->output->
-      SetScheduledFrameCompletionCallback (decklinksink->callback);
+  decklinksink->output->SetScheduledFrameCompletionCallback (decklinksink->
+      callback);
 
   sample_depth = bmdAudioSampleType16bitInteger;
   ret = decklinksink->output->EnableAudioOutput (bmdAudioSampleRate48kHz,
@@ -1088,16 +1118,18 @@ HRESULT
   return S_OK;
 }
 
-HRESULT Output::ScheduledPlaybackHasStopped ()
+HRESULT
+Output::ScheduledPlaybackHasStopped ()
 {
   GST_ERROR ("ScheduledPlaybackHasStopped");
   return S_OK;
 }
 
-HRESULT Output::RenderAudioSamples (bool preroll)
+HRESULT
+Output::RenderAudioSamples (bool preroll)
 {
   uint32_t samplesWritten;
-  GstBuffer * buffer;
+  GstBuffer *buffer;
 
   // guint64 samplesToWrite;
 
@@ -1107,9 +1139,7 @@ HRESULT Output::RenderAudioSamples (bool preroll)
     // running = true;
   } else {
     g_mutex_lock (decklinksink->audio_mutex);
-    decklinksink->output->ScheduleAudioSamples (
-        GST_BUFFER_DATA (decklinksink->audio_buffer),
-        GST_BUFFER_SIZE (decklinksink->audio_buffer) / 4, // 2 bytes per sample, stereo
+    decklinksink->output->ScheduleAudioSamples (GST_BUFFER_DATA (decklinksink->audio_buffer), GST_BUFFER_SIZE (decklinksink->audio_buffer) / 4, // 2 bytes per sample, stereo
         0, 0, &samplesWritten);
 
     buffer =
@@ -1131,4 +1161,126 @@ HRESULT Output::RenderAudioSamples (bool preroll)
   GST_DEBUG ("RenderAudioSamples");
 
   return S_OK;
+}
+
+
+static const GList *
+gst_decklink_sink_probe_get_properties (GstPropertyProbe * probe)
+{
+  GObjectClass *klass = G_OBJECT_GET_CLASS (probe);
+  static GList *list = NULL;
+  static gsize init = 0;
+
+  if (g_once_init_enter (&init)) {
+    list = g_list_append (NULL, g_object_class_find_property (klass, "device"));
+
+    g_once_init_leave (&init, 1);
+  }
+
+  return list;
+}
+
+
+static gboolean probed = FALSE;
+static int n_devices;
+
+static void
+gst_decklink_sink_class_probe_devices (GstElementClass * klass)
+{
+  IDeckLinkIterator *iterator;
+  IDeckLink *decklink;
+
+  n_devices = 0;
+  iterator = CreateDeckLinkIteratorInstance ();
+  if (iterator) {
+    while (iterator->Next (&decklink) == S_OK) {
+      n_devices++;
+    }
+  }
+
+  probed = TRUE;
+}
+
+static void
+gst_decklink_sink_probe_probe_property (GstPropertyProbe * probe,
+    guint prop_id, const GParamSpec * pspec)
+{
+  GstElementClass *klass = GST_ELEMENT_GET_CLASS (probe);
+
+  switch (prop_id) {
+    case PROP_DEVICE:
+      gst_decklink_sink_class_probe_devices (klass);
+      break;
+    default:
+      G_OBJECT_WARN_INVALID_PROPERTY_ID (probe, prop_id, pspec);
+      break;
+  }
+}
+
+static gboolean
+gst_decklink_sink_probe_needs_probe (GstPropertyProbe * probe,
+    guint prop_id, const GParamSpec * pspec)
+{
+  gboolean ret = FALSE;
+
+  switch (prop_id) {
+    case PROP_DEVICE:
+      ret = !probed;
+      break;
+    default:
+      G_OBJECT_WARN_INVALID_PROPERTY_ID (probe, prop_id, pspec);
+      break;
+  }
+  return ret;
+}
+
+static GValueArray *
+gst_decklink_sink_class_list_devices (GstElementClass * klass)
+{
+  GValueArray *array;
+  GValue value = {
+  0};
+  GList *item;
+  int i;
+
+  array = g_value_array_new (n_devices);
+  g_value_init (&value, G_TYPE_INT);
+  for (i = 0; i < n_devices; i++) {
+    g_value_set_int (&value, i);
+    g_value_array_append (array, &value);
+
+    item = item->next;
+  }
+  g_value_unset (&value);
+
+  return array;
+}
+
+static GValueArray *
+gst_decklink_sink_probe_get_values (GstPropertyProbe * probe,
+    guint prop_id, const GParamSpec * pspec)
+{
+  GstElementClass *klass = GST_ELEMENT_GET_CLASS (probe);
+  GValueArray *array = NULL;
+
+  switch (prop_id) {
+    case PROP_DEVICE:
+      array = gst_decklink_sink_class_list_devices (klass);
+      break;
+    default:
+      G_OBJECT_WARN_INVALID_PROPERTY_ID (probe, prop_id, pspec);
+      break;
+  }
+
+  return array;
+}
+
+static void
+gst_decklink_sink_property_probe_interface_init (GstPropertyProbeInterface *
+    iface)
+{
+  iface->get_properties = gst_decklink_sink_probe_get_properties;
+  iface->probe_property = gst_decklink_sink_probe_probe_property;
+  iface->needs_probe = gst_decklink_sink_probe_needs_probe;
+  iface->get_values = gst_decklink_sink_probe_get_values;
 }

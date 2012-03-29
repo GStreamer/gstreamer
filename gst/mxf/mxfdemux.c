@@ -2385,7 +2385,7 @@ gst_mxf_demux_find_essence_element (GstMXFDemux * demux,
   GstFlowReturn ret = GST_FLOW_OK;
   guint64 old_offset = demux->offset;
   GstMXFDemuxPartition *old_partition = demux->current_partition;
-  guint i;
+  gint i;
 
   GST_DEBUG_OBJECT (demux, "Trying to find essence element %" G_GINT64_FORMAT
       " of track %u with body_sid %u (keyframe %d)", *position,

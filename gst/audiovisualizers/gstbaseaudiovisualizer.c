@@ -913,7 +913,7 @@ gst_base_audio_visualizer_chain (GstPad * pad, GstObject * parent,
     if (avail - sbpf >= sbpf) {
       gst_adapter_flush (scope->adapter, sbpf);
       gst_adapter_unmap (scope->adapter);
-    } else if (avail - sbpf >= 0) {
+    } else if (avail >= sbpf) {
       /* just flush a bit and stop */
       gst_adapter_flush (scope->adapter, (avail - sbpf));
       gst_adapter_unmap (scope->adapter);

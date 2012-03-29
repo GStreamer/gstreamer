@@ -107,34 +107,7 @@ const GstDecklinkMode * gst_decklink_get_mode (GstDecklinkModeEnum e);
 GstCaps * gst_decklink_mode_get_caps (GstDecklinkModeEnum e);
 GstCaps * gst_decklink_mode_get_template_caps (void);
 
-#define GST_DECKLINK_MODE_CAPS(w,h,n,d,i) \
-  "video/x-raw-yuv,format=(fourcc){ UYVY, v210 },width=" #w ",height=" #h \
-  ",framerate=" #n "/" #d ",interlaced=" #i
-
-#define GST_DECKLINK_CAPS \
-  GST_DECKLINK_MODE_CAPS(720,486,30000,1001,true) ";" \
-  GST_DECKLINK_MODE_CAPS(720,486,24000,1001,true) ";" \
-  GST_DECKLINK_MODE_CAPS(720,576,25,1,true) ";" \
-  GST_DECKLINK_MODE_CAPS(720,486,30000,1001,false) ";" \
-  GST_DECKLINK_MODE_CAPS(720,576,25,1,false) ";" \
-  \
-  GST_DECKLINK_MODE_CAPS(1920,1080,24000,1001,false) ";" \
-  GST_DECKLINK_MODE_CAPS(1920,1080,24,1,false) ";" \
-  GST_DECKLINK_MODE_CAPS(1920,1080,25,1,false) ";" \
-  GST_DECKLINK_MODE_CAPS(1920,1080,30000,1001,false) ";" \
-  GST_DECKLINK_MODE_CAPS(1920,1080,30,1,false) ";" \
-  \
-  GST_DECKLINK_MODE_CAPS(1920,1080,25,1,true) ";" \
-  GST_DECKLINK_MODE_CAPS(1920,1080,30000,1001,true) ";" \
-  GST_DECKLINK_MODE_CAPS(1920,1080,30,1,true) ";" \
-  \
-  GST_DECKLINK_MODE_CAPS(1920,1080,50,1,false) ";" \
-  GST_DECKLINK_MODE_CAPS(1920,1080,60000,1001,false) ";" \
-  GST_DECKLINK_MODE_CAPS(1920,1080,60,1,false) ";" \
-  \
-  GST_DECKLINK_MODE_CAPS(1280,720,50,1,false) ";" \
-  GST_DECKLINK_MODE_CAPS(1280,720,60000,1001,false) ";" \
-  GST_DECKLINK_MODE_CAPS(1280,720,60,1,false)
+IDeckLink * gst_decklink_get_nth_device (int n);
 
 
 #endif

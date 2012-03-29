@@ -291,8 +291,8 @@ gst_celt_dec_parse_comments (GstCeltDec * dec, GstBuffer * buf)
 
   GST_INFO_OBJECT (dec, "tags: %" GST_PTR_FORMAT, list);
 
-  gst_pad_push_event (GST_AUDIO_DECODER_SRC_PAD (dec),
-      gst_event_new_tag (list));
+  gst_audio_decoder_merge_tags (GST_AUDIO_DECODER (dec), list,
+      GST_TAG_MERGE_REPLACE);
 
   g_free (encoder);
   g_free (ver);

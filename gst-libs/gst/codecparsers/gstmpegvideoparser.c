@@ -97,9 +97,8 @@ find_start_code (GstBitReader * b)
   while (gst_bit_reader_peek_bits_uint32 (b, &bits, 32)) {
     if (bits >> 8 == 0x1) {
       return TRUE;
-    } else {
-      gst_bit_reader_skip (b, 8);
-    }
+    } else if (gst_bit_reader_skip (b, 8) == FALSE)
+      break;
   }
 
   return FALSE;
@@ -324,10 +323,13 @@ gst_mpeg_video_parse (const guint8 * data, gsize size, guint offset)
   while (off >= 0 && off + 3 < size) {
     GstMpegVideoTypeOffsetSize *codoffsize;
 
-    gst_byte_reader_skip (&br, off + 3);
+
+    if (gst_byte_reader_skip (&br, off + 3) == FALSE)
+      goto failed;
 
     codoffsize = g_malloc (sizeof (GstMpegVideoTypeOffsetSize));
-    gst_byte_reader_get_uint8 (&br, &codoffsize->type);
+    if (gst_byte_reader_get_uint8 (&br, &codoffsize->type) == FALSE)
+      goto failed;
 
     codoffsize->offset = gst_byte_reader_get_pos (&br) + offset;
 
@@ -346,6 +348,12 @@ gst_mpeg_video_parse (const guint8 * data, gsize size, guint offset)
   }
 
   return g_list_reverse (ret);
+
+failed:
+  {
+    GST_WARNING ("Failed to parse");
+    return g_list_reverse (ret);
+  }
 }
 
 /**

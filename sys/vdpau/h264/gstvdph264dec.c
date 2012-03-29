@@ -687,23 +687,25 @@ gst_vdp_h264_dec_parse_data (GstBaseVideoDecoder * base_video_decoder,
 
   gst_bit_reader_init_from_buffer (&reader, buf);
 
-  /* skip nal_length or sync code */
-  gst_bit_reader_skip (&reader, h264_dec->nal_length_size * 8);
-
-  if (!gst_bit_reader_get_bits_uint8 (&reader, &forbidden_zero_bit, 1))
+  if (gst_bit_reader_get_remaining (&reader) <
+      h264_dec->nal_length_size * 8 + 7)
     goto invalid_packet;
+
+  /* skip nal_length or sync code */
+  gst_bit_reader_skip_unchecked (&reader, h264_dec->nal_length_size * 8);
+
+  forbidden_zero_bit = gst_bit_reader_get_bits_uint8_unchecked (&reader, 1);
+
   if (forbidden_zero_bit != 0) {
     GST_WARNING ("forbidden_zero_bit != 0");
     return GST_FLOW_ERROR;
   }
 
-  if (!gst_bit_reader_get_bits_uint16 (&reader, &nal_unit.ref_idc, 2))
-    goto invalid_packet;
+  nal_unit.ref_idc = gst_bit_reader_get_bits_uint16_unchecked (&reader, 2);
   GST_DEBUG ("nal_ref_idc: %u", nal_unit.ref_idc);
 
   /* read nal_unit_type */
-  if (!gst_bit_reader_get_bits_uint16 (&reader, &nal_unit.type, 5))
-    goto invalid_packet;
+  nal_unit.type = gst_bit_reader_get_bits_uint16_unchecked (&reader, 5);
 
   GST_DEBUG ("nal_unit_type: %u", nal_unit.type);
   if (nal_unit.type == 14 || nal_unit.type == 20) {
@@ -716,7 +718,7 @@ gst_vdp_h264_dec_parse_data (GstBaseVideoDecoder * base_video_decoder,
   size = gst_bit_reader_get_remaining (&reader) / 8;
 
   i = size - 1;
-  while (size >= 0 && data[i] == 0x00) {
+  while ((gint) size > 0 && data[i] == 0x00) {
     size--;
     i--;
   }

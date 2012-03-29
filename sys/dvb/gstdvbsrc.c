@@ -462,6 +462,8 @@ gst_dvbsrc_init (GstDvbSrc * object)
 
   /* We are a live source */
   gst_base_src_set_live (GST_BASE_SRC (object), TRUE);
+  /* And we wanted timestamped output */
+  gst_base_src_set_do_timestamp (GST_BASE_SRC (object), TRUE);
 
   object->fd_frontend = -1;
   object->fd_dvr = -1;
@@ -940,7 +942,7 @@ gst_dvbsrc_read_device (GstDvbSrc * object, int size)
   }
   gst_buffer_unmap (buf, &map);
   gst_buffer_resize (buf, 0, count);
-  GST_BUFFER_TIMESTAMP (buf) = GST_CLOCK_TIME_NONE;
+
   return buf;
 
 stopped:

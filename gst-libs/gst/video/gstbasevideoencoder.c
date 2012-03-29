@@ -241,6 +241,13 @@ gst_base_video_encoder_init (GstBaseVideoEncoder * base_video_encoder)
   base_video_encoder->sink_clipping = TRUE;
 }
 
+/**
+ * gst_base_video_encoder_set_headers:
+ * @base_video_encoder: a #GstBaseVideoEncoder
+ * @headers: (transfer full): the #GstBuffer containing the codec header
+ *
+ * Set the codec headers to be sent downstream whenever requested.
+ */
 void
 gst_base_video_encoder_set_headers (GstBaseVideoEncoder * base_video_encoder,
     GstBuffer * headers)
@@ -1117,11 +1124,15 @@ done:
  * gst_base_video_encoder_get_state:
  * @base_video_encoder: a #GstBaseVideoEncoder
  *
+ * Get the current #GstVideoState
+ *
  * Returns: #GstVideoState describing format of video data.
  */
 const GstVideoState *
 gst_base_video_encoder_get_state (GstBaseVideoEncoder * base_video_encoder)
 {
+  /* FIXME : Move to base codec class */
+
   return &GST_BASE_VIDEO_CODEC (base_video_encoder)->state;
 }
 
@@ -1152,7 +1163,7 @@ gst_base_video_encoder_set_latency (GstBaseVideoEncoder * base_video_encoder,
 /**
  * gst_base_video_encoder_set_latency_fields:
  * @base_video_encoder: a #GstBaseVideoEncoder
- * @fields: latency in fields
+ * @n_fields: latency in fields
  *
  * Informs baseclass of encoding latency in terms of fields (both min
  * and max latency).
@@ -1179,6 +1190,8 @@ gst_base_video_encoder_set_latency_fields (GstBaseVideoEncoder *
  * gst_base_video_encoder_get_oldest_frame:
  * @base_video_encoder: a #GstBaseVideoEncoder
  *
+ * Get the oldest unfinished pending #GstVideoFrameState
+ *
  * Returns: oldest unfinished pending #GstVideoFrameState
  */
 GstVideoFrameState *
@@ -1186,6 +1199,8 @@ gst_base_video_encoder_get_oldest_frame (GstBaseVideoEncoder *
     base_video_encoder)
 {
   GList *g;
+
+  /* FIXME : Move to base codec class */
 
   GST_BASE_VIDEO_CODEC_STREAM_LOCK (base_video_encoder);
   g = g_list_first (GST_BASE_VIDEO_CODEC (base_video_encoder)->frames);

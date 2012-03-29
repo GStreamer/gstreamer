@@ -72,7 +72,7 @@ enum
 {
   PROP_0,
   PROP_DATA,
-  PROP_FILENAME,
+  PROP_LOCATION,
   PROP_FIT_TO_FRAME,
   PROP_X,
   PROP_Y,
@@ -164,6 +164,8 @@ gst_rsvg_overlay_set_svg_data (GstRsvgOverlay * overlay, const gchar * data,
         overlay->svg_width = svg_dimension.width;
         overlay->svg_height = svg_dimension.height;
         gst_base_transform_set_passthrough (btrans, FALSE);
+        GST_INFO_OBJECT (overlay, "updated SVG, %d x %d", overlay->svg_width,
+            overlay->svg_height);
       }
     }
   }
@@ -184,7 +186,7 @@ gst_rsvg_overlay_set_property (GObject * object, guint prop_id,
           FALSE);
       break;
     }
-    case PROP_FILENAME:
+    case PROP_LOCATION:
     {
       gst_rsvg_overlay_set_svg_data (overlay, g_value_get_string (value), TRUE);
       break;
@@ -336,7 +338,7 @@ gst_rsvg_overlay_data_sink_event (GstPad * pad, GstEvent * event)
       GST_RSVG_UNLOCK (overlay);
     }
 
-    case GST_EVENT_FLUSH_START:
+    case GST_EVENT_FLUSH_STOP:
       gst_adapter_clear (overlay->adapter);
       break;
 
@@ -436,9 +438,10 @@ gst_rsvg_overlay_stop (GstBaseTransform * btrans)
 
   if (overlay->handle) {
     g_object_unref (overlay->handle);
-    g_object_unref (overlay->adapter);
     overlay->handle = NULL;
   }
+
+  gst_adapter_clear (overlay->adapter);
 
   return TRUE;
 }
@@ -474,7 +477,7 @@ gst_rsvg_overlay_class_init (GstRsvgOverlayClass * klass)
   g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_DATA,
       g_param_spec_string ("data", "data", "SVG data.", "",
           G_PARAM_WRITABLE | G_PARAM_STATIC_STRINGS));
-  g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_FILENAME,
+  g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_LOCATION,
       g_param_spec_string ("location", "location", "SVG file location.", "",
           G_PARAM_WRITABLE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_FIT_TO_FRAME,

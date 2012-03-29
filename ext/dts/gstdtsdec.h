@@ -68,8 +68,6 @@ struct _GstDtsDec {
 #else
   dts_state_t 	*state;
 #endif
-
-  GstTagList    *pending_tags;
 };
 
 struct _GstDtsDecClass {

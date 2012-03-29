@@ -491,6 +491,10 @@ gst_modplug_load_song (GstModPlug * modplug)
 
   gst_structure_get_int (structure, "channels", &modplug->channel);
   gst_structure_get_int (structure, "rate", &modplug->frequency);
+  
+  GST_DEBUG_OBJECT (modplug, 
+      "Audio settings: %d bits, %d channel(s), %d Hz sampling rate",
+      modplug->bits, modplug->channel, modplug->frequency);
 
   gst_pad_set_caps (modplug->srcpad, newcaps);
   gst_caps_unref (newcaps);
@@ -672,7 +676,8 @@ gst_modplug_loop (GstModPlug * modplug)
     if (modplug->offset == modplug->song_size) {
       GstTagList *tags;
       gboolean ok;
-      gchar comment[16384];
+      #define COMMENT_SIZE 16384
+      gchar comment[COMMENT_SIZE];
       GstSegment seg;
 
       ok = gst_modplug_load_song (modplug);
@@ -695,7 +700,9 @@ gst_modplug_loop (GstModPlug * modplug)
           GST_TAG_BEATS_PER_MINUTE,
           (gdouble) modplug->mSoundFile->GetMusicTempo (), NULL);
 
-      if (modplug->mSoundFile->GetSongComments ((gchar *) & comment, 16384, 32)) {
+      if (modplug->mSoundFile->GetSongComments ((gchar *) & comment,
+          COMMENT_SIZE, 32)) {
+        comment[COMMENT_SIZE - 1] = '\0';
         gst_tag_list_add (tags, GST_TAG_MERGE_APPEND,
             GST_TAG_COMMENT, comment, NULL);
       }
@@ -713,7 +720,7 @@ gst_modplug_loop (GstModPlug * modplug)
     gfloat temp;
 
     temp = (gfloat) modplug->song_length / modplug->seek_at;
-    seek_to_pos = (int) (modplug->mSoundFile->GetMaxPosition () / temp);
+    seek_to_pos = (gint) (modplug->mSoundFile->GetMaxPosition () / temp);
 
     GST_DEBUG_OBJECT (modplug, "Seeking to row %d", seek_to_pos);
 
@@ -722,7 +729,9 @@ gst_modplug_loop (GstModPlug * modplug)
   }
 
   /* read and output a buffer */
-  out = gst_buffer_new_allocate (NULL, modplug->read_bytes, NULL);
+  GST_LOG_OBJECT (modplug, "Read %d bytes", (gint)modplug->read_bytes);
+  /* libmodplug 0.8.7 trashes memory */
+  out = gst_buffer_new_allocate (NULL, modplug->read_bytes * 2, NULL);
 
   gst_buffer_map (out, &map, GST_MAP_WRITE);
   if (!modplug->mSoundFile->Read (map.data, modplug->read_bytes)) {
@@ -730,6 +739,7 @@ gst_modplug_loop (GstModPlug * modplug)
     goto eos;
   }
   gst_buffer_unmap (out, &map);
+  gst_buffer_resize (out, 0, modplug->read_bytes);
 
   GST_BUFFER_DURATION (out) =
       gst_util_uint64_scale_int (modplug->read_samples, GST_SECOND,
@@ -796,6 +806,7 @@ gst_modplug_change_state (GstElement * element, GstStateChange transition)
       }
       if (modplug->mSoundFile) {
         modplug->mSoundFile->Destroy ();
+        delete modplug->mSoundFile;
         modplug->mSoundFile = NULL;
       }
       break;

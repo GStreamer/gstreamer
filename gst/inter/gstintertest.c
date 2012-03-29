@@ -1,5 +1,5 @@
 /* GstInterTest
- * Copyright (C) 2011 FIXME <fixme@example.com>
+ * Copyright (C) 2011 David Schleef <ds@schleef.org>
  * Copyright (C) 2010 Entropy Wave Inc
  *
  * Redistribution and use in source and binary forms, with or without
@@ -86,7 +86,7 @@ main (int argc, char *argv[])
     g_thread_init (NULL);
 #endif
 
-  context = g_option_context_new ("- FIXME");
+  context = g_option_context_new ("- Internal src/sink test");
   g_option_context_add_main_entries (context, entries, GETTEXT_PACKAGE);
   g_option_context_add_group (context, gst_init_get_option_group ());
   if (!g_option_context_parse (context, &argc, &argv, &error)) {
@@ -188,14 +188,14 @@ gst_inter_test_create_pipeline_vts (GstInterTest * intertest)
 
   pipe_desc = g_string_new ("");
 
-  g_string_append (pipe_desc, "videotestsrc name=source num-buffers=10000 ! ");
+  g_string_append (pipe_desc, "videotestsrc name=source num-buffers=100 ! ");
   g_string_append (pipe_desc,
       "video/x-raw-yuv,format=(fourcc)I420,width=320,height=240 ! ");
   g_string_append (pipe_desc, "timeoverlay ! ");
   g_string_append (pipe_desc, "intervideosink name=sink sync=true ");
   g_string_append (pipe_desc,
-      "audiotestsrc samplesperbuffer=1600 num-buffers=100 ! ");
-  g_string_append (pipe_desc, "interaudiosink ");
+      "audiotestsrc samplesperbuffer=1600 num-buffers=100 ! audioconvert ! ");
+  g_string_append (pipe_desc, "interaudiosink sync=true ");
 
   if (verbose)
     g_print ("pipeline: %s\n", pipe_desc->str);
@@ -232,7 +232,7 @@ gst_inter_test_create_pipeline_server (GstInterTest * intertest)
   g_string_append (pipe_desc, "intervideosrc ! queue ! ");
   g_string_append (pipe_desc, "xvimagesink name=sink ");
   g_string_append (pipe_desc, "interaudiosrc ! queue ! ");
-  g_string_append (pipe_desc, "alsasink latency-time=100000000 ");
+  g_string_append (pipe_desc, "alsasink ");
 
   if (verbose)
     g_print ("pipeline: %s\n", pipe_desc->str);
@@ -337,7 +337,7 @@ gst_inter_test_handle_paused_to_ready (GstInterTest * intertest)
 static void
 gst_inter_test_handle_ready_to_null (GstInterTest * intertest)
 {
-  g_main_loop_quit (intertest->main_loop);
+  //g_main_loop_quit (intertest->main_loop);
 
 }
 

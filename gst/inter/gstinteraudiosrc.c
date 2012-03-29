@@ -19,14 +19,19 @@
 /**
  * SECTION:element-gstinteraudiosrc
  *
- * The interaudiosrc element does FIXME stuff.
+ * The interaudiosrc element is an audio source element.  It is used
+ * in connection with a interaudiosink element in a different pipeline.
  *
  * <refsect2>
  * <title>Example launch line</title>
  * |[
- * gst-launch -v fakesrc ! interaudiosrc ! FIXME ! fakesink
+ * gst-launch -v interaudiosrc ! queue ! audiosink
  * ]|
- * FIXME Describe what the pipeline does.
+ * 
+ * The interaudiosrc element cannot be used effectively with gst-launch,
+ * as it requires a second pipeline in the application to send audio.
+ * See the gstintertest.c example in the gst-plugins-bad source code for
+ * more details.
  * </refsect2>
  */
 
@@ -93,8 +98,7 @@ GST_STATIC_PAD_TEMPLATE ("src",
         "endianness = (int) BYTE_ORDER, "
         "signed = (boolean) true, "
         "width = (int) 16, "
-        "depth = (int) 16, "
-        "rate = (int) [ 1, MAX ], " "channels = (int) [ 1, 2 ]")
+        "depth = (int) 16, " "rate = (int) 48000, " "channels = (int) 2")
     );
 
 
@@ -115,8 +119,11 @@ gst_inter_audio_src_base_init (gpointer g_class)
   gst_element_class_add_pad_template (element_class,
       gst_static_pad_template_get (&gst_inter_audio_src_src_template));
 
-  gst_element_class_set_details_simple (element_class, "FIXME Long name",
-      "Generic", "FIXME Description", "FIXME <fixme@example.com>");
+  gst_element_class_set_details_simple (element_class,
+      "Internal audio source",
+      "Source/Audio",
+      "Virtual audio source for internal process communication",
+      "David Schleef <ds@schleef.org>");
 }
 
 static void
@@ -159,11 +166,12 @@ gst_inter_audio_src_class_init (GstInterAudioSrcClass * klass)
     base_src_class->prepare_seek_segment =
         GST_DEBUG_FUNCPTR (gst_inter_audio_src_prepare_seek_segment);
 
+#if 0
   g_object_class_install_property (gobject_class, PROP_CHANNEL,
       g_param_spec_string ("channel", "Channel",
           "Channel name to match inter src and sink elements",
           "default", G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
-
+#endif
 }
 
 static void
@@ -174,16 +182,20 @@ gst_inter_audio_src_init (GstInterAudioSrc * interaudiosrc,
   gst_base_src_set_live (GST_BASE_SRC (interaudiosrc), TRUE);
   gst_base_src_set_blocksize (GST_BASE_SRC (interaudiosrc), -1);
 
-  interaudiosrc->surface = gst_inter_surface_get ("default");
+  interaudiosrc->channel = g_strdup ("default");
 }
 
 void
 gst_inter_audio_src_set_property (GObject * object, guint property_id,
     const GValue * value, GParamSpec * pspec)
 {
-  /* GstInterAudioSrc *interaudiosrc = GST_INTER_AUDIO_SRC (object); */
+  GstInterAudioSrc *interaudiosrc = GST_INTER_AUDIO_SRC (object);
 
   switch (property_id) {
+    case PROP_CHANNEL:
+      g_free (interaudiosrc->channel);
+      interaudiosrc->channel = g_value_dup_string (value);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, property_id, pspec);
       break;
@@ -194,9 +206,12 @@ void
 gst_inter_audio_src_get_property (GObject * object, guint property_id,
     GValue * value, GParamSpec * pspec)
 {
-  /* GstInterAudioSrc *interaudiosrc = GST_INTER_AUDIO_SRC (object); */
+  GstInterAudioSrc *interaudiosrc = GST_INTER_AUDIO_SRC (object);
 
   switch (property_id) {
+    case PROP_CHANNEL:
+      g_value_set_string (value, interaudiosrc->channel);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, property_id, pspec);
       break;
@@ -281,6 +296,8 @@ gst_inter_audio_src_start (GstBaseSrc * src)
 
   GST_DEBUG_OBJECT (interaudiosrc, "start");
 
+  interaudiosrc->surface = gst_inter_surface_get (interaudiosrc->channel);
+
   return TRUE;
 }
 
@@ -290,6 +307,9 @@ gst_inter_audio_src_stop (GstBaseSrc * src)
   GstInterAudioSrc *interaudiosrc = GST_INTER_AUDIO_SRC (src);
 
   GST_DEBUG_OBJECT (interaudiosrc, "stop");
+
+  gst_inter_surface_unref (interaudiosrc->surface);
+  interaudiosrc->surface = NULL;
 
   return TRUE;
 }
@@ -345,11 +365,19 @@ static gboolean
 gst_inter_audio_src_event (GstBaseSrc * src, GstEvent * event)
 {
   GstInterAudioSrc *interaudiosrc = GST_INTER_AUDIO_SRC (src);
+  gboolean ret;
 
   GST_DEBUG_OBJECT (interaudiosrc, "event");
 
-  return TRUE;
+  switch (GST_EVENT_TYPE (event)) {
+    default:
+      ret = GST_BASE_SRC_CLASS (parent_class)->event (src, event);
+  }
+
+  return ret;
 }
+
+#define SIZE 1600
 
 static GstFlowReturn
 gst_inter_audio_src_create (GstBaseSrc * src, guint64 offset, guint size,
@@ -365,31 +393,31 @@ gst_inter_audio_src_create (GstBaseSrc * src, guint64 offset, guint size,
 
   g_mutex_lock (interaudiosrc->surface->mutex);
   n = gst_adapter_available (interaudiosrc->surface->audio_adapter) / 4;
-  if (n > 1600 * 2) {
-    GST_DEBUG ("flushing %d samples", 800);
-    gst_adapter_flush (interaudiosrc->surface->audio_adapter, 800 * 4);
-    n -= 800;
+  if (n > SIZE * 2) {
+    GST_DEBUG ("flushing %d samples", SIZE / 2);
+    gst_adapter_flush (interaudiosrc->surface->audio_adapter, (SIZE / 2) * 4);
+    n -= (SIZE / 2);
   }
-  if (n > 1600)
-    n = 1600;
+  if (n > SIZE)
+    n = SIZE;
   if (n > 0) {
     buffer = gst_adapter_take_buffer (interaudiosrc->surface->audio_adapter,
         n * 4);
   }
   g_mutex_unlock (interaudiosrc->surface->mutex);
 
-  if (n < 1600) {
-    GstBuffer *newbuf = gst_buffer_new_and_alloc (1600 * 4);
+  if (n < SIZE) {
+    GstBuffer *newbuf = gst_buffer_new_and_alloc (SIZE * 4);
 
-    GST_DEBUG ("creating %d samples of silence", 1600 - n);
-    memset (GST_BUFFER_DATA (newbuf) + n * 4, 0, 1600 * 4 - n * 4);
+    GST_DEBUG ("creating %d samples of silence", SIZE - n);
+    memset (GST_BUFFER_DATA (newbuf) + n * 4, 0, SIZE * 4 - n * 4);
     if (buffer) {
       memcpy (GST_BUFFER_DATA (newbuf), GST_BUFFER_DATA (buffer), n * 4);
       gst_buffer_unref (buffer);
     }
     buffer = newbuf;
   }
-  n = 1600;
+  n = SIZE;
 
   GST_BUFFER_OFFSET (buffer) = interaudiosrc->n_samples;
   GST_BUFFER_OFFSET_END (buffer) = interaudiosrc->n_samples + n;
@@ -429,10 +457,34 @@ static gboolean
 gst_inter_audio_src_query (GstBaseSrc * src, GstQuery * query)
 {
   GstInterAudioSrc *interaudiosrc = GST_INTER_AUDIO_SRC (src);
+  gboolean ret;
 
   GST_DEBUG_OBJECT (interaudiosrc, "query");
 
-  return TRUE;
+  switch (GST_QUERY_TYPE (query)) {
+    case GST_QUERY_LATENCY:{
+      GstClockTime min_latency, max_latency;
+
+      min_latency = 30 * gst_util_uint64_scale_int (GST_SECOND, SIZE, 48000);
+
+      max_latency = min_latency;
+
+      GST_ERROR_OBJECT (src,
+          "report latency min %" GST_TIME_FORMAT " max %" GST_TIME_FORMAT,
+          GST_TIME_ARGS (min_latency), GST_TIME_ARGS (max_latency));
+
+      gst_query_set_latency (query,
+          gst_base_src_is_live (src), min_latency, max_latency);
+
+      ret = TRUE;
+      break;
+    }
+    default:
+      ret = GST_BASE_SRC_CLASS (parent_class)->query (src, query);
+      break;
+  }
+
+  return ret;
 }
 
 static gboolean

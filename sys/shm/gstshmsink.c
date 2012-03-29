@@ -18,8 +18,18 @@
  * Free Software Foundation, Inc., 59 Temple Place - Suite 330,
  * Boston, MA 02111-1307, USA.
  */
-
-
+/**
+ * SECTION:element-shmsink
+ *
+ * Send data over shared memory to the matching source.
+ *
+ * <refsect2>
+ * <title>Example launch lines</title>
+ * |[
+ * gst-launch -v videotestsrc !  shmsink socket-path=/tmp/blah shm-size=1000000
+ * ]| Send video to shm buffers.
+ * </refsect2>
+ */
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif

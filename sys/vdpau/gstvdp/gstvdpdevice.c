@@ -18,6 +18,10 @@
  * Boston, MA 02111-1307, USA.
  */
 
+/* FIXME 0.11: suppress warnings for deprecated API such as GStaticRecMutex
+ * with newer GLib versions (>= 2.31.0) */
+#define GLIB_DISABLE_DEPRECATION_WARNINGS
+
 #include "gstvdpdevice.h"
 
 GST_DEBUG_CATEGORY_STATIC (gst_vdp_device_debug);

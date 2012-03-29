@@ -154,6 +154,18 @@ gst_wrapper_camera_bin_reset_video_src_caps (GstWrapperCameraBinSrc * self,
 
   GST_DEBUG_OBJECT (self, "Resetting src caps to %" GST_PTR_FORMAT, caps);
   if (self->src_vid_src) {
+    GstCaps *old_caps;
+
+    g_object_get (G_OBJECT (self->src_filter), "caps", &old_caps, NULL);
+    if (gst_caps_is_equal (caps, old_caps)) {
+      GST_DEBUG_OBJECT (self, "old and new caps are same, do not reset it");
+      if (old_caps)
+        gst_caps_unref (old_caps);
+      return;
+    }
+    if (old_caps)
+      gst_caps_unref (old_caps);
+
     clock = gst_element_get_clock (self->src_vid_src);
     base_time = gst_element_get_base_time (self->src_vid_src);
 

@@ -132,8 +132,6 @@ static gboolean gst_dtsdec_parse (GstAudioDecoder * dec, GstAdapter * adapter,
     gint * offset, gint * length);
 static GstFlowReturn gst_dtsdec_handle_frame (GstAudioDecoder * dec,
     GstBuffer * buffer);
-static GstFlowReturn gst_dtsdec_pre_push (GstAudioDecoder * bdec,
-    GstBuffer ** buffer);
 
 static GstFlowReturn gst_dtsdec_chain (GstPad * pad, GstObject * parent,
     GstBuffer * buf);
@@ -173,7 +171,6 @@ gst_dtsdec_class_init (GstDtsDecClass * klass)
   gstbase_class->set_format = GST_DEBUG_FUNCPTR (gst_dtsdec_set_format);
   gstbase_class->parse = GST_DEBUG_FUNCPTR (gst_dtsdec_parse);
   gstbase_class->handle_frame = GST_DEBUG_FUNCPTR (gst_dtsdec_handle_frame);
-  gstbase_class->pre_push = GST_DEBUG_FUNCPTR (gst_dtsdec_pre_push);
 
   /**
    * GstDtsDec::drc
@@ -257,10 +254,6 @@ gst_dtsdec_stop (GstAudioDecoder * dec)
     dca_free (dts->state);
     dts->state = NULL;
   }
-  if (dts->pending_tags) {
-    gst_tag_list_free (dts->pending_tags);
-    dts->pending_tags = NULL;
-  }
 
   return TRUE;
 }
@@ -284,7 +277,7 @@ gst_dtsdec_parse (GstAudioDecoder * bdec, GstAdapter * adapter,
   bit_rate = dts->bit_rate;
   sample_rate = dts->sample_rate;
   flags = 0;
-  while (av >= 7) {
+  while (size >= 7) {
     length = dca_syncinfo (dts->state, data, &flags,
         &sample_rate, &bit_rate, &frame_length);
 
@@ -447,28 +440,9 @@ gst_dtsdec_update_streaminfo (GstDtsDec * dts)
     /* 1 => open bitrate, 2 => variable bitrate, 3 => lossless */
     gst_tag_list_add (taglist, GST_TAG_MERGE_APPEND, GST_TAG_BITRATE,
         (guint) dts->bit_rate, NULL);
-
-    if (dts->pending_tags) {
-      gst_tag_list_free (dts->pending_tags);
-      dts->pending_tags = NULL;
-    }
-
-    dts->pending_tags = taglist;
+    gst_audio_decoder_merge_tags (GST_AUDIO_DECODER (dts), taglist,
+        GST_TAG_MERGE_REPLACE);
   }
-}
-
-static GstFlowReturn
-gst_dtsdec_pre_push (GstAudioDecoder * bdec, GstBuffer ** buffer)
-{
-  GstDtsDec *dts = GST_DTSDEC (bdec);
-
-  if (G_UNLIKELY (dts->pending_tags)) {
-    gst_pad_push_event (GST_AUDIO_DECODER_SRC_PAD (dts),
-        gst_event_new_tag (dts->pending_tags));
-    dts->pending_tags = NULL;
-  }
-
-  return GST_FLOW_OK;
 }
 
 static GstFlowReturn

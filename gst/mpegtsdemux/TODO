@@ -1,35 +1,30 @@
 tsdemux/tsparse TODO
 --------------------
 
-* clock for live streams
-  In order for playback to happen at the same rate as on the producer,
-  we need to estimate the remote clock based on capture time and PCR
-  values.
-  For this estimation to be as accurate as possible, the capture time
-  needs to happen on the sources.
-    => Ensure live sources actually timestamp their buffers
-  Once we have accurate timestamps, we can use an algorithm to
-  calculate the PCR/local-clock skew.
-    => Use the EPTLA algorithm as used in -good/rtp/rtpmanager/
-     gstrtpjitterbuffer
+* Perfomance
+  * Bufferlist : Creating/Destroying very small buffers is too
+  costly. Switch to pre-/re-allocating outgoing buffers in which we
+  copy the data. 
+  * Adapter : Use gst_adapter_peek()/_flush() instead of constantly
+  creating buffers.
 
-* Seeking
-  => Split out in a separate file/object. It is polluting tsdemux for
-  code readability/clarity.
-
-* Perfomance : Creation/Destruction of buffers is slow
-  * => This is due to g_type_instance_create using a dogslow rwlock
-  which take up to 50% of gst_adapter_take_buffer()
-  => Bugzilla #585375 (performance and contention problems)
-
-* mpegtspacketizer
-  * offset/timestamp of incoming buffers need to be carried on to the
-  sub-buffers in order for several demuxer features to work correctly.
+* Latency
+  * Calculate the actual latency instead of returning a fixed
+  value. The latency (for live streams) is the difference between the
+  currently inputted buffer timestamp (can be stored in the
+  packetizer) and the buffer we're pushing out.
+  This value should be reported/updated (leave a bit of extra margin
+  in addition to the calculated value).
 
 * mpegtsparser
-  * SERIOUS room for improvement performance-wise (see callgrind)
+  * SERIOUS room for improvement performance-wise (see callgrind),
+  mostly related to performance issues mentionned above.
 
-
+* Random-access seeking
+  * Do minimal parsing of video headers to detect keyframes and use
+  that to compute the keyframe intervals. Use that interval to offset
+  the seek position in order to maximize the chance of pushing out the
+  requested frames. 
 
 
 Synchronization, Scheduling and Timestamping
@@ -50,6 +45,9 @@ pay extra attention to the outgoing NEWSEGMENT event and buffer
 timestamps in order to guarantee proper playback and synchronization
 of the stream.
 
+  In the following, 'timestamps' correspond to GStreamer
+  buffer/segment values. The mpeg-ts PCR/DTS/PTS values are indicated
+  with their actual name.
 
  1) Live push-based scheduling
 
@@ -60,26 +58,25 @@ of the stream.
   the outgoing buffer timestamps need to correspond to the incoming
   buffer timestamp values.
 
-    => A delta, DTS_delta between incoming buffer timestamp and
-       DTS/PTS needs to be computed.
+    => mpegtspacketizer keeps track of PCR and input timestamp and
+       extrapolates a clock skew using the EPTLA algorithm.
 
     => The outgoing buffers will be timestamped with their PTS values
-       (overflow corrected) offseted by that initial DTS_delta.
+       (overflow corrected) corrected by that calculated clock skew.
 
   A latency is introduced between the time the buffer containing the
   first bit of a Access Unit is received in the demuxer and the moment
   the demuxer pushed out the buffer corresponding to that Access Unit.
 
-    => That latency needs to be reported. It corresponds to the
-       biggest Access Unit spacing, in this case 1/video-framerate.
+    => That latency needs to be reported.
 
   According to the ISO/IEC 13818-1:2007 specifications, D.0.1 Timing
   mode, the "coded audio and video that represent sound and pictures
   that are to be presented simultaneously may be separated in time
   within the coded bit stream by ==>as much as one second<=="
 
-    => The demuxer will therefore report an added latency of 1s to
-       handle this interleave.
+    => The algorithm to calculate the latency should take that into
+       account. 
 
 
  2) Non-live push-based scheduling
@@ -97,11 +94,22 @@ of the stream.
   do not have capture timestamps, we need to ensure the first buffer
   we push out corresponds to the base segment start runing time.
 
-    => A delta between the first DTS to output and the segment start
-       position needs to be computed.
+    => The packetizer keeps track of PCR locations and offsets in
+       addition to the clock skew (in the case of upstream buffers
+       being timestamped, which is the case for HLS).
+
+    => The demuxer indicates to the packetizer when he sees the
+       'beginning' of the program (i.e. the first valid PAT/PMT
+       combination). The packetizer will then use that location as
+       "timestamp 0", or "reference position/PCR".
+
+    => The lowest DTS is passed to the packetizer to be converted to
+       timestamp. That value is computed in the same way as live
+       streams if upstream buffers have timestamps, or will be
+       subtracted from the reference PCR.
 
     => The outgoing buffers will be timestamped with their PTS values
-       (overflow corrected) offseted by that initial delta.
+       (overflow corrected) adjusted by the packetizer.
 
   Latency is reported just as with the live use-case.
 
@@ -111,37 +119,13 @@ of the stream.
   We do not get a NEWSEGMENT event from upstream, we therefore need to
   compute the outgoing values.
 
-  The base stream/running time corresponds to the DTS of the first
-  buffer we will output. The DTS_delta becomes that earliest DTS.
+    => The outgoing values for the newsegment are calculated like for
+       the non-live push-based mode when upstream doesn't provide
+       timestamp'ed buffers.
 
-  =>  FILLME
+    => The outgoing buffer timestamps are timestamped with their PTS
+       values (overflow corrected) adjusted by the packetizer.
 
- X) General notes
-
-  It is assumed that PTS/DTS rollovers are detected and corrected such
-  as the outgoing timestamps never rollover. This can be easily
-  handled by correcting the DTS_delta when such rollovers are
-  detected. The maximum value of a GstClockTimeDiff is almost 3
-  centuries, we therefore have enough margin to handle a decent number
-  of rollovers.
-
-  The generic equation for calculating outgoing buffer timestamps
-  therefore becomes:
-
-    D   = DTS_delta, with rollover corrections
-    PTS = PTS of the buffer we are going to push out
-    TS  = Timestamp of the outgoing buffer
-
-    ==>   TS = PTS + D
-
-  If seeking is handled upstream for push-based cases, whether live or
-  not, no extra modification is required.
-
-  If seeking is handled by the demuxer in the non-live push-based
-  cases (converting from TIME to BYTES), the demuxer will need to
-  set the segment start/time values to the requested seek position.
-  The DTS_delta will also have to be recomputed to take into account
-  the seek position.
 
 
 [0] When talking about live sources, we mean this in the GStreamer

@@ -42,6 +42,13 @@
  * Boston, MA 02111-1307, USA.
  */
 
+/* This breaks the build for reasons that aren't entirely clear to me yet */
+#if 0
+//#ifdef HAVE_CONFIG_H
+//#include "config.h"
+//#endif
+#endif
+
 #include <cstdlib>
 #include <errno.h>
 #include <math.h>

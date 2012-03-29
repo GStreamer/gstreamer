@@ -599,6 +599,9 @@ struct _GstH264SliceHdr
 
   /* Size of the slice_header() in bits */
   guint header_size;
+
+  /* Number of emulation prevention bytes (EPB) in this slice_header() */
+  guint n_emulation_prevention_bytes;
 };
 
 

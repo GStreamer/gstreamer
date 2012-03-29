@@ -3,7 +3,7 @@
   <description>Various geometric image transform elements</description>
   <filename>../../gst/geometrictransform/.libs/libgstgeometrictransform.so</filename>
   <basename>libgstgeometrictransform.so</basename>
-  <version>0.10.22.1</version>
+  <version>0.10.23.1</version>
   <license>LGPL</license>
   <source>gst-plugins-bad</source>
   <package>GStreamer Bad Plug-ins git</package>
@@ -181,7 +181,7 @@
       <name>rotate</name>
       <longname>rotate</longname>
       <class>Transform/Effect/Video</class>
-      <description>Warps the picture into an arc shaped form</description>
+      <description>Rotates the picture by an arbitrary angle</description>
       <author>Thiago Santos&lt;thiago.sousa.santos@collabora.co.uk&gt;</author>
       <pads>
         <caps>

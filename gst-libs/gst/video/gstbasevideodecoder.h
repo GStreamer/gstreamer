@@ -122,6 +122,7 @@ G_STMT_START {                                                              \
  */
 struct _GstBaseVideoDecoder
 {
+  /*< private >*/
   GstBaseVideoCodec base_video_codec;
 
   /*< protected >*/
@@ -226,8 +227,10 @@ struct _GstBaseVideoDecoder
  */
 struct _GstBaseVideoDecoderClass
 {
+  /*< private >*/
   GstBaseVideoCodecClass base_video_codec_class;
 
+  /*< public >*/
   gboolean      (*start)          (GstBaseVideoDecoder *coder);
 
   gboolean      (*stop)           (GstBaseVideoDecoder *coder);
@@ -254,7 +257,7 @@ struct _GstBaseVideoDecoderClass
   void         *padding[GST_PADDING_LARGE];
 };
 
-void             gst_base_video_decoder_class_set_capture_pattern (GstBaseVideoDecoderClass *klass,
+void             gst_base_video_decoder_class_set_capture_pattern (GstBaseVideoDecoderClass *base_video_decoder_class,
                                     guint32 mask, guint32 pattern);
 
 GstVideoFrameState   *gst_base_video_decoder_get_frame (GstBaseVideoDecoder *coder,

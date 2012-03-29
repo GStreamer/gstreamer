@@ -19,14 +19,21 @@
 /**
  * SECTION:element-gstinteraudiosink
  *
- * The interaudiosink element does FIXME stuff.
+ * The interaudiosink element is an audio sink element.  It is used
+ * in connection with a interaudiosrc element in a different pipeline,
+ * similar to intervideosink and intervideosrc.
  *
  * <refsect2>
  * <title>Example launch line</title>
  * |[
- * gst-launch -v fakesrc ! interaudiosink ! FIXME ! fakesink
+ * gst-launch -v audiotestsrc ! queue ! interaudiosink
  * ]|
- * FIXME Describe what the pipeline does.
+ * 
+ * The interaudiosink element cannot be used effectively with gst-launch,
+ * as it requires a second pipeline in the application to receive the
+ * audio.
+ * See the gstintertest.c example in the gst-plugins-bad source code for
+ * more details.
  * </refsect2>
  */
 
@@ -91,8 +98,7 @@ GST_STATIC_PAD_TEMPLATE ("sink",
         "endianness = (int) BYTE_ORDER, "
         "signed = (boolean) true, "
         "width = (int) 16, "
-        "depth = (int) 16, "
-        "rate = (int) [ 1, MAX ], " "channels = (int) [ 1, 2 ]")
+        "depth = (int) 16, " "rate = (int) 48000, " "channels = (int) 2")
     );
 
 
@@ -113,8 +119,11 @@ gst_inter_audio_sink_base_init (gpointer g_class)
   gst_element_class_add_pad_template (element_class,
       gst_static_pad_template_get (&gst_inter_audio_sink_sink_template));
 
-  gst_element_class_set_details_simple (element_class, "FIXME Long name",
-      "Generic", "FIXME Description", "FIXME <fixme@example.com>");
+  gst_element_class_set_details_simple (element_class,
+      "Internal audio sink",
+      "Sink/Audio",
+      "Virtual audio sink for internal process communication",
+      "David Schleef <ds@schleef.org>");
 }
 
 static void
@@ -151,26 +160,32 @@ gst_inter_audio_sink_class_init (GstInterAudioSinkClass * klass)
   base_sink_class->unlock_stop =
       GST_DEBUG_FUNCPTR (gst_inter_audio_sink_unlock_stop);
 
+#if 0
   g_object_class_install_property (gobject_class, PROP_CHANNEL,
       g_param_spec_string ("channel", "Channel",
           "Channel name to match inter src and sink elements",
           "default", G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+#endif
 }
 
 static void
 gst_inter_audio_sink_init (GstInterAudioSink * interaudiosink,
     GstInterAudioSinkClass * interaudiosink_class)
 {
-  interaudiosink->surface = gst_inter_surface_get ("default");
+  interaudiosink->channel = g_strdup ("default");
 }
 
 void
 gst_inter_audio_sink_set_property (GObject * object, guint property_id,
     const GValue * value, GParamSpec * pspec)
 {
-  /* GstInterAudioSink *interaudiosink = GST_INTER_AUDIO_SINK (object); */
+  GstInterAudioSink *interaudiosink = GST_INTER_AUDIO_SINK (object);
 
   switch (property_id) {
+    case PROP_CHANNEL:
+      g_free (interaudiosink->channel);
+      interaudiosink->channel = g_value_dup_string (value);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, property_id, pspec);
       break;
@@ -181,9 +196,12 @@ void
 gst_inter_audio_sink_get_property (GObject * object, guint property_id,
     GValue * value, GParamSpec * pspec)
 {
-  /* GstInterAudioSink *interaudiosink = GST_INTER_AUDIO_SINK (object); */
+  GstInterAudioSink *interaudiosink = GST_INTER_AUDIO_SINK (object);
 
   switch (property_id) {
+    case PROP_CHANNEL:
+      g_value_set_string (value, interaudiosink->channel);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, property_id, pspec);
       break;
@@ -259,6 +277,11 @@ gst_inter_audio_sink_get_times (GstBaseSink * sink, GstBuffer * buffer,
 static gboolean
 gst_inter_audio_sink_start (GstBaseSink * sink)
 {
+  GstInterAudioSink *interaudiosink = GST_INTER_AUDIO_SINK (sink);
+
+  GST_DEBUG ("start");
+
+  interaudiosink->surface = gst_inter_surface_get (interaudiosink->channel);
 
   return TRUE;
 }
@@ -273,6 +296,9 @@ gst_inter_audio_sink_stop (GstBaseSink * sink)
   g_mutex_lock (interaudiosink->surface->mutex);
   gst_adapter_clear (interaudiosink->surface->audio_adapter);
   g_mutex_unlock (interaudiosink->surface->mutex);
+
+  gst_inter_surface_unref (interaudiosink->surface);
+  interaudiosink->surface = NULL;
 
   return TRUE;
 }

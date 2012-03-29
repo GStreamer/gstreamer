@@ -574,8 +574,8 @@ parse_cod (GstJP2kDecimator * self, GstByteReader * reader,
   }
 
   Scod = gst_byte_reader_get_uint8_unchecked (reader);
-  cod->sop = !!(Scod & 0x02);
-  cod->eph = !!(Scod & 0x04);
+  cod->sop = ! !(Scod & 0x02);
+  cod->eph = ! !(Scod & 0x04);
 
   /* SGcod */
   cod->progression_order = gst_byte_reader_get_uint8_unchecked (reader);
@@ -828,7 +828,11 @@ write_plt (GstJP2kDecimator * self, GstByteWriter * writer,
 
   plt_end_pos = gst_byte_writer_get_pos (writer);
   gst_byte_writer_set_pos (writer, plt_start_pos);
-  gst_byte_writer_put_uint16_be (writer, plt_end_pos - plt_start_pos);
+  if (!gst_byte_writer_put_uint16_be (writer, plt_end_pos - plt_start_pos)) {
+    GST_ERROR_OBJECT (self, "Not enough space to write plt size");
+    return GST_FLOW_ERROR;
+  }
+
   gst_byte_writer_set_pos (writer, plt_end_pos);
 
   return GST_FLOW_OK;
@@ -1328,9 +1332,9 @@ write_packet (GstJP2kDecimator * self, GstByteWriter * writer,
   }
 
   if (packet->sop) {
-    gst_byte_writer_put_uint16_be (writer, MARKER_SOP);
-    gst_byte_writer_put_uint16_be (writer, 4);
-    gst_byte_writer_put_uint16_be (writer, packet->seqno);
+    gst_byte_writer_put_uint16_be_unchecked (writer, MARKER_SOP);
+    gst_byte_writer_put_uint16_be_unchecked (writer, 4);
+    gst_byte_writer_put_uint16_be_unchecked (writer, packet->seqno);
   }
 
   if (packet->data) {
@@ -1696,7 +1700,7 @@ write_main_header (GstJP2kDecimator * self, GstByteWriter * writer,
     return GST_FLOW_ERROR;
   }
 
-  gst_byte_writer_put_uint16_be (writer, MARKER_SOC);
+  gst_byte_writer_put_uint16_be_unchecked (writer, MARKER_SOC);
 
   ret = write_siz (self, writer, &header->siz);
   if (ret != GST_FLOW_OK)

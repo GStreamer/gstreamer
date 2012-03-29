@@ -343,9 +343,8 @@ gst_hls_demux_src_event (GstPad * pad, GstEvent * event)
       GstSeekType start_type, stop_type;
       gint64 start, stop;
       GList *walk;
-      gint current_pos;
+      GstClockTime current_pos, target_pos;
       gint current_sequence;
-      gint target_second;
       GstM3U8MediaFile *file;
 
       GST_INFO_OBJECT (demux, "Received GST_EVENT_SEEK");
@@ -369,14 +368,13 @@ gst_hls_demux_src_event (GstPad * pad, GstEvent * event)
       file = GST_M3U8_MEDIA_FILE (demux->client->current->files->data);
       current_sequence = file->sequence;
       current_pos = 0;
-      target_second = start / GST_SECOND;
-      GST_DEBUG_OBJECT (demux, "Target seek to %d", target_second);
+      target_pos = (GstClockTime) start;
       for (walk = demux->client->current->files; walk; walk = walk->next) {
         file = walk->data;
 
         current_sequence = file->sequence;
-        if (current_pos <= target_second
-            && target_second < current_pos + file->duration) {
+        if (current_pos <= target_pos
+            && target_pos < current_pos + file->duration) {
           break;
         }
         current_pos += file->duration;
@@ -847,7 +845,6 @@ gst_hls_demux_make_fetcher_locked (GstHLSDemux * demux, const gchar * uri)
   demux->stopping_fetcher = FALSE;
   gst_element_set_bus (GST_ELEMENT (demux->fetcher), demux->fetcher_bus);
 
-  g_object_set (G_OBJECT (demux->fetcher), "location", uri, NULL);
   pad = gst_element_get_static_pad (demux->fetcher, "src");
   if (pad) {
     gst_pad_link (pad, demux->fetcherpad);
@@ -1069,6 +1066,8 @@ gst_hls_demux_cache_fragments (GstHLSDemux * demux)
         gst_m3u8_client_get_target_duration (demux->client)
         / GST_SECOND * G_USEC_PER_SEC);
     if (!gst_hls_demux_get_next_fragment (demux)) {
+      if (demux->end_of_playlist)
+        break;
       if (!demux->cancelled)
         GST_ERROR_OBJECT (demux, "Error caching the first fragments");
       return FALSE;

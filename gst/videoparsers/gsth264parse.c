@@ -920,6 +920,7 @@ gst_h264_parse_make_codec_data (GstH264Parse * h264parse)
   gboolean found = FALSE;
   GstMapInfo map;
   guint8 *data;
+  gint nl;
 
   /* only nal payload in stored nals */
 
@@ -956,12 +957,13 @@ gst_h264_parse_make_codec_data (GstH264Parse * h264parse)
   buf = gst_buffer_new_allocate (NULL, 5 + 1 + sps_size + 1 + pps_size, NULL);
   gst_buffer_map (buf, &map, GST_MAP_WRITE);
   data = map.data;
+  nl = h264parse->nal_length_size;
 
   data[0] = 1;                  /* AVC Decoder Configuration Record ver. 1 */
   data[1] = profile_idc;        /* profile_idc                             */
   data[2] = profile_comp;       /* profile_compability                     */
   data[3] = level_idc;          /* level_idc                               */
-  data[4] = 0xfc | (4 - 1);     /* nal_length_size_minus1                  */
+  data[4] = 0xfc | (nl - 1);    /* nal_length_size_minus1                  */
   data[5] = 0xe0 | num_sps;     /* number of SPSs */
 
   data += 6;
@@ -1578,14 +1580,16 @@ gst_h264_parse_pre_push_frame (GstBaseParse * parse, GstBaseParseFrame * frame)
 
           gst_byte_writer_init_with_size (&bw, gst_buffer_get_size (buffer),
               FALSE);
-          gst_byte_writer_put_buffer (&bw, buffer, 0, h264parse->idr_pos);
+          gst_byte_writer_put_buffer_unchecked (&bw, buffer, 0,
+              h264parse->idr_pos);
           GST_DEBUG_OBJECT (h264parse, "- inserting SPS/PPS");
           for (i = 0; i < GST_H264_MAX_SPS_COUNT; i++) {
             if ((codec_nal = h264parse->sps_nals[i])) {
               gsize nal_size = gst_buffer_get_size (codec_nal);
               GST_DEBUG_OBJECT (h264parse, "inserting SPS nal");
-              gst_byte_writer_put_uint32_be (&bw, bs ? 1 : nal_size);
-              gst_byte_writer_put_buffer (&bw, codec_nal, 0, nal_size);
+              gst_byte_writer_put_uint32_be_unchecked (&bw, bs ? 1 : nal_size);
+              gst_byte_writer_put_buffer_unchecked (&bw, codec_nal, 0,
+                  nal_size);
               h264parse->last_report = new_ts;
             }
           }
@@ -1593,12 +1597,14 @@ gst_h264_parse_pre_push_frame (GstBaseParse * parse, GstBaseParseFrame * frame)
             if ((codec_nal = h264parse->pps_nals[i])) {
               gsize nal_size = gst_buffer_get_size (codec_nal);
               GST_DEBUG_OBJECT (h264parse, "inserting PPS nal");
-              gst_byte_writer_put_uint32_be (&bw, bs ? 1 : nal_size);
-              gst_byte_writer_put_buffer (&bw, codec_nal, 0, nal_size);
+              gst_byte_writer_put_uint32_be_unchecked (&bw, bs ? 1 : nal_size);
+              gst_byte_writer_put_buffer_unchecked (&bw, codec_nal, 0,
+                  nal_size);
               h264parse->last_report = new_ts;
             }
           }
-          gst_byte_writer_put_buffer (&bw, buffer, h264parse->idr_pos, -1);
+          gst_byte_writer_put_buffer_unchecked (&bw, buffer, h264parse->idr_pos,
+              -1);
           /* collect result and push */
           new_buf = gst_byte_writer_reset_and_get_buffer (&bw);
           gst_buffer_copy_into (new_buf, buffer, GST_BUFFER_COPY_METADATA, 0,
