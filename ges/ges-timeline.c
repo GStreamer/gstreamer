@@ -1203,6 +1203,29 @@ ges_timeline_get_layers (GESTimeline * timeline)
 }
 
 /**
+ * ges_timeline_is_updating:
+ * @timeline: a #GESTimeline
+ *
+ * Get whether the timeline is updated for every change happening within or not.
+ *
+ * Returns: %TRUE if @timeline is updating on every changes, else %FALSE.
+ */
+gboolean
+ges_timeline_is_updating (GESTimeline * timeline)
+{
+  GList *tmp;
+
+  g_return_val_if_fail (GES_IS_TIMELINE (timeline), FALSE);
+
+  for (tmp = timeline->priv->tracks; tmp; tmp = tmp->next) {
+    if (!ges_track_is_updating (((TrackPrivate *) tmp->data)->track))
+      return FALSE;
+  }
+
+  return TRUE;
+}
+
+/**
  * ges_timeline_enable_update:
  * @timeline: a #GESTimeline
  * @enabled: Whether the timeline should update on every change or not.

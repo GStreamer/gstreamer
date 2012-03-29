@@ -231,6 +231,23 @@ ges_timeline_layer_new (void)
   return g_object_new (GES_TYPE_TIMELINE_LAYER, NULL);
 }
 
+/**
+ * ges_timeline_layer_get_timeline:
+ * @layer: The #GESTimelineLayer to get the parent #GESTimeline from
+ *
+ * Get the #GESTimeline in which #GESTimelineLayer currently is.
+ *
+ * Returns: (transfer none):  the #GESTimeline in which #GESTimelineLayer
+ * currently is or %NULL if not in any timeline yet.
+ */
+GESTimeline *
+ges_timeline_layer_get_timeline (GESTimelineLayer * layer)
+{
+  g_return_val_if_fail (GES_IS_TIMELINE_LAYER (layer), NULL);
+
+  return layer->timeline;
+}
+
 void
 ges_timeline_layer_set_timeline (GESTimelineLayer * layer,
     GESTimeline * timeline)

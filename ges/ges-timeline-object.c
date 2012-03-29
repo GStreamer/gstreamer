@@ -471,9 +471,10 @@ ges_timeline_object_create_track_objects_func (GESTimelineObject * object,
     GST_DEBUG ("Did not create track object");
     return FALSE;
   }
-  ges_track_object_set_timeline_object (result, object);
+
   ret = ges_track_add_object (track, result);
   ges_timeline_object_add_track_object (object, result);
+
   return ret;
 }
 
@@ -648,6 +649,7 @@ ges_timeline_object_release_track_object (GESTimelineObject * object,
 
   if (GES_IS_TRACK_EFFECT (trackobject)) {
     /* emit 'object-removed' */
+    object->priv->nb_effects--;
     g_signal_emit (object, ges_timeline_object_signals[EFFECT_REMOVED], 0,
         GES_TRACK_EFFECT (trackobject));
   } else

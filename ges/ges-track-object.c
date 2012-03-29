@@ -727,7 +727,7 @@ ensure_gnl_object (GESTrackObject * object)
   GESTrackObjectClass *class;
   GstElement *gnlobject;
   GHashTable *props_hash;
-  gboolean res = FALSE;
+  gboolean res = TRUE;
 
   if (object->priv->gnlobject && object->priv->valid)
     return FALSE;
@@ -759,9 +759,12 @@ ensure_gnl_object (GESTrackObject * object)
   if (gnlobject) {
     GST_DEBUG ("Got a valid GnlObject, now filling it in");
 
-    res =
-        ges_timeline_object_fill_track_object (object->priv->timelineobj,
-        object, object->priv->gnlobject);
+    if (object->priv->timelineobj)
+      res = ges_timeline_object_fill_track_object (object->priv->timelineobj,
+          object, object->priv->gnlobject);
+    else
+      res = TRUE;
+
     if (res) {
       /* Connect to property notifications */
       /* FIXME : remember the signalids so we can remove them later on !!! */

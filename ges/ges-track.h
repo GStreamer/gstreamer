@@ -103,6 +103,7 @@ GESTrack *ges_track_video_raw_new         (void);
 GESTrack *ges_track_audio_raw_new         (void);
 
 gboolean ges_track_enable_update          (GESTrack * track, gboolean enabled);
+gboolean ges_track_is_updating            (GESTrack * track);
 
 GList* ges_track_get_objects              (GESTrack *track);
 
