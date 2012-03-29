@@ -1337,6 +1337,7 @@ out_flushing:
 
     /* Need to make sure wake up any sleeping pads when we exit */
     GST_MULTI_QUEUE_MUTEX_LOCK (mq);
+    compute_high_time (mq);
     compute_high_id (mq);
     wake_up_next_non_linked (mq);
     GST_MULTI_QUEUE_MUTEX_UNLOCK (mq);
