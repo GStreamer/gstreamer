@@ -423,6 +423,7 @@ gst_matroska_demux_reset (GstElement * element)
   demux->tracks_parsed = FALSE;
   demux->common.segmentinfo_parsed = FALSE;
   demux->common.attachments_parsed = FALSE;
+  demux->common.chapters_parsed = FALSE;
 
   g_list_foreach (demux->common.tags_parsed,
       (GFunc) gst_matroska_demux_free_parsed_el, NULL);
@@ -479,6 +480,12 @@ gst_matroska_demux_reset (GstElement * element)
   if (demux->common.cached_buffer) {
     gst_buffer_unref (demux->common.cached_buffer);
     demux->common.cached_buffer = NULL;
+  }
+
+  /* free chapters TOC if any */
+  if (demux->common.toc) {
+    gst_toc_free (demux->common.toc);
+    demux->common.toc = NULL;
   }
 
   demux->invalid_duration = FALSE;
@@ -1347,6 +1354,7 @@ gst_matroska_demux_get_src_query_types (GstPad * pad)
     GST_QUERY_POSITION,
     GST_QUERY_DURATION,
     GST_QUERY_SEEKING,
+    GST_QUERY_TOC,
     0
   };
 
@@ -1442,6 +1450,23 @@ gst_matroska_demux_query (GstMatroskaDemux * demux, GstPad * pad,
             0, demux->common.segment.duration);
         res = TRUE;
       }
+      GST_OBJECT_UNLOCK (demux);
+      break;
+    }
+
+    case GST_QUERY_TOC:
+    {
+      GstToc *toc;
+
+      GST_OBJECT_LOCK (demux);
+      if (demux->common.toc)
+        toc = demux->common.toc;
+      else
+        toc = gst_toc_new ();
+      gst_query_set_toc (query, toc, 0);
+      res = TRUE;
+      if (!demux->common.toc)
+        gst_toc_free (toc);
       GST_OBJECT_UNLOCK (demux);
       break;
     }
@@ -1932,8 +1957,7 @@ gst_matroska_demux_handle_seek_event (GstMatroskaDemux * demux,
    * we might be playing a file that's still being recorded
    * so, invalidate our current duration, which is only a moving target,
    * and should not be used to clamp anything */
-  if (!demux->streaming && !demux->common.index &&
-      demux->invalid_duration) {
+  if (!demux->streaming && !demux->common.index && demux->invalid_duration) {
     gst_segment_set_duration (&seeksegment, GST_FORMAT_TIME,
         GST_CLOCK_TIME_NONE);
   }
@@ -2232,6 +2256,45 @@ gst_matroska_demux_handle_src_event (GstPad * pad, GstEvent * event)
         GST_OBJECT_UNLOCK (demux);
       }
       res = TRUE;
+      gst_event_unref (event);
+      break;
+    }
+
+    case GST_EVENT_TOC_SELECT:
+    {
+      char *uid = NULL;
+      GstTocEntry *entry = NULL;
+      GstEvent *seek_event;
+      gint64 start_pos;
+
+      if (!demux->common.toc) {
+        GST_DEBUG_OBJECT (demux, "no TOC to select");
+        return FALSE;
+      } else {
+        gst_event_parse_toc_select (event, &uid);
+        if (uid != NULL) {
+          GST_OBJECT_LOCK (demux);
+          entry = gst_toc_find_entry (demux->common.toc, uid);
+          if (entry == NULL) {
+            GST_OBJECT_UNLOCK (demux);
+            GST_WARNING_OBJECT (demux, "no TOC entry with given UID: %s", uid);
+            res = FALSE;
+          } else {
+            gst_toc_entry_get_start_stop (entry, &start_pos, NULL);
+            GST_OBJECT_UNLOCK (demux);
+            seek_event = gst_event_new_seek (1.0,
+                GST_FORMAT_TIME,
+                GST_SEEK_FLAG_FLUSH,
+                GST_SEEK_TYPE_SET, start_pos, GST_SEEK_TYPE_SET, -1);
+            res = gst_matroska_demux_handle_seek_event (demux, pad, seek_event);
+            gst_event_unref (seek_event);
+          }
+          g_free (uid);
+        } else {
+          GST_WARNING_OBJECT (demux, "received empty TOC select event");
+          res = FALSE;
+        }
+      }
       gst_event_unref (event);
       break;
     }
@@ -4254,8 +4317,20 @@ gst_matroska_demux_parse_id (GstMatroskaDemux * demux, guint32 id,
               GST_ELEMENT_CAST (demux), &ebml);
           break;
         case GST_MATROSKA_ID_CHAPTERS:
-          GST_READ_CHECK (gst_matroska_demux_take (demux, read, &ebml));
-          ret = gst_matroska_read_common_parse_chapters (&demux->common, &ebml);
+          if (!demux->common.chapters_parsed) {
+            GST_READ_CHECK (gst_matroska_demux_take (demux, read, &ebml));
+            ret =
+                gst_matroska_read_common_parse_chapters (&demux->common, &ebml);
+
+            if (demux->common.toc) {
+              gst_matroska_demux_send_event (demux,
+                  gst_event_new_toc (demux->common.toc, FALSE));
+              gst_element_post_message (GST_ELEMENT_CAST (demux),
+                  gst_message_new_toc (GST_OBJECT_CAST (demux),
+                      demux->common.toc, FALSE));
+            }
+          } else
+            GST_READ_CHECK (gst_matroska_demux_flush (demux, read));
           break;
         case GST_MATROSKA_ID_SEEKHEAD:
           GST_READ_CHECK (gst_matroska_demux_take (demux, read, &ebml));
