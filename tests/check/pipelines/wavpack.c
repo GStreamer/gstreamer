@@ -109,7 +109,7 @@ GST_START_TEST (test_encode_decode)
   audiotestsrc = gst_element_factory_make ("audiotestsrc", "src");
   fail_unless (audiotestsrc != NULL);
   g_object_set (G_OBJECT (audiotestsrc), "wave", 0, "freq", 440.0,
-      "num-buffers", 2000, NULL);
+      "num-buffers", 200, NULL);
 
   identity1 = gst_element_factory_make ("identity", "identity1");
   fail_unless (identity1 != NULL);
