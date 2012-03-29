@@ -683,9 +683,10 @@ gst_input_selector_wait_running_time (GstInputSelector * sel,
    *   d) the active pad has no running time or the active
    *      pad's running time is before this running time
    *   e) the active pad has a non-time segment
+   *   f) the active pad changed and has not pushed anything
    */
-  while (pad != active_selpad && !sel->flushing && !pad->flushing &&
-      (sel->blocked || active_running_time == -1
+  while (pad != active_selpad && !sel->flushing && !pad->flushing
+      && active_selpad->pushed && (sel->blocked || active_running_time == -1
           || running_time >= active_running_time)) {
     if (!sel->blocked)
       GST_DEBUG_OBJECT (pad,
