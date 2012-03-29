@@ -238,6 +238,7 @@ GST_START_TEST (test_32_bp_11025hz)
       rms += res[i] * res[i];
     rms = sqrt (rms / buffer_length);
     fail_unless (rms >= 0.4);
+    gst_buffer_unmap (outbuffer, &map);
   }
 
   /* cleanup */
@@ -312,6 +313,7 @@ GST_START_TEST (test_32_bp_22050hz)
       rms += res[i] * res[i];
     rms = sqrt (rms / buffer_length);
     fail_unless (rms <= 0.3);
+    gst_buffer_unmap (outbuffer, &map);
   }
 
   /* cleanup */
@@ -383,6 +385,7 @@ GST_START_TEST (test_32_br_0hz)
       rms += res[i] * res[i];
     rms = sqrt (rms / buffer_length);
     fail_unless (rms >= 0.9);
+    gst_buffer_unmap (outbuffer, &map);
   }
 
   /* cleanup */
@@ -459,6 +462,7 @@ GST_START_TEST (test_32_br_11025hz)
       rms += res[i] * res[i];
     rms = sqrt (rms / buffer_length);
     fail_unless (rms <= 0.35);
+    gst_buffer_unmap (outbuffer, &map);
   }
 
   /* cleanup */
@@ -533,6 +537,7 @@ GST_START_TEST (test_32_br_22050hz)
       rms += res[i] * res[i];
     rms = sqrt (rms / buffer_length);
     fail_unless (rms >= 0.9);
+    gst_buffer_unmap (outbuffer, &map);
   }
 
   /* cleanup */
@@ -666,6 +671,7 @@ GST_START_TEST (test_64_bp_0hz)
       rms += res[i] * res[i];
     rms = sqrt (rms / buffer_length);
     fail_unless (rms <= 0.1);
+    gst_buffer_unmap (outbuffer, &map);
   }
 
   /* cleanup */
@@ -741,6 +747,7 @@ GST_START_TEST (test_64_bp_11025hz)
       rms += res[i] * res[i];
     rms = sqrt (rms / buffer_length);
     fail_unless (rms >= 0.4);
+    gst_buffer_unmap (outbuffer, &map);
   }
 
   /* cleanup */
@@ -815,6 +822,7 @@ GST_START_TEST (test_64_bp_22050hz)
       rms += res[i] * res[i];
     rms = sqrt (rms / buffer_length);
     fail_unless (rms <= 0.3);
+    gst_buffer_unmap (outbuffer, &map);
   }
 
   /* cleanup */
@@ -886,6 +894,7 @@ GST_START_TEST (test_64_br_0hz)
       rms += res[i] * res[i];
     rms = sqrt (rms / buffer_length);
     fail_unless (rms >= 0.9);
+    gst_buffer_unmap (outbuffer, &map);
   }
 
   /* cleanup */
@@ -962,6 +971,7 @@ GST_START_TEST (test_64_br_11025hz)
       rms += res[i] * res[i];
     rms = sqrt (rms / buffer_length);
     fail_unless (rms <= 0.35);
+    gst_buffer_unmap (outbuffer, &map);
   }
 
   /* cleanup */
@@ -1036,6 +1046,7 @@ GST_START_TEST (test_64_br_22050hz)
       rms += res[i] * res[i];
     rms = sqrt (rms / buffer_length);
     fail_unless (rms >= 0.9);
+    gst_buffer_unmap (outbuffer, &map);
   }
 
   /* cleanup */
