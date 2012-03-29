@@ -860,6 +860,7 @@ gst_flac_enc_seek_callback (const FLAC__StreamEncoder * encoder,
 
     if (!seekable) {
       GST_DEBUG_OBJECT (flacenc, "downstream not seekable; not rewriting");
+      gst_object_unref (peerpad);
       return FLAC__STREAM_ENCODER_SEEK_STATUS_UNSUPPORTED;
     }
 
