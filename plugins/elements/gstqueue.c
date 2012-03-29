@@ -1163,7 +1163,10 @@ out_flushing:
     gst_pad_pause_task (queue->srcpad);
     GST_CAT_LOG_OBJECT (queue_dataflow, queue,
         "pause task, reason:  %s", gst_flow_get_name (ret));
-    GST_QUEUE_SIGNAL_DEL (queue);
+    if (ret == GST_FLOW_FLUSHING)
+      gst_queue_locked_flush (queue);
+    else
+      GST_QUEUE_SIGNAL_DEL (queue);
     GST_QUEUE_MUTEX_UNLOCK (queue);
     /* let app know about us giving up if upstream is not expected to do so */
     /* EOS is already taken care of elsewhere */
