@@ -368,11 +368,9 @@ gst_opus_enc_setup_base_class (GstOpusEnc * enc, GstAudioEncoder * benc)
 {
   gst_audio_encoder_set_latency (benc,
       gst_opus_enc_get_latency (enc), gst_opus_enc_get_latency (enc));
-  gst_audio_encoder_set_frame_samples_min (benc,
-      enc->frame_samples * enc->n_channels * 2);
-  gst_audio_encoder_set_frame_samples_max (benc,
-      enc->frame_samples * enc->n_channels * 2);
-  gst_audio_encoder_set_frame_max (benc, 0);
+  gst_audio_encoder_set_frame_samples_min (benc, enc->frame_samples);
+  gst_audio_encoder_set_frame_samples_max (benc, enc->frame_samples);
+  gst_audio_encoder_set_frame_max (benc, 1);
 }
 
 static gint
@@ -789,6 +787,9 @@ gst_opus_enc_encode (GstOpusEnc * enc, GstBuffer * buf)
   gsize bytes = enc->frame_samples * enc->n_channels * 2;
   gint ret = GST_FLOW_OK;
   GstMapInfo map;
+  GstMapInfo omap;
+  gint outsize;
+  GstBuffer *outbuf;
 
   g_mutex_lock (enc->property_lock);
 
@@ -813,49 +814,45 @@ gst_opus_enc_encode (GstOpusEnc * enc, GstBuffer * buf)
     goto done;
   }
 
-  while (size) {
-    gint encoded_size;
-    GstBuffer *outbuf;
-    GstMapInfo omap;
+  g_assert (size == bytes);
 
-    outbuf = gst_buffer_new_and_alloc (enc->max_payload_size * enc->n_channels);
-    if (!outbuf)
-      goto done;
+  outbuf = gst_buffer_new_and_alloc (enc->max_payload_size * enc->n_channels);
+  if (!outbuf)
+    goto done;
 
-    GST_DEBUG_OBJECT (enc, "encoding %d samples (%d bytes)",
-        enc->frame_samples, (int) bytes);
+  GST_DEBUG_OBJECT (enc, "encoding %d samples (%d bytes)",
+      enc->frame_samples, (int) bytes);
 
-    gst_buffer_map (outbuf, &omap, GST_MAP_WRITE);
-    encoded_size =
-        opus_multistream_encode (enc->state, (const gint16 *) data,
-        enc->frame_samples, omap.data, enc->max_payload_size * enc->n_channels);
-    gst_buffer_unmap (outbuf, &omap);
+  gst_buffer_map (outbuf, &omap, GST_MAP_WRITE);
 
-    if (encoded_size < 0) {
-      GST_ERROR_OBJECT (enc, "Encoding failed: %d", encoded_size);
-      ret = GST_FLOW_ERROR;
-      goto done;
-    } else if (encoded_size > enc->max_payload_size) {
-      GST_WARNING_OBJECT (enc,
-          "Encoded size %d is higher than max payload size (%d bytes)",
-          encoded_size, enc->max_payload_size);
-      ret = GST_FLOW_ERROR;
-      goto done;
-    }
+  GST_DEBUG_OBJECT (enc, "encoding %d samples (%d bytes)",
+      enc->frame_samples, (int) bytes);
 
-    GST_DEBUG_OBJECT (enc, "Output packet is %u bytes", encoded_size);
-    gst_buffer_set_size (outbuf, encoded_size);
+  outsize =
+      opus_multistream_encode (enc->state, (const gint16 *) data,
+      enc->frame_samples, GST_BUFFER_DATA (outbuf),
+      enc->max_payload_size * enc->n_channels);
 
-    ret =
-        gst_audio_encoder_finish_frame (GST_AUDIO_ENCODER (enc), outbuf,
-        enc->frame_samples);
+  gst_buffer_unmap (outbuf, &omap);
 
-    if ((GST_FLOW_OK != ret) && (GST_FLOW_NOT_LINKED != ret))
-      goto done;
-
-    data += bytes;
-    size -= bytes;
+  if (outsize < 0) {
+    GST_ERROR_OBJECT (enc, "Encoding failed: %d", outsize);
+    ret = GST_FLOW_ERROR;
+    goto done;
+  } else if (outsize > enc->max_payload_size) {
+    GST_WARNING_OBJECT (enc,
+        "Encoded size %d is higher than max payload size (%d bytes)",
+        outsize, enc->max_payload_size);
+    ret = GST_FLOW_ERROR;
+    goto done;
   }
+
+  GST_DEBUG_OBJECT (enc, "Output packet is %u bytes", outsize);
+  GST_BUFFER_SIZE (outbuf) = outsize;
+
+  ret =
+      gst_audio_encoder_finish_frame (GST_AUDIO_ENCODER (enc), outbuf,
+      enc->frame_samples);
 
 done:
 
