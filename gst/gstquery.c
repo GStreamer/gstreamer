@@ -1489,7 +1489,7 @@ gst_query_new_allocation (GstCaps * caps, gboolean need_pool)
 /**
  * gst_query_parse_allocation:
  * @query: a #GstQuery
- * @caps: (out transfer none) (allow-none): The #GstCaps
+ * @caps: (out) (transfer none) (allow-none): The #GstCaps
  * @need_pool: (out) (allow-none): Whether a #GstBufferPool is needed
  *
  * Parse an allocation query, writing the requested caps in @caps and
