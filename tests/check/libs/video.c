@@ -1126,7 +1126,7 @@ GST_START_TEST (test_overlay_composition_premultiplied_alpha)
 GST_END_TEST;
 #endif
 
-
+#if 0
 GST_START_TEST (test_overlay_composition_global_alpha)
 {
   GstVideoOverlayRectangle *rect1;
@@ -1505,7 +1505,7 @@ GST_START_TEST (test_overlay_composition_global_alpha)
 }
 
 GST_END_TEST;
-
+#endif
 static Suite *
 video_suite (void)
 {
