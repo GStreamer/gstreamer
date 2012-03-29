@@ -239,11 +239,12 @@ make ERROR_CFLAGS='' ERROR_CXXFLAGS=''
 # %{_libdir}/gstreamer-%{majorminor}/libgstpnm.so
 # %{_libdir}/gstreamer-%{majorminor}/libgstrfbsrc.so
 %{_libdir}/gstreamer-%{majorminor}/libgstrtpmux.so
-# %{_libdir}/gstreamer-%{majorminor}/libgstsegmentclip.so
-# %{_libdir}/gstreamer-%{majorminor}/libgstrawparse.so
-# %{_libdir}/gstreamer-%{majorminor}/libgstscaletempoplugin.so
-# %{_libdir}/gstreamer-%{majorminor}/libgstshm.so
+%{_libdir}/gstreamer-%{majorminor}/libgstsegmentclip.so
+%{_libdir}/gstreamer-%{majorminor}/libgstrawparse.so
+%{_libdir}/gstreamer-%{majorminor}/libgstscaletempoplugin.so
+%{_libdir}/gstreamer-%{majorminor}/libgstshm.so
 %{_libdir}/gstreamer-%{majorminor}/libgstsdpelem.so
+%{_libdir}/gstreamer-%{majorminor}/libgstsmooth.so
 # %{_libdir}/gstreamer-%{majorminor}/libgstspeed.so
 # %{_libdir}/gstreamer-%{majorminor}/libgststereo.so
 # %{_libdir}/gstreamer-%{majorminor}/libgstsubenc.so
@@ -275,7 +276,7 @@ make ERROR_CFLAGS='' ERROR_CXXFLAGS=''
 %{_libdir}/gstreamer-%{majorminor}/libgstaudiovisualizers.so
 # %{_libdir}/gstreamer-%{majorminor}/libgstfaceoverlay.so
 # %{_libdir}/gstreamer-%{majorminor}/libgstinter.so
-# %{_libdir}/gstreamer-%{majorminor}/libgstremovesilence.so
+%{_libdir}/gstreamer-%{majorminor}/libgstremovesilence.so
 
 # System (Linux) specific plugins
 # %{_libdir}/gstreamer-%{majorminor}/libgstdvb.so
@@ -284,9 +285,10 @@ make ERROR_CFLAGS='' ERROR_CXXFLAGS=''
 # Plugins with external dependencies
 # %{_libdir}/gstreamer-%{majorminor}/libgstapexsink.so
 %{_libdir}/gstreamer-%{majorminor}/libgstassrender.so
-# %{_libdir}/gstreamer-%{majorminor}/libgstbz2.so
+%{_libdir}/gstreamer-%{majorminor}/libgstbz2.so
 # %{_libdir}/gstreamer-%{majorminor}/libgstcdaudio.so
-# %{_libdir}/gstreamer-%{majorminor}/libgstcelt.so
+%{_libdir}/gstreamer-%{majorminor}/libgstcelt.so
+%{_libdir}/gstreamer-%{majorminor}/libgstopus.so
 #%ifnarch s390 s390x
 #%{_libdir}/gstreamer-%{majorminor}/libgstdc1394.so
 #%endif
@@ -301,7 +303,7 @@ make ERROR_CFLAGS='' ERROR_CXXFLAGS=''
 #%{_libdir}/gstreamer-%{majorminor}/libgstofa.so
 # %{_libdir}/gstreamer-%{majorminor}/libresindvd.so
 # %{_libdir}/gstreamer-%{majorminor}/libgstrsvg.so
-# %{_libdir}/gstreamer-%{majorminor}/libgstschro.so
+%{_libdir}/gstreamer-%{majorminor}/libgstschro.so
 # %{_libdir}/gstreamer-%{majorminor}/libgstsndfile.so
 %{_libdir}/gstreamer-%{majorminor}/libgstvp8.so
 %{_datadir}/gstreamer-%{majorminor}/presets/GstVP8Enc.prs
