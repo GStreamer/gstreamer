@@ -71,8 +71,6 @@ static OutputChain *get_output_chain_for_track (GESTimelinePipeline * self,
     GESTrack * track);
 static OutputChain *new_output_chain_for_track (GESTimelinePipeline * self,
     GESTrack * track);
-static gboolean play_sink_multiple_seeks_send_event (GstElement * element,
-    GstEvent * event);
 
 static void
 ges_timeline_pipeline_dispose (GObject * object)
@@ -123,8 +121,6 @@ ges_timeline_pipeline_class_init (GESTimelinePipelineClass * klass)
 static void
 ges_timeline_pipeline_init (GESTimelinePipeline * self)
 {
-  GstElementClass *playsinkclass;
-
   GST_INFO_OBJECT (self, "Creating new 'playsink'");
   self->priv = G_TYPE_INSTANCE_GET_PRIVATE (self,
       GES_TYPE_TIMELINE_PIPELINE, GESTimelinePipelinePrivate);
@@ -143,11 +139,6 @@ ges_timeline_pipeline_init (GESTimelinePipeline * self)
     goto no_playsink;
   if (G_UNLIKELY (self->priv->encodebin == NULL))
     goto no_encodebin;
-
-  /* HACK : Intercept events going through playsink */
-  playsinkclass = GST_ELEMENT_GET_CLASS (self->priv->playsink);
-  /* Replace playsink's GstBin::send_event with our own */
-  playsinkclass->send_event = play_sink_multiple_seeks_send_event;
 
   ges_timeline_pipeline_set_mode (self, DEFAULT_TIMELINE_MODE);
 
@@ -987,16 +978,3 @@ ges_timeline_pipeline_preview_set_audio_sink (GESTimelinePipeline * self,
 {
   g_object_set (self->priv->playsink, "audio-sink", sink, NULL);
 };
-
-
-static gboolean
-play_sink_multiple_seeks_send_event (GstElement * element, GstEvent * event)
-{
-  GstElementClass *klass = GST_ELEMENT_GET_CLASS (element);
-
-  GST_DEBUG ("%s", GST_EVENT_TYPE_NAME (event));
-
-  return
-      GST_ELEMENT_CLASS (g_type_class_peek_parent (klass))->send_event (element,
-      event);
-}
