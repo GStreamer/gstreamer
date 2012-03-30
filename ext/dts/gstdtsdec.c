@@ -237,7 +237,7 @@ gst_dtsdec_start (GstAudioDecoder * dec)
   dts->flag_update = TRUE;
 
   /* call upon legacy upstream byte support (e.g. seeking) */
-  gst_audio_decoder_set_byte_time (dec, TRUE);
+  gst_audio_decoder_set_estimate_rate (dec, TRUE);
 
   return TRUE;
 }

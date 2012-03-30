@@ -208,7 +208,7 @@ gst_faad_start (GstAudioDecoder * dec)
   gst_faad_reset (faad);
 
   /* call upon legacy upstream byte support (e.g. seeking) */
-  gst_audio_decoder_set_byte_time (dec, TRUE);
+  gst_audio_decoder_set_estimate_rate (dec, TRUE);
   /* never mind a few errors */
   gst_audio_decoder_set_max_errors (dec, 10);
 
