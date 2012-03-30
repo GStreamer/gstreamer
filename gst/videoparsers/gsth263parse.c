@@ -83,7 +83,7 @@ gst_h263_parse_class_init (GstH263ParseClass * klass)
   /* Override BaseParse vfuncs */
   parse_class->start = GST_DEBUG_FUNCPTR (gst_h263_parse_start);
   parse_class->stop = GST_DEBUG_FUNCPTR (gst_h263_parse_stop);
-  parse_class->event = GST_DEBUG_FUNCPTR (gst_h263_parse_sink_event);
+  parse_class->sink_event = GST_DEBUG_FUNCPTR (gst_h263_parse_sink_event);
   parse_class->handle_frame = GST_DEBUG_FUNCPTR (gst_h263_parse_handle_frame);
   parse_class->get_sink_caps = GST_DEBUG_FUNCPTR (gst_h263_parse_get_sink_caps);
 }
@@ -142,7 +142,7 @@ gst_h263_parse_sink_event (GstBaseParse * parse, GstEvent * event)
       break;
   }
 
-  return GST_BASE_PARSE_CLASS (parent_class)->event (parse, event);
+  return GST_BASE_PARSE_CLASS (parent_class)->sink_event (parse, event);
 }
 
 static guint

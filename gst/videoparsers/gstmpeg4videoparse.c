@@ -171,7 +171,7 @@ gst_mpeg4vparse_class_init (GstMpeg4VParseClass * klass)
       GST_DEBUG_FUNCPTR (gst_mpeg4vparse_pre_push_frame);
   parse_class->set_sink_caps = GST_DEBUG_FUNCPTR (gst_mpeg4vparse_set_caps);
   parse_class->get_sink_caps = GST_DEBUG_FUNCPTR (gst_mpeg4vparse_get_caps);
-  parse_class->event = GST_DEBUG_FUNCPTR (gst_mpeg4vparse_event);
+  parse_class->sink_event = GST_DEBUG_FUNCPTR (gst_mpeg4vparse_event);
   parse_class->src_event = GST_DEBUG_FUNCPTR (gst_mpeg4vparse_src_event);
 }
 
@@ -837,12 +837,12 @@ gst_mpeg4vparse_event (GstBaseParse * parse, GstEvent * event)
         gst_event_unref (event);
         res = TRUE;
       } else {
-        res = GST_BASE_PARSE_CLASS (parent_class)->event (parse, event);
+        res = GST_BASE_PARSE_CLASS (parent_class)->sink_event (parse, event);
       }
       break;
     }
     default:
-      res = GST_BASE_PARSE_CLASS (parent_class)->event (parse, event);
+      res = GST_BASE_PARSE_CLASS (parent_class)->sink_event (parse, event);
       break;
   }
   return res;

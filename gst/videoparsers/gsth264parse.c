@@ -127,7 +127,7 @@ gst_h264_parse_class_init (GstH264ParseClass * klass)
       GST_DEBUG_FUNCPTR (gst_h264_parse_pre_push_frame);
   parse_class->set_sink_caps = GST_DEBUG_FUNCPTR (gst_h264_parse_set_caps);
   parse_class->get_sink_caps = GST_DEBUG_FUNCPTR (gst_h264_parse_get_caps);
-  parse_class->event = GST_DEBUG_FUNCPTR (gst_h264_parse_event);
+  parse_class->sink_event = GST_DEBUG_FUNCPTR (gst_h264_parse_event);
   parse_class->src_event = GST_DEBUG_FUNCPTR (gst_h264_parse_src_event);
 
   gst_element_class_add_pad_template (gstelement_class,
@@ -1880,7 +1880,7 @@ gst_h264_parse_event (GstBaseParse * parse, GstEvent * event)
         gst_event_unref (event);
         res = TRUE;
       } else {
-        res = GST_BASE_PARSE_CLASS (parent_class)->event (parse, event);
+        res = GST_BASE_PARSE_CLASS (parent_class)->sink_event (parse, event);
         break;
       }
       break;
@@ -1889,7 +1889,7 @@ gst_h264_parse_event (GstBaseParse * parse, GstEvent * event)
       h264parse->dts = GST_CLOCK_TIME_NONE;
       h264parse->ts_trn_nb = GST_CLOCK_TIME_NONE;
 
-      res = GST_BASE_PARSE_CLASS (parent_class)->event (parse, event);
+      res = GST_BASE_PARSE_CLASS (parent_class)->sink_event (parse, event);
       break;
     case GST_EVENT_SEGMENT:
     {
@@ -1902,11 +1902,11 @@ gst_h264_parse_event (GstBaseParse * parse, GstEvent * event)
               || segment->applied_rate != 1.0))
         h264parse->do_ts = FALSE;
 
-      res = GST_BASE_PARSE_CLASS (parent_class)->event (parse, event);
+      res = GST_BASE_PARSE_CLASS (parent_class)->sink_event (parse, event);
       break;
     }
     default:
-      res = GST_BASE_PARSE_CLASS (parent_class)->event (parse, event);
+      res = GST_BASE_PARSE_CLASS (parent_class)->sink_event (parse, event);
       break;
   }
   return res;
