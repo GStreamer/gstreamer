@@ -675,7 +675,7 @@ static const gchar *interlace_mode[] = {
 static const gchar *
 gst_interlace_mode_to_string (GstVideoInterlaceMode mode)
 {
-  if (mode < 0 || mode >= G_N_ELEMENTS (interlace_mode))
+  if (((guint) mode) >= G_N_ELEMENTS (interlace_mode))
     return NULL;
 
   return interlace_mode[mode];
