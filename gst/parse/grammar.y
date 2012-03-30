@@ -338,7 +338,7 @@ static void gst_parse_new_child(GstChildProxy *child_proxy, GObject *object,
   GST_CAT_LOG_OBJECT (GST_CAT_PIPELINE, child_proxy, "new child %s, checking property %s",
       GST_OBJECT_NAME(object), set->name);
 
-  if (gst_child_proxy_lookup (GST_OBJECT (child_proxy), set->name, &target, &pspec)) {
+  if (gst_child_proxy_lookup (G_OBJECT (child_proxy), set->name, &target, &pspec)) {
     gboolean got_value = FALSE;
 
     value_type = pspec->value_type;
@@ -415,7 +415,7 @@ gst_parse_element_set (gchar *value, GstElement *element, graph_t *graph)
   }
   gst_parse_unescape (pos);
 
-  if (gst_child_proxy_lookup (GST_OBJECT (element), value, &target, &pspec)) {
+  if (gst_child_proxy_lookup (G_OBJECT (element), value, &target, &pspec)) {
     gboolean got_value = FALSE;
 
     value_type = pspec->value_type;
