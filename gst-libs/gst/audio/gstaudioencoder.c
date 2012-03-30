@@ -2081,6 +2081,13 @@ gst_audio_encoder_get_latency (GstAudioEncoder * enc,
   GST_OBJECT_UNLOCK (enc);
 }
 
+/**
+ * gst_audio_encoder_set_headers:
+ * @encoder: a #GstAudioEncoder
+ * @headers: (transfer full): a list of #GstBuffer containing the codec header
+ *
+ * Set the codec headers to be sent downstream whenever requested.
+ */
 void
 gst_audio_encoder_set_headers (GstAudioEncoder * enc, GList * headers)
 {
