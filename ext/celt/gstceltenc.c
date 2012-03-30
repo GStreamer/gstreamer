@@ -152,7 +152,7 @@ gst_celt_enc_class_init (GstCeltEncClass * klass)
   gstbase_class->stop = GST_DEBUG_FUNCPTR (gst_celt_enc_stop);
   gstbase_class->set_format = GST_DEBUG_FUNCPTR (gst_celt_enc_set_format);
   gstbase_class->handle_frame = GST_DEBUG_FUNCPTR (gst_celt_enc_handle_frame);
-  gstbase_class->event = GST_DEBUG_FUNCPTR (gst_celt_enc_sink_event);
+  gstbase_class->sink_event = GST_DEBUG_FUNCPTR (gst_celt_enc_sink_event);
   gstbase_class->pre_push = GST_DEBUG_FUNCPTR (gst_celt_enc_pre_push);
 
   g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_BITRATE,
@@ -403,7 +403,7 @@ gst_celt_enc_sink_event (GstAudioEncoder * benc, GstEvent * event)
   }
 
   /* we only peeked, let base class handle it */
-  return GST_AUDIO_ENCODER_CLASS (parent_class)->event (benc, event);
+  return GST_AUDIO_ENCODER_CLASS (parent_class)->sink_event (benc, event);
 }
 
 static GstBuffer *
