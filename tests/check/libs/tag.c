@@ -1314,26 +1314,29 @@ GST_START_TEST (test_exif_parsing)
   GstTagList *taglist;
   GstBuffer *buf;
   GstByteWriter writer;
+  gboolean res = TRUE;
   const gchar *str = NULL;
 
   gst_byte_writer_init (&writer);
 
   /* write the IFD */
   /* 1 entry */
-  gst_byte_writer_put_uint16_le (&writer, 1);
+  res &= gst_byte_writer_put_uint16_le (&writer, 1);
 
   /* copyright tag */
   /* tag id */
-  gst_byte_writer_put_uint16_le (&writer, 0x8298);
+  res &= gst_byte_writer_put_uint16_le (&writer, 0x8298);
   /* tag type */
-  gst_byte_writer_put_uint16_le (&writer, 0x2);
+  res &= gst_byte_writer_put_uint16_le (&writer, 0x2);
   /* count */
-  gst_byte_writer_put_uint32_le (&writer, strlen ("my copyright") + 1);
+  res &= gst_byte_writer_put_uint32_le (&writer, strlen ("my copyright") + 1);
   /* offset */
-  gst_byte_writer_put_uint32_le (&writer, 8 + 14);
+  res &= gst_byte_writer_put_uint32_le (&writer, 8 + 14);
 
   /* data */
-  gst_byte_writer_put_string (&writer, "my copyright");
+  res &= gst_byte_writer_put_string (&writer, "my copyright");
+
+  fail_unless (res, "Failed to write tag");
 
   buf = gst_byte_writer_reset_and_get_buffer (&writer);
 
