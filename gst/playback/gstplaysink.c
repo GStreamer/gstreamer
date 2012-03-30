@@ -52,6 +52,41 @@ GST_DEBUG_CATEGORY_STATIC (gst_play_sink_debug);
 
 #define GST_PLAY_CHAIN(c) ((GstPlayChain *)(c))
 
+/* enum types */
+/**
+ * GstPlaySinkSendEventMode:
+ * @MODE_DEFAULT: default GstBin's send_event handling
+ * @MODE_FIRST: send event only to the first sink that return true
+ *
+ * Send event handling to use
+ */
+typedef enum
+{
+  MODE_DEFAULT = 0,
+  MODE_FIRST = 1
+} GstPlaySinkSendEventMode;
+
+
+#define GST_TYPE_PLAY_SINK_SEND_EVENT_MODE (gst_play_sink_send_event_mode_get_type ())
+static GType
+gst_play_sink_send_event_mode_get_type (void)
+{
+  static GType gtype = 0;
+
+  if (gtype == 0) {
+    static const GEnumValue values[] = {
+      {MODE_DEFAULT, "Default GstBin's send_event handling (default)",
+          "default"},
+      {MODE_FIRST, "Sends the event to sinks until the first one handles it",
+          "first"},
+      {0, NULL, NULL}
+    };
+
+    gtype = g_enum_register_static ("GstPlaySinkSendEventMode", values);
+  }
+  return gtype;
+}
+
 /* holds the common data fields for the audio and video pipelines. We keep them
  * in a structure to more easily have all the info available. */
 typedef struct
@@ -207,6 +242,7 @@ struct _GstPlaySink
   gboolean volume_changed;      /* volume/mute changed while no audiochain */
   gboolean mute_changed;        /* ... has been created yet */
   gint64 av_offset;
+  GstPlaySinkSendEventMode send_event_mode;
 
   /* xoverlay proxy interface */
   GstXOverlay *xoverlay_element;        /* protected with LOCK */
@@ -276,6 +312,7 @@ enum
   PROP_VIDEO_SINK,
   PROP_AUDIO_SINK,
   PROP_TEXT_SINK,
+  PROP_SEND_EVENT_MODE,
   PROP_LAST
 };
 
@@ -509,6 +546,20 @@ gst_play_sink_class_init (GstPlaySinkClass * klass)
           "the text output element to use (NULL = default textoverlay)",
           GST_TYPE_ELEMENT, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
+  /**
+   * GstPlaySink::send-event-mode:
+   *
+   * Sets the handling method used for events received from send_event
+   * function. The default is %MODE_DEFAULT, that uses %GstBin's default
+   * handling (push the event to all internal sinks).
+   *
+   * Since: 0.10.37
+   */
+  g_object_class_install_property (gobject_klass, PROP_SEND_EVENT_MODE,
+      g_param_spec_enum ("send-event-mode", "Send event mode",
+          "How to send events received in send_event function",
+          GST_TYPE_PLAY_SINK_SEND_EVENT_MODE, MODE_DEFAULT,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   g_signal_new ("reconfigure", G_TYPE_FROM_CLASS (klass),
       G_SIGNAL_RUN_LAST | G_SIGNAL_ACTION, G_STRUCT_OFFSET (GstPlaySinkClass,
@@ -577,6 +628,7 @@ gst_play_sink_init (GstPlaySink * playsink)
   playsink->font_desc = NULL;
   playsink->subtitle_encoding = NULL;
   playsink->flags = DEFAULT_FLAGS;
+  playsink->send_event_mode = MODE_DEFAULT;
 
   playsink->stream_synchronizer =
       g_object_new (GST_TYPE_STREAM_SYNCHRONIZER, NULL);
@@ -3763,30 +3815,41 @@ static gboolean
 gst_play_sink_send_event_to_sink (GstPlaySink * playsink, GstEvent * event)
 {
   gboolean res = TRUE;
-  if (playsink->textchain && playsink->textchain->sink) {
-    gst_event_ref (event);
-    if ((res = gst_element_send_event (playsink->textchain->chain.bin, event))) {
-      GST_DEBUG_OBJECT (playsink, "Sent event successfully to text sink");
-    } else {
-      GST_DEBUG_OBJECT (playsink, "Event failed when sent to text sink");
+  if (playsink->send_event_mode == MODE_FIRST) {
+    if (playsink->textchain && playsink->textchain->sink) {
+      gst_event_ref (event);
+      if ((res =
+              gst_element_send_event (playsink->textchain->chain.bin, event))) {
+        GST_DEBUG_OBJECT (playsink, "Sent event successfully to text sink");
+      } else {
+        GST_DEBUG_OBJECT (playsink, "Event failed when sent to text sink");
+      }
     }
-  }
 
-  if (playsink->videochain) {
-    gst_event_ref (event);
-    if ((res = gst_element_send_event (playsink->videochain->chain.bin, event))) {
-      GST_DEBUG_OBJECT (playsink, "Sent event successfully to video sink");
-      goto done;
+    if (playsink->videochain) {
+      gst_event_ref (event);
+      if ((res =
+              gst_element_send_event (playsink->videochain->chain.bin,
+                  event))) {
+        GST_DEBUG_OBJECT (playsink, "Sent event successfully to video sink");
+        goto done;
+      }
+      GST_DEBUG_OBJECT (playsink, "Event failed when sent to video sink");
     }
-    GST_DEBUG_OBJECT (playsink, "Event failed when sent to video sink");
-  }
-  if (playsink->audiochain) {
-    gst_event_ref (event);
-    if ((res = gst_element_send_event (playsink->audiochain->chain.bin, event))) {
-      GST_DEBUG_OBJECT (playsink, "Sent event successfully to audio sink");
-      goto done;
+    if (playsink->audiochain) {
+      gst_event_ref (event);
+      if ((res =
+              gst_element_send_event (playsink->audiochain->chain.bin,
+                  event))) {
+        GST_DEBUG_OBJECT (playsink, "Sent event successfully to audio sink");
+        goto done;
+      }
+      GST_DEBUG_OBJECT (playsink, "Event failed when sent to audio sink");
     }
-    GST_DEBUG_OBJECT (playsink, "Event failed when sent to audio sink");
+  } else {
+    return
+        GST_ELEMENT_CLASS (gst_play_sink_parent_class)->send_event
+        (GST_ELEMENT_CAST (playsink), event);
   }
 
 done:
@@ -4103,6 +4166,9 @@ gst_play_sink_set_property (GObject * object, guint prop_id,
       gst_play_sink_set_sink (playsink, GST_PLAY_SINK_TYPE_TEXT,
           g_value_get_object (value));
       break;
+    case PROP_SEND_EVENT_MODE:
+      playsink->send_event_mode = g_value_get_enum (value);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, spec);
       break;
@@ -4151,6 +4217,9 @@ gst_play_sink_get_property (GObject * object, guint prop_id,
     case PROP_TEXT_SINK:
       g_value_take_object (value, gst_play_sink_get_sink (playsink,
               GST_PLAY_SINK_TYPE_TEXT));
+      break;
+    case PROP_SEND_EVENT_MODE:
+      g_value_set_enum (value, playsink->send_event_mode);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, spec);
