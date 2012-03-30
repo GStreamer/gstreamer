@@ -502,7 +502,7 @@ gst_child_proxy_base_init (gpointer g_class)
         g_signal_new ("child-added", G_TYPE_FROM_CLASS (g_class),
         G_SIGNAL_RUN_FIRST, G_STRUCT_OFFSET (GstChildProxyInterface,
             child_added), NULL, NULL, g_cclosure_marshal_generic, G_TYPE_NONE,
-        1, GST_TYPE_OBJECT);
+        1, G_TYPE_OBJECT);
 
     /**
      * GstChildProxy::child-removed:
@@ -515,7 +515,7 @@ gst_child_proxy_base_init (gpointer g_class)
         g_signal_new ("child-removed", G_TYPE_FROM_CLASS (g_class),
         G_SIGNAL_RUN_FIRST, G_STRUCT_OFFSET (GstChildProxyInterface,
             child_removed), NULL, NULL, g_cclosure_marshal_generic, G_TYPE_NONE,
-        1, GST_TYPE_OBJECT);
+        1, G_TYPE_OBJECT);
 
     initialized = TRUE;
   }
