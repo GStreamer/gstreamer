@@ -194,8 +194,11 @@ struct _GstAudioDecoder
  *                  any pending samples and not yet returned decoded data.
  *                  @hard indicates whether a FLUSH is being processed,
  *                  or otherwise a DISCONT (or conceptually similar).
- * @event:          Optional.
+ * @sink_event:     Optional.
  *                  Event handler on the sink pad. Subclasses should chain up to
+ *                  the parent implementation to invoke the default handler.
+ * @src_event:      Optional.
+ *                  Event handler on the src pad. Subclasses should chain up to
  *                  the parent implementation to invoke the default handler.
  * @pre_push:       Optional.
  *                  Called just prior to pushing (encoded data) buffer downstream.
@@ -240,7 +243,9 @@ struct _GstAudioDecoderClass
   GstFlowReturn (*pre_push)           (GstAudioDecoder *dec,
                                        GstBuffer **buffer);
 
-  gboolean      (*event)              (GstAudioDecoder *dec,
+  gboolean      (*sink_event)         (GstAudioDecoder *dec,
+                                       GstEvent *event);
+  gboolean      (*src_event)          (GstAudioDecoder *dec,
                                        GstEvent *event);
 
   gboolean      (*open)               (GstAudioDecoder *dec);

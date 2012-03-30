@@ -282,6 +282,8 @@ static GstStateChangeReturn gst_audio_decoder_change_state (GstElement *
     element, GstStateChange transition);
 static gboolean gst_audio_decoder_sink_eventfunc (GstAudioDecoder * dec,
     GstEvent * event);
+static gboolean gst_audio_decoder_src_eventfunc (GstAudioDecoder * dec,
+    GstEvent * event);
 static gboolean gst_audio_decoder_sink_event (GstPad * pad, GstObject * parent,
     GstEvent * event);
 static gboolean gst_audio_decoder_src_event (GstPad * pad, GstObject * parent,
@@ -372,8 +374,10 @@ gst_audio_decoder_class_init (GstAudioDecoderClass * klass)
           "Perform packet loss concealment (if supported)",
           DEFAULT_PLC, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
-  audiodecoder_class->event =
+  audiodecoder_class->sink_event =
       GST_DEBUG_FUNCPTR (gst_audio_decoder_sink_eventfunc);
+  audiodecoder_class->src_event =
+      GST_DEBUG_FUNCPTR (gst_audio_decoder_src_eventfunc);
 }
 
 static void
@@ -1622,8 +1626,8 @@ gst_audio_decoder_sink_event (GstPad * pad, GstObject * parent,
   GST_DEBUG_OBJECT (dec, "received event %d, %s", GST_EVENT_TYPE (event),
       GST_EVENT_TYPE_NAME (event));
 
-  if (klass->event)
-    ret = klass->event (dec, event);
+  if (klass->sink_event)
+    ret = klass->sink_event (dec, event);
   else {
     gst_event_unref (event);
     ret = FALSE;
@@ -1690,15 +1694,9 @@ gst_audio_decoder_do_seek (GstAudioDecoder * dec, GstEvent * event)
 }
 
 static gboolean
-gst_audio_decoder_src_event (GstPad * pad, GstObject * parent, GstEvent * event)
+gst_audio_decoder_src_eventfunc (GstAudioDecoder * dec, GstEvent * event)
 {
-  GstAudioDecoder *dec;
-  gboolean res = FALSE;
-
-  dec = GST_AUDIO_DECODER (parent);
-
-  GST_DEBUG_OBJECT (dec, "received event %d, %s", GST_EVENT_TYPE (event),
-      GST_EVENT_TYPE_NAME (event));
+  gboolean res;
 
   switch (GST_EVENT_TYPE (event)) {
     case GST_EVENT_SEEK:
@@ -1729,10 +1727,11 @@ gst_audio_decoder_src_event (GstPad * pad, GstObject * parent, GstEvent * event)
       /* ... though a non-time seek can be aided as well */
       /* First bring the requested format to time */
       if (!(res =
-              gst_pad_query_convert (pad, format, cur, GST_FORMAT_TIME, &tcur)))
+              gst_pad_query_convert (dec->srcpad, format, cur, GST_FORMAT_TIME,
+                  &tcur)))
         goto convert_error;
       if (!(res =
-              gst_pad_query_convert (pad, format, stop, GST_FORMAT_TIME,
+              gst_pad_query_convert (dec->srcpad, format, stop, GST_FORMAT_TIME,
                   &tstop)))
         goto convert_error;
 
@@ -1745,7 +1744,7 @@ gst_audio_decoder_src_event (GstPad * pad, GstObject * parent, GstEvent * event)
       break;
     }
     default:
-      res = gst_pad_event_default (pad, parent, event);
+      res = gst_pad_event_default (dec->srcpad, GST_OBJECT_CAST (dec), event);
       break;
   }
 done:
@@ -1757,6 +1756,29 @@ convert_error:
     GST_DEBUG_OBJECT (dec, "cannot convert start/stop for seek");
     goto done;
   }
+}
+
+static gboolean
+gst_audio_decoder_src_event (GstPad * pad, GstObject * parent, GstEvent * event)
+{
+  GstAudioDecoder *dec;
+  GstAudioDecoderClass *klass;
+  gboolean ret;
+
+  dec = GST_AUDIO_DECODER (parent);
+  klass = GST_AUDIO_DECODER_GET_CLASS (dec);
+
+  GST_DEBUG_OBJECT (dec, "received event %d, %s", GST_EVENT_TYPE (event),
+      GST_EVENT_TYPE_NAME (event));
+
+  if (klass->src_event)
+    ret = klass->src_event (dec, event);
+  else {
+    gst_event_unref (event);
+    ret = FALSE;
+  }
+
+  return ret;
 }
 
 /*
