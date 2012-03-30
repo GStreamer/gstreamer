@@ -510,6 +510,8 @@ class Window (object):
 
         self.actions.close_window.activate ()
 
+        return True
+
     @action
     def handle_new_window_action_activate (self, action):
 
