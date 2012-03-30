@@ -265,7 +265,7 @@ gst_buffer_add_xvimage_meta (GstBuffer * buffer, GstXvImageBufferPool * xvpool)
   error_caught = FALSE;
   XSetErrorHandler (handler);
 
-  gst_buffer_take_memory (buffer, -1,
+  gst_buffer_append_memory (buffer,
       gst_memory_new_wrapped (GST_MEMORY_FLAG_NO_SHARE, meta->xvimage->data,
           meta->size, 0, meta->size, NULL, NULL));
 

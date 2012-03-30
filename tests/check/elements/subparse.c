@@ -48,7 +48,7 @@ buffer_from_static_string (const gchar * s)
   len = strlen (s);
 
   buf = gst_buffer_new ();
-  gst_buffer_take_memory (buf, -1,
+  gst_buffer_append_memory (buf,
       gst_memory_new_wrapped (GST_MEMORY_FLAG_READONLY,
           (gpointer) s, len, 0, len, NULL, NULL));
 

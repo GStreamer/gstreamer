@@ -41,7 +41,7 @@ GST_START_TEST (test_buffer_clipping_time)
   /* Clip start and end */
   buf = gst_buffer_new ();
   data = (guint8 *) g_malloc (1000);
-  gst_buffer_take_memory (buf, -1,
+  gst_buffer_append_memory (buf,
       gst_memory_new_wrapped (0, data, 1000, 0, 1000, data, g_free));
 
   gst_segment_init (&s, GST_FORMAT_TIME);
@@ -71,7 +71,7 @@ GST_START_TEST (test_buffer_clipping_time)
   /* Clip only start */
   buf = gst_buffer_new ();
   data = (guint8 *) g_malloc (1000);
-  gst_buffer_take_memory (buf, -1,
+  gst_buffer_append_memory (buf,
       gst_memory_new_wrapped (0, data, 1000, 0, 1000, data, g_free));
 
   gst_segment_init (&s, GST_FORMAT_TIME);
@@ -101,7 +101,7 @@ GST_START_TEST (test_buffer_clipping_time)
   /* Clip only stop */
   buf = gst_buffer_new ();
   data = (guint8 *) g_malloc (1000);
-  gst_buffer_take_memory (buf, -1,
+  gst_buffer_append_memory (buf,
       gst_memory_new_wrapped (0, data, 1000, 0, 1000, data, g_free));
 
   gst_segment_init (&s, GST_FORMAT_TIME);
@@ -131,7 +131,7 @@ GST_START_TEST (test_buffer_clipping_time)
   /* Buffer outside segment */
   buf = gst_buffer_new ();
   data = (guint8 *) g_malloc (1000);
-  gst_buffer_take_memory (buf, -1,
+  gst_buffer_append_memory (buf,
       gst_memory_new_wrapped (0, data, 1000, 0, 1000, data, g_free));
 
   gst_segment_init (&s, GST_FORMAT_TIME);
@@ -150,7 +150,7 @@ GST_START_TEST (test_buffer_clipping_time)
   /* Clip start and end but don't touch duration and offset_end */
   buf = gst_buffer_new ();
   data = (guint8 *) g_malloc (1000);
-  gst_buffer_take_memory (buf, -1,
+  gst_buffer_append_memory (buf,
       gst_memory_new_wrapped (0, data, 1000, 0, 1000, data, g_free));
 
   gst_segment_init (&s, GST_FORMAT_TIME);
@@ -183,7 +183,7 @@ GST_START_TEST (test_buffer_clipping_time)
    */
   buf = gst_buffer_new ();
   data = (guint8 *) g_malloc (1000);
-  gst_buffer_take_memory (buf, -1,
+  gst_buffer_append_memory (buf,
       gst_memory_new_wrapped (0, data, 1000, 0, 1000, data, g_free));
 
   gst_segment_init (&s, GST_FORMAT_TIME);
@@ -207,7 +207,7 @@ GST_START_TEST (test_buffer_clipping_time)
    */
   buf = gst_buffer_new ();
   data = (guint8 *) g_malloc (1000);
-  gst_buffer_take_memory (buf, -1,
+  gst_buffer_append_memory (buf,
       gst_memory_new_wrapped (0, data, 1000, 0, 1000, data, g_free));
 
   gst_segment_init (&s, GST_FORMAT_PERCENT);
@@ -239,7 +239,7 @@ GST_START_TEST (test_buffer_clipping_samples)
   /* Clip start and end */
   buf = gst_buffer_new ();
   data = (guint8 *) g_malloc (1000);
-  gst_buffer_take_memory (buf, -1,
+  gst_buffer_append_memory (buf,
       gst_memory_new_wrapped (0, data, 1000, 0, 1000, data, g_free));
 
   gst_segment_init (&s, GST_FORMAT_DEFAULT);
@@ -269,7 +269,7 @@ GST_START_TEST (test_buffer_clipping_samples)
   /* Clip only start */
   buf = gst_buffer_new ();
   data = (guint8 *) g_malloc (1000);
-  gst_buffer_take_memory (buf, -1,
+  gst_buffer_append_memory (buf,
       gst_memory_new_wrapped (0, data, 1000, 0, 1000, data, g_free));
 
   gst_segment_init (&s, GST_FORMAT_DEFAULT);
@@ -299,7 +299,7 @@ GST_START_TEST (test_buffer_clipping_samples)
   /* Clip only stop */
   buf = gst_buffer_new ();
   data = (guint8 *) g_malloc (1000);
-  gst_buffer_take_memory (buf, -1,
+  gst_buffer_append_memory (buf,
       gst_memory_new_wrapped (0, data, 1000, 0, 1000, data, g_free));
 
   gst_segment_init (&s, GST_FORMAT_DEFAULT);
@@ -329,7 +329,7 @@ GST_START_TEST (test_buffer_clipping_samples)
   /* Buffer outside segment */
   buf = gst_buffer_new ();
   data = (guint8 *) g_malloc (1000);
-  gst_buffer_take_memory (buf, -1,
+  gst_buffer_append_memory (buf,
       gst_memory_new_wrapped (0, data, 1000, 0, 1000, data, g_free));
 
   gst_segment_init (&s, GST_FORMAT_DEFAULT);
@@ -348,7 +348,7 @@ GST_START_TEST (test_buffer_clipping_samples)
   /* Clip start and end but don't touch duration and offset_end */
   buf = gst_buffer_new ();
   data = (guint8 *) g_malloc (1000);
-  gst_buffer_take_memory (buf, -1,
+  gst_buffer_append_memory (buf,
       gst_memory_new_wrapped (0, data, 1000, 0, 1000, data, g_free));
 
   gst_segment_init (&s, GST_FORMAT_DEFAULT);
@@ -381,7 +381,7 @@ GST_START_TEST (test_buffer_clipping_samples)
    */
   buf = gst_buffer_new ();
   data = (guint8 *) g_malloc (1000);
-  gst_buffer_take_memory (buf, -1,
+  gst_buffer_append_memory (buf,
       gst_memory_new_wrapped (0, data, 1000, 0, 1000, data, g_free));
 
   gst_segment_init (&s, GST_FORMAT_DEFAULT);

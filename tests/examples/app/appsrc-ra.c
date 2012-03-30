@@ -71,8 +71,6 @@ feed_data (GstElement * appsrc, guint size, App * app)
   GstBuffer *buffer;
   GstFlowReturn ret;
 
-  buffer = gst_buffer_new ();
-
   if (app->offset >= app->length) {
     /* we are EOS, send end-of-stream */
     g_signal_emit_by_name (app->appsrc, "end-of-stream", &ret);
@@ -80,10 +78,12 @@ feed_data (GstElement * appsrc, guint size, App * app)
   }
 
   /* read the amount of data, we are allowed to return less if we are EOS */
+  buffer = gst_buffer_new ();
+
   if (app->offset + size > app->length)
     size = app->length - app->offset;
 
-  gst_buffer_take_memory (buffer, -1,
+  gst_buffer_append_memory (buffer,
       gst_memory_new_wrapped (GST_MEMORY_FLAG_READONLY,
           app->data, app->length, app->offset, size, NULL, NULL));
 

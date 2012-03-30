@@ -444,7 +444,7 @@ GST_START_TEST (test_vorbis_tags)
     gchar *vendor = NULL;
 
     buf = gst_buffer_new ();
-    gst_buffer_take_memory (buf, -1,
+    gst_buffer_append_memory (buf,
         gst_memory_new_wrapped (GST_MEMORY_FLAG_READONLY,
             (gpointer) speex_comments_buf1,
             sizeof (speex_comments_buf1), 0, sizeof (speex_comments_buf1), NULL,
@@ -490,7 +490,7 @@ GST_START_TEST (test_vorbis_tags)
     gchar *vendor = NULL;
 
     buf = gst_buffer_new ();
-    gst_buffer_take_memory (buf, -1,
+    gst_buffer_append_memory (buf,
         gst_memory_new_wrapped (GST_MEMORY_FLAG_READONLY,
             (gpointer) vorbis_comments_buf,
             sizeof (vorbis_comments_buf), 0, sizeof (vorbis_comments_buf), NULL,
@@ -1047,7 +1047,7 @@ GST_START_TEST (test_xmp_parsing)
 
       buf = gst_buffer_new ();
       len = strlen (text) + 1;
-      gst_buffer_take_memory (buf, -1,
+      gst_buffer_append_memory (buf,
           gst_memory_new_wrapped (0, text, len, 0, len, NULL, NULL));
 
       list = gst_tag_list_from_xmp_buffer (buf);

@@ -1875,7 +1875,7 @@ gst_tag_list_to_xmp_buffer_full (const GstTagList * list, gboolean read_only,
   bdata = g_string_free (data, FALSE);
 
   buffer = gst_buffer_new ();
-  gst_buffer_take_memory (buffer, -1,
+  gst_buffer_append_memory (buffer,
       gst_memory_new_wrapped (0, bdata, bsize, 0, bsize, bdata, g_free));
 
   return buffer;

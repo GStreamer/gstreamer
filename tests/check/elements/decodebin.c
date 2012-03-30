@@ -50,7 +50,7 @@ src_need_data_cb (GstElement * src, guint size, gpointer data)
   GstFlowReturn ret;
 
   buf = gst_buffer_new ();
-  gst_buffer_take_memory (buf, 0,
+  gst_buffer_append_memory (buf,
       gst_memory_new_wrapped (GST_MEMORY_FLAG_READONLY,
           (gpointer) dummytext, sizeof (dummytext), 0,
           sizeof (dummytext), NULL, NULL));
