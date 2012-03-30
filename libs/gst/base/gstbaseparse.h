@@ -210,7 +210,7 @@ struct _GstBaseParse {
  *                  if desired.
  * @convert:        Optional.
  *                  Convert between formats.
- * @event:          Optional.
+ * @sink_event:     Optional.
  *                  Event handler on the sink pad. This function should chain
  *                  up to the parent implementation to let the default handler
  *                  run.
@@ -258,7 +258,7 @@ struct _GstBaseParseClass {
                                        GstFormat      dest_format,
                                        gint64       * dest_value);
 
-  gboolean      (*event)              (GstBaseParse * parse,
+  gboolean      (*sink_event)         (GstBaseParse * parse,
                                        GstEvent     * event);
 
   gboolean      (*src_event)          (GstBaseParse * parse,

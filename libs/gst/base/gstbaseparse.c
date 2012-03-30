@@ -528,7 +528,7 @@ gst_base_parse_class_init (GstBaseParseClass * klass)
 #endif
 
   /* Default handlers */
-  klass->event = gst_base_parse_sink_eventfunc;
+  klass->sink_event = gst_base_parse_sink_eventfunc;
   klass->src_event = gst_base_parse_src_eventfunc;
   klass->convert = gst_base_parse_convert_default;
 
@@ -888,8 +888,8 @@ gst_base_parse_sink_event (GstPad * pad, GstObject * parent, GstEvent * event)
       /* We've not posted bitrate tags yet - do so now */
       gst_base_parse_post_bitrates (parse, TRUE, TRUE, TRUE);
 
-    if (bclass->event)
-      ret = bclass->event (parse, event);
+    if (bclass->sink_event)
+      ret = bclass->sink_event (parse, event);
     else {
       gst_event_unref (event);
       ret = FALSE;
