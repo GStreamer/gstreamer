@@ -1593,8 +1593,26 @@ static void
 track_object_inpoint_changed_cb (GESTrackObject * child,
     GParamSpec * arg G_GNUC_UNUSED, GESTimelineObject * object)
 {
+  ObjectMapping *map;
+
   if (object->priv->ignore_notifies)
     return;
+
+  map = find_object_mapping (object, child);
+  if (G_UNLIKELY (map == NULL))
+    /* something massively screwed up if we get this */
+    return;
+
+  if (!ges_track_object_is_locked (child)) {
+    /* Update the internal start_offset */
+    map->inpoint_offset = object->inpoint - child->inpoint;
+  } else {
+    /* Or update the parent start */
+    object->priv->initiated_move = child;
+    ges_timeline_object_set_inpoint (object,
+        child->inpoint + map->inpoint_offset);
+    object->priv->initiated_move = NULL;
+  }
 
 }
 
@@ -1602,8 +1620,26 @@ static void
 track_object_duration_changed_cb (GESTrackObject * child,
     GParamSpec * arg G_GNUC_UNUSED, GESTimelineObject * object)
 {
+  ObjectMapping *map;
+
   if (object->priv->ignore_notifies)
     return;
+
+  map = find_object_mapping (object, child);
+  if (G_UNLIKELY (map == NULL))
+    /* something massively screwed up if we get this */
+    return;
+
+  if (!ges_track_object_is_locked (child)) {
+    /* Update the internal start_offset */
+    map->duration_offset = object->duration - child->duration;
+  } else {
+    /* Or update the parent start */
+    object->priv->initiated_move = child;
+    ges_timeline_object_set_duration (object,
+        child->duration + map->duration_offset);
+    object->priv->initiated_move = NULL;
+  }
 
 }
 
