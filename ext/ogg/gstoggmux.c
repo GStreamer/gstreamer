@@ -1178,19 +1178,20 @@ gst_ogg_mux_make_fishead (GstOggMux * mux, ogg_stream_state * os)
 {
   GstByteWriter bw;
   GstBuffer *fishead;
+  gboolean handled = TRUE;
 
   GST_DEBUG_OBJECT (mux, "Creating fishead");
 
   gst_byte_writer_init_with_size (&bw, 64, TRUE);
-  gst_byte_writer_put_string_utf8 (&bw, "fishead");
-  gst_byte_writer_put_int16_le (&bw, 3);        /* version major */
-  gst_byte_writer_put_int16_le (&bw, 0);        /* version minor */
-  gst_byte_writer_put_int64_le (&bw, 0);        /* presentation time numerator */
-  gst_byte_writer_put_int64_le (&bw, 1000);     /* ...and denominator */
-  gst_byte_writer_put_int64_le (&bw, 0);        /* base time numerator */
-  gst_byte_writer_put_int64_le (&bw, 1000);     /* ...and denominator */
-  gst_byte_writer_fill (&bw, ' ', 20);  /* UTC time */
-  g_assert (gst_byte_writer_get_pos (&bw) == 64);
+  handled &= gst_byte_writer_put_string_utf8 (&bw, "fishead");
+  handled &= gst_byte_writer_put_int16_le (&bw, 3);     /* version major */
+  handled &= gst_byte_writer_put_int16_le (&bw, 0);     /* version minor */
+  handled &= gst_byte_writer_put_int64_le (&bw, 0);     /* presentation time numerator */
+  handled &= gst_byte_writer_put_int64_le (&bw, 1000);  /* ...and denominator */
+  handled &= gst_byte_writer_put_int64_le (&bw, 0);     /* base time numerator */
+  handled &= gst_byte_writer_put_int64_le (&bw, 1000);  /* ...and denominator */
+  handled &= gst_byte_writer_fill (&bw, ' ', 20);       /* UTC time */
+  g_assert (handled && gst_byte_writer_get_pos (&bw) == 64);
   fishead = gst_byte_writer_reset_and_get_buffer (&bw);
   gst_ogg_mux_submit_skeleton_header_packet (mux, os, fishead, 1, 0);
 }
@@ -1198,7 +1199,7 @@ gst_ogg_mux_make_fishead (GstOggMux * mux, ogg_stream_state * os)
 static void
 gst_ogg_mux_byte_writer_put_string_utf8 (GstByteWriter * bw, const char *s)
 {
-  gst_byte_writer_put_data (bw, (const guint8 *) s, strlen (s));
+  g_assert (gst_byte_writer_put_data (bw, (const guint8 *) s, strlen (s)));
 }
 
 static void
@@ -1266,22 +1267,23 @@ gst_ogg_mux_make_fisbone (GstOggMux * mux, ogg_stream_state * os,
     GstOggPadData * pad)
 {
   GstByteWriter bw;
+  gboolean handled = TRUE;
 
   GST_DEBUG_OBJECT (mux,
       "Creating %s fisbone for serial %08x",
       gst_ogg_stream_get_media_type (&pad->map), pad->map.serialno);
 
   gst_byte_writer_init (&bw);
-  gst_byte_writer_put_string_utf8 (&bw, "fisbone");
-  gst_byte_writer_put_int32_le (&bw, 44);       /* offset to message headers */
-  gst_byte_writer_put_uint32_le (&bw, pad->map.serialno);
-  gst_byte_writer_put_uint32_le (&bw, pad->map.n_header_packets);
-  gst_byte_writer_put_uint64_le (&bw, pad->map.granulerate_n);
-  gst_byte_writer_put_uint64_le (&bw, pad->map.granulerate_d);
-  gst_byte_writer_put_uint64_le (&bw, 0);       /* base granule */
-  gst_byte_writer_put_uint32_le (&bw, pad->map.preroll);
-  gst_byte_writer_put_uint8 (&bw, pad->map.granuleshift);
-  gst_byte_writer_fill (&bw, 0, 3);     /* padding */
+  handled &= gst_byte_writer_put_string_utf8 (&bw, "fisbone");
+  handled &= gst_byte_writer_put_int32_le (&bw, 44);    /* offset to message headers */
+  handled &= gst_byte_writer_put_uint32_le (&bw, pad->map.serialno);
+  handled &= gst_byte_writer_put_uint32_le (&bw, pad->map.n_header_packets);
+  handled &= gst_byte_writer_put_uint64_le (&bw, pad->map.granulerate_n);
+  handled &= gst_byte_writer_put_uint64_le (&bw, pad->map.granulerate_d);
+  handled &= gst_byte_writer_put_uint64_le (&bw, 0);    /* base granule */
+  handled &= gst_byte_writer_put_uint32_le (&bw, pad->map.preroll);
+  handled &= gst_byte_writer_put_uint8 (&bw, pad->map.granuleshift);
+  handled &= gst_byte_writer_fill (&bw, 0, 3);  /* padding */
   /* message header fields - MIME type for now */
   gst_ogg_mux_add_fisbone_message_header (mux, &bw, "Content-Type",
       gst_ogg_stream_get_media_type (&pad->map));
@@ -1291,6 +1293,9 @@ gst_ogg_mux_make_fisbone (GstOggMux * mux, ogg_stream_state * os,
       GST_TAG_LANGUAGE_CODE, pad->tags);
   gst_ogg_mux_add_fisbone_message_header_from_tags (mux, &bw, "Title",
       GST_TAG_TITLE, pad->tags);
+
+  if (G_UNLIKELY (!handled))
+    GST_WARNING_OBJECT (mux, "Error writing fishbon");
 
   gst_ogg_mux_submit_skeleton_header_packet (mux, os,
       gst_byte_writer_reset_and_get_buffer (&bw), 0, 0);
