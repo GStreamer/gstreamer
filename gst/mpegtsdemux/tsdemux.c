@@ -249,6 +249,7 @@ static void gst_ts_demux_get_property (GObject * object, guint prop_id,
 static void gst_ts_demux_flush_streams (GstTSDemux * tsdemux);
 static GstFlowReturn
 gst_ts_demux_push_pending_data (GstTSDemux * demux, TSDemuxStream * stream);
+static void gst_ts_demux_stream_flush (TSDemuxStream * stream);
 
 static gboolean push_event (MpegTSBase * base, GstEvent * event);
 static void _extra_init (GType type);
@@ -998,6 +999,7 @@ gst_ts_demux_stream_removed (MpegTSBase * base, MpegTSBaseStream * bstream)
     }
     stream->pad = NULL;
   }
+  gst_ts_demux_stream_flush (stream);
   stream->flow_return = GST_FLOW_NOT_LINKED;
 }
 
@@ -1029,6 +1031,12 @@ gst_ts_demux_stream_flush (TSDemuxStream * stream)
     gst_buffer_unref (stream->pendingbuffers[i]);
   memset (stream->pendingbuffers, 0, TS_MAX_PENDING_BUFFERS);
   stream->nbpending = 0;
+
+  if (stream->currentlist) {
+    g_list_foreach (stream->currentlist, (GFunc) gst_buffer_unref, NULL);
+    g_list_free (stream->currentlist);
+    stream->currentlist = NULL;
+  }
 
   stream->expected_size = 0;
   stream->current_size = 0;
@@ -1346,20 +1354,34 @@ gst_ts_demux_queue_data (GstTSDemux * demux, TSDemuxStream * stream,
     }
   }
 
-  if (stream->state == PENDING_PACKET_HEADER) {
-    GST_LOG ("HEADER: appending data to array");
-    /* Append to the array */
-    stream->pendingbuffers[stream->nbpending++] = buf;
-    stream->current_size += GST_BUFFER_SIZE (buf);
+  switch (stream->state) {
+    case PENDING_PACKET_HEADER:
+    {
+      GST_LOG ("HEADER: appending data to array");
+      /* Append to the array */
+      stream->pendingbuffers[stream->nbpending++] = buf;
+      stream->current_size += GST_BUFFER_SIZE (buf);
 
-    /* parse the header */
-    gst_ts_demux_parse_pes_header (demux, stream);
-  } else if (stream->state == PENDING_PACKET_BUFFER) {
-    GST_LOG ("BUFFER: appending data to bufferlist");
-    stream->currentlist = g_list_prepend (stream->currentlist, buf);
-    stream->current_size += GST_BUFFER_SIZE (buf);
+      /* parse the header */
+      gst_ts_demux_parse_pes_header (demux, stream);
+      break;
+    }
+    case PENDING_PACKET_BUFFER:
+    {
+      GST_LOG ("BUFFER: appending data to bufferlist");
+      stream->currentlist = g_list_prepend (stream->currentlist, buf);
+      stream->current_size += GST_BUFFER_SIZE (buf);
+      break;
+    }
+    case PENDING_PACKET_DISCONT:
+    {
+      GST_LOG ("DISCONT: dropping buffer");
+      gst_buffer_unref (packet->buffer);
+      break;
+    }
+    default:
+      break;
   }
-
 
   return;
 }
@@ -1464,8 +1486,10 @@ gst_ts_demux_push_pending_data (GstTSDemux * demux, TSDemuxStream * stream)
     goto beach;
   }
 
-  if (G_UNLIKELY (stream->state != PENDING_PACKET_BUFFER))
+  if (G_UNLIKELY (stream->state != PENDING_PACKET_BUFFER)) {
+    GST_LOG ("state:%d, returning", stream->state);
     goto beach;
+  }
 
   if (G_UNLIKELY (!stream->active))
     activate_pad_for_stream (demux, stream);
@@ -1485,6 +1509,7 @@ gst_ts_demux_push_pending_data (GstTSDemux * demux, TSDemuxStream * stream)
   GST_LOG_OBJECT (stream->pad, "Putting pending data into GstBufferList");
   stream->currentlist = g_list_reverse (stream->currentlist);
   gst_buffer_list_iterator_add_list (stream->currentit, stream->currentlist);
+  stream->currentlist = NULL;
   gst_buffer_list_iterator_free (stream->currentit);
 
   firstbuffer = gst_buffer_list_get (stream->current, 0, 0);

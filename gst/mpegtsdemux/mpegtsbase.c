@@ -93,6 +93,9 @@ static void mpegts_base_get_tags_from_sdt (MpegTSBase * base,
     GstStructure * sdt_info);
 static void mpegts_base_get_tags_from_eit (MpegTSBase * base,
     GstStructure * eit_info);
+static gboolean
+remove_each_program (gpointer key, MpegTSBaseProgram * program,
+    MpegTSBase * base);
 
 GST_BOILERPLATE_FULL (MpegTSBase, mpegts_base, GstElement, GST_TYPE_ELEMENT,
     _extra_init);
@@ -225,6 +228,9 @@ mpegts_base_reset (MpegTSBase * base)
 
   base->upstream_live = FALSE;
   base->queried_latency = FALSE;
+
+  g_hash_table_foreach_remove (base->programs, (GHRFunc) remove_each_program,
+      base);
 
   if (klass->reset)
     klass->reset (base);
@@ -1237,20 +1243,26 @@ mpegts_base_get_tags_from_eit (MpegTSBase * base, GstStructure * eit_info)
   }
 }
 
-static void
+static gboolean
 remove_each_program (gpointer key, MpegTSBaseProgram * program,
     MpegTSBase * base)
 {
+  MpegTSBaseClass *klass = GST_MPEGTS_BASE_GET_CLASS (base);
+
   /* First deactivate it */
   mpegts_base_deactivate_program (base, program);
   /* Then remove it */
-  mpegts_base_remove_program (base, program->program_number);
+  if (klass->program_stopped)
+    klass->program_stopped (base, program);
+
+  return TRUE;
 }
 
 static gboolean
 gst_mpegts_base_handle_eos (MpegTSBase * base)
 {
-  g_hash_table_foreach (base->programs, (GHFunc) remove_each_program, base);
+  g_hash_table_foreach_remove (base->programs, (GHRFunc) remove_each_program,
+      base);
   /* finally remove  */
   return TRUE;
 }
