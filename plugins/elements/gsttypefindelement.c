@@ -1048,6 +1048,7 @@ gst_type_find_element_loop (GstPad * pad)
 
     if (!found_caps || probability < typefind->min_probability) {
       GST_DEBUG ("Trying to guess using extension");
+      gst_caps_replace (&found_caps, NULL);
       found_caps =
           gst_type_find_guess_by_extension (typefind, pad, &probability);
     }
@@ -1063,6 +1064,7 @@ gst_type_find_element_loop (GstPad * pad)
     g_signal_emit (typefind, gst_type_find_element_signals[HAVE_TYPE],
         0, probability, found_caps);
     typefind->mode = MODE_NORMAL;
+    gst_caps_unref (found_caps);
   } else if (typefind->mode == MODE_NORMAL) {
     GstBuffer *outbuf = NULL;
 
