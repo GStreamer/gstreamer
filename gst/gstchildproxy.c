@@ -452,26 +452,30 @@ gst_child_proxy_set (GObject * object, const gchar * first_property_name, ...)
  * gst_child_proxy_child_added:
  * @object: the parent object
  * @child: the newly added child
+ * @name: the name of the new child
  *
  * Emits the "child-added" signal.
  */
 void
-gst_child_proxy_child_added (GObject * object, GObject * child)
+gst_child_proxy_child_added (GObject * object, GObject * child,
+    const gchar * name)
 {
-  g_signal_emit (G_OBJECT (object), signals[CHILD_ADDED], 0, child);
+  g_signal_emit (G_OBJECT (object), signals[CHILD_ADDED], 0, child, name);
 }
 
 /**
  * gst_child_proxy_child_removed:
  * @object: the parent object
  * @child: the removed child
+ * @name: the name of the old child
  *
  * Emits the "child-removed" signal.
  */
 void
-gst_child_proxy_child_removed (GObject * object, GObject * child)
+gst_child_proxy_child_removed (GObject * object, GObject * child,
+    const gchar * name)
 {
-  g_signal_emit (G_OBJECT (object), signals[CHILD_REMOVED], 0, child);
+  g_signal_emit (G_OBJECT (object), signals[CHILD_REMOVED], 0, child, name);
 }
 
 /* gobject methods */
@@ -495,6 +499,7 @@ gst_child_proxy_base_init (gpointer g_class)
      * GstChildProxy::child-added:
      * @child_proxy: the #GstChildProxy
      * @object: the #GObject that was added
+     * @name: the name of the new child
      *
      * Will be emitted after the @object was added to the @child_proxy.
      */
@@ -502,12 +507,13 @@ gst_child_proxy_base_init (gpointer g_class)
         g_signal_new ("child-added", G_TYPE_FROM_CLASS (g_class),
         G_SIGNAL_RUN_FIRST, G_STRUCT_OFFSET (GstChildProxyInterface,
             child_added), NULL, NULL, g_cclosure_marshal_generic, G_TYPE_NONE,
-        1, G_TYPE_OBJECT);
+        2, G_TYPE_OBJECT, G_TYPE_STRING);
 
     /**
      * GstChildProxy::child-removed:
      * @child_proxy: the #GstChildProxy
      * @object: the #GObject that was removed
+     * @name: the name of the old child
      *
      * Will be emitted after the @object was removed from the @child_proxy.
      */
@@ -515,7 +521,7 @@ gst_child_proxy_base_init (gpointer g_class)
         g_signal_new ("child-removed", G_TYPE_FROM_CLASS (g_class),
         G_SIGNAL_RUN_FIRST, G_STRUCT_OFFSET (GstChildProxyInterface,
             child_removed), NULL, NULL, g_cclosure_marshal_generic, G_TYPE_NONE,
-        1, G_TYPE_OBJECT);
+        2, G_TYPE_OBJECT, G_TYPE_STRING);
 
     initialized = TRUE;
   }
