@@ -512,24 +512,29 @@ static void
 calculate_next_transition (GESTrackObject * track_object,
     GESTimelineLayer * layer)
 {
-  GESTrack *track = ges_track_object_get_track (track_object);
-  GList *tckobjs_in_layer = track_get_by_layer (layer, track);
+  GESTrack *track;
+  GList *tckobjs_in_layer;
 
-  if (ges_track_object_get_track (track_object)) {
+  if ((track = ges_track_object_get_track (track_object))) {
+    tckobjs_in_layer = track_get_by_layer (layer, track);
     calculate_next_transition_with_list (track_object, tckobjs_in_layer, layer);
-  }
 
-  g_list_foreach (tckobjs_in_layer, (GFunc) g_object_unref, NULL);
-  g_list_free (tckobjs_in_layer);
+    g_list_foreach (tckobjs_in_layer, (GFunc) g_object_unref, NULL);
+    g_list_free (tckobjs_in_layer);
+  }
 }
 
 static void
 calculate_transitions (GESTrackObject * track_object)
 {
   GList *tckobjs_in_layer, *compared;
-  GESTrack *track = ges_track_object_get_track (track_object);
   GESTimelineLayer *layer;
   GESTimelineObject *tlobj;
+
+  GESTrack *track = ges_track_object_get_track (track_object);
+
+  if (track == NULL)
+    return;
 
   tlobj = ges_track_object_get_timeline_object (track_object);
   layer = ges_timeline_object_get_layer (tlobj);
