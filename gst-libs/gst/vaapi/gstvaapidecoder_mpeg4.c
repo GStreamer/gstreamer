@@ -753,6 +753,8 @@ decode_packet(GstVaapiDecoderMpeg4 *decoder, GstMpeg4Packet packet)
     }
     else if (tos->type == GST_MPEG4_VIDEO_OBJ_PLANE) {
         status = decode_picture(decoder, packet.data + packet.offset, packet.size);
+        if (status != GST_VAAPI_DECODER_STATUS_SUCCESS)
+            return status;
 
         /* decode slice
          * A resync marker shall only be located immediately before a macroblock 
@@ -769,6 +771,8 @@ decode_packet(GstVaapiDecoderMpeg4 *decoder, GstMpeg4Packet packet)
         
         if (priv->vol_hdr.resync_marker_disable) {
             status = decode_slice(decoder, _data, _data_size, FALSE);
+            if (status != GST_VAAPI_DECODER_STATUS_SUCCESS)
+                return status;
         }
         else {
             // next start_code is required to determine the end of last slice
