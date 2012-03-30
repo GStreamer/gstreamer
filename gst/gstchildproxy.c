@@ -39,9 +39,7 @@
  * "child1" and "child2" implement the #GstChildProxy interface.
  */
 /* FIXME-0.11:
- * it would be nice to make gst_child_proxy_get_child_by_name virtual too and
- * use GObject instead of GstObject. We could eventually provide the current
- * implementation as a default if children are GstObjects.
+ * it would be nice to use GObject instead of GstObject.
  * This change would allow to propose the interface for inclusion with
  * glib/gobject. IMHO this is useful for GtkContainer and compound widgets too.
  */
@@ -61,22 +59,9 @@ enum
 
 static guint signals[LAST_SIGNAL] = { 0 };
 
-/**
- * gst_child_proxy_get_child_by_name:
- * @parent: the parent object to get the child from
- * @name: the childs name
- *
- * Looks up a child element by the given name.
- *
- * Implementors can use #GstObject together with gst_object_get_name()
- *
- * Returns: (transfer full): the child object or %NULL if not found. Unref
- *     after usage.
- *
- * MT safe.
- */
-GstObject *
-gst_child_proxy_get_child_by_name (GstChildProxy * parent, const gchar * name)
+static GstObject *
+gst_child_proxy_default_get_child_by_name (GstChildProxy * parent,
+    const gchar * name)
 {
   guint count, i;
   GstObject *object, *result;
@@ -111,6 +96,30 @@ gst_child_proxy_get_child_by_name (GstChildProxy * parent, const gchar * name)
     gst_object_unref (object);
   }
   return result;
+}
+
+
+/**
+ * gst_child_proxy_get_child_by_name:
+ * @parent: the parent object to get the child from
+ * @name: the childs name
+ *
+ * Looks up a child element by the given name.
+ *
+ * Implementors can use #GstObject together with gst_object_get_name()
+ *
+ * Returns: (transfer full): the child object or %NULL if not found. Unref
+ *     after usage.
+ *
+ * MT safe.
+ */
+GstObject *
+gst_child_proxy_get_child_by_name (GstChildProxy * parent, const gchar * name)
+{
+  g_return_val_if_fail (GST_IS_CHILD_PROXY (parent), 0);
+
+  return (GST_CHILD_PROXY_GET_INTERFACE (parent)->get_child_by_name (parent,
+          name));
 }
 
 /**
@@ -468,6 +477,14 @@ gst_child_proxy_child_removed (GstObject * object, GstObject * child)
 /* gobject methods */
 
 static void
+gst_child_proxy_class_init (gpointer g_class, gpointer class_data)
+{
+  GstChildProxyInterface *iface = (GstChildProxyInterface *) g_class;
+
+  iface->get_child_by_name = gst_child_proxy_default_get_child_by_name;
+}
+
+static void
 gst_child_proxy_base_init (gpointer g_class)
 {
   static gboolean initialized = FALSE;
@@ -515,7 +532,7 @@ gst_child_proxy_get_type (void)
       sizeof (GstChildProxyInterface),
       gst_child_proxy_base_init,        /* base_init */
       NULL,                     /* base_finalize */
-      NULL,                     /* class_init */
+      gst_child_proxy_class_init,       /* class_init */
       NULL,                     /* class_finalize */
       NULL,                     /* class_data */
       0,
