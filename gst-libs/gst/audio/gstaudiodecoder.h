@@ -267,10 +267,10 @@ void              gst_audio_decoder_set_plc_aware  (GstAudioDecoder * dec,
 
 gint              gst_audio_decoder_get_plc_aware  (GstAudioDecoder * dec);
 
-void              gst_audio_decoder_set_byte_time  (GstAudioDecoder * dec,
+void              gst_audio_decoder_set_estimate_rate  (GstAudioDecoder * dec,
                                                     gboolean          enabled);
 
-gint              gst_audio_decoder_get_byte_time  (GstAudioDecoder * dec);
+gint              gst_audio_decoder_get_estimate_rate  (GstAudioDecoder * dec);
 
 gint              gst_audio_decoder_get_delay      (GstAudioDecoder * dec);
 

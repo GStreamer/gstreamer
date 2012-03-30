@@ -195,7 +195,7 @@ typedef struct _GstAudioDecoderContext
 
   /* output */
   gboolean do_plc;
-  gboolean do_byte_time;
+  gboolean do_estimate_rate;
   gint max_errors;
   /* MT-protected (with LOCK) */
   GstClockTime min_latency;
@@ -1460,7 +1460,7 @@ not_negotiated:
 static inline gboolean
 gst_audio_decoder_do_byte (GstAudioDecoder * dec)
 {
-  return dec->priv->ctx.do_byte_time && dec->priv->ctx.info.bpf &&
+  return dec->priv->ctx.do_estimate_rate && dec->priv->ctx.info.bpf &&
       dec->priv->ctx.info.rate <= dec->priv->samples_out;
 }
 
@@ -1486,7 +1486,7 @@ gst_audio_decoder_sink_eventfunc (GstAudioDecoder * dec, GstEvent * event)
         /* handle newsegment resulting from legacy simple seeking */
         /* note that we need to convert this whether or not enough data
          * to handle initial newsegment */
-        if (dec->priv->ctx.do_byte_time &&
+        if (dec->priv->ctx.do_estimate_rate &&
             gst_pad_query_convert (dec->sinkpad, GST_FORMAT_BYTES, seg.start,
                 GST_FORMAT_TIME, &nstart)) {
           /* best attempt convert */
@@ -2240,7 +2240,7 @@ gst_audio_decoder_get_plc_aware (GstAudioDecoder * dec)
 }
 
 /**
- * gst_audio_decoder_set_byte_time:
+ * gst_audio_decoder_set_estimate_rate:
  * @dec: a #GstAudioDecoder
  * @enabled: whether to enable byte to time conversion
  *
@@ -2249,15 +2249,15 @@ gst_audio_decoder_get_plc_aware (GstAudioDecoder * dec)
  * Since: 0.10.36
  */
 void
-gst_audio_decoder_set_byte_time (GstAudioDecoder * dec, gboolean enabled)
+gst_audio_decoder_set_estimate_rate (GstAudioDecoder * dec, gboolean enabled)
 {
   g_return_if_fail (GST_IS_AUDIO_DECODER (dec));
 
-  dec->priv->ctx.do_byte_time = enabled;
+  dec->priv->ctx.do_estimate_rate = enabled;
 }
 
 /**
- * gst_audio_decoder_get_byte_time:
+ * gst_audio_decoder_get_estimate_rate:
  * @dec: a #GstAudioDecoder
  *
  * Returns: currently configured byte to time conversion setting
@@ -2265,11 +2265,11 @@ gst_audio_decoder_set_byte_time (GstAudioDecoder * dec, gboolean enabled)
  * Since: 0.10.36
  */
 gint
-gst_audio_decoder_get_byte_time (GstAudioDecoder * dec)
+gst_audio_decoder_get_estimate_rate (GstAudioDecoder * dec)
 {
   g_return_val_if_fail (GST_IS_AUDIO_DECODER (dec), 0);
 
-  return dec->priv->ctx.do_byte_time;
+  return dec->priv->ctx.do_estimate_rate;
 }
 
 /**
