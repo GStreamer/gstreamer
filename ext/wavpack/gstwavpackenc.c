@@ -232,7 +232,7 @@ gst_wavpack_enc_class_init (GstWavpackEncClass * klass)
   base_class->stop = GST_DEBUG_FUNCPTR (gst_wavpack_enc_stop);
   base_class->set_format = GST_DEBUG_FUNCPTR (gst_wavpack_enc_set_format);
   base_class->handle_frame = GST_DEBUG_FUNCPTR (gst_wavpack_enc_handle_frame);
-  base_class->event = GST_DEBUG_FUNCPTR (gst_wavpack_enc_sink_event);
+  base_class->sink_event = GST_DEBUG_FUNCPTR (gst_wavpack_enc_sink_event);
 
   /* install all properties */
   g_object_class_install_property (gobject_class, ARG_MODE,
@@ -897,7 +897,7 @@ gst_wavpack_enc_sink_event (GstAudioEncoder * benc, GstEvent * event)
   }
 
   /* baseclass handles rest */
-  return GST_AUDIO_ENCODER_CLASS (parent_class)->event (benc, event);
+  return GST_AUDIO_ENCODER_CLASS (parent_class)->sink_event (benc, event);
 }
 
 static void

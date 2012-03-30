@@ -377,7 +377,7 @@ gst_flac_enc_class_init (GstFlacEncClass * klass)
   base_class->set_format = GST_DEBUG_FUNCPTR (gst_flac_enc_set_format);
   base_class->handle_frame = GST_DEBUG_FUNCPTR (gst_flac_enc_handle_frame);
   base_class->getcaps = GST_DEBUG_FUNCPTR (gst_flac_enc_getcaps);
-  base_class->event = GST_DEBUG_FUNCPTR (gst_flac_enc_sink_event);
+  base_class->sink_event = GST_DEBUG_FUNCPTR (gst_flac_enc_sink_event);
 }
 
 static void
@@ -1125,7 +1125,7 @@ gst_flac_enc_sink_event (GstAudioEncoder * enc, GstEvent * event)
   switch (GST_EVENT_TYPE (event)) {
     case GST_EVENT_EOS:
       flacenc->eos = TRUE;
-      ret = GST_AUDIO_ENCODER_CLASS (parent_class)->event (enc, event);
+      ret = GST_AUDIO_ENCODER_CLASS (parent_class)->sink_event (enc, event);
       break;
     case GST_EVENT_TAG:
       if (flacenc->tags) {
@@ -1135,10 +1135,10 @@ gst_flac_enc_sink_event (GstAudioEncoder * enc, GstEvent * event)
       } else {
         g_assert_not_reached ();
       }
-      ret = GST_AUDIO_ENCODER_CLASS (parent_class)->event (enc, event);
+      ret = GST_AUDIO_ENCODER_CLASS (parent_class)->sink_event (enc, event);
       break;
     default:
-      ret = GST_AUDIO_ENCODER_CLASS (parent_class)->event (enc, event);
+      ret = GST_AUDIO_ENCODER_CLASS (parent_class)->sink_event (enc, event);
       break;
   }
 

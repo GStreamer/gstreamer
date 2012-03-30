@@ -166,7 +166,7 @@ gst_speex_enc_class_init (GstSpeexEncClass * klass)
   base_class->stop = GST_DEBUG_FUNCPTR (gst_speex_enc_stop);
   base_class->set_format = GST_DEBUG_FUNCPTR (gst_speex_enc_set_format);
   base_class->handle_frame = GST_DEBUG_FUNCPTR (gst_speex_enc_handle_frame);
-  base_class->event = GST_DEBUG_FUNCPTR (gst_speex_enc_sink_event);
+  base_class->sink_event = GST_DEBUG_FUNCPTR (gst_speex_enc_sink_event);
   base_class->pre_push = GST_DEBUG_FUNCPTR (gst_speex_enc_pre_push);
 
   g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_QUALITY,
@@ -530,7 +530,7 @@ gst_speex_enc_sink_event (GstAudioEncoder * benc, GstEvent * event)
   }
 
   /* we only peeked, let base class handle it */
-  return GST_AUDIO_ENCODER_CLASS (parent_class)->event (benc, event);
+  return GST_AUDIO_ENCODER_CLASS (parent_class)->sink_event (benc, event);
 }
 
 static GstFlowReturn
