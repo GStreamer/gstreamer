@@ -693,7 +693,7 @@ buffer_list_copy_data (GstBuffer ** buf, guint idx, gpointer data)
     GstMemory *mem;
 
     mem = gst_buffer_get_memory (*buf, i);
-    gst_buffer_take_memory (dest, -1, mem);
+    gst_buffer_append_memory (dest, mem);
   }
 
   return TRUE;

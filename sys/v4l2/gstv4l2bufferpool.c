@@ -183,7 +183,7 @@ gst_v4l2_buffer_pool_alloc_buffer (GstBufferPool * bpool, GstBuffer ** buffer,
       if (meta->mem == MAP_FAILED)
         goto mmap_failed;
 
-      gst_buffer_take_memory (newbuf, -1,
+      gst_buffer_append_memory (newbuf,
           gst_memory_new_wrapped (0,
               meta->mem, meta->vbuffer.length, 0, meta->vbuffer.length, NULL,
               NULL));

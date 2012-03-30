@@ -1557,7 +1557,7 @@ gst_avi_mux_write_index (GstAviMux * avimux)
   data = (guint8 *) avimux->idx;
   avimux->idx = NULL;           /* will be free()'ed by gst_buffer_unref() */
 
-  gst_buffer_take_memory (buffer, -1,
+  gst_buffer_append_memory (buffer,
       gst_memory_new_wrapped (0, data, size, 0, size, data, g_free));
 
   avimux->total_data += size + 8;

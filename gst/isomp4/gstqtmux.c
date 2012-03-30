@@ -1189,7 +1189,7 @@ _gst_buffer_new_take_data (guint8 * data, guint size)
   GstBuffer *buf;
 
   buf = gst_buffer_new ();
-  gst_buffer_take_memory (buf, -1,
+  gst_buffer_append_memory (buf,
       gst_memory_new_wrapped (0, data, size, 0, size, data, g_free));
 
   return buf;

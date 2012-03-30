@@ -462,7 +462,7 @@ no_select:
   }
 
   outbuf = gst_buffer_new ();
-  gst_buffer_take_memory (outbuf, -1,
+  gst_buffer_append_memory (outbuf,
       gst_memory_new_wrapped (0, pktdata, pktsize, offset, ret, pktdata,
           g_free));
 

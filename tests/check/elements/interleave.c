@@ -419,7 +419,7 @@ src_handoff_float32 (GstElement * element, GstBuffer * buffer, GstPad * pad,
   for (i = 0; i < 48000; i++)
     data[i] = (n % 2 == 0) ? -1.0 : 1.0;
 
-  gst_buffer_take_memory (buffer, -1, gst_memory_new_wrapped (0, data,
+  gst_buffer_append_memory (buffer, gst_memory_new_wrapped (0, data,
           size, 0, size, data, g_free));
 
   GST_BUFFER_OFFSET (buffer) = GST_BUFFER_OFFSET_NONE;

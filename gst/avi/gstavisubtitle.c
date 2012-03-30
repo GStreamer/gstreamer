@@ -153,7 +153,7 @@ gst_avi_subtitle_extract_file (GstAviSubtitle * sub, GstBuffer * buffer,
 
     ret = gst_buffer_new ();
     slen = strlen (utf8);
-    gst_buffer_take_memory (ret, -1,
+    gst_buffer_append_memory (ret,
         gst_memory_new_wrapped (0, utf8, slen, 0, slen, utf8, g_free));
 
     GST_BUFFER_OFFSET (ret) = 0;

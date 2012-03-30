@@ -181,7 +181,7 @@ flush_data (GstRtpQDM2Depay * depay)
     GST_MEMDUMP ("Extracted packet", data, depay->packetsize);
 
     buf = gst_buffer_new ();
-    gst_buffer_take_memory (buf, -1,
+    gst_buffer_append_memory (buf,
         gst_memory_new_wrapped (0, data, depay->packetsize, 0,
             depay->packetsize, data, g_free));
 

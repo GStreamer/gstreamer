@@ -328,7 +328,7 @@ gst_rtp_theora_depay_setcaps (GstRTPBaseDepayload * depayload, GstCaps * caps)
     data = g_base64_decode (configuration, &size);
 
     confbuf = gst_buffer_new ();
-    gst_buffer_take_memory (confbuf, -1,
+    gst_buffer_append_memory (confbuf,
         gst_memory_new_wrapped (0, data, size, 0, size, data, g_free));
 
     if (!gst_rtp_theora_depay_parse_configuration (rtptheoradepay, confbuf))
@@ -542,7 +542,7 @@ gst_rtp_theora_depay_process (GstRTPBaseDepayload * depayload, GstBuffer * buf)
     /* create buffer for packet */
     if (G_UNLIKELY (to_free)) {
       outbuf = gst_buffer_new ();
-      gst_buffer_take_memory (buf, -1,
+      gst_buffer_append_memory (buf,
           gst_memory_new_wrapped (0, to_free,
               (payload - to_free) + length, payload - to_free, length, to_free,
               g_free));

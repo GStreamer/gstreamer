@@ -628,7 +628,7 @@ gst_jpegenc_chain (GstPad * pad, GstObject * parent, GstBuffer * buf)
 
   outbuf = gst_buffer_new ();
   gst_buffer_copy_into (outbuf, buf, GST_BUFFER_COPY_METADATA, 0, -1);
-  gst_buffer_take_memory (outbuf, -1, jpegenc->output_mem);
+  gst_buffer_append_memory (outbuf, jpegenc->output_mem);
   jpegenc->output_mem = NULL;
 
   ret = gst_pad_push (jpegenc->srcpad, outbuf);

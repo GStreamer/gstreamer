@@ -239,7 +239,7 @@ gst_y4m_encode_get_stream_header (GstY4mEncode * filter, gboolean tff)
   len = strlen (header);
 
   buf = gst_buffer_new ();
-  gst_buffer_take_memory (buf, -1,
+  gst_buffer_append_memory (buf,
       gst_memory_new_wrapped (0, header, len, 0, len, header, g_free));
 
   return buf;
@@ -256,7 +256,7 @@ gst_y4m_encode_get_frame_header (GstY4mEncode * filter)
   len = strlen (header);
 
   buf = gst_buffer_new ();
-  gst_buffer_take_memory (buf, -1,
+  gst_buffer_append_memory (buf,
       gst_memory_new_wrapped (0, header, len, 0, len, header, g_free));
 
   return buf;

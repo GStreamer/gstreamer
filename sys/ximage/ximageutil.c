@@ -433,7 +433,7 @@ gst_ximageutil_ximage_new (GstXContext * xcontext,
   }
   succeeded = TRUE;
 
-  gst_buffer_take_memory (ximage, -1,
+  gst_buffer_append_memory (ximage,
       gst_memory_new_wrapped (GST_MEMORY_FLAG_NO_SHARE, meta->ximage->data,
           meta->size, 0, meta->size, NULL, NULL));
 
