@@ -80,6 +80,7 @@ buffer_probe (GstPad * pad, GstPadProbeInfo * info, gpointer data)
       }
     }
   }
+  gst_caps_unref (pad_caps);
 
   return TRUE;
 }

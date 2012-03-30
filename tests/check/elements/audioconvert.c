@@ -460,9 +460,11 @@ verify_convert (const gchar * which, void *in, int inlength,
   {
     GstStructure *in_s, *out_s;
     gint out_chans;
+    GstCaps *ccaps;
 
     in_s = gst_caps_get_structure (incaps, 0);
-    out_s = gst_caps_get_structure (gst_pad_get_current_caps (mysinkpad), 0);
+    ccaps = gst_pad_get_current_caps (mysinkpad);
+    out_s = gst_caps_get_structure (ccaps, 0);
     fail_unless (gst_structure_get_int (out_s, "channels", &out_chans));
 
     /* positions for 1 and 2 channels are implicit if not provided */
@@ -472,6 +474,7 @@ verify_convert (const gchar * which, void *in, int inlength,
             gst_structure_to_string (in_s), gst_structure_to_string (out_s));
       }
     }
+    gst_caps_unref (ccaps);
   }
 
   buffers = g_list_remove (buffers, outbuffer);
@@ -994,8 +997,7 @@ GST_START_TEST (test_multichannel_conversion)
         get_int_mc_caps (11, G_BYTE_ORDER, 16, 16, TRUE, in_layout);
     GstCaps *out_caps = get_int_mc_caps (2, G_BYTE_ORDER, 16, 16, TRUE, NULL);
 
-    RUN_CONVERSION ("11 channels to 2", in,
-        gst_caps_copy (in_caps), out, gst_caps_copy (out_caps));
+    RUN_CONVERSION ("11 channels to 2", in, in_caps, out, out_caps);
   }
   {
     gint16 in[] = { 0, 0 };
@@ -1017,8 +1019,7 @@ GST_START_TEST (test_multichannel_conversion)
     GstCaps *out_caps =
         get_int_mc_caps (11, G_BYTE_ORDER, 16, 16, TRUE, out_layout);
 
-    RUN_CONVERSION ("2 channels to 11", in,
-        gst_caps_copy (in_caps), out, gst_caps_copy (out_caps));
+    RUN_CONVERSION ("2 channels to 11", in, in_caps, out, out_caps);
   }
 
 }

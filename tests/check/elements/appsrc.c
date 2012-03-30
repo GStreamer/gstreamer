@@ -66,7 +66,7 @@ GST_START_TEST (test_appsrc_non_null_caps)
 {
   GstElement *src;
   GstBuffer *buffer;
-  GstCaps *caps;
+  GstCaps *caps, *ccaps;
 
   src = setup_appsrc ();
 
@@ -99,7 +99,9 @@ GST_START_TEST (test_appsrc_non_null_caps)
   /* Check the output caps */
   fail_unless (g_list_length (buffers) == 4);
 
-  fail_unless (gst_caps_is_equal (gst_pad_get_current_caps (mysinkpad), caps));
+  ccaps = gst_pad_get_current_caps (mysinkpad);
+  fail_unless (gst_caps_is_equal (ccaps, caps));
+  gst_caps_unref (ccaps);
 
   ASSERT_SET_STATE (src, GST_STATE_NULL, GST_STATE_CHANGE_SUCCESS);
   gst_caps_unref (caps);

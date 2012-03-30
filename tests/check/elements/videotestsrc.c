@@ -214,6 +214,8 @@ got_buf_cb (GstElement * sink, GstBuffer * new_buf, GstPad * pad,
   if (*p_old_sample)
     gst_sample_unref (*p_old_sample);
   *p_old_sample = gst_sample_new (new_buf, caps, NULL, NULL);
+
+  gst_caps_unref (caps);
 }
 
 /* tests the positioning of pixels within the various RGB pixel layouts */

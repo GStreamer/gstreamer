@@ -58,6 +58,7 @@ src_need_data_cb (GstElement * src, guint size, gpointer data)
   GST_BUFFER_OFFSET (buf) = 0;
 
   g_signal_emit_by_name (src, "push-buffer", buf, &ret);
+  gst_buffer_unref (buf);
 
   fail_unless (ret == GST_FLOW_OK);
 }
