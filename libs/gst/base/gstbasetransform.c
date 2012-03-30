@@ -1086,6 +1086,7 @@ gst_base_transform_find_transform (GstBaseTransform * trans, GstPad * pad,
         gst_caps_unref (othercaps);
         othercaps = intersection;
       } else {
+        gst_caps_unref (othercaps);
         othercaps = peercaps;
       }
 
