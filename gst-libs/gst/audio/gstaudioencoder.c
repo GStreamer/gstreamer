@@ -305,7 +305,11 @@ static GstCaps *gst_audio_encoder_getcaps_default (GstAudioEncoder * enc,
 
 static gboolean gst_audio_encoder_sink_event_default (GstAudioEncoder * enc,
     GstEvent * event);
+static gboolean gst_audio_encoder_src_event_default (GstAudioEncoder * enc,
+    GstEvent * event);
 static gboolean gst_audio_encoder_sink_event (GstPad * pad, GstObject * parent,
+    GstEvent * event);
+static gboolean gst_audio_encoder_src_event (GstPad * pad, GstObject * parent,
     GstEvent * event);
 static gboolean gst_audio_encoder_sink_setcaps (GstAudioEncoder * enc,
     GstCaps * caps);
@@ -361,7 +365,8 @@ gst_audio_encoder_class_init (GstAudioEncoderClass * klass)
       GST_DEBUG_FUNCPTR (gst_audio_encoder_change_state);
 
   klass->getcaps = gst_audio_encoder_getcaps_default;
-  klass->event = gst_audio_encoder_sink_event_default;
+  klass->sink_event = gst_audio_encoder_sink_event_default;
+  klass->src_event = gst_audio_encoder_src_event_default;
 }
 
 static void
@@ -395,6 +400,8 @@ gst_audio_encoder_init (GstAudioEncoder * enc, GstAudioEncoderClass * bclass)
       gst_element_class_get_pad_template (GST_ELEMENT_CLASS (bclass), "src");
   g_return_if_fail (pad_template != NULL);
   enc->srcpad = gst_pad_new_from_template (pad_template, "src");
+  gst_pad_set_event_function (enc->srcpad,
+      GST_DEBUG_FUNCPTR (gst_audio_encoder_src_event));
   gst_pad_set_query_function (enc->srcpad,
       GST_DEBUG_FUNCPTR (gst_audio_encoder_src_query));
   gst_pad_use_fixed_caps (enc->srcpad);
@@ -1438,8 +1445,8 @@ gst_audio_encoder_sink_event (GstPad * pad, GstObject * parent,
   GST_DEBUG_OBJECT (enc, "received event %d, %s", GST_EVENT_TYPE (event),
       GST_EVENT_TYPE_NAME (event));
 
-  if (klass->event)
-    ret = klass->event (enc, event);
+  if (klass->sink_event)
+    ret = klass->sink_event (enc, event);
   else {
     gst_event_unref (event);
     ret = FALSE;
@@ -1503,6 +1510,42 @@ gst_audio_encoder_sink_query (GstPad * pad, GstObject * parent,
 
 error:
   return res;
+}
+
+static gboolean
+gst_audio_encoder_src_event_default (GstAudioEncoder * enc, GstEvent * event)
+{
+  gboolean res;
+
+  switch (GST_EVENT_TYPE (event)) {
+    default:
+      res = gst_pad_event_default (enc->srcpad, GST_OBJECT_CAST (enc), event);
+      break;
+  }
+  return res;
+}
+
+static gboolean
+gst_audio_encoder_src_event (GstPad * pad, GstObject * parent, GstEvent * event)
+{
+  GstAudioEncoder *enc;
+  GstAudioEncoderClass *klass;
+  gboolean ret;
+
+  enc = GST_AUDIO_ENCODER (parent);
+  klass = GST_AUDIO_ENCODER_GET_CLASS (enc);
+
+  GST_DEBUG_OBJECT (enc, "received event %d, %s", GST_EVENT_TYPE (event),
+      GST_EVENT_TYPE_NAME (event));
+
+  if (klass->src_event)
+    ret = klass->src_event (enc, event);
+  else {
+    gst_event_unref (event);
+    ret = FALSE;
+  }
+
+  return ret;
 }
 
 /*

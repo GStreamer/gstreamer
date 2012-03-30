@@ -139,10 +139,12 @@ struct _GstAudioEncoder {
  * @flush:          Optional.
  *                  Instructs subclass to clear any codec caches and discard
  *                  any pending samples and not yet returned encoded data.
- * @event:          Optional.
- *                  Event handler on the sink pad. This function should return
- *                  TRUE if the event was handled and should be discarded
- *                  (i.e. not unref'ed).
+ * @sink_event:     Optional.
+ *                  Event handler on the sink pad. Subclasses should chain up to
+ *                  the parent implementation to invoke the default handler.
+ * @src_event:      Optional.
+ *                  Event handler on the src pad. Subclasses should chain up to
+ *                  the parent implementation to invoke the default handler.
  * @pre_push:       Optional.
  *                  Called just prior to pushing (encoded data) buffer downstream.
  *                  Subclass has full discretionary access to buffer,
@@ -185,7 +187,10 @@ struct _GstAudioEncoderClass {
   GstFlowReturn (*pre_push)           (GstAudioEncoder *enc,
                                        GstBuffer **buffer);
 
-  gboolean      (*event)              (GstAudioEncoder *enc,
+  gboolean      (*sink_event)         (GstAudioEncoder *enc,
+                                       GstEvent *event);
+
+  gboolean      (*src_event)          (GstAudioEncoder *enc,
                                        GstEvent *event);
 
   GstCaps *     (*getcaps)            (GstAudioEncoder *enc, GstCaps *filter);
