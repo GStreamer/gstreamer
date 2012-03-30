@@ -830,8 +830,7 @@ gst_opus_enc_encode (GstOpusEnc * enc, GstBuffer * buf)
 
   outsize =
       opus_multistream_encode (enc->state, (const gint16 *) data,
-      enc->frame_samples, GST_BUFFER_DATA (outbuf),
-      enc->max_payload_size * enc->n_channels);
+      enc->frame_samples, omap.data, enc->max_payload_size * enc->n_channels);
 
   gst_buffer_unmap (outbuf, &omap);
 
@@ -848,7 +847,7 @@ gst_opus_enc_encode (GstOpusEnc * enc, GstBuffer * buf)
   }
 
   GST_DEBUG_OBJECT (enc, "Output packet is %u bytes", outsize);
-  GST_BUFFER_SIZE (outbuf) = outsize;
+  gst_buffer_set_size (outbuf, outsize);
 
   ret =
       gst_audio_encoder_finish_frame (GST_AUDIO_ENCODER (enc), outbuf,
