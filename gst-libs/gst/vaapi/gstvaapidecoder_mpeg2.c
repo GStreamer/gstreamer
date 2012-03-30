@@ -61,6 +61,102 @@ G_DEFINE_TYPE(GstVaapiDecoderMpeg2,
   } \
 } G_STMT_END
 
+/* PTS Generator */
+typedef struct _PTSGenerator PTSGenerator;
+struct _PTSGenerator {
+    GstClockTime        gop_pts; // Current GOP PTS
+    GstClockTime        max_pts; // Max picture PTS
+    guint               gop_tsn; // Absolute GOP TSN
+    guint               max_tsn; // Max picture TSN, relative to last GOP TSN
+    guint               ovl_tsn; // How many times TSN overflowed since GOP
+    guint               lst_tsn; // Last picture TSN
+    guint               fps_n;
+    guint               fps_d;
+};
+
+static void
+pts_init(PTSGenerator *tsg)
+{
+    tsg->gop_pts = GST_CLOCK_TIME_NONE;
+    tsg->max_pts = GST_CLOCK_TIME_NONE;
+    tsg->gop_tsn = 0;
+    tsg->max_tsn = 0;
+    tsg->ovl_tsn = 0;
+    tsg->lst_tsn = 0;
+    tsg->fps_n   = 0;
+    tsg->fps_d   = 0;
+}
+
+static inline GstClockTime
+pts_get_duration(PTSGenerator *tsg, guint num_frames)
+{
+    return gst_util_uint64_scale(num_frames,
+                                 GST_SECOND * tsg->fps_d, tsg->fps_n);
+}
+
+static void
+pts_set_framerate(PTSGenerator *tsg, guint fps_n, guint fps_d)
+{
+    tsg->fps_n = fps_n;
+    tsg->fps_d = fps_d;
+}
+
+static void
+pts_sync(PTSGenerator *tsg, GstClockTime gop_pts)
+{
+    guint gop_tsn;
+
+    if (!GST_CLOCK_TIME_IS_VALID(gop_pts) ||
+        (GST_CLOCK_TIME_IS_VALID(tsg->max_pts) && tsg->max_pts >= gop_pts)) {
+        /* Invalid GOP PTS, interpolate from the last known picture PTS */
+        if (GST_CLOCK_TIME_IS_VALID(tsg->max_pts)) {
+            gop_pts = tsg->max_pts + pts_get_duration(tsg, 1);
+            gop_tsn = tsg->gop_tsn + tsg->ovl_tsn * 1024 + tsg->max_tsn + 1;
+        }
+        else {
+            gop_pts = 0;
+            gop_tsn = 0;
+        }
+    }
+    else {
+        /* Interpolate GOP TSN from this valid PTS */
+        if (GST_CLOCK_TIME_IS_VALID(tsg->gop_pts))
+            gop_tsn = tsg->gop_tsn + gst_util_uint64_scale(
+                gop_pts - tsg->gop_pts, tsg->fps_n, GST_SECOND * tsg->fps_d);
+        else
+            gop_tsn = 0;
+    }
+
+    tsg->gop_pts = gop_pts;
+    tsg->gop_tsn = gop_tsn;
+    tsg->max_tsn = 0;
+    tsg->ovl_tsn = 0;
+    tsg->lst_tsn = 0;
+}
+
+static GstClockTime
+pts_eval(PTSGenerator *tsg, GstClockTime pic_pts, guint pic_tsn)
+{
+    GstClockTime pts;
+
+    if (!GST_CLOCK_TIME_IS_VALID(tsg->gop_pts))
+        tsg->gop_pts = 0;
+
+    pts = tsg->gop_pts + pts_get_duration(tsg, tsg->ovl_tsn * 1024 + pic_tsn);
+
+    if (!GST_CLOCK_TIME_IS_VALID(tsg->max_pts) || tsg->max_pts < pts)
+        tsg->max_pts = pts;
+
+    if (tsg->max_tsn < pic_tsn)
+        tsg->max_tsn = pic_tsn;
+    else if (tsg->max_tsn == 1023 && pic_tsn < tsg->lst_tsn) { /* TSN wrapped */
+        tsg->max_tsn = pic_tsn;
+        tsg->ovl_tsn++;
+    }
+    tsg->lst_tsn = pic_tsn;
+    return pts;
+}
+
 struct _GstVaapiDecoderMpeg2Private {
     GstVaapiProfile             profile;
     guint                       width;
@@ -75,9 +171,7 @@ struct _GstVaapiDecoderMpeg2Private {
     GstVaapiPicture            *current_picture;
     GstVaapiDpb                *dpb;
     GstAdapter                 *adapter;
-    GstClockTime                seq_pts;
-    GstClockTime                gop_pts;
-    GstClockTime                pts_diff;
+    PTSGenerator                tsg;
     guint                       is_constructed          : 1;
     guint                       is_opened               : 1;
     guint                       has_seq_ext             : 1;
@@ -204,6 +298,8 @@ gst_vaapi_decoder_mpeg2_open(GstVaapiDecoderMpeg2 *decoder, GstBuffer *buffer)
     priv->dpb = gst_vaapi_dpb_mpeg2_new();
     if (!priv->dpb)
         return FALSE;
+
+    pts_init(&priv->tsg);
     return TRUE;
 }
 
@@ -363,9 +459,8 @@ decode_sequence(GstVaapiDecoderMpeg2 *decoder, guchar *buf, guint buf_size)
 
     priv->fps_n = seq_hdr->fps_n;
     priv->fps_d = seq_hdr->fps_d;
+    pts_set_framerate(&priv->tsg, priv->fps_n, priv->fps_d);
     gst_vaapi_decoder_set_framerate(base_decoder, priv->fps_n, priv->fps_d);
-
-    priv->seq_pts = gst_adapter_prev_timestamp(priv->adapter, NULL);
 
     priv->width                 = seq_hdr->width;
     priv->height                = seq_hdr->height;
@@ -400,6 +495,7 @@ decode_sequence_ext(GstVaapiDecoderMpeg2 *decoder, guchar *buf, guint buf_size)
     if (seq_ext->fps_n_ext && seq_ext->fps_d_ext) {
         priv->fps_n *= seq_ext->fps_n_ext + 1;
         priv->fps_d *= seq_ext->fps_d_ext + 1;
+        pts_set_framerate(&priv->tsg, priv->fps_n, priv->fps_d);
         gst_vaapi_decoder_set_framerate(base_decoder, priv->fps_n, priv->fps_d);
     }
 
@@ -477,17 +573,8 @@ decode_gop(GstVaapiDecoderMpeg2 *decoder, guchar *buf, guint buf_size)
               gop.hour, gop.minute, gop.second, gop.frame,
               priv->closed_gop, priv->broken_link);
 
-    pts = GST_SECOND * (gop.hour * 3600 + gop.minute * 60 + gop.second);
-    pts += gst_util_uint64_scale(gop.frame, GST_SECOND * priv->fps_d, priv->fps_n);
-    if (priv->gop_pts != GST_CLOCK_TIME_NONE && pts <= priv->gop_pts) {
-        /* Try to fix GOP timestamps, based on demux timestamps */
-        pts = gst_adapter_prev_timestamp(priv->adapter, NULL);
-        if (pts != GST_CLOCK_TIME_NONE)
-            pts -= priv->pts_diff;
-    }
-    priv->gop_pts = pts;
-    if (!priv->pts_diff)
-        priv->pts_diff = priv->seq_pts - priv->gop_pts;
+    pts = gst_adapter_prev_timestamp(priv->adapter, NULL);
+    pts_sync(&priv->tsg, pts);
     return GST_VAAPI_DECODER_STATUS_SUCCESS;
 }
 
@@ -558,9 +645,8 @@ decode_picture(GstVaapiDecoderMpeg2 *decoder, guchar *buf, guint buf_size)
     }
 
     /* Update presentation time */
-    pts = priv->gop_pts;
-    pts += gst_util_uint64_scale(pic_hdr->tsn, GST_SECOND * priv->fps_d, priv->fps_n);
-    picture->pts = pts + priv->pts_diff;
+    pts = gst_adapter_prev_timestamp(priv->adapter, NULL);
+    picture->pts = pts_eval(&priv->tsg, pts, pic_hdr->tsn);
     return status;
 }
 
@@ -957,9 +1043,6 @@ gst_vaapi_decoder_mpeg2_init(GstVaapiDecoderMpeg2 *decoder)
     priv->profile               = GST_VAAPI_PROFILE_MPEG2_SIMPLE;
     priv->current_picture       = NULL;
     priv->adapter               = NULL;
-    priv->seq_pts               = GST_CLOCK_TIME_NONE;
-    priv->gop_pts               = GST_CLOCK_TIME_NONE;
-    priv->pts_diff              = 0;
     priv->is_constructed        = FALSE;
     priv->is_opened             = FALSE;
     priv->has_seq_ext           = FALSE;
