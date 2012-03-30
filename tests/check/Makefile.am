@@ -25,7 +25,7 @@ $(CHECK_REGISTRY):
 	$(TESTS_ENVIRONMENT)
 
 # elements to ignore for the state tests
-STATE_IGNORE_ELEMENTS = cdio cdparanoiasrc libvisual_ alsasrc alsasink
+STATE_IGNORE_ELEMENTS = cdio cdparanoiasrc libvisual_ alsasrc alsasink appsrc
 
 TESTS = $(check_PROGRAMS)
 
@@ -143,6 +143,7 @@ check_PROGRAMS = \
 # videoconvert takes too long, so disabled for now
 VALGRIND_TO_FIX = \
 	elements/videoconvert \
+	elements/decodebin \
 	libs/video
 
 # these tests don't even pass
