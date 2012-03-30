@@ -47,6 +47,12 @@ helper_find_suggest (gpointer data, guint probability, GstCaps * caps);
 
 typedef struct
 {
+  GstBuffer *buffer;
+  GstMapInfo map;
+} GstMappedBuffer;
+
+typedef struct
+{
   GSList *buffers;              /* buffer cache */
   guint64 size;
   guint64 last_offset;
@@ -80,7 +86,7 @@ helper_find_peek (gpointer data, gint64 offset, guint size)
   GSList *insert_pos = NULL;
   gsize buf_size;
   guint64 buf_offset;
-  GstMapInfo info;
+  GstMappedBuffer *bmap;
 #if 0
   GstCaps *caps;
 #endif
@@ -105,7 +111,8 @@ helper_find_peek (gpointer data, gint64 offset, guint size)
     GSList *walk;
 
     for (walk = helper->buffers; walk; walk = walk->next) {
-      GstBuffer *buf = GST_BUFFER_CAST (walk->data);
+      GstMappedBuffer *bmp = (GstMappedBuffer *) walk->data;
+      GstBuffer *buf = GST_BUFFER_CAST (bmp->buffer);
       guint64 buf_offset = GST_BUFFER_OFFSET (buf);
       guint buf_size = gst_buffer_get_size (buf);
 
@@ -114,10 +121,8 @@ helper_find_peek (gpointer data, gint64 offset, guint size)
        * we're after the searched end offset */
       if (buf_offset <= offset) {
         if ((offset + size) < (buf_offset + buf_size)) {
-          /* FIXME, unmap after usage */
-          if (!gst_buffer_map (buf, &info, GST_MAP_READ))
-            return NULL;
-          return (guint8 *) info.data + (offset - buf_offset);
+          /* must already have been mapped before */
+          return (guint8 *) bmp->map.data + (offset - buf_offset);
         }
       } else if (offset + size >= buf_offset + buf_size) {
         insert_pos = walk;
@@ -168,21 +173,21 @@ helper_find_peek (gpointer data, gint64 offset, guint size)
     return NULL;
   }
 
+  bmap = g_slice_new0 (GstMappedBuffer);
+  bmap->buffer = buffer;
   if (insert_pos) {
-    helper->buffers =
-        g_slist_insert_before (helper->buffers, insert_pos, buffer);
+    helper->buffers = g_slist_insert_before (helper->buffers, insert_pos, bmap);
   } else {
     /* if insert_pos is not set, our offset is bigger than the largest offset
      * we have so far; since we keep the list sorted with highest offsets
      * first, we need to prepend the buffer to the list */
     helper->last_offset = GST_BUFFER_OFFSET (buffer) + buf_size;
-    helper->buffers = g_slist_prepend (helper->buffers, buffer);
+    helper->buffers = g_slist_prepend (helper->buffers, bmap);
   }
 
-  /* FIXME, unmap */
-  gst_buffer_map (buffer, &info, GST_MAP_READ);
+  gst_buffer_map (buffer, &bmap->map, GST_MAP_READ);
 
-  return info.data;
+  return bmap->map.data;
 
 error:
   {
@@ -343,8 +348,13 @@ gst_type_find_helper_get_range (GstObject * obj, GstObject * parent,
   }
   gst_plugin_feature_list_free (type_list);
 
-  for (walk = helper.buffers; walk; walk = walk->next)
-    gst_buffer_unref (GST_BUFFER_CAST (walk->data));
+  for (walk = helper.buffers; walk; walk = walk->next) {
+    GstMappedBuffer *bmap = (GstMappedBuffer *) walk->data;
+
+    gst_buffer_unmap (bmap->buffer, &bmap->map);
+    gst_buffer_unref (bmap->buffer);
+    g_slice_free (GstMappedBuffer, bmap);
+  }
   g_slist_free (helper.buffers);
 
   if (helper.best_probability > 0)
