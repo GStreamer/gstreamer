@@ -268,7 +268,7 @@ GST_START_TEST (test_srt)
   test_srt_do_test (srt_input1, 0, G_N_ELEMENTS (srt_input1));
 
   /* try with UTF-8 BOM at the start */
-  test_srt_do_test (srt_input1, 0, G_N_ELEMENTS (srt_input2));
+  test_srt_do_test (srt_input2, 0, G_N_ELEMENTS (srt_input2));
 
   /* try with fewer than three post-comma digits, and some extra spaces */
   test_srt_do_test (srt_input3, 0, G_N_ELEMENTS (srt_input3));
