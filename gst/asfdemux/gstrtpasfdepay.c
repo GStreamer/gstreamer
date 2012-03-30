@@ -176,7 +176,7 @@ gst_rtp_asf_depay_setcaps (GstRTPBaseDepayload * depayload, GstCaps * caps)
   gst_caps_unref (src_caps);
 
   buf = gst_buffer_new ();
-  gst_buffer_take_memory (buf, -1,
+  gst_buffer_append_memory (buf,
       gst_memory_new_wrapped (0, headers, headers_len, 0, headers_len, headers,
           g_free));
 
