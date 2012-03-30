@@ -1132,10 +1132,6 @@ theora_handle_image (GstTheoraDec * dec, th_ycbcr_buffer buf, GstBuffer ** out)
   if (G_UNLIKELY (result != GST_FLOW_OK))
     goto no_buffer;
 
-  if G_UNLIKELY
-    (!gst_video_frame_map (&frame, &dec->vinfo, *out, GST_MAP_WRITE))
-        goto invalid_frame;
-
   if (!dec->has_cropping) {
     /* we need to crop the hard way */
     offset_x = dec->info.pic_x;
@@ -1170,6 +1166,10 @@ theora_handle_image (GstTheoraDec * dec, th_ycbcr_buffer buf, GstBuffer ** out)
   /* if only libtheora would allow us to give it a destination frame */
   GST_CAT_TRACE_OBJECT (GST_CAT_PERFORMANCE, dec,
       "doing unavoidable video frame copy");
+
+  if G_UNLIKELY
+    (!gst_video_frame_map (&frame, &dec->vinfo, *out, GST_MAP_WRITE))
+        goto invalid_frame;
 
   for (comp = 0; comp < 3; comp++) {
     width =
