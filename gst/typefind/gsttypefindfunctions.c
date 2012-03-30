@@ -235,18 +235,18 @@ check_utf16 (const guint8 * data, gint len, gint endianness)
   while (len >= 2) {
     /* test first for a single 16 bit value in the BMP */
     if (endianness == G_BIG_ENDIAN)
-      gst_byte_reader_get_uint16_be (&br, &high);
+      high = gst_byte_reader_get_uint16_be_unchecked (&br);
     else
-      gst_byte_reader_get_uint16_le (&br, &high);
+      high = gst_byte_reader_get_uint16_le_unchecked (&br);
     if (high >= 0xD800 && high <= 0xDBFF) {
       /* start of a surrogate pair */
       if (len < 4)
         return FALSE;
       len -= 2;
       if (endianness == G_BIG_ENDIAN)
-        gst_byte_reader_get_uint16_be (&br, &low);
+        low = gst_byte_reader_get_uint16_be_unchecked (&br);
       else
-        gst_byte_reader_get_uint16_le (&br, &low);
+        low = gst_byte_reader_get_uint16_le_unchecked (&br);
       if (low >= 0xDC00 && low <= 0xDFFF) {
         /* second half of the surrogate pair */
       } else
