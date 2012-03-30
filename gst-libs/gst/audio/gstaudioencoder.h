@@ -243,6 +243,9 @@ void            gst_audio_encoder_set_latency (GstAudioEncoder * enc,
                                                GstClockTime      min,
                                                GstClockTime      max);
 
+void            gst_audio_encoder_set_headers (GstAudioEncoder * enc,
+                                               GList           * headers);
+
 /* object properties */
 
 void            gst_audio_encoder_set_mark_granule (GstAudioEncoder * enc,

@@ -195,6 +195,9 @@ typedef struct _GstAudioEncoderContext
   /* MT-protected (with LOCK) */
   GstClockTime min_latency;
   GstClockTime max_latency;
+
+  GList *headers;
+  gboolean new_headers;
 } GstAudioEncoderContext;
 
 struct _GstAudioEncoderPrivate
@@ -439,6 +442,11 @@ gst_audio_encoder_reset (GstAudioEncoder * enc, gboolean full)
     gst_audio_info_init (&enc->priv->ctx.info);
     memset (&enc->priv->ctx, 0, sizeof (enc->priv->ctx));
 
+    g_list_foreach (enc->priv->ctx.headers, (GFunc) gst_buffer_unref, NULL);
+    g_list_free (enc->priv->ctx.headers);
+    enc->priv->ctx.headers = NULL;
+    enc->priv->ctx.new_headers = FALSE;
+
     if (enc->priv->tags)
       gst_tag_list_free (enc->priv->tags);
     enc->priv->tags = NULL;
@@ -677,6 +685,33 @@ gst_audio_encoder_finish_frame (GstAudioEncoder * enc, GstBuffer * buf,
   if (G_LIKELY (buf)) {
     gsize size;
 
+    /* Pushing headers first */
+    if (G_UNLIKELY (priv->ctx.new_headers)) {
+      GList *tmp;
+
+      GST_DEBUG_OBJECT (enc, "Sending headers");
+
+      for (tmp = priv->ctx.headers; tmp; tmp = tmp->next) {
+        GstBuffer *tmpbuf = gst_buffer_ref (tmp->data);
+
+        tmpbuf = gst_buffer_make_writable (tmpbuf);
+        size = gst_buffer_get_size (tmpbuf);
+
+        if (G_UNLIKELY (priv->discont)) {
+          GST_LOG_OBJECT (enc, "marking discont");
+          GST_BUFFER_FLAG_SET (tmpbuf, GST_BUFFER_FLAG_DISCONT);
+          priv->discont = FALSE;
+        }
+        GST_BUFFER_OFFSET (tmpbuf) = priv->bytes_out;
+        GST_BUFFER_OFFSET_END (tmpbuf) = priv->bytes_out + size;
+
+        priv->bytes_out += size;
+
+        gst_pad_push (enc->srcpad, tmpbuf);
+      }
+      priv->ctx.new_headers = FALSE;
+    }
+
     size = gst_buffer_get_size (buf);
 
     GST_LOG_OBJECT (enc, "taking %" G_GSIZE_FORMAT " bytes for output", size);
@@ -732,6 +767,7 @@ gst_audio_encoder_finish_frame (GstAudioEncoder * enc, GstBuffer * buf,
       if (ret != GST_FLOW_OK || !buf) {
         GST_DEBUG_OBJECT (enc, "subclass returned %s, buf %p",
             gst_flow_get_name (ret), buf);
+
         if (buf)
           gst_buffer_unref (buf);
         goto exit;
@@ -2043,6 +2079,19 @@ gst_audio_encoder_get_latency (GstAudioEncoder * enc,
   if (max)
     *max = enc->priv->ctx.max_latency;
   GST_OBJECT_UNLOCK (enc);
+}
+
+void
+gst_audio_encoder_set_headers (GstAudioEncoder * enc, GList * headers)
+{
+  GST_DEBUG_OBJECT (enc, "new headers %p", headers);
+
+  if (enc->priv->ctx.headers) {
+    g_list_foreach (enc->priv->ctx.headers, (GFunc) gst_buffer_unref, NULL);
+    g_list_free (enc->priv->ctx.headers);
+  }
+  enc->priv->ctx.headers = headers;
+  enc->priv->ctx.new_headers = TRUE;
 }
 
 /**
