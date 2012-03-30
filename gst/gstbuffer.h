@@ -266,15 +266,18 @@ GstBuffer * gst_buffer_new_wrapped_full    (GstMemoryFlags flags, gpointer data,
 GstBuffer * gst_buffer_new_wrapped         (gpointer data, gsize size);
 
 /* memory blocks */
-guint       gst_buffer_n_memory            (GstBuffer *buffer);
-void        gst_buffer_take_memory         (GstBuffer *buffer, gint idx, GstMemory *mem);
-void        gst_buffer_replace_memory      (GstBuffer *buffer, gint idx, GstMemory *mem);
-GstMemory * gst_buffer_get_memory          (GstBuffer *buffer, gint idx);
-void        gst_buffer_remove_memory_range (GstBuffer *buffer, guint idx, gint length);
+guint       gst_buffer_n_memory             (GstBuffer *buffer);
+void        gst_buffer_insert_memory        (GstBuffer *buffer, gint idx, GstMemory *mem);
+void        gst_buffer_replace_memory_range (GstBuffer *buffer, guint idx, gint length, GstMemory *mem);
+GstMemory * gst_buffer_get_memory_range     (GstBuffer *buffer, guint idx, gint length);
+void        gst_buffer_remove_memory_range  (GstBuffer *buffer, guint idx, gint length);
 
-#define     gst_buffer_append_memory(b,m)      gst_buffer_take_memory ((b), -1, (m))
-#define     gst_buffer_replace_all_memory(b,m) gst_buffer_replace_memory ((b), -1, (m))
-#define     gst_buffer_get_merged_memory(b)    gst_buffer_get_memory ((b), -1)
+#define     gst_buffer_prepend_memory(b,m)     gst_buffer_insert_memory ((b), 0, (m))
+#define     gst_buffer_append_memory(b,m)      gst_buffer_insert_memory ((b), -1, (m))
+#define     gst_buffer_replace_memory(b,i,m)   gst_buffer_replace_memory_range ((b), (i), 1, (m))
+#define     gst_buffer_replace_all_memory(b,m) gst_buffer_replace_memory ((b), 0, -1, (m))
+#define     gst_buffer_get_memory(b,i)         gst_buffer_get_memory_range ((b), (i), 1)
+#define     gst_buffer_get_all_memory(b)       gst_buffer_get_memory_range ((b), 0, -1)
 /**
  * gst_buffer_remove_memory:
  * @b: a #GstBuffer.
@@ -314,8 +317,12 @@ void        gst_buffer_resize              (GstBuffer *buffer, gssize offset, gs
  */
 #define     gst_buffer_set_size(b,s)       gst_buffer_resize ((b), 0, (s))
 
-gboolean    gst_buffer_map                 (GstBuffer *buffer, GstMapInfo *info, GstMapFlags flags);
+gboolean    gst_buffer_map_range           (GstBuffer *buffer, guint idx, gint length,
+                                            GstMapInfo *info, GstMapFlags flags);
+#define     gst_buffer_map(b,i,f)          gst_buffer_map_range ((b), 0, -1, (i), (f))
+
 void        gst_buffer_unmap               (GstBuffer *buffer, GstMapInfo *info);
+
 
 /* refcounting */
 /**

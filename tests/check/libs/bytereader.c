@@ -48,7 +48,7 @@ GST_START_TEST (test_initialization)
   guint8 x = 0;
   GstMapInfo info;
 
-  gst_buffer_take_memory (buffer, -1,
+  gst_buffer_insert_memory (buffer, -1,
       gst_memory_new_wrapped (GST_MEMORY_FLAG_READONLY, data, 4, 0, 4, NULL,
           NULL));
 

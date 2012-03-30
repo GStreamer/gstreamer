@@ -43,7 +43,7 @@
  *   size = width * height * bpp;
  *   buffer = gst_buffer_new ();
  *   memory = gst_allocator_alloc (NULL, size, NULL);
- *   gst_buffer_take_memory (buffer, -1, memory);
+ *   gst_buffer_insert_memory (buffer, -1, memory);
  *   ...
  *   </programlisting>
  * </example>
@@ -197,27 +197,23 @@ _is_span (GstMemory ** mem, gsize len, gsize * poffset, GstMemory ** parent)
 }
 
 static GstMemory *
-_get_merged_memory (GstBuffer * buffer, gboolean * merged)
+_get_merged_memory (GstBuffer * buffer, guint idx, guint length)
 {
   GstMemory **mem, *result;
-  gsize len;
 
   mem = GST_BUFFER_MEM_ARRAY (buffer);
-  len = GST_BUFFER_MEM_LEN (buffer);
 
-  if (G_UNLIKELY (len == 0)) {
+  if (G_UNLIKELY (length == 0)) {
     result = NULL;
-    *merged = FALSE;
-  } else if (G_LIKELY (len == 1)) {
-    result = gst_memory_ref (mem[0]);
-    *merged = FALSE;
+  } else if (G_LIKELY (length == 1)) {
+    result = gst_memory_ref (mem[idx]);
   } else {
     GstMemory *parent = NULL;
     gsize size, poffset = 0;
 
     size = gst_buffer_get_size (buffer);
 
-    if (G_UNLIKELY (_is_span (mem, len, &poffset, &parent))) {
+    if (G_UNLIKELY (_is_span (mem + idx, length, &poffset, &parent))) {
 
       if (parent->flags & GST_MEMORY_FLAG_NO_SHARE) {
         GST_CAT_DEBUG (GST_CAT_PERFORMANCE, "copy for merge %p", parent);
@@ -236,7 +232,7 @@ _get_merged_memory (GstBuffer * buffer, gboolean * merged)
       ptr = dinfo.data;
       left = size;
 
-      for (i = 0; i < len && left > 0; i++) {
+      for (i = idx; i < length && left > 0; i++) {
         gst_memory_map (mem[i], &sinfo, GST_MAP_READ);
         tocopy = MIN (sinfo.size, left);
         GST_CAT_DEBUG (GST_CAT_PERFORMANCE,
@@ -248,26 +244,30 @@ _get_merged_memory (GstBuffer * buffer, gboolean * merged)
       }
       gst_memory_unmap (result, &dinfo);
     }
-    *merged = TRUE;
   }
   return result;
 }
 
 static void
-_replace_all_memory (GstBuffer * buffer, GstMemory * mem)
+_replace_memory (GstBuffer * buffer, guint len, guint idx, guint length,
+    GstMemory * mem)
 {
-  gsize len, i;
+  gsize end, i;
 
-  GST_LOG ("buffer %p replace with memory %p", buffer, mem);
-
-  len = GST_BUFFER_MEM_LEN (buffer);
+  end = idx + length;
+  GST_LOG ("buffer %p replace %u-%u with memory %p", buffer, idx, end, mem);
 
   /* unref old memory */
-  for (i = 0; i < len; i++)
+  for (i = idx; i < end; i++)
     gst_memory_unref (GST_BUFFER_MEM_PTR (buffer, i));
+
+  if (end != len) {
+    g_memmove (&GST_BUFFER_MEM_PTR (buffer, idx + 1),
+        &GST_BUFFER_MEM_PTR (buffer, end), (len - end) * sizeof (gpointer));
+  }
   /* replace with single memory */
-  GST_BUFFER_MEM_PTR (buffer, 0) = mem;
-  GST_BUFFER_MEM_LEN (buffer) = 1;
+  GST_BUFFER_MEM_PTR (buffer, idx) = mem;
+  GST_BUFFER_MEM_LEN (buffer) = len - length + 1;
 }
 
 static inline void
@@ -276,14 +276,13 @@ _memory_add (GstBuffer * buffer, guint idx, GstMemory * mem)
   guint i, len = GST_BUFFER_MEM_LEN (buffer);
 
   if (G_UNLIKELY (len >= GST_BUFFER_MEM_MAX)) {
-    gboolean merged;
     /* too many buffer, span them. */
     /* FIXME, there is room for improvement here: We could only try to merge
      * 2 buffers to make some room. If we can't efficiently merge 2 buffers we
      * could try to only merge the two smallest buffers to avoid memcpy, etc. */
     GST_CAT_DEBUG (GST_CAT_PERFORMANCE, "memory array overflow in buffer %p",
         buffer);
-    _replace_all_memory (buffer, _get_merged_memory (buffer, &merged));
+    _replace_memory (buffer, len, 0, len, _get_merged_memory (buffer, 0, len));
     /* we now have 1 single spanned buffer */
     len = 1;
   }
@@ -413,8 +412,8 @@ gst_buffer_copy_into (GstBuffer * dest, GstBuffer * src,
       }
     }
     if (flags & GST_BUFFER_COPY_MERGE) {
-      gboolean merged;
-      _replace_all_memory (dest, _get_merged_memory (dest, &merged));
+      len = GST_BUFFER_MEM_LEN (dest);
+      _replace_memory (dest, len, 0, len, _get_merged_memory (dest, 0, len));
     }
   }
 
@@ -733,16 +732,16 @@ gst_buffer_n_memory (GstBuffer * buffer)
 }
 
 /**
- * gst_buffer_take_memory:
+ * gst_buffer_insert_memory:
  * @buffer: a #GstBuffer.
  * @idx: the index to add the memory at, or -1 to append it to the end
  * @mem: (transfer full): a #GstMemory.
  *
- * Add the memory block @mem to @buffer at @idx. This function takes ownership
+ * Insert the memory block @mem to @buffer at @idx. This function takes ownership
  * of @mem and thus doesn't increase its refcount.
  */
 void
-gst_buffer_take_memory (GstBuffer * buffer, gint idx, GstMemory * mem)
+gst_buffer_insert_memory (GstBuffer * buffer, gint idx, GstMemory * mem)
 {
   g_return_if_fail (GST_IS_BUFFER (buffer));
   g_return_if_fail (gst_buffer_is_writable (buffer));
@@ -774,61 +773,67 @@ _get_mapped (GstBuffer * buffer, guint idx, GstMapInfo * info,
 }
 
 /**
- * gst_buffer_get_memory:
+ * gst_buffer_get_memory_range:
  * @buffer: a #GstBuffer.
  * @idx: an index
+ * @length: a length
  *
- * Get the memory block in @buffer at @idx. If @idx is -1, all memory is merged
- * into one large #GstMemory object that is then returned.
+ * Get @length memory blocks in @buffer starting at @idx. The memory blocks will
+ * be merged into one large #GstMemory.
  *
- * Returns: (transfer full): a #GstMemory at @idx. Use gst_memory_unref () after usage.
+ * If @length is -1, all memory starting from @idx is merged.
+ *
+ * Returns: (transfer full): a #GstMemory that contains the merged data of @length
+ *    blocks starting at @idx. Use gst_memory_unref () after usage.
  */
 GstMemory *
-gst_buffer_get_memory (GstBuffer * buffer, gint idx)
+gst_buffer_get_memory_range (GstBuffer * buffer, guint idx, gint length)
 {
-  GstMemory *mem;
+  guint len;
+
+  GST_DEBUG ("idx %u, length %d", idx, length);
 
   g_return_val_if_fail (GST_IS_BUFFER (buffer), NULL);
-  g_return_val_if_fail (idx == -1 ||
-      (idx >= 0 && idx <= GST_BUFFER_MEM_LEN (buffer)), NULL);
+  len = GST_BUFFER_MEM_LEN (buffer);
+  g_return_val_if_fail ((length == -1 && idx < len) ||
+      (length > 0 && length + idx <= len), NULL);
 
-  if (idx == -1) {
-    gboolean merged;
-    mem = _get_merged_memory (buffer, &merged);
-  } else if ((mem = GST_BUFFER_MEM_PTR (buffer, idx))) {
-    gst_memory_ref (mem);
-  }
-  return mem;
+  if (length == -1)
+    length = len - idx;
+
+  return _get_merged_memory (buffer, idx, length);
 }
 
 /**
- * gst_buffer_replace_memory:
+ * gst_buffer_replace_memory_range:
  * @buffer: a #GstBuffer.
  * @idx: an index
+ * @length: a length should not be 0
  * @mem: (transfer full): a #GstMemory
  *
- * Replaces the memory block in @buffer at @idx with @mem. If @idx is -1, all
- * memory will be removed and replaced with @mem.
+ * Replaces @length memory blocks in @buffer starting at @idx with @mem.
+ *
+ * If @length is -1, all memory starting from @idx will be removed and
+ * replaced with @mem.
  *
  * @buffer should be writable.
  */
 void
-gst_buffer_replace_memory (GstBuffer * buffer, gint idx, GstMemory * mem)
+gst_buffer_replace_memory_range (GstBuffer * buffer, guint idx, gint length,
+    GstMemory * mem)
 {
+  guint len;
+
   g_return_if_fail (GST_IS_BUFFER (buffer));
   g_return_if_fail (gst_buffer_is_writable (buffer));
-  g_return_if_fail (idx == -1 ||
-      (idx >= 0 && idx < GST_BUFFER_MEM_LEN (buffer)));
+  len = GST_BUFFER_MEM_LEN (buffer);
+  g_return_if_fail ((length == -1 && idx < len) || (length > 0
+          && length + idx <= len));
 
-  if (idx == -1) {
-    _replace_all_memory (buffer, mem);
-  } else {
-    GstMemory *old;
+  if (length == -1)
+    length = len - idx;
 
-    if ((old = GST_BUFFER_MEM_PTR (buffer, idx)))
-      gst_memory_unref (old);
-    GST_BUFFER_MEM_PTR (buffer, idx) = mem;
-  }
+  _replace_memory (buffer, len, idx, length, mem);
 }
 
 /**
@@ -837,7 +842,7 @@ gst_buffer_replace_memory (GstBuffer * buffer, gint idx, GstMemory * mem)
  * @idx: an index
  * @length: a length
  *
- * Remove @len memory blocks in @buffer starting from @idx.
+ * Remove @length memory blocks in @buffer starting from @idx.
  *
  * @length can be -1, in which case all memory starting from @idx is removed.
  */
@@ -850,7 +855,7 @@ gst_buffer_remove_memory_range (GstBuffer * buffer, guint idx, gint length)
   g_return_if_fail (gst_buffer_is_writable (buffer));
 
   len = GST_BUFFER_MEM_LEN (buffer);
-  g_return_if_fail ((length == -1 && idx < len) || length + idx < len);
+  g_return_if_fail ((length == -1 && idx < len) || length + idx <= len);
 
   if (length == -1)
     length = len - idx;
@@ -1014,12 +1019,16 @@ gst_buffer_resize (GstBuffer * buffer, gssize offset, gssize size)
 }
 
 /**
- * gst_buffer_map:
+ * gst_buffer_map_range:
  * @buffer: a #GstBuffer.
+ * @idx: an index
+ * @length: a length
  * @info: (out): info about the mapping
  * @flags: flags for the mapping
  *
- * This function fills @info with a pointer to the merged memory in @buffer.
+ * This function fills @info with the #GstMapInfo of @length merged memory blocks
+ * starting at @idx in @buffer. When @length is -1, all memory blocks starting
+ * from @idx are merged and mapped.
  * @flags describe the desired access of the memory. When @flags is
  * #GST_MAP_WRITE, @buffer should be writable (as returned from
  * gst_buffer_is_writable()).
@@ -1028,22 +1037,26 @@ gst_buffer_resize (GstBuffer * buffer, gssize offset, gssize size)
  * automatically be created and returned. The readonly copy of the buffer memory
  * will then also be replaced with this writable copy.
  *
- * When the buffer contains multiple memory blocks, the returned pointer will be
- * a concatenation of the memory blocks.
- *
  * The memory in @info should be unmapped with gst_buffer_unmap() after usage.
  *
  * Returns: (transfer full): %TRUE if the map succeeded and @info contains valid
  * data.
  */
 gboolean
-gst_buffer_map (GstBuffer * buffer, GstMapInfo * info, GstMapFlags flags)
+gst_buffer_map_range (GstBuffer * buffer, guint idx, gint length,
+    GstMapInfo * info, GstMapFlags flags)
 {
   GstMemory *mem, *nmem;
-  gboolean write, writable, merged;
+  gboolean write, writable;
+  gsize len;
 
   g_return_val_if_fail (GST_IS_BUFFER (buffer), FALSE);
   g_return_val_if_fail (info != NULL, FALSE);
+  len = GST_BUFFER_MEM_LEN (buffer);
+  if (len == 0)
+    goto no_memory;
+  g_return_val_if_fail ((length == -1 && idx < len) || (length > 0
+          && length + idx <= len), FALSE);
 
   write = (flags & GST_MAP_WRITE) != 0;
   writable = gst_buffer_is_writable (buffer);
@@ -1052,7 +1065,10 @@ gst_buffer_map (GstBuffer * buffer, GstMapInfo * info, GstMapFlags flags)
   if (G_UNLIKELY (write && !writable))
     goto not_writable;
 
-  mem = _get_merged_memory (buffer, &merged);
+  if (length == -1)
+    length = len - idx;
+
+  mem = _get_merged_memory (buffer, idx, length);
   if (G_UNLIKELY (mem == NULL))
     goto no_memory;
 
@@ -1063,12 +1079,12 @@ gst_buffer_map (GstBuffer * buffer, GstMapInfo * info, GstMapFlags flags)
 
   /* if we merged or when the map returned a different memory, we try to replace
    * the memory in the buffer */
-  if (G_UNLIKELY (merged || nmem != mem)) {
+  if (G_UNLIKELY (length > 1 || nmem != mem)) {
     /* if the buffer is writable, replace the memory */
     if (writable) {
-      _replace_all_memory (buffer, gst_memory_ref (nmem));
+      _replace_memory (buffer, len, idx, length, gst_memory_ref (nmem));
     } else {
-      if (GST_BUFFER_MEM_LEN (buffer) > 1) {
+      if (len > 1) {
         GST_CAT_DEBUG (GST_CAT_PERFORMANCE,
             "temporary mapping for memory %p in buffer %p", nmem, buffer);
       }

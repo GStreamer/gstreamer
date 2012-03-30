@@ -191,7 +191,7 @@ create_read_only_buffer (void)
   buf = gst_buffer_new ();
 
   /* assign some read-only data to the new buffer */
-  gst_buffer_take_memory (buf, -1,
+  gst_buffer_insert_memory (buf, -1,
       gst_memory_new_wrapped (GST_MEMORY_FLAG_READONLY,
           (gpointer) ro_memory, sizeof (ro_memory),
           0, sizeof (ro_memory), NULL, NULL));
@@ -420,7 +420,7 @@ GST_START_TEST (test_size)
   fail_unless (maxsize == maxalloc2);
 
   /* append */
-  gst_buffer_take_memory (buf, -1, mem);
+  gst_buffer_insert_memory (buf, -1, mem);
 
   size = gst_buffer_get_sizes (buf, &offset, &maxalloc);
   fail_unless (size == 130);
@@ -433,7 +433,7 @@ GST_START_TEST (test_size)
   mem = gst_allocator_alloc (NULL, 100, NULL);
   size = gst_memory_get_sizes (mem, &offset, &maxalloc3);
   gst_memory_resize (mem, 0, 0);
-  gst_buffer_take_memory (buf, -1, mem);
+  gst_buffer_insert_memory (buf, -1, mem);
 
   size = gst_buffer_get_sizes (buf, &offset, &maxalloc);
   fail_unless (size == 130);
@@ -446,7 +446,7 @@ GST_START_TEST (test_size)
   mem = gst_allocator_alloc (NULL, 100, NULL);
   size = gst_memory_get_sizes (mem, &offset, &maxalloc4);
   gst_memory_resize (mem, 0, 0);
-  gst_buffer_take_memory (buf, 0, mem);
+  gst_buffer_insert_memory (buf, 0, mem);
 
   size = gst_buffer_get_sizes (buf, &offset, &maxalloc);
   fail_unless (size == 130);
@@ -566,8 +566,8 @@ GST_START_TEST (test_map)
   gsize size, offset;
 
   buf = gst_buffer_new ();
-  gst_buffer_take_memory (buf, -1, gst_allocator_alloc (NULL, 50, NULL));
-  gst_buffer_take_memory (buf, -1, gst_allocator_alloc (NULL, 50, NULL));
+  gst_buffer_insert_memory (buf, -1, gst_allocator_alloc (NULL, 50, NULL));
+  gst_buffer_insert_memory (buf, -1, gst_allocator_alloc (NULL, 50, NULL));
 
   size = gst_buffer_get_sizes (buf, &offset, &maxalloc);
   fail_unless (size == 100);

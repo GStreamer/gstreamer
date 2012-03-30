@@ -203,7 +203,7 @@ The 0.11 porting guide
     A GstBuffer is now a simple boxed type this means that subclassing is not
     possible anymore. 
 
-    To add data to the buffer you would now use gst_buffer_take_memory() with
+    To add data to the buffer you would now use gst_buffer_insert_memory() with
     a GstMemory object containing the data. Multiple memory blocks can added to
     a GstBuffer that can then be retrieved with gst_buffer_peek_memory().
 

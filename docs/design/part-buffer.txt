@@ -36,7 +36,7 @@ Managing GstMemory
 
 A GstBuffer contains an array of pointers to GstMemory objects. 
 
-When the buffer is writable, gst_buffer_take_memory() can be used to add a
+When the buffer is writable, gst_buffer_insert_memory() can be used to add a
 new GstMemory object to the buffer. When the array of memory is full, memory
 will be merged to make room for the new memory object.
 
