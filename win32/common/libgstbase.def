@@ -180,7 +180,6 @@ EXPORTS
 	gst_byte_writer_new
 	gst_byte_writer_new_with_data
 	gst_byte_writer_new_with_size
-	gst_byte_writer_put_buffer
 	gst_byte_writer_put_data
 	gst_byte_writer_put_float32_be
 	gst_byte_writer_put_float32_le
