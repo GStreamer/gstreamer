@@ -442,7 +442,7 @@ new_aligned_buffer (gint size)
   data = av_malloc (size);
 
   buf = gst_buffer_new ();
-  gst_buffer_take_memory (buf, -1,
+  gst_buffer_append_memory (buf,
       gst_memory_new_wrapped (0, data, size, 0, size, data, av_free));
 
   return buf;
