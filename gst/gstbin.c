@@ -294,7 +294,7 @@ static guint gst_bin_signals[LAST_SIGNAL] = { 0 };
 #define gst_bin_parent_class parent_class
 G_DEFINE_TYPE_WITH_CODE (GstBin, gst_bin, GST_TYPE_ELEMENT, _do_init);
 
-static GstObject *
+static GObject *
 gst_bin_child_proxy_get_child_by_index (GstChildProxy * child_proxy,
     guint index)
 {
@@ -308,7 +308,7 @@ gst_bin_child_proxy_get_child_by_index (GstChildProxy * child_proxy,
     gst_object_ref (res);
   GST_OBJECT_UNLOCK (bin);
 
-  return res;
+  return (GObject *) res;
 }
 
 static guint
@@ -1163,7 +1163,7 @@ no_state_recalc:
   g_free (elem_name);
 
   g_signal_emit (bin, gst_bin_signals[ELEMENT_ADDED], 0, element);
-  gst_child_proxy_child_added ((GstObject *) bin, (GstObject *) element);
+  gst_child_proxy_child_added ((GObject *) bin, (GObject *) element);
 
   return TRUE;
 
@@ -1497,7 +1497,7 @@ no_state_recalc:
   GST_OBJECT_UNLOCK (element);
 
   g_signal_emit (bin, gst_bin_signals[ELEMENT_REMOVED], 0, element);
-  gst_child_proxy_child_removed ((GstObject *) bin, (GstObject *) element);
+  gst_child_proxy_child_removed ((GObject *) bin, (GObject *) element);
 
   /* element is really out of our control now */
   gst_object_unref (element);

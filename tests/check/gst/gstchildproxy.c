@@ -29,7 +29,7 @@ GST_START_TEST (test_get)
   pipeline = gst_pipeline_new ("foo");
   fail_unless (pipeline != NULL, "Could not create pipeline");
 
-  gst_child_proxy_get (GST_OBJECT (pipeline), "name", &name, NULL);
+  gst_child_proxy_get (G_OBJECT (pipeline), "name", &name, NULL);
   fail_if (g_strcmp0 ("foo", name));
   g_free (name);
 
@@ -51,7 +51,7 @@ GST_START_TEST (test_child_get)
 
   gst_bin_add (GST_BIN (pipeline), elem);
 
-  gst_child_proxy_get (GST_OBJECT (pipeline), "src::name", &name, NULL);
+  gst_child_proxy_get (G_OBJECT (pipeline), "src::name", &name, NULL);
   fail_if (g_strcmp0 ("src", name));
   g_free (name);
 
