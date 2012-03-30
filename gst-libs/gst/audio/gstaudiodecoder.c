@@ -460,7 +460,8 @@ gst_audio_decoder_reset (GstAudioDecoder * dec, gboolean full)
       dec->priv->taglist = NULL;
     }
 
-    gst_segment_init (&dec->segment, GST_FORMAT_TIME);
+    gst_segment_init (&dec->input_segment, GST_FORMAT_TIME);
+    gst_segment_init (&dec->output_segment, GST_FORMAT_TIME);
 
     g_list_foreach (dec->priv->pending_events, (GFunc) gst_event_unref, NULL);
     g_list_free (dec->priv->pending_events);
@@ -644,7 +645,7 @@ gst_audio_decoder_push_forward (GstAudioDecoder * dec, GstBuffer * buf)
       GST_TIME_ARGS (GST_BUFFER_DURATION (buf)));
 
   /* clip buffer */
-  buf = gst_audio_buffer_clip (buf, &dec->segment, ctx->info.rate,
+  buf = gst_audio_buffer_clip (buf, &dec->output_segment, ctx->info.rate,
       ctx->info.bpf);
   if (G_UNLIKELY (!buf)) {
     GST_DEBUG_OBJECT (dec, "no data after clipping to segment");
@@ -662,7 +663,7 @@ gst_audio_decoder_push_forward (GstAudioDecoder * dec, GstBuffer * buf)
   if (G_LIKELY (GST_BUFFER_TIMESTAMP_IS_VALID (buf))) {
     /* duration should always be valid for raw audio */
     g_assert (GST_BUFFER_DURATION_IS_VALID (buf));
-    dec->segment.position =
+    dec->output_segment.position =
         GST_BUFFER_TIMESTAMP (buf) + GST_BUFFER_DURATION (buf);
   }
 
@@ -759,7 +760,7 @@ again:
   }
 
   if (G_LIKELY (buf)) {
-    if (dec->segment.rate > 0.0) {
+    if (dec->output_segment.rate > 0.0) {
       ret = gst_audio_decoder_push_forward (dec, buf);
       GST_LOG_OBJECT (dec, "buffer pushed: %s", gst_flow_get_name (ret));
     } else {
@@ -775,6 +776,29 @@ again:
   }
 
   return ret;
+}
+
+static gboolean
+gst_audio_decoder_push_event (GstAudioDecoder * dec, GstEvent * event)
+{
+  switch (GST_EVENT_TYPE (event)) {
+    case GST_EVENT_SEGMENT:{
+      GstSegment seg;
+
+      GST_AUDIO_DECODER_STREAM_LOCK (dec);
+      gst_event_copy_segment (event, &seg);
+
+      GST_DEBUG_OBJECT (dec, "starting segment %" GST_SEGMENT_FORMAT, &seg);
+
+      dec->output_segment = seg;
+      GST_AUDIO_DECODER_STREAM_UNLOCK (dec);
+      break;
+    }
+    default:
+      break;
+  }
+
+  return gst_pad_push_event (dec->srcpad, event);
 }
 
 /**
@@ -841,7 +865,7 @@ gst_audio_decoder_finish_frame (GstAudioDecoder * dec, GstBuffer * buf,
 
     GST_DEBUG_OBJECT (dec, "Pushing pending events");
     for (l = pending_events; l; l = l->next)
-      gst_pad_push_event (dec->srcpad, l->data);
+      gst_audio_decoder_push_event (dec, l->data);
     g_list_free (pending_events);
   }
 
@@ -926,7 +950,7 @@ gst_audio_decoder_finish_frame (GstAudioDecoder * dec, GstBuffer * buf,
     if (gst_tag_list_is_empty (priv->taglist)) {
       gst_tag_list_free (priv->taglist);
     } else {
-      gst_pad_push_event (dec->srcpad, gst_event_new_tag (priv->taglist));
+      gst_audio_decoder_push_event (dec, gst_event_new_tag (priv->taglist));
     }
     priv->taglist = NULL;
   }
@@ -1125,7 +1149,7 @@ gst_audio_decoder_drain (GstAudioDecoder * dec)
     /* dispatch reverse pending buffers */
     /* chain eventually calls upon drain as well, but by that time
      * gather list should be clear, so ok ... */
-    if (dec->segment.rate < 0.0 && dec->priv->gather)
+    if (dec->output_segment.rate < 0.0 && dec->priv->gather)
       gst_audio_decoder_chain_reverse (dec, NULL);
     /* have subclass give all it can */
     ret = gst_audio_decoder_push_buffers (dec, TRUE);
@@ -1161,7 +1185,8 @@ gst_audio_decoder_flush (GstAudioDecoder * dec, gboolean hard)
     ret = gst_audio_decoder_drain (dec);
   } else {
     gst_audio_decoder_clear_queues (dec);
-    gst_segment_init (&dec->segment, GST_FORMAT_TIME);
+    gst_segment_init (&dec->input_segment, GST_FORMAT_TIME);
+    gst_segment_init (&dec->output_segment, GST_FORMAT_TIME);
     dec->priv->error_count = 0;
   }
   /* only bother subclass with flushing if known it is already alive
@@ -1433,14 +1458,15 @@ gst_audio_decoder_chain (GstPad * pad, GstObject * parent, GstBuffer * buffer)
     /* buffer may claim DISCONT loudly, if it can't tell us where we are now,
      * we'll stick to where we were ...
      * Particularly useful/needed for upstream BYTE based */
-    if (dec->segment.rate > 0.0 && !GST_BUFFER_TIMESTAMP_IS_VALID (buffer)) {
+    if (dec->input_segment.rate > 0.0
+        && !GST_BUFFER_TIMESTAMP_IS_VALID (buffer)) {
       GST_DEBUG_OBJECT (dec, "... but restoring previous ts tracking");
       dec->priv->base_ts = ts;
       dec->priv->samples = samples;
     }
   }
 
-  if (dec->segment.rate > 0.0)
+  if (dec->input_segment.rate > 0.0)
     ret = gst_audio_decoder_chain_forward (dec, buffer);
   else
     ret = gst_audio_decoder_chain_reverse (dec, buffer);
@@ -1524,16 +1550,17 @@ gst_audio_decoder_sink_eventfunc (GstAudioDecoder * dec, GstEvent * event)
         GST_DEBUG_OBJECT (dec,
             "segment update: plc %d, do_plc %d, position %" GST_TIME_FORMAT,
             dec->priv->plc, dec->priv->ctx.do_plc,
-            GST_TIME_ARGS (dec->segment.position));
+            GST_TIME_ARGS (dec->input_segment.position));
         if (dec->priv->plc && dec->priv->ctx.do_plc &&
-            dec->segment.rate > 0.0 && dec->segment.position < start) {
+            dec->input_segment.rate > 0.0
+            && dec->input_segment.position < start) {
           GstAudioDecoderClass *klass;
           GstBuffer *buf;
 
           klass = GST_AUDIO_DECODER_GET_CLASS (dec);
           /* hand subclass empty frame with duration that needs covering */
           buf = gst_buffer_new ();
-          GST_BUFFER_DURATION (buf) = start - dec->segment.position;
+          GST_BUFFER_DURATION (buf) = start - dec->input_segment.position;
           /* best effort, not much error handling */
           gst_audio_decoder_handle_frame (dec, klass, buf);
         }
@@ -1552,7 +1579,7 @@ gst_audio_decoder_sink_eventfunc (GstAudioDecoder * dec, GstEvent * event)
       }
 
       /* and follow along with segment */
-      dec->segment = seg;
+      dec->input_segment = seg;
       dec->priv->pending_events =
           g_list_append (dec->priv->pending_events, event);
       GST_AUDIO_DECODER_STREAM_UNLOCK (dec);
@@ -1573,7 +1600,7 @@ gst_audio_decoder_sink_eventfunc (GstAudioDecoder * dec, GstEvent * event)
 
       /* Forward FLUSH_STOP, it is expected to be forwarded immediately
        * and no buffers are queued anyway. */
-      ret = gst_pad_push_event (dec->srcpad, event);
+      ret = gst_audio_decoder_push_event (dec, event);
       break;
 
     case GST_EVENT_EOS:
@@ -1583,7 +1610,7 @@ gst_audio_decoder_sink_eventfunc (GstAudioDecoder * dec, GstEvent * event)
 
       /* Forward EOS because no buffer or serialized event will come after
        * EOS and nothing could trigger another _finish_frame() call. */
-      ret = gst_pad_push_event (dec->srcpad, event);
+      ret = gst_audio_decoder_push_event (dec, event);
       break;
 
     case GST_EVENT_CAPS:
@@ -1671,7 +1698,7 @@ gst_audio_decoder_do_seek (GstAudioDecoder * dec, GstEvent * event)
     return FALSE;
   }
 
-  memcpy (&seek_segment, &dec->segment, sizeof (seek_segment));
+  memcpy (&seek_segment, &dec->output_segment, sizeof (seek_segment));
   gst_segment_do_seek (&seek_segment, rate, format, flags, start_type,
       start_time, end_type, end_time, NULL);
   start_time = seek_segment.position;
@@ -1956,9 +1983,11 @@ gst_audio_decoder_src_query (GstPad * pad, GstObject * parent, GstQuery * query)
       }
 
       /* we start from the last seen time */
-      time = dec->segment.position;
+      time = dec->output_segment.position;
       /* correct for the segment values */
-      time = gst_segment_to_stream_time (&dec->segment, GST_FORMAT_TIME, time);
+      time =
+          gst_segment_to_stream_time (&dec->output_segment, GST_FORMAT_TIME,
+          time);
 
       GST_LOG_OBJECT (dec,
           "query %p: our time: %" GST_TIME_FORMAT, query, GST_TIME_ARGS (time));

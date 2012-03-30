@@ -84,6 +84,26 @@ G_BEGIN_DECLS
 #define GST_AUDIO_DECODER_STREAM_LOCK(dec)   g_rec_mutex_lock (&GST_AUDIO_DECODER (dec)->stream_lock)
 #define GST_AUDIO_DECODER_STREAM_UNLOCK(dec) g_rec_mutex_unlock (&GST_AUDIO_DECODER (dec)->stream_lock)
 
+/**
+ * GST_AUDIO_DECODER_INPUT_SEGMENT:
+ * @obj: base parse instance
+ *
+ * Gives the input segment of the element.
+ *
+ * Since: 0.10.36
+ */
+#define GST_AUDIO_DECODER_INPUT_SEGMENT(obj)   (GST_AUDIO_DECODER_CAST (obj)->input_segment)
+
+/**
+ * GST_AUDIO_DECODER_OUTPUT_SEGMENT:
+ * @obj: base parse instance
+ *
+ * Gives the output segment of the element.
+ *
+ * Since: 0.10.36
+ */
+#define GST_AUDIO_DECODER_OUTPUT_SEGMENT(obj)   (GST_AUDIO_DECODER_CAST (obj)->output_segment)
+
 typedef struct _GstAudioDecoder GstAudioDecoder;
 typedef struct _GstAudioDecoderClass GstAudioDecoderClass;
 
@@ -161,7 +181,8 @@ struct _GstAudioDecoder
   GRecMutex       stream_lock;
 
   /* MT-protected (with STREAM_LOCK) */
-  GstSegment      segment;
+  GstSegment      input_segment;
+  GstSegment      output_segment;
 
   /*< private >*/
   GstAudioDecoderPrivate *priv;

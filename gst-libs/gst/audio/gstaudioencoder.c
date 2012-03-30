@@ -456,7 +456,8 @@ gst_audio_encoder_reset (GstAudioEncoder * enc, gboolean full)
     enc->priv->pending_events = NULL;
   }
 
-  gst_segment_init (&enc->segment, GST_FORMAT_TIME);
+  gst_segment_init (&enc->input_segment, GST_FORMAT_TIME);
+  gst_segment_init (&enc->output_segment, GST_FORMAT_TIME);
 
   gst_adapter_clear (enc->priv->adapter);
   enc->priv->got_data = FALSE;
@@ -525,6 +526,29 @@ close_failed:
   }
 }
 
+static gboolean
+gst_audio_encoder_push_event (GstAudioEncoder * enc, GstEvent * event)
+{
+  switch (GST_EVENT_TYPE (event)) {
+    case GST_EVENT_SEGMENT:{
+      GstSegment seg;
+
+      GST_AUDIO_ENCODER_STREAM_LOCK (enc);
+      gst_event_copy_segment (event, &seg);
+
+      GST_DEBUG_OBJECT (enc, "starting segment %" GST_SEGMENT_FORMAT, &seg);
+
+      enc->output_segment = seg;
+      GST_AUDIO_ENCODER_STREAM_UNLOCK (enc);
+      break;
+    }
+    default:
+      break;
+  }
+
+  return gst_pad_push_event (enc->srcpad, event);
+}
+
 /**
  * gst_audio_encoder_finish_frame:
  * @enc: a #GstAudioEncoder
@@ -585,7 +609,7 @@ gst_audio_encoder_finish_frame (GstAudioEncoder * enc, GstBuffer * buf,
 
     GST_DEBUG_OBJECT (enc, "Pushing pending events");
     for (l = pending_events; l; l = l->next)
-      gst_pad_push_event (enc->srcpad, l->data);
+      gst_audio_encoder_push_event (enc, l->data);
     g_list_free (pending_events);
   }
 
@@ -607,7 +631,7 @@ gst_audio_encoder_finish_frame (GstAudioEncoder * enc, GstBuffer * buf,
         caps);
 #endif
     GST_DEBUG_OBJECT (enc, "sending tags %" GST_PTR_FORMAT, tags);
-    gst_pad_push_event (enc->srcpad, gst_event_new_tag (tags));
+    gst_audio_encoder_push_event (enc, gst_event_new_tag (tags));
   }
 
   /* remove corresponding samples from input */
@@ -940,7 +964,7 @@ gst_audio_encoder_set_base_gp (GstAudioEncoder * enc)
 
   /* use running time for granule */
   /* incoming data is clipped, so a valid input should yield a valid output */
-  ts = gst_segment_to_running_time (&enc->segment, GST_FORMAT_TIME,
+  ts = gst_segment_to_running_time (&enc->input_segment, GST_FORMAT_TIME,
       enc->priv->base_ts);
   if (GST_CLOCK_TIME_IS_VALID (ts)) {
     enc->priv->base_gp =
@@ -1018,7 +1042,7 @@ gst_audio_encoder_chain (GstPad * pad, GstObject * parent, GstBuffer * buffer)
 
   /* clip to segment */
   /* NOTE: slightly painful linking -laudio only for this one ... */
-  buffer = gst_audio_buffer_clip (buffer, &enc->segment, ctx->info.rate,
+  buffer = gst_audio_buffer_clip (buffer, &enc->input_segment, ctx->info.rate,
       ctx->info.bpf);
   if (G_UNLIKELY (!buffer)) {
     GST_DEBUG_OBJECT (buffer, "no data after clipping to segment");
@@ -1368,7 +1392,7 @@ gst_audio_encoder_sink_event_default (GstAudioEncoder * enc, GstEvent * event)
       /* reset partially for new segment */
       gst_audio_encoder_reset (enc, FALSE);
       /* and follow along with segment */
-      enc->segment = seg;
+      enc->input_segment = seg;
 
       enc->priv->pending_events =
           g_list_append (enc->priv->pending_events, event);
@@ -1379,7 +1403,7 @@ gst_audio_encoder_sink_event_default (GstAudioEncoder * enc, GstEvent * event)
     }
 
     case GST_EVENT_FLUSH_START:
-      res = gst_pad_push_event (enc->srcpad, event);
+      res = gst_audio_encoder_push_event (enc, event);
       break;
 
     case GST_EVENT_FLUSH_STOP:
@@ -1396,7 +1420,7 @@ gst_audio_encoder_sink_event_default (GstAudioEncoder * enc, GstEvent * event)
       enc->priv->pending_events = NULL;
       GST_AUDIO_ENCODER_STREAM_UNLOCK (enc);
 
-      res = gst_pad_push_event (enc->srcpad, event);
+      res = gst_audio_encoder_push_event (enc, event);
       break;
 
     case GST_EVENT_EOS:
@@ -1407,7 +1431,7 @@ gst_audio_encoder_sink_event_default (GstAudioEncoder * enc, GstEvent * event)
       /* forward immediately because no buffer or serialized event
        * will come after EOS and nothing could trigger another
        * _finish_frame() call. */
-      res = gst_pad_push_event (enc->srcpad, event);
+      res = gst_audio_encoder_push_event (enc, event);
       break;
 
     case GST_EVENT_TAG:

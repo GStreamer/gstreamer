@@ -73,14 +73,24 @@ G_BEGIN_DECLS
 #define GST_AUDIO_ENCODER_SINK_PAD(obj)	(GST_AUDIO_ENCODER_CAST (obj)->sinkpad)
 
 /**
- * GST_AUDIO_ENCODER_SEGMENT:
+ * GST_AUDIO_ENCODER_INPUT_SEGMENT:
  * @obj: base parse instance
  *
- * Gives the segment of the element.
+ * Gives the input segment of the element.
  *
  * Since: 0.10.36
  */
-#define GST_AUDIO_ENCODER_SEGMENT(obj)     (GST_AUDIO_ENCODER_CAST (obj)->segment)
+#define GST_AUDIO_ENCODER_INPUT_SEGMENT(obj)     (GST_AUDIO_ENCODER_CAST (obj)->input_segment)
+
+/**
+ * GST_AUDIO_ENCODER_OUTPUT_SEGMENT:
+ * @obj: base parse instance
+ *
+ * Gives the output segment of the element.
+ *
+ * Since: 0.10.36
+ */
+#define GST_AUDIO_ENCODER_OUTPUT_SEGMENT(obj)     (GST_AUDIO_ENCODER_CAST (obj)->output_segment)
 
 #define GST_AUDIO_ENCODER_STREAM_LOCK(enc)   g_rec_mutex_lock (&GST_AUDIO_ENCODER (enc)->stream_lock)
 #define GST_AUDIO_ENCODER_STREAM_UNLOCK(enc) g_rec_mutex_unlock (&GST_AUDIO_ENCODER (enc)->stream_lock)
@@ -111,7 +121,8 @@ struct _GstAudioEncoder {
   GRecMutex       stream_lock;
 
   /* MT-protected (with STREAM_LOCK) */
-  GstSegment      segment;
+  GstSegment      input_segment;
+  GstSegment      output_segment;
 
   /*< private >*/
   GstAudioEncoderPrivate *priv;
