@@ -107,8 +107,6 @@ static GstCaps *gst_vorbis_enc_getcaps (GstAudioEncoder * enc,
     GstCaps * filter);
 static gboolean gst_vorbis_enc_sink_event (GstAudioEncoder * enc,
     GstEvent * event);
-static GstFlowReturn gst_vorbis_enc_pre_push (GstAudioEncoder * enc,
-    GstBuffer ** buffer);
 
 static gboolean gst_vorbis_enc_setup (GstVorbisEnc * vorbisenc);
 
@@ -184,7 +182,6 @@ gst_vorbis_enc_class_init (GstVorbisEncClass * klass)
   base_class->handle_frame = GST_DEBUG_FUNCPTR (gst_vorbis_enc_handle_frame);
   base_class->getcaps = GST_DEBUG_FUNCPTR (gst_vorbis_enc_getcaps);
   base_class->sink_event = GST_DEBUG_FUNCPTR (gst_vorbis_enc_sink_event);
-  base_class->pre_push = GST_DEBUG_FUNCPTR (gst_vorbis_enc_pre_push);
 }
 
 static void
@@ -246,8 +243,6 @@ gst_vorbis_enc_stop (GstAudioEncoder * enc)
   vorbisenc->last_message = NULL;
   gst_tag_list_free (vorbisenc->tags);
   vorbisenc->tags = NULL;
-  g_slist_foreach (vorbisenc->headers, (GFunc) gst_buffer_unref, NULL);
-  vorbisenc->headers = NULL;
 
   gst_tag_setter_reset_tags (GST_TAG_SETTER (enc));
 
@@ -606,17 +601,6 @@ gst_vorbis_enc_sink_event (GstAudioEncoder * enc, GstEvent * event)
   return GST_AUDIO_ENCODER_CLASS (parent_class)->sink_event (enc, event);
 }
 
-/* push out the buffer and do internal bookkeeping */
-static GstFlowReturn
-gst_vorbis_enc_push_header (GstVorbisEnc * vorbisenc, GstBuffer * buffer)
-{
-  GST_DEBUG_OBJECT (vorbisenc,
-      "Pushing buffer with GP %" G_GINT64_FORMAT ", ts %" GST_TIME_FORMAT,
-      GST_BUFFER_OFFSET_END (buffer),
-      GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (buffer)));
-  return gst_pad_push (GST_AUDIO_ENCODER_SRC_PAD (vorbisenc), buffer);
-}
-
 /*
  * (really really) FIXME: move into core (dixit tpm)
  */
@@ -712,6 +696,7 @@ gst_vorbis_enc_handle_frame (GstAudioEncoder * enc, GstBuffer * buffer)
     ogg_packet header_comm;
     ogg_packet header_code;
     GstCaps *caps;
+    GList *headers;
 
     GST_DEBUG_OBJECT (vorbisenc, "creating and sending header packets");
     gst_vorbis_enc_set_metadata (vorbisenc);
@@ -737,12 +722,12 @@ gst_vorbis_enc_handle_frame (GstAudioEncoder * enc, GstBuffer * buffer)
     gst_caps_unref (caps);
 
     /* store buffers for later pre_push sending */
-    g_slist_foreach (vorbisenc->headers, (GFunc) gst_buffer_unref, NULL);
-    vorbisenc->headers = NULL;
+    headers = NULL;
     GST_DEBUG_OBJECT (vorbisenc, "storing header buffers");
-    vorbisenc->headers = g_slist_prepend (vorbisenc->headers, buf3);
-    vorbisenc->headers = g_slist_prepend (vorbisenc->headers, buf2);
-    vorbisenc->headers = g_slist_prepend (vorbisenc->headers, buf1);
+    headers = g_list_prepend (headers, buf3);
+    headers = g_list_prepend (headers, buf2);
+    headers = g_list_prepend (headers, buf1);
+    gst_audio_encoder_set_headers (enc, headers);
 
     vorbisenc->header_sent = TRUE;
   }
@@ -827,36 +812,6 @@ gst_vorbis_enc_output_buffers (GstVorbisEnc * vorbisenc)
   }
 
   return GST_FLOW_OK;
-}
-
-static GstFlowReturn
-gst_vorbis_enc_pre_push (GstAudioEncoder * enc, GstBuffer ** buffer)
-{
-  GstVorbisEnc *vorbisenc;
-  GstFlowReturn ret = GST_FLOW_OK;
-
-  vorbisenc = GST_VORBISENC (enc);
-
-  /* FIXME 0.11 ? get rid of this special ogg stuff and have it
-   * put and use 'codec data' in caps like anything else,
-   * with all the usual out-of-band advantage etc */
-  if (G_UNLIKELY (vorbisenc->headers)) {
-    GSList *header = vorbisenc->headers;
-
-    /* try to push all of these, if we lose one, might as well lose all */
-    while (header) {
-      if (ret == GST_FLOW_OK)
-        ret = gst_vorbis_enc_push_header (vorbisenc, header->data);
-      else
-        gst_vorbis_enc_push_header (vorbisenc, header->data);
-      header = g_slist_next (header);
-    }
-
-    g_slist_free (vorbisenc->headers);
-    vorbisenc->headers = NULL;
-  }
-
-  return ret;
 }
 
 static void
