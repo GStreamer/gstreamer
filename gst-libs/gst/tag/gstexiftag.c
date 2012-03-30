@@ -614,30 +614,39 @@ gst_exif_writer_write_tag_header (GstExifWriter * writer,
     guint16 exif_tag, guint16 exif_type, guint32 count, guint32 offset,
     const guint32 * offset_data)
 {
+  gboolean handled = TRUE;
+
   GST_DEBUG ("Writing tag entry: id %x, type %u, count %u, offset %u",
       exif_tag, exif_type, count, offset);
 
   if (writer->byte_order == G_LITTLE_ENDIAN) {
-    gst_byte_writer_put_uint16_le (&writer->tagwriter, exif_tag);
-    gst_byte_writer_put_uint16_le (&writer->tagwriter, exif_type);
-    gst_byte_writer_put_uint32_le (&writer->tagwriter, count);
+    handled &= gst_byte_writer_put_uint16_le (&writer->tagwriter, exif_tag);
+    handled &= gst_byte_writer_put_uint16_le (&writer->tagwriter, exif_type);
+    handled &= gst_byte_writer_put_uint32_le (&writer->tagwriter, count);
     if (offset_data != NULL) {
-      gst_byte_writer_put_data (&writer->tagwriter, (guint8 *) offset_data, 4);
+      handled &=
+          gst_byte_writer_put_data (&writer->tagwriter, (guint8 *) offset_data,
+          4);
     } else {
-      gst_byte_writer_put_uint32_le (&writer->tagwriter, offset);
+      handled &= gst_byte_writer_put_uint32_le (&writer->tagwriter, offset);
     }
   } else if (writer->byte_order == G_BIG_ENDIAN) {
-    gst_byte_writer_put_uint16_be (&writer->tagwriter, exif_tag);
-    gst_byte_writer_put_uint16_be (&writer->tagwriter, exif_type);
-    gst_byte_writer_put_uint32_be (&writer->tagwriter, count);
+    handled &= gst_byte_writer_put_uint16_be (&writer->tagwriter, exif_tag);
+    handled &= gst_byte_writer_put_uint16_be (&writer->tagwriter, exif_type);
+    handled &= gst_byte_writer_put_uint32_be (&writer->tagwriter, count);
     if (offset_data != NULL) {
-      gst_byte_writer_put_data (&writer->tagwriter, (guint8 *) offset_data, 4);
+      handled &=
+          gst_byte_writer_put_data (&writer->tagwriter, (guint8 *) offset_data,
+          4);
     } else {
-      gst_byte_writer_put_uint32_be (&writer->tagwriter, offset);
+      handled &= gst_byte_writer_put_uint32_be (&writer->tagwriter, offset);
     }
   } else {
     g_assert_not_reached ();
   }
+
+  if (G_UNLIKELY (!handled))
+    GST_WARNING ("Error writing tag header");
 
   writer->tags_total++;
 }
@@ -646,26 +655,36 @@ static void
 gst_exif_writer_write_rational_data (GstExifWriter * writer, guint32 frac_n,
     guint32 frac_d)
 {
+  gboolean handled = TRUE;
+
   if (writer->byte_order == G_LITTLE_ENDIAN) {
-    gst_byte_writer_put_uint32_le (&writer->datawriter, frac_n);
-    gst_byte_writer_put_uint32_le (&writer->datawriter, frac_d);
+    handled &= gst_byte_writer_put_uint32_le (&writer->datawriter, frac_n);
+    handled &= gst_byte_writer_put_uint32_le (&writer->datawriter, frac_d);
   } else {
-    gst_byte_writer_put_uint32_be (&writer->datawriter, frac_n);
-    gst_byte_writer_put_uint32_be (&writer->datawriter, frac_d);
+    handled &= gst_byte_writer_put_uint32_be (&writer->datawriter, frac_n);
+    handled &= gst_byte_writer_put_uint32_be (&writer->datawriter, frac_d);
   }
+
+  if (G_UNLIKELY (!handled))
+    GST_WARNING ("Error writing rational data");
 }
 
 static void
 gst_exif_writer_write_signed_rational_data (GstExifWriter * writer,
     gint32 frac_n, gint32 frac_d)
 {
+  gboolean handled = TRUE;
+
   if (writer->byte_order == G_LITTLE_ENDIAN) {
-    gst_byte_writer_put_int32_le (&writer->datawriter, frac_n);
-    gst_byte_writer_put_int32_le (&writer->datawriter, frac_d);
+    handled &= gst_byte_writer_put_int32_le (&writer->datawriter, frac_n);
+    handled &= gst_byte_writer_put_int32_le (&writer->datawriter, frac_d);
   } else {
-    gst_byte_writer_put_int32_be (&writer->datawriter, frac_n);
-    gst_byte_writer_put_int32_be (&writer->datawriter, frac_d);
+    handled &= gst_byte_writer_put_int32_be (&writer->datawriter, frac_n);
+    handled &= gst_byte_writer_put_int32_be (&writer->datawriter, frac_d);
   }
+
+  if (G_UNLIKELY (!handled))
+    GST_WARNING ("Error writing signed rational data");
 }
 
 static void
@@ -771,7 +790,9 @@ write_exif_undefined_tag (GstExifWriter * writer, guint16 tag,
     offset = gst_byte_writer_get_size (&writer->datawriter);
     gst_exif_writer_write_tag_header (writer, tag, EXIF_TYPE_UNDEFINED,
         size, offset, NULL);
-    gst_byte_writer_put_data (&writer->datawriter, data, size);
+    if (!gst_byte_writer_put_data (&writer->datawriter, data, size)) {
+      GST_WARNING ("Error writing undefined tag");
+    }
   } else {
     /* small enough to go in the offset */
     memcpy ((guint8 *) & offset, data, size);
@@ -1073,6 +1094,7 @@ gst_exif_tag_rewrite_offsets (GstByteWriter * writer, gint byte_order,
   GstByteReader *reader;
   gint i;
   guint16 aux = G_MAXUINT16;
+  gboolean handled = TRUE;
 
   GST_LOG ("Rewriting tag entries offsets");
 
@@ -1080,9 +1102,9 @@ gst_exif_tag_rewrite_offsets (GstByteWriter * writer, gint byte_order,
 
   if (num_tags == -1) {
     if (byte_order == G_LITTLE_ENDIAN) {
-      gst_byte_reader_get_uint16_le (reader, &aux);
+      handled &= gst_byte_reader_get_uint16_le (reader, &aux);
     } else {
-      gst_byte_reader_get_uint16_be (reader, &aux);
+      handled &= gst_byte_reader_get_uint16_be (reader, &aux);
     }
     if (aux == G_MAXUINT16) {
       GST_WARNING ("Failed to read number of tags, won't rewrite offsets");
@@ -1150,11 +1172,13 @@ gst_exif_tag_rewrite_offsets (GstByteWriter * writer, gint byte_order,
     if (byte_size > 4 || tag_id == EXIF_GPS_IFD_TAG || tag_id == EXIF_IFD_TAG) {
       if (byte_order == G_LITTLE_ENDIAN) {
         if (gst_byte_reader_peek_uint32_le (reader, &cur_offset)) {
-          gst_byte_writer_put_uint32_le (writer, cur_offset + offset);
+          handled &=
+              gst_byte_writer_put_uint32_le (writer, cur_offset + offset);
         }
       } else {
         if (gst_byte_reader_peek_uint32_be (reader, &cur_offset)) {
-          gst_byte_writer_put_uint32_be (writer, cur_offset + offset);
+          handled &=
+              gst_byte_writer_put_uint32_be (writer, cur_offset + offset);
         }
       }
       GST_DEBUG ("Rewriting tag offset from %u to (%u + %u) %u",
@@ -1173,10 +1197,13 @@ gst_exif_tag_rewrite_offsets (GstByteWriter * writer, gint byte_order,
             NULL);
       }
     } else {
-      gst_byte_reader_skip (reader, 4);
+      handled &= gst_byte_reader_skip (reader, 4);
       GST_DEBUG ("No need to rewrite tag offset");
     }
   }
+  if (G_UNLIKELY (!handled))
+    GST_WARNING ("Error rewriting offsets");
+
   GST_LOG ("Done rewriting offsets");
 }
 
@@ -1465,6 +1492,7 @@ write_exif_ifd (const GstTagList * taglist, guint byte_order,
 {
   GstExifWriter writer;
   gint i;
+  gboolean handled = TRUE;
 
   GST_DEBUG ("Formatting taglist %p as exif buffer. Byte order: %d, "
       "base_offset: %u", taglist, byte_order, base_offset);
@@ -1479,7 +1507,7 @@ write_exif_ifd (const GstTagList * taglist, guint byte_order,
   gst_exif_writer_init (&writer, byte_order);
 
   /* write tag number as 0 */
-  gst_byte_writer_put_uint16_le (&writer.tagwriter, 0);
+  handled &= gst_byte_writer_put_uint16_le (&writer.tagwriter, 0);
 
   /* write both tag headers and data
    * in ascending id order */
@@ -1522,7 +1550,8 @@ write_exif_ifd (const GstTagList * taglist, guint byte_order,
             gst_byte_writer_get_size (&writer.datawriter), NULL);
 
         gst_buffer_map (inner_ifd, &info, GST_MAP_READ);
-        gst_byte_writer_put_data (&writer.datawriter, info.data, info.size);
+        handled &=
+            gst_byte_writer_put_data (&writer.datawriter, info.data, info.size);
         gst_buffer_unmap (inner_ifd, &info);
         gst_buffer_unref (inner_ifd);
       }
@@ -1539,14 +1568,16 @@ write_exif_ifd (const GstTagList * taglist, guint byte_order,
   /* Add the next IFD offset, we just set it to 0 because
    * there is no easy way to predict what it is going to be.
    * The user might rewrite the value if needed */
-  gst_byte_writer_put_uint32_le (&writer.tagwriter, 0);
+  handled &= gst_byte_writer_put_uint32_le (&writer.tagwriter, 0);
 
   /* write the number of tags */
   gst_byte_writer_set_pos (&writer.tagwriter, 0);
   if (writer.byte_order == G_LITTLE_ENDIAN)
-    gst_byte_writer_put_uint16_le (&writer.tagwriter, writer.tags_total);
+    handled &=
+        gst_byte_writer_put_uint16_le (&writer.tagwriter, writer.tags_total);
   else
-    gst_byte_writer_put_uint16_be (&writer.tagwriter, writer.tags_total);
+    handled &=
+        gst_byte_writer_put_uint16_be (&writer.tagwriter, writer.tags_total);
 
   GST_DEBUG ("Number of tags rewritten to %d", writer.tags_total);
 
@@ -1554,6 +1585,12 @@ write_exif_ifd (const GstTagList * taglist, guint byte_order,
   gst_exif_tag_rewrite_offsets (&writer.tagwriter, writer.byte_order,
       base_offset + gst_byte_writer_get_size (&writer.tagwriter),
       writer.tags_total, &writer.datawriter);
+
+  if (G_UNLIKELY (!handled)) {
+    GST_WARNING ("Error rewriting tags");
+    gst_buffer_unref (gst_exif_writer_reset_and_get_buffer (&writer));
+    return NULL;
+  }
 
   return gst_exif_writer_reset_and_get_buffer (&writer);
 }
@@ -1765,9 +1802,10 @@ gst_tag_list_to_exif_buffer (const GstTagList * taglist, gint byte_order,
 GstBuffer *
 gst_tag_list_to_exif_buffer_with_tiff_header (const GstTagList * taglist)
 {
-  GstBuffer *ifd;
+  GstBuffer *ifd, *res;
   GstByteWriter writer;
   GstMapInfo info;
+  gboolean handled = TRUE;
 
   ifd = gst_tag_list_to_exif_buffer (taglist, G_BYTE_ORDER, 8);
   if (ifd == NULL) {
@@ -1781,13 +1819,13 @@ gst_tag_list_to_exif_buffer_with_tiff_header (const GstTagList * taglist)
   gst_byte_writer_init_with_size (&writer, info.size + TIFF_HEADER_SIZE, FALSE);
   /* TIFF header */
   if (G_BYTE_ORDER == G_LITTLE_ENDIAN) {
-    gst_byte_writer_put_uint16_le (&writer, TIFF_LITTLE_ENDIAN);
-    gst_byte_writer_put_uint16_le (&writer, 42);
-    gst_byte_writer_put_uint32_le (&writer, 8);
+    handled &= gst_byte_writer_put_uint16_le (&writer, TIFF_LITTLE_ENDIAN);
+    handled &= gst_byte_writer_put_uint16_le (&writer, 42);
+    handled &= gst_byte_writer_put_uint32_le (&writer, 8);
   } else {
-    gst_byte_writer_put_uint16_be (&writer, TIFF_BIG_ENDIAN);
-    gst_byte_writer_put_uint16_be (&writer, 42);
-    gst_byte_writer_put_uint32_be (&writer, 8);
+    handled &= gst_byte_writer_put_uint16_be (&writer, TIFF_BIG_ENDIAN);
+    handled &= gst_byte_writer_put_uint16_be (&writer, 42);
+    handled &= gst_byte_writer_put_uint32_be (&writer, 8);
   }
   if (!gst_byte_writer_put_data (&writer, info.data, info.size)) {
     GST_WARNING ("Byte writer size mismatch");
@@ -1802,7 +1840,15 @@ gst_tag_list_to_exif_buffer_with_tiff_header (const GstTagList * taglist)
   gst_buffer_unmap (ifd, &info);
   gst_buffer_unref (ifd);
 
-  return gst_byte_writer_reset_and_get_buffer (&writer);
+  res = gst_byte_writer_reset_and_get_buffer (&writer);
+
+  if (G_UNLIKELY (!handled)) {
+    GST_WARNING ("Error creating buffer");
+    gst_buffer_unref (res);
+    res = NULL;
+  }
+
+  return res;
 }
 
 /**
