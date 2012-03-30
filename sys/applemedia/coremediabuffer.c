@@ -108,7 +108,7 @@ gst_core_media_buffer_new (GstCoreMediaCtx * ctx, CMSampleBufferRef sample_buf)
   meta->pixel_buf = pixel_buf;
   meta->block_buf = block_buf;
 
-  gst_buffer_take_memory (buf, -1,
+  gst_buffer_append_memory (buf,
       gst_memory_new_wrapped (GST_MEMORY_FLAG_NO_SHARE, data,
           size, 0, size, NULL, NULL));
 

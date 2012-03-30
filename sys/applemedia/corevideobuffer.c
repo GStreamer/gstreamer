@@ -105,7 +105,7 @@ gst_core_video_buffer_new (GstCoreMediaCtx * ctx, CVBufferRef cvbuf,
     size = cv->CVPixelBufferGetBytesPerRow (pixbuf) * height;
   }
 
-  gst_buffer_take_memory (buf, -1,
+  gst_buffer_append_memory (buf,
       gst_memory_new_wrapped (GST_MEMORY_FLAG_NO_SHARE, data,
           size, 0, size, NULL, NULL));
 

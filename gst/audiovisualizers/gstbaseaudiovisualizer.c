@@ -881,7 +881,7 @@ gst_base_audio_visualizer_chain (GstPad * pad, GstObject * parent,
     if (!(adata = (gpointer) gst_adapter_map (scope->adapter, sbpf)))
       break;
 
-    gst_buffer_take_memory (inbuf, -1,
+    gst_buffer_append_memory (inbuf,
         gst_memory_new_wrapped (GST_MEMORY_FLAG_READONLY, adata, sbpf, 0,
             sbpf, NULL, NULL));
 

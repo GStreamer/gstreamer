@@ -141,7 +141,7 @@ gst_schro_wrap_gst_buffer (GstBuffer * buffer)
   GstMemory *mem;
   GstMapInfo info;
 
-  mem = gst_buffer_get_merged_memory (buffer);
+  mem = gst_buffer_get_all_memory (buffer);
   if (!gst_memory_map (mem, &info, GST_MAP_READ)) {
     GST_ERROR ("Couldn't get readable memory from gstbuffer");
     return NULL;
