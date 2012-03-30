@@ -68,7 +68,6 @@ struct _GstCeltEnc {
   gint                  rate;
 
   gboolean              header_sent;
-  GSList               *headers;
 };
 
 struct _GstCeltEncClass {

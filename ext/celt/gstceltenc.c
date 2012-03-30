@@ -127,8 +127,6 @@ static GstFlowReturn gst_celt_enc_handle_frame (GstAudioEncoder * enc,
     GstBuffer * in_buf);
 static gboolean gst_celt_enc_sink_event (GstAudioEncoder * enc,
     GstEvent * event);
-static GstFlowReturn gst_celt_enc_pre_push (GstAudioEncoder * benc,
-    GstBuffer ** buffer);
 
 #define gst_celt_enc_parent_class parent_class
 G_DEFINE_TYPE_WITH_CODE (GstCeltEnc, gst_celt_enc, GST_TYPE_AUDIO_ENCODER,
@@ -153,7 +151,6 @@ gst_celt_enc_class_init (GstCeltEncClass * klass)
   gstbase_class->set_format = GST_DEBUG_FUNCPTR (gst_celt_enc_set_format);
   gstbase_class->handle_frame = GST_DEBUG_FUNCPTR (gst_celt_enc_handle_frame);
   gstbase_class->sink_event = GST_DEBUG_FUNCPTR (gst_celt_enc_sink_event);
-  gstbase_class->pre_push = GST_DEBUG_FUNCPTR (gst_celt_enc_pre_push);
 
   g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_BITRATE,
       g_param_spec_int ("bitrate", "Encoding Bit-rate",
@@ -580,6 +577,7 @@ gst_celt_enc_handle_frame (GstAudioEncoder * benc, GstBuffer * buf)
     /* libcelt has a bug which underestimates header size by 4... */
     unsigned int header_size = enc->header.header_size + 4;
     unsigned char *data = g_malloc (header_size);
+    GList *headers;
 
     /* create header buffer */
     int error = celt_header_to_packet (&enc->header, data, header_size);
@@ -610,11 +608,11 @@ gst_celt_enc_handle_frame (GstAudioEncoder * benc, GstBuffer * buf)
 
     /* push out buffers */
     /* store buffers for later pre_push sending */
-    g_slist_foreach (enc->headers, (GFunc) gst_buffer_unref, NULL);
-    enc->headers = NULL;
+    headers = NULL;
     GST_DEBUG_OBJECT (enc, "storing header buffers");
-    enc->headers = g_slist_prepend (enc->headers, buf2);
-    enc->headers = g_slist_prepend (enc->headers, buf1);
+    headers = g_list_prepend (headers, buf2);
+    headers = g_list_prepend (headers, buf1);
+    gst_audio_encoder_set_headers (benc, headers);
 
     enc->header_sent = TRUE;
   }
@@ -635,48 +633,6 @@ no_header:
     ret = GST_FLOW_ERROR;
     goto done;
   }
-}
-
-/* push out the buffer */
-static GstFlowReturn
-gst_celt_enc_push_buffer (GstCeltEnc * enc, GstBuffer * buffer)
-{
-  guint size;
-
-  size = gst_buffer_get_size (buffer);
-  GST_DEBUG_OBJECT (enc, "pushing output buffer of size %u", size);
-
-  return gst_pad_push (GST_AUDIO_ENCODER_SRC_PAD (enc), buffer);
-}
-
-static GstFlowReturn
-gst_celt_enc_pre_push (GstAudioEncoder * benc, GstBuffer ** buffer)
-{
-  GstCeltEnc *enc;
-  GstFlowReturn ret = GST_FLOW_OK;
-
-  enc = GST_CELT_ENC (benc);
-
-  /* FIXME 0.11 ? get rid of this special ogg stuff and have it
-   * put and use 'codec data' in caps like anything else,
-   * with all the usual out-of-band advantage etc */
-  if (G_UNLIKELY (enc->headers)) {
-    GSList *header = enc->headers;
-
-    /* try to push all of these, if we lose one, might as well lose all */
-    while (header) {
-      if (ret == GST_FLOW_OK)
-        ret = gst_celt_enc_push_buffer (enc, header->data);
-      else
-        gst_celt_enc_push_buffer (enc, header->data);
-      header = g_slist_next (header);
-    }
-
-    g_slist_free (enc->headers);
-    enc->headers = NULL;
-  }
-
-  return ret;
 }
 
 static void
