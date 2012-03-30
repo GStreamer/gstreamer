@@ -808,6 +808,15 @@ decode_buffer(GstVaapiDecoderMpeg2 *decoder, GstBuffer *buffer)
         gst_adapter_flush(priv->adapter, 4);
         size -= ofs;
 
+        if (ofs == 4) {
+            // Ignore empty user-data packets
+            if ((start_code & 0xff) == GST_MPEG_VIDEO_PACKET_USER_DATA)
+                continue;
+            GST_ERROR("failed to get a valid packet (SC: 0x%08x)", start_code);
+            status = GST_VAAPI_DECODER_STATUS_ERROR_BITSTREAM_PARSER;
+            break;
+        }
+
         buffer   = gst_adapter_take_buffer(priv->adapter, ofs - 4);
         buf      = GST_BUFFER_DATA(buffer);
         buf_size = GST_BUFFER_SIZE(buffer);
