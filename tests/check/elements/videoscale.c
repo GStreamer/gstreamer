@@ -88,7 +88,7 @@ caps_is_supported (const GstCaps * caps)
 
   return (fmt == GST_VIDEO_FORMAT_ARGB64 || fmt == GST_VIDEO_FORMAT_AYUV64
       || fmt == GST_VIDEO_FORMAT_GRAY8 || fmt == GST_VIDEO_FORMAT_GRAY16_BE
-      || GST_VIDEO_FORMAT_GRAY16_LE);
+      || fmt == GST_VIDEO_FORMAT_GRAY16_LE);
 }
 
 static void
