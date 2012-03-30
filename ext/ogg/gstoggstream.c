@@ -1200,7 +1200,7 @@ gst_ogg_map_add_fisbone (GstOggStream * pad, GstOggStream * skel_pad,
     pad->granulerate_n = GST_READ_UINT64_LE (data);
     pad->granulerate_d = GST_READ_UINT64_LE (data + 8);
   }
-  if (pad->granuleshift < 0) {
+  if (pad->granuleshift == G_MAXUINT32) {
     pad->granuleshift = GST_READ_UINT8 (data + 28);
   }
 
