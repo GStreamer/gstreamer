@@ -183,7 +183,7 @@ gst_vorbis_enc_class_init (GstVorbisEncClass * klass)
   base_class->set_format = GST_DEBUG_FUNCPTR (gst_vorbis_enc_set_format);
   base_class->handle_frame = GST_DEBUG_FUNCPTR (gst_vorbis_enc_handle_frame);
   base_class->getcaps = GST_DEBUG_FUNCPTR (gst_vorbis_enc_getcaps);
-  base_class->event = GST_DEBUG_FUNCPTR (gst_vorbis_enc_sink_event);
+  base_class->sink_event = GST_DEBUG_FUNCPTR (gst_vorbis_enc_sink_event);
   base_class->pre_push = GST_DEBUG_FUNCPTR (gst_vorbis_enc_pre_push);
 }
 
@@ -603,7 +603,7 @@ gst_vorbis_enc_sink_event (GstAudioEncoder * enc, GstEvent * event)
   }
 
   /* we only peeked, let base class handle it */
-  return GST_AUDIO_ENCODER_CLASS (parent_class)->event (enc, event);
+  return GST_AUDIO_ENCODER_CLASS (parent_class)->sink_event (enc, event);
 }
 
 /* push out the buffer and do internal bookkeeping */
