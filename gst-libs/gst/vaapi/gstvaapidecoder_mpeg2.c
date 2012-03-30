@@ -94,6 +94,12 @@ pts_get_duration(PTSGenerator *tsg, guint num_frames)
                                  GST_SECOND * tsg->fps_d, tsg->fps_n);
 }
 
+static inline guint
+pts_get_poc(PTSGenerator *tsg)
+{
+    return tsg->gop_tsn + tsg->ovl_tsn * 1024 + tsg->lst_tsn;
+}
+
 static void
 pts_set_framerate(PTSGenerator *tsg, guint fps_n, guint fps_d)
 {
@@ -647,6 +653,7 @@ decode_picture(GstVaapiDecoderMpeg2 *decoder, guchar *buf, guint buf_size)
     /* Update presentation time */
     pts = gst_adapter_prev_timestamp(priv->adapter, NULL);
     picture->pts = pts_eval(&priv->tsg, pts, pic_hdr->tsn);
+    picture->poc = pts_get_poc(&priv->tsg);
     return status;
 }
 

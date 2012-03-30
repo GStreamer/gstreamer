@@ -106,6 +106,7 @@ gst_vaapi_picture_create(
         picture->surface = gst_vaapi_surface_proxy_get_surface(picture->proxy);
         picture->type    = parent_picture->type;
         picture->pts     = parent_picture->pts;
+        picture->poc     = parent_picture->poc;
 
         // Copy all picture flags but "output"
         GST_VAAPI_PICTURE_FLAG_SET(
@@ -180,6 +181,7 @@ gst_vaapi_picture_init(GstVaapiPicture *picture)
     picture->iq_matrix  = NULL;
     picture->bitplane   = NULL;
     picture->pts        = GST_CLOCK_TIME_NONE;
+    picture->poc        = 0;
 }
 
 GstVaapiPicture *

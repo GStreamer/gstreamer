@@ -70,7 +70,7 @@ dpb_get_oldest(GstVaapiDpb *dpb, gboolean output)
         GstVaapiPicture * const picture = dpb->pictures[i];
         if ((GST_VAAPI_PICTURE_IS_OUTPUT(picture) ^ output) != 0)
             continue;
-        if (picture->pts < dpb->pictures[lowest_pts_index]->pts)
+        if (picture->poc < dpb->pictures[lowest_pts_index]->poc)
             lowest_pts_index = i;
     }
     return lowest_pts_index;
@@ -164,7 +164,7 @@ gst_vaapi_dpb_base_add(GstVaapiDpb *dpb, GstVaapiPicture *picture)
         while (dpb->num_pictures == dpb->max_pictures) {
             for (i = 0; i < dpb->num_pictures; i++) {
                 if (!GST_VAAPI_PICTURE_IS_OUTPUT(picture) &&
-                    dpb->pictures[i]->pts < picture->pts)
+                    dpb->pictures[i]->poc < picture->poc)
                     break;
             }
             if (i == dpb->num_pictures)
@@ -261,7 +261,7 @@ gst_vaapi_dpb_mpeg2_add(GstVaapiDpb *dpb, GstVaapiPicture *picture)
      * - the oldest reference picture is replaced with the new reference picture
      */
     if (G_LIKELY(dpb->num_pictures == 2)) {
-        index = (dpb->pictures[0]->pts > dpb->pictures[1]->pts);
+        index = (dpb->pictures[0]->poc > dpb->pictures[1]->poc);
         ref_picture = dpb->pictures[index];
         if (!GST_VAAPI_PICTURE_IS_OUTPUT(ref_picture)) {
             if (!dpb_output(dpb, ref_picture))
@@ -315,9 +315,9 @@ gst_vaapi_dpb_mpeg2_get_references(
     ref_pictures[1] = NULL;
     for (i = 0; i < dpb->num_pictures; i++) {
         ref_picture = dpb->pictures[i];
-        index       = ref_picture->pts > picture->pts;
+        index       = ref_picture->poc > picture->poc;
         picture_ptr = &ref_pictures[index];
-        if (!*picture_ptr || ((*picture_ptr)->pts > ref_picture->pts) == index)
+        if (!*picture_ptr || ((*picture_ptr)->poc > ref_picture->poc) == index)
             *picture_ptr = ref_picture;
     }
 

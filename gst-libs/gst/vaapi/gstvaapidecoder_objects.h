@@ -148,6 +148,7 @@ struct _GstVaapiPicture {
     GstVaapiIqMatrix           *iq_matrix;
     GstVaapiBitPlane           *bitplane;
     GstClockTime                pts;
+    gint32                      poc;
     guint                       structure;
 };
 
