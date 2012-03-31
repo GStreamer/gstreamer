@@ -185,7 +185,7 @@ gst_child_proxy_lookup (GObject * object, const gchar * name,
   gboolean res = FALSE;
   gchar **names, **current;
 
-  g_return_val_if_fail (GST_IS_OBJECT (object), FALSE);
+  g_return_val_if_fail (G_IS_OBJECT (object), FALSE);
   g_return_val_if_fail (name != NULL, FALSE);
 
   gst_object_ref (object);
@@ -197,7 +197,7 @@ gst_child_proxy_lookup (GObject * object, const gchar * name,
     if (!GST_IS_CHILD_PROXY (object)) {
       GST_INFO
           ("object %s is not a parent, so you cannot request a child by name %s",
-          GST_OBJECT_NAME (object), current[0]);
+          (GST_IS_OBJECT (object) ? GST_OBJECT_NAME (object) : ""), current[0]);
       break;
     }
     next = gst_child_proxy_get_child_by_name (GST_CHILD_PROXY (object),
@@ -246,7 +246,7 @@ gst_child_proxy_get_property (GObject * object, const gchar * name,
   GParamSpec *pspec;
   GObject *target;
 
-  g_return_if_fail (GST_IS_OBJECT (object));
+  g_return_if_fail (G_IS_OBJECT (object));
   g_return_if_fail (name != NULL);
   g_return_if_fail (G_IS_VALUE (value));
 
@@ -260,7 +260,8 @@ gst_child_proxy_get_property (GObject * object, const gchar * name,
 
 not_found:
   {
-    g_warning ("no property %s in object %s", name, GST_OBJECT_NAME (object));
+    g_warning ("no property %s in object %s", name,
+        (GST_IS_OBJECT (object) ? GST_OBJECT_NAME (object) : ""));
     return;
   }
 }
@@ -306,13 +307,14 @@ gst_child_proxy_get_valist (GObject * object,
 
 not_found:
   {
-    g_warning ("no property %s in object %s", name, GST_OBJECT_NAME (object));
+    g_warning ("no property %s in object %s", name,
+        (GST_IS_OBJECT (object) ? GST_OBJECT_NAME (object) : ""));
     return;
   }
 cant_copy:
   {
     g_warning ("error copying value %s in object %s: %s", pspec->name,
-        GST_OBJECT_NAME (object), error);
+        (GST_IS_OBJECT (object) ? GST_OBJECT_NAME (object) : ""), error);
     g_value_unset (&value);
     return;
   }
@@ -331,7 +333,7 @@ gst_child_proxy_get (GObject * object, const gchar * first_property_name, ...)
 {
   va_list var_args;
 
-  g_return_if_fail (GST_IS_OBJECT (object));
+  g_return_if_fail (G_IS_OBJECT (object));
 
   va_start (var_args, first_property_name);
   gst_child_proxy_get_valist (object, first_property_name, var_args);
@@ -353,7 +355,7 @@ gst_child_proxy_set_property (GObject * object, const gchar * name,
   GParamSpec *pspec;
   GObject *target;
 
-  g_return_if_fail (GST_IS_OBJECT (object));
+  g_return_if_fail (G_IS_OBJECT (object));
   g_return_if_fail (name != NULL);
   g_return_if_fail (G_IS_VALUE (value));
 
@@ -367,7 +369,7 @@ gst_child_proxy_set_property (GObject * object, const gchar * name,
 not_found:
   {
     g_warning ("cannot set property %s on object %s", name,
-        GST_OBJECT_NAME (object));
+        (GST_IS_OBJECT (object) ? GST_OBJECT_NAME (object) : ""));
     return;
   }
 }
@@ -415,13 +417,14 @@ gst_child_proxy_set_valist (GObject * object,
 
 not_found:
   {
-    g_warning ("no property %s in object %s", name, GST_OBJECT_NAME (object));
+    g_warning ("no property %s in object %s", name,
+        (GST_IS_OBJECT (object) ? GST_OBJECT_NAME (object) : ""));
     return;
   }
 cant_copy:
   {
     g_warning ("error copying value %s in object %s: %s", pspec->name,
-        GST_OBJECT_NAME (object), error);
+        (GST_IS_OBJECT (object) ? GST_OBJECT_NAME (object) : ""), error);
     g_value_unset (&value);
     gst_object_unref (target);
     return;
@@ -441,7 +444,7 @@ gst_child_proxy_set (GObject * object, const gchar * first_property_name, ...)
 {
   va_list var_args;
 
-  g_return_if_fail (GST_IS_OBJECT (object));
+  g_return_if_fail (G_IS_OBJECT (object));
 
   va_start (var_args, first_property_name);
   gst_child_proxy_set_valist (object, first_property_name, var_args);
@@ -549,7 +552,7 @@ gst_child_proxy_get_type (void)
     _type =
         g_type_register_static (G_TYPE_INTERFACE, "GstChildProxy", &info, 0);
 
-    g_type_interface_add_prerequisite (_type, GST_TYPE_OBJECT);
+    g_type_interface_add_prerequisite (_type, G_TYPE_OBJECT);
     g_once_init_leave (&type, (gsize) _type);
   }
   return type;
