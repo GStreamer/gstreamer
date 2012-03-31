@@ -392,23 +392,23 @@ gst_fd_src_create (GstPushSrc * psrc, GstBuffer ** outbuf)
   GstBuffer *buf;
   gssize readbytes;
   guint blocksize;
-  GstClockTime timeout;
   GstMapInfo info;
 
 #ifndef HAVE_WIN32
+  GstClockTime timeout;
   gboolean try_again;
   gint retval;
 #endif
 
   src = GST_FD_SRC (psrc);
 
+#ifndef HAVE_WIN32
   if (src->timeout > 0) {
     timeout = src->timeout * GST_USECOND;
   } else {
     timeout = GST_CLOCK_TIME_NONE;
   }
 
-#ifndef HAVE_WIN32
   do {
     try_again = FALSE;
 
