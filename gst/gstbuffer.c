@@ -773,6 +773,33 @@ _get_mapped (GstBuffer * buffer, guint idx, GstMapInfo * info,
 }
 
 /**
+ * gst_buffer_peek_memory:
+ * @buffer: a #GstBuffer.
+ * @idx: an index
+ *
+ * Get the memory block at @idx in @buffer. The memory block stays valid until
+ * the memory block in @buffer is removed, replaced or merged, typically with
+ * any call that modifies the memory in @buffer.
+ *
+ * Since this call does not influence the refcount of the memory,
+ * gst_memory_is_exclusive() can be used to check if @buffer is the sole owner
+ * of the returned memory.
+ *
+ * Returns: (transfer none): the #GstMemory at @idx.
+ */
+GstMemory *
+gst_buffer_peek_memory (GstBuffer * buffer, guint idx)
+{
+  guint len;
+
+  g_return_val_if_fail (GST_IS_BUFFER (buffer), NULL);
+  len = GST_BUFFER_MEM_LEN (buffer);
+  g_return_val_if_fail (idx < len, NULL);
+
+  return GST_BUFFER_MEM_PTR (buffer, idx);
+}
+
+/**
  * gst_buffer_get_memory_range:
  * @buffer: a #GstBuffer.
  * @idx: an index

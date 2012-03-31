@@ -269,6 +269,7 @@ GstBuffer * gst_buffer_new_wrapped         (gpointer data, gsize size);
 guint       gst_buffer_n_memory             (GstBuffer *buffer);
 void        gst_buffer_insert_memory        (GstBuffer *buffer, gint idx, GstMemory *mem);
 void        gst_buffer_replace_memory_range (GstBuffer *buffer, guint idx, gint length, GstMemory *mem);
+GstMemory * gst_buffer_peek_memory          (GstBuffer *buffer, guint idx);
 GstMemory * gst_buffer_get_memory_range     (GstBuffer *buffer, guint idx, gint length);
 void        gst_buffer_remove_memory_range  (GstBuffer *buffer, guint idx, gint length);
 
