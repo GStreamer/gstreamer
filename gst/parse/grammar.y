@@ -332,7 +332,7 @@ static void gst_parse_new_child(GstChildProxy *child_proxy, GObject *object,
   DelayedSet *set = (DelayedSet *) data;
   GParamSpec *pspec;
   GValue v = { 0, };
-  GstObject *target = NULL;
+  GObject *target = NULL;
   GType value_type;
 
   GST_CAT_LOG_OBJECT (GST_CAT_PIPELINE, child_proxy, "new child %s, checking property %s",
@@ -360,7 +360,7 @@ static void gst_parse_new_child(GstChildProxy *child_proxy, GObject *object,
     g_signal_handler_disconnect (child_proxy, set->signal_id);
     if (!got_value)
       goto error;
-    g_object_set_property (G_OBJECT (target), pspec->name, &v);
+    g_object_set_property (target, pspec->name, &v);
   } else {
     const gchar *obj_name = GST_OBJECT_NAME(object);
     gint len = strlen (obj_name);
@@ -375,12 +375,12 @@ out:
   if (G_IS_VALUE (&v))
     g_value_unset (&v);
   if (target)
-    gst_object_unref (target);
+    g_object_unref (target);
   return;
 
 error:
-  GST_CAT_ERROR (GST_CAT_PIPELINE, "could not set property \"%s\" in element \"%s\"",
-	 pspec->name, GST_ELEMENT_NAME (target));
+  GST_CAT_ERROR (GST_CAT_PIPELINE, "could not set property \"%s\" in "
+      GST_PTR_FORMAT, pspec->name, target);
   goto out;
 }
 
@@ -390,7 +390,7 @@ gst_parse_element_set (gchar *value, GstElement *element, graph_t *graph)
   GParamSpec *pspec;
   gchar *pos = value;
   GValue v = { 0, };
-  GstObject *target = NULL;
+  GObject *target = NULL;
   GType value_type;
 
   /* do nothing if assignment is for missing element */
@@ -436,7 +436,7 @@ gst_parse_element_set (gchar *value, GstElement *element, graph_t *graph)
     }
     if (!got_value)
       goto error;
-    g_object_set_property (G_OBJECT (target), pspec->name, &v);
+    g_object_set_property (target, pspec->name, &v);
   } else {
     /* do a delayed set */
     if (GST_IS_CHILD_PROXY (element)) {
@@ -454,7 +454,7 @@ out:
   if (G_IS_VALUE (&v))
     g_value_unset (&v);
   if (target)
-    gst_object_unref (target);
+    g_object_unref (target);
   return;
 
 error:
