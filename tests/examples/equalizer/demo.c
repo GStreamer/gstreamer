@@ -188,7 +188,7 @@ main (int argc, char *argv[])
   hbox = gtk_hbox_new (FALSE, 20);
 
   for (i = 0; i < NBANDS; i++) {
-    GstObject *band;
+    GObject *band;
     gdouble freq;
     gdouble bw;
     gdouble gain;
@@ -197,9 +197,9 @@ main (int argc, char *argv[])
 
     band = gst_child_proxy_get_child_by_index (GST_CHILD_PROXY (equalizer), i);
     g_assert (band != NULL);
-    g_object_get (G_OBJECT (band), "freq", &freq, NULL);
-    g_object_get (G_OBJECT (band), "bandwidth", &bw, NULL);
-    g_object_get (G_OBJECT (band), "gain", &gain, NULL);
+    g_object_get (band, "freq", &freq, NULL);
+    g_object_get (band, "bandwidth", &bw, NULL);
+    g_object_get (band, "gain", &gain, NULL);
 
     label = g_strdup_printf ("%d Hz", (int) (freq + 0.5));
     frame = gtk_frame_new (label);

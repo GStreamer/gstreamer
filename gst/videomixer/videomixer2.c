@@ -1812,7 +1812,8 @@ gst_videomixer2_request_new_pad (GstElement * element,
 
   /* add the pad to the element */
   gst_element_add_pad (element, GST_PAD (mixpad));
-  gst_child_proxy_child_added (GST_OBJECT (mix), GST_OBJECT (mixpad));
+  gst_child_proxy_child_added (G_OBJECT (mix), G_OBJECT (mixpad),
+      GST_OBJECT_NAME (mixpad));
 
   return GST_PAD (mixpad);
 }
@@ -1835,7 +1836,8 @@ gst_videomixer2_release_pad (GstElement * element, GstPad * pad)
   mixpad = GST_VIDEO_MIXER2_PAD (pad);
 
   mix->sinkpads = g_slist_remove (mix->sinkpads, pad);
-  gst_child_proxy_child_removed (GST_OBJECT (mix), GST_OBJECT (mixpad));
+  gst_child_proxy_child_removed (G_OBJECT (mix), G_OBJECT (mixpad),
+      GST_OBJECT_NAME (mixpad));
   mix->numpads--;
 
   update_caps = GST_VIDEO_INFO_FORMAT (&mix->info) != GST_VIDEO_FORMAT_UNKNOWN;
@@ -1897,16 +1899,16 @@ gst_videomixer2_set_property (GObject * object,
 }
 
 /* GstChildProxy implementation */
-static GstObject *
+static GObject *
 gst_videomixer2_child_proxy_get_child_by_index (GstChildProxy * child_proxy,
     guint index)
 {
   GstVideoMixer2 *mix = GST_VIDEO_MIXER2 (child_proxy);
-  GstObject *obj;
+  GObject *obj;
 
   GST_VIDEO_MIXER2_LOCK (mix);
   if ((obj = g_slist_nth_data (mix->sinkpads, index)))
-    gst_object_ref (obj);
+    g_object_ref (obj);
   GST_VIDEO_MIXER2_UNLOCK (mix);
   return obj;
 }

@@ -307,12 +307,12 @@ gst_iir_equalizer_band_get_type (void)
 
 
 /* child proxy iface */
-static GstObject *
+static GObject *
 gst_iir_equalizer_child_proxy_get_child_by_index (GstChildProxy * child_proxy,
     guint index)
 {
   GstIirEqualizer *equ = GST_IIR_EQUALIZER (child_proxy);
-  GstObject *ret;
+  GObject *ret;
 
   BANDS_LOCK (equ);
   if (G_UNLIKELY (index >= equ->freq_band_count)) {
@@ -320,7 +320,7 @@ gst_iir_equalizer_child_proxy_get_child_by_index (GstChildProxy * child_proxy,
     g_return_val_if_fail (index < equ->freq_band_count, NULL);
   }
 
-  ret = gst_object_ref (equ->bands[index]);
+  ret = g_object_ref (equ->bands[index]);
   BANDS_UNLOCK (equ);
 
   GST_LOG_OBJECT (equ, "return child[%d] %" GST_PTR_FORMAT, index, ret);
@@ -653,15 +653,15 @@ gst_iir_equalizer_compute_frequencies (GstIirEqualizer * equ, guint new_count)
       GST_DEBUG ("adding band[%d]=%p", i, equ->bands[i]);
 
       gst_object_set_parent (GST_OBJECT (equ->bands[i]), GST_OBJECT (equ));
-      gst_child_proxy_child_added (GST_OBJECT (equ),
-          GST_OBJECT (equ->bands[i]));
+      gst_child_proxy_child_added (G_OBJECT (equ),
+          G_OBJECT (equ->bands[i]), name);
     }
   } else {
     /* free unused bands */
     for (i = new_count; i < old_count; i++) {
       GST_DEBUG ("removing band[%d]=%p", i, equ->bands[i]);
-      gst_child_proxy_child_removed (GST_OBJECT (equ),
-          GST_OBJECT (equ->bands[i]));
+      gst_child_proxy_child_removed (G_OBJECT (equ),
+          G_OBJECT (equ->bands[i]), GST_OBJECT_NAME (equ->bands[i]));
       gst_object_unparent (GST_OBJECT (equ->bands[i]));
       equ->bands[i] = NULL;
     }

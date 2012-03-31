@@ -153,12 +153,12 @@ GST_START_TEST (test_equalizer_5bands_minus_24)
           (equalizer)), 5);
 
   for (i = 0; i < 5; i++) {
-    GstObject *band =
+    GObject *band =
         gst_child_proxy_get_child_by_index (GST_CHILD_PROXY (equalizer), i);
     fail_unless (band != NULL);
 
-    g_object_set (G_OBJECT (band), "gain", -24.0, NULL);
-    g_object_unref (G_OBJECT (band));
+    g_object_set (band, "gain", -24.0, NULL);
+    g_object_unref (band);
   }
 
   fail_unless (gst_element_set_state (equalizer,
@@ -221,12 +221,12 @@ GST_START_TEST (test_equalizer_5bands_plus_12)
           (equalizer)), 5);
 
   for (i = 0; i < 5; i++) {
-    GstObject *band =
+    GObject *band =
         gst_child_proxy_get_child_by_index (GST_CHILD_PROXY (equalizer), i);
     fail_unless (band != NULL);
 
-    g_object_set (G_OBJECT (band), "gain", 12.0, NULL);
-    g_object_unref (G_OBJECT (band));
+    g_object_set (band, "gain", 12.0, NULL);
+    g_object_unref (band);
   }
 
   fail_unless (gst_element_set_state (equalizer,
@@ -285,11 +285,11 @@ GST_START_TEST (test_equalizer_band_number_changing)
           (equalizer)), 5);
 
   for (i = 0; i < 5; i++) {
-    GstObject *band;
+    GObject *band;
 
     band = gst_child_proxy_get_child_by_index (GST_CHILD_PROXY (equalizer), i);
     fail_unless (band != NULL);
-    gst_object_unref (band);
+    g_object_unref (band);
   }
 
   g_object_set (G_OBJECT (equalizer), "num-bands", 10, NULL);
@@ -297,11 +297,11 @@ GST_START_TEST (test_equalizer_band_number_changing)
           (equalizer)), 10);
 
   for (i = 0; i < 10; i++) {
-    GstObject *band;
+    GObject *band;
 
     band = gst_child_proxy_get_child_by_index (GST_CHILD_PROXY (equalizer), i);
     fail_unless (band != NULL);
-    gst_object_unref (band);
+    g_object_unref (band);
   }
 
   /* cleanup */

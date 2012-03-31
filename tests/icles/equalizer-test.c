@@ -72,11 +72,11 @@ check_bus (GstClockTime max_wait_time)
 static void
 equalizer_set_band_value (GstElement * eq, guint band, gdouble val)
 {
-  GstObject *child;
+  GObject *child;
 
   child = gst_child_proxy_get_child_by_index (GST_CHILD_PROXY (eq), band);
   g_object_set (child, "gain", val, NULL);
-  gst_object_unref (child);
+  g_object_unref (child);
   g_print ("Band %2d: %.2f\n", band, val);
 }
 
@@ -84,12 +84,12 @@ static void
 equalizer_set_all_band_values (GstElement * eq, guint num, gdouble val)
 {
   gint i;
-  GstObject *child;
+  GObject *child;
 
   for (i = 0; i < num; i++) {
     child = gst_child_proxy_get_child_by_index (GST_CHILD_PROXY (eq), i);
     g_object_set (child, "gain", val, NULL);
-    gst_object_unref (child);
+    g_object_unref (child);
   }
   g_print ("All bands: %.2f\n", val);
 }

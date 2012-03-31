@@ -105,13 +105,13 @@ gst_iir_equalizer_3bands_set_property (GObject * object, guint prop_id,
 
   switch (prop_id) {
     case PROP_BAND0:
-      gst_child_proxy_set_property (GST_OBJECT (equ), "band0::gain", value);
+      gst_child_proxy_set_property (G_OBJECT (equ), "band0::gain", value);
       break;
     case PROP_BAND1:
-      gst_child_proxy_set_property (GST_OBJECT (equ), "band1::gain", value);
+      gst_child_proxy_set_property (G_OBJECT (equ), "band1::gain", value);
       break;
     case PROP_BAND2:
-      gst_child_proxy_set_property (GST_OBJECT (equ), "band2::gain", value);
+      gst_child_proxy_set_property (G_OBJECT (equ), "band2::gain", value);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -127,13 +127,13 @@ gst_iir_equalizer_3bands_get_property (GObject * object, guint prop_id,
 
   switch (prop_id) {
     case PROP_BAND0:
-      gst_child_proxy_get_property (GST_OBJECT (equ), "band0::gain", value);
+      gst_child_proxy_get_property (G_OBJECT (equ), "band0::gain", value);
       break;
     case PROP_BAND1:
-      gst_child_proxy_get_property (GST_OBJECT (equ), "band1::gain", value);
+      gst_child_proxy_get_property (G_OBJECT (equ), "band1::gain", value);
       break;
     case PROP_BAND2:
-      gst_child_proxy_get_property (GST_OBJECT (equ), "band2::gain", value);
+      gst_child_proxy_get_property (G_OBJECT (equ), "band2::gain", value);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
