@@ -726,8 +726,16 @@ gst_audio_encoder_finish_frame (GstAudioEncoder * enc, GstBuffer * buf,
           GST_BUFFER_FLAG_SET (tmpbuf, GST_BUFFER_FLAG_DISCONT);
           priv->discont = FALSE;
         }
-        GST_BUFFER_OFFSET (tmpbuf) = priv->bytes_out;
-        GST_BUFFER_OFFSET_END (tmpbuf) = priv->bytes_out + size;
+
+        /* Ogg codecs like Vorbis use offset/offset-end in a special
+         * way and both should be 0 for these codecs */
+        if (priv->base_gp >= 0) {
+          GST_BUFFER_OFFSET (tmpbuf) = 0;
+          GST_BUFFER_OFFSET_END (tmpbuf) = 0;
+        } else {
+          GST_BUFFER_OFFSET (tmpbuf) = priv->bytes_out;
+          GST_BUFFER_OFFSET_END (tmpbuf) = priv->bytes_out + size;
+        }
 
         priv->bytes_out += size;
 
