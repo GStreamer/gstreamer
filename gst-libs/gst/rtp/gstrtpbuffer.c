@@ -143,16 +143,10 @@ gst_rtp_buffer_allocate_data (GstBuffer * buffer, guint payload_len,
 GstBuffer *
 gst_rtp_buffer_new_take_data (gpointer data, gsize len)
 {
-  GstBuffer *result;
-
   g_return_val_if_fail (data != NULL, NULL);
   g_return_val_if_fail (len > 0, NULL);
 
-  result = gst_buffer_new ();
-  gst_buffer_append_memory (result,
-      gst_memory_new_wrapped (0, data, len, 0, len, data, g_free));
-
-  return result;
+  return gst_buffer_new_wrapped (data, len);
 }
 
 /**
