@@ -261,13 +261,18 @@ _replace_memory (GstBuffer * buffer, guint len, guint idx, guint length,
   for (i = idx; i < end; i++)
     gst_memory_unref (GST_BUFFER_MEM_PTR (buffer, i));
 
-  if (end != len) {
-    g_memmove (&GST_BUFFER_MEM_PTR (buffer, idx + 1),
+  if (mem != NULL) {
+    /* replace with single memory */
+    GST_BUFFER_MEM_PTR (buffer, idx) = mem;
+    idx++;
+    length--;
+  }
+
+  if (end < len) {
+    g_memmove (&GST_BUFFER_MEM_PTR (buffer, idx),
         &GST_BUFFER_MEM_PTR (buffer, end), (len - end) * sizeof (gpointer));
   }
-  /* replace with single memory */
-  GST_BUFFER_MEM_PTR (buffer, idx) = mem;
-  GST_BUFFER_MEM_LEN (buffer) = len - length + 1;
+  GST_BUFFER_MEM_LEN (buffer) = len - length;
 }
 
 static inline void
@@ -876,7 +881,7 @@ gst_buffer_replace_memory_range (GstBuffer * buffer, guint idx, gint length,
 void
 gst_buffer_remove_memory_range (GstBuffer * buffer, guint idx, gint length)
 {
-  guint len, i, end;
+  guint len;
 
   g_return_if_fail (GST_IS_BUFFER (buffer));
   g_return_if_fail (gst_buffer_is_writable (buffer));
@@ -887,15 +892,7 @@ gst_buffer_remove_memory_range (GstBuffer * buffer, guint idx, gint length)
   if (length == -1)
     length = len - idx;
 
-  end = idx + length;
-  for (i = idx; i < end; i++)
-    gst_memory_unref (GST_BUFFER_MEM_PTR (buffer, i));
-
-  if (end != len) {
-    g_memmove (&GST_BUFFER_MEM_PTR (buffer, idx),
-        &GST_BUFFER_MEM_PTR (buffer, end), (len - end) * sizeof (gpointer));
-  }
-  GST_BUFFER_MEM_LEN (buffer) = len - length;
+  _replace_memory (buffer, len, idx, length, NULL);
 }
 
 /**
