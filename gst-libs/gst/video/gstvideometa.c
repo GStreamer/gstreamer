@@ -119,45 +119,24 @@ static gboolean
 default_map (GstVideoMeta * meta, guint plane, GstMapInfo * info,
     gpointer * data, gint * stride, GstMapFlags flags)
 {
-  guint n, i;
-  guint offset;
+  guint offset, idx, length;
+  gsize skip;
   GstBuffer *buffer = meta->buffer;
 
-  if ((n = gst_buffer_n_memory (buffer)) == 0)
+  offset = meta->offset[plane];
+
+  /* find the memory block for this plane, this is the memory block containing
+   * the plane offset. FIXME use plane size */
+  if (!gst_buffer_find_memory (buffer, offset, 1, &idx, &length, &skip))
     goto no_memory;
 
-  offset = meta->offset[plane];
+  if (!gst_buffer_map_range (buffer, idx, length, info, flags))
+    goto cannot_map;
+
   *stride = meta->stride[plane];
-  /* find the memory block for this plane, this is the memory block containing
-   * the plane offset. @offset will be updated with the offset inside the memory
-   * block where the plane starts. */
-  for (i = 0; i < n; i++) {
-    GstMemory *mem = NULL;
-    gsize size;
+  *data = (guint8 *) info->data + skip;
 
-    mem = gst_buffer_get_memory (buffer, i);
-    size = gst_memory_get_sizes (mem, NULL, NULL);
-
-    if (offset < size) {
-      GstMemory *mapped;
-
-      if (!(mapped = gst_memory_make_mapped (mem, info, flags)))
-        goto cannot_map;
-
-      /* buffer is writable when WRITE map is requested, we checked this in
-       * _map * */
-      if (mapped != mem && (flags & GST_MAP_WRITE))
-        gst_buffer_replace_memory (buffer, i, gst_memory_ref (mapped));
-
-      *data = (guint8 *) info->data + offset;
-      return TRUE;
-    }
-    offset -= size;
-    gst_memory_unref (mem);
-  }
-  GST_DEBUG ("no memory found for offset %" G_GSIZE_FORMAT,
-      meta->offset[plane]);
-  return FALSE;
+  return TRUE;
 
   /* ERRORS */
 no_memory:
@@ -175,8 +154,9 @@ cannot_map:
 static gboolean
 default_unmap (GstVideoMeta * meta, guint plane, GstMapInfo * info)
 {
-  gst_memory_unmap (info->memory, info);
-  gst_memory_unref (info->memory);
+  GstBuffer *buffer = meta->buffer;
+
+  gst_buffer_unmap (buffer, info);
 
   return TRUE;
 }
