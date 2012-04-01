@@ -196,6 +196,7 @@ gst_buffer_insert_memory
 gst_buffer_replace_memory_range
 gst_buffer_get_memory_range
 gst_buffer_remove_memory_range
+gst_buffer_find_memory
 
 gst_buffer_prepend_memory
 gst_buffer_append_memory

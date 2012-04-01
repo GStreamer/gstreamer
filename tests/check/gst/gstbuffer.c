@@ -603,6 +603,89 @@ GST_START_TEST (test_map)
 
 GST_END_TEST;
 
+GST_START_TEST (test_find)
+{
+  GstBuffer *buf;
+  gsize maxalloc;
+  gsize size, offset;
+  guint idx, length;
+
+  buf = gst_buffer_new ();
+  gst_buffer_append_memory (buf, gst_allocator_alloc (NULL, 0, NULL));
+  gst_buffer_append_memory (buf, gst_allocator_alloc (NULL, 10, NULL));
+  gst_buffer_append_memory (buf, gst_allocator_alloc (NULL, 15, NULL));
+  gst_buffer_append_memory (buf, gst_allocator_alloc (NULL, 0, NULL));
+
+  size = gst_buffer_get_sizes (buf, &offset, &maxalloc);
+  fail_unless (size == 25);
+  fail_unless (offset >= 0);
+  fail_unless (maxalloc >= 25);
+  fail_unless (gst_buffer_n_memory (buf) == 4);
+
+  fail_unless (gst_buffer_find_memory (buf, 0, 5, &idx, &length, &offset));
+  fail_unless (idx == 1);
+  fail_unless (length == 1);
+  fail_unless (offset == 0);
+
+  fail_unless (gst_buffer_find_memory (buf, 0, 10, &idx, &length, &offset));
+  fail_unless (idx == 1);
+  fail_unless (length == 1);
+  fail_unless (offset == 0);
+
+  fail_unless (gst_buffer_find_memory (buf, 5, 4, &idx, &length, &offset));
+  fail_unless (idx == 1);
+  fail_unless (length == 1);
+  fail_unless (offset == 5);
+
+  fail_unless (gst_buffer_find_memory (buf, 5, 5, &idx, &length, &offset));
+  fail_unless (idx == 1);
+  fail_unless (length == 1);
+  fail_unless (offset == 5);
+
+  fail_unless (gst_buffer_find_memory (buf, 5, 6, &idx, &length, &offset));
+  fail_unless (idx == 1);
+  fail_unless (length == 2);
+  fail_unless (offset == 5);
+
+  fail_unless (gst_buffer_find_memory (buf, 10, 6, &idx, &length, &offset));
+  fail_unless (idx == 2);
+  fail_unless (length == 1);
+  fail_unless (offset == 0);
+
+  fail_unless (gst_buffer_find_memory (buf, 10, 15, &idx, &length, &offset));
+  fail_unless (idx == 2);
+  fail_unless (length == 1);
+  fail_unless (offset == 0);
+
+  fail_unless (gst_buffer_find_memory (buf, 11, 14, &idx, &length, &offset));
+  fail_unless (idx == 2);
+  fail_unless (length == 1);
+  fail_unless (offset == 1);
+
+  fail_unless (gst_buffer_find_memory (buf, 0, 25, &idx, &length, &offset));
+  fail_unless (idx == 1);
+  fail_unless (length == 2);
+  fail_unless (offset == 0);
+
+  fail_unless (gst_buffer_find_memory (buf, 24, 0, &idx, &length, &offset));
+  fail_unless (idx == 2);
+  fail_unless (length == 1);
+  fail_unless (offset == 14);
+
+  fail_if (gst_buffer_find_memory (buf, 11, 15, &idx, &length, &offset));
+  fail_if (gst_buffer_find_memory (buf, 0, 26, &idx, &length, &offset));
+  fail_if (gst_buffer_find_memory (buf, 25, 0, &idx, &length, &offset));
+
+  fail_unless (gst_buffer_find_memory (buf, 1, -1, &idx, &length, &offset));
+  fail_unless (idx == 1);
+  fail_unless (length == 3);
+  fail_unless (offset == 1);
+
+  gst_buffer_unref (buf);
+}
+
+GST_END_TEST;
+
 
 static Suite *
 gst_buffer_suite (void)
@@ -621,6 +704,7 @@ gst_buffer_suite (void)
   tcase_add_test (tc_chain, test_size);
   tcase_add_test (tc_chain, test_resize);
   tcase_add_test (tc_chain, test_map);
+  tcase_add_test (tc_chain, test_find);
 
   return s;
 }

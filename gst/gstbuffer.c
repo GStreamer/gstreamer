@@ -899,6 +899,79 @@ gst_buffer_remove_memory_range (GstBuffer * buffer, guint idx, gint length)
 }
 
 /**
+ * gst_buffer_find_memory:
+ * @buffer: a #GstBuffer.
+ * @offset: an offset
+ * @size: a size
+ * @idx: (out): pointer to index
+ * @length: (out): pointer to length
+ * @skip: (out): pointer to skip
+ *
+ * Find the memory blocks that span @size bytes starting from @offset
+ * in @buffer.
+ *
+ * When this function returns %TRUE, @idx will contain the index of the first
+ * memory bock where the byte for @offset can be found and @length contains the
+ * number of memory blocks containing the @size remaining bytes. @skip contains
+ * the number of bytes to skip in the memory bock at @idx to get to the byte
+ * for @offset.
+ *
+ * @size can be -1 to get all the memory blocks after @idx.
+ *
+ * Returns: %TRUE when @size bytes starting from @offset could be found in
+ * @buffer and @idx, @length and @skip will be filled.
+ */
+gboolean
+gst_buffer_find_memory (GstBuffer * buffer, gsize offset, gsize size,
+    guint * idx, guint * length, gsize * skip)
+{
+  guint i, len, found;
+
+  g_return_val_if_fail (GST_IS_BUFFER (buffer), FALSE);
+  g_return_val_if_fail (idx != NULL, FALSE);
+  g_return_val_if_fail (length != NULL, FALSE);
+  g_return_val_if_fail (skip != NULL, FALSE);
+
+  len = GST_BUFFER_MEM_LEN (buffer);
+
+  found = 0;
+  for (i = 0; i < len; i++) {
+    GstMemory *mem;
+    gsize s;
+
+    mem = GST_BUFFER_MEM_PTR (buffer, i);
+    s = gst_memory_get_sizes (mem, NULL, NULL);
+
+    if (s <= offset) {
+      /* block before offset, or empty block, skip */
+      offset -= s;
+    } else {
+      /* block after offset */
+      if (found == 0) {
+        /* first block, remember index and offset */
+        *idx = i;
+        *skip = offset;
+        if (size == -1) {
+          /* return remaining blocks */
+          *length = len - i;
+          return TRUE;
+        }
+        s -= offset;
+        offset = 0;
+      }
+      /* count the amount of found bytes */
+      found += s;
+      if (found >= size) {
+        /* we have enough bytes */
+        *length = i - *idx + 1;
+        return TRUE;
+      }
+    }
+  }
+  return FALSE;
+}
+
+/**
  * gst_buffer_get_sizes:
  * @buffer: a #GstBuffer.
  * @offset: a pointer to the offset

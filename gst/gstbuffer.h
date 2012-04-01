@@ -289,6 +289,9 @@ void        gst_buffer_remove_memory_range  (GstBuffer *buffer, guint idx, gint 
 #define     gst_buffer_remove_memory(b,i)      gst_buffer_remove_memory_range ((b), (i), 1)
 #define     gst_buffer_remove_all_memory(b)    gst_buffer_remove_memory_range ((b), 0, -1)
 
+gboolean    gst_buffer_find_memory         (GstBuffer *buffer, gsize offset, gsize size,
+                                            guint *idx, guint *length, gsize *skip);
+
 gsize       gst_buffer_fill                (GstBuffer *buffer, gsize offset,
                                             gconstpointer src, gsize size);
 gsize       gst_buffer_extract             (GstBuffer *buffer, gsize offset,
