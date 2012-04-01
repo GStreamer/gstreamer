@@ -705,6 +705,19 @@ handle_picture (GstMpeg2dec * mpeg2dec, const mpeg2_info_t * info)
     gst_video_frame_unmap (frame);
     gst_buffer_unref (frame->buffer);
   }
+
+  if (mpeg2dec->use_cropping) {
+    GstVideoCropMeta *crop;
+
+    crop = gst_buffer_add_video_crop_meta (outbuf);
+    /* we can do things slightly more efficient when we know that
+     * downstream understands clipping */
+    crop->x = 0;
+    crop->y = 0;
+    crop->width = mpeg2dec->width;
+    crop->height = mpeg2dec->height;
+  }
+
   gst_video_frame_map (frame, &mpeg2dec->vinfo, outbuf, GST_MAP_WRITE);
 
   buf[0] = GST_VIDEO_FRAME_PLANE_DATA (frame, 0);
@@ -942,17 +955,6 @@ handle_slice (GstMpeg2dec * mpeg2dec, const mpeg2_info_t * info)
    * array of buffers */
   gst_buffer_ref (outbuf);
 
-  if (mpeg2dec->use_cropping) {
-    GstVideoCropMeta *crop;
-
-    crop = gst_buffer_add_video_crop_meta (outbuf);
-    /* we can do things slightly more efficient when we know that
-     * downstream understands clipping */
-    crop->x = 0;
-    crop->y = 0;
-    crop->width = mpeg2dec->width;
-    crop->height = mpeg2dec->height;
-  }
 #if 0
   /* do cropping if the target region is smaller than the input one */
   if (mpeg2dec->decoded_width != mpeg2dec->width ||
