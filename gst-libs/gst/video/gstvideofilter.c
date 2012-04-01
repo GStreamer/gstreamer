@@ -277,8 +277,14 @@ gst_video_filter_transform_ip (GstBaseTransform * trans, GstBuffer * buf)
   fclass = GST_VIDEO_FILTER_GET_CLASS (filter);
   if (fclass->transform_frame_ip) {
     GstVideoFrame frame;
+    GstMapFlags flags;
 
-    if (!gst_video_frame_map (&frame, &filter->in_info, buf, GST_MAP_READWRITE))
+    flags = GST_MAP_READ;
+
+    if (!gst_base_transform_is_passthrough (trans))
+      flags |= GST_MAP_WRITE;
+
+    if (!gst_video_frame_map (&frame, &filter->in_info, buf, flags))
       goto invalid_buffer;
 
     res = fclass->transform_frame_ip (filter, &frame);
