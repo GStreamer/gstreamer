@@ -224,44 +224,45 @@ test_passthrough (int method)
   while (*p) {
     GstCaps *caps = *p;
 
-    for (method = 0; method < 3; method++) {
-      /* skip formats that videoconvert can't handle */
-      if (caps_is_supported (caps))
-        continue;
-
-      GST_DEBUG ("Running test for caps '%" GST_PTR_FORMAT "'"
-          " from %dx%u to %dx%d with method %d", caps, src_width, src_height,
-          dest_width, dest_height, method);
-      run_test (caps, src_width, src_height,
-          dest_width, dest_height, method,
-          G_CALLBACK (on_src_handoff_passthrough), &src_buffers,
-          G_CALLBACK (on_sink_handoff_passthrough), &sink_buffers);
-
-      fail_unless (src_buffers && sink_buffers);
-      fail_unless_equals_int (g_list_length (src_buffers),
-          g_list_length (sink_buffers));
-
-      for (l1 = src_buffers, l2 = sink_buffers; l1 && l2;
-          l1 = l1->next, l2 = l2->next) {
-        GstBuffer *a = l1->data;
-        GstBuffer *b = l2->data;
-        GstMapInfo mapa, mapb;
-
-        gst_buffer_map (a, &mapa, GST_MAP_READ);
-        gst_buffer_map (b, &mapb, GST_MAP_READ);
-        fail_unless_equals_int (mapa.size, mapb.size);
-        fail_unless (mapa.data == mapb.data);
-        gst_buffer_unmap (b, &mapb);
-        gst_buffer_unmap (a, &mapa);
-
-        gst_buffer_unref (a);
-        gst_buffer_unref (b);
-      }
-      g_list_free (src_buffers);
-      src_buffers = NULL;
-      g_list_free (sink_buffers);
-      sink_buffers = NULL;
+    /* skip formats that videoconvert can't handle */
+    if (caps_is_supported (caps)) {
+      goto next;
     }
+
+    GST_DEBUG ("Running test for caps '%" GST_PTR_FORMAT "'"
+        " from %dx%u to %dx%d with method %d", caps, src_width, src_height,
+        dest_width, dest_height, method);
+    run_test (caps, src_width, src_height,
+        dest_width, dest_height, method,
+        G_CALLBACK (on_src_handoff_passthrough), &src_buffers,
+        G_CALLBACK (on_sink_handoff_passthrough), &sink_buffers);
+
+    fail_unless (src_buffers && sink_buffers);
+    fail_unless_equals_int (g_list_length (src_buffers),
+        g_list_length (sink_buffers));
+
+    for (l1 = src_buffers, l2 = sink_buffers; l1 && l2;
+        l1 = l1->next, l2 = l2->next) {
+      GstBuffer *a = l1->data;
+      GstBuffer *b = l2->data;
+      GstMapInfo mapa, mapb;
+
+      gst_buffer_map (a, &mapa, GST_MAP_READ);
+      gst_buffer_map (b, &mapb, GST_MAP_READ);
+      fail_unless_equals_int (mapa.size, mapb.size);
+      fail_unless (mapa.data == mapb.data);
+      gst_buffer_unmap (b, &mapb);
+      gst_buffer_unmap (a, &mapa);
+
+      gst_buffer_unref (a);
+      gst_buffer_unref (b);
+    }
+    g_list_free (src_buffers);
+    src_buffers = NULL;
+    g_list_free (sink_buffers);
+    sink_buffers = NULL;
+
+  next:
     gst_caps_unref (caps);
     p++;
   }
