@@ -901,8 +901,10 @@ theora_negotiate (GstTheoraDec * dec)
     pool = gst_video_buffer_pool_new ();
   }
 
-  if (dec->pool)
+  if (dec->pool) {
+    gst_buffer_pool_set_active (dec->pool, FALSE);
     gst_object_unref (dec->pool);
+  }
   dec->pool = pool;
 
   if (dec->has_cropping) {
