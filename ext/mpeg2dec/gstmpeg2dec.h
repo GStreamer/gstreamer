@@ -86,14 +86,12 @@ struct _GstMpeg2dec {
 
   /* video state */
   GstVideoInfo   vinfo;
-  gint           decoded_width;
-  gint           decoded_height;
-  gint		 width;
-  gint		 height;
+  GstVideoInfo   cinfo;
+  gboolean       need_cropping;
+  gboolean       has_cropping;
   gint64         frame_period;
   gboolean       interlaced;
   GstBufferPool *pool;
-  gboolean       use_cropping;
 
   gint           size;
   gint           u_offs;

@@ -42,6 +42,7 @@ typedef gint mpeg2_state_t;
 #define STATE_BUFFER 0
 #endif
 
+GST_DEBUG_CATEGORY_EXTERN (GST_CAT_PERFORMANCE);
 GST_DEBUG_CATEGORY_STATIC (mpeg2dec_debug);
 #define GST_CAT_DEFAULT (mpeg2dec_debug)
 
@@ -104,9 +105,8 @@ static const GstFormat *gst_mpeg2dec_get_formats (GstPad * pad);
 static const GstEventMask *gst_mpeg2dec_get_event_masks (GstPad * pad);
 #endif
 
-#if 0
-static gboolean gst_mpeg2dec_crop_buffer (GstMpeg2dec * dec, GstBuffer ** buf);
-#endif
+static gboolean gst_mpeg2dec_crop_buffer (GstMpeg2dec * dec, GstBuffer ** buf,
+    GstVideoFrame * frame);
 
 /*static guint gst_mpeg2dec_signals[LAST_SIGNAL] = { 0 };*/
 
@@ -227,104 +227,94 @@ gst_mpeg2dec_qos_reset (GstMpeg2dec * mpeg2dec)
   GST_OBJECT_UNLOCK (mpeg2dec);
 }
 
-#if 0
 static GstFlowReturn
-gst_mpeg2dec_crop_buffer (GstMpeg2dec * dec, GstBuffer ** buf)
+gst_mpeg2dec_crop_buffer (GstMpeg2dec * dec, GstBuffer ** buf,
+    GstVideoFrame * frame)
 {
-  GstFlowReturn flow_ret;
-  GstBuffer *inbuf = *buf;
+  GstFlowReturn ret;
   GstBuffer *outbuf;
-  guint outsize, c;
+  GstVideoFrame outframe;
+  guint i, n_planes;
 
-  outsize = gst_video_format_get_size (dec->format, dec->width, dec->height);
+  ret = gst_buffer_pool_acquire_buffer (dec->pool, &outbuf, NULL);
+  if (G_UNLIKELY (ret != GST_FLOW_OK))
+    return ret;;
 
-  GST_LOG_OBJECT (dec, "Copying input buffer %ux%u (%u) to output buffer "
-      "%ux%u (%u)", dec->decoded_width, dec->decoded_height,
-      GST_BUFFER_SIZE (inbuf), dec->width, dec->height, outsize);
+  GST_CAT_LOG_OBJECT (GST_CAT_PERFORMANCE, dec,
+      "cropping input buffer to output buffer");
 
-  flow_ret = gst_pad_alloc_buffer_and_set_caps (dec->srcpad,
-      GST_BUFFER_OFFSET_NONE, outsize, GST_PAD_CAPS (dec->srcpad), &outbuf);
+  gst_video_frame_map (&outframe, &dec->cinfo, outbuf, GST_MAP_WRITE);
 
-  if (G_UNLIKELY (flow_ret != GST_FLOW_OK))
-    return flow_ret;
+  n_planes = GST_VIDEO_FRAME_N_PLANES (&outframe);
 
-  for (c = 0; c < 3; c++) {
-    const guint8 *src;
-    guint8 *dest;
-    guint stride_in, stride_out;
-    guint c_height, c_width, line;
+  for (i = 0; i < n_planes; i++) {
+    guint w, h, j;
+    guint8 *sp, *dp;
+    gint ss, ds;
 
-    src =
-        GST_BUFFER_DATA (inbuf) +
-        gst_video_format_get_component_offset (dec->format, c,
-        dec->decoded_width, dec->decoded_height);
-    dest =
-        GST_BUFFER_DATA (outbuf) +
-        gst_video_format_get_component_offset (dec->format, c, dec->width,
-        dec->height);
-    stride_out = gst_video_format_get_row_stride (dec->format, c, dec->width);
-    stride_in =
-        gst_video_format_get_row_stride (dec->format, c, dec->decoded_width);
-    c_height =
-        gst_video_format_get_component_height (dec->format, c, dec->height);
-    c_width = gst_video_format_get_component_width (dec->format, c, dec->width);
+    sp = GST_VIDEO_FRAME_PLANE_DATA (frame, i);
+    dp = GST_VIDEO_FRAME_PLANE_DATA (&outframe, i);
 
-    GST_DEBUG ("stride_in:%d _out:%d c_width:%d c_height:%d",
-        stride_in, stride_out, c_width, c_height);
+    ss = GST_VIDEO_FRAME_PLANE_STRIDE (frame, i);
+    ds = GST_VIDEO_FRAME_PLANE_STRIDE (&outframe, i);
 
-    if (stride_in == stride_out && stride_in == c_width) {
-      /* FAST PATH */
-      memcpy (dest, src, c_height * stride_out);
-      dest += stride_out * c_height;
-      src += stride_out * c_height;
-    } else {
-      for (line = 0; line < c_height; line++) {
-        memcpy (dest, src, c_width);
-        dest += stride_out;
-        src += stride_in;
-      }
+    w = MIN (ABS (ss), ABS (ds));
+    h = GST_VIDEO_FRAME_COMP_HEIGHT (&outframe, i);
+
+    GST_CAT_DEBUG (GST_CAT_PERFORMANCE, "copy plane %u, w:%u h:%u ", i, w, h);
+
+    for (j = 0; j < h; j++) {
+      memcpy (dp, sp, w);
+      dp += ds;
+      sp += ss;
     }
   }
+  gst_video_frame_unmap (&outframe);
 
-  gst_buffer_copy_metadata (outbuf, inbuf,
-      GST_BUFFER_COPY_TIMESTAMPS | GST_BUFFER_COPY_FLAGS);
+  gst_buffer_copy_into (outbuf, *buf,
+      GST_BUFFER_COPY_TIMESTAMPS | GST_BUFFER_COPY_FLAGS, 0, -1);
 
   gst_buffer_unref (*buf);
   *buf = outbuf;
 
   return GST_FLOW_OK;
 }
-#endif
 
 static GstFlowReturn
 gst_mpeg2dec_negotiate_pool (GstMpeg2dec * dec, GstCaps * caps,
-    GstVideoInfo * info)
+    GstVideoInfo * vinfo, GstVideoInfo * cinfo)
 {
   GstQuery *query;
   GstBufferPool *pool;
   guint size, min, max;
   GstStructure *config;
+  GstCaps *pcaps;
 
   /* find a pool for the negotiated caps now */
   query = gst_query_new_allocation (caps, TRUE);
 
-  if (!gst_pad_peer_query (dec->srcpad, query)) {
+  if (gst_pad_peer_query (dec->srcpad, query)) {
+    /* check if downstream supports cropping */
+    dec->has_cropping =
+        gst_query_has_allocation_meta (query, GST_VIDEO_CROP_META_API_TYPE);
+  } else {
     /* use the query default then */
     GST_DEBUG_OBJECT (dec, "didn't get downstream ALLOCATION hints");
+    dec->has_cropping = FALSE;
   }
 
   if (gst_query_get_n_allocation_pools (query) > 0) {
     /* we got configuration from our peer, parse them */
     gst_query_parse_nth_allocation_pool (query, 0, &pool, &size, &min, &max);
-    size = MAX (size, info->size);
   } else {
     pool = NULL;
-    size = info->size;
+    size = 0;
     min = max = 0;
   }
 
   GST_DEBUG_OBJECT (dec,
       "size:%d, min:%d, max:%d,pool:%p", size, min, max, pool);
+  GST_DEBUG_OBJECT (dec, "downstream cropping %d", dec->has_cropping);
 
   if (pool == NULL) {
     /* we did not get a pool, make one ourselves then */
@@ -337,8 +327,20 @@ gst_mpeg2dec_negotiate_pool (GstMpeg2dec * dec, GstCaps * caps,
   }
   dec->pool = pool;
 
+  if (dec->need_cropping && dec->has_cropping) {
+    /* we can crop, configure the pool with buffers of caps and size of the
+     * decoded picture size and then crop them with metadata */
+    pcaps = gst_video_info_to_caps (vinfo);
+    size = MAX (size, GST_VIDEO_INFO_SIZE (vinfo));
+  } else {
+    /* no cropping, use cropped videoinfo */
+    pcaps = gst_caps_ref (caps);
+    size = MAX (size, GST_VIDEO_INFO_SIZE (cinfo));
+  }
+
   config = gst_buffer_pool_get_config (pool);
-  gst_buffer_pool_config_set_params (config, caps, size, min, max);
+  gst_buffer_pool_config_set_params (config, pcaps, size, min, max);
+  gst_caps_unref (pcaps);
 
   if (gst_query_has_allocation_meta (query, GST_VIDEO_META_API_TYPE)) {
     /* just set the option, if the pool can support it we will transparently use
@@ -347,13 +349,6 @@ gst_mpeg2dec_negotiate_pool (GstMpeg2dec * dec, GstCaps * caps,
     gst_buffer_pool_config_add_option (config,
         GST_BUFFER_POOL_OPTION_VIDEO_META);
   }
-
-  /* check if downstream supports cropping */
-  dec->use_cropping =
-      gst_query_has_allocation_meta (query, GST_VIDEO_CROP_META_API_TYPE);
-
-  GST_DEBUG_OBJECT (dec, "downstream supports cropping : %d",
-      dec->use_cropping);
 
   gst_buffer_pool_set_config (pool, config);
   /* and activate */
@@ -382,8 +377,7 @@ handle_sequence (GstMpeg2dec * mpeg2dec, const mpeg2_info_t * info)
   GstFlowReturn ret = GST_FLOW_OK;
   const mpeg2_sequence_t *sequence;
   gint par_n, par_d;
-  gint width, height;
-  GstVideoInfo vinfo;
+  GstVideoInfo vinfo, cinfo;
   GstVideoFormat format;
   GstCaps *caps;
   gint y_size, uv_size;
@@ -393,13 +387,25 @@ handle_sequence (GstMpeg2dec * mpeg2dec, const mpeg2_info_t * info)
   if (sequence->frame_period == 0)
     goto invalid_frame_period;
 
-  mpeg2dec->width = width = sequence->picture_width;
-  mpeg2dec->height = height = sequence->picture_height;
-
   /* mpeg2 video can only be from 16x16 to 4096x4096. Everything
    * else is a corrupted file */
-  if (width > 4096 || width < 16 || height > 4096 || height < 16)
+  if (sequence->width > 4096 || sequence->width < 16 ||
+      sequence->height > 4096 || sequence->height < 16)
     goto invalid_size;
+
+  GST_DEBUG_OBJECT (mpeg2dec,
+      "widthxheight: %dx%d , decoded_widthxheight: %dx%d",
+      sequence->picture_width, sequence->picture_height, sequence->width,
+      sequence->height);
+
+  if (sequence->picture_width != sequence->width ||
+      sequence->picture_height != sequence->height) {
+    GST_DEBUG_OBJECT (mpeg2dec, "we need to crop");
+    mpeg2dec->need_cropping = TRUE;
+  } else {
+    GST_DEBUG_OBJECT (mpeg2dec, "no cropping needed");
+    mpeg2dec->need_cropping = FALSE;
+  }
 
   y_size = sequence->width * sequence->height;
   /* get subsampling */
@@ -424,16 +430,9 @@ handle_sequence (GstMpeg2dec * mpeg2dec, const mpeg2_info_t * info)
   mpeg2dec->u_offs = y_size;
   mpeg2dec->v_offs = y_size + uv_size;
 
+  /* we store the codec size before cropping */
   gst_video_info_init (&vinfo);
   gst_video_info_set_format (&vinfo, format, sequence->width, sequence->height);
-
-  /* size of the decoded frame */
-  mpeg2dec->decoded_width = sequence->width;
-  mpeg2dec->decoded_height = sequence->height;
-
-  GST_DEBUG_OBJECT (mpeg2dec,
-      "widthxheight: %dx%d , decoded_widthxheight: %dx%d", width, height,
-      sequence->width, sequence->height);
 
   /* sink caps par overrides sequence PAR */
   if (mpeg2dec->have_par) {
@@ -447,7 +446,8 @@ handle_sequence (GstMpeg2dec * mpeg2dec, const mpeg2_info_t * info)
   }
 
   if (par_n == 0 || par_d == 0) {
-    if (!gst_util_fraction_multiply (4, 3, height, width, &par_n, &par_d))
+    if (!gst_util_fraction_multiply (4, 3, sequence->picture_height,
+            sequence->picture_width, &par_n, &par_d))
       par_n = par_d = 1;
 
     GST_WARNING_OBJECT (mpeg2dec, "Unknown par, assuming %d:%d", par_n, par_d);
@@ -563,14 +563,18 @@ handle_sequence (GstMpeg2dec * mpeg2dec, const mpeg2_info_t * info)
       sequence->flags & SEQ_FLAG_LOW_DELAY,
       sequence->flags & SEQ_FLAG_COLOUR_DESCRIPTION);
 
-  caps = gst_video_info_to_caps (&vinfo);
+  /* for the output caps we always take the cropped dimensions */
+  cinfo = vinfo;
+  gst_video_info_set_format (&cinfo, GST_VIDEO_INFO_FORMAT (&vinfo),
+      sequence->picture_width, sequence->picture_height);
+  caps = gst_video_info_to_caps (&cinfo);
   gst_pad_set_caps (mpeg2dec->srcpad, caps);
 
-  mpeg2dec->vinfo = vinfo;
-
-  gst_mpeg2dec_negotiate_pool (mpeg2dec, caps, &vinfo);
-
+  gst_mpeg2dec_negotiate_pool (mpeg2dec, caps, &vinfo, &cinfo);
   gst_caps_unref (caps);
+
+  mpeg2dec->vinfo = vinfo;
+  mpeg2dec->cinfo = cinfo;
 
   mpeg2_custom_fbuf (mpeg2dec->decoder, 1);
   init_dummybuf (mpeg2dec);
@@ -595,7 +599,7 @@ invalid_frame_period:
 invalid_size:
   {
     GST_ERROR_OBJECT (mpeg2dec, "Invalid frame dimensions: %d x %d",
-        width, height);
+        sequence->width, sequence->height);
     return GST_FLOW_ERROR;
   }
 }
@@ -661,9 +665,20 @@ handle_picture (GstMpeg2dec * mpeg2dec, const mpeg2_info_t * info)
   gint type;
   guint8 *buf[3];
 
-  ret = gst_buffer_pool_acquire_buffer (mpeg2dec->pool, &outbuf, NULL);
-  if (G_UNLIKELY (ret != GST_FLOW_OK))
-    goto no_buffer;
+  if (mpeg2dec->need_cropping && !mpeg2dec->has_cropping) {
+    GstAllocationParams params = { 0, };
+
+    /* we need to crop manually */
+    params.align = 15;
+    outbuf =
+        gst_buffer_new_allocate (NULL, GST_VIDEO_INFO_SIZE (&mpeg2dec->vinfo),
+        &params);
+    ret = GST_FLOW_OK;
+  } else {
+    ret = gst_buffer_pool_acquire_buffer (mpeg2dec->pool, &outbuf, NULL);
+    if (G_UNLIKELY (ret != GST_FLOW_OK))
+      goto no_buffer;
+  }
 
   /* we store the original byteoffset of this picture in the stream here
    * because we need it for indexing */
@@ -704,9 +719,10 @@ handle_picture (GstMpeg2dec * mpeg2dec, const mpeg2_info_t * info)
   if (frame->buffer) {
     gst_video_frame_unmap (frame);
     gst_buffer_unref (frame->buffer);
+    frame->buffer = NULL;
   }
 
-  if (mpeg2dec->use_cropping) {
+  if (mpeg2dec->need_cropping && mpeg2dec->has_cropping) {
     GstVideoCropMeta *crop;
 
     crop = gst_buffer_add_video_crop_meta (outbuf);
@@ -714,8 +730,8 @@ handle_picture (GstMpeg2dec * mpeg2dec, const mpeg2_info_t * info)
      * downstream understands clipping */
     crop->x = 0;
     crop->y = 0;
-    crop->width = mpeg2dec->width;
-    crop->height = mpeg2dec->height;
+    crop->width = info->sequence->picture_width;
+    crop->height = info->sequence->picture_height;
   }
 
   gst_video_frame_map (frame, &mpeg2dec->vinfo, outbuf, GST_MAP_WRITE);
@@ -955,16 +971,13 @@ handle_slice (GstMpeg2dec * mpeg2dec, const mpeg2_info_t * info)
    * array of buffers */
   gst_buffer_ref (outbuf);
 
-#if 0
   /* do cropping if the target region is smaller than the input one */
-  if (mpeg2dec->decoded_width != mpeg2dec->width ||
-      mpeg2dec->decoded_height != mpeg2dec->height) {
+  if (mpeg2dec->need_cropping && !mpeg2dec->has_cropping) {
     GST_DEBUG_OBJECT (mpeg2dec, "cropping buffer");
-    ret = gst_mpeg2dec_crop_buffer (mpeg2dec, &outbuf);
+    ret = gst_mpeg2dec_crop_buffer (mpeg2dec, &outbuf, frame);
     if (ret != GST_FLOW_OK)
       goto done;
   }
-#endif
 
   if (mpeg2dec->segment.rate >= 0.0) {
     /* forward: push right away */
@@ -985,7 +998,7 @@ handle_slice (GstMpeg2dec * mpeg2dec, const mpeg2_info_t * info)
     mpeg2dec->queued = g_list_prepend (mpeg2dec->queued, outbuf);
     ret = GST_FLOW_OK;
   }
-
+done:
   return ret;
 
   /* special cases */
