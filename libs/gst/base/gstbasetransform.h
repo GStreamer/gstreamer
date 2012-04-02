@@ -107,8 +107,14 @@ struct _GstBaseTransform {
 /**
  * GstBaseTransformClass:
  * @parent_class:   Element parent class
- * @passthrough_on_same_caps: If set to TRUE, passthrough mode will be
+ * @passthrough_on_same_caps: If set to %TRUE, passthrough mode will be
  *                            automatically enabled if the caps are the same.
+ *                            Set to %FALSE by default.
+ * @transform_ip_on_passthrough: If set to %TRUE, @transform_ip will be called in
+ *                           passthrough mode. The passed buffer might not be
+ *                           writable. When %FALSE, neither @transform nor
+ *                           @transform_ip will be called in passthrough mode.
+ *                           Set to %TRUE by default.
  * @transform_caps: Optional.  Given the pad in this direction and the given
  *                  caps, what caps are allowed on the other pad in this
  *                  element ?
@@ -201,6 +207,7 @@ struct _GstBaseTransformClass {
 
   /*< public >*/
   gboolean       passthrough_on_same_caps;
+  gboolean       transform_ip_on_passthrough;
 
   /* virtual methods for subclasses */
   GstCaps*	(*transform_caps) (GstBaseTransform *trans,
