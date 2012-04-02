@@ -116,6 +116,7 @@ gst_audio_fx_base_iir_filter_class_init (GstAudioFXBaseIIRFilterClass * klass)
 
   trans_class->transform_ip =
       GST_DEBUG_FUNCPTR (gst_audio_fx_base_iir_filter_transform_ip);
+  trans_class->transform_ip_on_passthrough = FALSE;
   trans_class->stop = GST_DEBUG_FUNCPTR (gst_audio_fx_base_iir_filter_stop);
 }
 
@@ -370,9 +371,6 @@ gst_audio_fx_base_iir_filter_transform_ip (GstBaseTransform * base,
 
   if (GST_CLOCK_TIME_IS_VALID (stream_time))
     gst_object_sync_values (GST_OBJECT (filter), stream_time);
-
-  if (gst_base_transform_is_passthrough (base))
-    return GST_FLOW_OK;
 
   g_return_val_if_fail (filter->a != NULL, GST_FLOW_ERROR);
 

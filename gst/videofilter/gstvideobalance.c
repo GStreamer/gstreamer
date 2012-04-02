@@ -434,15 +434,10 @@ gst_video_balance_transform_frame_ip (GstVideoFilter * vfilter,
   if (!videobalance->process)
     goto not_negotiated;
 
-  /* if no change is needed, we are done */
-  if (gst_base_transform_is_passthrough (GST_BASE_TRANSFORM (vfilter)))
-    goto done;
-
   GST_OBJECT_LOCK (videobalance);
   videobalance->process (videobalance, frame);
   GST_OBJECT_UNLOCK (videobalance);
 
-done:
   return GST_FLOW_OK;
 
   /* ERRORS */
@@ -519,6 +514,7 @@ gst_video_balance_class_init (GstVideoBalanceClass * klass)
 
   trans_class->before_transform =
       GST_DEBUG_FUNCPTR (gst_video_balance_before_transform);
+  trans_class->transform_ip_on_passthrough = FALSE;
 
   vfilter_class->set_info = GST_DEBUG_FUNCPTR (gst_video_balance_set_info);
   vfilter_class->transform_frame_ip =

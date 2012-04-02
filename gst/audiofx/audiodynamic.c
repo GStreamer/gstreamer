@@ -256,8 +256,10 @@ gst_audio_dynamic_class_init (GstAudioDynamicClass * klass)
 
   GST_AUDIO_FILTER_CLASS (klass)->setup =
       GST_DEBUG_FUNCPTR (gst_audio_dynamic_setup);
+
   GST_BASE_TRANSFORM_CLASS (klass)->transform_ip =
       GST_DEBUG_FUNCPTR (gst_audio_dynamic_transform_ip);
+  GST_BASE_TRANSFORM_CLASS (klass)->transform_ip_on_passthrough = FALSE;
 }
 
 static void
@@ -705,8 +707,7 @@ gst_audio_dynamic_transform_ip (GstBaseTransform * base, GstBuffer * buf)
   if (GST_CLOCK_TIME_IS_VALID (stream_time))
     gst_object_sync_values (GST_OBJECT (filter), stream_time);
 
-  if (gst_base_transform_is_passthrough (base) ||
-      G_UNLIKELY (GST_BUFFER_FLAG_IS_SET (buf, GST_BUFFER_FLAG_GAP)))
+  if (G_UNLIKELY (GST_BUFFER_FLAG_IS_SET (buf, GST_BUFFER_FLAG_GAP)))
     return GST_FLOW_OK;
 
   gst_buffer_map (buf, &map, GST_MAP_READWRITE);

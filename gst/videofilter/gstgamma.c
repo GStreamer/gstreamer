@@ -134,6 +134,7 @@ gst_gamma_class_init (GstGammaClass * g_class)
 
   trans_class->before_transform =
       GST_DEBUG_FUNCPTR (gst_gamma_before_transform);
+  trans_class->transform_ip_on_passthrough = FALSE;
 
   vfilter_class->set_info = GST_DEBUG_FUNCPTR (gst_gamma_set_info);
   vfilter_class->transform_frame_ip =
@@ -400,14 +401,10 @@ gst_gamma_transform_frame_ip (GstVideoFilter * vfilter, GstVideoFrame * frame)
   if (!gamma->process)
     goto not_negotiated;
 
-  if (gst_base_transform_is_passthrough (GST_BASE_TRANSFORM (vfilter)))
-    goto done;
-
   GST_OBJECT_LOCK (gamma);
   gamma->process (gamma, frame);
   GST_OBJECT_UNLOCK (gamma);
 
-done:
   return GST_FLOW_OK;
 
   /* ERRORS */

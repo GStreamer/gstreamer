@@ -92,6 +92,7 @@ gst_alpha_color_class_init (GstAlphaColorClass * klass)
 
   gstbasetransform_class->transform_caps =
       GST_DEBUG_FUNCPTR (gst_alpha_color_transform_caps);
+  gstbasetransform_class->transform_ip_on_passthrough = FALSE;
 
   gstvideofilter_class->set_info = GST_DEBUG_FUNCPTR (gst_alpha_color_set_info);
   gstvideofilter_class->transform_frame_ip =
@@ -677,9 +678,6 @@ gst_alpha_color_transform_frame_ip (GstVideoFilter * filter,
     GstVideoFrame * frame)
 {
   GstAlphaColor *alpha = GST_ALPHA_COLOR (filter);
-
-  if (gst_base_transform_is_passthrough (GST_BASE_TRANSFORM (filter)))
-    return GST_FLOW_OK;
 
   if (G_UNLIKELY (!alpha->process))
     goto not_negotiated;
