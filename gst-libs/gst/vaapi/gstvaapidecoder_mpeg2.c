@@ -870,7 +870,7 @@ decode_slice(
     guint macroblock_offset;
     guint8 slice_vertical_position_extension;
     guint8 quantiser_scale_code;
-    guint8 intra_slice_flag, intra_slice = 0;
+    guint8 intra_slice = 0;
     guint8 extra_bit_slice, junk8;
 
     GST_DEBUG("slice %d @ %p, %u bytes)", slice_no, buf, buf_size);
@@ -896,11 +896,8 @@ decode_slice(
     READ_UINT8(&br, quantiser_scale_code, 5);
     READ_UINT8(&br, extra_bit_slice, 1);
     if (extra_bit_slice == 1) {
-        READ_UINT8(&br, intra_slice_flag, 1);
-        if (intra_slice_flag) {
-            READ_UINT8(&br, intra_slice, 1);
-            READ_UINT8(&br, junk8, 7);
-        }
+        READ_UINT8(&br, intra_slice, 1);
+        READ_UINT8(&br, junk8, 7);
         READ_UINT8(&br, extra_bit_slice, 1);
         while (extra_bit_slice == 1) {
             READ_UINT8(&br, junk8, 8);

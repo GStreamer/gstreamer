@@ -5,7 +5,8 @@ Copyright (C) 2011 Collabora
 
 Version 0.3.7 - DD.Apr.2012
 * Fix vaapidecode to report unsupported codec profiles
-* Fix decoding of MPEG-2 High profile streams compatible with Main profile
+* Fix MPEG-2 decoding of streams with extra slice() information
+* Fix MPEG-2 decoding of High profile streams compatible with Main profile
 * Don't forcibly resize user provided X windows (Holger Kaelberer)
 * Recalculate render rect only if caps are negotiated (Holger Kaelberer)
 
