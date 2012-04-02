@@ -269,7 +269,17 @@ error_decode_timeout:
 error_decode:
     {
         GST_DEBUG("decode error %d", status);
-        return GST_FLOW_UNEXPECTED;
+        switch (status) {
+        case GST_VAAPI_DECODER_STATUS_ERROR_UNSUPPORTED_CODEC:
+        case GST_VAAPI_DECODER_STATUS_ERROR_UNSUPPORTED_PROFILE:
+        case GST_VAAPI_DECODER_STATUS_ERROR_UNSUPPORTED_CHROMA_FORMAT:
+            ret = GST_FLOW_NOT_SUPPORTED;
+            break;
+        default:
+            ret = GST_FLOW_UNEXPECTED;
+            break;
+        }
+        return ret;
     }
 error_create_buffer:
     {
