@@ -1032,6 +1032,16 @@ gst_ts_demux_stream_flush (TSDemuxStream * stream)
   memset (stream->pendingbuffers, 0, TS_MAX_PENDING_BUFFERS);
   stream->nbpending = 0;
 
+  if (stream->current) {
+    gst_buffer_list_unref (stream->current);
+    stream->current = NULL;
+  }
+
+  if (stream->currentit) {
+    gst_buffer_list_iterator_free (stream->currentit);
+    stream->currentit = NULL;
+  }
+
   if (stream->currentlist) {
     g_list_foreach (stream->currentlist, (GFunc) gst_buffer_unref, NULL);
     g_list_free (stream->currentlist);

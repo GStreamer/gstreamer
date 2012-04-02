@@ -1,8 +1,5 @@
 plugin_LTLIBRARIES = libgstmpegtsdemux.la
 
-# FIXME 0.11: ignore GValueArray warnings for now until this is sorted
-ERROR_CFLAGS=
-
 libgstmpegtsdemux_la_SOURCES = \
 	gsttsdemux.c \
 	gstmpegdesc.c \

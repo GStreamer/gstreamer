@@ -1399,9 +1399,11 @@ mpegts_base_chain (GstPad * pad, GstBuffer * buf)
         based = mpegts_base_handle_psi (base, &section);
         gst_buffer_unref (section.buffer);
 
-        if (G_UNLIKELY (!based))
+        if (G_UNLIKELY (!based)) {
+          gst_buffer_unref (packet.buffer);
           /* bad PSI table */
           goto next;
+        }
       }
       /* we need to push section packet downstream */
       res = mpegts_base_push (base, &packet, &section);
