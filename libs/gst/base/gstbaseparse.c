@@ -2606,7 +2606,7 @@ gst_base_parse_chain (GstPad * pad, GstObject * parent, GstBuffer * buffer)
     /* probably already implicitly unmapped due to adapter operation,
      * but for good measure ... */
     gst_adapter_unmap (parse->priv->adapter);
-    if (ret != GST_FLOW_OK) {
+    if (ret != GST_FLOW_OK && ret != GST_FLOW_NOT_LINKED) {
       goto done;
     }
     if (skip == 0 && flush == 0) {
