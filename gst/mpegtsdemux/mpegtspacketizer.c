@@ -2375,8 +2375,13 @@ MpegTSPacketizerPacketReturn
 mpegts_packetizer_process_next_packet (MpegTSPacketizer2 * packetizer)
 {
   MpegTSPacketizerPacket packet;
+  MpegTSPacketizerPacketReturn ret;
 
-  return mpegts_packetizer_next_packet (packetizer, &packet);
+  ret = mpegts_packetizer_next_packet (packetizer, &packet);
+  if (packet.buffer)
+    gst_buffer_unref (packet.buffer);
+
+  return ret;
 }
 
 void
