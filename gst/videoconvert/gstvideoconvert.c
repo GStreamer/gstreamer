@@ -146,6 +146,7 @@ gst_video_convert_fixate_caps (GstBaseTransform * trans,
 
   result = gst_caps_intersect (othercaps, caps);
   if (gst_caps_is_empty (result)) {
+    gst_caps_unref (result);
     result = othercaps;
   } else {
     gst_caps_unref (othercaps);
