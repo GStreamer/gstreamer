@@ -438,19 +438,20 @@ print_tag (const GstTagList * list, const gchar * tag, gpointer unused)
   }
 }
 
+#define MAX_INDENT 40
+
 static void
 print_toc_entry (gpointer data, gpointer user_data)
 {
   GstTocEntry *entry = (GstTocEntry *) data;
-  const guint max_indent = 40;
-  const gchar spc[max_indent + 1] = "                                        ";
+  const gchar spc[MAX_INDENT + 1] = "                                        ";
   const gchar *entry_types[] = { "chapter", "edition" };
-  guint indent = MIN (GPOINTER_TO_UINT (user_data), max_indent);
+  guint indent = MIN (GPOINTER_TO_UINT (user_data), MAX_INDENT);
   gint64 start, stop;
 
   gst_toc_entry_get_start_stop (entry, &start, &stop);
 
-  PRINT ("%s%s:", &spc[max_indent - indent], entry_types[entry->type]);
+  PRINT ("%s%s:", &spc[MAX_INDENT - indent], entry_types[entry->type]);
   if (GST_CLOCK_TIME_IS_VALID (start)) {
     PRINT (" start: %" GST_TIME_FORMAT, GST_TIME_ARGS (start));
   }
