@@ -238,6 +238,14 @@ gst_vaapi_dpb_add(GstVaapiDpb *dpb, GstVaapiPicture *picture)
     return klass->add(dpb, picture);
 }
 
+guint
+gst_vaapi_dpb_size(GstVaapiDpb *dpb)
+{
+    g_return_val_if_fail(GST_VAAPI_IS_DPB(dpb), 0);
+
+    return dpb->num_pictures;
+}
+
 /* ------------------------------------------------------------------------- */
 /* --- MPEG-2 Decoded Picture Buffer                                     --- */
 /* ------------------------------------------------------------------------- */

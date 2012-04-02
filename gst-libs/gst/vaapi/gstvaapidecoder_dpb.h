@@ -103,6 +103,10 @@ gboolean
 gst_vaapi_dpb_add(GstVaapiDpb *dpb, GstVaapiPicture *picture)
     attribute_hidden;
 
+guint
+gst_vaapi_dpb_size(GstVaapiDpb *dpb)
+    attribute_hidden;
+
 static inline gpointer
 gst_vaapi_dpb_ref(gpointer ptr)
 {
