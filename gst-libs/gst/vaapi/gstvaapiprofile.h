@@ -65,12 +65,16 @@ enum _GstVaapiCodec {
 
 /**
  * GstVaapiProfile:
+ * @GST_VAAPI_PROFILE_UNKNOWN:
+ *   Unknown profile, used for initializers
  * @GST_VAAPI_PROFILE_MPEG1:
  *   MPEG-1
  * @GST_VAAPI_PROFILE_MPEG2_SIMPLE:
  *   MPEG-2 simple profile
  * @GST_VAAPI_PROFILE_MPEG2_MAIN:
  *   MPEG-2 main profile
+ * @GST_VAAPI_PROFILE_MPEG2_HIGH:
+ *   MPEG-2 high profile
  * @GST_VAAPI_PROFILE_MPEG4_SIMPLE:
  *   MPEG-4 Part-2 simple profile
  * @GST_VAAPI_PROFILE_MPEG4_ADVANCED_SIMPLE:
@@ -95,9 +99,11 @@ enum _GstVaapiCodec {
  * The set of all profiles for #GstVaapiProfile.
  */
 enum _GstVaapiProfile {
+    GST_VAAPI_PROFILE_UNKNOWN               = 0,
     GST_VAAPI_PROFILE_MPEG1                 = GST_VAAPI_MAKE_PROFILE(MPEG1,1),
     GST_VAAPI_PROFILE_MPEG2_SIMPLE          = GST_VAAPI_MAKE_PROFILE(MPEG2,1),
     GST_VAAPI_PROFILE_MPEG2_MAIN            = GST_VAAPI_MAKE_PROFILE(MPEG2,2),
+    GST_VAAPI_PROFILE_MPEG2_HIGH            = GST_VAAPI_MAKE_PROFILE(MPEG2,3),
     GST_VAAPI_PROFILE_MPEG4_SIMPLE          = GST_VAAPI_MAKE_PROFILE(MPEG4,1),
     GST_VAAPI_PROFILE_MPEG4_ADVANCED_SIMPLE = GST_VAAPI_MAKE_PROFILE(MPEG4,2),
     GST_VAAPI_PROFILE_MPEG4_MAIN            = GST_VAAPI_MAKE_PROFILE(MPEG4,3),

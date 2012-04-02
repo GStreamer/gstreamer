@@ -165,6 +165,7 @@ pts_eval(PTSGenerator *tsg, GstClockTime pic_pts, guint pic_tsn)
 
 struct _GstVaapiDecoderMpeg2Private {
     GstVaapiProfile             profile;
+    GstVaapiProfile             hw_profile;
     guint                       width;
     guint                       height;
     guint                       fps_n;
@@ -329,13 +330,66 @@ copy_quant_matrix(guint8 dst[64], const guint8 src[64])
     memcpy(dst, src, 64);
 }
 
+static const char *
+get_profile_str(GstVaapiProfile profile)
+{
+    char *str;
+
+    switch (profile) {
+    case GST_VAAPI_PROFILE_MPEG2_SIMPLE:    str = "simple";     break;
+    case GST_VAAPI_PROFILE_MPEG2_MAIN:      str = "main";       break;
+    case GST_VAAPI_PROFILE_MPEG2_HIGH:      str = "high";       break;
+    default:                                str = "<unknown>";  break;
+    }
+    return str;
+}
+
+static GstVaapiProfile
+get_profile(GstVaapiDecoderMpeg2 *decoder, GstVaapiEntrypoint entrypoint)
+{
+    GstVaapiDisplay * const va_display = GST_VAAPI_DECODER_DISPLAY(decoder);
+    GstVaapiDecoderMpeg2Private * const priv = decoder->priv;
+    GstVaapiProfile profile = priv->profile;
+
+    do {
+        /* Return immediately if the exact same profile was found */
+        if (gst_vaapi_display_has_decoder(va_display, profile, entrypoint))
+            break;
+
+        /* Otherwise, try to map to a higher profile */
+        switch (profile) {
+        case GST_VAAPI_PROFILE_MPEG2_SIMPLE:
+            profile = GST_VAAPI_PROFILE_MPEG2_MAIN;
+            break;
+        case GST_VAAPI_PROFILE_MPEG2_MAIN:
+            profile = GST_VAAPI_PROFILE_MPEG2_HIGH;
+            break;
+        case GST_VAAPI_PROFILE_MPEG2_HIGH:
+            // Try to map to main profile if no high profile specific bits used
+            if (priv->profile == profile    &&
+                !priv->has_seq_scalable_ext &&
+                (priv->has_seq_ext && priv->seq_ext.chroma_format == 1)) {
+                profile = GST_VAAPI_PROFILE_MPEG2_MAIN;
+                break;
+            }
+            // fall-through
+        default:
+            profile = GST_VAAPI_PROFILE_UNKNOWN;
+            break;
+        }
+    } while (profile != GST_VAAPI_PROFILE_UNKNOWN);
+
+    if (profile != priv->profile)
+        GST_INFO("forced %s profile to %s profile",
+                 get_profile_str(priv->profile), get_profile_str(profile));
+    return profile;
+}
+
 static GstVaapiDecoderStatus
 ensure_context(GstVaapiDecoderMpeg2 *decoder)
 {
     GstVaapiDecoderMpeg2Private * const priv = decoder->priv;
-    GstVaapiProfile profiles[2];
     GstVaapiEntrypoint entrypoint = GST_VAAPI_ENTRYPOINT_VLD;
-    guint i, n_profiles = 0;
     gboolean reset_context = FALSE;
 
     if (priv->profile_changed) {
@@ -343,18 +397,9 @@ ensure_context(GstVaapiDecoderMpeg2 *decoder)
         priv->profile_changed = FALSE;
         reset_context         = TRUE;
 
-        profiles[n_profiles++] = priv->profile;
-        if (priv->profile == GST_VAAPI_PROFILE_MPEG2_SIMPLE)
-            profiles[n_profiles++] = GST_VAAPI_PROFILE_MPEG2_MAIN;
-
-        for (i = 0; i < n_profiles; i++) {
-            if (gst_vaapi_display_has_decoder(GST_VAAPI_DECODER_DISPLAY(decoder),
-                                              profiles[i], entrypoint))
-                break;
-        }
-        if (i == n_profiles)
+        priv->hw_profile = get_profile(decoder, entrypoint);
+        if (priv->hw_profile == GST_VAAPI_PROFILE_UNKNOWN)
             return GST_VAAPI_DECODER_STATUS_ERROR_UNSUPPORTED_PROFILE;
-        priv->profile = profiles[i];
     }
 
     if (priv->size_changed) {
@@ -366,7 +411,7 @@ ensure_context(GstVaapiDecoderMpeg2 *decoder)
     if (reset_context) {
         reset_context = gst_vaapi_decoder_ensure_context(
             GST_VAAPI_DECODER(decoder),
-            priv->profile,
+            priv->hw_profile,
             entrypoint,
             priv->width, priv->height
         );
@@ -521,6 +566,9 @@ decode_sequence_ext(GstVaapiDecoderMpeg2 *decoder, guchar *buf, guint buf_size)
         break;
     case GST_MPEG_VIDEO_PROFILE_MAIN:
         profile = GST_VAAPI_PROFILE_MPEG2_MAIN;
+        break;
+    case GST_MPEG_VIDEO_PROFILE_HIGH:
+        profile = GST_VAAPI_PROFILE_MPEG2_HIGH;
         break;
     default:
         GST_ERROR("unsupported profile %d", seq_ext->profile);
@@ -1080,6 +1128,7 @@ gst_vaapi_decoder_mpeg2_init(GstVaapiDecoderMpeg2 *decoder)
     priv->height                = 0;
     priv->fps_n                 = 0;
     priv->fps_d                 = 0;
+    priv->hw_profile            = GST_VAAPI_PROFILE_UNKNOWN;
     priv->profile               = GST_VAAPI_PROFILE_MPEG2_SIMPLE;
     priv->current_picture       = NULL;
     priv->adapter               = NULL;
