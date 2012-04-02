@@ -405,6 +405,8 @@ gst_volume_class_init (GstVolumeClass * klass)
   trans_class->before_transform = GST_DEBUG_FUNCPTR (volume_before_transform);
   trans_class->transform_ip = GST_DEBUG_FUNCPTR (volume_transform_ip);
   trans_class->stop = GST_DEBUG_FUNCPTR (volume_stop);
+  trans_class->transform_ip_on_passthrough = FALSE;
+
   filter_class->setup = GST_DEBUG_FUNCPTR (volume_setup);
 }
 
@@ -810,9 +812,8 @@ volume_transform_ip (GstBaseTransform * base, GstBuffer * outbuf)
   if (G_UNLIKELY (!self->negotiated))
     goto not_negotiated;
 
-  /* don't process data in passthrough-mode */
-  if (gst_base_transform_is_passthrough (base) ||
-      GST_BUFFER_FLAG_IS_SET (outbuf, GST_BUFFER_FLAG_GAP))
+  /* don't process data with GAP */
+  if (GST_BUFFER_FLAG_IS_SET (outbuf, GST_BUFFER_FLAG_GAP))
     return GST_FLOW_OK;
 
   gst_buffer_map (outbuf, &map, GST_MAP_READWRITE);
