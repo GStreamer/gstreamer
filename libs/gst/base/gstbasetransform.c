@@ -394,6 +394,7 @@ gst_base_transform_class_init (GstBaseTransformClass * klass)
   gobject_class->finalize = gst_base_transform_finalize;
 
   klass->passthrough_on_same_caps = FALSE;
+  klass->transform_ip_on_passthrough = TRUE;
 
   klass->transform_caps =
       GST_DEBUG_FUNCPTR (gst_base_transform_default_transform_caps);
@@ -1996,8 +1997,8 @@ no_qos:
     /* In passthrough mode, give transform_ip a look at the
      * buffer, without making it writable, or just push the
      * data through */
-    if (bclass->transform_ip) {
-      GST_DEBUG_OBJECT (trans, "doing passthrough transform");
+    if (bclass->transform_ip_on_passthrough && bclass->transform_ip) {
+      GST_DEBUG_OBJECT (trans, "doing passthrough transform_ip");
       ret = bclass->transform_ip (trans, *outbuf);
     } else {
       GST_DEBUG_OBJECT (trans, "element is in passthrough");
