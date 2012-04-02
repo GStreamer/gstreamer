@@ -175,6 +175,7 @@ gst_zbar_class_init (GstZBarClass * g_class)
 
   trans_class->start = GST_DEBUG_FUNCPTR (gst_zbar_start);
   trans_class->stop = GST_DEBUG_FUNCPTR (gst_zbar_stop);
+  trans_class->transform_ip_on_passthrough = FALSE;
 
   vfilter_class->transform_frame_ip =
       GST_DEBUG_FUNCPTR (gst_zbar_transform_frame_ip);
@@ -253,9 +254,6 @@ gst_zbar_transform_frame_ip (GstVideoFilter * vfilter, GstVideoFrame * frame)
   const zbar_symbol_t *symbol;
   int n;
 
-  if (gst_base_transform_is_passthrough (GST_BASE_TRANSFORM (vfilter)))
-    goto done;
-
   image = zbar_image_create ();
 
   /* all formats we support start with an 8-bit Y plane. zbar doesn't need
@@ -305,7 +303,6 @@ out:
   zbar_image_scanner_recycle_image (zbar->scanner, image);
   zbar_image_destroy (image);
 
-done:
   return GST_FLOW_OK;
 }
 
