@@ -2362,7 +2362,7 @@ gst_query_set_toc (GstQuery * query, GstToc * toc, const gchar * extend_uid)
   g_return_if_fail (GST_QUERY_TYPE (query) == GST_QUERY_TOC);
   g_return_if_fail (toc != NULL);
 
-  structure = _gst_toc_to_structure (toc);
+  structure = __gst_toc_to_structure (toc);
 
   g_return_if_fail (structure != NULL);
 
@@ -2374,7 +2374,7 @@ gst_query_set_toc (GstQuery * query, GstToc * toc, const gchar * extend_uid)
   }
 
   if (extend_uid != NULL)
-    _gst_toc_structure_set_extend_uid (structure, extend_uid);
+    __gst_toc_structure_set_extend_uid (structure, extend_uid);
 
   gst_structure_set_parent_refcount (structure, &(query->mini_object.refcount));
   GST_QUERY_STRUCTURE (query) = structure;
@@ -2406,8 +2406,8 @@ gst_query_parse_toc (GstQuery * query, GstToc ** toc, gchar ** extend_uid)
   g_return_if_fail (structure != NULL);
 
   if (toc != NULL)
-    *toc = _gst_toc_from_structure (structure);
+    *toc = __gst_toc_from_structure (structure);
 
   if (extend_uid != NULL)
-    *extend_uid = _gst_toc_structure_get_extend_uid (structure);
+    *extend_uid = __gst_toc_structure_get_extend_uid (structure);
 }

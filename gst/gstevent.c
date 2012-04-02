@@ -1634,10 +1634,10 @@ gst_event_new_toc (GstToc * toc, gboolean updated)
 
   GST_CAT_INFO (GST_CAT_EVENT, "creating toc event");
 
-  toc_struct = _gst_toc_to_structure (toc);
+  toc_struct = __gst_toc_to_structure (toc);
 
   if (G_LIKELY (toc_struct != NULL)) {
-    _gst_toc_structure_set_updated (toc_struct, updated);
+    __gst_toc_structure_set_updated (toc_struct, updated);
     return gst_event_new_custom (GST_EVENT_TOC, toc_struct);
   } else
     return NULL;
@@ -1663,10 +1663,10 @@ gst_event_parse_toc (GstEvent * event, GstToc ** toc, gboolean * updated)
   g_return_if_fail (toc != NULL);
 
   structure = gst_event_get_structure (event);
-  *toc = _gst_toc_from_structure (structure);
+  *toc = __gst_toc_from_structure (structure);
 
   if (updated != NULL)
-    *updated = _gst_toc_structure_get_updated (structure);
+    *updated = __gst_toc_structure_get_updated (structure);
 }
 
 /**

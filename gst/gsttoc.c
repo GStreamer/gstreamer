@@ -480,7 +480,7 @@ gst_toc_entry_from_structure (const GstStructure * entry, guint level)
 }
 
 GstToc *
-_gst_toc_from_structure (const GstStructure * toc)
+__gst_toc_from_structure (const GstStructure * toc)
 {
   GstToc *ret;
   GstTocEntry *subentry;
@@ -645,7 +645,7 @@ gst_toc_entry_to_structure (const GstTocEntry * entry, guint level)
 }
 
 GstStructure *
-_gst_toc_to_structure (const GstToc * toc)
+__gst_toc_to_structure (const GstToc * toc)
 {
   GValue val = { 0 };
   GValue subentries_val = { 0 };
@@ -951,7 +951,7 @@ gst_toc_entry_get_start_stop (const GstTocEntry * entry, gint64 * start,
 }
 
 gboolean
-_gst_toc_structure_get_updated (const GstStructure * toc)
+__gst_toc_structure_get_updated (const GstStructure * toc)
 {
   const GValue *val;
 
@@ -967,7 +967,7 @@ _gst_toc_structure_get_updated (const GstStructure * toc)
 }
 
 void
-_gst_toc_structure_set_updated (GstStructure * toc, gboolean updated)
+__gst_toc_structure_set_updated (GstStructure * toc, gboolean updated)
 {
   GValue val = { 0 };
 
@@ -980,7 +980,7 @@ _gst_toc_structure_set_updated (GstStructure * toc, gboolean updated)
 }
 
 gchar *
-_gst_toc_structure_get_extend_uid (const GstStructure * toc)
+__gst_toc_structure_get_extend_uid (const GstStructure * toc)
 {
   const GValue *val;
 
@@ -996,7 +996,8 @@ _gst_toc_structure_get_extend_uid (const GstStructure * toc)
 }
 
 void
-_gst_toc_structure_set_extend_uid (GstStructure * toc, const gchar * extend_uid)
+__gst_toc_structure_set_extend_uid (GstStructure * toc,
+    const gchar * extend_uid)
 {
   GValue val = { 0 };
 

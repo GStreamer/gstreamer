@@ -117,12 +117,12 @@ void  _priv_gst_toc_initialize (void);
 
 /* TOC functions */
 /* These functions are used to parse TOC messages, events and queries */
-GstToc*        _gst_toc_from_structure (const GstStructure *toc);
-GstStructure*  _gst_toc_to_structure (const GstToc *toc);
-gboolean       _gst_toc_structure_get_updated (const GstStructure * toc);
-void           _gst_toc_structure_set_updated (GstStructure * toc, gboolean updated);
-gchar*         _gst_toc_structure_get_extend_uid (const GstStructure * toc);
-void           _gst_toc_structure_set_extend_uid (GstStructure * toc, const gchar * extend_uid);
+GstToc*        __gst_toc_from_structure (const GstStructure *toc);
+GstStructure*  __gst_toc_to_structure (const GstToc *toc);
+gboolean       __gst_toc_structure_get_updated (const GstStructure * toc);
+void           __gst_toc_structure_set_updated (GstStructure * toc, gboolean updated);
+gchar*         __gst_toc_structure_get_extend_uid (const GstStructure * toc);
+void           __gst_toc_structure_set_extend_uid (GstStructure * toc, const gchar * extend_uid);
 
 /* Private registry functions */
 gboolean _priv_gst_registry_remove_cache_plugins (GstRegistry *registry);
