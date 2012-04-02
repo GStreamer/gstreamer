@@ -934,7 +934,7 @@ gst_matroska_read_common_parse_chapter_element (GstMatroskaReadCommon * common,
     return ret;
   }
 
-  titles = gst_tag_list_new ();
+  titles = gst_tag_list_new_empty ();
   chapter_info = gst_toc_entry_new (GST_TOC_ENTRY_TYPE_CHAPTER,
       GST_MATROSKA_TOC_UID_EMPTY);
 
@@ -1882,7 +1882,7 @@ gst_matroska_read_common_parse_metadata_id_tag (GstMatroskaReadCommon * common,
 
   edition_targets = g_array_new (FALSE, FALSE, sizeof (guint64));
   chapter_targets = g_array_new (FALSE, FALSE, sizeof (guint64));
-  taglist = gst_tag_list_new ();
+  taglist = gst_tag_list_new_empty ();
 
   while (ret == GST_FLOW_OK && gst_ebml_read_has_remaining (ebml, 1, TRUE)) {
     /* read all sub-entries */
