@@ -75,6 +75,14 @@ Hardware requirements
 Usage
 -----
 
+  VA elements are automatically plugged into GStreamer pipelines. So,
+  using playbin2 should work as is. However, here are a few alternate
+  pipelines constructed manually.
+
   * Play an H.264 video with an MP4 container in fullscreen mode
   $ gst-launch-0.10 -v filesrc location=/path/to/video.mp4 ! \
       qtdemux ! vaapidecode ! vaapisink fullscreen=true
+
+  * Play a raw MPEG-2 interlaced stream
+  $ gst-launch-0.10 -v filesrc location=/path/to/mpeg2.bits ! \
+      mpegvideoparse ! vaapidecode ! vaapipostproc ! vaapisink

@@ -1,7 +1,29 @@
-gst-vaapi NEWS -- summary of changes.  2012-02-01
+gst-vaapi NEWS -- summary of changes.  2012-04-02
 Copyright (C) 2010-2011 Splitted-Desktop Systems
 Copyright (C) 2011-2012 Intel Corporation
 Copyright (C) 2011 Collabora
+
+Version 0.3.6 - 02.Apr.2012
+* Add support for decoding MPEG-2 interlaced streams
+* Add support for interlaced streams with FFmpeg decoders (Holger Kaelberer)
+* Add vaapipostproc element for video postprocessing (e.g. deinterlacing)
+* Skip all H.264 Filler Data NALs
+* Fix crashes in MPEG-4 decoder (Feng Yuan)
+* Fix fallback from MPEG-2 Simple to Main profile
+* Improve decoding of misformed MPEG-2 streams (+Feng Yuan)
+* Avoid a hang in playbin2 for some MPEG-2 TS streams (Feng Yuan)
+
+Version 0.3.5 - 02.Mar.2012
+* Fix H.264 decoding when emulation prevention bytes are detected
+* Skip all H.264 Access Unit (AU) NALs (Feng Yuan)
+* Fix modification process of H.264 reference picture lists (Feng Yuan)
+* Fix MPEG-2 stream size calculation (Sreerenj Balachandran)
+* Fix MPEG-2 decoding on Intel Gen with multiple slices per MB line
+* Fix crash when downloading/uploading VA images on PowerVR (Cedar Trail)
+* Fix double buffer free issues with some VA drivers
+* Fix crash when there is no free surface available for decoding
+* Skip profiles which have no entrypoints (Halley Zhao)
+* Fix minor memory leaks in plug-in elements
 
 Version 0.3.4 - 01.Feb.2012
 * Add H.264 decoder (based on codecparsers)
