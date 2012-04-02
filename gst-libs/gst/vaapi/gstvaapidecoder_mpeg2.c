@@ -1057,7 +1057,7 @@ gst_vaapi_decoder_mpeg2_init(GstVaapiDecoderMpeg2 *decoder)
     priv->has_pic_ext           = FALSE;
     priv->has_quant_matrix_ext  = FALSE;
     priv->size_changed          = FALSE;
-    priv->profile_changed       = FALSE;
+    priv->profile_changed       = TRUE; /* Allow fallbacks to work */
     priv->quant_matrix_changed  = FALSE;
     priv->progressive_sequence  = FALSE;
     priv->closed_gop            = FALSE;
