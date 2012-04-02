@@ -48,6 +48,11 @@ goom_lines (GoomData * goomdata, gint16 data[2][512], unsigned int ID,
       color2 = 0x00AA33DD;
       break;
     }
+    default:{
+      color1 = color2 = 0;
+      g_assert_not_reached ();
+      break;
+    }
   }
   *color = lighten (*color, power);
   color++;
