@@ -85,8 +85,6 @@ static gboolean gst_audio_convert_set_caps (GstBaseTransform * base,
     GstCaps * incaps, GstCaps * outcaps);
 static GstFlowReturn gst_audio_convert_transform (GstBaseTransform * base,
     GstBuffer * inbuf, GstBuffer * outbuf);
-static GstFlowReturn gst_audio_convert_transform_ip (GstBaseTransform * base,
-    GstBuffer * buf);
 static void gst_audio_convert_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec);
 static void gst_audio_convert_get_property (GObject * object, guint prop_id,
@@ -215,8 +213,6 @@ gst_audio_convert_class_init (GstAudioConvertClass * klass)
       GST_DEBUG_FUNCPTR (gst_audio_convert_fixate_caps);
   basetransform_class->set_caps =
       GST_DEBUG_FUNCPTR (gst_audio_convert_set_caps);
-  basetransform_class->transform_ip =
-      GST_DEBUG_FUNCPTR (gst_audio_convert_transform_ip);
   basetransform_class->transform =
       GST_DEBUG_FUNCPTR (gst_audio_convert_transform);
 
@@ -656,13 +652,6 @@ no_converter:
     GST_ERROR_OBJECT (base, "could not find converter");
     return FALSE;
   }
-}
-
-static GstFlowReturn
-gst_audio_convert_transform_ip (GstBaseTransform * base, GstBuffer * buf)
-{
-  /* nothing to do here */
-  return GST_FLOW_OK;
 }
 
 static GstFlowReturn
