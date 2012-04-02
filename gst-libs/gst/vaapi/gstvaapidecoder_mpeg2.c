@@ -128,7 +128,8 @@ pts_sync(PTSGenerator *tsg, GstClockTime gop_pts)
         /* Interpolate GOP TSN from this valid PTS */
         if (GST_CLOCK_TIME_IS_VALID(tsg->gop_pts))
             gop_tsn = tsg->gop_tsn + gst_util_uint64_scale(
-                gop_pts - tsg->gop_pts, tsg->fps_n, GST_SECOND * tsg->fps_d);
+                gop_pts - tsg->gop_pts + pts_get_duration(tsg, 1) - 1,
+                tsg->fps_n, GST_SECOND * tsg->fps_d);
         else
             gop_tsn = 0;
     }
