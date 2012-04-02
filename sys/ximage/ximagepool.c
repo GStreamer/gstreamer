@@ -259,6 +259,7 @@ create_failed:
         ("could not XShmCreateImage a %dx%d image", width, height));
     goto beach;
   }
+#ifdef HAVE_XSHM
 shmget_failed:
   {
     g_mutex_unlock (ximagesink->x_lock);
@@ -290,6 +291,7 @@ xattach_failed:
             width, height), ("Failed to XShmAttach"));
     goto beach;
   }
+#endif
 }
 
 static void
