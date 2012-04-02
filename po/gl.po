@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 0.10.32.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2012-03-22 12:55+0100\n"
+"POT-Creation-Date: 2012-04-02 23:15+0100\n"
 "PO-Revision-Date: 2011-09-05 12:49+0200\n"
 "Last-Translator: Fran Dieguez <frandieguez@ubuntu.com>\n"
 "Language-Team: Galician <proxecto@trasno.net>\n"
@@ -1073,6 +1073,18 @@ msgstr "ETIQUETA ENCONTRADA      : encontrada polo obxecto «%s».\n"
 msgid "FOUND TAG\n"
 msgstr "ETIQUETA ENCONTRADA\n"
 
+#, fuzzy, c-format
+msgid "FOUND TOC      : found by element \"%s\".\n"
+msgstr "ATOPADA ETIQUETA      : atopada polo elemento «%s».\n"
+
+#, fuzzy, c-format
+msgid "FOUND TOC      : found by object \"%s\".\n"
+msgstr "ETIQUETA ENCONTRADA      : encontrada polo obxecto «%s».\n"
+
+#, fuzzy
+msgid "FOUND TOC\n"
+msgstr "ETIQUETA ENCONTRADA\n"
+
 #, c-format
 msgid ""
 "INFO:\n"
@@ -1115,6 +1127,9 @@ msgstr "non hai un elemento «%s»"
 
 msgid "Output tags (also known as metadata)"
 msgstr "Etiquetas de saída (tamén coñecido como metadatos)"
+
+msgid "Ouput TOC (chapters and editions)"
+msgstr ""
 
 msgid "Output status information and property notifications"
 msgstr "Información do estado da saída e notificacións das propiedades"

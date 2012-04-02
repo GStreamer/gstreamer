@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 0.10.32.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2012-03-22 12:55+0100\n"
+"POT-Creation-Date: 2012-04-02 23:15+0100\n"
 "PO-Revision-Date: 2012-01-28 11:44+0700\n"
 "Last-Translator: Andhika Padmawan <andhika.padmawan@gmail.com>\n"
 "Language-Team: Indonesian <translation-team-id@lists.sourceforge.net>\n"
@@ -1069,6 +1069,18 @@ msgstr "MENEMUKAN TAG      : ditemukan oleh objek \"%s\".\n"
 msgid "FOUND TAG\n"
 msgstr "MENEMUKAN TAG\n"
 
+#, fuzzy, c-format
+msgid "FOUND TOC      : found by element \"%s\".\n"
+msgstr "MENEMUKAN TAG      : ditemukan oleh elemen \"%s\".\n"
+
+#, fuzzy, c-format
+msgid "FOUND TOC      : found by object \"%s\".\n"
+msgstr "MENEMUKAN TAG      : ditemukan oleh objek \"%s\".\n"
+
+#, fuzzy
+msgid "FOUND TOC\n"
+msgstr "MENEMUKAN TAG\n"
+
 #, c-format
 msgid ""
 "INFO:\n"
@@ -1109,6 +1121,9 @@ msgstr "tak ada elemen \"%s\""
 
 msgid "Output tags (also known as metadata)"
 msgstr "Tag keluaran (juga dikenal sebagai metadata)"
+
+msgid "Ouput TOC (chapters and editions)"
+msgstr ""
 
 msgid "Output status information and property notifications"
 msgstr "Informasi status keluaran dan pemberitahuan properti"

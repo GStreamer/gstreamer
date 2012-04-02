@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 0.10.30.3\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2012-03-22 12:55+0100\n"
+"POT-Creation-Date: 2012-04-02 23:15+0100\n"
 "PO-Revision-Date: 2010-11-08 16:13+0100\n"
 "Last-Translator: Peter Tuhársky <tuharsky@misbb.sk>\n"
 "Language-Team: Slovak <sk-i18n@lists.linux.sk>\n"
@@ -1091,6 +1091,18 @@ msgstr "NAŠLA SA ZNAČKA    : našiel ju objekt \"%s\".\n"
 msgid "FOUND TAG\n"
 msgstr "NAŠLA SA ZNAČKA\n"
 
+#, fuzzy, c-format
+msgid "FOUND TOC      : found by element \"%s\".\n"
+msgstr "NAŠLA SA ZNAČKA    : našiel ju prvok \"%s\".\n"
+
+#, fuzzy, c-format
+msgid "FOUND TOC      : found by object \"%s\".\n"
+msgstr "NAŠLA SA ZNAČKA    : našiel ju objekt \"%s\".\n"
+
+#, fuzzy
+msgid "FOUND TOC\n"
+msgstr "NAŠLA SA ZNAČKA\n"
+
 #, c-format
 msgid ""
 "INFO:\n"
@@ -1131,6 +1143,9 @@ msgstr "prvok \"%s\" neexistuje"
 
 msgid "Output tags (also known as metadata)"
 msgstr "Vypísať značky (známe tiež ako metadáta)"
+
+msgid "Ouput TOC (chapters and editions)"
+msgstr ""
 
 msgid "Output status information and property notifications"
 msgstr "Vypísať informácie o stave a upozornenia o vlastnostiach"

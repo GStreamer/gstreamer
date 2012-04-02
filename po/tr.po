@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 0.8.0\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2012-03-22 12:55+0100\n"
+"POT-Creation-Date: 2012-04-02 23:15+0100\n"
 "PO-Revision-Date: 2004-04-03 03:14+0300\n"
 "Last-Translator: Baris Cicek <baris@teamforce.name.tr>\n"
 "Language-Team: Turkish <gnu-tr-u12a@lists.sourceforge.net>\n"
@@ -1089,6 +1089,17 @@ msgstr "ETİKET BULUNDU      : \"%s\" öğesi tarafından bulundu.\n"
 msgid "FOUND TAG\n"
 msgstr ""
 
+#, fuzzy, c-format
+msgid "FOUND TOC      : found by element \"%s\".\n"
+msgstr "ETİKET BULUNDU      : \"%s\" öğesi tarafından bulundu.\n"
+
+#, fuzzy, c-format
+msgid "FOUND TOC      : found by object \"%s\".\n"
+msgstr "ETİKET BULUNDU      : \"%s\" öğesi tarafından bulundu.\n"
+
+msgid "FOUND TOC\n"
+msgstr ""
+
 #, c-format
 msgid ""
 "INFO:\n"
@@ -1127,6 +1138,9 @@ msgstr "\"%s\" öğesi yok"
 
 msgid "Output tags (also known as metadata)"
 msgstr "Çıktı etiketleri (metadata olarak da bilinir)"
+
+msgid "Ouput TOC (chapters and editions)"
+msgstr ""
 
 msgid "Output status information and property notifications"
 msgstr "Çıktı durum bilgisi ve özellik uyarıları"

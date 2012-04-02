@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 0.10.25.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2012-03-22 12:55+0100\n"
+"POT-Creation-Date: 2012-04-02 23:15+0100\n"
 "PO-Revision-Date: 2010-02-02 18:58+0800\n"
 "Last-Translator: Ji ZhengYu <zhengyuji@gmail.com>\n"
 "Language-Team: Chinese (simplified) <i18n-zh@googlegroups.com>\n"
@@ -1048,6 +1048,18 @@ msgstr "找到标识    :由组件“%s”找到。\n"
 msgid "FOUND TAG\n"
 msgstr "找到标识\n"
 
+#, fuzzy, c-format
+msgid "FOUND TOC      : found by element \"%s\".\n"
+msgstr "找到标识    :由组件“%s”找到。\n"
+
+#, fuzzy, c-format
+msgid "FOUND TOC      : found by object \"%s\".\n"
+msgstr "找到标识    :由组件“%s”找到。\n"
+
+#, fuzzy
+msgid "FOUND TOC\n"
+msgstr "找到标识\n"
+
 #, c-format
 msgid ""
 "INFO:\n"
@@ -1088,6 +1100,9 @@ msgstr "无组件“%s”"
 
 msgid "Output tags (also known as metadata)"
 msgstr "输出标识(也可认为是元数据)"
+
+msgid "Ouput TOC (chapters and editions)"
+msgstr ""
 
 msgid "Output status information and property notifications"
 msgstr "输出状态信息和属性通告"

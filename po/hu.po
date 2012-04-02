@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 0.10.30.3\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2012-03-22 12:55+0100\n"
+"POT-Creation-Date: 2012-04-02 23:15+0100\n"
 "PO-Revision-Date: 2010-11-01 13:39+0100\n"
 "Last-Translator: Gabor Kelemen <kelemeng@gnome.hu>\n"
 "Language-Team: Hungarian <translation-team-hu@lists.sourceforge.net>\n"
@@ -1068,6 +1068,18 @@ msgstr "CÍMKE MEGTALÁLVA: a(z) „%s” objektum által.\n"
 msgid "FOUND TAG\n"
 msgstr "CÍMKE MEGTALÁLVA\n"
 
+#, fuzzy, c-format
+msgid "FOUND TOC      : found by element \"%s\".\n"
+msgstr "CÍMKE MEGTALÁLVA: a(z) „%s” elem által.\n"
+
+#, fuzzy, c-format
+msgid "FOUND TOC      : found by object \"%s\".\n"
+msgstr "CÍMKE MEGTALÁLVA: a(z) „%s” objektum által.\n"
+
+#, fuzzy
+msgid "FOUND TOC\n"
+msgstr "CÍMKE MEGTALÁLVA\n"
+
 #, c-format
 msgid ""
 "INFO:\n"
@@ -1108,6 +1120,9 @@ msgstr "nincs „%s” elem"
 
 msgid "Output tags (also known as metadata)"
 msgstr "Kimeneti címkék (metaadatok)"
+
+msgid "Ouput TOC (chapters and editions)"
+msgstr ""
 
 msgid "Output status information and property notifications"
 msgstr "Kimeneti állapotinformációk és tulajdonság-értesítések"

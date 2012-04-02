@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 0.10.31.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2012-03-22 12:55+0100\n"
+"POT-Creation-Date: 2012-04-02 23:15+0100\n"
 "PO-Revision-Date: 2011-01-09 19:46+0100\n"
 "Last-Translator: Daniel Nylander <po@danielnylander.se>\n"
 "Language-Team: Swedish <tp-sv@listor.tp-sv.se>\n"
@@ -1087,6 +1087,18 @@ msgstr "HITTADE TAGG   : hittat av objektet \"%s\".\n"
 msgid "FOUND TAG\n"
 msgstr "HITTADE TAGG\n"
 
+#, fuzzy, c-format
+msgid "FOUND TOC      : found by element \"%s\".\n"
+msgstr "HITTADE TAGG   : hittat av elementet \"%s\".\n"
+
+#, fuzzy, c-format
+msgid "FOUND TOC      : found by object \"%s\".\n"
+msgstr "HITTADE TAGG   : hittat av objektet \"%s\".\n"
+
+#, fuzzy
+msgid "FOUND TOC\n"
+msgstr "HITTADE TAGG\n"
+
 #, c-format
 msgid ""
 "INFO:\n"
@@ -1127,6 +1139,9 @@ msgstr "inget \"%s\"-element"
 
 msgid "Output tags (also known as metadata)"
 msgstr "Utmatningstaggar (även känt som metadata)"
+
+msgid "Ouput TOC (chapters and editions)"
+msgstr ""
 
 msgid "Output status information and property notifications"
 msgstr "Skriv ut statusinformation och egenskapsnotifieringar"

@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 0.10.30.3\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2012-03-22 12:55+0100\n"
+"POT-Creation-Date: 2012-04-02 23:15+0100\n"
 "PO-Revision-Date: 2010-11-04 19:41+0100\n"
 "Last-Translator: Jordi Mallach <jordi@sindominio.net>\n"
 "Language-Team: Catalan <ca@dodds.net>\n"
@@ -1079,6 +1079,18 @@ msgstr "MARCADOR TROBAT: trobat per l'objecte «%s».\n"
 msgid "FOUND TAG\n"
 msgstr "MARCADOR TROBAT\n"
 
+#, fuzzy, c-format
+msgid "FOUND TOC      : found by element \"%s\".\n"
+msgstr "MARCADOR TROBAT: trobat per l'element «%s».\n"
+
+#, fuzzy, c-format
+msgid "FOUND TOC      : found by object \"%s\".\n"
+msgstr "MARCADOR TROBAT: trobat per l'objecte «%s».\n"
+
+#, fuzzy
+msgid "FOUND TOC\n"
+msgstr "MARCADOR TROBAT\n"
+
 #, c-format
 msgid ""
 "INFO:\n"
@@ -1123,6 +1135,9 @@ msgstr "no hi ha cap element «%s»"
 
 msgid "Output tags (also known as metadata)"
 msgstr "Mostra els marcadors (també coneguts com metadades)"
+
+msgid "Ouput TOC (chapters and editions)"
+msgstr ""
 
 msgid "Output status information and property notifications"
 msgstr "Mostra la informació d'estat i notificacions de propietats"

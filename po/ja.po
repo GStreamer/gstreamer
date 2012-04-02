@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 0.10.20.3\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2012-03-22 12:55+0100\n"
+"POT-Creation-Date: 2012-04-02 23:15+0100\n"
 "PO-Revision-Date: 2008-10-16 19:57+0900\n"
 "Last-Translator: Makoto Kato <makoto.kt@gmail.com>\n"
 "Language-Team: Japanese <translation-team-ja@lists.sourceforge.net>\n"
@@ -1049,6 +1049,17 @@ msgid "FOUND TAG\n"
 msgstr ""
 
 #, c-format
+msgid "FOUND TOC      : found by element \"%s\".\n"
+msgstr ""
+
+#, c-format
+msgid "FOUND TOC      : found by object \"%s\".\n"
+msgstr ""
+
+msgid "FOUND TOC\n"
+msgstr ""
+
+#, c-format
 msgid ""
 "INFO:\n"
 "%s\n"
@@ -1091,6 +1102,9 @@ msgstr "エレメント \"%s\" がありません"
 
 msgid "Output tags (also known as metadata)"
 msgstr "タグ (メタデータ) を出力する"
+
+msgid "Ouput TOC (chapters and editions)"
+msgstr ""
 
 msgid "Output status information and property notifications"
 msgstr ""

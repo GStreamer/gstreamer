@@ -10,7 +10,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 0.10.32.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2012-03-22 12:55+0100\n"
+"POT-Creation-Date: 2012-04-02 23:15+0100\n"
 "PO-Revision-Date: 2011-04-26 23:10+0200\n"
 "Last-Translator: Freek de Kruijf <f.de.kruijf@gmail.com>\n"
 "Language-Team: Dutch <vertaling@vrijschrift.org>\n"
@@ -1083,6 +1083,18 @@ msgstr "TAG GEVONDEN   : gevonden door object \"%s\".\n"
 msgid "FOUND TAG\n"
 msgstr "TAG GEVONDEN\n"
 
+#, fuzzy, c-format
+msgid "FOUND TOC      : found by element \"%s\".\n"
+msgstr "TAG GEVONDEN   : gevonden door element \"%s\".\n"
+
+#, fuzzy, c-format
+msgid "FOUND TOC      : found by object \"%s\".\n"
+msgstr "TAG GEVONDEN   : gevonden door object \"%s\".\n"
+
+#, fuzzy
+msgid "FOUND TOC\n"
+msgstr "TAG GEVONDEN\n"
+
 #, c-format
 msgid ""
 "INFO:\n"
@@ -1123,6 +1135,9 @@ msgstr "geen element \"%s\""
 
 msgid "Output tags (also known as metadata)"
 msgstr "Tags (ook bekend als metadata) weergeven"
+
+msgid "Ouput TOC (chapters and editions)"
+msgstr ""
 
 msgid "Output status information and property notifications"
 msgstr "Statusinformatie en eigenschapswaarschuwingen weergeven"

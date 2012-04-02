@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 0.10.32.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2012-03-22 12:55+0100\n"
+"POT-Creation-Date: 2012-04-02 23:15+0100\n"
 "PO-Revision-Date: 2011-04-26 17:54+0200\n"
 "Last-Translator: Jakub Bogusz <qboosh@pld-linux.org>\n"
 "Language-Team: Polish <translation-team-pl@lists.sourceforge.net>\n"
@@ -1079,6 +1079,18 @@ msgstr "ZNACZNIK       : znaleziony przez obiekt \"%s\".\n"
 msgid "FOUND TAG\n"
 msgstr "ZNACZNIK\n"
 
+#, fuzzy, c-format
+msgid "FOUND TOC      : found by element \"%s\".\n"
+msgstr "ZNACZNIK       : znaleziony przez element \"%s\".\n"
+
+#, fuzzy, c-format
+msgid "FOUND TOC      : found by object \"%s\".\n"
+msgstr "ZNACZNIK       : znaleziony przez obiekt \"%s\".\n"
+
+#, fuzzy
+msgid "FOUND TOC\n"
+msgstr "ZNACZNIK\n"
+
 #, c-format
 msgid ""
 "INFO:\n"
@@ -1119,6 +1131,9 @@ msgstr "brak elementu \"%s\""
 
 msgid "Output tags (also known as metadata)"
 msgstr "Wypisanie znaczników (znanych także jako metadane)"
+
+msgid "Ouput TOC (chapters and editions)"
+msgstr ""
 
 msgid "Output status information and property notifications"
 msgstr "Wypisywanie informacji o stanie i powiadomień właściwości"

@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer-0.10.26.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2012-03-22 12:55+0100\n"
+"POT-Creation-Date: 2012-04-02 23:15+0100\n"
 "PO-Revision-Date: 2010-03-25 13:10+0100\n"
 "Last-Translator: Mikel Olasagasti Uranga <hey_neken@mundurat.net>\n"
 "Language-Team: Basque <translation-team-eu@lists.sourceforge.net>\n"
@@ -1082,6 +1082,18 @@ msgstr "ETIKETA AURKITU DA: \"%s\" objektuak aurkitu du.\n"
 msgid "FOUND TAG\n"
 msgstr "ETIKETA AURKITU DA\n"
 
+#, fuzzy, c-format
+msgid "FOUND TOC      : found by element \"%s\".\n"
+msgstr "ETIKETA AURKITU DA: \"%s\" elementuak aurkitu du.\n"
+
+#, fuzzy, c-format
+msgid "FOUND TOC      : found by object \"%s\".\n"
+msgstr "ETIKETA AURKITU DA: \"%s\" objektuak aurkitu du.\n"
+
+#, fuzzy
+msgid "FOUND TOC\n"
+msgstr "ETIKETA AURKITU DA\n"
+
 #, c-format
 msgid ""
 "INFO:\n"
@@ -1123,6 +1135,9 @@ msgstr "ez dago \"%s\" elementua"
 
 msgid "Output tags (also known as metadata)"
 msgstr "Erakutsi etiketak (metadatu gisa ere ezagutzen direnak)"
+
+msgid "Ouput TOC (chapters and editions)"
+msgstr ""
 
 msgid "Output status information and property notifications"
 msgstr "Erakutsi egoerari buruzko informazioa eta propietateen jakinarazpenak"

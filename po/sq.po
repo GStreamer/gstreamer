@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 0.8.4\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2012-03-22 12:55+0100\n"
+"POT-Creation-Date: 2012-04-02 23:15+0100\n"
 "PO-Revision-Date: 2004-08-07 23:46+0200\n"
 "Last-Translator: Laurent Dhima <laurenti@alblinux.net>\n"
 "Language-Team: Albanian <begraj@hotmail.com>\n"
@@ -1088,6 +1088,17 @@ msgstr "NDRYSHIM I GJETUR      : u gjet nga elementi \"%s\".\n"
 msgid "FOUND TAG\n"
 msgstr ""
 
+#, fuzzy, c-format
+msgid "FOUND TOC      : found by element \"%s\".\n"
+msgstr "NDRYSHIM I GJETUR      : u gjet nga elementi \"%s\".\n"
+
+#, fuzzy, c-format
+msgid "FOUND TOC      : found by object \"%s\".\n"
+msgstr "NDRYSHIM I GJETUR      : u gjet nga elementi \"%s\".\n"
+
+msgid "FOUND TOC\n"
+msgstr ""
+
 #, c-format
 msgid ""
 "INFO:\n"
@@ -1126,6 +1137,9 @@ msgstr "asnjë element \"%s\""
 
 msgid "Output tags (also known as metadata)"
 msgstr "Tags e output (njohur gjithashtu si metadata)"
+
+msgid "Ouput TOC (chapters and editions)"
+msgstr ""
 
 msgid "Output status information and property notifications"
 msgstr "Njoftime të informacioneve dhe pronësisë së kondicionit të daljes"

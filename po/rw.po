@@ -15,7 +15,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 0.8.8\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2012-03-22 12:55+0100\n"
+"POT-Creation-Date: 2012-04-02 23:15+0100\n"
 "PO-Revision-Date: 2005-04-04 10:55-0700\n"
 "Last-Translator: Steven Michael Murphy <murf@e-tools.com>\n"
 "Language-Team: Kinyarwanda <translation-team-rw@lists.sourceforge.net>\n"
@@ -1253,6 +1253,17 @@ msgstr "Byabonetse ku Ikigize:"
 msgid "FOUND TAG\n"
 msgstr ""
 
+#, fuzzy, c-format
+msgid "FOUND TOC      : found by element \"%s\".\n"
+msgstr "Byabonetse ku Ikigize:"
+
+#, fuzzy, c-format
+msgid "FOUND TOC      : found by object \"%s\".\n"
+msgstr "Byabonetse ku Ikigize:"
+
+msgid "FOUND TOC\n"
+msgstr ""
+
 #, c-format
 msgid ""
 "INFO:\n"
@@ -1292,6 +1303,9 @@ msgstr "Oya Ikigize:"
 #, fuzzy
 msgid "Output tags (also known as metadata)"
 msgstr "Nka"
+
+msgid "Ouput TOC (chapters and editions)"
+msgstr ""
 
 #, fuzzy
 msgid "Output status information and property notifications"

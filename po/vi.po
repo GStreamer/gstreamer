@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 0.10.29.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2012-03-22 12:55+0100\n"
+"POT-Creation-Date: 2012-04-02 23:15+0100\n"
 "PO-Revision-Date: 2010-10-03 19:09+1030\n"
 "Last-Translator: Clytie Siddall <clytie@riverland.net.au>\n"
 "Language-Team: Vietnamese <vi-VN@googlegroups.com>\n"
@@ -1076,6 +1076,18 @@ msgstr "THẺ ĐÃ TÌM      : được tìm bởi đối tượng « %s ».\n"
 msgid "FOUND TAG\n"
 msgstr "THẺ ĐÃ TÌM\n"
 
+#, fuzzy, c-format
+msgid "FOUND TOC      : found by element \"%s\".\n"
+msgstr "THẺ ĐÃ TÌM      : được tìm bởi yếu tố « %s ».\n"
+
+#, fuzzy, c-format
+msgid "FOUND TOC      : found by object \"%s\".\n"
+msgstr "THẺ ĐÃ TÌM      : được tìm bởi đối tượng « %s ».\n"
+
+#, fuzzy
+msgid "FOUND TOC\n"
+msgstr "THẺ ĐÃ TÌM\n"
+
 #, c-format
 msgid ""
 "INFO:\n"
@@ -1116,6 +1128,9 @@ msgstr "không có yếu tố « %s »"
 
 msgid "Output tags (also known as metadata)"
 msgstr "Thể xuất (cũng được biết là siêu dữ liệu)"
+
+msgid "Ouput TOC (chapters and editions)"
+msgstr ""
 
 msgid "Output status information and property notifications"
 msgstr "Xuất thông tin trạng thái và thông báo tài sản"

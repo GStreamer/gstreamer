@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 0.9.7\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2012-03-22 12:55+0100\n"
+"POT-Creation-Date: 2012-04-02 23:15+0100\n"
 "PO-Revision-Date: 2005-12-05 11:45+0200\n"
 "Last-Translator: Petri Jooste <rkwjpj@puk.ac.za>\n"
 "Language-Team: Afrikaans <i18n@af.org.za>\n"
@@ -1078,6 +1078,17 @@ msgstr "ETIKET GEVIND  : gevind by element \"%s\".\n"
 msgid "FOUND TAG\n"
 msgstr ""
 
+#, fuzzy, c-format
+msgid "FOUND TOC      : found by element \"%s\".\n"
+msgstr "ETIKET GEVIND  : gevind by element \"%s\".\n"
+
+#, fuzzy, c-format
+msgid "FOUND TOC      : found by object \"%s\".\n"
+msgstr "ETIKET GEVIND  : gevind by element \"%s\".\n"
+
+msgid "FOUND TOC\n"
+msgstr ""
+
 #, c-format
 msgid ""
 "INFO:\n"
@@ -1119,6 +1130,9 @@ msgstr "geen element \"%s\""
 
 msgid "Output tags (also known as metadata)"
 msgstr "Wys etikette (ook bekend as metadata)"
+
+msgid "Ouput TOC (chapters and editions)"
+msgstr ""
 
 msgid "Output status information and property notifications"
 msgstr "Wys statusinligting en kennisgewings van eienskappe"

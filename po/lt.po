@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 0.10.29.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2012-03-22 12:55+0100\n"
+"POT-Creation-Date: 2012-04-02 23:15+0100\n"
 "PO-Revision-Date: 2010-07-16 00:50+0300\n"
 "Last-Translator: Žygimantas Beručka <uid0@akl.lt>\n"
 "Language-Team: Lithuanian <komp_lt@konferencijos.lt>\n"
@@ -1078,6 +1078,18 @@ msgstr "RASTA ŽYMA      : rasta objekto „%s“.\n"
 msgid "FOUND TAG\n"
 msgstr "RASTA ŽYMA\n"
 
+#, fuzzy, c-format
+msgid "FOUND TOC      : found by element \"%s\".\n"
+msgstr "RASTA ŽYMA      : rasta elemento „%s“.\n"
+
+#, fuzzy, c-format
+msgid "FOUND TOC      : found by object \"%s\".\n"
+msgstr "RASTA ŽYMA      : rasta objekto „%s“.\n"
+
+#, fuzzy
+msgid "FOUND TOC\n"
+msgstr "RASTA ŽYMA\n"
+
 #, c-format
 msgid ""
 "INFO:\n"
@@ -1118,6 +1130,9 @@ msgstr "nėra elemento „%s“"
 
 msgid "Output tags (also known as metadata)"
 msgstr "Išvesti žymas (dar žinomas kaip metaduomenys)"
+
+msgid "Ouput TOC (chapters and editions)"
+msgstr ""
 
 msgid "Output status information and property notifications"
 msgstr "Išvesti būsenos informaciją ir savybių pranešimus"

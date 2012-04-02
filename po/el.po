@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer-0.10.30.3\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2012-03-22 12:55+0100\n"
+"POT-Creation-Date: 2012-04-02 23:15+0100\n"
 "PO-Revision-Date: 2010-11-29 11:14+0200\n"
 "Last-Translator: Michael Kotsarinis <mk73628@gmail.com>\n"
 "Language-Team: Greek <team@lists.gnome.gr>\n"
@@ -1091,6 +1091,18 @@ msgstr "FOUND TAG      : εύρεση κατά αντικείμενο «%s».\n"
 msgid "FOUND TAG\n"
 msgstr "FOUND TAG\n"
 
+#, fuzzy, c-format
+msgid "FOUND TOC      : found by element \"%s\".\n"
+msgstr "FOUND TAG      : εύρεση κατά στοιχείο «%s».\n"
+
+#, fuzzy, c-format
+msgid "FOUND TOC      : found by object \"%s\".\n"
+msgstr "FOUND TAG      : εύρεση κατά αντικείμενο «%s».\n"
+
+#, fuzzy
+msgid "FOUND TOC\n"
+msgstr "FOUND TAG\n"
+
 #, c-format
 msgid ""
 "INFO:\n"
@@ -1131,6 +1143,9 @@ msgstr "δεν υπάρχει στοιχείο «%s»"
 
 msgid "Output tags (also known as metadata)"
 msgstr "Ετικέτες εξόδου (επίσης γνωστές ως μεταδεδομένα)"
+
+msgid "Ouput TOC (chapters and editions)"
+msgstr ""
 
 msgid "Output status information and property notifications"
 msgstr "Πληροφορίες κατάστασης εξόδου και ειδοποιήσεις ιδιοτήτων"

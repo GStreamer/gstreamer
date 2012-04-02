@@ -9,7 +9,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 0.10.32.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2012-03-22 12:55+0100\n"
+"POT-Creation-Date: 2012-04-02 23:15+0100\n"
 "PO-Revision-Date: 2011-04-28 09:34+0200\n"
 "Last-Translator: Claude Paroz <claude@2xlibre.net>\n"
 "Language-Team: French <traduc@traduc.org>\n"
@@ -1080,6 +1080,18 @@ msgstr "BALISE TROUVÉE  : découverte par l'objet « %s ».\n"
 msgid "FOUND TAG\n"
 msgstr "BALISE TROUVÉE\n"
 
+#, fuzzy, c-format
+msgid "FOUND TOC      : found by element \"%s\".\n"
+msgstr "BALISE TROUVÉE  : découverte par l'élément « %s ».\n"
+
+#, fuzzy, c-format
+msgid "FOUND TOC      : found by object \"%s\".\n"
+msgstr "BALISE TROUVÉE  : découverte par l'objet « %s ».\n"
+
+#, fuzzy
+msgid "FOUND TOC\n"
+msgstr "BALISE TROUVÉE\n"
+
 #, c-format
 msgid ""
 "INFO:\n"
@@ -1120,6 +1132,9 @@ msgstr "pas d'élément « %s »"
 
 msgid "Output tags (also known as metadata)"
 msgstr "Affiche les balises (aussi connues sous le nom de métadonnées)"
+
+msgid "Ouput TOC (chapters and editions)"
+msgstr ""
 
 msgid "Output status information and property notifications"
 msgstr "Affiche des informations d'état et des notifications de propriétés"

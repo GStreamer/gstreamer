@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 0.8.8\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2012-03-22 12:55+0100\n"
+"POT-Creation-Date: 2012-04-02 23:15+0100\n"
 "PO-Revision-Date: 2005-04-27 14:55+0800\n"
 "Last-Translator: Abel Cheung <abelcheung@gmail.com>\n"
 "Language-Team: Chinese (traditional) <zh-l10n@linux.org.tw>\n"
@@ -1068,6 +1068,17 @@ msgid "FOUND TAG\n"
 msgstr ""
 
 #, c-format
+msgid "FOUND TOC      : found by element \"%s\".\n"
+msgstr ""
+
+#, c-format
+msgid "FOUND TOC      : found by object \"%s\".\n"
+msgstr ""
+
+msgid "FOUND TOC\n"
+msgstr ""
+
+#, c-format
 msgid ""
 "INFO:\n"
 "%s\n"
@@ -1104,6 +1115,9 @@ msgid "Missing element: %s\n"
 msgstr "“%s” 元件不存在"
 
 msgid "Output tags (also known as metadata)"
+msgstr ""
+
+msgid "Ouput TOC (chapters and editions)"
 msgstr ""
 
 msgid "Output status information and property notifications"
