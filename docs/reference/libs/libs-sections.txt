@@ -489,6 +489,70 @@ GST_VAAPI_DECODER_FFMPEG_GET_CLASS
 </SECTION>
 
 <SECTION>
+<FILE>gstvaapidecoder_mpeg2</FILE>
+<TITLE>GstVaapiDecoderMpeg2</TITLE>
+GstVaapiDecoderMpeg2
+GstVaapiDecoderMpeg2Class
+gst_vaapi_decoder_mpeg2_new
+<SUBSECTION Standard>
+GST_VAAPI_DECODER_MPEG2
+GST_VAAPI_IS_DECODER_MPEG2
+GST_VAAPI_TYPE_DECODER_MPEG2
+gst_vaapi_decoder_mpeg2_get_type
+GST_VAAPI_DECODER_MPEG2_CLASS
+GST_VAAPI_IS_DECODER_MPEG2_CLASS
+GST_VAAPI_DECODER_MPEG2_GET_CLASS
+</SECTION>
+
+<SECTION>
+<FILE>gstvaapidecoder_mpeg4</FILE>
+<TITLE>GstVaapiDecoderMpeg4</TITLE>
+GstVaapiDecoderMpeg4
+GstVaapiDecoderMpeg4Class
+gst_vaapi_decoder_mpeg4_new
+<SUBSECTION Standard>
+GST_VAAPI_DECODER_MPEG4
+GST_VAAPI_IS_DECODER_MPEG4
+GST_VAAPI_TYPE_DECODER_MPEG4
+gst_vaapi_decoder_mpeg4_get_type
+GST_VAAPI_DECODER_MPEG4_CLASS
+GST_VAAPI_IS_DECODER_MPEG4_CLASS
+GST_VAAPI_DECODER_MPEG4_GET_CLASS
+</SECTION>
+
+<SECTION>
+<FILE>gstvaapidecoder_h264</FILE>
+<TITLE>GstVaapiDecoderH264</TITLE>
+GstVaapiDecoderH264
+GstVaapiDecoderH264Class
+gst_vaapi_decoder_h264_new
+<SUBSECTION Standard>
+GST_VAAPI_DECODER_H264
+GST_VAAPI_IS_DECODER_H264
+GST_VAAPI_TYPE_DECODER_H264
+gst_vaapi_decoder_h264_get_type
+GST_VAAPI_DECODER_H264_CLASS
+GST_VAAPI_IS_DECODER_H264_CLASS
+GST_VAAPI_DECODER_H264_GET_CLASS
+</SECTION>
+
+<SECTION>
+<FILE>gstvaapidecoder_vc1</FILE>
+<TITLE>GstVaapiDecoderVC1</TITLE>
+GstVaapiDecoderVC1
+GstVaapiDecoderVC1Class
+gst_vaapi_decoder_vc1_new
+<SUBSECTION Standard>
+GST_VAAPI_DECODER_VC1
+GST_VAAPI_IS_DECODER_VC1
+GST_VAAPI_TYPE_DECODER_VC1
+gst_vaapi_decoder_vc1_get_type
+GST_VAAPI_DECODER_VC1_CLASS
+GST_VAAPI_IS_DECODER_VC1_CLASS
+GST_VAAPI_DECODER_VC1_GET_CLASS
+</SECTION>
+
+<SECTION>
 <FILE>gstvaapisurfaceproxy</FILE>
 <TITLE>GstVaapiSurfaceProxy</TITLE>
 GstVaapiSurfaceProxy
@@ -501,6 +565,8 @@ gst_vaapi_surface_proxy_get_surface_id
 gst_vaapi_surface_proxy_set_surface
 gst_vaapi_surface_proxy_get_timestamp
 gst_vaapi_surface_proxy_set_timestamp
+gst_vaapi_surface_proxy_get_interlaced
+gst_vaapi_surface_proxy_set_interlaced
 gst_vaapi_surface_proxy_get_tff
 gst_vaapi_surface_proxy_set_tff
 <SUBSECTION Standard>

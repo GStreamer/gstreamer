@@ -1189,7 +1189,6 @@ gst_vaapi_image_get_buffer(
  * gst_vaapi_image_get_raw:
  * @image: a #GstVaapiImage
  * @dst_image: a #GstVaapiImageRaw
- * @buffer: a #GstBuffer
  * @rect: a #GstVaapiRectangle expressing a region, or %NULL for the
  *   whole image
  *

@@ -76,13 +76,15 @@ gst_vaapi_video_converter_glx_iface_init (GstSurfaceConverterInterface *iface) {
 
 /**
  * gst_vaapi_video_converter_glx_new:
- * @
+ * @surface: the #GstSurfaceBuffer
+ * @type: type of the target buffer (must be "opengl")
+ * @dest: target of the conversion (must be GL texture id)
  *
- * Creates an empty #GstBuffer. The caller is responsible for completing
- * the initialization of the buffer with the gst_vaapi_video_converter_glx_set_*()
- * functions.
+ * Creates an empty #GstBuffer. The caller is responsible for
+ * completing the initialization of the buffer with the
+ * gst_vaapi_video_converter_glx_set_*() functions.
  *
- * Return value: the newly allocated #GstBuffer, or %NULL or error
+ * Return value: the newly allocated #GstBuffer, or %NULL on error
  */
 GstSurfaceConverter *
 gst_vaapi_video_converter_glx_new(GstSurfaceBuffer *surface, const gchar *type,

@@ -629,7 +629,7 @@ gst_vaapipostproc_class_init(GstVaapiPostprocClass *klass)
     element_class->change_state = gst_vaapipostproc_change_state;
 
     /**
-     * GstVaapiSink:deinterlace-mode:
+     * GstVaapiPostproc:deinterlace-mode:
      *
      * This selects whether the deinterlacing should always be applied or if
      * they should only be applied on content that has the "interlaced" flag
@@ -646,7 +646,7 @@ gst_vaapipostproc_class_init(GstVaapiPostprocClass *klass)
                            G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
     /**
-     * GstVaapiSink:deinterlace-method:
+     * GstVaapiPostproc:deinterlace-method:
      *
      * This selects the deinterlacing method to apply.
      */
