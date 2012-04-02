@@ -23,6 +23,7 @@
 #define __GST_TOC_H__
 
 #include <gst/gstconfig.h>
+#include <gst/gststructure.h>
 #include <gst/gsttaglist.h>
 #include <gst/gstformat.h>
 

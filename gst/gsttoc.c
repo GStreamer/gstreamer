@@ -170,8 +170,8 @@ gst_toc_new (void)
   GstToc *toc;
 
   toc = g_slice_new0 (GstToc);
-  toc->tags = gst_tag_list_new ();
-  toc->info = gst_structure_id_empty_new (gst_toc_fields[GST_TOC_INFONAME]);
+  toc->tags = gst_tag_list_new_empty ();
+  toc->info = gst_structure_new_id_empty (gst_toc_fields[GST_TOC_INFONAME]);
 
   return toc;
 }
@@ -197,8 +197,8 @@ gst_toc_entry_new (GstTocEntryType type, const gchar * uid)
   entry = g_slice_new0 (GstTocEntry);
   entry->uid = g_strdup (uid);
   entry->type = type;
-  entry->tags = gst_tag_list_new ();
-  entry->info = gst_structure_id_empty_new (gst_toc_fields[GST_TOC_INFONAME]);
+  entry->tags = gst_tag_list_new_empty ();
+  entry->info = gst_structure_new_id_empty (gst_toc_fields[GST_TOC_INFONAME]);
 
   return entry;
 }
@@ -227,7 +227,7 @@ gst_toc_entry_new_with_pad (GstTocEntryType type, const gchar * uid,
   entry = g_slice_new0 (GstTocEntry);
   entry->uid = g_strdup (uid);
   entry->type = type;
-  entry->tags = gst_tag_list_new ();
+  entry->tags = gst_tag_list_new_empty ();
 
   if (pad != NULL && GST_IS_PAD (pad))
     entry->pads = g_list_append (entry->pads, gst_object_ref (pad));
@@ -306,7 +306,7 @@ gst_toc_structure_new (GstTagList * tags, GstStructure * info)
   GstStructure *ret;
   GValue val = { 0 };
 
-  ret = gst_structure_id_empty_new (gst_toc_fields[GST_TOC_TOC]);
+  ret = gst_structure_new_id_empty (gst_toc_fields[GST_TOC_TOC]);
 
   if (tags != NULL) {
     g_value_init (&val, GST_TYPE_STRUCTURE);
@@ -332,7 +332,7 @@ gst_toc_entry_structure_new (GstTocEntryType type, const gchar * uid,
   GValue val = { 0 };
   GstStructure *ret;
 
-  ret = gst_structure_id_empty_new (gst_toc_fields[GST_TOC_ENTRY]);
+  ret = gst_structure_new_id_empty (gst_toc_fields[GST_TOC_ENTRY]);
 
   gst_structure_id_set (ret, gst_toc_fields[GST_TOC_TYPE],
       GST_TYPE_TOC_ENTRY_TYPE, type, NULL);
@@ -884,7 +884,7 @@ gst_toc_entry_set_start_stop (GstTocEntry * entry, gint64 start, gint64 stop)
   }
 
   if (structure == NULL)
-    structure = gst_structure_id_empty_new (gst_toc_fields[GST_TOC_TIMENAME]);
+    structure = gst_structure_new_id_empty (gst_toc_fields[GST_TOC_TIMENAME]);
 
   gst_structure_id_set (structure, gst_toc_fields[GST_TOC_TIME_START],
       G_TYPE_INT64, start, gst_toc_fields[GST_TOC_TIME_STOP], G_TYPE_INT64,

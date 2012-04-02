@@ -2225,8 +2225,8 @@ gst_message_parse_toc (GstMessage * message, GstToc ** toc, gboolean * updated)
   g_return_if_fail (GST_MESSAGE_TYPE (message) == GST_MESSAGE_TOC);
   g_return_if_fail (toc != NULL);
 
-  *toc = _gst_toc_from_structure (message->structure);
+  *toc = _gst_toc_from_structure (GST_MESSAGE_STRUCTURE (message));
 
   if (updated != NULL)
-    *updated = _gst_toc_structure_get_updated (message->structure);
+    *updated = _gst_toc_structure_get_updated (GST_MESSAGE_STRUCTURE (message));
 }

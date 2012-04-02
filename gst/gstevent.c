@@ -1690,7 +1690,7 @@ gst_event_new_toc_select (const gchar * uid)
 
   GST_CAT_INFO (GST_CAT_EVENT, "creating toc select event for UID: %s", uid);
 
-  structure = gst_structure_id_new (GST_QUARK (EVENT_TOC_SELECT),
+  structure = gst_structure_new_id (GST_QUARK (EVENT_TOC_SELECT),
       GST_QUARK (UID), G_TYPE_STRING, uid, NULL);
 
   return gst_event_new_custom (GST_EVENT_TOC_SELECT, structure);

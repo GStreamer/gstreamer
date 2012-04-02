@@ -249,7 +249,6 @@ GST_START_TEST (test_serializing)
   /* check TOC event handling */
   event = gst_event_new_toc (toc, TRUE);
   fail_if (event == NULL);
-  fail_if (event->structure == NULL);
   fail_unless (event->type == GST_EVENT_TOC);
   ASSERT_MINI_OBJECT_REFCOUNT (GST_MINI_OBJECT (event), "GstEvent", 1);
 
@@ -265,7 +264,6 @@ GST_START_TEST (test_serializing)
   /* check TOC message handling */
   message = gst_message_new_toc (NULL, toc, TRUE);
   fail_if (message == NULL);
-  fail_if (event->structure == NULL);
   fail_unless (message->type == GST_MESSAGE_TOC);
   ASSERT_MINI_OBJECT_REFCOUNT (GST_MINI_OBJECT (message), "GstMessage", 1);
 
@@ -280,7 +278,6 @@ GST_START_TEST (test_serializing)
   /* check TOC select event handling */
   event = gst_event_new_toc_select (TEST_UID);
   fail_if (event == NULL);
-  fail_if (event->structure == NULL);
   fail_unless (event->type == GST_EVENT_TOC_SELECT);
   ASSERT_MINI_OBJECT_REFCOUNT (GST_MINI_OBJECT (event), "GstEvent", 1);
 
@@ -293,7 +290,6 @@ GST_START_TEST (test_serializing)
   query = gst_query_new_toc ();
   fail_if (query == NULL);
   gst_query_set_toc (query, toc, TEST_UID);
-  fail_if (query->structure == NULL);
   fail_unless (query->type == GST_QUERY_TOC);
   ASSERT_MINI_OBJECT_REFCOUNT (GST_MINI_OBJECT (query), "GstQuery", 1);
 

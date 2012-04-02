@@ -2335,8 +2335,10 @@ GstQuery *
 gst_query_new_toc (void)
 {
   GstQuery *query;
+  GstStructure *structure;
 
-  query = gst_query_new (GST_QUERY_TOC, NULL);
+  structure = gst_structure_new_id_empty (GST_QUARK (QUERY_TOC));
+  query = gst_query_new_custom (GST_QUERY_TOC, structure);
 
   return query;
 }
@@ -2354,6 +2356,7 @@ void
 gst_query_set_toc (GstQuery * query, GstToc * toc, const gchar * extend_uid)
 {
   GstStructure *structure;
+  GstStructure *old_structure;
 
   g_return_if_fail (query != NULL);
   g_return_if_fail (GST_QUERY_TYPE (query) == GST_QUERY_TOC);
@@ -2364,15 +2367,17 @@ gst_query_set_toc (GstQuery * query, GstToc * toc, const gchar * extend_uid)
   g_return_if_fail (structure != NULL);
 
   /* that shouldn't be happen in normal usage */
-  if (query->structure != NULL)
-    gst_structure_free (query->structure);
+  old_structure = GST_QUERY_STRUCTURE (query);
+  if (old_structure) {
+    gst_structure_set_parent_refcount (old_structure, NULL);
+    gst_structure_free (old_structure);
+  }
 
   if (extend_uid != NULL)
     _gst_toc_structure_set_extend_uid (structure, extend_uid);
 
-  query->structure = structure;
-  gst_structure_set_parent_refcount (query->structure,
-      &(query->mini_object.refcount));
+  gst_structure_set_parent_refcount (structure, &(query->mini_object.refcount));
+  GST_QUERY_STRUCTURE (query) = structure;
 }
 
 /**
