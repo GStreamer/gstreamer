@@ -57,8 +57,8 @@ struct _GstRTPBuffer
   GstMapInfo   map[4];
 };
 
-#define GST_RTP_BUFFER_INIT { NULL, { GST_MAP_INFO_INIT, GST_MAP_INFO_INIT, \
-                                      GST_MAP_INFO_INIT, GST_MAP_INFO_INIT} }
+#define GST_RTP_BUFFER_INIT { NULL, 0, 0, { GST_MAP_INFO_INIT, GST_MAP_INFO_INIT, \
+                                            GST_MAP_INFO_INIT, GST_MAP_INFO_INIT} }
 
 /* creating buffers */
 void            gst_rtp_buffer_allocate_data         (GstBuffer *buffer, guint payload_len,
