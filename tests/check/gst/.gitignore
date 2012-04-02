@@ -36,6 +36,8 @@ gststructure
 gstsystemclock
 gsttag
 gsttagsetter
+gsttoc
+gsttocsetter
 gsturi
 gstutils
 gstvalue
