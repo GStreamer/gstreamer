@@ -670,10 +670,11 @@ gst_a52dec_chain (GstPad * pad, GstObject * parent, GstBuffer * buf)
     gint len;
     GstBuffer *subbuf;
 
-    size = gst_buffer_extract (buf, 0, data, 2);
+    size = gst_buffer_get_size (buf);
     if (size < 2)
       goto not_enough_data;
 
+    gst_buffer_extract (buf, 0, data, 2);
     first_access = (data[0] << 8) | data[1];
 
     /* Skip the first_access header */
