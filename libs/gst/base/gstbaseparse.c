@@ -2466,7 +2466,7 @@ gst_base_parse_chain (GstPad * pad, GstBuffer * buffer)
     ret = gst_base_parse_handle_and_push_frame (parse, bclass, frame);
     GST_PAD_STREAM_UNLOCK (parse->srcpad);
 
-    if (ret != GST_FLOW_OK) {
+    if (ret != GST_FLOW_OK && ret != GST_FLOW_NOT_LINKED) {
       GST_LOG_OBJECT (parse, "push returned %d", ret);
       break;
     }
