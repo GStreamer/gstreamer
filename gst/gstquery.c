@@ -110,6 +110,7 @@ static GstQueryQuarks query_quarks[] = {
   {GST_QUERY_ACCEPT_CAPS, "accept-caps", 0},
   {GST_QUERY_CAPS, "caps", 0},
   {GST_QUERY_DRAIN, "drain", 0},
+  {GST_QUERY_TOC, "toc", 0},
 
   {0, NULL, 0}
 };
@@ -2319,4 +2320,89 @@ gst_query_new_drain (void)
   query = gst_query_new_custom (GST_QUERY_DRAIN, structure);
 
   return query;
+}
+
+/**
+ * gst_query_new_toc:
+ *
+ * Constructs a new query TOC query object. Use gst_query_unref()
+ * when done with it. A TOC query is used to query the full TOC with
+ * the UID marker for TOC extending (to insert some new entries).
+ *
+ * Returns: A #GstQuery.
+ */
+GstQuery *
+gst_query_new_toc (void)
+{
+  GstQuery *query;
+
+  query = gst_query_new (GST_QUERY_TOC, NULL);
+
+  return query;
+}
+
+/**
+ * gst_query_set_toc:
+ * @query: a #GstQuery with query type GST_QUERY_TOC.
+ * @toc: the GstToc to set.
+ * @extend_uid: UID which can be used for TOC extending (may be NULL),
+ * 0 means root TOC level.
+ *
+ * Answer a TOC query by setting appropriate #GstToc structure.
+ */
+void
+gst_query_set_toc (GstQuery * query, GstToc * toc, const gchar * extend_uid)
+{
+  GstStructure *structure;
+
+  g_return_if_fail (query != NULL);
+  g_return_if_fail (GST_QUERY_TYPE (query) == GST_QUERY_TOC);
+  g_return_if_fail (toc != NULL);
+
+  structure = _gst_toc_to_structure (toc);
+
+  g_return_if_fail (structure != NULL);
+
+  /* that shouldn't be happen in normal usage */
+  if (query->structure != NULL)
+    gst_structure_free (query->structure);
+
+  if (extend_uid != NULL)
+    _gst_toc_structure_set_extend_uid (structure, extend_uid);
+
+  query->structure = structure;
+  gst_structure_set_parent_refcount (query->structure,
+      &(query->mini_object.refcount));
+}
+
+/**
+ * gst_query_parse_toc:
+ * @query: a #GstQuery.
+ * @toc: (out): the storage for the received TOC (may be NULL).
+ * @extend_uid: (out): the storage for the received extend UID marker (may be NULL),
+ * 0 means root TOC level.
+ *
+ * Parse a TOC query, writing the TOC into @toc as a newly
+ * allocated #GstToc and extend UID into @extend_uid, if the respective parameters
+ * are non-NULL. Use @extend_uid value to insert new entries into the TOC (@extend_uid will
+ * act as root entry for newly inserted entries).
+ * Free @toc with gst_toc_free() and @extend_uid with g_free() after usage.
+ */
+void
+gst_query_parse_toc (GstQuery * query, GstToc ** toc, gchar ** extend_uid)
+{
+  const GstStructure *structure;
+
+  g_return_if_fail (query != NULL);
+  g_return_if_fail (GST_QUERY_TYPE (query) == GST_QUERY_TOC);
+
+  structure = gst_query_get_structure (query);
+
+  g_return_if_fail (structure != NULL);
+
+  if (toc != NULL)
+    *toc = _gst_toc_from_structure (structure);
+
+  if (extend_uid != NULL)
+    *extend_uid = _gst_toc_structure_get_extend_uid (structure);
 }

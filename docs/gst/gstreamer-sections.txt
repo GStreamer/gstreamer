@@ -1005,6 +1005,12 @@ gst_event_parse_stream_config_setup_data
 gst_event_add_stream_config_header
 gst_event_get_n_stream_config_headers
 gst_event_parse_nth_stream_config_header
+
+gst_event_new_toc
+gst_event_parse_toc
+
+gst_event_new_toc_select
+gst_event_parse_toc_select
 <SUBSECTION Standard>
 GstEventClass
 GST_EVENT
@@ -1413,6 +1419,8 @@ gst_message_set_qos_stats
 gst_message_parse_qos
 gst_message_parse_qos_values
 gst_message_parse_qos_stats
+gst_message_new_toc
+gst_message_parse_toc
 
 GstStructureChangeType
 gst_message_new_structure_change
@@ -2225,6 +2233,9 @@ gst_query_has_scheduling_mode
 
 gst_query_new_drain
 
+gst_query_new_toc
+gst_query_parse_toc
+gst_query_set_toc
 <SUBSECTION Standard>
 GstQueryClass
 GST_QUERY
@@ -2670,6 +2681,51 @@ GST_TYPE_TASK_STATE
 <SUBSECTION Private>
 gst_task_get_type
 gst_task_state_get_type
+</SECTION>
+
+
+<SECTION>
+<FILE>gsttoc</FILE>
+<TITLE>GstToc</TITLE>
+GstToc
+GstTocEntry
+GstTocEntryType
+gst_toc_entry_new
+gst_toc_entry_new_with_pad
+gst_toc_entry_free
+gst_toc_new
+gst_toc_free
+gst_toc_entry_copy
+gst_toc_copy
+gst_toc_find_entry
+gst_toc_entry_get_start_stop
+gst_toc_entry_set_start_stop
+<SUBSECTION Standard>
+GST_TYPE_TOC_ENTRY_TYPE
+<SUBSECTION Private>
+gst_toc_entry_type_get_type
+</SECTION>
+
+
+<SECTION>
+<FILE>gsttocsetter</FILE>
+<TITLE>GstTocSetter</TITLE>
+GstTocSetter
+GstTocSetterIFace
+gst_toc_setter_get_toc
+gst_toc_setter_get_toc_copy
+gst_toc_setter_reset_toc
+gst_toc_setter_set_toc
+gst_toc_setter_get_toc_entry
+gst_toc_setter_get_toc_entry_copy
+gst_toc_setter_add_toc_entry
+<SUBSECTION Standard>
+GST_IS_TOC_SETTER
+GST_TOC_SETTER
+GST_TOC_SETTER_GET_IFACE
+GST_TYPE_TOC_SETTER
+<SUBSECTION Private>
+gst_toc_setter_get_type
 </SECTION>
 
 

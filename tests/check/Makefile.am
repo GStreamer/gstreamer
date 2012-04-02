@@ -126,6 +126,8 @@ check_PROGRAMS =				\
 	gst/gsttag				\
 	gst/gsttagsetter			\
 	gst/gsttask				\
+	gst/gsttoc				\
+	gst/gsttocsetter			\
 	gst/gstvalue				\
 	generic/states				\
 	$(PARSE_CHECKS)				\

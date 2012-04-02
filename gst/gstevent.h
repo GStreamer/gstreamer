@@ -100,6 +100,8 @@ typedef enum {
  *                 without a SEGMENT event.
  * @GST_EVENT_SEGMENT_DONE: (unimplemented) Marks the end of a segment playback.
  * @GST_EVENT_GAP: (unimplemented) Marks a gap in the datastream.
+ * @GST_EVENT_TOC: An event which indicates that a new table of contents (TOC)
+ *                 was found or updated. Since: 0.10.37
  * @GST_EVENT_QOS: A quality message. Used to indicate to upstream elements
  *                 that the downstream elements should adjust their processing
  *                 rate.
@@ -114,6 +116,8 @@ typedef enum {
  *                  execute the step operation. Since: 0.10.24
  * @GST_EVENT_RECONFIGURE: A request for upstream renegotiating caps and reconfiguring.
  *                         Since: 0.11.0
+ * @GST_EVENT_TOC_SELECT: A request for a new playback position based on TOC
+ *                        entry's UID. Since 0.10.37
  * @GST_EVENT_CUSTOM_UPSTREAM: Upstream custom event
  * @GST_EVENT_CUSTOM_DOWNSTREAM: Downstream custom event that travels in the
  *                        data flow.
@@ -148,6 +152,7 @@ typedef enum {
   GST_EVENT_BUFFERSIZE            = GST_EVENT_MAKE_TYPE (90, FLAG(DOWNSTREAM) | FLAG(SERIALIZED) | FLAG(STICKY)),
   GST_EVENT_SINK_MESSAGE          = GST_EVENT_MAKE_TYPE (100, FLAG(DOWNSTREAM) | FLAG(SERIALIZED) | FLAG(STICKY) | FLAG(STICKY_MULTI)),
   GST_EVENT_EOS                   = GST_EVENT_MAKE_TYPE (110, FLAG(DOWNSTREAM) | FLAG(SERIALIZED) | FLAG(STICKY)),
+  GST_EVENT_TOC                   = GST_EVENT_MAKE_TYPE (120, FLAG(DOWNSTREAM) | FLAG(SERIALIZED) | FLAG(STICKY) | FLAG(STICKY_MULTI)),
 
   /* non-sticky downstream serialized */
   GST_EVENT_SEGMENT_DONE          = GST_EVENT_MAKE_TYPE (150, FLAG(DOWNSTREAM) | FLAG(SERIALIZED)),
@@ -160,6 +165,7 @@ typedef enum {
   GST_EVENT_LATENCY               = GST_EVENT_MAKE_TYPE (220, FLAG(UPSTREAM)),
   GST_EVENT_STEP                  = GST_EVENT_MAKE_TYPE (230, FLAG(UPSTREAM)),
   GST_EVENT_RECONFIGURE           = GST_EVENT_MAKE_TYPE (240, FLAG(UPSTREAM)),
+  GST_EVENT_TOC_SELECT            = GST_EVENT_MAKE_TYPE (250, FLAG(UPSTREAM)),
 
   /* custom events start here */
   GST_EVENT_CUSTOM_UPSTREAM          = GST_EVENT_MAKE_TYPE (270, FLAG(UPSTREAM)),
@@ -520,6 +526,11 @@ void            gst_event_copy_segment          (GstEvent *event, GstSegment *se
 GstEvent*       gst_event_new_tag               (GstTagList *taglist) G_GNUC_MALLOC;
 void            gst_event_parse_tag             (GstEvent *event, GstTagList **taglist);
 
+/* TOC event */
+GstEvent*      gst_event_new_toc                (GstToc *toc, gboolean updated);
+void           gst_event_parse_toc              (GstEvent *event, GstToc **toc, gboolean *updated);
+
+
 /* buffer */
 GstEvent *      gst_event_new_buffer_size       (GstFormat format, gint64 minsize, gint64 maxsize,
                                                  gboolean async) G_GNUC_MALLOC;
@@ -560,6 +571,10 @@ void            gst_event_parse_step            (GstEvent *event, GstFormat *for
 
 /* renegotiate event */
 GstEvent*       gst_event_new_reconfigure       (void) G_GNUC_MALLOC;
+
+/* TOC select event */
+GstEvent*       gst_event_new_toc_select        (const gchar *uid) G_GNUC_MALLOC;
+void            gst_event_parse_toc_select      (GstEvent *event, gchar **uid);
 
 G_END_DECLS
 

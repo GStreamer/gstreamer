@@ -69,6 +69,7 @@ static GstElement *pipeline;
 static EventLoopResult caught_error = ELR_NO_ERROR;
 static gboolean quiet = FALSE;
 static gboolean tags = FALSE;
+static gboolean toc = FALSE;
 static gboolean messages = FALSE;
 static gboolean is_live = FALSE;
 static gboolean waiting_eos = FALSE;
@@ -437,6 +438,35 @@ print_tag (const GstTagList * list, const gchar * tag, gpointer unused)
   }
 }
 
+static void
+print_toc_entry (gpointer data, gpointer user_data)
+{
+  GstTocEntry *entry = (GstTocEntry *) data;
+  const guint max_indent = 40;
+  const gchar spc[max_indent + 1] = "                                        ";
+  const gchar *entry_types[] = { "chapter", "edition" };
+  guint indent = MIN (GPOINTER_TO_UINT (user_data), max_indent);
+  gint64 start, stop;
+
+  gst_toc_entry_get_start_stop (entry, &start, &stop);
+
+  PRINT ("%s%s:", &spc[max_indent - indent], entry_types[entry->type]);
+  if (GST_CLOCK_TIME_IS_VALID (start)) {
+    PRINT (" start: %" GST_TIME_FORMAT, GST_TIME_ARGS (start));
+  }
+  if (GST_CLOCK_TIME_IS_VALID (stop)) {
+    PRINT (" stop: %" GST_TIME_FORMAT, GST_TIME_ARGS (stop));
+  }
+  PRINT ("\n");
+  indent += 2;
+
+  /* TODO: print tags */
+
+  /* loop over sub-toc entries */
+  g_list_foreach (entry->subentries, print_toc_entry,
+      GUINT_TO_POINTER (indent));
+}
+
 #ifndef DISABLE_FAULT_HANDLER
 /* we only use sighandler here because the registers are not important */
 static void
@@ -610,6 +640,28 @@ event_loop (GstElement * pipeline, gboolean blocking, GstState target_state)
           gst_message_parse_tag (message, &tag_list);
           gst_tag_list_foreach (tag_list, print_tag, NULL);
           gst_tag_list_free (tag_list);
+        }
+        break;
+      case GST_MESSAGE_TOC:
+        if (toc) {
+          GstToc *toc_msg;
+          gboolean updated;
+
+          if (GST_IS_ELEMENT (GST_MESSAGE_SRC (message))) {
+            PRINT (_("FOUND TOC      : found by element \"%s\".\n"),
+                GST_MESSAGE_SRC_NAME (message));
+          } else if (GST_IS_OBJECT (GST_MESSAGE_SRC (message))) {
+            PRINT (_("FOUND TOC      : found by object \"%s\".\n"),
+                GST_MESSAGE_SRC_NAME (message));
+          } else {
+            PRINT (_("FOUND TOC\n"));
+          }
+
+          gst_message_parse_toc (message, &toc_msg, &updated);
+          /* recursively loop over toc entries */
+          g_list_foreach (toc_msg->entries, print_toc_entry,
+              GUINT_TO_POINTER (0));
+          gst_toc_free (toc_msg);
         }
         break;
       case GST_MESSAGE_INFO:{
@@ -832,6 +884,8 @@ main (int argc, char *argv[])
   GOptionEntry options[] = {
     {"tags", 't', 0, G_OPTION_ARG_NONE, &tags,
         N_("Output tags (also known as metadata)"), NULL},
+    {"toc", 'c', 0, G_OPTION_ARG_NONE, &toc,
+        N_("Ouput TOC (chapters and editions)"), NULL},
     {"verbose", 'v', 0, G_OPTION_ARG_NONE, &verbose,
         N_("Output status information and property notifications"), NULL},
     {"quiet", 'q', 0, G_OPTION_ARG_NONE, &quiet,
