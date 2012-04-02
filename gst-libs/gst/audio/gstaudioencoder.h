@@ -54,7 +54,7 @@ G_BEGIN_DECLS
 
 /**
  * GST_AUDIO_ENCODER_SRC_PAD:
- * @obj: base parse instance
+ * @obj: audio encoder instance
  *
  * Gives the pointer to the source #GstPad object of the element.
  *
@@ -64,7 +64,7 @@ G_BEGIN_DECLS
 
 /**
  * GST_AUDIO_ENCODER_SINK_PAD:
- * @obj: base parse instance
+ * @obj: audio encoder instance
  *
  * Gives the pointer to the sink #GstPad object of the element.
  *

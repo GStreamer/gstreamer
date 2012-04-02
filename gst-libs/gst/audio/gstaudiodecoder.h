@@ -86,7 +86,7 @@ G_BEGIN_DECLS
 
 /**
  * GST_AUDIO_DECODER_INPUT_SEGMENT:
- * @obj: base parse instance
+ * @obj: audio decoder instance
  *
  * Gives the input segment of the element.
  *
@@ -96,7 +96,7 @@ G_BEGIN_DECLS
 
 /**
  * GST_AUDIO_DECODER_OUTPUT_SEGMENT:
- * @obj: base parse instance
+ * @obj: audio decoder instance
  *
  * Gives the output segment of the element.
  *
