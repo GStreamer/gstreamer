@@ -969,42 +969,51 @@ gst_buffer_find_memory (GstBuffer * buffer, gsize offset, gsize size,
 }
 
 /**
- * gst_buffer_get_sizes:
+ * gst_buffer_get_sizes_range:
  * @buffer: a #GstBuffer.
+ * @idx: an index
+ * @length: a length
  * @offset: a pointer to the offset
  * @maxsize: a pointer to the maxsize
  *
- * Get the total size of all memory blocks in @buffer.
+ * Get the total size of @length memory blocks stating from @idx in @buffer.
  *
- * When not %NULL, @offset will contain the offset of the data in the first
- * memory block in @buffer and @maxsize will contain the sum of the size
- * and @offset and the amount of extra padding on the last memory block.
- * @offset and @maxsize can be used to resize the buffer with
- * gst_buffer_resize().
+ * When not %NULL, @offset will contain the offset of the data in the
+ * memory block in @buffer at @idx and @maxsize will contain the sum of the size
+ * and @offset and the amount of extra padding on the memory block at @idx +
+ * @length -1.
+ * @offset and @maxsize can be used to resize the buffer memory blocks with
+ * gst_buffer_resize_range().
  *
- * Returns: the total size of the memory in @buffer.
+ * Returns: total size @length memory blocks starting at @idx in @buffer.
  */
 gsize
-gst_buffer_get_sizes (GstBuffer * buffer, gsize * offset, gsize * maxsize)
+gst_buffer_get_sizes_range (GstBuffer * buffer, guint idx, gint length,
+    gsize * offset, gsize * maxsize)
 {
   guint len;
   gsize size;
   GstMemory *mem;
 
   g_return_val_if_fail (GST_IS_BUFFER (buffer), 0);
-
   len = GST_BUFFER_MEM_LEN (buffer);
+  g_return_val_if_fail (len == 0 || (length == -1 && idx < len)
+      || (length + idx <= len), 0);
 
-  if (G_LIKELY (len == 1)) {
+  if (length == -1)
+    length = len - idx;
+
+  if (G_LIKELY (length == 1)) {
     /* common case */
-    mem = GST_BUFFER_MEM_PTR (buffer, 0);
+    mem = GST_BUFFER_MEM_PTR (buffer, idx);
     size = gst_memory_get_sizes (mem, offset, maxsize);
   } else {
-    guint i;
+    guint i, end;
     gsize extra, offs;
 
+    end = idx + length;
     size = offs = extra = 0;
-    for (i = 0; i < len; i++) {
+    for (i = idx; i < end; i++) {
       gsize s, o, ms;
 
       mem = GST_BUFFER_MEM_PTR (buffer, i);
@@ -1032,25 +1041,33 @@ gst_buffer_get_sizes (GstBuffer * buffer, gsize * offset, gsize * maxsize)
 }
 
 /**
- * gst_buffer_resize:
+ * gst_buffer_resize_range:
  * @buffer: a #GstBuffer.
+ * @idx: an index
+ * @length: a length
  * @offset: the offset adjustement
  * @size: the new size or -1 to just adjust the offset
  *
- * Set the total size of the buffer
+ * Set the total size of the @length memory blocks starting at @idx in
+ * @buffer
  */
 void
-gst_buffer_resize (GstBuffer * buffer, gssize offset, gssize size)
+gst_buffer_resize_range (GstBuffer * buffer, guint idx, gint length,
+    gssize offset, gssize size)
 {
-  guint len;
-  guint i;
+  guint i, len, end;
   gsize bsize, bufsize, bufoffs, bufmax;
   GstMemory *mem;
 
   g_return_if_fail (gst_buffer_is_writable (buffer));
   g_return_if_fail (size >= -1);
+  len = GST_BUFFER_MEM_LEN (buffer);
+  g_return_if_fail ((length == -1 && idx < len) || (length + idx <= len));
 
-  bufsize = gst_buffer_get_sizes (buffer, &bufoffs, &bufmax);
+  if (length == -1)
+    length = len - idx;
+
+  bufsize = gst_buffer_get_sizes_range (buffer, idx, length, &bufoffs, &bufmax);
 
   GST_CAT_LOG (GST_CAT_BUFFER, "trim %p %" G_GSSIZE_FORMAT "-%" G_GSSIZE_FORMAT
       " size:%" G_GSIZE_FORMAT " offs:%" G_GSIZE_FORMAT " max:%"
@@ -1070,10 +1087,9 @@ gst_buffer_resize (GstBuffer * buffer, gssize offset, gssize size)
   if (offset == 0 && size == bufsize)
     return;
 
-  len = GST_BUFFER_MEM_LEN (buffer);
-
+  end = idx + length;
   /* copy and trim */
-  for (i = 0; i < len; i++) {
+  for (i = idx; i < end; i++) {
     gsize left, noffs;
 
     mem = GST_BUFFER_MEM_PTR (buffer, i);
@@ -1081,7 +1097,7 @@ gst_buffer_resize (GstBuffer * buffer, gssize offset, gssize size)
 
     noffs = 0;
     /* last buffer always gets resized to the remaining size */
-    if (i + 1 == len)
+    if (i + 1 == end)
       left = size;
     /* shrink buffers before the offset */
     else if ((gssize) bsize <= offset) {
