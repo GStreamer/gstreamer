@@ -304,7 +304,7 @@ gst_jpegenc_getcaps (GstPad * pad, GstCaps * filter)
 {
   GstJpegEnc *jpegenc = GST_JPEGENC (gst_pad_get_parent (pad));
   GstCaps *caps, *othercaps;
-  const GstCaps *templ;
+  GstCaps *templ;
   gint i, j;
   GstStructure *structure = NULL;
 
@@ -312,14 +312,14 @@ gst_jpegenc_getcaps (GstPad * pad, GstCaps * filter)
      other end of the element */
 
   othercaps = gst_pad_peer_query_caps (jpegenc->srcpad, filter);
+  templ = gst_pad_get_pad_template_caps (pad);
   if (othercaps == NULL ||
       gst_caps_is_empty (othercaps) || gst_caps_is_any (othercaps)) {
-    caps = gst_caps_copy (gst_pad_get_pad_template_caps (pad));
+    caps = templ;
     goto done;
   }
 
   caps = gst_caps_new_empty ();
-  templ = gst_pad_get_pad_template_caps (pad);
 
   for (i = 0; i < gst_caps_get_size (templ); i++) {
     /* pick fields from peer caps */
@@ -338,6 +338,8 @@ gst_jpegenc_getcaps (GstPad * pad, GstCaps * filter)
       caps = gst_caps_merge_structure (caps, structure);
     }
   }
+
+  gst_caps_unref (templ);
 
 done:
 
