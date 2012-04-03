@@ -86,6 +86,12 @@ source_pad_data_cb (GstPad * pad, GstPadProbeInfo * info,
         fail_if (consist->eos, "Received a FLUSH_STOP after an EOS");
         consist->flushing = consist->expect_flush = FALSE;
         break;
+      case GST_EVENT_STREAM_START:
+      case GST_EVENT_STREAM_CONFIG:
+      case GST_EVENT_CAPS:
+        /* ok to have these before segment event */
+        /* FIXME check order more precisely, if so spec'ed somehow ? */
+        break;
       case GST_EVENT_SEGMENT:
         fail_if ((consist->expect_flush && consist->flushing),
             "Received SEGMENT while in a flushing seek");
