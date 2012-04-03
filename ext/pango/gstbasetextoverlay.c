@@ -2104,6 +2104,7 @@ gst_base_text_overlay_push_frame (GstBaseTextOverlay * overlay,
   /* ERRORS */
 invalid_frame:
   {
+    gst_buffer_unref (video_frame);
     GST_DEBUG_OBJECT (overlay, "received invalid buffer");
     return GST_FLOW_OK;
   }
