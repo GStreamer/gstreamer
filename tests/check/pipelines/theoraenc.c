@@ -36,9 +36,9 @@
 
 #define check_buffer_is_header(buffer,is_header) \
   fail_unless (GST_BUFFER_FLAG_IS_SET (buffer,   \
-          GST_BUFFER_FLAG_IN_CAPS) == is_header, \
+          GST_BUFFER_FLAG_HEADER) == is_header, \
       "GST_BUFFER_IN_CAPS is set to %d but expected %d", \
-      GST_BUFFER_FLAG_IS_SET (buffer, GST_BUFFER_FLAG_IN_CAPS), is_header)
+      GST_BUFFER_FLAG_IS_SET (buffer, GST_BUFFER_FLAG_HEADER), is_header)
 
 #define check_buffer_timestamp(buffer,timestamp) \
   fail_unless (GST_BUFFER_TIMESTAMP (buffer) == timestamp, \

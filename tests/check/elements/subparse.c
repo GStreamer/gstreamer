@@ -139,7 +139,7 @@ static SubParseInputChunk srt_input1[] = {
 static SubParseInputChunk srt_input2[] = {
   {
         "\xef\xbb\xbf" "1\n00:00:00,000 --> 00:00:03,50\nJust testing.\n\n",
-      0, 3 * GST_SECOND + 50 * GST_MSECOND, "Just testing."}
+      0, 3 * GST_SECOND + 500 * GST_MSECOND, "Just testing."}
 };
 
 /* starts with chunk number 0 and has less than three digits after the comma

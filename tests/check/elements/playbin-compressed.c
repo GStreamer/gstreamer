@@ -510,6 +510,7 @@ gst_codec_demuxer_setup_pad (GstCodecDemuxer * demux, GstPad ** pad,
     } else if (g_str_equal (streaminfo, "raw-audio")) {
       caps = gst_caps_new_simple ("audio/x-raw",
           "format", G_TYPE_STRING, "S16LE",
+          "layout", G_TYPE_STRING, "interleaved",
           "rate", G_TYPE_INT, 48000, "channels", G_TYPE_INT, 2, NULL);
     } else {
       caps = gst_caps_new_empty_simple ("audio/x-compressed");
@@ -969,7 +970,8 @@ GST_START_TEST (test_raw_single_audio_stream_manual_sink)
   playbin =
       create_playbin
       ("caps:audio/x-raw,"
-      " format=(string)S16LE, " " rate=(int)48000, " " channels=(int)2", TRUE);
+      " format=(string)S16LE, " "layout=(string)interleaved, "
+      " rate=(int)48000, " " channels=(int)2", TRUE);
 
   fail_unless_equals_int (gst_element_set_state (playbin, GST_STATE_READY),
       GST_STATE_CHANGE_SUCCESS);

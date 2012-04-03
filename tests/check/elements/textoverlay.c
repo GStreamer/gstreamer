@@ -177,6 +177,7 @@ buffer_is_all_black (GstBuffer * buf, GstCaps * caps)
     for (x = 0; x < w; ++x) {
       if (ptr[x] != 0x00) {
         GST_LOG ("non-black pixel (%d) at (x,y) %d,%d", ptr[x], x, y);
+        gst_buffer_unmap (buf, &map);
         return FALSE;
       }
     }
@@ -533,10 +534,6 @@ GST_START_TEST (test_video_waits_for_text)
   GST_BUFFER_TIMESTAMP (inbuffer) = 0;
   GST_BUFFER_DURATION (inbuffer) = GST_SECOND / 2;
 
-  /* take additional ref to keep it alive */
-  gst_buffer_ref (inbuffer);
-  ASSERT_BUFFER_REFCOUNT (inbuffer, "inbuffer", 2);
-
   /* pushing gives away one of the two references we have ... */
   GST_LOG ("pushing video buffer 1");
   fail_unless (gst_pad_push (myvideosrcpad, inbuffer) == GST_FLOW_OK);
@@ -549,18 +546,19 @@ GST_START_TEST (test_video_waits_for_text)
 
   /* there should be no text rendered */
   outbuffer = GST_BUFFER_CAST (buffers->data);
+  ASSERT_BUFFER_REFCOUNT (outbuffer, "outbuffer", 1);
   outcaps = gst_pad_get_current_caps (mysinkpad);
   fail_unless (buffer_is_all_black (outbuffer, outcaps));
   gst_caps_unref (outcaps);
 
   /* now, another video buffer */
-  inbuffer = gst_buffer_make_writable (inbuffer);
+  inbuffer = create_black_buffer (incaps);
   GST_BUFFER_TIMESTAMP (inbuffer) = GST_SECOND;
   GST_BUFFER_DURATION (inbuffer) = GST_SECOND / 2;
+  ASSERT_BUFFER_REFCOUNT (inbuffer, "inbuffer", 1);
 
   /* pushing gives away one of the two references we have ... */
   GST_LOG ("pushing video buffer 2");
-  gst_buffer_ref (inbuffer);
   fail_unless (gst_pad_push (myvideosrcpad, inbuffer) == GST_FLOW_OK);
 
   /* video buffer should have gone right away, with text rendered on it */
@@ -571,12 +569,13 @@ GST_START_TEST (test_video_waits_for_text)
 
   /* there should be text rendered */
   outbuffer = GST_BUFFER_CAST (buffers->next->data);
+  ASSERT_BUFFER_REFCOUNT (outbuffer, "outbuffer", 1);
   outcaps = gst_pad_get_current_caps (mysinkpad);
   fail_unless (buffer_is_all_black (outbuffer, outcaps) == FALSE);
   gst_caps_unref (outcaps);
 
   /* a third video buffer */
-  inbuffer = gst_buffer_make_writable (inbuffer);
+  inbuffer = create_black_buffer (incaps);
   GST_BUFFER_TIMESTAMP (inbuffer) = 30 * GST_SECOND;
   GST_BUFFER_DURATION (inbuffer) = GST_SECOND / 2;
 
@@ -590,7 +589,6 @@ GST_START_TEST (test_video_waits_for_text)
   fail_unless (thread != NULL);
 
   GST_LOG ("pushing video buffer 3");
-  gst_buffer_ref (inbuffer);
   fail_unless (gst_pad_push (myvideosrcpad, inbuffer) == GST_FLOW_OK);
 
   /* but the text should no longer be stuck in textoverlay */
@@ -601,12 +599,13 @@ GST_START_TEST (test_video_waits_for_text)
 
   /* ... and there should not be any text rendered on it */
   outbuffer = GST_BUFFER_CAST (buffers->next->next->data);
+  ASSERT_BUFFER_REFCOUNT (outbuffer, "outbuffer", 1);
   outcaps = gst_pad_get_current_caps (mysinkpad);
   fail_unless (buffer_is_all_black (outbuffer, outcaps));
   gst_caps_unref (outcaps);
 
   /* a fourth video buffer */
-  inbuffer = gst_buffer_make_writable (inbuffer);
+  inbuffer = create_black_buffer (incaps);
   GST_BUFFER_TIMESTAMP (inbuffer) = 35 * GST_SECOND;
   GST_BUFFER_DURATION (inbuffer) = GST_SECOND;
 
@@ -619,18 +618,15 @@ GST_START_TEST (test_video_waits_for_text)
   fail_unless (thread != NULL);
 
   GST_LOG ("pushing video buffer 4");
-  gst_buffer_ref (inbuffer);
   fail_unless (gst_pad_push (myvideosrcpad, inbuffer) == GST_FLOW_FLUSHING);
 
   /* and clean up */
   g_list_foreach (buffers, (GFunc) gst_mini_object_unref, NULL);
   g_list_free (buffers);
   buffers = NULL;
-  ASSERT_BUFFER_REFCOUNT (inbuffer, "inbuffer", 1);
 
   /* cleanup */
   cleanup_textoverlay (textoverlay);
-  gst_buffer_unref (inbuffer);
 
   /* give up our ref, textoverlay should've cleared its queued buffer by now */
   ASSERT_BUFFER_REFCOUNT (tbuf, "tbuf", 1);

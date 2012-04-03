@@ -141,8 +141,8 @@ check_PROGRAMS = \
 	elements/videorate          \
 	elements/videoscale         \
 	elements/videotestsrc       \
-	elements/volume
-	elements/adder	       \
+	elements/volume             \
+	elements/adder              \
 	$(check_theora)
 
 # TORTURE_TO_FIX = \
