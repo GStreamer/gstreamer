@@ -4724,12 +4724,14 @@ gst_avi_demux_loop_data (GstAviDemux * avi)
     buf = gst_avi_demux_invert (stream, buf);
 
     /* mark non-keyframes */
-    if (keyframe)
+    if (keyframe) {
       GST_BUFFER_FLAG_UNSET (buf, GST_BUFFER_FLAG_DELTA_UNIT);
-    else
+      GST_BUFFER_PTS (buf) = timestamp;
+    } else {
       GST_BUFFER_FLAG_SET (buf, GST_BUFFER_FLAG_DELTA_UNIT);
-
-    GST_BUFFER_TIMESTAMP (buf) = timestamp;
+      GST_BUFFER_PTS (buf) = GST_CLOCK_TIME_NONE;
+    }
+    GST_BUFFER_DTS (buf) = timestamp;
     GST_BUFFER_DURATION (buf) = duration;
     GST_BUFFER_OFFSET (buf) = out_offset;
     GST_BUFFER_OFFSET_END (buf) = out_offset_end;
@@ -5005,7 +5007,8 @@ gst_avi_demux_stream_data (GstAviDemux * avi)
           gst_pad_query_position (stream->pad, GST_FORMAT_TIME,
               (gint64 *) & dur_ts);
 
-          GST_BUFFER_TIMESTAMP (buf) = next_ts;
+          GST_BUFFER_DTS (buf) = next_ts;
+          GST_BUFFER_PTS (buf) = GST_CLOCK_TIME_NONE;
           GST_BUFFER_DURATION (buf) = dur_ts - next_ts;
           if (stream->strh->type == GST_RIFF_FCC_vids) {
             GST_BUFFER_OFFSET (buf) = stream->current_entry - 1;
