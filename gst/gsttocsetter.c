@@ -58,7 +58,7 @@ static GQuark gst_toc_key;
 typedef struct
 {
   GstToc *toc;
-  GStaticMutex lock;
+  GMutex lock;
 } GstTocData;
 
 GType
@@ -103,8 +103,6 @@ gst_toc_data_free (gpointer p)
   if (data->toc)
     gst_toc_free (data->toc);
 
-  g_static_mutex_free (&data->lock);
-
   g_slice_free (GstTocData, data);
 }
 
@@ -115,19 +113,19 @@ gst_toc_setter_get_data (GstTocSetter * setter)
 
   data = g_object_get_qdata (G_OBJECT (setter), gst_toc_key);
   if (!data) {
-    static GStaticMutex create_mutex = G_STATIC_MUTEX_INIT;
+    static GMutex create_mutex;
 
     /* make sure no other thread is creating a GstTocData at the same time */
-    g_static_mutex_lock (&create_mutex);
+    g_mutex_lock (&create_mutex);
     data = g_object_get_qdata (G_OBJECT (setter), gst_toc_key);
     if (!data) {
       data = g_slice_new (GstTocData);
-      g_static_mutex_init (&data->lock);
+      g_mutex_init (&data->lock);
       data->toc = NULL;
       g_object_set_qdata_full (G_OBJECT (setter), gst_toc_key, data,
           gst_toc_data_free);
     }
-    g_static_mutex_unlock (&create_mutex);
+    g_mutex_unlock (&create_mutex);
   }
 
   return data;
@@ -151,12 +149,12 @@ gst_toc_setter_reset_toc (GstTocSetter * setter)
 
   data = gst_toc_setter_get_data (setter);
 
-  g_static_mutex_lock (&data->lock);
+  g_mutex_lock (&data->lock);
   if (data->toc) {
     gst_toc_free (data->toc);
     data->toc = NULL;
   }
-  g_static_mutex_unlock (&data->lock);
+  g_mutex_unlock (&data->lock);
 }
 
 /**
@@ -204,12 +202,12 @@ gst_toc_setter_get_toc_copy (GstTocSetter * setter)
   g_return_val_if_fail (GST_IS_TOC_SETTER (setter), NULL);
 
   data = gst_toc_setter_get_data (setter);
-  g_static_mutex_lock (&data->lock);
+  g_mutex_lock (&data->lock);
 
   if (data->toc != NULL)
     ret = gst_toc_copy (data->toc);
 
-  g_static_mutex_unlock (&data->lock);
+  g_mutex_unlock (&data->lock);
 
   return ret;
 }
@@ -233,13 +231,13 @@ gst_toc_setter_set_toc (GstTocSetter * setter, const GstToc * toc)
 
   data = gst_toc_setter_get_data (setter);
 
-  g_static_mutex_lock (&data->lock);
+  g_mutex_lock (&data->lock);
   if (data->toc)
     gst_toc_free (data->toc);
 
   data->toc = gst_toc_copy (toc);
 
-  g_static_mutex_unlock (&data->lock);
+  g_mutex_unlock (&data->lock);
 }
 
 /**
@@ -268,11 +266,11 @@ gst_toc_setter_get_toc_entry (GstTocSetter * setter, const gchar * uid)
 
   data = gst_toc_setter_get_data (setter);
 
-  g_static_mutex_lock (&data->lock);
+  g_mutex_lock (&data->lock);
 
   ret = gst_toc_find_entry (data->toc, uid);
 
-  g_static_mutex_unlock (&data->lock);
+  g_mutex_unlock (&data->lock);
 
   return ret;
 }
@@ -303,13 +301,13 @@ gst_toc_setter_get_toc_entry_copy (GstTocSetter * setter, const gchar * uid)
 
   data = gst_toc_setter_get_data (setter);
 
-  g_static_mutex_lock (&data->lock);
+  g_mutex_lock (&data->lock);
 
   search = gst_toc_find_entry (data->toc, uid);
   if (search != NULL)
     ret = gst_toc_entry_copy (search);
 
-  g_static_mutex_unlock (&data->lock);
+  g_mutex_unlock (&data->lock);
 
   return ret;
 }
@@ -341,7 +339,7 @@ gst_toc_setter_add_toc_entry (GstTocSetter * setter, const gchar * parent_uid,
 
   data = gst_toc_setter_get_data (setter);
 
-  g_static_mutex_lock (&data->lock);
+  g_mutex_lock (&data->lock);
 
   copy_entry = gst_toc_entry_copy (entry);
 
@@ -356,7 +354,7 @@ gst_toc_setter_add_toc_entry (GstTocSetter * setter, const gchar * parent_uid,
     }
   }
 
-  g_static_mutex_unlock (&data->lock);
+  g_mutex_unlock (&data->lock);
 
   return ret;
 }
