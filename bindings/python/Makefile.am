@@ -19,10 +19,10 @@ INCLUDES = -I$(top_srcdir) -I$(srcdir) $(PYTHON_INCLUDES)
 ges_la_CFLAGS = -I$(top_srcdir)\
 		$(PYGST_CFLAGS) $(PYGOBJECT_CFLAGS) $(GST_PLUGINS_BASE_CFLAGS) $(GST_CFLAGS) -Wno-write-strings
 ges_la_LDFLAGS = -export-symbols-regex "^(initges|_PyGObject_API).*" \
-	-module -avoid-version $(GST_PLUGIN_LDFLAGS)
+	-module -avoid-version $(GST_PLUGIN_LDFLAGS) $(GIO_LDFLAGS)
 ges_la_LIBADD = $(top_builddir)/ges/libges-@GST_MAJORMINOR@.la \
 		$(GST_PLUGINS_BASE_LIBS) $(GST_BASE_LIBS) \
-		$(GST_LIBS) $(PYGST_LIBS) $(LIBM)
+		$(GST_LIBS) $(PYGST_LIBS) $(LIBM) $(GIO_LIBS)
 ges_la_SOURCES = gesmodule.c
 nodist_ges_la_SOURCES = ges.c
 
