@@ -323,7 +323,7 @@ void        gst_buffer_resize_range        (GstBuffer *buffer, guint idx, gint l
  * Set the size of @b to @s. This will remove or trim the memory blocks
  * in the buffer.
  */
-#define     gst_buffer_set_size(b,s)       gst_buffer_resize ((b), 0, (s))
+#define     gst_buffer_set_size(b,s)       gst_buffer_resize_range ((b), 0, -1, 0, (s))
 
 gboolean    gst_buffer_map_range           (GstBuffer *buffer, guint idx, gint length,
                                             GstMapInfo *info, GstMapFlags flags);
