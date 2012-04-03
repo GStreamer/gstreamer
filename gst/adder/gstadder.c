@@ -298,6 +298,7 @@ gst_adder_setcaps (GstAdder * adder, GstPad * pad, GstCaps * caps)
     }
   }
   adder->in_setcaps = FALSE;
+  gst_iterator_free (it);
 
   GST_LOG_OBJECT (adder, "handle caps changes on pad %p,%s to %" GST_PTR_FORMAT,
       pad, GST_PAD_NAME (pad), caps);
@@ -572,10 +573,16 @@ forward_event_func (const GValue * val, GValue * ret, EventData * data)
 {
   GstPad *pad = g_value_get_object (val);
   GstEvent *event = data->event;
+  GstPad *peer;
 
   gst_event_ref (event);
   GST_LOG_OBJECT (pad, "About to send event %s", GST_EVENT_TYPE_NAME (event));
-  if (!gst_pad_push_event (pad, event)) {
+  peer = gst_pad_get_peer (pad);
+  /* collect pad might have been set flushing,
+   * so bypass core checking that and send directly to peer */
+  if (!peer || !gst_pad_send_event (peer, event)) {
+    if (!peer)
+      gst_event_unref (event);
     GST_WARNING_OBJECT (pad, "Sending event  %p (%s) failed.",
         event, GST_EVENT_TYPE_NAME (event));
     /* quick hack to unflush the pads, ideally we need a way to just unflush
@@ -587,6 +594,8 @@ forward_event_func (const GValue * val, GValue * ret, EventData * data)
     GST_LOG_OBJECT (pad, "Sent event  %p (%s).",
         event, GST_EVENT_TYPE_NAME (event));
   }
+  if (peer)
+    gst_object_unref (peer);
 
   /* continue on other pads, even if one failed */
   return TRUE;
@@ -744,10 +753,12 @@ gst_adder_src_event (GstPad * pad, GstObject * parent, GstEvent * event)
     case GST_EVENT_QOS:
       /* QoS might be tricky */
       result = FALSE;
+      gst_event_unref (event);
       break;
     case GST_EVENT_NAVIGATION:
       /* navigation is rather pointless. */
       result = FALSE;
+      gst_event_unref (event);
       break;
     default:
       /* just forward the rest for now */
@@ -794,6 +805,7 @@ gst_adder_sink_event (GstCollectPads2 * pads, GstCollectData2 * pad,
               TRUE, FALSE)) {
         g_atomic_int_set (&adder->new_segment_pending, TRUE);
         GST_DEBUG_OBJECT (pad->pad, "forwarding flush stop");
+        res = gst_pad_event_default (pad->pad, GST_OBJECT (adder), event);
       } else {
         gst_event_unref (event);
         res = TRUE;
@@ -805,7 +817,6 @@ gst_adder_sink_event (GstCollectPads2 * pads, GstCollectData2 * pad,
         g_list_free (adder->pending_events);
         adder->pending_events = NULL;
       }
-      res = gst_pad_event_default (pad->pad, GST_OBJECT (adder), event);
       break;
     case GST_EVENT_TAG:
       /* collect tags here so we can push them out when we collect data */
