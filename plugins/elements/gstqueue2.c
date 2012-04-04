@@ -1139,20 +1139,27 @@ gst_queue2_have_data (GstQueue2 * queue, guint64 offset, guint length)
           (offset + length) - range->writing_pos);
 
   } else {
-    GST_INFO_OBJECT (queue, "not found in any range");
-    /* we don't have the range, see how far away we are, FIXME, find a good
-     * threshold based on the incoming rate. */
+    GST_INFO_OBJECT (queue, "not found in any range off %" G_GUINT64_FORMAT
+        " len %u", offset, length);
+    /* we don't have the range, see how far away we are */
     if (!queue->is_eos && queue->current) {
+      /* FIXME, find a good threshold based on the incoming rate. */
+      guint64 threshold = 1024 * 512;
+
       if (QUEUE_IS_USING_RING_BUFFER (queue)) {
-        if (offset < queue->current->offset || offset >
-            queue->current->writing_pos + QUEUE_MAX_BYTES (queue) -
-            queue->cur_level.bytes) {
-          perform_seek_to_offset (queue, offset);
-        } else {
+        guint64 distance;
+
+        distance = QUEUE_MAX_BYTES (queue) - queue->cur_level.bytes;
+        /* don't wait for the complete buffer to fill */
+        distance = MIN (distance, threshold);
+
+        if (offset >= queue->current->offset && offset <=
+            queue->current->writing_pos + distance) {
           GST_INFO_OBJECT (queue,
               "requested data is within range, wait for data");
+          return FALSE;
         }
-      } else if (offset < queue->current->writing_pos + 200000) {
+      } else if (offset < queue->current->writing_pos + threshold) {
         update_cur_pos (queue, queue->current, offset + length);
         GST_INFO_OBJECT (queue, "wait for data");
         return FALSE;
