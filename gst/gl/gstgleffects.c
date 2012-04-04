@@ -319,6 +319,7 @@ gst_gl_effects_draw_texture (GstGLEffects * effects, GLuint tex)
   glDrawElements (GL_TRIANGLES, 6, GL_UNSIGNED_SHORT, indices);
 #endif
 
+  glUseProgramObjectARB (0);
 }
 
 static void

@@ -80,6 +80,7 @@ struct _GstVisualGL
   GstGLDisplay *display;
   GLuint fbo;
   GLuint depthbuffer;
+  GLuint midtexture;
   GLdouble actor_projection_matrix[16];
   GLdouble actor_modelview_matrix[16];
   GLboolean is_enabled_gl_depth_test;
@@ -254,6 +255,7 @@ gst_visual_gl_init (GstVisualGL * visual)
   visual->display = NULL;
   visual->fbo = 0;
   visual->depthbuffer = 0;
+  visual->midtexture = 0;
 
   visual->is_enabled_gl_depth_test = GL_FALSE;
   visual->gl_depth_func = GL_LESS;
@@ -361,6 +363,9 @@ gst_visual_gl_src_setcaps (GstPad * pad, GstCaps * caps)
       gst_util_uint64_scale_int (visual->rate, visual->fps_d, visual->fps_n);
   visual->duration =
       gst_util_uint64_scale_int (GST_SECOND, visual->fps_d, visual->fps_n);
+
+  gst_gl_display_gen_texture (visual->display, &visual->midtexture,
+      visual->width, visual->height);
 
   gst_gl_display_gen_fbo (visual->display, visual->width, visual->height,
       &visual->fbo, &visual->depthbuffer);
@@ -735,13 +740,12 @@ check_gl_matrix (void)
 }
 
 static void
-render_frame (gint width, gint height, guint texture, GstVisualGL * visual)
+render_frame (GstVisualGL * visual)
 {
   const guint16 *data;
   VisBuffer *lbuf, *rbuf;
   guint16 ldata[VISUAL_SAMPLES], rdata[VISUAL_SAMPLES];
   guint i;
-  //GLint current_fbo = 0;
 
   /* Read VISUAL_SAMPLES samples per channel */
   data =
@@ -787,15 +791,16 @@ render_frame (gint width, gint height, guint texture, GstVisualGL * visual)
   glLoadMatrixd (visual->actor_modelview_matrix);
 
   /* This line try to hacks compatiblity with libprojectM
-   * You have to do that before calling glDrawBuffer(GL_BACK)
-   * Actually, at this point the current fbo is attached.
-   * then the folowing line unbind it.
-   * TODO: We have to rebind it just before final drawing
-   * if we want to append other glfilters after it.
+   * If libprojectM version <= 2.0.0 then we have to unbind our current
+   * fbo to see something. But it's incorrect and we cannot use fbo chainning (append other glfilters
+   * after libvisual_gl_projectM will not work)
+   * To have full compatibility, libprojectM needs to take care of our fbo.
+   * Indeed libprojectM has to unbind it before the first rendering pass
+   * and then rebind it before the final pass. It's done from 2.0.1
    */
-  //glGetIntegerv(GL_FRAMEBUFFER_BINDING, &current_fbo);
   if (g_ascii_strncasecmp (gst_element_get_name (GST_ELEMENT (visual)),
-          "visualglprojectm", 16) == 0)
+          "visualglprojectm", 16) == 0
+      && !HAVE_PROJECTM_TAKING_CARE_OF_EXTERNAL_FBO)
     glBindFramebufferEXT (GL_FRAMEBUFFER_EXT, 0);
 
   actor_negotiate (visual->display, visual);
@@ -809,16 +814,6 @@ render_frame (gint width, gint height, guint texture, GstVisualGL * visual)
     glEnable (GL_BLEND);
     glBlendFunc (visual->gl_blend_src_alpha, GL_ZERO);
   }
-
-  glMatrixMode (GL_MODELVIEW);
-  glScaled (1.0, -1.0, 1.0);
-
-  /* TODO: It should be possible to split libvisual rendering:
-   * framebuffer pass1,2,3 ... and final rendering
-   * This way we could rebind our fbo just before the
-   * final libvisual rendering
-   */
-  //glBindFramebufferEXT (GL_FRAMEBUFFER_EXT, current_fbo);
 
   visual_actor_run (visual->actor, visual->audio);
 
@@ -842,6 +837,36 @@ render_frame (gint width, gint height, guint texture, GstVisualGL * visual)
      glDisable (GL_CULL_FACE); */
 
   GST_DEBUG_OBJECT (visual, "rendered one frame");
+}
+
+static void
+bottom_up_to_top_down (gint width, gint height, guint texture,
+    GstVisualGL * visual)
+{
+
+  glEnable (GL_TEXTURE_RECTANGLE_ARB);
+  glBindTexture (GL_TEXTURE_RECTANGLE_ARB, texture);
+
+  glClear (GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+  glMatrixMode (GL_PROJECTION);
+  glLoadIdentity ();
+
+  glBegin (GL_QUADS);
+  glTexCoord2i (0, 0);
+  glVertex2i (-1, 1);
+  glTexCoord2i (width, 0);
+  glVertex2i (1, 1);
+  glTexCoord2i (width, height);
+  glVertex2i (1, -1);
+  glTexCoord2i (0, height);
+  glVertex2i (-1, -1);
+  glEnd ();
+
+  glBindTexture (GL_TEXTURE_RECTANGLE_ARB, 0);
+  glDisable (GL_TEXTURE_RECTANGLE_ARB);
+
+  GST_DEBUG_OBJECT (visual, "bottom up to top down");
 }
 
 static GstFlowReturn
@@ -931,10 +956,16 @@ gst_visual_gl_chain (GstPad * pad, GstBuffer * buffer)
       }
     }
 
-    /* this is a pretty weird API */
+    /* render libvisual plugin to our target */
+    gst_gl_display_use_fbo_v2 (visual->display,
+        visual->width, visual->height, visual->fbo, visual->depthbuffer,
+        visual->midtexture, (GLCB_V2) render_frame, (gpointer *) visual);
+
+    /* gst video is top-down whereas opengl plan is bottom up */
     gst_gl_display_use_fbo (visual->display,
         visual->width, visual->height, visual->fbo, visual->depthbuffer,
-        outbuf->texture, (GLCB) render_frame, 0, 0, 0,
+        outbuf->texture, (GLCB) bottom_up_to_top_down,
+        visual->width, visual->height, visual->midtexture,
         0, visual->width, 0, visual->height, GST_GL_DISPLAY_PROJECTION_ORTHO2D,
         (gpointer *) visual);
 
@@ -1052,6 +1083,11 @@ gst_visual_gl_change_state (GstElement * element, GstStateChange transition)
             visual->depthbuffer);
         visual->fbo = 0;
         visual->depthbuffer = 0;
+      }
+      if (visual->midtexture) {
+        gst_gl_display_del_texture (visual->display, visual->midtexture,
+            visual->width, visual->height);
+        visual->midtexture = 0;
       }
       if (visual->display) {
         g_object_unref (visual->display);

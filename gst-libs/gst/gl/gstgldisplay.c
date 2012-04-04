@@ -3240,6 +3240,7 @@ gst_gl_display_thread_do_download_draw_rgb (GstGLDisplay * display)
   gpointer data = display->download_data;
 
 #ifndef OPENGL_ES2
+  glUseProgramObjectARB (0);
   glEnable (GL_TEXTURE_RECTANGLE_ARB);
   glBindTexture (GL_TEXTURE_RECTANGLE_ARB, display->ouput_texture);
 #else
