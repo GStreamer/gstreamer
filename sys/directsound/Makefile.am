@@ -8,7 +8,7 @@ libgstdirectsoundsink_la_CFLAGS = \
 	$(DIRECTSOUND_CFLAGS)
 libgstdirectsoundsink_la_LIBADD = \
 	$(GST_PLUGINS_BASE_LIBS) \
-	-lgstaudio-$(GST_MAJORMINOR) -lgstinterfaces-$(GST_MAJORMINOR) \
+	-lgstaudio-$(GST_API_VERSION) -lgstinterfaces-$(GST_API_VERSION) \
 	$(GST_BASE_LIBS) \
 	$(GST_LIBS) \
 	$(DIRECTSOUND_LIBS)

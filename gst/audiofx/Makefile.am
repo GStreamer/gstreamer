@@ -29,8 +29,8 @@ libgstaudiofx_la_CFLAGS = $(GST_CFLAGS) \
 libgstaudiofx_la_LIBADD = $(GST_LIBS) \
 	$(GST_BASE_LIBS) \
 	$(GST_PLUGINS_BASE_LIBS) \
-	-lgstaudio-$(GST_MAJORMINOR) \
-	-lgstfft-$(GST_MAJORMINOR) \
+	-lgstaudio-$(GST_API_VERSION) \
+	-lgstfft-$(GST_API_VERSION) \
 	$(LIBM)
 libgstaudiofx_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
 libgstaudiofx_la_LIBTOOLFLAGS = --tag=disable-static

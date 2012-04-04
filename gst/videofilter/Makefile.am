@@ -13,7 +13,7 @@ libgstvideofilter_la_CFLAGS = $(GST_CFLAGS) \
 			$(GST_BASE_CFLAGS) \
 			$(GST_PLUGINS_BASE_CFLAGS)
 libgstvideofilter_la_LIBADD = $(GST_PLUGINS_BASE_LIBS) \
-			-lgstvideo-@GST_MAJORMINOR@ \
+			-lgstvideo-@GST_API_VERSION@ \
 			$(GST_BASE_LIBS) $(GST_LIBS)
 libgstvideofilter_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS) $(LIBM)
 libgstvideofilter_la_LIBTOOLFLAGS = --tag=disable-static

@@ -8,8 +8,8 @@ libgstosxvideosink_la_LIBADD =  \
 	$(GST_LIBS) \
 	$(GST_BASE_LIBS) \
     $(GST_PLUGINS_BASE_LIBS) \
-    -lgstvideo-$(GST_MAJORMINOR) \
-	-lgstinterfaces-$(GST_MAJORMINOR)
+    -lgstvideo-$(GST_API_VERSION) \
+	-lgstinterfaces-$(GST_API_VERSION)
 
 libgstosxvideosink_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS) -Wl,-framework -Wl,Cocoa -Wl,-framework -Wl,QuickTime -Wl,-framework -Wl,OpenGL
 libgstosxvideosink_la_LIBTOOLFLAGS = --tag=disable-static

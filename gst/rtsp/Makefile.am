@@ -5,9 +5,9 @@ libgstrtsp_la_SOURCES = gstrtsp.c gstrtspsrc.c \
 
 libgstrtsp_la_CFLAGS = $(GST_PLUGINS_BASE_CFLAGS) $(GST_CFLAGS)
 libgstrtsp_la_LIBADD = $(GST_PLUGINS_BASE_LIBS) $(GST_BASE_LIBS) \
-		       -lgstinterfaces-@GST_MAJORMINOR@ \
-		       -lgstrtp-@GST_MAJORMINOR@ -lgstrtsp-@GST_MAJORMINOR@ \
-		       -lgstsdp-@GST_MAJORMINOR@ $(GST_LIBS)
+		       -lgstinterfaces-@GST_API_VERSION@ \
+		       -lgstrtp-@GST_API_VERSION@ -lgstrtsp-@GST_API_VERSION@ \
+		       -lgstsdp-@GST_API_VERSION@ $(GST_LIBS)
 libgstrtsp_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
 libgstrtsp_la_LIBTOOLFLAGS = --tag=disable-static
 

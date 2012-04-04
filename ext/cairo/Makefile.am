@@ -36,7 +36,7 @@ libgstcairo_la_CFLAGS = \
 	$(GST_BASE_CFLAGS) \
 	$(GST_CFLAGS) $(CAIRO_CFLAGS) $(CAIRO_GOBJECT_CFLAGS)
 libgstcairo_la_LIBADD = \
-	$(GST_PLUGINS_BASE_LIBS) -lgstvideo-$(GST_MAJORMINOR) \
+	$(GST_PLUGINS_BASE_LIBS) -lgstvideo-$(GST_API_VERSION) \
 	$(GST_BASE_LIBS) $(GST_LIBS) $(CAIRO_LIBS) $(CAIRO_GOBJECT_LIBS) $(LIBM)
 libgstcairo_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
 libgstcairo_la_LIBTOOLFLAGS = --tag=disable-static

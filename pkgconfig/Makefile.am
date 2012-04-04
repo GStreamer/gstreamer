@@ -1,8 +1,8 @@
 ### all of the standard pc files we need to generate
 pcverfiles =  \
-	gstreamer-plugins-good-@GST_MAJORMINOR@.pc
+	gstreamer-plugins-good-@GST_API_VERSION@.pc
 pcverfiles_uninstalled = \
-	gstreamer-plugins-good-@GST_MAJORMINOR@-uninstalled.pc
+	gstreamer-plugins-good-@GST_API_VERSION@-uninstalled.pc
 
 ### all-local: $(pcverfiles) $(pcverfiles_uninstalled)
 all-local: $(pcverfiles_uninstalled)
@@ -12,9 +12,9 @@ cp_verbose_ = $(cp_verbose_$(AM_DEFAULT_VERBOSITY))
 cp_verbose_0 = @echo "  CP     $@";
 
 ### how to generate versioned .pc files from .pc files in this dir
-%-@GST_MAJORMINOR@.pc: %.pc
+%-@GST_API_VERSION@.pc: %.pc
 	$(cp_verbose)cp $< $@
-%-@GST_MAJORMINOR@-uninstalled.pc: %-uninstalled.pc
+%-@GST_API_VERSION@-uninstalled.pc: %-uninstalled.pc
 	$(cp_verbose)cp $< $@
 
 # do not install for now

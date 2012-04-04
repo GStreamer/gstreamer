@@ -13,7 +13,7 @@ libgstvideobox_la_LIBADD = $(GST_PLUGINS_BASE_LIBS) \
 			   $(GST_BASE_LIBS) \
 			   $(GST_LIBS) \
 			   $(ORC_LIBS) \
-			   -lgstvideo-@GST_MAJORMINOR@
+			   -lgstvideo-@GST_API_VERSION@
 libgstvideobox_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
 libgstvideobox_la_LIBTOOLFLAGS = --tag=disable-static
 

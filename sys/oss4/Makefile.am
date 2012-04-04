@@ -13,8 +13,8 @@ libgstoss4audio_la_SOURCES = \
 libgstoss4audio_la_CFLAGS = $(GST_PLUGINS_BASE_CFLAGS) $(GST_CFLAGS)
 libgstoss4audio_la_LIBADD = \
 	$(GST_PLUGINS_BASE_LIBS) \
-        -lgstinterfaces-$(GST_MAJORMINOR) \
-	-lgstaudio-$(GST_MAJORMINOR) \
+        -lgstinterfaces-$(GST_API_VERSION) \
+	-lgstaudio-$(GST_API_VERSION) \
 	$(GST_LIBS)
 libgstoss4audio_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS) 
 libgstoss4audio_la_LIBTOOLFLAGS = --tag=disable-static

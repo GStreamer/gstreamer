@@ -6,8 +6,8 @@ libgstapetag_la_CFLAGS = \
 	$(GST_BASE_CFLAGS) \
 	$(GST_CFLAGS)
 libgstapetag_la_LIBADD = \
-	$(GST_PLUGINS_BASE_LIBS) -lgsttag-@GST_MAJORMINOR@ \
-	-lgstpbutils-@GST_MAJORMINOR@\
+	$(GST_PLUGINS_BASE_LIBS) -lgsttag-@GST_API_VERSION@ \
+	-lgstpbutils-@GST_API_VERSION@\
 	$(GST_BASE_LIBS) \
 	$(GST_LIBS)
 libgstapetag_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)

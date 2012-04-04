@@ -8,7 +8,7 @@ libgstgdkpixbuf_la_CFLAGS = \
 	$(GST_BASE_CFLAGS) \
 	$(GST_CFLAGS) $(GDK_PIXBUF_CFLAGS)
 libgstgdkpixbuf_la_LIBADD = \
-	$(GST_PLUGINS_BASE_LIBS) -lgstvideo-$(GST_MAJORMINOR) \
+	$(GST_PLUGINS_BASE_LIBS) -lgstvideo-$(GST_API_VERSION) \
 	$(GST_CONTROLLER_LIBS) \
 	$(GST_BASE_LIBS) \
 	$(GST_LIBS) $(GDK_PIXBUF_LIBS)

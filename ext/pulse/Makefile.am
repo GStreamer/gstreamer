@@ -11,8 +11,8 @@ libgstpulse_la_SOURCES = \
 	pulseutil.c
 
 libgstpulse_la_CFLAGS = $(GST_PLUGINS_BASE_CFLAGS) $(GST_BASE_CFLAGS) $(GST_CFLAGS) $(PULSE_CFLAGS)
-libgstpulse_la_LIBADD = $(GST_PLUGINS_BASE_LIBS) -lgstaudio-$(GST_MAJORMINOR) \
-	-lgstinterfaces-$(GST_MAJORMINOR) -lgstpbutils-$(GST_MAJORMINOR) \
+libgstpulse_la_LIBADD = $(GST_PLUGINS_BASE_LIBS) -lgstaudio-$(GST_API_VERSION) \
+	-lgstinterfaces-$(GST_API_VERSION) -lgstpbutils-$(GST_API_VERSION) \
 	$(GST_BASE_LIBS) $(GST_LIBS) $(PULSE_LIBS)
 libgstpulse_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
 libgstpulse_la_LIBTOOLFLAGS = --tag=disable-static

@@ -7,9 +7,9 @@ libgstwavparse_la_CFLAGS = \
 	$(GST_CFLAGS)
 libgstwavparse_la_LIBADD = \
 	$(GST_PLUGINS_BASE_LIBS) \
-	-lgstriff-@GST_MAJORMINOR@ \
-	-lgstaudio-@GST_MAJORMINOR@ \
-	-lgsttag-@GST_MAJORMINOR@ \
+	-lgstriff-@GST_API_VERSION@ \
+	-lgstaudio-@GST_API_VERSION@ \
+	-lgsttag-@GST_API_VERSION@ \
 	$(GST_BASE_LIBS) \
 	$(GST_LIBS) \
 	$(LIBM)

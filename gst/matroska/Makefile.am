@@ -30,10 +30,10 @@ libgstmatroska_la_CFLAGS = \
 	$(GST_CFLAGS)
 libgstmatroska_la_LIBADD = \
 	$(GST_PLUGINS_BASE_LIBS) \
-	-lgstriff-@GST_MAJORMINOR@ \
-	-lgstaudio-@GST_MAJORMINOR@ \
-	-lgsttag-@GST_MAJORMINOR@ \
-	-lgstpbutils-@GST_MAJORMINOR@ \
+	-lgstriff-@GST_API_VERSION@ \
+	-lgstaudio-@GST_API_VERSION@ \
+	-lgsttag-@GST_API_VERSION@ \
+	-lgstpbutils-@GST_API_VERSION@ \
 	$(GST_BASE_LIBS) \
 	$(GST_LIBS) \
 	$(ZLIB_LIBS) \

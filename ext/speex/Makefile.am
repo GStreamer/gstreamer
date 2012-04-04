@@ -8,7 +8,7 @@ libgstspeex_la_CFLAGS = -DGST_USE_UNSTABLE_API \
 	$(SPEEX_CFLAGS)
 libgstspeex_la_LIBADD = \
 	$(GST_PLUGINS_BASE_LIBS) \
-	-lgsttag-$(GST_MAJORMINOR) -lgstaudio-$(GST_MAJORMINOR) \
+	-lgsttag-$(GST_API_VERSION) -lgstaudio-$(GST_API_VERSION) \
 	$(GST_BASE_LIBS) \
 	$(GST_LIBS) \
 	$(SPEEX_LIBS)

@@ -33,8 +33,8 @@ libgstvideo4linux2_la_LIBTOOLFLAGS = --tag=disable-static
 libgstvideo4linux2_la_LIBADD =   $(GST_PLUGINS_BASE_LIBS) \
 				 $(GST_BASE_LIBS) \
 				 $(GST_PLUGINS_BASE_LIBS) \
-				 -lgstvideo-$(GST_MAJORMINOR) \
-				 -lgstinterfaces-$(GST_MAJORMINOR) \
+				 -lgstvideo-$(GST_API_VERSION) \
+				 -lgstinterfaces-$(GST_API_VERSION) \
 				 $(GST_LIBS) \
 				 $(xv_libs) \
 				 $(LIBV4L2_LIBS) \

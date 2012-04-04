@@ -4,7 +4,7 @@ noinst_PROGRAMS = firfilter-example iirfilter-example
 ERROR_CFLAGS=
 
 firfilter_example_CFLAGS = $(GST_CFLAGS) $(GST_PLUGINS_BASE_CFLAGS)
-firfilter_example_LDADD = $(GST_LIBS) $(GST_PLUGINS_BASE_LIBS) -lgstfft-@GST_MAJORMINOR@ $(LIBM)
+firfilter_example_LDADD = $(GST_LIBS) $(GST_PLUGINS_BASE_LIBS) -lgstfft-@GST_API_VERSION@ $(LIBM)
 
 iirfilter_example_CFLAGS = $(GST_CFLAGS)
 iirfilter_example_LDADD = $(GST_LIBS) $(LIBM)

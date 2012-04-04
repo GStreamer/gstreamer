@@ -10,7 +10,7 @@ libgsteffectv_la_CFLAGS = \
 	$(GST_CFLAGS) \
 	-I$(top_srcdir)/gst/videofilter
 libgsteffectv_la_LIBADD = \
-	$(GST_PLUGINS_BASE_LIBS) -lgstvideo-@GST_MAJORMINOR@ \
+	$(GST_PLUGINS_BASE_LIBS) -lgstvideo-@GST_API_VERSION@ \
 	$(GST_BASE_LIBS) \
 	$(GST_LIBS) \
 	$(LIBM)

@@ -16,7 +16,7 @@ libgstnavigationtest_la_SOURCES = gstnavigationtest.c
 libgstnavigationtest_la_CFLAGS = $(GST_CFLAGS) $(GST_BASE_CFLAGS) \
 				 $(GST_PLUGINS_BASE_CFLAGS)
 libgstnavigationtest_la_LIBADD = $(GST_LIBS) $(GST_BASE_LIBS) \
-	$(GST_PLUGINS_BASE_LIBS) -lgstvideo-@GST_MAJORMINOR@ $(LIBM)
+	$(GST_PLUGINS_BASE_LIBS) -lgstvideo-@GST_API_VERSION@ $(LIBM)
 libgstnavigationtest_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
 libgstnavigationtest_la_LIBTOOLFLAGS = --tag=disable-static
 

@@ -75,11 +75,11 @@ libgstrtp_la_SOURCES = \
 
 libgstrtp_la_CFLAGS = $(GST_PLUGINS_BASE_CFLAGS) $(GST_BASE_CFLAGS) $(GST_CFLAGS)
 libgstrtp_la_LIBADD = $(GST_PLUGINS_BASE_LIBS) \
-		-lgstaudio-@GST_MAJORMINOR@ \
-		-lgstvideo-@GST_MAJORMINOR@ \
-                -lgsttag-@GST_MAJORMINOR@ \
-                -lgstrtp-@GST_MAJORMINOR@ \
-                -lgstpbutils-@GST_MAJORMINOR@ \
+		-lgstaudio-@GST_API_VERSION@ \
+		-lgstvideo-@GST_API_VERSION@ \
+                -lgsttag-@GST_API_VERSION@ \
+                -lgstrtp-@GST_API_VERSION@ \
+                -lgstpbutils-@GST_API_VERSION@ \
 		$(GST_BASE_LIBS) $(GST_LIBS) \
 		$(LIBM)
 libgstrtp_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS) 

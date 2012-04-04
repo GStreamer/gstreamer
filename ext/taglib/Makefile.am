@@ -10,7 +10,7 @@ libgsttaglib_la_CXXFLAGS = \
 	$(GST_CXXFLAGS) \
 	$(TAGLIB_CXXFLAGS)
 libgsttaglib_la_LIBADD = \
-	$(GST_PLUGINS_BASE_LIBS) -lgsttag-$(GST_MAJORMINOR) \
+	$(GST_PLUGINS_BASE_LIBS) -lgsttag-$(GST_API_VERSION) \
 	$(GST_LIBS) \
 	$(TAGLIB_LIBS)
 libgsttaglib_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
