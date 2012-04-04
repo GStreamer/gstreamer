@@ -54,7 +54,7 @@ BUILT_SOURCES = \
 CLEANFILES = core core.* test-registry.* *.gcno *.gcda $(BUILT_SOURCES)
 
 AM_CFLAGS = $(GST_OBJ_CFLAGS)
-LDADD = $(top_builddir)/libs/gst/base/libgstbase-@GST_MAJORMINOR@.la \
+LDADD = $(top_builddir)/libs/gst/base/libgstbase-@GST_API_VERSION@.la \
 	$(GST_OBJ_LIBS)
 
 elementmake.c elementcreate.c elementget.c elementlink.c elementfactory.c: $(top_srcdir)/docs/manual/basics-elements.xml

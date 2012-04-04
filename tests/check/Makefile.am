@@ -14,7 +14,7 @@ TESTS_ENVIRONMENT = \
         GST_PLUGIN_SYSTEM_PATH=					\
         GST_PLUGIN_PATH=$(top_builddir)/plugins
 
-plugindir = $(libdir)/gstreamer-@GST_MAJORMINOR@
+plugindir = $(libdir)/gstreamer-@GST_API_VERSION@
 
 # override to _not_ install the test plugins
 install-pluginLTLIBRARIES:
@@ -173,8 +173,8 @@ EXTRA_DIST = \
 
 AM_CFLAGS = $(GST_OBJ_CFLAGS) -UG_DISABLE_ASSERT -UG_DISABLE_CAST_CHECKS
 AM_CXXFLAGS = $(GST_OBJ_CXXFLAGS) -UG_DISABLE_ASSERT -UG_DISABLE_CAST_CHECKS
-LDADD = $(top_builddir)/libs/gst/check/libgstcheck-@GST_MAJORMINOR@.la \
-	$(top_builddir)/libs/gst/base/libgstbase-@GST_MAJORMINOR@.la \
+LDADD = $(top_builddir)/libs/gst/check/libgstcheck-@GST_API_VERSION@.la \
+	$(top_builddir)/libs/gst/base/libgstbase-@GST_API_VERSION@.la \
 	$(GST_OBJ_LIBS)
 
 gst_gstcpp_SOURCES = gst/gstcpp.cc
@@ -189,13 +189,13 @@ elements_filesrc_CFLAGS=$(GST_OBJ_CFLAGS) $(AM_CFLAGS) \
 	-DTESTFILE=\"$(top_srcdir)/configure.ac\"
 
 libs_controller_LDADD = \
-	$(top_builddir)/libs/gst/controller/libgstcontroller-@GST_MAJORMINOR@.la \
+	$(top_builddir)/libs/gst/controller/libgstcontroller-@GST_API_VERSION@.la \
 	$(LDADD)
 libs_gstnetclientclock_LDADD = \
-	$(top_builddir)/libs/gst/net/libgstnet-@GST_MAJORMINOR@.la \
+	$(top_builddir)/libs/gst/net/libgstnet-@GST_API_VERSION@.la \
 	$(LDADD)
 libs_gstnettimeprovider_LDADD = \
-	$(top_builddir)/libs/gst/net/libgstnet-@GST_MAJORMINOR@.la \
+	$(top_builddir)/libs/gst/net/libgstnet-@GST_API_VERSION@.la \
 	$(GIO_LIBS) $(LDADD)
 
 # valgrind testing

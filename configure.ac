@@ -34,13 +34,27 @@ m4_ifdef([AM_SILENT_RULES],[AM_SILENT_RULES([yes])],
   [AM_DEFAULT_VERBOSITY=1
    AC_SUBST(AM_DEFAULT_VERBOSITY)])
 
-dnl our libraries and install dirs use major.minor as a version
-GST_MAJORMINOR=$PACKAGE_VERSION_MAJOR.$PACKAGE_VERSION_MINOR
-dnl we override it here for release candidates for a new series
-GST_MAJORMINOR=0.11
-AC_SUBST(GST_MAJORMINOR)
-AC_DEFINE_UNQUOTED(GST_MAJORMINOR, "$GST_MAJORMINOR",
-  [library major.minor version])
+dnl GStreamer versioning, this is mostly informational
+dnl GST_VERSION_MAJOR=$PACKAGE_VERSION_MAJOR
+dnl GST_VERSION_MINOR=$PACKAGE_VERSION_MINOR
+dnl GST_VERSION_MICRO=$PACKAGE_VERSION_MICRO
+dnl GST_VERSION_NANO=$PACKAGE_VERSION_NANO
+dnl Change this to the above for non-pre
+GST_VERSION_MAJOR=1
+GST_VERSION_MINOR=0
+GST_VERSION_MICRO=0
+GST_VERSION_NANO=0
+AC_SUBST(GST_VERSION_MAJOR)
+AC_SUBST(GST_VERSION_MINOR)
+AC_SUBST(GST_VERSION_MICRO)
+AC_SUBST(GST_VERSION_NANO)
+
+dnl our libraries and install dirs use GST_API_VERSION in the filename
+dnl to allow side-by-side installation of different API versions
+GST_API_VERSION=1.0
+AC_SUBST(GST_API_VERSION)
+AC_DEFINE_UNQUOTED(GST_API_VERSION, "$GST_API_VERSION",
+  [GStreamer API Version])
 
 dnl CURRENT, REVISION, AGE
 dnl - library source changed -> increment REVISION
@@ -48,7 +62,7 @@ dnl - interfaces added/removed/changed -> increment CURRENT, REVISION = 0
 dnl - interfaces added -> increment AGE
 dnl - interfaces removed -> AGE = 0
 dnl sets GST_LT_LDFLAGS
-AS_LIBTOOL(GST, 33, 0, 0)
+AS_LIBTOOL(GST, 0, 0, 0)
 
 dnl FIXME: this macro doesn't actually work;
 dnl the generated libtool script has no support for the listed tags.
@@ -70,7 +84,7 @@ dnl set up gettext
 dnl the version check needs to stay here because autopoint greps for it
 AM_GNU_GETTEXT_VERSION([0.17])
 AM_GNU_GETTEXT([external])
-AG_GST_GETTEXT([gstreamer-$GST_MAJORMINOR])
+AG_GST_GETTEXT([gstreamer-$GST_API_VERSION])
 
 dnl *** check for arguments to configure ***
 
@@ -680,7 +694,7 @@ dnl default vars for all internal objects built on libgstreamer
 dnl includes GST_ALL_*
 GST_OBJ_CFLAGS="\$(GST_ALL_CFLAGS)"
 GST_OBJ_CXXFLAGS="\$(GST_ALL_CXXFLAGS)"
-GST_OBJ_LIBS="\$(top_builddir)/gst/libgstreamer-$GST_MAJORMINOR.la \$(GST_ALL_LIBS)"
+GST_OBJ_LIBS="\$(top_builddir)/gst/libgstreamer-$GST_API_VERSION.la \$(GST_ALL_LIBS)"
 AC_SUBST(GST_OBJ_CFLAGS)
 AC_SUBST(GST_OBJ_CXXFLAGS)
 AC_SUBST(GST_OBJ_LIBS)
@@ -691,7 +705,7 @@ GST_PLUGIN_LDFLAGS="-module -avoid-version -export-symbols-regex '^[_]*gst_plugi
 AC_SUBST(GST_PLUGIN_LDFLAGS, "$GST_PLUGIN_LDFLAGS")
 
 dnl plugin scanner locations
-AS_AC_EXPAND(GST_PLUGIN_SCANNER_INSTALLED,${libexecdir}/gstreamer-$GST_MAJORMINOR/gst-plugin-scanner)
+AS_AC_EXPAND(GST_PLUGIN_SCANNER_INSTALLED,${libexecdir}/gstreamer-$GST_API_VERSION/gst-plugin-scanner)
 AC_DEFINE_UNQUOTED(GST_PLUGIN_SCANNER_INSTALLED,
     "$GST_PLUGIN_SCANNER_INSTALLED", [location of the installed gst-plugin-scanner])
 AC_SUBST(GST_PLUGIN_SCANNER_INSTALLED)
@@ -773,7 +787,7 @@ sed \
     -e 's/.* GST_DATADIR$/#define GST_DATADIR PREFIX "\\\\share"/' \
     -e 's/.* GST_LEVEL_DEFAULT$/#define GST_LEVEL_DEFAULT GST_LEVEL_ERROR/' \
     -e 's/.* GST_LICENSE$/#define GST_LICENSE "'$GST_LICENSE'"/' \
-    -e 's/.* GST_MAJORMINOR$/#define GST_MAJORMINOR "'$GST_MAJORMINOR'"/' \
+    -e 's/.* GST_API_VERSION$/#define GST_API_VERSION "'$GST_API_VERSION'"/' \
     -e "s,.* GST_PACKAGE_NAME$,#define GST_PACKAGE_NAME \"${GST_PACKAGE_NAME}\"," \
     -e 's/.* GST_PACKAGE_ORIGIN$/#define GST_PACKAGE_ORIGIN "Unknown package origin"/' \
     -e "s,.* GST_PACKAGE_RELEASE_DATETIME$,#define GST_PACKAGE_RELEASE_DATETIME \"${GST_PACKAGE_RELEASE_DATETIME}\"," \
@@ -797,7 +811,7 @@ sed \
     -e "s/.* PACKAGE_STRING$/#define PACKAGE_STRING \"$PACKAGE_STRING\"/" \
     -e 's/.* PACKAGE_TARNAME$/#define PACKAGE_TARNAME "'$PACKAGE_TARNAME'"/' \
     -e 's/.* PACKAGE_VERSION$/#define PACKAGE_VERSION "'$PACKAGE_VERSION'"/' \
-    -e 's/.* PLUGINDIR$/#ifdef _DEBUG\n#  define PLUGINDIR PREFIX "\\\\debug\\\\lib\\\\gstreamer-0.11"\n#else\n#  define PLUGINDIR PREFIX "\\\\lib\\\\gstreamer-0.11"\n#endif/' \
+    -e 's/.* PLUGINDIR$/#ifdef _DEBUG\n#  define PLUGINDIR PREFIX "\\\\debug\\\\lib\\\\gstreamer-1.0"\n#else\n#  define PLUGINDIR PREFIX "\\\\lib\\\\gstreamer-1.0"\n#endif/' \
     -e 's/.* GST_PLUGIN_SCANNER_INSTALLED$/#define GST_PLUGIN_SCANNER_INSTALLED LIBDIR "\\\\gst-plugin-scanner"/' \
     -e 's/.* VERSION$/#define VERSION "'$VERSION'"/' \
     config.h.in >win32/common/config.h-new

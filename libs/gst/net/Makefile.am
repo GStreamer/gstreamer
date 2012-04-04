@@ -1,57 +1,57 @@
-lib_LTLIBRARIES = libgstnet-@GST_MAJORMINOR@.la
+lib_LTLIBRARIES = libgstnet-@GST_API_VERSION@.la
 
-libgstnet_@GST_MAJORMINOR@_includedir = $(includedir)/gstreamer-@GST_MAJORMINOR@/gst/net
-libgstnet_@GST_MAJORMINOR@_include_HEADERS = \
+libgstnet_@GST_API_VERSION@_includedir = $(includedir)/gstreamer-@GST_API_VERSION@/gst/net
+libgstnet_@GST_API_VERSION@_include_HEADERS = \
     gstnet.h \
     gstnetaddressmeta.h \
     gstnetclientclock.h \
     gstnettimepacket.h \
     gstnettimeprovider.h
 
-libgstnet_@GST_MAJORMINOR@_la_SOURCES = \
+libgstnet_@GST_API_VERSION@_la_SOURCES = \
     gstnetaddressmeta.c \
     gstnetclientclock.c \
     gstnettimepacket.c \
     gstnettimeprovider.c
 
-libgstnet_@GST_MAJORMINOR@_la_CFLAGS = $(GST_OBJ_CFLAGS) $(GIO_CFLAGS)
-libgstnet_@GST_MAJORMINOR@_la_LIBADD = $(GST_OBJ_LIBS) $(GIO_LIBS)
-libgstnet_@GST_MAJORMINOR@_la_LDFLAGS = $(GST_LIB_LDFLAGS) $(GST_ALL_LDFLAGS) $(GST_LT_LDFLAGS)
+libgstnet_@GST_API_VERSION@_la_CFLAGS = $(GST_OBJ_CFLAGS) $(GIO_CFLAGS)
+libgstnet_@GST_API_VERSION@_la_LIBADD = $(GST_OBJ_LIBS) $(GIO_LIBS)
+libgstnet_@GST_API_VERSION@_la_LDFLAGS = $(GST_LIB_LDFLAGS) $(GST_ALL_LDFLAGS) $(GST_LT_LDFLAGS)
 
 CLEANFILES = *.gcno *.gcda *.gcov
 
-%.c.gcov: .libs/libgstnet_@GST_MAJORMINOR@_la-%.gcda %.c
+%.c.gcov: .libs/libgstnet_@GST_API_VERSION@_la-%.gcda %.c
 	$(GCOV) -b -f -o $^ > $@.out
 
-gcov: $(libgstnet_@GST_MAJORMINOR@_la_SOURCES:=.gcov)
+gcov: $(libgstnet_@GST_API_VERSION@_la_SOURCES:=.gcov)
 
 Android.mk: Makefile.am
-	androgenizer -:PROJECT gstreamer -:SHARED libgstnet-@GST_MAJORMINOR@ -:TAGS eng debug \
+	androgenizer -:PROJECT gstreamer -:SHARED libgstnet-@GST_API_VERSION@ -:TAGS eng debug \
 	 -:REL_TOP $(top_srcdir) -:ABS_TOP $(abs_top_srcdir) \
-	 -:SOURCES $(libgstnet_@GST_MAJORMINOR@_la_SOURCES) \
-	 -:CFLAGS $(libgstnet_@GST_MAJORMINOR@_la_CFLAGS) \
-	 -:LDFLAGS $(libgstnet_@GST_MAJORMINOR@_la_LDFLAGS) \
-	           $(libgstnet_@GST_MAJORMINOR@_la_LIBADD) \
-	 -:HEADER_TARGET gstreamer-@GST_MAJORMINOR@/gst/net \
-	 -:HEADERS $(libgstnet_@GST_MAJORMINOR@_include_HEADERS) \
+	 -:SOURCES $(libgstnet_@GST_API_VERSION@_la_SOURCES) \
+	 -:CFLAGS $(libgstnet_@GST_API_VERSION@_la_CFLAGS) \
+	 -:LDFLAGS $(libgstnet_@GST_API_VERSION@_la_LDFLAGS) \
+	           $(libgstnet_@GST_API_VERSION@_la_LIBADD) \
+	 -:HEADER_TARGET gstreamer-@GST_API_VERSION@/gst/net \
+	 -:HEADERS $(libgstnet_@GST_API_VERSION@_include_HEADERS) \
 	 -:PASSTHROUGH LOCAL_ARM_MODE:=arm \
 	> $@
 
 
 if HAVE_INTROSPECTION
-BUILT_GIRSOURCES = GstNet-@GST_MAJORMINOR@.gir
+BUILT_GIRSOURCES = GstNet-@GST_API_VERSION@.gir
 
-gir_headers=$(patsubst %,$(srcdir)/%, $(libgstnet_@GST_MAJORMINOR@_include_HEADERS))
-gir_sources=$(patsubst %,$(srcdir)/%, $(libgstnet_@GST_MAJORMINOR@_la_SOURCES))
+gir_headers=$(patsubst %,$(srcdir)/%, $(libgstnet_@GST_API_VERSION@_include_HEADERS))
+gir_sources=$(patsubst %,$(srcdir)/%, $(libgstnet_@GST_API_VERSION@_la_SOURCES))
 gir_cincludes=--c-include="gst/net/gstnet.h"
 
-GstNet-@GST_MAJORMINOR@.gir: $(INTROSPECTION_SCANNER) libgstnet-@GST_MAJORMINOR@.la
+GstNet-@GST_API_VERSION@.gir: $(INTROSPECTION_SCANNER) libgstnet-@GST_API_VERSION@.la
 	$(AM_V_GEN)PKG_CONFIG_PATH="$(GST_PKG_CONFIG_PATH)" \
 		GST_PLUGIN_SYSTEM_PATH="" GST_PLUGIN_PATH="" GST_REGISTRY_UPDATE=no \
 		$(INTROSPECTION_SCANNER) -v --namespace GstNet \
 		--strip-prefix=Gst \
 		--warn-all \
-		--nsversion=@GST_MAJORMINOR@ \
+		--nsversion=@GST_API_VERSION@ \
 		-DGST_USE_UNSTABLE_API \
 		-I$(top_srcdir) \
 		-I$(top_srcdir)/libs \
@@ -60,14 +60,14 @@ GstNet-@GST_MAJORMINOR@.gir: $(INTROSPECTION_SCANNER) libgstnet-@GST_MAJORMINOR@
 		$(gir_cincludes) \
 		--add-include-path=$(top_builddir)/gst \
 		--library-path=$(top_builddir)/gst \
-		--library=$(top_builddir)/gst/libgstreamer-@GST_MAJORMINOR@.la \
-		--library=libgstnet-@GST_MAJORMINOR@.la \
-		--include=Gst-@GST_MAJORMINOR@ \
+		--library=$(top_builddir)/gst/libgstreamer-@GST_API_VERSION@.la \
+		--library=libgstnet-@GST_API_VERSION@.la \
+		--include=Gst-@GST_API_VERSION@ \
 		--include=Gio-2.0 \
 		--libtool="$(top_builddir)/libtool" \
-		--pkg gstreamer-@GST_MAJORMINOR@ \
+		--pkg gstreamer-@GST_API_VERSION@ \
 		--pkg gio-2.0 \
-		--pkg-export="gstreamer-net-@GST_MAJORMINOR@" \
+		--pkg-export="gstreamer-net-@GST_API_VERSION@" \
 		--add-init-section="gst_init(NULL,NULL);" \
 		--output $@ \
 		$(gir_headers) \

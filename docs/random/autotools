@@ -16,12 +16,12 @@ plugin Makefile.am:
 - DO NOT put any libraries in _LDFLAGS.  Typically, _LDFLAGS should only
   have $(GST_PLUGIN_LDFLAGS)
 - when using gst-plugins-base libraries, use $(GST_PLUGINS_BASE_LIBS) then
-  add -lgst(library)-$(GST_MAJORMINOR).  Example:
+  add -lgst(library)-$(GST_API_VERSION).  Example:
 
 libgstsdlvideosink_la_LIBADD =  $(GST_PLUGINS_BASE_LIBS) \
-                                -lgstvideo-$(GST_MAJORMINOR) \
-                                -lgstaudio-$(GST_MAJORMINOR) \
-                                -lgstinterfaces-$(GST_MAJORMINOR) \
+                                -lgstvideo-$(GST_API_VERSION) \
+                                -lgstaudio-$(GST_API_VERSION) \
+                                -lgstinterfaces-$(GST_API_VERSION) \
                                 $(SDL_LIBS)
 
 

@@ -1,5 +1,5 @@
 helpers_PROGRAMS = gst-plugin-scanner
-helpersdir=$(libexecdir)/gstreamer-$(GST_MAJORMINOR)
+helpersdir=$(libexecdir)/gstreamer-$(GST_API_VERSION)
 
 gst_plugin_scanner_SOURCES = gst-plugin-scanner.c
 gst_plugin_scanner_CFLAGS = $(GST_OBJ_CFLAGS)

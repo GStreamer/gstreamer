@@ -1,7 +1,7 @@
 ## Process this file with automake to produce Makefile.in
 
 # The name of the module, e.g. 'glib'.
-#DOC_MODULE=gstreamer-libs-@GST_MAJORMINOR@
+#DOC_MODULE=gstreamer-libs-@GST_API_VERSION@
 DOC_MODULE=gstreamer-libs
 
 # don't want $(DOC_MODULE)-scan.c to be built with -Werror
@@ -59,9 +59,9 @@ extra_files =
 # contains GtkObjects/GObjects and you want to document signals and properties.
 GTKDOC_CFLAGS = -I$(top_builddir) -I$(top_builddir)/libs $(GST_OBJ_CFLAGS)
 GTKDOC_LIBS = \
-	$(top_builddir)/libs/gst/controller/libgstcontroller-@GST_MAJORMINOR@.la \
-	$(top_builddir)/libs/gst/base/libgstbase-@GST_MAJORMINOR@.la \
-	$(top_builddir)/libs/gst/net/libgstnet-@GST_MAJORMINOR@.la \
+	$(top_builddir)/libs/gst/controller/libgstcontroller-@GST_API_VERSION@.la \
+	$(top_builddir)/libs/gst/base/libgstbase-@GST_API_VERSION@.la \
+	$(top_builddir)/libs/gst/net/libgstnet-@GST_API_VERSION@.la \
 	$(GST_OBJ_LIBS)
 
 GTKDOC_CC=$(LIBTOOL) --tag=CC --mode=compile $(CC)

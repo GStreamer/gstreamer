@@ -57,13 +57,13 @@
  *   <listitem>
  *     <para>default locations (if GST_PLUGIN_SYSTEM_PATH is not set). Those
  *       default locations are:
- *       <filename>~/.gstreamer-$GST_MAJORMINOR/plugins/</filename>
- *       and <filename>$prefix/libs/gstreamer-$GST_MAJORMINOR/</filename>.
+ *       <filename>~/.gstreamer-$GST_API_VERSION/plugins/</filename>
+ *       and <filename>$prefix/libs/gstreamer-$GST_API_VERSION/</filename>.
  *     </para>
  *   </listitem>
  * </itemizedlist>
  * The registry cache file is loaded from
- * <filename>~/.gstreamer-$GST_MAJORMINOR/registry-$ARCH.bin</filename> or the
+ * <filename>~/.gstreamer-$GST_API_VERSION/registry-$ARCH.bin</filename> or the
  * file listed in the GST_REGISTRY env var. One reason to change the registry
  * location is for testing.
  *
@@ -1574,7 +1574,7 @@ scan_and_update_registry (GstRegistry * default_registry,
     /* plugins in the user's home directory take precedence over
      * system-installed ones */
     home_plugins = g_build_filename (g_get_user_data_dir (),
-        "gstreamer-" GST_MAJORMINOR, "plugins", NULL);
+        "gstreamer-" GST_API_VERSION, "plugins", NULL);
 
     GST_DEBUG ("scanning home plugins %s", home_plugins);
     changed |= gst_registry_scan_path_internal (&context, home_plugins);
@@ -1656,7 +1656,7 @@ ensure_current_registry (GError ** error)
   registry_file = g_strdup (g_getenv ("GST_REGISTRY"));
   if (registry_file == NULL) {
     registry_file = g_build_filename (g_get_user_cache_dir (),
-        "gstreamer-" GST_MAJORMINOR, "registry." HOST_CPU ".bin", NULL);
+        "gstreamer-" GST_API_VERSION, "registry." HOST_CPU ".bin", NULL);
   }
 
   if (!_gst_disable_registry_cache) {

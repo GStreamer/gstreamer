@@ -8,9 +8,9 @@
 ]>
 <book id="index" xmlns:xi="http://www.w3.org/2003/XInclude">
   <bookinfo>
-    <title>GStreamer &GST_MAJORMINOR; Core Reference Manual</title>
+    <title>GStreamer &GST_API_VERSION; Core Reference Manual</title>
     <releaseinfo>
-      for GStreamer Core &GST_MAJORMINOR; (&GST_VERSION;)
+      for GStreamer Core &GST_API_VERSION; (&GST_VERSION;)
       The latest version of this documentation can be found on-line at
       <ulink role="online-location" url="http://gstreamer.freedesktop.org/data/doc/gstreamer/head/gstreamer/html/">http://gstreamer.freedesktop.org/data/doc/gstreamer/head/gstreamer/html/</ulink>.
     </releaseinfo>
@@ -50,7 +50,7 @@ Windows.  It is released under the GNU Library General Public License
     <title>GStreamer Core Library</title>
 
     <para>
-      libgstreamer-&GST_MAJORMINOR;.so provides all the core GStreamer services,
+      libgstreamer-&GST_API_VERSION;.so provides all the core GStreamer services,
       including initialization, plugin management and types,
       as well as the object hierarchy that defines elements and bins,
       along with some more specialized elements.

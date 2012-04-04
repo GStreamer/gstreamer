@@ -8,8 +8,8 @@ typelibdir=@abs_top_builddir@/libs/gst/base
 
 Name: GStreamer base classes, uninstalled
 Description: Base classes for GStreamer elements, Not Installed
-Requires: gstreamer-@GST_MAJORMINOR@ = @VERSION@
+Requires: gstreamer-@GST_API_VERSION@ = @VERSION@
 Version: @VERSION@
 
-Libs: @abs_top_builddir@/libs/gst/base/libgstbase-@GST_MAJORMINOR@.la
+Libs: @abs_top_builddir@/libs/gst/base/libgstbase-@GST_API_VERSION@.la
 Cflags: -I@abs_top_srcdir@/libs -I@abs_top_builddir@/libs

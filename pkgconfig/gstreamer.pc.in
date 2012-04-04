@@ -1,9 +1,9 @@
 prefix=@prefix@
 exec_prefix=@exec_prefix@
 libdir=@libdir@
-includedir=@includedir@/gstreamer-@GST_MAJORMINOR@
+includedir=@includedir@/gstreamer-@GST_API_VERSION@
 toolsdir=${exec_prefix}/bin
-pluginsdir=@libdir@/gstreamer-@GST_MAJORMINOR@
+pluginsdir=@libdir@/gstreamer-@GST_API_VERSION@
 datarootdir=${prefix}/share
 datadir=${datarootdir}
 girdir=${datadir}/gir-1.0
@@ -13,5 +13,5 @@ Name: GStreamer
 Description: Streaming media framework
 Requires: @GST_PKG_DEPS@
 Version: @VERSION@
-Libs: -L${libdir} -lgstreamer-@GST_MAJORMINOR@
+Libs: -L${libdir} -lgstreamer-@GST_API_VERSION@
 Cflags: -I${includedir}

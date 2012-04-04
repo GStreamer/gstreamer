@@ -249,7 +249,7 @@ remove_preset_file (void)
   gchar *preset_file_name;
 
   preset_file_name = g_build_filename (g_get_user_data_dir (),
-      "gstreamer-" GST_MAJORMINOR, "presets", "GstPresetTest.prs", NULL);
+      "gstreamer-" GST_API_VERSION, "presets", "GstPresetTest.prs", NULL);
   g_unlink (preset_file_name);
   g_free (preset_file_name);
 }
@@ -283,7 +283,7 @@ gst_preset_suite (void)
 
   /* check if we can create presets */
   gst_dir = g_build_filename (g_get_user_data_dir (),
-      "gstreamer-" GST_MAJORMINOR, NULL);
+      "gstreamer-" GST_API_VERSION, NULL);
   can_write = (g_access (gst_dir, R_OK | W_OK | X_OK) == 0);
   g_free (gst_dir);
 

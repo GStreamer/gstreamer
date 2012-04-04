@@ -477,7 +477,7 @@ gst_plugin_check_version (gint major, gint minor)
 {
   /* return NULL if the major and minor version numbers are not compatible */
   /* with ours. */
-  if (major != GST_VERSION_MAJOR || minor != GST_VERSION_MINOR)
+  if (major != GST_VERSION_MAJOR || minor > GST_VERSION_MINOR)
     return FALSE;
 
   return TRUE;

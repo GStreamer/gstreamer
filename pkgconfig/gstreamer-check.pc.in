@@ -1,7 +1,7 @@
 prefix=@prefix@
 exec_prefix=@exec_prefix@
 libdir=@libdir@
-includedir=@includedir@/gstreamer-@GST_MAJORMINOR@
+includedir=@includedir@/gstreamer-@GST_API_VERSION@
 datarootdir=${prefix}/share
 datadir=${datarootdir}
 girdir=${datadir}/gir-1.0
@@ -9,7 +9,7 @@ typelibdir=${libdir}/girepository-1.0
 
 Name: GStreamer check unit testing
 Description: Unit testing helper library for GStreamer modules
-Requires: gstreamer-@GST_MAJORMINOR@
+Requires: gstreamer-@GST_API_VERSION@
 Version: @VERSION@
-Libs: -L${libdir} -lgstcheck-@GST_MAJORMINOR@ @LIBM@
+Libs: -L${libdir} -lgstcheck-@GST_API_VERSION@ @LIBM@
 Cflags: -I${includedir}

@@ -1,8 +1,8 @@
-lib_LTLIBRARIES = libgstbase-@GST_MAJORMINOR@.la
+lib_LTLIBRARIES = libgstbase-@GST_API_VERSION@.la
 
-libgstbase_@GST_MAJORMINOR@_la_DEPENDENCIES = \
-	$(top_builddir)/gst/libgstreamer-@GST_MAJORMINOR@.la
-libgstbase_@GST_MAJORMINOR@_la_SOURCES = \
+libgstbase_@GST_API_VERSION@_la_DEPENDENCIES = \
+	$(top_builddir)/gst/libgstreamer-@GST_API_VERSION@.la
+libgstbase_@GST_API_VERSION@_la_SOURCES = \
 	gstadapter.c		\
 	gstbaseparse.c		\
 	gstbasesink.c		\
@@ -15,14 +15,14 @@ libgstbase_@GST_MAJORMINOR@_la_SOURCES = \
 	gstpushsrc.c		\
 	gsttypefindhelper.c
 
-libgstbase_@GST_MAJORMINOR@_la_CFLAGS = $(GST_OBJ_CFLAGS)
-libgstbase_@GST_MAJORMINOR@_la_LIBADD = $(GST_OBJ_LIBS)
-libgstbase_@GST_MAJORMINOR@_la_LDFLAGS = $(GST_LIB_LDFLAGS) $(GST_ALL_LDFLAGS) $(GST_LT_LDFLAGS)
+libgstbase_@GST_API_VERSION@_la_CFLAGS = $(GST_OBJ_CFLAGS)
+libgstbase_@GST_API_VERSION@_la_LIBADD = $(GST_OBJ_LIBS)
+libgstbase_@GST_API_VERSION@_la_LDFLAGS = $(GST_LIB_LDFLAGS) $(GST_ALL_LDFLAGS) $(GST_LT_LDFLAGS)
 
-libgstbase_@GST_MAJORMINOR@includedir =		\
-	$(includedir)/gstreamer-@GST_MAJORMINOR@/gst/base
+libgstbase_@GST_API_VERSION@includedir =		\
+	$(includedir)/gstreamer-@GST_API_VERSION@/gst/base
 
-libgstbase_@GST_MAJORMINOR@include_HEADERS =	\
+libgstbase_@GST_API_VERSION@include_HEADERS =	\
 	gstadapter.h		\
 	gstbaseparse.h		\
 	gstbasesink.h		\
@@ -45,35 +45,35 @@ EXTRA_DIST = gstindex.c gstmemindex.c
 
 CLEANFILES = *.gcno *.gcda *.gcov
 
-%.c.gcov: .libs/libgstbase_@GST_MAJORMINOR@_la-%.gcda %.c
+%.c.gcov: .libs/libgstbase_@GST_API_VERSION@_la-%.gcda %.c
 	$(GCOV) -b -f -o $^ > $@.out
 
-gcov: $(libgstbase_@GST_MAJORMINOR@_la_SOURCES:=.gcov)
+gcov: $(libgstbase_@GST_API_VERSION@_la_SOURCES:=.gcov)
 
 Android.mk: Makefile.am
-	androgenizer -:PROJECT gstreamer -:SHARED libgstbase-@GST_MAJORMINOR@ -:TAGS eng debug \
+	androgenizer -:PROJECT gstreamer -:SHARED libgstbase-@GST_API_VERSION@ -:TAGS eng debug \
 	 -:REL_TOP $(top_srcdir) -:ABS_TOP $(abs_top_srcdir) \
-	 -:SOURCES $(libgstbase_@GST_MAJORMINOR@_la_SOURCES) \
-	 -:CFLAGS $(DEFS) $(libgstbase_@GST_MAJORMINOR@_la_CFLAGS) \
-	 -:LDFLAGS $(libgstbase_@GST_MAJORMINOR@_la_LDFLAGS) \
-	           $(libgstbase_@GST_MAJORMINOR@_la_LIBADD) \
-	 -:HEADER_TARGET gstreamer-@GST_MAJORMINOR@/gst/base \
-	 -:HEADERS $(libgstbase_@GST_MAJORMINOR@include_HEADERS) \
+	 -:SOURCES $(libgstbase_@GST_API_VERSION@_la_SOURCES) \
+	 -:CFLAGS $(DEFS) $(libgstbase_@GST_API_VERSION@_la_CFLAGS) \
+	 -:LDFLAGS $(libgstbase_@GST_API_VERSION@_la_LDFLAGS) \
+	           $(libgstbase_@GST_API_VERSION@_la_LIBADD) \
+	 -:HEADER_TARGET gstreamer-@GST_API_VERSION@/gst/base \
+	 -:HEADERS $(libgstbase_@GST_API_VERSION@include_HEADERS) \
 	 -:PASSTHROUGH LOCAL_ARM_MODE:=arm \
 	> $@
 
 if HAVE_INTROSPECTION
-BUILT_GIRSOURCES = GstBase-@GST_MAJORMINOR@.gir
+BUILT_GIRSOURCES = GstBase-@GST_API_VERSION@.gir
 
-gir_headers=$(patsubst %,$(srcdir)/%, $(libgstbase_@GST_MAJORMINOR@include_HEADERS))
-gir_sources=$(patsubst %,$(srcdir)/%, $(libgstbase_@GST_MAJORMINOR@_la_SOURCES))
-gir_cincludes=$(patsubst %,--c-include='gst/base/%',$(libgstbase_@GST_MAJORMINOR@include_HEADERS))
+gir_headers=$(patsubst %,$(srcdir)/%, $(libgstbase_@GST_API_VERSION@include_HEADERS))
+gir_sources=$(patsubst %,$(srcdir)/%, $(libgstbase_@GST_API_VERSION@_la_SOURCES))
+gir_cincludes=$(patsubst %,--c-include='gst/base/%',$(libgstbase_@GST_API_VERSION@include_HEADERS))
 
-GstBase-@GST_MAJORMINOR@.gir: $(INTROSPECTION_SCANNER) libgstbase-@GST_MAJORMINOR@.la
+GstBase-@GST_API_VERSION@.gir: $(INTROSPECTION_SCANNER) libgstbase-@GST_API_VERSION@.la
 	$(AM_V_GEN)PKG_CONFIG_PATH="$(GST_PKG_CONFIG_PATH)" \
 		GST_PLUGIN_SYSTEM_PATH="" GST_PLUGIN_PATH="" GST_REGISTRY_UPDATE=no \
 		$(INTROSPECTION_SCANNER) -v --namespace GstBase \
-		--nsversion=@GST_MAJORMINOR@ \
+		--nsversion=@GST_API_VERSION@ \
 		--warn-all \
 		--strip-prefix=Gst \
 		-DGST_USE_UNSTABLE_API \
@@ -84,12 +84,12 @@ GstBase-@GST_MAJORMINOR@.gir: $(INTROSPECTION_SCANNER) libgstbase-@GST_MAJORMINO
 		$(gir_cincludes) \
 		--add-include-path=$(top_builddir)/gst \
 		--library-path=$(top_builddir)/gst \
-		--library=$(top_builddir)/gst/libgstreamer-0.11.la \
-		--library=libgstbase-0.11.la \
-		--include=Gst-0.11 \
+		--library=$(top_builddir)/gst/libgstreamer-@GST_API_VERSION@.la \
+		--library=libgstbase-@GST_API_VERSION@.la \
+		--include=Gst-@GST_API_VERSION@ \
 		--libtool="$(top_builddir)/libtool" \
-		--pkg gstreamer-@GST_MAJORMINOR@ \
-		--pkg-export gstreamer-base-@GST_MAJORMINOR@ \
+		--pkg gstreamer-@GST_API_VERSION@ \
+		--pkg-export gstreamer-base-@GST_API_VERSION@ \
 		--add-init-section="gst_init(NULL,NULL);" \
 		--output $@ \
 		$(gir_headers) \

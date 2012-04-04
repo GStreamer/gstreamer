@@ -223,7 +223,7 @@ main (int   argc,
     <para>
       To compile the helloworld example, use: <command>gcc -Wall
       helloworld.c -o helloworld
-      $(pkg-config --cflags --libs gstreamer-&GST_MAJORMINOR;)</command>.
+      $(pkg-config --cflags --libs gstreamer-&GST_API_VERSION;)</command>.
       &GStreamer; makes use of <command>pkg-config</command> to get compiler
       and linker flags needed to compile this application.
     </para>
@@ -238,7 +238,7 @@ main (int   argc,
       setup (ie. gst-uninstalled), you will need to use libtool to build the
       hello world program, like this: <command>libtool --mode=link gcc -Wall
       helloworld.c -o helloworld
-      $(pkg-config --cflags --libs gstreamer-&GST_MAJORMINOR;)</command>.
+      $(pkg-config --cflags --libs gstreamer-&GST_API_VERSION;)</command>.
     </para>
     <para>
       You can run this example application with <command>./helloworld

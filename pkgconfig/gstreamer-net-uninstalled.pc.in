@@ -8,8 +8,8 @@ typelibdir=@abs_top_builddir@/libs/gst/net
 
 Name: GStreamer networking library, uninstalled
 Description: Network-enabled GStreamer plug-ins and clocking, uninstalled
-Requires: gstreamer-@GST_MAJORMINOR@ = @VERSION@ gio-2.0
+Requires: gstreamer-@GST_API_VERSION@ = @VERSION@ gio-2.0
 Version: @VERSION@
 
-Libs: @abs_top_builddir@/libs/gst/net/libgstnet-@GST_MAJORMINOR@.la
+Libs: @abs_top_builddir@/libs/gst/net/libgstnet-@GST_API_VERSION@.la
 Cflags: -I@abs_top_srcdir@/libs -I@abs_top_builddir@/libs

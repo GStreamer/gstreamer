@@ -43,7 +43,7 @@ with
     <para>
 plug-ins in the user's home directory.  These are stored in a directory called
 <filename>plugins</filename> inside the
-<filename>.gstreamer-&GST_MAJORMINOR;</filename> directory in the user's
+<filename>.gstreamer-&GST_API_VERSION;</filename> directory in the user's
 home directory.
     </para>
   </listitem>

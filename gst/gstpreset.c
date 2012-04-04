@@ -160,7 +160,7 @@ preset_get_paths (GstPreset * preset, const gchar ** preset_user_path,
 
       /* user presets go in  user's XDG data directory. */
       preset_dir = g_build_filename (g_get_user_data_dir (),
-          "gstreamer-" GST_MAJORMINOR, "presets", NULL);
+          "gstreamer-" GST_API_VERSION, "presets", NULL);
       GST_INFO_OBJECT (preset, "user_preset_dir: '%s'", preset_dir);
       preset_path =
           g_strdup_printf ("%s" G_DIR_SEPARATOR_S "%s.prs", preset_dir,
@@ -198,7 +198,7 @@ preset_get_paths (GstPreset * preset, const gchar ** preset_user_path,
       gchar *preset_dir;
 
       /* system presets in '$GST_DATADIR/gstreamer-0.10/presets/GstAudioPanorama.prs' */
-      preset_dir = g_build_filename (GST_DATADIR, "gstreamer-" GST_MAJORMINOR,
+      preset_dir = g_build_filename (GST_DATADIR, "gstreamer-" GST_API_VERSION,
           "presets", NULL);
       GST_INFO_OBJECT (preset, "system_preset_dir: '%s'", preset_dir);
       preset_path = g_strdup_printf ("%s" G_DIR_SEPARATOR_S "%s.prs",

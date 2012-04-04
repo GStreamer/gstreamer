@@ -1,37 +1,37 @@
-lib_LTLIBRARIES = libgstcheck-@GST_MAJORMINOR@.la
+lib_LTLIBRARIES = libgstcheck-@GST_API_VERSION@.la
 
 SYMBOLS_FILE = exports.sym
 
 BUILT_SOURCES = internal-check.h
 
-libgstcheck_@GST_MAJORMINOR@_la_DEPENDENCIES = \
-	$(top_builddir)/gst/libgstreamer-@GST_MAJORMINOR@.la \
+libgstcheck_@GST_API_VERSION@_la_DEPENDENCIES = \
+	$(top_builddir)/gst/libgstreamer-@GST_API_VERSION@.la \
 	internal-check.h \
 	$(SYMBOLS_FILE)
-libgstcheck_@GST_MAJORMINOR@_la_SOURCES =	\
+libgstcheck_@GST_API_VERSION@_la_SOURCES =	\
 	gstbufferstraw.c			\
 	gstcheck.c				\
 	gstconsistencychecker.c
 
-libgstcheck_@GST_MAJORMINOR@_la_CFLAGS = $(GST_OBJ_CFLAGS) \
+libgstcheck_@GST_API_VERSION@_la_CFLAGS = $(GST_OBJ_CFLAGS) \
 	-I$(top_builddir)/libs \
 	-I$(top_builddir)/libs/gst/check \
 	-I$(top_builddir)/libs/gst/check/libcheck
-libgstcheck_@GST_MAJORMINOR@_la_LIBADD = $(GST_OBJ_LIBS) \
+libgstcheck_@GST_API_VERSION@_la_LIBADD = $(GST_OBJ_LIBS) \
 	$(top_builddir)/libs/gst/check/libcheck/libcheckinternal.la \
 	$(LIBM)
-libgstcheck_@GST_MAJORMINOR@_la_LDFLAGS = \
+libgstcheck_@GST_API_VERSION@_la_LDFLAGS = \
 	-export-symbols $(SYMBOLS_FILE) $(GST_ALL_LDFLAGS) $(GST_LT_LDFLAGS)
 
-libgstcheck_@GST_MAJORMINOR@includedir =		\
-	$(includedir)/gstreamer-@GST_MAJORMINOR@/gst/check
+libgstcheck_@GST_API_VERSION@includedir =		\
+	$(includedir)/gstreamer-@GST_API_VERSION@/gst/check
 
-libgstcheck_@GST_MAJORMINOR@include_HEADERS =	 \
+libgstcheck_@GST_API_VERSION@include_HEADERS =	 \
 	gstbufferstraw.h			\
 	gstcheck.h				\
 	gstconsistencychecker.h
 
-nodist_libgstcheck_@GST_MAJORMINOR@include_HEADERS =	\
+nodist_libgstcheck_@GST_API_VERSION@include_HEADERS =	\
 	internal-check.h	
 
 CLEANFILES = *.gcno *.gcda *.gcov internal-check.h $(SYMBOLS_FILE)
@@ -39,10 +39,10 @@ CLEANFILES = *.gcno *.gcda *.gcov internal-check.h $(SYMBOLS_FILE)
 internal-check.h: $(top_builddir)/libs/gst/check/libcheck/check.h
 	$(AM_V_GEN)cp $(top_builddir)/libs/gst/check/libcheck/check.h internal-check.h
 
-%.c.gcov: .libs/libgstcheck_@GST_MAJORMINOR@_la-%.gcda %.c
+%.c.gcov: .libs/libgstcheck_@GST_API_VERSION@_la-%.gcda %.c
 	$(GCOV) -b -f -o $^ > $@.out
 
-gcov: $(libgstcheck_@GST_MAJORMINOR@_la_SOURCES:=.gcov)
+gcov: $(libgstcheck_@GST_API_VERSION@_la_SOURCES:=.gcov)
 
 SUBDIRS = libcheck
 
@@ -108,19 +108,19 @@ $(SYMBOLS_FILE):
 	done
 
 if HAVE_INTROSPECTION
-BUILT_GIRSOURCES = GstCheck-@GST_MAJORMINOR@.gir
+BUILT_GIRSOURCES = GstCheck-@GST_API_VERSION@.gir
 
-gir_headers=$(patsubst %,$(srcdir)/%, $(libgstcheck_@GST_MAJORMINOR@include_HEADERS)) \
-    $(patsubst %,$(builddir)/%, $(nodist_libgstcheck_@GST_MAJORMINOR@include_HEADERS))
-gir_sources=$(patsubst %,$(srcdir)/%, $(libgstcheck_@GST_MAJORMINOR@_la_SOURCES))
-gir_cincludes=$(patsubst %,--c-include='gst/check/%',$(libgstcheck_@GST_MAJORMINOR@include_HEADERS)) \
-    $(patsubst %,--c-include='gst/check/%',$(nodist_libgstcheck_@GST_MAJORMINOR@include_HEADERS))
+gir_headers=$(patsubst %,$(srcdir)/%, $(libgstcheck_@GST_API_VERSION@include_HEADERS)) \
+    $(patsubst %,$(builddir)/%, $(nodist_libgstcheck_@GST_API_VERSION@include_HEADERS))
+gir_sources=$(patsubst %,$(srcdir)/%, $(libgstcheck_@GST_API_VERSION@_la_SOURCES))
+gir_cincludes=$(patsubst %,--c-include='gst/check/%',$(libgstcheck_@GST_API_VERSION@include_HEADERS)) \
+    $(patsubst %,--c-include='gst/check/%',$(nodist_libgstcheck_@GST_API_VERSION@include_HEADERS))
 
-GstCheck-@GST_MAJORMINOR@.gir: $(INTROSPECTION_SCANNER) libgstcheck-@GST_MAJORMINOR@.la
+GstCheck-@GST_API_VERSION@.gir: $(INTROSPECTION_SCANNER) libgstcheck-@GST_API_VERSION@.la
 	$(AM_V_GEN)PKG_CONFIG_PATH="$(GST_PKG_CONFIG_PATH)" \
 		GST_PLUGIN_SYSTEM_PATH="" GST_PLUGIN_PATH="" GST_REGISTRY_UPDATE=no \
 		$(INTROSPECTION_SCANNER) -v --namespace GstCheck \
-		--nsversion=@GST_MAJORMINOR@ \
+		--nsversion=@GST_API_VERSION@ \
 		--strip-prefix=Gst \
 		--warn-all \
 		-DGST_USE_UNSTABLE_API \
@@ -131,12 +131,12 @@ GstCheck-@GST_MAJORMINOR@.gir: $(INTROSPECTION_SCANNER) libgstcheck-@GST_MAJORMI
 		$(gir_cincludes) \
 		--add-include-path=$(top_builddir)/gst \
 		--library-path=$(top_builddir)/gst \
-		--library=$(top_builddir)/gst/libgstreamer-0.11.la \
-		--library=libgstcheck-0.11.la \
-		--include=Gst-0.11 \
+		--library=$(top_builddir)/gst/libgstreamer-@GST_API_VERSION@.la \
+		--library=libgstcheck-@GST_API_VERSION@.la \
+		--include=Gst-@GST_API_VERSION@ \
 		--libtool="$(top_builddir)/libtool" \
-		--pkg gstreamer-@GST_MAJORMINOR@ \
-		--pkg-export gstreamer-check-@GST_MAJORMINOR@ \
+		--pkg gstreamer-@GST_API_VERSION@ \
+		--pkg-export gstreamer-check-@GST_API_VERSION@ \
 		--add-init-section="gst_init(NULL,NULL);" \
 		--output $@ \
 		$(gir_headers) \

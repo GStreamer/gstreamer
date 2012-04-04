@@ -4,7 +4,7 @@ DISTCHECK_CONFIGURE_FLAGS=--enable-gtk-doc --enable-docbook
 ACLOCAL_AMFLAGS = -I m4 -I common/m4
 
 aclocaldir = $(datadir)/aclocal
-aclocal_DATA = gst-element-check-@GST_MAJORMINOR@.m4
+aclocal_DATA = gst-element-check-@GST_API_VERSION@.m4
 
 SUBDIRS = pkgconfig \
 	gst libs plugins tools tests \
@@ -32,7 +32,7 @@ EXTRA_DIST = \
 	scripts/gst-uninstalled \
 	$(win32)
 
-CLEANFILES = gst-element-check-@GST_MAJORMINOR@.m4
+CLEANFILES = gst-element-check-@GST_API_VERSION@.m4
 
 DISTCLEANFILES = _stdint.h
 
@@ -148,8 +148,8 @@ endif
 
 check: $(CHECK_EXPORTS) check-enum-gettypes
 
-gst-element-check-@GST_MAJORMINOR@.m4: gst-element-check.m4
-	$(AM_V_GEN)cp gst-element-check.m4 gst-element-check-@GST_MAJORMINOR@.m4
+gst-element-check-@GST_API_VERSION@.m4: gst-element-check.m4
+	$(AM_V_GEN)cp gst-element-check.m4 gst-element-check-@GST_API_VERSION@.m4
 
 # cruft: plugins that have been merged or moved or renamed
 
@@ -198,4 +198,4 @@ CRUFT_DIRS = \
 
 include $(top_srcdir)/common/cruft.mak
 
-all-local: gst-element-check-@GST_MAJORMINOR@.m4 check-cruft
+all-local: gst-element-check-@GST_API_VERSION@.m4 check-cruft

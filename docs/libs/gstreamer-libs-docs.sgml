@@ -8,9 +8,9 @@
 ]>
 <book id="index" xmlns:xi="http://www.w3.org/2003/XInclude">
   <bookinfo>
-    <title>GStreamer &GST_MAJORMINOR; Library Reference Manual</title>
+    <title>GStreamer &GST_API_VERSION; Library Reference Manual</title>
     <releaseinfo>
-      for GStreamer Library &GST_MAJORMINOR; (&GST_VERSION;)
+      for GStreamer Library &GST_API_VERSION; (&GST_VERSION;)
       The latest version of this documentation can be found on-line at
       <ulink role="online-location" url="http://gstreamer.freedesktop.org/data/doc/gstreamer/head/gstreamer-libs/html/">http://gstreamer.freedesktop.org/data/doc/gstreamer/head/gstreamer-libs/html/</ulink>.
     </releaseinfo>
@@ -29,7 +29,7 @@
     <chapter id="gstreamer-base">
       <title>GStreamer Base and Utillity Classes</title>
       <para>
-        libgstbase-&GST_MAJORMINOR;.so provides some base classes to be extended
+        libgstbase-&GST_API_VERSION;.so provides some base classes to be extended
         by elements and utillity classes that are most useful for plugin developers.
       </para>
 
@@ -50,7 +50,7 @@
     <chapter id="gstreamer-control">
       <title>GStreamer Dynamic Parameter Control</title>
       <para>
-        libgstcontroller-&GST_MAJORMINOR;.so provides functionality to animate
+        libgstcontroller-&GST_API_VERSION;.so provides functionality to animate
         element properties over time.
       </para>
 
@@ -63,7 +63,7 @@
     <chapter id="gstreamer-net">
       <title>GStreamer Network Classes</title>
       <para>
-        libgstnet-&GST_MAJORMINOR;.so provides network elements and objects.
+        libgstnet-&GST_API_VERSION;.so provides network elements and objects.
       </para>
 
       <xi:include href="xml/gstnetclientclock.xml" />
@@ -74,7 +74,7 @@
     <chapter id="gstreamer-check">
       <title>GStreamer Check Unit Testing</title>
       <para>
-        libgstcheck-&GST_MAJORMINOR;.so provides functionality for writing
+        libgstcheck-&GST_API_VERSION;.so provides functionality for writing
         unit tests that use the check framework.
       </para>
 

@@ -1,25 +1,25 @@
 ### all of the standard pc files we need to generate
 if HAVE_CHECK
-CHECK_PC_I = gstreamer-check-@GST_MAJORMINOR@.pc
-CHECK_PC_U = gstreamer-check-@GST_MAJORMINOR@-uninstalled.pc
+CHECK_PC_I = gstreamer-check-@GST_API_VERSION@.pc
+CHECK_PC_U = gstreamer-check-@GST_API_VERSION@-uninstalled.pc
 else
 CHECK_PC_I =
 CHECK_PC_U =
 endif
 
 pcfiles = 							\
-	gstreamer-@GST_MAJORMINOR@.pc				\
-	gstreamer-base-@GST_MAJORMINOR@.pc			\
+	gstreamer-@GST_API_VERSION@.pc				\
+	gstreamer-base-@GST_API_VERSION@.pc			\
 	$(CHECK_PC_I)						\
-	gstreamer-controller-@GST_MAJORMINOR@.pc		\
-	gstreamer-net-@GST_MAJORMINOR@.pc
+	gstreamer-controller-@GST_API_VERSION@.pc		\
+	gstreamer-net-@GST_API_VERSION@.pc
 
 pcfiles_uninstalled =						\
-	gstreamer-@GST_MAJORMINOR@-uninstalled.pc		\
-	gstreamer-base-@GST_MAJORMINOR@-uninstalled.pc		\
+	gstreamer-@GST_API_VERSION@-uninstalled.pc		\
+	gstreamer-base-@GST_API_VERSION@-uninstalled.pc		\
 	$(CHECK_PC_U)						\
-	gstreamer-controller-@GST_MAJORMINOR@-uninstalled.pc	\
-	gstreamer-net-@GST_MAJORMINOR@-uninstalled.pc
+	gstreamer-controller-@GST_API_VERSION@-uninstalled.pc	\
+	gstreamer-net-@GST_API_VERSION@-uninstalled.pc
 
 all-local: $(pcfiles) $(pcfiles_uninstalled)
 
@@ -28,9 +28,9 @@ cp_verbose_ = $(cp_verbose_$(AM_DEFAULT_VERBOSITY))
 cp_verbose_0 = @echo "  CP     $@";
 
 ### how to generate pc files
-%-@GST_MAJORMINOR@.pc: %.pc
+%-@GST_API_VERSION@.pc: %.pc
 	$(cp_verbose_0)cp $< $@
-%-@GST_MAJORMINOR@-uninstalled.pc: %-uninstalled.pc
+%-@GST_API_VERSION@-uninstalled.pc: %-uninstalled.pc
 	$(cp_verbose_0)cp $< $@
 
 pkgconfigdir = $(libdir)/pkgconfig

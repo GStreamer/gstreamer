@@ -1,7 +1,7 @@
 
 plugin_LTLIBRARIES = libgstcoreelements.la
 
-libgstcoreelements_la_DEPENDENCIES = $(top_builddir)/gst/libgstreamer-@GST_MAJORMINOR@.la
+libgstcoreelements_la_DEPENDENCIES = $(top_builddir)/gst/libgstreamer-@GST_API_VERSION@.la
 libgstcoreelements_la_SOURCES =	\
 	gstcapsfilter.c		\
 	gstelements.c		\
@@ -25,7 +25,7 @@ libgstcoreelements_la_SOURCES =	\
 
 libgstcoreelements_la_CFLAGS = $(GST_OBJ_CFLAGS)
 libgstcoreelements_la_LIBADD = \
-	$(top_builddir)/libs/gst/base/libgstbase-@GST_MAJORMINOR@.la \
+	$(top_builddir)/libs/gst/base/libgstbase-@GST_API_VERSION@.la \
 	$(GST_OBJ_LIBS)
 libgstcoreelements_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
 libgstcoreelements_la_LIBTOOLFLAGS = --tag=disable-static
@@ -69,5 +69,5 @@ Android.mk: Makefile.am
 	 -:LDFLAGS $(libgstcoreelements_la_LDFLAGS) \
 	            $(libgstcoreelements_la_LIBADD) \
 	 -:PASSTHROUGH LOCAL_ARM_MODE:=arm \
-	               LOCAL_MODULE_PATH:=$$\(TARGET_OUT\)/lib/gstreamer-@GST_MAJORMINOR@ \
+	               LOCAL_MODULE_PATH:=$$\(TARGET_OUT\)/lib/gstreamer-@GST_API_VERSION@ \
 	> $@

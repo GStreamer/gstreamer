@@ -1,7 +1,7 @@
 ## Process this file with automake to produce Makefile.in
 
 # The name of the module, e.g. 'glib'.
-# DOC_MODULE=gstreamer-@GST_MAJORMINOR@
+# DOC_MODULE=gstreamer-@GST_API_VERSION@
 DOC_MODULE=gstreamer
 
 # don't want $(DOC_MODULE)-scan.c to be built with -Werror
