@@ -1547,6 +1547,7 @@ beach:
   memset (stream->pendingbuffers, 0, TS_MAX_PENDING_BUFFERS);
   stream->nbpending = 0;
   stream->current = NULL;
+  stream->currentit = NULL;
   stream->expected_size = 0;
   stream->current_size = 0;
 
