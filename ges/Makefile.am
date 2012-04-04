@@ -3,6 +3,8 @@ built_source_make =
 
 lib_LTLIBRARIES = libges-@GST_MAJORMINOR@.la
 
+EXTRA_libges_@GST_MAJORMINOR@_la_SOURCES = gesmarshal.list
+
 CLEANFILES = $(BUILT_SOURCES) $(built_header_make) $(built_source_make)
 
 libges_@GST_MAJORMINOR@_la_SOURCES = 		\
@@ -94,9 +96,14 @@ libges_@GST_MAJORMINOR@include_HEADERS = 	\
 noinst_HEADERS = \
 	ges-internal.h
 
-libges_@GST_MAJORMINOR@_la_CFLAGS = -I$(top_srcdir) $(GST_PBUTILS_CFLAGS) $(GST_VIDEO_CFLAGS) $(GST_CONTROLLER_CFLAGS) $(GST_PLUGINS_BASE_CFLAGS) $(GST_CFLAGS) $(XML_CFLAGS)
-libges_@GST_MAJORMINOR@_la_LIBADD = $(GST_PBUTILS_LIBS) $(GST_VIDEO_LIBS) $(GST_CONTROLLER_LIBS) $(GST_PLUGINS_BASE_LIBS) $(GST_BASE_LIBS) $(GST_LIBS) $(XML_LIBS)
-libges_@GST_MAJORMINOR@_la_LDFLAGS = $(GST_LIB_LDFLAGS) $(GST_ALL_LDFLAGS) $(GST_LT_LDFLAGS) -export-symbols-regex \^_*\(ges_\|GES_\).*
+libges_@GST_MAJORMINOR@_la_CFLAGS = -I$(top_srcdir) $(GST_PBUTILS_CFLAGS) \
+		$(GST_VIDEO_CFLAGS) $(GST_CONTROLLER_CFLAGS) $(GST_PLUGINS_BASE_CFLAGS) \
+		$(GST_CFLAGS) $(XML_CFLAGS) $(GIO_CFLAGS)
+libges_@GST_MAJORMINOR@_la_LIBADD = $(GST_PBUTILS_LIBS) \
+		$(GST_VIDEO_LIBS) $(GST_CONTROLLER_LIBS) $(GST_PLUGINS_BASE_LIBS) \
+		$(GST_BASE_LIBS) $(GST_LIBS) $(XML_LIBS) $(GIO_LIBS)
+libges_@GST_MAJORMINOR@_la_LDFLAGS = $(GST_LIB_LDFLAGS) $(GST_ALL_LDFLAGS) \
+		$(GST_LT_LDFLAGS) $(GIO_CFLAGS) -export-symbols-regex \^_*\(ges_\|GES_\).*
 
 DISTCLEANFILE = $(CLEANFILES)
 
@@ -129,12 +136,14 @@ GES-@GST_MAJORMINOR@.gir: $(INTROSPECTION_SCANNER) libges-@GST_MAJORMINOR@.la
 		-I$(top_builddir) \
 		--add-include-path=`$(PKG_CONFIG) --variable=girdir gstreamer-0.11` \
 		--add-include-path=`$(PKG_CONFIG) --variable=girdir gstreamer-pbutils-0.11` \
+		--add-include-path=`$(PKG_CONFIG) --variable=girdir gio-2.0` \
 		--library=libges-@GST_MAJORMINOR@.la \
 		--include=Gst-@GST_MAJORMINOR@ \
 		--include=GstPbutils-@GST_MAJORMINOR@ \
 		--libtool="$(top_builddir)/libtool" \
 		--pkg gstreamer-@GST_MAJORMINOR@ \
 		--pkg gstreamer-pbutils-@GST_MAJORMINOR@ \
+		--pkg gio-2.0 \
 		--pkg-export ges-@GST_MAJORMINOR@ \
 		--add-init-section="gst_init(NULL, NULL);" \
 		--add-init-section="ges_init(NULL, NULL);" \
@@ -159,6 +168,7 @@ typelibs_DATA = $(BUILT_GIRSOURCES:.gir=.typelib)
 		--includedir=$(builddir) \
 		--includedir=`$(PKG_CONFIG) --variable=girdir gstreamer-0.11` \
 		--includedir=`$(PKG_CONFIG) --variable=girdir gstreamer-pbutils-0.11` \
+		--includedir=`$(PKG_CONFIG) --variable=girdir gio-2.0` \
 		$(INTROSPECTION_COMPILER_OPTS) $< -o $(@F)
 
 CLEANFILES += $(BUILT_GIRSOURCES) $(typelibs_DATA)

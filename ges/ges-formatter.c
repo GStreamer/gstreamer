@@ -44,6 +44,7 @@
  **/
 
 #include <gst/gst.h>
+#include <gio/gio.h>
 #include <stdlib.h>
 
 #include "ges-formatter.h"
@@ -61,6 +62,7 @@ struct _GESFormatterPrivate
   /* Make sure not to emit several times "moved-source" when the user already
    * provided the new source URI. */
   GHashTable *uri_newuri_table;
+  GHashTable *parent_newparent_table;
 };
 
 static void ges_formatter_dispose (GObject * object);
@@ -131,6 +133,8 @@ ges_formatter_init (GESFormatter * object)
 
   object->priv->uri_newuri_table = g_hash_table_new_full (g_str_hash,
       g_str_equal, g_free, g_free);
+  object->priv->parent_newparent_table = g_hash_table_new_full (g_file_hash,
+      (GEqualFunc) g_file_equal, g_object_unref, g_object_unref);
 }
 
 static void
@@ -142,6 +146,7 @@ ges_formatter_dispose (GObject * object)
     g_free (priv->data);
   }
   g_hash_table_destroy (priv->uri_newuri_table);
+  g_hash_table_destroy (priv->parent_newparent_table);
 }
 
 /**
@@ -519,10 +524,21 @@ ges_formatter_update_source_uri (GESFormatter * formatter,
         g_hash_table_lookup (formatter->priv->uri_newuri_table, uri);
 
     if (!cached_uri) {
+      GFile *parent, *new_parent, *new_file = g_file_new_for_uri (new_uri),
+          *file = g_file_new_for_uri (uri);
+
+      parent = g_file_get_parent (file);
+      new_parent = g_file_get_parent (new_file);
       g_hash_table_insert (formatter->priv->uri_newuri_table, g_strdup (uri),
           g_strdup (new_uri));
 
-      GST_DEBUG ("Adding %s to the new uri cache", new_uri);
+      g_hash_table_insert (formatter->priv->parent_newparent_table,
+          parent, new_parent);
+
+      GST_DEBUG ("Adding %s and its parent to the new uri cache", new_uri);
+
+      g_object_unref (file);
+      g_object_unref (new_file);
     }
 
     return klass->update_source_uri (formatter, source, new_uri);
@@ -540,15 +556,43 @@ discovery_error_cb (GESTimeline * timeline,
   if (error->domain == GST_RESOURCE_ERROR &&
       error->code == GST_RESOURCE_ERROR_NOT_FOUND) {
     const gchar *uri = ges_timeline_filesource_get_uri (tfs);
-    gchar *new_uri =
-        g_hash_table_lookup (formatter->priv->uri_newuri_table, uri);
+    gchar *new_uri = g_hash_table_lookup (formatter->priv->uri_newuri_table,
+        uri);
+
+    /* We didn't find this exact URI, trying to find its parent new directory */
+    if (!new_uri) {
+      GFile *parent, *file = g_file_new_for_uri (uri);
+
+      /* Check if we have the new parent in cache */
+      parent = g_file_get_parent (file);
+      if (parent) {
+        GFile *new_parent =
+            g_hash_table_lookup (formatter->priv->parent_newparent_table,
+            parent);
+
+        if (new_parent) {
+          gchar *basename = g_file_get_basename (file);
+          GFile *new_file = g_file_get_child (new_parent, basename);
+
+          new_uri = g_file_get_uri (new_file);
+
+          g_object_unref (new_file);
+          g_object_unref (parent);
+          g_free (basename);
+        }
+      }
+
+      g_object_unref (file);
+    }
 
     if (new_uri) {
       ges_formatter_update_source_uri (formatter, tfs, new_uri);
       GST_DEBUG ("%s found in the cache, new uri: %s", uri, new_uri);
-    } else
+
+    } else {
       g_signal_emit (formatter, ges_formatter_signals[SOURCE_MOVED_SIGNAL], 0,
           tfs);
+    }
   }
 }
 
