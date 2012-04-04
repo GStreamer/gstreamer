@@ -777,7 +777,7 @@ _get_parser (GstEncodeBin * ebin, GstEncodingProfile * sprof)
   GList *parsers1, *parsers, *tmp;
   GstElement *parser = NULL;
   GstElementFactory *parserfact = NULL;
-  const GstCaps *format;
+  GstCaps *format;
 
   format = gst_encoding_profile_get_format (sprof);
 
@@ -794,7 +794,7 @@ _get_parser (GstEncodeBin * ebin, GstEncodingProfile * sprof)
 
   if (G_UNLIKELY (parsers == NULL)) {
     GST_DEBUG ("Couldn't find any compatible parsers");
-    return NULL;
+    goto beach;
   }
 
   for (tmp = parsers; tmp; tmp = tmp->next) {
@@ -808,6 +808,10 @@ _get_parser (GstEncodeBin * ebin, GstEncodingProfile * sprof)
     parser = gst_element_factory_create (parserfact, NULL);
 
   gst_plugin_feature_list_free (parsers);
+
+beach:
+  if (format)
+    gst_caps_unref (format);
 
   return parser;
 }
@@ -838,7 +842,7 @@ _get_encoder (GstEncodeBin * ebin, GstEncodingProfile * sprof)
   GList *encoders, *tmp;
   GstElement *encoder = NULL;
   GstElementFactory *encoderfact = NULL;
-  const GstCaps *format;
+  GstCaps *format;
   const gchar *preset;
 
   format = gst_encoding_profile_get_format (sprof);
@@ -871,6 +875,9 @@ _get_encoder (GstEncodeBin * ebin, GstEncodingProfile * sprof)
   gst_plugin_feature_list_free (encoders);
 
 beach:
+  if (format)
+    gst_caps_unref (format);
+
   return encoder;
 }
 
@@ -1516,7 +1523,7 @@ _get_formatter (GstEncodeBin * ebin, GstEncodingProfile * sprof)
   GList *formatters, *tmpfmtr;
   GstElement *formatter = NULL;
   GstElementFactory *formatterfact = NULL;
-  const GstCaps *format;
+  GstCaps *format;
   const gchar *preset;
 
   format = gst_encoding_profile_get_format (sprof);
@@ -1546,6 +1553,8 @@ _get_formatter (GstEncodeBin * ebin, GstEncodingProfile * sprof)
   gst_plugin_feature_list_free (formatters);
 
 beach:
+  if (format)
+    gst_caps_unref (format);
   return formatter;
 }
 
@@ -1581,7 +1590,7 @@ _get_muxer (GstEncodeBin * ebin)
   GstElement *muxer = NULL;
   GstElementFactory *muxerfact = NULL;
   const GList *tmp;
-  const GstCaps *format;
+  GstCaps *format;
   const gchar *preset;
 
   format = gst_encoding_profile_get_format (ebin->profile);
@@ -1619,14 +1628,18 @@ _get_muxer (GstEncodeBin * ebin)
     /* See if the muxer can sink all of our stream profile caps */
     for (tmp = profiles; tmp; tmp = tmp->next) {
       GstEncodingProfile *sprof = (GstEncodingProfile *) tmp->data;
+      GstCaps *sformat = gst_encoding_profile_get_format (sprof);
 
-      if (!_factory_can_handle_caps (muxerfact,
-              gst_encoding_profile_get_format (sprof), GST_PAD_SINK, FALSE)) {
+      if (!_factory_can_handle_caps (muxerfact, sformat, GST_PAD_SINK, FALSE)) {
         GST_DEBUG ("Skipping muxer because it can't sink caps %"
-            GST_PTR_FORMAT, gst_encoding_profile_get_format (sprof));
+            GST_PTR_FORMAT, sformat);
         cansinkstreams = FALSE;
+        if (sformat)
+          gst_caps_unref (sformat);
         break;
       }
+      if (sformat)
+        gst_caps_unref (sformat);
     }
 
     /* Only use a muxer than can use all streams and than can accept the
@@ -1639,6 +1652,8 @@ _get_muxer (GstEncodeBin * ebin)
   gst_plugin_feature_list_free (muxers);
 
 beach:
+  if (format)
+    gst_caps_unref (format);
   return muxer;
 }
 
@@ -1701,15 +1716,16 @@ create_elements_and_pads (GstEncodeBin * ebin)
 
 no_muxer:
   {
-    GST_WARNING ("No available muxer for %" GST_PTR_FORMAT,
-        gst_encoding_profile_get_format (ebin->profile));
+    GstCaps *format = gst_encoding_profile_get_format (ebin->profile);
+
+    GST_WARNING ("No available muxer for %" GST_PTR_FORMAT, format);
     /* missing plugin support */
     gst_element_post_message (GST_ELEMENT_CAST (ebin),
-        gst_missing_encoder_message_new (GST_ELEMENT_CAST (ebin),
-            gst_encoding_profile_get_format (ebin->profile)));
+        gst_missing_encoder_message_new (GST_ELEMENT_CAST (ebin), format));
     GST_ELEMENT_ERROR (ebin, CORE, MISSING_PLUGIN, (NULL),
-        ("No available muxer for format %" GST_PTR_FORMAT,
-            gst_encoding_profile_get_format (ebin->profile)));
+        ("No available muxer for format %" GST_PTR_FORMAT, format));
+    if (format)
+      gst_caps_unref (format);
     return FALSE;
   }
 
