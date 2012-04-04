@@ -135,6 +135,8 @@ run_capsfilter_renegotiation (const gchar * launch_line)
   current_caps = NULL;
   gst_message_unref (msg);
   g_object_unref (bus);
+  gst_object_unref (sink);
+  gst_object_unref (capsfilter);
   g_object_unref (G_OBJECT (pipeline));
 }
 

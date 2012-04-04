@@ -31,16 +31,27 @@
 #include <gst/pbutils/encoding-profile.h>
 #include <gst/pbutils/encoding-target.h>
 
+static inline gboolean
+gst_caps_is_equal_unref (GstCaps * caps1, GstCaps * caps2)
+{
+  gboolean ret;
+
+  ret = gst_caps_is_equal (caps1, caps2);
+  gst_caps_unref (caps1);
+
+  return ret;
+}
+
 #define CHECK_PROFILE(profile, name, description, format, preset, presence, restriction) \
   {									\
   fail_if(profile == NULL);						\
   fail_unless_equals_string (gst_encoding_profile_get_name (profile), name); \
   fail_unless_equals_string (gst_encoding_profile_get_description (profile), description); \
-  fail_unless (gst_caps_is_equal (gst_encoding_profile_get_format (profile), format)); \
+  fail_unless (gst_caps_is_equal_unref (gst_encoding_profile_get_format (profile), format)); \
   fail_unless_equals_string (gst_encoding_profile_get_preset (profile), preset); \
   fail_unless_equals_int (gst_encoding_profile_get_presence (profile), presence); \
   if (restriction) \
-    fail_unless (gst_caps_is_equal (gst_encoding_profile_get_restriction (profile), restriction)); \
+    fail_unless (gst_caps_is_equal_unref (gst_encoding_profile_get_restriction (profile), restriction)); \
   }
 
 GST_START_TEST (test_profile_creation)
