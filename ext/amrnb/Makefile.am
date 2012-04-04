@@ -8,7 +8,7 @@ libgstamrnb_la_SOURCES = \
 libgstamrnb_la_CFLAGS = -DGST_USE_UNSTABLE_API $(GST_PLUGINS_BASE_CFLAGS) \
 	$(GST_BASE_CFLAGS) $(GST_CFLAGS) $(AMRNB_CFLAGS)
 libgstamrnb_la_LIBADD = $(GST_PLUGINS_BASE_LIBS) \
-        -lgstaudio-@GST_MAJORMINOR@ \
+        -lgstaudio-@GST_API_VERSION@ \
         $(GST_BASE_LIBS) $(GST_LIBS) $(AMRNB_LIBS)
 libgstamrnb_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
 libgstamrnb_la_LIBTOOLFLAGS = --tag=disable-static
@@ -17,7 +17,7 @@ noinst_HEADERS = \
 	amrnbdec.h \
 	amrnbenc.h
 
-presetdir = $(datadir)/gstreamer-$(GST_MAJORMINOR)/presets
+presetdir = $(datadir)/gstreamer-$(GST_API_VERSION)/presets
 preset_DATA = GstAmrnbEnc.prs
 
 EXTRA_DIST = $(preset_DATA)

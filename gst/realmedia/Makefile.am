@@ -9,9 +9,9 @@ libgstrmdemux_la_SOURCES = rademux.c rmdemux.c  \
 
 libgstrmdemux_la_CFLAGS = $(GST_PLUGINS_BASE_CFLAGS) $(GST_BASE_CFLAGS) $(GST_CFLAGS)
 libgstrmdemux_la_LIBADD = $(GST_PLUGINS_BASE_LIBS) \
-				-lgstrtsp-@GST_MAJORMINOR@ \
-				-lgstsdp-@GST_MAJORMINOR@ \
-				-lgstpbutils-@GST_MAJORMINOR@ \
+				-lgstrtsp-@GST_API_VERSION@ \
+				-lgstsdp-@GST_API_VERSION@ \
+				-lgstpbutils-@GST_API_VERSION@ \
 				$(GST_BASE_LIBS) $(GST_LIBS)
 libgstrmdemux_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
 libgstrmdemux_la_LIBTOOLFLAGS = --tag=disable-static

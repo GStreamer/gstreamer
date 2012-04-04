@@ -11,7 +11,7 @@ libgsta52dec_la_LIBADD = \
 	$(GST_PLUGINS_BASE_LIBS) \
         $(GST_BASE_LIBS) \
         $(GST_LIBS) \
-        -lgstaudio-$(GST_MAJORMINOR) \
+        -lgstaudio-$(GST_API_VERSION) \
 	$(ORC_LIBS) \
 	$(A52DEC_LIBS)
 libgsta52dec_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
