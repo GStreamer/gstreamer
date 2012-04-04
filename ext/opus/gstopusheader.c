@@ -33,6 +33,7 @@ gst_opus_enc_create_id_buffer (gint nchannels, gint n_stereo_streams,
 {
   GstBuffer *buffer;
   GstByteWriter bw;
+  gboolean hdl = TRUE;
 
   g_return_val_if_fail (nchannels > 0 && nchannels < 256, NULL);
   g_return_val_if_fail (n_stereo_streams >= 0, NULL);
@@ -41,18 +42,21 @@ gst_opus_enc_create_id_buffer (gint nchannels, gint n_stereo_streams,
   gst_byte_writer_init (&bw);
 
   /* See http://wiki.xiph.org/OggOpus */
-  gst_byte_writer_put_data (&bw, (const guint8 *) "OpusHead", 8);
-  gst_byte_writer_put_uint8 (&bw, 0);   /* version number */
-  gst_byte_writer_put_uint8 (&bw, nchannels);
-  gst_byte_writer_put_uint16_le (&bw, 0);       /* pre-skip */
-  gst_byte_writer_put_uint32_le (&bw, sample_rate);
-  gst_byte_writer_put_uint16_le (&bw, 0);       /* output gain */
-  gst_byte_writer_put_uint8 (&bw, channel_mapping_family);
+  hdl &= gst_byte_writer_put_data (&bw, (const guint8 *) "OpusHead", 8);
+  hdl &= gst_byte_writer_put_uint8 (&bw, 0);    /* version number */
+  hdl &= gst_byte_writer_put_uint8 (&bw, nchannels);
+  hdl &= gst_byte_writer_put_uint16_le (&bw, 0);        /* pre-skip */
+  hdl &= gst_byte_writer_put_uint32_le (&bw, sample_rate);
+  hdl &= gst_byte_writer_put_uint16_le (&bw, 0);        /* output gain */
+  hdl &= gst_byte_writer_put_uint8 (&bw, channel_mapping_family);
   if (channel_mapping_family > 0) {
-    gst_byte_writer_put_uint8 (&bw, nchannels - n_stereo_streams);
-    gst_byte_writer_put_uint8 (&bw, n_stereo_streams);
-    gst_byte_writer_put_data (&bw, channel_mapping, nchannels);
+    hdl &= gst_byte_writer_put_uint8 (&bw, nchannels - n_stereo_streams);
+    hdl &= gst_byte_writer_put_uint8 (&bw, n_stereo_streams);
+    hdl &= gst_byte_writer_put_data (&bw, channel_mapping, nchannels);
   }
+
+  if (!hdl)
+    GST_WARNING ("Error creating header");
 
   buffer = gst_byte_writer_reset_and_get_buffer (&bw);
 
