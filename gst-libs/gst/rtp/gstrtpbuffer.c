@@ -92,7 +92,7 @@ typedef struct _GstRTPHeader
  *
  * Allocate enough data in @buffer to hold an RTP packet with @csrc_count CSRCs,
  * a payload length of @payload_len and padding of @pad_len.
- * MALLOCDATA of @buffer will be overwritten and will not be freed. 
+ * @buffer must be writable and all previous memory in @buffer will be freed.
  * All other RTP header fields will be set to 0/FALSE.
  */
 void
@@ -105,6 +105,9 @@ gst_rtp_buffer_allocate_data (GstBuffer * buffer, guint payload_len,
 
   g_return_if_fail (csrc_count <= 15);
   g_return_if_fail (GST_IS_BUFFER (buffer));
+  g_return_if_fail (gst_buffer_is_writable (buffer));
+
+  gst_buffer_remove_all_memory (buffer);
 
   len = GST_RTP_HEADER_LEN + csrc_count * sizeof (guint32)
       + payload_len + pad_len;
