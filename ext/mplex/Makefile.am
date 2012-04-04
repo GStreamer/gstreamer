@@ -9,7 +9,7 @@ libgstmplex_la_SOURCES = \
 libgstmplex_la_CXXFLAGS = \
 	$(GST_PLUGINS_BAD_CFLAGS) $(GST_PLUGINS_BASE_CFLAGS) $(GST_CXXFLAGS) $(MPLEX_CFLAGS)
 libgstmplex_la_LIBADD = \
-	$(GST_PLUGINS_BASE_LIBS) $(GST_BASE_LIBS) -lgstaudio-$(GST_MAJORMINOR) \
+	$(GST_PLUGINS_BASE_LIBS) $(GST_BASE_LIBS) -lgstaudio-$(GST_API_VERSION) \
 	$(GST_LIBS) $(MPLEX_LIBS) 
 libgstmplex_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS) $(MPLEX_LDFLAGS)
 libgstmplex_la_LIBTOOLFLAGS = --tag=disable-static

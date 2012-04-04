@@ -9,8 +9,8 @@ libgstavc_la_CPPFLAGS = \
 	-framework AVCVideoServices \
 	-Wno-deprecated-declarations
 libgstavc_la_LIBADD =  \
-	$(GST_PLUGINS_BASE_LIBS) -lgstvideo-$(GST_MAJORMINOR) \
-	-lgstinterfaces-$(GST_MAJORMINOR) \
+	$(GST_PLUGINS_BASE_LIBS) -lgstvideo-$(GST_API_VERSION) \
+	-lgstinterfaces-$(GST_API_VERSION) \
 	$(GST_BASE_LIBS) \
 	$(GST_LIBS)
 

@@ -7,7 +7,7 @@ libgstcelt_la_CFLAGS = -DGST_USE_UNSTABLE_API \
 	$(CELT_CFLAGS)
 libgstcelt_la_LIBADD = \
 	$(GST_PLUGINS_BASE_LIBS) \
-	-lgstaudio-$(GST_MAJORMINOR) -lgsttag-$(GST_MAJORMINOR) \
+	-lgstaudio-$(GST_API_VERSION) -lgsttag-$(GST_API_VERSION) \
 	$(GST_BASE_LIBS) \
 	$(GST_LIBS) \
 	$(CELT_LIBS)

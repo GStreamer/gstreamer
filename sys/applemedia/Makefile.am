@@ -25,8 +25,8 @@ libgstapplemedia_la_OBJCFLAGS =			\
 libgstapplemedia_la_LIBADD =			\
 	$(GST_BASE_LIBS)			\
 	$(GST_PLUGINS_BASE_LIBS)		\
-	-lgstinterfaces-$(GST_MAJORMINOR)	\
-	-lgstvideo-$(GST_MAJORMINOR)
+	-lgstinterfaces-$(GST_API_VERSION)	\
+	-lgstvideo-$(GST_API_VERSION)
 
 libgstapplemedia_la_LIBTOOLFLAGS = --tag=disable-static
 

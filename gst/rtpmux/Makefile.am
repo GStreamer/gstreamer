@@ -3,7 +3,7 @@ plugin_LTLIBRARIES = libgstrtpmux.la
 libgstrtpmux_la_SOURCES = gstrtpmuxer.c gstrtpmux.c gstrtpdtmfmux.c
 
 libgstrtpmux_la_CFLAGS = $(GST_PLUGINS_BASE_CFLAGS) $(GST_CFLAGS)
-libgstrtpmux_la_LIBADD = $(GST_PLUGINS_BASE_LIBS) -lgstrtp-@GST_MAJORMINOR@ \
+libgstrtpmux_la_LIBADD = $(GST_PLUGINS_BASE_LIBS) -lgstrtp-@GST_API_VERSION@ \
 	$(GST_BASE_LIBS) $(GST_LIBS)
 libgstrtpmux_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
 libgstrtpmux_la_LIBTOOLFLAGS = --tag=disable-static
@@ -21,5 +21,5 @@ Android.mk: Makefile.am $(BUILT_SOURCES)
 	           $(libgstrtpmux_la_LIBADD) \
 	           -ldl \
 	 -:PASSTHROUGH LOCAL_ARM_MODE:=arm \
-		       LOCAL_MODULE_PATH:='$$(TARGET_OUT)/lib/gstreamer-0.11' \
+		       LOCAL_MODULE_PATH:='$$(TARGET_OUT)/lib/gstreamer-@GST_API_VERSION@' \
 	> $@

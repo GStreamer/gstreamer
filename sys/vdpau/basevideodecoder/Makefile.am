@@ -8,7 +8,7 @@ libgstbasevideodecoder_la_CFLAGS = $(GST_PLUGINS_BASE_CFLAGS) $(GST_CFLAGS) \
 	-DGstBaseVideoDecoder=SatBaseVideoDecoder \
 	-DGstBaseVideoDecoderClass=SatBaseVideoDecoderClass
 libgstbasevideodecoder_la_LIBADD = \
-	$(GST_PLUGINS_BASE_LIBS) -lgstinterfaces-$(GST_MAJORMINOR) \
+	$(GST_PLUGINS_BASE_LIBS) -lgstinterfaces-$(GST_API_VERSION) \
 	$(GST_BASE_LIBS) $(GST_LIBS)
 
 libgstbasevideodecoder_la_LDFLAGS = $(GST_ALL_LDFLAGS) -module -avoid-version

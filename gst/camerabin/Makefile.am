@@ -29,9 +29,9 @@ libgstcamerabin_la_CFLAGS = \
 	$(GST_CFLAGS) $(GST_BASE_CFLAGS) $(GST_PLUGINS_BASE_CFLAGS) \
 	-DGST_USE_UNSTABLE_API
 libgstcamerabin_la_LIBADD = \
-	$(top_builddir)/gst-libs/gst/interfaces/libgstphotography-$(GST_MAJORMINOR).la \
+	$(top_builddir)/gst-libs/gst/interfaces/libgstphotography-$(GST_API_VERSION).la \
 	$(GST_LIBS) $(GST_BASE_LIBS) $(GST_PLUGINS_BASE_LIBS) \
-	-lgstinterfaces-$(GST_MAJORMINOR) -lgsttag-$(GST_MAJORMINOR)
+	-lgstinterfaces-$(GST_API_VERSION) -lgsttag-$(GST_API_VERSION)
 
 libgstcamerabin_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
 libgstcamerabin_la_LIBTOOLFLAGS = --tag=disable-static
@@ -56,8 +56,8 @@ Android.mk: Makefile.am $(BUILT_SOURCES)
 	 -:LDFLAGS $(libgstcamerabin_la_LDFLAGS) \
 	           $(libgstcamerabin_la_LIBADD) \
 	           -ldl \
-	 -:LIBFILTER_STATIC gstphotography-@GST_MAJORMINOR@ \
-	          gstbasecamerabinsrc-@GST_MAJORMINOR@ \
+	 -:LIBFILTER_STATIC gstphotography-@GST_API_VERSION@ \
+	          gstbasecamerabinsrc-@GST_API_VERSION@ \
 	 -:PASSTHROUGH LOCAL_ARM_MODE:=arm \
 		       LOCAL_MODULE_PATH:='$$(TARGET_OUT)/lib/gstreamer-0.10' \
 	> $@

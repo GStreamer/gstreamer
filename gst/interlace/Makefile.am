@@ -9,7 +9,7 @@ libgstinterlace_la_CFLAGS = \
 
 libgstinterlace_la_LIBADD = \
 	$(GST_LIBS) \
-	$(GST_PLUGINS_BASE_LIBS) -lgstvideo-@GST_MAJORMINOR@ \
+	$(GST_PLUGINS_BASE_LIBS) -lgstvideo-@GST_API_VERSION@ \
 	$(LIBM)
 
 libgstinterlace_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)

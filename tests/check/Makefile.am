@@ -21,7 +21,7 @@ TESTS_ENVIRONMENT = \
 	    rsndvdbin sdlaudiosink sdlvideosink vcdsrc rfbsrc vdpauyuvvideo vdpauvideoyuv \
 	    vdpaumpegdec vdpaumpeg4dec vdpauh264dec vdpauvideopostprocess vdpausink neonhttpsrc"
 
-plugindir = $(libdir)/gstreamer-@GST_MAJORMINOR@
+plugindir = $(libdir)/gstreamer-@GST_API_VERSION@
 
 # override to _not_ install the test plugins
 install-pluginLTLIBRARIES:
@@ -240,8 +240,8 @@ libs_mpegvideoparser_CFLAGS = \
 	$(GST_BASE_CFLAGS) $(GST_CFLAGS) $(AM_CFLAGS)
 
 libs_mpegvideoparser_LDADD = \
-	$(top_builddir)/gst-libs/gst/codecparsers/libgstcodecparsers-@GST_MAJORMINOR@.la \
-	$(GST_PLUGINS_BAD_LIBS) -lgstcodecparsers-@GST_MAJORMINOR@ \
+	$(top_builddir)/gst-libs/gst/codecparsers/libgstcodecparsers-@GST_API_VERSION@.la \
+	$(GST_PLUGINS_BAD_LIBS) -lgstcodecparsers-@GST_API_VERSION@ \
 	$(GST_BASE_LIBS) $(GST_LIBS) $(LDADD)
 
 libs_h264parser_CFLAGS = \
@@ -250,8 +250,8 @@ libs_h264parser_CFLAGS = \
 	$(GST_BASE_CFLAGS) $(GST_CFLAGS) $(AM_CFLAGS)
 
 libs_h264parser_LDADD = \
-	$(top_builddir)/gst-libs/gst/codecparsers/libgstcodecparsers-@GST_MAJORMINOR@.la \
-	$(GST_PLUGINS_BAD_LIBS) -lgstcodecparsers-@GST_MAJORMINOR@ \
+	$(top_builddir)/gst-libs/gst/codecparsers/libgstcodecparsers-@GST_API_VERSION@.la \
+	$(GST_PLUGINS_BAD_LIBS) -lgstcodecparsers-@GST_API_VERSION@ \
 	$(GST_BASE_LIBS) $(GST_LIBS) $(LDADD)
 
 libs_vc1parser_CFLAGS = \
@@ -260,8 +260,8 @@ libs_vc1parser_CFLAGS = \
 	$(GST_BASE_CFLAGS) $(GST_CFLAGS) $(AM_CFLAGS)
 
 libs_vc1parser_LDADD = \
-	$(top_builddir)/gst-libs/gst/codecparsers/libgstcodecparsers-@GST_MAJORMINOR@.la \
-	$(GST_PLUGINS_BAD_LIBS) -lgstcodecparsers-@GST_MAJORMINOR@ \
+	$(top_builddir)/gst-libs/gst/codecparsers/libgstcodecparsers-@GST_API_VERSION@.la \
+	$(GST_PLUGINS_BAD_LIBS) -lgstcodecparsers-@GST_API_VERSION@ \
 	$(GST_BASE_LIBS) $(GST_LIBS) $(LDADD)
 
 elements_faad_CFLAGS = \
@@ -269,28 +269,28 @@ elements_faad_CFLAGS = \
 	$(GST_BASE_CFLAGS) $(GST_CFLAGS) $(AM_CFLAGS)
 elements_faad_LDADD = \
 	$(GST_PLUGINS_BASE_LIBS) $(GST_BASE_LIBS) $(GST_LIBS) $(LDADD) \
-	-lgstaudio-@GST_MAJORMINOR@
+	-lgstaudio-@GST_API_VERSION@
 
 elements_faac_CFLAGS = \
 	$(GST_PLUGINS_BASE_CFLAGS) \
 	$(GST_BASE_CFLAGS) $(GST_CFLAGS) $(AM_CFLAGS)
 elements_faac_LDADD = \
 	$(GST_PLUGINS_BASE_LIBS) $(GST_BASE_LIBS) $(GST_LIBS) $(LDADD) \
-	-lgstaudio-@GST_MAJORMINOR@
+	-lgstaudio-@GST_API_VERSION@
 
 elements_legacyresample_CFLAGS = \
 	$(GST_PLUGINS_BASE_CFLAGS) \
 	$(GST_BASE_CFLAGS) $(GST_CFLAGS) $(AM_CFLAGS)
 elements_legacyresample_LDADD = \
 	$(GST_PLUGINS_BASE_LIBS) $(GST_BASE_LIBS) $(GST_LIBS) $(LDADD) \
-	-lgstaudio-@GST_MAJORMINOR@
+	-lgstaudio-@GST_API_VERSION@
 
 elements_voaacenc_CFLAGS = \
 	$(GST_PLUGINS_BASE_CFLAGS) \
 	$(GST_BASE_CFLAGS) $(GST_CFLAGS) $(AM_CFLAGS)
 elements_voaacenc_LDADD = \
 	$(GST_PLUGINS_BASE_LIBS) $(GST_BASE_LIBS) $(GST_LIBS) $(LDADD) \
-	-lgstaudio-@GST_MAJORMINOR@
+	-lgstaudio-@GST_API_VERSION@
 
 elements_baseaudiovisualizer_SOURCES = elements/baseaudiovisualizer.c \
 	$(top_srcdir)/gst/audiovisualizers/gstbaseaudiovisualizer.c \
@@ -299,16 +299,16 @@ elements_baseaudiovisualizer_CFLAGS = $(GST_PLUGINS_BAD_CFLAGS) \
 	-I$(top_srcdir)/gst/audiovisualizers $(GST_PLUGINS_BASE_CFLAGS) \
 	$(GST_BASE_CFLAGS) $(GST_CONTROLLER_CFLAGS) $(GST_CFLAGS) $(AM_CFLAGS)
 elements_baseaudiovisualizer_LDADD = \
-	$(GST_PLUGINS_BASE_LIBS) -lgstaudio-@GST_MAJORMINOR@  \
-	-lgstvideo-@GST_MAJORMINOR@ 	$(GST_BASE_LIBS) $(GST_CONTROLLER_LIBS) \
+	$(GST_PLUGINS_BASE_LIBS) -lgstaudio-@GST_API_VERSION@  \
+	-lgstvideo-@GST_API_VERSION@ 	$(GST_BASE_LIBS) $(GST_CONTROLLER_LIBS) \
 	$(GST_LIBS) $(LDADD)
 
 elements_camerabin_CFLAGS = \
 	$(GST_PLUGINS_BAD_CFLAGS) $(GST_PLUGINS_BASE_CFLAGS) \
 	$(GST_BASE_CFLAGS) $(GST_CFLAGS) $(AM_CFLAGS) -DGST_USE_UNSTABLE_API
 elements_camerabin_LDADD = \
-	$(top_builddir)/gst-libs/gst/interfaces/libgstphotography-@GST_MAJORMINOR@.la \
-	$(GST_PLUGINS_BASE_LIBS) -lgstinterfaces-@GST_MAJORMINOR@ \
+	$(top_builddir)/gst-libs/gst/interfaces/libgstphotography-@GST_API_VERSION@.la \
+	$(GST_PLUGINS_BASE_LIBS) -lgstinterfaces-@GST_API_VERSION@ \
 	$(GST_BASE_LIBS) $(GST_LIBS) $(LDADD)
 
 elements_camerabin_SOURCES = elements/camerabin.c
@@ -317,14 +317,14 @@ elements_camerabin2_CFLAGS = \
 	$(GST_PLUGINS_BAD_CFLAGS) $(GST_PLUGINS_BASE_CFLAGS) \
 	$(GST_BASE_CFLAGS) $(GST_CFLAGS) $(AM_CFLAGS) -DGST_USE_UNSTABLE_API
 elements_camerabin2_LDADD = \
-        $(top_builddir)/gst-libs/gst/interfaces/libgstphotography-@GST_MAJORMINOR@.la \
-        $(top_builddir)/gst-libs/gst/basecamerabinsrc/libgstbasecamerabinsrc-@GST_MAJORMINOR@.la \
-        -lgstpbutils-$(GST_MAJORMINOR) \
+        $(top_builddir)/gst-libs/gst/interfaces/libgstphotography-@GST_API_VERSION@.la \
+        $(top_builddir)/gst-libs/gst/basecamerabinsrc/libgstbasecamerabinsrc-@GST_API_VERSION@.la \
+        -lgstpbutils-$(GST_API_VERSION) \
         $(GST_PLUGINS_BASE_LIBS) $(GST_BASE_LIBS) $(GST_LIBS) $(LDADD)
 elements_camerabin2_SOURCES = elements/camerabin2.c
 
 elements_jifmux_CFLAGS = $(GST_PLUGINS_BASE_CFLAGS) $(EXIF_CFLAGS) $(AM_CFLAGS)
-elements_jifmux_LDADD = $(GST_PLUGINS_BASE_LIBS) -lgsttag-$(GST_MAJORMINOR) $(GST_CHECK_LIBS) $(EXIF_LIBS) $(LDADD)
+elements_jifmux_LDADD = $(GST_PLUGINS_BASE_LIBS) -lgsttag-$(GST_API_VERSION) $(GST_CHECK_LIBS) $(EXIF_LIBS) $(LDADD)
 elements_jifmux_SOURCES = elements/jifmux.c
 
 elements_timidity_CFLAGS = $(GST_BASE_CFLAGS) $(AM_CFLAGS)
@@ -334,13 +334,13 @@ elements_kate_CFLAGS = $(GST_BASE_CFLAGS) $(AM_CFLAGS)
 elements_kate_LDADD = $(GST_BASE_LIBS) $(LDADD)
 
 elements_rtpmux_CFLAGS = $(GST_PLUGINS_BASE_CFLAGS) $(GST_BASE_CFLAGS) $(AM_CFLAGS)
-elements_rtpmux_LDADD = $(GST_PLUGINS_BASE_LIBS) -lgstrtp-$(GST_MAJORMINOR) $(GST_BASE_LIBS) $(LDADD)
+elements_rtpmux_LDADD = $(GST_PLUGINS_BASE_LIBS) -lgstrtp-$(GST_API_VERSION) $(GST_BASE_LIBS) $(LDADD)
 
 elements_assrender_CFLAGS = $(GST_PLUGINS_BASE_CFLAGS) $(GST_BASE_CFLAGS) $(AM_CFLAGS)
-elements_assrender_LDADD = $(GST_PLUGINS_BASE_LIBS) -lgstvideo-$(GST_MAJORMINOR) -lgstapp-$(GST_MAJORMINOR) $(GST_BASE_LIBS) $(LDADD)
+elements_assrender_LDADD = $(GST_PLUGINS_BASE_LIBS) -lgstvideo-$(GST_API_VERSION) -lgstapp-$(GST_API_VERSION) $(GST_BASE_LIBS) $(LDADD)
 
 elements_mpegtsmux_CFLAGS = $(GST_PLUGINS_BASE_CFLAGS) $(GST_BASE_CFLAGS) $(AM_CFLAGS)
-elements_mpegtsmux_LDADD = $(GST_PLUGINS_BASE_LIBS) -lgstvideo-$(GST_MAJORMINOR) $(GST_BASE_LIBS) $(LDADD)
+elements_mpegtsmux_LDADD = $(GST_PLUGINS_BASE_LIBS) -lgstvideo-$(GST_API_VERSION) $(GST_BASE_LIBS) $(LDADD)
 
 
 EXTRA_DIST = gst-plugins-bad.supp

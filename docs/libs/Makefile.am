@@ -4,7 +4,7 @@
 DOCS_ARE_INCOMPLETE_PLEASE_FIXME=yespleasedo
 
 # The name of the module, e.g. 'glib'.
-#DOC_MODULE=gst-plugins-libs-@GST_MAJORMINOR@
+#DOC_MODULE=gst-plugins-libs-@GST_API_VERSION@
 DOC_MODULE=gst-plugins-bad-libs
 
 # for upload-doc.mak
@@ -51,11 +51,11 @@ extra_files =
 # contains GtkObjects/GObjects and you want to document signals and properties.
 GTKDOC_CFLAGS = -DGST_USE_UNSTABLE_API $(GST_PLUGINS_BAD_CFLAGS) $(GST_PLUGINS_BASE_CFLAGS) $(GST_BASE_CFLAGS)
 GTKDOC_LIBS = \
-	$(top_builddir)/gst-libs/gst/codecparsers/libgstcodecparsers-@GST_MAJORMINOR@.la \
-	$(top_builddir)/gst-libs/gst/basecamerabinsrc/libgstbasecamerabinsrc-@GST_MAJORMINOR@.la \
-	$(top_builddir)/gst-libs/gst/interfaces/libgstphotography-@GST_MAJORMINOR@.la \
-	$(top_builddir)/gst-libs/gst/signalprocessor/libgstsignalprocessor-@GST_MAJORMINOR@.la \
-	$(top_builddir)/gst-libs/gst/video/libgstbasevideo-@GST_MAJORMINOR@.la \
+	$(top_builddir)/gst-libs/gst/codecparsers/libgstcodecparsers-@GST_API_VERSION@.la \
+	$(top_builddir)/gst-libs/gst/basecamerabinsrc/libgstbasecamerabinsrc-@GST_API_VERSION@.la \
+	$(top_builddir)/gst-libs/gst/interfaces/libgstphotography-@GST_API_VERSION@.la \
+	$(top_builddir)/gst-libs/gst/signalprocessor/libgstsignalprocessor-@GST_API_VERSION@.la \
+	$(top_builddir)/gst-libs/gst/video/libgstbasevideo-@GST_API_VERSION@.la \
   $(GST_BASE_LIBS)
 
 GTKDOC_CC=$(LIBTOOL) --tag=CC --mode=compile $(CC)

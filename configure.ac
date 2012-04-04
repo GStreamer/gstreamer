@@ -35,11 +35,12 @@ m4_ifdef([AM_SILENT_RULES],[AM_SILENT_RULES([yes])],
   [AM_DEFAULT_VERBOSITY=1
    AC_SUBST(AM_DEFAULT_VERBOSITY)])
 
-dnl our libraries and install dirs use major.minor as a version
-GST_MAJORMINOR=$GST_PLUGINS_BAD_VERSION_MAJOR.$GST_PLUGINS_BAD_VERSION_MINOR
-dnl we override it here if we need to for the release candidate of new series
-GST_MAJORMINOR=0.11
-AC_SUBST(GST_MAJORMINOR)
+dnl our libraries and install dirs use GST_API_VERSION in the filename
+dnl to allow side-by-side installation of different API versions
+GST_API_VERSION=1.0
+AC_SUBST(GST_API_VERSION)
+AC_DEFINE_UNQUOTED(GST_API_VERSION, "$GST_API_VERSION",
+  [GStreamer API Version])
 
 dnl CURRENT, REVISION, AGE
 dnl - library source changed -> increment REVISION
@@ -47,7 +48,7 @@ dnl - interfaces added/removed/changed -> increment CURRENT, REVISION = 0
 dnl - interfaces added -> increment AGE
 dnl - interfaces removed -> AGE = 0
 dnl sets GST_LT_LDFLAGS
-AS_LIBTOOL(GST, 24, 0, 0)
+AS_LIBTOOL(GST, 0, 0, 0)
 
 AG_GST_LIBTOOL_PREPARE
 
@@ -75,7 +76,7 @@ dnl set up gettext
 dnl the version check needs to stay here because autopoint greps for it
 AM_GNU_GETTEXT_VERSION([0.17])
 AM_GNU_GETTEXT([external])
-AG_GST_GETTEXT([gst-plugins-bad-$GST_MAJORMINOR])
+AG_GST_GETTEXT([gst-plugins-bad-$GST_API_VERSION])
 
 dnl *** check for arguments to configure ***
 
@@ -195,25 +196,25 @@ AG_GST_GLIB_CHECK([$GLIB_REQ])
 
 dnl checks for gstreamer
 dnl uninstalled is selected preferentially -- see pkg-config(1)
-AG_GST_CHECK_GST($GST_MAJORMINOR, [$GST_REQ], yes)
-AG_GST_CHECK_GST_BASE($GST_MAJORMINOR, [$GST_REQ], yes)
-AG_GST_CHECK_GST_CHECK($GST_MAJORMINOR, [$GST_REQ], no)
-AG_GST_CHECK_GST_CONTROLLER($GST_MAJORMINOR, [$GST_REQ], yes)
+AG_GST_CHECK_GST($GST_API_VERSION, [$GST_REQ], yes)
+AG_GST_CHECK_GST_BASE($GST_API_VERSION, [$GST_REQ], yes)
+AG_GST_CHECK_GST_CHECK($GST_API_VERSION, [$GST_REQ], no)
+AG_GST_CHECK_GST_CONTROLLER($GST_API_VERSION, [$GST_REQ], yes)
 AM_CONDITIONAL(HAVE_GST_CHECK, test "x$HAVE_GST_CHECK" = "xyes")
 
-AG_GST_CHECK_GST_PLUGINS_BASE($GST_MAJORMINOR, [$GSTPB_REQ], yes)
+AG_GST_CHECK_GST_PLUGINS_BASE($GST_API_VERSION, [$GSTPB_REQ], yes)
 
 dnl check for uninstalled plugin directories for unit tests
 AG_GST_CHECK_UNINSTALLED_SETUP([
-  AG_GST_CHECK_GST_PLUGINS_GOOD($GST_MAJORMINOR, [0.11.0])
-  AG_GST_CHECK_GST_PLUGINS_UGLY($GST_MAJORMINOR, [0.11.0])
-  AG_GST_CHECK_GST_PLUGINS_FFMPEG($GST_MAJORMINOR, [0.11.0])
+  AG_GST_CHECK_GST_PLUGINS_GOOD($GST_API_VERSION, [0.11.0])
+  AG_GST_CHECK_GST_PLUGINS_UGLY($GST_API_VERSION, [0.11.0])
+  AG_GST_CHECK_GST_PLUGINS_FFMPEG($GST_API_VERSION, [0.11.0])
 ])
 
 dnl Check for documentation xrefs
 GLIB_PREFIX="`$PKG_CONFIG --variable=prefix glib-2.0`"
-GST_PREFIX="`$PKG_CONFIG --variable=prefix gstreamer-$GST_MAJORMINOR`"
-GSTPB_PREFIX="`$PKG_CONFIG --variable=prefix gstreamer-plugins-base-$GST_MAJORMINOR`"
+GST_PREFIX="`$PKG_CONFIG --variable=prefix gstreamer-$GST_API_VERSION`"
+GSTPB_PREFIX="`$PKG_CONFIG --variable=prefix gstreamer-plugins-base-$GST_API_VERSION`"
 AC_SUBST(GLIB_PREFIX)
 AC_SUBST(GST_PREFIX)
 AC_SUBST(GSTPB_PREFIX)

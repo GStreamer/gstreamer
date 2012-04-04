@@ -21,7 +21,7 @@ libgstmxf_la_SOURCES = \
 
 libgstmxf_la_CFLAGS = $(GST_CFLAGS) $(GST_BASE_CFLAGS) $(GST_PLUGINS_BASE_CFLAGS)
 libgstmxf_la_LIBADD = $(GST_LIBS) $(GST_BASE_LIBS) $(GST_PLUGINS_BASE_LIBS) \
-	-lgstvideo-@GST_MAJORMINOR@
+	-lgstvideo-@GST_API_VERSION@
 libgstmxf_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
 libgstmxf_la_LIBTOOLFLAGS = --tag=disable-static
 

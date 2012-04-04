@@ -9,7 +9,7 @@ libgstid3tag_la_CFLAGS = \
 	$(GST_CFLAGS)
 
 libgstid3tag_la_LIBADD = \
-	$(GST_PLUGINS_BASE_LIBS) -lgsttag-$(GST_MAJORMINOR) \
+	$(GST_PLUGINS_BASE_LIBS) -lgsttag-$(GST_API_VERSION) \
 	$(GST_LIBS)
 
 libgstid3tag_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)

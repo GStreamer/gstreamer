@@ -6,9 +6,9 @@
 ]>
 <book id="index" xmlns:xi="http://www.w3.org/2003/XInclude">
   <bookinfo>
-    <title>GStreamer Bad Plugins &GST_MAJORMINOR; Library Reference Manual</title>
+    <title>GStreamer Bad Plugins &GST_API_VERSION; Library Reference Manual</title>
     <releaseinfo>
-      for GStreamer Bad Library &GST_MAJORMINOR; (&GST_VERSION;)
+      for GStreamer Bad Library &GST_API_VERSION; (&GST_VERSION;)
       <ulink role="online-location" url="http://gstreamer.freedesktop.org/data/doc/gstreamer/head/gst-plugins-bad-libs/html/">http://gstreamer.freedesktop.org/data/doc/gstreamer/head/gst-plugins-bad-libs/html/</ulink>.
     </releaseinfo>
   </bookinfo>
@@ -25,8 +25,8 @@
       <title>Bitstream parsing Library</title>
       <para>
         This library should be linked to by getting cflags and libs from
-        <filename>gstreamer-plugins-bad-&GST_MAJORMINOR;.pc</filename> and adding
-        <filename>-lgscodeparsers-&GST_MAJORMINOR;</filename> to the library flags.
+        <filename>gstreamer-plugins-bad-&GST_API_VERSION;.pc</filename> and adding
+        <filename>-lgscodeparsers-&GST_API_VERSION;</filename> to the library flags.
       </para>
       <xi:include href="xml/gsth264parser.xml" />
       <xi:include href="xml/gstmpegvideoparser.xml" />

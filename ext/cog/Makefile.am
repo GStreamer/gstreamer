@@ -12,7 +12,7 @@ libgstcog_la_CFLAGS = \
 	$(ORC_CFLAGS) \
 	$(COG_CFLAGS)
 libgstcog_la_LIBADD = \
-	$(GST_PLUGINS_BASE_LIBS) -lgstvideo-$(GST_MAJORMINOR) \
+	$(GST_PLUGINS_BASE_LIBS) -lgstvideo-$(GST_API_VERSION) \
 	$(GST_BASE_LIBS) \
 	$(GST_LIBS) \
 	$(ORC_LIBS) \

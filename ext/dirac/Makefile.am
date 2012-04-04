@@ -11,7 +11,7 @@ libgstdirac_la_CXXFLAGS = \
 	$(DIRAC_CFLAGS) \
 	-DGST_USE_UNSTABLE_API
 libgstdirac_la_LIBADD = \
-	$(top_builddir)/gst-libs/gst/video/libgstbasevideo-@GST_MAJORMINOR@.la \
+	$(top_builddir)/gst-libs/gst/video/libgstbasevideo-@GST_API_VERSION@.la \
         $(GST_PLUGINS_BASE_LIBS) \
         $(GST_BASE_LIBS) $(GST_LIBS) \
 	$(DIRAC_LIBS) -lz $(LIBM)

@@ -6,7 +6,7 @@ libgstrsvg_la_CFLAGS = \
 	$(GST_CFLAGS) \
 	$(RSVG_CFLAGS)
 libgstrsvg_la_LIBADD = \
-	$(GST_PLUGINS_BASE_LIBS) -lgstvideo-$(GST_MAJORMINOR) \
+	$(GST_PLUGINS_BASE_LIBS) -lgstvideo-$(GST_API_VERSION) \
 	$(GST_BASE_LIBS) \
 	$(GST_LIBS) \
 	$(RSVG_LIBS)

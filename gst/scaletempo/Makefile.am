@@ -6,7 +6,7 @@ libgstscaletempoplugin_la_SOURCES = gstscaletempoplugin.c gstscaletempo.c
 # flags used to compile this plugin
 # add other _CFLAGS and _LIBS as needed
 libgstscaletempoplugin_la_CFLAGS = $(GST_PLUGINS_BASE_CFLAGS) $(GST_CFLAGS)
-libgstscaletempoplugin_la_LIBADD = $(GST_PLUGINS_BASE_LIBS) -lgstaudio-@GST_MAJORMINOR@ \
+libgstscaletempoplugin_la_LIBADD = $(GST_PLUGINS_BASE_LIBS) -lgstaudio-@GST_API_VERSION@ \
 	$(GST_LIBS) $(GST_BASE_LIBS)
 libgstscaletempoplugin_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
 libgstscaletempoplugin_la_LIBTOOLFLAGS = --tag=disable-static

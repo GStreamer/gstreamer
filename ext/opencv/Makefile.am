@@ -33,7 +33,7 @@ libgstopencv_la_CFLAGS = $(GST_CFLAGS) $(GST_BASE_CFLAGS) $(OPENCV_CFLAGS) \
 	-DCV_NO_BACKWARD_COMPATIBILITY
 
 libgstopencv_la_LIBADD = $(GST_LIBS) $(GST_BASE_LIBS) $(OPENCV_LIBS) \
-			$(GSTPB_BASE_LIBS) -lgstvideo-$(GST_MAJORMINOR)
+			$(GSTPB_BASE_LIBS) -lgstvideo-$(GST_API_VERSION)
 
 libgstopencv_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
 libgstopencv_la_LIBTOOLFLAGS = --tag=disable-static

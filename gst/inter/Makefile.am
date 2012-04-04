@@ -28,7 +28,7 @@ libgstinter_la_CFLAGS = \
 	$(GST_CFLAGS)
 
 libgstinter_la_LIBADD = \
-	$(GST_PLUGINS_BASE_LIBS) -lgstvideo-@GST_MAJORMINOR@ -lgstaudio-@GST_MAJORMINOR@ \
+	$(GST_PLUGINS_BASE_LIBS) -lgstvideo-@GST_API_VERSION@ -lgstaudio-@GST_API_VERSION@ \
 	$(GST_BASE_LIBS) \
 	$(GST_LIBS) \
 	$(LIBM)

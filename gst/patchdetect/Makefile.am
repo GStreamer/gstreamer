@@ -9,7 +9,7 @@ libgstpatchdetect_la_CFLAGS = \
 	$(GST_PLUGINS_BASE_CFLAGS) \
 	$(GST_CFLAGS)
 libgstpatchdetect_la_LIBADD = \
-	$(GST_PLUGINS_BASE_LIBS) -lgstvideo-$(GST_MAJORMINOR) \
+	$(GST_PLUGINS_BASE_LIBS) -lgstvideo-$(GST_API_VERSION) \
 	$(GST_BASE_LIBS) \
 	$(GST_LIBS) \
 	$(LIBM)

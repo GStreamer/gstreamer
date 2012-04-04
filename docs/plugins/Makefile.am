@@ -3,7 +3,7 @@ GST_DOC_SCANOBJ = $(top_srcdir)/common/gstdoc-scangobj
 ## Process this file with automake to produce Makefile.in
 
 # The name of the module, e.g. 'glib'.
-#DOC_MODULE=gst-plugins-libs-@GST_MAJORMINOR@
+#DOC_MODULE=gst-plugins-libs-@GST_API_VERSION@
 MODULE=gst-plugins-bad
 DOC_MODULE=$(MODULE)-plugins
 
@@ -191,7 +191,7 @@ extra_files =
 # contains GtkObjects/GObjects and you want to document signals and properties.
 GTKDOC_CFLAGS = -DGST_USE_UNSTABLE_API $(GST_PLUGINS_BAD_CFLAGS) $(GST_BASE_CFLAGS) -I$(top_builddir)
 GTKDOC_LIBS = \
-	$(top_builddir)/gst-libs/gst/interfaces/libgstphotography-@GST_MAJORMINOR@.la \
+	$(top_builddir)/gst-libs/gst/interfaces/libgstphotography-@GST_API_VERSION@.la \
 	$(GST_BASE_LIBS)
 
 GTKDOC_CC=$(LIBTOOL) --tag=CC --mode=compile $(CC)

@@ -8,8 +8,8 @@ libgstopus_la_CFLAGS = \
 	$(GST_CFLAGS) \
 	$(OPUS_CFLAGS)
 libgstopus_la_LIBADD = \
-	$(GST_PLUGINS_BASE_LIBS) -lgstaudio-$(GST_MAJORMINOR) \
-	-lgsttag-$(GST_MAJORMINOR) -lgstrtp-$(GST_MAJORMINOR) \
+	$(GST_PLUGINS_BASE_LIBS) -lgstaudio-$(GST_API_VERSION) \
+	-lgsttag-$(GST_API_VERSION) -lgstrtp-$(GST_API_VERSION) \
 	$(GST_BASE_LIBS) \
 	$(GST_LIBS) \
 	$(OPUS_LIBS)

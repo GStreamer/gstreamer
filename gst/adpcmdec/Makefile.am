@@ -7,7 +7,7 @@ libgstadpcmdec_la_SOURCES = adpcmdec.c
 # add other _CFLAGS and _LIBS as needed
 libgstadpcmdec_la_CFLAGS = $(GST_PLUGINS_BASE_CFLAGS) $(GST_BASE_CFLAGS) $(GST_CFLAGS)
 libgstadpcmdec_la_LIBADD = \
-	$(GST_PLUGINS_BASE_LIBS) -lgstaudio-@GST_MAJORMINOR@ \
+	$(GST_PLUGINS_BASE_LIBS) -lgstaudio-@GST_API_VERSION@ \
 	$(GST_BASE_LIBS) $(GST_LIBS)
 libgstadpcmdec_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
 libgstadpcmdec_la_LIBTOOLFLAGS = --tag=disable-static

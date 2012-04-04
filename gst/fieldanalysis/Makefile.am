@@ -14,8 +14,8 @@ libgstfieldanalysis_la_CFLAGS = \
 	$(ORC_CFLAGS)
 
 libgstfieldanalysis_la_LIBADD = \
-	$(top_builddir)/gst-libs/gst/video/libgstbasevideo-@GST_MAJORMINOR@.la \
-	$(GST_PLUGINS_BASE_LIBS) -lgstvideo-@GST_MAJORMINOR@ \
+	$(top_builddir)/gst-libs/gst/video/libgstbasevideo-@GST_API_VERSION@.la \
+	$(GST_PLUGINS_BASE_LIBS) -lgstvideo-@GST_API_VERSION@ \
 	$(GST_BASE_LIBS) \
 	$(GST_LIBS) \
 	$(ORC_LIBS)

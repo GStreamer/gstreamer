@@ -5,8 +5,8 @@ libgstosxvideosrc_la_SOURCES = osxvideoplugin.c osxvideosrc.c
 libgstosxvideosrc_la_CFLAGS = $(GST_CFLAGS) $(GST_BASE_CFLAGS) \
 	$(GST_PLUGINS_BASE_CFLAGS) -Wno-deprecated-declarations
 libgstosxvideosrc_la_LIBADD =  \
-	$(GST_BASE_LIBS) $(GST_PLUGINS_BASE_LIBS) -lgstvideo-$(GST_MAJORMINOR) \
-	-lgstinterfaces-$(GST_MAJORMINOR)
+	$(GST_BASE_LIBS) $(GST_PLUGINS_BASE_LIBS) -lgstvideo-$(GST_API_VERSION) \
+	-lgstinterfaces-$(GST_API_VERSION)
 
 libgstosxvideosrc_la_LIBTOOLFLAGS = --tag=disable-static
 

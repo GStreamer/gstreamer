@@ -6,7 +6,7 @@
 #undef ENABLE_NLS
 
 /* gettext package name */
-#define GETTEXT_PACKAGE "gst-plugins-bad-0.11"
+#define GETTEXT_PACKAGE "gst-plugins-bad-1.0"
 
 /* PREFIX - specifically added for Windows for easier moving */
 #define PREFIX "C:\\gstreamer"

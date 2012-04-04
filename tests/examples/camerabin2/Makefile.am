@@ -12,11 +12,11 @@ gst_camera2_CFLAGS  = \
 	$(GMODULE_EXPORT_CFLAGS) \
         -DGST_USE_UNSTABLE_API
 gst_camera2_LDADD   = \
-        $(top_builddir)/gst-libs/gst/interfaces/libgstphotography-@GST_MAJORMINOR@.la \
+        $(top_builddir)/gst-libs/gst/interfaces/libgstphotography-@GST_API_VERSION@.la \
         $(GST_PLUGINS_BASE_LIBS) \
-        -lgstinterfaces-@GST_MAJORMINOR@ \
-        -lgstpbutils-@GST_MAJORMINOR@ \
-	-lgstvideo-@GST_MAJORMINOR@ \
+        -lgstinterfaces-@GST_API_VERSION@ \
+        -lgstpbutils-@GST_API_VERSION@ \
+	-lgstvideo-@GST_API_VERSION@ \
         $(GST_LIBS) \
 	$(GTK_LIBS) \
 	$(GMODULE_EXPORT_LIBS)
@@ -36,11 +36,11 @@ GST_CAMERABIN_X11_EXAMPLES = gst-camerabin2-test
 gst_camerabin2_test_SOURCES = gst-camerabin2-test.c
 gst_camerabin2_test_CFLAGS  = $(GST_CFLAGS) $(GST_PLUGINS_BASE_CFLAGS) $(GST_PLUGINS_BAD_CFLAGS)
 gst_camerabin2_test_LDADD   = \
-	$(top_builddir)/gst-libs/gst/interfaces/libgstphotography-@GST_MAJORMINOR@.la \
+	$(top_builddir)/gst-libs/gst/interfaces/libgstphotography-@GST_API_VERSION@.la \
 	$(GST_PLUGINS_BASE_LIBS) \
-	-lgstinterfaces-@GST_MAJORMINOR@ \
-	-lgstpbutils-@GST_MAJORMINOR@ \
-	-lgstvideo-@GST_MAJORMINOR@ \
+	-lgstinterfaces-@GST_API_VERSION@ \
+	-lgstpbutils-@GST_API_VERSION@ \
+	-lgstvideo-@GST_API_VERSION@ \
 	$(GST_BASE_LIBS) \
 	$(GST_LIBS) \
 	$(X11_LIBS)

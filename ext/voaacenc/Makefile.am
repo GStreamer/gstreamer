@@ -11,8 +11,8 @@ libgstvoaacenc_la_CFLAGS = -DGST_USE_UNSTABLE_API \
 	$(VOAACENC_CFLAGS)
 libgstvoaacenc_la_LIBADD = \
 	$(GST_PLUGINS_BASE_LIBS) \
-	-lgstaudio-$(GST_MAJORMINOR) \
-	-lgstpbutils-$(GST_MAJORMINOR) \
+	-lgstaudio-$(GST_API_VERSION) \
+	-lgstpbutils-$(GST_API_VERSION) \
 	$(GST_BASE_LIBS) \
 	$(GST_LIBS) \
 	$(VOAACENC_LIBS)
@@ -22,6 +22,6 @@ libgstvoaacenc_la_LIBTOOLFLAGS = --tag=disable-static
 noinst_HEADERS = \
 	gstvoaacenc.h
 
-presetdir = $(datadir)/gstreamer-$(GST_MAJORMINOR)/presets
+presetdir = $(datadir)/gstreamer-$(GST_API_VERSION)/presets
 
 EXTRA_DIST = $(preset_DATA)

@@ -12,7 +12,7 @@ libgstrawparse_la_CFLAGS = \
 		$(GST_CFLAGS)
 libgstrawparse_la_LIBADD = \
 	$(GST_PLUGINS_BASE_LIBS) \
-	-lgstvideo-@GST_MAJORMINOR@ -lgstaudio-@GST_MAJORMINOR@ \
+	-lgstvideo-@GST_API_VERSION@ -lgstaudio-@GST_API_VERSION@ \
 	$(GST_BASE_LIBS) \
 	$(GST_LIBS)
 libgstrawparse_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)

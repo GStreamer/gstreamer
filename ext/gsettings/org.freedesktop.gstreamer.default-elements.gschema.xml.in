@@ -1,5 +1,5 @@
 <schemalist>
-  <schema id="org.freedesktop.gstreamer-@GST_MAJORMINOR@.default-elements" path="/desktop/gstreamer/@GST_MAJORMINOR@/default-elements/" gettext-domain="@GETTEXT_PACKAGE@">
+  <schema id="org.freedesktop.gstreamer-@GST_API_VERSION@.default-elements" path="/desktop/gstreamer/@GST_API_VERSION@/default-elements/" gettext-domain="@GETTEXT_PACKAGE@">
     <key name="sounds-audiosink" type="s">
       <default>"@DEFAULT_AUDIOSINK@"</default>
       <summary>default GStreamer sound events audiosink</summary>

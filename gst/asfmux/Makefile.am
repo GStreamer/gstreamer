@@ -13,7 +13,7 @@ libgstasfmux_la_SOURCES = gstasfmux.c \
 # add other _CFLAGS and _LIBS as needed
 libgstasfmux_la_CFLAGS = $(GST_PLUGINS_BAD_CFLAGS) $(GST_PLUGINS_BASE_CFLAGS) $(GST_BASE_CFLAGS) $(GST_CFLAGS) 
 libgstasfmux_la_LIBADD = $(GST_LIBS) $(GST_BASE_LIBS) $(GST_PLUGINS_BASE_LIBS) \
-                         -lgstrtp-@GST_MAJORMINOR@
+                         -lgstrtp-@GST_API_VERSION@
 libgstasfmux_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
 libgstasfmux_la_LIBTOOLFLAGS = --tag=disable-static
 

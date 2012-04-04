@@ -8,8 +8,8 @@ libgstpvr_la_SOURCES = \
 libgstpvr_la_CFLAGS = $(GST_PLUGINS_BASE_CFLAGS) $(GST_CFLAGS) $(PVR_CFLAGS)
 
 libgstpvr_la_LIBADD = $(GST_LIBS) $(GST_BASE_LIBS) \
-	$(GST_PLUGINS_BASE_LIBS) $(X11_LIBS) -lgstvideo-$(GST_MAJORMINOR) \
-	-lgstinterfaces-$(GST_MAJORMINOR) -lpvr2d -lpvrPVR2D_DRIWSEGL\
+	$(GST_PLUGINS_BASE_LIBS) $(X11_LIBS) -lgstvideo-$(GST_API_VERSION) \
+	-lgstinterfaces-$(GST_API_VERSION) -lpvr2d -lpvrPVR2D_DRIWSEGL\
 	$(PVR_LIBS) \
 	$(LIBM)
 

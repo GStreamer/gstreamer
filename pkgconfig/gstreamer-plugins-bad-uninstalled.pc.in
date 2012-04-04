@@ -6,8 +6,8 @@ includedir=${pcfiledir}/../gst-libs
 Name: GStreamer Bad Plugin libraries, Uninstalled
 Description: Currently includes the photography interface library, uninstalled
 Version: @VERSION@
-Requires: gstreamer-@GST_MAJORMINOR@ gstreamer-base-@GST_MAJORMINOR@
+Requires: gstreamer-@GST_API_VERSION@ gstreamer-base-@GST_API_VERSION@
 
-Libs: -L${libdir} ${libdir}/libgstphotography-@GST_MAJORMINOR@.la
+Libs: -L${libdir} ${libdir}/libgstphotography-@GST_API_VERSION@.la
 Cflags: -I${includedir}
 

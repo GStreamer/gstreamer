@@ -1,7 +1,7 @@
-gsettings_SCHEMAS = org.freedesktop.gstreamer-@GST_MAJORMINOR@.default-elements.gschema.xml
+gsettings_SCHEMAS = org.freedesktop.gstreamer-@GST_API_VERSION@.default-elements.gschema.xml
 
-org.freedesktop.gstreamer-@GST_MAJORMINOR@.default-elements.gschema.xml: org.freedesktop.gstreamer.default-elements.gschema.xml
-	cp org.freedesktop.gstreamer.default-elements.gschema.xml org.freedesktop.gstreamer-@GST_MAJORMINOR@.default-elements.gschema.xml
+org.freedesktop.gstreamer-@GST_API_VERSION@.default-elements.gschema.xml: org.freedesktop.gstreamer.default-elements.gschema.xml
+	cp org.freedesktop.gstreamer.default-elements.gschema.xml org.freedesktop.gstreamer-@GST_API_VERSION@.default-elements.gschema.xml
 
 if USE_GSETTINGS
 @GSETTINGS_RULES@

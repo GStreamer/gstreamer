@@ -10,8 +10,8 @@ libgstdecklink_la_LIBADD = \
 	$(GST_PLUGINS_BASE_LIBS) \
 	$(GST_BASE_LIBS) \
 	$(GST_LIBS) \
-	-lgstvideo-@GST_MAJORMINOR@ \
-	-lgstinterfaces-@GST_MAJORMINOR@ \
+	-lgstvideo-@GST_API_VERSION@ \
+	-lgstinterfaces-@GST_API_VERSION@ \
 	$(DECKLINK_LIBS) \
 	$(LIBM)
 libgstdecklink_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)

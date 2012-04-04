@@ -5,8 +5,8 @@ libgstdfbvideosink_la_SOURCES =  dfbvideosink.c
 libgstdfbvideosink_la_CFLAGS = $(GST_CFLAGS) $(GST_PLUGINS_BASE_CFLAGS) \
 			       $(DIRECTFB_CFLAGS)
 libgstdfbvideosink_la_LIBADD = $(GST_PLUGINS_BASE_LIBS) \
-			       -lgstvideo-$(GST_MAJORMINOR) \
-			       -lgstinterfaces-$(GST_MAJORMINOR) \
+			       -lgstvideo-$(GST_API_VERSION) \
+			       -lgstinterfaces-$(GST_API_VERSION) \
 			       $(DIRECTFB_LIBS) $(LIBOIL_LIBS)
 libgstdfbvideosink_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
 libgstdfbvideosink_la_LIBTOOLFLAGS = --tag=disable-static

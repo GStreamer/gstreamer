@@ -14,7 +14,7 @@ libgstbayer_la_SOURCES = \
 libgstbayer_la_CFLAGS = $(GST_PLUGINS_BASE_CFLAGS) $(GST_BASE_CFLAGS) \
     $(ORC_CFLAGS) \
     $(GST_CFLAGS)
-libgstbayer_la_LIBADD = $(GST_PLUGINS_BASE_LIBS) -lgstvideo-$(GST_MAJORMINOR) \
+libgstbayer_la_LIBADD = $(GST_PLUGINS_BASE_LIBS) -lgstvideo-$(GST_API_VERSION) \
     $(ORC_LIBS) \
     $(GST_BASE_LIBS)
 libgstbayer_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)

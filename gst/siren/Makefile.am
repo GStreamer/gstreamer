@@ -10,7 +10,7 @@ libgstsiren_la_SOURCES = gstsiren.c \
 
 libgstsiren_la_CFLAGS = $(GST_PLUGINS_BASE_CFLAGS) $(GST_BASE_CFLAGS) \
 	$(GST_CFLAGS)
-libgstsiren_la_LIBADD = $(GST_PLUGINS_BASE_LIBS) -lgstaudio-@GST_MAJORMINOR@ \
+libgstsiren_la_LIBADD = $(GST_PLUGINS_BASE_LIBS) -lgstaudio-@GST_API_VERSION@ \
 	$(GST_BASE_LIBS) $(GST_LIBS) $(LIBM)
 libgstsiren_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
 libgstsiren_la_LIBTOOLFLAGS = --tag=disable-static

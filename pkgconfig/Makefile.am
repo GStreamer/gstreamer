@@ -1,13 +1,13 @@
 ### all of the standard pc files we need to generate
 pcverfiles =  \
-	gstreamer-plugins-bad-@GST_MAJORMINOR@.pc \
-	gstreamer-codecparsers-@GST_MAJORMINOR@.pc \
-	gstreamer-basevideo-@GST_MAJORMINOR@.pc
+	gstreamer-plugins-bad-@GST_API_VERSION@.pc \
+	gstreamer-codecparsers-@GST_API_VERSION@.pc \
+	gstreamer-basevideo-@GST_API_VERSION@.pc
 
 pcverfiles_uninstalled = \
-	gstreamer-plugins-bad-@GST_MAJORMINOR@-uninstalled.pc \
-	gstreamer-codecparsers-@GST_MAJORMINOR@-uninstalled.pc \
-	gstreamer-basevideo-@GST_MAJORMINOR@-uninstalled.pc
+	gstreamer-plugins-bad-@GST_API_VERSION@-uninstalled.pc \
+	gstreamer-codecparsers-@GST_API_VERSION@-uninstalled.pc \
+	gstreamer-basevideo-@GST_API_VERSION@-uninstalled.pc
 
 all-local: $(pcverfiles) $(pcverfiles_uninstalled)
 
@@ -16,9 +16,9 @@ cp_verbose_ = $(cp_verbose_$(AM_DEFAULT_VERBOSITY))
 cp_verbose_0 = @echo "  CP     $@";
 
 ### how to generate versioned .pc files from .pc files in this dir
-%-@GST_MAJORMINOR@.pc: %.pc
+%-@GST_API_VERSION@.pc: %.pc
 	$(cp_verbose_0)cp $< $@
-%-@GST_MAJORMINOR@-uninstalled.pc: %-uninstalled.pc
+%-@GST_API_VERSION@-uninstalled.pc: %-uninstalled.pc
 	$(cp_verbose_0)cp $< $@
 
 pkgconfigdir = $(libdir)/pkgconfig

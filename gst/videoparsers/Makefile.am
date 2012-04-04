@@ -11,8 +11,8 @@ libgstvideoparsersbad_la_CFLAGS = \
 	-DGST_USE_UNSTABLE_API \
 	$(GST_BASE_CFLAGS) $(GST_CFLAGS)
 libgstvideoparsersbad_la_LIBADD = \
-	$(top_builddir)/gst-libs/gst/codecparsers/libgstcodecparsers-$(GST_MAJORMINOR).la \
-	$(GST_PLUGINS_BASE_LIBS) -lgstpbutils-$(GST_MAJORMINOR) -lgstvideo-$(GST_MAJORMINOR) \
+	$(top_builddir)/gst-libs/gst/codecparsers/libgstcodecparsers-$(GST_API_VERSION).la \
+	$(GST_PLUGINS_BASE_LIBS) -lgstpbutils-$(GST_API_VERSION) -lgstvideo-$(GST_API_VERSION) \
 	$(GST_BASE_LIBS) $(GST_LIBS)
 libgstvideoparsersbad_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
 libgstvideoparsersbad_la_LIBTOOLFLAGS = --tag=disable-static
@@ -32,8 +32,8 @@ Android.mk: Makefile.am $(BUILT_SOURCES)
 	 -:LDFLAGS $(libgstvideoparsersbad_la_LDFLAGS) \
 	           $(libgstvideoparsersbad_la_LIBADD) \
 	           -ldl \
-	 -:LIBFILTER_STATIC gstbaseparse-@GST_MAJORMINOR@ \
-	                    gstcodecparsers-@GST_MAJORMINOR@ \
+	 -:LIBFILTER_STATIC gstbaseparse-@GST_API_VERSION@ \
+	                    gstcodecparsers-@GST_API_VERSION@ \
 	 -:PASSTHROUGH LOCAL_ARM_MODE:=arm \
 		       LOCAL_MODULE_PATH:='$$(TARGET_OUT)/lib/gstreamer-0.10' \
 	> $@

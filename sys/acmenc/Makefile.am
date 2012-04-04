@@ -6,9 +6,9 @@ libgstacmenc_la_CFLAGS = $(GST_CFLAGS) $(GST_BASE_CFLAGS) \
 libgstacmenc_la_LIBADD =     \
     $(GST_BASE_LIBS)             \
     $(GST_PLUGINS_BASE_LIBS)     \
-    -lgstriff-$(GST_MAJORMINOR)  \
-    -lgstaudio-$(GST_MAJORMINOR) \
-    -lgsttag-$(GST_MAJORMINOR)   \
+    -lgstriff-$(GST_API_VERSION)  \
+    -lgstaudio-$(GST_API_VERSION) \
+    -lgsttag-$(GST_API_VERSION)   \
     -lmsacm32
 
 libgstacmenc_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)

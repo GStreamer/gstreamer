@@ -1,12 +1,12 @@
 prefix=@prefix@
 exec_prefix=@exec_prefix@
 libdir=@libdir@
-includedir=@includedir@/gstreamer-@GST_MAJORMINOR@
+includedir=@includedir@/gstreamer-@GST_API_VERSION@
 
 Name: GStreamer base video
 Description: Base class, interface and utilities for video elements
-Requires: gstreamer-@GST_MAJORMINOR@ gstreamer-base-@GST_MAJORMINOR@
+Requires: gstreamer-@GST_API_VERSION@ gstreamer-base-@GST_API_VERSION@
 Version: @VERSION@
-Libs: -L${libdir} -lgstbasevideo-@GST_MAJORMINOR@
+Libs: -L${libdir} -lgstbasevideo-@GST_API_VERSION@
 Cflags: -I${includedir}
 

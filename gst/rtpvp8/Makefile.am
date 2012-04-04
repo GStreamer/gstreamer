@@ -11,7 +11,7 @@ noinst_HEADERS = gstrtpvp8depay.h \
 
 libgstrtpvp8_la_CFLAGS = $(GST_PLUGINS_BASE_CFLAGS) \
 	$(GST_BASE_CFLAGS) $(GST_CFLAGS)
-libgstrtpvp8_la_LIBADD = $(GST_PLUGINS_BASE_LIBS) -lgstrtp-@GST_MAJORMINOR@ \
+libgstrtpvp8_la_LIBADD = $(GST_PLUGINS_BASE_LIBS) -lgstrtp-@GST_API_VERSION@ \
 	$(GST_BASE_LIBS) $(GST_LIBS)
 libgstrtpvp8_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
 libgstrtpvp8_la_LIBTOOLFLAGS = --tag=disable-static
@@ -27,5 +27,5 @@ Android.mk: Makefile.am $(BUILT_SOURCES)
 	           $(libgstrtpvp8_la_LIBADD) \
 	           -ldl \
 	 -:PASSTHROUGH LOCAL_ARM_MODE:=arm \
-		       LOCAL_MODULE_PATH:='$$(TARGET_OUT)/lib/gstreamer-0.11' \
+		       LOCAL_MODULE_PATH:='$$(TARGET_OUT)/lib/gstreamer-@GST_API_VERSION@' \
 	> $@

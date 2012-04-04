@@ -18,7 +18,7 @@ libgstcdxaparse_la_LIBADD = \
 	$(GST_LIBS) \
 	$(GST_BASE_LIBS) \
 	$(GST_PLUGINS_BASE_LIBS) \
-	-lgstriff-@GST_MAJORMINOR@
+	-lgstriff-@GST_API_VERSION@
 
 libgstcdxaparse_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
 libgstcdxaparse_la_LIBTOOLFLAGS = --tag=disable-static

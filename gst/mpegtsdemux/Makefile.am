@@ -13,7 +13,7 @@ libgstmpegtsdemux_la_CFLAGS = \
 	$(GST_PLUGINS_BAD_CFLAGS) $(GST_PLUGINS_BASE_CFLAGS) \
 	$(GST_BASE_CFLAGS) $(GST_CFLAGS)
 libgstmpegtsdemux_la_LIBADD = \
-	$(GST_PLUGINS_BASE_LIBS) -lgsttag-$(GST_MAJORMINOR) \
+	$(GST_PLUGINS_BASE_LIBS) -lgsttag-$(GST_API_VERSION) \
 	$(GST_BASE_LIBS) $(GST_LIBS)
 libgstmpegtsdemux_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
 libgstmpegtsdemux_la_LIBTOOLFLAGS = --tag=disable-static

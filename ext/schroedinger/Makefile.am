@@ -17,8 +17,8 @@ libgstschro_la_CFLAGS = \
 	-DGST_USE_UNSTABLE_API \
 	$(SCHRO_CFLAGS)
 libgstschro_la_LIBADD = \
-	$(top_builddir)/gst-libs/gst/video/libgstbasevideo-@GST_MAJORMINOR@.la \
-	$(GST_PLUGINS_BASE_LIBS) -lgstvideo-@GST_MAJORMINOR@ \
+	$(top_builddir)/gst-libs/gst/video/libgstbasevideo-@GST_API_VERSION@.la \
+	$(GST_PLUGINS_BASE_LIBS) -lgstvideo-@GST_API_VERSION@ \
         $(GST_BASE_LIBS) $(GST_LIBS) \
 	$(SCHRO_LIBS)
 libgstschro_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
