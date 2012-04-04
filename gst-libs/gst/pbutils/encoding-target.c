@@ -358,7 +358,7 @@ serialize_stream_profiles (GKeyFile * out, GstEncodingProfile * sprof,
 {
   gchar *sprofgroupname;
   gchar *tmpc;
-  const GstCaps *format, *restriction;
+  GstCaps *format, *restriction;
   const gchar *preset, *name, *description;
 
   sprofgroupname = g_strdup_printf ("streamprofile-%s-%d", profilename, id);
@@ -407,6 +407,10 @@ serialize_stream_profiles (GKeyFile * out, GstEncodingProfile * sprof,
   }
 
   g_free (sprofgroupname);
+  if (format)
+    gst_caps_unref (format);
+  if (restriction)
+    gst_caps_unref (restriction);
   return TRUE;
 }
 
@@ -449,7 +453,7 @@ serialize_encoding_profile (GKeyFile * out, GstEncodingProfile * prof)
   const GList *tmp;
   guint i;
   const gchar *profname, *profdesc, *profpreset, *proftype;
-  const GstCaps *profformat;
+  GstCaps *profformat;
 
   profname = gst_encoding_profile_get_name (prof);
   profdesc = gst_encoding_profile_get_description (prof);
@@ -495,6 +499,8 @@ serialize_encoding_profile (GKeyFile * out, GstEncodingProfile * prof)
         return FALSE;
     }
   }
+  if (profformat)
+    gst_caps_unref (profformat);
   g_free (profgroupname);
   return TRUE;
 }
