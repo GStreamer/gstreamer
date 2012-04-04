@@ -18,4 +18,4 @@ noinst_PROGRAMS = 	\
 	$(graphical)
 
 AM_CFLAGS =  -I$(top_srcdir) $(GST_PBUTILS_CFLAGS) $(GST_CFLAGS) $(GTK_CFLAGS) -export-dynamic
-LDADD = $(top_builddir)/ges/libges-@GST_MAJORMINOR@.la $(GST_PBUTILS_LIBS) $(GST_LIBS) $(GTK_LIBS)
+LDADD = $(top_builddir)/ges/libges-@GST_API_VERSION@.la $(GST_PBUTILS_LIBS) $(GST_LIBS) $(GTK_LIBS)

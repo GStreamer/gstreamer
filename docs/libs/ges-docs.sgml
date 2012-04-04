@@ -9,7 +9,7 @@
   <bookinfo>
     <title>GStreamer Editing Services &GES_VERSION; Reference Manual</title>
     <releaseinfo>
-      for GStreamer Editing Services &GST_MAJORMINOR; (&GES_VERSION;)
+      for GStreamer Editing Services &GST_API_VERSION; (&GES_VERSION;)
     </releaseinfo>
   </bookinfo>
 

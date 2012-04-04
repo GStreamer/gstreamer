@@ -66,7 +66,7 @@ extra_files =
 GTKDOC_CFLAGS = -I$(top_srcdir) $(GST_PBUTILS_CFLAGS) $(GST_BASE_CFLAGS) \
 	$(GST_CFLAGS)  $(GIO_CFLAGS)
 GTKDOC_LIBS =  \
-	$(top_builddir)/ges/libges-@GST_MAJORMINOR@.la \
+	$(top_builddir)/ges/libges-@GST_API_VERSION@.la \
 	$(GST_BASE_LIBS) $(GST_LIBS) $(GIO_LIBS)
 
 GTKDOC_CC=$(LIBTOOL) --tag=CC --mode=compile $(CC)

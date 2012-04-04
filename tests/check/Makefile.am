@@ -2,7 +2,7 @@ include $(top_srcdir)/common/check.mak
 
 TESTS_ENVIRONMENT = 
 
-plugindir = $(libdir)/gstreamer-@GST_MAJORMINOR@
+plugindir = $(libdir)/gstreamer-@GST_API_VERSION@
 
 # override to _not_ install the test plugins
 install-pluginLTLIBRARIES:
@@ -36,8 +36,8 @@ AM_CFLAGS =  -I$(top_srcdir) $(GST_PLUGINS_BASE_CFLAGS) $(GST_OBJ_CFLAGS) \
 	$(GST_CHECK_CFLAGS) $(GST_OPTION_CFLAGS) $(GST_CFLAGS) \
 	-UG_DISABLE_ASSERT -UG_DISABLE_CAST_CHECKS
 
-LDADD = $(top_builddir)/ges/libges-@GST_MAJORMINOR@.la \
-	$(GST_PLUGINS_BASE_LIBS) -lgstpbutils-$(GST_MAJORMINOR) \
+LDADD = $(top_builddir)/ges/libges-@GST_API_VERSION@.la \
+	$(GST_PLUGINS_BASE_LIBS) -lgstpbutils-$(GST_API_VERSION) \
 	$(GST_OBJ_LIBS) $(GST_CHECK_LIBS)
 
 EXTRA_DIST = #gst-plugins-bad.supp

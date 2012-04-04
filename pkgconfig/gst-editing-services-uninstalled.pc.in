@@ -7,6 +7,6 @@ includedir=@abs_top_builddir@
 Name: gst-editing-services
 Description: GStreamer Editing Services
 Version: @VERSION@
-Requires: gstreamer-@GST_MAJORMINOR@ gstreamer-base-@GST_MAJORMINOR@ gstreamer-controller-@GST_MAJORMINOR@ gstreamer-pbutils-@GST_MAJORMINOR@
-Libs: @abs_top_builddir@/ges/libges-@GST_MAJORMINOR@.la
+Requires: gstreamer-@GST_API_VERSION@ gstreamer-base-@GST_API_VERSION@ gstreamer-controller-@GST_API_VERSION@ gstreamer-pbutils-@GST_API_VERSION@
+Libs: @abs_top_builddir@/ges/libges-@GST_API_VERSION@.la
 Cflags: -I@abs_top_srcdir@ -I@abs_top_builddir@

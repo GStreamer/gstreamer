@@ -36,10 +36,10 @@ m4_ifdef([AM_SILENT_RULES],[AM_SILENT_RULES([yes])],
  AC_SUBST(AM_DEFAULT_VERBOSITY)])
 
 dnl our libraries and install dirs use major.minor as a version
-GST_MAJORMINOR=$GST_EDITING_SERVICES_VERSION_MAJOR.$GST_EDITING_SERVICES_VERSION_MINOR
+GST_API_VERSION=$GST_EDITING_SERVICES_VERSION_MAJOR.$GST_EDITING_SERVICES_VERSION_MINOR
 dnl we override it here if we need to for the release candidate of new series
-GST_MAJORMINOR=0.11
-AC_SUBST(GST_MAJORMINOR)
+GST_API_VERSION=1.0
+AC_SUBST(GST_API_VERSION)
 
 dnl FIXME: this macro doesn't actually work;
 dnl the generated libtool script has no support for the listed tags.
@@ -153,20 +153,20 @@ AC_SUBST(GIO_LIBS)
 
 dnl checks for gstreamer
 dnl uninstalled is selected preferentially -- see pkg-config(1)
-AG_GST_CHECK_GST($GST_MAJORMINOR, [$GST_REQ], yes)
-AG_GST_CHECK_GST_BASE($GST_MAJORMINOR, [$GST_REQ], yes)
-#AG_GST_CHECK_GST_GDP($GST_MAJORMINOR, [$GST_REQ], yes)
-AG_GST_CHECK_GST_CHECK($GST_MAJORMINOR, [$GST_REQ], no)
-AG_GST_CHECK_GST_CONTROLLER($GST_MAJORMINOR, [$GST_REQ], yes)
-AG_GST_CHECK_GST_PLUGINS_BASE($GST_MAJORMINOR, [$GSTPB_REQ], yes)
+AG_GST_CHECK_GST($GST_API_VERSION, [$GST_REQ], yes)
+AG_GST_CHECK_GST_BASE($GST_API_VERSION, [$GST_REQ], yes)
+#AG_GST_CHECK_GST_GDP($GST_API_VERSION, [$GST_REQ], yes)
+AG_GST_CHECK_GST_CHECK($GST_API_VERSION, [$GST_REQ], no)
+AG_GST_CHECK_GST_CONTROLLER($GST_API_VERSION, [$GST_REQ], yes)
+AG_GST_CHECK_GST_PLUGINS_BASE($GST_API_VERSION, [$GSTPB_REQ], yes)
 AM_CONDITIONAL(HAVE_GST_CHECK, test "x$HAVE_GST_CHECK" = "xyes")
 
-GSTPB_PLUGINS_DIR=`$PKG_CONFIG gstreamer-plugins-base-$GST_MAJORMINOR --variable pluginsdir`
+GSTPB_PLUGINS_DIR=`$PKG_CONFIG gstreamer-plugins-base-$GST_API_VERSION --variable pluginsdir`
 AC_SUBST(GSTPB_PLUGINS_DIR)
 AC_MSG_NOTICE(Using GStreamer Base Plugins in $GSTPB_PLUGINS_DIR)
 
 dnl check for gstreamer-pbutils
-PKG_CHECK_MODULES(GST_PBUTILS, gstreamer-pbutils-$GST_MAJORMINOR, HAVE_GST_PBUTILS="yes", HAVE_GST_PBUTILS="no")
+PKG_CHECK_MODULES(GST_PBUTILS, gstreamer-pbutils-$GST_API_VERSION, HAVE_GST_PBUTILS="yes", HAVE_GST_PBUTILS="no")
 if test "x$HAVE_GST_PBUTILS" != "xyes"; then
   AC_ERROR([gst-pbutils is required for rendering support])
 fi
@@ -174,7 +174,7 @@ AC_SUBST(GST_PBUTILS_LIBS)
 AC_SUBST(GST_PBUTILS_CFLAGS)
 
 dnl check for gst-controller
-PKG_CHECK_MODULES(GST_CONTROLLER, gstreamer-controller-$GST_MAJORMINOR, HAVE_GST_CONTROLLER="yes", HAVE_GST_CONROLLER="no")
+PKG_CHECK_MODULES(GST_CONTROLLER, gstreamer-controller-$GST_API_VERSION, HAVE_GST_CONTROLLER="yes", HAVE_GST_CONROLLER="no")
 if test "x$HAVE_GST_CONTROLLER" != "xyes"; then
   AC_ERROR([gst-controller is required for transition support])
 fi
@@ -182,7 +182,7 @@ AC_SUBST(GST_CONTROLLER_LIBS)
 AC_SUBST(GST_CONTROLLER_CFLAGS)
 
 dnl check for gstvideo
-PKG_CHECK_MODULES(GST_VIDEO, gstreamer-video-$GST_MAJORMINOR, HAVE_GST_VIDEO="yes", HAVE_GST_CONROLLER="no")
+PKG_CHECK_MODULES(GST_VIDEO, gstreamer-video-$GST_API_VERSION, HAVE_GST_VIDEO="yes", HAVE_GST_CONROLLER="no")
 if test "x$HAVE_GST_VIDEO" != "xyes"; then
   AC_ERROR([gst-video is required for transition support])
 fi
@@ -191,8 +191,8 @@ AC_SUBST(GST_VIDEO_CFLAGS)
 
 dnl Check for documentation xrefs
 GLIB_PREFIX="`$PKG_CONFIG --variable=prefix glib-2.0`"
-GST_PREFIX="`$PKG_CONFIG --variable=prefix gstreamer-$GST_MAJORMINOR`"
-GSTPB_PREFIX="`$PKG_CONFIG --variable=prefix gstreamer-plugins-base-$GST_MAJORMINOR`"
+GST_PREFIX="`$PKG_CONFIG --variable=prefix gstreamer-$GST_API_VERSION`"
+GSTPB_PREFIX="`$PKG_CONFIG --variable=prefix gstreamer-plugins-base-$GST_API_VERSION`"
 AC_SUBST(GLIB_PREFIX)
 AC_SUBST(GST_PREFIX)
 AC_SUBST(GSTPB_PREFIX)
