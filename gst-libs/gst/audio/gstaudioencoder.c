@@ -439,13 +439,14 @@ gst_audio_encoder_reset (GstAudioEncoder * enc, gboolean full)
     enc->priv->active = FALSE;
     enc->priv->samples_in = 0;
     enc->priv->bytes_out = 0;
-    gst_audio_info_init (&enc->priv->ctx.info);
-    memset (&enc->priv->ctx, 0, sizeof (enc->priv->ctx));
 
     g_list_foreach (enc->priv->ctx.headers, (GFunc) gst_buffer_unref, NULL);
     g_list_free (enc->priv->ctx.headers);
     enc->priv->ctx.headers = NULL;
     enc->priv->ctx.new_headers = FALSE;
+
+    memset (&enc->priv->ctx, 0, sizeof (enc->priv->ctx));
+    gst_audio_info_init (&enc->priv->ctx.info);
 
     if (enc->priv->tags)
       gst_tag_list_free (enc->priv->tags);
@@ -828,6 +829,8 @@ exit:
 no_caps:
   {
     GST_ELEMENT_ERROR (enc, STREAM, ENCODE, ("no caps set"), (NULL));
+    if (buf)
+      gst_buffer_unref (buf);
     return GST_FLOW_ERROR;
   }
 overflow:
