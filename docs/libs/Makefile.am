@@ -23,11 +23,11 @@ include $(top_srcdir)/common/upload-doc.mak
 #	BUILDDIR=`pwd` && \
 #	cd $(srcdir)/tmpl && \
 #	ln -sf gstreamer-libs-unused.sgml \
-#		$$BUILDDIR/tmpl/gstreamer-libs-@GST_MAJORMINOR@-unused.sgml
+#		$$BUILDDIR/tmpl/gstreamer-libs-@GST_API_VERSION@-unused.sgml
 #	touch unused-build.stamp
 
-# these rules are added to create parallel docs using GST_MAJORMINOR
-#$(basefiles): gstreamer-libs-@GST_MAJORMINOR@%: gstreamer-libs%
+# these rules are added to create parallel docs using GST_API_VERSION
+#$(basefiles): gstreamer-libs-@GST_API_VERSION@%: gstreamer-libs%
 #	cp $< $@
 
 #CLEANFILES = $(basefiles)
@@ -61,7 +61,7 @@ HFILE_GLOB=$(DOC_SOURCE_DIR)/*.h
 CFILE_GLOB=$(DOC_SOURCE_DIR)/*.c
 
 SCANOBJ_DEPS = \
-	$(top_builddir)/gst/rtsp-server/libgstrtspserver-@GST_MAJORMINOR@.la
+	$(top_builddir)/gst/rtsp-server/libgstrtspserver-@GST_API_VERSION@.la
 
 # Extra options to supply to gtkdoc-scan.
 SCANOBJ_OPTIONS=--type-init-func="g_type_init();gst_init(&argc,&argv)"

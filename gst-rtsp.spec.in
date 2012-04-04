@@ -1,4 +1,4 @@
-%define         gst_majorminor @GST_MAJORMINOR@
+%define         gst_majorminor @GST_API_VERSION@
 
 Name:           gstreamer-rtsp-server
 Version:        @VERSION@

@@ -34,10 +34,10 @@ m4_ifdef([AM_SILENT_RULES],[AM_SILENT_RULES([yes])],
    AC_SUBST(AM_DEFAULT_VERBOSITY)])
 
 dnl our libraries and install dirs use major.minor as a version
-GST_MAJORMINOR=$PACKAGE_VERSION_MAJOR.$PACKAGE_VERSION_MINOR
+dnl GST_API_VERSION=$PACKAGE_VERSION_MAJOR.$PACKAGE_VERSION_MINOR
 dnl we override it here if we need to for the release candidate of new series
-GST_MAJORMINOR=0.11
-AC_SUBST(GST_MAJORMINOR)
+GST_API_VERSION=1.0
+AC_SUBST(GST_API_VERSION)
 
 AM_PROG_LIBTOOL
 
@@ -58,7 +58,7 @@ dnl set up gettext
 dnl the version check needs to stay here because autopoint greps for it
 AM_GNU_GETTEXT_VERSION([0.17])
 AM_GNU_GETTEXT([external])
-AG_GST_GETTEXT([gstreamer-$GST_MAJORMINOR])
+AG_GST_GETTEXT([gstreamer-$GST_API_VERSION])
 
 dnl *** check for arguments to configure ***
 
@@ -123,26 +123,26 @@ AG_GST_GLIB_CHECK([$GLIB_REQ])
 
 dnl checks for gstreamer
 dnl uninstalled is selected preferentially -- see pkg-config(1)
-AG_GST_CHECK_GST($GST_MAJORMINOR, [$GST_REQ], [yes])
+AG_GST_CHECK_GST($GST_API_VERSION, [$GST_REQ], [yes])
 
-GST_TOOLS_DIR=`$PKG_CONFIG --variable=toolsdir gstreamer-$GST_MAJORMINOR`
+GST_TOOLS_DIR=`$PKG_CONFIG --variable=toolsdir gstreamer-$GST_API_VERSION`
 if test -z $GST_TOOLS_DIR; then
   AC_MSG_ERROR([no tools dir defined in GStreamer pkg-config file; core upgrade needed.])
 fi
 AC_SUBST(GST_TOOLS_DIR)
 
-GST_PLUGINS_DIR=`$PKG_CONFIG gstreamer-$GST_MAJORMINOR --variable pluginsdir`
+GST_PLUGINS_DIR=`$PKG_CONFIG gstreamer-$GST_API_VERSION --variable pluginsdir`
 AC_SUBST(GST_PLUGINS_DIR)
 AC_MSG_NOTICE(Using GStreamer Core Plugins in $GST_PLUGINS_DIR)
 
-AG_GST_CHECK_GST_BASE($GST_MAJORMINOR, [$GST_REQ], [yes])
+AG_GST_CHECK_GST_BASE($GST_API_VERSION, [$GST_REQ], [yes])
 
-AG_GST_CHECK_GST_PLUGINS_BASE($GST_MAJORMINOR, [$GSTPB_REQ], [yes])
-GSTPB_PLUGINS_DIR=`$PKG_CONFIG gstreamer-plugins-base-$GST_MAJORMINOR --variable pluginsdir`
+AG_GST_CHECK_GST_PLUGINS_BASE($GST_API_VERSION, [$GSTPB_REQ], [yes])
+GSTPB_PLUGINS_DIR=`$PKG_CONFIG gstreamer-plugins-base-$GST_API_VERSION --variable pluginsdir`
 AC_SUBST(GSTPB_PLUGINS_DIR)
 AC_MSG_NOTICE(Using GStreamer Base Plugins in $GSTPB_PLUGINS_DIR)
 
-AG_GST_CHECK_GST_CHECK($GST_MAJORMINOR, [$GST_REQ], no)
+AG_GST_CHECK_GST_CHECK($GST_API_VERSION, [$GST_REQ], no)
 
 dnl FIXME: get rid of this by making sure gstreamer-check brings it in
 dnl check for "check", unit testing library/header
@@ -221,7 +221,7 @@ dnl default vars for all internal objects built on libgstrtspserver
 dnl includes GST_ALL_*
 GST_OBJ_CFLAGS="\$(GST_ALL_CFLAGS)"
 AC_SUBST([GST_OBJ_CFLAGS])
-GST_OBJ_LIBS="\$(top_builddir)/gst/rtsp-server/libgstrtspserver-$GST_MAJORMINOR.la \$(GST_ALL_LIBS)"
+GST_OBJ_LIBS="\$(top_builddir)/gst/rtsp-server/libgstrtspserver-$GST_API_VERSION.la \$(GST_ALL_LIBS)"
 AC_SUBST([GST_OBJ_LIBS])
 
 dnl this really should only contain flags, not libs - they get added before
