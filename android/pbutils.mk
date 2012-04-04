@@ -3,7 +3,7 @@ include $(CLEAR_VARS)
 
 GST_PBUTILS_DIR := gst-libs/gst/pbutils/
 
-gst_pbutils_COPY_HEADERS_TO := gstreamer-0.11/gst/pbutils
+gst_pbutils_COPY_HEADERS_TO := gstreamer-1.0/gst/pbutils
 gst_pbutils_COPY_HEADERS_BASE := \
 	gst-libs/gst/pbutils/descriptions.h \
 	gst-libs/gst/pbutils/install-plugins.h \
@@ -45,15 +45,15 @@ $(BUILT_SOURCES):
 
 
 LOCAL_SHARED_LIBRARIES := \
-    libgstvideo-0.11        \
-    libgstreamer-0.11       \
-    libgstbase-0.11         \
+    libgstvideo-1.0        \
+    libgstreamer-1.0       \
+    libgstbase-1.0         \
     libglib-2.0             \
     libgthread-2.0          \
     libgmodule-2.0          \
     libgobject-2.0 			
 
-LOCAL_MODULE:= libgstpbutils-0.11
+LOCAL_MODULE:= libgstpbutils-1.0
 LOCAL_CFLAGS := -DGSTREAMER_BUILT_FOR_ANDROID \
 	$(GST_PLUGINS_BASE_CFLAGS)
 #

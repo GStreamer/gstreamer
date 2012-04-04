@@ -6,7 +6,7 @@ libgsttypefindfunctions_la_CFLAGS = \
 	$(GST_CFLAGS) $(GIO_CFLAGS)
 libgsttypefindfunctions_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
 libgsttypefindfunctions_la_LIBADD = \
-	$(top_builddir)/gst-libs/gst/pbutils/libgstpbutils-@GST_MAJORMINOR@.la \
+	$(top_builddir)/gst-libs/gst/pbutils/libgstpbutils-@GST_API_VERSION@.la \
 	$(GST_BASE_LIBS) $(GST_LIBS) $(GIO_LIBS)
 
 libgsttypefindfunctions_la_LIBTOOLFLAGS = --tag=disable-static

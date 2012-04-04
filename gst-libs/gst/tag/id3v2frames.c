@@ -167,7 +167,7 @@ id3v2_parse_frame (ID3TagsWorking * work)
     work->parse_data = uncompressed_data;
 #else
     GST_WARNING ("Compressed ID3v2 tag frame could not be decompressed, because"
-        " libgsttag-" GST_MAJORMINOR " was compiled without zlib support");
+        " libgsttag-" GST_API_VERSION " was compiled without zlib support");
     g_free (uu_data);
     return FALSE;
 #endif

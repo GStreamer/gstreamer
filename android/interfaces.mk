@@ -1,7 +1,7 @@
 LOCAL_PATH:= $(call my-dir)
 #----------------------------------------
 # include 
-gst_interfaces_COPY_HEADERS_TO := gstreamer-0.11/gst/interfaces
+gst_interfaces_COPY_HEADERS_TO := gstreamer-1.0/gst/interfaces
 gst_interfaces_COPY_HEADERS_BASE := \
 	gst-libs/gst/interfaces/colorbalance.h \
 	gst-libs/gst/interfaces/colorbalancechannel.h \
@@ -45,14 +45,14 @@ LOCAL_SRC_FILES:= $(addprefix ../,$(interfaces_LOCAL_SRC_FILES_BASE)) \
 				  $(addprefix ../android/,$(interfaces_LOCAL_SRC_FILES_ANDROID))
 
 LOCAL_SHARED_LIBRARIES := \
-    libgstreamer-0.11       \
-    libgstbase-0.11         \
+    libgstreamer-1.0       \
+    libgstbase-1.0         \
     libglib-2.0             \
     libgthread-2.0          \
     libgmodule-2.0          \
     libgobject-2.0
 
-LOCAL_MODULE:= libgstinterfaces-0.11
+LOCAL_MODULE:= libgstinterfaces-1.0
 
 LOCAL_CFLAGS := -DHAVE_CONFIG_H	-DGSTREAMER_BUILT_FOR_ANDROID \
 	$(GST_PLUGINS_BASE_CFLAGS)

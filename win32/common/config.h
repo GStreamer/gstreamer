@@ -78,7 +78,7 @@
 #define GST_LICENSE "LGPL"
 
 /* major/minor version */
-#define GST_MAJORMINOR "0.11"
+#define GST_API_VERSION "0.11"
 
 /* package name in plugins */
 #define GST_PACKAGE_NAME "GStreamer Base Plug-ins source release"

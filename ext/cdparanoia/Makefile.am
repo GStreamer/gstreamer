@@ -7,7 +7,7 @@ libgstcdparanoia_la_CFLAGS = \
 	$(GST_CFLAGS) \
 	$(CDPARANOIA_CFLAGS)
 libgstcdparanoia_la_LIBADD = \
-	$(top_builddir)/gst-libs/gst/audio/libgstaudio-$(GST_MAJORMINOR).la \
+	$(top_builddir)/gst-libs/gst/audio/libgstaudio-$(GST_API_VERSION).la \
 	$(GST_BASE_LIBS) \
 	$(GST_LIBS) \
 	$(CDPARANOIA_LIBS)

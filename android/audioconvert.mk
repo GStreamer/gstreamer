@@ -15,14 +15,14 @@ audioconvert_LOCAL_SRC_FILES:= \
 LOCAL_SRC_FILES:= $(addprefix ../,$(audioconvert_LOCAL_SRC_FILES))
 
 LOCAL_SHARED_LIBRARIES := \
-    libgstaudio-0.11        \
-    libgstreamer-0.11       \
-    libgstbase-0.11         \
+    libgstaudio-1.0        \
+    libgstreamer-1.0       \
+    libgstbase-1.0         \
     libglib-2.0             \
     libgthread-2.0          \
     libgmodule-2.0          \
     libgobject-2.0 			\
-    libgstpbutils-0.11
+    libgstpbutils-1.0
 
 LOCAL_MODULE:= libgstaudioconvert
 
@@ -33,8 +33,8 @@ LOCAL_CFLAGS := -DHAVE_CONFIG_H -DGSTREAMER_BUILT_FOR_ANDROID \
 #
 LOCAL_PRELINK_MODULE := false
 
-#It's a gstreamer plugins, and it must be installed on ..../lib/gstreamer-0.11
-LOCAL_MODULE_PATH := $(TARGET_OUT)/lib/gstreamer-0.11
+#It's a gstreamer plugins, and it must be installed on ..../lib/gstreamer-1.0
+LOCAL_MODULE_PATH := $(TARGET_OUT)/lib/gstreamer-1.0
 LOCAL_MODULE_TAGS := optional
 
 include $(BUILD_SHARED_LIBRARY)

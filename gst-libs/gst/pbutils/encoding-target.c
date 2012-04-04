@@ -56,8 +56,8 @@
 /*
  * Location of profile files
  *
- * $GST_DATADIR/gstreamer-GST_MAJORMINOR/encoding-profile
- * $HOME/gstreamer-GST_MAJORMINOR/encoding-profile
+ * $GST_DATADIR/gstreamer-GST_API_VERSION/encoding-profile
+ * $HOME/gstreamer-GST_API_VERSION/encoding-profile
  *
  * Naming convention
  *   $(target.category)/$(target.name).gep
@@ -887,7 +887,7 @@ gst_encoding_target_load (const gchar * name, const gchar * category,
 
   /* Try from local profiles */
   tldir =
-      g_build_filename (g_get_user_data_dir (), "gstreamer-" GST_MAJORMINOR,
+      g_build_filename (g_get_user_data_dir (), "gstreamer-" GST_API_VERSION,
       GST_ENCODING_TARGET_DIRECTORY, NULL);
   target = gst_encoding_target_subload (tldir, category, lfilename, error);
   g_free (tldir);
@@ -895,7 +895,7 @@ gst_encoding_target_load (const gchar * name, const gchar * category,
   if (target == NULL) {
     /* Try from system-wide profiles */
     tldir =
-        g_build_filename (GST_DATADIR, "gstreamer-" GST_MAJORMINOR,
+        g_build_filename (GST_DATADIR, "gstreamer-" GST_API_VERSION,
         GST_ENCODING_TARGET_DIRECTORY, NULL);
     target = gst_encoding_target_subload (tldir, category, lfilename, error);
     g_free (tldir);
@@ -1010,7 +1010,7 @@ gst_encoding_target_save (GstEncodingTarget * target, GError ** error)
 
   lfilename = g_strdup_printf ("%s" GST_ENCODING_TARGET_SUFFIX, target->name);
   filename =
-      g_build_filename (g_get_user_data_dir (), "gstreamer-" GST_MAJORMINOR,
+      g_build_filename (g_get_user_data_dir (), "gstreamer-" GST_API_VERSION,
       GST_ENCODING_TARGET_DIRECTORY, target->category, lfilename, NULL);
   g_free (lfilename);
 
@@ -1064,13 +1064,13 @@ gst_encoding_list_available_categories (void)
 
   /* First try user-local categories */
   topdir =
-      g_build_filename (g_get_user_data_dir (), "gstreamer-" GST_MAJORMINOR,
+      g_build_filename (g_get_user_data_dir (), "gstreamer-" GST_API_VERSION,
       GST_ENCODING_TARGET_DIRECTORY, NULL);
   res = get_categories (topdir);
   g_free (topdir);
 
   /* Extend with system-wide categories */
-  topdir = g_build_filename (GST_DATADIR, "gstreamer-" GST_MAJORMINOR,
+  topdir = g_build_filename (GST_DATADIR, "gstreamer-" GST_API_VERSION,
       GST_ENCODING_TARGET_DIRECTORY, NULL);
   tmp1 = get_categories (topdir);
   g_free (topdir);
@@ -1181,13 +1181,13 @@ gst_encoding_list_all_targets (const gchar * categoryname)
 
   /* Get user-locals */
   topdir =
-      g_build_filename (g_get_user_data_dir (), "gstreamer-" GST_MAJORMINOR,
+      g_build_filename (g_get_user_data_dir (), "gstreamer-" GST_API_VERSION,
       GST_ENCODING_TARGET_DIRECTORY, NULL);
   res = get_all_targets (topdir, categoryname);
   g_free (topdir);
 
   /* Get system-wide */
-  topdir = g_build_filename (GST_DATADIR, "gstreamer-" GST_MAJORMINOR,
+  topdir = g_build_filename (GST_DATADIR, "gstreamer-" GST_API_VERSION,
       GST_ENCODING_TARGET_DIRECTORY, NULL);
   tmp1 = get_all_targets (topdir, categoryname);
   g_free (topdir);

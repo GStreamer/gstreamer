@@ -1,21 +1,21 @@
 libgsttagincludedir = \
-	$(includedir)/gstreamer-@GST_MAJORMINOR@/gst/tag
+	$(includedir)/gstreamer-@GST_API_VERSION@/gst/tag
 
 libgsttaginclude_HEADERS = \
 	tag.h gsttagdemux.h gsttagmux.h xmpwriter.h
 
-lib_LTLIBRARIES = libgsttag-@GST_MAJORMINOR@.la
+lib_LTLIBRARIES = libgsttag-@GST_API_VERSION@.la
 
-libgsttag_@GST_MAJORMINOR@_la_SOURCES = \
+libgsttag_@GST_API_VERSION@_la_SOURCES = \
 	gstvorbistag.c gstid3tag.c gstxmptag.c gstexiftag.c \
 	lang.c licenses.c tags.c gsttagdemux.c gsttagmux.c \
 	gsttageditingprivate.c id3v2.c id3v2frames.c xmpwriter.c
 
-libgsttag_@GST_MAJORMINOR@_la_CFLAGS = $(GST_PLUGINS_BASE_CFLAGS) \
+libgsttag_@GST_API_VERSION@_la_CFLAGS = $(GST_PLUGINS_BASE_CFLAGS) \
 	$(GST_BASE_CFLAGS) $(GST_CFLAGS) $(ZLIB_CFLAGS) \
-	-DLICENSE_TRANSLATIONS_PATH=\"$(pkgdatadir)/@GST_MAJORMINOR@/license-translations.dict\"
-libgsttag_@GST_MAJORMINOR@_la_LIBADD = $(GST_BASE_LIBS) $(GST_LIBS) $(LIBM) $(ZLIB_LIBS)
-libgsttag_@GST_MAJORMINOR@_la_LDFLAGS = $(GST_LIB_LDFLAGS) $(GST_ALL_LDFLAGS) $(GST_LT_LDFLAGS)
+	-DLICENSE_TRANSLATIONS_PATH=\"$(pkgdatadir)/@GST_API_VERSION@/license-translations.dict\"
+libgsttag_@GST_API_VERSION@_la_LIBADD = $(GST_BASE_LIBS) $(GST_LIBS) $(LIBM) $(ZLIB_LIBS)
+libgsttag_@GST_API_VERSION@_la_LDFLAGS = $(GST_LIB_LDFLAGS) $(GST_ALL_LDFLAGS) $(GST_LT_LDFLAGS)
 
 # lang-tables.dat contains generated static data and is included by lang.c
 # licenses-tables.dat contains generated data and is included by licenses.c
@@ -24,30 +24,30 @@ EXTRA_DIST = lang-tables.dat licenses-tables.dat license-translations.dict
 noinst_HEADERS = gsttageditingprivate.h id3v2.h
 
 if HAVE_INTROSPECTION
-BUILT_GIRSOURCES = GstTag-@GST_MAJORMINOR@.gir
+BUILT_GIRSOURCES = GstTag-@GST_API_VERSION@.gir
 
 gir_headers=$(patsubst %,$(srcdir)/%, $(libgsttaginclude_HEADERS))
-gir_sources=$(patsubst %,$(srcdir)/%, $(libgsttag_@GST_MAJORMINOR@_la_SOURCES))
+gir_sources=$(patsubst %,$(srcdir)/%, $(libgsttag_@GST_API_VERSION@_la_SOURCES))
 gir_cincludes=$(patsubst %,--c-include='gst/tag/%',$(libgsttaginclude_HEADERS))
 
-GstTag-@GST_MAJORMINOR@.gir: $(INTROSPECTION_SCANNER) libgsttag-@GST_MAJORMINOR@.la
+GstTag-@GST_API_VERSION@.gir: $(INTROSPECTION_SCANNER) libgsttag-@GST_API_VERSION@.la
 	$(AM_V_GEN)PKG_CONFIG_PATH="$(GST_PKG_CONFIG_PATH)" \
 		GST_PLUGIN_SYSTEM_PATH="" GST_PLUGIN_PATH="" GST_REGISTRY_UPDATE=no \
 		$(INTROSPECTION_SCANNER) -v --namespace GstTag \
-		--nsversion=@GST_MAJORMINOR@ \
+		--nsversion=@GST_API_VERSION@ \
 		--strip-prefix=Gst \
 		--warn-all \
 		$(gir_cincludes) \
 		-DGST_USE_UNSTABLE_API \
-		--add-include-path=`$(PKG_CONFIG) --variable=girdir gstreamer-@GST_MAJORMINOR@` \
-		--add-include-path=`$(PKG_CONFIG) --variable=girdir gstreamer-base-@GST_MAJORMINOR@` \
-		--library=libgsttag-@GST_MAJORMINOR@.la \
-		--include=Gst-@GST_MAJORMINOR@ \
-		--include=GstBase-@GST_MAJORMINOR@ \
+		--add-include-path=`$(PKG_CONFIG) --variable=girdir gstreamer-@GST_API_VERSION@` \
+		--add-include-path=`$(PKG_CONFIG) --variable=girdir gstreamer-base-@GST_API_VERSION@` \
+		--library=libgsttag-@GST_API_VERSION@.la \
+		--include=Gst-@GST_API_VERSION@ \
+		--include=GstBase-@GST_API_VERSION@ \
 		--libtool="$(top_builddir)/libtool" \
-		--pkg gstreamer-@GST_MAJORMINOR@ \
-		--pkg gstreamer-base-@GST_MAJORMINOR@ \
-		--pkg-export gstreamer-tag-@GST_MAJORMINOR@ \
+		--pkg gstreamer-@GST_API_VERSION@ \
+		--pkg gstreamer-base-@GST_API_VERSION@ \
+		--pkg-export gstreamer-tag-@GST_API_VERSION@ \
 		--add-init-section="gst_init(NULL,NULL);" \
 		--output $@ \
 		$(gir_headers) \
@@ -67,8 +67,8 @@ typelibs_DATA = $(BUILT_GIRSOURCES:.gir=.typelib)
 		$(INTROSPECTION_COMPILER) \
 		--includedir=$(srcdir) \
 		--includedir=$(builddir) \
-		--includedir=`$(PKG_CONFIG) --variable=girdir gstreamer-@GST_MAJORMINOR@` \
-		--includedir=`$(PKG_CONFIG) --variable=girdir gstreamer-base-@GST_MAJORMINOR@` \
+		--includedir=`$(PKG_CONFIG) --variable=girdir gstreamer-@GST_API_VERSION@` \
+		--includedir=`$(PKG_CONFIG) --variable=girdir gstreamer-base-@GST_API_VERSION@` \
 		$(INTROSPECTION_COMPILER_OPTS) $< -o $(@F)
 
 CLEANFILES = $(BUILT_GIRSOURCES) $(typelibs_DATA)
@@ -102,20 +102,20 @@ update-licenses: mklicensestables
 # translations come from an external source here, so we don't want the
 # strings retranslated, but also we don't want to create 30 1kB .mo files,
 # so just do something for now, we can change it later if someone really cares.
-licensetransdir = $(pkgdatadir)/@GST_MAJORMINOR@
+licensetransdir = $(pkgdatadir)/@GST_API_VERSION@
 licensetrans_DATA = $(srcdir)/license-translations.dict
 #endif
 
 Android.mk: Makefile.am
-	androgenizer -:PROJECT libgsttag -:SHARED libgsttag-@GST_MAJORMINOR@ \
+	androgenizer -:PROJECT libgsttag -:SHARED libgsttag-@GST_API_VERSION@ \
 	 -:TAGS eng debug \
          -:REL_TOP $(top_srcdir) -:ABS_TOP $(abs_top_srcdir) \
-	 -:SOURCES $(libgsttag_@GST_MAJORMINOR@_la_SOURCES) \
-	 -:CFLAGS $(DEFS) $(DEFAULT_INCLUDES) $(libgsttag_@GST_MAJORMINOR@_la_CFLAGS) \
-	 -:LDFLAGS $(libgsttag_@GST_MAJORMINOR@_la_LDFLAGS) \
-	           $(libgsttag_@GST_MAJORMINOR@_la_LIBADD) \
+	 -:SOURCES $(libgsttag_@GST_API_VERSION@_la_SOURCES) \
+	 -:CFLAGS $(DEFS) $(DEFAULT_INCLUDES) $(libgsttag_@GST_API_VERSION@_la_CFLAGS) \
+	 -:LDFLAGS $(libgsttag_@GST_API_VERSION@_la_LDFLAGS) \
+	           $(libgsttag_@GST_API_VERSION@_la_LIBADD) \
 	           -ldl \
-	 -:HEADER_TARGET gstreamer-@GST_MAJORMINOR@/gst/tag \
+	 -:HEADER_TARGET gstreamer-@GST_API_VERSION@/gst/tag \
 	 -:HEADERS $(libgsttaginclude_HEADERS) \
 	 -:PASSTHROUGH LOCAL_ARM_MODE:=arm \
 	> $@

@@ -1,7 +1,7 @@
 LOCAL_PATH:= $(call my-dir)
 #----------------------------------------
 # include 
-gst_app_COPY_HEADERS_TO := gstreamer-0.11/gst/app
+gst_app_COPY_HEADERS_TO := gstreamer-1.0/gst/app
 gst_app_COPY_HEADERS := \
 	../gst-libs/gst/app/gstappbuffer.h \
 	../gst-libs/gst/app/gstappsink.h \
@@ -20,14 +20,14 @@ app_LOCAL_SRC_FILES_BASE:= \
 LOCAL_SRC_FILES:= $(addprefix ../,$(app_LOCAL_SRC_FILES_BASE))
 
 LOCAL_SHARED_LIBRARIES := \
-    libgstreamer-0.11       \
-    libgstbase-0.11         \
+    libgstreamer-1.0       \
+    libgstbase-1.0         \
     libglib-2.0             \
     libgthread-2.0          \
     libgmodule-2.0          \
     libgobject-2.0 
 
-LOCAL_MODULE:= libgstapp-0.11
+LOCAL_MODULE:= libgstapp-1.0
 
 LOCAL_CFLAGS := -DHAVE_CONFIG_H	 -DGSTREAMER_BUILT_FOR_ANDROID \
 	$(GST_PLUGINS_BASE_CFLAGS)

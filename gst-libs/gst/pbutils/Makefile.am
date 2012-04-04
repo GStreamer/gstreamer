@@ -1,4 +1,4 @@
-lib_LTLIBRARIES = libgstpbutils-@GST_MAJORMINOR@.la
+lib_LTLIBRARIES = libgstpbutils-@GST_API_VERSION@.la
 
 headers_pbutils = \
 	pbutils.h         \
@@ -19,7 +19,7 @@ glib_gen_basename = pbutils
 built_headers_configure = \
 	gstpluginsbaseversion.h
 
-libgstpbutils_@GST_MAJORMINOR@_la_SOURCES = \
+libgstpbutils_@GST_API_VERSION@_la_SOURCES = \
 	gstpluginsbaseversion.c \
 	pbutils.c         \
 	codec-utils.c     \
@@ -31,26 +31,26 @@ libgstpbutils_@GST_MAJORMINOR@_la_SOURCES = \
 	gstdiscoverer.c   \
 	gstdiscoverer-types.c
 
-nodist_libgstpbutils_@GST_MAJORMINOR@_la_SOURCES = \
+nodist_libgstpbutils_@GST_API_VERSION@_la_SOURCES = \
 	pbutils-enumtypes.c	\
 	pbutils-marshal.c
 
-libgstpbutils_@GST_MAJORMINOR@includedir = $(includedir)/gstreamer-@GST_MAJORMINOR@/gst/pbutils
-libgstpbutils_@GST_MAJORMINOR@include_HEADERS = \
+libgstpbutils_@GST_API_VERSION@includedir = $(includedir)/gstreamer-@GST_API_VERSION@/gst/pbutils
+libgstpbutils_@GST_API_VERSION@include_HEADERS = \
 	$(headers_pbutils)
-nodist_libgstpbutils_@GST_MAJORMINOR@include_HEADERS = \
+nodist_libgstpbutils_@GST_API_VERSION@include_HEADERS = \
 	$(built_headers_configure) \
 	pbutils-enumtypes.h
 noinst_HEADERS = \
 	pbutils-private.h
 EXTRA_DIST = pbutils-marshal.list
 
-libgstpbutils_@GST_MAJORMINOR@_la_LIBADD = \
-  $(top_builddir)/gst-libs/gst/video/libgstvideo-@GST_MAJORMINOR@.la \
-  $(top_builddir)/gst-libs/gst/audio/libgstaudio-@GST_MAJORMINOR@.la \
+libgstpbutils_@GST_API_VERSION@_la_LIBADD = \
+  $(top_builddir)/gst-libs/gst/video/libgstvideo-@GST_API_VERSION@.la \
+  $(top_builddir)/gst-libs/gst/audio/libgstaudio-@GST_API_VERSION@.la \
   $(GST_LIBS)
-libgstpbutils_@GST_MAJORMINOR@_la_CFLAGS = $(GST_PLUGINS_BASE_CFLAGS) $(GST_CFLAGS)
-libgstpbutils_@GST_MAJORMINOR@_la_LDFLAGS = $(GST_LIB_LDFLAGS) $(GST_ALL_LDFLAGS) $(GST_LT_LDFLAGS)
+libgstpbutils_@GST_API_VERSION@_la_CFLAGS = $(GST_PLUGINS_BASE_CFLAGS) $(GST_CFLAGS)
+libgstpbutils_@GST_API_VERSION@_la_LDFLAGS = $(GST_LIB_LDFLAGS) $(GST_ALL_LDFLAGS) $(GST_LT_LDFLAGS)
 
 BUILT_SOURCES = \
 	pbutils-enumtypes.c \
@@ -66,34 +66,34 @@ DISTCLEANFILES = $(built_headers_configure)
 include $(top_srcdir)/common/gst-glib-gen.mak
 
 if HAVE_INTROSPECTION
-BUILT_GIRSOURCES = GstPbutils-@GST_MAJORMINOR@.gir
+BUILT_GIRSOURCES = GstPbutils-@GST_API_VERSION@.gir
 
-gir_headers=$(patsubst %,$(srcdir)/%, $(libgstpbutils_@GST_MAJORMINOR@include_HEADERS))
-gir_headers+=$(patsubst %,$(builddir)/%, $(nodist_libgstpbutils_@GST_MAJORMINOR@include_HEADERS))
-gir_sources=$(patsubst %,$(srcdir)/%, $(libgstpbutils_@GST_MAJORMINOR@_la_SOURCES))
-gir_sources+=$(patsubst %,$(builddir)/%, $(nodist_libgstpbutils_@GST_MAJORMINOR@_la_SOURCES))
-gir_cincludes=$(patsubst %,--c-include='gst/pbutils/%',$(libgstpbutils_@GST_MAJORMINOR@include_HEADERS))
-gir_cincludes+=$(patsubst %,--c-include='gst/pbutils/%',$(nodist_libgstpbutils_@GST_MAJORMINOR@include_HEADERS))
+gir_headers=$(patsubst %,$(srcdir)/%, $(libgstpbutils_@GST_API_VERSION@include_HEADERS))
+gir_headers+=$(patsubst %,$(builddir)/%, $(nodist_libgstpbutils_@GST_API_VERSION@include_HEADERS))
+gir_sources=$(patsubst %,$(srcdir)/%, $(libgstpbutils_@GST_API_VERSION@_la_SOURCES))
+gir_sources+=$(patsubst %,$(builddir)/%, $(nodist_libgstpbutils_@GST_API_VERSION@_la_SOURCES))
+gir_cincludes=$(patsubst %,--c-include='gst/pbutils/%',$(libgstpbutils_@GST_API_VERSION@include_HEADERS))
+gir_cincludes+=$(patsubst %,--c-include='gst/pbutils/%',$(nodist_libgstpbutils_@GST_API_VERSION@include_HEADERS))
 
-GstPbutils-@GST_MAJORMINOR@.gir: $(INTROSPECTION_SCANNER) libgstpbutils-@GST_MAJORMINOR@.la
+GstPbutils-@GST_API_VERSION@.gir: $(INTROSPECTION_SCANNER) libgstpbutils-@GST_API_VERSION@.la
 	$(AM_V_GEN)PKG_CONFIG_PATH="$(GST_PKG_CONFIG_PATH)" \
 		GST_PLUGIN_SYSTEM_PATH="" GST_PLUGIN_PATH="" GST_REGISTRY_UPDATE=no \
 		$(INTROSPECTION_SCANNER) -v --namespace GstPbutils \
-		--nsversion=@GST_MAJORMINOR@ \
+		--nsversion=@GST_API_VERSION@ \
 		--strip-prefix=Gst \
 		--warn-all \
 		$(gir_cincludes) \
 		-DGST_USE_UNSTABLE_API \
 		-I$(top_srcdir)/gst-libs \
 		-I$(top_builddir)/gst-libs \
-		--add-include-path=`$(PKG_CONFIG) --variable=girdir gstreamer-@GST_MAJORMINOR@` \
-		--library=libgstpbutils-@GST_MAJORMINOR@.la \
-		--library-path=`$(PKG_CONFIG) --variable=libdir gstreamer-@GST_MAJORMINOR@` \
-		--library=gstreamer-@GST_MAJORMINOR@ \
-		--include=Gst-@GST_MAJORMINOR@ \
+		--add-include-path=`$(PKG_CONFIG) --variable=girdir gstreamer-@GST_API_VERSION@` \
+		--library=libgstpbutils-@GST_API_VERSION@.la \
+		--library-path=`$(PKG_CONFIG) --variable=libdir gstreamer-@GST_API_VERSION@` \
+		--library=gstreamer-@GST_API_VERSION@ \
+		--include=Gst-@GST_API_VERSION@ \
 		--libtool="$(top_builddir)/libtool" \
-		--pkg gstreamer-@GST_MAJORMINOR@ \
-		--pkg-export gstreamer-pbutils-@GST_MAJORMINOR@ \
+		--pkg gstreamer-@GST_API_VERSION@ \
+		--pkg-export gstreamer-pbutils-@GST_API_VERSION@ \
 		--add-init-section="gst_init(NULL,NULL);" \
 		--output $@ \
 		$(gir_headers) \
@@ -113,24 +113,24 @@ typelibs_DATA = $(BUILT_GIRSOURCES:.gir=.typelib)
 		$(INTROSPECTION_COMPILER) \
 		--includedir=$(srcdir) \
 		--includedir=$(builddir) \
-		--includedir=`$(PKG_CONFIG) --variable=girdir gstreamer-@GST_MAJORMINOR@` \
+		--includedir=`$(PKG_CONFIG) --variable=girdir gstreamer-@GST_API_VERSION@` \
 		$(INTROSPECTION_COMPILER_OPTS) $< -o $(@F)
 
 CLEANFILES += $(BUILT_GIRSOURCES) $(typelibs_DATA)
 endif
 
 Android.mk: Makefile.am $(BUILT_SOURCES)
-	androgenizer -:PROJECT libgstpbutils -:SHARED libgstpbutils-@GST_MAJORMINOR@ \
+	androgenizer -:PROJECT libgstpbutils -:SHARED libgstpbutils-@GST_API_VERSION@ \
 	 -:TAGS eng debug \
          -:REL_TOP $(top_srcdir) -:ABS_TOP $(abs_top_srcdir) \
-	 -:SOURCES $(libgstpbutils_@GST_MAJORMINOR@_la_SOURCES) \
-	           $(nodist_libgstpbutils_@GST_MAJORMINOR@_la_SOURCES) \
-	 -:CFLAGS $(DEFS) $(DEFAULT_INCLUDES) $(libgstpbutils_@GST_MAJORMINOR@_la_CFLAGS) \
-	 -:LDFLAGS $(libgstpbutils_@GST_MAJORMINOR@_la_LDFLAGS) \
-	           $(libgstpbutils_@GST_MAJORMINOR@_la_LIBADD) \
+	 -:SOURCES $(libgstpbutils_@GST_API_VERSION@_la_SOURCES) \
+	           $(nodist_libgstpbutils_@GST_API_VERSION@_la_SOURCES) \
+	 -:CFLAGS $(DEFS) $(DEFAULT_INCLUDES) $(libgstpbutils_@GST_API_VERSION@_la_CFLAGS) \
+	 -:LDFLAGS $(libgstpbutils_@GST_API_VERSION@_la_LDFLAGS) \
+	           $(libgstpbutils_@GST_API_VERSION@_la_LIBADD) \
 	           -ldl \
-	 -:HEADER_TARGET gstreamer-@GST_MAJORMINOR@/gst/pbutils \
-	 -:HEADERS $(libgstpbutils_@GST_MAJORMINOR@include_HEADERS) \
-	           $(nodist_libgstpbutils_@GST_MAJORMINOR@include_HEADERS) \
+	 -:HEADER_TARGET gstreamer-@GST_API_VERSION@/gst/pbutils \
+	 -:HEADERS $(libgstpbutils_@GST_API_VERSION@include_HEADERS) \
+	           $(nodist_libgstpbutils_@GST_API_VERSION@include_HEADERS) \
 	 -:PASSTHROUGH LOCAL_ARM_MODE:=arm \
 	> $@

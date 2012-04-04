@@ -6,9 +6,9 @@
 ]>
 <book id="index" xmlns:xi="http://www.w3.org/2003/XInclude">
   <bookinfo>
-    <title>GStreamer Base Plugins &GST_MAJORMINOR; Library Reference Manual</title>
+    <title>GStreamer Base Plugins &GST_API_VERSION; Library Reference Manual</title>
     <releaseinfo>
-      for GStreamer Base Library &GST_MAJORMINOR; (&GST_VERSION;)
+      for GStreamer Base Library &GST_API_VERSION; (&GST_VERSION;)
       <ulink role="online-location" url="http://gstreamer.freedesktop.org/data/doc/gstreamer/head/gst-plugins-base-libs/html/">http://gstreamer.freedesktop.org/data/doc/gstreamer/head/gst-plugins-base-libs/html/</ulink>.
     </releaseinfo>
   </bookinfo>
@@ -25,8 +25,8 @@
       <title>App Library</title>
       <para>
         This library should be linked to by getting cflags and libs from
-        <filename>gstreamer-plugins-base-&GST_MAJORMINOR;.pc</filename> and adding
-        <filename>-lgstapp-&GST_MAJORMINOR;</filename> to the library flags.
+        <filename>gstreamer-plugins-base-&GST_API_VERSION;.pc</filename> and adding
+        <filename>-lgstapp-&GST_API_VERSION;</filename> to the library flags.
       </para>
       <para>
       To use it the functionality, insert an appsrc or appsink element into a pipeline and call the appropriate functions on the element.
@@ -39,8 +39,8 @@
       <title>Audio Library</title>
       <para>
         This library should be linked to by getting cflags and libs from
-        <filename>gstreamer-plugins-base-&GST_MAJORMINOR;.pc</filename> and adding
-        <filename>-lgstaudio-&GST_MAJORMINOR;</filename> to the library flags.
+        <filename>gstreamer-plugins-base-&GST_API_VERSION;.pc</filename> and adding
+        <filename>-lgstaudio-&GST_API_VERSION;</filename> to the library flags.
       </para>
       <xi:include href="xml/gstaudio.xml" />
       <xi:include href="xml/gstaudiocdsrc.xml" />
@@ -71,8 +71,8 @@
       </para>
       <para>
         This library should be linked to by getting cflags and libs from
-        <filename>gstreamer-plugins-base-&GST_MAJORMINOR;.pc</filename> and adding
-        <filename>-lgstfft-&GST_MAJORMINOR;</filename> to the library flags.
+        <filename>gstreamer-plugins-base-&GST_API_VERSION;.pc</filename> and adding
+        <filename>-lgstfft-&GST_API_VERSION;</filename> to the library flags.
       </para>
       <xi:include href="xml/gstfft.xml" />
       <xi:include href="xml/gstffts16.xml" />
@@ -85,8 +85,8 @@
       <title>Interfaces Library</title>
       <para>
         This library should be linked to by getting cflags and libs from
-        <filename>gstreamer-plugins-base-&GST_MAJORMINOR;.pc</filename> and adding
-        <filename>-lgstinterfaces-&GST_MAJORMINOR;</filename> to the library flags.
+        <filename>gstreamer-plugins-base-&GST_API_VERSION;.pc</filename> and adding
+        <filename>-lgstinterfaces-&GST_API_VERSION;</filename> to the library flags.
       </para>
       <xi:include href="xml/gstnavigation.xml" />
       <xi:include href="xml/gsttuner.xml" />
@@ -98,8 +98,8 @@
       <title>Riff Media Library</title>
       <para>
         This library should be linked to by getting cflags and libs from
-        <filename>gstreamer-plugins-base-&GST_MAJORMINOR;.pc</filename> and adding
-        <filename>-lgstriff-&GST_MAJORMINOR;</filename> to the library flags.
+        <filename>gstreamer-plugins-base-&GST_API_VERSION;.pc</filename> and adding
+        <filename>-lgstriff-&GST_API_VERSION;</filename> to the library flags.
       </para>
       <xi:include href="xml/gstriff.xml" />
     </chapter>
@@ -108,8 +108,8 @@
       <title>RTP Library</title>
       <para>
         This library should be linked to by getting cflags and libs from
-        <filename>gstreamer-plugins-base-&GST_MAJORMINOR;.pc</filename> and adding
-        <filename>-lgstrtp-&GST_MAJORMINOR;</filename> to the library flags.
+        <filename>gstreamer-plugins-base-&GST_API_VERSION;.pc</filename> and adding
+        <filename>-lgstrtp-&GST_API_VERSION;</filename> to the library flags.
       </para>
       <xi:include href="xml/gstrtpbaseaudiopayload.xml" />
       <xi:include href="xml/gstrtpbasedepayload.xml" />
@@ -123,8 +123,8 @@
       <title>RTSP Library</title>
       <para>
         This library should be linked to by getting cflags and libs from
-        <filename>gstreamer-plugins-base-&GST_MAJORMINOR;.pc</filename> and adding
-        <filename>-lgstrtsp-&GST_MAJORMINOR;</filename> to the library flags.
+        <filename>gstreamer-plugins-base-&GST_API_VERSION;.pc</filename> and adding
+        <filename>-lgstrtsp-&GST_API_VERSION;</filename> to the library flags.
       </para>
       <xi:include href="xml/gstrtspconnection.xml" />
       <xi:include href="xml/gstrtspdefs.xml" />
@@ -139,8 +139,8 @@
       <title>SDP Library</title>
       <para>
         This library should be linked to by getting cflags and libs from
-        <filename>gstreamer-plugins-base-&GST_MAJORMINOR;.pc</filename> and adding
-        <filename>-lgstsdp-&GST_MAJORMINOR;</filename> to the library flags.
+        <filename>gstreamer-plugins-base-&GST_API_VERSION;.pc</filename> and adding
+        <filename>-lgstsdp-&GST_API_VERSION;</filename> to the library flags.
       </para>
       <xi:include href="xml/gstsdpmessage.xml" />
     </chapter>
@@ -149,8 +149,8 @@
       <title>Tag Support Library</title>
       <para>
         This library should be linked to by getting cflags and libs from
-        <filename>gstreamer-plugins-base-&GST_MAJORMINOR;.pc</filename> and adding
-        <filename>-lgsttag-&GST_MAJORMINOR;</filename> to the library flags.
+        <filename>gstreamer-plugins-base-&GST_API_VERSION;.pc</filename> and adding
+        <filename>-lgsttag-&GST_API_VERSION;</filename> to the library flags.
       </para>
       <xi:include href="xml/gsttag.xml" />
       <xi:include href="xml/gsttagvorbis.xml" />
@@ -168,8 +168,8 @@
       <title>Base Utils Library</title>
       <para>
         This library should be linked to by getting cflags and libs from
-        <filename>gstreamer-plugins-base-&GST_MAJORMINOR;.pc</filename> and adding
-        <filename>-lgstpbutils-&GST_MAJORMINOR;</filename> to the library
+        <filename>gstreamer-plugins-base-&GST_API_VERSION;.pc</filename> and adding
+        <filename>-lgstpbutils-&GST_API_VERSION;</filename> to the library
         flags.
       </para>
       <xi:include href="xml/gstpbutils.xml" />
@@ -186,8 +186,8 @@
       <title>Video Library</title>
       <para>
         This library should be linked to by getting cflags and libs from
-        <filename>gstreamer-plugins-base-&GST_MAJORMINOR;.pc</filename> and adding
-        <filename>-lgstvideo-&GST_MAJORMINOR;</filename> to the library flags.
+        <filename>gstreamer-plugins-base-&GST_API_VERSION;.pc</filename> and adding
+        <filename>-lgstvideo-&GST_API_VERSION;</filename> to the library flags.
       </para>
       <xi:include href="xml/gstvideo.xml" />
       <xi:include href="xml/gstvideooverlaycomposition.xml" />

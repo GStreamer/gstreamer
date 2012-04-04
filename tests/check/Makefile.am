@@ -183,15 +183,15 @@ libs_libsabi_CFLAGS = \
 	$(AM_CFLAGS)
 
 libs_libsabi_LDADD = \
-	$(top_builddir)/gst-libs/gst/app/libgstapp-@GST_MAJORMINOR@.la \
-	$(top_builddir)/gst-libs/gst/audio/libgstaudio-@GST_MAJORMINOR@.la \
-	$(top_builddir)/gst-libs/gst/fft/libgstfft-@GST_MAJORMINOR@.la \
-	$(top_builddir)/gst-libs/gst/interfaces/libgstinterfaces-@GST_MAJORMINOR@.la \
-	$(top_builddir)/gst-libs/gst/pbutils/libgstpbutils-@GST_MAJORMINOR@.la \
-	$(top_builddir)/gst-libs/gst/rtp/libgstrtp-@GST_MAJORMINOR@.la \
-	$(top_builddir)/gst-libs/gst/rtsp/libgstrtsp-@GST_MAJORMINOR@.la \
-	$(top_builddir)/gst-libs/gst/tag/libgsttag-@GST_MAJORMINOR@.la \
-	$(top_builddir)/gst-libs/gst/video/libgstvideo-@GST_MAJORMINOR@.la \
+	$(top_builddir)/gst-libs/gst/app/libgstapp-@GST_API_VERSION@.la \
+	$(top_builddir)/gst-libs/gst/audio/libgstaudio-@GST_API_VERSION@.la \
+	$(top_builddir)/gst-libs/gst/fft/libgstfft-@GST_API_VERSION@.la \
+	$(top_builddir)/gst-libs/gst/interfaces/libgstinterfaces-@GST_API_VERSION@.la \
+	$(top_builddir)/gst-libs/gst/pbutils/libgstpbutils-@GST_API_VERSION@.la \
+	$(top_builddir)/gst-libs/gst/rtp/libgstrtp-@GST_API_VERSION@.la \
+	$(top_builddir)/gst-libs/gst/rtsp/libgstrtsp-@GST_API_VERSION@.la \
+	$(top_builddir)/gst-libs/gst/tag/libgsttag-@GST_API_VERSION@.la \
+	$(top_builddir)/gst-libs/gst/video/libgstvideo-@GST_API_VERSION@.la \
 	$(GST_BASE_LIBS) \
 	$(LDADD)
 
@@ -201,8 +201,8 @@ libs_audio_CFLAGS = \
 	$(AM_CFLAGS)
 
 libs_audio_LDADD = \
-	$(top_builddir)/gst-libs/gst/audio/libgstaudio-@GST_MAJORMINOR@.la \
-	$(top_builddir)/gst-libs/gst/interfaces/libgstinterfaces-@GST_MAJORMINOR@.la \
+	$(top_builddir)/gst-libs/gst/audio/libgstaudio-@GST_API_VERSION@.la \
+	$(top_builddir)/gst-libs/gst/interfaces/libgstinterfaces-@GST_API_VERSION@.la \
 	$(GST_BASE_LIBS) \
 	$(LDADD)
 
@@ -212,8 +212,8 @@ libs_audiocdsrc_CFLAGS = \
 	$(AM_CFLAGS)
 
 libs_audiocdsrc_LDADD = \
-	$(top_builddir)/gst-libs/gst/audio/libgstaudio-@GST_MAJORMINOR@.la \
-	$(top_builddir)/gst-libs/gst/tag/libgsttag-@GST_MAJORMINOR@.la \
+	$(top_builddir)/gst-libs/gst/audio/libgstaudio-@GST_API_VERSION@.la \
+	$(top_builddir)/gst-libs/gst/tag/libgsttag-@GST_API_VERSION@.la \
 	$(GST_BASE_LIBS) \
 	$(LDADD)
 
@@ -222,7 +222,7 @@ libs_discoverer_CFLAGS = \
 	$(AM_CFLAGS) \
 	-DGST_TEST_FILE="\"$(abs_top_srcdir)/tests/files/partialframe.mjpeg\""
 libs_discoverer_LDADD = \
-	$(top_builddir)/gst-libs/gst/pbutils/libgstpbutils-@GST_MAJORMINOR@.la \
+	$(top_builddir)/gst-libs/gst/pbutils/libgstpbutils-@GST_API_VERSION@.la \
 	$(GST_BASE_LIBS) $(LDADD)
 
 libs_fft_CFLAGS = \
@@ -231,7 +231,7 @@ libs_fft_CFLAGS = \
 	$(AM_CFLAGS)
 
 libs_fft_LDADD = \
-	$(top_builddir)/gst-libs/gst/fft/libgstfft-@GST_MAJORMINOR@.la \
+	$(top_builddir)/gst-libs/gst/fft/libgstfft-@GST_API_VERSION@.la \
 	$(GST_BASE_LIBS) \
 	$(LDADD)
 
@@ -241,7 +241,7 @@ libs_mixer_CFLAGS = \
         $(AM_CFLAGS)
 
 libs_mixer_LDADD = \
-	$(top_builddir)/gst-libs/gst/audio/libgstaudio-@GST_MAJORMINOR@.la \
+	$(top_builddir)/gst-libs/gst/audio/libgstaudio-@GST_API_VERSION@.la \
         $(GST_BASE_LIBS) \
         $(LDADD)
 
@@ -251,7 +251,7 @@ libs_navigation_CFLAGS = \
         $(AM_CFLAGS)
 
 libs_navigation_LDADD = \
-	$(top_builddir)/gst-libs/gst/interfaces/libgstinterfaces-@GST_MAJORMINOR@.la \
+	$(top_builddir)/gst-libs/gst/interfaces/libgstinterfaces-@GST_API_VERSION@.la \
         $(GST_BASE_LIBS) \
         $(LDADD)
 
@@ -259,14 +259,14 @@ libs_rtp_CFLAGS = \
 	$(GST_PLUGINS_BASE_CFLAGS) \
 	$(AM_CFLAGS)
 libs_rtp_LDADD = \
-	$(top_builddir)/gst-libs/gst/rtp/libgstrtp-@GST_MAJORMINOR@.la \
+	$(top_builddir)/gst-libs/gst/rtp/libgstrtp-@GST_API_VERSION@.la \
 	$(GST_BASE_LIBS) $(LDADD)
 
 libs_rtsp_CFLAGS = \
 	$(GST_PLUGINS_BASE_CFLAGS) \
 	$(AM_CFLAGS)
 libs_rtsp_LDADD = \
-	$(top_builddir)/gst-libs/gst/rtsp/libgstrtsp-@GST_MAJORMINOR@.la \
+	$(top_builddir)/gst-libs/gst/rtsp/libgstrtsp-@GST_API_VERSION@.la \
 	$(GST_BASE_LIBS) $(LDADD)
 
 libs_tag_CFLAGS = \
@@ -274,22 +274,22 @@ libs_tag_CFLAGS = \
 	$(GST_BASE_CFLAGS) \
 	$(AM_CFLAGS)
 libs_tag_LDADD = \
-	$(top_builddir)/gst-libs/gst/tag/libgsttag-@GST_MAJORMINOR@.la \
+	$(top_builddir)/gst-libs/gst/tag/libgsttag-@GST_API_VERSION@.la \
 	$(GST_BASE_LIBS) $(LDADD)
 
 libs_pbutils_CFLAGS = \
 	$(GST_PLUGINS_BASE_CFLAGS) \
 	$(AM_CFLAGS)
 libs_pbutils_LDADD = \
-	$(top_builddir)/gst-libs/gst/pbutils/libgstpbutils-@GST_MAJORMINOR@.la \
-	$(top_builddir)/gst-libs/gst/video/libgstvideo-@GST_MAJORMINOR@.la \
+	$(top_builddir)/gst-libs/gst/pbutils/libgstpbutils-@GST_API_VERSION@.la \
+	$(top_builddir)/gst-libs/gst/video/libgstvideo-@GST_API_VERSION@.la \
 	$(GST_BASE_LIBS) $(LDADD)
 
 libs_profile_CFLAGS = \
 	$(GST_PLUGINS_BASE_CFLAGS) \
 	$(AM_CFLAGS)
 libs_profile_LDADD = \
-	$(top_builddir)/gst-libs/gst/pbutils/libgstpbutils-@GST_MAJORMINOR@.la $(LDADD)
+	$(top_builddir)/gst-libs/gst/pbutils/libgstpbutils-@GST_API_VERSION@.la $(LDADD)
 
 libs_xmpwriter_CFLAGS = \
 	$(GST_PLUGINS_BASE_CFLAGS) \
@@ -297,7 +297,7 @@ libs_xmpwriter_CFLAGS = \
         $(AM_CFLAGS)
 
 libs_xmpwriter_LDADD = \
-	$(top_builddir)/gst-libs/gst/tag/libgsttag-@GST_MAJORMINOR@.la \
+	$(top_builddir)/gst-libs/gst/tag/libgsttag-@GST_API_VERSION@.la \
         $(GST_BASE_LIBS) \
         $(LDADD)
 
@@ -309,7 +309,7 @@ elements_appsink_CFLAGS = \
 	$(AM_CFLAGS)
 
 elements_appsink_LDADD = \
-	$(top_builddir)/gst-libs/gst/app/libgstapp-@GST_MAJORMINOR@.la \
+	$(top_builddir)/gst-libs/gst/app/libgstapp-@GST_API_VERSION@.la \
 	$(LDADD)
 
 elements_appsrc_CFLAGS = \
@@ -317,7 +317,7 @@ elements_appsrc_CFLAGS = \
 	$(AM_CFLAGS)
 
 elements_appsrc_LDADD = \
-	$(top_builddir)/gst-libs/gst/app/libgstapp-@GST_MAJORMINOR@.la \
+	$(top_builddir)/gst-libs/gst/app/libgstapp-@GST_API_VERSION@.la \
 	$(LDADD)
 
 elements_alsa_CFLAGS = \
@@ -325,8 +325,8 @@ elements_alsa_CFLAGS = \
 	$(AM_CFLAGS)
 
 elements_alsa_LDADD = \
-	$(top_builddir)/gst-libs/gst/interfaces/libgstinterfaces-@GST_MAJORMINOR@.la \
-	$(top_builddir)/gst-libs/gst/audio/libgstaudio-@GST_MAJORMINOR@.la \
+	$(top_builddir)/gst-libs/gst/interfaces/libgstinterfaces-@GST_API_VERSION@.la \
+	$(top_builddir)/gst-libs/gst/audio/libgstaudio-@GST_API_VERSION@.la \
 	$(LDADD)
 
 elements_audioconvert_CFLAGS = \
@@ -335,14 +335,14 @@ elements_audioconvert_CFLAGS = \
 	$(AM_CFLAGS)
 
 elements_audioconvert_LDADD = \
-	$(top_builddir)/gst-libs/gst/audio/libgstaudio-@GST_MAJORMINOR@.la \
-	$(top_builddir)/gst-libs/gst/interfaces/libgstinterfaces-@GST_MAJORMINOR@.la \
+	$(top_builddir)/gst-libs/gst/audio/libgstaudio-@GST_API_VERSION@.la \
+	$(top_builddir)/gst-libs/gst/interfaces/libgstinterfaces-@GST_API_VERSION@.la \
 	$(GST_BASE_LIBS) \
 	$(LDADD)
 
 elements_audiorate_LDADD = \
-	$(top_builddir)/gst-libs/gst/audio/libgstaudio-@GST_MAJORMINOR@.la \
-	$(top_builddir)/gst-libs/gst/interfaces/libgstinterfaces-@GST_MAJORMINOR@.la \
+	$(top_builddir)/gst-libs/gst/audio/libgstaudio-@GST_API_VERSION@.la \
+	$(top_builddir)/gst-libs/gst/interfaces/libgstinterfaces-@GST_API_VERSION@.la \
 	$(GST_BASE_LIBS) \
 	$(LDADD)
 elements_audiorate_CFLAGS = $(GST_PLUGINS_BASE_CFLAGS) $(CFLAGS) $(AM_CFLAGS)
@@ -356,13 +356,13 @@ elements_gdppay_LDADD = $(LDADD)
 elements_playbin_LDADD = $(GST_BASE_LIBS) $(LDADD)
 elements_playbin_CFLAGS = $(GST_BASE_CFLAGS) $(AM_CFLAGS)
 
-elements_playbin_compressed_LDADD = $(top_builddir)/gst-libs/gst/audio/libgstaudio-@GST_MAJORMINOR@.la $(GST_BASE_LIBS) $(LDADD)
+elements_playbin_compressed_LDADD = $(top_builddir)/gst-libs/gst/audio/libgstaudio-@GST_API_VERSION@.la $(GST_BASE_LIBS) $(LDADD)
 elements_playbin_compressed_CFLAGS = $(GST_PLUGINS_BASE_CFLAGS) $(GST_BASE_CFLAGS) $(AM_CFLAGS)
 
 elements_decodebin_LDADD = $(GST_BASE_LIBS) $(LDADD)
 elements_decodebin_CFLAGS = $(GST_BASE_CFLAGS) $(AM_CFLAGS)
 
-elements_encodebin_LDADD = $(top_builddir)/gst-libs/gst/pbutils/libgstpbutils-@GST_MAJORMINOR@.la $(GST_BASE_LIBS) $(LDADD)
+elements_encodebin_LDADD = $(top_builddir)/gst-libs/gst/pbutils/libgstpbutils-@GST_API_VERSION@.la $(GST_BASE_LIBS) $(LDADD)
 elements_encodebin_CFLAGS = $(GST_PLUGINS_BASE_CFLAGS) $(GST_BASE_CFLAGS) $(AM_CFLAGS)
 
 elements_subparse_LDADD =  $(LDADD)
@@ -374,9 +374,9 @@ elements_audioresample_CFLAGS = \
 	$(AM_CFLAGS)
 
 elements_audioresample_LDADD = \
-	$(top_builddir)/gst-libs/gst/fft/libgstfft-@GST_MAJORMINOR@.la \
-	$(top_builddir)/gst-libs/gst/audio/libgstaudio-@GST_MAJORMINOR@.la \
-	$(top_builddir)/gst-libs/gst/interfaces/libgstinterfaces-@GST_MAJORMINOR@.la \
+	$(top_builddir)/gst-libs/gst/fft/libgstfft-@GST_API_VERSION@.la \
+	$(top_builddir)/gst-libs/gst/audio/libgstaudio-@GST_API_VERSION@.la \
+	$(top_builddir)/gst-libs/gst/interfaces/libgstinterfaces-@GST_API_VERSION@.la \
 	$(GST_BASE_LIBS) \
 	$(LDADD)
 
@@ -384,7 +384,7 @@ elements_textoverlay_LDADD = $(GST_BASE_LIBS) $(LDADD)
 elements_textoverlay_CFLAGS = $(GST_BASE_CFLAGS) $(AM_CFLAGS)
 
 elements_volume_LDADD = \
-	$(top_builddir)/gst-libs/gst/audio/libgstaudio-@GST_MAJORMINOR@.la \
+	$(top_builddir)/gst-libs/gst/audio/libgstaudio-@GST_API_VERSION@.la \
 	$(GST_CONTROLLER_LIBS) \
 	$(GST_BASE_LIBS) \
 	$(LDADD)
@@ -422,7 +422,7 @@ elements_videoscale_CFLAGS = \
 	$(GST_BASE_CFLAGS) \
 	$(AM_CFLAGS)
 elements_videoscale_LDADD = \
-	$(top_builddir)/gst-libs/gst/video/libgstvideo-@GST_MAJORMINOR@.la \
+	$(top_builddir)/gst-libs/gst/video/libgstvideo-@GST_API_VERSION@.la \
 	$(GST_BASE_LIBS) $(LDADD)
 
 gst_typefindfunctions_CFLAGS = $(GST_BASE_CFLAGS) $(AM_CFLAGS)
@@ -434,7 +434,7 @@ libs_video_CFLAGS = \
 	$(AM_CFLAGS)
 
 libs_video_LDADD = \
-	$(top_builddir)/gst-libs/gst/video/libgstvideo-@GST_MAJORMINOR@.la \
+	$(top_builddir)/gst-libs/gst/video/libgstvideo-@GST_API_VERSION@.la \
 	$(GST_BASE_LIBS) \
 	$(LDADD)
 
@@ -467,8 +467,8 @@ pipelines_simple_launch_lines_CFLAGS = \
 	$(AM_CFLAGS)
 
 pipelines_simple_launch_lines_LDADD = \
-	$(top_builddir)/gst-libs/gst/audio/libgstaudio-@GST_MAJORMINOR@.la \
-	$(top_builddir)/gst-libs/gst/interfaces/libgstinterfaces-@GST_MAJORMINOR@.la \
+	$(top_builddir)/gst-libs/gst/audio/libgstaudio-@GST_API_VERSION@.la \
+	$(top_builddir)/gst-libs/gst/interfaces/libgstinterfaces-@GST_API_VERSION@.la \
 	$(GST_BASE_LIBS) \
 	$(LDADD)
 

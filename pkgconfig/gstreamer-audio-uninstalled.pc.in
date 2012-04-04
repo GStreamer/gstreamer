@@ -10,7 +10,7 @@ typelibdir=@abs_top_builddir@/gst-libs/gst/audio
 Name: GStreamer Audio Library, Uninstalled
 Description: Audio helper functions and base classes, uninstalled
 Version: @VERSION@
-Requires: gstreamer-@GST_MAJORMINOR@ gstreamer-base-@GST_MAJORMINOR@ gstreamer-interfaces-@GST_MAJORMINOR@
-Libs: @abs_top_builddir@/gst-libs/gst/audio/libgstaudio-@GST_MAJORMINOR@.la
+Requires: gstreamer-@GST_API_VERSION@ gstreamer-base-@GST_API_VERSION@ gstreamer-interfaces-@GST_API_VERSION@
+Libs: @abs_top_builddir@/gst-libs/gst/audio/libgstaudio-@GST_API_VERSION@.la
 Cflags: -I@abs_top_srcdir@/gst-libs -I@abs_top_builddir@/gst-libs
 

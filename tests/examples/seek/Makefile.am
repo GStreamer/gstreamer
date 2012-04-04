@@ -11,8 +11,8 @@ examples = $(GTK_EXAMPLES) stepping stepping2
 noinst_PROGRAMS = $(examples)
 
 LDADD = \
-	$(top_builddir)/gst-libs/gst/video/libgstvideo-@GST_MAJORMINOR@.la \
-	$(top_builddir)/gst-libs/gst/interfaces/libgstinterfaces-@GST_MAJORMINOR@.la \
+	$(top_builddir)/gst-libs/gst/video/libgstvideo-@GST_API_VERSION@.la \
+	$(top_builddir)/gst-libs/gst/interfaces/libgstinterfaces-@GST_API_VERSION@.la \
 	$(GST_LIBS) $(GTK_LIBS) $(LIBM)
 
 AM_CFLAGS = -I$(top_builddir)/gst-libs $(GST_PLUGINS_BASE_CFLAGS) $(GST_BASE_CFLAGS) $(GST_CFLAGS) $(GTK_CFLAGS)

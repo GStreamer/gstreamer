@@ -1,7 +1,7 @@
 LOCAL_PATH:= $(call my-dir)
 #----------------------------------------
 # include 
-gst_rtp_COPY_HEADERS_TO := gstreamer-0.11/gst/rtp
+gst_rtp_COPY_HEADERS_TO := gstreamer-1.0/gst/rtp
 gst_rtp_COPY_HEADERS := \
 	../gst-libs/gst/rtp/gstbasertpaudiopayload.h \
 	../gst-libs/gst/rtp/gstbasertpdepayload.h \
@@ -26,14 +26,14 @@ LOCAL_SRC_FILES:= $(addprefix ../,$(rtp_LOCAL_SRC_FILES))
 
 LOCAL_SHARED_LIBRARIES := \
 	libdl                   \
-    libgstreamer-0.11       \
-    libgstbase-0.11         \
+    libgstreamer-1.0       \
+    libgstbase-1.0         \
     libglib-2.0             \
     libgthread-2.0          \
     libgmodule-2.0          \
     libgobject-2.0 		
 
-LOCAL_MODULE:= libgstrtp-0.11
+LOCAL_MODULE:= libgstrtp-1.0
 LOCAL_CFLAGS := -DHAVE_CONFIG_H	-DGSTREAMER_BUILT_FOR_ANDROID \
 	$(GST_PLUGINS_BASE_CFLAGS)
 #

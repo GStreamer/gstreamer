@@ -21,8 +21,8 @@ noinst_HEADERS = \
 
 libgstogg_la_CFLAGS = $(GST_PLUGINS_BASE_CFLAGS) $(GST_BASE_CFLAGS) $(GST_CFLAGS) $(OGG_CFLAGS)
 libgstogg_la_LIBADD = \
-	$(top_builddir)/gst-libs/gst/riff/libgstriff-$(GST_MAJORMINOR).la \
-	$(top_builddir)/gst-libs/gst/tag/libgsttag-$(GST_MAJORMINOR).la \
+	$(top_builddir)/gst-libs/gst/riff/libgstriff-$(GST_API_VERSION).la \
+	$(top_builddir)/gst-libs/gst/tag/libgsttag-$(GST_API_VERSION).la \
 	$(GST_BASE_LIBS) \
 	$(GST_LIBS) \
 	$(OGG_LIBS)

@@ -1,6 +1,6 @@
-lib_LTLIBRARIES = libgstinterfaces-@GST_MAJORMINOR@.la
+lib_LTLIBRARIES = libgstinterfaces-@GST_API_VERSION@.la
 libgstinterfacesincludedir = \
-        $(includedir)/gstreamer-@GST_MAJORMINOR@/gst/interfaces
+        $(includedir)/gstreamer-@GST_API_VERSION@/gst/interfaces
 
 headers_interfaces = 		\
 	navigation.h		\
@@ -28,19 +28,19 @@ libgstinterfacesinclude_HEADERS = \
 nodist_libgstinterfacesinclude_HEADERS = \
 	interfaces-enumtypes.h
 
-libgstinterfaces_@GST_MAJORMINOR@_la_SOURCES = \
+libgstinterfaces_@GST_API_VERSION@_la_SOURCES = \
 	navigation.c		\
 	tuner.c			\
 	tunernorm.c		\
 	tunerchannel.c
 
-nodist_libgstinterfaces_@GST_MAJORMINOR@_la_SOURCES = 	\
+nodist_libgstinterfaces_@GST_API_VERSION@_la_SOURCES = 	\
 	$(built_sources)				\
 	interfaces-marshal.h
 
-libgstinterfaces_@GST_MAJORMINOR@_la_CFLAGS = $(GST_PLUGINS_BASE_CFLAGS) $(GST_CFLAGS)
-libgstinterfaces_@GST_MAJORMINOR@_la_LIBADD = $(GST_LIBS) $(LIBM) 
-libgstinterfaces_@GST_MAJORMINOR@_la_LDFLAGS = $(GST_LIB_LDFLAGS) $(GST_ALL_LDFLAGS) $(GST_LT_LDFLAGS)
+libgstinterfaces_@GST_API_VERSION@_la_CFLAGS = $(GST_PLUGINS_BASE_CFLAGS) $(GST_CFLAGS)
+libgstinterfaces_@GST_API_VERSION@_la_LIBADD = $(GST_LIBS) $(LIBM) 
+libgstinterfaces_@GST_API_VERSION@_la_LDFLAGS = $(GST_LIB_LDFLAGS) $(GST_ALL_LDFLAGS) $(GST_LT_LDFLAGS)
 
 BUILT_SOURCES = \
 	$(built_sources) \
@@ -53,32 +53,32 @@ CLEANFILES = $(BUILT_SOURCES)
 include $(top_srcdir)/common/gst-glib-gen.mak
 
 if HAVE_INTROSPECTION
-BUILT_GIRSOURCES = GstInterfaces-@GST_MAJORMINOR@.gir
+BUILT_GIRSOURCES = GstInterfaces-@GST_API_VERSION@.gir
 
 gir_headers=$(patsubst %,$(srcdir)/%, $(libgstinterfacesinclude_HEADERS))
 gir_headers+=$(patsubst %,$(builddir)/%, $(nodist_libgstinterfacesinclude_HEADERS))
-gir_sources=$(patsubst %,$(srcdir)/%, $(libgstinterfaces_@GST_MAJORMINOR@_la_SOURCES))
-gir_sources+=$(patsubst %,$(builddir)/%, $(nodist_libgstinterfaces_@GST_MAJORMINOR@_la_SOURCES))
+gir_sources=$(patsubst %,$(srcdir)/%, $(libgstinterfaces_@GST_API_VERSION@_la_SOURCES))
+gir_sources+=$(patsubst %,$(builddir)/%, $(nodist_libgstinterfaces_@GST_API_VERSION@_la_SOURCES))
 gir_cincludes=$(patsubst %,--c-include='gst/interfaces/%',$(libgstinterfacesinclude_HEADERS))
 gir_cincludes+=$(patsubst %,--c-include='gst/interfaces/%',$(nodist_libgstinterfacesinclude_HEADERS))
 
-GstInterfaces-@GST_MAJORMINOR@.gir: $(INTROSPECTION_SCANNER) libgstinterfaces-@GST_MAJORMINOR@.la
+GstInterfaces-@GST_API_VERSION@.gir: $(INTROSPECTION_SCANNER) libgstinterfaces-@GST_API_VERSION@.la
 	$(AM_V_GEN)PKG_CONFIG_PATH="$(GST_PKG_CONFIG_PATH)" \
 		GST_PLUGIN_SYSTEM_PATH="" GST_PLUGIN_PATH="" GST_REGISTRY_UPDATE=no \
 		$(INTROSPECTION_SCANNER) -v --namespace GstInterfaces \
-		--nsversion=@GST_MAJORMINOR@ \
+		--nsversion=@GST_API_VERSION@ \
 		--strip-prefix=Gst \
 		--warn-all \
 		$(gir_cincludes) \
 		-DGST_USE_UNSTABLE_API \
 		-I$(top_srcdir)/gst-libs \
 		-I$(top_builddir)/gst-libs \
-		--add-include-path=`$(PKG_CONFIG) --variable=girdir gstreamer-@GST_MAJORMINOR@` \
-		--library=libgstinterfaces-@GST_MAJORMINOR@.la \
-		--include=Gst-@GST_MAJORMINOR@ \
+		--add-include-path=`$(PKG_CONFIG) --variable=girdir gstreamer-@GST_API_VERSION@` \
+		--library=libgstinterfaces-@GST_API_VERSION@.la \
+		--include=Gst-@GST_API_VERSION@ \
 		--libtool="$(top_builddir)/libtool" \
-		--pkg gstreamer-@GST_MAJORMINOR@ \
-		--pkg-export gstreamer-interfaces-@GST_MAJORMINOR@ \
+		--pkg gstreamer-@GST_API_VERSION@ \
+		--pkg-export gstreamer-interfaces-@GST_API_VERSION@ \
 		--add-init-section="gst_init(NULL,NULL);" \
 		--output $@ \
 		$(gir_headers) \
@@ -98,23 +98,23 @@ typelibs_DATA = $(BUILT_GIRSOURCES:.gir=.typelib)
 		$(INTROSPECTION_COMPILER) \
 		--includedir=$(srcdir) \
 		--includedir=$(builddir) \
-		--includedir=`$(PKG_CONFIG) --variable=girdir gstreamer-@GST_MAJORMINOR@` \
+		--includedir=`$(PKG_CONFIG) --variable=girdir gstreamer-@GST_API_VERSION@` \
 		$(INTROSPECTION_COMPILER_OPTS) $< -o $(@F)
 
 CLEANFILES += $(BUILT_GIRSOURCES) $(typelibs_DATA)
 endif
 
 Android.mk: Makefile.am $(BUILT_SOURCES)
-	androgenizer -:PROJECT libgstinterfaces -:SHARED libgstinterfaces-@GST_MAJORMINOR@ \
+	androgenizer -:PROJECT libgstinterfaces -:SHARED libgstinterfaces-@GST_API_VERSION@ \
 	 -:TAGS eng debug \
          -:REL_TOP $(top_srcdir) -:ABS_TOP $(abs_top_srcdir) \
-	 -:SOURCES $(libgstinterfaces_@GST_MAJORMINOR@_la_SOURCES) \
-	           $(nodist_libgstinterfaces_@GST_MAJORMINOR@_la_SOURCES) \
-	 -:CFLAGS $(DEFS) $(libgstinterfaces_@GST_MAJORMINOR@_la_CFLAGS) \
-	 -:LDFLAGS $(libgstinterfaces_@GST_MAJORMINOR@_la_LDFLAGS) \
-	           $(libgstinterfaces_@GST_MAJORMINOR@_la_LIBADD) \
+	 -:SOURCES $(libgstinterfaces_@GST_API_VERSION@_la_SOURCES) \
+	           $(nodist_libgstinterfaces_@GST_API_VERSION@_la_SOURCES) \
+	 -:CFLAGS $(DEFS) $(libgstinterfaces_@GST_API_VERSION@_la_CFLAGS) \
+	 -:LDFLAGS $(libgstinterfaces_@GST_API_VERSION@_la_LDFLAGS) \
+	           $(libgstinterfaces_@GST_API_VERSION@_la_LIBADD) \
 	           -ldl \
-	 -:HEADER_TARGET gstreamer-@GST_MAJORMINOR@/gst/interfaces \
+	 -:HEADER_TARGET gstreamer-@GST_API_VERSION@/gst/interfaces \
 	 -:HEADERS $(libgstinterfacesinclude_HEADERS) \
 	           $(nodist_libgstinterfacesinclude_HEADERS) \
 	 -:PASSTHROUGH LOCAL_ARM_MODE:=arm \

@@ -10,7 +10,7 @@ typelibdir=@abs_top_builddir@/gst-libs/gst/app
 Name: GStreamer Application Library, Uninstalled
 Description: Helper functions and base classes for application integration, uninstalled
 Version: @VERSION@
-Requires: gstreamer-@GST_MAJORMINOR@ gstreamer-base-@GST_MAJORMINOR@
-Libs: @abs_top_builddir@/gst-libs/gst/app/libgstapp-@GST_MAJORMINOR@.la
+Requires: gstreamer-@GST_API_VERSION@ gstreamer-base-@GST_API_VERSION@
+Libs: @abs_top_builddir@/gst-libs/gst/app/libgstapp-@GST_API_VERSION@.la
 Cflags: -I@abs_top_srcdir@/gst-libs -I@abs_top_builddir@/gst-libs
 

@@ -20,7 +20,7 @@ libgstpango_la_CFLAGS = \
 	$(GST_CFLAGS) \
 	$(PANGO_CFLAGS)
 libgstpango_la_LIBADD = \
-	$(top_builddir)/gst-libs/gst/video/libgstvideo-$(GST_MAJORMINOR).la \
+	$(top_builddir)/gst-libs/gst/video/libgstvideo-$(GST_API_VERSION).la \
 	$(GST_BASE_LIBS) \
 	$(GST_LIBS) \
 	$(PANGO_LIBS)

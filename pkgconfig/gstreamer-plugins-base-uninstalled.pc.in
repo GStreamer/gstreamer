@@ -9,7 +9,7 @@ pluginsdir=@abs_top_builddir@
 Name: GStreamer Base Plugins Libraries, Uninstalled
 Description: Streaming media framework, base plugins libraries, uninstalled
 Version: @VERSION@
-Requires: gstreamer-@GST_MAJORMINOR@
+Requires: gstreamer-@GST_API_VERSION@
 Libs: -L@abs_top_builddir@/gst-libs/gst/audio -L@abs_top_builddir@/gst-libs/gst/fft -L@abs_top_builddir@/gst-libs/gst/interfaces -L@abs_top_builddir@/gst-libs/gst/riff -L@abs_top_builddir@/gst-libs/gst/rtp -L@abs_top_builddir@/gst-libs/gst/rtsp -L@abs_top_builddir@/gst-libs/gst/sdp -L@abs_top_builddir@/gst-libs/gst/tag -L@abs_top_builddir@/gst-libs/gst/pbutils -L@abs_top_builddir@/gst-libs/gst/video -L@abs_top_builddir@/gst-libs/gst/app
 Cflags: -I@abs_top_srcdir@/gst-libs -I@abs_top_builddir@/gst-libs
 

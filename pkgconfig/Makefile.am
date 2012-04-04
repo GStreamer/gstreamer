@@ -1,30 +1,30 @@
 ### all of the standard pc files we need to generate
 pcverfiles =  \
-	gstreamer-audio-@GST_MAJORMINOR@.pc \
-	gstreamer-app-@GST_MAJORMINOR@.pc \
-	gstreamer-fft-@GST_MAJORMINOR@.pc \
-	gstreamer-interfaces-@GST_MAJORMINOR@.pc \
-	gstreamer-pbutils-@GST_MAJORMINOR@.pc \
-	gstreamer-riff-@GST_MAJORMINOR@.pc \
-	gstreamer-rtp-@GST_MAJORMINOR@.pc \
-	gstreamer-rtsp-@GST_MAJORMINOR@.pc \
-	gstreamer-sdp-@GST_MAJORMINOR@.pc \
-	gstreamer-tag-@GST_MAJORMINOR@.pc \
-	gstreamer-video-@GST_MAJORMINOR@.pc \
-	gstreamer-plugins-base-@GST_MAJORMINOR@.pc
+	gstreamer-audio-@GST_API_VERSION@.pc \
+	gstreamer-app-@GST_API_VERSION@.pc \
+	gstreamer-fft-@GST_API_VERSION@.pc \
+	gstreamer-interfaces-@GST_API_VERSION@.pc \
+	gstreamer-pbutils-@GST_API_VERSION@.pc \
+	gstreamer-riff-@GST_API_VERSION@.pc \
+	gstreamer-rtp-@GST_API_VERSION@.pc \
+	gstreamer-rtsp-@GST_API_VERSION@.pc \
+	gstreamer-sdp-@GST_API_VERSION@.pc \
+	gstreamer-tag-@GST_API_VERSION@.pc \
+	gstreamer-video-@GST_API_VERSION@.pc \
+	gstreamer-plugins-base-@GST_API_VERSION@.pc
 pcverfiles_uninstalled = \
-	gstreamer-audio-@GST_MAJORMINOR@-uninstalled.pc \
-	gstreamer-app-@GST_MAJORMINOR@-uninstalled.pc \
-	gstreamer-fft-@GST_MAJORMINOR@-uninstalled.pc \
-	gstreamer-interfaces-@GST_MAJORMINOR@-uninstalled.pc \
-	gstreamer-pbutils-@GST_MAJORMINOR@-uninstalled.pc \
-	gstreamer-riff-@GST_MAJORMINOR@-uninstalled.pc \
-	gstreamer-rtp-@GST_MAJORMINOR@-uninstalled.pc \
-	gstreamer-rtsp-@GST_MAJORMINOR@-uninstalled.pc \
-	gstreamer-sdp-@GST_MAJORMINOR@-uninstalled.pc \
-	gstreamer-tag-@GST_MAJORMINOR@-uninstalled.pc \
-	gstreamer-video-@GST_MAJORMINOR@-uninstalled.pc \
-	gstreamer-plugins-base-@GST_MAJORMINOR@-uninstalled.pc
+	gstreamer-audio-@GST_API_VERSION@-uninstalled.pc \
+	gstreamer-app-@GST_API_VERSION@-uninstalled.pc \
+	gstreamer-fft-@GST_API_VERSION@-uninstalled.pc \
+	gstreamer-interfaces-@GST_API_VERSION@-uninstalled.pc \
+	gstreamer-pbutils-@GST_API_VERSION@-uninstalled.pc \
+	gstreamer-riff-@GST_API_VERSION@-uninstalled.pc \
+	gstreamer-rtp-@GST_API_VERSION@-uninstalled.pc \
+	gstreamer-rtsp-@GST_API_VERSION@-uninstalled.pc \
+	gstreamer-sdp-@GST_API_VERSION@-uninstalled.pc \
+	gstreamer-tag-@GST_API_VERSION@-uninstalled.pc \
+	gstreamer-video-@GST_API_VERSION@-uninstalled.pc \
+	gstreamer-plugins-base-@GST_API_VERSION@-uninstalled.pc
 
 all-local: $(pcverfiles) $(pcverfiles_uninstalled)
 
@@ -33,9 +33,9 @@ cp_verbose_ = $(cp_verbose_$(AM_DEFAULT_VERBOSITY))
 cp_verbose_0 = @echo "  CP     $@";
 
 ### how to generate versioned .pc files from .pc files in this dir
-%-@GST_MAJORMINOR@.pc: %.pc
+%-@GST_API_VERSION@.pc: %.pc
 	$(cp_verbose_0)cp $< $@
-%-@GST_MAJORMINOR@-uninstalled.pc: %-uninstalled.pc
+%-@GST_API_VERSION@-uninstalled.pc: %-uninstalled.pc
 	$(cp_verbose_0)cp $< $@
 
 pkgconfigdir = $(libdir)/pkgconfig

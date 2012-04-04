@@ -37,11 +37,12 @@ m4_ifdef([AM_SILENT_RULES],[AM_SILENT_RULES([yes])],
   [AM_DEFAULT_VERBOSITY=1
    AC_SUBST(AM_DEFAULT_VERBOSITY)])
 
-dnl our libraries and install dirs use major.minor as a version
-GST_MAJORMINOR=$PACKAGE_VERSION_MAJOR.$PACKAGE_VERSION_MINOR
-dnl we override it here if we need to for the release candidate of new series
-GST_MAJORMINOR=0.11
-AC_SUBST(GST_MAJORMINOR)
+dnl our libraries and install dirs use GST_API_VERSION in the filename
+dnl to allow side-by-side installation of different API versions
+GST_API_VERSION=1.0
+AC_SUBST(GST_API_VERSION)
+AC_DEFINE_UNQUOTED(GST_API_VERSION, "$GST_API_VERSION",
+  [GStreamer API Version])
 
 dnl CURRENT, REVISION, AGE
 dnl - library source changed -> increment REVISION
@@ -49,7 +50,7 @@ dnl - interfaces added/removed/changed -> increment CURRENT, REVISION = 0
 dnl - interfaces added -> increment AGE
 dnl - interfaces removed -> AGE = 0
 dnl sets GST_LT_LDFLAGS
-AS_LIBTOOL(GST, 28, 0, 0)
+AS_LIBTOOL(GST, 0, 0, 0)
 
 dnl FIXME: this macro doesn't actually work;
 dnl the generated libtool script has no support for the listed tags.
@@ -74,7 +75,7 @@ dnl set up gettext
 dnl the version check needs to stay here because autopoint greps for it
 AM_GNU_GETTEXT_VERSION([0.17])
 AM_GNU_GETTEXT([external])
-AG_GST_GETTEXT([gst-plugins-base-$GST_MAJORMINOR])
+AG_GST_GETTEXT([gst-plugins-base-$GST_API_VERSION])
 
 dnl *** check for arguments to configure ***
 
@@ -243,15 +244,15 @@ ORC_CHECK([0.4.11])
 
 dnl checks for gstreamer
 dnl uninstalled is selected preferentially -- see pkg-config(1)
-AG_GST_CHECK_GST($GST_MAJORMINOR, [$GST_REQ], yes)
-AG_GST_CHECK_GST_BASE($GST_MAJORMINOR, [$GST_REQ], yes)
-AG_GST_CHECK_GST_CONTROLLER($GST_MAJORMINOR, [$GST_REQ], yes)
-AG_GST_CHECK_GST_CHECK($GST_MAJORMINOR, [$GST_REQ], no)
+AG_GST_CHECK_GST($GST_API_VERSION, [$GST_REQ], yes)
+AG_GST_CHECK_GST_BASE($GST_API_VERSION, [$GST_REQ], yes)
+AG_GST_CHECK_GST_CONTROLLER($GST_API_VERSION, [$GST_REQ], yes)
+AG_GST_CHECK_GST_CHECK($GST_API_VERSION, [$GST_REQ], no)
 AM_CONDITIONAL(HAVE_GST_CHECK, test "x$HAVE_GST_CHECK" = "xyes")
 
 dnl Check for documentation xrefs
 GLIB_PREFIX="`$PKG_CONFIG --variable=prefix glib-2.0`"
-GST_PREFIX="`$PKG_CONFIG --variable=prefix gstreamer-$GST_MAJORMINOR`"
+GST_PREFIX="`$PKG_CONFIG --variable=prefix gstreamer-$GST_API_VERSION`"
 AC_SUBST(GLIB_PREFIX)
 AC_SUBST(GST_PREFIX)
 
@@ -363,7 +364,7 @@ AG_GST_DEFAULT_ELEMENTS
 dnl needed for encoding-target
 GST_DATADIR="$GST_PREFIX/share"
 AC_DEFINE_UNQUOTED(GST_DATADIR, "$GST_DATADIR", [system wide data directory])
-AC_DEFINE_UNQUOTED(GST_MAJORMINOR, "$GST_MAJORMINOR", [major/minor version])
+AC_DEFINE_UNQUOTED(GST_API_VERSION, "$GST_API_VERSION", [major/minor version])
 
 dnl behaviour of speex based audio resampler
 AC_MSG_CHECKING(which audio resample format to use for integer)
@@ -922,7 +923,7 @@ sed \
     -e 's/.* GST_DATADIR$/#define GST_DATADIR PREFIX "\\\\share"/' \
     -e 's/.* GST_LEVEL_DEFAULT$/#define GST_LEVEL_DEFAULT GST_LEVEL_ERROR/' \
     -e 's/.* GST_LICENSE$/#define GST_LICENSE "'$GST_LICENSE'"/' \
-    -e 's/.* GST_MAJORMINOR$/#define GST_MAJORMINOR "'$GST_MAJORMINOR'"/' \
+    -e 's/.* GST_API_VERSION$/#define GST_API_VERSION "'$GST_API_VERSION'"/' \
     -e "s,.* GST_PACKAGE_NAME$,#define GST_PACKAGE_NAME \"${GST_PACKAGE_NAME}\"," \
     -e 's/.* GST_PACKAGE_ORIGIN$/#define GST_PACKAGE_ORIGIN "Unknown package origin"/' \
     -e "s,.* GST_PACKAGE_RELEASE_DATETIME$,#define GST_PACKAGE_RELEASE_DATETIME \"${GST_PACKAGE_RELEASE_DATETIME}\"," \

@@ -8,8 +8,8 @@ nodist_libgstvolume_la_SOURCES = $(ORC_NODIST_SOURCES)
 libgstvolume_la_CFLAGS = $(GST_PLUGINS_BASE_CFLAGS) $(GST_BASE_CFLAGS) $(GST_CFLAGS) $(ORC_CFLAGS)
 libgstvolume_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
 libgstvolume_la_LIBADD = \
-	$(top_builddir)/gst-libs/gst/interfaces/libgstinterfaces-$(GST_MAJORMINOR).la \
-	$(top_builddir)/gst-libs/gst/audio/libgstaudio-$(GST_MAJORMINOR).la  \
+	$(top_builddir)/gst-libs/gst/interfaces/libgstinterfaces-$(GST_API_VERSION).la \
+	$(top_builddir)/gst-libs/gst/audio/libgstaudio-$(GST_API_VERSION).la  \
 	$(GST_BASE_LIBS) \
 	$(GST_LIBS) \
 	$(ORC_LIBS)

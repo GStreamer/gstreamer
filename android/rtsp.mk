@@ -1,7 +1,7 @@
 LOCAL_PATH:= $(call my-dir)
 #----------------------------------------
 # include 
-gst_rtsp_COPY_HEADERS_TO := gstreamer-0.11/gst/rtsp
+gst_rtsp_COPY_HEADERS_TO := gstreamer-1.0/gst/rtsp
 gst_rtsp_COPY_HEADERS_BASE := \
 	gst-libs/gst/rtsp/gstrtspbase64.h \
 	gst-libs/gst/rtsp/gstrtspdefs.h \
@@ -34,14 +34,14 @@ rtsp_LOCAL_SRC_FILES_BASE:= \
 LOCAL_SRC_FILES:= $(addprefix ../,$(rtsp_LOCAL_SRC_FILES_BASE))
 
 LOCAL_SHARED_LIBRARIES := \
-    libgstreamer-0.11       \
-    libgstbase-0.11         \
+    libgstreamer-1.0       \
+    libgstbase-1.0         \
     libglib-2.0             \
     libgthread-2.0          \
     libgmodule-2.0          \
     libgobject-2.0
 
-LOCAL_MODULE:= libgstrtsp-0.11
+LOCAL_MODULE:= libgstrtsp-1.0
 
 LOCAL_CFLAGS := -DHAVE_CONFIG_H -DINET_ADDRSTRLEN=16 -DGSTREAMER_BUILT_FOR_ANDROID \
 	$(GST_PLUGINS_BASE_CFLAGS)

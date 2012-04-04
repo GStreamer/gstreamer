@@ -1,39 +1,39 @@
-libgstsdpincludedir = $(includedir)/gstreamer-@GST_MAJORMINOR@/gst/sdp
+libgstsdpincludedir = $(includedir)/gstreamer-@GST_API_VERSION@/gst/sdp
 
 libgstsdpinclude_HEADERS = gstsdp.h            \
 			   gstsdpmessage.h
 
-lib_LTLIBRARIES = libgstsdp-@GST_MAJORMINOR@.la
+lib_LTLIBRARIES = libgstsdp-@GST_API_VERSION@.la
 
-libgstsdp_@GST_MAJORMINOR@_la_SOURCES = gstsdpmessage.c
+libgstsdp_@GST_API_VERSION@_la_SOURCES = gstsdpmessage.c
 
-libgstsdp_@GST_MAJORMINOR@_la_CFLAGS = $(GST_PLUGINS_BASE_CFLAGS) $(GST_BASE_CFLAGS) $(GST_CFLAGS) $(GIO_CFLAGS)
-libgstsdp_@GST_MAJORMINOR@_la_LIBADD = $(GST_LIBS) $(GIO_LIBS)
-libgstsdp_@GST_MAJORMINOR@_la_LDFLAGS = $(GST_LIB_LDFLAGS) $(GST_ALL_LDFLAGS) $(GST_LT_LDFLAGS)
+libgstsdp_@GST_API_VERSION@_la_CFLAGS = $(GST_PLUGINS_BASE_CFLAGS) $(GST_BASE_CFLAGS) $(GST_CFLAGS) $(GIO_CFLAGS)
+libgstsdp_@GST_API_VERSION@_la_LIBADD = $(GST_LIBS) $(GIO_LIBS)
+libgstsdp_@GST_API_VERSION@_la_LDFLAGS = $(GST_LIB_LDFLAGS) $(GST_ALL_LDFLAGS) $(GST_LT_LDFLAGS)
 
 if HAVE_INTROSPECTION
-BUILT_GIRSOURCES = GstSdp-@GST_MAJORMINOR@.gir
+BUILT_GIRSOURCES = GstSdp-@GST_API_VERSION@.gir
 
 gir_headers=$(patsubst %,$(srcdir)/%, $(libgstsdpinclude_HEADERS))
-gir_sources=$(patsubst %,$(srcdir)/%, $(libgstsdp_@GST_MAJORMINOR@_la_SOURCES))
+gir_sources=$(patsubst %,$(srcdir)/%, $(libgstsdp_@GST_API_VERSION@_la_SOURCES))
 gir_cincludes=$(patsubst %,--c-include='gst/sdp/%',$(libgstsdpinclude_HEADERS))
 
-GstSdp-@GST_MAJORMINOR@.gir: $(INTROSPECTION_SCANNER) libgstsdp-@GST_MAJORMINOR@.la
+GstSdp-@GST_API_VERSION@.gir: $(INTROSPECTION_SCANNER) libgstsdp-@GST_API_VERSION@.la
 	$(AM_V_GEN)PKG_CONFIG_PATH="$(GST_PKG_CONFIG_PATH)" \
 		GST_PLUGIN_SYSTEM_PATH="" GST_PLUGIN_PATH="" GST_REGISTRY_UPDATE=no \
 		$(INTROSPECTION_SCANNER) -v --namespace GstSdp \
-		--nsversion=@GST_MAJORMINOR@ \
+		--nsversion=@GST_API_VERSION@ \
 		--strip-prefix=Gst \
 		--warn-all \
 		$(gir_cincludes) \
 		-DGST_USE_UNSTABLE_API \
 		-I$(top_srcdir)/gst-libs \
-		--add-include-path=`$(PKG_CONFIG) --variable=girdir gstreamer-@GST_MAJORMINOR@` \
-		--library=libgstsdp-@GST_MAJORMINOR@.la \
-		--include=Gst-@GST_MAJORMINOR@ \
+		--add-include-path=`$(PKG_CONFIG) --variable=girdir gstreamer-@GST_API_VERSION@` \
+		--library=libgstsdp-@GST_API_VERSION@.la \
+		--include=Gst-@GST_API_VERSION@ \
 		--libtool="$(top_builddir)/libtool" \
-		--pkg gstreamer-@GST_MAJORMINOR@ \
-		--pkg-export gstreamer-sdp-@GST_MAJORMINOR@ \
+		--pkg gstreamer-@GST_API_VERSION@ \
+		--pkg-export gstreamer-sdp-@GST_API_VERSION@ \
 		--output $@ \
 		$(gir_headers) \
 		$(gir_sources)
@@ -52,22 +52,22 @@ typelibs_DATA = $(BUILT_GIRSOURCES:.gir=.typelib)
 		$(INTROSPECTION_COMPILER) \
 		--includedir=$(srcdir) \
 		--includedir=$(builddir) \
-		--includedir=`$(PKG_CONFIG) --variable=girdir gstreamer-@GST_MAJORMINOR@` \
+		--includedir=`$(PKG_CONFIG) --variable=girdir gstreamer-@GST_API_VERSION@` \
 		$(INTROSPECTION_COMPILER_OPTS) $< -o $(@F)
 
 CLEANFILES = $(BUILT_GIRSOURCES) $(typelibs_DATA)
 endif
 
 Android.mk: Makefile.am $(BUILT_SOURCES)
-	androgenizer -:PROJECT libgstsdp -:SHARED libgstsdp-@GST_MAJORMINOR@ \
+	androgenizer -:PROJECT libgstsdp -:SHARED libgstsdp-@GST_API_VERSION@ \
 	 -:TAGS eng debug \
          -:REL_TOP $(top_srcdir) -:ABS_TOP $(abs_top_srcdir) \
-	 -:SOURCES $(libgstsdp_@GST_MAJORMINOR@_la_SOURCES) \
-	 -:CFLAGS $(DEFS) $(DEFAULT_INCLUDES) $(libgstsdp_@GST_MAJORMINOR@_la_CFLAGS) \
-	 -:LDFLAGS $(libgstsdp_@GST_MAJORMINOR@_la_LDFLAGS) \
-	           $(libgstsdp_@GST_MAJORMINOR@_la_LIBADD) \
+	 -:SOURCES $(libgstsdp_@GST_API_VERSION@_la_SOURCES) \
+	 -:CFLAGS $(DEFS) $(DEFAULT_INCLUDES) $(libgstsdp_@GST_API_VERSION@_la_CFLAGS) \
+	 -:LDFLAGS $(libgstsdp_@GST_API_VERSION@_la_LDFLAGS) \
+	           $(libgstsdp_@GST_API_VERSION@_la_LIBADD) \
 	           -ldl \
-	 -:HEADER_TARGET gstreamer-@GST_MAJORMINOR@/gst/sdp \
+	 -:HEADER_TARGET gstreamer-@GST_API_VERSION@/gst/sdp \
 	 -:HEADERS $(libgstsdpinclude_HEADERS) \
 	 -:PASSTHROUGH LOCAL_ARM_MODE:=arm \
 	> $@

@@ -1,7 +1,7 @@
 LOCAL_PATH:= $(call my-dir)
 #----------------------------------------
 # include 
-gst_tag_COPY_HEADERS_TO := gstreamer-0.11/gst/tag
+gst_tag_COPY_HEADERS_TO := gstreamer-1.0/gst/tag
 gst_tag_COPY_HEADERS := \
 	../gst-libs/gst/tag/gsttagdemux.h \
 	../gst-libs/gst/tag/tag.h
@@ -22,14 +22,14 @@ tag_LOCAL_SRC_FILES:= \
 LOCAL_SRC_FILES:= $(addprefix ../,$(tag_LOCAL_SRC_FILES))
 
 LOCAL_SHARED_LIBRARIES := \
-    libgstreamer-0.11       \
-    libgstbase-0.11         \
+    libgstreamer-1.0       \
+    libgstbase-1.0         \
     libglib-2.0             \
     libgthread-2.0          \
     libgmodule-2.0          \
     libgobject-2.0
 
-LOCAL_MODULE:= libgsttag-0.11
+LOCAL_MODULE:= libgsttag-1.0
 
 LOCAL_CFLAGS := -DHAVE_CONFIG_H	-DGSTREAMER_BUILT_FOR_ANDROID \
 	$(GST_PLUGINS_BASE_CFLAGS)
