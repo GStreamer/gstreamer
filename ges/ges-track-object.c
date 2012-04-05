@@ -865,6 +865,13 @@ ges_track_object_get_track (GESTrackObject * object)
   return object->priv->track;
 }
 
+/**
+ * ges_track_object_set_timeline_object:
+ * @object: The #GESTrackObject to set the parent to
+ * @tlobj: The #GESTimelineObject, parent of @tlobj or %NULL
+ *
+ * Set the #GESTimelineObject to which @object belongs.
+ */
 void
 ges_track_object_set_timeline_object (GESTrackObject * object,
     GESTimelineObject * tlobj)
