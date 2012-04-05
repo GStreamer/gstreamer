@@ -1292,6 +1292,8 @@ gst_queue2_create_read (GstQueue2 * queue, guint64 offset, guint length,
                 "EOS hit but read %" G_GUINT64_FORMAT " bytes that we have",
                 level);
             read_length = level;
+            remaining = level;
+            length = level;
           } else {
             GST_DEBUG_OBJECT (queue,
                 "EOS hit and we don't have any requested data");
