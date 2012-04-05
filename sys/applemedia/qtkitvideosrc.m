@@ -118,7 +118,7 @@ G_DEFINE_TYPE (GstQTKitVideoSrc, gst_qtkit_video_src, GST_TYPE_PUSH_SRC);
 - (BOOL)stop;
 - (BOOL)unlock;
 - (BOOL)unlockStop;
-- (void)fixate:(GstCaps *)caps;
+- (GstCaps *)fixate:(GstCaps *)caps;
 - (BOOL)query:(GstQuery *)query;
 - (GstStateChangeReturn)changeState:(GstStateChange)transition;
 - (GstFlowReturn)create:(GstBuffer **)buf;
@@ -380,16 +380,18 @@ openFailed:
   return YES;
 }
 
-- (void)fixate:(GstCaps *)caps
+- (GstCaps *)fixate:(GstCaps *)caps
 {
   GstStructure *structure;
 
-  gst_caps_truncate (caps);
+  caps = gst_caps_truncate (caps);
   structure = gst_caps_get_structure (caps, 0);
   if (gst_structure_has_field (structure, "framerate")) {
     gst_structure_fixate_field_nearest_fraction (structure, "framerate",
         DEVICE_FPS_N, DEVICE_FPS_D);
   }
+
+  return caps;
 }
 
 - (GstStateChangeReturn)changeState:(GstStateChange)transition
@@ -517,7 +519,7 @@ static gboolean gst_qtkit_video_src_unlock (GstBaseSrc * basesrc);
 static gboolean gst_qtkit_video_src_unlock_stop (GstBaseSrc * basesrc);
 static GstFlowReturn gst_qtkit_video_src_create (GstPushSrc * pushsrc,
     GstBuffer ** buf);
-static void gst_qtkit_video_src_fixate (GstBaseSrc * basesrc, GstCaps * caps);
+static GstCaps * gst_qtkit_video_src_fixate (GstBaseSrc * basesrc, GstCaps * caps);
 
 static void
 gst_qtkit_video_src_class_init (GstQTKitVideoSrcClass * klass)
@@ -718,10 +720,14 @@ gst_qtkit_video_src_create (GstPushSrc * pushsrc, GstBuffer ** buf)
   return ret;
 }
 
-static void
+static GstCaps *
 gst_qtkit_video_src_fixate (GstBaseSrc * basesrc, GstCaps * caps)
 {
+  GstCaps *ret;
+
   OBJC_CALLOUT_BEGIN ();
-  [GST_QTKIT_VIDEO_SRC_IMPL (basesrc) fixate: caps];
+  ret = [GST_QTKIT_VIDEO_SRC_IMPL (basesrc) fixate: caps];
   OBJC_CALLOUT_END ();
+
+  return ret;
 }
