@@ -2820,5 +2820,5 @@ plugin_init (GstPlugin * plugin)
 }
 
 GST_PLUGIN_DEFINE (GST_VERSION_MAJOR, GST_VERSION_MINOR,
-    "pango", "Pango-based text rendering and overlay", plugin_init,
+    pango, "Pango-based text rendering and overlay", plugin_init,
     VERSION, GST_LICENSE, GST_PACKAGE_NAME, GST_PACKAGE_ORIGIN)
