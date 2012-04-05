@@ -1449,11 +1449,26 @@ calculate_and_push_newsegment (GstTSDemux * demux, TSDemuxStream * stream)
   }
 
   if (!demux->segment_event) {
+    gint64 start, stop, time;
+
     GST_DEBUG ("Calculating actual segment");
-    /* FIXME : Set proper values */
+
+    if (demux->segment.format == GST_FORMAT_TIME) {
+      /* if we have a TIME segment, set NS.start to the target ts so downstream
+       * can clip
+       */
+      start = demux->segment.start;
+      stop = demux->segment.stop;
+      time = demux->segment.time;
+    } else {
+      /* ...else start from the first ts/pts */
+      start = firstts;
+      stop = GST_CLOCK_TIME_NONE;
+      time = firstts;
+    }
     demux->segment_event =
-        gst_event_new_new_segment_full (FALSE, 1.0, 1.0, GST_FORMAT_TIME,
-        firstts, GST_CLOCK_TIME_NONE, firstts);
+        gst_event_new_new_segment_full (FALSE, demux->segment.rate,
+        demux->segment.applied_rate, GST_FORMAT_TIME, start, stop, time);
     GST_EVENT_SRC (demux->segment_event) = gst_object_ref (demux);
   }
 
