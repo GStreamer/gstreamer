@@ -260,7 +260,7 @@ G_BEGIN_DECLS \
 GST_PLUGIN_EXPORT GstPluginDesc gst_plugin_desc = {	\
   major,						\
   minor,						\
-  name,							\
+ #name,						        \
   (gchar *) description,				\
   init,							\
   version,						\

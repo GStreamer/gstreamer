@@ -434,7 +434,7 @@ plugin_init (GstPlugin *plugin)
 GST_PLUGIN_DEFINE (
   GST_VERSION_MAJOR,
   GST_VERSION_MINOR,
-  "my_filter",
+  my_filter,
   "My filter plugin",
   plugin_init,
   VERSION,
