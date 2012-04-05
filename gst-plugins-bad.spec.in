@@ -262,7 +262,7 @@ make ERROR_CFLAGS='' ERROR_CXXFLAGS=''
 # %{_libdir}/gstreamer-%{majorminor}/libgstinterlace.so
 # %{_libdir}/gstreamer-%{majorminor}/libgstjp2kdecimator.so
 # %{_libdir}/gstreamer-%{majorminor}/libgstlinsys.so
-%{_libdir}/gstreamer-%{majorminor}/libgstmpegtsdemux.so
+# %{_libdir}/gstreamer-%{majorminor}/libgstmpegtsdemux.so
 # %{_libdir}/gstreamer-%{majorminor}/libgstopencv.so
 # %{_libdir}/gstreamer-%{majorminor}/libgstpatchdetect.so
 %{_libdir}/gstreamer-%{majorminor}/libgstrtpvp8.so
@@ -271,8 +271,8 @@ make ERROR_CFLAGS='' ERROR_CXXFLAGS=''
 %{_libdir}/gstreamer-%{majorminor}/libgstvideoparsersbad.so
 %{_libdir}/gstreamer-%{majorminor}/libgsty4mdec.so
 # %{_libdir}/gstreamer-%{majorminor}/libgstopenal.so
-%{_libdir}/libgstbasecamerabinsrc-%{majorminor}.so.0
-%{_libdir}/libgstbasecamerabinsrc-%{majorminor}.so.0.0.0
+%{_libdir}/libgstbasecamerabinsrc-%{majorminor}.so.24
+%{_libdir}/libgstbasecamerabinsrc-%{majorminor}.so.24.0.0
 %{_libdir}/gstreamer-%{majorminor}/libgstaudiovisualizers.so
 # %{_libdir}/gstreamer-%{majorminor}/libgstfaceoverlay.so
 # %{_libdir}/gstreamer-%{majorminor}/libgstinter.so
