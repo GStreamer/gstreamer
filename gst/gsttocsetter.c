@@ -103,6 +103,8 @@ gst_toc_data_free (gpointer p)
   if (data->toc)
     gst_toc_free (data->toc);
 
+  g_mutex_clear (&data->lock);
+
   g_slice_free (GstTocData, data);
 }
 
