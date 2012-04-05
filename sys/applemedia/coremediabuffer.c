@@ -31,13 +31,26 @@ gst_core_media_meta_free (GstCoreMediaMeta * meta, GstBuffer * buf)
   g_object_unref (meta->ctx);
 }
 
+GType
+gst_core_media_meta_api_get_type (void)
+{
+  static volatile GType type;
+  static const gchar *tags[] = { "memory", NULL };
+
+  if (g_once_init_enter (&type)) {
+    GType _type = gst_meta_api_type_register ("GstCoreMediaMetaAPI", tags);
+    g_once_init_leave (&type, _type);
+  }
+  return type;
+}
+
 static const GstMetaInfo *
 gst_core_media_meta_get_info (void)
 {
   static const GstMetaInfo *core_media_meta_info = NULL;
 
   if (core_media_meta_info == NULL) {
-    core_media_meta_info = gst_meta_register ("GstCoreMediaeMeta",
+    core_media_meta_info = gst_meta_register (GST_CORE_MEDIA_META_API_TYPE,
         "GstCoreMediaMeta", sizeof (GstCoreMediaMeta),
         (GstMetaInitFunction) NULL,
         (GstMetaFreeFunction) gst_core_media_meta_free,
@@ -122,7 +135,7 @@ CVPixelBufferRef
 gst_core_media_buffer_get_pixel_buffer (GstBuffer * buf)
 {
   GstCoreMediaMeta *meta = (GstCoreMediaMeta *) gst_buffer_get_meta (buf,
-      gst_core_media_meta_get_info ());
+      GST_CORE_MEDIA_META_API_TYPE);
   g_return_val_if_fail (meta != NULL, NULL);
 
   return meta->ctx->cv->CVPixelBufferRetain (meta->pixel_buf);
