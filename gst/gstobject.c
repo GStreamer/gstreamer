@@ -375,7 +375,7 @@ gst_object_dispose (GObject * object)
     GList *node;
 
     for (node = self->control_bindings; node; node = g_list_next (node)) {
-      g_object_unref (node->data);
+      gst_object_unparent (node->data);
     }
     g_list_free (self->control_bindings);
     self->control_bindings = NULL;
