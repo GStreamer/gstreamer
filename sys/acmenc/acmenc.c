@@ -624,6 +624,6 @@ plugin_init (GstPlugin * plugin)
   return res;
 }
 
-GST_PLUGIN_DEFINE (GST_VERSION_MAJOR, GST_VERSION_MINOR, "acmenc",
+GST_PLUGIN_DEFINE (GST_VERSION_MAJOR, GST_VERSION_MINOR, acmenc,
     "ACM Encoder wrapper", plugin_init, VERSION, "LGPL", "GStreamer",
     "http://gstreamer.net/")

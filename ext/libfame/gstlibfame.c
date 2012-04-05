@@ -589,7 +589,7 @@ plugin_init (GstPlugin * plugin)
 
 GST_PLUGIN_DEFINE (GST_VERSION_MAJOR,
     GST_VERSION_MINOR,
-    "fameenc",
+    fameenc,
     "Fast Assembly MPEG Encoder",
     plugin_init,
     LIBFAME_VERSION, "LGPL", "libfame", "http://fame.sourceforge.net/")

@@ -108,6 +108,6 @@ gst_pvr2d_error_get_string (PVR2DERROR code)
 
 GST_PLUGIN_DEFINE (GST_VERSION_MAJOR,
     GST_VERSION_MINOR,
-    "pvr",
+    pvr,
     "Pvr2d based plugin",
     plugin_init, VERSION, "LGPL", "GStreamer", "http://gstreamer.net/")

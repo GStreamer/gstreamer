@@ -82,6 +82,6 @@ plugin_init (GstPlugin * plugin)
 
 GST_PLUGIN_DEFINE (GST_VERSION_MAJOR,
     GST_VERSION_MINOR,
-    "qtwrapper",
+    qtwrapper,
     "QuickTime codecs wrapper",
     plugin_init, VERSION, "LGPL", "GStreamer", "http://gstreamer.net/")

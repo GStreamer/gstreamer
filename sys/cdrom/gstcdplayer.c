@@ -358,5 +358,5 @@ plugin_init (GstPlugin * plugin)
       GST_TYPE_CDPLAYER);
 }
 
-GST_PLUGIN_DEFINE (GST_VERSION_MAJOR, GST_VERSION_MINOR, "cdplayer", "CD Player", plugin_init, VERSION, GST_LICENSE,    /* ? */
+GST_PLUGIN_DEFINE (GST_VERSION_MAJOR, GST_VERSION_MINOR, cdplayer, "CD Player", plugin_init, VERSION, GST_LICENSE,      /* ? */
     GST_PACKAGE_NAME, GST_PACKAGE_ORIGIN);

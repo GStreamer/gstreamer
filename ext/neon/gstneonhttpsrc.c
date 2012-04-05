@@ -1137,6 +1137,6 @@ plugin_init (GstPlugin * plugin)
  * so keep the name plugin_desc, or you cannot get your plug-in registered */
 GST_PLUGIN_DEFINE (GST_VERSION_MAJOR,
     GST_VERSION_MINOR,
-    "neon",
+    neon,
     "lib neon http client src",
     plugin_init, VERSION, GST_LICENSE, GST_PACKAGE_NAME, GST_PACKAGE_ORIGIN)

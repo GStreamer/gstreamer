@@ -538,7 +538,7 @@ plugin_init (GstPlugin * plugin)
 
 GST_PLUGIN_DEFINE (GST_VERSION_MAJOR,
     GST_VERSION_MINOR,
-    "divxenc",
+    divxenc,
     "DivX encoder",
     plugin_init,
     "5.03", GST_LICENSE_UNKNOWN, "divx4linux", "http://www.divx.com/");

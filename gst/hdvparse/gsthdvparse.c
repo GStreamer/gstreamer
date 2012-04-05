@@ -885,6 +885,6 @@ HDVParse_init (GstPlugin * HDVParse)
  */
 GST_PLUGIN_DEFINE (GST_VERSION_MAJOR,
     GST_VERSION_MINOR,
-    "hdvparse",
+    hdvparse,
     "HDV private stream parser",
     HDVParse_init, VERSION, "LGPL", "GStreamer", "http://gstreamer.net/")

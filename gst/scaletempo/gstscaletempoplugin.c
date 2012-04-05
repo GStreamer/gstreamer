@@ -69,6 +69,6 @@ plugin_init (GstPlugin * plugin)
  * description
  */
 GST_PLUGIN_DEFINE (GST_VERSION_MAJOR, GST_VERSION_MINOR,
-    "scaletempo", "Scale audio tempo in sync with playback rate",
+    scaletempo, "Scale audio tempo in sync with playback rate",
     plugin_init, VERSION, "LGPL", "GStreamer",
     "http://gstreamer.freedesktop.org/")

@@ -38,6 +38,6 @@ teletext_init (GstPlugin * teletext)
 
 GST_PLUGIN_DEFINE (GST_VERSION_MAJOR,
     GST_VERSION_MINOR,
-    "teletext",
+    teletext,
     "Teletext plugin",
     teletext_init, VERSION, "LGPL", "GStreamer", "http://gstreamer.net/")

@@ -300,7 +300,7 @@ plugin_init (GstPlugin * plugin)
 GST_PLUGIN_DEFINE (
     GST_VERSION_MAJOR,
     GST_VERSION_MINOR,
-    "replace",
+    replace,
     "FIXME Template plugin",
     plugin_init,
     VERSION,

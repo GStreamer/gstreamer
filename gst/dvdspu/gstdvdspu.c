@@ -1210,7 +1210,7 @@ gst_dvd_spu_plugin_init (GstPlugin * plugin)
 
 GST_PLUGIN_DEFINE (GST_VERSION_MAJOR,
     GST_VERSION_MINOR,
-    "dvdspu",
+    dvdspu,
     "DVD Sub-picture Overlay element",
     gst_dvd_spu_plugin_init,
     VERSION, GST_LICENSE, GST_PACKAGE_NAME, GST_PACKAGE_ORIGIN)

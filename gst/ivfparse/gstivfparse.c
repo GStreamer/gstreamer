@@ -295,6 +295,6 @@ ivfparse_init (GstPlugin * ivfparse)
 /* gstreamer looks for this structure to register plugins */
 GST_PLUGIN_DEFINE (GST_VERSION_MAJOR,
     GST_VERSION_MINOR,
-    "ivfparse",
+    ivfparse,
     "IVF parser",
     ivfparse_init, VERSION, "LGPL", GST_PACKAGE_NAME, GST_PACKAGE_ORIGIN)

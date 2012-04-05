@@ -39,6 +39,6 @@ plugin_init (GstPlugin * plugin)
 
 GST_PLUGIN_DEFINE (GST_VERSION_MAJOR,
     GST_VERSION_MINOR,
-    "pcapparse",
+    pcapparse,
     "Element parsing raw pcap streams",
     plugin_init, VERSION, "LGPL", "GStreamer", "http://gstreamer.net/")

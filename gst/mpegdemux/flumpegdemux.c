@@ -76,7 +76,7 @@ plugin_init (GstPlugin * plugin)
 
 GST_PLUGIN_DEFINE (GST_VERSION_MAJOR,
     GST_VERSION_MINOR,
-    "mpegdemux2",
+    mpegdemux2,
     "MPEG demuxers",
     plugin_init, VERSION,
     GST_LICENSE_UNKNOWN, GST_PACKAGE_NAME, GST_PACKAGE_ORIGIN);

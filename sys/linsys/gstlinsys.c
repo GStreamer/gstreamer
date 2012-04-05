@@ -44,5 +44,4 @@ plugin_init (GstPlugin * plugin)
 
 GST_PLUGIN_DEFINE (GST_VERSION_MAJOR,
     GST_VERSION_MINOR,
-    "linsys",
-    "FIXME", plugin_init, VERSION, "LGPL", PACKAGE_NAME, PACKAGE_ORIGIN)
+    linsys, "FIXME", plugin_init, VERSION, "LGPL", PACKAGE_NAME, PACKAGE_ORIGIN)
