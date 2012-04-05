@@ -158,16 +158,16 @@ gst_argb_control_binding_set_property (GObject * object, guint prop_id,
 
   switch (prop_id) {
     case PROP_CS_A:
-      self->cs_a = g_value_get_object (value);
+      self->cs_a = g_value_dup_object (value);
       break;
     case PROP_CS_R:
-      self->cs_r = g_value_get_object (value);
+      self->cs_r = g_value_dup_object (value);
       break;
     case PROP_CS_G:
-      self->cs_r = g_value_get_object (value);
+      self->cs_r = g_value_dup_object (value);
       break;
     case PROP_CS_B:
-      self->cs_g = g_value_get_object (value);
+      self->cs_g = g_value_dup_object (value);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);

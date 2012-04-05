@@ -218,7 +218,7 @@ gst_direct_control_binding_set_property (GObject * object, guint prop_id,
 
   switch (prop_id) {
     case PROP_CS:
-      self->cs = g_value_get_object (value);
+      self->cs = g_value_dup_object (value);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
