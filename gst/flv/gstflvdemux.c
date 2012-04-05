@@ -99,13 +99,15 @@ static gboolean gst_flv_demux_handle_seek_pull (GstFlvDemux * demux,
 static gboolean gst_flv_demux_query (GstPad * pad, GstQuery * query);
 static gboolean gst_flv_demux_src_event (GstPad * pad, GstEvent * event);
 
+static GstIndex *gst_flv_demux_get_index (GstElement * element);
 
 static void
 gst_flv_demux_parse_and_add_index_entry (GstFlvDemux * demux, GstClockTime ts,
     guint64 pos, gboolean keyframe)
 {
-  static GstIndexAssociation associations[2];
-  static GstIndexEntry *entry;
+  GstIndexAssociation associations[2];
+  GstIndex *index;
+  GstIndexEntry *entry;
 
   GST_LOG_OBJECT (demux,
       "adding key=%d association %" GST_TIME_FORMAT "-> %" G_GUINT64_FORMAT,
@@ -115,8 +117,13 @@ gst_flv_demux_parse_and_add_index_entry (GstFlvDemux * demux, GstClockTime ts,
   if (!demux->upstream_seekable)
     return;
 
+  index = gst_flv_demux_get_index (GST_ELEMENT (demux));
+
+  if (!index)
+    return;
+
   /* entry may already have been added before, avoid adding indefinitely */
-  entry = gst_index_get_assoc_entry (demux->index, demux->index_id,
+  entry = gst_index_get_assoc_entry (index, demux->index_id,
       GST_INDEX_LOOKUP_EXACT, GST_ASSOCIATION_FLAG_NONE, GST_FORMAT_BYTES, pos);
 
   if (entry) {
@@ -132,6 +139,7 @@ gst_flv_demux_parse_and_add_index_entry (GstFlvDemux * demux, GstClockTime ts,
     if (time != ts || key != ! !keyframe)
       GST_DEBUG_OBJECT (demux, "metadata mismatch");
 #endif
+    gst_object_unref (index);
     return;
   }
 
@@ -140,7 +148,7 @@ gst_flv_demux_parse_and_add_index_entry (GstFlvDemux * demux, GstClockTime ts,
   associations[1].format = GST_FORMAT_BYTES;
   associations[1].value = pos;
 
-  gst_index_add_associationv (demux->index, demux->index_id,
+  gst_index_add_associationv (index, demux->index_id,
       (keyframe) ? GST_ASSOCIATION_FLAG_KEY_UNIT :
       GST_ASSOCIATION_FLAG_DELTA_UNIT, 2,
       (const GstIndexAssociation *) &associations);
@@ -149,6 +157,8 @@ gst_flv_demux_parse_and_add_index_entry (GstFlvDemux * demux, GstClockTime ts,
     demux->index_max_pos = pos;
   if (ts > demux->index_max_time)
     demux->index_max_time = ts;
+
+  gst_object_unref (index);
 }
 
 static gchar *
@@ -606,7 +616,7 @@ gst_flv_demux_parse_tag_script (GstFlvDemux * demux, GstBuffer * buffer)
 
     g_free (function_name);
 
-    if (demux->index && demux->times && demux->filepositions) {
+    if (demux->times && demux->filepositions) {
       guint num;
 
       /* If an index was found, insert associations */
@@ -986,7 +996,7 @@ gst_flv_demux_parse_tag_audio (GstFlvDemux * demux, GstBuffer * buffer)
 
   /* Only add audio frames to the index if we have no video,
    * and if the index is not yet complete */
-  if (!demux->has_video && demux->index && !demux->indexed) {
+  if (!demux->has_video && !demux->indexed) {
     gst_flv_demux_parse_and_add_index_entry (demux,
         GST_BUFFER_TIMESTAMP (outbuf), demux->cur_tag_offset, TRUE);
   }
@@ -1359,7 +1369,7 @@ gst_flv_demux_parse_tag_video (GstFlvDemux * demux, GstBuffer * buffer)
   if (!keyframe)
     GST_BUFFER_FLAG_SET (outbuf, GST_BUFFER_FLAG_DELTA_UNIT);
 
-  if (!demux->indexed && demux->index) {
+  if (!demux->indexed) {
     gst_flv_demux_parse_and_add_index_entry (demux,
         GST_BUFFER_TIMESTAMP (outbuf), demux->cur_tag_offset, keyframe);
   }
@@ -1508,7 +1518,7 @@ gst_flv_demux_parse_tag_timestamp (GstFlvDemux * demux, gboolean index,
   ret = pts * GST_MSECOND;
   GST_LOG_OBJECT (demux, "pts: %" GST_TIME_FORMAT, GST_TIME_ARGS (ret));
 
-  if (index && demux->index && !demux->indexed && (type == 9 || (type == 8
+  if (index && !demux->indexed && (type == 9 || (type == 8
               && !demux->has_video))) {
     gst_flv_demux_parse_and_add_index_entry (demux, ret, demux->offset,
         keyframe);
@@ -2139,6 +2149,7 @@ static GstFlowReturn
 gst_flv_demux_seek_to_prev_keyframe (GstFlvDemux * demux)
 {
   GstFlowReturn ret = GST_FLOW_UNEXPECTED;
+  GstIndex *index;
   GstIndexEntry *entry = NULL;
 
   GST_DEBUG_OBJECT (demux,
@@ -2157,27 +2168,33 @@ gst_flv_demux_seek_to_prev_keyframe (GstFlvDemux * demux)
 
   GST_DEBUG_OBJECT (demux, "locating previous position");
 
+  index = gst_flv_demux_get_index (GST_ELEMENT (demux));
+
   /* locate index entry before previous start position */
-  if (demux->index)
-    entry = gst_index_get_assoc_entry (demux->index, demux->index_id,
+  if (index) {
+    entry = gst_index_get_assoc_entry (index, demux->index_id,
         GST_INDEX_LOOKUP_BEFORE, GST_ASSOCIATION_FLAG_KEY_UNIT,
         GST_FORMAT_BYTES, demux->from_offset - 1);
 
-  if (entry) {
-    gint64 bytes, time;
+    if (entry) {
+      gint64 bytes, time;
 
-    gst_index_entry_assoc_map (entry, GST_FORMAT_BYTES, &bytes);
-    gst_index_entry_assoc_map (entry, GST_FORMAT_TIME, &time);
+      gst_index_entry_assoc_map (entry, GST_FORMAT_BYTES, &bytes);
+      gst_index_entry_assoc_map (entry, GST_FORMAT_TIME, &time);
 
-    GST_DEBUG_OBJECT (demux, "found index entry for %" G_GINT64_FORMAT
-        " at %" GST_TIME_FORMAT ", seeking to %" G_GINT64_FORMAT,
-        demux->offset - 1, GST_TIME_ARGS (time), bytes);
+      GST_DEBUG_OBJECT (demux, "found index entry for %" G_GINT64_FORMAT
+          " at %" GST_TIME_FORMAT ", seeking to %" G_GINT64_FORMAT,
+          demux->offset - 1, GST_TIME_ARGS (time), bytes);
 
-    /* setup for next section */
-    demux->to_offset = demux->from_offset;
-    gst_flv_demux_move_to_offset (demux, bytes, FALSE);
-    ret = GST_FLOW_OK;
+      /* setup for next section */
+      demux->to_offset = demux->from_offset;
+      gst_flv_demux_move_to_offset (demux, bytes, FALSE);
+      ret = GST_FLOW_OK;
+    }
+
+    gst_object_unref (index);
   }
+
 
 done:
   return ret;
@@ -2435,15 +2452,18 @@ gst_flv_demux_find_offset (GstFlvDemux * demux, GstSegment * segment)
 {
   gint64 bytes = 0;
   gint64 time = 0;
+  GstIndex *index;
   GstIndexEntry *entry;
 
   g_return_val_if_fail (segment != NULL, 0);
 
   time = segment->last_stop;
 
-  if (demux->index) {
+  index = gst_flv_demux_get_index (GST_ELEMENT (demux));
+
+  if (index) {
     /* Let's check if we have an index entry for that seek time */
-    entry = gst_index_get_assoc_entry (demux->index, demux->index_id,
+    entry = gst_index_get_assoc_entry (index, demux->index_id,
         GST_INDEX_LOOKUP_BEFORE, GST_ASSOCIATION_FLAG_KEY_UNIT,
         GST_FORMAT_TIME, time);
 
@@ -2467,6 +2487,8 @@ gst_flv_demux_find_offset (GstFlvDemux * demux, GstSegment * segment)
       GST_DEBUG_OBJECT (demux, "no index entry found for %" GST_TIME_FORMAT,
           GST_TIME_ARGS (segment->start));
     }
+
+    gst_object_unref (index);
   }
 
   return bytes;
@@ -2884,10 +2906,17 @@ gst_flv_demux_sink_event (GstPad * pad, GstEvent * event)
       ret = gst_flv_demux_push_src_event (demux, event);
       break;
     case GST_EVENT_EOS:
+    {
+      GstIndex *index;
+
       GST_DEBUG_OBJECT (demux, "received EOS");
-      if (demux->index) {
+
+      index = gst_flv_demux_get_index (GST_ELEMENT (demux));
+
+      if (index) {
         GST_DEBUG_OBJECT (demux, "committing index");
-        gst_index_commit (demux->index, demux->index_id);
+        gst_index_commit (index, demux->index_id);
+        gst_object_unref (index);
       }
       if (!demux->no_more_pads) {
         gst_element_no_more_pads (GST_ELEMENT (demux));
@@ -2898,6 +2927,7 @@ gst_flv_demux_sink_event (GstPad * pad, GstEvent * event)
         GST_WARNING_OBJECT (demux, "failed pushing EOS on streams");
       ret = TRUE;
       break;
+    }
     case GST_EVENT_NEWSEGMENT:
     {
       GstFormat format;
@@ -3035,6 +3065,7 @@ gst_flv_demux_query (GstPad * pad, GstQuery * query)
         }
       }
       res = TRUE;
+      /* FIXME, check index this way is not thread safe */
       if (fmt != GST_FORMAT_TIME || !demux->index) {
         gst_query_set_seeking (query, fmt, FALSE, -1, -1);
       } else if (demux->random_access) {
@@ -3132,22 +3163,32 @@ static void
 gst_flv_demux_set_index (GstElement * element, GstIndex * index)
 {
   GstFlvDemux *demux = GST_FLV_DEMUX (element);
+  GstIndex *old_index;
 
   GST_OBJECT_LOCK (demux);
-  if (demux->index)
-    gst_object_unref (demux->index);
+
+  old_index = demux->index;
+
   if (index) {
     demux->index = gst_object_ref (index);
     demux->own_index = FALSE;
   } else
     demux->index = NULL;
 
+  if (old_index)
+    gst_object_unref (demux->index);
+
+  gst_object_ref (index);
+
   GST_OBJECT_UNLOCK (demux);
+
   /* object lock might be taken again */
   if (index)
     gst_index_get_writer_id (index, GST_OBJECT (element), &demux->index_id);
+
   GST_DEBUG_OBJECT (demux, "Set index %" GST_PTR_FORMAT, demux->index);
 
+  gst_object_unref (index);
 }
 
 static GstIndex *
@@ -3236,8 +3277,7 @@ gst_flv_demux_base_init (gpointer g_class)
 {
   GstElementClass *element_class = GST_ELEMENT_CLASS (g_class);
 
-  gst_element_class_add_static_pad_template (element_class,
-      &flv_sink_template);
+  gst_element_class_add_static_pad_template (element_class, &flv_sink_template);
   gst_element_class_add_static_pad_template (element_class,
       &audio_src_template);
   gst_element_class_add_static_pad_template (element_class,
