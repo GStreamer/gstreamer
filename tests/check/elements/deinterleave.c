@@ -453,9 +453,13 @@ src_handoff_float32_8ch (GstElement * src, GstBuffer * buf, GstPad * pad,
     }
   }
 
-  buf = gst_buffer_new ();
-  gst_buffer_append_memory (buf, gst_memory_new_wrapped (0, data,
-          size, 0, size, data, g_free));
+  if (gst_buffer_n_memory (buf)) {
+    gst_buffer_replace_memory_range (buf, 0, -1,
+        gst_memory_new_wrapped (0, data, size, 0, size, data, g_free));
+  } else {
+    gst_buffer_insert_memory (buf, 0,
+        gst_memory_new_wrapped (0, data, size, 0, size, data, g_free));
+  }
   GST_BUFFER_OFFSET (buf) = 0;
   GST_BUFFER_TIMESTAMP (buf) = 0;
 }
