@@ -323,6 +323,7 @@ struct _GstTestControlBindingClass
 };
 
 static GType gst_test_control_binding_get_type (void);
+static GstControlBindingClass *gst_test_control_binding_parent_class = NULL;
 
 static GstControlBinding *
 gst_test_control_binding_new (GstObject * object, const gchar * property_name,
@@ -345,18 +346,38 @@ gst_test_control_binding_get_control_source (GstTestControlBinding * self)
   return self->cs ? gst_object_ref (self->cs) : NULL;
 }
 
+static void
+gst_test_control_binding_finalize (GObject * obj)
+{
+  GstTestControlBinding *self = GST_TEST_CONTROL_BINDING (obj);
+
+  gst_object_unref (self->cs);
+
+  G_OBJECT_CLASS (gst_test_control_binding_parent_class)->finalize (obj);
+}
+
+static void
+gst_test_control_binding_class_init (gpointer klass, gpointer class_data)
+{
+  GObjectClass *gobject_class = G_OBJECT_CLASS (klass);
+
+  gst_test_control_binding_parent_class = g_type_class_peek_parent (klass);
+
+  gobject_class->finalize = gst_test_control_binding_finalize;
+}
+
 static GType
 gst_test_control_binding_get_type (void)
 {
-  static volatile gsize test_countrol_source_type = 0;
+  static volatile gsize test_countrol_binding_type = 0;
 
-  if (g_once_init_enter (&test_countrol_source_type)) {
+  if (g_once_init_enter (&test_countrol_binding_type)) {
     GType type;
     static const GTypeInfo info = {
       (guint16) sizeof (GstTestControlBindingClass),
       NULL,                     // base_init
       NULL,                     // base_finalize
-      NULL,                     // class_init
+      gst_test_control_binding_class_init,      // class_init
       NULL,                     // class_finalize
       NULL,                     // class_data
       (guint16) sizeof (GstTestControlBinding),
@@ -367,9 +388,9 @@ gst_test_control_binding_get_type (void)
     type =
         g_type_register_static (GST_TYPE_CONTROL_BINDING,
         "GstTestControlBinding", &info, 0);
-    g_once_init_leave (&test_countrol_source_type, type);
+    g_once_init_leave (&test_countrol_binding_type, type);
   }
-  return test_countrol_source_type;
+  return test_countrol_binding_type;
 }
 
 
