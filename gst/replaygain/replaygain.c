@@ -48,6 +48,6 @@ plugin_init (GstPlugin * plugin)
   return TRUE;
 }
 
-GST_PLUGIN_DEFINE (GST_VERSION_MAJOR, GST_VERSION_MINOR, "replaygain",
+GST_PLUGIN_DEFINE (GST_VERSION_MAJOR, GST_VERSION_MINOR, replaygain,
     "ReplayGain volume normalization", plugin_init, VERSION, GST_LICENSE,
     GST_PACKAGE_NAME, GST_PACKAGE_ORIGIN);

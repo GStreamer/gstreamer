@@ -72,6 +72,6 @@ plugin_init (GstPlugin * plugin)
 /* FIXME 0.11: merge alaw and mulaw into one plugin? */
 GST_PLUGIN_DEFINE (GST_VERSION_MAJOR,
     GST_VERSION_MINOR,
-    "alaw",
+    alaw,
     "ALaw audio conversion routines",
     plugin_init, VERSION, GST_LICENSE, GST_PACKAGE_NAME, GST_PACKAGE_ORIGIN)
