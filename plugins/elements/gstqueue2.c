@@ -1244,6 +1244,7 @@ gst_queue2_create_read (GstQueue2 * queue, guint64 offset, guint length,
   guint block_length, remaining, read_length;
   gint64 read_return;
   guint64 rb_size;
+  guint64 max_size;
   guint64 rpos;
 
   /* allocate the output buffer of the requested size */
@@ -1255,6 +1256,7 @@ gst_queue2_create_read (GstQueue2 * queue, guint64 offset, guint length,
 
   rpos = offset;
   rb_size = queue->ring_buffer_max_size;
+  max_size = QUEUE_MAX_BYTES (queue);
 
   remaining = length;
   while (remaining > 0) {
@@ -1273,16 +1275,16 @@ gst_queue2_create_read (GstQueue2 * queue, guint64 offset, guint length,
 
         GST_DEBUG_OBJECT (queue,
             "reading %" G_GUINT64_FORMAT ", writing %" G_GUINT64_FORMAT
-            ", level %" G_GUINT64_FORMAT,
-            rpos, queue->current->writing_pos, level);
+            ", level %" G_GUINT64_FORMAT ", max %" G_GUINT64_FORMAT,
+            rpos, queue->current->writing_pos, level, max_size);
 
-        if (level >= rb_size) {
+        if (level >= max_size) {
           /* we don't have the data but if we have a ring buffer that is full, we
            * need to read */
           GST_DEBUG_OBJECT (queue,
-              "ring buffer full, reading ring-buffer-max-size %"
-              G_GUINT64_FORMAT " bytes", rb_size);
-          read_length = rb_size;
+              "ring buffer full, reading QUEUE_MAX_BYTES %"
+              G_GUINT64_FORMAT " bytes", max_size);
+          read_length = max_size;
         } else if (queue->is_eos) {
           /* won't get any more data so read any data we have */
           if (level) {
