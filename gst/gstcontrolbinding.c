@@ -132,6 +132,8 @@ gst_control_binding_dispose (GObject * object)
 
   if (self->object)
     gst_object_replace (&self->object, NULL);
+
+  ((GObjectClass *) gst_control_binding_parent_class)->dispose (object);
 }
 
 static void
@@ -140,6 +142,8 @@ gst_control_binding_finalize (GObject * object)
   GstControlBinding *self = GST_CONTROL_BINDING (object);
 
   g_free (self->name);
+
+  ((GObjectClass *) gst_control_binding_parent_class)->finalize (object);
 }
 
 static void
