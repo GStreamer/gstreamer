@@ -255,7 +255,8 @@ _replace_memory (GstBuffer * buffer, guint len, guint idx, guint length,
   gsize end, i;
 
   end = idx + length;
-  GST_LOG ("buffer %p replace %u-%u with memory %p", buffer, idx, end, mem);
+  GST_LOG ("buffer %p replace %u-%" G_GSIZE_FORMAT " with memory %p", buffer,
+      idx, end, mem);
 
   /* unref old memory */
   for (i = idx; i < end; i++)
