@@ -1154,6 +1154,6 @@ plugin_init (GstPlugin * plugin)
 
 GST_PLUGIN_DEFINE (GST_VERSION_MAJOR,
     GST_VERSION_MINOR,
-    "dvdsub",
+    dvdsub,
     "DVD subtitle parser and decoder", plugin_init,
     VERSION, GST_LICENSE, GST_PACKAGE_NAME, GST_PACKAGE_ORIGIN);
