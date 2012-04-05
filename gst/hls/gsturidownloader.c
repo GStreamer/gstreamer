@@ -184,9 +184,17 @@ gst_uri_downloader_bus_handler (GstBus * bus,
 
   if (GST_MESSAGE_TYPE (message) == GST_MESSAGE_ERROR ||
       GST_MESSAGE_TYPE (message) == GST_MESSAGE_WARNING) {
+    GError *err = NULL;
+    gchar *dbg_info = NULL;
+
+    gst_message_parse_error (message, &err, &dbg_info);
     GST_WARNING_OBJECT (downloader,
-        "Received error in bus from the source element, "
-        "the download will be cancelled");
+        "Received error: %s from %s, the download will be cancelled",
+        GST_OBJECT_NAME (message->src), err->message);
+    GST_DEBUG ("Debugging info: %s\n", (dbg_info) ? dbg_info : "none");
+    g_error_free (err);
+    g_free (dbg_info);
+
     /* remove the sync handler to avoid duplicated messages */
     gst_bus_set_sync_handler (downloader->priv->bus, NULL, NULL);
     gst_uri_downloader_cancel (downloader);
@@ -213,9 +221,8 @@ gst_uri_downloader_chain (GstPad * pad, GstBuffer * buf)
     goto done;
   }
 
-  GST_LOG_OBJECT (downloader,
-      "The uri fetcher received a new buffer of size %u",
-      GST_BUFFER_SIZE (buf));
+  GST_LOG_OBJECT (downloader, "The uri fetcher received a new buffer "
+      "of size %u", GST_BUFFER_SIZE (buf));
   if (!gst_fragment_add_buffer (downloader->priv->download, buf))
     GST_WARNING_OBJECT (downloader, "Could not add buffer to fragment");
   GST_OBJECT_UNLOCK (downloader);
