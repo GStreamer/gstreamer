@@ -1057,20 +1057,27 @@ gst_queue2_have_data (GstQueue2 * queue, guint64 offset, guint length)
           (offset + length) - range->writing_pos);
 
   } else {
-    GST_INFO_OBJECT (queue, "not found in any range");
-    /* we don't have the range, see how far away we are, FIXME, find a good
-     * threshold based on the incoming rate. */
+    GST_INFO_OBJECT (queue, "not found in any range off %" G_GUINT64_FORMAT
+        " len %u", offset, length);
+    /* we don't have the range, see how far away we are */
     if (!queue->is_eos && queue->current) {
+      /* FIXME, find a good threshold based on the incoming rate. */
+      guint64 threshold = 1024 * 512;
+
       if (QUEUE_IS_USING_RING_BUFFER (queue)) {
-        if (offset < queue->current->offset || offset >
-            queue->current->writing_pos + QUEUE_MAX_BYTES (queue) -
-            queue->cur_level.bytes) {
-          perform_seek_to_offset (queue, offset);
-        } else {
+        guint64 distance;
+
+        distance = QUEUE_MAX_BYTES (queue) - queue->cur_level.bytes;
+        /* don't wait for the complete buffer to fill */
+        distance = MIN (distance, threshold);
+
+        if (offset >= queue->current->offset && offset <=
+            queue->current->writing_pos + distance) {
           GST_INFO_OBJECT (queue,
               "requested data is within range, wait for data");
+          return FALSE;
         }
-      } else if (offset < queue->current->writing_pos + 200000) {
+      } else if (offset < queue->current->writing_pos + threshold) {
         update_cur_pos (queue, queue->current, offset + length);
         GST_INFO_OBJECT (queue, "wait for data");
         return FALSE;
@@ -1157,6 +1164,7 @@ gst_queue2_create_read (GstQueue2 * queue, guint64 offset, guint length,
   guint64 file_offset;
   guint block_length, remaining, read_length;
   guint64 rb_size;
+  guint64 max_size;
   guint64 rpos;
   GstFlowReturn ret = GST_FLOW_OK;
 
@@ -1174,6 +1182,7 @@ gst_queue2_create_read (GstQueue2 * queue, guint64 offset, guint length,
 
   rpos = offset;
   rb_size = queue->ring_buffer_max_size;
+  max_size = QUEUE_MAX_BYTES (queue);
 
   remaining = length;
   while (remaining > 0) {
@@ -1192,16 +1201,16 @@ gst_queue2_create_read (GstQueue2 * queue, guint64 offset, guint length,
 
         GST_DEBUG_OBJECT (queue,
             "reading %" G_GUINT64_FORMAT ", writing %" G_GUINT64_FORMAT
-            ", level %" G_GUINT64_FORMAT,
-            rpos, queue->current->writing_pos, level);
+            ", level %" G_GUINT64_FORMAT ", max %" G_GUINT64_FORMAT,
+            rpos, queue->current->writing_pos, level, max_size);
 
-        if (level >= rb_size) {
+        if (level >= max_size) {
           /* we don't have the data but if we have a ring buffer that is full, we
            * need to read */
           GST_DEBUG_OBJECT (queue,
-              "ring buffer full, reading ring-buffer-max-size %"
-              G_GUINT64_FORMAT " bytes", rb_size);
-          read_length = rb_size;
+              "ring buffer full, reading QUEUE_MAX_BYTES %"
+              G_GUINT64_FORMAT " bytes", max_size);
+          read_length = max_size;
         } else if (queue->is_eos) {
           /* won't get any more data so read any data we have */
           if (level) {
@@ -1209,6 +1218,8 @@ gst_queue2_create_read (GstQueue2 * queue, guint64 offset, guint length,
                 "EOS hit but read %" G_GUINT64_FORMAT " bytes that we have",
                 level);
             read_length = level;
+            remaining = level;
+            length = level;
           } else
             goto hit_eos;
         }
