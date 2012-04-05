@@ -390,8 +390,8 @@ gst_raw_parse_loop (GstElement * element)
 
   if (gst_buffer_get_size (buffer) < size) {
     GST_DEBUG_OBJECT (rp, "Short read at offset %" G_GINT64_FORMAT
-        ", got only %u of %u bytes", rp->offset, gst_buffer_get_size (buffer),
-        size);
+        ", got only %" G_GSIZE_FORMAT " of %u bytes", rp->offset,
+        gst_buffer_get_size (buffer), size);
 
     if (size > rp->framesize) {
       gst_buffer_set_size (buffer, gst_buffer_get_size (buffer) -
