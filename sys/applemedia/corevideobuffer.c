@@ -33,13 +33,26 @@ gst_core_video_meta_free (GstCoreVideoMeta * meta, GstBuffer * buf)
   g_object_unref (meta->ctx);
 }
 
+GType
+gst_core_video_meta_api_get_type (void)
+{
+  static volatile GType type;
+  static const gchar *tags[] = { "memory", NULL };
+
+  if (g_once_init_enter (&type)) {
+    GType _type = gst_meta_api_type_register ("GstCoreVideoMetaAPI", tags);
+    g_once_init_leave (&type, _type);
+  }
+  return type;
+}
+
 static const GstMetaInfo *
 gst_core_video_meta_get_info (void)
 {
   static const GstMetaInfo *core_video_meta_info = NULL;
 
   if (core_video_meta_info == NULL) {
-    core_video_meta_info = gst_meta_register ("GstCoreVideoeMeta",
+    core_video_meta_info = gst_meta_register (GST_CORE_VIDEO_META_API_TYPE,
         "GstCoreVideoMeta", sizeof (GstCoreVideoMeta),
         (GstMetaInitFunction) NULL,
         (GstMetaFreeFunction) gst_core_video_meta_free,

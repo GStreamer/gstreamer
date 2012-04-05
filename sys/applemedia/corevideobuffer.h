@@ -28,6 +28,10 @@
 
 G_BEGIN_DECLS
 
+#define GST_CORE_VIDEO_META_API_TYPE (gst_core_video_meta_api_get_type())
+#define gst_buffer_get_core_video_meta(b) \
+  ((GstCoreVideoMeta*)gst_buffer_get_meta((b),GST_CORE_VIDEO_META_API_TYPE))
+
 typedef struct _GstCoreVideoMeta
 {
   GstMeta meta;
@@ -40,6 +44,7 @@ typedef struct _GstCoreVideoMeta
 GstBuffer * gst_core_video_buffer_new      (GstCoreMediaCtx * ctx,
                                             CVBufferRef cvbuf,
                                             GstVideoInfo *info);
+GType gst_core_video_meta_api_get_type (void);
 
 G_END_DECLS
 
