@@ -26,6 +26,10 @@
 # include "config.h"
 #endif
 
+#ifdef HAVE_VALGRIND
+# include <valgrind/valgrind.h>
+#endif
+
 #include <gst/check/gstcheck.h>
 #include <gst/audio/audio.h>
 #include <gst/audio/audio-enumtypes.h>
@@ -109,10 +113,13 @@ interleave_chain_func (GstPad * pad, GstObject * parent, GstBuffer * buffer)
   fail_unless_equals_int (map.size, 48000 * 2 * sizeof (gfloat));
   fail_unless (outdata != NULL);
 
-  for (i = 0; i < 48000 * 2; i += 2) {
-    fail_unless_equals_float (outdata[i], input[0]);
-    fail_unless_equals_float (outdata[i + 1], input[1]);
-  }
+#ifdef HAVE_VALGRIND
+  if (!(RUNNING_ON_VALGRIND))
+#endif
+    for (i = 0; i < 48000 * 2; i += 2) {
+      fail_unless_equals_float (outdata[i], input[0]);
+      fail_unless_equals_float (outdata[i + 1], input[1]);
+    }
   gst_buffer_unmap (buffer, &map);
   gst_buffer_unref (buffer);
 
@@ -473,10 +480,13 @@ sink_handoff_float32 (GstElement * element, GstBuffer * buffer, GstPad * pad,
   gst_caps_unref (ccaps);
   gst_caps_unref (caps);
 
-  for (i = 0; i < 48000 * 2; i += 2) {
-    fail_unless_equals_float (data[i], -1.0);
-    fail_unless_equals_float (data[i + 1], 1.0);
-  }
+#ifdef HAVE_VALGRIND
+  if (!(RUNNING_ON_VALGRIND))
+#endif
+    for (i = 0; i < 48000 * 2; i += 2) {
+      fail_unless_equals_float (data[i], -1.0);
+      fail_unless_equals_float (data[i + 1], 1.0);
+    }
   gst_buffer_unmap (buffer, &map);
 
   have_data++;

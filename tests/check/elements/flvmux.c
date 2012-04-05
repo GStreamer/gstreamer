@@ -18,6 +18,14 @@
  * Boston, MA 02111-1307, USA.
  */
 
+#ifdef HAVE_CONFIG_H
+# include "config.h"
+#endif
+
+#ifdef HAVE_VALGRIND
+# include <valgrind/valgrind.h>
+#endif
+
 #include <gst/check/gstcheck.h>
 
 #include <gst/gst.h>
@@ -149,9 +157,17 @@ flvmux_suite (void)
 {
   Suite *s = suite_create ("flvmux");
   TCase *tc_chain = tcase_create ("general");
+  gint loop = 499;
 
   suite_add_tcase (s, tc_chain);
-  tcase_add_loop_test (tc_chain, test_index_writing, 1, 499);
+
+#ifdef HAVE_VALGRIND
+  if (RUNNING_ON_VALGRIND) {
+    loop = 140;
+  }
+#endif
+
+  tcase_add_loop_test (tc_chain, test_index_writing, 1, loop);
 
   return s;
 }
