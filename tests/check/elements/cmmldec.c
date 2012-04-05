@@ -104,6 +104,8 @@ static guint8 granuleshift;
 
 static GstPad *srcpad, *sinkpad;
 
+static GList *events;
+
 static GstStaticPadTemplate sinktemplate = GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
     GST_PAD_ALWAYS,
@@ -141,12 +143,37 @@ buffer_unref (void *buffer, void *user_data)
 }
 
 static void
+event_unref (void *event, void *user_data)
+{
+  ASSERT_OBJECT_REFCOUNT (event, "event", 1);
+  gst_event_unref (GST_EVENT (event));
+}
+
+static gboolean
+cmmldec_sink_event (GstPad * pad, GstObject * parent, GstEvent * event)
+{
+  GST_LOG ("received event %" GST_PTR_FORMAT, event);
+
+  switch (GST_EVENT_TYPE (event)) {
+    case GST_EVENT_TAG:
+      events = g_list_append (events, event);
+      break;
+    default:
+      gst_event_unref (event);
+      break;
+  }
+
+  return TRUE;
+}
+
+static void
 setup_cmmldec (void)
 {
   GST_DEBUG ("setup_cmmldec");
   cmmldec = gst_check_setup_element ("cmmldec");
   srcpad = gst_check_setup_src_pad (cmmldec, &srctemplate);
   sinkpad = gst_check_setup_sink_pad (cmmldec, &sinktemplate);
+  gst_pad_set_event_function (sinkpad, cmmldec_sink_event);
   gst_pad_set_active (srcpad, TRUE);
   gst_pad_set_active (sinkpad, TRUE);
 
@@ -179,6 +206,11 @@ teardown_cmmldec (void)
   gst_check_teardown_src_pad (cmmldec);
   gst_check_teardown_sink_pad (cmmldec);
   gst_check_teardown_element (cmmldec);
+
+  /* sticky stuff cleared above first */
+  g_list_foreach (events, event_unref, NULL);
+  g_list_free (events);
+  events = NULL;
 }
 
 static void
@@ -228,29 +260,26 @@ push_caps (void)
 static GObject *
 cmml_tag_message_pop (GstBus * bus, const gchar * tag)
 {
-  GstMessage *message;
-
   GstTagList *taglist;
-
   const GValue *value;
+  GObject *obj = NULL;
+  GstEvent *event;
 
-  GObject *obj;
-
-  message = gst_bus_poll (bus, GST_MESSAGE_TAG, 0);
-  if (message == NULL)
+  if (!events)
     return NULL;
 
-  gst_message_parse_tag (message, &taglist);
+  event = (GstEvent *) events->data;
+  events = g_list_delete_link (events, events);
+  gst_event_parse_tag (event, &taglist);
+
   value = gst_tag_list_get_value_index (taglist, tag, 0);
-  if (value == NULL) {
-    gst_message_unref (message);
-    gst_tag_list_free (taglist);
-    return NULL;
-  }
+  if (value == NULL)
+    goto exit;
 
   obj = g_value_dup_object (value);
-  gst_message_unref (message);
-  gst_tag_list_free (taglist);
+
+exit:
+  gst_event_unref (event);
 
   return obj;
 }
