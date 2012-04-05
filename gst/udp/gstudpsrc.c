@@ -393,6 +393,7 @@ retry:
           || g_error_matches (err, G_IO_ERROR, G_IO_ERROR_CANCELLED)) {
         goto stopped;
       } else if (g_error_matches (err, G_IO_ERROR, G_IO_ERROR_TIMED_OUT)) {
+        g_clear_error (&err);
         /* timeout, post element message */
         gst_element_post_message (GST_ELEMENT_CAST (udpsrc),
             gst_message_new_element (GST_OBJECT_CAST (udpsrc),
@@ -490,6 +491,7 @@ select_error:
 stopped:
   {
     GST_DEBUG ("stop called");
+    g_clear_error (&err);
     return GST_FLOW_FLUSHING;
   }
 get_available_error:
