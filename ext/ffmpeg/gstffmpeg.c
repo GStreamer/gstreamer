@@ -160,7 +160,7 @@ plugin_init (GstPlugin * plugin)
 
 GST_PLUGIN_DEFINE (GST_VERSION_MAJOR,
     GST_VERSION_MINOR,
-    "ffmpeg",
+    ffmpeg,
     "All FFmpeg codecs and formats (" FFMPEG_SOURCE ")",
     plugin_init, PACKAGE_VERSION,
 #ifdef GST_FFMPEG_ENABLE_LGPL

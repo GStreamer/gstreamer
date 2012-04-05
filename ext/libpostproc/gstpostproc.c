@@ -901,7 +901,7 @@ plugin_init (GstPlugin * plugin)
 
 GST_PLUGIN_DEFINE (GST_VERSION_MAJOR,
     GST_VERSION_MINOR,
-    "postproc",
+    postproc,
     "postprocessing elements (" FFMPEG_SOURCE ")",
     plugin_init,
     PACKAGE_VERSION, "GPL", "FFMpeg", "http://ffmpeg.sourceforge.net/")
