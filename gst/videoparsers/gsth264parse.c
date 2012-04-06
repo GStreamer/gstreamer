@@ -1577,19 +1577,18 @@ gst_h264_parse_pre_push_frame (GstBaseParse * parse, GstBaseParseFrame * frame)
           GstByteWriter bw;
           GstBuffer *new_buf;
           const gboolean bs = h264parse->format == GST_H264_PARSE_FORMAT_BYTE;
+          gboolean ok;
 
           gst_byte_writer_init_with_size (&bw, gst_buffer_get_size (buffer),
               FALSE);
-          gst_byte_writer_put_buffer_unchecked (&bw, buffer, 0,
-              h264parse->idr_pos);
+          ok = gst_byte_writer_put_buffer (&bw, buffer, 0, h264parse->idr_pos);
           GST_DEBUG_OBJECT (h264parse, "- inserting SPS/PPS");
           for (i = 0; i < GST_H264_MAX_SPS_COUNT; i++) {
             if ((codec_nal = h264parse->sps_nals[i])) {
               gsize nal_size = gst_buffer_get_size (codec_nal);
               GST_DEBUG_OBJECT (h264parse, "inserting SPS nal");
-              gst_byte_writer_put_uint32_be_unchecked (&bw, bs ? 1 : nal_size);
-              gst_byte_writer_put_buffer_unchecked (&bw, codec_nal, 0,
-                  nal_size);
+              ok &= gst_byte_writer_put_uint32_be (&bw, bs ? 1 : nal_size);
+              ok &= gst_byte_writer_put_buffer (&bw, codec_nal, 0, nal_size);
               h264parse->last_report = new_ts;
             }
           }
@@ -1597,14 +1596,13 @@ gst_h264_parse_pre_push_frame (GstBaseParse * parse, GstBaseParseFrame * frame)
             if ((codec_nal = h264parse->pps_nals[i])) {
               gsize nal_size = gst_buffer_get_size (codec_nal);
               GST_DEBUG_OBJECT (h264parse, "inserting PPS nal");
-              gst_byte_writer_put_uint32_be_unchecked (&bw, bs ? 1 : nal_size);
-              gst_byte_writer_put_buffer_unchecked (&bw, codec_nal, 0,
-                  nal_size);
+              ok &= gst_byte_writer_put_uint32_be (&bw, bs ? 1 : nal_size);
+              ok &= gst_byte_writer_put_buffer (&bw, codec_nal, 0, nal_size);
               h264parse->last_report = new_ts;
             }
           }
-          gst_byte_writer_put_buffer_unchecked (&bw, buffer, h264parse->idr_pos,
-              -1);
+          ok &=
+              gst_byte_writer_put_buffer (&bw, buffer, h264parse->idr_pos, -1);
           /* collect result and push */
           new_buf = gst_byte_writer_reset_and_get_buffer (&bw);
           gst_buffer_copy_into (new_buf, buffer, GST_BUFFER_COPY_METADATA, 0,
@@ -1614,6 +1612,10 @@ gst_h264_parse_pre_push_frame (GstBaseParse * parse, GstBaseParseFrame * frame)
           GST_BUFFER_FLAG_UNSET (new_buf, GST_BUFFER_FLAG_DELTA_UNIT);
           gst_buffer_replace (&frame->out_buffer, new_buf);
           gst_buffer_unref (new_buf);
+          /* some result checking seems to make some compilers happy */
+          if (G_UNLIKELY (!ok)) {
+            GST_ERROR_OBJECT (h264parse, "failed to insert SPS/PPS");
+          }
         }
       }
       /* we pushed whatever we had */
@@ -1736,10 +1738,10 @@ gst_h264_parse_set_caps (GstBaseParse * parse, GstCaps * caps)
 
     /* if upstream sets codec_data without setting stream-format and alignment, we
      * assume stream-format=avc,alignment=au */
-    if (format == GST_H264_PARSE_FORMAT_NONE) {
+    if (format == GST_H264_PARSE_FORMAT_NONE)
       format = GST_H264_PARSE_FORMAT_AVC;
+    if (align == GST_H264_PARSE_ALIGN_NONE)
       align = GST_H264_PARSE_ALIGN_AU;
-    }
   } else {
     GST_DEBUG_OBJECT (h264parse, "have bytestream h264");
     /* nothing to pre-process */
