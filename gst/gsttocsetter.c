@@ -50,50 +50,22 @@
 #include <gobject/gvaluecollector.h>
 #include <string.h>
 
-GST_DEBUG_CATEGORY_STATIC (gst_toc_interface_debug);
-#define GST_CAT_DEFAULT tag_toc_interface_debug
-
 static GQuark gst_toc_key;
+
+G_DEFINE_INTERFACE_WITH_CODE (GstTocSetter, gst_toc_setter, GST_TYPE_ELEMENT,
+    gst_toc_key = g_quark_from_static_string ("gst-toc-setter-data"););
+
+static void
+gst_toc_setter_default_init (GstTocSetterInterface * klass)
+{
+  /* nothing to do here, it's a dummy interface */
+}
 
 typedef struct
 {
   GstToc *toc;
   GMutex lock;
 } GstTocData;
-
-GType
-gst_toc_setter_get_type (void)
-{
-  static volatile gsize toc_setter_type = 0;
-
-  if (g_once_init_enter (&toc_setter_type)) {
-    GType _type;
-    static const GTypeInfo toc_setter_info = {
-      sizeof (GstTocSetterInterface),   /* class_size */
-      NULL,                     /* base_init */
-      NULL,                     /* base_finalize */
-      NULL,
-      NULL,                     /* class_finalize */
-      NULL,                     /* class_data */
-      0,
-      0,
-      NULL
-    };
-
-    GST_DEBUG_CATEGORY_INIT (gst_toc_interface_debug, "GstTocInterface", 0,
-        "interfaces for the TOC");
-
-    _type = g_type_register_static (G_TYPE_INTERFACE, "GstTocSetter",
-        &toc_setter_info, 0);
-
-    g_type_interface_add_prerequisite (_type, GST_TYPE_ELEMENT);
-
-    gst_toc_key = g_quark_from_static_string ("GST_TOC_SETTER");
-    g_once_init_leave (&toc_setter_type, _type);
-  }
-
-  return toc_setter_type;
-}
 
 static void
 gst_toc_data_free (gpointer p)
@@ -345,9 +317,11 @@ gst_toc_setter_add_toc_entry (GstTocSetter * setter, const gchar * parent_uid,
 
   copy_entry = gst_toc_entry_copy (entry);
 
-  if (g_strcmp0 (parent_uid, "0") == 0)
+  if (g_strcmp0 (parent_uid, "0") == 0) {
+    if (data->toc == NULL)
+      data->toc = gst_toc_new ();
     data->toc->entries = g_list_append (data->toc->entries, copy_entry);
-  else {
+  } else {
     parent = gst_toc_find_entry (data->toc, parent_uid);
 
     if (parent != NULL) {
