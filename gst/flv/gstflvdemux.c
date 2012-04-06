@@ -110,8 +110,8 @@ static void
 gst_flv_demux_parse_and_add_index_entry (GstFlvDemux * demux, GstClockTime ts,
     guint64 pos, gboolean keyframe)
 {
-  static GstIndexAssociation associations[2];
-  static GstIndexEntry *entry;
+  GstIndexAssociation associations[2];
+  GstIndexEntry *entry;
 
   GST_LOG_OBJECT (demux,
       "adding key=%d association %" GST_TIME_FORMAT "-> %" G_GUINT64_FORMAT,
