@@ -2629,12 +2629,6 @@ gst_queue2_handle_src_event (GstPad * pad, GstEvent * event)
         /* now unblock the getrange function */
         GST_QUEUE2_MUTEX_LOCK (queue);
         queue->srcresult = GST_FLOW_OK;
-        if (queue->current) {
-          /* forget the highest read offset, we'll calculate a new one when we
-           * get the next getrange request. We need to do this in order to reset
-           * the buffering percentage */
-          queue->current->max_reading_pos = 0;
-        }
         GST_QUEUE2_MUTEX_UNLOCK (queue);
 
         /* when using a temp file, we eat the event */
