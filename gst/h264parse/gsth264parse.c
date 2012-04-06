@@ -1728,9 +1728,10 @@ gst_h264_parse_push_buffer (GstH264Parse * h264parse, GstBuffer * buf)
           /* insert config NALs into AU */
           GstByteWriter bw;
           GstBuffer *codec_nal, *new_buf;
+          gboolean ok;
 
           gst_byte_writer_init_with_size (&bw, GST_BUFFER_SIZE (buf), FALSE);
-          gst_byte_writer_put_data_unchecked (&bw, GST_BUFFER_DATA (buf),
+          ok = gst_byte_writer_put_data (&bw, GST_BUFFER_DATA (buf),
               h264parse->idr_offset);
           GST_DEBUG_OBJECT (h264parse, "- inserting SPS/PPS");
           for (i = 0; i < MAX_SPS_COUNT; i++) {
@@ -1739,7 +1740,7 @@ gst_h264_parse_push_buffer (GstH264Parse * h264parse, GstBuffer * buf)
               codec_nal = gst_buffer_copy (h264parse->sps_nals[i]);
               codec_nal =
                   gst_h264_parse_write_nal_prefix (h264parse, codec_nal);
-              gst_byte_writer_put_data_unchecked (&bw,
+              ok &= gst_byte_writer_put_data (&bw,
                   GST_BUFFER_DATA (codec_nal), GST_BUFFER_SIZE (codec_nal));
               h264parse->last_report = timestamp;
             }
@@ -1750,12 +1751,12 @@ gst_h264_parse_push_buffer (GstH264Parse * h264parse, GstBuffer * buf)
               codec_nal = gst_buffer_copy (h264parse->pps_nals[i]);
               codec_nal =
                   gst_h264_parse_write_nal_prefix (h264parse, codec_nal);
-              gst_byte_writer_put_data_unchecked (&bw,
+              ok &= gst_byte_writer_put_data (&bw,
                   GST_BUFFER_DATA (codec_nal), GST_BUFFER_SIZE (codec_nal));
               h264parse->last_report = timestamp;
             }
           }
-          gst_byte_writer_put_data_unchecked (&bw,
+          ok &= gst_byte_writer_put_data (&bw,
               GST_BUFFER_DATA (buf) + h264parse->idr_offset,
               GST_BUFFER_SIZE (buf) - h264parse->idr_offset);
           /* collect result and push */
@@ -1763,6 +1764,10 @@ gst_h264_parse_push_buffer (GstH264Parse * h264parse, GstBuffer * buf)
           gst_buffer_copy_metadata (new_buf, buf, GST_BUFFER_COPY_ALL);
           gst_buffer_unref (buf);
           buf = new_buf;
+          /* some result checking seems to make some compilers happy */
+          if (G_UNLIKELY (!ok)) {
+            GST_ERROR_OBJECT (h264parse, "failed to insert SPS/PPS");
+          }
         }
       }
     }
