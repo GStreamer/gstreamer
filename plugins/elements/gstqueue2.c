@@ -2096,7 +2096,7 @@ gst_queue2_handle_sink_event (GstPad * pad, GstObject * parent,
     case GST_EVENT_FLUSH_START:
     {
       GST_CAT_LOG_OBJECT (queue_dataflow, queue, "received flush start event");
-      if (queue->srcpad->mode == GST_ACTIVATE_PUSH) {
+      if (GST_PAD_MODE (queue->srcpad) == GST_PAD_MODE_PUSH) {
         /* forward event */
         gst_pad_push_event (queue->srcpad, event);
 
@@ -2128,7 +2128,7 @@ gst_queue2_handle_sink_event (GstPad * pad, GstObject * parent,
     {
       GST_CAT_LOG_OBJECT (queue_dataflow, queue, "received flush stop event");
 
-      if (queue->srcpad->mode == GST_ACTIVATE_PUSH) {
+      if (GST_PAD_MODE (queue->srcpad) == GST_PAD_MODE_PUSH) {
         /* forward event */
         gst_pad_push_event (queue->srcpad, event);
 
