@@ -89,35 +89,14 @@ typedef struct
 #define GST_TAG_DATA_LOCK(data) g_mutex_lock(&data->lock)
 #define GST_TAG_DATA_UNLOCK(data) g_mutex_unlock(&data->lock)
 
-GType
-gst_tag_setter_get_type (void)
+G_DEFINE_INTERFACE_WITH_CODE (GstTagSetter, gst_tag_setter, GST_TYPE_ELEMENT,
+    gst_tag_key = g_quark_from_static_string ("gst-tag-setter-data");
+    );
+
+static void
+gst_tag_setter_default_init (GstTagSetterInterface * klass)
 {
-  static volatile gsize tag_setter_type = 0;
-
-  if (g_once_init_enter (&tag_setter_type)) {
-    GType _type;
-    static const GTypeInfo tag_setter_info = {
-      sizeof (GstTagSetterInterface),   /* class_size */
-      NULL,                     /* base_init */
-      NULL,                     /* base_finalize */
-      NULL,
-      NULL,                     /* class_finalize */
-      NULL,                     /* class_data */
-      0,
-      0,
-      NULL
-    };
-
-    _type = g_type_register_static (G_TYPE_INTERFACE, "GstTagSetter",
-        &tag_setter_info, 0);
-
-    g_type_interface_add_prerequisite (_type, GST_TYPE_ELEMENT);
-
-    gst_tag_key = g_quark_from_static_string ("GST_TAG_SETTER");
-    g_once_init_leave (&tag_setter_type, _type);
-  }
-
-  return tag_setter_type;
+  /* nothing to do here, it's a dummy interface */
 }
 
 static void
