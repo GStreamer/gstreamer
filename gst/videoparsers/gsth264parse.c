@@ -1640,10 +1640,10 @@ gst_h264_parse_set_caps (GstBaseParse * parse, GstCaps * caps)
 
     /* if upstream sets codec_data without setting stream-format and alignment, we
      * assume stream-format=avc,alignment=au */
-    if (format == GST_H264_PARSE_FORMAT_NONE) {
+    if (format == GST_H264_PARSE_FORMAT_NONE)
       format = GST_H264_PARSE_FORMAT_AVC;
+    if (align == GST_H264_PARSE_ALIGN_NONE)
       align = GST_H264_PARSE_ALIGN_AU;
-    }
   } else {
     GST_DEBUG_OBJECT (h264parse, "have bytestream h264");
     /* nothing to pre-process */
