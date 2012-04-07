@@ -1,5 +1,7 @@
 /* GStreamer
  * Copyright (C) <1999> Erik Walthinsen <omega@cse.ogi.edu>
+ * Copyright (C) 2012 Collabora Ltd.
+ *	Author : Edward Hervey <edward@collabora.com>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -22,9 +24,7 @@
 #define __GST_PNGDEC_H__
 
 #include <gst/gst.h>
-#include <gst/video/video.h>
-#include <gst/video/gstvideopool.h>
-
+#include <gst/video/gstvideodecoder.h>
 #include <png.h>
 
 G_BEGIN_DECLS
@@ -40,45 +40,30 @@ typedef struct _GstPngDecClass GstPngDecClass;
 
 struct _GstPngDec
 {
-  GstElement element;
+  GstVideoDecoder parent;
 
-  GstPad *sinkpad, *srcpad;
+  GstVideoCodecState *input_state;
+  GstVideoCodecState *output_state;
+  GstVideoCodecFrame *current_frame;
 
-  gboolean need_newsegment;
+  GstFlowReturn ret;
 
   /* Progressive */
   GstBuffer *buffer_out;
-  GstFlowReturn ret;
+  png_uint_32 rowbytes;
   
-  /* Pull range */
-  gint offset;
-
   png_structp png;
   png_infop info;
   png_infop endinfo;
-  gboolean setup;
 
-  GstVideoInfo vinfo;
-  gint width;
-  gint height;
   gint color_type;
-  gint fps_n;
-  gint fps_d;
 
-  GstBufferPool *pool;
-
-  /* Chain */
-  gboolean framed;
-  GstClockTime in_timestamp;
-  GstClockTime in_duration;
-
-  GstSegment segment;
   gboolean image_ready;
 };
 
 struct _GstPngDecClass
 {
-  GstElementClass parent_class;
+  GstVideoDecoderClass parent_class;
 };
 
 GType gst_pngdec_get_type(void);
