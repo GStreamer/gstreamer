@@ -26,7 +26,7 @@
 #endif
 
 #include "gstffmpeg.h"
-#include "gstffmpegenc.h"
+#include "gstffmpegvidenc.h"
 #include "gstffmpegcfg.h"
 
 #include <string.h>
@@ -49,7 +49,7 @@ gst_ffmpeg_pass_get_type (void)
     };
 
     ffmpeg_pass_type =
-        g_enum_register_static ("GstFFMpegEncPass", ffmpeg_passes);
+        g_enum_register_static ("GstFFMpegVidEncPass", ffmpeg_passes);
   }
 
   return ffmpeg_pass_type;
@@ -71,7 +71,7 @@ gst_ffmpeg_lim_pass_get_type (void)
     };
 
     ffmpeg_lim_pass_type =
-        g_enum_register_static ("GstFFMpegEncLimPass", ffmpeg_lim_passes);
+        g_enum_register_static ("GstFFMpegVidEncLimPass", ffmpeg_lim_passes);
   }
 
   return ffmpeg_lim_pass_type;
@@ -94,7 +94,8 @@ gst_ffmpeg_mb_decision_get_type (void)
     };
 
     ffmpeg_mb_decision_type =
-        g_enum_register_static ("GstFFMpegEncMBDecision", ffmpeg_mb_decisions);
+        g_enum_register_static ("GstFFMpegVidEncMBDecision",
+        ffmpeg_mb_decisions);
   }
 
   return ffmpeg_mb_decision_type;
@@ -207,7 +208,8 @@ gst_ffmpeg_quant_type_get_type (void)
     };
 
     ffmpeg_quant_type_type =
-        g_enum_register_static ("GstFFMpegEncQuantTypes", ffmpeg_quant_types);
+        g_enum_register_static ("GstFFMpegVidEncQuantTypes",
+        ffmpeg_quant_types);
   }
 
   return ffmpeg_quant_type_type;
@@ -228,7 +230,7 @@ gst_ffmpeg_pre_me_get_type (void)
     };
 
     ffmpeg_pre_me_type =
-        g_enum_register_static ("GstFFMpegEncPreME", ffmpeg_pre_mes);
+        g_enum_register_static ("GstFFMpegVidEncPreME", ffmpeg_pre_mes);
   }
 
   return ffmpeg_pre_me_type;
@@ -249,7 +251,8 @@ gst_ffmpeg_pred_method_get_type (void)
     };
 
     ffmpeg_pred_method =
-        g_enum_register_static ("GstFFMpegEncPredMethod", ffmpeg_pred_methods);
+        g_enum_register_static ("GstFFMpegVidEncPredMethod",
+        ffmpeg_pred_methods);
   }
 
   return ffmpeg_pred_method;
@@ -325,7 +328,7 @@ struct _GParamSpecData
 /* properties whose member offset is higher than the config base
  * can be copied directly at context configuration time;
  * and can also retrieve a default value from lavc */
-#define CONTEXT_CONFIG_OFFSET   G_STRUCT_OFFSET (GstFFMpegEnc, config)
+#define CONTEXT_CONFIG_OFFSET   G_STRUCT_OFFSET (GstFFMpegVidEnc, config)
 
 /* additional info is named pointer specified by the quark */
 static GQuark quark;
@@ -340,7 +343,7 @@ static GList *property_list;
     default, include, exclude)                                          \
 G_STMT_START {                                                          \
   GParamSpecData *_qdata = g_new0 (GParamSpecData, 1);                  \
-  GstFFMpegEnc _enc;                                                    \
+  GstFFMpegVidEnc _enc;                                                    \
   _qdata->offset = G_STRUCT_OFFSET (struct_type, member);               \
   _qdata->size = sizeof (_enc.member);                                  \
   _qdata->lavc_default = default;                                       \
@@ -351,7 +354,7 @@ G_STMT_START {                                                          \
 } G_STMT_END
 
 #define gst_ffmpeg_add_pspec(pspec, member, default, include, exclude)       \
-  gst_ffmpeg_add_pspec_full (pspec, property_list, GstFFMpegEnc, member,     \
+  gst_ffmpeg_add_pspec_full (pspec, property_list, GstFFMpegVidEnc, member,     \
       default, include, exclude)
 
 /* ==== BEGIN CONFIGURATION SECTION ==== */
@@ -756,7 +759,7 @@ gst_ffmpeg_cfg_codec_has_pspec (enum CodecID codec_id, GParamSpec * pspec)
 
 /* install all properties for klass that have been registered in property_list */
 void
-gst_ffmpeg_cfg_install_property (GstFFMpegEncClass * klass, guint base)
+gst_ffmpeg_cfg_install_property (GstFFMpegVidEncClass * klass, guint base)
 {
   GParamSpec *pspec;
   GList *list;
@@ -888,7 +891,7 @@ gboolean
 gst_ffmpeg_cfg_set_property (GObject * object,
     const GValue * value, GParamSpec * pspec)
 {
-  GstFFMpegEnc *ffmpegenc = (GstFFMpegEnc *) (object);
+  GstFFMpegVidEnc *ffmpegenc = (GstFFMpegVidEnc *) (object);
   GParamSpecData *qdata;
 
   qdata = g_param_spec_get_qdata (pspec, quark);
@@ -956,7 +959,7 @@ gboolean
 gst_ffmpeg_cfg_get_property (GObject * object,
     GValue * value, GParamSpec * pspec)
 {
-  GstFFMpegEnc *ffmpegenc = (GstFFMpegEnc *) (object);
+  GstFFMpegVidEnc *ffmpegenc = (GstFFMpegVidEnc *) (object);
   GParamSpecData *qdata;
 
   qdata = g_param_spec_get_qdata (pspec, quark);
@@ -1016,7 +1019,7 @@ gst_ffmpeg_cfg_get_property (GObject * object,
 }
 
 void
-gst_ffmpeg_cfg_set_defaults (GstFFMpegEnc * ffmpegenc)
+gst_ffmpeg_cfg_set_defaults (GstFFMpegVidEnc * ffmpegenc)
 {
   GParamSpec **pspecs;
   guint num_props, i;
@@ -1044,10 +1047,11 @@ gst_ffmpeg_cfg_set_defaults (GstFFMpegEnc * ffmpegenc)
 
 
 void
-gst_ffmpeg_cfg_fill_context (GstFFMpegEnc * ffmpegenc, AVCodecContext * context)
+gst_ffmpeg_cfg_fill_context (GstFFMpegVidEnc * ffmpegenc,
+    AVCodecContext * context)
 {
-  GstFFMpegEncClass *klass
-      = (GstFFMpegEncClass *) G_OBJECT_GET_CLASS (ffmpegenc);
+  GstFFMpegVidEncClass *klass
+      = (GstFFMpegVidEncClass *) G_OBJECT_GET_CLASS (ffmpegenc);
   GParamSpec *pspec;
   GParamSpecData *qdata;
   GList *list;
@@ -1079,7 +1083,7 @@ gst_ffmpeg_cfg_fill_context (GstFFMpegEnc * ffmpegenc, AVCodecContext * context)
 }
 
 void
-gst_ffmpeg_cfg_finalize (GstFFMpegEnc * ffmpegenc)
+gst_ffmpeg_cfg_finalize (GstFFMpegVidEnc * ffmpegenc)
 {
   GParamSpec **pspecs;
   guint num_props, i;

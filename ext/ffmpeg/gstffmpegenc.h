@@ -21,16 +21,16 @@
  * object definition and other useful things.
  */
 
-#ifndef __GST_FFMPEGENC_H__
-#define __GST_FFMPEGENC_H__
+#ifndef __GST_FFMPEGAUDENC_H__
+#define __GST_FFMPEGAUDENC_H__
 
 G_BEGIN_DECLS
 
 #include <gst/base/gstadapter.h>
 
-typedef struct _GstFFMpegEnc GstFFMpegEnc;
+typedef struct _GstFFMpegAudEnc GstFFMpegAudEnc;
 
-struct _GstFFMpegEnc
+struct _GstFFMpegAudEnc
 {
   GstElement element;
 
@@ -39,7 +39,6 @@ struct _GstFFMpegEnc
   GstPad *sinkpad;
 
   AVCodecContext *context;
-  AVFrame *picture;
   gboolean opened;
   GstClockTime adapter_ts;
   guint64 adapter_consumed;
@@ -48,39 +47,17 @@ struct _GstFFMpegEnc
 
   /* cache */
   gulong bitrate;
-  gint me_method;
-  gint gop_size;
   gulong buffer_size;
   gulong rtp_payload_size;
-
-  guint8 *working_buf;
-  gulong working_buf_size;
-
-  /* settings with some special handling */
-  guint pass;
-  gfloat quantizer;
-  gchar *filename;
-  guint lmin;
-  guint lmax;
-  gint max_key_interval;
-  gboolean interlaced;
-
-  /* statistics file */
-  FILE *file;
-
-  /* for b-frame delay handling */
-  GQueue *delay;
 
   /* other settings are copied over straight,
    * include a context here, rather than copy-and-past it from avcodec.h */
   AVCodecContext config;
-
-  gboolean force_keyframe;
 };
 
-typedef struct _GstFFMpegEncClass GstFFMpegEncClass;
+typedef struct _GstFFMpegAudEncClass GstFFMpegAudEncClass;
 
-struct _GstFFMpegEncClass
+struct _GstFFMpegAudEncClass
 {
   GstElementClass parent_class;
 
@@ -89,17 +66,17 @@ struct _GstFFMpegEncClass
   GstCaps *sinkcaps;
 };
 
-#define GST_TYPE_FFMPEGENC \
-  (gst_ffmpegenc_get_type())
-#define GST_FFMPEGENC(obj) \
-  (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_FFMPEGENC,GstFFMpegEnc))
-#define GST_FFMPEGENC_CLASS(klass) \
-  (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_FFMPEGENC,GstFFMpegEncClass))
-#define GST_IS_FFMPEGENC(obj) \
-  (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_FFMPEGENC))
-#define GST_IS_FFMPEGENC_CLASS(klass) \
-  (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_FFMPEGENC))
+#define GST_TYPE_FFMPEGAUDENC \
+  (gst_ffmpegaudenc_get_type())
+#define GST_FFMPEGAUDENC(obj) \
+  (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_FFMPEGAUDENC,GstFFMpegAudEnc))
+#define GST_FFMPEGAUDENC_CLASS(klass) \
+  (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_FFMPEGAUDENC,GstFFMpegAudEncClass))
+#define GST_IS_FFMPEGAUDENC(obj) \
+  (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_FFMPEGAUDENC))
+#define GST_IS_FFMPEGAUDENC_CLASS(klass) \
+  (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_FFMPEGAUDENC))
 
 G_END_DECLS
 
-#endif /* __GST_FFMPEGENC_H__ */
+#endif /* __GST_FFMPEGAUDENC_H__ */

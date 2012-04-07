@@ -21,16 +21,14 @@
  * object definition and other useful things.
  */
 
-#ifndef __GST_FFMPEGENC_H__
-#define __GST_FFMPEGENC_H__
+#ifndef __GST_FFMPEGVIDENC_H__
+#define __GST_FFMPEGVIDENC_H__
 
 G_BEGIN_DECLS
 
-#include <gst/base/gstadapter.h>
+typedef struct _GstFFMpegVidEnc GstFFMpegVidEnc;
 
-typedef struct _GstFFMpegEnc GstFFMpegEnc;
-
-struct _GstFFMpegEnc
+struct _GstFFMpegVidEnc
 {
   GstElement element;
 
@@ -41,9 +39,6 @@ struct _GstFFMpegEnc
   AVCodecContext *context;
   AVFrame *picture;
   gboolean opened;
-  GstClockTime adapter_ts;
-  guint64 adapter_consumed;
-  GstAdapter *adapter;
   gboolean discont;
 
   /* cache */
@@ -78,9 +73,9 @@ struct _GstFFMpegEnc
   gboolean force_keyframe;
 };
 
-typedef struct _GstFFMpegEncClass GstFFMpegEncClass;
+typedef struct _GstFFMpegVidEncClass GstFFMpegVidEncClass;
 
-struct _GstFFMpegEncClass
+struct _GstFFMpegVidEncClass
 {
   GstElementClass parent_class;
 
@@ -89,17 +84,17 @@ struct _GstFFMpegEncClass
   GstCaps *sinkcaps;
 };
 
-#define GST_TYPE_FFMPEGENC \
-  (gst_ffmpegenc_get_type())
-#define GST_FFMPEGENC(obj) \
-  (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_FFMPEGENC,GstFFMpegEnc))
-#define GST_FFMPEGENC_CLASS(klass) \
-  (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_FFMPEGENC,GstFFMpegEncClass))
-#define GST_IS_FFMPEGENC(obj) \
-  (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_FFMPEGENC))
-#define GST_IS_FFMPEGENC_CLASS(klass) \
-  (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_FFMPEGENC))
+#define GST_TYPE_FFMPEGVIDENC \
+  (gst_ffmpegvidenc_get_type())
+#define GST_FFMPEGVIDENC(obj) \
+  (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_FFMPEGVIDENC,GstFFMpegVidEnc))
+#define GST_FFMPEGVIDENC_CLASS(klass) \
+  (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_FFMPEGVIDENC,GstFFMpegVidEncClass))
+#define GST_IS_FFMPEGVIDENC(obj) \
+  (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_FFMPEGVIDENC))
+#define GST_IS_FFMPEGVIDENC_CLASS(klass) \
+  (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_FFMPEGVIDENC))
 
 G_END_DECLS
 
-#endif /* __GST_FFMPEGENC_H__ */
+#endif /* __GST_FFMPEGVIDENC_H__ */

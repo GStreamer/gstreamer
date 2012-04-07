@@ -44,8 +44,10 @@ extern gboolean _shut_up_I_am_probing;
 #endif
 
 extern gboolean gst_ffmpegdemux_register (GstPlugin * plugin);
-extern gboolean gst_ffmpegdec_register (GstPlugin * plugin);
-extern gboolean gst_ffmpegenc_register (GstPlugin * plugin);
+extern gboolean gst_ffmpegauddec_register (GstPlugin * plugin);
+extern gboolean gst_ffmpegviddec_register (GstPlugin * plugin);
+extern gboolean gst_ffmpegaudenc_register (GstPlugin * plugin);
+extern gboolean gst_ffmpegvidenc_register (GstPlugin * plugin);
 extern gboolean gst_ffmpegmux_register (GstPlugin * plugin);
 extern gboolean gst_ffmpegcsp_register (GstPlugin * plugin);
 #if 0
