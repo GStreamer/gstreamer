@@ -27,6 +27,17 @@ AM_CONFIG_HEADER([config.h])
 dnl AM_MAINTAINER_MODE only provides the option to configure to enable it
 AM_MAINTAINER_MODE
 
+dnl error out
+AC_MSG_ERROR([
+ ================================================================================
+  Development of gst-python for GStreamer 0.10 has switched to the 0.10
+  branch in git. Do: git checkout -b 0.10 origin/0.10
+
+  The master branch of gst-python is not used any longer for GStreamer 0.11/1.0.
+  Applications will need to be ported over to the new pygi bindings.
+ ================================================================================
+])
+
 dnl use pretty build output with automake >= 1.11
 m4_ifdef([AM_SILENT_RULES],[AM_SILENT_RULES([yes])],
   [AM_DEFAULT_VERBOSITY=1
