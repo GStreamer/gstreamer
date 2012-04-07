@@ -2178,10 +2178,10 @@ gst_message_new_toc (GstObject * src, GstToc * toc, gboolean updated)
 
   g_return_val_if_fail (toc != NULL, NULL);
 
-  toc_struct = _gst_toc_to_structure (toc);
+  toc_struct = priv_gst_toc_to_structure (toc);
 
   if (G_LIKELY (toc_struct != NULL)) {
-    _gst_toc_structure_set_updated (toc_struct, updated);
+    priv_gst_toc_structure_set_updated (toc_struct, updated);
     return gst_message_new_custom (GST_MESSAGE_TOC, src, toc_struct);
   } else
     return NULL;
@@ -2208,8 +2208,8 @@ gst_message_parse_toc (GstMessage * message, GstToc ** toc, gboolean * updated)
   g_return_if_fail (GST_MESSAGE_TYPE (message) == GST_MESSAGE_TOC);
   g_return_if_fail (toc != NULL);
 
-  *toc = _gst_toc_from_structure (message->structure);
+  *toc = priv_gst_toc_from_structure (message->structure);
 
   if (updated != NULL)
-    *updated = _gst_toc_structure_get_updated (message->structure);
+    *updated = priv_gst_toc_structure_get_updated (message->structure);
 }
