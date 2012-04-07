@@ -332,6 +332,8 @@ gst_file_src_init (GstFileSrc * src, GstFileSrcClass * g_class)
   src->sequential = DEFAULT_SEQUENTIAL;
 
   src->is_regular = FALSE;
+
+  gst_base_src_set_blocksize (GST_BASE_SRC (src), DEFAULT_BLOCKSIZE);
 }
 
 static void
