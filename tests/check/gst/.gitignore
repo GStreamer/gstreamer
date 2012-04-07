@@ -39,6 +39,8 @@ gstutils
 gstvalue
 gstquery
 gsttask
+gsttoc
+gsttocsetter
 *.check.xml
 gstinfo
 gstxml
