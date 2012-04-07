@@ -416,6 +416,8 @@ EXPORTS
 	gst_event_new_sink_message
 	gst_event_new_step
 	gst_event_new_tag
+	gst_event_new_toc
+	gst_event_new_toc_select
 	gst_event_parse_buffer_size
 	gst_event_parse_latency
 	gst_event_parse_new_segment
@@ -426,6 +428,8 @@ EXPORTS
 	gst_event_parse_sink_message
 	gst_event_parse_step
 	gst_event_parse_tag
+	gst_event_parse_toc
+	gst_event_parse_toc_select
 	gst_event_set_seqnum
 	gst_event_type_flags_get_type
 	gst_event_type_get_flags
@@ -571,6 +575,7 @@ EXPORTS
 	gst_message_new_structure_change
 	gst_message_new_tag
 	gst_message_new_tag_full
+	gst_message_new_toc
 	gst_message_new_warning
 	gst_message_parse_async_start
 	gst_message_parse_buffering
@@ -595,6 +600,7 @@ EXPORTS
 	gst_message_parse_structure_change
 	gst_message_parse_tag
 	gst_message_parse_tag_full
+	gst_message_parse_toc
 	gst_message_parse_warning
 	gst_message_set_buffering_stats
 	gst_message_set_qos_stats
@@ -878,6 +884,7 @@ EXPORTS
 	gst_query_new_position
 	gst_query_new_seeking
 	gst_query_new_segment
+	gst_query_new_toc
 	gst_query_new_uri
 	gst_query_parse_buffering_percent
 	gst_query_parse_buffering_range
@@ -891,6 +898,7 @@ EXPORTS
 	gst_query_parse_position
 	gst_query_parse_seeking
 	gst_query_parse_segment
+	gst_query_parse_toc
 	gst_query_parse_uri
 	gst_query_set_buffering_percent
 	gst_query_set_buffering_range
@@ -903,6 +911,7 @@ EXPORTS
 	gst_query_set_position
 	gst_query_set_seeking
 	gst_query_set_segment
+	gst_query_set_toc
 	gst_query_set_uri
 	gst_query_type_get_by_nick
 	gst_query_type_get_details
@@ -1134,6 +1143,25 @@ EXPORTS
 	gst_task_start
 	gst_task_state_get_type
 	gst_task_stop
+	gst_toc_copy
+	gst_toc_entry_copy
+	gst_toc_entry_free
+	gst_toc_entry_get_start_stop
+	gst_toc_entry_new
+	gst_toc_entry_new_with_pad
+	gst_toc_entry_set_start_stop
+	gst_toc_entry_type_get_type
+	gst_toc_find_entry
+	gst_toc_free
+	gst_toc_new
+	gst_toc_setter_add_toc_entry
+	gst_toc_setter_get_toc
+	gst_toc_setter_get_toc_copy
+	gst_toc_setter_get_toc_entry
+	gst_toc_setter_get_toc_entry_copy
+	gst_toc_setter_get_type
+	gst_toc_setter_reset_toc
+	gst_toc_setter_set_toc
 	gst_trace_destroy
 	gst_trace_flush
 	gst_trace_new
