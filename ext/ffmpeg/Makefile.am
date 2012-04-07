@@ -11,7 +11,9 @@ libgstffmpeg_la_SOURCES = gstffmpeg.c	\
 			  gstffmpegcodecmap.c	\
 			  gstffmpegutils.c	\
 			  gstffmpegenc.c	\
+			  gstffmpegvidenc.c	\
 			  gstffmpegdec.c	\
+			  gstffmpegviddec.c	\
 			  gstffmpegcfg.c	\
 			  gstffmpegdemux.c	\
 			  gstffmpegmux.c    \
@@ -35,5 +37,6 @@ noinst_HEADERS = \
 	gstffmpegcodecmap.h \
 	gstffmpegutils.h \
 	gstffmpegenc.h \
+	gstffmpegvidenc.h \
 	gstffmpegcfg.h \
 	gstffmpegpipe.h
