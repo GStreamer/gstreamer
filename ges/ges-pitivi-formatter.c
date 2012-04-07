@@ -1101,9 +1101,20 @@ load_pitivi_file_from_uri (GESFormatter * self,
     return FALSE;
   }
 
-  if (!make_timeline_objects (self)) {
-    GST_ERROR ("Couldn't deserialise the project properly");
-    return FALSE;
+
+
+  /* If there are no timeline objects to load we should emit
+   * 'project-loaded' signal.
+   */
+  if (!g_hash_table_size (priv->timeline_objects_table)) {
+    GESFormatterClass *klass = GES_FORMATTER_GET_CLASS (self);
+
+    klass->project_loaded (self, GES_PITIVI_FORMATTER (self)->priv->timeline);
+  } else {
+    if (!make_timeline_objects (self)) {
+      GST_ERROR ("Couldn't deserialise the project properly");
+      return FALSE;
+    }
   }
 
   xmlXPathFreeContext (priv->xpathCtx);
