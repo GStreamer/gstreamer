@@ -57,10 +57,6 @@
  * </refsect2>
  */
 
-/* FIXME 0.11: suppress warnings for deprecated API such as GValueArray
- * with newer GLib versions (>= 2.31.0) */
-#define GLIB_DISABLE_DEPRECATION_WARNINGS
-
 #ifdef HAVE_CONFIG_H
 #  include "config.h"
 #endif
@@ -239,12 +235,12 @@ gst_interleave_finalize (GObject * object)
 
   if (self->channel_positions
       && self->channel_positions != self->input_channel_positions) {
-    g_array_free (self->channel_positions, TRUE);
+    g_value_array_free (self->channel_positions);
     self->channel_positions = NULL;
   }
 
   if (self->input_channel_positions) {
-    g_array_free (self->input_channel_positions, TRUE);
+    g_value_array_free (self->input_channel_positions);
     self->input_channel_positions = NULL;
   }
 
@@ -254,21 +250,21 @@ gst_interleave_finalize (GObject * object)
 }
 
 static gboolean
-gst_interleave_check_channel_positions (GArray * positions)
+gst_interleave_check_channel_positions (GValueArray * positions)
 {
   gint i;
   guint channels;
   GstAudioChannelPosition *pos;
   gboolean ret;
-  GValue val;
 
-  channels = positions->len;
+  channels = positions->n_values;
   pos = g_new (GstAudioChannelPosition, channels);
 
   for (i = 0; i < channels; i++) {
-    val = g_array_index (positions, GValue, i);
-    pos[i] = g_value_get_enum (&val);
-    g_value_reset (&val);
+    GValue *val;
+
+    val = g_value_array_get_nth (positions, i);
+    pos[i] = g_value_get_enum (val);
   }
 
   ret = gst_audio_check_valid_channel_positions (pos, channels, FALSE);
@@ -282,15 +278,16 @@ gst_interleave_set_channel_positions (GstInterleave * self, GstStructure * s)
 {
   gint i;
   guint64 channel_mask = 0;
-  GValue val;
 
-  if (self->channel_positions && self->channels == self->channel_positions->len
+  if (self->channel_positions != NULL &&
+      self->channels == self->channel_positions->n_values
       && gst_interleave_check_channel_positions (self->channel_positions)) {
     GST_DEBUG_OBJECT (self, "Using provided channel positions");
     for (i = 0; i < self->channels; i++) {
-      val = g_array_index (self->channel_positions, GValue, i);
-      channel_mask |= G_GUINT64_CONSTANT (1) << g_value_get_enum (&val);
-      g_value_reset (&val);
+      GValue *val;
+
+      val = g_value_array_get_nth (self->channel_positions, i);
+      channel_mask |= G_GUINT64_CONSTANT (1) << g_value_get_enum (val);
     }
   } else {
     GST_WARNING_OBJECT (self, "Using NONE channel positions");
@@ -345,8 +342,13 @@ gst_interleave_class_init (GstInterleaveClass * klass)
    *
    */
   g_object_class_install_property (gobject_class, PROP_CHANNEL_POSITIONS,
-      g_param_spec_boxed ("channel-positions", "Channel positions",
-          "Channel position of the n-th output", G_TYPE_ARRAY,
+      g_param_spec_value_array ("channel-positions", "Channel positions",
+          "Channel positions used on the output",
+          g_param_spec_enum ("channel-position", "Channel position",
+              "Channel position of the n-th input",
+              GST_TYPE_AUDIO_CHANNEL_POSITION,
+              GST_AUDIO_CHANNEL_POSITION_NONE,
+              G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS),
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   /**
@@ -390,7 +392,7 @@ gst_interleave_init (GstInterleave * self)
   gst_collect_pads2_set_function (self->collect,
       (GstCollectPads2Function) gst_interleave_collected, self);
 
-  self->input_channel_positions = g_array_new (FALSE, TRUE, sizeof (GValue));
+  self->input_channel_positions = g_value_array_new (0);
   self->channel_positions_from_input = TRUE;
   self->channel_positions = self->input_channel_positions;
 }
@@ -400,22 +402,16 @@ gst_interleave_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec)
 {
   GstInterleave *self = GST_INTERLEAVE (object);
-  int i;
-  GArray *arr;
 
   switch (prop_id) {
     case PROP_CHANNEL_POSITIONS:
       if (self->channel_positions &&
           self->channel_positions != self->input_channel_positions)
-        g_array_free (self->channel_positions, TRUE);
+        g_value_array_free (self->channel_positions);
 
-      arr = g_value_get_boxed (value);
-      self->channel_positions = g_array_new (FALSE, TRUE, sizeof (GValue));
-      for (i = 0; i < arr->len; i++)
-        g_array_append_val (self->channel_positions, g_array_index (arr, GValue,
-                i));
+      self->channel_positions = g_value_dup_boxed (value);
       self->channel_positions_from_input = FALSE;
-      self->channels = self->channel_positions->len;
+      self->channels = self->channel_positions->n_values;
       break;
     case PROP_CHANNEL_POSITIONS_FROM_INPUT:
       self->channel_positions_from_input = g_value_get_boolean (value);
@@ -423,7 +419,7 @@ gst_interleave_set_property (GObject * object, guint prop_id,
       if (self->channel_positions_from_input) {
         if (self->channel_positions &&
             self->channel_positions != self->input_channel_positions)
-          g_array_free (self->channel_positions, TRUE);
+          g_value_array_free (self->channel_positions);
         self->channel_positions = self->input_channel_positions;
       }
       break;
@@ -493,7 +489,7 @@ gst_interleave_request_new_pad (GstElement * element, GstPadTemplate * templ,
   g_value_init (&val, GST_TYPE_AUDIO_CHANNEL_POSITION);
   g_value_set_enum (&val, GST_AUDIO_CHANNEL_POSITION_NONE);
   self->input_channel_positions =
-      g_array_append_val (self->input_channel_positions, val);
+      g_value_array_append (self->input_channel_positions, &val);
   g_value_unset (&val);
 
   /* Update the src caps if we already have them */
@@ -549,7 +545,7 @@ gst_interleave_release_pad (GstElement * element, GstPad * pad)
   g_atomic_int_add (&self->channels, -1);
 
   position = GST_INTERLEAVE_PAD_CAST (pad)->channel;
-  g_array_remove_index (self->input_channel_positions, position);
+  g_value_array_remove (self->input_channel_positions, position);
 
   /* Update channel numbers */
   GST_OBJECT_LOCK (self);
@@ -764,7 +760,7 @@ gst_interleave_sink_setcaps (GstInterleave * self, GstPad * pad,
 
     if (self->channel_positions_from_input
         && GST_AUDIO_INFO_CHANNELS (&info) == 1) {
-      val = &g_array_index (self->input_channel_positions, GValue, channel);
+      val = g_value_array_get_nth (self->input_channel_positions, channel);
       g_value_set_enum (val, GST_AUDIO_INFO_POSITION (&info, 0));
     }
 

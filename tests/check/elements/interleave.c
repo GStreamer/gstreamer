@@ -662,7 +662,7 @@ GST_START_TEST (test_interleave_2ch_pipeline_custom_chanpos)
   GstElement *pipeline, *queue, *src1, *src2, *interleave, *sink;
   GstPad *sinkpad0, *sinkpad1, *tmp, *tmp2;
   GstMessage *msg;
-  GArray *arr;
+  GValueArray *arr;
   GValue val = { 0, };
 
   have_data = 0;
@@ -693,18 +693,18 @@ GST_START_TEST (test_interleave_2ch_pipeline_custom_chanpos)
   interleave = gst_element_factory_make ("interleave", "interleave");
   fail_unless (interleave != NULL);
   g_object_set (interleave, "channel-positions-from-input", FALSE, NULL);
-  arr = g_array_new (FALSE, TRUE, sizeof (GValue));
+  arr = g_value_array_new (2);
 
   g_value_init (&val, GST_TYPE_AUDIO_CHANNEL_POSITION);
   g_value_set_enum (&val, GST_AUDIO_CHANNEL_POSITION_FRONT_CENTER);
-  g_array_append_val (arr, val);
+  g_value_array_append (arr, &val);
   g_value_reset (&val);
   g_value_set_enum (&val, GST_AUDIO_CHANNEL_POSITION_REAR_CENTER);
-  g_array_append_val (arr, val);
+  g_value_array_append (arr, &val);
   g_value_unset (&val);
 
   g_object_set (interleave, "channel-positions", arr, NULL);
-  g_array_free (arr, TRUE);
+  g_value_array_free (arr);
   gst_bin_add (GST_BIN (pipeline), gst_object_ref (interleave));
 
   sinkpad0 = gst_element_get_request_pad (interleave, "sink_%u");
