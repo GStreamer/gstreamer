@@ -580,6 +580,7 @@ gst_event_type_get_type (void)
     {C_ENUM (GST_EVENT_BUFFERSIZE), "GST_EVENT_BUFFERSIZE", "buffersize"},
     {C_ENUM (GST_EVENT_SINK_MESSAGE), "GST_EVENT_SINK_MESSAGE", "sink-message"},
     {C_ENUM (GST_EVENT_EOS), "GST_EVENT_EOS", "eos"},
+    {C_ENUM (GST_EVENT_TOC), "GST_EVENT_TOC", "toc"},
     {C_ENUM (GST_EVENT_SEGMENT_DONE), "GST_EVENT_SEGMENT_DONE", "segment-done"},
     {C_ENUM (GST_EVENT_GAP), "GST_EVENT_GAP", "gap"},
     {C_ENUM (GST_EVENT_QOS), "GST_EVENT_QOS", "qos"},
@@ -588,6 +589,7 @@ gst_event_type_get_type (void)
     {C_ENUM (GST_EVENT_LATENCY), "GST_EVENT_LATENCY", "latency"},
     {C_ENUM (GST_EVENT_STEP), "GST_EVENT_STEP", "step"},
     {C_ENUM (GST_EVENT_RECONFIGURE), "GST_EVENT_RECONFIGURE", "reconfigure"},
+    {C_ENUM (GST_EVENT_TOC_SELECT), "GST_EVENT_TOC_SELECT", "toc-select"},
     {C_ENUM (GST_EVENT_CUSTOM_UPSTREAM), "GST_EVENT_CUSTOM_UPSTREAM",
         "custom-upstream"},
     {C_ENUM (GST_EVENT_CUSTOM_DOWNSTREAM), "GST_EVENT_CUSTOM_DOWNSTREAM",
@@ -814,6 +816,7 @@ gst_message_type_get_type (void)
     {C_FLAGS (GST_MESSAGE_STEP_START), "GST_MESSAGE_STEP_START", "step-start"},
     {C_FLAGS (GST_MESSAGE_QOS), "GST_MESSAGE_QOS", "qos"},
     {C_FLAGS (GST_MESSAGE_PROGRESS), "GST_MESSAGE_PROGRESS", "progress"},
+    {C_FLAGS (GST_MESSAGE_TOC), "GST_MESSAGE_TOC", "toc"},
     {C_FLAGS (GST_MESSAGE_ANY), "GST_MESSAGE_ANY", "any"},
     {0, NULL, NULL}
   };
@@ -1386,6 +1389,7 @@ gst_query_type_get_type (void)
     {C_ENUM (GST_QUERY_ACCEPT_CAPS), "GST_QUERY_ACCEPT_CAPS", "accept-caps"},
     {C_ENUM (GST_QUERY_CAPS), "GST_QUERY_CAPS", "caps"},
     {C_ENUM (GST_QUERY_DRAIN), "GST_QUERY_DRAIN", "drain"},
+    {C_ENUM (GST_QUERY_TOC), "GST_QUERY_TOC", "toc"},
     {0, NULL, NULL}
   };
 
@@ -1579,6 +1583,27 @@ gst_task_state_get_type (void)
 
   if (g_once_init_enter (&id)) {
     GType tmp = g_enum_register_static ("GstTaskState", values);
+    g_once_init_leave (&id, tmp);
+  }
+
+  return (GType) id;
+}
+
+/* enumerations from "gsttoc.h" */
+GType
+gst_toc_entry_type_get_type (void)
+{
+  static gsize id = 0;
+  static const GEnumValue values[] = {
+    {C_ENUM (GST_TOC_ENTRY_TYPE_CHAPTER), "GST_TOC_ENTRY_TYPE_CHAPTER",
+        "chapter"},
+    {C_ENUM (GST_TOC_ENTRY_TYPE_EDITION), "GST_TOC_ENTRY_TYPE_EDITION",
+        "edition"},
+    {0, NULL, NULL}
+  };
+
+  if (g_once_init_enter (&id)) {
+    GType tmp = g_enum_register_static ("GstTocEntryType", values);
     g_once_init_leave (&id, tmp);
   }
 

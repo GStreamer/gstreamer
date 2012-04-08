@@ -17,13 +17,16 @@
 #undef ENABLE_SUBUNIT
 
 /* gettext package name */
-#define GETTEXT_PACKAGE "gstreamer-0.11"
+#define GETTEXT_PACKAGE "gstreamer-1.0"
 
 /* The GIO library directory. */
 #undef GIO_LIBDIR
 
 /* The GIO modules directory. */
 #undef GIO_MODULE_DIR
+
+/* GStreamer API Version */
+#define GST_API_VERSION "1.0"
 
 /* data dir */
 #define GST_DATADIR PREFIX "\\share"
@@ -52,17 +55,14 @@
 /* GStreamer license */
 #define GST_LICENSE "LGPL"
 
-/* library major.minor version */
-#define GST_API_VERSION "0.11"
-
 /* package name in plugins */
-#define GST_PACKAGE_NAME "GStreamer source release"
+#define GST_PACKAGE_NAME "GStreamer git"
 
 /* package origin */
 #define GST_PACKAGE_ORIGIN "Unknown package origin"
 
 /* GStreamer package release date/time for plugins as YYYY-MM-DD */
-#define GST_PACKAGE_RELEASE_DATETIME "2012-03-22"
+#define GST_PACKAGE_RELEASE_DATETIME "2012-04-07T14:43Z"
 
 /* location of the installed gst-plugin-scanner */
 #define GST_PLUGIN_SCANNER_INSTALLED LIBDIR "\\gst-plugin-scanner"
@@ -334,7 +334,7 @@
 #define PACKAGE_NAME "GStreamer"
 
 /* Define to the full name and version of this package. */
-#define PACKAGE_STRING "GStreamer 0.11.3"
+#define PACKAGE_STRING "GStreamer 0.11.89.1"
 
 /* Define to the one symbol short name of this package. */
 #define PACKAGE_TARNAME "gstreamer"
@@ -343,13 +343,13 @@
 #undef PACKAGE_URL
 
 /* Define to the version of this package. */
-#define PACKAGE_VERSION "0.11.3"
+#define PACKAGE_VERSION "0.11.89.1"
 
 /* directory where plugins are located */
 #ifdef _DEBUG
-#  define PLUGINDIR PREFIX "\\debug\\lib\\gstreamer-0.11"
+#  define PLUGINDIR PREFIX "\\debug\\lib\\gstreamer-1.0"
 #else
-#  define PLUGINDIR PREFIX "\\lib\\gstreamer-0.11"
+#  define PLUGINDIR PREFIX "\\lib\\gstreamer-1.0"
 #endif
 
 /* The size of `char', as computed by sizeof. */
@@ -374,7 +374,7 @@
 #undef USE_POISONING
 
 /* Version number of package */
-#define VERSION "0.11.3"
+#define VERSION "0.11.89.1"
 
 /* Define WORDS_BIGENDIAN to 1 if your processor stores words with the most
    significant byte first (like Motorola and SPARC, unlike Intel). */

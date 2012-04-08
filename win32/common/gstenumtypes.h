@@ -192,6 +192,10 @@ GType gst_tag_flag_get_type (void);
 GType gst_task_state_get_type (void);
 #define GST_TYPE_TASK_STATE (gst_task_state_get_type())
 
+/* enumerations from "gsttoc.h" */
+GType gst_toc_entry_type_get_type (void);
+#define GST_TYPE_TOC_ENTRY_TYPE (gst_toc_entry_type_get_type())
+
 /* enumerations from "gsttypefind.h" */
 GType gst_type_find_probability_get_type (void);
 #define GST_TYPE_TYPE_FIND_PROBABILITY (gst_type_find_probability_get_type())
