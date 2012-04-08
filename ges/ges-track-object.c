@@ -60,6 +60,8 @@ struct _GESTrackObjectPrivate
 
   gboolean valid;
 
+  guint64 maxduration;
+
   gboolean locked;              /* If TRUE, then moves in sync with its controlling
                                  * GESTimelineObject */
 };
@@ -73,6 +75,7 @@ enum
   PROP_PRIORITY,
   PROP_ACTIVE,
   PROP_LOCKED,
+  PROP_MAX_DURATION,
   PROP_LAST
 };
 
@@ -149,6 +152,9 @@ ges_track_object_get_property (GObject * object, guint property_id,
     case PROP_LOCKED:
       g_value_set_boolean (value, ges_track_object_is_locked (tobj));
       break;
+    case PROP_MAX_DURATION:
+      g_value_set_uint64 (value, tobj->priv->maxduration);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, property_id, pspec);
   }
@@ -178,6 +184,9 @@ ges_track_object_set_property (GObject * object, guint property_id,
       break;
     case PROP_LOCKED:
       ges_track_object_set_locked_internal (tobj, g_value_get_boolean (value));
+      break;
+    case PROP_MAX_DURATION:
+      ges_track_object_set_max_duration (tobj, g_value_get_uint64 (value));
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, property_id, pspec);
@@ -289,6 +298,18 @@ ges_track_object_class_init (GESTrackObjectClass * klass)
       G_PARAM_READWRITE);
   g_object_class_install_property (object_class, PROP_LOCKED,
       properties[PROP_LOCKED]);
+
+  /**
+   * GESTrackObject:max-duration:
+   *
+   * The maximum duration (in nanoseconds) of the #GESTrackObject.
+   *
+   * Since: 0.10.XX
+   */
+  g_object_class_install_property (object_class, PROP_MAX_DURATION,
+      g_param_spec_uint64 ("max-duration", "Maximum duration",
+          "The duration of the object", 0, G_MAXUINT64, G_MAXUINT64,
+          G_PARAM_READWRITE | G_PARAM_CONSTRUCT));
 
   /**
    * GESTrackObject::deep-notify:
@@ -843,14 +864,20 @@ ges_track_object_get_track (GESTrackObject * object)
   return object->priv->track;
 }
 
-
+/**
+ * ges_track_object_set_timeline_object:
+ * @object: The #GESTrackObject to set the parent to
+ * @tlobject: The #GESTimelineObject, parent of @tlobj or %NULL
+ *
+ * Set the #GESTimelineObject to which @object belongs.
+ */
 void
 ges_track_object_set_timeline_object (GESTrackObject * object,
-    GESTimelineObject * tlobj)
+    GESTimelineObject * tlobject)
 {
-  GST_DEBUG ("object:%p, timeline-object:%p", object, tlobj);
+  GST_DEBUG ("object:%p, timeline-object:%p", object, tlobject);
 
-  object->priv->timelineobj = tlobj;
+  object->priv->timelineobj = tlobject;
 }
 
 /**
@@ -1422,4 +1449,39 @@ prop_hash_not_set:
     GST_ERROR ("The child properties haven't been set on %p", object);
     return NULL;
   }
+}
+
+/**
+ * ges_track_object_get_max_duration:
+ * @object: The #GESTrackObject to retrieve max duration from
+ *
+ * Get the max duration of @object.
+ *
+ * Returns: The max duration of @object
+ *
+ * Since: 0.10.XX
+ */
+guint64
+ges_track_object_get_max_duration (GESTrackObject * object)
+{
+  g_return_val_if_fail (GES_IS_TRACK_OBJECT (object), 0);
+
+  return object->priv->maxduration;
+}
+
+/**
+ * ges_track_object_set_max_duration:
+ * @object: The #GESTrackObject to retrieve max duration from
+ * @maxduration: The maximum duration of @object
+ *
+ * Returns: Set the max duration of @object
+ *
+ * Since: 0.10.XX
+ */
+void
+ges_track_object_set_max_duration (GESTrackObject * object, guint64 maxduration)
+{
+  g_return_if_fail (GES_IS_TRACK_OBJECT (object));
+
+  object->priv->maxduration = maxduration;
 }

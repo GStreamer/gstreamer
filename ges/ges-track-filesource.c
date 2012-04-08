@@ -34,14 +34,13 @@ G_DEFINE_TYPE (GESTrackFileSource, ges_track_filesource, GES_TYPE_TRACK_SOURCE);
 
 struct _GESTrackFileSourcePrivate
 {
-  guint64 maxduration;
+  void *dummy;
 };
 
 enum
 {
   PROP_0,
-  PROP_URI,
-  PROP_MAX_DURATION
+  PROP_URI
 };
 
 static void
@@ -53,9 +52,6 @@ ges_track_filesource_get_property (GObject * object, guint property_id,
   switch (property_id) {
     case PROP_URI:
       g_value_set_string (value, tfs->uri);
-      break;
-    case PROP_MAX_DURATION:
-      g_value_set_uint64 (value, tfs->priv->maxduration);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, property_id, pspec);
@@ -71,9 +67,6 @@ ges_track_filesource_set_property (GObject * object, guint property_id,
   switch (property_id) {
     case PROP_URI:
       tfs->uri = g_value_dup_string (value);
-      break;
-    case PROP_MAX_DURATION:
-      tfs->priv->maxduration = g_value_get_uint64 (value);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, property_id, pspec);
@@ -113,19 +106,6 @@ ges_track_filesource_class_init (GESTrackFileSourceClass * klass)
   object_class->get_property = ges_track_filesource_get_property;
   object_class->set_property = ges_track_filesource_set_property;
   object_class->dispose = ges_track_filesource_dispose;
-
-  /**
-   * GESTrackFileSource:max-duration:
-   *
-   * The maximum duration (in nanoseconds) of the file.
-   *
-   * If not set before adding the object to a layer, it will be discovered
-   * asynchronously. Connect to 'notify::max-duration' to be notified of it.
-   */
-  g_object_class_install_property (object_class, PROP_MAX_DURATION,
-      g_param_spec_uint64 ("max-duration", "Maximum duration",
-          "The duration of the file", 0, G_MAXUINT64, GST_CLOCK_TIME_NONE,
-          G_PARAM_READWRITE | G_PARAM_CONSTRUCT));
 
   /**
    * GESTrackFileSource:uri

@@ -108,6 +108,8 @@ gboolean ges_timeline_layer_remove_object (GESTimelineLayer * layer,
 void     ges_timeline_layer_set_priority  (GESTimelineLayer * layer,
 					   guint priority);
 
+gboolean ges_timeline_layer_is_empty      (GESTimelineLayer * layer);
+
 guint   ges_timeline_layer_get_priority  (GESTimelineLayer * layer);
 
 gboolean ges_timeline_layer_get_auto_transition (GESTimelineLayer * layer);

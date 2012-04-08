@@ -43,6 +43,8 @@ gboolean
 ges_timeline_object_create_track_objects_func (GESTimelineObject
     * object, GESTrack * track);
 
+void default_set_max_duration (GESTimelineObject * object, guint64 maxduration);
+
 static void
 track_object_start_changed_cb (GESTrackObject * child,
     GParamSpec * arg G_GNUC_UNUSED, GESTimelineObject * object);
@@ -131,6 +133,8 @@ struct _GESTimelineObjectPrivate
   gboolean ignore_notifies;
   gboolean is_moving;
 
+  guint64 maxduration;
+
   GList *mappings;
 
   guint nb_effects;
@@ -151,6 +155,7 @@ enum
   PROP_HEIGHT,
   PROP_LAYER,
   PROP_SUPPORTED_FORMATS,
+  PROP_MAX_DURATION,
   PROP_LAST
 };
 
@@ -184,6 +189,9 @@ ges_timeline_object_get_property (GObject * object, guint property_id,
     case PROP_SUPPORTED_FORMATS:
       g_value_set_flags (value, tobj->priv->supportedformats);
       break;
+    case PROP_MAX_DURATION:
+      g_value_set_uint64 (value, tobj->priv->maxduration);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, property_id, pspec);
   }
@@ -215,6 +223,9 @@ ges_timeline_object_set_property (GObject * object, guint property_id,
       ges_timeline_object_set_supported_formats (tobj,
           g_value_get_flags (value));
       break;
+    case PROP_MAX_DURATION:
+      ges_timeline_object_set_max_duration (tobj, g_value_get_uint64 (value));
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, property_id, pspec);
   }
@@ -230,6 +241,7 @@ ges_timeline_object_class_init (GESTimelineObjectClass * klass)
   object_class->get_property = ges_timeline_object_get_property;
   object_class->set_property = ges_timeline_object_set_property;
   klass->create_track_objects = ges_timeline_object_create_track_objects_func;
+  klass->set_max_duration = default_set_max_duration;
   klass->track_object_added = NULL;
   klass->track_object_released = NULL;
 
@@ -373,6 +385,18 @@ ges_timeline_object_class_init (GESTimelineObjectClass * klass)
       G_SIGNAL_RUN_FIRST, 0, NULL, NULL, g_cclosure_marshal_generic,
       G_TYPE_NONE, 1, GES_TYPE_TRACK_OBJECT);
 
+  /**
+   * GESTimelineObject:max-duration:
+   *
+   * The maximum duration (in nanoseconds) of the #GESTimelineObject.
+   *
+   * Since: 0.10.XX
+   */
+  g_object_class_install_property (object_class, PROP_MAX_DURATION,
+      g_param_spec_uint64 ("max-duration", "Maximum duration",
+          "The duration of the object", 0, G_MAXUINT64, G_MAXUINT64,
+          G_PARAM_READWRITE | G_PARAM_CONSTRUCT));
+
   klass->need_fill_track = TRUE;
 }
 
@@ -387,6 +411,7 @@ ges_timeline_object_init (GESTimelineObject * self)
   self->priv->layer = NULL;
   self->priv->nb_effects = 0;
   self->priv->is_moving = FALSE;
+  self->priv->maxduration = G_MAXUINT64;
 }
 
 /**
@@ -456,6 +481,15 @@ ges_timeline_object_create_track_objects (GESTimelineObject * object,
   return klass->create_track_objects (object, track);
 }
 
+/* Default implementation of default_set_max_duration */
+void
+default_set_max_duration (GESTimelineObject * object, guint64 maxduration)
+{
+  GList *tmp;
+  for (tmp = object->priv->trackobjects; tmp; tmp = g_list_next (tmp))
+    g_object_set (tmp->data, "max-duration", maxduration, NULL);
+}
+
 /*
  * default implementation of GESTimelineObjectClass::create_track_objects
  */
@@ -464,7 +498,6 @@ ges_timeline_object_create_track_objects_func (GESTimelineObject * object,
     GESTrack * track)
 {
   GESTrackObject *result;
-  gboolean ret;
 
   result = ges_timeline_object_create_track_object (object, track);
   if (!result) {
@@ -472,10 +505,10 @@ ges_timeline_object_create_track_objects_func (GESTimelineObject * object,
     return FALSE;
   }
 
-  ret = ges_track_add_object (track, result);
-  ges_timeline_object_add_track_object (object, result);
+  if (ges_timeline_object_add_track_object (object, result) == FALSE)
+    return FALSE;
 
-  return ret;
+  return ges_track_add_object (track, result);
 }
 
 /**
@@ -558,6 +591,7 @@ ges_timeline_object_add_track_object (GESTimelineObject * object, GESTrackObject
   ges_track_object_set_start (trobj, object->start);
   ges_track_object_set_duration (trobj, object->duration);
   ges_track_object_set_inpoint (trobj, object->inpoint);
+  ges_track_object_set_max_duration (trobj, object->priv->maxduration);
 
   if (klass->track_object_added) {
     GST_DEBUG ("Calling track_object_added subclass method");
@@ -586,7 +620,7 @@ ges_timeline_object_add_track_object (GESTimelineObject * object, GESTrackObject
       + mapping->priority_offset);
 
   GST_DEBUG ("Returning trobj:%p", trobj);
-  if (!GES_IS_TRACK_PARSE_LAUNCH_EFFECT (trobj)) {
+  if (!GES_IS_TRACK_EFFECT (trobj)) {
     g_signal_emit (object, ges_timeline_object_signals[TRACK_OBJECT_ADDED], 0,
         GES_TRACK_OBJECT (trobj));
   } else {
@@ -994,6 +1028,9 @@ ges_timeline_object_move_to_layer (GESTimelineObject * object, GESTimelineLayer
 
     return ges_timeline_layer_add_object (layer, object);
   }
+
+  GST_DEBUG_OBJECT (object, "moving to layer %p, priority: %d", layer,
+      ges_timeline_layer_get_priority (layer));
 
   object->priv->is_moving = TRUE;
   g_object_ref (object);
@@ -1455,6 +1492,45 @@ ges_timeline_object_objects_set_locked (GESTimelineObject * object,
   }
 }
 
+/**
+ * ges_timeline_object_get_max_duration:
+ * @object: The #GESTimelineObject to retrieve max duration from
+ *
+ * Get the max duration of @object.
+ *
+ * Returns: The max duration of @object
+ *
+ * Since: 0.10.XX
+ */
+guint64
+ges_timeline_object_get_max_duration (GESTimelineObject * object)
+{
+  g_return_val_if_fail (GES_IS_TIMELINE_OBJECT (object), 0);
+
+  return object->priv->maxduration;
+}
+
+/**
+ * ges_timeline_object_set_max_duration:
+ * @object: The #GESTimelineObject to retrieve max duration from
+ * @maxduration: The maximum duration of @object
+ *
+ * Returns: Set the max duration of @object
+ *
+ * Since: 0.10.XX
+ */
+void
+ges_timeline_object_set_max_duration (GESTimelineObject * object,
+    guint64 maxduration)
+{
+  GESTimelineObjectClass *klass = GES_TIMELINE_OBJECT_GET_CLASS (object);
+
+  g_return_if_fail (GES_IS_TIMELINE_OBJECT (object));
+
+  object->priv->maxduration = maxduration;
+  klass->set_max_duration (object, maxduration);
+}
+
 static void
 update_height (GESTimelineObject * object)
 {
@@ -1517,8 +1593,26 @@ static void
 track_object_inpoint_changed_cb (GESTrackObject * child,
     GParamSpec * arg G_GNUC_UNUSED, GESTimelineObject * object)
 {
+  ObjectMapping *map;
+
   if (object->priv->ignore_notifies)
     return;
+
+  map = find_object_mapping (object, child);
+  if (G_UNLIKELY (map == NULL))
+    /* something massively screwed up if we get this */
+    return;
+
+  if (!ges_track_object_is_locked (child)) {
+    /* Update the internal start_offset */
+    map->inpoint_offset = object->inpoint - child->inpoint;
+  } else {
+    /* Or update the parent start */
+    object->priv->initiated_move = child;
+    ges_timeline_object_set_inpoint (object,
+        child->inpoint + map->inpoint_offset);
+    object->priv->initiated_move = NULL;
+  }
 
 }
 
@@ -1526,8 +1620,26 @@ static void
 track_object_duration_changed_cb (GESTrackObject * child,
     GParamSpec * arg G_GNUC_UNUSED, GESTimelineObject * object)
 {
+  ObjectMapping *map;
+
   if (object->priv->ignore_notifies)
     return;
+
+  map = find_object_mapping (object, child);
+  if (G_UNLIKELY (map == NULL))
+    /* something massively screwed up if we get this */
+    return;
+
+  if (!ges_track_object_is_locked (child)) {
+    /* Update the internal start_offset */
+    map->duration_offset = object->duration - child->duration;
+  } else {
+    /* Or update the parent start */
+    object->priv->initiated_move = child;
+    ges_timeline_object_set_duration (object,
+        child->duration + map->duration_offset);
+    object->priv->initiated_move = NULL;
+  }
 
 }
 

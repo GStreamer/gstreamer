@@ -37,17 +37,6 @@
 #define LAYER_HEIGHT 1000
 
 static void
-track_object_removed_cb (GESTimelineObject * object,
-    GESTrackObject * track_object);
-static void track_object_added_cb (GESTimelineObject * object,
-    GESTrackObject * track_object, GHashTable * signal_table);
-static void track_object_changed_cb (GESTrackObject * track_object,
-    GParamSpec * arg G_GNUC_UNUSED);
-static void calculate_transitions (GESTrackObject * track_object);
-static void calculate_next_transition (GESTrackObject * track_object,
-    GESTimelineLayer * layer);
-
-static void
 timeline_object_height_changed_cb (GESTimelineObject * obj,
     GESTrackEffect * tr_eff, GESTimelineObject * second_obj);
 
@@ -59,13 +48,9 @@ struct _GESTimelineLayerPrivate
   GList *objects_start;         /* The TimelineObjects sorted by start and
                                  * priority */
 
-  guint32 priority;             /* The priority of the layer within the 
+  guint32 priority;             /* The priority of the layer within the
                                  * containing timeline */
-
   gboolean auto_transition;
-
-
-  GHashTable *signal_table;
 };
 
 enum
@@ -85,13 +70,7 @@ enum
 
 static guint ges_timeline_layer_signals[LAST_SIGNAL] = { 0 };
 
-static gboolean ges_timeline_layer_resync_priorities (GESTimelineLayer * layer);
-
-static GList *track_get_by_layer (GESTimelineLayer * layer, GESTrack * track);
-
-static void compare (GList * compared, GESTrackObject * track_object,
-    gboolean ahead);
-
+/* GObject standard vmethods */
 static void
 ges_timeline_layer_get_property (GObject * object, guint property_id,
     GValue * value, GParamSpec * pspec)
@@ -213,50 +192,9 @@ ges_timeline_layer_init (GESTimelineLayer * self)
   self->priv->auto_transition = FALSE;
   self->min_gnl_priority = 0;
   self->max_gnl_priority = LAYER_HEIGHT;
-  self->priv->signal_table =
-      g_hash_table_new_full (g_direct_hash, g_direct_equal, g_object_unref,
-      NULL);
 }
 
-/**
- * ges_timeline_layer_new:
- *
- * Creates a new #GESTimelineLayer.
- *
- * Returns: A new #GESTimelineLayer
- */
-GESTimelineLayer *
-ges_timeline_layer_new (void)
-{
-  return g_object_new (GES_TYPE_TIMELINE_LAYER, NULL);
-}
-
-/**
- * ges_timeline_layer_get_timeline:
- * @layer: The #GESTimelineLayer to get the parent #GESTimeline from
- *
- * Get the #GESTimeline in which #GESTimelineLayer currently is.
- *
- * Returns: (transfer none):  the #GESTimeline in which #GESTimelineLayer
- * currently is or %NULL if not in any timeline yet.
- */
-GESTimeline *
-ges_timeline_layer_get_timeline (GESTimelineLayer * layer)
-{
-  g_return_val_if_fail (GES_IS_TIMELINE_LAYER (layer), NULL);
-
-  return layer->timeline;
-}
-
-void
-ges_timeline_layer_set_timeline (GESTimelineLayer * layer,
-    GESTimeline * timeline)
-{
-  GST_DEBUG ("layer:%p, timeline:%p", layer, timeline);
-
-  layer->timeline = timeline;
-}
-
+/* Private methods and utils */
 static gint
 objects_start_compare (GESTimelineObject * a, GESTimelineObject * b)
 {
@@ -294,268 +232,6 @@ track_get_by_layer (GESTimelineLayer * layer, GESTrack * track)
 
   return return_list;
 }
-
-/**
- * ges_timeline_layer_add_object:
- * @layer: a #GESTimelineLayer
- * @object: (transfer full): the #GESTimelineObject to add.
- *
- * Adds the given object to the layer. Sets the object's parent, and thus
- * takes ownership of the object.
- *
- * An object can only be added to one layer.
- *
- * Returns: TRUE if the object was properly added to the layer, or FALSE
- * if the @layer refuses to add the object.
- */
-gboolean
-ges_timeline_layer_add_object (GESTimelineLayer * layer,
-    GESTimelineObject * object)
-{
-  GESTimelineLayer *tl_obj_layer;
-  guint32 maxprio, minprio, prio;
-
-  GST_DEBUG ("layer:%p, object:%p", layer, object);
-
-  tl_obj_layer = ges_timeline_object_get_layer (object);
-
-  if (G_UNLIKELY (tl_obj_layer)) {
-    GST_WARNING ("TimelineObject %p already belongs to another layer", object);
-    g_object_unref (tl_obj_layer);
-    return FALSE;
-  }
-
-  g_object_ref_sink (object);
-
-  /* Take a reference to the object and store it stored by start/priority */
-  layer->priv->objects_start =
-      g_list_insert_sorted (layer->priv->objects_start, object,
-      (GCompareFunc) objects_start_compare);
-
-  /* We have to wait for the track objects to be created to calculate transitions */
-  if (layer->priv->auto_transition) {
-    if (GES_IS_TIMELINE_SOURCE (object)) {
-      g_signal_connect (G_OBJECT (object), "track-object-added",
-          G_CALLBACK (track_object_added_cb), layer->priv->signal_table);
-      g_signal_connect (G_OBJECT (object), "track-object-removed",
-          G_CALLBACK (track_object_removed_cb), NULL);
-    }
-  }
-
-  /* Inform the object it's now in this layer */
-  ges_timeline_object_set_layer (object, layer);
-
-  GST_DEBUG ("current object priority : %d, layer min/max : %d/%d",
-      GES_TIMELINE_OBJECT_PRIORITY (object),
-      layer->min_gnl_priority, layer->max_gnl_priority);
-
-  /* Set the priority. */
-  maxprio = layer->max_gnl_priority;
-  minprio = layer->min_gnl_priority;
-  prio = GES_TIMELINE_OBJECT_PRIORITY (object);
-  if (minprio + prio > (maxprio)) {
-    GST_WARNING ("%p is out of the layer %p space, setting its priority to "
-        "setting its priority %d to failthe maximum priority of the layer %d",
-        object, layer, prio, maxprio - minprio);
-    ges_timeline_object_set_priority (object, LAYER_HEIGHT - 1);
-  }
-  /* If the object has an acceptable priority, we just let it with its current
-   * priority */
-
-  ges_timeline_layer_resync_priorities (layer);
-
-  /* emit 'object-added' */
-  g_signal_emit (layer, ges_timeline_layer_signals[OBJECT_ADDED], 0, object);
-
-  return TRUE;
-}
-
-static void
-track_object_duration_cb (GESTrackObject * track_object,
-    GParamSpec * arg G_GNUC_UNUSED)
-{
-  GESTimelineLayer *layer;
-  GESTimelineObject *tlobj;
-
-  tlobj = ges_track_object_get_timeline_object (track_object);
-  layer = ges_timeline_object_get_layer (tlobj);
-  if (G_LIKELY (GES_IS_TRACK_SOURCE (track_object)))
-    GST_DEBUG ("Here we should recalculate");
-  calculate_next_transition (track_object, layer);
-}
-
-static void
-track_object_deleted_cb (GESTrack * track, GESTrackObject * track_object)
-{
-  GList *track_objects, *tmp, *cur;
-  GESTimelineLayer *layer;
-
-  track_objects = ges_track_get_objects (track);
-  cur = g_list_find (track_objects, track_object);
-  for (tmp = cur->next; tmp; tmp = tmp->next) {
-    if (GES_IS_TRACK_SOURCE (tmp->data)) {
-      break;
-    }
-    if (GES_IS_TRACK_AUDIO_TRANSITION (tmp->data)
-        || GES_IS_TRACK_VIDEO_TRANSITION (tmp->data)) {
-      layer =
-          ges_timeline_object_get_layer (ges_track_object_get_timeline_object
-          (tmp->data));
-      if (ges_timeline_layer_get_auto_transition (layer)) {
-        ges_track_enable_update (track, FALSE);
-        ges_timeline_layer_remove_object (layer,
-            ges_track_object_get_timeline_object (tmp->data));
-        ges_track_enable_update (track, TRUE);
-      }
-      g_object_unref (layer);
-    }
-  }
-
-  for (tmp = cur->prev; tmp; tmp = tmp->prev) {
-    if (GES_IS_TRACK_SOURCE (tmp->data)) {
-      break;
-    }
-    if (GES_IS_TRACK_AUDIO_TRANSITION (tmp->data)
-        || GES_IS_TRACK_VIDEO_TRANSITION (tmp->data)) {
-      layer =
-          ges_timeline_object_get_layer (ges_track_object_get_timeline_object
-          (tmp->data));
-      if (ges_timeline_layer_get_auto_transition (layer)) {
-        ges_track_enable_update (track, FALSE);
-        ges_timeline_layer_remove_object (layer,
-            ges_track_object_get_timeline_object (tmp->data));
-        ges_track_enable_update (track, TRUE);
-      }
-      g_object_unref (layer);
-    }
-  }
-  g_object_unref (track_object);
-}
-
-static void
-track_object_added_cb (GESTimelineObject * object,
-    GESTrackObject * track_object, GHashTable * signal_table)
-{
-  GESTrack *track;
-  gint ptr;
-
-  if (GES_IS_TRACK_SOURCE (track_object)) {
-    g_signal_connect (G_OBJECT (track_object), "notify::start",
-        G_CALLBACK (track_object_changed_cb), NULL);
-    g_signal_connect (G_OBJECT (track_object), "notify::duration",
-        G_CALLBACK (track_object_duration_cb), NULL);
-    calculate_transitions (track_object);
-  }
-  track = ges_track_object_get_track (track_object);
-  if (!g_hash_table_lookup (signal_table, track)) {
-    ptr = g_signal_connect (track, "track-object-removed",
-        (GCallback) track_object_deleted_cb, NULL);
-    g_hash_table_insert (signal_table, track, GINT_TO_POINTER (ptr));
-  }
-  return;
-}
-
-static void
-track_object_removed_cb (GESTimelineObject * object,
-    GESTrackObject * track_object)
-{
-  return;
-  if (GES_IS_TRACK_SOURCE (track_object)) {
-    g_signal_handlers_disconnect_by_func (track_object, track_object_changed_cb,
-        object);
-  }
-  return;
-}
-
-static void
-timeline_object_height_changed_cb (GESTimelineObject * obj,
-    GESTrackEffect * tr_eff, GESTimelineObject * second_obj)
-{
-  gint priority, height;
-  g_object_get (obj, "height", &height, "priority", &priority, NULL);
-  g_object_set (second_obj, "priority", priority + height, NULL);
-}
-
-static void
-track_object_changed_cb (GESTrackObject * track_object,
-    GParamSpec * arg G_GNUC_UNUSED)
-{
-  if (G_LIKELY (GES_IS_TRACK_SOURCE (track_object)))
-    calculate_transitions (track_object);
-}
-
-static void
-calculate_next_transition_with_list (GESTrackObject * track_object,
-    GList * tckobjs_in_layer, GESTimelineLayer * layer)
-{
-  GList *compared;
-
-  if (!(compared = g_list_find (tckobjs_in_layer, track_object)))
-    return;
-
-  if (compared == NULL)
-    /* This is the last TrackObject of the Track */
-    return;
-
-  do {
-    compared = compared->next;
-    if (compared == NULL)
-      return;
-  } while (!GES_IS_TRACK_SOURCE (compared->data));
-
-  compare (compared, track_object, FALSE);
-}
-
-
-static void
-calculate_next_transition (GESTrackObject * track_object,
-    GESTimelineLayer * layer)
-{
-  GESTrack *track = ges_track_object_get_track (track_object);
-  GList *tckobjs_in_layer = track_get_by_layer (layer, track);
-
-  if (ges_track_object_get_track (track_object)) {
-    calculate_next_transition_with_list (track_object, tckobjs_in_layer, layer);
-  }
-
-  g_list_foreach (tckobjs_in_layer, (GFunc) g_object_unref, NULL);
-  g_list_free (tckobjs_in_layer);
-}
-
-static void
-calculate_transitions (GESTrackObject * track_object)
-{
-  GList *tckobjs_in_layer, *compared;
-  GESTrack *track = ges_track_object_get_track (track_object);
-  GESTimelineLayer *layer;
-  GESTimelineObject *tlobj;
-
-  tlobj = ges_track_object_get_timeline_object (track_object);
-  layer = ges_timeline_object_get_layer (tlobj);
-  tckobjs_in_layer = track_get_by_layer (layer, track);
-  if (!(compared = g_list_find (tckobjs_in_layer, track_object)))
-    return;
-  do {
-    compared = compared->prev;
-
-    if (compared == NULL) {
-      /* Nothing before, let's check after */
-      calculate_next_transition_with_list (track_object, tckobjs_in_layer,
-          layer);
-      goto done;
-
-    }
-  } while (!GES_IS_TRACK_SOURCE (compared->data));
-
-  compare (compared, track_object, TRUE);
-
-  calculate_next_transition_with_list (track_object, tckobjs_in_layer, layer);
-
-done:
-  g_list_foreach (tckobjs_in_layer, (GFunc) g_object_unref, NULL);
-  g_list_free (tckobjs_in_layer);
-}
-
 
 /* Compare:
  * @compared: The #GList of #GESTrackObjects that we compare with @track_object
@@ -732,13 +408,90 @@ clean:
 }
 
 static void
+calculate_next_transition_with_list (GESTrackObject * track_object,
+    GList * tckobjs_in_layer, GESTimelineLayer * layer)
+{
+  GList *compared;
+
+  if (!(compared = g_list_find (tckobjs_in_layer, track_object)))
+    return;
+
+  if (compared == NULL)
+    /* This is the last TrackObject of the Track */
+    return;
+
+  do {
+    compared = compared->next;
+    if (compared == NULL)
+      return;
+  } while (!GES_IS_TRACK_SOURCE (compared->data));
+
+  compare (compared, track_object, FALSE);
+}
+
+
+static void
+calculate_next_transition (GESTrackObject * track_object,
+    GESTimelineLayer * layer)
+{
+  GESTrack *track;
+  GList *tckobjs_in_layer;
+
+  if ((track = ges_track_object_get_track (track_object))) {
+    tckobjs_in_layer = track_get_by_layer (layer, track);
+    calculate_next_transition_with_list (track_object, tckobjs_in_layer, layer);
+
+    g_list_foreach (tckobjs_in_layer, (GFunc) g_object_unref, NULL);
+    g_list_free (tckobjs_in_layer);
+  }
+}
+
+static void
+calculate_transitions (GESTrackObject * track_object)
+{
+  GList *tckobjs_in_layer, *compared;
+  GESTimelineLayer *layer;
+  GESTimelineObject *tlobj;
+
+  GESTrack *track = ges_track_object_get_track (track_object);
+
+  if (track == NULL)
+    return;
+
+  tlobj = ges_track_object_get_timeline_object (track_object);
+  layer = ges_timeline_object_get_layer (tlobj);
+  tckobjs_in_layer = track_get_by_layer (layer, track);
+  if (!(compared = g_list_find (tckobjs_in_layer, track_object)))
+    return;
+  do {
+    compared = compared->prev;
+
+    if (compared == NULL) {
+      /* Nothing before, let's check after */
+      calculate_next_transition_with_list (track_object, tckobjs_in_layer,
+          layer);
+      goto done;
+
+    }
+  } while (!GES_IS_TRACK_SOURCE (compared->data));
+
+  compare (compared, track_object, TRUE);
+
+  calculate_next_transition_with_list (track_object, tckobjs_in_layer, layer);
+
+done:
+  g_list_foreach (tckobjs_in_layer, (GFunc) g_object_unref, NULL);
+  g_list_free (tckobjs_in_layer);
+}
+
+
+static void
 look_for_transition (GESTrackObject * track_object, GESTimelineLayer * layer)
 {
   GESTrack *track;
   GList *track_objects, *tmp, *cur;
 
   track = ges_track_object_get_track (track_object);
-
   track_objects = ges_track_get_objects (track);
 
   cur = g_list_find (track_objects, track_object);
@@ -768,14 +521,169 @@ look_for_transition (GESTrackObject * track_object, GESTimelineLayer * layer)
   g_list_free (track_objects);
 }
 
+/**
+ * ges_timeline_layer_resync_priorities:
+ * @layer: a #GESTimelineLayer
+ *
+ * Resyncs the priorities of the objects controlled by @layer.
+ * This method
+ */
 static gboolean
-disconnect_handlers (GESTrack * track, gpointer * ptr)
+ges_timeline_layer_resync_priorities (GESTimelineLayer * layer)
 {
-  g_signal_handler_disconnect (track, GPOINTER_TO_INT (ptr));
+  GList *tmp;
+  GESTimelineObject *obj;
+
+  GST_DEBUG ("Resync priorities of %p", layer);
+
+  /* TODO : Inhibit composition updates while doing this.
+   * Ideally we want to do it from an even higher level, but here will
+   * do in the meantime. */
+
+  for (tmp = layer->priv->objects_start; tmp; tmp = tmp->next) {
+    obj = GES_TIMELINE_OBJECT (tmp->data);
+    ges_timeline_object_set_priority (obj, GES_TIMELINE_OBJECT_PRIORITY (obj));
+  }
 
   return TRUE;
 }
 
+/* Callbacks */
+
+static void
+track_object_duration_cb (GESTrackObject * track_object,
+    GParamSpec * arg G_GNUC_UNUSED)
+{
+  GESTimelineLayer *layer;
+  GESTimelineObject *tlobj;
+
+  tlobj = ges_track_object_get_timeline_object (track_object);
+  layer = ges_timeline_object_get_layer (tlobj);
+  if (G_LIKELY (GES_IS_TRACK_SOURCE (track_object)))
+    calculate_next_transition (track_object, layer);
+}
+
+static void
+track_object_removed_cb (GESTrack * track, GESTrackObject * track_object)
+{
+  GList *track_objects, *tmp, *cur;
+  GESTimelineLayer *layer;
+
+  track_objects = ges_track_get_objects (track);
+  cur = g_list_find (track_objects, track_object);
+  for (tmp = cur->next; tmp; tmp = tmp->next) {
+    if (GES_IS_TRACK_SOURCE (tmp->data)) {
+      break;
+    }
+    if (GES_IS_TRACK_AUDIO_TRANSITION (tmp->data)
+        || GES_IS_TRACK_VIDEO_TRANSITION (tmp->data)) {
+      layer =
+          ges_timeline_object_get_layer (ges_track_object_get_timeline_object
+          (tmp->data));
+      if (ges_timeline_layer_get_auto_transition (layer)) {
+        ges_track_enable_update (track, FALSE);
+        ges_timeline_layer_remove_object (layer,
+            ges_track_object_get_timeline_object (tmp->data));
+        ges_track_enable_update (track, TRUE);
+      }
+      g_object_unref (layer);
+    }
+  }
+
+  for (tmp = cur->prev; tmp; tmp = tmp->prev) {
+    if (GES_IS_TRACK_SOURCE (tmp->data)) {
+      break;
+    }
+    if (GES_IS_TRACK_AUDIO_TRANSITION (tmp->data)
+        || GES_IS_TRACK_VIDEO_TRANSITION (tmp->data)) {
+      layer =
+          ges_timeline_object_get_layer (ges_track_object_get_timeline_object
+          (tmp->data));
+      if (ges_timeline_layer_get_auto_transition (layer)) {
+        ges_track_enable_update (track, FALSE);
+        ges_timeline_layer_remove_object (layer,
+            ges_track_object_get_timeline_object (tmp->data));
+        ges_track_enable_update (track, TRUE);
+      }
+      g_object_unref (layer);
+    }
+  }
+  g_object_unref (track_object);
+}
+
+static void
+track_object_changed_cb (GESTrackObject * track_object,
+    GParamSpec * arg G_GNUC_UNUSED)
+{
+  if (G_LIKELY (GES_IS_TRACK_SOURCE (track_object)))
+    calculate_transitions (track_object);
+}
+
+static void
+track_object_added_cb (GESTrack * track, GESTrackObject * track_object,
+    GESTimelineLayer * layer)
+{
+  GST_ERROR ("TRACKOBJECTADDED %i", GES_IS_TRACK_SOURCE (track_object));
+  if (GES_IS_TRACK_SOURCE (track_object)) {
+    g_signal_connect (G_OBJECT (track_object), "notify::start",
+        G_CALLBACK (track_object_changed_cb), NULL);
+    g_signal_connect (G_OBJECT (track_object), "notify::duration",
+        G_CALLBACK (track_object_duration_cb), NULL);
+    calculate_transitions (track_object);
+  }
+
+}
+
+static void
+track_removed_cb (GESTrack * track, GESTrackObject * track_object,
+    GESTimelineLayer * layer)
+{
+  g_signal_handlers_disconnect_by_func (track, track_object_added_cb, layer);
+  g_signal_handlers_disconnect_by_func (track, track_object_removed_cb, NULL);
+}
+
+static void
+track_added_cb (GESTrack * track, GESTrackObject * track_object,
+    GESTimelineLayer * layer)
+{
+  g_signal_connect (track, "track-object-removed",
+      (GCallback) track_object_removed_cb, NULL);
+  g_signal_connect (track, "track-object-added",
+      (GCallback) track_object_added_cb, NULL);
+}
+
+static void
+timeline_object_height_changed_cb (GESTimelineObject * obj,
+    GESTrackEffect * tr_eff, GESTimelineObject * second_obj)
+{
+  gint priority, height;
+  g_object_get (obj, "height", &height, "priority", &priority, NULL);
+  g_object_set (second_obj, "priority", priority + height, NULL);
+}
+
+static void
+start_calculating_transitions (GESTimelineLayer * layer)
+{
+  GList *tmp, *tracks = ges_timeline_get_tracks (layer->timeline);
+
+  g_signal_connect (layer->timeline, "track-added", G_CALLBACK (track_added_cb),
+      layer);
+  g_signal_connect (layer->timeline, "track-removed",
+      G_CALLBACK (track_removed_cb), layer);
+
+  for (tmp = tracks; tmp; tmp = tmp->next) {
+    g_signal_connect (G_OBJECT (tmp->data), "track-object-added",
+        G_CALLBACK (track_object_added_cb), layer);
+    g_signal_connect (G_OBJECT (tmp->data), "track-object-removed",
+        G_CALLBACK (track_object_removed_cb), NULL);
+  }
+
+  g_list_free_full (tracks, g_object_unref);
+
+  /* FIXME calculate all the transitions at that time */
+}
+
+/* Public methods */
 /**
  * ges_timeline_layer_remove_object:
  * @layer: a #GESTimelineLayer
@@ -804,13 +712,15 @@ ges_timeline_layer_remove_object (GESTimelineLayer * layer,
   tl_obj_layer = ges_timeline_object_get_layer (object);
   if (G_UNLIKELY (tl_obj_layer != layer)) {
     GST_WARNING ("TimelineObject doesn't belong to this layer");
+
     if (tl_obj_layer != NULL)
       g_object_unref (tl_obj_layer);
+
     return FALSE;
   }
   g_object_unref (tl_obj_layer);
 
-  if (layer->priv->auto_transition) {
+  if (layer->priv->auto_transition && GES_IS_TIMELINE_SOURCE (object)) {
     trackobjects = ges_timeline_object_get_track_objects (object);
 
     for (tmp = trackobjects; tmp; tmp = tmp->next) {
@@ -820,9 +730,6 @@ ges_timeline_layer_remove_object (GESTimelineLayer * layer,
     g_list_foreach (trackobjects, (GFunc) g_object_unref, NULL);
     g_list_free (trackobjects);
   }
-
-  g_hash_table_foreach_remove (layer->priv->signal_table,
-      (GHRFunc) disconnect_handlers, NULL);
 
   /* emit 'object-removed' */
   g_signal_emit (layer, ges_timeline_layer_signals[OBJECT_REMOVED], 0, object);
@@ -836,33 +743,6 @@ ges_timeline_layer_remove_object (GESTimelineLayer * layer,
 
   /* Remove our reference to the object */
   g_object_unref (object);
-
-  return TRUE;
-}
-
-/**
- * ges_timeline_layer_resync_priorities:
- * @layer: a #GESTimelineLayer
- *
- * Resyncs the priorities of the objects controlled by @layer.
- * This method
- */
-gboolean
-ges_timeline_layer_resync_priorities (GESTimelineLayer * layer)
-{
-  GList *tmp;
-  GESTimelineObject *obj;
-
-  GST_DEBUG ("Resync priorities of %p", layer);
-
-  /* TODO : Inhibit composition updates while doing this.
-   * Ideally we want to do it from an even higher level, but here will
-   * do in the meantime. */
-
-  for (tmp = layer->priv->objects_start; tmp; tmp = tmp->next) {
-    obj = GES_TIMELINE_OBJECT (tmp->data);
-    ges_timeline_object_set_priority (obj, GES_TIMELINE_OBJECT_PRIORITY (obj));
-  }
 
   return TRUE;
 }
@@ -921,20 +801,11 @@ ges_timeline_layer_set_auto_transition (GESTimelineLayer * layer,
     gboolean auto_transition)
 {
 
-  GList *tmp;
   g_return_if_fail (GES_IS_TIMELINE_LAYER (layer));
 
-  if (auto_transition) {
-    for (tmp = layer->priv->objects_start; tmp; tmp = tmp->next) {
-      if (GES_IS_TIMELINE_SOURCE (tmp->data)) {
-        g_signal_connect (G_OBJECT (tmp->data), "track-object-added",
-            G_CALLBACK (track_object_added_cb), layer);
-        g_signal_connect (G_OBJECT (tmp->data), "track-object-removed",
-            G_CALLBACK (track_object_removed_cb), layer);
-      }
-    }
-    /* FIXME calculate all the transitions at that time */
-  }
+  if (auto_transition && layer->timeline)
+    start_calculating_transitions (layer);
+
   layer->priv->auto_transition = auto_transition;
 }
 
@@ -987,4 +858,144 @@ ges_timeline_layer_get_objects (GESTimelineLayer * layer)
 
   ret = g_list_reverse (ret);
   return ret;
+}
+
+/**
+ * ges_timeline_layer_is_empty:
+ * @layer: The #GESTimelineLayer to check
+ *
+ * Convenience method to check if @layer is empty (doesn't contain any object),
+ * or not.
+ *
+ * Returns: %TRUE if @layer is empty, %FALSE if it already contains at least
+ * one #GESTimelineObject
+ */
+gboolean
+ges_timeline_layer_is_empty (GESTimelineLayer * layer)
+{
+  g_return_val_if_fail (GES_IS_TIMELINE_LAYER (layer), FALSE);
+
+  return (layer->priv->objects_start == NULL);
+}
+
+/**
+ * ges_timeline_layer_add_object:
+ * @layer: a #GESTimelineLayer
+ * @object: (transfer full): the #GESTimelineObject to add.
+ *
+ * Adds the given object to the layer. Sets the object's parent, and thus
+ * takes ownership of the object.
+ *
+ * An object can only be added to one layer.
+ *
+ * Calling this method will construct and properly set all the media related
+ * elements on @object. If you need to know when those objects (actually #GESTrackObject)
+ * are constructed, you should connect to the object::track-object-added signal which
+ * is emited right after those elements are ready to be used.
+ *
+ * Returns: TRUE if the object was properly added to the layer, or FALSE
+ * if the @layer refuses to add the object.
+ */
+gboolean
+ges_timeline_layer_add_object (GESTimelineLayer * layer,
+    GESTimelineObject * object)
+{
+  GESTimelineLayer *tl_obj_layer;
+  guint32 maxprio, minprio, prio;
+
+  GST_DEBUG ("layer:%p, object:%p", layer, object);
+
+  tl_obj_layer = ges_timeline_object_get_layer (object);
+
+  if (G_UNLIKELY (tl_obj_layer)) {
+    GST_WARNING ("TimelineObject %p already belongs to another layer", object);
+    g_object_unref (tl_obj_layer);
+    return FALSE;
+  }
+
+  g_object_ref_sink (object);
+
+  /* Take a reference to the object and store it stored by start/priority */
+  layer->priv->objects_start =
+      g_list_insert_sorted (layer->priv->objects_start, object,
+      (GCompareFunc) objects_start_compare);
+
+  /* Inform the object it's now in this layer */
+  ges_timeline_object_set_layer (object, layer);
+
+  GST_DEBUG ("current object priority : %d, layer min/max : %d/%d",
+      GES_TIMELINE_OBJECT_PRIORITY (object),
+      layer->min_gnl_priority, layer->max_gnl_priority);
+
+  /* Set the priority. */
+  maxprio = layer->max_gnl_priority;
+  minprio = layer->min_gnl_priority;
+  prio = GES_TIMELINE_OBJECT_PRIORITY (object);
+  if (minprio + prio > (maxprio)) {
+    GST_WARNING ("%p is out of the layer %p space, setting its priority to "
+        "setting its priority %d to failthe maximum priority of the layer %d",
+        object, layer, prio, maxprio - minprio);
+    ges_timeline_object_set_priority (object, LAYER_HEIGHT - 1);
+  }
+  /* If the object has an acceptable priority, we just let it with its current
+   * priority */
+
+  ges_timeline_layer_resync_priorities (layer);
+
+  /* emit 'object-added' */
+  g_signal_emit (layer, ges_timeline_layer_signals[OBJECT_ADDED], 0, object);
+
+  return TRUE;
+}
+
+/**
+ * ges_timeline_layer_new:
+ *
+ * Creates a new #GESTimelineLayer.
+ *
+ * Returns: A new #GESTimelineLayer
+ */
+GESTimelineLayer *
+ges_timeline_layer_new (void)
+{
+  return g_object_new (GES_TYPE_TIMELINE_LAYER, NULL);
+}
+
+/**
+ * ges_timeline_layer_get_timeline:
+ * @layer: The #GESTimelineLayer to get the parent #GESTimeline from
+ *
+ * Get the #GESTimeline in which #GESTimelineLayer currently is.
+ *
+ * Returns: (transfer none):  the #GESTimeline in which #GESTimelineLayer
+ * currently is or %NULL if not in any timeline yet.
+ */
+GESTimeline *
+ges_timeline_layer_get_timeline (GESTimelineLayer * layer)
+{
+  g_return_val_if_fail (GES_IS_TIMELINE_LAYER (layer), NULL);
+
+  return layer->timeline;
+}
+
+void
+ges_timeline_layer_set_timeline (GESTimelineLayer * layer,
+    GESTimeline * timeline)
+{
+  GST_DEBUG ("layer:%p, timeline:%p", layer, timeline);
+
+  if (layer->priv->auto_transition == TRUE) {
+    if (layer->timeline != NULL) {
+      g_signal_handlers_disconnect_by_func (layer->timeline, track_added_cb,
+          layer);
+      g_signal_handlers_disconnect_by_func (layer->timeline, track_removed_cb,
+          layer);
+    }
+
+    layer->timeline = timeline;
+    if (timeline != NULL)
+      start_calculating_transitions (layer);
+
+  } else
+    layer->timeline = timeline;
 }

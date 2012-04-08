@@ -42,15 +42,12 @@ struct _GESTimelineFileSourcePrivate
 
   gboolean mute;
   gboolean is_image;
-
-  guint64 maxduration;
 };
 
 enum
 {
   PROP_0,
   PROP_URI,
-  PROP_MAX_DURATION,
   PROP_MUTE,
   PROP_IS_IMAGE,
 };
@@ -61,6 +58,9 @@ static GESTrackObject
     GESTrack * track);
 void
 ges_timeline_filesource_set_uri (GESTimelineFileSource * self, gchar * uri);
+
+static void
+filesource_set_max_duration (GESTimelineObject * object, guint64 maxduration);
 
 static void
 ges_timeline_filesource_get_property (GObject * object, guint property_id,
@@ -74,9 +74,6 @@ ges_timeline_filesource_get_property (GObject * object, guint property_id,
       break;
     case PROP_MUTE:
       g_value_set_boolean (value, priv->mute);
-      break;
-    case PROP_MAX_DURATION:
-      g_value_set_uint64 (value, priv->maxduration);
       break;
     case PROP_IS_IMAGE:
       g_value_set_boolean (value, priv->is_image);
@@ -98,10 +95,6 @@ ges_timeline_filesource_set_property (GObject * object, guint property_id,
       break;
     case PROP_MUTE:
       ges_timeline_filesource_set_mute (tfs, g_value_get_boolean (value));
-      break;
-    case PROP_MAX_DURATION:
-      ges_timeline_filesource_set_max_duration (tfs,
-          g_value_get_uint64 (value));
       break;
     case PROP_IS_IMAGE:
       ges_timeline_filesource_set_is_image (tfs, g_value_get_boolean (value));
@@ -144,19 +137,6 @@ ges_timeline_filesource_class_init (GESTimelineFileSourceClass * klass)
           NULL, G_PARAM_READWRITE | G_PARAM_CONSTRUCT));
 
   /**
-   * GESTimelineFileSource:max-duration:
-   *
-   * The maximum duration (in nanoseconds) of the file.
-   *
-   * If not set before adding the object to a layer, it will be discovered
-   * asynchronously. Connect to 'notify::max-duration' to be notified of it.
-   */
-  g_object_class_install_property (object_class, PROP_MAX_DURATION,
-      g_param_spec_uint64 ("max-duration", "Maximum duration",
-          "The duration of the file", 0, G_MAXUINT64, GST_CLOCK_TIME_NONE,
-          G_PARAM_READWRITE | G_PARAM_CONSTRUCT));
-
-  /**
    * GESTimelineFileSource:mute:
    *
    * Whether the sound will be played or not.
@@ -178,6 +158,7 @@ ges_timeline_filesource_class_init (GESTimelineFileSourceClass * klass)
 
   timobj_class->create_track_object =
       ges_timeline_filesource_create_track_object;
+  timobj_class->set_max_duration = filesource_set_max_duration;
   timobj_class->need_fill_track = FALSE;
 }
 
@@ -234,24 +215,26 @@ void
 ges_timeline_filesource_set_max_duration (GESTimelineFileSource * self,
     guint64 maxduration)
 {
-  GESTimelineObject *object = GES_TIMELINE_OBJECT (self);
+  ges_timeline_object_set_max_duration (GES_TIMELINE_OBJECT (self),
+      maxduration);
+}
+
+void
+filesource_set_max_duration (GESTimelineObject * object, guint64 maxduration)
+{
   GList *tmp, *tckobjs;
 
-  self->priv->maxduration = maxduration;
   if (object->duration == GST_CLOCK_TIME_NONE || object->duration == 0) {
     /* If we don't have a valid duration, use the max duration */
-    g_object_set (self, "duration", self->priv->maxduration - object->inpoint,
-        NULL);
+    g_object_set (object, "duration", maxduration - object->inpoint, NULL);
   }
 
-  tckobjs = ges_timeline_object_get_track_objects (GES_TIMELINE_OBJECT (self));
+  tckobjs = ges_timeline_object_get_track_objects (object);
   for (tmp = tckobjs; tmp; tmp = g_list_next (tmp)) {
     g_object_set (tmp->data, "max-duration", maxduration, NULL);
-
-    /* We free the list in the same loop */
-    g_object_unref (tmp->data);
-    g_list_free_1 (tmp);
   }
+
+  g_list_free_full (tckobjs, g_object_unref);
 }
 
 /**
@@ -309,7 +292,7 @@ ges_timeline_filesource_is_muted (GESTimelineFileSource * self)
 guint64
 ges_timeline_filesource_get_max_duration (GESTimelineFileSource * self)
 {
-  return self->priv->maxduration;
+  return ges_timeline_object_get_max_duration (GES_TIMELINE_OBJECT (self));
 }
 
 /**
