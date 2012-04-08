@@ -493,7 +493,6 @@ look_for_transition (GESTrackObject * track_object, GESTimelineLayer * layer)
   GList *track_objects, *tmp, *cur;
 
   track = ges_track_object_get_track (track_object);
-
   track_objects = ges_track_get_objects (track);
 
   cur = g_list_find (track_objects, track_object);
@@ -663,6 +662,28 @@ timeline_object_height_changed_cb (GESTimelineObject * obj,
   g_object_set (second_obj, "priority", priority + height, NULL);
 }
 
+static void
+start_calculating_transitions (GESTimelineLayer * layer)
+{
+  GList *tmp, *tracks = ges_timeline_get_tracks (layer->timeline);
+
+  g_signal_connect (layer->timeline, "track-added", G_CALLBACK (track_added_cb),
+      layer);
+  g_signal_connect (layer->timeline, "track-removed",
+      G_CALLBACK (track_removed_cb), layer);
+
+  for (tmp = tracks; tmp; tmp = tmp->next) {
+    g_signal_connect (G_OBJECT (tmp->data), "track-object-added",
+        G_CALLBACK (track_object_added_cb), layer);
+    g_signal_connect (G_OBJECT (tmp->data), "track-object-removed",
+        G_CALLBACK (track_object_removed_cb), NULL);
+  }
+
+  g_list_free_full (tracks, g_object_unref);
+
+  /* FIXME calculate all the transitions at that time */
+}
+
 /* Public methods */
 /**
  * ges_timeline_layer_remove_object:
@@ -692,13 +713,15 @@ ges_timeline_layer_remove_object (GESTimelineLayer * layer,
   tl_obj_layer = ges_timeline_object_get_layer (object);
   if (G_UNLIKELY (tl_obj_layer != layer)) {
     GST_WARNING ("TimelineObject doesn't belong to this layer");
+
     if (tl_obj_layer != NULL)
       g_object_unref (tl_obj_layer);
+
     return FALSE;
   }
   g_object_unref (tl_obj_layer);
 
-  if (layer->priv->auto_transition) {
+  if (layer->priv->auto_transition && GES_IS_TIMELINE_SOURCE (object)) {
     trackobjects = ges_timeline_object_get_track_objects (object);
 
     for (tmp = trackobjects; tmp; tmp = tmp->next) {
@@ -779,20 +802,11 @@ ges_timeline_layer_set_auto_transition (GESTimelineLayer * layer,
     gboolean auto_transition)
 {
 
-  GList *tmp;
   g_return_if_fail (GES_IS_TIMELINE_LAYER (layer));
 
-  if (auto_transition && layer->timeline) {
-    GList *tracks = ges_timeline_get_tracks (layer->timeline);
+  if (auto_transition && layer->timeline)
+    start_calculating_transitions (layer);
 
-    for (tmp = tracks; tmp; tmp = tmp->next) {
-      g_signal_connect (G_OBJECT (tmp->data), "track-object-added",
-          G_CALLBACK (track_object_added_cb), layer);
-      g_signal_connect (G_OBJECT (tmp->data), "track-object-removed",
-          G_CALLBACK (track_object_removed_cb), NULL);
-    }
-    /* FIXME calculate all the transitions at that time */
-  }
   layer->priv->auto_transition = auto_transition;
 }
 
@@ -979,22 +993,10 @@ ges_timeline_layer_set_timeline (GESTimelineLayer * layer,
           layer);
     }
 
-    if (timeline != NULL) {
-      GList *tmp, *tracks = ges_timeline_get_tracks (timeline);
+    layer->timeline = timeline;
+    if (timeline != NULL)
+      start_calculating_transitions (layer);
 
-      g_signal_connect (timeline, "track-added", G_CALLBACK (track_added_cb),
-          layer);
-      g_signal_connect (timeline, "track-removed",
-          G_CALLBACK (track_removed_cb), layer);
-
-      for (tmp = tracks; tmp; tmp = tmp->next) {
-        g_signal_connect (G_OBJECT (tmp->data), "track-object-added",
-            G_CALLBACK (track_object_added_cb), layer);
-        g_signal_connect (G_OBJECT (tmp->data), "track-object-removed",
-            G_CALLBACK (track_object_removed_cb), NULL);
-      }
-    }
-  }
-
-  layer->timeline = timeline;
+  } else
+    layer->timeline = timeline;
 }
