@@ -38,10 +38,14 @@
 #define LAYER_HEIGHT 1000
 
 static void
-track_object_removed_cb (GESTimelineObject * object,
-    GESTrackObject * track_object);
-static void track_object_added_cb (GESTimelineObject * object,
-    GESTrackObject * track_object, GHashTable * signal_table);
+track_object_removed_cb (GESTrack * track, GESTrackObject * track_object);
+static void track_object_added_cb (GESTrack * track,
+    GESTrackObject * track_object, GESTimelineLayer * layer);
+static void
+track_removed_cb (GESTrack * track, GESTrackObject * track_object,
+    GESTimelineLayer * layer);
+static void track_added_cb (GESTrack * track, GESTrackObject * track_object,
+    GESTimelineLayer * layer);
 static void track_object_changed_cb (GESTrackObject * track_object,
     GParamSpec * arg G_GNUC_UNUSED);
 static void calculate_transitions (GESTrackObject * track_object);
@@ -65,8 +69,6 @@ struct _GESTimelineLayerPrivate
 
   gboolean auto_transition;
 
-
-  GHashTable *signal_table;
 };
 
 enum
@@ -214,9 +216,6 @@ ges_timeline_layer_init (GESTimelineLayer * self)
   self->priv->auto_transition = FALSE;
   self->min_gnl_priority = 0;
   self->max_gnl_priority = LAYER_HEIGHT;
-  self->priv->signal_table =
-      g_hash_table_new_full (g_direct_hash, g_direct_equal, g_object_unref,
-      NULL);
 }
 
 /**
@@ -254,6 +253,31 @@ ges_timeline_layer_set_timeline (GESTimelineLayer * layer,
     GESTimeline * timeline)
 {
   GST_DEBUG ("layer:%p, timeline:%p", layer, timeline);
+
+  if (layer->priv->auto_transition == TRUE) {
+    if (layer->timeline != NULL) {
+      g_signal_handlers_disconnect_by_func (layer->timeline, track_added_cb,
+          layer);
+      g_signal_handlers_disconnect_by_func (layer->timeline, track_removed_cb,
+          layer);
+    }
+
+    if (timeline != NULL) {
+      GList *tmp, *tracks = ges_timeline_get_tracks (timeline);
+
+      g_signal_connect (timeline, "track-added", G_CALLBACK (track_added_cb),
+          layer);
+      g_signal_connect (timeline, "track-removed",
+          G_CALLBACK (track_removed_cb), layer);
+
+      for (tmp = tracks; tmp; tmp = tmp->next) {
+        g_signal_connect (G_OBJECT (tmp->data), "track-object-added",
+            G_CALLBACK (track_object_added_cb), layer);
+        g_signal_connect (G_OBJECT (tmp->data), "track-object-removed",
+            G_CALLBACK (track_object_removed_cb), NULL);
+      }
+    }
+  }
 
   layer->timeline = timeline;
 }
@@ -338,16 +362,6 @@ ges_timeline_layer_add_object (GESTimelineLayer * layer,
       g_list_insert_sorted (layer->priv->objects_start, object,
       (GCompareFunc) objects_start_compare);
 
-  /* We have to wait for the track objects to be created to calculate transitions */
-  if (layer->priv->auto_transition) {
-    if (GES_IS_TIMELINE_SOURCE (object)) {
-      g_signal_connect (G_OBJECT (object), "track-object-added",
-          G_CALLBACK (track_object_added_cb), layer->priv->signal_table);
-      g_signal_connect (G_OBJECT (object), "track-object-removed",
-          G_CALLBACK (track_object_removed_cb), NULL);
-    }
-  }
-
   /* Inform the object it's now in this layer */
   ges_timeline_object_set_layer (object, layer);
 
@@ -390,7 +404,7 @@ track_object_duration_cb (GESTrackObject * track_object,
 }
 
 static void
-track_object_deleted_cb (GESTrack * track, GESTrackObject * track_object)
+track_object_removed_cb (GESTrack * track, GESTrackObject * track_object)
 {
   GList *track_objects, *tmp, *cur;
   GESTimelineLayer *layer;
@@ -438,12 +452,28 @@ track_object_deleted_cb (GESTrack * track, GESTrackObject * track_object)
 }
 
 static void
-track_object_added_cb (GESTimelineObject * object,
-    GESTrackObject * track_object, GHashTable * signal_table)
+track_removed_cb (GESTrack * track, GESTrackObject * track_object,
+    GESTimelineLayer * layer)
 {
-  GESTrack *track;
-  gint ptr;
+  g_signal_handlers_disconnect_by_func (track, track_object_added_cb, layer);
+  g_signal_handlers_disconnect_by_func (track, track_object_removed_cb, NULL);
+}
 
+static void
+track_added_cb (GESTrack * track, GESTrackObject * track_object,
+    GESTimelineLayer * layer)
+{
+  g_signal_connect (track, "track-object-removed",
+      (GCallback) track_object_removed_cb, NULL);
+  g_signal_connect (track, "track-object-added",
+      (GCallback) track_object_added_cb, NULL);
+}
+
+static void
+track_object_added_cb (GESTrack * track, GESTrackObject * track_object,
+    GESTimelineLayer * layer)
+{
+  GST_ERROR ("TRACKOBJECTADDED %i", GES_IS_TRACK_SOURCE (track_object));
   if (GES_IS_TRACK_SOURCE (track_object)) {
     g_signal_connect (G_OBJECT (track_object), "notify::start",
         G_CALLBACK (track_object_changed_cb), NULL);
@@ -451,25 +481,7 @@ track_object_added_cb (GESTimelineObject * object,
         G_CALLBACK (track_object_duration_cb), NULL);
     calculate_transitions (track_object);
   }
-  track = ges_track_object_get_track (track_object);
-  if (!g_hash_table_lookup (signal_table, track)) {
-    ptr = g_signal_connect (track, "track-object-removed",
-        (GCallback) track_object_deleted_cb, NULL);
-    g_hash_table_insert (signal_table, track, GINT_TO_POINTER (ptr));
-  }
-  return;
-}
 
-static void
-track_object_removed_cb (GESTimelineObject * object,
-    GESTrackObject * track_object)
-{
-  return;
-  if (GES_IS_TRACK_SOURCE (track_object)) {
-    g_signal_handlers_disconnect_by_func (track_object, track_object_changed_cb,
-        object);
-  }
-  return;
 }
 
 static void
@@ -778,13 +790,6 @@ look_for_transition (GESTrackObject * track_object, GESTimelineLayer * layer)
   g_list_free (track_objects);
 }
 
-static gboolean
-disconnect_handlers (GESTrack * track, gpointer * ptr)
-{
-  g_signal_handler_disconnect (track, GPOINTER_TO_INT (ptr));
-
-  return TRUE;
-}
 
 /**
  * ges_timeline_layer_remove_object:
@@ -830,9 +835,6 @@ ges_timeline_layer_remove_object (GESTimelineLayer * layer,
     g_list_foreach (trackobjects, (GFunc) g_object_unref, NULL);
     g_list_free (trackobjects);
   }
-
-  g_hash_table_foreach_remove (layer->priv->signal_table,
-      (GHRFunc) disconnect_handlers, NULL);
 
   /* emit 'object-removed' */
   g_signal_emit (layer, ges_timeline_layer_signals[OBJECT_REMOVED], 0, object);
@@ -934,14 +936,14 @@ ges_timeline_layer_set_auto_transition (GESTimelineLayer * layer,
   GList *tmp;
   g_return_if_fail (GES_IS_TIMELINE_LAYER (layer));
 
-  if (auto_transition) {
-    for (tmp = layer->priv->objects_start; tmp; tmp = tmp->next) {
-      if (GES_IS_TIMELINE_SOURCE (tmp->data)) {
-        g_signal_connect (G_OBJECT (tmp->data), "track-object-added",
-            G_CALLBACK (track_object_added_cb), layer);
-        g_signal_connect (G_OBJECT (tmp->data), "track-object-removed",
-            G_CALLBACK (track_object_removed_cb), layer);
-      }
+  if (auto_transition && layer->timeline) {
+    GList *tracks = ges_timeline_get_tracks (layer->timeline);
+
+    for (tmp = tracks; tmp; tmp = tmp->next) {
+      g_signal_connect (G_OBJECT (tmp->data), "track-object-added",
+          G_CALLBACK (track_object_added_cb), layer);
+      g_signal_connect (G_OBJECT (tmp->data), "track-object-removed",
+          G_CALLBACK (track_object_removed_cb), NULL);
     }
     /* FIXME calculate all the transitions at that time */
   }
