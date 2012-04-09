@@ -239,7 +239,7 @@ gst_smpte_class_init (GstSMPTEClass * klass)
       gst_static_pad_template_get (&gst_smpte_sink2_template));
   gst_element_class_add_pad_template (gstelement_class,
       gst_static_pad_template_get (&gst_smpte_src_template));
-  gst_element_class_set_details_simple (gstelement_class, "SMPTE transitions",
+  gst_element_class_set_static_metadata (gstelement_class, "SMPTE transitions",
       "Filter/Editor/Video",
       "Apply the standard SMPTE transitions on video images",
       "Wim Taymans <wim.taymans@chello.be>");

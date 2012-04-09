@@ -90,7 +90,7 @@ gst_rtp_vorbis_pay_class_init (GstRtpVorbisPayClass * klass)
   gst_element_class_add_pad_template (gstelement_class,
       gst_static_pad_template_get (&gst_rtp_vorbis_pay_sink_template));
 
-  gst_element_class_set_details_simple (gstelement_class,
+  gst_element_class_set_static_metadata (gstelement_class,
       "RTP Vorbis depayloader",
       "Codec/Payloader/Network/RTP",
       "Payload-encode Vorbis audio into RTP packets (RFC 5215)",

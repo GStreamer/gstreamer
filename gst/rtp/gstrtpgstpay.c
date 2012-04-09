@@ -87,7 +87,7 @@ gst_rtp_gst_pay_class_init (GstRtpGSTPayClass * klass)
   gst_element_class_add_pad_template (gstelement_class,
       gst_static_pad_template_get (&gst_rtp_gst_pay_sink_template));
 
-  gst_element_class_set_details_simple (gstelement_class,
+  gst_element_class_set_static_metadata (gstelement_class,
       "RTP GStreamer payloader", "Codec/Payloader/Network/RTP",
       "Payload GStreamer buffers as RTP packets",
       "Wim Taymans <wim.taymans@gmail.com>");

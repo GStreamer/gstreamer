@@ -84,7 +84,7 @@ gst_iir_equalizer_3bands_class_init (GstIirEqualizer3BandsClass * klass)
           -24.0, 12.0, 0.0,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS | GST_PARAM_CONTROLLABLE));
 
-  gst_element_class_set_details_simple (gstelement_class, "3 Band Equalizer",
+  gst_element_class_set_static_metadata (gstelement_class, "3 Band Equalizer",
       "Filter/Effect/Audio",
       "Direct Form 3 band IIR equalizer", "Stefan Kost <ensonic@users.sf.net>");
 }

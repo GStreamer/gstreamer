@@ -111,7 +111,7 @@ gst_audio_invert_class_init (GstAudioInvertClass * klass)
           0.0,
           G_PARAM_READWRITE | GST_PARAM_CONTROLLABLE | G_PARAM_STATIC_STRINGS));
 
-  gst_element_class_set_details_simple (gstelement_class, "Audio inversion",
+  gst_element_class_set_static_metadata (gstelement_class, "Audio inversion",
       "Filter/Effect/Audio",
       "Swaps upper and lower half of audio samples",
       "Sebastian Dröge <slomo@circular-chaos.org>");

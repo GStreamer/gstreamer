@@ -71,7 +71,7 @@ gst_rtp_pcmu_pay_class_init (GstRtpPcmuPayClass * klass)
   gst_element_class_add_pad_template (gstelement_class,
       gst_static_pad_template_get (&gst_rtp_pcmu_pay_src_template));
 
-  gst_element_class_set_details_simple (gstelement_class, "RTP PCMU payloader",
+  gst_element_class_set_static_metadata (gstelement_class, "RTP PCMU payloader",
       "Codec/Payloader/Network/RTP",
       "Payload-encodes PCMU audio into a RTP packet",
       "Edgard Lima <edgard.lima@indt.org.br>");

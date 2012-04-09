@@ -193,7 +193,7 @@ gst_aspect_ratio_crop_class_init (GstAspectRatioCropClass * klass)
           "Target aspect-ratio of video", 0, 1, G_MAXINT, 1, 0, 1,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
-  gst_element_class_set_details_simple (element_class, "aspectratiocrop",
+  gst_element_class_set_static_metadata (element_class, "aspectratiocrop",
       "Filter/Effect/Video",
       "Crops video into a user-defined aspect-ratio",
       "Thijs Vermeir <thijsvermeir@gmail.com>");

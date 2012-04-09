@@ -111,7 +111,7 @@ gst_id3demux_class_init (GstID3DemuxClass * klass)
   gst_element_class_add_pad_template (gstelement_class,
       gst_static_pad_template_get (&sink_factory));
 
-  gst_element_class_set_details_simple (gstelement_class, "ID3 tag demuxer",
+  gst_element_class_set_static_metadata (gstelement_class, "ID3 tag demuxer",
       "Codec/Demuxer/Metadata",
       "Read and output ID3v1 and ID3v2 tags while demuxing the contents",
       "Jan Schmidt <thaytan@mad.scientist.com>");

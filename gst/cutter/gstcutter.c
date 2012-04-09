@@ -148,7 +148,7 @@ gst_cutter_class_init (GstCutterClass * klass)
       gst_static_pad_template_get (&cutter_src_factory));
   gst_element_class_add_pad_template (element_class,
       gst_static_pad_template_get (&cutter_sink_factory));
-  gst_element_class_set_details_simple (element_class, "Audio cutter",
+  gst_element_class_set_static_metadata (element_class, "Audio cutter",
       "Filter/Editor/Audio",
       "Audio Cutter to split audio into non-silent bits",
       "Thomas Vander Stichele <thomas at apestaart dot org>");

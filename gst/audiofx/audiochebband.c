@@ -187,7 +187,7 @@ gst_audio_cheb_band_class_init (GstAudioChebBandClass * klass)
           4, 32, 4,
           G_PARAM_READWRITE | GST_PARAM_CONTROLLABLE | G_PARAM_STATIC_STRINGS));
 
-  gst_element_class_set_details_simple (gstelement_class,
+  gst_element_class_set_static_metadata (gstelement_class,
       "Band pass & band reject filter", "Filter/Effect/Audio",
       "Chebyshev band pass and band reject filter",
       "Sebastian Dröge <sebastian.droege@collabora.co.uk>");

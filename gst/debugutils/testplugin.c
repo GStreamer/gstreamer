@@ -115,7 +115,7 @@ gst_test_class_init (GstTestClass * klass)
   gst_element_class_add_pad_template (gstelement_class,
       gst_static_pad_template_get (&sinktemplate));
 
-  gst_element_class_set_details_simple (gstelement_class, "Test plugin",
+  gst_element_class_set_static_metadata (gstelement_class, "Test plugin",
       "Testing", "perform a number of tests", "Benjamin Otte <otte@gnome>");
 
   basesink_class->render = GST_DEBUG_FUNCPTR (gst_test_render_buffer);

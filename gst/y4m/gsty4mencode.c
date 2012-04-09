@@ -111,7 +111,7 @@ gst_y4m_encode_class_init (GstY4mEncodeClass * klass)
   gst_element_class_add_pad_template (gstelement_class,
       gst_static_pad_template_get (&y4mencode_sink_factory));
 
-  gst_element_class_set_details_simple (gstelement_class,
+  gst_element_class_set_static_metadata (gstelement_class,
       "YUV4MPEG video encoder", "Codec/Encoder/Video",
       "Encodes a YUV frame into the yuv4mpeg format (mjpegtools)",
       "Wim Taymans <wim.taymans@gmail.com>");

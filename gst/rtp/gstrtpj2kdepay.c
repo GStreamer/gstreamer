@@ -110,7 +110,7 @@ gst_rtp_j2k_depay_class_init (GstRtpJ2KDepayClass * klass)
   gst_element_class_add_pad_template (gstelement_class,
       gst_static_pad_template_get (&gst_rtp_j2k_depay_sink_template));
 
-  gst_element_class_set_details_simple (gstelement_class,
+  gst_element_class_set_static_metadata (gstelement_class,
       "RTP JPEG 2000 depayloader", "Codec/Depayloader/Network/RTP",
       "Extracts JPEG 2000 video from RTP packets (RFC 5371)",
       "Wim Taymans <wim.taymans@gmail.com>");

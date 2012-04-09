@@ -263,7 +263,7 @@ gst_alpha_class_init (GstAlphaClass * klass)
           DEFAULT_PREFER_PASSTHROUGH,
           G_PARAM_READWRITE | GST_PARAM_CONTROLLABLE | G_PARAM_STATIC_STRINGS));
 
-  gst_element_class_set_details_simple (gstelement_class, "Alpha filter",
+  gst_element_class_set_static_metadata (gstelement_class, "Alpha filter",
       "Filter/Effect/Video",
       "Adds an alpha channel to video - uniform or via chroma-keying",
       "Wim Taymans <wim.taymans@gmail.com>\n"

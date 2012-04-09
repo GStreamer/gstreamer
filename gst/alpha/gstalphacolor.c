@@ -80,7 +80,7 @@ gst_alpha_color_class_init (GstAlphaColorClass * klass)
   GST_DEBUG_CATEGORY_INIT (alpha_color_debug, "alphacolor", 0,
       "ARGB<->AYUV colorspace conversion preserving the alpha channels");
 
-  gst_element_class_set_details_simple (gstelement_class, "Alpha color filter",
+  gst_element_class_set_static_metadata (gstelement_class, "Alpha color filter",
       "Filter/Converter/Video",
       "ARGB from/to AYUV colorspace conversion preserving the alpha channel",
       "Wim Taymans <wim.taymans@gmail.com>");

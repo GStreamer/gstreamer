@@ -144,7 +144,7 @@ gst_cmml_enc_class_init (GstCmmlEncClass * enc_class)
       gst_static_pad_template_get (&gst_cmml_enc_sink_factory));
   gst_element_class_add_pad_template (element_class,
       gst_static_pad_template_get (&gst_cmml_enc_src_factory));
-  gst_element_class_set_details_simple (element_class, "CMML streams encoder",
+  gst_element_class_set_static_metadata (element_class, "CMML streams encoder",
       "Codec/Encoder",
       "Encodes CMML streams", "Alessandro Decina <alessandro@nnva.org>");
 }

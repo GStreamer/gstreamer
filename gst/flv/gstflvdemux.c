@@ -3247,7 +3247,7 @@ gst_flv_demux_class_init (GstFlvDemuxClass * klass)
       gst_static_pad_template_get (&audio_src_template));
   gst_element_class_add_pad_template (gstelement_class,
       gst_static_pad_template_get (&video_src_template));
-  gst_element_class_set_details_simple (gstelement_class, "FLV Demuxer",
+  gst_element_class_set_static_metadata (gstelement_class, "FLV Demuxer",
       "Codec/Demuxer",
       "Demux FLV feeds into digital streams",
       "Julien Moutte <julien@moutte.net>");

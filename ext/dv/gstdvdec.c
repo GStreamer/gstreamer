@@ -181,7 +181,7 @@ gst_dvdec_class_init (GstDVDecClass * klass)
   gst_element_class_add_pad_template (gstelement_class,
       gst_static_pad_template_get (&src_temp));
 
-  gst_element_class_set_details_simple (gstelement_class, "DV video decoder",
+  gst_element_class_set_static_metadata (gstelement_class, "DV video decoder",
       "Codec/Decoder/Video",
       "Uses libdv to decode DV video (smpte314) (libdv.sourceforge.net)",
       "Erik Walthinsen <omega@cse.ogi.edu>," "Wim Taymans <wim@fluendo.com>");

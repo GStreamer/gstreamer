@@ -120,8 +120,8 @@ gst_pixbufscale_class_init (GstPixbufScaleClass * klass)
   trans_class = (GstBaseTransformClass *) klass;
   filter_class = (GstVideoFilterClass *) klass;
 
-  gst_element_class_set_details_simple (element_class, "GdkPixbuf image scaler",
-      "Filter/Effect/Video", "Resizes video",
+  gst_element_class_set_static_metadata (element_class,
+      "GdkPixbuf image scaler", "Filter/Effect/Video", "Resizes video",
       "Jan Schmidt <thaytan@mad.scientist.com>, "
       "Wim Taymans <wim.taymans@chello.be>, "
       "Renato Filho <renato.filho@indt.org.br>");

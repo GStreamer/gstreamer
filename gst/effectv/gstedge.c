@@ -232,7 +232,7 @@ gst_edgetv_class_init (GstEdgeTVClass * klass)
 
   gobject_class->finalize = gst_edgetv_finalize;
 
-  gst_element_class_set_details_simple (gstelement_class, "EdgeTV effect",
+  gst_element_class_set_static_metadata (gstelement_class, "EdgeTV effect",
       "Filter/Effect/Video",
       "Apply edge detect on video", "Wim Taymans <wim.taymans@chello.be>");
 

@@ -237,7 +237,7 @@ gst_navigationtest_class_init (GstNavigationtestClass * klass)
   element_class->change_state =
       GST_DEBUG_FUNCPTR (gst_navigationtest_change_state);
 
-  gst_element_class_set_details_simple (element_class, "Video navigation test",
+  gst_element_class_set_static_metadata (element_class, "Video navigation test",
       "Filter/Effect/Video",
       "Handle navigation events showing a black square following mouse pointer",
       "David Schleef <ds@schleef.org>");

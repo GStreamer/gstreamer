@@ -70,7 +70,7 @@ static void gst_oss_mixer_element_finalize (GObject * object);
 static void
 gst_oss_mixer_element_base_init (gpointer klass)
 {
-  gst_element_class_set_details_simple (GST_ELEMENT_CLASS (klass), "OSS Mixer",
+  gst_element_class_set_static_metadata (GST_ELEMENT_CLASS (klass), "OSS Mixer",
       "Generic/Audio",
       "Control sound input and output levels with OSS",
       "Andrew Vander Wingo <wingo@pobox.com>");

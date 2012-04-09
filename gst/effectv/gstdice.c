@@ -289,7 +289,7 @@ gst_dicetv_class_init (GstDiceTVClass * klass)
           MIN_CUBE_BITS, MAX_CUBE_BITS, DEFAULT_CUBE_BITS,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS | GST_PARAM_CONTROLLABLE));
 
-  gst_element_class_set_details_simple (gstelement_class, "DiceTV effect",
+  gst_element_class_set_static_metadata (gstelement_class, "DiceTV effect",
       "Filter/Effect/Video",
       "'Dices' the screen up into many small squares",
       "Wim Taymans <wim.taymans@gmail.be>");

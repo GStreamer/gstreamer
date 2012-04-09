@@ -1246,7 +1246,7 @@ gst_ximage_src_class_init (GstXImageSrcClass * klass)
           "Window name to capture from", NULL,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
-  gst_element_class_set_details_simple (ec, "Ximage video source",
+  gst_element_class_set_static_metadata (ec, "Ximage video source",
       "Source/Video",
       "Creates a screenshot video stream",
       "Lutz Mueller <lutz@users.sourceforge.net>, "

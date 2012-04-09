@@ -102,7 +102,7 @@ gst_rtp_dv_depay_class_init (GstRTPDVDepayClass * klass)
   gst_element_class_add_pad_template (gstelement_class,
       gst_static_pad_template_get (&sink_factory));
 
-  gst_element_class_set_details_simple (gstelement_class, "RTP DV Depayloader",
+  gst_element_class_set_static_metadata (gstelement_class, "RTP DV Depayloader",
       "Codec/Depayloader/Network/RTP",
       "Depayloads DV from RTP packets (RFC 3189)",
       "Marcel Moreaux <marcelm@spacelabs.nl>, Wim Taymans <wim.taymans@gmail.com>");

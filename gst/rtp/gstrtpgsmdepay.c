@@ -79,8 +79,8 @@ gst_rtp_gsm_depay_class_init (GstRTPGSMDepayClass * klass)
   gst_element_class_add_pad_template (gstelement_class,
       gst_static_pad_template_get (&gst_rtp_gsm_depay_sink_template));
 
-  gst_element_class_set_details_simple (gstelement_class, "RTP GSM depayloader",
-      "Codec/Depayloader/Network/RTP",
+  gst_element_class_set_static_metadata (gstelement_class,
+      "RTP GSM depayloader", "Codec/Depayloader/Network/RTP",
       "Extracts GSM audio from RTP packets", "Zeeshan Ali <zeenix@gmail.com>");
 
   gstrtpbase_depayload_class->process = gst_rtp_gsm_depay_process;

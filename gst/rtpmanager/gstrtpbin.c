@@ -1852,7 +1852,7 @@ gst_rtp_bin_class_init (GstRtpBinClass * klass)
   gst_element_class_add_pad_template (gstelement_class,
       gst_static_pad_template_get (&rtpbin_send_rtp_src_template));
 
-  gst_element_class_set_details_simple (gstelement_class, "RTP Bin",
+  gst_element_class_set_static_metadata (gstelement_class, "RTP Bin",
       "Filter/Network/RTP",
       "Real-Time Transport Protocol bin",
       "Wim Taymans <wim.taymans@gmail.com>");

@@ -112,7 +112,7 @@ static const gchar *mixer_ext_flags_get_string (gint flags);
 static void
 gst_oss4_mixer_base_init (gpointer klass)
 {
-  gst_element_class_set_details_simple (GST_ELEMENT_CLASS (klass),
+  gst_element_class_set_static_metadata (GST_ELEMENT_CLASS (klass),
       "OSS v4 Audio Mixer", "Generic/Audio",
       "Control sound input and output levels with OSS4",
       "Tim-Philipp Müller <tim centricular net>");

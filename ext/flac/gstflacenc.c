@@ -367,7 +367,7 @@ gst_flac_enc_class_init (GstFlacEncClass * klass)
   gst_element_class_add_pad_template (gstelement_class,
       gst_static_pad_template_get (&sink_factory));
 
-  gst_element_class_set_details_simple (gstelement_class, "FLAC audio encoder",
+  gst_element_class_set_static_metadata (gstelement_class, "FLAC audio encoder",
       "Codec/Encoder/Audio",
       "Encodes audio with the FLAC lossless audio encoder",
       "Wim Taymans <wim.taymans@chello.be>");

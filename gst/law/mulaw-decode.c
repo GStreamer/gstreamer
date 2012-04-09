@@ -186,7 +186,7 @@ gst_mulawdec_class_init (GstMuLawDecClass * klass)
   gst_element_class_add_pad_template (element_class,
       gst_static_pad_template_get (&mulaw_dec_sink_factory));
 
-  gst_element_class_set_details_simple (element_class, "Mu Law audio decoder",
+  gst_element_class_set_static_metadata (element_class, "Mu Law audio decoder",
       "Codec/Decoder/Audio",
       "Convert 8bit mu law to 16bit PCM",
       "Zaheer Abbas Merali <zaheerabbas at merali dot org>");

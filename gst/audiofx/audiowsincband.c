@@ -196,7 +196,7 @@ gst_audio_wsincband_class_init (GstAudioWSincBandClass * klass)
           WINDOW_HAMMING,
           G_PARAM_READWRITE | GST_PARAM_CONTROLLABLE | G_PARAM_STATIC_STRINGS));
 
-  gst_element_class_set_details_simple (gstelement_class,
+  gst_element_class_set_static_metadata (gstelement_class,
       "Band pass & band reject filter", "Filter/Effect/Audio",
       "Band pass and band reject windowed sinc filter",
       "Thomas Vander Stichele <thomas at apestaart dot org>, "

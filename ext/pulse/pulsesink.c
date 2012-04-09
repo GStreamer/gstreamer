@@ -1862,7 +1862,7 @@ gst_pulsesink_class_init (GstPulseSinkClass * klass)
           "list of pulseaudio stream properties",
           GST_TYPE_STRUCTURE, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
-  gst_element_class_set_details_simple (gstelement_class,
+  gst_element_class_set_static_metadata (gstelement_class,
       "PulseAudio Audio Sink",
       "Sink/Audio", "Plays audio to a PulseAudio server", "Lennart Poettering");
   gst_element_class_add_pad_template (gstelement_class,

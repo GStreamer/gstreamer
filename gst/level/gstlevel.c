@@ -204,7 +204,7 @@ gst_level_class_init (GstLevelClass * klass)
       gst_static_pad_template_get (&sink_template_factory));
   gst_element_class_add_pad_template (element_class,
       gst_static_pad_template_get (&src_template_factory));
-  gst_element_class_set_details_simple (element_class, "Level",
+  gst_element_class_set_static_metadata (element_class, "Level",
       "Filter/Analyzer/Audio",
       "RMS/Peak/Decaying Peak Level messager for audio/raw",
       "Thomas Vander Stichele <thomas at apestaart dot org>");

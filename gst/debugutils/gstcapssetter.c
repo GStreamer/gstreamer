@@ -141,7 +141,7 @@ gst_caps_setter_class_init (GstCapsSetterClass * g_class)
           "Drop fields of incoming caps", DEFAULT_REPLACE,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
-  gst_element_class_set_details_simple (element_class, "CapsSetter",
+  gst_element_class_set_static_metadata (element_class, "CapsSetter",
       "Generic",
       "Set/merge caps on stream",
       "Mark Nauwelaerts <mnauw@users.sourceforge.net>");

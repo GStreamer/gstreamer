@@ -43,7 +43,7 @@ static GstStateChangeReturn gst_sunaudiomixer_change_state (GstElement *
 static void
 gst_sunaudiomixer_base_init (gpointer klass)
 {
-  gst_element_class_set_details_simple (GST_ELEMENT_CLASS (klass),
+  gst_element_class_set_static_metadata (GST_ELEMENT_CLASS (klass),
       "Sun Audio Mixer", "Generic/Audio",
       "Control sound input and output levels with Sun Audio",
       "Brian Cameron <brian.cameron@sun.com>");

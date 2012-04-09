@@ -136,7 +136,7 @@ gst_audio_echo_class_init (GstAudioEchoClass * klass)
           0.0, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS
           | GST_PARAM_CONTROLLABLE));
 
-  gst_element_class_set_details_simple (gstelement_class, "Audio echo",
+  gst_element_class_set_static_metadata (gstelement_class, "Audio echo",
       "Filter/Effect/Audio",
       "Adds an echo or reverb effect to an audio stream",
       "Sebastian Dröge <sebastian.droege@collabora.co.uk>");

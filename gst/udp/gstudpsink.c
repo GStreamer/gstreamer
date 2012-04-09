@@ -94,7 +94,7 @@ gst_udpsink_class_init (GstUDPSinkClass * klass)
           0, 65535, UDP_DEFAULT_PORT,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
-  gst_element_class_set_details_simple (gstelement_class, "UDP packet sender",
+  gst_element_class_set_static_metadata (gstelement_class, "UDP packet sender",
       "Sink/Network",
       "Send data over the network via UDP", "Wim Taymans <wim@fluendo.com>");
 }

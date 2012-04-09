@@ -766,7 +766,7 @@ gst_jack_audio_sink_class_init (GstJackAudioSinkClass * klass)
           GST_TYPE_JACK_TRANSPORT, DEFAULT_PROP_TRANSPORT,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
-  gst_element_class_set_details_simple (gstelement_class, "Audio Sink (Jack)",
+  gst_element_class_set_static_metadata (gstelement_class, "Audio Sink (Jack)",
       "Sink/Audio", "Output audio to a JACK server",
       "Wim Taymans <wim.taymans@gmail.com>");
 

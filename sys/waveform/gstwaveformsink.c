@@ -127,7 +127,7 @@ gst_waveform_sink_class_init (GstWaveFormSinkClass * klass)
   GST_DEBUG_CATEGORY_INIT (waveformsink_debug, "waveformsink", 0,
       "Waveform sink");
 
-  gst_element_class_set_details_simple (element_class, "WaveForm Audio Sink",
+  gst_element_class_set_static_metadata (element_class, "WaveForm Audio Sink",
       "Sink/Audio",
       "Output to a sound card via WaveForm API",
       "Sebastien Moutte <sebastien@moutte.net>");

@@ -167,7 +167,7 @@ gst_flac_dec_class_init (GstFlacDecClass * klass)
   gst_element_class_add_pad_template (gstelement_class,
       gst_static_pad_template_get (&flac_dec_sink_factory));
 
-  gst_element_class_set_details_simple (gstelement_class, "FLAC audio decoder",
+  gst_element_class_set_static_metadata (gstelement_class, "FLAC audio decoder",
       "Codec/Decoder/Audio", "Decodes FLAC lossless audio streams",
       "Tim-Philipp Müller <tim@centricular.net>, "
       "Wim Taymans <wim.taymans@gmail.com>");

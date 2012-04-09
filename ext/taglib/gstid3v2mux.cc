@@ -99,7 +99,7 @@ gst_id3v2_mux_class_init (GstId3v2MuxClass * klass)
   gst_element_class_add_pad_template (element_class,
       gst_static_pad_template_get (&src_template));
 
-  gst_element_class_set_details_simple (element_class,
+  gst_element_class_set_static_metadata (element_class,
       "TagLib-based ID3v2 Muxer", "Formatter/Metadata",
       "Adds an ID3v2 header to the beginning of MP3 files using taglib",
       "Christophe Fergeau <teuf@gnome.org>");

@@ -100,7 +100,7 @@ gst_auto_video_sink_class_init (GstAutoVideoSinkClass * klass)
 
   gst_element_class_add_pad_template (eklass,
       gst_static_pad_template_get (&sink_template));
-  gst_element_class_set_details_simple (eklass, "Auto video sink",
+  gst_element_class_set_static_metadata (eklass, "Auto video sink",
       "Sink/Video",
       "Wrapper video sink for automatically detected video sink",
       "Jan Schmidt <thaytan@noraisin.net>");

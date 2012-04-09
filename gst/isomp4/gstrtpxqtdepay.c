@@ -133,7 +133,7 @@ gst_rtp_xqt_depay_class_init (GstRtpXQTDepayClass * klass)
   gst_element_class_add_pad_template (gstelement_class,
       gst_static_pad_template_get (&gst_rtp_xqt_depay_sink_template));
 
-  gst_element_class_set_details_simple (gstelement_class,
+  gst_element_class_set_static_metadata (gstelement_class,
       "RTP packet depayloader", "Codec/Depayloader/Network",
       "Extracts Quicktime audio/video from RTP packets",
       "Wim Taymans <wim@fluendo.com>");

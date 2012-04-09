@@ -103,7 +103,7 @@ gst_pulsemixer_class_init (GstPulseMixerClass * g_class)
           "Human-readable name of the sound device", NULL,
           G_PARAM_READABLE | G_PARAM_STATIC_STRINGS));
 
-  gst_element_class_set_details_simple (GST_ELEMENT_CLASS (g_class),
+  gst_element_class_set_static_metadata (GST_ELEMENT_CLASS (g_class),
       "PulseAudio Mixer",
       "Generic/Audio",
       "Control sound input and output levels for PulseAudio",

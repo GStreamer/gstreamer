@@ -148,7 +148,7 @@ gst_cacasink_class_init (GstCACASinkClass * klass)
 
   gstelement_class->change_state = gst_cacasink_change_state;
 
-  gst_element_class_set_details_simple (gstelement_class,
+  gst_element_class_set_static_metadata (gstelement_class,
       "A colored ASCII art video sink", "Sink/Video",
       "A colored ASCII art videosink", "Zeeshan Ali <zak147@yahoo.com>");
   gst_element_class_add_pad_template (gstelement_class,

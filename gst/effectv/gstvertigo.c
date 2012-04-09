@@ -300,7 +300,7 @@ gst_vertigotv_class_init (GstVertigoTVClass * klass)
           "Control the rate of zooming", 1.01, 1.1, 1.01,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
-  gst_element_class_set_details_simple (gstelement_class, "VertigoTV effect",
+  gst_element_class_set_static_metadata (gstelement_class, "VertigoTV effect",
       "Filter/Effect/Video",
       "A loopback alpha blending effector with rotating and scaling",
       "Wim Taymans <wim.taymans@gmail.be>");

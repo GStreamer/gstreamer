@@ -191,7 +191,7 @@ gst_dvdemux_class_init (GstDVDemuxClass * klass)
   gst_element_class_add_pad_template (gstelement_class,
       gst_static_pad_template_get (&audio_src_temp));
 
-  gst_element_class_set_details_simple (gstelement_class,
+  gst_element_class_set_static_metadata (gstelement_class,
       "DV system stream demuxer", "Codec/Demuxer",
       "Uses libdv to separate DV audio from DV video (libdv.sourceforge.net)",
       "Erik Walthinsen <omega@cse.ogi.edu>, Wim Taymans <wim@fluendo.com>");

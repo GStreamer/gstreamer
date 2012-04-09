@@ -163,7 +163,7 @@ gst_avi_demux_class_init (GstAviDemuxClass * klass)
   gst_element_class_add_pad_template (gstelement_class,
       gst_static_pad_template_get (&sink_templ));
 
-  gst_element_class_set_details_simple (gstelement_class, "Avi demuxer",
+  gst_element_class_set_static_metadata (gstelement_class, "Avi demuxer",
       "Codec/Demuxer",
       "Demultiplex an avi file into audio and video",
       "Erik Walthinsen <omega@cse.ogi.edu>, "

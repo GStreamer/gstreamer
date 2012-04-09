@@ -172,7 +172,7 @@ gst_directsound_sink_class_init (GstDirectSoundSinkClass * klass)
           "Mute state of this stream", DEFAULT_MUTE,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
-  gst_element_class_set_details_simple (element_class,
+  gst_element_class_set_static_metadata (element_class,
       "Direct Sound Audio Sink", "Sink/Audio",
       "Output to a sound card via Direct Sound",
       "Sebastien Moutte <sebastien@moutte.net>");

@@ -126,7 +126,7 @@ gst_goom_class_init (GstGoomClass * klass)
 
   gstelement_class->change_state = GST_DEBUG_FUNCPTR (gst_goom_change_state);
 
-  gst_element_class_set_details_simple (gstelement_class,
+  gst_element_class_set_static_metadata (gstelement_class,
       "GOOM: what a GOOM! 2k1 edition", "Visualization",
       "Takes frames of data and outputs video frames using the GOOM 2k1 filter",
       "Wim Taymans <wim@fluendo.com>");

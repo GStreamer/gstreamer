@@ -83,7 +83,7 @@ gst_rtp_pcma_depay_class_init (GstRtpPcmaDepayClass * klass)
   gst_element_class_add_pad_template (gstelement_class,
       gst_static_pad_template_get (&gst_rtp_pcma_depay_sink_template));
 
-  gst_element_class_set_details_simple (gstelement_class,
+  gst_element_class_set_static_metadata (gstelement_class,
       "RTP PCMA depayloader", "Codec/Depayloader/Network/RTP",
       "Extracts PCMA audio from RTP packets",
       "Edgard Lima <edgard.lima@indt.org.br>, Zeeshan Ali <zeenix@gmail.com>");

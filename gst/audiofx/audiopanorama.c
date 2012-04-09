@@ -206,7 +206,7 @@ gst_audio_panorama_class_init (GstAudioPanoramaClass * klass)
           GST_TYPE_AUDIO_PANORAMA_METHOD, METHOD_PSYCHOACOUSTIC,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
-  gst_element_class_set_details_simple (gstelement_class, "Stereo positioning",
+  gst_element_class_set_static_metadata (gstelement_class, "Stereo positioning",
       "Filter/Effect/Audio",
       "Positions audio streams in the stereo panorama",
       "Stefan Kost <ensonic@users.sf.net>");

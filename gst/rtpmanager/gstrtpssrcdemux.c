@@ -358,7 +358,7 @@ gst_rtp_ssrc_demux_class_init (GstRtpSsrcDemuxClass * klass)
   gst_element_class_add_pad_template (gstelement_klass,
       gst_static_pad_template_get (&rtp_ssrc_demux_rtcp_src_template));
 
-  gst_element_class_set_details_simple (gstelement_klass, "RTP SSRC Demux",
+  gst_element_class_set_static_metadata (gstelement_klass, "RTP SSRC Demux",
       "Demux/Network/RTP",
       "Splits RTP streams based on the SSRC",
       "Wim Taymans <wim.taymans@gmail.com>");

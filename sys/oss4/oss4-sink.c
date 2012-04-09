@@ -126,7 +126,7 @@ gst_oss4_sink_base_init (gpointer g_class)
   GstElementClass *element_class = GST_ELEMENT_CLASS (g_class);
   GstPadTemplate *templ;
 
-  gst_element_class_set_details_simple (element_class,
+  gst_element_class_set_static_metadata (element_class,
       "OSS v4 Audio Sink", "Sink/Audio",
       "Output to a sound card via OSS version 4",
       "Tim-Philipp Müller <tim centricular net>");

@@ -241,7 +241,7 @@ gst_streaktv_class_init (GstStreakTVClass * klass)
           "Feedback", DEFAULT_FEEDBACK,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
-  gst_element_class_set_details_simple (gstelement_class, "StreakTV effect",
+  gst_element_class_set_static_metadata (gstelement_class, "StreakTV effect",
       "Filter/Effect/Video",
       "StreakTV makes after images of moving objects",
       "FUKUCHI, Kentarou <fukuchi@users.sourceforge.net>, "

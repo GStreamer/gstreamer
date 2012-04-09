@@ -180,7 +180,7 @@ gst_multipart_demux_class_init (GstMultipartDemuxClass * klass)
       gst_static_pad_template_get (&multipart_demux_sink_template_factory));
   gst_element_class_add_pad_template (gstelement_class,
       gst_static_pad_template_get (&multipart_demux_src_template_factory));
-  gst_element_class_set_details_simple (gstelement_class, "Multipart demuxer",
+  gst_element_class_set_static_metadata (gstelement_class, "Multipart demuxer",
       "Codec/Demuxer",
       "demux multipart streams",
       "Wim Taymans <wim.taymans@gmail.com>, Sjoerd Simons <sjoerd@luon.net>");

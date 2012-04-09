@@ -134,7 +134,7 @@ gst_audio_iir_filter_class_init (GstAudioIIRFilterClass * klass)
       G_SIGNAL_RUN_LAST, G_STRUCT_OFFSET (GstAudioIIRFilterClass, rate_changed),
       NULL, NULL, NULL, G_TYPE_NONE, 1, G_TYPE_INT);
 
-  gst_element_class_set_details_simple (gstelement_class,
+  gst_element_class_set_static_metadata (gstelement_class,
       "Audio IIR filter", "Filter/Effect/Audio",
       "Generic audio IIR filter with custom filter kernel",
       "Sebastian Dröge <sebastian.droege@collabora.co.uk>");

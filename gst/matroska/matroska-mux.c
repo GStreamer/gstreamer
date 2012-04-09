@@ -267,7 +267,7 @@ gst_matroska_mux_class_init (GstMatroskaMuxClass * klass)
       gst_static_pad_template_get (&subtitlesink_templ));
   gst_element_class_add_pad_template (gstelement_class,
       gst_static_pad_template_get (&src_templ));
-  gst_element_class_set_details_simple (gstelement_class, "Matroska muxer",
+  gst_element_class_set_static_metadata (gstelement_class, "Matroska muxer",
       "Codec/Muxer",
       "Muxes video/audio/subtitle streams into a matroska stream",
       "GStreamer maintainers <gstreamer-devel@lists.sourceforge.net>");

@@ -118,7 +118,7 @@ gst_rtp_theora_pay_class_init (GstRtpTheoraPayClass * klass)
   gst_element_class_add_pad_template (gstelement_class,
       gst_static_pad_template_get (&gst_rtp_theora_pay_sink_template));
 
-  gst_element_class_set_details_simple (gstelement_class,
+  gst_element_class_set_static_metadata (gstelement_class,
       "RTP Theora payloader", "Codec/Payloader/Network/RTP",
       "Payload-encode Theora video into RTP packets (draft-01 RFC XXXX)",
       "Wim Taymans <wim.taymans@gmail.com>");

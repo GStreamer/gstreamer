@@ -225,7 +225,7 @@ gst_revtv_class_init (GstRevTVClass * klass)
       g_param_spec_int ("gain", "Gain", "Control gain", 1, 200, 50,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS | GST_PARAM_CONTROLLABLE));
 
-  gst_element_class_set_details_simple (gstelement_class, "RevTV effect",
+  gst_element_class_set_static_metadata (gstelement_class, "RevTV effect",
       "Filter/Effect/Video",
       "A video waveform monitor for each line of video processed",
       "Wim Taymans <wim.taymans@gmail.be>");

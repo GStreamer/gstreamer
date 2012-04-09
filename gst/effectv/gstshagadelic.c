@@ -235,7 +235,7 @@ gst_shagadelictv_class_init (GstShagadelicTVClass * klass)
 
   gobject_class->finalize = gst_shagadelictv_finalize;
 
-  gst_element_class_set_details_simple (gstelement_class, "ShagadelicTV",
+  gst_element_class_set_static_metadata (gstelement_class, "ShagadelicTV",
       "Filter/Effect/Video",
       "Oh behave, ShagedelicTV makes images shagadelic!",
       "Wim Taymans <wim.taymans@chello.be>");

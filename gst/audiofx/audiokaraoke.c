@@ -133,7 +133,7 @@ gst_audio_karaoke_class_init (GstAudioKaraokeClass * klass)
           "The Frequency width of the filter", 0.0, 100.0, DEFAULT_FILTER_WIDTH,
           G_PARAM_READWRITE | GST_PARAM_CONTROLLABLE | G_PARAM_STATIC_STRINGS));
 
-  gst_element_class_set_details_simple (gstelement_class, "AudioKaraoke",
+  gst_element_class_set_static_metadata (gstelement_class, "AudioKaraoke",
       "Filter/Effect/Audio",
       "Removes voice from sound", "Wim Taymans <wim.taymans@gmail.com>");
 

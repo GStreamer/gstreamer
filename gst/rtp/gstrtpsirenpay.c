@@ -69,7 +69,7 @@ gst_rtp_siren_pay_class_init (GstRTPSirenPayClass * klass)
       gst_static_pad_template_get (&gst_rtp_siren_pay_sink_template));
   gst_element_class_add_pad_template (gstelement_class,
       gst_static_pad_template_get (&gst_rtp_siren_pay_src_template));
-  gst_element_class_set_details_simple (gstelement_class,
+  gst_element_class_set_static_metadata (gstelement_class,
       "RTP Payloader for Siren Audio", "Codec/Payloader/Network/RTP",
       "Packetize Siren audio streams into RTP packets",
       "Youness Alaoui <kakaroto@kakaroto.homelinux.net>");

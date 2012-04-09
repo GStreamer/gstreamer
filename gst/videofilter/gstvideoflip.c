@@ -1011,7 +1011,7 @@ gst_video_flip_class_init (GstVideoFlipClass * klass)
           GST_TYPE_VIDEO_FLIP_METHOD, PROP_METHOD_DEFAULT,
           GST_PARAM_CONTROLLABLE | G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
-  gst_element_class_set_details_simple (gstelement_class, "Video flipper",
+  gst_element_class_set_static_metadata (gstelement_class, "Video flipper",
       "Filter/Effect/Video",
       "Flips and rotates video", "David Schleef <ds@schleef.org>");
 

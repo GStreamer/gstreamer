@@ -84,7 +84,7 @@ gst_rtp_mpv_pay_class_init (GstRTPMPVPayClass * klass)
   gst_element_class_add_pad_template (gstelement_class,
       gst_static_pad_template_get (&gst_rtp_mpv_pay_src_template));
 
-  gst_element_class_set_details_simple (gstelement_class,
+  gst_element_class_set_static_metadata (gstelement_class,
       "RTP MPEG2 ES video payloader", "Codec/Payloader/Network/RTP",
       "Payload-encodes MPEG2 ES into RTP packets (RFC 2250)",
       "Thijs Vermeir <thijsvermeir@gmail.com>");

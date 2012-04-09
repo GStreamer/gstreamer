@@ -168,7 +168,7 @@ gst_v4l2src_class_init (GstV4l2SrcClass * klass)
           "Only use every nth frame", 1, G_MAXINT,
           PROP_DEF_DECIMATE, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
-  gst_element_class_set_details_simple (element_class,
+  gst_element_class_set_static_metadata (element_class,
       "Video (video4linux2) Source", "Source/Video",
       "Reads frames from a Video4Linux2 device",
       "Edgard Lima <edgard.lima@indt.org.br>, "

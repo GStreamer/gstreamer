@@ -159,7 +159,7 @@ gst_wavparse_class_init (GstWavParseClass * klass)
       GST_PAD_ALWAYS, gst_riff_create_audio_template_caps ());
   gst_element_class_add_pad_template (gstelement_class, src_template);
 
-  gst_element_class_set_details_simple (gstelement_class, "WAV audio demuxer",
+  gst_element_class_set_static_metadata (gstelement_class, "WAV audio demuxer",
       "Codec/Demuxer/Audio",
       "Parse a .wav file into raw audio",
       "Erik Walthinsen <omega@cse.ogi.edu>");

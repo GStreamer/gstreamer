@@ -113,7 +113,7 @@ gst_tag_inject_class_init (GstTagInjectClass * klass)
 
   gobject_class->finalize = gst_tag_inject_finalize;
 
-  gst_element_class_set_details_simple (gstelement_class,
+  gst_element_class_set_static_metadata (gstelement_class,
       "TagInject",
       "Generic", "inject metadata tags", "Stefan Kost <ensonic@users.sf.net>");
   gst_element_class_add_pad_template (gstelement_class,

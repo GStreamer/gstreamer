@@ -170,7 +170,7 @@ gst_progress_report_class_init (GstProgressReportClass * g_class)
   gst_element_class_add_pad_template (element_class,
       gst_static_pad_template_get (&progress_report_src_template));
 
-  gst_element_class_set_details_simple (element_class, "Progress report",
+  gst_element_class_set_static_metadata (element_class, "Progress report",
       "Testing",
       "Periodically query and report on processing progress",
       "Jan Schmidt <thaytan@mad.scientist.com>");

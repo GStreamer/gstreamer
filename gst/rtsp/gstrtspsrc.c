@@ -482,7 +482,7 @@ gst_rtspsrc_class_init (GstRTSPSrcClass * klass)
   gst_element_class_add_pad_template (gstelement_class,
       gst_static_pad_template_get (&rtptemplate));
 
-  gst_element_class_set_details_simple (gstelement_class,
+  gst_element_class_set_static_metadata (gstelement_class,
       "RTSP packet receiver", "Source/Network",
       "Receive data over the network via RTSP (RFC 2326)",
       "Wim Taymans <wim@fluendo.com>, "

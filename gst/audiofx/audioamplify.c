@@ -287,7 +287,7 @@ gst_audio_amplify_class_init (GstAudioAmplifyClass * klass)
           GST_TYPE_AUDIO_AMPLIFY_CLIPPING_METHOD, METHOD_CLIP,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
-  gst_element_class_set_details_simple (gstelement_class, "Audio amplifier",
+  gst_element_class_set_static_metadata (gstelement_class, "Audio amplifier",
       "Filter/Effect/Audio",
       "Amplifies an audio stream by a given factor",
       "Sebastian Dröge <slomo@circular-chaos.org>");

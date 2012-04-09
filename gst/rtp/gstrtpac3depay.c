@@ -68,8 +68,8 @@ gst_rtp_ac3_depay_class_init (GstRtpAC3DepayClass * klass)
   gst_element_class_add_pad_template (gstelement_class,
       gst_static_pad_template_get (&gst_rtp_ac3_depay_sink_template));
 
-  gst_element_class_set_details_simple (gstelement_class, "RTP AC3 depayloader",
-      "Codec/Depayloader/Network/RTP",
+  gst_element_class_set_static_metadata (gstelement_class,
+      "RTP AC3 depayloader", "Codec/Depayloader/Network/RTP",
       "Extracts AC3 audio from RTP packets (RFC 4184)",
       "Wim Taymans <wim.taymans@gmail.com>");
 

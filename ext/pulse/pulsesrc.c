@@ -228,7 +228,7 @@ gst_pulsesrc_class_init (GstPulseSrcClass * klass)
           "record stream", 0, G_MAXUINT, PA_INVALID_INDEX,
           G_PARAM_READABLE | G_PARAM_STATIC_STRINGS));
 
-  gst_element_class_set_details_simple (gstelement_class,
+  gst_element_class_set_static_metadata (gstelement_class,
       "PulseAudio Audio Source",
       "Source/Audio",
       "Captures audio from a PulseAudio server", "Lennart Poettering");

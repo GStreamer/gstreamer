@@ -126,7 +126,7 @@ gst_aac_parse_class_init (GstAacParseClass * klass)
   gst_element_class_add_pad_template (element_class,
       gst_static_pad_template_get (&src_template));
 
-  gst_element_class_set_details_simple (element_class,
+  gst_element_class_set_static_metadata (element_class,
       "AAC audio stream parser", "Codec/Parser/Audio",
       "Advanced Audio Coding parser", "Stefan Kost <stefan.kost@nokia.com>");
 

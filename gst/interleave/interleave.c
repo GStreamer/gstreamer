@@ -307,7 +307,7 @@ gst_interleave_class_init (GstInterleaveClass * klass)
   GST_DEBUG_CATEGORY_INIT (gst_interleave_debug, "interleave", 0,
       "interleave element");
 
-  gst_element_class_set_details_simple (gstelement_class, "Audio interleaver",
+  gst_element_class_set_static_metadata (gstelement_class, "Audio interleaver",
       "Filter/Converter/Audio",
       "Folds many mono channels into one interleaved audio stream",
       "Andy Wingo <wingo at pobox.com>, "

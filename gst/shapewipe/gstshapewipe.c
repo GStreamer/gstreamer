@@ -150,7 +150,7 @@ gst_shape_wipe_class_init (GstShapeWipeClass * klass)
   gstelement_class->change_state =
       GST_DEBUG_FUNCPTR (gst_shape_wipe_change_state);
 
-  gst_element_class_set_details_simple (gstelement_class,
+  gst_element_class_set_static_metadata (gstelement_class,
       "Shape Wipe transition filter",
       "Filter/Editor/Video",
       "Adds a shape wipe transition to a video stream",

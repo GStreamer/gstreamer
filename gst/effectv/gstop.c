@@ -394,7 +394,7 @@ gst_optv_class_init (GstOpTVClass * klass)
           "Luma threshold", 0, G_MAXINT, DEFAULT_THRESHOLD,
           GST_PARAM_CONTROLLABLE | G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
-  gst_element_class_set_details_simple (gstelement_class, "OpTV effect",
+  gst_element_class_set_static_metadata (gstelement_class, "OpTV effect",
       "Filter/Effect/Video",
       "Optical art meets real-time video effect",
       "FUKUCHI, Kentarou <fukuchi@users.sourceforge.net>, "

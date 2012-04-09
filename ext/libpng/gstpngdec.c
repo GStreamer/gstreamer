@@ -88,7 +88,7 @@ gst_pngdec_class_init (GstPngDecClass * klass)
       gst_static_pad_template_get (&gst_pngdec_src_pad_template));
   gst_element_class_add_pad_template (gstelement_class,
       gst_static_pad_template_get (&gst_pngdec_sink_pad_template));
-  gst_element_class_set_details_simple (gstelement_class, "PNG image decoder",
+  gst_element_class_set_static_metadata (gstelement_class, "PNG image decoder",
       "Codec/Decoder/Image",
       "Decode a png video frame to a raw image",
       "Wim Taymans <wim@fluendo.com>");

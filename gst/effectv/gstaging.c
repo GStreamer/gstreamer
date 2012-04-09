@@ -376,7 +376,7 @@ gst_agingtv_class_init (GstAgingTVClass * klass)
           "Dusts", DEFAULT_DUSTS,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS | GST_PARAM_CONTROLLABLE));
 
-  gst_element_class_set_details_simple (gstelement_class, "AgingTV effect",
+  gst_element_class_set_static_metadata (gstelement_class, "AgingTV effect",
       "Filter/Effect/Video",
       "AgingTV adds age to video input using scratches and dust",
       "Sam Lantinga <slouken@devolution.com>");

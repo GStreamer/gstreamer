@@ -108,7 +108,7 @@ gst_icydemux_class_init (GstICYDemuxClass * klass)
   gst_element_class_add_pad_template (gstelement_class,
       gst_static_pad_template_get (&sink_factory));
 
-  gst_element_class_set_details_simple (gstelement_class, "ICY tag demuxer",
+  gst_element_class_set_static_metadata (gstelement_class, "ICY tag demuxer",
       "Codec/Demuxer/Metadata",
       "Read and output ICY tags while demuxing the contents",
       "Jan Schmidt <thaytan@mad.scientist.com>, "

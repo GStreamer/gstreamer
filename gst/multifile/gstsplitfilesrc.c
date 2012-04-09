@@ -129,7 +129,7 @@ gst_split_file_src_class_init (GstSplitFileSrcClass * klass)
   gst_element_class_add_pad_template (gstelement_class,
       gst_static_pad_template_get (&gst_split_file_src_pad_template));
 
-  gst_element_class_set_details_simple (gstelement_class, "Split-File Source",
+  gst_element_class_set_static_metadata (gstelement_class, "Split-File Source",
       "Source/File",
       "Read a sequentially named set of files as if it was one large file",
       "Tim-Philipp Müller <tim.muller@collabora.co.uk>");

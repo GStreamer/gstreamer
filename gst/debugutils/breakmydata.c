@@ -143,7 +143,7 @@ gst_break_my_data_class_init (GstBreakMyDataClass * klass)
   gst_element_class_add_pad_template (gstelement_class,
       gst_static_pad_template_get (&bmd_src_template));
 
-  gst_element_class_set_details_simple (gstelement_class, "Break my data",
+  gst_element_class_set_static_metadata (gstelement_class, "Break my data",
       "Testing",
       "randomly change data in the stream", "Benjamin Otte <otte@gnome>");
 

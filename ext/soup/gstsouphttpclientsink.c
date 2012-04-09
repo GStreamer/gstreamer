@@ -172,7 +172,7 @@ gst_soup_http_client_sink_class_init (GstSoupHttpClientSinkClass * klass)
   gst_element_class_add_pad_template (gstelement_class,
       gst_static_pad_template_get (&gst_soup_http_client_sink_sink_template));
 
-  gst_element_class_set_details_simple (gstelement_class, "HTTP client sink",
+  gst_element_class_set_static_metadata (gstelement_class, "HTTP client sink",
       "Generic", "Sends streams to HTTP server via PUT",
       "David Schleef <ds@entropywave.com>");
 

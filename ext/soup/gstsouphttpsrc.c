@@ -242,7 +242,7 @@ gst_soup_http_src_class_init (GstSoupHTTPSrcClass * klass)
   gst_element_class_add_pad_template (gstelement_class,
       gst_static_pad_template_get (&srctemplate));
 
-  gst_element_class_set_details_simple (gstelement_class, "HTTP client source",
+  gst_element_class_set_static_metadata (gstelement_class, "HTTP client source",
       "Source/Network",
       "Receive data as a client over the network via HTTP using SOUP",
       "Wouter Cloetens <wouter@mind.be>");

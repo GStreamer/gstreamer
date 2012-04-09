@@ -123,7 +123,7 @@ gst_gamma_class_init (GstGammaClass * g_class)
           0.01, 10, DEFAULT_PROP_GAMMA,
           GST_PARAM_CONTROLLABLE | G_PARAM_STATIC_STRINGS | G_PARAM_READWRITE));
 
-  gst_element_class_set_details_simple (gstelement_class,
+  gst_element_class_set_static_metadata (gstelement_class,
       "Video gamma correction", "Filter/Effect/Video",
       "Adjusts gamma on a video stream", "Arwed v. Merkatz <v.merkatz@gmx.net");
 

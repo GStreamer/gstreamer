@@ -95,7 +95,7 @@ gst_rtp_theora_depay_class_init (GstRtpTheoraDepayClass * klass)
   gst_element_class_add_pad_template (gstelement_class,
       gst_static_pad_template_get (&gst_rtp_theora_depay_src_template));
 
-  gst_element_class_set_details_simple (gstelement_class,
+  gst_element_class_set_static_metadata (gstelement_class,
       "RTP Theora depayloader", "Codec/Depayloader/Network/RTP",
       "Extracts Theora video from RTP packets (draft-01 of RFC XXXX)",
       "Wim Taymans <wim.taymans@gmail.com>");

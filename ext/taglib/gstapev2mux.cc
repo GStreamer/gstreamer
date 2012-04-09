@@ -91,7 +91,7 @@ gst_apev2_mux_class_init (GstApev2MuxClass * klass)
   gst_element_class_add_pad_template (element_class,
       gst_static_pad_template_get (&src_template));
 
-  gst_element_class_set_details_simple (element_class,
+  gst_element_class_set_static_metadata (element_class,
       "TagLib-based APEv2 Muxer", "Formatter/Metadata",
       "Adds an APEv2 header to the beginning of files using taglib",
       "Sebastian Dröge <slomo@circular-chaos.org>");

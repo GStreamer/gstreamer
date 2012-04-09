@@ -263,8 +263,8 @@ gst_udpsrc_class_init (GstUDPSrcClass * klass)
   gst_element_class_add_pad_template (gstelement_class,
       gst_static_pad_template_get (&src_template));
 
-  gst_element_class_set_details_simple (gstelement_class, "UDP packet receiver",
-      "Source/Network",
+  gst_element_class_set_static_metadata (gstelement_class,
+      "UDP packet receiver", "Source/Network",
       "Receive data over the network via UDP",
       "Wim Taymans <wim@fluendo.com>, "
       "Thijs Vermeir <thijs.vermeir@barco.com>");

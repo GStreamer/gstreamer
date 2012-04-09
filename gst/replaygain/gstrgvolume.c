@@ -282,7 +282,7 @@ gst_rg_volume_class_init (GstRgVolumeClass * klass)
       gst_static_pad_template_get (&src_template));
   gst_element_class_add_pad_template (element_class,
       gst_static_pad_template_get (&sink_template));
-  gst_element_class_set_details_simple (element_class, "ReplayGain volume",
+  gst_element_class_set_static_metadata (element_class, "ReplayGain volume",
       "Filter/Effect/Audio",
       "Apply ReplayGain volume adjustment",
       "Ren\xc3\xa9 Stadler <mail@renestadler.de>");

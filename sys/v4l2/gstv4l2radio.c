@@ -305,7 +305,7 @@ gst_v4l2radio_class_init (GstV4l2RadioClass * klass)
   gstelement_class->change_state =
       GST_DEBUG_FUNCPTR (gst_v4l2radio_change_state);
 
-  gst_element_class_set_details_simple (gstelement_class,
+  gst_element_class_set_static_metadata (gstelement_class,
       "Radio (video4linux2) Tuner",
       "Tuner",
       "Controls a Video4Linux2 radio device",

@@ -120,8 +120,8 @@ gst_speex_dec_class_init (GstSpeexDecClass * klass)
       gst_static_pad_template_get (&speex_dec_src_factory));
   gst_element_class_add_pad_template (gstelement_class,
       gst_static_pad_template_get (&speex_dec_sink_factory));
-  gst_element_class_set_details_simple (gstelement_class, "Speex audio decoder",
-      "Codec/Decoder/Audio",
+  gst_element_class_set_static_metadata (gstelement_class,
+      "Speex audio decoder", "Codec/Decoder/Audio",
       "decode speex streams to audio", "Wim Taymans <wim@fluendo.com>");
 
   GST_DEBUG_CATEGORY_INIT (speexdec_debug, "speexdec", 0,

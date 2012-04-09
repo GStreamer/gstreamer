@@ -234,7 +234,7 @@ gst_spectrum_class_init (GstSpectrumClass * klass)
   GST_DEBUG_CATEGORY_INIT (gst_spectrum_debug, "spectrum", 0,
       "audio spectrum analyser element");
 
-  gst_element_class_set_details_simple (element_class, "Spectrum analyzer",
+  gst_element_class_set_static_metadata (element_class, "Spectrum analyzer",
       "Filter/Analyzer/Audio",
       "Run an FFT on the audio signal, output spectrum data",
       "Erik Walthinsen <omega@cse.ogi.edu>, "

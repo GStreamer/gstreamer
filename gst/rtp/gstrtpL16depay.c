@@ -89,7 +89,7 @@ gst_rtp_L16_depay_class_init (GstRtpL16DepayClass * klass)
   gst_element_class_add_pad_template (gstelement_class,
       gst_static_pad_template_get (&gst_rtp_L16_depay_sink_template));
 
-  gst_element_class_set_details_simple (gstelement_class,
+  gst_element_class_set_static_metadata (gstelement_class,
       "RTP audio depayloader", "Codec/Depayloader/Network/RTP",
       "Extracts raw audio from RTP packets",
       "Zeeshan Ali <zak147@yahoo.com>," "Wim Taymans <wim.taymans@gmail.com>");

@@ -89,7 +89,7 @@ gst_navseek_class_init (GstNavSeekClass * klass)
   gst_element_class_add_pad_template (element_class,
       gst_static_pad_template_get (&navseek_src_template));
 
-  gst_element_class_set_details_simple (element_class,
+  gst_element_class_set_static_metadata (element_class,
       "Seek based on left-right arrows", "Filter/Video",
       "Seek based on navigation keys left-right",
       "Jan Schmidt <thaytan@mad.scientist.com>");

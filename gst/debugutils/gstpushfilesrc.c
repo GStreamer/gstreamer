@@ -95,7 +95,7 @@ gst_push_file_src_class_init (GstPushFileSrcClass * g_class)
   gst_element_class_add_pad_template (element_class,
       gst_static_pad_template_get (&srctemplate));
 
-  gst_element_class_set_details_simple (element_class, "Push File Source",
+  gst_element_class_set_static_metadata (element_class, "Push File Source",
       "Testing",
       "Implements pushfile:// URI-handler for push-based file access",
       "Tim-Philipp Müller <tim centricular net>");

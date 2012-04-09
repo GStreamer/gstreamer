@@ -142,7 +142,7 @@ gst_gdk_pixbuf_sink_class_init (GstGdkPixbufSinkClass * klass)
   GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
   GObjectClass *gobject_class = G_OBJECT_CLASS (klass);
 
-  gst_element_class_set_details_simple (element_class, "GdkPixbuf sink",
+  gst_element_class_set_static_metadata (element_class, "GdkPixbuf sink",
       "Sink/Video", "Output images as GdkPixbuf objects in bus messages",
       "Tim-Philipp Müller <tim centricular net>");
 

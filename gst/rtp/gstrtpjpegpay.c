@@ -258,7 +258,7 @@ gst_rtp_jpeg_pay_class_init (GstRtpJPEGPayClass * klass)
   gst_element_class_add_pad_template (gstelement_class,
       gst_static_pad_template_get (&gst_rtp_jpeg_pay_sink_template));
 
-  gst_element_class_set_details_simple (gstelement_class, "RTP JPEG payloader",
+  gst_element_class_set_static_metadata (gstelement_class, "RTP JPEG payloader",
       "Codec/Payloader/Network/RTP",
       "Payload-encodes JPEG pictures into RTP packets (RFC 2435)",
       "Axis Communications <dev-gstreamer@axis.com>");

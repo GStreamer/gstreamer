@@ -95,7 +95,7 @@ gst_image_freeze_class_init (GstImageFreezeClass * klass)
   gstelement_class->change_state =
       GST_DEBUG_FUNCPTR (gst_image_freeze_change_state);
 
-  gst_element_class_set_details_simple (gstelement_class,
+  gst_element_class_set_static_metadata (gstelement_class,
       "Still frame stream generator",
       "Filter/Video",
       "Generates a still frame stream from an image",

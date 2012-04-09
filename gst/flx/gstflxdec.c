@@ -107,7 +107,7 @@ gst_flxdec_base_init (GstFlxDecClass * klass)
 {
   GstElementClass *gstelement_class = GST_ELEMENT_CLASS (klass);
 
-  gst_element_class_set_details_simple (gstelement_class, "FLX video decoder",
+  gst_element_class_set_static_metadata (gstelement_class, "FLX video decoder",
       "Codec/Decoder/Video",
       "FLC/FLI/FLX video decoder",
       "Sepp Wijnands <mrrazz@garbage-coderz.net>, Zeeshan Ali <zeenix@gmail.com>");

@@ -117,7 +117,7 @@ gst_flac_tag_class_init (GstFlacTagClass * klass)
   gobject_class->dispose = gst_flac_tag_dispose;
   gstelement_class->change_state = gst_flac_tag_change_state;
 
-  gst_element_class_set_details_simple (gstelement_class, "FLAC tagger",
+  gst_element_class_set_static_metadata (gstelement_class, "FLAC tagger",
       "Formatter/Metadata",
       "Rewrite tags in a FLAC file", "Christophe Fergeau <teuf@gnome.org>");
 

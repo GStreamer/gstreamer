@@ -275,7 +275,7 @@ gst_quarktv_class_init (GstQuarkTVClass * klass)
           "Number of planes", 0, 64, PLANES,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS | GST_PARAM_CONTROLLABLE));
 
-  gst_element_class_set_details_simple (gstelement_class, "QuarkTV effect",
+  gst_element_class_set_static_metadata (gstelement_class, "QuarkTV effect",
       "Filter/Effect/Video",
       "Motion dissolver", "FUKUCHI, Kentarou <fukuchi@users.sourceforge.net>");
 

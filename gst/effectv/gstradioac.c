@@ -604,7 +604,7 @@ gst_radioactv_class_init (GstRadioacTVClass * klass)
           "Trigger (in trigger mode)", DEFAULT_TRIGGER,
           GST_PARAM_CONTROLLABLE | G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
-  gst_element_class_set_details_simple (gstelement_class, "RadioacTV effect",
+  gst_element_class_set_static_metadata (gstelement_class, "RadioacTV effect",
       "Filter/Effect/Video",
       "motion-enlightment effect",
       "FUKUCHI, Kentarou <fukuchi@users.sourceforge.net>, "

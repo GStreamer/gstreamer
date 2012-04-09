@@ -102,7 +102,7 @@ gst_auto_video_src_class_init (GstAutoVideoSrcClass * klass)
 
   gst_element_class_add_pad_template (eklass,
       gst_static_pad_template_get (&src_template));
-  gst_element_class_set_details_simple (eklass, "Auto video source",
+  gst_element_class_set_static_metadata (eklass, "Auto video source",
       "Source/Video",
       "Wrapper video source for automatically detected video source",
       "Jan Schmidt <thaytan@noraisin.net>, "

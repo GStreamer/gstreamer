@@ -132,7 +132,7 @@ gst_wavenc_class_init (GstWavEncClass * klass)
 
   element_class->change_state = GST_DEBUG_FUNCPTR (gst_wavenc_change_state);
 
-  gst_element_class_set_details_simple (element_class, "WAV audio muxer",
+  gst_element_class_set_static_metadata (element_class, "WAV audio muxer",
       "Codec/Muxer/Audio",
       "Encode raw audio into WAV", "Iain Holmes <iain@prettypeople.org>");
 

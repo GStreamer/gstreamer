@@ -212,7 +212,7 @@ gst_aasink_class_init (GstAASinkClass * klass)
   gst_element_class_add_pad_template (gstelement_class,
       gst_static_pad_template_get (&sink_template));
 
-  gst_element_class_set_details_simple (gstelement_class,
+  gst_element_class_set_static_metadata (gstelement_class,
       "ASCII art video sink", "Sink/Video", "An ASCII art videosink",
       "Wim Taymans <wim.taymans@chello.be>");
 

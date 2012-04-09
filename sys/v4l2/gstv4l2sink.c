@@ -198,7 +198,7 @@ gst_v4l2sink_class_init (GstV4l2SinkClass * klass)
           "The height of the video crop; default is equal to negotiated image height",
           0, 0xffffffff, 0, G_PARAM_READWRITE));
 
-  gst_element_class_set_details_simple (element_class,
+  gst_element_class_set_static_metadata (element_class,
       "Video (video4linux2) Sink", "Sink/Video",
       "Displays frames on a video4linux2 device", "Rob Clark <rob@ti.com>,");
 

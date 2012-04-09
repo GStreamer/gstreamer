@@ -127,7 +127,7 @@ gst_smokeenc_base_init (gpointer g_class)
       gst_static_pad_template_get (&gst_smokeenc_sink_pad_template));
   gst_element_class_add_pad_template (element_class,
       gst_static_pad_template_get (&gst_smokeenc_src_pad_template));
-  gst_element_class_set_details_simple (element_class, "Smoke video encoder",
+  gst_element_class_set_static_metadata (element_class, "Smoke video encoder",
       "Codec/Encoder/Video",
       "Encode images into the Smoke format", "Wim Taymans <wim@fluendo.com>");
 }

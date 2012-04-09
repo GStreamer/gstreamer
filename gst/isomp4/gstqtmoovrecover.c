@@ -145,7 +145,7 @@ gst_qt_moov_recover_class_init (GstQTMoovRecoverClass * klass)
   GST_DEBUG_CATEGORY_INIT (gst_qt_moov_recover_debug, "qtmoovrecover", 0,
       "QT Moovie Recover");
 
-  gst_element_class_set_details_simple (gstelement_class, "QT Moov Recover",
+  gst_element_class_set_static_metadata (gstelement_class, "QT Moov Recover",
       "Util", "Recovers unfinished qtmux files",
       "Thiago Santos <thiago.sousa.santos@collabora.co.uk>");
 }

@@ -86,7 +86,7 @@ gst_ape_demux_class_init (GstApeDemuxClass * klass)
   tagdemux_class = GST_TAG_DEMUX_CLASS (klass);
   element_class = GST_ELEMENT_CLASS (klass);
 
-  gst_element_class_set_details_simple (element_class, "APE tag demuxer",
+  gst_element_class_set_static_metadata (element_class, "APE tag demuxer",
       "Codec/Demuxer/Metadata",
       "Read and output APE tags while demuxing the contents",
       "Tim-Philipp Müller <tim centricular net>");

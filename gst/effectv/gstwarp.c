@@ -240,7 +240,7 @@ gst_warptv_class_init (GstWarpTVClass * klass)
 
   gobject_class->finalize = gst_warptv_finalize;
 
-  gst_element_class_set_details_simple (gstelement_class, "WarpTV effect",
+  gst_element_class_set_static_metadata (gstelement_class, "WarpTV effect",
       "Filter/Effect/Video",
       "WarpTV does realtime goo'ing of the video input",
       "Sam Lantinga <slouken@devolution.com>");

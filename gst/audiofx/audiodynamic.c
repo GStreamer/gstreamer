@@ -245,7 +245,7 @@ gst_audio_dynamic_class_init (GstAudioDynamicClass * klass)
           1.0,
           G_PARAM_READWRITE | GST_PARAM_CONTROLLABLE | G_PARAM_STATIC_STRINGS));
 
-  gst_element_class_set_details_simple (gstelement_class,
+  gst_element_class_set_static_metadata (gstelement_class,
       "Dynamic range controller", "Filter/Effect/Audio",
       "Compressor and Expander", "Sebastian Dröge <slomo@circular-chaos.org>");
 

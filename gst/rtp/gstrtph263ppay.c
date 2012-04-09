@@ -142,7 +142,7 @@ gst_rtp_h263p_pay_class_init (GstRtpH263PPayClass * klass)
   gst_element_class_add_pad_template (gstelement_class,
       gst_static_pad_template_get (&gst_rtp_h263p_pay_sink_template));
 
-  gst_element_class_set_details_simple (gstelement_class, "RTP H263 payloader",
+  gst_element_class_set_static_metadata (gstelement_class, "RTP H263 payloader",
       "Codec/Payloader/Network/RTP",
       "Payload-encodes H263/+/++ video in RTP packets (RFC 4629)",
       "Wim Taymans <wim.taymans@gmail.com>");

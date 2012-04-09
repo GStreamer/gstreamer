@@ -167,11 +167,10 @@ gst_deinterleave_class_init (GstDeinterleaveClass * klass)
   GST_DEBUG_CATEGORY_INIT (gst_deinterleave_debug, "deinterleave", 0,
       "deinterleave element");
 
-  gst_element_class_set_details_simple (gstelement_class, "Audio deinterleaver",
-      "Filter/Converter/Audio",
+  gst_element_class_set_static_metadata (gstelement_class,
+      "Audio deinterleaver", "Filter/Converter/Audio",
       "Splits one interleaved multichannel audio stream into many mono audio streams",
-      "Andy Wingo <wingo at pobox.com>, "
-      "Iain <iain@prettypeople.org>, "
+      "Andy Wingo <wingo at pobox.com>, " "Iain <iain@prettypeople.org>, "
       "Sebastian Dröge <slomo@circular-chaos.org>");
 
   gst_element_class_add_pad_template (gstelement_class,

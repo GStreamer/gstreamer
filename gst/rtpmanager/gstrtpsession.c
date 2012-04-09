@@ -609,7 +609,7 @@ gst_rtp_session_class_init (GstRtpSessionClass * klass)
   gst_element_class_add_pad_template (gstelement_class,
       gst_static_pad_template_get (&rtpsession_send_rtcp_src_template));
 
-  gst_element_class_set_details_simple (gstelement_class, "RTP Session",
+  gst_element_class_set_static_metadata (gstelement_class, "RTP Session",
       "Filter/Network/RTP",
       "Implement an RTP session", "Wim Taymans <wim.taymans@gmail.com>");
 

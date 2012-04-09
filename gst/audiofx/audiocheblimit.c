@@ -178,7 +178,7 @@ gst_audio_cheb_limit_class_init (GstAudioChebLimitClass * klass)
           2, 32, 4,
           G_PARAM_READWRITE | GST_PARAM_CONTROLLABLE | G_PARAM_STATIC_STRINGS));
 
-  gst_element_class_set_details_simple (gstelement_class,
+  gst_element_class_set_static_metadata (gstelement_class,
       "Low pass & high pass filter",
       "Filter/Effect/Audio",
       "Chebyshev low pass and high pass filter",

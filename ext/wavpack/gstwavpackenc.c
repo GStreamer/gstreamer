@@ -219,7 +219,7 @@ gst_wavpack_enc_class_init (GstWavpackEncClass * klass)
       gst_static_pad_template_get (&wvcsrc_factory));
 
   /* set element details */
-  gst_element_class_set_details_simple (element_class, "Wavpack audio encoder",
+  gst_element_class_set_static_metadata (element_class, "Wavpack audio encoder",
       "Codec/Encoder/Audio",
       "Encodes audio with the Wavpack lossless/lossy audio codec",
       "Sebastian Dröge <slomo@circular-chaos.org>");

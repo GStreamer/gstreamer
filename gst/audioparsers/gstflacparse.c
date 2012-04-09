@@ -242,7 +242,7 @@ gst_flac_parse_class_init (GstFlacParseClass * klass)
   gst_element_class_add_pad_template (element_class,
       gst_static_pad_template_get (&sink_factory));
 
-  gst_element_class_set_details_simple (element_class, "FLAC audio parser",
+  gst_element_class_set_static_metadata (element_class, "FLAC audio parser",
       "Codec/Parser/Audio",
       "Parses audio with the FLAC lossless audio codec",
       "Sebastian Dröge <sebastian.droege@collabora.co.uk>");

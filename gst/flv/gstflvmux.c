@@ -195,7 +195,7 @@ gst_flv_mux_class_init (GstFlvMuxClass * klass)
       gst_static_pad_template_get (&audiosink_templ));
   gst_element_class_add_pad_template (gstelement_class,
       gst_static_pad_template_get (&src_templ));
-  gst_element_class_set_details_simple (gstelement_class, "FLV muxer",
+  gst_element_class_set_static_metadata (gstelement_class, "FLV muxer",
       "Codec/Muxer",
       "Muxes video/audio streams into a FLV stream",
       "Sebastian Dröge <sebastian.droege@collabora.co.uk>");

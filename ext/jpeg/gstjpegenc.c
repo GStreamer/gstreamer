@@ -147,7 +147,7 @@ gst_jpegenc_class_init (GstJpegEncClass * klass)
       gst_static_pad_template_get (&gst_jpegenc_sink_pad_template));
   gst_element_class_add_pad_template (gstelement_class,
       gst_static_pad_template_get (&gst_jpegenc_src_pad_template));
-  gst_element_class_set_details_simple (gstelement_class, "JPEG image encoder",
+  gst_element_class_set_static_metadata (gstelement_class, "JPEG image encoder",
       "Codec/Encoder/Image",
       "Encode images in JPEG format", "Wim Taymans <wim.taymans@tvd.be>");
 

@@ -123,7 +123,7 @@ gst_multipart_mux_class_init (GstMultipartMuxClass * klass)
   gst_element_class_add_pad_template (gstelement_class,
       gst_static_pad_template_get (&sink_factory));
 
-  gst_element_class_set_details_simple (gstelement_class, "Multipart muxer",
+  gst_element_class_set_static_metadata (gstelement_class, "Multipart muxer",
       "Codec/Muxer", "mux multipart streams", "Wim Taymans <wim@fluendo.com>");
 
   /* populate mime types */

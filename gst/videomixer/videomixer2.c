@@ -1965,7 +1965,7 @@ gst_videomixer2_class_init (GstVideoMixer2Class * klass)
   gst_element_class_add_pad_template (gstelement_class,
       gst_static_pad_template_get (&sink_factory));
 
-  gst_element_class_set_details_simple (gstelement_class, "Video mixer 2",
+  gst_element_class_set_static_metadata (gstelement_class, "Video mixer 2",
       "Filter/Editor/Video",
       "Mix multiple video streams", "Wim Taymans <wim@fluendo.com>, "
       "Sebastian Dröge <sebastian.droege@collabora.co.uk>");

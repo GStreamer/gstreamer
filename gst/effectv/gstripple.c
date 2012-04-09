@@ -588,7 +588,7 @@ gst_rippletv_class_init (GstRippleTVClass * klass)
           "Mode", GST_TYPE_RIPPLETV_MODE, DEFAULT_MODE,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS | GST_PARAM_CONTROLLABLE));
 
-  gst_element_class_set_details_simple (gstelement_class, "RippleTV effect",
+  gst_element_class_set_static_metadata (gstelement_class, "RippleTV effect",
       "Filter/Effect/Video",
       "RippleTV does ripple mark effect on the video input",
       "FUKUCHI, Kentarou <fukuchi@users.sourceforge.net>, "

@@ -106,7 +106,7 @@ gst_median_base_init (GstMedianClass * klass)
       gst_static_pad_template_get (&median_sink_factory));
   gst_element_class_add_pad_template (element_class,
       gst_static_pad_template_get (&median_src_factory));
-  gst_element_class_set_details_simple (element_class, "Median effect",
+  gst_element_class_set_static_metadata (element_class, "Median effect",
       "Filter/Effect/Video",
       "Apply a median filter to an image",
       "Wim Taymans <wim.taymans@chello.be>");

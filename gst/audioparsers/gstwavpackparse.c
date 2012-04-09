@@ -98,7 +98,7 @@ gst_wavpack_parse_class_init (GstWavpackParseClass * klass)
   gst_element_class_add_pad_template (element_class,
       gst_static_pad_template_get (&src_template));
 
-  gst_element_class_set_details_simple (element_class,
+  gst_element_class_set_static_metadata (element_class,
       "Wavpack audio stream parser", "Codec/Parser/Audio",
       "Wavpack parser", "Mark Nauwelaerts <mark.nauwelaerts@collabora.co.uk>");
 }

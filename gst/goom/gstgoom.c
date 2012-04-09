@@ -125,7 +125,7 @@ gst_goom_class_init (GstGoomClass * klass)
 
   gobject_class->finalize = gst_goom_finalize;
 
-  gst_element_class_set_details_simple (gstelement_class, "GOOM: what a GOOM!",
+  gst_element_class_set_static_metadata (gstelement_class, "GOOM: what a GOOM!",
       "Visualization",
       "Takes frames of data and outputs video frames using the GOOM filter",
       "Wim Taymans <wim@fluendo.com>");

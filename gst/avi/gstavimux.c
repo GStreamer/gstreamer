@@ -267,7 +267,7 @@ gst_avi_mux_class_init (GstAviMuxClass * klass)
   gst_element_class_add_pad_template (gstelement_class,
       gst_static_pad_template_get (&video_sink_factory));
 
-  gst_element_class_set_details_simple (gstelement_class, "Avi muxer",
+  gst_element_class_set_static_metadata (gstelement_class, "Avi muxer",
       "Codec/Muxer",
       "Muxes audio and video into an avi stream",
       "GStreamer maintainers <gstreamer-devel@lists.sourceforge.net>");

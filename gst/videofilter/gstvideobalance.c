@@ -502,7 +502,7 @@ gst_video_balance_class_init (GstVideoBalanceClass * klass)
           DEFAULT_PROP_SATURATION,
           GST_PARAM_CONTROLLABLE | G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
-  gst_element_class_set_details_simple (gstelement_class, "Video balance",
+  gst_element_class_set_static_metadata (gstelement_class, "Video balance",
       "Filter/Effect/Video",
       "Adjusts brightness, contrast, hue, saturation on a video stream",
       "David Schleef <ds@schleef.org>");

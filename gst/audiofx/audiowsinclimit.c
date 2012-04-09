@@ -192,7 +192,7 @@ gst_audio_wsinclimit_class_init (GstAudioWSincLimitClass * klass)
           WINDOW_HAMMING,
           G_PARAM_READWRITE | GST_PARAM_CONTROLLABLE | G_PARAM_STATIC_STRINGS));
 
-  gst_element_class_set_details_simple (gstelement_class,
+  gst_element_class_set_static_metadata (gstelement_class,
       "Low pass & high pass filter", "Filter/Effect/Audio",
       "Low pass and high pass windowed sinc filter",
       "Thomas Vander Stichele <thomas at apestaart dot org>, "

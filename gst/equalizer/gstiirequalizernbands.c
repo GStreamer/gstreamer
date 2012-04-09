@@ -117,7 +117,7 @@ gst_iir_equalizer_nbands_class_init (GstIirEqualizerNBandsClass * klass)
           "number of different bands to use", 1, 64, 10,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS | G_PARAM_CONSTRUCT));
 
-  gst_element_class_set_details_simple (gstelement_class, "N Band Equalizer",
+  gst_element_class_set_static_metadata (gstelement_class, "N Band Equalizer",
       "Filter/Effect/Audio",
       "Direct Form IIR equalizer",
       "Benjamin Otte <otte@gnome.org>," " Stefan Kost <ensonic@users.sf.net>");
