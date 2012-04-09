@@ -1180,6 +1180,7 @@ gst_element_request_pad (GstElement * element,
 {
   g_return_val_if_fail (GST_IS_ELEMENT (element), NULL);
   g_return_val_if_fail (templ != NULL, NULL);
+  g_return_val_if_fail (templ->presence == GST_PAD_REQUEST, NULL);
 
   return _gst_element_request_pad (element, templ, name, caps);
 }
