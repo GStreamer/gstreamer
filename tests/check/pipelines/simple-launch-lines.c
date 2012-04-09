@@ -241,10 +241,16 @@ GST_START_TEST (test_video_encoders_decoders)
       GST_MESSAGE_ANY & ~(GST_MESSAGE_ERROR | GST_MESSAGE_WARNING),
       GST_MESSAGE_UNKNOWN, target_state);
 
-  s = ENC_DEC_PIPELINE_STRING (DEFAULT_BUFCOUNT, "smokeenc", "smokedec");
-  run_pipeline (setup_pipeline (s), s,
-      GST_MESSAGE_ANY & ~(GST_MESSAGE_ERROR | GST_MESSAGE_WARNING),
-      GST_MESSAGE_UNKNOWN, target_state);
+
+  if (gst_registry_check_feature_version (gst_registry_get (), "smokeenc",
+          GST_VERSION_MAJOR, GST_VERSION_MINOR, 0) &&
+      gst_registry_check_feature_version (gst_registry_get (), "smokedec",
+          GST_VERSION_MAJOR, GST_VERSION_MINOR, 0)) {
+    s = ENC_DEC_PIPELINE_STRING (DEFAULT_BUFCOUNT, "smokeenc", "smokedec");
+    run_pipeline (setup_pipeline (s), s,
+        GST_MESSAGE_ANY & ~(GST_MESSAGE_ERROR | GST_MESSAGE_WARNING),
+        GST_MESSAGE_UNKNOWN, target_state);
+  }
 }
 
 GST_END_TEST
