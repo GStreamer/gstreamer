@@ -214,7 +214,7 @@ gst_rtsp_wms_class_init (GstRTSPWMSClass * g_class)
 
   GST_DEBUG_CATEGORY_INIT (rtspwms_debug, "rtspwms", 0, "WMS RTSP extension");
 
-  gst_element_class_set_details_simple (element_class, "WMS RTSP Extension",
+  gst_element_class_set_static_metadata (element_class, "WMS RTSP Extension",
       "Network/Extension/Protocol",
       "Extends RTSP so that it can handle WMS setup",
       "Wim Taymans <wim.taymans@gmail.com>");

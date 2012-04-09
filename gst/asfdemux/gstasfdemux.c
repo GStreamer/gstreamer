@@ -121,7 +121,7 @@ gst_asf_demux_class_init (GstASFDemuxClass * klass)
 
   gstelement_class = (GstElementClass *) klass;
 
-  gst_element_class_set_details_simple (gstelement_class, "ASF Demuxer",
+  gst_element_class_set_static_metadata (gstelement_class, "ASF Demuxer",
       "Codec/Demuxer",
       "Demultiplexes ASF Streams", "Owen Fraser-Green <owen@discobabe.net>");
 

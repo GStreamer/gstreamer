@@ -98,7 +98,7 @@ gst_synaesthesia_class_init (GstSynaesthesiaClass * klass)
   gstelement_class->change_state =
       GST_DEBUG_FUNCPTR (gst_synaesthesia_change_state);
 
-  gst_element_class_set_details_simple (gstelement_class, "Synaesthesia",
+  gst_element_class_set_static_metadata (gstelement_class, "Synaesthesia",
       "Visualization",
       "Creates video visualizations of audio input, using stereo and pitch information",
       "Richard Boulton <richard@tartarus.org>");

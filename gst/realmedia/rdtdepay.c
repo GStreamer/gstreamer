@@ -97,7 +97,7 @@ gst_rdt_depay_class_init (GstRDTDepayClass * klass)
   gst_element_class_add_pad_template (gstelement_class,
       gst_static_pad_template_get (&gst_rdt_depay_sink_template));
 
-  gst_element_class_set_details_simple (gstelement_class, "RDT packet parser",
+  gst_element_class_set_static_metadata (gstelement_class, "RDT packet parser",
       "Codec/Depayloader/Network",
       "Extracts RealMedia from RDT packets",
       "Lutz Mueller <lutz at topfrose dot de>, "

@@ -758,7 +758,7 @@ gst_x264_enc_class_init (GstX264EncClass * klass)
   /* append weighted prediction parameter */
   g_string_append_printf (x264enc_defaults, ":weightp=0");
 
-  gst_element_class_set_details_simple (gstelement_class,
+  gst_element_class_set_static_metadata (gstelement_class,
       "x264enc", "Codec/Encoder/Video", "H264 Encoder",
       "Josef Zlomek <josef.zlomek@itonis.tv>, "
       "Mark Nauwelaerts <mnauw@users.sf.net>");

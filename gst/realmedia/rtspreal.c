@@ -675,7 +675,7 @@ gst_rtsp_real_class_init (GstRTSPRealClass * g_class)
 
   gobject_class->finalize = gst_rtsp_real_finalize;
 
-  gst_element_class_set_details_simple (gstelement_class,
+  gst_element_class_set_static_metadata (gstelement_class,
       "RealMedia RTSP Extension", "Network/Extension/Protocol",
       "Extends RTSP so that it can handle RealMedia setup",
       "Wim Taymans <wim.taymans@gmail.com>");

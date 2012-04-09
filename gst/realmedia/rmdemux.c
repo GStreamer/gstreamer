@@ -204,7 +204,7 @@ gst_rmdemux_base_init (GstRMDemuxClass * klass)
       gst_static_pad_template_get (&gst_rmdemux_videosrc_template));
   gst_element_class_add_pad_template (element_class,
       gst_static_pad_template_get (&gst_rmdemux_audiosrc_template));
-  gst_element_class_set_details_simple (element_class, "RealMedia Demuxer",
+  gst_element_class_set_static_metadata (element_class, "RealMedia Demuxer",
       "Codec/Demuxer",
       "Demultiplex a RealMedia file into audio and video streams",
       "David Schleef <ds@schleef.org>");

@@ -103,7 +103,7 @@ gst_real_audio_demux_class_init (GstRealAudioDemuxClass * klass)
   gst_element_class_add_pad_template (gstelement_class,
       gst_static_pad_template_get (&src_template));
 
-  gst_element_class_set_details_simple (gstelement_class, "RealAudio Demuxer",
+  gst_element_class_set_static_metadata (gstelement_class, "RealAudio Demuxer",
       "Codec/Demuxer",
       "Demultiplex a RealAudio file",
       "Tim-Philipp Müller <tim centricular net>");

@@ -116,7 +116,7 @@ gst_dvd_sub_dec_class_init (GstDvdSubDecClass * klass)
   gst_element_class_add_pad_template (gstelement_class,
       gst_static_pad_template_get (&subtitle_template));
 
-  gst_element_class_set_details_simple (gstelement_class,
+  gst_element_class_set_static_metadata (gstelement_class,
       "DVD subtitle decoder", "Codec/Decoder/Video",
       "Decodes DVD subtitles into AYUV video frames",
       "Wim Taymans <wim.taymans@gmail.com>, "

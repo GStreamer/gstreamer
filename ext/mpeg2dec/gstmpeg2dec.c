@@ -132,7 +132,7 @@ gst_mpeg2dec_class_init (GstMpeg2decClass * klass)
   gst_element_class_add_pad_template (gstelement_class,
       gst_static_pad_template_get (&user_data_template_factory));
 #endif
-  gst_element_class_set_details_simple (gstelement_class,
+  gst_element_class_set_static_metadata (gstelement_class,
       "mpeg1 and mpeg2 video decoder", "Codec/Decoder/Video",
       "Uses libmpeg2 to decode MPEG video streams",
       "Wim Taymans <wim.taymans@gmail.com>");

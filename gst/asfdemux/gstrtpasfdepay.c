@@ -80,7 +80,7 @@ gst_rtp_asf_depay_class_init (GstRtpAsfDepayClass * klass)
   gst_element_class_add_pad_template (gstelement_class,
       gst_static_pad_template_get (&sink_factory));
 
-  gst_element_class_set_details_simple (gstelement_class,
+  gst_element_class_set_static_metadata (gstelement_class,
       "RTP ASF packet depayloader", "Codec/Depayloader/Network",
       "Extracts ASF streams from RTP",
       "Tim-Philipp Müller <tim centricular net>, "

@@ -119,7 +119,7 @@ gst_amrnbdec_class_init (GstAmrnbDecClass * klass)
   gst_element_class_add_pad_template (element_class,
       gst_static_pad_template_get (&src_template));
 
-  gst_element_class_set_details_simple (element_class, "AMR-NB audio decoder",
+  gst_element_class_set_static_metadata (element_class, "AMR-NB audio decoder",
       "Codec/Decoder/Audio",
       "Adaptive Multi-Rate Narrow-Band audio decoder",
       "GStreamer maintainers <gstreamer-devel@lists.sourceforge.net>");

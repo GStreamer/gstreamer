@@ -120,8 +120,8 @@ gst_dvdlpcmdec_base_init (gpointer g_class)
       gst_static_pad_template_get (&gst_dvdlpcmdec_sink_template));
   gst_element_class_add_pad_template (element_class,
       gst_static_pad_template_get (&gst_dvdlpcmdec_src_template));
-  gst_element_class_set_details_simple (element_class, "DVD LPCM Audio decoder",
-      "Codec/Decoder/Audio",
+  gst_element_class_set_static_metadata (element_class,
+      "DVD LPCM Audio decoder", "Codec/Decoder/Audio",
       "Decode DVD LPCM frames into standard PCM audio",
       "Jan Schmidt <jan@noraisin.net>, Michael Smith <msmith@fluendo.com>");
 }

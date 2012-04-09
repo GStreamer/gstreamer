@@ -94,8 +94,8 @@ gst_pnm_src_class_init (GstPNMSrcClass * klass)
   gst_element_class_add_pad_template (gstelement_class,
       gst_static_pad_template_get (&gst_pnm_src_template));
 
-  gst_element_class_set_details_simple (gstelement_class, "PNM packet receiver",
-      "Source/Network",
+  gst_element_class_set_static_metadata (gstelement_class,
+      "PNM packet receiver", "Source/Network",
       "Receive data over the network via PNM",
       "Wim Taymans <wim.taymans@gmail.com>");
 

@@ -331,8 +331,8 @@ gst_cdio_cdda_src_class_init (GstCdioCddaSrcClass * klass)
           "Read from device at the specified speed (-1 = default)", -1, 100,
           DEFAULT_READ_SPEED, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
-  gst_element_class_set_details_simple (element_class, "CD audio source (CDDA)",
-      "Source/File",
+  gst_element_class_set_static_metadata (element_class,
+      "CD audio source (CDDA)", "Source/File",
       "Read audio from CD using libcdio",
       "Tim-Philipp Müller <tim centricular net>");
 }

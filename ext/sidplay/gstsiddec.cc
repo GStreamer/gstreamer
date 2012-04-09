@@ -192,7 +192,7 @@ gst_siddec_class_init (GstSidDecClass * klass)
       g_param_spec_boxed ("metadata", "Metadata", "Metadata", GST_TYPE_CAPS,
           (GParamFlags)(G_PARAM_READABLE | G_PARAM_STATIC_STRINGS)));
 
-  gst_element_class_set_details_simple (gstelement_class, "Sid decoder",
+  gst_element_class_set_static_metadata (gstelement_class, "Sid decoder",
       "Codec/Decoder/Audio", "Use libsidplay to decode SID audio tunes",
       "Wim Taymans <wim.taymans@gmail.com>");
 

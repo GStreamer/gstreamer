@@ -128,7 +128,7 @@ gst_mad_class_init (GstMadClass * klass)
   gst_element_class_add_pad_template (element_class,
       gst_static_pad_template_get (&mad_src_template_factory));
 
-  gst_element_class_set_details_simple (element_class, "mad mp3 decoder",
+  gst_element_class_set_static_metadata (element_class, "mad mp3 decoder",
       "Codec/Decoder/Audio",
       "Uses mad code to decode mp3 streams", "Wim Taymans <wim@fluendo.com>");
 }

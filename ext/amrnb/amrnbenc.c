@@ -159,7 +159,7 @@ gst_amrnbenc_class_init (GstAmrnbEncClass * klass)
   gst_element_class_add_pad_template (element_class,
       gst_static_pad_template_get (&src_template));
 
-  gst_element_class_set_details_simple (element_class, "AMR-NB audio encoder",
+  gst_element_class_set_static_metadata (element_class, "AMR-NB audio encoder",
       "Codec/Encoder/Audio",
       "Adaptive Multi-Rate Narrow-Band audio encoder",
       "Wim Taymans <wim.taymans@gmail.com>");
