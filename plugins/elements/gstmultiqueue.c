@@ -1193,6 +1193,7 @@ gst_multi_queue_loop (GstPad * pad)
   guint32 newid;
   GstFlowReturn result;
   GstClockTime next_time;
+  gboolean is_buffer;
 
   sq = (GstSingleQueue *) gst_pad_get_element_private (pad);
   mq = sq->mqueue;
@@ -1213,6 +1214,8 @@ gst_multi_queue_loop (GstPad * pad)
   /* steal the object and destroy the item */
   object = gst_multi_queue_item_steal_object (item);
   gst_multi_queue_item_destroy (item);
+
+  is_buffer = GST_IS_BUFFER (object);
 
   /* Get running time of the item. Events will have GST_CLOCK_TIME_NONE */
   next_time = get_running_time (&sq->src_segment, object, TRUE);
@@ -1323,6 +1326,7 @@ gst_multi_queue_loop (GstPad * pad)
 
   /* Try to push out the new object */
   result = gst_single_queue_push_one (mq, sq, object);
+  object = NULL;
 
   /* Check if we pushed something already and if this is
    * now a switch from an active to a non-active stream.
@@ -1358,13 +1362,11 @@ gst_multi_queue_loop (GstPad * pad)
     }
   }
 
-  if (GST_IS_BUFFER (object))
+  if (is_buffer)
     sq->pushed = TRUE;
   sq->srcresult = result;
   sq->last_oldid = newid;
   GST_MULTI_QUEUE_MUTEX_UNLOCK (mq);
-
-  object = NULL;
 
   if (result != GST_FLOW_OK && result != GST_FLOW_NOT_LINKED
       && result != GST_FLOW_UNEXPECTED)
