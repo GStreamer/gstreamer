@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-base 0.10.30.3\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2012-03-22 14:47+0100\n"
+"POT-Creation-Date: 2012-04-07 16:44+0100\n"
 "PO-Revision-Date: 2010-10-25 10:27+0900\n"
 "Last-Translator: Makoto Kato <makoto.kt@gmail.com>\n"
 "Language-Team: Japanese <translation-team-ja@lists.sourceforge.net>\n"
@@ -390,6 +390,21 @@ msgstr "ロスレス MSZH"
 
 msgid "Run-length encoding"
 msgstr "ランレングス符号化"
+
+msgid "Subtitle"
+msgstr ""
+
+#, fuzzy
+msgid "MPL2 subtitle format"
+msgstr "TMPlayer 字幕形式"
+
+#, fuzzy
+msgid "DKS subtitle format"
+msgstr "Sami 字幕形式"
+
+#, fuzzy
+msgid "QTtext subtitle format"
+msgstr "Kate 字幕形式"
 
 msgid "Sami subtitle format"
 msgstr "Sami 字幕形式"

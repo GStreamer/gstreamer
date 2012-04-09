@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-base 0.10.28.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2012-03-22 14:47+0100\n"
+"POT-Creation-Date: 2012-04-07 16:44+0100\n"
 "PO-Revision-Date: 2010-06-07 18:17+0100\n"
 "Last-Translator: Daniel Nylander <po@danielnylander.se>\n"
 "Language-Team: Swedish <tp-sv@listor.tp-sv.se>\n"
@@ -386,6 +386,22 @@ msgstr "Förlustfri MSZH"
 
 msgid "Run-length encoding"
 msgstr "Körlängdskodning"
+
+#, fuzzy
+msgid "Subtitle"
+msgstr "Titel"
+
+#, fuzzy
+msgid "MPL2 subtitle format"
+msgstr "Undertextformatet TMPlayer"
+
+#, fuzzy
+msgid "DKS subtitle format"
+msgstr "Undertextformatet Sami"
+
+#, fuzzy
+msgid "QTtext subtitle format"
+msgstr "Undertextformatet Kate"
 
 msgid "Sami subtitle format"
 msgstr "Undertextformatet Sami"
@@ -1360,9 +1376,6 @@ msgstr "Insticksmodul eller element av okänd typ"
 
 #~ msgid "_Year:"
 #~ msgstr "_År:"
-
-#~ msgid "Title"
-#~ msgstr "Titel"
 
 #~ msgid "Length"
 #~ msgstr "Speltid"

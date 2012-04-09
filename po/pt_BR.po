@@ -9,7 +9,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-base-0.10.31.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2012-03-22 14:47+0100\n"
+"POT-Creation-Date: 2012-04-07 16:44+0100\n"
 "PO-Revision-Date: 2011-01-08 01:02-0300\n"
 "Last-Translator: Fabrício Godoy <skarllot@gmail.com>\n"
 "Language-Team: Brazilian Portuguese <ldp-br@bazar.conectiva.com.br>\n"
@@ -398,6 +398,21 @@ msgstr "MSZH Sem Perdas"
 
 msgid "Run-length encoding"
 msgstr "Codificação Run-length"
+
+msgid "Subtitle"
+msgstr ""
+
+#, fuzzy
+msgid "MPL2 subtitle format"
+msgstr "Formato de legendas TMPlayer"
+
+#, fuzzy
+msgid "DKS subtitle format"
+msgstr "Formato de legendas Sami"
+
+#, fuzzy
+msgid "QTtext subtitle format"
+msgstr "Formato de legendas Kate"
 
 msgid "Sami subtitle format"
 msgstr "Formato de legendas Sami"

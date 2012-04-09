@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-base 0.10.32.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2012-03-22 14:47+0100\n"
+"POT-Creation-Date: 2012-04-07 16:44+0100\n"
 "PO-Revision-Date: 2012-01-28 11:31+0700\n"
 "Last-Translator: Andhika Padmawan <andhika.padmawan@gmail.com>\n"
 "Language-Team: Indonesian <translation-team-id@lists.sourceforge.net>\n"
@@ -384,6 +384,21 @@ msgstr "Lossless MSZH"
 
 msgid "Run-length encoding"
 msgstr "Penyandian sepanjang-jalan"
+
+msgid "Subtitle"
+msgstr ""
+
+#, fuzzy
+msgid "MPL2 subtitle format"
+msgstr "Format subjudul TMPlayer"
+
+#, fuzzy
+msgid "DKS subtitle format"
+msgstr "Format subjudul Sami"
+
+#, fuzzy
+msgid "QTtext subtitle format"
+msgstr "Format subjudul Kate"
 
 msgid "Sami subtitle format"
 msgstr "Format subjudul Sami"

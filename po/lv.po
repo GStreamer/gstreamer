@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-base 0.10.32.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2012-03-22 14:47+0100\n"
+"POT-Creation-Date: 2012-04-07 16:44+0100\n"
 "PO-Revision-Date: 2011-09-02 12:02-0000\n"
 "Last-Translator: Rihards Priedītis <rprieditis@gmail.com>\n"
 "Language-Team: Latvian <translation-team-lv@lists.sourceforge.net>\n"
@@ -390,6 +390,21 @@ msgstr "Bez zudumu MSZH"
 
 msgid "Run-length encoding"
 msgstr "Sērijas garuma kodēšana"
+
+msgid "Subtitle"
+msgstr ""
+
+#, fuzzy
+msgid "MPL2 subtitle format"
+msgstr "TMPlayer subtitru formāts"
+
+#, fuzzy
+msgid "DKS subtitle format"
+msgstr "Sami subtitru formāts"
+
+#, fuzzy
+msgid "QTtext subtitle format"
+msgstr "Kate subtitru formāts"
 
 msgid "Sami subtitle format"
 msgstr "Sami subtitru formāts"

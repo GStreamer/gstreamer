@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-base 0.10.30.3\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2012-03-22 14:47+0100\n"
+"POT-Creation-Date: 2012-04-07 16:44+0100\n"
 "PO-Revision-Date: 2010-11-08 15:34+0100\n"
 "Last-Translator: Peter Tuhársky <tuharsky@misbb.sk>\n"
 "Language-Team: Slovak <sk-i18n@lists.linux.sk>\n"
@@ -391,6 +391,21 @@ msgstr "Bezstratové MSZH"
 
 msgid "Run-length encoding"
 msgstr "Kódovanie počas prehrávania"
+
+msgid "Subtitle"
+msgstr ""
+
+#, fuzzy
+msgid "MPL2 subtitle format"
+msgstr "Titulkový formát TMPlayer"
+
+#, fuzzy
+msgid "DKS subtitle format"
+msgstr "Formát titulkov sami"
+
+#, fuzzy
+msgid "QTtext subtitle format"
+msgstr "Formát titulkov Kate"
 
 msgid "Sami subtitle format"
 msgstr "Formát titulkov sami"

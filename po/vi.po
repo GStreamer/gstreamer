@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-base 0.10.28.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2012-03-22 14:47+0100\n"
+"POT-Creation-Date: 2012-04-07 16:44+0100\n"
 "PO-Revision-Date: 2010-04-27 22:51+0930\n"
 "Last-Translator: Clytie Siddall <clytie@riverland.net.au>\n"
 "Language-Team: Vietnamese <vi-VN@googlegroups.com>\n"
@@ -385,6 +385,21 @@ msgstr "MSZH không mất gì (Lossless MSZH)"
 
 msgid "Run-length encoding"
 msgstr "Mã hoá độ dài chạy (Run-Length Encoding: RLE)"
+
+msgid "Subtitle"
+msgstr ""
+
+#, fuzzy
+msgid "MPL2 subtitle format"
+msgstr "Định dạng phụ đề TMPlayer"
+
+#, fuzzy
+msgid "DKS subtitle format"
+msgstr "Định dạng phụ đề Sami"
+
+#, fuzzy
+msgid "QTtext subtitle format"
+msgstr "Định dạng phụ đề Kate"
 
 msgid "Sami subtitle format"
 msgstr "Định dạng phụ đề Sami"

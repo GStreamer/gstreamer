@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-base 0.10.30.3\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2012-03-22 14:47+0100\n"
+"POT-Creation-Date: 2012-04-07 16:44+0100\n"
 "PO-Revision-Date: 2010-10-27 12:05+0200\n"
 "Last-Translator: Michael Kotsarinis <mk73628@gmail.com>\n"
 "Language-Team: Greek <team@lists.gnome.gr>\n"
@@ -406,6 +406,21 @@ msgstr "Μη απωλεστικός MSZH"
 
 msgid "Run-length encoding"
 msgstr "Κωδικοποίηση Run-length"
+
+msgid "Subtitle"
+msgstr ""
+
+#, fuzzy
+msgid "MPL2 subtitle format"
+msgstr "Μορφή υποτίτλων TMPlayer"
+
+#, fuzzy
+msgid "DKS subtitle format"
+msgstr "Μορφή υποτίτλων Sami "
+
+#, fuzzy
+msgid "QTtext subtitle format"
+msgstr "Μορφή υποτίτλων Kate"
 
 msgid "Sami subtitle format"
 msgstr "Μορφή υποτίτλων Sami "

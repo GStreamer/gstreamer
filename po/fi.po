@@ -12,7 +12,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-base 0.10.30.3\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2012-03-22 14:47+0100\n"
+"POT-Creation-Date: 2012-04-07 16:44+0100\n"
 "PO-Revision-Date: 2010-12-31 23:21+0200\n"
 "Last-Translator: Tommi Vainikainen <Tommi.Vainikainen@iki.fi>\n"
 "Language-Team: Finnish <translation-team-fi@lists.sourceforge.net>\n"
@@ -391,6 +391,21 @@ msgstr "Häviötön MSZH"
 
 msgid "Run-length encoding"
 msgstr "RLE-koodaus"
+
+msgid "Subtitle"
+msgstr ""
+
+#, fuzzy
+msgid "MPL2 subtitle format"
+msgstr "TMPlayer-tekstitysmuoto"
+
+#, fuzzy
+msgid "DKS subtitle format"
+msgstr "Sami-tekstitysmuoto"
+
+#, fuzzy
+msgid "QTtext subtitle format"
+msgstr "Kate-tekstitysmuoto"
 
 msgid "Sami subtitle format"
 msgstr "Sami-tekstitysmuoto"

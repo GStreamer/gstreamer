@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-base-0.10.32.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2012-03-22 14:47+0100\n"
+"POT-Creation-Date: 2012-04-07 16:44+0100\n"
 "PO-Revision-Date: 2011-12-05 09:10+0200\n"
 "Last-Translator: Мирослав Николић <miroslavnikolic@rocketmail.com>\n"
 "Language-Team: Serbian <gnu@prevod.org>\n"
@@ -387,6 +387,21 @@ msgstr "Безгубитни МСЗХ"
 
 msgid "Run-length encoding"
 msgstr "Кодирање покретања дужине"
+
+msgid "Subtitle"
+msgstr ""
+
+#, fuzzy
+msgid "MPL2 subtitle format"
+msgstr "ТМПлејер формат титла"
+
+#, fuzzy
+msgid "DKS subtitle format"
+msgstr "Сами формат титла"
+
+#, fuzzy
+msgid "QTtext subtitle format"
+msgstr "Кејт формат титла"
 
 msgid "Sami subtitle format"
 msgstr "Сами формат титла"

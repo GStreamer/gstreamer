@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-base-0.10.15.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2012-03-22 14:47+0100\n"
+"POT-Creation-Date: 2012-04-07 16:44+0100\n"
 "PO-Revision-Date: 2008-03-07 23:43+0200\n"
 "Last-Translator: Gintautas Miliauskas <gintas@akl.lt>\n"
 "Language-Team: Lithuanian <komp_lt@konferencijos.lt>\n"
@@ -391,6 +391,21 @@ msgstr "Lossless MSZH"
 
 msgid "Run-length encoding"
 msgstr "Eilės ilgio kodavimas (RLE)"
+
+msgid "Subtitle"
+msgstr ""
+
+#, fuzzy
+msgid "MPL2 subtitle format"
+msgstr "TMPlayer titrų formatas"
+
+#, fuzzy
+msgid "DKS subtitle format"
+msgstr "Sami titrų formatas"
+
+#, fuzzy
+msgid "QTtext subtitle format"
+msgstr "Sami titrų formatas"
 
 msgid "Sami subtitle format"
 msgstr "Sami titrų formatas"

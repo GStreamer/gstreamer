@@ -9,7 +9,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-base 0.10.32.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2012-03-22 14:47+0100\n"
+"POT-Creation-Date: 2012-04-07 16:44+0100\n"
 "PO-Revision-Date: 2011-04-28 00:04+0200\n"
 "Last-Translator: Christian Kirbach <christian.kirbach@googlemail.com>\n"
 "Language-Team: German <translation-team-de@lists.sourceforge.net>\n"
@@ -397,6 +397,21 @@ msgstr "verlustloses MSZH"
 
 msgid "Run-length encoding"
 msgstr "RLE-Codierung"
+
+msgid "Subtitle"
+msgstr ""
+
+#, fuzzy
+msgid "MPL2 subtitle format"
+msgstr "Untertitel-Format TMPlayer"
+
+#, fuzzy
+msgid "DKS subtitle format"
+msgstr "Untertitel-Format Sami"
+
+#, fuzzy
+msgid "QTtext subtitle format"
+msgstr "Untertitel-Format Kate"
 
 msgid "Sami subtitle format"
 msgstr "Untertitel-Format Sami"

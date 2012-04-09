@@ -9,7 +9,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-base 0.10.32.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2012-03-22 14:47+0100\n"
+"POT-Creation-Date: 2012-04-07 16:44+0100\n"
 "PO-Revision-Date: 2011-04-28 09:19+0200\n"
 "Last-Translator: Claude Paroz <claude@2xlibre.net>\n"
 "Language-Team: French <traduc@traduc.org>\n"
@@ -407,6 +407,21 @@ msgstr "MSZH sans perte"
 # http://fr.wikipedia.org/wiki/Run-length_encoding
 msgid "Run-length encoding"
 msgstr "Codage par plages"
+
+msgid "Subtitle"
+msgstr ""
+
+#, fuzzy
+msgid "MPL2 subtitle format"
+msgstr "Format de sous-titres TMPlayer"
+
+#, fuzzy
+msgid "DKS subtitle format"
+msgstr "Format de sous-titres Sami"
+
+#, fuzzy
+msgid "QTtext subtitle format"
+msgstr "Format de sous-titres Kate"
 
 msgid "Sami subtitle format"
 msgstr "Format de sous-titres Sami"
