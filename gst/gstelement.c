@@ -1230,6 +1230,34 @@ gst_element_class_add_metadata (GstElementClass * klass,
 }
 
 /**
+ * gst_element_class_add_static_metadata:
+ * @klass: class to set metadata for
+ * @key: the key to set
+ * @value: the value to set
+ *
+ * Set @key with @value as metadata in @klass.
+ *
+ * Same as gst_element_class_add_metadata(), but @value must be a static string
+ * or an inlined string, as it will not be copied. (GStreamer plugins will
+ * be made resident once loaded, so this function can be used even from
+ * dynamically loaded plugins.)
+ */
+void
+gst_element_class_add_static_metadata (GstElementClass * klass,
+    const gchar * key, const gchar * value)
+{
+  GValue val = G_VALUE_INIT;
+
+  g_return_if_fail (GST_IS_ELEMENT_CLASS (klass));
+  g_return_if_fail (key != NULL);
+  g_return_if_fail (value != NULL);
+
+  g_value_init (&val, G_TYPE_STRING);
+  g_value_set_static_string (&val, value);
+  gst_structure_take_value ((GstStructure *) klass->metadata, key, &val);
+}
+
+/**
  * gst_element_class_set_metadata:
  * @klass: class to set metadata for
  * @longname: The long English name of the element. E.g. "File Sink"
@@ -1256,6 +1284,51 @@ gst_element_class_set_metadata (GstElementClass * klass,
       GST_ELEMENT_METADATA_KLASS, G_TYPE_STRING, classification,
       GST_ELEMENT_METADATA_DESCRIPTION, G_TYPE_STRING, description,
       GST_ELEMENT_METADATA_AUTHOR, G_TYPE_STRING, author, NULL);
+}
+
+/**
+ * gst_element_class_set_static_metadata:
+ * @klass: class to set metadata for
+ * @longname: The long English name of the element. E.g. "File Sink"
+ * @classification: String describing the type of element, as an unordered list
+ * separated with slashes ('/'). See draft-klass.txt of the design docs
+ * for more details and common types. E.g: "Sink/File"
+ * @description: Sentence describing the purpose of the element.
+ * E.g: "Write stream to a file"
+ * @author: Name and contact details of the author(s). Use \n to separate
+ * multiple author metadata. E.g: "Joe Bloggs &lt;joe.blogs at foo.com&gt;"
+ *
+ * Sets the detailed information for a #GstElementClass.
+ * <note>This function is for use in _class_init functions only.</note>
+ *
+ * Same as gst_element_class_set_metadata(), but @longname, @classification,
+ * @description, and @author must be static strings or inlined strings, as
+ * they will not be copied. (GStreamer plugins will be made resident once
+ * loaded, so this function can be used even from dynamically loaded plugins.)
+ */
+void
+gst_element_class_set_static_metadata (GstElementClass * klass,
+    const gchar * longname, const gchar * classification,
+    const gchar * description, const gchar * author)
+{
+  GstStructure *s = (GstStructure *) klass->metadata;
+  GValue val = G_VALUE_INIT;
+
+  g_return_if_fail (GST_IS_ELEMENT_CLASS (klass));
+
+  g_value_init (&val, G_TYPE_STRING);
+
+  g_value_set_static_string (&val, longname);
+  gst_structure_set_value (s, GST_ELEMENT_METADATA_LONGNAME, &val);
+
+  g_value_set_static_string (&val, classification);
+  gst_structure_set_value (s, GST_ELEMENT_METADATA_KLASS, &val);
+
+  g_value_set_static_string (&val, description);
+  gst_structure_set_value (s, GST_ELEMENT_METADATA_DESCRIPTION, &val);
+
+  g_value_set_static_string (&val, author);
+  gst_structure_take_value (s, GST_ELEMENT_METADATA_AUTHOR, &val);
 }
 
 /**

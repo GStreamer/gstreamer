@@ -669,7 +669,14 @@ void                    gst_element_class_set_metadata          (GstElementClass
                                                                  const gchar     *classification,
                                                                  const gchar     *description,
                                                                  const gchar     *author);
+void                    gst_element_class_set_static_metadata   (GstElementClass *klass,
+                                                                 const gchar     *longname,
+                                                                 const gchar     *classification,
+                                                                 const gchar     *description,
+                                                                 const gchar     *author);
 void                    gst_element_class_add_metadata          (GstElementClass * klass,
+                                                                 const gchar * key, const gchar * value);
+void                    gst_element_class_add_static_metadata   (GstElementClass * klass,
                                                                  const gchar * key, const gchar * value);
 const gchar *           gst_element_class_get_metadata          (GstElementClass * klass,
                                                                  const gchar * key);

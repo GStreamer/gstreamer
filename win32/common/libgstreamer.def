@@ -321,10 +321,12 @@ EXPORTS
 	gst_element_change_state
 	gst_element_class_add_metadata
 	gst_element_class_add_pad_template
+	gst_element_class_add_static_metadata
 	gst_element_class_get_metadata
 	gst_element_class_get_pad_template
 	gst_element_class_get_pad_template_list
 	gst_element_class_set_metadata
+	gst_element_class_set_static_metadata
 	gst_element_continue_state
 	gst_element_create_all_pads
 	gst_element_factory_can_sink_all_caps
@@ -1112,7 +1114,6 @@ EXPORTS
 	gst_task_pool_push
 	gst_task_set_lock
 	gst_task_set_pool
-	gst_task_set_priority
 	gst_task_set_state
 	gst_task_set_thread_callbacks
 	gst_task_start
