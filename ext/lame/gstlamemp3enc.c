@@ -233,7 +233,7 @@ gst_lamemp3enc_class_init (GstLameMP3EncClass * klass)
   gst_element_class_add_pad_template (gstelement_class,
       gst_static_pad_template_get (&gst_lamemp3enc_sink_template));
 
-  gst_element_class_set_details_simple (gstelement_class,
+  gst_element_class_set_static_metadata (gstelement_class,
       "L.A.M.E. mp3 encoder", "Codec/Encoder/Audio",
       "High-quality free MP3 encoder",
       "Sebastian Dröge <sebastian.droege@collabora.co.uk>");
