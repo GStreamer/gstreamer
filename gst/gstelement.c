@@ -92,6 +92,7 @@
 #include "gstevent.h"
 #include "gstutils.h"
 #include "gstinfo.h"
+#include "gstquark.h"
 #include "gstvalue.h"
 #include "gst-i18n-lib.h"
 #include "glib-compat-private.h"
@@ -1279,11 +1280,11 @@ gst_element_class_set_metadata (GstElementClass * klass,
 {
   g_return_if_fail (GST_IS_ELEMENT_CLASS (klass));
 
-  gst_structure_set ((GstStructure *) klass->metadata,
-      GST_ELEMENT_METADATA_LONGNAME, G_TYPE_STRING, longname,
-      GST_ELEMENT_METADATA_KLASS, G_TYPE_STRING, classification,
-      GST_ELEMENT_METADATA_DESCRIPTION, G_TYPE_STRING, description,
-      GST_ELEMENT_METADATA_AUTHOR, G_TYPE_STRING, author, NULL);
+  gst_structure_id_set ((GstStructure *) klass->metadata,
+      GST_QUARK (ELEMENT_METADATA_LONGNAME), G_TYPE_STRING, longname,
+      GST_QUARK (ELEMENT_METADATA_KLASS), G_TYPE_STRING, classification,
+      GST_QUARK (ELEMENT_METADATA_DESCRIPTION), G_TYPE_STRING, description,
+      GST_QUARK (ELEMENT_METADATA_AUTHOR), G_TYPE_STRING, author, NULL);
 }
 
 /**
@@ -1319,16 +1320,17 @@ gst_element_class_set_static_metadata (GstElementClass * klass,
   g_value_init (&val, G_TYPE_STRING);
 
   g_value_set_static_string (&val, longname);
-  gst_structure_set_value (s, GST_ELEMENT_METADATA_LONGNAME, &val);
+  gst_structure_id_set_value (s, GST_QUARK (ELEMENT_METADATA_LONGNAME), &val);
 
   g_value_set_static_string (&val, classification);
-  gst_structure_set_value (s, GST_ELEMENT_METADATA_KLASS, &val);
+  gst_structure_id_set_value (s, GST_QUARK (ELEMENT_METADATA_KLASS), &val);
 
   g_value_set_static_string (&val, description);
-  gst_structure_set_value (s, GST_ELEMENT_METADATA_DESCRIPTION, &val);
+  gst_structure_id_set_value (s, GST_QUARK (ELEMENT_METADATA_DESCRIPTION),
+      &val);
 
   g_value_set_static_string (&val, author);
-  gst_structure_take_value (s, GST_ELEMENT_METADATA_AUTHOR, &val);
+  gst_structure_id_take_value (s, GST_QUARK (ELEMENT_METADATA_AUTHOR), &val);
 }
 
 /**
