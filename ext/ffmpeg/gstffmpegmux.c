@@ -229,7 +229,7 @@ gst_ffmpegmux_base_init (gpointer g_class)
     description = g_strdup_printf ("FFmpeg %s %s", in_plugin->long_name,
         is_formatter ? "formatter" : "muxer");
   }
-  gst_element_class_set_details_simple (element_class, longname,
+  gst_element_class_set_static_metadata (element_class, longname,
       is_formatter ? "Formatter/Metadata" : "Codec/Muxer", description,
       "Wim Taymans <wim.taymans@chello.be>, "
       "Ronald Bultje <rbultje@ronald.bitfreak.net>");

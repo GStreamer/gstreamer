@@ -143,8 +143,8 @@ gst_ffmpegenc_base_init (GstFFMpegEncClass * klass)
   classification = g_strdup_printf ("Codec/Encoder/%s",
       (in_plugin->type == AVMEDIA_TYPE_VIDEO) ? "Video" : "Audio");
   description = g_strdup_printf ("FFmpeg %s encoder", in_plugin->name);
-  gst_element_class_set_details_simple (element_class, longname, classification,
-      description,
+  gst_element_class_set_static_metadata (element_class, longname,
+      classification, description,
       "Wim Taymans <wim.taymans@gmail.com>, "
       "Ronald Bultje <rbultje@ronald.bitfreak.net>");
   g_free (longname);

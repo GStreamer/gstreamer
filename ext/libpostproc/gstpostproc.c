@@ -365,8 +365,8 @@ gst_post_proc_base_init (GstPostProcClass * klass)
       filterdetails[ppidx].longname);
   description = g_strdup_printf ("LibPostProc %s",
       filterdetails[ppidx].description);
-  gst_element_class_set_details_simple (element_class, longname, "Filter/Video",
-      description,
+  gst_element_class_set_static_metadata (element_class, longname,
+      "Filter/Video", description,
       "Edward Hervey <edward@fluendo.com>, Mark Nauwelaerts (manauw@skynet.be)");
   g_free (longname);
   g_free (description);
