@@ -327,7 +327,7 @@ gst_ffmpegdec_base_init (GstFFMpegDecClass * klass)
   classification = g_strdup_printf ("Codec/Decoder/%s",
       (in_plugin->type == AVMEDIA_TYPE_VIDEO) ? "Video" : "Audio");
   description = g_strdup_printf ("FFmpeg %s decoder", in_plugin->name);
-  gst_element_class_set_static_metadata (element_class, longname,
+  gst_element_class_set_metadata (element_class, longname,
       classification, description,
       "Wim Taymans <wim.taymans@gmail.com>, "
       "Ronald Bultje <rbultje@ronald.bitfreak.net>, "

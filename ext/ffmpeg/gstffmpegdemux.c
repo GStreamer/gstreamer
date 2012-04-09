@@ -202,7 +202,7 @@ gst_ffmpegdemux_base_init (GstFFMpegDemuxClass * klass)
   /* construct the element details struct */
   longname = g_strdup_printf ("FFmpeg %s demuxer", in_plugin->long_name);
   description = g_strdup_printf ("FFmpeg %s demuxer", in_plugin->long_name);
-  gst_element_class_set_static_metadata (element_class, longname,
+  gst_element_class_set_metadata (element_class, longname,
       "Codec/Demuxer", description,
       "Wim Taymans <wim@fluendo.com>, "
       "Ronald Bultje <rbultje@ronald.bitfreak.net>, "
