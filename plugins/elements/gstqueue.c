@@ -363,7 +363,7 @@ gst_queue_class_init (GstQueueClass * klass)
 
   gobject_class->finalize = gst_queue_finalize;
 
-  gst_element_class_set_details_simple (gstelement_class,
+  gst_element_class_set_static_metadata (gstelement_class,
       "Queue",
       "Generic", "Simple data queue", "Erik Walthinsen <omega@cse.ogi.edu>");
   gst_element_class_add_pad_template (gstelement_class,

@@ -216,7 +216,7 @@ gst_fake_sink_class_init (GstFakeSinkClass * klass)
       NULL, NULL, g_cclosure_marshal_generic, G_TYPE_NONE, 2,
       GST_TYPE_BUFFER | G_SIGNAL_TYPE_STATIC_SCOPE, GST_TYPE_PAD);
 
-  gst_element_class_set_details_simple (gstelement_class,
+  gst_element_class_set_static_metadata (gstelement_class,
       "Fake Sink",
       "Sink",
       "Black hole for data",

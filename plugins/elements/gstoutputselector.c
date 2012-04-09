@@ -139,7 +139,7 @@ gst_output_selector_class_init (GstOutputSelectorClass * klass)
           DEFAULT_PAD_NEGOTIATION_MODE,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
-  gst_element_class_set_details_simple (gstelement_class, "Output selector",
+  gst_element_class_set_static_metadata (gstelement_class, "Output selector",
       "Generic", "1-to-N output stream selector",
       "Stefan Kost <stefan.kost@nokia.com>");
   gst_element_class_add_pad_template (gstelement_class,

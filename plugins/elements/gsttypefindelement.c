@@ -237,7 +237,7 @@ gst_type_find_element_class_init (GstTypeFindElementClass * typefind_class)
   typefind_class->have_type =
       GST_DEBUG_FUNCPTR (gst_type_find_element_have_type);
 
-  gst_element_class_set_details_simple (gstelement_class,
+  gst_element_class_set_static_metadata (gstelement_class,
       "TypeFind",
       "Generic",
       "Finds the media type of a stream",

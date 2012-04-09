@@ -373,7 +373,7 @@ gst_queue2_class_init (GstQueue2Class * klass)
   gst_element_class_add_pad_template (gstelement_class,
       gst_static_pad_template_get (&sinktemplate));
 
-  gst_element_class_set_details_simple (gstelement_class, "Queue 2",
+  gst_element_class_set_static_metadata (gstelement_class, "Queue 2",
       "Generic",
       "Simple data queue",
       "Erik Walthinsen <omega@cse.ogi.edu>, "

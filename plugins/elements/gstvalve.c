@@ -106,7 +106,7 @@ gst_valve_class_init (GstValveClass * klass)
   gst_element_class_add_pad_template (gstelement_class,
       gst_static_pad_template_get (&sinktemplate));
 
-  gst_element_class_set_details_simple (gstelement_class, "Valve element",
+  gst_element_class_set_static_metadata (gstelement_class, "Valve element",
       "Filter", "Drops buffers and events or lets them through",
       "Olivier Crete <olivier.crete@collabora.co.uk>");
 }

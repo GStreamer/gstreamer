@@ -232,7 +232,7 @@ gst_tee_class_init (GstTeeClass * klass)
   g_object_class_install_property (gobject_class, PROP_ALLOC_PAD,
       pspec_alloc_pad);
 
-  gst_element_class_set_details_simple (gstelement_class,
+  gst_element_class_set_static_metadata (gstelement_class,
       "Tee pipe fitting",
       "Generic",
       "1-to-N pipe fitting",

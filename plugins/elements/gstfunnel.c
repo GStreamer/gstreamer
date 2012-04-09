@@ -152,7 +152,7 @@ gst_funnel_class_init (GstFunnelClass * klass)
 
   gobject_class->dispose = GST_DEBUG_FUNCPTR (gst_funnel_dispose);
 
-  gst_element_class_set_details_simple (gstelement_class,
+  gst_element_class_set_static_metadata (gstelement_class,
       "Funnel pipe fitting", "Generic", "N-to-1 pipe fitting",
       "Olivier Crete <olivier.crete@collabora.co.uk>");
 

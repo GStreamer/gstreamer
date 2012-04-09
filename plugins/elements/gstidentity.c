@@ -227,7 +227,7 @@ gst_identity_class_init (GstIdentityClass * klass)
 
   gobject_class->finalize = gst_identity_finalize;
 
-  gst_element_class_set_details_simple (gstelement_class,
+  gst_element_class_set_static_metadata (gstelement_class,
       "Identity",
       "Generic",
       "Pass data without modification", "Erik Walthinsen <omega@cse.ogi.edu>");

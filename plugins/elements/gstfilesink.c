@@ -220,7 +220,7 @@ gst_file_sink_class_init (GstFileSinkClass * klass)
           "Append to an already existing file", DEFAULT_APPEND,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
-  gst_element_class_set_details_simple (gstelement_class,
+  gst_element_class_set_static_metadata (gstelement_class,
       "File Sink",
       "Sink/File", "Write stream to a file",
       "Thomas Vander Stichele <thomas at apestaart dot org>");

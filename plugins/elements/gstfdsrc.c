@@ -169,7 +169,7 @@ gst_fd_src_class_init (GstFdSrcClass * klass)
           G_MAXUINT64, DEFAULT_TIMEOUT,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
-  gst_element_class_set_details_simple (gstelement_class,
+  gst_element_class_set_static_metadata (gstelement_class,
       "Filedescriptor Source",
       "Source/File",
       "Read from a file descriptor", "Erik Walthinsen <omega@cse.ogi.edu>");

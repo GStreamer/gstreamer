@@ -132,7 +132,7 @@ gst_fd_sink_class_init (GstFdSinkClass * klass)
   gobject_class->get_property = gst_fd_sink_get_property;
   gobject_class->dispose = gst_fd_sink_dispose;
 
-  gst_element_class_set_details_simple (gstelement_class,
+  gst_element_class_set_static_metadata (gstelement_class,
       "Filedescriptor Sink",
       "Sink/File",
       "Write data to a file descriptor", "Erik Walthinsen <omega@cse.ogi.edu>");

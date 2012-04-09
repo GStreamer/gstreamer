@@ -417,7 +417,7 @@ gst_multi_queue_class_init (GstMultiQueueClass * klass)
 
   gobject_class->finalize = gst_multi_queue_finalize;
 
-  gst_element_class_set_details_simple (gstelement_class,
+  gst_element_class_set_static_metadata (gstelement_class,
       "MultiQueue",
       "Generic", "Multiple data queue", "Edward Hervey <edward@fluendo.com>");
   gst_element_class_add_pad_template (gstelement_class,

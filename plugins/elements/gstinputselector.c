@@ -838,7 +838,7 @@ gst_input_selector_class_init (GstInputSelectorClass * klass)
       G_STRUCT_OFFSET (GstInputSelectorClass, block), NULL, NULL,
       gst_input_selector_marshal_INT64__VOID, G_TYPE_INT64, 0);
 
-  gst_element_class_set_details_simple (gstelement_class, "Input selector",
+  gst_element_class_set_static_metadata (gstelement_class, "Input selector",
       "Generic", "N-to-1 input stream selector",
       "Julien Moutte <julien@moutte.net>, "
       "Jan Schmidt <thaytan@mad.scientist.com>, "
