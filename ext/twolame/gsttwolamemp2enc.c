@@ -332,7 +332,7 @@ gst_two_lame_class_init (GstTwoLameClass * klass)
   gst_element_class_add_pad_template (GST_ELEMENT_CLASS (klass),
       gst_static_pad_template_get (&gst_two_lame_sink_template));
 
-  gst_element_class_set_details_simple (GST_ELEMENT_CLASS (klass),
+  gst_element_class_set_static_metadata (GST_ELEMENT_CLASS (klass),
       "TwoLAME mp2 encoder", "Codec/Encoder/Audio",
       "High-quality free MP2 encoder",
       "Sebastian Dröge <sebastian.droege@collabora.co.uk>");
