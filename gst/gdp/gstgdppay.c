@@ -119,7 +119,7 @@ gst_gdp_pay_class_init (GstGDPPayClass * klass)
           GST_TYPE_DP_VERSION, DEFAULT_VERSION,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
-  gst_element_class_set_details_simple (gstelement_class,
+  gst_element_class_set_static_metadata (gstelement_class,
       "GDP Payloader", "GDP/Payloader",
       "Payloads GStreamer Data Protocol buffers",
       "Thomas Vander Stichele <thomas at apestaart dot org>");

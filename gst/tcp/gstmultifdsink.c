@@ -385,7 +385,7 @@ gst_multi_fd_sink_class_init (GstMultiFdSinkClass * klass)
           client_handle_removed), NULL, NULL, gst_tcp_marshal_VOID__INT,
       G_TYPE_NONE, 1, G_TYPE_INT);
 
-  gst_element_class_set_details_simple (gstelement_class,
+  gst_element_class_set_static_metadata (gstelement_class,
       "Multi filedescriptor sink", "Sink/Network",
       "Send data to multiple filedescriptors",
       "Thomas Vander Stichele <thomas at apestaart dot org>, "

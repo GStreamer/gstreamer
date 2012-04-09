@@ -171,7 +171,7 @@ gst_vorbis_enc_class_init (GstVorbisEncClass * klass)
   gst_element_class_add_pad_template (gstelement_class,
       gst_static_pad_template_get (&vorbis_enc_sink_factory));
 
-  gst_element_class_set_details_simple (gstelement_class,
+  gst_element_class_set_static_metadata (gstelement_class,
       "Vorbis audio encoder", "Codec/Encoder/Audio",
       "Encodes audio in Vorbis format",
       "Monty <monty@xiph.org>, " "Wim Taymans <wim@fluendo.com>");

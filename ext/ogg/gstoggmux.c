@@ -170,7 +170,7 @@ gst_ogg_mux_class_init (GstOggMuxClass * klass)
   gst_element_class_add_pad_template (gstelement_class,
       gst_static_pad_template_get (&subtitle_sink_factory));
 
-  gst_element_class_set_details_simple (gstelement_class,
+  gst_element_class_set_static_metadata (gstelement_class,
       "Ogg muxer", "Codec/Muxer",
       "mux ogg streams (info about ogg: http://xiph.org)",
       "Wim Taymans <wim@fluendo.com>");

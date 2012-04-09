@@ -108,7 +108,7 @@ gst_tcp_server_src_class_init (GstTCPServerSrcClass * klass)
   gst_element_class_add_pad_template (gstelement_class,
       gst_static_pad_template_get (&srctemplate));
 
-  gst_element_class_set_details_simple (gstelement_class,
+  gst_element_class_set_static_metadata (gstelement_class,
       "TCP server source", "Source/Network",
       "Receive data as a server over the network via TCP",
       "Thomas Vander Stichele <thomas at apestaart dot org>");

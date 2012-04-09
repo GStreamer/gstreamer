@@ -599,7 +599,7 @@ gst_multi_output_sink_class_init (GstMultiOutputSinkClass * klass)
   gst_element_class_add_pad_template (gstelement_class,
       gst_static_pad_template_get (&sinktemplate));
 
-  gst_element_class_set_details_simple (gstelement_class,
+  gst_element_class_set_static_metadata (gstelement_class,
       "Multi output sink", "Sink/Network",
       "Send data to multiple outputs",
       "Thomas Vander Stichele <thomas at apestaart dot org>, "

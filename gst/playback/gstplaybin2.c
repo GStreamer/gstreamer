@@ -1133,7 +1133,7 @@ gst_play_bin_class_init (GstPlayBinClass * klass)
   klass->get_audio_pad = gst_play_bin_get_audio_pad;
   klass->get_text_pad = gst_play_bin_get_text_pad;
 
-  gst_element_class_set_details_simple (gstelement_klass,
+  gst_element_class_set_static_metadata (gstelement_klass,
       "Player Bin 2", "Generic/Bin/Player",
       "Autoplug and play media from an uri",
       "Wim Taymans <wim.taymans@gmail.com>");

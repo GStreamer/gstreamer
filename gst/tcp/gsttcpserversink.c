@@ -94,7 +94,7 @@ gst_tcp_server_sink_class_init (GstTCPServerSinkClass * klass)
           0, TCP_HIGHEST_PORT, TCP_DEFAULT_PORT,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
-  gst_element_class_set_details_simple (gstelement_class,
+  gst_element_class_set_static_metadata (gstelement_class,
       "TCP server sink", "Sink/Network",
       "Send data as a server over the network via TCP",
       "Thomas Vander Stichele <thomas at apestaart dot org>");

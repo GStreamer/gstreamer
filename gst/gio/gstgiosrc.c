@@ -127,7 +127,7 @@ gst_gio_src_class_init (GstGioSrcClass * klass)
       g_param_spec_object ("file", "File", "GFile to read from",
           G_TYPE_FILE, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
-  gst_element_class_set_details_simple (gstelement_class, "GIO source",
+  gst_element_class_set_static_metadata (gstelement_class, "GIO source",
       "Source/File",
       "Read from any GIO-supported location",
       "Ren\xc3\xa9 Stadler <mail@renestadler.de>, "

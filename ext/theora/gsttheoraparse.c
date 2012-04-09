@@ -143,7 +143,7 @@ gst_theora_parse_class_init (GstTheoraParseClass * klass)
       gst_static_pad_template_get (&theora_parse_src_factory));
   gst_element_class_add_pad_template (gstelement_class,
       gst_static_pad_template_get (&theora_parse_sink_factory));
-  gst_element_class_set_details_simple (gstelement_class,
+  gst_element_class_set_static_metadata (gstelement_class,
       "Theora video parser", "Codec/Parser/Video",
       "parse raw theora streams", "Andy Wingo <wingo@pobox.com>");
 

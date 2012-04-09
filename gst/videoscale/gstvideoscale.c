@@ -247,7 +247,7 @@ gst_video_scale_class_init (GstVideoScaleClass * klass)
           "Size of filter envelope", 0.0, 5.0, DEFAULT_PROP_ENVELOPE,
           G_PARAM_CONSTRUCT | G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
-  gst_element_class_set_details_simple (element_class,
+  gst_element_class_set_static_metadata (element_class,
       "Video scaler", "Filter/Converter/Video/Scaler",
       "Resizes video", "Wim Taymans <wim.taymans@chello.be>");
 

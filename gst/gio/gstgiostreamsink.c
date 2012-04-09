@@ -111,7 +111,7 @@ gst_gio_stream_sink_class_init (GstGioStreamSinkClass * klass)
       g_param_spec_object ("stream", "Stream", "Stream to write to",
           G_TYPE_OUTPUT_STREAM, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
-  gst_element_class_set_details_simple (gstelement_class, "GIO stream sink",
+  gst_element_class_set_static_metadata (gstelement_class, "GIO stream sink",
       "Sink",
       "Write to any GIO stream",
       "Sebastian Dröge <sebastian.droege@collabora.co.uk>");

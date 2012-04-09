@@ -264,7 +264,7 @@ gst_video_test_src_class_init (GstVideoTestSrcClass * klass)
           G_MININT32, G_MAXINT32, DEFAULT_HORIZONTAL_SPEED,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
-  gst_element_class_set_details_simple (gstelement_class,
+  gst_element_class_set_static_metadata (gstelement_class,
       "Video test source", "Source/Video",
       "Creates a test video stream", "David A. Schleef <ds@schleef.org>");
 

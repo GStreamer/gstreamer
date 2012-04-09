@@ -2936,7 +2936,7 @@ gst_xvimagesink_class_init (GstXvImageSinkClass * klass)
 
   gobject_class->finalize = gst_xvimagesink_finalize;
 
-  gst_element_class_set_details_simple (gstelement_class,
+  gst_element_class_set_static_metadata (gstelement_class,
       "Video sink", "Sink/Video",
       "A Xv based videosink", "Julien Moutte <julien@moutte.net>");
 

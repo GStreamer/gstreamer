@@ -103,7 +103,7 @@ gst_ssa_parse_class_init (GstSsaParseClass * klass)
       gst_static_pad_template_get (&sink_templ));
   gst_element_class_add_pad_template (element_class,
       gst_static_pad_template_get (&src_templ));
-  gst_element_class_set_details_simple (element_class,
+  gst_element_class_set_static_metadata (element_class,
       "SSA Subtitle Parser", "Codec/Parser/Subtitle",
       "Parses SSA subtitle streams",
       "Tim-Philipp Müller <tim centricular net>");

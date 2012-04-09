@@ -423,7 +423,7 @@ gst_encode_bin_class_init (GstEncodeBinClass * klass)
   gstelement_klass->release_pad =
       GST_DEBUG_FUNCPTR (gst_encode_bin_release_pad);
 
-  gst_element_class_set_details_simple (gstelement_klass,
+  gst_element_class_set_static_metadata (gstelement_klass,
       "Encoder Bin",
       "Generic/Bin/Encoder",
       "Convenience encoding/muxing element",

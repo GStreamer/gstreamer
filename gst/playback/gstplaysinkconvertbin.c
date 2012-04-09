@@ -603,7 +603,7 @@ gst_play_sink_convert_bin_class_init (GstPlaySinkConvertBinClass * klass)
       gst_static_pad_template_get (&srctemplate));
   gst_element_class_add_pad_template (gstelement_class,
       gst_static_pad_template_get (&sinktemplate));
-  gst_element_class_set_details_simple (gstelement_class,
+  gst_element_class_set_static_metadata (gstelement_class,
       "Player Sink Converter Bin", "Bin/Converter",
       "Convenience bin for audio/video conversion",
       "Sebastian Dröge <sebastian.droege@collabora.co.uk>");

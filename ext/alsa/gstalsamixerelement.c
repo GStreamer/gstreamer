@@ -92,7 +92,7 @@ gst_alsa_mixer_element_class_init (GstAlsaMixerElementClass * klass)
           "Human-readable name of the sound device",
           DEFAULT_PROP_DEVICE_NAME, G_PARAM_READABLE | G_PARAM_STATIC_STRINGS));
 
-  gst_element_class_set_details_simple (element_class,
+  gst_element_class_set_static_metadata (element_class,
       "Alsa mixer", "Generic/Audio",
       "Control sound input and output levels with ALSA",
       "Leif Johnson <leif@ambient.2y.net>");

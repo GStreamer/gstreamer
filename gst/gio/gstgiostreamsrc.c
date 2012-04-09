@@ -105,7 +105,7 @@ gst_gio_stream_src_class_init (GstGioStreamSrcClass * klass)
       g_param_spec_object ("stream", "Stream", "Stream to read from",
           G_TYPE_INPUT_STREAM, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
-  gst_element_class_set_details_simple (gstelement_class, "GIO stream source",
+  gst_element_class_set_static_metadata (gstelement_class, "GIO stream source",
       "Source",
       "Read from any GIO stream",
       "Sebastian Dröge <sebastian.droege@collabora.co.uk>");

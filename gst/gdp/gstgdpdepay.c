@@ -91,7 +91,7 @@ gst_gdp_depay_class_init (GstGDPDepayClass * klass)
   gobject_class = (GObjectClass *) klass;
   gstelement_class = (GstElementClass *) klass;
 
-  gst_element_class_set_details_simple (gstelement_class,
+  gst_element_class_set_static_metadata (gstelement_class,
       "GDP Depayloader", "GDP/Depayloader",
       "Depayloads GStreamer Data Protocol buffers",
       "Thomas Vander Stichele <thomas at apestaart dot org>");

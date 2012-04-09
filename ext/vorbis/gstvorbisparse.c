@@ -99,7 +99,7 @@ gst_vorbis_parse_class_init (GstVorbisParseClass * klass)
       gst_static_pad_template_get (&vorbis_parse_src_factory));
   gst_element_class_add_pad_template (gstelement_class,
       gst_static_pad_template_get (&vorbis_parse_sink_factory));
-  gst_element_class_set_details_simple (gstelement_class,
+  gst_element_class_set_static_metadata (gstelement_class,
       "VorbisParse", "Codec/Parser/Audio",
       "parse raw vorbis streams",
       "Thomas Vander Stichele <thomas at apestaart dot org>");

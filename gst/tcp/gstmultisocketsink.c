@@ -333,7 +333,7 @@ gst_multi_socket_sink_class_init (GstMultiSocketSinkClass * klass)
           client_handle_removed), NULL, NULL, g_cclosure_marshal_VOID__OBJECT,
       G_TYPE_NONE, 1, G_TYPE_SOCKET);
 
-  gst_element_class_set_details_simple (gstelement_class,
+  gst_element_class_set_static_metadata (gstelement_class,
       "Multi socket sink", "Sink/Network",
       "Send data to multiple sockets",
       "Thomas Vander Stichele <thomas at apestaart dot org>, "

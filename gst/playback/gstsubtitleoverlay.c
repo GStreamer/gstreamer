@@ -1634,7 +1634,7 @@ gst_subtitle_overlay_class_init (GstSubtitleOverlayClass * klass)
   gst_element_class_add_pad_template (element_class,
       gst_static_pad_template_get (&subtitle_sinktemplate));
 
-  gst_element_class_set_details_simple (element_class, "Subtitle Overlay",
+  gst_element_class_set_static_metadata (element_class, "Subtitle Overlay",
       "Video/Overlay/Subtitle",
       "Overlays a video stream with subtitles",
       "Sebastian Dröge <sebastian.droege@collabora.co.uk>");

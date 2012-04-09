@@ -90,7 +90,7 @@ gst_vorbis_dec_class_init (GstVorbisDecClass * klass)
   sink_template = gst_static_pad_template_get (&vorbis_dec_sink_factory);
   gst_element_class_add_pad_template (element_class, sink_template);
 
-  gst_element_class_set_details_simple (element_class,
+  gst_element_class_set_static_metadata (element_class,
       "Vorbis audio decoder", "Codec/Decoder/Audio",
       GST_VORBIS_DEC_DESCRIPTION,
       "Benjamin Otte <otte@gnome.org>, Chris Lord <chris@openedhand.com>");

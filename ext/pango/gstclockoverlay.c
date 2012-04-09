@@ -147,7 +147,7 @@ gst_clock_overlay_class_init (GstClockOverlayClass * klass)
   gobject_class->set_property = gst_clock_overlay_set_property;
   gobject_class->get_property = gst_clock_overlay_get_property;
 
-  gst_element_class_set_details_simple (gstelement_class, "Clock overlay",
+  gst_element_class_set_static_metadata (gstelement_class, "Clock overlay",
       "Filter/Editor/Video",
       "Overlays the current clock time on a video stream",
       "Tim-Philipp Müller <tim@centricular.net>");

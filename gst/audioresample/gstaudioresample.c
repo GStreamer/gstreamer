@@ -146,7 +146,7 @@ gst_audio_resample_class_init (GstAudioResampleClass * klass)
   gst_element_class_add_pad_template (gstelement_class,
       gst_static_pad_template_get (&gst_audio_resample_sink_template));
 
-  gst_element_class_set_details_simple (gstelement_class, "Audio resampler",
+  gst_element_class_set_static_metadata (gstelement_class, "Audio resampler",
       "Filter/Converter/Audio", "Resamples audio",
       "Sebastian Dröge <sebastian.droege@collabora.co.uk>");
 

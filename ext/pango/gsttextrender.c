@@ -193,7 +193,7 @@ gst_text_render_class_init (GstTextRenderClass * klass)
   gst_element_class_add_pad_template (gstelement_class,
       gst_static_pad_template_get (&sink_template_factory));
 
-  gst_element_class_set_details_simple (gstelement_class, "Text renderer",
+  gst_element_class_set_static_metadata (gstelement_class, "Text renderer",
       "Filter/Editor/Video",
       "Renders a text string to an image bitmap",
       "David Schleef <ds@schleef.org>, "

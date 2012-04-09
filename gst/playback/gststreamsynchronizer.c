@@ -888,7 +888,7 @@ gst_stream_synchronizer_class_init (GstStreamSynchronizerClass * klass)
   gst_element_class_add_pad_template (element_class,
       gst_static_pad_template_get (&sinktemplate));
 
-  gst_element_class_set_details_simple (element_class,
+  gst_element_class_set_static_metadata (element_class,
       "Stream Synchronizer", "Generic",
       "Synchronizes a group of streams to have equal durations and starting points",
       "Sebastian Dröge <sebastian.droege@collabora.co.uk>");

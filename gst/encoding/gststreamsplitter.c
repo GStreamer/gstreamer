@@ -76,7 +76,7 @@ gst_stream_splitter_class_init (GstStreamSplitterClass * klass)
   gstelement_klass->release_pad =
       GST_DEBUG_FUNCPTR (gst_stream_splitter_release_pad);
 
-  gst_element_class_set_details_simple (gstelement_klass,
+  gst_element_class_set_static_metadata (gstelement_klass,
       "streamsplitter", "Generic",
       "Splits streams based on their media type",
       "Edward Hervey <edward.hervey@collabora.co.uk>");

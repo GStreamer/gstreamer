@@ -1961,7 +1961,7 @@ gst_ximagesink_class_init (GstXImageSinkClass * klass)
           "Height of the window", 0, G_MAXUINT64, 0,
           G_PARAM_READABLE | G_PARAM_STATIC_STRINGS));
 
-  gst_element_class_set_details_simple (gstelement_class,
+  gst_element_class_set_static_metadata (gstelement_class,
       "Video sink", "Sink/Video",
       "A standard X based videosink", "Julien Moutte <julien@moutte.net>");
 

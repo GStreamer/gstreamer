@@ -394,7 +394,7 @@ gst_volume_class_init (GstVolumeClass * klass)
           0.0, VOLUME_MAX_DOUBLE, DEFAULT_PROP_VOLUME,
           G_PARAM_READWRITE | GST_PARAM_CONTROLLABLE | G_PARAM_STATIC_STRINGS));
 
-  gst_element_class_set_details_simple (element_class, "Volume",
+  gst_element_class_set_static_metadata (element_class, "Volume",
       "Filter/Effect/Audio",
       "Set volume on audio/raw streams", "Andy Wingo <wingo@pobox.com>");
 

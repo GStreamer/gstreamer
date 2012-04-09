@@ -201,7 +201,7 @@ gst_audio_convert_class_init (GstAudioConvertClass * klass)
       gst_static_pad_template_get (&gst_audio_convert_src_template));
   gst_element_class_add_pad_template (element_class,
       gst_static_pad_template_get (&gst_audio_convert_sink_template));
-  gst_element_class_set_details_simple (element_class,
+  gst_element_class_set_static_metadata (element_class,
       "Audio converter", "Filter/Converter/Audio",
       "Convert audio to different formats", "Benjamin Otte <otte@gnome.org>");
 

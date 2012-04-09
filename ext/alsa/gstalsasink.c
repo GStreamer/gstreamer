@@ -153,7 +153,7 @@ gst_alsasink_class_init (GstAlsaSinkClass * klass)
   gobject_class->get_property = gst_alsasink_get_property;
   gobject_class->set_property = gst_alsasink_set_property;
 
-  gst_element_class_set_details_simple (gstelement_class,
+  gst_element_class_set_static_metadata (gstelement_class,
       "Audio sink (ALSA)", "Sink/Audio",
       "Output to a sound card via ALSA", "Wim Taymans <wim@fluendo.com>");
 

@@ -72,7 +72,7 @@ gst_stream_combiner_class_init (GstStreamCombinerClass * klass)
   gstelement_klass->release_pad =
       GST_DEBUG_FUNCPTR (gst_stream_combiner_release_pad);
 
-  gst_element_class_set_details_simple (gstelement_klass,
+  gst_element_class_set_static_metadata (gstelement_klass,
       "streamcombiner", "Generic",
       "Recombines streams splitted by the streamsplitter element",
       "Edward Hervey <edward.hervey@collabora.co.uk>");

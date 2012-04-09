@@ -196,7 +196,7 @@ gst_play_sink_video_convert_class_init (GstPlaySinkVideoConvertClass * klass)
           "Whether to use a videobalance element", FALSE,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
-  gst_element_class_set_details_simple (gstelement_class,
+  gst_element_class_set_static_metadata (gstelement_class,
       "Player Sink Video Converter", "Video/Bin/Converter",
       "Convenience bin for video conversion",
       "Sebastian Dröge <sebastian.droege@collabora.co.uk>");

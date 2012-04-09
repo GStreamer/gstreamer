@@ -365,7 +365,7 @@ gst_video_convert_class_init (GstVideoConvertClass * klass)
   gst_element_class_add_pad_template (gstelement_class,
       gst_static_pad_template_get (&gst_video_convert_sink_template));
 
-  gst_element_class_set_details_simple (gstelement_class,
+  gst_element_class_set_static_metadata (gstelement_class,
       " Colorspace converter", "Filter/Converter/Video",
       "Converts video from one colorspace to another",
       "GStreamer maintainers <gstreamer-devel@lists.sourceforge.net>");

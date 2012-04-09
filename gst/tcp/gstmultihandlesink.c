@@ -460,7 +460,7 @@ gst_multi_handle_sink_class_init (GstMultiHandleSinkClass * klass)
   gst_element_class_add_pad_template (gstelement_class,
       gst_static_pad_template_get (&sinktemplate));
 
-  gst_element_class_set_details_simple (gstelement_class,
+  gst_element_class_set_static_metadata (gstelement_class,
       "Multi socket sink", "Sink/Network",
       "Send data to multiple sockets",
       "Thomas Vander Stichele <thomas at apestaart dot org>, "

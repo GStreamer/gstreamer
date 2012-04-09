@@ -901,7 +901,7 @@ gst_decode_bin_class_init (GstDecodeBinClass * klass)
   gst_element_class_add_pad_template (gstelement_klass,
       gst_static_pad_template_get (&decoder_bin_src_template));
 
-  gst_element_class_set_details_simple (gstelement_klass,
+  gst_element_class_set_static_metadata (gstelement_klass,
       "Decoder Bin", "Generic/Bin/Decoder",
       "Autoplug and decode to raw media",
       "Edward Hervey <edward.hervey@collabora.co.uk>, "

@@ -127,7 +127,7 @@ gst_cd_paranoia_src_class_init (GstCdParanoiaSrcClass * klass)
   gobject_class->get_property = gst_cd_paranoia_src_get_property;
   gobject_class->finalize = gst_cd_paranoia_src_finalize;
 
-  gst_element_class_set_details_simple (element_class,
+  gst_element_class_set_static_metadata (element_class,
       "CD Audio (cdda) Source, Paranoia IV", "Source/File",
       "Read audio from CD in paranoid mode",
       "Erik Walthinsen <omega@cse.ogi.edu>, Wim Taymans <wim@fluendo.com>");

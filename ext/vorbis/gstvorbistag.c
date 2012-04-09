@@ -73,7 +73,7 @@ gst_vorbis_tag_class_init (GstVorbisTagClass * klass)
   GstVorbisParseClass *vorbisparse_class = GST_VORBIS_PARSE_CLASS (klass);
   GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
 
-  gst_element_class_set_details_simple (element_class,
+  gst_element_class_set_static_metadata (element_class,
       "VorbisTag", "Formatter/Metadata",
       "Retags vorbis streams", "James Livingston <doclivingston@gmail.com>");
 
