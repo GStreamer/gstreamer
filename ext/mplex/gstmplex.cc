@@ -276,7 +276,7 @@ gst_mplex_setcaps (GstPad * pad, GstCaps * caps)
   JobStream *jobstream;
   GstMplexIBitStream *inputstream;
   GstMplexPad *mpad;
-  GstCaps *othercaps;
+  GstCaps *othercaps, *templ;
   gboolean ret = TRUE;
 
   mplex = GST_MPLEX (GST_PAD_PARENT (pad));
@@ -286,14 +286,16 @@ gst_mplex_setcaps (GstPad * pad, GstCaps * caps)
     goto refuse_renegotiation;
 
   /* since muxer does not really check much ... */
-  othercaps = gst_caps_intersect (caps, gst_pad_get_pad_template_caps (pad));
+  templ = gst_pad_get_pad_template_caps (pad);
+  othercaps = gst_caps_intersect (caps, templ);
+  gst_caps_unref (templ);
   if (othercaps)
     gst_caps_unref (othercaps);
   else
     goto refuse_caps;
 
   /* set the fixed template caps on the srcpad, should accept without objection */
-  othercaps = gst_caps_copy (gst_pad_get_pad_template_caps (mplex->srcpad));
+  othercaps = gst_pad_get_pad_template_caps (mplex->srcpad);
   ret = gst_pad_set_caps (mplex->srcpad, othercaps);
   gst_caps_unref (othercaps);
   if (!ret)
