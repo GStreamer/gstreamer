@@ -31,10 +31,8 @@
 #include "config.h"
 
 #include <gst/vaapi/gstvaapidisplay.h>
-#include <gst/vaapi/gstvaapidecoder_mpeg2.h>
 #include <gst/vaapi/gstvaapivideosink.h>
 #include <gst/vaapi/gstvaapivideobuffer.h>
-#include <gst/vaapi/gstvaapidecoder_ffmpeg.h>
 #include <gst/video/videocontext.h>
 
 #if USE_VAAPI_GLX
