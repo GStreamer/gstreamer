@@ -29,13 +29,18 @@
  * get_peer, and then remove references in every test function */
 static GstPad *mysrcpad, *mysinkpad;
 
-#define AUDIO_CAPS_STRING "audio/x-raw-int, " \
+#if G_BYTE_ORDER == G_BIG_ENDIAN
+#define AFORMAT "S16BE"
+#else
+#define AFORMAT "S16LE"
+#endif
+
+#define AUDIO_CAPS_STRING "audio/x-raw, " \
+                           "format = (string) " AFORMAT ", "\
+                           "layout = (string) interleaved, " \
                            "rate = (int) 16000, " \
-                           "channels = (int) 1, " \
-                           "width = (int) 16, " \
-                           "depth = (int) 16, " \
-                           "signed = (boolean) true, " \
-                           "endianness = (int) BYTE_ORDER "
+                           "channels = (int) 1 "
+
 
 #define AMRWB_CAPS_STRING "audio/AMR-WB"
 
@@ -61,8 +66,8 @@ setup_voamrwbenc (void)
   voamrwbenc = gst_check_setup_element ("voamrwbenc");
   /* ensure mode as expected */
   g_object_set (voamrwbenc, "band-mode", 0, NULL);
-  mysrcpad = gst_check_setup_src_pad (voamrwbenc, &srctemplate, NULL);
-  mysinkpad = gst_check_setup_sink_pad (voamrwbenc, &sinktemplate, NULL);
+  mysrcpad = gst_check_setup_src_pad (voamrwbenc, &srctemplate);
+  mysinkpad = gst_check_setup_sink_pad (voamrwbenc, &sinktemplate);
   gst_pad_set_active (mysrcpad, TRUE);
   gst_pad_set_active (mysinkpad, TRUE);
 
@@ -99,10 +104,10 @@ do_test (void)
   /* corresponds to audio buffer mentioned in the caps */
   inbuffer = gst_buffer_new_and_alloc (320 * nbuffers * 2);
   /* makes valgrind's memcheck happier */
-  memset (GST_BUFFER_DATA (inbuffer), 0, GST_BUFFER_SIZE (inbuffer));
+  gst_buffer_memset (inbuffer, 0, 0, 1024 * nbuffers * 2 * 2);
   caps = gst_caps_from_string (AUDIO_CAPS_STRING);
 
-  gst_buffer_set_caps (inbuffer, caps);
+  gst_pad_set_caps (mysrcpad, caps);
   gst_caps_unref (caps);
   GST_BUFFER_TIMESTAMP (inbuffer) = 0;
   ASSERT_BUFFER_REFCOUNT (inbuffer, "inbuffer", 1);
@@ -116,15 +121,17 @@ do_test (void)
 
   /* clean up buffers */
   for (i = 0; i < num_buffers; ++i) {
-    gint size;
+    GstMapInfo map;
+    gsize size;
     guint8 *data;
     GstClockTime time, dur;
 
     outbuffer = GST_BUFFER (buffers->data);
     fail_if (outbuffer == NULL);
 
-    data = GST_BUFFER_DATA (outbuffer);
-    size = GST_BUFFER_SIZE (outbuffer);
+    gst_buffer_map (outbuffer, &map, GST_MAP_READ);
+    data = map.data;
+    size = map.size;
 
     /* at least for mode 0 */
     fail_unless (size == 18);
@@ -135,6 +142,7 @@ do_test (void)
     dur = GST_BUFFER_DURATION (outbuffer);
     fail_unless (time == 20 * GST_MSECOND * i);
     fail_unless (dur == 20 * GST_MSECOND);
+    gst_buffer_unmap (outbuffer, &map);
 
     buffers = g_list_remove (buffers, outbuffer);
 

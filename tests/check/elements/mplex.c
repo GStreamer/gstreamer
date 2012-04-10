@@ -233,7 +233,7 @@ GST_START_TEST (test_audio_pad)
       "could not set to playing");
 
   /* corresponds to I420 buffer for the size mentioned in the caps */
-  inbuffer = gst_buffer_new ();
+  inbuffer = gst_buffer_new_and_alloc (sizeof (mp2_data));
   gst_buffer_fill (inbuffer, 0, mp2_data, sizeof (mp2_data));
   caps = gst_caps_from_string (AUDIO_CAPS_STRING);
   gst_pad_set_caps (mysrcpad, caps);
