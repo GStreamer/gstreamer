@@ -143,6 +143,7 @@ struct _GstQueue2
    * because we can't save it on the file */
   gboolean segment_event_received;
   GstEvent *starting_segment;
+  gboolean seeking;
 
   GstEvent *stream_start_event;
 

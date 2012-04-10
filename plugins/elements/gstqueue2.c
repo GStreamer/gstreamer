@@ -661,7 +661,7 @@ apply_segment (GstQueue2 * queue, GstEvent * event, GstSegment * segment,
   gst_event_copy_segment (event, segment);
 
   if (segment->format == GST_FORMAT_BYTES) {
-    if (QUEUE_IS_USING_TEMP_FILE (queue)) {
+    if (!QUEUE_IS_USING_QUEUE (queue)) {
       /* start is where we'll be getting from and as such writing next */
       queue->current = add_range (queue, segment->start);
       /* update the stats for this range */
@@ -1005,6 +1005,8 @@ perform_seek_to_offset (GstQueue2 * queue, guint64 offset)
   GstEvent *event;
   gboolean res;
 
+  /* until we receive the FLUSH_STOP from this seek, we skip data */
+  queue->seeking = TRUE;
   GST_QUEUE2_MUTEX_UNLOCK (queue);
 
   GST_DEBUG_OBJECT (queue, "Seeking to %" G_GUINT64_FORMAT, offset);
@@ -2138,6 +2140,7 @@ gst_queue2_handle_sink_event (GstPad * pad, GstObject * parent,
         queue->sinkresult = GST_FLOW_OK;
         queue->is_eos = FALSE;
         queue->unexpected = FALSE;
+        queue->seeking = FALSE;
         /* reset rate counters */
         reset_rate_timer (queue);
         gst_pad_start_task (queue->srcpad, (GstTaskFunction) gst_queue2_loop,
@@ -2283,6 +2286,10 @@ gst_queue2_chain_buffer_or_buffer_list (GstQueue2 * queue,
   if (queue->unexpected)
     goto out_unexpected;
 
+  /* while we didn't receive the newsegment, we're seeking and we skip data */
+  if (queue->seeking)
+    goto out_seeking;
+
   if (!gst_queue2_wait_free_space (queue))
     goto out_flushing;
 
@@ -2311,6 +2318,14 @@ out_eos:
     gst_mini_object_unref (item);
 
     return GST_FLOW_EOS;
+  }
+out_seeking:
+  {
+    GST_CAT_LOG_OBJECT (queue_dataflow, queue, "exit because we are seeking");
+    GST_QUEUE2_MUTEX_UNLOCK (queue);
+    gst_mini_object_unref (item);
+
+    return GST_FLOW_OK;
   }
 out_unexpected:
   {
