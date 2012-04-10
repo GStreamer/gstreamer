@@ -123,7 +123,6 @@
 #include "gstbufferpool.h"
 #include "gstinfo.h"
 #include "gstutils.h"
-#include "gstminiobject.h"
 #include "gstversion.h"
 
 GType _gst_buffer_type = 0;
