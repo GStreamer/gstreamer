@@ -46,7 +46,7 @@
 #define TOC_TAG         "TocTag"
 
 #define TEST_UID        "129537542"
-#define INFO_NAME       "info"
+#define INFO_NAME	"gst-toc-check"
 #define INFO_FIELD      "info-test"
 #define INFO_TEXT_EN    "info-text-entry"
 #define INFO_TEXT_TOC   "info-text-toc"
@@ -55,6 +55,7 @@
 {                                                                        \
   gchar *tag_c;                                                          \
   const GValue *val;                                                     \
+  GstStructure *struct_c;                                                \
                                                                          \
   fail_unless_equals_string (entry_c->uid, uid_c);                       \
   fail_unless (entry_c->type == type_c);                                 \
@@ -62,13 +63,18 @@
   fail_unless (entry_c->pads == NULL);                                   \
                                                                          \
   fail_unless (entry_c->info != NULL);                                   \
-  val = gst_structure_get_value (entry_c->info, INFO_FIELD);             \
+  gst_structure_get (entry_c->info, INFO_NAME, GST_TYPE_STRUCTURE,       \
+      &struct_c, NULL);                                                  \
+  fail_unless (struct_c != NULL);                                        \
+  val = gst_structure_get_value (struct_c, INFO_FIELD);                  \
   fail_unless (val != NULL);                                             \
   fail_unless_equals_string (g_value_get_string (val), INFO_TEXT_EN);    \
                                                                          \
   fail_unless (gst_tag_list_get_string (entry_c->tags,                   \
-		       GST_TAG_TITLE, &tag_c));                                  \
+      GST_TAG_TITLE, &tag_c));                                           \
   fail_unless_equals_string (tag_c, ENTRY_TAG);                          \
+  g_free (tag_c);                                                        \
+  gst_structure_free (struct_c);                                         \
 }
 
 #define CHECK_TOC(toc_t)                                                 \
@@ -76,17 +82,24 @@
   GstTocEntry *entry_t, *subentry_t;                                     \
   gchar *tag_t;                                                          \
   const GValue *val;                                                     \
+  GstStructure *struct_toc;                                              \
+                                                                         \
   /* check TOC */                                                        \
   fail_unless (g_list_length (toc_t->entries) == 2);                     \
   fail_unless (toc_t->tags != NULL);                                     \
   fail_unless (gst_tag_list_get_string (toc_t->tags,                     \
-		       GST_TAG_TITLE, &tag_t));                                  \
+      GST_TAG_TITLE, &tag_t));                                           \
   fail_unless_equals_string (tag_t, TOC_TAG);                            \
+  g_free (tag_t);                                                        \
                                                                          \
   fail_unless (toc_t->info != NULL);                                     \
-  val = gst_structure_get_value (toc_t->info, INFO_FIELD);               \
+  gst_structure_get (toc_t->info, INFO_NAME, GST_TYPE_STRUCTURE,         \
+      &struct_toc, NULL);                                                \
+  fail_unless (struct_toc != NULL);                                      \
+  val = gst_structure_get_value (struct_toc, INFO_FIELD);                \
   fail_unless (val != NULL);                                             \
   fail_unless_equals_string (g_value_get_string (val), INFO_TEXT_TOC);   \
+  gst_structure_free (struct_toc);                                       \
                                                                          \
   /* check edition1 */                                                   \
   entry_t = g_list_nth_data (toc_t->entries, 0);                         \
@@ -122,6 +135,7 @@
 
 GST_START_TEST (test_serializing)
 {
+  GstStructure *structure;
   GstToc *toc, *test_toc = NULL;
   GstTocEntry *ed, *ch, *subch;
   GstEvent *event;
@@ -135,18 +149,22 @@ GST_START_TEST (test_serializing)
   fail_if (toc == NULL);
   gst_tag_list_add (toc->tags, GST_TAG_MERGE_APPEND, GST_TAG_TITLE,
       TOC_TAG, NULL);
-  toc->info =
+  structure =
       gst_structure_new (INFO_NAME, INFO_FIELD, G_TYPE_STRING, INFO_TEXT_TOC,
       NULL);
+  gst_structure_set (toc->info, INFO_NAME, GST_TYPE_STRUCTURE, structure, NULL);
+  gst_structure_free (structure);
 
   /* create edition1 */
   ed = gst_toc_entry_new (GST_TOC_ENTRY_TYPE_EDITION, ENTRY_ED1);
   fail_if (ed == NULL);
   gst_tag_list_add (ed->tags, GST_TAG_MERGE_APPEND, GST_TAG_TITLE,
       ENTRY_TAG, NULL);
-  ed->info =
+  structure =
       gst_structure_new (INFO_NAME, INFO_FIELD, G_TYPE_STRING, INFO_TEXT_EN,
       NULL);
+  gst_structure_set (ed->info, INFO_NAME, GST_TYPE_STRUCTURE, structure, NULL);
+  gst_structure_free (structure);
 
   CHECK_TOC_ENTRY (ed, GST_TOC_ENTRY_TYPE_EDITION, ENTRY_ED1);
 
@@ -155,9 +173,11 @@ GST_START_TEST (test_serializing)
   fail_if (ch == NULL);
   gst_tag_list_add (ch->tags, GST_TAG_MERGE_APPEND, GST_TAG_TITLE,
       ENTRY_TAG, NULL);
-  ch->info =
+  structure =
       gst_structure_new (INFO_NAME, INFO_FIELD, G_TYPE_STRING, INFO_TEXT_EN,
       NULL);
+  gst_structure_set (ch->info, INFO_NAME, GST_TYPE_STRUCTURE, structure, NULL);
+  gst_structure_free (structure);
 
   CHECK_TOC_ENTRY (ch, GST_TOC_ENTRY_TYPE_CHAPTER, ENTRY_CH1);
 
@@ -169,11 +189,16 @@ GST_START_TEST (test_serializing)
   fail_if (ch == NULL);
   gst_tag_list_add (ch->tags, GST_TAG_MERGE_APPEND, GST_TAG_TITLE,
       ENTRY_TAG, NULL);
-  ch->info =
+  structure =
       gst_structure_new (INFO_NAME, INFO_FIELD, G_TYPE_STRING, INFO_TEXT_EN,
       NULL);
+  gst_structure_set (ch->info, INFO_NAME, GST_TYPE_STRUCTURE, structure, NULL);
+  gst_structure_free (structure);
 
   CHECK_TOC_ENTRY (ch, GST_TOC_ENTRY_TYPE_CHAPTER, ENTRY_CH2);
+
+  ed->subentries = g_list_append (ed->subentries, ch);
+  fail_unless (g_list_length (ed->subentries) == 2);
 
   /* append edition1 to the TOC */
   toc->entries = g_list_append (toc->entries, ed);
@@ -185,8 +210,7 @@ GST_START_TEST (test_serializing)
 
   fail_if (ed == NULL);
 
-  ed->subentries = g_list_append (ed->subentries, ch);
-  fail_unless (g_list_length (ed->subentries) == 2);
+  CHECK_TOC_ENTRY (ed, GST_TOC_ENTRY_TYPE_EDITION, ENTRY_ED1);
 
   /* test info GstStructure */
   gst_toc_entry_set_start_stop (ch, 100, 1000);
@@ -199,9 +223,11 @@ GST_START_TEST (test_serializing)
   fail_if (ed == NULL);
   gst_tag_list_add (ed->tags, GST_TAG_MERGE_APPEND, GST_TAG_TITLE,
       ENTRY_TAG, NULL);
-  ed->info =
+  structure =
       gst_structure_new (INFO_NAME, INFO_FIELD, G_TYPE_STRING, INFO_TEXT_EN,
       NULL);
+  gst_structure_set (ed->info, INFO_NAME, GST_TYPE_STRUCTURE, structure, NULL);
+  gst_structure_free (structure);
 
   CHECK_TOC_ENTRY (ed, GST_TOC_ENTRY_TYPE_EDITION, ENTRY_ED2);
 
@@ -210,9 +236,11 @@ GST_START_TEST (test_serializing)
   fail_if (ch == NULL);
   gst_tag_list_add (ch->tags, GST_TAG_MERGE_APPEND, GST_TAG_TITLE,
       ENTRY_TAG, NULL);
-  ch->info =
+  structure =
       gst_structure_new (INFO_NAME, INFO_FIELD, G_TYPE_STRING, INFO_TEXT_EN,
       NULL);
+  gst_structure_set (ch->info, INFO_NAME, GST_TYPE_STRUCTURE, structure, NULL);
+  gst_structure_free (structure);
 
   CHECK_TOC_ENTRY (ch, GST_TOC_ENTRY_TYPE_CHAPTER, ENTRY_CH3);
 
@@ -221,9 +249,12 @@ GST_START_TEST (test_serializing)
   fail_if (subch == NULL);
   gst_tag_list_add (subch->tags, GST_TAG_MERGE_APPEND, GST_TAG_TITLE,
       ENTRY_TAG, NULL);
-  subch->info =
+  structure =
       gst_structure_new (INFO_NAME, INFO_FIELD, G_TYPE_STRING, INFO_TEXT_EN,
       NULL);
+  gst_structure_set (subch->info, INFO_NAME, GST_TYPE_STRUCTURE, structure,
+      NULL);
+  gst_structure_free (structure);
 
   CHECK_TOC_ENTRY (subch, GST_TOC_ENTRY_TYPE_CHAPTER, ENTRY_SUB1);
 
