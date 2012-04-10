@@ -96,13 +96,11 @@ static void
 gst_waveform_sink_class_init (GstWaveFormSinkClass * klass)
 {
   GObjectClass *gobject_class;
-  GstElementClass *gstelement_class;
   GstBaseSinkClass *gstbasesink_class;
   GstAudioSinkClass *gstaudiosink_class;
   GstElementClass *element_class;
 
   gobject_class = (GObjectClass *) klass;
-  gstelement_class = (GstElementClass *) klass;
   gstbasesink_class = (GstBaseSinkClass *) klass;
   gstaudiosink_class = (GstAudioSinkClass *) klass;
   element_class = GST_ELEMENT_CLASS (klass);
