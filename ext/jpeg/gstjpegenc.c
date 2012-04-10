@@ -562,7 +562,7 @@ gst_jpegenc_chain (GstPad * pad, GstObject * parent, GstBuffer * buf)
 
   height = GST_VIDEO_FRAME_HEIGHT (&frame);
 
-  GST_LOG_OBJECT (jpegenc, "got buffer of %lu bytes",
+  GST_LOG_OBJECT (jpegenc, "got buffer of %" G_GSIZE_FORMAT " bytes",
       gst_buffer_get_size (buf));
 
   for (i = 0; i < jpegenc->channels; i++) {
