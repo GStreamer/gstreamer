@@ -243,7 +243,7 @@ static const GstAudioChannelPosition
 static gpointer
 gst_voaacenc_generate_sink_caps (gpointer data)
 {
-  GstCaps *caps = gst_caps_new_empty ();
+  GstCaps *caps;
   gint i, c;
   static const int rates[] = {
     8000, 11025, 12000, 16000, 22050, 24000,
