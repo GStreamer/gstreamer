@@ -168,7 +168,8 @@ gst_mplex_finalize (GObject * object)
   while (walk) {
     GstMplexPad *mpad = (GstMplexPad *) walk->data;
 
-    gst_object_unref (mpad->pad);
+    if (mpad->pad)
+      gst_object_unref (mpad->pad);
     mpad->pad = NULL;
     walk = walk->next;
   }
@@ -660,12 +661,14 @@ gst_mplex_release_pad (GstElement * element, GstPad * pad)
 
     GST_MPLEX_MUTEX_LOCK (mplex);
     mpad->eos = TRUE;
-    gst_object_unref (mpad->pad);
+    g_assert (mpad->pad == pad);
     mpad->pad = NULL;
     /* wake up if waiting on this pad */
     GST_MPLEX_SIGNAL (mplex, mpad);
 
     padname = gst_object_get_name (GST_OBJECT (pad));
+    /* now only drop what might be last ref */
+    gst_object_unref (pad);
     if (strstr (padname, "audio")) {
       mplex->num_apads--;
     } else {
