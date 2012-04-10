@@ -740,7 +740,7 @@ apply_segment (GstQueue2 * queue, GstEvent * event, GstSegment * segment,
       G_GINT64_FORMAT, update, rate, arate, format, start, stop, time);
 
   if (format == GST_FORMAT_BYTES) {
-    if (QUEUE_IS_USING_TEMP_FILE (queue)) {
+    if (!QUEUE_IS_USING_QUEUE (queue)) {
       /* start is where we'll be getting from and as such writing next */
       queue->current = add_range (queue, start);
       /* update the stats for this range */
