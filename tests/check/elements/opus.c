@@ -24,6 +24,18 @@
 
 #include <gst/check/gstcheck.h>
 
+#if G_BYTE_ORDER == G_BIG_ENDIAN
+#define AFORMAT "S16BE"
+#else
+#define AFORMAT "S16LE"
+#endif
+
+#define AUDIO_CAPS_STRING "audio/x-raw, " \
+                           "format = (string) " AFORMAT ", "\
+                           "layout = (string) interleaved, " \
+                           "rate = (int) 48000, " \
+                           "channels = (int) 1 "
+
 static const guint8 opus_ogg_id_header[19] = {
   0x4f, 0x70, 0x75, 0x73, 0x48, 0x65, 0x61, 0x64, 0x00, 0x02, 0x00, 0x00, 0x00,
   0x00, 0x00, 0x00, 0x00, 0x00, 0x00
@@ -60,8 +72,8 @@ setup_opusdec (void)
 
   GST_DEBUG ("setup_opusdec");
   opusdec = gst_check_setup_element ("opusdec");
-  mydecsrcpad = gst_check_setup_src_pad (opusdec, &srctemplate, NULL);
-  mydecsinkpad = gst_check_setup_sink_pad (opusdec, &sinktemplate, NULL);
+  mydecsrcpad = gst_check_setup_src_pad (opusdec, &srctemplate);
+  mydecsinkpad = gst_check_setup_sink_pad (opusdec, &sinktemplate);
   gst_pad_set_active (mydecsrcpad, TRUE);
   gst_pad_set_active (mydecsinkpad, TRUE);
 
@@ -88,8 +100,8 @@ setup_opusenc (void)
 
   GST_DEBUG ("setup_opusenc");
   opusenc = gst_check_setup_element ("opusenc");
-  myencsrcpad = gst_check_setup_src_pad (opusenc, &srctemplate, NULL);
-  myencsinkpad = gst_check_setup_sink_pad (opusenc, &sinktemplate, NULL);
+  myencsrcpad = gst_check_setup_src_pad (opusenc, &srctemplate);
+  myencsinkpad = gst_check_setup_sink_pad (opusenc, &sinktemplate);
   gst_pad_set_active (myencsrcpad, TRUE);
   gst_pad_set_active (myencsinkpad, TRUE);
 
@@ -121,7 +133,7 @@ check_buffers (guint expected)
   for (i = 0; i < num_buffers; ++i) {
     outbuffer = GST_BUFFER (buffers->data);
     fail_if (outbuffer == NULL);
-    fail_if (GST_BUFFER_SIZE (outbuffer) == 0);
+    fail_if (gst_buffer_get_size (outbuffer) == 0);
 
     buffers = g_list_remove (buffers, outbuffer);
 
@@ -142,7 +154,7 @@ GST_START_TEST (test_opus_id_header)
       "could not set to playing");
 
   inbuffer = gst_buffer_new_and_alloc (sizeof (opus_ogg_id_header));
-  memcpy (GST_BUFFER_DATA (inbuffer), opus_ogg_id_header,
+  gst_buffer_fill (inbuffer, 0, opus_ogg_id_header,
       sizeof (opus_ogg_id_header));
   ASSERT_BUFFER_REFCOUNT (inbuffer, "inbuffer", 1);
   gst_buffer_ref (inbuffer);
@@ -208,8 +220,6 @@ GST_START_TEST (test_opus_encode_samples)
   GstElement *opusenc;
   GstBuffer *inbuffer;
   GstCaps *caps;
-  guint16 *samples;
-  unsigned int n;
 
   opusenc = setup_opusenc ();
 
@@ -218,19 +228,15 @@ GST_START_TEST (test_opus_encode_samples)
       "could not set to playing");
 
   inbuffer = gst_buffer_new_and_alloc (nsamples * 2);
-  samples = (guint16 *) GST_BUFFER_DATA (inbuffer);
-  for (n = 0; n < nsamples; ++n) {
-    samples[n] = 0;
-  }
+  gst_buffer_memset (inbuffer, 0, 0, nsamples * 2);
 
   GST_BUFFER_TIMESTAMP (inbuffer) = GST_BUFFER_OFFSET (inbuffer) = 0;
   GST_BUFFER_DURATION (inbuffer) = GST_CLOCK_TIME_NONE;
   ASSERT_BUFFER_REFCOUNT (inbuffer, "inbuffer", 1);
 
-  caps =
-      gst_caps_from_string ("audio/x-raw,format=S16LE,rate=48000,channels=1");
+  caps = gst_caps_from_string (AUDIO_CAPS_STRING);
   fail_unless (caps != NULL);
-  gst_buffer_set_caps (inbuffer, caps);
+  gst_pad_set_caps (myencsrcpad, caps);
   gst_caps_unref (caps);
   gst_buffer_ref (inbuffer);
 
@@ -264,8 +270,7 @@ GST_START_TEST (test_opus_encode_properties)
   GstElement *opusenc;
   GstBuffer *inbuffer;
   GstCaps *caps;
-  guint16 *samples;
-  unsigned int n, step;
+  unsigned int step;
   static const struct
   {
     const char *param;
@@ -299,22 +304,19 @@ GST_START_TEST (test_opus_encode_properties)
           GST_STATE_PLAYING) == GST_STATE_CHANGE_SUCCESS,
       "could not set to playing");
 
-  caps =
-      gst_caps_from_string ("audio/x-raw,format=S16LE,rate=48000,channels=1");
+  caps = gst_caps_from_string (AUDIO_CAPS_STRING);
   fail_unless (caps != NULL);
+
+  gst_pad_set_caps (myencsrcpad, caps);
 
   for (step = 0; step < steps; ++step) {
     inbuffer = gst_buffer_new_and_alloc (nsamples * 2);
-    samples = (guint16 *) GST_BUFFER_DATA (inbuffer);
-    for (n = 0; n < nsamples; ++n) {
-      samples[n] = 0;
-    }
+    gst_buffer_memset (inbuffer, 0, 0, nsamples * 2);
 
     GST_BUFFER_TIMESTAMP (inbuffer) = GST_BUFFER_OFFSET (inbuffer) = 0;
     GST_BUFFER_DURATION (inbuffer) = GST_CLOCK_TIME_NONE;
     ASSERT_BUFFER_REFCOUNT (inbuffer, "inbuffer", 1);
 
-    gst_buffer_set_caps (inbuffer, caps);
     gst_buffer_ref (inbuffer);
 
     /* pushing gives away my reference ... */
