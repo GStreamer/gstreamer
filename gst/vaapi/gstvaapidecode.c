@@ -301,7 +301,7 @@ error_commit_buffer:
 static gboolean
 gst_vaapidecode_create(GstVaapiDecode *decode, GstCaps *caps)
 {
-    VADisplay dpy;
+    GstVaapiDisplay *dpy;
     GstStructure *structure;
     int version;
 
