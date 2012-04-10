@@ -4746,11 +4746,15 @@ gst_matroska_demux_handle_sink_event (GstPad * pad, GstObject * parent,
     }
     case GST_EVENT_FLUSH_STOP:
     {
+      guint64 dur;
+
       gst_adapter_clear (demux->common.adapter);
       GST_OBJECT_LOCK (demux);
       gst_matroska_read_common_reset_streams (&demux->common,
           GST_CLOCK_TIME_NONE, TRUE);
-      demux->common.segment.position = GST_CLOCK_TIME_NONE;
+      dur = demux->common.segment.duration;
+      gst_segment_init (&demux->common.segment, GST_FORMAT_TIME);
+      demux->common.segment.duration = dur;
       demux->cluster_time = GST_CLOCK_TIME_NONE;
       demux->cluster_offset = 0;
       GST_OBJECT_UNLOCK (demux);
