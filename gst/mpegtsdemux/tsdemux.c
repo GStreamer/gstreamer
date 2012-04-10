@@ -35,6 +35,7 @@
 #include <string.h>
 
 #include <glib.h>
+#include <gst/tag/tag.h>
 
 #include "mpegtsbase.h"
 #include "tsdemux.h"
@@ -145,6 +146,8 @@ struct _TSDemuxStream
 
   /* Whether this stream needs to send a newsegment */
   gboolean need_newsegment;
+
+  GstTagList *taglist;
 };
 
 #define VIDEO_CAPS \
@@ -622,6 +625,43 @@ done:
   return ret;
 }
 
+static void
+gst_ts_demux_create_tags (TSDemuxStream * stream)
+{
+  guint8 *desc = NULL;
+  int i;
+
+  desc = mpegts_get_descriptor_from_stream ((MpegTSBaseStream *) stream,
+      DESC_ISO_639_LANGUAGE);
+  if (desc) {
+    if (!stream->taglist)
+      stream->taglist = gst_tag_list_new_empty ();
+
+    for (i = 0; i < DESC_ISO_639_LANGUAGE_codes_n (desc); i++) {
+      const gchar *lc;
+      gchar lang_code[4];
+      gchar *language_n;
+
+      language_n = (gchar *)
+          DESC_ISO_639_LANGUAGE_language_code_nth (desc, i);
+
+      GST_LOG ("Add language code for stream: %s", language_n);
+
+      lang_code[0] = language_n[0];
+      lang_code[1] = language_n[1];
+      lang_code[2] = language_n[2];
+      lang_code[3] = 0;
+
+      /* descriptor contains ISO 639-2 code, we want the ISO 639-1 code */
+      lc = gst_tag_get_language_code (lang_code);
+      gst_tag_list_add (stream->taglist, GST_TAG_MERGE_REPLACE,
+          GST_TAG_LANGUAGE_CODE, (lc) ? lc : lang_code, NULL);
+    }
+
+    g_free (desc);
+  }
+}
+
 static GstPad *
 create_pad_for_stream (MpegTSBase * base, MpegTSBaseStream * bstream,
     MpegTSBaseProgram * program)
@@ -633,6 +673,7 @@ create_pad_for_stream (MpegTSBase * base, MpegTSBaseStream * bstream,
   guint8 *desc = NULL;
   GstPad *pad = NULL;
 
+  gst_ts_demux_create_tags (stream);
 
   GST_LOG ("Attempting to create pad for stream 0x%04x with stream_type %d",
       bstream->pid, bstream->stream_type);
@@ -1418,6 +1459,14 @@ push_new_segment:
     GST_DEBUG_OBJECT (stream->pad, "Pushing newsegment event");
     gst_event_ref (demux->segment_event);
     gst_pad_push_event (stream->pad, demux->segment_event);
+  }
+
+  /* Push pending tags */
+  if (stream->taglist) {
+    GST_DEBUG_OBJECT (stream->pad, "Sending tags %" GST_PTR_FORMAT,
+        stream->taglist);
+    gst_pad_push_event (stream->pad, gst_event_new_tag (stream->taglist));
+    stream->taglist = NULL;
   }
 
   stream->need_newsegment = FALSE;
