@@ -1087,6 +1087,8 @@ perform_seek_to_offset (GstQueue2 * queue, guint64 offset)
   GstEvent *event;
   gboolean res;
 
+  /* until we receive the FLUSH_STOP from this seek, we skip data */
+  queue->seeking = TRUE;
   GST_QUEUE2_MUTEX_UNLOCK (queue);
 
   GST_DEBUG_OBJECT (queue, "Seeking to %" G_GUINT64_FORMAT, offset);
@@ -1096,8 +1098,6 @@ perform_seek_to_offset (GstQueue2 * queue, guint64 offset)
       GST_SEEK_FLAG_FLUSH | GST_SEEK_FLAG_ACCURATE, GST_SEEK_TYPE_SET, offset,
       GST_SEEK_TYPE_NONE, -1);
 
-  /* until we receive the FLUSH_STOP from this seek, we skip data */
-  queue->seeking = TRUE;
   res = gst_pad_push_event (queue->sinkpad, event);
   GST_QUEUE2_MUTEX_LOCK (queue);
 
