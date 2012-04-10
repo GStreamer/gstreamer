@@ -228,6 +228,7 @@ gst_toc_entry_new_with_pad (GstTocEntryType type, const gchar * uid,
   entry->uid = g_strdup (uid);
   entry->type = type;
   entry->tags = gst_tag_list_new ();
+  entry->info = gst_structure_id_empty_new (gst_toc_fields[GST_TOC_INFONAME]);
 
   if (pad != NULL && GST_IS_PAD (pad))
     entry->pads = g_list_append (entry->pads, gst_object_ref (pad));
@@ -397,8 +398,9 @@ gst_toc_entry_from_structure (const GstStructure * entry, guint level)
 {
   GstTocEntry *ret, *subentry;
   const GValue *val;
-  const GstTagList *entry_tags;
   const GstStructure *subentry_struct;
+  GstTagList *list;
+  GstStructure *st;
   gint count, i;
   const gchar *uid;
   guint chapters_count = 0, editions_count = 0;
@@ -463,8 +465,9 @@ gst_toc_entry_from_structure (const GstStructure * entry, guint level)
     val = gst_structure_id_get_value (entry, gst_toc_fields[GST_TOC_TAGS]);
 
     if (G_LIKELY (GST_IS_TAG_LIST (gst_value_get_structure (val)))) {
-      entry_tags = GST_TAG_LIST (gst_value_get_structure (val));
-      ret->tags = gst_tag_list_copy (entry_tags);
+      list = gst_tag_list_copy (GST_TAG_LIST (gst_value_get_structure (val)));
+      gst_tag_list_free (ret->tags);
+      ret->tags = list;
     }
   }
 
@@ -472,8 +475,11 @@ gst_toc_entry_from_structure (const GstStructure * entry, guint level)
           gst_toc_fields[GST_TOC_INFO], GST_TYPE_STRUCTURE)) {
     val = gst_structure_id_get_value (entry, gst_toc_fields[GST_TOC_INFO]);
 
-    if (G_LIKELY (GST_IS_STRUCTURE (gst_value_get_structure (val))))
-      ret->info = gst_structure_copy (gst_value_get_structure (val));
+    if (G_LIKELY (GST_IS_STRUCTURE (gst_value_get_structure (val)))) {
+      st = gst_structure_copy (gst_value_get_structure (val));
+      gst_structure_free (ret->info);
+      ret->info = st;
+    }
   }
 
   return ret;
@@ -486,7 +492,8 @@ priv_gst_toc_from_structure (const GstStructure * toc)
   GstTocEntry *subentry;
   const GstStructure *subentry_struct;
   const GValue *val;
-  const GstTagList *entry_tags;
+  GstTagList *list;
+  GstStructure *st;
   guint count, i;
   guint editions_count = 0, chapters_count = 0;
 
@@ -542,8 +549,9 @@ priv_gst_toc_from_structure (const GstStructure * toc)
     val = gst_structure_id_get_value (toc, gst_toc_fields[GST_TOC_TAGS]);
 
     if (G_LIKELY (GST_IS_TAG_LIST (gst_value_get_structure (val)))) {
-      entry_tags = GST_TAG_LIST (gst_value_get_structure (val));
-      ret->tags = gst_tag_list_copy (entry_tags);
+      list = gst_tag_list_copy (GST_TAG_LIST (gst_value_get_structure (val)));
+      gst_tag_list_free (ret->tags);
+      ret->tags = list;
     }
   }
 
@@ -551,8 +559,11 @@ priv_gst_toc_from_structure (const GstStructure * toc)
           gst_toc_fields[GST_TOC_INFO], GST_TYPE_STRUCTURE)) {
     val = gst_structure_id_get_value (toc, gst_toc_fields[GST_TOC_INFO]);
 
-    if (G_LIKELY (GST_IS_STRUCTURE (gst_value_get_structure (val))))
-      ret->info = gst_structure_copy (gst_value_get_structure (val));
+    if (G_LIKELY (GST_IS_STRUCTURE (gst_value_get_structure (val)))) {
+      st = gst_structure_copy (gst_value_get_structure (val));
+      gst_structure_free (ret->info);
+      ret->info = st;
+    }
   }
 
   if (G_UNLIKELY (ret->entries == NULL)) {
@@ -782,16 +793,24 @@ gst_toc_entry_copy (const GstTocEntry * entry)
 {
   GstTocEntry *ret, *sub;
   GList *cur;
+  GstTagList *list;
+  GstStructure *st;
 
   g_return_val_if_fail (entry != NULL, NULL);
 
   ret = gst_toc_entry_new (entry->type, entry->uid);
 
-  if (GST_IS_STRUCTURE (entry->info))
-    ret->info = gst_structure_copy (entry->info);
+  if (GST_IS_STRUCTURE (entry->info)) {
+    st = gst_structure_copy (entry->info);
+    gst_structure_free (ret->info);
+    ret->info = st;
+  }
 
-  if (GST_IS_TAG_LIST (entry->tags))
-    ret->tags = gst_tag_list_copy (entry->tags);
+  if (GST_IS_TAG_LIST (entry->tags)) {
+    list = gst_tag_list_copy (entry->tags);
+    gst_tag_list_free (ret->tags);
+    ret->tags = list;
+  }
 
   cur = entry->pads;
   while (cur != NULL) {
@@ -832,16 +851,24 @@ gst_toc_copy (const GstToc * toc)
   GstToc *ret;
   GstTocEntry *entry;
   GList *cur;
+  GstTagList *list;
+  GstStructure *st;
 
   g_return_val_if_fail (toc != NULL, NULL);
 
   ret = gst_toc_new ();
 
-  if (GST_IS_STRUCTURE (toc->info))
-    ret->info = gst_structure_copy (toc->info);
+  if (GST_IS_STRUCTURE (toc->info)) {
+    st = gst_structure_copy (toc->info);
+    gst_structure_free (ret->info);
+    ret->info = st;
+  }
 
-  if (GST_IS_TAG_LIST (toc->tags))
-    ret->tags = gst_tag_list_copy (toc->tags);
+  if (GST_IS_TAG_LIST (toc->tags)) {
+    list = gst_tag_list_copy (toc->tags);
+    gst_tag_list_free (ret->tags);
+    ret->tags = list;
+  }
 
   cur = toc->entries;
   while (cur != NULL) {
