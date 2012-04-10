@@ -362,8 +362,13 @@ gst_glimage_sink_get_property (GObject * object, guint prop_id,
       g_value_set_boolean (value, glimage_sink->keep_aspect_ratio);
       break;
     case PROP_PIXEL_ASPECT_RATIO:
-      if (glimage_sink->par)
-        g_value_transform (glimage_sink->par, value);
+      if (!glimage_sink->par) {
+        glimage_sink->par = g_new0 (GValue, 1);
+        g_value_init (glimage_sink->par, GST_TYPE_FRACTION);
+        gst_value_set_fraction (glimage_sink->par, 1, 1);
+      }
+      if (!g_value_transform (glimage_sink->par, value))
+        g_warning ("Could not transform string to aspect ratio");
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
