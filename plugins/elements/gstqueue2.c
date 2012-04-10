@@ -1096,6 +1096,8 @@ perform_seek_to_offset (GstQueue2 * queue, guint64 offset)
       GST_SEEK_FLAG_FLUSH | GST_SEEK_FLAG_ACCURATE, GST_SEEK_TYPE_SET, offset,
       GST_SEEK_TYPE_NONE, -1);
 
+  /* until we receive the FLUSH_STOP from this seek, we skip data */
+  queue->seeking = TRUE;
   res = gst_pad_push_event (queue->sinkpad, event);
   GST_QUEUE2_MUTEX_LOCK (queue);
 
@@ -2181,6 +2183,7 @@ gst_queue2_handle_sink_event (GstPad * pad, GstEvent * event)
         queue->sinkresult = GST_FLOW_OK;
         queue->is_eos = FALSE;
         queue->unexpected = FALSE;
+        queue->seeking = FALSE;
         /* reset rate counters */
         reset_rate_timer (queue);
         gst_pad_start_task (queue->srcpad, (GstTaskFunction) gst_queue2_loop,
@@ -2307,6 +2310,10 @@ gst_queue2_chain_buffer_or_buffer_list (GstQueue2 * queue,
   if (queue->unexpected)
     goto out_unexpected;
 
+  /* while we didn't receive the newsegment, we're seeking and we skip data */
+  if (queue->seeking)
+    goto out_seeking;
+
   if (!gst_queue2_wait_free_space (queue))
     goto out_flushing;
 
@@ -2335,6 +2342,14 @@ out_eos:
     gst_mini_object_unref (item);
 
     return GST_FLOW_UNEXPECTED;
+  }
+out_seeking:
+  {
+    GST_CAT_LOG_OBJECT (queue_dataflow, queue, "exit because we are seeking");
+    GST_QUEUE2_MUTEX_UNLOCK (queue);
+    gst_mini_object_unref (item);
+
+    return GST_FLOW_OK;
   }
 out_unexpected:
   {

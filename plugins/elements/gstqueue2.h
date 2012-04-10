@@ -143,6 +143,7 @@ struct _GstQueue2
    * because we can't save it on the file */
   gboolean segment_event_received;
   GstEvent *starting_segment;
+  gboolean seeking;
 
   guint64 ring_buffer_max_size;
   guint8 * ring_buffer;
