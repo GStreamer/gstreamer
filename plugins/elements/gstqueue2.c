@@ -2195,6 +2195,7 @@ gst_queue2_handle_sink_event (GstPad * pad, GstEvent * event)
         queue->is_eos = FALSE;
         queue->unexpected = FALSE;
         queue->sinkresult = GST_FLOW_OK;
+        queue->seeking = FALSE;
         GST_QUEUE2_MUTEX_UNLOCK (queue);
 
         gst_event_unref (event);
