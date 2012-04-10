@@ -3376,6 +3376,7 @@ gst_matroska_demux_parse_blockgroup_or_simpleblock (GstMatroskaDemux * demux,
     /* need to refresh segment info ASAP */
     if (GST_CLOCK_TIME_IS_VALID (lace_time) && demux->need_newsegment) {
       guint64 clace_time, duration;
+      gdouble rate;
 
       GST_DEBUG_OBJECT (demux,
           "generating segment starting at %" GST_TIME_FORMAT,
@@ -3388,11 +3389,12 @@ gst_matroska_demux_parse_blockgroup_or_simpleblock (GstMatroskaDemux * demux,
       }
       clace_time = MAX (lace_time, demux->stream_start_time);
       duration = demux->common.segment.duration;
+      rate = demux->common.segment.rate;
       /* we really want to set, don't care much about previous state */
       gst_segment_init (&demux->common.segment, GST_FORMAT_TIME);
       gst_segment_set_newsegment (&demux->common.segment, FALSE,
-          demux->common.segment.rate, GST_FORMAT_TIME, clace_time,
-          GST_CLOCK_TIME_NONE, clace_time - demux->stream_start_time);
+          rate, GST_FORMAT_TIME, clace_time, GST_CLOCK_TIME_NONE,
+          clace_time - demux->stream_start_time);
       gst_segment_set_duration (&demux->common.segment, GST_FORMAT_TIME,
           duration);
       /* now convey our segment notion downstream */
@@ -4738,11 +4740,15 @@ gst_matroska_demux_handle_sink_event (GstPad * pad, GstEvent * event)
     }
     case GST_EVENT_FLUSH_STOP:
     {
+      guint64 dur;
+
       gst_adapter_clear (demux->common.adapter);
       GST_OBJECT_LOCK (demux);
       gst_matroska_read_common_reset_streams (&demux->common,
           GST_CLOCK_TIME_NONE, TRUE);
-      demux->common.segment.last_stop = GST_CLOCK_TIME_NONE;
+      dur = demux->common.segment.duration;
+      gst_segment_init (&demux->common.segment, GST_FORMAT_TIME);
+      demux->common.segment.duration = dur;
       demux->cluster_time = GST_CLOCK_TIME_NONE;
       demux->cluster_offset = 0;
       GST_OBJECT_UNLOCK (demux);
