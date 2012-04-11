@@ -66,7 +66,8 @@ G_DEFINE_TYPE (GstGLWindow, gst_gl_window, G_TYPE_OBJECT);
 
 gboolean _gst_gl_window_debug = FALSE;
 
-void gst_gl_window_init_platform ()
+void
+gst_gl_window_init_platform ()
 {
 }
 
@@ -251,7 +252,7 @@ gst_gl_window_set_external_window_id (GstGLWindow * window, gulong id)
 
     g_debug ("release parent %lud\n", (gulong) parent_id);
 
-    g_assert (parent_proc);
+    g_return_if_fail (parent_proc);
 
     SetWindowLongPtr (parent_id, GWL_WNDPROC, (LONG) parent_proc);
     SetParent (priv->internal_win_id, NULL);
@@ -389,7 +390,7 @@ gst_gl_window_quit_loop (GstGLWindow * window, GstGLWindowCB callback,
     GstGLWindowPrivate *priv = window->priv;
     LRESULT res = PostMessage (priv->internal_win_id, WM_GST_GL_WINDOW_QUIT,
         (WPARAM) data, (LPARAM) callback);
-    g_assert (SUCCEEDED (res));
+    g_return_if_fail (SUCCEEDED (res));
     g_debug ("end loop requested\n");
   }
 }
@@ -403,7 +404,7 @@ gst_gl_window_send_message (GstGLWindow * window, GstGLWindowCB callback,
     GstGLWindowPrivate *priv = window->priv;
     LRESULT res = SendMessage (priv->internal_win_id, WM_GST_GL_WINDOW_CUSTOM,
         (WPARAM) data, (LPARAM) callback);
-    g_assert (SUCCEEDED (res));
+    g_return_if_fail (SUCCEEDED (res));
   }
 }
 

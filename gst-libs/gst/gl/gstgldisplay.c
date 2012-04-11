@@ -716,7 +716,8 @@ gst_gl_display_thread_destroy_context (GstGLDisplay * display)
     }
       break;
     default:
-      g_assert_not_reached ();
+      GST_ERROR ("Unknow colorspace conversion %d",
+          display->upload_colorspace_conversion);
   }
 
   if (display->upload_fbo) {
@@ -1048,7 +1049,9 @@ gst_gl_display_thread_init_upload (GstGLDisplay * display)
           }
             break;
           default:
-            g_assert_not_reached ();
+            gst_gl_display_set_error (display,
+                "Unsupported upload video format %d",
+                display->upload_video_format);
         }
       }
       //check if YCBCR MESA is available
@@ -1078,7 +1081,9 @@ gst_gl_display_thread_init_upload (GstGLDisplay * display)
                 "Your MESA version only supports YUY2 and UYVY (GLSL is required for others yuv formats)");
             break;
           default:
-            g_assert_not_reached ();
+            gst_gl_display_set_error (display,
+                "Unsupported upload video format %d",
+                display->upload_video_format);
         }
       }
       //check if color matrix is available
@@ -1102,7 +1107,8 @@ gst_gl_display_thread_init_upload (GstGLDisplay * display)
     }
       break;
     default:
-      g_assert_not_reached ();
+      gst_gl_display_set_error (display, "Unsupported upload video format %d",
+          display->upload_video_format);
   }
 }
 
@@ -1155,12 +1161,14 @@ gst_gl_display_thread_do_upload (GstGLDisplay * display)
             gst_gl_display_thread_do_upload_draw (display);
           break;
         default:
-          g_assert_not_reached ();
+          gst_gl_display_set_error (display, "Unknow colorspace conversion %d",
+              display->upload_colorspace_conversion);
       }
     }
       break;
     default:
-      g_assert_not_reached ();
+      gst_gl_display_set_error (display, "Unsupported upload video format %d",
+          display->upload_video_format);
   }
 }
 
@@ -1288,7 +1296,9 @@ gst_gl_display_thread_init_download (GstGLDisplay * display)
             display->multipleRT[2] = GL_COLOR_ATTACHMENT2_EXT;
             break;
           default:
-            g_assert_not_reached ();
+            gst_gl_display_set_error (display,
+                "Unsupported download video format %d",
+                display->download_video_format);
         }
 
         //attach the depth render buffer to the FBO
@@ -1304,8 +1314,10 @@ gst_gl_display_thread_init_download (GstGLDisplay * display)
 
         gst_gl_display_check_framebuffer_status ();
 
-        g_assert (glCheckFramebufferStatusEXT (GL_FRAMEBUFFER_EXT) ==
-            GL_FRAMEBUFFER_COMPLETE_EXT);
+        if (glCheckFramebufferStatusEXT (GL_FRAMEBUFFER_EXT) !=
+            GL_FRAMEBUFFER_COMPLETE_EXT)
+          gst_gl_display_set_error (display,
+              "GL framebuffer status incomplete");
 
         //unbind the FBO
         glBindFramebufferEXT (GL_FRAMEBUFFER_EXT, 0);
@@ -1318,7 +1330,8 @@ gst_gl_display_thread_init_download (GstGLDisplay * display)
     }
       break;
     default:
-      g_assert_not_reached ();
+      gst_gl_display_set_error (display, "Unsupported download video format %d",
+          display->download_video_format);
   }
 
   switch (display->download_video_format) {
@@ -1511,7 +1524,9 @@ gst_gl_display_thread_init_download (GstGLDisplay * display)
 #endif
             break;
           default:
-            g_assert_not_reached ();
+            gst_gl_display_set_error (display,
+                "Unsupported download video format %d",
+                display->download_video_format);
         }
       } else {
         //turn off the pipeline because colorspace conversion is not possible
@@ -1521,7 +1536,8 @@ gst_gl_display_thread_init_download (GstGLDisplay * display)
     }
       break;
     default:
-      g_assert_not_reached ();
+      gst_gl_display_set_error (display, "Unsupported download video format %d",
+          display->download_video_format);
   }
 }
 
@@ -1553,7 +1569,8 @@ gst_gl_display_thread_do_download (GstGLDisplay * display)
       gst_gl_display_thread_do_download_draw_yuv (display);
       break;
     default:
-      g_assert_not_reached ();
+      gst_gl_display_set_error (display, "Unsupported download video format %d",
+          display->download_video_format);
   }
 }
 
@@ -1616,8 +1633,9 @@ gst_gl_display_thread_gen_fbo (GstGLDisplay * display)
       GL_RENDERBUFFER_EXT, display->generated_depth_buffer);
 #endif
 
-  g_assert (glCheckFramebufferStatusEXT (GL_FRAMEBUFFER_EXT) ==
-      GL_FRAMEBUFFER_COMPLETE_EXT);
+  if (glCheckFramebufferStatusEXT (GL_FRAMEBUFFER_EXT) !=
+      GL_FRAMEBUFFER_COMPLETE_EXT)
+    gst_gl_display_set_error (display, "GL framebuffer status incomplete");
 
   //unbind the FBO
   glBindFramebufferEXT (GL_FRAMEBUFFER_EXT, 0);
@@ -1663,7 +1681,8 @@ gst_gl_display_thread_use_fbo (GstGLDisplay * display)
           display->use_fbo_proj_param4);
       break;
     default:
-      g_assert_not_reached ();
+      gst_gl_display_set_error (display, "Unknow fbo projection %d",
+          display->use_fbo_projection);
   }
 
   glMatrixMode (GL_MODELVIEW);
@@ -2019,7 +2038,8 @@ gst_gl_display_glgen_texture (GstGLDisplay * display, GLuint * pTexture,
                 height, 0, GL_YCBCR_MESA, GL_UNSIGNED_SHORT_8_8_MESA, NULL);
           break;
         default:
-          g_assert_not_reached ();
+          gst_gl_display_set_error (display, "Unknow colorspace conversion %d",
+              display->upload_colorspace_conversion);
       }
       break;
     case GST_VIDEO_FORMAT_I420:
@@ -2029,7 +2049,8 @@ gst_gl_display_glgen_texture (GstGLDisplay * display, GLuint * pTexture,
           width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
       break;
     default:
-      g_assert_not_reached ();
+      gst_gl_display_set_error (display, "Unsupported upload video format %d",
+          display->upload_video_format);
   }
 
   glTexParameteri (GL_TEXTURE_RECTANGLE_ARB, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
@@ -2646,8 +2667,9 @@ gst_gl_display_thread_init_upload_fbo (GstGLDisplay * display)
 
     gst_gl_display_check_framebuffer_status ();
 
-    g_assert (glCheckFramebufferStatusEXT (GL_FRAMEBUFFER_EXT) ==
-        GL_FRAMEBUFFER_COMPLETE_EXT);
+    if (glCheckFramebufferStatusEXT (GL_FRAMEBUFFER_EXT) !=
+        GL_FRAMEBUFFER_COMPLETE_EXT)
+      gst_gl_display_set_error (display, "GL framebuffer status incomplete");
 
     //unbind the FBO
     glBindFramebufferEXT (GL_FRAMEBUFFER_EXT, 0);
@@ -2710,7 +2732,8 @@ gst_gl_display_thread_do_upload_make (GstGLDisplay * display)
               height, 0, GL_YCBCR_MESA, GL_UNSIGNED_SHORT_8_8_MESA, NULL);
           break;
         default:
-          g_assert_not_reached ();
+          gst_gl_display_set_error (display, "Unknow colorspace conversion %d",
+              display->upload_colorspace_conversion);
       }
       break;
     case GST_VIDEO_FORMAT_UYVY:
@@ -2729,7 +2752,8 @@ gst_gl_display_thread_do_upload_make (GstGLDisplay * display)
               height, 0, GL_YCBCR_MESA, GL_UNSIGNED_SHORT_8_8_MESA, NULL);
           break;
         default:
-          g_assert_not_reached ();
+          gst_gl_display_set_error (display, "Unknow colorspace conversion %d",
+              display->upload_colorspace_conversion);
       }
       break;
     case GST_VIDEO_FORMAT_I420:
@@ -2751,7 +2775,8 @@ gst_gl_display_thread_do_upload_make (GstGLDisplay * display)
       break;
 
     default:
-      g_assert_not_reached ();
+      gst_gl_display_set_error (display, "Unsupported upload video format %d",
+          display->upload_video_format);
   }
 }
 
@@ -2800,11 +2825,13 @@ gst_gl_display_thread_do_upload_fill (GstGLDisplay * display)
             glBindTexture (GL_TEXTURE_RECTANGLE_ARB, display->upload_outtex);
           break;
         default:
-          g_assert_not_reached ();
+          gst_gl_display_set_error (display, "Unknow colorspace conversion %d",
+              display->upload_colorspace_conversion);
       }
       break;
     default:
-      g_assert_not_reached ();
+      gst_gl_display_set_error (display, "Unsupported upload video format %d",
+          display->upload_video_format);
   }
 
   switch (display->upload_video_format) {
@@ -2854,7 +2881,8 @@ gst_gl_display_thread_do_upload_fill (GstGLDisplay * display)
               GL_YCBCR_MESA, GL_UNSIGNED_SHORT_8_8_REV_MESA, data);
           break;
         default:
-          g_assert_not_reached ();
+          gst_gl_display_set_error (display, "Unknow colorspace conversion %d",
+              display->upload_colorspace_conversion);
       }
       break;
     case GST_VIDEO_FORMAT_UYVY:
@@ -2874,7 +2902,8 @@ gst_gl_display_thread_do_upload_fill (GstGLDisplay * display)
               GL_YCBCR_MESA, GL_UNSIGNED_SHORT_8_8_MESA, data);
           break;
         default:
-          g_assert_not_reached ();
+          gst_gl_display_set_error (display, "Unknow colorspace conversion %d",
+              display->upload_colorspace_conversion);
       }
       break;
     case GST_VIDEO_FORMAT_I420:
@@ -2901,7 +2930,8 @@ gst_gl_display_thread_do_upload_fill (GstGLDisplay * display)
     }
       break;
     default:
-      g_assert_not_reached ();
+      gst_gl_display_set_error (display, "Unsupported upload video format %d",
+          display->upload_video_format);
   }
 
   //make sure no texture is in use in our opengl context
@@ -3025,7 +3055,9 @@ gst_gl_display_thread_do_upload_draw (GstGLDisplay * display)
               shader_upload_YUY2_UYVY = display->shader_upload_UYVY;
               break;
             default:
-              g_assert_not_reached ();
+              gst_gl_display_set_error (display,
+                  "Upload video format inconsistency %d",
+                  display->upload_video_format);
           }
 
           gst_gl_shader_use (shader_upload_YUY2_UYVY);
@@ -3092,7 +3124,8 @@ gst_gl_display_thread_do_upload_draw (GstGLDisplay * display)
         }
           break;
         default:
-          g_assert_not_reached ();
+          gst_gl_display_set_error (display, "Unknow colorspace conversion %d",
+              display->upload_colorspace_conversion);
       }
     }
       break;
@@ -3188,7 +3221,8 @@ gst_gl_display_thread_do_upload_draw (GstGLDisplay * display)
       break;
 
     default:
-      g_assert_not_reached ();
+      gst_gl_display_set_error (display, "Unsupported upload video format %d",
+          display->upload_video_format);
 
   }                             //end switch display->currentVideo_format
 
@@ -3240,7 +3274,8 @@ gst_gl_display_thread_do_download_draw_rgb (GstGLDisplay * display)
   gpointer data = display->download_data;
 
 #ifndef OPENGL_ES2
-  glUseProgramObjectARB (0);
+  if (display->upload_colorspace_conversion == GST_GL_DISPLAY_CONVERSION_GLSL)
+    glUseProgramObjectARB (0);
   glEnable (GL_TEXTURE_RECTANGLE_ARB);
   glBindTexture (GL_TEXTURE_RECTANGLE_ARB, display->ouput_texture);
 #else
@@ -3320,7 +3355,8 @@ gst_gl_display_thread_do_download_draw_rgb (GstGLDisplay * display)
 #endif
       break;
     default:
-      g_assert_not_reached ();
+      gst_gl_display_set_error (display,
+          "Download video format inconsistency %d", video_format);
   }
 
 #ifndef OPENGL_ES2
@@ -3389,7 +3425,8 @@ gst_gl_display_thread_do_download_draw_yuv (GstGLDisplay * display)
           shader_download_YUY2_UYVY = display->shader_download_UYVY;
           break;
         default:
-          g_assert_not_reached ();
+          gst_gl_display_set_error (display,
+              "Download video format inconsistensy %d", video_format);
       }
 #ifndef OPENGL_ES2
       glDrawBuffer (GL_COLOR_ATTACHMENT0_EXT);
@@ -3478,7 +3515,8 @@ gst_gl_display_thread_do_download_draw_yuv (GstGLDisplay * display)
       break;
 
     default:
-      g_assert_not_reached ();
+      gst_gl_display_set_error (display,
+          "Download video format inconsistensy %d", video_format);
 
   }                             //end switch display->currentVideo_format
 
@@ -3559,7 +3597,8 @@ gst_gl_display_thread_do_download_draw_yuv (GstGLDisplay * display)
     }
       break;
     default:
-      g_assert_not_reached ();
+      gst_gl_display_set_error (display,
+          "Download video format inconsistensy %d", video_format);
   }
 #ifndef OPENGL_ES2
   glReadBuffer (GL_NONE);
