@@ -743,8 +743,6 @@ apply_segment (GstQueue2 * queue, GstEvent * event, GstSegment * segment,
     if (!QUEUE_IS_USING_QUEUE (queue)) {
       /* start is where we'll be getting from and as such writing next */
       queue->current = add_range (queue, start);
-      /* update the stats for this range */
-      update_cur_level (queue, queue->current);
     }
   }
 
