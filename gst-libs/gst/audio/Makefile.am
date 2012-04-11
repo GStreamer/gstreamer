@@ -18,7 +18,6 @@ EXTRA_DIST = audio-marshal.list
 
 CLEANFILES = $(BUILT_SOURCES)
 
-# FIXME 0.11: rename GstBaseAudioSink to GstAudioBaseSink or merge with GstAudioSink
 libgstaudio_@GST_API_VERSION@_la_SOURCES = \
 	audio.c \
 	gstaudioringbuffer.c \
