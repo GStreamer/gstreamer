@@ -235,7 +235,7 @@ GST_START_TEST (test_filled_read)
       "max-size-buffers", (guint) 0, "max-size-time", (guint64) 0,
       "max-size-bytes", (guint) 4 * 1024, NULL);
 
-  gst_pad_activate_pull (srcpad, TRUE);
+  gst_pad_activate_mode (srcpad, GST_PAD_MODE_PULL, TRUE);
   gst_element_set_state (queue2, GST_STATE_PLAYING);
 
   /* fill up the buffer */
@@ -247,7 +247,7 @@ GST_START_TEST (test_filled_read)
   fail_unless (gst_pad_get_range (srcpad, 1024, 4 * 1024,
           &buffer) == GST_FLOW_OK);
 
-  fail_unless (GST_BUFFER_SIZE (buffer) == 4 * 1024);
+  fail_unless (gst_buffer_get_size (buffer) == 4 * 1024);
 
   gst_element_set_state (queue2, GST_STATE_NULL);
 
