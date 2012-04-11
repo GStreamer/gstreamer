@@ -267,7 +267,7 @@ gst_vorbis_enc_generate_sink_caps (void)
     const GstAudioChannelPosition *pos = gst_vorbis_channel_positions[i - 1];
 
     for (c = 0; c < i; c++) {
-      channel_mask |= G_GUINT64_CONSTANT (1) << pos[i];
+      channel_mask |= G_GUINT64_CONSTANT (1) << pos[c];
     }
 
     structure = gst_structure_new ("audio/x-raw",
