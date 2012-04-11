@@ -1309,6 +1309,7 @@ gst_queue2_create_read (GstQueue2 * queue, guint64 offset, guint length,
               "update current position [%" G_GUINT64_FORMAT "-%"
               G_GUINT64_FORMAT "]", rpos, queue->current->max_reading_pos);
           update_cur_pos (queue, queue->current, rpos);
+          GST_QUEUE2_SIGNAL_DEL (queue);
         }
         GST_DEBUG_OBJECT (queue, "waiting for add");
         GST_QUEUE2_WAIT_ADD_CHECK (queue, queue->srcresult, out_flushing);
