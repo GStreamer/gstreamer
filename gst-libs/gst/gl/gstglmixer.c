@@ -623,7 +623,7 @@ gst_gl_mixer_query (GstPad * pad, GstQuery * query)
           GstPad *peer = gst_pad_get_peer (GST_PAD_CAST (sink_pad));
           walk = g_slist_next (walk);
 
-          g_assert (sink_pad->display != NULL);
+          g_return_val_if_fail (sink_pad->display != NULL, FALSE);
 
           gst_gl_display_activate_gl_context (foreign_display, FALSE);
 

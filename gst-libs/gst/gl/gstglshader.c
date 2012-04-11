@@ -248,7 +248,7 @@ gst_gl_shader_init (GstGLShader * self)
   priv->vertex_handle = 0;
   priv->program_handle = glCreateProgramObjectARB ();
 
-  g_assert (priv->program_handle);
+  g_return_if_fail (priv->program_handle);
 
   priv->compiled = FALSE;
   priv->active = FALSE;         // unused at the moment
@@ -290,7 +290,7 @@ gst_gl_shader_compile (GstGLShader * shader, GError ** error)
   if (priv->compiled)
     return priv->compiled;
 
-  g_assert (priv->program_handle);
+  g_return_val_if_fail (priv->program_handle, FALSE);
 
   if (priv->vertex_src) {
     /* create vertex object */
@@ -384,7 +384,7 @@ gst_gl_shader_release (GstGLShader * shader)
 
   priv = shader->priv;
 
-  g_assert (priv->program_handle);
+  g_return_if_fail (priv->program_handle);
 
   if (!priv->compiled)
     return;
@@ -428,7 +428,7 @@ gst_gl_shader_use (GstGLShader * shader)
 
   priv = shader->priv;
 
-  g_assert (priv->program_handle);
+  g_return_if_fail (priv->program_handle);
 
   glUseProgramObjectARB (priv->program_handle);
 

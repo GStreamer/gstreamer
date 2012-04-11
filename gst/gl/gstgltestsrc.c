@@ -515,7 +515,7 @@ gst_gl_test_src_do_seek (GstBaseSrc * bsrc, GstSegment * segment)
     src->running_time = 0;
   }
 
-  g_assert (src->running_time <= time);
+  g_return_val_if_fail (src->running_time <= time, FALSE);
 
   return TRUE;
 }
