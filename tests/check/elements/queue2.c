@@ -244,6 +244,7 @@ GST_START_TEST (test_filled_read)
 
   thread = g_thread_create ((GThreadFunc) push_buffer, sinkpad, TRUE, NULL);
 
+  buffer = NULL;
   fail_unless (gst_pad_get_range (srcpad, 1024, 4 * 1024,
           &buffer) == GST_FLOW_OK);
 
