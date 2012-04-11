@@ -207,6 +207,60 @@ GST_START_TEST (test_simple_create_destroy)
 
 GST_END_TEST;
 
+static gpointer
+push_buffer (GstPad * sinkpad)
+{
+  GstBuffer *buffer;
+
+  buffer = gst_buffer_new_and_alloc (1 * 1024);
+
+  gst_pad_chain (sinkpad, buffer);
+
+  return NULL;
+}
+
+GST_START_TEST (test_filled_read)
+{
+  GstElement *queue2;
+  GstBuffer *buffer;
+  GstPad *sinkpad, *srcpad;
+  GThread *thread;
+
+  queue2 = gst_element_factory_make ("queue2", NULL);
+  sinkpad = gst_element_get_static_pad (queue2, "sink");
+  srcpad = gst_element_get_static_pad (queue2, "src");
+
+  g_object_set (queue2, "ring-buffer-max-size", (guint64) 5 * 1024,
+      "use-buffering", FALSE,
+      "max-size-buffers", (guint) 0, "max-size-time", (guint64) 0,
+      "max-size-bytes", (guint) 4 * 1024, NULL);
+
+  gst_pad_activate_pull (srcpad, TRUE);
+  gst_element_set_state (queue2, GST_STATE_PLAYING);
+
+  /* fill up the buffer */
+  buffer = gst_buffer_new_and_alloc (4 * 1024);
+  fail_unless (gst_pad_chain (sinkpad, buffer) == GST_FLOW_OK);
+
+  thread = g_thread_create ((GThreadFunc) push_buffer, sinkpad, TRUE, NULL);
+
+  fail_unless (gst_pad_get_range (srcpad, 1024, 4 * 1024,
+          &buffer) == GST_FLOW_OK);
+
+  fail_unless (GST_BUFFER_SIZE (buffer) == 4 * 1024);
+
+  gst_element_set_state (queue2, GST_STATE_NULL);
+
+  g_thread_join (thread);
+
+  gst_object_unref (sinkpad);
+  gst_object_unref (srcpad);
+  gst_object_unref (queue2);
+}
+
+GST_END_TEST;
+
+
 static Suite *
 queue2_suite (void)
 {
@@ -219,6 +273,7 @@ queue2_suite (void)
   tcase_add_test (tc_chain, test_simple_pipeline_ringbuffer);
   tcase_add_test (tc_chain, test_simple_shutdown_while_running);
   tcase_add_test (tc_chain, test_simple_shutdown_while_running_ringbuffer);
+  tcase_add_test (tc_chain, test_filled_read);
   return s;
 }
 
