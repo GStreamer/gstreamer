@@ -1304,15 +1304,11 @@ gst_queue2_create_read (GstQueue2 * queue, guint64 offset, guint length,
       }
 
       if (read_length == 0) {
-        if (QUEUE_IS_USING_RING_BUFFER (queue)
-            && queue->current->max_reading_pos > rpos) {
-          /* protect cached data (data between offset and max_reading_pos)
-           * and update current level */
+        if (QUEUE_IS_USING_RING_BUFFER (queue)) {
           GST_DEBUG_OBJECT (queue,
-              "protecting cached data [%" G_GUINT64_FORMAT "-%" G_GUINT64_FORMAT
-              "]", rpos, queue->current->max_reading_pos);
-          queue->current->max_reading_pos = rpos;
-          update_cur_level (queue, queue->current);
+              "update current position [%" G_GUINT64_FORMAT "-%"
+              G_GUINT64_FORMAT "]", rpos, queue->current->max_reading_pos);
+          update_cur_pos (queue, queue->current, rpos);
         }
         GST_DEBUG_OBJECT (queue, "waiting for add");
         GST_QUEUE2_WAIT_ADD_CHECK (queue, queue->srcresult, out_flushing);
