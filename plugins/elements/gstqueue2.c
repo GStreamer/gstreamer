@@ -1624,7 +1624,7 @@ gst_queue2_create_write (GstQueue2 * queue, GstBuffer * buffer)
   data = GST_BUFFER_DATA (buffer);
 
   GST_DEBUG_OBJECT (queue, "Writing %u bytes to %" G_GUINT64_FORMAT, size,
-      GST_BUFFER_OFFSET (buffer));
+      writing_pos);
 
   while (size > 0) {
     guint to_write;
