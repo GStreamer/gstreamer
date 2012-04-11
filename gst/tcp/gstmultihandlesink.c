@@ -416,7 +416,7 @@ gst_multi_handle_sink_class_init (GstMultiHandleSinkClass * klass)
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (gobject_class, PROP_BURST_VALUE,
       g_param_spec_uint64 ("burst-value", "Burst value",
-          "The amount of burst expressed in burst-unit", 0, G_MAXUINT64,
+          "The amount of burst expressed in burst-format", 0, G_MAXUINT64,
           DEFAULT_BURST_VALUE, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   g_object_class_install_property (gobject_class, PROP_QOS_DSCP,
