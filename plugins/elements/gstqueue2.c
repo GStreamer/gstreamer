@@ -661,7 +661,7 @@ apply_segment (GstQueue2 * queue, GstEvent * event, GstSegment * segment,
   gst_event_copy_segment (event, segment);
 
   if (segment->format == GST_FORMAT_BYTES) {
-    if (!QUEUE_IS_USING_QUEUE (queue)) {
+    if (!QUEUE_IS_USING_QUEUE (queue) && is_sink) {
       /* start is where we'll be getting from and as such writing next */
       queue->current = add_range (queue, segment->start);
     }
