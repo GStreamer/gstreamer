@@ -193,7 +193,6 @@ check_PROGRAMS = \
 	elements/mpegtsmux \
 	elements/mpegvideoparse \
 	elements/mpeg4videoparse \
-	elements/multifdsink \
 	elements/mxfdemux \
 	elements/mxfmux \
 	elements/id3mux \
