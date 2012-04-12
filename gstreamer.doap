@@ -40,6 +40,17 @@ hierarchy, and a set of media-agnostic core elements.
 
  <release>
   <Version>
+   <revision>0.11.90</revision>
+   <branch>0.11</branch>
+   <name>And all with pearl and ruby glowing was the fair palace door</name>
+   <created>2012-04-12</created>
+   <file-release rdf:resource="http://gstreamer.freedesktop.org/src/gstreamer/gstreamer-0.11.90.tar.bz2" />
+   <file-release rdf:resource="http://gstreamer.freedesktop.org/src/gstreamer/gstreamer-0.11.90.tar.gz" />
+  </Version>
+ </release>
+
+ <release>
+  <Version>
    <revision>0.11.3</revision>
    <branch>0.11</branch>
    <name>Thrill of the Hunt</name>

@@ -1,5 +1,5 @@
 
-Release notes for GStreamer 0.11.3 "Thrill of the Hunt"
+Release notes for GStreamer 0.11.90 "And all with pearl and ruby glowing was the fair palace door"
         
 
 
@@ -16,6 +16,7 @@ It is, however, parallel installable with the 0.10.x series.
 
 The 0.11.x series has improved memory management and features
 various cleanups and enhancements.
+
 
 
 This module, gstreamer, only contains core functionality.
@@ -38,22 +39,10 @@ contains a set of less supported plug-ins that haven't passed the
 
 Features of this release
     
-      * Various bug fixes and improvements
-      * Input-selector defaults to sync-streams=true
-      * Queue don't just start the thread on linking
-      * Add user_data and notify to gst_memory_new_wrapped()
-      * Rework caps function for performance
-      * Improve basetransform allocator handling
-      * Implement metadata transforms
-      * Metadata registration improvements
-      * Use generic marshallers everywhere
-      * Push Sticky events in more cases
-      * Register queries like events
-      * Add DRAIN serialized query
-      * Add 0-padding and prefix to GstMemory
-      * Rework the ALLOCATION query
-      * Allow setting the allocator in a bufferpool
-      * Improve pull/get_range
+      * Lots of bugfixes, cleanup and other improvements
+      * Improvements to the buffer and memory managment API
+      * A new GstTOC interface, e.g. for handling chapters
+      * The GstChildProxy interface works with any GObject now
 There were no bugs fixed in this release
     
 
@@ -88,15 +77,20 @@ Webkit, Jokosher, Transmageddon and others. We're working on porting more applic
   
 Contributors to this release
     
+      * Alessandro Decina
+      * Alexander Saprykin
       * Christian Fredrik Kalager Schaller
       * David Schleef
       * Edward Hervey
+      * Fabrizio (Misto) Milo
       * Mark Nauwelaerts
       * Matej Knopp
+      * Olivier Crête
       * Ryan Lortie
       * Sebastian Dröge
       * Sreerenj Balachandran
       * Stefan Sauer
       * Tim-Philipp Müller
       * Wim Taymans
+      * Руслан Ижбулатов
  

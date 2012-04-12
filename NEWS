@@ -1,4 +1,11 @@
-This is GStreamer 0.11.3 "Thrill of the Hunt"
+This is GStreamer 0.11.90 "And all with pearl and ruby glowing was the fair palace door"
+
+New features in 0.11.90:
+
+      * Lots of bugfixes, cleanup and other improvements
+      * Improvements to the buffer and memory managment API
+      * A new GstTOC interface, e.g. for handling chapters
+      * The GstChildProxy interface works with any GObject now
 
 New features in 0.11.3:
 
