@@ -525,12 +525,12 @@ gst_rtp_mpa_robust_depay_push_mp3_frames (GstRtpMPARobustDepay * rtpmpadepay)
           head->size, head->side_info);
       rtpmpadepay->mp3_frame = gst_byte_writer_new_with_size (head->size, TRUE);
       /* 0-fill possible gaps */
-      gst_byte_writer_fill (rtpmpadepay->mp3_frame, 0, head->size);
+      gst_byte_writer_fill_unchecked (rtpmpadepay->mp3_frame, 0, head->size);
       gst_byte_writer_set_pos (rtpmpadepay->mp3_frame, 0);
       /* bytewriter corresponds to head frame,
        * i.e. the header and the side info must match */
       gst_buffer_map (head->buffer, &map, GST_MAP_READ);
-      gst_byte_writer_put_data (rtpmpadepay->mp3_frame,
+      gst_byte_writer_put_data_unchecked (rtpmpadepay->mp3_frame,
           map.data, 4 + head->side_info);
       gst_buffer_unmap (head->buffer, &map);
     }
@@ -549,7 +549,7 @@ gst_rtp_mpa_robust_depay_push_mp3_frames (GstRtpMPARobustDepay * rtpmpadepay)
       GST_LOG_OBJECT (rtpmpadepay,
           "appending %d bytes from ADU frame at offset %d", av,
           rtpmpadepay->offset);
-      gst_byte_writer_put_data (rtpmpadepay->mp3_frame,
+      gst_byte_writer_put_data_unchecked (rtpmpadepay->mp3_frame,
           map.data + rtpmpadepay->offset, av);
       rtpmpadepay->offset += av;
       gst_buffer_unmap (buf, &map);
@@ -594,7 +594,7 @@ gst_rtp_mpa_robust_depay_push_mp3_frames (GstRtpMPARobustDepay * rtpmpadepay)
         GST_LOG_OBJECT (rtpmpadepay, "adding to current MP3 frame");
         gst_byte_writer_set_pos (rtpmpadepay->mp3_frame, tpos);
         av = MIN (av, map.size - 4 - frame->side_info);
-        gst_byte_writer_put_data (rtpmpadepay->mp3_frame,
+        gst_byte_writer_put_data_unchecked (rtpmpadepay->mp3_frame,
             map.data + 4 + frame->side_info, av);
         rtpmpadepay->offset += av + 4 + frame->side_info;
         gst_buffer_unmap (buf, &map);
