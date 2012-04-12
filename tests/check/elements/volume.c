@@ -1733,6 +1733,7 @@ GST_START_TEST (test_controller_usability)
 {
   GstControlSource *cs;
   GstTimedValueControlSource *tvcs;
+  GstControlBinding *cb;
   GstElement *volume;
 
   volume = setup_volume ();
@@ -1740,8 +1741,8 @@ GST_START_TEST (test_controller_usability)
   /* this shouldn't crash, whether this mode is implemented or not */
   cs = gst_interpolation_control_source_new ();
   g_object_set (cs, "mode", GST_INTERPOLATION_MODE_CUBIC, NULL);
-  gst_object_add_control_binding (GST_OBJECT_CAST (volume),
-      gst_direct_control_binding_new (GST_OBJECT_CAST (volume), "volume", cs));
+  cb = gst_direct_control_binding_new (GST_OBJECT_CAST (volume), "volume", cs);
+  gst_object_add_control_binding (GST_OBJECT_CAST (volume), cb);
 
   tvcs = (GstTimedValueControlSource *) cs;
   gst_timed_value_control_source_set (tvcs, 0 * GST_SECOND, 0.0);
@@ -1749,6 +1750,7 @@ GST_START_TEST (test_controller_usability)
   gst_timed_value_control_source_set (tvcs, 10 * GST_SECOND, 0.0);
 
   gst_object_unref (cs);
+  gst_object_remove_control_binding (GST_OBJECT_CAST (volume), cb);
 
   cleanup_volume (volume);
 }
