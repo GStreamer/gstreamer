@@ -827,8 +827,8 @@ gst_buffer_get_memory_range (GstBuffer * buffer, guint idx, gint length)
 
   g_return_val_if_fail (GST_IS_BUFFER (buffer), NULL);
   len = GST_BUFFER_MEM_LEN (buffer);
-  g_return_val_if_fail ((length == -1 && idx < len) ||
-      (length > 0 && length + idx <= len), NULL);
+  g_return_val_if_fail ((len == 0 && idx == 0 && length == -1) ||
+      (length == -1 && idx < len) || (length > 0 && length + idx <= len), NULL);
 
   if (length == -1)
     length = len - idx;
@@ -859,8 +859,8 @@ gst_buffer_replace_memory_range (GstBuffer * buffer, guint idx, gint length,
   g_return_if_fail (GST_IS_BUFFER (buffer));
   g_return_if_fail (gst_buffer_is_writable (buffer));
   len = GST_BUFFER_MEM_LEN (buffer);
-  g_return_if_fail ((length == -1 && idx < len) || (length > 0
-          && length + idx <= len));
+  g_return_if_fail ((len == 0 && idx == 0 && length == -1) ||
+      (length == -1 && idx < len) || (length > 0 && length + idx <= len));
 
   if (length == -1)
     length = len - idx;
@@ -887,7 +887,8 @@ gst_buffer_remove_memory_range (GstBuffer * buffer, guint idx, gint length)
   g_return_if_fail (gst_buffer_is_writable (buffer));
 
   len = GST_BUFFER_MEM_LEN (buffer);
-  g_return_if_fail ((length == -1 && idx < len) || length + idx <= len);
+  g_return_if_fail ((len == 0 && idx == 0 && length == -1) ||
+      (length == -1 && idx < len) || length + idx <= len);
 
   if (length == -1)
     length = len - idx;
@@ -997,8 +998,8 @@ gst_buffer_get_sizes_range (GstBuffer * buffer, guint idx, gint length,
 
   g_return_val_if_fail (GST_IS_BUFFER (buffer), 0);
   len = GST_BUFFER_MEM_LEN (buffer);
-  g_return_val_if_fail (len == 0 || (length == -1 && idx < len)
-      || (length + idx <= len), 0);
+  g_return_val_if_fail ((len == 0 && idx == 0 && length == -1) ||
+      (length == -1 && idx < len) || (length + idx <= len), 0);
 
   if (length == -1)
     length = len - idx;
@@ -1062,7 +1063,8 @@ gst_buffer_resize_range (GstBuffer * buffer, guint idx, gint length,
   g_return_if_fail (gst_buffer_is_writable (buffer));
   g_return_if_fail (size >= -1);
   len = GST_BUFFER_MEM_LEN (buffer);
-  g_return_if_fail ((length == -1 && idx < len) || (length + idx <= len));
+  g_return_if_fail ((len == 0 && idx == 0 && length == -1) ||
+      (length == -1 && idx < len) || (length + idx <= len));
 
   if (length == -1)
     length = len - idx;
@@ -1166,9 +1168,8 @@ gst_buffer_map_range (GstBuffer * buffer, guint idx, gint length,
   g_return_val_if_fail (GST_IS_BUFFER (buffer), FALSE);
   g_return_val_if_fail (info != NULL, FALSE);
   len = GST_BUFFER_MEM_LEN (buffer);
-  if (len == 0)
-    goto no_memory;
-  g_return_val_if_fail ((length == -1 && idx < len) || (length > 0
+  g_return_val_if_fail ((len == 0 && idx == 0 && length == -1) ||
+      (length == -1 && idx < len) || (length > 0
           && length + idx <= len), FALSE);
 
   write = (flags & GST_MAP_WRITE) != 0;
