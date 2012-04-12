@@ -276,7 +276,7 @@ gst_consistency_checker_free (GstStreamConsistency * consist)
   for (node = consist->pads; node; node = g_list_next (node)) {
     p = (GstStreamConsistencyProbe *) node->data;
     gst_pad_remove_probe (p->pad, p->probeid);
-    g_object_unref (p->pad);
+    gst_object_unref (p->pad);
     g_free (p);
   }
   g_list_free (consist->pads);
