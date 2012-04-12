@@ -31,13 +31,16 @@
 #undef ENABLE_NLS
 
 /* gettext package name */
-#define GETTEXT_PACKAGE "gst-plugins-ugly-0.11"
+#define GETTEXT_PACKAGE "gst-plugins-ugly-1.0"
 
 /* The GIO library directory. */
 #undef GIO_LIBDIR
 
 /* The GIO modules directory. */
 #undef GIO_MODULE_DIR
+
+/* GStreamer API Version */
+#define GST_API_VERSION "1.0"
 
 /* macro to use to show function name */
 #undef GST_FUNCTION
@@ -58,7 +61,7 @@
 #define GST_PACKAGE_ORIGIN "Unknown package origin"
 
 /* GStreamer package release date/time for plugins as YYYY-MM-DD */
-#define GST_PACKAGE_RELEASE_DATETIME "2012-03-22"
+#define GST_PACKAGE_RELEASE_DATETIME "2012-04-12"
 
 /* Define to enable a52dec (used by a52dec). */
 #undef HAVE_A52DEC
@@ -245,7 +248,7 @@
 #define PACKAGE_NAME "GStreamer Ugly Plug-ins"
 
 /* Define to the full name and version of this package. */
-#define PACKAGE_STRING "GStreamer Ugly Plug-ins 0.11.2"
+#define PACKAGE_STRING "GStreamer Ugly Plug-ins 0.11.90"
 
 /* Define to the one symbol short name of this package. */
 #define PACKAGE_TARNAME "gst-plugins-ugly"
@@ -254,7 +257,7 @@
 #undef PACKAGE_URL
 
 /* Define to the version of this package. */
-#define PACKAGE_VERSION "0.11.2"
+#define PACKAGE_VERSION "0.11.90"
 
 /* directory where plugins are located */
 #ifdef _DEBUG
@@ -282,7 +285,7 @@
 #undef STDC_HEADERS
 
 /* Version number of package */
-#define VERSION "0.11.2"
+#define VERSION "0.11.90"
 
 /* Define WORDS_BIGENDIAN to 1 if your processor stores words with the most
    significant byte first (like Motorola and SPARC, unlike Intel). */

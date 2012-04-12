@@ -1,10 +1,11 @@
 
-Release notes for GStreamer Ugly Plug-ins 0.11.2 "Savior from Anger"
+Release notes for GStreamer Ugly Plug-ins 0.11.90 "Is all that we see or seem but a dream within a dream?"
         
+
 
 The GStreamer team is proud to announce a new release
 in the 0.11.x unstable series of the
-GStreamer Ugly Plug-ins.
+GStreamer Bad Plug-ins.
 
 
 The 0.11.x series is an unstable series targeted at developers and will
@@ -12,9 +13,6 @@ eventually lead up to the stable 1.0 series.
 It is not API or ABI compatible with the stable 0.10.x series.
 It is, however, parallel installable with the 0.10.x series.
 
-
-
-"When you have to shoot, shoot.  Don't talk."
 
 
 There are times when the world needs a color between black and white.
@@ -56,16 +54,9 @@ contains a set of less supported plug-ins that haven't passed the
 
 Features of this release
     
-      * Many cleanups
-      * Ported to new 0.11 core API changes
-      * xingmux: port to 0.11
-      * synaesthesia: port to 0.11
-      * x264enc: handle PTS and DTS
-
-Bugs fixed in this release
-     
-      * 662617 : compiler warnings due to printf format mismatches
-      * 669863 : [0.11] [x264enc] X264 encoder doesn't unmap input frame
+      * Lots of bugfixes, cleanup and other improvements
+There were no bugs fixed in this release
+    
 
 Download
 
@@ -94,11 +85,6 @@ Applications
   
 Contributors to this release
     
-      * Alessandro Decina
-      * Christian Fredrik Kalager Schaller
-      * Christian Morales Vega
-      * David Schleef
-      * Edward Hervey
       * Mark Nauwelaerts
       * Sebastian Dröge
       * Tim-Philipp Müller
