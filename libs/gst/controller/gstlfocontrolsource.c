@@ -399,6 +399,7 @@ gst_lfo_waveform_get_type (void)
 #define _do_init \
   GST_DEBUG_CATEGORY_INIT (GST_CAT_DEFAULT, "lfo control source", 0, "low frequency oscillator control source")
 
+#define gst_lfo_control_source_parent_class parent_class
 G_DEFINE_TYPE_WITH_CODE (GstLFOControlSource, gst_lfo_control_source,
     GST_TYPE_CONTROL_SOURCE, _do_init);
 
@@ -466,7 +467,7 @@ gst_lfo_control_source_finalize (GObject * obj)
   gst_lfo_control_source_reset (self);
   g_mutex_clear (&self->lock);
 
-  G_OBJECT_CLASS (gst_lfo_control_source_parent_class)->finalize (obj);
+  G_OBJECT_CLASS (parent_class)->finalize (obj);
 }
 
 static void

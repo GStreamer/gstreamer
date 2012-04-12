@@ -59,6 +59,7 @@ static gboolean gst_argb_control_binding_get_value_array (GstControlBinding *
   GST_DEBUG_CATEGORY_INIT (GST_CAT_DEFAULT, "gstargbcontrolbinding", 0, \
       "dynamic parameter control source attachment");
 
+#define gst_argb_control_binding_parent_class parent_class
 G_DEFINE_TYPE_WITH_CODE (GstARGBControlBinding, gst_argb_control_binding,
     GST_TYPE_CONTROL_BINDING, _do_init);
 
@@ -133,9 +134,8 @@ gst_argb_control_binding_constructor (GType type, guint n_construct_params,
   GstARGBControlBinding *self;
 
   self =
-      GST_ARGB_CONTROL_BINDING (G_OBJECT_CLASS
-      (gst_argb_control_binding_parent_class)
-      ->constructor (type, n_construct_params, construct_params));
+      GST_ARGB_CONTROL_BINDING (G_OBJECT_CLASS (parent_class)->constructor
+      (type, n_construct_params, construct_params));
 
   if (GST_CONTROL_BINDING_PSPEC (self)) {
     if (!(G_PARAM_SPEC_VALUE_TYPE (GST_CONTROL_BINDING_PSPEC (self)) ==
@@ -213,6 +213,8 @@ gst_argb_control_binding_dispose (GObject * object)
     gst_object_replace ((GstObject **) & self->cs_g, NULL);
   if (self->cs_b)
     gst_object_replace ((GstObject **) & self->cs_b, NULL);
+
+  G_OBJECT_CLASS (parent_class)->dispose (object);
 }
 
 static void
@@ -221,6 +223,8 @@ gst_argb_control_binding_finalize (GObject * object)
   GstARGBControlBinding *self = GST_ARGB_CONTROL_BINDING (object);
 
   g_value_unset (&self->cur_value);
+
+  G_OBJECT_CLASS (parent_class)->finalize (object);
 }
 
 static gboolean

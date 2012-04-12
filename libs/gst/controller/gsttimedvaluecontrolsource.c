@@ -48,6 +48,7 @@ GST_DEBUG_CATEGORY_STATIC (GST_CAT_DEFAULT);
   GST_DEBUG_CATEGORY_INIT (GST_CAT_DEFAULT, "timed value control source", 0, \
     "timed value control source base class")
 
+#define gst_timed_value_control_source_parent_class parent_class
 G_DEFINE_ABSTRACT_TYPE_WITH_CODE (GstTimedValueControlSource,
     gst_timed_value_control_source, GST_TYPE_CONTROL_SOURCE, _do_init);
 
@@ -408,7 +409,7 @@ gst_timed_value_control_source_finalize (GObject * obj)
   g_mutex_unlock (&self->lock);
   g_mutex_clear (&self->lock);
 
-  G_OBJECT_CLASS (gst_timed_value_control_source_parent_class)->finalize (obj);
+  G_OBJECT_CLASS (parent_class)->finalize (obj);
 }
 
 static void

@@ -58,6 +58,7 @@ static gboolean gst_direct_control_binding_get_value_array (GstControlBinding *
   GST_DEBUG_CATEGORY_INIT (GST_CAT_DEFAULT, "gstdirectcontrolbinding", 0, \
       "dynamic parameter control source attachment");
 
+#define gst_direct_control_binding_parent_class parent_class
 G_DEFINE_TYPE_WITH_CODE (GstDirectControlBinding, gst_direct_control_binding,
     GST_TYPE_CONTROL_BINDING, _do_init);
 
@@ -154,9 +155,8 @@ gst_direct_control_binding_constructor (GType type, guint n_construct_params,
   GstDirectControlBinding *self;
 
   self =
-      GST_DIRECT_CONTROL_BINDING (G_OBJECT_CLASS
-      (gst_direct_control_binding_parent_class)
-      ->constructor (type, n_construct_params, construct_params));
+      GST_DIRECT_CONTROL_BINDING (G_OBJECT_CLASS (parent_class)->constructor
+      (type, n_construct_params, construct_params));
 
   if (GST_CONTROL_BINDING_PSPEC (self)) {
     GType type, base;
@@ -249,6 +249,8 @@ gst_direct_control_binding_dispose (GObject * object)
 
   if (self->cs)
     gst_object_replace ((GstObject **) & self->cs, NULL);
+
+  G_OBJECT_CLASS (parent_class)->dispose (object);
 }
 
 static void
@@ -257,6 +259,8 @@ gst_direct_control_binding_finalize (GObject * object)
   GstDirectControlBinding *self = GST_DIRECT_CONTROL_BINDING (object);
 
   g_value_unset (&self->cur_value);
+
+  G_OBJECT_CLASS (parent_class)->finalize (object);
 }
 
 static gboolean
