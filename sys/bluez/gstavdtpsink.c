@@ -1329,6 +1329,8 @@ gst_avdtp_sink_transport_acquire (GstAvdtpSink * self)
   reply = dbus_connection_send_with_reply_and_block (self->data->conn,
       msg, -1, &err);
 
+  dbus_message_unref (msg);
+
   if (dbus_error_is_set (&err))
     goto fail;
 
@@ -1354,7 +1356,7 @@ fail:
   dbus_error_free (&err);
 
   if (reply)
-    dbus_message_unref (msg);
+    dbus_message_unref (reply);
 
   return FALSE;
 }
