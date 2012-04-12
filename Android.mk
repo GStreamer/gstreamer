@@ -12,14 +12,14 @@ GST_BUILT_SOURCES := 		\
 	gst/parse/grammar.tab.c	\
 	gst/parse/grammar.output	\
 	gst/parse/lex.priv_gst_parse_yy.c \
-	pkgconfig/gstreamer-0.10.pc       \
-	pkgconfig/gstreamer-base-0.10.pc      \
-	pkgconfig/gstreamer-controller-0.10.pc    \
-	pkgconfig/gstreamer-net-0.10.pc	\
-	pkgconfig/gstreamer-0.10-uninstalled.pc       \
-	pkgconfig/gstreamer-base-0.10-uninstalled.pc      \
-	pkgconfig/gstreamer-controller-0.10-uninstalled.pc    \
-	pkgconfig/gstreamer-net-0.10-uninstalled.pc	\
+	pkgconfig/gstreamer-1.0.pc       \
+	pkgconfig/gstreamer-base-1.0.pc      \
+	pkgconfig/gstreamer-controller-1.0.pc    \
+	pkgconfig/gstreamer-net-1.0.pc	\
+	pkgconfig/gstreamer-1.0-uninstalled.pc       \
+	pkgconfig/gstreamer-base-1.0-uninstalled.pc      \
+	pkgconfig/gstreamer-controller-1.0-uninstalled.pc    \
+	pkgconfig/gstreamer-net-1.0-uninstalled.pc	\
 	gst/Android.mk \
 	gst/parse/Android.mk \
 	libs/Android.mk \
