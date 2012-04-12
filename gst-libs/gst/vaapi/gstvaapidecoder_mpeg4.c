@@ -79,6 +79,12 @@ struct _GstVaapiDecoderMpeg4Private {
     // time base for recent I/P/S frame, 
     // it is time base of forward reference frame for B frame
     GstClockTime                    sync_time; 
+
+    /* last non-b-frame time by resolution */
+    GstClockTime                    last_non_b_scale_time;
+    GstClockTime                    non_b_scale_time;
+    GstClockTime                    trb;
+    GstClockTime                    trd;
     // temporal_reference of previous frame of svh
     guint8                          prev_t_ref;
     guint                           is_constructed          : 1;
@@ -389,7 +395,7 @@ decode_gop(GstVaapiDecoderMpeg4 *decoder, const guint8 *buf, guint buf_size)
 {
     GstVaapiDecoderMpeg4Private * const priv = decoder->priv;
     GstMpeg4GroupOfVOP gop;
-    GstClockTime pts;
+    GstClockTime gop_time;
 
     if (buf_size >4) {
         if (gst_mpeg4_parse_group_of_vop(&gop, buf, buf_size) != GST_MPEG4_PARSER_OK) {
@@ -412,10 +418,10 @@ decode_gop(GstVaapiDecoderMpeg4 *decoder, const guint8 *buf, guint buf_size)
               gop.hours, gop.minutes, gop.seconds,
               priv->closed_gop, priv->broken_link);
 
-    pts = GST_SECOND * (gop.hours * 3600 + gop.minutes * 60 + gop.seconds);
-    priv->gop_pts = pts;
-    priv->last_sync_time = priv->gop_pts;
-    priv->sync_time= priv->gop_pts;
+    gop_time             = gop.hours * 3600 + gop.minutes * 60 + gop.seconds;
+    priv->gop_pts        = gop_time * GST_SECOND;
+    priv->last_sync_time = gop_time;
+    priv->sync_time      = gop_time;
     
     if (priv->calculate_pts_diff) {
         priv->pts_diff = priv->seq_pts - priv->gop_pts;
@@ -556,11 +562,16 @@ decode_picture(GstVaapiDecoderMpeg4 *decoder, const guint8 *buf, guint buf_size)
             priv->sync_time = priv->last_sync_time + vop_hdr->modulo_time_base;
             pts = priv->sync_time * GST_SECOND;
             pts += gst_util_uint64_scale(vop_hdr->time_increment, GST_SECOND, vol_hdr->vop_time_increment_resolution);
+            priv->last_non_b_scale_time = priv->non_b_scale_time;
+            priv->non_b_scale_time = priv->sync_time * vol_hdr->vop_time_increment_resolution + vop_hdr->time_increment;
+            priv->trd  = priv->non_b_scale_time - priv->last_non_b_scale_time;
         }
         else {
             // increment basing on display oder
-            pts = (priv->last_sync_time + vop_hdr->modulo_time_base)* GST_SECOND;
+            pts = (priv->last_sync_time + vop_hdr->modulo_time_base) * GST_SECOND;
             pts += gst_util_uint64_scale(vop_hdr->time_increment, GST_SECOND, vol_hdr->vop_time_increment_resolution);
+            priv->trb = (priv->last_sync_time + vop_hdr->modulo_time_base) * vol_hdr->vop_time_increment_resolution +
+                vop_hdr->time_increment - priv->last_non_b_scale_time;
         }
     }
     picture->pts = pts + priv->pts_diff;
@@ -649,14 +660,16 @@ fill_picture(GstVaapiDecoderMpeg4 *decoder, GstVaapiPicture *picture)
         pic_param->vop_time_increment_resolution                = priv->vol_hdr.vop_time_increment_resolution;
     }    
 
+    pic_param->TRB = 0;
+    pic_param->TRD = 0;
     switch (priv->coding_type) {
     case GST_MPEG4_B_VOP:
-        pic_param->TRB                                          = priv->curr_picture->pts - priv->prev_picture->pts;
-        pic_param->TRD                                          = priv->next_picture->pts - priv->prev_picture->pts;
+        pic_param->TRB                                          = priv->trb;
         pic_param->backward_reference_picture                   = priv->next_picture->surface_id;
         pic_param->vop_fields.bits.backward_reference_vop_coding_type       = priv->prev_picture->type;
         // fall-through
     case GST_MPEG4_P_VOP:
+        pic_param->TRD                                          = priv->trd;
         if (priv->prev_picture)
             pic_param->forward_reference_picture                = priv->prev_picture->surface_id;
         break;
@@ -1049,6 +1062,10 @@ gst_vaapi_decoder_mpeg4_init(GstVaapiDecoderMpeg4 *decoder)
     priv->progressive_sequence  = FALSE;
     priv->closed_gop            = FALSE;
     priv->broken_link           = FALSE;
+    priv->last_non_b_scale_time = 0;
+    priv->non_b_scale_time      = 0;
+    priv->trb                   = 0;
+    priv->trd                   = 0;
 }
 
 /**
