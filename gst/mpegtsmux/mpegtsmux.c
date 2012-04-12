@@ -783,8 +783,7 @@ mpegtsmux_src_event (GstPad * pad, GstEvent * event)
             break;
         }
       }
-
-      gst_event_unref (event);
+      gst_iterator_free (iter);
       break;
     }
     default:
