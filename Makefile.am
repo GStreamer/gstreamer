@@ -1,15 +1,15 @@
 DISTCHECK_CONFIGURE_FLAGS=--enable-gtk-doc
 
 COMMON_SUBDIRS = ext docs common tests
-SUBDIRS = $(FFMPEG_SUBDIRS) $(COMMON_SUBDIRS)
+SUBDIRS = $(LIBAV_SUBDIRS) $(COMMON_SUBDIRS)
 DIST_SUBDIRS = $(COMMON_SUBDIRS) gst-libs
 
 # include before EXTRA_DIST for win32 assignment
 include $(top_srcdir)/common/win32.mak
 
 EXTRA_DIST = \
-	gst-ffmpeg.spec depcomp autogen.sh \
-	AUTHORS COPYING NEWS README ChangeLog gst-ffmpeg.doap \
+	gst-libav.spec depcomp autogen.sh \
+	AUTHORS COPYING NEWS README ChangeLog gst-libav.doap \
 	$(win32)
 
 ACLOCAL_AMFLAGS = -I m4 -I common/m4

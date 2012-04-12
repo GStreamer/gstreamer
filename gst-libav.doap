@@ -5,20 +5,20 @@
   xmlns:foaf="http://xmlns.com/foaf/0.1/"
   xmlns:admin="http://webns.net/mvcb/">
 
- <name>GStreamer FFmpeg Plug-ins</name>
- <shortname>gst-ffmpeg</shortname>
- <homepage rdf:resource="http://gstreamer.freedesktop.org/modules/gst-ffmpeg.html" />
+ <name>GStreamer libav Plug-ins</name>
+ <shortname>gst-libav</shortname>
+ <homepage rdf:resource="http://gstreamer.freedesktop.org/modules/gst-libav.html" />
  <created>2004-02-26</created>
  <shortdesc xml:lang="en">
-a plug-in using the FFmpeg library
+a plug-in using the libav library
 </shortdesc>
  <description xml:lang="en">
-GStreamer FFmpeg plug-in contains  elements using the FFmpeg library code. It
+GStreamer libav plug-in contains  elements using the libav library code. It
 contains most popular decoders as well as very fast
 colorspace conversion elements.
  </description>
  <category></category>
- <bug-database rdf:resource="http://bugzilla.gnome.org/enter_bug.cgi?product=GStreamer&amp;component=gst-ffmpeg" />
+ <bug-database rdf:resource="http://bugzilla.gnome.org/enter_bug.cgi?product=GStreamer&amp;component=gst-libav" />
  <screenshots></screenshots>
  <mailing-list rdf:resource="http://lists.sourceforge.net/lists/listinfo/gstreamer-devel/" />
  <programming-language>C</programming-language>
