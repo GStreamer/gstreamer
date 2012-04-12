@@ -258,7 +258,7 @@ make ERROR_CFLAGS='' ERROR_CXXFLAGS=''
 # %{_libdir}/gstreamer-%{majorminor}/libgstdecklink.so
 %{_libdir}/gstreamer-%{majorminor}/libgstdvbsuboverlay.so
 # %{_libdir}/gstreamer-%{majorminor}/libgstfieldanalysis.so
-# %{_libdir}/gstreamer-%{majorminor}/libgstfragmented.so
+%{_libdir}/gstreamer-%{majorminor}/libgstfragmented.so
 # %{_libdir}/gstreamer-%{majorminor}/libgstinterlace.so
 # %{_libdir}/gstreamer-%{majorminor}/libgstjp2kdecimator.so
 # %{_libdir}/gstreamer-%{majorminor}/libgstlinsys.so

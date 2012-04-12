@@ -46,7 +46,6 @@
 #define GLIB_DISABLE_DEPRECATION_WARNINGS
 
 #include <string.h>
-#include <gst/base/gsttypefindhelper.h>
 #include <gst/glib-compat-private.h>
 #include "gsthlsdemux.h"
 
@@ -90,10 +89,14 @@ static GstStateChangeReturn
 gst_hls_demux_change_state (GstElement * element, GstStateChange transition);
 
 /* GstHLSDemux */
-static GstFlowReturn gst_hls_demux_chain (GstPad * pad, GstBuffer * buf);
-static gboolean gst_hls_demux_sink_event (GstPad * pad, GstEvent * event);
-static gboolean gst_hls_demux_src_event (GstPad * pad, GstEvent * event);
-static gboolean gst_hls_demux_src_query (GstPad * pad, GstQuery * query);
+static GstFlowReturn gst_hls_demux_chain (GstPad * pad, GstObject * parent,
+    GstBuffer * buf);
+static gboolean gst_hls_demux_sink_event (GstPad * pad, GstObject * parent,
+    GstEvent * event);
+static gboolean gst_hls_demux_src_event (GstPad * pad, GstObject * parent,
+    GstEvent * event);
+static gboolean gst_hls_demux_src_query (GstPad * pad, GstObject * parent,
+    GstQuery * query);
 static void gst_hls_demux_stream_loop (GstHLSDemux * demux);
 static void gst_hls_demux_updates_loop (GstHLSDemux * demux);
 static void gst_hls_demux_stop (GstHLSDemux * demux);
@@ -108,34 +111,8 @@ static gboolean gst_hls_demux_set_location (GstHLSDemux * demux,
     const gchar * uri);
 static gchar *gst_hls_src_buf_to_utf8_playlist (GstBuffer * buf);
 
-static void
-_do_init (GType type)
-{
-  GST_DEBUG_CATEGORY_INIT (gst_hls_demux_debug, "hlsdemux", 0,
-      "hlsdemux element");
-}
-
-GST_BOILERPLATE_FULL (GstHLSDemux, gst_hls_demux, GstElement,
-    GST_TYPE_ELEMENT, _do_init);
-
-static void
-gst_hls_demux_base_init (gpointer g_class)
-{
-  GstElementClass *element_class = GST_ELEMENT_CLASS (g_class);
-
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&srctemplate));
-
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&sinktemplate));
-
-  gst_element_class_set_details_simple (element_class,
-      "HLS Demuxer",
-      "Demuxer/URIList",
-      "HTTP Live Streaming demuxer",
-      "Marc-Andre Lureau <marcandre.lureau@gmail.com>\n"
-      "Andoni Morales Alastruey <ylatuya@gmail.com>");
-}
+#define gst_hls_demux_parent_class parent_class
+G_DEFINE_TYPE (GstHLSDemux, gst_hls_demux, GST_TYPE_ELEMENT);
 
 static void
 gst_hls_demux_dispose (GObject * obj)
@@ -149,7 +126,7 @@ gst_hls_demux_dispose (GObject * obj)
       gst_task_join (demux->stream_task);
     }
     gst_object_unref (demux->stream_task);
-    g_static_rec_mutex_free (&demux->stream_lock);
+    g_rec_mutex_clear (&demux->stream_lock);
     demux->stream_task = NULL;
   }
 
@@ -160,8 +137,8 @@ gst_hls_demux_dispose (GObject * obj)
       gst_task_join (demux->updates_task);
     }
     gst_object_unref (demux->updates_task);
-    g_mutex_free (demux->updates_timed_lock);
-    g_static_rec_mutex_free (&demux->updates_lock);
+    g_mutex_clear (&demux->updates_timed_lock);
+    g_rec_mutex_clear (&demux->updates_lock);
     demux->updates_task = NULL;
   }
 
@@ -181,10 +158,10 @@ static void
 gst_hls_demux_class_init (GstHLSDemuxClass * klass)
 {
   GObjectClass *gobject_class;
-  GstElementClass *gstelement_class;
+  GstElementClass *element_class;
 
   gobject_class = (GObjectClass *) klass;
-  gstelement_class = (GstElementClass *) klass;
+  element_class = (GstElementClass *) klass;
 
   gobject_class->set_property = gst_hls_demux_set_property;
   gobject_class->get_property = gst_hls_demux_get_property;
@@ -204,12 +181,27 @@ gst_hls_demux_class_init (GstHLSDemuxClass * klass)
           0, 1, DEFAULT_BITRATE_SWITCH_TOLERANCE,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
-  gstelement_class->change_state =
-      GST_DEBUG_FUNCPTR (gst_hls_demux_change_state);
+  element_class->change_state = GST_DEBUG_FUNCPTR (gst_hls_demux_change_state);
+
+  gst_element_class_add_pad_template (element_class,
+      gst_static_pad_template_get (&srctemplate));
+
+  gst_element_class_add_pad_template (element_class,
+      gst_static_pad_template_get (&sinktemplate));
+
+  gst_element_class_set_details_simple (element_class,
+      "HLS Demuxer",
+      "Demuxer/URIList",
+      "HTTP Live Streaming demuxer",
+      "Marc-Andre Lureau <marcandre.lureau@gmail.com>\n"
+      "Andoni Morales Alastruey <ylatuya@gmail.com>");
+
+  GST_DEBUG_CATEGORY_INIT (gst_hls_demux_debug, "hlsdemux", 0,
+      "hlsdemux element");
 }
 
 static void
-gst_hls_demux_init (GstHLSDemux * demux, GstHLSDemuxClass * klass)
+gst_hls_demux_init (GstHLSDemux * demux)
 {
   /* sink pad */
   demux->sinkpad = gst_pad_new_from_static_template (&sinktemplate, "sink");
@@ -231,16 +223,16 @@ gst_hls_demux_init (GstHLSDemux * demux, GstHLSDemuxClass * klass)
   demux->queue = g_queue_new ();
 
   /* Updates task */
-  g_static_rec_mutex_init (&demux->updates_lock);
+  g_rec_mutex_init (&demux->updates_lock);
   demux->updates_task =
-      gst_task_create ((GstTaskFunction) gst_hls_demux_updates_loop, demux);
+      gst_task_new ((GstTaskFunction) gst_hls_demux_updates_loop, demux);
   gst_task_set_lock (demux->updates_task, &demux->updates_lock);
-  demux->updates_timed_lock = g_mutex_new ();
+  g_mutex_init (&demux->updates_timed_lock);
 
   /* Streaming task */
-  g_static_rec_mutex_init (&demux->stream_lock);
+  g_rec_mutex_init (&demux->stream_lock);
   demux->stream_task =
-      gst_task_create ((GstTaskFunction) gst_hls_demux_stream_loop, demux);
+      gst_task_new ((GstTaskFunction) gst_hls_demux_stream_loop, demux);
   gst_task_set_lock (demux->stream_task, &demux->stream_lock);
 }
 
@@ -323,11 +315,11 @@ gst_hls_demux_change_state (GstElement * element, GstStateChange transition)
 }
 
 static gboolean
-gst_hls_demux_src_event (GstPad * pad, GstEvent * event)
+gst_hls_demux_src_event (GstPad * pad, GstObject * parent, GstEvent * event)
 {
   GstHLSDemux *demux;
 
-  demux = GST_HLS_DEMUX (gst_pad_get_element_private (pad));
+  demux = GST_HLS_DEMUX (parent);
 
   switch (event->type) {
     case GST_EVENT_SEEK:
@@ -393,12 +385,12 @@ gst_hls_demux_src_event (GstPad * pad, GstEvent * event)
       gst_task_pause (demux->stream_task);
 
       /* wait for streaming to finish */
-      g_static_rec_mutex_lock (&demux->stream_lock);
+      g_rec_mutex_lock (&demux->stream_lock);
 
       demux->need_cache = TRUE;
       while (!g_queue_is_empty (demux->queue)) {
-        GstBufferList *buf_list = g_queue_pop_head (demux->queue);
-        gst_buffer_list_unref (buf_list);
+        GstFragment *fragment = g_queue_pop_head (demux->queue);
+        g_object_unref (fragment);
       }
       g_queue_clear (demux->queue);
 
@@ -413,12 +405,12 @@ gst_hls_demux_src_event (GstPad * pad, GstEvent * event)
 
       if (flags & GST_SEEK_FLAG_FLUSH) {
         GST_DEBUG_OBJECT (demux, "sending flush stop");
-        gst_pad_push_event (demux->srcpad, gst_event_new_flush_stop ());
+        gst_pad_push_event (demux->srcpad, gst_event_new_flush_stop (TRUE));
       }
 
       demux->cancelled = FALSE;
       gst_task_start (demux->stream_task);
-      g_static_rec_mutex_unlock (&demux->stream_lock);
+      g_rec_mutex_unlock (&demux->stream_lock);
 
       return TRUE;
     }
@@ -426,21 +418,22 @@ gst_hls_demux_src_event (GstPad * pad, GstEvent * event)
       break;
   }
 
-  return gst_pad_event_default (pad, event);
+  return gst_pad_event_default (pad, parent, event);
 }
 
 static gboolean
-gst_hls_demux_sink_event (GstPad * pad, GstEvent * event)
+gst_hls_demux_sink_event (GstPad * pad, GstObject * parent, GstEvent * event)
 {
-  GstHLSDemux *demux = GST_HLS_DEMUX (gst_pad_get_parent (pad));
+  GstHLSDemux *demux;
   GstQuery *query;
   gboolean ret;
   gchar *uri;
 
+  demux = GST_HLS_DEMUX (parent);
 
   switch (event->type) {
     case GST_EVENT_EOS:{
-      gchar *playlist;
+      gchar *playlist = NULL;
 
       if (demux->playlist == NULL) {
         GST_WARNING_OBJECT (demux, "Received EOS without a playlist.");
@@ -483,7 +476,7 @@ gst_hls_demux_sink_event (GstPad * pad, GstEvent * event)
       gst_event_unref (event);
       return TRUE;
     }
-    case GST_EVENT_NEWSEGMENT:
+    case GST_EVENT_SEGMENT:
       /* Swallow newsegments, we'll push our own */
       gst_event_unref (event);
       return TRUE;
@@ -491,11 +484,11 @@ gst_hls_demux_sink_event (GstPad * pad, GstEvent * event)
       break;
   }
 
-  return gst_pad_event_default (pad, event);
+  return gst_pad_event_default (pad, parent, event);
 }
 
 static gboolean
-gst_hls_demux_src_query (GstPad * pad, GstQuery * query)
+gst_hls_demux_src_query (GstPad * pad, GstObject * parent, GstQuery * query)
 {
   GstHLSDemux *hlsdemux;
   gboolean ret = FALSE;
@@ -503,7 +496,7 @@ gst_hls_demux_src_query (GstPad * pad, GstQuery * query)
   if (query == NULL)
     return FALSE;
 
-  hlsdemux = GST_HLS_DEMUX (gst_pad_get_element_private (pad));
+  hlsdemux = GST_HLS_DEMUX (parent);
 
   switch (query->type) {
     case GST_QUERY_DURATION:{
@@ -563,16 +556,14 @@ gst_hls_demux_src_query (GstPad * pad, GstQuery * query)
 }
 
 static GstFlowReturn
-gst_hls_demux_chain (GstPad * pad, GstBuffer * buf)
+gst_hls_demux_chain (GstPad * pad, GstObject * parent, GstBuffer * buf)
 {
-  GstHLSDemux *demux = GST_HLS_DEMUX (gst_pad_get_parent (pad));
+  GstHLSDemux *demux = GST_HLS_DEMUX (parent);
 
   if (demux->playlist == NULL)
     demux->playlist = buf;
   else
     demux->playlist = gst_buffer_append (demux->playlist, buf);
-
-  gst_object_unref (demux);
 
   return GST_FLOW_OK;
 }
@@ -600,18 +591,6 @@ switch_pads (GstHLSDemux * demux, GstCaps * newcaps)
   GST_DEBUG ("Switching pads (oldpad:%p) with caps: %" GST_PTR_FORMAT, oldpad,
       newcaps);
 
-  /* FIXME: This is a workaround for a bug in playsink.
-   * If we're switching from an audio-only or video-only fragment
-   * to an audio-video segment, the new sink doesn't know about
-   * the current running time and audio/video will go out of sync.
-   *
-   * This should be fixed in playsink by distributing the
-   * current running time to newly created sinks and is
-   * fixed in 0.11 with the new segments.
-   */
-  if (demux->srcpad)
-    gst_pad_push_event (demux->srcpad, gst_event_new_flush_stop ());
-
   /* First create and activate new pad */
   demux->srcpad = gst_pad_new_from_static_template (&srctemplate, NULL);
   gst_pad_set_event_function (demux->srcpad,
@@ -620,7 +599,9 @@ switch_pads (GstHLSDemux * demux, GstCaps * newcaps)
       GST_DEBUG_FUNCPTR (gst_hls_demux_src_query));
   gst_pad_set_element_private (demux->srcpad, demux);
   gst_pad_set_active (demux->srcpad, TRUE);
+  gst_pad_push_event (demux->srcpad, gst_event_new_stream_start ());
   gst_pad_set_caps (demux->srcpad, newcaps);
+  gst_pad_push_event (demux->srcpad, gst_event_new_caps (newcaps));
   gst_element_add_pad (GST_ELEMENT (demux), demux->srcpad);
 
   gst_element_no_more_pads (GST_ELEMENT (demux));
@@ -636,9 +617,10 @@ switch_pads (GstHLSDemux * demux, GstCaps * newcaps)
 static void
 gst_hls_demux_stream_loop (GstHLSDemux * demux)
 {
-  GstBufferList *buffer_list;
+  GstFragment *fragment;
   GstBuffer *buf;
   GstFlowReturn ret;
+  GstCaps *bufcaps, *srccaps = NULL;
 
   /* Loop for the source pad task. The task is started when we have
    * received the main playlist from the source element. It tries first to
@@ -663,24 +645,33 @@ gst_hls_demux_stream_loop (GstHLSDemux * demux)
     goto pause_task;
   }
 
-  buffer_list = g_queue_pop_head (demux->queue);
-  /* Work with the first buffer of the list */
-  buf = gst_buffer_list_get (buffer_list, 0, 0);
+  fragment = g_queue_pop_head (demux->queue);
+  buf = gst_fragment_get_buffer (fragment);
+
   /* Figure out if we need to create/switch pads */
-  if (G_UNLIKELY (!demux->srcpad
-          || GST_BUFFER_CAPS (buf) != GST_PAD_CAPS (demux->srcpad)
+  if (G_LIKELY (demux->srcpad))
+    srccaps = gst_pad_get_current_caps (demux->srcpad);
+  bufcaps = gst_fragment_get_caps (fragment);
+  if (G_UNLIKELY (!srccaps || !gst_caps_is_equal_fixed (bufcaps, srccaps)
           || demux->need_segment)) {
-    switch_pads (demux, GST_BUFFER_CAPS (buf));
+    switch_pads (demux, bufcaps);
     demux->need_segment = TRUE;
   }
+  gst_caps_unref (bufcaps);
+  if (G_LIKELY (srccaps))
+    gst_caps_unref (srccaps);
+  g_object_unref (fragment);
+
   if (demux->need_segment) {
     GstClockTime start = demux->position + demux->position_shift;
+    GstSegment segment;
     /* And send a newsegment */
     GST_DEBUG_OBJECT (demux, "Sending new-segment. segment start:%"
         GST_TIME_FORMAT, GST_TIME_ARGS (start));
-    gst_pad_push_event (demux->srcpad,
-        gst_event_new_new_segment (FALSE, 1.0, GST_FORMAT_TIME,
-            start, GST_CLOCK_TIME_NONE, start));
+    gst_segment_init (&segment, GST_FORMAT_TIME);
+    segment.start = start;
+    segment.time = start;
+    gst_pad_push_event (demux->srcpad, gst_event_new_segment (&segment));
     demux->need_segment = FALSE;
     demux->position_shift = 0;
   }
@@ -688,7 +679,7 @@ gst_hls_demux_stream_loop (GstHLSDemux * demux)
   if (GST_CLOCK_TIME_IS_VALID (GST_BUFFER_DURATION (buf)))
     demux->position += GST_BUFFER_DURATION (buf);
 
-  ret = gst_pad_push_list (demux->srcpad, buffer_list);
+  ret = gst_pad_push (demux->srcpad, buf);
   if (ret != GST_FLOW_OK)
     goto error_pushing;
 
@@ -758,8 +749,8 @@ gst_hls_demux_reset (GstHLSDemux * demux, gboolean dispose)
   }
 
   while (!g_queue_is_empty (demux->queue)) {
-    GstBufferList *buffer_list = g_queue_pop_head (demux->queue);
-    gst_buffer_list_unref (buffer_list);
+    GstFragment *fragment = g_queue_pop_head (demux->queue);
+    g_object_unref (fragment);
   }
   g_queue_clear (demux->queue);
 
@@ -788,11 +779,11 @@ gst_hls_demux_updates_loop (GstHLSDemux * demux)
    * switch to a different bitrate */
 
   /* block until the next scheduled update or the signal to quit this thread */
-  g_mutex_lock (demux->updates_timed_lock);
+  g_mutex_lock (&demux->updates_timed_lock);
   GST_DEBUG_OBJECT (demux, "Started updates task");
   while (TRUE) {
     if (g_cond_timed_wait (GST_TASK_GET_COND (demux->updates_task),
-            demux->updates_timed_lock, &demux->next_update)) {
+            &demux->updates_timed_lock, &demux->next_update)) {
       goto quit;
     }
     /* update the playlist for live sources */
@@ -852,7 +843,7 @@ quit:
   {
     GST_DEBUG_OBJECT (demux, "Stopped updates task");
     gst_hls_demux_stop (demux);
-    g_mutex_unlock (demux->updates_timed_lock);
+    g_mutex_unlock (&demux->updates_timed_lock);
   }
 }
 
@@ -933,29 +924,33 @@ gst_hls_demux_cache_fragments (GstHLSDemux * demux)
 static gchar *
 gst_hls_src_buf_to_utf8_playlist (GstBuffer * buf)
 {
-  gint size;
-  gchar *data;
+  GstMapInfo info;
   gchar *playlist;
 
-  data = (gchar *) GST_BUFFER_DATA (buf);
-  size = GST_BUFFER_SIZE (buf);
-
-  if (!g_utf8_validate (data, size, NULL))
+  if (!gst_buffer_map (buf, &info, GST_MAP_READ))
     return NULL;
 
-  /* alloc size + 1 to end with a null character */
-  playlist = g_malloc0 (size + 1);
-  memcpy (playlist, data, size + 1);
+  if (!g_utf8_validate ((gchar *) info.data, info.size, NULL))
+    goto validate_error;
 
+  /* alloc size + 1 to end with a null character */
+  playlist = g_malloc0 (info.size + 1);
+  memcpy (playlist, info.data, info.size + 1);
+
+  gst_buffer_unmap (buf, &info);
   gst_buffer_unref (buf);
   return playlist;
+
+validate_error:
+  gst_buffer_unmap (buf, &info);
+  gst_buffer_unref (buf);
+  return NULL;
 }
 
 static gboolean
 gst_hls_demux_update_playlist (GstHLSDemux * demux)
 {
   GstFragment *download;
-  GstBufferListIterator *it;
   GstBuffer *buf;
   gchar *playlist;
 
@@ -966,17 +961,8 @@ gst_hls_demux_update_playlist (GstHLSDemux * demux)
   if (download == NULL)
     return FALSE;
 
-  /* Merge all the buffers in the list to build a unique buffer with the
-   * playlist */
-  it = gst_buffer_list_iterate (gst_fragment_get_buffer_list (download));
-
-  /* skip the first group, which contains the headers, which are not set in the
-   * demuxer*/
-  gst_buffer_list_iterator_next_group (it);
-  buf = gst_buffer_list_iterator_merge_group (it);
-
+  buf = gst_fragment_get_buffer (download);
   playlist = gst_hls_src_buf_to_utf8_playlist (buf);
-  gst_buffer_list_iterator_free (it);
   g_object_unref (download);
 
   if (playlist == NULL) {
@@ -1112,7 +1098,6 @@ gst_hls_demux_get_next_fragment (GstHLSDemux * demux, gboolean caching)
   const gchar *next_fragment_uri;
   GstClockTime duration;
   GstClockTime timestamp;
-  GstBufferList *buffer_list;
   GstBuffer *buf;
   gboolean discont;
 
@@ -1132,14 +1117,13 @@ gst_hls_demux_get_next_fragment (GstHLSDemux * demux, gboolean caching)
   if (download == NULL)
     goto error;
 
-  buffer_list = gst_fragment_get_buffer_list (download);
-  buf = gst_buffer_list_get (buffer_list, 0, 0);
+  buf = gst_fragment_get_buffer (download);
   GST_BUFFER_DURATION (buf) = duration;
-  GST_BUFFER_TIMESTAMP (buf) = timestamp;
+  GST_BUFFER_PTS (buf) = timestamp;
 
   /* We actually need to do this every time we switch bitrate */
   if (G_UNLIKELY (demux->do_typefind)) {
-    GstCaps *caps = gst_type_find_helper_for_buffer (NULL, buf, NULL);
+    GstCaps *caps = gst_fragment_get_caps (download);
 
     if (!demux->input_caps || !gst_caps_is_equal (caps, demux->input_caps)) {
       gst_caps_replace (&demux->input_caps, caps);
@@ -1147,22 +1131,21 @@ gst_hls_demux_get_next_fragment (GstHLSDemux * demux, gboolean caching)
       GST_INFO_OBJECT (demux, "Input source caps: %" GST_PTR_FORMAT,
           demux->input_caps);
       demux->do_typefind = FALSE;
-    } else
-      gst_caps_unref (caps);
+    }
+    gst_caps_unref (caps);
+  } else {
+    gst_fragment_set_caps (download, demux->input_caps);
   }
-  gst_buffer_set_caps (buf, demux->input_caps);
 
   if (discont) {
     GST_DEBUG_OBJECT (demux, "Marking fragment as discontinuous");
     GST_BUFFER_FLAG_SET (buf, GST_BUFFER_FLAG_DISCONT);
   }
 
-  g_queue_push_tail (demux->queue, buffer_list);
-  g_object_unref (download);
+  g_queue_push_tail (demux->queue, download);
   if (!caching) {
     GST_TASK_SIGNAL (demux->updates_task);
   }
-
   return TRUE;
 
 error:

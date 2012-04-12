@@ -304,7 +304,7 @@ GST_PLUGINS_NONPORTED=" aiff asfmux \
  camerabin cdxaparse coloreffects \
  dccp faceoverlay festival \
  fieldanalysis freeverb freeze frei0r gaudieffects \
- hdvparse hls id3tag inter interlace ivfparse jpegformat jp2kdecimator \
+ hdvparse id3tag inter interlace ivfparse jpegformat jp2kdecimator \
  kate liveadder legacyresample librfb mpegtsmux \
  mpegpsmux mve mxf mythtv nsf nuvdemux \
  patchdetect pnm real \
