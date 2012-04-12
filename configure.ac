@@ -1839,6 +1839,19 @@ AG_GST_CHECK_FEATURE(GSETTINGS, [GSettings plugin], gsettings, [
   fi
 ])
 
+dnl *** sndio ***
+translit(dnm, m, l) AM_CONDITIONAL(USE_SNDIO, true)
+AG_GST_CHECK_FEATURE(SNDIO, [sndio audio], sndio, [
+  AC_CHECK_HEADER(sndio.h, HAVE_SNDIO="yes", HAVE_SNDIO="no")
+  if test "x$HAVE_SNDIO" = "xyes"; then
+    AC_CHECK_LIB(sndio, sio_open, HAVE_SNDIO="yes", HAVE_SNDIO="no")
+    if test "x$HAVE_SNDIO" = "xyes"; then
+      SNDIO_LIBS=-lsndio
+      AC_SUBST(SNDIO_LIBS)
+    fi
+  fi
+])
+
 else
 
 dnl not building plugins with external dependencies,
@@ -1910,6 +1923,7 @@ AM_CONDITIONAL(USE_ZBAR, false)
 AM_CONDITIONAL(USE_VP8, false)
 AM_CONDITIONAL(USE_RTMP, false)
 AM_CONDITIONAL(USE_TELETEXTDEC, false)
+AM_CONDITIONAL(USE_SNDIO, false)
 
 fi dnl of EXT plugins
 
@@ -2147,6 +2161,7 @@ ext/sdl/Makefile
 ext/sndfile/Makefile
 ext/soundtouch/Makefile
 ext/spandsp/Makefile
+ext/sndio/Makefile
 ext/teletextdec/Makefile
 ext/gme/Makefile
 ext/gsettings/Makefile

@@ -330,6 +330,12 @@ else
 SNDFILE_DIR=
 endif
 
+if USE_SNDIO
+SNDIO_DIR = sndio
+else
+SNDIO_DIR =
+endif
+
 if USE_SOUNDTOUCH
 SOUNDTOUCH_DIR=soundtouch
 else
@@ -452,6 +458,7 @@ SUBDIRS=\
 	$(SHOUT_DIR) \
 	$(SMOOTHWAVE_DIR) \
 	$(SNDFILE_DIR) \
+	$(SNDIO_DIR) \
 	$(SOUNDTOUCH_DIR) \
 	$(SPANDSP_DIR) \
 	$(GME_DIR) \
@@ -507,6 +514,7 @@ DIST_SUBDIRS = \
 	schroedinger \
 	sdl \
 	sndfile \
+	sndio \
 	soundtouch \
 	spandsp \
 	spc \
