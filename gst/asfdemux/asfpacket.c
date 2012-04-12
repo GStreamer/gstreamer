@@ -382,28 +382,58 @@ gst_asf_demux_parse_payload (GstASFDemux * demux, AsfPacket * packet,
 
     GST_LOG_OBJECT (demux, "payload length: %u", payload_len);
 
-    if (payload_len > 0) {
+    if (payload_len == 0) {
+      GST_DEBUG_OBJECT (demux, "skipping empty payload");
+    } else if (payload.mo_offset == 0 && payload.mo_size == payload_len) {
+      /* if the media object is not fragmented, just create a sub-buffer */
+      GST_LOG_OBJECT (demux, "unfragmented media object size %u", payload_len);
       payload.buf = asf_packet_create_payload_buffer (packet, p_data, p_size,
           payload_len);
+      payload.buf_filled = payload_len;
+      gst_asf_payload_queue_for_stream (demux, &payload, stream);
+    } else {
+      const guint8 *payload_data = *p_data;
+
+      g_assert (payload_len <= *p_size);
+
+      *p_data += payload_len;
+      *p_size -= payload_len;
 
       /* n-th fragment of a fragmented media object? */
       if (payload.mo_offset != 0) {
         AsfPayload *prev;
 
         if ((prev = asf_payload_find_previous_fragment (&payload, stream))) {
-          if (payload.mo_offset != gst_buffer_get_size (prev->buf)) {
+          if (prev->buf == NULL || payload.mo_size != prev->mo_size ||
+              payload.mo_offset >= gst_buffer_get_size (prev->buf) ||
+              payload.mo_offset + payload_len >
+              gst_buffer_get_size (prev->buf)) {
             GST_WARNING_OBJECT (demux, "Offset doesn't match previous data?!");
+          } else {
+            /* we assume fragments are payloaded with increasing mo_offset */
+            if (payload.mo_offset != prev->buf_filled) {
+              GST_WARNING_OBJECT (demux, "media object payload discontinuity: "
+                  "offset=%u vs buf_filled=%u", payload.mo_offset,
+                  prev->buf_filled);
+            }
+            gst_buffer_fill (prev->buf, payload.mo_offset,
+                payload_data, payload_len);
+            prev->buf_filled =
+                MAX (prev->buf_filled, payload.mo_offset + payload_len);
+            GST_LOG_OBJECT (demux, "Merged media object fragments, size now %u",
+                prev->buf_filled);
           }
-          /* note: buffer join/merge might not preserve buffer flags */
-          prev->buf = gst_buffer_append (prev->buf, payload.buf);
-          GST_LOG_OBJECT (demux,
-              "Merged fragments, merged size: %" G_GSIZE_FORMAT,
-              gst_buffer_get_size (prev->buf));
         } else {
-          gst_buffer_unref (payload.buf);
+          GST_DEBUG_OBJECT (demux, "n-th payload fragment, but don't have "
+              "any previous fragment, ignoring payload");
         }
-        payload.buf = NULL;
       } else {
+        GST_LOG_OBJECT (demux, "allocating buffer of size %u for fragmented "
+            "media object", payload.mo_size);
+        payload.buf = gst_buffer_new_allocate (NULL, payload.mo_size, NULL);
+        gst_buffer_fill (payload.buf, 0, payload_data, payload_len);
+        payload.buf_filled = payload_len;
+
         gst_asf_payload_queue_for_stream (demux, &payload, stream);
       }
     }
@@ -445,6 +475,7 @@ gst_asf_demux_parse_payload (GstASFDemux * demux, AsfPacket * packet,
       if (G_LIKELY (sub_payload_len > 0)) {
         payload.buf = asf_packet_create_payload_buffer (packet,
             &payload_data, &payload_len, sub_payload_len);
+        payload.buf_filled = sub_payload_len;
 
         payload.ts = ts;
         if (G_LIKELY (ts_delta))

@@ -32,6 +32,8 @@ typedef struct {
   guint         mo_number;         /* media object number (unused)           */
   guint         mo_offset;         /* offset (timestamp for compressed data) */
   guint         mo_size;           /* size of media-object-to-be, or 0       */
+  guint         buf_filled;        /* how much of the mo data we got so far  */
+  GstBuffer    *buf;               /* buffer to assemble media-object or NULL*/
   guint         rep_data_len;      /* should never be more than 256, since   */
   guint8        rep_data[256];     /* the length should be stored in a byte  */
   GstClockTime  ts;
@@ -41,7 +43,6 @@ typedef struct {
   gboolean      interlaced;        /* default: FALSE */
   gboolean      tff;
   gboolean      rff;
-  GstBuffer    *buf;
 } AsfPayload;
 
 typedef struct {
@@ -58,9 +59,8 @@ typedef struct {
 
 gboolean   gst_asf_demux_parse_packet (GstASFDemux * demux, GstBuffer * buf);
 
-/* FIXME - gst_buffer_get_size is slow */
 #define gst_asf_payload_is_complete(payload) \
-    (gst_buffer_get_size ((payload)->buf) >= (payload)->mo_size)
+    ((payload)->buf_filled >= (payload)->mo_size)
 
 G_END_DECLS
 
