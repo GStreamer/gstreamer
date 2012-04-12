@@ -478,7 +478,8 @@ gst_aac_parse_read_loas_config (GstAacParse * aacparse, const guint8 * data,
   gst_bit_reader_init (&br, data, avail);
 
   /* skip sync word (11 bits) and size (13 bits) */
-  gst_bit_reader_skip (&br, 11 + 13);
+  if (!gst_bit_reader_skip (&br, 11 + 13))
+    return FALSE;
 
   /* First bit is "use last config" */
   if (!gst_bit_reader_get_bits_uint8 (&br, &u8, 1))
@@ -547,7 +548,8 @@ gst_aac_parse_read_loas_config (GstAacParse * aacparse, const guint8 * data,
                     sample_rate, channels, &bits))
               return FALSE;
             asc_len -= bits;
-            gst_bit_reader_skip (&br, asc_len);
+            if (!gst_bit_reader_skip (&br, asc_len))
+              return FALSE;
           }
         }
       }

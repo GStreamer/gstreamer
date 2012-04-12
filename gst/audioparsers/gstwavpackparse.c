@@ -385,6 +385,7 @@ gst_wavpack_parse_frame_header (GstWavpackParse * parse, GstBuffer * buf,
   GstByteReader br;
   WavpackHeader wph = { {0,}, 0, };
   GstMapInfo map;
+  gboolean hdl = TRUE;
 
   g_return_val_if_fail (gst_buffer_get_size (buf) >=
       skip + sizeof (WavpackHeader), FALSE);
@@ -396,15 +397,18 @@ gst_wavpack_parse_frame_header (GstWavpackParse * parse, GstBuffer * buf,
   gst_byte_reader_skip_unchecked (&br, skip + 4);
 
   /* read */
-  gst_byte_reader_get_uint32_le (&br, &wph.ckSize);
-  gst_byte_reader_get_uint16_le (&br, &wph.version);
-  gst_byte_reader_get_uint8 (&br, &wph.track_no);
-  gst_byte_reader_get_uint8 (&br, &wph.index_no);
-  gst_byte_reader_get_uint32_le (&br, &wph.total_samples);
-  gst_byte_reader_get_uint32_le (&br, &wph.block_index);
-  gst_byte_reader_get_uint32_le (&br, &wph.block_samples);
-  gst_byte_reader_get_uint32_le (&br, &wph.flags);
-  gst_byte_reader_get_uint32_le (&br, &wph.crc);
+  hdl &= gst_byte_reader_get_uint32_le (&br, &wph.ckSize);
+  hdl &= gst_byte_reader_get_uint16_le (&br, &wph.version);
+  hdl &= gst_byte_reader_get_uint8 (&br, &wph.track_no);
+  hdl &= gst_byte_reader_get_uint8 (&br, &wph.index_no);
+  hdl &= gst_byte_reader_get_uint32_le (&br, &wph.total_samples);
+  hdl &= gst_byte_reader_get_uint32_le (&br, &wph.block_index);
+  hdl &= gst_byte_reader_get_uint32_le (&br, &wph.block_samples);
+  hdl &= gst_byte_reader_get_uint32_le (&br, &wph.flags);
+  hdl &= gst_byte_reader_get_uint32_le (&br, &wph.crc);
+
+  if (!hdl)
+    GST_WARNING_OBJECT (parse, "Error reading header");
 
   /* dump */
   GST_LOG_OBJECT (parse, "size %d", wph.ckSize);

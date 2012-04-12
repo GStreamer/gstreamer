@@ -865,7 +865,8 @@ gst_flac_parse_handle_streaminfo (GstFlacParse * flacparse, GstBuffer * buffer)
   }
 
   /* Skip metadata block header */
-  gst_bit_reader_skip (&reader, 32);
+  if (!gst_bit_reader_skip (&reader, 32))
+    goto error;
 
   if (!gst_bit_reader_get_bits_uint16 (&reader, &flacparse->min_blocksize, 16))
     goto error;
