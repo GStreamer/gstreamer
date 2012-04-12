@@ -46315,12 +46315,12 @@
 
 <ARG>
 <NAME>GstShmSink::buffer-time</NAME>
-<TYPE>guint64</TYPE>
-<RANGE></RANGE>
+<TYPE>gint64</TYPE>
+<RANGE>>= G_MAXULONG</RANGE>
 <FLAGS>rwx</FLAGS>
 <NICK>Buffer Time of the shm buffer</NICK>
 <BLURB>Maximum Size of the shm buffer in nanoseconds (-1 to disable).</BLURB>
-<DEFAULT>18446744073709551615</DEFAULT>
+<DEFAULT>-1</DEFAULT>
 </ARG>
 
 <ARG>
@@ -46328,8 +46328,8 @@
 <TYPE>gchar*</TYPE>
 <RANGE></RANGE>
 <FLAGS>rw</FLAGS>
-<NICK>File Location</NICK>
-<BLURB>Location of the file to read.</BLURB>
+<NICK>RTMP Location</NICK>
+<BLURB>Location of the RTMP url to read.</BLURB>
 <DEFAULT>NULL</DEFAULT>
 </ARG>
 
@@ -57808,8 +57808,8 @@
 <TYPE>gchar*</TYPE>
 <RANGE></RANGE>
 <FLAGS>rw</FLAGS>
-<NICK>File Location</NICK>
-<BLURB>Location of the file to read.</BLURB>
+<NICK>RTMP Location</NICK>
+<BLURB>RTMP url.</BLURB>
 <DEFAULT>NULL</DEFAULT>
 </ARG>
 
@@ -57931,5 +57931,25 @@
 <NICK>tolerance</NICK>
 <BLURB>contrast tolerance for smoothing.</BLURB>
 <DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstVoAmrWbEnc::band-mode</NAME>
+<TYPE>GstVoAmrWbEncBandMode</TYPE>
+<RANGE></RANGE>
+<FLAGS>rwx</FLAGS>
+<NICK>Band Mode</NICK>
+<BLURB>Encoding Band Mode (Kbps).</BLURB>
+<DEFAULT>MR660</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstVoAacEnc::bitrate</NAME>
+<TYPE>gint</TYPE>
+<RANGE>>= 0</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Bitrate</NICK>
+<BLURB>Target Audio Bitrate.</BLURB>
+<DEFAULT>128000</DEFAULT>
 </ARG>
 

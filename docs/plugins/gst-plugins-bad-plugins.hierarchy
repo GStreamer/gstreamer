@@ -18,6 +18,8 @@ GObject
           GstCeltEnc
           GstFaac
           GstGSMEnc
+          GstVoAacEnc
+          GstVoAmrWbEnc
         GstBaseAudioVisualizer
           GstSpaceScope
           GstSpectraScope
@@ -32,12 +34,15 @@ GObject
           GstMpegvParse
         GstBaseSink
           GstChecksumSink
+          GstRTMPSink
           GstShmSink
         GstBaseSrc
           GstDTMFSrc
           GstDataURISrc
+          GstFliteTestSrc
           GstPushSrc
             GstMMS
+            GstRTMPSrc
             GstShmSrc
           GstRTPDTMFSrc
         GstBaseTransform
@@ -49,6 +54,7 @@ GObject
           GstScaletempo
           GstVideoFilter
             GstSmooth
+            GstZBar
         GstBaseVideoCodec
           GstBaseVideoDecoder
             GstSchroDec
@@ -72,10 +78,9 @@ GObject
         GstCompare
         GstDVBSubOverlay
         GstDVDSpu
+        GstGmeDec
         GstModPlug
-        GstMpeg2enc
         GstMpegPSDemux
-        GstMplex
         GstPcapParse
         GstRTPBaseDepayload
           GstRtpDTMFDepay
@@ -91,9 +96,6 @@ GObject
           GstAudioSegmentClip
           GstVideoSegmentClip
         GstY4mDec
-        MpegTSBase
-          GstTSDemux
-          MpegTSParse2
       GstPad
       GstPadTemplate
       GstPlugin

@@ -3,7 +3,7 @@
   <description>shared memory sink source</description>
   <filename>../../sys/shm/.libs/libgstshm.so</filename>
   <basename>libgstshm.so</basename>
-  <version>0.11.2</version>
+  <version>0.11.90</version>
   <license>LGPL</license>
   <source>gst-plugins-bad</source>
   <package>GStreamer Bad Plug-ins source release</package>
@@ -28,7 +28,7 @@
       <name>shmsrc</name>
       <longname>Shared Memory Source</longname>
       <class>Source</class>
-      <description>Receive data from the sharem memory sink</description>
+      <description>Receive data from the shared memory sink</description>
       <author>Olivier Crete &lt;olivier.crete@collabora.co.uk&gt;</author>
       <pads>
         <caps>

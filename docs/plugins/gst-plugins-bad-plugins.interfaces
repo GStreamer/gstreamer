@@ -46,6 +46,8 @@ GstVCDSrc GstURIHandler
 GstVP8Enc GstPreset GstTagSetter
 GstVP8Enc GstTagSetter GstPreset
 GstViewfinderBin GstChildProxy
+GstVoAacEnc GstPreset
+GstVoAmrWbEnc GstPreset
 GstWrapperCameraBinSrc GstChildProxy
 GstXvidEnc GstPreset
 RsnDvdBin GstChildProxy GstURIHandler

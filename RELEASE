@@ -1,11 +1,11 @@
 
-Release notes for GStreamer Bad Plug-ins 0.11.2 "Crossthreaded"
+Release notes for GStreamer Bad Plug-ins 0.11.90 "Where the good and the bad and the worst and the best have gone to their eternal rest"
         
 
 
 The GStreamer team is proud to announce a new release
 in the 0.11.x unstable series of the
-GStreamer Bad Plug-ins.
+GStreamer Ugly Plug-ins.
 
 
 The 0.11.x series is an unstable series targeted at developers and will
@@ -13,9 +13,6 @@ eventually lead up to the stable 1.0 series.
 It is not API or ABI compatible with the stable 0.10.x series.
 It is, however, parallel installable with the 0.10.x series.
 
-
-
-"That an accusation?"
 
 
 No perfectly groomed moustache or any amount of fine clothing is going to
@@ -61,26 +58,9 @@ contains a set of well-supported plug-ins, but might pose problems for
 
 Features of this release
     
-      * Many cleanups
-      * Ported to new 0.11 core API changes
-      * schro: Ported to 0.11
-      * qtkitvideosrc: Ported to 0.11
-      * vtdec: Ported to 0.11
-      * celt: Ported to 0.11
-      * removesilence: Ported to 0.11
-      * bz2: Ported to 0.11
-      * segmentclip: Ported to 0.11
-      * smooth: Ported to 0.11
-      * scaletempo: Ported to 0.11
-      * rawparse: Ported to 0.11
-      * shm: Ported to 0.11
-
-Bugs fixed in this release
-     
-      * 658438 : [0.11][h263parse] Make h263 profiles/levels string fields in the caps
-      * 662618 : [gst-plugins-bad]compiler warnings due to printf format mismatch
-      * 665355 : [basevideodecoder] deletes frame but keeps it in list
-      * 670367 : Build failures for gst-plugins-bad
+      * Lots of bugfixes, cleanup and other improvements
+There were no bugs fixed in this release
+    
 
 Download
 
@@ -110,14 +90,13 @@ Applications
 Contributors to this release
     
       * Alessandro Decina
-      * Christian Fredrik Kalager Schaller
-      * David Schleef
+      * Andoni Morales Alastruey
       * Edward Hervey
       * Mark Nauwelaerts
-      * Matej Knopp
+      * Olivier Crête
       * Sebastian Dröge
-      * Sreerenj Balachandran
+      * Stefan Sauer
       * Thibault Saunier
-      * Tim-Philipp Müller
       * Wim Taymans
+      * uraeus
  
