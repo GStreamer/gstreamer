@@ -27,7 +27,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <gst/gst.h>
-#ifdef HAVE_FFMPEG_UNINSTALLED
+#ifdef HAVE_LIBAV_UNINSTALLED
 #include <avcodec.h>
 #include <avformat.h>
 #else
@@ -128,7 +128,7 @@ gboolean _shut_up_I_am_probing = FALSE;
 static gboolean
 plugin_init (GstPlugin * plugin)
 {
-  GST_DEBUG_CATEGORY_INIT (ffmpeg_debug, "ffmpeg", 0, "FFmpeg elements");
+  GST_DEBUG_CATEGORY_INIT (ffmpeg_debug, "libav", 0, "libav elements");
 #ifndef GST_DISABLE_GST_DEBUG
 
   av_log_set_callback (gst_ffmpeg_log_callback);
@@ -160,12 +160,12 @@ plugin_init (GstPlugin * plugin)
 
 GST_PLUGIN_DEFINE (GST_VERSION_MAJOR,
     GST_VERSION_MINOR,
-    ffmpeg,
-    "All FFmpeg codecs and formats (" FFMPEG_SOURCE ")",
+    libav,
+    "All libav codecs and formats (" LIBAV_SOURCE ")",
     plugin_init, PACKAGE_VERSION,
-#ifdef GST_FFMPEG_ENABLE_LGPL
+#ifdef GST_LIBAV_ENABLE_LGPL
     "LGPL",
 #else
     "GPL",
 #endif
-    "FFmpeg", "http://ffmpeg.org/")
+    "libav", "http://www.libav.org")

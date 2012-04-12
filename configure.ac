@@ -5,7 +5,7 @@ dnl when going to/from release please set the nano (fourth number) right !
 dnl releases only do Wall, cvs and prerelease does Werror too
 AC_INIT(GStreamer Libav, 0.11.89.1,
     http://bugzilla.gnome.org/enter_bug.cgi?product=GStreamer,
-    gst-ffmpeg)
+    gst-libav)
 
 AG_GST_INIT
 
@@ -208,42 +208,42 @@ if test "x$have_bz2" = "xno"; then
 fi
 
 AC_ARG_ENABLE(lgpl,
-              [AC_HELP_STRING([--enable-lgpl], [build a LGPL licensed gst-ffmpeg])])
-AM_CONDITIONAL(GST_FFMPEG_ENABLE_LGPL, test "x$enable_lgpl" = "xyes")
+              [AC_HELP_STRING([--enable-lgpl], [build a LGPL licensed gst-libav])])
+AM_CONDITIONAL(GST_LIBAV_ENABLE_LGPL, test "x$enable_lgpl" = "xyes")
 if test "x$enable_lgpl" = "xyes"; then
-  AC_DEFINE([GST_FFMPEG_ENABLE_LGPL], [], [Defined if building a LGPL-only version of gst-ffmpeg])
+  AC_DEFINE([GST_LIBAV_ENABLE_LGPL], [], [Defined if building a LGPL-only version of gst-libav])
 fi
 
 dnl *** configure external libs ***
 
-HAVE_FFMPEG_UNINSTALLED=1
+HAVE_LIBAV_UNINSTALLED=1
 
-AC_ARG_WITH(system-ffmpeg,
-            [AC_HELP_STRING([--with-system-ffmpeg], [use system Libav libraries])])
+AC_ARG_WITH(system-libav,
+            [AC_HELP_STRING([--with-system-libav], [use system Libav libraries])])
 
-if test "x$with_system_ffmpeg" = "xyes"; then
-  PKG_CHECK_MODULES(FFMPEG, libavformat libavcodec libavutil) 
+if test "x$with_system_libav" = "xyes"; then
+  PKG_CHECK_MODULES(LIBAV, libavformat libavcodec libavutil) 
   if test "x$enable_lgpl" != "xyes"; then
     PKG_CHECK_MODULES(POSTPROC, libpostproc libavcodec libavutil)
   fi
   PKG_CHECK_MODULES(SWSCALE, libswscale libavutil)
   saved_CPPFLAGS="$CPPFLAGS"
-  CPPFLAGS="$CPPFLAGS $FFMPEG_CFLAGS"
+  CPPFLAGS="$CPPFLAGS $LIBAV_CFLAGS"
   AC_CHECK_HEADERS([avi.h])
   CPPFLAGS="$saved_CPPFLAGS"
-  AC_DEFINE([FFMPEG_SOURCE], ["system install"], [Describes where the Libav libraries come from.])
-  HAVE_FFMPEG_UNINSTALLED=0
+  AC_DEFINE([LIBAV_SOURCE], ["system install"], [Describes where the Libav libraries come from.])
+  HAVE_LIBAV_UNINSTALLED=0
   AC_MSG_NOTICE([Using system-installed FFMpeg code])
   AC_MSG_WARN([
   ======================================================================
-   WARNING: you have chosen to build gst-ffmpeg against a random
+   WARNING: you have chosen to build gst-libav against a random
    external version of Libav instead of building it against the tested
-   internal Libav snapshot that is included with gst-ffmpeg.
+   internal Libav snapshot that is included with gst-libav.
    
    This is a very bad idea.  So bad in fact that words cannot express
    just how bad it is.  Suffice to say that it is BAD.
    
-   The GStreamer developers cannot and will not support a gst-ffmpeg
+   The GStreamer developers cannot and will not support a gst-libav
    built this way.  Any bug reports that indicate there is an external
    version of Libav involved will be closed immediately without further
    investigation.
@@ -251,15 +251,15 @@ if test "x$with_system_ffmpeg" = "xyes"; then
    The reason such a setup can't be supported is that the Libav API
    and ABI is in constant flux, yet there aren't any official releases
    of the Libav library to develop against.  This makes it impossible
-   to guarantee that gst-ffmpeg will work reliably, or even compile,
-   with a randomly picked version Libav.  Even if gst-ffmpeg compiles
+   to guarantee that gst-libav will work reliably, or even compile,
+   with a randomly picked version Libav.  Even if gst-libav compiles
    and superficially appears to work fine against your chosen external
    Libav version, that might just not be the case on other systems, or
    even the same system at a later time, or when using decoders,
    encoders, demuxers or muxers that have not been tested.
    
    Please do not create or distribute binary packages of gst-Libav
-   that link against an external ffmpeg. Thank you!
+   that link against an external libav. Thank you!
   ======================================================================
   ])
 
@@ -269,16 +269,16 @@ else
 
   AC_MSG_NOTICE([Using local Libav snapshot])
   
-  dnl libgstffmpeg.la: include dirs
-  FFMPEG_CFLAGS="-I \$(top_srcdir)/gst-libs/ext/libav/libavutil \
+  dnl libgstlibav.la: include dirs
+  LIBAV_CFLAGS="-I \$(top_srcdir)/gst-libs/ext/libav/libavutil \
   		 -I \$(top_srcdir)/gst-libs/ext/libav/libavformat \
                  -I \$(top_srcdir)/gst-libs/ext/libav/libavcodec \
 		 -I \$(top_srcdir)/gst-libs/ext/libav \
 		 -I \$(top_builddir)/gst-libs/ext/libav \
                  -Wno-deprecated-declarations"
 
-  dnl libgstffmpeg.la: libs to statically link to        
-  FFMPEG_LIBS="\$(top_builddir)/gst-libs/ext/libav/libavformat/libavformat.a \
+  dnl libgstlibav.la: libs to statically link to        
+  LIBAV_LIBS="\$(top_builddir)/gst-libs/ext/libav/libavformat/libavformat.a \
                \$(top_builddir)/gst-libs/ext/libav/libavcodec/libavcodec.a \
                \$(top_builddir)/gst-libs/ext/libav/libavutil/libavutil.a"
   dnl
@@ -304,47 +304,47 @@ else
   SWSCALE_LIBS="\$(top_builddir)/gst-libs/ext/libav/libswscale/libswscale.a \
                 \$(top_builddir)/gst-libs/ext/libav/libavutil/libavutil.a"
 
-  FFMPEG_SUBDIRS=gst-libs
+  LIBAV_SUBDIRS=gst-libs
   AC_DEFINE(HAVE_AVI_H)
-  AC_DEFINE([FFMPEG_SOURCE], ["local snapshot"], [Describes where the Libav libraries come from.])
+  AC_DEFINE([LIBAV_SOURCE], ["local snapshot"], [Describes where the Libav libraries come from.])
 
-  AC_ARG_WITH(ffmpeg-extra-configure, 
-      AC_HELP_STRING([--with-ffmpeg-extra-configure="xxx"],
-      [extra configure options for internal ffmpeg ./configure script]),,
-      with_ffmpeg_extra_configure=no)
+  AC_ARG_WITH(libav-extra-configure, 
+      AC_HELP_STRING([--with-libav-extra-configure="xxx"],
+      [extra configure options for internal libav ./configure script]),,
+      with_libav=no)
 
   # basic arguments
-  embffmpeg_configure_args="--prefix=$prefix"
+  emblibav_configure_args="--prefix=$prefix"
 
   # Enable pic and static so that we get .a files, but with PIC code.
-  embffmpeg_configure_args="$embffmpeg_configure_args --disable-avserver --disable-avplay\
+  emblibav_configure_args="$emblibav_configure_args --disable-avserver --disable-avplay\
         --disable-ffmpeg --disable-avprobe --enable-static --enable-pic \
 	--disable-encoder=flac --disable-decoder=cavs --disable-protocols --disable-devices\
 	--disable-network --disable-hwaccels --disable-filters --disable-doc\
 	--enable-optimizations"
 
   if test "x$enable_lgpl" != "xyes"; then
-    embffmpeg_configure_args="$embffmpeg_configure_args --enable-postproc \
+    emblibav_configure_args="$emblibav_configure_args --enable-postproc \
         --enable-gpl"
   fi
 
-  # if we are cross-compiling, tell ffmpeg so
+  # if we are cross-compiling, tell libav so
   target_os=`echo $host_os | sed 's/-gnu//'`
   if test "x$cross_compiling" = xyes; then
-    embffmpeg_configure_args="$embffmpeg_configure_args --enable-cross-compile \
+    emblibav_configure_args="$emblibav_configure_args --enable-cross-compile \
         --target-os=$target_os --arch=$host_cpu --cross-prefix=$host_alias-"
   fi
 
   case $host_os in
-    # Unfortunately, in Mac OS 10.5 the current rev of ffmpeg builds
+    # Unfortunately, in Mac OS 10.5 the current rev of libav builds
     # some non-PIC code into the .a file. See
     # http://trac.macosforge.org/projects/macports/ticket/13725 for more
     # info.
     darwin*) 
-      embffmpeg_configure_args="$embffmpeg_configure_args --disable-mmx --disable-altivec"
+      emblibav_configure_args="$emblibav_configure_args --disable-mmx --disable-altivec"
       ;;
     mingw32*)
-      embffmpeg_configure_args="$embffmpeg_configure_args --enable-memalign-hack"
+      emblibav_configure_args="$emblibav_configure_args --enable-memalign-hack"
       WIN32_LIBS="-lws2_32"
       ;;
     *)
@@ -353,29 +353,29 @@ else
   esac
 
   dnl checks for extra enable/disable flags
-  FFMPEG_OPTS="(cd $srcdir/gst-libs/ext/libav && ./configure --help)"
-  # Let's check if we can disable the building of the ffmpeg binary
-  can_disable=`echo "$FFMPEG_OPTS" | grep 'disable-ffmpeg'`
+  LIBAV_OPTS="(cd $srcdir/gst-libs/ext/libav && ./configure --help)"
+  # Let's check if we can disable the building of the libav binary
+  can_disable=`echo "$LIBAV_OPTS" | grep 'disable-ffmpeg'`
   if test "$can_disable" != ""; then
-    embffmpeg_configure_args="$embffmpeg_configure_args --disable-ffmpeg"
+    emblibav_configure_args="$emblibav_configure_args --disable-ffmpeg"
   fi
   dnl check if libswscale needs enabling explicitly
-  can_enable=`echo "$FFMPEG_OPTS" | grep 'enable-swscale'`
+  can_enable=`echo "$LIBAV_OPTS" | grep 'enable-swscale'`
   if test "$can_enable" != ""; then
-    embffmpeg_configure_args="$embffmpeg_configure_args --enable-swscale"
+    emblibav_configure_args="$emblibav_configure_args --enable-swscale"
   fi
 
-  # append extra configure options to embffmpeg_configure_args if needed
-  if test "x$with_ffmpeg_extra_configure" != "xno"; then
-    embffmpeg_configure_args="$embffmpeg_configure_args $with_ffmpeg_extra_configure"
+  # append extra configure options to emblibav_configure_args if needed
+  if test "x$with_libav_extra_configure" != "xno"; then
+    emblibav_configure_args="$emblibav_configure_args $with_libav_extra_configure"
   fi
 
-  AC_SUBST(FFMPEG_CO_DIR)
-  AC_SUBST(FFMPEG_SVN)
-  AC_SUBST(FFMPEG_REVISION)
-  AC_SUBST(FFMPEG_EXTERNALS_REVISION)
-  AC_CONFIG_COMMANDS([configure-embedded-ffmpeg],
-    [echo "Configuring included Libav instance with args $embffmpeg_configure_args"
+  AC_SUBST(LIBAV_CO_DIR)
+  AC_SUBST(LIBAV_SVN)
+  AC_SUBST(LIBAV_REVISION)
+  AC_SUBST(LIBAV_EXTERNALS_REVISION)
+  AC_CONFIG_COMMANDS([configure-embedded-libav],
+    [echo "Configuring included Libav instance with args $emblibav_configure_args"
      origdir=`pwd`
      dnl Don't put path on the configure call when not needed, as FFmpeg's configure relies on it
      dnl to detect out-of-tree builds
@@ -387,33 +387,33 @@ else
 
      AS_MKDIR_P(["$ac_top_build_prefix"gst-libs/ext/libav])
      cd "$ac_top_build_prefix"gst-libs/ext/libav &&
-         eval "$confcmd $embffmpeg_configure_args" ||
+         eval "$confcmd $emblibav_configure_args" ||
          AC_MSG_ERROR([Failed to configure embedded Libav tree])
      cd "$origdir"
     ],
-    [embffmpeg_configure_args="$embffmpeg_configure_args"])
+    [emblibav_configure_args="$emblibav_configure_args"])
   AC_MSG_NOTICE([Using included Libav code])
 fi
 
-AC_SUBST(FFMPEG_CFLAGS)
-AC_SUBST(FFMPEG_LIBS)
-AC_SUBST(FFMPEG_SUBDIRS)
+AC_SUBST(LIBAV_CFLAGS)
+AC_SUBST(LIBAV_LIBS)
+AC_SUBST(LIBAV_SUBDIRS)
 AC_SUBST(POSTPROC_CFLAGS)
 AC_SUBST(POSTPROC_LIBS)
 AC_SUBST(SWSCALE_CFLAGS)
 AC_SUBST(SWSCALE_LIBS)
 AC_SUBST(WIN32_LIBS)
  
-if test x$HAVE_FFMPEG_UNINSTALLED = x1; then
-  AC_DEFINE(HAVE_FFMPEG_UNINSTALLED, [], [Defined if building against uninstalled Libav source])
+if test x$HAVE_LIBAV_UNINSTALLED = x1; then
+  AC_DEFINE(HAVE_LIBAV_UNINSTALLED, [], [Defined if building against uninstalled Libav source])
 fi
-AM_CONDITIONAL(HAVE_FFMPEG_UNINSTALLED, test x$HAVE_FFMPEG_UNINSTALLED = x1)
+AM_CONDITIONAL(HAVE_LIBAV_UNINSTALLED, test x$HAVE_LIBAV_UNINSTALLED = x1)
 
 AC_CONFIG_FILES(
 Makefile
 common/Makefile
 common/m4/Makefile
-gst-ffmpeg.spec
+gst-libav.spec
 ext/Makefile
 ext/ffmpeg/Makefile
 ext/libpostproc/Makefile

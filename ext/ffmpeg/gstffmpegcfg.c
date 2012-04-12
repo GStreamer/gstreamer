@@ -49,7 +49,7 @@ gst_ffmpeg_pass_get_type (void)
     };
 
     ffmpeg_pass_type =
-        g_enum_register_static ("GstFFMpegEncPass", ffmpeg_passes);
+        g_enum_register_static ("GstLibAVEncPass", ffmpeg_passes);
   }
 
   return ffmpeg_pass_type;
@@ -71,7 +71,7 @@ gst_ffmpeg_lim_pass_get_type (void)
     };
 
     ffmpeg_lim_pass_type =
-        g_enum_register_static ("GstFFMpegEncLimPass", ffmpeg_lim_passes);
+        g_enum_register_static ("GstLibAVEncLimPass", ffmpeg_lim_passes);
   }
 
   return ffmpeg_lim_pass_type;
@@ -94,7 +94,7 @@ gst_ffmpeg_mb_decision_get_type (void)
     };
 
     ffmpeg_mb_decision_type =
-        g_enum_register_static ("GstFFMpegEncMBDecision", ffmpeg_mb_decisions);
+        g_enum_register_static ("GstLibAVEncMBDecision", ffmpeg_mb_decisions);
   }
 
   return ffmpeg_mb_decision_type;
@@ -129,7 +129,7 @@ gst_ffmpeg_mb_cmp_get_type (void)
     };
 
     ffmpeg_mb_cmp_type =
-        g_enum_register_static ("GstFFMpegCMPFunction", ffmpeg_mb_cmps);
+        g_enum_register_static ("GstLibAVCMPFunction", ffmpeg_mb_cmps);
   }
 
   return ffmpeg_mb_cmp_type;
@@ -154,7 +154,7 @@ gst_ffmpeg_dct_algo_get_type (void)
     };
 
     ffmpeg_dct_algo_type =
-        g_enum_register_static ("GstFFMpegDCTAlgo", ffmpeg_dct_algos);
+        g_enum_register_static ("GstLibAVDCTAlgo", ffmpeg_dct_algos);
   }
 
   return ffmpeg_dct_algo_type;
@@ -187,7 +187,7 @@ gst_ffmpeg_idct_algo_get_type (void)
     };
 
     ffmpeg_idct_algo_type =
-        g_enum_register_static ("GstFFMpegIDCTAlgo", ffmpeg_idct_algos);
+        g_enum_register_static ("GstLibAVIDCTAlgo", ffmpeg_idct_algos);
   }
 
   return ffmpeg_idct_algo_type;
@@ -207,7 +207,7 @@ gst_ffmpeg_quant_type_get_type (void)
     };
 
     ffmpeg_quant_type_type =
-        g_enum_register_static ("GstFFMpegEncQuantTypes", ffmpeg_quant_types);
+        g_enum_register_static ("GstLibAVEncQuantTypes", ffmpeg_quant_types);
   }
 
   return ffmpeg_quant_type_type;
@@ -228,7 +228,7 @@ gst_ffmpeg_pre_me_get_type (void)
     };
 
     ffmpeg_pre_me_type =
-        g_enum_register_static ("GstFFMpegEncPreME", ffmpeg_pre_mes);
+        g_enum_register_static ("GstLibAVEncPreME", ffmpeg_pre_mes);
   }
 
   return ffmpeg_pre_me_type;
@@ -249,7 +249,7 @@ gst_ffmpeg_pred_method_get_type (void)
     };
 
     ffmpeg_pred_method =
-        g_enum_register_static ("GstFFMpegEncPredMethod", ffmpeg_pred_methods);
+        g_enum_register_static ("GstLibAVEncPredMethod", ffmpeg_pred_methods);
   }
 
   return ffmpeg_pred_method;
@@ -293,8 +293,7 @@ gst_ffmpeg_flags_get_type (void)
       {0, NULL, NULL},
     };
 
-    ffmpeg_flags_type =
-        g_flags_register_static ("GstFFMpegFlags", ffmpeg_flags);
+    ffmpeg_flags_type = g_flags_register_static ("GstLibAVFlags", ffmpeg_flags);
   }
 
   return ffmpeg_flags_type;

@@ -24,7 +24,7 @@
 #  include "config.h"
 #endif
 
-#ifdef HAVE_FFMPEG_UNINSTALLED
+#ifdef HAVE_LIBAV_UNINSTALLED
 #  include <avcodec.h>
 #else
 #  include <libavcodec/avcodec.h>
@@ -73,7 +73,7 @@ gst_ffmpegdeinterlace_modes_get_type (void)
 
   if (!deinterlace_modes_type) {
     deinterlace_modes_type =
-        g_enum_register_static ("GstFFMpegDeinterlaceModes", modes_types);
+        g_enum_register_static ("GstLibAVDeinterlaceModes", modes_types);
   }
   return deinterlace_modes_type;
 }
@@ -169,7 +169,7 @@ gst_ffmpegdeinterlace_class_init (GstFFMpegDeinterlaceClass * klass)
       gst_static_pad_template_get (&sink_factory));
 
   gst_element_class_set_static_metadata (element_class,
-      "FFMPEG Deinterlace element", "Filter/Effect/Video/Deinterlace",
+      "libav Deinterlace element", "Filter/Effect/Video/Deinterlace",
       "Deinterlace video", "Luca Ognibene <luogni@tin.it>");
 }
 
@@ -335,7 +335,7 @@ gst_ffmpegdeinterlace_chain (GstPad * pad, GstObject * parent,
 gboolean
 gst_ffmpegdeinterlace_register (GstPlugin * plugin)
 {
-  return gst_element_register (plugin, "ffdeinterlace",
+  return gst_element_register (plugin, "avdeinterlace",
       GST_RANK_NONE, GST_TYPE_FFMPEGDEINTERLACE);
 }
 

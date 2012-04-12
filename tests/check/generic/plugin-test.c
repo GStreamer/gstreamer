@@ -24,9 +24,9 @@
 #include <gst/check/gstcheck.h>
 #include <stdlib.h>
 
-GST_START_TEST (test_ffmpeg_plugin)
+GST_START_TEST (test_libav_plugin)
 {
-  GstPlugin *plugin = gst_plugin_load_by_name ("ffmpeg");
+  GstPlugin *plugin = gst_plugin_load_by_name ("libav");
 
   fail_if (plugin == NULL, "Could not load FFmpeg plugin");
 
@@ -36,21 +36,21 @@ GST_START_TEST (test_ffmpeg_plugin)
 
 GST_END_TEST;
 
-GST_START_TEST (test_ffmpeg_update_reg)
+GST_START_TEST (test_libav_update_reg)
 {
   GstElement *encoder, *muxer, *decoder;
 
   /* Ask for elements the first time */
-  encoder = gst_element_factory_make ("ffenc_mpeg2video", "sink");
-  GST_DEBUG ("Creating element ffenc_mpeg2video %p", encoder);
+  encoder = gst_element_factory_make ("avenc_mpeg2video", "sink");
+  GST_DEBUG ("Creating element avenc_mpeg2video %p", encoder);
   fail_unless (encoder != NULL);
 
-  decoder = gst_element_factory_make ("ffdec_mpeg2video", "sink");
-  GST_DEBUG ("Creating element ffdec_mpeg2video %p", decoder);
+  decoder = gst_element_factory_make ("avdec_mpeg2video", "sink");
+  GST_DEBUG ("Creating element avdec_mpeg2video %p", decoder);
   fail_unless (decoder != NULL);
 
-  muxer = gst_element_factory_make ("ffmux_dvd", "sink");
-  GST_DEBUG ("Creating element ffmux_dvd %p", muxer);
+  muxer = gst_element_factory_make ("avmux_dvd", "sink");
+  GST_DEBUG ("Creating element avmux_dvd %p", muxer);
   fail_unless (muxer != NULL);
 
   gst_object_unref (encoder);
@@ -62,16 +62,16 @@ GST_START_TEST (test_ffmpeg_update_reg)
 
   /* Ask for elements the second time */
 
-  encoder = gst_element_factory_make ("ffenc_mpeg2video", "sink");
-  GST_DEBUG ("Creating element ffenc_mpeg2video %p", encoder);
+  encoder = gst_element_factory_make ("avenc_mpeg2video", "sink");
+  GST_DEBUG ("Creating element avenc_mpeg2video %p", encoder);
   fail_unless (encoder != NULL);
 
-  decoder = gst_element_factory_make ("ffdec_mpeg2video", "sink");
-  GST_DEBUG ("Creating element ffdec_mpeg2video %p", decoder);
+  decoder = gst_element_factory_make ("avdec_mpeg2video", "sink");
+  GST_DEBUG ("Creating element avdec_mpeg2video %p", decoder);
   fail_unless (decoder != NULL);
 
-  muxer = gst_element_factory_make ("ffmux_dvd", "sink");
-  GST_DEBUG ("Creating element ffmux_dvd %p", muxer);
+  muxer = gst_element_factory_make ("avmux_dvd", "sink");
+  GST_DEBUG ("Creating element avmux_dvd %p", muxer);
   fail_unless (muxer != NULL);
 
   gst_object_unref (encoder);
@@ -89,8 +89,8 @@ plugin_test_suite (void)
 
   suite_add_tcase (s, tc_chain);
 
-  tcase_add_test (tc_chain, test_ffmpeg_plugin);
-  tcase_add_test (tc_chain, test_ffmpeg_update_reg);
+  tcase_add_test (tc_chain, test_libav_plugin);
+  tcase_add_test (tc_chain, test_libav_update_reg);
 
   return s;
 }

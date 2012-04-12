@@ -24,7 +24,7 @@
 #include "config.h"
 #endif
 
-#ifdef HAVE_FFMPEG_UNINSTALLED
+#ifdef HAVE_LIBAV_UNINSTALLED
 #include <avcodec.h>
 #else
 #include <libavcodec/avcodec.h>
@@ -110,7 +110,7 @@ gst_ffmpegaudioresample_base_init (gpointer g_class)
   gst_element_class_add_static_pad_template (element_class, &src_factory);
   gst_element_class_add_static_pad_template (element_class, &sink_factory);
   gst_element_class_set_static_metadata (element_class,
-      "FFMPEG Audio resampling element", "Filter/Converter/Audio",
+      "libav Audio resampling element", "Filter/Converter/Audio",
       "Converts audio from one samplerate to another",
       "Edward Hervey <bilboed@bilboed.com>");
 }
@@ -306,6 +306,6 @@ gst_ffmpegaudioresample_transform (GstBaseTransform * trans, GstBuffer * inbuf,
 gboolean
 gst_ffmpegaudioresample_register (GstPlugin * plugin)
 {
-  return gst_element_register (plugin, "ffaudioresample",
+  return gst_element_register (plugin, "avaudioresample",
       GST_RANK_NONE, GST_TYPE_FFMPEGAUDIORESAMPLE);
 }

@@ -4,7 +4,7 @@ GST_DOC_SCANOBJ = $(top_srcdir)/common/gstdoc-scangobj
 
 # The name of the module, e.g. 'glib'.
 #DOC_MODULE=gst-plugins-libs-@GST_API_VERSION@
-MODULE=gst-ffmpeg
+MODULE=gst-libav
 DOC_MODULE=$(MODULE)-plugins
 
 # for upload-doc.mak

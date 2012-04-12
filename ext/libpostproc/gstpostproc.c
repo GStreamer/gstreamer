@@ -29,7 +29,7 @@
 #include <orc/orc.h>
 #endif
 
-#ifdef HAVE_FFMPEG_UNINSTALLED
+#ifdef HAVE_LIBAV_UNINSTALLED
 #include <avcodec.h>
 #include <postprocess.h>
 #else
@@ -902,6 +902,5 @@ plugin_init (GstPlugin * plugin)
 GST_PLUGIN_DEFINE (GST_VERSION_MAJOR,
     GST_VERSION_MINOR,
     postproc,
-    "postprocessing elements (" FFMPEG_SOURCE ")",
-    plugin_init,
-    PACKAGE_VERSION, "GPL", "FFMpeg", "http://ffmpeg.sourceforge.net/")
+    "postprocessing elements (" LIBAV_SOURCE ")",
+    plugin_init, PACKAGE_VERSION, "GPL", "libav", "http://www.libav.org")

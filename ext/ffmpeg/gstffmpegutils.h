@@ -24,7 +24,7 @@
 #include "config.h"
 #endif
 
-#ifdef HAVE_FFMPEG_UNINSTALLED
+#ifdef HAVE_LIBAV_UNINSTALLED
 #include <mathematics.h>
 #include <avcodec.h>
 #else

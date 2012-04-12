@@ -1,4 +1,4 @@
 SUBDIRS = ffmpeg libswscale
-if !GST_FFMPEG_ENABLE_LGPL
+if !GST_LIBAV_ENABLE_LGPL
     SUBDIRS += libpostproc
 endif

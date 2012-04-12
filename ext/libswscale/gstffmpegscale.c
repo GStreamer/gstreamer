@@ -23,7 +23,7 @@
 #include "config.h"
 #endif
 
-#ifdef HAVE_FFMPEG_UNINSTALLED
+#ifdef HAVE_LIBAV_UNINSTALLED
 #include <swscale.h>
 #else
 #include <libswscale/swscale.h>
@@ -135,7 +135,7 @@ gst_ffmpegscale_method_get_type (void)
 
   if (!ffmpegscale_method_type) {
     ffmpegscale_method_type =
-        g_enum_register_static ("GstFFMpegVideoScaleMethod",
+        g_enum_register_static ("GstLibAVVideoScaleMethod",
         ffmpegscale_methods);
   }
   return ffmpegscale_method_type;
@@ -196,7 +196,7 @@ gst_ffmpegscale_class_init (GstFFMpegScaleClass * klass)
       gst_static_pad_template_get (&sink_factory));
 
   gst_element_class_set_static_metadata (gstelement_class,
-      "FFMPEG Scale element", "Filter/Converter/Video",
+      "libav Scale element", "Filter/Converter/Video",
       "Converts video from one resolution to another",
       "Luca Ognibene <luogni@tin.it>, Mark Nauwelaerts <mnauw@users.sf.net>");
 
@@ -756,7 +756,7 @@ gst_ffmpeg_log_callback (void *ptr, int level, const char *fmt, va_list vl)
 static gboolean
 plugin_init (GstPlugin * plugin)
 {
-  GST_DEBUG_CATEGORY_INIT (ffmpegscale_debug, "ffvideoscale", 0,
+  GST_DEBUG_CATEGORY_INIT (ffmpegscale_debug, "avvideoscale", 0,
       "video scaling element");
 
 #ifdef HAVE_ORC
@@ -767,17 +767,18 @@ plugin_init (GstPlugin * plugin)
   av_log_set_callback (gst_ffmpeg_log_callback);
 #endif
 
-  return gst_element_register (plugin, "ffvideoscale",
+  return gst_element_register (plugin, "avvideoscale",
       GST_RANK_NONE, GST_TYPE_FFMPEGSCALE);
 }
 
 GST_PLUGIN_DEFINE (GST_VERSION_MAJOR,
     GST_VERSION_MINOR,
-    ffvideoscale,
-    "videoscaling element (" FFMPEG_SOURCE ")", plugin_init, PACKAGE_VERSION,
-#ifdef GST_FFMPEG_ENABLE_LGPL
+    avvideoscale,
+    "libav videoscaling element (" LIBAV_SOURCE ")", plugin_init,
+    PACKAGE_VERSION,
+#ifdef GST_LIBAV_ENABLE_LGPL
     "LGPL",
 #else
     "GPL",
 #endif
-    "FFMpeg", "http://ffmpeg.sourceforge.net/")
+    "libav", "http://www.libav.org/")

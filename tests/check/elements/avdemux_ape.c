@@ -1,4 +1,4 @@
-/* GStreamer unit tests for ffdec_adpcm
+/* GStreamer unit tests for avdemux_ape
  *
  * Copyright (C) 2009 Tim-Philipp Müller  <tim centricular net>
  *
@@ -22,12 +22,12 @@
 
 #include <gst/gst.h>
 
+typedef void (CheckTagsFunc) (const GstTagList * tags, const gchar * file);
+
 static void
 pad_added_cb (GstElement * decodebin, GstPad * pad, GstBin * pipeline)
 {
   GstElement *sink;
-
-  GST_INFO_OBJECT (pad, "got pad");
 
   sink = gst_bin_get_by_name (pipeline, "fakesink");
   fail_unless (gst_element_link (decodebin, sink));
@@ -51,13 +51,34 @@ error_cb (GstBus * bus, GstMessage * msg, gpointer user_data)
   return GST_BUS_PASS;
 }
 
-static gboolean
-decode_file (const gchar * file, gboolean push_mode)
+static GstPadProbeReturn
+event_probe (GstPad * pad, GstPadProbeInfo * info, gpointer user_data)
+{
+  GstTagList **p_tags = user_data;
+  GstEvent *event = GST_PAD_PROBE_INFO_EVENT (info);
+
+  if (GST_EVENT_TYPE (event) == GST_EVENT_TAG) {
+    GST_INFO ("tag event: %" GST_PTR_FORMAT, event);
+    if (*p_tags == NULL) {
+      GstTagList *event_tags;
+
+      GST_INFO ("first tag, saving");
+      gst_event_parse_tag (event, &event_tags);
+      *p_tags = gst_tag_list_copy (event_tags);
+    }
+  }
+  return GST_PAD_PROBE_OK;      /* keep the data */
+}
+
+/* FIXME: push_mode not used currently */
+static GstTagList *
+read_tags_from_file (const gchar * file, gboolean push_mode)
 {
   GstStateChangeReturn state_ret;
-  GstElement *sink, *src, *dec, *queue, *pipeline;
-  GstMessage *msg;
+  GstTagList *tags = NULL;
+  GstElement *sink, *src, *dec, *pipeline;
   GstBus *bus;
+  GstPad *pad;
   gchar *path;
 
   pipeline = gst_pipeline_new ("pipeline");
@@ -65,12 +86,6 @@ decode_file (const gchar * file, gboolean push_mode)
 
   src = gst_element_factory_make ("filesrc", "filesrc");
   fail_unless (src != NULL, "Failed to create filesrc!");
-
-  if (push_mode) {
-    queue = gst_element_factory_make ("queue", "queue");
-  } else {
-    queue = gst_element_factory_make ("identity", "identity");
-  }
 
   dec = gst_element_factory_make ("decodebin", "decodebin");
   fail_unless (dec != NULL, "Failed to create decodebin!");
@@ -84,8 +99,8 @@ decode_file (const gchar * file, gboolean push_mode)
    * we just want to abort and nothing else */
   gst_bus_set_sync_handler (bus, error_cb, (gpointer) file);
 
-  gst_bin_add_many (GST_BIN (pipeline), src, queue, dec, sink, NULL);
-  gst_element_link_many (src, queue, dec, NULL);
+  gst_bin_add_many (GST_BIN (pipeline), src, dec, sink, NULL);
+  gst_element_link_many (src, dec, NULL);
 
   path = g_build_filename (GST_TEST_FILES_PATH, file, NULL);
   GST_LOG ("reading file '%s'", path);
@@ -93,6 +108,13 @@ decode_file (const gchar * file, gboolean push_mode)
 
   /* can't link uridecodebin and sink yet, do that later */
   g_signal_connect (dec, "pad-added", G_CALLBACK (pad_added_cb), pipeline);
+
+  /* we want to make sure there's a tag event coming out of avdemux_ape
+   * (ie. the one apedemux generated) */
+  pad = gst_element_get_static_pad (sink, "sink");
+  gst_pad_add_probe (pad, GST_PAD_PROBE_TYPE_EVENT_DOWNSTREAM, event_probe,
+      &tags, NULL);
+  gst_object_unref (pad);
 
   state_ret = gst_element_set_state (pipeline, GST_STATE_PAUSED);
   fail_unless (state_ret != GST_STATE_CHANGE_FAILURE);
@@ -103,14 +125,10 @@ decode_file (const gchar * file, gboolean push_mode)
     fail_unless_equals_int (state_ret, GST_STATE_CHANGE_SUCCESS);
   }
 
-  state_ret = gst_element_set_state (pipeline, GST_STATE_PLAYING);
-  fail_unless (state_ret != GST_STATE_CHANGE_FAILURE);
+  GST_LOG ("PAUSED, let's retrieve our tags");
 
-  GST_LOG ("PAUSED, let's decode");
-  msg = gst_bus_timed_pop_filtered (bus, 10 * GST_SECOND, GST_MESSAGE_EOS);
-  GST_LOG ("Done, got EOS message");
-  fail_unless (msg != NULL);
-  gst_message_unref (msg);
+  fail_unless (tags != NULL, "Expected tag event! (%s)", file);
+
   gst_object_unref (bus);
 
   fail_unless_equals_int (gst_element_set_state (pipeline, GST_STATE_NULL),
@@ -119,50 +137,70 @@ decode_file (const gchar * file, gboolean push_mode)
 
   g_free (path);
 
-  return TRUE;
+  GST_INFO ("%s: tags = %" GST_PTR_FORMAT, file, tags);
+  return tags;
 }
 
 static void
-run_check_for_file (const gchar * filename)
+run_check_for_file (const gchar * filename, CheckTagsFunc * check_func)
 {
-  gboolean ret;
+  GstTagList *tags;
 
   /* first, pull-based */
-  ret = decode_file (filename, FALSE);
-  fail_unless (ret == TRUE, "Failed to decode '%s' (pull mode)", filename);
-
-  /* second, push-based */
-  ret = decode_file (filename, TRUE);
-  fail_unless (ret == TRUE, "Failed to decode '%s' (push mode)", filename);
+  tags = read_tags_from_file (filename, FALSE);
+  fail_unless (tags != NULL, "Failed to extract tags from '%s'", filename);
+  check_func (tags, filename);
+  gst_tag_list_free (tags);
 }
 
-GST_START_TEST (test_low_sample_rate_adpcm)
+#define tag_list_has_tag(taglist,tag) \
+    (gst_tag_list_get_value_index((taglist),(tag),0) != NULL)
+
+/* just make sure avdemux_ape forwarded the tags extracted by apedemux
+ * (should be the first tag list / tag event too) */
+static void
+check_for_apedemux_tags (const GstTagList * tags, const gchar * file)
+{
+  gchar *artist = NULL;
+
+  fail_unless (gst_tag_list_get_string (tags, GST_TAG_ARTIST, &artist));
+  fail_unless (artist != NULL);
+  fail_unless_equals_string (artist, "Marvin Gaye");
+  g_free (artist);
+
+  fail_unless (tag_list_has_tag (tags, GST_TAG_CONTAINER_FORMAT));
+
+  GST_LOG ("all good");
+}
+
+GST_START_TEST (test_tag_caching)
 {
 #define MIN_VERSION GST_VERSION_MAJOR, GST_VERSION_MINOR, 0
-  if (!gst_registry_check_feature_version (gst_registry_get (), "wavparse",
+
+  if (!gst_registry_check_feature_version (gst_registry_get (), "apedemux",
           MIN_VERSION)
       || !gst_registry_check_feature_version (gst_registry_get (), "decodebin",
           MIN_VERSION)) {
-    g_printerr ("skipping test_low_sample_rate_adpcm: required element "
-        "wavparse or element decodebin not found\n");
+    g_printerr ("Skipping test_tag_caching: required element apedemux or "
+        "decodebin element not found\n");
     return;
   }
 
-  run_check_for_file ("591809.wav");
+  run_check_for_file ("586957.ape", check_for_apedemux_tags);
 }
 
 GST_END_TEST;
 
 static Suite *
-ffdec_adpcm_suite (void)
+avdemux_ape_suite (void)
 {
-  Suite *s = suite_create ("ffdec_adpcm");
+  Suite *s = suite_create ("avdemux_ape");
   TCase *tc_chain = tcase_create ("general");
 
   suite_add_tcase (s, tc_chain);
-  tcase_add_test (tc_chain, test_low_sample_rate_adpcm);
+  tcase_add_test (tc_chain, test_tag_caching);
 
   return s;
 }
 
-GST_CHECK_MAIN (ffdec_adpcm)
+GST_CHECK_MAIN (avdemux_ape)

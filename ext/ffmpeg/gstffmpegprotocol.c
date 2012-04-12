@@ -23,7 +23,7 @@
 #endif
 #include <string.h>
 #include <errno.h>
-#ifdef HAVE_FFMPEG_UNINSTALLED
+#ifdef HAVE_LIBAV_UNINSTALLED
 #include <avformat.h>
 #else
 #include <libavformat/avformat.h>

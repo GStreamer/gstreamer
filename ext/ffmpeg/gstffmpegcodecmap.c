@@ -23,7 +23,7 @@
 #include "config.h"
 #endif
 #include <gst/gst.h>
-#ifdef HAVE_FFMPEG_UNINSTALLED
+#ifdef HAVE_LIBAV_UNINSTALLED
 #include <avcodec.h>
 #else
 #include <libavcodec/avcodec.h>

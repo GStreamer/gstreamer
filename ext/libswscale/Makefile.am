@@ -1,15 +1,15 @@
-plugin_LTLIBRARIES = libgstffmpegscale.la
+plugin_LTLIBRARIES = libgstavscale.la
 
-libgstffmpegscale_la_SOURCES = gstffmpegscale.c
+libgstavscale_la_SOURCES = gstffmpegscale.c
 
-libgstffmpegscale_la_CFLAGS = $(SWSCALE_CFLAGS) $(GST_PLUGINS_BASE_CFLAGS) $(GST_BASE_CFLAGS) $(GST_CFLAGS) \
+libgstavscale_la_CFLAGS = $(SWSCALE_CFLAGS) $(GST_PLUGINS_BASE_CFLAGS) $(GST_BASE_CFLAGS) $(GST_CFLAGS) \
 	$(ORC_CFLAGS)
-libgstffmpegscale_la_LIBADD = $(SWSCALE_LIBS) \
+libgstavscale_la_LIBADD = $(SWSCALE_LIBS) \
 	$(GST_PLUGINS_BASE_LIBS) -lgstvideo-$(GST_API_VERSION) \
 	$(GST_BASE_LIBS) $(ORC_LIBS) $(LIBM) -lz
-libgstffmpegscale_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS) $(DARWIN_LDFLAGS)
-libgstffmpegscale_la_LIBTOOLFLAGS = --tag=disable-static
+libgstavscale_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS) $(DARWIN_LDFLAGS)
+libgstavscale_la_LIBTOOLFLAGS = --tag=disable-static
 
-if HAVE_FFMPEG_UNINSTALLED
-libgstffmpegscale_la_DEPENDENCIES = $(SWSCALE_LIBS)
+if HAVE_LIBAV_UNINSTALLED
+libgstavscale_la_DEPENDENCIES = $(SWSCALE_LIBS)
 endif

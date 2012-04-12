@@ -2,7 +2,7 @@
  * Copyright (C) 2005 Luca Ognibene <luogni@tin.it>
  * Based (copied) on simple_launch_lines.c
  *
- * ffmpeg-lock.c: Unit test for libavcodec's locks
+ * libavcodec-locking.c: Unit test for libavcodec's locks
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -103,7 +103,7 @@ GST_START_TEST (test_libavcodec_locks)
   for (i = 0; i < NUM_SINKS; i++)
     sink[i] =
         g_strdup_printf
-        (" t.src_%u ! queue ! ffenc_mpeg4 ! ffdec_mpeg4 ! fakesink sync=true",
+        (" t.src_%u ! queue ! avenc_mpeg4 ! avdec_mpeg4 ! fakesink sync=true",
         i);
 
   sink[NUM_SINKS] = NULL;
@@ -147,7 +147,7 @@ simple_launch_lines_suite (void)
 
 #ifndef GST_DISABLE_PARSE
   /* only run this if we haven't been configured with --disable-encoders */
-  if (gst_registry_check_feature_version (gst_registry_get (), "ffenc_mpeg4",
+  if (gst_registry_check_feature_version (gst_registry_get (), "avenc_mpeg4",
           GST_VERSION_MAJOR, GST_VERSION_MINOR, 0)) {
     tcase_add_test (tc_chain, test_libavcodec_locks);
   } else {

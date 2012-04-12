@@ -24,7 +24,7 @@
 #include <assert.h>
 #include <string.h>
 
-#ifdef HAVE_FFMPEG_UNINSTALLED
+#ifdef HAVE_LIBAV_UNINSTALLED
 #include <avcodec.h>
 #else
 #include <libavcodec/avcodec.h>
@@ -261,7 +261,7 @@ static void gst_ffmpegdec_release_buffer (AVCodecContext * context,
 
 static void gst_ffmpegdec_drain (GstFFMpegDec * ffmpegdec);
 
-#define GST_FFDEC_PARAMS_QDATA g_quark_from_static_string("ffdec-params")
+#define GST_FFDEC_PARAMS_QDATA g_quark_from_static_string("avdec-params")
 
 static GstElementClass *parent_class = NULL;
 
@@ -280,7 +280,7 @@ gst_ffmpegdec_lowres_get_type (void)
     };
 
     ffmpegdec_lowres_type =
-        g_enum_register_static ("GstFFMpegDecLowres", ffmpegdec_lowres);
+        g_enum_register_static ("GstLibAVDecLowres", ffmpegdec_lowres);
   }
 
   return ffmpegdec_lowres_type;
@@ -302,7 +302,7 @@ gst_ffmpegdec_skipframe_get_type (void)
     };
 
     ffmpegdec_skipframe_type =
-        g_enum_register_static ("GstFFMpegDecSkipFrame", ffmpegdec_skipframe);
+        g_enum_register_static ("GstLibAVDecSkipFrame", ffmpegdec_skipframe);
   }
 
   return ffmpegdec_skipframe_type;
@@ -323,10 +323,10 @@ gst_ffmpegdec_base_init (GstFFMpegDecClass * klass)
   g_assert (in_plugin != NULL);
 
   /* construct the element details struct */
-  longname = g_strdup_printf ("FFmpeg %s decoder", in_plugin->long_name);
+  longname = g_strdup_printf ("libav %s decoder", in_plugin->long_name);
   classification = g_strdup_printf ("Codec/Decoder/%s",
       (in_plugin->type == AVMEDIA_TYPE_VIDEO) ? "Video" : "Audio");
-  description = g_strdup_printf ("FFmpeg %s decoder", in_plugin->name);
+  description = g_strdup_printf ("libav %s decoder", in_plugin->name);
   gst_element_class_set_metadata (element_class, longname,
       classification, description,
       "Wim Taymans <wim.taymans@gmail.com>, "
@@ -714,7 +714,7 @@ gst_ffmpegdec_open (GstFFMpegDec * ffmpegdec)
 could_not_open:
   {
     gst_ffmpegdec_close (ffmpegdec);
-    GST_DEBUG_OBJECT (ffmpegdec, "ffdec_%s: Failed to open FFMPEG codec",
+    GST_DEBUG_OBJECT (ffmpegdec, "avdec_%s: Failed to open FFMPEG codec",
         oclass->in_plugin->name);
     return FALSE;
   }
@@ -1353,19 +1353,19 @@ gst_ffmpegdec_video_negotiate (GstFFMpegDec * ffmpegdec, gboolean force)
   /* ERRORS */
 unknown_format:
   {
-#ifdef HAVE_FFMPEG_UNINSTALLED
+#ifdef HAVE_LIBAV_UNINSTALLED
     /* using internal ffmpeg snapshot */
     GST_ELEMENT_ERROR (ffmpegdec, CORE, NEGOTIATION,
-        ("Could not find GStreamer caps mapping for FFmpeg pixfmt %d.",
+        ("Could not find GStreamer caps mapping for libav pixfmt %d.",
             ffmpegdec->ctx_pix_fmt), (NULL));
 #else
     /* using external ffmpeg */
     GST_ELEMENT_ERROR (ffmpegdec, CORE, NEGOTIATION,
-        ("Could not find GStreamer caps mapping for FFmpeg codec '%s', and "
+        ("Could not find GStreamer caps mapping for libav codec '%s', and "
             "you are using an external libavcodec. This is most likely due to "
             "a packaging problem and/or libavcodec having been upgraded to a "
             "version that is not compatible with this version of "
-            "gstreamer-ffmpeg. Make sure your gstreamer-ffmpeg and libavcodec "
+            "gstreamer-libav. Make sure your gstreamer-libav and libavcodec "
             "packages come from the same source/repository.",
             oclass->in_plugin->name), (NULL));
 #endif
@@ -1374,7 +1374,7 @@ unknown_format:
 caps_failed:
   {
     GST_ELEMENT_ERROR (ffmpegdec, CORE, NEGOTIATION, (NULL),
-        ("Could not set caps for ffmpeg decoder (%s), not fixed?",
+        ("Could not set caps for libav decoder (%s), not fixed?",
             oclass->in_plugin->name));
     gst_caps_unref (caps);
 
@@ -1461,19 +1461,19 @@ gst_ffmpegdec_audio_negotiate (GstFFMpegDec * ffmpegdec, gboolean force)
   /* ERRORS */
 no_caps:
   {
-#ifdef HAVE_FFMPEG_UNINSTALLED
+#ifdef HAVE_LIBAV_UNINSTALLED
     /* using internal ffmpeg snapshot */
     GST_ELEMENT_ERROR (ffmpegdec, CORE, NEGOTIATION,
-        ("Could not find GStreamer caps mapping for FFmpeg codec '%s'.",
+        ("Could not find GStreamer caps mapping for libav codec '%s'.",
             oclass->in_plugin->name), (NULL));
 #else
     /* using external ffmpeg */
     GST_ELEMENT_ERROR (ffmpegdec, CORE, NEGOTIATION,
-        ("Could not find GStreamer caps mapping for FFmpeg codec '%s', and "
+        ("Could not find GStreamer caps mapping for libav codec '%s', and "
             "you are using an external libavcodec. This is most likely due to "
             "a packaging problem and/or libavcodec having been upgraded to a "
             "version that is not compatible with this version of "
-            "gstreamer-ffmpeg. Make sure your gstreamer-ffmpeg and libavcodec "
+            "gstreamer-libav. Make sure your gstreamer-libav and libavcodec "
             "packages come from the same source/repository.",
             oclass->in_plugin->name), (NULL));
 #endif
@@ -1482,7 +1482,7 @@ no_caps:
 caps_failed:
   {
     GST_ELEMENT_ERROR (ffmpegdec, CORE, NEGOTIATION, (NULL),
-        ("Could not set caps for ffmpeg decoder (%s), not fixed?",
+        ("Could not set caps for libav decoder (%s), not fixed?",
             oclass->in_plugin->name));
     gst_caps_unref (caps);
 
@@ -2361,7 +2361,7 @@ gst_ffmpegdec_audio_frame (GstFFMpegDec * ffmpegdec,
   if (len == -1 && (in_plugin->id == CODEC_ID_AAC
           || in_plugin->id == CODEC_ID_AAC_LATM)) {
     GST_ELEMENT_ERROR (ffmpegdec, STREAM, DECODE, (NULL),
-        ("Decoding of AAC stream by FFMPEG failed."));
+        ("Decoding of AAC stream by libav failed."));
     *ret = GST_FLOW_ERROR;
   }
 
@@ -2444,7 +2444,7 @@ gst_ffmpegdec_frame (GstFFMpegDec * ffmpegdec,
 
   if (len < 0 || have_data < 0) {
     GST_WARNING_OBJECT (ffmpegdec,
-        "ffdec_%s: decoding error (len: %d, have_data: %d)",
+        "avdec_%s: decoding error (len: %d, have_data: %d)",
         oclass->in_plugin->name, len, have_data);
     *got_data = 0;
     goto beach;
@@ -2504,7 +2504,7 @@ gst_ffmpegdec_drain (GstFFMpegDec * ffmpegdec)
     gint have_data, len, try = 0;
 
     GST_LOG_OBJECT (ffmpegdec,
-        "codec has delay capabilities, calling until ffmpeg has drained everything");
+        "codec has delay capabilities, calling until libav has drained everything");
 
     do {
       GstFlowReturn ret;
@@ -3021,7 +3021,7 @@ not_negotiated:
   {
     oclass = (GstFFMpegDecClass *) (G_OBJECT_GET_CLASS (ffmpegdec));
     GST_ELEMENT_ERROR (ffmpegdec, CORE, NEGOTIATION, (NULL),
-        ("ffdec_%s: input format was not set before data start",
+        ("avdec_%s: input format was not set before data start",
             oclass->in_plugin->name));
     gst_buffer_unref (inbuf);
     return GST_FLOW_NOT_NEGOTIATED;
@@ -3177,14 +3177,14 @@ gst_ffmpegdec_register (GstPlugin * plugin)
      * outside of ffmpeg. */
     if (g_str_has_suffix (in_plugin->name, "_vdpau")) {
       GST_DEBUG
-          ("Ignoring VDPAU decoder %s. We can't handle this outside of ffmpeg",
+          ("Ignoring VDPAU decoder %s. We can't handle this outside of libav",
           in_plugin->name);
       goto next;
     }
 
     if (g_str_has_suffix (in_plugin->name, "_xvmc")) {
       GST_DEBUG
-          ("Ignoring XVMC decoder %s. We can't handle this outside of ffmpeg",
+          ("Ignoring XVMC decoder %s. We can't handle this outside of libav",
           in_plugin->name);
       goto next;
     }
@@ -3217,7 +3217,7 @@ gst_ffmpegdec_register (GstPlugin * plugin)
     /* construct the type */
     plugin_name = g_strdup ((gchar *) in_plugin->name);
     g_strdelimit (plugin_name, NULL, '_');
-    type_name = g_strdup_printf ("ffdec_%s", plugin_name);
+    type_name = g_strdup_printf ("avdec_%s", plugin_name);
     g_free (plugin_name);
 
     type = g_type_from_name (type_name);

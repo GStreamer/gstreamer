@@ -19,14 +19,14 @@ clean-local: clean-local-check
 check_PROGRAMS = \
 	generic/plugin-test \
 	generic/libavcodec-locking \
-	elements/ffdec_adpcm \
-	elements/ffdemux_ape \
+	elements/avdec_adpcm \
+	elements/avdemux_ape \
 	elements/postproc
 
 VALGRIND_TO_FIX = \
 	generic/plugin-test \
 	generic/libavcodec-locking \
-	elements/ffdemux_ape
+	elements/avdemux_ape
 
 TESTS = $(check_PROGRAMS)
 
@@ -42,6 +42,6 @@ LDADD = $(GST_OBJ_LIBS) $(GST_CHECK_LIBS) $(CHECK_LIBS)
 # valgrind testing
 VALGRIND_TESTS_DISABLE = $(VALGRIND_TO_FIX)
 
-SUPPRESSIONS = $(top_srcdir)/common/gst.supp $(srcdir)/gst-ffmpeg.supp
+SUPPRESSIONS = $(top_srcdir)/common/gst.supp $(srcdir)/gst-libav.supp
 
-EXTRA_DIST = gst-ffmpeg.supp
+EXTRA_DIST = gst-libav.supp

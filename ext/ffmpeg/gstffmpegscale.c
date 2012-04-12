@@ -24,7 +24,7 @@
 #include "config.h"
 #endif
 
-#ifdef HAVE_FFMPEG_UNINSTALLED
+#ifdef HAVE_LIBAV_UNINSTALLED
 #include <avcodec.h>
 #else
 #include <ffmpeg/avcodec.h>
@@ -105,7 +105,7 @@ gst_ffmpegscale_base_init (gpointer g_class)
 
   gst_element_class_add_static_pad_template (element_class, &src_factory);
   gst_element_class_add_static_pad_template (element_class, &sink_factory);
-  gst_element_class_set_static_metadata (element_class, "FFMPEG Scale element",
+  gst_element_class_set_static_metadata (element_class, "libav Scale element",
       "Filter/Converter/Video/Scaler",
       "Converts video from one resolution to another",
       "Luca Ognibene <luogni@tin.it>");
@@ -398,6 +398,6 @@ gst_ffmpegscale_handle_src_event (GstPad * pad, GstEvent * event)
 gboolean
 gst_ffmpegscale_register (GstPlugin * plugin)
 {
-  return gst_element_register (plugin, "ffvideoscale",
+  return gst_element_register (plugin, "avvideoscale",
       GST_RANK_NONE, GST_TYPE_FFMPEGSCALE);
 }

@@ -22,7 +22,7 @@
 #endif
 
 #include <string.h>
-#ifdef HAVE_FFMPEG_UNINSTALLED
+#ifdef HAVE_LIBAV_UNINSTALLED
 #include <avformat.h>
 #else
 #include <libavformat/avformat.h>
@@ -132,7 +132,7 @@ static GstCaps *gst_ffmpegmux_get_id_caps (enum CodecID *id_list);
 static void gst_ffmpeg_mux_simple_caps_set_int_list (GstCaps * caps,
     const gchar * field, guint num, const gint * values);
 
-#define GST_FFMUX_PARAMS_QDATA g_quark_from_static_string("ffmux-params")
+#define GST_FFMUX_PARAMS_QDATA g_quark_from_static_string("avmux-params")
 
 static GstElementClass *parent_class = NULL;
 
@@ -216,17 +216,17 @@ gst_ffmpegmux_base_init (gpointer g_class)
   is_formatter = gst_ffmpegmux_is_formatter (in_plugin->name);
   if (replacement != NULL) {
     longname =
-        g_strdup_printf ("FFmpeg %s %s (not recommended, use %s instead)",
+        g_strdup_printf ("libav %s %s (not recommended, use %s instead)",
         in_plugin->long_name, is_formatter ? "formatter" : "muxer",
         replacement);
     description =
-        g_strdup_printf ("FFmpeg %s %s (not recommended, use %s instead)",
+        g_strdup_printf ("libav %s %s (not recommended, use %s instead)",
         in_plugin->long_name, is_formatter ? "formatter" : "muxer",
         replacement);
   } else {
-    longname = g_strdup_printf ("FFmpeg %s %s", in_plugin->long_name,
+    longname = g_strdup_printf ("libav %s %s", in_plugin->long_name,
         is_formatter ? "formatter" : "muxer");
-    description = g_strdup_printf ("FFmpeg %s %s", in_plugin->long_name,
+    description = g_strdup_printf ("libav %s %s", in_plugin->long_name,
         is_formatter ? "formatter" : "muxer");
   }
   gst_element_class_set_metadata (element_class, longname,
@@ -430,7 +430,7 @@ gst_ffmpegmux_request_new_pad (GstElement * element,
     type = AVMEDIA_TYPE_AUDIO;
     bitrate = 285 * 1024;
   } else {
-    g_warning ("ffmux: unknown pad template!");
+    g_warning ("avmux: unknown pad template!");
     return NULL;
   }
 
@@ -458,7 +458,7 @@ gst_ffmpegmux_request_new_pad (GstElement * element,
   /* we fill in codec during capsnego */
 
   /* we love debug output (c) (tm) (r) */
-  GST_DEBUG ("Created %s pad for ffmux_%s element",
+  GST_DEBUG ("Created %s pad for avmux_%s element",
       padname, ((GstFFMpegMuxClass *) klass)->in_plugin->name);
   g_free (padname);
 
@@ -655,7 +655,7 @@ gst_ffmpegmux_collected (GstCollectPads2 * pads, gpointer user_data)
     if (url_fopen (&ffmpegmux->context->pb,
             ffmpegmux->context->filename, open_flags) < 0) {
       GST_ELEMENT_ERROR (ffmpegmux, LIBRARY, TOO_LAZY, (NULL),
-          ("Failed to open stream context in ffmux"));
+          ("Failed to open stream context in avmux"));
       return GST_FLOW_ERROR;
     }
 
@@ -947,7 +947,7 @@ gst_ffmpegmux_register (GstPlugin * plugin)
      * muxer type. */
 
     /* construct the type */
-    type_name = g_strdup_printf ("ffmux_%s", in_plugin->name);
+    type_name = g_strdup_printf ("avmux_%s", in_plugin->name);
 
     p = type_name;
 

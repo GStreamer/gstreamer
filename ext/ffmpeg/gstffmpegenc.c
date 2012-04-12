@@ -28,7 +28,7 @@
 #include <glib/gstdio.h>
 #include <errno.h>
 
-#ifdef HAVE_FFMPEG_UNINSTALLED
+#ifdef HAVE_LIBAV_UNINSTALLED
 #include <avcodec.h>
 #else
 #include <libavcodec/avcodec.h>
@@ -85,7 +85,7 @@ gst_ffmpegenc_me_method_get_type (void)
   };
   if (!ffmpegenc_me_method_type) {
     ffmpegenc_me_method_type =
-        g_enum_register_static ("GstFFMpegEncMeMethod", ffmpegenc_me_methods);
+        g_enum_register_static ("GstLibAVEncMeMethod", ffmpegenc_me_methods);
   }
   return ffmpegenc_me_method_type;
 }
@@ -118,7 +118,7 @@ static void gst_ffmpegenc_get_property (GObject * object,
 static GstStateChangeReturn gst_ffmpegenc_change_state (GstElement * element,
     GstStateChange transition);
 
-#define GST_FFENC_PARAMS_QDATA g_quark_from_static_string("ffenc-params")
+#define GST_FFENC_PARAMS_QDATA g_quark_from_static_string("avenc-params")
 
 static GstElementClass *parent_class = NULL;
 
@@ -139,10 +139,10 @@ gst_ffmpegenc_base_init (GstFFMpegEncClass * klass)
   g_assert (in_plugin != NULL);
 
   /* construct the element details struct */
-  longname = g_strdup_printf ("FFmpeg %s encoder", in_plugin->long_name);
+  longname = g_strdup_printf ("libav %s encoder", in_plugin->long_name);
   classification = g_strdup_printf ("Codec/Encoder/%s",
       (in_plugin->type == AVMEDIA_TYPE_VIDEO) ? "Video" : "Audio");
-  description = g_strdup_printf ("FFmpeg %s encoder", in_plugin->name);
+  description = g_strdup_printf ("libav %s encoder", in_plugin->name);
   gst_element_class_set_metadata (element_class, longname,
       classification, description,
       "Wim Taymans <wim.taymans@gmail.com>, "
@@ -676,7 +676,7 @@ gst_ffmpegenc_setcaps (GstFFMpegEnc * ffmpegenc, GstCaps * caps)
       gst_ffmpeg_avcodec_close (ffmpegenc->context);
     if (ffmpegenc->context->stats_in)
       g_free (ffmpegenc->context->stats_in);
-    GST_DEBUG_OBJECT (ffmpegenc, "ffenc_%s: Failed to open FFMPEG codec",
+    GST_DEBUG_OBJECT (ffmpegenc, "avenc_%s: Failed to open libav codec",
         oclass->in_plugin->name);
     return FALSE;
   }
@@ -689,7 +689,7 @@ gst_ffmpegenc_setcaps (GstFFMpegEnc * ffmpegenc, GstCaps * caps)
   if (pix_fmt != ffmpegenc->context->pix_fmt) {
     gst_ffmpeg_avcodec_close (ffmpegenc->context);
     GST_DEBUG_OBJECT (ffmpegenc,
-        "ffenc_%s: AV wants different colourspace (%d given, %d wanted)",
+        "avenc_%s: AV wants different colourspace (%d given, %d wanted)",
         oclass->in_plugin->name, pix_fmt, ffmpegenc->context->pix_fmt);
     return FALSE;
   }
@@ -697,7 +697,7 @@ gst_ffmpegenc_setcaps (GstFFMpegEnc * ffmpegenc, GstCaps * caps)
    * and quite some codecs do not make up their own mind about that
    * in any case, _NONE can never work out later on */
   if (oclass->in_plugin->type == AVMEDIA_TYPE_VIDEO && pix_fmt == PIX_FMT_NONE) {
-    GST_DEBUG_OBJECT (ffmpegenc, "ffenc_%s: Failed to determine input format",
+    GST_DEBUG_OBJECT (ffmpegenc, "avenc_%s: Failed to determine input format",
         oclass->in_plugin->name);
     return FALSE;
   }
@@ -822,7 +822,7 @@ gst_ffmpegenc_chain_video (GstPad * pad, GstObject * parent, GstBuffer * inbuf)
     GstFFMpegEncClass *oclass =
         (GstFFMpegEncClass *) (G_OBJECT_GET_CLASS (ffmpegenc));
     GST_ERROR_OBJECT (ffmpegenc,
-        "ffenc_%s: failed to encode buffer", oclass->in_plugin->name);
+        "avenc_%s: failed to encode buffer", oclass->in_plugin->name);
 #endif /* GST_DISABLE_GST_DEBUG */
     gst_buffer_unref (inbuf);
     return GST_FLOW_OK;
@@ -1135,7 +1135,7 @@ gst_ffmpegenc_flush_buffers (GstFFMpegEnc * ffmpegenc, gboolean send)
       GstFFMpegEncClass *oclass =
           (GstFFMpegEncClass *) (G_OBJECT_GET_CLASS (ffmpegenc));
       GST_WARNING_OBJECT (ffmpegenc,
-          "ffenc_%s: failed to flush buffer", oclass->in_plugin->name);
+          "avenc_%s: failed to flush buffer", oclass->in_plugin->name);
 #endif /* GST_DISABLE_GST_DEBUG */
       break;
     }
@@ -1446,7 +1446,7 @@ gst_ffmpegenc_register (GstPlugin * plugin)
     }
 
     /* construct the type */
-    type_name = g_strdup_printf ("ffenc_%s", in_plugin->name);
+    type_name = g_strdup_printf ("avenc_%s", in_plugin->name);
 
     type = g_type_from_name (type_name);
 

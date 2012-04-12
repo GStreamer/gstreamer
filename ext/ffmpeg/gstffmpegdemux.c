@@ -24,7 +24,7 @@
 #endif
 
 #include <string.h>
-#ifdef HAVE_FFMPEG_UNINSTALLED
+#ifdef HAVE_LIBAV_UNINSTALLED
 #include <avformat.h>
 #ifdef HAVE_AVI_H
 #include <avi.h>
@@ -142,7 +142,7 @@ gst_ffmpegdemux_send_event (GstElement * element, GstEvent * event);
 static GstStateChangeReturn
 gst_ffmpegdemux_change_state (GstElement * element, GstStateChange transition);
 
-#define GST_FFDEMUX_PARAMS_QDATA g_quark_from_static_string("ffdemux-params")
+#define GST_FFDEMUX_PARAMS_QDATA g_quark_from_static_string("avdemux-params")
 
 static GstElementClass *parent_class = NULL;
 
@@ -200,8 +200,8 @@ gst_ffmpegdemux_base_init (GstFFMpegDemuxClass * klass)
   }
 
   /* construct the element details struct */
-  longname = g_strdup_printf ("FFmpeg %s demuxer", in_plugin->long_name);
-  description = g_strdup_printf ("FFmpeg %s demuxer", in_plugin->long_name);
+  longname = g_strdup_printf ("libav %s demuxer", in_plugin->long_name);
+  description = g_strdup_printf ("libav %s demuxer", in_plugin->long_name);
   gst_element_class_set_metadata (element_class, longname,
       "Codec/Demuxer", description,
       "Wim Taymans <wim@fluendo.com>, "
@@ -1290,7 +1290,7 @@ gst_ffmpegdemux_type_find (GstTypeFind * tf, gpointer priv)
 
       sinkcaps = gst_ffmpeg_formatid_to_caps (in_plugin->name);
 
-      GST_LOG ("ffmpeg typefinder '%s' suggests %" GST_PTR_FORMAT ", p=%u%%",
+      GST_LOG ("libav typefinder '%s' suggests %" GST_PTR_FORMAT ", p=%u%%",
           in_plugin->name, sinkcaps, res);
 
       gst_type_find_suggest (tf, res, sinkcaps);
@@ -1873,7 +1873,7 @@ gst_ffmpegdemux_register (GstPlugin * plugin)
     gint rank;
     gboolean register_typefind_func = TRUE;
 
-    GST_LOG ("Attempting to handle ffmpeg demuxer plugin %s [%s]",
+    GST_LOG ("Attempting to handle libav demuxer plugin %s [%s]",
         in_plugin->name, in_plugin->long_name);
 
     /* no emulators */
@@ -1994,7 +1994,7 @@ gst_ffmpegdemux_register (GstPlugin * plugin)
     }
 
     /* construct the type */
-    type_name = g_strdup_printf ("ffdemux_%s", name);
+    type_name = g_strdup_printf ("avdemux_%s", name);
 
     /* if it's already registered, drop it */
     if (g_type_from_name (type_name)) {
@@ -2002,7 +2002,7 @@ gst_ffmpegdemux_register (GstPlugin * plugin)
       goto next;
     }
 
-    typefind_name = g_strdup_printf ("fftype_%s", name);
+    typefind_name = g_strdup_printf ("avtype_%s", name);
 
     /* create the type now */
     type = g_type_register_static (GST_TYPE_ELEMENT, type_name, &typeinfo, 0);
@@ -2018,7 +2018,7 @@ gst_ffmpegdemux_register (GstPlugin * plugin)
             !gst_type_find_register (plugin, typefind_name, rank,
                 gst_ffmpegdemux_type_find, extensions, NULL, in_plugin,
                 NULL))) {
-      g_warning ("Register of type ffdemux_%s failed", name);
+      g_warning ("Register of type avdemux_%s failed", name);
       g_free (type_name);
       g_free (typefind_name);
       return FALSE;
