@@ -544,7 +544,7 @@ gst_flv_demux_parse_tag_script (GstFlvDemux * demux, GstBuffer * buffer)
   gst_buffer_map (buffer, &map, GST_MAP_READ);
   gst_byte_reader_init (&reader, map.data, map.size);
 
-  gst_byte_reader_skip (&reader, 7);
+  gst_byte_reader_skip_unchecked (&reader, 7);
 
   GST_LOG_OBJECT (demux, "parsing a script tag");
 
