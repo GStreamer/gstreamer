@@ -42,8 +42,6 @@ static GstStaticPadTemplate audio_src_template = GST_STATIC_PAD_TEMPLATE ("src",
 typedef struct _TestData
 {
   GstEvent *sink_event;
-  GstEvent *src_event1;
-  GstEvent *src_event2;
   gint src_events;
 } TestData;
 
@@ -60,14 +58,10 @@ src_event (GstPad * pad, GstObject * parent, GstEvent * event)
 {
   TestData *data = (TestData *) gst_pad_get_element_private (pad);
 
-  if (event->type == GST_EVENT_CUSTOM_UPSTREAM) {
+  if (event->type == GST_EVENT_CUSTOM_UPSTREAM)
     data->src_events += 1;
-    if (data->src_event1 != NULL)
-      data->src_event2 = event;
-    else
-      data->src_event1 = event;
-  }
 
+  gst_event_unref (event);
   return TRUE;
 }
 
@@ -79,6 +73,7 @@ sink_event (GstPad * pad, GstObject * parent, GstEvent * event)
   if (event->type == GST_EVENT_CUSTOM_DOWNSTREAM)
     data->sink_event = event;
 
+  gst_event_unref (event);
   return TRUE;
 }
 
