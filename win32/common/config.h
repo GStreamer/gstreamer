@@ -31,13 +31,16 @@
 #undef ENABLE_NLS
 
 /* gettext package name */
-#define GETTEXT_PACKAGE "gst-plugins-good-0.11"
+#define GETTEXT_PACKAGE "gst-plugins-good-1.0"
 
 /* The GIO library directory. */
 #undef GIO_LIBDIR
 
 /* The GIO modules directory. */
 #undef GIO_MODULE_DIR
+
+/* GStreamer API Version */
+#define GST_API_VERSION "1.0"
 
 /* Defined if gcov is enabled to force a rebuild due to config.h changing */
 #undef GST_GCOV_ENABLED
@@ -55,7 +58,7 @@
 #define GST_PACKAGE_ORIGIN "Unknown package origin"
 
 /* GStreamer package release date/time for plugins as YYYY-MM-DD */
-#define GST_PACKAGE_RELEASE_DATETIME "2012-03-22"
+#define GST_PACKAGE_RELEASE_DATETIME "2012-04-12"
 
 /* struct v4l2_buffer missing */
 #undef GST_V4L2_MISSING_BUFDECL
@@ -304,6 +307,9 @@
 /* Define to 1 if you have the <sys/param.h> header file. */
 #undef HAVE_SYS_PARAM_H
 
+/* Define to 1 if you have the <sys/socket.h> header file. */
+#undef HAVE_SYS_SOCKET_H
+
 /* Define to 1 if you have the <sys/stat.h> header file. */
 #define HAVE_SYS_STAT_H 1
 
@@ -363,7 +369,7 @@
 #define PACKAGE_NAME "GStreamer Good Plug-ins"
 
 /* Define to the full name and version of this package. */
-#define PACKAGE_STRING "GStreamer Good Plug-ins 0.11.2"
+#define PACKAGE_STRING "GStreamer Good Plug-ins 0.11.90"
 
 /* Define to the one symbol short name of this package. */
 #define PACKAGE_TARNAME "gst-plugins-good"
@@ -372,7 +378,7 @@
 #undef PACKAGE_URL
 
 /* Define to the version of this package. */
-#define PACKAGE_VERSION "0.11.2"
+#define PACKAGE_VERSION "0.11.90"
 
 /* directory where plugins are located */
 #ifdef _DEBUG
@@ -403,7 +409,7 @@
 #undef STDC_HEADERS
 
 /* Version number of package */
-#define VERSION "0.11.2"
+#define VERSION "0.11.90"
 
 /* old wavpack API */
 #undef WAVPACK_OLD_API

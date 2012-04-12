@@ -325,7 +325,7 @@ deinterlace_line_vfir (guint8 * ORC_RESTRICT d1, const guint8 * ORC_RESTRICT s1,
     const guint8 * ORC_RESTRICT s4, const guint8 * ORC_RESTRICT s5, int n)
 {
   OrcExecutor _ex, *ex = &_ex;
-  static int p_inited = 0;
+  static volatile int p_inited = 0;
   static OrcProgram *p = 0;
   void (*func) (OrcExecutor *);
 
@@ -468,7 +468,7 @@ deinterlace_line_linear (guint8 * ORC_RESTRICT d1,
     const guint8 * ORC_RESTRICT s1, const guint8 * ORC_RESTRICT s2, int n)
 {
   OrcExecutor _ex, *ex = &_ex;
-  static int p_inited = 0;
+  static volatile int p_inited = 0;
   static OrcProgram *p = 0;
   void (*func) (OrcExecutor *);
 
@@ -638,7 +638,7 @@ deinterlace_line_linear_blend (guint8 * ORC_RESTRICT d1,
     const guint8 * ORC_RESTRICT s3, int n)
 {
   OrcExecutor _ex, *ex = &_ex;
-  static int p_inited = 0;
+  static volatile int p_inited = 0;
   static OrcProgram *p = 0;
   void (*func) (OrcExecutor *);
 
@@ -921,7 +921,7 @@ deinterlace_line_greedy (orc_uint8 * ORC_RESTRICT d1,
     int p1, int n)
 {
   OrcExecutor _ex, *ex = &_ex;
-  static int p_inited = 0;
+  static volatile int p_inited = 0;
   static OrcProgram *p = 0;
   void (*func) (OrcExecutor *);
 

@@ -40,6 +40,7 @@ GObject
           GstAudioBaseSink
             GstJackAudioSink
             GstPulseSink
+          GstCACASink
           GstDynUDPSink
           GstMultiFileSink
           GstMultiUDPSink
@@ -106,6 +107,7 @@ GObject
             GstRadioacTV
             GstRevTV
             GstRippleTV
+            GstSMPTEAlpha
             GstShagadelicTV
             GstStreakTV
             GstVertigoTV
@@ -129,6 +131,7 @@ GObject
         GstCutter
         GstDVDec
         GstDVDemux
+        GstDeinterleave
         GstFlacTag
         GstFlvDemux
         GstFlvMux
@@ -138,6 +141,7 @@ GObject
         GstICYDemux
         GstISMLMux
         GstImageFreeze
+        GstInterleave
         GstJpegDec
         GstJpegEnc
         GstMJ2Mux
@@ -232,6 +236,7 @@ GObject
         GstRtpPtDemux
         GstRtpSession
         GstRtpSsrcDemux
+        GstSMPTE
         GstShapeWipe
         GstTagDemux
           GstApeDemux
@@ -245,6 +250,7 @@ GObject
         GstWavParse
         GstY4mEncode
       GstPad
+        GstInterleavePad
         GstVideoMixer2Pad
       GstPadTemplate
       GstPlugin
@@ -274,6 +280,7 @@ GInterface
   GstStreamVolume
   GstTagSetter
   GstTagXmpWriter
+  GstTocSetter
   GstTuner
   GstURIHandler
   GstVideoOrientation

@@ -1,5 +1,6 @@
 GIcon GObject
 GInitable GObject
+GstChildProxy GObject
 GstChildProxy GstObject
 GstColorBalance GstImplementsInterface GstElement
 GstImplementsInterface GstElement
@@ -7,6 +8,7 @@ GstMixer GstImplementsInterface GstElement
 GstStreamVolume GObject
 GstTagSetter GstElement
 GstTagXmpWriter GstElement
+GstTocSetter GstElement
 GstTuner GstImplementsInterface GstElement
 GstVideoOrientation GstImplementsInterface GstElement
 GstXOverlay GstImplementsInterface GstElement

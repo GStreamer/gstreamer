@@ -33,6 +33,7 @@ GstIirEqualizerNBands GstChildProxy
 GstMJ2Mux GstTagSetter GstTagXmpWriter
 GstMP4Mux GstTagSetter GstTagXmpWriter
 GstMatroskaMux GstTagSetter
+GstMatroskaMux GstTagSetter GstTocSetter
 GstOss4Mixer GstImplementsInterface GstMixer GstPropertyProbe
 GstOss4Sink GstStreamVolume GstPropertyProbe
 GstOss4Source GstImplementsInterface GstMixer GstPropertyProbe
@@ -75,3 +76,4 @@ GstVideoMixer GstChildProxy
 GstVideoMixer2 GstChildProxy
 GstWavpackEnc GstPreset
 GstWebMMux GstTagSetter
+GstWebMMux GstTagSetter GstTocSetter

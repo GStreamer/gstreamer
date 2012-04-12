@@ -1,5 +1,5 @@
 
-Release notes for GStreamer Good Plug-ins 0.11.2 "Rite of Devastation"
+Release notes for GStreamer Good Plug-ins 0.11.90 "From grief and moan to a gold throne"
         
 
 
@@ -13,9 +13,6 @@ eventually lead up to the stable 1.0 series.
 It is not API or ABI compatible with the stable 0.10.x series.
 It is, however, parallel installable with the 0.10.x series.
 
-
-
-"Such ingratitude.  After all the times I've saved your life."
 
 
 A collection of plug-ins you'd want to have right next to you on the
@@ -55,29 +52,10 @@ contains a set of less supported plug-ins that haven't passed the
 
 Features of this release
     
-      * Many cleanups
-      * Ported to new 0.11 core API changes
-      * flacenc: various fixes
-      * gdkpixbuf: port to 0.11
-      * wavpack: port to 0.11
-      * rtpbin: many fixes
-      * qtdemux: use PTS and DTS
-      * imagefreeze: port to 0.11
-      * qtdemux: negotiate allocators
-
-Bugs fixed in this release
-     
-      * 670623 : [0.11] flacenc not working
-      * 628773 : [0.11] rtp -- match properties and caps fields
-      * 658357 : [0.11] pulse: build fails with recent pulseaudio
-      * 662615 : [0.11] build failure due to printf format compiler warnings on OSX 64 bit
-      * 667085 : [0.11] dcaparse: uses uninitialized variable
-      * 669607 : [0.11] directsoundsink: Fix compiling
-      * 669612 : [0.11] waveformsink: Port to 0.11
-      * 669643 : [0.11] interleave port
-      * 670320 : gst-plugins-good 0.11.1 fails to build due to missing gstsmokedec.h
-      * 671534 : [0.11] qtmux: cover art tag is GstSample now
-      * 670303 : [0.11] Can't access " rms " , " peak " and " decay " keys from GstLevel bus message trough PyGI
+      * Lots of bugfixes, cleanup and other improvements
+      * The interleave/deinterleave plugin was ported to 0.11
+There were no bugs fixed in this release
+    
 
 Download
 
@@ -106,25 +84,15 @@ Applications
   
 Contributors to this release
     
-      * Alessandro Decina
-      * Andrej Gelenberg
-      * Antoine Tremblay
-      * David Schleef
-      * Dominique Leuenberger
-      * Edward Hervey
-      * Marc Leeman
+      * Alexander Saprykin
       * Mark Nauwelaerts
-      * Matej Knopp
-      * Nicola Murino
-      * Oleksij Rempel (Alexey Fisher)
+      * Nicolas Dufresne
       * Olivier Crête
-      * Peteris Krisjanis
-      * Ross Burton
+      * Raimo Järvi
       * Sebastian Dröge
-      * Sreerenj Balachandran
       * Stefan Sauer
       * Tim-Philipp Müller
-      * Vincent Penquerc'h
-      * Vincent Untz
       * Wim Taymans
+      * uraeus
+      * Руслан Ижбулатов
  

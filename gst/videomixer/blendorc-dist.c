@@ -193,7 +193,7 @@ void
 orc_splat_u32 (guint32 * ORC_RESTRICT d1, int p1, int n)
 {
   OrcExecutor _ex, *ex = &_ex;
-  static int p_inited = 0;
+  static volatile int p_inited = 0;
   static OrcProgram *p = 0;
   void (*func) (OrcExecutor *);
 
@@ -285,7 +285,7 @@ orc_memcpy_u32 (guint32 * ORC_RESTRICT d1, const guint32 * ORC_RESTRICT s1,
     int n)
 {
   OrcExecutor _ex, *ex = &_ex;
-  static int p_inited = 0;
+  static volatile int p_inited = 0;
   static OrcProgram *p = 0;
   void (*func) (OrcExecutor *);
 
@@ -438,7 +438,7 @@ orc_blend_u8 (guint8 * ORC_RESTRICT d1, int d1_stride,
     const guint8 * ORC_RESTRICT s1, int s1_stride, int p1, int n, int m)
 {
   OrcExecutor _ex, *ex = &_ex;
-  static int p_inited = 0;
+  static volatile int p_inited = 0;
   static OrcProgram *p = 0;
   void (*func) (OrcExecutor *);
 
@@ -742,7 +742,7 @@ orc_blend_argb (guint8 * ORC_RESTRICT d1, int d1_stride,
     const guint8 * ORC_RESTRICT s1, int s1_stride, int p1, int n, int m)
 {
   OrcExecutor _ex, *ex = &_ex;
-  static int p_inited = 0;
+  static volatile int p_inited = 0;
   static OrcProgram *p = 0;
   void (*func) (OrcExecutor *);
 
@@ -1076,7 +1076,7 @@ orc_blend_bgra (guint8 * ORC_RESTRICT d1, int d1_stride,
     const guint8 * ORC_RESTRICT s1, int s1_stride, int p1, int n, int m)
 {
   OrcExecutor _ex, *ex = &_ex;
-  static int p_inited = 0;
+  static volatile int p_inited = 0;
   static OrcProgram *p = 0;
   void (*func) (OrcExecutor *);
 
@@ -1562,7 +1562,7 @@ orc_overlay_argb (guint8 * ORC_RESTRICT d1, int d1_stride,
     const guint8 * ORC_RESTRICT s1, int s1_stride, int p1, int n, int m)
 {
   OrcExecutor _ex, *ex = &_ex;
-  static int p_inited = 0;
+  static volatile int p_inited = 0;
   static OrcProgram *p = 0;
   void (*func) (OrcExecutor *);
 
@@ -2086,7 +2086,7 @@ orc_overlay_bgra (guint8 * ORC_RESTRICT d1, int d1_stride,
     const guint8 * ORC_RESTRICT s1, int s1_stride, int p1, int n, int m)
 {
   OrcExecutor _ex, *ex = &_ex;
-  static int p_inited = 0;
+  static volatile int p_inited = 0;
   static OrcProgram *p = 0;
   void (*func) (OrcExecutor *);
 

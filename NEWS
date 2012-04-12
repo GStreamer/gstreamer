@@ -1,4 +1,9 @@
-This is GStreamer Good Plug-ins 0.11.2, "Rite of Devastation"
+This is GStreamer Good Plug-ins 0.11.90 "From grief and moan to a gold throne"
+
+New features in 0.11.90:
+
+      * Lots of bugfixes, cleanup and other improvements
+      * The interleave/deinterleave plugin was ported to 0.11
 
 New features in 0.11.2:
 
