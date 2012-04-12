@@ -250,6 +250,9 @@ gst_vaapi_dpb_size(GstVaapiDpb *dpb)
 /* --- MPEG-2 Decoded Picture Buffer                                     --- */
 /* ------------------------------------------------------------------------- */
 
+/* At most two reference pictures for MPEG-2 */
+#define MAX_MPEG2_REFERENCES 2
+
 G_DEFINE_TYPE(GstVaapiDpbMpeg2, gst_vaapi_dpb_mpeg2, GST_VAAPI_TYPE_DPB)
 
 static gboolean
@@ -268,7 +271,7 @@ gst_vaapi_dpb_mpeg2_add(GstVaapiDpb *dpb, GstVaapiPicture *picture)
      * - ... thus causing older reference pictures to be output, if not already
      * - the oldest reference picture is replaced with the new reference picture
      */
-    if (G_LIKELY(dpb->num_pictures == 2)) {
+    if (G_LIKELY(dpb->num_pictures == MAX_MPEG2_REFERENCES)) {
         index = (dpb->pictures[0]->poc > dpb->pictures[1]->poc);
         ref_picture = dpb->pictures[index];
         if (!GST_VAAPI_PICTURE_IS_OUTPUT(ref_picture)) {
@@ -302,7 +305,7 @@ gst_vaapi_dpb_mpeg2_class_init(GstVaapiDpbMpeg2Class *klass)
 GstVaapiDpb *
 gst_vaapi_dpb_mpeg2_new(void)
 {
-    return dpb_new(GST_VAAPI_TYPE_DPB_MPEG2, 2);
+    return dpb_new(GST_VAAPI_TYPE_DPB_MPEG2, MAX_MPEG2_REFERENCES);
 }
 
 void
@@ -313,7 +316,8 @@ gst_vaapi_dpb_mpeg2_get_references(
     GstVaapiPicture   **next_picture_ptr
 )
 {
-    GstVaapiPicture **picture_ptr, *ref_picture, *ref_pictures[2];
+    GstVaapiPicture *ref_picture, *ref_pictures[MAX_MPEG2_REFERENCES];
+    GstVaapiPicture **picture_ptr;
     guint i, index;
 
     g_return_if_fail(GST_VAAPI_IS_DPB_MPEG2(dpb));
