@@ -1669,7 +1669,10 @@ gst_matroska_demux_search_cluster (GstMatroskaDemux * demux, gint64 * pos)
     if (cluster_pos >= 0) {
       newpos += cluster_pos;
       /* prepare resuming at next byte */
-      gst_byte_reader_skip (&reader, cluster_pos + 1);
+      if (!gst_byte_reader_skip (&reader, cluster_pos + 1)) {
+        GST_DEBUG_OBJECT (demux, "Need more data -> continue");
+        continue;
+      }
       GST_DEBUG_OBJECT (demux,
           "found cluster ebml id at offset %" G_GINT64_FORMAT, newpos);
       /* extra checks whether we really sync'ed to a cluster:

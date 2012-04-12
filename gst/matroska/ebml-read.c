@@ -223,11 +223,12 @@ gst_ebml_peek_id_full (GstEbmlRead * ebml, guint32 * id, guint64 * length,
     GstByteReader *br = gst_ebml_read_br (ebml);
     guint size = gst_byte_reader_get_remaining (br);
 
-    gst_byte_reader_peek_data (br, size, &data);
+    if (gst_byte_reader_peek_data (br, size, &data)) {
 
-    GST_LOG_OBJECT (ebml->el, "current br %p; remaining %d", br, size);
-    if (data)
-      GST_MEMDUMP_OBJECT (ebml->el, "element", data, MIN (size, *length));
+      GST_LOG_OBJECT (ebml->el, "current br %p; remaining %d", br, size);
+      if (data)
+        GST_MEMDUMP_OBJECT (ebml->el, "element", data, MIN (size, *length));
+    }
   }
 #endif
 

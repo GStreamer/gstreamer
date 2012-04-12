@@ -427,14 +427,16 @@ gst_ebml_write_element_push (GstEbmlWrite * ebml, GstBuffer * buf,
       gst_buffer_map (buf, &map, GST_MAP_READ);
       buf_data = map.data;
     }
-    gst_byte_writer_put_data (ebml->streamheader, buf_data, data_size);
+    if (!gst_byte_writer_put_data (ebml->streamheader, buf_data, data_size))
+      GST_WARNING ("Error writing data to streamheader");
   }
   if (ebml->cache) {
     if (!buf_data) {
       gst_buffer_map (buf, &map, GST_MAP_READ);
       buf_data = map.data;
     }
-    gst_byte_writer_put_data (ebml->cache, buf_data, data_size);
+    if (!gst_byte_writer_put_data (ebml->cache, buf_data, data_size))
+      GST_WARNING ("Error writing data to cache");
     if (map.data)
       gst_buffer_unmap (buf, &map);
     gst_buffer_unref (buf);
