@@ -81,16 +81,16 @@ gst_omx_video_enc_change_state (GstElement * element,
 static gboolean gst_omx_video_enc_start (GstBaseVideoEncoder * encoder);
 static gboolean gst_omx_video_enc_stop (GstBaseVideoEncoder * encoder);
 static gboolean gst_omx_video_enc_set_format (GstBaseVideoEncoder * encoder,
-    GstVideoState * state);
+    GstVideoInfo * info);
 static gboolean gst_omx_video_enc_reset (GstBaseVideoEncoder * encoder);
 static GstFlowReturn gst_omx_video_enc_handle_frame (GstBaseVideoEncoder *
-    encoder, GstVideoFrame * frame);
+    encoder, GstVideoFrameState * frame);
 static gboolean gst_omx_video_enc_finish (GstBaseVideoEncoder * encoder);
 
 static GstFlowReturn gst_omx_video_enc_drain (GstOMXVideoEnc * self);
 
 static GstFlowReturn gst_omx_video_enc_handle_output_frame (GstOMXVideoEnc *
-    self, GstOMXPort * port, GstOMXBuffer * buf, GstVideoFrame * frame);
+    self, GstOMXPort * port, GstOMXBuffer * buf, GstVideoFrameState * frame);
 
 enum
 {
@@ -111,147 +111,12 @@ enum
 
 /* class initialization */
 
-#define DEBUG_INIT(bla) \
+#define DEBUG_INIT \
   GST_DEBUG_CATEGORY_INIT (gst_omx_video_enc_debug_category, "omxvideoenc", 0, \
       "debug category for gst-omx video encoder base class");
 
-GST_BOILERPLATE_FULL (GstOMXVideoEnc, gst_omx_video_enc, GstBaseVideoEncoder,
+G_DEFINE_ABSTRACT_TYPE_WITH_CODE (GstOMXVideoEnc, gst_omx_video_enc,
     GST_TYPE_BASE_VIDEO_ENCODER, DEBUG_INIT);
-
-static void
-gst_omx_video_enc_base_init (gpointer g_class)
-{
-  GstElementClass *element_class = GST_ELEMENT_CLASS (g_class);
-  GstOMXVideoEncClass *videoenc_class = GST_OMX_VIDEO_ENC_CLASS (g_class);
-  GKeyFile *config;
-  const gchar *element_name;
-  GError *err;
-  gchar *core_name, *component_name, *component_role;
-  gint in_port_index, out_port_index;
-  gchar *template_caps;
-  GstPadTemplate *templ;
-  GstCaps *caps;
-  gchar **hacks;
-
-  element_name =
-      g_type_get_qdata (G_TYPE_FROM_CLASS (g_class),
-      gst_omx_element_name_quark);
-  /* This happens for the base class and abstract subclasses */
-  if (!element_name)
-    return;
-
-  config = gst_omx_get_configuration ();
-
-  /* This will always succeed, see check in plugin_init */
-  core_name = g_key_file_get_string (config, element_name, "core-name", NULL);
-  g_assert (core_name != NULL);
-  videoenc_class->core_name = core_name;
-  component_name =
-      g_key_file_get_string (config, element_name, "component-name", NULL);
-  g_assert (component_name != NULL);
-  videoenc_class->component_name = component_name;
-
-  /* If this fails we simply don't set a role */
-  if ((component_role =
-          g_key_file_get_string (config, element_name, "component-role",
-              NULL))) {
-    GST_DEBUG ("Using component-role '%s' for element '%s'", component_role,
-        element_name);
-    videoenc_class->component_role = component_role;
-  }
-
-
-  /* Now set the inport/outport indizes and assume sane defaults */
-  err = NULL;
-  in_port_index =
-      g_key_file_get_integer (config, element_name, "in-port-index", &err);
-  if (err != NULL) {
-    GST_DEBUG ("No 'in-port-index' set for element '%s', assuming 0: %s",
-        element_name, err->message);
-    in_port_index = 0;
-    g_error_free (err);
-  }
-  videoenc_class->in_port_index = in_port_index;
-
-  err = NULL;
-  out_port_index =
-      g_key_file_get_integer (config, element_name, "out-port-index", &err);
-  if (err != NULL) {
-    GST_DEBUG ("No 'out-port-index' set for element '%s', assuming 1: %s",
-        element_name, err->message);
-    out_port_index = 1;
-    g_error_free (err);
-  }
-  videoenc_class->out_port_index = out_port_index;
-
-  /* Add pad templates */
-  err = NULL;
-  if (!(template_caps =
-          g_key_file_get_string (config, element_name, "sink-template-caps",
-              &err))) {
-    GST_DEBUG
-        ("No sink template caps specified for element '%s', using default '%s'",
-        element_name, videoenc_class->default_sink_template_caps);
-    caps = gst_caps_from_string (videoenc_class->default_sink_template_caps);
-    g_assert (caps != NULL);
-    g_error_free (err);
-  } else {
-    caps = gst_caps_from_string (template_caps);
-    if (!caps) {
-      GST_DEBUG
-          ("Could not parse sink template caps '%s' for element '%s', using default '%s'",
-          template_caps, element_name,
-          videoenc_class->default_sink_template_caps);
-      caps = gst_caps_from_string (videoenc_class->default_sink_template_caps);
-      g_assert (caps != NULL);
-    }
-  }
-  templ = gst_pad_template_new ("sink", GST_PAD_SINK, GST_PAD_ALWAYS, caps);
-  g_free (template_caps);
-  gst_element_class_add_pad_template (element_class, templ);
-  gst_object_unref (templ);
-
-  err = NULL;
-  if (!(template_caps =
-          g_key_file_get_string (config, element_name, "src-template-caps",
-              &err))) {
-    GST_DEBUG
-        ("No src template caps specified for element '%s', using default '%s'",
-        element_name, videoenc_class->default_src_template_caps);
-    caps = gst_caps_from_string (videoenc_class->default_src_template_caps);
-    g_assert (caps != NULL);
-    g_error_free (err);
-  } else {
-    caps = gst_caps_from_string (template_caps);
-    if (!caps) {
-      GST_DEBUG
-          ("Could not parse src template caps '%s' for element '%s', using default '%s'",
-          template_caps, element_name,
-          videoenc_class->default_src_template_caps);
-      caps = gst_caps_from_string (videoenc_class->default_src_template_caps);
-      g_assert (caps != NULL);
-    }
-  }
-  templ = gst_pad_template_new ("src", GST_PAD_SRC, GST_PAD_ALWAYS, caps);
-  g_free (template_caps);
-  gst_element_class_add_pad_template (element_class, templ);
-  gst_object_unref (templ);
-
-  if ((hacks =
-          g_key_file_get_string_list (config, element_name, "hacks", NULL,
-              NULL))) {
-#ifndef GST_DISABLE_GST_DEBUG
-    gchar **walk = hacks;
-
-    while (*walk) {
-      GST_DEBUG ("Using hack: %s", *walk);
-      walk++;
-    }
-#endif
-
-    videoenc_class->hacks = gst_omx_parse_hacks (hacks);
-  }
-}
 
 static void
 gst_omx_video_enc_class_init (GstOMXVideoEncClass * klass)
@@ -260,6 +125,7 @@ gst_omx_video_enc_class_init (GstOMXVideoEncClass * klass)
   GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
   GstBaseVideoEncoderClass *base_video_encoder_class =
       GST_BASE_VIDEO_ENCODER_CLASS (klass);
+
 
   gobject_class->finalize = gst_omx_video_enc_finalize;
   gobject_class->set_property = gst_omx_video_enc_set_property;
@@ -314,7 +180,7 @@ gst_omx_video_enc_class_init (GstOMXVideoEncClass * klass)
   base_video_encoder_class->finish =
       GST_DEBUG_FUNCPTR (gst_omx_video_enc_finish);
 
-  klass->default_sink_template_caps = "video/x-raw-yuv, "
+  klass->cdata.default_sink_template_caps = "video/x-raw, "
       "width = " GST_VIDEO_SIZE_RANGE ", "
       "height = " GST_VIDEO_SIZE_RANGE ", " "framerate = " GST_VIDEO_FPS_RANGE;
 
@@ -323,7 +189,7 @@ gst_omx_video_enc_class_init (GstOMXVideoEncClass * klass)
 }
 
 static void
-gst_omx_video_enc_init (GstOMXVideoEnc * self, GstOMXVideoEncClass * klass)
+gst_omx_video_enc_init (GstOMXVideoEnc * self)
 {
   self->control_rate = GST_OMX_VIDEO_ENC_CONTROL_RATE_DEFAULT;
   self->target_bitrate = GST_OMX_VIDEO_ENC_TARGET_BITRATE_DEFAULT;
@@ -341,8 +207,7 @@ gst_omx_video_enc_open (GstOMXVideoEnc * self)
   GstOMXVideoEncClass *klass = GST_OMX_VIDEO_ENC_GET_CLASS (self);
 
   self->component =
-      gst_omx_component_new (GST_OBJECT_CAST (self), klass->core_name,
-      klass->component_name, klass->component_role, klass->hacks);
+      gst_omx_component_new (GST_OBJECT_CAST (self), &klass->cdata);
   self->started = FALSE;
 
   if (!self->component)
@@ -353,9 +218,9 @@ gst_omx_video_enc_open (GstOMXVideoEnc * self)
     return FALSE;
 
   self->in_port =
-      gst_omx_component_add_port (self->component, klass->in_port_index);
+      gst_omx_component_add_port (self->component, klass->cdata.in_port_index);
   self->out_port =
-      gst_omx_component_add_port (self->component, klass->out_port_index);
+      gst_omx_component_add_port (self->component, klass->cdata.out_port_index);
 
   if (!self->in_port || !self->out_port)
     return FALSE;
@@ -497,7 +362,7 @@ gst_omx_video_enc_finalize (GObject * object)
   g_mutex_free (self->drain_lock);
   g_cond_free (self->drain_cond);
 
-  G_OBJECT_CLASS (parent_class)->finalize (object);
+  G_OBJECT_CLASS (gst_omx_video_enc_parent_class)->finalize (object);
 }
 
 static void
@@ -616,7 +481,9 @@ gst_omx_video_enc_change_state (GstElement * element, GstStateChange transition)
   if (ret == GST_STATE_CHANGE_FAILURE)
     return ret;
 
-  ret = GST_ELEMENT_CLASS (parent_class)->change_state (element, transition);
+  ret =
+      GST_ELEMENT_CLASS (gst_omx_video_enc_parent_class)->change_state (element,
+      transition);
 
   if (ret == GST_STATE_CHANGE_FAILURE)
     return ret;
@@ -625,7 +492,7 @@ gst_omx_video_enc_change_state (GstElement * element, GstStateChange transition)
     case GST_STATE_CHANGE_PLAYING_TO_PAUSED:
       break;
     case GST_STATE_CHANGE_PAUSED_TO_READY:
-      self->downstream_flow_ret = GST_FLOW_WRONG_STATE;
+      self->downstream_flow_ret = GST_FLOW_FLUSHING;
       self->started = FALSE;
 
       if (!gst_omx_video_enc_shutdown (self))
@@ -645,18 +512,18 @@ gst_omx_video_enc_change_state (GstElement * element, GstStateChange transition)
 #define MAX_FRAME_DIST_TICKS  (5 * OMX_TICKS_PER_SECOND)
 #define MAX_FRAME_DIST_FRAMES (100)
 
-static GstVideoFrame *
+static GstVideoFrameState *
 _find_nearest_frame (GstOMXVideoEnc * self, GstOMXBuffer * buf)
 {
   GList *l, *best_l = NULL;
   GList *finish_frames = NULL;
-  GstVideoFrame *best = NULL;
+  GstVideoFrameState *best = NULL;
   guint64 best_timestamp = 0;
   guint64 best_diff = G_MAXUINT64;
   BufferIdentification *best_id = NULL;
 
   for (l = GST_BASE_VIDEO_CODEC (self)->frames; l; l = l->next) {
-    GstVideoFrame *tmp = l->data;
+    GstVideoFrameState *tmp = l->data;
     BufferIdentification *id = tmp->coder_hook;
     guint64 timestamp, diff;
 
@@ -689,7 +556,7 @@ _find_nearest_frame (GstOMXVideoEnc * self, GstOMXBuffer * buf)
 
   if (best_id) {
     for (l = GST_BASE_VIDEO_CODEC (self)->frames; l && l != best_l; l = l->next) {
-      GstVideoFrame *tmp = l->data;
+      GstVideoFrameState *tmp = l->data;
       BufferIdentification *id = tmp->coder_hook;
       guint64 diff_ticks, diff_frames;
 
@@ -722,7 +589,7 @@ _find_nearest_frame (GstOMXVideoEnc * self, GstOMXBuffer * buf)
 
 static GstFlowReturn
 gst_omx_video_enc_handle_output_frame (GstOMXVideoEnc * self, GstOMXPort * port,
-    GstOMXBuffer * buf, GstVideoFrame * frame)
+    GstOMXBuffer * buf, GstVideoFrameState * frame)
 {
   GstOMXVideoEncClass *klass = GST_OMX_VIDEO_ENC_GET_CLASS (self);
   GstFlowReturn flow_ret = GST_FLOW_OK;
@@ -731,12 +598,18 @@ gst_omx_video_enc_handle_output_frame (GstOMXVideoEnc * self, GstOMXPort * port,
       && buf->omx_buf->nFilledLen > 0) {
     GstCaps *caps;
     GstBuffer *codec_data;
+    GstMapInfo map = GST_MAP_INFO_INIT;
 
-    caps = gst_caps_copy (GST_PAD_CAPS (GST_BASE_VIDEO_CODEC_SRC_PAD (self)));
+    caps =
+        gst_caps_copy (gst_pad_get_current_caps (GST_BASE_VIDEO_CODEC_SRC_PAD
+            (self)));
     codec_data = gst_buffer_new_and_alloc (buf->omx_buf->nFilledLen);
-    memcpy (GST_BUFFER_DATA (codec_data),
+
+    gst_buffer_map (codec_data, &map, GST_MAP_WRITE);
+    memcpy (map.data,
         buf->omx_buf->pBuffer + buf->omx_buf->nOffset,
         buf->omx_buf->nFilledLen);
+    gst_buffer_unmap (codec_data, &map);
 
     gst_caps_set_simple (caps, "codec_data", GST_TYPE_BUFFER, codec_data, NULL);
     if (!gst_pad_set_caps (GST_BASE_VIDEO_CODEC_SRC_PAD (self), caps)) {
@@ -747,19 +620,19 @@ gst_omx_video_enc_handle_output_frame (GstOMXVideoEnc * self, GstOMXPort * port,
     flow_ret = GST_FLOW_OK;
   } else if (buf->omx_buf->nFilledLen > 0) {
     GstBuffer *outbuf;
+    GstMapInfo map = GST_MAP_INFO_INIT;
 
     if (buf->omx_buf->nFilledLen > 0) {
       outbuf = gst_buffer_new_and_alloc (buf->omx_buf->nFilledLen);
 
-      memcpy (GST_BUFFER_DATA (outbuf),
+      gst_buffer_map (outbuf, &map, GST_MAP_WRITE);
+      memcpy (map.data,
           buf->omx_buf->pBuffer + buf->omx_buf->nOffset,
           buf->omx_buf->nFilledLen);
+      gst_buffer_unmap (outbuf, &map);
     } else {
       outbuf = gst_buffer_new ();
     }
-
-    gst_buffer_set_caps (outbuf,
-        GST_PAD_CAPS (GST_BASE_VIDEO_CODEC_SRC_PAD (self)));
 
     GST_BUFFER_TIMESTAMP (outbuf) =
         gst_util_uint64_scale (buf->omx_buf->nTimeStamp, GST_SECOND,
@@ -769,7 +642,7 @@ gst_omx_video_enc_handle_output_frame (GstOMXVideoEnc * self, GstOMXPort * port,
           gst_util_uint64_scale (buf->omx_buf->nTickCount, GST_SECOND,
           OMX_TICKS_PER_SECOND);
 
-    if ((klass->hacks & GST_OMX_HACK_SYNCFRAME_FLAG_NOT_USED)
+    if ((klass->cdata.hacks & GST_OMX_HACK_SYNCFRAME_FLAG_NOT_USED)
         || (buf->omx_buf->nFlags & OMX_BUFFERFLAG_SYNCFRAME)) {
       if (frame)
         frame->is_sync_point = TRUE;
@@ -806,7 +679,7 @@ gst_omx_video_enc_loop (GstOMXVideoEnc * self)
   GstOMXVideoEncClass *klass;
   GstOMXPort *port = self->out_port;
   GstOMXBuffer *buf = NULL;
-  GstVideoFrame *frame;
+  GstVideoFrameState *frame;
   GstFlowReturn flow_ret = GST_FLOW_OK;
   GstOMXAcquireBufferReturn acq_return;
   gboolean is_eos;
@@ -825,7 +698,7 @@ gst_omx_video_enc_loop (GstOMXVideoEnc * self)
     return;
   }
 
-  if (!GST_PAD_CAPS (GST_BASE_VIDEO_CODEC_SRC_PAD (self))
+  if (!gst_pad_has_current_caps (GST_BASE_VIDEO_CODEC_SRC_PAD (self))
       || acq_return == GST_OMX_ACQUIRE_BUFFER_RECONFIGURED) {
     GstVideoState *state = &GST_BASE_VIDEO_CODEC (self)->state;
     GstCaps *caps;
@@ -882,7 +755,7 @@ gst_omx_video_enc_loop (GstOMXVideoEnc * self)
     g_assert (klass->handle_output_frame);
     flow_ret = klass->handle_output_frame (self, self->out_port, buf, frame);
 
-    if (is_eos || flow_ret == GST_FLOW_UNEXPECTED) {
+    if (is_eos || flow_ret == GST_FLOW_EOS) {
       g_mutex_lock (self->drain_lock);
       if (self->draining) {
         GST_DEBUG_OBJECT (self, "Drained");
@@ -890,7 +763,7 @@ gst_omx_video_enc_loop (GstOMXVideoEnc * self)
         g_cond_broadcast (self->drain_cond);
       } else if (flow_ret == GST_FLOW_OK) {
         GST_DEBUG_OBJECT (self, "Component signalled EOS");
-        flow_ret = GST_FLOW_UNEXPECTED;
+        flow_ret = GST_FLOW_EOS;
       }
       g_mutex_unlock (self->drain_lock);
     } else {
@@ -903,9 +776,9 @@ gst_omx_video_enc_loop (GstOMXVideoEnc * self)
     self->downstream_flow_ret = flow_ret;
 
   } else {
-    g_assert ((klass->hacks & GST_OMX_HACK_NO_EMPTY_EOS_BUFFER));
+    g_assert ((klass->cdata.hacks & GST_OMX_HACK_NO_EMPTY_EOS_BUFFER));
     GST_BASE_VIDEO_CODEC_STREAM_LOCK (self);
-    flow_ret = GST_FLOW_UNEXPECTED;
+    flow_ret = GST_FLOW_EOS;
   }
 
   if (flow_ret != GST_FLOW_OK)
@@ -932,20 +805,19 @@ flushing:
   {
     GST_DEBUG_OBJECT (self, "Flushing -- stopping task");
     gst_pad_pause_task (GST_BASE_VIDEO_CODEC_SRC_PAD (self));
-    self->downstream_flow_ret = GST_FLOW_WRONG_STATE;
+    self->downstream_flow_ret = GST_FLOW_FLUSHING;
     self->started = FALSE;
     return;
   }
 flow_error:
   {
-    if (flow_ret == GST_FLOW_UNEXPECTED) {
+    if (flow_ret == GST_FLOW_EOS) {
       GST_DEBUG_OBJECT (self, "EOS");
 
       gst_pad_push_event (GST_BASE_VIDEO_CODEC_SRC_PAD (self),
           gst_event_new_eos ());
       gst_pad_pause_task (GST_BASE_VIDEO_CODEC_SRC_PAD (self));
-    } else if (flow_ret == GST_FLOW_NOT_LINKED
-        || flow_ret < GST_FLOW_UNEXPECTED) {
+    } else if (flow_ret == GST_FLOW_NOT_LINKED || flow_ret < GST_FLOW_EOS) {
       GST_ELEMENT_ERROR (self, STREAM, FAILED, ("Internal data stream error."),
           ("stream stopped, reason %s", gst_flow_get_name (flow_ret)));
 
@@ -1015,7 +887,7 @@ gst_omx_video_enc_stop (GstBaseVideoEncoder * encoder)
   if (gst_omx_component_get_state (self->component, 0) > OMX_StateIdle)
     gst_omx_component_set_state (self->component, OMX_StateIdle);
 
-  self->downstream_flow_ret = GST_FLOW_WRONG_STATE;
+  self->downstream_flow_ret = GST_FLOW_FLUSHING;
   self->started = FALSE;
   self->eos = FALSE;
 
@@ -1031,7 +903,7 @@ gst_omx_video_enc_stop (GstBaseVideoEncoder * encoder)
 
 static gboolean
 gst_omx_video_enc_set_format (GstBaseVideoEncoder * encoder,
-    GstVideoState * state)
+    GstVideoInfo * info)
 {
   GstOMXVideoEnc *self;
   GstOMXVideoEncClass *klass;
@@ -1041,7 +913,8 @@ gst_omx_video_enc_set_format (GstBaseVideoEncoder * encoder,
   self = GST_OMX_VIDEO_ENC (encoder);
   klass = GST_OMX_VIDEO_ENC_GET_CLASS (encoder);
 
-  GST_DEBUG_OBJECT (self, "Setting new caps %" GST_PTR_FORMAT, state->caps);
+  GST_DEBUG_OBJECT (self, "Setting new format %s",
+      gst_video_format_to_string (info->finfo->format));
 
   gst_omx_port_get_port_definition (self->in_port, &port_def);
 
@@ -1061,7 +934,7 @@ gst_omx_video_enc_set_format (GstBaseVideoEncoder * encoder,
       return FALSE;
   }
 
-  switch (state->format) {
+  switch (info->finfo->format) {
     case GST_VIDEO_FORMAT_I420:
       port_def.format.video.eColorFormat = OMX_COLOR_FormatYUV420Planar;
       break;
@@ -1069,19 +942,20 @@ gst_omx_video_enc_set_format (GstBaseVideoEncoder * encoder,
       port_def.format.video.eColorFormat = OMX_COLOR_FormatYUV420SemiPlanar;
       break;
     default:
-      GST_ERROR_OBJECT (self, "Unsupported caps %" GST_PTR_FORMAT, state->caps);
+      GST_ERROR_OBJECT (self, "Unsupported format %s",
+          gst_video_format_to_string (info->finfo->format));
       return FALSE;
       break;
   }
-  port_def.format.video.nFrameWidth = state->width;
-  port_def.format.video.nFrameHeight = state->height;
-  if (state->fps_n == 0) {
+  port_def.format.video.nFrameWidth = info->width;
+  port_def.format.video.nFrameHeight = info->height;
+  if (info->fps_n == 0) {
     port_def.format.video.xFramerate = 0;
   } else {
-    if (!(klass->hacks & GST_OMX_HACK_VIDEO_FRAMERATE_INTEGER))
-      port_def.format.video.xFramerate = (state->fps_n << 16) / (state->fps_d);
+    if (!(klass->cdata.hacks & GST_OMX_HACK_VIDEO_FRAMERATE_INTEGER))
+      port_def.format.video.xFramerate = (info->fps_n << 16) / (info->fps_d);
     else
-      port_def.format.video.xFramerate = (state->fps_n) / (state->fps_d);
+      port_def.format.video.xFramerate = (info->fps_n) / (info->fps_d);
   }
 
   if (!gst_omx_port_update_port_definition (self->in_port, &port_def))
@@ -1090,7 +964,7 @@ gst_omx_video_enc_set_format (GstBaseVideoEncoder * encoder,
     return FALSE;
 
   if (klass->set_format) {
-    if (!klass->set_format (self, self->in_port, state)) {
+    if (!klass->set_format (self, self->in_port, info)) {
       GST_ERROR_OBJECT (self, "Subclass failed to set the new format");
       return FALSE;
     }
@@ -1186,6 +1060,8 @@ gst_omx_video_enc_fill_buffer (GstOMXVideoEnc * self, GstBuffer * inbuf,
   GstVideoState *state = &GST_BASE_VIDEO_CODEC (self)->state;
   OMX_PARAM_PORTDEFINITIONTYPE *port_def = &self->in_port->port_def;
   gboolean ret = FALSE;
+  GstVideoInfo vinfo;
+  GstVideoFrame frame;
 
   if (state->width != port_def->format.video.nFrameWidth ||
       state->height != port_def->format.video.nFrameHeight) {
@@ -1194,16 +1070,21 @@ gst_omx_video_enc_fill_buffer (GstOMXVideoEnc * self, GstBuffer * inbuf,
   }
 
   /* Same strides and everything */
-  if (GST_BUFFER_SIZE (inbuf) ==
+  if (gst_buffer_get_size (inbuf) ==
       outbuf->omx_buf->nAllocLen - outbuf->omx_buf->nOffset) {
-    outbuf->omx_buf->nFilledLen = GST_BUFFER_SIZE (inbuf);
-    memcpy (outbuf->omx_buf->pBuffer + outbuf->omx_buf->nOffset,
-        GST_BUFFER_DATA (inbuf), outbuf->omx_buf->nFilledLen);
+    outbuf->omx_buf->nFilledLen = gst_buffer_get_size (inbuf);
+
+    gst_buffer_extract (inbuf, 0,
+        outbuf->omx_buf->pBuffer + outbuf->omx_buf->nOffset,
+        outbuf->omx_buf->nFilledLen);
     ret = TRUE;
     goto done;
   }
 
   /* Different strides */
+
+  gst_video_info_from_caps (&vinfo, state->caps);
+
   switch (state->format) {
     case GST_VIDEO_FORMAT_I420:{
       gint i, j, height;
@@ -1215,16 +1096,15 @@ gst_omx_video_enc_fill_buffer (GstOMXVideoEnc * self, GstBuffer * inbuf,
       for (i = 0; i < 3; i++) {
         if (i == 0) {
           dest_stride = port_def->format.video.nStride;
-          src_stride =
-              gst_video_format_get_row_stride (state->format, 0, state->width);
+          src_stride = vinfo.stride[0];
 
           /* XXX: Try this if no stride was set */
           if (dest_stride == 0)
             dest_stride = src_stride;
         } else {
           dest_stride = port_def->format.video.nStride / 2;
-          src_stride =
-              gst_video_format_get_row_stride (state->format, 1, state->width);
+          src_stride = vinfo.stride[1];
+
           /* XXX: Try this if no stride was set */
           if (dest_stride == 0)
             dest_stride = src_stride;
@@ -1240,21 +1120,14 @@ gst_omx_video_enc_fill_buffer (GstOMXVideoEnc * self, GstBuffer * inbuf,
               (port_def->format.video.nSliceHeight / 2) *
               (port_def->format.video.nStride / 2);
 
-        src =
-            GST_BUFFER_DATA (inbuf) +
-            gst_video_format_get_component_offset (state->format, i,
-            state->width, state->height);
-
-        height =
-            gst_video_format_get_component_height (state->format, i,
-            state->height);
-
-        if (src + src_stride * height >
-            GST_BUFFER_DATA (inbuf) + GST_BUFFER_SIZE (inbuf)) {
+        if (!gst_video_frame_map (&frame, &vinfo, inbuf, GST_MAP_READ)) {
           GST_ERROR_OBJECT (self, "Invalid input buffer size");
           ret = FALSE;
           break;
         }
+        src = GST_VIDEO_FRAME_COMP_DATA (&frame, i);
+        height = GST_VIDEO_FRAME_HEIGHT (&frame);
+
         if (dest + dest_stride * height >
             outbuf->omx_buf->pBuffer + outbuf->omx_buf->nAllocLen) {
           GST_ERROR_OBJECT (self, "Invalid output buffer size");
@@ -1268,6 +1141,8 @@ gst_omx_video_enc_fill_buffer (GstOMXVideoEnc * self, GstBuffer * inbuf,
           src += src_stride;
           dest += dest_stride;
         }
+
+        gst_video_frame_unmap (&frame);
       }
       ret = TRUE;
       break;
@@ -1282,15 +1157,14 @@ gst_omx_video_enc_fill_buffer (GstOMXVideoEnc * self, GstBuffer * inbuf,
       for (i = 0; i < 2; i++) {
         if (i == 0) {
           dest_stride = port_def->format.video.nStride;
-          src_stride =
-              gst_video_format_get_row_stride (state->format, 0, state->width);
+          src_stride = vinfo.stride[0];
           /* XXX: Try this if no stride was set */
           if (dest_stride == 0)
             dest_stride = src_stride;
         } else {
           dest_stride = port_def->format.video.nStride;
-          src_stride =
-              gst_video_format_get_row_stride (state->format, 1, state->width);
+          src_stride = vinfo.stride[1];
+
           /* XXX: Try this if no stride was set */
           if (dest_stride == 0)
             dest_stride = src_stride;
@@ -1302,21 +1176,16 @@ gst_omx_video_enc_fill_buffer (GstOMXVideoEnc * self, GstBuffer * inbuf,
               port_def->format.video.nSliceHeight *
               port_def->format.video.nStride;
 
-        src =
-            GST_BUFFER_DATA (inbuf) +
-            gst_video_format_get_component_offset (state->format, i,
-            state->width, state->height);
 
-        height =
-            gst_video_format_get_component_height (state->format, i,
-            state->height);
 
-        if (src + src_stride * height >
-            GST_BUFFER_DATA (inbuf) + GST_BUFFER_SIZE (inbuf)) {
+        if (!gst_video_frame_map (&frame, &vinfo, inbuf, GST_MAP_READ)) {
           GST_ERROR_OBJECT (self, "Invalid input buffer size");
           ret = FALSE;
           break;
         }
+        src = GST_VIDEO_FRAME_COMP_DATA (&frame, i);
+        height = GST_VIDEO_FRAME_HEIGHT (&frame);
+
         if (dest + dest_stride * height >
             outbuf->omx_buf->pBuffer + outbuf->omx_buf->nAllocLen) {
           GST_ERROR_OBJECT (self, "Invalid output buffer size");
@@ -1330,6 +1199,8 @@ gst_omx_video_enc_fill_buffer (GstOMXVideoEnc * self, GstBuffer * inbuf,
           src += src_stride;
           dest += dest_stride;
         }
+
+        gst_video_frame_unmap (&frame);
       }
       ret = TRUE;
       break;
@@ -1346,7 +1217,7 @@ done:
 
 static GstFlowReturn
 gst_omx_video_enc_handle_frame (GstBaseVideoEncoder * encoder,
-    GstVideoFrame * frame)
+    GstVideoFrameState * frame)
 {
   GstOMXAcquireBufferReturn acq_ret = GST_OMX_ACQUIRE_BUFFER_ERROR;
   GstOMXVideoEnc *self;
@@ -1358,7 +1229,7 @@ gst_omx_video_enc_handle_frame (GstBaseVideoEncoder * encoder,
 
   if (self->eos) {
     GST_WARNING_OBJECT (self, "Got frame after EOS");
-    return GST_FLOW_UNEXPECTED;
+    return GST_FLOW_EOS;
   }
 
   if (self->downstream_flow_ret != GST_FLOW_OK) {
@@ -1445,7 +1316,7 @@ gst_omx_video_enc_handle_frame (GstBaseVideoEncoder * encoder,
     if (duration != GST_CLOCK_TIME_NONE) {
       buf->omx_buf->nTickCount =
           gst_util_uint64_scale (buf->omx_buf->nFilledLen, duration,
-          GST_BUFFER_SIZE (frame->sink_buffer));
+          gst_buffer_get_size (frame->sink_buffer));
       self->last_upstream_ts += duration;
     }
 
@@ -1480,8 +1351,8 @@ component_error:
 
 flushing:
   {
-    GST_DEBUG_OBJECT (self, "Flushing -- returning WRONG_STATE");
-    return GST_FLOW_WRONG_STATE;
+    GST_DEBUG_OBJECT (self, "Flushing -- returning FLUSHING");
+    return GST_FLOW_FLUSHING;
   }
 reconfigure_error:
   {
@@ -1517,7 +1388,7 @@ gst_omx_video_enc_finish (GstBaseVideoEncoder * encoder)
   }
   self->eos = TRUE;
 
-  if ((klass->hacks & GST_OMX_HACK_NO_EMPTY_EOS_BUFFER)) {
+  if ((klass->cdata.hacks & GST_OMX_HACK_NO_EMPTY_EOS_BUFFER)) {
     GST_WARNING_OBJECT (self, "Component does not support empty EOS buffers");
 
     /* Insert a NULL into the queue to signal EOS */
@@ -1579,7 +1450,7 @@ gst_omx_video_enc_drain (GstOMXVideoEnc * self)
     return GST_FLOW_OK;
   }
 
-  if ((klass->hacks & GST_OMX_HACK_NO_EMPTY_EOS_BUFFER)) {
+  if ((klass->cdata.hacks & GST_OMX_HACK_NO_EMPTY_EOS_BUFFER)) {
     GST_WARNING_OBJECT (self, "Component does not support empty EOS buffers");
     return GST_FLOW_OK;
   }

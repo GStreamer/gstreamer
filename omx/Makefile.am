@@ -53,9 +53,9 @@ libgstopenmax_la_CFLAGS = \
 	$(fixbaseclasses)
 libgstopenmax_la_LIBADD = \
 	$(GST_PLUGINS_BASE_LIBS) \
-	-lgstaudio-@GST_MAJORMINOR@ \
-	-lgstpbutils-@GST_MAJORMINOR@ \
-	-lgstvideo-@GST_MAJORMINOR@ \
+	-lgstaudio-@GST_API_VERSION@ \
+	-lgstpbutils-@GST_API_VERSION@ \
+	-lgstvideo-@GST_API_VERSION@ \
 	$(GST_BASE_LIBS) \
 	$(GST_LIBS)
 libgstopenmax_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)

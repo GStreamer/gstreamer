@@ -30,7 +30,6 @@ GST_DEBUG_CATEGORY_STATIC (gst_omx_aac_enc_debug_category);
 #define GST_CAT_DEFAULT gst_omx_aac_enc_debug_category
 
 /* prototypes */
-static void gst_omx_aac_enc_finalize (GObject * object);
 static void gst_omx_aac_enc_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec);
 static void gst_omx_aac_enc_get_property (GObject * object, guint prop_id,
@@ -98,38 +97,21 @@ gst_omx_aac_er_tools_get_type (void)
 
 /* class initialization */
 
-#define DEBUG_INIT(bla) \
+#define DEBUG_INIT \
   GST_DEBUG_CATEGORY_INIT (gst_omx_aac_enc_debug_category, "omxaacenc", 0, \
       "debug category for gst-omx audio encoder base class");
 
-GST_BOILERPLATE_FULL (GstOMXAACEnc, gst_omx_aac_enc,
-    GstOMXAudioEnc, GST_TYPE_OMX_AUDIO_ENC, DEBUG_INIT);
+G_DEFINE_TYPE_WITH_CODE (GstOMXAACEnc, gst_omx_aac_enc,
+    GST_TYPE_OMX_AUDIO_ENC, DEBUG_INIT);
 
-static void
-gst_omx_aac_enc_base_init (gpointer g_class)
-{
-  GstElementClass *element_class = GST_ELEMENT_CLASS (g_class);
-  GstOMXAudioEncClass *audioenc_class = GST_OMX_AUDIO_ENC_CLASS (g_class);
-
-  gst_element_class_set_details_simple (element_class,
-      "OpenMAX AAC Audio Encoder",
-      "Codec/Encoder/Audio",
-      "Encode AAC audio streams",
-      "Sebastian Dröge <sebastian.droege@collabora.co.uk>");
-
-  /* If no role was set from the config file we set the
-   * default AAC audio encoder role */
-  if (!audioenc_class->component_role)
-    audioenc_class->component_role = "audio_encoder.aac";
-}
 
 static void
 gst_omx_aac_enc_class_init (GstOMXAACEncClass * klass)
 {
   GObjectClass *gobject_class = G_OBJECT_CLASS (klass);
+  GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
   GstOMXAudioEncClass *audioenc_class = GST_OMX_AUDIO_ENC_CLASS (klass);
 
-  gobject_class->finalize = gst_omx_aac_enc_finalize;
   gobject_class->set_property = gst_omx_aac_enc_set_property;
   gobject_class->get_property = gst_omx_aac_enc_get_property;
 
@@ -161,25 +143,26 @@ gst_omx_aac_enc_class_init (GstOMXAACEncClass * klass)
   audioenc_class->get_num_samples =
       GST_DEBUG_FUNCPTR (gst_omx_aac_enc_get_num_samples);
 
-  audioenc_class->default_src_template_caps = "audio/mpeg, "
+  audioenc_class->cdata.default_src_template_caps = "audio/mpeg, "
       "mpegversion=(int){2, 4}, "
       "stream-format=(string){raw, adts, adif, loas, latm}";
+
+
+  gst_element_class_set_details_simple (element_class,
+      "OpenMAX AAC Audio Encoder",
+      "Codec/Encoder/Audio",
+      "Encode AAC audio streams",
+      "Sebastian Dröge <sebastian.droege@collabora.co.uk>");
+
+  gst_omx_set_default_role (&audioenc_class->cdata, "audio_encoder.aac");
 }
 
 static void
-gst_omx_aac_enc_init (GstOMXAACEnc * self, GstOMXAACEncClass * klass)
+gst_omx_aac_enc_init (GstOMXAACEnc * self)
 {
   self->bitrate = DEFAULT_BITRATE;
   self->aac_tools = DEFAULT_AAC_TOOLS;
   self->aac_er_tools = DEFAULT_AAC_ER_TOOLS;
-}
-
-static void
-gst_omx_aac_enc_finalize (GObject * object)
-{
-  /* GstOMXAACEnc *self = GST_OMX_AAC_ENC (object); */
-
-  G_OBJECT_CLASS (parent_class)->finalize (object);
 }
 
 static void
@@ -250,24 +233,20 @@ gst_omx_aac_enc_set_format (GstOMXAudioEnc * enc, GstOMXPort * port,
     return FALSE;
   }
 
-  peercaps = gst_pad_peer_get_caps (GST_AUDIO_ENCODER_SRC_PAD (self));
+  peercaps = gst_pad_peer_query_caps (GST_AUDIO_ENCODER_SRC_PAD (self),
+      gst_pad_get_pad_template_caps (GST_AUDIO_ENCODER_SRC_PAD (self)));
   if (peercaps) {
-    GstCaps *intersection;
     GstStructure *s;
     gint mpegversion = 0;
     const gchar *profile_string, *stream_format_string;
 
-    intersection =
-        gst_caps_intersect (peercaps,
-        gst_pad_get_pad_template_caps (GST_AUDIO_ENCODER_SRC_PAD (self)));
-    gst_caps_unref (peercaps);
-    if (gst_caps_is_empty (intersection)) {
-      gst_caps_unref (intersection);
+    if (gst_caps_is_empty (peercaps)) {
+      gst_caps_unref (peercaps);
       GST_ERROR_OBJECT (self, "Empty caps");
       return FALSE;
     }
 
-    s = gst_caps_get_structure (intersection, 0);
+    s = gst_caps_get_structure (peercaps, 0);
 
     if (gst_structure_get_int (s, "mpegversion", &mpegversion)) {
       profile_string =
@@ -285,7 +264,7 @@ gst_omx_aac_enc_set_format (GstOMXAudioEnc * enc, GstOMXPort * port,
           profile = OMX_AUDIO_AACObjectLTP;
         } else {
           GST_ERROR_OBJECT (self, "Unsupported profile '%s'", profile_string);
-          gst_caps_unref (intersection);
+          gst_caps_unref (peercaps);
           return FALSE;
         }
       }
@@ -310,12 +289,12 @@ gst_omx_aac_enc_set_format (GstOMXAudioEnc * enc, GstOMXPort * port,
       } else {
         GST_ERROR_OBJECT (self, "Unsupported stream-format '%s'",
             stream_format_string);
-        gst_caps_unref (intersection);
+        gst_caps_unref (peercaps);
         return FALSE;
       }
     }
 
-    gst_caps_unref (intersection);
+    gst_caps_unref (peercaps);
   }
 
   aac_profile.eAACProfile = profile;
@@ -487,7 +466,7 @@ gst_omx_aac_enc_get_caps (GstOMXAudioEnc * enc, GstOMXPort * port,
       break;
   }
 
-  caps = gst_caps_new_simple ("audio/mpeg", NULL);
+  caps = gst_caps_new_empty_simple ("audio/mpeg");
 
   if (mpegversion != 0)
     gst_caps_set_simple (caps, "mpegversion", G_TYPE_INT, mpegversion,
@@ -505,14 +484,16 @@ gst_omx_aac_enc_get_caps (GstOMXAudioEnc * enc, GstOMXPort * port,
 
   if (aac_profile.eAACStreamFormat == OMX_AUDIO_AACStreamFormatRAW) {
     GstBuffer *codec_data;
-    guint8 *cdata;
     adts_sample_index sr_idx;
+    GstMapInfo map = GST_MAP_INFO_INIT;
 
     codec_data = gst_buffer_new_and_alloc (2);
-    cdata = GST_BUFFER_DATA (codec_data);
+    gst_buffer_map (codec_data, &map, GST_MAP_WRITE);
     sr_idx = map_adts_sample_index (aac_profile.nSampleRate);
-    cdata[0] = ((aac_profile.eAACProfile & 0x1F) << 3) | ((sr_idx & 0xE) >> 1);
-    cdata[1] = ((sr_idx & 0x1) << 7) | ((aac_profile.nChannels & 0xF) << 3);
+    map.data[0] = ((aac_profile.eAACProfile & 0x1F) << 3) |
+        ((sr_idx & 0xE) >> 1);
+    map.data[1] = ((sr_idx & 0x1) << 7) | ((aac_profile.nChannels & 0xF) << 3);
+    gst_buffer_unmap (codec_data, &map);
 
     GST_DEBUG_OBJECT (enc, "setting new codec_data");
     gst_caps_set_simple (caps, "codec_data", GST_TYPE_BUFFER, codec_data, NULL);

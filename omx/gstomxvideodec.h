@@ -77,20 +77,11 @@ struct _GstOMXVideoDecClass
 {
   GstBaseVideoDecoderClass parent_class;
 
-  const gchar *core_name;
-  const gchar *component_name;
-  const gchar *component_role;
-
-  const gchar *default_src_template_caps;
-  const gchar *default_sink_template_caps;
-  
-  guint32 in_port_index, out_port_index;
-
-  guint64 hacks;
+  GstOMXClassData cdata;
 
   gboolean (*is_format_change) (GstOMXVideoDec * self, GstOMXPort * port, GstVideoState * state);
   gboolean (*set_format)       (GstOMXVideoDec * self, GstOMXPort * port, GstVideoState * state);
-  GstFlowReturn (*prepare_frame)   (GstOMXVideoDec * self, GstVideoFrame *frame);
+  GstFlowReturn (*prepare_frame)   (GstOMXVideoDec * self, GstVideoFrameState *frame);
 };
 
 GType gst_omx_video_dec_get_type (void);

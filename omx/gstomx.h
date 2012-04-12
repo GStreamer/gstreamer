@@ -71,6 +71,7 @@ typedef struct _GstOMXPort GstOMXPort;
 typedef enum _GstOMXPortDirection GstOMXPortDirection;
 typedef struct _GstOMXComponent GstOMXComponent;
 typedef struct _GstOMXBuffer GstOMXBuffer;
+typedef struct _GstOMXClassData GstOMXClassData;
 
 typedef enum {
   /* Everything good and the buffer is valid */
@@ -184,7 +185,18 @@ struct _GstOMXBuffer {
   gint settings_cookie;
 };
 
-extern GQuark     gst_omx_element_name_quark;
+struct _GstOMXClassData {
+  const gchar *core_name;
+  const gchar *component_name;
+  const gchar *component_role;
+
+  const gchar *default_src_template_caps;
+  const gchar *default_sink_template_caps;
+
+  guint32 in_port_index, out_port_index;
+
+  guint64 hacks;
+};
 
 GKeyFile *        gst_omx_get_configuration (void);
 
@@ -195,7 +207,7 @@ GstOMXCore *      gst_omx_core_acquire (const gchar * filename);
 void              gst_omx_core_release (GstOMXCore * core);
 
 
-GstOMXComponent * gst_omx_component_new  (GstObject *parent, const gchar * core_name, const gchar * component_name, const gchar *component_role, guint64 hacks);
+GstOMXComponent * gst_omx_component_new (GstObject * parent, const GstOMXClassData *cdata);
 void              gst_omx_component_free (GstOMXComponent * comp);
 
 OMX_ERRORTYPE     gst_omx_component_set_state (GstOMXComponent * comp, OMX_STATETYPE state);
@@ -235,6 +247,9 @@ OMX_ERRORTYPE     gst_omx_port_set_enabled (GstOMXPort * port, gboolean enabled)
 gboolean          gst_omx_port_is_enabled (GstOMXPort * port);
 
 OMX_ERRORTYPE     gst_omx_port_manual_reconfigure (GstOMXPort * port, gboolean start);
+
+void              gst_omx_set_default_role (GstOMXClassData *class_data, const gchar *default_role);
+
 
 G_END_DECLS
 

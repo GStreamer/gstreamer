@@ -30,9 +30,8 @@ GST_DEBUG_CATEGORY_STATIC (gst_omx_h263_enc_debug_category);
 #define GST_CAT_DEFAULT gst_omx_h263_enc_debug_category
 
 /* prototypes */
-static void gst_omx_h263_enc_finalize (GObject * object);
 static gboolean gst_omx_h263_enc_set_format (GstOMXVideoEnc * enc,
-    GstOMXPort * port, GstVideoState * state);
+    GstOMXPort * port, GstVideoInfo * state);
 static GstCaps *gst_omx_h263_enc_get_caps (GstOMXVideoEnc * enc,
     GstOMXPort * port, GstVideoState * state);
 
@@ -43,18 +42,24 @@ enum
 
 /* class initialization */
 
-#define DEBUG_INIT(bla) \
+#define DEBUG_INIT \
   GST_DEBUG_CATEGORY_INIT (gst_omx_h263_enc_debug_category, "omxh263enc", 0, \
       "debug category for gst-omx video encoder base class");
 
-GST_BOILERPLATE_FULL (GstOMXH263Enc, gst_omx_h263_enc,
-    GstOMXVideoEnc, GST_TYPE_OMX_VIDEO_ENC, DEBUG_INIT);
+G_DEFINE_TYPE_WITH_CODE (GstOMXH263Enc, gst_omx_h263_enc,
+    GST_TYPE_OMX_VIDEO_ENC, DEBUG_INIT);
 
 static void
-gst_omx_h263_enc_base_init (gpointer g_class)
+gst_omx_h263_enc_class_init (GstOMXH263EncClass * klass)
 {
-  GstElementClass *element_class = GST_ELEMENT_CLASS (g_class);
-  GstOMXVideoEncClass *videoenc_class = GST_OMX_VIDEO_ENC_CLASS (g_class);
+  GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
+  GstOMXVideoEncClass *videoenc_class = GST_OMX_VIDEO_ENC_CLASS (klass);
+
+  videoenc_class->set_format = GST_DEBUG_FUNCPTR (gst_omx_h263_enc_set_format);
+  videoenc_class->get_caps = GST_DEBUG_FUNCPTR (gst_omx_h263_enc_get_caps);
+
+  videoenc_class->cdata.default_src_template_caps = "video/x-h263, "
+      "width=(int) [ 16, 4096 ], " "height=(int) [ 16, 4096 ]";
 
   gst_element_class_set_details_simple (element_class,
       "OpenMAX H.263 Video Encoder",
@@ -62,43 +67,17 @@ gst_omx_h263_enc_base_init (gpointer g_class)
       "Encode H.263 video streams",
       "Sebastian Dröge <sebastian.droege@collabora.co.uk>");
 
-  /* If no role was set from the config file we set the
-   * default H263 video encoder role */
-  if (!videoenc_class->component_role)
-    videoenc_class->component_role = "video_encoder.h263";
+  gst_omx_set_default_role (&videoenc_class->cdata, "video_encoder.h263");
 }
 
 static void
-gst_omx_h263_enc_class_init (GstOMXH263EncClass * klass)
+gst_omx_h263_enc_init (GstOMXH263Enc * self)
 {
-  GObjectClass *gobject_class = G_OBJECT_CLASS (klass);
-  GstOMXVideoEncClass *videoenc_class = GST_OMX_VIDEO_ENC_CLASS (klass);
-
-  gobject_class->finalize = gst_omx_h263_enc_finalize;
-
-  videoenc_class->set_format = GST_DEBUG_FUNCPTR (gst_omx_h263_enc_set_format);
-  videoenc_class->get_caps = GST_DEBUG_FUNCPTR (gst_omx_h263_enc_get_caps);
-
-  videoenc_class->default_src_template_caps = "video/x-h263, "
-      "width=(int) [ 16, 4096 ], " "height=(int) [ 16, 4096 ]";
-}
-
-static void
-gst_omx_h263_enc_init (GstOMXH263Enc * self, GstOMXH263EncClass * klass)
-{
-}
-
-static void
-gst_omx_h263_enc_finalize (GObject * object)
-{
-  /* GstOMXH263Enc *self = GST_OMX_H263_VIDEO_ENC (object); */
-
-  G_OBJECT_CLASS (parent_class)->finalize (object);
 }
 
 static gboolean
 gst_omx_h263_enc_set_format (GstOMXVideoEnc * enc, GstOMXPort * port,
-    GstVideoState * state)
+    GstVideoInfo * info)
 {
   GstOMXH263Enc *self = GST_OMX_H263_ENC (enc);
   GstCaps *peercaps;
@@ -106,24 +85,20 @@ gst_omx_h263_enc_set_format (GstOMXVideoEnc * enc, GstOMXPort * port,
   OMX_VIDEO_H263LEVELTYPE level = OMX_VIDEO_H263Level10;
   OMX_VIDEO_PARAM_PROFILELEVELTYPE param;
   OMX_ERRORTYPE err;
+  guint profile_id, level_id;
 
-  peercaps = gst_pad_peer_get_caps (GST_BASE_VIDEO_CODEC_SRC_PAD (enc));
+  peercaps = gst_pad_peer_query_caps (GST_BASE_VIDEO_CODEC_SRC_PAD (enc),
+      gst_pad_get_pad_template_caps (GST_BASE_VIDEO_CODEC_SRC_PAD (enc)));
   if (peercaps) {
     GstStructure *s;
-    GstCaps *intersection;
-    guint profile_id, level_id;
 
-    intersection =
-        gst_caps_intersect (peercaps,
-        gst_pad_get_pad_template_caps (GST_BASE_VIDEO_CODEC_SRC_PAD (enc)));
-    gst_caps_unref (peercaps);
-    if (gst_caps_is_empty (intersection)) {
-      gst_caps_unref (intersection);
+    if (gst_caps_is_empty (peercaps)) {
+      gst_caps_unref (peercaps);
       GST_ERROR_OBJECT (self, "Empty caps");
       return FALSE;
     }
 
-    s = gst_caps_get_structure (intersection, 0);
+    s = gst_caps_get_structure (peercaps, 0);
     if (gst_structure_get_uint (s, "profile", &profile_id)) {
       switch (profile_id) {
         case 0:
@@ -154,8 +129,7 @@ gst_omx_h263_enc_set_format (GstOMXVideoEnc * enc, GstOMXPort * port,
           profile = OMX_VIDEO_H263ProfileHighLatency;
           break;
         default:
-          GST_ERROR_OBJECT (self, "Invalid profile %u", profile_id);
-          return FALSE;
+          goto unsupported_profile;
       }
     }
     if (gst_structure_get_uint (s, "level", &level_id)) {
@@ -182,10 +156,10 @@ gst_omx_h263_enc_set_format (GstOMXVideoEnc * enc, GstOMXPort * port,
           level = OMX_VIDEO_H263Level70;
           break;
         default:
-          GST_ERROR_OBJECT (self, "Unsupported level %u", level_id);
-          return FALSE;
+          goto unsupported_level;
       }
     }
+    gst_caps_unref (peercaps);
   }
 
   GST_OMX_INIT_STRUCT (&param);
@@ -207,6 +181,16 @@ gst_omx_h263_enc_set_format (GstOMXVideoEnc * enc, GstOMXPort * port,
   }
 
   return TRUE;
+
+unsupported_profile:
+  gst_caps_unref (peercaps);
+  GST_ERROR_OBJECT (self, "Unsupported profile %u", profile_id);
+  return FALSE;
+
+unsupported_level:
+  gst_caps_unref (peercaps);
+  GST_ERROR_OBJECT (self, "Unsupported level %u", level_id);
+  return FALSE;
 }
 
 static GstCaps *

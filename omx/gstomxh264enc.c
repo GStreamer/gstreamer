@@ -30,13 +30,12 @@ GST_DEBUG_CATEGORY_STATIC (gst_omx_h264_enc_debug_category);
 #define GST_CAT_DEFAULT gst_omx_h264_enc_debug_category
 
 /* prototypes */
-static void gst_omx_h264_enc_finalize (GObject * object);
 static gboolean gst_omx_h264_enc_set_format (GstOMXVideoEnc * enc,
-    GstOMXPort * port, GstVideoState * state);
+    GstOMXPort * port, GstVideoInfo * info);
 static GstCaps *gst_omx_h264_enc_get_caps (GstOMXVideoEnc * enc,
     GstOMXPort * port, GstVideoState * state);
 static GstFlowReturn gst_omx_h264_enc_handle_output_frame (GstOMXVideoEnc *
-    self, GstOMXPort * port, GstOMXBuffer * buf, GstVideoFrame * frame);
+    self, GstOMXPort * port, GstOMXBuffer * buf, GstVideoFrameState * frame);
 
 enum
 {
@@ -45,18 +44,26 @@ enum
 
 /* class initialization */
 
-#define DEBUG_INIT(bla) \
+#define DEBUG_INIT \
   GST_DEBUG_CATEGORY_INIT (gst_omx_h264_enc_debug_category, "omxh264enc", 0, \
       "debug category for gst-omx video encoder base class");
 
-GST_BOILERPLATE_FULL (GstOMXH264Enc, gst_omx_h264_enc,
-    GstOMXVideoEnc, GST_TYPE_OMX_VIDEO_ENC, DEBUG_INIT);
+G_DEFINE_TYPE_WITH_CODE (GstOMXH264Enc, gst_omx_h264_enc,
+    GST_TYPE_OMX_VIDEO_ENC, DEBUG_INIT);
 
 static void
-gst_omx_h264_enc_base_init (gpointer g_class)
+gst_omx_h264_enc_class_init (GstOMXH264EncClass * klass)
 {
-  GstElementClass *element_class = GST_ELEMENT_CLASS (g_class);
-  GstOMXVideoEncClass *videoenc_class = GST_OMX_VIDEO_ENC_CLASS (g_class);
+  GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
+  GstOMXVideoEncClass *videoenc_class = GST_OMX_VIDEO_ENC_CLASS (klass);
+
+  videoenc_class->set_format = GST_DEBUG_FUNCPTR (gst_omx_h264_enc_set_format);
+  videoenc_class->get_caps = GST_DEBUG_FUNCPTR (gst_omx_h264_enc_get_caps);
+
+  videoenc_class->cdata.default_src_template_caps = "video/x-h264, "
+      "width=(int) [ 16, 4096 ], " "height=(int) [ 16, 4096 ]";
+  videoenc_class->handle_output_frame =
+      GST_DEBUG_FUNCPTR (gst_omx_h264_enc_handle_output_frame);
 
   gst_element_class_set_details_simple (element_class,
       "OpenMAX H.264 Video Encoder",
@@ -64,45 +71,17 @@ gst_omx_h264_enc_base_init (gpointer g_class)
       "Encode H.264 video streams",
       "Sebastian Dröge <sebastian.droege@collabora.co.uk>");
 
-  /* If no role was set from the config file we set the
-   * default H264 video encoder role */
-  if (!videoenc_class->component_role)
-    videoenc_class->component_role = "video_encoder.avc";
+  gst_omx_set_default_role (&videoenc_class->cdata, "video_encoder.avc");
 }
 
 static void
-gst_omx_h264_enc_class_init (GstOMXH264EncClass * klass)
+gst_omx_h264_enc_init (GstOMXH264Enc * self)
 {
-  GObjectClass *gobject_class = G_OBJECT_CLASS (klass);
-  GstOMXVideoEncClass *videoenc_class = GST_OMX_VIDEO_ENC_CLASS (klass);
-
-  gobject_class->finalize = gst_omx_h264_enc_finalize;
-
-  videoenc_class->set_format = GST_DEBUG_FUNCPTR (gst_omx_h264_enc_set_format);
-  videoenc_class->get_caps = GST_DEBUG_FUNCPTR (gst_omx_h264_enc_get_caps);
-
-  videoenc_class->default_src_template_caps = "video/x-h264, "
-      "width=(int) [ 16, 4096 ], " "height=(int) [ 16, 4096 ]";
-  videoenc_class->handle_output_frame =
-      GST_DEBUG_FUNCPTR (gst_omx_h264_enc_handle_output_frame);
-}
-
-static void
-gst_omx_h264_enc_init (GstOMXH264Enc * self, GstOMXH264EncClass * klass)
-{
-}
-
-static void
-gst_omx_h264_enc_finalize (GObject * object)
-{
-  /* GstOMXH264Enc *self = GST_OMX_H264_VIDEO_ENC (object); */
-
-  G_OBJECT_CLASS (parent_class)->finalize (object);
 }
 
 static gboolean
 gst_omx_h264_enc_set_format (GstOMXVideoEnc * enc, GstOMXPort * port,
-    GstVideoState * state)
+    GstVideoInfo * info)
 {
   GstOMXH264Enc *self = GST_OMX_H264_ENC (enc);
   GstCaps *peercaps;
@@ -110,24 +89,20 @@ gst_omx_h264_enc_set_format (GstOMXVideoEnc * enc, GstOMXPort * port,
   OMX_VIDEO_AVCLEVELTYPE level = OMX_VIDEO_AVCLevel11;
   OMX_VIDEO_PARAM_PROFILELEVELTYPE param;
   OMX_ERRORTYPE err;
+  const gchar *profile_string, *level_string;
 
-  peercaps = gst_pad_peer_get_caps (GST_BASE_VIDEO_CODEC_SRC_PAD (enc));
+  peercaps = gst_pad_peer_query_caps (GST_BASE_VIDEO_CODEC_SRC_PAD (enc),
+      gst_pad_get_pad_template_caps (GST_BASE_VIDEO_CODEC_SRC_PAD (enc)));
   if (peercaps) {
     GstStructure *s;
-    GstCaps *intersection;
-    const gchar *profile_string, *level_string;
 
-    intersection =
-        gst_caps_intersect (peercaps,
-        gst_pad_get_pad_template_caps (GST_BASE_VIDEO_CODEC_SRC_PAD (enc)));
-    gst_caps_unref (peercaps);
-    if (gst_caps_is_empty (intersection)) {
-      gst_caps_unref (intersection);
+    if (gst_caps_is_empty (peercaps)) {
+      gst_caps_unref (peercaps);
       GST_ERROR_OBJECT (self, "Empty caps");
       return FALSE;
     }
 
-    s = gst_caps_get_structure (intersection, 0);
+    s = gst_caps_get_structure (peercaps, 0);
     profile_string = gst_structure_get_string (s, "profile");
     if (profile_string) {
       if (g_str_equal (profile_string, "baseline")) {
@@ -145,8 +120,7 @@ gst_omx_h264_enc_set_format (GstOMXVideoEnc * enc, GstOMXPort * port,
       } else if (g_str_equal (profile_string, "high-4:4:4")) {
         profile = OMX_VIDEO_AVCProfileHigh444;
       } else {
-        GST_ERROR_OBJECT (self, "Unsupported profile %s", profile_string);
-        return FALSE;
+        goto unsupported_profile;
       }
     }
     level_string = gst_structure_get_string (s, "level");
@@ -184,10 +158,10 @@ gst_omx_h264_enc_set_format (GstOMXVideoEnc * enc, GstOMXPort * port,
       } else if (g_str_equal (level_string, "5.1")) {
         level = OMX_VIDEO_AVCLevel51;
       } else {
-        GST_ERROR_OBJECT (self, "Unsupported level %s", level_string);
-        return FALSE;
+        goto unsupported_level;
       }
     }
+    gst_caps_unref (peercaps);
   }
 
   GST_OMX_INIT_STRUCT (&param);
@@ -209,6 +183,16 @@ gst_omx_h264_enc_set_format (GstOMXVideoEnc * enc, GstOMXPort * port,
   }
 
   return TRUE;
+
+unsupported_profile:
+  gst_caps_unref (peercaps);
+  GST_ERROR_OBJECT (self, "Unsupported profile %s", profile_string);
+  return FALSE;
+
+unsupported_level:
+  gst_caps_unref (peercaps);
+  GST_ERROR_OBJECT (self, "Unsupported level %s", level_string);
+  return FALSE;
 }
 
 static GstCaps *
@@ -331,7 +315,7 @@ gst_omx_h264_enc_get_caps (GstOMXVideoEnc * enc, GstOMXPort * port,
 
 static GstFlowReturn
 gst_omx_h264_enc_handle_output_frame (GstOMXVideoEnc * self, GstOMXPort * port,
-    GstOMXBuffer * buf, GstVideoFrame * frame)
+    GstOMXBuffer * buf, GstVideoFrameState * frame)
 {
   if (buf->omx_buf->nFlags & OMX_BUFFERFLAG_CODECCONFIG) {
     /* The codec data is SPS/PPS with a startcode => bytestream stream format
@@ -342,19 +326,25 @@ gst_omx_h264_enc_handle_output_frame (GstOMXVideoEnc * self, GstOMXPort * port,
         GST_READ_UINT32_BE (buf->omx_buf->pBuffer +
             buf->omx_buf->nOffset) == 0x00000001) {
       GstBuffer *hdrs;
+      GstMapInfo map = GST_MAP_INFO_INIT;
 
       GST_DEBUG_OBJECT (self, "got codecconfig in byte-stream format");
       buf->omx_buf->nFlags &= ~OMX_BUFFERFLAG_CODECCONFIG;
 
       hdrs = gst_buffer_new_and_alloc (buf->omx_buf->nFilledLen);
-      memcpy (GST_BUFFER_DATA (hdrs),
+
+      gst_buffer_map (hdrs, &map, GST_MAP_WRITE);
+      memcpy (map.data,
           buf->omx_buf->pBuffer + buf->omx_buf->nOffset,
           buf->omx_buf->nFilledLen);
+      gst_buffer_unmap (hdrs, &map);
       gst_base_video_encoder_set_headers (GST_BASE_VIDEO_ENCODER (self), hdrs);
       gst_buffer_unref (hdrs);
     }
   }
 
-  return GST_OMX_VIDEO_ENC_CLASS (parent_class)->handle_output_frame (self,
-      port, buf, frame);
+  return
+      GST_OMX_VIDEO_ENC_CLASS
+      (gst_omx_h264_enc_parent_class)->handle_output_frame (self, port, buf,
+      frame);
 }

@@ -30,9 +30,8 @@ GST_DEBUG_CATEGORY_STATIC (gst_omx_mpeg4_video_enc_debug_category);
 #define GST_CAT_DEFAULT gst_omx_mpeg4_video_enc_debug_category
 
 /* prototypes */
-static void gst_omx_mpeg4_video_enc_finalize (GObject * object);
 static gboolean gst_omx_mpeg4_video_enc_set_format (GstOMXVideoEnc * enc,
-    GstOMXPort * port, GstVideoState * state);
+    GstOMXPort * port, GstVideoInfo * info);
 static GstCaps *gst_omx_mpeg4_video_enc_get_caps (GstOMXVideoEnc * enc,
     GstOMXPort * port, GstVideoState * state);
 
@@ -43,18 +42,28 @@ enum
 
 /* class initialization */
 
-#define DEBUG_INIT(bla) \
+#define DEBUG_INIT \
   GST_DEBUG_CATEGORY_INIT (gst_omx_mpeg4_video_enc_debug_category, "omxmpeg4videoenc", 0, \
       "debug category for gst-omx video encoder base class");
 
-GST_BOILERPLATE_FULL (GstOMXMPEG4VideoEnc, gst_omx_mpeg4_video_enc,
-    GstOMXVideoEnc, GST_TYPE_OMX_VIDEO_ENC, DEBUG_INIT);
+G_DEFINE_TYPE_WITH_CODE (GstOMXMPEG4VideoEnc, gst_omx_mpeg4_video_enc,
+    GST_TYPE_OMX_VIDEO_ENC, DEBUG_INIT);
 
 static void
-gst_omx_mpeg4_video_enc_base_init (gpointer g_class)
+gst_omx_mpeg4_video_enc_class_init (GstOMXMPEG4VideoEncClass * klass)
 {
-  GstElementClass *element_class = GST_ELEMENT_CLASS (g_class);
-  GstOMXVideoEncClass *videoenc_class = GST_OMX_VIDEO_ENC_CLASS (g_class);
+  GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
+  GstOMXVideoEncClass *videoenc_class = GST_OMX_VIDEO_ENC_CLASS (klass);
+
+  videoenc_class->set_format =
+      GST_DEBUG_FUNCPTR (gst_omx_mpeg4_video_enc_set_format);
+  videoenc_class->get_caps =
+      GST_DEBUG_FUNCPTR (gst_omx_mpeg4_video_enc_get_caps);
+
+  videoenc_class->cdata.default_src_template_caps = "video/mpeg, "
+      "mpegversion=(int) 4, "
+      "systemstream=(boolean) false, "
+      "width=(int) [ 16, 4096 ], " "height=(int) [ 16, 4096 ]";
 
   gst_element_class_set_details_simple (element_class,
       "OpenMAX MPEG4 Video Encoder",
@@ -62,65 +71,34 @@ gst_omx_mpeg4_video_enc_base_init (gpointer g_class)
       "Encode MPEG4 video streams",
       "Sebastian Dröge <sebastian.droege@collabora.co.uk>");
 
-  /* If no role was set from the config file we set the
-   * default MPEG4 video encoder role */
-  if (!videoenc_class->component_role)
-    videoenc_class->component_role = "video_encoder.mpeg4";
+  gst_omx_set_default_role (&videoenc_class->cdata, "video_encoder.mpeg4");
 }
 
 static void
-gst_omx_mpeg4_video_enc_class_init (GstOMXMPEG4VideoEncClass * klass)
+gst_omx_mpeg4_video_enc_init (GstOMXMPEG4VideoEnc * self)
 {
-  GObjectClass *gobject_class = G_OBJECT_CLASS (klass);
-  GstOMXVideoEncClass *videoenc_class = GST_OMX_VIDEO_ENC_CLASS (klass);
-
-  gobject_class->finalize = gst_omx_mpeg4_video_enc_finalize;
-
-  videoenc_class->set_format =
-      GST_DEBUG_FUNCPTR (gst_omx_mpeg4_video_enc_set_format);
-  videoenc_class->get_caps =
-      GST_DEBUG_FUNCPTR (gst_omx_mpeg4_video_enc_get_caps);
-
-  videoenc_class->default_src_template_caps = "video/mpeg, "
-      "mpegversion=(int) 4, "
-      "systemstream=(boolean) false, "
-      "width=(int) [ 16, 4096 ], " "height=(int) [ 16, 4096 ]";
-}
-
-static void
-gst_omx_mpeg4_video_enc_init (GstOMXMPEG4VideoEnc * self,
-    GstOMXMPEG4VideoEncClass * klass)
-{
-}
-
-static void
-gst_omx_mpeg4_video_enc_finalize (GObject * object)
-{
-  /* GstOMXMPEG4VideoEnc *self = GST_OMX_MPEG4_VIDEO_ENC (object); */
-
-  G_OBJECT_CLASS (parent_class)->finalize (object);
 }
 
 static gboolean
 gst_omx_mpeg4_video_enc_set_format (GstOMXVideoEnc * enc, GstOMXPort * port,
-    GstVideoState * state)
+    GstVideoInfo * info)
 {
   GstOMXMPEG4VideoEnc *self = GST_OMX_MPEG4_VIDEO_ENC (enc);
-  GstCaps *peercaps;
+  GstCaps *peercaps, *intersection;
   OMX_VIDEO_MPEG4PROFILETYPE profile = OMX_VIDEO_MPEG4ProfileSimple;
   OMX_VIDEO_MPEG4LEVELTYPE level = OMX_VIDEO_MPEG4Level1;
   OMX_VIDEO_PARAM_PROFILELEVELTYPE param;
   OMX_ERRORTYPE err;
+  const gchar *profile_string, *level_string;
 
-  peercaps = gst_pad_peer_get_caps (GST_BASE_VIDEO_CODEC_SRC_PAD (enc));
+  peercaps = gst_pad_peer_query_caps (GST_BASE_VIDEO_CODEC_SRC_PAD (enc), NULL);
   if (peercaps) {
     GstStructure *s;
-    GstCaps *intersection;
-    const gchar *profile_string, *level_string;
 
     intersection =
         gst_caps_intersect (peercaps,
         gst_pad_get_pad_template_caps (GST_BASE_VIDEO_CODEC_SRC_PAD (enc)));
+
     gst_caps_unref (peercaps);
     if (gst_caps_is_empty (intersection)) {
       gst_caps_unref (intersection);
@@ -164,8 +142,7 @@ gst_omx_mpeg4_video_enc_set_format (GstOMXVideoEnc * enc, GstOMXPort * port,
       } else if (g_str_equal (profile_string, "advanced-simple")) {
         profile = OMX_VIDEO_MPEG4ProfileAdvancedSimple;
       } else {
-        GST_ERROR_OBJECT (self, "Unsupported profile %s", profile_string);
-        return FALSE;
+        goto unsupported_profile;
       }
     }
     level_string = gst_structure_get_string (s, "level");
@@ -187,10 +164,11 @@ gst_omx_mpeg4_video_enc_set_format (GstOMXVideoEnc * enc, GstOMXPort * port,
       } else if (g_str_equal (level_string, "5")) {
         level = OMX_VIDEO_MPEG4Level5;
       } else {
-        GST_ERROR_OBJECT (self, "Unsupported level %s", level_string);
-        return FALSE;
+        goto unsupported_level;
       }
     }
+
+    gst_caps_unref (intersection);
   }
 
   GST_OMX_INIT_STRUCT (&param);
@@ -212,6 +190,16 @@ gst_omx_mpeg4_video_enc_set_format (GstOMXVideoEnc * enc, GstOMXPort * port,
   }
 
   return TRUE;
+
+unsupported_profile:
+  gst_caps_unref (intersection);
+  GST_ERROR_OBJECT (self, "Unsupported profile %s", profile_string);
+  return FALSE;
+
+unsupported_level:
+  gst_caps_unref (intersection);
+  GST_ERROR_OBJECT (self, "Unsupported level %s", level_string);
+  return FALSE;
 }
 
 static GstCaps *

@@ -70,12 +70,12 @@ typedef struct _GstBaseVideoEncoderClass GstBaseVideoEncoderClass;
 
 /**
  * GstBaseVideoEncoder:
- * @element: the parent element.
  *
  * The opaque #GstBaseVideoEncoder data structure.
  */
 struct _GstBaseVideoEncoder
 {
+  /*< private >*/
   GstBaseVideoCodec base_video_codec;
 
   /*< protected >*/
@@ -112,9 +112,11 @@ struct _GstBaseVideoEncoder
  *                  Allows closing external resources.
  * @set_format:     Optional.
  *                  Notifies subclass of incoming data format.
- *                  GstVideoState fields have already been
+ *                  GstVideoInfo fields have already been
  *                  set according to provided caps.
  * @handle_frame:   Provides input frame to subclass.
+ * @reset:          Optional.
+ *                  Allows subclass (codec) to perform post-seek semantics reset.
  * @finish:         Optional.
  *                  Called to request subclass to dispatch any pending remaining
  *                  data (e.g. at EOS).
@@ -133,6 +135,7 @@ struct _GstBaseVideoEncoder
  */
 struct _GstBaseVideoEncoderClass
 {
+  /*< private >*/
   GstBaseVideoCodecClass              base_video_codec_class;
 
   /*< public >*/
@@ -143,16 +146,16 @@ struct _GstBaseVideoEncoderClass
   gboolean      (*stop)               (GstBaseVideoEncoder *coder);
 
   gboolean      (*set_format)         (GstBaseVideoEncoder *coder,
-                                       GstVideoState *state);
+                                       GstVideoInfo *info);
 
   GstFlowReturn (*handle_frame)       (GstBaseVideoEncoder *coder,
-                                       GstVideoFrame *frame);
+                                       GstVideoFrameState *frame);
 
   gboolean      (*reset)              (GstBaseVideoEncoder *coder);
   GstFlowReturn (*finish)             (GstBaseVideoEncoder *coder);
 
   GstFlowReturn (*shape_output)       (GstBaseVideoEncoder *coder,
-                                       GstVideoFrame *frame);
+                                       GstVideoFrameState *frame);
 
   gboolean      (*event)              (GstBaseVideoEncoder *coder,
                                        GstEvent *event);
@@ -164,18 +167,18 @@ struct _GstBaseVideoEncoderClass
 
 GType                  gst_base_video_encoder_get_type (void);
 
-const GstVideoState*   gst_base_video_encoder_get_state (GstBaseVideoEncoder *coder);
+const GstVideoState*   gst_base_video_encoder_get_state (GstBaseVideoEncoder *base_video_encoder);
 
-GstVideoFrame*         gst_base_video_encoder_get_oldest_frame (GstBaseVideoEncoder *coder);
+GstVideoFrameState*    gst_base_video_encoder_get_oldest_frame (GstBaseVideoEncoder *coder);
 GstFlowReturn          gst_base_video_encoder_finish_frame (GstBaseVideoEncoder *base_video_encoder,
-                                                            GstVideoFrame *frame);
+                                                            GstVideoFrameState *frame);
 
 void                   gst_base_video_encoder_set_latency (GstBaseVideoEncoder *base_video_encoder,
                                                            GstClockTime min_latency, GstClockTime max_latency);
 void                   gst_base_video_encoder_set_latency_fields (GstBaseVideoEncoder *base_video_encoder,
                                                                   int n_fields);
 void                   gst_base_video_encoder_set_headers (GstBaseVideoEncoder *base_video_encoder,
-                                                                  GstBuffer *headers);
+							   GstBuffer *headers);
 G_END_DECLS
 
 #endif

@@ -28,6 +28,8 @@
 #include <gst/gst.h>
 #include <gst/base/gstadapter.h>
 #include <gst/video/video.h>
+#include <gst/video/gstvideopool.h>
+#include <gst/video/gstvideometa.h>
 
 G_BEGIN_DECLS
 
@@ -76,17 +78,56 @@ G_BEGIN_DECLS
 /**
  * GST_BASE_VIDEO_CODEC_FLOW_NEED_DATA:
  *
+ * Returned while parsing to indicate more data is needed.
  */
 #define GST_BASE_VIDEO_CODEC_FLOW_NEED_DATA GST_FLOW_CUSTOM_SUCCESS
 
-#define GST_BASE_VIDEO_CODEC_STREAM_LOCK(codec) g_static_rec_mutex_lock (&GST_BASE_VIDEO_CODEC (codec)->stream_lock)
-#define GST_BASE_VIDEO_CODEC_STREAM_UNLOCK(codec) g_static_rec_mutex_unlock (&GST_BASE_VIDEO_CODEC (codec)->stream_lock)
+/**
+ * GST_BASE_VIDEO_CODEC_STREAM_LOCK:
+ * @codec: video codec instance
+ *
+ * Obtain a lock to protect the codec function from concurrent access.
+ *
+ * Since: 0.10.22
+ */
+#define GST_BASE_VIDEO_CODEC_STREAM_LOCK(codec) g_rec_mutex_lock (&GST_BASE_VIDEO_CODEC (codec)->stream_lock)
+/**
+ * GST_BASE_VIDEO_CODEC_STREAM_UNLOCK:
+ * @codec: video codec instance
+ *
+ * Release the lock that protects the codec function from concurrent access.
+ *
+ * Since: 0.10.22
+ */
+#define GST_BASE_VIDEO_CODEC_STREAM_UNLOCK(codec) g_rec_mutex_unlock (&GST_BASE_VIDEO_CODEC (codec)->stream_lock)
 
 typedef struct _GstVideoState GstVideoState;
-typedef struct _GstVideoFrame GstVideoFrame;
+typedef struct _GstVideoFrameState GstVideoFrameState;
 typedef struct _GstBaseVideoCodec GstBaseVideoCodec;
 typedef struct _GstBaseVideoCodecClass GstBaseVideoCodecClass;
 
+/* GstVideoState is only used on the compressed video pad */
+/**
+ * GstVideoState:
+ * @width: Width in pixels (including borders)
+ * @height: Height in pixels (including borders)
+ * @fps_n: Numerator of framerate
+ * @fps_d: Denominator of framerate
+ * @par_n: Numerator of Pixel Aspect Ratio
+ * @par_d: Denominator of Pixel Aspect Ratio
+ * @have_interlaced: The content of the @interlaced field is present and valid
+ * @interlaced: %TRUE if the stream is interlaced
+ * @top_field_first: %TRUE if the interlaced frame is top-field-first
+ * @clean_width: Useful width of video in pixels (i.e. without borders)
+ * @clean_height: Useful height of video in pixels (i.e. without borders)
+ * @clean_offset_left: Horizontal offset (from the left) of useful region in pixels
+ * @clean_offset_top: Vertical offset (from the top) of useful region in pixels
+ * @bytes_per_picture: Size in bytes of each picture
+ * @codec_data: Optional Codec Data for the stream
+ *
+ * Information about compressed video stream.
+ * FIXME: Re-use GstVideoInfo for more fields.
+ */
 struct _GstVideoState
 {
   GstCaps *caps;
@@ -105,13 +146,45 @@ struct _GstVideoState
   int bytes_per_picture;
 
   GstBuffer *codec_data;
-
 };
 
-struct _GstVideoFrame
+/**
+ * GstVideoFrameState:
+ * @decode_timestamp: Decoding timestamp (aka DTS)
+ * @presentation_timestamp: Presentation timestamp (aka PTS)
+ * @presentation_duration: Duration of frame
+ * @system_frame_number: unique ID attributed when #GstVideoFrameState is
+ *        created
+ * @decode_frame_number: Decoded frame number, increases in decoding order
+ * @presentation_frame_number: Presentation frame number, increases in
+ *        presentation order.
+ * @distance_from_sync: Distance of the frame from a sync point, in number
+ *        of frames.
+ * @is_sync_point: #TRUE if the frame is a synchronization point (like a
+ *        keyframe)
+ * @is_eos: #TRUE if the frame is the last one of a segment.
+ * @decode_only: If #TRUE, the frame is only meant to be decoded but not
+ *        pushed downstream
+ * @sink_buffer: input buffer
+ * @src_buffer: output buffer
+ * @field_index: Number of fields since beginning of stream
+ * @n_fields: Number of fields present in frame (default 2)
+ * @coder_hook: Private data called with @coder_hook_destroy_notify
+ * @coder_hook_destroy_notify: Called when frame is destroyed
+ * @deadline: Target clock time for display (running time)
+ * @force_keyframe: For encoders, if #TRUE a keyframe must be generated
+ * @force_keyframe_headers: For encoders, if #TRUE new headers must be generated
+ * @events: List of #GstEvent that must be pushed before the next @src_buffer
+ *
+ * State of a video frame going through the codec
+ **/
+
+struct _GstVideoFrameState
 {
+  /*< private >*/
   gint ref_count;
 
+  /*< public >*/
   GstClockTime decode_timestamp;
   GstClockTime presentation_timestamp;
   GstClockTime presentation_duration;
@@ -123,6 +196,10 @@ struct _GstVideoFrame
   int distance_from_sync;
   gboolean is_sync_point;
   gboolean is_eos;
+
+  /* Frames that should not be pushed downstream and are
+   * not meant for display */
+  gboolean decode_only;
 
   GstBuffer *sink_buffer;
   GstBuffer *src_buffer;
@@ -143,51 +220,68 @@ struct _GstVideoFrame
   GList *events;
 };
 
+/**
+ * GstBaseVideoCodec:
+ *
+ * The opaque #GstBaseVideoCodec data structure.
+ */
 struct _GstBaseVideoCodec
 {
-  GstElement element;
-
   /*< private >*/
-  GstPad *sinkpad;
-  GstPad *srcpad;
+  GstElement      element;
+
+  /*< protected >*/
+  GstPad         *sinkpad;
+  GstPad         *srcpad;
 
   /* protects all data processing, i.e. is locked
    * in the chain function, finish_frame and when
    * processing serialized events */
-  GStaticRecMutex stream_lock;
+  GRecMutex stream_lock;
 
-  guint64 system_frame_number;
+  guint64         system_frame_number;
 
   GList *frames;  /* Protected with OBJECT_LOCK */
-  GstVideoState state;
+  GstVideoState state;		/* Compressed video pad */
+  GstVideoInfo info;		/* Raw video pad */
   GstSegment segment;
 
-  gdouble proportion;
-  GstClockTime earliest_time;
-  gboolean discont;
+  /* QoS properties */
+  gdouble         proportion;
+  GstClockTime    earliest_time;
+  gboolean        discont;
 
-  gint64 bytes;
-  gint64 time;
+  gint64          bytes;
+  gint64          time;
 
   /* FIXME before moving to base */
-  void *padding[GST_PADDING_LARGE];
+  void           *padding[GST_PADDING_LARGE];
 };
 
+/**
+ * GstBaseVideoCodecClass:
+ *
+ * The opaque #GstBaseVideoCodecClass data structure.
+ */
 struct _GstBaseVideoCodecClass
 {
+  /*< private >*/
   GstElementClass element_class;
 
   /* FIXME before moving to base */
   void *padding[GST_PADDING_LARGE];
 };
 
-GType gst_video_frame_get_type (void);
+GType gst_video_frame_state_get_type (void);
 GType gst_base_video_codec_get_type (void);
 
-GstVideoFrame * gst_base_video_codec_new_frame (GstBaseVideoCodec *base_video_codec);
+void gst_base_video_codec_append_frame (GstBaseVideoCodec *codec, GstVideoFrameState *frame);
+void gst_base_video_codec_remove_frame (GstBaseVideoCodec *codec, GstVideoFrameState *frame);
 
-GstVideoFrame * gst_video_frame_ref (GstVideoFrame * frame);
-void            gst_video_frame_unref (GstVideoFrame * frame);
+GstVideoFrameState * gst_base_video_codec_new_frame (GstBaseVideoCodec *base_video_codec);
+
+GstVideoFrameState * gst_video_frame_state_ref (GstVideoFrameState * frame);
+void                 gst_video_frame_state_unref (GstVideoFrameState * frame);
 
 G_END_DECLS
 
