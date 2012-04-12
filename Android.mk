@@ -4,30 +4,30 @@ include $(CLEAR_VARS)
 GST_PLUGINS_BASE_TOP := $(LOCAL_PATH)
 
 GST_PLUGINS_BASE_BUILT_SOURCES := 						\
-	pkgconfig/gstreamer-app-0.10.pc				\
-	pkgconfig/gstreamer-audio-0.10.pc			\
-	pkgconfig/gstreamer-fft-0.10.pc				\
-	pkgconfig/gstreamer-interfaces-0.10.pc			\
-	pkgconfig/gstreamer-pbutils-0.10.pc			\
-	pkgconfig/gstreamer-plugins-base-0.10.pc		\
-	pkgconfig/gstreamer-riff-0.10.pc			\
-	pkgconfig/gstreamer-rtp-0.10.pc				\
-	pkgconfig/gstreamer-rtsp-0.10.pc			\
-	pkgconfig/gstreamer-sdp-0.10.pc				\
-	pkgconfig/gstreamer-tag-0.10.pc				\
-	pkgconfig/gstreamer-video-0.10.pc			\
-	pkgconfig/gstreamer-app-0.10-uninstalled.pc		\
-	pkgconfig/gstreamer-audio-0.10-uninstalled.pc		\
-	pkgconfig/gstreamer-fft-0.10-uninstalled.pc		\
-	pkgconfig/gstreamer-interfaces-0.10-uninstalled.pc	\
-	pkgconfig/gstreamer-pbutils-0.10-uninstalled.pc		\
-	pkgconfig/gstreamer-plugins-base-0.10-uninstalled.pc	\
-	pkgconfig/gstreamer-riff-0.10-uninstalled.pc		\
-	pkgconfig/gstreamer-rtp-0.10-uninstalled.pc		\
-	pkgconfig/gstreamer-rtsp-0.10-uninstalled.pc		\
-	pkgconfig/gstreamer-sdp-0.10-uninstalled.pc		\
-	pkgconfig/gstreamer-tag-0.10-uninstalled.pc		\
-	pkgconfig/gstreamer-video-0.10-uninstalled.pc		\
+	pkgconfig/gstreamer-app-1.0.pc				\
+	pkgconfig/gstreamer-audio-1.0.pc			\
+	pkgconfig/gstreamer-fft-1.0.pc				\
+	pkgconfig/gstreamer-interfaces-1.0.pc			\
+	pkgconfig/gstreamer-pbutils-1.0.pc			\
+	pkgconfig/gstreamer-plugins-base-1.0.pc		\
+	pkgconfig/gstreamer-riff-1.0.pc			\
+	pkgconfig/gstreamer-rtp-1.0.pc				\
+	pkgconfig/gstreamer-rtsp-1.0.pc			\
+	pkgconfig/gstreamer-sdp-1.0.pc				\
+	pkgconfig/gstreamer-tag-1.0.pc				\
+	pkgconfig/gstreamer-video-1.0.pc			\
+	pkgconfig/gstreamer-app-1.0-uninstalled.pc		\
+	pkgconfig/gstreamer-audio-1.0-uninstalled.pc		\
+	pkgconfig/gstreamer-fft-1.0-uninstalled.pc		\
+	pkgconfig/gstreamer-interfaces-1.0-uninstalled.pc	\
+	pkgconfig/gstreamer-pbutils-1.0-uninstalled.pc		\
+	pkgconfig/gstreamer-plugins-base-1.0-uninstalled.pc	\
+	pkgconfig/gstreamer-riff-1.0-uninstalled.pc		\
+	pkgconfig/gstreamer-rtp-1.0-uninstalled.pc		\
+	pkgconfig/gstreamer-rtsp-1.0-uninstalled.pc		\
+	pkgconfig/gstreamer-sdp-1.0-uninstalled.pc		\
+	pkgconfig/gstreamer-tag-1.0-uninstalled.pc		\
+	pkgconfig/gstreamer-video-1.0-uninstalled.pc		\
 	gst-libs/gst/interfaces/Android.mk			\
 	gst-libs/gst/tag/Android.mk				\
 	gst-libs/gst/audio/Android.mk				\
