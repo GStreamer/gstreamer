@@ -221,7 +221,7 @@ gst_plugin_feature_list_copy (GList * list)
     GList *last;
 
     new_list = g_list_alloc ();
-    new_list->data = g_object_ref ((GObject *) list->data);
+    new_list->data = gst_object_ref (list->data);
     new_list->prev = NULL;
     last = new_list;
     list = list->next;
@@ -229,7 +229,7 @@ gst_plugin_feature_list_copy (GList * list)
       last->next = g_list_alloc ();
       last->next->prev = last;
       last = last->next;
-      last->data = g_object_ref ((GObject *) list->data);
+      last->data = gst_object_ref (list->data);
       list = list->next;
     }
     last->next = NULL;

@@ -340,7 +340,7 @@ gst_object_replace (GstObject ** oldobj, GstObject * newobj)
     return FALSE;
 
   if (newobj)
-    g_object_ref (newobj);
+    gst_object_ref (newobj);
 
   while (G_UNLIKELY (!g_atomic_pointer_compare_and_exchange ((gpointer *)
               oldobj, oldptr, newobj))) {
@@ -350,7 +350,7 @@ gst_object_replace (GstObject ** oldobj, GstObject * newobj)
   }
 
   if (oldptr)
-    g_object_unref (oldptr);
+    gst_object_unref (oldptr);
 
   return oldptr != newobj;
 }
@@ -1220,7 +1220,7 @@ gst_object_get_control_binding (GstObject * object, const gchar * property_name)
 
   GST_OBJECT_LOCK (object);
   if ((binding = gst_object_find_control_binding (object, property_name))) {
-    g_object_ref (binding);
+    gst_object_ref (binding);
   }
   GST_OBJECT_UNLOCK (object);
 
