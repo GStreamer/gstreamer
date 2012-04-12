@@ -3819,6 +3819,16 @@
 </ARG>
 
 <ARG>
+<NAME>GstPlaySink::send-event-mode</NAME>
+<TYPE>GstPlaySinkSendEventMode</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Send event mode</NICK>
+<BLURB>How to send events received in send_event function.</BLURB>
+<DEFAULT>Default GstBin's send_event handling (default)</DEFAULT>
+</ARG>
+
+<ARG>
 <NAME>GstSubtitleOverlay::font-desc</NAME>
 <TYPE>gchar*</TYPE>
 <RANGE></RANGE>

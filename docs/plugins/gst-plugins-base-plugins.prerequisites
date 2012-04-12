@@ -1,5 +1,6 @@
 GFile GObject
 GInitable GObject
+GstChildProxy GObject
 GstChildProxy GstObject
 GstColorBalance GstImplementsInterface GstElement
 GstImplementsInterface GstElement

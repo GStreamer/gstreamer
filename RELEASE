@@ -1,5 +1,5 @@
 
-Release notes for GStreamer Base Plug-ins 0.11.3 "Axe and Smash"
+Release notes for GStreamer Base Plug-ins 0.11.90 "Golden bells! What a world of happiness their harmony foretells!"
         
 
 
@@ -32,8 +32,8 @@ This module contains elements for, among others:
   typefind functions
   audio processing: audioconvert, adder, audiorate, audioresample, volume
   visualisation: libvisual
-  video processing: videoconvert
-  aggregate elements: uridecodebin, playbin, decodebin, encodebin
+  video processing: ffmpegcolorspace
+  aggregate elements: uridecodebin, playbin2, decodebin2, decodebin, playbin, encodebin
   libraries: app, audio, cdda, fft, interfaces, netbuffer, pbutils, riff, rtp, rtsp, sdp, tag, video
 
 
@@ -55,17 +55,11 @@ contains a set of less supported plug-ins that haven't passed the
 
 Features of this release
     
-      * Many API cleanups
-      * Ported to new 0.11 core API changes
-      * Many fixes and improvements
-      * video: Improve video frame map/unmap
-      * theora: Improve video negotiation
-      * Various performance improvements
-
-Bugs fixed in this release
-     
-      * 668343 : [0.11] - segfault when using missing plugin support in 0.11
-      * 668542 : [0.11] EncodingProfileClass is missing from GstPbutils-0.11.gir
+      * Lots of bugfixes, cleanup and other improvements
+      * API cleanup in the audio base classes
+      * Improvements to the RTP buffer
+There were no bugs fixed in this release
+    
 
 Download
 
@@ -94,21 +88,15 @@ Applications
   
 Contributors to this release
     
+      * Alban Browaeys
       * Alessandro Decina
-      * David Schleef
       * Edward Hervey
       * Holger Kaelberer
-      * Jonathan Matthew
+      * Jonathan Lyons
       * Mark Nauwelaerts
-      * Ognyan Tonchev
-      * Oleksij Rempel (Alexey Fisher)
-      * Peter Korsgaard
-      * Philippe Normand
+      * Raimo Järvi
       * Sebastian Dröge
-      * Sreerenj Balachandran
-      * Stefan Sauer
+      * Thiago Santos
       * Tim-Philipp Müller
-      * Vincent Penquerc'h
-      * Vincent Untz
       * Wim Taymans
  

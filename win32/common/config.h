@@ -42,13 +42,16 @@
 #undef ENABLE_NLS
 
 /* gettext package name */
-#define GETTEXT_PACKAGE "gst-plugins-base-0.11"
+#define GETTEXT_PACKAGE "gst-plugins-base-1.0"
 
 /* The GIO library directory. */
 #undef GIO_LIBDIR
 
 /* The GIO modules directory. */
 #undef GIO_MODULE_DIR
+
+/* major/minor version */
+#define GST_API_VERSION "1.0"
 
 /* system wide data directory */
 #define GST_DATADIR PREFIX "\\share"
@@ -77,9 +80,6 @@
 /* GStreamer license */
 #define GST_LICENSE "LGPL"
 
-/* major/minor version */
-#define GST_API_VERSION "0.11"
-
 /* package name in plugins */
 #define GST_PACKAGE_NAME "GStreamer Base Plug-ins source release"
 
@@ -87,7 +87,7 @@
 #define GST_PACKAGE_ORIGIN "Unknown package origin"
 
 /* GStreamer package release date/time for plugins as YYYY-MM-DD */
-#define GST_PACKAGE_RELEASE_DATETIME "2012-03-22"
+#define GST_PACKAGE_RELEASE_DATETIME "2012-04-12"
 
 /* Define to enable ALSA (used by alsa). */
 #undef HAVE_ALSA
@@ -313,7 +313,7 @@
 #define PACKAGE_NAME "GStreamer Base Plug-ins"
 
 /* Define to the full name and version of this package. */
-#define PACKAGE_STRING "GStreamer Base Plug-ins 0.11.3"
+#define PACKAGE_STRING "GStreamer Base Plug-ins 0.11.90"
 
 /* Define to the one symbol short name of this package. */
 #define PACKAGE_TARNAME "gst-plugins-base"
@@ -322,7 +322,7 @@
 #undef PACKAGE_URL
 
 /* Define to the version of this package. */
-#define PACKAGE_VERSION "0.11.3"
+#define PACKAGE_VERSION "0.11.90"
 
 /* directory where plugins are located */
 #ifdef _DEBUG
@@ -353,7 +353,7 @@
 #undef USE_TREMOLO
 
 /* Version number of package */
-#define VERSION "0.11.3"
+#define VERSION "0.11.90"
 
 /* Define WORDS_BIGENDIAN to 1 if your processor stores words with the most
    significant byte first (like Motorola and SPARC, unlike Intel). */

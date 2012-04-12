@@ -1,4 +1,10 @@
-This is GStreamer Base Plug-ins 0.11.3, "Axe and Smash"
+This is GStreamer Base Plug-ins 0.11.90 "Golden bells! What a world of happiness their harmony foretells!"
+
+New in 0.11.90:
+
+      * Lots of bugfixes, cleanup and other improvements
+      * API cleanup in the audio base classes
+      * Improvements to the RTP buffer
 
 New in 0.11.3:
 
