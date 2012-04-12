@@ -233,7 +233,7 @@ if test "x$with_system_libav" = "xyes"; then
   CPPFLAGS="$saved_CPPFLAGS"
   AC_DEFINE([LIBAV_SOURCE], ["system install"], [Describes where the Libav libraries come from.])
   HAVE_LIBAV_UNINSTALLED=0
-  AC_MSG_NOTICE([Using system-installed FFMpeg code])
+  AC_MSG_NOTICE([Using system-installed libav code])
   AC_MSG_WARN([
   ======================================================================
    WARNING: you have chosen to build gst-libav against a random
