@@ -4215,36 +4215,38 @@ build_jp2h_extension (AtomTRAK * trak, gint width, gint height,
       idhr_size + colr_size + cmap_size + cdef_size, TRUE);
 
   /* ihdr = image header box */
-  gst_byte_writer_put_uint32_be (&writer, 22);
-  gst_byte_writer_put_uint32_le (&writer, GST_MAKE_FOURCC ('i', 'h', 'd', 'r'));
-  gst_byte_writer_put_uint32_be (&writer, height);
-  gst_byte_writer_put_uint32_be (&writer, width);
-  gst_byte_writer_put_uint16_be (&writer, ncomp);
+  gst_byte_writer_put_uint32_be_unchecked (&writer, 22);
+  gst_byte_writer_put_uint32_le_unchecked (&writer, GST_MAKE_FOURCC ('i', 'h',
+          'd', 'r'));
+  gst_byte_writer_put_uint32_be_unchecked (&writer, height);
+  gst_byte_writer_put_uint32_be_unchecked (&writer, width);
+  gst_byte_writer_put_uint16_be_unchecked (&writer, ncomp);
   /* 8 bits per component, unsigned */
-  gst_byte_writer_put_uint8 (&writer, 0x7);
+  gst_byte_writer_put_uint8_unchecked (&writer, 0x7);
   /* compression type; reserved */
-  gst_byte_writer_put_uint8 (&writer, 0x7);
+  gst_byte_writer_put_uint8_unchecked (&writer, 0x7);
   /* colour space (un)known */
-  gst_byte_writer_put_uint8 (&writer, 0x0);
+  gst_byte_writer_put_uint8_unchecked (&writer, 0x0);
   /* intellectual property right (box present) */
-  gst_byte_writer_put_uint8 (&writer, 0x0);
+  gst_byte_writer_put_uint8_unchecked (&writer, 0x0);
 
   /* colour specification box */
-  gst_byte_writer_put_uint32_be (&writer, 15);
-  gst_byte_writer_put_uint32_le (&writer, GST_MAKE_FOURCC ('c', 'o', 'l', 'r'));
+  gst_byte_writer_put_uint32_be_unchecked (&writer, 15);
+  gst_byte_writer_put_uint32_le_unchecked (&writer, GST_MAKE_FOURCC ('c', 'o',
+          'l', 'r'));
 
   /* specification method: enumerated */
-  gst_byte_writer_put_uint8 (&writer, 0x1);
+  gst_byte_writer_put_uint8_unchecked (&writer, 0x1);
   /* precedence; reserved */
-  gst_byte_writer_put_uint8 (&writer, 0x0);
+  gst_byte_writer_put_uint8_unchecked (&writer, 0x0);
   /* approximation; reserved */
-  gst_byte_writer_put_uint8 (&writer, 0x0);
+  gst_byte_writer_put_uint8_unchecked (&writer, 0x0);
   /* enumerated colourspace */
-  gst_byte_writer_put_uint32_be (&writer, cenum);
+  gst_byte_writer_put_uint32_be_unchecked (&writer, cenum);
 
   if (cmap_array) {
-    gst_byte_writer_put_uint32_be (&writer, cmap_size);
-    gst_byte_writer_put_uint32_le (&writer,
+    gst_byte_writer_put_uint32_be_unchecked (&writer, cmap_size);
+    gst_byte_writer_put_uint32_le_unchecked (&writer,
         GST_MAKE_FOURCC ('c', 'm', 'a', 'p'));
     for (i = 0; i < cmap_array_size; i++) {
       const GValue *item;
@@ -4264,33 +4266,33 @@ build_jp2h_extension (AtomTRAK * trak, gint width, gint height,
         GST_WARNING ("MTYP of cmap atom signals Pallete Mapping, but we don't "
             "handle Pallete mapping atoms yet");
 
-      gst_byte_writer_put_uint16_be (&writer, cmp);
-      gst_byte_writer_put_uint8 (&writer, mtyp);
-      gst_byte_writer_put_uint8 (&writer, pcol);
+      gst_byte_writer_put_uint16_be_unchecked (&writer, cmp);
+      gst_byte_writer_put_uint8_unchecked (&writer, mtyp);
+      gst_byte_writer_put_uint8_unchecked (&writer, pcol);
     }
   }
 
   if (cdef_array) {
-    gst_byte_writer_put_uint32_be (&writer, cdef_size);
-    gst_byte_writer_put_uint32_le (&writer,
+    gst_byte_writer_put_uint32_be_unchecked (&writer, cdef_size);
+    gst_byte_writer_put_uint32_le_unchecked (&writer,
         GST_MAKE_FOURCC ('c', 'd', 'e', 'f'));
-    gst_byte_writer_put_uint16_be (&writer, cdef_array_size);
+    gst_byte_writer_put_uint16_be_unchecked (&writer, cdef_array_size);
     for (i = 0; i < cdef_array_size; i++) {
       const GValue *item;
       gint value;
       item = gst_value_array_get_value (cdef_array, i);
       value = g_value_get_int (item);
 
-      gst_byte_writer_put_uint16_be (&writer, i);
+      gst_byte_writer_put_uint16_be_unchecked (&writer, i);
       if (value > 0) {
-        gst_byte_writer_put_uint16_be (&writer, 0);
-        gst_byte_writer_put_uint16_be (&writer, value);
+        gst_byte_writer_put_uint16_be_unchecked (&writer, 0);
+        gst_byte_writer_put_uint16_be_unchecked (&writer, value);
       } else if (value < 0) {
-        gst_byte_writer_put_uint16_be (&writer, -value);
-        gst_byte_writer_put_uint16_be (&writer, 0);     /* TODO what here? */
+        gst_byte_writer_put_uint16_be_unchecked (&writer, -value);
+        gst_byte_writer_put_uint16_be_unchecked (&writer, 0);   /* TODO what here? */
       } else {
-        gst_byte_writer_put_uint16_be (&writer, 1);
-        gst_byte_writer_put_uint16_be (&writer, 0);
+        gst_byte_writer_put_uint16_be_unchecked (&writer, 1);
+        gst_byte_writer_put_uint16_be_unchecked (&writer, 0);
       }
     }
   }

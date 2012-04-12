@@ -6251,7 +6251,8 @@ qtdemux_get_rtsp_uri_from_hndl (GstQTDemux * qtdemux, GNode * minf)
                   break;
                 }
                 /* skipping to the next entry */
-                gst_byte_reader_skip (&dref, atom_size - 8);
+                if (!gst_byte_reader_skip (&dref, atom_size - 8))
+                  break;
               } else {
                 GST_WARNING_OBJECT (qtdemux, "Failed to parse hndl child "
                     "atom header");
@@ -6261,7 +6262,8 @@ qtdemux_get_rtsp_uri_from_hndl (GstQTDemux * qtdemux, GNode * minf)
             break;
           }
           /* skip to the next entry */
-          gst_byte_reader_skip (&dref, size - 8);
+          if (!gst_byte_reader_skip (&dref, size - 8))
+            break;
         } else {
           GST_WARNING_OBJECT (qtdemux, "Error parsing dref atom");
         }

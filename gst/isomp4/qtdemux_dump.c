@@ -64,7 +64,7 @@ qtdemux_dump_mvhd (GstQTDemux * qtdemux, GstByteReader * data, int depth)
 
   GST_LOG ("%*s  pref. rate:    %g", depth, "", GET_FP32 (data));
   GST_LOG ("%*s  pref. volume:  %g", depth, "", GET_FP16 (data));
-  gst_byte_reader_skip (data, 46);
+  gst_byte_reader_skip_unchecked (data, 46);
   GST_LOG ("%*s  preview time:  %u", depth, "", GET_UINT32 (data));
   GST_LOG ("%*s  preview dur.:  %u", depth, "", GET_UINT32 (data));
   GST_LOG ("%*s  poster time:   %u", depth, "", GET_UINT32 (data));
@@ -281,7 +281,7 @@ qtdemux_dump_stsd (GstQTDemux * qtdemux, GstByteReader * data, int depth)
       return FALSE;
 
     qt_atom_parser_peek_sub (data, 0, 78, &sub);
-    gst_byte_reader_skip (&sub, 6);
+    gst_byte_reader_skip_unchecked (&sub, 6);
     GST_LOG ("%*s    data reference:%d", depth, "", GET_UINT16 (&sub));
     GST_LOG ("%*s    version/rev.:  %08x", depth, "", GET_UINT32 (&sub));
     fourcc = GET_FOURCC (&sub);
@@ -297,7 +297,7 @@ qtdemux_dump_stsd (GstQTDemux * qtdemux, GstByteReader * data, int depth)
     GST_LOG ("%*s    frame count:   %u", depth, "", GET_UINT16 (&sub));
     /* something is not right with this, it's supposed to be a string but it's
      * not apparently, so just skip this for now */
-    gst_byte_reader_skip (&sub, 1 + 31);
+    gst_byte_reader_skip_unchecked (&sub, 1 + 31);
     GST_LOG ("%*s    compressor:    (skipped)", depth, "");
     GST_LOG ("%*s    depth:         %u", depth, "", GET_UINT16 (&sub));
     GST_LOG ("%*s    color table ID:%u", depth, "", GET_UINT16 (&sub));
