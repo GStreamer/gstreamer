@@ -118,7 +118,7 @@ rm -rf $RPM_BUILD_ROOT
 %{_libdir}/gstreamer-%{majorminor}/libgstmultifile.so
 %{_libdir}/gstreamer-%{majorminor}/libgstspectrum.so
 %{_libdir}/gstreamer-%{majorminor}/libgstgoom2k1.so
-# %{_libdir}/gstreamer-%{majorminor}/libgstinterleave.so
+%{_libdir}/gstreamer-%{majorminor}/libgstinterleave.so
 %{_libdir}/gstreamer-%{majorminor}/libgstreplaygain.so
 # %{_libdir}/gstreamer-%{majorminor}/libgstdeinterlace.so
 %{_libdir}/gstreamer-%{majorminor}/libgstflv.so
