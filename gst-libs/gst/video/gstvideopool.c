@@ -328,7 +328,7 @@ gst_video_buffer_pool_finalize (GObject * object)
     gst_caps_unref (priv->caps);
 
   if (priv->allocator)
-    gst_allocator_ref (priv->allocator);
+    gst_allocator_unref (priv->allocator);
 
   G_OBJECT_CLASS (gst_video_buffer_pool_parent_class)->finalize (object);
 }
