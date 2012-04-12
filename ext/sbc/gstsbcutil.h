@@ -72,4 +72,3 @@ void gst_sbc_util_set_structure_string_param(GstStructure *structure,
 			GValue *value);
 
 gboolean gst_sbc_util_fill_sbc_params(sbc_t *sbc, GstCaps *caps);
-
