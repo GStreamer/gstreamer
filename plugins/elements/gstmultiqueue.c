@@ -755,7 +755,6 @@ gst_single_queue_flush (GstMultiQueue * mq, GstSingleQueue * sq, gboolean flush)
     gst_data_queue_set_flushing (sq->queue, TRUE);
 
     sq->flushing = TRUE;
-    GST_MULTI_QUEUE_MUTEX_UNLOCK (mq);
 
     /* wake up non-linked task */
     GST_LOG_OBJECT (mq, "SingleQueue %d : waking up eventually waiting task",
