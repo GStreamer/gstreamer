@@ -61,8 +61,8 @@ enum
 
 #define DEFAULT_PROP_MODE GST_MIRROR_MODE_LEFT
 
-GST_BOILERPLATE (GstMirror, gst_mirror, GstGeometricTransform,
-    GST_TYPE_GEOMETRIC_TRANSFORM);
+#define gst_mirror_parent_class parent_class
+G_DEFINE_TYPE (GstMirror, gst_mirror, GST_TYPE_GEOMETRIC_TRANSFORM);
 
 #define GST_TYPE_MIRROR_MODE (gst_mirror_mode_get_type())
 static GType
@@ -123,18 +123,6 @@ gst_mirror_get_property (GObject * object, guint prop_id,
   }
 }
 
-static void
-gst_mirror_base_init (gpointer gclass)
-{
-  GstElementClass *element_class = GST_ELEMENT_CLASS (gclass);
-
-  gst_element_class_set_details_simple (element_class,
-      "mirror",
-      "Transform/Effect/Video",
-      "Split the image into two halves and reflect one over each other",
-      "Filippo Argiolas <filippo.argiolas@gmail.com>");
-}
-
 static gboolean
 mirror_map (GstGeometricTransform * gt, gint x, gint y, gdouble * in_x,
     gdouble * in_y)
@@ -187,10 +175,18 @@ static void
 gst_mirror_class_init (GstMirrorClass * klass)
 {
   GObjectClass *gobject_class;
+  GstElementClass *gstelement_class;
   GstGeometricTransformClass *gstgt_class;
 
   gobject_class = (GObjectClass *) klass;
+  gstelement_class = (GstElementClass *) klass;
   gstgt_class = (GstGeometricTransformClass *) klass;
+
+  gst_element_class_set_details_simple (gstelement_class,
+      "mirror",
+      "Transform/Effect/Video",
+      "Split the image into two halves and reflect one over each other",
+      "Filippo Argiolas <filippo.argiolas@gmail.com>");
 
   gobject_class->set_property = gst_mirror_set_property;
   gobject_class->get_property = gst_mirror_get_property;
@@ -207,7 +203,7 @@ gst_mirror_class_init (GstMirrorClass * klass)
 }
 
 static void
-gst_mirror_init (GstMirror * filter, GstMirrorClass * gclass)
+gst_mirror_init (GstMirror * filter)
 {
   GstGeometricTransform *gt = GST_GEOMETRIC_TRANSFORM (filter);
 

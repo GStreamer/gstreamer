@@ -303,7 +303,7 @@ dnl Make sure you have a space before and after all plugins
 GST_PLUGINS_NONPORTED=" aiff asfmux \
  camerabin cdxaparse coloreffects \
  dccp faceoverlay festival \
- fieldanalysis freeverb freeze frei0r gaudieffects geometrictransform \
+ fieldanalysis freeverb freeze frei0r gaudieffects \
  hdvparse hls id3tag inter interlace ivfparse jpegformat jp2kdecimator \
  kate liveadder legacyresample librfb mpegtsmux \
  mpegpsmux mve mxf mythtv nsf nuvdemux \

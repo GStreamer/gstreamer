@@ -65,8 +65,8 @@ enum
 #define DEFAULT_HEIGHT 0.5
 #define DEFAULT_ZOOM 2.0
 
-GST_BOILERPLATE (GstSquare, gst_square, GstGeometricTransform,
-    GST_TYPE_GEOMETRIC_TRANSFORM);
+#define gst_square_parent_class parent_class
+G_DEFINE_TYPE (GstSquare, gst_square, GST_TYPE_GEOMETRIC_TRANSFORM);
 
 /* GObject vmethod implementations */
 
@@ -137,18 +137,6 @@ gst_square_get_property (GObject * object, guint prop_id,
   }
 }
 
-static void
-gst_square_base_init (gpointer gclass)
-{
-  GstElementClass *element_class = GST_ELEMENT_CLASS (gclass);
-
-  gst_element_class_set_details_simple (element_class,
-      "square",
-      "Transform/Effect/Video",
-      "Distort center part of the image into a square",
-      "Filippo Argiolas <filippo.argiolas@gmail.com>");
-}
-
 static gboolean
 square_map (GstGeometricTransform * gt, gint x, gint y, gdouble * in_x,
     gdouble * in_y)
@@ -190,12 +178,21 @@ static void
 gst_square_class_init (GstSquareClass * klass)
 {
   GObjectClass *gobject_class;
+  GstElementClass *gstelement_class;
   GstGeometricTransformClass *gstgt_class;
 
   gobject_class = (GObjectClass *) klass;
+  gstelement_class = (GstElementClass *) klass;
   gstgt_class = (GstGeometricTransformClass *) klass;
 
   parent_class = g_type_class_peek_parent (klass);
+
+  gst_element_class_set_details_simple (gstelement_class,
+      "square",
+      "Transform/Effect/Video",
+      "Distort center part of the image into a square",
+      "Filippo Argiolas <filippo.argiolas@gmail.com>");
+
   gobject_class->set_property = GST_DEBUG_FUNCPTR (gst_square_set_property);
   gobject_class->get_property = GST_DEBUG_FUNCPTR (gst_square_get_property);
 
@@ -219,7 +216,7 @@ gst_square_class_init (GstSquareClass * klass)
 }
 
 static void
-gst_square_init (GstSquare * filter, GstSquareClass * gclass)
+gst_square_init (GstSquare * filter)
 {
   GstGeometricTransform *gt = GST_GEOMETRIC_TRANSFORM (filter);
 

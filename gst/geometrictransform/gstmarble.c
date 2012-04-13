@@ -74,8 +74,8 @@ enum
 #define DEFAULT_AMOUNT 1
 #define DEFAULT_TURBULENCE 1
 
-GST_BOILERPLATE (GstMarble, gst_marble, GstGeometricTransform,
-    GST_TYPE_GEOMETRIC_TRANSFORM);
+#define gst_marble_parent_class parent_class
+G_DEFINE_TYPE (GstMarble, gst_marble, GST_TYPE_GEOMETRIC_TRANSFORM);
 
 static void
 gst_marble_set_property (GObject * object, guint prop_id, const GValue * value,
@@ -165,20 +165,6 @@ gst_marble_finalize (GObject * obj)
   G_OBJECT_CLASS (parent_class)->finalize (obj);
 }
 
-/* GObject vmethod implementations */
-
-static void
-gst_marble_base_init (gpointer gclass)
-{
-  GstElementClass *element_class = GST_ELEMENT_CLASS (gclass);
-
-  gst_element_class_set_details_simple (element_class,
-      "marble",
-      "Transform/Effect/Video",
-      "Applies a marbling effect to the image",
-      "Thiago Santos<thiago.sousa.santos@collabora.co.uk>");
-}
-
 static gboolean
 marble_prepare (GstGeometricTransform * trans)
 {
@@ -228,12 +214,20 @@ static void
 gst_marble_class_init (GstMarbleClass * klass)
 {
   GObjectClass *gobject_class;
+  GstElementClass *gstelement_class;
   GstGeometricTransformClass *gstgt_class;
 
   gobject_class = (GObjectClass *) klass;
+  gstelement_class = (GstElementClass *) klass;
   gstgt_class = (GstGeometricTransformClass *) klass;
 
   parent_class = g_type_class_peek_parent (klass);
+
+  gst_element_class_set_details_simple (gstelement_class,
+      "marble",
+      "Transform/Effect/Video",
+      "Applies a marbling effect to the image",
+      "Thiago Santos<thiago.sousa.santos@collabora.co.uk>");
 
   gobject_class->finalize = GST_DEBUG_FUNCPTR (gst_marble_finalize);
   gobject_class->set_property = GST_DEBUG_FUNCPTR (gst_marble_set_property);
@@ -265,7 +259,7 @@ gst_marble_class_init (GstMarbleClass * klass)
 }
 
 static void
-gst_marble_init (GstMarble * filter, GstMarbleClass * gclass)
+gst_marble_init (GstMarble * filter)
 {
   GstGeometricTransform *gt = GST_GEOMETRIC_TRANSFORM (filter);
 

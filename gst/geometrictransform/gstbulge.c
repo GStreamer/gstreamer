@@ -62,8 +62,8 @@ enum
 
 #define DEFAULT_ZOOM 3.0
 
-GST_BOILERPLATE (GstBulge, gst_bulge, GstCircleGeometricTransform,
-    GST_TYPE_CIRCLE_GEOMETRIC_TRANSFORM);
+#define gst_bulge_parent_class parent_class
+G_DEFINE_TYPE (GstBulge, gst_bulge, GST_TYPE_CIRCLE_GEOMETRIC_TRANSFORM);
 
 static void
 gst_bulge_set_property (GObject * object, guint prop_id, const GValue * value,
@@ -117,20 +117,6 @@ gst_bulge_finalize (GObject * obj)
   G_OBJECT_CLASS (parent_class)->finalize (obj);
 }
 
-/* GObject vmethod implementations */
-
-static void
-gst_bulge_base_init (gpointer gclass)
-{
-  GstElementClass *element_class = GST_ELEMENT_CLASS (gclass);
-
-  gst_element_class_set_details_simple (element_class,
-      "bulge",
-      "Transform/Effect/Video",
-      "Adds a protuberance in the center point",
-      "Filippo Argiolas <filippo.argiolas@gmail.com>");
-}
-
 static gboolean
 bulge_map (GstGeometricTransform * gt, gint x, gint y, gdouble * in_x,
     gdouble * in_y)
@@ -181,12 +167,20 @@ static void
 gst_bulge_class_init (GstBulgeClass * klass)
 {
   GObjectClass *gobject_class;
+  GstElementClass *gstelement_class;
   GstGeometricTransformClass *gstgt_class;
 
   gobject_class = (GObjectClass *) klass;
+  gstelement_class = (GstElementClass *) klass;
   gstgt_class = (GstGeometricTransformClass *) klass;
 
   parent_class = g_type_class_peek_parent (klass);
+
+  gst_element_class_set_details_simple (gstelement_class,
+      "bulge",
+      "Transform/Effect/Video",
+      "Adds a protuberance in the center point",
+      "Filippo Argiolas <filippo.argiolas@gmail.com>");
 
   gobject_class->set_property = GST_DEBUG_FUNCPTR (gst_bulge_set_property);
   gobject_class->get_property = GST_DEBUG_FUNCPTR (gst_bulge_get_property);
@@ -204,7 +198,7 @@ gst_bulge_class_init (GstBulgeClass * klass)
 }
 
 static void
-gst_bulge_init (GstBulge * filter, GstBulgeClass * gclass)
+gst_bulge_init (GstBulge * filter)
 {
   GstGeometricTransform *gt = GST_GEOMETRIC_TRANSFORM (filter);
 

@@ -63,8 +63,8 @@ enum
 #define DEFAULT_INTENSITY 0.5
 #define MAX_SHRINK_AMOUNT 3.0
 
-GST_BOILERPLATE (GstStretch, gst_stretch, GstCircleGeometricTransform,
-    GST_TYPE_CIRCLE_GEOMETRIC_TRANSFORM);
+#define gst_stretch_parent_class parent_class
+G_DEFINE_TYPE (GstStretch, gst_stretch, GST_TYPE_CIRCLE_GEOMETRIC_TRANSFORM);
 
 static void
 gst_stretch_set_property (GObject * object, guint prop_id, const GValue * value,
@@ -118,20 +118,6 @@ gst_stretch_finalize (GObject * obj)
   G_OBJECT_CLASS (parent_class)->finalize (obj);
 }
 
-/* GObject vmethod implementations */
-
-static void
-gst_stretch_base_init (gpointer gclass)
-{
-  GstElementClass *element_class = GST_ELEMENT_CLASS (gclass);
-
-  gst_element_class_set_details_simple (element_class,
-      "stretch",
-      "Transform/Effect/Video",
-      "Stretch the image in a circle around the center point",
-      "Filippo Argiolas <filippo.argiolas@gmail.com>");
-}
-
 static gboolean
 stretch_map (GstGeometricTransform * gt, gint x, gint y, gdouble * in_x,
     gdouble * in_y)
@@ -183,12 +169,20 @@ static void
 gst_stretch_class_init (GstStretchClass * klass)
 {
   GObjectClass *gobject_class;
+  GstElementClass *gstelement_class;
   GstGeometricTransformClass *gstgt_class;
 
   gobject_class = (GObjectClass *) klass;
+  gstelement_class = (GstElementClass *) klass;
   gstgt_class = (GstGeometricTransformClass *) klass;
 
   parent_class = g_type_class_peek_parent (klass);
+
+  gst_element_class_set_details_simple (gstelement_class,
+      "stretch",
+      "Transform/Effect/Video",
+      "Stretch the image in a circle around the center point",
+      "Filippo Argiolas <filippo.argiolas@gmail.com>");
 
   gobject_class->set_property = GST_DEBUG_FUNCPTR (gst_stretch_set_property);
   gobject_class->get_property = GST_DEBUG_FUNCPTR (gst_stretch_get_property);
@@ -206,7 +200,7 @@ gst_stretch_class_init (GstStretchClass * klass)
 }
 
 static void
-gst_stretch_init (GstStretch * filter, GstStretchClass * gclass)
+gst_stretch_init (GstStretch * filter)
 {
   GstGeometricTransform *gt = GST_GEOMETRIC_TRANSFORM (filter);
 

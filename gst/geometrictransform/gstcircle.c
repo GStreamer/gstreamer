@@ -74,8 +74,8 @@ enum
 #define DEFAULT_HEIGHT 20
 #define DEFAULT_SPREAD_ANGLE G_PI
 
-GST_BOILERPLATE (GstCircle, gst_circle, GstCircleGeometricTransform,
-    GST_TYPE_CIRCLE_GEOMETRIC_TRANSFORM);
+#define gst_circle_parent_class parent_class
+G_DEFINE_TYPE (GstCircle, gst_circle, GST_TYPE_CIRCLE_GEOMETRIC_TRANSFORM);
 
 static void
 gst_circle_set_property (GObject * object, guint prop_id, const GValue * value,
@@ -150,20 +150,6 @@ gst_circle_finalize (GObject * obj)
   G_OBJECT_CLASS (parent_class)->finalize (obj);
 }
 
-/* GObject vmethod implementations */
-
-static void
-gst_circle_base_init (gpointer gclass)
-{
-  GstElementClass *element_class = GST_ELEMENT_CLASS (gclass);
-
-  gst_element_class_set_details_simple (element_class,
-      "circle",
-      "Transform/Effect/Video",
-      "Warps the picture into an arc shaped form",
-      "Thiago Santos<thiago.sousa.santos@collabora.co.uk>");
-}
-
 static gboolean
 circle_map (GstGeometricTransform * gt, gint x, gint y, gdouble * in_x,
     gdouble * in_y)
@@ -196,12 +182,20 @@ static void
 gst_circle_class_init (GstCircleClass * klass)
 {
   GObjectClass *gobject_class;
+  GstElementClass *gstelement_class;
   GstGeometricTransformClass *gstgt_class;
 
   gobject_class = (GObjectClass *) klass;
+  gstelement_class = (GstElementClass *) klass;
   gstgt_class = (GstGeometricTransformClass *) klass;
 
   parent_class = g_type_class_peek_parent (klass);
+
+  gst_element_class_set_details_simple (gstelement_class,
+      "circle",
+      "Transform/Effect/Video",
+      "Warps the picture into an arc shaped form",
+      "Thiago Santos<thiago.sousa.santos@collabora.co.uk>");
 
   gobject_class->finalize = GST_DEBUG_FUNCPTR (gst_circle_finalize);
   gobject_class->set_property = GST_DEBUG_FUNCPTR (gst_circle_set_property);
@@ -227,7 +221,7 @@ gst_circle_class_init (GstCircleClass * klass)
 }
 
 static void
-gst_circle_init (GstCircle * filter, GstCircleClass * gclass)
+gst_circle_init (GstCircle * filter)
 {
   filter->angle = DEFAULT_ANGLE;
   filter->spread_angle = DEFAULT_SPREAD_ANGLE;

@@ -68,8 +68,8 @@ enum
 
 #define DEFAULT_INTENSITY 0.5
 
-GST_BOILERPLATE (GstPinch, gst_pinch, GstCircleGeometricTransform,
-    GST_TYPE_CIRCLE_GEOMETRIC_TRANSFORM);
+#define gst_pinch_parent_class parent_class
+G_DEFINE_TYPE (GstPinch, gst_pinch, GST_TYPE_CIRCLE_GEOMETRIC_TRANSFORM);
 
 static void
 gst_pinch_set_property (GObject * object, guint prop_id, const GValue * value,
@@ -123,20 +123,6 @@ gst_pinch_finalize (GObject * obj)
   G_OBJECT_CLASS (parent_class)->finalize (obj);
 }
 
-/* GObject vmethod implementations */
-
-static void
-gst_pinch_base_init (gpointer gclass)
-{
-  GstElementClass *element_class = GST_ELEMENT_CLASS (gclass);
-
-  gst_element_class_set_details_simple (element_class,
-      "pinch",
-      "Transform/Effect/Video",
-      "Applies 'pinch' geometric transform to the image",
-      "Thiago Santos<thiago.sousa.santos@collabora.co.uk>");
-}
-
 static gboolean
 pinch_map (GstGeometricTransform * gt, gint x, gint y, gdouble * in_x,
     gdouble * in_y)
@@ -182,12 +168,20 @@ static void
 gst_pinch_class_init (GstPinchClass * klass)
 {
   GObjectClass *gobject_class;
+  GstElementClass *gstelement_class;
   GstGeometricTransformClass *gstgt_class;
 
   gobject_class = (GObjectClass *) klass;
+  gstelement_class = (GstElementClass *) klass;
   gstgt_class = (GstGeometricTransformClass *) klass;
 
   parent_class = g_type_class_peek_parent (klass);
+
+  gst_element_class_set_details_simple (gstelement_class,
+      "pinch",
+      "Transform/Effect/Video",
+      "Applies 'pinch' geometric transform to the image",
+      "Thiago Santos<thiago.sousa.santos@collabora.co.uk>");
 
   gobject_class->finalize = GST_DEBUG_FUNCPTR (gst_pinch_finalize);
   gobject_class->set_property = GST_DEBUG_FUNCPTR (gst_pinch_set_property);
@@ -204,7 +198,7 @@ gst_pinch_class_init (GstPinchClass * klass)
 }
 
 static void
-gst_pinch_init (GstPinch * filter, GstPinchClass * gclass)
+gst_pinch_init (GstPinch * filter)
 {
   GstGeometricTransform *gt = GST_GEOMETRIC_TRANSFORM (filter);
 

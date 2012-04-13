@@ -23,52 +23,25 @@
 
 #include "gstgeometrictransform.h"
 #include "geometricmath.h"
-#include <gst/controller/gstcontroller.h>
 #include <string.h>
 
 GST_DEBUG_CATEGORY_STATIC (geometric_transform_debug);
 #define GST_CAT_DEFAULT geometric_transform_debug
 
 static GstStaticPadTemplate gst_geometric_transform_src_template =
-    GST_STATIC_PAD_TEMPLATE ("src",
+GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS (GST_VIDEO_CAPS_ABGR "; "
-        GST_VIDEO_CAPS_ARGB "; "
-        GST_VIDEO_CAPS_BGR "; "
-        GST_VIDEO_CAPS_BGRA "; "
-        GST_VIDEO_CAPS_BGRx "; "
-        GST_VIDEO_CAPS_RGB "; "
-        GST_VIDEO_CAPS_RGBA "; "
-        GST_VIDEO_CAPS_RGBx "; "
-        GST_VIDEO_CAPS_YUV ("AYUV") "; "
-        GST_VIDEO_CAPS_xBGR "; "
-        GST_VIDEO_CAPS_xRGB "; "
-        GST_VIDEO_CAPS_GRAY8 "; "
-        GST_VIDEO_CAPS_GRAY16 ("BIG_ENDIAN") "; "
-        GST_VIDEO_CAPS_GRAY16 ("LITTLE_ENDIAN")
-    )
+    GST_STATIC_CAPS (GST_VIDEO_CAPS_MAKE ("{ ARGB, BGR, BGRA, BGRx, RGB, "
+            "RGBA, RGBx, AYUV, xBGR, xRGB, GRAY8, GRAY16_BE, GRAY16_LE }"))
     );
 
 static GstStaticPadTemplate gst_geometric_transform_sink_template =
-    GST_STATIC_PAD_TEMPLATE ("sink",
+GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS (GST_VIDEO_CAPS_ABGR "; "
-        GST_VIDEO_CAPS_ARGB "; "
-        GST_VIDEO_CAPS_BGR "; "
-        GST_VIDEO_CAPS_BGRA "; "
-        GST_VIDEO_CAPS_BGRx "; "
-        GST_VIDEO_CAPS_RGB "; "
-        GST_VIDEO_CAPS_RGBA "; "
-        GST_VIDEO_CAPS_RGBx "; "
-        GST_VIDEO_CAPS_YUV ("AYUV") "; "
-        GST_VIDEO_CAPS_xBGR "; "
-        GST_VIDEO_CAPS_xRGB "; "
-        GST_VIDEO_CAPS_GRAY8 "; "
-        GST_VIDEO_CAPS_GRAY16 ("BIG_ENDIAN") "; "
-        GST_VIDEO_CAPS_GRAY16 ("LITTLE_ENDIAN")
-    )
+    GST_STATIC_CAPS (GST_VIDEO_CAPS_MAKE ("{ ARGB, BGR, BGRA, BGRx, RGB, "
+            "RGBA, RGBx, AYUV, xBGR, xRGB, GRAY8, GRAY16_BE, GRAY16_LE }"))
     );
 
 static GstVideoFilterClass *parent_class = NULL;
@@ -163,6 +136,7 @@ gst_geometric_transform_set_caps (GstBaseTransform * btrans, GstCaps * incaps,
   gint old_width;
   gint old_height;
   GstGeometricTransformClass *klass;
+  GstVideoInfo vinfo;
 
   gt = GST_GEOMETRIC_TRANSFORM_CAST (btrans);
   klass = GST_GEOMETRIC_TRANSFORM_GET_CLASS (gt);
@@ -170,11 +144,12 @@ gst_geometric_transform_set_caps (GstBaseTransform * btrans, GstCaps * incaps,
   old_width = gt->width;
   old_height = gt->height;
 
-  ret = gst_video_format_parse_caps (incaps, &gt->format, &gt->width,
-      &gt->height);
+  ret = gst_video_info_from_caps (&vinfo, incaps);
   if (ret) {
-    gt->row_stride = gst_video_format_get_row_stride (gt->format, 0, gt->width);
-    gt->pixel_stride = gst_video_format_get_pixel_stride (gt->format, 0);
+    gt->width = vinfo.width;
+    gt->height = vinfo.height;
+    gt->row_stride = vinfo.stride[0];
+    gt->pixel_stride = GST_VIDEO_INFO_COMP_PSTRIDE (&vinfo, 0);
 
     /* regenerate the map */
     GST_OBJECT_LOCK (gt);
@@ -228,10 +203,26 @@ gst_geometric_transform_do_map (GstGeometricTransform * gt, GstBuffer * inbuf,
     /* only set the values if the values are valid */
     if (trunc_x >= 0 && trunc_x < gt->width && trunc_y >= 0 &&
         trunc_y < gt->height) {
+      GstMapInfo in_info;
+      GstMapInfo out_info;
+
+      if (!gst_buffer_map (outbuf, &out_info, GST_MAP_WRITE)) {
+        GST_WARNING_OBJECT (gt, "Failed to map output buffer");
+        return;
+      }
+      if (!gst_buffer_map (inbuf, &in_info, GST_MAP_READ)) {
+        GST_WARNING_OBJECT (gt, "Failed to map input buffer");
+        gst_buffer_unmap (outbuf, &out_info);
+        return;
+      }
+
       in_offset = trunc_y * gt->row_stride + trunc_x * gt->pixel_stride;
 
-      memcpy (GST_BUFFER_DATA (outbuf) + out_offset,
-          GST_BUFFER_DATA (inbuf) + in_offset, gt->pixel_stride);
+      memcpy (out_info.data + out_offset,
+          in_info.data + in_offset, gt->pixel_stride);
+
+      gst_buffer_unmap (outbuf, &out_info);
+      gst_buffer_unmap (inbuf, &in_info);
     }
   }
 }
@@ -262,19 +253,21 @@ gst_geometric_transform_transform (GstBaseTransform * trans, GstBuffer * buf,
   gint x, y;
   GstFlowReturn ret = GST_FLOW_OK;
   gdouble *ptr;
+  GstMapInfo out_info;
 
   gt = GST_GEOMETRIC_TRANSFORM_CAST (trans);
   klass = GST_GEOMETRIC_TRANSFORM_GET_CLASS (gt);
 
-  memset (GST_BUFFER_DATA (outbuf), 0, GST_BUFFER_SIZE (outbuf));
+  gst_buffer_map (outbuf, &out_info, GST_MAP_WRITE);
+  memset (out_info.data, 0, out_info.size);
 
   GST_OBJECT_LOCK (gt);
   if (gt->precalc_map) {
     if (gt->needs_remap) {
       if (klass->prepare_func)
         if (!klass->prepare_func (gt)) {
-          GST_OBJECT_UNLOCK (gt);
-          return FALSE;
+          ret = FALSE;
+          goto end;
         }
       gst_geometric_transform_generate_map (gt);
     }
@@ -304,6 +297,7 @@ gst_geometric_transform_transform (GstBaseTransform * trans, GstBuffer * buf,
   }
 end:
   GST_OBJECT_UNLOCK (gt);
+  gst_buffer_unmap (outbuf, &out_info);
   return ret;
 }
 

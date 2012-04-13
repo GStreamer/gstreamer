@@ -53,22 +53,8 @@
 GST_DEBUG_CATEGORY_STATIC (gst_fisheye_debug);
 #define GST_CAT_DEFAULT gst_fisheye_debug
 
-GST_BOILERPLATE (GstFisheye, gst_fisheye, GstGeometricTransform,
-    GST_TYPE_GEOMETRIC_TRANSFORM);
-
-/* GObject vmethod implementations */
-
-static void
-gst_fisheye_base_init (gpointer gclass)
-{
-  GstElementClass *element_class = GST_ELEMENT_CLASS (gclass);
-
-  gst_element_class_set_details_simple (element_class,
-      "fisheye",
-      "Transform/Effect/Video",
-      "Split the image into two halves and reflect one over each other",
-      "Filippo Argiolas <filippo.argiolas@gmail.com>");
-}
+#define gst_fisheye_parent_class parent_class
+G_DEFINE_TYPE (GstFisheye, gst_fisheye, GST_TYPE_GEOMETRIC_TRANSFORM);
 
 static gboolean
 fisheye_map (GstGeometricTransform * gt, gint x, gint y, gdouble * in_x,
@@ -123,17 +109,24 @@ fisheye_map (GstGeometricTransform * gt, gint x, gint y, gdouble * in_x,
 static void
 gst_fisheye_class_init (GstFisheyeClass * klass)
 {
+  GstElementClass *gstelement_class;
   GstGeometricTransformClass *gstgt_class;
 
+  gstelement_class = (GstElementClass *) klass;
   gstgt_class = (GstGeometricTransformClass *) klass;
 
   parent_class = g_type_class_peek_parent (klass);
+  gst_element_class_set_details_simple (gstelement_class,
+      "fisheye",
+      "Transform/Effect/Video",
+      "Split the image into two halves and reflect one over each other",
+      "Filippo Argiolas <filippo.argiolas@gmail.com>");
 
   gstgt_class->map_func = fisheye_map;
 }
 
 static void
-gst_fisheye_init (GstFisheye * filter, GstFisheyeClass * gclass)
+gst_fisheye_init (GstFisheye * filter)
 {
   GstGeometricTransform *gt = GST_GEOMETRIC_TRANSFORM (filter);
 

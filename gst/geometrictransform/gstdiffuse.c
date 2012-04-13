@@ -68,8 +68,8 @@ enum
 
 #define DEFAULT_SCALE 4
 
-GST_BOILERPLATE (GstDiffuse, gst_diffuse, GstGeometricTransform,
-    GST_TYPE_GEOMETRIC_TRANSFORM);
+#define gst_diffuse_parent_class parent_class
+G_DEFINE_TYPE (GstDiffuse, gst_diffuse, GST_TYPE_GEOMETRIC_TRANSFORM);
 
 static void
 gst_diffuse_set_property (GObject * object, guint prop_id, const GValue * value,
@@ -130,18 +130,6 @@ gst_diffuse_finalize (GObject * obj)
 
 /* GObject vmethod implementations */
 
-static void
-gst_diffuse_base_init (gpointer gclass)
-{
-  GstElementClass *element_class = GST_ELEMENT_CLASS (gclass);
-
-  gst_element_class_set_details_simple (element_class,
-      "diffuse",
-      "Transform/Effect/Video",
-      "Diffuses the image by moving its pixels in random directions",
-      "Thiago Santos<thiago.sousa.santos@collabora.co.uk>");
-}
-
 static gboolean
 diffuse_prepare (GstGeometricTransform * trans)
 {
@@ -187,12 +175,20 @@ static void
 gst_diffuse_class_init (GstDiffuseClass * klass)
 {
   GObjectClass *gobject_class;
+  GstElementClass *gstelement_class;
   GstGeometricTransformClass *gstgt_class;
 
   gobject_class = (GObjectClass *) klass;
+  gstelement_class = (GstElementClass *) klass;
   gstgt_class = (GstGeometricTransformClass *) klass;
 
   parent_class = g_type_class_peek_parent (klass);
+
+  gst_element_class_set_details_simple (gstelement_class,
+      "diffuse",
+      "Transform/Effect/Video",
+      "Diffuses the image by moving its pixels in random directions",
+      "Thiago Santos<thiago.sousa.santos@collabora.co.uk>");
 
   gobject_class->finalize = GST_DEBUG_FUNCPTR (gst_diffuse_finalize);
   gobject_class->set_property = GST_DEBUG_FUNCPTR (gst_diffuse_set_property);
@@ -209,7 +205,7 @@ gst_diffuse_class_init (GstDiffuseClass * klass)
 }
 
 static void
-gst_diffuse_init (GstDiffuse * filter, GstDiffuseClass * gclass)
+gst_diffuse_init (GstDiffuse * filter)
 {
   GstGeometricTransform *gt = GST_GEOMETRIC_TRANSFORM (filter);
 
