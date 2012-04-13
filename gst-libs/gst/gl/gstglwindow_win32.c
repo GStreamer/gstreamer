@@ -174,19 +174,26 @@ gst_gl_window_new (DWORD_PTR external_gl_context)
       x, y, 0, 0, (HWND) NULL, (HMENU) NULL, hinstance, window);
 
   if (!priv->internal_win_id) {
-    g_debug ("failed to create gl window: %lud\n",
-        (gulong) priv->internal_win_id);
-    return NULL;
+    g_debug ("failed to create gl window\n");
+    goto failure;
   }
 
   g_debug ("gl window created: %lud\n", (gulong) priv->internal_win_id);
 
   //device is set in the window_proc
-  g_return_val_if_fail (priv->device, NULL);
+  if (!priv->display) {
+    g_debug ("failed to create display\n");
+    goto failure;
+  }
 
   ShowCursor (TRUE);
 
   return window;
+
+failure:
+  g_mutex_unlock (priv->x_lock);
+  g_object_unref (G_OBJECT (window));
+  return NULL;
 }
 
 GQuark
