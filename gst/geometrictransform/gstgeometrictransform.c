@@ -128,49 +128,45 @@ end:
 }
 
 static gboolean
-gst_geometric_transform_set_caps (GstBaseTransform * btrans, GstCaps * incaps,
-    GstCaps * outcaps)
+gst_geometric_transform_set_info (GstVideoFilter * vfilter, GstCaps * incaps,
+    GstVideoInfo * in_info, GstCaps * outcaps, GstVideoInfo * out_info)
 {
   GstGeometricTransform *gt;
-  gboolean ret;
+  gboolean ret = TRUE;
   gint old_width;
   gint old_height;
   GstGeometricTransformClass *klass;
-  GstVideoInfo vinfo;
 
-  gt = GST_GEOMETRIC_TRANSFORM_CAST (btrans);
+  gt = GST_GEOMETRIC_TRANSFORM_CAST (vfilter);
   klass = GST_GEOMETRIC_TRANSFORM_GET_CLASS (gt);
 
   old_width = gt->width;
   old_height = gt->height;
 
-  ret = gst_video_info_from_caps (&vinfo, incaps);
-  if (ret) {
-    gt->width = vinfo.width;
-    gt->height = vinfo.height;
-    gt->row_stride = vinfo.stride[0];
-    gt->pixel_stride = GST_VIDEO_INFO_COMP_PSTRIDE (&vinfo, 0);
+  gt->width = in_info->width;
+  gt->height = in_info->height;
+  gt->row_stride = in_info->stride[0];
+  gt->pixel_stride = GST_VIDEO_INFO_COMP_PSTRIDE (in_info, 0);
 
-    /* regenerate the map */
-    GST_OBJECT_LOCK (gt);
-    if (gt->map == NULL || old_width == 0 || old_height == 0
-        || gt->width != old_width || gt->height != old_height) {
-      if (klass->prepare_func)
-        if (!klass->prepare_func (gt)) {
-          GST_OBJECT_UNLOCK (gt);
-          return FALSE;
-        }
-      if (gt->precalc_map)
-        gst_geometric_transform_generate_map (gt);
-    }
-    GST_OBJECT_UNLOCK (gt);
+  /* regenerate the map */
+  GST_OBJECT_LOCK (gt);
+  if (gt->map == NULL || old_width == 0 || old_height == 0
+      || gt->width != old_width || gt->height != old_height) {
+    if (klass->prepare_func)
+      if (!klass->prepare_func (gt)) {
+        GST_OBJECT_UNLOCK (gt);
+        return FALSE;
+      }
+    if (gt->precalc_map)
+      gst_geometric_transform_generate_map (gt);
   }
+  GST_OBJECT_UNLOCK (gt);
   return ret;
 }
 
 static void
-gst_geometric_transform_do_map (GstGeometricTransform * gt, GstBuffer * inbuf,
-    GstBuffer * outbuf, gint x, gint y, gdouble in_x, gdouble in_y)
+gst_geometric_transform_do_map (GstGeometricTransform * gt, guint8 * in_data,
+    guint8 * out_data, gint x, gint y, gdouble in_x, gdouble in_y)
 {
   gint in_offset;
   gint out_offset;
@@ -203,26 +199,9 @@ gst_geometric_transform_do_map (GstGeometricTransform * gt, GstBuffer * inbuf,
     /* only set the values if the values are valid */
     if (trunc_x >= 0 && trunc_x < gt->width && trunc_y >= 0 &&
         trunc_y < gt->height) {
-      GstMapInfo in_info;
-      GstMapInfo out_info;
-
-      if (!gst_buffer_map (outbuf, &out_info, GST_MAP_WRITE)) {
-        GST_WARNING_OBJECT (gt, "Failed to map output buffer");
-        return;
-      }
-      if (!gst_buffer_map (inbuf, &in_info, GST_MAP_READ)) {
-        GST_WARNING_OBJECT (gt, "Failed to map input buffer");
-        gst_buffer_unmap (outbuf, &out_info);
-        return;
-      }
-
       in_offset = trunc_y * gt->row_stride + trunc_x * gt->pixel_stride;
 
-      memcpy (out_info.data + out_offset,
-          in_info.data + in_offset, gt->pixel_stride);
-
-      gst_buffer_unmap (outbuf, &out_info);
-      gst_buffer_unmap (inbuf, &in_info);
+      memcpy (out_data + out_offset, in_data + in_offset, gt->pixel_stride);
     }
   }
 }
@@ -245,21 +224,23 @@ gst_geometric_transform_before_transform (GstBaseTransform * trans,
 }
 
 static GstFlowReturn
-gst_geometric_transform_transform (GstBaseTransform * trans, GstBuffer * buf,
-    GstBuffer * outbuf)
+gst_geometric_transform_transform_frame (GstVideoFilter * vfilter,
+    GstVideoFrame * in_frame, GstVideoFrame * out_frame)
 {
   GstGeometricTransform *gt;
   GstGeometricTransformClass *klass;
   gint x, y;
   GstFlowReturn ret = GST_FLOW_OK;
   gdouble *ptr;
-  GstMapInfo out_info;
+  guint8 *in_data;
+  guint8 *out_data;
 
-  gt = GST_GEOMETRIC_TRANSFORM_CAST (trans);
+  gt = GST_GEOMETRIC_TRANSFORM_CAST (vfilter);
   klass = GST_GEOMETRIC_TRANSFORM_GET_CLASS (gt);
 
-  gst_buffer_map (outbuf, &out_info, GST_MAP_WRITE);
-  memset (out_info.data, 0, out_info.size);
+  in_data = GST_VIDEO_FRAME_PLANE_DATA (in_frame, 0);
+  out_data = GST_VIDEO_FRAME_PLANE_DATA (out_frame, 0);
+  memset (out_data, 0, out_frame->map[0].size);
 
   GST_OBJECT_LOCK (gt);
   if (gt->precalc_map) {
@@ -276,7 +257,8 @@ gst_geometric_transform_transform (GstBaseTransform * trans, GstBuffer * buf,
     for (y = 0; y < gt->height; y++) {
       for (x = 0; x < gt->width; x++) {
         /* do the mapping */
-        gst_geometric_transform_do_map (gt, buf, outbuf, x, y, ptr[0], ptr[1]);
+        gst_geometric_transform_do_map (gt, in_data, out_data, x, y, ptr[0],
+            ptr[1]);
         ptr += 2;
       }
     }
@@ -286,7 +268,8 @@ gst_geometric_transform_transform (GstBaseTransform * trans, GstBuffer * buf,
         gdouble in_x, in_y;
 
         if (klass->map_func (gt, x, y, &in_x, &in_y)) {
-          gst_geometric_transform_do_map (gt, buf, outbuf, x, y, in_x, in_y);
+          gst_geometric_transform_do_map (gt, in_data, out_data, x, y, in_x,
+              in_y);
         } else {
           GST_WARNING_OBJECT (gt, "Failed to do mapping for %d %d", x, y);
           ret = GST_FLOW_ERROR;
@@ -297,7 +280,6 @@ gst_geometric_transform_transform (GstBaseTransform * trans, GstBuffer * buf,
   }
 end:
   GST_OBJECT_UNLOCK (gt);
-  gst_buffer_unmap (outbuf, &out_info);
   return ret;
 }
 
@@ -372,9 +354,11 @@ gst_geometric_transform_class_init (gpointer klass, gpointer class_data)
 {
   GObjectClass *obj_class;
   GstBaseTransformClass *trans_class;
+  GstVideoFilterClass *vfilter_class;
 
   obj_class = (GObjectClass *) klass;
   trans_class = (GstBaseTransformClass *) klass;
+  vfilter_class = (GstVideoFilterClass *) klass;
 
   parent_class = g_type_class_peek_parent (klass);
 
@@ -384,11 +368,13 @@ gst_geometric_transform_class_init (gpointer klass, gpointer class_data)
       GST_DEBUG_FUNCPTR (gst_geometric_transform_get_property);
 
   trans_class->stop = GST_DEBUG_FUNCPTR (gst_geometric_transform_stop);
-  trans_class->set_caps = GST_DEBUG_FUNCPTR (gst_geometric_transform_set_caps);
-  trans_class->transform =
-      GST_DEBUG_FUNCPTR (gst_geometric_transform_transform);
   trans_class->before_transform =
       GST_DEBUG_FUNCPTR (gst_geometric_transform_before_transform);
+
+  vfilter_class->set_info =
+      GST_DEBUG_FUNCPTR (gst_geometric_transform_set_info);
+  vfilter_class->transform_frame =
+      GST_DEBUG_FUNCPTR (gst_geometric_transform_transform_frame);
 
   g_object_class_install_property (obj_class, PROP_OFF_EDGE_PIXELS,
       g_param_spec_enum ("off-edge-pixels", "Off edge pixels",
