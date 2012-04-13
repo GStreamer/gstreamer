@@ -58,8 +58,7 @@ static GstPad *mysrcpad, *mysinkpad;
     "width = (int) 240, "               \
     "height = (int) 120, "              \
     "framerate = (fraction) 999/7 , "	\
-    "format = (string) I420, "          \
-    "color-matrix=(string)sdtv"
+    "format = (string) I420"
 
 static GstStaticPadTemplate sinktemplate = GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
