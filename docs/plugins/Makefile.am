@@ -50,7 +50,6 @@ IGNORE_CFILES = utils.c mem.c imgconvert.c
 # the registry won't have the element
 
 EXTRA_HFILES = \
-	$(top_srcdir)/ext/alsa/gstalsamixerelement.h \
 	$(top_srcdir)/ext/alsa/gstalsasink.h \
 	$(top_srcdir)/ext/alsa/gstalsasrc.h \
 	$(top_srcdir)/ext/cdparanoia/gstcdparanoiasrc.h \
