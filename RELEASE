@@ -1,10 +1,11 @@
 
-Release notes for GStreamer FFmpeg Plug-ins 0.11.2 "Sadistic Symphony"
+Release notes for GStreamer libav Plug-ins 0.11.90 "Nameless here for evermore"
         
+
 
 The GStreamer team is proud to announce a new release
 in the 0.11.x unstable series of the
-GStreamer FFmpeg Plug-ins.
+GStreamer libav Plug-ins.
 
 
 The 0.11.x series is an unstable series targeted at developers and will
@@ -13,7 +14,8 @@ It is not API or ABI compatible with the stable 0.10.x series.
 It is, however, parallel installable with the 0.10.x series.
 
 
-This module contains plug-ins using libraries from the FFmpeg project.
+
+This module contains plug-ins using libraries from the libav project.
 
 
 
@@ -35,21 +37,16 @@ contains a set of less supported plug-ins that haven't passed the
 
 Features of this release
     
-      * Many cleanups
-      * Ported to new 0.11 core API changes
-      * Disable ffmpeg multithreading
-      * Add support for the VOC format
-      * Improve memory allocation
-      * Optimize for 0-padded input buffers
-
-Bugs fixed in this release
-     
-      * 664687 : CPU count detection fails on OS X
+      * Lots of bugfixes, cleanup and other improvements
+      * Renamed from gst-ffmpeg to libav, also all element factory names now start with an 'av' prefix instead of 'ff'
+      * Handle difference between DTS/PTS properly
+There were no bugs fixed in this release
+    
 
 Download
 
-You can find source releases of gst-ffmpeg in the download directory:
-http://gstreamer.freedesktop.org/src/gst-ffmpeg/
+You can find source releases of gst-libav in the download directory:
+http://gstreamer.freedesktop.org/src/gst-libav/
 
 GStreamer Homepage
 
@@ -73,9 +70,7 @@ Applications
   
 Contributors to this release
     
-      * Alessandro Decina
-      * Edward Hervey
-      * Matej Knopp
       * Sebastian Dröge
+      * Tim-Philipp Müller
       * Wim Taymans
  

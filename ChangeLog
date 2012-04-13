@@ -1,9 +1,181 @@
-=== release 0.11.2 ===
+=== release 0.11.90 ===
 
-2012-03-22  Wim Taymans <wim.taymans@collabora.co.uk>
+2012-04-13  Sebastian Dröge <sebastian.droege@collabora.co.uk>
 
 	* configure.ac:
-	  releasing 0.11.2, "Sadistic Symphony"
+	  releasing 0.11.90, "Nameless here for evermore"
+
+2012-04-12 19:56:12 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* Makefile.am:
+	* gst-libav.doap:
+	  Fix make distcheck
+
+2012-04-12 19:46:24 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* configure.ac:
+	  configure: Remove another occurence of ffmpeg
+
+2012-04-12 19:41:52 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* configure.ac:
+	* docs/plugins/Makefile.am:
+	* docs/plugins/gst-ffmpeg-plugins-docs.sgml:
+	* docs/plugins/gst-ffmpeg-plugins-sections.txt:
+	* docs/plugins/gst-ffmpeg-plugins.args:
+	* docs/plugins/gst-ffmpeg-plugins.hierarchy:
+	* docs/plugins/gst-ffmpeg-plugins.interfaces:
+	* docs/plugins/gst-ffmpeg-plugins.prerequisites:
+	* docs/plugins/gst-ffmpeg-plugins.signals:
+	* docs/plugins/gst-ffmpeg-plugins.types:
+	* docs/plugins/gst-libav-plugins-docs.sgml:
+	* docs/plugins/gst-libav-plugins-sections.txt:
+	* docs/plugins/gst-libav-plugins.args:
+	* docs/plugins/gst-libav-plugins.hierarchy:
+	* docs/plugins/gst-libav-plugins.interfaces:
+	* docs/plugins/gst-libav-plugins.prerequisites:
+	* docs/plugins/gst-libav-plugins.signals:
+	* docs/plugins/gst-libav-plugins.types:
+	* docs/plugins/inspect/plugin-ffmpeg.xml:
+	* ext/Makefile.am:
+	* ext/ffmpeg/Makefile.am:
+	* ext/ffmpeg/gstffmpeg.c:
+	* ext/ffmpeg/gstffmpeg.h:
+	* ext/ffmpeg/gstffmpegaudioresample.c:
+	* ext/ffmpeg/gstffmpegcfg.c:
+	* ext/ffmpeg/gstffmpegcodecmap.c:
+	* ext/ffmpeg/gstffmpegcodecmap.h:
+	* ext/ffmpeg/gstffmpegdec.c:
+	* ext/ffmpeg/gstffmpegdeinterlace.c:
+	* ext/ffmpeg/gstffmpegdemux.c:
+	* ext/ffmpeg/gstffmpegenc.c:
+	* ext/ffmpeg/gstffmpegmux.c:
+	* ext/ffmpeg/gstffmpegprotocol.c:
+	* ext/ffmpeg/gstffmpegscale.c:
+	* ext/ffmpeg/gstffmpegutils.h:
+	* ext/libpostproc/gstpostproc.c:
+	* ext/libswscale/Makefile.am:
+	* ext/libswscale/gstffmpegscale.c:
+	* gst-ffmpeg.doap:
+	* gst-ffmpeg.spec.in:
+	* gst-libav.doap:
+	* gst-libav.spec.in:
+	* tests/check/Makefile.am:
+	* tests/check/elements/avdec_adpcm.c:
+	* tests/check/elements/avdemux_ape.c:
+	* tests/check/elements/ffdec_adpcm.c:
+	* tests/check/elements/ffdemux_ape.c:
+	* tests/check/generic/libavcodec-locking.c:
+	* tests/check/generic/plugin-test.c:
+	* tests/check/gst-ffmpeg.supp:
+	* tests/check/gst-libav.supp:
+	  Rename everything from gst-ffmpeg to gst-libav
+	  Also change elements factory names to avenc_*, avdec_*,
+	  avmux_* and avdemux_*. The actual filenames, type names,
+	  function/variable names are not touched to make merging
+	  with 0.10 easier at this point. Once 0.10 is not supported
+	  anymore everything should be renamed.
+
+2012-04-12 11:06:22 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* gst-libs/ext/Makefile.am:
+	  ffmpeg: Fix make dist
+
+2012-04-10 00:59:24 +0100  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+
+	* ext/ffmpeg/gstffmpegdec.c:
+	* ext/ffmpeg/gstffmpegdemux.c:
+	* ext/ffmpeg/gstffmpegenc.c:
+	* ext/ffmpeg/gstffmpegmux.c:
+	  ffmpeg: use set_metadata() for generated strings
+	  Reverts parts of previous commit.
+
+2012-04-10 00:53:43 +0100  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+
+	* ext/ffmpeg/gstffmpegaudioresample.c:
+	* ext/ffmpeg/gstffmpegdec.c:
+	* ext/ffmpeg/gstffmpegdeinterlace.c:
+	* ext/ffmpeg/gstffmpegdemux.c:
+	* ext/ffmpeg/gstffmpegenc.c:
+	* ext/ffmpeg/gstffmpegmux.c:
+	* ext/ffmpeg/gstffmpegscale.c:
+	* ext/libpostproc/gstpostproc.c:
+	* ext/libswscale/gstffmpegscale.c:
+	  Use new gst_element_class_set_static_metadata()
+
+2012-04-05 18:44:32 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* common:
+	  Automatic update of common submodule
+	  From 7fda524 to 464fe15
+
+2012-04-05 17:41:11 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* ext/ffmpeg/gstffmpeg.c:
+	* ext/libpostproc/gstpostproc.c:
+	* ext/libswscale/gstffmpegscale.c:
+	  gst: Update for GST_PLUGIN_DEFINE() API changes
+
+2012-04-05 13:28:41 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* configure.ac:
+	  configure: Update version to 0.11.89.1
+
+2012-04-04 14:48:25 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* configure.ac:
+	* docs/plugins/Makefile.am:
+	* docs/plugins/gst-ffmpeg-plugins-docs.sgml:
+	* docs/version.entities.in:
+	* ext/ffmpeg/Makefile.am:
+	* ext/libpostproc/Makefile.am:
+	* ext/libswscale/Makefile.am:
+	* gst-ffmpeg.spec.in:
+	  ffmpeg: Update versioning
+
+2012-04-03 11:52:05 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* ext/ffmpeg/gstffmpegdec.c:
+	  ffdec: handle DTS/PTS
+	  Now that we can know about PTS and DTS on incomming buffers, track them and set
+	  the correct output timestamps.
+	  We can remove the code to estimate if input buffers have pts or dts.
+
+2012-03-30 18:14:00 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* ext/ffmpeg/gstffmpegutils.c:
+	  update for buffer api change
+
+2012-03-28 12:50:19 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* ext/ffmpeg/gstffmpegdec.c:
+	  update for buffer changes
+
+2012-03-27 16:39:09 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* ext/ffmpeg/gstffmpegenc.c:
+	  ffenc: fix caps handling
+	  Avoid copies and leaks
+
+2012-03-26 12:13:46 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	  Replace master with 0.11
+
+2012-03-22 15:56:32 +0100  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* configure.ac:
+	  back to development
+
+=== release 0.11.2 ===
+
+2012-03-22 15:53:13 +0100  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* ChangeLog:
+	* NEWS:
+	* RELEASE:
+	* configure.ac:
+	* gst-ffmpeg.doap:
+	  Release 0.11.2
 
 2012-03-22 15:31:40 +0100  Wim Taymans <wim.taymans@collabora.co.uk>
 

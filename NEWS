@@ -1,4 +1,10 @@
-This is GStreamer FFmpeg Plug-ins 0.11.2 "Sadistic Symphony"
+This is GStreamer libav Plug-ins 0.11.90 "Nameless here for evermore" 
+
+New in 0.11.90:
+
+      * Lots of bugfixes, cleanup and other improvements
+      * Renamed from gst-ffmpeg to libav, also all element factory names now start with an 'av' prefix instead of 'ff'
+      * Handle difference between DTS/PTS properly
 
 New in 0.11.2:
 
