@@ -1,4 +1,3 @@
-ext/alsa/gstalsamixertrack.c
 ext/alsa/gstalsasink.c
 ext/alsa/gstalsasrc.c
 ext/cdparanoia/gstcdparanoiasrc.c
