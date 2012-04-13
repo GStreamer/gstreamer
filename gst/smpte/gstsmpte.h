@@ -79,6 +79,7 @@ struct _GstSMPTEClass {
   GstElementClass parent_class;
 };
 
+GType gst_smpte_get_type (void);
 gboolean gst_smpte_plugin_init (GstPlugin * plugin);
 
 G_END_DECLS

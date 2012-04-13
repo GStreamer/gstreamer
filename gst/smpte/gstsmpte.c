@@ -146,8 +146,6 @@ gst_smpte_transition_type_get_type (void)
 }
 
 
-static void gst_smpte_class_init (GstSMPTEClass * klass);
-static void gst_smpte_init (GstSMPTE * smpte);
 static void gst_smpte_finalize (GstSMPTE * smpte);
 
 static GstFlowReturn gst_smpte_collected (GstCollectPads2 * pads,
@@ -161,33 +159,10 @@ static void gst_smpte_get_property (GObject * object, guint prop_id,
 static GstStateChangeReturn gst_smpte_change_state (GstElement * element,
     GstStateChange transition);
 
-static GstElementClass *parent_class = NULL;
-
 /*static guint gst_smpte_signals[LAST_SIGNAL] = { 0 }; */
 
-static GType
-gst_smpte_get_type (void)
-{
-  static GType smpte_type = 0;
-
-  if (!smpte_type) {
-    static const GTypeInfo smpte_info = {
-      sizeof (GstSMPTEClass),
-      NULL,
-      NULL,
-      (GClassInitFunc) gst_smpte_class_init,
-      NULL,
-      NULL,
-      sizeof (GstSMPTE),
-      0,
-      (GInstanceInitFunc) gst_smpte_init,
-    };
-
-    smpte_type =
-        g_type_register_static (GST_TYPE_ELEMENT, "GstSMPTE", &smpte_info, 0);
-  }
-  return smpte_type;
-}
+#define gst_smpte_parent_class parent_class
+G_DEFINE_TYPE (GstSMPTE, gst_smpte, GST_TYPE_ELEMENT);
 
 static void
 gst_smpte_class_init (GstSMPTEClass * klass)
@@ -694,7 +669,7 @@ gst_smpte_change_state (GstElement * element, GstStateChange transition)
       break;
   }
 
-  ret = parent_class->change_state (element, transition);
+  ret = GST_ELEMENT_CLASS (parent_class)->change_state (element, transition);
 
   switch (transition) {
     case GST_STATE_CHANGE_PAUSED_TO_READY:
