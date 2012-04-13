@@ -25,6 +25,13 @@
  *
  * A value mapping object that attaches control sources to gobject properties.
  */
+/* FIXME(ensonic): should we make gst_object_add_control_binding() internal
+ * - we create the control_binding for a certain object anyway
+ * - we could call gst_object_add_control_binding() at the end of
+ *   gst_control_binding_constructor()
+ * - the weak-ref on object is not nice, as is the same as gst_object_parent()
+ *   once the object is added to the parent
+ */
 
 #include "gst_private.h"
 
@@ -130,8 +137,10 @@ gst_control_binding_dispose (GObject * object)
 {
   GstControlBinding *self = GST_CONTROL_BINDING (object);
 
-  if (self->object)
-    gst_object_replace (&self->object, NULL);
+  /* we did not took a reference */
+  g_object_remove_weak_pointer ((GObject *) self->object,
+      (gpointer *) & self->object);
+  self->object = NULL;
 
   ((GObjectClass *) gst_control_binding_parent_class)->dispose (object);
 }
@@ -154,7 +163,10 @@ gst_control_binding_set_property (GObject * object, guint prop_id,
 
   switch (prop_id) {
     case PROP_OBJECT:
-      self->object = g_value_dup_object (value);
+      /* do not ref to avoid a ref cycle */
+      self->object = g_value_get_object (value);
+      g_object_add_weak_pointer ((GObject *) self->object,
+          (gpointer *) & self->object);
       break;
     case PROP_NAME:
       self->name = g_value_dup_string (value);
