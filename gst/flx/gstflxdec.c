@@ -51,23 +51,23 @@ static GstStaticPadTemplate sink_factory = GST_STATIC_PAD_TEMPLATE ("sink",
 static GstStaticPadTemplate src_video_factory = GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS (GST_VIDEO_CAPS_xRGB_HOST_ENDIAN)
+#if G_BYTE_ORDER == G_BIG_ENDIAN
+    GST_STATIC_CAPS (GST_VIDEO_CAPS_MAKE ("xRGB"))
+#else
+    GST_STATIC_CAPS (GST_VIDEO_CAPS_MAKE ("BGRx"))
+#endif
     );
 
-
-static void gst_flxdec_class_init (GstFlxDecClass * klass);
-static void gst_flxdec_base_init (GstFlxDecClass * klass);
-static void gst_flxdec_init (GstFlxDec * flxdec);
 static void gst_flxdec_dispose (GstFlxDec * flxdec);
 
-static GstFlowReturn gst_flxdec_chain (GstPad * pad, GstBuffer * buf);
+static GstFlowReturn gst_flxdec_chain (GstPad * pad, GstObject * parent,
+    GstBuffer * buf);
 
 static GstStateChangeReturn gst_flxdec_change_state (GstElement * element,
     GstStateChange transition);
 
-static gboolean gst_flxdec_src_query_handler (GstPad * pad, GstQuery * query);
-static gboolean gst_flxdec_src_event_handler (GstPad * pad, GstEvent * event);
-static gboolean gst_flxdec_sink_event_handler (GstPad * pad, GstEvent * event);
+static gboolean gst_flxdec_src_query_handler (GstPad * pad, GstObject * parent,
+    GstQuery * query);
 
 static void flx_decode_color (GstFlxDec *, guchar *, guchar *, gint);
 static void flx_decode_brun (GstFlxDec *, guchar *, guchar *);
@@ -76,46 +76,8 @@ static void flx_decode_delta_flc (GstFlxDec *, guchar *, guchar *);
 
 #define rndalign(off) ((off) + ((off) & 1))
 
-static GstElementClass *parent_class = NULL;
-
-GType
-gst_flxdec_get_type (void)
-{
-  static GType flxdec_type = 0;
-
-  if (!flxdec_type) {
-    static const GTypeInfo flxdec_info = {
-      sizeof (GstFlxDecClass),
-      (GBaseInitFunc) gst_flxdec_base_init,
-      NULL,
-      (GClassInitFunc) gst_flxdec_class_init,
-      NULL,
-      NULL,
-      sizeof (GstFlxDec),
-      0,
-      (GInstanceInitFunc) gst_flxdec_init,
-    };
-
-    flxdec_type =
-        g_type_register_static (GST_TYPE_ELEMENT, "GstFlxDec", &flxdec_info, 0);
-  }
-  return flxdec_type;
-}
-
-static void
-gst_flxdec_base_init (GstFlxDecClass * klass)
-{
-  GstElementClass *gstelement_class = GST_ELEMENT_CLASS (klass);
-
-  gst_element_class_set_static_metadata (gstelement_class, "FLX video decoder",
-      "Codec/Decoder/Video",
-      "FLC/FLI/FLX video decoder",
-      "Sepp Wijnands <mrrazz@garbage-coderz.net>, Zeeshan Ali <zeenix@gmail.com>");
-  gst_element_class_add_pad_template (gstelement_class,
-      gst_static_pad_template_get (&sink_factory));
-  gst_element_class_add_pad_template (gstelement_class,
-      gst_static_pad_template_get (&src_video_factory));
-}
+#define gst_flxdec_parent_class parent_class
+G_DEFINE_TYPE (GstFlxDec, gst_flxdec, GST_TYPE_ELEMENT);
 
 static void
 gst_flxdec_class_init (GstFlxDecClass * klass)
@@ -132,7 +94,16 @@ gst_flxdec_class_init (GstFlxDecClass * klass)
 
   GST_DEBUG_CATEGORY_INIT (flxdec_debug, "flxdec", 0, "FLX video decoder");
 
-  gstelement_class->change_state = gst_flxdec_change_state;
+  gstelement_class->change_state = GST_DEBUG_FUNCPTR (gst_flxdec_change_state);
+
+  gst_element_class_set_static_metadata (gstelement_class, "FLX video decoder",
+      "Codec/Decoder/Video",
+      "FLC/FLI/FLX video decoder",
+      "Sepp Wijnands <mrrazz@garbage-coderz.net>, Zeeshan Ali <zeenix@gmail.com>");
+  gst_element_class_add_pad_template (gstelement_class,
+      gst_static_pad_template_get (&sink_factory));
+  gst_element_class_add_pad_template (gstelement_class,
+      gst_static_pad_template_get (&src_video_factory));
 }
 
 static void
@@ -140,18 +111,15 @@ gst_flxdec_init (GstFlxDec * flxdec)
 {
   flxdec->sinkpad = gst_pad_new_from_static_template (&sink_factory, "sink");
   gst_element_add_pad (GST_ELEMENT (flxdec), flxdec->sinkpad);
-  gst_pad_set_chain_function (flxdec->sinkpad, gst_flxdec_chain);
-  gst_pad_set_event_function (flxdec->sinkpad, gst_flxdec_sink_event_handler);
+  gst_pad_set_chain_function (flxdec->sinkpad,
+      GST_DEBUG_FUNCPTR (gst_flxdec_chain));
 
   flxdec->srcpad = gst_pad_new_from_static_template (&src_video_factory, "src");
   gst_element_add_pad (GST_ELEMENT (flxdec), flxdec->srcpad);
-  gst_pad_set_query_function (flxdec->srcpad, gst_flxdec_src_query_handler);
-  gst_pad_set_event_function (flxdec->srcpad, gst_flxdec_src_event_handler);
+  gst_pad_set_query_function (flxdec->srcpad,
+      GST_DEBUG_FUNCPTR (gst_flxdec_src_query_handler));
 
   gst_pad_use_fixed_caps (flxdec->srcpad);
-
-  flxdec->frame = NULL;
-  flxdec->delta = NULL;
 
   flxdec->adapter = gst_adapter_new ();
 }
@@ -168,9 +136,10 @@ gst_flxdec_dispose (GstFlxDec * flxdec)
 }
 
 static gboolean
-gst_flxdec_src_query_handler (GstPad * pad, GstQuery * query)
+gst_flxdec_src_query_handler (GstPad * pad, GstObject * parent,
+    GstQuery * query)
 {
-  GstFlxDec *flxdec = (GstFlxDec *) gst_pad_get_parent (pad);
+  GstFlxDec *flxdec = (GstFlxDec *) parent;
   gboolean ret = FALSE;
 
   switch (GST_QUERY_TYPE (query)) {
@@ -191,37 +160,9 @@ gst_flxdec_src_query_handler (GstPad * pad, GstQuery * query)
       break;
   }
 done:
-  gst_object_unref (flxdec);
+  if (!ret)
+    ret = gst_pad_query_default (pad, parent, query);
 
-  return ret;
-}
-
-static gboolean
-gst_flxdec_src_event_handler (GstPad * pad, GstEvent * event)
-{
-  GstFlxDec *flxdec = (GstFlxDec *) gst_pad_get_parent (pad);
-  gboolean ret;
-
-  /* TODO: implement the seek and other event handling */
-
-  ret = gst_pad_push_event (flxdec->sinkpad, event);
-
-  gst_object_unref (flxdec);
-
-  return ret;
-}
-
-static gboolean
-gst_flxdec_sink_event_handler (GstPad * pad, GstEvent * event)
-{
-  GstFlxDec *flxdec;
-  gboolean ret;
-
-  flxdec = GST_FLXDEC (gst_pad_get_parent (pad));
-
-  ret = gst_pad_push_event (flxdec->srcpad, event);
-
-  gst_object_unref (flxdec);
   return ret;
 }
 
@@ -359,11 +300,10 @@ flx_decode_delta_fli (GstFlxDec * flxdec, guchar * data, guchar * dest)
   guchar *start_p, x;
 
   g_return_if_fail (flxdec != NULL);
-  g_return_if_fail (flxdec->delta != NULL);
+  g_return_if_fail (flxdec->delta_data != NULL);
 
   /* use last frame for delta */
-  memcpy (dest, GST_BUFFER_DATA (flxdec->delta),
-      GST_BUFFER_SIZE (flxdec->delta));
+  memcpy (dest, flxdec->delta_data, flxdec->size);
 
   start_line = (data[0] + (data[1] << 8));
   lines = (data[2] + (data[3] << 8));
@@ -410,11 +350,10 @@ flx_decode_delta_flc (GstFlxDec * flxdec, guchar * data, guchar * dest)
   guchar *start_p;
 
   g_return_if_fail (flxdec != NULL);
-  g_return_if_fail (flxdec->delta != NULL);
+  g_return_if_fail (flxdec->delta_data != NULL);
 
   /* use last frame for delta */
-  memcpy (dest, GST_BUFFER_DATA (flxdec->delta),
-      GST_BUFFER_SIZE (flxdec->delta));
+  memcpy (dest, flxdec->delta_data, flxdec->size);
 
   lines = (data[0] + (data[1] << 8));
   data += 2;
@@ -469,7 +408,7 @@ flx_decode_delta_flc (GstFlxDec * flxdec, guchar * data, guchar * dest)
 }
 
 static GstFlowReturn
-gst_flxdec_chain (GstPad * pad, GstBuffer * buf)
+gst_flxdec_chain (GstPad * pad, GstObject * parent, GstBuffer * buf)
 {
   GstCaps *caps;
   guint avail;
@@ -479,7 +418,7 @@ gst_flxdec_chain (GstPad * pad, GstBuffer * buf)
   FlxHeader *flxh;
 
   g_return_val_if_fail (buf != NULL, GST_FLOW_ERROR);
-  flxdec = (GstFlxDec *) gst_pad_get_parent (pad);
+  flxdec = (GstFlxDec *) parent;
   g_return_val_if_fail (flxdec != NULL, GST_FLOW_ERROR);
 
   gst_adapter_push (flxdec->adapter, buf);
@@ -487,10 +426,12 @@ gst_flxdec_chain (GstPad * pad, GstBuffer * buf)
 
   if (flxdec->state == GST_FLXDEC_READ_HEADER) {
     if (avail >= FlxHeaderSize) {
-      const guint8 *data = gst_adapter_peek (flxdec->adapter, FlxHeaderSize);
+      const guint8 *data = gst_adapter_map (flxdec->adapter, FlxHeaderSize);
+      GstCaps *templ;
 
       memcpy ((gchar *) & flxdec->hdr, data, FlxHeaderSize);
       FLX_HDR_FIX_ENDIANNESS (&(flxdec->hdr));
+      gst_adapter_unmap (flxdec->adapter);
       gst_adapter_flush (flxdec->adapter, FlxHeaderSize);
 
       flxh = &flxdec->hdr;
@@ -521,7 +462,9 @@ gst_flxdec_chain (GstPad * pad, GstBuffer * buf)
       GST_LOG ("duration   :  %" GST_TIME_FORMAT,
           GST_TIME_ARGS (flxdec->duration));
 
-      caps = gst_caps_from_string (GST_VIDEO_CAPS_xRGB_HOST_ENDIAN);
+      templ = gst_pad_get_pad_template_caps (flxdec->srcpad);
+      caps = gst_caps_copy (templ);
+      gst_caps_unref (templ);
       gst_caps_set_simple (caps,
           "width", G_TYPE_INT, flxh->width,
           "height", G_TYPE_INT, flxh->height,
@@ -545,14 +488,8 @@ gst_flxdec_chain (GstPad * pad, GstBuffer * buf)
       flxdec->size = (flxh->width * flxh->height);
 
       /* create delta and output frame */
-      flxdec->frame = gst_buffer_new ();
-      flxdec->delta = gst_buffer_new ();
-      GST_BUFFER_DATA (flxdec->frame) = g_malloc (flxdec->size);
-      GST_BUFFER_MALLOCDATA (flxdec->frame) = GST_BUFFER_DATA (flxdec->frame);
-      GST_BUFFER_SIZE (flxdec->frame) = flxdec->size;
-      GST_BUFFER_DATA (flxdec->delta) = g_malloc (flxdec->size);
-      GST_BUFFER_MALLOCDATA (flxdec->delta) = GST_BUFFER_DATA (flxdec->delta);
-      GST_BUFFER_SIZE (flxdec->delta) = flxdec->size;
+      flxdec->frame_data = g_malloc (flxdec->size);
+      flxdec->delta_data = g_malloc (flxdec->size);
 
       flxdec->state = GST_FLXDEC_PLAYING;
     }
@@ -560,15 +497,17 @@ gst_flxdec_chain (GstPad * pad, GstBuffer * buf)
     GstBuffer *out;
 
     /* while we have enough data in the adapter */
-    while (avail >= FlxFrameChunkSize) {
+    while (avail >= FlxFrameChunkSize && res == GST_FLOW_OK) {
       FlxFrameChunk flxfh;
       guchar *chunk;
       const guint8 *data;
+      GstMapInfo map;
 
       chunk = NULL;
-      data = gst_adapter_peek (flxdec->adapter, FlxFrameChunkSize);
+      data = gst_adapter_map (flxdec->adapter, FlxFrameChunkSize);
       memcpy (&flxfh, data, FlxFrameChunkSize);
       FLX_FRAME_CHUNK_FIX_ENDIANNESS (&flxfh);
+      gst_adapter_unmap (flxdec->adapter);
 
       switch (flxfh.id) {
         case FLX_FRAME_TYPE:
@@ -586,29 +525,32 @@ gst_flxdec_chain (GstPad * pad, GstBuffer * buf)
             break;
 
           /* create 32 bits output frame */
-          res = gst_pad_alloc_buffer_and_set_caps (flxdec->srcpad,
-              GST_BUFFER_OFFSET_NONE,
-              flxdec->size * 4, GST_PAD_CAPS (flxdec->srcpad), &out);
-          if (res != GST_FLOW_OK)
-            break;
+//          res = gst_pad_alloc_buffer_and_set_caps (flxdec->srcpad,
+//              GST_BUFFER_OFFSET_NONE,
+//              flxdec->size * 4, GST_PAD_CAPS (flxdec->srcpad), &out);
+//          if (res != GST_FLOW_OK)
+//            break;
+
+          out = gst_buffer_new_and_alloc (flxdec->size * 4);
 
           /* decode chunks */
           flx_decode_chunks (flxdec,
               ((FlxFrameType *) chunk)->chunks,
-              chunk + FlxFrameTypeSize, GST_BUFFER_DATA (flxdec->frame));
+              chunk + FlxFrameTypeSize, flxdec->frame_data);
 
           /* save copy of the current frame for possible delta. */
-          memcpy (GST_BUFFER_DATA (flxdec->delta),
-              GST_BUFFER_DATA (flxdec->frame), GST_BUFFER_SIZE (flxdec->delta));
+          memcpy (flxdec->delta_data, flxdec->frame_data, flxdec->size);
 
+          gst_buffer_map (out, &map, GST_MAP_WRITE);
           /* convert current frame. */
-          flx_colorspace_convert (flxdec->converter,
-              GST_BUFFER_DATA (flxdec->frame), GST_BUFFER_DATA (out));
+          flx_colorspace_convert (flxdec->converter, flxdec->frame_data,
+              map.data);
+          gst_buffer_unmap (out, &map);
 
           GST_BUFFER_TIMESTAMP (out) = flxdec->next_time;
           flxdec->next_time += flxdec->frame_time;
 
-          gst_pad_push (flxdec->srcpad, out);
+          res = gst_pad_push (flxdec->srcpad, out);
           break;
       }
 
@@ -619,7 +561,6 @@ gst_flxdec_chain (GstPad * pad, GstBuffer * buf)
     }
   }
 need_more_data:
-  gst_object_unref (flxdec);
   return res;
 
   /* ERRORS */
@@ -653,19 +594,23 @@ gst_flxdec_change_state (GstElement * element, GstStateChange transition)
       break;
   }
 
-  ret = parent_class->change_state (element, transition);
+  ret = GST_ELEMENT_CLASS (parent_class)->change_state (element, transition);
 
   switch (transition) {
     case GST_STATE_CHANGE_PLAYING_TO_PAUSED:
       break;
     case GST_STATE_CHANGE_PAUSED_TO_READY:
-      if (flxdec->frame) {
-        gst_buffer_unref (flxdec->frame);
-        flxdec->frame = NULL;
+      if (flxdec->frame_data) {
+        g_free (flxdec->frame_data);
+        flxdec->frame_data = NULL;
       }
-      if (flxdec->delta) {
-        gst_buffer_unref (flxdec->delta);
-        flxdec->delta = NULL;
+      if (flxdec->delta_data) {
+        g_free (flxdec->delta_data);
+        flxdec->delta_data = NULL;
+      }
+      if (flxdec->converter) {
+        flx_colorspace_converter_destroy (flxdec->converter);
+        flxdec->converter = NULL;
       }
       break;
     case GST_STATE_CHANGE_READY_TO_NULL:
