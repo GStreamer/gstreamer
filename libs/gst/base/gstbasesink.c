@@ -4546,6 +4546,7 @@ gst_base_sink_default_query (GstBaseSink * basesink, GstQuery * query)
       gst_query_parse_accept_caps (query, &caps);
       allowed = gst_base_sink_query_caps (basesink, basesink->sinkpad, NULL);
       subset = gst_caps_is_subset (caps, allowed);
+      gst_caps_unref (allowed);
       gst_query_set_accept_caps_result (query, subset);
       res = TRUE;
       break;
