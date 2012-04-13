@@ -283,8 +283,10 @@ gst_gl_window_new (gulong external_gl_context)
   g_mutex_lock (priv->x_lock);
 
   priv->device = XOpenDisplay (priv->display_name);
-  if (priv->device == NULL)
-    goto no_display;
+  if (priv->device == NULL) {
+    g_debug ("XOpenDisplay failed\n");
+    goto failure;
+  }
 
   XSynchronize (priv->device, FALSE);
 
@@ -312,14 +314,16 @@ gst_gl_window_new (gulong external_gl_context)
   priv->connection = ConnectionNumber (priv->device);
 
   ret = glXQueryExtension (priv->device, &error_base, &event_base);
-  if (!ret)
-    g_debug ("No GLX extension");
+  if (!ret) {
+    g_debug ("No GLX extension\n");
+    goto failure;
+  }
 
   priv->visual_info = glXChooseVisual (priv->device, priv->screen_num, attrib);
 
   if (!priv->visual_info) {
-    g_warning ("glx visual is null (bad attributes)\n");
-    return NULL;
+    g_debug ("glx visual is null (bad attributes)\n");
+    goto failure;
   }
 
   if (priv->visual_info->visual != priv->visual)
@@ -386,6 +390,11 @@ gst_gl_window_new (gulong external_gl_context)
       glXCreateContext (priv->device, priv->visual_info,
       (GLXContext) external_gl_context, TRUE);
 
+  if (!priv->gl_context) {
+    g_debug ("failed to create opengl context\n");
+    goto failure;
+  }
+
   g_debug ("gl context id: %ld\n", (gulong) priv->gl_context);
 
   if (!glXIsDirect (priv->device, priv->gl_context))
@@ -404,8 +413,10 @@ gst_gl_window_new (gulong external_gl_context)
 
   ret = glXMakeCurrent (priv->device, priv->internal_win_id, priv->gl_context);
 
-  if (!ret)
+  if (!ret) {
     g_debug ("failed to make opengl context current\n");
+    goto failure;
+  }
 
   if (glXIsDirect (priv->device, priv->gl_context))
     g_debug ("Direct Rendering: yes\n");
@@ -416,9 +427,9 @@ gst_gl_window_new (gulong external_gl_context)
 
   return window;
 
-no_display:
+failure:
   g_mutex_unlock (priv->x_lock);
-  g_object_unref (window);
+  g_object_unref (G_OBJECT (window));
   return NULL;
 }
 

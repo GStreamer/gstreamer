@@ -107,19 +107,25 @@ gst_gl_window_finalize (GObject * object)
 
   g_mutex_lock (priv->x_lock);
 
+  g_debug ("about to finalize gl window\n");
+
   priv->parent = 0;
 
-  XUnmapWindow (priv->device, priv->internal_win_id);
+  if (priv->device)
+    XUnmapWindow (priv->device, priv->internal_win_id);
 
-  ret =
-      eglMakeCurrent (priv->device, EGL_NO_SURFACE, EGL_NO_SURFACE,
-      EGL_NO_CONTEXT);
-  if (!ret)
-    g_debug ("failed to release opengl context\n");
+  if (priv->gl_context) {
+    ret =
+        eglMakeCurrent (priv->device, EGL_NO_SURFACE, EGL_NO_SURFACE,
+        EGL_NO_CONTEXT);
+    if (!ret)
+      g_debug ("failed to release opengl context\n");
 
-  eglDestroyContext (priv->device, priv->gl_context);
+    eglDestroyContext (priv->device, priv->gl_context);
+  }
 
-  eglTerminate (priv->device);
+  if (priv->device)
+    eglTerminate (priv->device);
 
   XFree (priv->visual_info);
 
@@ -241,13 +247,50 @@ gst_gl_window_class_init (GstGLWindowClass * klass)
 static void
 gst_gl_window_init (GstGLWindow * window)
 {
+  GstGLWindowPrivate *priv = NULL;
   window->priv = GST_GL_WINDOW_GET_PRIVATE (window);
+  priv = window->priv;
 
   if (g_getenv ("GST_GL_WINDOW_DEBUG") != NULL)
     _gst_gl_window_debug = TRUE;
 
   g_log_set_handler ("GstGLWindow", G_LOG_LEVEL_DEBUG,
       gst_gl_window_log_handler, NULL);
+
+  priv->x_lock = NULL;
+  priv->cond_send_message = NULL;
+  priv->running = FALSE;
+  priv->visible = FALSE;
+  priv->allow_extra_expose_events = FALSE;
+
+  /* X context */
+  priv->display_name = NULL;
+  priv->device = NULL;
+  priv->screen_num = 0;
+  priv->root = 0;
+  priv->depth = 0;
+  priv->device_width = 0;
+  priv->device_height = 0;
+  priv->connection = 0;
+  priv->visual_info = NULL;
+  priv->parent = 0;
+  priv->internal_win_id = 0;
+
+  /* We use a specific connection to send events */
+  priv->disp_send = NULL;
+
+  /* EGL */
+  priv->gl_context = EGL_NO_CONTEXT;
+  priv->gl_display = 0;
+  priv->gl_surface = EGL_NO_SURFACE;
+
+  /* frozen callbacks */
+  priv->draw_cb = NULL;
+  priv->draw_data = NULL;
+  priv->resize_cb = NULL;
+  priv->resize_data = NULL;
+  priv->close_cb = NULL;
+  priv->close_data = NULL;
 }
 
 /* Must be called in the gl thread */
@@ -341,6 +384,11 @@ gst_gl_window_new (gulong external_gl_context)
       1, 1, 0, priv->visual_info->depth, InputOutput,
       priv->visual_info->visual, mask, &win_attr);
 
+  if (!priv->internal_win_id) {
+    g_debug ("XCreateWindow failed\n");
+    goto failure;
+  }
+
   XSync (priv->device, FALSE);
 
   XSetWindowBackgroundPixmap (priv->device, priv->internal_win_id, None);
@@ -378,26 +426,32 @@ gst_gl_window_new (gulong external_gl_context)
 
   if (eglInitialize (priv->gl_display, &majorVersion, &minorVersion))
     g_debug ("egl initialized: %d.%d\n", majorVersion, minorVersion);
-  else
+  else {
     g_debug ("failed to initialize egl %ld, %s\n", (gulong) priv->gl_display,
         EGLErrorString ());
+    goto failure;
+  }
 
   if (eglChooseConfig (priv->gl_display, config_attrib, &config, 1,
           &numConfigs))
     g_debug ("config set: %ld, %ld\n", (gulong) config, (gulong) numConfigs);
-  else
+  else {
     g_debug ("failed to set config %ld, %s\n", (gulong) priv->gl_display,
         EGLErrorString ());
+    goto failure;
+  }
 
   priv->gl_surface =
       eglCreateWindowSurface (priv->gl_display, config,
       (EGLNativeWindowType) priv->internal_win_id, NULL);
   if (priv->gl_surface != EGL_NO_SURFACE)
     g_debug ("surface created: %ld\n", (gulong) priv->gl_surface);
-  else
+  else {
     g_debug ("failed to create surface %ld, %ld, %ld, %s\n",
         (gulong) priv->gl_display, (gulong) priv->gl_surface,
         (gulong) priv->gl_display, EGLErrorString ());
+    goto failure;
+  }
 
   g_debug ("about to create gl context\n");
 
@@ -407,19 +461,28 @@ gst_gl_window_new (gulong external_gl_context)
 
   if (priv->gl_context != EGL_NO_CONTEXT)
     g_debug ("gl context created: %ld\n", (gulong) priv->gl_context);
-  else
+  else {
     g_debug ("failed to create glcontext %ld, %ld, %s\n",
         (gulong) priv->gl_context, (gulong) priv->gl_display,
         EGLErrorString ());
+    goto failure;
+  }
 
   if (!eglMakeCurrent (priv->gl_display, priv->gl_surface, priv->gl_surface,
-          priv->gl_context))
+          priv->gl_context)) {
     g_debug ("failed to make opengl context current %ld, %s\n",
         (gulong) priv->gl_display, EGLErrorString ());
+    goto failure;
+  }
 
   g_mutex_unlock (priv->x_lock);
 
   return window;
+
+failure:
+  g_mutex_unlock (priv->x_lock);
+  g_object_unref (G_OBJECT (window));
+  return NULL;
 }
 
 GQuark
@@ -673,13 +736,13 @@ gst_gl_window_run_loop (GstGLWindow * window)
           if (priv->running) {
 #if SIZEOF_VOID_P == 8
             GstGLWindowCB custom_cb =
-                (GstGLWindowCB) (((event.xclient.
-                        data.l[0] & 0xffffffff) << 32) | (event.xclient.
-                    data.l[1] & 0xffffffff));
+                (GstGLWindowCB) (((event.xclient.data.
+                        l[0] & 0xffffffff) << 32) | (event.xclient.data.
+                    l[1] & 0xffffffff));
             gpointer custom_data =
-                (gpointer) (((event.xclient.
-                        data.l[2] & 0xffffffff) << 32) | (event.xclient.
-                    data.l[3] & 0xffffffff));
+                (gpointer) (((event.xclient.data.
+                        l[2] & 0xffffffff) << 32) | (event.xclient.data.
+                    l[3] & 0xffffffff));
 #else
             GstGLWindowCB custom_cb = (GstGLWindowCB) event.xclient.data.l[0];
             gpointer custom_data = (gpointer) event.xclient.data.l[1];
@@ -715,13 +778,13 @@ gst_gl_window_run_loop (GstGLWindow * window)
             && event.xclient.message_type == wm_quit_loop) {
 #if SIZEOF_VOID_P == 8
           GstGLWindowCB destroy_cb =
-              (GstGLWindowCB) (((event.xclient.
-                      data.l[0] & 0xffffffff) << 32) | (event.xclient.
-                  data.l[1] & 0xffffffff));
+              (GstGLWindowCB) (((event.xclient.data.
+                      l[0] & 0xffffffff) << 32) | (event.xclient.data.
+                  l[1] & 0xffffffff));
           gpointer destroy_data =
-              (gpointer) (((event.xclient.
-                      data.l[2] & 0xffffffff) << 32) | (event.xclient.
-                  data.l[3] & 0xffffffff));
+              (gpointer) (((event.xclient.data.
+                      l[2] & 0xffffffff) << 32) | (event.xclient.data.
+                  l[3] & 0xffffffff));
 #else
           GstGLWindowCB destroy_cb = (GstGLWindowCB) event.xclient.data.l[0];
           gpointer destroy_data = (gpointer) event.xclient.data.l[1];
@@ -737,13 +800,13 @@ gst_gl_window_run_loop (GstGLWindow * window)
           while (XCheckTypedEvent (priv->device, ClientMessage, &pending_event)) {
 #if SIZEOF_VOID_P == 8
             GstGLWindowCB custom_cb =
-                (GstGLWindowCB) (((event.xclient.
-                        data.l[0] & 0xffffffff) << 32) | (event.xclient.
-                    data.l[1] & 0xffffffff));
+                (GstGLWindowCB) (((event.xclient.data.
+                        l[0] & 0xffffffff) << 32) | (event.xclient.data.
+                    l[1] & 0xffffffff));
             gpointer custom_data =
-                (gpointer) (((event.xclient.
-                        data.l[2] & 0xffffffff) << 32) | (event.xclient.
-                    data.l[3] & 0xffffffff));
+                (gpointer) (((event.xclient.data.
+                        l[2] & 0xffffffff) << 32) | (event.xclient.data.
+                    l[3] & 0xffffffff));
 #else
             GstGLWindowCB custom_cb = (GstGLWindowCB) event.xclient.data.l[0];
             gpointer custom_data = (gpointer) event.xclient.data.l[1];
