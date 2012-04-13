@@ -42,7 +42,8 @@ gst_gl_effects_squeeze_callback (gint width, gint height, guint texture,
 
       gst_gl_shader_compile (shader, &error);
       if (error) {
-        gst_gl_display_set_error (effects->display,
+        GstGLFilter *filter = GST_GL_FILTER (effects);
+        gst_gl_display_set_error (filter->display,
             "Failed to initialize squeeze shader, %s", error->message);
         g_error_free (error);
         error = NULL;

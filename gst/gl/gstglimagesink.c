@@ -427,6 +427,12 @@ gst_glimage_sink_change_state (GstElement * element, GstStateChange transition)
         if (!ok) {
           GST_ELEMENT_ERROR (glimage_sink, RESOURCE, NOT_FOUND,
               (GST_GL_DISPLAY_ERR_MSG (glimage_sink->display)), (NULL));
+
+          if (glimage_sink->display) {
+            g_object_unref (glimage_sink->display);
+            glimage_sink->display = NULL;
+          }
+
           return GST_STATE_CHANGE_FAILURE;
         }
       }
