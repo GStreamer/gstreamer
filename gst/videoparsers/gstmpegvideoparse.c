@@ -541,6 +541,7 @@ gst_mpegv_parse_handle_frame (GstBaseParse * parse,
 end:
   if (fsize > 0) {
     ret = TRUE;
+    mpvparse->last_sc = -1;
   } else if (GST_BASE_PARSE_DRAINING (parse)) {
     fsize = buf_size;
     ret = TRUE;
