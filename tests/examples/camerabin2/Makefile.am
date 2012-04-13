@@ -14,7 +14,6 @@ gst_camera2_CFLAGS  = \
 gst_camera2_LDADD   = \
         $(top_builddir)/gst-libs/gst/interfaces/libgstphotography-@GST_API_VERSION@.la \
         $(GST_PLUGINS_BASE_LIBS) \
-        -lgstinterfaces-@GST_API_VERSION@ \
         -lgstpbutils-@GST_API_VERSION@ \
 	-lgstvideo-@GST_API_VERSION@ \
         $(GST_LIBS) \
@@ -38,7 +37,6 @@ gst_camerabin2_test_CFLAGS  = $(GST_CFLAGS) $(GST_PLUGINS_BASE_CFLAGS) $(GST_PLU
 gst_camerabin2_test_LDADD   = \
 	$(top_builddir)/gst-libs/gst/interfaces/libgstphotography-@GST_API_VERSION@.la \
 	$(GST_PLUGINS_BASE_LIBS) \
-	-lgstinterfaces-@GST_API_VERSION@ \
 	-lgstpbutils-@GST_API_VERSION@ \
 	-lgstvideo-@GST_API_VERSION@ \
 	$(GST_BASE_LIBS) \
