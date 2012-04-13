@@ -34,7 +34,7 @@
 /* for XkbKeycodeToKeysym */
 #include <X11/XKBlib.h>
 
-#include <gst/interfaces/navigation.h>
+#include <gst/video/navigation.h>
 
 #include "gstv4l2videooverlay.h"
 #include "gstv4l2object.h"

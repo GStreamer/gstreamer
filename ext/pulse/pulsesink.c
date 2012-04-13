@@ -23,7 +23,7 @@
 
 /**
  * SECTION:element-pulsesink
- * @see_also: pulsesrc, pulsemixer
+ * @see_also: pulsesrc
  *
  * This element outputs audio to a
  * <ulink href="http://www.pulseaudio.org">PulseAudio sound server</ulink>.

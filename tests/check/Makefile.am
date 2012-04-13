@@ -294,7 +294,7 @@ elements_sunaudio_CFLAGS = \
 	$(GST_PLUGINS_BASE_CFLAGS) $(CFLAGS) \
 	$(AM_CFLAGS)
 elements_sunaudio_LDADD = \
-	$(GST_PLUGINS_BASE_LIBS) -lgstinterfaces-@GST_API_VERSION@ \
+	$(GST_PLUGINS_BASE_LIBS) \
 	$(LDADD)
 
 elements_udpsrc_CFLAGS = $(AM_CFLAGS) $(GIO_CFLAGS)

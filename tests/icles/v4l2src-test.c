@@ -24,7 +24,6 @@
 #include <getopt.h>
 
 #include <gst/gst.h>
-#include <gst/interfaces/tuner.h>
 #include <gst/video/colorbalance.h>
 #include <gst/video/videoorientation.h>
 
@@ -49,6 +48,7 @@ run_options (char opt)
   int res;
 
   switch (opt) {
+#if 0
     case 'f':
     {
       GstTuner *tuner = GST_TUNER (source);
@@ -143,6 +143,7 @@ run_options (char opt)
         gst_tuner_set_channel (tuner, channel);
     }
       break;
+#endif
     case 'e':
       gst_element_set_state (pipeline, GST_STATE_NULL);
       g_main_loop_quit (loop);

@@ -21,7 +21,7 @@
 
 /**
  * SECTION:element-pulsesrc
- * @see_also: pulsesink, pulsemixer
+ * @see_also: pulsesink
  *
  * This element captures audio from a
  * <ulink href="http://www.pulseaudio.org">PulseAudio sound server</ulink>.
@@ -47,7 +47,6 @@
 
 #include "pulsesrc.h"
 #include "pulseutil.h"
-#include "pulsemixerctrl.h"
 
 GST_DEBUG_CATEGORY_EXTERN (pulse_debug);
 #define GST_CAT_DEFAULT pulse_debug
@@ -127,11 +126,8 @@ static GstStaticPadTemplate pad_template = GST_STATIC_PAD_TEMPLATE ("src",
     );
 
 
-GST_IMPLEMENT_PULSEMIXER_CTRL_METHODS (GstPulseSrc, gst_pulsesrc);
-
 #define gst_pulsesrc_parent_class parent_class
 G_DEFINE_TYPE_WITH_CODE (GstPulseSrc, gst_pulsesrc, GST_TYPE_AUDIO_SRC,
-    G_IMPLEMENT_INTERFACE (GST_TYPE_MIXER, gst_pulsesrc_mixer_interface_init);
     G_IMPLEMENT_INTERFACE (GST_TYPE_STREAM_VOLUME, NULL));
 
 static void
@@ -287,8 +283,6 @@ gst_pulsesrc_init (GstPulseSrc * pulsesrc)
 
   pulsesrc->notify = 0;
 
-  pulsesrc->mixer = NULL;
-
   pulsesrc->properties = NULL;
   pulsesrc->proplist = NULL;
 
@@ -347,11 +341,6 @@ gst_pulsesrc_finalize (GObject * object)
     gst_structure_free (pulsesrc->properties);
   if (pulsesrc->proplist)
     pa_proplist_free (pulsesrc->proplist);
-
-  if (pulsesrc->mixer) {
-    gst_pulsemixer_ctrl_free (pulsesrc->mixer);
-    pulsesrc->mixer = NULL;
-  }
 
   if (pulsesrc->probe) {
     gst_pulseprobe_free (pulsesrc->probe);
@@ -1616,11 +1605,6 @@ gst_pulsesrc_change_state (GstElement * element, GstStateChange transition)
         this->mainloop = NULL;
         goto mainloop_start_failed;
       }
-
-      if (!this->mixer)
-        this->mixer =
-            gst_pulsemixer_ctrl_new (G_OBJECT (this), this->server,
-            this->device, GST_PULSEMIXER_SOURCE);
       break;
     case GST_STATE_CHANGE_PAUSED_TO_PLAYING:
       /* uncork and start recording */
@@ -1645,11 +1629,6 @@ gst_pulsesrc_change_state (GstElement * element, GstStateChange transition)
       gst_pulsesrc_pause (this);
       break;
     case GST_STATE_CHANGE_READY_TO_NULL:
-      if (this->mixer) {
-        gst_pulsemixer_ctrl_free (this->mixer);
-        this->mixer = NULL;
-      }
-
       if (this->mainloop)
         pa_threaded_mainloop_stop (this->mainloop);
 

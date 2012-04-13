@@ -79,7 +79,6 @@ EXTRA_HFILES = \
 	$(top_srcdir)/ext/taglib/gstid3v2mux.h \
 	$(top_srcdir)/ext/pulse/pulsesink.h \
 	$(top_srcdir)/ext/pulse/pulsesrc.h \
-	$(top_srcdir)/ext/pulse/pulsemixer.h \
 	$(top_srcdir)/ext/speex/gstspeexenc.h \
 	$(top_srcdir)/ext/speex/gstspeexdec.h \
 	$(top_srcdir)/ext/wavpack/gstwavpackdec.h \

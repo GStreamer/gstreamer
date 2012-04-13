@@ -27,7 +27,6 @@
 
 #include "pulsesink.h"
 #include "pulsesrc.h"
-#include "pulsemixer.h"
 
 GST_DEBUG_CATEGORY (pulse_debug);
 
@@ -47,10 +46,6 @@ plugin_init (GstPlugin * plugin)
 
   if (!gst_element_register (plugin, "pulsesrc", GST_RANK_PRIMARY + 10,
           GST_TYPE_PULSESRC))
-    return FALSE;
-
-  if (!gst_element_register (plugin, "pulsemixer", GST_RANK_NONE,
-          GST_TYPE_PULSEMIXER))
     return FALSE;
 
   GST_DEBUG_CATEGORY_INIT (pulse_debug, "pulse", 0, "PulseAudio elements");

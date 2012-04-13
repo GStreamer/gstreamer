@@ -13,8 +13,7 @@ V4L2_TESTS = v4l2src-test
 v4l2src_test_SOURCES = v4l2src-test.c
 v4l2src_test_CFLAGS = $(GST_PLUGINS_BASE_CFLAGS) $(GST_CFLAGS)
 v4l2src_test_LDADD = $(GST_PLUGINS_BASE_LIBS) \
-		     -lgstvideo-$(GST_API_VERSION) \
-		     -lgstinterfaces-$(GST_API_VERSION) $(GST_LIBS)
+		     -lgstvideo-$(GST_API_VERSION)
 
 else
 V4L2_TESTS =
@@ -25,7 +24,7 @@ OSS4_TESTS=test-oss4
 
 test_oss4_SOURCES = test-oss4.c
 test_oss4_CFLAGS  = $(GST_PLUGINS_BASE_CFLAGS) $(GST_CFLAGS)
-test_oss4_LDADD   = $(GST_PLUGINS_BASE_LIBS) -lgstinterfaces-$(GST_API_VERSION) $(GST_LIBS)
+test_oss4_LDADD   = $(GST_PLUGINS_BASE_LIBS) $(GST_LIBS)
 test_oss4_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
 else
 OSS4_TESTS=

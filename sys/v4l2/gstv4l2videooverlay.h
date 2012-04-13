@@ -26,7 +26,7 @@
 #include <X11/X.h>
 
 #include <gst/gst.h>
-#include <gst/interfaces/navigation.h>
+#include <gst/video/navigation.h>
 #include <gst/video/gstvideosink.h>  /* for GstVideoRectange */
 #include <gst/video/videooverlay.h>
 
