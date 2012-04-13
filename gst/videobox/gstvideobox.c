@@ -135,10 +135,16 @@ static const gint cog_identity_matrix_8bit[] = {
 #define APPLY_MATRIX(m,o,v1,v2,v3) ((m[o*4] * v1 + m[o*4+1] * v2 + m[o*4+2] * v3 + m[o*4+3]) >> 8)
 
 static void
-fill_ayuv (GstVideoBoxFill fill_type, guint b_alpha, GstVideoFormat format,
-    guint8 * dest, gboolean sdtv, gint width, gint height)
+fill_ayuv (GstVideoBoxFill fill_type, guint b_alpha,
+    GstVideoFrame * frame, gboolean sdtv)
 {
   guint32 empty_pixel;
+  guint8 *dest;
+  gint width, height;
+  gint stride;
+
+  width = GST_VIDEO_FRAME_WIDTH (frame);
+  height = GST_VIDEO_FRAME_HEIGHT (frame);
 
   b_alpha = CLAMP (b_alpha, 0, 255);
 
@@ -151,22 +157,37 @@ fill_ayuv (GstVideoBoxFill fill_type, guint b_alpha, GstVideoFormat format,
         (yuv_hdtv_colors_Y[fill_type] << 16) |
         (yuv_hdtv_colors_U[fill_type] << 8) | yuv_hdtv_colors_V[fill_type]);
 
-  orc_splat_u32 ((guint32 *) dest, empty_pixel, width * height);
+  dest = GST_VIDEO_FRAME_PLANE_DATA (frame, 0);
+  stride = GST_VIDEO_FRAME_PLANE_STRIDE (frame, 0);
+
+  if (G_LIKELY (stride == 4 * width))
+    orc_splat_u32 ((guint32 *) dest, empty_pixel, width * height);
+  else if (height) {
+    for (; height; --height) {
+      orc_splat_u32 ((guint32 *) dest, empty_pixel, width);
+      dest += stride;
+    }
+  }
 }
 
 static void
-copy_ayuv_ayuv (guint i_alpha, GstVideoFormat dest_format, guint8 * dest,
-    gboolean dest_sdtv, gint dest_width, gint dest_height, gint dest_x,
-    gint dest_y, GstVideoFormat src_format, const guint8 * src,
-    gboolean src_sdtv, gint src_width, gint src_height, gint src_x, gint src_y,
-    gint w, gint h)
+copy_ayuv_ayuv (guint i_alpha, GstVideoFrame * dest_frame,
+    gboolean dest_sdtv, gint dest_x, gint dest_y, GstVideoFrame * src_frame,
+    gboolean src_sdtv, gint src_x, gint src_y, gint w, gint h)
 {
   gint i, j;
-  gint src_stride = 4 * src_width;
-  gint dest_stride = 4 * dest_width;
+  gint src_stride;
+  gint dest_stride;
+  guint8 *dest, *src;
 
-  dest = dest + dest_y * dest_width * 4 + dest_x * 4;
-  src = src + src_y * src_width * 4 + src_x * 4;
+  src_stride = GST_VIDEO_FRAME_PLANE_STRIDE (src_frame, 0);
+  dest_stride = GST_VIDEO_FRAME_PLANE_STRIDE (dest_frame, 0);
+
+  src = GST_VIDEO_FRAME_PLANE_DATA (src_frame, 0);
+  dest = GST_VIDEO_FRAME_PLANE_DATA (dest_frame, 0);
+
+  dest = dest + dest_y * dest_stride + dest_x * 4;
+  src = src + src_y * src_stride + src_x * 4;
 
   w *= 4;
 
@@ -208,15 +229,13 @@ copy_ayuv_ayuv (guint i_alpha, GstVideoFormat dest_format, guint8 * dest,
 }
 
 static void
-copy_ayuv_i420 (guint i_alpha, GstVideoFormat dest_format, guint8 * dest,
-    gboolean dest_sdtv, gint dest_width, gint dest_height, gint dest_x,
-    gint dest_y, GstVideoFormat src_format, const guint8 * src,
-    gboolean src_sdtv, gint src_width, gint src_height, gint src_x, gint src_y,
-    gint w, gint h)
+copy_ayuv_i420 (guint i_alpha, GstVideoFrame * dest_frame,
+    gboolean dest_sdtv, gint dest_x, gint dest_y, GstVideoFrame * src_frame,
+    gboolean src_sdtv, gint src_x, gint src_y, gint w, gint h)
 {
   gint i, j;
   guint8 *destY, *destY2, *destU, *destV;
-  gint dest_strideY, dest_strideUV;
+  gint dest_strideY, dest_strideU, dest_strideV;
   const guint8 *src2;
   gint src_stride;
   gint y_idx, uv_idx;
@@ -224,27 +243,29 @@ copy_ayuv_i420 (guint i_alpha, GstVideoFormat dest_format, guint8 * dest,
   gint u1, u2, u3, u4;
   gint v1, v2, v3, v4;
   gint matrix[12];
+  guint8 *src;
+  gint dest_height, src_height, dest_width;
 
-  dest_strideY = gst_video_format_get_row_stride (dest_format, 0, dest_width);
-  dest_strideUV = gst_video_format_get_row_stride (dest_format, 1, dest_width);
+  dest_height = GST_VIDEO_FRAME_HEIGHT (dest_frame);
+  dest_width = GST_VIDEO_FRAME_WIDTH (dest_frame);
+  src_height = GST_VIDEO_FRAME_HEIGHT (src_frame);
 
-  src_stride = 4 * src_width;
+  dest_strideY = GST_VIDEO_FRAME_COMP_STRIDE (dest_frame, 0);
+  dest_strideU = GST_VIDEO_FRAME_COMP_STRIDE (dest_frame, 1);
+  dest_strideV = GST_VIDEO_FRAME_COMP_STRIDE (dest_frame, 2);
 
-  destY =
-      dest + gst_video_format_get_component_offset (dest_format, 0,
-      dest_width, dest_height);
-  destU =
-      dest + gst_video_format_get_component_offset (dest_format, 1,
-      dest_width, dest_height);
-  destV =
-      dest + gst_video_format_get_component_offset (dest_format, 2,
-      dest_width, dest_height);
+  src_stride = GST_VIDEO_FRAME_PLANE_STRIDE (src_frame, 0);
+
+  destY = GST_VIDEO_FRAME_COMP_DATA (dest_frame, 0);
+  destU = GST_VIDEO_FRAME_COMP_DATA (dest_frame, 1);
+  destV = GST_VIDEO_FRAME_COMP_DATA (dest_frame, 2);
 
   destY = destY + dest_y * dest_strideY + dest_x;
   destY2 = (dest_y < dest_height) ? destY + dest_strideY : destY;
-  destU = destU + (dest_y / 2) * dest_strideUV + dest_x / 2;
-  destV = destV + (dest_y / 2) * dest_strideUV + dest_x / 2;
+  destU = destU + (dest_y / 2) * dest_strideU + dest_x / 2;
+  destV = destV + (dest_y / 2) * dest_strideV + dest_x / 2;
 
+  src = GST_VIDEO_FRAME_PLANE_DATA (src_frame, 0);
   src = src + src_y * src_stride + src_x * 4;
   src2 = (src_y < src_height) ? src + src_stride : src;
 
@@ -341,8 +362,8 @@ copy_ayuv_i420 (guint i_alpha, GstVideoFormat dest_format, guint8 * dest,
 
     destY += dest_strideY;
     destY2 += dest_strideY;
-    destU += dest_strideUV;
-    destV += dest_strideUV;
+    destU += dest_strideU;
+    destV += dest_strideV;
     src += src_stride;
     src2 += src_stride;
     i = dest_y + 1;
@@ -460,8 +481,8 @@ copy_ayuv_i420 (guint i_alpha, GstVideoFormat dest_format, guint8 * dest,
 
     destY += 2 * dest_strideY;
     destY2 += 2 * dest_strideY;
-    destU += dest_strideUV;
-    destV += dest_strideUV;
+    destU += dest_strideU;
+    destV += dest_strideV;
     src += 2 * src_stride;
     src2 += 2 * src_stride;
   }
@@ -628,13 +649,13 @@ copy_ayuv_i420 (guint i_alpha, GstVideoFormat dest_format, guint8 * dest,
 
 static void
 fill_planar_yuv (GstVideoBoxFill fill_type, guint b_alpha,
-    GstVideoFormat format, guint8 * dest, gboolean sdtv, gint width,
-    gint height)
+    GstVideoFrame * frame, gboolean sdtv)
 {
   guint8 empty_pixel[3];
   guint8 *destY, *destU, *destV;
-  gint strideY, strideUV;
-  gint heightY, heightUV;
+  gint strideY, strideU, strideV;
+  gint heightY, heightU, heightV;
+  gint widthY, widthU, widthV;
 
   if (sdtv) {
     empty_pixel[0] = yuv_sdtv_colors_Y[fill_type];
@@ -646,67 +667,82 @@ fill_planar_yuv (GstVideoBoxFill fill_type, guint b_alpha,
     empty_pixel[2] = yuv_hdtv_colors_V[fill_type];
   }
 
-  strideY = gst_video_format_get_row_stride (format, 0, width);
-  strideUV = gst_video_format_get_row_stride (format, 1, width);
+  strideY = GST_VIDEO_FRAME_COMP_STRIDE (frame, 0);
+  strideU = GST_VIDEO_FRAME_COMP_STRIDE (frame, 1);
+  strideV = GST_VIDEO_FRAME_COMP_STRIDE (frame, 2);
 
-  destY =
-      dest + gst_video_format_get_component_offset (format, 0, width, height);
-  destU =
-      dest + gst_video_format_get_component_offset (format, 1, width, height);
-  destV =
-      dest + gst_video_format_get_component_offset (format, 2, width, height);
+  destY = GST_VIDEO_FRAME_COMP_DATA (frame, 0);
+  destU = GST_VIDEO_FRAME_COMP_DATA (frame, 1);
+  destV = GST_VIDEO_FRAME_COMP_DATA (frame, 2);
 
-  heightY = gst_video_format_get_component_height (format, 0, height);
-  heightUV = gst_video_format_get_component_height (format, 1, height);
+  widthY = GST_VIDEO_FRAME_COMP_WIDTH (frame, 0);
+  widthU = GST_VIDEO_FRAME_COMP_WIDTH (frame, 1);
+  widthV = GST_VIDEO_FRAME_COMP_WIDTH (frame, 2);
 
-  memset (destY, empty_pixel[0], strideY * heightY);
-  memset (destU, empty_pixel[1], strideUV * heightUV);
-  memset (destV, empty_pixel[2], strideUV * heightUV);
+  heightY = GST_VIDEO_FRAME_COMP_HEIGHT (frame, 0);
+  heightU = GST_VIDEO_FRAME_COMP_HEIGHT (frame, 0);
+  heightV = GST_VIDEO_FRAME_COMP_HEIGHT (frame, 0);
+
+  if (strideY == widthY) {
+    memset (destY, empty_pixel[0], strideY * heightY);
+  } else if (heightY) {
+    for (; heightY; --heightY) {
+      memset (destY, empty_pixel[0], widthY);
+      destY += strideY;
+    }
+  }
+  if (strideU == widthU) {
+    memset (destU, empty_pixel[1], strideU * heightU);
+  } else if (heightU) {
+    for (; heightU; --heightU) {
+      memset (destU, empty_pixel[0], widthY);
+      destU += strideU;
+    }
+  }
+  if (strideV == widthV) {
+    memset (destV, empty_pixel[2], strideV * heightV);
+  } else if (heightV) {
+    for (; heightV; --heightV) {
+      memset (destV, empty_pixel[0], widthV);
+      destV += strideV;
+    }
+  }
 }
 
 static void
-copy_y444_y444 (guint i_alpha, GstVideoFormat dest_format, guint8 * dest,
-    gboolean dest_sdtv, gint dest_width, gint dest_height, gint dest_x,
-    gint dest_y, GstVideoFormat src_format, const guint8 * src,
-    gboolean src_sdtv, gint src_width, gint src_height, gint src_x, gint src_y,
-    gint w, gint h)
+copy_y444_y444 (guint i_alpha, GstVideoFrame * dest,
+    gboolean dest_sdtv, gint dest_x, gint dest_y, GstVideoFrame * src,
+    gboolean src_sdtv, gint src_x, gint src_y, gint w, gint h)
 {
   gint i, j;
   guint8 *destY, *destU, *destV;
   const guint8 *srcY, *srcU, *srcV;
-  gint dest_stride;
-  gint src_stride;
+  gint dest_strideY, dest_strideU, dest_strideV;
+  gint src_strideY, src_strideU, src_strideV;
 
-  dest_stride = gst_video_format_get_row_stride (dest_format, 0, dest_width);
-  src_stride = gst_video_format_get_row_stride (src_format, 0, src_width);
+  dest_strideY = GST_VIDEO_FRAME_COMP_STRIDE (dest, 0);
+  dest_strideU = GST_VIDEO_FRAME_COMP_STRIDE (dest, 1);
+  dest_strideV = GST_VIDEO_FRAME_COMP_STRIDE (dest, 2);
 
-  destY =
-      dest + gst_video_format_get_component_offset (dest_format, 0,
-      dest_width, dest_height);
-  destU =
-      dest + gst_video_format_get_component_offset (dest_format, 1,
-      dest_width, dest_height);
-  destV =
-      dest + gst_video_format_get_component_offset (dest_format, 2,
-      dest_width, dest_height);
+  src_strideY = GST_VIDEO_FRAME_COMP_STRIDE (src, 0);
+  src_strideU = GST_VIDEO_FRAME_COMP_STRIDE (src, 1);
+  src_strideV = GST_VIDEO_FRAME_COMP_STRIDE (src, 2);
 
-  srcY =
-      src + gst_video_format_get_component_offset (src_format, 0,
-      src_width, src_height);
-  srcU =
-      src + gst_video_format_get_component_offset (src_format, 1,
-      src_width, src_height);
-  srcV =
-      src + gst_video_format_get_component_offset (src_format, 2,
-      src_width, src_height);
+  destY = GST_VIDEO_FRAME_COMP_DATA (dest, 0);
+  destU = GST_VIDEO_FRAME_COMP_DATA (dest, 1);
+  destV = GST_VIDEO_FRAME_COMP_DATA (dest, 2);
 
-  destY = destY + dest_y * dest_stride + dest_x;
-  destU = destU + dest_y * dest_stride + dest_x;
-  destV = destV + dest_y * dest_stride + dest_x;
+  srcY = GST_VIDEO_FRAME_COMP_DATA (src, 0);
+  srcU = GST_VIDEO_FRAME_COMP_DATA (src, 1);
+  srcV = GST_VIDEO_FRAME_COMP_DATA (src, 2);
 
-  srcY = srcY + src_y * src_stride + src_x;
-  srcU = srcU + src_y * src_stride + src_x;
-  srcV = srcV + src_y * src_stride + src_x;
+  destY = destY + dest_y * dest_strideY + dest_x;
+  destU = destU + dest_y * dest_strideU + dest_x;
+  destV = destV + dest_y * dest_strideV + dest_x;
+
+  srcY = srcY + src_y * src_strideY + src_x;
+  srcU = srcU + src_y * src_strideU + src_x;
+  srcV = srcV + src_y * src_strideV + src_x;
 
   if (src_sdtv != dest_sdtv) {
     gint matrix[12];
@@ -726,13 +762,13 @@ copy_y444_y444 (guint i_alpha, GstVideoFormat dest_format, guint8 * dest,
         destU[j] = u;
         destV[j] = v;
       }
-      destY += dest_stride;
-      destU += dest_stride;
-      destV += dest_stride;
+      destY += dest_strideY;
+      destU += dest_strideU;
+      destV += dest_strideV;
 
-      srcY += src_stride;
-      srcU += src_stride;
-      srcV += src_stride;
+      srcY += src_strideY;
+      srcU += src_strideU;
+      srcV += src_strideV;
     }
   } else {
     for (i = 0; i < h; i++) {
@@ -740,69 +776,60 @@ copy_y444_y444 (guint i_alpha, GstVideoFormat dest_format, guint8 * dest,
       memcpy (destU, srcU, w);
       memcpy (destV, srcV, w);
 
-      destY += dest_stride;
-      destU += dest_stride;
-      destV += dest_stride;
+      destY += dest_strideY;
+      destU += dest_strideU;
+      destV += dest_strideV;
 
-      srcY += src_stride;
-      srcU += src_stride;
-      srcV += src_stride;
+      srcY += src_strideY;
+      srcU += src_strideU;
+      srcV += src_strideV;
     }
   }
 }
 
 static void
-copy_y42b_y42b (guint i_alpha, GstVideoFormat dest_format, guint8 * dest,
-    gboolean dest_sdtv, gint dest_width, gint dest_height, gint dest_x,
-    gint dest_y, GstVideoFormat src_format, const guint8 * src,
-    gboolean src_sdtv, gint src_width, gint src_height, gint src_x, gint src_y,
-    gint w, gint h)
+copy_y42b_y42b (guint i_alpha, GstVideoFrame * dest,
+    gboolean dest_sdtv, gint dest_x, gint dest_y, GstVideoFrame * src,
+    gboolean src_sdtv, gint src_x, gint src_y, gint w, gint h)
 {
   gint i, j;
   guint8 *destY, *destU, *destV;
   const guint8 *srcY, *srcU, *srcV;
-  gint dest_strideY, dest_strideUV;
-  gint src_strideY, src_strideUV;
+  gint dest_strideY, dest_strideU, dest_strideV;
+  gint src_strideY, src_strideU, src_strideV;
   gint src_y_idx, src_uv_idx;
   gint dest_y_idx, dest_uv_idx;
   gint matrix[12];
   gint y1, y2;
   gint u1, u2;
   gint v1, v2;
+  gint dest_width;
 
-  dest_strideY = gst_video_format_get_row_stride (dest_format, 0, dest_width);
-  dest_strideUV = gst_video_format_get_row_stride (dest_format, 1, dest_width);
-  src_strideY = gst_video_format_get_row_stride (src_format, 0, src_width);
-  src_strideUV = gst_video_format_get_row_stride (src_format, 1, src_width);
+  dest_width = GST_VIDEO_FRAME_WIDTH (dest);
 
-  destY =
-      dest + gst_video_format_get_component_offset (dest_format, 0,
-      dest_width, dest_height);
-  destU =
-      dest + gst_video_format_get_component_offset (dest_format, 1,
-      dest_width, dest_height);
-  destV =
-      dest + gst_video_format_get_component_offset (dest_format, 2,
-      dest_width, dest_height);
+  dest_strideY = GST_VIDEO_FRAME_COMP_STRIDE (dest, 0);
+  dest_strideU = GST_VIDEO_FRAME_COMP_STRIDE (dest, 0);
+  dest_strideV = GST_VIDEO_FRAME_COMP_STRIDE (dest, 0);
 
-  srcY =
-      src + gst_video_format_get_component_offset (src_format, 0,
-      src_width, src_height);
-  srcU =
-      src + gst_video_format_get_component_offset (src_format, 1,
-      src_width, src_height);
-  srcV =
-      src + gst_video_format_get_component_offset (src_format, 2,
-      src_width, src_height);
+  src_strideY = GST_VIDEO_FRAME_COMP_STRIDE (src, 0);
+  src_strideU = GST_VIDEO_FRAME_COMP_STRIDE (src, 1);
+  src_strideV = GST_VIDEO_FRAME_COMP_STRIDE (src, 2);
 
+  destY = GST_VIDEO_FRAME_COMP_DATA (dest, 0);
+  destU = GST_VIDEO_FRAME_COMP_DATA (dest, 1);
+  destV = GST_VIDEO_FRAME_COMP_DATA (dest, 2);
+
+  srcY = GST_VIDEO_FRAME_COMP_DATA (src, 0);
+  srcU = GST_VIDEO_FRAME_COMP_DATA (src, 1);
+  srcV = GST_VIDEO_FRAME_COMP_DATA (src, 2);
 
   destY = destY + dest_y * dest_strideY + dest_x;
-  destU = destU + dest_y * dest_strideUV + dest_x / 2;
-  destV = destV + dest_y * dest_strideUV + dest_x / 2;
+  destU = destU + dest_y * dest_strideU + dest_x / 2;
+  destV = destV + dest_y * dest_strideV + dest_x / 2;
 
   srcY = srcY + src_y * src_strideY + src_x;
-  srcU = srcU + src_y * src_strideUV + src_x / 2;
-  srcV = srcV + src_y * src_strideUV + src_x / 2;
+  srcU = srcU + src_y * src_strideU + src_x / 2;
+  srcV = srcV + src_y * src_strideV + src_x / 2;
 
   h = dest_y + h;
   w = dest_x + w;
@@ -896,67 +923,58 @@ copy_y42b_y42b (guint i_alpha, GstVideoFormat dest_format, guint8 * dest,
     }
 
     destY += dest_strideY;
-    destU += dest_strideUV;
-    destV += dest_strideUV;
+    destU += dest_strideU;
+    destV += dest_strideV;
     srcY += src_strideY;
 
-    srcU += src_strideUV;
-    srcV += src_strideUV;
+    srcU += src_strideU;
+    srcV += src_strideV;
   }
 }
 
 static void
-copy_y41b_y41b (guint i_alpha, GstVideoFormat dest_format, guint8 * dest,
-    gboolean dest_sdtv, gint dest_width, gint dest_height, gint dest_x,
-    gint dest_y, GstVideoFormat src_format, const guint8 * src,
-    gboolean src_sdtv, gint src_width, gint src_height, gint src_x, gint src_y,
-    gint w, gint h)
+copy_y41b_y41b (guint i_alpha, GstVideoFrame * dest,
+    gboolean dest_sdtv, gint dest_x, gint dest_y, GstVideoFrame * src,
+    gboolean src_sdtv, gint src_x, gint src_y, gint w, gint h)
 {
   gint i, j;
   guint8 *destY, *destU, *destV;
   const guint8 *srcY, *srcU, *srcV;
-  gint dest_strideY, dest_strideUV;
-  gint src_strideY, src_strideUV;
+  gint dest_strideY, dest_strideU, dest_strideV;
+  gint src_strideY, src_strideU, src_strideV;
   gint src_y_idx, src_uv_idx;
   gint dest_y_idx, dest_uv_idx;
   gint matrix[12];
   gint y1, y2, y3, y4;
   gint u1, u2, u3, u4;
   gint v1, v2, v3, v4;
+  gint dest_width;
 
-  dest_strideY = gst_video_format_get_row_stride (dest_format, 0, dest_width);
-  dest_strideUV = gst_video_format_get_row_stride (dest_format, 1, dest_width);
-  src_strideY = gst_video_format_get_row_stride (src_format, 0, src_width);
-  src_strideUV = gst_video_format_get_row_stride (src_format, 1, src_width);
+  dest_width = GST_VIDEO_FRAME_WIDTH (dest);
 
-  destY =
-      dest + gst_video_format_get_component_offset (dest_format, 0,
-      dest_width, dest_height);
-  destU =
-      dest + gst_video_format_get_component_offset (dest_format, 1,
-      dest_width, dest_height);
-  destV =
-      dest + gst_video_format_get_component_offset (dest_format, 2,
-      dest_width, dest_height);
+  dest_strideY = GST_VIDEO_FRAME_COMP_STRIDE (dest, 0);
+  dest_strideU = GST_VIDEO_FRAME_COMP_STRIDE (dest, 0);
+  dest_strideV = GST_VIDEO_FRAME_COMP_STRIDE (dest, 0);
 
-  srcY =
-      src + gst_video_format_get_component_offset (src_format, 0,
-      src_width, src_height);
-  srcU =
-      src + gst_video_format_get_component_offset (src_format, 1,
-      src_width, src_height);
-  srcV =
-      src + gst_video_format_get_component_offset (src_format, 2,
-      src_width, src_height);
+  src_strideY = GST_VIDEO_FRAME_COMP_STRIDE (src, 0);
+  src_strideU = GST_VIDEO_FRAME_COMP_STRIDE (src, 1);
+  src_strideV = GST_VIDEO_FRAME_COMP_STRIDE (src, 2);
 
+  destY = GST_VIDEO_FRAME_COMP_DATA (dest, 0);
+  destU = GST_VIDEO_FRAME_COMP_DATA (dest, 1);
+  destV = GST_VIDEO_FRAME_COMP_DATA (dest, 2);
+
+  srcY = GST_VIDEO_FRAME_COMP_DATA (src, 0);
+  srcU = GST_VIDEO_FRAME_COMP_DATA (src, 1);
+  srcV = GST_VIDEO_FRAME_COMP_DATA (src, 2);
 
   destY = destY + dest_y * dest_strideY + dest_x;
-  destU = destU + dest_y * dest_strideUV + dest_x / 4;
-  destV = destV + dest_y * dest_strideUV + dest_x / 4;
+  destU = destU + dest_y * dest_strideU + dest_x / 4;
+  destV = destV + dest_y * dest_strideV + dest_x / 4;
 
   srcY = srcY + src_y * src_strideY + src_x;
-  srcU = srcU + src_y * src_strideUV + src_x / 4;
-  srcV = srcV + src_y * src_strideUV + src_x / 4;
+  srcU = srcU + src_y * src_strideU + src_x / 4;
+  srcV = srcV + src_y * src_strideV + src_x / 4;
 
   h = dest_y + h;
   w = dest_x + w;
@@ -1169,72 +1187,60 @@ copy_y41b_y41b (guint i_alpha, GstVideoFormat dest_format, guint8 * dest,
     }
 
     destY += dest_strideY;
-    destU += dest_strideUV;
-    destV += dest_strideUV;
+    destU += dest_strideU;
+    destV += dest_strideV;
     srcY += src_strideY;
-    srcU += src_strideUV;
-    srcV += src_strideUV;
+    srcU += src_strideU;
+    srcV += src_strideV;
   }
 }
 
 static void
-copy_i420_i420 (guint i_alpha, GstVideoFormat dest_format, guint8 * dest,
-    gboolean dest_sdtv, gint dest_width, gint dest_height, gint dest_x,
-    gint dest_y, GstVideoFormat src_format, const guint8 * src,
-    gboolean src_sdtv, gint src_width, gint src_height, gint src_x, gint src_y,
-    gint w, gint h)
+copy_i420_i420 (guint i_alpha, GstVideoFrame * dest,
+    gboolean dest_sdtv, gint dest_x, gint dest_y, GstVideoFrame * src,
+    gboolean src_sdtv, gint src_x, gint src_y, gint w, gint h)
 {
   gint i, j;
   guint8 *destY, *destU, *destV;
   const guint8 *srcY, *srcU, *srcV;
   guint8 *destY2;
   const guint8 *srcY2, *srcU2, *srcV2;
-  gint dest_strideY, dest_strideUV;
-  gint src_strideY, src_strideUV;
+  gint dest_strideY, dest_strideU, dest_strideV;
+  gint src_strideY, src_strideU, src_strideV;
   gint src_y_idx, src_uv_idx;
   gint dest_y_idx, dest_uv_idx;
   gint matrix[12];
   gint y1, y2, y3, y4;
   gint u1, u2, u3, u4;
   gint v1, v2, v3, v4;
+  gint dest_width, dest_height;
 
-  dest_strideY =
-      gst_video_format_get_row_stride (GST_VIDEO_FORMAT_I420, 0, dest_width);
-  dest_strideUV =
-      gst_video_format_get_row_stride (GST_VIDEO_FORMAT_I420, 1, dest_width);
-  src_strideY =
-      gst_video_format_get_row_stride (GST_VIDEO_FORMAT_I420, 0, src_width);
-  src_strideUV =
-      gst_video_format_get_row_stride (GST_VIDEO_FORMAT_I420, 1, src_width);
+  dest_width = GST_VIDEO_FRAME_WIDTH (dest);
+  dest_height = GST_VIDEO_FRAME_HEIGHT (dest);
 
-  destY =
-      dest + gst_video_format_get_component_offset (GST_VIDEO_FORMAT_I420, 0,
-      dest_width, dest_height);
-  destU =
-      dest + gst_video_format_get_component_offset (dest_format, 1,
-      dest_width, dest_height);
-  destV =
-      dest + gst_video_format_get_component_offset (dest_format, 2,
-      dest_width, dest_height);
+  dest_strideY = GST_VIDEO_FRAME_COMP_STRIDE (dest, 0);
+  dest_strideU = GST_VIDEO_FRAME_COMP_STRIDE (dest, 0);
+  dest_strideV = GST_VIDEO_FRAME_COMP_STRIDE (dest, 0);
 
-  srcY =
-      src + gst_video_format_get_component_offset (GST_VIDEO_FORMAT_I420, 0,
-      src_width, src_height);
-  srcU =
-      src + gst_video_format_get_component_offset (src_format, 1,
-      src_width, src_height);
-  srcV =
-      src + gst_video_format_get_component_offset (src_format, 2,
-      src_width, src_height);
+  src_strideY = GST_VIDEO_FRAME_COMP_STRIDE (src, 0);
+  src_strideU = GST_VIDEO_FRAME_COMP_STRIDE (src, 1);
+  src_strideV = GST_VIDEO_FRAME_COMP_STRIDE (src, 2);
 
+  destY = GST_VIDEO_FRAME_COMP_DATA (dest, 0);
+  destU = GST_VIDEO_FRAME_COMP_DATA (dest, 1);
+  destV = GST_VIDEO_FRAME_COMP_DATA (dest, 2);
+
+  srcY = GST_VIDEO_FRAME_COMP_DATA (src, 0);
+  srcU = GST_VIDEO_FRAME_COMP_DATA (src, 1);
+  srcV = GST_VIDEO_FRAME_COMP_DATA (src, 2);
 
   destY = destY + dest_y * dest_strideY + dest_x;
-  destU = destU + (dest_y / 2) * dest_strideUV + dest_x / 2;
-  destV = destV + (dest_y / 2) * dest_strideUV + dest_x / 2;
+  destU = destU + (dest_y / 2) * dest_strideU + dest_x / 2;
+  destV = destV + (dest_y / 2) * dest_strideV + dest_x / 2;
 
   srcY = srcY + src_y * src_strideY + src_x;
-  srcU = srcU + (src_y / 2) * src_strideUV + src_x / 2;
-  srcV = srcV + (src_y / 2) * src_strideUV + src_x / 2;
+  srcU = srcU + (src_y / 2) * src_strideU + src_x / 2;
+  srcV = srcV + (src_y / 2) * src_strideV + src_x / 2;
 
   destY2 = destY + dest_strideY;
   srcY2 = srcY + src_strideY;
@@ -1339,14 +1345,14 @@ copy_i420_i420 (guint i_alpha, GstVideoFormat dest_format, guint8 * dest,
 
     destY += dest_strideY;
     destY2 += dest_strideY;
-    destU += dest_strideUV;
-    destV += dest_strideUV;
+    destU += dest_strideU;
+    destV += dest_strideV;
     srcY += src_strideY;
     srcY2 += src_strideY;
     src_y++;
     if (src_y % 2 == 0) {
-      srcU += src_strideUV;
-      srcV += src_strideUV;
+      srcU += src_strideU;
+      srcV += src_strideV;
     }
     i = dest_y + 1;
   } else {
@@ -1363,8 +1369,8 @@ copy_i420_i420 (guint i_alpha, GstVideoFormat dest_format, guint8 * dest,
     srcU2 = srcU;
     srcV2 = srcV;
     if (src_y % 2 == 1) {
-      srcU2 += src_strideUV;
-      srcV2 += src_strideUV;
+      srcU2 += src_strideU;
+      srcV2 += src_strideV;
     }
 
     if (dest_x % 2 == 1) {
@@ -1477,14 +1483,14 @@ copy_i420_i420 (guint i_alpha, GstVideoFormat dest_format, guint8 * dest,
 
     destY += 2 * dest_strideY;
     destY2 += 2 * dest_strideY;
-    destU += dest_strideUV;
-    destV += dest_strideUV;
+    destU += dest_strideU;
+    destV += dest_strideV;
     srcY += 2 * src_strideY;
     srcY2 += 2 * src_strideY;
 
     src_y += 2;
-    srcU += src_strideUV;
-    srcV += src_strideUV;
+    srcU += src_strideU;
+    srcV += src_strideV;
   }
 
   /* 3. Handle the last scanline if one exists. This again
@@ -1662,38 +1668,31 @@ copy_i420_i420 (guint i_alpha, GstVideoFormat dest_format, guint8 * dest,
 }
 
 static void
-copy_i420_ayuv (guint i_alpha, GstVideoFormat dest_format, guint8 * dest,
-    gboolean dest_sdtv, gint dest_width, gint dest_height, gint dest_x,
-    gint dest_y, GstVideoFormat src_format, const guint8 * src,
-    gboolean src_sdtv, gint src_width, gint src_height, gint src_x, gint src_y,
-    gint w, gint h)
+copy_i420_ayuv (guint i_alpha, GstVideoFrame * dest_frame,
+    gboolean dest_sdtv, gint dest_x, gint dest_y, GstVideoFrame * src_frame,
+    gboolean src_sdtv, gint src_x, gint src_y, gint w, gint h)
 {
   const guint8 *srcY, *srcU, *srcV;
-  gint src_strideY, src_strideUV;
+  gint src_strideY, src_strideU, src_strideV;
   gint dest_stride;
+  guint8 *dest;
 
-  src_strideY =
-      gst_video_format_get_row_stride (GST_VIDEO_FORMAT_I420, 0, src_width);
-  src_strideUV =
-      gst_video_format_get_row_stride (GST_VIDEO_FORMAT_I420, 1, src_width);
+  src_strideY = GST_VIDEO_FRAME_COMP_STRIDE (src_frame, 0);
+  src_strideU = GST_VIDEO_FRAME_COMP_STRIDE (src_frame, 1);
+  src_strideV = GST_VIDEO_FRAME_COMP_STRIDE (src_frame, 2);
 
-  srcY =
-      src + gst_video_format_get_component_offset (GST_VIDEO_FORMAT_I420, 0,
-      src_width, src_height);
-  srcU =
-      src + gst_video_format_get_component_offset (src_format, 1,
-      src_width, src_height);
-  srcV =
-      src + gst_video_format_get_component_offset (src_format, 2,
-      src_width, src_height);
+  srcY = GST_VIDEO_FRAME_COMP_DATA (src_frame, 0);
+  srcU = GST_VIDEO_FRAME_COMP_DATA (src_frame, 1);
+  srcV = GST_VIDEO_FRAME_COMP_DATA (src_frame, 2);
 
-  dest_stride = dest_width * 4;
+  dest_stride = GST_VIDEO_FRAME_PLANE_STRIDE (dest_frame, 0);
 
+  dest = GST_VIDEO_FRAME_PLANE_DATA (dest_frame, 0);
   dest = dest + dest_y * dest_stride + dest_x * 4;
 
   srcY = srcY + src_y * src_strideY + src_x;
-  srcU = srcU + (src_y / 2) * src_strideUV + src_x / 2;
-  srcV = srcV + (src_y / 2) * src_strideUV + src_x / 2;
+  srcU = srcU + (src_y / 2) * src_strideU + src_x / 2;
+  srcV = srcV + (src_y / 2) * src_strideV + src_x / 2;
 
   i_alpha = CLAMP (i_alpha, 0, 255);
 
@@ -1727,8 +1726,8 @@ copy_i420_ayuv (guint i_alpha, GstVideoFormat dest_format, guint8 * dest,
       src_y++;
       srcY += src_strideY;
       if (src_y % 2 == 0) {
-        srcU += src_strideUV;
-        srcV += src_strideUV;
+        srcU += src_strideU;
+        srcV += src_strideV;
       }
     }
   } else {
@@ -1751,24 +1750,33 @@ copy_i420_ayuv (guint i_alpha, GstVideoFormat dest_format, guint8 * dest,
       src_y++;
       srcY += src_strideY;
       if (src_y % 2 == 0) {
-        srcU += src_strideUV;
-        srcV += src_strideUV;
+        srcU += src_strideU;
+        srcV += src_strideV;
       }
     }
   }
 }
 
 static void
-fill_rgb32 (GstVideoBoxFill fill_type, guint b_alpha, GstVideoFormat format,
-    guint8 * dest, gboolean sdtv, gint width, gint height)
+fill_rgb32 (GstVideoBoxFill fill_type, guint b_alpha,
+    GstVideoFrame * frame, gboolean sdtv)
 {
   guint32 empty_pixel;
   gint p[4];
+  guint8 *dest;
+  guint stride;
+  gint width, height;
 
-  p[0] = gst_video_format_get_component_offset (format, 3, width, height);
-  p[1] = gst_video_format_get_component_offset (format, 0, width, height);
-  p[2] = gst_video_format_get_component_offset (format, 1, width, height);
-  p[3] = gst_video_format_get_component_offset (format, 2, width, height);
+  width = GST_VIDEO_FRAME_WIDTH (frame);
+  height = GST_VIDEO_FRAME_HEIGHT (frame);
+
+  dest = GST_VIDEO_FRAME_PLANE_DATA (frame, 0);
+  stride = GST_VIDEO_FRAME_PLANE_STRIDE (frame, 0);
+
+  p[0] = GST_VIDEO_FRAME_COMP_OFFSET (frame, 3);
+  p[1] = GST_VIDEO_FRAME_COMP_OFFSET (frame, 0);
+  p[2] = GST_VIDEO_FRAME_COMP_OFFSET (frame, 1);
+  p[3] = GST_VIDEO_FRAME_COMP_OFFSET (frame, 2);
 
   b_alpha = CLAMP (b_alpha, 0, 255);
 
@@ -1777,21 +1785,35 @@ fill_rgb32 (GstVideoBoxFill fill_type, guint b_alpha, GstVideoFormat format,
       (rgb_colors_G[fill_type] << (p[2] * 8)) |
       (rgb_colors_B[fill_type] << (p[3] * 8)));
 
-  orc_splat_u32 ((guint32 *) dest, empty_pixel, width * height);
+  if (stride == width * 4) {
+    orc_splat_u32 ((guint32 *) dest, empty_pixel, width * height);
+  } else if (height) {
+    for (; height; --height) {
+      orc_splat_u32 ((guint32 *) dest, empty_pixel, width);
+      dest += stride;
+    }
+  }
 }
 
 static void
-fill_rgb24 (GstVideoBoxFill fill_type, guint b_alpha, GstVideoFormat format,
-    guint8 * dest, gboolean sdtv, gint width, gint height)
+fill_rgb24 (GstVideoBoxFill fill_type, guint b_alpha,
+    GstVideoFrame * frame, gboolean sdtv)
 {
-  gint dest_stride = GST_ROUND_UP_4 (width * 3);
+  gint dest_stride;
   gint p[4];
   gint i, j;
+  guint8 *dest;
+  gint width, height;
 
-  p[0] = gst_video_format_get_component_offset (format, 3, width, height);
-  p[1] = gst_video_format_get_component_offset (format, 0, width, height);
-  p[2] = gst_video_format_get_component_offset (format, 1, width, height);
-  p[3] = gst_video_format_get_component_offset (format, 2, width, height);
+  width = GST_VIDEO_FRAME_WIDTH (frame);
+  height = GST_VIDEO_FRAME_HEIGHT (frame);
+
+  dest = GST_VIDEO_FRAME_PLANE_DATA (frame, 0);
+  dest_stride = GST_VIDEO_FRAME_PLANE_STRIDE (frame, 0);
+
+  p[1] = GST_VIDEO_FRAME_COMP_OFFSET (frame, 0);
+  p[2] = GST_VIDEO_FRAME_COMP_OFFSET (frame, 1);
+  p[3] = GST_VIDEO_FRAME_COMP_OFFSET (frame, 2);
 
   for (i = 0; i < height; i++) {
     for (j = 0; j < width; j++) {
@@ -1804,11 +1826,9 @@ fill_rgb24 (GstVideoBoxFill fill_type, guint b_alpha, GstVideoFormat format,
 }
 
 static void
-copy_rgb32 (guint i_alpha, GstVideoFormat dest_format, guint8 * dest,
-    gboolean dest_sdtv, gint dest_width, gint dest_height, gint dest_x,
-    gint dest_y, GstVideoFormat src_format, const guint8 * src,
-    gboolean src_sdtv, gint src_width, gint src_height, gint src_x, gint src_y,
-    gint w, gint h)
+copy_rgb32 (guint i_alpha, GstVideoFrame * dest_frame,
+    gboolean dest_sdtv, gint dest_x, gint dest_y, GstVideoFrame * src_frame,
+    gboolean src_sdtv, gint src_x, gint src_y, gint w, gint h)
 {
   gint i, j;
   gint src_stride, dest_stride;
@@ -1816,45 +1836,32 @@ copy_rgb32 (guint i_alpha, GstVideoFormat dest_format, guint8 * dest,
   gint in_bpp, out_bpp;
   gint p_out[4];
   gint p_in[4];
-  gboolean packed_out = (dest_format == GST_VIDEO_FORMAT_RGB
-      || dest_format == GST_VIDEO_FORMAT_BGR);
-  gboolean packed_in = (src_format == GST_VIDEO_FORMAT_RGB
-      || src_format == GST_VIDEO_FORMAT_BGR);
+  gboolean packed_out;
+  gboolean packed_in;
+  guint8 *src, *dest;
 
-  src_stride = (packed_in) ? GST_ROUND_UP_4 (3 * src_width) : 4 * src_width;
-  dest_stride = (packed_out) ? GST_ROUND_UP_4 (3 * dest_width) : 4 * dest_width;
-  in_bpp = (packed_in) ? 3 : 4;
-  out_bpp = (packed_out) ? 3 : 4;
+  src_stride = GST_VIDEO_FRAME_PLANE_STRIDE (src_frame, 0);
+  dest_stride = GST_VIDEO_FRAME_PLANE_STRIDE (dest_frame, 0);
+  in_bpp = GST_VIDEO_FRAME_COMP_PSTRIDE (src_frame, 0);
+  out_bpp = GST_VIDEO_FRAME_COMP_PSTRIDE (dest_frame, 0);
+  packed_in = (in_bpp < 4);
+  packed_out = (out_bpp < 4);
 
-  out_alpha = gst_video_format_has_alpha (dest_format);
-  p_out[0] =
-      gst_video_format_get_component_offset (dest_format, 3, dest_width,
-      dest_height);
-  p_out[1] =
-      gst_video_format_get_component_offset (dest_format, 0, dest_width,
-      dest_height);
-  p_out[2] =
-      gst_video_format_get_component_offset (dest_format, 1, dest_width,
-      dest_height);
-  p_out[3] =
-      gst_video_format_get_component_offset (dest_format, 2, dest_width,
-      dest_height);
+  out_alpha = GST_VIDEO_INFO_HAS_ALPHA (&dest_frame->info);
+  p_out[0] = GST_VIDEO_FRAME_COMP_OFFSET (dest_frame, 3);
+  p_out[1] = GST_VIDEO_FRAME_COMP_OFFSET (dest_frame, 0);
+  p_out[2] = GST_VIDEO_FRAME_COMP_OFFSET (dest_frame, 1);
+  p_out[3] = GST_VIDEO_FRAME_COMP_OFFSET (dest_frame, 2);
 
-  in_alpha = gst_video_format_has_alpha (src_format);
-  p_in[0] =
-      gst_video_format_get_component_offset (src_format, 3, src_width,
-      src_height);
-  p_in[1] =
-      gst_video_format_get_component_offset (src_format, 0, src_width,
-      src_height);
-  p_in[2] =
-      gst_video_format_get_component_offset (src_format, 1, src_width,
-      src_height);
-  p_in[3] =
-      gst_video_format_get_component_offset (src_format, 2, src_width,
-      src_height);
+  in_alpha = GST_VIDEO_INFO_HAS_ALPHA (&src_frame->info);
+  p_in[0] = GST_VIDEO_FRAME_COMP_OFFSET (src_frame, 3);
+  p_in[1] = GST_VIDEO_FRAME_COMP_OFFSET (src_frame, 0);
+  p_in[2] = GST_VIDEO_FRAME_COMP_OFFSET (src_frame, 1);
+  p_in[3] = GST_VIDEO_FRAME_COMP_OFFSET (src_frame, 2);
 
+  dest = GST_VIDEO_FRAME_PLANE_DATA (dest_frame, 0);
   dest = dest + dest_y * dest_stride + dest_x * out_bpp;
+  src = GST_VIDEO_FRAME_PLANE_DATA (src_frame, 0);
   src = src + src_y * src_stride + src_x * in_bpp;
 
   if (in_alpha && out_alpha) {
@@ -1921,47 +1928,42 @@ copy_rgb32 (guint i_alpha, GstVideoFormat dest_format, guint8 * dest,
 }
 
 static void
-copy_rgb32_ayuv (guint i_alpha, GstVideoFormat dest_format, guint8 * dest,
-    gboolean dest_sdtv, gint dest_width, gint dest_height, gint dest_x,
-    gint dest_y, GstVideoFormat src_format, const guint8 * src,
-    gboolean src_sdtv, gint src_width, gint src_height, gint src_x, gint src_y,
-    gint w, gint h)
+copy_rgb32_ayuv (guint i_alpha, GstVideoFrame * dest_frame,
+    gboolean dest_sdtv, gint dest_x, gint dest_y, GstVideoFrame * src_frame,
+    gboolean src_sdtv, gint src_x, gint src_y, gint w, gint h)
 {
   gint i, j;
   gint src_stride, dest_stride;
   gboolean in_alpha;
   gint in_bpp;
   gint p_in[4];
-  gboolean packed_in = (src_format == GST_VIDEO_FORMAT_RGB
-      || src_format == GST_VIDEO_FORMAT_BGR);
+  gboolean packed_in;
   gint matrix[12];
   gint a;
   gint y, u, v;
   gint r, g, b;
+  guint8 *dest, *src;
 
-  src_stride = (packed_in) ? GST_ROUND_UP_4 (3 * src_width) : 4 * src_width;
-  dest_stride = 4 * dest_width;
-  in_bpp = (packed_in) ? 3 : 4;
+  dest = GST_VIDEO_FRAME_PLANE_DATA (dest_frame, 0);
+  dest_stride = GST_VIDEO_FRAME_PLANE_STRIDE (dest_frame, 0);
 
-  in_alpha = gst_video_format_has_alpha (src_format);
-  p_in[0] =
-      gst_video_format_get_component_offset (src_format, 3, src_width,
-      src_height);
-  p_in[1] =
-      gst_video_format_get_component_offset (src_format, 0, src_width,
-      src_height);
-  p_in[2] =
-      gst_video_format_get_component_offset (src_format, 1, src_width,
-      src_height);
-  p_in[3] =
-      gst_video_format_get_component_offset (src_format, 2, src_width,
-      src_height);
+  src_stride = GST_VIDEO_FRAME_PLANE_STRIDE (src_frame, 0);
+  in_bpp = GST_VIDEO_FRAME_COMP_PSTRIDE (src_frame, 0);
+  packed_in = (in_bpp < 4);
+
+  in_alpha = GST_VIDEO_INFO_HAS_ALPHA (&src_frame->info);
+  p_in[0] = GST_VIDEO_FRAME_COMP_OFFSET (src_frame, 3);
+  p_in[1] = GST_VIDEO_FRAME_COMP_OFFSET (src_frame, 0);
+  p_in[2] = GST_VIDEO_FRAME_COMP_OFFSET (src_frame, 1);
+  p_in[3] = GST_VIDEO_FRAME_COMP_OFFSET (src_frame, 2);
 
   memcpy (matrix,
       (dest_sdtv) ? cog_rgb_to_ycbcr_matrix_8bit_sdtv :
       cog_rgb_to_ycbcr_matrix_8bit_hdtv, 12 * sizeof (gint));
 
+  dest = GST_VIDEO_FRAME_PLANE_DATA (dest_frame, 0);
   dest = dest + dest_y * dest_stride + dest_x * 4;
+  src = GST_VIDEO_FRAME_PLANE_DATA (src_frame, 0);
   src = src + src_y * src_stride + src_x * in_bpp;
 
   if (in_alpha) {
@@ -2034,47 +2036,42 @@ copy_rgb32_ayuv (guint i_alpha, GstVideoFormat dest_format, guint8 * dest,
 }
 
 static void
-copy_ayuv_rgb32 (guint i_alpha, GstVideoFormat dest_format, guint8 * dest,
-    gboolean dest_sdtv, gint dest_width, gint dest_height, gint dest_x,
-    gint dest_y, GstVideoFormat src_format, const guint8 * src,
-    gboolean src_sdtv, gint src_width, gint src_height, gint src_x, gint src_y,
-    gint w, gint h)
+copy_ayuv_rgb32 (guint i_alpha, GstVideoFrame * dest_frame,
+    gboolean dest_sdtv, gint dest_x, gint dest_y, GstVideoFrame * src_frame,
+    gboolean src_sdtv, gint src_x, gint src_y, gint w, gint h)
 {
   gint i, j;
   gint src_stride, dest_stride;
   gboolean out_alpha;
   gint out_bpp;
   gint p_out[4];
-  gboolean packed_out = (dest_format == GST_VIDEO_FORMAT_RGB
-      || dest_format == GST_VIDEO_FORMAT_BGR);
+  gboolean packed_out;
   gint matrix[12];
   gint a;
   gint y, u, v;
   gint r, g, b;
+  guint8 *src, *dest;
 
-  dest_stride = (packed_out) ? GST_ROUND_UP_4 (3 * dest_width) : 4 * dest_width;
-  src_stride = 4 * src_width;
-  out_bpp = (packed_out) ? 3 : 4;
+  src = GST_VIDEO_FRAME_PLANE_DATA (src_frame, 0);
+  src_stride = GST_VIDEO_FRAME_PLANE_STRIDE (src_frame, 0);
 
-  out_alpha = gst_video_format_has_alpha (dest_format);
-  p_out[0] =
-      gst_video_format_get_component_offset (dest_format, 3, dest_width,
-      dest_height);
-  p_out[1] =
-      gst_video_format_get_component_offset (dest_format, 0, dest_width,
-      dest_height);
-  p_out[2] =
-      gst_video_format_get_component_offset (dest_format, 1, dest_width,
-      dest_height);
-  p_out[3] =
-      gst_video_format_get_component_offset (dest_format, 2, dest_width,
-      dest_height);
+  dest_stride = GST_VIDEO_FRAME_PLANE_STRIDE (dest_frame, 0);
+  out_bpp = GST_VIDEO_FRAME_COMP_PSTRIDE (dest_frame, 0);
+  packed_out = (out_bpp < 4);
+
+  out_alpha = GST_VIDEO_INFO_HAS_ALPHA (&dest_frame->info);
+  p_out[0] = GST_VIDEO_FRAME_COMP_OFFSET (dest_frame, 3);
+  p_out[1] = GST_VIDEO_FRAME_COMP_OFFSET (dest_frame, 0);
+  p_out[2] = GST_VIDEO_FRAME_COMP_OFFSET (dest_frame, 1);
+  p_out[3] = GST_VIDEO_FRAME_COMP_OFFSET (dest_frame, 2);
 
   memcpy (matrix,
       (src_sdtv) ? cog_ycbcr_to_rgb_matrix_8bit_sdtv :
       cog_ycbcr_to_rgb_matrix_8bit_hdtv, 12 * sizeof (gint));
 
+  dest = GST_VIDEO_FRAME_PLANE_DATA (dest_frame, 0);
   dest = dest + dest_y * dest_stride + dest_x * out_bpp;
+  src = GST_VIDEO_FRAME_PLANE_DATA (src_frame, 0);
   src = src + src_y * src_stride + src_x * 4;
 
   if (out_alpha) {
@@ -2139,16 +2136,26 @@ copy_ayuv_rgb32 (guint i_alpha, GstVideoFormat dest_format, guint8 * dest,
 }
 
 static void
-fill_gray (GstVideoBoxFill fill_type, guint b_alpha, GstVideoFormat format,
-    guint8 * dest, gboolean sdtv, gint width, gint height)
+fill_gray (GstVideoBoxFill fill_type, guint b_alpha,
+    GstVideoFrame * frame, gboolean sdtv)
 {
   gint i, j;
   gint dest_stride;
+  guint8 *dest;
+  gint width, height;
+  GstVideoFormat format;
+
+  format = GST_VIDEO_FRAME_FORMAT (frame);
+
+  width = GST_VIDEO_FRAME_WIDTH (frame);
+  height = GST_VIDEO_FRAME_WIDTH (frame);
+
+  dest = GST_VIDEO_FRAME_PLANE_DATA (frame, 0);
+  dest_stride = GST_VIDEO_FRAME_PLANE_STRIDE (frame, 0);
 
   if (format == GST_VIDEO_FORMAT_GRAY8) {
     guint8 val = yuv_sdtv_colors_Y[fill_type];
 
-    dest_stride = GST_ROUND_UP_4 (width);
     for (i = 0; i < height; i++) {
       memset (dest, val, width);
       dest += dest_stride;
@@ -2156,7 +2163,6 @@ fill_gray (GstVideoBoxFill fill_type, guint b_alpha, GstVideoFormat format,
   } else {
     guint16 val = yuv_sdtv_colors_Y[fill_type] << 8;
 
-    dest_stride = GST_ROUND_UP_4 (width * 2);
     if (format == GST_VIDEO_FORMAT_GRAY16_BE) {
       for (i = 0; i < height; i++) {
         for (j = 0; j < width; j++) {
@@ -2176,22 +2182,23 @@ fill_gray (GstVideoBoxFill fill_type, guint b_alpha, GstVideoFormat format,
 }
 
 static void
-copy_packed_simple (guint i_alpha, GstVideoFormat dest_format, guint8 * dest,
-    gboolean dest_sdtv, gint dest_width, gint dest_height, gint dest_x,
-    gint dest_y, GstVideoFormat src_format, const guint8 * src,
-    gboolean src_sdtv, gint src_width, gint src_height, gint src_x, gint src_y,
-    gint w, gint h)
+copy_packed_simple (guint i_alpha, GstVideoFrame * dest_frame,
+    gboolean dest_sdtv, gint dest_x, gint dest_y, GstVideoFrame * src_frame,
+    gboolean src_sdtv, gint src_x, gint src_y, gint w, gint h)
 {
   gint i;
   gint src_stride, dest_stride;
   gint pixel_stride, row_size;
+  guint8 *src, *dest;
 
-  src_stride = gst_video_format_get_row_stride (src_format, 0, src_width);
-  dest_stride = gst_video_format_get_row_stride (dest_format, 0, dest_width);
-  pixel_stride = gst_video_format_get_pixel_stride (dest_format, 0);
+  src_stride = GST_VIDEO_FRAME_PLANE_STRIDE (src_frame, 0);
+  dest_stride = GST_VIDEO_FRAME_PLANE_STRIDE (dest_frame, 0);
+  pixel_stride = GST_VIDEO_FRAME_COMP_PSTRIDE (dest_frame, 0);
   row_size = w * pixel_stride;
 
+  dest = GST_VIDEO_FRAME_PLANE_DATA (dest_frame, 0);
   dest = dest + dest_y * dest_stride + dest_x * pixel_stride;
+  src = GST_VIDEO_FRAME_PLANE_DATA (src_frame, 0);
   src = src + src_y * src_stride + src_x * pixel_stride;
 
   for (i = 0; i < h; i++) {
@@ -2202,12 +2209,23 @@ copy_packed_simple (guint i_alpha, GstVideoFormat dest_format, guint8 * dest,
 }
 
 static void
-fill_yuy2 (GstVideoBoxFill fill_type, guint b_alpha, GstVideoFormat format,
-    guint8 * dest, gboolean sdtv, gint width, gint height)
+fill_yuy2 (GstVideoBoxFill fill_type, guint b_alpha,
+    GstVideoFrame * frame, gboolean sdtv)
 {
   guint8 y, u, v;
   gint i, j;
-  gint stride = gst_video_format_get_row_stride (format, 0, width);
+  gint stride;
+  gint width, height;
+  guint8 *dest;
+  GstVideoFormat format;
+
+  format = GST_VIDEO_FRAME_FORMAT (frame);
+
+  width = GST_VIDEO_FRAME_WIDTH (frame);
+  height = GST_VIDEO_FRAME_HEIGHT (frame);
+
+  dest = GST_VIDEO_FRAME_PLANE_DATA (frame, 0);
+  stride = GST_VIDEO_FRAME_PLANE_STRIDE (frame, 0);
 
   y = (sdtv) ? yuv_sdtv_colors_Y[fill_type] : yuv_hdtv_colors_Y[fill_type];
   u = (sdtv) ? yuv_sdtv_colors_U[fill_type] : yuv_hdtv_colors_U[fill_type];
@@ -2252,24 +2270,28 @@ fill_yuy2 (GstVideoBoxFill fill_type, guint b_alpha, GstVideoFormat format,
 }
 
 static void
-copy_yuy2_yuy2 (guint i_alpha, GstVideoFormat dest_format, guint8 * dest,
-    gboolean dest_sdtv, gint dest_width, gint dest_height, gint dest_x,
-    gint dest_y, GstVideoFormat src_format, const guint8 * src,
-    gboolean src_sdtv, gint src_width, gint src_height, gint src_x, gint src_y,
-    gint w, gint h)
+copy_yuy2_yuy2 (guint i_alpha, GstVideoFrame * dest_frame,
+    gboolean dest_sdtv, gint dest_x, gint dest_y, GstVideoFrame * src_frame,
+    gboolean src_sdtv, gint src_x, gint src_y, gint w, gint h)
 {
   gint i, j;
   gint src_stride, dest_stride;
+  guint8 *src, *dest;
+  GstVideoFormat src_format;
 
-  src_stride = gst_video_format_get_row_stride (src_format, 0, src_width);
-  dest_stride = gst_video_format_get_row_stride (dest_format, 0, dest_width);
+  src_format = GST_VIDEO_FRAME_FORMAT (src_frame);
+
+  src_stride = GST_VIDEO_FRAME_PLANE_STRIDE (src_frame, 0);
+  dest_stride = GST_VIDEO_FRAME_PLANE_STRIDE (dest_frame, 0);
 
   dest_x = (dest_x & ~1);
   src_x = (src_x & ~1);
 
   w = w + (w % 2);
 
+  dest = GST_VIDEO_FRAME_PLANE_DATA (dest_frame, 0);
   dest = dest + dest_y * dest_stride + dest_x * 2;
+  src = GST_VIDEO_FRAME_PLANE_DATA (src_frame, 0);
   src = src + src_y * src_stride + src_x * 2;
 
   if (src_sdtv != dest_sdtv) {
@@ -2362,53 +2384,27 @@ enum
 };
 
 static GstStaticPadTemplate gst_video_box_src_template =
-    GST_STATIC_PAD_TEMPLATE ("src",
+GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS (GST_VIDEO_CAPS_YUV ("AYUV") ";"
-        GST_VIDEO_CAPS_ARGB ";" GST_VIDEO_CAPS_BGRA ";"
-        GST_VIDEO_CAPS_ABGR ";" GST_VIDEO_CAPS_RGBA ";"
-        GST_VIDEO_CAPS_xRGB ";" GST_VIDEO_CAPS_BGRx ";"
-        GST_VIDEO_CAPS_xBGR ";" GST_VIDEO_CAPS_RGBx ";"
-        GST_VIDEO_CAPS_RGB ";" GST_VIDEO_CAPS_BGR ";"
-        GST_VIDEO_CAPS_YUV ("Y444") ";"
-        GST_VIDEO_CAPS_YUV ("Y42B") ";"
-        GST_VIDEO_CAPS_YUV ("YUY2") ";"
-        GST_VIDEO_CAPS_YUV ("YVYU") ";"
-        GST_VIDEO_CAPS_YUV ("UYVY") ";"
-        GST_VIDEO_CAPS_YUV ("I420") ";"
-        GST_VIDEO_CAPS_YUV ("YV12") ";"
-        GST_VIDEO_CAPS_YUV ("Y41B") ";"
-        GST_VIDEO_CAPS_GRAY8 ";"
-        GST_VIDEO_CAPS_GRAY16 ("BIG_ENDIAN") ";"
-        GST_VIDEO_CAPS_GRAY16 ("LITTLE_ENDIAN"))
+    GST_STATIC_CAPS (GST_VIDEO_CAPS_MAKE ("{ AYUV, "
+            "ARGB, BGRA, ABGR, RGBA, xRGB, BGRx, xBGR, RGBx, RGB, BGR, "
+            "Y444, Y42B, YUY2, YVYU, UYVY, I420, YV12, Y41B, "
+            "GRAY8, GRAY16_BE, GRAY16_LE } "))
     );
 
 static GstStaticPadTemplate gst_video_box_sink_template =
-    GST_STATIC_PAD_TEMPLATE ("sink",
+GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS (GST_VIDEO_CAPS_YUV ("AYUV") ";"
-        GST_VIDEO_CAPS_ARGB ";" GST_VIDEO_CAPS_BGRA ";"
-        GST_VIDEO_CAPS_ABGR ";" GST_VIDEO_CAPS_RGBA ";"
-        GST_VIDEO_CAPS_xRGB ";" GST_VIDEO_CAPS_BGRx ";"
-        GST_VIDEO_CAPS_xBGR ";" GST_VIDEO_CAPS_RGBx ";"
-        GST_VIDEO_CAPS_RGB ";" GST_VIDEO_CAPS_BGR ";"
-        GST_VIDEO_CAPS_YUV ("Y444") ";"
-        GST_VIDEO_CAPS_YUV ("Y42B") ";"
-        GST_VIDEO_CAPS_YUV ("YUY2") ";"
-        GST_VIDEO_CAPS_YUV ("YVYU") ";"
-        GST_VIDEO_CAPS_YUV ("UYVY") ";"
-        GST_VIDEO_CAPS_YUV ("I420") ";"
-        GST_VIDEO_CAPS_YUV ("YV12") ";"
-        GST_VIDEO_CAPS_YUV ("Y41B") ";"
-        GST_VIDEO_CAPS_GRAY8 ";"
-        GST_VIDEO_CAPS_GRAY16 ("BIG_ENDIAN") ";"
-        GST_VIDEO_CAPS_GRAY16 ("LITTLE_ENDIAN"))
+    GST_STATIC_CAPS (GST_VIDEO_CAPS_MAKE ("{ AYUV, "
+            "ARGB, BGRA, ABGR, RGBA, xRGB, BGRx, xBGR, RGBx, RGB, BGR, "
+            "Y444, Y42B, YUY2, YVYU, UYVY, I420, YV12, Y41B, "
+            "GRAY8, GRAY16_BE, GRAY16_LE } "))
     );
 
-GST_BOILERPLATE (GstVideoBox, gst_video_box, GstBaseTransform,
-    GST_TYPE_BASE_TRANSFORM);
+#define gst_video_box_parent_class parent_class
+G_DEFINE_TYPE (GstVideoBox, gst_video_box, GST_TYPE_VIDEO_FILTER);
 
 static void gst_video_box_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec);
@@ -2417,19 +2413,16 @@ static void gst_video_box_get_property (GObject * object, guint prop_id,
 
 static gboolean gst_video_box_recalc_transform (GstVideoBox * video_box);
 static GstCaps *gst_video_box_transform_caps (GstBaseTransform * trans,
-    GstPadDirection direction, GstCaps * from);
-static gboolean gst_video_box_set_caps (GstBaseTransform * trans,
-    GstCaps * in, GstCaps * out);
-static gboolean gst_video_box_get_unit_size (GstBaseTransform * trans,
-    GstCaps * caps, guint * size);
-static GstFlowReturn gst_video_box_transform (GstBaseTransform * trans,
-    GstBuffer * in, GstBuffer * out);
+    GstPadDirection direction, GstCaps * from, GstCaps * filter);
 static void gst_video_box_before_transform (GstBaseTransform * trans,
     GstBuffer * in);
-static void gst_video_box_fixate_caps (GstBaseTransform * trans,
-    GstPadDirection direction, GstCaps * caps, GstCaps * othercaps);
 static gboolean gst_video_box_src_event (GstBaseTransform * trans,
     GstEvent * event);
+
+static gboolean gst_video_box_set_info (GstVideoFilter * vfilter, GstCaps * in,
+    GstVideoInfo * in_info, GstCaps * out, GstVideoInfo * out_info);
+static GstFlowReturn gst_video_box_transform_frame (GstVideoFilter * vfilter,
+    GstVideoFrame * in_frame, GstVideoFrame * out_frame);
 
 #define GST_TYPE_VIDEO_BOX_FILL (gst_video_box_fill_get_type())
 static GType
@@ -2453,23 +2446,6 @@ gst_video_box_fill_get_type (void)
   return video_box_fill_type;
 }
 
-
-static void
-gst_video_box_base_init (gpointer g_class)
-{
-  GstElementClass *element_class = GST_ELEMENT_CLASS (g_class);
-
-  gst_element_class_set_static_metadata (element_class, "Video box filter",
-      "Filter/Effect/Video",
-      "Resizes a video by adding borders or cropping",
-      "Wim Taymans <wim@fluendo.com>");
-
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&gst_video_box_sink_template));
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&gst_video_box_src_template));
-}
-
 static void
 gst_video_box_finalize (GObject * object)
 {
@@ -2487,7 +2463,9 @@ static void
 gst_video_box_class_init (GstVideoBoxClass * klass)
 {
   GObjectClass *gobject_class = (GObjectClass *) klass;
+  GstElementClass *element_class = (GstElementClass *) (klass);
   GstBaseTransformClass *trans_class = (GstBaseTransformClass *) klass;
+  GstVideoFilterClass *vfilter_class = (GstVideoFilterClass *) klass;
 
   gobject_class->set_property = gst_video_box_set_property;
   gobject_class->get_property = gst_video_box_get_property;
@@ -2537,19 +2515,29 @@ gst_video_box_class_init (GstVideoBoxClass * klass)
       g_param_spec_boolean ("autocrop", "Auto crop",
           "Auto crop", FALSE, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
-  trans_class->transform = GST_DEBUG_FUNCPTR (gst_video_box_transform);
   trans_class->before_transform =
       GST_DEBUG_FUNCPTR (gst_video_box_before_transform);
   trans_class->transform_caps =
       GST_DEBUG_FUNCPTR (gst_video_box_transform_caps);
-  trans_class->set_caps = GST_DEBUG_FUNCPTR (gst_video_box_set_caps);
-  trans_class->get_unit_size = GST_DEBUG_FUNCPTR (gst_video_box_get_unit_size);
-  trans_class->fixate_caps = GST_DEBUG_FUNCPTR (gst_video_box_fixate_caps);
   trans_class->src_event = GST_DEBUG_FUNCPTR (gst_video_box_src_event);
+
+  vfilter_class->set_info = GST_DEBUG_FUNCPTR (gst_video_box_set_info);
+  vfilter_class->transform_frame =
+      GST_DEBUG_FUNCPTR (gst_video_box_transform_frame);
+
+  gst_element_class_set_static_metadata (element_class, "Video box filter",
+      "Filter/Effect/Video",
+      "Resizes a video by adding borders or cropping",
+      "Wim Taymans <wim@fluendo.com>");
+
+  gst_element_class_add_pad_template (element_class,
+      gst_static_pad_template_get (&gst_video_box_sink_template));
+  gst_element_class_add_pad_template (element_class,
+      gst_static_pad_template_get (&gst_video_box_src_template));
 }
 
 static void
-gst_video_box_init (GstVideoBox * video_box, GstVideoBoxClass * g_class)
+gst_video_box_init (GstVideoBox * video_box)
 {
   video_box->box_right = DEFAULT_RIGHT;
   video_box->box_left = DEFAULT_LEFT;
@@ -2634,7 +2622,7 @@ gst_video_box_set_property (GObject * object, guint prop_id,
   gst_video_box_recalc_transform (video_box);
 
   GST_DEBUG_OBJECT (video_box, "Calling reconfigure");
-  gst_base_transform_reconfigure (GST_BASE_TRANSFORM_CAST (video_box));
+  gst_base_transform_reconfigure_src (GST_BASE_TRANSFORM_CAST (video_box));
 
   g_mutex_unlock (video_box->mutex);
 }
@@ -2793,186 +2781,204 @@ gst_video_box_transform_dimension_value (const GValue * src_val,
 
 static GstCaps *
 gst_video_box_transform_caps (GstBaseTransform * trans,
-    GstPadDirection direction, GstCaps * from)
+    GstPadDirection direction, GstCaps * from, GstCaps * filter)
 {
   GstVideoBox *video_box = GST_VIDEO_BOX (trans);
   GstCaps *to, *ret;
-  const GstCaps *templ;
-  const gchar *name;
+  GstCaps *templ;
   GstStructure *structure;
   GstPad *other;
+  gint i, j;
 
-  to = gst_caps_copy (from);
-  /* Just to be sure... */
-  gst_caps_truncate (to);
-  structure = gst_caps_get_structure (to, 0);
+  to = gst_caps_new_empty ();
+  for (i = 0; i < gst_caps_get_size (from); i++) {
+    const GValue *fval, *lval;
+    GValue list = { 0, };
+    GValue val = { 0, };
+    gboolean seen_yuv = FALSE, seen_rgb = FALSE;
+    const gchar *str;
 
-  /* Transform width/height */
-  if (video_box->autocrop) {
-    gst_structure_remove_field (structure, "width");
-    gst_structure_remove_field (structure, "height");
-  } else {
-    gint dw = 0, dh = 0;
-    const GValue *v;
-    GValue w_val = { 0, };
-    GValue h_val = { 0, };
+    structure = gst_structure_copy (gst_caps_get_structure (from, i));
 
-    /* calculate width and height */
-    if (direction == GST_PAD_SINK) {
-      dw -= video_box->box_left;
-      dw -= video_box->box_right;
+    /* Transform width/height */
+    if (video_box->autocrop) {
+      gst_structure_remove_field (structure, "width");
+      gst_structure_remove_field (structure, "height");
     } else {
-      dw += video_box->box_left;
-      dw += video_box->box_right;
-    }
+      gint dw = 0, dh = 0;
+      const GValue *v;
+      GValue w_val = { 0, };
+      GValue h_val = { 0, };
 
-    if (direction == GST_PAD_SINK) {
-      dh -= video_box->box_top;
-      dh -= video_box->box_bottom;
-    } else {
-      dh += video_box->box_top;
-      dh += video_box->box_bottom;
-    }
-
-    v = gst_structure_get_value (structure, "width");
-    if (!gst_video_box_transform_dimension_value (v, dw, &w_val)) {
-      GST_WARNING_OBJECT (video_box, "could not tranform width value with dw=%d"
-          ", caps structure=%" GST_PTR_FORMAT, dw, structure);
-      gst_caps_unref (to);
-      to = gst_caps_new_empty ();
-      return to;
-    }
-    gst_structure_set_value (structure, "width", &w_val);
-
-    v = gst_structure_get_value (structure, "height");
-    if (!gst_video_box_transform_dimension_value (v, dh, &h_val)) {
-      g_value_unset (&w_val);
-      GST_WARNING_OBJECT (video_box,
-          "could not tranform height value with dh=%d" ", caps structure=%"
-          GST_PTR_FORMAT, dh, structure);
-      gst_caps_unref (to);
-      to = gst_caps_new_empty ();
-      return to;
-    }
-    gst_structure_set_value (structure, "height", &h_val);
-    g_value_unset (&w_val);
-    g_value_unset (&h_val);
-  }
-
-  /* Supported conversions:
-   * I420->AYUV
-   * I420->YV12
-   * YV12->AYUV
-   * YV12->I420
-   * AYUV->I420
-   * AYUV->YV12
-   * AYUV->xRGB (24bpp, 32bpp, incl. alpha)
-   * xRGB->xRGB (24bpp, 32bpp, from/to all variants, incl. alpha)
-   * xRGB->AYUV (24bpp, 32bpp, incl. alpha)
-   *
-   * Passthrough only for everything else.
-   */
-  name = gst_structure_get_name (structure);
-  if (g_str_equal (name, "video/x-raw-yuv")) {
-    guint32 fourcc;
-
-    if (gst_structure_get_fourcc (structure, "format", &fourcc) &&
-        (fourcc == GST_STR_FOURCC ("AYUV") ||
-            fourcc == GST_STR_FOURCC ("I420") ||
-            fourcc == GST_STR_FOURCC ("YV12"))) {
-      GValue list = { 0, };
-      GValue val = { 0, };
-      GstStructure *s2;
-
-      /* get rid of format */
-      gst_structure_remove_field (structure, "format");
-      gst_structure_remove_field (structure, "color-matrix");
-      gst_structure_remove_field (structure, "chroma-site");
-
-      s2 = gst_structure_copy (structure);
-
-      g_value_init (&list, GST_TYPE_LIST);
-      g_value_init (&val, GST_TYPE_FOURCC);
-      gst_value_set_fourcc (&val, GST_STR_FOURCC ("AYUV"));
-      gst_value_list_append_value (&list, &val);
-      g_value_reset (&val);
-      gst_value_set_fourcc (&val, GST_STR_FOURCC ("I420"));
-      gst_value_list_append_value (&list, &val);
-      g_value_reset (&val);
-      gst_value_set_fourcc (&val, GST_STR_FOURCC ("YV12"));
-      gst_value_list_append_value (&list, &val);
-      g_value_unset (&val);
-      gst_structure_set_value (structure, "format", &list);
-      g_value_unset (&list);
-
-      /* We can only convert to RGB if input is AYUV */
-      if (fourcc == GST_STR_FOURCC ("AYUV")) {
-        gst_structure_set_name (s2, "video/x-raw-rgb");
-        g_value_init (&list, GST_TYPE_LIST);
-        g_value_init (&val, G_TYPE_INT);
-        g_value_set_int (&val, 32);
-        gst_value_list_append_value (&list, &val);
-        g_value_reset (&val);
-        g_value_set_int (&val, 24);
-        gst_value_list_append_value (&list, &val);
-        g_value_unset (&val);
-        gst_structure_set_value (s2, "depth", &list);
-        gst_structure_set_value (s2, "bpp", &list);
-        g_value_unset (&list);
-        gst_caps_append_structure (to, s2);
+      /* calculate width and height */
+      if (direction == GST_PAD_SINK) {
+        dw -= video_box->box_left;
+        dw -= video_box->box_right;
       } else {
-        gst_structure_free (s2);
+        dw += video_box->box_left;
+        dw += video_box->box_right;
+      }
+
+      if (direction == GST_PAD_SINK) {
+        dh -= video_box->box_top;
+        dh -= video_box->box_bottom;
+      } else {
+        dh += video_box->box_top;
+        dh += video_box->box_bottom;
+      }
+
+      v = gst_structure_get_value (structure, "width");
+      if (!gst_video_box_transform_dimension_value (v, dw, &w_val)) {
+        GST_WARNING_OBJECT (video_box,
+            "could not tranform width value with dw=%d" ", caps structure=%"
+            GST_PTR_FORMAT, dw, structure);
+        goto bail;
+      }
+      gst_structure_set_value (structure, "width", &w_val);
+
+      v = gst_structure_get_value (structure, "height");
+      if (!gst_video_box_transform_dimension_value (v, dh, &h_val)) {
+        g_value_unset (&w_val);
+        GST_WARNING_OBJECT (video_box,
+            "could not tranform height value with dh=%d" ", caps structure=%"
+            GST_PTR_FORMAT, dh, structure);
+        goto bail;
+      }
+      gst_structure_set_value (structure, "height", &h_val);
+      g_value_unset (&w_val);
+      g_value_unset (&h_val);
+    }
+
+    /* Supported conversions:
+     * I420->AYUV
+     * I420->YV12
+     * YV12->AYUV
+     * YV12->I420
+     * AYUV->I420
+     * AYUV->YV12
+     * AYUV->xRGB (24bpp, 32bpp, incl. alpha)
+     * xRGB->xRGB (24bpp, 32bpp, from/to all variants, incl. alpha)
+     * xRGB->AYUV (24bpp, 32bpp, incl. alpha)
+     *
+     * Passthrough only for everything else.
+     */
+    fval = gst_structure_get_value (structure, "format");
+    if (fval && GST_VALUE_HOLDS_LIST (fval)) {
+      for (j = 0; j < gst_value_list_get_size (fval); j++) {
+        lval = gst_value_list_get_value (fval, j);
+        if ((str = g_value_get_string (lval))) {
+          if (strstr (str, "RGB") || strstr (str, "BGR") ||
+              strcmp (str, "AYUV") == 0)
+            seen_rgb = TRUE;
+          else if (strcmp (str, "I420") == 0 || strcmp (str, "YV12") == 0 ||
+              strcmp (str, "AYUV") == 0)
+            seen_yuv = TRUE;
+        }
+      }
+    } else if (fval && G_VALUE_HOLDS_STRING (fval)) {
+      if ((str = g_value_get_string (fval))) {
+        if (strstr (str, "RGB") || strstr (str, "BGR") ||
+            strcmp (str, "AYUV") == 0)
+          seen_rgb = TRUE;
+        else if (strcmp (str, "I420") == 0 || strcmp (str, "YV12") == 0 ||
+            strcmp (str, "AYUV") == 0)
+          seen_yuv = TRUE;
       }
     }
-  } else if (g_str_equal (name, "video/x-raw-rgb")) {
-    gint bpp;
 
-    if (gst_structure_get_int (structure, "bpp", &bpp) &&
-        (bpp == 32 || bpp == 24)) {
-      GValue list = { 0, };
-      GValue val = { 0, };
-      GstStructure *s2;
-
-      /* get rid of format */
-      gst_structure_remove_field (structure, "depth");
-      gst_structure_remove_field (structure, "bpp");
-      gst_structure_remove_field (structure, "red_mask");
-      gst_structure_remove_field (structure, "green_mask");
-      gst_structure_remove_field (structure, "blue_mask");
-      gst_structure_remove_field (structure, "alpha_mask");
-
-      s2 = gst_structure_copy (structure);
-
+    if (seen_yuv || seen_rgb) {
       g_value_init (&list, GST_TYPE_LIST);
-      g_value_init (&val, G_TYPE_INT);
-      g_value_set_int (&val, 32);
-      gst_value_list_append_value (&list, &val);
-      g_value_reset (&val);
-      g_value_set_int (&val, 24);
+
+      g_value_init (&val, G_TYPE_STRING);
+      g_value_set_string (&val, "AYUV");
       gst_value_list_append_value (&list, &val);
       g_value_unset (&val);
-      gst_structure_set_value (structure, "depth", &list);
-      gst_structure_set_value (structure, "bpp", &list);
-      g_value_unset (&list);
 
-      gst_structure_set_name (s2, "video/x-raw-yuv");
-      gst_structure_set (s2, "format", GST_TYPE_FOURCC, GST_STR_FOURCC ("AYUV"),
-          NULL);
-      gst_caps_append_structure (to, s2);
+      if (seen_yuv) {
+        g_value_init (&val, G_TYPE_STRING);
+        g_value_set_string (&val, "I420");
+        gst_value_list_append_value (&list, &val);
+        g_value_reset (&val);
+        g_value_set_string (&val, "YV12");
+        gst_value_list_append_value (&list, &val);
+        g_value_unset (&val);
+      }
+      if (seen_rgb) {
+        g_value_init (&val, G_TYPE_STRING);
+        g_value_set_string (&val, "RGBx");
+        gst_value_list_append_value (&list, &val);
+        g_value_reset (&val);
+        g_value_set_string (&val, "BGRx");
+        gst_value_list_append_value (&list, &val);
+        g_value_reset (&val);
+        g_value_set_string (&val, "xRGB");
+        gst_value_list_append_value (&list, &val);
+        g_value_reset (&val);
+        g_value_set_string (&val, "xBGR");
+        gst_value_list_append_value (&list, &val);
+        g_value_reset (&val);
+        g_value_set_string (&val, "RGBA");
+        gst_value_list_append_value (&list, &val);
+        g_value_reset (&val);
+        g_value_set_string (&val, "BGRA");
+        gst_value_list_append_value (&list, &val);
+        g_value_reset (&val);
+        g_value_set_string (&val, "ARGB");
+        gst_value_list_append_value (&list, &val);
+        g_value_reset (&val);
+        g_value_set_string (&val, "ABGR");
+        gst_value_list_append_value (&list, &val);
+        g_value_reset (&val);
+        g_value_set_string (&val, "RGB");
+        gst_value_list_append_value (&list, &val);
+        g_value_reset (&val);
+        g_value_set_string (&val, "BGR");
+        gst_value_list_append_value (&list, &val);
+        g_value_unset (&val);
+      }
+      gst_value_list_merge (&val, fval, &list);
+      gst_structure_set_value (structure, "format", &val);
+      g_value_unset (&val);
+      g_value_unset (&list);
     }
+
+    gst_structure_remove_field (structure, "colorimetry");
+    gst_structure_remove_field (structure, "chroma-site");
+
+    gst_caps_append_structure (to, structure);
   }
 
   /* filter against set allowed caps on the pad */
   other = (direction == GST_PAD_SINK) ? trans->srcpad : trans->sinkpad;
-
   templ = gst_pad_get_pad_template_caps (other);
   ret = gst_caps_intersect (to, templ);
   gst_caps_unref (to);
+  gst_caps_unref (templ);
 
   GST_DEBUG_OBJECT (video_box, "direction %d, transformed %" GST_PTR_FORMAT
       " to %" GST_PTR_FORMAT, direction, from, ret);
 
+  if (ret && filter) {
+    GstCaps *intersection;
+
+    GST_DEBUG_OBJECT (video_box, "Using filter caps %" GST_PTR_FORMAT, filter);
+    intersection =
+        gst_caps_intersect_full (filter, ret, GST_CAPS_INTERSECT_FIRST);
+    gst_caps_unref (ret);
+    ret = intersection;
+    GST_DEBUG_OBJECT (video_box, "Intersection %" GST_PTR_FORMAT, ret);
+  }
+
   return ret;
+
+  /* ERRORS */
+bail:
+  {
+    gst_structure_free (structure);
+    gst_caps_unref (to);
+    to = gst_caps_new_empty ();
+    return to;
+  }
 }
 
 static gboolean
@@ -3129,33 +3135,30 @@ gst_video_box_select_processing_functions (GstVideoBox * video_box)
 }
 
 static gboolean
-gst_video_box_set_caps (GstBaseTransform * trans, GstCaps * in, GstCaps * out)
+gst_video_box_set_info (GstVideoFilter * vfilter, GstCaps * in,
+    GstVideoInfo * in_info, GstCaps * out, GstVideoInfo * out_info)
 {
-  GstVideoBox *video_box = GST_VIDEO_BOX (trans);
+  GstVideoBox *video_box = GST_VIDEO_BOX (vfilter);
   gboolean ret;
-  const gchar *matrix;
 
   g_mutex_lock (video_box->mutex);
 
-  ret =
-      gst_video_format_parse_caps (in, &video_box->in_format,
-      &video_box->in_width, &video_box->in_height);
-  ret &=
-      gst_video_format_parse_caps (out, &video_box->out_format,
-      &video_box->out_width, &video_box->out_height);
+  video_box->in_format = GST_VIDEO_INFO_FORMAT (in_info);
+  video_box->in_width = GST_VIDEO_INFO_WIDTH (in_info);
+  video_box->in_height = GST_VIDEO_INFO_HEIGHT (in_info);
 
-  matrix = gst_video_parse_caps_color_matrix (in);
-  video_box->in_sdtv = matrix ? g_str_equal (matrix, "sdtv") : TRUE;
-  matrix = gst_video_parse_caps_color_matrix (out);
-  video_box->out_sdtv = matrix ? g_str_equal (matrix, "sdtv") : TRUE;
+  video_box->out_format = GST_VIDEO_INFO_FORMAT (in_info);
+  video_box->out_width = GST_VIDEO_INFO_WIDTH (in_info);
+  video_box->out_height = GST_VIDEO_INFO_HEIGHT (in_info);
 
-  /* something wrong getting the caps */
-  if (!ret)
-    goto no_caps;
+  video_box->in_sdtv =
+      in_info->colorimetry.matrix == GST_VIDEO_COLOR_MATRIX_BT601;
+  video_box->out_sdtv =
+      out_info->colorimetry.matrix == GST_VIDEO_COLOR_MATRIX_BT601;
 
-  GST_DEBUG_OBJECT (trans, "Input w: %d h: %d", video_box->in_width,
+  GST_DEBUG_OBJECT (video_box, "Input w: %d h: %d", video_box->in_width,
       video_box->in_height);
-  GST_DEBUG_OBJECT (trans, "Output w: %d h: %d", video_box->out_width,
+  GST_DEBUG_OBJECT (video_box, "Output w: %d h: %d", video_box->out_width,
       video_box->out_height);
 
   if (video_box->autocrop)
@@ -3169,55 +3172,6 @@ gst_video_box_set_caps (GstBaseTransform * trans, GstCaps * in, GstCaps * out)
   g_mutex_unlock (video_box->mutex);
 
   return ret;
-
-  /* ERRORS */
-no_caps:
-  {
-    GST_DEBUG_OBJECT (video_box,
-        "Invalid caps: %" GST_PTR_FORMAT " -> %" GST_PTR_FORMAT, in, out);
-    g_mutex_unlock (video_box->mutex);
-    return FALSE;
-  }
-}
-
-static gboolean
-gst_video_box_get_unit_size (GstBaseTransform * trans, GstCaps * caps,
-    guint * size)
-{
-  GstVideoFormat format;
-  gint width, height;
-  gboolean ret;
-
-  g_assert (size);
-
-  ret = gst_video_format_parse_caps (caps, &format, &width, &height);
-  if (!ret) {
-    GST_ERROR_OBJECT (trans, "Invalid caps: %" GST_PTR_FORMAT, caps);
-    return FALSE;
-  }
-
-  *size = gst_video_format_get_size (format, width, height);
-
-  GST_LOG_OBJECT (trans, "Returning from _unit_size %d", *size);
-
-  return TRUE;
-}
-
-static void
-gst_video_box_fixate_caps (GstBaseTransform * trans,
-    GstPadDirection direction, GstCaps * caps, GstCaps * othercaps)
-{
-  gint width, height;
-  GstStructure *s;
-  gboolean ret;
-
-  ret = gst_video_format_parse_caps (caps, NULL, &width, &height);
-  if (!ret)
-    return;
-
-  s = gst_caps_get_structure (othercaps, 0);
-  gst_structure_fixate_field_nearest_int (s, "width", width);
-  gst_structure_fixate_field_nearest_int (s, "height", height);
 }
 
 static gboolean
@@ -3267,8 +3221,8 @@ gst_video_box_src_event (GstBaseTransform * trans, GstEvent * event)
 }
 
 static void
-gst_video_box_process (GstVideoBox * video_box, const guint8 * src,
-    guint8 * dest)
+gst_video_box_process (GstVideoBox * video_box, GstVideoFrame * in,
+    GstVideoFrame * out)
 {
   guint b_alpha = CLAMP (video_box->border_alpha * 256, 0, 255);
   guint i_alpha = CLAMP (video_box->alpha * 256, 0, 255);
@@ -3309,21 +3263,17 @@ gst_video_box_process (GstVideoBox * video_box, const guint8 * src,
       i_alpha, b_alpha);
 
   if (crop_h < 0 || crop_w < 0) {
-    video_box->fill (fill_type, b_alpha, video_box->out_format, dest,
-        video_box->out_sdtv, video_box->out_width, video_box->out_height);
+    video_box->fill (fill_type, b_alpha, out, video_box->out_sdtv);
   } else if (bb == 0 && bt == 0 && br == 0 && bl == 0) {
-    video_box->copy (i_alpha, video_box->out_format, dest, video_box->out_sdtv,
-        video_box->out_width, video_box->out_height, 0, 0, video_box->in_format,
-        src, video_box->in_sdtv, video_box->in_width, video_box->in_height, 0,
-        0, crop_w, crop_h);
+    video_box->copy (i_alpha, out, video_box->out_sdtv, 0, 0, in,
+        video_box->in_sdtv, 0, 0, crop_w, crop_h);
   } else {
     gint src_x = 0, src_y = 0;
     gint dest_x = 0, dest_y = 0;
 
     /* Fill everything if a border should be added somewhere */
     if (bt < 0 || bb < 0 || br < 0 || bl < 0)
-      video_box->fill (fill_type, b_alpha, video_box->out_format, dest,
-          video_box->out_sdtv, video_box->out_width, video_box->out_height);
+      video_box->fill (fill_type, b_alpha, out, video_box->out_sdtv);
 
     /* Top border */
     if (bt < 0) {
@@ -3340,10 +3290,8 @@ gst_video_box_process (GstVideoBox * video_box, const guint8 * src,
     }
 
     /* Frame */
-    video_box->copy (i_alpha, video_box->out_format, dest, video_box->out_sdtv,
-        video_box->out_width, video_box->out_height, dest_x, dest_y,
-        video_box->in_format, src, video_box->in_sdtv, video_box->in_width,
-        video_box->in_height, src_x, src_y, crop_w, crop_h);
+    video_box->copy (i_alpha, out, video_box->out_sdtv, dest_x, dest_y,
+        in, video_box->in_sdtv, src_x, src_y, crop_w, crop_h);
   }
 
   GST_LOG_OBJECT (video_box, "image created");
@@ -3367,18 +3315,13 @@ gst_video_box_before_transform (GstBaseTransform * trans, GstBuffer * in)
 }
 
 static GstFlowReturn
-gst_video_box_transform (GstBaseTransform * trans, GstBuffer * in,
-    GstBuffer * out)
+gst_video_box_transform_frame (GstVideoFilter * vfilter,
+    GstVideoFrame * in_frame, GstVideoFrame * out_frame)
 {
-  GstVideoBox *video_box = GST_VIDEO_BOX (trans);
-  const guint8 *indata;
-  guint8 *outdata;
-
-  indata = GST_BUFFER_DATA (in);
-  outdata = GST_BUFFER_DATA (out);
+  GstVideoBox *video_box = GST_VIDEO_BOX (vfilter);
 
   g_mutex_lock (video_box->mutex);
-  gst_video_box_process (video_box, indata, outdata);
+  gst_video_box_process (video_box, in_frame, out_frame);
   g_mutex_unlock (video_box->mutex);
   return GST_FLOW_OK;
 }
