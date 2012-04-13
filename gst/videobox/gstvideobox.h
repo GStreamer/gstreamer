@@ -57,7 +57,7 @@ struct _GstVideoBox
   /* <private> */
 
   /* Guarding everything below */
-  GMutex *mutex;
+  GMutex mutex;
   /* caps */
   GstVideoFormat in_format;
   gint in_width, in_height;

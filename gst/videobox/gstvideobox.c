@@ -2451,10 +2451,7 @@ gst_video_box_finalize (GObject * object)
 {
   GstVideoBox *video_box = GST_VIDEO_BOX (object);
 
-  if (video_box->mutex) {
-    g_mutex_free (video_box->mutex);
-    video_box->mutex = NULL;
-  }
+  g_mutex_clear (&video_box->mutex);
 
   G_OBJECT_CLASS (parent_class)->finalize (object);
 }
@@ -2552,7 +2549,7 @@ gst_video_box_init (GstVideoBox * video_box)
   video_box->border_alpha = DEFAULT_BORDER_ALPHA;
   video_box->autocrop = FALSE;
 
-  video_box->mutex = g_mutex_new ();
+  g_mutex_init (&video_box->mutex);
 }
 
 static void
@@ -2561,7 +2558,7 @@ gst_video_box_set_property (GObject * object, guint prop_id,
 {
   GstVideoBox *video_box = GST_VIDEO_BOX (object);
 
-  g_mutex_lock (video_box->mutex);
+  g_mutex_lock (&video_box->mutex);
   switch (prop_id) {
     case PROP_LEFT:
       video_box->box_left = g_value_get_int (value);
@@ -2624,7 +2621,7 @@ gst_video_box_set_property (GObject * object, guint prop_id,
   GST_DEBUG_OBJECT (video_box, "Calling reconfigure");
   gst_base_transform_reconfigure_src (GST_BASE_TRANSFORM_CAST (video_box));
 
-  g_mutex_unlock (video_box->mutex);
+  g_mutex_unlock (&video_box->mutex);
 }
 
 static void
@@ -3141,7 +3138,7 @@ gst_video_box_set_info (GstVideoFilter * vfilter, GstCaps * in,
   GstVideoBox *video_box = GST_VIDEO_BOX (vfilter);
   gboolean ret;
 
-  g_mutex_lock (video_box->mutex);
+  g_mutex_lock (&video_box->mutex);
 
   video_box->in_format = GST_VIDEO_INFO_FORMAT (in_info);
   video_box->in_width = GST_VIDEO_INFO_WIDTH (in_info);
@@ -3169,7 +3166,7 @@ gst_video_box_set_info (GstVideoFilter * vfilter, GstCaps * in,
 
   if (ret)
     ret = gst_video_box_select_processing_functions (video_box);
-  g_mutex_unlock (video_box->mutex);
+  g_mutex_unlock (&video_box->mutex);
 
   return ret;
 }
@@ -3320,9 +3317,9 @@ gst_video_box_transform_frame (GstVideoFilter * vfilter,
 {
   GstVideoBox *video_box = GST_VIDEO_BOX (vfilter);
 
-  g_mutex_lock (video_box->mutex);
+  g_mutex_lock (&video_box->mutex);
   gst_video_box_process (video_box, in_frame, out_frame);
-  g_mutex_unlock (video_box->mutex);
+  g_mutex_unlock (&video_box->mutex);
   return GST_FLOW_OK;
 }
 
