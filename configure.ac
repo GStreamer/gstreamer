@@ -1,4 +1,4 @@
-AC_PREREQ(2.60)
+AC_PREREQ(2.62)
 
 dnl initialize autoconf
 dnl when going to/from release please set the nano (fourth number) right !
@@ -10,7 +10,7 @@ AC_INIT(GStreamer Bad Plug-ins, 0.11.90.1,
 AG_GST_INIT
 
 dnl initialize automake
-AM_INIT_AUTOMAKE([-Wno-portability 1.10])
+AM_INIT_AUTOMAKE([-Wno-portability 1.11 no-dist-gzip dist-xz tar-ustar])
 
 dnl define PACKAGE_VERSION_* variables
 AS_VERSION
@@ -25,7 +25,7 @@ dnl define the output header for config
 AM_CONFIG_HEADER([config.h])
 
 dnl AM_MAINTAINER_MODE only provides the option to configure to enable it
-AM_MAINTAINER_MODE
+AM_MAINTAINER_MODE([enable])
 
 dnl sets host_* variables
 AC_CANONICAL_HOST
@@ -42,6 +42,8 @@ AC_SUBST(GST_API_VERSION)
 AC_DEFINE_UNQUOTED(GST_API_VERSION, "$GST_API_VERSION",
   [GStreamer API Version])
 
+AG_GST_LIBTOOL_PREPARE
+
 dnl CURRENT, REVISION, AGE
 dnl - library source changed -> increment REVISION
 dnl - interfaces added/removed/changed -> increment CURRENT, REVISION = 0
@@ -49,16 +51,6 @@ dnl - interfaces added -> increment AGE
 dnl - interfaces removed -> AGE = 0
 dnl sets GST_LT_LDFLAGS
 AS_LIBTOOL(GST, 0, 0, 0)
-
-AG_GST_LIBTOOL_PREPARE
-
-dnl FIXME: this macro doesn't actually work;
-dnl the generated libtool script has no support for the listed tags.
-dnl So this needs to be fixed first if we want to use this
-dnl AS_LIBTOOL_TAGS([CXX])
-
-AC_LIBTOOL_WIN32_DLL
-AM_PROG_LIBTOOL
 
 dnl *** required versions of GStreamer stuff ***
 GST_REQ=0.11.90
@@ -141,7 +133,7 @@ AG_GST_PLUGIN_DOCS([1.3],[2.1])
 dnl *** checks for libraries ***
 
 dnl check for libm, for sin() etc.
-AC_CHECK_LIBM
+LT_LIB_M
 AC_SUBST(LIBM)
 
 AC_FUNC_MMAP
