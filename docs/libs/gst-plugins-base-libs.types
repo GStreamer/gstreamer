@@ -22,16 +22,8 @@ gst_audio_base_src_get_type
 #include <gst/audio/gstaudioringbuffer.h>
 gst_audio_ring_buffer_get_type
 
-#include <gst/audio/mixer.h>
-gst_mixer_get_type
-gst_mixer_options_get_type
-gst_mixer_track_get_type
-#include <gst/interfaces/navigation.h>
+#include <gst/video/navigation.h>
 gst_navigation_get_type
-#include <gst/interfaces/tuner.h>
-gst_tuner_get_type
-gst_tuner_channel_get_type
-gst_tuner_norm_get_type
 #include <gst/audio/streamvolume.h>
 gst_stream_volume_get_type
 

@@ -1,7 +1,6 @@
 noinst_PROGRAMS = playback-test
 
 LDADD = \
-	$(top_builddir)/gst-libs/gst/interfaces/libgstinterfaces-@GST_API_VERSION@.la \
 	$(top_builddir)/gst-libs/gst/video/libgstvideo-@GST_API_VERSION@.la \
 	$(GST_LIBS) $(GTK_LIBS) $(LIBM)
 

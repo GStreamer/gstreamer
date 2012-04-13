@@ -63,8 +63,8 @@
 #include "config.h"
 #endif
 
-#include <gst/interfaces/navigation.h>
-#include <gst/interfaces/interfaces-enumtypes.h>
+#include <gst/video/navigation.h>
+#include <gst/video/video-enumtypes.h>
 
 static void gst_navigation_class_init (GstNavigationInterface * iface);
 

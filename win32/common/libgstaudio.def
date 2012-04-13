@@ -61,7 +61,6 @@ EXPORTS
 	gst_audio_decoder_set_plc
 	gst_audio_decoder_set_plc_aware
 	gst_audio_decoder_set_tolerance
-	gst_audio_default_registry_mixer_filter
 	gst_audio_downmix_meta_api_get_type
 	gst_audio_downmix_meta_get_info
 	gst_audio_encoder_finish_frame
@@ -155,31 +154,6 @@ EXPORTS
 	gst_audio_src_get_type
 	gst_buffer_add_audio_downmix_meta
 	gst_buffer_get_audio_downmix_meta_for_channels
-	gst_mixer_get_mixer_flags
-	gst_mixer_get_mixer_type
-	gst_mixer_get_option
-	gst_mixer_get_type
-	gst_mixer_get_volume
-	gst_mixer_list_tracks
-	gst_mixer_message_get_type
-	gst_mixer_message_parse_mute_toggled
-	gst_mixer_message_parse_option_changed
-	gst_mixer_message_parse_options_list_changed
-	gst_mixer_message_parse_record_toggled
-	gst_mixer_message_parse_volume_changed
-	gst_mixer_mixer_changed
-	gst_mixer_mute_toggled
-	gst_mixer_option_changed
-	gst_mixer_options_get_type
-	gst_mixer_options_get_values
-	gst_mixer_options_list_changed
-	gst_mixer_record_toggled
-	gst_mixer_set_mute
-	gst_mixer_set_option
-	gst_mixer_set_record
-	gst_mixer_set_volume
-	gst_mixer_track_get_type
-	gst_mixer_volume_changed
 	gst_stream_volume_convert_volume
 	gst_stream_volume_get_mute
 	gst_stream_volume_get_type

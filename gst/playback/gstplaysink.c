@@ -31,7 +31,7 @@
 #include <gst/audio/streamvolume.h>
 #include <gst/video/colorbalance.h>
 #include <gst/video/videooverlay.h>
-#include <gst/interfaces/navigation.h>
+#include <gst/video/navigation.h>
 
 #include "gstplaysink.h"
 #include "gststreamsynchronizer.h"

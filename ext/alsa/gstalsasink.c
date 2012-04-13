@@ -22,7 +22,7 @@
 
 /**
  * SECTION:element-alsasink
- * @see_also: alsasrc, alsamixer
+ * @see_also: alsasrc
  *
  * This element renders raw audio samples using the ALSA api.
  *

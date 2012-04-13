@@ -38,10 +38,6 @@
 #include <gst/audio/gstaudiobasesink.h>
 #include <gst/audio/gstaudiobasesrc.h>
 #include <gst/audio/gstaudioringbuffer.h>
-#include <gst/audio/mixerutils.h>
-#include <gst/audio/mixer.h>
-#include <gst/audio/mixeroptions.h>
-#include <gst/audio/mixertrack.h>
 #include <gst/audio/streamvolume.h>
 
 #include <gst/fft/gstfftf32.h>
@@ -49,13 +45,6 @@
 #include <gst/fft/gstfft.h>
 #include <gst/fft/gstffts16.h>
 #include <gst/fft/gstffts32.h>
-
-#include <gst/interfaces/interfaces-enumtypes.h>
-#include <gst/interfaces/interfaces-marshal.h>
-#include <gst/interfaces/navigation.h>
-#include <gst/interfaces/tunerchannel.h>
-#include <gst/interfaces/tuner.h>
-#include <gst/interfaces/tunernorm.h>
 
 #include <gst/pbutils/codec-utils.h>
 #include <gst/pbutils/descriptions.h>
@@ -106,6 +95,7 @@
 #include <gst/video/colorbalance.h>
 #include <gst/video/videoorientation.h>
 #include <gst/video/videooverlay.h>
+#include <gst/video/navigation.h>
 
 /* we mostly just want to make sure that our library headers don't
  * contain anything a C++ compiler might not like */

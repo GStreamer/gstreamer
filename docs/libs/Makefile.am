@@ -41,7 +41,7 @@ IGNORE_HFILES = pbutils-private.h gsttageditingprivate.h id3v2.h \
 	kiss_fftr_s16.h kiss_fftr_s32.h kiss_fft_s16.h kiss_fft_s32.h \
 	_kiss_fft_guts_f32.h _kiss_fft_guts_f64.h _kiss_fft_guts_s16.h \
 	_kiss_fft_guts_s16.h _kiss_fft_guts_s32.h _kiss_fft_guts_s32.h \
-	interfaces-marshal.h pbutils-marshal.h
+	pbutils-marshal.h
 
 
 # Images to copy into HTML directory.
@@ -57,7 +57,6 @@ extra_files =
 # contains GtkObjects/GObjects and you want to document signals and properties.
 GTKDOC_CFLAGS = $(GST_PLUGINS_BASE_CFLAGS) $(GST_BASE_CFLAGS) -DGST_USE_UNSTABLE_API
 GTKDOC_LIBS = \
-	$(top_builddir)/gst-libs/gst/interfaces/libgstinterfaces-@GST_API_VERSION@.la \
 	$(top_builddir)/gst-libs/gst/audio/libgstaudio-@GST_API_VERSION@.la \
 	$(top_builddir)/gst-libs/gst/fft/libgstfft-@GST_API_VERSION@.la \
 	$(top_builddir)/gst-libs/gst/rtp/libgstrtp-@GST_API_VERSION@.la \

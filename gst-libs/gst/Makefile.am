@@ -1,8 +1,4 @@
-# The interfaces directory has to be built before the others,
-# otherwise some generated header files will be missing for the
-# plugins in the other directories.
 SUBDIRS = \
-	interfaces \
 	tag \
 	fft \
 	rtp \
@@ -17,7 +13,7 @@ SUBDIRS = \
 noinst_HEADERS = gettext.h gst-i18n-plugin.h glib-compat-private.h
 
 # dependencies:
-audio: interfaces tag
+audio: tag
 
 riff: tag audio
 
@@ -26,7 +22,7 @@ rtsp: sdp
 pbutils: video audio
 
 INDEPENDENT_SUBDIRS = \
-	interfaces tag audio fft rtp sdp video app
+	tag audio fft rtp sdp video app
 
 .PHONY: independent-subdirs $(INDEPENDENT_SUBDIRS)
 

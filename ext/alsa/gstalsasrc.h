@@ -25,7 +25,6 @@
 
 #include <gst/audio/gstaudiosrc.h>
 #include "gstalsa.h"
-#include "gstalsamixer.h"
 
 G_BEGIN_DECLS
 
@@ -71,8 +70,6 @@ struct _GstAlsaSrc {
   guint                 period_time;
   snd_pcm_uframes_t     buffer_size;
   snd_pcm_uframes_t     period_size;
-
-  GstAlsaMixer          *mixer;
 
   GMutex                *alsa_lock;
 };

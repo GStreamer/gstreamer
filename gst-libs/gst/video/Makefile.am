@@ -1,5 +1,5 @@
 # variables used for enum/marshal generation
-glib_enum_headers = video.h colorbalance.h
+glib_enum_headers = video.h colorbalance.h navigation.h
 glib_enum_define = GST_VIDEO
 glib_gen_prefix = gst_video
 glib_gen_basename = video
@@ -17,6 +17,7 @@ EXTRA_DIST = video-marshal.list
 libgstvideo_@GST_API_VERSION@_la_SOURCES = \
 	colorbalance.c   	\
 	colorbalancechannel.c   \
+	navigation.c            \
 	video.c          	\
 	gstvideosink.c   	\
 	gstvideofilter.c 	\
@@ -32,6 +33,7 @@ libgstvideo_@GST_API_VERSION@includedir = $(includedir)/gstreamer-@GST_API_VERSI
 libgstvideo_@GST_API_VERSION@include_HEADERS = \
 	colorbalance.h 		\
 	colorbalancechannel.h	\
+	navigation.h            \
 	video.h			\
 	gstvideosink.h 		\
 	gstvideofilter.h	\

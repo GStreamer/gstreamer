@@ -45,7 +45,6 @@
 #include <gst/gst.h>
 #include <gst/base/gstbasetransform.h>
 #include <gst/audio/audio.h>
-#include <gst/audio/mixer.h>
 #include <gst/audio/gstaudiofilter.h>
 
 #ifdef HAVE_ORC
@@ -79,9 +78,6 @@
 #define VOLUME_MAX_INT32             G_MAXINT32
 #define VOLUME_MIN_INT32             G_MININT32
 
-/* number of steps we use for the mixer interface to go from 0.0 to 1.0 */
-# define VOLUME_STEPS           100
-
 #define GST_CAT_DEFAULT gst_volume_debug
 GST_DEBUG_CATEGORY_STATIC (GST_CAT_DEFAULT);
 
@@ -112,12 +108,9 @@ enum
     ", layout = (string) { interleaved, non-interleaved }"
 #endif
 
-static void gst_volume_mixer_init (GstMixerInterface * iface);
-
 #define gst_volume_parent_class parent_class
 G_DEFINE_TYPE_WITH_CODE (GstVolume, gst_volume,
     GST_TYPE_AUDIO_FILTER,
-    G_IMPLEMENT_INTERFACE (GST_TYPE_MIXER, gst_volume_mixer_init);
     G_IMPLEMENT_INTERFACE (GST_TYPE_STREAM_VOLUME, NULL));
 
 static void volume_set_property (GObject * object, guint prop_id,
@@ -280,75 +273,6 @@ volume_update_volume (GstVolume * self, const GstAudioInfo * info,
   return res;
 }
 
-/* Mixer interface */
-
-static const GList *
-gst_volume_list_tracks (GstMixer * mixer)
-{
-  GstVolume *self = GST_VOLUME (mixer);
-
-  g_return_val_if_fail (self != NULL, NULL);
-  g_return_val_if_fail (GST_IS_VOLUME (self), NULL);
-
-  return self->tracklist;
-}
-
-static void
-gst_volume_set_volume (GstMixer * mixer, GstMixerTrack * track, gint * volumes)
-{
-  GstVolume *self = GST_VOLUME (mixer);
-
-  g_return_if_fail (self != NULL);
-  g_return_if_fail (GST_IS_VOLUME (self));
-
-  GST_OBJECT_LOCK (self);
-  self->volume = (gfloat) volumes[0] / VOLUME_STEPS;
-  GST_OBJECT_UNLOCK (self);
-}
-
-static void
-gst_volume_get_volume (GstMixer * mixer, GstMixerTrack * track, gint * volumes)
-{
-  GstVolume *self = GST_VOLUME (mixer);
-
-  g_return_if_fail (self != NULL);
-  g_return_if_fail (GST_IS_VOLUME (self));
-
-  GST_OBJECT_LOCK (self);
-  volumes[0] = (gint) self->volume * VOLUME_STEPS;
-  GST_OBJECT_UNLOCK (self);
-}
-
-static void
-gst_volume_set_mute (GstMixer * mixer, GstMixerTrack * track, gboolean mute)
-{
-  GstVolume *self = GST_VOLUME (mixer);
-
-  g_return_if_fail (self != NULL);
-  g_return_if_fail (GST_IS_VOLUME (self));
-
-  GST_OBJECT_LOCK (self);
-  self->mute = mute;
-  GST_OBJECT_UNLOCK (self);
-}
-
-static GstMixerType
-gst_volume_get_mixer_type (GstMixer * mixer)
-{
-  return GST_MIXER_SOFTWARE;
-}
-
-static void
-gst_volume_mixer_init (GstMixerInterface * iface)
-{
-  /* default virtual functions */
-  iface->list_tracks = gst_volume_list_tracks;
-  iface->set_volume = gst_volume_set_volume;
-  iface->get_volume = gst_volume_get_volume;
-  iface->set_mute = gst_volume_set_mute;
-  iface->get_mixer_type = gst_volume_get_mixer_type;
-}
-
 /* Element class */
 
 static void
@@ -413,24 +337,11 @@ gst_volume_class_init (GstVolumeClass * klass)
 static void
 gst_volume_init (GstVolume * self)
 {
-  GstMixerTrack *track = NULL;
-
   self->mute = DEFAULT_PROP_MUTE;;
   self->volume = DEFAULT_PROP_VOLUME;
 
   self->tracklist = NULL;
   self->negotiated = FALSE;
-
-  track = g_object_new (GST_TYPE_MIXER_TRACK, NULL);
-
-  if (GST_IS_MIXER_TRACK (track)) {
-    track->label = g_strdup ("volume");
-    track->num_channels = 1;
-    track->min_volume = 0;
-    track->max_volume = VOLUME_STEPS;
-    track->flags = GST_MIXER_TRACK_SOFTWARE;
-    self->tracklist = g_list_append (self->tracklist, track);
-  }
 
   gst_base_transform_set_gap_aware (GST_BASE_TRANSFORM (self), TRUE);
 }
@@ -960,10 +871,6 @@ static gboolean
 plugin_init (GstPlugin * plugin)
 {
   GST_DEBUG_CATEGORY_INIT (GST_CAT_DEFAULT, "volume", 0, "Volume gain");
-
-  /* ref class from a thread-safe context to work around missing bit of
-   * thread-safety in GObject */
-  g_type_class_ref (GST_TYPE_MIXER_TRACK);
 
   return gst_element_register (plugin, "volume", GST_RANK_NONE,
       GST_TYPE_VOLUME);

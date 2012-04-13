@@ -57,9 +57,6 @@
       <xi:include href="xml/gstaudioringbuffer.xml" />
       <xi:include href="xml/gstaudioiec61937.xml" />
       <xi:include href="xml/gststreamvolume.xml" />
-      <xi:include href="xml/gstmixer.xml" />
-      <xi:include href="xml/gstmixeroptions.xml" />
-      <xi:include href="xml/gstmixertrack.xml" />
     </chapter>
 
     <chapter id="gstreamer-ffft">
@@ -79,19 +76,6 @@
       <xi:include href="xml/gstffts32.xml" />
       <xi:include href="xml/gstfftf32.xml" />
       <xi:include href="xml/gstfftf64.xml" />
-    </chapter>
-
-    <chapter id="gstreamer-interfaces">
-      <title>Interfaces Library</title>
-      <para>
-        This library should be linked to by getting cflags and libs from
-        <filename>gstreamer-plugins-base-&GST_API_VERSION;.pc</filename> and adding
-        <filename>-lgstinterfaces-&GST_API_VERSION;</filename> to the library flags.
-      </para>
-      <xi:include href="xml/gstnavigation.xml" />
-      <xi:include href="xml/gsttuner.xml" />
-      <xi:include href="xml/gsttunerchannel.xml" />
-      <xi:include href="xml/gsttunernorm.xml" />
     </chapter>
 
     <chapter id="gstreamer-riff">

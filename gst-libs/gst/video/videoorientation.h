@@ -23,7 +23,6 @@
 #define __GST_VIDEO_ORIENTATION_H__
 
 #include <gst/gst.h>
-#include <gst/interfaces/interfaces-enumtypes.h>
 
 G_BEGIN_DECLS
 

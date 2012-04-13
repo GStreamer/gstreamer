@@ -32,15 +32,12 @@
 #include <gst/audio/gstaudiosrc.h>
 #include <gst/audio/gstaudiosink.h>
 #include <gst/audio/gstaudioringbuffer.h>
-#include <gst/audio/mixer.h>
 #include <gst/audio/streamvolume.h>
 #include <gst/fft/gstfft.h>
 #include <gst/fft/gstffts16.h>
 #include <gst/fft/gstffts32.h>
 #include <gst/fft/gstfftf32.h>
 #include <gst/fft/gstfftf64.h>
-#include <gst/interfaces/navigation.h>
-#include <gst/interfaces/tuner.h>
 #include <gst/pbutils/pbutils.h>
 #include <gst/riff/riff-media.h>
 #include <gst/riff/riff-read.h>
@@ -67,6 +64,7 @@
 #include <gst/video/colorbalance.h>
 #include <gst/video/videoorientation.h>
 #include <gst/video/videooverlay.h>
+#include <gst/video/navigation.h>
 
 /* initial version of the file was generated using:
  * grep -A1 "<STRUCT>" ../../docs/libs/gst-plugins-base-libs-decl.txt | \

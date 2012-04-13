@@ -140,7 +140,7 @@
  * <title>GstVideoOverlay and Gtk+</title>
  * <para>
  * |[
- * #include &lt;gst/interfaces/xoverlay.h&gt;
+ * #include &lt;gst/video/xoverlay.h&gt;
  * #include &lt;gtk/gtk.h&gt;
  * #ifdef GDK_WINDOWING_X11
  * #include &lt;gdk/gdkx.h&gt;  // for GDK_WINDOW_XID
@@ -244,7 +244,7 @@
  * |[
  * #include &lt;glib.h&gt;
  * #include &lt;gst/gst.h&gt;
- * #include &lt;gst/interfaces/videooverlay.h&gt;
+ * #include &lt;gst/video/videooverlay.h&gt;
  *
  * #include &lt;QApplication&gt;
  * #include &lt;QTimer&gt;

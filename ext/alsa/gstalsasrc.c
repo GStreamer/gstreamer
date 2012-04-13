@@ -21,7 +21,7 @@
 
 /**
  * SECTION:element-alsasrc
- * @see_also: alsasink, alsamixer
+ * @see_also: alsasink
  *
  * This element reads data from an audio card using the ALSA API.
  *
@@ -65,12 +65,8 @@ enum
   PROP_LAST
 };
 
-static void gst_alsasrc_init_interfaces (GType type);
 #define gst_alsasrc_parent_class parent_class
-G_DEFINE_TYPE_WITH_CODE (GstAlsaSrc, gst_alsasrc,
-    GST_TYPE_AUDIO_SRC, gst_alsasrc_init_interfaces (g_define_type_id));
-
-GST_IMPLEMENT_ALSA_MIXER_METHODS (GstAlsaSrc, gst_alsasrc_mixer);
+G_DEFINE_TYPE (GstAlsaSrc, gst_alsasrc, GST_TYPE_AUDIO_SRC);
 
 static void gst_alsasrc_finalize (GObject * object);
 static void gst_alsasrc_set_property (GObject * object,
@@ -120,22 +116,6 @@ gst_alsasrc_finalize (GObject * object)
   g_mutex_free (src->alsa_lock);
 
   G_OBJECT_CLASS (parent_class)->finalize (object);
-}
-
-static void
-gst_alsasrc_init_interfaces (GType type)
-{
-  static const GInterfaceInfo mixer_iface_info = {
-    (GInterfaceInitFunc) gst_alsasrc_mixer_interface_init,
-    NULL,
-    NULL,
-  };
-
-  g_type_add_interface_static (type, GST_TYPE_MIXER, &mixer_iface_info);
-
-#if 0
-  gst_alsa_type_add_device_property_probe_interface (type);
-#endif
 }
 
 static void
@@ -667,9 +647,6 @@ gst_alsasrc_open (GstAudioSrc * asrc)
   CHECK (snd_pcm_open (&alsa->handle, alsa->device, SND_PCM_STREAM_CAPTURE,
           SND_PCM_NONBLOCK), open_error);
 
-  if (!alsa->mixer)
-    alsa->mixer = gst_alsa_mixer_new (alsa->device, GST_ALSA_MIXER_CAPTURE);
-
   return TRUE;
 
   /* ERRORS */
@@ -767,11 +744,6 @@ gst_alsasrc_close (GstAudioSrc * asrc)
 
   snd_pcm_close (alsa->handle);
   alsa->handle = NULL;
-
-  if (alsa->mixer) {
-    gst_alsa_mixer_free (alsa->mixer);
-    alsa->mixer = NULL;
-  }
 
   gst_caps_replace (&alsa->cached_caps, NULL);
 

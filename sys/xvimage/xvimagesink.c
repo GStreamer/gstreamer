@@ -118,7 +118,7 @@
 #endif
 
 /* Our interfaces */
-#include <gst/interfaces/navigation.h>
+#include <gst/video/navigation.h>
 #include <gst/video/videooverlay.h>
 #include <gst/video/colorbalance.h>
 /* Helper functions */

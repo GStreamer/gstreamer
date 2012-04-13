@@ -26,7 +26,7 @@
 
 #include <gst/check/gstcheck.h>
 
-#include <gst/interfaces/navigation.h>
+#include <gst/video/navigation.h>
 
 #include <string.h>
 

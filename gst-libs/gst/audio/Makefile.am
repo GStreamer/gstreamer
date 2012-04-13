@@ -22,10 +22,6 @@ libgstaudio_@GST_API_VERSION@_la_SOURCES = \
 	audio.c \
 	gstaudioringbuffer.c \
 	gstaudioclock.c \
-	mixer.c \
-	mixeroptions.c \
-	mixertrack.c \
-	mixerutils.c \
 	gstaudiocdsrc.c \
 	gstaudiodecoder.c \
 	gstaudioencoder.c \
@@ -54,10 +50,6 @@ libgstaudio_@GST_API_VERSION@include_HEADERS = \
 	gstaudiometa.h \
 	gstaudiosink.h \
 	gstaudiosrc.h \
-	mixer.h \
-	mixeroptions.h \
-	mixertrack.h \
-	mixerutils.h \
 	streamvolume.h \
 	gstaudioiec61937.h
 
@@ -66,7 +58,6 @@ nodist_libgstaudio_@GST_API_VERSION@include_HEADERS = \
 
 libgstaudio_@GST_API_VERSION@_la_CFLAGS = $(GST_PLUGINS_BASE_CFLAGS) $(GST_BASE_CFLAGS) $(GST_CFLAGS)
 libgstaudio_@GST_API_VERSION@_la_LIBADD = \
-  $(top_builddir)/gst-libs/gst/interfaces/libgstinterfaces-@GST_API_VERSION@.la \
   $(top_builddir)/gst-libs/gst/tag/libgsttag-@GST_API_VERSION@.la \
   $(GST_BASE_LIBS) $(GST_LIBS) $(LIBM)
 libgstaudio_@GST_API_VERSION@_la_LDFLAGS = $(GST_LIB_LDFLAGS) $(GST_ALL_LDFLAGS) $(GST_LT_LDFLAGS)
@@ -93,18 +84,15 @@ GstAudio-@GST_API_VERSION@.gir: $(INTROSPECTION_SCANNER) libgstaudio-@GST_API_VE
 		-I$(top_srcdir)/gst-libs \
 		-I$(top_builddir)/gst-libs \
 		$(gir_cincludes) \
-		--add-include-path=$(builddir)/../interfaces \
 		--add-include-path=`$(PKG_CONFIG) --variable=girdir gstreamer-@GST_API_VERSION@` \
 		--add-include-path=`$(PKG_CONFIG) --variable=girdir gstreamer-base-@GST_API_VERSION@` \
 		--library=$(top_builddir)/gst-libs/gst/tag/libgsttag-@GST_API_VERSION@.la \
 		--library=libgstaudio-@GST_API_VERSION@.la \
 		--include=Gst-@GST_API_VERSION@ \
 		--include=GstBase-@GST_API_VERSION@ \
-		--include=GstInterfaces-@GST_API_VERSION@ \
 		--libtool="$(top_builddir)/libtool" \
 		--pkg gstreamer-@GST_API_VERSION@ \
 		--pkg gstreamer-base-@GST_API_VERSION@ \
-		--pkg gstreamer-interfaces-@GST_API_VERSION@ \
 		--pkg-export gstreamer-audio-@GST_API_VERSION@ \
 		--add-init-section="gst_init(NULL,NULL);" \
 		--output $@ \
@@ -125,7 +113,6 @@ typelibs_DATA = $(BUILT_GIRSOURCES:.gir=.typelib)
 		$(INTROSPECTION_COMPILER) \
 		--includedir=$(srcdir) \
 		--includedir=$(builddir) \
-		--includedir=$(builddir)/../interfaces \
 		--includedir=`$(PKG_CONFIG) --variable=girdir gstreamer-base-@GST_API_VERSION@` \
 		--includedir=`$(PKG_CONFIG) --variable=girdir gstreamer-@GST_API_VERSION@` \
 		$(INTROSPECTION_COMPILER_OPTS) $< -o $(@F)

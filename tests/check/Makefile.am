@@ -25,15 +25,9 @@ $(CHECK_REGISTRY):
 	$(TESTS_ENVIRONMENT)
 
 # elements to ignore for the state tests
-STATE_IGNORE_ELEMENTS = cdio cdparanoiasrc libvisual_ alsasrc alsamixer alsasink
+STATE_IGNORE_ELEMENTS = cdio cdparanoiasrc libvisual_ alsasrc alsasink
 
 TESTS = $(check_PROGRAMS)
-
-if USE_ALSA
-check_alsa = elements/alsa
-else
-check_alsa =
-endif
 
 if USE_LIBVISUAL
 check_libvisual = elements/libvisual
@@ -95,7 +89,6 @@ cxx_checks =
 endif
 
 check_PROGRAMS = \
-	$(check_alsa) \
 	$(check_ogg) \
 	$(check_vorbis) \
 	elements/audioconvert \
@@ -110,7 +103,6 @@ check_PROGRAMS = \
 	libs/audiocdsrc \
 	libs/discoverer \
 	libs/fft \
-	libs/mixer \
 	libs/navigation \
 	libs/pbutils \
 	libs/profile \
@@ -186,7 +178,6 @@ libs_libsabi_LDADD = \
 	$(top_builddir)/gst-libs/gst/app/libgstapp-@GST_API_VERSION@.la \
 	$(top_builddir)/gst-libs/gst/audio/libgstaudio-@GST_API_VERSION@.la \
 	$(top_builddir)/gst-libs/gst/fft/libgstfft-@GST_API_VERSION@.la \
-	$(top_builddir)/gst-libs/gst/interfaces/libgstinterfaces-@GST_API_VERSION@.la \
 	$(top_builddir)/gst-libs/gst/pbutils/libgstpbutils-@GST_API_VERSION@.la \
 	$(top_builddir)/gst-libs/gst/rtp/libgstrtp-@GST_API_VERSION@.la \
 	$(top_builddir)/gst-libs/gst/rtsp/libgstrtsp-@GST_API_VERSION@.la \
@@ -202,7 +193,6 @@ libs_audio_CFLAGS = \
 
 libs_audio_LDADD = \
 	$(top_builddir)/gst-libs/gst/audio/libgstaudio-@GST_API_VERSION@.la \
-	$(top_builddir)/gst-libs/gst/interfaces/libgstinterfaces-@GST_API_VERSION@.la \
 	$(GST_BASE_LIBS) \
 	$(LDADD)
 
@@ -235,23 +225,13 @@ libs_fft_LDADD = \
 	$(GST_BASE_LIBS) \
 	$(LDADD)
 
-libs_mixer_CFLAGS = \
-	$(GST_PLUGINS_BASE_CFLAGS) \
-        $(GST_BASE_CFLAGS) \
-        $(AM_CFLAGS)
-
-libs_mixer_LDADD = \
-	$(top_builddir)/gst-libs/gst/audio/libgstaudio-@GST_API_VERSION@.la \
-        $(GST_BASE_LIBS) \
-        $(LDADD)
-
 libs_navigation_CFLAGS = \
+	$(top_builddir)/gst-libs/gst/video/libgstvideo-@GST_API_VERSION@.la \
 	$(GST_PLUGINS_BASE_CFLAGS) \
         $(GST_BASE_CFLAGS) \
         $(AM_CFLAGS)
 
 libs_navigation_LDADD = \
-	$(top_builddir)/gst-libs/gst/interfaces/libgstinterfaces-@GST_API_VERSION@.la \
         $(GST_BASE_LIBS) \
         $(LDADD)
 
@@ -320,15 +300,6 @@ elements_appsrc_LDADD = \
 	$(top_builddir)/gst-libs/gst/app/libgstapp-@GST_API_VERSION@.la \
 	$(LDADD)
 
-elements_alsa_CFLAGS = \
-	$(GST_PLUGINS_BASE_CFLAGS) \
-	$(AM_CFLAGS)
-
-elements_alsa_LDADD = \
-	$(top_builddir)/gst-libs/gst/interfaces/libgstinterfaces-@GST_API_VERSION@.la \
-	$(top_builddir)/gst-libs/gst/audio/libgstaudio-@GST_API_VERSION@.la \
-	$(LDADD)
-
 elements_audioconvert_CFLAGS = \
 	$(GST_PLUGINS_BASE_CFLAGS) \
 	$(GST_BASE_CFLAGS) \
@@ -336,13 +307,11 @@ elements_audioconvert_CFLAGS = \
 
 elements_audioconvert_LDADD = \
 	$(top_builddir)/gst-libs/gst/audio/libgstaudio-@GST_API_VERSION@.la \
-	$(top_builddir)/gst-libs/gst/interfaces/libgstinterfaces-@GST_API_VERSION@.la \
 	$(GST_BASE_LIBS) \
 	$(LDADD)
 
 elements_audiorate_LDADD = \
 	$(top_builddir)/gst-libs/gst/audio/libgstaudio-@GST_API_VERSION@.la \
-	$(top_builddir)/gst-libs/gst/interfaces/libgstinterfaces-@GST_API_VERSION@.la \
 	$(GST_BASE_LIBS) \
 	$(LDADD)
 elements_audiorate_CFLAGS = $(GST_PLUGINS_BASE_CFLAGS) $(CFLAGS) $(AM_CFLAGS)
@@ -376,7 +345,6 @@ elements_audioresample_CFLAGS = \
 elements_audioresample_LDADD = \
 	$(top_builddir)/gst-libs/gst/fft/libgstfft-@GST_API_VERSION@.la \
 	$(top_builddir)/gst-libs/gst/audio/libgstaudio-@GST_API_VERSION@.la \
-	$(top_builddir)/gst-libs/gst/interfaces/libgstinterfaces-@GST_API_VERSION@.la \
 	$(GST_BASE_LIBS) \
 	$(LDADD)
 
@@ -468,7 +436,6 @@ pipelines_simple_launch_lines_CFLAGS = \
 
 pipelines_simple_launch_lines_LDADD = \
 	$(top_builddir)/gst-libs/gst/audio/libgstaudio-@GST_API_VERSION@.la \
-	$(top_builddir)/gst-libs/gst/interfaces/libgstinterfaces-@GST_API_VERSION@.la \
 	$(GST_BASE_LIBS) \
 	$(LDADD)
 

@@ -18,7 +18,6 @@ test_colorkey_SOURCES = test-colorkey.c
 test_colorkey_CFLAGS = $(GST_PLUGINS_BASE_CFLAGS) \
 	$(GST_BASE_CFLAGS) $(GST_CFLAGS) $(X_CFLAGS) $(GTK_CFLAGS)
 test_colorkey_LDADD = \
-	$(top_builddir)/gst-libs/gst/interfaces/libgstinterfaces-$(GST_API_VERSION).la \
 	$(top_builddir)/gst-libs/gst/video/libgstvideo-$(GST_API_VERSION).la \
 	$(GST_LIBS) $(X_LIBS) $(LIBM) $(GTK_LIBS)
 
