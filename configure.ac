@@ -1,14 +1,14 @@
-AC_PREREQ(2.60)
+AC_PREREQ(2.62)
 dnl initialize autoconf
 dnl when going to/from release please set the nano (fourth number) right !
 dnl releases only do Wall, cvs and prerelease does Werror too
-AC_INIT(Gst-RTSP, 0.11.0.1,
+AC_INIT(Gst-RTSP, 0.11.89.1,
     http://bugzilla.gnome.org/enter_bug.cgi?product=GStreamer,
     gst-rtsp)
 AG_GST_INIT
 
 dnl initialize automake
-AM_INIT_AUTOMAKE([-Wno-portability 1.10])
+AM_INIT_AUTOMAKE([-Wno-portability 1.11 no-dist-gzip dist-xz tar-ustar])
 
 dnl define PACKAGE_VERSION_* variables
 AS_VERSION
@@ -23,7 +23,7 @@ dnl define the output header for config
 AM_CONFIG_HEADER([config.h])
 
 dnl AM_MAINTAINER_MODE only provides the option to configure to enable it
-AM_MAINTAINER_MODE
+AM_MAINTAINER_MODE([enable])
 
 dnl sets host_* variables
 AC_CANONICAL_HOST
@@ -39,7 +39,7 @@ dnl we override it here if we need to for the release candidate of new series
 GST_API_VERSION=1.0
 AC_SUBST(GST_API_VERSION)
 
-AM_PROG_LIBTOOL
+AS_LIBTOOL(GST, 0, 0, 0)
 
 dnl *** required versions of GStreamer stuff ***
 GST_REQ=0.11.0
@@ -215,6 +215,12 @@ dnl LDFLAGS really should only contain flags, not libs - they get added before
 dnl whatevertarget_LIBS and -L flags here affect the rest of the linking
 GST_ALL_LDFLAGS="-no-undefined"
 AC_SUBST(GST_ALL_LDFLAGS)
+
+dnl GST_LIB_LDFLAGS
+dnl linker flags shared by all libraries
+dnl LDFLAGS modifier defining exported symbols from built libraries
+GST_LIB_LDFLAGS="-export-symbols-regex \^[_]?\(gst_\|Gst\|GST_\).*"
+AC_SUBST(GST_LIB_LDFLAGS)
 
 dnl GST_OBJ_*
 dnl default vars for all internal objects built on libgstrtspserver

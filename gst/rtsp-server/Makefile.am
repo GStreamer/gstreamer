@@ -33,7 +33,7 @@ libgstrtspserver_@GST_API_VERSION@_la_SOURCES = \
     $(c_sources)
 
 libgstrtspserver_@GST_API_VERSION@_la_CFLAGS = $(GST_PLUGINS_BASE_CFLAGS) $(GST_CFLAGS)
-libgstrtspserver_@GST_API_VERSION@_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
+libgstrtspserver_@GST_API_VERSION@_la_LDFLAGS = $(GST_LIB_LDFLAGS) $(GST_ALL_LDFLAGS) $(GST_LT_LDFLAGS)
 libgstrtspserver_@GST_API_VERSION@_la_LIBADD = \
 	$(GST_PLUGINS_BASE_LIBS) $(GST_BASE_LIBS) \
     -lgstrtp-@GST_API_VERSION@ -lgstrtsp-@GST_API_VERSION@ \
