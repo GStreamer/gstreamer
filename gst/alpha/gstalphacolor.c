@@ -123,7 +123,7 @@ gst_alpha_color_transform_caps (GstBaseTransform * btrans,
 
     /* Remove any specific parameter from the structure */
     gst_structure_remove_field (structure, "format");
-    gst_structure_remove_field (structure, "color-matrix");
+    gst_structure_remove_field (structure, "colorimetry");
     gst_structure_remove_field (structure, "chroma-site");
 
     gst_structure_set_name (structure, "video/x-raw");
@@ -479,8 +479,8 @@ gst_alpha_color_set_info (GstVideoFilter * filter, GstCaps * incaps,
       GST_VIDEO_INFO_HEIGHT (in_info) != GST_VIDEO_INFO_HEIGHT (out_info))
     goto invalid_caps;
 
-  in_sdtv = in_info->colorimetry.matrix = GST_VIDEO_COLOR_MATRIX_BT601;
-  out_sdtv = out_info->colorimetry.matrix = GST_VIDEO_COLOR_MATRIX_BT601;
+  in_sdtv = in_info->colorimetry.matrix == GST_VIDEO_COLOR_MATRIX_BT601;
+  out_sdtv = out_info->colorimetry.matrix == GST_VIDEO_COLOR_MATRIX_BT601;
 
   switch (GST_VIDEO_INFO_FORMAT (in_info)) {
     case GST_VIDEO_FORMAT_ARGB:

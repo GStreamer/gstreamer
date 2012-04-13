@@ -571,7 +571,7 @@ gst_smpte_alpha_transform_caps (GstBaseTransform * trans,
       gst_structure_remove_field (structure, "format");
     }
 
-    gst_structure_remove_field (structure, "color-matrix");
+    gst_structure_remove_field (structure, "colorimetry");
     gst_structure_remove_field (structure, "chroma-site");
 
     gst_caps_append_structure (tmp_caps, structure);

@@ -457,7 +457,7 @@ gst_alpha_transform_caps (GstBaseTransform * btrans,
     structure = gst_structure_copy (gst_caps_get_structure (caps, i));
 
     gst_structure_remove_field (structure, "format");
-    gst_structure_remove_field (structure, "color-matrix");
+    gst_structure_remove_field (structure, "colorimetry");
     gst_structure_remove_field (structure, "chroma-site");
 
     gst_caps_append_structure (tmp, structure);
@@ -515,8 +515,9 @@ gst_alpha_set_info (GstVideoFilter * filter,
 
   GST_ALPHA_LOCK (alpha);
 
-  alpha->in_sdtv = in_info->colorimetry.matrix = GST_VIDEO_COLOR_MATRIX_BT601;
-  alpha->out_sdtv = out_info->colorimetry.matrix = GST_VIDEO_COLOR_MATRIX_BT601;
+  alpha->in_sdtv = in_info->colorimetry.matrix == GST_VIDEO_COLOR_MATRIX_BT601;
+  alpha->out_sdtv =
+      out_info->colorimetry.matrix == GST_VIDEO_COLOR_MATRIX_BT601;
 
   passthrough = alpha->prefer_passthrough &&
       GST_VIDEO_INFO_FORMAT (in_info) == GST_VIDEO_INFO_FORMAT (out_info)
