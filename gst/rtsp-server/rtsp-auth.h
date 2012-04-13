@@ -70,7 +70,7 @@ void                gst_rtsp_auth_set_basic         (GstRTSPAuth *auth, const gc
 
 gboolean            gst_rtsp_auth_setup_auth        (GstRTSPAuth *auth, GstRTSPClient * client,
                                                      GQuark hint, GstRTSPClientState *state);
-gboolean            gst_rtsp_auth_check_method      (GstRTSPAuth *auth, GstRTSPClient * client,
+gboolean            gst_rtsp_auth_check             (GstRTSPAuth *auth, GstRTSPClient * client,
                                                      GQuark hint, GstRTSPClientState *state);
 /* helpers */
 gchar *             gst_rtsp_auth_make_basic        (const gchar * user, const gchar * pass);

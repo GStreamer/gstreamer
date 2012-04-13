@@ -429,7 +429,7 @@ do_send_data_list (GstBufferList * blist, guint8 channel,
 {
   guint len, i;
 
-  len = gst_buffer_list_len (blist);
+  len = gst_buffer_list_length (blist);
 
   for (i = 0; i < len; i++) {
     GstBuffer *group = gst_buffer_list_get (blist, i);
@@ -1351,7 +1351,7 @@ handle_request (GstRTSPClient * client, GstRTSPMessage * request)
   state.session = session;
 
   if (client->auth) {
-    if (!gst_rtsp_auth_check (client->auth, client, &state))
+    if (!gst_rtsp_auth_check (client->auth, client, 0, &state))
       goto not_authorized;
   }
 
@@ -1433,9 +1433,7 @@ handle_data (GstRTSPClient * client, GstRTSPMessage * message)
 
   gst_rtsp_message_steal_body (message, &data, &size);
 
-  buffer = gst_buffer_new ();
-  gst_buffer_take_memory (buffer, -1,
-      gst_memory_new_wrapped (0, data, size, 0, size, data, g_free));
+  buffer = gst_buffer_new_wrapped (data, size);
 
   handled = FALSE;
   for (walk = client->streams; walk; walk = g_list_next (walk)) {
@@ -1849,20 +1847,20 @@ tunnel_complete (GstRTSPWatch * watch, gpointer user_data)
 no_tunnelid:
   {
     GST_INFO ("client %p: no tunnelid provided", client);
-    return GST_RTSP_STS_SERVICE_UNAVAILABLE;
+    return GST_RTSP_ERROR;
   }
 no_tunnel:
   {
     g_mutex_unlock (tunnels_lock);
     GST_INFO ("client %p: tunnel session %s not found", client, tunnelid);
-    return GST_RTSP_STS_SERVICE_UNAVAILABLE;
+    return GST_RTSP_ERROR;
   }
 tunnel_closed:
   {
     g_mutex_unlock (tunnels_lock);
     GST_INFO ("client %p: tunnel session %s was closed", client, tunnelid);
     g_object_unref (oclient);
-    return GST_RTSP_STS_SERVICE_UNAVAILABLE;
+    return GST_RTSP_ERROR;
   }
 }
 

@@ -189,7 +189,7 @@ default_check_method (GstRTSPAuth * auth, GstRTSPClient * client,
   gboolean result = TRUE;
   GstRTSPResult res;
 
-  if (state->method & auth->methods != 0) {
+  if ((state->method & auth->methods) != 0) {
     gchar *authorization;
 
     result = FALSE;
@@ -221,7 +221,7 @@ no_auth:
 }
 
 /**
- * gst_rtsp_auth_check_method:
+ * gst_rtsp_auth_check:
  * @auth: a #GstRTSPAuth
  * @client: the client
  * @hint: a hint
