@@ -46,7 +46,7 @@ fixbaseclasses = \
 
 libgstopenmax_la_CFLAGS = \
 	-DGST_USE_UNSTABLE_API=1 \
-	-I$(srcdir)/openmax \
+	-I$(abs_srcdir)/openmax \
 	$(GST_PLUGINS_BASE_CFLAGS) \
 	$(GST_BASE_CFLAGS) \
 	$(GST_CFLAGS) \
