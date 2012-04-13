@@ -27,6 +27,8 @@ EXTRA_DIST = tuner-marshal.list
 
 CLEANFILES = $(built_sources) $(built_headers)
 
+BUILT_SOURCES = $(built_sources) $(built_headers)
+
 include $(top_srcdir)/common/gst-glib-gen.mak
 
 libgstvideo4linux2_la_SOURCES = gstv4l2.c \
