@@ -61,7 +61,8 @@ gst_gl_shader_finalize (GObject * object)
 {
   GstGLShader *shader;
   GstGLShaderPrivate *priv;
-/*  GLint status = GL_FALSE; */
+  /*  GLint status = GL_FALSE; */
+  /* GLenum err = 0; */
 
   shader = GST_GL_SHADER (object);
   priv = shader->priv;
@@ -76,8 +77,10 @@ gst_gl_shader_finalize (GObject * object)
 
   /* delete program */
   if (priv->program_handle) {
+    g_debug ("finalizing program shader %ud", priv->program_handle);
+
     glDeleteObjectARB (priv->program_handle);
-    glGetError ();
+    /* err = glGetError (); */
     /* g_debug ("error: 0x%x", err);  */
     /* glGetObjectParameterivARB(priv->program_handle, GL_OBJECT_DELETE_STATUS_ARB, &status); */
     /* g_debug ("program deletion status:%s", status == GL_TRUE ? "true" : "false" ); */
@@ -258,6 +261,8 @@ gst_gl_shader_init (GstGLShader * self)
 
   g_log_set_handler ("GstGLShader", G_LOG_LEVEL_DEBUG,
       gst_gl_shader_log_handler, NULL);
+
+  g_debug ("shader initialized %ud", priv->program_handle);
 }
 
 GstGLShader *
@@ -390,6 +395,8 @@ gst_gl_shader_release (GstGLShader * shader)
     return;
 
   if (priv->vertex_handle) {    // not needed but nvidia doesn't care to respect the spec
+    g_debug ("finalizing vertex shader %ud", priv->vertex_handle);
+
     glDeleteObjectARB (priv->vertex_handle);
 
     /* err = glGetError (); */
@@ -399,6 +406,8 @@ gst_gl_shader_release (GstGLShader * shader)
   }
 
   if (priv->fragment_handle) {
+    g_debug ("finalizing fragment shader %ud", priv->fragment_handle);
+
     glDeleteObjectARB (priv->fragment_handle);
 
     /* err = glGetError (); */

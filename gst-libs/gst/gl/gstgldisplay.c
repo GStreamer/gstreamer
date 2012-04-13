@@ -566,7 +566,7 @@ gst_gl_display_set_error (GstGLDisplay * display, const char *format, ...)
 gpointer
 gst_gl_display_thread_create_context (GstGLDisplay * display)
 {
-  GLenum err = 0;
+  GLenum err = GLEW_OK;
 
   gst_gl_display_lock (display);
   display->gl_window = gst_gl_window_new (display->external_gl_context);
@@ -589,17 +589,17 @@ gst_gl_display_thread_create_context (GstGLDisplay * display)
         glewGetErrorString (err));
 #endif
   } else {
+#ifndef OPENGL_ES2
     //OpenGL > 1.2.0 and Glew > 1.4.0
-    GString *opengl_version =
-        g_string_truncate (g_string_new ((gchar *) glGetString (GL_VERSION)),
-        3);
+    GString *opengl_version = NULL;
     gint opengl_version_major = 0;
     gint opengl_version_minor = 0;
+#endif
 
-    sscanf (opengl_version->str, "%d.%d", &opengl_version_major,
-        &opengl_version_minor);
+    GLenum gl_err = GL_NO_ERROR;
+    if (glGetString (GL_VERSION))
+      GST_INFO ("GL_VERSION: %s", glGetString (GL_VERSION));
 
-    GST_INFO ("GL_VERSION: %s", glGetString (GL_VERSION));
 #ifndef OPENGL_ES2
     GST_INFO ("GLEW_VERSION: %s", glewGetString (GLEW_VERSION));
 #endif
@@ -609,20 +609,38 @@ gst_gl_display_thread_create_context (GstGLDisplay * display)
     else
       GST_INFO ("Your driver does not support GLSL (OpenGL Shading Language)");
 
-    GST_INFO ("GL_VENDOR: %s", glGetString (GL_VENDOR));
-    GST_INFO ("GL_RENDERER: %s", glGetString (GL_RENDERER));
+    if (glGetString (GL_VENDOR))
+      GST_INFO ("GL_VENDOR: %s", glGetString (GL_VENDOR));
 
-    g_string_free (opengl_version, TRUE);
+    if (glGetString (GL_RENDERER))
+      GST_INFO ("GL_RENDERER: %s", glGetString (GL_RENDERER));
 
+
+    gl_err = glGetError ();
+    if (gl_err != GL_NO_ERROR) {
+      gst_gl_display_set_error (display, "glGetString error: 0x%x", gl_err);
+    }
 #ifndef OPENGL_ES2
-    if ((opengl_version_major < 1) ||
-        (GLEW_VERSION_MAJOR < 1) ||
-        (opengl_version_major < 2 && opengl_version_major >= 1
-            && opengl_version_minor < 2) || (GLEW_VERSION_MAJOR < 2
-            && GLEW_VERSION_MAJOR >= 1 && GLEW_VERSION_MINOR < 4)) {
-      //turn off the pipeline, the old drivers are not yet supported
-      gst_gl_display_set_error (display,
-          "Required OpenGL >= 1.2.0 and Glew >= 1.4.0");
+    if (glGetString (GL_VERSION) && gl_err == GL_NO_ERROR) {
+
+      opengl_version =
+          g_string_truncate (g_string_new ((gchar *) glGetString (GL_VERSION)),
+          3);
+
+      sscanf (opengl_version->str, "%d.%d", &opengl_version_major,
+          &opengl_version_minor);
+
+      g_string_free (opengl_version, TRUE);
+
+      if ((opengl_version_major < 1) ||
+          (GLEW_VERSION_MAJOR < 1) ||
+          (opengl_version_major < 2 && opengl_version_major >= 1
+              && opengl_version_minor < 2) || (GLEW_VERSION_MAJOR < 2
+              && GLEW_VERSION_MAJOR >= 1 && GLEW_VERSION_MINOR < 4)) {
+        //turn off the pipeline, the old drivers are not yet supported
+        gst_gl_display_set_error (display,
+            "Required OpenGL >= 1.2.0 and Glew >= 1.4.0");
+      }
     }
 #else
     if (!GL_ES_VERSION_2_0) {
@@ -3360,10 +3378,10 @@ gst_gl_display_thread_do_download_draw_rgb (GstGLDisplay * display)
   }
 
 #ifndef OPENGL_ES2
-  glDisable (GL_TEXTURE_RECTANGLE_ARB);
-#else
   glReadBuffer (GL_NONE);
 #endif
+
+  glDisable (GL_TEXTURE_RECTANGLE_ARB);
 }
 
 
