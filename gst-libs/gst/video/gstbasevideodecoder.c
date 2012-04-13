@@ -1001,7 +1001,7 @@ gst_base_video_decoder_chain_forward (GstBaseVideoDecoder * base_video_decoder,
   if (base_video_decoder->packetized) {
     base_video_decoder->current_frame->sink_buffer = buf;
 
-    if (GST_BUFFER_FLAG_IS_SET (buf, GST_BUFFER_FLAG_DELTA_UNIT))
+    if (!GST_BUFFER_FLAG_IS_SET (buf, GST_BUFFER_FLAG_DELTA_UNIT))
       base_video_decoder->current_frame->is_sync_point = TRUE;
 
     ret = gst_base_video_decoder_have_frame_2 (base_video_decoder);
