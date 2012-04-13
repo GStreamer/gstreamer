@@ -2009,6 +2009,21 @@ could_not_link:
   }
 }
 
+static gboolean
+is_live_source (GstElement * source)
+{
+  GObjectClass *source_class = NULL;
+  gboolean is_live = FALSE;
+
+  source_class = G_OBJECT_GET_CLASS (source);
+  if (!g_object_class_find_property (source_class, "is-live"))
+    return FALSE;
+
+  g_object_get (G_OBJECT (source), "is-live", &is_live, NULL);
+
+  return is_live;
+}
+
 /* construct and run the source and decoder elements until we found
  * all the streams or until a preroll queue has been filled.
 */
@@ -2037,6 +2052,9 @@ setup_source (GstURIDecodeBin * decoder)
 
   g_signal_emit (decoder, gst_uri_decode_bin_signals[SIGNAL_SOURCE_SETUP],
       0, decoder->source);
+
+  if (is_live_source (decoder->source))
+    decoder->is_stream = FALSE;
 
   /* remove the old decoders now, if any */
   remove_decoders (decoder, FALSE);
