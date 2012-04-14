@@ -202,6 +202,8 @@ gst_video_filter_set_caps (GstBaseTransform * trans, GstCaps * incaps,
     filter->out_info = out_info;
     if (fclass->transform_frame == NULL)
       gst_base_transform_set_in_place (trans, TRUE);
+    if (fclass->transform_frame_ip == NULL)
+      GST_BASE_TRANSFORM_CLASS (fclass)->transform_ip_on_passthrough = FALSE;
   }
   filter->negotiated = res;
 
