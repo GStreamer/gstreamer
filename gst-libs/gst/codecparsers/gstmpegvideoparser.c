@@ -334,12 +334,12 @@ gst_mpeg_video_parse (const guint8 * data, gsize size, guint offset)
     codoffsize->offset = gst_byte_reader_get_pos (&br) + offset;
 
     rsize = gst_byte_reader_get_remaining (&br);
-    if (rsize <= 0) {
-      g_free (codoffsize);
-      break;
+    if (rsize == 0) {
+      /* if there are no more bytes after the start code set the size to -1 */
+      off = -1;
+    } else {
+      off = scan_for_start_codes (&br, 0, rsize);
     }
-
-    off = scan_for_start_codes (&br, 0, rsize);
 
     codoffsize->size = off;
 
