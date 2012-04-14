@@ -361,10 +361,12 @@ gst_adapter_try_to_merge_up (GstAdapter * adapter, gsize size)
   head = g->data;
   g = g_slist_next (g);
 
-  /* How large do we want our head buffer? The requested size, plus whatever's
-   * been skipped already */
-  size += adapter->skip;
   hsize = gst_buffer_get_size (head);
+
+  /* Remove skipped part from the buffer (otherwise the buffer might grow indefinitely) */
+  gst_buffer_resize (head, adapter->skip, hsize - adapter->skip);
+  hsize -= adapter->skip;
+  adapter->skip = 0;
 
   while (g != NULL && hsize < size) {
     cur = g->data;
