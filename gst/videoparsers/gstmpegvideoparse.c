@@ -227,15 +227,27 @@ gst_mpegv_parse_process_config (GstMpegvParse * mpvparse, GstBuffer * buf,
     guint size)
 {
   GList *tmp;
-  GstMapInfo map;
   guint8 *data;
+  guint8 *data_with_prefix;
+  GstMapInfo map;
 
   gst_buffer_map (buf, &map, GST_MAP_READ);
   data = map.data + mpvparse->seq_offset;
+  if (mpvparse->seq_offset < 4) {
+    /* This shouldn't happen, but just in case... */
+    GST_WARNING_OBJECT (mpvparse, "Sequence header start code missing.");
+    return FALSE;
+  }
+  /* pointer to sequence header data including the start code prefix -
+     used for codec private data */
+  data_with_prefix = data - 4;
 
-  /* only do stuff if something new */
+  /* only do stuff if something new; only compare first 11 bytes, changes in
+     quantiser matrix doesn't matter here. Also changing the matrices in
+     codec_data seems to cause problem with decoders */
   if (mpvparse->config && size == gst_buffer_get_size (mpvparse->config) &&
-      gst_buffer_memcmp (mpvparse->config, 0, data, size) == 0) {
+      gst_buffer_memcmp (mpvparse->config, 0, data_with_prefix, MIN (size,
+              11)) == 0) {
     gst_buffer_unmap (buf, &map);
     return TRUE;
   }
@@ -285,7 +297,7 @@ gst_mpegv_parse_process_config (GstMpegvParse * mpvparse, GstBuffer * buf,
     gst_buffer_unref (mpvparse->config);
 
   mpvparse->config = gst_buffer_new_and_alloc (size);
-  gst_buffer_fill (mpvparse->config, 0, data, size);
+  gst_buffer_fill (mpvparse->config, 0, data_with_prefix, size);
 
   /* trigger src caps update */
   mpvparse->update_caps = TRUE;
