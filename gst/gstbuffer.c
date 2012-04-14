@@ -235,7 +235,8 @@ _get_merged_memory (GstBuffer * buffer, guint idx, guint length)
         gst_memory_map (mem[i], &sinfo, GST_MAP_READ);
         tocopy = MIN (sinfo.size, left);
         GST_CAT_DEBUG (GST_CAT_PERFORMANCE,
-            "memcpy for merge %p from memory %p", result, mem[i]);
+            "memcpy %" G_GSIZE_FORMAT " bytes for merge %p from memory %p",
+            tocopy, result, mem[i]);
         memcpy (ptr, (guint8 *) sinfo.data, tocopy);
         left -= tocopy;
         ptr += tocopy;
