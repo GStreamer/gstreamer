@@ -283,7 +283,7 @@ gst_mpegv_parse_process_config (GstMpegvParse * mpvparse, GstBuffer * buf,
                 map.data, map.size, tpoffsz->offset)) {
           mpvparse->fps_num =
               mpvparse->sequencehdr.fps_n * (mpvparse->sequenceext.fps_n_ext +
-              1) * 2;
+              1);
           mpvparse->fps_den =
               mpvparse->sequencehdr.fps_d * (mpvparse->sequenceext.fps_d_ext +
               1);
@@ -737,8 +737,10 @@ gst_mpegv_parse_parse_frame (GstBaseParse * parse, GstBaseParseFrame * frame)
     GST_BUFFER_DURATION (buffer) = 0;
   }
 
-  GST_BUFFER_DURATION (buffer) =
-      (1 + mpvparse->frame_repeat_count) * GST_BUFFER_DURATION (buffer);
+  if (GST_CLOCK_TIME_IS_VALID (GST_BUFFER_DURATION (buffer))) {
+    GST_BUFFER_DURATION (buffer) =
+        (1 + mpvparse->frame_repeat_count) * GST_BUFFER_DURATION (buffer) / 2;
+  }
 
   if (G_UNLIKELY (mpvparse->drop && !mpvparse->config)) {
     GST_DEBUG_OBJECT (mpvparse, "dropping frame as no config yet");
