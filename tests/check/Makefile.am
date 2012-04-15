@@ -226,12 +226,12 @@ libs_fft_LDADD = \
 	$(LDADD)
 
 libs_navigation_CFLAGS = \
-	$(top_builddir)/gst-libs/gst/video/libgstvideo-@GST_API_VERSION@.la \
 	$(GST_PLUGINS_BASE_CFLAGS) \
         $(GST_BASE_CFLAGS) \
         $(AM_CFLAGS)
 
 libs_navigation_LDADD = \
+	$(top_builddir)/gst-libs/gst/video/libgstvideo-@GST_API_VERSION@.la \
         $(GST_BASE_LIBS) \
         $(LDADD)
 
