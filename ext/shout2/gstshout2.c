@@ -77,7 +77,7 @@ enum
 static GstStaticPadTemplate sink_template = GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS ("application/ogg; "
+    GST_STATIC_CAPS ("application/ogg; audio/ogg; video/ogg; "
         "audio/mpeg, mpegversion = (int) 1, layer = (int) [ 1, 3 ]" WEBM_CAPS));
 
 static void gst_shout2send_finalize (GstShout2send * shout2send);
