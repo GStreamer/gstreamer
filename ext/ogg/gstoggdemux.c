@@ -1915,7 +1915,9 @@ static GstStaticPadTemplate ogg_demux_sink_template_factory =
     GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS ("application/ogg; application/x-annodex")
+    GST_STATIC_CAPS ("application/ogg; audio/ogg; video/ogg; "
+        "application/annodex; audio/annodex; video/annodex; "
+        "application/kate")
     );
 
 static void gst_ogg_demux_finalize (GObject * object);

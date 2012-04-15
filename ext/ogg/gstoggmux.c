@@ -97,7 +97,7 @@ enum
 static GstStaticPadTemplate src_factory = GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS ("application/ogg")
+    GST_STATIC_CAPS ("application/ogg; audio/ogg; video/ogg")
     );
 
 static GstStaticPadTemplate video_sink_factory =
@@ -1521,11 +1521,18 @@ gst_ogg_mux_send_headers (GstOggMux * mux)
   /* hbufs holds all buffers for the headers now */
 
   /* create caps with the buffers */
-  caps = gst_pad_query_caps (mux->srcpad, NULL);
+  /* FIXME: should prefer media type audio/ogg, video/ogg, etc. depending on
+   * what we create, if acceptable downstream (instead of defaulting to
+   * application/ogg because that's the first in the template caps) */
+  caps = gst_pad_get_allowed_caps (mux->srcpad);
   if (caps) {
-    caps = gst_ogg_mux_set_header_on_caps (caps, hbufs);
-    gst_pad_set_caps (mux->srcpad, caps);
-    gst_caps_unref (caps);
+    if (!gst_caps_is_fixed (caps))
+      caps = gst_caps_fixate (caps);
+    if (caps) {
+      caps = gst_ogg_mux_set_header_on_caps (caps, hbufs);
+      gst_pad_set_caps (mux->srcpad, caps);
+      gst_caps_unref (caps);
+    }
   }
   /* and send the buffers */
   while (hbufs != NULL) {
