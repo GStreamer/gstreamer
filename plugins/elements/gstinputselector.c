@@ -601,8 +601,12 @@ forward_sticky_events (GstPad * sinkpad, GstEvent ** event, gpointer user_data)
 
   if (GST_EVENT_TYPE (*event) == GST_EVENT_SEGMENT) {
     GstSegment *seg = &GST_SELECTOR_PAD (sinkpad)->segment;
+    GstEvent *e;
 
-    gst_pad_push_event (sel->srcpad, gst_event_new_segment (seg));
+    e = gst_event_new_segment (seg);
+    gst_event_set_seqnum (e, GST_SELECTOR_PAD_CAST (sinkpad)->segment_seqnum);
+
+    gst_pad_push_event (sel->srcpad, e);
   } else {
     gst_pad_push_event (sel->srcpad, gst_event_ref (*event));
   }
