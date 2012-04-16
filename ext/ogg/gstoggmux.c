@@ -128,8 +128,10 @@ static GstStaticPadTemplate subtitle_sink_factory =
 
 static void gst_ogg_mux_finalize (GObject * object);
 
-static GstFlowReturn
-gst_ogg_mux_collected (GstCollectPads2 * pads, GstOggMux * ogg_mux);
+static GstFlowReturn gst_ogg_mux_collected (GstCollectPads2 * pads,
+    GstOggMux * ogg_mux);
+static gboolean gst_ogg_mux_sink_event (GstCollectPads2 * pads,
+    GstCollectData2 * pad, GstEvent * event, gpointer user_data);
 static gboolean gst_ogg_mux_handle_src_event (GstPad * pad, GstObject * parent,
     GstEvent * event);
 static GstPad *gst_ogg_mux_request_new_pad (GstElement * element,
@@ -248,6 +250,9 @@ gst_ogg_mux_init (GstOggMux * ogg_mux)
   gst_collect_pads2_set_function (ogg_mux->collect,
       (GstCollectPads2Function) GST_DEBUG_FUNCPTR (gst_ogg_mux_collected),
       ogg_mux);
+  gst_collect_pads2_set_event_function (ogg_mux->collect,
+      (GstCollectPads2EventFunction) GST_DEBUG_FUNCPTR (gst_ogg_mux_sink_event),
+      ogg_mux);
 
   ogg_mux->max_delay = DEFAULT_MAX_DELAY;
   ogg_mux->max_page_delay = DEFAULT_MAX_PAGE_DELAY;
@@ -304,11 +309,11 @@ gst_ogg_mux_sinkconnect (GstPad * pad, GstPad * peer)
 }
 
 static gboolean
-gst_ogg_mux_sink_event (GstPad * pad, GstObject * parent, GstEvent * event)
+gst_ogg_mux_sink_event (GstCollectPads2 * pads, GstCollectData2 * pad,
+    GstEvent * event, gpointer user_data)
 {
-  GstOggMux *ogg_mux = GST_OGG_MUX (parent);
-  GstOggPadData *ogg_pad = (GstOggPadData *) gst_pad_get_element_private (pad);
-  gboolean ret = FALSE;
+  GstOggMux *ogg_mux = GST_OGG_MUX (user_data);
+  GstOggPadData *ogg_pad = (GstOggPadData *) pad;
 
   GST_DEBUG_OBJECT (pad, "Got %s event", GST_EVENT_TYPE_NAME (event));
 
@@ -351,9 +356,9 @@ gst_ogg_mux_sink_event (GstPad * pad, GstObject * parent, GstEvent * event)
 
   /* now GstCollectPads can take care of the rest, e.g. EOS */
   if (event != NULL)
-    ret = ogg_pad->collect_event (pad, parent, event);
+    return gst_collect_pads2_event_default (pads, pad, event, FALSE);
 
-  return ret;
+  return TRUE;
 }
 
 static gboolean
@@ -474,10 +479,6 @@ gst_ogg_mux_request_new_pad (GstElement * element,
       }
 
       gst_segment_init (&oggpad->segment, GST_FORMAT_TIME);
-
-      oggpad->collect_event = (GstPadEventFunction) GST_PAD_EVENTFUNC (newpad);
-      gst_pad_set_event_function (newpad,
-          GST_DEBUG_FUNCPTR (gst_ogg_mux_sink_event));
     }
   }
 

@@ -82,8 +82,6 @@ typedef struct
   gint64  next_granule;         /* expected granule of next buffer ts */
   gint64  keyframe_granule;     /* granule of last preceding keyframe */
 
-  GstPadEventFunction collect_event;
-
   GstTagList *tags;
 }
 GstOggPadData;
