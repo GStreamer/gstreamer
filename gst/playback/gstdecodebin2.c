@@ -1770,6 +1770,7 @@ connect_pad (GstDecodeBin * dbin, GstElement * src, GstDecodePad * dpad,
     GstDecodeElement *delem;
     GstElement *element;
     GstPad *sinkpad;
+    GParamSpec *pspec;
     gboolean subtitle;
 
     /* Set dpad target to pad again, it might've been unset
@@ -1948,8 +1949,9 @@ connect_pad (GstDecodeBin * dbin, GstElement * src, GstDecodePad * dpad,
     connect_element (dbin, element, chain);
 
     /* try to configure the subtitle encoding property when we can */
-    if (g_object_class_find_property (G_OBJECT_GET_CLASS (element),
-            "subtitle-encoding")) {
+    pspec = g_object_class_find_property (G_OBJECT_GET_CLASS (element),
+        "subtitle-encoding");
+    if (pspec && G_PARAM_SPEC_VALUE_TYPE (pspec) == G_TYPE_STRING) {
       SUBTITLE_LOCK (dbin);
       GST_DEBUG_OBJECT (dbin,
           "setting subtitle-encoding=%s to element", dbin->encoding);
@@ -1957,8 +1959,9 @@ connect_pad (GstDecodeBin * dbin, GstElement * src, GstDecodePad * dpad,
           NULL);
       SUBTITLE_UNLOCK (dbin);
       subtitle = TRUE;
-    } else
+    } else {
       subtitle = FALSE;
+    }
 
     /* Bring the element to the state of the parent */
     if ((gst_element_set_state (element,
