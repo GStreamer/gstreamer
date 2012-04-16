@@ -1,2 +1,2 @@
-gstv4l2element-marshal.h
-gstv4l2element-marshal.c
+gstv4l2-marshal.c
+gstv4l2-marshal.h

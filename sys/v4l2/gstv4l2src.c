@@ -50,8 +50,8 @@
 #include <sys/time.h>
 #include <unistd.h>
 
-#include "gst/video/gstvideometa.h"
-#include "gst/video/gstvideopool.h"
+#include <gst/video/gstvideometa.h>
+#include <gst/video/gstvideopool.h>
 
 #include "gstv4l2src.h"
 
@@ -79,6 +79,15 @@ enum
   PROP_ALWAYS_COPY,
   PROP_DECIMATE
 };
+
+/* signals and args */
+enum
+{
+  SIGNAL_PRE_SET_FORMAT,
+  LAST_SIGNAL
+};
+
+static guint gst_v4l2_signals[LAST_SIGNAL] = { 0 };
 
 GST_IMPLEMENT_V4L2_COLOR_BALANCE_METHODS (GstV4l2Src, gst_v4l2src);
 GST_IMPLEMENT_V4L2_TUNER_METHODS (GstV4l2Src, gst_v4l2src);
@@ -167,6 +176,27 @@ gst_v4l2src_class_init (GstV4l2SrcClass * klass)
       g_param_spec_int ("decimate", "Decimate",
           "Only use every nth frame", 1, G_MAXINT,
           PROP_DEF_DECIMATE, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
+  /**
+   * GstV4l2Src::pre-set-format:
+   * @v4l2src: the v4l2src instance
+   * @fd: the file descriptor of the current device
+   * @fourcc: the fourcc of the format being set
+   * @width: The width of the video
+   * @height: The height of the video
+   *
+   * This signal gets emitted before calling the v4l2 VIDIOC_S_FMT ioctl
+   * (set format). This allows for any custom configuration of the device to
+   * happen prior to the format being set.
+   * This is mostly useful for UVC H264 encoding cameras which need the H264
+   * Probe & Commit to happen prior to the normal Probe & Commit.
+   */
+  gst_v4l2_signals[SIGNAL_PRE_SET_FORMAT] = g_signal_new ("pre-set-format",
+      G_TYPE_FROM_CLASS (klass),
+      G_SIGNAL_RUN_LAST,
+      0,
+      NULL, NULL,
+      NULL, G_TYPE_NONE, 4, G_TYPE_INT, G_TYPE_UINT, G_TYPE_UINT, G_TYPE_UINT);
 
   gst_element_class_set_static_metadata (element_class,
       "Video (video4linux2) Source", "Source/Video",
