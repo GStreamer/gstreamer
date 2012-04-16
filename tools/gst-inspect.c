@@ -900,24 +900,22 @@ print_signal_info (GstElement * element)
           g_type_name (query->return_type), g_type_name (type));
 
       for (j = 0; j < query->n_params; j++) {
-        if (_name)
-          g_print ("%s", _name);
+        g_print (",\n");
         if (G_TYPE_IS_FUNDAMENTAL (query->param_types[j])) {
-          g_print (",\n%s%s arg%d", indent,
+          n_print ("%s%s arg%d", indent,
               g_type_name (query->param_types[j]), j);
         } else if (G_TYPE_IS_ENUM (query->param_types[j])) {
-          g_print (",\n%s%s arg%d", indent,
+          n_print ("%s%s arg%d", indent,
               g_type_name (query->param_types[j]), j);
         } else {
-          g_print (",\n%s%s* arg%d", indent,
+          n_print ("%s%s* arg%d", indent,
               g_type_name (query->param_types[j]), j);
         }
       }
 
       if (k == 0) {
-        if (_name)
-          g_print ("%s", _name);
-        g_print (",\n%sgpointer user_data);\n", indent);
+        g_print (",\n");
+        n_print ("%sgpointer user_data);\n", indent);
       } else
         g_print (");\n");
 
