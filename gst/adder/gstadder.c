@@ -778,7 +778,7 @@ gst_adder_sink_event (GstCollectPads2 * pads, GstCollectData2 * pad,
     GstEvent * event, gpointer user_data)
 {
   GstAdder *adder = GST_ADDER (user_data);
-  gboolean res = FALSE;
+  gboolean res = FALSE, discard = FALSE;
 
   GST_DEBUG_OBJECT (pad->pad, "Got %s event on sink pad",
       GST_EVENT_TYPE_NAME (event));
@@ -791,12 +791,8 @@ gst_adder_sink_event (GstCollectPads2 * pads, GstCollectData2 * pad,
       gst_event_parse_caps (event, &caps);
       res = gst_adder_setcaps (adder, pad->pad, caps);
       gst_event_unref (event);
-
-      break;
+      event = NULL;
     }
-    case GST_EVENT_FLUSH_START:
-      res = gst_pad_event_default (pad->pad, GST_OBJECT (adder), event);
-      break;
     case GST_EVENT_FLUSH_STOP:
       /* we received a flush-stop. We will only forward it when
        * flush_stop_pending is set, and we will unset it then.
@@ -805,10 +801,8 @@ gst_adder_sink_event (GstCollectPads2 * pads, GstCollectData2 * pad,
               TRUE, FALSE)) {
         g_atomic_int_set (&adder->new_segment_pending, TRUE);
         GST_DEBUG_OBJECT (pad->pad, "forwarding flush stop");
-        res = gst_pad_event_default (pad->pad, GST_OBJECT (adder), event);
       } else {
-        gst_event_unref (event);
-        res = TRUE;
+        discard = TRUE;
         GST_DEBUG_OBJECT (pad->pad, "eating flush stop");
       }
       /* Clear pending tags */
@@ -821,7 +815,7 @@ gst_adder_sink_event (GstCollectPads2 * pads, GstCollectData2 * pad,
     case GST_EVENT_TAG:
       /* collect tags here so we can push them out when we collect data */
       adder->pending_events = g_list_append (adder->pending_events, event);
-      res = TRUE;
+      discard = TRUE;
       break;
     case GST_EVENT_SEGMENT:
       if (g_atomic_int_compare_and_exchange (&adder->wait_for_new_segment,
@@ -830,19 +824,16 @@ gst_adder_sink_event (GstCollectPads2 * pads, GstCollectData2 * pad,
          * see FIXME in gst_adder_collected() */
         g_atomic_int_set (&adder->new_segment_pending, TRUE);
       }
-      gst_event_unref (event);
-      res = TRUE;
-      break;
-    case GST_EVENT_EOS:
-      gst_event_unref (event);
-      res = TRUE;
+      discard = TRUE;
       break;
     default:
-      res = gst_pad_event_default (pad->pad, GST_OBJECT (adder), event);
       break;
   }
 
-  return res;
+  if (G_LIKELY (event))
+    return gst_collect_pads2_event_default (pads, pad, event, discard);
+  else
+    return res;
 }
 
 static void
