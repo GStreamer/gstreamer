@@ -940,7 +940,7 @@ print_children_info (GstElement * element)
   children = (GList *) GST_BIN (element)->children;
   if (children) {
     n_print ("\n");
-    g_print ("Children:\n");
+    n_print ("Children:\n");
   }
 
   while (children) {
