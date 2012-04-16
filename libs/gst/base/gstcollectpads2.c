@@ -130,6 +130,8 @@ struct _GstCollectPads2Private
   gpointer compare_user_data;
   GstCollectPads2EventFunction event_func;      /* function and data for event callback */
   gpointer event_user_data;
+  GstCollectPads2QueryFunction query_func;
+  gpointer query_user_data;
   GstCollectPads2ClipFunction clip_func;
   gpointer clip_user_data;
 
@@ -145,6 +147,8 @@ static GstFlowReturn gst_collect_pads2_chain (GstPad * pad, GstObject * parent,
     GstBuffer * buffer);
 static gboolean gst_collect_pads2_event (GstPad * pad, GstObject * parent,
     GstEvent * event);
+static gboolean gst_collect_pads2_query (GstPad * pad, GstObject * parent,
+    GstQuery * query);
 static void gst_collect_pads2_finalize (GObject * object);
 static GstFlowReturn gst_collect_pads2_default_collected (GstCollectPads2 *
     pads, gpointer user_data);
@@ -157,6 +161,8 @@ static void unref_data (GstCollectData2 * data);
 
 static gboolean gst_collect_pads2_event_default_internal (GstCollectPads2 *
     pads, GstCollectData2 * data, GstEvent * event, gpointer user_data);
+static gboolean gst_collect_pads2_query_default_internal (GstCollectPads2 *
+    pads, GstCollectData2 * data, GstQuery * query, gpointer user_data);
 
 
 /* Some properties are protected by LOCK, others by STREAM_LOCK
@@ -246,6 +252,7 @@ gst_collect_pads2_init (GstCollectPads2 * pads)
   pads->priv->earliest_time = GST_CLOCK_TIME_NONE;
 
   pads->priv->event_func = gst_collect_pads2_event_default_internal;
+  pads->priv->query_func = gst_collect_pads2_query_default_internal;
 
   /* members to manage the pad list */
   pads->priv->pad_cookie = 0;
@@ -455,6 +462,36 @@ gst_collect_pads2_set_event_function (GstCollectPads2 * pads,
 }
 
 /**
+ * gst_collect_pads2_set_query_function:
+ * @pads: the collectspads to use
+ * @func: the function to set
+ * @user_data: user data passed to the function
+ *
+ * Set the query callback function and user data that will be called after
+ * collectpads has received a query originating from one of the collected
+ * pads.  If the query being processed is a serialized one, this callback is
+ * called with @pads STREAM_LOCK held, otherwise not.  As this lock should be
+ * held when calling a number of CollectPads functions, it should be acquired
+ * if so (unusually) needed.
+ *
+ * MT safe.
+ *
+ * Since: 0.10.36
+ */
+void
+gst_collect_pads2_set_query_function (GstCollectPads2 * pads,
+    GstCollectPads2QueryFunction func, gpointer user_data)
+{
+  g_return_if_fail (pads != NULL);
+  g_return_if_fail (GST_IS_COLLECT_PADS2 (pads));
+
+  GST_OBJECT_LOCK (pads);
+  pads->priv->query_func = func;
+  pads->priv->query_user_data = user_data;
+  GST_OBJECT_UNLOCK (pads);
+}
+
+/**
 * gst_collect_pads2_clip_running_time:
 * @pads: the collectspads to use
 * @cdata: collect data of corresponding pad
@@ -624,6 +661,7 @@ gst_collect_pads2_add_pad_full (GstCollectPads2 * pads, GstPad * pad,
   pads->priv->pad_list = g_slist_append (pads->priv->pad_list, data);
   gst_pad_set_chain_function (pad, GST_DEBUG_FUNCPTR (gst_collect_pads2_chain));
   gst_pad_set_event_function (pad, GST_DEBUG_FUNCPTR (gst_collect_pads2_event));
+  gst_pad_set_query_function (pad, GST_DEBUG_FUNCPTR (gst_collect_pads2_query));
   /* backward compat, also add to data if stopped, so that the element already
    * has this in the public data list before going PAUSED (typically)
    * this can only be done when we are stopped because we don't take the
@@ -1874,6 +1912,112 @@ pad_removed:
     return FALSE;
   }
 }
+
+/**
+ * gst_collect_pads2_query_default:
+ * @pads: the collectspads to use
+ * @data: collect data of corresponding pad
+ * @query: query being processed
+ * @discard: process but do not send event downstream
+ *
+ * Default GstCollectPads2 query handling that elements should always
+ * chain up to to ensure proper operation.  Element might however indicate
+ * query should not be forwarded downstream.
+ *
+ * Since: 0.11.x
+ */
+gboolean
+gst_collect_pads2_query_default (GstCollectPads2 * pads, GstCollectData2 * data,
+    GstQuery * query, gboolean discard)
+{
+  gboolean res = TRUE;
+  GstObject *parent;
+  GstPad *pad;
+
+  pad = data->pad;
+  parent = GST_OBJECT_PARENT (pad);
+
+  switch (GST_QUERY_TYPE (query)) {
+    case GST_QUERY_SEEKING:
+    {
+      GstFormat format;
+
+      /* don't pass it along as some (file)sink might claim it does
+       * whereas with a collectpads in between that will not likely work */
+      gst_query_parse_seeking (query, &format, NULL, NULL, NULL);
+      gst_query_set_seeking (query, format, FALSE, 0, -1);
+      res = TRUE;
+      discard = TRUE;
+      break;
+    }
+    default:
+      break;
+  }
+
+  if (!discard)
+    return gst_pad_query_default (pad, parent, query);
+  else
+    return res;
+}
+
+static gboolean
+gst_collect_pads2_query_default_internal (GstCollectPads2 * pads,
+    GstCollectData2 * data, GstQuery * query, gpointer user_data)
+{
+  return gst_collect_pads2_query_default (pads, data, query, FALSE);
+}
+
+static gboolean
+gst_collect_pads2_query (GstPad * pad, GstObject * parent, GstQuery * query)
+{
+  gboolean res = FALSE, need_unlock = FALSE;
+  GstCollectData2 *data;
+  GstCollectPads2 *pads;
+  GstCollectPads2QueryFunction query_func;
+  gpointer query_user_data;
+
+  GST_DEBUG_OBJECT (pad, "Got %s query on sink pad",
+      GST_QUERY_TYPE_NAME (query));
+
+  /* some magic to get the managing collect_pads2 */
+  GST_OBJECT_LOCK (pad);
+  data = (GstCollectData2 *) gst_pad_get_element_private (pad);
+  if (G_UNLIKELY (data == NULL))
+    goto pad_removed;
+  ref_data (data);
+  GST_OBJECT_UNLOCK (pad);
+
+  pads = data->collect;
+
+  GST_OBJECT_LOCK (pads);
+  query_func = pads->priv->query_func;
+  query_user_data = pads->priv->query_user_data;
+  GST_OBJECT_UNLOCK (pads);
+
+  if (GST_QUERY_IS_SERIALIZED (query)) {
+    GST_COLLECT_PADS2_STREAM_LOCK (pads);
+    need_unlock = TRUE;
+  }
+
+  if (G_LIKELY (query_func)) {
+    res = query_func (pads, data, query, query_user_data);
+  }
+
+  if (need_unlock)
+    GST_COLLECT_PADS2_STREAM_UNLOCK (pads);
+
+  unref_data (data);
+  return res;
+
+  /* ERRORS */
+pad_removed:
+  {
+    GST_DEBUG ("%s got removed from collectpads", GST_OBJECT_NAME (pad));
+    GST_OBJECT_UNLOCK (pad);
+    return FALSE;
+  }
+}
+
 
 /* For each buffer we receive we check if our collected condition is reached
  * and if so we call the collected function. When this is done we check if

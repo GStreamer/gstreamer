@@ -220,6 +220,24 @@ typedef gboolean (*GstCollectPads2EventFunction)        (GstCollectPads2 *pads, 
 
 
 /**
+ * GstCollectPads2QueryFunction:
+ * @pads: the #GstCollectPads2 that trigered the callback
+ * @pad: the #GstPad that received an event
+ * @query: the #GstEvent received
+ * @user_data: user data passed to gst_collect_pads2_set_query_function()
+ *
+ * A function that will be called while processing a query. It takes
+ * ownership of the query and is responsible for chaining up (to
+ * events downstream (with gst_pad_event_default()).
+ *
+ * Returns: %TRUE if the pad could handle the event
+ *
+ * Since: 0.11.x
+ */
+typedef gboolean (*GstCollectPads2QueryFunction)        (GstCollectPads2 *pads, GstCollectData2 * pad,
+                                                         GstQuery * query, gpointer user_data);
+
+/**
  * GstCollectPads2ClipFunction:
  * @pads: a #GstCollectPads2
  * @data: a #GstCollectData2
@@ -318,6 +336,9 @@ void            gst_collect_pads2_set_buffer_function  (GstCollectPads2 *pads,
 void            gst_collect_pads2_set_event_function   (GstCollectPads2 *pads,
                                                         GstCollectPads2EventFunction func,
                                                         gpointer user_data);
+void            gst_collect_pads2_set_query_function   (GstCollectPads2 *pads,
+                                                        GstCollectPads2QueryFunction func,
+                                                        gpointer user_data);
 void            gst_collect_pads2_set_compare_function (GstCollectPads2 *pads,
                                                         GstCollectPads2CompareFunction func,
                                                         gpointer user_data);
@@ -363,9 +384,11 @@ GstFlowReturn	gst_collect_pads2_clip_running_time (GstCollectPads2 * pads,
 						GstCollectData2 * cdata, GstBuffer * buf, GstBuffer ** outbuf,
                                                 gpointer user_data);
 
-/* default handler */
+/* default handlers */
 gboolean        gst_collect_pads2_event_default (GstCollectPads2 * pads2, GstCollectData2 * data,
                                                  GstEvent * event, gboolean discard);
+gboolean        gst_collect_pads2_query_default (GstCollectPads2 * pads, GstCollectData2 * data,
+                                                 GstQuery * query, gboolean discard);
 
 
 G_END_DECLS
