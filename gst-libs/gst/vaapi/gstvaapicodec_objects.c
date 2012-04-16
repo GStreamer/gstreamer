@@ -248,6 +248,7 @@ gst_vaapi_bitplane_new(GstVaapiDecoder *decoder, guint8 *data, guint data_size)
 /* --- JPEG Huffman Tables                                               --- */
 /* ------------------------------------------------------------------------- */
 
+#if USE_JPEG_DECODER
 GST_VAAPI_CODEC_DEFINE_TYPE(GstVaapiHuffmanTable,
                             gst_vaapi_huffman_table,
                             GST_VAAPI_TYPE_CODEC_OBJECT)
@@ -302,3 +303,4 @@ gst_vaapi_huffman_table_new(
         return NULL;
     return GST_VAAPI_HUFFMAN_TABLE_CAST(object);
 }
+#endif
