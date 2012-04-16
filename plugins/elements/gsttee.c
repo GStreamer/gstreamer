@@ -107,24 +107,66 @@ GST_STATIC_PAD_TEMPLATE ("src_%u",
     GST_PAD_REQUEST,
     GST_STATIC_CAPS_ANY);
 
-/* structure and quark to keep track of which pads have been pushed */
-static GQuark push_data;
-
 #define _do_init \
-    GST_DEBUG_CATEGORY_INIT (gst_tee_debug, "tee", 0, "tee element"); \
-    push_data = g_quark_from_static_string ("tee-push-data");
+    GST_DEBUG_CATEGORY_INIT (gst_tee_debug, "tee", 0, "tee element");
 #define gst_tee_parent_class parent_class
 G_DEFINE_TYPE_WITH_CODE (GstTee, gst_tee, GST_TYPE_ELEMENT, _do_init);
 
 static GParamSpec *pspec_last_message = NULL;
 static GParamSpec *pspec_alloc_pad = NULL;
 
-typedef struct
+GType gst_tee_pad_get_type (void);
+
+#define GST_TYPE_TEE_PAD \
+  (gst_tee_pad_get_type())
+#define GST_TEE_PAD(obj) \
+  (G_TYPE_CHECK_INSTANCE_CAST ((obj), GST_TYPE_TEE_PAD, GstTeePad))
+#define GST_TEE_PAD_CLASS(klass) \
+  (G_TYPE_CHECK_CLASS_CAST ((klass), GST_TYPE_TEE_PAD, GstTeePadClass))
+#define GST_IS_TEE_PAD(obj) \
+  (G_TYPE_CHECK_INSTANCE_TYPE ((obj), GST_TYPE_TEE_PAD))
+#define GST_IS_TEE_PAD_CLASS(klass) \
+  (G_TYPE_CHECK_CLASS_TYPE ((klass), GST_TYPE_TEE_PAD))
+#define GST_TEE_PAD_CAST(obj) \
+  ((GstTeePad *)(obj))
+
+typedef struct _GstTeePad GstTeePad;
+typedef struct _GstTeePadClass GstTeePadClass;
+
+struct _GstTeePad
 {
+  GstPad parent;
+
   gboolean pushed;
   GstFlowReturn result;
   gboolean removed;
-} PushData;
+};
+
+struct _GstTeePadClass
+{
+  GstPadClass parent;
+};
+
+G_DEFINE_TYPE (GstTeePad, gst_tee_pad, GST_TYPE_PAD);
+
+static void
+gst_tee_pad_class_init (GstTeePadClass * klass)
+{
+}
+
+static void
+gst_tee_pad_reset (GstTeePad * pad)
+{
+  pad->pushed = FALSE;
+  pad->result = GST_FLOW_NOT_LINKED;
+  pad->removed = FALSE;
+}
+
+static void
+gst_tee_pad_init (GstTeePad * pad)
+{
+  gst_tee_pad_reset (pad);
+}
 
 static GstPad *gst_tee_request_new_pad (GstElement * element,
     GstPadTemplate * temp, const gchar * unused, const GstCaps * caps);
@@ -295,7 +337,6 @@ gst_tee_request_new_pad (GstElement * element, GstPadTemplate * templ,
   GstTee *tee;
   GstPadMode mode;
   gboolean res;
-  PushData *data;
 
   tee = GST_TEE (element);
 
@@ -304,18 +345,12 @@ gst_tee_request_new_pad (GstElement * element, GstPadTemplate * templ,
   GST_OBJECT_LOCK (tee);
   name = g_strdup_printf ("src_%u", tee->pad_counter++);
 
-  srcpad = gst_pad_new_from_template (templ, name);
+  srcpad = GST_PAD_CAST (g_object_new (GST_TYPE_TEE_PAD,
+          "name", name, "direction", templ->direction, "template", templ,
+          NULL));
   g_free (name);
 
   mode = tee->sink_mode;
-
-  /* install the data, we automatically free it when the pad is disposed because
-   * of _release_pad or when the element goes away. */
-  data = g_new0 (PushData, 1);
-  data->pushed = FALSE;
-  data->result = GST_FLOW_NOT_LINKED;
-  data->removed = FALSE;
-  g_object_set_qdata_full (G_OBJECT (srcpad), push_data, data, g_free);
 
   GST_OBJECT_UNLOCK (tee);
 
@@ -370,7 +405,6 @@ static void
 gst_tee_release_pad (GstElement * element, GstPad * pad)
 {
   GstTee *tee;
-  PushData *data;
   gboolean changed = FALSE;
 
   tee = GST_TEE (element);
@@ -379,11 +413,9 @@ gst_tee_release_pad (GstElement * element, GstPad * pad)
 
   /* wait for pending pad_alloc to finish */
   GST_TEE_DYN_LOCK (tee);
-  data = g_object_get_qdata (G_OBJECT (pad), push_data);
-
   GST_OBJECT_LOCK (tee);
   /* mark the pad as removed so that future pad_alloc fails with NOT_LINKED. */
-  data->removed = TRUE;
+  GST_TEE_PAD_CAST (pad)->removed = TRUE;
   if (tee->allocpad == pad) {
     tee->allocpad = NULL;
     changed = TRUE;
@@ -550,15 +582,8 @@ gst_tee_do_push (GstTee * tee, GstPad * pad, gpointer data, gboolean is_list)
 static void
 clear_pads (GstPad * pad, GstTee * tee)
 {
-  PushData *data;
-
-  data = g_object_get_qdata ((GObject *) pad, push_data);
-
-  /* the data must be there or we have a screwed up internal state */
-  g_assert (data != NULL);
-
-  data->pushed = FALSE;
-  data->result = GST_FLOW_NOT_LINKED;
+  GST_TEE_PAD_CAST (pad)->pushed = FALSE;
+  GST_TEE_PAD_CAST (pad)->result = GST_FLOW_NOT_LINKED;
 }
 
 static GstFlowReturn
@@ -604,16 +629,10 @@ restart:
 
   while (pads) {
     GstPad *pad;
-    PushData *pdata;
 
     pad = GST_PAD_CAST (pads->data);
 
-    /* get the private data, something is really wrong with the internal state
-     * when it is not there */
-    pdata = g_object_get_qdata ((GObject *) pad, push_data);
-    g_assert (pdata != NULL);
-
-    if (G_LIKELY (!pdata->pushed)) {
+    if (G_LIKELY (!GST_TEE_PAD_CAST (pad)->pushed)) {
       /* not yet pushed, release lock and start pushing */
       gst_object_ref (pad);
       GST_OBJECT_UNLOCK (tee);
@@ -627,15 +646,13 @@ restart:
           gst_flow_get_name (ret));
 
       GST_OBJECT_LOCK (tee);
-      /* keep track of which pad we pushed and the result value. We need to do
-       * this before we release the refcount on the pad, the PushData is
-       * destroyed when the last ref of the pad goes away. */
-      pdata->pushed = TRUE;
-      pdata->result = ret;
+      /* keep track of which pad we pushed and the result value */
+      GST_TEE_PAD_CAST (pad)->pushed = TRUE;
+      GST_TEE_PAD_CAST (pad)->result = ret;
       gst_object_unref (pad);
     } else {
       /* already pushed, use previous return value */
-      ret = pdata->result;
+      ret = GST_TEE_PAD_CAST (pad)->result;
       GST_LOG_OBJECT (tee, "pad already pushed with %s",
           gst_flow_get_name (ret));
     }
