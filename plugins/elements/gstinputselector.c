@@ -929,6 +929,8 @@ gst_input_selector_set_active_pad (GstInputSelector * self, GstPad * pad)
   active_pad_p = &self->active_sinkpad;
   gst_object_replace ((GstObject **) active_pad_p, GST_OBJECT_CAST (pad));
 
+  gst_pad_push_event (pad, gst_event_new_reconfigure ());
+
   /* Wake up all non-active pads in sync mode, they might be
    * the active pad now */
   if (self->sync_streams)
