@@ -258,8 +258,10 @@ _default_mem_copy (GstMemoryDefault * mem, gssize offset, gsize size)
   copy =
       _default_mem_new_block (0, mem->mem.maxsize, 0, mem->mem.offset + offset,
       size);
+  GST_CAT_DEBUG (GST_CAT_PERFORMANCE,
+      "memcpy %" G_GSIZE_FORMAT " memory %p -> %p", mem->mem.maxsize, mem,
+      copy);
   memcpy (copy->data, mem->data, mem->mem.maxsize);
-  GST_CAT_DEBUG (GST_CAT_PERFORMANCE, "copy memory %p -> %p", mem, copy);
 
   return copy;
 }
@@ -324,8 +326,9 @@ _fallback_mem_copy (GstMemory * mem, gssize offset, gssize size)
     return NULL;
   }
 
+  GST_CAT_DEBUG (GST_CAT_PERFORMANCE,
+      "memcpy %" G_GSSIZE_FORMAT " memory %p -> %p", size, mem, copy);
   memcpy (dinfo.data, sinfo.data + offset, size);
-  GST_CAT_DEBUG (GST_CAT_PERFORMANCE, "copy memory %p -> %p", mem, copy);
   gst_memory_unmap (copy, &dinfo);
   gst_memory_unmap (mem, &sinfo);
 
