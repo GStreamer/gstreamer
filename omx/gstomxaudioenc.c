@@ -733,9 +733,9 @@ gst_omx_audio_enc_handle_frame (GstAudioEncoder * encoder, GstBuffer * inbuf)
   GstOMXAcquireBufferReturn acq_ret = GST_OMX_ACQUIRE_BUFFER_ERROR;
   GstOMXAudioEnc *self;
   GstOMXBuffer *buf;
+  gsize size;
   guint offset = 0;
   GstClockTime timestamp, duration, timestamp_offset = 0;
-  GstMapInfo map = GST_MAP_INFO_INIT;
 
   self = GST_OMX_AUDIO_ENC (encoder);
 
@@ -759,9 +759,8 @@ gst_omx_audio_enc_handle_frame (GstAudioEncoder * encoder, GstBuffer * inbuf)
   timestamp = GST_BUFFER_TIMESTAMP (inbuf);
   duration = GST_BUFFER_DURATION (inbuf);
 
-  gst_buffer_map (inbuf, &map, GST_MAP_READ);
-
-  while (offset < map.size) {
+  size = gst_buffer_get_size (inbuf);
+  while (offset < size) {
     /* Make sure to release the base class stream lock, otherwise
      * _loop() can't call _finish_frame() and we might block forever
      * because no input buffers are released */
@@ -801,15 +800,15 @@ gst_omx_audio_enc_handle_frame (GstAudioEncoder * encoder, GstBuffer * inbuf)
     /* Copy the buffer content in chunks of size as requested
      * by the port */
     buf->omx_buf->nFilledLen =
-        MIN (map.size - offset,
-        buf->omx_buf->nAllocLen - buf->omx_buf->nOffset);
-    memcpy (buf->omx_buf->pBuffer + buf->omx_buf->nOffset,
-        map.data + offset, buf->omx_buf->nFilledLen);
+        MIN (size - offset, buf->omx_buf->nAllocLen - buf->omx_buf->nOffset);
+    gst_buffer_extract (inbuf, offset,
+        buf->omx_buf->pBuffer + buf->omx_buf->nOffset,
+        buf->omx_buf->nFilledLen);
 
     /* Interpolate timestamps if we're passing the buffer
      * in multiple chunks */
     if (offset != 0 && duration != GST_CLOCK_TIME_NONE) {
-      timestamp_offset = gst_util_uint64_scale (offset, duration, map.size);
+      timestamp_offset = gst_util_uint64_scale (offset, duration, size);
     }
 
     if (timestamp != GST_CLOCK_TIME_NONE) {
@@ -820,7 +819,7 @@ gst_omx_audio_enc_handle_frame (GstAudioEncoder * encoder, GstBuffer * inbuf)
     }
     if (duration != GST_CLOCK_TIME_NONE) {
       buf->omx_buf->nTickCount =
-          gst_util_uint64_scale (buf->omx_buf->nFilledLen, duration, map.size);
+          gst_util_uint64_scale (buf->omx_buf->nFilledLen, duration, size);
       self->last_upstream_ts += duration;
     }
 
@@ -829,14 +828,10 @@ gst_omx_audio_enc_handle_frame (GstAudioEncoder * encoder, GstBuffer * inbuf)
     gst_omx_port_release_buffer (self->in_port, buf);
   }
 
-  gst_buffer_unmap (inbuf, &map);
-
-
   return self->downstream_flow_ret;
 
 full_buffer:
   {
-    gst_buffer_unmap (inbuf, &map);
     GST_ELEMENT_ERROR (self, LIBRARY, FAILED, (NULL),
         ("Got OpenMAX buffer with no free space (%p, %u/%u)", buf,
             buf->omx_buf->nOffset, buf->omx_buf->nAllocLen));
@@ -844,7 +839,6 @@ full_buffer:
   }
 component_error:
   {
-    gst_buffer_unmap (inbuf, &map);
     GST_ELEMENT_ERROR (self, LIBRARY, FAILED, (NULL),
         ("OpenMAX component in error state %s (0x%08x)",
             gst_omx_component_get_last_error_string (self->component),
@@ -854,13 +848,11 @@ component_error:
 
 flushing:
   {
-    gst_buffer_unmap (inbuf, &map);
     GST_DEBUG_OBJECT (self, "Flushing -- returning FLUSHING");
     return GST_FLOW_FLUSHING;
   }
 reconfigure_error:
   {
-    gst_buffer_unmap (inbuf, &map);
     GST_ELEMENT_ERROR (self, LIBRARY, SETTINGS, (NULL),
         ("Unable to reconfigure input port"));
     return GST_FLOW_ERROR;
