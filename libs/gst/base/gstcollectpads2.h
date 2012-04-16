@@ -207,11 +207,9 @@ typedef gint (*GstCollectPads2CompareFunction) (GstCollectPads2 *pads,
  * @user_data: user data passed to gst_collect_pads2_set_event_function()
  *
  * A function that will be called while processing an event. It takes
- * ownership of the event and is responsible for forwarding
- * events downstream (with gst_pad_event_default()) or dropping events.
- *
- * The STREAM_START, CAPS, STREAM_CONFIG, SEGMENT and EOS events should
- * usually be dropped by this function.
+ * ownership of the event and is responsible for chaining up (to
+ * gst_collect_pads2_event_default()) or dropping events (such typical cases
+ * being handled by the default handler).
  *
  * Returns: %TRUE if the pad could handle the event
  *
@@ -364,6 +362,10 @@ void            gst_collect_pads2_set_waiting   (GstCollectPads2 *pads, GstColle
 GstFlowReturn	gst_collect_pads2_clip_running_time (GstCollectPads2 * pads,
 						GstCollectData2 * cdata, GstBuffer * buf, GstBuffer ** outbuf,
                                                 gpointer user_data);
+
+/* default handler */
+gboolean        gst_collect_pads2_event_default (GstCollectPads2 * pads2, GstCollectData2 * data,
+                                                 GstEvent * event, gboolean discard);
 
 
 G_END_DECLS

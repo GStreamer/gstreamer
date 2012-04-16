@@ -155,6 +155,10 @@ static gboolean gst_collect_pads2_recalculate_full (GstCollectPads2 * pads);
 static void ref_data (GstCollectData2 * data);
 static void unref_data (GstCollectData2 * data);
 
+static gboolean gst_collect_pads2_event_default_internal (GstCollectPads2 *
+    pads, GstCollectData2 * data, GstEvent * event, gpointer user_data);
+
+
 /* Some properties are protected by LOCK, others by STREAM_LOCK
  * However, manipulating either of these partitions may require
  * to signal/wake a _WAIT, so use a separate (sort of) event to prevent races
@@ -240,6 +244,8 @@ gst_collect_pads2_init (GstCollectPads2 * pads)
   pads->priv->compare_user_data = NULL;
   pads->priv->earliest_data = NULL;
   pads->priv->earliest_time = GST_CLOCK_TIME_NONE;
+
+  pads->priv->event_func = gst_collect_pads2_event_default_internal;
 
   /* members to manage the pad list */
   pads->priv->pad_cookie = 0;
@@ -424,8 +430,8 @@ unref_data (GstCollectData2 * data)
  * @func: the function to set
  * @user_data: user data passed to the function
  *
- * Set the event callback function and user data that will be called after
- * collectpads has processed and event originating from one of the collected
+ * Set the event callback function and user data that will be called when
+ * collectpads has received an event originating from one of the collected
  * pads.  If the event being processed is a serialized one, this callback is
  * called with @pads STREAM_LOCK held, otherwise not.  As this lock should be
  * held when calling a number of CollectPads functions, it should be acquired
@@ -1640,50 +1646,44 @@ gst_collect_pads2_default_compare_func (GstCollectPads2 * pads,
   return 0;
 }
 
-static gboolean
-gst_collect_pads2_event (GstPad * pad, GstObject * parent, GstEvent * event)
+/**
+ * gst_collect_pads2_event_default:
+ * @pads: the collectspads to use
+ * @data: collect data of corresponding pad
+ * @event: event being processed
+ * @discard: process but do not send event downstream
+ *
+ * Default GstCollectPads2 event handling that elements should always
+ * chain up to to ensure proper operation.  Element might however indicate
+ * event should not be forwarded downstream.
+ *
+ * Since: 0.11.x
+ */
+gboolean
+gst_collect_pads2_event_default (GstCollectPads2 * pads, GstCollectData2 * data,
+    GstEvent * event, gboolean discard)
 {
-  gboolean res = FALSE, need_unlock = FALSE;
-  GstCollectData2 *data;
-  GstCollectPads2 *pads;
-  GstCollectPads2EventFunction event_func;
+  gboolean res = TRUE;
   GstCollectPads2BufferFunction buffer_func;
-  gpointer event_user_data;
-
-  /* some magic to get the managing collect_pads2 */
-  GST_OBJECT_LOCK (pad);
-  data = (GstCollectData2 *) gst_pad_get_element_private (pad);
-  if (G_UNLIKELY (data == NULL))
-    goto pad_removed;
-  ref_data (data);
-  GST_OBJECT_UNLOCK (pad);
-
-  res = FALSE;
-
-  pads = data->collect;
-
-  GST_DEBUG_OBJECT (data->pad, "Got %s event on sink pad",
-      GST_EVENT_TYPE_NAME (event));
+  GstObject *parent;
+  GstPad *pad;
 
   GST_OBJECT_LOCK (pads);
-  event_func = pads->priv->event_func;
-  event_user_data = pads->priv->event_user_data;
   buffer_func = pads->priv->buffer_func;
   GST_OBJECT_UNLOCK (pads);
+
+  pad = data->pad;
+  parent = GST_OBJECT_PARENT (pad);
 
   switch (GST_EVENT_TYPE (event)) {
     case GST_EVENT_FLUSH_START:
     {
       /* forward event to unblock check_collected */
-      if (event_func) {
-        res = event_func (pads, data, event, event_user_data);
-      } else {
-        GST_DEBUG_OBJECT (pad, "forwarding flush start");
-        res = gst_pad_event_default (pad, parent, event);
-      }
+      GST_DEBUG_OBJECT (pad, "forwarding flush start");
+      res = gst_pad_event_default (pad, parent, event);
 
       /* now unblock the chain function.
-       * no cond per pad, so they all unblock, 
+       * no cond per pad, so they all unblock,
        * non-flushing block again */
       GST_COLLECT_PADS2_STREAM_LOCK (pads);
       GST_COLLECT_PADS2_STATE_SET (data, GST_COLLECT_PADS2_STATE_FLUSHING);
@@ -1703,9 +1703,7 @@ gst_collect_pads2_event (GstPad * pad, GstObject * parent, GstEvent * event)
 
       GST_COLLECT_PADS2_STREAM_UNLOCK (pads);
 
-      /* event already cleaned up by forwarding */
-      res = TRUE;
-      goto done;
+      goto eat;
     }
     case GST_EVENT_FLUSH_STOP:
     {
@@ -1728,8 +1726,7 @@ gst_collect_pads2_event (GstPad * pad, GstObject * parent, GstEvent * event)
       }
       GST_COLLECT_PADS2_STREAM_UNLOCK (pads);
 
-      /* forward event */
-      goto forward_or_default;
+      goto forward;
     }
     case GST_EVENT_EOS:
     {
@@ -1748,7 +1745,7 @@ gst_collect_pads2_event (GstPad * pad, GstObject * parent, GstEvent * event)
       gst_collect_pads2_check_collected (pads);
       GST_COLLECT_PADS2_STREAM_UNLOCK (pads);
 
-      goto forward_or_eat;
+      goto eat;
     }
     case GST_EVENT_SEGMENT:
     {
@@ -1796,48 +1793,76 @@ gst_collect_pads2_event (GstPad * pad, GstObject * parent, GstEvent * event)
       GST_COLLECT_PADS2_STREAM_UNLOCK (pads);
       /* we must not forward this event since multiple segments will be
        * accumulated and this is certainly not what we want. */
-      goto forward_or_eat;
+      goto eat;
     }
     case GST_EVENT_CAPS:
     case GST_EVENT_STREAM_START:
     case GST_EVENT_STREAM_CONFIG:
-      goto forward_or_eat;
+      goto eat;
     default:
       /* forward other events */
-      goto forward_or_default;
+      goto forward;
   }
 
-forward_or_default:
+eat:
+  gst_event_unref (event);
+  return res;
+
+forward:
+  if (discard)
+    goto eat;
+  else
+    return gst_pad_event_default (pad, parent, event);
+}
+
+static gboolean
+gst_collect_pads2_event_default_internal (GstCollectPads2 * pads,
+    GstCollectData2 * data, GstEvent * event, gpointer user_data)
+{
+  return gst_collect_pads2_event_default (pads, data, event, FALSE);
+}
+
+static gboolean
+gst_collect_pads2_event (GstPad * pad, GstObject * parent, GstEvent * event)
+{
+  gboolean res = FALSE, need_unlock = FALSE;
+  GstCollectData2 *data;
+  GstCollectPads2 *pads;
+  GstCollectPads2EventFunction event_func;
+  gpointer event_user_data;
+
+  /* some magic to get the managing collect_pads2 */
+  GST_OBJECT_LOCK (pad);
+  data = (GstCollectData2 *) gst_pad_get_element_private (pad);
+  if (G_UNLIKELY (data == NULL))
+    goto pad_removed;
+  ref_data (data);
+  GST_OBJECT_UNLOCK (pad);
+
+  res = FALSE;
+
+  pads = data->collect;
+
+  GST_DEBUG_OBJECT (data->pad, "Got %s event on sink pad",
+      GST_EVENT_TYPE_NAME (event));
+
+  GST_OBJECT_LOCK (pads);
+  event_func = pads->priv->event_func;
+  event_user_data = pads->priv->event_user_data;
+  GST_OBJECT_UNLOCK (pads);
+
   if (GST_EVENT_IS_SERIALIZED (event)) {
     GST_COLLECT_PADS2_STREAM_LOCK (pads);
     need_unlock = TRUE;
   }
-  if (event_func) {
+
+  if (G_LIKELY (event_func)) {
     res = event_func (pads, data, event, event_user_data);
-  } else {
-    GST_DEBUG_OBJECT (pad, "forwarding %s", GST_EVENT_TYPE_NAME (event));
-    res = gst_pad_event_default (pad, parent, event);
   }
+
   if (need_unlock)
     GST_COLLECT_PADS2_STREAM_UNLOCK (pads);
-  goto done;
 
-forward_or_eat:
-  if (GST_EVENT_IS_SERIALIZED (event)) {
-    GST_COLLECT_PADS2_STREAM_LOCK (pads);
-    need_unlock = TRUE;
-  }
-  if (event_func) {
-    res = event_func (pads, data, event, event_user_data);
-  } else {
-    gst_event_unref (event);
-    res = TRUE;
-  }
-  if (need_unlock)
-    GST_COLLECT_PADS2_STREAM_UNLOCK (pads);
-  goto done;
-
-done:
   unref_data (data);
   return res;
 
