@@ -215,12 +215,14 @@ EXPORTS
 	gst_collect_pads2_clip_running_time
 	gst_collect_pads2_collect
 	gst_collect_pads2_collect_range
+	gst_collect_pads2_event_default
 	gst_collect_pads2_flush
 	gst_collect_pads2_get_type
 	gst_collect_pads2_is_active
 	gst_collect_pads2_new
 	gst_collect_pads2_peek
 	gst_collect_pads2_pop
+	gst_collect_pads2_query_default
 	gst_collect_pads2_read_buffer
 	gst_collect_pads2_remove_pad
 	gst_collect_pads2_set_buffer_function
@@ -229,6 +231,7 @@ EXPORTS
 	gst_collect_pads2_set_event_function
 	gst_collect_pads2_set_flushing
 	gst_collect_pads2_set_function
+	gst_collect_pads2_set_query_function
 	gst_collect_pads2_set_waiting
 	gst_collect_pads2_start
 	gst_collect_pads2_stop
