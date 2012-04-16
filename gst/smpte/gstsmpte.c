@@ -333,9 +333,11 @@ gst_smpte_sink_event (GstCollectPads2 * pads,
       break;
     }
     default:
-      ret = gst_pad_event_default (pad,
-          GST_OBJECT_CAST (GST_PAD_PARENT (pad)), event);
+      break;
   }
+
+  if (event != NULL)
+    return gst_collect_pads2_event_default (pads, data, event, FALSE);
 
   return ret;
 }

@@ -1835,7 +1835,7 @@ gst_avi_mux_handle_event (GstCollectPads2 * pads, GstCollectData2 * data,
     GstEvent * event, gpointer user_data)
 {
   GstAviMux *avimux;
-  gboolean ret = FALSE;
+  gboolean ret = TRUE;
 
   avimux = GST_AVI_MUX (user_data);
 
@@ -1860,6 +1860,7 @@ gst_avi_mux_handle_event (GstCollectPads2 * pads, GstCollectData2 * data,
         ret = gst_avi_mux_audsink_set_caps (data->pad, caps);
       }
       gst_event_unref (event);
+      event = NULL;
       break;
     }
     case GST_EVENT_TAG:{
@@ -1870,18 +1871,15 @@ gst_avi_mux_handle_event (GstCollectPads2 * pads, GstCollectData2 * data,
       gst_event_parse_tag (event, &list);
       gst_tag_setter_merge_tags (setter, list, mode);
       gst_event_unref (event);
-      ret = TRUE;
+      event = NULL;
       break;
     }
-    case GST_EVENT_EOS:
-    case GST_EVENT_SEGMENT:
-      gst_event_unref (event);
-      ret = TRUE;
-      break;
     default:
-      ret = gst_pad_event_default (data->pad, GST_OBJECT (avimux), event);
       break;
   }
+
+  if (event != NULL)
+    return gst_collect_pads2_event_default (pads, data, event, FALSE);
 
   return ret;
 }

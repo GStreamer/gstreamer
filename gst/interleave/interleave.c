@@ -816,7 +816,7 @@ gst_interleave_sink_event (GstCollectPads2 * pads, GstCollectData2 * data,
     GstEvent * event, gpointer user_data)
 {
   GstInterleave *self = GST_INTERLEAVE (user_data);
-  gboolean ret = FALSE;
+  gboolean ret = TRUE;
 
   GST_DEBUG ("Got %s event on pad %s:%s", GST_EVENT_TYPE_NAME (event),
       GST_DEBUG_PAD_NAME (data->pad));
@@ -838,14 +838,17 @@ gst_interleave_sink_event (GstCollectPads2 * pads, GstCollectData2 * data,
       gst_event_parse_caps (event, &caps);
       ret = gst_interleave_sink_setcaps (self, data->pad, caps);
       gst_event_unref (event);
+      event = NULL;
       break;
     }
     default:
-      ret = gst_pad_event_default (data->pad, GST_OBJECT (self), event);
       break;
   }
 
   /* now GstCollectPads2 can take care of the rest, e.g. EOS */
+  if (event != NULL)
+    return gst_collect_pads2_event_default (pads, data, event, FALSE);
+
   return ret;
 }
 

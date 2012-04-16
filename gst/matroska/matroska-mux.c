@@ -746,7 +746,7 @@ gst_matroska_mux_handle_sink_event (GstCollectPads2 * pads,
   GstMatroskaMux *mux;
   GstPad *pad;
   GstTagList *list;
-  gboolean ret = FALSE;
+  gboolean ret = TRUE;
 
   mux = GST_MATROSKA_MUX (user_data);
   collect_pad = (GstMatroskaPad *) data;
@@ -792,18 +792,6 @@ gst_matroska_mux_handle_sink_event (GstCollectPads2 * pads,
 
       gst_event_unref (event);
       /* handled this, don't want collectpads to forward it downstream */
-      event = NULL;
-      ret = TRUE;
-      break;
-    }
-    case GST_EVENT_SEGMENT:{
-      const GstSegment *segment;
-
-      gst_event_parse_segment (event, &segment);
-      if (segment->format != GST_FORMAT_TIME) {
-        ret = FALSE;
-      }
-      gst_event_unref (event);
       event = NULL;
       ret = TRUE;
       break;
@@ -869,13 +857,11 @@ gst_matroska_mux_handle_sink_event (GstCollectPads2 * pads,
     }
       /* fall through */
     default:
-      ret = gst_pad_event_default (data->pad, GST_OBJECT (mux), event);
-      break;
-    case GST_EVENT_EOS:
-      gst_event_unref (event);
-      ret = TRUE;
       break;
   }
+
+  if (event != NULL)
+    return gst_collect_pads2_event_default (pads, data, event, FALSE);
 
   return ret;
 }

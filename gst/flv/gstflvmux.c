@@ -287,7 +287,7 @@ gst_flv_mux_handle_sink_event (GstCollectPads2 * pads, GstCollectData2 * data,
     GstEvent * event, gpointer user_data)
 {
   GstFlvMux *mux = GST_FLV_MUX (user_data);
-  gboolean ret = FALSE;
+  gboolean ret = TRUE;
 
   switch (GST_EVENT_TYPE (event)) {
     case GST_EVENT_CAPS:
@@ -308,6 +308,7 @@ gst_flv_mux_handle_sink_event (GstCollectPads2 * pads, GstCollectData2 * data,
       }
       /* and eat */
       gst_event_unref (event);
+      event = NULL;
       break;
     }
     case GST_EVENT_TAG:{
@@ -320,17 +321,15 @@ gst_flv_mux_handle_sink_event (GstCollectPads2 * pads, GstCollectData2 * data,
       mux->new_tags = TRUE;
       ret = TRUE;
       gst_event_unref (event);
+      event = NULL;
       break;
     }
-    case GST_EVENT_EOS:
-    case GST_EVENT_SEGMENT:
-      gst_event_unref (event);
-      ret = TRUE;
-      break;
     default:
-      ret = gst_pad_event_default (data->pad, GST_OBJECT (mux), event);
       break;
   }
+
+  if (event != NULL)
+    return gst_collect_pads2_event_default (pads, data, event, FALSE);
 
   return ret;
 }

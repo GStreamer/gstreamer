@@ -1631,7 +1631,6 @@ gst_videomixer2_sink_event (GstCollectPads2 * pads, GstCollectData2 * cdata,
   GST_DEBUG_OBJECT (pad, "Got %s event on pad %s:%s",
       GST_EVENT_TYPE_NAME (event), GST_DEBUG_PAD_NAME (pad));
 
-  /* return FALSE => event will be forwarded */
   switch (GST_EVENT_TYPE (event)) {
     case GST_EVENT_CAPS:
     {
@@ -1642,6 +1641,7 @@ gst_videomixer2_sink_event (GstCollectPads2 * pads, GstCollectData2 * cdata,
           gst_videomixer2_pad_sink_setcaps (GST_PAD (pad), GST_OBJECT (mix),
           caps);
       gst_event_unref (event);
+      event = NULL;
       break;
     }
     case GST_EVENT_SEGMENT:{
@@ -1649,9 +1649,6 @@ gst_videomixer2_sink_event (GstCollectPads2 * pads, GstCollectData2 * cdata,
       gst_event_copy_segment (event, &seg);
 
       g_assert (seg.format == GST_FORMAT_TIME);
-      /* eat SEGMENT events */
-      ret = TRUE;
-      gst_event_unref (event);
       break;
     }
     case GST_EVENT_FLUSH_STOP:
@@ -1666,17 +1663,13 @@ gst_videomixer2_sink_event (GstCollectPads2 * pads, GstCollectData2 * cdata,
       mix->segment.position = -1;
       mix->ts_offset = 0;
       mix->nframes = 0;
-
-      ret = gst_pad_event_default (cdata->pad, GST_OBJECT (mix), event);
-      break;
-    case GST_EVENT_EOS:
-      gst_event_unref (event);
-      ret = TRUE;
       break;
     default:
-      ret = gst_pad_event_default (cdata->pad, GST_OBJECT (mix), event);
       break;
   }
+
+  if (event != NULL)
+    return gst_collect_pads2_event_default (pads, cdata, event, FALSE);
 
   return ret;
 }

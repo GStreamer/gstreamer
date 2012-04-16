@@ -3280,7 +3280,7 @@ gst_qt_mux_sink_event (GstCollectPads2 * pads, GstCollectData2 * data,
   GstQTMux *qtmux;
   guint32 avg_bitrate = 0, max_bitrate = 0;
   GstPad *pad = data->pad;
-  gboolean ret = FALSE;
+  gboolean ret = TRUE;
 
   qtmux = GST_QT_MUX_CAST (user_data);
   switch (GST_EVENT_TYPE (event)) {
@@ -3298,6 +3298,7 @@ gst_qt_mux_sink_event (GstCollectPads2 * pads, GstCollectData2 * data,
 
       ret = collect_pad->set_caps (pad, caps);
       gst_event_unref (event);
+      event = NULL;
       break;
     }
     case GST_EVENT_TAG:{
@@ -3327,18 +3328,16 @@ gst_qt_mux_sink_event (GstCollectPads2 * pads, GstCollectData2 * data,
       }
 
       gst_event_unref (event);
+      event = NULL;
       ret = TRUE;
       break;
     }
     default:
-      ret = gst_pad_event_default (data->pad, GST_OBJECT (qtmux), event);
-      break;
-    case GST_EVENT_EOS:
-    case GST_EVENT_SEGMENT:
-      gst_event_unref (event);
-      ret = TRUE;
       break;
   }
+
+  if (event != NULL)
+    return gst_collect_pads2_event_default (pads, data, event, FALSE);
 
   return ret;
 }
