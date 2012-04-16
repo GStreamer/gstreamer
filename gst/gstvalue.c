@@ -1841,6 +1841,65 @@ gst_value_deserialize_caps (GValue * dest, const gchar * s)
   return FALSE;
 }
 
+/**************
+ * GstSegment *
+ **************/
+static gchar *
+gst_value_serialize_segment (const GValue * value)
+{
+  GstSegment *seg = g_value_get_boxed (value);
+  gchar *t, *res;
+  GstStructure *s;
+
+  s = gst_structure_new ("GstSegment",
+      "flags", GST_TYPE_SEGMENT_FLAGS, seg->flags,
+      "rate", G_TYPE_DOUBLE, seg->rate,
+      "applied-rate", G_TYPE_DOUBLE, seg->applied_rate,
+      "format", GST_TYPE_FORMAT, seg->format,
+      "base", G_TYPE_UINT64, seg->base,
+      "start", G_TYPE_UINT64, seg->start,
+      "stop", G_TYPE_UINT64, seg->stop,
+      "time", G_TYPE_UINT64, seg->time,
+      "position", G_TYPE_UINT64, seg->position,
+      "duration", G_TYPE_UINT64, seg->duration, NULL);
+  t = gst_structure_to_string (s);
+  res = g_strdup_printf ("\"%s\"", t);
+  g_free (t);
+  gst_structure_free (s);
+
+  return res;
+}
+
+static gboolean
+gst_value_deserialize_segment (GValue * dest, const gchar * s)
+{
+  GstStructure *str;
+  GstSegment seg;
+  gboolean res;
+
+  str = gst_structure_from_string (s, NULL);
+  if (str == NULL)
+    return FALSE;
+
+  res = gst_structure_get (str,
+      "flags", GST_TYPE_SEGMENT_FLAGS, &seg.flags,
+      "rate", G_TYPE_DOUBLE, &seg.rate,
+      "applied-rate", G_TYPE_DOUBLE, &seg.applied_rate,
+      "format", GST_TYPE_FORMAT, &seg.format,
+      "base", G_TYPE_UINT64, &seg.base,
+      "start", G_TYPE_UINT64, &seg.start,
+      "stop", G_TYPE_UINT64, &seg.stop,
+      "time", G_TYPE_UINT64, &seg.time,
+      "position", G_TYPE_UINT64, &seg.position,
+      "duration", G_TYPE_UINT64, &seg.duration, NULL);
+  gst_structure_free (str);
+
+  if (res)
+    g_value_set_boxed (dest, &seg);
+
+  return res;
+}
+
 /****************
  * GstStructure *
  ****************/
@@ -5724,6 +5783,17 @@ _priv_gst_value_initialize (void)
     };
 
     gst_value.type = GST_TYPE_CAPS;
+    gst_value_register (&gst_value);
+  }
+  {
+    static GstValueTable gst_value = {
+      0,
+      NULL,
+      gst_value_serialize_segment,
+      gst_value_deserialize_segment,
+    };
+
+    gst_value.type = GST_TYPE_SEGMENT;
     gst_value_register (&gst_value);
   }
   {
