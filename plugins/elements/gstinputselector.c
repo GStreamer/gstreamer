@@ -146,7 +146,7 @@ struct _GstSelectorPad
   GstSegment segment;           /* the current segment on the pad */
   guint32 segment_seqnum;       /* sequence number of the current segment */
 
-  gboolean segment_pending;
+  gboolean events_pending;      /* TRUE if sticky events need to be updated */
 };
 
 struct _GstSelectorPadClass
@@ -307,7 +307,7 @@ gst_selector_pad_reset (GstSelectorPad * pad)
   pad->pushed = FALSE;
   pad->eos = FALSE;
   pad->eos_sent = FALSE;
-  pad->segment_pending = FALSE;
+  pad->events_pending = FALSE;
   pad->discont = FALSE;
   pad->flushing = FALSE;
   pad->position = GST_CLOCK_TIME_NONE;
@@ -401,15 +401,6 @@ gst_selector_pad_event (GstPad * pad, GstObject * parent, GstEvent * event)
       GST_DEBUG_OBJECT (pad, "configured SEGMENT %" GST_SEGMENT_FORMAT,
           &selpad->segment);
 
-      /* If we aren't forwarding the event because the pad is not the
-       * active_sinkpad, then set the flag on the pad
-       * that says a segment needs sending if/when that pad is activated.
-       * For all other cases, we send the event immediately, which makes
-       * sparse streams and other segment updates work correctly downstream.
-       */
-      if (!forward)
-        selpad->segment_pending = TRUE;
-
       GST_OBJECT_UNLOCK (selpad);
       GST_INPUT_SELECTOR_UNLOCK (sel);
       break;
@@ -462,8 +453,17 @@ gst_selector_pad_event (GstPad * pad, GstObject * parent, GstEvent * event)
   if (forward) {
     GST_DEBUG_OBJECT (pad, "forwarding event");
     res = gst_pad_push_event (sel->srcpad, event);
-  } else
+  } else {
+    /* If we aren't forwarding the event because the pad is not the
+     * active_sinkpad, then set the flag on the pad
+     * that says a segment needs sending if/when that pad is activated.
+     * For all other cases, we send the event immediately, which makes
+     * sparse streams and other segment updates work correctly downstream.
+     */
+    if (GST_EVENT_IS_STICKY (event))
+      selpad->events_pending = TRUE;
     gst_event_unref (event);
+  }
 
   return res;
 }
@@ -594,6 +594,21 @@ gst_input_selector_wait_running_time (GstInputSelector * sel,
   return (sel->flushing || pad->flushing);
 }
 
+static gboolean
+forward_sticky_events (GstPad * sinkpad, GstEvent ** event, gpointer user_data)
+{
+  GstInputSelector *sel = GST_INPUT_SELECTOR (user_data);
+
+  if (GST_EVENT_TYPE (*event) == GST_EVENT_SEGMENT) {
+    GstSegment *seg = &GST_SELECTOR_PAD (sinkpad)->segment;
+
+    gst_pad_push_event (sel->srcpad, gst_event_new_segment (seg));
+  } else {
+    gst_pad_push_event (sel->srcpad, gst_event_ref (*event));
+  }
+
+  return TRUE;
+}
 
 static GstFlowReturn
 gst_selector_pad_chain (GstPad * pad, GstObject * parent, GstBuffer * buf)
@@ -604,12 +619,9 @@ gst_selector_pad_chain (GstPad * pad, GstObject * parent, GstBuffer * buf)
   GstPad *prev_active_sinkpad;
   GstSelectorPad *selpad;
   GstClockTime start_time;
-  GstSegment *seg;
-  GstEvent *start_event = NULL;
 
   sel = GST_INPUT_SELECTOR (parent);
   selpad = GST_SELECTOR_PAD_CAST (pad);
-  seg = &selpad->segment;
 
   GST_INPUT_SELECTOR_LOCK (sel);
   /* wait or check for flushing */
@@ -642,6 +654,7 @@ gst_selector_pad_chain (GstPad * pad, GstObject * parent, GstBuffer * buf)
 
     GST_OBJECT_LOCK (pad);
     selpad->position = start_time;
+    selpad->segment.position = start_time;
     GST_OBJECT_UNLOCK (pad);
   }
 
@@ -653,31 +666,19 @@ gst_selector_pad_chain (GstPad * pad, GstObject * parent, GstBuffer * buf)
   if (sel->sync_streams)
     GST_INPUT_SELECTOR_BROADCAST (sel);
 
-  /* if we have a pending segment, push it out now */
-  if (G_UNLIKELY (prev_active_sinkpad != active_sinkpad
-          || selpad->segment_pending)) {
-    if (G_UNLIKELY (seg->format == GST_FORMAT_UNDEFINED)) {
-      GST_ERROR_OBJECT (pad, "Buffers arrived before NEWSEGMENT event");
-    } else {
-      GST_DEBUG_OBJECT (pad,
-          "pushing pending NEWSEGMENT update %d, rate %lf, applied rate %lf, "
-          "format %d, " "%" G_GINT64_FORMAT " -- %" G_GINT64_FORMAT ", time %"
-          G_GINT64_FORMAT, FALSE, seg->rate, seg->applied_rate, seg->format,
-          seg->start, seg->stop, seg->time);
-
-      start_event = gst_event_new_segment (seg);
-      gst_event_set_seqnum (start_event, selpad->segment_seqnum);
-      selpad->segment_pending = FALSE;
-    }
-  }
   GST_INPUT_SELECTOR_UNLOCK (sel);
 
   if (prev_active_sinkpad != active_sinkpad && pad == active_sinkpad) {
     g_object_notify (G_OBJECT (sel), "active-pad");
   }
 
-  if (start_event)
-    gst_pad_push_event (sel->srcpad, start_event);
+  /* if we have a pending events, push them now */
+  if (G_UNLIKELY (prev_active_sinkpad != active_sinkpad
+          || selpad->events_pending)) {
+    gst_pad_sticky_events_foreach (GST_PAD_CAST (selpad), forward_sticky_events,
+        sel);
+    selpad->events_pending = FALSE;
+  }
 
   if (selpad->discont) {
     buf = gst_buffer_make_writable (buf);
@@ -924,7 +925,7 @@ gst_input_selector_set_active_pad (GstInputSelector * self, GstPad * pad)
 
   /* Send a new SEGMENT event on the new pad next */
   if (old != new && new)
-    new->segment_pending = TRUE;
+    new->events_pending = TRUE;
 
   active_pad_p = &self->active_sinkpad;
   gst_object_replace ((GstObject **) active_pad_p, GST_OBJECT_CAST (pad));
