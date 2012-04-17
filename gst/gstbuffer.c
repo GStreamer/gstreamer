@@ -1625,6 +1625,8 @@ gst_buffer_remove_meta (GstBuffer * buffer, GstMeta * meta)
   g_return_val_if_fail (buffer != NULL, FALSE);
   g_return_val_if_fail (meta != NULL, FALSE);
   g_return_val_if_fail (gst_buffer_is_writable (buffer), FALSE);
+  g_return_val_if_fail (!GST_META_FLAG_IS_SET (meta, GST_META_FLAG_LOCKED),
+      FALSE);
 
   /* find the metadata and delete */
   prev = GST_BUFFER_META (buffer);
@@ -1724,6 +1726,7 @@ gst_buffer_foreach_meta (GstBuffer * buffer, GstBufferForeachMetaFunc func,
           g_type_name (info->type));
 
       g_return_if_fail (gst_buffer_is_writable (buffer));
+      g_return_if_fail (!GST_META_FLAG_IS_SET (m, GST_META_FLAG_LOCKED));
 
       /* remove from list */
       if (GST_BUFFER_META (buffer) == walk)

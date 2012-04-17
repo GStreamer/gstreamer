@@ -34,8 +34,8 @@ typedef struct _GstMetaInfo GstMetaInfo;
  * GstMetaFlags:
  * @GST_META_FLAG_NONE: no flags
  * @GST_META_FLAG_READONLY: metadata should not be modified
- * @GST_META_FLAG_POOLED: metadata is managed by a bufferpool and should not
- *    be removed
+ * @GST_META_FLAG_POOLED: metadata is managed by a bufferpool
+ * @GST_META_FLAG_LOCKED: metadata should not be removed
  * @GST_META_FLAG_LAST: additional flags can be added starting from this flag.
  *
  * Extra metadata flags.
@@ -44,6 +44,7 @@ typedef enum {
   GST_META_FLAG_NONE        = 0,
   GST_META_FLAG_READONLY    = (1 << 0),
   GST_META_FLAG_POOLED      = (1 << 1),
+  GST_META_FLAG_LOCKED      = (1 << 2),
 
   GST_META_FLAG_LAST        = (1 << 16)
 } GstMetaFlags;

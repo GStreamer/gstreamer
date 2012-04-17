@@ -129,11 +129,12 @@ struct _GstBufferPool {
  * @alloc_buffer: allocate a buffer. the default implementation allocates
  *        buffers from the configured memory allocator and with the configured
  *        parameters. All metadata that is present on the allocated buffer will
- *        be marked as #GST_META_FLAG_POOLED and will not be removed from the
- *        buffer in @reset_buffer.
+ *        be marked as #GST_META_FLAG_POOLED and #GST_META_FLAG_LOCKED and will
+ *        not be removed from the buffer in @reset_buffer.
  * @reset_buffer: reset the buffer to its state when it was freshly allocated.
  *        The default implementation will clear the flags, timestamps and
- *        will remove the metadata without the #GST_META_FLAG_POOLED flag.
+ *        will remove the metadata without the #GST_META_FLAG_POOLED flag (even
+ *        the metadata with #GST_META_FLAG_LOCKED).
  * @release_buffer: release a buffer back in the pool. The default
  *        implementation will put the buffer back in the queue and notify any
  *        blocking acquire_buffer calls.

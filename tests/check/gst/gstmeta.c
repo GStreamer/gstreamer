@@ -210,6 +210,40 @@ GST_START_TEST (test_meta_test)
 
 GST_END_TEST;
 
+static gboolean
+foreach_meta (GstBuffer * buffer, GstMeta ** meta, gpointer user_data)
+{
+  /* try to remove */
+  *meta = NULL;
+  return TRUE;
+}
+
+GST_START_TEST (test_meta_locked)
+{
+  GstBuffer *buffer;
+  GstMetaTest *meta;
+
+  buffer = gst_buffer_new_and_alloc (4);
+  fail_if (buffer == NULL);
+
+  /* add some metadata */
+  meta = GST_META_TEST_ADD (buffer);
+  fail_if (meta == NULL);
+  GST_META_FLAG_SET (meta, GST_META_FLAG_LOCKED);
+
+  ASSERT_CRITICAL (gst_buffer_remove_meta (buffer, (GstMeta *) meta));
+  ASSERT_CRITICAL (gst_buffer_foreach_meta (buffer, foreach_meta, NULL));
+
+  GST_META_FLAG_UNSET (meta, GST_META_FLAG_LOCKED);
+
+  gst_buffer_remove_meta (buffer, (GstMeta *) meta);
+
+  /* clean up */
+  gst_buffer_unref (buffer);
+}
+
+GST_END_TEST;
+
 static Suite *
 gst_buffermeta_suite (void)
 {
@@ -218,6 +252,7 @@ gst_buffermeta_suite (void)
 
   suite_add_tcase (s, tc_chain);
   tcase_add_test (tc_chain, test_meta_test);
+  tcase_add_test (tc_chain, test_meta_locked);
 
   return s;
 }
