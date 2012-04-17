@@ -821,7 +821,7 @@ gst_jpeg_parse_set_new_caps (GstJpegParse * parse, gboolean header_ok)
     if (!GST_CLOCK_TIME_IS_VALID (parse->priv->duration)
         && parse->priv->framerate_numerator != 0) {
       parse->priv->duration = gst_util_uint64_scale_int (GST_SECOND,
-          parse->priv->framerate_numerator, parse->priv->framerate_denominator);
+          parse->priv->framerate_denominator, parse->priv->framerate_numerator);
     }
   } else {
     /* unknown duration */
