@@ -1316,7 +1316,7 @@ ges_timeline_object_set_top_effect_priority (GESTimelineObject * object,
   }
 
   if (current_prio > object->priv->nb_effects) {
-    GST_DEBUG ("%p is not a top effect");
+    GST_DEBUG ("%p is not a top effect", effect);
     return FALSE;
   }
 

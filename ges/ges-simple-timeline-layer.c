@@ -211,8 +211,9 @@ gstl_recalculate (GESSimpleTimelineLayer * self)
       if (pos < 0)
         pos = 0;
 
-      GST_LOG ("%p obj: height: %d: trans_priority %d Position: %d, "
-          "duration %d", obj, height, transition_priority, pos);
+      GST_LOG ("%p obj: height: %d: trans_priority %d Position: %" G_GINT64_FORMAT
+          ", duration %" G_GINT64_FORMAT, obj, height, transition_priority, pos,
+          dur);
 
       g_assert (transition_priority != -1);
 

@@ -313,7 +313,7 @@ ges_track_title_source_set_xpos (GESTrackTitleSource * self, gdouble position)
 void
 ges_track_title_source_set_ypos (GESTrackTitleSource * self, gdouble position)
 {
-  GST_DEBUG ("self:%p, ypos:%d", self, position);
+  GST_DEBUG ("self:%p, ypos:%f", self, position);
 
   self->priv->ypos = position;
   if (self->priv->text_el)
