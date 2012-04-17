@@ -95,7 +95,7 @@ to print out different types of debugging information to stderr.
   <para>
 The variable takes a comma-separated list of "category_name:level" pairs
 to set specific levels for the individual categories.
-The level value ranges from 0 (nothing) to 5 (LOG).
+The level value ranges from 0 (nothing) to 9 (MEMDUMP).
     <variablelist>
 
       <varlistentry>
@@ -120,7 +120,19 @@ are expected to happen.
       </varlistentry>
 
       <varlistentry>
-        <term>3 - <option>INFO</option></term>
+        <term>3 - <option>FIXME</option></term>
+        <listitem>
+<para>
+Logs all fixme messages. Fixme messages are messages that indicate that something
+in the executed code path is not fully implemented or handled yet.  The purpose
+of this message is to make it easier to spot incomplete/unfinished pieces of
+code when reading the debug log.
+</para>
+        </listitem>
+      </varlistentry>
+
+      <varlistentry>
+        <term>4 - <option>INFO</option></term>
         <listitem>
 <para>
 Logs all informational messages.  These are typically used for events in
@@ -131,7 +143,7 @@ logged at this level.
       </varlistentry>
 
       <varlistentry>
-        <term>4 - <option>DEBUG</option></term>
+        <term>5 - <option>DEBUG</option></term>
         <listitem>
 <para>
 Logs all debug messages.  These are general debug messages for events
@@ -142,12 +154,34 @@ these include setup, teardown, change of parameters, ...
       </varlistentry>
 
       <varlistentry>
-        <term>5 - <option>LOG</option></term>
+        <term>6 - <option>LOG</option></term>
         <listitem>
 <para>
 Logs all log messages.  These are messages for events
 that happen repeatedly during an object's lifetime;
 these include streaming and steady-state conditions.
+</para>
+        </listitem>
+      </varlistentry>
+
+      <varlistentry>
+        <term>7 - <option>TRACE</option></term>
+        <listitem>
+<para>
+Logs all trace messages.  These messages for events
+that happen repeatedly during an object's lifetime such as the
+ref/unref cycles.
+</para>
+        </listitem>
+      </varlistentry>
+
+      <varlistentry>
+        <term>9 - <option>MEMDUMP</option></term>
+        <listitem>
+<para>
+Log all memory dump messages. Memory dump messages are used to log
+(small) chunks of data as memory dumps in the log. They will be displayed
+as hexdump with ASCII characters.
 </para>
         </listitem>
       </varlistentry>
@@ -158,7 +192,7 @@ these include streaming and steady-state conditions.
 
   <para>
 For example, setting <envar>GST_DEBUG</envar> to
-<option>GST_AUTOPLUG:5,GST_ELEMENT_*:3</option>, will cause the
+<option>GST_AUTOPLUG:6,GST_ELEMENT_*:4</option>, will cause the
 <option>GST_AUTOPLUG</option> category to be logged at full
 <option>LOG</option> level, while all categories starting with
 <option>GST_ELEMENT_</option> will be logged at <option>INFO</option> level.
@@ -167,7 +201,7 @@ For example, setting <envar>GST_DEBUG</envar> to
   <para>
 To get all possible debug output, set
 <envar>GST_DEBUG</envar>
-to <option>*:5</option>
+to <option>*:9</option>
   </para>
 
 </formalpara>
@@ -234,6 +268,44 @@ plugin registry. This is useful for embedded device which is not updating the
 plugins frequently, it will save time when doing gst_init().
   </para>
 
+</formalpara>
+
+<formalpara id="GST_TRACE">
+  <title><envar>GST_TRACE</envar></title>
+
+  <para>
+    Enable memory allocation tracing. Most GStreamer objects have support for
+    tracing the number of unfreed objects and their memory pointers.
+  </para>
+  <para>
+The variable takes a comma-separated list of tracing options to enable.
+    <variablelist>
+
+      <varlistentry>
+        <term>live</term>
+        <listitem>
+<para>
+  Counts all live objects and dumps an overview of the number of unfreed
+  objects at program exit.
+</para>
+        </listitem>
+      </varlistentry>
+
+      <varlistentry>
+        <term>mem-live</term>
+        <listitem>
+<para>
+  Keep track of the unfreed memory pointers and dump an overview of all unfreed
+  memory at program exit. Together with a level 9 debug log this can be used to
+  follow the lifecycle of leaked objects in order to track down where they are
+  leaked.
+</para>
+        </listitem>
+      </varlistentry>
+    </variablelist>
+
+ Use <option>all</option> to enable all tracing flags.
+  </para>
 </formalpara>
 
 <formalpara id="ORC_CODE">
