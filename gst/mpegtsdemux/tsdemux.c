@@ -1563,6 +1563,7 @@ beach:
   stream->nbpending = 0;
   stream->current = NULL;
   stream->currentit = NULL;
+  stream->currentlist = NULL;
   stream->expected_size = 0;
   stream->current_size = 0;
 
