@@ -411,8 +411,10 @@ AM_CONDITIONAL(HAVE_WINSOCK2_H, test "x$HAVE_WINSOCK2_H" = "xyes")
 if test "x$HAVE_WINSOCK2_H" = "xyes"; then
   DCCP_LIBS="$DCCP_LIBS -lws2_32"
   XDG_LIBS="$XDG_LIBS -lws2_32"
+  RTMP_LIBS="$RTMP_LIBS -lws2_32"
   AC_SUBST(DCCP_LIBS)
   AC_SUBST(XDG_LIBS)
+  AC_SUBST(RTMP_LIBS)
 fi
 
 if test "x$HAVE_PTHREAD_H" = "xyes"; then
