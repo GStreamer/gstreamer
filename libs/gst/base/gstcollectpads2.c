@@ -1814,21 +1814,22 @@ gst_collect_pads2_event (GstPad * pad, GstEvent * event)
           ", stop %" GST_TIME_FORMAT, GST_TIME_ARGS (start),
           GST_TIME_ARGS (stop));
 
-      /* default muxing functionality */
-      if (!buffer_func)
-        goto newsegment_done;
-
       /* default collection can not handle other segment formats than time */
-      if (format != GST_FORMAT_TIME) {
+      if (buffer_func && format != GST_FORMAT_TIME) {
         GST_WARNING_OBJECT (pads, "GstCollectPads2 default collecting "
             "can only handle time segments. Non time segment ignored.");
         goto newsegment_done;
       }
 
+      /* accept segment */
       gst_segment_set_newsegment_full (&data->segment, update, rate, arate,
           format, start, stop, time);
 
       GST_COLLECT_PADS2_STATE_SET (data, GST_COLLECT_PADS2_STATE_NEW_SEGMENT);
+
+      /* default muxing functionality */
+      if (!buffer_func)
+        goto newsegment_done;
 
       /* If oldest time is not known, or current pad got newsegment;
        * recalculate the state */
