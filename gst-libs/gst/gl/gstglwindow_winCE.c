@@ -195,7 +195,6 @@ gst_gl_window_new (gulong external_gl_context)
   return window;
 
 failure:
-  g_mutex_unlock (priv->x_lock);
   g_object_unref (G_OBJECT (window));
   return NULL;
 }

@@ -1,4 +1,4 @@
-/* 
+/*
  * GStreamer
  * Copyright (C) 2008 Julien Isorce <julien.isorce@gmail.com>
  *

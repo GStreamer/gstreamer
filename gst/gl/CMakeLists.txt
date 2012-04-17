@@ -8,7 +8,6 @@ include_directories(AFTER
   ../../gst-libs/gst/gl
   ${GLEW_INCLUDE_DIR}
   ../../gst-libs
-  ../..
   .
   effects)
 
@@ -19,7 +18,9 @@ include_directories(AFTER
 endif (NOT GST_USING_BINARY_REGISTRY)
 
 if (WIN32)
-  include_directories(AFTER ../../win32/common)
+  include_directories(AFTER
+    ../../win32/common
+    ../../../win32/common)
 endif (WIN32)
 
 add_library (gstopengl MODULE

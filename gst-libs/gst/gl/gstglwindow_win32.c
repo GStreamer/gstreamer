@@ -181,8 +181,8 @@ gst_gl_window_new (DWORD_PTR external_gl_context)
   g_debug ("gl window created: %lud\n", (gulong) priv->internal_win_id);
 
   //device is set in the window_proc
-  if (!priv->display) {
-    g_debug ("failed to create display\n");
+  if (!priv->device) {
+    g_debug ("failed to create device\n");
     goto failure;
   }
 
@@ -191,7 +191,6 @@ gst_gl_window_new (DWORD_PTR external_gl_context)
   return window;
 
 failure:
-  g_mutex_unlock (priv->x_lock);
   g_object_unref (G_OBJECT (window));
   return NULL;
 }
