@@ -1,0 +1,7 @@
+
+Debug
+ipch
+*.user
+*.sdf
+*.opensdf
+vs/2010/libs
