@@ -23,7 +23,7 @@
 
 
 #include <gst/gst.h>
-#include <gst/base/gstcollectpads2.h>
+#include <gst/base/gstcollectpads.h>
 #include <gst/riff/riff-media.h>
 
 #include "gstasfobjects.h"
@@ -57,7 +57,7 @@ enum _GstAsfMuxState
 
 struct _GstAsfPad
 {
-  GstCollectData2 collect;
+  GstCollectData collect;
 
   gboolean is_audio;
   guint8 stream_number;
@@ -143,7 +143,7 @@ struct _GstAsfMux
   /* pads */
   GstPad *srcpad;
 
-  GstCollectPads2 *collect;
+  GstCollectPads *collect;
   GstPadEventFunction collect_event;
 };
 

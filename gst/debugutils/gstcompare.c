@@ -26,7 +26,7 @@
 #include <string.h>
 
 #include <gst/gst.h>
-#include <gst/base/gstcollectpads2.h>
+#include <gst/base/gstcollectpads.h>
 #include <gst/video/video.h>
 
 #include "gstcompare.h"
@@ -110,7 +110,7 @@ static void gst_compare_reset (GstCompare * overlay);
 
 static gboolean gst_compare_query (GstPad * pad, GstObject * parent,
     GstQuery * query);
-static GstFlowReturn gst_compare_collect_pads (GstCollectPads2 * cpads,
+static GstFlowReturn gst_compare_collect_pads (GstCollectPads * cpads,
     GstCompare * comp);
 
 static GstStateChangeReturn gst_compare_change_state (GstElement * element,
@@ -184,9 +184,9 @@ gst_compare_class_init (GstCompareClass * klass)
 static void
 gst_compare_init (GstCompare * comp)
 {
-  comp->cpads = gst_collect_pads2_new ();
-  gst_collect_pads2_set_function (comp->cpads,
-      (GstCollectPads2Function) GST_DEBUG_FUNCPTR (gst_compare_collect_pads),
+  comp->cpads = gst_collect_pads_new ();
+  gst_collect_pads_set_function (comp->cpads,
+      (GstCollectPadsFunction) GST_DEBUG_FUNCPTR (gst_compare_collect_pads),
       comp);
 
   comp->sinkpad = gst_pad_new_from_static_template (&sink_factory, "sink");
@@ -198,10 +198,10 @@ gst_compare_init (GstCompare * comp)
   gst_pad_set_query_function (comp->checkpad, gst_compare_query);
   gst_element_add_pad (GST_ELEMENT (comp), comp->checkpad);
 
-  gst_collect_pads2_add_pad_full (comp->cpads, comp->sinkpad,
-      sizeof (GstCollectData2), NULL, TRUE);
-  gst_collect_pads2_add_pad_full (comp->cpads, comp->checkpad,
-      sizeof (GstCollectData2), NULL, TRUE);
+  gst_collect_pads_add_pad_full (comp->cpads, comp->sinkpad,
+      sizeof (GstCollectData), NULL, TRUE);
+  gst_collect_pads_add_pad_full (comp->cpads, comp->checkpad,
+      sizeof (GstCollectData), NULL, TRUE);
 
   comp->srcpad = gst_pad_new_from_static_template (&src_factory, "src");
   gst_pad_set_query_function (comp->srcpad, gst_compare_query);
@@ -557,16 +557,16 @@ gst_compare_buffers (GstCompare * comp, GstBuffer * buf1, GstCaps * caps1,
 }
 
 static GstFlowReturn
-gst_compare_collect_pads (GstCollectPads2 * cpads, GstCompare * comp)
+gst_compare_collect_pads (GstCollectPads * cpads, GstCompare * comp)
 {
   GstBuffer *buf1, *buf2;
   GstCaps *caps1, *caps2;
 
-  buf1 = gst_collect_pads2_pop (comp->cpads,
+  buf1 = gst_collect_pads_pop (comp->cpads,
       gst_pad_get_element_private (comp->sinkpad));
   caps1 = gst_pad_get_current_caps (comp->sinkpad);
 
-  buf2 = gst_collect_pads2_pop (comp->cpads,
+  buf2 = gst_collect_pads_pop (comp->cpads,
       gst_pad_get_element_private (comp->checkpad));
   caps2 = gst_pad_get_current_caps (comp->checkpad);
 
@@ -665,10 +665,10 @@ gst_compare_change_state (GstElement * element, GstStateChange transition)
   switch (transition) {
     case GST_STATE_CHANGE_NULL_TO_READY:
     case GST_STATE_CHANGE_READY_TO_PAUSED:
-      gst_collect_pads2_start (comp->cpads);
+      gst_collect_pads_start (comp->cpads);
       break;
     case GST_STATE_CHANGE_PAUSED_TO_READY:
-      gst_collect_pads2_stop (comp->cpads);
+      gst_collect_pads_stop (comp->cpads);
       break;
     default:
       break;

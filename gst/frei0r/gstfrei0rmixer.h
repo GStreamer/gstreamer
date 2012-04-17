@@ -22,7 +22,7 @@
 
 #include <gst/gst.h>
 #include <gst/video/video.h>
-#include <gst/base/gstcollectpads2.h>
+#include <gst/base/gstcollectpads.h>
 
 #include "frei0r.h"
 #include "gstfrei0r.h"
@@ -42,7 +42,7 @@ typedef struct _GstFrei0rMixerClass GstFrei0rMixerClass;
 struct _GstFrei0rMixer {
   GstElement parent;
 
-  GstCollectPads2 *collect;
+  GstCollectPads *collect;
   GstPad *src;
   GstPad *sink0, *sink1, *sink2;
 

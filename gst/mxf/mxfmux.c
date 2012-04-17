@@ -146,9 +146,9 @@ gst_mxf_mux_init (GstMXFMux * mux, GstMXFMuxClass * g_class)
   gst_caps_unref (caps);
   gst_element_add_pad (GST_ELEMENT (mux), mux->srcpad);
 
-  mux->collect = gst_collect_pads2_new ();
-  gst_collect_pads2_set_function (mux->collect,
-      (GstCollectPads2Function) GST_DEBUG_FUNCPTR (gst_mxf_mux_collected), mux);
+  mux->collect = gst_collect_pads_new ();
+  gst_collect_pads_set_function (mux->collect,
+      (GstCollectPadsFunction) GST_DEBUG_FUNCPTR (gst_mxf_mux_collected), mux);
 
   gst_mxf_mux_reset (mux);
 }
@@ -209,7 +209,7 @@ gst_mxf_mux_reset (GstMXFMux * mux)
     g_object_unref (cpad->adapter);
     g_free (cpad->mapping_data);
 
-    gst_collect_pads2_remove_pad (mux->collect, cpad->collect.pad);
+    gst_collect_pads_remove_pad (mux->collect, cpad->collect.pad);
   }
 
   mux->state = GST_MXF_MUX_STATE_HEADER;
@@ -268,7 +268,7 @@ gst_mxf_mux_handle_sink_event (GstPad * pad, GstEvent * event)
       break;
   }
 
-  /* now GstCollectPads2 can take care of the rest, e.g. EOS */
+  /* now GstCollectPads can take care of the rest, e.g. EOS */
   if (ret)
     ret = mux->collect_event (pad, event);
   gst_object_unref (mux);
@@ -420,13 +420,13 @@ gst_mxf_mux_request_new_pad (GstElement * element,
   pad = gst_pad_new_from_template (templ, name);
   g_free (name);
   cpad = (GstMXFMuxPad *)
-      gst_collect_pads2_add_pad (mux->collect, pad, sizeof (GstMXFMuxPad));
+      gst_collect_pads_add_pad (mux->collect, pad, sizeof (GstMXFMuxPad));
   cpad->last_timestamp = 0;
   cpad->adapter = gst_adapter_new ();
   cpad->writer = writer;
 
   /* FIXME: hacked way to override/extend the event function of
-   * GstCollectPads2; because it sets its own event function giving the
+   * GstCollectPads; because it sets its own event function giving the
    * element no access to events.
    */
   mux->collect_event = (GstPadEventFunction) GST_PAD_EVENTFUNC (pad);
@@ -450,7 +450,7 @@ gst_mxf_mux_release_pad (GstElement * element, GstPad * pad)
      g_object_unref (cpad->adapter);
      g_free (cpad->mapping_data);
 
-     gst_collect_pads2_remove_pad (mux->collect, pad);
+     gst_collect_pads_remove_pad (mux->collect, pad);
      gst_element_remove_pad (element, pad); */
 }
 
@@ -1099,7 +1099,7 @@ gst_mxf_mux_handle_buffer (GstMXFMux * mux, GstMXFMuxPad * cpad)
   GstBuffer *packet;
   GstFlowReturn ret = GST_FLOW_OK;
   guint8 slen, ber[9];
-  gboolean flush = ((cpad->collect.state & GST_COLLECT_PADS2_STATE_EOS)
+  gboolean flush = ((cpad->collect.state & GST_COLLECT_PADS_STATE_EOS)
       && !cpad->have_complete_edit_unit && cpad->collect.buffer == NULL);
 
   if (cpad->have_complete_edit_unit) {
@@ -1108,7 +1108,7 @@ gst_mxf_mux_handle_buffer (GstMXFMux * mux, GstMXFMuxPad * cpad)
         cpad->source_track->parent.track_id, cpad->pos);
     buf = NULL;
   } else if (!flush) {
-    buf = gst_collect_pads2_pop (mux->collect, &cpad->collect);
+    buf = gst_collect_pads_pop (mux->collect, &cpad->collect);
   }
 
   if (buf) {
@@ -1369,7 +1369,7 @@ _sort_mux_pads (gconstpointer a, gconstpointer b)
 }
 
 static GstFlowReturn
-gst_mxf_mux_collected (GstCollectPads2 * pads, gpointer user_data)
+gst_mxf_mux_collected (GstCollectPads * pads, gpointer user_data)
 {
   GstMXFMux *mux = GST_MXF_MUX (user_data);
   GstMXFMuxPad *best = NULL;
@@ -1430,7 +1430,7 @@ gst_mxf_mux_collected (GstCollectPads2 * pads, gpointer user_data)
           gst_util_uint64_scale ((mux->last_gc_position + 1) * GST_SECOND,
           mux->min_edit_rate.d, mux->min_edit_rate.n);
 
-      pad_eos = cpad->collect.state & GST_COLLECT_PADS2_STATE_EOS;
+      pad_eos = cpad->collect.state & GST_COLLECT_PADS_STATE_EOS;
       if (!pad_eos)
         eos = FALSE;
 
@@ -1482,12 +1482,12 @@ gst_mxf_mux_change_state (GstElement * element, GstStateChange transition)
     case GST_STATE_CHANGE_NULL_TO_READY:
       break;
     case GST_STATE_CHANGE_READY_TO_PAUSED:
-      gst_collect_pads2_start (mux->collect);
+      gst_collect_pads_start (mux->collect);
       break;
     case GST_STATE_CHANGE_PAUSED_TO_PLAYING:
       break;
     case GST_STATE_CHANGE_PAUSED_TO_READY:
-      gst_collect_pads2_stop (mux->collect);
+      gst_collect_pads_stop (mux->collect);
       break;
     default:
       break;

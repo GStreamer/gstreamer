@@ -114,7 +114,7 @@ static void gst_ssim_release_pad (GstElement * element, GstPad * pad);
 static GstStateChangeReturn gst_ssim_change_state (GstElement * element,
     GstStateChange transition);
 
-static GstFlowReturn gst_ssim_collected (GstCollectPads2 * pads,
+static GstFlowReturn gst_ssim_collected (GstCollectPads * pads,
     gpointer user_data);
 
 static GstElementClass *parent_class = NULL;
@@ -901,7 +901,7 @@ gst_ssim_src_event (GstPad * pad, GstEvent * event)
       /* check if we are flushing */
       if (flags & GST_SEEK_FLAG_FLUSH) {
         /* make sure we accept nothing anymore and return WRONG_STATE */
-        gst_collect_pads2_set_flushing (ssim->collect, TRUE);
+        gst_collect_pads_set_flushing (ssim->collect, TRUE);
 
         /* flushing seek, start flush downstream, the flush will be done
          * when all pads received a FLUSH_STOP. */
@@ -991,7 +991,7 @@ gst_ssim_sink_event (GstPad * pad, GstEvent * event)
       break;
   }
 
-  /* now GstCollectPads2 can take care of the rest, e.g. EOS */
+  /* now GstCollectPads can take care of the rest, e.g. EOS */
   GST_DEBUG ("Dispatching %s event on pad %s:%s", GST_EVENT_TYPE_NAME (event),
       GST_DEBUG_PAD_NAME (pad));
   ret = ssim->collect_event (pad, event);
@@ -1158,10 +1158,10 @@ gst_ssim_request_new_pad (GstElement * element, GstPadTemplate * templ,
   gst_pad_set_getcaps_function (newpad,
       GST_DEBUG_FUNCPTR (gst_ssim_sink_getcaps));
   gst_pad_set_setcaps_function (newpad, GST_DEBUG_FUNCPTR (gst_ssim_setcaps));
-  gst_collect_pads2_add_pad (ssim->collect, newpad, sizeof (GstCollectData2));
+  gst_collect_pads_add_pad (ssim->collect, newpad, sizeof (GstCollectData));
 
   /* FIXME: hacked way to override/extend the event function of
-   * GstCollectPads2; because it sets its own event function giving the
+   * GstCollectPads; because it sets its own event function giving the
    * element no access to events
    */
   GST_DEBUG_OBJECT (ssim, "Current collect_event is %p, changing to %p",
@@ -1233,7 +1233,7 @@ could_not_add_src:
 could_not_add_sink:
   {
     GST_DEBUG_OBJECT (ssim, "could not add sink pad");
-    gst_collect_pads2_remove_pad (ssim->collect, newpad);
+    gst_collect_pads_remove_pad (ssim->collect, newpad);
     gst_object_unref (newpad);
     return NULL;
   }
@@ -1248,7 +1248,7 @@ gst_ssim_release_pad (GstElement * element, GstPad * pad)
 
   GST_DEBUG_OBJECT (ssim, "release pad %s:%s", GST_DEBUG_PAD_NAME (pad));
 
-  gst_collect_pads2_remove_pad (ssim->collect, pad);
+  gst_collect_pads_remove_pad (ssim->collect, pad);
   gst_element_remove_pad (element, pad);
 }
 
@@ -1267,8 +1267,8 @@ gst_ssim_init (GstSSim * ssim)
   ssim->sinkcaps = NULL;
 
   /* keep track of the sinkpads requested */
-  ssim->collect = gst_collect_pads2_new ();
-  gst_collect_pads2_set_function (ssim->collect,
+  ssim->collect = gst_collect_pads_new ();
+  gst_collect_pads_set_function (ssim->collect,
       GST_DEBUG_FUNCPTR (gst_ssim_collected), ssim);
 }
 
@@ -1407,7 +1407,7 @@ gst_ssim_regenerate_windows (GstSSim * ssim)
 }
 
 static GstFlowReturn
-gst_ssim_collected (GstCollectPads2 * pads, gpointer user_data)
+gst_ssim_collected (GstCollectPads * pads, gpointer user_data)
 {
   GstSSim *ssim;
   GSList *collected;
@@ -1440,12 +1440,12 @@ gst_ssim_collected (GstCollectPads2 * pads, gpointer user_data)
   }
 
   for (collected = pads->data; collected; collected = g_slist_next (collected)) {
-    GstCollectData2 *collect_data;
+    GstCollectData *collect_data;
     GstBuffer *inbuf;
 
-    collect_data = (GstCollectData2 *) collected->data;
+    collect_data = (GstCollectData *) collected->data;
 
-    inbuf = gst_collect_pads2_peek (pads, collect_data);
+    inbuf = gst_collect_pads_peek (pads, collect_data);
 
     if (inbuf == NULL) {
       GST_LOG_OBJECT (ssim, "channel %p: no bytes available", collect_data);
@@ -1469,12 +1469,12 @@ gst_ssim_collected (GstCollectPads2 * pads, gpointer user_data)
 
     for (collected = pads->data; collected;
         collected = g_slist_next (collected)) {
-      GstCollectData2 *collect_data;
+      GstCollectData *collect_data;
 
-      collect_data = (GstCollectData2 *) collected->data;
+      collect_data = (GstCollectData *) collected->data;
 
       if (collect_data->pad == ssim->orig) {
-        orgbuf = gst_collect_pads2_pop (pads, collect_data);;
+        orgbuf = gst_collect_pads_pop (pads, collect_data);;
 
         GST_DEBUG_OBJECT (ssim, "Original stream - flags(0x%x), timestamp(%"
             GST_TIME_FORMAT "), duration(%" GST_TIME_FORMAT ")",
@@ -1491,14 +1491,14 @@ gst_ssim_collected (GstCollectPads2 * pads, gpointer user_data)
   GST_LOG_OBJECT (ssim, "starting to cycle through streams");
 
   for (collected = pads->data; collected; collected = g_slist_next (collected)) {
-    GstCollectData2 *collect_data;
+    GstCollectData *collect_data;
     GstBuffer *inbuf;
     guint8 *indata;
 
-    collect_data = (GstCollectData2 *) collected->data;
+    collect_data = (GstCollectData *) collected->data;
 
     if (collect_data->pad != ssim->orig) {
-      inbuf = gst_collect_pads2_pop (pads, collect_data);
+      inbuf = gst_collect_pads_pop (pads, collect_data);
 
       indata = GST_BUFFER_DATA (inbuf);
 
@@ -1659,7 +1659,7 @@ gst_ssim_change_state (GstElement * element, GstStateChange transition)
       ssim->segment_position = 0;
       ssim->segment_rate = 1.0;
       gst_segment_init (&ssim->segment, GST_FORMAT_UNDEFINED);
-      gst_collect_pads2_start (ssim->collect);
+      gst_collect_pads_start (ssim->collect);
       break;
     case GST_STATE_CHANGE_PAUSED_TO_PLAYING:
       break;
@@ -1667,7 +1667,7 @@ gst_ssim_change_state (GstElement * element, GstStateChange transition)
       /* need to unblock the collectpads before calling the
        * parent change_state so that streaming can finish
        */
-      gst_collect_pads2_stop (ssim->collect);
+      gst_collect_pads_stop (ssim->collect);
       break;
     default:
       break;

@@ -84,7 +84,7 @@
 #define __MPEGTSMUX_H__
 
 #include <gst/gst.h>
-#include <gst/base/gstcollectpads2.h>
+#include <gst/base/gstcollectpads.h>
 #include <gst/base/gstadapter.h>
 
 G_BEGIN_DECLS
@@ -108,7 +108,7 @@ struct MpegTsMux {
 
   GstPad *srcpad;
 
-  GstCollectPads2 *collect;
+  GstCollectPads *collect;
 
   TsMux *tsmux;
   TsMuxProgram **programs;
@@ -139,7 +139,7 @@ struct MpegTsMuxClass  {
 #define MPEG_TS_PAD_DATA(data)  ((MpegTsPadData *)(data))
 
 struct MpegTsPadData {
-  GstCollectData2 collect; /* Parent */
+  GstCollectData collect; /* Parent */
 
   gint pid;
   TsMuxStream *stream;

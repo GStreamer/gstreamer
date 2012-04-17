@@ -229,7 +229,7 @@ ks_video_format_to_structure (GUID subtype_guid, GUID format_guid)
           "format", GST_TYPE_FOURCC, GST_MAKE_FOURCC ('d', 'v', 's', 'd'),
           NULL);
     }
-  } else if (memcmp (&subtype_guid.Data2, &MEDIASUBTYPE_FOURCC.Data2,
+  } else if (memcmp (&subtype_guid.Data, &MEDIASUBTYPE_FOURCC.Data,
           sizeof (subtype_guid) - sizeof (subtype_guid.Data1)) == 0) {
     guint8 *p = (guint8 *) & subtype_guid.Data1;
 
@@ -240,7 +240,7 @@ ks_video_format_to_structure (GUID subtype_guid, GUID format_guid)
 
   if (!structure) {
     GST_DEBUG ("Unknown DirectShow Video GUID %08x-%04x-%04x-%04x-%08x%04x",
-        subtype_guid.Data1, subtype_guid.Data2, subtype_guid.Data3,
+        subtype_guid.Data1, subtype_guid.Data, subtype_guid.Data3,
         *(WORD *) subtype_guid.Data4, *(DWORD *) & subtype_guid.Data4[2],
         *(WORD *) & subtype_guid.Data4[6]);
   }

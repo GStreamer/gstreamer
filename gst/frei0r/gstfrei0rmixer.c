@@ -120,7 +120,7 @@ gst_frei0r_mixer_change_state (GstElement * element, GstStateChange transition)
     case GST_STATE_CHANGE_NULL_TO_READY:
       break;
     case GST_STATE_CHANGE_READY_TO_PAUSED:
-      gst_collect_pads2_start (self->collect);
+      gst_collect_pads_start (self->collect);
       break;
     case GST_STATE_CHANGE_PAUSED_TO_PLAYING:
       break;
@@ -129,11 +129,11 @@ gst_frei0r_mixer_change_state (GstElement * element, GstStateChange transition)
   }
 
   /* Stop before calling the parent's state change function as
-   * GstCollectPads2 might take locks and we would deadlock in that
+   * GstCollectPads might take locks and we would deadlock in that
    * case
    */
   if (transition == GST_STATE_CHANGE_PAUSED_TO_READY)
-    gst_collect_pads2_stop (self->collect);
+    gst_collect_pads_stop (self->collect);
 
   ret =
       GST_ELEMENT_CLASS (g_type_class_peek_parent (klass))->change_state
@@ -488,7 +488,7 @@ gst_frei0r_mixer_src_event (GstPad * pad, GstEvent * event)
       /* check if we are flushing */
       if (flags & GST_SEEK_FLAG_FLUSH) {
         /* make sure we accept nothing anymore and return WRONG_STATE */
-        gst_collect_pads2_set_flushing (self->collect, TRUE);
+        gst_collect_pads_set_flushing (self->collect, TRUE);
 
         /* flushing seek, start flush downstream, the flush will be done
          * when all pads received a FLUSH_STOP. */
@@ -532,7 +532,7 @@ gst_frei0r_mixer_sink0_event (GstPad * pad, GstEvent * event)
       break;
   }
 
-  /* now GstCollectPads2 can take care of the rest, e.g. EOS */
+  /* now GstCollectPads can take care of the rest, e.g. EOS */
   ret = self->collect_event (pad, event);
 
   gst_object_unref (self);
@@ -541,7 +541,7 @@ gst_frei0r_mixer_sink0_event (GstPad * pad, GstEvent * event)
 }
 
 static GstFlowReturn
-gst_frei0r_mixer_collected (GstCollectPads2 * pads, GstFrei0rMixer * self)
+gst_frei0r_mixer_collected (GstCollectPads * pads, GstFrei0rMixer * self)
 {
   GstBuffer *inbuf0 = NULL, *inbuf1 = NULL, *inbuf2 = NULL;
   GstBuffer *outbuf = NULL;
@@ -575,15 +575,15 @@ gst_frei0r_mixer_collected (GstCollectPads2 * pads, GstFrei0rMixer * self)
     return ret;
 
   for (l = pads->data; l; l = l->next) {
-    GstCollectData2 *cdata = l->data;
+    GstCollectData *cdata = l->data;
 
     if (cdata->pad == self->sink0) {
-      inbuf0 = gst_collect_pads2_pop (pads, cdata);
+      inbuf0 = gst_collect_pads_pop (pads, cdata);
       segment = &cdata->segment;
     } else if (cdata->pad == self->sink1) {
-      inbuf1 = gst_collect_pads2_pop (pads, cdata);
+      inbuf1 = gst_collect_pads_pop (pads, cdata);
     } else if (cdata->pad == self->sink2) {
-      inbuf2 = gst_collect_pads2_pop (pads, cdata);
+      inbuf2 = gst_collect_pads_pop (pads, cdata);
     }
   }
 
@@ -708,9 +708,9 @@ gst_frei0r_mixer_init (GstFrei0rMixer * self, GstFrei0rMixerClass * klass)
   self->property_cache =
       gst_frei0r_property_cache_init (klass->properties, klass->n_properties);
 
-  self->collect = gst_collect_pads2_new ();
-  gst_collect_pads2_set_function (self->collect,
-      (GstCollectPads2Function) gst_frei0r_mixer_collected, self);
+  self->collect = gst_collect_pads_new ();
+  gst_collect_pads_set_function (self->collect,
+      (GstCollectPadsFunction) gst_frei0r_mixer_collected, self);
 
   self->src =
       gst_pad_new_from_template (gst_element_class_get_pad_template
@@ -734,8 +734,8 @@ gst_frei0r_mixer_init (GstFrei0rMixer * self, GstFrei0rMixerClass * klass)
       GST_DEBUG_FUNCPTR (gst_frei0r_mixer_set_caps));
   gst_pad_set_query_function (self->sink0,
       GST_DEBUG_FUNCPTR (gst_frei0r_mixer_sink_query));
-  gst_collect_pads2_add_pad (self->collect, self->sink0,
-      sizeof (GstCollectData2));
+  gst_collect_pads_add_pad (self->collect, self->sink0,
+      sizeof (GstCollectData));
   self->collect_event = (GstPadEventFunction) GST_PAD_EVENTFUNC (self->sink0);
   gst_pad_set_event_function (self->sink0,
       GST_DEBUG_FUNCPTR (gst_frei0r_mixer_sink0_event));
@@ -750,8 +750,8 @@ gst_frei0r_mixer_init (GstFrei0rMixer * self, GstFrei0rMixerClass * klass)
       GST_DEBUG_FUNCPTR (gst_frei0r_mixer_set_caps));
   gst_pad_set_query_function (self->sink0,
       GST_DEBUG_FUNCPTR (gst_frei0r_mixer_sink_query));
-  gst_collect_pads2_add_pad (self->collect, self->sink1,
-      sizeof (GstCollectData2));
+  gst_collect_pads_add_pad (self->collect, self->sink1,
+      sizeof (GstCollectData));
   gst_element_add_pad (GST_ELEMENT_CAST (self), self->sink1);
 
   if (klass->info->plugin_type == F0R_PLUGIN_TYPE_MIXER3) {
@@ -764,8 +764,8 @@ gst_frei0r_mixer_init (GstFrei0rMixer * self, GstFrei0rMixerClass * klass)
         GST_DEBUG_FUNCPTR (gst_frei0r_mixer_set_caps));
     gst_pad_set_query_function (self->sink0,
         GST_DEBUG_FUNCPTR (gst_frei0r_mixer_sink_query));
-    gst_collect_pads2_add_pad (self->collect, self->sink2,
-        sizeof (GstCollectData2));
+    gst_collect_pads_add_pad (self->collect, self->sink2,
+        sizeof (GstCollectData));
     gst_element_add_pad (GST_ELEMENT_CAST (self), self->sink2);
   }
 

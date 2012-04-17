@@ -52,7 +52,7 @@ struct _GstCompare {
   GstPad *sinkpad;
   GstPad *checkpad;
 
-  GstCollectPads2 *cpads;
+  GstCollectPads *cpads;
 
   gint count;
 
