@@ -144,7 +144,7 @@ check_PROGRAMS =				\
 # failing tests
 noinst_PROGRAMS =				\
 	gst/gstpipeline				\
-	libs/collectpads2
+	libs/collectpads
 
 # elements to ignore for the state tests
 # STATE_IGNORE_ELEMENTS =

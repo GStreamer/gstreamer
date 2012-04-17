@@ -3,7 +3,7 @@
  * Copyright (C) 2008 Mark Nauwelaerts <mnauw@users.sourceforge.net>
  * Copyright (C) 2010 Sebastian Dröge <sebastian.droege@collabora.co.uk>
  *
- * gstcollectpads2.c:
+ * gstcollectpads.c:
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -21,7 +21,7 @@
  * Boston, MA 02111-1307, USA.
  */
 /**
- * SECTION:gstcollectpads2
+ * SECTION:gstcollectpads
  * @short_description: manages a set of pads that operate in collect mode
  * @see_also:
  *
@@ -29,12 +29,12 @@
  * is given to the manager of this object when all pads have data.
  * <itemizedlist>
  *   <listitem><para>
- *     Collectpads are created with gst_collect_pads2_new(). A callback should then
- *     be installed with gst_collect_pads2_set_function ().
+ *     Collectpads are created with gst_collect_pads_new(). A callback should then
+ *     be installed with gst_collect_pads_set_function ().
  *   </para></listitem>
  *   <listitem><para>
- *     Pads are added to the collection with gst_collect_pads2_add_pad()/
- *     gst_collect_pads2_remove_pad(). The pad
+ *     Pads are added to the collection with gst_collect_pads_add_pad()/
+ *     gst_collect_pads_remove_pad(). The pad
  *     has to be a sinkpad. The chain and event functions of the pad are
  *     overridden. The element_private of the pad is used to store
  *     private information for the collectpads.
@@ -47,30 +47,30 @@
  *     When data is queued on all pads in waiting mode, the callback function is called.
  *   </para></listitem>
  *   <listitem><para>
- *     Data can be dequeued from the pad with the gst_collect_pads2_pop() method.
- *     One can peek at the data with the gst_collect_pads2_peek() function.
+ *     Data can be dequeued from the pad with the gst_collect_pads_pop() method.
+ *     One can peek at the data with the gst_collect_pads_peek() function.
  *     These functions will return NULL if the pad received an EOS event. When all
- *     pads return NULL from a gst_collect_pads2_peek(), the element can emit an EOS
+ *     pads return NULL from a gst_collect_pads_peek(), the element can emit an EOS
  *     event itself.
  *   </para></listitem>
  *   <listitem><para>
- *     Data can also be dequeued in byte units using the gst_collect_pads2_available(),
- *     gst_collect_pads2_read() and gst_collect_pads2_flush() calls.
+ *     Data can also be dequeued in byte units using the gst_collect_pads_available(),
+ *     gst_collect_pads_read() and gst_collect_pads_flush() calls.
  *   </para></listitem>
  *   <listitem><para>
- *     Elements should call gst_collect_pads2_start() and gst_collect_pads2_stop() in
+ *     Elements should call gst_collect_pads_start() and gst_collect_pads_stop() in
  *     their state change functions to start and stop the processing of the collectpads.
- *     The gst_collect_pads2_stop() call should be called before calling the parent
+ *     The gst_collect_pads_stop() call should be called before calling the parent
  *     element state change function in the PAUSED_TO_READY state change to ensure
  *     no pad is blocked and the element can finish streaming.
  *   </para></listitem>
  *   <listitem><para>
- *     gst_collect_pads2_collect() and gst_collect_pads2_collect_range() can be used by
- *     elements that start a #GstTask to drive the collect_pads2. This feature is however
+ *     gst_collect_pads_collect() and gst_collect_pads_collect_range() can be used by
+ *     elements that start a #GstTask to drive the collect_pads. This feature is however
  *     not yet implemented.
  *   </para></listitem>
  *   <listitem><para>
- *     gst_collect_pads2_set_waiting() sets a pad to waiting or non-waiting mode.
+ *     gst_collect_pads_set_waiting() sets a pad to waiting or non-waiting mode.
  *     CollectPads element is not waiting for data to be collected on non-waiting pads.
  *     Thus these pads may but need not have data when the callback is called.
  *     All pads are in waiting mode by default.
@@ -88,24 +88,24 @@
 
 #include <gst/gst_private.h>
 
-#include "gstcollectpads2.h"
+#include "gstcollectpads.h"
 
 #include "../../../gst/glib-compat-private.h"
 
-GST_DEBUG_CATEGORY_STATIC (collect_pads2_debug);
-#define GST_CAT_DEFAULT collect_pads2_debug
+GST_DEBUG_CATEGORY_STATIC (collect_pads_debug);
+#define GST_CAT_DEFAULT collect_pads_debug
 
-#define parent_class gst_collect_pads2_parent_class
-G_DEFINE_TYPE (GstCollectPads2, gst_collect_pads2, GST_TYPE_OBJECT);
+#define parent_class gst_collect_pads_parent_class
+G_DEFINE_TYPE (GstCollectPads, gst_collect_pads, GST_TYPE_OBJECT);
 
-struct _GstCollectData2Private
+struct _GstCollectDataPrivate
 {
   /* refcounting for struct, and destroy callback */
-  GstCollectData2DestroyNotify destroy_notify;
+  GstCollectDataDestroyNotify destroy_notify;
   gint refcount;
 };
 
-struct _GstCollectPads2Private
+struct _GstCollectPadsPrivate
 {
   /* with LOCK and/or STREAM_LOCK */
   gboolean started;
@@ -116,23 +116,23 @@ struct _GstCollectPads2Private
   guint queuedpads;             /* number of pads with a buffer */
   guint eospads;                /* number of pads that are EOS */
   GstClockTime earliest_time;   /* Current earliest time */
-  GstCollectData2 *earliest_data;       /* Pad data for current earliest time */
+  GstCollectData *earliest_data;        /* Pad data for current earliest time */
 
   /* with LOCK */
   GSList *pad_list;             /* updated pad list */
   guint32 pad_cookie;           /* updated cookie */
 
-  GstCollectPads2Function func; /* function and user_data for callback */
+  GstCollectPadsFunction func;  /* function and user_data for callback */
   gpointer user_data;
-  GstCollectPads2BufferFunction buffer_func;    /* function and user_data for buffer callback */
+  GstCollectPadsBufferFunction buffer_func;     /* function and user_data for buffer callback */
   gpointer buffer_user_data;
-  GstCollectPads2CompareFunction compare_func;
+  GstCollectPadsCompareFunction compare_func;
   gpointer compare_user_data;
-  GstCollectPads2EventFunction event_func;      /* function and data for event callback */
+  GstCollectPadsEventFunction event_func;       /* function and data for event callback */
   gpointer event_user_data;
-  GstCollectPads2QueryFunction query_func;
+  GstCollectPadsQueryFunction query_func;
   gpointer query_user_data;
-  GstCollectPads2ClipFunction clip_func;
+  GstCollectPadsClipFunction clip_func;
   gpointer clip_user_data;
 
   /* no other lock needed */
@@ -141,28 +141,28 @@ struct _GstCollectPads2Private
   guint32 evt_cookie;
 };
 
-static void gst_collect_pads2_clear (GstCollectPads2 * pads,
-    GstCollectData2 * data);
-static GstFlowReturn gst_collect_pads2_chain (GstPad * pad, GstObject * parent,
+static void gst_collect_pads_clear (GstCollectPads * pads,
+    GstCollectData * data);
+static GstFlowReturn gst_collect_pads_chain (GstPad * pad, GstObject * parent,
     GstBuffer * buffer);
-static gboolean gst_collect_pads2_event (GstPad * pad, GstObject * parent,
+static gboolean gst_collect_pads_event (GstPad * pad, GstObject * parent,
     GstEvent * event);
-static gboolean gst_collect_pads2_query (GstPad * pad, GstObject * parent,
+static gboolean gst_collect_pads_query (GstPad * pad, GstObject * parent,
     GstQuery * query);
-static void gst_collect_pads2_finalize (GObject * object);
-static GstFlowReturn gst_collect_pads2_default_collected (GstCollectPads2 *
+static void gst_collect_pads_finalize (GObject * object);
+static GstFlowReturn gst_collect_pads_default_collected (GstCollectPads *
     pads, gpointer user_data);
-static gint gst_collect_pads2_default_compare_func (GstCollectPads2 * pads,
-    GstCollectData2 * data1, GstClockTime timestamp1, GstCollectData2 * data2,
+static gint gst_collect_pads_default_compare_func (GstCollectPads * pads,
+    GstCollectData * data1, GstClockTime timestamp1, GstCollectData * data2,
     GstClockTime timestamp2, gpointer user_data);
-static gboolean gst_collect_pads2_recalculate_full (GstCollectPads2 * pads);
-static void ref_data (GstCollectData2 * data);
-static void unref_data (GstCollectData2 * data);
+static gboolean gst_collect_pads_recalculate_full (GstCollectPads * pads);
+static void ref_data (GstCollectData * data);
+static void unref_data (GstCollectData * data);
 
-static gboolean gst_collect_pads2_event_default_internal (GstCollectPads2 *
-    pads, GstCollectData2 * data, GstEvent * event, gpointer user_data);
-static gboolean gst_collect_pads2_query_default_internal (GstCollectPads2 *
-    pads, GstCollectData2 * data, GstQuery * query, gpointer user_data);
+static gboolean gst_collect_pads_event_default_internal (GstCollectPads *
+    pads, GstCollectData * data, GstEvent * event, gpointer user_data);
+static gboolean gst_collect_pads_query_default_internal (GstCollectPads *
+    pads, GstCollectData * data, GstQuery * query, gpointer user_data);
 
 
 /* Some properties are protected by LOCK, others by STREAM_LOCK
@@ -171,63 +171,63 @@ static gboolean gst_collect_pads2_query_default_internal (GstCollectPads2 *
  * Alternative implementations are possible, e.g. some low-level re-implementing
  * of the 2 above locks to drop both of them atomically when going into _WAIT.
  */
-#define GST_COLLECT_PADS2_GET_EVT_COND(pads) (&((GstCollectPads2 *)pads)->priv->evt_cond)
-#define GST_COLLECT_PADS2_GET_EVT_LOCK(pads) (&((GstCollectPads2 *)pads)->priv->evt_lock)
-#define GST_COLLECT_PADS2_EVT_WAIT(pads, cookie) G_STMT_START {    \
-  g_mutex_lock (GST_COLLECT_PADS2_GET_EVT_LOCK (pads));            \
+#define GST_COLLECT_PADS_GET_EVT_COND(pads) (&((GstCollectPads *)pads)->priv->evt_cond)
+#define GST_COLLECT_PADS_GET_EVT_LOCK(pads) (&((GstCollectPads *)pads)->priv->evt_lock)
+#define GST_COLLECT_PADS_EVT_WAIT(pads, cookie) G_STMT_START {    \
+  g_mutex_lock (GST_COLLECT_PADS_GET_EVT_LOCK (pads));            \
   /* should work unless a lot of event'ing and thread starvation */\
-  while (cookie == ((GstCollectPads2 *) pads)->priv->evt_cookie)         \
-    g_cond_wait (GST_COLLECT_PADS2_GET_EVT_COND (pads),            \
-        GST_COLLECT_PADS2_GET_EVT_LOCK (pads));                    \
-  cookie = ((GstCollectPads2 *) pads)->priv->evt_cookie;                 \
-  g_mutex_unlock (GST_COLLECT_PADS2_GET_EVT_LOCK (pads));          \
+  while (cookie == ((GstCollectPads *) pads)->priv->evt_cookie)         \
+    g_cond_wait (GST_COLLECT_PADS_GET_EVT_COND (pads),            \
+        GST_COLLECT_PADS_GET_EVT_LOCK (pads));                    \
+  cookie = ((GstCollectPads *) pads)->priv->evt_cookie;                 \
+  g_mutex_unlock (GST_COLLECT_PADS_GET_EVT_LOCK (pads));          \
 } G_STMT_END
-#define GST_COLLECT_PADS2_EVT_WAIT_TIMED(pads, cookie, timeout) G_STMT_START { \
+#define GST_COLLECT_PADS_EVT_WAIT_TIMED(pads, cookie, timeout) G_STMT_START { \
   GTimeVal __tv; \
   \
   g_get_current_time (&tv); \
   g_time_val_add (&tv, timeout); \
   \
-  g_mutex_lock (GST_COLLECT_PADS2_GET_EVT_LOCK (pads));            \
+  g_mutex_lock (GST_COLLECT_PADS_GET_EVT_LOCK (pads));            \
   /* should work unless a lot of event'ing and thread starvation */\
-  while (cookie == ((GstCollectPads2 *) pads)->priv->evt_cookie)         \
-    g_cond_timed_wait (GST_COLLECT_PADS2_GET_EVT_COND (pads),            \
-        GST_COLLECT_PADS2_GET_EVT_LOCK (pads), &tv);                    \
-  cookie = ((GstCollectPads2 *) pads)->priv->evt_cookie;                 \
-  g_mutex_unlock (GST_COLLECT_PADS2_GET_EVT_LOCK (pads));          \
+  while (cookie == ((GstCollectPads *) pads)->priv->evt_cookie)         \
+    g_cond_timed_wait (GST_COLLECT_PADS_GET_EVT_COND (pads),            \
+        GST_COLLECT_PADS_GET_EVT_LOCK (pads), &tv);                    \
+  cookie = ((GstCollectPads *) pads)->priv->evt_cookie;                 \
+  g_mutex_unlock (GST_COLLECT_PADS_GET_EVT_LOCK (pads));          \
 } G_STMT_END
-#define GST_COLLECT_PADS2_EVT_BROADCAST(pads) G_STMT_START {       \
-  g_mutex_lock (GST_COLLECT_PADS2_GET_EVT_LOCK (pads));            \
+#define GST_COLLECT_PADS_EVT_BROADCAST(pads) G_STMT_START {       \
+  g_mutex_lock (GST_COLLECT_PADS_GET_EVT_LOCK (pads));            \
   /* never mind wrap-around */                                     \
-  ++(((GstCollectPads2 *) pads)->priv->evt_cookie);                      \
-  g_cond_broadcast (GST_COLLECT_PADS2_GET_EVT_COND (pads));        \
-  g_mutex_unlock (GST_COLLECT_PADS2_GET_EVT_LOCK (pads));          \
+  ++(((GstCollectPads *) pads)->priv->evt_cookie);                      \
+  g_cond_broadcast (GST_COLLECT_PADS_GET_EVT_COND (pads));        \
+  g_mutex_unlock (GST_COLLECT_PADS_GET_EVT_LOCK (pads));          \
 } G_STMT_END
-#define GST_COLLECT_PADS2_EVT_INIT(cookie) G_STMT_START {          \
-  g_mutex_lock (GST_COLLECT_PADS2_GET_EVT_LOCK (pads));            \
-  cookie = ((GstCollectPads2 *) pads)->priv->evt_cookie;                 \
-  g_mutex_unlock (GST_COLLECT_PADS2_GET_EVT_LOCK (pads));          \
+#define GST_COLLECT_PADS_EVT_INIT(cookie) G_STMT_START {          \
+  g_mutex_lock (GST_COLLECT_PADS_GET_EVT_LOCK (pads));            \
+  cookie = ((GstCollectPads *) pads)->priv->evt_cookie;                 \
+  g_mutex_unlock (GST_COLLECT_PADS_GET_EVT_LOCK (pads));          \
 } G_STMT_END
 
 static void
-gst_collect_pads2_class_init (GstCollectPads2Class * klass)
+gst_collect_pads_class_init (GstCollectPadsClass * klass)
 {
   GObjectClass *gobject_class = (GObjectClass *) klass;
 
-  g_type_class_add_private (klass, sizeof (GstCollectPads2Private));
+  g_type_class_add_private (klass, sizeof (GstCollectPadsPrivate));
 
-  GST_DEBUG_CATEGORY_INIT (collect_pads2_debug, "collectpads2", 0,
-      "GstCollectPads2");
+  GST_DEBUG_CATEGORY_INIT (collect_pads_debug, "collectpads", 0,
+      "GstCollectPads");
 
-  gobject_class->finalize = GST_DEBUG_FUNCPTR (gst_collect_pads2_finalize);
+  gobject_class->finalize = GST_DEBUG_FUNCPTR (gst_collect_pads_finalize);
 }
 
 static void
-gst_collect_pads2_init (GstCollectPads2 * pads)
+gst_collect_pads_init (GstCollectPads * pads)
 {
   pads->priv =
-      G_TYPE_INSTANCE_GET_PRIVATE (pads, GST_TYPE_COLLECT_PADS2,
-      GstCollectPads2Private);
+      G_TYPE_INSTANCE_GET_PRIVATE (pads, GST_TYPE_COLLECT_PADS,
+      GstCollectPadsPrivate);
 
   pads->data = NULL;
   pads->priv->cookie = 0;
@@ -238,7 +238,7 @@ gst_collect_pads2_init (GstCollectPads2 * pads)
 
   g_rec_mutex_init (&pads->stream_lock);
 
-  pads->priv->func = gst_collect_pads2_default_collected;
+  pads->priv->func = gst_collect_pads_default_collected;
   pads->priv->user_data = NULL;
   pads->priv->event_func = NULL;
   pads->priv->event_user_data = NULL;
@@ -246,13 +246,13 @@ gst_collect_pads2_init (GstCollectPads2 * pads)
   /* members for default muxing */
   pads->priv->buffer_func = NULL;
   pads->priv->buffer_user_data = NULL;
-  pads->priv->compare_func = gst_collect_pads2_default_compare_func;
+  pads->priv->compare_func = gst_collect_pads_default_compare_func;
   pads->priv->compare_user_data = NULL;
   pads->priv->earliest_data = NULL;
   pads->priv->earliest_time = GST_CLOCK_TIME_NONE;
 
-  pads->priv->event_func = gst_collect_pads2_event_default_internal;
-  pads->priv->query_func = gst_collect_pads2_query_default_internal;
+  pads->priv->event_func = gst_collect_pads_event_default_internal;
+  pads->priv->query_func = gst_collect_pads_query_default_internal;
 
   /* members to manage the pad list */
   pads->priv->pad_cookie = 0;
@@ -265,9 +265,9 @@ gst_collect_pads2_init (GstCollectPads2 * pads)
 }
 
 static void
-gst_collect_pads2_finalize (GObject * object)
+gst_collect_pads_finalize (GObject * object)
 {
-  GstCollectPads2 *pads = GST_COLLECT_PADS2 (object);
+  GstCollectPads *pads = GST_COLLECT_PADS (object);
 
   GST_DEBUG_OBJECT (object, "finalize");
 
@@ -286,37 +286,37 @@ gst_collect_pads2_finalize (GObject * object)
 }
 
 /**
- * gst_collect_pads2_new:
+ * gst_collect_pads_new:
  *
  * Create a new instance of #GstCollectsPads.
  *
  * MT safe.
  *
- * Returns: (transfer full): a new #GstCollectPads2, or NULL in case of an error.
+ * Returns: (transfer full): a new #GstCollectPads, or NULL in case of an error.
  *
  * Since: 0.10.36
  */
-GstCollectPads2 *
-gst_collect_pads2_new (void)
+GstCollectPads *
+gst_collect_pads_new (void)
 {
-  GstCollectPads2 *newcoll;
+  GstCollectPads *newcoll;
 
-  newcoll = g_object_new (GST_TYPE_COLLECT_PADS2, NULL);
+  newcoll = g_object_new (GST_TYPE_COLLECT_PADS, NULL);
 
   return newcoll;
 }
 
 /* Must be called with GstObject lock! */
 static void
-gst_collect_pads2_set_buffer_function_locked (GstCollectPads2 * pads,
-    GstCollectPads2BufferFunction func, gpointer user_data)
+gst_collect_pads_set_buffer_function_locked (GstCollectPads * pads,
+    GstCollectPadsBufferFunction func, gpointer user_data)
 {
   pads->priv->buffer_func = func;
   pads->priv->buffer_user_data = user_data;
 }
 
 /**
- * gst_collect_pads2_set_buffer_function:
+ * gst_collect_pads_set_buffer_function:
  * @pads: the collectpads to use
  * @func: the function to set
  * @user_data: (closure): user data passed to the function
@@ -329,19 +329,19 @@ gst_collect_pads2_set_buffer_function_locked (GstCollectPads2 * pads,
  * Since: 0.10.36
  */
 void
-gst_collect_pads2_set_buffer_function (GstCollectPads2 * pads,
-    GstCollectPads2BufferFunction func, gpointer user_data)
+gst_collect_pads_set_buffer_function (GstCollectPads * pads,
+    GstCollectPadsBufferFunction func, gpointer user_data)
 {
   g_return_if_fail (pads != NULL);
-  g_return_if_fail (GST_IS_COLLECT_PADS2 (pads));
+  g_return_if_fail (GST_IS_COLLECT_PADS (pads));
 
   GST_OBJECT_LOCK (pads);
-  gst_collect_pads2_set_buffer_function_locked (pads, func, user_data);
+  gst_collect_pads_set_buffer_function_locked (pads, func, user_data);
   GST_OBJECT_UNLOCK (pads);
 }
 
 /**
- * gst_collect_pads2_set_compare_function:
+ * gst_collect_pads_set_compare_function:
  * @pads: the pads to use
  * @func: the function to set
  * @user_data: (closure): user data passed to the function
@@ -357,11 +357,11 @@ no known use-case, and collaboration with default algorithm is unpredictable.
 If custom compairing/operation is needed, just use a collect function of
 your own */
 void
-gst_collect_pads2_set_compare_function (GstCollectPads2 * pads,
-    GstCollectPads2CompareFunction func, gpointer user_data)
+gst_collect_pads_set_compare_function (GstCollectPads * pads,
+    GstCollectPadsCompareFunction func, gpointer user_data)
 {
   g_return_if_fail (pads != NULL);
-  g_return_if_fail (GST_IS_COLLECT_PADS2 (pads));
+  g_return_if_fail (GST_IS_COLLECT_PADS (pads));
 
   GST_OBJECT_LOCK (pads);
   pads->priv->compare_func = func;
@@ -370,7 +370,7 @@ gst_collect_pads2_set_compare_function (GstCollectPads2 * pads,
 }
 
 /**
- * gst_collect_pads2_set_function:
+ * gst_collect_pads_set_function:
  * @pads: the collectspads to use
  * @func: the function to set
  * @user_data: user data passed to the function
@@ -382,7 +382,7 @@ gst_collect_pads2_set_compare_function (GstCollectPads2 * pads,
  * is desired, this sets a callback that will be invoked instead when
  * all the pads added to the collection have buffers queued.
  * Evidently, this callback is not compatible with
- * gst_collect_pads2_set_buffer_function() callback.
+ * gst_collect_pads_set_buffer_function() callback.
  * If this callback is set, the former will be unset.
  *
  * MT safe.
@@ -390,21 +390,21 @@ gst_collect_pads2_set_compare_function (GstCollectPads2 * pads,
  * Since: 0.10.36
  */
 void
-gst_collect_pads2_set_function (GstCollectPads2 * pads,
-    GstCollectPads2Function func, gpointer user_data)
+gst_collect_pads_set_function (GstCollectPads * pads,
+    GstCollectPadsFunction func, gpointer user_data)
 {
   g_return_if_fail (pads != NULL);
-  g_return_if_fail (GST_IS_COLLECT_PADS2 (pads));
+  g_return_if_fail (GST_IS_COLLECT_PADS (pads));
 
   GST_OBJECT_LOCK (pads);
   pads->priv->func = func;
   pads->priv->user_data = user_data;
-  gst_collect_pads2_set_buffer_function_locked (pads, NULL, NULL);
+  gst_collect_pads_set_buffer_function_locked (pads, NULL, NULL);
   GST_OBJECT_UNLOCK (pads);
 }
 
 static void
-ref_data (GstCollectData2 * data)
+ref_data (GstCollectData * data)
 {
   g_assert (data != NULL);
 
@@ -412,7 +412,7 @@ ref_data (GstCollectData2 * data)
 }
 
 static void
-unref_data (GstCollectData2 * data)
+unref_data (GstCollectData * data)
 {
   g_assert (data != NULL);
   g_assert (data->priv->refcount > 0);
@@ -432,7 +432,7 @@ unref_data (GstCollectData2 * data)
 }
 
 /**
- * gst_collect_pads2_set_event_function:
+ * gst_collect_pads_set_event_function:
  * @pads: the collectspads to use
  * @func: the function to set
  * @user_data: user data passed to the function
@@ -449,11 +449,11 @@ unref_data (GstCollectData2 * data)
  * Since: 0.10.36
  */
 void
-gst_collect_pads2_set_event_function (GstCollectPads2 * pads,
-    GstCollectPads2EventFunction func, gpointer user_data)
+gst_collect_pads_set_event_function (GstCollectPads * pads,
+    GstCollectPadsEventFunction func, gpointer user_data)
 {
   g_return_if_fail (pads != NULL);
-  g_return_if_fail (GST_IS_COLLECT_PADS2 (pads));
+  g_return_if_fail (GST_IS_COLLECT_PADS (pads));
 
   GST_OBJECT_LOCK (pads);
   pads->priv->event_func = func;
@@ -462,7 +462,7 @@ gst_collect_pads2_set_event_function (GstCollectPads2 * pads,
 }
 
 /**
- * gst_collect_pads2_set_query_function:
+ * gst_collect_pads_set_query_function:
  * @pads: the collectspads to use
  * @func: the function to set
  * @user_data: user data passed to the function
@@ -479,11 +479,11 @@ gst_collect_pads2_set_event_function (GstCollectPads2 * pads,
  * Since: 0.10.36
  */
 void
-gst_collect_pads2_set_query_function (GstCollectPads2 * pads,
-    GstCollectPads2QueryFunction func, gpointer user_data)
+gst_collect_pads_set_query_function (GstCollectPads * pads,
+    GstCollectPadsQueryFunction func, gpointer user_data)
 {
   g_return_if_fail (pads != NULL);
-  g_return_if_fail (GST_IS_COLLECT_PADS2 (pads));
+  g_return_if_fail (GST_IS_COLLECT_PADS (pads));
 
   GST_OBJECT_LOCK (pads);
   pads->priv->query_func = func;
@@ -492,7 +492,7 @@ gst_collect_pads2_set_query_function (GstCollectPads2 * pads,
 }
 
 /**
-* gst_collect_pads2_clip_running_time:
+* gst_collect_pads_clip_running_time:
 * @pads: the collectspads to use
 * @cdata: collect data of corresponding pad
 * @buf: buffer being clipped
@@ -505,8 +505,8 @@ gst_collect_pads2_set_query_function (GstCollectPads2 * pads,
 * Since: 0.10.37
 */
 GstFlowReturn
-gst_collect_pads2_clip_running_time (GstCollectPads2 * pads,
-    GstCollectData2 * cdata, GstBuffer * buf, GstBuffer ** outbuf,
+gst_collect_pads_clip_running_time (GstCollectPads * pads,
+    GstCollectData * cdata, GstBuffer * buf, GstBuffer ** outbuf,
     gpointer user_data)
 {
   GstClockTime time;
@@ -534,7 +534,7 @@ gst_collect_pads2_clip_running_time (GstCollectPads2 * pads,
 }
 
  /**
- * gst_collect_pads2_set_clip_function:
+ * gst_collect_pads_set_clip_function:
  * @pads: the collectspads to use
  * @clipfunc: clip function to install
  * @user_data: user data to pass to @clip_func
@@ -545,68 +545,68 @@ gst_collect_pads2_clip_running_time (GstCollectPads2 * pads,
  * Since: 0.10.36
  */
 void
-gst_collect_pads2_set_clip_function (GstCollectPads2 * pads,
-    GstCollectPads2ClipFunction clipfunc, gpointer user_data)
+gst_collect_pads_set_clip_function (GstCollectPads * pads,
+    GstCollectPadsClipFunction clipfunc, gpointer user_data)
 {
   g_return_if_fail (pads != NULL);
-  g_return_if_fail (GST_IS_COLLECT_PADS2 (pads));
+  g_return_if_fail (GST_IS_COLLECT_PADS (pads));
 
   pads->priv->clip_func = clipfunc;
   pads->priv->clip_user_data = user_data;
 }
 
 /**
- * gst_collect_pads2_add_pad:
+ * gst_collect_pads_add_pad:
  * @pads: the collectspads to use
  * @pad: (transfer none): the pad to add
- * @size: the size of the returned #GstCollectData2 structure
+ * @size: the size of the returned #GstCollectData structure
  *
  * Add a pad to the collection of collect pads. The pad has to be
  * a sinkpad. The refcount of the pad is incremented. Use
- * gst_collect_pads2_remove_pad() to remove the pad from the collection
+ * gst_collect_pads_remove_pad() to remove the pad from the collection
  * again.
  *
- * You specify a size for the returned #GstCollectData2 structure
+ * You specify a size for the returned #GstCollectData structure
  * so that you can use it to store additional information.
  *
  * The pad will be automatically activated in push mode when @pads is
  * started.
  *
- * This function calls gst_collect_pads2_add_pad_full() passing a value of NULL
+ * This function calls gst_collect_pads_add_pad_full() passing a value of NULL
  * for destroy_notify and TRUE for locked.
  *
  * MT safe.
  *
- * Returns: a new #GstCollectData2 to identify the new pad. Or NULL
+ * Returns: a new #GstCollectData to identify the new pad. Or NULL
  *   if wrong parameters are supplied.
  *
  * Since: 0.10.36
  */
-GstCollectData2 *
-gst_collect_pads2_add_pad (GstCollectPads2 * pads, GstPad * pad, guint size)
+GstCollectData *
+gst_collect_pads_add_pad (GstCollectPads * pads, GstPad * pad, guint size)
 {
-  return gst_collect_pads2_add_pad_full (pads, pad, size, NULL, TRUE);
+  return gst_collect_pads_add_pad_full (pads, pad, size, NULL, TRUE);
 }
 
 /**
- * gst_collect_pads2_add_pad_full:
+ * gst_collect_pads_add_pad_full:
  * @pads: the collectspads to use
  * @pad: (transfer none): the pad to add
- * @size: the size of the returned #GstCollectData2 structure
- * @destroy_notify: function to be called before the returned #GstCollectData2
+ * @size: the size of the returned #GstCollectData structure
+ * @destroy_notify: function to be called before the returned #GstCollectData
  * structure is freed
  * @lock: whether to lock this pad in usual waiting state
  *
  * Add a pad to the collection of collect pads. The pad has to be
  * a sinkpad. The refcount of the pad is incremented. Use
- * gst_collect_pads2_remove_pad() to remove the pad from the collection
+ * gst_collect_pads_remove_pad() to remove the pad from the collection
  * again.
  *
- * You specify a size for the returned #GstCollectData2 structure
+ * You specify a size for the returned #GstCollectData structure
  * so that you can use it to store additional information.
  *
- * You can also specify a #GstCollectData2DestroyNotify that will be called
- * just before the #GstCollectData2 structure is freed. It is passed the
+ * You can also specify a #GstCollectDataDestroyNotify that will be called
+ * just before the #GstCollectData structure is freed. It is passed the
  * pointer to the structure and should free any custom memory and resources
  * allocated for it.
  *
@@ -625,32 +625,32 @@ gst_collect_pads2_add_pad (GstCollectPads2 * pads, GstPad * pad, guint size)
  *
  * Since: 0.10.36
  *
- * Returns: a new #GstCollectData2 to identify the new pad. Or NULL
+ * Returns: a new #GstCollectData to identify the new pad. Or NULL
  *   if wrong parameters are supplied.
  */
-GstCollectData2 *
-gst_collect_pads2_add_pad_full (GstCollectPads2 * pads, GstPad * pad,
-    guint size, GstCollectData2DestroyNotify destroy_notify, gboolean lock)
+GstCollectData *
+gst_collect_pads_add_pad_full (GstCollectPads * pads, GstPad * pad,
+    guint size, GstCollectDataDestroyNotify destroy_notify, gboolean lock)
 {
-  GstCollectData2 *data;
+  GstCollectData *data;
 
   g_return_val_if_fail (pads != NULL, NULL);
-  g_return_val_if_fail (GST_IS_COLLECT_PADS2 (pads), NULL);
+  g_return_val_if_fail (GST_IS_COLLECT_PADS (pads), NULL);
   g_return_val_if_fail (pad != NULL, NULL);
   g_return_val_if_fail (GST_PAD_IS_SINK (pad), NULL);
-  g_return_val_if_fail (size >= sizeof (GstCollectData2), NULL);
+  g_return_val_if_fail (size >= sizeof (GstCollectData), NULL);
 
   GST_DEBUG_OBJECT (pads, "adding pad %s:%s", GST_DEBUG_PAD_NAME (pad));
 
   data = g_malloc0 (size);
-  data->priv = g_new0 (GstCollectData2Private, 1);
+  data->priv = g_new0 (GstCollectDataPrivate, 1);
   data->collect = pads;
   data->pad = gst_object_ref (pad);
   data->buffer = NULL;
   data->pos = 0;
   gst_segment_init (&data->segment, GST_FORMAT_UNDEFINED);
-  data->state = GST_COLLECT_PADS2_STATE_WAITING;
-  data->state |= lock ? GST_COLLECT_PADS2_STATE_LOCKED : 0;
+  data->state = GST_COLLECT_PADS_STATE_WAITING;
+  data->state |= lock ? GST_COLLECT_PADS_STATE_LOCKED : 0;
   data->priv->refcount = 1;
   data->priv->destroy_notify = destroy_notify;
 
@@ -659,9 +659,9 @@ gst_collect_pads2_add_pad_full (GstCollectPads2 * pads, GstPad * pad,
   gst_pad_set_element_private (pad, data);
   GST_OBJECT_UNLOCK (pad);
   pads->priv->pad_list = g_slist_append (pads->priv->pad_list, data);
-  gst_pad_set_chain_function (pad, GST_DEBUG_FUNCPTR (gst_collect_pads2_chain));
-  gst_pad_set_event_function (pad, GST_DEBUG_FUNCPTR (gst_collect_pads2_event));
-  gst_pad_set_query_function (pad, GST_DEBUG_FUNCPTR (gst_collect_pads2_query));
+  gst_pad_set_chain_function (pad, GST_DEBUG_FUNCPTR (gst_collect_pads_chain));
+  gst_pad_set_event_function (pad, GST_DEBUG_FUNCPTR (gst_collect_pads_event));
+  gst_pad_set_query_function (pad, GST_DEBUG_FUNCPTR (gst_collect_pads_query));
   /* backward compat, also add to data if stopped, so that the element already
    * has this in the public data list before going PAUSED (typically)
    * this can only be done when we are stopped because we don't take the
@@ -680,7 +680,7 @@ gst_collect_pads2_add_pad_full (GstCollectPads2 * pads, GstPad * pad,
 }
 
 static gint
-find_pad (GstCollectData2 * data, GstPad * pad)
+find_pad (GstCollectData * data, GstPad * pad)
 {
   if (data->pad == pad)
     return 0;
@@ -688,13 +688,13 @@ find_pad (GstCollectData2 * data, GstPad * pad)
 }
 
 /**
- * gst_collect_pads2_remove_pad:
+ * gst_collect_pads_remove_pad:
  * @pads: the collectspads to use
  * @pad: (transfer none): the pad to remove
  *
  * Remove a pad from the collection of collect pads. This function will also
- * free the #GstCollectData2 and all the resources that were allocated with
- * gst_collect_pads2_add_pad().
+ * free the #GstCollectData and all the resources that were allocated with
+ * gst_collect_pads_add_pad().
  *
  * The pad will be deactivated automatically when @pads is stopped.
  *
@@ -705,13 +705,13 @@ find_pad (GstCollectData2 * data, GstPad * pad)
  * Since: 0.10.36
  */
 gboolean
-gst_collect_pads2_remove_pad (GstCollectPads2 * pads, GstPad * pad)
+gst_collect_pads_remove_pad (GstCollectPads * pads, GstPad * pad)
 {
-  GstCollectData2 *data;
+  GstCollectData *data;
   GSList *list;
 
   g_return_val_if_fail (pads != NULL, FALSE);
-  g_return_val_if_fail (GST_IS_COLLECT_PADS2 (pads), FALSE);
+  g_return_val_if_fail (GST_IS_COLLECT_PADS (pads), FALSE);
   g_return_val_if_fail (pad != NULL, FALSE);
   g_return_val_if_fail (GST_IS_PAD (pad), FALSE);
 
@@ -723,7 +723,7 @@ gst_collect_pads2_remove_pad (GstCollectPads2 * pads, GstPad * pad)
   if (!list)
     goto unknown_pad;
 
-  data = (GstCollectData2 *) list->data;
+  data = (GstCollectData *) list->data;
 
   GST_DEBUG_OBJECT (pads, "found pad %s:%s at %p", GST_DEBUG_PAD_NAME (pad),
       data);
@@ -743,7 +743,7 @@ gst_collect_pads2_remove_pad (GstCollectPads2 * pads, GstPad * pad)
 
     dlist = g_slist_find_custom (pads->data, pad, (GCompareFunc) find_pad);
     if (dlist) {
-      GstCollectData2 *pdata = dlist->data;
+      GstCollectData *pdata = dlist->data;
 
       pads->data = g_slist_delete_link (pads->data, dlist);
       unref_data (pdata);
@@ -754,7 +754,7 @@ gst_collect_pads2_remove_pad (GstCollectPads2 * pads, GstPad * pad)
   pads->priv->pad_cookie++;
 
   /* signal waiters because something changed */
-  GST_COLLECT_PADS2_EVT_BROADCAST (pads);
+  GST_COLLECT_PADS_EVT_BROADCAST (pads);
 
   /* deactivate the pad when needed */
   if (!pads->priv->started)
@@ -777,7 +777,7 @@ unknown_pad:
 }
 
 /**
- * gst_collect_pads2_is_active:
+ * gst_collect_pads_is_active:
  * @pads: the collectspads to use
  * @pad: the pad to check
  *
@@ -792,20 +792,20 @@ unknown_pad:
  * Since: 0.10.36
  */
 gboolean
-gst_collect_pads2_is_active (GstCollectPads2 * pads, GstPad * pad)
+gst_collect_pads_is_active (GstCollectPads * pads, GstPad * pad)
 {
   g_return_val_if_fail (pads != NULL, FALSE);
-  g_return_val_if_fail (GST_IS_COLLECT_PADS2 (pads), FALSE);
+  g_return_val_if_fail (GST_IS_COLLECT_PADS (pads), FALSE);
   g_return_val_if_fail (pad != NULL, FALSE);
   g_return_val_if_fail (GST_IS_PAD (pad), FALSE);
 
-  g_warning ("gst_collect_pads2_is_active() is not implemented");
+  g_warning ("gst_collect_pads_is_active() is not implemented");
 
   return FALSE;
 }
 
 /**
- * gst_collect_pads2_collect:
+ * gst_collect_pads_collect:
  * @pads: the collectspads to use
  *
  * Collect data on all pads. This function is usually called
@@ -820,18 +820,18 @@ gst_collect_pads2_is_active (GstCollectPads2 * pads, GstPad * pad)
  * Since: 0.10.36
  */
 GstFlowReturn
-gst_collect_pads2_collect (GstCollectPads2 * pads)
+gst_collect_pads_collect (GstCollectPads * pads)
 {
   g_return_val_if_fail (pads != NULL, GST_FLOW_ERROR);
-  g_return_val_if_fail (GST_IS_COLLECT_PADS2 (pads), GST_FLOW_ERROR);
+  g_return_val_if_fail (GST_IS_COLLECT_PADS (pads), GST_FLOW_ERROR);
 
-  g_warning ("gst_collect_pads2_collect() is not implemented");
+  g_warning ("gst_collect_pads_collect() is not implemented");
 
   return GST_FLOW_NOT_SUPPORTED;
 }
 
 /**
- * gst_collect_pads2_collect_range:
+ * gst_collect_pads_collect_range:
  * @pads: the collectspads to use
  * @offset: the offset to collect
  * @length: the length to collect
@@ -848,13 +848,13 @@ gst_collect_pads2_collect (GstCollectPads2 * pads)
  * Since: 0.10.36
  */
 GstFlowReturn
-gst_collect_pads2_collect_range (GstCollectPads2 * pads, guint64 offset,
+gst_collect_pads_collect_range (GstCollectPads * pads, guint64 offset,
     guint length)
 {
   g_return_val_if_fail (pads != NULL, GST_FLOW_ERROR);
-  g_return_val_if_fail (GST_IS_COLLECT_PADS2 (pads), GST_FLOW_ERROR);
+  g_return_val_if_fail (GST_IS_COLLECT_PADS (pads), GST_FLOW_ERROR);
 
-  g_warning ("gst_collect_pads2_collect_range() is not implemented");
+  g_warning ("gst_collect_pads_collect_range() is not implemented");
 
   return GST_FLOW_NOT_SUPPORTED;
 }
@@ -863,14 +863,14 @@ gst_collect_pads2_collect_range (GstCollectPads2 * pads, guint64 offset,
  * Must be called with STREAM_LOCK.
  */
 static void
-gst_collect_pads2_set_flushing_unlocked (GstCollectPads2 * pads,
+gst_collect_pads_set_flushing_unlocked (GstCollectPads * pads,
     gboolean flushing)
 {
   GSList *walk = NULL;
 
   /* Update the pads flushing flag */
   for (walk = pads->data; walk; walk = g_slist_next (walk)) {
-    GstCollectData2 *cdata = walk->data;
+    GstCollectData *cdata = walk->data;
 
     if (GST_IS_PAD (cdata->pad)) {
       GST_OBJECT_LOCK (cdata->pad);
@@ -879,20 +879,20 @@ gst_collect_pads2_set_flushing_unlocked (GstCollectPads2 * pads,
       else
         GST_PAD_UNSET_FLUSHING (cdata->pad);
       if (flushing)
-        GST_COLLECT_PADS2_STATE_SET (cdata, GST_COLLECT_PADS2_STATE_FLUSHING);
+        GST_COLLECT_PADS_STATE_SET (cdata, GST_COLLECT_PADS_STATE_FLUSHING);
       else
-        GST_COLLECT_PADS2_STATE_UNSET (cdata, GST_COLLECT_PADS2_STATE_FLUSHING);
-      gst_collect_pads2_clear (pads, cdata);
+        GST_COLLECT_PADS_STATE_UNSET (cdata, GST_COLLECT_PADS_STATE_FLUSHING);
+      gst_collect_pads_clear (pads, cdata);
       GST_OBJECT_UNLOCK (cdata->pad);
     }
   }
 
   /* inform _chain of changes */
-  GST_COLLECT_PADS2_EVT_BROADCAST (pads);
+  GST_COLLECT_PADS_EVT_BROADCAST (pads);
 }
 
 /**
- * gst_collect_pads2_set_flushing:
+ * gst_collect_pads_set_flushing:
  * @pads: the collectspads to use
  * @flushing: desired state of the pads
  *
@@ -907,39 +907,39 @@ gst_collect_pads2_set_flushing_unlocked (GstCollectPads2 * pads,
  * Since: 0.10.36
  */
 void
-gst_collect_pads2_set_flushing (GstCollectPads2 * pads, gboolean flushing)
+gst_collect_pads_set_flushing (GstCollectPads * pads, gboolean flushing)
 {
   g_return_if_fail (pads != NULL);
-  g_return_if_fail (GST_IS_COLLECT_PADS2 (pads));
+  g_return_if_fail (GST_IS_COLLECT_PADS (pads));
 
   /* NOTE since this eventually calls _pop, some (STREAM_)LOCK is needed here */
-  GST_COLLECT_PADS2_STREAM_LOCK (pads);
-  gst_collect_pads2_set_flushing_unlocked (pads, flushing);
-  GST_COLLECT_PADS2_STREAM_UNLOCK (pads);
+  GST_COLLECT_PADS_STREAM_LOCK (pads);
+  gst_collect_pads_set_flushing_unlocked (pads, flushing);
+  GST_COLLECT_PADS_STREAM_UNLOCK (pads);
 }
 
 /**
- * gst_collect_pads2_start:
+ * gst_collect_pads_start:
  * @pads: the collectspads to use
  *
- * Starts the processing of data in the collect_pads2.
+ * Starts the processing of data in the collect_pads.
  *
  * MT safe.
  *
  * Since: 0.10.36
  */
 void
-gst_collect_pads2_start (GstCollectPads2 * pads)
+gst_collect_pads_start (GstCollectPads * pads)
 {
   GSList *collected;
 
   g_return_if_fail (pads != NULL);
-  g_return_if_fail (GST_IS_COLLECT_PADS2 (pads));
+  g_return_if_fail (GST_IS_COLLECT_PADS (pads));
 
   GST_DEBUG_OBJECT (pads, "starting collect pads");
 
   /* make sure stop and collect cannot be called anymore */
-  GST_COLLECT_PADS2_STREAM_LOCK (pads);
+  GST_COLLECT_PADS_STREAM_LOCK (pads);
 
   /* make pads streamable */
   GST_OBJECT_LOCK (pads);
@@ -947,25 +947,25 @@ gst_collect_pads2_start (GstCollectPads2 * pads)
   /* loop over the master pad list and reset the segment */
   collected = pads->priv->pad_list;
   for (; collected; collected = g_slist_next (collected)) {
-    GstCollectData2 *data;
+    GstCollectData *data;
 
     data = collected->data;
     gst_segment_init (&data->segment, GST_FORMAT_UNDEFINED);
   }
 
-  gst_collect_pads2_set_flushing_unlocked (pads, FALSE);
+  gst_collect_pads_set_flushing_unlocked (pads, FALSE);
 
   /* Start collect pads */
   pads->priv->started = TRUE;
   GST_OBJECT_UNLOCK (pads);
-  GST_COLLECT_PADS2_STREAM_UNLOCK (pads);
+  GST_COLLECT_PADS_STREAM_UNLOCK (pads);
 }
 
 /**
- * gst_collect_pads2_stop:
+ * gst_collect_pads_stop:
  * @pads: the collectspads to use
  *
- * Stops the processing of data in the collect_pads2. this function
+ * Stops the processing of data in the collect_pads. this function
  * will also unblock any blocking operations.
  *
  * MT safe.
@@ -973,21 +973,21 @@ gst_collect_pads2_start (GstCollectPads2 * pads)
  * Since: 0.10.36
  */
 void
-gst_collect_pads2_stop (GstCollectPads2 * pads)
+gst_collect_pads_stop (GstCollectPads * pads)
 {
   GSList *collected;
 
   g_return_if_fail (pads != NULL);
-  g_return_if_fail (GST_IS_COLLECT_PADS2 (pads));
+  g_return_if_fail (GST_IS_COLLECT_PADS (pads));
 
   GST_DEBUG_OBJECT (pads, "stopping collect pads");
 
   /* make sure collect and start cannot be called anymore */
-  GST_COLLECT_PADS2_STREAM_LOCK (pads);
+  GST_COLLECT_PADS_STREAM_LOCK (pads);
 
   /* make pads not accept data anymore */
   GST_OBJECT_LOCK (pads);
-  gst_collect_pads2_set_flushing_unlocked (pads, TRUE);
+  gst_collect_pads_set_flushing_unlocked (pads, TRUE);
 
   /* Stop collect pads */
   pads->priv->started = FALSE;
@@ -997,7 +997,7 @@ gst_collect_pads2_stop (GstCollectPads2 * pads)
   /* loop over the master pad list and flush buffers */
   collected = pads->priv->pad_list;
   for (; collected; collected = g_slist_next (collected)) {
-    GstCollectData2 *data;
+    GstCollectData *data;
     GstBuffer **buffer_p;
 
     data = collected->data;
@@ -1006,7 +1006,7 @@ gst_collect_pads2_stop (GstCollectPads2 * pads)
       gst_buffer_replace (buffer_p, NULL);
       data->pos = 0;
     }
-    GST_COLLECT_PADS2_STATE_UNSET (data, GST_COLLECT_PADS2_STATE_EOS);
+    GST_COLLECT_PADS_STATE_UNSET (data, GST_COLLECT_PADS_STATE_EOS);
   }
 
   if (pads->priv->earliest_data)
@@ -1016,13 +1016,13 @@ gst_collect_pads2_stop (GstCollectPads2 * pads)
 
   GST_OBJECT_UNLOCK (pads);
   /* Wake them up so they can end the chain functions. */
-  GST_COLLECT_PADS2_EVT_BROADCAST (pads);
+  GST_COLLECT_PADS_EVT_BROADCAST (pads);
 
-  GST_COLLECT_PADS2_STREAM_UNLOCK (pads);
+  GST_COLLECT_PADS_STREAM_UNLOCK (pads);
 }
 
 /**
- * gst_collect_pads2_peek:
+ * gst_collect_pads_peek:
  * @pads: the collectspads to peek
  * @data: the data to use
  *
@@ -1038,12 +1038,12 @@ gst_collect_pads2_stop (GstCollectPads2 * pads)
  * Since: 0.10.36
  */
 GstBuffer *
-gst_collect_pads2_peek (GstCollectPads2 * pads, GstCollectData2 * data)
+gst_collect_pads_peek (GstCollectPads * pads, GstCollectData * data)
 {
   GstBuffer *result;
 
   g_return_val_if_fail (pads != NULL, NULL);
-  g_return_val_if_fail (GST_IS_COLLECT_PADS2 (pads), NULL);
+  g_return_val_if_fail (GST_IS_COLLECT_PADS (pads), NULL);
   g_return_val_if_fail (data != NULL, NULL);
 
   if ((result = data->buffer))
@@ -1056,7 +1056,7 @@ gst_collect_pads2_peek (GstCollectPads2 * pads, GstCollectData2 * data)
 }
 
 /**
- * gst_collect_pads2_pop:
+ * gst_collect_pads_pop:
  * @pads: the collectspads to pop
  * @data: the data to use
  *
@@ -1072,23 +1072,23 @@ gst_collect_pads2_peek (GstCollectPads2 * pads, GstCollectData2 * data)
  * Since: 0.10.36
  */
 GstBuffer *
-gst_collect_pads2_pop (GstCollectPads2 * pads, GstCollectData2 * data)
+gst_collect_pads_pop (GstCollectPads * pads, GstCollectData * data)
 {
   GstBuffer *result;
 
   g_return_val_if_fail (pads != NULL, NULL);
-  g_return_val_if_fail (GST_IS_COLLECT_PADS2 (pads), NULL);
+  g_return_val_if_fail (GST_IS_COLLECT_PADS (pads), NULL);
   g_return_val_if_fail (data != NULL, NULL);
 
   if ((result = data->buffer)) {
     data->buffer = NULL;
     data->pos = 0;
     /* one less pad with queued data now */
-    if (GST_COLLECT_PADS2_STATE_IS_SET (data, GST_COLLECT_PADS2_STATE_WAITING))
+    if (GST_COLLECT_PADS_STATE_IS_SET (data, GST_COLLECT_PADS_STATE_WAITING))
       pads->priv->queuedpads--;
   }
 
-  GST_COLLECT_PADS2_EVT_BROADCAST (pads);
+  GST_COLLECT_PADS_EVT_BROADCAST (pads);
 
   GST_DEBUG_OBJECT (pads, "Pop buffer on pad %s:%s: buffer=%p",
       GST_DEBUG_PAD_NAME (data->pad), result);
@@ -1099,16 +1099,16 @@ gst_collect_pads2_pop (GstCollectPads2 * pads, GstCollectData2 * data)
 /* pop and unref the currently queued buffer, should be called with STREAM_LOCK
  * held */
 static void
-gst_collect_pads2_clear (GstCollectPads2 * pads, GstCollectData2 * data)
+gst_collect_pads_clear (GstCollectPads * pads, GstCollectData * data)
 {
   GstBuffer *buf;
 
-  if ((buf = gst_collect_pads2_pop (pads, data)))
+  if ((buf = gst_collect_pads_pop (pads, data)))
     gst_buffer_unref (buf);
 }
 
 /**
- * gst_collect_pads2_available:
+ * gst_collect_pads_available:
  * @pads: the collectspads to query
  *
  * Query how much bytes can be read from each queued buffer. This means
@@ -1129,25 +1129,25 @@ gst_collect_pads2_clear (GstCollectPads2 * pads, GstCollectData2 * data)
  * but would then have to maintain this in _chain and particularly _pop, etc,
  * even if element is never interested in this information */
 guint
-gst_collect_pads2_available (GstCollectPads2 * pads)
+gst_collect_pads_available (GstCollectPads * pads)
 {
   GSList *collected;
   guint result = G_MAXUINT;
 
   g_return_val_if_fail (pads != NULL, 0);
-  g_return_val_if_fail (GST_IS_COLLECT_PADS2 (pads), 0);
+  g_return_val_if_fail (GST_IS_COLLECT_PADS (pads), 0);
 
   collected = pads->data;
   for (; collected; collected = g_slist_next (collected)) {
-    GstCollectData2 *pdata;
+    GstCollectData *pdata;
     GstBuffer *buffer;
     gint size;
 
-    pdata = (GstCollectData2 *) collected->data;
+    pdata = (GstCollectData *) collected->data;
 
     /* ignore pad with EOS */
-    if (G_UNLIKELY (GST_COLLECT_PADS2_STATE_IS_SET (pdata,
-                GST_COLLECT_PADS2_STATE_EOS))) {
+    if (G_UNLIKELY (GST_COLLECT_PADS_STATE_IS_SET (pdata,
+                GST_COLLECT_PADS_STATE_EOS))) {
       GST_DEBUG_OBJECT (pads, "pad %p is EOS", pdata);
       continue;
     }
@@ -1179,7 +1179,7 @@ not_filled:
 }
 
 /**
- * gst_collect_pads2_flush:
+ * gst_collect_pads_flush:
  * @pads: the collectspads to query
  * @data: the data to use
  * @size: the number of bytes to flush
@@ -1197,7 +1197,7 @@ not_filled:
  * Since: 0.10.36
  */
 guint
-gst_collect_pads2_flush (GstCollectPads2 * pads, GstCollectData2 * data,
+gst_collect_pads_flush (GstCollectPads * pads, GstCollectData * data,
     guint size)
 {
   guint flushsize;
@@ -1205,7 +1205,7 @@ gst_collect_pads2_flush (GstCollectPads2 * pads, GstCollectData2 * data,
   GstBuffer *buffer;
 
   g_return_val_if_fail (pads != NULL, 0);
-  g_return_val_if_fail (GST_IS_COLLECT_PADS2 (pads), 0);
+  g_return_val_if_fail (GST_IS_COLLECT_PADS (pads), 0);
   g_return_val_if_fail (data != NULL, 0);
 
   /* no buffer, must be EOS */
@@ -1221,13 +1221,13 @@ gst_collect_pads2_flush (GstCollectPads2 * pads, GstCollectData2 * data,
 
   if (data->pos >= bsize)
     /* _clear will also reset data->pos to 0 */
-    gst_collect_pads2_clear (pads, data);
+    gst_collect_pads_clear (pads, data);
 
   return flushsize;
 }
 
 /**
- * gst_collect_pads2_read_buffer:
+ * gst_collect_pads_read_buffer:
  * @pads: the collectspads to query
  * @data: the data to use
  * @size: the number of bytes to read
@@ -1246,14 +1246,14 @@ gst_collect_pads2_flush (GstCollectPads2 * pads, GstCollectData2 * data,
  * Unref the buffer after use.
  */
 GstBuffer *
-gst_collect_pads2_read_buffer (GstCollectPads2 * pads, GstCollectData2 * data,
+gst_collect_pads_read_buffer (GstCollectPads * pads, GstCollectData * data,
     guint size)
 {
   guint readsize;
   GstBuffer *buffer;
 
   g_return_val_if_fail (pads != NULL, NULL);
-  g_return_val_if_fail (GST_IS_COLLECT_PADS2 (pads), NULL);
+  g_return_val_if_fail (GST_IS_COLLECT_PADS (pads), NULL);
   g_return_val_if_fail (data != NULL, NULL);
 
   /* no buffer, must be EOS */
@@ -1267,7 +1267,7 @@ gst_collect_pads2_read_buffer (GstCollectPads2 * pads, GstCollectData2 * data,
 }
 
 /**
- * gst_collect_pads2_take_buffer:
+ * gst_collect_pads_take_buffer:
  * @pads: the collectspads to query
  * @data: the data to use
  * @size: the number of bytes to read
@@ -1287,19 +1287,19 @@ gst_collect_pads2_read_buffer (GstCollectPads2 * pads, GstCollectData2 * data,
  * Unref the buffer after use.
  */
 GstBuffer *
-gst_collect_pads2_take_buffer (GstCollectPads2 * pads, GstCollectData2 * data,
+gst_collect_pads_take_buffer (GstCollectPads * pads, GstCollectData * data,
     guint size)
 {
-  GstBuffer *buffer = gst_collect_pads2_read_buffer (pads, data, size);
+  GstBuffer *buffer = gst_collect_pads_read_buffer (pads, data, size);
 
   if (buffer) {
-    gst_collect_pads2_flush (pads, data, gst_buffer_get_size (buffer));
+    gst_collect_pads_flush (pads, data, gst_buffer_get_size (buffer));
   }
   return buffer;
 }
 
 /**
- * gst_collect_pads2_set_waiting:
+ * gst_collect_pads_set_waiting:
  * @pads: the collectspads
  * @data: the data to use
  * @waiting: boolean indicating whether this pad should operate
@@ -1317,29 +1317,29 @@ gst_collect_pads2_take_buffer (GstCollectPads2 * pads, GstCollectData2 * data,
  * Since: 0.10.36
  */
 void
-gst_collect_pads2_set_waiting (GstCollectPads2 * pads, GstCollectData2 * data,
+gst_collect_pads_set_waiting (GstCollectPads * pads, GstCollectData * data,
     gboolean waiting)
 {
   g_return_if_fail (pads != NULL);
-  g_return_if_fail (GST_IS_COLLECT_PADS2 (pads));
+  g_return_if_fail (GST_IS_COLLECT_PADS (pads));
   g_return_if_fail (data != NULL);
 
   GST_DEBUG_OBJECT (pads, "Setting pad %s to waiting %d, locked %d",
       GST_PAD_NAME (data->pad), waiting,
-      GST_COLLECT_PADS2_STATE_IS_SET (data, GST_COLLECT_PADS2_STATE_LOCKED));
+      GST_COLLECT_PADS_STATE_IS_SET (data, GST_COLLECT_PADS_STATE_LOCKED));
 
   /* Do something only on a change and if not locked */
-  if (!GST_COLLECT_PADS2_STATE_IS_SET (data, GST_COLLECT_PADS2_STATE_LOCKED) &&
-      (GST_COLLECT_PADS2_STATE_IS_SET (data, GST_COLLECT_PADS2_STATE_WAITING) !=
+  if (!GST_COLLECT_PADS_STATE_IS_SET (data, GST_COLLECT_PADS_STATE_LOCKED) &&
+      (GST_COLLECT_PADS_STATE_IS_SET (data, GST_COLLECT_PADS_STATE_WAITING) !=
           ! !waiting)) {
     /* Set waiting state for this pad */
     if (waiting)
-      GST_COLLECT_PADS2_STATE_SET (data, GST_COLLECT_PADS2_STATE_WAITING);
+      GST_COLLECT_PADS_STATE_SET (data, GST_COLLECT_PADS_STATE_WAITING);
     else
-      GST_COLLECT_PADS2_STATE_UNSET (data, GST_COLLECT_PADS2_STATE_WAITING);
+      GST_COLLECT_PADS_STATE_UNSET (data, GST_COLLECT_PADS_STATE_WAITING);
     /* Update number of queued pads if needed */
     if (!data->buffer &&
-        !GST_COLLECT_PADS2_STATE_IS_SET (data, GST_COLLECT_PADS2_STATE_EOS)) {
+        !GST_COLLECT_PADS_STATE_IS_SET (data, GST_COLLECT_PADS_STATE_EOS)) {
       if (waiting)
         pads->priv->queuedpads--;
       else
@@ -1347,7 +1347,7 @@ gst_collect_pads2_set_waiting (GstCollectPads2 * pads, GstCollectData2 * data,
     }
 
     /* signal waiters because something changed */
-    GST_COLLECT_PADS2_EVT_BROADCAST (pads);
+    GST_COLLECT_PADS_EVT_BROADCAST (pads);
   }
 }
 
@@ -1361,7 +1361,7 @@ gst_collect_pads2_set_waiting (GstCollectPads2 * pads, GstCollectData2 * data,
  * Must be called with STREAM_LOCK.
  */
 static void
-gst_collect_pads2_check_pads (GstCollectPads2 * pads)
+gst_collect_pads_check_pads (GstCollectPads * pads)
 {
   /* the master list and cookie are protected with LOCK */
   GST_OBJECT_LOCK (pads);
@@ -1383,15 +1383,15 @@ gst_collect_pads2_check_pads (GstCollectPads2 * pads)
     /* loop over the master pad list */
     collected = pads->priv->pad_list;
     for (; collected; collected = g_slist_next (collected)) {
-      GstCollectData2 *data;
+      GstCollectData *data;
 
       /* update the stats */
       pads->priv->numpads++;
       data = collected->data;
-      if (GST_COLLECT_PADS2_STATE_IS_SET (data, GST_COLLECT_PADS2_STATE_EOS))
+      if (GST_COLLECT_PADS_STATE_IS_SET (data, GST_COLLECT_PADS_STATE_EOS))
         pads->priv->eospads++;
-      else if (data->buffer || !GST_COLLECT_PADS2_STATE_IS_SET (data,
-              GST_COLLECT_PADS2_STATE_WAITING))
+      else if (data->buffer || !GST_COLLECT_PADS_STATE_IS_SET (data,
+              GST_COLLECT_PADS_STATE_WAITING))
         pads->priv->queuedpads++;
 
       /* add to the list of pads to collect */
@@ -1412,13 +1412,13 @@ gst_collect_pads2_check_pads (GstCollectPads2 * pads)
  * Returns: The #GstFlowReturn of collection.
  */
 static GstFlowReturn
-gst_collect_pads2_check_collected (GstCollectPads2 * pads)
+gst_collect_pads_check_collected (GstCollectPads * pads)
 {
   GstFlowReturn flow_ret = GST_FLOW_OK;
-  GstCollectPads2Function func;
+  GstCollectPadsFunction func;
   gpointer user_data;
 
-  g_return_val_if_fail (GST_IS_COLLECT_PADS2 (pads), GST_FLOW_ERROR);
+  g_return_val_if_fail (GST_IS_COLLECT_PADS (pads), GST_FLOW_ERROR);
 
   GST_OBJECT_LOCK (pads);
   func = pads->priv->func;
@@ -1428,7 +1428,7 @@ gst_collect_pads2_check_collected (GstCollectPads2 * pads)
   g_return_val_if_fail (pads->priv->func != NULL, GST_FLOW_NOT_SUPPORTED);
 
   /* check for new pads, update stats etc.. */
-  gst_collect_pads2_check_pads (pads);
+  gst_collect_pads_check_pads (pads);
 
   if (G_UNLIKELY (pads->priv->eospads == pads->priv->numpads)) {
     /* If all our pads are EOS just collect once to let the element
@@ -1482,7 +1482,7 @@ gst_collect_pads2_check_collected (GstCollectPads2 * pads)
  * (from non-waiting state).
  */
 static gboolean
-gst_collect_pads2_recalculate_waiting (GstCollectPads2 * pads)
+gst_collect_pads_recalculate_waiting (GstCollectPads * pads)
 {
   GSList *collected;
   gboolean result = FALSE;
@@ -1492,20 +1492,20 @@ gst_collect_pads2_recalculate_waiting (GstCollectPads2 * pads)
     return FALSE;
 
   for (collected = pads->data; collected; collected = g_slist_next (collected)) {
-    GstCollectData2 *data = (GstCollectData2 *) collected->data;
+    GstCollectData *data = (GstCollectData *) collected->data;
     int cmp_res;
 
     /* check if pad has a segment */
     if (data->segment.format == GST_FORMAT_UNDEFINED) {
       GST_WARNING_OBJECT (pads,
-          "GstCollectPads2 has no time segment, assuming 0 based.");
+          "GstCollectPads has no time segment, assuming 0 based.");
       gst_segment_init (&data->segment, GST_FORMAT_TIME);
-      GST_COLLECT_PADS2_STATE_SET (data, GST_COLLECT_PADS2_STATE_NEW_SEGMENT);
+      GST_COLLECT_PADS_STATE_SET (data, GST_COLLECT_PADS_STATE_NEW_SEGMENT);
     }
 
     /* check segment format */
     if (data->segment.format != GST_FORMAT_TIME) {
-      GST_ERROR_OBJECT (pads, "GstCollectPads2 can handle only time segments.");
+      GST_ERROR_OBJECT (pads, "GstCollectPads can handle only time segments.");
       continue;
     }
 
@@ -1515,12 +1515,11 @@ gst_collect_pads2_recalculate_waiting (GstCollectPads2 * pads)
         pads->priv->compare_user_data);
     if (cmp_res > 0)
       /* stop waiting */
-      gst_collect_pads2_set_waiting (pads, data, FALSE);
+      gst_collect_pads_set_waiting (pads, data, FALSE);
     else {
-      if (!GST_COLLECT_PADS2_STATE_IS_SET (data,
-              GST_COLLECT_PADS2_STATE_WAITING)) {
+      if (!GST_COLLECT_PADS_STATE_IS_SET (data, GST_COLLECT_PADS_STATE_WAITING)) {
         /* start waiting */
-        gst_collect_pads2_set_waiting (pads, data, TRUE);
+        gst_collect_pads_set_waiting (pads, data, TRUE);
         result = TRUE;
       }
     }
@@ -1530,13 +1529,13 @@ gst_collect_pads2_recalculate_waiting (GstCollectPads2 * pads)
 }
 
 /**
- * gst_collect_pads2_find_best_pad:
+ * gst_collect_pads_find_best_pad:
  * @pads: the collectpads to use
  * @data: returns the collectdata for earliest data
  * @time: returns the earliest available buffertime
  *
  * Find the oldest/best pad, i.e. pad holding the oldest buffer and
- * and return the corresponding #GstCollectData2 and buffertime.
+ * and return the corresponding #GstCollectData and buffertime.
  *
  * This function should be called with STREAM_LOCK held,
  * such as in the callback.
@@ -1544,11 +1543,11 @@ gst_collect_pads2_recalculate_waiting (GstCollectPads2 * pads)
  * Since: 0.10.36
  */
 static void
-gst_collect_pads2_find_best_pad (GstCollectPads2 * pads,
-    GstCollectData2 ** data, GstClockTime * time)
+gst_collect_pads_find_best_pad (GstCollectPads * pads,
+    GstCollectData ** data, GstClockTime * time)
 {
   GSList *collected;
-  GstCollectData2 *best = NULL;
+  GstCollectData *best = NULL;
   GstClockTime best_time = GST_CLOCK_TIME_NONE;
 
   g_return_if_fail (data != NULL);
@@ -1556,10 +1555,10 @@ gst_collect_pads2_find_best_pad (GstCollectPads2 * pads,
 
   for (collected = pads->data; collected; collected = g_slist_next (collected)) {
     GstBuffer *buffer;
-    GstCollectData2 *data = (GstCollectData2 *) collected->data;
+    GstCollectData *data = (GstCollectData *) collected->data;
     GstClockTime timestamp;
 
-    buffer = gst_collect_pads2_peek (pads, data);
+    buffer = gst_collect_pads_peek (pads, data);
     /* if we have a buffer check if it is better then the current best one */
     if (buffer != NULL) {
       timestamp = GST_BUFFER_TIMESTAMP (buffer);
@@ -1577,43 +1576,43 @@ gst_collect_pads2_find_best_pad (GstCollectPads2 * pads,
   *time = best_time;
 
   GST_DEBUG_OBJECT (pads, "best pad %s, best time %" GST_TIME_FORMAT,
-      best ? GST_PAD_NAME (((GstCollectData2 *) best)->pad) : "(nil)",
+      best ? GST_PAD_NAME (((GstCollectData *) best)->pad) : "(nil)",
       GST_TIME_ARGS (best_time));
 }
 
 /*
  * Function to recalculate earliest_data and earliest_timestamp. This also calls
- * gst_collect_pads2_recalculate_waiting
+ * gst_collect_pads_recalculate_waiting
  *
  * Must be called with STREAM_LOCK.
  */
 static gboolean
-gst_collect_pads2_recalculate_full (GstCollectPads2 * pads)
+gst_collect_pads_recalculate_full (GstCollectPads * pads)
 {
   if (pads->priv->earliest_data)
     unref_data (pads->priv->earliest_data);
-  gst_collect_pads2_find_best_pad (pads, &pads->priv->earliest_data,
+  gst_collect_pads_find_best_pad (pads, &pads->priv->earliest_data,
       &pads->priv->earliest_time);
   if (pads->priv->earliest_data)
     ref_data (pads->priv->earliest_data);
-  return gst_collect_pads2_recalculate_waiting (pads);
+  return gst_collect_pads_recalculate_waiting (pads);
 }
 
 /*
- * Default collect callback triggered when #GstCollectPads2 gathered all data.
+ * Default collect callback triggered when #GstCollectPads gathered all data.
  *
  * Called with STREAM_LOCK.
  */
 static GstFlowReturn
-gst_collect_pads2_default_collected (GstCollectPads2 * pads, gpointer user_data)
+gst_collect_pads_default_collected (GstCollectPads * pads, gpointer user_data)
 {
-  GstCollectData2 *best = NULL;
+  GstCollectData *best = NULL;
   GstBuffer *buffer;
   GstFlowReturn ret = GST_FLOW_OK;
-  GstCollectPads2BufferFunction func;
+  GstCollectPadsBufferFunction func;
   gpointer buffer_user_data;
 
-  g_return_val_if_fail (GST_IS_COLLECT_PADS2 (pads), GST_FLOW_ERROR);
+  g_return_val_if_fail (GST_IS_COLLECT_PADS (pads), GST_FLOW_ERROR);
 
   GST_OBJECT_LOCK (pads);
   func = pads->priv->buffer_func;
@@ -1623,7 +1622,7 @@ gst_collect_pads2_default_collected (GstCollectPads2 * pads, gpointer user_data)
   g_return_val_if_fail (func != NULL, GST_FLOW_NOT_SUPPORTED);
 
   /* Find the oldest pad at all cost */
-  if (gst_collect_pads2_recalculate_full (pads)) {
+  if (gst_collect_pads_recalculate_full (pads)) {
     /* waiting was switched on,
      * so give another thread a chance to deliver a possibly
      * older buffer; don't charge on yet with the current oldest */
@@ -1644,16 +1643,16 @@ gst_collect_pads2_default_collected (GstCollectPads2 * pads, gpointer user_data)
   /* make sure that the pad we take a buffer from is waiting;
    * otherwise popping a buffer will seem not to have happened
    * and collectpads can get into a busy loop */
-  gst_collect_pads2_set_waiting (pads, best, TRUE);
+  gst_collect_pads_set_waiting (pads, best, TRUE);
 
   /* Send buffer */
-  buffer = gst_collect_pads2_pop (pads, best);
+  buffer = gst_collect_pads_pop (pads, best);
   ret = func (pads, best, buffer, buffer_user_data);
 
   /* maybe non-waiting was forced to waiting above due to
    * newsegment events coming too sparsely,
    * so re-check to restore state to avoid hanging/waiting */
-  gst_collect_pads2_recalculate_full (pads);
+  gst_collect_pads_recalculate_full (pads);
 
 done:
   return ret;
@@ -1663,9 +1662,9 @@ done:
  * Default timestamp compare function.
  */
 static gint
-gst_collect_pads2_default_compare_func (GstCollectPads2 * pads,
-    GstCollectData2 * data1, GstClockTime timestamp1,
-    GstCollectData2 * data2, GstClockTime timestamp2, gpointer user_data)
+gst_collect_pads_default_compare_func (GstCollectPads * pads,
+    GstCollectData * data1, GstClockTime timestamp1,
+    GstCollectData * data2, GstClockTime timestamp2, gpointer user_data)
 {
 
   GST_LOG_OBJECT (pads, "comparing %" GST_TIME_FORMAT
@@ -1689,24 +1688,24 @@ gst_collect_pads2_default_compare_func (GstCollectPads2 * pads,
 }
 
 /**
- * gst_collect_pads2_event_default:
+ * gst_collect_pads_event_default:
  * @pads: the collectspads to use
  * @data: collect data of corresponding pad
  * @event: event being processed
  * @discard: process but do not send event downstream
  *
- * Default GstCollectPads2 event handling that elements should always
+ * Default GstCollectPads event handling that elements should always
  * chain up to to ensure proper operation.  Element might however indicate
  * event should not be forwarded downstream.
  *
  * Since: 0.11.x
  */
 gboolean
-gst_collect_pads2_event_default (GstCollectPads2 * pads, GstCollectData2 * data,
+gst_collect_pads_event_default (GstCollectPads * pads, GstCollectData * data,
     GstEvent * event, gboolean discard)
 {
   gboolean res = TRUE;
-  GstCollectPads2BufferFunction buffer_func;
+  GstCollectPadsBufferFunction buffer_func;
   GstObject *parent;
   GstPad *pad;
 
@@ -1727,14 +1726,14 @@ gst_collect_pads2_event_default (GstCollectPads2 * pads, GstCollectData2 * data,
       /* now unblock the chain function.
        * no cond per pad, so they all unblock,
        * non-flushing block again */
-      GST_COLLECT_PADS2_STREAM_LOCK (pads);
-      GST_COLLECT_PADS2_STATE_SET (data, GST_COLLECT_PADS2_STATE_FLUSHING);
-      gst_collect_pads2_clear (pads, data);
+      GST_COLLECT_PADS_STREAM_LOCK (pads);
+      GST_COLLECT_PADS_STATE_SET (data, GST_COLLECT_PADS_STATE_FLUSHING);
+      gst_collect_pads_clear (pads, data);
 
       /* cater for possible default muxing functionality */
       if (buffer_func) {
         /* restore to initial state */
-        gst_collect_pads2_set_waiting (pads, data, TRUE);
+        gst_collect_pads_set_waiting (pads, data, TRUE);
         /* if the current pad is affected, reset state, recalculate later */
         if (pads->priv->earliest_data == data) {
           unref_data (data);
@@ -1743,49 +1742,49 @@ gst_collect_pads2_event_default (GstCollectPads2 * pads, GstCollectData2 * data,
         }
       }
 
-      GST_COLLECT_PADS2_STREAM_UNLOCK (pads);
+      GST_COLLECT_PADS_STREAM_UNLOCK (pads);
 
       goto eat;
     }
     case GST_EVENT_FLUSH_STOP:
     {
       /* flush the 1 buffer queue */
-      GST_COLLECT_PADS2_STREAM_LOCK (pads);
-      GST_COLLECT_PADS2_STATE_UNSET (data, GST_COLLECT_PADS2_STATE_FLUSHING);
-      gst_collect_pads2_clear (pads, data);
+      GST_COLLECT_PADS_STREAM_LOCK (pads);
+      GST_COLLECT_PADS_STATE_UNSET (data, GST_COLLECT_PADS_STATE_FLUSHING);
+      gst_collect_pads_clear (pads, data);
       /* we need new segment info after the flush */
       gst_segment_init (&data->segment, GST_FORMAT_UNDEFINED);
-      GST_COLLECT_PADS2_STATE_UNSET (data, GST_COLLECT_PADS2_STATE_NEW_SEGMENT);
+      GST_COLLECT_PADS_STATE_UNSET (data, GST_COLLECT_PADS_STATE_NEW_SEGMENT);
       /* if the pad was EOS, remove the EOS flag and
        * decrement the number of eospads */
-      if (G_UNLIKELY (GST_COLLECT_PADS2_STATE_IS_SET (data,
-                  GST_COLLECT_PADS2_STATE_EOS))) {
-        if (!GST_COLLECT_PADS2_STATE_IS_SET (data,
-                GST_COLLECT_PADS2_STATE_WAITING))
+      if (G_UNLIKELY (GST_COLLECT_PADS_STATE_IS_SET (data,
+                  GST_COLLECT_PADS_STATE_EOS))) {
+        if (!GST_COLLECT_PADS_STATE_IS_SET (data,
+                GST_COLLECT_PADS_STATE_WAITING))
           pads->priv->queuedpads++;
         pads->priv->eospads--;
-        GST_COLLECT_PADS2_STATE_UNSET (data, GST_COLLECT_PADS2_STATE_EOS);
+        GST_COLLECT_PADS_STATE_UNSET (data, GST_COLLECT_PADS_STATE_EOS);
       }
-      GST_COLLECT_PADS2_STREAM_UNLOCK (pads);
+      GST_COLLECT_PADS_STREAM_UNLOCK (pads);
 
       goto forward;
     }
     case GST_EVENT_EOS:
     {
-      GST_COLLECT_PADS2_STREAM_LOCK (pads);
+      GST_COLLECT_PADS_STREAM_LOCK (pads);
       /* if the pad was not EOS, make it EOS and so we
        * have one more eospad */
-      if (G_LIKELY (!GST_COLLECT_PADS2_STATE_IS_SET (data,
-                  GST_COLLECT_PADS2_STATE_EOS))) {
-        GST_COLLECT_PADS2_STATE_SET (data, GST_COLLECT_PADS2_STATE_EOS);
-        if (!GST_COLLECT_PADS2_STATE_IS_SET (data,
-                GST_COLLECT_PADS2_STATE_WAITING))
+      if (G_LIKELY (!GST_COLLECT_PADS_STATE_IS_SET (data,
+                  GST_COLLECT_PADS_STATE_EOS))) {
+        GST_COLLECT_PADS_STATE_SET (data, GST_COLLECT_PADS_STATE_EOS);
+        if (!GST_COLLECT_PADS_STATE_IS_SET (data,
+                GST_COLLECT_PADS_STATE_WAITING))
           pads->priv->queuedpads--;
         pads->priv->eospads++;
       }
       /* check if we need collecting anything, we ignore the result. */
-      gst_collect_pads2_check_collected (pads);
-      GST_COLLECT_PADS2_STREAM_UNLOCK (pads);
+      gst_collect_pads_check_collected (pads);
+      GST_COLLECT_PADS_STREAM_UNLOCK (pads);
 
       goto eat;
     }
@@ -1794,7 +1793,7 @@ gst_collect_pads2_event_default (GstCollectPads2 * pads, GstCollectData2 * data,
       GstSegment seg;
       gint cmp_res;
 
-      GST_COLLECT_PADS2_STREAM_LOCK (pads);
+      GST_COLLECT_PADS_STREAM_LOCK (pads);
 
       gst_event_copy_segment (event, &seg);
 
@@ -1802,13 +1801,13 @@ gst_collect_pads2_event_default (GstCollectPads2 * pads, GstCollectData2 * data,
 
       /* default collection can not handle other segment formats than time */
       if (buffer_func && seg.format != GST_FORMAT_TIME) {
-        GST_WARNING_OBJECT (pads, "GstCollectPads2 default collecting "
+        GST_WARNING_OBJECT (pads, "GstCollectPads default collecting "
             "can only handle time segments. Non time segment ignored.");
         goto newsegment_done;
       }
 
       data->segment = seg;
-      GST_COLLECT_PADS2_STATE_SET (data, GST_COLLECT_PADS2_STATE_NEW_SEGMENT);
+      GST_COLLECT_PADS_STATE_SET (data, GST_COLLECT_PADS_STATE_NEW_SEGMENT);
 
       /* default muxing functionality */
       if (!buffer_func)
@@ -1817,7 +1816,7 @@ gst_collect_pads2_event_default (GstCollectPads2 * pads, GstCollectData2 * data,
       /* If oldest time is not known, or current pad got newsegment;
        * recalculate the state */
       if (!pads->priv->earliest_data || pads->priv->earliest_data == data) {
-        gst_collect_pads2_recalculate_full (pads);
+        gst_collect_pads_recalculate_full (pads);
         goto newsegment_done;
       }
 
@@ -1829,10 +1828,10 @@ gst_collect_pads2_event_default (GstCollectPads2 * pads, GstCollectData2 * data,
 
       if (cmp_res > 0)
         /* Stop waiting */
-        gst_collect_pads2_set_waiting (pads, data, FALSE);
+        gst_collect_pads_set_waiting (pads, data, FALSE);
 
     newsegment_done:
-      GST_COLLECT_PADS2_STREAM_UNLOCK (pads);
+      GST_COLLECT_PADS_STREAM_UNLOCK (pads);
       /* we must not forward this event since multiple segments will be
        * accumulated and this is certainly not what we want. */
       goto eat;
@@ -1858,24 +1857,24 @@ forward:
 }
 
 static gboolean
-gst_collect_pads2_event_default_internal (GstCollectPads2 * pads,
-    GstCollectData2 * data, GstEvent * event, gpointer user_data)
+gst_collect_pads_event_default_internal (GstCollectPads * pads,
+    GstCollectData * data, GstEvent * event, gpointer user_data)
 {
-  return gst_collect_pads2_event_default (pads, data, event, FALSE);
+  return gst_collect_pads_event_default (pads, data, event, FALSE);
 }
 
 static gboolean
-gst_collect_pads2_event (GstPad * pad, GstObject * parent, GstEvent * event)
+gst_collect_pads_event (GstPad * pad, GstObject * parent, GstEvent * event)
 {
   gboolean res = FALSE, need_unlock = FALSE;
-  GstCollectData2 *data;
-  GstCollectPads2 *pads;
-  GstCollectPads2EventFunction event_func;
+  GstCollectData *data;
+  GstCollectPads *pads;
+  GstCollectPadsEventFunction event_func;
   gpointer event_user_data;
 
-  /* some magic to get the managing collect_pads2 */
+  /* some magic to get the managing collect_pads */
   GST_OBJECT_LOCK (pad);
-  data = (GstCollectData2 *) gst_pad_get_element_private (pad);
+  data = (GstCollectData *) gst_pad_get_element_private (pad);
   if (G_UNLIKELY (data == NULL))
     goto pad_removed;
   ref_data (data);
@@ -1894,7 +1893,7 @@ gst_collect_pads2_event (GstPad * pad, GstObject * parent, GstEvent * event)
   GST_OBJECT_UNLOCK (pads);
 
   if (GST_EVENT_IS_SERIALIZED (event)) {
-    GST_COLLECT_PADS2_STREAM_LOCK (pads);
+    GST_COLLECT_PADS_STREAM_LOCK (pads);
     need_unlock = TRUE;
   }
 
@@ -1903,7 +1902,7 @@ gst_collect_pads2_event (GstPad * pad, GstObject * parent, GstEvent * event)
   }
 
   if (need_unlock)
-    GST_COLLECT_PADS2_STREAM_UNLOCK (pads);
+    GST_COLLECT_PADS_STREAM_UNLOCK (pads);
 
   unref_data (data);
   return res;
@@ -1918,20 +1917,20 @@ pad_removed:
 }
 
 /**
- * gst_collect_pads2_query_default:
+ * gst_collect_pads_query_default:
  * @pads: the collectspads to use
  * @data: collect data of corresponding pad
  * @query: query being processed
  * @discard: process but do not send event downstream
  *
- * Default GstCollectPads2 query handling that elements should always
+ * Default GstCollectPads query handling that elements should always
  * chain up to to ensure proper operation.  Element might however indicate
  * query should not be forwarded downstream.
  *
  * Since: 0.11.x
  */
 gboolean
-gst_collect_pads2_query_default (GstCollectPads2 * pads, GstCollectData2 * data,
+gst_collect_pads_query_default (GstCollectPads * pads, GstCollectData * data,
     GstQuery * query, gboolean discard)
 {
   gboolean res = TRUE;
@@ -1965,27 +1964,27 @@ gst_collect_pads2_query_default (GstCollectPads2 * pads, GstCollectData2 * data,
 }
 
 static gboolean
-gst_collect_pads2_query_default_internal (GstCollectPads2 * pads,
-    GstCollectData2 * data, GstQuery * query, gpointer user_data)
+gst_collect_pads_query_default_internal (GstCollectPads * pads,
+    GstCollectData * data, GstQuery * query, gpointer user_data)
 {
-  return gst_collect_pads2_query_default (pads, data, query, FALSE);
+  return gst_collect_pads_query_default (pads, data, query, FALSE);
 }
 
 static gboolean
-gst_collect_pads2_query (GstPad * pad, GstObject * parent, GstQuery * query)
+gst_collect_pads_query (GstPad * pad, GstObject * parent, GstQuery * query)
 {
   gboolean res = FALSE, need_unlock = FALSE;
-  GstCollectData2 *data;
-  GstCollectPads2 *pads;
-  GstCollectPads2QueryFunction query_func;
+  GstCollectData *data;
+  GstCollectPads *pads;
+  GstCollectPadsQueryFunction query_func;
   gpointer query_user_data;
 
   GST_DEBUG_OBJECT (pad, "Got %s query on sink pad",
       GST_QUERY_TYPE_NAME (query));
 
-  /* some magic to get the managing collect_pads2 */
+  /* some magic to get the managing collect_pads */
   GST_OBJECT_LOCK (pad);
-  data = (GstCollectData2 *) gst_pad_get_element_private (pad);
+  data = (GstCollectData *) gst_pad_get_element_private (pad);
   if (G_UNLIKELY (data == NULL))
     goto pad_removed;
   ref_data (data);
@@ -1999,7 +1998,7 @@ gst_collect_pads2_query (GstPad * pad, GstObject * parent, GstQuery * query)
   GST_OBJECT_UNLOCK (pads);
 
   if (GST_QUERY_IS_SERIALIZED (query)) {
-    GST_COLLECT_PADS2_STREAM_LOCK (pads);
+    GST_COLLECT_PADS_STREAM_LOCK (pads);
     need_unlock = TRUE;
   }
 
@@ -2008,7 +2007,7 @@ gst_collect_pads2_query (GstPad * pad, GstObject * parent, GstQuery * query)
   }
 
   if (need_unlock)
-    GST_COLLECT_PADS2_STREAM_UNLOCK (pads);
+    GST_COLLECT_PADS_STREAM_UNLOCK (pads);
 
   unref_data (data);
   return res;
@@ -2030,19 +2029,19 @@ pad_removed:
  * collected 
  */
 static GstFlowReturn
-gst_collect_pads2_chain (GstPad * pad, GstObject * parent, GstBuffer * buffer)
+gst_collect_pads_chain (GstPad * pad, GstObject * parent, GstBuffer * buffer)
 {
-  GstCollectData2 *data;
-  GstCollectPads2 *pads;
+  GstCollectData *data;
+  GstCollectPads *pads;
   GstFlowReturn ret;
   GstBuffer **buffer_p;
   guint32 cookie;
 
   GST_DEBUG ("Got buffer for pad %s:%s", GST_DEBUG_PAD_NAME (pad));
 
-  /* some magic to get the managing collect_pads2 */
+  /* some magic to get the managing collect_pads */
   GST_OBJECT_LOCK (pad);
-  data = (GstCollectData2 *) gst_pad_get_element_private (pad);
+  data = (GstCollectData *) gst_pad_get_element_private (pad);
   if (G_UNLIKELY (data == NULL))
     goto no_data;
   ref_data (data);
@@ -2050,17 +2049,17 @@ gst_collect_pads2_chain (GstPad * pad, GstObject * parent, GstBuffer * buffer)
 
   pads = data->collect;
 
-  GST_COLLECT_PADS2_STREAM_LOCK (pads);
+  GST_COLLECT_PADS_STREAM_LOCK (pads);
   /* if not started, bail out */
   if (G_UNLIKELY (!pads->priv->started))
     goto not_started;
   /* check if this pad is flushing */
-  if (G_UNLIKELY (GST_COLLECT_PADS2_STATE_IS_SET (data,
-              GST_COLLECT_PADS2_STATE_FLUSHING)))
+  if (G_UNLIKELY (GST_COLLECT_PADS_STATE_IS_SET (data,
+              GST_COLLECT_PADS_STATE_FLUSHING)))
     goto flushing;
   /* pad was EOS, we can refuse this data */
-  if (G_UNLIKELY (GST_COLLECT_PADS2_STATE_IS_SET (data,
-              GST_COLLECT_PADS2_STATE_EOS)))
+  if (G_UNLIKELY (GST_COLLECT_PADS_STATE_IS_SET (data,
+              GST_COLLECT_PADS_STATE_EOS)))
     goto eos;
 
   /* see if we need to clip */
@@ -2084,7 +2083,7 @@ gst_collect_pads2_chain (GstPad * pad, GstObject * parent, GstBuffer * buffer)
       GST_DEBUG_PAD_NAME (pad));
 
   /* One more pad has data queued */
-  if (GST_COLLECT_PADS2_STATE_IS_SET (data, GST_COLLECT_PADS2_STATE_WAITING))
+  if (GST_COLLECT_PADS_STATE_IS_SET (data, GST_COLLECT_PADS_STATE_WAITING))
     pads->priv->queuedpads++;
   buffer_p = &data->buffer;
   gst_buffer_replace (buffer_p, buffer);
@@ -2101,7 +2100,7 @@ gst_collect_pads2_chain (GstPad * pad, GstObject * parent, GstBuffer * buffer)
   do {
     /* Check if our collected condition is matched and call the collected
      * function if it is */
-    ret = gst_collect_pads2_check_collected (pads);
+    ret = gst_collect_pads_check_collected (pads);
     /* when an error occurs, we want to report this back to the caller ASAP
      * without having to block if the buffer was not popped */
     if (G_UNLIKELY (ret != GST_FLOW_OK))
@@ -2117,7 +2116,7 @@ gst_collect_pads2_chain (GstPad * pad, GstObject * parent, GstBuffer * buffer)
      * point.  Putting it here also makes this thread ignores any evt it raised
      * itself (as is a usual WAIT semantic).
      */
-    GST_COLLECT_PADS2_EVT_INIT (cookie);
+    GST_COLLECT_PADS_EVT_INIT (cookie);
 
     /* pad could be removed and re-added */
     unref_data (data);
@@ -2135,9 +2134,9 @@ gst_collect_pads2_chain (GstPad * pad, GstObject * parent, GstBuffer * buffer)
      * can get stopped or flushed as well. We can however not get EOS
      * because we still hold the STREAM_LOCK.
      */
-    GST_COLLECT_PADS2_STREAM_UNLOCK (pads);
-    GST_COLLECT_PADS2_EVT_WAIT (pads, cookie);
-    GST_COLLECT_PADS2_STREAM_LOCK (pads);
+    GST_COLLECT_PADS_STREAM_UNLOCK (pads);
+    GST_COLLECT_PADS_EVT_WAIT (pads, cookie);
+    GST_COLLECT_PADS_STREAM_LOCK (pads);
 
     GST_DEBUG_OBJECT (pads, "Pad %s:%s resuming", GST_DEBUG_PAD_NAME (pad));
 
@@ -2145,14 +2144,14 @@ gst_collect_pads2_chain (GstPad * pad, GstObject * parent, GstBuffer * buffer)
     if (G_UNLIKELY (!pads->priv->started))
       goto not_started;
     /* check if this pad is flushing */
-    if (G_UNLIKELY (GST_COLLECT_PADS2_STATE_IS_SET (data,
-                GST_COLLECT_PADS2_STATE_FLUSHING)))
+    if (G_UNLIKELY (GST_COLLECT_PADS_STATE_IS_SET (data,
+                GST_COLLECT_PADS_STATE_FLUSHING)))
       goto flushing;
   }
   while (data->buffer != NULL);
 
 unlock_done:
-  GST_COLLECT_PADS2_STREAM_UNLOCK (pads);
+  GST_COLLECT_PADS_STREAM_UNLOCK (pads);
   unref_data (data);
   if (buffer)
     gst_buffer_unref (buffer);
@@ -2176,14 +2175,14 @@ no_data:
 not_started:
   {
     GST_DEBUG ("not started");
-    gst_collect_pads2_clear (pads, data);
+    gst_collect_pads_clear (pads, data);
     ret = GST_FLOW_FLUSHING;
     goto unlock_done;
   }
 flushing:
   {
     GST_DEBUG ("pad %s:%s is flushing", GST_DEBUG_PAD_NAME (pad));
-    gst_collect_pads2_clear (pads, data);
+    gst_collect_pads_clear (pads, data);
     ret = GST_FLOW_FLUSHING;
     goto unlock_done;
   }
@@ -2206,7 +2205,7 @@ error:
     /* we print the error, the element should post a reasonable error
      * message for fatal errors */
     GST_DEBUG ("collect failed, reason %d (%s)", ret, gst_flow_get_name (ret));
-    gst_collect_pads2_clear (pads, data);
+    gst_collect_pads_clear (pads, data);
     goto unlock_done;
   }
 }

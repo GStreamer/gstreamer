@@ -42,7 +42,7 @@
     <ClCompile Include="..\..\..\libs\gst\base\gstcollectpads.c">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\libs\gst\base\gstcollectpads2.c">
+    <ClCompile Include="..\..\..\libs\gst\base\gstcollectpads.c">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="..\..\..\libs\gst\base\gstpushsrc.c">
@@ -89,7 +89,7 @@
     <ClInclude Include="..\..\..\libs\gst\base\gstcollectpads.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\libs\gst\base\gstcollectpads2.h">
+    <ClInclude Include="..\..\..\libs\gst\base\gstcollectpads.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\libs\gst\base\gstpushsrc.h">

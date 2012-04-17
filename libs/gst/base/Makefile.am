@@ -11,7 +11,7 @@ libgstbase_@GST_API_VERSION@_la_SOURCES = \
 	gstbitreader.c		\
 	gstbytereader.c		\
 	gstbytewriter.c         \
-	gstcollectpads2.c	\
+	gstcollectpads.c	\
 	gstpushsrc.c		\
 	gsttypefindhelper.c
 
@@ -31,7 +31,7 @@ libgstbase_@GST_API_VERSION@include_HEADERS =	\
 	gstbitreader.h		\
 	gstbytereader.h		\
 	gstbytewriter.h         \
-	gstcollectpads2.h	\
+	gstcollectpads.h	\
 	gstpushsrc.h		\
 	gsttypefindhelper.h
 

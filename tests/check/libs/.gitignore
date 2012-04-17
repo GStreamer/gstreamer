@@ -6,7 +6,7 @@ bitreader
 bytereader
 bytewriter
 gdp
-collectpads2
+collectpads
 controller
 gstlibscpp
 gstnetclientclock

@@ -31,7 +31,7 @@
 #include <gst/base/gstbitreader.h>
 #include <gst/base/gstbytereader.h>
 #include <gst/base/gstbytewriter.h>
-#include <gst/base/gstcollectpads2.h>
+#include <gst/base/gstcollectpads.h>
 #include <gst/base/gstpushsrc.h>
 #include <gst/base/gsttypefindhelper.h>
 

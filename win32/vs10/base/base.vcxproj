@@ -78,7 +78,7 @@
     <ClCompile Include="..\..\..\libs\gst\base\gstbytereader.c" />
     <ClCompile Include="..\..\..\libs\gst\base\gstbytewriter.c" />
     <ClCompile Include="..\..\..\libs\gst\base\gstcollectpads.c" />
-    <ClCompile Include="..\..\..\libs\gst\base\gstcollectpads2.c" />
+    <ClCompile Include="..\..\..\libs\gst\base\gstcollectpads.c" />
     <ClCompile Include="..\..\..\libs\gst\base\gstpushsrc.c" />
     <ClCompile Include="..\..\..\libs\gst\base\gsttypefindhelper.c" />
   </ItemGroup>
@@ -95,7 +95,7 @@
     <ClInclude Include="..\..\..\libs\gst\base\gstbytewriter-docs.h" />
     <ClInclude Include="..\..\..\libs\gst\base\gstbytewriter.h" />
     <ClInclude Include="..\..\..\libs\gst\base\gstcollectpads.h" />
-    <ClInclude Include="..\..\..\libs\gst\base\gstcollectpads2.h" />
+    <ClInclude Include="..\..\..\libs\gst\base\gstcollectpads.h" />
     <ClInclude Include="..\..\..\libs\gst\base\gstpushsrc.h" />
     <ClInclude Include="..\..\..\libs\gst\base\gsttypefindhelper.h" />
   </ItemGroup>

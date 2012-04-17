@@ -615,68 +615,68 @@ GST_BYTE_WRITER
 </SECTION>
 
 <SECTION>
-<FILE>gstcollectpads2</FILE>
-<TITLE>GstCollectPads2</TITLE>
-<INCLUDE>gst/base/gstcollectpads2.h</INCLUDE>
-GstCollectPads2
-GstCollectData2
+<FILE>gstcollectpads</FILE>
+<TITLE>GstCollectPads</TITLE>
+<INCLUDE>gst/base/gstcollectpads.h</INCLUDE>
+GstCollectPads
+GstCollectData
 
-GstCollectData2DestroyNotify
-GstCollectPads2BufferFunction
-GstCollectPads2CompareFunction
-GstCollectPads2EventFunction
-GstCollectPads2ClipFunction
-GstCollectPads2Function
-GstCollectPads2StateFlags
+GstCollectDataDestroyNotify
+GstCollectPadsBufferFunction
+GstCollectPadsCompareFunction
+GstCollectPadsEventFunction
+GstCollectPadsClipFunction
+GstCollectPadsFunction
+GstCollectPadsStateFlags
 
-GST_COLLECT_PADS2_STATE
-GST_COLLECT_PADS2_STATE_IS_SET
-GST_COLLECT_PADS2_STATE_SET
-GST_COLLECT_PADS2_STATE_UNSET
+GST_COLLECT_PADS_STATE
+GST_COLLECT_PADS_STATE_IS_SET
+GST_COLLECT_PADS_STATE_SET
+GST_COLLECT_PADS_STATE_UNSET
 
-GST_COLLECT_PADS2_GET_STREAM_LOCK
-GST_COLLECT_PADS2_STREAM_LOCK
-GST_COLLECT_PADS2_STREAM_UNLOCK
+GST_COLLECT_PADS_GET_STREAM_LOCK
+GST_COLLECT_PADS_STREAM_LOCK
+GST_COLLECT_PADS_STREAM_UNLOCK
 
-gst_collect_pads2_new
+gst_collect_pads_new
 
-gst_collect_pads2_add_pad
-gst_collect_pads2_add_pad_full
-gst_collect_pads2_remove_pad
+gst_collect_pads_add_pad
+gst_collect_pads_add_pad_full
+gst_collect_pads_remove_pad
 
-gst_collect_pads2_start
-gst_collect_pads2_stop
+gst_collect_pads_start
+gst_collect_pads_stop
 
-gst_collect_pads2_available
-gst_collect_pads2_is_active
+gst_collect_pads_available
+gst_collect_pads_is_active
 
-gst_collect_pads2_collect
-gst_collect_pads2_collect_range
+gst_collect_pads_collect
+gst_collect_pads_collect_range
 
-gst_collect_pads2_flush
-gst_collect_pads2_peek
-gst_collect_pads2_pop
+gst_collect_pads_flush
+gst_collect_pads_peek
+gst_collect_pads_pop
 
-gst_collect_pads2_read
-gst_collect_pads2_read_buffer
-gst_collect_pads2_take_buffer
+gst_collect_pads_read
+gst_collect_pads_read_buffer
+gst_collect_pads_take_buffer
 
-gst_collect_pads2_set_buffer_function
-gst_collect_pads2_set_compare_function
-gst_collect_pads2_set_event_function
-gst_collect_pads2_set_clip_function
-gst_collect_pads2_set_flushing
-gst_collect_pads2_set_function
-gst_collect_pads2_set_waiting
+gst_collect_pads_set_buffer_function
+gst_collect_pads_set_compare_function
+gst_collect_pads_set_event_function
+gst_collect_pads_set_clip_function
+gst_collect_pads_set_flushing
+gst_collect_pads_set_function
+gst_collect_pads_set_waiting
 <SUBSECTION Standard>
-GstCollectPads2Class
-GST_COLLECT_PADS2
-GST_COLLECT_PADS2_CLASS
-GST_TYPE_COLLECT_PADS2
-GST_IS_COLLECT_PADS2
-GST_IS_COLLECT_PADS2_CLASS
-GST_COLLECT_PADS2_GET_CLASS
-gst_collect_pads2_get_type
+GstCollectPadsClass
+GST_COLLECT_PADS
+GST_COLLECT_PADS_CLASS
+GST_TYPE_COLLECT_PADS
+GST_IS_COLLECT_PADS
+GST_IS_COLLECT_PADS_CLASS
+GST_COLLECT_PADS_GET_CLASS
+gst_collect_pads_get_type
 <SUBSECTION Private>
 </SECTION>
 

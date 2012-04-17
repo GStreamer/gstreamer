@@ -209,33 +209,33 @@ EXPORTS
 	gst_byte_writer_reset
 	gst_byte_writer_reset_and_get_buffer
 	gst_byte_writer_reset_and_get_data
-	gst_collect_pads2_add_pad
-	gst_collect_pads2_add_pad_full
-	gst_collect_pads2_available
-	gst_collect_pads2_clip_running_time
-	gst_collect_pads2_collect
-	gst_collect_pads2_collect_range
-	gst_collect_pads2_event_default
-	gst_collect_pads2_flush
-	gst_collect_pads2_get_type
-	gst_collect_pads2_is_active
-	gst_collect_pads2_new
-	gst_collect_pads2_peek
-	gst_collect_pads2_pop
-	gst_collect_pads2_query_default
-	gst_collect_pads2_read_buffer
-	gst_collect_pads2_remove_pad
-	gst_collect_pads2_set_buffer_function
-	gst_collect_pads2_set_clip_function
-	gst_collect_pads2_set_compare_function
-	gst_collect_pads2_set_event_function
-	gst_collect_pads2_set_flushing
-	gst_collect_pads2_set_function
-	gst_collect_pads2_set_query_function
-	gst_collect_pads2_set_waiting
-	gst_collect_pads2_start
-	gst_collect_pads2_stop
-	gst_collect_pads2_take_buffer
+	gst_collect_pads_add_pad
+	gst_collect_pads_add_pad_full
+	gst_collect_pads_available
+	gst_collect_pads_clip_running_time
+	gst_collect_pads_collect
+	gst_collect_pads_collect_range
+	gst_collect_pads_event_default
+	gst_collect_pads_flush
+	gst_collect_pads_get_type
+	gst_collect_pads_is_active
+	gst_collect_pads_new
+	gst_collect_pads_peek
+	gst_collect_pads_pop
+	gst_collect_pads_query_default
+	gst_collect_pads_read_buffer
+	gst_collect_pads_remove_pad
+	gst_collect_pads_set_buffer_function
+	gst_collect_pads_set_clip_function
+	gst_collect_pads_set_compare_function
+	gst_collect_pads_set_event_function
+	gst_collect_pads_set_flushing
+	gst_collect_pads_set_function
+	gst_collect_pads_set_query_function
+	gst_collect_pads_set_waiting
+	gst_collect_pads_start
+	gst_collect_pads_stop
+	gst_collect_pads_take_buffer
 	gst_push_src_get_type
 	gst_type_find_helper
 	gst_type_find_helper_for_buffer

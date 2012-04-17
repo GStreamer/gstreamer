@@ -6,14 +6,14 @@
 #include <gst/base/gstbasesrc.h>
 #include <gst/base/gstbasesink.h>
 #include <gst/base/gstbasetransform.h>
-#include <gst/base/gstcollectpads2.h>
+#include <gst/base/gstcollectpads.h>
 #include <gst/base/gstpushsrc.h>
 
 gst_adapter_get_type
 gst_base_src_get_type
 gst_base_sink_get_type
 gst_base_transform_get_type
-gst_collect_pads2_get_type
+gst_collect_pads_get_type
 gst_push_src_get_type
 
 % controller
