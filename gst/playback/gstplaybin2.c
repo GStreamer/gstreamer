@@ -3179,7 +3179,6 @@ autoplug_continue_cb (GstElement * element, GstPad * pad, GstCaps * caps,
   GstElement *sink;
   GstPad *sinkpad = NULL;
 
-  GST_PLAY_BIN_LOCK (group->playbin);
   GST_SOURCE_GROUP_LOCK (group);
 
   if ((sink = group->playbin->text_sink))
@@ -3256,7 +3255,6 @@ autoplug_continue_cb (GstElement * element, GstPad * pad, GstCaps * caps,
 
 done:
   GST_SOURCE_GROUP_UNLOCK (group);
-  GST_PLAY_BIN_UNLOCK (group->playbin);
 
   GST_DEBUG_OBJECT (group->playbin,
       "continue autoplugging group %p for %s:%s, %" GST_PTR_FORMAT ": %d",
