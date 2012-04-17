@@ -16,7 +16,6 @@
 /* Structure to contain all our information, so we can pass it around */
 typedef struct _CustomData {
   GstElement *playbin2;   /* Our one and only pipeline */
-  GstElement *xoverlay_element;
   
   GtkWidget *main_window;
   GtkWidget *video_window;
@@ -26,29 +25,28 @@ typedef struct _CustomData {
   
   GstState state;
   gint64 duration;
-  
-  guintptr embed_xid;
 } CustomData;
   
 /* Forward definition of the message processing function */
 static gboolean handle_message (GstBus *bus, GstMessage *msg, CustomData *data);
-static GstBusSyncReply bus_sync_handler (GstBus *bus, GstMessage *msg, CustomData *data);
     
 static void realize_cb (GtkWidget *widget, CustomData *data) {
   GdkWindow *window = gtk_widget_get_window (widget);
-
+  guintptr window_handle;
+  
   /* This is here just for pedagogical purposes, GDK_WINDOW_XID will call it
    * as well */
   if (!gdk_window_ensure_native (window))
     g_error ("Couldn't create native window needed for GstXOverlay!");
-
+  
 #if defined (GDK_WINDOWING_WIN32)
-  data->embed_xid = (guintptr)GDK_WINDOW_HWND (window);
+  window_handle = (guintptr)GDK_WINDOW_HWND (window);
 #elif defined (GDK_WINDOWING_QUARTZ)
-  data->embed_xid = gdk_quartz_window_get_nsview (window);
+  window_handle = gdk_quartz_window_get_nsview (window);
 #elif defined (GDK_WINDOWING_X11)
-  data->embed_xid = GDK_WINDOW_XID (window);
+  window_handle = GDK_WINDOW_XID (window);
 #endif
+  gst_x_overlay_set_window_handle (GST_X_OVERLAY (data->playbin2), window_handle);
 }
   
 static void play_cb (GtkButton *button, CustomData *data) {
@@ -81,9 +79,6 @@ static gboolean draw_cb (GtkWidget *widget, GdkEventExpose *event, CustomData *d
     cairo_fill (cr);
     cairo_destroy (cr);
   }
-
-  if (data->xoverlay_element)
-    gst_x_overlay_expose (GST_X_OVERLAY (data->xoverlay_element));
   
   return FALSE;
 }
@@ -169,8 +164,6 @@ static gboolean refresh_ui (CustomData *data) {
 }
   
 static void reset_app (CustomData *data) {
-  if (data->xoverlay_element)
-    gst_object_unref (data->xoverlay_element);
   gst_object_unref (data->playbin2);
 }
   
@@ -214,7 +207,6 @@ int main(int argc, char *argv[]) {
   create_ui (&data);
   
   bus = gst_element_get_bus (data.playbin2);
-  gst_bus_set_sync_handler (bus, (GstBusSyncHandler)bus_sync_handler, &data);
   gst_bus_add_watch (bus, (GstBusFunc)handle_message, &data);
   gst_object_unref (bus);
   
@@ -348,34 +340,4 @@ static gboolean handle_message (GstBus *bus, GstMessage *msg, CustomData *data) 
   }
   
   return TRUE;
-}
-  
-static GstBusSyncReply bus_sync_handler (GstBus *bus, GstMessage *msg, CustomData *data) {
-  /*ignore anything but 'prepare-xwindow-id' element messages */
-  if (GST_MESSAGE_TYPE (msg) != GST_MESSAGE_ELEMENT)
-    return GST_BUS_PASS;
-  if (!gst_structure_has_name (msg->structure, "prepare-xwindow-id"))
-    return GST_BUS_PASS;
-  
-  if (data->embed_xid != 0) {
-    /* GST_MESSAGE_SRC (message) will be the video sink element */
-    GstElement *sink = GST_ELEMENT (GST_MESSAGE_SRC (msg));
-    
-    /* If we were tracking a previous video sink, release it */
-    if (data->xoverlay_element != NULL)
-      gst_object_unref (data->xoverlay_element);
-    
-    /* Get a reference to the new sink */
-    data->xoverlay_element = GST_ELEMENT (gst_object_ref (sink));
-    
-    if (g_object_class_find_property (G_OBJECT_GET_CLASS (sink), "force-aspect-ratio")) {
-      g_object_set (sink, "force-aspect-ratio", TRUE, NULL);
-    }
-    gst_x_overlay_set_window_handle (GST_X_OVERLAY (sink), data->embed_xid);
-  } else {
-    g_warning ("Should have obtained an xid by now!");
-  }
-  
-  gst_message_unref (msg);
-  return GST_BUS_DROP;
 }
