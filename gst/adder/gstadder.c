@@ -778,7 +778,7 @@ gst_adder_sink_event (GstCollectPads2 * pads, GstCollectData2 * pad,
     GstEvent * event, gpointer user_data)
 {
   GstAdder *adder = GST_ADDER (user_data);
-  gboolean res = FALSE, discard = FALSE;
+  gboolean res = TRUE, discard = FALSE;
 
   GST_DEBUG_OBJECT (pad->pad, "Got %s event on sink pad",
       GST_EVENT_TYPE_NAME (event));
@@ -815,7 +815,7 @@ gst_adder_sink_event (GstCollectPads2 * pads, GstCollectData2 * pad,
     case GST_EVENT_TAG:
       /* collect tags here so we can push them out when we collect data */
       adder->pending_events = g_list_append (adder->pending_events, event);
-      discard = TRUE;
+      event = NULL;
       break;
     case GST_EVENT_SEGMENT:
       if (g_atomic_int_compare_and_exchange (&adder->wait_for_new_segment,
