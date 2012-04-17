@@ -318,7 +318,7 @@ print_tag_each (GQuark field_id, const GValue * value, gpointer user_data)
 
   if (G_VALUE_HOLDS_STRING (value))
     ser = g_value_dup_string (value);
-  else if (GST_VALUE_HOLDS_BUFFER (value)) {
+  else if (GST_VALUE_HOLDS_SAMPLE (value)) {
     GstSample *smpl = gst_value_get_sample (value);
     GstBuffer *buf = gst_sample_get_buffer (smpl);
     GstCaps *caps = gst_sample_get_caps (smpl);
