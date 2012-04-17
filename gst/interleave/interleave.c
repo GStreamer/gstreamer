@@ -211,8 +211,8 @@ static gboolean gst_interleave_src_query (GstPad * pad, GstObject * parent,
 static gboolean gst_interleave_src_event (GstPad * pad, GstObject * parent,
     GstEvent * event);
 
-static gboolean gst_interleave_sink_event (GstCollectPads2 * pads,
-    GstCollectData2 * data, GstEvent * event, gpointer user_data);
+static gboolean gst_interleave_sink_event (GstCollectPads * pads,
+    GstCollectData * data, GstEvent * event, gpointer user_data);
 
 static gboolean gst_interleave_sink_setcaps (GstInterleave * self,
     GstPad * pad, const GstCaps * caps);
@@ -220,7 +220,7 @@ static gboolean gst_interleave_sink_setcaps (GstInterleave * self,
 static GstCaps *gst_interleave_sink_getcaps (GstPad * pad, GstObject * parent,
     GstCaps * filter);
 
-static GstFlowReturn gst_interleave_collected (GstCollectPads2 * pads,
+static GstFlowReturn gst_interleave_collected (GstCollectPads * pads,
     GstInterleave * self);
 
 static void
@@ -388,9 +388,9 @@ gst_interleave_init (GstInterleave * self)
   gst_pad_set_active (self->src, TRUE);
   gst_element_add_pad (GST_ELEMENT (self), self->src);
 
-  self->collect = gst_collect_pads2_new ();
-  gst_collect_pads2_set_function (self->collect,
-      (GstCollectPads2Function) gst_interleave_collected, self);
+  self->collect = gst_collect_pads_new ();
+  gst_collect_pads_set_function (self->collect,
+      (GstCollectPadsFunction) gst_interleave_collected, self);
 
   self->input_channel_positions = g_value_array_new (0);
   self->channel_positions_from_input = TRUE;
@@ -477,10 +477,10 @@ gst_interleave_request_new_pad (GstElement * element, GstPadTemplate * templ,
 
   gst_pad_use_fixed_caps (new_pad);
 
-  gst_collect_pads2_add_pad (self->collect, new_pad, sizeof (GstCollectData2));
+  gst_collect_pads_add_pad (self->collect, new_pad, sizeof (GstCollectData));
 
-  gst_collect_pads2_set_event_function (self->collect,
-      (GstCollectPads2EventFunction)
+  gst_collect_pads_set_event_function (self->collect,
+      (GstCollectPadsEventFunction)
       GST_DEBUG_FUNCPTR (gst_interleave_sink_event), self);
 
   if (!gst_element_add_pad (element, new_pad))
@@ -524,7 +524,7 @@ not_sink_pad:
 could_not_add:
   {
     GST_DEBUG_OBJECT (self, "could not add pad %s", GST_PAD_NAME (new_pad));
-    gst_collect_pads2_remove_pad (self->collect, new_pad);
+    gst_collect_pads_remove_pad (self->collect, new_pad);
     gst_object_unref (new_pad);
     return NULL;
   }
@@ -579,7 +579,7 @@ gst_interleave_release_pad (GstElement * element, GstPad * pad)
 
   GST_OBJECT_UNLOCK (self->collect);
 
-  gst_collect_pads2_remove_pad (self->collect, pad);
+  gst_collect_pads_remove_pad (self->collect, pad);
   gst_element_remove_pad (element, pad);
 }
 
@@ -601,7 +601,7 @@ gst_interleave_change_state (GstElement * element, GstStateChange transition)
       self->segment_position = 0;
       self->segment_rate = 1.0;
       gst_segment_init (&self->segment, GST_FORMAT_UNDEFINED);
-      gst_collect_pads2_start (self->collect);
+      gst_collect_pads_start (self->collect);
       break;
     case GST_STATE_CHANGE_PAUSED_TO_PLAYING:
       break;
@@ -610,11 +610,11 @@ gst_interleave_change_state (GstElement * element, GstStateChange transition)
   }
 
   /* Stop before calling the parent's state change function as
-   * GstCollectPads2 might take locks and we would deadlock in that
+   * GstCollectPads might take locks and we would deadlock in that
    * case
    */
   if (transition == GST_STATE_CHANGE_PAUSED_TO_READY)
-    gst_collect_pads2_stop (self->collect);
+    gst_collect_pads_stop (self->collect);
 
   ret = GST_ELEMENT_CLASS (parent_class)->change_state (element, transition);
 
@@ -812,7 +812,7 @@ invalid_caps:
 }
 
 static gboolean
-gst_interleave_sink_event (GstCollectPads2 * pads, GstCollectData2 * data,
+gst_interleave_sink_event (GstCollectPads * pads, GstCollectData * data,
     GstEvent * event, gpointer user_data)
 {
   GstInterleave *self = GST_INTERLEAVE (user_data);
@@ -845,9 +845,9 @@ gst_interleave_sink_event (GstCollectPads2 * pads, GstCollectData2 * data,
       break;
   }
 
-  /* now GstCollectPads2 can take care of the rest, e.g. EOS */
+  /* now GstCollectPads can take care of the rest, e.g. EOS */
   if (event != NULL)
-    return gst_collect_pads2_event_default (pads, data, event, FALSE);
+    return gst_collect_pads_event_default (pads, data, event, FALSE);
 
   return ret;
 }
@@ -1138,7 +1138,7 @@ gst_interleave_src_event (GstPad * pad, GstObject * parent, GstEvent * event)
       /* check if we are flushing */
       if (flags & GST_SEEK_FLAG_FLUSH) {
         /* make sure we accept nothing anymore and return WRONG_STATE */
-        gst_collect_pads2_set_flushing (self->collect, TRUE);
+        gst_collect_pads_set_flushing (self->collect, TRUE);
 
         /* flushing seek, start flush downstream, the flush will be done
          * when all pads received a FLUSH_STOP. */
@@ -1172,7 +1172,7 @@ gst_interleave_src_event (GstPad * pad, GstObject * parent, GstEvent * event)
 }
 
 static GstFlowReturn
-gst_interleave_collected (GstCollectPads2 * pads, GstInterleave * self)
+gst_interleave_collected (GstCollectPads * pads, GstInterleave * self)
 {
   guint size;
   GstBuffer *outbuf;
@@ -1189,7 +1189,7 @@ gst_interleave_collected (GstCollectPads2 * pads, GstInterleave * self)
   g_return_val_if_fail (self->channels > 0, GST_FLOW_NOT_NEGOTIATED);
   g_return_val_if_fail (self->rate > 0, GST_FLOW_NOT_NEGOTIATED);
 
-  size = gst_collect_pads2_available (pads);
+  size = gst_collect_pads_available (pads);
 
   g_return_val_if_fail (size % width == 0, GST_FLOW_ERROR);
 
@@ -1209,14 +1209,14 @@ gst_interleave_collected (GstCollectPads2 * pads, GstInterleave * self)
   memset (write_info.data, 0, size * self->channels);
 
   for (collected = pads->data; collected != NULL; collected = collected->next) {
-    GstCollectData2 *cdata;
+    GstCollectData *cdata;
     GstBuffer *inbuf;
     guint8 *outdata;
     GstMapInfo input_info;
 
-    cdata = (GstCollectData2 *) collected->data;
+    cdata = (GstCollectData *) collected->data;
 
-    inbuf = gst_collect_pads2_take_buffer (pads, cdata, size);
+    inbuf = gst_collect_pads_take_buffer (pads, cdata, size);
     if (inbuf == NULL) {
       GST_DEBUG_OBJECT (cdata->pad, "No buffer available");
       goto next;

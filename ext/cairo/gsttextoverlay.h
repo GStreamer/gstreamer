@@ -3,7 +3,7 @@
 #define __GST_CAIRO_TEXT_OVERLAY_H__
 
 #include <gst/gst.h>
-#include <gst/base/gstcollectpads2.h>
+#include <gst/base/gstcollectpads.h>
 
 G_BEGIN_DECLS
 
@@ -45,9 +45,9 @@ struct _GstCairoTextOverlay {
     GstPad               *text_sinkpad;
     GstPad               *srcpad;
 
-    GstCollectPads2      *collect;
-    GstCollectData2      *video_collect_data;
-    GstCollectData2      *text_collect_data;
+    GstCollectPads      *collect;
+    GstCollectData      *video_collect_data;
+    GstCollectData      *text_collect_data;
     GstPadEventFunction   collect_event;
 
     gint                  width;

@@ -23,7 +23,7 @@
 #define __GST_MULTIPART_MUX__
 
 #include <gst/gst.h>
-#include <gst/base/gstcollectpads2.h>
+#include <gst/base/gstcollectpads.h>
 
 #include <string.h>
 
@@ -42,7 +42,7 @@ typedef struct _GstMultipartMuxClass GstMultipartMuxClass;
 /* all information needed for one multipart stream */
 typedef struct
 {
-  GstCollectData2 collect;       /* we extend the CollectData2 */
+  GstCollectData collect;       /* we extend the CollectData */
 
   GstBuffer *buffer;            /* the queued buffer for this pad */
   GstClockTime timestamp;       /* its timestamp, converted to running_time so that we can
@@ -64,7 +64,7 @@ struct _GstMultipartMux
   GstPad *srcpad;
 
   /* sinkpads */
-  GstCollectPads2 *collect;
+  GstCollectPads *collect;
 
   gint numpads;
 

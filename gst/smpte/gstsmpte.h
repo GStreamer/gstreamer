@@ -22,7 +22,7 @@
 #define __GST_SMPTE_H__
 
 #include <gst/gst.h>
-#include <gst/base/gstcollectpads2.h>
+#include <gst/base/gstcollectpads.h>
 #include <gst/video/video.h>
 
 G_BEGIN_DECLS
@@ -50,7 +50,7 @@ struct _GstSMPTE {
   GstPad        *srcpad,
                 *sinkpad1,
                 *sinkpad2;
-  GstCollectPads2 *collect;
+  GstCollectPads *collect;
 
   /* properties */
   gint           type;

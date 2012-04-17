@@ -24,7 +24,7 @@
 #define __GST_MATROSKA_MUX_H__
 
 #include <gst/gst.h>
-#include <gst/base/gstcollectpads2.h>
+#include <gst/base/gstcollectpads.h>
 
 #include "ebml-write.h"
 #include "matroska-ids.h"
@@ -58,7 +58,7 @@ typedef gboolean (*GstMatroskaCapsFunc) (GstPad *pad, GstCaps *caps);
 /* all information needed for one matroska stream */
 typedef struct
 {
-  GstCollectData2 collect;       /* we extend the CollectData */
+  GstCollectData collect;       /* we extend the CollectData */
   GstMatroskaCapsFunc capsfunc;
   GstMatroskaTrackContext *track;
 
@@ -77,7 +77,7 @@ typedef struct _GstMatroskaMux {
 
   /* pads */
   GstPad        *srcpad;
-  GstCollectPads2 *collect;
+  GstCollectPads *collect;
   GstEbmlWrite *ebml_write;
 
   guint          num_streams,

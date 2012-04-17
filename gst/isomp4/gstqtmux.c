@@ -116,7 +116,7 @@
 #include <glib/gstdio.h>
 
 #include <gst/gst.h>
-#include <gst/base/gstcollectpads2.h>
+#include <gst/base/gstcollectpads.h>
 #include <gst/audio/audio.h>
 #include <gst/video/video.h>
 #include <gst/tag/xmpwriter.h>
@@ -226,11 +226,11 @@ static GstPad *gst_qt_mux_request_new_pad (GstElement * element,
 static void gst_qt_mux_release_pad (GstElement * element, GstPad * pad);
 
 /* event */
-static gboolean gst_qt_mux_sink_event (GstCollectPads2 * pads,
-    GstCollectData2 * data, GstEvent * event, gpointer user_data);
+static gboolean gst_qt_mux_sink_event (GstCollectPads * pads,
+    GstCollectData * data, GstEvent * event, gpointer user_data);
 
-static GstFlowReturn gst_qt_mux_handle_buffer (GstCollectPads2 * pads,
-    GstCollectData2 * cdata, GstBuffer * buf, gpointer user_data);
+static GstFlowReturn gst_qt_mux_handle_buffer (GstCollectPads * pads,
+    GstCollectData * cdata, GstBuffer * buf, gpointer user_data);
 static GstFlowReturn gst_qt_mux_add_buffer (GstQTMux * qtmux, GstQTPad * pad,
     GstBuffer * buf);
 
@@ -482,13 +482,13 @@ gst_qt_mux_init (GstQTMux * qtmux, GstQTMuxClass * qtmux_klass)
   gst_element_add_pad (GST_ELEMENT (qtmux), qtmux->srcpad);
 
   qtmux->sinkpads = NULL;
-  qtmux->collect = gst_collect_pads2_new ();
-  gst_collect_pads2_set_buffer_function (qtmux->collect,
+  qtmux->collect = gst_collect_pads_new ();
+  gst_collect_pads_set_buffer_function (qtmux->collect,
       GST_DEBUG_FUNCPTR (gst_qt_mux_handle_buffer), qtmux);
-  gst_collect_pads2_set_event_function (qtmux->collect,
+  gst_collect_pads_set_event_function (qtmux->collect,
       GST_DEBUG_FUNCPTR (gst_qt_mux_sink_event), qtmux);
-  gst_collect_pads2_set_clip_function (qtmux->collect,
-      GST_DEBUG_FUNCPTR (gst_collect_pads2_clip_running_time), qtmux);
+  gst_collect_pads_set_clip_function (qtmux->collect,
+      GST_DEBUG_FUNCPTR (gst_collect_pads_clip_running_time), qtmux);
 
   /* properties set to default upon construction */
 
@@ -1691,7 +1691,7 @@ gst_qt_mux_start_file (GstQTMux * qtmux)
         gst_buffer_unref (prefix);
 
       for (walk = qtmux->sinkpads; walk && !fail; walk = g_slist_next (walk)) {
-        GstCollectData2 *cdata = (GstCollectData2 *) walk->data;
+        GstCollectData *cdata = (GstCollectData *) walk->data;
         GstQTPad *qpad = (GstQTPad *) cdata;
         /* write info for each stream */
         fail = atoms_recov_write_trak_info (qtmux->moov_recov_file, qpad->trak);
@@ -1791,7 +1791,7 @@ gst_qt_mux_stop_file (GstQTMux * qtmux)
 
   /* pushing last buffers for each pad */
   for (walk = qtmux->collect->data; walk; walk = g_slist_next (walk)) {
-    GstCollectData2 *cdata = (GstCollectData2 *) walk->data;
+    GstCollectData *cdata = (GstCollectData *) walk->data;
     GstQTPad *qtpad = (GstQTPad *) cdata;
 
     /* avoid add_buffer complaining if not negotiated
@@ -1883,7 +1883,7 @@ gst_qt_mux_stop_file (GstQTMux * qtmux)
   /* check for late streams */
   first_ts = GST_CLOCK_TIME_NONE;
   for (walk = qtmux->collect->data; walk; walk = g_slist_next (walk)) {
-    GstCollectData2 *cdata = (GstCollectData2 *) walk->data;
+    GstCollectData *cdata = (GstCollectData *) walk->data;
     GstQTPad *qtpad = (GstQTPad *) cdata;
 
     if (!GST_CLOCK_TIME_IS_VALID (first_ts) ||
@@ -1896,7 +1896,7 @@ gst_qt_mux_stop_file (GstQTMux * qtmux)
       GST_TIME_ARGS (first_ts));
   /* add EDTSs for late streams */
   for (walk = qtmux->collect->data; walk; walk = g_slist_next (walk)) {
-    GstCollectData2 *cdata = (GstCollectData2 *) walk->data;
+    GstCollectData *cdata = (GstCollectData *) walk->data;
     GstQTPad *qtpad = (GstQTPad *) cdata;
     guint32 lateness;
     guint32 duration;
@@ -2550,7 +2550,7 @@ not_negotiated:
 }
 
 static GstFlowReturn
-gst_qt_mux_handle_buffer (GstCollectPads2 * pads, GstCollectData2 * cdata,
+gst_qt_mux_handle_buffer (GstCollectPads * pads, GstCollectData * cdata,
     GstBuffer * buf, gpointer user_data)
 {
   GstFlowReturn ret = GST_FLOW_OK;
@@ -3274,7 +3274,7 @@ refuse_renegotiation:
 }
 
 static gboolean
-gst_qt_mux_sink_event (GstCollectPads2 * pads, GstCollectData2 * data,
+gst_qt_mux_sink_event (GstCollectPads * pads, GstCollectData * data,
     GstEvent * event, gpointer user_data)
 {
   GstQTMux *qtmux;
@@ -3337,7 +3337,7 @@ gst_qt_mux_sink_event (GstCollectPads2 * pads, GstCollectData2 * data,
   }
 
   if (event != NULL)
-    return gst_collect_pads2_event_default (pads, data, event, FALSE);
+    return gst_collect_pads_event_default (pads, data, event, FALSE);
 
   return ret;
 }
@@ -3361,7 +3361,7 @@ gst_qt_mux_release_pad (GstElement * element, GstPad * pad)
     }
   }
 
-  gst_collect_pads2_remove_pad (mux->collect, pad);
+  gst_collect_pads_remove_pad (mux->collect, pad);
 }
 
 static GstPad *
@@ -3405,8 +3405,8 @@ gst_qt_mux_request_new_pad (GstElement * element,
   newpad = gst_pad_new_from_template (templ, name);
   g_free (name);
   collect_pad = (GstQTPad *)
-      gst_collect_pads2_add_pad_full (qtmux->collect, newpad, sizeof (GstQTPad),
-      (GstCollectData2DestroyNotify) (gst_qt_mux_pad_reset), TRUE);
+      gst_collect_pads_add_pad_full (qtmux->collect, newpad, sizeof (GstQTPad),
+      (GstCollectDataDestroyNotify) (gst_qt_mux_pad_reset), TRUE);
   /* set up pad */
   gst_qt_mux_pad_reset (collect_pad);
   collect_pad->trak = atom_trak_new (qtmux->context);
@@ -3556,13 +3556,13 @@ gst_qt_mux_change_state (GstElement * element, GstStateChange transition)
     case GST_STATE_CHANGE_NULL_TO_READY:
       break;
     case GST_STATE_CHANGE_READY_TO_PAUSED:
-      gst_collect_pads2_start (qtmux->collect);
+      gst_collect_pads_start (qtmux->collect);
       qtmux->state = GST_QT_MUX_STATE_STARTED;
       break;
     case GST_STATE_CHANGE_PAUSED_TO_PLAYING:
       break;
     case GST_STATE_CHANGE_PAUSED_TO_READY:
-      gst_collect_pads2_stop (qtmux->collect);
+      gst_collect_pads_stop (qtmux->collect);
       break;
     default:
       break;

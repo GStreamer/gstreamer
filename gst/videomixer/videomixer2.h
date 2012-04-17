@@ -25,7 +25,7 @@
 #include <gst/video/video.h>
 
 #include "blend.h"
-#include <gst/base/gstcollectpads2.h>
+#include <gst/base/gstcollectpads.h>
 
 G_BEGIN_DECLS
 
@@ -77,7 +77,7 @@ struct _GstVideoMixer2
   /* Lock to prevent the state to change while blending */
   GMutex lock;
   /* Sink pads using Collect Pads 2*/
-  GstCollectPads2 *collect;
+  GstCollectPads *collect;
 
   /* sinkpads, a GSList of GstVideoMixer2Pads */
   GSList *sinkpads;

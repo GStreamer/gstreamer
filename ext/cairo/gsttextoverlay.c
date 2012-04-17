@@ -106,7 +106,7 @@ static gboolean gst_text_overlay_setcaps (GstPad * pad, GstCaps * caps);
 static GstPadLinkReturn gst_text_overlay_text_pad_linked (GstPad * pad,
     GstPad * peer);
 static void gst_text_overlay_text_pad_unlinked (GstPad * pad);
-static GstFlowReturn gst_text_overlay_collected (GstCollectPads2 * pads,
+static GstFlowReturn gst_text_overlay_collected (GstCollectPads * pads,
     gpointer data);
 static void gst_text_overlay_finalize (GObject * object);
 static void gst_text_overlay_font_init (GstCairoTextOverlay * overlay);
@@ -215,7 +215,7 @@ gst_text_overlay_finalize (GObject * object)
 {
   GstCairoTextOverlay *overlay = GST_CAIRO_TEXT_OVERLAY (object);
 
-  gst_collect_pads2_stop (overlay->collect);
+  gst_collect_pads_stop (overlay->collect);
   gst_object_unref (overlay->collect);
 
   g_free (overlay->text_fill_image);
@@ -279,16 +279,16 @@ gst_text_overlay_init (GstCairoTextOverlay * overlay,
   overlay->fps_n = 0;
   overlay->fps_d = 1;
 
-  overlay->collect = gst_collect_pads2_new ();
+  overlay->collect = gst_collect_pads_new ();
 
-  gst_collect_pads2_set_function (overlay->collect,
+  gst_collect_pads_set_function (overlay->collect,
       GST_DEBUG_FUNCPTR (gst_text_overlay_collected), overlay);
 
-  overlay->video_collect_data = gst_collect_pads2_add_pad (overlay->collect,
-      overlay->video_sinkpad, sizeof (GstCollectData2));
+  overlay->video_collect_data = gst_collect_pads_add_pad (overlay->collect,
+      overlay->video_sinkpad, sizeof (GstCollectData));
 
   /* FIXME: hacked way to override/extend the event function of
-   * GstCollectPads2; because it sets its own event function giving the
+   * GstCollectPads; because it sets its own event function giving the
    * element no access to events. Nicked from avimux. */
   overlay->collect_event =
       (GstPadEventFunction) GST_PAD_EVENTFUNC (overlay->video_sinkpad);
@@ -640,8 +640,8 @@ gst_text_overlay_text_pad_linked (GstPad * pad, GstPad * peer)
   GST_DEBUG_OBJECT (overlay, "Text pad linked");
 
   if (overlay->text_collect_data == NULL) {
-    overlay->text_collect_data = gst_collect_pads2_add_pad (overlay->collect,
-        overlay->text_sinkpad, sizeof (GstCollectData2));
+    overlay->text_collect_data = gst_collect_pads_add_pad (overlay->collect,
+        overlay->text_sinkpad, sizeof (GstCollectData));
   }
 
   overlay->need_render = TRUE;
@@ -660,7 +660,7 @@ gst_text_overlay_text_pad_unlinked (GstPad * pad)
   GST_DEBUG_OBJECT (overlay, "Text pad unlinked");
 
   if (overlay->text_collect_data) {
-    gst_collect_pads2_remove_pad (overlay->collect, overlay->text_sinkpad);
+    gst_collect_pads_remove_pad (overlay->collect, overlay->text_sinkpad);
     overlay->text_collect_data = NULL;
   }
 
@@ -807,7 +807,7 @@ gst_text_overlay_pop_video (GstCairoTextOverlay * overlay)
 {
   GstBuffer *buf;
 
-  buf = gst_collect_pads2_pop (overlay->collect, overlay->video_collect_data);
+  buf = gst_collect_pads_pop (overlay->collect, overlay->video_collect_data);
   g_return_if_fail (buf != NULL);
   gst_buffer_unref (buf);
 }
@@ -818,7 +818,7 @@ gst_text_overlay_pop_text (GstCairoTextOverlay * overlay)
   GstBuffer *buf;
 
   if (overlay->text_collect_data) {
-    buf = gst_collect_pads2_pop (overlay->collect, overlay->text_collect_data);
+    buf = gst_collect_pads_pop (overlay->collect, overlay->text_collect_data);
     g_return_if_fail (buf != NULL);
     gst_buffer_unref (buf);
   }
@@ -828,7 +828,7 @@ gst_text_overlay_pop_text (GstCairoTextOverlay * overlay)
 
 /* This function is called when there is data on all pads */
 static GstFlowReturn
-gst_text_overlay_collected (GstCollectPads2 * pads, gpointer data)
+gst_text_overlay_collected (GstCollectPads * pads, gpointer data)
 {
   GstCairoTextOverlay *overlay;
   GstFlowReturn ret = GST_FLOW_OK;
@@ -842,14 +842,14 @@ gst_text_overlay_collected (GstCollectPads2 * pads, gpointer data)
 
   GST_DEBUG ("Collecting");
 
-  video_frame = gst_collect_pads2_peek (overlay->collect,
+  video_frame = gst_collect_pads_peek (overlay->collect,
       overlay->video_collect_data);
 
   /* send EOS if video stream EOSed regardless of text stream */
   if (video_frame == NULL) {
     GST_DEBUG ("Video stream at EOS");
     if (overlay->text_collect_data) {
-      text_buf = gst_collect_pads2_pop (overlay->collect,
+      text_buf = gst_collect_pads_pop (overlay->collect,
           overlay->text_collect_data);
     }
     gst_pad_push_event (overlay->srcpad, gst_event_new_eos ());
@@ -892,7 +892,7 @@ gst_text_overlay_collected (GstCollectPads2 * pads, gpointer data)
     goto done;
   }
 
-  text_buf = gst_collect_pads2_peek (overlay->collect,
+  text_buf = gst_collect_pads_peek (overlay->collect,
       overlay->text_collect_data);
 
   /* just push the video frame if the text stream has EOSed */
@@ -1004,7 +1004,7 @@ gst_text_overlay_video_event (GstPad * pad, GstEvent * event)
     gst_pad_push_event (overlay->srcpad, event);
   }
 
-  /* now GstCollectPads2 can take care of the rest, e.g. EOS */
+  /* now GstCollectPads can take care of the rest, e.g. EOS */
   ret = overlay->collect_event (pad, event);
   gst_object_unref (overlay);
   return ret;
@@ -1018,12 +1018,12 @@ gst_text_overlay_change_state (GstElement * element, GstStateChange transition)
 
   switch (transition) {
     case GST_STATE_CHANGE_READY_TO_PAUSED:
-      gst_collect_pads2_start (overlay->collect);
+      gst_collect_pads_start (overlay->collect);
       break;
     case GST_STATE_CHANGE_PAUSED_TO_READY:
       /* need to unblock the collectpads before calling the
        * parent change_state so that streaming can finish */
-      gst_collect_pads2_stop (overlay->collect);
+      gst_collect_pads_stop (overlay->collect);
       break;
     default:
       break;

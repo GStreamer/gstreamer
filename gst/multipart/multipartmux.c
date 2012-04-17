@@ -84,7 +84,7 @@ static GstPad *gst_multipart_mux_request_new_pad (GstElement * element,
 static GstStateChangeReturn gst_multipart_mux_change_state (GstElement *
     element, GstStateChange transition);
 
-static GstFlowReturn gst_multipart_mux_collected (GstCollectPads2 * pads,
+static GstFlowReturn gst_multipart_mux_collected (GstCollectPads * pads,
     GstMultipartMux * mux);
 
 static void gst_multipart_mux_set_property (GObject * object, guint prop_id,
@@ -148,9 +148,9 @@ gst_multipart_mux_init (GstMultipartMux * multipart_mux)
 
   multipart_mux->boundary = g_strdup (DEFAULT_BOUNDARY);
 
-  multipart_mux->collect = gst_collect_pads2_new ();
-  gst_collect_pads2_set_function (multipart_mux->collect,
-      (GstCollectPads2Function) GST_DEBUG_FUNCPTR (gst_multipart_mux_collected),
+  multipart_mux->collect = gst_collect_pads_new ();
+  gst_collect_pads_set_function (multipart_mux->collect,
+      (GstCollectPadsFunction) GST_DEBUG_FUNCPTR (gst_multipart_mux_collected),
       multipart_mux);
 }
 
@@ -194,7 +194,7 @@ gst_multipart_mux_request_new_pad (GstElement * element,
     GstMultipartPadData *multipartpad;
 
     multipartpad = (GstMultipartPadData *)
-        gst_collect_pads2_add_pad (multipart_mux->collect, newpad,
+        gst_collect_pads_add_pad (multipart_mux->collect, newpad,
         sizeof (GstMultipartPadData));
 
     /* save a pointer to our data in the pad */
@@ -340,7 +340,7 @@ gst_multipart_mux_queue_pads (GstMultipartMux * mux)
   /* try to make sure we have a buffer from each usable pad first */
   walk = mux->collect->data;
   while (walk) {
-    GstCollectData2 *data = (GstCollectData2 *) walk->data;
+    GstCollectData *data = (GstCollectData *) walk->data;
     GstMultipartPadData *pad = (GstMultipartPadData *) data;
 
     walk = g_slist_next (walk);
@@ -349,7 +349,7 @@ gst_multipart_mux_queue_pads (GstMultipartMux * mux)
     if (pad->buffer == NULL) {
       GstBuffer *buf = NULL;
 
-      buf = gst_collect_pads2_pop (mux->collect, data);
+      buf = gst_collect_pads_pop (mux->collect, data);
 
       /* Store timestamp with segment_start and preroll */
       if (buf && GST_BUFFER_TIMESTAMP_IS_VALID (buf)) {
@@ -383,7 +383,7 @@ gst_multipart_mux_queue_pads (GstMultipartMux * mux)
  * 3) push both buffers on best pad, go to 1
  */
 static GstFlowReturn
-gst_multipart_mux_collected (GstCollectPads2 * pads, GstMultipartMux * mux)
+gst_multipart_mux_collected (GstCollectPads * pads, GstMultipartMux * mux)
 {
   GstMultipartPadData *best;
   GstFlowReturn ret = GST_FLOW_OK;
@@ -606,11 +606,11 @@ gst_multipart_mux_change_state (GstElement * element, GstStateChange transition)
       multipart_mux->negotiated = FALSE;
       multipart_mux->need_segment = TRUE;
       GST_DEBUG_OBJECT (multipart_mux, "starting collect pads");
-      gst_collect_pads2_start (multipart_mux->collect);
+      gst_collect_pads_start (multipart_mux->collect);
       break;
     case GST_STATE_CHANGE_PAUSED_TO_READY:
       GST_DEBUG_OBJECT (multipart_mux, "stopping collect pads");
-      gst_collect_pads2_stop (multipart_mux->collect);
+      gst_collect_pads_stop (multipart_mux->collect);
       break;
     default:
       break;
