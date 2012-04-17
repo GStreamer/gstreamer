@@ -28,7 +28,6 @@
 #include <glib/gprintf.h>
 #include <ges/ges.h>
 #include <gst/pbutils/encoding-profile.h>
-#include <regex.h>
 
 /* GLOBAL VARIABLE */
 static guint repeat = 0;
@@ -93,16 +92,15 @@ check_path (char *path)
 static gboolean
 check_time (char *time)
 {
-  static regex_t re;
-  static gboolean compiled = FALSE;
+  static GRegex *re = NULL;
 
-  if (!compiled) {
-    compiled = TRUE;
-    if (regcomp (&re, "^[0-9]+(.[0-9]+)?$", REG_EXTENDED | REG_NOSUB))
+  if (!re) {
+    if (NULL == (re = g_regex_new ("^[0-9]+(.[0-9]+)?$", G_REGEX_EXTENDED, 0,
+        NULL)))
       return FALSE;
   }
 
-  if (!regexec (&re, time, (size_t) 0, NULL, 0))
+  if (g_regex_match (re, time, 0, NULL))
     return TRUE;
   return FALSE;
 }
