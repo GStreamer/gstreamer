@@ -23,6 +23,7 @@
 
 #include <gst/gst.h>
 #include <gst/video/video.h>
+#include <gst/video/gstvideoencoder.h>
 #include "_stdint.h"
 #include <x264.h>
 
@@ -44,13 +45,9 @@ typedef struct _GstX264EncClass GstX264EncClass;
 
 struct _GstX264Enc
 {
-  GstElement element;
+  GstVideoEncoder element;
 
   /*< private >*/
-  GstPad *sinkpad;
-  GstPad *srcpad;
-  GstSegment segment;
-
   x264_t *x264enc;
   x264_param_t x264param;
   gint current_byte_stream;
@@ -93,14 +90,12 @@ struct _GstX264Enc
   gint psy_tune;
   guint tune;
   GString *tunings;
+  gint profile;
   GString *option_string_prop; /* option-string property */
   GString *option_string; /* used by set prop */
 
   /* input description */
-  GstVideoInfo info;
-
-  /* for b-frame delay handling */
-  GQueue *delay;
+  GstVideoCodecState *input_state;
 
   guint8 *buffer;
   gulong buffer_size;
@@ -112,14 +107,11 @@ struct _GstX264Enc
   const gchar *peer_profile;
   gboolean peer_intra_profile;
   const x264_level_t *peer_level;
-
-  GstClockTime pending_key_unit_ts;
-  GstEvent *force_key_unit_event;
 };
 
 struct _GstX264EncClass
 {
-  GstElementClass parent_class;
+  GstVideoEncoderClass parent_class;
 };
 
 GType gst_x264_enc_get_type (void);
