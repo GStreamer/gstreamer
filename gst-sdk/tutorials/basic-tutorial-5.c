@@ -137,12 +137,12 @@ static gboolean refresh_ui (CustomData *data) {
     if (!gst_element_query_duration (data->playbin2, &fmt, &data->duration)) {
       g_printerr ("Could not query current duration.\n");
     } else {
-      gtk_range_set_range (GTK_RANGE (data->slider), 0, data->duration / GST_SECOND);
+      gtk_range_set_range (GTK_RANGE (data->slider), 0, (gdouble)data->duration / GST_SECOND);
     }
   }
   
   if (gst_element_query_position (data->playbin2, &fmt, &current)) {
-    gtk_range_set_value (GTK_RANGE (data->slider), current / GST_SECOND);
+    gtk_range_set_value (GTK_RANGE (data->slider), (gdouble)current / GST_SECOND);
   }
   return TRUE;
 }
@@ -171,8 +171,7 @@ int main(int argc, char *argv[]) {
   }
   
   /* Set the URI to play */
-//  g_object_set (data.playbin2, "uri", "http://docs.gstreamer.com/media/sintel_trailer-480p.webm", NULL);
-  g_object_set (data.playbin2, "uri", "file:///f:/media/big_buck_bunny_480p.H264.mov", NULL);
+  g_object_set (data.playbin2, "uri", "http://docs.gstreamer.com/media/sintel_trailer-480p.webm", NULL);
   
   create_ui (&data);
   

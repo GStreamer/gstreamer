@@ -3,5 +3,6 @@ Debug
 ipch
 *.user
 *.sdf
+*.suo
 *.opensdf
 vs/2010/libs
