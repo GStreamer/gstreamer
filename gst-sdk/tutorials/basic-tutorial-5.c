@@ -16,9 +16,13 @@
 /* Structure to contain all our information, so we can pass it around */
 typedef struct _CustomData {
   GstElement *playbin2;   /* Our one and only pipeline */
+  GstElement *xoverlay_element;
+  
   GtkWidget *main_window;
   GtkWidget *video_window;
   GtkWidget *slider;
+  GtkWidget *streams_list;
+  gboolean updating_slider;
   
   GstState state;
   gint64 duration;
@@ -34,9 +38,9 @@ static void realize_cb (GtkWidget *widget, CustomData *data) {
   GdkWindow *window = gtk_widget_get_window (widget);
 
   /* This is here just for pedagogical purposes, GDK_WINDOW_XID will call it
-   * as well */ /*
+   * as well */
   if (!gdk_window_ensure_native (window))
-    g_error ("Couldn't create native window needed for GstXOverlay!");*/
+    g_error ("Couldn't create native window needed for GstXOverlay!");
 
 #if defined (GDK_WINDOWING_WIN32)
   data->embed_xid = (guintptr)GDK_WINDOW_HWND (window);
@@ -77,15 +81,22 @@ static gboolean draw_cb (GtkWidget *widget, GdkEventExpose *event, CustomData *d
     cairo_fill (cr);
     cairo_destroy (cr);
   }
-  /*
-  if (app->xoverlay_element)
-    gst_x_overlay_expose (GST_X_OVERLAY (app->xoverlay_element));
-  */
+
+  if (data->xoverlay_element)
+    gst_x_overlay_expose (GST_X_OVERLAY (data->xoverlay_element));
+  
   return FALSE;
 }
   
+static void slider_cb (GtkRange *range, CustomData *data) {
+  if (!data->updating_slider) {
+    gdouble value = gtk_range_get_value (GTK_RANGE (data->slider));
+    gst_element_seek_simple (data->playbin2, GST_FORMAT_TIME, GST_SEEK_FLAG_FLUSH | GST_SEEK_FLAG_KEY_UNIT, (gint64)(value * GST_SECOND));
+  }
+}
+  
 static void create_ui (CustomData *data) {
-  GtkWidget *controls, *main_box;
+  GtkWidget *controls, *main_box, *main_hbox;
   GtkWidget *play_button, *pause_button, *stop_button;
   
   data->main_window = gtk_window_new (GTK_WINDOW_TOPLEVEL);
@@ -107,6 +118,10 @@ static void create_ui (CustomData *data) {
   
   data->slider = gtk_hscale_new_with_range (0, 100, 1);
   gtk_scale_set_draw_value (GTK_SCALE (data->slider), 0);
+  g_signal_connect (G_OBJECT (data->slider), "value-changed", G_CALLBACK (slider_cb), data);
+
+  data->streams_list = gtk_text_view_new ();
+  gtk_text_view_set_editable (GTK_TEXT_VIEW (data->streams_list), FALSE);
   
   controls = gtk_hbox_new (FALSE, 0);
   gtk_box_pack_start (GTK_BOX (controls), play_button, FALSE, FALSE, 2);
@@ -114,8 +129,12 @@ static void create_ui (CustomData *data) {
   gtk_box_pack_start (GTK_BOX (controls), stop_button, FALSE, FALSE, 2);
   gtk_box_pack_start (GTK_BOX (controls), data->slider, TRUE, TRUE, 2);
 
+  main_hbox = gtk_hbox_new (FALSE, 0);
+  gtk_box_pack_start (GTK_BOX (main_hbox), data->video_window, TRUE, TRUE, 0);
+  gtk_box_pack_start (GTK_BOX (main_hbox), data->streams_list, FALSE, FALSE, 2);
+
   main_box = gtk_vbox_new (FALSE, 0);
-  gtk_box_pack_start (GTK_BOX (main_box), data->video_window, TRUE, TRUE, 0);
+  gtk_box_pack_start (GTK_BOX (main_box), main_hbox, TRUE, TRUE, 0);
   gtk_box_pack_start (GTK_BOX (main_box), controls, FALSE, FALSE, 0);
   gtk_container_add (GTK_CONTAINER (data->main_window), main_box);
   gtk_window_set_default_size (GTK_WINDOW (data->main_window), 640, 480);
@@ -142,9 +161,23 @@ static gboolean refresh_ui (CustomData *data) {
   }
   
   if (gst_element_query_position (data->playbin2, &fmt, &current)) {
+    data->updating_slider = TRUE;
     gtk_range_set_value (GTK_RANGE (data->slider), (gdouble)current / GST_SECOND);
+    data->updating_slider = FALSE;
   }
   return TRUE;
+}
+  
+static void reset_app (CustomData *data) {
+  if (data->xoverlay_element)
+    gst_object_unref (data->xoverlay_element);
+  gst_object_unref (data->playbin2);
+}
+  
+static void tags_cb (GstElement *playbin2, gint stream, CustomData *data) {
+  gst_element_post_message (playbin2,
+    gst_message_new_application (GST_OBJECT (playbin2),
+      gst_structure_new ("tags-changed", NULL)));
 }
   
 int main(int argc, char *argv[]) {
@@ -173,6 +206,11 @@ int main(int argc, char *argv[]) {
   /* Set the URI to play */
   g_object_set (data.playbin2, "uri", "http://docs.gstreamer.com/media/sintel_trailer-480p.webm", NULL);
   
+  /* Connect to interesting signals in playbin2 */
+  g_signal_connect (G_OBJECT (data.playbin2), "video-tags-changed", (GCallback) tags_cb, &data);
+  g_signal_connect (G_OBJECT (data.playbin2), "audio-tags-changed", (GCallback) tags_cb, &data);
+  g_signal_connect (G_OBJECT (data.playbin2), "text-tags-changed", (GCallback) tags_cb, &data);
+  
   create_ui (&data);
   
   bus = gst_element_get_bus (data.playbin2);
@@ -188,14 +226,93 @@ int main(int argc, char *argv[]) {
     return -1;
   }
   
-  g_timeout_add (500, (GSourceFunc)refresh_ui, &data);
-  // add timeout to refresh UI: query position and duration (if unknown), gtk_range_set_value() on the slider
+  /* Register a function that GTK will call every second */
+  g_timeout_add (1000, (GSourceFunc)refresh_ui, &data);
+  
   gtk_main ();
   
   /* Free resources */
   gst_element_set_state (data.playbin2, GST_STATE_NULL);
-  gst_object_unref (data.playbin2);
+  reset_app (&data);
   return 0;
+}
+  
+/* Extract metadata from all the streams */
+static void analyze_streams (CustomData *data) {
+  gint i;
+  GstTagList *tags;
+  gchar *str, total_str[8192];
+  guint rate;
+  gint n_video, n_audio, n_text;
+  GtkTextBuffer *text;
+  GtkTextIter text_start, text_end;
+  
+  /* Clean current contents of the widget */
+  text = gtk_text_view_get_buffer (GTK_TEXT_VIEW (data->streams_list));
+  gtk_text_buffer_get_start_iter (text, &text_start);
+  gtk_text_buffer_get_end_iter (text, &text_end);
+  gtk_text_buffer_delete (text, &text_start, &text_end);
+  
+  /* Read some properties */
+  g_object_get (data->playbin2, "n-video", &n_video, NULL);
+  g_object_get (data->playbin2, "n-audio", &n_audio, NULL);
+  g_object_get (data->playbin2, "n-text", &n_text, NULL);
+  
+  for (i = 0; i < n_video; i++) {
+    tags = NULL;
+    /* Retrieve the stream's video tags */
+    g_signal_emit_by_name (data->playbin2, "get-video-tags", i, &tags);
+    if (tags) {
+      g_snprintf (total_str, sizeof (total_str), "video stream %d:\n", i);
+      gtk_text_buffer_insert_at_cursor (text, total_str, -1);
+      gst_tag_list_get_string (tags, GST_TAG_VIDEO_CODEC, &str);
+      g_snprintf (total_str, sizeof (total_str), "  codec: %s\n", str ? str : "unknown");
+      gtk_text_buffer_insert_at_cursor (text, total_str, -1);
+      g_free (str);
+      gst_tag_list_free (tags);
+    }
+  }
+  
+  for (i = 0; i < n_audio; i++) {
+    tags = NULL;
+    /* Retrieve the stream's audio tags */
+    g_signal_emit_by_name (data->playbin2, "get-audio-tags", i, &tags);
+    if (tags) {
+      g_snprintf (total_str, sizeof (total_str), "\naudio stream %d:\n", i);
+      gtk_text_buffer_insert_at_cursor (text, total_str, -1);
+      if (gst_tag_list_get_string (tags, GST_TAG_AUDIO_CODEC, &str)) {
+        g_snprintf (total_str, sizeof (total_str), "  codec: %s\n", str);
+        gtk_text_buffer_insert_at_cursor (text, total_str, -1);
+        g_free (str);
+      }
+      if (gst_tag_list_get_string (tags, GST_TAG_LANGUAGE_CODE, &str)) {
+        g_snprintf (total_str, sizeof (total_str), "  language: %s\n", str);
+        gtk_text_buffer_insert_at_cursor (text, total_str, -1);
+        g_free (str);
+      }
+      if (gst_tag_list_get_uint (tags, GST_TAG_BITRATE, &rate)) {
+        g_snprintf (total_str, sizeof (total_str), "  bitrate: %d\n", rate);
+        gtk_text_buffer_insert_at_cursor (text, total_str, -1);
+      }
+      gst_tag_list_free (tags);
+    }
+  }
+  
+  for (i = 0; i < n_text; i++) {
+    tags = NULL;
+    /* Retrieve the stream's subtitle tags */
+    g_signal_emit_by_name (data->playbin2, "get-text-tags", i, &tags);
+    if (tags) {
+      g_snprintf (total_str, sizeof (total_str), "\nsubtitle stream %d:\n", i);
+      gtk_text_buffer_insert_at_cursor (text, total_str, -1);
+      if (gst_tag_list_get_string (tags, GST_TAG_LANGUAGE_CODE, &str)) {
+        g_snprintf (total_str, sizeof (total_str), "  language: %s\n", str);
+        gtk_text_buffer_insert_at_cursor (text, total_str, -1);
+        g_free (str);
+      }
+      gst_tag_list_free (tags);
+    }
+  }
 }
   
 static gboolean handle_message (GstBus *bus, GstMessage *msg, CustomData *data) {
@@ -209,7 +326,7 @@ static gboolean handle_message (GstBus *bus, GstMessage *msg, CustomData *data) 
       g_printerr ("Debugging information: %s\n", debug_info ? debug_info : "none");
       g_clear_error (&err);
       g_free (debug_info);
-      gtk_main_quit ();
+      gst_element_set_state (data->playbin2, GST_STATE_READY);
       break;
     case GST_MESSAGE_EOS:
       g_print ("End-Of-Stream reached.\n");
@@ -223,10 +340,16 @@ static gboolean handle_message (GstBus *bus, GstMessage *msg, CustomData *data) 
         g_print ("State set to %s\n", gst_element_state_get_name (new_state));
       }
     } break;
+    case GST_MESSAGE_APPLICATION:
+      if (g_strcmp0 (gst_structure_get_name (msg->structure), "tags-changed") == 0) {
+        analyze_streams (data);
+      }
+      break;
   }
-
+  
   return TRUE;
 }
+  
 static GstBusSyncReply bus_sync_handler (GstBus *bus, GstMessage *msg, CustomData *data) {
   /*ignore anything but 'prepare-xwindow-id' element messages */
   if (GST_MESSAGE_TYPE (msg) != GST_MESSAGE_ELEMENT)
@@ -236,8 +359,19 @@ static GstBusSyncReply bus_sync_handler (GstBus *bus, GstMessage *msg, CustomDat
   
   if (data->embed_xid != 0) {
     /* GST_MESSAGE_SRC (message) will be the video sink element */
-    GstXOverlay *xoverlay = GST_X_OVERLAY (GST_MESSAGE_SRC (msg));
-    gst_x_overlay_set_window_handle (xoverlay, data->embed_xid);
+    GstElement *sink = GST_ELEMENT (GST_MESSAGE_SRC (msg));
+    
+    /* If we were tracking a previous video sink, release it */
+    if (data->xoverlay_element != NULL)
+      gst_object_unref (data->xoverlay_element);
+    
+    /* Get a reference to the new sink */
+    data->xoverlay_element = GST_ELEMENT (gst_object_ref (sink));
+    
+    if (g_object_class_find_property (G_OBJECT_GET_CLASS (sink), "force-aspect-ratio")) {
+      g_object_set (sink, "force-aspect-ratio", TRUE, NULL);
+    }
+    gst_x_overlay_set_window_handle (GST_X_OVERLAY (sink), data->embed_xid);
   } else {
     g_warning ("Should have obtained an xid by now!");
   }
