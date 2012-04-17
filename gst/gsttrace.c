@@ -63,7 +63,11 @@ _priv_gst_alloc_trace_initialize (void)
 
   trace = g_getenv ("GST_TRACE");
   if (trace != NULL) {
-    _gst_trace_flags = atoi (trace);
+    const GDebugKey keys[] = {
+      {"live", GST_ALLOC_TRACE_LIVE},
+      {"mem-live", GST_ALLOC_TRACE_MEM_LIVE},
+    };
+    _gst_trace_flags = g_parse_debug_string (trace, keys, G_N_ELEMENTS (keys));
     atexit (_at_exit);
   }
 
