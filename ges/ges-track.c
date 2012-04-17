@@ -456,14 +456,6 @@ ges_track_add_object (GESTrack * track, GESTrackObject * object)
     return FALSE;
   }
 
-  /* At this point, the track object shouldn't have any gnlobject since
-   * it hasn't been added to a track yet.
-   * FIXME : This check seems a bit obsolete */
-  if (G_UNLIKELY (ges_track_object_get_gnlobject (object) != NULL)) {
-    GST_ERROR ("TrackObject already controls a gnlobject !");
-    return FALSE;
-  }
-
   if (G_UNLIKELY (!ges_track_object_set_track (object, track))) {
     GST_ERROR ("Couldn't properly add the object to the Track");
     return FALSE;

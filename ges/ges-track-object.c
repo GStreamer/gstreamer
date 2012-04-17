@@ -766,20 +766,21 @@ ensure_gnl_object (GESTrackObject * object)
 
   GST_DEBUG ("Calling virtual method");
 
-  /* call the create_gnl_object virtual method */
-  gnlobject = class->create_gnl_object (object);
-
-  if (G_UNLIKELY (gnlobject == NULL)) {
-    GST_ERROR
-        ("'create_gnl_object' implementation returned TRUE but no GnlObject is available");
-    goto done;
-  }
-
-  object->priv->gnlobject = gnlobject;
-
   /* 2. Fill in the GnlObject */
-  if (gnlobject) {
-    GST_DEBUG ("Got a valid GnlObject, now filling it in");
+  if (object->priv->gnlobject == NULL) {
+
+    /* call the create_gnl_object virtual method */
+    gnlobject = class->create_gnl_object (object);
+
+    if (G_UNLIKELY (gnlobject == NULL)) {
+      GST_ERROR
+          ("'create_gnl_object' implementation returned TRUE but no GnlObject is available");
+      goto done;
+    }
+
+    GST_DEBUG_OBJECT (object, "Got a valid GnlObject, now filling it in");
+
+    object->priv->gnlobject = gnlobject;
 
     if (object->priv->timelineobj)
       res = ges_timeline_object_fill_track_object (object->priv->timelineobj,
@@ -803,13 +804,16 @@ ensure_gnl_object (GESTrackObject * object)
 
       /* Set some properties on the GnlObject */
       g_object_set (object->priv->gnlobject,
-          "caps", ges_track_get_caps (object->priv->track),
           "duration", object->priv->pending_duration,
           "media-duration", object->priv->pending_duration,
           "start", object->priv->pending_start,
           "media-start", object->priv->pending_inpoint,
           "priority", object->priv->pending_priority,
           "active", object->priv->pending_active, NULL);
+
+      if (object->priv->track != NULL)
+        g_object_set (object->priv->gnlobject,
+            "caps", ges_track_get_caps (object->priv->track), NULL);
 
       /*  We feed up the props_hashtable if possible */
       if (class->get_props_hastable) {
@@ -842,8 +846,16 @@ ges_track_object_set_track (GESTrackObject * object, GESTrack * track)
 
   object->priv->track = track;
 
-  if (object->priv->track)
-    return ensure_gnl_object (object);
+  if (object->priv->track) {
+    /* If we already have a gnlobject, we just set its caps properly */
+    if (object->priv->gnlobject) {
+      g_object_set (object->priv->gnlobject,
+          "caps", ges_track_get_caps (object->priv->track), NULL);
+      return TRUE;
+    } else {
+      return ensure_gnl_object (object);
+    }
+  }
 
   return TRUE;
 }
