@@ -820,7 +820,6 @@ gst_tee_src_activate_mode (GstPad * pad, GstObject * parent, GstPadMode mode,
       res = TRUE;
       break;
   }
-  GST_OBJECT_UNLOCK (tee);
 
   return res;
 
