@@ -878,7 +878,7 @@ gst_gl_window_run_loop (GstGLWindow * window)
       }
 
       default:
-        g_debug ("unknow\n");
+        g_debug ("unknown XEvent type: %ud\n", event.type);
         break;
 
     }                           // switch

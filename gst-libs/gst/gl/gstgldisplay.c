@@ -1918,7 +1918,11 @@ gst_gl_display_on_draw (GstGLDisplay * display)
   //make sure that the environnement is clean
   if (display->upload_colorspace_conversion == GST_GL_DISPLAY_CONVERSION_GLSL)
     glUseProgramObjectARB (0);
+
+#ifndef OPENGL_ES2
   glDisable (GL_TEXTURE_RECTANGLE_ARB);
+#endif
+
   glBindTexture (GL_TEXTURE_RECTANGLE_ARB, 0);
 
   //check if a client draw callback is registered
@@ -2982,7 +2986,9 @@ gst_gl_display_thread_do_upload_draw (GstGLDisplay * display)
   glBindFramebufferEXT (GL_FRAMEBUFFER_EXT, display->upload_fbo);
 
   //setup a texture to render to
+#ifndef OPENGL_ES2
   glEnable (GL_TEXTURE_RECTANGLE_ARB);
+#endif
   glBindTexture (GL_TEXTURE_RECTANGLE_ARB, display->upload_outtex);
 
   //attach the texture to the FBO to renderer to
@@ -3040,7 +3046,10 @@ gst_gl_display_thread_do_upload_draw (GstGLDisplay * display)
       glEnableVertexAttribArray (display->shader_upload_attr_position_loc);
       glEnableVertexAttribArray (display->shader_upload_attr_texture_loc);
 #endif
+
+#ifndef OPENGL_ES2
       glEnable (GL_TEXTURE_RECTANGLE_ARB);
+#endif
       glBindTexture (GL_TEXTURE_RECTANGLE_ARB, display->upload_intex);
       glTexParameteri (GL_TEXTURE_RECTANGLE_ARB, GL_TEXTURE_MAG_FILTER,
           GL_LINEAR);
@@ -3124,9 +3133,8 @@ gst_gl_display_thread_do_upload_draw (GstGLDisplay * display)
 #ifndef OPENGL_ES2
           glMatrixMode (GL_PROJECTION);
           glLoadIdentity ();
-#endif
-
           glEnable (GL_TEXTURE_RECTANGLE_ARB);
+#endif
           glBindTexture (GL_TEXTURE_RECTANGLE_ARB, display->upload_intex);
           glTexParameteri (GL_TEXTURE_RECTANGLE_ARB, GL_TEXTURE_MAG_FILTER,
               GL_LINEAR);
@@ -3334,7 +3342,6 @@ gst_gl_display_thread_do_download_draw_rgb (GstGLDisplay * display)
   glDrawElements (GL_TRIANGLES, 6, GL_UNSIGNED_SHORT, indices);
 
   glUseProgramObjectARB (0);
-  glDisable (GL_TEXTURE_RECTANGLE_ARB);
 #endif
 
   switch (video_format) {
@@ -3379,9 +3386,8 @@ gst_gl_display_thread_do_download_draw_rgb (GstGLDisplay * display)
 
 #ifndef OPENGL_ES2
   glReadBuffer (GL_NONE);
-#endif
-
   glDisable (GL_TEXTURE_RECTANGLE_ARB);
+#endif
 }
 
 
@@ -3560,9 +3566,8 @@ gst_gl_display_thread_do_download_draw_yuv (GstGLDisplay * display)
   //without GLSL (whereas rgb is)
   glUseProgramObjectARB (0);
 
-  glDisable (GL_TEXTURE_RECTANGLE_ARB);
-
 #ifndef OPENGL_ES2
+  glDisable (GL_TEXTURE_RECTANGLE_ARB);
   glMatrixMode (GL_PROJECTION);
   glPopMatrix ();
   glMatrixMode (GL_MODELVIEW);
