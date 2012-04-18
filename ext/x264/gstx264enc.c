@@ -1476,6 +1476,15 @@ gst_x264_enc_set_src_caps (GstX264Enc * encoder, GstCaps * caps)
   return TRUE;
 }
 
+static void
+gst_x264_enc_set_latency (GstX264Enc * encoder)
+{
+  GstVideoInfo *info = &encoder->input_state->info;
+  GstClockTime latency = gst_util_uint64_scale (GST_SECOND * info->fps_d,
+      x264_encoder_maximum_delayed_frames (encoder->x264enc), info->fps_n);
+  gst_video_encoder_set_latency (GST_VIDEO_ENCODER (encoder), latency, latency);
+}
+
 static gboolean
 gst_x264_enc_set_format (GstVideoEncoder * video_enc,
     GstVideoCodecState * state)
@@ -1647,6 +1656,8 @@ gst_x264_enc_set_format (GstVideoEncoder * video_enc,
     return FALSE;
   }
 
+  gst_x264_enc_set_latency (encoder);
+
   return TRUE;
 }
 
@@ -1757,6 +1768,7 @@ gst_x264_enc_encode_frame (GstX264Enc * encoder, x264_picture_t * pic_in,
     encoder->reconfig = FALSE;
     if (x264_encoder_reconfig (encoder->x264enc, &encoder->x264param) < 0)
       GST_WARNING_OBJECT (encoder, "Could not reconfigure");
+    gst_x264_enc_set_latency (encoder);
   }
 
   if (pic_in && input_frame) {
