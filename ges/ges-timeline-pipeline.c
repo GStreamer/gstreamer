@@ -474,7 +474,7 @@ pad_added_cb (GstElement * timeline, GstPad * pad, GESTimelinePipeline * self)
       goto error;
     }
 
-    tmppad = gst_element_get_request_pad (chain->tee, "src%d");
+    tmppad = gst_element_get_request_pad (chain->tee, "src_%u");
     if (G_UNLIKELY (gst_pad_link_full (tmppad, sinkpad,
                 GST_PAD_LINK_CHECK_NOTHING) != GST_PAD_LINK_OK)) {
       GST_ERROR_OBJECT (self, "Couldn't link track pad to playsink");
@@ -521,7 +521,7 @@ pad_added_cb (GstElement * timeline, GstPad * pad, GESTimelinePipeline * self)
       chain->encodebinpad = sinkpad;
     }
 
-    tmppad = gst_element_get_request_pad (chain->tee, "src%d");
+    tmppad = gst_element_get_request_pad (chain->tee, "src_%u");
     if (G_UNLIKELY (gst_pad_link_full (tmppad,
                 chain->encodebinpad,
                 GST_PAD_LINK_CHECK_NOTHING) != GST_PAD_LINK_OK)) {
