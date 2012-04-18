@@ -1593,7 +1593,7 @@ scan_and_update_registry (GstRegistry * default_registry,
           g_win32_get_package_installation_directory_of_module
           (_priv_gst_dll_handle);
 
-      dir = g_build_filename (base_dir, "lib", "gstreamer-0.10", NULL);
+      dir = g_build_filename (base_dir, "lib", "gstreamer-" GST_API_VERSION, NULL);
       GST_DEBUG ("scanning DLL dir %s", dir);
 
       changed |= gst_registry_scan_path_internal (&context, dir);
