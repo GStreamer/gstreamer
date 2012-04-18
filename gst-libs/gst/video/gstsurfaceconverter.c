@@ -36,7 +36,7 @@
  * uploads. The context must be discarded when the pipeline goes to
  * #GST_STATE_NULL or renewed whenever the caps are changed.
  * <note>
- *   The GstVideoContext interface is unstable API and may change in future.
+ *   The GstSurfaceConverter interface is unstable API and may change in future.
  *   One can define GST_USE_UNSTABLE_API to acknowledge and avoid this warning.
  * </note>
  *

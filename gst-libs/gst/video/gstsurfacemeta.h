@@ -24,7 +24,7 @@
 #define _GST_SURFACE_META_H_
 
 #ifndef GST_USE_UNSTABLE_API
-#warning "GstSurfaceBuffer is unstable API and may change in future."
+#warning "GstSurfaceMeta is unstable API and may change in future."
 #warning "You can define GST_USE_UNSTABLE_API to avoid this warning."
 #endif
 

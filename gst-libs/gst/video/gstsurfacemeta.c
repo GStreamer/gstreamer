@@ -39,7 +39,7 @@
  * allow easy negotiating of such feature with other elements (e.g. a
  * ClutterGstVideoSink can claim accpeting caps "video/x-surface,opengl=true").
  * <note>
- *   The GstVideoContext interface is unstable API and may change in future.
+ *   The GstSurfaceMeta interface is unstable API and may change in future.
  *   One can define GST_USE_UNSTABLE_API to acknowledge and avoid this warning.
  * </note>
  */
