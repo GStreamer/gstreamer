@@ -868,10 +868,12 @@ gst_debug_construct_win_color (guint colorinfo)
   };
 
   /* we draw black as white, as cmd.exe can only have black bg */
-  if (colorinfo == 0) {
-    return ansi_to_win_fg[7];
+  if ((colorinfo & (GST_DEBUG_FG_MASK | GST_DEBUG_BG_MASK)) == 0) {
+    color = ansi_to_win_fg[7];
   }
-
+  if (colorinfo & GST_DEBUG_UNDERLINE) {
+    color |= BACKGROUND_INTENSITY;
+  }
   if (colorinfo & GST_DEBUG_BOLD) {
     color |= FOREGROUND_INTENSITY;
   }
