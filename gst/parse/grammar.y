@@ -379,7 +379,7 @@ out:
   return;
 
 error:
-  GST_CAT_ERROR (GST_CAT_PIPELINE, "could not set property \"%s\" in "
+  GST_CAT_ERROR (GST_CAT_PIPELINE, "could not set property \"%s\" in %"
       GST_PTR_FORMAT, pspec->name, target);
   goto out;
 }
