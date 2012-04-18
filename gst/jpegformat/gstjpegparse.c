@@ -928,7 +928,8 @@ gst_jpeg_parse_chain (GstPad * pad, GstBuffer * buf)
     if (G_UNLIKELY (!GST_CLOCK_TIME_IS_VALID (parse->priv->next_ts)))
       parse->priv->next_ts = timestamp;
 
-    parse->priv->duration = duration;
+    if (G_LIKELY (GST_CLOCK_TIME_IS_VALID (duration)))
+      parse->priv->duration = duration;
 
     /* check if we already have a EOI */
     len = gst_jpeg_parse_get_image_length (parse);
@@ -971,6 +972,7 @@ gst_jpeg_parse_sink_event (GstPad * pad, GstEvent * event)
     }
     case GST_EVENT_FLUSH_STOP:
       parse->priv->next_ts = GST_CLOCK_TIME_NONE;
+      parse->priv->duration = GST_CLOCK_TIME_NONE;
       parse->priv->last_offset = 0;
       parse->priv->last_entropy_len = 0;
       parse->priv->last_resync = FALSE;
@@ -1039,6 +1041,7 @@ gst_jpeg_parse_change_state (GstElement * element, GstStateChange transition)
       parse->priv->new_segment = FALSE;
 
       parse->priv->next_ts = GST_CLOCK_TIME_NONE;
+      parse->priv->duration = GST_CLOCK_TIME_NONE;
 
       parse->priv->last_offset = 0;
       parse->priv->last_entropy_len = 0;
