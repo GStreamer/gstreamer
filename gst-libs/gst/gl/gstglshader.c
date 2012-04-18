@@ -308,8 +308,13 @@ gst_gl_shader_compile (GstGLShader * shader, GError ** error)
     glGetObjectParameterivARB (priv->vertex_handle,
         GL_OBJECT_COMPILE_STATUS_ARB, &status);
 
+#ifndef OPENGL_ES2
     glGetInfoLogARB (priv->vertex_handle,
         sizeof (info_buffer) - 1, &len, info_buffer);
+#else
+    glGetShaderInfoLog (priv->vertex_handle,
+        sizeof (info_buffer) - 1, &len, info_buffer);
+#endif
     info_buffer[len] = '\0';
 
     if (status != GL_TRUE) {
@@ -324,6 +329,8 @@ gst_gl_shader_compile (GstGLShader * shader, GError ** error)
       g_debug ("\n%s\n", info_buffer);
     }
     glAttachObjectARB (priv->program_handle, priv->vertex_handle);
+
+    g_debug ("vertex shader attached %ud", priv->vertex_handle);
   }
 
   if (priv->fragment_src) {
@@ -337,8 +344,13 @@ gst_gl_shader_compile (GstGLShader * shader, GError ** error)
     glGetObjectParameterivARB (priv->fragment_handle,
         GL_OBJECT_COMPILE_STATUS_ARB, &status);
 
+#ifndef OPENGL_ES2
     glGetInfoLogARB (priv->fragment_handle,
         sizeof (info_buffer) - 1, &len, info_buffer);
+#else
+    glGetShaderInfoLog (priv->fragment_handle,
+        sizeof (info_buffer) - 1, &len, info_buffer);
+#endif
     info_buffer[len] = '\0';
     if (status != GL_TRUE) {
       g_set_error (error, GST_GL_SHADER_ERROR,
@@ -352,12 +364,18 @@ gst_gl_shader_compile (GstGLShader * shader, GError ** error)
       g_debug ("\n%s\n", info_buffer);
     }
     glAttachObjectARB (priv->program_handle, priv->fragment_handle);
+
+    g_debug ("fragment shader attached %ud", priv->fragment_handle);
   }
 
   /* if nothing failed link shaders */
   glLinkProgramARB (priv->program_handle);
 
+#ifndef OPENGL_ES2
   glGetObjectParameterivARB (priv->program_handle, GL_LINK_STATUS, &status);
+#else
+  glGetProgramiv (priv->program_handle, GL_LINK_STATUS, &status);
+#endif
 
   glGetInfoLogARB (priv->program_handle,
       sizeof (info_buffer) - 1, &len, info_buffer);
@@ -397,7 +415,11 @@ gst_gl_shader_release (GstGLShader * shader)
   if (priv->vertex_handle) {    // not needed but nvidia doesn't care to respect the spec
     g_debug ("finalizing vertex shader %ud", priv->vertex_handle);
 
+#ifndef OPENGL_ES2
     glDeleteObjectARB (priv->vertex_handle);
+#else
+    glDeleteShader (priv->vertex_handle);
+#endif
 
     /* err = glGetError (); */
     /* g_debug ("error: 0x%x", err); */
@@ -408,7 +430,11 @@ gst_gl_shader_release (GstGLShader * shader)
   if (priv->fragment_handle) {
     g_debug ("finalizing fragment shader %ud", priv->fragment_handle);
 
+#ifndef OPENGL_ES2
     glDeleteObjectARB (priv->fragment_handle);
+#else
+    glDeleteShader (priv->fragment_handle);
+#endif
 
     /* err = glGetError (); */
     /* g_debug ("error: 0x%x", err); */
