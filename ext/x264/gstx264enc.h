@@ -97,9 +97,6 @@ struct _GstX264Enc
   /* input description */
   GstVideoCodecState *input_state;
 
-  guint8 *buffer;
-  gulong buffer_size;
-
   /* configuration changed  while playing */
   gboolean reconfig;
 
