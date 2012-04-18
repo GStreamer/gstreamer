@@ -115,48 +115,21 @@ static GstFlowReturn gst_hdv1394src_create (GstPushSrc * psrc,
 
 static void gst_hdv1394src_update_device_name (GstHDV1394Src * src);
 
-static void
-_do_init (GType type)
-{
-  static const GInterfaceInfo urihandler_info = {
-    gst_hdv1394src_uri_handler_init,
-    NULL,
-    NULL,
-  };
-  g_type_add_interface_static (type, GST_TYPE_URI_HANDLER, &urihandler_info);
-
-  gst_1394_type_add_property_probe_interface (type);
-
-  GST_DEBUG_CATEGORY_INIT (hdv1394src_debug, "hdv1394src", 0,
-      "MPEG-TS firewire source");
-}
-
-GST_BOILERPLATE_FULL (GstHDV1394Src, gst_hdv1394src, GstPushSrc,
-    GST_TYPE_PUSH_SRC, _do_init);
-
-
-static void
-gst_hdv1394src_base_init (gpointer g_class)
-{
-  GstElementClass *element_class = GST_ELEMENT_CLASS (g_class);
-
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&src_factory));
-
-  gst_element_class_set_static_metadata (element_class,
-      "Firewire (1394) HDV video source", "Source/Video",
-      "Source for MPEG-TS video data from firewire port",
-      "Edward Hervey <bilboed@bilboed.com>");
-}
+#define gst_hdv1394src_parent_class parent_class
+G_DEFINE_TYPE_WITH_CODE (GstHDV1394Src, gst_hdv1394src, GST_TYPE_PUSH_SRC,
+    G_IMPLEMENT_INTERFACE (GST_TYPE_URI_HANDLER,
+        gst_hdv1394src_uri_handler_init));
 
 static void
 gst_hdv1394src_class_init (GstHDV1394SrcClass * klass)
 {
   GObjectClass *gobject_class;
+  GstElementClass *gstelement_class;
   GstBaseSrcClass *gstbasesrc_class;
   GstPushSrcClass *gstpushsrc_class;
 
   gobject_class = (GObjectClass *) klass;
+  gstelement_class = (GstElementClass *) klass;
   gstbasesrc_class = (GstBaseSrcClass *) klass;
   gstpushsrc_class = (GstPushSrcClass *) klass;
 
@@ -196,10 +169,21 @@ gst_hdv1394src_class_init (GstHDV1394SrcClass * klass)
   gstbasesrc_class->unlock = gst_hdv1394src_unlock;
 
   gstpushsrc_class->create = gst_hdv1394src_create;
+
+  gst_element_class_add_pad_template (gstelement_class,
+      gst_static_pad_template_get (&src_factory));
+
+  gst_element_class_set_static_metadata (gstelement_class,
+      "Firewire (1394) HDV video source", "Source/Video",
+      "Source for MPEG-TS video data from firewire port",
+      "Edward Hervey <bilboed@bilboed.com>");
+
+  GST_DEBUG_CATEGORY_INIT (hdv1394src_debug, "hdv1394src", 0,
+      "MPEG-TS firewire source");
 }
 
 static void
-gst_hdv1394src_init (GstHDV1394Src * dv1394src, GstHDV1394SrcClass * klass)
+gst_hdv1394src_init (GstHDV1394Src * dv1394src)
 {
   GstPad *srcpad = GST_BASE_SRC_PAD (dv1394src);
 
@@ -387,7 +371,6 @@ static GstFlowReturn
 gst_hdv1394src_create (GstPushSrc * psrc, GstBuffer ** buf)
 {
   GstHDV1394Src *dv1394src = GST_HDV1394SRC (psrc);
-  GstCaps *caps;
   struct pollfd pollfds[2];
 
   pollfds[0].fd = raw1394_get_fd (dv1394src->handle);
@@ -439,16 +422,9 @@ gst_hdv1394src_create (GstPushSrc * psrc, GstBuffer ** buf)
   GST_LOG ("We have some frames (%u bytes)", (guint) dv1394src->outoffset);
 
   /* Create the buffer */
-  *buf = gst_buffer_new ();
-  GST_BUFFER_DATA (*buf) = dv1394src->outdata;
-  GST_BUFFER_MALLOCDATA (*buf) = dv1394src->outdata;
-  GST_BUFFER_SIZE (*buf) = dv1394src->outoffset;
+  *buf = gst_buffer_new_wrapped (dv1394src->outdata, dv1394src->outoffset);
   dv1394src->outdata = NULL;
   dv1394src->outoffset = 0;
-
-  caps = gst_pad_get_caps (GST_BASE_SRC_PAD (psrc));
-  gst_buffer_set_caps (*buf, caps);
-  gst_caps_unref (caps);
 
   return GST_FLOW_OK;
 
@@ -785,21 +761,21 @@ gethandle_failed:
 
 /*** GSTURIHANDLER INTERFACE *************************************************/
 
-static guint
-gst_hdv1394src_uri_get_type (void)
+static GstURIType
+gst_hdv1394src_uri_get_type (GType type)
 {
   return GST_URI_SRC;
 }
 
-static gchar **
-gst_hdv1394src_uri_get_protocols (void)
+static const gchar *const *
+gst_hdv1394src_uri_get_protocols (GType type)
 {
-  static gchar *protocols[] = { (char *) "hdv", NULL };
+  static const gchar *protocols[] = { (char *) "hdv", NULL };
 
   return protocols;
 }
 
-static const gchar *
+static gchar *
 gst_hdv1394src_uri_get_uri (GstURIHandler * handler)
 {
   GstHDV1394Src *gst_hdv1394src = GST_HDV1394SRC (handler);
@@ -808,7 +784,8 @@ gst_hdv1394src_uri_get_uri (GstURIHandler * handler)
 }
 
 static gboolean
-gst_hdv1394src_uri_set_uri (GstURIHandler * handler, const gchar * uri)
+gst_hdv1394src_uri_set_uri (GstURIHandler * handler, const gchar * uri,
+    GError ** error)
 {
   gchar *protocol, *location;
   gboolean ret = TRUE;
@@ -817,6 +794,8 @@ gst_hdv1394src_uri_set_uri (GstURIHandler * handler, const gchar * uri)
   protocol = gst_uri_get_protocol (uri);
   if (strcmp (protocol, "hdv") != 0) {
     g_free (protocol);
+    g_set_error (error, GST_URI_ERROR, GST_URI_ERROR_BAD_URI,
+        "Invalid HDV URI");
     return FALSE;
   }
   g_free (protocol);

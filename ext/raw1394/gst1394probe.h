@@ -24,7 +24,9 @@
 
 G_BEGIN_DECLS
 
+#if 0
 void gst_1394_type_add_property_probe_interface (GType type);
+#endif
 
 G_END_DECLS
 

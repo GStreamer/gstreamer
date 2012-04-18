@@ -309,7 +309,7 @@ dnl *** plug-ins to include ***
 dnl Non ported plugins (non-dependant, then dependant)
 dnl Make sure you have a space before and after all plugins
 GST_PLUGINS_NONPORTED="deinterlace \
- cairo cairo_gobject dv1394 gdk_pixbuf \
+ cairo cairo_gobject gdk_pixbuf \
  oss oss4 \
  osx_video osx_audio "
 AC_SUBST(GST_PLUGINS_NONPORTED)
