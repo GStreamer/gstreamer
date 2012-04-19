@@ -178,7 +178,7 @@ gst_v4l2src_class_init (GstV4l2SrcClass * klass)
           PROP_DEF_DECIMATE, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   /**
-   * GstV4l2Src::pre-set-format:
+   * GstV4l2Src::prepare-format:
    * @v4l2src: the v4l2src instance
    * @fd: the file descriptor of the current device
    * @fourcc: the fourcc of the format being set
@@ -191,7 +191,7 @@ gst_v4l2src_class_init (GstV4l2SrcClass * klass)
    * This is mostly useful for UVC H264 encoding cameras which need the H264
    * Probe & Commit to happen prior to the normal Probe & Commit.
    */
-  gst_v4l2_signals[SIGNAL_PRE_SET_FORMAT] = g_signal_new ("pre-set-format",
+  gst_v4l2_signals[SIGNAL_PRE_SET_FORMAT] = g_signal_new ("prepare-format",
       G_TYPE_FROM_CLASS (klass),
       G_SIGNAL_RUN_LAST,
       0,

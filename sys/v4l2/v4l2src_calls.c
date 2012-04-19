@@ -218,7 +218,7 @@ gst_v4l2src_set_capture (GstV4l2Src * v4l2src, guint32 pixelformat,
   if (pixelformat == GST_MAKE_FOURCC ('M', 'P', 'E', 'G'))
     return TRUE;
 
-  g_signal_emit_by_name (v4l2src, "pre-set-format",
+  g_signal_emit_by_name (v4l2src, "prepare-format",
       v4l2src->v4l2object->video_fd, pixelformat, width, height);
 
   if (!gst_v4l2_object_set_format (v4l2src->v4l2object, pixelformat, width,
