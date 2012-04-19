@@ -1202,7 +1202,7 @@ gst_v4l2_object_v4l2fourcc_to_structure (guint32 fourcc)
       /* FIXME: get correct fourccs here */
       break;
     case V4L2_PIX_FMT_H264:    /* H.264 */
-      structure = gst_structure_new ("video/x-h264", NULL);
+      structure = gst_structure_new_empty ("video/x-h264");
       break;
     case V4L2_PIX_FMT_RGB332:
     case V4L2_PIX_FMT_RGB555X:
