@@ -550,7 +550,9 @@ gst_ffmpegscale_set_caps (GstBaseTransform * trans, GstCaps * incaps,
     GstCaps * outcaps)
 {
   GstFFMpegScale *scale = GST_FFMPEGSCALE (trans);
+#ifdef HAVE_ORC
   guint mmx_flags, altivec_flags;
+#endif
   gint swsflags;
   gboolean ok;
 
@@ -591,8 +593,6 @@ gst_ffmpegscale_set_caps (GstBaseTransform * trans, GstCaps * incaps,
       | (mmx_flags & ORC_TARGET_MMX_3DNOW ? SWS_CPU_CAPS_3DNOW : 0)
       | (altivec_flags & ORC_TARGET_ALTIVEC_ALTIVEC ? SWS_CPU_CAPS_ALTIVEC : 0);
 #else
-  mmx_flags = 0;
-  altivec_flags = 0;
   swsflags = 0;
 #endif
 
