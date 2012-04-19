@@ -594,7 +594,9 @@ gst_ffmpegscale_set_caps (GstBaseTransform * trans, GstCaps * incaps,
     GstCaps * outcaps)
 {
   GstFFMpegScale *scale = GST_FFMPEGSCALE (trans);
+#ifdef HAVE_ORC
   guint mmx_flags, altivec_flags;
+#endif
   gint swsflags;
   GstVideoFormat in_format, out_format;
   gboolean ok;
@@ -638,11 +640,8 @@ gst_ffmpegscale_set_caps (GstBaseTransform * trans, GstCaps * incaps,
       | (mmx_flags & ORC_TARGET_MMX_3DNOW ? SWS_CPU_CAPS_3DNOW : 0)
       | (altivec_flags & ORC_TARGET_ALTIVEC_ALTIVEC ? SWS_CPU_CAPS_ALTIVEC : 0);
 #else
-  mmx_flags = 0;
-  altivec_flags = 0;
   swsflags = 0;
 #endif
-
 
   scale->ctx = sws_getContext (scale->in_width, scale->in_height,
       scale->in_pixfmt, scale->out_width, scale->out_height, scale->out_pixfmt,
@@ -817,9 +816,7 @@ plugin_init (GstPlugin * plugin)
 GST_PLUGIN_DEFINE (GST_VERSION_MAJOR,
     GST_VERSION_MINOR,
     "ffvideoscale",
-    "videoscaling element (" FFMPEG_SOURCE ")",
-    plugin_init,
-    PACKAGE_VERSION,
+    "videoscaling element (" FFMPEG_SOURCE ")", plugin_init, PACKAGE_VERSION,
 #ifdef GST_FFMPEG_ENABLE_LGPL
     "LGPL",
 #else
