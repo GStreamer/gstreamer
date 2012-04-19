@@ -342,10 +342,8 @@ gst_dvdec_src_negotiate (GstDVDec * dvdec)
   dvdec->vinfo.par_d = dvdec->par_y;
   if (dvdec->interlaced) {
     dvdec->vinfo.interlace_mode = GST_VIDEO_INTERLACE_MODE_INTERLEAVED;
-    dvdec->vinfo.flags |= GST_VIDEO_FLAG_INTERLACED;
   } else {
     dvdec->vinfo.interlace_mode = GST_VIDEO_INTERLACE_MODE_PROGRESSIVE;
-    dvdec->vinfo.flags &= GST_VIDEO_FLAG_INTERLACED;
   }
 
   othercaps = gst_video_info_to_caps (&dvdec->vinfo);

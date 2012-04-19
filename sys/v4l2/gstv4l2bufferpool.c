@@ -197,8 +197,8 @@ gst_v4l2_buffer_pool_alloc_buffer (GstBufferPool * bpool, GstBuffer ** buffer,
         stride[0] = obj->bytesperline;
 
         GST_DEBUG_OBJECT (pool, "adding video meta, stride %d", stride[0]);
-        gst_buffer_add_video_meta_full (newbuf, info->flags,
-            GST_VIDEO_INFO_FORMAT (info), GST_VIDEO_INFO_WIDTH (info),
+        gst_buffer_add_video_meta_full (newbuf, GST_VIDEO_INFO_FORMAT (info),
+            GST_VIDEO_FRAME_FLAG_NONE, GST_VIDEO_INFO_WIDTH (info),
             GST_VIDEO_INFO_HEIGHT (info), GST_VIDEO_INFO_N_PLANES (info),
             offset, stride);
       }
@@ -595,11 +595,9 @@ gst_v4l2_buffer_pool_dqbuf (GstV4l2BufferPool * pool, GstBuffer ** buffer)
   /* set top/bottom field first if v4l2_buffer has the information */
   if (vbuffer.field == V4L2_FIELD_INTERLACED_TB) {
     GST_BUFFER_FLAG_SET (outbuf, GST_VIDEO_BUFFER_FLAG_TFF);
-    GST_BUFFER_FLAG_SET (outbuf, GST_VIDEO_BUFFER_FLAG_INTERLACED);
   }
   if (vbuffer.field == V4L2_FIELD_INTERLACED_BT) {
     GST_BUFFER_FLAG_UNSET (outbuf, GST_VIDEO_BUFFER_FLAG_TFF);
-    GST_BUFFER_FLAG_SET (outbuf, GST_VIDEO_BUFFER_FLAG_INTERLACED);
   }
 
   /* this can change at every frame, esp. with jpeg */

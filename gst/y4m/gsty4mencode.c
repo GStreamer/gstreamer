@@ -220,7 +220,7 @@ gst_y4m_encode_get_stream_header (GstY4mEncode * filter, gboolean tff)
   gchar interlaced;
   gsize len;
 
-  if (filter->info.flags & GST_VIDEO_FLAG_INTERLACED) {
+  if (GST_VIDEO_INFO_IS_INTERLACED (&filter->info)) {
     if (tff)
       interlaced = 't';
     else
@@ -278,7 +278,7 @@ gst_y4m_encode_chain (GstPad * pad, GstObject * parent, GstBuffer * buf)
   if (G_UNLIKELY (!filter->header)) {
     gboolean tff;
 
-    if (filter->info.flags & GST_VIDEO_FLAG_INTERLACED) {
+    if (GST_VIDEO_INFO_IS_INTERLACED (&filter->info)) {
       tff = GST_BUFFER_FLAG_IS_SET (buf, GST_VIDEO_BUFFER_FLAG_TFF);
     }
     outbuf = gst_y4m_encode_get_stream_header (filter, tff);

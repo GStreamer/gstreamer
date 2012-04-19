@@ -187,7 +187,7 @@ gst_rtp_vraw_pay_setcaps (GstRTPBasePayload * payload, GstCaps * caps)
       break;
   }
 
-  if (info.flags & GST_VIDEO_FLAG_INTERLACED) {
+  if (GST_VIDEO_INFO_IS_INTERLACED (&info)) {
     yinc *= 2;
   }
 
@@ -204,7 +204,7 @@ gst_rtp_vraw_pay_setcaps (GstRTPBasePayload * payload, GstCaps * caps)
   hstr = g_strdup_printf ("%d", GST_VIDEO_INFO_HEIGHT (&info));
 
   gst_rtp_base_payload_set_options (payload, "video", TRUE, "RAW", 90000);
-  if (info.flags & GST_VIDEO_FLAG_INTERLACED) {
+  if (GST_VIDEO_INFO_IS_INTERLACED (&info)) {
     res = gst_rtp_base_payload_set_outcaps (payload, "sampling", G_TYPE_STRING,
         samplingstr, "depth", G_TYPE_STRING, depthstr, "width", G_TYPE_STRING,
         wstr, "height", G_TYPE_STRING, hstr, "colorimetry", G_TYPE_STRING,
@@ -271,7 +271,7 @@ gst_rtp_vraw_pay_handle_buffer (GstRTPBasePayload * payload, GstBuffer * buffer)
   width = GST_VIDEO_INFO_WIDTH (&rtpvrawpay->vinfo);
   height = GST_VIDEO_INFO_HEIGHT (&rtpvrawpay->vinfo);
 
-  interlaced = ! !(rtpvrawpay->vinfo.flags & GST_VIDEO_FLAG_INTERLACED);
+  interlaced = GST_VIDEO_INFO_IS_INTERLACED (&rtpvrawpay->vinfo);
 
   /* start with line 0, offset 0 */
   for (field = 0; field < 1 + interlaced; field++) {

@@ -2217,7 +2217,7 @@ gst_v4l2_object_set_format (GstV4l2Object * v4l2object, GstCaps * caps)
   fps_d = GST_VIDEO_INFO_FPS_D (&info);
   stride = GST_VIDEO_INFO_PLANE_STRIDE (&info, 0);
 
-  if (info.flags & GST_VIDEO_FLAG_INTERLACED) {
+  if (GST_VIDEO_INFO_IS_INTERLACED (&info)) {
     GST_DEBUG_OBJECT (v4l2object->element, "interlaced video");
     /* ideally we would differentiate between types of interlaced video
      * but there is not sufficient information in the caps..

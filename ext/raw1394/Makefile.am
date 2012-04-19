@@ -17,7 +17,7 @@ libgst1394_la_CFLAGS = \
 	$(GST_CFLAGS) \
 	$(DV1394_CFLAGS)
 libgst1394_la_LIBADD = \
-	$(GST_PLUGINS_BASE_LIBS) -lgstinterfaces-$(GST_API_VERSION) \
+	$(GST_PLUGINS_BASE_LIBS) \
 	$(GST_BASE_LIBS) \
 	$(GST_LIBS) \
 	$(DV1394_LIBS)
