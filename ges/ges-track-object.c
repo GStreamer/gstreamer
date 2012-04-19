@@ -1498,3 +1498,49 @@ ges_track_object_set_max_duration (GESTrackObject * object, guint64 maxduration)
 
   object->priv->maxduration = maxduration;
 }
+
+GESTrackObject *
+ges_track_object_copy (GESTrackObject * object, gboolean deep)
+{
+  GESTrackObject *ret = NULL;
+  GParameter *params;
+  GParamSpec **specs;
+  guint n, n_specs, n_params;
+  GValue val = { 0 };
+
+  g_return_val_if_fail (GES_IS_TRACK_OBJECT (object), NULL);
+
+  specs =
+      g_object_class_list_properties (G_OBJECT_GET_CLASS (object), &n_specs);
+  params = g_new0 (GParameter, n_specs);
+  n_params = 0;
+
+  for (n = 0; n < n_specs; ++n) {
+    if (g_strcmp0 (specs[n]->name, "parent") &&
+        (specs[n]->flags & G_PARAM_READWRITE) == G_PARAM_READWRITE) {
+      params[n_params].name = g_intern_string (specs[n]->name);
+      g_value_init (&params[n_params].value, specs[n]->value_type);
+      g_object_get_property (G_OBJECT (object), specs[n]->name,
+          &params[n_params].value);
+      ++n_params;
+    }
+  }
+
+  ret = g_object_newv (G_TYPE_FROM_INSTANCE (object), n_params, params);
+  g_free (specs);
+  g_free (params);
+
+  if (deep == FALSE)
+    return ret;
+
+  ensure_gnl_object (ret);
+  specs = ges_track_object_list_children_properties (object, &n_specs);
+  for (n = 0; n < n_specs; ++n) {
+    g_value_init (&val, specs[n]->value_type);
+    g_object_get_property (G_OBJECT (object), specs[n]->name, &val);
+    ges_track_object_set_child_property_by_pspec (ret, specs[n], &val);
+    g_value_unset (&val);
+  }
+
+  return ret;
+}

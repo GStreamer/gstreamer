@@ -22,8 +22,12 @@
 #define __GES_INTERNAL_H__
 
 #include <gst/gst.h>
+#include "ges-track-object.h"
 
 GST_DEBUG_CATEGORY_EXTERN (_ges_debug);
 #define GST_CAT_DEFAULT _ges_debug
+
+GESTrackObject *
+ges_track_object_copy (GESTrackObject * object, gboolean deep);
 
 #endif /* __GES_INTERNAL_H__ */
