@@ -977,6 +977,7 @@ gst_app_src_create (GstBaseSrc * bsrc, guint64 offset, guint size,
         goto seek_error;
 
       priv->offset = offset;
+      priv->is_eos = FALSE;
     }
   }
 
