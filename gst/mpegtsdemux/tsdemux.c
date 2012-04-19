@@ -598,8 +598,10 @@ push_event (MpegTSBase * base, GstEvent * event)
   GstTSDemux *demux = (GstTSDemux *) base;
   GList *tmp;
 
-  if (G_UNLIKELY (demux->program == NULL))
+  if (G_UNLIKELY (demux->program == NULL)) {
+    gst_event_unref (event);
     return FALSE;
+  }
 
   for (tmp = demux->program->stream_list; tmp; tmp = tmp->next) {
     TSDemuxStream *stream = (TSDemuxStream *) tmp->data;
@@ -608,6 +610,8 @@ push_event (MpegTSBase * base, GstEvent * event)
       gst_pad_push_event (stream->pad, event);
     }
   }
+
+  gst_event_unref (event);
 
   return TRUE;
 }
@@ -947,7 +951,8 @@ create_pad_for_stream (MpegTSBase * base, MpegTSBaseStream * bstream,
 
   if (name)
     g_free (name);
-
+  if (template)
+    gst_object_unref (template);
   if (caps)
     gst_caps_unref (caps);
 

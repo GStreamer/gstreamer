@@ -251,6 +251,9 @@ push_event (MpegTSBase * base, GstEvent * event)
       gst_pad_push_event (pad, event);
     }
   }
+
+  gst_event_unref (event);
+
   return TRUE;
 }
 

@@ -1311,12 +1311,12 @@ mpegts_base_sink_event (GstPad * pad, GstEvent * event)
       break;
     case GST_EVENT_EOS:
       res = gst_mpegts_base_handle_eos (base);
+      gst_event_unref (event);
       break;
     case GST_EVENT_FLUSH_START:
       mpegts_packetizer_flush (base->packetizer);
       mpegts_base_flush (base);
       res = GST_MPEGTS_BASE_GET_CLASS (base)->push_event (base, event);
-      gst_event_unref (event);
       break;
     case GST_EVENT_FLUSH_STOP:
       gst_segment_init (&base->segment, GST_FORMAT_UNDEFINED);
@@ -1324,7 +1324,6 @@ mpegts_base_sink_event (GstPad * pad, GstEvent * event)
       /* Passthrough */
     default:
       res = GST_MPEGTS_BASE_GET_CLASS (base)->push_event (base, event);
-      gst_event_unref (event);
   }
 
   gst_object_unref (base);
@@ -1426,7 +1425,7 @@ static GstFlowReturn
 mpegts_base_scan (MpegTSBase * base)
 {
   GstFlowReturn ret;
-  GstBuffer *buf;
+  GstBuffer *buf = NULL;
   guint i;
   gboolean done = FALSE;
   MpegTSPacketizerPacketReturn pret;
@@ -1447,6 +1446,7 @@ mpegts_base_scan (MpegTSBase * base)
 
     /* Push to packetizer */
     mpegts_packetizer_push (base->packetizer, buf);
+    buf = NULL;
 
     if (mpegts_packetizer_has_packets (base->packetizer)) {
       if (base->seek_offset == -1) {
@@ -1496,6 +1496,7 @@ mpegts_base_scan (MpegTSBase * base)
 
     /* Push to packetizer */
     mpegts_packetizer_push (base->packetizer, buf);
+    buf = NULL;
 
     if (mpegts_packetizer_has_packets (base->packetizer)) {
       while (1) {
@@ -1545,7 +1546,7 @@ mpegts_base_loop (MpegTSBase * base)
       break;
     case BASE_MODE_STREAMING:
     {
-      GstBuffer *buf;
+      GstBuffer *buf = NULL;
 
       GST_DEBUG ("Pulling data from %" G_GUINT64_FORMAT, base->seek_offset);
 
