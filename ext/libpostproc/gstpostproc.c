@@ -279,8 +279,10 @@ gst_ffmpeg_log_callback (void *ptr, int level, const char *fmt, va_list vl)
 static void
 change_context (GstPostProc * postproc, gint width, gint height)
 {
+#ifdef HAVE_ORC
   guint mmx_flags;
   guint altivec_flags;
+#endif
   gint ppflags;
 
   GST_DEBUG_OBJECT (postproc, "change_context, width:%d, height:%d",
@@ -300,8 +302,6 @@ change_context (GstPostProc * postproc, gint width, gint height)
         | (altivec_flags & ORC_TARGET_ALTIVEC_ALTIVEC ? PP_CPU_CAPS_ALTIVEC :
         0);
 #else
-    mmx_flags = 0;
-    altivec_flags = 0;
     ppflags = 0;
 #endif
 
