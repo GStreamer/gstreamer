@@ -623,7 +623,7 @@ typedef enum {
  */
 struct _GstVideoFrame {
   GstVideoInfo info;
-  GstVideoFrameFlags frame_flags;
+  GstVideoFrameFlags flags;
 
   GstBuffer *buffer;
   gpointer   meta;

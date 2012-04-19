@@ -260,8 +260,8 @@ video_buffer_pool_alloc (GstBufferPool * pool, GstBuffer ** buffer,
   if (priv->add_videometa) {
     GST_DEBUG_OBJECT (pool, "adding GstVideoMeta");
 
-    gst_buffer_add_video_meta_full (*buffer, GST_VIDEO_INFO_FORMAT (info),
-        GST_VIDEO_FRAME_FLAG_NONE,
+    gst_buffer_add_video_meta_full (*buffer, GST_VIDEO_FRAME_FLAG_NONE,
+        GST_VIDEO_INFO_FORMAT (info),
         GST_VIDEO_INFO_WIDTH (info), GST_VIDEO_INFO_HEIGHT (info),
         GST_VIDEO_INFO_N_PLANES (info), info->offset, info->stride);
   }

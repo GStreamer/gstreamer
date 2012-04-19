@@ -1038,7 +1038,7 @@ gst_video_frame_map_id (GstVideoFrame * frame, GstVideoInfo * info,
     frame->info.width = meta->width;
     frame->info.height = meta->height;
     frame->id = meta->id;
-    frame->frame_flags = meta->frame_flags;
+    frame->flags = meta->flags;
 
     for (i = 0; i < info->finfo->n_planes; i++)
       gst_video_meta_map (meta, i, &frame->map[i], &frame->data[i],
@@ -1050,14 +1050,14 @@ gst_video_frame_map_id (GstVideoFrame * frame, GstVideoInfo * info,
       goto no_metadata;
 
     frame->id = id;
-    frame->frame_flags = 0;
+    frame->flags = 0;
 
     if (GST_BUFFER_FLAG_IS_SET (buffer, GST_VIDEO_BUFFER_FLAG_TFF))
-      frame->frame_flags |= GST_VIDEO_FRAME_FLAG_TFF;
+      frame->flags |= GST_VIDEO_FRAME_FLAG_TFF;
     if (GST_BUFFER_FLAG_IS_SET (buffer, GST_VIDEO_BUFFER_FLAG_RFF))
-      frame->frame_flags |= GST_VIDEO_FRAME_FLAG_RFF;
+      frame->flags |= GST_VIDEO_FRAME_FLAG_RFF;
     if (GST_BUFFER_FLAG_IS_SET (buffer, GST_VIDEO_BUFFER_FLAG_ONEFIELD))
-      frame->frame_flags |= GST_VIDEO_FRAME_FLAG_ONEFIELD;
+      frame->flags |= GST_VIDEO_FRAME_FLAG_ONEFIELD;
 
     gst_buffer_map (buffer, &frame->map[0], flags);
 
