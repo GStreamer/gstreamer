@@ -197,8 +197,8 @@ gst_v4l2_buffer_pool_alloc_buffer (GstBufferPool * bpool, GstBuffer ** buffer,
         stride[0] = obj->bytesperline;
 
         GST_DEBUG_OBJECT (pool, "adding video meta, stride %d", stride[0]);
-        gst_buffer_add_video_meta_full (newbuf, GST_VIDEO_INFO_FORMAT (info),
-            GST_VIDEO_FRAME_FLAG_NONE, GST_VIDEO_INFO_WIDTH (info),
+        gst_buffer_add_video_meta_full (newbuf, GST_VIDEO_FRAME_FLAG_NONE,
+            GST_VIDEO_INFO_FORMAT (info), GST_VIDEO_INFO_WIDTH (info),
             GST_VIDEO_INFO_HEIGHT (info), GST_VIDEO_INFO_N_PLANES (info),
             offset, stride);
       }
