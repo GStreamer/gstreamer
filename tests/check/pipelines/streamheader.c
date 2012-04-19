@@ -69,7 +69,7 @@ GST_START_TEST (test_multisocketsink_gdp_tag)
   GstPad *pad;
   GMainLoop *loop;
   int pfd[2];
-  GSocket *s[2];
+  GSocket *s[2] = { NULL, };
 
   loop = g_main_loop_new (NULL, FALSE);
 
@@ -185,7 +185,7 @@ GST_START_TEST (test_multisocketsink_gdp_vorbisenc)
   GstPad *pad;
   GMainLoop *loop;
   int pfd[2];
-  GSocket *s[2];
+  GSocket *s[2] = { NULL, };
 
   loop = g_main_loop_new (NULL, FALSE);
 
