@@ -50,6 +50,12 @@ struct _GstVaapiDecoderJpegPrivate {
     guint                       width;
     guint                       height;
     GstVaapiPicture            *current_picture;
+    GstJpegFrameHdr             frame_hdr;
+    GstJpegHuffmanTable         huf_tables[GST_JPEG_MAX_SCAN_COMPONENTS*2];
+    GstJpegQuantTable           quant_tables[GST_JPEG_MAX_SCAN_COMPONENTS];
+    gboolean                    has_huf_table;
+    gboolean                    has_quant_table;
+    guint                       mcu_restart;
     guint                       is_opened       : 1;
     guint                       profile_changed : 1;
     guint                       is_constructed  : 1;
@@ -65,10 +71,8 @@ get_status(GstJpegParserResult result)
     case GST_JPEG_PARSER_OK:
         status = GST_VAAPI_DECODER_STATUS_SUCCESS;
         break;
-    case GST_JPEG_PARSER_FRAME_ERROR:
-    case GST_JPEG_PARSER_SCAN_ERROR:
-    case GST_JPEG_PARSER_HUFFMAN_ERROR:
-    case GST_JPEG_PARSER_QUANT_ERROR:
+    case GST_JPEG_PARSER_BROKEN_DATA:
+    case GST_JPEG_PARSER_NO_SCAN_FOUND:
         status = GST_VAAPI_DECODER_STATUS_ERROR_BITSTREAM_PARSER;
         break;
     default:
@@ -178,7 +182,7 @@ static gboolean
 fill_picture(
     GstVaapiDecoderJpeg *decoder, 
     GstVaapiPicture     *picture,
-    GstJpegImage        *jpeg_image
+    GstJpegFrameHdr     *jpeg_frame_hdr
 )
 {
     VAPictureParameterBufferJPEG *pic_param = picture->param;
@@ -187,23 +191,25 @@ fill_picture(
     g_assert(pic_param);
 
     memset(pic_param, 0, sizeof(VAPictureParameterBufferJPEG));
-    pic_param->type             = jpeg_image->frame_type;
-    pic_param->sample_precision = jpeg_image->sample_precision;
-    pic_param->image_width      = jpeg_image->width;
-    pic_param->image_height     = jpeg_image->height;
+    pic_param->type             = jpeg_frame_hdr->profile;
+    pic_param->sample_precision = jpeg_frame_hdr->sample_precision;
+    pic_param->image_width      = jpeg_frame_hdr->width;
+    pic_param->image_height     = jpeg_frame_hdr->height;
 
     /* XXX: ROI + rotation */
 
-    pic_param->num_components   = jpeg_image->num_components;
+    pic_param->num_components   = jpeg_frame_hdr->num_components;
+    if (jpeg_frame_hdr->num_components > 4)
+        return FALSE;
     for (i = 0; i < pic_param->num_components; i++) {
         pic_param->components[i].component_id =
-            jpeg_image->components[i].identifier;
+            jpeg_frame_hdr->components[i].identifier;
         pic_param->components[i].h_sampling_factor =
-            jpeg_image->components[i].horizontal_factor;
+            jpeg_frame_hdr->components[i].horizontal_factor;
         pic_param->components[i].v_sampling_factor =
-            jpeg_image->components[i].vertical_factor;
+            jpeg_frame_hdr->components[i].vertical_factor;
         pic_param->components[i].quantiser_table_selector =
-            jpeg_image->components[i].quant_table_selector;
+            jpeg_frame_hdr->components[i].quant_table_selector;
     }
     return TRUE;
 }
@@ -211,23 +217,31 @@ fill_picture(
 static gboolean
 fill_quantization_table(
     GstVaapiDecoderJpeg *decoder, 
-    GstVaapiPicture     *picture,
-    GstJpegImage        *jpeg_image
+    GstVaapiPicture     *picture
 )
 {
+    GstVaapiDecoderJpegPrivate * const priv = decoder->priv;
     VAIQMatrixBufferJPEG *iq_matrix;
-    int i = 0;
+    guint i, j;
+
+    if (!priv->has_quant_table)
+        gst_jpeg_get_default_quantization_table(priv->quant_tables, GST_JPEG_MAX_SCAN_COMPONENTS);
     
     picture->iq_matrix = GST_VAAPI_IQ_MATRIX_NEW(JPEG, decoder);
     g_assert(picture->iq_matrix);
     iq_matrix = picture->iq_matrix->param;
     memset(iq_matrix, 0, sizeof(VAIQMatrixBufferJPEG));
-    for (i = 0; i < GST_JPEG_MAX_COMPONENTS; i++) {
-        iq_matrix->precision[i] = jpeg_image->quant_tables[i].quant_precision;
-        if (iq_matrix->precision[i] == 0) /* 8-bit values*/
-          memcpy(iq_matrix->quantiser_matrix[i], jpeg_image->quant_tables[i].quant_table, 64);
+    for (i = 0; i < GST_JPEG_MAX_SCAN_COMPONENTS; i++) {
+        iq_matrix->precision[i] = priv->quant_tables[i].quant_precision;
+        if (iq_matrix->precision[i] == 0) /* 8-bit values */
+            for (j = 0; j < GST_JPEG_MAX_QUANT_ELEMENTS; j++) {
+                iq_matrix->quantiser_matrix[i][j] =
+                    priv->quant_tables[i].quant_table[j];
+            }
         else
-          memcpy(iq_matrix->quantiser_matrix[i], jpeg_image->quant_tables[i].quant_table, 128);
+            memcpy(iq_matrix->quantiser_matrix[i],
+                   priv->quant_tables[i].quant_table,
+                   128);
     }
     return TRUE;
 }
@@ -235,119 +249,65 @@ fill_quantization_table(
 static gboolean
 fill_huffman_table(
     GstVaapiDecoderJpeg *decoder, 
-    GstVaapiPicture     *picture,
-    GstJpegImage        *jpeg_image
+    GstVaapiPicture     *picture
 )
 {
+    GstVaapiDecoderJpegPrivate * const priv = decoder->priv;
     VAHuffmanTableBufferJPEG *huffman_table;
-    int i;
+    guint i;
+
+    if (!priv->has_huf_table)
+        gst_jpeg_get_default_huffman_table(priv->huf_tables);
     
     picture->huf_table = GST_VAAPI_HUFFMAN_TABLE_NEW(JPEG, decoder);
     g_assert(picture->huf_table);
     huffman_table = picture->huf_table->param;
     memset(huffman_table, 0, sizeof(VAHuffmanTableBufferJPEG));
-    for (i = 0; i < GST_JPEG_MAX_COMPONENTS; i++) {
+    for (i = 0; i < GST_JPEG_MAX_SCAN_COMPONENTS; i++) {
         memcpy(huffman_table->huffman_table[i].dc_bits,
-               jpeg_image->dc_huf_tables[i].huf_bits, 
+               priv->huf_tables[i].huf_bits,
                16);
         memcpy(huffman_table->huffman_table[i].dc_huffval,
-               jpeg_image->dc_huf_tables[i].huf_values, 
+               priv->huf_tables[i].huf_values,
                16);
         memcpy(huffman_table->huffman_table[i].ac_bits,
-               jpeg_image->ac_huf_tables[i].huf_bits, 
+               priv->huf_tables[GST_JPEG_MAX_SCAN_COMPONENTS + i].huf_bits,
                16);
         memcpy(huffman_table->huffman_table[i].ac_huffval,
-               jpeg_image->ac_huf_tables[i].huf_values, 
+               priv->huf_tables[GST_JPEG_MAX_SCAN_COMPONENTS + i].huf_values,
                256);
     }
     return TRUE;
 }
 
 static guint
-get_max_horizontal_samples(GstJpegImage *jpeg)
+get_max_horizontal_samples(GstJpegFrameHdr *frame_hdr)
 {
     guint i, max_factor = 0;
 
-    for (i = 0; i < jpeg->num_components; i++) {
-        if (jpeg->components[i].horizontal_factor > max_factor)
-            max_factor = jpeg->components[i].horizontal_factor;
+    for (i = 0; i < frame_hdr->num_components; i++) {
+        if (frame_hdr->components[i].horizontal_factor > max_factor)
+            max_factor = frame_hdr->components[i].horizontal_factor;
     }
     return max_factor;
 }
 
 static guint
-get_max_vertical_samples(GstJpegImage *jpeg)
+get_max_vertical_samples(GstJpegFrameHdr *frame_hdr)
 {
     guint i, max_factor = 0;
 
-    for (i = 0; i < jpeg->num_components; i++) {
-        if (jpeg->components[i].vertical_factor > max_factor)
-            max_factor = jpeg->components[i].vertical_factor;
+    for (i = 0; i < frame_hdr->num_components; i++) {
+        if (frame_hdr->components[i].vertical_factor > max_factor)
+            max_factor = frame_hdr->components[i].vertical_factor;
     }
     return max_factor;
-}
-
-static gboolean
-fill_slices(
-    GstVaapiDecoderJpeg *decoder, 
-    GstVaapiPicture     *picture,
-    GstJpegImage        *jpeg_image
-)
-{
-    VASliceParameterBufferJPEG *slice_param;
-    GstVaapiSlice *gst_slice;
-    int i;
-    const guint8 *sos_src;
-    guint32 sos_length;
-    guint total_h_samples, total_v_samples;
-
-    while (gst_jpeg_get_left_size(jpeg_image)) {
-        sos_src = gst_jpeg_get_position(jpeg_image);
-        sos_length = gst_jpeg_skip_to_scan_end(jpeg_image);
-        if (!sos_length)
-            break;
-        gst_slice = GST_VAAPI_SLICE_NEW(JPEG, decoder, sos_src, sos_length);
-        slice_param = gst_slice->param;        
-        slice_param->num_components = jpeg_image->current_scan.num_components;
-        for (i = 0; i < slice_param->num_components; i++) {
-            slice_param->components[i].component_id = jpeg_image->current_scan.components[i].component_selector;
-            slice_param->components[i].dc_selector = jpeg_image->current_scan.components[i].dc_selector;
-            slice_param->components[i].ac_selector = jpeg_image->current_scan.components[i].ac_selector;
-        }
-        slice_param->restart_interval = jpeg_image->restart_interval;
-        
-        if (jpeg_image->current_scan.num_components == 1) { /*non-interleaved*/
-            slice_param->slice_horizontal_position = 0;
-            slice_param->slice_vertical_position = 0;
-            /* Y mcu numbers*/
-            if (slice_param->components[0].component_id == jpeg_image->components[0].identifier) {
-                slice_param->num_mcus = (jpeg_image->width/8)*(jpeg_image->height/8);
-            } else { /*Cr, Cb mcu numbers*/
-                slice_param->num_mcus = (jpeg_image->width/16)*(jpeg_image->height/16);
-            }
-        } else { /* interleaved */
-            slice_param->slice_horizontal_position = 0;
-            slice_param->slice_vertical_position = 0;
-            total_v_samples = get_max_vertical_samples(jpeg_image);
-            total_h_samples = get_max_horizontal_samples(jpeg_image);
-            slice_param->num_mcus = ((jpeg_image->width + total_h_samples*8 - 1)/(total_h_samples*8)) * 
-                                    ((jpeg_image->height + total_v_samples*8 -1)/(total_v_samples*8));
-        }
-        
-        gst_vaapi_picture_add_slice(picture, gst_slice);
-        if (!gst_jpeg_parse_next_scan(jpeg_image)) {
-            break;
-        }
-    }
-
-    if (picture->slices && picture->slices->len)
-        return TRUE;
-    return FALSE;
 }
 
 static GstVaapiDecoderStatus
 decode_picture(
     GstVaapiDecoderJpeg *decoder, 
+    guint8               profile,
     guchar              *buf,
     guint                buf_size,
     GstClockTime         pts
@@ -355,28 +315,41 @@ decode_picture(
 {
     GstVaapiDecoderJpegPrivate * const priv = decoder->priv;
     GstVaapiPicture *picture = NULL;
+    GstJpegFrameHdr *jpeg_frame_hdr = &priv->frame_hdr;
     GstVaapiDecoderStatus status = GST_VAAPI_DECODER_STATUS_SUCCESS;
-    GstJpegImage jpeg_image;
     GstJpegParserResult result;
 
     /* parse jpeg */
-    memset(&jpeg_image, 0, sizeof(jpeg_image));
-    result = gst_jpeg_parse_image(&jpeg_image, buf, buf_size);
+    memset(jpeg_frame_hdr, 0, sizeof(GstJpegFrameHdr));
+    switch (profile) {
+        case GST_JPEG_MARKER_SOF_MIN:
+            jpeg_frame_hdr->profile = GST_JPEG_MARKER_SOF_MIN;
+            priv->profile = GST_VAAPI_PROFILE_JPEG_BASELINE;
+            break;
+        default:
+            GST_WARNING("Jpeg profile was not supported.");
+            return GST_VAAPI_DECODER_STATUS_ERROR_UNSUPPORTED_PROFILE;
+    }
+
+    result = gst_jpeg_parse_frame_hdr(jpeg_frame_hdr, buf, buf_size, 0);
     if (result != GST_JPEG_PARSER_OK) {
         GST_ERROR("failed to parse image");
         return get_status(result);
     }
 
     /* set info to va parameters in current picture*/
-    priv->profile = GST_VAAPI_PROFILE_JPEG_BASELINE;
-    priv->height  = jpeg_image.height;
-    priv->width   = jpeg_image.width;
-    
+    priv->height  = jpeg_frame_hdr->height;
+    priv->width   = jpeg_frame_hdr->width;
+
     status = ensure_context(decoder);
     if (status != GST_VAAPI_DECODER_STATUS_SUCCESS) {
         GST_ERROR("failed to reset context");
         return status;
     }
+
+    if (priv->current_picture &&
+        (status = decode_current_picture(decoder)) != GST_VAAPI_DECODER_STATUS_SUCCESS)
+        return status;
 
     picture = GST_VAAPI_PICTURE_NEW(JPEG, decoder);
     if (!picture) {
@@ -386,23 +359,8 @@ decode_picture(
     gst_vaapi_picture_replace(&priv->current_picture, picture);
     gst_vaapi_picture_unref(picture);
 
-    if (!fill_picture(decoder, picture, &jpeg_image))
+    if (!fill_picture(decoder, picture, jpeg_frame_hdr))
         return GST_VAAPI_DECODER_STATUS_ERROR_UNKNOWN;
-
-    if (!fill_quantization_table(decoder, picture, &jpeg_image)) {
-        GST_ERROR("failed to fill in quantization table");
-        return GST_VAAPI_DECODER_STATUS_ERROR_UNKNOWN;
-    }
-
-    if (!fill_huffman_table(decoder, picture, &jpeg_image)) {
-        GST_ERROR("failed to fill in huffman table");
-        return GST_VAAPI_DECODER_STATUS_ERROR_UNKNOWN;
-    }
-
-    if (!fill_slices(decoder, picture, &jpeg_image)) {
-        GST_ERROR("failed to fill in all scans");
-        return GST_VAAPI_DECODER_STATUS_ERROR_UNKNOWN;
-    }
 
     /* Update presentation time */
     picture->pts = pts;
@@ -410,12 +368,215 @@ decode_picture(
 }
 
 static GstVaapiDecoderStatus
+decode_huffman_table(
+    GstVaapiDecoderJpeg *decoder,
+    guchar              *buf,
+    guint                buf_size
+)
+{
+    GstVaapiDecoderJpegPrivate * const priv = decoder->priv;
+    GstJpegParserResult result;
+
+    result = gst_jpeg_parse_huffman_table(
+        priv->huf_tables,
+        buf, buf_size, 0
+    );
+    if (result != GST_JPEG_PARSER_OK) {
+        GST_DEBUG("failed to parse Huffman table");
+        return get_status(result);
+    }
+    priv->has_huf_table = TRUE;
+    return GST_VAAPI_DECODER_STATUS_SUCCESS;
+}
+
+static GstVaapiDecoderStatus
+decode_quant_table(
+    GstVaapiDecoderJpeg *decoder,
+    guchar              *buf,
+    guint                buf_size
+)
+{
+    GstVaapiDecoderJpegPrivate * const priv = decoder->priv;
+    GstJpegParserResult result;
+
+    result = gst_jpeg_parse_quant_table(
+        priv->quant_tables,
+        GST_JPEG_MAX_SCAN_COMPONENTS,
+        buf, buf_size, 0
+    );
+    if (result != GST_JPEG_PARSER_OK) {
+        GST_DEBUG("failed to parse quantization table");
+        return get_status(result);
+    }
+    priv->has_quant_table = TRUE;
+    return GST_VAAPI_DECODER_STATUS_SUCCESS;
+}
+
+static GstVaapiDecoderStatus
+decode_restart_interval(
+    GstVaapiDecoderJpeg *decoder,
+    guchar              *buf,
+    guint                buf_size
+)
+{
+    GstVaapiDecoderJpegPrivate * const priv = decoder->priv;
+    GstJpegParserResult result;
+
+    result = gst_jpeg_parse_restart_interval(
+        &priv->mcu_restart,
+        buf, buf_size, 0
+    );
+    if (result != GST_JPEG_PARSER_OK) {
+        GST_DEBUG("failed to parse restart interval");
+        return get_status(result);
+    }
+    return GST_VAAPI_DECODER_STATUS_SUCCESS;
+}
+
+static gint32
+scan_to_end(const guint8 *start, guint32 size)
+{
+    const guint8 *pos = start, *end = start + size;
+
+    for (; pos < end; ++pos) {
+        if (*pos != 0xFF)
+            continue;
+        while (*pos == 0xFF && pos + 1 < end)
+            ++pos;
+        if (*pos == 0x00 || *pos == 0xFF ||
+            (*pos >= GST_JPEG_MARKER_RST_MIN && *pos <= GST_JPEG_MARKER_RST_MAX))
+            continue;
+        break;
+    }
+    if (pos >= end)
+        return size;
+    return pos - start - 1;
+}
+
+static gboolean
+scan_to_next_scan(guint8 *data,  guint32 size,
+           guint8 **scan, guint32 *scan_header_size, guint32 *scan_left_size)
+{
+    GList *seg_list = NULL;
+    gboolean ret = FALSE;
+
+    if (!data || !size)
+        return FALSE;
+
+    seg_list = gst_jpeg_parse(data, size, 0);
+    for (; seg_list; seg_list = seg_list->next) {
+        GstJpegTypeOffsetSize * const seg = seg_list->data;
+        if (seg->type != GST_JPEG_MARKER_SOS)
+            continue;
+        *scan = seg->offset + data;
+        *scan_header_size = seg->size;
+        *scan_left_size = size - seg->offset - seg->size;
+        ret = TRUE;
+        break;
+    }
+    g_list_free_full(seg_list, g_free);
+    return ret;
+}
+
+static GstVaapiDecoderStatus
+decode_scan(
+    GstVaapiDecoderJpeg *decoder,
+    guchar              *scan,
+    guint                scan_header_size,
+    guint                scan_left_size)
+{
+    GstVaapiDecoderJpegPrivate * const priv = decoder->priv;
+    GstVaapiPicture *picture = priv->current_picture;
+    GstJpegParserResult result = GST_JPEG_PARSER_OK;
+    VASliceParameterBufferJPEG *slice_param;
+    GstVaapiSlice *gst_slice;
+    guint8 *mcu_start, *next_mark;
+    guint8 *buf_end = scan + scan_header_size + scan_left_size;
+    guint mcu_size;
+    guint total_h_samples, total_v_samples;
+    GstJpegScanHdr  scan_hdr;
+    guint i;
+
+    if (!picture) {
+        GST_ERROR ("There is no VAPicture before decoding scan.");
+        return GST_VAAPI_DECODER_STATUS_ERROR_INVALID_SURFACE;
+    }
+
+    if (!fill_quantization_table(decoder, picture)) {
+        GST_ERROR("Failed to fill in quantization table");
+        return GST_VAAPI_DECODER_STATUS_ERROR_UNKNOWN;
+    }
+
+    if (!fill_huffman_table(decoder, picture)) {
+        GST_ERROR("Failed to fill in huffman table");
+        return GST_VAAPI_DECODER_STATUS_ERROR_UNKNOWN;
+    }
+
+    mcu_size = scan_left_size;
+    while (scan_left_size) {
+        memset(&scan_hdr, 0, sizeof(scan_hdr));
+        result = gst_jpeg_parse_scan_hdr(&scan_hdr, scan, scan_header_size, 0);
+        if (result != GST_JPEG_PARSER_OK) {
+            GST_DEBUG("Jpeg parsed scan failed.");
+            return get_status(result);
+        }
+        mcu_start = scan + scan_header_size;
+        mcu_size = scan_to_end(mcu_start, scan_left_size);
+
+        gst_slice = GST_VAAPI_SLICE_NEW(JPEG, decoder, mcu_start, mcu_size);
+        gst_vaapi_picture_add_slice(picture, gst_slice);
+
+        slice_param = gst_slice->param;
+        slice_param->num_components = scan_hdr.num_components;
+        for (i = 0; i < scan_hdr.num_components; i++) {
+            slice_param->components[i].component_id = scan_hdr.components[i].component_selector;
+            slice_param->components[i].dc_selector = scan_hdr.components[i].dc_selector;
+            slice_param->components[i].ac_selector = scan_hdr.components[i].ac_selector;
+        }
+        slice_param->restart_interval = priv->mcu_restart;
+        if (scan_hdr.num_components == 1) { /*non-interleaved*/
+            slice_param->slice_horizontal_position = 0;
+            slice_param->slice_vertical_position = 0;
+            /* Y mcu numbers*/
+            if (slice_param->components[0].component_id == priv->frame_hdr.components[0].identifier) {
+                slice_param->num_mcus = (priv->frame_hdr.width/8)*(priv->frame_hdr.height/8);
+            } else { /*Cr, Cb mcu numbers*/
+                slice_param->num_mcus = (priv->frame_hdr.width/16)*(priv->frame_hdr.height/16);
+            }
+        } else { /* interleaved */
+            slice_param->slice_horizontal_position = 0;
+            slice_param->slice_vertical_position = 0;
+            total_v_samples = get_max_vertical_samples(&priv->frame_hdr);
+            total_h_samples = get_max_horizontal_samples(&priv->frame_hdr);
+            slice_param->num_mcus = ((priv->frame_hdr.width + total_h_samples*8 - 1)/(total_h_samples*8)) *
+                                    ((priv->frame_hdr.height + total_v_samples*8 -1)/(total_v_samples*8));
+        }
+
+        next_mark = mcu_start + mcu_size;
+        scan_left_size = buf_end - next_mark;
+        if (scan_left_size < 4) /* Mark_code(2-bytes) + header_length(2-bytes)*/
+            break;
+
+        if (!scan_to_next_scan(next_mark, scan_left_size, &scan, &scan_header_size, &scan_left_size))
+            break;
+    }
+
+    if (picture->slices && picture->slices->len)
+        return GST_VAAPI_DECODER_STATUS_SUCCESS;
+    return GST_VAAPI_DECODER_STATUS_ERROR_NO_DATA;
+}
+
+static GstVaapiDecoderStatus
 decode_buffer(GstVaapiDecoderJpeg *decoder, GstBuffer *buffer)
 {
-    GstVaapiDecoderStatus status;
+    GstVaapiDecoderJpegPrivate * const priv = decoder->priv;
+    GstVaapiDecoderStatus status = GST_VAAPI_DECODER_STATUS_ERROR_NO_DATA;
     GstClockTime pts;
     guchar *buf;
     guint buf_size;
+    GList *seg_list = NULL;
+    gboolean scan_found = FALSE;
+    GstJpegTypeOffsetSize *seg;
 
     buf      = GST_BUFFER_DATA(buffer);
     buf_size = GST_BUFFER_SIZE(buffer);
@@ -425,10 +586,53 @@ decode_buffer(GstVaapiDecoderJpeg *decoder, GstBuffer *buffer)
     pts = GST_BUFFER_TIMESTAMP(buffer);
     g_assert(GST_CLOCK_TIME_IS_VALID(pts));
 
-    status = decode_picture(decoder, buf, buf_size, pts);
-    if (status != GST_VAAPI_DECODER_STATUS_SUCCESS)
-        return status;
-    return decode_current_picture(decoder);
+    priv->has_quant_table = FALSE;
+    priv->has_huf_table = FALSE;
+    priv->mcu_restart = 0;
+
+    seg_list = gst_jpeg_parse(buf, buf_size, 0);
+    for (; seg_list && !scan_found; seg_list = seg_list->next) {
+        seg = seg_list->data;
+        g_assert(seg);
+        switch (seg->type) {
+        case GST_JPEG_MARKER_DHT:
+            status = decode_huffman_table(decoder, buf + seg->offset, seg->size);
+            break;
+        case GST_JPEG_MARKER_DAC:
+            GST_ERROR("unsupported arithmetic decoding");
+            status = GST_VAAPI_DECODER_STATUS_ERROR_UNSUPPORTED_PROFILE;
+            break;
+        case GST_JPEG_MARKER_DQT:
+            status = decode_quant_table(decoder, buf + seg->offset, seg->size);
+            break;
+        case GST_JPEG_MARKER_DRI:
+            status = decode_restart_interval(decoder, buf + seg->offset, seg->size);
+            break;
+        case GST_JPEG_MARKER_SOS:
+            status = decode_scan(decoder, buf + seg->offset, seg->size, buf_size - seg->offset - seg->size);
+            scan_found = TRUE;
+            break;
+        default:
+            if (seg->type >= GST_JPEG_MARKER_SOF_MIN &&
+                seg->type <= GST_JPEG_MARKER_SOF_MAX)
+                status = decode_picture(decoder, seg->type, buf + seg->offset, seg->size, pts);
+            else {
+                GST_WARNING("unsupported marker (0x%02x)", seg->type);
+                status = GST_VAAPI_DECODER_STATUS_ERROR_BITSTREAM_PARSER;
+            }
+            break;
+        }
+    }
+
+    /* clean seg_list */
+    g_list_free_full(seg_list, g_free);
+
+    if (status == GST_VAAPI_DECODER_STATUS_SUCCESS) {
+        if (scan_found)
+            return decode_current_picture(decoder);
+        return GST_VAAPI_DECODER_STATUS_ERROR_NO_DATA;
+    }
+    return status;
 }
 
 GstVaapiDecoderStatus
@@ -494,9 +698,15 @@ gst_vaapi_decoder_jpeg_init(GstVaapiDecoderJpeg *decoder)
     priv->width                 = 0;
     priv->height                = 0;
     priv->current_picture       = NULL;
+    priv->has_huf_table         = FALSE;
+    priv->has_quant_table       = FALSE;
+    priv->mcu_restart           = 0;
     priv->is_opened             = FALSE;
     priv->profile_changed       = TRUE;
     priv->is_constructed        = FALSE;
+    memset(&priv->frame_hdr, 0, sizeof(priv->frame_hdr));
+    memset(priv->huf_tables, 0, sizeof(priv->huf_tables));
+    memset(priv->quant_tables, 0, sizeof(priv->quant_tables));
 }
 
 /**

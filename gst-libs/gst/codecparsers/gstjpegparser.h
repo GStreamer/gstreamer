@@ -317,7 +317,6 @@ GstJpegParserResult     gst_jpeg_parse_quant_table      (GstJpegQuantTable *quan
 /**
  * gst_jpeg_parse_huffman_table:
  * @huf_tables: (out): The #GstJpegHuffmanTable structure to fill in
- * @num_huf_tables: The number of allocated Huffman tables in @huf_tables
  * @data: The data from which to parse the Huffman table
  * @size: The size of @data
  * @offset: The offset in bytes from which to start parsing @data
@@ -327,13 +326,14 @@ GstJpegParserResult     gst_jpeg_parse_quant_table      (GstJpegQuantTable *quan
  * Note: @huf_tables represents the user-allocated Huffman tables
  * based on the number of scan components. That is, the parser writes
  * the output Huffman table at the index specified by the Huffman
- * table destination identifier (Th). So, the array of Huffman tables
- * shall be large enough to hold the table for the last component.
+ * table destination identifier (Th). The first array of
+ * <GST_JPEG_MAX_SCAN_COMPONENTS> Huffman tables are related
+ * to dc tables; The second array of <GST_JPEG_MAX_SCAN_COMPONENTS>
+ * of Huffman tables are related to ac tables.
  *
  * Returns: a #GstJpegParserResult
  */
-GstJpegParserResult     gst_jpeg_parse_huffman_table    (GstJpegHuffmanTable *huf_tables,
-                                                         guint num_huf_tables,
+GstJpegParserResult     gst_jpeg_parse_huffman_table    (GstJpegHuffmanTable huf_tables[GST_JPEG_MAX_SCAN_COMPONENTS*2],
                                                          const guint8 * data,
                                                          gsize size,
                                                          guint offset);
@@ -351,6 +351,29 @@ GstJpegParserResult     gst_jpeg_parse_restart_interval (guint * interval,
                                                          const guint8 * data,
                                                          gsize size,
                                                          guint offset);
+
+/**
+ * gst_jpeg_get_default_huffman_table:
+ * @huf_tables: (out): The default dc/ac hufman tables to fill in
+ *
+ * DC huffman tables fill in the first 4 arrays.
+ * AC huffman tables fill in the last 4 arrays.
+ *
+ * Returns: void
+ */
+void                    gst_jpeg_get_default_huffman_table (
+                                                   GstJpegHuffmanTable huf_tables[GST_JPEG_MAX_SCAN_COMPONENTS*2]);
+
+/**
+ * gst_jpeg_get_default_quantization_table:
+ * @quant_tables: (out): The default luma/chroma quant-tables in zigzag mode
+ * @num_quant_tables: The number of allocated quantization tables in @quant_tables
+ *
+ * Fills in @quant_tables with the default quantization tables, as
+ * specified by the JPEG standard.
+ */
+void                    gst_jpeg_get_default_quantization_table (GstJpegQuantTable *quant_tables,
+                                                            guint num_quant_tables);
 
 G_END_DECLS
 
