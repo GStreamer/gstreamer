@@ -124,6 +124,8 @@ typedef struct
   guint8 continuity_counter;
   guint8 *payload;
 
+  GstMapInfo bufmap;
+
   guint8 *data_start;
   guint8 *data_end;
   guint8 *data;
@@ -176,7 +178,7 @@ MpegTSPacketizerPacketReturn mpegts_packetizer_next_packet (MpegTSPacketizer2 *p
 MpegTSPacketizerPacketReturn
 mpegts_packetizer_process_next_packet(MpegTSPacketizer2 * packetizer);
 void mpegts_packetizer_clear_packet (MpegTSPacketizer2 *packetizer,
-  MpegTSPacketizerPacket *packet);
+				     MpegTSPacketizerPacket *packet);
 void mpegts_packetizer_remove_stream(MpegTSPacketizer2 *packetizer,
   gint16 pid);
 

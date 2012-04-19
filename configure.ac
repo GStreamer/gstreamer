@@ -314,7 +314,7 @@ GST_PLUGINS_NONPORTED=" aiff asfmux \
  apexsink cdaudio cog curl dc1394 dirac directfb resindvd \
  gsettings jp2k ladspa mimic \
  musepack musicbrainz nas neon ofa openal opencv rsvg sdl sndfile soundtouch spandsp spc timidity \
- wildmidi xvid lv2 teletextdec dvb mpegtsdemux"
+ wildmidi xvid lv2 teletextdec dvb"
 AC_SUBST(GST_PLUGINS_NONPORTED)
 
 dnl these are all the gst plug-ins, compilable without additional libs

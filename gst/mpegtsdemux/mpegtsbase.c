@@ -81,14 +81,15 @@ static void mpegts_base_dispose (GObject * object);
 static void mpegts_base_finalize (GObject * object);
 static void mpegts_base_free_program (MpegTSBaseProgram * program);
 static void mpegts_base_free_stream (MpegTSBaseStream * ptream);
-static gboolean mpegts_base_sink_activate (GstPad * pad);
-static gboolean mpegts_base_sink_activate_pull (GstPad * pad, gboolean active);
-static gboolean mpegts_base_sink_activate_push (GstPad * pad, gboolean active);
-static GstFlowReturn mpegts_base_chain (GstPad * pad, GstBuffer * buf);
-static gboolean mpegts_base_sink_event (GstPad * pad, GstEvent * event);
+static gboolean mpegts_base_sink_activate (GstPad * pad, GstObject * parent);
+static gboolean mpegts_base_sink_activate_mode (GstPad * pad,
+    GstObject * parent, GstPadMode mode, gboolean active);
+static GstFlowReturn mpegts_base_chain (GstPad * pad, GstObject * parent,
+    GstBuffer * buf);
+static gboolean mpegts_base_sink_event (GstPad * pad, GstObject * parent,
+    GstEvent * event);
 static GstStateChangeReturn mpegts_base_change_state (GstElement * element,
     GstStateChange transition);
-static void _extra_init (GType type);
 static void mpegts_base_get_tags_from_sdt (MpegTSBase * base,
     GstStructure * sdt_info);
 static void mpegts_base_get_tags_from_eit (MpegTSBase * base,
@@ -97,9 +98,20 @@ static gboolean
 remove_each_program (gpointer key, MpegTSBaseProgram * program,
     MpegTSBase * base);
 
-GST_BOILERPLATE_FULL (MpegTSBase, mpegts_base, GstElement, GST_TYPE_ELEMENT,
-    _extra_init);
+static void
+_extra_init (void)
+{
+  QUARK_PROGRAMS = g_quark_from_string ("programs");
+  QUARK_PROGRAM_NUMBER = g_quark_from_string ("program-number");
+  QUARK_PID = g_quark_from_string ("pid");
+  QUARK_PCR_PID = g_quark_from_string ("pcr-pid");
+  QUARK_STREAMS = g_quark_from_string ("streams");
+  QUARK_STREAM_TYPE = g_quark_from_string ("stream-type");
+}
 
+#define mpegts_base_parent_class parent_class
+G_DEFINE_TYPE_WITH_CODE (MpegTSBase, mpegts_base, GST_TYPE_ELEMENT,
+    _extra_init ());
 
 static const guint32 crc_tab[256] = {
   0x00000000, 0x04c11db7, 0x09823b6e, 0x0d4326d9, 0x130476dc, 0x17c56b6b,
@@ -161,25 +173,6 @@ mpegts_base_calc_crc32 (guint8 * data, guint datalen)
 }
 
 static void
-_extra_init (GType type)
-{
-  QUARK_PROGRAMS = g_quark_from_string ("programs");
-  QUARK_PROGRAM_NUMBER = g_quark_from_string ("program-number");
-  QUARK_PID = g_quark_from_string ("pid");
-  QUARK_PCR_PID = g_quark_from_string ("pcr-pid");
-  QUARK_STREAMS = g_quark_from_string ("streams");
-  QUARK_STREAM_TYPE = g_quark_from_string ("stream-type");
-}
-
-static void
-mpegts_base_base_init (gpointer klass)
-{
-  GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
-
-  gst_element_class_add_static_pad_template (element_class, &sink_template);
-}
-
-static void
 mpegts_base_class_init (MpegTSBaseClass * klass)
 {
   GObjectClass *gobject_class;
@@ -187,6 +180,9 @@ mpegts_base_class_init (MpegTSBaseClass * klass)
 
   element_class = GST_ELEMENT_CLASS (klass);
   element_class->change_state = mpegts_base_change_state;
+
+  gst_element_class_add_pad_template (element_class,
+      gst_static_pad_template_get (&sink_template));
 
   gobject_class = G_OBJECT_CLASS (klass);
   gobject_class->set_property = mpegts_base_set_property;
@@ -237,14 +233,12 @@ mpegts_base_reset (MpegTSBase * base)
 }
 
 static void
-mpegts_base_init (MpegTSBase * base, MpegTSBaseClass * klass)
+mpegts_base_init (MpegTSBase * base)
 {
   base->sinkpad = gst_pad_new_from_static_template (&sink_template, "sink");
   gst_pad_set_activate_function (base->sinkpad, mpegts_base_sink_activate);
-  gst_pad_set_activatepull_function (base->sinkpad,
-      mpegts_base_sink_activate_pull);
-  gst_pad_set_activatepush_function (base->sinkpad,
-      mpegts_base_sink_activate_push);
+  gst_pad_set_activatemode_function (base->sinkpad,
+      mpegts_base_sink_activate_mode);
   gst_pad_set_chain_function (base->sinkpad, mpegts_base_chain);
   gst_pad_set_event_function (base->sinkpad, mpegts_base_sink_event);
   gst_element_add_pad (GST_ELEMENT (base), base->sinkpad);
@@ -495,21 +489,31 @@ mpegts_base_free_program (MpegTSBaseProgram * program)
 
 /* FIXME : This is being called by tsdemux::find_timestamps()
  * We need to avoid re-entrant code like that */
+static gboolean
+mpegts_base_stop_program (MpegTSBase * base, MpegTSBaseProgram * program)
+{
+  MpegTSBaseClass *klass = GST_MPEGTS_BASE_GET_CLASS (base);
+
+  GST_DEBUG_OBJECT (base, "program_number : %d", program->program_number);
+
+  if (klass->program_stopped)
+    klass->program_stopped (base, program);
+
+  return TRUE;
+}
+
 void
 mpegts_base_remove_program (MpegTSBase * base, gint program_number)
 {
   MpegTSBaseProgram *program;
-  MpegTSBaseClass *klass = GST_MPEGTS_BASE_GET_CLASS (base);
 
   GST_DEBUG_OBJECT (base, "program_number : %d", program_number);
+  program =
+      (MpegTSBaseProgram *) g_hash_table_lookup (base->programs,
+      GINT_TO_POINTER (program_number));
+  if (program)
+    mpegts_base_stop_program (base, program);
 
-  if (klass->program_stopped) {
-    program =
-        (MpegTSBaseProgram *) g_hash_table_lookup (base->programs,
-        GINT_TO_POINTER (program_number));
-    if (program)
-      klass->program_stopped (base, program);
-  }
   g_hash_table_remove (base->programs, GINT_TO_POINTER (program_number));
 }
 
@@ -1056,11 +1060,15 @@ mpegts_base_handle_psi (MpegTSBase * base, MpegTSPacketizerSection * section)
 
   /* table ids 0x70 - 0x73 do not have a crc */
   if (G_LIKELY (section->table_id < 0x70 || section->table_id > 0x73)) {
-    if (G_UNLIKELY (mpegts_base_calc_crc32 (GST_BUFFER_DATA (section->buffer),
-                GST_BUFFER_SIZE (section->buffer)) != 0)) {
+    GstMapInfo map;
+
+    gst_buffer_map (section->buffer, &map, GST_MAP_READ);
+    if (G_UNLIKELY (mpegts_base_calc_crc32 (map.data, map.size) != 0)) {
+      gst_buffer_unmap (section->buffer, &map);
       GST_WARNING_OBJECT (base, "bad crc in psi pid 0x%x", section->pid);
       return FALSE;
     }
+    gst_buffer_unmap (section->buffer, &map);
   }
 
   switch (section->table_id) {
@@ -1195,7 +1203,7 @@ mpegts_base_get_tags_from_sdt (MpegTSBase * base, GstStructure * sdt_info)
 
     program = mpegts_base_get_program (base, program_number);
     if (program && !program->tags) {
-      program->tags = gst_tag_list_new_full (GST_TAG_ARTIST,
+      program->tags = gst_tag_list_new (GST_TAG_ARTIST,
           gst_structure_get_string (service, "name"), NULL);
     }
   }
@@ -1236,7 +1244,7 @@ mpegts_base_get_tags_from_eit (MpegTSBase * base, GstStructure * eit_info)
         gst_structure_get_uint (event, "duration", &duration);
 
         program->event_id = event_id;
-        program->tags = gst_tag_list_new_full (GST_TAG_TITLE,
+        program->tags = gst_tag_list_new (GST_TAG_TITLE,
             title, GST_TAG_DURATION, duration * GST_SECOND, NULL);
       }
     }
@@ -1280,37 +1288,28 @@ mpegts_base_flush (MpegTSBase * base)
 }
 
 static gboolean
-mpegts_base_sink_event (GstPad * pad, GstEvent * event)
+mpegts_base_sink_event (GstPad * pad, GstObject * parent, GstEvent * event)
 {
   gboolean res = TRUE;
-  MpegTSBase *base = GST_MPEGTS_BASE (gst_object_get_parent (GST_OBJECT (pad)));
+  MpegTSBase *base = GST_MPEGTS_BASE (parent);
 
   GST_WARNING_OBJECT (base, "Got event %s",
       gst_event_type_get_name (GST_EVENT_TYPE (event)));
 
   switch (GST_EVENT_TYPE (event)) {
-    case GST_EVENT_NEWSEGMENT:
-    {
-      gboolean update;
-      gdouble rate, applied_rate;
-      GstFormat format;
-      gint64 start, stop, position;
-
-      gst_event_parse_new_segment_full (event, &update, &rate, &applied_rate,
-          &format, &start, &stop, &position);
-      GST_DEBUG_OBJECT (base,
-          "Segment update:%d, rate:%f, applied_rate:%f, format:%s", update,
-          rate, applied_rate, gst_format_get_name (format));
-      GST_DEBUG_OBJECT (base,
-          "        start:%" G_GINT64_FORMAT ", stop:%" G_GINT64_FORMAT
-          ", position:%" G_GINT64_FORMAT, start, stop, position);
-      gst_segment_set_newsegment_full (&base->segment, update, rate,
-          applied_rate, format, start, stop, position);
+    case GST_EVENT_SEGMENT:
+      gst_event_copy_segment (event, &base->segment);
       gst_event_unref (event);
-    }
+      break;
+    case GST_EVENT_STREAM_START:
+      gst_event_unref (event);
       break;
     case GST_EVENT_EOS:
       res = gst_mpegts_base_handle_eos (base);
+      gst_event_unref (event);
+      break;
+    case GST_EVENT_CAPS:
+      /* FIXME, do something */
       gst_event_unref (event);
       break;
     case GST_EVENT_FLUSH_START:
@@ -1326,7 +1325,6 @@ mpegts_base_sink_event (GstPad * pad, GstEvent * event)
       res = GST_MPEGTS_BASE_GET_CLASS (base)->push_event (base, event);
   }
 
-  gst_object_unref (base);
   return res;
 }
 
@@ -1362,7 +1360,7 @@ mpegts_base_push (MpegTSBase * base, MpegTSPacketizerPacket * packet,
 }
 
 static GstFlowReturn
-mpegts_base_chain (GstPad * pad, GstBuffer * buf)
+mpegts_base_chain (GstPad * pad, GstObject * parent, GstBuffer * buf)
 {
   GstFlowReturn res = GST_FLOW_OK;
   MpegTSBase *base;
@@ -1371,7 +1369,7 @@ mpegts_base_chain (GstPad * pad, GstBuffer * buf)
   MpegTSPacketizer2 *packetizer;
   MpegTSPacketizerPacket packet;
 
-  base = GST_MPEGTS_BASE (gst_object_get_parent (GST_OBJECT (pad)));
+  base = GST_MPEGTS_BASE (parent);
   packetizer = base->packetizer;
 
   if (G_UNLIKELY (base->queried_latency == FALSE)) {
@@ -1379,8 +1377,14 @@ mpegts_base_chain (GstPad * pad, GstBuffer * buf)
   }
 
   mpegts_packetizer_push (base->packetizer, buf);
-  while (((pret = mpegts_packetizer_next_packet (base->packetizer,
-                  &packet)) != PACKET_NEED_MORE) && res == GST_FLOW_OK) {
+
+  while (res == GST_FLOW_OK) {
+    pret = mpegts_packetizer_next_packet (base->packetizer, &packet);
+
+    /* If we don't have enough data, return */
+    if (G_UNLIKELY (pret == PACKET_NEED_MORE))
+      break;
+
     if (G_UNLIKELY (pret == PACKET_BAD))
       /* bad header, skip the packet */
       goto next;
@@ -1417,7 +1421,6 @@ mpegts_base_chain (GstPad * pad, GstBuffer * buf)
     mpegts_packetizer_clear_packet (base->packetizer, &packet);
   }
 
-  gst_object_unref (base);
   return res;
 }
 
@@ -1480,7 +1483,7 @@ mpegts_base_scan (MpegTSBase * base)
 
   /* Get the size of upstream */
   format = GST_FORMAT_BYTES;
-  if (!gst_pad_query_peer_duration (base->sinkpad, &format, &tmpval))
+  if (!gst_pad_peer_query_duration (base->sinkpad, format, &tmpval))
     goto beach;
   upstream_size = tmpval;
   done = FALSE;
@@ -1554,8 +1557,8 @@ mpegts_base_loop (MpegTSBase * base)
           100 * base->packetsize, &buf);
       if (G_UNLIKELY (ret != GST_FLOW_OK))
         goto error;
-      base->seek_offset += GST_BUFFER_SIZE (buf);
-      ret = mpegts_base_chain (base->sinkpad, buf);
+      base->seek_offset += gst_buffer_get_size (buf);
+      ret = mpegts_base_chain (base->sinkpad, GST_OBJECT_CAST (base), buf);
       if (G_UNLIKELY (ret != GST_FLOW_OK))
         goto error;
     }
@@ -1571,16 +1574,9 @@ error:
   {
     const gchar *reason = gst_flow_get_name (ret);
     GST_DEBUG_OBJECT (base, "Pausing task, reason %s", reason);
-    if (ret == GST_FLOW_UNEXPECTED) {
-      /* Push EOS downstream */
-      if (!GST_MPEGTS_BASE_GET_CLASS (base)->push_event (base,
-              gst_event_new_eos ())) {
-        /* If that failed, emit an error so the pipeline can be stopped */
-        GST_ELEMENT_ERROR (base, STREAM, DEMUX, (NULL),
-            ("got eos but no streams (yet)"));
-
-      }
-    } else if (ret == GST_FLOW_NOT_LINKED || ret < GST_FLOW_UNEXPECTED) {
+    if (ret == GST_FLOW_EOS) {
+      GST_MPEGTS_BASE_GET_CLASS (base)->push_event (base, gst_event_new_eos ());
+    } else if (ret == GST_FLOW_NOT_LINKED || ret < GST_FLOW_EOS) {
       GST_ELEMENT_ERROR (base, STREAM, FAILED,
           (_("Internal data stream error.")),
           ("stream stopped, reason %s", reason));
@@ -1646,7 +1642,7 @@ mpegts_base_handle_seek_event (MpegTSBase * base, GstPad * pad,
   if (flush) {
     /* send a FLUSH_STOP for the sinkpad, since we need data for seeking */
     GST_DEBUG_OBJECT (base, "sending flush stop");
-    gst_pad_push_event (base->sinkpad, gst_event_new_flush_stop ());
+    gst_pad_push_event (base->sinkpad, gst_event_new_flush_stop (TRUE));
     /* And actually flush our pending data */
     mpegts_base_flush (base);
     mpegts_packetizer_flush (base->packetizer);
@@ -1675,7 +1671,7 @@ mpegts_base_handle_seek_event (MpegTSBase * base, GstPad * pad,
     GST_DEBUG_OBJECT (base, "sending flush stop");
     //gst_pad_push_event (base->sinkpad, gst_event_new_flush_stop ());
     GST_MPEGTS_BASE_GET_CLASS (base)->push_event (base,
-        gst_event_new_flush_stop ());
+        gst_event_new_flush_stop (TRUE));
   }
   //else
 done:
@@ -1687,38 +1683,62 @@ push_mode:
 
 
 static gboolean
-mpegts_base_sink_activate (GstPad * pad)
+mpegts_base_sink_activate (GstPad * sinkpad, GstObject * parent)
 {
-  if (gst_pad_check_pull_range (pad)) {
-    GST_DEBUG_OBJECT (pad, "activating pull");
-    return gst_pad_activate_pull (pad, TRUE);
-  } else {
-    GST_DEBUG_OBJECT (pad, "activating push");
-    return gst_pad_activate_push (pad, TRUE);
+  GstQuery *query;
+  gboolean pull_mode;
+
+  query = gst_query_new_scheduling ();
+
+  if (!gst_pad_peer_query (sinkpad, query)) {
+    gst_query_unref (query);
+    goto activate_push;
+  }
+
+  pull_mode = gst_query_has_scheduling_mode (query, GST_PAD_MODE_PULL);
+  gst_query_unref (query);
+
+  if (!pull_mode)
+    goto activate_push;
+
+  GST_DEBUG_OBJECT (sinkpad, "activating pull");
+  return gst_pad_activate_mode (sinkpad, GST_PAD_MODE_PULL, TRUE);
+
+activate_push:
+  {
+    GST_DEBUG_OBJECT (sinkpad, "activating push");
+    return gst_pad_activate_mode (sinkpad, GST_PAD_MODE_PUSH, TRUE);
   }
 }
 
 static gboolean
-mpegts_base_sink_activate_pull (GstPad * pad, gboolean active)
+mpegts_base_sink_activate_mode (GstPad * pad, GstObject * parent,
+    GstPadMode mode, gboolean active)
 {
-  MpegTSBase *base = GST_MPEGTS_BASE (GST_OBJECT_PARENT (pad));
-  if (active) {
-    base->mode = BASE_MODE_SCANNING;
-    base->packetizer->calculate_offset = TRUE;
-    return gst_pad_start_task (pad, (GstTaskFunction) mpegts_base_loop, base);
-  } else
-    return gst_pad_stop_task (pad);
-}
+  gboolean res;
+  MpegTSBase *base = GST_MPEGTS_BASE (parent);
 
-static gboolean
-mpegts_base_sink_activate_push (GstPad * pad, gboolean active)
-{
-  MpegTSBase *base = GST_MPEGTS_BASE (GST_OBJECT_PARENT (pad));
-  base->mode = BASE_MODE_PUSHING;
-  base->packetizer->calculate_skew = TRUE;
-  return TRUE;
+  switch (mode) {
+    case GST_PAD_MODE_PUSH:
+      base->mode = BASE_MODE_PUSHING;
+      base->packetizer->calculate_skew = TRUE;
+      res = TRUE;
+      break;
+    case GST_PAD_MODE_PULL:
+      if (active) {
+        base->mode = BASE_MODE_SCANNING;
+        base->packetizer->calculate_offset = TRUE;
+        res =
+            gst_pad_start_task (pad, (GstTaskFunction) mpegts_base_loop, base);
+      } else
+        res = gst_pad_stop_task (pad);
+      break;
+    default:
+      res = FALSE;
+      break;
+  }
+  return res;
 }
-
 
 static GstStateChangeReturn
 mpegts_base_change_state (GstElement * element, GstStateChange transition)
