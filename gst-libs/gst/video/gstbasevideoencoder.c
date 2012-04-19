@@ -351,9 +351,7 @@ gst_base_video_encoder_sink_setcaps (GstBaseVideoEncoder * base_video_encoder,
   /* FIXME (Edward): We need flags in GstVideoInfo to know whether
    * interlaced field was present in input caps */
   tmp_state.have_interlaced = tmp_state.interlaced =
-      GST_VIDEO_INFO_FLAG_IS_SET (&tmp_info, GST_VIDEO_FLAG_INTERLACED);
-  tmp_state.top_field_first =
-      GST_VIDEO_INFO_FLAG_IS_SET (&tmp_info, GST_VIDEO_FLAG_TFF);
+      GST_VIDEO_INFO_IS_INTERLACED (&tmp_info);
 
   if (changed) {
     /* arrange draining pending frames */

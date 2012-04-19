@@ -383,14 +383,10 @@ gst_y4m_dec_parse_header (GstY4mDec * y4mdec, char *header)
     case '?':
     case 'p':
       y4mdec->info.interlace_mode = GST_VIDEO_INTERLACE_MODE_PROGRESSIVE;
-      y4mdec->info.flags &= ~GST_VIDEO_FLAG_INTERLACED;
       break;
     case 't':
     case 'b':
       y4mdec->info.interlace_mode = GST_VIDEO_INTERLACE_MODE_INTERLEAVED;
-      y4mdec->info.flags |= GST_VIDEO_FLAG_INTERLACED;
-      if (interlaced_char == 't')
-        y4mdec->info.flags |= GST_VIDEO_FLAG_TFF;
       break;
     default:
       GST_WARNING_OBJECT (y4mdec, "Unknown interlaced char '%c'",
@@ -539,9 +535,6 @@ gst_y4m_dec_chain (GstPad * pad, GstObject * parent, GstBuffer * buffer)
     GST_BUFFER_DURATION (buffer) =
         gst_y4m_dec_frames_to_timestamp (y4mdec, y4mdec->frame_index + 1) -
         GST_BUFFER_TIMESTAMP (buffer);
-    if (y4mdec->info.flags & GST_VIDEO_FLAG_TFF) {
-      GST_BUFFER_FLAG_SET (buffer, GST_VIDEO_BUFFER_FLAG_TFF);
-    }
 
     y4mdec->frame_index++;
 

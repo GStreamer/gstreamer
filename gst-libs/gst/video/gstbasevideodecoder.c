@@ -2028,10 +2028,7 @@ gst_base_video_decoder_set_src_caps (GstBaseVideoDecoder * base_video_decoder)
   info->fps_d = state->fps_d;
 
   if (state->have_interlaced) {
-    if (state->interlaced)
-      GST_VIDEO_INFO_FLAG_SET (info, GST_VIDEO_FLAG_INTERLACED);
-    if (state->top_field_first)
-      GST_VIDEO_INFO_FLAG_SET (info, GST_VIDEO_FLAG_TFF);
+    info->interlace_mode = GST_VIDEO_INTERLACE_MODE_INTERLEAVED;
   }
 
   /* FIXME : Handle chroma site */
