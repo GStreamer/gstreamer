@@ -886,9 +886,6 @@ handle_slice (GstMpeg2dec * mpeg2dec, const mpeg2_info_t * info)
   }
   mpeg2dec->next_time += GST_BUFFER_DURATION (outbuf);
 
-  if (!(picture->flags & PIC_FLAG_PROGRESSIVE_FRAME))
-    GST_BUFFER_FLAG_SET (outbuf, GST_VIDEO_BUFFER_FLAG_INTERLACED);
-
   if (picture->flags & PIC_FLAG_TOP_FIELD_FIRST)
     GST_BUFFER_FLAG_SET (outbuf, GST_VIDEO_BUFFER_FLAG_TFF);
 
