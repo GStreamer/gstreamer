@@ -272,8 +272,8 @@ pvr_buffer_pool_alloc (GstBufferPool * pool, GstBuffer ** buffer,
 
     GST_DEBUG_OBJECT (pool, "adding GstVideoMeta");
     /* these are just the defaults for now */
-    meta = gst_buffer_add_video_meta (pvr, GST_VIDEO_INFO_FORMAT (info),
-        GST_VIDEO_FRAME_FLAG_NONE, pvrpool->padded_width,
+    meta = gst_buffer_add_video_meta (pvr, GST_VIDEO_FRAME_FLAG_NONE,
+        GST_VIDEO_INFO_FORMAT (info), pvrpool->padded_width,
         pvrpool->padded_height);
     if (G_UNLIKELY (meta == NULL))
       GST_WARNING_OBJECT (pool, "Failed to add GstVideoMeta");
