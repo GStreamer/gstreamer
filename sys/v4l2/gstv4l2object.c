@@ -2235,10 +2235,16 @@ gst_v4l2_object_set_format (GstV4l2Object * v4l2object, GstCaps * caps)
   GST_V4L2_CHECK_OPEN (v4l2object);
   GST_V4L2_CHECK_NOT_ACTIVE (v4l2object);
 
+  /* MPEG-TS source cameras don't get their format set for some reason.
+   * It looks wrong and we weren't able to track down the reason for that code
+   * so it is disabled until someone who has an mpeg-ts camera complains...
+   */
+#if 0
   /* Only unconditionally accept mpegts for sources */
   if ((v4l2object->type == V4L2_BUF_TYPE_VIDEO_CAPTURE) &&
       (pixelformat == GST_MAKE_FOURCC ('M', 'P', 'E', 'G')))
     goto done;
+#endif
 
   memset (&format, 0x00, sizeof (struct v4l2_format));
   format.type = v4l2object->type;

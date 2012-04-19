@@ -215,8 +215,14 @@ gst_v4l2src_set_capture (GstV4l2Src * v4l2src, guint32 pixelformat,
   gint fd = v4l2src->v4l2object->video_fd;
   struct v4l2_streamparm stream;
 
+  /* MPEG-TS source cameras don't get their format set for some reason.
+   * It looks wrong and we weren't able to track down the reason for that code
+   * so it is disabled until someone who has an mpeg-ts camera complains...
+   */
+#if 0
   if (pixelformat == GST_MAKE_FOURCC ('M', 'P', 'E', 'G'))
     return TRUE;
+#endif
 
   g_signal_emit_by_name (v4l2src, "prepare-format",
       v4l2src->v4l2object->video_fd, pixelformat, width, height);
