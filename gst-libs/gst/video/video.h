@@ -329,10 +329,6 @@ typedef enum {
 /**
  * GstVideoFlags:
  * @GST_VIDEO_FLAG_NONE: no flags
- * @GST_VIDEO_FLAG_INTERLACED: The video is interlaced
- * @GST_VIDEO_FLAG_TFF: The video has the top field first
- * @GST_VIDEO_FLAG_RFF: The video has the repeat flag
- * @GST_VIDEO_FLAG_ONEFIELD: one field
  * @GST_VIDEO_FLAG_VARIABLE_FPS: a variable fps is selected, fps_n and fps_d
  * denote the maximum fps of the video
  *
@@ -340,11 +336,7 @@ typedef enum {
  */
 typedef enum {
   GST_VIDEO_FLAG_NONE         = 0,
-  GST_VIDEO_FLAG_INTERLACED   = (1 << 0),
-  GST_VIDEO_FLAG_TFF          = (1 << 1),
-  GST_VIDEO_FLAG_RFF          = (1 << 2),
-  GST_VIDEO_FLAG_ONEFIELD     = (1 << 3),
-  GST_VIDEO_FLAG_VARIABLE_FPS = (1 << 4)
+  GST_VIDEO_FLAG_VARIABLE_FPS = (1 << 0)
 } GstVideoFlags;
 
 /**
@@ -601,6 +593,21 @@ gboolean     gst_video_info_convert     (GstVideoInfo *info,
                                          gint64        src_value,
                                          GstFormat     dest_format,
                                          gint64       *dest_value);
+/**
+ * GstVideoFrameFlags:
+ * @GST_VIDEO_FRAME_FLAG_NONE: no flags
+ * @GST_VIDEO_FRAME_FLAG_TFF: The video frame has the top field first
+ * @GST_VIDEO_FRAME_FLAG_RFF: The video frame has the repeat flag
+ * @GST_VIDEO_FRAME_FLAG_ONEFIELD: The video frame has one field
+ *
+ * Extra video frame flags
+ */
+typedef enum {
+  GST_VIDEO_FRAME_FLAG_NONE         = 0,
+  GST_VIDEO_FRAME_FLAG_TFF          = (1 << 0),
+  GST_VIDEO_FRAME_FLAG_RFF          = (1 << 1),
+  GST_VIDEO_FRAME_FLAG_ONEFIELD     = (1 << 2)
+} GstVideoFrameFlags;
 
 /**
  * GstVideoFrame:
@@ -616,6 +623,7 @@ gboolean     gst_video_info_convert     (GstVideoInfo *info,
  */
 struct _GstVideoFrame {
   GstVideoInfo info;
+  GstVideoFrameFlags frame_flags;
 
   GstBuffer *buffer;
   gpointer   meta;
@@ -693,7 +701,6 @@ gboolean    gst_video_frame_copy_plane    (GstVideoFrame *dest, const GstVideoFr
 
 /**
  * GstVideoBufferFlags:
- * @GST_VIDEO_BUFFER_FLAG_INTERLACED:  Mark #GstBuffer as interlaced
  * @GST_VIDEO_BUFFER_FLAG_TFF:         If the #GstBuffer is interlaced, then the first field
  *                                     in the video frame is the top field.  If unset, the
  *                                     bottom field is first.
@@ -707,10 +714,9 @@ gboolean    gst_video_frame_copy_plane    (GstVideoFrame *dest, const GstVideoFr
  * Additional video buffer flags.
  */
 typedef enum {
-  GST_VIDEO_BUFFER_FLAG_INTERLACED  = (GST_BUFFER_FLAG_LAST << 0),
-  GST_VIDEO_BUFFER_FLAG_TFF         = (GST_BUFFER_FLAG_LAST << 1),
-  GST_VIDEO_BUFFER_FLAG_RFF         = (GST_BUFFER_FLAG_LAST << 2),
-  GST_VIDEO_BUFFER_FLAG_ONEFIELD    = (GST_BUFFER_FLAG_LAST << 3),
+  GST_VIDEO_BUFFER_FLAG_TFF         = (GST_BUFFER_FLAG_LAST << 0),
+  GST_VIDEO_BUFFER_FLAG_RFF         = (GST_BUFFER_FLAG_LAST << 1),
+  GST_VIDEO_BUFFER_FLAG_ONEFIELD    = (GST_BUFFER_FLAG_LAST << 2),
 
   GST_VIDEO_BUFFER_FLAG_LAST        = (GST_BUFFER_FLAG_LAST << 8)
 } GstVideoBufferFlags;

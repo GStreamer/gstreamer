@@ -58,8 +58,8 @@ struct _GstVideoMeta {
 
   GstBuffer         *buffer;
 
-  GstVideoFlags      flags;
   GstVideoFormat     format;
+  GstVideoFrameFlags frame_flags;
   gint               id;
   guint              width;
   guint              height;
@@ -79,10 +79,10 @@ const GstMetaInfo * gst_video_meta_get_info (void);
 #define gst_buffer_get_video_meta(b) ((GstVideoMeta*)gst_buffer_get_meta((b),GST_VIDEO_META_API_TYPE))
 GstVideoMeta * gst_buffer_get_video_meta_id    (GstBuffer *buffer, gint id);
 
-GstVideoMeta * gst_buffer_add_video_meta       (GstBuffer *buffer, GstVideoFlags flags,
-                                                GstVideoFormat format, guint width, guint height);
-GstVideoMeta * gst_buffer_add_video_meta_full  (GstBuffer *buffer, GstVideoFlags flags,
-                                                GstVideoFormat format, guint width, guint height,
+GstVideoMeta * gst_buffer_add_video_meta       (GstBuffer *buffer, GstVideoFormat format,
+                                                GstVideoFrameFlags frame_flags, guint width, guint height);
+GstVideoMeta * gst_buffer_add_video_meta_full  (GstBuffer *buffer, GstVideoFormat format,
+                                                GstVideoFrameFlags frame_flags, guint width, guint height,
                                                 guint n_planes, gsize offset[GST_VIDEO_MAX_PLANES],
                                                 gint stride[GST_VIDEO_MAX_PLANES]);
 
