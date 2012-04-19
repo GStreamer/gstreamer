@@ -631,8 +631,8 @@ xvimage_buffer_pool_alloc (GstBufferPool * pool, GstBuffer ** buffer,
 
     GST_DEBUG_OBJECT (pool, "adding GstVideoMeta");
     /* these are just the defaults for now */
-    meta = gst_buffer_add_video_meta (xvimage, 0, GST_VIDEO_INFO_FORMAT (info),
-        priv->padded_width, priv->padded_height);
+    meta = gst_buffer_add_video_meta (xvimage, GST_VIDEO_INFO_FORMAT (info),
+        GST_VIDEO_FRAME_FLAG_NONE, priv->padded_width, priv->padded_height);
 
     if (priv->need_alignment) {
       meta->width = GST_VIDEO_INFO_WIDTH (&priv->info);

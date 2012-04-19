@@ -260,14 +260,13 @@ gst_video_convert_set_info (GstVideoFilter * filter,
     goto format_mismatch;
 
   /* if present, these must match too */
-  if ((in_info->flags & GST_VIDEO_FLAG_INTERLACED) !=
-      (out_info->flags & GST_VIDEO_FLAG_INTERLACED))
+  if (in_info->interlace_mode != out_info->interlace_mode)
     goto format_mismatch;
 
   space->from_spec = in_spec;
   space->to_spec = out_spec;
 
-  interlaced = (in_info->flags & GST_VIDEO_FLAG_INTERLACED) != 0;
+  interlaced = GST_VIDEO_INFO_IS_INTERLACED (in_info);
 
   space->convert =
       videoconvert_convert_new (GST_VIDEO_INFO_FORMAT (out_info), out_spec,

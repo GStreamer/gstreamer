@@ -730,7 +730,8 @@ collect_information (GstDiscoverer * dc, const GstStructure * st,
       info->framerate_num = vinfo.fps_n;
       info->framerate_denom = vinfo.fps_d;
 
-      info->interlaced = (vinfo.flags & GST_VIDEO_FLAG_INTERLACED) != 0;
+      info->interlaced =
+          vinfo.interlace_mode != GST_VIDEO_INTERLACE_MODE_PROGRESSIVE;
     }
 
     if (gst_structure_id_has_field (st, _TAGS_QUARK)) {
