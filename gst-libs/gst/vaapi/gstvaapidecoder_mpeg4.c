@@ -728,7 +728,7 @@ fill_picture(GstVaapiDecoderMpeg4 *decoder, GstVaapiPicture *picture)
     case GST_MPEG4_B_VOP:
         pic_param->TRB                                          = priv->trb;
         pic_param->backward_reference_picture                   = priv->next_picture->surface_id;
-        pic_param->vop_fields.bits.backward_reference_vop_coding_type = get_vop_coding_type(priv->prev_picture);
+        pic_param->vop_fields.bits.backward_reference_vop_coding_type = get_vop_coding_type(priv->next_picture);
         // fall-through
     case GST_MPEG4_P_VOP:
         pic_param->TRD                                          = priv->trd;
