@@ -27,9 +27,9 @@
 
 #include <gst/gst.h>
 
+
 #define NO_LEGACY_MIXER
 #include "oss4-audio.h"
-#include "oss4-mixer.h"
 #include "oss4-sink.h"
 #include "oss4-source.h"
 #include "oss4-soundcard.h"
@@ -42,6 +42,8 @@
 #include <unistd.h>
 #include <errno.h>
 #include <string.h>
+
+#if 0
 
 GST_DEBUG_CATEGORY_EXTERN (oss4_debug);
 #define GST_CAT_DEFAULT oss4_debug
@@ -109,6 +111,8 @@ gst_oss4_property_probe_needs_probe (GstPropertyProbe * probe,
   /* don't cache probed data */
   return TRUE;
 }
+
+#endif
 
 static gint
 oss4_mixerinfo_priority_cmp (struct oss_mixerinfo *mi1,
@@ -282,9 +286,8 @@ gst_oss4_property_probe_get_audio_devices (GstObject * obj, int fd,
   return g_list_reverse (devices);
 }
 
-static GValueArray *
-gst_oss4_property_probe_get_values (GstPropertyProbe * probe,
-    guint prop_id, const GParamSpec * pspec)
+GValueArray *
+gst_oss4_property_probe_get_values (GstObject * probe, const gchar * pname)
 {
   struct oss_sysinfo si = { {0,}, };
   GValueArray *array = NULL;
@@ -292,8 +295,8 @@ gst_oss4_property_probe_get_values (GstPropertyProbe * probe,
   GList *devices, *l;
   int cap_mask, fd = -1;
 
-  if (!g_str_equal (pspec->name, "device")) {
-    G_OBJECT_WARN_INVALID_PROPERTY_ID (probe, prop_id, pspec);
+  if (!g_str_equal (pname, "device")) {
+    GST_WARNING_OBJECT (probe, "invalid property");
     return NULL;
   }
 
@@ -310,9 +313,6 @@ gst_oss4_property_probe_get_values (GstPropertyProbe * probe,
     GST_DEBUG_OBJECT (probe, "probing available input devices");
     cap_mask = PCM_CAP_INPUT;
     fd = GST_OSS4_SOURCE (probe)->fd;
-  } else if (GST_IS_OSS4_MIXER (probe)) {
-    fd = GST_OSS4_MIXER (probe)->fd;
-    cap_mask = 0;
   } else {
     GST_OBJECT_UNLOCK (obj);
     g_return_val_if_reached (NULL);
@@ -393,6 +393,7 @@ no_sysinfo:
   }
 }
 
+#if 0
 static void
 gst_oss4_property_probe_interface_init (GstPropertyProbeInterface * iface)
 {
@@ -414,3 +415,4 @@ gst_oss4_add_property_probe_interface (GType type)
   g_type_add_interface_static (type, GST_TYPE_PROPERTY_PROBE,
       &probe_iface_info);
 }
+#endif

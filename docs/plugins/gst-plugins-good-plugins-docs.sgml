@@ -111,7 +111,6 @@
     <xi:include href="xml/element-multipartmux.xml" />
     <xi:include href="xml/element-multiudpsink.xml" />
     <xi:include href="xml/element-optv.xml" />
-    <xi:include href="xml/element-oss4mixer.xml" />
     <xi:include href="xml/element-oss4sink.xml" />
     <xi:include href="xml/element-oss4src.xml" />
     <xi:include href="xml/element-osssink.xml" />

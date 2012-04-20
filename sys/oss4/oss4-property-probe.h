@@ -20,9 +20,13 @@
 #ifndef GST_OSS4_PROPERTY_PROBE_H
 #define GST_OSS4_PROPERTY_PROBE_H
 
+#if 0
+
 #include <gst/interfaces/propertyprobe.h>
 
 void      gst_oss4_add_property_probe_interface (GType type);
+
+#endif
 
 gboolean  gst_oss4_property_probe_find_device_name (GstObject   * obj,
                                                     int           fd,
@@ -32,6 +36,9 @@ gboolean  gst_oss4_property_probe_find_device_name (GstObject   * obj,
 gboolean  gst_oss4_property_probe_find_device_name_nofd (GstObject   * obj,
                                                          const gchar * device_handle,
                                                          gchar      ** device_name);
+
+GValueArray *gst_oss4_property_probe_get_values (GstObject * obj, const gchar * pname);
+
 
 #endif /* GST_OSS4_PROPERTY_PROBE_H */
 

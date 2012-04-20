@@ -55,7 +55,7 @@
 #include <string.h>
 
 #include <gst/gst-i18n-plugin.h>
-#include <gst/interfaces/streamvolume.h>
+#include <gst/audio/streamvolume.h>
 
 #define NO_LEGACY_MIXER
 #include "oss4-audio.h"
@@ -66,7 +66,6 @@
 GST_DEBUG_CATEGORY_EXTERN (oss4sink_debug);
 #define GST_CAT_DEFAULT oss4sink_debug
 
-static void gst_oss4_sink_init_interfaces (GType type);
 static void gst_oss4_sink_dispose (GObject * object);
 static void gst_oss4_sink_finalize (GObject * object);
 
@@ -75,15 +74,15 @@ static void gst_oss4_sink_get_property (GObject * object, guint prop_id,
 static void gst_oss4_sink_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec);
 
-static GstCaps *gst_oss4_sink_getcaps (GstBaseSink * bsink);
+static GstCaps *gst_oss4_sink_getcaps (GstBaseSink * bsink, GstCaps * filter);
 static gboolean gst_oss4_sink_open (GstAudioSink * asink,
     gboolean silent_errors);
 static gboolean gst_oss4_sink_open_func (GstAudioSink * asink);
 static gboolean gst_oss4_sink_close (GstAudioSink * asink);
 static gboolean gst_oss4_sink_prepare (GstAudioSink * asink,
-    GstRingBufferSpec * spec);
+    GstAudioRingBufferSpec * spec);
 static gboolean gst_oss4_sink_unprepare (GstAudioSink * asink);
-static guint gst_oss4_sink_write (GstAudioSink * asink, gpointer data,
+static gint gst_oss4_sink_write (GstAudioSink * asink, gpointer data,
     guint length);
 static guint gst_oss4_sink_delay (GstAudioSink * asink);
 static void gst_oss4_sink_reset (GstAudioSink * asink);
@@ -104,8 +103,9 @@ enum
   PROP_LAST
 };
 
-GST_BOILERPLATE_FULL (GstOss4Sink, gst_oss4_sink, GstAudioSink,
-    GST_TYPE_AUDIO_SINK, gst_oss4_sink_init_interfaces);
+#define gst_oss4_sink_parent_class parent_class
+G_DEFINE_TYPE_WITH_CODE (GstOss4Sink, gst_oss4_sink,
+    GST_TYPE_AUDIO_SINK, G_IMPLEMENT_INTERFACE (GST_TYPE_STREAM_VOLUME, NULL));
 
 static void
 gst_oss4_sink_dispose (GObject * object)
@@ -121,27 +121,13 @@ gst_oss4_sink_dispose (GObject * object)
 }
 
 static void
-gst_oss4_sink_base_init (gpointer g_class)
-{
-  GstElementClass *element_class = GST_ELEMENT_CLASS (g_class);
-  GstPadTemplate *templ;
-
-  gst_element_class_set_static_metadata (element_class,
-      "OSS v4 Audio Sink", "Sink/Audio",
-      "Output to a sound card via OSS version 4",
-      "Tim-Philipp Müller <tim centricular net>");
-
-  templ = gst_pad_template_new ("sink", GST_PAD_SINK, GST_PAD_ALWAYS,
-      gst_oss4_audio_get_template_caps ());
-  gst_element_class_add_pad_template (element_class, templ);
-}
-
-static void
 gst_oss4_sink_class_init (GstOss4SinkClass * klass)
 {
   GstAudioSinkClass *audiosink_class = (GstAudioSinkClass *) klass;
   GstBaseSinkClass *basesink_class = (GstBaseSinkClass *) klass;
+  GstElementClass *gstelement_class = (GstElementClass *) klass;
   GObjectClass *gobject_class = (GObjectClass *) klass;
+  GstPadTemplate *templ;
 
   gobject_class->dispose = gst_oss4_sink_dispose;
   gobject_class->finalize = gst_oss4_sink_finalize;
@@ -180,10 +166,19 @@ gst_oss4_sink_class_init (GstOss4SinkClass * klass)
   audiosink_class->write = GST_DEBUG_FUNCPTR (gst_oss4_sink_write);
   audiosink_class->delay = GST_DEBUG_FUNCPTR (gst_oss4_sink_delay);
   audiosink_class->reset = GST_DEBUG_FUNCPTR (gst_oss4_sink_reset);
+
+  gst_element_class_set_static_metadata (gstelement_class,
+      "OSS v4 Audio Sink", "Sink/Audio",
+      "Output to a sound card via OSS version 4",
+      "Tim-Philipp Müller <tim centricular net>");
+
+  templ = gst_pad_template_new ("sink", GST_PAD_SINK, GST_PAD_ALWAYS,
+      gst_oss4_audio_get_template_caps ());
+  gst_element_class_add_pad_template (gstelement_class, templ);
 }
 
 static void
-gst_oss4_sink_init (GstOss4Sink * osssink, GstOss4SinkClass * klass)
+gst_oss4_sink_init (GstOss4Sink * osssink)
 {
   const gchar *device;
 
@@ -205,9 +200,6 @@ gst_oss4_sink_finalize (GObject * object)
 
   g_free (osssink->device);
   osssink->device = NULL;
-
-  g_list_free (osssink->property_probe_list);
-  osssink->property_probe_list = NULL;
 
   G_OBJECT_CLASS (parent_class)->finalize (object);
 }
@@ -383,7 +375,7 @@ gst_oss4_sink_get_property (GObject * object, guint prop_id,
 }
 
 static GstCaps *
-gst_oss4_sink_getcaps (GstBaseSink * bsink)
+gst_oss4_sink_getcaps (GstBaseSink * bsink, GstCaps * filter)
 {
   GstOss4Sink *oss;
   GstCaps *caps;
@@ -401,7 +393,16 @@ gst_oss4_sink_getcaps (GstBaseSink * bsink)
     }
   }
 
-  return caps;
+  if (filter && caps) {
+    GstCaps *intersection;
+
+    intersection =
+        gst_caps_intersect_full (filter, caps, GST_CAPS_INTERSECT_FIRST);
+    gst_caps_unref (caps);
+    return intersection;
+  } else {
+    return caps;
+  }
 }
 
 /* note: we must not take the object lock here unless we fix up get_property */
@@ -576,7 +577,7 @@ gst_oss4_sink_close (GstAudioSink * asink)
 }
 
 static gboolean
-gst_oss4_sink_prepare (GstAudioSink * asink, GstRingBufferSpec * spec)
+gst_oss4_sink_prepare (GstAudioSink * asink, GstAudioRingBufferSpec * spec)
 {
   GstOss4Sink *oss;
 
@@ -588,7 +589,8 @@ gst_oss4_sink_prepare (GstAudioSink * asink, GstRingBufferSpec * spec)
     return FALSE;
   }
 
-  oss->bytes_per_sample = spec->bytes_per_sample;
+  oss->bytes_per_sample = GST_AUDIO_INFO_BPF (&spec->info);
+
   return TRUE;
 }
 
@@ -619,7 +621,7 @@ couldnt_reopen:
   }
 }
 
-static guint
+static gint
 gst_oss4_sink_write (GstAudioSink * asink, gpointer data, guint length)
 {
   GstOss4Sink *oss;
@@ -680,16 +682,4 @@ gst_oss4_sink_reset (GstAudioSink * asink)
   /* There's nothing we can do here really: OSS can't handle access to the
    * same device/fd from multiple threads and might deadlock or blow up in
    * other ways if we try an ioctl SNDCTL_DSP_HALT or similar */
-}
-
-static void
-gst_oss4_sink_init_interfaces (GType type)
-{
-  static const GInterfaceInfo svol_iface_info = {
-    NULL, NULL, NULL
-  };
-
-  g_type_add_interface_static (type, GST_TYPE_STREAM_VOLUME, &svol_iface_info);
-
-  gst_oss4_add_property_probe_interface (type);
 }

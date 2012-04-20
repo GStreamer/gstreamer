@@ -21,7 +21,7 @@
 #define GST_OSS4_AUDIO_H_
 
 #include <gst/gst.h>
-#include <gst/audio/gstringbuffer.h>
+#include <gst/audio/gstaudioringbuffer.h>
 
 /* This is the minimum version we require */
 #define GST_MIN_OSS4_VERSION  0x040003
@@ -32,7 +32,7 @@ gboolean  gst_oss4_audio_check_version (GstObject * obj, int fd);
 
 GstCaps * gst_oss4_audio_probe_caps  (GstObject * obj, int fd);
 
-gboolean  gst_oss4_audio_set_format  (GstObject * obj, int fd, GstRingBufferSpec * spec);
+gboolean  gst_oss4_audio_set_format  (GstObject * obj, int fd, GstAudioRingBufferSpec * spec);
 
 GstCaps * gst_oss4_audio_get_template_caps (void);
 

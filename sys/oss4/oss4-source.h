@@ -22,7 +22,6 @@
 
 #include <gst/gst.h>
 #include <gst/audio/gstaudiosrc.h>
-#include <gst/interfaces/mixertrack.h>
 
 G_BEGIN_DECLS
 
@@ -46,13 +45,6 @@ struct _GstOss4Source {
   gint            bytes_per_sample;
 
   GstCaps       * probed_caps;
-
-  /* property probe interface */
-  GList         * property_probe_list;
-
-  /* mixer interface */
-  GList         * tracks;
-  gboolean        tracks_static;  /* FALSE if the list of inputs may change */
 };
 
 struct _GstOss4SourceClass {
@@ -60,28 +52,6 @@ struct _GstOss4SourceClass {
 };
 
 GType  gst_oss4_source_get_type (void);
-
-/* our mixer track for input selection */
-#define GST_TYPE_OSS4_SOURCE_INPUT            (gst_oss4_source_input_get_type())
-#define GST_OSS4_SOURCE_INPUT(obj)            (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_OSS4_SOURCE_INPUT,GstOss4SourceInput))
-#define GST_OSS4_SOURCE_INPUT_CLASS(klass)    (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_OSS4_SOURCE_INPUT,GstOss4SourceInputClass))
-#define GST_IS_OSS4_SOURCE_INPUT(obj)         (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_OSS4_SOURCE_INPUT))
-#define GST_IS_OSS4_SOURCE_INPUT_CLASS(klass) (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_OSS4_SOURCE_INPUT))
-
-typedef struct _GstOss4SourceInput GstOss4SourceInput;
-typedef struct _GstOss4SourceInputClass GstOss4SourceInputClass;
-
-struct _GstOss4SourceInput {
-  GstMixerTrack mixer_track;
-
-  int           route; /* number for SNDCTL_DSP_SET_RECSRC etc. */
-};
-
-struct _GstOss4SourceInputClass {
-  GstMixerTrackClass mixer_track_class;
-};
-
-GType  gst_oss4_source_input_get_type (void);
 
 G_END_DECLS
 

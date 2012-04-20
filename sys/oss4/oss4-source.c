@@ -50,7 +50,6 @@
 #include <unistd.h>
 #include <string.h>
 
-#include <gst/interfaces/mixer.h>
 #include <gst/gst-i18n-plugin.h>
 
 #define NO_LEGACY_MIXER
@@ -74,10 +73,8 @@ enum
   PROP_DEVICE_NAME
 };
 
-static void gst_oss4_source_init_interfaces (GType type);
-
-GST_BOILERPLATE_FULL (GstOss4Source, gst_oss4_source, GstAudioSrc,
-    GST_TYPE_AUDIO_SRC, gst_oss4_source_init_interfaces);
+#define gst_oss4_source_parent_class parent_class
+G_DEFINE_TYPE (GstOss4Source, gst_oss4_source, GST_TYPE_AUDIO_SRC);
 
 static void gst_oss4_source_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec);
@@ -87,14 +84,14 @@ static void gst_oss4_source_set_property (GObject * object, guint prop_id,
 static void gst_oss4_source_dispose (GObject * object);
 static void gst_oss4_source_finalize (GstOss4Source * osssrc);
 
-static GstCaps *gst_oss4_source_getcaps (GstBaseSrc * bsrc);
+static GstCaps *gst_oss4_source_getcaps (GstBaseSrc * bsrc, GstCaps * filter);
 
 static gboolean gst_oss4_source_open (GstAudioSrc * asrc,
     gboolean silent_errors);
 static gboolean gst_oss4_source_open_func (GstAudioSrc * asrc);
 static gboolean gst_oss4_source_close (GstAudioSrc * asrc);
 static gboolean gst_oss4_source_prepare (GstAudioSrc * asrc,
-    GstRingBufferSpec * spec);
+    GstAudioRingBufferSpec * spec);
 static gboolean gst_oss4_source_unprepare (GstAudioSrc * asrc);
 static guint gst_oss4_source_read (GstAudioSrc * asrc, gpointer data,
     guint length);
@@ -102,29 +99,16 @@ static guint gst_oss4_source_delay (GstAudioSrc * asrc);
 static void gst_oss4_source_reset (GstAudioSrc * asrc);
 
 static void
-gst_oss4_source_base_init (gpointer g_class)
-{
-  GstElementClass *element_class = GST_ELEMENT_CLASS (g_class);
-  GstPadTemplate *templ;
-
-  gst_element_class_set_static_metadata (element_class,
-      "OSS v4 Audio Source", "Source/Audio",
-      "Capture from a sound card via OSS version 4",
-      "Tim-Philipp Müller <tim centricular net>");
-
-  templ = gst_pad_template_new ("src", GST_PAD_SRC, GST_PAD_ALWAYS,
-      gst_oss4_audio_get_template_caps ());
-  gst_element_class_add_pad_template (element_class, templ);
-}
-
-static void
 gst_oss4_source_class_init (GstOss4SourceClass * klass)
 {
   GObjectClass *gobject_class;
+  GstElementClass *gstelement_class;
   GstBaseSrcClass *gstbasesrc_class;
   GstAudioSrcClass *gstaudiosrc_class;
+  GstPadTemplate *templ;
 
   gobject_class = (GObjectClass *) klass;
+  gstelement_class = (GstElementClass *) klass;
   gstbasesrc_class = (GstBaseSrcClass *) klass;
   gstaudiosrc_class = (GstAudioSrcClass *) klass;
 
@@ -153,10 +137,19 @@ gst_oss4_source_class_init (GstOss4SourceClass * klass)
       g_param_spec_string ("device-name", "Device name",
           "Human-readable name of the sound device", DEFAULT_DEVICE_NAME,
           G_PARAM_READABLE | G_PARAM_STATIC_STRINGS));
+
+  gst_element_class_set_static_metadata (gstelement_class,
+      "OSS v4 Audio Source", "Source/Audio",
+      "Capture from a sound card via OSS version 4",
+      "Tim-Philipp Müller <tim centricular net>");
+
+  templ = gst_pad_template_new ("src", GST_PAD_SRC, GST_PAD_ALWAYS,
+      gst_oss4_audio_get_template_caps ());
+  gst_element_class_add_pad_template (gstelement_class, templ);
 }
 
 static void
-gst_oss4_source_init (GstOss4Source * osssrc, GstOss4SourceClass * g_class)
+gst_oss4_source_init (GstOss4Source * osssrc)
 {
   const gchar *device;
 
@@ -175,9 +168,6 @@ gst_oss4_source_finalize (GstOss4Source * oss)
 {
   g_free (oss->device);
   oss->device = NULL;
-
-  g_list_free (oss->property_probe_list);
-  oss->property_probe_list = NULL;
 
   G_OBJECT_CLASS (parent_class)->finalize ((GObject *) (oss));
 }
@@ -265,7 +255,7 @@ gst_oss4_source_get_property (GObject * object, guint prop_id,
 }
 
 static GstCaps *
-gst_oss4_source_getcaps (GstBaseSrc * bsrc)
+gst_oss4_source_getcaps (GstBaseSrc * bsrc, GstCaps * filter)
 {
   GstOss4Source *oss;
   GstCaps *caps;
@@ -283,7 +273,16 @@ gst_oss4_source_getcaps (GstBaseSrc * bsrc)
     }
   }
 
-  return caps;
+  if (filter && caps) {
+    GstCaps *intersection;
+
+    intersection =
+        gst_caps_intersect_full (filter, caps, GST_CAPS_INTERSECT_FIRST);
+    gst_caps_unref (caps);
+    return intersection;
+  } else {
+    return caps;
+  }
 }
 
 /* note: we must not take the object lock here unless we fix up get_property */
@@ -414,14 +413,6 @@ gst_oss4_source_open_func (GstAudioSrc * asrc)
   return gst_oss4_source_open (asrc, FALSE);
 }
 
-static void
-gst_oss4_source_free_mixer_tracks (GstOss4Source * oss)
-{
-  g_list_foreach (oss->tracks, (GFunc) g_object_unref, NULL);
-  g_list_free (oss->tracks);
-  oss->tracks = NULL;
-}
-
 static gboolean
 gst_oss4_source_close (GstAudioSrc * asrc)
 {
@@ -445,13 +436,11 @@ gst_oss4_source_close (GstAudioSrc * asrc)
   g_free (oss->device_name);
   oss->device_name = NULL;
 
-  gst_oss4_source_free_mixer_tracks (oss);
-
   return TRUE;
 }
 
 static gboolean
-gst_oss4_source_prepare (GstAudioSrc * asrc, GstRingBufferSpec * spec)
+gst_oss4_source_prepare (GstAudioSrc * asrc, GstAudioRingBufferSpec * spec)
 {
   GstOss4Source *oss;
 
@@ -463,7 +452,8 @@ gst_oss4_source_prepare (GstAudioSrc * asrc, GstRingBufferSpec * spec)
     return FALSE;
   }
 
-  oss->bytes_per_sample = spec->bytes_per_sample;
+  oss->bytes_per_sample = GST_AUDIO_INFO_BPF (&spec->info);
+
   return TRUE;
 }
 
@@ -554,443 +544,4 @@ gst_oss4_source_reset (GstAudioSrc * asrc)
   /* There's nothing we can do here really: OSS can't handle access to the
    * same device/fd from multiple threads and might deadlock or blow up in
    * other ways if we try an ioctl SNDCTL_DSP_HALT or similar */
-}
-
-/* GstMixer interface, which we abuse here for input selection, because we
- * don't have a proper interface for that and because that's what
- * gnome-sound-recorder does. */
-
-/* GstMixerTrack is a plain GObject, so let's just use the GLib macro here */
-G_DEFINE_TYPE (GstOss4SourceInput, gst_oss4_source_input, GST_TYPE_MIXER_TRACK);
-
-static void
-gst_oss4_source_input_class_init (GstOss4SourceInputClass * klass)
-{
-  /* nothing to do here */
-}
-
-static void
-gst_oss4_source_input_init (GstOss4SourceInput * i)
-{
-  /* nothing to do here */
-}
-
-#if 0
-
-static void
-gst_ossmixer_ensure_track_list (GstOssMixer * mixer)
-{
-  gint i, master = -1;
-
-  g_return_if_fail (mixer->fd != -1);
-
-  if (mixer->tracklist)
-    return;
-
-  /* find master volume */
-  if (mixer->devmask & SOUND_MASK_VOLUME)
-    master = SOUND_MIXER_VOLUME;
-  else if (mixer->devmask & SOUND_MASK_PCM)
-    master = SOUND_MIXER_PCM;
-  else if (mixer->devmask & SOUND_MASK_SPEAKER)
-    master = SOUND_MIXER_SPEAKER;       /* doubtful... */
-  /* else: no master, so we won't set any */
-
-  /* build track list */
-  for (i = 0; i < SOUND_MIXER_NRDEVICES; i++) {
-    if (mixer->devmask & (1 << i)) {
-      GstMixerTrack *track;
-      gboolean input = FALSE, stereo = FALSE, record = FALSE;
-
-      /* track exists, make up capabilities */
-      if (MASK_BIT_IS_SET (mixer->stereomask, i))
-        stereo = TRUE;
-      if (MASK_BIT_IS_SET (mixer->recmask, i))
-        input = TRUE;
-      if (MASK_BIT_IS_SET (mixer->recdevs, i))
-        record = TRUE;
-
-      /* do we want mixer in our list? */
-      if (!((mixer->dir & GST_OSS_MIXER_CAPTURE && input == TRUE) ||
-              (mixer->dir & GST_OSS_MIXER_PLAYBACK && i != SOUND_MIXER_PCM)))
-        /* the PLAYBACK case seems hacky, but that's how 0.8 had it */
-        continue;
-
-      /* add track to list */
-      track = gst_ossmixer_track_new (mixer->fd, i, stereo ? 2 : 1,
-          (record ? GST_MIXER_TRACK_RECORD : 0) |
-          (input ? GST_MIXER_TRACK_INPUT :
-              GST_MIXER_TRACK_OUTPUT) |
-          ((master != i) ? 0 : GST_MIXER_TRACK_MASTER));
-      mixer->tracklist = g_list_append (mixer->tracklist, track);
-    }
-  }
-}
-
-/* unused with G_DISABLE_* */
-static G_GNUC_UNUSED gboolean
-gst_ossmixer_contains_track (GstOssMixer * mixer, GstOssMixerTrack * osstrack)
-{
-  const GList *item;
-
-  for (item = mixer->tracklist; item != NULL; item = item->next)
-    if (item->data == osstrack)
-      return TRUE;
-
-  return FALSE;
-}
-
-const GList *
-gst_ossmixer_list_tracks (GstOssMixer * mixer)
-{
-  gst_ossmixer_ensure_track_list (mixer);
-
-  return (const GList *) mixer->tracklist;
-}
-
-void
-gst_ossmixer_get_volume (GstOssMixer * mixer,
-    GstMixerTrack * track, gint * volumes)
-{
-  gint volume;
-  GstOssMixerTrack *osstrack = GST_OSSMIXER_TRACK (track);
-
-  g_return_if_fail (mixer->fd != -1);
-  g_return_if_fail (gst_ossmixer_contains_track (mixer, osstrack));
-
-  if (track->flags & GST_MIXER_TRACK_MUTE) {
-    volumes[0] = osstrack->lvol;
-    if (track->num_channels == 2) {
-      volumes[1] = osstrack->rvol;
-    }
-  } else {
-    /* get */
-    if (ioctl (mixer->fd, MIXER_READ (osstrack->track_num), &volume) < 0) {
-      g_warning ("Error getting recording device (%d) volume: %s",
-          osstrack->track_num, g_strerror (errno));
-      volume = 0;
-    }
-
-    osstrack->lvol = volumes[0] = (volume & 0xff);
-    if (track->num_channels == 2) {
-      osstrack->rvol = volumes[1] = ((volume >> 8) & 0xff);
-    }
-  }
-}
-
-void
-gst_ossmixer_set_mute (GstOssMixer * mixer, GstMixerTrack * track,
-    gboolean mute)
-{
-  int volume;
-  GstOssMixerTrack *osstrack = GST_OSSMIXER_TRACK (track);
-
-  g_return_if_fail (mixer->fd != -1);
-  g_return_if_fail (gst_ossmixer_contains_track (mixer, osstrack));
-
-  if (mute) {
-    volume = 0;
-  } else {
-    volume = (osstrack->lvol & 0xff);
-    if (MASK_BIT_IS_SET (mixer->stereomask, osstrack->track_num)) {
-      volume |= ((osstrack->rvol & 0xff) << 8);
-    }
-  }
-
-  if (ioctl (mixer->fd, MIXER_WRITE (osstrack->track_num), &volume) < 0) {
-    g_warning ("Error setting mixer recording device volume (0x%x): %s",
-        volume, g_strerror (errno));
-    return;
-  }
-
-  if (mute) {
-    track->flags |= GST_MIXER_TRACK_MUTE;
-  } else {
-    track->flags &= ~GST_MIXER_TRACK_MUTE;
-  }
-}
-#endif
-
-static gint
-gst_oss4_source_mixer_get_current_input (GstOss4Source * oss)
-{
-  int cur = -1;
-
-  if (ioctl (oss->fd, SNDCTL_DSP_GET_RECSRC, &cur) == -1 || cur < 0)
-    return -1;
-
-  return cur;
-}
-
-static const gchar *
-gst_oss4_source_mixer_update_record_flags (GstOss4Source * oss, gint cur_route)
-{
-  const gchar *cur_name = "";
-  GList *t;
-
-  for (t = oss->tracks; t != NULL; t = t->next) {
-    GstMixerTrack *track = t->data;
-
-    if (GST_OSS4_SOURCE_INPUT (track)->route == cur_route) {
-      if (!GST_MIXER_TRACK_HAS_FLAG (track, GST_MIXER_TRACK_RECORD)) {
-        track->flags |= GST_MIXER_TRACK_RECORD;
-        /* no point in sending a mixer-record-changes message here */
-      }
-      cur_name = track->label;
-    } else {
-      if (GST_MIXER_TRACK_HAS_FLAG (track, GST_MIXER_TRACK_RECORD)) {
-        track->flags &= ~GST_MIXER_TRACK_RECORD;
-        /* no point in sending a mixer-record-changes message here */
-      }
-    }
-  }
-
-  return cur_name;
-}
-
-static const GList *
-gst_oss4_source_mixer_list_tracks (GstMixer * mixer)
-{
-  oss_mixer_enuminfo names = { 0, };
-  GstOss4Source *oss;
-  const gchar *cur_name;
-  GList *tracks = NULL;
-  gint i, cur;
-
-  g_return_val_if_fail (mixer != NULL, NULL);
-  g_return_val_if_fail (GST_IS_OSS4_SOURCE (mixer), NULL);
-  g_return_val_if_fail (GST_OSS4_SOURCE_IS_OPEN (mixer), NULL);
-
-  oss = GST_OSS4_SOURCE (mixer);
-
-  if (oss->tracks != NULL && oss->tracks_static)
-    goto done;
-
-  if (ioctl (oss->fd, SNDCTL_DSP_GET_RECSRC_NAMES, &names) == -1)
-    goto get_recsrc_names_error;
-
-  oss->tracks_static = (names.version == 0);
-
-  GST_INFO_OBJECT (oss, "%d inputs (list is static: %s):", names.nvalues,
-      (oss->tracks_static) ? "yes" : "no");
-
-  for (i = 0; i < MIN (names.nvalues, OSS_ENUM_MAXVALUE + 1); ++i) {
-    GstMixerTrack *track;
-
-    track = g_object_new (GST_TYPE_OSS4_SOURCE_INPUT, NULL);
-    track->label = g_strdup (&names.strings[names.strindex[i]]);
-    track->flags = GST_MIXER_TRACK_INPUT;
-    track->num_channels = 2;
-    track->min_volume = 0;
-    track->max_volume = 100;
-    GST_OSS4_SOURCE_INPUT (track)->route = i;
-
-    GST_INFO_OBJECT (oss, " [%d] %s", i, track->label);
-    tracks = g_list_append (tracks, track);
-  }
-
-  gst_oss4_source_free_mixer_tracks (oss);
-  oss->tracks = tracks;
-
-done:
-
-  /* update RECORD flags */
-  cur = gst_oss4_source_mixer_get_current_input (oss);
-  cur_name = gst_oss4_source_mixer_update_record_flags (oss, cur);
-  GST_DEBUG_OBJECT (oss, "current input route: %d (%s)", cur, cur_name);
-
-  return (const GList *) oss->tracks;
-
-/* ERRORS */
-get_recsrc_names_error:
-  {
-    GST_WARNING_OBJECT (oss, "GET_RECSRC_NAMES failed: %s", g_strerror (errno));
-    return NULL;
-  }
-}
-
-static void
-gst_oss4_source_mixer_set_volume (GstMixer * mixer, GstMixerTrack * track,
-    gint * volumes)
-{
-  GstOss4Source *oss;
-  int new_vol, cur;
-
-  g_return_if_fail (mixer != NULL);
-  g_return_if_fail (track != NULL);
-  g_return_if_fail (GST_IS_MIXER_TRACK (track));
-  g_return_if_fail (GST_IS_OSS4_SOURCE (mixer));
-  g_return_if_fail (GST_OSS4_SOURCE_IS_OPEN (mixer));
-
-  oss = GST_OSS4_SOURCE (mixer);
-
-  cur = gst_oss4_source_mixer_get_current_input (oss);
-  if (cur != GST_OSS4_SOURCE_INPUT (track)->route) {
-    GST_DEBUG_OBJECT (oss, "track not selected input route, ignoring request");
-    return;
-  }
-
-  new_vol = (volumes[1] << 8) | volumes[0];
-  if (ioctl (oss->fd, SNDCTL_DSP_SETRECVOL, &new_vol) == -1) {
-    GST_WARNING_OBJECT (oss, "SETRECVOL failed: %s", g_strerror (errno));
-  }
-}
-
-static void
-gst_oss4_source_mixer_get_volume (GstMixer * mixer, GstMixerTrack * track,
-    gint * volumes)
-{
-  GstOss4Source *oss;
-  int cur;
-
-  g_return_if_fail (mixer != NULL);
-  g_return_if_fail (GST_IS_OSS4_SOURCE (mixer));
-  g_return_if_fail (GST_OSS4_SOURCE_IS_OPEN (mixer));
-
-  oss = GST_OSS4_SOURCE (mixer);
-
-  cur = gst_oss4_source_mixer_get_current_input (oss);
-  if (cur != GST_OSS4_SOURCE_INPUT (track)->route) {
-    volumes[0] = 0;
-    volumes[1] = 0;
-  } else {
-    int vol = -1;
-
-    if (ioctl (oss->fd, SNDCTL_DSP_GETRECVOL, &vol) == -1 || vol < 0) {
-      GST_WARNING_OBJECT (oss, "GETRECVOL failed: %s", g_strerror (errno));
-      volumes[0] = 100;
-      volumes[1] = 100;
-    } else {
-      volumes[0] = MIN (100, vol & 0xff);
-      volumes[1] = MIN (100, (vol >> 8) & 0xff);
-    }
-  }
-}
-
-static void
-gst_oss4_source_mixer_set_record (GstMixer * mixer, GstMixerTrack * track,
-    gboolean record)
-{
-  GstOss4Source *oss;
-  const gchar *cur_name;
-  gint cur;
-
-  g_return_if_fail (mixer != NULL);
-  g_return_if_fail (track != NULL);
-  g_return_if_fail (GST_IS_MIXER_TRACK (track));
-  g_return_if_fail (GST_IS_OSS4_SOURCE (mixer));
-  g_return_if_fail (GST_OSS4_SOURCE_IS_OPEN (mixer));
-
-  oss = GST_OSS4_SOURCE (mixer);
-
-  cur = gst_oss4_source_mixer_get_current_input (oss);
-
-  /* stop recording for an input that's not selected anyway => nothing to do */
-  if (!record && cur != GST_OSS4_SOURCE_INPUT (track)->route)
-    goto done;
-
-  /* select recording for an input that's already selected => nothing to do
-   * (or should we mess with the recording volume in this case maybe?) */
-  if (record && cur == GST_OSS4_SOURCE_INPUT (track)->route)
-    goto done;
-
-  /* make current input stop recording: we can't really make an input stop
-   * recording, we can only select an input FOR recording, so we'll just ignore
-   * all requests to stop for now */
-  if (!record) {
-    GST_WARNING_OBJECT (oss, "Can't un-select an input as such, only switch "
-        "to a different input source");
-    /* FIXME: set recording volume to 0 maybe? */
-  } else {
-    int new_route = GST_OSS4_SOURCE_INPUT (track)->route;
-
-    /* select this input for recording */
-
-    if (ioctl (oss->fd, SNDCTL_DSP_SET_RECSRC, &new_route) == -1) {
-      GST_WARNING_OBJECT (oss, "Could not select input %d for recording: %s",
-          new_route, g_strerror (errno));
-    } else {
-      cur = new_route;
-    }
-  }
-
-done:
-
-  cur_name = gst_oss4_source_mixer_update_record_flags (oss, cur);
-  GST_DEBUG_OBJECT (oss, "active input route: %d (%s)", cur, cur_name);
-}
-
-static void
-gst_oss4_source_mixer_set_mute (GstMixer * mixer, GstMixerTrack * track,
-    gboolean mute)
-{
-  g_return_if_fail (mixer != NULL);
-  g_return_if_fail (track != NULL);
-  g_return_if_fail (GST_IS_MIXER_TRACK (track));
-  g_return_if_fail (GST_IS_OSS4_SOURCE (mixer));
-  g_return_if_fail (GST_OSS4_SOURCE_IS_OPEN (mixer));
-
-  /* FIXME: implement gst_oss4_source_mixer_set_mute() - what to do here? */
-  /* oss4_mixer_set_mute (mixer->mixer, track, mute); */
-}
-
-static void
-gst_oss4_source_mixer_interface_init (GstMixerInterface * iface)
-{
-  GST_MIXER_TYPE (iface) = GST_MIXER_HARDWARE;
-
-  iface->list_tracks = gst_oss4_source_mixer_list_tracks;
-  iface->set_volume = gst_oss4_source_mixer_set_volume;
-  iface->get_volume = gst_oss4_source_mixer_get_volume;
-  iface->set_mute = gst_oss4_source_mixer_set_mute;
-  iface->set_record = gst_oss4_source_mixer_set_record;
-}
-
-/* Implement the horror that is GstImplementsInterface */
-
-static gboolean
-gst_oss4_source_mixer_supported (GstImplementsInterface * iface,
-    GType iface_type)
-{
-  GstOss4Source *oss;
-  gboolean is_open;
-
-  g_return_val_if_fail (GST_IS_OSS4_SOURCE (iface), FALSE);
-  g_return_val_if_fail (iface_type == GST_TYPE_MIXER, FALSE);
-
-  oss = GST_OSS4_SOURCE (iface);
-
-  GST_OBJECT_LOCK (oss);
-  is_open = GST_OSS4_SOURCE_IS_OPEN (iface);
-  GST_OBJECT_UNLOCK (oss);
-
-  return is_open;
-}
-
-static void
-gst_oss4_source_mixer_implements_interface_init (GstImplementsInterfaceClass *
-    klass)
-{
-  klass->supported = gst_oss4_source_mixer_supported;
-}
-
-static void
-gst_oss4_source_init_interfaces (GType type)
-{
-  static const GInterfaceInfo implements_iface_info = {
-    (GInterfaceInitFunc) gst_oss4_source_mixer_implements_interface_init,
-    NULL,
-    NULL,
-  };
-  static const GInterfaceInfo mixer_iface_info = {
-    (GInterfaceInitFunc) gst_oss4_source_mixer_interface_init,
-    NULL,
-    NULL,
-  };
-
-  g_type_add_interface_static (type, GST_TYPE_IMPLEMENTS_INTERFACE,
-      &implements_iface_info);
-  g_type_add_interface_static (type, GST_TYPE_MIXER, &mixer_iface_info);
-
-  gst_oss4_add_property_probe_interface (type);
 }
