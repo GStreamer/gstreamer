@@ -23,6 +23,10 @@ if (WIN32)
     ../../../win32/common)
 endif (WIN32)
 
+if (APPLE)
+  include_directories(AFTER ../..)
+endif (APPLE)
+
 add_library (gstopengl MODULE
   gstopengl.c
   gstglimagesink.c
