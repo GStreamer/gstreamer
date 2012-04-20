@@ -897,8 +897,8 @@ gst_dvbsrc_plugin_init (GstPlugin * plugin)
       GST_TYPE_DVBSRC);
 }
 
-static GstBuffer *
-gst_dvbsrc_read_device (GstDvbSrc * object, int size)
+static GstFlowReturn
+gst_dvbsrc_read_device (GstDvbSrc * object, int size, GstBuffer ** buffer)
 {
   gint count = 0;
   gint ret_val = 0;
@@ -906,10 +906,10 @@ gst_dvbsrc_read_device (GstDvbSrc * object, int size)
   GstClockTime timeout = object->timeout * GST_USECOND;
   GstMapInfo map;
 
-  g_return_val_if_fail (GST_IS_BUFFER (buf), NULL);
+  g_return_val_if_fail (GST_IS_BUFFER (buf), GST_FLOW_ERROR);
 
   if (object->fd_dvr < 0)
-    return NULL;
+    return GST_FLOW_ERROR;
 
   gst_buffer_map (buf, &map, GST_MAP_WRITE);
   while (count < size) {
@@ -943,20 +943,25 @@ gst_dvbsrc_read_device (GstDvbSrc * object, int size)
   gst_buffer_unmap (buf, &map);
   gst_buffer_resize (buf, 0, count);
 
-  return buf;
+  *buffer = buf;
+
+  return GST_FLOW_OK;
 
 stopped:
-  GST_DEBUG_OBJECT (object, "stop called");
-  gst_buffer_unmap (buf, &map);
-  gst_buffer_unref (buf);
-  return NULL;
-
+  {
+    GST_DEBUG_OBJECT (object, "stop called");
+    gst_buffer_unmap (buf, &map);
+    gst_buffer_unref (buf);
+    return GST_FLOW_WRONG_STATE;
+  }
 select_error:
-  GST_ELEMENT_ERROR (object, RESOURCE, READ, (NULL),
-      ("select error %d: %s (%d)", ret_val, g_strerror (errno), errno));
-  gst_buffer_unmap (buf, &map);
-  gst_buffer_unref (buf);
-  return NULL;
+  {
+    GST_ELEMENT_ERROR (object, RESOURCE, READ, (NULL),
+        ("select error %d: %s (%d)", ret_val, g_strerror (errno), errno));
+    gst_buffer_unmap (buf, &map);
+    gst_buffer_unref (buf);
+    return GST_FLOW_ERROR;
+  }
 }
 
 static GstFlowReturn
@@ -979,10 +984,7 @@ gst_dvbsrc_create (GstPushSrc * element, GstBuffer ** buf)
   if (object->fd_dvr > -1) {
     /* --- Read TS from DVR device --- */
     GST_DEBUG_OBJECT (object, "Reading from DVR device");
-    *buf = gst_dvbsrc_read_device (object, buffer_size);
-    if (*buf != NULL) {
-      retval = GST_FLOW_OK;
-    }
+    retval = gst_dvbsrc_read_device (object, buffer_size, buf);
 
     if (object->stats_interval != 0 &&
         ++object->stats_counter == object->stats_interval) {
