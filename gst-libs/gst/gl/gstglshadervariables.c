@@ -140,7 +140,7 @@ char *mat_parsevalue (int n, int m, char *value, char *_saveptr,
 		char *variables:
 			The text to be parsed.
 
-		int (*_setvariable)():	
+		int (*_setvariable)():
 			Defaults to gst_gl_shadervariable_set().
 			You can specify here a user function for managing the
 			parsed variable description.
@@ -148,7 +148,7 @@ char *mat_parsevalue (int n, int m, char *value, char *_saveptr,
 	return values:
 		 0: 	No error.
 		-1:	Error.
-	
+
 */
 
 int
@@ -319,7 +319,8 @@ parse_error:
       fprintf (stderr, " ");
     fprintf (stderr, "^\n");
   }
-  GST_ERROR ("parse error on line %d, position %d (%s)", line, t - p, t);
+  GST_ERROR ("parse error on line %d, position %ld (%s)", line, (glong) (t - p),
+      t);
   return -1;
 }
 
@@ -345,7 +346,7 @@ parse_error:
 	return values:
 		 0: 	No error.
 		!0:	Pointer to parse error.
-	
+
 */
 
 char *
@@ -425,7 +426,7 @@ parsename (char **varname, int *arraysize, char **saveptr)
 	return values:
 		 0: 	No error.
 		!0:	Variable type unknown/incorrect.
-	
+
 */
 
 int
@@ -622,7 +623,7 @@ gst_gl_shadervariable_set (GstGLShader * shader,
 	return values:
 		 0: 	No error.
 		!0:	Pointer to parse error.
-	
+
 */
 
 char *
@@ -882,7 +883,7 @@ parsevalue (char *value, char *_saveptr, struct gst_gl_shadervariable_desc *ret)
 	return values:
 		 0: 	No error.
 		!0:	Pointer to parse error.
-	
+
 */
 
 char *
@@ -1008,7 +1009,7 @@ vec_parsevalue (int n, char *value, char *_saveptr,
 	return values:
 		 0: 	No error.
 		!0:	Pointer to parse error.
-	
+
 */
 
 char *
@@ -1129,7 +1130,7 @@ bvec_parsevalue (int n, char *value, char *_saveptr,
 	return values:
 		 0: 	No error.
 		!0:	Pointer to parse error.
-	
+
 */
 
 char *
@@ -1255,7 +1256,7 @@ ivec_parsevalue (int n, char *value, char *_saveptr,
 	return values:
 		 0: 	No error.
 		!0:	Pointer to parse error.
-	
+
 */
 
 char *
@@ -1381,7 +1382,7 @@ uvec_parsevalue (int n, char *value, char *_saveptr,
 	return values:
 		 0: 	No error.
 		!0:	Pointer to parse error.
-	
+
 */
 
 char *
