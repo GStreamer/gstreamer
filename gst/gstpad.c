@@ -4633,7 +4633,7 @@ _priv_gst_pad_invalidate_cache (GstPad * pad)
   do {
     cache = g_atomic_pointer_get (cache_ptr);
     /* now try to replace the pointer with INVALID. If nothing is busy with this
-     * caps, we get the cache and clean it up. If something is busy, we replace
+     * cache, we get the cache and clean it up. If something is busy, we replace
      * with INVALID so that when the function finishes and tries to put the
      * cache back, it'll fail and cleanup */
   } while (!g_atomic_pointer_compare_and_exchange (cache_ptr, cache,
