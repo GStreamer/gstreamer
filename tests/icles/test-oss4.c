@@ -29,104 +29,10 @@
 #include <stdlib.h>
 
 #include <gst/gst.h>
-#include <gst/interfaces/propertyprobe.h>
-#include <gst/interfaces/mixer.h>
 
 static gboolean opt_show_mixer_messages = FALSE;
 
 #define WAIT_TIME  60.0         /* in seconds */
-
-static void
-show_mixer_messages (GstElement * element)
-{
-  GstMessage *msg;
-  GstBus *bus;
-  GTimer *t;
-
-  t = g_timer_new ();
-
-  bus = gst_bus_new ();
-  gst_element_set_bus (element, bus);
-
-  g_print ("\nShowing mixer messages for %u seconds ...\n", (guint) WAIT_TIME);
-
-  while (g_timer_elapsed (t, NULL) < WAIT_TIME) {
-    gdouble remaining = WAIT_TIME - g_timer_elapsed (t, NULL);
-    gint64 maxwait =
-        GST_SECOND * gst_util_gdouble_to_guint64 (MAX (0.0, remaining));
-    gchar *s = NULL;
-
-    msg = gst_bus_timed_pop (bus, maxwait);
-    if (!msg)
-      break;
-
-    if (msg->structure)
-      s = gst_structure_to_string (msg->structure);
-    g_print ("%s message: %s\n", GST_MESSAGE_TYPE_NAME (msg), s);
-    gst_message_unref (msg);
-    g_free (s);
-  }
-
-  gst_element_set_bus (element, NULL);
-  gst_object_unref (bus);
-  g_timer_destroy (t);
-}
-
-static void
-probe_mixer_tracks (GstElement * element)
-{
-  const GList *tracks, *t;
-  GstMixer *mixer;
-  guint count;
-
-  if (!GST_IS_MIXER (element))
-    return;
-
-  mixer = GST_MIXER (element);
-  tracks = gst_mixer_list_tracks (mixer);
-  count = g_list_length ((GList *) tracks);
-  g_print ("  %d mixer tracks%c\n", count, (count == 0) ? '.' : ':');
-
-  for (t = tracks; t != NULL; t = t->next) {
-    GstMixerTrack *track;
-    gchar *label = NULL;
-    guint flags = 0;
-
-    track = GST_MIXER_TRACK (t->data);
-    g_object_get (track, "label", &label, "flags", &flags, NULL);
-
-    if (GST_IS_MIXER_OPTIONS (track)) {
-      GString *s;
-      GList *vals, *v;
-
-      vals = gst_mixer_options_get_values (GST_MIXER_OPTIONS (track));
-      s = g_string_new ("options: ");
-      for (v = vals; v != NULL; v = v->next) {
-        if (v->prev != NULL)
-          g_string_append (s, ", ");
-        g_string_append (s, (const gchar *) v->data);
-      }
-
-      g_print ("    [%s] flags=0x%08x, %s\n", label, flags, s->str);
-      g_string_free (s, TRUE);
-    } else if (track->num_channels == 0) {
-      g_print ("    [%s] flags=0x%08x, switch\n", label, flags);
-    } else if (track->num_channels > 0) {
-      g_print ("    [%s] flags=0x%08x, slider (%d channels)\n", label, flags,
-          track->num_channels);
-    } else {
-      g_print ("    [%s] flags=0x%08x, UNKNOWN TYPE\n", label, flags);
-    }
-
-    g_free (label);
-  }
-
-  /* for testing the mixer watch thread / auto-notifications */
-  if (strstr (GST_ELEMENT_NAME (element), "mixer") != NULL &&
-      opt_show_mixer_messages) {
-    show_mixer_messages (element);
-  }
-}
 
 static void
 probe_pad (GstElement * element, const gchar * pad_name)
@@ -139,7 +45,7 @@ probe_pad (GstElement * element, const gchar * pad_name)
   if (pad == NULL)
     return;
 
-  caps = gst_pad_get_caps (pad);
+  caps = gst_pad_query_caps (pad, NULL);
   g_return_if_fail (caps != NULL);
 
   for (i = 0; i < gst_caps_get_size (caps); ++i) {
@@ -167,19 +73,14 @@ probe_details (GstElement * element)
   probe_pad (element, "sink");
   probe_pad (element, "src");
 
-  probe_mixer_tracks (element);
-
   gst_element_set_state (element, GST_STATE_NULL);
 }
 
 static void
 probe_element (const gchar * name)
 {
-  GstPropertyProbe *probe;
-  GValueArray *arr;
   GstElement *element;
   gchar *devname = NULL;
-  gint i;
 
   element = gst_element_factory_make (name, name);
 
@@ -192,35 +93,7 @@ probe_element (const gchar * name)
 
   /* and now for real */
 
-  probe = GST_PROPERTY_PROBE (element);
-  arr = gst_property_probe_probe_and_get_values_name (probe, "device");
-
-  for (i = 0; arr != NULL && i < arr->n_values; ++i) {
-    GValue *val;
-    gchar *dev_name = NULL;
-
-    g_print ("\n");
-    /* we assume the element supports getting the device-name in NULL state */
-    val = g_value_array_get_nth (arr, i);
-    g_object_set (element, "device", g_value_get_string (val), NULL);
-    g_object_get (element, "device-name", &dev_name, NULL);
-    g_print ("%-10s device[%d] = %s (%s)\n", GST_OBJECT_NAME (element),
-        i, g_value_get_string (val), dev_name);
-    if (strstr (dev_name, "/usb")) {
-      g_print ("\n\nWARNING: going to probe USB audio device. OSS4 USB support"
-          " is still\npretty shaky, so bad things may happen (e.g. kernel "
-          "lockup).\nPress Control-C NOW if you don't want to continue. "
-          "(waiting 5secs)\n\n");
-      g_usleep (5 * G_USEC_PER_SEC);
-    }
-    g_free (dev_name);
-
-    probe_details (element);
-  }
-
-  if (arr) {
-    g_value_array_free (arr);
-  }
+  probe_details (element);
 
   gst_object_unref (element);
 }
@@ -248,7 +121,6 @@ main (int argc, char **argv)
 
   probe_element ("oss4sink");
   probe_element ("oss4src");
-  probe_element ("oss4mixer");
 
   return 0;
 }
