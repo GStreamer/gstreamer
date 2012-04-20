@@ -425,6 +425,7 @@ gst_matroska_mux_init (GstMatroskaMux * mux)
 
   gst_pad_set_event_function (mux->srcpad, gst_matroska_mux_handle_src_event);
   gst_element_add_pad (GST_ELEMENT (mux), mux->srcpad);
+  gst_pad_use_fixed_caps (mux->srcpad);
 
   mux->collect = gst_collect_pads_new ();
   gst_collect_pads_set_clip_function (mux->collect,
@@ -2495,6 +2496,7 @@ gst_matroska_mux_start (GstMatroskaMux * mux)
   } else {
     ebml->caps = gst_caps_new_empty_simple ("video/x-matroska");
   }
+  gst_pad_set_caps (mux->srcpad, ebml->caps);
   /* we start with a EBML header */
   doctype = mux->doctype;
   GST_INFO_OBJECT (ebml, "DocType: %s, Version: %d",
@@ -3145,6 +3147,7 @@ gst_matroska_mux_stop_streamheader (GstMatroskaMux * mux)
   g_value_unset (&streamheader);
   gst_caps_replace (&ebml->caps, caps);
   gst_buffer_unref (streamheader_buffer);
+  gst_pad_set_caps (mux->srcpad, caps);
   gst_caps_unref (caps);
 }
 
