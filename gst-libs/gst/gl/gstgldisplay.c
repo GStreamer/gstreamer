@@ -2177,6 +2177,10 @@ gst_gl_display_check_framebuffer_status (void)
       GST_ERROR ("GL_FRAMEBUFFER_INCOMPLETE_DIMENSIONS");
       break;
 
+    case GL_FRAMEBUFFER_UNDEFINED:
+      GST_ERROR ("GL_FRAMEBUFFER_UNDEFINED");
+      break;
+
     default:
       GST_ERROR ("General FBO error");
   }
@@ -3286,9 +3290,9 @@ gst_gl_display_thread_do_upload_draw (GstGLDisplay * display)
       viewport_dim[3]);
 #endif
 
-  glBindFramebufferEXT (GL_FRAMEBUFFER_EXT, 0);
-
   gst_gl_display_check_framebuffer_status ();
+
+  glBindFramebufferEXT (GL_FRAMEBUFFER_EXT, 0);
 }
 
 
@@ -3578,9 +3582,9 @@ gst_gl_display_thread_do_download_draw_yuv (GstGLDisplay * display)
       viewport_dim[3]);
 #endif
 
-  glBindFramebufferEXT (GL_FRAMEBUFFER_EXT, 0);
-
   gst_gl_display_check_framebuffer_status ();
+
+  glBindFramebufferEXT (GL_FRAMEBUFFER_EXT, 0);
 
   glBindFramebufferEXT (GL_FRAMEBUFFER_EXT, display->download_fbo);
 #ifndef OPENGL_ES2
@@ -3627,6 +3631,7 @@ gst_gl_display_thread_do_download_draw_yuv (GstGLDisplay * display)
   glReadBuffer (GL_NONE);
 #endif
 
-  glBindFramebufferEXT (GL_FRAMEBUFFER_EXT, 0);
   gst_gl_display_check_framebuffer_status ();
+
+  glBindFramebufferEXT (GL_FRAMEBUFFER_EXT, 0);
 }
