@@ -103,7 +103,7 @@ gst_gl_differencematte_init_gl_resources (GstGLFilter * filter)
     gst_gl_display_set_error (GST_GL_FILTER (differencematte)->display,
         "Failed to initialize difference shader");
     GST_ELEMENT_ERROR (differencematte, RESOURCE, NOT_FOUND,
-        (GST_GL_DISPLAY_ERR_MSG (GST_GL_FILTER (differencematte)->display)),
+        GST_GL_DISPLAY_ERR_MSG (GST_GL_FILTER (differencematte)->display),
         (NULL));
     return;
   }
@@ -113,7 +113,7 @@ gst_gl_differencematte_init_gl_resources (GstGLFilter * filter)
     gst_gl_display_set_error (GST_GL_FILTER (differencematte)->display,
         "Failed to initialize hconv7 shader");
     GST_ELEMENT_ERROR (differencematte, RESOURCE, NOT_FOUND,
-        (GST_GL_DISPLAY_ERR_MSG (GST_GL_FILTER (differencematte)->display)),
+        GST_GL_DISPLAY_ERR_MSG (GST_GL_FILTER (differencematte)->display),
         (NULL));
     return;
   }
@@ -123,7 +123,7 @@ gst_gl_differencematte_init_gl_resources (GstGLFilter * filter)
     gst_gl_display_set_error (GST_GL_FILTER (differencematte)->display,
         "Failed to initialize vconv7 shader");
     GST_ELEMENT_ERROR (differencematte, RESOURCE, NOT_FOUND,
-        (GST_GL_DISPLAY_ERR_MSG (GST_GL_FILTER (differencematte)->display)),
+        GST_GL_DISPLAY_ERR_MSG (GST_GL_FILTER (differencematte)->display),
         (NULL));
     return;
   }
@@ -133,7 +133,7 @@ gst_gl_differencematte_init_gl_resources (GstGLFilter * filter)
     gst_gl_display_set_error (GST_GL_FILTER (differencematte)->display,
         "Failed to initialize interp shader");
     GST_ELEMENT_ERROR (differencematte, RESOURCE, NOT_FOUND,
-        (GST_GL_DISPLAY_ERR_MSG (GST_GL_FILTER (differencematte)->display)),
+        GST_GL_DISPLAY_ERR_MSG (GST_GL_FILTER (differencematte)->display),
         (NULL));
     return;
   }

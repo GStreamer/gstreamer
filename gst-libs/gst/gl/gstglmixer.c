@@ -638,7 +638,7 @@ gst_gl_mixer_query (GstPad * pad, GstQuery * query)
                 sink_pad->display, NULL);
           else
             GST_ELEMENT_ERROR (mix, RESOURCE, NOT_FOUND,
-                (GST_GL_DISPLAY_ERR_MSG (sink_pad->display)), (NULL));
+                GST_GL_DISPLAY_ERR_MSG (sink_pad->display), (NULL));
 
           /* does not work:
            * res = gst_pad_query_default (GST_PAD_CAST (sink_pad), query);*/
@@ -704,7 +704,7 @@ gst_gl_mixer_setcaps (GstPad * pad, GstCaps * caps)
   if (!gst_gl_display_gen_fbo (mix->display, mix->width, mix->height,
           &mix->fbo, &mix->depthbuffer)) {
     GST_ELEMENT_ERROR (mix, RESOURCE, NOT_FOUND,
-        (GST_GL_DISPLAY_ERR_MSG (mix->display)), (NULL));
+        GST_GL_DISPLAY_ERR_MSG (mix->display), (NULL));
     gst_object_unref (mix);
     return FALSE;
   }

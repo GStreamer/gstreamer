@@ -40,7 +40,7 @@ gst_gl_effects_tunnel_callback (gint width, gint height, guint texture,
     gst_gl_display_set_error (GST_GL_FILTER (effects)->display,
         "Failed to initialize tunnel shader");
     GST_ELEMENT_ERROR (effects, RESOURCE, NOT_FOUND,
-        (GST_GL_DISPLAY_ERR_MSG (GST_GL_FILTER (effects)->display)), (NULL));
+        GST_GL_DISPLAY_ERR_MSG (GST_GL_FILTER (effects)->display), (NULL));
     return;
   }
 

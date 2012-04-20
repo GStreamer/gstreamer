@@ -59,7 +59,7 @@ gst_gl_effects_xray_step_two (gint width, gint height, guint texture,
     gst_gl_display_set_error (GST_GL_FILTER (effects)->display,
         "Failed to initialize hconv7 shader");
     GST_ELEMENT_ERROR (effects, RESOURCE, NOT_FOUND,
-        (GST_GL_DISPLAY_ERR_MSG (GST_GL_FILTER (effects)->display)), (NULL));
+        GST_GL_DISPLAY_ERR_MSG (GST_GL_FILTER (effects)->display), (NULL));
     return;
   }
 
@@ -98,7 +98,7 @@ gst_gl_effects_xray_step_three (gint width, gint height, guint texture,
     gst_gl_display_set_error (GST_GL_FILTER (effects)->display,
         "Failed to initialize vconv7 shader");
     GST_ELEMENT_ERROR (effects, RESOURCE, NOT_FOUND,
-        (GST_GL_DISPLAY_ERR_MSG (GST_GL_FILTER (effects)->display)), (NULL));
+        GST_GL_DISPLAY_ERR_MSG (GST_GL_FILTER (effects)->display), (NULL));
     return;
   }
 
@@ -138,7 +138,7 @@ gst_gl_effects_xray_desaturate (gint width, gint height, guint texture,
     gst_gl_display_set_error (GST_GL_FILTER (effects)->display,
         "Failed to initialize desaturate shader");
     GST_ELEMENT_ERROR (effects, RESOURCE, NOT_FOUND,
-        (GST_GL_DISPLAY_ERR_MSG (GST_GL_FILTER (effects)->display)), (NULL));
+        GST_GL_DISPLAY_ERR_MSG (GST_GL_FILTER (effects)->display), (NULL));
     return;
   }
 
@@ -175,7 +175,7 @@ gst_gl_effects_xray_sobel_hconv (gint width, gint height, guint texture,
     gst_gl_display_set_error (GST_GL_FILTER (effects)->display,
         "Failed to initialize sobel hvonc3 shader");
     GST_ELEMENT_ERROR (effects, RESOURCE, NOT_FOUND,
-        (GST_GL_DISPLAY_ERR_MSG (GST_GL_FILTER (effects)->display)), (NULL));
+        GST_GL_DISPLAY_ERR_MSG (GST_GL_FILTER (effects)->display), (NULL));
     return;
   }
 
@@ -212,7 +212,7 @@ gst_gl_effects_xray_sobel_vconv (gint width, gint height, guint texture,
     gst_gl_display_set_error (GST_GL_FILTER (effects)->display,
         "Failed to initialize sobel vconv3 shader");
     GST_ELEMENT_ERROR (effects, RESOURCE, NOT_FOUND,
-        (GST_GL_DISPLAY_ERR_MSG (GST_GL_FILTER (effects)->display)), (NULL));
+        GST_GL_DISPLAY_ERR_MSG (GST_GL_FILTER (effects)->display), (NULL));
     return;
   }
 
@@ -249,7 +249,7 @@ gst_gl_effects_xray_sobel_length (gint width, gint height, guint texture,
     gst_gl_display_set_error (GST_GL_FILTER (effects)->display,
         "Failed to initialize seobel length shader");
     GST_ELEMENT_ERROR (effects, RESOURCE, NOT_FOUND,
-        (GST_GL_DISPLAY_ERR_MSG (GST_GL_FILTER (effects)->display)), (NULL));
+        GST_GL_DISPLAY_ERR_MSG (GST_GL_FILTER (effects)->display), (NULL));
     return;
   }
 
@@ -289,7 +289,7 @@ gst_gl_effects_xray_step_five (gint width, gint height, guint texture,
     gst_gl_display_set_error (GST_GL_FILTER (effects)->display,
         "Failed to initialize multiply shader");
     GST_ELEMENT_ERROR (effects, RESOURCE, NOT_FOUND,
-        (GST_GL_DISPLAY_ERR_MSG (GST_GL_FILTER (effects)->display)), (NULL));
+        GST_GL_DISPLAY_ERR_MSG (GST_GL_FILTER (effects)->display), (NULL));
     return;
   }
 

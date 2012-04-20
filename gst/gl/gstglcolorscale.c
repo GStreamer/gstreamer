@@ -394,7 +394,7 @@ gst_gl_colorscale_set_caps (GstBaseTransform * bt, GstCaps * incaps,
 
   if (!ret) {
     GST_ELEMENT_ERROR (colorscale, RESOURCE, NOT_FOUND,
-        (GST_GL_DISPLAY_ERR_MSG (colorscale->display)), (NULL));
+        GST_GL_DISPLAY_ERR_MSG (colorscale->display), (NULL));
     return FALSE;
   }
   //blocking call, init colorspace conversion if needed
@@ -405,7 +405,7 @@ gst_gl_colorscale_set_caps (GstBaseTransform * bt, GstCaps * incaps,
 
   if (!ret) {
     GST_ELEMENT_ERROR (colorscale, RESOURCE, NOT_FOUND,
-        (GST_GL_DISPLAY_ERR_MSG (colorscale->display)), (NULL));
+        GST_GL_DISPLAY_ERR_MSG (colorscale->display), (NULL));
     return FALSE;
   }
   //blocking call, init colorspace conversion if needed
@@ -415,7 +415,7 @@ gst_gl_colorscale_set_caps (GstBaseTransform * bt, GstCaps * incaps,
 
   if (!ret)
     GST_ELEMENT_ERROR (colorscale, RESOURCE, NOT_FOUND,
-        (GST_GL_DISPLAY_ERR_MSG (colorscale->display)), (NULL));
+        GST_GL_DISPLAY_ERR_MSG (colorscale->display), (NULL));
 
   return ret;
 }

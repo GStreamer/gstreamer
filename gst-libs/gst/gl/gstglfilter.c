@@ -270,7 +270,7 @@ gst_gl_filter_start (GstBaseTransform * bt)
 
       if (!isPerformed)
         GST_ELEMENT_ERROR (filter, RESOURCE, NOT_FOUND,
-            (GST_GL_DISPLAY_ERR_MSG (filter->display)), (NULL));
+            GST_GL_DISPLAY_ERR_MSG (filter->display), (NULL));
     }
   }
 
@@ -407,7 +407,7 @@ gst_gl_filter_set_caps (GstBaseTransform * bt, GstCaps * incaps,
 
   if (!ret) {
     GST_ELEMENT_ERROR (filter, RESOURCE, NOT_FOUND,
-        (GST_GL_DISPLAY_ERR_MSG (filter->display)), (NULL));
+        GST_GL_DISPLAY_ERR_MSG (filter->display), (NULL));
     return FALSE;
   }
 
@@ -420,7 +420,7 @@ gst_gl_filter_set_caps (GstBaseTransform * bt, GstCaps * incaps,
 
   if (!ret) {
     GST_ELEMENT_ERROR (filter, RESOURCE, NOT_FOUND,
-        (GST_GL_DISPLAY_ERR_MSG (filter->display)), (NULL));
+        GST_GL_DISPLAY_ERR_MSG (filter->display), (NULL));
     return FALSE;
   }
 
@@ -429,7 +429,7 @@ gst_gl_filter_set_caps (GstBaseTransform * bt, GstCaps * incaps,
 
   if (!ret) {
     GST_ELEMENT_ERROR (filter, RESOURCE, NOT_FOUND,
-        (GST_GL_DISPLAY_ERR_MSG (filter->display)), (NULL));
+        GST_GL_DISPLAY_ERR_MSG (filter->display), (NULL));
     return FALSE;
   }
 

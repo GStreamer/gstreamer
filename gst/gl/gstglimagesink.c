@@ -426,7 +426,7 @@ gst_glimage_sink_change_state (GstElement * element, GstStateChange transition)
         ok = gst_gl_display_create_context (glimage_sink->display, 0);
         if (!ok) {
           GST_ELEMENT_ERROR (glimage_sink, RESOURCE, NOT_FOUND,
-              (GST_GL_DISPLAY_ERR_MSG (glimage_sink->display)), (NULL));
+              GST_GL_DISPLAY_ERR_MSG (glimage_sink->display), (NULL));
 
           if (glimage_sink->display) {
             g_object_unref (glimage_sink->display);
@@ -539,7 +539,7 @@ gst_glimage_sink_set_caps (GstBaseSink * bsink, GstCaps * caps)
 
     if (!ok) {
       GST_ELEMENT_ERROR (glimage_sink, RESOURCE, NOT_FOUND,
-          (GST_GL_DISPLAY_ERR_MSG (glimage_sink->display)), (NULL));
+          GST_GL_DISPLAY_ERR_MSG (glimage_sink->display), (NULL));
       return FALSE;
     }
   }
@@ -662,7 +662,7 @@ gst_glimage_sink_render (GstBaseSink * bsink, GstBuffer * buf)
     return GST_FLOW_OK;
   else {
     GST_ELEMENT_ERROR (glimage_sink, RESOURCE, NOT_FOUND,
-        (GST_GL_DISPLAY_ERR_MSG (glimage_sink->display)), (NULL));
+        GST_GL_DISPLAY_ERR_MSG (glimage_sink->display), (NULL));
     return GST_FLOW_ERROR;
   }
 }

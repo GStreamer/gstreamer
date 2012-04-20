@@ -259,7 +259,7 @@ gst_gl_download_start (GstBaseTransform * bt)
   download->display = gst_gl_display_new ();
   if (!gst_gl_display_create_context (download->display, 0)) {
     GST_ELEMENT_ERROR (download, RESOURCE, NOT_FOUND,
-        (GST_GL_DISPLAY_ERR_MSG (download->display)), (NULL));
+        GST_GL_DISPLAY_ERR_MSG (download->display), (NULL));
     return FALSE;
   }
 
@@ -356,7 +356,7 @@ gst_gl_download_set_caps (GstBaseTransform * bt, GstCaps * incaps,
       download->width, download->height);
   if (!ret)
     GST_ELEMENT_ERROR (download, RESOURCE, NOT_FOUND,
-        (GST_GL_DISPLAY_ERR_MSG (download->display)), (NULL));
+        GST_GL_DISPLAY_ERR_MSG (download->display), (NULL));
 
   return ret;
 }

@@ -49,8 +49,7 @@ gst_gl_effects_squeeze_callback (gint width, gint height, guint texture,
         error = NULL;
         gst_gl_shader_use (NULL);
         GST_ELEMENT_ERROR (effects, RESOURCE, NOT_FOUND,
-            (GST_GL_DISPLAY_ERR_MSG (GST_GL_FILTER (effects)->display)),
-            (NULL));
+            GST_GL_DISPLAY_ERR_MSG (GST_GL_FILTER (effects)->display), (NULL));
       } else {
         effects->draw_attr_position_loc =
             gst_gl_shader_get_attribute_location (shader, "a_position");
@@ -66,7 +65,7 @@ gst_gl_effects_squeeze_callback (gint width, gint height, guint texture,
     gst_gl_display_set_error (GST_GL_FILTER (effects)->display,
         "Failed to initialize squeeze shader");
     GST_ELEMENT_ERROR (effects, RESOURCE, NOT_FOUND,
-        (GST_GL_DISPLAY_ERR_MSG (GST_GL_FILTER (effects)->display)), (NULL));
+        GST_GL_DISPLAY_ERR_MSG (GST_GL_FILTER (effects)->display), (NULL));
     return;
   }
   glMatrixMode (GL_PROJECTION);

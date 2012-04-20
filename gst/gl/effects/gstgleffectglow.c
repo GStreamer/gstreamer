@@ -43,7 +43,7 @@ gst_gl_effects_glow_step_one (gint width, gint height, guint texture,
     gst_gl_display_set_error (GST_GL_FILTER (effects)->display,
         "Failed to initialize luma threshold shader");
     GST_ELEMENT_ERROR (effects, RESOURCE, NOT_FOUND,
-        (GST_GL_DISPLAY_ERR_MSG (GST_GL_FILTER (effects)->display)), (NULL));
+        GST_GL_DISPLAY_ERR_MSG (GST_GL_FILTER (effects)->display), (NULL));
     return;
   }
 
@@ -85,7 +85,7 @@ gst_gl_effects_glow_step_two (gint width, gint height, guint texture,
     gst_gl_display_set_error (GST_GL_FILTER (effects)->display,
         "Failed to initialize hconv7 shader");
     GST_ELEMENT_ERROR (effects, RESOURCE, NOT_FOUND,
-        (GST_GL_DISPLAY_ERR_MSG (GST_GL_FILTER (effects)->display)), (NULL));
+        GST_GL_DISPLAY_ERR_MSG (GST_GL_FILTER (effects)->display), (NULL));
     return;
   }
 
@@ -124,7 +124,7 @@ gst_gl_effects_glow_step_three (gint width, gint height, guint texture,
     gst_gl_display_set_error (GST_GL_FILTER (effects)->display,
         "Failed to initialize vcon7 shader");
     GST_ELEMENT_ERROR (effects, RESOURCE, NOT_FOUND,
-        (GST_GL_DISPLAY_ERR_MSG (GST_GL_FILTER (effects)->display)), (NULL));
+        GST_GL_DISPLAY_ERR_MSG (GST_GL_FILTER (effects)->display), (NULL));
     return;
   }
 
@@ -163,7 +163,7 @@ gst_gl_effects_glow_step_four (gint width, gint height, guint texture,
     gst_gl_display_set_error (GST_GL_FILTER (effects)->display,
         "Failed to initialize sum shader");
     GST_ELEMENT_ERROR (effects, RESOURCE, NOT_FOUND,
-        (GST_GL_DISPLAY_ERR_MSG (GST_GL_FILTER (effects)->display)), (NULL));
+        GST_GL_DISPLAY_ERR_MSG (GST_GL_FILTER (effects)->display), (NULL));
     return;
   }
 

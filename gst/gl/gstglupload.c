@@ -305,7 +305,7 @@ gst_gl_upload_start (GstBaseTransform * bt)
 
       if (!isPerformed)
         GST_ELEMENT_ERROR (upload, RESOURCE, NOT_FOUND,
-            (GST_GL_DISPLAY_ERR_MSG (upload->display)), (NULL));
+            GST_GL_DISPLAY_ERR_MSG (upload->display), (NULL));
     }
   }
 
@@ -511,7 +511,7 @@ gst_gl_upload_set_caps (GstBaseTransform * bt, GstCaps * incaps,
 
   if (!ret)
     GST_ELEMENT_ERROR (upload, RESOURCE, NOT_FOUND,
-        (GST_GL_DISPLAY_ERR_MSG (upload->display)), (NULL));
+        GST_GL_DISPLAY_ERR_MSG (upload->display), (NULL));
 
   return ret;
 }

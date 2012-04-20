@@ -78,7 +78,7 @@ typedef void (*GstGLDisplayThreadFunc) (GstGLDisplay * display, gpointer data);
 typedef void (*GLCB) (gint, gint, guint, gpointer stuff);
 typedef void (*GLCB_V2) (gpointer stuff);
 
-#define GST_GL_DISPLAY_ERR_MSG(obj) (GST_GL_DISPLAY_CAST(obj)->error_message)
+#define GST_GL_DISPLAY_ERR_MSG(obj) ("%s", GST_GL_DISPLAY_CAST(obj)->error_message)
 
 struct _GstGLDisplay
 {

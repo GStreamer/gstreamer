@@ -392,7 +392,7 @@ gst_gl_test_src_setcaps (GstBaseSrc * bsrc, GstCaps * caps)
 
     if (!res)
       GST_ELEMENT_ERROR (gltestsrc, RESOURCE, NOT_FOUND,
-          (GST_GL_DISPLAY_ERR_MSG (gltestsrc->display)), (NULL));
+          GST_GL_DISPLAY_ERR_MSG (gltestsrc->display), (NULL));
   }
   return res;
 }
@@ -651,7 +651,7 @@ gst_gl_test_src_start (GstBaseSrc * basesrc)
 
       if (!isPerformed)
         GST_ELEMENT_ERROR (src, RESOURCE, NOT_FOUND,
-            (GST_GL_DISPLAY_ERR_MSG (src->display)), (NULL));
+            GST_GL_DISPLAY_ERR_MSG (src->display), (NULL));
     }
   }
 
