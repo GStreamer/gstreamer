@@ -146,6 +146,7 @@ struct _MpegTSBaseClass {
   /* Virtual methods */
   void (*reset) (MpegTSBase *base);
   GstFlowReturn (*push) (MpegTSBase *base, MpegTSPacketizerPacket *packet, MpegTSPacketizerSection * section);
+  /* takes ownership of @event */
   gboolean (*push_event) (MpegTSBase *base, GstEvent * event);
 
   /* program_started gets called when program's pmt arrives for first time */
