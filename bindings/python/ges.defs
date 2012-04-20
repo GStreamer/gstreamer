@@ -1153,7 +1153,7 @@
   (c-name "ges_timeline_object_split")
   (return-type "GESTimelineObject*")
   (parameters
-    '("gint64" "position")
+    '("guint64" "position")
   )
 )
 

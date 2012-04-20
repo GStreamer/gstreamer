@@ -298,7 +298,7 @@ ges_timeline_object_set_supported_formats   (GESTimelineObject * object,
 					    GESTrackType supportedformats);
 
 GESTimelineObject *
-ges_timeline_object_split                   (GESTimelineObject * object, gint64 position);
+ges_timeline_object_split                   (GESTimelineObject * object, guint64 position);
 
 void
 ges_timeline_object_objects_set_locked      (GESTimelineObject * object, gboolean locked);

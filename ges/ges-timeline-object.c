@@ -1307,7 +1307,8 @@ ges_timeline_object_set_top_effect_priority (GESTimelineObject * object,
 /**
  * ges_timeline_object_split:
  * @object: the #GESTimelineObject to split
- * @position: The position at which to split the @object (in nanosecond)
+ * @position: a #GstClockTime representing the position at which to split
+ * @object
  *
  * The function modifies @object, and creates another #GESTimelineObject so
  * we have two clips at the end, splitted at the time specified by @position.
@@ -1318,7 +1319,7 @@ ges_timeline_object_set_top_effect_priority (GESTimelineObject * object,
  * Since: 0.10.XX
  */
 GESTimelineObject *
-ges_timeline_object_split (GESTimelineObject * object, gint64 position)
+ges_timeline_object_split (GESTimelineObject * object, guint64 position)
 {
   GList *tmp;
   gboolean locked;
@@ -1328,6 +1329,7 @@ ges_timeline_object_split (GESTimelineObject * object, gint64 position)
   GstClockTime start, inpoint, duration;
 
   g_return_val_if_fail (GES_IS_TIMELINE_OBJECT (object), NULL);
+  g_return_val_if_fail (GST_CLOCK_TIME_IS_VALID (position), NULL);
 
   priv = object->priv;
 
