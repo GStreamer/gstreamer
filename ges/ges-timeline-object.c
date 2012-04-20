@@ -58,10 +58,6 @@ track_object_priority_changed_cb (GESTrackObject * child,
     GParamSpec * arg G_GNUC_UNUSED, GESTimelineObject * object);
 static void update_height (GESTimelineObject * object);
 
-void
-tck_object_added_cb (GESTimelineObject * object,
-    GESTrackObject * track_object, GList * track_objects);
-
 static gint sort_track_effects (gpointer a, gpointer b,
     GESTimelineObject * object);
 static void
@@ -1308,34 +1304,6 @@ ges_timeline_object_set_top_effect_priority (GESTimelineObject * object,
   return TRUE;
 }
 
-void
-tck_object_added_cb (GESTimelineObject * object,
-    GESTrackObject * track_object, GList * track_objects)
-{
-  gint64 duration, start, inpoint, position;
-  GList *tmp;
-  gboolean locked;
-
-  ges_track_object_set_locked (track_object, FALSE);
-  g_object_get (object, "start", &position, NULL);
-  for (tmp = track_objects; tmp; tmp = tmp->next) {
-    if (ges_track_object_get_track (track_object)->type ==
-        ges_track_object_get_track (tmp->data)->type) {
-      locked = ges_track_object_is_locked (tmp->data);
-      ges_track_object_set_locked (tmp->data, FALSE);
-      g_object_get (tmp->data, "duration", &duration, "start", &start,
-          "in-point", &inpoint, NULL);
-      g_object_set (tmp->data, "duration",
-          duration - (duration + start - position), NULL);
-      g_object_set (track_object, "start", position, "in-point",
-          duration - (duration + start - inpoint - position), "duration",
-          duration + start - position, NULL);
-      ges_track_object_set_locked (tmp->data, locked);
-      ges_track_object_set_locked (track_object, locked);
-    }
-  }
-}
-
 /**
  * ges_timeline_object_split:
  * @object: the #GESTimelineObject to split
@@ -1352,38 +1320,100 @@ tck_object_added_cb (GESTimelineObject * object,
 GESTimelineObject *
 ges_timeline_object_split (GESTimelineObject * object, gint64 position)
 {
-  GList *track_objects, *tmp;
-  GESTimelineLayer *layer;
+  GList *tmp;
+  gboolean locked;
   GESTimelineObject *new_object;
-  gint64 duration, start, inpoint;
+  GESTimelineObjectPrivate *priv;
+
+  GstClockTime start, inpoint, duration;
 
   g_return_val_if_fail (GES_IS_TIMELINE_OBJECT (object), NULL);
 
-  g_object_get (object, "duration", &duration, "start", &start, "in-point",
-      &inpoint, NULL);
+  priv = object->priv;
 
-  track_objects = ges_timeline_object_get_track_objects (object);
-  layer = ges_timeline_object_get_layer (object);
+  duration = GES_TIMELINE_OBJECT_DURATION (object);
+  start = GES_TIMELINE_OBJECT_START (object);
+  inpoint = GES_TIMELINE_OBJECT_INPOINT (object);
 
-  new_object = ges_timeline_object_copy (object, FALSE);
-
-  if (g_list_length (track_objects) == 2) {
-    g_object_set (new_object, "start", position, NULL);
-    g_signal_connect (G_OBJECT (new_object), "track-object-added",
-        G_CALLBACK (tck_object_added_cb), track_objects);
-  } else {
-    for (tmp = track_objects; tmp; tmp = tmp->next) {
-      g_object_set (tmp->data, "duration",
-          duration - (duration + start - position), NULL);
-      g_object_set (new_object, "start", position, "in-point",
-          duration - (duration + start - position), "duration",
-          (duration + start - position), NULL);
-      g_object_set (object, "duration",
-          duration - (duration + start - position), NULL);
-    }
+  if (position >= start + duration || position <= start) {
+    GST_WARNING_OBJECT (object, "Can not split %" GST_TIME_FORMAT
+        " out of boundaries", GST_TIME_ARGS (position));
+    return NULL;
   }
 
-  ges_timeline_layer_add_object (layer, new_object);
+  GST_DEBUG_OBJECT (object, "Spliting at %" GST_TIME_FORMAT,
+      GST_TIME_ARGS (position));
+
+  /* Create the new TimelineObject */
+  new_object = ges_timeline_object_copy (object, FALSE);
+
+  /* Set new timing properties on the TimelineObject */
+  ges_timeline_object_set_start (new_object, position);
+  ges_timeline_object_set_inpoint (new_object, object->inpoint +
+      duration - (duration + start - position));
+  ges_timeline_object_set_duration (new_object, duration + start - position);
+
+  if (object->priv->layer) {
+    /* We do not want the timeline to create again TrackObject-s */
+    ges_timeline_object_set_moving_from_layer (new_object, TRUE);
+    ges_timeline_layer_add_object (object->priv->layer, new_object);
+    ges_timeline_object_set_moving_from_layer (new_object, FALSE);
+  }
+
+  /* We first set the new duration and the child mapping will be updated
+   * properly in the following loop */
+  object->duration = position - object->start;
+  for (tmp = priv->trackobjects; tmp; tmp = tmp->next) {
+    GESTrack *track;
+
+    GESTrackObject *new_tckobj, *tckobj = GES_TRACK_OBJECT (tmp->data);
+
+    duration = ges_track_object_get_duration (tckobj);
+    start = ges_track_object_get_start (tckobj);
+    inpoint = ges_track_object_get_inpoint (tckobj);
+
+    if (position <= start || position >= (start + duration)) {
+      GST_DEBUG_OBJECT (tckobj, "Outside %" GST_TIME_FORMAT "the boundaries "
+          "not copying it ( start %" GST_TIME_FORMAT ", end %" GST_TIME_FORMAT
+          ")", GST_TIME_ARGS (position), GST_TIME_ARGS (tckobj->start),
+          GST_TIME_ARGS (tckobj->start + tckobj->duration));
+      continue;
+    }
+
+    new_tckobj = ges_track_object_copy (tckobj, TRUE);
+    if (new_tckobj == NULL) {
+      GST_WARNING_OBJECT (tckobj, "Could not create a copy");
+      continue;
+    }
+
+    ges_timeline_object_add_track_object (new_object, new_tckobj);
+
+    track = ges_track_object_get_track (tckobj);
+    if (track == NULL)
+      GST_DEBUG_OBJECT (tckobj, "Was not in a track, not adding %p to"
+          "any track", new_tckobj);
+    else
+      ges_track_add_object (track, new_tckobj);
+
+    /* Unlock TrackObject-s as we do not want the container to move
+     * syncronously */
+    locked = ges_track_object_is_locked (tckobj);
+    ges_track_object_set_locked (new_tckobj, FALSE);
+    ges_track_object_set_locked (tckobj, FALSE);
+
+    /* Set 'new' track object timing propeties */
+    ges_track_object_set_start (new_tckobj, position);
+    ges_track_object_set_inpoint (new_tckobj, inpoint + duration - (duration +
+            start - position));
+    ges_track_object_set_duration (new_tckobj, duration + start - position);
+
+    /* Set 'old' track object duration */
+    ges_track_object_set_duration (tckobj, position - start);
+
+    /* And let track objects in the same locking state as before. */
+    ges_track_object_set_locked (tckobj, locked);
+    ges_track_object_set_locked (new_tckobj, locked);
+  }
 
   return new_object;
 }
@@ -1416,18 +1446,6 @@ ges_timeline_object_copy (GESTimelineObject * object, gboolean * deep)
   }
 
   ret = g_object_newv (G_TYPE_FROM_INSTANCE (object), n_params, params);
-
-  if (GES_IS_TIMELINE_FILE_SOURCE (ret)) {
-    GList *tck_objects;
-    tck_objects = ges_timeline_object_get_track_objects (object);
-    if (g_list_length (tck_objects) == 1) {
-      GESTrackType type;
-      type = ges_track_object_get_track (tck_objects->data)->type;
-      ges_timeline_filesource_set_supported_formats (GES_TIMELINE_FILE_SOURCE
-          (ret), type);
-    }
-    g_list_free (tck_objects);
-  }
 
   g_free (specs);
   g_free (params);
