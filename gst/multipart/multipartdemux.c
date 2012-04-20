@@ -313,14 +313,6 @@ gst_multipart_find_pad_by_mime (GstMultipartDemux * demux, gchar * mime,
         name);
     g_free (name);
 
-    /* take the mime type, convert it to the caps name */
-    capsname = gst_multipart_demux_get_gstname (demux, mime);
-    caps = gst_caps_from_string (capsname);
-    GST_DEBUG_OBJECT (demux, "caps for pad: %s", capsname);
-    gst_pad_use_fixed_caps (pad);
-    gst_pad_set_caps (pad, caps);
-    gst_caps_unref (caps);
-
     mppad->pad = pad;
     mppad->mime = g_strdup (mime);
     mppad->last_ret = GST_FLOW_OK;
@@ -328,7 +320,15 @@ gst_multipart_find_pad_by_mime (GstMultipartDemux * demux, gchar * mime,
     demux->srcpads = g_slist_prepend (demux->srcpads, mppad);
     demux->numpads++;
 
+    /* take the mime type, convert it to the caps name */
+    capsname = gst_multipart_demux_get_gstname (demux, mime);
+    caps = gst_caps_from_string (capsname);
+    GST_DEBUG_OBJECT (demux, "caps for pad: %s", capsname);
+    gst_pad_use_fixed_caps (pad);
     gst_pad_set_active (pad, TRUE);
+    gst_pad_set_caps (pad, caps);
+    gst_caps_unref (caps);
+
     gst_element_add_pad (GST_ELEMENT_CAST (demux), pad);
 
     if (created) {
