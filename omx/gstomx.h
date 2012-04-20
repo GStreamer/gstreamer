@@ -71,6 +71,11 @@ G_BEGIN_DECLS
  */
 #define GST_OMX_HACK_DRAIN_MAY_NOT_RETURN                             G_GUINT64_CONSTANT (0x0000000000000040)
 
+/* If the component doesn't allow any component role to be set.
+ * Happens with Broadcom's OpenMAX implementation.
+ */
+#define GST_OMX_HACK_NO_COMPONENT_ROLE                                G_GUINT64_CONSTANT (0x0000000000000080)
+
 
 typedef struct _GstOMXCore GstOMXCore;
 typedef struct _GstOMXPort GstOMXPort;
