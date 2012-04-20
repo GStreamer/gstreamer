@@ -44,7 +44,7 @@ OPENGL_SOURCES =  \
 	effects/gstgleffectsin.c \
 	effects/gstgleffectglow.c \
 	effects/gstgleffectxray.c
-	
+
 if HAVE_PNG
 OPENGL_SOURCES += \
 	gstglbumper.c \
