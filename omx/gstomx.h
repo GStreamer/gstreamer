@@ -39,6 +39,7 @@ G_BEGIN_DECLS
   (st)->nSize = sizeof (*(st)); \
   (st)->nVersion.s.nVersionMajor = 1; \
   (st)->nVersion.s.nVersionMinor = 1; \
+  (st)->nVersion.s.nRevision = 2; \
 } G_STMT_END
 
 /* Different hacks that are required to work around
