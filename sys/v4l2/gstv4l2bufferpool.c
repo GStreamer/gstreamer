@@ -40,8 +40,6 @@
 
 #include <gstv4l2bufferpool.h>
 
-#include "gstv4l2src.h"
-#include "gstv4l2sink.h"
 #include "v4l2_calls.h"
 #include "gst/gst-i18n-plugin.h"
 #include <gst/glib-compat-private.h>
