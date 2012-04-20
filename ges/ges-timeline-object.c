@@ -477,6 +477,7 @@ ges_timeline_object_create_track_objects (GESTimelineObject * object,
     GST_WARNING ("no GESTimelineObject::create_track_objects implentation");
     return FALSE;
   }
+
   return klass->create_track_objects (object, track);
 }
 
@@ -646,12 +647,13 @@ ges_timeline_object_release_track_object (GESTimelineObject * object,
 {
   GList *tmp;
   ObjectMapping *mapping = NULL;
-  GESTimelineObjectClass *klass = GES_TIMELINE_OBJECT_GET_CLASS (object);
+  GESTimelineObjectClass *klass;
 
   g_return_val_if_fail (GES_IS_TIMELINE_OBJECT (object), FALSE);
   g_return_val_if_fail (GES_IS_TRACK_OBJECT (trackobject), FALSE);
 
   GST_DEBUG ("object:%p, trackobject:%p", object, trackobject);
+  klass = GES_TIMELINE_OBJECT_GET_CLASS (object);
 
   if (!(g_list_find (object->priv->trackobjects, trackobject))) {
     GST_WARNING ("TrackObject isn't controlled by this object");
@@ -977,7 +979,7 @@ void
 ges_timeline_object_set_moving_from_layer (GESTimelineObject * object,
     gboolean is_moving)
 {
-  g_return_if_fail (GES_IS_TRACK_OBJECT (object));
+  g_return_if_fail (GES_IS_TIMELINE_OBJECT (object));
 
   object->priv->is_moving = is_moving;
 }
@@ -997,6 +999,8 @@ ges_timeline_object_set_moving_from_layer (GESTimelineObject * object,
 gboolean
 ges_timeline_object_is_moving_from_layer (GESTimelineObject * object)
 {
+  g_return_val_if_fail (GES_IS_TIMELINE_OBJECT (object), FALSE);
+
   return object->priv->is_moving;
 }
 
