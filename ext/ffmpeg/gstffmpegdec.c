@@ -2757,15 +2757,15 @@ gst_ffmpegdec_chain (GstPad * pad, GstObject * parent, GstBuffer * inbuf)
   discont = GST_BUFFER_IS_DISCONT (inbuf);
 
   /* The discont flags marks a buffer that is not continuous with the previous
-   * buffer. This means we need to clear whatever data we currently have. We
-   * currently also wait for a new keyframe, which might be suboptimal in the
-   * case of a network error, better show the errors than to drop all data.. */
+   * buffer. This means we need to clear whatever data we currently have. We let
+   * ffmpeg continue with the data that it has. We currently drain the old
+   * frames that might be inside the decoder and we clear any partial data in
+   * the pcache, we might be able to remove the drain and flush too. */
   if (G_UNLIKELY (discont)) {
     GST_DEBUG_OBJECT (ffmpegdec, "received DISCONT");
     /* drain what we have queued */
     gst_ffmpegdec_drain (ffmpegdec);
     gst_ffmpegdec_flush_pcache (ffmpegdec);
-    avcodec_flush_buffers (ffmpegdec->context);
     ffmpegdec->discont = TRUE;
     gst_ffmpegdec_reset_ts (ffmpegdec);
   }
