@@ -2,16 +2,12 @@ plugin_LTLIBRARIES = libgstossaudio.la
 
 libgstossaudio_la_SOURCES = gstossaudio.c	 \
 		            gstosshelper.c	 \
-			    gstossmixer.c	 \
-			    gstossmixerelement.c \
-			    gstossmixertrack.c	 \
 			    gstosssink.c	 \
 			    gstosssrc.c
 
 libgstossaudio_la_CFLAGS = $(GST_PLUGINS_BASE_CFLAGS) $(GST_BASE_CFLAGS) $(GST_CFLAGS)
 libgstossaudio_la_LIBADD = \
 	$(GST_PLUGINS_BASE_LIBS) \
-        -lgstinterfaces-$(GST_API_VERSION) \
 	-lgstaudio-$(GST_API_VERSION) \
 	$(GST_BASE_LIBS) \
 	$(GST_LIBS)
@@ -22,7 +18,4 @@ noinst_HEADERS = common.h            \
 		gstosssink.h	     \
 		gstosssrc.h	     \
                 gstosshelper.h	     \
-		gstossdmabuffer.h    \
-		gstossmixer.h        \
-		gstossmixerelement.h \
-		gstossmixertrack.h
+                gstossdmabuffer.h

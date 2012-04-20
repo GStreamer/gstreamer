@@ -194,7 +194,6 @@ EXTRA_HFILES = \
 	$(top_srcdir)/sys/oss4/oss4-mixer.h \
 	$(top_srcdir)/sys/oss4/oss4-sink.h \
 	$(top_srcdir)/sys/oss4/oss4-source.h \
-	$(top_srcdir)/sys/oss/gstossmixerelement.h \
 	$(top_srcdir)/sys/oss/gstosssink.h \
 	$(top_srcdir)/sys/oss/gstosssrc.h \
 	$(top_srcdir)/sys/osxaudio/gstosxaudiosrc.h \

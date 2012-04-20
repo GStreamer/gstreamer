@@ -1458,20 +1458,6 @@ GstOss4SourceInputClass
 </SECTION>
 
 <SECTION>
-<FILE>element-ossmixer</FILE>
-<TITLE>ossmixer</TITLE>
-GstOssMixerElement
-<SUBSECTION Standard>
-GstOssMixerElementClass
-GST_OSS_MIXER_ELEMENT
-GST_OSS_MIXER_ELEMENT_CLASS
-GST_IS_OSS_MIXER_ELEMENT
-GST_IS_OSS_MIXER_ELEMENT_CLASS
-GST_TYPE_OSS_MIXER_ELEMENT
-gst_oss_mixer_element_get_type
-</SECTION>
-
-<SECTION>
 <FILE>element-osssink</FILE>
 <TITLE>osssink</TITLE>
 GstOssSink

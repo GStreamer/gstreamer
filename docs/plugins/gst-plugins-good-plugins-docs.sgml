@@ -114,7 +114,6 @@
     <xi:include href="xml/element-oss4mixer.xml" />
     <xi:include href="xml/element-oss4sink.xml" />
     <xi:include href="xml/element-oss4src.xml" />
-    <xi:include href="xml/element-ossmixer.xml" />
     <xi:include href="xml/element-osssink.xml" />
     <xi:include href="xml/element-osssrc.xml" />
     <xi:include href="xml/element-osxaudiosink.xml" />

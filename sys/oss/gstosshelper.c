@@ -47,10 +47,7 @@
 # endif /* HAVE_OSS_INCLUDE_IN_ROOT */
 #endif /* HAVE_OSS_INCLUDE_IN_SYS */
 
-#include <gst/interfaces/propertyprobe.h>
-
 #include "gstosshelper.h"
-#include "gstossmixer.h"
 
 GST_DEBUG_CATEGORY_EXTERN (oss_debug);
 #define GST_CAT_DEFAULT oss_debug
@@ -176,19 +173,19 @@ gst_oss_helper_get_format_structure (unsigned int format_bit)
       format = "U8";
       break;
     case AFMT_S16_LE:
-      format = "S16_LE";
+      format = "S16LE";
       break;
     case AFMT_S16_BE:
-      format = "S16_BE";
+      format = "S16BE";
       break;
     case AFMT_S8:
       format = "S8";
       break;
     case AFMT_U16_LE:
-      format = "U16_LE";
+      format = "U16LE";
       break;
     case AFMT_U16_BE:
-      format = "U16_BE";
+      format = "U16BE";
       break;
     default:
       g_assert_not_reached ();
@@ -196,7 +193,8 @@ gst_oss_helper_get_format_structure (unsigned int format_bit)
   }
 
   structure = gst_structure_new ("audio/x-raw",
-      "format", G_TYPE_STRING, format, NULL);
+      "format", G_TYPE_STRING, format,
+      "layout", G_TYPE_STRING, "interleaved", NULL);
 
   return structure;
 }
@@ -385,4 +383,42 @@ gst_oss_helper_rate_int_compare (gconstpointer a, gconstpointer b)
   if (*va > *vb)
     return 1;
   return 0;
+}
+
+gchar *
+gst_oss_helper_get_card_name (const gchar * mixer_name)
+{
+#ifdef SOUND_MIXER_INFO
+  struct mixer_info minfo;
+#endif
+  gint fd;
+  gchar *name = NULL;
+
+  GST_INFO ("Opening mixer for device %s", mixer_name);
+  fd = open (mixer_name, O_RDWR);
+  if (fd == -1)
+    goto open_failed;
+
+  /* get name, not fatal */
+#ifdef SOUND_MIXER_INFO
+  if (ioctl (fd, SOUND_MIXER_INFO, &minfo) == 0) {
+    name = g_strdup (minfo.name);
+    GST_INFO ("Card name = %s", GST_STR_NULL (name));
+  } else
+#endif
+  {
+    name = g_strdup ("Unknown");
+    GST_INFO ("Unknown card name");
+  }
+
+  return name;
+
+  /* ERRORS */
+open_failed:
+  {
+    /* this is valid. OSS devices don't need to expose a mixer */
+    GST_DEBUG ("Failed to open mixer device %s, mixing disabled: %s",
+        mixer_name, strerror (errno));
+    return NULL;
+  }
 }

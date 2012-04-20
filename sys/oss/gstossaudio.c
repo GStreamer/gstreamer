@@ -23,7 +23,6 @@
 
 #include "gst/gst-i18n-plugin.h"
 
-#include "gstossmixerelement.h"
 #include "gstosssink.h"
 #include "gstosssrc.h"
 
@@ -33,9 +32,7 @@ GST_DEBUG_CATEGORY (oss_debug);
 static gboolean
 plugin_init (GstPlugin * plugin)
 {
-  if (!gst_element_register (plugin, "ossmixer", GST_RANK_NONE,
-          GST_TYPE_OSS_MIXER_ELEMENT) ||
-      !gst_element_register (plugin, "osssrc", GST_RANK_SECONDARY,
+  if (!gst_element_register (plugin, "osssrc", GST_RANK_SECONDARY,
           GST_TYPE_OSS_SRC) ||
       !gst_element_register (plugin, "osssink", GST_RANK_SECONDARY,
           GST_TYPE_OSSSINK)) {
