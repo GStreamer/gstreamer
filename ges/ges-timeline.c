@@ -48,7 +48,7 @@ static void track_duration_cb (GstElement * track,
 G_DEFINE_TYPE (GESTimeline, ges_timeline, GST_TYPE_BIN);
 
 #define GES_TIMELINE_PENDINGOBJS_GET_LOCK(timeline) \
-  (GES_TIMELINE(timeline)->priv->pendingobjects_lock)
+  (&GES_TIMELINE(timeline)->priv->pendingobjects_lock)
 #define GES_TIMELINE_PENDINGOBJS_LOCK(timeline) \
   (g_mutex_lock(GES_TIMELINE_PENDINGOBJS_GET_LOCK (timeline)))
 #define GES_TIMELINE_PENDINGOBJS_UNLOCK(timeline) \
@@ -66,7 +66,7 @@ struct _GESTimelinePrivate
   GstDiscoverer *discoverer;
   GList *pendingobjects;
   /* lock to avoid discovery of objects that will be removed */
-  GMutex *pendingobjects_lock;
+  GMutex pendingobjects_lock;
 
   /* Whether we are changing state asynchronously or not */
   gboolean async_pending;
@@ -174,7 +174,7 @@ ges_timeline_finalize (GObject * object)
 {
   GESTimeline *timeline = GES_TIMELINE (object);
 
-  g_mutex_free (timeline->priv->pendingobjects_lock);
+  g_mutex_clear (&timeline->priv->pendingobjects_lock);
 
   G_OBJECT_CLASS (ges_timeline_parent_class)->finalize (object);
 }
@@ -284,7 +284,7 @@ ges_timeline_init (GESTimeline * self)
   self->priv->tracks = NULL;
   self->priv->duration = 0;
 
-  self->priv->pendingobjects_lock = g_mutex_new ();
+  g_mutex_init (&self->priv->pendingobjects_lock);
   /* New discoverer with a 15s timeout */
   self->priv->discoverer = gst_discoverer_new (15 * GST_SECOND, NULL);
   g_signal_connect (self->priv->discoverer, "finished",
