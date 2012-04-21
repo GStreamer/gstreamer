@@ -12,7 +12,6 @@ gst/rtsp/gstrtspsrc.c
 gst/wavparse/gstwavparse.c
 sys/oss/gstosssink.c
 sys/oss/gstosssrc.c
-sys/oss4/oss4-mixer.c
 sys/oss4/oss4-sink.c
 sys/oss4/oss4-source.c
 sys/sunaudio/gstsunaudiomixertrack.c
