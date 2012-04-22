@@ -393,6 +393,7 @@ ges_timeline_object_class_init (GESTimelineObjectClass * klass)
           G_PARAM_READWRITE | G_PARAM_CONSTRUCT));
 
   klass->need_fill_track = TRUE;
+  klass->snaps = FALSE;
 }
 
 static void
@@ -768,11 +769,20 @@ ges_timeline_object_set_start_internal (GESTimelineObject * object,
   GList *tmp;
   GESTrackObject *tr;
   ObjectMapping *map;
+  GESTimeline *timeline = NULL;
+  GESTimelineObjectPrivate *priv = object->priv;
+  gboolean snap = FALSE;
 
   g_return_val_if_fail (GES_IS_TIMELINE_OBJECT (object), FALSE);
 
   GST_DEBUG ("object:%p, start:%" GST_TIME_FORMAT,
       object, GST_TIME_ARGS (start));
+
+  /* If the class has snapping enabled and the object is in a timeline,
+   * we snap */
+  if (priv->layer && GES_TIMELINE_OBJECT_GET_CLASS (object)->snaps)
+    timeline = ges_timeline_layer_get_timeline (object->priv->layer);
+  snap = timeline && priv->initiated_move == NULL ? TRUE : FALSE;
 
   object->priv->ignore_notifies = TRUE;
 
@@ -790,7 +800,12 @@ ges_timeline_object_set_start_internal (GESTimelineObject * object,
         continue;
       }
 
-      ges_track_object_set_start (tr, new_start);
+      /* Make the snapping happen if in a timeline */
+      if (snap)
+        ges_timeline_move_object_simple (timeline, tr, NULL, GES_EDGE_NONE,
+            start);
+      else
+        ges_track_object_set_start (tr, start);
     } else {
       /* ... or update the offset */
       map->start_offset = start - tr->start;
@@ -809,6 +824,9 @@ ges_timeline_object_set_start_internal (GESTimelineObject * object,
  * @start: the position in #GstClockTime
  *
  * Set the position of the object in its containing layer
+ *
+ * Note that if the timeline snap-distance property of the timeline containing
+ * @object is set, @object will properly snap to its neighboors.
  */
 void
 ges_timeline_object_set_start (GESTimelineObject * object, guint64 start)
@@ -870,18 +888,34 @@ ges_timeline_object_set_duration_internal (GESTimelineObject * object,
 {
   GList *tmp;
   GESTrackObject *tr;
+  GESTimeline *timeline = NULL;
+  GESTimelineObjectPrivate *priv = object->priv;
+  gboolean snap = FALSE;
 
   g_return_val_if_fail (GES_IS_TIMELINE_OBJECT (object), FALSE);
 
   GST_DEBUG ("object:%p, duration:%" GST_TIME_FORMAT,
       object, GST_TIME_ARGS (duration));
 
+  /* If the class has snapping enabled and the object is in a timeline,
+   * we snap */
+  if (priv->layer && GES_TIMELINE_OBJECT_GET_CLASS (object)->snaps)
+    timeline = ges_timeline_layer_get_timeline (object->priv->layer);
+
+  snap = timeline && priv->initiated_move == NULL ? TRUE : FALSE;
+
   for (tmp = object->priv->trackobjects; tmp; tmp = g_list_next (tmp)) {
     tr = (GESTrackObject *) tmp->data;
 
-    if (ges_track_object_is_locked (tr))
-      /* call set_duration on each trackobject */
-      ges_track_object_set_duration (tr, duration);
+    if (ges_track_object_is_locked (tr)) {
+      /* call set_duration on each trackobject
+       * and make the snapping happen if in a timeline */
+      if (G_LIKELY (snap))
+        ges_timeline_trim_object_simple (timeline, tr, NULL, GES_EDGE_END,
+            tr->start + duration, TRUE);
+      else
+        ges_track_object_set_duration (tr, duration);
+    }
   }
 
   object->duration = duration;
@@ -894,6 +928,9 @@ ges_timeline_object_set_duration_internal (GESTimelineObject * object,
  * @duration: the duration in #GstClockTime
  *
  * Set the duration of the object
+ *
+ * Note that if the timeline snap-distance property of the timeline containing
+ * @object is set, @object will properly snap to its neighboors.
  */
 void
 ges_timeline_object_set_duration (GESTimelineObject * object, guint64 duration)
@@ -1365,7 +1402,7 @@ ges_timeline_object_edit (GESTimelineObject * object, GList * layers,
     priority_offset = new_layer_priority -
         ges_timeline_layer_get_priority (layer);
 
-    ret &= timeline_context_to_layer (layer->timeline, object, priority_offset);
+    ret &= timeline_context_to_layer (layer->timeline, priority_offset);
   }
 
   return ret;
