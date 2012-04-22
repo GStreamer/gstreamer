@@ -1923,6 +1923,7 @@ gst_ffmpegdemux_register (GstPlugin * plugin)
         !strcmp (in_plugin->name, "mp3") ||
         !strcmp (in_plugin->name, "matroska") ||
         !strcmp (in_plugin->name, "matroska_webm") ||
+        !strcmp (in_plugin->name, "matroska,webm") ||
         !strcmp (in_plugin->name, "mpeg") ||
         !strcmp (in_plugin->name, "wav") ||
         !strcmp (in_plugin->name, "au") ||
