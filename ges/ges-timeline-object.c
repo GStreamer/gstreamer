@@ -606,7 +606,7 @@ ges_timeline_object_add_track_object (GESTimelineObject * object, GESTrackObject
       g_signal_connect (G_OBJECT (trobj), "notify::duration",
       G_CALLBACK (track_object_duration_changed_cb), object);
   mapping->inpoint_notifyid =
-      g_signal_connect (G_OBJECT (trobj), "notify::inpoint",
+      g_signal_connect (G_OBJECT (trobj), "notify::in-point",
       G_CALLBACK (track_object_inpoint_changed_cb), object);
   mapping->priority_notifyid =
       g_signal_connect (G_OBJECT (trobj), "notify::priority",
