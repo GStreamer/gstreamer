@@ -243,9 +243,10 @@ gst_v4l2_buffer_pool_set_config (GstBufferPool * bpool, GstStructure * config)
   GstV4l2BufferPool *pool = GST_V4L2_BUFFER_POOL (bpool);
   GstV4l2Object *obj = pool->obj;
   GstCaps *caps;
-  guint size, min_buffers, max_buffers;
+  guint size, min_buffers, max_buffers, num_buffers, copy_threshold;
   GstAllocator *allocator;
   GstAllocationParams params;
+  struct v4l2_requestbuffers breq;
 
   GST_DEBUG_OBJECT (pool, "set config");
 
@@ -276,8 +277,76 @@ gst_v4l2_buffer_pool_set_config (GstBufferPool * bpool, GstStructure * config)
 
   GST_DEBUG_OBJECT (pool, "config %" GST_PTR_FORMAT, config);
 
+  switch (obj->mode) {
+    case GST_V4L2_IO_RW:
+      /* we preallocate 1 buffer, this value also instructs the latency
+       * calculation to have 1 frame latency max */
+      num_buffers = 1;
+      copy_threshold = 0;
+      break;
+    case GST_V4L2_IO_MMAP:
+    {
+      /* request a reasonable number of buffers when no max specified. We will
+       * copy when we run out of buffers */
+      if (max_buffers == 0)
+        num_buffers = 4;
+      else
+        num_buffers = max_buffers;
+
+      /* first, lets request buffers, and see how many we can get: */
+      GST_DEBUG_OBJECT (pool, "starting, requesting %d MMAP buffers",
+          num_buffers);
+
+      memset (&breq, 0, sizeof (struct v4l2_requestbuffers));
+      breq.type = obj->type;
+      breq.count = num_buffers;
+      breq.memory = V4L2_MEMORY_MMAP;
+
+      if (v4l2_ioctl (pool->video_fd, VIDIOC_REQBUFS, &breq) < 0)
+        goto reqbufs_failed;
+
+      GST_LOG_OBJECT (pool, " count:  %u", breq.count);
+      GST_LOG_OBJECT (pool, " type:   %d", breq.type);
+      GST_LOG_OBJECT (pool, " memory: %d", breq.memory);
+
+      if (breq.count < GST_V4L2_MIN_BUFFERS)
+        goto no_buffers;
+
+      if (num_buffers != breq.count) {
+        GST_WARNING_OBJECT (pool, "using %u buffers instead", breq.count);
+        num_buffers = breq.count;
+      }
+      /* update min buffers with the amount of buffers we just reserved. We need
+       * to configure this value in the bufferpool so that the default start
+       * implementation calls our allocate function */
+      min_buffers = breq.count;
+
+      if (max_buffers == 0 || num_buffers < max_buffers) {
+        /* if we are asked to provide more buffers than we have allocated, start
+         * copying buffers when we only have 2 buffers left in the pool */
+        copy_threshold = 2;
+      } else {
+        /* we are certain that we have enough buffers so we don't need to
+         * copy */
+        copy_threshold = 0;
+      }
+      break;
+    }
+    case GST_V4L2_IO_USERPTR:
+    default:
+      num_buffers = 0;
+      copy_threshold = 0;
+      g_assert_not_reached ();
+      break;
+  }
+
   pool->size = size;
-  pool->max_buffers = max_buffers;
+  pool->num_buffers = num_buffers;
+  pool->copy_threshold = copy_threshold;
+  if (pool->allocator)
+    gst_allocator_unref (pool->allocator);
+  if ((pool->allocator = allocator))
+    gst_allocator_ref (allocator);
   pool->params = params;
 
   gst_buffer_pool_config_set_params (config, caps, size, min_buffers,
@@ -296,6 +365,19 @@ missing_video_api:
 wrong_config:
   {
     GST_ERROR_OBJECT (pool, "invalid config %" GST_PTR_FORMAT, config);
+    return FALSE;
+  }
+reqbufs_failed:
+  {
+    GST_ERROR_OBJECT (pool,
+        "error requesting %d buffers: %s", num_buffers, g_strerror (errno));
+    return FALSE;
+  }
+no_buffers:
+  {
+    GST_ERROR_OBJECT (pool,
+        "we received %d from device '%s', we want at least %d",
+        breq.count, obj->videodev, GST_V4L2_MIN_BUFFERS);
     return FALSE;
   }
 }
@@ -337,55 +419,9 @@ gst_v4l2_buffer_pool_start (GstBufferPool * bpool)
 {
   GstV4l2BufferPool *pool = GST_V4L2_BUFFER_POOL (bpool);
   GstV4l2Object *obj = pool->obj;
-  struct v4l2_requestbuffers breq;
-  gint max_buffers;
-
-  max_buffers = pool->max_buffers;
-
-  switch (obj->mode) {
-    case GST_V4L2_IO_RW:
-    {
-      break;
-    }
-    case GST_V4L2_IO_MMAP:
-    {
-      /* first, lets request buffers, and see how many we can get: */
-      GST_DEBUG_OBJECT (pool, "starting, requesting %d MMAP buffers",
-          max_buffers);
-
-      if (max_buffers == 0)
-        max_buffers = 4;
-
-      memset (&breq, 0, sizeof (struct v4l2_requestbuffers));
-      breq.type = obj->type;
-      breq.count = max_buffers;
-      breq.memory = V4L2_MEMORY_MMAP;
-
-      if (v4l2_ioctl (pool->video_fd, VIDIOC_REQBUFS, &breq) < 0)
-        goto reqbufs_failed;
-
-      GST_LOG_OBJECT (pool, " count:  %u", breq.count);
-      GST_LOG_OBJECT (pool, " type:   %d", breq.type);
-      GST_LOG_OBJECT (pool, " memory: %d", breq.memory);
-
-      if (breq.count < GST_V4L2_MIN_BUFFERS)
-        goto no_buffers;
-
-      if (max_buffers != breq.count) {
-        GST_WARNING_OBJECT (pool, "using %u buffers instead", breq.count);
-        max_buffers = breq.count;
-      }
-      break;
-    }
-    case GST_V4L2_IO_USERPTR:
-    default:
-      g_assert_not_reached ();
-      break;
-  }
 
   pool->obj = obj;
-  pool->max_buffers = max_buffers;
-  pool->buffers = g_new0 (GstBuffer *, max_buffers);
+  pool->buffers = g_new0 (GstBuffer *, pool->num_buffers);
   pool->num_allocated = 0;
 
   /* now, allocate the buffers: */
@@ -403,19 +439,6 @@ gst_v4l2_buffer_pool_start (GstBufferPool * bpool)
   return TRUE;
 
   /* ERRORS */
-reqbufs_failed:
-  {
-    GST_ERROR_OBJECT (pool,
-        "error requesting %d buffers: %s", max_buffers, g_strerror (errno));
-    return FALSE;
-  }
-no_buffers:
-  {
-    GST_ERROR_OBJECT (pool,
-        "we received %d from device '%s', we want at least %d",
-        breq.count, obj->videodev, GST_V4L2_MIN_BUFFERS);
-    return FALSE;
-  }
 start_failed:
   {
     GST_ERROR_OBJECT (pool, "failed to start streaming");
@@ -519,16 +542,22 @@ gst_v4l2_buffer_pool_qbuf (GstV4l2BufferPool * pool, GstBuffer * buf)
   gint index;
 
   meta = GST_V4L2_META_GET (buf);
-  g_assert (meta != NULL);
+  if (meta == NULL) {
+    GST_LOG_OBJECT (pool, "unref copied buffer %p", buf);
+    /* no meta, it was a copied buffer that we can unref */
+    gst_buffer_unref (buf);
+    return GST_FLOW_OK;
+  }
 
   index = meta->vbuffer.index;
 
-  GST_LOG_OBJECT (pool, "enqueue buffer %p, index:%d, queued:%d", buf,
-      index, pool->num_queued);
+  GST_LOG_OBJECT (pool, "enqueue buffer %p, index:%d, queued:%d, flags:%08x",
+      buf, index, pool->num_queued, meta->vbuffer.flags);
 
   if (pool->buffers[index] != NULL)
     goto already_queued;
 
+  GST_LOG_OBJECT (pool, "doing QBUF");
   if (v4l2_ioctl (pool->video_fd, VIDIOC_QBUF, &meta->vbuffer) < 0)
     goto queue_failed;
 
@@ -699,6 +728,21 @@ gst_v4l2_buffer_pool_acquire_buffer (GstBufferPool * bpool, GstBuffer ** buffer,
            * storage for our buffers. This function does poll first so we can
            * interrupt it fine. */
           ret = gst_v4l2_buffer_pool_dqbuf (pool, buffer);
+          if (G_UNLIKELY (ret != GST_FLOW_OK))
+            goto done;
+
+          /* start copying buffers when we are running low on buffers */
+          if (pool->num_queued < pool->copy_threshold) {
+            GstBuffer *copy;
+
+            /* copy the memory */
+            copy = gst_buffer_copy (*buffer);
+            GST_LOG_OBJECT (pool, "copy buffer %p->%p", *buffer, copy);
+
+            /* and requeue so that we can continue capturing */
+            ret = gst_v4l2_buffer_pool_qbuf (pool, *buffer);
+            *buffer = copy;
+          }
           break;
 
         case GST_V4L2_IO_USERPTR:
@@ -734,6 +778,7 @@ gst_v4l2_buffer_pool_acquire_buffer (GstBufferPool * bpool, GstBuffer ** buffer,
       g_assert_not_reached ();
       break;
   }
+done:
   return ret;
 
   /* ERRORS */
@@ -822,7 +867,8 @@ gst_v4l2_buffer_pool_finalize (GObject * object)
 
   if (pool->video_fd >= 0)
     v4l2_close (pool->video_fd);
-
+  if (pool->allocator)
+    gst_allocator_unref (pool->allocator);
   g_free (pool->buffers);
 
   G_OBJECT_CLASS (parent_class)->finalize (object);

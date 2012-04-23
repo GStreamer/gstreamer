@@ -54,11 +54,12 @@ struct _GstV4l2BufferPool
   GstAllocator *allocator;
   GstAllocationParams params;
   guint size;
-  guint max_buffers;
   gboolean add_videometa;
 
+  guint num_buffers;         /* number of buffers we use */
   guint num_allocated;       /* number of buffers allocated by the driver */
   guint num_queued;          /* number of buffers queued in the driver */
+  guint copy_threshold;      /* when our pool runs lower, start handing out copies */
 
   gboolean streaming;
 
