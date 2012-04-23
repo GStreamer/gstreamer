@@ -155,8 +155,8 @@ static gboolean refresh_ui (CustomData *data) {
   GstFormat fmt = GST_FORMAT_TIME;
   gint64 current = -1;
   
-  /* We do not want to update anything unless we are in the PLAYING state */
-  if (data->state != GST_STATE_PLAYING)
+  /* We do not want to update anything unless we are in the PAUSED or PLAYING states */
+  if (data->state < GST_STATE_PAUSED)
     return TRUE;
   
   /* If we didn't know it yet, query the stream duration */
@@ -221,6 +221,10 @@ static void state_changed_cb (GstBus *bus, GstMessage *msg, CustomData *data) {
   if (GST_MESSAGE_SRC (msg) == GST_OBJECT (data->playbin2)) {
     data->state = new_state;
     g_print ("State set to %s\n", gst_element_state_get_name (new_state));
+    if (old_state == GST_STATE_READY && new_state == GST_STATE_PAUSED) {
+      /* For extra responsiveness, we refresh the GUI as soon as we reach the PAUSED state */
+      refresh_ui (data);
+    }
   }
 }
   
