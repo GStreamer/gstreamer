@@ -897,13 +897,14 @@ ges_timeline_object_set_duration_internal (GESTimelineObject * object,
   GST_DEBUG ("object:%p, duration:%" GST_TIME_FORMAT,
       object, GST_TIME_ARGS (duration));
 
-  /* If the class has snapping enabled and the object is in a timeline,
-   * we snap */
   if (priv->layer && GES_TIMELINE_OBJECT_GET_CLASS (object)->snaps)
     timeline = ges_timeline_layer_get_timeline (object->priv->layer);
 
+  /* If the class has snapping enabled, the object is in a timeline,
+   * and we are not following a moved TrackObject, we snap */
   snap = timeline && priv->initiated_move == NULL ? TRUE : FALSE;
 
+  object->priv->ignore_notifies = TRUE;
   for (tmp = object->priv->trackobjects; tmp; tmp = g_list_next (tmp)) {
     tr = (GESTrackObject *) tmp->data;
 
@@ -917,6 +918,7 @@ ges_timeline_object_set_duration_internal (GESTimelineObject * object,
         ges_track_object_set_duration (tr, duration);
     }
   }
+  object->priv->ignore_notifies = FALSE;
 
   object->duration = duration;
   return TRUE;
@@ -958,12 +960,10 @@ ges_timeline_object_set_priority_internal (GESTimelineObject * object,
   GST_DEBUG ("object:%p, priority:%" G_GUINT32_FORMAT, object, priority);
 
   priv = object->priv;
-  priv->ignore_notifies = TRUE;
-
-  object->priv->ignore_notifies = TRUE;
 
   get_layer_priorities (priv->layer, &layer_min_gnl_prio, &layer_max_gnl_prio);
 
+  priv->ignore_notifies = TRUE;
   for (tmp = priv->trackobjects; tmp; tmp = g_list_next (tmp)) {
     tr = (GESTrackObject *) tmp->data;
     map = find_object_mapping (object, tr);
