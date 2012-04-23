@@ -763,6 +763,7 @@ gst_adapter_take_buffer (GstAdapter * adapter, gsize nbytes)
   if (gst_adapter_try_to_merge_up (adapter, nbytes)) {
     /* Merged something, let's try again for sub-buffering */
     cur = adapter->buflist->data;
+    skip = adapter->skip;
     if (gst_buffer_get_size (cur) >= nbytes + skip) {
       GST_LOG_OBJECT (adapter, "providing buffer of %" G_GSIZE_FORMAT " bytes"
           " via sub-buffer", nbytes);
