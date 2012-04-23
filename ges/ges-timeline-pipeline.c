@@ -144,6 +144,7 @@ ges_timeline_pipeline_init (GESTimelinePipeline * self)
   if (G_UNLIKELY (self->priv->encodebin == NULL))
     goto no_encodebin;
 
+  /* TODO : Remove this hack once we depend on gst-p-base 0.10.37 */
   /* HACK : Intercept events going through playsink */
   playsinkclass = GST_ELEMENT_GET_CLASS (self->priv->playsink);
   /* Replace playsink's GstBin::send_event with our own */
