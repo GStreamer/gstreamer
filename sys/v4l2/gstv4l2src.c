@@ -190,6 +190,8 @@ gst_v4l2src_class_init (GstV4l2SrcClass * klass)
    * happen prior to the format being set.
    * This is mostly useful for UVC H264 encoding cameras which need the H264
    * Probe & Commit to happen prior to the normal Probe & Commit.
+   *
+   * Since: 0.10.32
    */
   gst_v4l2_signals[SIGNAL_PRE_SET_FORMAT] = g_signal_new ("prepare-format",
       G_TYPE_FROM_CLASS (klass),
