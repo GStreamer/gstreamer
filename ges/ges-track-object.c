@@ -1499,6 +1499,17 @@ ges_track_object_set_max_duration (GESTrackObject * object, guint64 maxduration)
   object->priv->maxduration = maxduration;
 }
 
+/**
+ * ges_track_object_copy:
+ * @object: The #GESTrackObject to copy
+ * @deep: whether we want to create the gnlobject and copy it properties
+ *
+ * Copies @object
+ *
+ * Returns: The newly create #GESTrackObject, copied from @object
+ *
+ * Since: 0.10.XX
+ */
 GESTrackObject *
 ges_track_object_copy (GESTrackObject * object, gboolean deep)
 {
@@ -1529,6 +1540,8 @@ ges_track_object_copy (GESTrackObject * object, gboolean deep)
   ret = g_object_newv (G_TYPE_FROM_INSTANCE (object), n_params, params);
   g_free (specs);
   g_free (params);
+  specs = NULL;
+  params = NULL;
 
   if (deep == FALSE)
     return ret;
@@ -1541,6 +1554,9 @@ ges_track_object_copy (GESTrackObject * object, gboolean deep)
     ges_track_object_set_child_property_by_pspec (ret, specs[n], &val);
     g_value_unset (&val);
   }
+
+  g_free (specs);
+  g_free (params);
 
   return ret;
 }

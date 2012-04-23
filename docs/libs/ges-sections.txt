@@ -107,6 +107,7 @@ ges_track_object_get_child_property
 ges_track_object_get_child_property_valist
 ges_track_object_get_child_property_by_pspec
 ges_track_object_edit
+ges_track_object_copy
 <SUBSECTION Standard>
 GES_TRACK_OBJECT_DURATION
 GES_TRACK_OBJECT_INPOINT

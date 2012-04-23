@@ -226,6 +226,9 @@ void ges_track_object_set_child_property     (GESTrackObject * object,
                                               const gchar * first_property_name,
                                               ...) G_GNUC_NULL_TERMINATED;
 
+GESTrackObject * ges_track_object_copy       (GESTrackObject * object,
+                                              gboolean deep);
+
 gboolean
 ges_track_object_edit                        (GESTrackObject * object,
                                               GList *layers, GESEditMode mode,
