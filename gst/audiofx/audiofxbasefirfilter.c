@@ -156,7 +156,7 @@ process_##channels##_##width (GstAudioFXBaseFIRFilter * self, const g##ctype * s
   if (self->buffer_fill > kernel_length) \
     self->buffer_fill = kernel_length; \
   \
-  return input_samples / channels; \
+  return input_samples; \
 } G_STMT_END
 
 DEFINE_PROCESS_FUNC (32, float);
