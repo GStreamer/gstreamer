@@ -112,6 +112,8 @@ gboolean gst_asf_parse_packet (GstBuffer * buffer, GstAsfPacketInfo * packet,
     gboolean trust_delta_flag, guint packet_size);
 guint64 gst_asf_match_and_peek_obj_size (const guint8 * data,
     const Guid * guid);
+guint64 gst_asf_match_and_peek_obj_size_buf (GstBuffer * buf,
+    const Guid * guid);
 gboolean gst_asf_parse_headers (GstBuffer * buffer, GstAsfFileInfo * file_info);
 
 /* ASF tags

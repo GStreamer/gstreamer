@@ -22,7 +22,7 @@
 #define __GST_RTP_ASF_PAY_H__
 
 #include <gst/gst.h>
-#include <gst/rtp/gstbasertppayload.h>
+#include <gst/rtp/gstrtpbasepayload.h>
 #include <gst/rtp/gstrtpbuffer.h>
 #include <gst/base/gstadapter.h>
 
@@ -53,7 +53,7 @@ typedef struct _GstRtpAsfPayClass GstRtpAsfPayClass;
 
 struct _GstRtpAsfPay
 {
-  GstBaseRTPPayload rtppay;
+  GstRTPBasePayload rtppay;
 
   enum GstRtpAsfPayState state;
 
@@ -77,7 +77,7 @@ struct _GstRtpAsfPay
 
 struct _GstRtpAsfPayClass
 {
-  GstBaseRTPPayloadClass parent_class;
+  GstRTPBasePayloadClass parent_class;
 };
 
 GType gst_rtp_asf_pay_get_type (void);

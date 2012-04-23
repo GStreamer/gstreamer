@@ -73,6 +73,7 @@
 #endif
 
 #include <string.h>
+#include <stdio.h>
 #include <gst/gst-i18n-plugin.h>
 #include "gstasfmux.h"
 
@@ -149,12 +150,14 @@ static GstStaticPadTemplate audio_sink_factory =
         "audio/mpeg, layer = (int) 3, mpegversion = (int) 1, "
         "channels = (int) [1,2], rate = (int) [8000,96000]"));
 
-static void gst_asf_mux_base_init (gpointer g_class);
 static void gst_asf_mux_class_init (GstAsfMuxClass * klass);
 static void gst_asf_mux_init (GstAsfMux * asfmux);
 
+static gboolean gst_asf_mux_audio_set_caps (GstPad * pad, GstCaps * caps);
+static gboolean gst_asf_mux_video_set_caps (GstPad * pad, GstCaps * caps);
+
 static GstPad *gst_asf_mux_request_new_pad (GstElement * element,
-    GstPadTemplate * templ, const gchar * name);
+    GstPadTemplate * templ, const gchar * name, const GstCaps * caps);
 static void gst_asf_mux_set_property (GObject * object,
     guint prop_id, const GValue * value, GParamSpec * pspec);
 static void gst_asf_mux_get_property (GObject * object,
@@ -162,7 +165,8 @@ static void gst_asf_mux_get_property (GObject * object,
 static GstStateChangeReturn gst_asf_mux_change_state (GstElement * element,
     GstStateChange transition);
 
-static gboolean gst_asf_mux_sink_event (GstPad * pad, GstEvent * event);
+static gboolean gst_asf_mux_sink_event (GstCollectPads * pads,
+    GstCollectData * cdata, GstEvent * event, GstAsfMux * asfmux);
 
 static void gst_asf_mux_pad_reset (GstAsfPad * data);
 static GstFlowReturn gst_asf_mux_collected (GstCollectPads * collect,
@@ -178,7 +182,7 @@ gst_asf_mux_get_type (void)
   if (!asfmux_type) {
     static const GTypeInfo asfmux_info = {
       sizeof (GstAsfMuxClass),
-      gst_asf_mux_base_init,
+      NULL,
       NULL,
       (GClassInitFunc) gst_asf_mux_class_init,
       NULL,
@@ -231,26 +235,6 @@ gst_asf_mux_reset (GstAsfMux * asfmux)
   asfmux->file_id.v4 = 0;
 
   gst_tag_setter_reset_tags (GST_TAG_SETTER (asfmux));
-}
-
-static void
-gst_asf_mux_base_init (gpointer g_class)
-{
-  GstElementClass *element_class = GST_ELEMENT_CLASS (g_class);
-
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&src_factory));
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&audio_sink_factory));
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&video_sink_factory));
-
-  gst_element_class_set_details_simple (element_class, "ASF muxer",
-      "Codec/Muxer",
-      "Muxes audio and video into an ASF stream",
-      "Thiago Santos <thiagoss@embedded.ufcg.edu.br>");
-
-  GST_DEBUG_CATEGORY_INIT (asfmux_debug, "asfmux", 0, "Muxer for ASF streams");
 }
 
 static void
@@ -321,23 +305,35 @@ gst_asf_mux_class_init (GstAsfMuxClass * klass)
   gstelement_class->request_new_pad =
       GST_DEBUG_FUNCPTR (gst_asf_mux_request_new_pad);
   gstelement_class->change_state = GST_DEBUG_FUNCPTR (gst_asf_mux_change_state);
+
+  gst_element_class_add_pad_template (gstelement_class,
+      gst_static_pad_template_get (&src_factory));
+  gst_element_class_add_pad_template (gstelement_class,
+      gst_static_pad_template_get (&audio_sink_factory));
+  gst_element_class_add_pad_template (gstelement_class,
+      gst_static_pad_template_get (&video_sink_factory));
+
+  gst_element_class_set_details_simple (gstelement_class, "ASF muxer",
+      "Codec/Muxer",
+      "Muxes audio and video into an ASF stream",
+      "Thiago Santos <thiagoss@embedded.ufcg.edu.br>");
+
+  GST_DEBUG_CATEGORY_INIT (asfmux_debug, "asfmux", 0, "Muxer for ASF streams");
 }
 
 static void
 gst_asf_mux_init (GstAsfMux * asfmux)
 {
-  GstCaps *caps;
-
   asfmux->srcpad = gst_pad_new_from_static_template (&src_factory, "src");
-  caps = gst_caps_copy (gst_pad_get_pad_template_caps (asfmux->srcpad));
-  gst_pad_set_caps (asfmux->srcpad, caps);
-  gst_caps_unref (caps);
   gst_pad_use_fixed_caps (asfmux->srcpad);
   gst_element_add_pad (GST_ELEMENT (asfmux), asfmux->srcpad);
 
   asfmux->collect = gst_collect_pads_new ();
   gst_collect_pads_set_function (asfmux->collect,
       (GstCollectPadsFunction) GST_DEBUG_FUNCPTR (gst_asf_mux_collected),
+      asfmux);
+  gst_collect_pads_set_event_function (asfmux->collect,
+      (GstCollectPadsEventFunction) GST_DEBUG_FUNCPTR (gst_asf_mux_sink_event),
       asfmux);
 
   asfmux->payloads = NULL;
@@ -350,14 +346,26 @@ gst_asf_mux_init (GstAsfMux * asfmux)
 }
 
 static gboolean
-gst_asf_mux_sink_event (GstPad * pad, GstEvent * event)
+gst_asf_mux_sink_event (GstCollectPads * pads, GstCollectData * cdata,
+    GstEvent * event, GstAsfMux * asfmux)
 {
-  gboolean ret;
-  GstAsfMux *asfmux;
-  GstAsfPad *asfpad = (GstAsfPad *) gst_pad_get_element_private (pad);
+  GstAsfPad *asfpad = (GstAsfPad *) cdata;
+  gboolean ret = TRUE;
 
-  asfmux = GST_ASF_MUX_CAST (gst_pad_get_parent (pad));
   switch (GST_EVENT_TYPE (event)) {
+    case GST_EVENT_CAPS:
+    {
+      GstCaps *caps;
+
+      gst_event_parse_caps (event, &caps);
+      if (asfpad->is_audio)
+        ret = gst_asf_mux_audio_set_caps (cdata->pad, caps);
+      else
+        ret = gst_asf_mux_video_set_caps (cdata->pad, caps);
+      gst_event_unref (event);
+      event = NULL;
+      break;
+    }
     case GST_EVENT_TAG:{
       GST_DEBUG_OBJECT (asfmux, "received tag event");
       /* we discard tag events that come after we started
@@ -374,7 +382,7 @@ gst_asf_mux_sink_event (GstPad * pad, GstEvent * event)
           gst_tag_setter_merge_tags (setter, list, mode);
         } else {
           if (asfpad->taglist == NULL) {
-            asfpad->taglist = gst_tag_list_new ();
+            asfpad->taglist = gst_tag_list_new_empty ();
           }
           gst_tag_list_insert (asfpad->taglist, list, GST_TAG_MERGE_REPLACE);
         }
@@ -385,8 +393,9 @@ gst_asf_mux_sink_event (GstPad * pad, GstEvent * event)
       break;
   }
 
-  ret = asfmux->collect_event (pad, event);
-  gst_object_unref (asfmux);
+  if (event != NULL)
+    return gst_collect_pads_event_default (pads, cdata, event, FALSE);
+
   return ret;
 }
 
@@ -403,10 +412,9 @@ static GstFlowReturn
 gst_asf_mux_push_buffer (GstAsfMux * asfmux, GstBuffer * buf)
 {
   GstFlowReturn ret;
-  gst_buffer_set_caps (buf, GST_PAD_CAPS (asfmux->srcpad));
   ret = gst_pad_push (asfmux->srcpad, buf);
   if (ret == GST_FLOW_OK)
-    asfmux->file_size += GST_BUFFER_SIZE (buf);
+    asfmux->file_size += gst_buffer_get_size (buf);
   return ret;
 }
 
@@ -505,7 +513,7 @@ gst_asf_mux_get_content_description_tags (GstAsfMux * asfmux,
     if (asftags->tags != NULL) {
       gst_tag_list_free (asftags->tags);
     }
-    asftags->tags = gst_tag_list_new ();
+    asftags->tags = gst_tag_list_new_empty ();
     asftags->cont_desc_size = 0;
     asftags->ext_cont_desc_size = 0;
 
@@ -633,7 +641,7 @@ gst_asf_mux_get_headers_size (GstAsfMux * asfmux)
       size += ASF_VIDEO_SPECIFIC_DATA_SIZE;
 
     if (asfpad->codec_data)
-      size += GST_BUFFER_SIZE (asfpad->codec_data);
+      size += gst_buffer_get_size (asfpad->codec_data);
 
     stream_num++;
   }
@@ -713,7 +721,7 @@ gst_asf_mux_write_stream_properties (GstAsfMux * asfmux, guint8 ** buf,
 
   /* codec specific data length */
   if (asfpad->codec_data)
-    codec_data_length = GST_BUFFER_SIZE (asfpad->codec_data);
+    codec_data_length = gst_buffer_get_size (asfpad->codec_data);
   if (asfpad->is_audio)
     media_specific_data_length = ASF_AUDIO_SPECIFIC_DATA_SIZE;
   else
@@ -800,7 +808,7 @@ gst_asf_mux_write_stream_properties (GstAsfMux * asfmux, guint8 ** buf,
   }
 
   if (codec_data_length > 0)
-    memcpy (*buf, GST_BUFFER_DATA (asfpad->codec_data), codec_data_length);
+    gst_buffer_extract (asfpad->codec_data, 0, *buf, codec_data_length);
 
   *buf += codec_data_length;
 }
@@ -1286,6 +1294,9 @@ gst_asf_mux_start_file (GstAsfMux * asfmux)
   GstCaps *caps;
   GstStructure *structure;
   guint64 padding = asfmux->prop_padding;
+  GstSegment segment;
+  GstMapInfo map;
+
   if (padding < ASF_PADDING_OBJECT_SIZE)
     padding = 0;
 
@@ -1293,9 +1304,13 @@ gst_asf_mux_start_file (GstAsfMux * asfmux)
   GST_INFO_OBJECT (asfmux, "Writing headers");
   asfmux->state = GST_ASF_MUX_STATE_HEADERS;
 
+  caps = gst_pad_get_pad_template_caps (asfmux->srcpad);
+  gst_pad_set_caps (asfmux->srcpad, caps);
+  gst_caps_unref (caps);
+
   /* let downstream know we think in BYTES and expect to do seeking later */
-  gst_pad_push_event (asfmux->srcpad,
-      gst_event_new_new_segment (FALSE, 1.0, GST_FORMAT_BYTES, 0, -1, 0));
+  gst_segment_init (&segment, GST_FORMAT_BYTES);
+  gst_pad_push_event (asfmux->srcpad, gst_event_new_segment (&segment));
 
   gst_asf_generate_file_id (&asfmux->file_id);
 
@@ -1318,14 +1333,16 @@ gst_asf_mux_start_file (GstAsfMux * asfmux)
       asftags->cont_desc_size +
       asftags->ext_cont_desc_size +
       metadata_obj_size + padding + ASF_DATA_OBJECT_SIZE);
-  bufdata = GST_BUFFER_DATA (buf);
 
-  gst_asf_mux_write_header_object (asfmux, &bufdata, GST_BUFFER_SIZE (buf) -
+  gst_buffer_map (buf, &map, GST_MAP_WRITE);
+  bufdata = map.data;
+
+  gst_asf_mux_write_header_object (asfmux, &bufdata, map.size -
       ASF_DATA_OBJECT_SIZE, 2 + stream_num);
 
   /* get the position of the file properties object for 
    * updating it in gst_asf_mux_stop_file */
-  asfmux->file_properties_object_position = bufdata - GST_BUFFER_DATA (buf);
+  asfmux->file_properties_object_position = bufdata - map.data;
   gst_asf_mux_write_file_properties (asfmux, &bufdata);
 
   for (walk = asfmux->collect->data; walk; walk = g_slist_next (walk)) {
@@ -1361,7 +1378,7 @@ gst_asf_mux_start_file (GstAsfMux * asfmux)
   gst_asf_mux_write_padding_object (asfmux, &bufdata, padding);
 
   /* store data object position for later updating some fields */
-  asfmux->data_object_position = bufdata - GST_BUFFER_DATA (buf);
+  asfmux->data_object_position = bufdata - map.data;
   gst_asf_mux_write_data_object (asfmux, &bufdata);
 
   /* set streamheader in source pad if 'streamable' */
@@ -1369,17 +1386,18 @@ gst_asf_mux_start_file (GstAsfMux * asfmux)
     g_value_init (&streamheader, GST_TYPE_ARRAY);
     gst_asf_mux_put_buffer_in_streamheader (&streamheader, buf);
 
-    caps = gst_caps_ref (GST_PAD_CAPS (asfmux->srcpad));
+    caps = gst_pad_get_current_caps (asfmux->srcpad);
     caps = gst_caps_make_writable (caps);
     structure = gst_caps_get_structure (caps, 0);
     gst_structure_set_value (structure, "streamheader", &streamheader);
     gst_pad_set_caps (asfmux->srcpad, caps);
-    GST_BUFFER_FLAG_SET (buf, GST_BUFFER_FLAG_IN_CAPS);
+    GST_BUFFER_FLAG_SET (buf, GST_BUFFER_FLAG_HEADER);
     g_value_unset (&streamheader);
     gst_caps_unref (caps);
   }
 
-  g_assert (bufdata - GST_BUFFER_DATA (buf) == GST_BUFFER_SIZE (buf));
+  g_assert (bufdata - map.data == map.size);
+  gst_buffer_unmap (buf, &map);
   return gst_asf_mux_push_buffer (asfmux, buf);
 }
 
@@ -1423,11 +1441,11 @@ gst_asf_mux_add_simple_index_entry (GstAsfMux * asfmux,
 static GstFlowReturn
 gst_asf_mux_send_packet (GstAsfMux * asfmux, GstBuffer * buf)
 {
-  g_assert (GST_BUFFER_SIZE (buf) == asfmux->packet_size);
+  g_assert (gst_buffer_get_size (buf) == asfmux->packet_size);
   asfmux->total_data_packets++;
   GST_LOG_OBJECT (asfmux,
       "Pushing a packet of size %u and timestamp %" G_GUINT64_FORMAT,
-      GST_BUFFER_SIZE (buf), GST_BUFFER_TIMESTAMP (buf));
+      gst_buffer_get_size (buf), GST_BUFFER_TIMESTAMP (buf));
   GST_LOG_OBJECT (asfmux, "Total data packets: %" G_GUINT64_FORMAT,
       asfmux->total_data_packets);
   return gst_asf_mux_push_buffer (asfmux, buf);
@@ -1457,6 +1475,7 @@ gst_asf_mux_flush_payloads (GstAsfMux * asfmux)
   AsfPayload *payload;
   guint32 payload_size;
   guint offset;
+  GstMapInfo map;
 
   if (asfmux->payloads == NULL)
     return GST_FLOW_OK;         /* nothing to send is ok */
@@ -1464,10 +1483,11 @@ gst_asf_mux_flush_payloads (GstAsfMux * asfmux)
   GST_LOG_OBJECT (asfmux, "Flushing payloads");
 
   buf = gst_buffer_new_and_alloc (asfmux->packet_size);
-  memset (GST_BUFFER_DATA (buf), 0, asfmux->packet_size);
+  gst_buffer_map (buf, &map, GST_MAP_WRITE);
+  memset (map.data, 0, asfmux->packet_size);
 
   /* 1 for the multiple payload flags */
-  data = GST_BUFFER_DATA (buf) + asfmux->payload_parsing_info_size + 1;
+  data = map.data + asfmux->payload_parsing_info_size + 1;
   size_left = asfmux->packet_size - asfmux->payload_parsing_info_size - 1;
 
   has_keyframe = FALSE;
@@ -1509,7 +1529,7 @@ gst_asf_mux_flush_payloads (GstAsfMux * asfmux)
     GST_DEBUG_OBJECT (asfmux, "replicated data length: %d",
         (gint) payload->replicated_data_length);
     GST_DEBUG_OBJECT (asfmux, "payload size: %u",
-        GST_BUFFER_SIZE (payload->data));
+        gst_buffer_get_size (payload->data));
     GST_DEBUG_OBJECT (asfmux, "presentation time: %" G_GUINT32_FORMAT " (%"
         GST_TIME_FORMAT ")", payload->presentation_time,
         GST_TIME_ARGS (payload->presentation_time * GST_MSECOND));
@@ -1554,7 +1574,8 @@ gst_asf_mux_flush_payloads (GstAsfMux * asfmux)
     payload = (AsfPayload *) aux->data;
     asfmux->payloads = g_slist_remove (asfmux->payloads, payload);
     asfmux->payload_data_size -=
-        (GST_BUFFER_SIZE (payload->data) + ASF_MULTIPLE_PAYLOAD_HEADER_SIZE);
+        (gst_buffer_get_size (payload->data) +
+        ASF_MULTIPLE_PAYLOAD_HEADER_SIZE);
     gst_asf_payload_free (payload);
   }
 
@@ -1586,7 +1607,7 @@ gst_asf_mux_flush_payloads (GstAsfMux * asfmux)
       asfmux->payload_data_size);
 
   /* fill payload parsing info */
-  data = GST_BUFFER_DATA (buf);
+  data = map.data;
   /* flags */
   GST_WRITE_UINT8 (data, (0x0 << 7) |   /* no error correction */
       (ASF_FIELD_TYPE_DWORD << 5) |     /* packet length type */
@@ -1637,11 +1658,12 @@ gst_asf_mux_flush_payloads (GstAsfMux * asfmux)
 
   /* multiple payloads flags */
   GST_WRITE_UINT8 (data + offset, 0x2 << 6 | payloads_count);
+  gst_buffer_unmap (buf, &map);
 
   if (payloads_count == 0) {
     GST_WARNING_OBJECT (asfmux, "Sending packet without any payload");
   }
-  asfmux->data_object_size += GST_BUFFER_SIZE (buf);
+  asfmux->data_object_size += gst_buffer_get_size (buf);
   if (!has_keyframe)
     GST_BUFFER_FLAG_SET (buf, GST_BUFFER_FLAG_DELTA_UNIT);
   return gst_asf_mux_send_packet (asfmux, buf);
@@ -1671,8 +1693,12 @@ gst_asf_mux_push_simple_index (GstAsfMux * asfmux, GstAsfVideoPad * pad)
       g_slist_length (pad->simple_index) * ASF_SIMPLE_INDEX_ENTRY_SIZE;
   GstBuffer *buf = gst_buffer_new_and_alloc (object_size);
   GSList *walk;
-  guint8 *data = GST_BUFFER_DATA (buf);
+  guint8 *data;
   guint32 entries_count = g_slist_length (pad->simple_index);
+  GstMapInfo map;
+
+  gst_buffer_map (buf, &map, GST_MAP_WRITE);
+  data = map.data;
 
   gst_asf_put_guid (data, guids[ASF_SIMPLE_INDEX_OBJECT_INDEX]);
   GST_WRITE_UINT64_LE (data + 16, object_size);
@@ -1699,7 +1725,8 @@ gst_asf_mux_push_simple_index (GstAsfMux * asfmux, GstAsfVideoPad * pad)
   }
 
   GST_DEBUG_OBJECT (asfmux, "Pushing the simple index");
-  g_assert (data - GST_BUFFER_DATA (buf) == object_size);
+  g_assert (data - map.data == object_size);
+  gst_buffer_unmap (buf, &map);
   return gst_asf_mux_push_buffer (asfmux, buf);
 }
 
@@ -1751,6 +1778,9 @@ gst_asf_mux_stop_file (GstAsfMux * asfmux)
   GSList *walk;
   GstClockTime play_duration = 0;
   guint32 bitrate = 0;
+  GstSegment segment;
+  GstMapInfo map;
+  guint8 *data;
 
   /* write indexes */
   ret = gst_asf_mux_write_indexes (asfmux);
@@ -1771,22 +1801,25 @@ gst_asf_mux_stop_file (GstAsfMux * asfmux)
    * values we didn't know back then */
   GST_DEBUG_OBJECT (asfmux,
       "Sending new segment to file properties object position");
-  event =
-      gst_event_new_new_segment (FALSE, 1.0, GST_FORMAT_BYTES,
-      asfmux->file_properties_object_position + 40, GST_CLOCK_TIME_NONE, 0);
+  gst_segment_init (&segment, GST_FORMAT_BYTES);
+  segment.start = segment.position =
+      asfmux->file_properties_object_position + 40;
+  event = gst_event_new_segment (&segment);
   if (!gst_pad_push_event (asfmux->srcpad, event)) {
     GST_ERROR_OBJECT (asfmux, "Failed to update file properties object");
     return GST_FLOW_ERROR;
   }
   /* All file properties fields except the first 40 bytes */
   buf = gst_buffer_new_and_alloc (ASF_FILE_PROPERTIES_OBJECT_SIZE - 40);
+  gst_buffer_map (buf, &map, GST_MAP_WRITE);
+  data = map.data;
 
-  GST_WRITE_UINT64_LE (GST_BUFFER_DATA (buf), asfmux->file_size);
-  gst_asf_put_time (GST_BUFFER_DATA (buf) + 8, gst_asf_get_current_time ());
-  GST_WRITE_UINT64_LE (GST_BUFFER_DATA (buf) + 16, asfmux->total_data_packets);
-  GST_WRITE_UINT64_LE (GST_BUFFER_DATA (buf) + 24, (play_duration / 100) +
+  GST_WRITE_UINT64_LE (data, asfmux->file_size);
+  gst_asf_put_time (data + 8, gst_asf_get_current_time ());
+  GST_WRITE_UINT64_LE (data + 16, asfmux->total_data_packets);
+  GST_WRITE_UINT64_LE (data + 24, (play_duration / 100) +
       ASF_MILI_TO_100NANO (asfmux->preroll));
-  GST_WRITE_UINT64_LE (GST_BUFFER_DATA (buf) + 32, (play_duration / 100));      /* TODO send duration */
+  GST_WRITE_UINT64_LE (data + 32, (play_duration / 100));       /* TODO send duration */
 
   /* if play duration is smaller then preroll, player might have problems */
   if (asfmux->preroll > play_duration / GST_MSECOND) {
@@ -1795,13 +1828,14 @@ gst_asf_mux_stop_file (GstAsfMux * asfmux)
         ("Preroll time larger than streams duration, "
             "try setting a smaller preroll value next time"));
   }
-  GST_WRITE_UINT64_LE (GST_BUFFER_DATA (buf) + 40, asfmux->preroll);
-  GST_WRITE_UINT32_LE (GST_BUFFER_DATA (buf) + 48, 0x2);        /* flags - seekable */
-  GST_WRITE_UINT32_LE (GST_BUFFER_DATA (buf) + 52, asfmux->packet_size);
-  GST_WRITE_UINT32_LE (GST_BUFFER_DATA (buf) + 56, asfmux->packet_size);
+  GST_WRITE_UINT64_LE (data + 40, asfmux->preroll);
+  GST_WRITE_UINT32_LE (data + 48, 0x2); /* flags - seekable */
+  GST_WRITE_UINT32_LE (data + 52, asfmux->packet_size);
+  GST_WRITE_UINT32_LE (data + 56, asfmux->packet_size);
   /* FIXME - we want the max instantaneous bitrate, for vbr streams, we can't
    * get it this way, this would be the average, right? */
-  GST_WRITE_UINT32_LE (GST_BUFFER_DATA (buf) + 60, bitrate);    /* max bitrate */
+  GST_WRITE_UINT32_LE (data + 60, bitrate);     /* max bitrate */
+  gst_buffer_unmap (buf, &map);
 
   /* we don't use gst_asf_mux_push_buffer because we are overwriting
    * already sent data */
@@ -1814,19 +1848,20 @@ gst_asf_mux_stop_file (GstAsfMux * asfmux)
   GST_DEBUG_OBJECT (asfmux, "Seeking back to data object");
 
   /* seek back to the data object */
-  event = gst_event_new_new_segment (FALSE, 1.0, GST_FORMAT_BYTES,
-      asfmux->data_object_position + 16, GST_CLOCK_TIME_NONE, 0);
-
+  segment.start = segment.position = asfmux->data_object_position + 16;
+  event = gst_event_new_segment (&segment);
   if (!gst_pad_push_event (asfmux->srcpad, event)) {
     GST_ERROR_OBJECT (asfmux, "Seek to update data object failed");
     return GST_FLOW_ERROR;
   }
 
   buf = gst_buffer_new_and_alloc (32);  /* qword+guid+qword */
-  GST_WRITE_UINT64_LE (GST_BUFFER_DATA (buf), asfmux->data_object_size +
-      ASF_DATA_OBJECT_SIZE);
-  gst_asf_put_guid (GST_BUFFER_DATA (buf) + 8, asfmux->file_id);
-  GST_WRITE_UINT64_LE (GST_BUFFER_DATA (buf) + 24, asfmux->total_data_packets);
+  gst_buffer_map (buf, &map, GST_MAP_WRITE);
+  data = map.data;
+  GST_WRITE_UINT64_LE (data, asfmux->data_object_size + ASF_DATA_OBJECT_SIZE);
+  gst_asf_put_guid (data + 8, asfmux->file_id);
+  GST_WRITE_UINT64_LE (data + 24, asfmux->total_data_packets);
+  gst_buffer_unmap (buf, &map);
 
   return gst_pad_push (asfmux->srcpad, buf);
 }
@@ -1871,7 +1906,7 @@ gst_asf_mux_process_buffer (GstAsfMux * asfmux, GstAsfPad * pad,
   payload->replicated_data_length = 8;
 
   /* replicated data - 1) media object size */
-  payload->media_object_size = GST_BUFFER_SIZE (buf);
+  payload->media_object_size = gst_buffer_get_size (buf);
   /* replicated data - 2) presentation time */
   if (!GST_CLOCK_TIME_IS_VALID (GST_BUFFER_TIMESTAMP (buf))) {
     GST_ERROR_OBJECT (asfmux, "Received buffer without timestamp");
@@ -1896,7 +1931,7 @@ gst_asf_mux_process_buffer (GstAsfMux * asfmux, GstAsfPad * pad,
 
   asfmux->payloads = g_slist_append (asfmux->payloads, payload);
   asfmux->payload_data_size +=
-      GST_BUFFER_SIZE (buf) + ASF_MULTIPLE_PAYLOAD_HEADER_SIZE;
+      gst_buffer_get_size (buf) + ASF_MULTIPLE_PAYLOAD_HEADER_SIZE;
   GST_LOG_OBJECT (asfmux, "Payload data size: %" G_GUINT32_FORMAT,
       asfmux->payload_data_size);
 
@@ -1931,7 +1966,7 @@ gst_asf_mux_collected (GstCollectPads * collect, gpointer data)
   }
 
   if (G_UNLIKELY (asfmux->state == GST_ASF_MUX_STATE_EOS))
-    return GST_FLOW_UNEXPECTED;
+    return GST_FLOW_EOS;
 
   /* select the earliest buffer */
   walk = asfmux->collect->data;
@@ -1999,7 +2034,7 @@ gst_asf_mux_collected (GstCollectPads * collect, gpointer data)
     }
     if (ret == GST_FLOW_OK) {
       gst_pad_push_event (asfmux->srcpad, gst_event_new_eos ());
-      ret = GST_FLOW_UNEXPECTED;
+      ret = GST_FLOW_EOS;
     }
     asfmux->state = GST_ASF_MUX_STATE_EOS;
   }
@@ -2201,7 +2236,7 @@ gst_asf_mux_video_set_caps (GstPad * pad, GstCaps * caps)
     videopad->vidinfo.bit_cnt = 24;
 
     /* in case we have a fourcc, we use it */
-    if (gst_structure_get_fourcc (structure, "format", &fourcc)) {
+    if (gst_structure_get_uint (structure, "format", &fourcc)) {
       videopad->vidinfo.compression = fourcc;
     } else {
       gint version;
@@ -2233,7 +2268,7 @@ refuse_caps:
 
 static GstPad *
 gst_asf_mux_request_new_pad (GstElement * element,
-    GstPadTemplate * templ, const gchar * req_name)
+    GstPadTemplate * templ, const gchar * req_name, const GstCaps * caps)
 {
   GstElementClass *klass = GST_ELEMENT_GET_CLASS (element);
   GstAsfMux *asfmux = GST_ASF_MUX_CAST (element);
@@ -2241,7 +2276,9 @@ gst_asf_mux_request_new_pad (GstElement * element,
   GstAsfPad *collect_pad;
   gboolean is_audio;
   guint collect_size = 0;
-  gchar *name;
+  gchar *name = NULL;
+  const gchar *pad_name = NULL;
+  gint pad_id;
 
   GST_DEBUG_OBJECT (asfmux, "Requested pad: %s", GST_STR_NULL (req_name));
 
@@ -2251,26 +2288,36 @@ gst_asf_mux_request_new_pad (GstElement * element,
     return NULL;
   }
 
-  if (templ == gst_element_class_get_pad_template (klass, "audio_%d")) {
-    name = g_strdup_printf ("audio_%02d", asfmux->stream_number + 1);
+  if (templ == gst_element_class_get_pad_template (klass, "audio_%u")) {
+    /* don't mix named and unnamed pads, if the pad already exists we fail when
+     * trying to add it */
+    if (req_name != NULL && sscanf (req_name, "audio_%u", &pad_id) == 1) {
+      pad_name = req_name;
+    } else {
+      name = g_strdup_printf ("audio_%u", asfmux->stream_number + 1);
+      pad_name = name;
+    }
     GST_DEBUG_OBJECT (asfmux, "Adding new pad %s", name);
-    newpad = gst_pad_new_from_template (templ, name);
-    g_free (name);
+    newpad = gst_pad_new_from_template (templ, pad_name);
     is_audio = TRUE;
-    gst_pad_set_setcaps_function (newpad,
-        GST_DEBUG_FUNCPTR (gst_asf_mux_audio_set_caps));
-  } else if (templ == gst_element_class_get_pad_template (klass, "video_%d")) {
-    name = g_strdup_printf ("video_%02d", asfmux->stream_number + 1);
+  } else if (templ == gst_element_class_get_pad_template (klass, "video_%u")) {
+    /* don't mix named and unnamed pads, if the pad already exists we fail when
+     * trying to add it */
+    if (req_name != NULL && sscanf (req_name, "video_%u", &pad_id) == 1) {
+      pad_name = req_name;
+    } else {
+      name = g_strdup_printf ("video_%u", asfmux->stream_number + 1);
+      pad_name = name;
+    }
     GST_DEBUG_OBJECT (asfmux, "Adding new pad %s", name);
     newpad = gst_pad_new_from_template (templ, name);
-    g_free (name);
     is_audio = FALSE;
-    gst_pad_set_setcaps_function (newpad,
-        GST_DEBUG_FUNCPTR (gst_asf_mux_video_set_caps));
   } else {
     GST_WARNING_OBJECT (asfmux, "This is not our template!");
     return NULL;
   }
+
+  g_free (name);
 
   /* add pad to collections */
   if (is_audio) {
@@ -2292,14 +2339,6 @@ gst_asf_mux_request_new_pad (GstElement * element,
   /* set pad stream number */
   asfmux->stream_number += 1;
   collect_pad->stream_number = asfmux->stream_number;
-
-  /* FIXME: hacked way to override/extend the event function of
-   * GstCollectPads; because it sets its own event function giving
-   * the element no access to events.
-   */
-  asfmux->collect_event = (GstPadEventFunction) GST_PAD_EVENTFUNC (newpad);
-  gst_pad_set_event_function (newpad,
-      GST_DEBUG_FUNCPTR (gst_asf_mux_sink_event));
 
   gst_pad_set_active (newpad, TRUE);
   gst_element_add_pad (element, newpad);

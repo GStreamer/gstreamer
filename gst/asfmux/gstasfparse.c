@@ -46,7 +46,8 @@ static GstStateChangeReturn gst_asf_parse_change_state (GstElement * element,
     GstStateChange transition);
 static void gst_asf_parse_loop (GstPad * pad);
 
-GST_BOILERPLATE (GstAsfParse, gst_asf_parse, GstElement, GST_TYPE_ELEMENT);
+#define gst_asf_parse_parent_class parent_class
+G_DEFINE_TYPE (GstAsfParse, gst_asf_parse, GST_TYPE_ELEMENT);
 
 static void
 gst_asf_parse_reset (GstAsfParse * asfparse)
@@ -61,29 +62,62 @@ gst_asf_parse_reset (GstAsfParse * asfparse)
 }
 
 static gboolean
-gst_asf_parse_sink_activate (GstPad * pad)
+gst_asf_parse_sink_activate (GstPad * sinkpad, GstObject * parent)
 {
-  if (gst_pad_check_pull_range (pad)) {
-    return gst_pad_activate_pull (pad, TRUE);
-  } else {
-    return gst_pad_activate_push (pad, TRUE);
+  GstQuery *query;
+  gboolean pull_mode;
+
+  query = gst_query_new_scheduling ();
+
+  if (!gst_pad_peer_query (sinkpad, query)) {
+    gst_query_unref (query);
+    goto activate_push;
+  }
+
+  pull_mode = gst_query_has_scheduling_mode (query, GST_PAD_MODE_PULL);
+  gst_query_unref (query);
+
+  if (!pull_mode)
+    goto activate_push;
+
+  GST_DEBUG_OBJECT (sinkpad, "activating pull");
+  return gst_pad_activate_mode (sinkpad, GST_PAD_MODE_PULL, TRUE);
+
+activate_push:
+  {
+    GST_DEBUG_OBJECT (sinkpad, "activating push");
+    return gst_pad_activate_mode (sinkpad, GST_PAD_MODE_PUSH, TRUE);
   }
 }
 
 static gboolean
-gst_asf_parse_sink_activate_pull (GstPad * pad, gboolean active)
+gst_asf_parse_sink_activate_mode (GstPad * pad, GstObject * parent,
+    GstPadMode mode, gboolean active)
 {
-  if (active) {
-    return gst_pad_start_task (pad, (GstTaskFunction) gst_asf_parse_loop, pad);
-  } else {
-    return gst_pad_stop_task (pad);
+  gboolean res;
+
+  switch (mode) {
+    case GST_PAD_MODE_PULL:
+      if (active) {
+        res =
+            gst_pad_start_task (pad, (GstTaskFunction) gst_asf_parse_loop, pad);
+      } else {
+        res = gst_pad_stop_task (pad);
+      }
+    case GST_PAD_MODE_PUSH:
+      res = TRUE;
+      break;
+    default:
+      res = FALSE;
+      break;
   }
+
+  return res;
 }
 
 static GstFlowReturn
 gst_asf_parse_push (GstAsfParse * asfparse, GstBuffer * buf)
 {
-  gst_buffer_set_caps (buf, asfparse->outcaps);
   return gst_pad_push (asfparse->srcpad, buf);
 }
 
@@ -93,10 +127,12 @@ gst_asf_parse_parse_data_object (GstAsfParse * asfparse, GstBuffer * buffer)
   GstByteReader *reader;
   GstFlowReturn ret = GST_FLOW_OK;
   guint64 packet_count = 0;
+  GstMapInfo map;
 
   GST_DEBUG_OBJECT (asfparse, "Parsing data object");
 
-  reader = gst_byte_reader_new_from_buffer (buffer);
+  gst_buffer_map (buffer, &map, GST_MAP_READ);
+  reader = gst_byte_reader_new (map.data, map.size);
   /* skip to packet count */
   if (!gst_byte_reader_skip (reader, 40))
     goto error;
@@ -112,12 +148,14 @@ gst_asf_parse_parse_data_object (GstAsfParse * asfparse, GstBuffer * buffer)
         packet_count);
   }
 
+  gst_buffer_unmap (buffer, &map);
   gst_byte_reader_free (reader);
   return gst_asf_parse_push (asfparse, buffer);
 
 error:
   ret = GST_FLOW_ERROR;
   GST_ERROR_OBJECT (asfparse, "Error while parsing data object headers");
+  gst_buffer_unmap (buffer, &map);
   gst_byte_reader_free (reader);
   return ret;
 }
@@ -161,6 +199,7 @@ gst_asf_parse_pull_headers (GstAsfParse * asfparse)
   GstBuffer *headers = NULL;
   guint64 size;
   GstFlowReturn ret;
+  GstMapInfo map;
 
   if ((ret = gst_pad_pull_range (asfparse->sinkpad, asfparse->offset,
               ASF_GUID_OBJSIZE_SIZE, &guid_and_size)) != GST_FLOW_OK) {
@@ -168,8 +207,10 @@ gst_asf_parse_pull_headers (GstAsfParse * asfparse)
     goto leave;
   }
   asfparse->offset += ASF_GUID_OBJSIZE_SIZE;
-  size = gst_asf_match_and_peek_obj_size (GST_BUFFER_DATA (guid_and_size),
+  gst_buffer_map (guid_and_size, &map, GST_MAP_READ);
+  size = gst_asf_match_and_peek_obj_size (map.data,
       &(guids[ASF_HEADER_OBJECT_INDEX]));
+  gst_buffer_unmap (guid_and_size, &map);
 
   if (size == 0) {
     GST_ERROR_OBJECT (asfparse, "ASF starting identifier missing");
@@ -209,7 +250,7 @@ gst_asf_parse_pull_data_header (GstAsfParse * asfparse)
     return ret;
   }
   asfparse->offset += ASF_DATA_OBJECT_SIZE;
-  asfparse->data_size = gst_asf_match_and_peek_obj_size (GST_BUFFER_DATA (buf),
+  asfparse->data_size = gst_asf_match_and_peek_obj_size_buf (buf,
       &(guids[ASF_DATA_OBJECT_INDEX]));
   if (asfparse->data_size == 0) {
     GST_ERROR_OBJECT (asfparse, "Unexpected object, was expecting data object");
@@ -262,8 +303,7 @@ gst_asf_parse_pull_indexes (GstAsfParse * asfparse)
     if (ret != GST_FLOW_OK)
       break;
     /* we can peek at the object size */
-    obj_size =
-        gst_asf_match_and_peek_obj_size (GST_BUFFER_DATA (guid_and_size), NULL);
+    obj_size = gst_asf_match_and_peek_obj_size_buf (guid_and_size, NULL);
     if (obj_size == 0) {
       GST_ERROR_OBJECT (asfparse, "Incomplete object found");
       gst_buffer_unref (guid_and_size);
@@ -346,9 +386,9 @@ pause:
     GST_INFO_OBJECT (asfparse, "Pausing sinkpad task");
     gst_pad_pause_task (pad);
 
-    if (ret == GST_FLOW_UNEXPECTED) {
+    if (ret == GST_FLOW_EOS) {
       gst_pad_push_event (asfparse->srcpad, gst_event_new_eos ());
-    } else if (ret == GST_FLOW_NOT_LINKED || ret < GST_FLOW_UNEXPECTED) {
+    } else if (ret == GST_FLOW_NOT_LINKED || ret < GST_FLOW_EOS) {
       GST_ELEMENT_ERROR (asfparse, STREAM, FAILED,
           (NULL), ("streaming task paused, reason %s (%d)", reason, ret));
       gst_pad_push_event (asfparse->srcpad, gst_event_new_eos ());
@@ -357,12 +397,12 @@ pause:
 }
 
 static GstFlowReturn
-gst_asf_parse_chain (GstPad * pad, GstBuffer * buffer)
+gst_asf_parse_chain (GstPad * pad, GstObject * parent, GstBuffer * buffer)
 {
   GstAsfParse *asfparse;
   GstFlowReturn ret = GST_FLOW_OK;
 
-  asfparse = GST_ASF_PARSE (GST_PAD_PARENT (pad));
+  asfparse = GST_ASF_PARSE (parent);
   gst_adapter_push (asfparse->adapter, buffer);
 
   switch (asfparse->parse_state) {
@@ -372,9 +412,10 @@ gst_asf_parse_chain (GstPad * pad, GstBuffer * buffer)
 
         /* we can peek at the object size */
         asfparse->headers_size =
-            gst_asf_match_and_peek_obj_size (gst_adapter_peek
+            gst_asf_match_and_peek_obj_size (gst_adapter_map
             (asfparse->adapter, ASF_GUID_OBJSIZE_SIZE),
             &(guids[ASF_HEADER_OBJECT_INDEX]));
+        gst_adapter_unmap (asfparse->adapter);
 
         if (asfparse->headers_size == 0) {
           /* something is wrong, this probably ain't an ASF stream */
@@ -401,9 +442,10 @@ gst_asf_parse_chain (GstPad * pad, GstBuffer * buffer)
 
         /* we can peek at the object size */
         asfparse->data_size =
-            gst_asf_match_and_peek_obj_size (gst_adapter_peek
+            gst_asf_match_and_peek_obj_size (gst_adapter_map
             (asfparse->adapter, ASF_GUID_OBJSIZE_SIZE),
             &(guids[ASF_DATA_OBJECT_INDEX]));
+        gst_adapter_unmap (asfparse->adapter);
 
         if (asfparse->data_size == 0) {
           /* something is wrong */
@@ -447,8 +489,9 @@ gst_asf_parse_chain (GstPad * pad, GstBuffer * buffer)
       if (gst_adapter_available (asfparse->adapter) >= ASF_GUID_OBJSIZE_SIZE) {
         guint64 obj_size;
         /* we can peek at the object size */
-        obj_size = gst_asf_match_and_peek_obj_size (gst_adapter_peek
+        obj_size = gst_asf_match_and_peek_obj_size (gst_adapter_map
             (asfparse->adapter, ASF_GUID_OBJSIZE_SIZE), NULL);
+        gst_adapter_unmap (asfparse->adapter);
         if (gst_adapter_available (asfparse->adapter) >= obj_size) {
           GST_DEBUG_OBJECT (asfparse, "Skiping object");
           ret = gst_asf_parse_push (asfparse,
@@ -465,23 +508,6 @@ gst_asf_parse_chain (GstPad * pad, GstBuffer * buffer)
 
 end:
   return ret;
-}
-
-static void
-gst_asf_parse_base_init (gpointer g_class)
-{
-  GstElementClass *element_class = GST_ELEMENT_CLASS (g_class);
-
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&src_factory));
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&sink_factory));
-
-  gst_element_class_set_details_simple (element_class, "ASF parser",
-      "Parser", "Parses ASF", "Thiago Santos <thiagoss@embedded.ufcg.edu.br>");
-
-  GST_DEBUG_CATEGORY_INIT (asfparse_debug, "asfparse", 0,
-      "Parser for ASF streams");
 }
 
 static void
@@ -511,17 +537,28 @@ gst_asf_parse_class_init (GstAsfParseClass * klass)
 
   gstelement_class->change_state =
       GST_DEBUG_FUNCPTR (gst_asf_parse_change_state);
+
+  gst_element_class_add_pad_template (gstelement_class,
+      gst_static_pad_template_get (&src_factory));
+  gst_element_class_add_pad_template (gstelement_class,
+      gst_static_pad_template_get (&sink_factory));
+
+  gst_element_class_set_details_simple (gstelement_class, "ASF parser",
+      "Parser", "Parses ASF", "Thiago Santos <thiagoss@embedded.ufcg.edu.br>");
+
+  GST_DEBUG_CATEGORY_INIT (asfparse_debug, "asfparse", 0,
+      "Parser for ASF streams");
 }
 
 static void
-gst_asf_parse_init (GstAsfParse * asfparse, GstAsfParseClass * klass)
+gst_asf_parse_init (GstAsfParse * asfparse)
 {
   asfparse->sinkpad = gst_pad_new_from_static_template (&sink_factory, "sink");
   gst_pad_set_chain_function (asfparse->sinkpad, gst_asf_parse_chain);
   gst_pad_set_activate_function (asfparse->sinkpad,
       gst_asf_parse_sink_activate);
-  gst_pad_set_activatepull_function (asfparse->sinkpad,
-      gst_asf_parse_sink_activate_pull);
+  gst_pad_set_activatemode_function (asfparse->sinkpad,
+      gst_asf_parse_sink_activate_mode);
   gst_element_add_pad (GST_ELEMENT (asfparse), asfparse->sinkpad);
 
   asfparse->srcpad = gst_pad_new_from_static_template (&src_factory, "src");
@@ -529,7 +566,7 @@ gst_asf_parse_init (GstAsfParse * asfparse, GstAsfParseClass * klass)
   gst_element_add_pad (GST_ELEMENT (asfparse), asfparse->srcpad);
 
   asfparse->adapter = gst_adapter_new ();
-  asfparse->outcaps = gst_caps_new_simple ("video/x-ms-asf", NULL);
+  asfparse->outcaps = gst_caps_new_empty_simple ("video/x-ms-asf");
   asfparse->asfinfo = gst_asf_file_info_new ();
   asfparse->packetinfo = g_new0 (GstAsfPacketInfo, 1);
   gst_asf_parse_reset (asfparse);

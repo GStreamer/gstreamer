@@ -300,7 +300,7 @@ AG_GST_DEFAULT_ELEMENTS
 dnl *** plug-ins to include ***
 dnl Non ported plugins (non-dependant, then dependant)
 dnl Make sure you have a space before and after all plugins
-GST_PLUGINS_NONPORTED=" aiff asfmux \
+GST_PLUGINS_NONPORTED=" aiff \
  camerabin cdxaparse coloreffects \
  dccp faceoverlay festival \
  fieldanalysis freeverb freeze frei0r gaudieffects \

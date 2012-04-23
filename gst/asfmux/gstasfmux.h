@@ -144,7 +144,6 @@ struct _GstAsfMux
   GstPad *srcpad;
 
   GstCollectPads *collect;
-  GstPadEventFunction collect_event;
 };
 
 struct _GstAsfMuxClass
