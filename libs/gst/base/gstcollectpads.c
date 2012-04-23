@@ -1722,6 +1722,7 @@ gst_collect_pads_event_default (GstCollectPads * pads, GstCollectData * data,
       /* forward event to unblock check_collected */
       GST_DEBUG_OBJECT (pad, "forwarding flush start");
       res = gst_pad_event_default (pad, parent, event);
+      event = NULL;
 
       /* now unblock the chain function.
        * no cond per pad, so they all unblock,
@@ -1846,7 +1847,8 @@ gst_collect_pads_event_default (GstCollectPads * pads, GstCollectData * data,
   }
 
 eat:
-  gst_event_unref (event);
+  if (event)
+    gst_event_unref (event);
   return res;
 
 forward:
