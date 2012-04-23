@@ -150,9 +150,6 @@ static GstStaticPadTemplate audio_sink_factory =
         "audio/mpeg, layer = (int) 3, mpegversion = (int) 1, "
         "channels = (int) [1,2], rate = (int) [8000,96000]"));
 
-static void gst_asf_mux_class_init (GstAsfMuxClass * klass);
-static void gst_asf_mux_init (GstAsfMux * asfmux);
-
 static gboolean gst_asf_mux_audio_set_caps (GstPad * pad, GstCaps * caps);
 static gboolean gst_asf_mux_video_set_caps (GstPad * pad, GstCaps * caps);
 
@@ -174,36 +171,8 @@ static GstFlowReturn gst_asf_mux_collected (GstCollectPads * collect,
 
 static GstElementClass *parent_class = NULL;
 
-GType
-gst_asf_mux_get_type (void)
-{
-  static GType asfmux_type = 0;
-
-  if (!asfmux_type) {
-    static const GTypeInfo asfmux_info = {
-      sizeof (GstAsfMuxClass),
-      NULL,
-      NULL,
-      (GClassInitFunc) gst_asf_mux_class_init,
-      NULL,
-      NULL,
-      sizeof (GstAsfMux),
-      0,
-      (GInstanceInitFunc) gst_asf_mux_init,
-    };
-    static const GInterfaceInfo tag_setter_info = {
-      NULL,
-      NULL,
-      NULL
-    };
-
-    asfmux_type =
-        g_type_register_static (GST_TYPE_ELEMENT, "GstAsfMux", &asfmux_info, 0);
-    g_type_add_interface_static (asfmux_type, GST_TYPE_TAG_SETTER,
-        &tag_setter_info);
-  }
-  return asfmux_type;
-}
+G_DEFINE_TYPE_WITH_CODE (GstAsfMux, gst_asf_mux, GST_TYPE_ELEMENT,
+    G_IMPLEMENT_INTERFACE (GST_TYPE_TAG_SETTER, NULL));
 
 static void
 gst_asf_mux_reset (GstAsfMux * asfmux)
