@@ -184,7 +184,7 @@ gst_v4l2_buffer_pool_alloc_buffer (GstBufferPool * bpool, GstBuffer ** buffer,
         goto mmap_failed;
 
       gst_buffer_append_memory (newbuf,
-          gst_memory_new_wrapped (0,
+          gst_memory_new_wrapped (GST_MEMORY_FLAG_NO_SHARE,
               meta->mem, meta->vbuffer.length, 0, meta->vbuffer.length, NULL,
               NULL));
 
