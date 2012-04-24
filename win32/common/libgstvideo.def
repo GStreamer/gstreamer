@@ -3,6 +3,7 @@ EXPORTS
 	gst_video_buffer_get_overlay_composition
 	gst_video_buffer_set_overlay_composition
 	gst_video_calculate_display_ratio
+	gst_video_chroma_site_get_type
 	gst_video_codec_frame_get_type
 	gst_video_codec_frame_ref
 	gst_video_codec_frame_set_hook
@@ -10,6 +11,11 @@ EXPORTS
 	gst_video_codec_state_get_type
 	gst_video_codec_state_ref
 	gst_video_codec_state_unref
+	gst_video_color_matrix_get_type
+	gst_video_color_primaries_get_type
+	gst_video_color_range_get_type
+	gst_video_colorimetry_from_string
+	gst_video_colorimetry_matches
 	gst_video_convert_frame
 	gst_video_convert_frame_async
 	gst_video_decoder_add_to_frame
@@ -51,12 +57,16 @@ EXPORTS
 	gst_video_event_parse_still_frame
 	gst_video_event_parse_upstream_force_key_unit
 	gst_video_filter_get_type
+	gst_video_flags_get_type
 	gst_video_format_convert
+	gst_video_format_flags_get_type
 	gst_video_format_from_fourcc
+	gst_video_format_from_masks
 	gst_video_format_get_component_depth
 	gst_video_format_get_component_height
 	gst_video_format_get_component_offset
 	gst_video_format_get_component_width
+	gst_video_format_get_info
 	gst_video_format_get_pixel_stride
 	gst_video_format_get_row_stride
 	gst_video_format_get_size
@@ -71,9 +81,16 @@ EXPORTS
 	gst_video_format_parse_caps
 	gst_video_format_parse_caps_interlaced
 	gst_video_format_to_fourcc
+	gst_video_format_to_string
 	gst_video_frame_rate
 	gst_video_get_size
 	gst_video_get_size_from_caps
+	gst_video_info_from_caps
+	gst_video_info_init
+	gst_video_info_is_equal
+	gst_video_info_set_format
+	gst_video_info_to_caps
+	gst_video_interlace_mode_get_type
 	gst_video_overlay_composition_add_rectangle
 	gst_video_overlay_composition_blend
 	gst_video_overlay_composition_copy
@@ -85,12 +102,14 @@ EXPORTS
 	gst_video_overlay_composition_new
 	gst_video_overlay_rectangle_copy
 	gst_video_overlay_rectangle_get_flags
+	gst_video_overlay_rectangle_get_global_alpha
 	gst_video_overlay_rectangle_get_pixels_argb
 	gst_video_overlay_rectangle_get_pixels_unscaled_argb
 	gst_video_overlay_rectangle_get_render_rectangle
 	gst_video_overlay_rectangle_get_seqnum
 	gst_video_overlay_rectangle_get_type
 	gst_video_overlay_rectangle_new_argb
+	gst_video_overlay_rectangle_set_global_alpha
 	gst_video_overlay_rectangle_set_render_rectangle
 	gst_video_parse_caps_chroma_site
 	gst_video_parse_caps_color_matrix
@@ -99,3 +118,4 @@ EXPORTS
 	gst_video_parse_caps_pixel_aspect_ratio
 	gst_video_sink_center_rect
 	gst_video_sink_get_type
+	gst_video_transfer_function_get_type
