@@ -1578,31 +1578,17 @@ GstCaps *
 gst_video_info_to_caps (GstVideoInfo * info)
 {
   GstCaps *caps;
-  const gchar *capsname = NULL;
 
   g_return_val_if_fail (info != NULL, NULL);
   g_return_val_if_fail (info->finfo != NULL, NULL);
   g_return_val_if_fail (info->finfo->format != GST_VIDEO_FORMAT_UNKNOWN, NULL);
 
-  if (GST_VIDEO_INFO_IS_YUV (info))
-    capsname = "video/x-raw-yuv";
-  else if (GST_VIDEO_INFO_IS_RGB (info))
-    capsname = "video/x-raw-rgb";
-  else if (GST_VIDEO_INFO_IS_GRAY (info))
-    capsname = "video/x-raw-gray";
+  caps = gst_video_format_new_caps_raw (GST_VIDEO_INFO_FORMAT (info));
 
-  caps = gst_caps_new_simple (capsname,
+  gst_caps_set_simple (caps,
       "width", G_TYPE_INT, info->width,
       "height", G_TYPE_INT, info->height,
       "pixel-aspect-ratio", GST_TYPE_FRACTION, info->par_n, info->par_d, NULL);
-
-  if (GST_VIDEO_INFO_IS_YUV (info))
-    gst_caps_set_simple (caps, "format", GST_TYPE_FOURCC,
-        gst_video_format_to_fourcc (info->finfo->format), NULL);
-  else if (GST_VIDEO_INFO_IS_RGB (info) || GST_VIDEO_INFO_IS_GRAY (info))
-    gst_caps_set_simple (caps, "depth", G_TYPE_INT,
-        info->finfo->bits * GST_VIDEO_INFO_N_COMPONENTS (info), NULL);
-
 
   gst_caps_set_simple (caps, "interlaced", G_TYPE_BOOLEAN,
       GST_VIDEO_INFO_IS_INTERLACED (info), NULL);
