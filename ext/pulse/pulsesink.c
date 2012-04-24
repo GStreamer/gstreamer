@@ -407,7 +407,7 @@ gst_pulsering_context_subscribe_cb (pa_context * c,
     GstPulseRingBuffer *pbuf = (GstPulseRingBuffer *) walk->data;
     psink = GST_PULSESINK_CAST (GST_OBJECT_PARENT (pbuf));
 
-    GST_LOG_OBJECT (psink, "type %d, idx %u", t, idx);
+    GST_LOG_OBJECT (psink, "type %04x, idx %u", t, idx);
 
     if (!pbuf->stream)
       continue;
