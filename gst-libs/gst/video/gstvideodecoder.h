@@ -92,15 +92,6 @@ G_BEGIN_DECLS
 #define GST_VIDEO_DECODER_FLOW_NEED_DATA GST_FLOW_CUSTOM_SUCCESS
 
 /**
- * GST_VIDEO_DECODER_FLOW_DROPPED:
- *
- * Returned when the event/buffer should be dropped.
- *
- * Since: 0.10.36
- */
-#define GST_VIDEO_DECODER_FLOW_DROPPED GST_FLOW_CUSTOM_SUCCESS_1
-
-/**
  * GST_VIDEO_DECODER_INPUT_SEGMENT:
  * @obj: base decoder instance
  *

@@ -275,6 +275,11 @@ static GstVideoCodecFrame *gst_video_decoder_new_frame (GstVideoDecoder *
 
 static void gst_video_decoder_clear_queues (GstVideoDecoder * dec);
 
+static gboolean gst_video_decoder_sink_event_default (GstVideoDecoder * decoder,
+    GstEvent * event);
+static gboolean gst_video_decoder_src_event_default (GstVideoDecoder * decoder,
+    GstEvent * event);
+
 /* we can't use G_DEFINE_ABSTRACT_TYPE because we need the klass in the _init
  * method to get to the padtemplates */
 GType
@@ -322,6 +327,9 @@ gst_video_decoder_class_init (GstVideoDecoderClass * klass)
 
   gstelement_class->change_state =
       GST_DEBUG_FUNCPTR (gst_video_decoder_change_state);
+
+  klass->sink_event = gst_video_decoder_sink_event_default;
+  klass->src_event = gst_video_decoder_src_event_default;
 }
 
 static void
@@ -667,12 +675,45 @@ gst_video_decoder_flush (GstVideoDecoder * dec, gboolean hard)
   return ret;
 }
 
+
 static gboolean
-gst_video_decoder_sink_eventfunc (GstVideoDecoder * decoder, GstEvent * event)
+gst_video_decoder_push_event (GstVideoDecoder * decoder, GstEvent * event)
+{
+  switch (GST_EVENT_TYPE (event)) {
+    case GST_EVENT_SEGMENT:
+    {
+      GstSegment segment;
+
+      GST_VIDEO_DECODER_STREAM_LOCK (decoder);
+
+      gst_event_copy_segment (event, &segment);
+
+      GST_DEBUG_OBJECT (decoder, "segment %" GST_SEGMENT_FORMAT, &segment);
+
+      if (segment.format != GST_FORMAT_TIME) {
+        GST_DEBUG_OBJECT (decoder, "received non TIME newsegment");
+        GST_VIDEO_DECODER_STREAM_UNLOCK (decoder);
+        break;
+      }
+
+      decoder->output_segment = segment;
+      GST_VIDEO_DECODER_STREAM_UNLOCK (decoder);
+      break;
+    }
+    default:
+      break;
+  }
+
+  return gst_pad_push_event (decoder->srcpad, event);
+}
+
+static gboolean
+gst_video_decoder_sink_event_default (GstVideoDecoder * decoder,
+    GstEvent * event)
 {
   GstVideoDecoderClass *decoder_class;
   GstVideoDecoderPrivate *priv;
-  gboolean handled = FALSE;
+  gboolean ret = FALSE;
 
   priv = decoder->priv;
   decoder_class = GST_VIDEO_DECODER_GET_CLASS (decoder);
@@ -683,8 +724,9 @@ gst_video_decoder_sink_eventfunc (GstVideoDecoder * decoder, GstEvent * event)
       GstCaps *caps;
 
       gst_event_parse_caps (event, &caps);
-      handled = gst_video_decoder_setcaps (decoder, caps);
+      ret = gst_video_decoder_setcaps (decoder, caps);
       gst_event_unref (event);
+      event = NULL;
       break;
     }
     case GST_EVENT_EOS:
@@ -705,7 +747,7 @@ gst_video_decoder_sink_eventfunc (GstVideoDecoder * decoder, GstEvent * event)
         flow_ret = GST_FLOW_OK;
       }
 
-      handled = (flow_ret == GST_VIDEO_DECODER_FLOW_DROPPED);
+      ret = (flow_ret == GST_FLOW_OK);
       GST_VIDEO_DECODER_STREAM_UNLOCK (decoder);
       break;
     }
@@ -769,82 +811,18 @@ gst_video_decoder_sink_eventfunc (GstVideoDecoder * decoder, GstEvent * event)
       break;
   }
 
-  return handled;
-
-newseg_wrong_format:
-  {
-    GST_DEBUG_OBJECT (decoder, "received non TIME newsegment");
-    gst_event_unref (event);
-    /* SWALLOW EVENT */
-    /* FIXME : Ideally we'd like to return FALSE in the event handler */
-    return TRUE;
-  }
-}
-
-static gboolean
-gst_video_decoder_push_event (GstVideoDecoder * decoder, GstEvent * event)
-{
-  switch (GST_EVENT_TYPE (event)) {
-    case GST_EVENT_SEGMENT:
-    {
-      GstSegment segment;
-
-      GST_VIDEO_DECODER_STREAM_LOCK (decoder);
-
-      gst_event_copy_segment (event, &segment);
-
-      GST_DEBUG_OBJECT (decoder, "segment %" GST_SEGMENT_FORMAT, &segment);
-
-      if (segment.format != GST_FORMAT_TIME) {
-        GST_DEBUG_OBJECT (decoder, "received non TIME newsegment");
-        GST_VIDEO_DECODER_STREAM_UNLOCK (decoder);
-        break;
-      }
-
-      decoder->output_segment = segment;
-      GST_VIDEO_DECODER_STREAM_UNLOCK (decoder);
-      break;
-    }
-    default:
-      break;
-  }
-
-  return gst_pad_push_event (decoder->srcpad, event);
-}
-
-static gboolean
-gst_video_decoder_sink_event (GstPad * pad, GstObject * parent,
-    GstEvent * event)
-{
-  GstVideoDecoder *decoder;
-  GstVideoDecoderClass *decoder_class;
-  gboolean ret = FALSE;
-  gboolean handled = FALSE;
-
-  decoder = GST_VIDEO_DECODER (parent);
-  decoder_class = GST_VIDEO_DECODER_GET_CLASS (decoder);
-
-  GST_DEBUG_OBJECT (decoder, "received event %d, %s", GST_EVENT_TYPE (event),
-      GST_EVENT_TYPE_NAME (event));
-
-  if (decoder_class->sink_event)
-    handled = decoder_class->sink_event (decoder, event);
-
-  if (!handled)
-    handled = gst_video_decoder_sink_eventfunc (decoder, event);
-
-  if (!handled) {
-    /* Forward non-serialized events and EOS/FLUSH_STOP immediately.
-     * For EOS this is required because no buffer or serialized event
-     * will come after EOS and nothing could trigger another
-     * _finish_frame() call.   *
-     * If the subclass handles sending of EOS manually it can return
-     * _DROPPED from ::finish() and all other subclasses should have
-     * decoded/flushed all remaining data before this
-     *
-     * For FLUSH_STOP this is required because it is expected
-     * to be forwarded immediately and no buffers are queued anyway.
-     */
+  /* Forward non-serialized events and EOS/FLUSH_STOP immediately.
+   * For EOS this is required because no buffer or serialized event
+   * will come after EOS and nothing could trigger another
+   * _finish_frame() call.   *
+   * If the subclass handles sending of EOS manually it can return
+   * _DROPPED from ::finish() and all other subclasses should have
+   * decoded/flushed all remaining data before this
+   *
+   * For FLUSH_STOP this is required because it is expected
+   * to be forwarded immediately and no buffers are queued anyway.
+   */
+  if (event) {
     if (!GST_EVENT_IS_SERIALIZED (event)
         || GST_EVENT_TYPE (event) == GST_EVENT_EOS
         || GST_EVENT_TYPE (event) == GST_EVENT_FLUSH_STOP) {
@@ -856,6 +834,34 @@ gst_video_decoder_sink_event (GstPad * pad, GstObject * parent,
       GST_VIDEO_DECODER_STREAM_UNLOCK (decoder);
     }
   }
+
+  return ret;
+
+newseg_wrong_format:
+  {
+    GST_DEBUG_OBJECT (decoder, "received non TIME newsegment");
+    gst_event_unref (event);
+    /* SWALLOW EVENT */
+    return FALSE;
+  }
+}
+
+static gboolean
+gst_video_decoder_sink_event (GstPad * pad, GstObject * parent,
+    GstEvent * event)
+{
+  GstVideoDecoder *decoder;
+  GstVideoDecoderClass *decoder_class;
+  gboolean ret = FALSE;
+
+  decoder = GST_VIDEO_DECODER (parent);
+  decoder_class = GST_VIDEO_DECODER_GET_CLASS (decoder);
+
+  GST_DEBUG_OBJECT (decoder, "received event %d, %s", GST_EVENT_TYPE (event),
+      GST_EVENT_TYPE_NAME (event));
+
+  if (decoder_class->sink_event)
+    ret = decoder_class->sink_event (decoder, event);
 
   return ret;
 }
@@ -928,13 +934,12 @@ gst_video_decoder_do_seek (GstVideoDecoder * dec, GstEvent * event)
 }
 
 static gboolean
-gst_video_decoder_src_event (GstPad * pad, GstObject * parent, GstEvent * event)
+gst_video_decoder_src_event_default (GstVideoDecoder * decoder,
+    GstEvent * event)
 {
-  GstVideoDecoder *decoder;
   GstVideoDecoderPrivate *priv;
   gboolean res = FALSE;
 
-  decoder = GST_VIDEO_DECODER (parent);
   priv = decoder->priv;
 
   GST_DEBUG_OBJECT (decoder,
@@ -970,11 +975,12 @@ gst_video_decoder_src_event (GstPad * pad, GstObject * parent, GstEvent * event)
       /* ... though a non-time seek can be aided as well */
       /* First bring the requested format to time */
       if (!(res =
-              gst_pad_query_convert (pad, format, cur, GST_FORMAT_TIME, &tcur)))
+              gst_pad_query_convert (decoder->srcpad, format, cur,
+                  GST_FORMAT_TIME, &tcur)))
         goto convert_error;
       if (!(res =
-              gst_pad_query_convert (pad, format, stop, GST_FORMAT_TIME,
-                  &tstop)))
+              gst_pad_query_convert (decoder->srcpad, format, stop,
+                  GST_FORMAT_TIME, &tstop)))
         goto convert_error;
 
       /* then seek with time on the peer */
@@ -1031,6 +1037,25 @@ done:
 convert_error:
   GST_DEBUG_OBJECT (decoder, "could not convert format");
   goto done;
+}
+
+static gboolean
+gst_video_decoder_src_event (GstPad * pad, GstObject * parent, GstEvent * event)
+{
+  GstVideoDecoder *decoder;
+  GstVideoDecoderClass *decoder_class;
+  gboolean ret = FALSE;
+
+  decoder = GST_VIDEO_DECODER (parent);
+  decoder_class = GST_VIDEO_DECODER_GET_CLASS (decoder);
+
+  GST_DEBUG_OBJECT (decoder, "received event %d, %s", GST_EVENT_TYPE (event),
+      GST_EVENT_TYPE_NAME (event));
+
+  if (decoder_class->src_event)
+    ret = decoder_class->src_event (decoder, event);
+
+  return ret;
 }
 
 static gboolean
