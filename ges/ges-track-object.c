@@ -309,8 +309,8 @@ ges_track_object_class_init (GESTrackObjectClass * klass)
    */
   g_object_class_install_property (object_class, PROP_MAX_DURATION,
       g_param_spec_uint64 ("max-duration", "Maximum duration",
-          "The duration of the object", 0, G_MAXUINT64, G_MAXUINT64,
-          G_PARAM_READWRITE | G_PARAM_CONSTRUCT));
+          "The duration of the object", GST_CLOCK_TIME_NONE, G_MAXUINT64,
+          G_MAXUINT64, G_PARAM_READWRITE | G_PARAM_CONSTRUCT));
 
   /**
    * GESTrackObject::deep-notify:
@@ -338,17 +338,18 @@ ges_track_object_class_init (GESTrackObjectClass * klass)
 static void
 ges_track_object_init (GESTrackObject * self)
 {
-  self->priv = G_TYPE_INSTANCE_GET_PRIVATE (self,
+  GESTrackObjectPrivate *priv = self->priv = G_TYPE_INSTANCE_GET_PRIVATE (self,
       GES_TYPE_TRACK_OBJECT, GESTrackObjectPrivate);
 
   /* Sane default values */
-  self->priv->pending_start = 0;
-  self->priv->pending_inpoint = 0;
-  self->priv->pending_duration = GST_SECOND;
-  self->priv->pending_priority = 1;
-  self->priv->pending_active = TRUE;
-  self->priv->locked = TRUE;
-  self->priv->properties_hashtable = NULL;
+  priv->pending_start = 0;
+  priv->pending_inpoint = 0;
+  priv->pending_duration = GST_SECOND;
+  priv->pending_priority = 1;
+  priv->pending_active = TRUE;
+  priv->locked = TRUE;
+  priv->properties_hashtable = NULL;
+  priv->maxduration = GST_CLOCK_TIME_NONE;
 }
 
 static inline gboolean
@@ -429,17 +430,24 @@ static inline gboolean
 ges_track_object_set_duration_internal (GESTrackObject * object,
     guint64 duration)
 {
+  GESTrackObjectPrivate *priv = object->priv;
+
   GST_DEBUG ("object:%p, duration:%" GST_TIME_FORMAT,
       object, GST_TIME_ARGS (duration));
 
-  if (object->priv->gnlobject != NULL) {
+  if (GST_CLOCK_TIME_IS_VALID (priv->maxduration) &&
+      duration > object->inpoint + priv->maxduration)
+    duration = priv->maxduration - object->inpoint;
+
+  if (priv->gnlobject != NULL) {
     if (G_UNLIKELY (duration == object->duration))
       return FALSE;
 
-    g_object_set (object->priv->gnlobject, "duration", duration,
+    g_object_set (priv->gnlobject, "duration", duration,
         "media-duration", duration, NULL);
   } else
-    object->priv->pending_duration = duration;
+    priv->pending_duration = duration;
+
   return TRUE;
 }
 
