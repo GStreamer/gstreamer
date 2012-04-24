@@ -26,15 +26,15 @@
 
 G_BEGIN_DECLS
 
+#include <gst/video/gstvideoencoder.h>
+
 typedef struct _GstFFMpegVidEnc GstFFMpegVidEnc;
 
 struct _GstFFMpegVidEnc
 {
-  GstElement element;
+  GstVideoEncoder parent;
 
-  /* We need to keep track of our pads, so we do so here. */
-  GstPad *srcpad;
-  GstPad *sinkpad;
+  GstVideoCodecState *input_state;
 
   AVCodecContext *context;
   AVFrame *picture;
@@ -63,21 +63,16 @@ struct _GstFFMpegVidEnc
   /* statistics file */
   FILE *file;
 
-  /* for b-frame delay handling */
-  GQueue *delay;
-
   /* other settings are copied over straight,
    * include a context here, rather than copy-and-past it from avcodec.h */
   AVCodecContext config;
-
-  gboolean force_keyframe;
 };
 
 typedef struct _GstFFMpegVidEncClass GstFFMpegVidEncClass;
 
 struct _GstFFMpegVidEncClass
 {
-  GstElementClass parent_class;
+  GstVideoEncoderClass parent_class;
 
   AVCodec *in_plugin;
   GstPadTemplate *srctempl, *sinktempl;
