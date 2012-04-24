@@ -367,6 +367,8 @@ connect_failed:
     }
     g_clear_error (&err);
     g_object_unref (saddr);
+    /* pretend we opened ok for proper cleanup to happen */
+    GST_OBJECT_FLAG_SET (this, GST_TCP_CLIENT_SINK_OPEN);
     gst_tcp_client_sink_stop (GST_BASE_SINK (this));
     return FALSE;
   }
