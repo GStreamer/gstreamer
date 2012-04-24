@@ -77,9 +77,8 @@ struct _GstColorEffects
   GstVideoFormat format;
   gint width;
   gint height;
-  gint size;
 
-  void (*process) (GstColorEffects * filter, guint8 * data);
+  void (*process) (GstColorEffects * filter, GstVideoFrame * frame);
 };
 
 struct _GstColorEffectsClass

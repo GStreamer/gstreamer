@@ -49,15 +49,11 @@ enum
   PROP_PRESET
 };
 
-GST_BOILERPLATE (GstColorEffects, gst_color_effects, GstVideoFilter,
-    GST_TYPE_VIDEO_FILTER);
+#define gst_color_effects_parent_class parent_class
+G_DEFINE_TYPE (GstColorEffects, gst_color_effects, GST_TYPE_VIDEO_FILTER);
 
-#define CAPS_STR GST_VIDEO_CAPS_ARGB ";" GST_VIDEO_CAPS_BGRA ";"\
-  GST_VIDEO_CAPS_ABGR ";" GST_VIDEO_CAPS_RGBA ";"\
-  GST_VIDEO_CAPS_xRGB ";" GST_VIDEO_CAPS_RGBx ";"\
-  GST_VIDEO_CAPS_xBGR ";" GST_VIDEO_CAPS_BGRx ";"\
-  GST_VIDEO_CAPS_RGB ";" GST_VIDEO_CAPS_BGR ";" \
-  GST_VIDEO_CAPS_YUV ("AYUV") ";"
+#define CAPS_STR GST_VIDEO_CAPS_MAKE ("{ " \
+    "ARGB, BGRA, ABGR, RGBA, xRGB, BGRx, xBGR, RGBx, RGB, BGR, AYUV }")
 
 static GstStaticPadTemplate gst_color_effects_src_template =
 GST_STATIC_PAD_TEMPLATE ("src",
@@ -303,7 +299,8 @@ static const gint cog_rgb_to_ycbcr_matrix_8bit_sdtv[] = {
     m[o*4+2] * v3 + m[o*4+3]) >> 8)
 
 static void
-gst_color_effects_transform_rgb (GstColorEffects * filter, guint8 * data)
+gst_color_effects_transform_rgb (GstColorEffects * filter,
+    GstVideoFrame * frame)
 {
   gint i, j;
   gint width, height;
@@ -311,23 +308,18 @@ gst_color_effects_transform_rgb (GstColorEffects * filter, guint8 * data)
   guint32 r, g, b;
   guint32 luma;
   gint offsets[3];
+  guint8 *data;
 
-  /* videoformat fun copied from videobalance */
+  data = GST_VIDEO_FRAME_PLANE_DATA (frame, 0);
+  offsets[0] = GST_VIDEO_FRAME_COMP_POFFSET (frame, 0);
+  offsets[1] = GST_VIDEO_FRAME_COMP_POFFSET (frame, 1);
+  offsets[2] = GST_VIDEO_FRAME_COMP_POFFSET (frame, 2);
 
-  offsets[0] = gst_video_format_get_component_offset (filter->format, 0,
-      filter->width, filter->height);
-  offsets[1] = gst_video_format_get_component_offset (filter->format, 1,
-      filter->width, filter->height);
-  offsets[2] = gst_video_format_get_component_offset (filter->format, 2,
-      filter->width, filter->height);
+  width = GST_VIDEO_FRAME_WIDTH (frame);
+  height = GST_VIDEO_FRAME_HEIGHT (frame);
 
-  width =
-      gst_video_format_get_component_width (filter->format, 0, filter->width);
-  height =
-      gst_video_format_get_component_height (filter->format, 0, filter->height);
-  row_stride =
-      gst_video_format_get_row_stride (filter->format, 0, filter->width);
-  pixel_stride = gst_video_format_get_pixel_stride (filter->format, 0);
+  row_stride = GST_VIDEO_FRAME_PLANE_STRIDE (frame, 0);
+  pixel_stride = GST_VIDEO_FRAME_COMP_PSTRIDE (frame, 0);
   row_wrap = row_stride - pixel_stride * width;
 
   /* transform */
@@ -365,7 +357,8 @@ gst_color_effects_transform_rgb (GstColorEffects * filter, guint8 * data)
 }
 
 static void
-gst_color_effects_transform_ayuv (GstColorEffects * filter, guint8 * data)
+gst_color_effects_transform_ayuv (GstColorEffects * filter,
+    GstVideoFrame * frame)
 {
   gint i, j;
   gint width, height;
@@ -373,23 +366,18 @@ gst_color_effects_transform_ayuv (GstColorEffects * filter, guint8 * data)
   gint r, g, b;
   gint y, u, v;
   gint offsets[3];
+  guint8 *data;
 
-  /* videoformat fun copied from videobalance */
+  data = GST_VIDEO_FRAME_PLANE_DATA (frame, 0);
+  offsets[0] = GST_VIDEO_FRAME_COMP_POFFSET (frame, 0);
+  offsets[1] = GST_VIDEO_FRAME_COMP_POFFSET (frame, 1);
+  offsets[2] = GST_VIDEO_FRAME_COMP_POFFSET (frame, 2);
 
-  offsets[0] = gst_video_format_get_component_offset (filter->format, 0,
-      filter->width, filter->height);
-  offsets[1] = gst_video_format_get_component_offset (filter->format, 1,
-      filter->width, filter->height);
-  offsets[2] = gst_video_format_get_component_offset (filter->format, 2,
-      filter->width, filter->height);
+  width = GST_VIDEO_FRAME_WIDTH (frame);
+  height = GST_VIDEO_FRAME_HEIGHT (frame);
 
-  width =
-      gst_video_format_get_component_width (filter->format, 0, filter->width);
-  height =
-      gst_video_format_get_component_height (filter->format, 0, filter->height);
-  row_stride =
-      gst_video_format_get_row_stride (filter->format, 0, filter->width);
-  pixel_stride = gst_video_format_get_pixel_stride (filter->format, 0);
+  row_stride = GST_VIDEO_FRAME_PLANE_STRIDE (frame, 0);
+  pixel_stride = GST_VIDEO_FRAME_COMP_PSTRIDE (frame, 0);
   row_wrap = row_stride - pixel_stride * width;
 
   for (i = 0; i < height; i++) {
@@ -445,24 +433,21 @@ gst_color_effects_transform_ayuv (GstColorEffects * filter, guint8 * data)
 }
 
 static gboolean
-gst_color_effects_set_caps (GstBaseTransform * btrans, GstCaps * incaps,
-    GstCaps * outcaps)
+gst_color_effects_set_info (GstVideoFilter * vfilter, GstCaps * incaps,
+    GstVideoInfo * in_info, GstCaps * outcaps, GstVideoInfo * out_info)
 {
-  GstColorEffects *filter = GST_COLOR_EFFECTS (btrans);
+  GstColorEffects *filter = GST_COLOR_EFFECTS (vfilter);
 
   GST_DEBUG_OBJECT (filter,
       "in %" GST_PTR_FORMAT " out %" GST_PTR_FORMAT, incaps, outcaps);
 
   filter->process = NULL;
 
-  if (!gst_video_format_parse_caps (incaps, &filter->format,
-          &filter->width, &filter->height))
-    goto invalid_caps;
+  filter->format = GST_VIDEO_INFO_FORMAT (in_info);
+  filter->width = GST_VIDEO_INFO_WIDTH (in_info);
+  filter->height = GST_VIDEO_INFO_HEIGHT (in_info);
 
   GST_OBJECT_LOCK (filter);
-
-  filter->size =
-      gst_video_format_get_size (filter->format, filter->width, filter->height);
 
   switch (filter->format) {
     case GST_VIDEO_FORMAT_AYUV:
@@ -487,63 +472,30 @@ gst_color_effects_set_caps (GstBaseTransform * btrans, GstCaps * incaps,
   GST_OBJECT_UNLOCK (filter);
 
   return filter->process != NULL;
-
-invalid_caps:
-  GST_ERROR_OBJECT (filter, "Invalid caps: %" GST_PTR_FORMAT, incaps);
-  return FALSE;
 }
 
 static GstFlowReturn
-gst_color_effects_transform_ip (GstBaseTransform * trans, GstBuffer * out)
+gst_color_effects_transform_frame_ip (GstVideoFilter * vfilter,
+    GstVideoFrame * out)
 {
-  GstColorEffects *filter = GST_COLOR_EFFECTS (trans);
-  guint8 *data;
-  gint size;
+  GstColorEffects *filter = GST_COLOR_EFFECTS (vfilter);
 
   if (!filter->process)
     goto not_negotiated;
-
-  data = GST_BUFFER_DATA (out);
-  size = GST_BUFFER_SIZE (out);
-
-  if (size != filter->size)
-    goto wrong_size;
 
   /* do nothing if there is no table ("none" preset) */
   if (filter->table == NULL)
     return GST_FLOW_OK;
 
   GST_OBJECT_LOCK (filter);
-  filter->process (filter, data);
+  filter->process (filter, out);
   GST_OBJECT_UNLOCK (filter);
 
   return GST_FLOW_OK;
 
-wrong_size:
-  {
-    GST_ELEMENT_ERROR (filter, STREAM, FORMAT,
-        (NULL), ("Invalid buffer size %d, expected %d", size, filter->size));
-    return GST_FLOW_ERROR;
-  }
 not_negotiated:
   GST_ERROR_OBJECT (filter, "Not negotiated yet");
   return GST_FLOW_NOT_NEGOTIATED;
-}
-
-static void
-gst_color_effects_base_init (gpointer g_class)
-{
-  GstElementClass *element_class = GST_ELEMENT_CLASS (g_class);
-
-  gst_element_class_set_details_simple (element_class,
-      "Color Look-up Table filter", "Filter/Effect/Video",
-      "Color Look-up Table filter",
-      "Filippo Argiolas <filippo.argiolas@gmail.com>");
-
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&gst_color_effects_sink_template));
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&gst_color_effects_src_template));
 }
 
 static void
@@ -615,7 +567,8 @@ static void
 gst_color_effects_class_init (GstColorEffectsClass * klass)
 {
   GObjectClass *gobject_class = (GObjectClass *) klass;
-  GstBaseTransformClass *trans_class = (GstBaseTransformClass *) klass;
+  GstElementClass *element_class = (GstElementClass *) klass;
+  GstVideoFilterClass *vfilter_class = (GstVideoFilterClass *) klass;
 
   GST_DEBUG_CATEGORY_INIT (coloreffects_debug, "coloreffects", 0,
       "coloreffects");
@@ -628,13 +581,23 @@ gst_color_effects_class_init (GstColorEffectsClass * klass)
           GST_TYPE_COLOR_EFFECTS_PRESET, DEFAULT_PROP_PRESET,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
-  trans_class->set_caps = GST_DEBUG_FUNCPTR (gst_color_effects_set_caps);
-  trans_class->transform_ip =
-      GST_DEBUG_FUNCPTR (gst_color_effects_transform_ip);
+  vfilter_class->set_info = GST_DEBUG_FUNCPTR (gst_color_effects_set_info);
+  vfilter_class->transform_frame_ip =
+      GST_DEBUG_FUNCPTR (gst_color_effects_transform_frame_ip);
+
+  gst_element_class_set_details_simple (element_class,
+      "Color Look-up Table filter", "Filter/Effect/Video",
+      "Color Look-up Table filter",
+      "Filippo Argiolas <filippo.argiolas@gmail.com>");
+
+  gst_element_class_add_pad_template (element_class,
+      gst_static_pad_template_get (&gst_color_effects_sink_template));
+  gst_element_class_add_pad_template (element_class,
+      gst_static_pad_template_get (&gst_color_effects_src_template));
 }
 
 static void
-gst_color_effects_init (GstColorEffects * filter, GstColorEffectsClass * klass)
+gst_color_effects_init (GstColorEffects * filter)
 {
   filter->preset = GST_COLOR_EFFECTS_PRESET_NONE;
   filter->table = NULL;

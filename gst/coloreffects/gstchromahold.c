@@ -69,23 +69,19 @@ enum
 };
 
 static GstStaticPadTemplate gst_chroma_hold_src_template =
-    GST_STATIC_PAD_TEMPLATE ("src",
+GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS (GST_VIDEO_CAPS_ARGB ";" GST_VIDEO_CAPS_BGRA ";"
-        GST_VIDEO_CAPS_ABGR ";" GST_VIDEO_CAPS_RGBA
-        ";" GST_VIDEO_CAPS_xRGB ";" GST_VIDEO_CAPS_BGRx ";" GST_VIDEO_CAPS_xBGR
-        ";" GST_VIDEO_CAPS_RGBx)
+    GST_STATIC_CAPS (GST_VIDEO_CAPS_MAKE
+        ("{ ARGB, BGRA, ABGR, RGBA, xRGB, BGRx, xBGR, RGBx}"))
     );
 
 static GstStaticPadTemplate gst_chroma_hold_sink_template =
-    GST_STATIC_PAD_TEMPLATE ("sink",
+GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS (GST_VIDEO_CAPS_ARGB ";" GST_VIDEO_CAPS_BGRA ";"
-        GST_VIDEO_CAPS_ABGR ";" GST_VIDEO_CAPS_RGBA
-        ";" GST_VIDEO_CAPS_xRGB ";" GST_VIDEO_CAPS_BGRx ";" GST_VIDEO_CAPS_xBGR
-        ";" GST_VIDEO_CAPS_RGBx)
+    GST_STATIC_CAPS (GST_VIDEO_CAPS_MAKE
+        ("{ ARGB, BGRA, ABGR, RGBA, xRGB, BGRx, xBGR, RGBx}"))
     );
 
 #define GST_CHROMA_HOLD_LOCK(self) G_STMT_START { \
@@ -101,12 +97,11 @@ static GstStaticPadTemplate gst_chroma_hold_sink_template =
 } G_STMT_END
 
 static gboolean gst_chroma_hold_start (GstBaseTransform * trans);
-static gboolean gst_chroma_hold_get_unit_size (GstBaseTransform * btrans,
-    GstCaps * caps, guint * size);
-static gboolean gst_chroma_hold_set_caps (GstBaseTransform * btrans,
-    GstCaps * incaps, GstCaps * outcaps);
-static GstFlowReturn gst_chroma_hold_transform_ip (GstBaseTransform * btrans,
-    GstBuffer * buf);
+static gboolean gst_chroma_hold_set_info (GstVideoFilter * vfilter,
+    GstCaps * incaps, GstVideoInfo * in_info, GstCaps * outcaps,
+    GstVideoInfo * out_info);
+static GstFlowReturn gst_chroma_hold_transform_frame_ip (GstVideoFilter *
+    vfilter, GstVideoFrame * frame);
 static void gst_chroma_hold_before_transform (GstBaseTransform * btrans,
     GstBuffer * buf);
 
@@ -119,33 +114,16 @@ static void gst_chroma_hold_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec);
 static void gst_chroma_hold_finalize (GObject * object);
 
-GST_BOILERPLATE (GstChromaHold, gst_chroma_hold, GstVideoFilter,
-    GST_TYPE_VIDEO_FILTER);
-
-static void
-gst_chroma_hold_base_init (gpointer g_class)
-{
-  GstElementClass *element_class = GST_ELEMENT_CLASS (g_class);
-
-  gst_element_class_set_details_simple (element_class, "Chroma hold filter",
-      "Filter/Effect/Video",
-      "Removes all color information except for one color",
-      "Sebastian Dröge <sebastian.droege@collabora.co.uk>");
-
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&gst_chroma_hold_sink_template));
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&gst_chroma_hold_src_template));
-
-  GST_DEBUG_CATEGORY_INIT (gst_chroma_hold_debug, "chromahold", 0,
-      "chromahold - Removes all color information except for one color");
-}
+#define gst_chroma_hold_parent_class parent_class
+G_DEFINE_TYPE (GstChromaHold, gst_chroma_hold, GST_TYPE_VIDEO_FILTER);
 
 static void
 gst_chroma_hold_class_init (GstChromaHoldClass * klass)
 {
   GObjectClass *gobject_class = (GObjectClass *) klass;
+  GstElementClass *gstelement_class = (GstElementClass *) klass;
   GstBaseTransformClass *btrans_class = (GstBaseTransformClass *) klass;
+  GstVideoFilterClass *vfilter_class = (GstVideoFilterClass *) klass;
 
   gobject_class->set_property = gst_chroma_hold_set_property;
   gobject_class->get_property = gst_chroma_hold_get_property;
@@ -169,16 +147,29 @@ gst_chroma_hold_class_init (GstChromaHoldClass * klass)
           G_PARAM_READWRITE | GST_PARAM_CONTROLLABLE | G_PARAM_STATIC_STRINGS));
 
   btrans_class->start = GST_DEBUG_FUNCPTR (gst_chroma_hold_start);
-  btrans_class->transform_ip = GST_DEBUG_FUNCPTR (gst_chroma_hold_transform_ip);
   btrans_class->before_transform =
       GST_DEBUG_FUNCPTR (gst_chroma_hold_before_transform);
-  btrans_class->get_unit_size =
-      GST_DEBUG_FUNCPTR (gst_chroma_hold_get_unit_size);
-  btrans_class->set_caps = GST_DEBUG_FUNCPTR (gst_chroma_hold_set_caps);
+
+  vfilter_class->transform_frame_ip =
+      GST_DEBUG_FUNCPTR (gst_chroma_hold_transform_frame_ip);
+  vfilter_class->set_info = GST_DEBUG_FUNCPTR (gst_chroma_hold_set_info);
+
+  gst_element_class_set_details_simple (gstelement_class, "Chroma hold filter",
+      "Filter/Effect/Video",
+      "Removes all color information except for one color",
+      "Sebastian Dröge <sebastian.droege@collabora.co.uk>");
+
+  gst_element_class_add_pad_template (gstelement_class,
+      gst_static_pad_template_get (&gst_chroma_hold_sink_template));
+  gst_element_class_add_pad_template (gstelement_class,
+      gst_static_pad_template_get (&gst_chroma_hold_src_template));
+
+  GST_DEBUG_CATEGORY_INIT (gst_chroma_hold_debug, "chromahold", 0,
+      "chromahold - Removes all color information except for one color");
 }
 
 static void
-gst_chroma_hold_init (GstChromaHold * self, GstChromaHoldClass * klass)
+gst_chroma_hold_init (GstChromaHold * self)
 {
   self->target_r = DEFAULT_TARGET_R;
   self->target_g = DEFAULT_TARGET_G;
@@ -255,42 +246,19 @@ gst_chroma_hold_get_property (GObject * object, guint prop_id, GValue * value,
 }
 
 static gboolean
-gst_chroma_hold_get_unit_size (GstBaseTransform * btrans,
-    GstCaps * caps, guint * size)
+gst_chroma_hold_set_info (GstVideoFilter * vfilter, GstCaps * incaps,
+    GstVideoInfo * in_info, GstCaps * outcaps, GstVideoInfo * out_info)
 {
-  GstVideoFormat format;
-  gint width, height;
-
-  if (!gst_video_format_parse_caps (caps, &format, &width, &height))
-    return FALSE;
-
-  *size = gst_video_format_get_size (format, width, height);
-
-  GST_DEBUG_OBJECT (btrans, "unit size = %d for format %d w %d height %d",
-      *size, format, width, height);
-
-  return TRUE;
-}
-
-static gboolean
-gst_chroma_hold_set_caps (GstBaseTransform * btrans,
-    GstCaps * incaps, GstCaps * outcaps)
-{
-  GstChromaHold *self = GST_CHROMA_HOLD (btrans);
+  GstChromaHold *self = GST_CHROMA_HOLD (vfilter);
 
   GST_CHROMA_HOLD_LOCK (self);
 
-  if (!gst_video_format_parse_caps (outcaps, &self->format,
-          &self->width, &self->height)) {
-    GST_WARNING_OBJECT (self,
-        "Failed to parse caps %" GST_PTR_FORMAT " -> %" GST_PTR_FORMAT, incaps,
-        outcaps);
-    GST_CHROMA_HOLD_UNLOCK (self);
-    return FALSE;
-  }
-
   GST_DEBUG_OBJECT (self,
       "Setting caps %" GST_PTR_FORMAT " -> %" GST_PTR_FORMAT, incaps, outcaps);
+
+  self->format = GST_VIDEO_INFO_FORMAT (in_info);
+  self->width = GST_VIDEO_INFO_WIDTH (in_info);
+  self->height = GST_VIDEO_INFO_HEIGHT (in_info);
 
   if (!gst_chroma_hold_set_process_function (self)) {
     GST_WARNING_OBJECT (self, "No processing function for this caps");
@@ -350,7 +318,7 @@ hue_dist (gint h1, gint h2)
 }
 
 static void
-gst_chroma_hold_process_xrgb (guint8 * dest, gint width,
+gst_chroma_hold_process_xrgb (GstVideoFrame * frame, gint width,
     gint height, GstChromaHold * self)
 {
   gint i, j;
@@ -360,11 +328,15 @@ gst_chroma_hold_process_xrgb (guint8 * dest, gint width,
   gint tolerance = self->tolerance;
   gint p[4];
   gint diff;
+  gint row_wrap;
+  guint8 *dest;
 
-  p[0] = gst_video_format_get_component_offset (self->format, 3, width, height);
-  p[1] = gst_video_format_get_component_offset (self->format, 0, width, height);
-  p[2] = gst_video_format_get_component_offset (self->format, 1, width, height);
-  p[3] = gst_video_format_get_component_offset (self->format, 2, width, height);
+  dest = GST_VIDEO_FRAME_PLANE_DATA (frame, 0);
+  p[0] = GST_VIDEO_FRAME_COMP_POFFSET (frame, 3);
+  p[1] = GST_VIDEO_FRAME_COMP_POFFSET (frame, 0);
+  p[2] = GST_VIDEO_FRAME_COMP_POFFSET (frame, 1);
+  p[3] = GST_VIDEO_FRAME_COMP_POFFSET (frame, 2);
+  row_wrap = GST_VIDEO_FRAME_PLANE_STRIDE (frame, 0) - 4 * width;
 
   h1 = self->hue;
 
@@ -386,6 +358,7 @@ gst_chroma_hold_process_xrgb (guint8 * dest, gint width,
 
       dest += 4;
     }
+    dest += row_wrap;
   }
 }
 
@@ -445,10 +418,10 @@ gst_chroma_hold_before_transform (GstBaseTransform * btrans, GstBuffer * buf)
 }
 
 static GstFlowReturn
-gst_chroma_hold_transform_ip (GstBaseTransform * btrans, GstBuffer * buf)
+gst_chroma_hold_transform_frame_ip (GstVideoFilter * vfilter,
+    GstVideoFrame * frame)
 {
-  GstChromaHold *self = GST_CHROMA_HOLD (btrans);
-  gint width, height;
+  GstChromaHold *self = GST_CHROMA_HOLD (vfilter);
 
   GST_CHROMA_HOLD_LOCK (self);
 
@@ -458,10 +431,7 @@ gst_chroma_hold_transform_ip (GstBaseTransform * btrans, GstBuffer * buf)
     return GST_FLOW_NOT_NEGOTIATED;
   }
 
-  width = self->width;
-  height = self->height;
-
-  self->process (GST_BUFFER_DATA (buf), width, height, self);
+  self->process (frame, self->width, self->height, self);
 
   GST_CHROMA_HOLD_UNLOCK (self);
 

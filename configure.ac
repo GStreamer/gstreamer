@@ -301,7 +301,7 @@ dnl *** plug-ins to include ***
 dnl Non ported plugins (non-dependant, then dependant)
 dnl Make sure you have a space before and after all plugins
 GST_PLUGINS_NONPORTED=" aiff \
- camerabin cdxaparse coloreffects \
+ camerabin cdxaparse \
  dccp faceoverlay festival \
  fieldanalysis freeverb freeze frei0r gaudieffects \
  hdvparse id3tag inter interlace ivfparse jpegformat jp2kdecimator \

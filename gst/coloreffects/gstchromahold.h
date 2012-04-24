@@ -28,7 +28,6 @@
 #include <gst/gst.h>
 #include <gst/video/video.h>
 #include <gst/video/gstvideofilter.h>
-#include <gst/controller/gstcontroller.h>
 
 G_BEGIN_DECLS
 #define GST_TYPE_CHROMA_HOLD \
@@ -62,7 +61,7 @@ struct _GstChromaHold
   guint tolerance;
 
   /* processing function */
-  void (*process) (guint8 * dest, gint width, gint height,
+  void (*process) (GstVideoFrame * frame, gint width, gint height,
       GstChromaHold * chroma_hold);
 
   /* pre-calculated values */
