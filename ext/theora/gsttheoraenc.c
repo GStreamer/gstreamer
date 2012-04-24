@@ -69,25 +69,6 @@
 #define GST_CAT_DEFAULT theoraenc_debug
 GST_DEBUG_CATEGORY_STATIC (GST_CAT_DEFAULT);
 
-#define GST_TYPE_BORDER_MODE (gst_border_mode_get_type())
-static GType
-gst_border_mode_get_type (void)
-{
-  static GType border_mode_type = 0;
-  static const GEnumValue border_mode[] = {
-    {BORDER_NONE, "No Border", "none"},
-    {BORDER_BLACK, "Black Border", "black"},
-    {BORDER_MIRROR, "Mirror image in borders", "mirror"},
-    {0, NULL, NULL},
-  };
-
-  if (!border_mode_type) {
-    border_mode_type =
-        g_enum_register_static ("GstTheoraEncBorderMode", border_mode);
-  }
-  return border_mode_type;
-}
-
 #define GST_TYPE_MULTIPASS_MODE (gst_multipass_mode_get_type())
 static GType
 gst_multipass_mode_get_type (void)
@@ -136,18 +117,11 @@ _ilog (unsigned int v)
 enum
 {
   PROP_0,
-  PROP_CENTER,
-  PROP_BORDER,
   PROP_BITRATE,
   PROP_QUALITY,
-  PROP_QUICK,
   PROP_KEYFRAME_AUTO,
   PROP_KEYFRAME_FREQ,
   PROP_KEYFRAME_FREQ_FORCE,
-  PROP_KEYFRAME_THRESHOLD,
-  PROP_KEYFRAME_MINDISTANCE,
-  PROP_NOISE_SENSITIVITY,
-  PROP_SHARPNESS,
   PROP_SPEEDLEVEL,
   PROP_VP3_COMPATIBLE,
   PROP_DROP_FRAMES,
@@ -182,8 +156,8 @@ static GstStaticPadTemplate theora_enc_sink_factory =
 GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS ("video/x-raw-yuv, "
-        "format = (fourcc) { I420, Y42B, Y444 }, "
+    GST_STATIC_CAPS ("video/x-raw, "
+        "format = (string) { I420, Y42B, Y444 }, "
         "framerate = (fraction) [1/MAX, MAX], "
         "width = (int) [ 1, MAX ], " "height = (int) [ 1, MAX ]")
     );
@@ -192,11 +166,13 @@ static GstStaticPadTemplate theora_enc_src_factory =
 GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS ("video/x-theora")
+    GST_STATIC_CAPS ("video/x-theora, "
+        "framerate = (fraction) [1/MAX, MAX], "
+        "width = (int) [ 1, MAX ], " "height = (int) [ 1, MAX ]")
     );
 
-GST_BOILERPLATE (GstTheoraEnc, gst_theora_enc, GstVideoEncoder,
-    GST_TYPE_VIDEO_ENCODER);
+#define gst_theora_enc_parent_class parent_class
+G_DEFINE_TYPE (GstTheoraEnc, gst_theora_enc, GST_TYPE_VIDEO_ENCODER);
 
 static gboolean theora_enc_start (GstVideoEncoder * enc);
 static gboolean theora_enc_stop (GstVideoEncoder * enc);
@@ -208,7 +184,8 @@ static GstFlowReturn theora_enc_pre_push (GstVideoEncoder * benc,
     GstVideoCodecFrame * frame);
 static GstFlowReturn theora_enc_finish (GstVideoEncoder * enc);
 
-static GstCaps *theora_enc_sink_getcaps (GstPad * pad);
+static GstCaps *theora_enc_getcaps (GstVideoEncoder * encoder,
+    GstCaps * filter);
 static void theora_enc_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec);
 static void theora_enc_set_property (GObject * object, guint prop_id,
@@ -219,9 +196,16 @@ static gboolean theora_enc_write_multipass_cache (GstTheoraEnc * enc,
     gboolean begin, gboolean eos);
 
 static void
-gst_theora_enc_base_init (gpointer g_class)
+gst_theora_enc_class_init (GstTheoraEncClass * klass)
 {
-  GstElementClass *element_class = GST_ELEMENT_CLASS (g_class);
+  GObjectClass *gobject_class = (GObjectClass *) klass;
+  GstElementClass *element_class = (GstElementClass *) klass;
+  GstVideoEncoderClass *gstvideo_encoder_class =
+      GST_VIDEO_ENCODER_CLASS (klass);
+
+  gobject_class->set_property = theora_enc_set_property;
+  gobject_class->get_property = theora_enc_get_property;
+  gobject_class->finalize = theora_enc_finalize;
 
   gst_element_class_add_pad_template (element_class,
       gst_static_pad_template_get (&theora_enc_src_factory));
@@ -231,18 +215,6 @@ gst_theora_enc_base_init (gpointer g_class)
       "Theora video encoder", "Codec/Encoder/Video",
       "encode raw YUV video to a theora stream",
       "Wim Taymans <wim@fluendo.com>");
-}
-
-static void
-gst_theora_enc_class_init (GstTheoraEncClass * klass)
-{
-  GObjectClass *gobject_class = (GObjectClass *) klass;
-  GstVideoEncoderClass *gstvideo_encoder_class =
-      GST_VIDEO_ENCODER_CLASS (klass);
-
-  gobject_class->set_property = theora_enc_set_property;
-  gobject_class->get_property = theora_enc_get_property;
-  gobject_class->finalize = theora_enc_finalize;
 
   gstvideo_encoder_class->start = GST_DEBUG_FUNCPTR (theora_enc_start);
   gstvideo_encoder_class->stop = GST_DEBUG_FUNCPTR (theora_enc_stop);
@@ -252,16 +224,8 @@ gst_theora_enc_class_init (GstTheoraEncClass * klass)
       GST_DEBUG_FUNCPTR (theora_enc_handle_frame);
   gstvideo_encoder_class->pre_push = GST_DEBUG_FUNCPTR (theora_enc_pre_push);
   gstvideo_encoder_class->finish = GST_DEBUG_FUNCPTR (theora_enc_finish);
+  gstvideo_encoder_class->getcaps = GST_DEBUG_FUNCPTR (theora_enc_getcaps);
 
-  g_object_class_install_property (gobject_class, PROP_CENTER,
-      g_param_spec_boolean ("center", "Center",
-          "ignored and kept for API compat only", TRUE,
-          (GParamFlags) G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
-  g_object_class_install_property (gobject_class, PROP_BORDER,
-      g_param_spec_enum ("border", "Border",
-          "ignored and kept for API compat only",
-          GST_TYPE_BORDER_MODE, BORDER_BLACK,
-          (GParamFlags) G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   /* general encoding stream options */
   g_object_class_install_property (gobject_class, PROP_BITRATE,
       g_param_spec_int ("bitrate", "Bitrate", "Compressed video bitrate (kbps)",
@@ -273,10 +237,6 @@ gst_theora_enc_class_init (GstTheoraEncClass * klass)
           THEORA_DEF_QUALITY,
           (GParamFlags) G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS |
           GST_PARAM_MUTABLE_PLAYING));
-  g_object_class_install_property (gobject_class, PROP_QUICK,
-      g_param_spec_boolean ("quick", "Quick",
-          "ignored and kept for API compat only", TRUE,
-          (GParamFlags) G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (gobject_class, PROP_KEYFRAME_AUTO,
       g_param_spec_boolean ("keyframe-auto", "Keyframe Auto",
           "Automatic keyframe detection", THEORA_DEF_KEYFRAME_AUTO,
@@ -289,22 +249,6 @@ gst_theora_enc_class_init (GstTheoraEncClass * klass)
       g_param_spec_int ("keyframe-force", "Keyframe force",
           "Force keyframe every N frames", 1, 32768,
           THEORA_DEF_KEYFRAME_FREQ_FORCE,
-          (GParamFlags) G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
-  g_object_class_install_property (gobject_class, PROP_KEYFRAME_THRESHOLD,
-      g_param_spec_int ("keyframe-threshold", "Keyframe threshold",
-          "ignored and kept for API compat only", 0, 32768, 80,
-          (GParamFlags) G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
-  g_object_class_install_property (gobject_class, PROP_KEYFRAME_MINDISTANCE,
-      g_param_spec_int ("keyframe-mindistance", "Keyframe mindistance",
-          "ignored and kept for API compat only", 1, 32768, 8,
-          (GParamFlags) G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
-  g_object_class_install_property (gobject_class, PROP_NOISE_SENSITIVITY,
-      g_param_spec_int ("noise-sensitivity", "Noise sensitivity",
-          "ignored and kept for API compat only", 0, 32768, 1,
-          (GParamFlags) G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
-  g_object_class_install_property (gobject_class, PROP_SHARPNESS,
-      g_param_spec_int ("sharpness", "Sharpness",
-          "ignored and kept for API compat only", 0, 2, 0,
           (GParamFlags) G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (gobject_class, PROP_SPEEDLEVEL,
       g_param_spec_int ("speed-level", "Speed level",
@@ -358,11 +302,8 @@ gst_theora_enc_class_init (GstTheoraEncClass * klass)
 }
 
 static void
-gst_theora_enc_init (GstTheoraEnc * enc, GstTheoraEncClass * g_class)
+gst_theora_enc_init (GstTheoraEnc * enc)
 {
-  gst_pad_set_getcaps_function (GST_VIDEO_ENCODER_SINK_PAD (enc),
-      GST_DEBUG_FUNCPTR (theora_enc_sink_getcaps));
-
   enc->video_bitrate = THEORA_DEF_BITRATE;
   enc->video_quality = THEORA_DEF_QUALITY;
   enc->keyframe_auto = THEORA_DEF_KEYFRAME_AUTO;
@@ -571,9 +512,9 @@ theora_enc_get_supported_formats (void)
 }
 
 static GstCaps *
-theora_enc_sink_getcaps (GstPad * pad)
+theora_enc_getcaps (GstVideoEncoder * encoder, GstCaps * filter)
 {
-  GstCaps *caps;
+  GstCaps *caps, *ret;
   char *supported_formats, *caps_string;
 
   supported_formats = theora_enc_get_supported_formats ();
@@ -582,8 +523,8 @@ theora_enc_sink_getcaps (GstPad * pad)
     return gst_caps_new_empty ();
   }
 
-  caps_string = g_strdup_printf ("video/x-raw-yuv, "
-      "format = (fourcc) { %s }, "
+  caps_string = g_strdup_printf ("video/x-raw, "
+      "format = (string) { %s }, "
       "framerate = (fraction) [1/MAX, MAX], "
       "width = (int) [ 1, MAX ], " "height = (int) [ 1, MAX ]",
       supported_formats);
@@ -592,7 +533,10 @@ theora_enc_sink_getcaps (GstPad * pad)
   g_free (supported_formats);
   GST_DEBUG ("Supported caps: %" GST_PTR_FORMAT, caps);
 
-  return caps;
+  ret = gst_video_encoder_proxy_getcaps (encoder, caps, filter);
+  gst_caps_unref (caps);
+
+  return ret;
 }
 
 static gboolean
@@ -682,14 +626,14 @@ theora_push_packet (GstTheoraEnc * enc, ogg_packet * packet)
 
   benc = GST_VIDEO_ENCODER (enc);
 
-  buf = gst_buffer_new_and_alloc (packet->bytes);
+  buf = gst_buffer_new_allocate (NULL, packet->bytes, NULL);
   if (!buf) {
     GST_WARNING_OBJECT (enc, "Could not allocate buffer");
     ret = GST_FLOW_ERROR;
     goto done;
   }
 
-  memcpy (GST_BUFFER_DATA (buf), packet->packet, packet->bytes);
+  gst_buffer_fill (buf, 0, packet->packet, packet->bytes);
 
   frame = gst_video_encoder_get_oldest_frame (benc);
   frame->output_buffer = buf;
@@ -728,7 +672,7 @@ theora_set_header_on_caps (GstCaps * caps, GList * buffers)
     buffer = walk->data;
 
     /* mark buffer */
-    GST_BUFFER_FLAG_SET (buffer, GST_BUFFER_FLAG_IN_CAPS);
+    GST_BUFFER_FLAG_SET (buffer, GST_BUFFER_FLAG_HEADER);
 
     /* Copy buffer, because we can't use the original -
      * it creates a circular refcount with the caps<->buffers */
@@ -750,24 +694,10 @@ theora_set_header_on_caps (GstCaps * caps, GList * buffers)
 }
 
 static void
-theora_enc_init_buffer (th_ycbcr_buffer buf, th_info * info, guint8 * data)
+theora_enc_init_buffer (th_ycbcr_buffer buf, GstVideoFrame * frame)
 {
-  GstVideoFormat format;
+  GstVideoInfo vinfo;
   guint i;
-
-  switch (info->pixel_fmt) {
-    case TH_PF_444:
-      format = GST_VIDEO_FORMAT_Y444;
-      break;
-    case TH_PF_420:
-      format = GST_VIDEO_FORMAT_I420;
-      break;
-    case TH_PF_422:
-      format = GST_VIDEO_FORMAT_Y42B;
-      break;
-    default:
-      g_assert_not_reached ();
-  }
 
   /* According to Theora developer Timothy Terriberry, the Theora 
    * encoder will not use memory outside of pic_width/height, even when
@@ -776,17 +706,17 @@ theora_enc_init_buffer (th_ycbcr_buffer buf, th_info * info, guint8 * data)
    * Due to this, setting the frame's width/height as the buffer width/height
    * is perfectly ok, even though it does not strictly look ok.
    */
-  for (i = 0; i < 3; i++) {
-    buf[i].width =
-        gst_video_format_get_component_width (format, i, info->frame_width);
-    buf[i].height =
-        gst_video_format_get_component_height (format, i, info->frame_height);
 
-    buf[i].data =
-        data + gst_video_format_get_component_offset (format, i,
-        info->pic_width, info->pic_height);
-    buf[i].stride =
-        gst_video_format_get_row_stride (format, i, info->pic_width);
+  gst_video_info_init (&vinfo);
+  gst_video_info_set_format (&vinfo, GST_VIDEO_FRAME_FORMAT (frame),
+      GST_ROUND_UP_16 (GST_VIDEO_FRAME_WIDTH (frame)),
+      GST_ROUND_UP_16 (GST_VIDEO_FRAME_HEIGHT (frame)));
+
+  for (i = 0; i < 3; i++) {
+    buf[i].width = GST_VIDEO_INFO_COMP_WIDTH (&vinfo, i);
+    buf[i].height = GST_VIDEO_INFO_COMP_HEIGHT (&vinfo, i);
+    buf[i].data = GST_VIDEO_FRAME_COMP_DATA (frame, i);
+    buf[i].stride = GST_VIDEO_FRAME_COMP_STRIDE (frame, i);
   }
 }
 
@@ -795,22 +725,29 @@ theora_enc_read_multipass_cache (GstTheoraEnc * enc)
 {
   GstBuffer *cache_buf;
   const guint8 *cache_data;
-  gsize bytes_read = 0, bytes_consumed = 0;
+  gsize bytes_read = 0;
+  gssize bytes_consumed = 0;
   GIOStatus stat = G_IO_STATUS_NORMAL;
   gboolean done = FALSE;
 
   while (!done) {
     if (gst_adapter_available (enc->multipass_cache_adapter) == 0) {
-      cache_buf = gst_buffer_new_and_alloc (512);
+      GstMapInfo minfo;
+
+      cache_buf = gst_buffer_new_allocate (NULL, 512, NULL);
+
+      gst_buffer_map (cache_buf, &minfo, GST_MAP_WRITE);
+
       stat = g_io_channel_read_chars (enc->multipass_cache_fd,
-          (gchar *) GST_BUFFER_DATA (cache_buf), GST_BUFFER_SIZE (cache_buf),
-          &bytes_read, NULL);
+          (gchar *) minfo.data, minfo.size, &bytes_read, NULL);
 
       if (bytes_read <= 0) {
+        gst_buffer_unmap (cache_buf, &minfo);
         gst_buffer_unref (cache_buf);
         break;
       } else {
-        GST_BUFFER_SIZE (cache_buf) = bytes_read;
+        gst_buffer_unmap (cache_buf, &minfo);
+        gst_buffer_resize (cache_buf, 0, bytes_read);
 
         gst_adapter_push (enc->multipass_cache_adapter, cache_buf);
       }
@@ -821,11 +758,13 @@ theora_enc_read_multipass_cache (GstTheoraEnc * enc)
     bytes_read =
         MIN (gst_adapter_available (enc->multipass_cache_adapter), 512);
 
-    cache_data = gst_adapter_peek (enc->multipass_cache_adapter, bytes_read);
+    cache_data = gst_adapter_map (enc->multipass_cache_adapter, bytes_read);
 
     bytes_consumed =
         th_encode_ctl (enc->encoder, TH_ENCCTL_2PASS_IN, (guint8 *) cache_data,
         bytes_read);
+    gst_adapter_unmap (enc->multipass_cache_adapter);
+
     done = bytes_consumed <= 0;
     if (bytes_consumed > 0)
       gst_adapter_flush (enc->multipass_cache_adapter, bytes_consumed);
@@ -864,7 +803,7 @@ theora_enc_write_multipass_cache (GstTheoraEnc * enc, gboolean begin,
 
   }
 
-  if (stat == G_IO_STATUS_ERROR || bytes_read < 0 || bytes_written < 0) {
+  if (stat == G_IO_STATUS_ERROR || bytes_read < 0) {
     if (begin) {
       if (eos)
         GST_ELEMENT_WARNING (enc, RESOURCE, WRITE, (NULL),
@@ -900,15 +839,15 @@ theora_enc_buffer_from_header_packet (GstTheoraEnc * enc, ogg_packet * packet)
 {
   GstBuffer *outbuf;
 
-  outbuf = gst_buffer_new_and_alloc (packet->bytes);
-  memcpy (GST_BUFFER_DATA (outbuf), packet->packet, packet->bytes);
+  outbuf = gst_buffer_new_allocate (NULL, packet->bytes, NULL);
+  gst_buffer_fill (outbuf, 0, packet->packet, packet->bytes);
   GST_BUFFER_OFFSET (outbuf) = 0;
   GST_BUFFER_OFFSET_END (outbuf) = 0;
   GST_BUFFER_TIMESTAMP (outbuf) = GST_CLOCK_TIME_NONE;
   GST_BUFFER_DURATION (outbuf) = GST_CLOCK_TIME_NONE;
 
   GST_DEBUG ("created header packet buffer, %d bytes",
-      GST_BUFFER_SIZE (outbuf));
+      gst_buffer_get_size (outbuf));
   return outbuf;
 }
 
@@ -996,7 +935,7 @@ theora_enc_handle_frame (GstVideoEncoder * benc, GstVideoCodecFrame * frame)
     buffers = g_list_reverse (buffers);
 
     /* mark buffers and put on caps */
-    caps = gst_caps_new_simple ("video/x-theora", NULL);
+    caps = gst_caps_new_empty_simple ("video/x-theora");
     caps = theora_set_header_on_caps (caps, buffers);
     state = gst_video_encoder_set_output_state (benc, caps, enc->input_state);
 
@@ -1012,9 +951,7 @@ theora_enc_handle_frame (GstVideoEncoder * benc, GstVideoCodecFrame * frame)
   {
     th_ycbcr_buffer ycbcr;
     gint res;
-
-    theora_enc_init_buffer (ycbcr, &enc->info,
-        GST_BUFFER_DATA (frame->input_buffer));
+    GstVideoFrame vframe;
 
     if (force_keyframe) {
       theora_enc_reset (enc);
@@ -1029,7 +966,13 @@ theora_enc_handle_frame (GstVideoEncoder * benc, GstVideoCodecFrame * frame)
       }
     }
 
+    gst_video_frame_map (&vframe, &enc->input_state->info, frame->input_buffer,
+        GST_MAP_READ);
+    theora_enc_init_buffer (ycbcr, &vframe);
+
     res = th_encode_ycbcr_in (enc->encoder, ycbcr);
+    gst_video_frame_unmap (&vframe);
+
     /* none of the failure cases can happen here */
     g_assert (res == 0);
 
@@ -1102,15 +1045,6 @@ theora_enc_set_property (GObject * object, guint prop_id,
   GstTheoraEnc *enc = GST_THEORA_ENC (object);
 
   switch (prop_id) {
-    case PROP_CENTER:
-    case PROP_BORDER:
-    case PROP_QUICK:
-    case PROP_KEYFRAME_THRESHOLD:
-    case PROP_KEYFRAME_MINDISTANCE:
-    case PROP_NOISE_SENSITIVITY:
-    case PROP_SHARPNESS:
-      /* kept for API compat, but ignored */
-      break;
     case PROP_BITRATE:
       GST_OBJECT_LOCK (enc);
       enc->video_bitrate = g_value_get_int (value) * 1000;
@@ -1176,12 +1110,6 @@ theora_enc_get_property (GObject * object, guint prop_id,
   GstTheoraEnc *enc = GST_THEORA_ENC (object);
 
   switch (prop_id) {
-    case PROP_CENTER:
-      g_value_set_boolean (value, TRUE);
-      break;
-    case PROP_BORDER:
-      g_value_set_enum (value, BORDER_BLACK);
-      break;
     case PROP_BITRATE:
       GST_OBJECT_LOCK (enc);
       g_value_set_int (value, enc->video_bitrate / 1000);
@@ -1192,9 +1120,6 @@ theora_enc_get_property (GObject * object, guint prop_id,
       g_value_set_int (value, enc->video_quality);
       GST_OBJECT_UNLOCK (enc);
       break;
-    case PROP_QUICK:
-      g_value_set_boolean (value, TRUE);
-      break;
     case PROP_KEYFRAME_AUTO:
       g_value_set_boolean (value, enc->keyframe_auto);
       break;
@@ -1203,18 +1128,6 @@ theora_enc_get_property (GObject * object, guint prop_id,
       break;
     case PROP_KEYFRAME_FREQ_FORCE:
       g_value_set_int (value, enc->keyframe_force);
-      break;
-    case PROP_KEYFRAME_THRESHOLD:
-      g_value_set_int (value, 80);
-      break;
-    case PROP_KEYFRAME_MINDISTANCE:
-      g_value_set_int (value, 8);
-      break;
-    case PROP_NOISE_SENSITIVITY:
-      g_value_set_int (value, 1);
-      break;
-    case PROP_SHARPNESS:
-      g_value_set_int (value, 0);
       break;
     case PROP_SPEEDLEVEL:
       g_value_set_int (value, enc->speed_level);

@@ -47,11 +47,13 @@
 #include "gsttheoradec.h"
 #include <gst/tag/tag.h>
 #include <gst/video/video.h>
+#include <gst/video/gstvideometa.h>
+#include <gst/video/gstvideopool.h>
 
 #define GST_CAT_DEFAULT theoradec_debug
 GST_DEBUG_CATEGORY_STATIC (GST_CAT_DEFAULT);
+GST_DEBUG_CATEGORY_EXTERN (GST_CAT_PERFORMANCE);
 
-#define THEORA_DEF_CROP         TRUE
 #define THEORA_DEF_TELEMETRY_MV 0
 #define THEORA_DEF_TELEMETRY_MBMODE 0
 #define THEORA_DEF_TELEMETRY_QI 0
@@ -60,7 +62,6 @@ GST_DEBUG_CATEGORY_STATIC (GST_CAT_DEFAULT);
 enum
 {
   PROP_0,
-  PROP_CROP,
   PROP_TELEMETRY_MV,
   PROP_TELEMETRY_MBMODE,
   PROP_TELEMETRY_QI,
@@ -71,8 +72,8 @@ static GstStaticPadTemplate theora_dec_src_factory =
 GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS ("video/x-raw-yuv, "
-        "format = (fourcc) { I420, Y42B, Y444 }, "
+    GST_STATIC_CAPS ("video/x-raw, "
+        "format = (string) { I420, Y42B, Y444 }, "
         "framerate = (fraction) [0/1, MAX], "
         "width = (int) [ 1, MAX ], " "height = (int) [ 1, MAX ]")
     );
@@ -84,8 +85,8 @@ GST_STATIC_PAD_TEMPLATE ("sink",
     GST_STATIC_CAPS ("video/x-theora")
     );
 
-GST_BOILERPLATE (GstTheoraDec, gst_theora_dec, GstVideoDecoder,
-    GST_TYPE_VIDEO_DECODER);
+#define gst_theora_dec_parent_class parent_class
+G_DEFINE_TYPE (GstTheoraDec, gst_theora_dec, GST_TYPE_VIDEO_DECODER);
 
 static void theora_dec_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec);
@@ -105,22 +106,6 @@ static GstFlowReturn theora_dec_handle_frame (GstVideoDecoder * decoder,
 static GstFlowReturn theora_dec_decode_buffer (GstTheoraDec * dec,
     GstBuffer * buf, GstVideoCodecFrame * frame);
 
-
-static void
-gst_theora_dec_base_init (gpointer g_class)
-{
-  GstElementClass *element_class = GST_ELEMENT_CLASS (g_class);
-
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&theora_dec_src_factory));
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&theora_dec_sink_factory));
-  gst_element_class_set_details_simple (element_class,
-      "Theora video decoder", "Codec/Decoder/Video",
-      "decode raw theora streams to raw YUV video",
-      "Benjamin Otte <otte@gnome.org>, Wim Taymans <wim@fluendo.com>");
-}
-
 static gboolean
 gst_theora_dec_ctl_is_supported (int req)
 {
@@ -132,15 +117,11 @@ static void
 gst_theora_dec_class_init (GstTheoraDecClass * klass)
 {
   GObjectClass *gobject_class = G_OBJECT_CLASS (klass);
+  GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
   GstVideoDecoderClass *video_decoder_class = GST_VIDEO_DECODER_CLASS (klass);
 
   gobject_class->set_property = theora_dec_set_property;
   gobject_class->get_property = theora_dec_get_property;
-
-  g_object_class_install_property (gobject_class, PROP_CROP,
-      g_param_spec_boolean ("crop", "Crop",
-          "Crop the image to the visible region", THEORA_DEF_CROP,
-          (GParamFlags) G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   if (gst_theora_dec_ctl_is_supported (TH_DECCTL_SET_TELEMETRY_MV)) {
     g_object_class_install_property (gobject_class, PROP_TELEMETRY_MV,
@@ -186,6 +167,15 @@ gst_theora_dec_class_init (GstTheoraDecClass * klass)
             G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   }
 
+  gst_element_class_add_pad_template (element_class,
+      gst_static_pad_template_get (&theora_dec_src_factory));
+  gst_element_class_add_pad_template (element_class,
+      gst_static_pad_template_get (&theora_dec_sink_factory));
+  gst_element_class_set_details_simple (element_class,
+      "Theora video decoder", "Codec/Decoder/Video",
+      "decode raw theora streams to raw YUV video",
+      "Benjamin Otte <otte@gnome.org>, Wim Taymans <wim@fluendo.com>");
+
   video_decoder_class->start = GST_DEBUG_FUNCPTR (theora_dec_start);
   video_decoder_class->stop = GST_DEBUG_FUNCPTR (theora_dec_stop);
   video_decoder_class->reset = GST_DEBUG_FUNCPTR (theora_dec_reset);
@@ -198,9 +188,8 @@ gst_theora_dec_class_init (GstTheoraDecClass * klass)
 }
 
 static void
-gst_theora_dec_init (GstTheoraDec * dec, GstTheoraDecClass * g_class)
+gst_theora_dec_init (GstTheoraDec * dec)
 {
-  dec->crop = THEORA_DEF_CROP;
   dec->telemetry_mv = THEORA_DEF_TELEMETRY_MV;
   dec->telemetry_mbmode = THEORA_DEF_TELEMETRY_MBMODE;
   dec->telemetry_qi = THEORA_DEF_TELEMETRY_QI;
@@ -269,10 +258,11 @@ theora_dec_parse (GstVideoDecoder * decoder,
 
   av = gst_adapter_available (adapter);
 
-  data = gst_adapter_peek (adapter, 1);
+  data = gst_adapter_map (adapter, 1);
   /* check for keyframe; must not be header packet */
   if (!(data[0] & 0x80) && (data[0] & 0x40) == 0)
     GST_VIDEO_CODEC_FRAME_SET_SYNC_POINT (frame);
+  gst_adapter_unmap (adapter);
 
   /* and pass along all */
   gst_video_decoder_add_to_frame (decoder, av);
@@ -295,15 +285,17 @@ theora_dec_set_format (GstVideoDecoder * bdec, GstVideoCodecState * state)
   /* FIXME : Interesting, we always accept any kind of caps ? */
   if (state->codec_data) {
     GstBuffer *buffer;
+    GstMapInfo minfo;
     guint8 *data;
     guint size;
     guint offset;
 
     buffer = state->codec_data;
+    gst_buffer_map (buffer, &minfo, GST_MAP_READ);
 
     offset = 0;
-    size = GST_BUFFER_SIZE (buffer);
-    data = GST_BUFFER_DATA (buffer);
+    size = minfo.size;
+    data = (guint8 *) minfo.data;
 
     while (size > 2) {
       guint psize;
@@ -318,7 +310,7 @@ theora_dec_set_format (GstVideoDecoder * bdec, GstVideoCodecState * state)
       /* make sure we don't read too much */
       psize = MIN (psize, size);
 
-      buf = gst_buffer_create_sub (buffer, offset, psize);
+      buf = gst_buffer_copy_region (buffer, GST_BUFFER_COPY_ALL, offset, psize);
 
       /* first buffer is a discont buffer */
       if (offset == 2)
@@ -333,6 +325,8 @@ theora_dec_set_format (GstVideoDecoder * bdec, GstVideoCodecState * state)
       data += psize;
       offset += psize;
     }
+
+    gst_buffer_unmap (buffer, &minfo);
   }
 
   GST_DEBUG_OBJECT (dec, "Done");
@@ -344,24 +338,17 @@ static GstFlowReturn
 theora_handle_comment_packet (GstTheoraDec * dec, ogg_packet * packet)
 {
   gchar *encoder = NULL;
-  GstBuffer *buf;
   GstTagList *list;
 
   GST_DEBUG_OBJECT (dec, "parsing comment packet");
 
-  buf = gst_buffer_new ();
-  GST_BUFFER_SIZE (buf) = packet->bytes;
-  GST_BUFFER_DATA (buf) = packet->packet;
-
   list =
-      gst_tag_list_from_vorbiscomment_buffer (buf, (guint8 *) "\201theora", 7,
-      &encoder);
-
-  gst_buffer_unref (buf);
+      gst_tag_list_from_vorbiscomment (packet->packet, packet->bytes,
+      (guint8 *) "\201theora", 7, &encoder);
 
   if (!list) {
     GST_ERROR_OBJECT (dec, "couldn't decode comments");
-    list = gst_tag_list_new ();
+    list = gst_tag_list_new_empty ();
   }
   if (encoder) {
     gst_tag_list_add (list, GST_TAG_MERGE_REPLACE,
@@ -437,29 +424,13 @@ theora_handle_type_packet (GstTheoraDec * dec, ogg_packet * packet)
       goto unsupported_format;
   }
 
-  if (dec->crop) {
-    GST_VIDEO_INFO_WIDTH (info) = dec->info.pic_width;
-    GST_VIDEO_INFO_HEIGHT (info) = dec->info.pic_height;
-    dec->offset_x = dec->info.pic_x;
-    dec->offset_y = dec->info.pic_y;
-    /* Ensure correct offsets in chroma for formats that need it
-     * by rounding the offset. libtheora will add proper pixels,
-     * so no need to handle them ourselves. */
-    if (dec->offset_x & 1 && dec->info.pixel_fmt != TH_PF_444) {
-      dec->offset_x--;
-      GST_VIDEO_INFO_WIDTH (info)++;
-    }
-    if (dec->offset_y & 1 && dec->info.pixel_fmt == TH_PF_420) {
-      dec->offset_y--;
-      GST_VIDEO_INFO_HEIGHT (info)++;
-    }
-  } else {
-    /* no cropping, use the encoded dimensions */
-    GST_VIDEO_INFO_WIDTH (info) = dec->info.frame_width;
-    GST_VIDEO_INFO_HEIGHT (info) = dec->info.frame_height;
-    dec->offset_x = 0;
-    dec->offset_y = 0;
-  }
+  /* FIXME: Use crop metadata */
+
+  /* no cropping, use the encoded dimensions */
+  GST_VIDEO_INFO_WIDTH (info) = dec->info.frame_width;
+  GST_VIDEO_INFO_HEIGHT (info) = dec->info.frame_height;
+  dec->offset_x = 0;
+  dec->offset_y = 0;
 
   GST_DEBUG_OBJECT (dec, "after fixup frame dimension %dx%d, offset %d:%d",
       info->width, info->height, dec->offset_x, dec->offset_y);
@@ -504,8 +475,8 @@ theora_handle_type_packet (GstTheoraDec * dec, ogg_packet * packet)
   /* FIXME : Put this on the next outgoing frame */
   /* FIXME :  */
   if (dec->tags) {
-    gst_element_found_tags_for_pad (GST_ELEMENT_CAST (dec),
-        GST_VIDEO_DECODER_SRC_PAD (dec), dec->tags);
+    gst_pad_push_event (GST_VIDEO_DECODER (dec)->srcpad,
+        gst_event_new_tag (dec->tags));
     dec->tags = NULL;
   }
 
@@ -569,6 +540,7 @@ theora_handle_image (GstTheoraDec * dec, th_ycbcr_buffer buf,
   int i, plane;
   guint8 *dest, *src;
   GstBuffer *out;
+  GstMapInfo minfo;
 
   result = gst_video_decoder_alloc_output_frame (decoder, frame);
 
@@ -581,13 +553,15 @@ theora_handle_image (GstTheoraDec * dec, th_ycbcr_buffer buf,
   out = frame->output_buffer;
   info = &dec->output_state->info;
 
-  /* FIXME : Use GstVideoInfo */
+  gst_buffer_map (out, &minfo, GST_MAP_WRITE);
+
+  /* FIXME : Use crop metadata */
   for (plane = 0; plane < 3; plane++) {
     width = GST_VIDEO_INFO_COMP_WIDTH (info, plane);
     height = GST_VIDEO_INFO_COMP_HEIGHT (info, plane);
     stride = GST_VIDEO_INFO_COMP_STRIDE (info, plane);
 
-    dest = GST_BUFFER_DATA (out) + GST_VIDEO_INFO_COMP_OFFSET (info, plane);
+    dest = minfo.data + GST_VIDEO_INFO_COMP_OFFSET (info, plane);
     src = buf[plane].data;
     src +=
         ((height ==
@@ -604,6 +578,8 @@ theora_handle_image (GstTheoraDec * dec, th_ycbcr_buffer buf,
       src += buf[plane].stride;
     }
   }
+
+  gst_buffer_unmap (out, &minfo);
 
   return GST_FLOW_OK;
 }
@@ -700,10 +676,12 @@ theora_dec_decode_buffer (GstTheoraDec * dec, GstBuffer * buf,
 {
   ogg_packet packet;
   GstFlowReturn result = GST_FLOW_OK;
+  GstMapInfo minfo;
 
   /* make ogg_packet out of the buffer */
-  packet.packet = GST_BUFFER_DATA (buf);
-  packet.bytes = GST_BUFFER_SIZE (buf);
+  gst_buffer_map (buf, &minfo, GST_MAP_READ);
+  packet.packet = minfo.data;
+  packet.bytes = minfo.size;
   packet.granulepos = -1;
   packet.packetno = 0;          /* we don't really care */
   packet.b_o_s = dec->have_header ? 0 : 1;
@@ -732,6 +710,8 @@ theora_dec_decode_buffer (GstTheoraDec * dec, GstBuffer * buf,
   }
 
 done:
+  gst_buffer_unmap (buf, &minfo);
+
   return result;
 }
 
@@ -757,9 +737,6 @@ theora_dec_set_property (GObject * object, guint prop_id,
   GstTheoraDec *dec = GST_THEORA_DEC (object);
 
   switch (prop_id) {
-    case PROP_CROP:
-      dec->crop = g_value_get_boolean (value);
-      break;
     case PROP_TELEMETRY_MV:
       dec->telemetry_mv = g_value_get_int (value);
       break;
@@ -785,9 +762,6 @@ theora_dec_get_property (GObject * object, guint prop_id,
   GstTheoraDec *dec = GST_THEORA_DEC (object);
 
   switch (prop_id) {
-    case PROP_CROP:
-      g_value_set_boolean (value, dec->crop);
-      break;
     case PROP_TELEMETRY_MV:
       g_value_set_int (value, dec->telemetry_mv);
       break;
