@@ -1531,6 +1531,42 @@ no_endianess:
 }
 
 /**
+ * gst_video_info_is_equal:
+ * @info: a #GstVideoInfo
+ * @other: a #GstVideoInfo
+ *
+ * Compares two #GstVideoInfo and returns whether they are equal or not
+ *
+ * Returns: %TRUE if @info and @other are equal, else %FALSE.
+ */
+gboolean
+gst_video_info_is_equal (const GstVideoInfo * info, const GstVideoInfo * other)
+{
+  if (GST_VIDEO_INFO_FORMAT (info) != GST_VIDEO_INFO_FORMAT (other))
+    return FALSE;
+  if (GST_VIDEO_INFO_INTERLACE_MODE (info) !=
+      GST_VIDEO_INFO_INTERLACE_MODE (other))
+    return FALSE;
+  if (GST_VIDEO_INFO_FLAGS (info) != GST_VIDEO_INFO_FLAGS (other))
+    return FALSE;
+  if (GST_VIDEO_INFO_WIDTH (info) != GST_VIDEO_INFO_WIDTH (other))
+    return FALSE;
+  if (GST_VIDEO_INFO_HEIGHT (info) != GST_VIDEO_INFO_HEIGHT (other))
+    return FALSE;
+  if (GST_VIDEO_INFO_SIZE (info) != GST_VIDEO_INFO_SIZE (other))
+    return FALSE;
+  if (GST_VIDEO_INFO_PAR_N (info) != GST_VIDEO_INFO_PAR_N (other))
+    return FALSE;
+  if (GST_VIDEO_INFO_PAR_D (info) != GST_VIDEO_INFO_PAR_D (other))
+    return FALSE;
+  if (GST_VIDEO_INFO_FPS_N (info) != GST_VIDEO_INFO_FPS_N (other))
+    return FALSE;
+  if (GST_VIDEO_INFO_FPS_D (info) != GST_VIDEO_INFO_FPS_D (other))
+    return FALSE;
+  return TRUE;
+}
+
+/**
  * gst_video_info_to_caps:
  * @info: a #GstVideoInfo
  *

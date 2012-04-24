@@ -895,7 +895,8 @@ gboolean     gst_video_info_convert     (GstVideoInfo *info,
                                          gint64        src_value,
                                          GstFormat     dest_format,
                                          gint64       *dest_value);
-
+gboolean     gst_video_info_is_equal    (const GstVideoInfo *info,
+					 const GstVideoInfo *other);
 /* functions */
 
 const GValue * gst_video_frame_rate (GstPad * pad);
