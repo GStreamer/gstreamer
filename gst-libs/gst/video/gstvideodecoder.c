@@ -841,6 +841,7 @@ gst_video_decoder_sink_event_default (GstVideoDecoder * decoder,
       decoder->priv->current_frame_events =
           g_list_prepend (decoder->priv->current_frame_events, event);
       GST_VIDEO_DECODER_STREAM_UNLOCK (decoder);
+      ret = TRUE;
     }
   }
 
@@ -851,7 +852,7 @@ newseg_wrong_format:
     GST_DEBUG_OBJECT (decoder, "received non TIME newsegment");
     gst_event_unref (event);
     /* SWALLOW EVENT */
-    return FALSE;
+    return TRUE;
   }
 }
 

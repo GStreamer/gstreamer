@@ -853,19 +853,20 @@ gst_video_info_from_caps (GstVideoInfo * info, const GstCaps * caps)
 
   structure = gst_caps_get_structure (caps, 0);
 
-  if (gst_structure_has_name (structure, "video/x-raw") &&
-      !(s = gst_structure_get_string (structure, "format"))) {
-    goto no_format;
+  if (gst_structure_has_name (structure, "video/x-raw")) {
+    if (!(s = gst_structure_get_string (structure, "format")))
+      goto no_format;
+
+    format = gst_video_format_from_string (s);
+    if (format == GST_VIDEO_FORMAT_UNKNOWN)
+      goto unknown_format;
+
   } else if (g_str_has_prefix (gst_structure_get_name (structure), "video/") ||
       g_str_has_prefix (gst_structure_get_name (structure), "image/")) {
     format = GST_VIDEO_FORMAT_ENCODED;
   } else {
     goto wrong_name;
   }
-
-  format = gst_video_format_from_string (s);
-  if (format == GST_VIDEO_FORMAT_UNKNOWN)
-    goto unknown_format;
 
   /* width and height are mandatory, except for non-raw-formats */
   if (!gst_structure_get_int (structure, "width", &width) &&
@@ -1432,6 +1433,7 @@ fill_planes (GstVideoInfo * info)
           info->stride[2] * (GST_ROUND_UP_4 (height) / 4);
       break;
     case GST_VIDEO_FORMAT_ENCODED:
+      break;
     case GST_VIDEO_FORMAT_UNKNOWN:
       GST_ERROR ("invalid format");
       g_warning ("invalid format");

@@ -593,14 +593,11 @@ gst_video_encoder_setcaps (GstVideoEncoder * encoder, GstCaps * caps)
   if (!ret)
     GST_WARNING_OBJECT (encoder, "rejected caps %" GST_PTR_FORMAT, caps);
 
-  gst_object_unref (encoder);
-
   return ret;
 
 parse_fail:
   {
     GST_WARNING_OBJECT (encoder, "Failed to parse caps");
-    gst_object_unref (encoder);
     return FALSE;
   }
 }
@@ -630,7 +627,9 @@ gst_video_encoder_proxy_getcaps (GstVideoEncoder * encoder, GstCaps * caps,
   /* Allow downstream to specify width/height/framerate/PAR constraints
    * and forward them upstream for video converters to handle
    */
-  templ_caps = caps ? caps : gst_pad_get_pad_template_caps (encoder->sinkpad);
+  templ_caps =
+      caps ? gst_caps_ref (caps) :
+      gst_pad_get_pad_template_caps (encoder->sinkpad);
   allowed = gst_pad_get_allowed_caps (encoder->srcpad);
 
   if (!allowed || gst_caps_is_empty (allowed) || gst_caps_is_any (allowed)) {
@@ -836,6 +835,7 @@ gst_video_encoder_sink_event_default (GstVideoEncoder * encoder,
       encoder->priv->at_eos = FALSE;
 
       encoder->input_segment = segment;
+      ret = TRUE;
       GST_VIDEO_ENCODER_STREAM_UNLOCK (encoder);
       break;
     }
@@ -891,6 +891,7 @@ gst_video_encoder_sink_event_default (GstVideoEncoder * encoder,
       encoder->priv->current_frame_events =
           g_list_prepend (encoder->priv->current_frame_events, event);
       GST_VIDEO_ENCODER_STREAM_UNLOCK (encoder);
+      ret = TRUE;
     }
   }
 
