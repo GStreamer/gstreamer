@@ -45,16 +45,16 @@ int main(int argc, char *argv[]) {
   }
   
   /* Set the URI to play */
-  g_object_set (data.playbin2, "uri", "http://docs.gstreamer.com/media/sintel_cropped_multilingual.webm", NULL);
+  g_object_set (data.playbin2, "uri", "http://docs.gstreamer.com/media/sintel_trailer-480p.ogv", NULL);
   
-  /* Set flags to show Audio and Video but ignore Subtitles */
+  /* Set the subtitle URI to play and some font description */
+  g_object_set (data.playbin2, "suburi", "http://docs.gstreamer.com/media/sintel_trailer_gr.srt", NULL);
+  g_object_set (data.playbin2, "subtitle-font-desc", "Sans, 18", NULL);
+  
+  /* Set flags to show Audio, Video and Subtitles */
   g_object_get (data.playbin2, "flags", &flags, NULL);
-  flags |= GST_PLAY_FLAG_VIDEO | GST_PLAY_FLAG_AUDIO;
-  flags &= ~GST_PLAY_FLAG_TEXT;
+  flags |= GST_PLAY_FLAG_VIDEO | GST_PLAY_FLAG_AUDIO | GST_PLAY_FLAG_TEXT;
   g_object_set (data.playbin2, "flags", flags, NULL);
-  
-  /* Set connection speed. This will affect some internal decisions of playbin2 */
-  g_object_set (data.playbin2, "connection-speed", 56, NULL);
   
   /* Add a bus watch, so we get notified when a message arrives */
   bus = gst_element_get_bus (data.playbin2);
@@ -144,14 +144,16 @@ static void analyze_streams (CustomData *data) {
   for (i = 0; i < data->n_text; i++) {
     tags = NULL;
     /* Retrieve the stream's subtitle tags */
+    g_print ("subtitle stream %d:\n", i);
     g_signal_emit_by_name (data->playbin2, "get-text-tags", i, &tags);
     if (tags) {
-      g_print ("subtitle stream %d:\n", i);
       if (gst_tag_list_get_string (tags, GST_TAG_LANGUAGE_CODE, &str)) {
         g_print ("  language: %s\n", str);
         g_free (str);
       }
       gst_tag_list_free (tags);
+    } else {
+      g_print ("  no tags found\n");
     }
   }
   
@@ -160,9 +162,9 @@ static void analyze_streams (CustomData *data) {
   g_object_get (data->playbin2, "current-text", &data->current_text, NULL);
   
   g_print ("\n");
-  g_print ("Currently playing video stream %d, audio stream %d and text stream %d\n",
-    data->current_video, data->current_audio, data->current_text);
-  g_print ("Type any number and hit ENTER to select a different audio stream\n");
+  g_print ("Currently playing video stream %d, audio stream %d and subtitle stream %d\n",
+      data->current_video, data->current_audio, data->current_text);
+  g_print ("Type any number and hit ENTER to select a different subtitle stream\n");
 }
   
 /* Process messages from GStreamer */
@@ -205,12 +207,12 @@ static gboolean handle_keyboard (GIOChannel *source, GIOCondition cond, CustomDa
   
   if (g_io_channel_read_line (source, &str, NULL, NULL, NULL) == G_IO_STATUS_NORMAL) {
     int index = atoi (str);
-    if (index < 0 || index >= data->n_audio) {
+    if (index < 0 || index >= data->n_text) {
       g_printerr ("Index out of bounds\n");
     } else {
-      /* If the input was a valid audio stream index, set the current audio stream */
-      g_print ("Setting current audio stream to %d\n", index);
-      g_object_set (data->playbin2, "current-audio", index, NULL);
+      /* If the input was a valid subtitle stream index, set the current subtitle stream */
+      g_print ("Setting current subtitle stream to %d\n", index);
+      g_object_set (data->playbin2, "current-text", index, NULL);
     }
   }
   g_free (str);
