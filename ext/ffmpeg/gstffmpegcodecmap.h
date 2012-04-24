@@ -27,6 +27,7 @@
 #endif
 #include <gst/gst.h>
 
+#include <gst/video/video.h>
 #include <gst/audio/multichannel.h>
 
 /*
@@ -90,6 +91,13 @@ void
 gst_ffmpeg_caps_with_codectype (enum AVMediaType  type,
                                 const GstCaps  *caps,
                                 AVCodecContext *context);
+
+void
+gst_ffmpeg_videoinfo_to_context (GstVideoInfo *info,
+				 AVCodecContext *context);
+
+GstVideoFormat gst_ffmpeg_pixfmt_to_videoformat (enum PixelFormat pixfmt);
+enum PixelFormat gst_ffmpeg_videoformat_to_pixfmt (GstVideoFormat format);
 
 /*
  * _formatid_to_caps () is meant for muxers/demuxers, it
