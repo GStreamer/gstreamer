@@ -283,6 +283,8 @@ static gboolean gst_video_decoder_sink_event_default (GstVideoDecoder * decoder,
     GstEvent * event);
 static gboolean gst_video_decoder_src_event_default (GstVideoDecoder * decoder,
     GstEvent * event);
+static gboolean gst_video_decoder_configure_buffer_pool_default (GstVideoDecoder
+    * decoder, GstQuery * query, GstBufferPool * pool);
 
 /* we can't use G_DEFINE_ABSTRACT_TYPE because we need the klass in the _init
  * method to get to the padtemplates */
@@ -334,6 +336,8 @@ gst_video_decoder_class_init (GstVideoDecoderClass * klass)
 
   klass->sink_event = gst_video_decoder_sink_event_default;
   klass->src_event = gst_video_decoder_src_event_default;
+  klass->configure_buffer_pool =
+      gst_video_decoder_configure_buffer_pool_default;
 }
 
 static void
@@ -1947,7 +1951,8 @@ gst_video_decoder_finish_frame (GstVideoDecoder * decoder,
 
   GST_LOG_OBJECT (decoder, "finish frame");
 
-  if (G_UNLIKELY (priv->output_state_changed))
+  if (G_UNLIKELY (priv->output_state_changed || (priv->output_state
+              && gst_pad_check_reconfigure (decoder->srcpad))))
     gst_video_decoder_set_src_caps (decoder);
 
   GST_VIDEO_DECODER_STREAM_LOCK (decoder);
@@ -2375,6 +2380,25 @@ gst_video_decoder_get_frame (GstVideoDecoder * decoder, int frame_number)
   return frame;
 }
 
+static gboolean
+gst_video_decoder_configure_buffer_pool_default (GstVideoDecoder * decoder,
+    GstQuery * query, GstBufferPool * pool)
+{
+  GstStructure *config;
+
+  if (gst_query_has_allocation_meta (query, GST_VIDEO_META_API_TYPE)) {
+    config = gst_buffer_pool_get_config (pool);
+    /* just set the option, if the pool can support it we will transparently use
+     * it through the video info API. We could also see if the pool support this
+     * option and only activate it then. */
+    gst_buffer_pool_config_add_option (config,
+        GST_BUFFER_POOL_OPTION_VIDEO_META);
+    gst_buffer_pool_set_config (pool, config);
+  }
+
+  return TRUE;
+}
+
 /**
  * gst_video_decoder_set_src_caps:
  * @decoder: a #GstVideoDecoder
@@ -2389,6 +2413,7 @@ static gboolean
 gst_video_decoder_set_src_caps (GstVideoDecoder * decoder)
 {
   GstVideoCodecState *state = decoder->priv->output_state;
+  GstVideoDecoderClass *klass;
   GstQuery *query;
   GstBufferPool *pool;
   GstStructure *config;
@@ -2399,6 +2424,8 @@ gst_video_decoder_set_src_caps (GstVideoDecoder * decoder)
   g_return_val_if_fail (GST_VIDEO_INFO_HEIGHT (&state->info) != 0, FALSE);
 
   GST_VIDEO_DECODER_STREAM_LOCK (decoder);
+
+  klass = GST_VIDEO_DECODER_GET_CLASS (decoder);
 
   GST_DEBUG_OBJECT (decoder, "output_state par %d/%d fps %d/%d",
       state->info.par_n, state->info.par_d,
@@ -2442,18 +2469,14 @@ gst_video_decoder_set_src_caps (GstVideoDecoder * decoder)
 
   config = gst_buffer_pool_get_config (pool);
   gst_buffer_pool_config_set_params (config, state->caps, size, min, max);
-
-  if (gst_query_has_allocation_meta (query, GST_VIDEO_META_API_TYPE)) {
-    /* just set the option, if the pool can support it we will transparently use
-     * it through the video info API. We could also see if the pool support this
-     * option and only activate it then. */
-    gst_buffer_pool_config_add_option (config,
-        GST_BUFFER_POOL_OPTION_VIDEO_META);
-  }
-
   gst_buffer_pool_set_config (pool, config);
+
+  if (klass->configure_buffer_pool)
+    ret = klass->configure_buffer_pool (decoder, query, pool);
+
   /* and activate */
-  gst_buffer_pool_set_active (pool, TRUE);
+  if (ret)
+    gst_buffer_pool_set_active (pool, TRUE);
 
   gst_query_unref (query);
 
@@ -2482,7 +2505,9 @@ gst_video_decoder_alloc_output_buffer (GstVideoDecoder * decoder)
   GST_DEBUG ("alloc src buffer");
 
   GST_VIDEO_DECODER_STREAM_LOCK (decoder);
-  if (G_UNLIKELY (decoder->priv->output_state_changed))
+  if (G_UNLIKELY (decoder->priv->output_state_changed
+          || (decoder->priv->output_state
+              && gst_pad_check_reconfigure (decoder->srcpad))))
     gst_video_decoder_set_src_caps (decoder);
 
   gst_buffer_pool_acquire_buffer (decoder->priv->pool, &buffer, NULL);
@@ -2516,7 +2541,9 @@ gst_video_decoder_alloc_output_frame (GstVideoDecoder *
 
   g_return_val_if_fail (num_bytes != 0, GST_FLOW_ERROR);
 
-  if (G_UNLIKELY (decoder->priv->output_state_changed))
+  if (G_UNLIKELY (decoder->priv->output_state_changed
+          || (decoder->priv->output_state
+              && gst_pad_check_reconfigure (decoder->srcpad))))
     gst_video_decoder_set_src_caps (decoder);
 
   GST_LOG_OBJECT (decoder, "alloc buffer size %d", num_bytes);
