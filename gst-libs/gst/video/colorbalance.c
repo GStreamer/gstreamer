@@ -25,7 +25,6 @@
 #endif
 
 #include "colorbalance.h"
-#include "video-marshal.h"
 
 /**
  * SECTION:gstcolorbalance
@@ -99,8 +98,7 @@ gst_color_balance_class_init (GstColorBalanceInterface * iface)
         g_signal_new ("value-changed",
         GST_TYPE_COLOR_BALANCE, G_SIGNAL_RUN_LAST,
         G_STRUCT_OFFSET (GstColorBalanceInterface, value_changed),
-        NULL, NULL,
-        gst_video_marshal_VOID__OBJECT_INT,
+        NULL, NULL, NULL,
         G_TYPE_NONE, 2, GST_TYPE_COLOR_BALANCE_CHANNEL, G_TYPE_INT);
 
     initialized = TRUE;

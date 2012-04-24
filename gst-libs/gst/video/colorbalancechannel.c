@@ -96,8 +96,7 @@ gst_color_balance_channel_class_init (GstColorBalanceChannelClass * klass)
       g_signal_new ("value-changed", G_TYPE_FROM_CLASS (klass),
       G_SIGNAL_RUN_LAST,
       G_STRUCT_OFFSET (GstColorBalanceChannelClass,
-          value_changed),
-      NULL, NULL, g_cclosure_marshal_VOID__INT, G_TYPE_NONE, 1, G_TYPE_INT);
+          value_changed), NULL, NULL, NULL, G_TYPE_NONE, 1, G_TYPE_INT);
 
   object_klass->dispose = gst_color_balance_channel_dispose;
 }

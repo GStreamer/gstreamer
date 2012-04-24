@@ -1,18 +1,16 @@
-# variables used for enum/marshal generation
+# variables used for enum generation
 glib_enum_headers = video.h colorbalance.h navigation.h
 glib_enum_define = GST_VIDEO
 glib_gen_prefix = gst_video
 glib_gen_basename = video
 
-built_sources = video-enumtypes.c video-marshal.c
-built_headers = video-enumtypes.h video-marshal.h
+built_sources = video-enumtypes.c
+built_headers = video-enumtypes.h
 BUILT_SOURCES = $(built_sources) $(built_headers)
 
 lib_LTLIBRARIES = libgstvideo-@GST_API_VERSION@.la
 
 CLEANFILES = $(BUILT_SOURCES)
-
-EXTRA_DIST = video-marshal.list
 
 libgstvideo_@GST_API_VERSION@_la_SOURCES = \
 	colorbalance.c   	\
