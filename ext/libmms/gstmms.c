@@ -287,7 +287,7 @@ gst_mms_do_seek (GstBaseSrc * src, GstSegment * segment)
   }
   gst_segment_init (segment, GST_FORMAT_BYTES);
   gst_segment_do_seek (segment, segment->rate, GST_FORMAT_BYTES,
-      segment->flags, GST_SEEK_TYPE_SET, start, GST_SEEK_TYPE_NONE,
+      GST_SEEK_FLAG_NONE, GST_SEEK_TYPE_SET, start, GST_SEEK_TYPE_NONE,
       segment->stop, NULL);
   return TRUE;
 }
