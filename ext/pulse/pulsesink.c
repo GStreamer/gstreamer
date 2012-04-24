@@ -904,8 +904,12 @@ gst_pulseringbuffer_acquire (GstAudioRingBuffer * buf,
   flags = PA_STREAM_INTERPOLATE_TIMING | PA_STREAM_AUTO_TIMING_UPDATE |
       PA_STREAM_ADJUST_LATENCY | PA_STREAM_START_CORKED;
 
-  if (psink->mute_set && psink->mute)
-    flags |= PA_STREAM_START_MUTED;
+  if (psink->mute_set) {
+    if (psink->mute)
+      flags |= PA_STREAM_START_MUTED;
+    else
+      flags |= PA_STREAM_START_UNMUTED;
+  }
 
   /* we always start corked (see flags above) */
   pbuf->corked = TRUE;
