@@ -466,9 +466,23 @@ theora_handle_type_packet (GstTheoraDec * dec, ogg_packet * packet)
   state->info.par_n = par_num;
   state->info.par_d = par_den;
 
+  /* these values are for all versions of the colorspace specified in the
+   * theora info */
   state->info.chroma_site = GST_VIDEO_CHROMA_SITE_JPEG;
-  /* FIXME : Need to specify SDTV color-matrix ... once it's handled
-   * with the backported GstVideoInfo */
+  state->info.colorimetry.range = GST_VIDEO_COLOR_RANGE_16_235;
+  state->info.colorimetry.matrix = GST_VIDEO_COLOR_MATRIX_BT601;
+  state->info.colorimetry.transfer = GST_VIDEO_TRANSFER_BT709;
+  switch (dec->info.colorspace) {
+    case TH_CS_ITU_REC_470M:
+      state->info.colorimetry.primaries = GST_VIDEO_COLOR_PRIMARIES_BT470M;
+      break;
+    case TH_CS_ITU_REC_470BG:
+      state->info.colorimetry.primaries = GST_VIDEO_COLOR_PRIMARIES_BT470BG;
+      break;
+    default:
+      state->info.colorimetry.primaries = GST_VIDEO_COLOR_PRIMARIES_UNKNOWN;
+      break;
+  }
 
   dec->have_header = TRUE;
 
