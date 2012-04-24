@@ -779,6 +779,7 @@ gst_v4l2src_fill (GstPushSrc * src, GstBuffer * buf)
   GstFlowReturn ret;
   GstClock *clock;
   GstClockTime timestamp, duration;
+  GstClockTime delay;
 
 #if 0
   int i;
@@ -797,6 +798,40 @@ gst_v4l2src_fill (GstPushSrc * src, GstBuffer * buf)
 
   if (G_UNLIKELY (ret != GST_FLOW_OK))
     goto error;
+
+
+  timestamp = GST_BUFFER_TIMESTAMP (buf);
+
+  if (timestamp != GST_CLOCK_TIME_NONE) {
+    struct timespec now;
+    GstClockTime gstnow;
+
+    /* v4l2 specs say to use the system time although many drivers switched to
+     * the more desirable monotonic time. We first try to use the monotonic time
+     * and see how that goes */
+    clock_gettime (CLOCK_MONOTONIC, &now);
+    gstnow = GST_TIMESPEC_TO_TIME (now);
+
+    if (gstnow < timestamp && (timestamp - gstnow) > (10 * GST_SECOND)) {
+      GTimeVal now;
+
+      /* very large diff, fall back to system time */
+      g_get_current_time (&now);
+      gstnow = GST_TIMEVAL_TO_TIME (now);
+    }
+
+    if (gstnow > timestamp) {
+      delay = gstnow - timestamp;
+    } else {
+      delay = 0;
+    }
+
+    GST_DEBUG_OBJECT (v4l2src, "ts: %" GST_TIME_FORMAT " now %" GST_TIME_FORMAT
+        " delay %" GST_TIME_FORMAT, GST_TIME_ARGS (timestamp),
+        GST_TIME_ARGS (gstnow), GST_TIME_ARGS (delay));
+  } else {
+    delay = 0;
+  }
 
   /* set buffer metadata */
   GST_BUFFER_OFFSET (buf) = v4l2src->offset++;
@@ -822,6 +857,12 @@ gst_v4l2src_fill (GstPushSrc * src, GstBuffer * buf)
     timestamp = gst_clock_get_time (clock) - timestamp;
     gst_object_unref (clock);
 
+    /* adjust for delay in the device */
+    if (timestamp > delay)
+      timestamp -= delay;
+    else
+      timestamp = 0;
+
     /* if we have a framerate adjust timestamp for frame latency */
     if (GST_CLOCK_TIME_IS_VALID (duration)) {
       if (timestamp > duration)
@@ -841,8 +882,9 @@ gst_v4l2src_fill (GstPushSrc * src, GstBuffer * buf)
     v4l2src->ctrl_time = timestamp;
   }
   gst_object_sync_values (GST_OBJECT (src), v4l2src->ctrl_time);
-  GST_INFO_OBJECT (src, "sync to %" GST_TIME_FORMAT,
-      GST_TIME_ARGS (v4l2src->ctrl_time));
+
+  GST_INFO_OBJECT (src, "sync to %" GST_TIME_FORMAT " out ts %" GST_TIME_FORMAT,
+      GST_TIME_ARGS (v4l2src->ctrl_time), GST_TIME_ARGS (timestamp));
 
   /* FIXME: use the timestamp from the buffer itself! */
   GST_BUFFER_TIMESTAMP (buf) = timestamp;

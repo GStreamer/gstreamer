@@ -587,6 +587,7 @@ gst_v4l2_buffer_pool_dqbuf (GstV4l2BufferPool * pool, GstBuffer ** buffer)
   GstBuffer *outbuf;
   struct v4l2_buffer vbuffer;
   GstV4l2Object *obj = pool->obj;
+  GstClockTime timestamp;
 
   if (obj->type == V4L2_BUF_TYPE_VIDEO_CAPTURE) {
     /* select works for input devices when data is available. According to the
@@ -615,10 +616,13 @@ gst_v4l2_buffer_pool_dqbuf (GstV4l2BufferPool * pool, GstBuffer ** buffer)
   pool->buffers[vbuffer.index] = NULL;
   pool->num_queued--;
 
+  timestamp = GST_TIMEVAL_TO_TIME (vbuffer.timestamp);
+
   GST_LOG_OBJECT (pool,
-      "dequeued buffer %p seq:%d (ix=%d), used %d, flags %08x, pool-queued=%d, buffer=%p",
-      outbuf, vbuffer.sequence, vbuffer.index, vbuffer.bytesused, vbuffer.flags,
-      pool->num_queued, outbuf);
+      "dequeued buffer %p seq:%d (ix=%d), used %d, flags %08x, ts %"
+      GST_TIME_FORMAT ", pool-queued=%d, buffer=%p", outbuf, vbuffer.sequence,
+      vbuffer.index, vbuffer.bytesused, vbuffer.flags,
+      GST_TIME_ARGS (timestamp), pool->num_queued, outbuf);
 
   /* set top/bottom field first if v4l2_buffer has the information */
   if (vbuffer.field == V4L2_FIELD_INTERLACED_TB) {
@@ -633,6 +637,8 @@ gst_v4l2_buffer_pool_dqbuf (GstV4l2BufferPool * pool, GstBuffer ** buffer)
     gst_buffer_resize (outbuf, 0, vbuffer.bytesused);
   else
     gst_buffer_resize (outbuf, 0, vbuffer.length);
+
+  GST_BUFFER_TIMESTAMP (outbuf) = timestamp;
 
   *buffer = outbuf;
 
