@@ -213,6 +213,9 @@ struct _GstVideoEncoder
  *                  Event handler on the source pad. This function should return
  *                  TRUE if the event was handled and should be discarded
  *                  (i.e. not unref'ed).
+ * @propose_allocation: Optional.
+ *                      Propose buffer allocation parameters for upstream elements.
+ *                      The default implementation proposes the VIDEO_META.
  *
  * Subclasses can override any of the available virtual methods or not, as
  * needed. At minimum @handle_frame needs to be overridden, and @set_format
@@ -257,6 +260,9 @@ struct _GstVideoEncoderClass
 
   gboolean      (*src_event)    (GstVideoEncoder *encoder,
 				 GstEvent *event);
+
+  gboolean      (*propose_allocation) (GstVideoEncoder * encoder,
+                                       GstQuery * query);
 
   /*< private >*/
   /* FIXME before moving to base */

@@ -122,6 +122,8 @@
 #include "gstvideoencoder.h"
 #include "gstvideoutils.h"
 
+#include <gst/video/gstvideometa.h>
+
 #include <string.h>
 
 GST_DEBUG_CATEGORY (videoencoder_debug);
@@ -219,6 +221,8 @@ static gboolean gst_video_encoder_sink_event_default (GstVideoEncoder * encoder,
     GstEvent * event);
 static gboolean gst_video_encoder_src_event_default (GstVideoEncoder * encoder,
     GstEvent * event);
+static gboolean gst_video_encoder_propose_allocation_default (GstVideoEncoder *
+    encoder, GstQuery * query);
 
 /* we can't use G_DEFINE_ABSTRACT_TYPE because we need the klass in the _init
  * method to get to the padtemplates */
@@ -278,6 +282,7 @@ gst_video_encoder_class_init (GstVideoEncoderClass * klass)
 
   klass->sink_event = gst_video_encoder_sink_event_default;
   klass->src_event = gst_video_encoder_src_event_default;
+  klass->propose_allocation = gst_video_encoder_propose_allocation_default;
 }
 
 static void
@@ -702,6 +707,14 @@ gst_video_encoder_sink_getcaps (GstVideoEncoder * encoder, GstCaps * filter)
   return caps;
 }
 
+static gboolean
+gst_video_encoder_propose_allocation_default (GstVideoEncoder * encoder,
+    GstQuery * query)
+{
+  gst_query_add_allocation_meta (query, GST_VIDEO_META_API_TYPE);
+
+  return TRUE;
+}
 
 static gboolean
 gst_video_encoder_sink_query (GstPad * pad, GstObject * parent,
@@ -722,6 +735,14 @@ gst_video_encoder_sink_query (GstPad * pad, GstObject * parent,
       gst_query_set_caps_result (query, caps);
       gst_caps_unref (caps);
       res = TRUE;
+      break;
+    }
+    case GST_QUERY_ALLOCATION:
+    {
+      GstVideoEncoderClass *klass = GST_VIDEO_ENCODER_GET_CLASS (encoder);
+
+      if (klass->propose_allocation)
+        res = klass->propose_allocation (encoder, query);
       break;
     }
     default:
