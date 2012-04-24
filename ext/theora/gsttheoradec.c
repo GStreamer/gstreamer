@@ -102,6 +102,8 @@ static GstFlowReturn theora_dec_parse (GstVideoDecoder * decoder,
     GstVideoCodecFrame * frame, GstAdapter * adapter, gboolean at_eos);
 static GstFlowReturn theora_dec_handle_frame (GstVideoDecoder * decoder,
     GstVideoCodecFrame * frame);
+static gboolean theora_dec_configure_buffer_pool (GstVideoDecoder * decoder,
+    GstQuery * query, GstBufferPool * pool);
 
 static GstFlowReturn theora_dec_decode_buffer (GstTheoraDec * dec,
     GstBuffer * buf, GstVideoCodecFrame * frame);
@@ -183,6 +185,8 @@ gst_theora_dec_class_init (GstTheoraDecClass * klass)
   video_decoder_class->parse = GST_DEBUG_FUNCPTR (theora_dec_parse);
   video_decoder_class->handle_frame =
       GST_DEBUG_FUNCPTR (theora_dec_handle_frame);
+  video_decoder_class->configure_buffer_pool =
+      GST_DEBUG_FUNCPTR (theora_dec_configure_buffer_pool);
 
   GST_DEBUG_CATEGORY_INIT (theoradec_debug, "theoradec", 0, "Theora decoder");
 }
@@ -203,6 +207,7 @@ static void
 gst_theora_dec_reset (GstTheoraDec * dec)
 {
   dec->need_keyframe = TRUE;
+  dec->can_crop = FALSE;
 }
 
 static gboolean
@@ -424,16 +429,21 @@ theora_handle_type_packet (GstTheoraDec * dec, ogg_packet * packet)
       goto unsupported_format;
   }
 
-  /* FIXME: Use crop metadata */
+  GST_VIDEO_INFO_WIDTH (info) = dec->info.pic_width;
+  GST_VIDEO_INFO_HEIGHT (info) = dec->info.pic_height;
 
-  /* no cropping, use the encoded dimensions */
-  GST_VIDEO_INFO_WIDTH (info) = dec->info.frame_width;
-  GST_VIDEO_INFO_HEIGHT (info) = dec->info.frame_height;
-  dec->offset_x = 0;
-  dec->offset_y = 0;
+  /* Ensure correct offsets in chroma for formats that need it
+   * by rounding the offset. libtheora will add proper pixels,
+   * so no need to handle them ourselves. */
+  if (dec->info.pic_x & 1 && dec->info.pixel_fmt != TH_PF_444) {
+    GST_VIDEO_INFO_WIDTH (info)++;
+  }
+  if (dec->info.pic_y & 1 && dec->info.pixel_fmt == TH_PF_420) {
+    GST_VIDEO_INFO_HEIGHT (info)++;
+  }
 
   GST_DEBUG_OBJECT (dec, "after fixup frame dimension %dx%d, offset %d:%d",
-      info->width, info->height, dec->offset_x, dec->offset_y);
+      info->width, info->height, dec->info.pic_x, dec->info.pic_y);
 
   /* done */
   dec->decoder = th_decode_alloc (&dec->info, dec->setup);
@@ -548,13 +558,14 @@ theora_handle_image (GstTheoraDec * dec, th_ycbcr_buffer buf,
     GstVideoCodecFrame * frame)
 {
   GstVideoDecoder *decoder = GST_VIDEO_DECODER (dec);
-  GstVideoInfo *info;
   gint width, height, stride;
   GstFlowReturn result;
-  int i, plane;
+  gint i, comp;
   guint8 *dest, *src;
-  GstBuffer *out;
-  GstMapInfo minfo;
+  GstVideoFrame vframe;
+  GstVideoCropMeta *crop;
+  gint pic_width, pic_height;
+  gint offset_x, offset_y;
 
   result = gst_video_decoder_alloc_output_frame (decoder, frame);
 
@@ -564,38 +575,77 @@ theora_handle_image (GstTheoraDec * dec, th_ycbcr_buffer buf,
     return result;
   }
 
-  out = frame->output_buffer;
-  info = &dec->output_state->info;
+  if (!dec->can_crop) {
+    /* we need to crop the hard way */
+    offset_x = dec->info.pic_x;
+    offset_y = dec->info.pic_y;
+    pic_width = dec->info.pic_width;
+    pic_height = dec->info.pic_height;
+    /* Ensure correct offsets in chroma for formats that need it
+     * by rounding the offset. libtheora will add proper pixels,
+     * so no need to handle them ourselves. */
+    if (offset_x & 1 && dec->info.pixel_fmt != TH_PF_444)
+      offset_x--;
+    if (offset_y & 1 && dec->info.pixel_fmt == TH_PF_420)
+      offset_y--;
+  } else {
+    /* copy the whole frame */
+    offset_x = 0;
+    offset_y = 0;
+    pic_width = dec->info.frame_width;
+    pic_height = dec->info.frame_height;
 
-  gst_buffer_map (out, &minfo, GST_MAP_WRITE);
+    if (dec->info.pic_width != dec->info.frame_width ||
+        dec->info.pic_height != dec->info.frame_height ||
+        dec->info.pic_x != 0 || dec->info.pic_y != 0) {
+      crop = gst_buffer_add_video_crop_meta (frame->output_buffer);
 
-  /* FIXME : Use crop metadata */
-  for (plane = 0; plane < 3; plane++) {
-    width = GST_VIDEO_INFO_COMP_WIDTH (info, plane);
-    height = GST_VIDEO_INFO_COMP_HEIGHT (info, plane);
-    stride = GST_VIDEO_INFO_COMP_STRIDE (info, plane);
+      /* we can do things slightly more efficient when we know that
+       * downstream understands clipping */
+      crop->x = dec->info.pic_x;
+      crop->y = dec->info.pic_y;
+      crop->width = dec->info.pic_width;
+      crop->height = dec->info.pic_height;
+    }
+  }
 
-    dest = minfo.data + GST_VIDEO_INFO_COMP_OFFSET (info, plane);
-    src = buf[plane].data;
-    src +=
-        ((height ==
-            GST_VIDEO_INFO_HEIGHT (info)) ? dec->offset_y : dec->offset_y / 2)
-        * buf[plane].stride;
-    src +=
-        (width ==
-        GST_VIDEO_INFO_WIDTH (info)) ? dec->offset_x : dec->offset_x / 2;
+  /* if only libtheora would allow us to give it a destination frame */
+  GST_CAT_TRACE_OBJECT (GST_CAT_PERFORMANCE, dec,
+      "doing unavoidable video frame copy");
+
+  if (G_UNLIKELY (!gst_video_frame_map (&vframe, &dec->output_state->info,
+              frame->output_buffer, GST_MAP_WRITE)))
+    goto invalid_frame;
+
+  for (comp = 0; comp < 3; comp++) {
+    width =
+        GST_VIDEO_FORMAT_INFO_SCALE_WIDTH (vframe.info.finfo, comp, pic_width);
+    height =
+        GST_VIDEO_FORMAT_INFO_SCALE_HEIGHT (vframe.info.finfo, comp,
+        pic_height);
+    stride = GST_VIDEO_FRAME_COMP_STRIDE (&vframe, comp);
+    dest = GST_VIDEO_FRAME_COMP_DATA (&vframe, comp);
+
+    src = buf[comp].data;
+    src += ((height == pic_height) ? offset_y : offset_y / 2)
+        * buf[comp].stride;
+    src += (width == pic_width) ? offset_x : offset_x / 2;
 
     for (i = 0; i < height; i++) {
       memcpy (dest, src, width);
 
       dest += stride;
-      src += buf[plane].stride;
+      src += buf[comp].stride;
     }
   }
-
-  gst_buffer_unmap (out, &minfo);
+  gst_video_frame_unmap (&vframe);
 
   return GST_FLOW_OK;
+invalid_frame:
+  {
+    GST_DEBUG_OBJECT (dec, "could not map video frame");
+    return GST_FLOW_ERROR;
+  }
 }
 
 static GstFlowReturn
@@ -742,6 +792,39 @@ theora_dec_handle_frame (GstVideoDecoder * bdec, GstVideoCodecFrame * frame)
     res = gst_video_decoder_finish_frame (bdec, frame);
 
   return res;
+}
+
+static gboolean
+theora_dec_configure_buffer_pool (GstVideoDecoder * decoder, GstQuery * query,
+    GstBufferPool * pool)
+{
+  GstTheoraDec *dec = GST_THEORA_DEC (decoder);
+
+  dec->can_crop =
+      gst_query_has_allocation_meta (query, GST_VIDEO_CROP_META_API_TYPE);
+  if (dec->can_crop) {
+    GstStructure *config;
+    GstVideoInfo info;
+    GstCaps *caps;
+    guint size, min, max;
+
+    config = gst_buffer_pool_get_config (pool);
+    gst_buffer_pool_config_get_params (config, &caps, &size, &min, &max);
+
+    /* Calculate uncropped size */
+    gst_video_info_init (&info);
+    gst_video_info_from_caps (&info, caps);
+    gst_video_info_set_format (&info, info.finfo->format, dec->info.frame_width,
+        dec->info.frame_height);
+    size = MAX (size, info.size);
+
+    gst_buffer_pool_config_set_params (config, caps, size, min, max);
+
+    gst_buffer_pool_set_config (pool, config);
+  }
+
+  return GST_VIDEO_DECODER_CLASS (parent_class)->configure_buffer_pool (decoder,
+      query, pool);
 }
 
 static void

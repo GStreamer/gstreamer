@@ -69,7 +69,6 @@ struct _GstTheoraDec
   gboolean need_keyframe;
   GstVideoCodecState *input_state;
   GstVideoCodecState *output_state;
-  gint offset_x, offset_y;
 
   /* telemetry debuging options */
   gint telemetry_mv;
@@ -78,6 +77,8 @@ struct _GstTheoraDec
   gint telemetry_bits;
 
   GstTagList *tags;
+  
+  gboolean can_crop;
 };
 
 struct _GstTheoraDecClass
