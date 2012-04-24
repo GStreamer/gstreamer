@@ -146,6 +146,8 @@
 #include "gstvideodecoder.h"
 #include "gstvideoutils.h"
 
+#include <gst/video/gstvideopool.h>
+#include <gst/video/gstvideometa.h>
 #include <string.h>
 
 GST_DEBUG_CATEGORY (videodecoder_debug);
@@ -158,6 +160,8 @@ GST_DEBUG_CATEGORY (videodecoder_debug);
 struct _GstVideoDecoderPrivate
 {
   /* FIXME introduce a context ? */
+
+  GstBufferPool *pool;
 
   /* parse tracking */
   /* input data */
@@ -634,6 +638,11 @@ gst_video_decoder_finalize (GObject * object)
     gst_video_codec_state_unref (decoder->priv->input_state);
   if (decoder->priv->output_state)
     gst_video_codec_state_unref (decoder->priv->output_state);
+
+  if (decoder->priv->pool) {
+    g_object_unref (decoder->priv->pool);
+    decoder->priv->pool = NULL;
+  }
 
   G_OBJECT_CLASS (parent_class)->finalize (object);
 }
@@ -2379,6 +2388,10 @@ static gboolean
 gst_video_decoder_set_src_caps (GstVideoDecoder * decoder)
 {
   GstVideoCodecState *state = decoder->priv->output_state;
+  GstQuery *query;
+  GstBufferPool *pool;
+  GstStructure *config;
+  guint size, min, max;
   gboolean ret;
 
   g_return_val_if_fail (GST_VIDEO_INFO_WIDTH (&state->info) != 0, FALSE);
@@ -2397,6 +2410,51 @@ gst_video_decoder_set_src_caps (GstVideoDecoder * decoder)
 
   ret = gst_pad_set_caps (decoder->srcpad, state->caps);
   decoder->priv->output_state_changed = FALSE;
+
+  /* Negotiate pool */
+  query = gst_query_new_allocation (state->caps, TRUE);
+
+  if (!gst_pad_peer_query (decoder->srcpad, query)) {
+    GST_DEBUG_OBJECT (decoder, "didn't get downstream ALLOCATION hints");
+  }
+
+  if (gst_query_get_n_allocation_pools (query) > 0) {
+    /* we got configuration from our peer, parse them */
+    gst_query_parse_nth_allocation_pool (query, 0, &pool, &size, &min, &max);
+    size = MAX (size, state->info.size);
+  } else {
+    pool = NULL;
+    size = state->info.size;
+    min = max = 0;
+  }
+
+  if (pool == NULL) {
+    /* we did not get a pool, make one ourselves then */
+    pool = gst_video_buffer_pool_new ();
+  }
+
+  if (decoder->priv->pool) {
+    gst_buffer_pool_set_active (decoder->priv->pool, FALSE);
+    gst_object_unref (decoder->priv->pool);
+  }
+  decoder->priv->pool = pool;
+
+  config = gst_buffer_pool_get_config (pool);
+  gst_buffer_pool_config_set_params (config, state->caps, size, min, max);
+
+  if (gst_query_has_allocation_meta (query, GST_VIDEO_META_API_TYPE)) {
+    /* just set the option, if the pool can support it we will transparently use
+     * it through the video info API. We could also see if the pool support this
+     * option and only activate it then. */
+    gst_buffer_pool_config_add_option (config,
+        GST_BUFFER_POOL_OPTION_VIDEO_META);
+  }
+
+  gst_buffer_pool_set_config (pool, config);
+  /* and activate */
+  gst_buffer_pool_set_active (pool, TRUE);
+
+  gst_query_unref (query);
 
   GST_VIDEO_DECODER_STREAM_UNLOCK (decoder);
 
@@ -2419,9 +2477,6 @@ GstBuffer *
 gst_video_decoder_alloc_output_buffer (GstVideoDecoder * decoder)
 {
   GstBuffer *buffer;
-  GstFlowReturn flow_ret;
-  GstVideoCodecState *state = decoder->priv->output_state;
-  int num_bytes = GST_VIDEO_INFO_SIZE (&state->info);
 
   GST_DEBUG ("alloc src buffer");
 
@@ -2429,8 +2484,7 @@ gst_video_decoder_alloc_output_buffer (GstVideoDecoder * decoder)
   if (G_UNLIKELY (decoder->priv->output_state_changed))
     gst_video_decoder_set_src_caps (decoder);
 
-  flow_ret = GST_FLOW_OK;
-  buffer = gst_buffer_new_allocate (NULL, num_bytes, NULL);
+  gst_buffer_pool_acquire_buffer (decoder->priv->pool, &buffer, NULL);
 
   GST_VIDEO_DECODER_STREAM_UNLOCK (decoder);
 
@@ -2467,8 +2521,8 @@ gst_video_decoder_alloc_output_frame (GstVideoDecoder *
   GST_LOG_OBJECT (decoder, "alloc buffer size %d", num_bytes);
   GST_VIDEO_DECODER_STREAM_LOCK (decoder);
 
-  flow_ret = GST_FLOW_OK;
-  frame->output_buffer = gst_buffer_new_allocate (NULL, num_bytes, NULL);
+  flow_ret = gst_buffer_pool_acquire_buffer (decoder->priv->pool,
+      &frame->output_buffer, NULL);
 
   GST_VIDEO_DECODER_STREAM_UNLOCK (decoder);
 
