@@ -247,7 +247,7 @@ gst_rtp_celt_depay_process (GstRTPBaseDepayload * depayload, GstBuffer * buf)
     do {
       s = payload[pos++];
       size += s;
-      total_size += size + 1;
+      total_size += s + 1;
     } while (s == 0xff);
 
     outbuf = gst_rtp_buffer_get_payload_subbuffer (&rtp, offset, size);
