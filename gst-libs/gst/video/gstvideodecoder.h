@@ -26,6 +26,9 @@
 #define _GST_VIDEO_DECODER_H_
 
 #include <gst/base/gstadapter.h>
+#include <gst/video/video.h>
+#include <gst/video/gstvideopool.h>
+#include <gst/video/gstvideometa.h>
 #include <gst/video/gstvideoutils.h>
 
 G_BEGIN_DECLS
@@ -125,7 +128,7 @@ G_BEGIN_DECLS
  *
  * Since: 0.10.36
  */
-#define GST_VIDEO_DECODER_STREAM_LOCK(decoder) g_static_rec_mutex_lock (&GST_VIDEO_DECODER (decoder)->stream_lock)
+#define GST_VIDEO_DECODER_STREAM_LOCK(decoder) g_rec_mutex_lock (&GST_VIDEO_DECODER (decoder)->stream_lock)
 
 /**
  * GST_VIDEO_DECODER_STREAM_UNLOCK:
@@ -135,7 +138,7 @@ G_BEGIN_DECLS
  *
  * Since: 0.10.36
  */
-#define GST_VIDEO_DECODER_STREAM_UNLOCK(decoder) g_static_rec_mutex_unlock (&GST_VIDEO_DECODER (decoder)->stream_lock)
+#define GST_VIDEO_DECODER_STREAM_UNLOCK(decoder) g_rec_mutex_unlock (&GST_VIDEO_DECODER (decoder)->stream_lock)
 
 typedef struct _GstVideoDecoder GstVideoDecoder;
 typedef struct _GstVideoDecoderClass GstVideoDecoderClass;
@@ -211,7 +214,7 @@ struct _GstVideoDecoder
   /* protects all data processing, i.e. is locked
    * in the chain function, finish_frame and when
    * processing serialized events */
-  GStaticRecMutex stream_lock;
+  GRecMutex stream_lock;
 
   /* MT-protected (with STREAM_LOCK) */
   GstSegment      input_segment;

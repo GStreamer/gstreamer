@@ -135,7 +135,7 @@ G_BEGIN_DECLS
  *
  * Since: 0.10.36
  */
-#define GST_VIDEO_ENCODER_STREAM_LOCK(encoder) g_static_rec_mutex_lock (&GST_VIDEO_ENCODER (encoder)->stream_lock)
+#define GST_VIDEO_ENCODER_STREAM_LOCK(encoder) g_rec_mutex_lock (&GST_VIDEO_ENCODER (encoder)->stream_lock)
 
 /**
  * GST_VIDEO_ENCODER_STREAM_UNLOCK:
@@ -145,7 +145,7 @@ G_BEGIN_DECLS
  *
  * Since: 0.10.36
  */
-#define GST_VIDEO_ENCODER_STREAM_UNLOCK(encoder) g_static_rec_mutex_unlock (&GST_VIDEO_ENCODER (encoder)->stream_lock)
+#define GST_VIDEO_ENCODER_STREAM_UNLOCK(encoder) g_rec_mutex_unlock (&GST_VIDEO_ENCODER (encoder)->stream_lock)
 
 typedef struct _GstVideoEncoder GstVideoEncoder;
 typedef struct _GstVideoEncoderPrivate GstVideoEncoderPrivate;
@@ -170,7 +170,7 @@ struct _GstVideoEncoder
   /* protects all data processing, i.e. is locked
    * in the chain function, finish_frame and when
    * processing serialized events */
-  GStaticRecMutex stream_lock;
+  GRecMutex stream_lock;
 
   /* MT-protected (with STREAM_LOCK) */
   GstSegment      input_segment;
@@ -258,7 +258,8 @@ struct _GstVideoEncoderClass
   GstFlowReturn (*pre_push)     (GstVideoEncoder *encoder,
 				 GstVideoCodecFrame *frame);
 
-  GstCaps *     (*getcaps)      (GstVideoEncoder *enc);
+  GstCaps *     (*getcaps)      (GstVideoEncoder *enc,
+                                 GstCaps *filter);
 
   gboolean      (*sink_event)   (GstVideoEncoder *encoder,
 				 GstEvent *event);
@@ -287,7 +288,8 @@ GstFlowReturn        gst_video_encoder_finish_frame (GstVideoEncoder *encoder,
 						     GstVideoCodecFrame *frame);
 
 GstCaps *            gst_video_encoder_proxy_getcaps (GstVideoEncoder * enc,
-						      GstCaps         * caps);
+						      GstCaps         * caps,
+                                                      GstCaps         * filter);
 void                 gst_video_encoder_set_discont (GstVideoEncoder *encoder);
 gboolean             gst_video_encoder_get_discont (GstVideoEncoder *encoder);
 

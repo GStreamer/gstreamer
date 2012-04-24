@@ -123,7 +123,6 @@ static VideoFormat formats[] = {
   {0x00000000, {GST_VIDEO_FORMAT_UNKNOWN, "UNKNOWN", "unknown video", 0, DPTH0,
               PSTR0, PLANE_NA,
           OFFS0}},
-
   MAKE_YUV_FORMAT (I420, "raw video", GST_MAKE_FOURCC ('I', '4', '2', '0'),
       DPTH888, PSTR111,
       PLANE012, OFFS0, SUB420),
@@ -240,6 +239,8 @@ static VideoFormat formats[] = {
   MAKE_YUV_FORMAT (r210, "raw video", GST_MAKE_FOURCC ('r', '2', '1', '0'),
       DPTH10_10_10,
       PSTR444, PLANE0, OFFS0, SUB444),
+  {0x00000000, {GST_VIDEO_FORMAT_ENCODED, "ENCODED", "encoded video",
+          GST_VIDEO_FORMAT_FLAG_COMPLEX, DPTH0, PSTR0, PLANE_NA, OFFS0}},
 };
 
 /**
@@ -839,8 +840,8 @@ gst_video_info_from_caps (GstVideoInfo * info, const GstCaps * caps)
 {
   GstStructure *structure;
   const gchar *s;
-  GstVideoFormat format;
-  gint width, height, views;
+  GstVideoFormat format = GST_VIDEO_FORMAT_UNKNOWN;
+  gint width = 0, height = 0, views;
   gint fps_n, fps_d;
   gint par_n, par_d;
 
@@ -852,19 +853,26 @@ gst_video_info_from_caps (GstVideoInfo * info, const GstCaps * caps)
 
   structure = gst_caps_get_structure (caps, 0);
 
-  if (!gst_structure_has_name (structure, "video/x-raw"))
-    goto wrong_name;
-
-  if (!(s = gst_structure_get_string (structure, "format")))
+  if (gst_structure_has_name (structure, "video/x-raw") &&
+      !(s = gst_structure_get_string (structure, "format"))) {
     goto no_format;
+  } else if (g_str_has_prefix (gst_structure_get_name (structure), "video/") ||
+      g_str_has_prefix (gst_structure_get_name (structure), "image/")) {
+    format = GST_VIDEO_FORMAT_ENCODED;
+  } else {
+    goto wrong_name;
+  }
 
   format = gst_video_format_from_string (s);
   if (format == GST_VIDEO_FORMAT_UNKNOWN)
     goto unknown_format;
 
-  if (!gst_structure_get_int (structure, "width", &width))
+  /* width and height are mandatory, except for non-raw-formats */
+  if (!gst_structure_get_int (structure, "width", &width) &&
+      format != GST_VIDEO_FORMAT_ENCODED)
     goto no_width;
-  if (!gst_structure_get_int (structure, "height", &height))
+  if (!gst_structure_get_int (structure, "height", &height) &&
+      format != GST_VIDEO_FORMAT_ENCODED)
     goto no_height;
 
   gst_video_info_set_format (info, format, width, height);
@@ -917,7 +925,7 @@ gst_video_info_from_caps (GstVideoInfo * info, const GstCaps * caps)
   /* ERROR */
 wrong_name:
   {
-    GST_ERROR ("wrong name '%s', expected video/x-raw",
+    GST_ERROR ("wrong name '%s', expected video/ or image/",
         gst_structure_get_name (structure));
     return FALSE;
   }
@@ -941,6 +949,42 @@ no_height:
     GST_ERROR ("no height property given");
     return FALSE;
   }
+}
+
+/**
+ * gst_video_info_is_equal:
+ * @info: a #GstVideoInfo
+ * @other: a #GstVideoInfo
+ *
+ * Compares two #GstVideoInfo and returns whether they are equal or not
+ *
+ * Returns: %TRUE if @info and @other are equal, else %FALSE.
+ */
+gboolean
+gst_video_info_is_equal (const GstVideoInfo * info, const GstVideoInfo * other)
+{
+  if (GST_VIDEO_INFO_FORMAT (info) != GST_VIDEO_INFO_FORMAT (other))
+    return FALSE;
+  if (GST_VIDEO_INFO_INTERLACE_MODE (info) !=
+      GST_VIDEO_INFO_INTERLACE_MODE (other))
+    return FALSE;
+  if (GST_VIDEO_INFO_FLAGS (info) != GST_VIDEO_INFO_FLAGS (other))
+    return FALSE;
+  if (GST_VIDEO_INFO_WIDTH (info) != GST_VIDEO_INFO_WIDTH (other))
+    return FALSE;
+  if (GST_VIDEO_INFO_HEIGHT (info) != GST_VIDEO_INFO_HEIGHT (other))
+    return FALSE;
+  if (GST_VIDEO_INFO_SIZE (info) != GST_VIDEO_INFO_SIZE (other))
+    return FALSE;
+  if (GST_VIDEO_INFO_PAR_N (info) != GST_VIDEO_INFO_PAR_N (other))
+    return FALSE;
+  if (GST_VIDEO_INFO_PAR_D (info) != GST_VIDEO_INFO_PAR_D (other))
+    return FALSE;
+  if (GST_VIDEO_INFO_FPS_N (info) != GST_VIDEO_INFO_FPS_N (other))
+    return FALSE;
+  if (GST_VIDEO_INFO_FPS_D (info) != GST_VIDEO_INFO_FPS_D (other))
+    return FALSE;
+  return TRUE;
 }
 
 /**
@@ -1387,6 +1431,7 @@ fill_planes (GstVideoInfo * info)
       info->size = info->offset[2] +
           info->stride[2] * (GST_ROUND_UP_4 (height) / 4);
       break;
+    case GST_VIDEO_FORMAT_ENCODED:
     case GST_VIDEO_FORMAT_UNKNOWN:
       GST_ERROR ("invalid format");
       g_warning ("invalid format");

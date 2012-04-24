@@ -27,23 +27,9 @@
 
 #include <string.h>
 
-GType
-gst_video_codec_frame_get_type (void)
-{
-  static volatile gsize type = 0;
-
-  if (g_once_init_enter (&type)) {
-    GType _type;
-
-    _type = g_boxed_type_register_static ("GstVideoCodecFrame",
-        (GBoxedCopyFunc) gst_video_codec_frame_ref,
-        (GBoxedFreeFunc) gst_video_codec_frame_unref);
-    g_once_init_leave (&type, _type);
-  }
-  return (GType) type;
-}
-
-
+G_DEFINE_BOXED_TYPE (GstVideoCodecFrame, gst_video_codec_frame,
+    (GBoxedCopyFunc) gst_video_codec_frame_ref,
+    (GBoxedFreeFunc) gst_video_codec_frame_unref);
 
 static void
 _gst_video_codec_frame_free (GstVideoCodecFrame * frame)
@@ -172,18 +158,6 @@ gst_video_codec_state_unref (GstVideoCodecState * state)
   }
 }
 
-GType
-gst_video_codec_state_get_type (void)
-{
-  static volatile gsize type = 0;
-
-  if (g_once_init_enter (&type)) {
-    GType _type;
-
-    _type = g_boxed_type_register_static ("GstVideoCodecState",
-        (GBoxedCopyFunc) gst_video_codec_state_ref,
-        (GBoxedFreeFunc) gst_video_codec_state_unref);
-    g_once_init_leave (&type, _type);
-  }
-  return (GType) type;
-}
+G_DEFINE_BOXED_TYPE (GstVideoCodecState, gst_video_codec_state,
+    (GBoxedCopyFunc) gst_video_codec_state_ref,
+    (GBoxedFreeFunc) gst_video_codec_state_unref);
