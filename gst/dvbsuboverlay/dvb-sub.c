@@ -655,23 +655,24 @@ _dvb_sub_read_2bit_string (guint8 * destbuf, gint dbuf_len,
 
   while (!stop_parsing && (gst_bit_reader_get_remaining (&gb) > 0)) {
     guint run_length = 0, clut_index = 0;
-    gst_bit_reader_get_bits_uint32 (&gb, &bits, 2);
+
+    bits = gst_bit_reader_get_bits_uint32_unchecked (&gb, 2);
 
     if (bits) {                 /* 2-bit_pixel-code */
       run_length = 1;
       clut_index = bits;
     } else {                    /* 2-bit_zero */
-      gst_bit_reader_get_bits_uint32 (&gb, &bits, 1);
+      bits = gst_bit_reader_get_bits_uint32_unchecked (&gb, 1);
       if (bits == 1) {          /* switch_1 == '1' */
-        gst_bit_reader_get_bits_uint32 (&gb, &run_length, 3);
+        run_length = gst_bit_reader_get_bits_uint32_unchecked (&gb, 3);
         run_length += 3;
-        gst_bit_reader_get_bits_uint32 (&gb, &clut_index, 2);
+        clut_index = gst_bit_reader_get_bits_uint32_unchecked (&gb, 2);
       } else {                  /* switch_1 == '0' */
-        gst_bit_reader_get_bits_uint32 (&gb, &bits, 1);
+        bits = gst_bit_reader_get_bits_uint32_unchecked (&gb, 1);
         if (bits == 1) {        /* switch_2 == '1' */
           run_length = 1;       /* 1x pseudo-colour '00' */
         } else {                /* switch_2 == '0' */
-          gst_bit_reader_get_bits_uint32 (&gb, &bits, 2);
+          bits = gst_bit_reader_get_bits_uint32_unchecked (&gb, 2);
           switch (bits) {       /* switch_3 */
             case 0x0:          /* end of 2-bit/pixel_code_string */
               stop_parsing = TRUE;
@@ -680,14 +681,14 @@ _dvb_sub_read_2bit_string (guint8 * destbuf, gint dbuf_len,
               run_length = 2;
               break;
             case 0x2:          /* the following 6 bits contain run length coded pixel data */
-              gst_bit_reader_get_bits_uint32 (&gb, &run_length, 4);
+              run_length = gst_bit_reader_get_bits_uint32_unchecked (&gb, 4);
               run_length += 12;
-              gst_bit_reader_get_bits_uint32 (&gb, &clut_index, 2);
+              clut_index = gst_bit_reader_get_bits_uint32_unchecked (&gb, 2);
               break;
             case 0x3:          /* the following 10 bits contain run length coded pixel data */
-              gst_bit_reader_get_bits_uint32 (&gb, &run_length, 8);
+              run_length = gst_bit_reader_get_bits_uint32_unchecked (&gb, 8);
               run_length += 29;
-              gst_bit_reader_get_bits_uint32 (&gb, &clut_index, 2);
+              clut_index = gst_bit_reader_get_bits_uint32_unchecked (&gb, 2);
               break;
           }
         }
@@ -747,28 +748,29 @@ _dvb_sub_read_4bit_string (guint8 * destbuf, gint dbuf_len,
 
   while (!stop_parsing && (gst_bit_reader_get_remaining (&gb) > 0)) {
     guint run_length = 0, clut_index = 0;
-    gst_bit_reader_get_bits_uint32 (&gb, &bits, 4);
+
+    bits = gst_bit_reader_get_bits_uint32_unchecked (&gb, 4);
 
     if (bits) {
       run_length = 1;
       clut_index = bits;
     } else {
-      gst_bit_reader_get_bits_uint32 (&gb, &bits, 1);
+      bits = gst_bit_reader_get_bits_uint32_unchecked (&gb, 1);
       if (bits == 0) {          /* switch_1 == '0' */
-        gst_bit_reader_get_bits_uint32 (&gb, &run_length, 3);
+        run_length = gst_bit_reader_get_bits_uint32_unchecked (&gb, 3);
         if (!run_length) {
           stop_parsing = TRUE;
         } else {
           run_length += 2;
         }
       } else {                  /* switch_1 == '1' */
-        gst_bit_reader_get_bits_uint32 (&gb, &bits, 1);
+        bits = gst_bit_reader_get_bits_uint32_unchecked (&gb, 1);
         if (bits == 0) {        /* switch_2 == '0' */
-          gst_bit_reader_get_bits_uint32 (&gb, &run_length, 2);
+          run_length = gst_bit_reader_get_bits_uint32_unchecked (&gb, 2);
           run_length += 4;
-          gst_bit_reader_get_bits_uint32 (&gb, &clut_index, 4);
+          clut_index = gst_bit_reader_get_bits_uint32_unchecked (&gb, 4);
         } else {                /* switch_2 == '1' */
-          gst_bit_reader_get_bits_uint32 (&gb, &bits, 2);
+          bits = gst_bit_reader_get_bits_uint32_unchecked (&gb, 2);
           switch (bits) {
             case 0x0:          /* switch_3 == '00' */
               run_length = 1;   /* 1 pixel of pseudo-color 0 */
@@ -777,14 +779,14 @@ _dvb_sub_read_4bit_string (guint8 * destbuf, gint dbuf_len,
               run_length = 2;   /* 2 pixels of pseudo-color 0 */
               break;
             case 0x2:          /* switch_3 == '10' */
-              gst_bit_reader_get_bits_uint32 (&gb, &run_length, 4);
+              run_length = gst_bit_reader_get_bits_uint32_unchecked (&gb, 4);
               run_length += 9;
-              gst_bit_reader_get_bits_uint32 (&gb, &clut_index, 4);
+              clut_index = gst_bit_reader_get_bits_uint32_unchecked (&gb, 4);
               break;
             case 0x3:          /* switch_3 == '11' */
-              gst_bit_reader_get_bits_uint32 (&gb, &run_length, 8);
+              run_length = gst_bit_reader_get_bits_uint32_unchecked (&gb, 8);
               run_length += 25;
-              gst_bit_reader_get_bits_uint32 (&gb, &clut_index, 4);
+              clut_index = gst_bit_reader_get_bits_uint32_unchecked (&gb, 4);
               break;
           }
         }
@@ -858,23 +860,23 @@ _dvb_sub_read_8bit_string (guint8 * destbuf, gint dbuf_len,
   /* Rephrased - it's better to work with bytes with default value '0' instead of reading from memory we don't own. */
   while (!stop_parsing && (gst_bit_reader_get_remaining (&gb) > 0)) {
     guint run_length = 0, clut_index = 0;
-    gst_bit_reader_get_bits_uint32 (&gb, &bits, 8);
+    bits = gst_bit_reader_get_bits_uint32_unchecked (&gb, 8);
 
     if (bits) {                 /* 8-bit_pixel-code */
       run_length = 1;
       clut_index = bits;
     } else {                    /* 8-bit_zero */
-      gst_bit_reader_get_bits_uint32 (&gb, &bits, 1);
+      bits = gst_bit_reader_get_bits_uint32_unchecked (&gb, 1);
       if (bits == 0) {          /* switch_1 == '0' */
         /* run_length_1-127 for pseudo-colour _entry) '0x00' */
-        gst_bit_reader_get_bits_uint32 (&gb, &run_length, 7);
+        run_length = gst_bit_reader_get_bits_uint32_unchecked (&gb, 7);
         if (run_length == 0) {  /* end_of_string_signal */
           stop_parsing = TRUE;
         }
       } else {                  /* switch_1 == '1' */
         /* run_length_3-127 */
-        gst_bit_reader_get_bits_uint32 (&gb, &run_length, 7);
-        gst_bit_reader_get_bits_uint32 (&gb, &clut_index, 8);
+        run_length = gst_bit_reader_get_bits_uint32_unchecked (&gb, 7);
+        clut_index = gst_bit_reader_get_bits_uint32_unchecked (&gb, 8);
 
         if (run_length < 3) {
           GST_WARNING ("runlength value was %u, but the spec requires it "
