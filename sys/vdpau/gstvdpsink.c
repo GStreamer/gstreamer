@@ -30,6 +30,8 @@
 #include <gst/interfaces/navigation.h>
 #include <gst/interfaces/xoverlay.h>
 
+#include <X11/XKBlib.h>
+
 /* Debugging category */
 #include <gst/gstinfo.h>
 
@@ -387,7 +389,8 @@ gst_vdp_sink_handle_xevents (VdpSink * vdp_sink)
             e.xkey.keycode, e.xkey.x, e.xkey.x);
         g_mutex_lock (vdp_sink->x_lock);
         keysym =
-            XKeycodeToKeysym (vdp_sink->device->display, e.xkey.keycode, 0);
+            XkbKeycodeToKeysym (vdp_sink->device->display, e.xkey.keycode, 0,
+            0);
         g_mutex_unlock (vdp_sink->x_lock);
         if (keysym != NoSymbol) {
           char *key_str = NULL;
