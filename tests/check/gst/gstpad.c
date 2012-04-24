@@ -1085,6 +1085,7 @@ test_queue_src_caps_notify (gboolean link_queue)
 {
   GstElement *queue;
   GstPad *src, *sink, *another_pad;
+  GstCaps *caps;
 
   queue = gst_element_factory_make ("queue", NULL);
   fail_unless (queue != NULL);
@@ -1111,7 +1112,9 @@ test_queue_src_caps_notify (gboolean link_queue)
 
   g_signal_connect (src, "notify::caps", G_CALLBACK (caps_notify), NULL);
 
-  gst_pad_send_event (sink, gst_event_new_caps (gst_caps_from_string ("caps")));
+  caps = gst_caps_from_string ("caps");
+  gst_pad_send_event (sink, gst_event_new_caps (caps));
+  gst_caps_unref (caps);
 
   g_usleep (10000);
 

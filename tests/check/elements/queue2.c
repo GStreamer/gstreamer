@@ -249,6 +249,7 @@ GST_START_TEST (test_filled_read)
           &buffer) == GST_FLOW_OK);
 
   fail_unless (gst_buffer_get_size (buffer) == 4 * 1024);
+  gst_buffer_unref (buffer);
 
   gst_element_set_state (queue2, GST_STATE_NULL);
 
