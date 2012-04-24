@@ -265,11 +265,9 @@ ges_timeline_class_init (GESTimelineClass * klass)
   object_class->finalize = ges_timeline_finalize;
 
   /**
-   * GESTimelineObject:duration
+   * GESTimeline:duration
    *
    * Current duration (in nanoseconds) of the #GESTimeline
-   *
-   * Default value: 0
    */
   properties[PROP_DURATION] =
       g_param_spec_uint64 ("duration", "Duration",
@@ -1849,7 +1847,7 @@ fail:
  * ges_timeline_append_layer:
  * @timeline: a #GESTimeline
  *
- * Append a newly creater #GESTimelineLayer to @timeline
+ * Append a newly created #GESTimelineLayer to @timeline
  * Note that you do not own any reference to the returned layer.
  *
  * Returns: (transfer none): The newly created #GESTimelineLayer, or the last (empty)
