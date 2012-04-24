@@ -233,7 +233,9 @@ gst_ffmpegviddec_base_init (GstFFMpegVidDecClass * klass)
     GST_DEBUG ("Couldn't get sink caps for decoder '%s'", in_plugin->name);
     sinkcaps = gst_caps_from_string ("unknown/unknown");
   }
-  srccaps = gst_caps_from_string ("video/x-raw-rgb; video/x-raw-yuv");
+  srccaps =
+      gst_caps_from_string
+      ("video/x-raw-rgb; video/x-raw-yuv; video/x-raw-gray");
 
   /* pad templates */
   sinktempl = gst_pad_template_new ("sink", GST_PAD_SINK,
