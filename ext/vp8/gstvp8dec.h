@@ -24,7 +24,7 @@
 #define __GST_VP8_DEC_H__
 
 #include <gst/gst.h>
-#include <gst/video/gstbasevideodecoder.h>
+#include <gst/video/gstvideodecoder.h>
 
 /* FIXME: Undef HAVE_CONFIG_H because vpx_codec.h uses it,
  * which causes compilation failures */
@@ -53,7 +53,7 @@ typedef struct _GstVP8DecClass GstVP8DecClass;
 
 struct _GstVP8Dec
 {
-  GstBaseVideoDecoder base_video_decoder;
+  GstVideoDecoder base_video_decoder;
 
   /* < private > */
   vpx_codec_ctx_t decoder;
@@ -66,11 +66,13 @@ struct _GstVP8Dec
   enum vp8_postproc_level post_processing_flags;
   gint deblocking_level;
   gint noise_level;
+
+  GstVideoCodecState *input_state;
 };
 
 struct _GstVP8DecClass
 {
-  GstBaseVideoDecoderClass base_video_decoder_class;
+  GstVideoDecoderClass base_video_decoder_class;
 };
 
 GType gst_vp8_dec_get_type (void);

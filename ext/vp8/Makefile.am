@@ -8,13 +8,11 @@ libgstvp8_la_SOURCES = \
 	plugin.c
 
 libgstvp8_la_CFLAGS = \
-	$(GST_PLUGINS_BAD_CFLAGS) \
 	$(GST_PLUGINS_BASE_CFLAGS) \
 	$(GST_BASE_CFLAGS) \
 	$(GST_CFLAGS) \
 	-DGST_USE_UNSTABLE_API
 libgstvp8_la_LIBADD = \
-	$(top_builddir)/gst-libs/gst/video/libgstbasevideo-@GST_API_VERSION@.la \
 	$(GST_PLUGINS_BASE_LIBS) -lgsttag-@GST_API_VERSION@ -lgstvideo-@GST_API_VERSION@ \
 	$(GST_BASE_LIBS) $(GST_LIBS) $(VPX_LIBS)
 libgstvp8_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
