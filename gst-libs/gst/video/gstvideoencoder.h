@@ -61,15 +61,6 @@ G_BEGIN_DECLS
 #define GST_VIDEO_ENCODER_SRC_NAME     "src"
 
 /**
- * GST_VIDEO_ENCODER_FLOW_DROPPED:
- *
- * Returned when the event/buffer should be dropped.
- *
- * Since: 0.10.36
- */
-#define GST_VIDEO_ENCODER_FLOW_DROPPED GST_FLOW_CUSTOM_SUCCESS_1
-
-/**
  * GST_VIDEO_ENCODER_SRC_PAD:
  * @obj: a #GstVideoEncoder
  *

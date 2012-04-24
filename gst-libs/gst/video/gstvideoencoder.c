@@ -215,6 +215,11 @@ static gboolean gst_video_encoder_src_query (GstPad * pad, GstObject * parent,
 static GstVideoCodecFrame *gst_video_encoder_new_frame (GstVideoEncoder *
     encoder, GstBuffer * buf, GstClockTime timestamp, GstClockTime duration);
 
+static gboolean gst_video_encoder_sink_event_default (GstVideoEncoder * encoder,
+    GstEvent * event);
+static gboolean gst_video_encoder_src_event_default (GstVideoEncoder * encoder,
+    GstEvent * event);
+
 /* we can't use G_DEFINE_ABSTRACT_TYPE because we need the klass in the _init
  * method to get to the padtemplates */
 GType
@@ -270,6 +275,9 @@ gst_video_encoder_class_init (GstVideoEncoderClass * klass)
 
   gstelement_class->change_state =
       GST_DEBUG_FUNCPTR (gst_video_encoder_change_state);
+
+  klass->sink_event = gst_video_encoder_sink_event_default;
+  klass->src_event = gst_video_encoder_src_event_default;
 }
 
 static void
@@ -773,7 +781,8 @@ gst_video_encoder_push_event (GstVideoEncoder * encoder, GstEvent * event)
 }
 
 static gboolean
-gst_video_encoder_sink_eventfunc (GstVideoEncoder * encoder, GstEvent * event)
+gst_video_encoder_sink_event_default (GstVideoEncoder * encoder,
+    GstEvent * event)
 {
   GstVideoEncoderClass *encoder_class;
   gboolean ret = FALSE;
@@ -788,6 +797,7 @@ gst_video_encoder_sink_eventfunc (GstVideoEncoder * encoder, GstEvent * event)
       gst_event_parse_caps (event, &caps);
       ret = gst_video_encoder_setcaps (encoder, caps);
       gst_event_unref (event);
+      event = NULL;
       break;
     }
     case GST_EVENT_EOS:
@@ -803,7 +813,7 @@ gst_video_encoder_sink_eventfunc (GstVideoEncoder * encoder, GstEvent * event)
         flow_ret = GST_FLOW_OK;
       }
 
-      ret = (flow_ret == GST_VIDEO_ENCODER_FLOW_DROPPED);
+      ret = (flow_ret == GST_FLOW_OK);
       GST_VIDEO_ENCODER_STREAM_UNLOCK (encoder);
       break;
     }
@@ -852,12 +862,36 @@ gst_video_encoder_sink_eventfunc (GstVideoEncoder * encoder, GstEvent * event)
               GST_TIME_ARGS (running_time), all_headers, count);
         }
         gst_event_unref (event);
+        event = NULL;
         ret = TRUE;
       }
       break;
     }
     default:
       break;
+  }
+
+  /* Forward non-serialized events and EOS/FLUSH_STOP immediately.
+   * For EOS this is required because no buffer or serialized event
+   * will come after EOS and nothing could trigger another
+   * _finish_frame() call.   *
+   * If the subclass handles sending of EOS manually it can simply
+   * not chain up to the parent class' event handler
+   *
+   * For FLUSH_STOP this is required because it is expected
+   * to be forwarded immediately and no buffers are queued anyway.
+   */
+  if (event) {
+    if (!GST_EVENT_IS_SERIALIZED (event)
+        || GST_EVENT_TYPE (event) == GST_EVENT_EOS
+        || GST_EVENT_TYPE (event) == GST_EVENT_FLUSH_STOP) {
+      ret = gst_video_encoder_push_event (encoder, event);
+    } else {
+      GST_VIDEO_ENCODER_STREAM_LOCK (encoder);
+      encoder->priv->current_frame_events =
+          g_list_prepend (encoder->priv->current_frame_events, event);
+      GST_VIDEO_ENCODER_STREAM_UNLOCK (encoder);
+    }
   }
 
   return ret;
@@ -869,7 +903,6 @@ gst_video_encoder_sink_event (GstPad * pad, GstObject * parent,
 {
   GstVideoEncoder *enc;
   GstVideoEncoderClass *klass;
-  gboolean handled = FALSE;
   gboolean ret = TRUE;
 
   enc = GST_VIDEO_ENCODER (parent);
@@ -879,44 +912,16 @@ gst_video_encoder_sink_event (GstPad * pad, GstObject * parent,
       GST_EVENT_TYPE_NAME (event));
 
   if (klass->sink_event)
-    handled = klass->sink_event (enc, event);
-
-  if (!handled)
-    handled = gst_video_encoder_sink_eventfunc (enc, event);
-
-  if (!handled) {
-    /* Forward non-serialized events and EOS/FLUSH_STOP immediately.
-     * For EOS this is required because no buffer or serialized event
-     * will come after EOS and nothing could trigger another
-     * _finish_frame() call.   *
-     * If the subclass handles sending of EOS manually it can return
-     * _DROPPED from ::finish() and all other subclasses should have
-     * decoded/flushed all remaining data before this
-     *
-     * For FLUSH_STOP this is required because it is expected
-     * to be forwarded immediately and no buffers are queued anyway.
-     */
-    if (!GST_EVENT_IS_SERIALIZED (event)
-        || GST_EVENT_TYPE (event) == GST_EVENT_EOS
-        || GST_EVENT_TYPE (event) == GST_EVENT_FLUSH_STOP) {
-      ret = gst_video_encoder_push_event (enc, event);
-    } else {
-      GST_VIDEO_ENCODER_STREAM_LOCK (enc);
-      enc->priv->current_frame_events =
-          g_list_prepend (enc->priv->current_frame_events, event);
-      GST_VIDEO_ENCODER_STREAM_UNLOCK (enc);
-    }
-  }
-
-  GST_DEBUG_OBJECT (enc, "event handled");
+    ret = klass->sink_event (enc, event);
 
   return ret;
 }
 
 static gboolean
-gst_video_encoder_src_eventfunc (GstVideoEncoder * encoder, GstEvent * event)
+gst_video_encoder_src_event_default (GstVideoEncoder * encoder,
+    GstEvent * event)
 {
-  gboolean handled = FALSE;
+  gboolean ret = FALSE;
 
   switch (GST_EVENT_TYPE (event)) {
     case GST_EVENT_CUSTOM_UPSTREAM:
@@ -942,7 +947,8 @@ gst_video_encoder_src_eventfunc (GstVideoEncoder * encoder, GstEvent * event)
               GST_TIME_ARGS (running_time), all_headers, count);
         }
         gst_event_unref (event);
-        handled = TRUE;
+        event = NULL;
+        ret = TRUE;
       }
       break;
     }
@@ -950,7 +956,12 @@ gst_video_encoder_src_eventfunc (GstVideoEncoder * encoder, GstEvent * event)
       break;
   }
 
-  return handled;
+  if (event)
+    ret =
+        gst_pad_event_default (encoder->srcpad, GST_OBJECT_CAST (encoder),
+        event);
+
+  return ret;
 }
 
 static gboolean
@@ -959,7 +970,6 @@ gst_video_encoder_src_event (GstPad * pad, GstObject * parent, GstEvent * event)
   GstVideoEncoder *encoder;
   GstVideoEncoderClass *klass;
   gboolean ret = FALSE;
-  gboolean handled = FALSE;
 
   encoder = GST_VIDEO_ENCODER (parent);
   klass = GST_VIDEO_ENCODER_GET_CLASS (encoder);
@@ -967,13 +977,7 @@ gst_video_encoder_src_event (GstPad * pad, GstObject * parent, GstEvent * event)
   GST_LOG_OBJECT (encoder, "handling event: %" GST_PTR_FORMAT, event);
 
   if (klass->src_event)
-    handled = klass->src_event (encoder, event);
-
-  if (!handled)
-    handled = gst_video_encoder_src_eventfunc (encoder, event);
-
-  if (!handled)
-    ret = gst_pad_event_default (pad, parent, event);
+    ret = klass->src_event (encoder, event);
 
   return ret;
 }
