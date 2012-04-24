@@ -22,6 +22,7 @@ check_PROGRAMS = \
 	ges/filesource	\
 	ges/simplelayer	\
 	ges/timelineobject	\
+	ges/timelineedition	\
 	ges/titles\
 	ges/transition	\
 	ges/overlays\
