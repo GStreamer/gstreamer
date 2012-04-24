@@ -1544,3 +1544,70 @@ ges_track_object_copy (GESTrackObject * object, gboolean deep)
 
   return ret;
 }
+
+/**
+ * ges_track_object_edit:
+ * @object: the #GESTrackObject to edit
+ * @layers: (element-type GESTimelineLayer): The layers you want the edit to
+ *  happen in, %NULL means that the edition is done in all the
+ *  #GESTimelineLayers contained in the current timeline.
+ *      FIXME: This is not implemented yet.
+ * @mode: The #GESEditMode in which the editition will happen.
+ * @edge: The #GESEdge the edit should happen on.
+ * @position: The position at which to edit @object (in nanosecond)
+ *
+ * Edit @object in the different exisiting #GESEditMode modes. In the case of
+ * slide, and roll, you need to specify a #GESEdge
+ *
+ * Returns: %TRUE if the object as been edited properly, %FALSE if an error
+ * occured
+ *
+ * Since: 0.10.XX
+ */
+gboolean
+ges_track_object_edit (GESTrackObject * object,
+    GList * layers, GESEditMode mode, GESEdge edge, guint64 position)
+{
+  GESTrack *track = ges_track_object_get_track (object);
+  GESTimeline *timeline;
+
+  if (G_UNLIKELY (!track)) {
+    GST_WARNING_OBJECT (object, "Trying to edit in %d mode but not in"
+        "any Track yet.", mode);
+    return FALSE;
+  } else if (position < 0) {
+    GST_DEBUG_OBJECT (object, "Trying to move before 0, not moving");
+    return FALSE;
+  }
+
+  timeline = GES_TIMELINE (ges_track_get_timeline (track));
+
+  if (G_UNLIKELY (!timeline)) {
+    GST_WARNING_OBJECT (object, "Trying to edit in %d mode but not in"
+        "track %p no in any timeline yet.", mode, track);
+    return FALSE;
+  }
+
+  switch (mode) {
+    case GES_EDIT_MODE_NORMAL:
+      timeline_move_object (timeline, object, layers, edge, position);
+      break;
+    case GES_EDIT_MODE_TRIM:
+      timeline_trim_object (timeline, object, layers, edge, position);
+      break;
+    case GES_EDIT_MODE_RIPPLE:
+      timeline_ripple_object (timeline, object, layers, edge, position);
+      break;
+    case GES_EDIT_MODE_ROLL:
+      timeline_roll_object (timeline, object, layers, edge, position);
+      break;
+    case GES_EDIT_MODE_SLIDE:
+      timeline_slide_object (timeline, object, layers, edge, position);
+      break;
+    default:
+      GST_ERROR ("Unkown edit mode: %d", mode);
+      return FALSE;
+  }
+
+  return TRUE;
+}

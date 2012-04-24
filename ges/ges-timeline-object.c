@@ -1305,6 +1305,73 @@ ges_timeline_object_set_top_effect_priority (GESTimelineObject * object,
 }
 
 /**
+ * ges_timeline_object_edit:
+ * @object: the #GESTimelineObject to edit
+ * @layers: (element-type GESTimelineLayer): The layers you want the edit to
+ *  happen in, %NULL means that the edition is done in all the
+ *  #GESTimelineLayers contained in the current timeline.
+ * @new_layer_priority: The priority of the layer @object should land in.
+ *  If the layer you're trying to move the object to doesn't exist, it will
+ *  be created automatically. -1 means no move.
+ * @mode: The #GESEditMode in which the editition will happen.
+ * @edge: The #GESEdge the edit should happen on.
+ * @position: The position at which to edit @object (in nanosecond)
+ *
+ * Edit @object in the different exisiting #GESEditMode modes. In the case of
+ * slide, and roll, you need to specify a #GESEdge
+ *
+ * Returns: %TRUE if the object as been edited properly, %FALSE if an error
+ * occured
+ *
+ * Since: 0.10.XX
+ */
+gboolean
+ges_timeline_object_edit (GESTimelineObject * object, GList * layers,
+    gint new_layer_priority, GESEditMode mode, GESEdge edge, guint64 position)
+{
+  GList *tmp;
+  gboolean ret = TRUE;
+  GESTimelineLayer *layer;
+
+  g_return_val_if_fail (GES_IS_TIMELINE_OBJECT (object), FALSE);
+
+  if (!G_UNLIKELY (object->priv->trackobjects)) {
+    GST_WARNING_OBJECT (object, "Trying to edit, but not containing"
+        "any TrackObject yet.");
+    return FALSE;
+  } else if (position < 0) {
+    GST_DEBUG_OBJECT (object, "Trying to move before 0, not moving");
+  }
+
+  for (tmp = object->priv->trackobjects; tmp; tmp = g_list_next (tmp)) {
+    if (ges_track_object_is_locked (tmp->data)) {
+      ret &= ges_track_object_edit (tmp->data, layers, mode, edge, position);
+      break;
+    }
+  }
+
+  /* Moving to layer */
+  if (new_layer_priority == -1) {
+    GST_DEBUG_OBJECT (object, "Not moving new prio %d", new_layer_priority);
+  } else {
+    gint priority_offset;
+
+    layer = object->priv->layer;
+    if (layer == NULL) {
+      GST_WARNING_OBJECT (object, "Not in any layer yet, not moving");
+
+      return FALSE;
+    }
+    priority_offset = new_layer_priority -
+        ges_timeline_layer_get_priority (layer);
+
+    ret &= timeline_context_to_layer (layer->timeline, object, priority_offset);
+  }
+
+  return ret;
+}
+
+/**
  * ges_timeline_object_split:
  * @object: the #GESTimelineObject to split
  * @position: a #GstClockTime representing the position at which to split
@@ -1552,6 +1619,264 @@ ges_timeline_object_set_max_duration (GESTimelineObject * object,
 
   object->priv->maxduration = maxduration;
   klass->set_max_duration (object, maxduration);
+}
+
+/**
+ * ges_timeline_object_ripple:
+ * @object: The #GESTimeline to ripple.
+ * @start: The new start of @object in ripple mode.
+ *
+ * Edits @object in ripple mode. It allows you to modify the
+ * start of @object and move the following neighbours accordingly.
+ * This will change the overall timeline duration.
+ *
+ * You could also use:
+ *
+ *    #ges_timeline_object_edit (@object, @layers,
+ *        new_layer_priority=-1, GES_EDIT_MODE_RIPPLE, GES_EDGE_NONE,
+ *        @position);
+ *
+ * Which lets you more control over layer management.
+ *
+ * Returns: %TRUE if the object as been rippled properly, %FALSE if an error
+ * occured
+ */
+gboolean
+ges_timeline_object_ripple (GESTimelineObject * object, guint64 start)
+{
+  GList *tmp, *tckobjs;
+  gboolean ret = TRUE;
+  GESTimeline *timeline;
+
+  g_return_val_if_fail (GES_IS_TIMELINE_OBJECT (object), FALSE);
+
+  timeline = ges_timeline_layer_get_timeline (object->priv->layer);
+
+  if (timeline == NULL) {
+    GST_DEBUG ("Not in a timeline yet");
+    return FALSE;
+  }
+
+  tckobjs = ges_timeline_object_get_track_objects (object);
+  for (tmp = tckobjs; tmp; tmp = g_list_next (tmp)) {
+    if (ges_track_object_is_locked (tmp->data)) {
+      ret = timeline_ripple_object (timeline, GES_TRACK_OBJECT (tmp->data),
+          NULL, GES_EDGE_NONE, start);
+      /* As we work only with locked objects, the changes will be reflected
+       * to others controlled TrackObjects */
+      break;
+    }
+  }
+  g_list_free_full (tckobjs, g_object_unref);
+
+  return ret;
+}
+
+/**
+ * ges_timeline_object_ripple_end:
+ * @object: The #GESTimeline to ripple.
+ * @end: The new end (start + duration) of @object in ripple mode. It will
+ *       basically only change the duration of @object.
+ *
+ * Edits @object in ripple mode. It allows you to modify the
+ * duration of a @object and move the following neighbours accordingly.
+ * This will change the overall timeline duration.
+ *
+ * You could also use:
+ *
+ *    #ges_timeline_object_edit (@object, @layers,
+ *        new_layer_priority=-1, GES_EDIT_MODE_RIPPLE, GES_EDGE_END, @end);
+ *
+ * Which lets you more control over layer management.
+ *
+ * Returns: %TRUE if the object as been rippled properly, %FALSE if an error
+ * occured
+ */
+gboolean
+ges_timeline_object_ripple_end (GESTimelineObject * object, guint64 end)
+{
+  GList *tmp, *tckobjs;
+  gboolean ret = TRUE;
+  GESTimeline *timeline;
+
+  g_return_val_if_fail (GES_IS_TIMELINE_OBJECT (object), FALSE);
+
+  timeline = ges_timeline_layer_get_timeline (object->priv->layer);
+
+  if (timeline == NULL) {
+    GST_DEBUG ("Not in a timeline yet");
+    return FALSE;
+  }
+
+  tckobjs = ges_timeline_object_get_track_objects (object);
+  for (tmp = tckobjs; tmp; tmp = g_list_next (tmp)) {
+    if (ges_track_object_is_locked (tmp->data)) {
+      ret = timeline_ripple_object (timeline, GES_TRACK_OBJECT (tmp->data),
+          NULL, GES_EDGE_END, end);
+      /* As we work only with locked objects, the changes will be reflected
+       * to others controlled TrackObjects */
+      break;
+    }
+  }
+  g_list_free_full (tckobjs, g_object_unref);
+
+  return ret;
+}
+
+/**
+ * ges_timeline_object_roll_start:
+ * @start: The new start of @object in roll mode, it will also adapat
+ * the in-point of @object according
+ *
+ * Edits @object in roll mode. It allows you to modify the
+ * start and inpoint of a @object and "resize" (basicly change the duration
+ * in this case) of the previous neighbours accordingly.
+ * This will not change the overall timeline duration.
+ *
+ * You could also use:
+ *
+ *    #ges_timeline_object_edit (@object, @layers,
+ *        new_layer_priority=-1, GES_EDIT_MODE_ROLL, GES_EDGE_START, @start);
+ *
+ * Which lets you more control over layer management.
+ *
+ * Returns: %TRUE if the object as been roll properly, %FALSE if an error
+ * occured
+ */
+gboolean
+ges_timeline_object_roll_start (GESTimelineObject * object, guint64 start)
+{
+  GList *tmp, *tckobjs;
+  gboolean ret = TRUE;
+  GESTimeline *timeline;
+
+  g_return_val_if_fail (GES_IS_TIMELINE_OBJECT (object), FALSE);
+
+  timeline = ges_timeline_layer_get_timeline (object->priv->layer);
+
+  if (timeline == NULL) {
+    GST_DEBUG ("Not in a timeline yet");
+    return FALSE;
+  }
+
+  tckobjs = ges_timeline_object_get_track_objects (object);
+  for (tmp = tckobjs; tmp; tmp = g_list_next (tmp)) {
+    if (ges_track_object_is_locked (tmp->data)) {
+      ret = timeline_roll_object (timeline, GES_TRACK_OBJECT (tmp->data),
+          NULL, GES_EDGE_START, start);
+      /* As we work only with locked objects, the changes will be reflected
+       * to others controlled TrackObjects */
+      break;
+    }
+  }
+  g_list_free_full (tckobjs, g_object_unref);
+
+  return ret;
+}
+
+/**
+ * ges_timeline_object_roll_end:
+ * @object: The #GESTimeline to roll.
+ * @end: The new end (start + duration) of @object in roll mode
+ *
+ * Edits @object in roll mode. It allows you to modify the
+ * duration of a @object and trim (basicly change the start + inpoint
+ * in this case) the following neighbours accordingly.
+ * This will not change the overall timeline duration.
+ *
+ * You could also use:
+ *
+ *    #ges_timeline_object_edit (@object, @layers,
+ *        new_layer_priority=-1, GES_EDIT_MODE_ROLL, GES_EDGE_END, @end);
+ *
+ * Which lets you more control over layer management.
+ *
+ * Returns: %TRUE if the object as been rolled properly, %FALSE if an error
+ * occured
+ */
+gboolean
+ges_timeline_object_roll_end (GESTimelineObject * object, guint64 end)
+{
+  GList *tmp, *tckobjs;
+  gboolean ret = TRUE;
+  GESTimeline *timeline;
+
+  g_return_val_if_fail (GES_IS_TIMELINE_OBJECT (object), FALSE);
+
+  timeline = ges_timeline_layer_get_timeline (object->priv->layer);
+
+  if (timeline == NULL) {
+    GST_DEBUG ("Not in a timeline yet");
+    return FALSE;
+  }
+
+
+  tckobjs = ges_timeline_object_get_track_objects (object);
+  for (tmp = tckobjs; tmp; tmp = g_list_next (tmp)) {
+    if (ges_track_object_is_locked (tmp->data)) {
+      ret = timeline_roll_object (timeline, GES_TRACK_OBJECT (tmp->data),
+          NULL, GES_EDGE_END, end);
+      /* As we work only with locked objects, the changes will be reflected
+       * to others controlled TrackObjects */
+      break;
+    }
+  }
+  g_list_free_full (tckobjs, g_object_unref);
+
+  return ret;
+}
+
+/**
+ * ges_timeline_object_trim_start:
+ * @object: The #GESTimeline to trim.
+ * @start: The new start of @object in trim mode, will adapt the inpoint
+ * of @object accordingly
+ *
+ * Edits @object in trim mode. It allows you to modify the
+ * inpoint and start of @object.
+ * This will not change the overall timeline duration.
+ *
+ * You could also use:
+ *
+ *    #ges_timeline_object_edit (@object, @layers,
+ *        new_layer_priority=-1, GES_EDIT_MODE_TRIM, GES_EDGE_START, @start);
+ *
+ * Which lets you more control over layer management.
+ *
+ * Note that to trim the end of an object you can just set its duration. The same way
+ * as this method, it will take into account the snapping-distance property of the
+ * timeline in which @object is.
+ *
+ * Returns: %TRUE if the object as been trimmed properly, %FALSE if an error
+ * occured
+ */
+gboolean
+ges_timeline_object_trim_start (GESTimelineObject * object, guint64 start)
+{
+  GList *tmp, *tckobjs;
+  gboolean ret = TRUE;
+  GESTimeline *timeline;
+
+  g_return_val_if_fail (GES_IS_TIMELINE_OBJECT (object), FALSE);
+
+  timeline = ges_timeline_layer_get_timeline (object->priv->layer);
+
+  if (timeline == NULL) {
+    GST_DEBUG ("Not in a timeline yet");
+    return FALSE;
+  }
+
+  tckobjs = ges_timeline_object_get_track_objects (object);
+  for (tmp = tckobjs; tmp; tmp = g_list_next (tmp)) {
+    if (ges_track_object_is_locked (tmp->data)) {
+      ret = timeline_trim_object (timeline, GES_TRACK_OBJECT (tmp->data),
+          NULL, GES_EDGE_START, start);
+      break;
+    }
+  }
+  g_list_free_full (tckobjs, g_object_unref);
+
+  return ret;
 }
 
 static void

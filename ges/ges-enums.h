@@ -323,6 +323,60 @@ typedef enum {
 
 GType ges_pipeline_flags_get_type (void);
 
+/**
+ * GESEditMode:
+ * @GES_EDIT_MODE_NORMAL: The object is edited the normal way (default).
+ * @GES_EDIT_MODE_RIPPLE: The objects are edited in ripple mode.
+ *  The Ripple mode allows you to modify the beginning/end of a clip
+ *  and move the neighbours accordingly. This will change the overall
+ *  timeline duration.
+ * @GES_EDIT_MODE_ROLL: The object is edited in roll mode.
+ *  The Roll mode allows you to modify the position of an editing point
+ *  between two clips without modifying the inpoint of the first clip
+ *  nor the out-point of the second clip. This will not change the
+ *  overall timeline duration.
+ * @GES_EDIT_MODE_TRIM: The object is edited in trim mode.
+ *  The Trim mode allows you to modify the in-point/out-point of a clip without
+ *  modifying it's duration or position in the timeline.
+ * @GES_EDIT_MODE_SLIDE: The object is edited in slide mode.
+ *  The Slide mode allows you to modify the position of a clip in a
+ *  timeline without modifying it's duration or it's in-point, but will
+ *  modify the out-point of the previous clip and in-point of the
+ *  following clip so as not to modify the overall timeline duration.
+ *
+ * The various edition modes the a clip can be edited with.
+ */
+typedef enum {
+    GES_EDIT_MODE_NORMAL,
+    GES_EDIT_MODE_RIPPLE,
+    GES_EDIT_MODE_ROLL,
+    GES_EDIT_MODE_TRIM,
+    GES_EDIT_MODE_SLIDE
+} GESEditMode;
+
+#define GES_TYPE_EDIT_MODE ges_edit_mode_get_type()
+
+GType ges_edit_mode_get_type (void);
+
+/**
+ * GESEdge:
+ * @GES_EDGE_START: Represents the start of an object.
+ * @GES_EDGE_END: Represents the end of an object.
+ * @GES_EDGE_NONE: Represent the fact we are not workin with any edge of an
+ *   object.
+ *
+ * The edges of an object contain in a #GESTimeline or #GESTrack
+ */
+typedef enum {
+    GES_EDGE_START,
+    GES_EDGE_END,
+    GES_EDGE_NONE
+} GESEdge;
+
+#define GES_TYPE_EDGE ges_edge_get_type()
+
+GType ges_edge_get_type (void);
+
 G_END_DECLS
 
 #endif /* __GES_ENUMS_H__ */

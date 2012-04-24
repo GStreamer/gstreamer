@@ -300,8 +300,29 @@ ges_timeline_object_set_supported_formats   (GESTimelineObject * object,
 GESTimelineObject *
 ges_timeline_object_split                   (GESTimelineObject * object, guint64 position);
 
+gboolean
+ges_timeline_object_edit                    (GESTimelineObject * object,
+                                             GList *layers, gint new_layer_priority,
+                                             GESEditMode mode, GESEdge edge,
+                                             guint64 position);
+
 void
 ges_timeline_object_objects_set_locked      (GESTimelineObject * object, gboolean locked);
+
+gboolean ges_timeline_object_ripple         (GESTimelineObject *object,
+                                             guint64 start);
+
+gboolean ges_timeline_object_ripple_end     (GESTimelineObject *object,
+                                             guint64 end);
+
+gboolean ges_timeline_object_roll_start     (GESTimelineObject *object,
+                                             guint64 start);
+
+gboolean ges_timeline_object_roll_end       (GESTimelineObject *object,
+                                             guint64 end);
+
+gboolean ges_timeline_object_trim_start     (GESTimelineObject *object,
+                                             guint64 start);
 G_END_DECLS
 
 #endif /* _GES_TIMELINE_OBJECT */
