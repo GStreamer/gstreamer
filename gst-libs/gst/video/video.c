@@ -141,7 +141,6 @@ static VideoFormat formats[] = {
   {0x00000000, {GST_VIDEO_FORMAT_UNKNOWN, "UNKNOWN", "unknown video", 0, DPTH0,
               PSTR0, PLANE_NA,
           OFFS0}},
-
   MAKE_YUV_FORMAT (I420, "raw video", GST_MAKE_FOURCC ('I', '4', '2', '0'),
       DPTH888, PSTR111,
       PLANE012, OFFS0, SUB420),
@@ -258,6 +257,8 @@ static VideoFormat formats[] = {
   MAKE_YUV_FORMAT (r210, "raw video", GST_MAKE_FOURCC ('r', '2', '1', '0'),
       DPTH10_10_10,
       PSTR444, PLANE0, OFFS0, SUB444),
+  {0x00000000, {GST_VIDEO_FORMAT_ENCODED, "ENCODED", "encoded video",
+          GST_VIDEO_FORMAT_FLAG_COMPLEX, DPTH0, PSTR0, PLANE_NA, OFFS0}},
 };
 
 /**
@@ -1373,7 +1374,7 @@ gst_video_info_from_caps (GstVideoInfo * info, const GstCaps * caps)
   GstStructure *structure;
   const gchar *s;
   GstVideoFormat format = GST_VIDEO_FORMAT_UNKNOWN;
-  gint width, height;
+  gint width = 0, height = 0;
   gint fps_n, fps_d;
   gint par_n, par_d;
   gboolean interlaced;
@@ -1436,14 +1437,19 @@ gst_video_info_from_caps (GstVideoInfo * info, const GstCaps * caps)
     } else if (depth == 16 && bpp == 16 && endianness == G_LITTLE_ENDIAN) {
       format = GST_VIDEO_FORMAT_GRAY16_LE;
     }
-  }
+  } else if (g_str_has_prefix (gst_structure_get_name (structure), "video/") ||
+      g_str_has_prefix (gst_structure_get_name (structure), "image/"))
+    format = GST_VIDEO_FORMAT_ENCODED;
 
   if (format == GST_VIDEO_FORMAT_UNKNOWN)
     goto unknown_format;
 
-  if (!gst_structure_get_int (structure, "width", &width))
+  /* width and height are mandatory, except for non-raw-formats */
+  if (!gst_structure_get_int (structure, "width", &width) &&
+      format != GST_VIDEO_FORMAT_ENCODED)
     goto no_width;
-  if (!gst_structure_get_int (structure, "height", &height))
+  if (!gst_structure_get_int (structure, "height", &height) &&
+      format != GST_VIDEO_FORMAT_ENCODED)
     goto no_height;
 
   gst_video_info_set_format (info, format, width, height);
@@ -1557,6 +1563,10 @@ gst_video_info_to_caps (GstVideoInfo * info)
   if (GST_VIDEO_INFO_IS_YUV (info))
     gst_caps_set_simple (caps, "format", GST_TYPE_FOURCC,
         gst_video_format_to_fourcc (info->finfo->format), NULL);
+  else if (GST_VIDEO_INFO_IS_RGB (info) || GST_VIDEO_INFO_IS_GRAY (info))
+    gst_caps_set_simple (caps, "depth", G_TYPE_INT,
+        info->finfo->bits * GST_VIDEO_INFO_N_COMPONENTS (info), NULL);
+
 
   gst_caps_set_simple (caps, "interlaced", G_TYPE_BOOLEAN,
       GST_VIDEO_INFO_IS_INTERLACED (info), NULL);
@@ -1745,7 +1755,9 @@ fill_planes (GstVideoInfo * info)
       info->size = info->offset[2] +
           info->stride[2] * (GST_ROUND_UP_4 (height) / 4);
       break;
-    case GST_VIDEO_FORMAT_UNKNOWN:
+    default:
+      if (GST_VIDEO_FORMAT_INFO_IS_COMPLEX (info->finfo))
+        break;
       GST_ERROR ("invalid format");
       g_warning ("invalid format");
       break;
