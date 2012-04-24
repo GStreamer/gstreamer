@@ -231,7 +231,7 @@ fill_planes (GstBlendVideoFormatInfo * info)
       info->offset[1] = info->offset[2] +
           info->stride[1] * (GST_ROUND_UP_4 (height) / 4);
       break;
-    case GST_VIDEO_FORMAT_UNKNOWN:
+    default:
       GST_ERROR ("invalid format");
       g_warning ("invalid format");
       break;
