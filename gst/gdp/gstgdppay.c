@@ -678,6 +678,7 @@ gst_gdp_pay_sink_event (GstPad * pad, GstObject * parent, GstEvent * event)
       gst_event_parse_caps (event, &caps);
       if (this->caps == NULL || !gst_caps_is_equal (this->caps, caps)) {
         GST_INFO_OBJECT (pad, "caps changed to %" GST_PTR_FORMAT, caps);
+        gst_buffer_replace (&outbuffer, NULL);
         gst_caps_replace (&this->caps, caps);
         outbuffer = gst_gdp_buffer_from_caps (this, caps);
         if (outbuffer == NULL)
