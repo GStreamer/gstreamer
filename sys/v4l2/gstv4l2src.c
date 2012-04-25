@@ -778,7 +778,7 @@ gst_v4l2src_fill (GstPushSrc * src, GstBuffer * buf)
   GstV4l2Object *obj = v4l2src->v4l2object;
   GstFlowReturn ret;
   GstClock *clock;
-  GstClockTime timestamp, duration;
+  GstClockTime abs_time, base_time, timestamp, duration;
   GstClockTime delay;
 
 #if 0
@@ -801,6 +801,28 @@ gst_v4l2src_fill (GstPushSrc * src, GstBuffer * buf)
 
 
   timestamp = GST_BUFFER_TIMESTAMP (buf);
+  duration = obj->duration;
+
+  /* timestamps, LOCK to get clock and base time. */
+  /* FIXME: element clock and base_time is rarely changing */
+  GST_OBJECT_LOCK (v4l2src);
+  if ((clock = GST_ELEMENT_CLOCK (v4l2src))) {
+    /* we have a clock, get base time and ref clock */
+    base_time = GST_ELEMENT (v4l2src)->base_time;
+    gst_object_ref (clock);
+  } else {
+    /* no clock, can't set timestamps */
+    base_time = GST_CLOCK_TIME_NONE;
+  }
+  GST_OBJECT_UNLOCK (v4l2src);
+
+  /* sample pipeline clock */
+  if (clock) {
+    abs_time = gst_clock_get_time (clock);
+    gst_object_unref (clock);
+  } else {
+    abs_time = GST_CLOCK_TIME_NONE;
+  }
 
   if (timestamp != GST_CLOCK_TIME_NONE) {
     struct timespec now;
@@ -830,46 +852,28 @@ gst_v4l2src_fill (GstPushSrc * src, GstBuffer * buf)
         " delay %" GST_TIME_FORMAT, GST_TIME_ARGS (timestamp),
         GST_TIME_ARGS (gstnow), GST_TIME_ARGS (delay));
   } else {
-    delay = 0;
+    /* we assume 1 frame latency otherwise */
+    if (GST_CLOCK_TIME_IS_VALID (duration))
+      delay = duration;
+    else
+      delay = 0;
   }
 
   /* set buffer metadata */
   GST_BUFFER_OFFSET (buf) = v4l2src->offset++;
   GST_BUFFER_OFFSET_END (buf) = v4l2src->offset;
 
-  /* timestamps, LOCK to get clock and base time. */
-  /* FIXME: element clock and base_time is rarely changing */
-  GST_OBJECT_LOCK (v4l2src);
-  if ((clock = GST_ELEMENT_CLOCK (v4l2src))) {
-    /* we have a clock, get base time and ref clock */
-    timestamp = GST_ELEMENT (v4l2src)->base_time;
-    gst_object_ref (clock);
-  } else {
-    /* no clock, can't set timestamps */
-    timestamp = GST_CLOCK_TIME_NONE;
-  }
-  GST_OBJECT_UNLOCK (v4l2src);
-
-  duration = obj->duration;
-
-  if (G_LIKELY (clock)) {
+  if (G_LIKELY (abs_time != GST_CLOCK_TIME_NONE)) {
     /* the time now is the time of the clock minus the base time */
-    timestamp = gst_clock_get_time (clock) - timestamp;
-    gst_object_unref (clock);
+    timestamp = abs_time - base_time;
 
     /* adjust for delay in the device */
     if (timestamp > delay)
       timestamp -= delay;
     else
       timestamp = 0;
-
-    /* if we have a framerate adjust timestamp for frame latency */
-    if (GST_CLOCK_TIME_IS_VALID (duration)) {
-      if (timestamp > duration)
-        timestamp -= duration;
-      else
-        timestamp = 0;
-    }
+  } else {
+    timestamp = GST_CLOCK_TIME_NONE;
   }
 
   /* activate settings for next frame */
@@ -886,7 +890,6 @@ gst_v4l2src_fill (GstPushSrc * src, GstBuffer * buf)
   GST_INFO_OBJECT (src, "sync to %" GST_TIME_FORMAT " out ts %" GST_TIME_FORMAT,
       GST_TIME_ARGS (v4l2src->ctrl_time), GST_TIME_ARGS (timestamp));
 
-  /* FIXME: use the timestamp from the buffer itself! */
   GST_BUFFER_TIMESTAMP (buf) = timestamp;
   GST_BUFFER_DURATION (buf) = duration;
 
