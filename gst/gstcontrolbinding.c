@@ -316,6 +316,20 @@ gst_control_binding_get_value_array (GstControlBinding * self,
   return ret;
 }
 
+#define CONVERT_ARRAY(type,TYPE) \
+{ \
+  g##type *v = g_new (g##type,n_values); \
+  ret = gst_control_binding_get_value_array (self, timestamp, interval, \
+      n_values, v); \
+  if (ret) { \
+    for (i = 0; i < n_values; i++) { \
+      g_value_init (&values[i], G_TYPE_##TYPE); \
+      g_value_set_##type (&values[i], v[i]); \
+    } \
+  } \
+  g_free (v); \
+}
+
 /**
  * gst_control_binding_get_g_value_array:
  * @self: the control binding
@@ -352,8 +366,63 @@ gst_control_binding_get_g_value_array (GstControlBinding * self,
     ret =
         klass->get_g_value_array (self, timestamp, interval, n_values, values);
   } else {
-    GST_WARNING_OBJECT (self, "missing get_g_value_array implementation");
-    // FIXME(ensonic): emulate
+    guint i;
+    GType type, base;
+
+    base = type = G_PARAM_SPEC_VALUE_TYPE (GST_CONTROL_BINDING_PSPEC (self));
+    while ((type = g_type_parent (type)))
+      base = type;
+
+    GST_INFO_OBJECT (self, "missing get_g_value_array implementation, we're "
+        "emulating it");
+    switch (base) {
+      case G_TYPE_INT:
+        CONVERT_ARRAY (int, INT);
+        break;
+      case G_TYPE_UINT:
+        CONVERT_ARRAY (uint, UINT);
+        break;
+      case G_TYPE_LONG:
+        CONVERT_ARRAY (long, LONG);
+        break;
+      case G_TYPE_ULONG:
+        CONVERT_ARRAY (ulong, ULONG);
+        break;
+      case G_TYPE_INT64:
+        CONVERT_ARRAY (int64, INT64);
+        break;
+      case G_TYPE_UINT64:
+        CONVERT_ARRAY (uint64, UINT64);
+        break;
+      case G_TYPE_FLOAT:
+        CONVERT_ARRAY (float, FLOAT);
+        break;
+      case G_TYPE_DOUBLE:
+        CONVERT_ARRAY (double, DOUBLE);
+        break;
+      case G_TYPE_BOOLEAN:
+        CONVERT_ARRAY (boolean, BOOLEAN);
+        break;
+      case G_TYPE_ENUM:
+      {
+        gint *v = g_new (gint, n_values);
+        ret = gst_control_binding_get_value_array (self, timestamp, interval,
+            n_values, v);
+        if (ret) {
+          for (i = 0; i < n_values; i++) {
+            g_value_init (&values[i], type);
+            g_value_set_enum (&values[i], v[i]);
+          }
+        }
+        g_free (v);
+      }
+        break;
+      default:
+        GST_WARNING ("incomplete implementation for paramspec type '%s'",
+            G_PARAM_SPEC_TYPE_NAME (GST_CONTROL_BINDING_PSPEC (self)));
+        GST_CONTROL_BINDING_PSPEC (self) = NULL;
+        break;
+    }
   }
   return ret;
 }
