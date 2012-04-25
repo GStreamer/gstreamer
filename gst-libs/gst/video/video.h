@@ -316,6 +316,12 @@ typedef struct _GstVideoFrame GstVideoFrame;
  *     are interlaced in one frame.
  * @GST_VIDEO_INTERLACE_MODE_MIXED: video contains both interlaced and
  *     progressive frames, the buffer flags describe the frame and fields.
+ * @GST_VIDEO_INTERLACE_MODE_FIELDS: 2 fields are stored in one buffer, use the
+ *     frame ID to get access to the required field. For multiview (the
+ *     'views' property > 1) the second field of view N is at N + 'views'.
+ *     Each view has only half the amount of lines as noted in the
+ *     height property. This mode requires multiple GstVideoMeta metadata
+ *     to describe the fields.
  *
  * The possible values of the #GstVideoInterlaceMode describing the interlace
  * mode of the stream.
@@ -323,7 +329,8 @@ typedef struct _GstVideoFrame GstVideoFrame;
 typedef enum {
   GST_VIDEO_INTERLACE_MODE_PROGRESSIVE = 0,
   GST_VIDEO_INTERLACE_MODE_INTERLEAVED,
-  GST_VIDEO_INTERLACE_MODE_MIXED
+  GST_VIDEO_INTERLACE_MODE_MIXED,
+  GST_VIDEO_INTERLACE_MODE_FIELDS
 } GstVideoInterlaceMode;
 
 /**
