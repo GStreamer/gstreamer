@@ -5,7 +5,8 @@ libgstcurl_la_SOURCES = gstcurl.c \
 			gstcurltlssink.c \
 			gstcurlhttpsink.c \
 			gstcurlfilesink.c \
-			gstcurlftpsink.c
+			gstcurlftpsink.c \
+			gstcurlsmtpsink.c
 libgstcurl_la_CFLAGS = \
 	$(GST_PLUGINS_BAD_CFLAGS) \
 	$(GST_BASE_CFLAGS) \
@@ -23,4 +24,5 @@ noinst_HEADERS = gstcurlbasesink.h \
 		 gstcurltlssink.h \
 		 gstcurlhttpsink.h \
 		 gstcurlfilesink.h \
-		 gstcurlftpsink.h
+		 gstcurlftpsink.h \
+		 gstcurlsmtpsink.h

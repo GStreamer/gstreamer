@@ -150,7 +150,8 @@ endif
 if USE_CURL
 check_curl = elements/curlhttpsink \
 	elements/curlfilesink \
-	elements/curlftpsink
+	elements/curlftpsink \
+	elements/curlsmtpsink
 else
 check_curl =
 endif
