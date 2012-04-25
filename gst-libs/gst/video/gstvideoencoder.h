@@ -215,7 +215,6 @@ struct _GstVideoEncoder
  *                  (i.e. not unref'ed).
  * @propose_allocation: Optional.
  *                      Propose buffer allocation parameters for upstream elements.
- *                      The default implementation proposes the VIDEO_META.
  *
  * Subclasses can override any of the available virtual methods or not, as
  * needed. At minimum @handle_frame needs to be overridden, and @set_format

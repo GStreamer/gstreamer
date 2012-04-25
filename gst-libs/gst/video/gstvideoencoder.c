@@ -711,8 +711,6 @@ static gboolean
 gst_video_encoder_propose_allocation_default (GstVideoEncoder * encoder,
     GstQuery * query)
 {
-  gst_query_add_allocation_meta (query, GST_VIDEO_META_API_TYPE);
-
   return TRUE;
 }
 
