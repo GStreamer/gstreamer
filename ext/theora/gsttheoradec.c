@@ -102,8 +102,8 @@ static GstFlowReturn theora_dec_parse (GstVideoDecoder * decoder,
     GstVideoCodecFrame * frame, GstAdapter * adapter, gboolean at_eos);
 static GstFlowReturn theora_dec_handle_frame (GstVideoDecoder * decoder,
     GstVideoCodecFrame * frame);
-static gboolean theora_dec_configure_buffer_pool (GstVideoDecoder * decoder,
-    GstQuery * query, GstBufferPool * pool);
+static gboolean theora_dec_decide_allocation (GstVideoDecoder * decoder,
+    GstQuery * query);
 
 static GstFlowReturn theora_dec_decode_buffer (GstTheoraDec * dec,
     GstBuffer * buf, GstVideoCodecFrame * frame);
@@ -185,8 +185,8 @@ gst_theora_dec_class_init (GstTheoraDecClass * klass)
   video_decoder_class->parse = GST_DEBUG_FUNCPTR (theora_dec_parse);
   video_decoder_class->handle_frame =
       GST_DEBUG_FUNCPTR (theora_dec_handle_frame);
-  video_decoder_class->configure_buffer_pool =
-      GST_DEBUG_FUNCPTR (theora_dec_configure_buffer_pool);
+  video_decoder_class->decide_allocation =
+      GST_DEBUG_FUNCPTR (theora_dec_decide_allocation);
 
   GST_DEBUG_CATEGORY_INIT (theoradec_debug, "theoradec", 0, "Theora decoder");
 }
@@ -795,36 +795,63 @@ theora_dec_handle_frame (GstVideoDecoder * bdec, GstVideoCodecFrame * frame)
 }
 
 static gboolean
-theora_dec_configure_buffer_pool (GstVideoDecoder * decoder, GstQuery * query,
-    GstBufferPool * pool)
+theora_dec_decide_allocation (GstVideoDecoder * decoder, GstQuery * query)
 {
   GstTheoraDec *dec = GST_THEORA_DEC (decoder);
+  GstVideoCodecState *state = gst_video_decoder_get_output_state (decoder);
+  GstBufferPool *pool;
+  gboolean update;
+  guint size, min, max;
+  GstStructure *config;
+
+  if (gst_query_get_n_allocation_pools (query) > 0) {
+    gst_query_parse_nth_allocation_pool (query, 0, &pool, &size, &min, &max);
+
+    /* adjust size */
+    size = MAX (size, state->info.size);
+    update = TRUE;
+  } else {
+    pool = NULL;
+    size = state->info.size;
+    min = max = 0;
+    update = FALSE;
+  }
+
+  /* no downstream pool, make our own */
+  if (pool == NULL) {
+    pool = gst_video_buffer_pool_new ();
+  }
+
+  config = gst_buffer_pool_get_config (pool);
+  if (gst_query_has_allocation_meta (query, GST_VIDEO_META_API_TYPE)) {
+    gst_buffer_pool_config_add_option (config,
+        GST_BUFFER_POOL_OPTION_VIDEO_META);
+  }
 
   dec->can_crop =
       gst_query_has_allocation_meta (query, GST_VIDEO_CROP_META_API_TYPE);
-  if (dec->can_crop) {
-    GstStructure *config;
-    GstVideoInfo info;
-    GstCaps *caps;
-    guint size, min, max;
 
-    config = gst_buffer_pool_get_config (pool);
-    gst_buffer_pool_config_get_params (config, &caps, &size, &min, &max);
+  if (dec->can_crop) {
+    GstVideoInfo info = state->info;
 
     /* Calculate uncropped size */
-    gst_video_info_init (&info);
-    gst_video_info_from_caps (&info, caps);
     gst_video_info_set_format (&info, info.finfo->format, dec->info.frame_width,
         dec->info.frame_height);
     size = MAX (size, info.size);
-
-    gst_buffer_pool_config_set_params (config, caps, size, min, max);
-
-    gst_buffer_pool_set_config (pool, config);
   }
 
-  return GST_VIDEO_DECODER_CLASS (parent_class)->configure_buffer_pool (decoder,
-      query, pool);
+  gst_buffer_pool_set_config (pool, config);
+
+  if (update)
+    gst_query_set_nth_allocation_pool (query, 0, pool, size, min, max);
+  else
+    gst_query_add_allocation_pool (query, pool, size, min, max);
+
+  if (pool)
+    gst_object_unref (pool);
+
+  return GST_VIDEO_DECODER_CLASS (parent_class)->decide_allocation (decoder,
+      query);
 }
 
 static void
