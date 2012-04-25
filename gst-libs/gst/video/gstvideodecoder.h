@@ -247,11 +247,11 @@ struct _GstVideoDecoder
  *                  Event handler on the source pad. This function should return
  *                  TRUE if the event was handled and should be discarded
  *                  (i.e. not unref'ed).
- * @configure_buffer_pool: Optional.
- *                  Configure the buffer that is used for allocation of output
- *                  buffers. The passed query contains the result of the allocation
- *                  query. The default implementation will add the VIDEO_META if
- *                  supported by the buffer pool.
+ * @decide_allocation: Optional.
+ *                     Setup the allocation parameters for allocating output
+ *                     buffers. The passed in query contains the result of the
+ *                     downstream allocation query.
+ *
  * Subclasses can override any of the available virtual methods or not, as
  * needed. At minimum @handle_frame needs to be overridden, and @set_format
  * and likely as well.  If non-packetized input is supported or expected,
@@ -295,7 +295,7 @@ struct _GstVideoDecoderClass
   gboolean      (*src_event)      (GstVideoDecoder *decoder,
 				   GstEvent *event);
 
-  gboolean      (*configure_buffer_pool)  (GstVideoDecoder *decoder, GstQuery *query, GstBufferPool *pool);
+  gboolean      (*decide_allocation)  (GstVideoDecoder *decoder, GstQuery *query);
 
 
   /*< private >*/

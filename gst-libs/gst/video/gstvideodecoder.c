@@ -283,8 +283,8 @@ static gboolean gst_video_decoder_sink_event_default (GstVideoDecoder * decoder,
     GstEvent * event);
 static gboolean gst_video_decoder_src_event_default (GstVideoDecoder * decoder,
     GstEvent * event);
-static gboolean gst_video_decoder_configure_buffer_pool_default (GstVideoDecoder
-    * decoder, GstQuery * query, GstBufferPool * pool);
+static gboolean gst_video_decoder_decide_allocation_default (GstVideoDecoder *
+    decoder, GstQuery * query);
 
 /* we can't use G_DEFINE_ABSTRACT_TYPE because we need the klass in the _init
  * method to get to the padtemplates */
@@ -336,8 +336,7 @@ gst_video_decoder_class_init (GstVideoDecoderClass * klass)
 
   klass->sink_event = gst_video_decoder_sink_event_default;
   klass->src_event = gst_video_decoder_src_event_default;
-  klass->configure_buffer_pool =
-      gst_video_decoder_configure_buffer_pool_default;
+  klass->decide_allocation = gst_video_decoder_decide_allocation_default;
 }
 
 static void
@@ -2381,21 +2380,9 @@ gst_video_decoder_get_frame (GstVideoDecoder * decoder, int frame_number)
 }
 
 static gboolean
-gst_video_decoder_configure_buffer_pool_default (GstVideoDecoder * decoder,
-    GstQuery * query, GstBufferPool * pool)
+gst_video_decoder_decide_allocation_default (GstVideoDecoder * decoder,
+    GstQuery * query)
 {
-  GstStructure *config;
-
-  if (gst_query_has_allocation_meta (query, GST_VIDEO_META_API_TYPE)) {
-    config = gst_buffer_pool_get_config (pool);
-    /* just set the option, if the pool can support it we will transparently use
-     * it through the video info API. We could also see if the pool support this
-     * option and only activate it then. */
-    gst_buffer_pool_config_add_option (config,
-        GST_BUFFER_POOL_OPTION_VIDEO_META);
-    gst_buffer_pool_set_config (pool, config);
-  }
-
   return TRUE;
 }
 
@@ -2414,11 +2401,13 @@ gst_video_decoder_set_src_caps (GstVideoDecoder * decoder)
 {
   GstVideoCodecState *state = decoder->priv->output_state;
   GstVideoDecoderClass *klass;
-  GstQuery *query;
+  GstQuery *query = NULL;
   GstBufferPool *pool;
-  GstStructure *config;
   guint size, min, max;
-  gboolean ret;
+  GstAllocator *allocator;
+  GstAllocationParams params;
+  GstStructure *config;
+  gboolean ret = TRUE;
 
   g_return_val_if_fail (GST_VIDEO_INFO_WIDTH (&state->info) != 0, FALSE);
   g_return_val_if_fail (GST_VIDEO_INFO_HEIGHT (&state->info) != 0, FALSE);
@@ -2437,6 +2426,8 @@ gst_video_decoder_set_src_caps (GstVideoDecoder * decoder)
   GST_DEBUG_OBJECT (decoder, "setting caps %" GST_PTR_FORMAT, state->caps);
 
   ret = gst_pad_set_caps (decoder->srcpad, state->caps);
+  if (!ret)
+    goto done;
   decoder->priv->output_state_changed = FALSE;
 
   /* Negotiate pool */
@@ -2446,8 +2437,22 @@ gst_video_decoder_set_src_caps (GstVideoDecoder * decoder)
     GST_DEBUG_OBJECT (decoder, "didn't get downstream ALLOCATION hints");
   }
 
+  if (klass->decide_allocation) {
+    if (!(ret = klass->decide_allocation (decoder, query)))
+      goto done;
+  }
+
+  /* we got configuration from our peer or the decide_allocation method,
+   * parse them */
+  if (gst_query_get_n_allocation_params (query) > 0) {
+    /* try the allocator */
+    gst_query_parse_nth_allocation_param (query, 0, &allocator, &params);
+  } else {
+    allocator = NULL;
+    gst_allocation_params_init (&params);
+  }
+
   if (gst_query_get_n_allocation_pools (query) > 0) {
-    /* we got configuration from our peer, parse them */
     gst_query_parse_nth_allocation_pool (query, 0, &pool, &size, &min, &max);
     size = MAX (size, state->info.size);
   } else {
@@ -2457,9 +2462,16 @@ gst_video_decoder_set_src_caps (GstVideoDecoder * decoder)
   }
 
   if (pool == NULL) {
-    /* we did not get a pool, make one ourselves then */
+    /* no pool, we can make our own */
+    GST_DEBUG_OBJECT (decoder, "no pool, making new pool");
     pool = gst_video_buffer_pool_new ();
   }
+
+  /* now configure */
+  config = gst_buffer_pool_get_config (pool);
+  gst_buffer_pool_config_set_params (config, state->caps, size, min, max);
+  gst_buffer_pool_config_set_allocator (config, allocator, &params);
+  gst_buffer_pool_set_config (pool, config);
 
   if (decoder->priv->pool) {
     gst_buffer_pool_set_active (decoder->priv->pool, FALSE);
@@ -2467,18 +2479,12 @@ gst_video_decoder_set_src_caps (GstVideoDecoder * decoder)
   }
   decoder->priv->pool = pool;
 
-  config = gst_buffer_pool_get_config (pool);
-  gst_buffer_pool_config_set_params (config, state->caps, size, min, max);
-  gst_buffer_pool_set_config (pool, config);
-
-  if (klass->configure_buffer_pool)
-    ret = klass->configure_buffer_pool (decoder, query, pool);
-
   /* and activate */
-  if (ret)
-    gst_buffer_pool_set_active (pool, TRUE);
+  gst_buffer_pool_set_active (pool, TRUE);
 
-  gst_query_unref (query);
+done:
+  if (query)
+    gst_query_unref (query);
 
   GST_VIDEO_DECODER_STREAM_UNLOCK (decoder);
 
