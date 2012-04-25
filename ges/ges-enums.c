@@ -18,6 +18,11 @@
  * Boston, MA 02111-1307, USA.
  */
 
+/**
+ * SECTION:ges-enums
+ * @short_description: Various enums for the Gstreamer Editing Services
+ */
+
 #include "ges-enums.h"
 
 #define C_ENUM(v) ((guint) v)
