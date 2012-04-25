@@ -1097,12 +1097,14 @@ gst_video_frame_map_id (GstVideoFrame * frame, GstVideoInfo * info,
     frame->id = id;
     frame->flags = 0;
 
-    if (GST_BUFFER_FLAG_IS_SET (buffer, GST_VIDEO_BUFFER_FLAG_TFF))
-      frame->flags |= GST_VIDEO_FRAME_FLAG_TFF;
-    if (GST_BUFFER_FLAG_IS_SET (buffer, GST_VIDEO_BUFFER_FLAG_RFF))
-      frame->flags |= GST_VIDEO_FRAME_FLAG_RFF;
-    if (GST_BUFFER_FLAG_IS_SET (buffer, GST_VIDEO_BUFFER_FLAG_ONEFIELD))
-      frame->flags |= GST_VIDEO_FRAME_FLAG_ONEFIELD;
+    if (GST_VIDEO_INFO_IS_INTERLACED (info)) {
+      if (GST_BUFFER_FLAG_IS_SET (buffer, GST_VIDEO_BUFFER_FLAG_TFF))
+        frame->flags |= GST_VIDEO_FRAME_FLAG_TFF;
+      if (GST_BUFFER_FLAG_IS_SET (buffer, GST_VIDEO_BUFFER_FLAG_RFF))
+        frame->flags |= GST_VIDEO_FRAME_FLAG_RFF;
+      if (GST_BUFFER_FLAG_IS_SET (buffer, GST_VIDEO_BUFFER_FLAG_ONEFIELD))
+        frame->flags |= GST_VIDEO_FRAME_FLAG_ONEFIELD;
+    }
 
     gst_buffer_map (buffer, &frame->map[0], flags);
 
