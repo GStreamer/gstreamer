@@ -182,6 +182,9 @@ struct _GESTimelineObject {
  * #GESTrack.
  * @fill_track_object: method to fill an associated #GESTrackObject.
  * @need_fill_track: Set to TRUE if @fill_track_object needs to be called.
+ * @snaps: Set to %TRUE if the objects of this type snap with
+ *  other objects in a timeline %FALSE otherwise (default is %FALSE). Basically only
+ *  sources snap.
  * @track_object_added: Should be overridden by subclasses if they need to perform an
  * operation when a #GESTrackObject is added. Since: 0.10.2
  * @track_object_released: Should be overridden by subclasses if they need to perform
@@ -202,6 +205,7 @@ struct _GESTimelineObjectClass {
   /* FIXME : might need a release_track_object */
   GESFillTrackObjectFunc  fill_track_object;
   gboolean need_fill_track;
+  gboolean snaps;
 
   void (*track_object_added)    (GESTimelineObject *object,
                                 GESTrackObject *tck_object);
@@ -212,7 +216,7 @@ struct _GESTimelineObjectClass {
 
   /*< private >*/
   /* Padding for API extension */
-  gpointer _ges_reserved[GES_PADDING - 3];
+  gpointer _ges_reserved[GES_PADDING - 4];
 };
 
 GType ges_timeline_object_get_type          (void);
@@ -298,10 +302,31 @@ ges_timeline_object_set_supported_formats   (GESTimelineObject * object,
 					    GESTrackType supportedformats);
 
 GESTimelineObject *
-ges_timeline_object_split                   (GESTimelineObject * object, gint64 position);
+ges_timeline_object_split                   (GESTimelineObject * object, guint64 position);
+
+gboolean
+ges_timeline_object_edit                    (GESTimelineObject * object,
+                                             GList *layers, gint new_layer_priority,
+                                             GESEditMode mode, GESEdge edge,
+                                             guint64 position);
 
 void
 ges_timeline_object_objects_set_locked      (GESTimelineObject * object, gboolean locked);
+
+gboolean ges_timeline_object_ripple         (GESTimelineObject *object,
+                                             guint64 start);
+
+gboolean ges_timeline_object_ripple_end     (GESTimelineObject *object,
+                                             guint64 end);
+
+gboolean ges_timeline_object_roll_start     (GESTimelineObject *object,
+                                             guint64 start);
+
+gboolean ges_timeline_object_roll_end       (GESTimelineObject *object,
+                                             guint64 end);
+
+gboolean ges_timeline_object_trim_start     (GESTimelineObject *object,
+                                             guint64 start);
 G_END_DECLS
 
 #endif /* _GES_TIMELINE_OBJECT */

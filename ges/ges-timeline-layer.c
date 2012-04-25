@@ -623,7 +623,6 @@ static void
 track_object_added_cb (GESTrack * track, GESTrackObject * track_object,
     GESTimelineLayer * layer)
 {
-  GST_ERROR ("TRACKOBJECTADDED %i", GES_IS_TRACK_SOURCE (track_object));
   if (GES_IS_TRACK_SOURCE (track_object)) {
     g_signal_connect (G_OBJECT (track_object), "notify::start",
         G_CALLBACK (track_object_changed_cb), NULL);

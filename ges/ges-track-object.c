@@ -308,8 +308,8 @@ ges_track_object_class_init (GESTrackObjectClass * klass)
    */
   g_object_class_install_property (object_class, PROP_MAX_DURATION,
       g_param_spec_uint64 ("max-duration", "Maximum duration",
-          "The duration of the object", 0, G_MAXUINT64, G_MAXUINT64,
-          G_PARAM_READWRITE | G_PARAM_CONSTRUCT));
+          "The duration of the object", GST_CLOCK_TIME_NONE, G_MAXUINT64,
+          G_MAXUINT64, G_PARAM_READWRITE | G_PARAM_CONSTRUCT));
 
   /**
    * GESTrackObject::deep-notify:
@@ -337,17 +337,18 @@ ges_track_object_class_init (GESTrackObjectClass * klass)
 static void
 ges_track_object_init (GESTrackObject * self)
 {
-  self->priv = G_TYPE_INSTANCE_GET_PRIVATE (self,
+  GESTrackObjectPrivate *priv = self->priv = G_TYPE_INSTANCE_GET_PRIVATE (self,
       GES_TYPE_TRACK_OBJECT, GESTrackObjectPrivate);
 
   /* Sane default values */
-  self->priv->pending_start = 0;
-  self->priv->pending_inpoint = 0;
-  self->priv->pending_duration = GST_SECOND;
-  self->priv->pending_priority = 1;
-  self->priv->pending_active = TRUE;
-  self->priv->locked = TRUE;
-  self->priv->properties_hashtable = NULL;
+  priv->pending_start = 0;
+  priv->pending_inpoint = 0;
+  priv->pending_duration = GST_SECOND;
+  priv->pending_priority = 1;
+  priv->pending_active = TRUE;
+  priv->locked = TRUE;
+  priv->properties_hashtable = NULL;
+  priv->maxduration = GST_CLOCK_TIME_NONE;
 }
 
 static inline gboolean
@@ -376,6 +377,8 @@ ges_track_object_set_start_internal (GESTrackObject * object, guint64 start)
 void
 ges_track_object_set_start (GESTrackObject * object, guint64 start)
 {
+  g_return_if_fail (GES_IS_TRACK_OBJECT (object));
+
   if (ges_track_object_set_start_internal (object, start))
 #if GLIB_CHECK_VERSION(2,26,0)
     g_object_notify_by_pspec (G_OBJECT (object), properties[PROP_START]);
@@ -412,6 +415,8 @@ ges_track_object_set_inpoint_internal (GESTrackObject * object, guint64 inpoint)
 void
 ges_track_object_set_inpoint (GESTrackObject * object, guint64 inpoint)
 {
+  g_return_if_fail (GES_IS_TRACK_OBJECT (object));
+
   if (ges_track_object_set_inpoint_internal (object, inpoint))
 #if GLIB_CHECK_VERSION(2,26,0)
     g_object_notify_by_pspec (G_OBJECT (object), properties[PROP_INPOINT]);
@@ -424,17 +429,24 @@ static inline gboolean
 ges_track_object_set_duration_internal (GESTrackObject * object,
     guint64 duration)
 {
+  GESTrackObjectPrivate *priv = object->priv;
+
   GST_DEBUG ("object:%p, duration:%" GST_TIME_FORMAT,
       object, GST_TIME_ARGS (duration));
 
-  if (object->priv->gnlobject != NULL) {
+  if (GST_CLOCK_TIME_IS_VALID (priv->maxduration) &&
+      duration > object->inpoint + priv->maxduration)
+    duration = priv->maxduration - object->inpoint;
+
+  if (priv->gnlobject != NULL) {
     if (G_UNLIKELY (duration == object->duration))
       return FALSE;
 
-    g_object_set (object->priv->gnlobject, "duration", duration,
+    g_object_set (priv->gnlobject, "duration", duration,
         "media-duration", duration, NULL);
   } else
-    object->priv->pending_duration = duration;
+    priv->pending_duration = duration;
+
   return TRUE;
 }
 
@@ -449,6 +461,8 @@ ges_track_object_set_duration_internal (GESTrackObject * object,
 void
 ges_track_object_set_duration (GESTrackObject * object, guint64 duration)
 {
+  g_return_if_fail (GES_IS_TRACK_OBJECT (object));
+
   if (ges_track_object_set_duration_internal (object, duration))
 #if GLIB_CHECK_VERSION(2,26,0)
     g_object_notify_by_pspec (G_OBJECT (object), properties[PROP_DURATION]);
@@ -511,6 +525,8 @@ ges_track_object_set_priority (GESTrackObject * object, guint32 priority)
 gboolean
 ges_track_object_set_active (GESTrackObject * object, gboolean active)
 {
+  g_return_val_if_fail (GES_IS_TRACK_OBJECT (object), FALSE);
+
   GST_DEBUG ("object:%p, active:%d", object, active);
 
   if (object->priv->gnlobject != NULL) {
@@ -631,7 +647,7 @@ gnlobject_duration_cb (GstElement * gnlobject, GParamSpec * arg G_GNUC_UNUSED,
 
   g_object_get (gnlobject, "duration", &duration, NULL);
 
-  GST_DEBUG ("gnlobject duration : %" GST_TIME_FORMAT " current : %"
+  GST_DEBUG_OBJECT (gnlobject, "duration : %" GST_TIME_FORMAT " current : %"
       GST_TIME_FORMAT, GST_TIME_ARGS (duration), GST_TIME_ARGS (obj->duration));
 
   if (duration != obj->duration) {
@@ -765,20 +781,21 @@ ensure_gnl_object (GESTrackObject * object)
 
   GST_DEBUG ("Calling virtual method");
 
-  /* call the create_gnl_object virtual method */
-  gnlobject = class->create_gnl_object (object);
-
-  if (G_UNLIKELY (gnlobject == NULL)) {
-    GST_ERROR
-        ("'create_gnl_object' implementation returned TRUE but no GnlObject is available");
-    goto done;
-  }
-
-  object->priv->gnlobject = gnlobject;
-
   /* 2. Fill in the GnlObject */
-  if (gnlobject) {
-    GST_DEBUG ("Got a valid GnlObject, now filling it in");
+  if (object->priv->gnlobject == NULL) {
+
+    /* call the create_gnl_object virtual method */
+    gnlobject = class->create_gnl_object (object);
+
+    if (G_UNLIKELY (gnlobject == NULL)) {
+      GST_ERROR
+          ("'create_gnl_object' implementation returned TRUE but no GnlObject is available");
+      goto done;
+    }
+
+    GST_DEBUG_OBJECT (object, "Got a valid GnlObject, now filling it in");
+
+    object->priv->gnlobject = gnlobject;
 
     if (object->priv->timelineobj)
       res = ges_timeline_object_fill_track_object (object->priv->timelineobj,
@@ -802,13 +819,16 @@ ensure_gnl_object (GESTrackObject * object)
 
       /* Set some properties on the GnlObject */
       g_object_set (object->priv->gnlobject,
-          "caps", ges_track_get_caps (object->priv->track),
           "duration", object->priv->pending_duration,
           "media-duration", object->priv->pending_duration,
           "start", object->priv->pending_start,
           "media-start", object->priv->pending_inpoint,
           "priority", object->priv->pending_priority,
           "active", object->priv->pending_active, NULL);
+
+      if (object->priv->track != NULL)
+        g_object_set (object->priv->gnlobject,
+            "caps", ges_track_get_caps (object->priv->track), NULL);
 
       /*  We feed up the props_hashtable if possible */
       if (class->get_props_hastable) {
@@ -841,8 +861,16 @@ ges_track_object_set_track (GESTrackObject * object, GESTrack * track)
 
   object->priv->track = track;
 
-  if (object->priv->track)
-    return ensure_gnl_object (object);
+  if (object->priv->track) {
+    /* If we already have a gnlobject, we just set its caps properly */
+    if (object->priv->gnlobject) {
+      g_object_set (object->priv->gnlobject,
+          "caps", ges_track_get_caps (object->priv->track), NULL);
+      return TRUE;
+    } else {
+      return ensure_gnl_object (object);
+    }
+  }
 
   return TRUE;
 }
@@ -969,6 +997,8 @@ ges_track_object_set_locked (GESTrackObject * object, gboolean locked)
 gboolean
 ges_track_object_is_locked (GESTrackObject * object)
 {
+  g_return_val_if_fail (GES_IS_TRACK_OBJECT (object), FALSE);
+
   return object->priv->locked;
 }
 
@@ -978,13 +1008,16 @@ ges_track_object_is_locked (GESTrackObject * object)
  *
  * Get the position of the object in the container #GESTrack.
  *
- * Returns: the start position (in #GstClockTime)
+ * Returns: the start position (in #GstClockTime) or #GST_CLOCK_TIME_NONE
+ * if something went wrong.
  *
  * Since: 0.10.2
  */
 guint64
 ges_track_object_get_start (GESTrackObject * object)
 {
+  g_return_val_if_fail (GES_IS_TRACK_OBJECT (object), GST_CLOCK_TIME_NONE);
+
   if (G_UNLIKELY (object->priv->gnlobject == NULL))
     return object->priv->pending_start;
   else
@@ -997,13 +1030,16 @@ ges_track_object_get_start (GESTrackObject * object)
  *
  * Get the offset within the contents of this #GESTrackObject
  *
- * Returns: the in-point (in #GstClockTime)
+ * Returns: the in-point (in #GstClockTime) or #GST_CLOCK_TIME_NONE
+ * if something went wrong.
  *
  * Since: 0.10.2
  */
 guint64
 ges_track_object_get_inpoint (GESTrackObject * object)
 {
+  g_return_val_if_fail (GES_IS_TRACK_OBJECT (object), GST_CLOCK_TIME_NONE);
+
   if (G_UNLIKELY (object->priv->gnlobject == NULL))
     return object->priv->pending_inpoint;
   else
@@ -1017,13 +1053,16 @@ ges_track_object_get_inpoint (GESTrackObject * object)
  * Get the duration which will be used in the container #GESTrack
  * starting from the 'in-point'
  *
- * Returns: the duration (in #GstClockTime)
+ * Returns: the duration (in #GstClockTime) or #GST_CLOCK_TIME_NONE
+ * if something went wrong.
  *
  * Since: 0.10.2
  */
 guint64
 ges_track_object_get_duration (GESTrackObject * object)
 {
+  g_return_val_if_fail (GES_IS_TRACK_OBJECT (object), GST_CLOCK_TIME_NONE);
+
   if (G_UNLIKELY (object->priv->gnlobject == NULL))
     return object->priv->pending_duration;
   else
@@ -1036,13 +1075,15 @@ ges_track_object_get_duration (GESTrackObject * object)
  *
  * Get the priority of the object withing the containing #GESTrack.
  *
- * Returns: the priority of @object
+ * Returns: the priority of @object or -1 if something went wrong
  *
  * Since: 0.10.2
  */
 guint32
 ges_track_object_get_priority (GESTrackObject * object)
 {
+  g_return_val_if_fail (GES_IS_TRACK_OBJECT (object), -1);
+
   if (G_UNLIKELY (object->priv->gnlobject == NULL))
     return object->priv->pending_priority;
   else
@@ -1063,6 +1104,8 @@ ges_track_object_get_priority (GESTrackObject * object)
 gboolean
 ges_track_object_is_active (GESTrackObject * object)
 {
+  g_return_val_if_fail (GES_IS_TRACK_OBJECT (object), FALSE);
+
   if (G_UNLIKELY (object->priv->gnlobject == NULL))
     return object->priv->pending_active;
   else
@@ -1100,7 +1143,11 @@ ges_track_object_lookup_child (GESTrackObject * object, const gchar * prop_name,
   gpointer key, value;
   gchar **names, *name, *classename;
   gboolean res;
-  GESTrackObjectPrivate *priv = object->priv;
+  GESTrackObjectPrivate *priv;
+
+  g_return_val_if_fail (GES_IS_TRACK_OBJECT (object), FALSE);
+
+  priv = object->priv;
 
   classename = NULL;
   res = FALSE;
@@ -1147,8 +1194,11 @@ ges_track_object_set_child_property_by_pspec (GESTrackObject * object,
     GParamSpec * pspec, GValue * value)
 {
   GstElement *element;
+  GESTrackObjectPrivate *priv;
 
-  GESTrackObjectPrivate *priv = object->priv;
+  g_return_if_fail (GES_IS_TRACK_OBJECT (object));
+
+  priv = object->priv;
 
   if (!priv->properties_hashtable)
     goto prop_hash_not_set;
@@ -1198,7 +1248,7 @@ ges_track_object_set_child_property_valist (GESTrackObject * object,
   gchar *error = NULL;
   GValue value = { 0, };
 
-  g_return_if_fail (G_IS_OBJECT (object));
+  g_return_if_fail (GES_IS_TRACK_OBJECT (object));
 
   name = first_property_name;
 
@@ -1263,6 +1313,8 @@ ges_track_object_set_child_property (GESTrackObject * object,
     const gchar * first_property_name, ...)
 {
   va_list var_args;
+
+  g_return_if_fail (GES_IS_TRACK_OBJECT (object));
 
   va_start (var_args, first_property_name);
   ges_track_object_set_child_property_valist (object, first_property_name,
@@ -1372,6 +1424,8 @@ ges_track_object_get_child_property (GESTrackObject * object,
 {
   va_list var_args;
 
+  g_return_if_fail (GES_IS_TRACK_OBJECT (object));
+
   va_start (var_args, first_property_name);
   ges_track_object_get_child_property_valist (object, first_property_name,
       var_args);
@@ -1393,8 +1447,11 @@ ges_track_object_get_child_property_by_pspec (GESTrackObject * object,
     GParamSpec * pspec, GValue * value)
 {
   GstElement *element;
+  GESTrackObjectPrivate *priv;
 
-  GESTrackObjectPrivate *priv = object->priv;
+  g_return_if_fail (GES_IS_TRACK_OBJECT (object));
+
+  priv = object->priv;
 
   if (!priv->properties_hashtable)
     goto prop_hash_not_set;
@@ -1484,4 +1541,135 @@ ges_track_object_set_max_duration (GESTrackObject * object, guint64 maxduration)
   g_return_if_fail (GES_IS_TRACK_OBJECT (object));
 
   object->priv->maxduration = maxduration;
+}
+
+/**
+ * ges_track_object_copy:
+ * @object: The #GESTrackObject to copy
+ * @deep: whether we want to create the gnlobject and copy it properties
+ *
+ * Copies @object
+ *
+ * Returns: The newly create #GESTrackObject, copied from @object
+ *
+ * Since: 0.10.XX
+ */
+GESTrackObject *
+ges_track_object_copy (GESTrackObject * object, gboolean deep)
+{
+  GESTrackObject *ret = NULL;
+  GParameter *params;
+  GParamSpec **specs;
+  guint n, n_specs, n_params;
+  GValue val = { 0 };
+
+  g_return_val_if_fail (GES_IS_TRACK_OBJECT (object), NULL);
+
+  specs =
+      g_object_class_list_properties (G_OBJECT_GET_CLASS (object), &n_specs);
+  params = g_new0 (GParameter, n_specs);
+  n_params = 0;
+
+  for (n = 0; n < n_specs; ++n) {
+    if (g_strcmp0 (specs[n]->name, "parent") &&
+        (specs[n]->flags & G_PARAM_READWRITE) == G_PARAM_READWRITE) {
+      params[n_params].name = g_intern_string (specs[n]->name);
+      g_value_init (&params[n_params].value, specs[n]->value_type);
+      g_object_get_property (G_OBJECT (object), specs[n]->name,
+          &params[n_params].value);
+      ++n_params;
+    }
+  }
+
+  ret = g_object_newv (G_TYPE_FROM_INSTANCE (object), n_params, params);
+  g_free (specs);
+  g_free (params);
+  specs = NULL;
+  params = NULL;
+
+  if (deep == FALSE)
+    return ret;
+
+  ensure_gnl_object (ret);
+  specs = ges_track_object_list_children_properties (object, &n_specs);
+  for (n = 0; n < n_specs; ++n) {
+    g_value_init (&val, specs[n]->value_type);
+    g_object_get_property (G_OBJECT (object), specs[n]->name, &val);
+    ges_track_object_set_child_property_by_pspec (ret, specs[n], &val);
+    g_value_unset (&val);
+  }
+
+  g_free (specs);
+  g_free (params);
+
+  return ret;
+}
+
+/**
+ * ges_track_object_edit:
+ * @object: the #GESTrackObject to edit
+ * @layers: (element-type GESTimelineLayer): The layers you want the edit to
+ *  happen in, %NULL means that the edition is done in all the
+ *  #GESTimelineLayers contained in the current timeline.
+ *      FIXME: This is not implemented yet.
+ * @mode: The #GESEditMode in which the editition will happen.
+ * @edge: The #GESEdge the edit should happen on.
+ * @position: The position at which to edit @object (in nanosecond)
+ *
+ * Edit @object in the different exisiting #GESEditMode modes. In the case of
+ * slide, and roll, you need to specify a #GESEdge
+ *
+ * Returns: %TRUE if the object as been edited properly, %FALSE if an error
+ * occured
+ *
+ * Since: 0.10.XX
+ */
+gboolean
+ges_track_object_edit (GESTrackObject * object,
+    GList * layers, GESEditMode mode, GESEdge edge, guint64 position)
+{
+  GESTrack *track = ges_track_object_get_track (object);
+  GESTimeline *timeline;
+
+  g_return_val_if_fail (GES_IS_TRACK_OBJECT (object), FALSE);
+
+  if (G_UNLIKELY (!track)) {
+    GST_WARNING_OBJECT (object, "Trying to edit in %d mode but not in"
+        "any Track yet.", mode);
+    return FALSE;
+  } else if (position < 0) {
+    GST_DEBUG_OBJECT (object, "Trying to move before 0, not moving");
+    return FALSE;
+  }
+
+  timeline = GES_TIMELINE (ges_track_get_timeline (track));
+
+  if (G_UNLIKELY (!timeline)) {
+    GST_WARNING_OBJECT (object, "Trying to edit in %d mode but not in"
+        "track %p no in any timeline yet.", mode, track);
+    return FALSE;
+  }
+
+  switch (mode) {
+    case GES_EDIT_MODE_NORMAL:
+      timeline_move_object (timeline, object, layers, edge, position);
+      break;
+    case GES_EDIT_MODE_TRIM:
+      timeline_trim_object (timeline, object, layers, edge, position);
+      break;
+    case GES_EDIT_MODE_RIPPLE:
+      timeline_ripple_object (timeline, object, layers, edge, position);
+      break;
+    case GES_EDIT_MODE_ROLL:
+      timeline_roll_object (timeline, object, layers, edge, position);
+      break;
+    case GES_EDIT_MODE_SLIDE:
+      timeline_slide_object (timeline, object, layers, edge, position);
+      break;
+    default:
+      GST_ERROR ("Unkown edit mode: %d", mode);
+      return FALSE;
+  }
+
+  return TRUE;
 }

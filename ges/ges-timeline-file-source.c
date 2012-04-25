@@ -231,7 +231,8 @@ filesource_set_max_duration (GESTimelineObject * object, guint64 maxduration)
 
   tckobjs = ges_timeline_object_get_track_objects (object);
   for (tmp = tckobjs; tmp; tmp = g_list_next (tmp)) {
-    g_object_set (tmp->data, "max-duration", maxduration, NULL);
+    ges_track_object_set_max_duration (GES_TRACK_OBJECT (tmp->data),
+        maxduration);
   }
 
   g_list_free_full (tckobjs, g_object_unref);

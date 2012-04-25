@@ -22,8 +22,41 @@
 #define __GES_INTERNAL_H__
 
 #include <gst/gst.h>
+#include "ges-timeline.h"
+#include "ges-track-object.h"
 
 GST_DEBUG_CATEGORY_EXTERN (_ges_debug);
 #define GST_CAT_DEFAULT _ges_debug
+
+gboolean
+timeline_ripple_object         (GESTimeline *timeline, GESTrackObject *obj,
+                                    GList * layers, GESEdge edge,
+                                    guint64 position);
+
+gboolean
+timeline_slide_object          (GESTimeline *timeline, GESTrackObject *obj,
+                                    GList * layers, GESEdge edge, guint64 position);
+
+gboolean
+timeline_roll_object           (GESTimeline *timeline, GESTrackObject *obj,
+                                    GList * layers, GESEdge edge, guint64 position);
+
+gboolean
+timeline_trim_object           (GESTimeline *timeline, GESTrackObject * object,
+                                    GList * layers, GESEdge edge, guint64 position);
+gboolean
+ges_timeline_trim_object_simple (GESTimeline * timeline, GESTrackObject * obj,
+                                 GList * layers, GESEdge edge, guint64 position, gboolean snapping);
+
+gboolean
+ges_timeline_move_object_simple (GESTimeline * timeline, GESTrackObject * object,
+                                 GList * layers, GESEdge edge, guint64 position);
+
+gboolean
+timeline_move_object           (GESTimeline *timeline, GESTrackObject * object,
+                                    GList * layers, GESEdge edge, guint64 position);
+
+gboolean
+timeline_context_to_layer      (GESTimeline *timeline, gint offset);
 
 #endif /* __GES_INTERNAL_H__ */

@@ -195,6 +195,83 @@ GST_START_TEST (test_object_properties_unlocked)
 }
 
 GST_END_TEST;
+
+GST_START_TEST (test_split_object)
+{
+  GESTrack *track;
+  GESTrackObject *trackobject, *splittckobj;
+  GESTimelineObject *object, *splitobj;
+  GList *splittckobjs;
+
+  ges_init ();
+
+  track = ges_track_new (GES_TRACK_TYPE_CUSTOM, GST_CAPS_ANY);
+  fail_unless (track != NULL);
+
+  object =
+      (GESTimelineObject *) ges_custom_timeline_source_new (my_fill_track_func,
+      NULL);
+  fail_unless (object != NULL);
+
+  /* Set some properties */
+  g_object_set (object, "start", (guint64) 42, "duration", (guint64) 50,
+      "in-point", (guint64) 12, NULL);
+  assert_equals_uint64 (GES_TIMELINE_OBJECT_START (object), 42);
+  assert_equals_uint64 (GES_TIMELINE_OBJECT_DURATION (object), 50);
+  assert_equals_uint64 (GES_TIMELINE_OBJECT_INPOINT (object), 12);
+
+  trackobject = ges_timeline_object_create_track_object (object, track);
+  ges_timeline_object_add_track_object (object, trackobject);
+  fail_unless (trackobject != NULL);
+  fail_unless (ges_track_object_set_track (trackobject, track));
+
+  /* Check that trackobject has the same properties */
+  assert_equals_uint64 (GES_TRACK_OBJECT_START (trackobject), 42);
+  assert_equals_uint64 (GES_TRACK_OBJECT_DURATION (trackobject), 50);
+  assert_equals_uint64 (GES_TRACK_OBJECT_INPOINT (trackobject), 12);
+
+  /* And let's also check that it propagated correctly to GNonLin */
+  gnl_object_check (ges_track_object_get_gnlobject (trackobject), 42, 50, 12,
+      50, 0, TRUE);
+
+  splitobj = ges_timeline_object_split (object, 67);
+  fail_unless (GES_IS_TIMELINE_OBJECT (splitobj));
+
+  assert_equals_uint64 (GES_TIMELINE_OBJECT_START (object), 42);
+  assert_equals_uint64 (GES_TIMELINE_OBJECT_DURATION (object), 25);
+  assert_equals_uint64 (GES_TIMELINE_OBJECT_INPOINT (object), 12);
+
+  assert_equals_uint64 (GES_TIMELINE_OBJECT_START (splitobj), 67);
+  assert_equals_uint64 (GES_TIMELINE_OBJECT_DURATION (splitobj), 25);
+  assert_equals_uint64 (GES_TIMELINE_OBJECT_INPOINT (splitobj), 37);
+
+  splittckobjs = ges_timeline_object_get_track_objects (splitobj);
+  fail_unless_equals_int (g_list_length (splittckobjs), 1);
+
+  splittckobj = GES_TRACK_OBJECT (splittckobjs->data);
+  fail_unless (GES_IS_TRACK_OBJECT (splittckobj));
+  assert_equals_uint64 (GES_TRACK_OBJECT_START (splittckobj), 67);
+  assert_equals_uint64 (GES_TRACK_OBJECT_DURATION (splittckobj), 25);
+  assert_equals_uint64 (GES_TRACK_OBJECT_INPOINT (splittckobj), 37);
+
+  fail_unless (splittckobj != trackobject);
+  fail_unless (splitobj != object);
+
+  /* We own the only ref */
+  ASSERT_OBJECT_REFCOUNT (splitobj, "splitobj", 1);
+  /* 1 ref for the TimelineObject, 1 ref for the Track and 1 in splittckobjs */
+  ASSERT_OBJECT_REFCOUNT (splittckobj, "splittckobj", 3);
+
+  g_object_unref (track);
+  g_object_unref (splitobj);
+  g_object_unref (object);
+
+  ASSERT_OBJECT_REFCOUNT (splittckobj, "splittckobj", 1);
+  g_list_free_full (splittckobjs, g_object_unref);
+}
+
+GST_END_TEST;
+
 static Suite *
 ges_suite (void)
 {
@@ -205,6 +282,7 @@ ges_suite (void)
 
   tcase_add_test (tc_chain, test_object_properties);
   tcase_add_test (tc_chain, test_object_properties_unlocked);
+  tcase_add_test (tc_chain, test_split_object);
 
   return s;
 }
