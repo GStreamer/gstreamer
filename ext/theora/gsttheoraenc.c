@@ -65,6 +65,7 @@
 
 #include <gst/tag/tag.h>
 #include <gst/video/video.h>
+#include <gst/video/gstvideometa.h>
 
 #define GST_CAT_DEFAULT theoraenc_debug
 GST_DEBUG_CATEGORY_STATIC (GST_CAT_DEFAULT);
@@ -183,6 +184,8 @@ static GstFlowReturn theora_enc_handle_frame (GstVideoEncoder * enc,
 static GstFlowReturn theora_enc_pre_push (GstVideoEncoder * benc,
     GstVideoCodecFrame * frame);
 static GstFlowReturn theora_enc_finish (GstVideoEncoder * enc);
+static gboolean theora_enc_propose_allocation (GstVideoEncoder * encoder,
+    GstQuery * query);
 
 static GstCaps *theora_enc_getcaps (GstVideoEncoder * encoder,
     GstCaps * filter);
@@ -225,6 +228,8 @@ gst_theora_enc_class_init (GstTheoraEncClass * klass)
   gstvideo_encoder_class->pre_push = GST_DEBUG_FUNCPTR (theora_enc_pre_push);
   gstvideo_encoder_class->finish = GST_DEBUG_FUNCPTR (theora_enc_finish);
   gstvideo_encoder_class->getcaps = GST_DEBUG_FUNCPTR (theora_enc_getcaps);
+  gstvideo_encoder_class->propose_allocation =
+      GST_DEBUG_FUNCPTR (theora_enc_propose_allocation);
 
   /* general encoding stream options */
   g_object_class_install_property (gobject_class, PROP_BITRATE,
@@ -1036,6 +1041,15 @@ theora_enc_finish (GstVideoEncoder * benc)
   theora_enc_clear_multipass_cache (enc);
 
   return TRUE;
+}
+
+static gboolean
+theora_enc_propose_allocation (GstVideoEncoder * encoder, GstQuery * query)
+{
+  gst_query_add_allocation_meta (query, GST_VIDEO_META_API_TYPE);
+
+  return GST_VIDEO_ENCODER_CLASS (parent_class)->propose_allocation (encoder,
+      query);
 }
 
 static void
