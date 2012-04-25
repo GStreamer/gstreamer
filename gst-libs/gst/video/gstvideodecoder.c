@@ -421,26 +421,22 @@ gst_video_rawvideo_convert (GstVideoCodecState * state,
   } else if (src_format == GST_FORMAT_DEFAULT &&
       *dest_format == GST_FORMAT_TIME && fps_n) {
     /* convert frames to time */
-    /* FIXME add segment time? */
     *dest_value = gst_util_uint64_scale (src_value, GST_SECOND * fps_d, fps_n);
     res = TRUE;
   } else if (src_format == GST_FORMAT_TIME &&
       *dest_format == GST_FORMAT_DEFAULT && fps_d) {
     /* convert time to frames */
-    /* FIXME subtract segment time? */
     *dest_value = gst_util_uint64_scale (src_value, fps_n, GST_SECOND * fps_d);
     res = TRUE;
   } else if (src_format == GST_FORMAT_TIME &&
       *dest_format == GST_FORMAT_BYTES && fps_d && vidsize) {
     /* convert time to frames */
-    /* FIXME subtract segment time? */
     *dest_value = gst_util_uint64_scale (src_value,
         fps_n * vidsize, GST_SECOND * fps_d);
     res = TRUE;
   } else if (src_format == GST_FORMAT_BYTES &&
       *dest_format == GST_FORMAT_TIME && fps_n && vidsize) {
     /* convert frames to time */
-    /* FIXME add segment time? */
     *dest_value = gst_util_uint64_scale (src_value,
         GST_SECOND * fps_d, fps_n * vidsize);
     res = TRUE;
