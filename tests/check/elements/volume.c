@@ -1694,7 +1694,7 @@ GST_START_TEST (test_passthrough)
   GstElement *volume;
   GstBuffer *inbuffer, *outbuffer;
   GstCaps *caps;
-  gint16 in[2] = { 16384, -256 };
+  gint16 *out, in[2] = { 16384, -256 };
   GstMapInfo map;
 
   volume = setup_volume ();
@@ -1718,8 +1718,8 @@ GST_START_TEST (test_passthrough)
   fail_if ((outbuffer = (GstBuffer *) buffers->data) == NULL);
   fail_unless (inbuffer == outbuffer);
   gst_buffer_map (outbuffer, &map, GST_MAP_READ);
-  GST_INFO ("expected %+5d %+5d  real %+5d %+5d", in[0], in[1], map.data[0],
-      map.data[1]);
+  out = (gint16 *) map.data;
+  GST_INFO ("expected %+5d %+5d  real %+5d %+5d", in[0], in[1], out[0], out[1]);
   fail_unless (memcmp (map.data, in, 4) == 0);
   gst_buffer_unmap (outbuffer, &map);
 
@@ -1763,7 +1763,7 @@ GST_START_TEST (test_controller_processing)
   GstElement *volume;
   GstBuffer *inbuffer, *outbuffer;
   GstCaps *caps;
-  gint16 in[2] = { 16384, -256 };
+  gint16 *out, in[2] = { 16384, -256 };
   GstMapInfo map;
   GstSegment seg;
 
@@ -1798,8 +1798,8 @@ GST_START_TEST (test_controller_processing)
   fail_if ((outbuffer = (GstBuffer *) buffers->data) == NULL);
   fail_unless (inbuffer == outbuffer);
   gst_buffer_map (outbuffer, &map, GST_MAP_READ);
-  GST_INFO ("expected %+5d %+5d  real %+5d %+5d", in[0], in[1], map.data[0],
-      map.data[1]);
+  out = (gint16 *) map.data;
+  GST_INFO ("expected %+5d %+5d  real %+5d %+5d", in[0], in[1], out[0], out[1]);
   fail_unless (memcmp (map.data, in, 4) == 0);
   gst_buffer_unmap (outbuffer, &map);
 
