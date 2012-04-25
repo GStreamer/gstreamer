@@ -413,6 +413,7 @@ gst_direct_control_binding_get_value_array (GstControlBinding * _self,
   if ((res = gst_control_source_get_value_array (self->cs, timestamp,
               interval, n_values, src_val))) {
     for (i = 0; i < n_values; i++) {
+      /* we will only get NAN for sparse control sources, such as triggers */
       if (!isnan (src_val[i])) {
         convert (self, src_val[i], (gpointer) values);
       } else {
@@ -454,6 +455,7 @@ gst_direct_control_binding_get_g_value_array (GstControlBinding * _self,
   if ((res = gst_control_source_get_value_array (self->cs, timestamp,
               interval, n_values, src_val))) {
     for (i = 0; i < n_values; i++) {
+      /* we will only get NAN for sparse control sources, such as triggers */
       if (!isnan (src_val[i])) {
         g_value_init (&values[i], type);
         convert (self, src_val[i], &values[i]);
