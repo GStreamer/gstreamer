@@ -17,6 +17,22 @@
  * Boston, MA 02111-1307, USA.
  */
 
+#if defined(__MINGW32__)
+# ifndef _OBJC_NO_COM_
+#  if defined(__cplusplus) && !defined(CINTERFACE)
+#   if defined(__GNUC__) &&  __GNUC__ < 3 && !defined(NOCOMATTRIBUTE)
+#    define DECLARE_INTERFACE_IID_(i,b,d) _COM_interface __attribute__((com_interface)) i : public b
+#   else
+#    define DECLARE_INTERFACE_IID_(i,b,d) _COM_interface i : public b
+#   endif
+#  else
+#   define DECLARE_INTERFACE_IID_(i,b,d) DECLARE_INTERFACE(i)
+#  endif
+# endif
+# if !defined(__MSABI_LONG)
+#  define __MSABI_LONG(x)  x ## l
+# endif
+#endif
 #include <d3d9.h>
 #include <d3dx9tex.h>
 

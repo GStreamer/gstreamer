@@ -313,7 +313,7 @@ GST_PLUGINS_NONPORTED=" aiff \
  apexsink cdaudio cog dc1394 dirac directfb resindvd \
  gsettings jp2k ladspa mimic \
  musepack musicbrainz nas neon ofa openal opencv rsvg sdl sndfile soundtouch spandsp spc timidity \
- directsound direct3d directdraw direct3d9 acm wininet \
+ directsound directdraw direct3d9 acm wininet \
  wildmidi xvid lv2 teletextdec dvb sndio"
 AC_SUBST(GST_PLUGINS_NONPORTED)
 

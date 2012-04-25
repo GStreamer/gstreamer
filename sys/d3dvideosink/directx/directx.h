@@ -21,7 +21,7 @@
 #define __DIRECTX_DIRECTX_H__
 
 #include "dx.h"
-#include "d3d.h"
+#include "directx_d3d.h"
 
 /* TODO: Remove these headers -- they should not be publically distributed.   */
 /*       They're included for now only for expediancy in getting d3dvideosink */

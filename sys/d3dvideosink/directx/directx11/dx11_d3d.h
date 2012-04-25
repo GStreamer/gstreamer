@@ -22,7 +22,7 @@
 
 #include <windows.h>
 
-#include "../d3d.h"
+#include "../directx_d3d.h"
 
 #define DX11_D3D_API_CALL_FUNC(api, func_name, ...)              (DIRECTX_CALL_COMPONENT_SYMBOL(DIRECTX_D3D(api), D3D11DispatchTable, func_name, __VA_ARGS__))
 #define DX11_D3D_COMPONENT_CALL_FUNC(component, func_name, ...)  (DIRECTX_CALL_COMPONENT_SYMBOL(component, D3D11DispatchTable, func_name, __VA_ARGS__))
