@@ -31,8 +31,8 @@ Media Types
                      the frame and fields.
     "fields"       : 2 fields are stored in one buffer, use the frame ID
                      to get access to the required field. For multiview (the
-                     'views' property > 1) the second field of view N is at N +
-                     'views'.
+                     'views' property > 1) the fields of view N can be found at
+                     frame ID (N * 2) and (N * 2) + 1.
                      Each view has only half the amount of lines as noted in the
                      height property, pads specifying the "fields" property
                      must be prepared for this. This mode requires multiple
