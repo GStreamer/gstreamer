@@ -1089,26 +1089,6 @@ gst_video_encoder_new_frame (GstVideoEncoder * encoder, GstBuffer * buf,
   frame->pts = timestamp;
   frame->duration = duration;
 
-  if (GST_VIDEO_INFO_IS_INTERLACED (&encoder->priv->input_state->info)) {
-    if (GST_BUFFER_FLAG_IS_SET (buf, GST_VIDEO_BUFFER_FLAG_TFF)) {
-      GST_VIDEO_CODEC_FRAME_FLAG_SET (frame, GST_VIDEO_CODEC_FRAME_FLAG_TFF);
-    } else {
-      GST_VIDEO_CODEC_FRAME_FLAG_UNSET (frame, GST_VIDEO_CODEC_FRAME_FLAG_TFF);
-    }
-    if (GST_BUFFER_FLAG_IS_SET (buf, GST_VIDEO_BUFFER_FLAG_RFF)) {
-      GST_VIDEO_CODEC_FRAME_FLAG_SET (frame, GST_VIDEO_CODEC_FRAME_FLAG_RFF);
-    } else {
-      GST_VIDEO_CODEC_FRAME_FLAG_UNSET (frame, GST_VIDEO_CODEC_FRAME_FLAG_RFF);
-    }
-    if (GST_BUFFER_FLAG_IS_SET (buf, GST_VIDEO_BUFFER_FLAG_ONEFIELD)) {
-      GST_VIDEO_CODEC_FRAME_FLAG_SET (frame,
-          GST_VIDEO_CODEC_FRAME_FLAG_ONEFIELD);
-    } else {
-      GST_VIDEO_CODEC_FRAME_FLAG_UNSET (frame,
-          GST_VIDEO_CODEC_FRAME_FLAG_ONEFIELD);
-    }
-  }
-
   return frame;
 }
 

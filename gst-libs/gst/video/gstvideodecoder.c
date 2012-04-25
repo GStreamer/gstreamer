@@ -1940,7 +1940,6 @@ gst_video_decoder_finish_frame (GstVideoDecoder * decoder,
     GstVideoCodecFrame * frame)
 {
   GstVideoDecoderPrivate *priv = decoder->priv;
-  GstVideoCodecState *state = priv->output_state;
   GstBuffer *output_buffer;
   GstFlowReturn ret = GST_FLOW_OK;
   guint64 start, stop;
@@ -1967,26 +1966,6 @@ gst_video_decoder_finish_frame (GstVideoDecoder * decoder,
   frame->output_buffer = NULL;
 
   GST_BUFFER_FLAG_UNSET (output_buffer, GST_BUFFER_FLAG_DELTA_UNIT);
-  if (GST_VIDEO_INFO_IS_INTERLACED (&state->info)) {
-    if (GST_VIDEO_CODEC_FRAME_FLAG_IS_SET (frame,
-            GST_VIDEO_CODEC_FRAME_FLAG_TFF)) {
-      GST_BUFFER_FLAG_SET (output_buffer, GST_VIDEO_BUFFER_FLAG_TFF);
-    } else {
-      GST_BUFFER_FLAG_UNSET (output_buffer, GST_VIDEO_BUFFER_FLAG_TFF);
-    }
-    if (GST_VIDEO_CODEC_FRAME_FLAG_IS_SET (frame,
-            GST_VIDEO_CODEC_FRAME_FLAG_RFF)) {
-      GST_BUFFER_FLAG_SET (output_buffer, GST_VIDEO_BUFFER_FLAG_RFF);
-    } else {
-      GST_BUFFER_FLAG_UNSET (output_buffer, GST_VIDEO_BUFFER_FLAG_RFF);
-    }
-    if (GST_VIDEO_CODEC_FRAME_FLAG_IS_SET (frame,
-            GST_VIDEO_CODEC_FRAME_FLAG_ONEFIELD)) {
-      GST_BUFFER_FLAG_SET (output_buffer, GST_VIDEO_BUFFER_FLAG_ONEFIELD);
-    } else {
-      GST_BUFFER_FLAG_UNSET (output_buffer, GST_VIDEO_BUFFER_FLAG_ONEFIELD);
-    }
-  }
 
   if (priv->discont) {
     GST_BUFFER_FLAG_SET (output_buffer, GST_BUFFER_FLAG_DISCONT);
@@ -2122,21 +2101,16 @@ gst_video_decoder_get_frame_duration (GstVideoDecoder * decoder,
     GstVideoCodecFrame * frame)
 {
   GstVideoCodecState *state = decoder->priv->output_state;
-  gint fields;
 
   if (state->info.fps_d == 0 || state->info.fps_n == 0) {
     return GST_CLOCK_TIME_NONE;
   }
 
-  if (GST_VIDEO_CODEC_FRAME_FLAG_IS_SET (frame, GST_VIDEO_CODEC_FRAME_FLAG_RFF))
-    fields = 3;
-  else if (GST_VIDEO_CODEC_FRAME_FLAG_IS_SET (frame,
-          GST_VIDEO_CODEC_FRAME_FLAG_ONEFIELD))
-    fields = 1;
-  else
-    fields = 2;
+  /* FIXME: For interlaced frames this needs to take into account
+   * the number of valid fields in the frame
+   */
 
-  return gst_util_uint64_scale (fields * GST_SECOND, state->info.fps_d,
+  return gst_util_uint64_scale (GST_SECOND, state->info.fps_d,
       state->info.fps_n);
 }
 

@@ -74,9 +74,6 @@ struct _GstVideoCodecState
  * @GST_VIDEO_CODEC_FRAME_FLAG_SYNC_POINT: is the frame a synchronization point (keyframe)
  * @GST_VIDEO_CODEC_FRAME_FLAG_FORCE_KEYFRAME: should the output frame be made a keyframe
  * @GST_VIDEO_CODEC_FRAME_FLAG_FORCE_KEYFRAME_HEADERS: should the encoder output stream headers
- * @GST_VIDEO_CODEC_FRAME_FLAG_TFF: top-field first
- * @GST_VIDEO_CODEC_FRAME_FLAG_RFF: the field is repeated
- * @GST_VIDEO_CODEC_FRAME_FLAG_ONEFIELD: only one field is present
  *
  * Flags for #GstVideoCodecFrame
  */
@@ -85,10 +82,7 @@ typedef enum
   GST_VIDEO_CODEC_FRAME_FLAG_DECODE_ONLY            = (1<<0),
   GST_VIDEO_CODEC_FRAME_FLAG_SYNC_POINT             = (1<<1),
   GST_VIDEO_CODEC_FRAME_FLAG_FORCE_KEYFRAME         = (1<<2),
-  GST_VIDEO_CODEC_FRAME_FLAG_FORCE_KEYFRAME_HEADERS = (1<<3),
-  GST_VIDEO_CODEC_FRAME_FLAG_TFF                    = (1<<4),
-  GST_VIDEO_CODEC_FRAME_FLAG_RFF                    = (1<<5),
-  GST_VIDEO_CODEC_FRAME_FLAG_ONEFIELD               = (1<<6)
+  GST_VIDEO_CODEC_FRAME_FLAG_FORCE_KEYFRAME_HEADERS = (1<<3)
 } GstVideoCodecFrameFlags;
 
 /**
