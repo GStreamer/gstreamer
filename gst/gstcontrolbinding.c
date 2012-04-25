@@ -31,6 +31,13 @@
  *   gst_control_binding_constructor()
  * - the weak-ref on object is not nice, as is the same as gst_object_parent()
  *   once the object is added to the parent
+ *
+ * - another option would be do defer what I am doing in _constructor to when
+ *   the parent is set (need to listen to the signal then)
+ *   then basically I could
+ *   a) remove the obj arg and wait the binding to be added or
+ *   b) add the binding from constructor, unref object there and make obj
+ *      writeonly
  */
 
 #include "gst_private.h"
@@ -273,19 +280,23 @@ gst_control_binding_get_value (GstControlBinding * self, GstClockTime timestamp)
  * @n_values: the number of values
  * @values: array to put control-values in
  *
- * Gets a number of values for the given controllered property starting at the
+ * Gets a number of values for the given controlled property starting at the
  * requested time. The array @values need to hold enough space for @n_values of
  * the same type as the objects property's type.
  *
  * This function is useful if one wants to e.g. draw a graph of the control
  * curve or apply a control curve sample by sample.
  *
+ * The values are unboxed and ready to be used. The similar function 
+ * gst_control_binding_get_g_value_array() returns the array as #GValues and is
+ * better suites for bindings.
+ *
  * Returns: %TRUE if the given array could be filled, %FALSE otherwise
  */
 gboolean
 gst_control_binding_get_value_array (GstControlBinding * self,
     GstClockTime timestamp, GstClockTime interval, guint n_values,
-    GValue * values)
+    gpointer values)
 {
   GstControlBindingClass *klass;
   gboolean ret = FALSE;
@@ -301,6 +312,48 @@ gst_control_binding_get_value_array (GstControlBinding * self,
     ret = klass->get_value_array (self, timestamp, interval, n_values, values);
   } else {
     GST_WARNING_OBJECT (self, "missing get_value_array implementation");
+  }
+  return ret;
+}
+
+/**
+ * gst_control_binding_get_g_value_array:
+ * @self: the control binding
+ * @timestamp: the time that should be processed
+ * @interval: the time spacing between subsequent values
+ * @n_values: the number of values
+ * @values: array to put control-values in
+ *
+ * Gets a number of #GValues for the given controlled property starting at the
+ * requested time. The array @values need to hold enough space for @n_values of
+ * #GValue.
+ *
+ * This function is useful if one wants to e.g. draw a graph of the control
+ * curve or apply a control curve sample by sample.
+ *
+ * Returns: %TRUE if the given array could be filled, %FALSE otherwise
+ */
+gboolean
+gst_control_binding_get_g_value_array (GstControlBinding * self,
+    GstClockTime timestamp, GstClockTime interval, guint n_values,
+    GValue * values)
+{
+  GstControlBindingClass *klass;
+  gboolean ret = FALSE;
+
+  g_return_val_if_fail (GST_IS_CONTROL_BINDING (self), FALSE);
+  g_return_val_if_fail (GST_CLOCK_TIME_IS_VALID (timestamp), FALSE);
+  g_return_val_if_fail (GST_CLOCK_TIME_IS_VALID (interval), FALSE);
+  g_return_val_if_fail (values, FALSE);
+
+  klass = GST_CONTROL_BINDING_GET_CLASS (self);
+
+  if (G_LIKELY (klass->get_g_value_array != NULL)) {
+    ret =
+        klass->get_g_value_array (self, timestamp, interval, n_values, values);
+  } else {
+    GST_WARNING_OBJECT (self, "missing get_g_value_array implementation");
+    // FIXME(ensonic): emulate
   }
   return ret;
 }

@@ -53,6 +53,9 @@ static GValue *gst_argb_control_binding_get_value (GstControlBinding * _self,
     GstClockTime timestamp);
 static gboolean gst_argb_control_binding_get_value_array (GstControlBinding *
     _self, GstClockTime timestamp, GstClockTime interval, guint n_values,
+    gpointer values);
+static gboolean gst_argb_control_binding_get_g_value_array (GstControlBinding *
+    _self, GstClockTime timestamp, GstClockTime interval, guint n_values,
     GValue * values);
 
 #define _do_init \
@@ -94,6 +97,8 @@ gst_argb_control_binding_class_init (GstARGBControlBindingClass * klass)
   control_binding_class->get_value = gst_argb_control_binding_get_value;
   control_binding_class->get_value_array =
       gst_argb_control_binding_get_value_array;
+  control_binding_class->get_g_value_array =
+      gst_argb_control_binding_get_g_value_array;
 
   properties[PROP_CS_A] =
       g_param_spec_object ("control-source-a", "ControlSource A",
@@ -315,6 +320,71 @@ gst_argb_control_binding_get_value (GstControlBinding * _self,
 
 static gboolean
 gst_argb_control_binding_get_value_array (GstControlBinding * _self,
+    GstClockTime timestamp, GstClockTime interval, guint n_values,
+    gpointer values_)
+{
+  GstARGBControlBinding *self = GST_ARGB_CONTROL_BINDING (_self);
+  gint i;
+  gdouble *src_val_a = NULL, *src_val_r = NULL, *src_val_g = NULL, *src_val_b =
+      NULL;
+  guint *values = (guint *) values_;
+  gboolean ret = TRUE;
+
+  g_return_val_if_fail (GST_IS_ARGB_CONTROL_BINDING (self), FALSE);
+  g_return_val_if_fail (GST_CLOCK_TIME_IS_VALID (timestamp), FALSE);
+  g_return_val_if_fail (GST_CLOCK_TIME_IS_VALID (interval), FALSE);
+  g_return_val_if_fail (values, FALSE);
+  g_return_val_if_fail (GST_CONTROL_BINDING_PSPEC (self), FALSE);
+
+  if (self->cs_a) {
+    src_val_a = g_new0 (gdouble, n_values);
+    ret &= gst_control_source_get_value_array (self->cs_a, timestamp,
+        interval, n_values, src_val_a);
+  }
+  if (self->cs_r) {
+    src_val_r = g_new0 (gdouble, n_values);
+    ret &= gst_control_source_get_value_array (self->cs_r, timestamp,
+        interval, n_values, src_val_r);
+  }
+  if (self->cs_g) {
+    src_val_g = g_new0 (gdouble, n_values);
+    ret &= gst_control_source_get_value_array (self->cs_g, timestamp,
+        interval, n_values, src_val_g);
+  }
+  if (self->cs_b) {
+    src_val_b = g_new0 (gdouble, n_values);
+    ret &= gst_control_source_get_value_array (self->cs_b, timestamp,
+        interval, n_values, src_val_b);
+  }
+  if (G_LIKELY (ret)) {
+    for (i = 0; i < n_values; i++) {
+      gdouble a = 1.0, r = 0.0, g = 0.0, b = 0.0;
+      if (src_val_a && !isnan (src_val_a[i]))
+        a = src_val_a[i];
+      if (src_val_r && !isnan (src_val_r[i]))
+        r = src_val_r[i];
+      if (src_val_g && !isnan (src_val_g[i]))
+        g = src_val_g[i];
+      if (src_val_b && !isnan (src_val_b[i]))
+        b = src_val_b[i];
+      values[i] = (((guint) (CLAMP (a, 0.0, 1.0) * 255)) << 24) |
+          (((guint) (CLAMP (r, 0.0, 1.0) * 255)) << 16) |
+          (((guint) (CLAMP (g, 0.0, 1.0) * 255)) << 8) |
+          ((guint) (CLAMP (b, 0.0, 1.0) * 255));
+    }
+  } else {
+    GST_LOG ("failed to get control value for property %s at ts %"
+        GST_TIME_FORMAT, _self->name, GST_TIME_ARGS (timestamp));
+  }
+  g_free (src_val_a);
+  g_free (src_val_r);
+  g_free (src_val_g);
+  g_free (src_val_b);
+  return ret;
+}
+
+static gboolean
+gst_argb_control_binding_get_g_value_array (GstControlBinding * _self,
     GstClockTime timestamp, GstClockTime interval, guint n_values,
     GValue * values)
 {

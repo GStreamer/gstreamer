@@ -48,14 +48,24 @@ typedef struct _GstDirectControlBinding GstDirectControlBinding;
 typedef struct _GstDirectControlBindingClass GstDirectControlBindingClass;
 
 /**
- * GstDirectControlBindingConvert:
+ * GstDirectControlBindingConvertValue:
+ * @self: the #GstDirectControlBinding instance
+ * @src_value: the value returned by the cotnrol source
+ * @dest_value: the target location
+ *
+ * Function to map a control-value to the target plain data type.
+ */
+typedef void (* GstDirectControlBindingConvertValue) (GstDirectControlBinding *self, gdouble src_value, gpointer dest_value);
+
+/**
+ * GstDirectControlBindingConvertGValue:
  * @self: the #GstDirectControlBinding instance
  * @src_value: the value returned by the cotnrol source
  * @dest_value: the target GValue
  *
  * Function to map a control-value to the target GValue.
  */
-typedef void (* GstDirectControlBindingConvert) (GstDirectControlBinding *self, gdouble src_value, GValue *dest_value);
+typedef void (* GstDirectControlBindingConvertGValue) (GstDirectControlBinding *self, gdouble src_value, GValue *dest_value);
 
 /**
  * GstDirectControlBinding:
@@ -70,8 +80,10 @@ struct _GstDirectControlBinding {
   GstControlSource *cs;    /* GstControlSource for this property */
   GValue cur_value;
   gdouble last_value;
+  gint byte_size;
 
-  GstDirectControlBindingConvert convert;
+  GstDirectControlBindingConvertValue convert_value;
+  GstDirectControlBindingConvertGValue convert_g_value;
 
   gpointer _gst_reserved[GST_PADDING];
 };

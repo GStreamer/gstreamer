@@ -254,6 +254,7 @@ EXPORTS
 	gst_clock_single_shot_id_reinit
 	gst_clock_type_get_type
 	gst_clock_unadjust_unlocked
+	gst_control_binding_get_g_value_array
 	gst_control_binding_get_type
 	gst_control_binding_get_value
 	gst_control_binding_get_value_array
@@ -605,6 +606,7 @@ EXPORTS
 	gst_object_flags_get_type
 	gst_object_get_control_binding
 	gst_object_get_control_rate
+	gst_object_get_g_value_array
 	gst_object_get_name
 	gst_object_get_parent
 	gst_object_get_path_string

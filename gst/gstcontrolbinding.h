@@ -93,7 +93,8 @@ struct _GstControlBindingClass
   /* virtual methods */
   gboolean (* sync_values) (GstControlBinding *self, GstObject *object, GstClockTime timestamp, GstClockTime last_sync);
   GValue * (* get_value) (GstControlBinding *self, GstClockTime timestamp);
-  gboolean (* get_value_array) (GstControlBinding *self, GstClockTime timestamp,GstClockTime interval, guint n_values, GValue *values);
+  gboolean (* get_value_array) (GstControlBinding *self, GstClockTime timestamp,GstClockTime interval, guint n_values, gpointer values);
+  gboolean (* get_g_value_array) (GstControlBinding *self, GstClockTime timestamp,GstClockTime interval, guint n_values, GValue *values);
 
   /*< private >*/
   gpointer _gst_reserved[GST_PADDING];
@@ -110,6 +111,8 @@ gboolean            gst_control_binding_sync_values        (GstControlBinding * 
 GValue *            gst_control_binding_get_value          (GstControlBinding *binding,
                                                             GstClockTime timestamp);
 gboolean            gst_control_binding_get_value_array    (GstControlBinding *binding, GstClockTime timestamp,
+                                                            GstClockTime interval, guint n_values, gpointer values);
+gboolean            gst_control_binding_get_g_value_array  (GstControlBinding *binding, GstClockTime timestamp,
                                                             GstClockTime interval, guint n_values, GValue *values);
 
 void                gst_control_binding_set_disabled       (GstControlBinding * self, gboolean disabled);

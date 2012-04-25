@@ -253,6 +253,9 @@ GValue *        gst_object_get_value              (GstObject * object, const gch
                                                    GstClockTime timestamp);
 gboolean        gst_object_get_value_array        (GstObject * object, const gchar * property_name,
                                                    GstClockTime timestamp, GstClockTime interval,
+                                                   guint n_values, gpointer values);
+gboolean        gst_object_get_g_value_array      (GstObject * object, const gchar * property_name,
+                                                   GstClockTime timestamp, GstClockTime interval,
                                                    guint n_values, GValue *values);
 
 GstClockTime    gst_object_get_control_rate       (GstObject * object);

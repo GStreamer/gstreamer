@@ -230,15 +230,15 @@ test_interpolation (void)
 
   g_object_set (cs, "mode", GST_INTERPOLATION_MODE_NONE, NULL);
   v1 = g_new0 (GValue, n_values);
-  gst_object_get_value_array (e, "int", 0, GST_SECOND / 10, n_values, v1);
+  gst_object_get_g_value_array (e, "int", 0, GST_SECOND / 10, n_values, v1);
 
   g_object_set (cs, "mode", GST_INTERPOLATION_MODE_LINEAR, NULL);
   v2 = g_new0 (GValue, n_values);
-  gst_object_get_value_array (e, "int", 0, GST_SECOND / 10, n_values, v2);
+  gst_object_get_g_value_array (e, "int", 0, GST_SECOND / 10, n_values, v2);
 
   g_object_set (cs, "mode", GST_INTERPOLATION_MODE_CUBIC, NULL);
   v3 = g_new0 (GValue, n_values);
-  gst_object_get_value_array (e, "int", 0, GST_SECOND / 10, n_values, v3);
+  gst_object_get_g_value_array (e, "int", 0, GST_SECOND / 10, n_values, v3);
 
   for (t = 0; t < n_values; t++) {
     i1 = g_value_get_int (&v1[t]);
@@ -320,23 +320,23 @@ test_lfo (void)
 
   g_object_set (cs, "waveform", GST_LFO_WAVEFORM_SINE, NULL);
   v1 = g_new0 (GValue, n_values);
-  gst_object_get_value_array (e, "int", 0, GST_SECOND / 10, n_values, v1);
+  gst_object_get_g_value_array (e, "int", 0, GST_SECOND / 10, n_values, v1);
 
   g_object_set (cs, "waveform", GST_LFO_WAVEFORM_SQUARE, NULL);
   v2 = g_new0 (GValue, n_values);
-  gst_object_get_value_array (e, "int", 0, GST_SECOND / 10, n_values, v2);
+  gst_object_get_g_value_array (e, "int", 0, GST_SECOND / 10, n_values, v2);
 
   g_object_set (cs, "waveform", GST_LFO_WAVEFORM_SAW, NULL);
   v3 = g_new0 (GValue, n_values);
-  gst_object_get_value_array (e, "int", 0, GST_SECOND / 10, n_values, v3);
+  gst_object_get_g_value_array (e, "int", 0, GST_SECOND / 10, n_values, v3);
 
   g_object_set (cs, "waveform", GST_LFO_WAVEFORM_REVERSE_SAW, NULL);
   v4 = g_new0 (GValue, n_values);
-  gst_object_get_value_array (e, "int", 0, GST_SECOND / 10, n_values, v4);
+  gst_object_get_g_value_array (e, "int", 0, GST_SECOND / 10, n_values, v4);
 
   g_object_set (cs, "waveform", GST_LFO_WAVEFORM_TRIANGLE, NULL);
   v5 = g_new0 (GValue, n_values);
-  gst_object_get_value_array (e, "int", 0, GST_SECOND / 10, n_values, v5);
+  gst_object_get_g_value_array (e, "int", 0, GST_SECOND / 10, n_values, v5);
 
   for (t = 0; t < n_values; t++) {
     i1 = g_value_get_int (&v1[t]);
@@ -418,7 +418,7 @@ test_chained_lfo (void)
   n_values = 40 * 10;
 
   v1 = g_new0 (GValue, n_values);
-  gst_object_get_value_array (e, "int", 0, GST_SECOND / 10, n_values, v1);
+  gst_object_get_g_value_array (e, "int", 0, GST_SECOND / 10, n_values, v1);
 
   for (t = 0; t < n_values; t++) {
     i1 = g_value_get_int (&v1[t]);

@@ -1300,9 +1300,54 @@ gst_object_get_value (GstObject * object, const gchar * property_name,
  * @n_values: the number of values
  * @values: array to put control-values in
  *
- * Gets a number of values for the given controllered property starting at the
+ * Gets a number of values for the given controlled property starting at the
  * requested time. The array @values need to hold enough space for @n_values of
  * the same type as the objects property's type.
+ *
+ * This function is useful if one wants to e.g. draw a graph of the control
+ * curve or apply a control curve sample by sample.
+ *
+ * The values are unboxed and ready to be used. The similar function 
+ * gst_object_get_g_value_array() returns the array as #GValues and is
+ * better suites for bindings.
+ *
+ * Returns: %TRUE if the given array could be filled, %FALSE otherwise
+ */
+gboolean
+gst_object_get_value_array (GstObject * object, const gchar * property_name,
+    GstClockTime timestamp, GstClockTime interval, guint n_values,
+    gpointer values)
+{
+  gboolean res = FALSE;
+  GstControlBinding *binding;
+
+  g_return_val_if_fail (GST_IS_OBJECT (object), FALSE);
+  g_return_val_if_fail (property_name, FALSE);
+  g_return_val_if_fail (GST_CLOCK_TIME_IS_VALID (timestamp), FALSE);
+  g_return_val_if_fail (GST_CLOCK_TIME_IS_VALID (interval), FALSE);
+  g_return_val_if_fail (values, FALSE);
+
+  GST_OBJECT_LOCK (object);
+  if ((binding = gst_object_find_control_binding (object, property_name))) {
+    res = gst_control_binding_get_value_array (binding, timestamp, interval,
+        n_values, values);
+  }
+  GST_OBJECT_UNLOCK (object);
+  return res;
+}
+
+/**
+ * gst_object_get_g_value_array:
+ * @object: the object that has controlled properties
+ * @property_name: the name of the property to get
+ * @timestamp: the time that should be processed
+ * @interval: the time spacing between subsequent values
+ * @n_values: the number of values
+ * @values: array to put control-values in
+ *
+ * Gets a number of #GValues for the given controlled property starting at the
+ * requested time. The array @values need to hold enough space for @n_values of
+ * #GValue.
  *
  * This function is useful if one wants to e.g. draw a graph of the control
  * curve or apply a control curve sample by sample.
@@ -1310,7 +1355,7 @@ gst_object_get_value (GstObject * object, const gchar * property_name,
  * Returns: %TRUE if the given array could be filled, %FALSE otherwise
  */
 gboolean
-gst_object_get_value_array (GstObject * object, const gchar * property_name,
+gst_object_get_g_value_array (GstObject * object, const gchar * property_name,
     GstClockTime timestamp, GstClockTime interval, guint n_values,
     GValue * values)
 {
@@ -1325,7 +1370,7 @@ gst_object_get_value_array (GstObject * object, const gchar * property_name,
 
   GST_OBJECT_LOCK (object);
   if ((binding = gst_object_find_control_binding (object, property_name))) {
-    res = gst_control_binding_get_value_array (binding, timestamp, interval,
+    res = gst_control_binding_get_g_value_array (binding, timestamp, interval,
         n_values, values);
   }
   GST_OBJECT_UNLOCK (object);

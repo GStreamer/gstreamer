@@ -605,6 +605,7 @@ GST_START_TEST (controller_interpolation_linear_value_array)
   GstElement *elem;
   gdouble *raw_values;
   GValue *g_values;
+  gint *values;
 
   elem = gst_element_factory_make ("testobj", NULL);
 
@@ -633,16 +634,27 @@ GST_START_TEST (controller_interpolation_linear_value_array)
 
   g_free (raw_values);
 
-  /* now pull in mapped values for some timestamps */
+  /* now pull in mapped GValues for some timestamps */
   g_values = g_new0 (GValue, 3);
 
-  fail_unless (gst_object_get_value_array (GST_OBJECT (elem), "int",
+  fail_unless (gst_object_get_g_value_array (GST_OBJECT (elem), "int",
           0, GST_SECOND / 2, 3, g_values));
   fail_unless_equals_int (g_value_get_int (&g_values[0]), 0);
   fail_unless_equals_int (g_value_get_int (&g_values[1]), 50);
   fail_unless_equals_int (g_value_get_int (&g_values[2]), 100);
 
   g_free (g_values);
+
+  /* now pull in mapped values for some timestamps */
+  values = g_new0 (gint, 3);
+
+  fail_unless (gst_object_get_value_array (GST_OBJECT (elem), "int",
+          0, GST_SECOND / 2, 3, values));
+  fail_unless_equals_int (values[0], 0);
+  fail_unless_equals_int (values[1], 50);
+  fail_unless_equals_int (values[2], 100);
+
+  g_free (values);
 
   gst_object_unref (cs);
   gst_object_unref (elem);
