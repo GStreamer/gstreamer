@@ -130,8 +130,7 @@ static GstFlowReturn default_alloc_buffer (GstBufferPool * pool,
     GstBuffer ** buffer, GstBufferPoolAcquireParams * params);
 static GstFlowReturn default_acquire_buffer (GstBufferPool * pool,
     GstBuffer ** buffer, GstBufferPoolAcquireParams * params);
-static void default_reset_buffer (GstBufferPool * pool, GstBuffer * buffer,
-    GstBufferPoolAcquireParams * params);
+static void default_reset_buffer (GstBufferPool * pool, GstBuffer * buffer);
 static void default_free_buffer (GstBufferPool * pool, GstBuffer * buffer);
 static void default_release_buffer (GstBufferPool * pool, GstBuffer * buffer);
 
@@ -997,8 +996,7 @@ remove_meta_unpooled (GstBuffer * buffer, GstMeta ** meta, gpointer user_data)
 }
 
 static void
-default_reset_buffer (GstBufferPool * pool, GstBuffer * buffer,
-    GstBufferPoolAcquireParams * params)
+default_reset_buffer (GstBufferPool * pool, GstBuffer * buffer)
 {
   GST_BUFFER_FLAGS (buffer) = 0;
 
@@ -1051,9 +1049,6 @@ gst_buffer_pool_acquire_buffer (GstBufferPool * pool, GstBuffer ** buffer,
     /* all buffers from the pool point to the pool and have the refcount of the
      * pool incremented */
     (*buffer)->pool = gst_object_ref (pool);
-    /* now reset the buffer when needed */
-    if (G_LIKELY (pclass->reset_buffer))
-      pclass->reset_buffer (pool, *buffer, params);
   } else {
     dec_outstanding (pool);
   }
@@ -1095,6 +1090,10 @@ gst_buffer_pool_release_buffer (GstBufferPool * pool, GstBuffer * buffer)
     return;
 
   pclass = GST_BUFFER_POOL_GET_CLASS (pool);
+
+  /* reset the buffer when needed */
+  if (G_LIKELY (pclass->reset_buffer))
+    pclass->reset_buffer (pool, buffer);
 
   if (G_LIKELY (pclass->release_buffer))
     pclass->release_buffer (pool, buffer);

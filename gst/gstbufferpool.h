@@ -156,8 +156,7 @@ struct _GstBufferPoolClass {
                                     GstBufferPoolAcquireParams *params);
   GstFlowReturn  (*alloc_buffer)   (GstBufferPool *pool, GstBuffer **buffer,
                                     GstBufferPoolAcquireParams *params);
-  void           (*reset_buffer)   (GstBufferPool *pool, GstBuffer *buffer,
-                                    GstBufferPoolAcquireParams *params);
+  void           (*reset_buffer)   (GstBufferPool *pool, GstBuffer *buffer);
   void           (*release_buffer) (GstBufferPool *pool, GstBuffer *buffer);
   void           (*free_buffer)    (GstBufferPool *pool, GstBuffer *buffer);
 
