@@ -1169,7 +1169,9 @@ gst_video_decoder_src_query (GstPad * pad, GstObject * parent, GstQuery * query)
 
         GST_OBJECT_LOCK (dec);
         min_latency += dec->priv->min_latency;
-        if (max_latency != GST_CLOCK_TIME_NONE) {
+        if (dec->priv->max_latency == GST_CLOCK_TIME_NONE) {
+          max_latency = GST_CLOCK_TIME_NONE;
+        } else if (max_latency != GST_CLOCK_TIME_NONE) {
           max_latency += dec->priv->max_latency;
         }
         GST_OBJECT_UNLOCK (dec);
