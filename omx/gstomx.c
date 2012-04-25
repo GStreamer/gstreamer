@@ -1973,6 +1973,8 @@ gst_omx_parse_hacks (gchar ** hacks)
       hacks_flags |= GST_OMX_HACK_NO_COMPONENT_RECONFIGURE;
     else if (g_str_equal (*hacks, "no-empty-eos-buffer"))
       hacks_flags |= GST_OMX_HACK_NO_EMPTY_EOS_BUFFER;
+    else if (g_str_equal (*hacks, "drain-may-not-return"))
+      hacks_flags |= GST_OMX_HACK_DRAIN_MAY_NOT_RETURN;
     else
       GST_WARNING ("Unknown hack: %s", *hacks);
     hacks++;

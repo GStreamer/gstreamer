@@ -1398,8 +1398,20 @@ gst_omx_video_dec_drain (GstOMXVideoDec * self)
   buf->omx_buf->nFlags |= OMX_BUFFERFLAG_EOS;
   gst_omx_port_release_buffer (self->in_port, buf);
   GST_DEBUG_OBJECT (self, "Waiting until component is drained");
-  g_cond_wait (self->drain_cond, self->drain_lock);
-  GST_DEBUG_OBJECT (self, "Drained component");
+
+  if (G_UNLIKELY(self->component->hacks & GST_OMX_HACK_DRAIN_MAY_NOT_RETURN)) {
+    GTimeVal tv = { .tv_sec = 0, .tv_usec = 500000 };
+
+    if (!g_cond_timed_wait (self->drain_cond, self->drain_lock, &tv))
+      GST_WARNING_OBJECT (self, "Drain timed out");
+    else
+      GST_DEBUG_OBJECT (self, "Drained component");
+
+  } else {
+    g_cond_wait (self->drain_cond, self->drain_lock);
+    GST_DEBUG_OBJECT (self, "Drained component");
+  }
+
   g_mutex_unlock (self->drain_lock);
   GST_BASE_VIDEO_CODEC_STREAM_LOCK (self);
 

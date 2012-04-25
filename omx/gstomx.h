@@ -65,6 +65,11 @@ G_BEGIN_DECLS
  */
 #define GST_OMX_HACK_NO_EMPTY_EOS_BUFFER                              G_GUINT64_CONSTANT (0x0000000000000020)
 
+/* If the component might not acknowledge a drain.
+ * Happens with TI's Ducati OpenMAX implementation.
+ */
+#define GST_OMX_HACK_DRAIN_MAY_NOT_RETURN                             G_GUINT64_CONSTANT (0x0000000000000040)
+
 
 typedef struct _GstOMXCore GstOMXCore;
 typedef struct _GstOMXPort GstOMXPort;
