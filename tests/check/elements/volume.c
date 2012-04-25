@@ -1760,6 +1760,7 @@ GST_END_TEST;
 GST_START_TEST (test_controller_processing)
 {
   GstControlSource *cs;
+  GstTimedValueControlSource *tvcs;
   GstElement *volume;
   GstBuffer *inbuffer, *outbuffer;
   GstCaps *caps;
@@ -1773,6 +1774,10 @@ GST_START_TEST (test_controller_processing)
   g_object_set (cs, "mode", GST_INTERPOLATION_MODE_CUBIC, NULL);
   gst_object_add_control_binding (GST_OBJECT_CAST (volume),
       gst_direct_control_binding_new (GST_OBJECT_CAST (volume), "volume", cs));
+
+  /* the value range for volume is 0.0 ... 10.0 */
+  tvcs = (GstTimedValueControlSource *) cs;
+  gst_timed_value_control_source_set (tvcs, 0 * GST_SECOND, 0.1);
 
   fail_unless (gst_element_set_state (volume,
           GST_STATE_PLAYING) == GST_STATE_CHANGE_SUCCESS,
