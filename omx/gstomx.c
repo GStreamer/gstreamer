@@ -1220,7 +1220,9 @@ gst_omx_port_set_flushing (GstOMXPort * port, gboolean flush)
          * valid anymore after the buffer was consumed
          */
         buf->omx_buf->nFlags = 0;
+        g_mutex_unlock (port->port_lock);
         err = OMX_FillThisBuffer (comp->handle, buf->omx_buf);
+        g_mutex_lock (port->port_lock);
         if (err != OMX_ErrorNone) {
           GST_ERROR_OBJECT (comp->parent,
               "Failed to pass buffer %p (%p) to port %u: %s (0x%08x)", buf,
