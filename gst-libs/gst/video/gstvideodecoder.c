@@ -162,6 +162,8 @@ struct _GstVideoDecoderPrivate
   /* FIXME introduce a context ? */
 
   GstBufferPool *pool;
+  GstAllocator *allocator;
+  GstAllocationParams params;
 
   /* parse tracking */
   /* input data */
@@ -639,7 +641,12 @@ gst_video_decoder_finalize (GObject * object)
     gst_video_codec_state_unref (decoder->priv->output_state);
 
   if (decoder->priv->pool) {
-    g_object_unref (decoder->priv->pool);
+    gst_object_unref (decoder->priv->pool);
+    decoder->priv->pool = NULL;
+  }
+
+  if (decoder->priv->allocator) {
+    gst_allocator_unref (decoder->priv->allocator);
     decoder->priv->pool = NULL;
   }
 
@@ -2355,6 +2362,70 @@ static gboolean
 gst_video_decoder_decide_allocation_default (GstVideoDecoder * decoder,
     GstQuery * query)
 {
+  GstCaps *outcaps;
+  GstBufferPool *pool = NULL;
+  guint size, min, max;
+  GstAllocator *allocator = NULL;
+  GstAllocationParams params;
+  GstStructure *config;
+  gboolean update_pool, update_allocator;
+  GstVideoInfo vinfo;
+
+  gst_query_parse_allocation (query, &outcaps, NULL);
+  gst_video_info_init (&vinfo);
+  gst_video_info_from_caps (&vinfo, outcaps);
+
+  /* we got configuration from our peer or the decide_allocation method,
+   * parse them */
+  if (gst_query_get_n_allocation_params (query) > 0) {
+    /* try the allocator */
+    gst_query_parse_nth_allocation_param (query, 0, &allocator, &params);
+    update_allocator = TRUE;
+  } else {
+    allocator = NULL;
+    gst_allocation_params_init (&params);
+    update_allocator = FALSE;
+  }
+
+  if (gst_query_get_n_allocation_pools (query) > 0) {
+    gst_query_parse_nth_allocation_pool (query, 0, &pool, &size, &min, &max);
+    size = MAX (size, vinfo.size);
+    update_pool = TRUE;
+  } else {
+    pool = NULL;
+    size = vinfo.size;
+    min = max = 0;
+
+    update_pool = FALSE;
+  }
+
+  if (pool == NULL) {
+    /* no pool, we can make our own */
+    GST_DEBUG_OBJECT (decoder, "no pool, making new pool");
+    pool = gst_video_buffer_pool_new ();
+  }
+
+  /* now configure */
+  config = gst_buffer_pool_get_config (pool);
+  gst_buffer_pool_config_set_params (config, outcaps, size, min, max);
+  gst_buffer_pool_config_set_allocator (config, allocator, &params);
+  gst_buffer_pool_set_config (pool, config);
+
+  if (update_allocator)
+    gst_query_set_nth_allocation_param (query, 0, allocator, &params);
+  else
+    gst_query_add_allocation_param (query, allocator, &params);
+  if (allocator)
+    gst_allocator_unref (allocator);
+
+  if (update_pool)
+    gst_query_set_nth_allocation_pool (query, 0, pool, size, min, max);
+  else
+    gst_query_add_allocation_pool (query, pool, size, min, max);
+
+  if (pool)
+    gst_object_unref (pool);
+
   return TRUE;
 }
 
@@ -2374,11 +2445,9 @@ gst_video_decoder_set_src_caps (GstVideoDecoder * decoder)
   GstVideoCodecState *state = decoder->priv->output_state;
   GstVideoDecoderClass *klass;
   GstQuery *query = NULL;
-  GstBufferPool *pool;
-  guint size, min, max;
+  GstBufferPool *pool = NULL;
   GstAllocator *allocator;
   GstAllocationParams params;
-  GstStructure *config;
   gboolean ret = TRUE;
 
   g_return_val_if_fail (GST_VIDEO_INFO_WIDTH (&state->info) != 0, FALSE);
@@ -2409,41 +2478,37 @@ gst_video_decoder_set_src_caps (GstVideoDecoder * decoder)
     GST_DEBUG_OBJECT (decoder, "didn't get downstream ALLOCATION hints");
   }
 
-  if (klass->decide_allocation) {
-    if (!(ret = klass->decide_allocation (decoder, query)))
-      goto done;
-  }
+  g_assert (klass->decide_allocation != NULL);
+  ret = klass->decide_allocation (decoder, query);
+
+  GST_DEBUG_OBJECT (decoder, "ALLOCATION (%d) params: %" GST_PTR_FORMAT, ret,
+      query);
+
+  if (!ret)
+    goto no_decide_allocation;
 
   /* we got configuration from our peer or the decide_allocation method,
    * parse them */
   if (gst_query_get_n_allocation_params (query) > 0) {
-    /* try the allocator */
     gst_query_parse_nth_allocation_param (query, 0, &allocator, &params);
   } else {
     allocator = NULL;
     gst_allocation_params_init (&params);
   }
 
-  if (gst_query_get_n_allocation_pools (query) > 0) {
-    gst_query_parse_nth_allocation_pool (query, 0, &pool, &size, &min, &max);
-    size = MAX (size, state->info.size);
-  } else {
-    pool = NULL;
-    size = state->info.size;
-    min = max = 0;
+  if (gst_query_get_n_allocation_pools (query) > 0)
+    gst_query_parse_nth_allocation_pool (query, 0, &pool, NULL, NULL, NULL);
+  if (!pool) {
+    if (allocator)
+      gst_allocator_unref (allocator);
+    ret = FALSE;
+    goto no_decide_allocation;
   }
 
-  if (pool == NULL) {
-    /* no pool, we can make our own */
-    GST_DEBUG_OBJECT (decoder, "no pool, making new pool");
-    pool = gst_video_buffer_pool_new ();
-  }
-
-  /* now configure */
-  config = gst_buffer_pool_get_config (pool);
-  gst_buffer_pool_config_set_params (config, state->caps, size, min, max);
-  gst_buffer_pool_config_set_allocator (config, allocator, &params);
-  gst_buffer_pool_set_config (pool, config);
+  if (decoder->priv->allocator)
+    gst_allocator_unref (decoder->priv->allocator);
+  decoder->priv->allocator = allocator;
+  decoder->priv->params = params;
 
   if (decoder->priv->pool) {
     gst_buffer_pool_set_active (decoder->priv->pool, FALSE);
@@ -2461,6 +2526,13 @@ done:
   GST_VIDEO_DECODER_STREAM_UNLOCK (decoder);
 
   return ret;
+
+  /* Errors */
+no_decide_allocation:
+  {
+    GST_WARNING_OBJECT (decoder, "Subclass failed to decide allocation");
+    goto done;
+  }
 }
 
 /**
