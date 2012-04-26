@@ -1371,9 +1371,24 @@ static void
 gst_x264_enc_set_latency (GstX264Enc * encoder)
 {
   GstVideoInfo *info = &encoder->input_state->info;
-  GstClockTime latency = gst_util_uint64_scale (GST_SECOND * info->fps_d,
-      x264_encoder_maximum_delayed_frames (encoder->x264enc), info->fps_n);
-  gst_video_encoder_set_latency (GST_VIDEO_ENCODER (encoder), latency, latency);
+
+  if (info->fps_n) {
+    GstClockTime latency;
+    gint max_delayed_frames;
+    max_delayed_frames = x264_encoder_maximum_delayed_frames (encoder->x264enc);
+    latency = gst_util_uint64_scale_ceil (GST_SECOND * info->fps_d,
+        max_delayed_frames, info->fps_n);
+
+    GST_INFO ("Updating latency to %" GST_TIME_FORMAT " (%d frames)",
+        GST_TIME_ARGS (latency), max_delayed_frames);
+
+    gst_video_encoder_set_latency (GST_VIDEO_ENCODER (encoder), latency,
+        latency);
+  } else {
+    /* We can't do live as we don't know our latency */
+    gst_video_encoder_set_latency (GST_VIDEO_ENCODER (encoder),
+        GST_CLOCK_TIME_NONE, GST_CLOCK_TIME_NONE);
+  }
 }
 
 static gboolean
