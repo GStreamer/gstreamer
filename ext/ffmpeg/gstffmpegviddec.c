@@ -624,14 +624,14 @@ gst_ffmpegviddec_get_buffer (AVCodecContext * context, AVFrame * picture)
    * picture back from ffmpeg we can use this to correctly timestamp the output
    * buffer */
   picture->reordered_opaque = context->reordered_opaque;
-  /* make sure we don't free the buffer when it's not ours */
-  picture->opaque = NULL;
 
   frame =
       gst_video_decoder_get_frame (GST_VIDEO_DECODER (ffmpegdec),
       picture->reordered_opaque);
   if (G_UNLIKELY (frame == NULL))
     goto no_frame;
+
+  picture->opaque = frame;
 
   if (!ffmpegdec->current_dr) {
     GST_LOG_OBJECT (ffmpegdec, "direct rendering disabled, fallback alloc");
@@ -694,7 +694,6 @@ gst_ffmpegviddec_get_buffer (AVCodecContext * context, AVFrame * picture)
    * the opaque data. */
   picture->type = FF_BUFFER_TYPE_USER;
   picture->age = 256 * 256 * 256 * 64;
-  picture->opaque = gst_video_codec_frame_ref (frame);
 
   GST_LOG_OBJECT (ffmpegdec, "returned frame %p", frame->output_buffer);
 
@@ -713,17 +712,16 @@ gst_ffmpegviddec_release_buffer (AVCodecContext * context, AVFrame * picture)
   GstFFMpegVidDec *ffmpegdec;
 
   ffmpegdec = (GstFFMpegVidDec *) context->opaque;
+  frame = (GstVideoCodecFrame *) picture->opaque;
+  GST_DEBUG_OBJECT (ffmpegdec, "release frame %d", frame->system_frame_number);
 
   /* check if it was our buffer */
-  if (picture->opaque == NULL) {
+  if (picture->type != FF_BUFFER_TYPE_USER) {
     GST_DEBUG_OBJECT (ffmpegdec, "default release buffer");
     avcodec_default_release_buffer (context, picture);
-    return;
   }
 
   /* we remove the opaque data now */
-  frame = (GstVideoCodecFrame *) picture->opaque;
-  GST_DEBUG_OBJECT (ffmpegdec, "release frame %d", frame->system_frame_number);
   picture->opaque = NULL;
 
   gst_video_codec_frame_unref (frame);
@@ -909,7 +907,6 @@ get_output_buffer (GstFFMpegVidDec * ffmpegdec, GstVideoCodecFrame * frame)
   GstVideoInfo *info;
   gint c;
 
-
   GST_LOG_OBJECT (ffmpegdec, "get output buffer");
 
   ret = alloc_output_buffer (ffmpegdec, frame);
@@ -1055,9 +1052,7 @@ gst_ffmpegviddec_video_frame (GstFFMpegVidDec * ffmpegdec,
     goto beach;
 
   /* get the output picture timing info again */
-  out_frame =
-      gst_video_decoder_get_frame (GST_VIDEO_DECODER (ffmpegdec),
-      (int) ffmpegdec->picture->reordered_opaque);
+  out_frame = ffmpegdec->picture->opaque;
 
   GST_DEBUG_OBJECT (ffmpegdec,
       "pts %" G_GUINT64_FORMAT " duration %" G_GUINT64_FORMAT,
@@ -1140,7 +1135,7 @@ gst_ffmpegviddec_video_frame (GstFFMpegVidDec * ffmpegdec,
 
   /* mark as keyframe or delta unit */
   if (ffmpegdec->picture->top_field_first)
-    GST_VIDEO_CODEC_FRAME_FLAG_SET (frame, GST_VIDEO_CODEC_FRAME_FLAG_TFF);
+    GST_VIDEO_CODEC_FRAME_FLAG_SET (out_frame, GST_VIDEO_CODEC_FRAME_FLAG_TFF);
 
 
   *ret =
