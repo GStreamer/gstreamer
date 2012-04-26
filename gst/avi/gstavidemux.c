@@ -72,6 +72,16 @@ static GstStaticPadTemplate sink_templ = GST_STATIC_PAD_TEMPLATE ("sink",
     GST_STATIC_CAPS ("video/x-msvideo")
     );
 
+#ifndef GST_DISABLE_GST_DEBUG
+static const char *const snap_types[2][2] = {
+  {"any", "before"},
+  {"after", "nearest"},
+};
+#endif
+
+static void gst_avi_demux_base_init (GstAviDemuxClass * klass);
+static void gst_avi_demux_class_init (GstAviDemuxClass * klass);
+static void gst_avi_demux_init (GstAviDemux * avi);
 static void gst_avi_demux_finalize (GObject * object);
 
 static void gst_avi_demux_reset (GstAviDemux * avi);
@@ -3979,15 +3989,18 @@ static gboolean
 gst_avi_demux_do_seek (GstAviDemux * avi, GstSegment * segment)
 {
   GstClockTime seek_time;
-  gboolean keyframe;
+  gboolean keyframe, before, after;
   guint i, index;
   GstAviStream *stream;
 
   seek_time = segment->position;
-  keyframe = ! !(segment->flags & GST_SEEK_FLAG_KEY_UNIT);
+  keyframe = !!(segment->flags & GST_SEEK_FLAG_KEY_UNIT);
+  before = !!(segment->flags & GST_SEEK_FLAG_SNAP_BEFORE);
+  after = !!(segment->flags & GST_SEEK_FLAG_SNAP_AFTER);
 
   GST_DEBUG_OBJECT (avi, "seek to: %" GST_TIME_FORMAT
-      " keyframe seeking:%d", GST_TIME_ARGS (seek_time), keyframe);
+      " keyframe seeking:%d, %s", GST_TIME_ARGS (seek_time), keyframe,
+      snap_types[before ? 1 : 0][after ? 1 : 0]);
 
   /* FIXME, this code assumes the main stream with keyframes is stream 0,
    * which is mostly correct... */
@@ -3999,11 +4012,25 @@ gst_avi_demux_do_seek (GstAviDemux * avi, GstSegment * segment)
 
   /* check if we are already on a keyframe */
   if (!ENTRY_IS_KEYFRAME (&stream->index[index])) {
-    GST_DEBUG_OBJECT (avi, "not keyframe, searching back");
-    /* now go to the previous keyframe, this is where we should start
-     * decoding from. */
-    index = gst_avi_demux_index_prev (avi, stream, index, TRUE);
-    GST_DEBUG_OBJECT (avi, "previous keyframe at %u", index);
+    gboolean next;
+
+    next = after && !before;
+    if (segment->rate < 0)
+      next = !next;
+
+    if (next) {
+      GST_DEBUG_OBJECT (avi, "not keyframe, searching forward");
+      /* now go to the next keyframe, this is where we should start
+       * decoding from. */
+      index = gst_avi_demux_index_next (avi, stream, index, TRUE);
+      GST_DEBUG_OBJECT (avi, "next keyframe at %u", index);
+    } else {
+      GST_DEBUG_OBJECT (avi, "not keyframe, searching back");
+      /* now go to the previous keyframe, this is where we should start
+       * decoding from. */
+      index = gst_avi_demux_index_prev (avi, stream, index, TRUE);
+      GST_DEBUG_OBJECT (avi, "previous keyframe at %u", index);
+    }
   }
 
   /* move the main stream to this position */
@@ -4184,7 +4211,7 @@ avi_demux_handle_seek_push (GstAviDemux * avi, GstPad * pad, GstEvent * event)
   GstSeekFlags flags;
   GstSeekType cur_type = GST_SEEK_TYPE_NONE, stop_type;
   gint64 cur, stop;
-  gboolean keyframe;
+  gboolean keyframe, before, after;
   GstAviStream *stream;
   guint index;
   guint n, str_num;
@@ -4224,13 +4251,15 @@ avi_demux_handle_seek_push (GstAviDemux * avi, GstPad * pad, GstEvent * event)
   gst_segment_do_seek (&seeksegment, rate, format, flags,
       cur_type, cur, stop_type, stop, &update);
 
-  keyframe = ! !(flags & GST_SEEK_FLAG_KEY_UNIT);
+  keyframe = !!(flags & GST_SEEK_FLAG_KEY_UNIT);
   cur = seeksegment.position;
+  before = !!(flags & GST_SEEK_FLAG_SNAP_BEFORE);
+  after = !!(flags & GST_SEEK_FLAG_SNAP_AFTER);
 
   GST_DEBUG_OBJECT (avi,
       "Seek requested: ts %" GST_TIME_FORMAT " stop %" GST_TIME_FORMAT
-      ", kf %u, rate %lf", GST_TIME_ARGS (cur), GST_TIME_ARGS (stop), keyframe,
-      rate);
+      ", kf %u, %s, rate %lf", GST_TIME_ARGS (cur), GST_TIME_ARGS (stop),
+      keyframe, snap_types[before ? 1 : 0][after ? 1 : 0], rate);
 
   if (rate < 0) {
     GST_DEBUG_OBJECT (avi, "negative rate seek not supported in push mode");
@@ -4249,11 +4278,25 @@ avi_demux_handle_seek_push (GstAviDemux * avi, GstPad * pad, GstEvent * event)
 
   /* check if we are already on a keyframe */
   if (!ENTRY_IS_KEYFRAME (&stream->index[index])) {
-    GST_DEBUG_OBJECT (avi, "Entry is not a keyframe - searching back");
-    /* now go to the previous keyframe, this is where we should start
-     * decoding from. */
-    index = gst_avi_demux_index_prev (avi, stream, index, TRUE);
-    GST_DEBUG_OBJECT (avi, "Found previous keyframe at %u", index);
+    gboolean next;
+
+    next = after && !before;
+    if (seeksegment.rate < 0)
+      next = !next;
+
+    if (next) {
+      GST_DEBUG_OBJECT (avi, "Entry is not a keyframe - searching forward");
+      /* now go to the next keyframe, this is where we should start
+       * decoding from. */
+      index = gst_avi_demux_index_next (avi, stream, index, TRUE);
+      GST_DEBUG_OBJECT (avi, "Found previous keyframe at %u", index);
+    } else {
+      GST_DEBUG_OBJECT (avi, "Entry is not a keyframe - searching back");
+      /* now go to the previous keyframe, this is where we should start
+       * decoding from. */
+      index = gst_avi_demux_index_prev (avi, stream, index, TRUE);
+      GST_DEBUG_OBJECT (avi, "Found previous keyframe at %u", index);
+    }
   }
 
   gst_avi_demux_get_buffer_info (avi, stream, index,
@@ -4285,11 +4328,19 @@ avi_demux_handle_seek_push (GstAviDemux * avi, GstPad * pad, GstEvent * event)
 
     /* check if we are already on a keyframe */
     if (!ENTRY_IS_KEYFRAME (&str->index[idx])) {
-      GST_DEBUG_OBJECT (avi, "Entry is not a keyframe - searching back");
-      /* now go to the previous keyframe, this is where we should start
-       * decoding from. */
-      idx = gst_avi_demux_index_prev (avi, str, idx, TRUE);
-      GST_DEBUG_OBJECT (avi, "Found previous keyframe at %u", idx);
+      if (after && !before) {
+        GST_DEBUG_OBJECT (avi, "Entry is not a keyframe - searching forward");
+        /* now go to the next keyframe, this is where we should start
+         * decoding from. */
+        idx = gst_avi_demux_index_next (avi, str, idx, TRUE);
+        GST_DEBUG_OBJECT (avi, "Found next keyframe at %u", idx);
+      } else {
+        GST_DEBUG_OBJECT (avi, "Entry is not a keyframe - searching back");
+        /* now go to the previous keyframe, this is where we should start
+         * decoding from. */
+        idx = gst_avi_demux_index_prev (avi, str, idx, TRUE);
+        GST_DEBUG_OBJECT (avi, "Found previous keyframe at %u", idx);
+      }
     }
 
     gst_avi_demux_get_buffer_info (avi, str, idx,
