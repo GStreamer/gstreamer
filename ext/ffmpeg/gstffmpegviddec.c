@@ -152,6 +152,7 @@ static int gst_ffmpegviddec_get_buffer (AVCodecContext * context,
 static void gst_ffmpegviddec_release_buffer (AVCodecContext * context,
     AVFrame * picture);
 
+static GstFlowReturn gst_ffmpegviddec_finish (GstVideoDecoder * decoder);
 static void gst_ffmpegviddec_drain (GstFFMpegVidDec * ffmpegdec);
 
 #define GST_FFDEC_PARAMS_QDATA g_quark_from_static_string("ffdec-params")
@@ -298,6 +299,7 @@ gst_ffmpegviddec_class_init (GstFFMpegVidDecClass * klass)
   viddec_class->handle_frame = gst_ffmpegviddec_handle_frame;
   viddec_class->stop = gst_ffmpegviddec_stop;
   viddec_class->reset = gst_ffmpegviddec_reset;
+  viddec_class->finish = gst_ffmpegviddec_finish;
 }
 
 static void
@@ -1384,13 +1386,26 @@ gst_ffmpegviddec_stop (GstVideoDecoder * decoder)
   return TRUE;
 }
 
+static GstFlowReturn
+gst_ffmpegviddec_finish (GstVideoDecoder * decoder)
+{
+  GstFFMpegVidDec *ffmpegdec = (GstFFMpegVidDec *) decoder;
+
+  gst_ffmpegviddec_drain (ffmpegdec);
+
+  return GST_FLOW_OK;
+}
+
 static gboolean
 gst_ffmpegviddec_reset (GstVideoDecoder * decoder, gboolean hard)
 {
   GstFFMpegVidDec *ffmpegdec = (GstFFMpegVidDec *) decoder;
 
-  if (ffmpegdec->opened)
-    gst_ffmpegviddec_drain (ffmpegdec);
+  if (ffmpegdec->opened) {
+    if (!hard)
+      gst_ffmpegviddec_drain (ffmpegdec);
+    avcodec_flush_buffers (ffmpegdec->context);
+  }
 
   return TRUE;
 }
