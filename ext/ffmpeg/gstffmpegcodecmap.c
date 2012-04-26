@@ -2300,7 +2300,7 @@ gst_ffmpeg_videoinfo_to_context (GstVideoInfo * info, AVCodecContext * context)
   gint i, bpp = 0;
 
   context->width = GST_VIDEO_INFO_WIDTH (info);
-  context->height = GST_VIDEO_INFO_WIDTH (info);
+  context->height = GST_VIDEO_INFO_HEIGHT (info);
   for (i = 0; i < GST_VIDEO_INFO_N_COMPONENTS (info); i++)
     bpp += GST_VIDEO_INFO_COMP_DEPTH (info, i);
   context->bits_per_coded_sample = bpp;
