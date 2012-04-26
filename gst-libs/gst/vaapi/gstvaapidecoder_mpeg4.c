@@ -73,6 +73,7 @@ struct _GstVaapiDecoderMpeg4Private {
     GstClockTime                    seq_pts;
     GstClockTime                    gop_pts;
     GstClockTime                    pts_diff;
+    GstClockTime                    max_pts;
     // anchor sync time base for any picture type, 
     // it is time base of backward reference frame
     GstClockTime                    last_sync_time; 
@@ -314,8 +315,6 @@ decode_sequence(GstVaapiDecoderMpeg4 *decoder, const guint8 *buf, guint buf_size
         priv->profile_changed = TRUE;
     }
     priv->seq_pts = gst_adapter_prev_timestamp(priv->adapter, NULL);
-    priv->calculate_pts_diff = TRUE;
-
     priv->size_changed          = TRUE;
 
     return GST_VAAPI_DECODER_STATUS_SUCCESS;
@@ -419,18 +418,63 @@ decode_gop(GstVaapiDecoderMpeg4 *decoder, const guint8 *buf, guint buf_size)
               priv->closed_gop, priv->broken_link);
 
     gop_time             = gop.hours * 3600 + gop.minutes * 60 + gop.seconds;
-    priv->gop_pts        = gop_time * GST_SECOND;
     priv->last_sync_time = gop_time;
     priv->sync_time      = gop_time;
     
-    if (priv->calculate_pts_diff) {
-        priv->pts_diff = priv->seq_pts - priv->gop_pts;
-        priv->calculate_pts_diff = FALSE;
-    }
-
+    if (priv->gop_pts != GST_CLOCK_TIME_NONE)
+        priv->pts_diff += gop_time * GST_SECOND - priv->gop_pts;
+    priv->gop_pts = gop_time * GST_SECOND;
+    priv->calculate_pts_diff = TRUE;
     priv->is_first_field = TRUE;
 
     return GST_VAAPI_DECODER_STATUS_SUCCESS;
+}
+
+void
+calculate_pts_diff(GstVaapiDecoderMpeg4 *decoder,
+                      GstMpeg4VideoObjectLayer *vol_hdr,
+                      GstMpeg4VideoObjectPlane *vop_hdr)
+{
+    GstVaapiDecoderMpeg4Private * const priv = decoder->priv;
+    GstClockTime frame_timestamp;
+
+    frame_timestamp = gst_adapter_prev_timestamp(priv->adapter, NULL);
+    if (frame_timestamp && frame_timestamp != GST_CLOCK_TIME_NONE) {
+        /* Buffer with timestamp */
+        if (priv->max_pts != GST_CLOCK_TIME_NONE &&
+            frame_timestamp < priv->max_pts) {
+            frame_timestamp = priv->max_pts +
+                gst_util_uint64_scale((vol_hdr->fixed_vop_rate ?
+                                       vol_hdr->fixed_vop_time_increment : 1),
+                                      GST_SECOND,
+                                      vol_hdr->vop_time_increment_resolution);
+        }
+    } else {
+        /* Buffer without timestamp set */
+        if (priv->max_pts == GST_CLOCK_TIME_NONE) /* first buffer */
+            frame_timestamp = 0;
+        else {
+            GstClockTime tmp_pts;
+            tmp_pts = priv->pts_diff + priv->gop_pts +
+                vop_hdr->modulo_time_base * GST_SECOND +
+                gst_util_uint64_scale(vop_hdr->time_increment,
+                                      GST_SECOND,
+                                      vol_hdr->vop_time_increment_resolution);
+            if (tmp_pts > priv->max_pts)
+                frame_timestamp = tmp_pts;
+            else
+                frame_timestamp = priv->max_pts +
+                    gst_util_uint64_scale((vol_hdr->fixed_vop_rate ?
+                                           vol_hdr->fixed_vop_time_increment : 1),
+                                           GST_SECOND,
+                                          vol_hdr->vop_time_increment_resolution);
+        }
+    }
+
+    priv->pts_diff = frame_timestamp -
+        (priv->gop_pts + vop_hdr->modulo_time_base * GST_SECOND +
+         gst_util_uint64_scale(vop_hdr->time_increment, GST_SECOND,
+                               vol_hdr->vop_time_increment_resolution));
 }
  
 static GstVaapiDecoderStatus
@@ -555,6 +599,12 @@ decode_picture(GstVaapiDecoderMpeg4 *decoder, const guint8 *buf, guint buf_size)
         priv->prev_t_ref = priv->svh_hdr.temporal_reference;
     }
     else {
+        /* Update priv->pts_diff */
+        if (priv->calculate_pts_diff) {
+            calculate_pts_diff(decoder, vol_hdr, vop_hdr);
+            priv->calculate_pts_diff = FALSE;
+        }
+
         /* Update presentation time, 6.3.5 */
         if(vop_hdr->coding_type != GST_MPEG4_B_VOP) {
             // increment basing on decoding order
@@ -575,6 +625,8 @@ decode_picture(GstVaapiDecoderMpeg4 *decoder, const guint8 *buf, guint buf_size)
         }
     }
     picture->pts = pts + priv->pts_diff;
+    if (priv->max_pts == GST_CLOCK_TIME_NONE || priv->max_pts < picture->pts)
+        priv->max_pts = picture->pts;
 
     /* Update reference pictures */
     /* XXX: consider priv->vol_hdr.low_delay, consider packed video frames for DivX/XviD */
@@ -1058,6 +1110,7 @@ gst_vaapi_decoder_mpeg4_init(GstVaapiDecoderMpeg4 *decoder)
     priv->sub_buffer            = NULL;
     priv->seq_pts               = GST_CLOCK_TIME_NONE;
     priv->gop_pts               = GST_CLOCK_TIME_NONE;
+    priv->max_pts               = GST_CLOCK_TIME_NONE;
     priv->pts_diff              = 0;
     priv->calculate_pts_diff    = TRUE;
     priv->is_constructed        = FALSE;
