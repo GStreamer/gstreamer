@@ -802,6 +802,13 @@ gst_base_transform_default_decide_allocation (GstBaseTransform * trans,
 {
   guint i, n_metas;
   GstBaseTransformClass *klass;
+  GstCaps *outcaps;
+  GstBufferPool *pool;
+  guint size, min, max;
+  GstAllocator *allocator;
+  GstAllocationParams params;
+  GstStructure *config;
+  gboolean update_allocator;
 
   klass = GST_BASE_TRANSFORM_GET_CLASS (trans);
 
@@ -836,6 +843,54 @@ gst_base_transform_default_decide_allocation (GstBaseTransform * trans,
       n_metas--;
     }
   }
+
+  gst_query_parse_allocation (query, &outcaps, NULL);
+
+  /* we got configuration from our peer or the decide_allocation method,
+   * parse them */
+  if (gst_query_get_n_allocation_params (query) > 0) {
+    /* try the allocator */
+    gst_query_parse_nth_allocation_param (query, 0, &allocator, &params);
+    update_allocator = TRUE;
+  } else {
+    allocator = NULL;
+    gst_allocation_params_init (&params);
+    update_allocator = FALSE;
+  }
+
+  if (gst_query_get_n_allocation_pools (query) > 0) {
+    gst_query_parse_nth_allocation_pool (query, 0, &pool, &size, &min, &max);
+
+    if (pool == NULL) {
+      /* no pool, we can make our own */
+      GST_DEBUG_OBJECT (trans, "no pool, making new pool");
+      pool = gst_buffer_pool_new ();
+    }
+  } else {
+    pool = NULL;
+    size = min = max = 0;
+  }
+
+  /* now configure */
+  if (pool) {
+    config = gst_buffer_pool_get_config (pool);
+    gst_buffer_pool_config_set_params (config, outcaps, size, min, max);
+    gst_buffer_pool_config_set_allocator (config, allocator, &params);
+    gst_buffer_pool_set_config (pool, config);
+  }
+
+  if (update_allocator)
+    gst_query_set_nth_allocation_param (query, 0, allocator, &params);
+  else
+    gst_query_add_allocation_param (query, allocator, &params);
+  if (allocator)
+    gst_allocator_unref (allocator);
+
+  if (pool) {
+    gst_query_set_nth_allocation_pool (query, 0, pool, size, min, max);
+    gst_object_unref (pool);
+  }
+
   return TRUE;
 }
 
@@ -844,8 +899,7 @@ gst_base_transform_do_bufferpool (GstBaseTransform * trans, GstCaps * outcaps)
 {
   GstQuery *query;
   gboolean result = TRUE;
-  GstBufferPool *pool;
-  guint size, min, max;
+  GstBufferPool *pool = NULL;
   GstBaseTransformClass *klass;
   GstBaseTransformPrivate *priv = trans->priv;
   GstAllocator *allocator;
@@ -882,43 +936,28 @@ gst_base_transform_do_bufferpool (GstBaseTransform * trans, GstCaps * outcaps)
   klass = GST_BASE_TRANSFORM_GET_CLASS (trans);
 
   GST_DEBUG_OBJECT (trans, "calling decide_allocation");
-  if (G_LIKELY (klass->decide_allocation))
-    if ((result = klass->decide_allocation (trans, query)) == FALSE)
-      goto no_decide_allocation;
+  g_assert (klass->decide_allocation != NULL);
+  result = klass->decide_allocation (trans, query);
+
+  GST_DEBUG_OBJECT (trans, "ALLOCATION (%d) params: %" GST_PTR_FORMAT, result,
+      query);
+
+  if (!result)
+    goto no_decide_allocation;
 
   /* we got configuration from our peer or the decide_allocation method,
    * parse them */
   if (gst_query_get_n_allocation_params (query) > 0) {
-    /* try the allocator */
     gst_query_parse_nth_allocation_param (query, 0, &allocator, &params);
   } else {
     allocator = NULL;
     gst_allocation_params_init (&params);
   }
 
-  if (gst_query_get_n_allocation_pools (query) > 0) {
-    gst_query_parse_nth_allocation_pool (query, 0, &pool, &size, &min, &max);
+  if (gst_query_get_n_allocation_pools (query) > 0)
+    gst_query_parse_nth_allocation_pool (query, 0, &pool, NULL, NULL, NULL);
 
-    if (pool == NULL) {
-      /* no pool, just parameters, we can make our own */
-      GST_DEBUG_OBJECT (trans, "no pool, making new pool");
-      pool = gst_buffer_pool_new ();
-    }
-  } else {
-    pool = NULL;
-    size = min = max = 0;
-  }
-
-  /* now configure */
-  if (pool) {
-    GstStructure *config;
-
-    config = gst_buffer_pool_get_config (pool);
-    gst_buffer_pool_config_set_params (config, outcaps, size, min, max);
-    gst_buffer_pool_config_set_allocator (config, allocator, &params);
-    gst_buffer_pool_set_config (pool, config);
-  }
-  /* and store */
+  /* now store */
   result =
       gst_base_transform_set_allocation (trans, pool, allocator, &params,
       query);

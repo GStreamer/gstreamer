@@ -314,6 +314,8 @@ static GstFlowReturn gst_base_src_default_create (GstBaseSrc * basesrc,
     guint64 offset, guint size, GstBuffer ** buf);
 static GstFlowReturn gst_base_src_default_alloc (GstBaseSrc * basesrc,
     guint64 offset, guint size, GstBuffer ** buf);
+static gboolean gst_base_src_decide_allocation_default (GstBaseSrc * basesrc,
+    GstQuery * query);
 
 static gboolean gst_base_src_set_flushing (GstBaseSrc * basesrc,
     gboolean flushing, gboolean live_play, gboolean unlock, gboolean * playing);
@@ -385,6 +387,8 @@ gst_base_src_class_init (GstBaseSrcClass * klass)
   klass->event = GST_DEBUG_FUNCPTR (gst_base_src_default_event);
   klass->create = GST_DEBUG_FUNCPTR (gst_base_src_default_create);
   klass->alloc = GST_DEBUG_FUNCPTR (gst_base_src_default_alloc);
+  klass->decide_allocation =
+      GST_DEBUG_FUNCPTR (gst_base_src_decide_allocation_default);
 
   /* Registering debug symbols for function pointers */
   GST_DEBUG_REGISTER_FUNCPTR (gst_base_src_activate_mode);
@@ -2784,6 +2788,68 @@ gst_base_src_activate_pool (GstBaseSrc * basesrc, gboolean active)
   return res;
 }
 
+
+static gboolean
+gst_base_src_decide_allocation_default (GstBaseSrc * basesrc, GstQuery * query)
+{
+  GstCaps *outcaps;
+  GstBufferPool *pool;
+  guint size, min, max;
+  GstAllocator *allocator;
+  GstAllocationParams params;
+  GstStructure *config;
+  gboolean update_allocator;
+
+  gst_query_parse_allocation (query, &outcaps, NULL);
+
+  /* we got configuration from our peer or the decide_allocation method,
+   * parse them */
+  if (gst_query_get_n_allocation_params (query) > 0) {
+    /* try the allocator */
+    gst_query_parse_nth_allocation_param (query, 0, &allocator, &params);
+    update_allocator = TRUE;
+  } else {
+    allocator = NULL;
+    gst_allocation_params_init (&params);
+    update_allocator = FALSE;
+  }
+
+  if (gst_query_get_n_allocation_pools (query) > 0) {
+    gst_query_parse_nth_allocation_pool (query, 0, &pool, &size, &min, &max);
+
+    if (pool == NULL) {
+      /* no pool, we can make our own */
+      GST_DEBUG_OBJECT (basesrc, "no pool, making new pool");
+      pool = gst_buffer_pool_new ();
+    }
+  } else {
+    pool = NULL;
+    size = min = max = 0;
+  }
+
+  /* now configure */
+  if (pool) {
+    config = gst_buffer_pool_get_config (pool);
+    gst_buffer_pool_config_set_params (config, outcaps, size, min, max);
+    gst_buffer_pool_config_set_allocator (config, allocator, &params);
+    gst_buffer_pool_set_config (pool, config);
+  }
+
+  if (update_allocator)
+    gst_query_set_nth_allocation_param (query, 0, allocator, &params);
+  else
+    gst_query_add_allocation_param (query, allocator, &params);
+  if (allocator)
+    gst_allocator_unref (allocator);
+
+  if (pool) {
+    gst_query_set_nth_allocation_pool (query, 0, pool, size, min, max);
+    gst_object_unref (pool);
+  }
+
+  return TRUE;
+}
+
 static gboolean
 gst_base_src_prepare_allocation (GstBaseSrc * basesrc, GstCaps * caps)
 {
@@ -2792,7 +2858,6 @@ gst_base_src_prepare_allocation (GstBaseSrc * basesrc, GstCaps * caps)
   GstQuery *query;
   GstBufferPool *pool = NULL;
   GstAllocator *allocator = NULL;
-  guint size, min, max;
   GstAllocationParams params;
 
   bclass = GST_BASE_SRC_GET_CLASS (basesrc);
@@ -2806,42 +2871,26 @@ gst_base_src_prepare_allocation (GstBaseSrc * basesrc, GstCaps * caps)
     GST_DEBUG_OBJECT (basesrc, "peer ALLOCATION query failed");
   }
 
-  if (G_LIKELY (bclass->decide_allocation))
-    result = bclass->decide_allocation (basesrc, query);
+  g_assert (bclass->decide_allocation != NULL);
+  result = bclass->decide_allocation (basesrc, query);
 
   GST_DEBUG_OBJECT (basesrc, "ALLOCATION (%d) params: %" GST_PTR_FORMAT, result,
       query);
 
+  if (!result)
+    goto no_decide_allocation;
+
+  /* we got configuration from our peer or the decide_allocation method,
+   * parse them */
   if (gst_query_get_n_allocation_params (query) > 0) {
-    /* try the allocator */
     gst_query_parse_nth_allocation_param (query, 0, &allocator, &params);
   } else {
     allocator = NULL;
     gst_allocation_params_init (&params);
   }
 
-  if (gst_query_get_n_allocation_pools (query) > 0) {
-    gst_query_parse_nth_allocation_pool (query, 0, &pool, &size, &min, &max);
-
-    if (pool == NULL) {
-      /* no pool, just parameters, we can make our own */
-      GST_DEBUG_OBJECT (basesrc, "no pool, making new pool");
-      pool = gst_buffer_pool_new ();
-    }
-  } else {
-    pool = NULL;
-    size = min = max = 0;
-  }
-
-  /* now configure */
-  if (pool) {
-    GstStructure *config;
-
-    config = gst_buffer_pool_get_config (pool);
-    gst_buffer_pool_config_set_params (config, caps, size, min, max);
-    gst_buffer_pool_config_set_allocator (config, allocator, &params);
-    gst_buffer_pool_set_config (pool, config);
-  }
+  if (gst_query_get_n_allocation_pools (query) > 0)
+    gst_query_parse_nth_allocation_pool (query, 0, &pool, NULL, NULL, NULL);
 
   result = gst_base_src_set_allocation (basesrc, pool, allocator, &params);
 
@@ -2849,6 +2898,14 @@ gst_base_src_prepare_allocation (GstBaseSrc * basesrc, GstCaps * caps)
 
   return result;
 
+  /* Errors */
+no_decide_allocation:
+  {
+    GST_WARNING_OBJECT (basesrc, "Subclass failed to decide allocation");
+    gst_query_unref (query);
+
+    return result;
+  }
 }
 
 /* default negotiation code.
