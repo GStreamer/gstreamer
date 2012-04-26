@@ -1995,8 +1995,12 @@ gst_video_decoder_finish_frame (GstVideoDecoder * decoder,
     goto done;
   }
 
-  output_buffer = gst_buffer_make_writable (frame->output_buffer);
-  frame->output_buffer = NULL;
+  /* A reference always needs to be owned by the frame on the buffer.
+   * For that reason, we use a complete sub-buffer (zero-cost) to push
+   * downstream.
+   * The original buffer will be free-ed only when downstream AND the
+   * current implementation are done with the frame. */
+  output_buffer = gst_buffer_ref (frame->output_buffer);
 
   GST_BUFFER_FLAG_UNSET (output_buffer, GST_BUFFER_FLAG_DELTA_UNIT);
 
