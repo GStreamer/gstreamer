@@ -1362,6 +1362,7 @@ gst_x264_enc_set_src_caps (GstX264Enc * encoder, GstCaps * caps)
   state = gst_video_encoder_set_output_state (GST_VIDEO_ENCODER (encoder),
       outcaps, encoder->input_state);
   GST_DEBUG ("here are the caps: %" GST_PTR_FORMAT, state->caps);
+  gst_video_codec_state_unref (state);
 
   return TRUE;
 }
