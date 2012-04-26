@@ -1364,8 +1364,8 @@ gst_matroska_parse_handle_seek_event (GstMatroskaParse * parse,
   /* check sanity before we start flushing and all that */
   GST_OBJECT_LOCK (parse);
   if ((entry = gst_matroska_read_common_do_index_seek (&parse->common, track,
-              seeksegment.position, &parse->seek_index, &parse->seek_entry)) ==
-      NULL) {
+              seeksegment.position, &parse->seek_index, &parse->seek_entry,
+              FALSE)) == NULL) {
     /* pull mode without index can scan later on */
     GST_DEBUG_OBJECT (parse, "No matching seek entry in index");
     GST_OBJECT_UNLOCK (parse);
