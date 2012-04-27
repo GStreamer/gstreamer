@@ -91,6 +91,7 @@ int sp_writer_setperms_shm (ShmPipe * self, mode_t perms);
 int sp_writer_resize (ShmPipe * self, size_t size);
 
 int sp_get_fd (ShmPipe * self);
+const char *sp_get_shm_area_name (ShmPipe *self);
 int sp_writer_get_client_fd (ShmClient * client);
 
 ShmBlock *sp_writer_alloc_block (ShmPipe * self, size_t size);

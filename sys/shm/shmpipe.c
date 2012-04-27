@@ -90,6 +90,7 @@ struct _ShmArea
   int id;
 
   int use_count;
+  int is_writer;
 
   int shm_fd;
 
@@ -286,6 +287,8 @@ sp_open_shm (char *path, int id, mode_t perms, size_t size)
 
   area->shm_area_len = size;
 
+  area->is_writer = (path == NULL);
+
 
   if (path)
     flags = O_RDONLY;
@@ -320,6 +323,7 @@ sp_open_shm (char *path, int id, mode_t perms, size_t size)
 
     prot = PROT_READ | PROT_WRITE;
   } else {
+    area->shm_area_name = strdup (path);
     prot = PROT_READ;
   }
 
@@ -353,7 +357,8 @@ sp_close_shm (ShmArea * area)
     close (area->shm_fd);
 
   if (area->shm_area_name) {
-    shm_unlink (area->shm_area_name);
+    if (area->is_writer)
+      shm_unlink (area->shm_area_name);
     free (area->shm_area_name);
   }
 
@@ -933,6 +938,15 @@ int
 sp_get_fd (ShmPipe * self)
 {
   return self->main_socket;
+}
+
+const gchar *
+sp_get_shm_area_name (ShmPipe * self)
+{
+  if (self->shm_area)
+    return self->shm_area->shm_area_name;
+
+  return NULL;
 }
 
 int
