@@ -68,6 +68,7 @@ struct _GstVP8Dec
   gint noise_level;
 
   GstVideoCodecState *input_state;
+  GstVideoCodecState *output_state;
 };
 
 struct _GstVP8DecClass

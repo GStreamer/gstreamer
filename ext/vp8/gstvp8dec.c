@@ -300,6 +300,10 @@ gst_vp8_dec_reset (GstVideoDecoder * base_video_decoder, gboolean hard)
 
   decoder = GST_VP8_DEC (base_video_decoder);
 
+  if (decoder->output_state) {
+    gst_video_codec_state_unref (decoder->output_state);
+    decoder->output_state = NULL;
+  }
   if (decoder->decoder_inited)
     vpx_codec_destroy (&decoder->decoder);
   decoder->decoder_inited = FALSE;
@@ -326,11 +330,9 @@ gst_vp8_dec_image_to_buffer (GstVP8Dec * dec, const vpx_image_t * img,
 {
   int stride, w, h, i;
   guint8 *d;
-  GstVideoCodecState *outputstate;
   GstVideoInfo *info;
 
-  outputstate = gst_video_decoder_get_output_state (GST_VIDEO_DECODER (dec));
-  info = &outputstate->info;
+  info = &dec->output_state->info;
 
   d = GST_BUFFER_DATA (buffer) + GST_VIDEO_INFO_COMP_OFFSET (info, 0);
   stride = GST_VIDEO_INFO_COMP_STRIDE (info, 0);
@@ -358,8 +360,6 @@ gst_vp8_dec_image_to_buffer (GstVP8Dec * dec, const vpx_image_t * img,
   for (i = 0; i < h; i++)
     memcpy (d + i * stride,
         img->planes[VPX_PLANE_V] + i * img->stride[VPX_PLANE_V], w);
-
-  gst_video_codec_state_unref (outputstate);
 }
 
 static GstFlowReturn
@@ -370,7 +370,6 @@ open_codec (GstVP8Dec * dec, GstVideoCodecFrame * frame)
   vpx_codec_caps_t caps;
   GstVideoCodecState *state = dec->input_state;
   vpx_codec_err_t status;
-  GstVideoCodecState *output_state;
 
   memset (&stream_info, 0, sizeof (stream_info));
   stream_info.sz = sizeof (stream_info);
@@ -385,9 +384,10 @@ open_codec (GstVP8Dec * dec, GstVideoCodecFrame * frame)
     return GST_FLOW_OK;
   }
 
-  output_state = gst_video_decoder_set_output_state (GST_VIDEO_DECODER (dec),
+  g_assert (dec->output_state == NULL);
+  dec->output_state =
+      gst_video_decoder_set_output_state (GST_VIDEO_DECODER (dec),
       GST_VIDEO_FORMAT_I420, stream_info.w, stream_info.h, state);
-  gst_video_codec_state_unref (output_state);
   gst_vp8_dec_send_tags (dec);
 
   caps = vpx_codec_get_caps (&vpx_codec_vp8_dx_algo);
