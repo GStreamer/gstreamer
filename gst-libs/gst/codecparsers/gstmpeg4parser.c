@@ -328,7 +328,7 @@ compute_resync_marker_size (const GstMpeg4VideoObjectPlane * vop,
         *mask = 0xfffff000;
         break;
       case 20:
-        *pattern = 0x0000080;
+        *pattern = 0x00000800;
         *mask = 0xfffff800;
         break;
       case 21:
