@@ -1492,6 +1492,8 @@ update_colorbalance (GstPlaySink * playsink)
 
   g_signal_handlers_unblock_by_func (balance,
       G_CALLBACK (colorbalance_value_changed_cb), playsink);
+
+  gst_object_unref (balance);
 }
 
 /* make the element (bin) that contains the elements needed to perform
