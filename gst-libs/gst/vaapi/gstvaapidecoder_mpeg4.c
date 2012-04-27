@@ -496,6 +496,9 @@ decode_picture(GstVaapiDecoderMpeg4 *decoder, const guint8 *buf, guint buf_size)
     }
     else {
         parser_result = gst_mpeg4_parse_video_object_plane(vop_hdr, sprite_trajectory, vol_hdr, buf, buf_size);
+        /* Need to skip this frame if VOP was not coded */
+        if (GST_MPEG4_PARSER_OK == parser_result && !vop_hdr->coded)
+            return GST_VAAPI_DECODER_STATUS_ERROR_NO_DATA;
     }
 
     if (parser_result != GST_MPEG4_PARSER_OK) {
@@ -964,7 +967,8 @@ decode_buffer(GstVaapiDecoderMpeg4 *decoder, GstBuffer *buffer)
                 break;
             }
             status = decode_packet(decoder, packet);
-            if (GST_VAAPI_DECODER_STATUS_SUCCESS == status) {
+            if (GST_VAAPI_DECODER_STATUS_SUCCESS == status ||
+                GST_VAAPI_DECODER_STATUS_ERROR_NO_DATA == status) {
                 consumed_size = packet.offset + packet.size - pos; 
                 pos = packet.offset + packet.size; 
                 if (gst_adapter_available(priv->adapter) >= pos)
