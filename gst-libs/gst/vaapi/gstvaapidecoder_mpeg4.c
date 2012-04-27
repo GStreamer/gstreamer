@@ -304,6 +304,7 @@ decode_sequence(GstVaapiDecoderMpeg4 *decoder, const guint8 *buf, guint buf_size
         profile = GST_VAAPI_PROFILE_MPEG4_SIMPLE;
         break;
     case GST_MPEG4_PROFILE_ADVANCED_SIMPLE:
+    case GST_MPEG4_PROFILE_SIMPLE_SCALABLE: /* shared profile with ADVANCED_SIMPLE */
         profile = GST_VAAPI_PROFILE_MPEG4_ADVANCED_SIMPLE;
         break;
     default:
