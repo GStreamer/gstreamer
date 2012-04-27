@@ -163,7 +163,7 @@ gst_alsa_detect_formats (GstObject * obj, snd_pcm_hw_params_t * hw_params,
 
     s = gst_caps_get_structure (in_caps, i);
     if (!gst_structure_has_name (s, "audio/x-raw")) {
-      GST_WARNING_OBJECT (obj, "skipping non-raw format");
+      GST_DEBUG_OBJECT (obj, "skipping non-raw format");
       continue;
     }
 
@@ -476,7 +476,7 @@ gst_alsa_probe_supported_formats (GstObject * obj, snd_pcm_t * handle,
     snd_pcm_t *pcm = gst_alsa_open_iec958_pcm (obj);
 
     if (G_LIKELY (pcm)) {
-      gst_caps_append (caps, gst_caps_new_empty_simple ("audio/x-iec958"));
+      gst_caps_append (caps, gst_caps_from_string (PASSTHROUGH_CAPS));
       snd_pcm_close (pcm);
     }
   }

@@ -51,6 +51,7 @@
 #include "gstalsasink.h"
 #include "gstalsadeviceprobe.h"
 
+#include <gst/audio/gstaudioiec61937.h>
 #include <gst/gst-i18n-plugin.h>
 #include "gst/glib-compat-private.h"
 
@@ -81,6 +82,7 @@ static void gst_alsasink_get_property (GObject * object,
     guint prop_id, GValue * value, GParamSpec * pspec);
 
 static GstCaps *gst_alsasink_getcaps (GstBaseSink * bsink, GstCaps * filter);
+static gboolean gst_alsasink_query (GstBaseSink * bsink, GstQuery * query);
 
 static gboolean gst_alsasink_open (GstAudioSink * asink);
 static gboolean gst_alsasink_prepare (GstAudioSink * asink,
@@ -91,6 +93,9 @@ static gint gst_alsasink_write (GstAudioSink * asink, gpointer data,
     guint length);
 static guint gst_alsasink_delay (GstAudioSink * asink);
 static void gst_alsasink_reset (GstAudioSink * asink);
+static gboolean gst_alsasink_acceptcaps (GstAlsaSink * alsa, GstCaps * caps);
+static GstBuffer *gst_alsasink_payload (GstAudioBaseSink * sink,
+    GstBuffer * buf);
 
 static gint output_ref;         /* 0    */
 static snd_output_t *output;    /* NULL */
@@ -104,7 +109,7 @@ static GstStaticPadTemplate alsasink_sink_factory =
         "format = (string) " GST_AUDIO_FORMATS_ALL ", "
         "layout = (string) interleaved, "
         "rate = (int) [ 1, MAX ], " "channels = (int) [ 1, MAX ]; "
-        "audio/x-iec958")
+        PASSTHROUGH_CAPS)
     );
 
 static void
@@ -140,11 +145,13 @@ gst_alsasink_class_init (GstAlsaSinkClass * klass)
   GObjectClass *gobject_class;
   GstElementClass *gstelement_class;
   GstBaseSinkClass *gstbasesink_class;
+  GstAudioBaseSinkClass *gstbaseaudiosink_class;
   GstAudioSinkClass *gstaudiosink_class;
 
   gobject_class = (GObjectClass *) klass;
   gstelement_class = (GstElementClass *) klass;
   gstbasesink_class = (GstBaseSinkClass *) klass;
+  gstbaseaudiosink_class = (GstAudioBaseSinkClass *) klass;
   gstaudiosink_class = (GstAudioSinkClass *) klass;
 
   parent_class = g_type_class_peek_parent (klass);
@@ -161,6 +168,9 @@ gst_alsasink_class_init (GstAlsaSinkClass * klass)
       gst_static_pad_template_get (&alsasink_sink_factory));
 
   gstbasesink_class->get_caps = GST_DEBUG_FUNCPTR (gst_alsasink_getcaps);
+  gstbasesink_class->query = GST_DEBUG_FUNCPTR (gst_alsasink_query);
+
+  gstbaseaudiosink_class->payload = GST_DEBUG_FUNCPTR (gst_alsasink_payload);
 
   gstaudiosink_class->open = GST_DEBUG_FUNCPTR (gst_alsasink_open);
   gstaudiosink_class->prepare = GST_DEBUG_FUNCPTR (gst_alsasink_prepare);
@@ -310,6 +320,82 @@ gst_alsasink_getcaps (GstBaseSink * bsink, GstCaps * filter)
   } else {
     return caps;
   }
+}
+
+static gboolean
+gst_alsasink_acceptcaps (GstAlsaSink * alsa, GstCaps * caps)
+{
+  GstAudioRingBuffer *rbuf = GST_AUDIO_BASE_SINK (alsa)->ringbuffer;
+  GstPad *pad = GST_BASE_SINK (alsa)->sinkpad;
+  GstCaps *pad_caps;
+  GstStructure *st;
+  gboolean ret = FALSE;
+
+  GstAudioRingBufferSpec spec = { 0 };
+
+  pad_caps = gst_pad_query_caps (pad, caps);
+  if (!pad_caps || gst_caps_is_empty (pad_caps)) {
+    if (pad_caps)
+      gst_caps_unref (pad_caps);
+    ret = FALSE;
+    goto done;
+  }
+  gst_caps_unref (pad_caps);
+
+  /* If we've not got fixed caps, creating a stream might fail, so let's just
+   * return from here with default acceptcaps behaviour */
+  if (!gst_caps_is_fixed (caps))
+    goto done;
+
+  if (!gst_audio_ring_buffer_parse_caps (&rbuf->spec, caps))
+    goto done;
+
+  /* Make sure input is framed (one frame per buffer) and can be payloaded */
+  switch (rbuf->spec.type) {
+    case GST_AUDIO_RING_BUFFER_FORMAT_TYPE_AC3:
+    case GST_AUDIO_RING_BUFFER_FORMAT_TYPE_EAC3:
+    case GST_AUDIO_RING_BUFFER_FORMAT_TYPE_DTS:
+    case GST_AUDIO_RING_BUFFER_FORMAT_TYPE_MPEG:
+    {
+      gboolean framed = FALSE, parsed = FALSE;
+      st = gst_caps_get_structure (caps, 0);
+
+      gst_structure_get_boolean (st, "framed", &framed);
+      gst_structure_get_boolean (st, "parsed", &parsed);
+      if ((!framed && !parsed) || gst_audio_iec61937_frame_size (&spec) <= 0)
+        goto done;
+    }
+    default:{
+    }
+  }
+  ret = TRUE;
+
+done:
+  return ret;
+}
+
+static gboolean
+gst_alsasink_query (GstBaseSink * sink, GstQuery * query)
+{
+  GstAlsaSink *alsa = GST_ALSA_SINK (sink);
+  gboolean ret;
+
+  switch (GST_QUERY_TYPE (query)) {
+    case GST_QUERY_ACCEPT_CAPS:
+    {
+      GstCaps *caps;
+
+      gst_query_parse_accept_caps (query, &caps);
+      ret = gst_alsasink_acceptcaps (alsa, caps);
+      gst_query_set_accept_caps_result (query, ret);
+      ret = TRUE;
+      break;
+    }
+    default:
+      ret = GST_BASE_SINK_CLASS (parent_class)->query (sink, query);
+      break;
+  }
+  return ret;
 }
 
 static int
@@ -693,7 +779,10 @@ alsasink_parse_spec (GstAlsaSink * alsa, GstAudioRingBufferSpec * spec)
     case GST_AUDIO_RING_BUFFER_FORMAT_TYPE_MU_LAW:
       alsa->format = SND_PCM_FORMAT_MU_LAW;
       break;
-    case GST_AUDIO_RING_BUFFER_FORMAT_TYPE_IEC958:
+    case GST_AUDIO_RING_BUFFER_FORMAT_TYPE_AC3:
+    case GST_AUDIO_RING_BUFFER_FORMAT_TYPE_EAC3:
+    case GST_AUDIO_RING_BUFFER_FORMAT_TYPE_DTS:
+    case GST_AUDIO_RING_BUFFER_FORMAT_TYPE_MPEG:
       alsa->format = SND_PCM_FORMAT_S16_BE;
       alsa->iec958 = TRUE;
       break;
@@ -1000,4 +1089,41 @@ prepare_error:
     GST_ALSA_SINK_UNLOCK (asink);
     return;
   }
+}
+
+static GstBuffer *
+gst_alsasink_payload (GstAudioBaseSink * sink, GstBuffer * buf)
+{
+  GstAlsaSink *alsa;
+
+  alsa = GST_ALSA_SINK (sink);
+
+  if (alsa->iec958) {
+    GstBuffer *out;
+    gint framesize;
+    GstMapInfo iinfo, oinfo;
+
+    framesize = gst_audio_iec61937_frame_size (&sink->ringbuffer->spec);
+    if (framesize <= 0)
+      return NULL;
+
+    out = gst_buffer_new_and_alloc (framesize);
+
+    gst_buffer_map (buf, &iinfo, GST_MAP_READ);
+    gst_buffer_map (out, &oinfo, GST_MAP_WRITE);
+
+    if (!gst_audio_iec61937_payload (iinfo.data, iinfo.size,
+            oinfo.data, oinfo.size, &sink->ringbuffer->spec)) {
+      gst_buffer_unref (out);
+      return NULL;
+    }
+
+    gst_buffer_unmap (buf, &iinfo);
+    gst_buffer_unmap (out, &oinfo);
+
+    gst_buffer_copy_into (out, buf, GST_BUFFER_COPY_METADATA, 0, -1);
+    return out;
+  }
+
+  return gst_buffer_ref (buf);
 }
