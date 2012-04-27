@@ -326,7 +326,11 @@ gst_vp8_dec_image_to_buffer (GstVP8Dec * dec, const vpx_image_t * img,
 {
   int stride, w, h, i;
   guint8 *d;
-  GstVideoInfo *info = &dec->input_state->info;
+  GstVideoCodecState *outputstate;
+  GstVideoInfo *info;
+
+  outputstate = gst_video_decoder_get_output_state (GST_VIDEO_DECODER (dec));
+  info = &outputstate->info;
 
   d = GST_BUFFER_DATA (buffer) + GST_VIDEO_INFO_COMP_OFFSET (info, 0);
   stride = GST_VIDEO_INFO_COMP_STRIDE (info, 0);
@@ -354,6 +358,8 @@ gst_vp8_dec_image_to_buffer (GstVP8Dec * dec, const vpx_image_t * img,
   for (i = 0; i < h; i++)
     memcpy (d + i * stride,
         img->planes[VPX_PLANE_V] + i * img->stride[VPX_PLANE_V], w);
+
+  gst_video_codec_state_unref (outputstate);
 }
 
 static GstFlowReturn
