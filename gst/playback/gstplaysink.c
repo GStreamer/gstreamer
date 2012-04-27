@@ -3908,6 +3908,42 @@ gst_play_sink_change_state (GstElement * element, GstStateChange transition)
        * sinks */
       do_async_start (playsink);
       ret = GST_STATE_CHANGE_ASYNC;
+
+      /* block all pads here */
+      GST_PLAY_SINK_LOCK (playsink);
+      if (playsink->video_pad && playsink->video_block_id == 0) {
+        GstPad *opad =
+            GST_PAD_CAST (gst_proxy_pad_get_internal (GST_PROXY_PAD
+                (playsink->video_pad)));
+        playsink->video_block_id =
+            gst_pad_add_probe (opad, GST_PAD_PROBE_TYPE_BLOCK_DOWNSTREAM,
+            sinkpad_blocked_cb, playsink, NULL);
+        PENDING_FLAG_SET (playsink, GST_PLAY_SINK_TYPE_VIDEO);
+        gst_object_unref (opad);
+      }
+
+      if (playsink->audio_pad && playsink->audio_block_id == 0) {
+        GstPad *opad =
+            GST_PAD_CAST (gst_proxy_pad_get_internal (GST_PROXY_PAD
+                (playsink->audio_pad)));
+        playsink->audio_block_id =
+            gst_pad_add_probe (opad, GST_PAD_PROBE_TYPE_BLOCK_DOWNSTREAM,
+            sinkpad_blocked_cb, playsink, NULL);
+        PENDING_FLAG_SET (playsink, GST_PLAY_SINK_TYPE_AUDIO);
+        gst_object_unref (opad);
+      }
+
+      if (playsink->text_pad && playsink->text_block_id == 0) {
+        GstPad *opad =
+            GST_PAD_CAST (gst_proxy_pad_get_internal (GST_PROXY_PAD
+                (playsink->text_pad)));
+        playsink->text_block_id =
+            gst_pad_add_probe (opad, GST_PAD_PROBE_TYPE_BLOCK_DOWNSTREAM,
+            sinkpad_blocked_cb, playsink, NULL);
+        PENDING_FLAG_SET (playsink, GST_PLAY_SINK_TYPE_TEXT);
+        gst_object_unref (opad);
+      }
+      GST_PLAY_SINK_UNLOCK (playsink);
       break;
     case GST_STATE_CHANGE_PAUSED_TO_READY:
       /* unblock all pads here */
