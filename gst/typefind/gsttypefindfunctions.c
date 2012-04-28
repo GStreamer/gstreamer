@@ -3435,76 +3435,256 @@ ircam_type_find (GstTypeFind * tf, gpointer ununsed)
   }
 }
 
-/* EBML typefind helper */
-static gboolean
-ebml_check_header (GstTypeFind * tf, const gchar * doctype, int doctype_len)
+/*** Matroska/WebM ***/
+
+#define EBML_HEADER           0x1A45DFA3
+#define EBML_VERSION          0x4286
+#define EBML_DOCTYPE          0x4282
+#define EBML_DOCTYPE_VERSION  0x4287
+#define MATROSKA_SEGMENT      0x18538067
+#define MATROSKA_CLUSTER      0x1F43B675
+#define MATROSKA_TRACKS       0x1654AE6B
+#define MATROSKA_TRACK_ENTRY  0xAE
+#define MATROSKA_TRACK_TYPE   0x83
+#define MATROSKA_STEREO_MODE  0x53B8
+
+#define EBML_MAX_LEN (2 * 1024 * 1024)
+
+typedef enum
 {
-  /* 4 bytes for EBML ID, 1 byte for header length identifier */
-  const guint8 *data = gst_type_find_peek (tf, 0, 4 + 1);
-  gint len_mask = 0x80, size = 1, n = 1, total;
+  EBML_DOCTYPE_UNKNOWN = 0,
+  EBML_DOCTYPE_MATROSKA,
+  EBML_DOCTYPE_WEBM
+} GstEbmlDocType;
 
-  if (!data)
-    return FALSE;
+typedef struct
+{
+  GstEbmlDocType doctype;
+  guint audio;
+  guint video;
+  guint other;
+  guint video_stereo;
+  guint chunks;
+  guint tracks_ok;              /* if we've seen and fully parsed the TRACKS element */
+} GstMatroskaInfo;
 
-  /* ebml header? */
-  if (data[0] != 0x1A || data[1] != 0x45 || data[2] != 0xDF || data[3] != 0xA3)
-    return FALSE;
+static inline guint
+ebml_read_chunk_header (GstTypeFind * tf, DataScanCtx * c, guint max_size,
+    guint32 * id, guint64 * size)
+{
+  guint64 mask;
+  guint msbit_set, i, len, id_len;
 
-  /* length of header */
-  total = data[4];
-  while (size <= 8 && !(total & len_mask)) {
-    size++;
-    len_mask >>= 1;
+  if (c->size < 12 || max_size < 1)
+    return 0;
+
+  /* element ID */
+  *id = c->data[0];
+  if ((c->data[0] & 0x80) == 0x80) {
+    id_len = 1;
+  } else if ((c->data[0] & 0xC0) == 0x40) {
+    id_len = 2;
+  } else if ((c->data[0] & 0xE0) == 0x20) {
+    id_len = 3;
+  } else if ((c->data[0] & 0xF0) == 0x10) {
+    id_len = 4;
+  } else {
+    return 0;
   }
-  if (size > 8)
-    return FALSE;
-  total &= (len_mask - 1);
-  while (n < size)
-    total = (total << 8) | data[4 + n++];
 
-  /* get new data for full header, 4 bytes for EBML ID,
-   * EBML length tag and the actual header */
-  data = gst_type_find_peek (tf, 0, 4 + size + total);
-  if (!data)
-    return FALSE;
+  if (max_size < id_len)
+    return 0;
 
-  /* only check doctype if asked to do so */
-  if (doctype == NULL || doctype_len == 0)
-    return TRUE;
+  for (i = 1; i < id_len; ++i) {
+    *id = (*id << 8) | c->data[i];
+  }
 
-  /* the header must contain the doctype. For now, we don't parse the
-   * whole header but simply check for the availability of that array
-   * of characters inside the header. Not fully fool-proof, but good
-   * enough. */
-  for (n = 4 + size; n <= 4 + size + total - doctype_len; n++)
-    if (!memcmp (&data[n], doctype, doctype_len))
-      return TRUE;
+  data_scan_ctx_advance (tf, c, id_len);
+  max_size -= id_len;
 
-  return FALSE;
+  /* size */
+  if (max_size < 1 || c->data[0] == 0)
+    return 0;
+
+  msbit_set = g_bit_nth_msf (c->data[0], 8);
+  mask = ((1 << msbit_set) - 1);
+  *size = c->data[0] & mask;
+  len = 7 - msbit_set;
+
+  if (max_size < 1 + len)
+    return 0;
+  for (i = 0; i < len; ++i) {
+    mask = (mask << 8) | 0xff;
+    *size = (*size << 8) | c->data[1 + i];
+  }
+
+  data_scan_ctx_advance (tf, c, 1 + len);
+
+  /* undefined/unknown size? (all bits 1) */
+  if (*size == mask) {
+    /* allow unknown size for SEGMENT chunk, bail out otherwise */
+    if (*id == MATROSKA_SEGMENT)
+      *size = G_MAXUINT64;
+    else
+      return 0;
+  }
+
+  return id_len + (1 + len);
 }
 
-/*** video/x-matroska ***/
+static gboolean
+ebml_parse_chunk (GstTypeFind * tf, DataScanCtx * ctx, guint32 chunk_id,
+    guint chunk_size, GstMatroskaInfo * info, guint depth)
+{                               /* FIXME: make sure input size is clipped to 32 bit */
+  static const gchar SPACES[] = "                ";
+  DataScanCtx c = *ctx;
+  guint64 element_size;
+  guint32 id, hdr_len;
+
+  if (depth >= 8)               /* keep SPACES large enough for depth */
+    return FALSE;
+
+  while (chunk_size > 0) {
+    if (c.offset > EBML_MAX_LEN || !data_scan_ctx_ensure_data (tf, &c, 64))
+      return FALSE;
+
+    hdr_len = ebml_read_chunk_header (tf, &c, chunk_size, &id, &element_size);
+    if (hdr_len == 0)
+      return FALSE;
+
+    g_assert (hdr_len <= chunk_size);
+    chunk_size -= hdr_len;
+
+    if (element_size > chunk_size)
+      return FALSE;
+
+    GST_DEBUG ("%s %08x, size %" G_GUINT64_FORMAT " / %" G_GUINT64_FORMAT,
+        SPACES + sizeof (SPACES) - 1 - (2 * depth), id, element_size,
+        hdr_len + element_size);
+
+    if (!data_scan_ctx_ensure_data (tf, &c, element_size)) {
+      GST_DEBUG ("not enough data");
+      return FALSE;
+    }
+
+    switch (id) {
+      case EBML_DOCTYPE:
+        if (element_size >= 8 && memcmp (c.data, "matroska", 8) == 0)
+          info->doctype = EBML_DOCTYPE_MATROSKA;
+        else if (element_size >= 4 && memcmp (c.data, "webm", 4) == 0)
+          info->doctype = EBML_DOCTYPE_WEBM;
+        break;
+      case MATROSKA_SEGMENT:
+        GST_LOG ("parsing segment");
+        ebml_parse_chunk (tf, &c, id, element_size, info, depth + 1);
+        GST_LOG ("parsed segment, done");
+        return FALSE;
+      case MATROSKA_TRACKS:
+        GST_LOG ("parsing tracks");
+        info->tracks_ok =
+            ebml_parse_chunk (tf, &c, id, element_size, info, depth + 1);
+        GST_LOG ("parsed tracks: %s, done (after %" G_GUINT64_FORMAT " bytes)",
+            info->tracks_ok ? "ok" : "FAIL", c.offset + element_size);
+        return FALSE;
+      case MATROSKA_TRACK_ENTRY:
+        GST_LOG ("parsing track entry");
+        if (!ebml_parse_chunk (tf, &c, id, element_size, info, depth + 1))
+          return FALSE;
+        break;
+      case MATROSKA_TRACK_TYPE:{
+        guint type = 0, i;
+
+        /* is supposed to always be 1-byte, but not everyone's following that */
+        for (i = 0; i < element_size; ++i)
+          type = (type << 8) | c.data[i];
+
+        GST_DEBUG ("%s   track type %u",
+            SPACES + sizeof (SPACES) - 1 - (2 * depth), type);
+
+        if (type == 1)
+          ++info->video;
+        else if (c.data[0] == 2)
+          ++info->audio;
+        else
+          ++info->other;
+        break;
+      }
+      case MATROSKA_STEREO_MODE:
+        ++info->video_stereo;
+        break;
+      case MATROSKA_CLUSTER:
+        GST_WARNING ("cluster, bailing out (should've found tracks by now)");
+        return FALSE;
+      default:
+        break;
+    }
+    data_scan_ctx_advance (tf, &c, element_size);
+    chunk_size -= element_size;
+    ++info->chunks;
+  }
+
+  return TRUE;
+}
+
 static GstStaticCaps matroska_caps = GST_STATIC_CAPS ("video/x-matroska");
 
 #define MATROSKA_CAPS (gst_static_caps_get(&matroska_caps))
 static void
 matroska_type_find (GstTypeFind * tf, gpointer ununsed)
 {
-  if (ebml_check_header (tf, "matroska", 8))
-    gst_type_find_suggest (tf, GST_TYPE_FIND_MAXIMUM, MATROSKA_CAPS);
-  else if (ebml_check_header (tf, NULL, 0))
-    gst_type_find_suggest (tf, GST_TYPE_FIND_LIKELY, MATROSKA_CAPS);
-}
+  GstTypeFindProbability prob;
+  GstMatroskaInfo info = { 0, };
+  const gchar *type_name;
+  DataScanCtx c = { 0, NULL, 0 };
+  gboolean is_audio;
+  guint64 size;
+  guint32 id, hdr_len;
 
-/*** video/webm ***/
-static GstStaticCaps webm_caps = GST_STATIC_CAPS ("video/webm");
+  if (!data_scan_ctx_ensure_data (tf, &c, 64))
+    return;
 
-#define WEBM_CAPS (gst_static_caps_get(&webm_caps))
-static void
-webm_type_find (GstTypeFind * tf, gpointer ununsed)
-{
-  if (ebml_check_header (tf, "webm", 4))
-    gst_type_find_suggest (tf, GST_TYPE_FIND_MAXIMUM, WEBM_CAPS);
+  if (GST_READ_UINT32_BE (c.data) != EBML_HEADER)
+    return;
+
+  while (c.offset < EBML_MAX_LEN && data_scan_ctx_ensure_data (tf, &c, 64)) {
+    hdr_len = ebml_read_chunk_header (tf, &c, c.size, &id, &size);
+    if (hdr_len == 0)
+      return;
+
+    GST_INFO ("=== top-level chunk %08x, size %" G_GUINT64_FORMAT
+        " / %" G_GUINT64_FORMAT, id, size, size + hdr_len);
+
+    if (!ebml_parse_chunk (tf, &c, id, size, &info, 0))
+      break;
+    data_scan_ctx_advance (tf, &c, size);
+    GST_INFO ("=== done with chunk %08x", id);
+    if (id == MATROSKA_SEGMENT)
+      break;
+  }
+
+  GST_INFO ("audio=%u video=%u other=%u chunks=%u doctype=%d all_tracks=%d",
+      info.audio, info.video, info.other, info.chunks, info.doctype,
+      info.tracks_ok);
+
+  /* perhaps we should bail out if tracks_ok is FALSE and wait for more data?
+   * (we would need new API to signal this properly and prevent other
+   * typefinders from taking over the decision then) */
+  is_audio = (info.audio > 0 && info.video == 0 && info.other == 0);
+
+  if (info.doctype == EBML_DOCTYPE_WEBM) {
+    type_name = (is_audio) ? "audio/webm" : "video/webm";
+  } else if (info.video > 0 && info.video_stereo) {
+    type_name = "video/x-matroska-3d";
+  } else {
+    type_name = (is_audio) ? "audio/x-matroska" : "video/x-matroska";
+  }
+
+  if (info.doctype == EBML_DOCTYPE_UNKNOWN)
+    prob = GST_TYPE_FIND_LIKELY;
+  else
+    prob = GST_TYPE_FIND_MAXIMUM;
+
+  gst_type_find_suggest_simple (tf, prob, type_name, NULL);
 }
 
 /*** application/mxf ***/
@@ -4638,9 +4818,7 @@ plugin_init (GstPlugin * plugin)
   TYPE_FIND_REGISTER (plugin, "image/x-portable-pixmap", GST_RANK_SECONDARY,
       pnm_type_find, "pnm,ppm,pgm,pbm", PNM_CAPS, NULL, NULL);
   TYPE_FIND_REGISTER (plugin, "video/x-matroska", GST_RANK_PRIMARY,
-      matroska_type_find, "mkv,mka", MATROSKA_CAPS, NULL, NULL);
-  TYPE_FIND_REGISTER (plugin, "video/webm", GST_RANK_PRIMARY, webm_type_find,
-      "webm", WEBM_CAPS, NULL, NULL);
+      matroska_type_find, "mkv,mka,mk3d,webm", MATROSKA_CAPS, NULL, NULL);
   TYPE_FIND_REGISTER (plugin, "application/mxf", GST_RANK_PRIMARY,
       mxf_type_find, "mxf", MXF_CAPS, NULL, NULL);
   TYPE_FIND_REGISTER_START_WITH (plugin, "video/x-mve", GST_RANK_SECONDARY,
