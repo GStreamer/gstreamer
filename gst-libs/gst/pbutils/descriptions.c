@@ -67,6 +67,8 @@ static const FormatInfo formats[] = {
   /* container/tag formats with static descriptions */
   {"audio/annodex", "Ogg", FLAG_CONTAINER},
   {"audio/ogg", "Ogg", FLAG_CONTAINER},
+  {"audio/webm", "WebM", FLAG_CONTAINER},
+  {"audio/x-matroska", "Matroska", FLAG_CONTAINER},
   {"application/annodex", "Ogg", FLAG_CONTAINER},
   {"application/gxf", "General Exchange Format (GXF)", FLAG_CONTAINER},
   {"application/ogg", "Ogg", FLAG_CONTAINER},
@@ -86,6 +88,7 @@ static const FormatInfo formats[] = {
   {"video/x-fli", "FLI/FLC/FLX Animation", FLAG_CONTAINER},
   {"video/x-flv", "Flash", FLAG_CONTAINER},
   {"video/x-matroska", "Matroska", FLAG_CONTAINER},
+  {"video/x-matroska-3d", "Matroska", FLAG_CONTAINER},
   {"video/webm", "WebM", FLAG_CONTAINER},
   {"video/x-ms-asf", "Advanced Streaming Format (ASF)", FLAG_CONTAINER},
   {"video/x-msvideo", "Audio Video Interleave (AVI)", FLAG_CONTAINER},
