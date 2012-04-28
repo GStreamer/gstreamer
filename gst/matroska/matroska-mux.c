@@ -82,7 +82,7 @@ enum
 static GstStaticPadTemplate src_templ = GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS ("video/x-matroska")
+    GST_STATIC_CAPS ("video/x-matroska; video/x-matroska-3d; audio/x-matroska")
     );
 
 #define COMMON_VIDEO_CAPS \
@@ -2459,6 +2459,8 @@ gst_matroska_mux_start (GstMatroskaMux * mux)
     GST_MATROSKA_ID_TAGS,
     0
   };
+  const gchar *media_type;
+  gboolean audio_only;
   guint64 master, child;
   GSList *collected;
   int i;
@@ -2491,11 +2493,13 @@ gst_matroska_mux_start (GstMatroskaMux * mux)
     gst_query_unref (query);
   }
 
+  audio_only = mux->num_v_streams == 0 && mux->num_a_streams > 0;
   if (!strcmp (mux->doctype, GST_MATROSKA_DOCTYPE_WEBM)) {
-    ebml->caps = gst_caps_new_empty_simple ("video/webm");
+    media_type = (audio_only) ? "audio/webm" : "video/webm";
   } else {
-    ebml->caps = gst_caps_new_empty_simple ("video/x-matroska");
+    media_type = (audio_only) ? "audio/x-matroska" : "video/x-matroska";
   }
+  ebml->caps = gst_caps_new_empty_simple (media_type);
   gst_pad_set_caps (mux->srcpad, ebml->caps);
   /* we start with a EBML header */
   doctype = mux->doctype;
@@ -2642,11 +2646,11 @@ gst_matroska_mux_start (GstMatroskaMux * mux)
         cur = cur->next;
       }
 
-      gst_toc_entry_get_start_stop (((GstTocEntry *) toc_entry->
-              subentries->data), &start, NULL);
+      gst_toc_entry_get_start_stop (((GstTocEntry *) toc_entry->subentries->
+              data), &start, NULL);
       toc_entry->subentries = g_list_reverse (toc_entry->subentries);
-      gst_toc_entry_get_start_stop (((GstTocEntry *) toc_entry->
-              subentries->data), NULL, &stop);
+      gst_toc_entry_get_start_stop (((GstTocEntry *) toc_entry->subentries->
+              data), NULL, &stop);
       gst_toc_entry_set_start_stop (toc_entry, start, stop);
 
       to_write = g_list_append (to_write, toc_entry);
@@ -3131,11 +3135,7 @@ gst_matroska_mux_stop_streamheader (GstMatroskaMux * mux)
   GstEbmlWrite *ebml = mux->ebml_write;
 
   streamheader_buffer = gst_ebml_stop_streamheader (ebml);
-  if (!strcmp (mux->doctype, GST_MATROSKA_DOCTYPE_WEBM)) {
-    caps = gst_caps_new_empty_simple ("video/webm");
-  } else {
-    caps = gst_caps_new_empty_simple ("video/x-matroska");
-  }
+  caps = gst_caps_copy (mux->ebml_write->caps);
   s = gst_caps_get_structure (caps, 0);
   g_value_init (&streamheader, GST_TYPE_ARRAY);
   g_value_init (&bufval, GST_TYPE_BUFFER);

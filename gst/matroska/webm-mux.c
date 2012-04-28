@@ -58,7 +58,7 @@ G_DEFINE_TYPE (GstWebMMux, gst_webm_mux, GST_TYPE_MATROSKA_MUX);
 static GstStaticPadTemplate webm_src_templ = GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS ("video/webm")
+    GST_STATIC_CAPS ("video/webm; audio/webm")
     );
 
 static GstStaticPadTemplate webm_videosink_templ =
