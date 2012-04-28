@@ -1,4 +1,5 @@
 EXPORTS
+	_gst_video_decoder_error
 	gst_buffer_add_video_meta
 	gst_buffer_add_video_meta_full
 	gst_buffer_get_video_meta_id
@@ -48,6 +49,13 @@ EXPORTS
 	gst_video_buffer_pool_new
 	gst_video_calculate_display_ratio
 	gst_video_chroma_site_get_type
+	gst_video_codec_frame_get_type
+	gst_video_codec_frame_ref
+	gst_video_codec_frame_set_hook
+	gst_video_codec_frame_unref
+	gst_video_codec_state_get_type
+	gst_video_codec_state_ref
+	gst_video_codec_state_unref
 	gst_video_color_matrix_get_type
 	gst_video_color_primaries_get_type
 	gst_video_color_range_get_type
@@ -57,6 +65,36 @@ EXPORTS
 	gst_video_convert_sample_async
 	gst_video_crop_meta_api_get_type
 	gst_video_crop_meta_get_info
+	gst_video_decoder_add_to_frame
+	gst_video_decoder_alloc_output_buffer
+	gst_video_decoder_alloc_output_frame
+	gst_video_decoder_drop_frame
+	gst_video_decoder_finish_frame
+	gst_video_decoder_get_estimate_rate
+	gst_video_decoder_get_frame
+	gst_video_decoder_get_latency
+	gst_video_decoder_get_max_decode_time
+	gst_video_decoder_get_max_errors
+	gst_video_decoder_get_oldest_frame
+	gst_video_decoder_get_output_state
+	gst_video_decoder_get_packetized
+	gst_video_decoder_get_type
+	gst_video_decoder_have_frame
+	gst_video_decoder_set_estimate_rate
+	gst_video_decoder_set_latency
+	gst_video_decoder_set_max_errors
+	gst_video_decoder_set_output_state
+	gst_video_decoder_set_packetized
+	gst_video_encoder_finish_frame
+	gst_video_encoder_get_frame
+	gst_video_encoder_get_latency
+	gst_video_encoder_get_oldest_frame
+	gst_video_encoder_get_output_state
+	gst_video_encoder_get_type
+	gst_video_encoder_proxy_getcaps
+	gst_video_encoder_set_headers
+	gst_video_encoder_set_latency
+	gst_video_encoder_set_output_state
 	gst_video_event_is_force_key_unit
 	gst_video_event_new_downstream_force_key_unit
 	gst_video_event_new_still_frame
@@ -76,16 +114,17 @@ EXPORTS
 	gst_video_format_to_string
 	gst_video_frame_copy
 	gst_video_frame_copy_plane
+	gst_video_frame_flags_get_type
 	gst_video_frame_map
 	gst_video_frame_map_id
 	gst_video_frame_unmap
 	gst_video_info_convert
 	gst_video_info_from_caps
 	gst_video_info_init
+	gst_video_info_is_equal
 	gst_video_info_set_format
 	gst_video_info_to_caps
 	gst_video_interlace_mode_get_type
-	gst_video_marshal_VOID__OBJECT_INT
 	gst_video_meta_api_get_type
 	gst_video_meta_get_info
 	gst_video_meta_map
