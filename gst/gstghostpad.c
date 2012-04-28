@@ -207,6 +207,7 @@ gst_proxy_pad_query_default (GstPad * pad, GstObject * parent, GstQuery * query)
         GST_DEBUG_OBJECT (pad, "no target");
         /* We don't have a target, we return TRUE and we assume that any future
          * target will be able to deal with any configured caps. */
+        gst_query_set_accept_caps_result (query, TRUE);
         res = TRUE;
       }
       break;
