@@ -24,7 +24,6 @@
 #include <gst/gst.h>
 #include <gst/check/gstcheck.h>
 
-#include <gst/app/gstapp-marshal.h>
 #include <gst/app/gstappsink.h>
 #include <gst/app/gstappsrc.h>
 
@@ -56,7 +55,6 @@
 #include <gst/pbutils/missing-plugins.h>
 #include <gst/pbutils/pbutils-enumtypes.h>
 #include <gst/pbutils/pbutils.h>
-#include <gst/pbutils/pbutils-marshal.h>
 
 #include <gst/riff/riff-ids.h>
 #include <gst/riff/riff-media.h>
@@ -74,7 +72,6 @@
 #include <gst/rtsp/gstrtsp-enumtypes.h>
 #include <gst/rtsp/gstrtspextension.h>
 #include <gst/rtsp/gstrtsp.h>
-#include <gst/rtsp/gstrtsp-marshal.h>
 #include <gst/rtsp/gstrtspmessage.h>
 #include <gst/rtsp/gstrtsprange.h>
 #include <gst/rtsp/gstrtsptransport.h>
@@ -89,7 +86,6 @@
 #include <gst/video/gstvideofilter.h>
 #include <gst/video/gstvideosink.h>
 #include <gst/video/video-enumtypes.h>
-#include <gst/video/video-marshal.h>
 #include <gst/video/video.h>
 #include <gst/video/colorbalancechannel.h>
 #include <gst/video/colorbalance.h>
