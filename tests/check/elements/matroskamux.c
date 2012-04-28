@@ -41,7 +41,7 @@ GstPad *mysrcpad, *mysinkpad;
 static GstStaticPadTemplate sinktemplate = GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS ("video/x-matroska"));
+    GST_STATIC_CAPS ("video/x-matroska; audio/x-matroska"));
 static GstStaticPadTemplate srcvorbistemplate = GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
     GST_PAD_ALWAYS,
