@@ -765,6 +765,7 @@ EXPORTS
 	gst_plugin_get_name
 	gst_plugin_get_origin
 	gst_plugin_get_package
+	gst_plugin_get_release_date_string
 	gst_plugin_get_source
 	gst_plugin_get_type
 	gst_plugin_get_version

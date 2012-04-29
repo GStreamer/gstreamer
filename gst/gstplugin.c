@@ -993,6 +993,29 @@ gst_plugin_get_origin (GstPlugin * plugin)
 }
 
 /**
+ * gst_plugin_get_release_date_string:
+ * @plugin: plugin to get the release date of
+ *
+ * Get the release date (and possibly time) in form of a string, if available.
+ *
+ * For normal GStreamer plugin releases this will usually just be a date in
+ * the form of "YYYY-MM-DD", while pre-releases and builds from git may contain
+ * a time component after the date as well, in which case the string will be
+ * formatted like "YYYY-MM-DDTHH:MMZ" (e.g. "2012-04-30T09:30Z").
+ *
+ * There may be plugins that do not have a valid release date set on them.
+ *
+ * Returns: the date string of the plugin, or %NULL if not available.
+ */
+const gchar *
+gst_plugin_get_release_date_string (GstPlugin * plugin)
+{
+  g_return_val_if_fail (plugin != NULL, NULL);
+
+  return plugin->desc.release_datetime;
+}
+
+/**
  * gst_plugin_get_module:
  * @plugin: plugin to query
  *

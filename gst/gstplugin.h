@@ -329,6 +329,7 @@ const gchar*		gst_plugin_get_license		(GstPlugin *plugin);
 const gchar*		gst_plugin_get_source		(GstPlugin *plugin);
 const gchar*		gst_plugin_get_package		(GstPlugin *plugin);
 const gchar*		gst_plugin_get_origin		(GstPlugin *plugin);
+const gchar*		gst_plugin_get_release_date_string (GstPlugin *plugin);
 const GstStructure*	gst_plugin_get_cache_data	(GstPlugin * plugin);
 void			gst_plugin_set_cache_data	(GstPlugin * plugin, GstStructure *cache_data);
 
