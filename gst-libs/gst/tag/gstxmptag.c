@@ -60,7 +60,8 @@ static const gchar *schema_list[] = {
  *
  * Gets the list of supported schemas in the xmp lib
  *
- * Returns: a %NULL terminated array of strings with the schema names
+ * Returns: (transfer none): a %NULL terminated array of strings with the
+ *     schema names
  *
  * Since: 0.10.33
  */

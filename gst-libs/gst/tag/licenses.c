@@ -201,8 +201,8 @@ static const gchar jurisdictions[] =
  * (e.g. to tag an audio track appropriately in a video or audio editor, or
  * an image in a camera application).
  *
- * Returns: NULL-terminated array of license strings. Free with g_strfreev()
- *     when no longer needed.
+ * Returns: (transfer full): NULL-terminated array of license strings. Free
+ *     with g_strfreev() when no longer needed.
  *
  * Since: 0.10.36
  */

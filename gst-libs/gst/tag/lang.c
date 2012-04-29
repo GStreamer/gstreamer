@@ -266,8 +266,8 @@ qsort_strcmp_func (const void *p1, const void *p2)
  * tagging purposes (e.g. to tag an audio track appropriately in a video or
  * audio editor).
  *
- * Returns: NULL-terminated string array with two-letter language codes. Free
- *     with g_strfreev() when no longer needed.
+ * Returns: (transfer full): NULL-terminated string array with two-letter
+ *     language codes. Free with g_strfreev() when no longer needed.
  *
  * Since: 0.10.26
  */
