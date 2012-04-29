@@ -768,7 +768,7 @@ _priv_gst_registry_chunks_load_plugin (GstRegistry * registry, gchar ** in,
   plugin = g_object_newv (GST_TYPE_PLUGIN, 0, NULL);
 
   /* TODO: also set GST_PLUGIN_FLAG_CONST */
-  plugin->flags |= GST_PLUGIN_FLAG_CACHED;
+  GST_OBJECT_FLAG_SET (plugin, GST_PLUGIN_FLAG_CACHED);
   plugin->file_mtime = pe->file_mtime;
   plugin->file_size = pe->file_size;
 
@@ -804,7 +804,7 @@ _priv_gst_registry_chunks_load_plugin (GstRegistry * registry, gchar ** in,
   /* If the license string is 'BLACKLIST', mark this as a blacklisted
    * plugin */
   if (strcmp (plugin->desc.license, "BLACKLIST") == 0)
-    plugin->flags |= GST_PLUGIN_FLAG_BLACKLISTED;
+    GST_OBJECT_FLAG_SET (plugin, GST_PLUGIN_FLAG_BLACKLISTED);
 
   plugin->basename = g_path_get_basename (plugin->filename);
 

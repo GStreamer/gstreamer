@@ -35,9 +35,6 @@
 #include <locale.h>
 #include <glib/gprintf.h>
 
-/* FIXME: shouldn't have to access private API */
-#include "gst/gst_private.h"
-
 static char *_name = NULL;
 
 static int print_element_info (GstElementFactory * factory,
@@ -963,7 +960,7 @@ print_blacklist (void)
   plugins = gst_registry_get_plugin_list (gst_registry_get ());
   for (cur = plugins; cur != NULL; cur = g_list_next (cur)) {
     GstPlugin *plugin = (GstPlugin *) (cur->data);
-    if (plugin->flags & GST_PLUGIN_FLAG_BLACKLISTED) {
+    if (GST_OBJECT_FLAG_IS_SET (plugin, GST_PLUGIN_FLAG_BLACKLISTED)) {
       g_print ("  %s\n", gst_plugin_get_name (plugin));
       count++;
     }
@@ -992,7 +989,7 @@ print_element_list (gboolean print_all)
     plugins = g_list_next (plugins);
     plugincount++;
 
-    if (plugin->flags & GST_PLUGIN_FLAG_BLACKLISTED) {
+    if (GST_OBJECT_FLAG_IS_SET (plugin, GST_PLUGIN_FLAG_BLACKLISTED)) {
       blacklistcount++;
       continue;
     }

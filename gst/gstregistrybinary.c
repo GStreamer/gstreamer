@@ -378,7 +378,7 @@ priv_gst_registry_binary_write_cache (GstRegistry * registry, GList * plugins,
     if (!plugin->filename)
       continue;
 
-    if (plugin->flags & GST_PLUGIN_FLAG_CACHED) {
+    if (GST_OBJECT_FLAG_IS_SET (plugin, GST_PLUGIN_FLAG_CACHED)) {
       GStatBuf statbuf;
 
       if (g_stat (plugin->filename, &statbuf) < 0 ||

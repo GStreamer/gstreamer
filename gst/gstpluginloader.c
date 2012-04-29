@@ -339,7 +339,7 @@ plugin_loader_create_blacklist_plugin (GstPluginLoader * l,
   plugin->filename = g_strdup (entry->filename);
   plugin->file_mtime = entry->file_mtime;
   plugin->file_size = entry->file_size;
-  plugin->flags |= GST_PLUGIN_FLAG_BLACKLISTED;
+  GST_OBJECT_FLAG_SET (plugin, GST_PLUGIN_FLAG_BLACKLISTED);
 
   plugin->basename = g_path_get_basename (plugin->filename);
   plugin->desc.name = g_intern_string (plugin->basename);
@@ -849,7 +849,7 @@ handle_rx_packet (GstPluginLoader * l,
           return FALSE;
         }
 
-        newplugin->flags &= ~GST_PLUGIN_FLAG_CACHED;
+        GST_OBJECT_FLAG_UNSET (newplugin, GST_PLUGIN_FLAG_CACHED);
         GST_LOG_OBJECT (l->registry,
             "marking plugin %p as registered as %s", newplugin,
             newplugin->filename);

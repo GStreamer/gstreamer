@@ -274,8 +274,6 @@ struct _GstPlugin {
 
   GstPluginDesc *orig_desc;
 
-  unsigned int  flags;
-
   gchar *	filename;
   gchar *	basename;       /* base name (non-dir part) of plugin path */
 

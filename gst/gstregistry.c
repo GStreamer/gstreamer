@@ -438,7 +438,7 @@ gst_registry_add_plugin (GstRegistry * registry, GstPlugin * plugin)
           GST_STR_NULL (plugin->filename));
       /* If the new plugin is blacklisted and the existing one isn't cached, do not
        * accept if it's from a different location than the existing one */
-      if ((plugin->flags & GST_PLUGIN_FLAG_BLACKLISTED) &&
+      if (GST_OBJECT_FLAG_IS_SET (plugin, GST_PLUGIN_FLAG_BLACKLISTED) &&
           strcmp (plugin->filename, existing_plugin->filename)) {
         GST_WARNING_OBJECT (registry,
             "Not replacing plugin because new one (%s) is blacklisted but for a different location than existing one (%s)",
@@ -1272,7 +1272,7 @@ gst_registry_scan_path_level (GstRegistryScanContext * context,
           !(deps_changed = _priv_plugin_deps_files_changed (plugin)) &&
           !strcmp (plugin->filename, filename)) {
         GST_LOG_OBJECT (context->registry, "file %s cached", filename);
-        plugin->flags &= ~GST_PLUGIN_FLAG_CACHED;
+        GST_OBJECT_FLAG_UNSET (plugin, GST_PLUGIN_FLAG_CACHED);
         GST_LOG_OBJECT (context->registry,
             "marking plugin %p as registered as %s", plugin, filename);
         plugin->registered = TRUE;
@@ -1481,7 +1481,7 @@ gst_registry_remove_cache_plugins (GstRegistry * registry)
   while (g) {
     g_next = g->next;
     plugin = g->data;
-    if (plugin->flags & GST_PLUGIN_FLAG_CACHED) {
+    if (GST_OBJECT_FLAG_IS_SET (plugin, GST_PLUGIN_FLAG_CACHED)) {
       GST_DEBUG_OBJECT (registry, "removing cached plugin \"%s\"",
           GST_STR_NULL (plugin->filename));
       registry->priv->plugins = g_list_delete_link (registry->priv->plugins, g);
@@ -1593,7 +1593,9 @@ scan_and_update_registry (GstRegistry * default_registry,
           g_win32_get_package_installation_directory_of_module
           (_priv_gst_dll_handle);
 
-      dir = g_build_filename (base_dir, "lib", "gstreamer-" GST_API_VERSION, NULL);
+      dir =
+          g_build_filename (base_dir, "lib", "gstreamer-" GST_API_VERSION,
+          NULL);
       GST_DEBUG ("scanning DLL dir %s", dir);
 
       changed |= gst_registry_scan_path_internal (&context, dir);
