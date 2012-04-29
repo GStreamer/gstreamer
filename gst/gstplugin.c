@@ -1159,25 +1159,7 @@ gst_plugin_list_feature_filter (GList * list,
 
   return data.result;
 }
-#endif
 
-/**
- * gst_plugin_name_filter:
- * @plugin: the plugin to check
- * @name: the name of the plugin
- *
- * A standard filter that returns TRUE when the plugin is of the
- * given name.
- *
- * Returns: TRUE if the plugin is of the given name.
- */
-gboolean
-gst_plugin_name_filter (GstPlugin * plugin, const gchar * name)
-{
-  return (plugin->desc.name && !strcmp (plugin->desc.name, name));
-}
-
-#if 0
 /**
  * gst_plugin_find_feature:
  * @plugin: plugin to get the feature from

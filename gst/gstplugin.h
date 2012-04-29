@@ -298,8 +298,6 @@ void			gst_plugin_set_cache_data	(GstPlugin * plugin, GstStructure *cache_data);
 
 gboolean		gst_plugin_is_loaded		(GstPlugin *plugin);
 
-gboolean		gst_plugin_name_filter		(GstPlugin *plugin, const gchar *name);
-
 GstPlugin *		gst_plugin_load_file		(const gchar *filename, GError** error);
 
 GstPlugin *             gst_plugin_load                 (GstPlugin *plugin);

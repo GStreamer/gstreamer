@@ -816,6 +816,12 @@ gst_registry_feature_filter (GstRegistry * registry,
   return list;
 }
 
+static gboolean
+gst_registry_plugin_name_filter (GstPlugin * plugin, const gchar * name)
+{
+  return (plugin->desc.name && !strcmp (plugin->desc.name, name));
+}
+
 /**
  * gst_registry_find_plugin:
  * @registry: the registry to search
@@ -839,7 +845,7 @@ gst_registry_find_plugin (GstRegistry * registry, const gchar * name)
   g_return_val_if_fail (name != NULL, NULL);
 
   walk = gst_registry_plugin_filter (registry,
-      (GstPluginFilter) gst_plugin_name_filter, TRUE, (gpointer) name);
+      (GstPluginFilter) gst_registry_plugin_name_filter, TRUE, (gpointer) name);
   if (walk) {
     result = GST_PLUGIN_CAST (walk->data);
 

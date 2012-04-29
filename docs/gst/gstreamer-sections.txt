@@ -1998,7 +1998,6 @@ gst_plugin_get_release_date_string
 gst_plugin_is_loaded
 gst_plugin_get_cache_data
 gst_plugin_set_cache_data
-gst_plugin_name_filter
 gst_plugin_load_file
 gst_plugin_load
 gst_plugin_load_by_name
