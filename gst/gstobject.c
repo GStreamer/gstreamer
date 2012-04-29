@@ -559,7 +559,14 @@ gst_object_set_name_default (GstObject * object)
   type_name = g_quark_to_string (q);
   if (strncmp (type_name, "Gst", 3) == 0)
     type_name += 3;
-  name = g_strdup_printf ("%s%d", type_name, count);
+  /* give the 20th "queue" element and the first "queue2" different names */
+  l = strlen (type_name);
+  if (l > 0 && g_ascii_isdigit (type_name[l - 1])) {
+    name = g_strdup_printf ("%s-%d", type_name, count);
+  } else {
+    name = g_strdup_printf ("%s%d", type_name, count);
+  }
+
   l = strlen (name);
   for (i = 0; i < l; i++)
     name[i] = g_ascii_tolower (name[i]);
