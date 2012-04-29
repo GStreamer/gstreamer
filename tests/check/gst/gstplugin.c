@@ -61,7 +61,7 @@ GST_START_TEST (test_registry)
 
     /* one for the registry, one for the list */
     GST_DEBUG ("refcount %d %s", GST_OBJECT_REFCOUNT_VALUE (plugin),
-        plugin->desc.name);
+        gst_plugin_get_name (plugin));
     ASSERT_OBJECT_REFCOUNT (plugin, "plugin in registry", 2);
 
     gst_object_unref (plugin);
@@ -145,11 +145,12 @@ GST_START_TEST (test_find_plugin)
   fail_if (plugin == NULL, "Failed to find coreelements plugin");
   ASSERT_OBJECT_REFCOUNT (plugin, "plugin", 2);
 
-  fail_unless_equals_string (plugin->desc.version, VERSION);
-  fail_unless_equals_string (plugin->desc.license, "LGPL");
-  fail_unless_equals_string (plugin->desc.source, "gstreamer");
-  fail_unless_equals_string (plugin->desc.package, GST_PACKAGE_NAME);
-  fail_unless_equals_string (plugin->desc.origin, GST_PACKAGE_ORIGIN);
+  fail_unless_equals_string (gst_plugin_get_version (plugin), VERSION);
+  fail_unless_equals_string (gst_plugin_get_license (plugin), "LGPL");
+  fail_unless_equals_string (gst_plugin_get_source (plugin), "gstreamer");
+  fail_unless_equals_string (gst_plugin_get_package (plugin), GST_PACKAGE_NAME);
+  fail_unless_equals_string (gst_plugin_get_origin (plugin),
+      GST_PACKAGE_ORIGIN);
 
   gst_object_unref (plugin);
 }
