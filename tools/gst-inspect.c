@@ -35,6 +35,9 @@
 #include <locale.h>
 #include <glib/gprintf.h>
 
+/* FIXME: shouldn't have to access private API */
+#include "gst/gst_private.h"
+
 static char *_name = NULL;
 
 static int print_element_info (GstElementFactory * factory,
@@ -961,7 +964,7 @@ print_blacklist (void)
   for (cur = plugins; cur != NULL; cur = g_list_next (cur)) {
     GstPlugin *plugin = (GstPlugin *) (cur->data);
     if (plugin->flags & GST_PLUGIN_FLAG_BLACKLISTED) {
-      g_print ("  %s\n", plugin->desc.name);
+      g_print ("  %s\n", gst_plugin_get_name (plugin));
       count++;
     }
   }
@@ -996,7 +999,7 @@ print_element_list (gboolean print_all)
 
     orig_features = features =
         gst_registry_get_feature_list_by_plugin (gst_registry_get (),
-        plugin->desc.name);
+        gst_plugin_get_name (plugin));
     while (features) {
       GstPluginFeature *feature;
 
@@ -1012,7 +1015,7 @@ print_element_list (gboolean print_all)
         if (print_all)
           print_element_info (factory, TRUE);
         else
-          g_print ("%s:  %s: %s\n", plugin->desc.name,
+          g_print ("%s:  %s: %s\n", gst_plugin_get_name (plugin),
               GST_OBJECT_NAME (factory),
               gst_element_factory_get_longname (factory));
 #if 0
@@ -1029,7 +1032,7 @@ print_element_list (gboolean print_all)
 
         factory = GST_TYPE_FIND_FACTORY (feature);
         if (!print_all)
-          g_print ("%s: %s: ", plugin->desc.name,
+          g_print ("%s: %s: ", gst_plugin_get_name (plugin),
               gst_plugin_feature_get_name (feature));
         if (factory->extensions) {
           guint i = 0;
@@ -1047,7 +1050,7 @@ print_element_list (gboolean print_all)
         }
       } else {
         if (!print_all)
-          n_print ("%s:  %s (%s)\n", plugin->desc.name,
+          n_print ("%s:  %s (%s)\n", gst_plugin_get_name (plugin),
               GST_OBJECT_NAME (feature), g_type_name (G_OBJECT_TYPE (feature)));
       }
 
@@ -1086,7 +1089,7 @@ print_all_uri_handlers (void)
 
     features =
         gst_registry_get_feature_list_by_plugin (gst_registry_get (),
-        plugin->desc.name);
+        gst_plugin_get_name (plugin));
 
     for (f = features; f; f = f->next) {
       GstPluginFeature *feature = GST_PLUGIN_FEATURE (f->data);
@@ -1097,7 +1100,8 @@ print_all_uri_handlers (void)
 
         factory = GST_ELEMENT_FACTORY (gst_plugin_feature_load (feature));
         if (!factory) {
-          g_print ("element plugin %s couldn't be loaded\n", plugin->desc.name);
+          g_print ("element plugin %s couldn't be loaded\n",
+              gst_plugin_get_name (plugin));
           continue;
         }
 
@@ -1152,21 +1156,24 @@ print_all_uri_handlers (void)
 static void
 print_plugin_info (GstPlugin * plugin)
 {
+  const gchar *release_date = gst_plugin_get_release_date_string (plugin);
+  const gchar *filename = gst_plugin_get_filename (plugin);
+
   n_print ("Plugin Details:\n");
-  n_print ("  Name:\t\t\t%s\n", plugin->desc.name);
-  n_print ("  Description:\t\t%s\n", plugin->desc.description);
-  n_print ("  Filename:\t\t%s\n",
-      plugin->filename ? plugin->filename : "(null)");
-  n_print ("  Version:\t\t%s\n", plugin->desc.version);
-  n_print ("  License:\t\t%s\n", plugin->desc.license);
-  n_print ("  Source module:\t%s\n", plugin->desc.source);
-  if (plugin->desc.release_datetime != NULL) {
+  n_print ("  Name:\t\t\t%s\n", gst_plugin_get_name (plugin));
+  n_print ("  Description:\t\t%s\n", gst_plugin_get_description (plugin));
+  n_print ("  Filename:\t\t%s\n", (filename != NULL) ? filename : "(null)");
+  n_print ("  Version:\t\t%s\n", gst_plugin_get_version (plugin));
+  n_print ("  License:\t\t%s\n", gst_plugin_get_license (plugin));
+  n_print ("  Source module:\t%s\n", gst_plugin_get_source (plugin));
+
+  if (release_date != NULL) {
     const gchar *tz = "(UTC)";
     gchar *str, *sep;
 
     /* may be: YYYY-MM-DD or YYYY-MM-DDTHH:MMZ */
     /* YYYY-MM-DDTHH:MMZ => YYYY-MM-DD HH:MM (UTC) */
-    str = g_strdup (plugin->desc.release_datetime);
+    str = g_strdup (release_date);
     sep = strstr (str, "T");
     if (sep != NULL) {
       *sep = ' ';
@@ -1179,8 +1186,8 @@ print_plugin_info (GstPlugin * plugin)
     n_print ("  Source release date:\t%s%s\n", str, tz);
     g_free (str);
   }
-  n_print ("  Binary package:\t%s\n", plugin->desc.package);
-  n_print ("  Origin URL:\t\t%s\n", plugin->desc.origin);
+  n_print ("  Binary package:\t%s\n", gst_plugin_get_package (plugin));
+  n_print ("  Origin URL:\t\t%s\n", gst_plugin_get_origin (plugin));
   n_print ("\n");
 }
 
@@ -1196,7 +1203,7 @@ print_plugin_features (GstPlugin * plugin)
 
   origlist = features =
       gst_registry_get_feature_list_by_plugin (gst_registry_get (),
-      plugin->desc.name);
+      gst_plugin_get_name (plugin));
 
   while (features) {
     GstPluginFeature *feature;
@@ -1225,7 +1232,7 @@ print_plugin_features (GstPlugin * plugin)
       if (factory->extensions) {
         guint i = 0;
 
-        g_print ("%s: %s: ", plugin->desc.name,
+        g_print ("%s: %s: ", gst_plugin_get_name (plugin),
             gst_plugin_feature_get_name (feature));
         while (factory->extensions[i]) {
           g_print ("%s%s", i > 0 ? ", " : "", factory->extensions[i]);
@@ -1233,7 +1240,7 @@ print_plugin_features (GstPlugin * plugin)
         }
         g_print ("\n");
       } else
-        g_print ("%s: %s: no extensions\n", plugin->desc.name,
+        g_print ("%s: %s: no extensions\n", gst_plugin_get_name (plugin),
             gst_plugin_feature_get_name (feature));
 
       num_typefinders++;
