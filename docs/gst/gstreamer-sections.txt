@@ -1995,7 +1995,6 @@ gst_plugin_get_origin
 gst_plugin_get_source
 gst_plugin_get_version
 gst_plugin_get_release_date_string
-gst_plugin_get_module
 gst_plugin_is_loaded
 gst_plugin_get_cache_data
 gst_plugin_set_cache_data

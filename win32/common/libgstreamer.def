@@ -761,7 +761,6 @@ EXPORTS
 	gst_plugin_get_description
 	gst_plugin_get_filename
 	gst_plugin_get_license
-	gst_plugin_get_module
 	gst_plugin_get_name
 	gst_plugin_get_origin
 	gst_plugin_get_package

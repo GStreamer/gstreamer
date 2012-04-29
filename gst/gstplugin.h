@@ -333,7 +333,6 @@ const gchar*		gst_plugin_get_release_date_string (GstPlugin *plugin);
 const GstStructure*	gst_plugin_get_cache_data	(GstPlugin * plugin);
 void			gst_plugin_set_cache_data	(GstPlugin * plugin, GstStructure *cache_data);
 
-GModule *		gst_plugin_get_module		(GstPlugin *plugin);
 gboolean		gst_plugin_is_loaded		(GstPlugin *plugin);
 
 gboolean		gst_plugin_name_filter		(GstPlugin *plugin, const gchar *name);

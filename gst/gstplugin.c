@@ -1016,24 +1016,6 @@ gst_plugin_get_release_date_string (GstPlugin * plugin)
 }
 
 /**
- * gst_plugin_get_module:
- * @plugin: plugin to query
- *
- * Gets the #GModule of the plugin. If the plugin isn't loaded yet, NULL is
- * returned.
- *
- * Returns: (transfer none): module belonging to the plugin or NULL if the
- *          plugin isn't loaded yet.
- */
-GModule *
-gst_plugin_get_module (GstPlugin * plugin)
-{
-  g_return_val_if_fail (plugin != NULL, NULL);
-
-  return plugin->module;
-}
-
-/**
  * gst_plugin_is_loaded:
  * @plugin: plugin to query
  *
