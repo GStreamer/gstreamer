@@ -257,5 +257,47 @@ extern GstDebugCategory *_priv_GST_CAT_POLL;
 #endif
 
 
+/**** objects made opaque until the private bits have been made private ****/
+
+#include <gmodule.h>
+#include <time.h> /* time_t */
+#include <sys/types.h> /* off_t */
+#include <sys/stat.h> /* off_t */
+
+typedef struct _GstPluginPrivate GstPluginPrivate;
+
+struct _GstPlugin {
+  GstObject       object;
+
+  /*< private >*/
+  GstPluginDesc	desc;
+
+  GstPluginDesc *orig_desc;
+
+  unsigned int  flags;
+
+  gchar *	filename;
+  gchar *	basename;       /* base name (non-dir part) of plugin path */
+
+  GModule *	module;		/* contains the module if plugin is loaded */
+
+  off_t         file_size;
+  time_t        file_mtime;
+  gboolean      registered;     /* TRUE when the registry has seen a filename
+                                 * that matches the plugin's basename */
+
+  GstPluginPrivate *priv;
+
+  gpointer _gst_reserved[GST_PADDING];
+};
+
+struct _GstPluginClass {
+  GstObjectClass  object_class;
+
+  /*< private >*/
+  gpointer _gst_reserved[GST_PADDING];
+};
+
+
 G_END_DECLS
 #endif /* __GST_PRIVATE_H__ */
