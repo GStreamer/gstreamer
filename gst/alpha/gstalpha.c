@@ -171,7 +171,7 @@ static GstFlowReturn gst_alpha_transform_frame (GstVideoFilter * filter,
 static void gst_alpha_init_params_full (GstAlpha * alpha,
     const GstVideoFormatInfo * in_info, const GstVideoFormatInfo * out_info);
 static void gst_alpha_init_params (GstAlpha * alpha);
-static gboolean gst_alpha_set_process_function (GstAlpha * alpha);
+static void gst_alpha_set_process_function (GstAlpha * alpha);
 static gboolean gst_alpha_set_process_function_full (GstAlpha * alpha,
     GstVideoInfo * in_info, GstVideoInfo * out_info);
 
@@ -2363,8 +2363,16 @@ gst_alpha_init_params_full (GstAlpha * alpha,
 static void
 gst_alpha_init_params (GstAlpha * alpha)
 {
-  gst_alpha_init_params_full (alpha, GST_VIDEO_FILTER (alpha)->in_info.finfo,
-      GST_VIDEO_FILTER (alpha)->out_info.finfo);
+  const GstVideoFormatInfo *finfo_in, *finfo_out;
+
+  finfo_in = GST_VIDEO_FILTER (alpha)->in_info.finfo;
+  finfo_out = GST_VIDEO_FILTER (alpha)->out_info.finfo;
+
+  if (finfo_in != NULL && finfo_out != NULL) {
+    gst_alpha_init_params_full (alpha, finfo_in, finfo_out);
+  } else {
+    GST_DEBUG_OBJECT (alpha, "video formats not set yet");
+  }
 }
 
 /* Protected with the alpha lock */
@@ -2543,12 +2551,19 @@ gst_alpha_set_process_function_full (GstAlpha * alpha, GstVideoInfo * in_info,
   return alpha->process != NULL;
 }
 
-static gboolean
+static void
 gst_alpha_set_process_function (GstAlpha * alpha)
 {
-  return gst_alpha_set_process_function_full (alpha,
-      &GST_VIDEO_FILTER_CAST (alpha)->in_info,
-      &GST_VIDEO_FILTER_CAST (alpha)->out_info);
+  GstVideoInfo *info_in, *info_out;
+
+  info_in = &GST_VIDEO_FILTER (alpha)->in_info;
+  info_out = &GST_VIDEO_FILTER (alpha)->out_info;
+
+  if (info_in->finfo != NULL && info_out->finfo != NULL) {
+    gst_alpha_set_process_function_full (alpha, info_in, info_out);
+  } else {
+    GST_DEBUG_OBJECT (alpha, "video formats not set yet");
+  }
 }
 
 static void
