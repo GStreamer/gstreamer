@@ -59,6 +59,17 @@ typedef enum {
  * @GST_SEEK_FLAG_SKIP: when doing fast foward or fast reverse playback, allow
  *                     elements to skip frames instead of generating all
  *                     frames. Since 0.10.22.
+ * @GST_SEEK_FLAG_SNAP_BEFORE: go to a location before the requested position,
+ *                     if KEY_UNIT this means the keyframe at or before the
+ *                     requested position the one at or before the seek target.
+ *                     Since 0.10.37.
+ * @GST_SEEK_FLAG_SNAP_AFTER: go to a location after the requested position,
+ *                     if KEY_UNIT this means the keyframe at of after the
+ *                     requested position. Since 0.10.37.
+ * @GST_SEEK_FLAG_SNAP_NEAREST: go to a position near the requested position,
+ *                     if KEY_UNIT this means the keyframe closest to the
+ *                     requested position, if both keyframes are at an equal
+ *                     distance, behaves like SNAP_BEFORE. Since 0.10.37.
  *
  * Flags to be used with gst_element_seek() or gst_event_new_seek(). All flags
  * can be used together.
@@ -82,6 +93,16 @@ typedef enum {
  * and demuxers to adjust the playback rate by skipping frames. This can improve
  * performance and decrease CPU usage because not all frames need to be decoded.
  *
+ * The @GST_SEEK_FLAG_SNAP_BEFORE flag can be used to snap to the previous
+ * relevant location, and the @GST_SEEK_FLAG_SNAP_AFTER flag can be used to
+ * select the next relevant location. If KEY_UNIT is specified, the relevant
+ * location is a keyframe. If both flags are specified, the nearest of these
+ * locations will be selected. If none are specified, the implementation is
+ * free to select whichever it wants.
+ * The before and after here are in running time, so when playing backwards,
+ * the next location refers to the one that will played in next, and not the
+ * one that is located after in the actual source stream.
+ *
  * Also see part-seeking.txt in the GStreamer design documentation for more
  * details on the meaning of these flags and the behaviour expected of
  * elements that handle them.
@@ -92,7 +113,11 @@ typedef enum {
   GST_SEEK_FLAG_ACCURATE        = (1 << 1),
   GST_SEEK_FLAG_KEY_UNIT        = (1 << 2),
   GST_SEEK_FLAG_SEGMENT         = (1 << 3),
-  GST_SEEK_FLAG_SKIP            = (1 << 4)
+  GST_SEEK_FLAG_SKIP            = (1 << 4),
+  GST_SEEK_FLAG_SNAP_BEFORE     = (1 << 5),
+  GST_SEEK_FLAG_SNAP_AFTER      = (1 << 6),
+  GST_SEEK_FLAG_SNAP_NEAREST    = GST_SEEK_FLAG_SNAP_BEFORE | GST_SEEK_FLAG_SNAP_AFTER,
+  /* Careful to restart next flag with 1<<7 here */
 } GstSeekFlags;
 
 /**

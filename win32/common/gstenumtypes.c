@@ -1472,6 +1472,10 @@ gst_seek_flags_get_type (void)
     {C_FLAGS (GST_SEEK_FLAG_KEY_UNIT), "GST_SEEK_FLAG_KEY_UNIT", "key-unit"},
     {C_FLAGS (GST_SEEK_FLAG_SEGMENT), "GST_SEEK_FLAG_SEGMENT", "segment"},
     {C_FLAGS (GST_SEEK_FLAG_SKIP), "GST_SEEK_FLAG_SKIP", "skip"},
+    {C_FLAGS (GST_SEEK_FLAG_SNAP_BEFORE), "GST_SEEK_FLAG_SNAP_BEFORE",
+        "snap-before"},
+    {C_FLAGS (GST_SEEK_FLAG_SNAP_AFTER), "GST_SEEK_FLAG_SNAP_AFTER",
+        "snap-after"},
     {0, NULL, NULL}
   };
 

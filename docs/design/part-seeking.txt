@@ -174,6 +174,12 @@ implemented demuxer/parser-side, e.g. make demuxers/parsers ignore the
 KEY_UNIT flag if the position adjustment would be larger than 1/10th of
 the duration or somesuch.
 
+Flags can be used to influence snapping direction for those cases where it
+matters. SNAP_BEFORE will select the preceding position to the seek target,
+and SNAP_AFTER will select the following one. If both flags are set, the
+nearest one to the seek target will be used. If none of these flags are set,
+the seeking implemention is free to select whichever it wants.
+
 Summary:
 
  - if the KEY_UNIT flag is *not* specified, the demuxer/parser should
