@@ -33,6 +33,8 @@
 
 #include "dvdreadsrc.h"
 
+#include <gmodule.h>
+
 #include <gst/gst-i18n-plugin.h>
 
 GST_DEBUG_CATEGORY_STATIC (gstgst_dvd_read_src_debug);
