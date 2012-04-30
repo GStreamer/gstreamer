@@ -706,7 +706,7 @@ static GstFlowReturn
 gst_multi_file_sink_render_list (GstBaseSink * sink, GstBufferList * list)
 {
   GstBuffer *buf;
-  guint size;
+  guint size = 0;
 
   gst_buffer_list_foreach (list, buffer_list_calc_size, &size);
   GST_LOG_OBJECT (sink, "total size of buffer list %p: %u", list, size);
