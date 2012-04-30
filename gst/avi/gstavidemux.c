@@ -79,9 +79,6 @@ static const char *const snap_types[2][2] = {
 };
 #endif
 
-static void gst_avi_demux_base_init (GstAviDemuxClass * klass);
-static void gst_avi_demux_class_init (GstAviDemuxClass * klass);
-static void gst_avi_demux_init (GstAviDemux * avi);
 static void gst_avi_demux_finalize (GObject * object);
 
 static void gst_avi_demux_reset (GstAviDemux * avi);
@@ -3994,9 +3991,9 @@ gst_avi_demux_do_seek (GstAviDemux * avi, GstSegment * segment)
   GstAviStream *stream;
 
   seek_time = segment->position;
-  keyframe = !!(segment->flags & GST_SEEK_FLAG_KEY_UNIT);
-  before = !!(segment->flags & GST_SEEK_FLAG_SNAP_BEFORE);
-  after = !!(segment->flags & GST_SEEK_FLAG_SNAP_AFTER);
+  keyframe = ! !(segment->flags & GST_SEEK_FLAG_KEY_UNIT);
+  before = ! !(segment->flags & GST_SEEK_FLAG_SNAP_BEFORE);
+  after = ! !(segment->flags & GST_SEEK_FLAG_SNAP_AFTER);
 
   GST_DEBUG_OBJECT (avi, "seek to: %" GST_TIME_FORMAT
       " keyframe seeking:%d, %s", GST_TIME_ARGS (seek_time), keyframe,
@@ -4251,10 +4248,10 @@ avi_demux_handle_seek_push (GstAviDemux * avi, GstPad * pad, GstEvent * event)
   gst_segment_do_seek (&seeksegment, rate, format, flags,
       cur_type, cur, stop_type, stop, &update);
 
-  keyframe = !!(flags & GST_SEEK_FLAG_KEY_UNIT);
+  keyframe = ! !(flags & GST_SEEK_FLAG_KEY_UNIT);
   cur = seeksegment.position;
-  before = !!(flags & GST_SEEK_FLAG_SNAP_BEFORE);
-  after = !!(flags & GST_SEEK_FLAG_SNAP_AFTER);
+  before = ! !(flags & GST_SEEK_FLAG_SNAP_BEFORE);
+  after = ! !(flags & GST_SEEK_FLAG_SNAP_AFTER);
 
   GST_DEBUG_OBJECT (avi,
       "Seek requested: ts %" GST_TIME_FORMAT " stop %" GST_TIME_FORMAT
