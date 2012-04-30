@@ -138,11 +138,6 @@ gst_multi_file_src_class_init (GstMultiFileSrcClass * klass)
 
   gstpushsrc_class->create = gst_multi_file_src_create;
 
-  if (sizeof (off_t) < 8) {
-    GST_LOG ("No large file support, sizeof (off_t) = %" G_GSIZE_FORMAT,
-        sizeof (off_t));
-  }
-
   GST_DEBUG_CATEGORY_INIT (gst_multi_file_src_debug, "multifilesrc", 0,
       "multifilesrc element");
 
