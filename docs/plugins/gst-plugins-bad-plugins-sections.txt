@@ -104,29 +104,14 @@ gst_burn_plugin_init
 <FILE>element-camerabin</FILE>
 <TITLE>camerabin</TITLE>
 GstCameraBin
-GstCameraBinMode
 <SUBSECTION Standard>
 GstCameraBinClass
-GST_CAMERABIN
-GST_IS_CAMERABIN
-GST_TYPE_CAMERABIN
-GST_CAMERABIN_CLASS
-GST_IS_CAMERABIN_CLASS
-gst_camerabin_get_type
-</SECTION>
-
-<SECTION>
-<FILE>element-camerabin2</FILE>
-<TITLE>camerabin2</TITLE>
-GstCameraBin2
-<SUBSECTION Standard>
-GstCameraBin2Class
-GST_CAMERA_BIN2
-GST_IS_CAMERA_BIN2
-GST_TYPE_CAMERA_BIN2
-GST_CAMERA_BIN2_CLASS
-GST_IS_CAMERA_BIN2_CLASS
-gst_camera_bin2_get_type
+GST_CAMERA_BIN
+GST_IS_CAMERA_BIN
+GST_TYPE_CAMERA_BIN
+GST_CAMERA_BIN_CLASS
+GST_IS_CAMERA_BIN_CLASS
+gst_camera_bin_get_type
 </SECTION>
 
 <SECTION>

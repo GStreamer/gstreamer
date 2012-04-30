@@ -147,7 +147,6 @@ if test "x$HAVE_UNISTD_H" != "xyes"; then
   GST_PLUGINS_SELECTED=`echo $GST_PLUGINS_SELECTED | $SED -e s/festival//`
 fi
 
-dnl used by camerabin
 AC_CHECK_HEADERS([sys/time.h])
 
 dnl used by ext/dts
@@ -301,7 +300,7 @@ dnl *** plug-ins to include ***
 dnl Non ported plugins (non-dependant, then dependant)
 dnl Make sure you have a space before and after all plugins
 GST_PLUGINS_NONPORTED=" aiff \
- camerabin cdxaparse \
+ cdxaparse \
  dccp faceoverlay festival \
  fieldanalysis freeverb freeze frei0r gaudieffects \
  hdvparse id3tag inter interlace ivfparse jpegformat jp2kdecimator \
@@ -325,7 +324,6 @@ AG_GST_CHECK_PLUGIN(asfmux)
 AG_GST_CHECK_PLUGIN(audiovisualizers)
 AG_GST_CHECK_PLUGIN(autoconvert)
 AG_GST_CHECK_PLUGIN(bayer)
-AG_GST_CHECK_PLUGIN(camerabin)
 AG_GST_CHECK_PLUGIN(camerabin2)
 AG_GST_CHECK_PLUGIN(cdxaparse)
 AG_GST_CHECK_PLUGIN(coloreffects)
@@ -2013,7 +2011,6 @@ gst/asfmux/Makefile
 gst/audiovisualizers/Makefile
 gst/autoconvert/Makefile
 gst/bayer/Makefile
-gst/camerabin/Makefile
 gst/camerabin2/Makefile
 gst/cdxaparse/Makefile
 gst/coloreffects/Makefile
@@ -2113,7 +2110,6 @@ tests/Makefile
 tests/check/Makefile
 tests/files/Makefile
 tests/examples/Makefile
-tests/examples/camerabin/Makefile
 tests/examples/camerabin2/Makefile
 tests/examples/directfb/Makefile
 tests/examples/mxf/Makefile
