@@ -24,6 +24,10 @@
 
 G_BEGIN_DECLS
 
+/* to keep code mergeable */
+#define GstCameraBin2 GstCameraBin
+#define GstCameraBin2Class GstCameraBinClass
+
 #define GST_TYPE_CAMERA_BIN2   (gst_camera_bin2_get_type())
 #define GST_CAMERA_BIN2(obj)   (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_CAMERA_BIN2,GstCameraBin2))
 #define GST_CAMERA_BIN2_CAST(obj)   ((GstCameraBin2 *) obj)

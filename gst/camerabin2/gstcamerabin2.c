@@ -48,8 +48,8 @@
  * <para>
  * Camerabin2 can be created using gst_element_factory_make() just like
  * any other element. Video or image capture mode can be selected using
- * the #GstCameraBin2:mode property and the file to save the capture is
- * selected using #GstCameraBin2:location property.
+ * the #GstCameraBin:mode property and the file to save the capture is
+ * selected using #GstCameraBin:location property.
  *
  * After creating camerabin2, applications might want to do some
  * customization (there's a section about this below), then select
@@ -60,14 +60,14 @@
  * location, a %GST_MESSAGE_ELEMENT named 'image-done' will be posted on
  * the #GstBus.
  *
- * In video capture mode, send a #GstCameraBin2:start-capture to start
- * recording, then send a #GstCameraBin2:stop-capture to stop recording.
+ * In video capture mode, send a #GstCameraBin:start-capture to start
+ * recording, then send a #GstCameraBin:stop-capture to stop recording.
  * Note that both signals are asynchronous, so, calling
- * #GstCameraBin2:stop-capture doesn't guarantee that the video has been
+ * #GstCameraBin:stop-capture doesn't guarantee that the video has been
  * properly finished yet. Applications should wait for the 'video-done'
  * message to be posted on the bus.
  *
- * In both modes, if #GstCameraBin2:post-previews is %TRUE, a #GstBuffer
+ * In both modes, if #GstCameraBin:post-previews is %TRUE, a #GstBuffer
  * will be post to the #GstBus in a field named 'buffer', in a
  * 'preview-image' message of type %GST_MESSAGE_ELEMENT.
  * </para>
@@ -82,50 +82,50 @@
  *
  * #GstEncodingProfile<!-- -->s are used to tell camerabin2 which formats it
  * should encode the captures to, those should be set to
- * #GstCameraBin2:image-profile and #GstCameraBin2:video-profile. Default is
+ * #GstCameraBin:image-profile and #GstCameraBin:video-profile. Default is
  * jpeg for images, and ogg (theora and vorbis) for video. If a profile without
  * an audio stream is set for video, audio will be disabled on recordings.
  *
- * #GstCameraBin2:preview-caps can be used to select which format preview
+ * #GstCameraBin:preview-caps can be used to select which format preview
  * images should be posted on the #GstBus. It has to be a raw video format.
  *
- * Camerabin2 has a #GstCameraBin2:camera-source property so applications can
+ * Camerabin2 has a #GstCameraBin:camera-source property so applications can
  * set their source that will provide buffers for the viewfinder and for
  * captures. This camera source is a special type of source that has 3 pads.
  * To use a 'regular' source with a single pad you should use
  * #GstWrapperCameraBinSource, it will adapt your source and provide 3 pads.
  *
  * Applications can also select the desired viewfinder sink using
- * #GstCameraBin2:viewfinder-sink, it is also possible to select the audio
- * source using #GstCameraBin2:audio-source.
+ * #GstCameraBin:viewfinder-sink, it is also possible to select the audio
+ * source using #GstCameraBin:audio-source.
  *
  * The viewfinder resolution can be configured using
- * #GstCameraBin2:viewfinder-caps, these #GstCaps should be a subset of
- * #GstCameraBin2:viewfinder-supported-caps.
+ * #GstCameraBin:viewfinder-caps, these #GstCaps should be a subset of
+ * #GstCameraBin:viewfinder-supported-caps.
  *
  * To select the desired resolution for captures, camerabin2 provides
- * #GstCameraBin2:image-capture-caps and #GstCameraBin2:video-capture-caps,
+ * #GstCameraBin:image-capture-caps and #GstCameraBin:video-capture-caps,
  * these caps must be a subset of what the source can produce. The allowed
- * caps can be probed using #GstCameraBin2:image-capture-supported-caps and
- * #GstCameraBin2:video-capture-supported-caps. In an analogous way, there
- * are #GstCameraBin2:audio-capture-caps and
- * #GstCameraBin2:audio-capture-supported-caps.
+ * caps can be probed using #GstCameraBin:image-capture-supported-caps and
+ * #GstCameraBin:video-capture-supported-caps. In an analogous way, there
+ * are #GstCameraBin:audio-capture-caps and
+ * #GstCameraBin:audio-capture-supported-caps.
  *
- * Camerabin2 also allows applications to insert custom #GstElements on any
+ * Camerabin also allows applications to insert custom #GstElements on any
  * of its branches: video capture, image capture, viewfinder and preview.
- * Check #GstCameraBin2:video-filter, #GstCameraBin2:image-filter,
- * #GstCameraBin2:viewfinder-filter and #GstCameraBin2:preview-filter.
+ * Check #GstCameraBin:video-filter, #GstCameraBin:image-filter,
+ * #GstCameraBin:viewfinder-filter and #GstCameraBin:preview-filter.
  * </para>
  * </refsect2>
  *
  * <refsect2>
  * <title>Example launch line</title>
  * <para>
- * Unfortunatelly, camerabin2 can't be really used from gst-launch, as you need
+ * Unfortunately, camerabin can't be really used from gst-launch, as you need
  * to send signals to control it. The following pipeline might be able
  * to show the viewfinder using all the default elements.
  * |[
- * gst-launch -v -m camerabin2
+ * gst-launch -v -m camerabin
  * ]|
  * </para>
  * </refsect2>
@@ -324,7 +324,7 @@ gst_camera_bin2_get_type (void)
     };
 
     gst_camera_bin_type =
-        g_type_register_static (GST_TYPE_PIPELINE, "GstCameraBin2",
+        g_type_register_static (GST_TYPE_PIPELINE, "GstCameraBin",
         &gst_camera_bin_info, 0);
 
     g_type_add_interface_static (gst_camera_bin_type, GST_TYPE_TAG_SETTER,
@@ -637,8 +637,9 @@ gst_camera_bin_base_init (gpointer g_class)
 {
   GstElementClass *element_class = GST_ELEMENT_CLASS (g_class);
 
-  gst_element_class_set_details_simple (element_class, "CameraBin2",
-      "Generic/Bin/Camera", "CameraBin2",
+  gst_element_class_set_details_simple (element_class, "Camera Bin",
+      "Generic/Bin/Camera",
+      "Take image snapshots and record movies from camera",
       "Thiago Santos <thiago.sousa.santos@collabora.co.uk>");
 }
 
@@ -2433,8 +2434,8 @@ gst_camera_bin_get_property (GObject * object, guint prop_id,
 gboolean
 gst_camera_bin2_plugin_init (GstPlugin * plugin)
 {
-  GST_DEBUG_CATEGORY_INIT (gst_camera_bin_debug, "camerabin2", 0, "CameraBin2");
+  GST_DEBUG_CATEGORY_INIT (gst_camera_bin_debug, "camerabin", 0, "CameraBin");
 
-  return gst_element_register (plugin, "camerabin2", GST_RANK_NONE,
+  return gst_element_register (plugin, "camerabin", GST_RANK_NONE,
       gst_camera_bin2_get_type ());
 }
