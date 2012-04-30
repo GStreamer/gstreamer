@@ -1716,8 +1716,10 @@ gst_x264_enc_encode_frame (GstX264Enc * encoder, x264_picture_t * pic_in,
   }
 
 out:
-  if (frame)
+  if (frame) {
     gst_video_encoder_finish_frame (GST_VIDEO_ENCODER (encoder), frame);
+    gst_video_codec_frame_unref (frame);
+  }
 
   return ret;
 }
