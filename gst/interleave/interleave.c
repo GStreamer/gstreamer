@@ -786,6 +786,8 @@ gst_interleave_sink_setcaps (GstInterleave * self, GstPad * pad,
 
     gst_structure_remove_field (s, "channel-mask");
 
+    GST_DEBUG_OBJECT (self, "setting sinkcaps %" GST_PTR_FORMAT, sinkcaps);
+
     gst_caps_replace (&self->sinkcaps, sinkcaps);
 
     gst_caps_unref (sinkcaps);
