@@ -110,7 +110,6 @@
 
 /* TODO
  *
- * * Change _set_output_format() to steal the reference of the provided caps
  * * Calculate actual latency based on input/output timestamp/frame_number
  *   and if it exceeds the recorded one, save it and emit a GST_MESSAGE_LATENCY
  */
