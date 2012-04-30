@@ -27,6 +27,8 @@
 #include <OMX_Core.h>
 #include <OMX_Component.h>
 
+#include "gstomxrecmutex.h"
+
 G_BEGIN_DECLS
 
 #define GST_OMX_INIT_STRUCT(st) G_STMT_START { \
@@ -138,7 +140,7 @@ struct _GstOMXPort {
    * Note: This lock must always be taken before
    * the component's state lock if both are needed!
    */
-  GMutex *port_lock;
+  GstOMXRecMutex port_lock;
   GCond *port_cond;
   OMX_PARAM_PORTDEFINITIONTYPE port_def;
   GPtrArray *buffers; /* Contains GstOMXBuffer* */
@@ -171,7 +173,7 @@ struct _GstOMXComponent {
    * pending_reconfigure_outports.
    * Signalled if one of them changes
    */
-  GMutex *state_lock;
+  GstOMXRecMutex state_lock;
   GCond *state_cond;
   OMX_STATETYPE state;
   /* OMX_StateInvalid if no pending state */

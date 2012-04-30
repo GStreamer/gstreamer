@@ -163,12 +163,12 @@ EventHandler (OMX_HANDLETYPE hComponent, OMX_PTR pAppData, OMX_EVENTTYPE eEvent,
            * a state change to be finished */
           GST_DEBUG_OBJECT (comp->parent, "State change to %d finished",
               nData2);
-          g_mutex_lock (comp->state_lock);
+          gst_omx_rec_mutex_recursive_lock (&comp->state_lock);
           comp->state = (OMX_STATETYPE) nData2;
           if (comp->state == comp->pending_state)
             comp->pending_state = OMX_StateInvalid;
           g_cond_broadcast (comp->state_cond);
-          g_mutex_unlock (comp->state_lock);
+          gst_omx_rec_mutex_recursive_unlock (&comp->state_lock);
           break;
         }
         case OMX_CommandFlush:{
@@ -185,7 +185,7 @@ EventHandler (OMX_HANDLETYPE hComponent, OMX_PTR pAppData, OMX_EVENTTYPE eEvent,
            * that the port is really flushed now and
            * we can continue
            */
-          g_mutex_lock (port->port_lock);
+          gst_omx_rec_mutex_recursive_lock (&port->port_lock);
           /* FIXME: If this is ever called when the port
            * was not set to flushing something went
            * wrong but it happens for some reason.
@@ -197,7 +197,7 @@ EventHandler (OMX_HANDLETYPE hComponent, OMX_PTR pAppData, OMX_EVENTTYPE eEvent,
             GST_ERROR_OBJECT (comp->parent, "Port %u was not flushing",
                 port->index);
           }
-          g_mutex_unlock (port->port_lock);
+          gst_omx_rec_mutex_recursive_unlock (&port->port_lock);
           break;
         }
         case OMX_CommandPortEnable:
@@ -212,10 +212,10 @@ EventHandler (OMX_HANDLETYPE hComponent, OMX_PTR pAppData, OMX_EVENTTYPE eEvent,
           GST_DEBUG_OBJECT (comp->parent, "Port %u %s", port->index,
               (cmd == OMX_CommandPortEnable ? "enabled" : "disabled"));
 
-          g_mutex_lock (port->port_lock);
+          gst_omx_rec_mutex_recursive_lock (&port->port_lock);
           port->enabled_changed = TRUE;
           g_cond_broadcast (port->port_cond);
-          g_mutex_unlock (port->port_lock);
+          gst_omx_rec_mutex_recursive_unlock (&port->port_lock);
 
           break;
         }
@@ -265,17 +265,17 @@ EventHandler (OMX_HANDLETYPE hComponent, OMX_PTR pAppData, OMX_EVENTTYPE eEvent,
       for (i = 0; i < n; i++) {
         GstOMXPort *port = g_ptr_array_index (comp->ports, i);
 
-        g_mutex_lock (port->port_lock);
+        gst_omx_rec_mutex_recursive_lock (&port->port_lock);
         if (port_index == OMX_ALL || port_index == port->index) {
           port->settings_cookie++;
           if (port->port_def.eDir == OMX_DirOutput)
             outports = g_list_prepend (outports, port);
           g_cond_broadcast (port->port_cond);
         }
-        g_mutex_unlock (port->port_lock);
+        gst_omx_rec_mutex_recursive_unlock (&port->port_lock);
       }
 
-      g_mutex_lock (comp->state_lock);
+      gst_omx_rec_mutex_recursive_lock (&comp->state_lock);
       for (k = outports; k; k = k->next) {
         gboolean found = FALSE;
 
@@ -293,7 +293,7 @@ EventHandler (OMX_HANDLETYPE hComponent, OMX_PTR pAppData, OMX_EVENTTYPE eEvent,
 
       if (comp->pending_reconfigure_outports)
         g_atomic_int_set (&comp->have_pending_reconfigure_outports, 1);
-      g_mutex_unlock (comp->state_lock);
+      gst_omx_rec_mutex_recursive_unlock (&comp->state_lock);
 
       g_list_free (outports);
 
@@ -328,7 +328,7 @@ EmptyBufferDone (OMX_HANDLETYPE hComponent, OMX_PTR pAppData,
 
   /* Input buffer is empty again and can
    * be used to contain new input */
-  g_mutex_lock (port->port_lock);
+  gst_omx_rec_mutex_recursive_lock (&port->port_lock);
   GST_DEBUG_OBJECT (comp->parent, "Port %u emptied buffer %p (%p)",
       port->index, buf, buf->omx_buf->pBuffer);
   buf->used = FALSE;
@@ -353,7 +353,7 @@ EmptyBufferDone (OMX_HANDLETYPE hComponent, OMX_PTR pAppData,
 
   g_queue_push_tail (port->pending_buffers, buf);
   g_cond_broadcast (port->port_cond);
-  g_mutex_unlock (port->port_lock);
+  gst_omx_rec_mutex_recursive_unlock (&port->port_lock);
 
   return OMX_ErrorNone;
 }
@@ -378,13 +378,13 @@ FillBufferDone (OMX_HANDLETYPE hComponent, OMX_PTR pAppData,
 
   /* Output buffer contains output now or
    * the port was flushed */
-  g_mutex_lock (port->port_lock);
+  gst_omx_rec_mutex_recursive_lock (&port->port_lock);
   GST_DEBUG_OBJECT (comp->parent, "Port %u filled buffer %p (%p)", port->index,
       buf, buf->omx_buf->pBuffer);
   buf->used = FALSE;
   g_queue_push_tail (port->pending_buffers, buf);
   g_cond_broadcast (port->port_cond);
-  g_mutex_unlock (port->port_lock);
+  gst_omx_rec_mutex_recursive_unlock (&port->port_lock);
 
   return OMX_ErrorNone;
 }
@@ -427,7 +427,7 @@ gst_omx_component_new (GstObject * parent, const GstOMXClassData * cdata)
   comp->n_in_ports = 0;
   comp->n_out_ports = 0;
 
-  comp->state_lock = g_mutex_new ();
+  gst_omx_rec_mutex_init (&comp->state_lock);
   comp->state_cond = g_cond_new ();
   comp->pending_state = OMX_StateInvalid;
   comp->last_error = OMX_ErrorNone;
@@ -475,7 +475,7 @@ gst_omx_component_free (GstOMXComponent * comp)
 
       gst_omx_port_deallocate_buffers (port);
 
-      g_mutex_free (port->port_lock);
+      gst_omx_rec_mutex_clear (&port->port_lock);
       g_cond_free (port->port_cond);
       g_queue_free (port->pending_buffers);
 
@@ -493,7 +493,7 @@ gst_omx_component_free (GstOMXComponent * comp)
   gst_omx_core_release (comp->core);
 
   g_cond_free (comp->state_cond);
-  g_mutex_free (comp->state_lock);
+  gst_omx_rec_mutex_clear (&comp->state_lock);
 
   gst_object_unref (comp->parent);
 
@@ -508,7 +508,7 @@ gst_omx_component_set_state (GstOMXComponent * comp, OMX_STATETYPE state)
 
   g_return_val_if_fail (comp != NULL, OMX_ErrorUndefined);
 
-  g_mutex_lock (comp->state_lock);
+  gst_omx_rec_mutex_lock (&comp->state_lock);
   old_state = comp->state;
   GST_DEBUG_OBJECT (comp->parent, "Setting state from %d to %d", old_state,
       state);
@@ -534,15 +534,13 @@ gst_omx_component_set_state (GstOMXComponent * comp, OMX_STATETYPE state)
     g_cond_broadcast (comp->state_cond);
   }
 
-  /* Release lock because the command could call into the callbacks,
-   * which take the lock again */
-  g_mutex_unlock (comp->state_lock);
+  gst_omx_rec_mutex_begin_recursion (&comp->state_lock);
   err = OMX_SendCommand (comp->handle, OMX_CommandStateSet, state, NULL);
-  g_mutex_lock (comp->state_lock);
+  gst_omx_rec_mutex_end_recursion (&comp->state_lock);
   /* No need to check if anything has changed here */
 
 done:
-  g_mutex_unlock (comp->state_lock);
+  gst_omx_rec_mutex_unlock (&comp->state_lock);
 
   if (err != OMX_ErrorNone) {
     GST_ERROR_OBJECT (comp->parent,
@@ -564,7 +562,7 @@ gst_omx_component_get_state (GstOMXComponent * comp, GstClockTime timeout)
 
   GST_DEBUG_OBJECT (comp->parent, "Getting state");
 
-  g_mutex_lock (comp->state_lock);
+  gst_omx_rec_mutex_lock (&comp->state_lock);
   ret = comp->state;
   if (comp->pending_state == OMX_StateInvalid)
     goto done;
@@ -592,7 +590,8 @@ gst_omx_component_get_state (GstOMXComponent * comp, GstClockTime timeout)
   }
 
   do {
-    signalled = g_cond_timed_wait (comp->state_cond, comp->state_lock, timeval);
+    signalled =
+        g_cond_timed_wait (comp->state_cond, comp->state_lock.lock, timeval);
   } while (signalled && comp->last_error == OMX_ErrorNone
       && comp->pending_state != OMX_StateInvalid);
 
@@ -615,7 +614,7 @@ gst_omx_component_get_state (GstOMXComponent * comp, GstClockTime timeout)
   }
 
 done:
-  g_mutex_unlock (comp->state_lock);
+  gst_omx_rec_mutex_unlock (&comp->state_lock);
 
   /* If we waited and timed out this component is unusable now */
   if (!signalled)
@@ -662,7 +661,7 @@ gst_omx_component_add_port (GstOMXComponent * comp, guint32 index)
 
   port->port_def = port_def;
 
-  port->port_lock = g_mutex_new ();
+  gst_omx_rec_mutex_init (&port->port_lock);
   port->port_cond = g_cond_new ();
   port->pending_buffers = g_queue_new ();
   port->flushing = TRUE;
@@ -735,14 +734,14 @@ gst_omx_component_set_last_error (GstOMXComponent * comp, OMX_ERRORTYPE err)
 
   GST_ERROR_OBJECT (comp->parent, "Setting last error: %s (0x%08x)",
       gst_omx_error_to_string (err), err);
-  g_mutex_lock (comp->state_lock);
+  gst_omx_rec_mutex_lock (&comp->state_lock);
   /* We only set the first error ever from which
    * we can't recover anymore.
    */
   if (comp->last_error == OMX_ErrorNone)
     comp->last_error = err;
   g_cond_broadcast (comp->state_cond);
-  g_mutex_unlock (comp->state_lock);
+  gst_omx_rec_mutex_unlock (&comp->state_lock);
 
   /* Now notify all ports, no locking needed
    * here because the ports are allocated in the
@@ -753,9 +752,9 @@ gst_omx_component_set_last_error (GstOMXComponent * comp, OMX_ERRORTYPE err)
   for (i = 0; i < n; i++) {
     GstOMXPort *tmp = g_ptr_array_index (comp->ports, i);
 
-    g_mutex_lock (tmp->port_lock);
+    gst_omx_rec_mutex_lock (&tmp->port_lock);
     g_cond_broadcast (tmp->port_cond);
-    g_mutex_unlock (tmp->port_lock);
+    gst_omx_rec_mutex_unlock (&tmp->port_lock);
   }
 }
 
@@ -766,9 +765,9 @@ gst_omx_component_get_last_error (GstOMXComponent * comp)
 
   g_return_val_if_fail (comp != NULL, OMX_ErrorUndefined);
 
-  g_mutex_lock (comp->state_lock);
+  gst_omx_rec_mutex_lock (&comp->state_lock);
   err = comp->last_error;
-  g_mutex_unlock (comp->state_lock);
+  gst_omx_rec_mutex_unlock (&comp->state_lock);
 
   GST_DEBUG_OBJECT (comp->parent, "Returning last error: %s (0x%08x)",
       gst_omx_error_to_string (err), err);
@@ -882,7 +881,7 @@ gst_omx_port_update_port_definition (GstOMXPort * port,
 
   comp = port->comp;
 
-  g_mutex_lock (port->port_lock);
+  gst_omx_rec_mutex_lock (&port->port_lock);
   if (port_def)
     err =
         gst_omx_component_set_parameter (comp, OMX_IndexParamPortDefinition,
@@ -893,7 +892,7 @@ gst_omx_port_update_port_definition (GstOMXPort * port,
   GST_DEBUG_OBJECT (comp->parent, "Updated port %u definition: %s (0x%08x)",
       port->index, gst_omx_error_to_string (err), err);
 
-  g_mutex_unlock (port->port_lock);
+  gst_omx_rec_mutex_unlock (&port->port_lock);
 
   return (err == OMX_ErrorNone);
 }
@@ -915,7 +914,7 @@ gst_omx_port_acquire_buffer (GstOMXPort * port, GstOMXBuffer ** buf)
 
   GST_DEBUG_OBJECT (comp->parent, "Acquiring buffer from port %u", port->index);
 
-  g_mutex_lock (port->port_lock);
+  gst_omx_rec_mutex_lock (&port->port_lock);
 
 retry:
 
@@ -940,16 +939,16 @@ retry:
    */
   if (port->port_def.eDir == OMX_DirInput) {
     if (g_atomic_int_get (&comp->have_pending_reconfigure_outports)) {
-      g_mutex_unlock (port->port_lock);
-      g_mutex_lock (comp->state_lock);
+      gst_omx_rec_mutex_unlock (&port->port_lock);
+      gst_omx_rec_mutex_lock (&comp->state_lock);
       while (g_atomic_int_get (&comp->have_pending_reconfigure_outports) &&
           (err = comp->last_error) == OMX_ErrorNone && !port->flushing) {
         GST_DEBUG_OBJECT (comp->parent,
             "Waiting for output ports to reconfigure");
-        g_cond_wait (comp->state_cond, comp->state_lock);
+        g_cond_wait (comp->state_cond, comp->state_lock.lock);
       }
-      g_mutex_unlock (comp->state_lock);
-      g_mutex_lock (port->port_lock);
+      gst_omx_rec_mutex_unlock (&comp->state_lock);
+      gst_omx_rec_mutex_lock (&port->port_lock);
       goto retry;
     }
 
@@ -1004,7 +1003,7 @@ retry:
    */
   if (g_queue_is_empty (port->pending_buffers)) {
     GST_DEBUG_OBJECT (comp->parent, "Queue of port %u is empty", port->index);
-    g_cond_wait (port->port_cond, port->port_lock);
+    g_cond_wait (port->port_cond, port->port_lock.lock);
   } else {
     GST_DEBUG_OBJECT (comp->parent, "Port %u has pending buffers",
         port->pending_buffers);
@@ -1017,7 +1016,7 @@ retry:
   goto retry;
 
 done:
-  g_mutex_unlock (port->port_lock);
+  gst_omx_rec_mutex_unlock (&port->port_lock);
 
   if (_buf) {
     g_assert (_buf == _buf->omx_buf->pAppPrivate);
@@ -1045,7 +1044,7 @@ gst_omx_port_release_buffer (GstOMXPort * port, GstOMXBuffer * buf)
   GST_DEBUG_OBJECT (comp->parent, "Releasing buffer %p (%p) to port %u",
       buf, buf->omx_buf->pBuffer, port->index);
 
-  g_mutex_lock (port->port_lock);
+  gst_omx_rec_mutex_lock (&port->port_lock);
 
   if (port->port_def.eDir == OMX_DirInput) {
     /* Reset all flags, some implementations don't
@@ -1076,17 +1075,20 @@ gst_omx_port_release_buffer (GstOMXPort * port, GstOMXBuffer * buf)
   /* FIXME: What if the settings cookies don't match? */
 
   buf->used = TRUE;
+
+  gst_omx_rec_mutex_begin_recursion (&port->port_lock);
   if (port->port_def.eDir == OMX_DirInput) {
     err = OMX_EmptyThisBuffer (comp->handle, buf->omx_buf);
   } else {
     err = OMX_FillThisBuffer (comp->handle, buf->omx_buf);
   }
+  gst_omx_rec_mutex_end_recursion (&port->port_lock);
 
   GST_DEBUG_OBJECT (comp->parent, "Released buffer %p to port %u: %s (0x%08x)",
       buf, port->index, gst_omx_error_to_string (err), err);
 
 done:
-  g_mutex_unlock (port->port_lock);
+  gst_omx_rec_mutex_unlock (&port->port_lock);
 
   return err;
 }
@@ -1103,7 +1105,7 @@ gst_omx_port_set_flushing (GstOMXPort * port, gboolean flush)
   GST_DEBUG_OBJECT (comp->parent, "Setting port %d to %sflushing",
       port->index, (flush ? "" : "not "));
 
-  g_mutex_lock (port->port_lock);
+  gst_omx_rec_mutex_lock (&port->port_lock);
   if (! !flush == ! !port->flushing) {
     GST_DEBUG_OBJECT (comp->parent, "Port %u was %sflushing already",
         port->index, (flush ? "" : "not "));
@@ -1116,17 +1118,17 @@ gst_omx_port_set_flushing (GstOMXPort * port, gboolean flush)
     goto done;
   }
 
-  g_mutex_lock (comp->state_lock);
+  gst_omx_rec_mutex_lock (&comp->state_lock);
   if (comp->state != OMX_StateIdle && comp->state != OMX_StateExecuting) {
 
     GST_DEBUG_OBJECT (comp->parent, "Component is in wrong state: %d",
         comp->state);
     err = OMX_ErrorUndefined;
 
-    g_mutex_unlock (comp->state_lock);
+    gst_omx_rec_mutex_unlock (&comp->state_lock);
     goto done;
   }
-  g_mutex_unlock (comp->state_lock);
+  gst_omx_rec_mutex_unlock (&comp->state_lock);
 
   port->flushing = flush;
   if (flush) {
@@ -1143,17 +1145,16 @@ gst_omx_port_set_flushing (GstOMXPort * port, gboolean flush)
      * additionally check if the condition they're waiting
      * for is true after waking up.
      */
-    g_mutex_lock (comp->state_lock);
+    gst_omx_rec_mutex_lock (&comp->state_lock);
     g_cond_broadcast (comp->state_cond);
-    g_mutex_unlock (comp->state_lock);
+    gst_omx_rec_mutex_unlock (&comp->state_lock);
 
     /* Now flush the port */
     port->flushed = FALSE;
-    /* Unlock because this could call one of the callbacks which
-     * also take the lock */
-    g_mutex_unlock (port->port_lock);
+
+    gst_omx_rec_mutex_begin_recursion (&port->port_lock);
     err = OMX_SendCommand (comp->handle, OMX_CommandFlush, port->index, NULL);
-    g_mutex_lock (port->port_lock);
+    gst_omx_rec_mutex_end_recursion (&port->port_lock);
 
     if (err != OMX_ErrorNone) {
       GST_ERROR_OBJECT (comp->parent,
@@ -1186,7 +1187,8 @@ gst_omx_port_set_flushing (GstOMXPort * port, gboolean flush)
     last_error = OMX_ErrorNone;
     while (signalled && last_error == OMX_ErrorNone && !port->flushed
         && port->buffers->len > g_queue_get_length (port->pending_buffers)) {
-      signalled = g_cond_timed_wait (port->port_cond, port->port_lock, timeval);
+      signalled =
+          g_cond_timed_wait (port->port_cond, port->port_lock.lock, timeval);
 
       last_error = gst_omx_component_get_last_error (comp);
     }
@@ -1221,9 +1223,11 @@ gst_omx_port_set_flushing (GstOMXPort * port, gboolean flush)
          * valid anymore after the buffer was consumed
          */
         buf->omx_buf->nFlags = 0;
-        g_mutex_unlock (port->port_lock);
+
+        gst_omx_rec_mutex_begin_recursion (&port->port_lock);
         err = OMX_FillThisBuffer (comp->handle, buf->omx_buf);
-        g_mutex_lock (port->port_lock);
+        gst_omx_rec_mutex_end_recursion (&port->port_lock);
+
         if (err != OMX_ErrorNone) {
           GST_ERROR_OBJECT (comp->parent,
               "Failed to pass buffer %p (%p) to port %u: %s (0x%08x)", buf,
@@ -1240,7 +1244,7 @@ gst_omx_port_set_flushing (GstOMXPort * port, gboolean flush)
 done:
   GST_DEBUG_OBJECT (comp->parent, "Set port %u to %sflushing: %s (0x%08x)",
       port->index, (flush ? "" : "not "), gst_omx_error_to_string (err), err);
-  g_mutex_unlock (port->port_lock);
+  gst_omx_rec_mutex_unlock (&port->port_lock);
 
   return err;
 
@@ -1250,9 +1254,9 @@ error:
      * set_last_error() needs all port locks.
      * This is safe here because we're just going
      * to error out anyway */
-    g_mutex_unlock (port->port_lock);
+    gst_omx_rec_mutex_unlock (&port->port_lock);
     gst_omx_component_set_last_error (comp, err);
-    g_mutex_lock (port->port_lock);
+    gst_omx_rec_mutex_lock (&port->port_lock);
     goto done;
   }
 }
@@ -1267,9 +1271,9 @@ gst_omx_port_is_flushing (GstOMXPort * port)
 
   comp = port->comp;
 
-  g_mutex_lock (port->port_lock);
+  gst_omx_rec_mutex_lock (&port->port_lock);
   flushing = port->flushing;
-  g_mutex_unlock (port->port_lock);
+  gst_omx_rec_mutex_unlock (&port->port_lock);
 
   GST_DEBUG_OBJECT (comp->parent, "Port %u is flushing: %d", port->index,
       flushing);
@@ -1338,9 +1342,12 @@ gst_omx_port_allocate_buffers_unlocked (GstOMXPort * port)
     buf->settings_cookie = port->settings_cookie;
     g_ptr_array_add (port->buffers, buf);
 
+    gst_omx_rec_mutex_begin_recursion (&port->port_lock);
     err =
         OMX_AllocateBuffer (comp->handle, &buf->omx_buf, port->index, buf,
         port->port_def.nBufferSize);
+    gst_omx_rec_mutex_end_recursion (&port->port_lock);
+
     if (err != OMX_ErrorNone) {
       GST_ERROR_OBJECT (comp->parent,
           "Failed to allocate buffer for port %u: %s (0x%08x)", port->index,
@@ -1369,9 +1376,9 @@ error:
      * set_last_error() needs all port locks.
      * This is safe here because we're just going
      * to error out anyway */
-    g_mutex_unlock (port->port_lock);
+    gst_omx_rec_mutex_unlock (&port->port_lock);
     gst_omx_component_set_last_error (comp, err);
-    g_mutex_lock (port->port_lock);
+    gst_omx_rec_mutex_lock (&port->port_lock);
     goto done;
   }
 }
@@ -1383,9 +1390,9 @@ gst_omx_port_allocate_buffers (GstOMXPort * port)
 
   g_return_val_if_fail (port != NULL, OMX_ErrorUndefined);
 
-  g_mutex_lock (port->port_lock);
+  gst_omx_rec_mutex_lock (&port->port_lock);
   err = gst_omx_port_allocate_buffers_unlocked (port);
-  g_mutex_unlock (port->port_lock);
+  gst_omx_rec_mutex_unlock (&port->port_lock);
 
   return err;
 }
@@ -1439,7 +1446,11 @@ gst_omx_port_deallocate_buffers_unlocked (GstOMXPort * port)
       buf->omx_buf->pAppPrivate = NULL;
       GST_DEBUG_OBJECT (comp->parent, "Deallocating buffer %p (%p)", buf,
           buf->omx_buf->pBuffer);
+
+      gst_omx_rec_mutex_begin_recursion (&port->port_lock);
       tmp = OMX_FreeBuffer (comp->handle, port->index, buf->omx_buf);
+      gst_omx_rec_mutex_end_recursion (&port->port_lock);
+
       if (tmp != OMX_ErrorNone) {
         GST_ERROR_OBJECT (comp->parent,
             "Failed to deallocate buffer %d of port %u: %s (0x%08x)", i,
@@ -1473,9 +1484,9 @@ gst_omx_port_deallocate_buffers (GstOMXPort * port)
 
   g_return_val_if_fail (port != NULL, OMX_ErrorUndefined);
 
-  g_mutex_lock (port->port_lock);
+  gst_omx_rec_mutex_lock (&port->port_lock);
   err = gst_omx_port_deallocate_buffers_unlocked (port);
-  g_mutex_unlock (port->port_lock);
+  gst_omx_rec_mutex_unlock (&port->port_lock);
 
   return err;
 }
@@ -1516,7 +1527,7 @@ gst_omx_port_set_enabled_unlocked (GstOMXPort * port, gboolean enabled)
     port->flushing = TRUE;
   }
 
-  g_mutex_unlock (port->port_lock);
+  gst_omx_rec_mutex_begin_recursion (&port->port_lock);
   if (enabled)
     err =
         OMX_SendCommand (comp->handle, OMX_CommandPortEnable, port->index,
@@ -1525,7 +1536,7 @@ gst_omx_port_set_enabled_unlocked (GstOMXPort * port, gboolean enabled)
     err =
         OMX_SendCommand (comp->handle, OMX_CommandPortDisable,
         port->index, NULL);
-  g_mutex_lock (port->port_lock);
+  gst_omx_rec_mutex_end_recursion (&port->port_lock);
 
   if (err != OMX_ErrorNone) {
     GST_ERROR_OBJECT (comp->parent,
@@ -1555,7 +1566,8 @@ gst_omx_port_set_enabled_unlocked (GstOMXPort * port, gboolean enabled)
   last_error = OMX_ErrorNone;
   while (signalled && last_error == OMX_ErrorNone && (port->buffers
           && port->buffers->len > g_queue_get_length (port->pending_buffers))) {
-    signalled = g_cond_timed_wait (port->port_cond, port->port_lock, timeval);
+    signalled =
+        g_cond_timed_wait (port->port_cond, port->port_lock.lock, timeval);
     last_error = gst_omx_component_get_last_error (comp);
   }
 
@@ -1594,7 +1606,8 @@ gst_omx_port_set_enabled_unlocked (GstOMXPort * port, gboolean enabled)
       &port->port_def);
   while (signalled && last_error == OMX_ErrorNone
       && (! !port->port_def.bEnabled != ! !enabled || !port->enabled_changed)) {
-    signalled = g_cond_timed_wait (port->port_cond, port->port_lock, timeval);
+    signalled =
+        g_cond_timed_wait (port->port_cond, port->port_lock.lock, timeval);
     last_error = gst_omx_component_get_last_error (comp);
     gst_omx_component_get_parameter (comp, OMX_IndexParamPortDefinition,
         &port->port_def);
@@ -1634,7 +1647,11 @@ gst_omx_port_set_enabled_unlocked (GstOMXPort * port, gboolean enabled)
          * valid anymore after the buffer was consumed
          */
         buf->omx_buf->nFlags = 0;
+
+        gst_omx_rec_mutex_begin_recursion (&port->port_lock);
         err = OMX_FillThisBuffer (comp->handle, buf->omx_buf);
+        gst_omx_rec_mutex_end_recursion (&port->port_lock);
+
         if (err != OMX_ErrorNone) {
           GST_ERROR_OBJECT (comp->parent,
               "Failed to pass buffer %p (%p) to port %u: %s (0x%08x)", buf,
@@ -1661,9 +1678,9 @@ error:
      * set_last_error() needs all port locks.
      * This is safe here because we're just going
      * to error out anyway */
-    g_mutex_unlock (port->port_lock);
+    gst_omx_rec_mutex_unlock (&port->port_lock);
     gst_omx_component_set_last_error (comp, err);
-    g_mutex_lock (port->port_lock);
+    gst_omx_rec_mutex_lock (&port->port_lock);
     goto done;
   }
 }
@@ -1675,9 +1692,9 @@ gst_omx_port_set_enabled (GstOMXPort * port, gboolean enabled)
 
   g_return_val_if_fail (port != NULL, OMX_ErrorUndefined);
 
-  g_mutex_lock (port->port_lock);
+  gst_omx_rec_mutex_lock (&port->port_lock);
   err = gst_omx_port_set_enabled_unlocked (port, enabled);
-  g_mutex_unlock (port->port_lock);
+  gst_omx_rec_mutex_unlock (&port->port_lock);
 
   return err;
 }
@@ -1692,11 +1709,11 @@ gst_omx_port_is_enabled (GstOMXPort * port)
 
   comp = port->comp;
 
-  g_mutex_lock (port->port_lock);
+  gst_omx_rec_mutex_lock (&port->port_lock);
   gst_omx_component_get_parameter (comp, OMX_IndexParamPortDefinition,
       &port->port_def);
   enabled = port->port_def.bEnabled;
-  g_mutex_unlock (port->port_lock);
+  gst_omx_rec_mutex_unlock (&port->port_lock);
 
   GST_DEBUG_OBJECT (comp->parent, "Port %u is enabled: %d", port->index,
       enabled);
@@ -1716,7 +1733,7 @@ gst_omx_port_reconfigure (GstOMXPort * port)
 
   GST_DEBUG_OBJECT (comp->parent, "Reconfiguring port %u", port->index);
 
-  g_mutex_lock (port->port_lock);
+  gst_omx_rec_mutex_lock (&port->port_lock);
 
   if (!port->settings_changed)
     goto done;
@@ -1744,7 +1761,7 @@ gst_omx_port_reconfigure (GstOMXPort * port)
   if (port->port_def.eDir == OMX_DirOutput) {
     GList *l;
 
-    g_mutex_lock (comp->state_lock);
+    gst_omx_rec_mutex_lock (&comp->state_lock);
     for (l = comp->pending_reconfigure_outports; l; l = l->next) {
       if (l->data == (gpointer) port) {
         comp->pending_reconfigure_outports =
@@ -1756,14 +1773,14 @@ gst_omx_port_reconfigure (GstOMXPort * port)
       g_atomic_int_set (&comp->have_pending_reconfigure_outports, 0);
       g_cond_broadcast (comp->state_cond);
     }
-    g_mutex_unlock (comp->state_lock);
+    gst_omx_rec_mutex_unlock (&comp->state_lock);
   }
 
 done:
   GST_DEBUG_OBJECT (comp->parent, "Reconfigured port %u: %s (0x%08x)",
       port->index, gst_omx_error_to_string (err), err);
 
-  g_mutex_unlock (port->port_lock);
+  gst_omx_rec_mutex_unlock (&port->port_lock);
   return err;
 }
 
@@ -1780,7 +1797,7 @@ gst_omx_port_manual_reconfigure (GstOMXPort * port, gboolean start)
   GST_DEBUG_OBJECT (comp->parent, "Manual reconfigure of port %u %s",
       port->index, (start ? "start" : "stsop"));
 
-  g_mutex_lock (port->port_lock);
+  gst_omx_rec_mutex_lock (&port->port_lock);
 
   if ((err = gst_omx_component_get_last_error (comp)) != OMX_ErrorNone)
     goto done;
@@ -1794,7 +1811,7 @@ gst_omx_port_manual_reconfigure (GstOMXPort * port, gboolean start)
     GList *l;
 
     if (start) {
-      g_mutex_lock (comp->state_lock);
+      gst_omx_rec_mutex_lock (&comp->state_lock);
       for (l = comp->pending_reconfigure_outports; l; l = l->next) {
         if (l->data == (gpointer) port)
           break;
@@ -1805,9 +1822,9 @@ gst_omx_port_manual_reconfigure (GstOMXPort * port, gboolean start)
             g_list_prepend (comp->pending_reconfigure_outports, port);
         g_atomic_int_set (&comp->have_pending_reconfigure_outports, 1);
       }
-      g_mutex_unlock (comp->state_lock);
+      gst_omx_rec_mutex_unlock (&comp->state_lock);
     } else {
-      g_mutex_lock (comp->state_lock);
+      gst_omx_rec_mutex_lock (&comp->state_lock);
       for (l = comp->pending_reconfigure_outports; l; l = l->next) {
         if (l->data == (gpointer) port) {
           comp->pending_reconfigure_outports =
@@ -1819,13 +1836,13 @@ gst_omx_port_manual_reconfigure (GstOMXPort * port, gboolean start)
         g_atomic_int_set (&comp->have_pending_reconfigure_outports, 0);
         g_cond_broadcast (comp->state_cond);
       }
-      g_mutex_unlock (comp->state_lock);
+      gst_omx_rec_mutex_unlock (&comp->state_lock);
     }
   }
 
 
 done:
-  g_mutex_unlock (port->port_lock);
+  gst_omx_rec_mutex_unlock (&port->port_lock);
 
   GST_DEBUG_OBJECT (comp->parent, "Manual reconfigure of port %u: %s (0x%08x)",
       port->index, gst_omx_error_to_string (err), err);

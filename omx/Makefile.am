@@ -16,7 +16,8 @@ libgstopenmax_la_SOURCES = \
 	gstbasevideocodec.c \
 	gstbasevideodecoder.c \
 	gstbasevideoencoder.c \
-	gstbasevideoutils.c
+	gstbasevideoutils.c \
+	gstomxrecmutex.c
 
 noinst_HEADERS = \
 	gstomx.h \
@@ -34,7 +35,8 @@ noinst_HEADERS = \
 	gstbasevideocodec.h \
 	gstbasevideodecoder.h \
 	gstbasevideoencoder.h \
-	gstbasevideoutils.h
+	gstbasevideoutils.h \
+	gstomxrecmutex.h
 
 fixbaseclasses = \
         -DGstBaseVideoCodec=OMXBaseVideoCodec \

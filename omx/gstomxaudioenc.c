@@ -885,10 +885,10 @@ gst_omx_audio_enc_sink_event (GstAudioEncoder * encoder, GstEvent * event)
       GST_WARNING_OBJECT (self, "Component does not support empty EOS buffers");
 
       /* Insert a NULL into the queue to signal EOS */
-      g_mutex_lock (self->out_port->port_lock);
+      gst_omx_rec_mutex_lock (&self->out_port->port_lock);
       g_queue_push_tail (self->out_port->pending_buffers, NULL);
       g_cond_broadcast (self->out_port->port_cond);
-      g_mutex_unlock (self->out_port->port_lock);
+      gst_omx_rec_mutex_unlock (&self->out_port->port_lock);
       return TRUE;
     }
 

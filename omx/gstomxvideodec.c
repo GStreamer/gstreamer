@@ -1342,10 +1342,10 @@ gst_omx_video_dec_finish (GstBaseVideoDecoder * decoder)
     GST_WARNING_OBJECT (self, "Component does not support empty EOS buffers");
 
     /* Insert a NULL into the queue to signal EOS */
-    g_mutex_lock (self->out_port->port_lock);
+    gst_omx_rec_mutex_lock (&self->out_port->port_lock);
     g_queue_push_tail (self->out_port->pending_buffers, NULL);
     g_cond_broadcast (self->out_port->port_cond);
-    g_mutex_unlock (self->out_port->port_lock);
+    gst_omx_rec_mutex_unlock (&self->out_port->port_lock);
 
     return GST_BASE_VIDEO_DECODER_FLOW_DROPPED;
   }
