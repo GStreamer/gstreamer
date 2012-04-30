@@ -498,6 +498,7 @@ done:
 static void
 gst_omx_video_dec_loop (GstOMXVideoDec * self)
 {
+  GstOMXVideoDecClass *klass;
   GstOMXPort *port = self->out_port;
   GstOMXBuffer *buf = NULL;
   GstVideoFrameState *frame;
@@ -505,6 +506,8 @@ gst_omx_video_dec_loop (GstOMXVideoDec * self)
   GstOMXAcquireBufferReturn acq_return;
   GstClockTimeDiff deadline;
   gboolean is_eos;
+
+  klass = GST_OMX_VIDEO_DEC_GET_CLASS (self);
 
   acq_return = gst_omx_port_acquire_buffer (port, &buf);
   if (acq_return == GST_OMX_ACQUIRE_BUFFER_ERROR) {
@@ -566,106 +569,114 @@ gst_omx_video_dec_loop (GstOMXVideoDec * self)
       return;
   }
 
-  g_assert (acq_return == GST_OMX_ACQUIRE_BUFFER_OK && buf != NULL);
+  g_assert (acq_return == GST_OMX_ACQUIRE_BUFFER_OK);
 
-  GST_DEBUG_OBJECT (self, "Handling buffer: 0x%08x %lu", buf->omx_buf->nFlags,
-      buf->omx_buf->nTimeStamp);
+  if (buf) {
+    GST_DEBUG_OBJECT (self, "Handling buffer: 0x%08x %lu", buf->omx_buf->nFlags,
+        buf->omx_buf->nTimeStamp);
 
-  /* This prevents a deadlock between the srcpad stream
-   * lock and the videocodec stream lock, if ::reset()
-   * is called at the wrong time
-   */
-  if (gst_omx_port_is_flushing (self->out_port)) {
-    GST_DEBUG_OBJECT (self, "Flushing");
-    gst_omx_port_release_buffer (self->out_port, buf);
-    goto flushing;
-  }
-
-  GST_BASE_VIDEO_CODEC_STREAM_LOCK (self);
-  frame = _find_nearest_frame (self, buf);
-
-  is_eos = ! !(buf->omx_buf->nFlags & OMX_BUFFERFLAG_EOS);
-
-  if (frame
-      && (deadline = gst_base_video_decoder_get_max_decode_time
-          (GST_BASE_VIDEO_DECODER (self), frame)) < 0) {
-    GST_WARNING_OBJECT (self,
-        "Frame is too late, dropping (deadline %" GST_TIME_FORMAT ")",
-        GST_TIME_ARGS (-deadline));
-    flow_ret =
-        gst_base_video_decoder_drop_frame (GST_BASE_VIDEO_DECODER (self),
-        frame);
-  } else if (!frame && buf->omx_buf->nFilledLen > 0) {
-    GstBuffer *outbuf;
-
-    /* This sometimes happens at EOS or if the input is not properly framed,
-     * let's handle it gracefully by allocating a new buffer for the current
-     * caps and filling it
+    /* This prevents a deadlock between the srcpad stream
+     * lock and the videocodec stream lock, if ::reset()
+     * is called at the wrong time
      */
-
-    GST_ERROR_OBJECT (self, "No corresponding frame found");
-
-    outbuf =
-        gst_base_video_decoder_alloc_src_buffer (GST_BASE_VIDEO_DECODER (self));
-
-    if (!gst_omx_video_dec_fill_buffer (self, buf, outbuf)) {
-      gst_buffer_unref (outbuf);
+    if (gst_omx_port_is_flushing (self->out_port)) {
+      GST_DEBUG_OBJECT (self, "Flushing");
       gst_omx_port_release_buffer (self->out_port, buf);
-      goto invalid_buffer;
+      goto flushing;
     }
 
-    flow_ret = gst_pad_push (GST_BASE_VIDEO_CODEC_SRC_PAD (self), outbuf);
-  } else if (buf->omx_buf->nFilledLen > 0) {
-    if (GST_BASE_VIDEO_CODEC (self)->state.bytes_per_picture == 0) {
-      /* FIXME: If the sinkpad caps change we have currently no way
-       * to allocate new src buffers because basevideodecoder assumes
-       * that the caps on both pads are equivalent all the time
-       */
+    GST_BASE_VIDEO_CODEC_STREAM_LOCK (self);
+    frame = _find_nearest_frame (self, buf);
+
+    is_eos = ! !(buf->omx_buf->nFlags & OMX_BUFFERFLAG_EOS);
+
+    if (frame
+        && (deadline = gst_base_video_decoder_get_max_decode_time
+            (GST_BASE_VIDEO_DECODER (self), frame)) < 0) {
       GST_WARNING_OBJECT (self,
-          "Caps change pending and still have buffers for old caps -- dropping");
-    } else
-        if (gst_base_video_decoder_alloc_src_frame (GST_BASE_VIDEO_DECODER
-            (self), frame) == GST_FLOW_OK) {
-      /* FIXME: This currently happens because of a race condition too.
-       * We first need to reconfigure the output port and then the input
-       * port if both need reconfiguration.
+          "Frame is too late, dropping (deadline %" GST_TIME_FORMAT ")",
+          GST_TIME_ARGS (-deadline));
+      flow_ret =
+          gst_base_video_decoder_drop_frame (GST_BASE_VIDEO_DECODER (self),
+          frame);
+    } else if (!frame && buf->omx_buf->nFilledLen > 0) {
+      GstBuffer *outbuf;
+
+      /* This sometimes happens at EOS or if the input is not properly framed,
+       * let's handle it gracefully by allocating a new buffer for the current
+       * caps and filling it
        */
-      if (!gst_omx_video_dec_fill_buffer (self, buf, frame->src_buffer)) {
-        gst_buffer_replace (&frame->src_buffer, NULL);
-        flow_ret =
-            gst_base_video_decoder_finish_frame (GST_BASE_VIDEO_DECODER (self),
-            frame);
+
+      GST_ERROR_OBJECT (self, "No corresponding frame found");
+
+      outbuf =
+          gst_base_video_decoder_alloc_src_buffer (GST_BASE_VIDEO_DECODER
+          (self));
+
+      if (!gst_omx_video_dec_fill_buffer (self, buf, outbuf)) {
+        gst_buffer_unref (outbuf);
         gst_omx_port_release_buffer (self->out_port, buf);
         goto invalid_buffer;
       }
-    }
-    flow_ret =
-        gst_base_video_decoder_finish_frame (GST_BASE_VIDEO_DECODER (self),
-        frame);
-  } else if (frame != NULL) {
-    flow_ret =
-        gst_base_video_decoder_finish_frame (GST_BASE_VIDEO_DECODER (self),
-        frame);
-  }
 
-  if (is_eos || flow_ret == GST_FLOW_EOS) {
-    g_mutex_lock (self->drain_lock);
-    if (self->draining) {
-      GST_DEBUG_OBJECT (self, "Drained");
-      self->draining = FALSE;
-      g_cond_broadcast (self->drain_cond);
-    } else if (flow_ret == GST_FLOW_OK) {
-      GST_DEBUG_OBJECT (self, "Component signalled EOS");
-      flow_ret = GST_FLOW_EOS;
+      flow_ret = gst_pad_push (GST_BASE_VIDEO_CODEC_SRC_PAD (self), outbuf);
+    } else if (buf->omx_buf->nFilledLen > 0) {
+      if (GST_BASE_VIDEO_CODEC (self)->state.bytes_per_picture == 0) {
+        /* FIXME: If the sinkpad caps change we have currently no way
+         * to allocate new src buffers because basevideodecoder assumes
+         * that the caps on both pads are equivalent all the time
+         */
+        GST_WARNING_OBJECT (self,
+            "Caps change pending and still have buffers for old caps -- dropping");
+      } else
+          if (gst_base_video_decoder_alloc_src_frame (GST_BASE_VIDEO_DECODER
+              (self), frame) == GST_FLOW_OK) {
+        /* FIXME: This currently happens because of a race condition too.
+         * We first need to reconfigure the output port and then the input
+         * port if both need reconfiguration.
+         */
+        if (!gst_omx_video_dec_fill_buffer (self, buf, frame->src_buffer)) {
+          gst_buffer_replace (&frame->src_buffer, NULL);
+          flow_ret =
+              gst_base_video_decoder_finish_frame (GST_BASE_VIDEO_DECODER
+              (self), frame);
+          gst_omx_port_release_buffer (self->out_port, buf);
+          goto invalid_buffer;
+        }
+      }
+      flow_ret =
+          gst_base_video_decoder_finish_frame (GST_BASE_VIDEO_DECODER (self),
+          frame);
+    } else if (frame != NULL) {
+      flow_ret =
+          gst_base_video_decoder_finish_frame (GST_BASE_VIDEO_DECODER (self),
+          frame);
     }
-    g_mutex_unlock (self->drain_lock);
+
+    if (is_eos || flow_ret == GST_FLOW_EOS) {
+      g_mutex_lock (self->drain_lock);
+      if (self->draining) {
+        GST_DEBUG_OBJECT (self, "Drained");
+        self->draining = FALSE;
+        g_cond_broadcast (self->drain_cond);
+      } else if (flow_ret == GST_FLOW_OK) {
+        GST_DEBUG_OBJECT (self, "Component signalled EOS");
+        flow_ret = GST_FLOW_EOS;
+      }
+      g_mutex_unlock (self->drain_lock);
+    } else {
+      GST_DEBUG_OBJECT (self, "Finished frame: %s",
+          gst_flow_get_name (flow_ret));
+    }
+
+    gst_omx_port_release_buffer (port, buf);
+
+    self->downstream_flow_ret = flow_ret;
   } else {
-    GST_DEBUG_OBJECT (self, "Finished frame: %s", gst_flow_get_name (flow_ret));
+    g_assert ((klass->cdata.hacks & GST_OMX_HACK_NO_EMPTY_EOS_BUFFER));
+    GST_BASE_VIDEO_CODEC_STREAM_LOCK (self);
+    flow_ret = GST_FLOW_EOS;
   }
-
-  gst_omx_port_release_buffer (port, buf);
-
-  self->downstream_flow_ret = flow_ret;
 
   if (flow_ret != GST_FLOW_OK)
     goto flow_error;
@@ -1311,10 +1322,12 @@ static GstFlowReturn
 gst_omx_video_dec_finish (GstBaseVideoDecoder * decoder)
 {
   GstOMXVideoDec *self;
+  GstOMXVideoDecClass *klass;
   GstOMXBuffer *buf;
   GstOMXAcquireBufferReturn acq_ret;
 
   self = GST_OMX_VIDEO_DEC (decoder);
+  klass = GST_OMX_VIDEO_DEC_GET_CLASS (self);
 
   GST_DEBUG_OBJECT (self, "Sending EOS to the component");
 
@@ -1324,6 +1337,18 @@ gst_omx_video_dec_finish (GstBaseVideoDecoder * decoder)
     return GST_BASE_VIDEO_DECODER_FLOW_DROPPED;
   }
   self->eos = TRUE;
+
+  if ((klass->cdata.hacks & GST_OMX_HACK_NO_EMPTY_EOS_BUFFER)) {
+    GST_WARNING_OBJECT (self, "Component does not support empty EOS buffers");
+
+    /* Insert a NULL into the queue to signal EOS */
+    g_mutex_lock (self->out_port->port_lock);
+    g_queue_push_tail (self->out_port->pending_buffers, NULL);
+    g_cond_broadcast (self->out_port->port_cond);
+    g_mutex_unlock (self->out_port->port_lock);
+
+    return GST_BASE_VIDEO_DECODER_FLOW_DROPPED;
+  }
 
   /* Make sure to release the base class stream lock, otherwise
    * _loop() can't call _finish_frame() and we might block forever
@@ -1355,10 +1380,13 @@ gst_omx_video_dec_finish (GstBaseVideoDecoder * decoder)
 static GstFlowReturn
 gst_omx_video_dec_drain (GstOMXVideoDec * self)
 {
+  GstOMXVideoDecClass *klass;
   GstOMXBuffer *buf;
   GstOMXAcquireBufferReturn acq_ret;
 
   GST_DEBUG_OBJECT (self, "Draining component");
+
+  klass = GST_OMX_VIDEO_DEC_GET_CLASS (self);
 
   if (!self->started) {
     GST_DEBUG_OBJECT (self, "Component not started yet");
@@ -1369,6 +1397,11 @@ gst_omx_video_dec_drain (GstOMXVideoDec * self)
   /* Don't send EOS buffer twice, this doesn't work */
   if (self->eos) {
     GST_DEBUG_OBJECT (self, "Component is EOS already");
+    return GST_FLOW_OK;
+  }
+
+  if ((klass->cdata.hacks & GST_OMX_HACK_NO_EMPTY_EOS_BUFFER)) {
+    GST_WARNING_OBJECT (self, "Component does not support empty EOS buffers");
     return GST_FLOW_OK;
   }
 

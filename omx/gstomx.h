@@ -21,6 +21,7 @@
 #ifndef __GST_OMX_H__
 #define __GST_OMX_H__
 
+#include <gmodule.h>
 #include <gst/gst.h>
 #include <string.h>
 #include <OMX_Core.h>
