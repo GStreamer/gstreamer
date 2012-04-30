@@ -650,7 +650,7 @@ gst_video_test_src_decide_allocation (GstBaseSrc * bsrc, GstQuery * query)
   if (pool)
     gst_object_unref (pool);
 
-  return TRUE;
+  return GST_BASE_SRC_CLASS (parent_class)->decide_allocation (bsrc, query);
 }
 
 static gboolean
