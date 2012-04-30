@@ -1606,11 +1606,17 @@ mpegts_base_handle_seek_event (MpegTSBase * base, GstPad * pad,
   if (format != GST_FORMAT_TIME)
     return FALSE;
 
-  /* First try if upstream supports seeking in TIME format */
-  if (gst_pad_push_event (base->sinkpad, gst_event_ref (event))) {
-    GST_DEBUG ("upstream handled SEEK event");
-    gst_event_unref (event);
-    return TRUE;
+  if (base->mode == BASE_MODE_PUSHING) {
+    /* First try if upstream supports seeking in TIME format */
+    if (gst_pad_push_event (base->sinkpad, gst_event_ref (event))) {
+      GST_DEBUG ("upstream handled SEEK event");
+      gst_event_unref (event);
+      return TRUE;
+    }
+    /* FIXME : Actually ... it is supported, we just need to convert
+     * the seek event to BYTES */
+    GST_ERROR ("seeking in push mode not supported");
+    goto push_mode;
   }
 
   GST_DEBUG ("seek event, rate: %f start: %" GST_TIME_FORMAT
@@ -1618,13 +1624,6 @@ mpegts_base_handle_seek_event (MpegTSBase * base, GstPad * pad,
       GST_TIME_ARGS (stop));
 
   flush = flags & GST_SEEK_FLAG_FLUSH;
-
-  if (base->mode == BASE_MODE_PUSHING) {
-    /* FIXME : Actually ... it is supported, we just need to convert
-     * the seek event to BYTES */
-    GST_ERROR ("seeking in push mode not supported");
-    goto push_mode;
-  }
 
   /* stop streaming, either by flushing or by pausing the task */
   base->mode = BASE_MODE_SEEKING;
