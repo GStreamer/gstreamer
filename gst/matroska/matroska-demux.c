@@ -2496,24 +2496,19 @@ gst_matroska_demux_sync_streams (GstMatroskaDemux * demux)
         GST_CLOCK_TIME_IS_VALID (demux->common.segment.position) &&
         demux->common.segment.position > demux->common.segment.start &&
         context->pos + (GST_SECOND / 2) < demux->common.segment.position) {
-      gint64 new_start;
-      GstSegment segment;
+
       GstEvent *event;
+      guint64 start = context->pos;
+      guint64 stop = demux->common.segment.position - (GST_SECOND / 2);
 
-      new_start = demux->common.segment.position - (GST_SECOND / 2);
-      if (GST_CLOCK_TIME_IS_VALID (demux->common.segment.stop))
-        new_start = MIN (new_start, demux->common.segment.stop);
       GST_DEBUG_OBJECT (demux,
-          "Synchronizing stream %d with others by advancing time " "from %"
+          "Synchronizing stream %d with other by advancing time from %"
           GST_TIME_FORMAT " to %" GST_TIME_FORMAT, stream_nr,
-          GST_TIME_ARGS (context->pos), GST_TIME_ARGS (new_start));
+          GST_TIME_ARGS (start), GST_TIME_ARGS (stop));
 
-      context->pos = new_start;
+      context->pos = stop;
 
-      /* advance stream time */
-      segment = demux->common.segment;
-      segment.position = new_start;
-      event = gst_event_new_segment (&segment);
+      event = gst_event_new_gap (start, stop - start);
       GST_OBJECT_UNLOCK (demux);
       gst_pad_push_event (context->pad, event);
       GST_OBJECT_LOCK (demux);
