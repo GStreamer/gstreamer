@@ -512,6 +512,7 @@ gst_multi_file_sink_render (GstBaseSink * sink, GstBuffer * buffer)
   gchar *filename;
   gboolean ret;
   GError *error = NULL;
+  gboolean first_file = TRUE;
 
   gst_buffer_map (buffer, &map, GST_MAP_READ);
 
@@ -561,9 +562,10 @@ gst_multi_file_sink_render (GstBaseSink * sink, GstBuffer * buffer)
       if (GST_BUFFER_TIMESTAMP_IS_VALID (buffer) &&
           GST_BUFFER_TIMESTAMP (buffer) >= multifilesink->next_segment &&
           !GST_BUFFER_FLAG_IS_SET (buffer, GST_BUFFER_FLAG_DELTA_UNIT)) {
-        if (multifilesink->file)
+        if (multifilesink->file) {
+          first_file = FALSE;
           gst_multi_file_sink_close_file (multifilesink, buffer);
-
+        }
         multifilesink->next_segment += 10 * GST_SECOND;
       }
 
@@ -571,7 +573,8 @@ gst_multi_file_sink_render (GstBaseSink * sink, GstBuffer * buffer)
         if (!gst_multi_file_sink_open_next_file (multifilesink))
           goto stdio_write_error;
 
-        gst_multi_file_sink_write_stream_headers (multifilesink);
+        if (!first_file)
+          gst_multi_file_sink_write_stream_headers (multifilesink);
       }
 
       ret = fwrite (map.data, map.size, 1, multifilesink->file);
@@ -605,15 +608,18 @@ gst_multi_file_sink_render (GstBaseSink * sink, GstBuffer * buffer)
             multifilesink->cur_file_size, new_size,
             multifilesink->max_file_size);
 
-        if (multifilesink->file != NULL)
+        if (multifilesink->file != NULL) {
+          first_file = FALSE;
           gst_multi_file_sink_close_file (multifilesink, NULL);
+        }
       }
 
       if (multifilesink->file == NULL) {
         if (!gst_multi_file_sink_open_next_file (multifilesink))
           goto stdio_write_error;
 
-        gst_multi_file_sink_write_stream_headers (multifilesink);
+        if (!first_file)
+          gst_multi_file_sink_write_stream_headers (multifilesink);
       }
 
       ret = fwrite (map.data, map.size, 1, multifilesink->file);
