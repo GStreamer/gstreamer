@@ -1385,9 +1385,12 @@ mpegts_base_chain (GstPad * pad, GstObject * parent, GstBuffer * buf)
     if (G_UNLIKELY (pret == PACKET_NEED_MORE))
       break;
 
-    if (G_UNLIKELY (pret == PACKET_BAD))
+    if (G_UNLIKELY (pret == PACKET_BAD)) {
       /* bad header, skip the packet */
+      GST_DEBUG_OBJECT (base, "bad packet, skipping");
+      gst_buffer_unref (packet.buffer);
       goto next;
+    }
 
     /* base PSI data */
     if (packet.payload != NULL && mpegts_base_is_psi (base, &packet)) {
