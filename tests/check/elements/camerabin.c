@@ -1,6 +1,6 @@
 /* GStreamer
  *
- * unit test for camerabin2 basic operations
+ * unit test for camerabin basic operations
  * Copyright (C) 2010 Nokia Corporation <multimedia@maemo.org>
  * Copyright (C) 2010 Thiago Santos <thiago.sousa.santos@collabora.co.uk>
  *
@@ -221,11 +221,11 @@ make_test_file_name (const gchar * base_name, gint num)
    * multifilesink like location */
   if (num == -1) {
     return g_strdup_printf ("%s" G_DIR_SEPARATOR_S
-        "gstcamerabin2test_%s_%u_%%03d.cap", g_get_tmp_dir (), base_name,
+        "gstcamerabintest_%s_%u_%%03d.cap", g_get_tmp_dir (), base_name,
         test_id);
   } else {
     return g_strdup_printf ("%s" G_DIR_SEPARATOR_S
-        "gstcamerabin2test_%s_%u_%03d.cap", g_get_tmp_dir (), base_name,
+        "gstcamerabintest_%s_%u_%03d.cap", g_get_tmp_dir (), base_name,
         test_id, num);
   }
 }
@@ -384,7 +384,7 @@ setup_wrappercamerabinsrc_videotestsrc (void)
 
   main_loop = g_main_loop_new (NULL, TRUE);
 
-  camera = gst_check_setup_element ("camerabin2");
+  camera = gst_check_setup_element ("camerabin");
   fakevideosink = gst_element_factory_make ("fakesink", NULL);
   src = gst_element_factory_make ("wrappercamerabinsrc", NULL);
   testsrc = gst_element_factory_make ("videotestsrc", NULL);
@@ -525,7 +525,7 @@ check_file_validity (const gchar * filename, gint num, GstTagList * taglist,
   guint source;
 
   GMainLoop *loop = g_main_loop_new (NULL, FALSE);
-  GstElement *playbin = gst_element_factory_make ("playbin2", NULL);
+  GstElement *playbin = gst_element_factory_make ("playbin", NULL);
   GstElement *fakevideo = gst_element_factory_make ("fakesink", NULL);
   GstElement *fakeaudio = gst_element_factory_make ("fakesink", NULL);
   gchar *uri = g_strconcat ("file://", make_const_file_name (filename, num),
@@ -1025,7 +1025,7 @@ GST_START_TEST (test_image_capture_with_tags)
       GST_TAG_DEVICE_MANUFACTURER, "MyFavoriteBrand",
       GST_TAG_DEVICE_MODEL, "123v42.1",
       GST_TAG_DESCRIPTION, "some description",
-      GST_TAG_APPLICATION_NAME, "camerabin2 test",
+      GST_TAG_APPLICATION_NAME, "camerabin test",
       GST_TAG_GEO_LOCATION_ELEVATION, 300.85, NULL);
   taglists[1] = gst_tag_list_new (GST_TAG_COMMENT, "test2",
       GST_TAG_GEO_LOCATION_LATITUDE, 1.6, GST_TAG_GEO_LOCATION_LONGITUDE,
@@ -1531,13 +1531,13 @@ static Suite *
 camerabin_suite (void)
 {
   GstElementFactory *jpegenc_factory;
-  Suite *s = suite_create ("camerabin2");
+  Suite *s = suite_create ("camerabin");
   gint i;
   TCase *tc_generic = tcase_create ("generic");
 
   jpegenc_factory = gst_element_factory_find ("jpegenc");
   if (jpegenc_factory == NULL) {
-    GST_WARNING ("Skipping camerabin2 tests because jpegenc is missing");
+    GST_WARNING ("Skipping camerabin tests because jpegenc is missing");
     goto end;
   }
 
