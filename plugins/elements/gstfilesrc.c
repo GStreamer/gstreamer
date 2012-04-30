@@ -42,6 +42,7 @@
 
 #include <stdio.h>
 #include <sys/types.h>
+#include <sys/stat.h>
 #ifdef G_OS_WIN32
 #include <io.h>                 /* lseek, open, close, read */
 /* On win32, stat* default to 32 bit; we need the 64-bit
@@ -56,7 +57,6 @@
  * _stat*, since we're explicitly overriding that */
 #undef _INC_STAT_INL
 #endif
-#include <sys/stat.h>
 #include <fcntl.h>
 
 #ifdef HAVE_UNISTD_H
