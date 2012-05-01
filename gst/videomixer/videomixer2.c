@@ -112,7 +112,7 @@ static GstStaticPadTemplate src_factory = GST_STATIC_PAD_TEMPLATE ("src",
     GST_STATIC_CAPS (GST_VIDEO_CAPS_MAKE (FORMATS))
     );
 
-static GstStaticPadTemplate sink_factory = GST_STATIC_PAD_TEMPLATE ("sink_%d",
+static GstStaticPadTemplate sink_factory = GST_STATIC_PAD_TEMPLATE ("sink_%u",
     GST_PAD_SINK,
     GST_PAD_REQUEST,
     GST_STATIC_CAPS (GST_VIDEO_CAPS_MAKE (FORMATS))
@@ -1754,8 +1754,8 @@ gst_videomixer2_request_new_pad (GstElement * element,
 
   mix = GST_VIDEO_MIXER2 (element);
 
-  if (templ == gst_element_class_get_pad_template (klass, "sink_%d")) {
-    gint serial = 0;
+  if (templ == gst_element_class_get_pad_template (klass, "sink_%u")) {
+    guint serial = 0;
     gchar *name = NULL;
     GstVideoMixer2Collect *mixcol = NULL;
 
@@ -1771,7 +1771,7 @@ gst_videomixer2_request_new_pad (GstElement * element,
         mix->next_sinkpad = serial + 1;
     }
     /* create new pad with the name */
-    name = g_strdup_printf ("sink_%d", serial);
+    name = g_strdup_printf ("sink_%u", serial);
     mixpad = g_object_new (GST_TYPE_VIDEO_MIXER2_PAD, "name", name, "direction",
         templ->direction, "template", templ, NULL);
     g_free (name);

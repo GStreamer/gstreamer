@@ -83,7 +83,7 @@ struct _GstVideoMixer2
   GSList *sinkpads;
   gint numpads;
   /* Next available sinkpad index */
-  gint next_sinkpad;
+  guint next_sinkpad;
 
   /* Output caps */
   GstVideoInfo info;
