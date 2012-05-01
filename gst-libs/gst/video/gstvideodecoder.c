@@ -1749,10 +1749,6 @@ gst_video_decoder_new_frame (GstVideoDecoder * decoder)
   priv->system_frame_number++;
   frame->decode_frame_number = priv->decode_frame_number;
   priv->decode_frame_number++;
-  GST_VIDEO_DECODER_STREAM_UNLOCK (decoder);
-
-  GST_LOG_OBJECT (decoder, "Created new frame %p (sfn:%d)",
-      frame, frame->system_frame_number);
 
   frame->dts = GST_CLOCK_TIME_NONE;
   frame->pts = GST_CLOCK_TIME_NONE;
@@ -1760,6 +1756,9 @@ gst_video_decoder_new_frame (GstVideoDecoder * decoder)
   frame->events = priv->current_frame_events;
   priv->current_frame_events = NULL;
   GST_VIDEO_DECODER_STREAM_UNLOCK (decoder);
+
+  GST_LOG_OBJECT (decoder, "Created new frame %p (sfn:%d)",
+      frame, frame->system_frame_number);
 
   return frame;
 }
