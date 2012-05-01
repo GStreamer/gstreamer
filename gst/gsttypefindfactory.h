@@ -73,6 +73,7 @@ GList *         gst_type_find_factory_get_list          (void);
 
 gchar **        gst_type_find_factory_get_extensions    (GstTypeFindFactory *factory);
 GstCaps *       gst_type_find_factory_get_caps          (GstTypeFindFactory *factory);
+gboolean        gst_type_find_factory_has_function      (GstTypeFindFactory *factory);
 void            gst_type_find_factory_call_function     (GstTypeFindFactory *factory,
                                                          GstTypeFind *find);
 

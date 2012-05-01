@@ -623,7 +623,7 @@ gst_type_find_helper_for_extension (GstObject * obj, const gchar * extension)
     factory = GST_TYPE_FIND_FACTORY (l->data);
 
     /* we only want to check those factories without a function */
-    if (factory->function != NULL)
+    if (gst_type_find_factory_has_function (factory))
       continue;
 
     /* get the extension that this typefind factory can handle */
