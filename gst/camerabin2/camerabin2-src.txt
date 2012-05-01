@@ -71,11 +71,3 @@ caps negotiation. Camerabin2 puts capsfilters downstream from each of the
 camera source pads. The camera source can simply get_caps on the peer of
 each of its pads to know what are the allowed caps for that pad.
 
-
--- Renegotiation --
-Easy renegotiation isn't supported on gstreamer yet (there is some ongoing work
-currently). Camerabin2 will use a custom 'renegotiate' event, no fields to
-indicate that a certain pad should renegotiate its caps.
-
-Upon receiving this event, a pad should get_caps on its peer and do the caps
-negotiation again. It is likely that a new format was requested.

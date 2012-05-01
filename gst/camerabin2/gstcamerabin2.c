@@ -348,13 +348,6 @@ gst_camera_bin_change_state (GstElement * element, GstStateChange trans);
 /* Camerabin functions */
 
 static GstEvent *
-gst_camera_bin_new_event_renegotiate (void)
-{
-  return gst_event_new_custom (GST_EVENT_CUSTOM_BOTH,
-      gst_structure_new_empty ("renegotiate"));
-}
-
-static GstEvent *
 gst_camera_bin_new_event_file_location (const gchar * location)
 {
   return gst_event_new_custom (GST_EVENT_CUSTOM_DOWNSTREAM,
@@ -2094,13 +2087,8 @@ gst_camera_bin_set_property (GObject * object, guint prop_id,
         GST_WARNING_OBJECT (camera, "Image capsfilter missing");
       }
 
-      /* set the capsfilter caps and notify the src to renegotiate */
-      if (pad) {
-        GST_DEBUG_OBJECT (camera, "Pushing renegotiate on %s",
-            GST_PAD_NAME (pad));
-        gst_pad_send_event (pad, gst_camera_bin_new_event_renegotiate ());
+      if (pad)
         gst_object_unref (pad);
-      }
     }
       break;
     case PROP_VIDEO_CAPTURE_CAPS:{
@@ -2115,7 +2103,6 @@ gst_camera_bin_set_property (GObject * object, guint prop_id,
           "Setting video capture caps to %" GST_PTR_FORMAT,
           gst_value_get_caps (value));
 
-      /* set the capsfilter caps and notify the src to renegotiate */
       if (G_LIKELY (camera->videobin_capsfilter)) {
         g_object_set (camera->videobin_capsfilter, "caps",
             gst_value_get_caps (value), NULL);
@@ -2124,9 +2111,6 @@ gst_camera_bin_set_property (GObject * object, guint prop_id,
       }
 
       if (pad) {
-        GST_DEBUG_OBJECT (camera, "Pushing renegotiate on %s",
-            GST_PAD_NAME (pad));
-        gst_pad_send_event (pad, gst_camera_bin_new_event_renegotiate ());
         gst_object_unref (pad);
       }
     }
@@ -2143,7 +2127,6 @@ gst_camera_bin_set_property (GObject * object, guint prop_id,
           "Setting viewfinder capture caps to %" GST_PTR_FORMAT,
           gst_value_get_caps (value));
 
-      /* set the capsfilter caps and notify the src to renegotiate */
       if (G_LIKELY (camera->viewfinderbin_capsfilter)) {
         g_object_set (camera->viewfinderbin_capsfilter, "caps",
             gst_value_get_caps (value), NULL);
@@ -2152,9 +2135,6 @@ gst_camera_bin_set_property (GObject * object, guint prop_id,
       }
 
       if (pad) {
-        GST_DEBUG_OBJECT (camera, "Pushing renegotiate on %s",
-            GST_PAD_NAME (pad));
-        gst_pad_send_event (pad, gst_camera_bin_new_event_renegotiate ());
         gst_object_unref (pad);
       }
     }
