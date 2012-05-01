@@ -105,6 +105,30 @@ GST_END_TEST;
 
 #endif /* G_OS_WIN32 */
 
+GST_START_TEST (test_uri_misc)
+{
+  /* require at least three characters for the protocol */
+  fail_if (gst_uri_is_valid ("B:\\foo.txt"));
+  fail_if (gst_uri_is_valid ("B:/foo.txt"));
+  fail_if (gst_uri_is_valid ("B://foo.txt"));
+  fail_if (gst_uri_is_valid ("B:foo.txt"));
+
+  fail_if (gst_uri_is_valid ("AB:\\foo.txt"));
+  fail_if (gst_uri_is_valid ("AB:/foo.txt"));
+  fail_if (gst_uri_is_valid ("AB://foo.txt"));
+  fail_if (gst_uri_is_valid ("AB:foo.txt"));
+
+  fail_unless (gst_uri_is_valid ("ABC:/foo.txt"));
+  fail_unless (gst_uri_is_valid ("ABC://foo.txt"));
+  fail_unless (gst_uri_is_valid ("ABC:foo.txt"));
+
+  fail_unless (gst_uri_is_valid ("ABCD:/foo.txt"));
+  fail_unless (gst_uri_is_valid ("ABCD://foo.txt"));
+  fail_unless (gst_uri_is_valid ("ABCD:foo.txt"));
+}
+
+GST_END_TEST;
+
 static Suite *
 gst_uri_suite (void)
 {
@@ -116,6 +140,7 @@ gst_uri_suite (void)
   suite_add_tcase (s, tc_chain);
   tcase_add_test (tc_chain, test_protocol_case);
   tcase_add_test (tc_chain, test_uri_get_location);
+  tcase_add_test (tc_chain, test_uri_misc);
 #ifdef G_OS_WIN32
   tcase_add_test (tc_chain, test_win32_uri);
 #endif
