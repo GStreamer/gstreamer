@@ -308,9 +308,8 @@ gst_type_find_helper_get_range (GstObject * obj, GstObject * parent,
         extension);
 
     for (l = type_list; l; l = next) {
+      const gchar *const *ext;
       GstTypeFindFactory *factory;
-      gint i;
-      gchar **ext;
 
       next = l->next;
 
@@ -323,8 +322,8 @@ gst_type_find_helper_get_range (GstObject * obj, GstObject * parent,
       GST_LOG_OBJECT (obj, "testing factory %s for extension %s",
           GST_OBJECT_NAME (factory), extension);
 
-      for (i = 0; ext[i]; i++) {
-        if (strcmp (ext[i], extension) == 0) {
+      while (*ext != NULL) {
+        if (strcmp (*ext, extension) == 0) {
           /* found extension, move in front */
           GST_LOG_OBJECT (obj, "moving typefind for extension %s to head",
               extension);
@@ -336,6 +335,7 @@ gst_type_find_helper_get_range (GstObject * obj, GstObject * parent,
           pos++;
           break;
         }
+        ++ext;
       }
     }
   }
@@ -617,8 +617,7 @@ gst_type_find_helper_for_extension (GstObject * obj, const gchar * extension)
 
   for (l = type_list; l; l = g_list_next (l)) {
     GstTypeFindFactory *factory;
-    gchar **ext;
-    gint i;
+    const gchar *const *ext;
 
     factory = GST_TYPE_FIND_FACTORY (l->data);
 
@@ -633,14 +632,15 @@ gst_type_find_helper_for_extension (GstObject * obj, const gchar * extension)
 
     /* there are extension, see if one of them matches the requested
      * extension */
-    for (i = 0; ext[i]; i++) {
-      if (strcmp (ext[i], extension) == 0) {
+    while (*ext != NULL) {
+      if (strcmp (*ext, extension) == 0) {
         /* we found a matching extension, take the caps */
         if ((result = gst_type_find_factory_get_caps (factory))) {
           gst_caps_ref (result);
           goto done;
         }
       }
+      ++ext;
     }
   }
 done:

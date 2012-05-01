@@ -1026,17 +1026,20 @@ print_element_list (gboolean print_all)
 #endif
       } else if (GST_IS_TYPE_FIND_FACTORY (feature)) {
         GstTypeFindFactory *factory;
+        const gchar *const *extensions;
 
         factory = GST_TYPE_FIND_FACTORY (feature);
         if (!print_all)
           g_print ("%s: %s: ", gst_plugin_get_name (plugin),
               gst_plugin_feature_get_name (feature));
-        if (factory->extensions) {
+
+        extensions = gst_type_find_factory_get_extensions (factory);
+        if (extensions != NULL) {
           guint i = 0;
 
-          while (factory->extensions[i]) {
+          while (extensions[i]) {
             if (!print_all)
-              g_print ("%s%s", i > 0 ? ", " : "", factory->extensions[i]);
+              g_print ("%s%s", i > 0 ? ", " : "", extensions[i]);
             i++;
           }
           if (!print_all)
@@ -1224,15 +1227,17 @@ print_plugin_features (GstPlugin * plugin)
 #endif
     } else if (GST_IS_TYPE_FIND_FACTORY (feature)) {
       GstTypeFindFactory *factory;
+      const gchar *const *extensions;
 
       factory = GST_TYPE_FIND_FACTORY (feature);
-      if (factory->extensions) {
+      extensions = gst_type_find_factory_get_extensions (factory);
+      if (extensions) {
         guint i = 0;
 
         g_print ("%s: %s: ", gst_plugin_get_name (plugin),
             gst_plugin_feature_get_name (feature));
-        while (factory->extensions[i]) {
-          g_print ("%s%s", i > 0 ? ", " : "", factory->extensions[i]);
+        while (extensions[i]) {
+          g_print ("%s%s", i > 0 ? ", " : "", extensions[i]);
           i++;
         }
         g_print ("\n");
