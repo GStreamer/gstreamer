@@ -563,7 +563,6 @@ theora_handle_image (GstTheoraDec * dec, th_ycbcr_buffer buf,
   gint i, comp;
   guint8 *dest, *src;
   GstVideoFrame vframe;
-  GstVideoCropMeta *crop;
   gint pic_width, pic_height;
   gint offset_x, offset_y;
 
@@ -598,14 +597,33 @@ theora_handle_image (GstTheoraDec * dec, th_ycbcr_buffer buf,
     if (dec->info.pic_width != dec->info.frame_width ||
         dec->info.pic_height != dec->info.frame_height ||
         dec->info.pic_x != 0 || dec->info.pic_y != 0) {
-      crop = gst_buffer_add_video_crop_meta (frame->output_buffer);
+      GstVideoMeta *vmeta;
+      GstVideoCropMeta *cmeta;
+
+      vmeta = gst_buffer_get_video_meta (frame->output_buffer);
+      /* If the buffer pool didn't add the meta already
+       * we add it ourselves here */
+      if (!vmeta)
+        vmeta = gst_buffer_add_video_meta (frame->output_buffer,
+            GST_VIDEO_FRAME_FLAG_NONE,
+            dec->output_state->info.finfo->format,
+            dec->info.frame_width, dec->info.frame_height);
+
+      /* Just to be sure that the buffer pool doesn't do something
+       * completely weird and we would crash later
+       */
+      g_assert (vmeta->format == dec->output_state->info.finfo->format);
+      g_assert (vmeta->width == dec->info.frame_width);
+      g_assert (vmeta->height == dec->info.frame_height);
+
+      cmeta = gst_buffer_add_video_crop_meta (frame->output_buffer);
 
       /* we can do things slightly more efficient when we know that
        * downstream understands clipping */
-      crop->x = dec->info.pic_x;
-      crop->y = dec->info.pic_y;
-      crop->width = dec->info.pic_width;
-      crop->height = dec->info.pic_height;
+      cmeta->x = dec->info.pic_x;
+      cmeta->y = dec->info.pic_y;
+      cmeta->width = dec->info.pic_width;
+      cmeta->height = dec->info.pic_height;
     }
   }
 
@@ -800,62 +818,47 @@ theora_dec_decide_allocation (GstVideoDecoder * decoder, GstQuery * query)
   GstTheoraDec *dec = GST_THEORA_DEC (decoder);
   GstVideoCodecState *state;
   GstBufferPool *pool;
-  gboolean update;
   guint size, min, max;
   GstStructure *config;
 
+  if (!GST_VIDEO_DECODER_CLASS (parent_class)->decide_allocation (decoder,
+          query))
+    return FALSE;
+
   state = gst_video_decoder_get_output_state (decoder);
 
-  if (gst_query_get_n_allocation_pools (query) > 0) {
-    gst_query_parse_nth_allocation_pool (query, 0, &pool, &size, &min, &max);
+  gst_query_parse_nth_allocation_pool (query, 0, &pool, &size, &min, &max);
 
-    /* adjust size */
-    size = MAX (size, state->info.size);
-    update = TRUE;
-  } else {
-    pool = NULL;
-    size = state->info.size;
-    min = max = 0;
-    update = FALSE;
-  }
-
-  /* no downstream pool, make our own */
-  if (pool == NULL) {
-    pool = gst_video_buffer_pool_new ();
-  }
-
+  dec->can_crop = FALSE;
   config = gst_buffer_pool_get_config (pool);
   if (gst_query_has_allocation_meta (query, GST_VIDEO_META_API_TYPE)) {
     gst_buffer_pool_config_add_option (config,
         GST_BUFFER_POOL_OPTION_VIDEO_META);
+    dec->can_crop =
+        gst_query_has_allocation_meta (query, GST_VIDEO_CROP_META_API_TYPE);
   }
-
-  dec->can_crop =
-      gst_query_has_allocation_meta (query, GST_VIDEO_CROP_META_API_TYPE);
 
   if (dec->can_crop) {
     GstVideoInfo info = state->info;
+    GstCaps *caps;
 
     /* Calculate uncropped size */
     gst_video_info_set_format (&info, info.finfo->format, dec->info.frame_width,
         dec->info.frame_height);
     size = MAX (size, info.size);
+    caps = gst_video_info_to_caps (&info);
+    gst_buffer_pool_config_set_params (config, caps, size, min, max);
+    gst_caps_unref (caps);
   }
 
   gst_buffer_pool_set_config (pool, config);
 
-  if (update)
-    gst_query_set_nth_allocation_pool (query, 0, pool, size, min, max);
-  else
-    gst_query_add_allocation_pool (query, pool, size, min, max);
+  gst_query_set_nth_allocation_pool (query, 0, pool, size, min, max);
 
-  if (pool)
-    gst_object_unref (pool);
-
+  gst_object_unref (pool);
   gst_video_codec_state_unref (state);
 
-  return GST_VIDEO_DECODER_CLASS (parent_class)->decide_allocation (decoder,
-      query);
+  return TRUE;
 }
 
 static void
