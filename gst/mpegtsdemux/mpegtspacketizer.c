@@ -2208,12 +2208,11 @@ mpegts_packetizer_flush (MpegTSPacketizer2 * packetizer)
     int i;
     for (i = 0; i < 8192; i++) {
       if (packetizer->streams[i]) {
-        gst_adapter_flush (packetizer->streams[i]->section_adapter,
-            packetizer->streams[i]->section_adapter->size);
+        gst_adapter_clear (packetizer->streams[i]->section_adapter);
       }
     }
   }
-  gst_adapter_flush (packetizer->adapter, packetizer->adapter->size);
+  gst_adapter_clear (packetizer->adapter);
 
   packetizer->offset = 0;
   packetizer->empty = TRUE;
@@ -2269,7 +2268,8 @@ mpegts_try_discover_packet_size (MpegTSPacketizer2 * packetizer)
 
   dest = g_malloc (MPEGTS_MAX_PACKETSIZE * 4);
   /* wait for 3 sync bytes */
-  while (packetizer->adapter->size >= MPEGTS_MAX_PACKETSIZE * 4) {
+  while (gst_adapter_available (packetizer->adapter) >=
+      MPEGTS_MAX_PACKETSIZE * 4) {
 
     /* check for sync bytes */
     gst_adapter_copy (packetizer->adapter, dest, 0, MPEGTS_MAX_PACKETSIZE * 4);
@@ -2334,7 +2334,7 @@ mpegts_packetizer_has_packets (MpegTSPacketizer2 * packetizer)
     if (!mpegts_try_discover_packet_size (packetizer))
       return FALSE;
   }
-  return packetizer->adapter->size >= packetizer->packet_size;
+  return gst_adapter_available (packetizer->adapter) >= packetizer->packet_size;
 }
 
 MpegTSPacketizerPacketReturn
@@ -2350,7 +2350,9 @@ mpegts_packetizer_next_packet (MpegTSPacketizer2 * packetizer,
       return PACKET_NEED_MORE;
   }
 
-  while ((avail = packetizer->adapter->size) >= packetizer->packet_size) {
+  while ((avail =
+          gst_adapter_available (packetizer->adapter)) >=
+      packetizer->packet_size) {
     guint i;
     GstBuffer *tmpbuf;
     guint8 *bufdata;
@@ -2407,7 +2409,7 @@ mpegts_packetizer_next_packet (MpegTSPacketizer2 * packetizer,
     GST_BUFFER_OFFSET (packet->buffer) += i;
     tmpbuf =
         gst_adapter_take_buffer (packetizer->adapter,
-        packetizer->adapter->size);
+        gst_adapter_available (packetizer->adapter));
     /* ... and push everything back in */
     gst_adapter_push (packetizer->adapter, packet->buffer);
     gst_adapter_push (packetizer->adapter, tmpbuf);
@@ -2519,7 +2521,8 @@ mpegts_packetizer_push_section (MpegTSPacketizer2 * packetizer,
           G_GSIZE_FORMAT " avail %" G_GSIZE_FORMAT, packet->pid, table_id,
           subtable_extension, stream->continuity_counter,
           packet->continuity_counter, section_length,
-          gst_buffer_get_size (sub_buf), stream->section_adapter->size);
+          gst_buffer_get_size (sub_buf),
+          gst_adapter_available (stream->section_adapter));
       mpegts_packetizer_clear_section (packetizer, stream);
     } else {
       GST_DEBUG
@@ -2558,9 +2561,10 @@ mpegts_packetizer_push_section (MpegTSPacketizer2 * packetizer,
 
     /* >= as sections can be padded and padding is not included in
      * section_length */
-    if (stream->section_adapter->size >= stream->section_length + 3) {
-      res = mpegts_packetizer_parse_section_header (packetizer,
-          stream, section);
+    if (gst_adapter_available (stream->section_adapter) >=
+        stream->section_length + 3) {
+      res =
+          mpegts_packetizer_parse_section_header (packetizer, stream, section);
 
       /* flush stuffing bytes */
       mpegts_packetizer_clear_section (packetizer, stream);
