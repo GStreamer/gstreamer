@@ -1599,7 +1599,6 @@ gst_camera_bin_create_elements (GstCameraBin2 * camera)
         NULL);
 
     if (camera->image_profile == NULL) {
-      GstEncodingContainerProfile *prof;
       GstEncodingVideoProfile *vprof;
       GstCaps *caps;
 
@@ -1607,13 +1606,8 @@ gst_camera_bin_create_elements (GstCameraBin2 * camera)
       vprof = gst_encoding_video_profile_new (caps, NULL, NULL, 1);
       gst_encoding_video_profile_set_variableframerate (vprof, TRUE);
 
-      prof = gst_encoding_container_profile_new ("jpeg", "jpeg container", caps,
-          NULL);
-      gst_encoding_container_profile_add_profile (prof,
-          (GstEncodingProfile *) vprof);
-
       gst_caps_unref (caps);
-      camera->image_profile = (GstEncodingProfile *) prof;
+      camera->image_profile = (GstEncodingProfile *) vprof;
       camera->image_profile_switch = TRUE;
     }
 
