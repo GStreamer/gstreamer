@@ -621,7 +621,7 @@ gst_v4l2src_decide_allocation (GstBaseSrc * bsrc, GstQuery * query)
   else
     gst_query_add_allocation_pool (query, pool, size, min, max);
 
-  return TRUE;
+  return GST_BASE_SRC_CLASS (parent_class)->decide_allocation (bsrc, query);
 }
 
 static gboolean
