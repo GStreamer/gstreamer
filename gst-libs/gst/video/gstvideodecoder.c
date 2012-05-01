@@ -64,7 +64,7 @@
  *     </para></listitem>
  *     <listitem><para>
  *       If codec processing results in decoded data, subclass should call
- *       @gst_video_decoder_finish_frame to have decoded data pushed
+ *       @gst_video_decoder_finish_frame to have decoded data pushed.
  *       downstream.
  *     </para></listitem>
  *   </itemizedlist>
@@ -2212,6 +2212,7 @@ gst_video_decoder_have_frame_2 (GstVideoDecoder * decoder)
       frame->pts);
 
   /* do something with frame */
+  gst_video_codec_frame_ref (frame);
   ret = decoder_class->handle_frame (decoder, frame);
   if (ret != GST_FLOW_OK)
     GST_DEBUG_OBJECT (decoder, "flow error %s", gst_flow_get_name (ret));
