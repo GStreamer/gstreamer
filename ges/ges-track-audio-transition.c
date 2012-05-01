@@ -153,7 +153,7 @@ link_element_to_mixer_with_volume (GstBin * bin, GstElement * element,
   gst_bin_add (bin, volume);
 
   if (!fast_element_link (element, volume) ||
-      !gst_element_link_pads_full (volume, "src", mixer, "sink%d",
+      !gst_element_link_pads_full (volume, "src", mixer, "sink_%u",
           GST_PAD_LINK_CHECK_NOTHING))
     GST_ERROR_OBJECT (bin, "Error linking volume to mixer");
 
