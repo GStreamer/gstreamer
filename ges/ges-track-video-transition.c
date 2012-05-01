@@ -53,6 +53,8 @@ struct _GESTrackVideoTransitionPrivate
   gdouble end_value;
   guint64 dur;
 
+  /* This is in case the smpte doesn't exist yet */
+  gint pending_border_value;
 };
 
 enum
@@ -124,6 +126,7 @@ ges_track_video_transition_init (GESTrackVideoTransition * self)
   self->priv->start_value = 0.0;
   self->priv->end_value = 0.0;
   self->priv->dur = 42;
+  self->priv->pending_border_value = -1;
 }
 
 static void
@@ -434,6 +437,11 @@ switch_to_smpte_cb (GstPad * sink, gboolean blocked,
   add_smpte_to_bin (priv->sinka, smptealpha, priv);
   add_smpte_to_bin (priv->sinkb, smptealphab, priv);
 
+  if (priv->pending_border_value != -1) {
+    g_object_set (smptealphab, "border", priv->pending_border_value, NULL);
+    priv->pending_border_value = -1;
+  }
+
   replace_mixer (priv);
 
   priv->start_value = 1.0;
@@ -597,6 +605,19 @@ ges_track_video_transition_duration_changed (GESTrackObject * object,
 
   priv->dur = duration;
   GST_LOG ("done updating controller");
+}
+
+void
+ges_track_video_transition_set_border (GESTrackVideoTransition * self,
+    gint value)
+{
+  GESTrackVideoTransitionPrivate *priv = self->priv;
+
+  if (!priv->smpte) {
+    priv->pending_border_value = value;
+    return;
+  }
+  g_object_set (priv->smpte, "border", value, NULL);
 }
 
 /**

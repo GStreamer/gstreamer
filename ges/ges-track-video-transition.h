@@ -85,6 +85,10 @@ ges_track_video_transition_get_transition_type (GESTrackVideoTransition * trans)
 
 GESTrackVideoTransition* ges_track_video_transition_new (void);
 
+void
+ges_track_video_transition_set_border (GESTrackVideoTransition * self,
+				       gint value);
+
 G_END_DECLS
 
 #endif /* _GES_TRACK_VIDEO_transition */
