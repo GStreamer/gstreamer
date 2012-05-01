@@ -192,7 +192,6 @@ gst_video_context_pad_query (const GValue * item, GValue * value,
   gboolean res;
 
   res = gst_pad_peer_query (pad, query);
-  gst_object_unref (pad);
 
   if (res) {
     g_value_set_boolean (value, TRUE);
