@@ -315,30 +315,6 @@ gst_wrapper_camera_bin_src_vidsrc_probe (GstPad * pad, GstPadProbeInfo * info,
   return ret;
 }
 
-static gboolean
-gst_wrapper_camera_bin_src_event (GstPad * pad, GstObject * parent,
-    GstEvent * event)
-{
-  GstWrapperCameraBinSrc *src =
-      GST_WRAPPER_CAMERA_BIN_SRC (GST_PAD_PARENT (pad));
-  const GstStructure *structure;
-
-  structure = gst_event_get_structure (event);
-  if (structure && gst_structure_has_name (structure, "renegotiate")) {
-    GST_DEBUG_OBJECT (src, "Received renegotiate on pad %s",
-        GST_PAD_NAME (pad));
-
-    if (pad == src->imgsrc) {
-      src->image_renegotiate = TRUE;
-    } else if (pad == src->vidsrc) {
-      src->video_renegotiate = TRUE;
-    }
-  }
-  //TODO porting
-  //return src->srcpad_event_func (pad, event);
-  return TRUE;
-}
-
 static GstPadProbeReturn
 gst_wrapper_camera_src_src_event_probe (GstPad * pad, GstPadProbeInfo * info,
     gpointer udata)
@@ -1171,10 +1147,6 @@ gst_wrapper_camera_bin_src_init (GstWrapperCameraBinSrc * self)
   gst_element_add_pad (GST_ELEMENT (self), self->vidsrc);
 
   self->srcpad_event_func = GST_PAD_EVENTFUNC (self->vfsrc);
-
-  gst_pad_set_event_function (self->imgsrc, gst_wrapper_camera_bin_src_event);
-  gst_pad_set_event_function (self->vidsrc, gst_wrapper_camera_bin_src_event);
-  gst_pad_set_event_function (self->vfsrc, gst_wrapper_camera_bin_src_event);
 
   /* TODO where are variables reset? */
   self->image_capture_count = 0;
