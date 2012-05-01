@@ -426,7 +426,7 @@ GST_START_TEST (test_uri_parsing)
   /* wrong protocol */
   foosrc = gst_element_factory_make ("cdfoosrc", "cdfoosrc");
   fail_unless (gst_uri_handler_set_uri (GST_URI_HANDLER (foosrc),
-          "x://", NULL) == FALSE);
+          "xyz://", NULL) == FALSE);
   fail_unless (gst_uri_handler_set_uri (GST_URI_HANDLER (foosrc),
           "cddaq://", NULL) == FALSE);
 
