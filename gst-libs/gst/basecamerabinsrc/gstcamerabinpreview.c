@@ -140,7 +140,7 @@ gst_camerabin_create_preview_pipeline (GstElement * element,
   data->pipeline = gst_pipeline_new ("preview-pipeline");
   data->appsrc = gst_element_factory_make ("appsrc", "preview-appsrc");
   data->appsink = gst_element_factory_make ("appsink", "preview-appsink");
-  csp = gst_element_factory_make ("ffmpegcolorspace", "preview-csp");
+  csp = gst_element_factory_make ("videoconvert", "preview-vconv");
   vscale = gst_element_factory_make ("videoscale", "preview-vscale");
 
   if (!data->appsrc || !data->appsink || !csp || !vscale) {

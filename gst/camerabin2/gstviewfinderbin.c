@@ -199,9 +199,9 @@ gst_viewfinder_bin_create_elements (GstViewfinderBin * vfbin)
     gst_ghost_pad_set_target (GST_GHOST_PAD (vfbin->ghostpad), NULL);
 
     /* add the elements, user wants them */
-    csp = gst_element_factory_make ("ffmpegcolorspace", "vfbin-csp");
+    csp = gst_element_factory_make ("videoconvert", "vfbin-csp");
     if (!csp) {
-      missing_element_name = "ffmpegcolorspace";
+      missing_element_name = "videoconvert";
       goto missing_element;
     }
     gst_bin_add (GST_BIN_CAST (vfbin), csp);

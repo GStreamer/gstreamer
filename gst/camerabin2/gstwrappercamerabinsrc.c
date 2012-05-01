@@ -480,8 +480,8 @@ gst_wrapper_camera_bin_src_construct_pipeline (GstBaseCameraSrc * bcamsrc)
       gst_object_unref (pad);
     }
 
-    if (!gst_camerabin_create_and_add_element (cbin, "ffmpegcolorspace",
-            "src-colorspace"))
+    if (!gst_camerabin_create_and_add_element (cbin, "videoconvert",
+            "src-videoconvert"))
       goto done;
 
     if (!(self->src_filter =
@@ -590,10 +590,10 @@ gst_wrapper_camera_bin_src_construct_pipeline (GstBaseCameraSrc * bcamsrc)
   if (!self->video_filter) {
     if (self->app_vid_filter) {
       self->video_filter = gst_object_ref (self->app_vid_filter);
-      filter_csp = gst_element_factory_make ("ffmpegcolorspace",
-          "filter-colorspace");
+      filter_csp = gst_element_factory_make ("videoconvert",
+          "filter-videoconvert");
       gst_bin_add_many (cbin, self->video_filter, filter_csp, NULL);
-      src_csp = gst_bin_get_by_name (cbin, "src-colorspace");
+      src_csp = gst_bin_get_by_name (cbin, "src-videoconvert");
       capsfilter = gst_bin_get_by_name (cbin, "src-capsfilter");
       if (gst_pad_is_linked (gst_element_get_static_pad (src_csp, "src")))
         gst_element_unlink (src_csp, capsfilter);
