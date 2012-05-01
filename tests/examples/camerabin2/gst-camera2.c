@@ -179,7 +179,7 @@ on_formatComboBox_changed (GtkWidget * widget, gpointer data)
     GtkWidget *dialog =
         gtk_message_dialog_new (GTK_WINDOW (ui_main_window), GTK_DIALOG_MODAL,
         GTK_MESSAGE_ERROR, GTK_BUTTONS_OK,
-        "Could not initialize camerabin2 with the "
+        "Could not initialize camerabin with the "
         "selected format. Your system might not have the required plugins installed.\n"
         "Please select another format.");
 
@@ -298,7 +298,7 @@ main (int argc, char *argv[])
     return 1;
   }
 
-  camera = gst_element_factory_make ("camerabin2", "camera");
+  camera = gst_element_factory_make ("camerabin", "camera");
   bus = gst_pipeline_get_bus (GST_PIPELINE (camera));
   gst_bus_add_watch (bus, bus_callback, NULL);
   gst_bus_set_sync_handler (bus, bus_sync_callback, NULL);

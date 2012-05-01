@@ -81,8 +81,8 @@
     startup time, change mode time, shot to save, shot to snapshot,
     shot to shot, preview to precapture, shot to buffer.
     e.g. 3.5,1.0,5.0,2.5,5.0,1.5,1.0
-    * Startup time -> time it takes for camerabin2 to reach playing
-    * Change mode time -> time it takes for camerabin2 to change to the selected
+    * Startup time -> time it takes for camerabin to reach playing
+    * Change mode time -> time it takes for camerabin to change to the selected
     mode in playing
     * Shot to save -> time it takes from start-capture to having the image saved
     to disk
@@ -218,7 +218,7 @@ static gchar *video_capture_caps_str = NULL;
 static gchar *audio_capture_caps_str = NULL;
 static gboolean performance_measure = FALSE;
 static gchar *performance_targets_str = NULL;
-static gchar *camerabin2_flags = NULL;
+static gchar *camerabin_flags = NULL;
 
 
 #define MODE_VIDEO 2
@@ -577,7 +577,7 @@ load_encoding_profile (void)
           gep_targetname);
   } else
     GST_DEBUG
-        ("Encoding profile not set, using camerabin2 default encoding profile");
+        ("Encoding profile not set, using camerabin default encoding profile");
 
   return prof;
 }
@@ -613,7 +613,7 @@ setup_pipeline_element (GstElement * element, const gchar * property_name,
 }
 
 static void
-set_camerabin2_caps_from_string (void)
+set_camerabin_caps_from_string (void)
 {
   GstCaps *caps = NULL;
   if (image_capture_caps_str != NULL) {
@@ -664,7 +664,7 @@ setup_pipeline (void)
 
   initial_time = gst_util_get_timestamp ();
 
-  camerabin = gst_element_factory_make ("camerabin2", NULL);
+  camerabin = gst_element_factory_make ("camerabin", NULL);
   if (NULL == camerabin) {
     g_warning ("can't create camerabin element\n");
     goto error;
@@ -677,9 +677,9 @@ setup_pipeline (void)
   gst_bus_add_watch (bus, bus_callback, NULL);
   gst_object_unref (bus);
 
-  GST_INFO_OBJECT (camerabin, "camerabin2 created");
+  GST_INFO_OBJECT (camerabin, "camerabin created");
 
-  gst_util_set_object_arg (G_OBJECT (camerabin), "flags", camerabin2_flags);
+  gst_util_set_object_arg (G_OBJECT (camerabin), "flags", camerabin_flags);
 
   if (videosrc_name) {
     GstElement *wrapper;
@@ -731,7 +731,7 @@ setup_pipeline (void)
     g_object_set (sink, "sync", TRUE, NULL);
   } else {
     /* Get the inner viewfinder sink, this uses fixed names given
-     * by default in camerabin2 */
+     * by default in camerabin */
     sink = gst_bin_get_by_name (GST_BIN (camerabin), "vf-bin");
     g_assert (sink);
     gst_object_unref (sink);
@@ -782,7 +782,7 @@ setup_pipeline (void)
     }
   }
 
-  set_camerabin2_caps_from_string ();
+  set_camerabin_caps_from_string ();
 
   /* change to the wrong mode if timestamping if performance mode is on so
    * we can change it back and measure the time after in playing */
@@ -1242,8 +1242,8 @@ main (int argc, char *argv[])
           ", shot to snapshot, shot to shot, preview to shot, shot to buffer. "
           "e.g. 3.5,1.0,5.0,2.5,5.0,1.5,1.0",
         NULL},
-    {"flags", '\0', 0, G_OPTION_ARG_STRING, &camerabin2_flags,
-        "camerabin2 element flags (default = 0)", NULL},
+    {"flags", '\0', 0, G_OPTION_ARG_STRING, &camerabin_flags,
+        "camerabin element flags (default = 0)", NULL},
     {NULL}
   };
 
