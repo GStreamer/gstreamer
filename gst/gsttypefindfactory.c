@@ -186,12 +186,12 @@ gst_type_find_factory_get_caps (GstTypeFindFactory * factory)
  * Returns: (transfer none) (array zero-terminated=1) (element-type utf8): a
  *     NULL-terminated array of extensions associated with this factory
  */
-gchar **
+const gchar *const *
 gst_type_find_factory_get_extensions (GstTypeFindFactory * factory)
 {
   g_return_val_if_fail (GST_IS_TYPE_FIND_FACTORY (factory), NULL);
 
-  return factory->extensions;
+  return (const gchar * const *) factory->extensions;
 }
 
 /**
