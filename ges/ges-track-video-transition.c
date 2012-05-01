@@ -685,6 +685,8 @@ ges_track_video_transition_set_transition_type (GESTrackVideoTransition * self,
 GESVideoStandardTransitionType
 ges_track_video_transition_get_transition_type (GESTrackVideoTransition * trans)
 {
+  if (trans->priv->pending_type)
+    return trans->priv->pending_type;
   return trans->priv->type;
 }
 
