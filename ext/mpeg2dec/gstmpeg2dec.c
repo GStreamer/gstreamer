@@ -90,7 +90,7 @@ static GstFlowReturn gst_mpeg2dec_handle_frame (GstVideoDecoder * decoder,
 static void gst_mpeg2dec_set_index (GstElement * element, GstIndex * index);
 static GstIndex *gst_mpeg2dec_get_index (GstElement * element);
 
-static void clear_buffers (GstMpeg2dec * mpeg2dec);
+static void gst_mpeg2dec_clear_buffers (GstMpeg2dec * mpeg2dec);
 static gboolean gst_mpeg2dec_crop_buffer (GstMpeg2dec * dec, GstBuffer ** buf);
 
 
@@ -161,7 +161,7 @@ gst_mpeg2dec_finalize (GObject * object)
     mpeg2dec->decoder = NULL;
   }
 
-  clear_buffers (mpeg2dec);
+  gst_mpeg2dec_clear_buffers (mpeg2dec);
   g_free (mpeg2dec->dummybuf[3]);
   mpeg2dec->dummybuf[3] = NULL;
 
@@ -191,7 +191,7 @@ gst_mpeg2dec_close (GstVideoDecoder * decoder)
     mpeg2dec->decoder = NULL;
     mpeg2dec->info = NULL;
   }
-  clear_buffers (mpeg2dec);
+  gst_mpeg2dec_clear_buffers (mpeg2dec);
 
   return TRUE;
 }
@@ -260,7 +260,7 @@ gst_mpeg2dec_reset (GstVideoDecoder * decoder, gboolean hard)
   mpeg2_reset (mpeg2dec->decoder, hard);
   mpeg2_skip (mpeg2dec->decoder, 1);
 
-  clear_buffers (mpeg2dec);
+  gst_mpeg2dec_clear_buffers (mpeg2dec);
 
   return TRUE;
 }
@@ -398,6 +398,60 @@ gst_mpeg2dec_alloc_sized_buf (GstMpeg2dec * mpeg2dec, guint size,
   GST_BUFFER_SIZE (*obuf) = size;
 }
 
+typedef struct
+{
+  GstBuffer *buffer;
+  gint id;
+} GstMpeg2DecBuffer;
+
+static void
+gst_mpeg2dec_clear_buffers (GstMpeg2dec * mpeg2dec)
+{
+  GList *l;
+  while ((l = g_list_first (mpeg2dec->buffers))) {
+    GstMpeg2DecBuffer *mbuf = l->data;
+    gst_buffer_unref (mbuf->buffer);
+    g_slice_free (GstMpeg2DecBuffer, mbuf);
+    mpeg2dec->buffers = g_list_delete_link (mpeg2dec->buffers, l);
+  }
+}
+
+static void
+gst_mpeg2dec_save_buffer (GstMpeg2dec * mpeg2dec, GstBuffer * buffer, gint id)
+{
+  GstMpeg2DecBuffer *mbuf;
+
+  mbuf = g_slice_new0 (GstMpeg2DecBuffer);
+  mbuf->buffer = gst_buffer_ref (buffer);
+  mbuf->id = id;
+
+  mpeg2dec->buffers = g_list_prepend (mpeg2dec->buffers, mbuf);
+}
+
+static gint
+gst_mpeg2dec_buffer_compare (GstMpeg2DecBuffer * mbuf, gconstpointer id)
+{
+  if (mbuf->id == GPOINTER_TO_INT (id))
+    return 0;
+  return -1;
+}
+
+static void
+gst_mpeg2dec_discard_buffer (GstMpeg2dec * mpeg2dec, gint id)
+{
+  GList *l = g_list_find_custom (mpeg2dec->buffers, GINT_TO_POINTER (id),
+      (GCompareFunc) gst_mpeg2dec_buffer_compare);
+
+  if (l) {
+    GstMpeg2DecBuffer *mbuf = l->data;
+    gst_buffer_unref (mbuf->buffer);
+    g_slice_free (GstMpeg2DecBuffer, mbuf);
+    mpeg2dec->buffers = g_list_delete_link (mpeg2dec->buffers, l);
+  } else {
+    GST_WARNING ("Could not find buffer %u, will be leaked until next reset");
+  }
+}
+
 static void
 gst_mpeg2dec_alloc_buffer (GstMpeg2dec * mpeg2dec, gint64 offset,
     GstVideoCodecFrame * frame)
@@ -416,8 +470,8 @@ gst_mpeg2dec_alloc_buffer (GstMpeg2dec * mpeg2dec, gint64 offset,
 
   mpeg2_set_buf (mpeg2dec->decoder, buf,
       GINT_TO_POINTER (frame->system_frame_number));
-  mpeg2dec->buffers = g_list_prepend (mpeg2dec->buffers,
-      gst_buffer_ref (frame->output_buffer));
+  gst_mpeg2dec_save_buffer (mpeg2dec, frame->output_buffer,
+      frame->system_frame_number);
 
   /* we store the original byteoffset of this picture in the stream here
    * because we need it for indexing */
@@ -585,6 +639,7 @@ handle_sequence (GstMpeg2dec * mpeg2dec, const mpeg2_info_t * info)
   mpeg2_set_buf (mpeg2dec->decoder, mpeg2dec->dummybuf, NULL);
   mpeg2_set_buf (mpeg2dec->decoder, mpeg2dec->dummybuf, NULL);
   mpeg2_set_buf (mpeg2dec->decoder, mpeg2dec->dummybuf, NULL);
+  gst_mpeg2dec_clear_buffers (mpeg2dec);
 
 done:
   return ret;
@@ -594,16 +649,6 @@ negotiate_failed:
     GST_ELEMENT_ERROR (mpeg2dec, CORE, NEGOTIATION, (NULL), (NULL));
     ret = GST_FLOW_NOT_NEGOTIATED;
     goto done;
-  }
-}
-
-static void
-clear_buffers (GstMpeg2dec * mpeg2dec)
-{
-  GList *l;
-  while ((l = g_list_first (mpeg2dec->buffers))) {
-    gst_buffer_unref (GST_BUFFER (l->data));
-    mpeg2dec->buffers = g_list_delete_link (mpeg2dec->buffers, l);
   }
 }
 
@@ -831,15 +876,11 @@ gst_mpeg2dec_handle_frame (GstVideoDecoder * decoder,
         } else {
           GST_DEBUG_OBJECT (mpeg2dec, "no picture to display");
         }
-        if (info->discard_fbuf && info->discard_fbuf->id) {
-          GList *l = g_list_find (mpeg2dec->buffers, info->discard_fbuf->id);
-          if (l) {
-            gst_buffer_unref (GST_BUFFER (l->data));
-            mpeg2dec->buffers = g_list_delete_link (mpeg2dec->buffers, l);
-          }
-        }
+        if (info->discard_fbuf && info->discard_fbuf->id)
+          gst_mpeg2dec_discard_buffer (mpeg2dec,
+              GPOINTER_TO_INT (info->discard_fbuf->id));
         if (state != STATE_SLICE) {
-          clear_buffers (mpeg2dec);
+          gst_mpeg2dec_clear_buffers (mpeg2dec);
         }
         break;
       case STATE_BUFFER:
