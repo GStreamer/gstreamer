@@ -136,8 +136,8 @@ ges_timeline_pipeline_init (GESTimelinePipeline * self)
       gst_element_factory_make ("encodebin", "internal-encodebin");
   /* Limit encodebin buffering to 1 buffer since we know the various
    * stream fed to it are decoupled already */
-  g_object_set (self->priv->encodebin, "queue-buffers-max", (guint32) 1,
-      "queue-bytes-max", (guint32) 0, "queue-time-max", (guint64) 0,
+  g_object_set (self->priv->encodebin, "queue-buffers-max", (guint) 1,
+      "queue-bytes-max", (guint) 0, "queue-time-max", (guint64) 0,
       "avoid-reencoding", TRUE, NULL);
 
   if (G_UNLIKELY (self->priv->playsink == NULL))

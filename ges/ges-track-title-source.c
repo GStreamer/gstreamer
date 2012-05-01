@@ -161,7 +161,7 @@ ges_track_title_source_create_element (GESTrackObject * object)
 
   g_object_set (background, "pattern", (gint) GES_VIDEO_TEST_PATTERN_BLACK,
       NULL);
-  g_object_set (text, "color", (guint32) self->priv->color, NULL);
+  g_object_set (text, "color", (guint) self->priv->color, NULL);
   g_object_set (text, "xpos", (gdouble) self->priv->xpos, NULL);
   g_object_set (text, "ypos", (gdouble) self->priv->ypos, NULL);
 
