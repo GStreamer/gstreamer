@@ -296,6 +296,29 @@ struct _GstPluginClass {
   gpointer _gst_reserved[GST_PADDING];
 };
 
+#include "gsttypefind.h"
+
+struct _GstTypeFindFactory {
+  GstPluginFeature              feature;
+  /* <private> */
+
+  GstTypeFindFunction           function;
+  gchar **                      extensions;
+  GstCaps *                     caps; /* FIXME: not yet saved in registry */
+
+  gpointer                      user_data;
+  GDestroyNotify                user_data_notify;
+
+  gpointer _gst_reserved[GST_PADDING];
+};
+
+struct _GstTypeFindFactoryClass {
+  GstPluginFeatureClass         parent;
+  /* <private> */
+
+  gpointer _gst_reserved[GST_PADDING];
+};
+
 
 G_END_DECLS
 #endif /* __GST_PRIVATE_H__ */

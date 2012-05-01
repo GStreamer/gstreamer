@@ -36,34 +36,13 @@ G_BEGIN_DECLS
 #define GST_IS_TYPE_FIND_FACTORY_CLASS(klass)      (G_TYPE_CHECK_CLASS_TYPE ((klass), GST_TYPE_TYPE_FIND_FACTORY))
 #define GST_TYPE_FIND_FACTORY_GET_CLASS(obj)       (G_TYPE_INSTANCE_GET_CLASS ((obj), GST_TYPE_TYPE_FIND_FACTORY, GstTypeFindFactoryClass))
 
-typedef struct _GstTypeFindFactory GstTypeFindFactory;
-typedef struct _GstTypeFindFactoryClass GstTypeFindFactoryClass;
-
 /**
  * GstTypeFindFactory:
  *
- * Object that stores information about a typefind function.
+ * Opaque object that stores information about a typefind function.
  */
-struct _GstTypeFindFactory {
-  GstPluginFeature              feature;
-  /* <private> */
-
-  GstTypeFindFunction           function;
-  gchar **                      extensions;
-  GstCaps *                     caps; /* FIXME: not yet saved in registry */
-
-  gpointer                      user_data;
-  GDestroyNotify                user_data_notify;
-
-  gpointer _gst_reserved[GST_PADDING];
-};
-
-struct _GstTypeFindFactoryClass {
-  GstPluginFeatureClass         parent;
-  /* <private> */
-
-  gpointer _gst_reserved[GST_PADDING];
-};
+typedef struct _GstTypeFindFactory GstTypeFindFactory;
+typedef struct _GstTypeFindFactoryClass GstTypeFindFactoryClass;
 
 /* typefinding interface */
 
