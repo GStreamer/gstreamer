@@ -349,6 +349,7 @@ gst_adapter_push (GstAdapter * adapter, GstBuffer * buf)
   }
 }
 
+#if 0
 /* Internal method only. Tries to merge buffers at the head of the queue
  * to form a single larger buffer of size 'size'.
  *
@@ -404,6 +405,7 @@ gst_adapter_try_to_merge_up (GstAdapter * adapter, gsize size)
 
   return ret;
 }
+#endif
 
 /**
  * gst_adapter_map:
@@ -451,7 +453,9 @@ gst_adapter_map (GstAdapter * adapter, gsize size)
   if (adapter->assembled_len >= size)
     return adapter->assembled_data;
 
+#if 0
   do {
+#endif
     cur = adapter->buflist->data;
     skip = adapter->skip;
 
@@ -464,7 +468,9 @@ gst_adapter_map (GstAdapter * adapter, gsize size)
     }
     /* We may be able to efficiently merge buffers in our pool to
      * gather a big enough chunk to return it from the head buffer directly */
+#if 0
   } while (gst_adapter_try_to_merge_up (adapter, size));
+#endif
 
   /* see how much data we can reuse from the assembled memory and how much
    * we need to copy */
@@ -757,7 +763,7 @@ gst_adapter_take_buffer (GstAdapter * adapter, gsize nbytes)
     buffer = gst_buffer_copy_region (cur, GST_BUFFER_COPY_ALL, skip, nbytes);
     goto done;
   }
-
+#if 0
   if (gst_adapter_try_to_merge_up (adapter, nbytes)) {
     /* Merged something, let's try again for sub-buffering */
     cur = adapter->buflist->data;
@@ -769,6 +775,7 @@ gst_adapter_take_buffer (GstAdapter * adapter, gsize nbytes)
       goto done;
     }
   }
+#endif
 
   data = gst_adapter_take_internal (adapter, nbytes);
 
