@@ -2310,22 +2310,21 @@ gst_video_decoder_set_output_state (GstVideoDecoder * decoder,
  *
  * Get the oldest pending unfinished #GstVideoCodecFrame
  *
- * Returns: (transfer none): oldest pending unfinished #GstVideoCodecFrame.
+ * Returns: (transfer full): oldest pending unfinished #GstVideoCodecFrame.
  *
  * Since: 0.10.36
  */
 GstVideoCodecFrame *
 gst_video_decoder_get_oldest_frame (GstVideoDecoder * decoder)
 {
-  GList *g;
+  GstVideoCodecFrame *frame = NULL;
 
   GST_VIDEO_DECODER_STREAM_LOCK (decoder);
-  g = decoder->priv->frames;
+  if (decoder->priv->frames)
+    frame = gst_video_codec_frame_ref (decoder->priv->frames->data);
   GST_VIDEO_DECODER_STREAM_UNLOCK (decoder);
 
-  if (g == NULL)
-    return NULL;
-  return (GstVideoCodecFrame *) (g->data);
+  return (GstVideoCodecFrame *) frame;
 }
 
 /**
