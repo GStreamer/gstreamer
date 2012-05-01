@@ -397,8 +397,14 @@ gst_wrapper_camera_bin_src_caps_cb (GObject * gobject, GParamSpec * pspec,
   gst_base_camera_src_setup_zoom (bcamsrc);
 
   /* Update post-zoom capsfilter */
-  if (self->src_zoom_filter)
-    g_object_set (G_OBJECT (self->src_zoom_filter), "caps", caps, NULL);
+  if (self->src_zoom_filter) {
+    GstCaps *filtercaps;
+
+    g_object_get (G_OBJECT (self->src_zoom_filter), "caps", &filtercaps, NULL);
+    if (!gst_caps_is_equal (filtercaps, caps))
+      g_object_set (G_OBJECT (self->src_zoom_filter), "caps", caps, NULL);
+    gst_caps_unref (filtercaps);
+  }
 
   /* drop our ref on the caps */
   gst_caps_unref (caps);
