@@ -1662,8 +1662,11 @@ gst_x264_enc_encode_frame (GstX264Enc * encoder, x264_picture_t * pic_in,
   guint8 *data;
   GstPad *srcpad;
 
-  if (G_UNLIKELY (encoder->x264enc == NULL))
+  if (G_UNLIKELY (encoder->x264enc == NULL)) {
+    if (input_frame)
+      gst_video_codec_frame_unref (input_frame);
     return GST_FLOW_NOT_NEGOTIATED;
+  }
 
   GST_OBJECT_LOCK (encoder);
   if (encoder->reconfig) {
@@ -1696,8 +1699,9 @@ gst_x264_enc_encode_frame (GstX264Enc * encoder, x264_picture_t * pic_in,
     goto out;
   }
 
-  /* This frame is now queued */
-  frame = NULL;
+  /* Input frame is now queued */
+  if (input_frame)
+    gst_video_codec_frame_unref (input_frame);
 
   if (!*i_nal) {
     ret = GST_FLOW_OK;
@@ -1731,10 +1735,8 @@ gst_x264_enc_encode_frame (GstX264Enc * encoder, x264_picture_t * pic_in,
   }
 
 out:
-  if (frame) {
+  if (frame)
     gst_video_encoder_finish_frame (GST_VIDEO_ENCODER (encoder), frame);
-    gst_video_codec_frame_unref (frame);
-  }
 
   return ret;
 }
