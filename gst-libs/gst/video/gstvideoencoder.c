@@ -1642,22 +1642,21 @@ gst_video_encoder_get_latency (GstVideoEncoder * encoder,
  *
  * Get the oldest unfinished pending #GstVideoCodecFrame
  *
- * Returns: oldest unfinished pending #GstVideoCodecFrame
+ * Returns: (transfer full): oldest unfinished pending #GstVideoCodecFrame
  *
  * Since: 0.10.36
  */
 GstVideoCodecFrame *
 gst_video_encoder_get_oldest_frame (GstVideoEncoder * encoder)
 {
-  GList *g;
+  GstVideoCodecFrame *frame = NULL;
 
   GST_VIDEO_ENCODER_STREAM_LOCK (encoder);
-  g = encoder->priv->frames;
+  if (encoder->priv->frames)
+    frame = gst_video_codec_frame_ref (encoder->priv->frames->data);
   GST_VIDEO_ENCODER_STREAM_UNLOCK (encoder);
 
-  if (g == NULL)
-    return NULL;
-  return (GstVideoCodecFrame *) (g->data);
+  return (GstVideoCodecFrame *) frame;
 }
 
 /**
