@@ -78,6 +78,7 @@ static void gst_mpeg2dec_finalize (GObject * object);
 static gboolean gst_mpeg2dec_open (GstVideoDecoder * decoder);
 static gboolean gst_mpeg2dec_close (GstVideoDecoder * decoder);
 static gboolean gst_mpeg2dec_start (GstVideoDecoder * decoder);
+static gboolean gst_mpeg2dec_stop (GstVideoDecoder * decoder);
 static gboolean gst_mpeg2dec_set_format (GstVideoDecoder * decoder,
     GstVideoCodecState * state);
 static gboolean gst_mpeg2dec_reset (GstVideoDecoder * decoder, gboolean hard);
@@ -120,6 +121,7 @@ gst_mpeg2dec_class_init (GstMpeg2decClass * klass)
   video_decoder_class->open = GST_DEBUG_FUNCPTR (gst_mpeg2dec_open);
   video_decoder_class->close = GST_DEBUG_FUNCPTR (gst_mpeg2dec_close);
   video_decoder_class->start = GST_DEBUG_FUNCPTR (gst_mpeg2dec_start);
+  video_decoder_class->stop = GST_DEBUG_FUNCPTR (gst_mpeg2dec_stop);
   video_decoder_class->reset = GST_DEBUG_FUNCPTR (gst_mpeg2dec_reset);
   video_decoder_class->set_format = GST_DEBUG_FUNCPTR (gst_mpeg2dec_set_format);
   video_decoder_class->handle_frame =
@@ -197,6 +199,18 @@ gst_mpeg2dec_close (GstVideoDecoder * decoder)
 static gboolean
 gst_mpeg2dec_start (GstVideoDecoder * decoder)
 {
+  return gst_mpeg2dec_reset (decoder, TRUE);
+}
+
+static gboolean
+gst_mpeg2dec_stop (GstVideoDecoder * decoder)
+{
+  GstMpeg2dec *mpeg2dec = GST_MPEG2DEC (decoder);
+
+  if (mpeg2dec->input_state) {
+    gst_video_codec_state_unref (mpeg2dec->input_state);
+    mpeg2dec->input_state = NULL;
+  }
   return gst_mpeg2dec_reset (decoder, TRUE);
 }
 
