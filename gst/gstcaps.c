@@ -1037,8 +1037,6 @@ gst_caps_is_subset_structure (const GstCaps * caps,
  * <note>This function does not work reliably if optional properties for caps
  * are included on one caps and omitted on the other.</note>
  *
- * This function deals correctly with passing NULL for any of the caps.
- *
  * Returns: TRUE if both caps are equal.
  */
 gboolean
