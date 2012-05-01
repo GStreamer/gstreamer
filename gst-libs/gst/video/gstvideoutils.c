@@ -36,6 +36,8 @@ _gst_video_codec_frame_free (GstVideoCodecFrame * frame)
 {
   g_return_if_fail (frame != NULL);
 
+  GST_DEBUG ("free frame %p", frame);
+
   if (frame->input_buffer) {
     gst_buffer_unref (frame->input_buffer);
   }
