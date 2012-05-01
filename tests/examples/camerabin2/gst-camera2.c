@@ -197,7 +197,7 @@ bus_sync_callback (GstBus * bus, GstMessage * message, gpointer data)
   if (GST_MESSAGE_TYPE (message) != GST_MESSAGE_ELEMENT)
     return GST_BUS_PASS;
 
-  if (!gst_message_has_name (message, "prepare-xwindow-id"))
+  if (!gst_message_has_name (message, "prepare-window-handle"))
     return GST_BUS_PASS;
 
   /* FIXME: make sure to get XID in main thread */
