@@ -42,3 +42,5 @@ log
 /bindings/python/ges.c
 
 /m4
+
+/tools/ges-launch-1.0
