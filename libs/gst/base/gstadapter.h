@@ -38,40 +38,13 @@ G_BEGIN_DECLS
 #define GST_IS_ADAPTER_CLASS(klass) \
   (G_TYPE_CHECK_CLASS_TYPE((klass), GST_TYPE_ADAPTER))
 
-typedef struct _GstAdapter GstAdapter;
-typedef struct _GstAdapterClass GstAdapterClass;
-typedef struct _GstAdapterPrivate GstAdapterPrivate;
-
 /**
  * GstAdapter:
  *
  * The opaque #GstAdapter data structure.
  */
-struct _GstAdapter {
-  GObject       object;
-
-  /*< private >*/
-  GSList *      buflist;
-  GSList *      buflist_end;
-  gsize         size;
-  gsize         skip;
-
-  /* we keep state of assembled pieces */
-  gpointer      assembled_data;
-  gsize         assembled_size;
-  gsize         assembled_len;
-
-  GstAdapterPrivate *priv;
-
-  gpointer _gst_reserved[GST_PADDING];
-};
-
-struct _GstAdapterClass {
-  GObjectClass  parent_class;
-
-  /*< private >*/
-  gpointer _gst_reserved[GST_PADDING];
-};
+typedef struct _GstAdapter GstAdapter;
+typedef struct _GstAdapterClass GstAdapterClass;
 
 GType                   gst_adapter_get_type            (void);
 
