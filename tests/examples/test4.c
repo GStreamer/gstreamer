@@ -116,7 +116,7 @@ main (int argc, gchar ** argv)
    * ready to start using it... by solely working with the layer ! */
 
   for (i = 2; i < argc; i++) {
-    gchar *uri = g_strdup_printf ("file://%s", argv[i]);
+    gchar *uri = gst_filename_to_uri (argv[i], NULL);
     GESTimelineFileSource *src = ges_timeline_filesource_new (uri);
 
     g_assert (src);
@@ -142,7 +142,7 @@ main (int argc, gchar ** argv)
   if (gst_uri_is_valid (argv[1])) {
     output_uri = g_strdup (argv[1]);
   } else {
-    output_uri = g_strdup_printf ("file://%s", argv[1]);
+    output_uri = gst_filename_to_uri (argv[1], NULL);
   }
   profile = make_encoding_profile (audio, container);
   if (!ges_timeline_pipeline_set_render_settings (pipeline, output_uri,

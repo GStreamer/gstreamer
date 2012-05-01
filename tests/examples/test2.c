@@ -62,7 +62,7 @@ main (int argc, gchar ** argv)
    * ready to start using it... by solely working with the layer ! */
 
   for (i = 1; i < argc; i++, offset += GST_SECOND) {
-    gchar *uri = g_strdup_printf ("file://%s", argv[i]);
+    gchar *uri = gst_filename_to_uri (argv[i], NULL);
     GESTimelineFileSource *src = ges_timeline_filesource_new (uri);
 
     g_assert (src);

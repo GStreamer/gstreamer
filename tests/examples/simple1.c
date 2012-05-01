@@ -88,7 +88,7 @@ main (int argc, gchar ** argv)
     return -1;
 
   if (1) {
-    gchar *uri = g_strdup_printf ("file://%s", argv[1]);
+    gchar *uri = gst_filename_to_uri (argv[1], NULL);
     /* Add the main audio/video file */
     src = ges_timeline_filesource_new (uri);
     g_free (uri);

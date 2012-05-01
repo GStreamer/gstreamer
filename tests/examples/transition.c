@@ -40,7 +40,7 @@ GESTimelineObject *
 make_source (gchar * path, guint64 start, guint64 duration, guint64 inpoint,
     gint priority)
 {
-  char *uri = g_strdup_printf ("file://%s", path);
+  gchar *uri = gst_filename_to_uri (path, NULL);
 
   GESTimelineObject *ret =
       GES_TIMELINE_OBJECT (ges_timeline_filesource_new (uri));

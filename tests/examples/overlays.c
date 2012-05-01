@@ -41,7 +41,7 @@ GESTimelinePipeline *make_timeline (char *path, float duration, char *text,
 GESTimelineObject *
 make_source (char *path, guint64 start, guint64 duration, gint priority)
 {
-  char *uri = g_strdup_printf ("file://%s", path);
+  gchar *uri = gst_filename_to_uri (path, NULL);
 
   GESTimelineObject *ret =
       GES_TIMELINE_OBJECT (ges_timeline_filesource_new (uri));
@@ -125,7 +125,7 @@ main (int argc, char **argv)
   GESTimelinePipeline *pipeline;
   GMainLoop *mainloop;
   gdouble duration = DEFAULT_DURATION;
-  char *path, *text;
+  char *path = NULL, *text;
   guint64 color;
   gdouble xpos = DEFAULT_POS, ypos = DEFAULT_POS;
 
@@ -162,6 +162,9 @@ main (int argc, char **argv)
   g_option_context_free (ctx);
 
   ges_init ();
+
+  if (path == NULL)
+    g_error ("Must specify --path=/path/to/media/file option\n");
 
   pipeline = make_timeline (path, duration, text, color, xpos, ypos);
 
