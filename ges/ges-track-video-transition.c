@@ -232,10 +232,7 @@ ges_track_video_transition_create_element (GESTrackObject * object)
   gst_bin_add_many (GST_BIN (topbin), iconva, iconvb, scalea, scaleb, capsfilt,
       oconv, NULL);
 
-  /* Prefer videomixer2 to videomixer */
-  mixer = gst_element_factory_make ("videomixer2", NULL);
-  if (mixer == NULL)
-    mixer = gst_element_factory_make ("videomixer", NULL);
+  mixer = gst_element_factory_make ("videomixer", NULL);
   g_assert (mixer);
   g_object_set (G_OBJECT (mixer), "background", 1, NULL);
   gst_bin_add (GST_BIN (topbin), mixer);
@@ -310,7 +307,7 @@ ges_track_video_transition_create_element (GESTrackObject * object)
 static GObject *
 link_element_to_mixer (GstElement * element, GstElement * mixer)
 {
-  GstPad *sinkpad = gst_element_get_request_pad (mixer, "sink_%d");
+  GstPad *sinkpad = gst_element_get_request_pad (mixer, "sink_%u");
   GstPad *srcpad = gst_element_get_static_pad (element, "src");
 
   gst_pad_link_full (srcpad, sinkpad, GST_PAD_LINK_CHECK_NOTHING);
@@ -338,7 +335,7 @@ link_element_to_mixer_with_smpte (GstBin * bin, GstElement * element,
   }
 
   srcpad = gst_element_get_static_pad (smptealpha, "src");
-  sinkpad = gst_element_get_request_pad (mixer, "sink_%d");
+  sinkpad = gst_element_get_request_pad (mixer, "sink_%u");
   gst_pad_link_full (srcpad, sinkpad, GST_PAD_LINK_CHECK_NOTHING);
   gst_object_unref (srcpad);
 
