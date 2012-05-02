@@ -46,13 +46,13 @@ G_BEGIN_DECLS
 
 typedef struct _GESTrackVideoTransitionPrivate GESTrackVideoTransitionPrivate;
 
-/** 
+/**
  * GESTrackVideoTransition:
  */
 
 struct _GESTrackVideoTransition {
   GESTrackTransition parent;
-  
+
   /*< private >*/
 
   GESTrackVideoTransitionPrivate *priv;
@@ -75,20 +75,17 @@ struct _GESTrackVideoTransitionClass {
   gpointer _ges_reserved[GES_PADDING];
 };
 
-GType ges_track_video_transition_get_type (void);
-
-gboolean ges_track_video_transition_set_transition_type (GESTrackVideoTransition * self,
-						GESVideoStandardTransitionType type);
-GESVideoStandardTransitionType
-ges_track_video_transition_get_transition_type (GESTrackVideoTransition * trans);
-
+GType ges_track_video_transition_get_type               (void);
 GESTrackVideoTransition* ges_track_video_transition_new (void);
 
-void
-ges_track_video_transition_set_border (GESTrackVideoTransition * self,
-				       guint value);
+gboolean ges_track_video_transition_set_transition_type (GESTrackVideoTransition * self,
+                                                         GESVideoStandardTransitionType type);
+GESVideoStandardTransitionType
+ges_track_video_transition_get_transition_type          (GESTrackVideoTransition * trans);
 
-gint ges_track_video_transition_get_border (GESTrackVideoTransition * self);
+void ges_track_video_transition_set_border              (GESTrackVideoTransition * self,
+                                                         guint value);
+gint ges_track_video_transition_get_border              (GESTrackVideoTransition * self);
 
 G_END_DECLS
 
