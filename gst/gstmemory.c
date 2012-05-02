@@ -222,7 +222,7 @@ _default_alloc_alloc (GstAllocator * allocator, gsize size,
 }
 
 static gpointer
-_default_mem_map (GstMemoryDefault * mem, GstMapFlags flags)
+_default_mem_map (GstMemoryDefault * mem, gsize maxsize, GstMapFlags flags)
 {
   return mem->data;
 }
