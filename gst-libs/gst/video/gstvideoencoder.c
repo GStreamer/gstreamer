@@ -1908,7 +1908,7 @@ gst_video_encoder_get_output_state (GstVideoEncoder * encoder)
  *
  * Creates a new #GstVideoCodecState with the specified caps as the output state
  * for the encoder.
- * Any previously set output state on @decoder will be replaced by the newly
+ * Any previously set output state on @encoder will be replaced by the newly
  * created one.
  *
  * The specified @caps should not contain any resolution, pixel-aspect-ratio,
