@@ -1144,6 +1144,7 @@ EXPORTS
 	gst_type_find_factory_get_extensions
 	gst_type_find_factory_get_list
 	gst_type_find_factory_get_type
+	gst_type_find_factory_has_function
 	gst_type_find_get_length
 	gst_type_find_get_type
 	gst_type_find_peek
