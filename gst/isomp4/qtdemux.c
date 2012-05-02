@@ -9537,7 +9537,8 @@ qtdemux_audio_caps (GstQTDemux * qtdemux, QtDemuxStream * stream,
     case GST_MAKE_FOURCC ('r', 'a', 'w', ' '):
       _codec ("Raw 8-bit PCM audio");
       caps = gst_caps_new_simple ("audio/x-raw",
-          "format", G_TYPE_STRING, "U8", NULL);
+          "format", G_TYPE_STRING, "U8",
+          "layout", G_TYPE_STRING, "interleaved", NULL);
       break;
     case GST_MAKE_FOURCC ('t', 'w', 'o', 's'):
       endian = G_BIG_ENDIAN;
@@ -9559,30 +9560,35 @@ qtdemux_audio_caps (GstQTDemux * qtdemux, QtDemuxStream * stream,
       g_free (str);
 
       caps = gst_caps_new_simple ("audio/x-raw",
-          "format", G_TYPE_STRING, gst_audio_format_to_string (format), NULL);
+          "format", G_TYPE_STRING, gst_audio_format_to_string (format),
+          "layout", G_TYPE_STRING, "interleaved", NULL);
       break;
     }
     case GST_MAKE_FOURCC ('f', 'l', '6', '4'):
       _codec ("Raw 64-bit floating-point audio");
       caps = gst_caps_new_simple ("audio/x-raw",
-          "format", G_TYPE_STRING, "F64BE", NULL);
+          "format", G_TYPE_STRING, "F64BE",
+          "layout", G_TYPE_STRING, "interleaved", NULL);
       break;
     case GST_MAKE_FOURCC ('f', 'l', '3', '2'):
       _codec ("Raw 32-bit floating-point audio");
       caps = gst_caps_new_simple ("audio/x-raw",
-          "format", G_TYPE_STRING, "F32BE", NULL);
+          "format", G_TYPE_STRING, "F32BE",
+          "layout", G_TYPE_STRING, "interleaved", NULL);
       break;
     case FOURCC_in24:
       _codec ("Raw 24-bit PCM audio");
       /* we assume BIG ENDIAN, an enda box will tell us to change this to little
        * endian later */
       caps = gst_caps_new_simple ("audio/x-raw",
-          "format", G_TYPE_STRING, "S24BE", NULL);
+          "format", G_TYPE_STRING, "S24BE",
+          "layout", G_TYPE_STRING, "interleaved", NULL);
       break;
     case GST_MAKE_FOURCC ('i', 'n', '3', '2'):
       _codec ("Raw 32-bit PCM audio");
       caps = gst_caps_new_simple ("audio/x-raw",
-          "format", G_TYPE_STRING, "S32BE", NULL);
+          "format", G_TYPE_STRING, "S32BE",
+          "layout", G_TYPE_STRING, "interleaved", NULL);
       break;
     case GST_MAKE_FOURCC ('u', 'l', 'a', 'w'):
       _codec ("Mu-law audio");
