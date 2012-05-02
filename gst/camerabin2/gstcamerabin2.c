@@ -2158,7 +2158,7 @@ gst_camera_bin_set_property (GObject * object, guint prop_id,
     case PROP_VIDEO_ENCODING_PROFILE:
       if (camera->video_profile)
         gst_encoding_profile_unref (camera->video_profile);
-      camera->video_profile = (GstEncodingProfile *) g_value_dup_boxed (value);
+      camera->video_profile = (GstEncodingProfile *) g_value_dup_object (value);
       camera->video_profile_switch = TRUE;
       break;
     case PROP_IMAGE_FILTER:
@@ -2214,7 +2214,7 @@ gst_camera_bin_set_property (GObject * object, guint prop_id,
     case PROP_IMAGE_ENCODING_PROFILE:
       if (camera->image_profile)
         gst_encoding_profile_unref (camera->image_profile);
-      camera->image_profile = (GstEncodingProfile *) g_value_dup_boxed (value);
+      camera->image_profile = (GstEncodingProfile *) g_value_dup_object (value);
       camera->image_profile_switch = TRUE;
       break;
     case PROP_FLAGS:
@@ -2351,7 +2351,7 @@ gst_camera_bin_get_property (GObject * object, guint prop_id,
       break;
     case PROP_VIDEO_ENCODING_PROFILE:
       if (camera->video_profile) {
-        g_value_set_boxed (value, camera->video_profile);
+        g_value_set_object (value, camera->video_profile);
       }
       break;
     case PROP_VIDEO_FILTER:
@@ -2389,7 +2389,7 @@ gst_camera_bin_get_property (GObject * object, guint prop_id,
       break;
     case PROP_IMAGE_ENCODING_PROFILE:
       if (camera->image_profile) {
-        g_value_set_boxed (value, camera->image_profile);
+        g_value_set_object (value, camera->image_profile);
       }
       break;
     case PROP_IDLE:
