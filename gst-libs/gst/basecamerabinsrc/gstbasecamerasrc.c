@@ -287,14 +287,22 @@ gst_base_camera_src_set_property (GObject * object,
       self->post_preview = g_value_get_boolean (value);
       break;
     case PROP_PREVIEW_CAPS:{
-      GstCaps *new_caps = NULL;
+      GstCaps *new_caps;
+
       new_caps = (GstCaps *) gst_value_get_caps (value);
+      if (new_caps == NULL) {
+        new_caps = gst_caps_new_any ();
+      } else {
+        new_caps = gst_caps_ref (new_caps);
+      }
+
       if (!gst_caps_is_equal (self->preview_caps, new_caps)) {
         gst_caps_replace (&self->preview_caps, new_caps);
         gst_base_camera_src_setup_preview (self, new_caps);
       } else {
         GST_DEBUG_OBJECT (self, "New preview caps equal current preview caps");
       }
+      gst_caps_unref (new_caps);
     }
       break;
     case PROP_PREVIEW_FILTER:
@@ -477,7 +485,7 @@ gst_base_camera_src_class_init (GstBaseCameraSrcClass * klass)
 
   g_object_class_install_property (gobject_class, PROP_PREVIEW_CAPS,
       g_param_spec_boxed ("preview-caps", "Preview caps",
-          "The caps of the preview image to be posted",
+          "The caps of the preview image to be posted (NULL means ANY)",
           GST_TYPE_CAPS, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   g_object_class_install_property (gobject_class, PROP_PREVIEW_FILTER,
@@ -546,6 +554,7 @@ gst_base_camera_src_init (GstBaseCameraSrc * self)
   g_mutex_init (&self->capturing_mutex);
 
   self->post_preview = DEFAULT_POST_PREVIEW;
+  self->preview_caps = gst_caps_new_any ();
 
   self->preview_pipeline =
       gst_camerabin_create_preview_pipeline (GST_ELEMENT_CAST (self), NULL);
