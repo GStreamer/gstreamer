@@ -39,24 +39,10 @@ void load_project (gchar * uri);
 static gchar *
 ensure_uri (gchar * location)
 {
-  gchar *res;
-  gchar *path;
-
   if (gst_uri_is_valid (location))
     return g_strdup (location);
-
-  if (!g_path_is_absolute (location)) {
-    gchar *cur_dir;
-    cur_dir = g_get_current_dir ();
-    path = g_build_filename (cur_dir, location, NULL);
-    g_free (cur_dir);
-  } else
-    path = g_strdup (location);
-
-  res = g_filename_to_uri (path, NULL, NULL);
-  g_free (path);
-
-  return res;
+  else
+    return gst_filename_to_uri (location, NULL);
 }
 
 static gboolean
@@ -78,25 +64,13 @@ thumbnail_cb (gpointer pipeline)
 }
 
 static gboolean
-check_path (char *path)
-{
-  FILE *fp = fopen (path, "r");
-  if (fp) {
-    fclose (fp);
-    return TRUE;
-  }
-
-  return FALSE;
-}
-
-static gboolean
 check_time (char *time)
 {
   static GRegex *re = NULL;
 
   if (!re) {
     if (NULL == (re = g_regex_new ("^[0-9]+(.[0-9]+)?$", G_REGEX_EXTENDED, 0,
-        NULL)))
+                NULL)))
       return FALSE;
   }
 
@@ -232,11 +206,6 @@ create_timeline (int nbargs, gchar ** argv, gchar * audio, gchar * video)
     else {
       gchar *uri;
       guint64 inpoint;
-
-      if (!check_path (source)) {
-        g_error ("'%s': could not open path!", source);
-        goto build_failure;
-      }
 
       if (!(uri = ensure_uri (source))) {
         GST_ERROR ("couldn't create uri for '%s'", source);
