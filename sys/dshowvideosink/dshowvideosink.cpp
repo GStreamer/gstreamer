@@ -560,7 +560,7 @@ LRESULT APIENTRY WndProcHook (HWND hWnd, UINT message, WPARAM wParam, LPARAM lPa
   /* Handle certain actions specially on the window passed to us.
    * Then forward back to the original window.
    */
-  GstDshowVideoSink *sink = (GstDshowVideoSink *)GetProp (hWnd, L"GstDShowVideoSink");
+  GstDshowVideoSink *sink = (GstDshowVideoSink *)GetProp (hWnd, (LPCSTR)"GstDShowVideoSink");
   g_assert (sink != NULL);
 
   switch (message) {
@@ -639,7 +639,7 @@ gst_dshowvideosink_window_thread (GstDshowVideoSink * sink)
   memset (&WndClass, 0, sizeof (WNDCLASS));
   WndClass.style = CS_HREDRAW | CS_VREDRAW;
   WndClass.hInstance = GetModuleHandle (NULL);
-  WndClass.lpszClassName = L"GST-DShowSink";
+  WndClass.lpszClassName = (LPCSTR)"GST-DShowSink";
   WndClass.hbrBackground = (HBRUSH) GetStockObject (BLACK_BRUSH);
   WndClass.cbClsExtra = 0;
   WndClass.cbWndExtra = 0;
@@ -701,8 +701,8 @@ gst_dshowvideosink_window_thread (GstDshowVideoSink * sink)
     exstyle = 0;
   }
 
-  HWND video_window = CreateWindowEx (exstyle, L"GST-DShowSink",
-      L"GStreamer DirectShow sink default window",
+  HWND video_window = CreateWindowEx (exstyle, (LPCSTR)"GST-DShowSink",
+      (LPCSTR)"GStreamer DirectShow sink default window",
       style, offx, offy, width, height, NULL, NULL,
       WndClass.hInstance, NULL);
   if (video_window == NULL) {
@@ -790,7 +790,7 @@ static void gst_dshowvideosink_set_window_for_renderer (GstDshowVideoSink *sink)
   /* Application has requested a specific window ID */
   sink->prevWndProc = (WNDPROC) SetWindowLong (sink->window_id, GWL_WNDPROC, (LONG)WndProcHook);
   GST_DEBUG_OBJECT (sink, "Set wndproc to %p from %p", WndProcHook, sink->prevWndProc);
-  SetProp (sink->window_id, L"GstDShowVideoSink", sink);
+  SetProp (sink->window_id, (LPCSTR)"GstDShowVideoSink", sink);
   /* This causes the new WNDPROC to become active */
   SetWindowPos (sink->window_id, 0, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE | SWP_NOZORDER | SWP_FRAMECHANGED);
 
@@ -982,7 +982,7 @@ gst_dshowvideosink_stop_graph (GstDshowVideoSink *sink)
   if (sink->window_id) {
     /* Return control of application window */
     SetWindowLong (sink->window_id, GWL_WNDPROC, (LONG)sink->prevWndProc);
-    RemoveProp (sink->window_id, L"GstDShowVideoSink");
+    RemoveProp (sink->window_id, (LPCSTR)"GstDShowVideoSink");
     SetWindowPos (sink->window_id, 0, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE | SWP_NOZORDER | SWP_FRAMECHANGED);
     sink->prevWndProc = NULL;
   }
