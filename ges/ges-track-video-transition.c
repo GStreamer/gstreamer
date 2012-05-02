@@ -607,9 +607,19 @@ ges_track_video_transition_duration_changed (GESTrackObject * object,
   GST_LOG ("done updating controller");
 }
 
+/**
+ * ges_track_video_transition_get_border:
+ * @self: The #GESTrackVideoTransition to get the border from
+ * @value: The value of the borer to set on @object
+ *
+ * Set the border property of @self, this value represents
+ * the border width of the transition. In case this value does
+ * not make sense for the current transition type, it is cached
+ * for later use.
+ */
 void
 ges_track_video_transition_set_border (GESTrackVideoTransition * self,
-    gint value)
+    guint value)
 {
   GESTrackVideoTransitionPrivate *priv = self->priv;
 
@@ -618,6 +628,30 @@ ges_track_video_transition_set_border (GESTrackVideoTransition * self,
     return;
   }
   g_object_set (priv->smpte, "border", value, NULL);
+}
+
+/**
+ * ges_track_video_transition_get_border:
+ * @self: The #GESTrackVideoTransition to get the border from
+ *
+ * Get the border property of @self, this value represents
+ * the border width of the transition.
+ *
+ * Returns: The border values of @self or -1 if not meaningfull
+ * (this will happen when not using a smpte transition).
+ */
+gint
+ges_track_video_transition_get_border (GESTrackVideoTransition * self)
+{
+  gint value;
+
+  if (!self->priv->smpte) {
+    return -1;
+  }
+
+  g_object_get (self->priv->smpte, "border", &value, NULL);
+
+  return value;
 }
 
 /**
