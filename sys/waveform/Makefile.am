@@ -5,7 +5,7 @@ libgstwaveformsink_la_CFLAGS = $(GST_CFLAGS) $(GST_BASE_CFLAGS) \
         $(GST_PLUGINS_BASE_CFLAGS)
 libgstwaveformsink_la_LIBADD = \
 	$(GST_PLUGINS_BASE_LIBS) \
-        -lgstaudio-$(GST_API_VERSION) -lgstinterfaces-$(GST_API_VERSION) \
+        -lgstaudio-$(GST_API_VERSION) \
         $(GST_BASE_LIBS) \
 	$(GST_LIBS) \
 	-lwinmm
