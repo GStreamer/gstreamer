@@ -30,6 +30,10 @@
 
 #include "windows.h"
 
+#ifdef _WIN64
+#define GWL_WNDPROC GWLP_WNDPROC
+#endif
+
 #define WM_GRAPH_NOTIFY WM_APP + 1 /* Private message */
 
 GST_DEBUG_CATEGORY (dshowvideosink_debug);
