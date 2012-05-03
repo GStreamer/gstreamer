@@ -1813,15 +1813,15 @@ gst_video_event_parse_downstream_force_key_unit (GstEvent * event,
     return FALSE;
 
   if (!gst_structure_get_clock_time (s, "timestamp", &ev_timestamp))
-    return FALSE;               /* Not a force key unit event */
+    ev_timestamp = GST_CLOCK_TIME_NONE;
   if (!gst_structure_get_clock_time (s, "stream-time", &ev_stream_time))
-    return FALSE;               /* Not a force key unit event */
+    ev_stream_time = GST_CLOCK_TIME_NONE;
   if (!gst_structure_get_clock_time (s, "running-time", &ev_running_time))
-    return FALSE;               /* Not a force key unit event */
+    ev_running_time = GST_CLOCK_TIME_NONE;
   if (!gst_structure_get_boolean (s, "all-headers", &ev_all_headers))
-    return FALSE;               /* Not a force key unit event */
+    ev_all_headers = FALSE;
   if (!gst_structure_get_uint (s, "count", &ev_count))
-    return FALSE;               /* Not a force key unit event */
+    ev_count = 0;
 
   if (timestamp)
     *timestamp = ev_timestamp;
@@ -1877,11 +1877,11 @@ gst_video_event_parse_upstream_force_key_unit (GstEvent * event,
     return FALSE;
 
   if (!gst_structure_get_clock_time (s, "running-time", &ev_running_time))
-    return FALSE;               /* Not a force key unit event */
+    ev_running_time = GST_CLOCK_TIME_NONE;
   if (!gst_structure_get_boolean (s, "all-headers", &ev_all_headers))
-    return FALSE;               /* Not a force key unit event */
+    ev_all_headers = FALSE;
   if (!gst_structure_get_uint (s, "count", &ev_count))
-    return FALSE;               /* Not a force key unit event */
+    ev_count = 0;
 
   if (running_time)
     *running_time = ev_running_time;
