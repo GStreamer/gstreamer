@@ -683,8 +683,6 @@ gst_v4l2_buffer_pool_dqbuf (GstV4l2BufferPool * pool, GstBuffer ** buffer)
   /* this can change at every frame, esp. with jpeg */
   if (obj->type == V4L2_BUF_TYPE_VIDEO_CAPTURE)
     gst_buffer_resize (outbuf, 0, vbuffer.bytesused);
-  else
-    gst_buffer_resize (outbuf, 0, vbuffer.length);
 
   GST_BUFFER_TIMESTAMP (outbuf) = timestamp;
 
@@ -897,6 +895,10 @@ gst_v4l2_buffer_pool_release_buffer (GstBufferPool * bpool, GstBuffer * buffer)
           if (pool->buffers[index] == NULL) {
             GST_LOG_OBJECT (pool, "buffer %u not queued, putting on free list",
                 index);
+
+            /* reset to the full length, in case it was changed */
+            gst_buffer_resize (buffer, 0, meta->vbuffer.length);
+
             /* playback, put the buffer back in the queue to refill later. */
             GST_BUFFER_POOL_CLASS (parent_class)->release_buffer (bpool,
                 buffer);
