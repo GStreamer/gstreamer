@@ -832,11 +832,7 @@ void
 ges_timeline_object_set_start (GESTimelineObject * object, guint64 start)
 {
   if (ges_timeline_object_set_start_internal (object, start))
-#if GLIB_CHECK_VERSION(2,26,0)
     g_object_notify_by_pspec (G_OBJECT (object), properties[PROP_START]);
-#else
-    g_object_notify (G_OBJECT (object), "start");
-#endif
 }
 
 static gboolean
@@ -875,11 +871,7 @@ void
 ges_timeline_object_set_inpoint (GESTimelineObject * object, guint64 inpoint)
 {
   if (ges_timeline_object_set_inpoint_internal (object, inpoint))
-#if GLIB_CHECK_VERSION(2,26,0)
     g_object_notify_by_pspec (G_OBJECT (object), properties[PROP_INPOINT]);
-#else
-    g_object_notify (G_OBJECT (object), "in-point");
-#endif
 }
 
 static gboolean
@@ -938,11 +930,7 @@ void
 ges_timeline_object_set_duration (GESTimelineObject * object, guint64 duration)
 {
   if (ges_timeline_object_set_duration_internal (object, duration))
-#if GLIB_CHECK_VERSION(2,26,0)
     g_object_notify_by_pspec (G_OBJECT (object), properties[PROP_DURATION]);
-#else
-    g_object_notify (G_OBJECT (object), "duration");
-#endif
 }
 
 static gboolean

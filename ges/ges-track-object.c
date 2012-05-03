@@ -381,11 +381,7 @@ ges_track_object_set_start (GESTrackObject * object, guint64 start)
   g_return_if_fail (GES_IS_TRACK_OBJECT (object));
 
   if (ges_track_object_set_start_internal (object, start))
-#if GLIB_CHECK_VERSION(2,26,0)
     g_object_notify_by_pspec (G_OBJECT (object), properties[PROP_START]);
-#else
-    g_object_notify (G_OBJECT (object), "start");
-#endif
 }
 
 static inline gboolean
@@ -419,11 +415,7 @@ ges_track_object_set_inpoint (GESTrackObject * object, guint64 inpoint)
   g_return_if_fail (GES_IS_TRACK_OBJECT (object));
 
   if (ges_track_object_set_inpoint_internal (object, inpoint))
-#if GLIB_CHECK_VERSION(2,26,0)
     g_object_notify_by_pspec (G_OBJECT (object), properties[PROP_INPOINT]);
-#else
-    g_object_notify (G_OBJECT (object), "in-point");
-#endif
 }
 
 static inline gboolean
@@ -465,11 +457,7 @@ ges_track_object_set_duration (GESTrackObject * object, guint64 duration)
   g_return_if_fail (GES_IS_TRACK_OBJECT (object));
 
   if (ges_track_object_set_duration_internal (object, duration))
-#if GLIB_CHECK_VERSION(2,26,0)
     g_object_notify_by_pspec (G_OBJECT (object), properties[PROP_DURATION]);
-#else
-    g_object_notify (G_OBJECT (object), "duration");
-#endif
 }
 
 static inline gboolean
@@ -505,11 +493,7 @@ void
 ges_track_object_set_priority (GESTrackObject * object, guint32 priority)
 {
   if (ges_track_object_set_priority_internal (object, priority))
-#if GLIB_CHECK_VERSION(2,26,0)
     g_object_notify_by_pspec (G_OBJECT (object), properties[PROP_PRIORITY]);
-#else
-    g_object_notify (G_OBJECT (object), "priority");
-#endif
 }
 
 
@@ -978,11 +962,7 @@ ges_track_object_set_locked (GESTrackObject * object, gboolean locked)
   GST_DEBUG_OBJECT (object, "%s object", locked ? "Locking" : "Unlocking");
 
   ges_track_object_set_locked_internal (object, locked);
-#if GLIB_CHECK_VERSION(2,26,0)
   g_object_notify_by_pspec (G_OBJECT (object), properties[PROP_LOCKED]);
-#else
-  g_object_notify (G_OBJECT (object), "locked");
-#endif
 
 }
 
