@@ -1932,7 +1932,7 @@ plugin_init (GstPlugin * plugin)
 {
   /* PRIMARY: this is the best videosink to use on windows */
   if (!gst_element_register (plugin, "dshowvideosink",
-          GST_RANK_PRIMARY, GST_TYPE_DSHOWVIDEOSINK))
+          GST_RANK_SECONDARY, GST_TYPE_DSHOWVIDEOSINK))
     return FALSE;
 
   return TRUE;
