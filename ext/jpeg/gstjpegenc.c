@@ -226,7 +226,9 @@ gst_jpegenc_flush_destination (j_compress_ptr cinfo)
 static void
 gst_jpegenc_term_destination (j_compress_ptr cinfo)
 {
+  GstBuffer *outbuf;
   GstJpegEnc *jpegenc = (GstJpegEnc *) (cinfo->client_data);
+
   GST_DEBUG_OBJECT (jpegenc, "gst_jpegenc_chain: term_source");
 
   gst_memory_unmap (jpegenc->output_mem, &jpegenc->output_map);
@@ -235,6 +237,14 @@ gst_jpegenc_term_destination (j_compress_ptr cinfo)
       jpegenc->output_map.size - jpegenc->jdest.free_in_buffer);
   jpegenc->output_map.data = NULL;
   jpegenc->output_map.size = 0;
+
+  outbuf = gst_buffer_new ();
+  gst_buffer_copy_into (outbuf, jpegenc->current_frame->input_buffer,
+      GST_BUFFER_COPY_METADATA, 0, -1);
+  gst_buffer_append_memory (outbuf, jpegenc->output_mem);
+  jpegenc->output_mem = NULL;
+
+  jpegenc->current_frame->output_buffer = outbuf;
 
   gst_video_frame_unmap (&jpegenc->current_vframe);
 

@@ -69,15 +69,10 @@ struct GstJpegDecSourceMgr {
 struct _GstJpegDec {
   GstVideoDecoder decoder;
 
-  guint8     *cur_buf;
-
   /* negotiated state */
   GstVideoCodecState *input_state;
   GstVideoCodecFrame *current_frame;
-
-  gint     offset[3];
-  gint     stride;
-  gint     inc;
+  GstMapInfo current_frame_map;
 
   /* parse state */
   gboolean saw_header;

@@ -49,24 +49,21 @@ G_BEGIN_DECLS
 typedef struct _GstJpegEnc GstJpegEnc;
 typedef struct _GstJpegEncClass GstJpegEncClass;
 
-#define GST_JPEG_ENC_MAX_COMPONENT  4
-
 struct _GstJpegEnc
 {
   GstVideoEncoder encoder;
 
   GstVideoCodecState *input_state;
+  GstVideoFrame current_vframe;
   GstVideoCodecFrame *current_frame;
 
   guint channels;
 
-  gint stride[GST_JPEG_ENC_MAX_COMPONENT];
-  gint offset[GST_JPEG_ENC_MAX_COMPONENT];
-  gint inc[GST_JPEG_ENC_MAX_COMPONENT];
-  gint cwidth[GST_JPEG_ENC_MAX_COMPONENT];
-  gint cheight[GST_JPEG_ENC_MAX_COMPONENT];
-  gint h_samp[GST_JPEG_ENC_MAX_COMPONENT];
-  gint v_samp[GST_JPEG_ENC_MAX_COMPONENT];
+  gint inc[GST_VIDEO_MAX_COMPONENTS];
+  gint cwidth[GST_VIDEO_MAX_COMPONENTS];
+  gint cheight[GST_VIDEO_MAX_COMPONENTS];
+  gint h_samp[GST_VIDEO_MAX_COMPONENTS];
+  gint v_samp[GST_VIDEO_MAX_COMPONENTS];
   gint h_max_samp;
   gint v_max_samp;
   gboolean planar;
@@ -86,15 +83,13 @@ struct _GstJpegEnc
   gint smoothing;
   gint idct_method;
 
-  GstBuffer *output_buffer;
+  GstMemory *output_mem;
+  GstMapInfo output_map;
 };
 
 struct _GstJpegEncClass
 {
   GstVideoEncoderClass parent_class;
-
-  /* signals */
-  void (*frame_encoded) (GstElement * element);
 };
 
 GType gst_jpegenc_get_type (void);
