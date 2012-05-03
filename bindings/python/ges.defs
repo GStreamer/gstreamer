@@ -2319,8 +2319,29 @@
   (c-name "ges_track_video_transition_set_border")
   (return-type "none")
   (parameters
-    '("gint" "value")
+    '("guint" "value")
   )
+)
+
+(define-method get_border
+  (of-object "GESTrackVideoTransition")
+  (c-name "ges_track_video_transition_get_border")
+  (return-type "gint")
+)
+
+(define-method set_inverted
+  (of-object "GESTrackVideoTransition")
+  (c-name "ges_track_video_transition_set_inverted")
+  (return-type "none")
+  (parameters
+    '("gboolean" "inverted")
+  )
+)
+
+(define-method is_inverted
+  (of-object "GESTrackVideoTransition")
+  (c-name "ges_track_video_transition_is_inverted")
+  (return-type "gboolean")
 )
 
 (define-method get_transition_type
