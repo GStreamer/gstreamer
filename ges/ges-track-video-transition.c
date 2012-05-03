@@ -29,6 +29,12 @@
 G_DEFINE_TYPE (GESTrackVideoTransition, ges_track_video_transition,
     GES_TYPE_TRACK_TRANSITION);
 
+static inline void
+ges_track_video_transition_set_border_internal (GESTrackVideoTransition * self,
+    guint border);
+static inline void
+ges_track_video_transition_set_inverted_internal (GESTrackVideoTransition *
+    self, gboolean inverted);
 static inline gboolean
 ges_track_video_transition_set_transition_type_internal (GESTrackVideoTransition
     * self, GESVideoStandardTransitionType type);
@@ -250,14 +256,16 @@ ges_track_video_transition_set_property (GObject * object,
 
   switch (property_id) {
     case PROP_BORDER:
-      ges_track_video_transition_set_border (tr, g_value_get_uint (value));
+      ges_track_video_transition_set_border_internal (tr,
+          g_value_get_uint (value));
       break;
     case PROP_TRANSITION_TYPE:
       ges_track_video_transition_set_transition_type_internal (tr,
           g_value_get_enum (value));
       break;
     case PROP_INVERT:
-      ges_track_video_transition_set_inverted (tr, g_value_get_boolean (value));
+      ges_track_video_transition_set_inverted_internal (tr,
+          g_value_get_boolean (value));
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, property_id, pspec);
@@ -667,6 +675,33 @@ ges_track_video_transition_duration_changed (GESTrackObject * object,
   GST_LOG ("done updating controller");
 }
 
+static inline void
+ges_track_video_transition_set_border_internal (GESTrackVideoTransition * self,
+    guint value)
+{
+  GESTrackVideoTransitionPrivate *priv = self->priv;
+
+  if (!priv->smpte) {
+    priv->pending_border_value = value;
+    return;
+  }
+  g_object_set (priv->smpte, "border", value, NULL);
+}
+
+static inline void
+ges_track_video_transition_set_inverted_internal (GESTrackVideoTransition *
+    self, gboolean inverted)
+{
+  GESTrackVideoTransitionPrivate *priv = self->priv;
+
+  if (!priv->smpte) {
+    priv->pending_inverted = inverted;
+    return;
+  }
+  g_object_set (priv->smpte, "invert", inverted, NULL);
+}
+
+
 static inline gboolean
 ges_track_video_transition_set_transition_type_internal (GESTrackVideoTransition
     * self, GESVideoStandardTransitionType type)
@@ -726,13 +761,9 @@ void
 ges_track_video_transition_set_border (GESTrackVideoTransition * self,
     guint value)
 {
-  GESTrackVideoTransitionPrivate *priv = self->priv;
+  ges_track_video_transition_set_border_internal (self, value);
 
-  if (!priv->smpte) {
-    priv->pending_border_value = value;
-    return;
-  }
-  g_object_set (priv->smpte, "border", value, NULL);
+  g_object_notify_by_pspec (G_OBJECT (self), properties[PROP_BORDER]);
 }
 
 /**
@@ -773,13 +804,9 @@ void
 ges_track_video_transition_set_inverted (GESTrackVideoTransition * self,
     gboolean inverted)
 {
-  GESTrackVideoTransitionPrivate *priv = self->priv;
+  ges_track_video_transition_set_inverted (self, inverted);
 
-  if (!priv->smpte) {
-    priv->pending_inverted = inverted;
-    return;
-  }
-  g_object_set (priv->smpte, "invert", inverted, NULL);
+  g_object_notify_by_pspec (G_OBJECT (self), properties[PROP_INVERT]);
 }
 
 /**
