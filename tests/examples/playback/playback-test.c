@@ -311,10 +311,10 @@ format_value (GtkScale * scale, gdouble value, PlaybackApp * app)
 
   real = value * app->duration / N_GRAD;
   seconds = (gint64) real / GST_SECOND;
-  subseconds = (gint64) real / (GST_SECOND / N_GRAD);
+  subseconds = (gint64) real / (GST_MSECOND);
 
-  return g_strdup_printf ("%02" G_GINT64_FORMAT ":%02" G_GINT64_FORMAT ":%02"
-      G_GINT64_FORMAT, seconds / 60, seconds % 60, subseconds % 100);
+  return g_strdup_printf ("%02" G_GINT64_FORMAT ":%02" G_GINT64_FORMAT ":%03"
+      G_GINT64_FORMAT, seconds / 60, seconds % 60, subseconds % 1000);
 }
 
 static gchar *
