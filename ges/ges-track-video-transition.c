@@ -55,6 +55,7 @@ struct _GESTrackVideoTransitionPrivate
 
   /* This is in case the smpte doesn't exist yet */
   gint pending_border_value;
+  gboolean pending_inverted;
 };
 
 enum
@@ -127,6 +128,7 @@ ges_track_video_transition_init (GESTrackVideoTransition * self)
   self->priv->end_value = 0.0;
   self->priv->dur = 42;
   self->priv->pending_border_value = -1;
+  self->priv->pending_inverted = FALSE;
 }
 
 static void
@@ -419,6 +421,11 @@ switch_to_smpte_cb (GstPad * sink, gboolean blocked,
     priv->pending_border_value = -1;
   }
 
+  if (priv->pending_inverted) {
+    g_object_set (smptealphab, "invert", priv->pending_inverted, NULL);
+    priv->pending_inverted = FALSE;
+  }
+
   replace_mixer (priv);
 
   priv->start_value = 1.0;
@@ -591,9 +598,9 @@ ges_track_video_transition_duration_changed (GESTrackObject * object,
 }
 
 /**
- * ges_track_video_transition_get_border:
- * @self: The #GESTrackVideoTransition to get the border from
- * @value: The value of the borer to set on @object
+ * ges_track_video_transition_set_border:
+ * @self: The #GESTrackVideoTransition to set the border to
+ * @value: The value of the border to set on @object
  *
  * Set the border property of @self, this value represents
  * the border width of the transition. In case this value does
@@ -620,7 +627,7 @@ ges_track_video_transition_set_border (GESTrackVideoTransition * self,
  * Get the border property of @self, this value represents
  * the border width of the transition.
  *
- * Returns: The border values of @self or -1 if not meaningfull
+ * Returns: The border values of @self or -1 if not meaningful
  * (this will happen when not using a smpte transition).
  */
 gint
@@ -635,6 +642,52 @@ ges_track_video_transition_get_border (GESTrackVideoTransition * self)
   g_object_get (self->priv->smpte, "border", &value, NULL);
 
   return value;
+}
+
+/**
+ * ges_track_video_transition_set_inverted:
+ * @self: The #GESTrackVideoTransition to set invert on
+ * @value: The value of the  to set on @object
+ *
+ * Set the invert property of @self, this value represents
+ * the direction of the transition. In case this value does
+ * not make sense for the current transition type, it is cached
+ * for later use.
+ */
+void
+ges_track_video_transition_set_inverted (GESTrackVideoTransition * self,
+    gboolean inverted)
+{
+  GESTrackVideoTransitionPrivate *priv = self->priv;
+
+  if (!priv->smpte) {
+    priv->pending_inverted = inverted;
+    return;
+  }
+  g_object_set (priv->smpte, "invert", inverted, NULL);
+}
+
+/**
+ * ges_track_video_transition_is_inverted:
+ * @self: The #GESTrackVideoTransition to get the inversion from
+ *
+ * Get the invert property of @self, this value represents
+ * the direction of the transition.
+ *
+ * Returns: The invert value of @self
+ */
+gboolean
+ges_track_video_transition_is_inverted (GESTrackVideoTransition * self)
+{
+  gboolean inverted;
+
+  if (!self->priv->smpte) {
+    return FALSE;
+  }
+
+  g_object_get (self->priv->smpte, "invert", &inverted, NULL);
+
+  return inverted;
 }
 
 /**

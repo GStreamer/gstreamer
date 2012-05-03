@@ -87,6 +87,10 @@ void ges_track_video_transition_set_border              (GESTrackVideoTransition
                                                          guint value);
 gint ges_track_video_transition_get_border              (GESTrackVideoTransition * self);
 
+void ges_track_video_transition_set_inverted            (GESTrackVideoTransition * self,
+                                                         gboolean inverted);
+gboolean ges_track_video_transition_is_inverted        (GESTrackVideoTransition * self);
+
 G_END_DECLS
 
 #endif /* _GES_TRACK_VIDEO_transition */
