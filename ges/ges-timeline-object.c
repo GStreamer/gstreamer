@@ -1364,8 +1364,6 @@ ges_timeline_object_edit (GESTimelineObject * object, GList * layers,
     GST_WARNING_OBJECT (object, "Trying to edit, but not containing"
         "any TrackObject yet.");
     return FALSE;
-  } else if (position < 0) {
-    GST_DEBUG_OBJECT (object, "Trying to move before 0, not moving");
   }
 
   for (tmp = object->priv->trackobjects; tmp; tmp = g_list_next (tmp)) {

@@ -1618,9 +1618,6 @@ ges_track_object_edit (GESTrackObject * object,
     GST_WARNING_OBJECT (object, "Trying to edit in %d mode but not in"
         "any Track yet.", mode);
     return FALSE;
-  } else if (position < 0) {
-    GST_DEBUG_OBJECT (object, "Trying to move before 0, not moving");
-    return FALSE;
   }
 
   timeline = GES_TIMELINE (ges_track_get_timeline (track));
