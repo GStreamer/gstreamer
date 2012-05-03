@@ -985,7 +985,7 @@ gst_x264_enc_init_encoder (GstX264Enc * encoder)
   /* make sure that the encoder is closed */
   gst_x264_enc_close_encoder (encoder);
 
-  GST_OBJECT_LOCK (encoder);
+  GST_VIDEO_ENCODER_STREAM_LOCK (encoder);
 
   gst_x264_enc_build_tunings_string (encoder);
 
@@ -1172,7 +1172,7 @@ gst_x264_enc_init_encoder (GstX264Enc * encoder)
 
   encoder->reconfig = FALSE;
 
-  GST_OBJECT_UNLOCK (encoder);
+  GST_VIDEO_ENCODER_STREAM_UNLOCK (encoder);
 
   encoder->x264enc = x264_encoder_open (&encoder->x264param);
   if (!encoder->x264enc) {
@@ -1184,7 +1184,7 @@ gst_x264_enc_init_encoder (GstX264Enc * encoder)
   return TRUE;
 
 unlock_and_return:
-  GST_OBJECT_UNLOCK (encoder);
+  GST_VIDEO_ENCODER_STREAM_UNLOCK (encoder);
   return FALSE;
 }
 
@@ -1668,11 +1668,12 @@ gst_x264_enc_encode_frame (GstX264Enc * encoder, x264_picture_t * pic_in,
     return GST_FLOW_NOT_NEGOTIATED;
   }
 
-  GST_OBJECT_LOCK (encoder);
+  GST_VIDEO_ENCODER_STREAM_LOCK (encoder);
   if (encoder->reconfig) {
     encoder->reconfig = FALSE;
     if (x264_encoder_reconfig (encoder->x264enc, &encoder->x264param) < 0)
       GST_WARNING_OBJECT (encoder, "Could not reconfigure");
+
     gst_x264_enc_set_latency (encoder);
   }
 
@@ -1685,7 +1686,7 @@ gst_x264_enc_encode_frame (GstX264Enc * encoder, x264_picture_t * pic_in,
         pic_in->i_type = X264_TYPE_IDR;
     }
   }
-  GST_OBJECT_UNLOCK (encoder);
+  GST_VIDEO_ENCODER_STREAM_UNLOCK (encoder);
 
   encoder_return = x264_encoder_encode (encoder->x264enc,
       &nal, i_nal, pic_in, &pic_out);
@@ -1799,7 +1800,7 @@ gst_x264_enc_set_property (GObject * object, guint prop_id,
 
   encoder = GST_X264_ENC (object);
 
-  GST_OBJECT_LOCK (encoder);
+  GST_VIDEO_ENCODER_STREAM_LOCK (encoder);
   /* state at least matters for sps, bytestream, pass,
    * and so by extension ... */
 
@@ -1994,14 +1995,14 @@ gst_x264_enc_set_property (GObject * object, guint prop_id,
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
   }
-  GST_OBJECT_UNLOCK (encoder);
+  GST_VIDEO_ENCODER_STREAM_UNLOCK (encoder);
   return;
 
   /* ERROR */
 wrong_state:
   {
     GST_WARNING_OBJECT (encoder, "setting property in wrong state");
-    GST_OBJECT_UNLOCK (encoder);
+    GST_VIDEO_ENCODER_STREAM_UNLOCK (encoder);
   }
 }
 
@@ -2013,7 +2014,7 @@ gst_x264_enc_get_property (GObject * object, guint prop_id,
 
   encoder = GST_X264_ENC (object);
 
-  GST_OBJECT_LOCK (encoder);
+  GST_VIDEO_ENCODER_STREAM_LOCK (encoder);
   switch (prop_id) {
     case ARG_THREADS:
       g_value_set_uint (value, encoder->threads);
@@ -2134,7 +2135,7 @@ gst_x264_enc_get_property (GObject * object, guint prop_id,
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
   }
-  GST_OBJECT_UNLOCK (encoder);
+  GST_VIDEO_ENCODER_STREAM_UNLOCK (encoder);
 }
 
 static gboolean
