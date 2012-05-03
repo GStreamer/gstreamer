@@ -61,7 +61,12 @@ struct _GESTrackVideoTransitionPrivate
 enum
 {
   PROP_0,
+  PROP_BORDER,
+  PROP_INVERT,
+  PROP_LAST
 };
+
+static GParamSpec *properties[PROP_LAST];
 
 #define fast_element_link(a,b) gst_element_link_pads_full((a),"src",(b),"sink",GST_PAD_LINK_CHECK_NOTHING)
 
@@ -98,13 +103,37 @@ ges_track_video_transition_class_init (GESTrackVideoTransitionClass * klass)
   g_type_class_add_private (klass, sizeof (GESTrackVideoTransitionPrivate));
 
   object_class = G_OBJECT_CLASS (klass);
-  toclass = GES_TRACK_OBJECT_CLASS (klass);
 
   object_class->get_property = ges_track_video_transition_get_property;
   object_class->set_property = ges_track_video_transition_set_property;
   object_class->dispose = ges_track_video_transition_dispose;
   object_class->finalize = ges_track_video_transition_finalize;
 
+  /**
+   * GESTrackVideoTransition:border
+   *
+   * This value represents the border width of the transition.
+   *
+   */
+  properties[PROP_BORDER] =
+      g_param_spec_uint ("border", "Border", "The border width", 0,
+      G_MAXUINT, 0, G_PARAM_READWRITE);
+  g_object_class_install_property (object_class, PROP_BORDER,
+      properties[PROP_BORDER]);
+
+  /**
+   * GESTrackVideoTransition:invert
+   *
+   * This value represents the direction of the transition.
+   *
+   */
+  properties[PROP_INVERT] =
+      g_param_spec_boolean ("invert", "Invert",
+      "Whether the transition is inverted", FALSE, G_PARAM_READWRITE);
+  g_object_class_install_property (object_class, PROP_INVERT,
+      properties[PROP_INVERT]);
+
+  toclass = GES_TRACK_OBJECT_CLASS (klass);
   toclass->duration_changed = ges_track_video_transition_duration_changed;
   toclass->create_element = ges_track_video_transition_create_element;
 }
@@ -178,7 +207,15 @@ static void
 ges_track_video_transition_get_property (GObject * object,
     guint property_id, GValue * value, GParamSpec * pspec)
 {
+  GESTrackVideoTransition *tr = GES_TRACK_VIDEO_TRANSITION (object);
+
   switch (property_id) {
+    case PROP_BORDER:
+      g_value_set_uint (value, ges_track_video_transition_get_border (tr));
+      break;
+    case PROP_INVERT:
+      g_value_set_boolean (value, ges_track_video_transition_is_inverted (tr));
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, property_id, pspec);
   }
@@ -188,7 +225,15 @@ static void
 ges_track_video_transition_set_property (GObject * object,
     guint property_id, const GValue * value, GParamSpec * pspec)
 {
+  GESTrackVideoTransition *tr = GES_TRACK_VIDEO_TRANSITION (object);
+
   switch (property_id) {
+    case PROP_BORDER:
+      ges_track_video_transition_set_border (tr, g_value_get_uint (value));
+      break;
+    case PROP_INVERT:
+      ges_track_video_transition_set_inverted (tr, g_value_get_boolean (value));
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, property_id, pspec);
   }
