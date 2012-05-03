@@ -29,6 +29,9 @@
 G_DEFINE_TYPE (GESTrackVideoTransition, ges_track_video_transition,
     GES_TYPE_TRACK_TRANSITION);
 
+static inline gboolean
+ges_track_video_transition_set_transition_type_internal (GESTrackVideoTransition
+    * self, GESVideoStandardTransitionType type);
 struct _GESTrackVideoTransitionPrivate
 {
   GESVideoStandardTransitionType type;
@@ -62,6 +65,7 @@ enum
 {
   PROP_0,
   PROP_BORDER,
+  PROP_TRANSITION_TYPE,
   PROP_INVERT,
   PROP_LAST
 };
@@ -120,6 +124,19 @@ ges_track_video_transition_class_init (GESTrackVideoTransitionClass * klass)
       G_MAXUINT, 0, G_PARAM_READWRITE);
   g_object_class_install_property (object_class, PROP_BORDER,
       properties[PROP_BORDER]);
+
+  /**
+   * GESTrackVideoTransition:type
+   *
+   * The #GESVideoStandardTransitionType currently applied on the object
+   *
+   */
+  properties[PROP_TRANSITION_TYPE] =
+      g_param_spec_enum ("transition-type", "Transition type",
+      "The type of the transition", GES_VIDEO_STANDARD_TRANSITION_TYPE_TYPE,
+      GES_VIDEO_STANDARD_TRANSITION_TYPE_NONE, G_PARAM_READWRITE);
+  g_object_class_install_property (object_class, PROP_TRANSITION_TYPE,
+      properties[PROP_TRANSITION_TYPE]);
 
   /**
    * GESTrackVideoTransition:invert
@@ -213,6 +230,10 @@ ges_track_video_transition_get_property (GObject * object,
     case PROP_BORDER:
       g_value_set_uint (value, ges_track_video_transition_get_border (tr));
       break;
+    case PROP_TRANSITION_TYPE:
+      g_value_set_enum (value,
+          ges_track_video_transition_get_transition_type (tr));
+      break;
     case PROP_INVERT:
       g_value_set_boolean (value, ges_track_video_transition_is_inverted (tr));
       break;
@@ -230,6 +251,10 @@ ges_track_video_transition_set_property (GObject * object,
   switch (property_id) {
     case PROP_BORDER:
       ges_track_video_transition_set_border (tr, g_value_get_uint (value));
+      break;
+    case PROP_TRANSITION_TYPE:
+      ges_track_video_transition_set_transition_type_internal (tr,
+          g_value_get_enum (value));
       break;
     case PROP_INVERT:
       ges_track_video_transition_set_inverted (tr, g_value_get_boolean (value));
@@ -642,6 +667,51 @@ ges_track_video_transition_duration_changed (GESTrackObject * object,
   GST_LOG ("done updating controller");
 }
 
+static inline gboolean
+ges_track_video_transition_set_transition_type_internal (GESTrackVideoTransition
+    * self, GESVideoStandardTransitionType type)
+{
+  GESTrackVideoTransitionPrivate *priv = self->priv;
+
+  GST_LOG ("%p %d => %d", self, priv->type, type);
+
+  if (type == priv->type && !priv->pending_type) {
+    GST_INFO ("This type is already set on this transition\n");
+    return TRUE;
+  }
+  if (type == priv->pending_type) {
+    GST_INFO ("This type is already pending for this transition\n");
+    return TRUE;
+  }
+  if (priv->type &&
+      ((priv->type != type) || (priv->type != priv->pending_type)) &&
+      ((type == GES_VIDEO_STANDARD_TRANSITION_TYPE_CROSSFADE) ||
+          (priv->type == GES_VIDEO_STANDARD_TRANSITION_TYPE_CROSSFADE))) {
+    priv->pending_type = type;
+    if (type != GES_VIDEO_STANDARD_TRANSITION_TYPE_CROSSFADE) {
+      if (!priv->topbin)
+        return FALSE;
+      priv->smpte = NULL;
+      gst_pad_set_blocked_async (gst_element_get_static_pad (priv->topbin,
+              "sinka"), TRUE, (GstPadBlockCallback) switch_to_smpte_cb, self);
+    } else {
+      if (!priv->topbin)
+        return FALSE;
+      priv->start_value = 1.0;
+      priv->end_value = 0.0;
+      gst_pad_set_blocked_async (gst_element_get_static_pad (priv->topbin,
+              "sinka"), TRUE, (GstPadBlockCallback) switch_to_crossfade_cb,
+          self);
+    }
+    return TRUE;
+  }
+  priv->pending_type = type;
+  if (priv->smpte && (type != GES_VIDEO_STANDARD_TRANSITION_TYPE_CROSSFADE)) {
+    g_object_set (priv->smpte, "type", (gint) type, NULL);
+  }
+  return TRUE;
+}
+
 /**
  * ges_track_video_transition_set_border:
  * @self: The #GESTrackVideoTransition to set the border to
@@ -748,45 +818,12 @@ gboolean
 ges_track_video_transition_set_transition_type (GESTrackVideoTransition * self,
     GESVideoStandardTransitionType type)
 {
-  GESTrackVideoTransitionPrivate *priv = self->priv;
+  gboolean ret =
+      ges_track_video_transition_set_transition_type_internal (self, type);
 
-  GST_LOG ("%p %d => %d", self, priv->type, type);
+  g_object_notify_by_pspec (G_OBJECT (self), properties[PROP_TRANSITION_TYPE]);
 
-  if (type == priv->type && !priv->pending_type) {
-    GST_INFO ("This type is already set on this transition\n");
-    return TRUE;
-  }
-  if (type == priv->pending_type) {
-    GST_INFO ("This type is already pending for this transition\n");
-    return TRUE;
-  }
-  if (priv->type &&
-      ((priv->type != type) || (priv->type != priv->pending_type)) &&
-      ((type == GES_VIDEO_STANDARD_TRANSITION_TYPE_CROSSFADE) ||
-          (priv->type == GES_VIDEO_STANDARD_TRANSITION_TYPE_CROSSFADE))) {
-    priv->pending_type = type;
-    if (type != GES_VIDEO_STANDARD_TRANSITION_TYPE_CROSSFADE) {
-      if (!priv->topbin)
-        return FALSE;
-      priv->smpte = NULL;
-      gst_pad_set_blocked_async (gst_element_get_static_pad (priv->topbin,
-              "sinka"), TRUE, (GstPadBlockCallback) switch_to_smpte_cb, self);
-    } else {
-      if (!priv->topbin)
-        return FALSE;
-      priv->start_value = 1.0;
-      priv->end_value = 0.0;
-      gst_pad_set_blocked_async (gst_element_get_static_pad (priv->topbin,
-              "sinka"), TRUE, (GstPadBlockCallback) switch_to_crossfade_cb,
-          self);
-    }
-    return TRUE;
-  }
-  priv->pending_type = type;
-  if (priv->smpte && (type != GES_VIDEO_STANDARD_TRANSITION_TYPE_CROSSFADE)) {
-    g_object_set (priv->smpte, "type", (gint) type, NULL);
-  }
-  return TRUE;
+  return ret;
 }
 
 /**
