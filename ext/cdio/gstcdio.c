@@ -30,12 +30,16 @@
 GST_DEBUG_CATEGORY (gst_cdio_debug);
 
 void
-gst_cdio_add_cdtext_field (GstObject * src, cdtext_t * cdtext,
+gst_cdio_add_cdtext_field (GstObject * src, cdtext_t * cdtext, track_t track,
     cdtext_field_t field, const gchar * gst_tag, GstTagList ** p_tags)
 {
   const gchar *txt;
 
+#if LIBCDIO_VERSION_NUM > 83
+  txt = cdtext_get_const (cdtext, field, track);
+#else
   txt = cdtext_get_const (field, cdtext);
+#endif
   if (txt == NULL || *txt == '\0') {
     GST_DEBUG_OBJECT (src, "empty CD-TEXT field %u (%s)", field, gst_tag);
     return;
@@ -57,6 +61,12 @@ gst_cdio_add_cdtext_field (GstObject * src, cdtext_t * cdtext,
 }
 
 GstTagList *
+#if LIBCDIO_VERSION_NUM > 83
+gst_cdio_get_cdtext (GstObject * src, cdtext_t * t, track_t track)
+{
+  GstTagList *tags = NULL;
+
+#else
 gst_cdio_get_cdtext (GstObject * src, CdIo * cdio, track_t track)
 {
   GstTagList *tags = NULL;
@@ -67,14 +77,22 @@ gst_cdio_get_cdtext (GstObject * src, CdIo * cdio, track_t track)
     GST_DEBUG_OBJECT (src, "no CD-TEXT for track %u", track);
     return NULL;
   }
+#endif
 
-  gst_cdio_add_cdtext_field (src, t, CDTEXT_PERFORMER, GST_TAG_ARTIST, &tags);
-  gst_cdio_add_cdtext_field (src, t, CDTEXT_TITLE, GST_TAG_TITLE, &tags);
+  gst_cdio_add_cdtext_field (src, t, track, CDTEXT_FIELD_PERFORMER,
+      GST_TAG_ARTIST, &tags);
+  gst_cdio_add_cdtext_field (src, t, track, CDTEXT_FIELD_TITLE, GST_TAG_TITLE,
+      &tags);
 
   return tags;
 }
 
 void
+#if LIBCDIO_VERSION_NUM > 83
+gst_cdio_add_cdtext_album_tags (GstObject * src, cdtext_t * t,
+    GstTagList * tags)
+{
+#else
 gst_cdio_add_cdtext_album_tags (GstObject * src, CdIo * cdio, GstTagList * tags)
 {
   cdtext_t *t;
@@ -84,11 +102,14 @@ gst_cdio_add_cdtext_album_tags (GstObject * src, CdIo * cdio, GstTagList * tags)
     GST_DEBUG_OBJECT (src, "no CD-TEXT for album");
     return;
   }
+#endif
 
-  /* FIXME: map CDTEXT_PERFORMER to GST_TAG_ALBUM_ARTIST once we have that */
-  gst_cdio_add_cdtext_field (src, t, CDTEXT_TITLE, GST_TAG_ALBUM, &tags);
-  gst_cdio_add_cdtext_field (src, t, CDTEXT_GENRE, GST_TAG_GENRE, &tags);
-
+  gst_cdio_add_cdtext_field (src, t, 0, CDTEXT_FIELD_PERFORMER,
+      GST_TAG_ALBUM_ARTIST, &tags);
+  gst_cdio_add_cdtext_field (src, t, 0, CDTEXT_FIELD_TITLE, GST_TAG_ALBUM,
+      &tags);
+  gst_cdio_add_cdtext_field (src, t, 0, CDTEXT_FIELD_GENRE, GST_TAG_GENRE,
+      &tags);
   GST_DEBUG ("CD-TEXT album tags: %" GST_PTR_FORMAT, tags);
 }
 

@@ -24,22 +24,38 @@
 #include <gst/gst.h>
 #include <cdio/cdio.h>
 #include <cdio/cdtext.h>
+#include <cdio/version.h>
+
+#if LIBCDIO_VERSION_NUM <= 83
+  #define CDTEXT_FIELD_PERFORMER CDTEXT_PERFORMER
+  #define CDTEXT_FIELD_GENRE     CDTEXT_GENRE
+  #define CDTEXT_FIELD_TITLE     CDTEXT_TITLE
+#endif
 
 GST_DEBUG_CATEGORY_EXTERN (gst_cdio_debug);
 #define GST_CAT_DEFAULT gst_cdio_debug
 
 void     gst_cdio_add_cdtext_field (GstObject      * src,
                                     cdtext_t       * cdtext,
+                                    track_t          track,
                                     cdtext_field_t   field,
                                     const gchar    * gst_tag,
                                     GstTagList    ** p_tags);
 
 GstTagList  * gst_cdio_get_cdtext  (GstObject      * src,
+#if LIBCDIO_VERSION_NUM > 83
+                                    cdtext_t       * t,
+#else
                                     CdIo           * cdio,
+#endif
                                     track_t          track);
 
 void      gst_cdio_add_cdtext_album_tags (GstObject  * src,
+#if LIBCDIO_VERSION_NUM > 83
+                                          cdtext_t   * t,
+#else
                                           CdIo       * cdio,
+#endif
                                           GstTagList * tags);
 
 #endif /* __GST_CDIO_H__ */

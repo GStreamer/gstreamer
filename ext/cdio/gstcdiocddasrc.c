@@ -206,6 +206,9 @@ gst_cdio_cdda_src_open (GstAudioCdSrc * audiocdsrc, const gchar * device)
   GstCdioCddaSrc *src;
   discmode_t discmode;
   gint first_track, num_tracks, i;
+#if LIBCDIO_VERSION_NUM > 83
+  cdtext_t *cdtext;
+#endif
 
   src = GST_CDIO_CDDA_SRC (audiocdsrc);
 
@@ -232,8 +235,18 @@ gst_cdio_cdda_src_open (GstAudioCdSrc * audiocdsrc, const gchar * device)
   if (src->read_speed != -1)
     cdio_set_speed (src->cdio, src->read_speed);
 
+#if LIBCDIO_VERSION_NUM > 83
+  cdtext = cdio_get_cdtext (src->cdio);
+
+  if (NULL == cdtext)
+    GST_DEBUG_OBJECT (src, "no CD-TEXT on disc");
+  else
+    gst_cdio_add_cdtext_album_tags (GST_OBJECT_CAST (src), cdtext,
+        audiocdsrc->tags);
+#else
   gst_cdio_add_cdtext_album_tags (GST_OBJECT_CAST (src), src->cdio,
       audiocdsrc->tags);
+#endif
 
   GST_LOG_OBJECT (src, "%u tracks, first track: %d", num_tracks, first_track);
 
@@ -250,8 +263,14 @@ gst_cdio_cdda_src_open (GstAudioCdSrc * audiocdsrc, const gchar * device)
      * the right thing here (for cddb id calculations etc. as well) */
     track.start = cdio_get_track_lsn (src->cdio, i + first_track);
     track.end = track.start + len_sectors - 1;  /* -1? */
+#if LIBCDIO_VERSION_NUM > 83
+    if (NULL != cdtext)
+      track.tags = gst_cdio_get_cdtext (GST_OBJECT (src), cdtext,
+          i + first_track);
+#else
     track.tags = gst_cdio_get_cdtext (GST_OBJECT (src), src->cdio,
         i + first_track);
+#endif
 
     gst_audio_cd_src_add_track (GST_AUDIO_CD_SRC (src), &track);
   }
