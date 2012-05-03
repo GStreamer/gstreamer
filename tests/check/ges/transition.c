@@ -145,12 +145,10 @@ GST_START_TEST (test_transition_properties)
    * still be using crossfade */
   GST_DEBUG ("Setting back to 1 (should fail)");
   g_object_set (object, "vtype", 1, NULL);
-  /* FIXME : This should succeed */
-  assert_equals_int (GES_TIMELINE_STANDARD_TRANSITION (object)->vtype,
-      GES_VIDEO_STANDARD_TRANSITION_TYPE_CROSSFADE);
+
+  assert_equals_int (GES_TIMELINE_STANDARD_TRANSITION (object)->vtype, 1);
   assert_equals_int (ges_track_video_transition_get_transition_type
-      (GES_TRACK_VIDEO_TRANSITION (trackobject)),
-      GES_VIDEO_STANDARD_TRANSITION_TYPE_CROSSFADE);
+      (GES_TRACK_VIDEO_TRANSITION (trackobject)), 1);
 
   GST_DEBUG ("Releasing track object");
   ges_timeline_object_release_track_object (object, trackobject);
