@@ -844,7 +844,7 @@ gst_ffmpegdec_setcaps (GstFFMpegDec * ffmpegdec, GstCaps * caps)
   } else
     ffmpegdec->context->thread_count = ffmpegdec->max_threads;
 
-  ffmpegdec->context->thread_type = FF_THREAD_SLICE;
+  ffmpegdec->context->thread_type = FF_THREAD_SLICE | FF_THREAD_FRAME;
 
   /* open codec - we don't select an output pix_fmt yet,
    * simply because we don't know! We only get it
@@ -1446,8 +1446,8 @@ gst_ffmpegdec_audio_negotiate (GstFFMpegDec * ffmpegdec, gboolean force)
   memcpy (ffmpegdec->format.audio.gst_layout,
       ffmpegdec->format.audio.ffmpeg_layout,
       sizeof (GstAudioChannelPosition) * ffmpegdec->format.audio.channels);
-  gst_audio_channel_positions_to_valid_order (ffmpegdec->format.audio.
-      gst_layout, ffmpegdec->format.audio.channels);
+  gst_audio_channel_positions_to_valid_order (ffmpegdec->format.
+      audio.gst_layout, ffmpegdec->format.audio.channels);
 
   GST_LOG_OBJECT (ffmpegdec, "output caps %" GST_PTR_FORMAT, caps);
 
@@ -2647,11 +2647,6 @@ gst_ffmpegdec_sink_event (GstPad * pad, GstObject * parent, GstEvent * event)
           goto invalid_format;
       }
 
-      /* drain pending frames before trying to use the new segment, queued
-       * buffers belonged to the previous segment. */
-      if (ffmpegdec->context->codec)
-        gst_ffmpegdec_drain (ffmpegdec);
-
       GST_DEBUG_OBJECT (ffmpegdec, "SEGMENT in time %" GST_SEGMENT_FORMAT,
           &segment);
 
@@ -2765,8 +2760,6 @@ gst_ffmpegdec_chain (GstPad * pad, GstObject * parent, GstBuffer * inbuf)
    * the pcache, we might be able to remove the drain and flush too. */
   if (G_UNLIKELY (discont)) {
     GST_DEBUG_OBJECT (ffmpegdec, "received DISCONT");
-    /* drain what we have queued */
-    gst_ffmpegdec_drain (ffmpegdec);
     gst_ffmpegdec_flush_pcache (ffmpegdec);
     ffmpegdec->discont = TRUE;
     gst_ffmpegdec_reset_ts (ffmpegdec);
