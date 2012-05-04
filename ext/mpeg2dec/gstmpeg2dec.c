@@ -600,9 +600,9 @@ handle_sequence (GstMpeg2dec * mpeg2dec, const mpeg2_info_t * info)
   mpeg2dec->fps_d = info->sequence->frame_period;
   mpeg2dec->frame_period = info->sequence->frame_period * GST_USECOND / 27;
 
-  /* Mpeg2dec has 1 frame latency to produce a picture and 1 frame latency in
+  /* Mpeg2dec has 2 frame latency to produce a picture and 1 frame latency in
    * it's parser */
-  latency = 2 * mpeg2dec->frame_period;
+  latency = 3 * mpeg2dec->frame_period;
   gst_video_decoder_set_latency (GST_VIDEO_DECODER (mpeg2dec), latency,
       latency);
 
