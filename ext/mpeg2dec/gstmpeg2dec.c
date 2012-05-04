@@ -598,7 +598,9 @@ handle_sequence (GstMpeg2dec * mpeg2dec, const mpeg2_info_t * info)
   /* set framerate */
   mpeg2dec->fps_n = 27000000;
   mpeg2dec->fps_d = info->sequence->frame_period;
-  mpeg2dec->frame_period = info->sequence->frame_period * GST_USECOND / 27;
+  mpeg2dec->frame_period =
+      gst_util_uint64_scale_ceil (info->sequence->frame_period, GST_USECOND,
+      27);
 
   /* Mpeg2dec has 2 frame latency to produce a picture and 1 frame latency in
    * it's parser */
