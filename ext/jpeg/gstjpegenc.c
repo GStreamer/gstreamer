@@ -304,14 +304,29 @@ gst_jpegenc_getcaps (GstPad * pad, GstCaps * filter)
 {
   GstJpegEnc *jpegenc = GST_JPEGENC (gst_pad_get_parent (pad));
   GstCaps *caps, *othercaps;
+  GstCaps *otherfilter;
   GstCaps *templ;
   gint i, j;
   GstStructure *structure = NULL;
 
   /* we want to proxy properties like width, height and framerate from the
      other end of the element */
+  if (filter) {
+    otherfilter = gst_caps_new_empty ();
+    for (i = 0; i < gst_caps_get_size (filter); i++) {
+      GstStructure *s = gst_structure_copy (gst_caps_get_structure (filter, i));
 
-  othercaps = gst_pad_peer_query_caps (jpegenc->srcpad, filter);
+      gst_structure_set_name (s, "image/jpeg");
+
+      gst_caps_append_structure (otherfilter, s);
+    }
+  } else {
+    otherfilter = NULL;
+  }
+  othercaps = gst_pad_peer_query_caps (jpegenc->srcpad, otherfilter);
+  if (otherfilter)
+    gst_caps_unref (otherfilter);
+
   templ = gst_pad_get_pad_template_caps (pad);
   if (othercaps == NULL ||
       gst_caps_is_empty (othercaps) || gst_caps_is_any (othercaps)) {
