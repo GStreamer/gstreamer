@@ -167,9 +167,6 @@ static void
 gst_wrapper_camera_bin_reset_video_src_caps (GstWrapperCameraBinSrc * self,
     GstCaps * caps)
 {
-  GstClock *clock;
-  gint64 base_time;
-
   GST_DEBUG_OBJECT (self, "Resetting src caps to %" GST_PTR_FORMAT, caps);
   if (self->src_vid_src) {
     GstCaps *old_caps;
@@ -184,58 +181,7 @@ gst_wrapper_camera_bin_reset_video_src_caps (GstWrapperCameraBinSrc * self,
     if (old_caps)
       gst_caps_unref (old_caps);
 
-    clock = gst_element_get_clock (self->src_vid_src);
-    base_time = gst_element_get_base_time (self->src_vid_src);
-
-    /* Ideally, we should only need to get the source to READY here,
-     * but it seems v4l2src isn't happy with this. Putting to NULL makes
-     * it work.
-     *
-     * TODO fix this in v4l2src
-     */
-    gst_element_set_state (self->src_vid_src, GST_STATE_NULL);
     set_capsfilter_caps (self, caps);
-
-    self->drop_newseg = TRUE;
-
-    GST_DEBUG_OBJECT (self, "Bringing source up");
-    if (!gst_element_sync_state_with_parent (self->src_vid_src)) {
-      GST_WARNING_OBJECT (self, "Failed to reset source caps");
-      gst_element_set_state (self->src_vid_src, GST_STATE_NULL);
-    }
-
-    if (clock) {
-      gst_element_set_clock (self->src_vid_src, clock);
-      gst_element_set_base_time (self->src_vid_src, base_time);
-
-      if (GST_IS_BIN (self->src_vid_src)) {
-        GstIterator *it =
-            gst_bin_iterate_elements (GST_BIN (self->src_vid_src));
-        GValue item = { 0 };
-        gboolean done = FALSE;
-        while (!done) {
-          switch (gst_iterator_next (it, &item)) {
-            case GST_ITERATOR_OK:
-              gst_element_set_base_time (GST_ELEMENT (g_value_get_object
-                      (&item)), base_time);
-              g_value_unset (&item);
-              break;
-            case GST_ITERATOR_RESYNC:
-              gst_iterator_resync (it);
-              break;
-            case GST_ITERATOR_ERROR:
-              done = TRUE;
-              break;
-            case GST_ITERATOR_DONE:
-              done = TRUE;
-              break;
-          }
-        }
-        gst_iterator_free (it);
-      }
-
-      gst_object_unref (clock);
-    }
   }
 }
 
