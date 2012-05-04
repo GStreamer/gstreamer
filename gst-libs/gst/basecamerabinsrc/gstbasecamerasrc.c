@@ -87,7 +87,8 @@ enum
   PROP_READY_FOR_CAPTURE,
   PROP_POST_PREVIEW,
   PROP_PREVIEW_CAPS,
-  PROP_PREVIEW_FILTER
+  PROP_PREVIEW_FILTER,
+  PROP_AUTO_START
 };
 
 enum
@@ -100,6 +101,7 @@ enum
 };
 
 #define DEFAULT_POST_PREVIEW TRUE
+#define DEFAULT_AUTO_START FALSE
 
 static guint basecamerasrc_signals[LAST_SIGNAL];
 
@@ -319,6 +321,9 @@ gst_base_camera_src_set_property (GObject * object,
             "Cannot change preview filter, is element in NULL state?");
       }
       break;
+    case PROP_AUTO_START:
+      self->auto_start = g_value_get_boolean (value);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (self, prop_id, pspec);
       break;
@@ -354,6 +359,9 @@ gst_base_camera_src_get_property (GObject * object,
     case PROP_PREVIEW_FILTER:
       if (self->preview_filter)
         g_value_set_object (value, self->preview_filter);
+      break;
+    case PROP_AUTO_START:
+      g_value_set_boolean (value, self->auto_start);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (self, prop_id, pspec);
@@ -421,6 +429,8 @@ gst_base_camera_src_change_state (GstElement * element,
        * messages on the pipeline */
       gst_element_set_state (self->preview_pipeline->pipeline,
           GST_STATE_PLAYING);
+      if (self->auto_start)
+        g_signal_emit_by_name (G_OBJECT (self), "start-capture", NULL);
       break;
     default:
       break;
@@ -431,6 +441,8 @@ gst_base_camera_src_change_state (GstElement * element,
   switch (transition) {
     case GST_STATE_CHANGE_PAUSED_TO_READY:
       gst_element_set_state (self->preview_pipeline->pipeline, GST_STATE_READY);
+      if (self->auto_start)
+        g_signal_emit_by_name (G_OBJECT (self), "stop-capture", NULL);
       break;
     case GST_STATE_CHANGE_READY_TO_NULL:
       gst_element_set_state (self->preview_pipeline->pipeline, GST_STATE_NULL);
@@ -497,6 +509,11 @@ gst_base_camera_src_class_init (GstBaseCameraSrcClass * klass)
           "A custom preview filter to process preview image data",
           GST_TYPE_ELEMENT, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
+  g_object_class_install_property (gobject_class, PROP_AUTO_START,
+      g_param_spec_boolean ("auto-start", "Auto start capture",
+          "Automatically starts capture when going to the PAUSED state",
+          DEFAULT_AUTO_START, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
   /**
    * GstBaseCameraSrc:ready-for-capture:
    *
@@ -545,6 +562,7 @@ gst_base_camera_src_init (GstBaseCameraSrc * self)
   self->max_zoom = MAX_ZOOM;
   self->mode = MODE_IMAGE;
 
+  self->auto_start = DEFAULT_AUTO_START;
   self->capturing = FALSE;
   g_mutex_init (&self->capturing_mutex);
 

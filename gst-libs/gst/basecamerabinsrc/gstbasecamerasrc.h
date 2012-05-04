@@ -68,6 +68,7 @@ struct _GstBaseCameraSrc
 
   GstCameraBinMode mode;
 
+  gboolean auto_start;
   gboolean capturing;
   GMutex capturing_mutex;
 
