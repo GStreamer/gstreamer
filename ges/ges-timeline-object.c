@@ -389,7 +389,7 @@ ges_timeline_object_class_init (GESTimelineObjectClass * klass)
    */
   g_object_class_install_property (object_class, PROP_MAX_DURATION,
       g_param_spec_uint64 ("max-duration", "Maximum duration",
-          "The duration of the object", 0, G_MAXUINT64, G_MAXUINT64,
+          "The maximum duration of the object", 0, G_MAXUINT64, G_MAXUINT64,
           G_PARAM_READWRITE | G_PARAM_CONSTRUCT));
 
   klass->need_fill_track = TRUE;

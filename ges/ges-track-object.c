@@ -309,8 +309,8 @@ ges_track_object_class_init (GESTrackObjectClass * klass)
    */
   g_object_class_install_property (object_class, PROP_MAX_DURATION,
       g_param_spec_uint64 ("max-duration", "Maximum duration",
-          "The duration of the object", GST_CLOCK_TIME_NONE, G_MAXUINT64,
-          G_MAXUINT64, G_PARAM_READWRITE | G_PARAM_CONSTRUCT));
+          "The maximum duration of the object", 0, G_MAXUINT64, G_MAXUINT64,
+          G_PARAM_READWRITE | G_PARAM_CONSTRUCT));
 
   /**
    * GESTrackObject::deep-notify:
