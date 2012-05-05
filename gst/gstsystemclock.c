@@ -52,7 +52,9 @@
 #  define WIN32_LEAN_AND_MEAN   /* prevents from including too many things */
 #  include <windows.h>          /* QueryPerformance* stuff */
 #  undef WIN32_LEAN_AND_MEAN
+#  ifndef EWOULDBLOCK
 #  define EWOULDBLOCK EAGAIN    /* This is just to placate gcc */
+#  endif
 #endif /* G_OS_WIN32 */
 
 #define GET_ENTRY_STATUS(e)          ((GstClockReturn) g_atomic_int_get(&GST_CLOCK_ENTRY_STATUS(e)))

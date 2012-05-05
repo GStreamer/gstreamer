@@ -72,7 +72,6 @@
 
 #ifdef G_OS_WIN32
 #include <winsock2.h>
-#define EINPROGRESS WSAEINPROGRESS
 #else
 #define _GNU_SOURCE 1
 #ifdef HAVE_SYS_POLL_H

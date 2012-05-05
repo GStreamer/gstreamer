@@ -404,6 +404,7 @@ GST_START_TEST (test_uri_interface)
 
 GST_END_TEST;
 
+#ifdef G_OS_UNIX
 static void
 check_uri_for_uri (GstElement * e, const gchar * in_uri, const gchar * uri)
 {
@@ -459,6 +460,7 @@ check_uri_for_location (GstElement * e, const gchar * location,
 
   g_free (query_uri);
 }
+#endif
 
 GST_START_TEST (test_uri_query)
 {
