@@ -1269,8 +1269,8 @@ gst_ts_demux_parse_pes_header (GstTSDemux * demux, TSDemuxStream * stream)
   }
 
   /* Remove PES headers */
-  GST_DEBUG ("Moving data forward  by %d bytes (packet_size:%d, have:%d)",
-      header.header_size, header.packet_length, map.size);
+  GST_DEBUG ("Moving data forward  by %d bytes (packet_size:%d, have:%"
+      G_GSIZE_FORMAT ")", header.header_size, header.packet_length, map.size);
   stream->expected_size = header.packet_length;
   gst_buffer_resize (buf, header.header_size, map.size - header.header_size);
 

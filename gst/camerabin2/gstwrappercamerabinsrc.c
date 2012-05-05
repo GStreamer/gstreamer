@@ -199,8 +199,9 @@ gst_wrapper_camera_bin_src_imgsrc_probe (GstPad * pad, GstPadProbeInfo * info,
   GstBuffer *buffer = GST_BUFFER (info->data);
   GstPadProbeReturn ret = GST_PAD_PROBE_DROP;
 
-  GST_LOG_OBJECT (self, "Image probe, mode %d, capture count %d bufsize: %u",
-      camerasrc->mode, self->image_capture_count, gst_buffer_get_size (buffer));
+  GST_LOG_OBJECT (self, "Image probe, mode %d, capture count %d bufsize: %"
+      G_GSIZE_FORMAT, camerasrc->mode, self->image_capture_count,
+      gst_buffer_get_size (buffer));
 
   g_mutex_lock (&camerasrc->capturing_mutex);
   if (self->image_capture_count > 0) {

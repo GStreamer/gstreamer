@@ -573,7 +573,8 @@ gst_asf_parse_packet (GstBuffer * buffer, GstAsfPacketInfo * packet,
   gst_buffer_map (buffer, &map, GST_MAP_READ);
   reader = gst_byte_reader_new (map.data, map.size);
 
-  GST_LOG ("Starting packet parsing, size: %u", gst_buffer_get_size (buffer));
+  GST_LOG ("Starting packet parsing, size: %" G_GSIZE_FORMAT,
+      gst_buffer_get_size (buffer));
   if (!gst_byte_reader_get_uint8 (reader, &first))
     goto error;
 

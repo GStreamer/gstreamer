@@ -228,7 +228,7 @@ gst_uri_downloader_chain (GstPad * pad, GstObject * parent, GstBuffer * buf)
   }
 
   GST_LOG_OBJECT (downloader, "The uri fetcher received a new buffer "
-      "of size %u", gst_buffer_get_size (buf));
+      "of size %" G_GSIZE_FORMAT, gst_buffer_get_size (buf));
   if (!gst_fragment_add_buffer (downloader->priv->download, buf))
     GST_WARNING_OBJECT (downloader, "Could not add buffer to fragment");
   GST_OBJECT_UNLOCK (downloader);

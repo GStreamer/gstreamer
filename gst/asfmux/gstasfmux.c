@@ -1413,8 +1413,8 @@ gst_asf_mux_send_packet (GstAsfMux * asfmux, GstBuffer * buf)
   g_assert (gst_buffer_get_size (buf) == asfmux->packet_size);
   asfmux->total_data_packets++;
   GST_LOG_OBJECT (asfmux,
-      "Pushing a packet of size %u and timestamp %" G_GUINT64_FORMAT,
-      gst_buffer_get_size (buf), GST_BUFFER_TIMESTAMP (buf));
+      "Pushing a packet of size %" G_GSIZE_FORMAT " and timestamp %"
+      G_GUINT64_FORMAT, gst_buffer_get_size (buf), GST_BUFFER_TIMESTAMP (buf));
   GST_LOG_OBJECT (asfmux, "Total data packets: %" G_GUINT64_FORMAT,
       asfmux->total_data_packets);
   return gst_asf_mux_push_buffer (asfmux, buf);
@@ -1497,7 +1497,7 @@ gst_asf_mux_flush_payloads (GstAsfMux * asfmux)
         payload->media_object_size);
     GST_DEBUG_OBJECT (asfmux, "replicated data length: %d",
         (gint) payload->replicated_data_length);
-    GST_DEBUG_OBJECT (asfmux, "payload size: %u",
+    GST_DEBUG_OBJECT (asfmux, "payload size: %" G_GSIZE_FORMAT,
         gst_buffer_get_size (payload->data));
     GST_DEBUG_OBJECT (asfmux, "presentation time: %" G_GUINT32_FORMAT " (%"
         GST_TIME_FORMAT ")", payload->presentation_time,

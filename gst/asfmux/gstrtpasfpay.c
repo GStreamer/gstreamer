@@ -203,7 +203,7 @@ gst_rtp_asf_pay_handle_packet (GstRtpAsfPay * rtpasfpay, GstBuffer * buffer)
     size_left = gst_rtp_buffer_get_payload_len (&rtp) - rtpasfpay->cur_off;
 
     GST_DEBUG_OBJECT (rtpasfpay, "Input buffer bytes consumed: %"
-        G_GUINT32_FORMAT "/%" G_GUINT32_FORMAT, packet_offset,
+        G_GUINT32_FORMAT "/%" G_GSIZE_FORMAT, packet_offset,
         gst_buffer_get_size (buffer));
 
     GST_DEBUG_OBJECT (rtpasfpay, "Output rtpbuffer status");
