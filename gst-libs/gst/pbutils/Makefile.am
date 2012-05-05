@@ -86,12 +86,12 @@ GstPbutils-@GST_API_VERSION@.gir: $(INTROSPECTION_SCANNER) libgstpbutils-@GST_AP
 		-DGST_USE_UNSTABLE_API \
 		-I$(top_srcdir)/gst-libs \
 		-I$(top_builddir)/gst-libs \
-		--add-include-path=`$(PKG_CONFIG) --variable=girdir gstreamer-@GST_API_VERSION@` \
+		--add-include-path=`PKG_CONFIG_PATH="$(GST_PKG_CONFIG_PATH)" $(PKG_CONFIG) --variable=girdir gstreamer-@GST_API_VERSION@` \
 		--library=$(top_builddir)/gst-libs/gst/tag/libgsttag-@GST_API_VERSION@.la \
 		--library=$(top_builddir)/gst-libs/gst/video/libgstvideo-@GST_API_VERSION@.la \
 		--library=$(top_builddir)/gst-libs/gst/audio/libgstaudio-@GST_API_VERSION@.la \
 		--library=libgstpbutils-@GST_API_VERSION@.la \
-		--library-path=`$(PKG_CONFIG) --variable=libdir gstreamer-@GST_API_VERSION@` \
+		--library-path=`PKG_CONFIG_PATH="$(GST_PKG_CONFIG_PATH)" $(PKG_CONFIG) --variable=libdir gstreamer-@GST_API_VERSION@` \
 		--library=gstreamer-@GST_API_VERSION@ \
 		--include=Gst-@GST_API_VERSION@ \
 		--libtool="$(top_builddir)/libtool" \
@@ -116,7 +116,7 @@ typelibs_DATA = $(BUILT_GIRSOURCES:.gir=.typelib)
 		$(INTROSPECTION_COMPILER) \
 		--includedir=$(srcdir) \
 		--includedir=$(builddir) \
-		--includedir=`$(PKG_CONFIG) --variable=girdir gstreamer-@GST_API_VERSION@` \
+		--includedir=`PKG_CONFIG_PATH="$(GST_PKG_CONFIG_PATH)" $(PKG_CONFIG) --variable=girdir gstreamer-@GST_API_VERSION@` \
 		$(INTROSPECTION_COMPILER_OPTS) $< -o $(@F)
 
 CLEANFILES += $(BUILT_GIRSOURCES) $(typelibs_DATA)

@@ -69,7 +69,7 @@ GstRtsp-@GST_API_VERSION@.gir: $(INTROSPECTION_SCANNER) libgstrtsp-@GST_API_VERS
 		-I$(top_builddir)/gst-libs \
 		-I$(top_srcdir)/gst-libs \
 		--add-include-path=$(builddir)/../sdp \
-		--add-include-path=`$(PKG_CONFIG) --variable=girdir gstreamer-@GST_API_VERSION@` \
+		--add-include-path=`PKG_CONFIG_PATH="$(GST_PKG_CONFIG_PATH)" $(PKG_CONFIG) --variable=girdir gstreamer-@GST_API_VERSION@` \
 		--library=libgstrtsp-@GST_API_VERSION@.la \
 		--include=Gio-2.0 \
 		--include=Gst-@GST_API_VERSION@ \
@@ -99,7 +99,7 @@ typelibs_DATA = $(BUILT_GIRSOURCES:.gir=.typelib)
 		--includedir=$(srcdir) \
 		--includedir=$(builddir) \
 		--includedir=$(builddir)/../sdp \
-		--includedir=`$(PKG_CONFIG) --variable=girdir gstreamer-@GST_API_VERSION@` \
+		--includedir=`PKG_CONFIG_PATH="$(GST_PKG_CONFIG_PATH)" $(PKG_CONFIG) --variable=girdir gstreamer-@GST_API_VERSION@` \
 		$(INTROSPECTION_COMPILER_OPTS) $< -o $(@F)
 
 CLEANFILES += $(BUILT_GIRSOURCES) $(typelibs_DATA)
