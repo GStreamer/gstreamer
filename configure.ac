@@ -401,28 +401,14 @@ AC_CHECK_HEADERS([sys/socket.h], HAVE_SYS_SOCKET_H=yes)
 AC_CHECK_HEADERS([winsock2.h], HAVE_WINSOCK2_H=yes)
 
 if test "x$HAVE_WINSOCK2_H" = "xyes"; then
-  WIN32_LIBS="-lws2_32"
-  AC_SUBST(WIN32_LIBS)
-fi
-
-dnl needed for festival
-AM_CONDITIONAL(HAVE_WINSOCK2_H, test "x$HAVE_WINSOCK2_H" = "xyes")
-
-if test "x$HAVE_WINSOCK2_H" = "xyes"; then
-  DCCP_LIBS="$DCCP_LIBS -lws2_32"
-  XDG_LIBS="$XDG_LIBS -lws2_32"
-  RTMP_LIBS="$RTMP_LIBS -lws2_32"
-  AC_SUBST(DCCP_LIBS)
-  AC_SUBST(XDG_LIBS)
-  AC_SUBST(RTMP_LIBS)
+  WINSOCK2_LIBS="-lws2_32"
+  AC_SUBST(WINSOCK2_LIBS)
 fi
 
 if test "x$HAVE_PTHREAD_H" = "xyes"; then
   DCCP_LIBS="$DCCP_LIBS -lpthread"
   AC_SUBST(DCCP_LIBS)
-fi
-
-if test "x$HAVE_PTHREAD_H" != "xyes"; then
+else
   AG_GST_DISABLE_PLUGIN(dccp)
 fi
 

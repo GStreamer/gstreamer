@@ -1,12 +1,5 @@
 plugin_LTLIBRARIES = libgstpcapparse.la
 
-# when compiling for windows we need to link with the winsock library
-if HAVE_WINSOCK2_H
-  WINSOCK2_LIBS = -lws2_32
-else
-  WINSOCK2_LIBS = 
-endif
-
 libgstpcapparse_la_SOURCES = \
 	gstpcapparse.c gstirtspparse.c plugin.c
 

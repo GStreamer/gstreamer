@@ -1,12 +1,6 @@
 
 plugin_LTLIBRARIES = libgstfestival.la
 
-if HAVE_WINSOCK2_H
-WINSOCK2_LIBS = -lws2_32
-else
-WINSOCK2_LIBS =
-endif
-
 libgstfestival_la_SOURCES = gstfestival.c 
 libgstfestival_la_CFLAGS = $(GST_CFLAGS) $(GST_PLUGINS_BASE_CFLAGS)
 # we use net connection now... perhaps use the lib later
