@@ -625,11 +625,7 @@ composition_duration_cb (GstElement * composition,
 
     obj->priv->duration = duration;
 
-#if GLIB_CHECK_VERSION(2,26,0)
     g_object_notify_by_pspec (G_OBJECT (obj), properties[ARG_DURATION]);
-#else
-    g_object_notify (G_OBJECT (obj), "duration");
-#endif
   }
 }
 

@@ -1727,11 +1727,7 @@ track_duration_cb (GstElement * track,
 
     timeline->priv->duration = max_duration;
 
-#if GLIB_CHECK_VERSION(2,26,0)
     g_object_notify_by_pspec (G_OBJECT (timeline), properties[PROP_DURATION]);
-#else
-    g_object_notify (G_OBJECT (timeline), "duration");
-#endif
   }
 }
 

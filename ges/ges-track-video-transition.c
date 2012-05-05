@@ -31,6 +31,15 @@
 G_DEFINE_TYPE (GESTrackVideoTransition, ges_track_video_transition,
     GES_TYPE_TRACK_TRANSITION);
 
+static inline void
+ges_track_video_transition_set_border_internal (GESTrackVideoTransition * self,
+    guint border);
+static inline void
+ges_track_video_transition_set_inverted_internal (GESTrackVideoTransition *
+    self, gboolean inverted);
+static inline gboolean
+ges_track_video_transition_set_transition_type_internal (GESTrackVideoTransition
+    * self, GESVideoStandardTransitionType type);
 struct _GESTrackVideoTransitionPrivate
 {
   GESVideoStandardTransitionType type;
@@ -48,9 +57,6 @@ struct _GESTrackVideoTransitionPrivate
   GstPad *sinka;
   GstPad *sinkb;
 
-  gulong switch_to_smpte_prob;
-  gulong switch_to_cfade_prob;
-
   /* these will be different depending on whether smptealpha or alpha element
    * is used */
   gdouble start_value;
@@ -59,12 +65,19 @@ struct _GESTrackVideoTransitionPrivate
 
   /* This is in case the smpte doesn't exist yet */
   gint pending_border_value;
+  gboolean pending_inverted;
 };
 
 enum
 {
   PROP_0,
+  PROP_BORDER,
+  PROP_TRANSITION_TYPE,
+  PROP_INVERT,
+  PROP_LAST
 };
+
+static GParamSpec *properties[PROP_LAST];
 
 #define fast_element_link(a,b) gst_element_link_pads_full((a),"src",(b),"sink",GST_PAD_LINK_CHECK_NOTHING)
 
@@ -101,13 +114,50 @@ ges_track_video_transition_class_init (GESTrackVideoTransitionClass * klass)
   g_type_class_add_private (klass, sizeof (GESTrackVideoTransitionPrivate));
 
   object_class = G_OBJECT_CLASS (klass);
-  toclass = GES_TRACK_OBJECT_CLASS (klass);
 
   object_class->get_property = ges_track_video_transition_get_property;
   object_class->set_property = ges_track_video_transition_set_property;
   object_class->dispose = ges_track_video_transition_dispose;
   object_class->finalize = ges_track_video_transition_finalize;
 
+  /**
+   * GESTrackVideoTransition:border
+   *
+   * This value represents the border width of the transition.
+   *
+   */
+  properties[PROP_BORDER] =
+      g_param_spec_uint ("border", "Border", "The border width", 0,
+      G_MAXUINT, 0, G_PARAM_READWRITE);
+  g_object_class_install_property (object_class, PROP_BORDER,
+      properties[PROP_BORDER]);
+
+  /**
+   * GESTrackVideoTransition:type
+   *
+   * The #GESVideoStandardTransitionType currently applied on the object
+   *
+   */
+  properties[PROP_TRANSITION_TYPE] =
+      g_param_spec_enum ("transition-type", "Transition type",
+      "The type of the transition", GES_VIDEO_STANDARD_TRANSITION_TYPE_TYPE,
+      GES_VIDEO_STANDARD_TRANSITION_TYPE_NONE, G_PARAM_READWRITE);
+  g_object_class_install_property (object_class, PROP_TRANSITION_TYPE,
+      properties[PROP_TRANSITION_TYPE]);
+
+  /**
+   * GESTrackVideoTransition:invert
+   *
+   * This value represents the direction of the transition.
+   *
+   */
+  properties[PROP_INVERT] =
+      g_param_spec_boolean ("invert", "Invert",
+      "Whether the transition is inverted", FALSE, G_PARAM_READWRITE);
+  g_object_class_install_property (object_class, PROP_INVERT,
+      properties[PROP_INVERT]);
+
+  toclass = GES_TRACK_OBJECT_CLASS (klass);
   toclass->duration_changed = ges_track_video_transition_duration_changed;
   toclass->create_element = ges_track_video_transition_create_element;
 }
@@ -130,9 +180,7 @@ ges_track_video_transition_init (GESTrackVideoTransition * self)
   self->priv->end_value = 0.0;
   self->priv->dur = 42;
   self->priv->pending_border_value = -1;
-
-  self->priv->switch_to_smpte_prob = -1;
-  self->priv->switch_to_cfade_prob = -1;
+  self->priv->pending_inverted = FALSE;
 }
 
 static void
@@ -180,7 +228,19 @@ static void
 ges_track_video_transition_get_property (GObject * object,
     guint property_id, GValue * value, GParamSpec * pspec)
 {
+  GESTrackVideoTransition *tr = GES_TRACK_VIDEO_TRANSITION (object);
+
   switch (property_id) {
+    case PROP_BORDER:
+      g_value_set_uint (value, ges_track_video_transition_get_border (tr));
+      break;
+    case PROP_TRANSITION_TYPE:
+      g_value_set_enum (value,
+          ges_track_video_transition_get_transition_type (tr));
+      break;
+    case PROP_INVERT:
+      g_value_set_boolean (value, ges_track_video_transition_is_inverted (tr));
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, property_id, pspec);
   }
@@ -190,7 +250,21 @@ static void
 ges_track_video_transition_set_property (GObject * object,
     guint property_id, const GValue * value, GParamSpec * pspec)
 {
+  GESTrackVideoTransition *tr = GES_TRACK_VIDEO_TRANSITION (object);
+
   switch (property_id) {
+    case PROP_BORDER:
+      ges_track_video_transition_set_border_internal (tr,
+          g_value_get_uint (value));
+      break;
+    case PROP_TRANSITION_TYPE:
+      ges_track_video_transition_set_transition_type_internal (tr,
+          g_value_get_enum (value));
+      break;
+    case PROP_INVERT:
+      ges_track_video_transition_set_inverted_internal (tr,
+          g_value_get_boolean (value));
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, property_id, pspec);
   }
@@ -226,10 +300,7 @@ create_mixer (GstElement * topbin)
 {
   GstElement *mixer = NULL;
 
-  /* Prefer videomixer2 to videomixer */
-  mixer = gst_element_factory_make ("videomixer2", NULL);
-  if (mixer == NULL)
-    mixer = gst_element_factory_make ("videomixer", NULL);
+  mixer = gst_element_factory_make ("videomixer", NULL);
   g_object_set (G_OBJECT (mixer), "background", 1, NULL);
   gst_bin_add (GST_BIN (topbin), mixer);
 
@@ -412,8 +483,6 @@ switch_to_smpte_cb (GstPad * sink, gboolean blocked,
   GstElement *smptealphab = gst_element_factory_make ("smptealpha", NULL);
   GESTrackVideoTransitionPrivate *priv = transition->priv;
 
-  GST_ERROR ("EHE");
-
   if (priv->pending_type == GES_VIDEO_STANDARD_TRANSITION_TYPE_CROSSFADE)
     goto beach;
 
@@ -425,6 +494,11 @@ switch_to_smpte_cb (GstPad * sink, gboolean blocked,
   if (priv->pending_border_value != -1) {
     g_object_set (smptealphab, "border", priv->pending_border_value, NULL);
     priv->pending_border_value = -1;
+  }
+
+  if (priv->pending_inverted) {
+    g_object_set (smptealphab, "invert", priv->pending_inverted, NULL);
+    priv->pending_inverted = FALSE;
   }
 
   replace_mixer (priv);
@@ -448,9 +522,8 @@ switch_to_smpte_cb (GstPad * sink, gboolean blocked,
 
 beach:
   priv->pending_type = GES_VIDEO_STANDARD_TRANSITION_TYPE_NONE;
-  gst_pad_remove_probe (sink, priv->switch_to_smpte_prob);
 
-  return GST_PAD_PROBE_OK;
+  return GST_PAD_PROBE_REMOVE;
 }
 
 static GstElement *
@@ -493,8 +566,6 @@ switch_to_crossfade_cb (GstPad * sink, gboolean blocked,
   GstElement *peerb;
   GESTrackVideoTransitionPrivate *priv = transition->priv;
 
-  GST_ERROR ("EHE");
-
   GST_INFO ("Bin %p switching from smpte to crossfade", priv->topbin);
 
   if (priv->pending_type != GES_VIDEO_STANDARD_TRANSITION_TYPE_CROSSFADE)
@@ -527,15 +598,14 @@ switch_to_crossfade_cb (GstPad * sink, gboolean blocked,
 
 beach:
   priv->pending_type = GES_VIDEO_STANDARD_TRANSITION_TYPE_NONE;
-  gst_pad_remove_probe (sink, priv->switch_to_cfade_prob);
 
-  return GST_PAD_PROBE_OK;
+  return GST_PAD_PROBE_REMOVE;
 }
 
 static GObject *
 link_element_to_mixer (GstElement * element, GstElement * mixer)
 {
-  GstPad *sinkpad = gst_element_get_request_pad (mixer, "sink_%d");
+  GstPad *sinkpad = gst_element_get_request_pad (mixer, "sink_%u");
   GstPad *srcpad = gst_element_get_static_pad (element, "src");
 
   gst_pad_link_full (srcpad, sinkpad, GST_PAD_LINK_CHECK_NOTHING);
@@ -597,18 +667,8 @@ ges_track_video_transition_duration_changed (GESTrackObject * object,
   GST_LOG ("done updating controller");
 }
 
-/**
- * ges_track_video_transition_get_border:
- * @self: The #GESTrackVideoTransition to get the border from
- * @value: The value of the borer to set on @object
- *
- * Set the border property of @self, this value represents
- * the border width of the transition. In case this value does
- * not make sense for the current transition type, it is cached
- * for later use.
- */
-void
-ges_track_video_transition_set_border (GESTrackVideoTransition * self,
+static inline void
+ges_track_video_transition_set_border_internal (GESTrackVideoTransition * self,
     guint value)
 {
   GESTrackVideoTransitionPrivate *priv = self->priv;
@@ -620,42 +680,23 @@ ges_track_video_transition_set_border (GESTrackVideoTransition * self,
   g_object_set (priv->smpte, "border", value, NULL);
 }
 
-/**
- * ges_track_video_transition_get_border:
- * @self: The #GESTrackVideoTransition to get the border from
- *
- * Get the border property of @self, this value represents
- * the border width of the transition.
- *
- * Returns: The border values of @self or -1 if not meaningfull
- * (this will happen when not using a smpte transition).
- */
-gint
-ges_track_video_transition_get_border (GESTrackVideoTransition * self)
+static inline void
+ges_track_video_transition_set_inverted_internal (GESTrackVideoTransition *
+    self, gboolean inverted)
 {
-  gint value;
+  GESTrackVideoTransitionPrivate *priv = self->priv;
 
-  if (!self->priv->smpte) {
-    return -1;
+  if (!priv->smpte) {
+    priv->pending_inverted = inverted;
+    return;
   }
-
-  g_object_get (self->priv->smpte, "border", &value, NULL);
-
-  return value;
+  g_object_set (priv->smpte, "invert", inverted, NULL);
 }
 
-/**
- * ges_track_video_transition_set_transition_type:
- * @self: a #GESTrackVideoTransition
- * @type: a #GESVideoStandardTransitionType
- *
- * Sets the transition being used to @type.
- *
- * Returns: %TRUE if the transition type was properly changed, else %FALSE.
- */
-gboolean
-ges_track_video_transition_set_transition_type (GESTrackVideoTransition * self,
-    GESVideoStandardTransitionType type)
+
+static inline gboolean
+ges_track_video_transition_set_transition_type_internal (GESTrackVideoTransition
+    * self, GESVideoStandardTransitionType type)
 {
   GESTrackVideoTransitionPrivate *priv = self->priv;
 
@@ -681,19 +722,15 @@ ges_track_video_transition_set_transition_type (GESTrackVideoTransition * self,
     if (type != GES_VIDEO_STANDARD_TRANSITION_TYPE_CROSSFADE) {
       if (!priv->topbin)
         return FALSE;
-      GST_ERROR ("OO");
       priv->smpte = NULL;
-      priv->switch_to_smpte_prob =
-          gst_pad_add_probe (pad, GST_PAD_PROBE_TYPE_BLOCK_UPSTREAM,
+      gst_pad_add_probe (pad, GST_PAD_PROBE_TYPE_IDLE,
           (GstPadProbeCallback) switch_to_smpte_cb, self, NULL);
-      GST_ERROR ("OO");
     } else {
       if (!priv->topbin)
         return FALSE;
       priv->start_value = 1.0;
       priv->end_value = 0.0;
-      priv->switch_to_cfade_prob =
-          gst_pad_add_probe (pad, GST_PAD_PROBE_TYPE_BLOCK_UPSTREAM,
+      gst_pad_add_probe (pad, GST_PAD_PROBE_TYPE_IDLE,
           (GstPadProbeCallback) switch_to_crossfade_cb, self, NULL);
     }
     return TRUE;
@@ -703,6 +740,112 @@ ges_track_video_transition_set_transition_type (GESTrackVideoTransition * self,
     g_object_set (priv->smpte, "type", (gint) type, NULL);
   }
   return TRUE;
+}
+
+/**
+ * ges_track_video_transition_set_border:
+ * @self: The #GESTrackVideoTransition to set the border to
+ * @value: The value of the border to set on @object
+ *
+ * Set the border property of @self, this value represents
+ * the border width of the transition. In case this value does
+ * not make sense for the current transition type, it is cached
+ * for later use.
+ */
+void
+ges_track_video_transition_set_border (GESTrackVideoTransition * self,
+    guint value)
+{
+  ges_track_video_transition_set_border_internal (self, value);
+
+  g_object_notify_by_pspec (G_OBJECT (self), properties[PROP_BORDER]);
+}
+
+/**
+ * ges_track_video_transition_get_border:
+ * @self: The #GESTrackVideoTransition to get the border from
+ *
+ * Get the border property of @self, this value represents
+ * the border width of the transition.
+ *
+ * Returns: The border values of @self or -1 if not meaningful
+ * (this will happen when not using a smpte transition).
+ */
+gint
+ges_track_video_transition_get_border (GESTrackVideoTransition * self)
+{
+  gint value;
+
+  if (!self->priv->smpte) {
+    return -1;
+  }
+
+  g_object_get (self->priv->smpte, "border", &value, NULL);
+
+  return value;
+}
+
+/**
+ * ges_track_video_transition_set_inverted:
+ * @self: The #GESTrackVideoTransition to set invert on
+ * @value: The value of the  to set on @object
+ *
+ * Set the invert property of @self, this value represents
+ * the direction of the transition. In case this value does
+ * not make sense for the current transition type, it is cached
+ * for later use.
+ */
+void
+ges_track_video_transition_set_inverted (GESTrackVideoTransition * self,
+    gboolean inverted)
+{
+  ges_track_video_transition_set_inverted (self, inverted);
+
+  g_object_notify_by_pspec (G_OBJECT (self), properties[PROP_INVERT]);
+}
+
+/**
+ * ges_track_video_transition_is_inverted:
+ * @self: The #GESTrackVideoTransition to get the inversion from
+ *
+ * Get the invert property of @self, this value represents
+ * the direction of the transition.
+ *
+ * Returns: The invert value of @self
+ */
+gboolean
+ges_track_video_transition_is_inverted (GESTrackVideoTransition * self)
+{
+  gboolean inverted;
+
+  if (!self->priv->smpte) {
+    return FALSE;
+  }
+
+  g_object_get (self->priv->smpte, "invert", &inverted, NULL);
+
+  return inverted;
+}
+
+/**
+ * ges_track_video_transition_set_transition_type:
+ * @self: a #GESTrackVideoTransition
+ * @type: a #GESVideoStandardTransitionType
+ *
+ * Sets the transition being used to @type.
+ *
+ * Returns: %TRUE if the transition type was properly changed, else %FALSE.
+ */
+gboolean
+ges_track_video_transition_set_transition_type (GESTrackVideoTransition * self,
+    GESVideoStandardTransitionType type)
+{
+  gboolean ret =
+      ges_track_video_transition_set_transition_type_internal (self, type);
+
+  g_object_notify_by_pspec (G_OBJECT (self), properties[PROP_TRANSITION_TYPE]);
+
+  return ret;
 }
 
 /**

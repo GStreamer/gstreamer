@@ -390,7 +390,7 @@ ges_timeline_object_class_init (GESTimelineObjectClass * klass)
    */
   g_object_class_install_property (object_class, PROP_MAX_DURATION,
       g_param_spec_uint64 ("max-duration", "Maximum duration",
-          "The duration of the object", 0, G_MAXUINT64, G_MAXUINT64,
+          "The maximum duration of the object", 0, G_MAXUINT64, G_MAXUINT64,
           G_PARAM_READWRITE | G_PARAM_CONSTRUCT));
 
   klass->need_fill_track = TRUE;
@@ -833,11 +833,7 @@ void
 ges_timeline_object_set_start (GESTimelineObject * object, guint64 start)
 {
   if (ges_timeline_object_set_start_internal (object, start))
-#if GLIB_CHECK_VERSION(2,26,0)
     g_object_notify_by_pspec (G_OBJECT (object), properties[PROP_START]);
-#else
-    g_object_notify (G_OBJECT (object), "start");
-#endif
 }
 
 static gboolean
@@ -876,11 +872,7 @@ void
 ges_timeline_object_set_inpoint (GESTimelineObject * object, guint64 inpoint)
 {
   if (ges_timeline_object_set_inpoint_internal (object, inpoint))
-#if GLIB_CHECK_VERSION(2,26,0)
     g_object_notify_by_pspec (G_OBJECT (object), properties[PROP_INPOINT]);
-#else
-    g_object_notify (G_OBJECT (object), "in-point");
-#endif
 }
 
 static gboolean
@@ -939,11 +931,7 @@ void
 ges_timeline_object_set_duration (GESTimelineObject * object, guint64 duration)
 {
   if (ges_timeline_object_set_duration_internal (object, duration))
-#if GLIB_CHECK_VERSION(2,26,0)
     g_object_notify_by_pspec (G_OBJECT (object), properties[PROP_DURATION]);
-#else
-    g_object_notify (G_OBJECT (object), "duration");
-#endif
 }
 
 static gboolean
@@ -1377,8 +1365,6 @@ ges_timeline_object_edit (GESTimelineObject * object, GList * layers,
     GST_WARNING_OBJECT (object, "Trying to edit, but not containing"
         "any TrackObject yet.");
     return FALSE;
-  } else if (position < 0) {
-    GST_DEBUG_OBJECT (object, "Trying to move before 0, not moving");
   }
 
   for (tmp = object->priv->trackobjects; tmp; tmp = g_list_next (tmp)) {
