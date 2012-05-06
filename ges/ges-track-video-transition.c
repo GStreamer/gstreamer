@@ -804,7 +804,7 @@ void
 ges_track_video_transition_set_inverted (GESTrackVideoTransition * self,
     gboolean inverted)
 {
-  ges_track_video_transition_set_inverted (self, inverted);
+  ges_track_video_transition_set_inverted_internal (self, inverted);
 
   g_object_notify_by_pspec (G_OBJECT (self), properties[PROP_INVERT]);
 }
