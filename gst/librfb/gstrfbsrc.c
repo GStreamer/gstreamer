@@ -34,6 +34,10 @@
 #include <X11/Xlib.h>
 #endif
 
+#ifdef G_OS_WIN32
+#include <winsock2.h>
+#endif
+
 enum
 {
   ARG_0,
@@ -70,7 +74,7 @@ GST_STATIC_PAD_TEMPLATE ("src",
         "height = (int) [ 16, 4096 ], " "framerate = (fraction) 0/1")
     );
 
-static void gst_rfb_src_dispose (GObject * object);
+static void gst_rfb_src_finalize (GObject * object);
 static void gst_rfb_src_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec);
 static void gst_rfb_src_get_property (GObject * object, guint prop_id,
@@ -114,7 +118,7 @@ gst_rfb_src_class_init (GstRfbSrcClass * klass)
   gstbasesrc_class = (GstBaseSrcClass *) klass;
   gstpushsrc_class = (GstPushSrcClass *) klass;
 
-  gobject_class->dispose = gst_rfb_src_dispose;
+  gobject_class->finalize = gst_rfb_src_finalize;
   gobject_class->set_property = gst_rfb_src_set_property;
   gobject_class->get_property = gst_rfb_src_get_property;
 
@@ -188,10 +192,19 @@ gst_rfb_src_init (GstRfbSrc * src, GstRfbSrcClass * klass)
 
   src->decoder = rfb_decoder_new ();
 
+#ifdef G_OS_WIN32
+  {
+    WSADATA wsa_data;
+
+    if (WSAStartup (MAKEWORD (2, 2), &wsa_data) != 0) {
+      GST_ERROR_OBJECT (sink, "WSAStartup failed: 0x%08x", WSAGetLastError ());
+    }
+  }
+#endif
 }
 
 static void
-gst_rfb_src_dispose (GObject * object)
+gst_rfb_src_finalize (GObject * object)
 {
   GstRfbSrc *src = GST_RFB_SRC (object);
 
@@ -201,8 +214,11 @@ gst_rfb_src_dispose (GObject * object)
     g_free (src->decoder);
     src->decoder = NULL;
   }
+#ifdef G_OS_WIN32
+  WSACleanup ();
+#endif
 
-  G_OBJECT_CLASS (parent_class)->dispose (object);
+  G_OBJECT_CLASS (parent_class)->finalize (object);
 }
 
 static void
