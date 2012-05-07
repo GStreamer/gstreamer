@@ -537,7 +537,8 @@ remove_smpte_from_bin (GESTrackVideoTransitionPrivate * priv, GstPad * sink)
 
   if (smpte == NULL) {
     gst_object_unref (smpte_src);
-    GST_ERROR ("The pad %p has no parent element. This should not happen");
+    GST_ERROR ("The pad %" GST_PTR_FORMAT " has no parent element. "
+        "This should not happen", smpte_src);
     return (NULL);
   }
 
