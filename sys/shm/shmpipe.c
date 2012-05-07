@@ -177,7 +177,7 @@ struct CommandBuffer
 static ShmArea *sp_open_shm (char *path, int id, mode_t perms, size_t size);
 static void sp_close_shm (ShmArea * area);
 static int sp_shmbuf_dec (ShmPipe * self, ShmBuffer * buf,
-    ShmBuffer * prev_buf);
+    ShmBuffer * prev_buf, ShmClient * client);
 static void sp_shm_area_dec (ShmPipe * self, ShmArea * area);
 
 
@@ -696,7 +696,7 @@ sp_writer_recv (ShmPipe * self, ShmClient * client)
       for (buf = self->buffers; buf; buf = buf->next) {
         if (buf->shm_area->id == cb.area_id &&
             buf->offset == cb.payload.ack_buffer.offset) {
-          sp_shmbuf_dec (self, buf, prev_buf);
+          sp_shmbuf_dec (self, buf, prev_buf, client);
           break;
         }
         prev_buf = buf;
@@ -811,8 +811,27 @@ error:
 }
 
 static int
-sp_shmbuf_dec (ShmPipe * self, ShmBuffer * buf, ShmBuffer * prev_buf)
+sp_shmbuf_dec (ShmPipe * self, ShmBuffer * buf, ShmBuffer * prev_buf,
+    ShmClient * client)
 {
+  int i;
+  int had_client = 0;
+
+  /**
+   * Remove client from the list of buffer users. Here we make sure that
+   * if a client closes connection but already decremented the use count
+   * for this buffer, but other clients didn't have time to decrement
+   * buffer will not be freed too early in sp_writer_close_client.
+   */
+  for (i = 0; i < buf->num_clients; i++) {
+    if (buf->clients[i] == client->fd) {
+      buf->clients[i] = -1;
+      had_client = 1;
+      break;
+    }
+  }
+  assert (had_client);
+
   buf->use_count--;
 
   if (buf->use_count == 0) {
@@ -827,7 +846,6 @@ sp_shmbuf_dec (ShmPipe * self, ShmBuffer * buf, ShmBuffer * prev_buf)
     spalloc_free1 (sizeof (ShmBuffer) + sizeof (int) * buf->num_clients, buf);
     return 0;
   }
-
   return 1;
 }
 
@@ -845,8 +863,7 @@ again:
 
     for (i = 0; i < buffer->num_clients; i++) {
       if (buffer->clients[i] == client->fd) {
-        buffer->clients[i] = -1;
-        if (!sp_shmbuf_dec (self, buffer, prev_buf))
+        if (!sp_shmbuf_dec (self, buffer, prev_buf, client))
           goto again;
         break;
       }
