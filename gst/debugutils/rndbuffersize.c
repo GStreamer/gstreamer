@@ -23,7 +23,7 @@
  */
 
 #ifdef HAVE_CONFIG_H
-#  include "config.h"
+#include "config.h"
 #endif
 
 #include <gst/gst.h>
@@ -51,6 +51,8 @@ struct _GstRndBufferSize
 
   GstPad *sinkpad, *srcpad;
   guint64 offset;
+
+  gboolean need_newsegment;
 };
 
 struct _GstRndBufferSizeClass
@@ -259,6 +261,7 @@ gst_rnd_buffer_size_activate_mode (GstPad * pad, GstObject * parent,
         res =
             gst_pad_start_task (pad, (GstTaskFunction) gst_rnd_buffer_size_loop,
             self);
+        self->need_newsegment = TRUE;
       } else {
         GST_INFO_OBJECT (self, "stopping pull");
         res = gst_pad_stop_task (pad);
@@ -300,6 +303,15 @@ gst_rnd_buffer_size_loop (GstRndBufferSize * self)
 
   if (size < num_bytes) {
     GST_WARNING_OBJECT (self, "short buffer: %u bytes", size);
+  }
+
+  if (self->need_newsegment) {
+    GstSegment segment;
+
+    gst_segment_init (&segment, GST_FORMAT_BYTES);
+    segment.start = self->offset;
+    gst_pad_push_event (self->srcpad, gst_event_new_segment (&segment));
+    self->need_newsegment = FALSE;
   }
 
   self->offset += size;
