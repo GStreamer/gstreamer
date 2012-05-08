@@ -1,7 +1,7 @@
 /*
  * GStreamer
- * Copyright (C) 2010 Luis de Bethencourt <luis@debethencourt.com>
- * 
+ * Copyright (C) <2010-2012> Luis de Bethencourt <luis@debethencourt.com>
+ *
  * Solarize - smart inverse film video effect.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
@@ -48,6 +48,7 @@
 
 #include <gst/gst.h>
 
+#include <gst/video/video.h>
 #include <gst/video/gstvideofilter.h>
 
 G_BEGIN_DECLS
@@ -73,6 +74,7 @@ struct _GstSolarize
 
   /* < private > */
 
+  GstVideoInfo info;
   gint width, height;
 
   gint threshold, start, end;

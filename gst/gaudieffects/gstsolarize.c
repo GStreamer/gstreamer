@@ -1,7 +1,7 @@
 /*
  * GStreamer
- * Copyright (C) 2010 Luis de Bethencourt <luis@debethencourt.com>
- * 
+ * Copyright (C) <2010-2012> Luis de Bethencourt <luis@debethencourt.com>
+ *
  * Solarize - curve adjustment video effect.
  * Based on Pete Warden's FreeFrame plugin with the same name.
  *
@@ -67,15 +67,13 @@
 #include "gstplugin.h"
 #include "gstsolarize.h"
 
-#include <gst/video/video.h>
-
 GST_DEBUG_CATEGORY_STATIC (gst_solarize_debug);
 #define GST_CAT_DEFAULT gst_solarize_debug
 
 #if G_BYTE_ORDER == G_LITTLE_ENDIAN
-#define CAPS_STR GST_VIDEO_CAPS_BGRx ";" GST_VIDEO_CAPS_RGBx
+#define CAPS_STR GST_VIDEO_CAPS_MAKE ("{  BGRx, RGBx }")
 #else
-#define CAPS_STR GST_VIDEO_CAPS_xRGB ";" GST_VIDEO_CAPS_xBGR
+#define CAPS_STR GST_VIDEO_CAPS_MAKE ("{  xBGR, xRGB }")
 #endif
 
 /* Filter signals and args. */
@@ -117,8 +115,7 @@ static GstStaticPadTemplate src_factory = GST_STATIC_PAD_TEMPLATE ("src",
     GST_STATIC_CAPS (CAPS_STR)
     );
 
-GST_BOILERPLATE (GstSolarize, gst_solarize, GstVideoFilter,
-    GST_TYPE_VIDEO_FILTER);
+G_DEFINE_TYPE (GstSolarize, gst_solarize, GST_TYPE_VIDEO_FILTER);
 
 static void gst_solarize_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec);
@@ -132,29 +129,24 @@ static GstFlowReturn gst_solarize_transform (GstBaseTransform * btrans,
 
 /* GObject vmethod implementations */
 
-static void
-gst_solarize_base_init (gpointer gclass)
-{
-  GstElementClass *element_class = GST_ELEMENT_CLASS (gclass);
-
-  gst_element_class_set_details_simple (element_class,
-      "Solarize",
-      "Filter/Effect/Video",
-      "Solarize tunable inverse in the video signal.",
-      "Luis de Bethencourt <luis@debethencourt.com>");
-
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&src_factory));
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&sink_factory));
-}
-
 /* Initialize the solarize's class. */
 static void
 gst_solarize_class_init (GstSolarizeClass * klass)
 {
   GObjectClass *gobject_class = (GObjectClass *) klass;
+  GstElementClass *gstelement_class = (GstElementClass *) klass;
   GstBaseTransformClass *trans_class = (GstBaseTransformClass *) klass;
+
+  gst_element_class_set_details_simple (gstelement_class,
+      "Solarize",
+      "Filter/Effect/Video",
+      "Solarize tunable inverse in the video signal.",
+      "Luis de Bethencourt <luis@debethencourt.com>");
+
+  gst_element_class_add_pad_template (gstelement_class,
+      gst_static_pad_template_get (&src_factory));
+  gst_element_class_add_pad_template (gstelement_class,
+      gst_static_pad_template_get (&sink_factory));
 
   gobject_class->set_property = gst_solarize_set_property;
   gobject_class->get_property = gst_solarize_get_property;
@@ -188,7 +180,7 @@ gst_solarize_class_init (GstSolarizeClass * klass)
  * initialize instance structure.
  */
 static void
-gst_solarize_init (GstSolarize * filter, GstSolarizeClass * gclass)
+gst_solarize_init (GstSolarize * filter)
 {
   filter->threshold = DEFAULT_THRESHOLD;
   filter->start = DEFAULT_START;
@@ -255,19 +247,25 @@ static gboolean
 gst_solarize_set_caps (GstBaseTransform * btrans, GstCaps * incaps,
     GstCaps * outcaps)
 {
-  GstSolarize *filter = GST_SOLARIZE (btrans);
-  GstStructure *structure;
-  gboolean ret = FALSE;
+  GstSolarize *solarize = GST_SOLARIZE (btrans);
+  GstVideoInfo info;
 
-  GST_OBJECT_LOCK (filter);
-  structure = gst_caps_get_structure (incaps, 0);
-  if (gst_structure_get_int (structure, "width", &filter->width) &&
-      gst_structure_get_int (structure, "height", &filter->height)) {
-    ret = TRUE;
+  if (!gst_video_info_from_caps (&info, incaps))
+    goto invalid_caps;
+
+  solarize->info = info;
+
+  solarize->width = GST_VIDEO_INFO_WIDTH (&info);
+  solarize->height = GST_VIDEO_INFO_HEIGHT (&info);
+
+  return TRUE;
+
+  /* ERRORS */
+invalid_caps:
+  {
+    GST_DEBUG_OBJECT (btrans, "could not parse caps");
+    return FALSE;
   }
-  GST_OBJECT_UNLOCK (filter);
-
-  return ret;
 }
 
 /* Actual processing. */
@@ -277,10 +275,16 @@ gst_solarize_transform (GstBaseTransform * btrans,
 {
   GstSolarize *filter = GST_SOLARIZE (btrans);
   gint video_size, threshold, start, end;
-  guint32 *src = (guint32 *) GST_BUFFER_DATA (in_buf);
-  guint32 *dest = (guint32 *) GST_BUFFER_DATA (out_buf);
+  guint32 *src, *dest;
   GstClockTime timestamp;
   gint64 stream_time;
+  GstVideoFrame in_frame, out_frame;
+
+  gst_video_frame_map (&in_frame, &filter->info, in_buf, GST_MAP_READ);
+  gst_video_frame_map (&out_frame, &filter->info, out_buf, GST_MAP_WRITE);
+
+  src = GST_VIDEO_FRAME_PLANE_DATA (&in_frame, 0);
+  dest = GST_VIDEO_FRAME_PLANE_DATA (&out_frame, 0);
 
   /* GstController: update the properties */
   timestamp = GST_BUFFER_TIMESTAMP (in_buf);
