@@ -662,11 +662,9 @@ SharedHiddenWndProc (HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
     {
       /* Did we receive a message to check if the device is available again? */
       if (wParam == IDT_DEVICELOST) {
-        GST_D3DVIDEOSINK_SWAP_CHAIN_LOCK (sink);
         /* This will synchronously call SharedHiddenWndProc() because this thread is the one that created the window. */
         SendMessage (hWnd, WM_DIRECTX_D3D_DEVICELOST, 0,
             (LPARAM) shared.device_lost_sink);
-        GST_D3DVIDEOSINK_SWAP_CHAIN_UNLOCK (sink);
         return 0;
       }
       break;
