@@ -776,9 +776,12 @@ ges_timeline_snap_position (GESTimeline * timeline, GESTrackObject * trackobj,
   /* We emit the snapping signal only if we snapped with a different value
    * than the current one */
   if (emit) {
+    GstClockTime snap_time = ret ? *ret : GST_CLOCK_TIME_NONE;
+
     ges_timeline_emit_snappig (timeline, trackobj, ret);
+
     GST_DEBUG_OBJECT (timeline, "Snaping at %" GST_TIME_FORMAT,
-        GST_TIME_ARGS (*ret));
+        GST_TIME_ARGS (snap_time));
   }
 
   return ret;
