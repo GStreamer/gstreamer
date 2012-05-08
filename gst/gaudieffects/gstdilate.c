@@ -68,7 +68,6 @@
 #include "gstdilate.h"
 
 #include <gst/video/video.h>
-#include <gst/controller/gstcontroller.h>
 
 GST_DEBUG_CATEGORY_STATIC (gst_dilate_debug);
 #define GST_CAT_DEFAULT gst_dilate_debug

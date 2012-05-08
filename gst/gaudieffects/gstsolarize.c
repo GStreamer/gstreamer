@@ -68,7 +68,6 @@
 #include "gstsolarize.h"
 
 #include <gst/video/video.h>
-#include <gst/controller/gstcontroller.h>
 
 GST_DEBUG_CATEGORY_STATIC (gst_solarize_debug);
 #define GST_CAT_DEFAULT gst_solarize_debug

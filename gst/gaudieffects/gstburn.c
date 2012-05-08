@@ -1,7 +1,7 @@
 /*
  * GStreamer
  * Copyright (C) 2010 Luis de Bethencourt <luis@debethencourt.com>
- * 
+ *
  * Burn - curve adjustment video effect.
  * Based on Pete Warden's FreeFrame plugin with the same name.
  *
@@ -68,7 +68,6 @@
 #include "gstburn.h"
 
 #include <gst/video/video.h>
-#include <gst/controller/gstcontroller.h>
 
 GST_DEBUG_CATEGORY_STATIC (gst_burn_debug);
 #define GST_CAT_DEFAULT gst_burn_debug

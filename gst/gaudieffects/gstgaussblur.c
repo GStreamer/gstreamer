@@ -4,7 +4,6 @@
 
 #include <math.h>
 #include <gst/gst.h>
-#include <gst/controller/gstcontroller.h>
 
 #include "gstplugin.h"
 #include "gstgaussblur.h"
