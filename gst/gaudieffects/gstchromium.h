@@ -1,7 +1,7 @@
 /*
  * GStreamer
  * Copyright (C) 2010 Luis de Bethencourt <luis@debethencourt.com>>
- * 
+ *
  * Chromium - burning chrome video effect.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
@@ -71,6 +71,7 @@ struct GstChromium
   gint width, height;
 
   /* < private > */
+  GstVideoInfo info;
   gint edge_a, edge_b;
   gboolean silent;
 };
