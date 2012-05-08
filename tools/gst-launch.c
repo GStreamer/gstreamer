@@ -438,6 +438,27 @@ print_tag (const GstTagList * list, const gchar * tag, gpointer unused)
   }
 }
 
+static void
+print_tag_foreach (const GstTagList * tags, const gchar * tag,
+    gpointer user_data)
+{
+  GValue val = { 0, };
+  gchar *str;
+  gint depth = GPOINTER_TO_INT (user_data);
+
+  gst_tag_list_copy_value (&val, tags, tag);
+
+  if (G_VALUE_HOLDS_STRING (&val))
+    str = g_value_dup_string (&val);
+  else
+    str = gst_value_serialize (&val);
+
+  g_print ("%*s%s: %s\n", 2 * depth, " ", gst_tag_get_nick (tag), str);
+  g_free (str);
+
+  g_value_unset (&val);
+}
+
 #define MAX_INDENT 40
 
 static void
@@ -461,7 +482,9 @@ print_toc_entry (gpointer data, gpointer user_data)
   PRINT ("\n");
   indent += 2;
 
-  /* TODO: print tags */
+  /* print tags */
+  gst_tag_list_foreach (entry->tags, print_tag_foreach,
+      GINT_TO_POINTER (indent));
 
   /* loop over sub-toc entries */
   g_list_foreach (entry->subentries, print_toc_entry,
