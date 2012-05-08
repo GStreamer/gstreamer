@@ -1952,7 +1952,7 @@ gst_omx_error_to_string (OMX_ERRORTYPE err)
     case OMX_ErrorContentPipeCreationFailed:
       return "Content pipe creation failed";
     case OMX_ErrorSeperateTablesUsed:
-      return "Seperate tables used";
+      return "Separate tables used";
     case OMX_ErrorTunnelingUnsupported:
       return "Tunneling unsupported";
     default:
