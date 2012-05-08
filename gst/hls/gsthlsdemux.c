@@ -1004,14 +1004,16 @@ gst_hls_demux_change_playlist (GstHLSDemux * demux, guint max_bitrate)
     current_variant = list;
   }
 
+retry_failover_protection:
+  old_bandwidth = GST_M3U8 (previous_variant->data)->bandwidth;
+  new_bandwidth = GST_M3U8 (current_variant->data)->bandwidth;
+
   /* Don't do anything else if the playlist is the same */
-  if (current_variant == previous_variant) {
+  if (new_bandwidth == old_bandwidth) {
     GST_M3U8_CLIENT_UNLOCK (demux->client);
     return TRUE;
   }
 
-  old_bandwidth = GST_M3U8 (previous_variant->data)->bandwidth;
-  new_bandwidth = GST_M3U8 (current_variant->data)->bandwidth;
   demux->client->main->current_variant = current_variant;
   GST_M3U8_CLIENT_UNLOCK (demux->client);
 
@@ -1029,8 +1031,17 @@ gst_hls_demux_change_playlist (GstHLSDemux * demux, guint max_bitrate)
     gst_element_post_message (GST_ELEMENT_CAST (demux),
         gst_message_new_element (GST_OBJECT_CAST (demux), s));
   } else {
+    GList *failover = NULL;
+
     GST_INFO_OBJECT (demux, "Unable to update playlist. Switching back");
     GST_M3U8_CLIENT_LOCK (demux->client);
+
+    failover = g_list_previous (current_variant);
+    if (failover && new_bandwidth == GST_M3U8 (failover->data)->bandwidth) {
+      current_variant = failover;
+      goto retry_failover_protection;
+    }
+
     demux->client->main->current_variant = previous_variant;
     GST_M3U8_CLIENT_UNLOCK (demux->client);
     gst_m3u8_client_set_current (demux->client, previous_variant->data);
