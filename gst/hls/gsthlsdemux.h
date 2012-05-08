@@ -69,7 +69,7 @@ struct _GstHLSDemux
 
   /* Properties */
   guint fragments_cache;        /* number of fragments needed to be cached to start playing */
-  gfloat bitrate_switch_tol;    /* tolerance with respect to the fragment duration to switch the bitarate*/
+  gfloat bitrate_limit;         /*  limit of the available bitrate to use */
 
   /* Streaming task */
   GstTask *stream_task;
@@ -81,7 +81,6 @@ struct _GstHLSDemux
   GRecMutex updates_lock;
   GMutex updates_timed_lock;
   GTimeVal next_update;         /* Time of the next update */
-  gint64 accumulated_delay;     /* Delay accumulated fetching fragments, used to decide a playlist switch */
   gboolean cancelled;
 
   /* Position in the stream */

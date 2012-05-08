@@ -67,7 +67,7 @@ enum
   PROP_0,
 
   PROP_FRAGMENTS_CACHE,
-  PROP_BITRATE_SWITCH_TOLERANCE,
+  PROP_BITRATE_LIMIT,
   PROP_LAST
 };
 
@@ -75,7 +75,7 @@ static const float update_interval_factor[] = { 1, 0.5, 1.5, 3 };
 
 #define DEFAULT_FRAGMENTS_CACHE 3
 #define DEFAULT_FAILED_COUNT 3
-#define DEFAULT_BITRATE_SWITCH_TOLERANCE 0.4
+#define DEFAULT_BITRATE_LIMIT 0.8
 
 /* GObject */
 static void gst_hls_demux_set_property (GObject * object, guint prop_id,
@@ -174,12 +174,11 @@ gst_hls_demux_class_init (GstHLSDemuxClass * klass)
           2, G_MAXUINT, DEFAULT_FRAGMENTS_CACHE,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
-  g_object_class_install_property (gobject_class, PROP_BITRATE_SWITCH_TOLERANCE,
-      g_param_spec_float ("bitrate-switch-tolerance",
-          "Bitrate switch tolerance",
-          "Tolerance with respect of the fragment duration to switch to "
-          "a different bitrate if the client is too slow/fast.",
-          0, 1, DEFAULT_BITRATE_SWITCH_TOLERANCE,
+  g_object_class_install_property (gobject_class, PROP_BITRATE_LIMIT,
+      g_param_spec_float ("bitrate-limit",
+          "Bitrate limit in %",
+          "Limit of the available bitrate to use when switching to alternates.",
+          0, 1, DEFAULT_BITRATE_LIMIT,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   element_class->change_state = GST_DEBUG_FUNCPTR (gst_hls_demux_change_state);
@@ -219,7 +218,7 @@ gst_hls_demux_init (GstHLSDemux * demux)
 
   /* Properties */
   demux->fragments_cache = DEFAULT_FRAGMENTS_CACHE;
-  demux->bitrate_switch_tol = DEFAULT_BITRATE_SWITCH_TOLERANCE;
+  demux->bitrate_limit = DEFAULT_BITRATE_LIMIT;
 
   demux->queue = g_queue_new ();
 
@@ -247,8 +246,8 @@ gst_hls_demux_set_property (GObject * object, guint prop_id,
     case PROP_FRAGMENTS_CACHE:
       demux->fragments_cache = g_value_get_uint (value);
       break;
-    case PROP_BITRATE_SWITCH_TOLERANCE:
-      demux->bitrate_switch_tol = g_value_get_float (value);
+    case PROP_BITRATE_LIMIT:
+      demux->bitrate_limit = g_value_get_float (value);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -266,8 +265,8 @@ gst_hls_demux_get_property (GObject * object, guint prop_id, GValue * value,
     case PROP_FRAGMENTS_CACHE:
       g_value_set_uint (value, demux->fragments_cache);
       break;
-    case PROP_BITRATE_SWITCH_TOLERANCE:
-      g_value_set_float (value, demux->bitrate_switch_tol);
+    case PROP_BITRATE_LIMIT:
+      g_value_set_float (value, demux->bitrate_limit);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -724,7 +723,6 @@ static void
 gst_hls_demux_reset (GstHLSDemux * demux, gboolean dispose)
 {
   demux->need_cache = TRUE;
-  demux->accumulated_delay = 0;
   demux->end_of_playlist = FALSE;
   demux->cancelled = FALSE;
   demux->do_typefind = TRUE;
@@ -781,6 +779,10 @@ gst_hls_demux_updates_loop (GstHLSDemux * demux)
   g_mutex_lock (&demux->updates_timed_lock);
   GST_DEBUG_OBJECT (demux, "Started updates task");
   while (TRUE) {
+    /* schedule the next update */
+    gst_hls_demux_schedule (demux);
+
+    /*  block until the next scheduled update or the signal to quit this thread */
     if (g_cond_timed_wait (GST_TASK_GET_COND (demux->updates_task),
             &demux->updates_timed_lock, &demux->next_update)) {
       goto quit;
@@ -791,7 +793,6 @@ gst_hls_demux_updates_loop (GstHLSDemux * demux)
         demux->client->update_failed_count++;
         if (demux->client->update_failed_count < DEFAULT_FAILED_COUNT) {
           GST_WARNING_OBJECT (demux, "Could not update the playlist");
-          gst_hls_demux_schedule (demux);
           continue;
         } else {
           GST_ELEMENT_ERROR (demux, RESOURCE, NOT_FOUND,
@@ -800,9 +801,6 @@ gst_hls_demux_updates_loop (GstHLSDemux * demux)
         }
       }
     }
-
-    /* schedule the next update */
-    gst_hls_demux_schedule (demux);
 
     /* if it's a live source and the playlist couldn't be updated, there aren't
      * more fragments in the playlist, so we just wait for the next schedulled
@@ -831,10 +829,10 @@ gst_hls_demux_updates_loop (GstHLSDemux * demux)
         }
       } else {
         demux->client->update_failed_count = 0;
-      }
 
-      /* try to switch to another bitrate if needed */
-      gst_hls_demux_switch_playlist (demux);
+        /* try to switch to another bitrate if needed */
+        gst_hls_demux_switch_playlist (demux);
+      }
     }
   }
 
@@ -884,9 +882,6 @@ gst_hls_demux_cache_fragments (GstHLSDemux * demux)
         gst_message_new_buffering (GST_OBJECT (demux),
             100 * i / demux->fragments_cache));
     g_get_current_time (&demux->next_update);
-    g_time_val_add (&demux->next_update,
-        gst_m3u8_client_get_target_duration (demux->client)
-        / GST_SECOND * G_USEC_PER_SEC);
     if (!gst_hls_demux_get_next_fragment (demux, TRUE)) {
       if (demux->end_of_playlist)
         break;
@@ -969,8 +964,8 @@ gst_hls_demux_update_playlist (GstHLSDemux * demux, gboolean update)
 
     GST_M3U8_CLIENT_LOCK (demux->client);
     last_sequence =
-        GST_M3U8_MEDIA_FILE (g_list_last (demux->client->current->files)->
-        data)->sequence;
+        GST_M3U8_MEDIA_FILE (g_list_last (demux->client->current->
+            files)->data)->sequence;
 
     if (demux->client->sequence >= last_sequence - 3) {
       GST_DEBUG_OBJECT (demux, "Sequence is beyond playlist. Moving back to %d",
@@ -985,39 +980,49 @@ gst_hls_demux_update_playlist (GstHLSDemux * demux, gboolean update)
 }
 
 static gboolean
-gst_hls_demux_change_playlist (GstHLSDemux * demux, gboolean is_fast)
+gst_hls_demux_change_playlist (GstHLSDemux * demux, guint max_bitrate)
 {
-  GList *list;
-  GList *previous_list;
-  GstStructure *s;
-  gint new_bandwidth;
+  GList *list, *previous_variant, *current_variant;
+  gint old_bandwidth, new_bandwidth;
 
   GST_M3U8_CLIENT_LOCK (demux->client);
-  previous_list = demux->client->main->current_variant;
-  if (is_fast)
-    list = g_list_next (previous_list);
-  else
-    list = g_list_previous (previous_list);
+  current_variant = demux->client->main->current_variant;
+  previous_variant = current_variant;
+
+  /*  Go to the highest possible bandwidth allowed */
+  while (GST_M3U8 (current_variant->data)->bandwidth < max_bitrate) {
+    list = g_list_next (current_variant);
+    if (!list)
+      break;
+    current_variant = list;
+  }
+
+  while (GST_M3U8 (current_variant->data)->bandwidth > max_bitrate) {
+    list = g_list_previous (current_variant);
+    if (!list)
+      break;
+    current_variant = list;
+  }
 
   /* Don't do anything else if the playlist is the same */
-  if (!list || list->data == demux->client->current) {
+  if (current_variant == previous_variant) {
     GST_M3U8_CLIENT_UNLOCK (demux->client);
     return TRUE;
   }
 
-  demux->client->main->current_variant = list;
+  old_bandwidth = GST_M3U8 (previous_variant->data)->bandwidth;
+  new_bandwidth = GST_M3U8 (current_variant->data)->bandwidth;
+  demux->client->main->current_variant = current_variant;
   GST_M3U8_CLIENT_UNLOCK (demux->client);
 
-  gst_m3u8_client_set_current (demux->client, list->data);
+  gst_m3u8_client_set_current (demux->client, current_variant->data);
 
-  GST_M3U8_CLIENT_LOCK (demux->client);
-  new_bandwidth = demux->client->current->bandwidth;
-  GST_M3U8_CLIENT_UNLOCK (demux->client);
-
-  GST_INFO_OBJECT (demux, "Client is %s, switching to bitrate %d",
-      is_fast ? "fast" : "slow", new_bandwidth);
+  GST_INFO_OBJECT (demux, "Client was on %dbps, max allowed is %dbps, switching"
+      " to bitrate %dbps", old_bandwidth, max_bitrate, new_bandwidth);
 
   if (gst_hls_demux_update_playlist (demux, FALSE)) {
+    GstStructure *s;
+
     s = gst_structure_new ("playlist",
         "uri", G_TYPE_STRING, gst_m3u8_client_get_current_uri (demux->client),
         "bitrate", G_TYPE_INT, new_bandwidth, NULL);
@@ -1026,10 +1031,15 @@ gst_hls_demux_change_playlist (GstHLSDemux * demux, gboolean is_fast)
   } else {
     GST_INFO_OBJECT (demux, "Unable to update playlist. Switching back");
     GST_M3U8_CLIENT_LOCK (demux->client);
-    demux->client->main->current_variant = previous_list;
+    demux->client->main->current_variant = previous_variant;
     GST_M3U8_CLIENT_UNLOCK (demux->client);
-    gst_m3u8_client_set_current (demux->client, previous_list->data);
-    return FALSE;
+    gst_m3u8_client_set_current (demux->client, previous_variant->data);
+    /*  Try a lower bitrate (or stop if we just tried the lowest) */
+    if (new_bandwidth ==
+        GST_M3U8 (g_list_first (demux->client->main->lists)->data)->bandwidth)
+      return FALSE;
+    else
+      return gst_hls_demux_change_playlist (demux, new_bandwidth - 1);
   }
 
   /* Force typefinding since we might have changed media type */
@@ -1071,9 +1081,12 @@ static gboolean
 gst_hls_demux_switch_playlist (GstHLSDemux * demux)
 {
   GTimeVal now;
-  gint64 diff, limit;
+  GstClockTime diff;
+  gsize size;
+  gint bitrate;
+  GstFragment *fragment = g_queue_peek_tail (demux->queue);
+  GstBuffer *buffer;
 
-  g_get_current_time (&now);
   GST_M3U8_CLIENT_LOCK (demux->client);
   if (!demux->client->main->lists) {
     GST_M3U8_CLIENT_UNLOCK (demux->client);
@@ -1083,35 +1096,17 @@ gst_hls_demux_switch_playlist (GstHLSDemux * demux)
 
   /* compare the time when the fragment was downloaded with the time when it was
    * scheduled */
-  diff = (GST_TIMEVAL_TO_TIME (demux->next_update) - GST_TIMEVAL_TO_TIME (now));
-  limit = gst_m3u8_client_get_target_duration (demux->client)
-      * demux->bitrate_switch_tol;
+  g_get_current_time (&now);
+  diff = (GST_TIMEVAL_TO_TIME (now) - GST_TIMEVAL_TO_TIME (demux->next_update));
+  buffer = gst_fragment_get_buffer (fragment);
+  size = gst_buffer_get_size (buffer);
+  bitrate = (size * 8) / ((double) diff / GST_SECOND);
 
-  GST_DEBUG ("diff:%s%" GST_TIME_FORMAT ", limit:%" GST_TIME_FORMAT,
-      diff < 0 ? "-" : " ", GST_TIME_ARGS (ABS (diff)), GST_TIME_ARGS (limit));
+  GST_DEBUG ("Downloaded %d bytes in %" GST_TIME_FORMAT ". Bitrate is : %d",
+      size, GST_TIME_ARGS (diff), bitrate);
 
-  /* if we are on time switch to a higher bitrate */
-  if (diff > limit) {
-    while (diff > limit) {
-      if (!gst_hls_demux_change_playlist (demux, TRUE))
-        break;
-      diff -= limit;
-    }
-    demux->accumulated_delay = 0;
-  } else if (diff < 0) {
-    /* if the client is too slow wait until it has accumulated a certain delay
-     * to switch to a lower bitrate */
-    demux->accumulated_delay -= diff;
-    if (demux->accumulated_delay >= limit) {
-      while (demux->accumulated_delay >= limit) {
-        if (!gst_hls_demux_change_playlist (demux, FALSE))
-          break;
-        demux->accumulated_delay -= limit;
-      }
-      demux->accumulated_delay = 0;
-    }
-  }
-  return TRUE;
+  gst_buffer_unref (buffer);
+  return gst_hls_demux_change_playlist (demux, bitrate * demux->bitrate_limit);
 }
 
 static gboolean
