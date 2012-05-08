@@ -233,8 +233,7 @@ static inline guint
 scan_for_start_codes (const GstByteReader * reader, guint offset, guint size)
 {
   const guint8 *data;
-  guint32 state;
-  guint i;
+  guint i = 0;
 
   g_return_val_if_fail (size > 0, -1);
   g_return_val_if_fail ((guint64) offset + size <= reader->size - reader->byte,
@@ -246,33 +245,20 @@ scan_for_start_codes (const GstByteReader * reader, guint offset, guint size)
 
   data = reader->data + reader->byte + offset;
 
-  /* set the state to something that does not match */
-  state = 0xffffffff;
-
-  /* now find data */
-  for (i = 0; i < size; i++) {
-    /* throw away one byte and move in the next byte */
-    state = ((state << 8) | data[i]);
-    if (G_UNLIKELY ((state & 0xffffff00) == 0x00000100)) {
-      /* we have a match but we need to have skipped at
-       * least 4 bytes to fill the state. */
-      if (G_LIKELY (i >= 3))
-        return offset + i - 3;
+  while (i < (size - 4)) {
+    if (data[i + 2] > 1) {
+      i += 3;
+    } else if (data[i + 1]) {
+      i += 2;
+    } else if (data[i] || data[i + 2] != 1) {
+      i++;
+    } else {
+      break;
     }
-
-    /* TODO: reimplement making 010001 not detected as a sc
-     * Accelerate search for start code
-     * if (data[i] > 1) {
-     * while (i < (size - 4) && data[i] > 1) {
-     *   if (data[i + 3] > 1)
-     *     i += 4;
-     *   else
-     *     i += 1;
-     * }
-     * state = 0x00000100;
-     *}
-     */
   }
+
+  if (i < (size - 4))
+    return offset + i;
 
   /* nothing found */
   return -1;
