@@ -866,17 +866,7 @@ gst_hls_demux_cache_fragments (GstHLSDemux * demux)
     }
   }
 
-  /* If it's a live source, set the sequence number to the end of the list
-   * and substract the 'fragmets_cache' to start from the last fragment*/
-  if (gst_m3u8_client_is_live (demux->client)) {
-    GST_M3U8_CLIENT_LOCK (demux->client);
-    demux->client->sequence += g_list_length (demux->client->current->files);
-    if (demux->client->sequence >= demux->fragments_cache)
-      demux->client->sequence -= demux->fragments_cache;
-    else
-      demux->client->sequence = 0;
-    GST_M3U8_CLIENT_UNLOCK (demux->client);
-  } else {
+  if (!gst_m3u8_client_is_live (demux->client)) {
     GstClockTime duration = gst_m3u8_client_get_duration (demux->client);
 
     GST_DEBUG_OBJECT (demux, "Sending duration message : %" GST_TIME_FORMAT,
