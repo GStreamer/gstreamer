@@ -28,10 +28,10 @@
 #define IDT_DEVICELOST          1
 
 /* Provide access to data that will be shared among all instantiations of this element */
-#define GST_D3DVIDEOSINK_SHARED_D3D_LOCK	       g_static_mutex_lock (&shared_d3d_lock);
-#define GST_D3DVIDEOSINK_SHARED_D3D_UNLOCK       g_static_mutex_unlock (&shared_d3d_lock);
-#define GST_D3DVIDEOSINK_SHARED_D3D_HOOK_LOCK	   g_static_mutex_lock (&shared_d3d_hook_lock);
-#define GST_D3DVIDEOSINK_SHARED_D3D_HOOK_UNLOCK  g_static_mutex_unlock (&shared_d3d_hook_lock);
+#define GST_D3DVIDEOSINK_SHARED_D3D_LOCK         g_static_mutex_lock (&shared_d3d_lock)
+#define GST_D3DVIDEOSINK_SHARED_D3D_UNLOCK       g_static_mutex_unlock (&shared_d3d_lock)
+#define GST_D3DVIDEOSINK_SHARED_D3D_HOOK_LOCK    g_static_mutex_lock (&shared_d3d_hook_lock)
+#define GST_D3DVIDEOSINK_SHARED_D3D_HOOK_UNLOCK  g_static_mutex_unlock (&shared_d3d_hook_lock)
 typedef struct _GstD3DVideoSinkShared GstD3DVideoSinkShared;
 struct _GstD3DVideoSinkShared
 {
@@ -1136,9 +1136,10 @@ gst_d3dvideosink_set_window_for_renderer (GstD3DVideoSink * sink)
     /* when we're done. */
     GST_DEBUG ("Unable to set window procedure. Error: %s",
         g_win32_error_message (GetLastError ()));
-    GST_D3DVIDEOSINK_SHARED_D3D_HOOK_LOCK
-        gst_d3dvideosink_hook_window_for_renderer (sink);
-  GST_D3DVIDEOSINK_SHARED_D3D_HOOK_UNLOCK} else {
+    GST_D3DVIDEOSINK_SHARED_D3D_HOOK_LOCK;
+    gst_d3dvideosink_hook_window_for_renderer (sink);
+    GST_D3DVIDEOSINK_SHARED_D3D_HOOK_UNLOCK;
+  } else {
     GST_DEBUG ("Set wndproc to %p from %p", WndProcHook, sink->prevWndProc);
     GST_DEBUG ("Set renderer window to %p", sink->window_handle);
   }
@@ -1307,12 +1308,13 @@ gst_d3dvideosink_unhook_all_windows (void)
   /* Unhook all windows that may be currently hooked. This is mainly a precaution in case     */
   /* a wayward process doesn't properly set state back to NULL (which would remove the hook). */
 
-  GST_D3DVIDEOSINK_SHARED_D3D_LOCK GST_D3DVIDEOSINK_SHARED_D3D_HOOK_LOCK
+  GST_D3DVIDEOSINK_SHARED_D3D_LOCK;
+  GST_D3DVIDEOSINK_SHARED_D3D_HOOK_LOCK;
   {
     GList *item;
     GstD3DVideoSink *s;
 
-      GST_DEBUG ("Attempting to unhook all windows for process %lu",
+    GST_DEBUG ("Attempting to unhook all windows for process %lu",
         GetCurrentProcessId ());
 
     for (item = g_list_first (shared.element_list); item; item = item->next) {
@@ -1320,7 +1322,9 @@ gst_d3dvideosink_unhook_all_windows (void)
       gst_d3dvideosink_unhook_window_for_renderer (s);
     }
   }
-GST_D3DVIDEOSINK_SHARED_D3D_HOOK_UNLOCK GST_D3DVIDEOSINK_SHARED_D3D_UNLOCK}
+  GST_D3DVIDEOSINK_SHARED_D3D_HOOK_UNLOCK;
+  GST_D3DVIDEOSINK_SHARED_D3D_UNLOCK;
+}
 
 static void
 gst_d3dvideosink_remove_window_for_renderer (GstD3DVideoSink * sink)
@@ -1345,11 +1349,11 @@ gst_d3dvideosink_remove_window_for_renderer (GstD3DVideoSink * sink)
       }
     }
 
-    GST_D3DVIDEOSINK_SHARED_D3D_HOOK_LOCK
-        gst_d3dvideosink_unhook_window_for_renderer (sink);
-    GST_D3DVIDEOSINK_SHARED_D3D_HOOK_UNLOCK
-        /* Remove the property associating our sink with the window */
-        RemoveProp (sink->window_handle, TEXT ("GstD3DVideoSink"));
+    GST_D3DVIDEOSINK_SHARED_D3D_HOOK_LOCK;
+    gst_d3dvideosink_unhook_window_for_renderer (sink);
+    GST_D3DVIDEOSINK_SHARED_D3D_HOOK_UNLOCK;
+    /* Remove the property associating our sink with the window */
+    RemoveProp (sink->window_handle, TEXT ("GstD3DVideoSink"));
   }
 }
 
@@ -1834,7 +1838,7 @@ error:
 static gboolean
 gst_d3dvideosink_update_all (GstD3DVideoSink * sink)
 {
-  GST_D3DVIDEOSINK_SHARED_D3D_LOCK {
+  GST_D3DVIDEOSINK_SHARED_D3D_LOCK; {
     GList *item;
     GstD3DVideoSink *s;
     for (item = g_list_first (shared.element_list); item; item = item->next) {
@@ -1843,7 +1847,8 @@ gst_d3dvideosink_update_all (GstD3DVideoSink * sink)
     }
   }
 /*success:*/
-  GST_D3DVIDEOSINK_SHARED_D3D_UNLOCK return TRUE;
+  GST_D3DVIDEOSINK_SHARED_D3D_UNLOCK;
+  return TRUE;
 /*error:*/
 /*  GST_D3DVIDEOSINK_SHARED_D3D_UNLOCK     */
 /*   */
@@ -1853,7 +1858,7 @@ gst_d3dvideosink_update_all (GstD3DVideoSink * sink)
 static gboolean
 gst_d3dvideosink_refresh_all (GstD3DVideoSink * sink)
 {
-  GST_D3DVIDEOSINK_SHARED_D3D_LOCK {
+  GST_D3DVIDEOSINK_SHARED_D3D_LOCK; {
     GList *item;
     GstD3DVideoSink *s;
     for (item = g_list_first (shared.element_list); item; item = item->next) {
@@ -1862,7 +1867,8 @@ gst_d3dvideosink_refresh_all (GstD3DVideoSink * sink)
     }
   }
 /*success:*/
-  GST_D3DVIDEOSINK_SHARED_D3D_UNLOCK return TRUE;
+  GST_D3DVIDEOSINK_SHARED_D3D_UNLOCK;
+  return TRUE;
 /*error:*/
 /*  GST_D3DVIDEOSINK_SHARED_D3D_UNLOCK     */
 /*  return FALSE;                          */
@@ -1971,10 +1977,10 @@ gst_d3dvideosink_initialize_direct3d (GstD3DVideoSink * sink)
     return FALSE;
   }
 
-  GST_D3DVIDEOSINK_SHARED_D3D_LOCK
-      /* Add to our GList containing all of our elements. */
-      /* GLists are doubly-linked lists and calling prepend() prevents it from having to traverse the entire list just to add one item. */
-      shared.element_list = g_list_prepend (shared.element_list, sink);
+  GST_D3DVIDEOSINK_SHARED_D3D_LOCK;
+  /* Add to our GList containing all of our elements. */
+  /* GLists are doubly-linked lists and calling prepend() prevents it from having to traverse the entire list just to add one item. */
+  shared.element_list = g_list_prepend (shared.element_list, sink);
 
   /* Increment our count of the number of elements we have */
   shared.element_count++;
@@ -2018,9 +2024,11 @@ gst_d3dvideosink_initialize_direct3d (GstD3DVideoSink * sink)
     goto error;
 
 success:
-  GST_D3DVIDEOSINK_SHARED_D3D_UNLOCK return TRUE;
+  GST_D3DVIDEOSINK_SHARED_D3D_UNLOCK;
+  return TRUE;
 error:
-  GST_D3DVIDEOSINK_SHARED_D3D_UNLOCK return FALSE;
+  GST_D3DVIDEOSINK_SHARED_D3D_UNLOCK;
+  return FALSE;
 }
 
 static gboolean
@@ -2346,9 +2354,9 @@ static gboolean
 gst_d3dvideosink_release_direct3d (GstD3DVideoSink * sink)
 {
   GST_DEBUG ("Cleaning all Direct3D objects");
-  GST_D3DVIDEOSINK_SHARED_D3D_LOCK
-      /* Be absolutely sure that we've released this sink's hook (if any). */
-      gst_d3dvideosink_unhook_window_for_renderer (sink);
+  GST_D3DVIDEOSINK_SHARED_D3D_LOCK;
+  /* Be absolutely sure that we've released this sink's hook (if any). */
+  gst_d3dvideosink_unhook_window_for_renderer (sink);
 
   /* Remove item from the list */
   shared.element_list = g_list_remove (shared.element_list, sink);
@@ -2374,7 +2382,8 @@ gst_d3dvideosink_release_direct3d (GstD3DVideoSink * sink)
   gst_d3dvideosink_close_shared_hidden_window (sink);
 
 success:
-  GST_D3DVIDEOSINK_SHARED_D3D_UNLOCK return TRUE;
+  GST_D3DVIDEOSINK_SHARED_D3D_UNLOCK;
+  return TRUE;
 /*error:*/
 /*  GST_D3DVIDEOSINK_SHARED_D3D_UNLOCK     */
 /*  return FALSE;                          */
