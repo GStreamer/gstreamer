@@ -70,6 +70,7 @@ GType gst_play_sink_get_type (void);
 
 GstPad *         gst_play_sink_request_pad    (GstPlaySink *playsink, GstPlaySinkType type);
 void             gst_play_sink_release_pad    (GstPlaySink *playsink, GstPad *pad);
+void             gst_play_sink_refresh_pad    (GstPlaySink *playsink, GstPad *pad, GstPlaySinkType type);
 
 void             gst_play_sink_set_sink       (GstPlaySink * playsink, GstPlaySinkType type, GstElement * sink);
 GstElement *     gst_play_sink_get_sink       (GstPlaySink * playsink, GstPlaySinkType type);

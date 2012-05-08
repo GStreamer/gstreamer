@@ -2715,6 +2715,9 @@ pad_added_cb (GstElement * decodebin, GstPad * pad, GstSourceGroup * group)
      * the sink. */
     changed = FALSE;
     sinkpad = NULL;
+
+    /* store the selector for the pad */
+    g_object_set_data (G_OBJECT (pad), "playbin2.select", select);
   }
   GST_SOURCE_GROUP_UNLOCK (group);
 
@@ -2787,6 +2790,15 @@ pad_removed_cb (GstElement * decodebin, GstPad * pad, GstSourceGroup * group)
       "pad %s:%s removed from group %p", GST_DEBUG_PAD_NAME (pad), group);
 
   GST_SOURCE_GROUP_LOCK (group);
+
+  if ((select = g_object_get_data (G_OBJECT (pad), "playbin2.select"))) {
+    g_assert (select->selector == NULL);
+    g_assert (select->srcpad == pad);
+    gst_object_unref (pad);
+    select->srcpad = NULL;
+    goto exit;
+  }
+
   /* get the selector sinkpad */
   if (!(peer = g_object_get_data (G_OBJECT (pad), "playbin.sinkpad")))
     goto not_linked;
@@ -2804,6 +2816,16 @@ pad_removed_cb (GstElement * decodebin, GstPad * pad, GstSourceGroup * group)
     /* remove the pad from the array */
     g_ptr_array_remove (select->channels, peer);
     GST_DEBUG_OBJECT (playbin, "pad %p removed from array", peer);
+
+    if (!select->channels->len && select->selector) {
+      GST_DEBUG_OBJECT (playbin, "all selector sinkpads removed");
+      GST_DEBUG_OBJECT (playbin, "removing selector %p", select->selector);
+      gst_object_unref (select->srcpad);
+      select->srcpad = NULL;
+      gst_element_set_state (select->selector, GST_STATE_NULL);
+      gst_bin_remove (GST_BIN_CAST (playbin), select->selector);
+      select->selector = NULL;
+    }
   }
 
   /* unlink the pad now (can fail, the pad is unlinked before it's removed) */
@@ -2823,6 +2845,7 @@ pad_removed_cb (GstElement * decodebin, GstPad * pad, GstSourceGroup * group)
   gst_object_unref (peer);
 
   gst_object_unref (selector);
+exit:
   GST_SOURCE_GROUP_UNLOCK (group);
 
   return;
@@ -2877,7 +2900,17 @@ no_more_pads_cb (GstElement * decodebin, GstSourceGroup * group)
       GST_DEBUG_OBJECT (playbin, "requesting new sink pad %d", select->type);
       select->sinkpad =
           gst_play_sink_request_pad (playbin->playsink, select->type);
-
+    } else if (select->srcpad && select->sinkpad) {
+      GST_DEBUG_OBJECT (playbin, "refreshing new sink pad %d", select->type);
+      gst_play_sink_refresh_pad (playbin->playsink, select->sinkpad,
+          select->type);
+    } else if (select->sinkpad && select->srcpad == NULL) {
+      GST_DEBUG_OBJECT (playbin, "releasing sink pad %d", select->type);
+      gst_play_sink_release_pad (playbin->playsink, select->sinkpad);
+      select->sinkpad = NULL;
+    }
+    if (select->sinkpad && select->srcpad &&
+        !gst_pad_is_linked (select->srcpad)) {
       res = gst_pad_link (select->srcpad, select->sinkpad);
       GST_DEBUG_OBJECT (playbin, "linked type %s, result: %d",
           select->media_list[0], res);

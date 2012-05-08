@@ -3507,6 +3507,48 @@ caps_notify_cb (GstPad * pad, GParamSpec * unused, GstPlaySink * playsink)
   }
 }
 
+void
+gst_play_sink_refresh_pad (GstPlaySink * playsink, GstPad * pad,
+    GstPlaySinkType type)
+{
+  GST_DEBUG_OBJECT (playsink, "refresh pad %" GST_PTR_FORMAT, pad);
+
+  GST_PLAY_SINK_LOCK (playsink);
+  if (pad == playsink->video_pad) {
+    if (type != GST_PLAY_SINK_TYPE_VIDEO_RAW &&
+        type != GST_PLAY_SINK_TYPE_VIDEO)
+      goto wrong_type;
+  } else if (pad == playsink->audio_pad) {
+    if (type != GST_PLAY_SINK_TYPE_AUDIO_RAW &&
+        type != GST_PLAY_SINK_TYPE_AUDIO)
+      goto wrong_type;
+  } else if (pad == playsink->text_pad) {
+    if (type != GST_PLAY_SINK_TYPE_TEXT)
+      goto wrong_type;
+  }
+
+  if (type != GST_PLAY_SINK_TYPE_FLUSHING) {
+    GstPad *blockpad =
+        GST_PAD_CAST (gst_proxy_pad_get_internal (GST_PROXY_PAD (pad)));
+
+    gst_pad_set_blocked_async (blockpad, TRUE, sinkpad_blocked_cb, playsink);
+    PENDING_FLAG_SET (playsink, type);
+    gst_object_unref (blockpad);
+  }
+  GST_PLAY_SINK_UNLOCK (playsink);
+
+  return;
+
+  /* ERRORS */
+wrong_type:
+  {
+    GST_WARNING_OBJECT (playsink, "wrong type %d for pad %" GST_PTR_FORMAT,
+        pad);
+    GST_PLAY_SINK_UNLOCK (playsink);
+    return;
+  }
+}
+
 /**
  * gst_play_sink_request_pad
  * @playsink: a #GstPlaySink
@@ -3630,6 +3672,7 @@ gst_play_sink_request_pad (GstPlaySink * playsink, GstPlaySinkType type)
 
   return res;
 }
+
 
 static GstPad *
 gst_play_sink_request_new_pad (GstElement * element, GstPadTemplate * templ,
