@@ -325,12 +325,10 @@ gst_alsasink_getcaps (GstBaseSink * bsink, GstCaps * filter)
 static gboolean
 gst_alsasink_acceptcaps (GstAlsaSink * alsa, GstCaps * caps)
 {
-  GstAudioRingBuffer *rbuf = GST_AUDIO_BASE_SINK (alsa)->ringbuffer;
   GstPad *pad = GST_BASE_SINK (alsa)->sinkpad;
   GstCaps *pad_caps;
   GstStructure *st;
   gboolean ret = FALSE;
-
   GstAudioRingBufferSpec spec = { 0 };
 
   pad_caps = gst_pad_query_caps (pad, caps);
@@ -347,11 +345,14 @@ gst_alsasink_acceptcaps (GstAlsaSink * alsa, GstCaps * caps)
   if (!gst_caps_is_fixed (caps))
     goto done;
 
-  if (!gst_audio_ring_buffer_parse_caps (&rbuf->spec, caps))
+  /* parse helper expects this set, so avoid nasty warning
+   * will be set properly later on anyway  */
+  spec.latency_time = GST_SECOND;
+  if (!gst_audio_ring_buffer_parse_caps (&spec, caps))
     goto done;
 
   /* Make sure input is framed (one frame per buffer) and can be payloaded */
-  switch (rbuf->spec.type) {
+  switch (spec.type) {
     case GST_AUDIO_RING_BUFFER_FORMAT_TYPE_AC3:
     case GST_AUDIO_RING_BUFFER_FORMAT_TYPE_EAC3:
     case GST_AUDIO_RING_BUFFER_FORMAT_TYPE_DTS:
