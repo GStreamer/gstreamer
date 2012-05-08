@@ -940,6 +940,7 @@ gst_hls_demux_update_playlist (GstHLSDemux * demux)
   GstFragment *download;
   GstBuffer *buf;
   gchar *playlist;
+  gboolean updated = FALSE;
 
   const gchar *uri = gst_m3u8_client_get_current_uri (demux->client);
 
@@ -957,7 +958,29 @@ gst_hls_demux_update_playlist (GstHLSDemux * demux)
     return FALSE;
   }
 
-  return gst_m3u8_client_update (demux->client, playlist);
+  updated = gst_m3u8_client_update (demux->client, playlist);
+
+  /*  If it's a live source, do not let the sequence number go beyond
+   * three fragments before the end of the list */
+  if (updated && demux->client->current &&
+      gst_m3u8_client_is_live (demux->client)) {
+    guint last_sequence;
+
+    GST_M3U8_CLIENT_LOCK (demux->client);
+    last_sequence =
+        GST_M3U8_MEDIA_FILE (g_list_last (demux->client->current->files)->
+        data)->sequence;
+
+    if (demux->client->sequence >= last_sequence - 3) {
+      GST_DEBUG_OBJECT (demux, "Sequence is beyond playlist. Moving back to %d",
+          last_sequence - 3);
+      demux->need_segment = TRUE;
+      demux->client->sequence = last_sequence - 3;
+    }
+    GST_M3U8_CLIENT_UNLOCK (demux->client);
+  }
+
+  return updated;
 }
 
 static gboolean
