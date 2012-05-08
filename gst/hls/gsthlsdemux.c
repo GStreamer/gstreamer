@@ -105,7 +105,8 @@ static gboolean gst_hls_demux_schedule (GstHLSDemux * demux);
 static gboolean gst_hls_demux_switch_playlist (GstHLSDemux * demux);
 static gboolean gst_hls_demux_get_next_fragment (GstHLSDemux * demux,
     gboolean caching);
-static gboolean gst_hls_demux_update_playlist (GstHLSDemux * demux);
+static gboolean gst_hls_demux_update_playlist (GstHLSDemux * demux,
+    gboolean update);
 static void gst_hls_demux_reset (GstHLSDemux * demux, gboolean dispose);
 static gboolean gst_hls_demux_set_location (GstHLSDemux * demux,
     const gchar * uri);
@@ -786,7 +787,7 @@ gst_hls_demux_updates_loop (GstHLSDemux * demux)
     }
     /* update the playlist for live sources */
     if (gst_m3u8_client_is_live (demux->client)) {
-      if (!gst_hls_demux_update_playlist (demux)) {
+      if (!gst_hls_demux_update_playlist (demux, TRUE)) {
         demux->client->update_failed_count++;
         if (demux->client->update_failed_count < DEFAULT_FAILED_COUNT) {
           GST_WARNING_OBJECT (demux, "Could not update the playlist");
@@ -859,7 +860,7 @@ gst_hls_demux_cache_fragments (GstHLSDemux * demux)
     child = demux->client->main->current_variant->data;
     GST_M3U8_CLIENT_UNLOCK (demux->client);
     gst_m3u8_client_set_current (demux->client, child);
-    if (!gst_hls_demux_update_playlist (demux)) {
+    if (!gst_hls_demux_update_playlist (demux, FALSE)) {
       GST_ERROR_OBJECT (demux, "Could not fetch the child playlist %s",
           child->uri);
       return FALSE;
@@ -935,7 +936,7 @@ validate_error:
 }
 
 static gboolean
-gst_hls_demux_update_playlist (GstHLSDemux * demux)
+gst_hls_demux_update_playlist (GstHLSDemux * demux, gboolean update)
 {
   GstFragment *download;
   GstBuffer *buf;
@@ -962,7 +963,7 @@ gst_hls_demux_update_playlist (GstHLSDemux * demux)
 
   /*  If it's a live source, do not let the sequence number go beyond
    * three fragments before the end of the list */
-  if (updated && demux->client->current &&
+  if (updated && update == FALSE && demux->client->current &&
       gst_m3u8_client_is_live (demux->client)) {
     guint last_sequence;
 
@@ -1016,7 +1017,7 @@ gst_hls_demux_change_playlist (GstHLSDemux * demux, gboolean is_fast)
   GST_INFO_OBJECT (demux, "Client is %s, switching to bitrate %d",
       is_fast ? "fast" : "slow", new_bandwidth);
 
-  if (gst_hls_demux_update_playlist (demux)) {
+  if (gst_hls_demux_update_playlist (demux, FALSE)) {
     s = gst_structure_new ("playlist",
         "uri", G_TYPE_STRING, gst_m3u8_client_get_current_uri (demux->client),
         "bitrate", G_TYPE_INT, new_bandwidth, NULL);
