@@ -74,9 +74,6 @@ struct _GstExclusion
 
   /* < private > */
 
-  GstVideoInfo info;
-  gint width, height;
-
   gint factor;
   gboolean silent;
 };
