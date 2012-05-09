@@ -206,6 +206,126 @@ GST_START_TEST (test_test_source_in_layer)
 
 GST_END_TEST;
 
+static gint
+find_composition_func (GstElement * element)
+{
+  GstElementFactory *fac = gst_element_get_factory (element);
+  const gchar *name = gst_plugin_feature_get_name (GST_PLUGIN_FEATURE (fac));
+
+  if (g_strcmp0 (name, "gnlcomposition") == 0)
+    return 0;
+
+  return 1;
+}
+
+static GstElement *
+find_composition (GESTrack * track)
+{
+  GstIterator *it = gst_bin_iterate_recurse (GST_BIN (track));
+  GstElement *ret =
+      gst_iterator_find_custom (it, (GCompareFunc) find_composition_func, NULL);
+
+  gst_iterator_free (it);
+
+  return ret;
+}
+
+#define gap_object_check(gnlobj, start, duration, priority)  \
+{                                                            \
+  guint64 pstart, pdur, pprio;                               \
+  g_object_get (gnlobj, "start", &pstart, "duration", &pdur, \
+    "priority", &pprio, NULL);                               \
+  assert_equals_uint64 (pstart, start);                      \
+  assert_equals_uint64 (pdur, duration);                     \
+  assert_equals_int (pprio, priority);                       \
+}
+GST_START_TEST (test_gap_filling_basic)
+{
+  GESTrack *track;
+  GESTrackObject *trackobject, *trackobject1, *trackobject2;
+  /*GESTimelineLayer *layer; */
+  GESTimelineObject *object, *object1, *object2;
+  GstElement *gnlsrc, *gnlsrc1, *gap = NULL;
+  GstElement *composition;
+  GList *tmp;
+
+  ges_init ();
+
+  track = ges_track_audio_raw_new ();
+  fail_unless (track != NULL);
+
+  composition = find_composition (track);
+  fail_unless (composition != NULL);
+
+  object = GES_TIMELINE_OBJECT (ges_timeline_test_source_new ());
+  fail_unless (object != NULL);
+
+  /* Set some properties */
+  g_object_set (object, "start", (guint64) 0, "duration", (guint64) 5, NULL);
+  assert_equals_uint64 (GES_TIMELINE_OBJECT_START (object), 0);
+  assert_equals_uint64 (GES_TIMELINE_OBJECT_DURATION (object), 5);
+
+  trackobject = ges_timeline_object_create_track_object (object, track);
+  ges_timeline_object_add_track_object (object, trackobject);
+  fail_unless (ges_track_add_object (track, trackobject));
+  fail_unless (trackobject != NULL);
+  gnlsrc = ges_track_object_get_gnlobject (trackobject);
+  fail_unless (gnlsrc != NULL);
+
+  /* Check that trackobject has the same properties */
+  assert_equals_uint64 (GES_TRACK_OBJECT_START (trackobject), 0);
+  assert_equals_uint64 (GES_TRACK_OBJECT_DURATION (trackobject), 5);
+
+  /* Check no gap were wrongly added */
+  assert_equals_int (g_list_length (GST_BIN_CHILDREN (composition)), 1);
+
+  object1 = GES_TIMELINE_OBJECT (ges_timeline_test_source_new ());
+  fail_unless (object1 != NULL);
+
+  g_object_set (object1, "start", (guint64) 15, "duration", (guint64) 5, NULL);
+  assert_equals_uint64 (GES_TIMELINE_OBJECT_START (object1), 15);
+  assert_equals_uint64 (GES_TIMELINE_OBJECT_DURATION (object1), 5);
+
+  trackobject1 = ges_timeline_object_create_track_object (object1, track);
+  ges_timeline_object_add_track_object (object1, trackobject1);
+  fail_unless (ges_track_add_object (track, trackobject1));
+  fail_unless (trackobject1 != NULL);
+  gnlsrc1 = ges_track_object_get_gnlobject (trackobject1);
+  fail_unless (gnlsrc1 != NULL);
+
+  /* Check that trackobject1 has the same properties */
+  assert_equals_uint64 (GES_TRACK_OBJECT_START (trackobject1), 15);
+  assert_equals_uint64 (GES_TRACK_OBJECT_DURATION (trackobject1), 5);
+
+  /* Check the gap as properly been added */
+  assert_equals_int (g_list_length (GST_BIN_CHILDREN (composition)), 3);
+
+  for (tmp = GST_BIN_CHILDREN (composition); tmp; tmp = tmp->next) {
+    GstElement *tmp_gnlobj = GST_ELEMENT (tmp->data);
+
+    if (tmp_gnlobj != gnlsrc && tmp_gnlobj != gnlsrc1) {
+      gap = tmp_gnlobj;
+    }
+  }
+  fail_unless (gap != NULL);
+  gap_object_check (gap, 5, 10, 0)
+
+      object2 = GES_TIMELINE_OBJECT (ges_timeline_test_source_new ());
+  fail_unless (object2 != NULL);
+  g_object_set (object2, "start", (guint64) 35, "duration", (guint64) 5, NULL);
+  trackobject2 = ges_timeline_object_create_track_object (object2, track);
+  ges_timeline_object_add_track_object (object2, trackobject2);
+  fail_unless (ges_track_add_object (track, trackobject2));
+  fail_unless (trackobject2 != NULL);
+  assert_equals_uint64 (GES_TRACK_OBJECT_START (trackobject2), 35);
+  assert_equals_uint64 (GES_TRACK_OBJECT_DURATION (trackobject2), 5);
+  assert_equals_int (g_list_length (GST_BIN_CHILDREN (composition)), 5);
+
+  gst_object_unref (track);
+}
+
+GST_END_TEST;
+
 static Suite *
 ges_suite (void)
 {
@@ -217,6 +337,7 @@ ges_suite (void)
   tcase_add_test (tc_chain, test_test_source_basic);
   tcase_add_test (tc_chain, test_test_source_properties);
   tcase_add_test (tc_chain, test_test_source_in_layer);
+  tcase_add_test (tc_chain, test_gap_filling_basic);
 
   return s;
 }
