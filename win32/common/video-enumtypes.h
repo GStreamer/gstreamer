@@ -27,12 +27,24 @@ GType gst_video_transfer_function_get_type (void);
 #define GST_TYPE_VIDEO_TRANSFER_FUNCTION (gst_video_transfer_function_get_type())
 GType gst_video_color_primaries_get_type (void);
 #define GST_TYPE_VIDEO_COLOR_PRIMARIES (gst_video_color_primaries_get_type())
+GType gst_video_frame_flags_get_type (void);
+#define GST_TYPE_VIDEO_FRAME_FLAGS (gst_video_frame_flags_get_type())
 GType gst_video_buffer_flags_get_type (void);
 #define GST_TYPE_VIDEO_BUFFER_FLAGS (gst_video_buffer_flags_get_type())
 
 /* enumerations from "colorbalance.h" */
 GType gst_color_balance_type_get_type (void);
 #define GST_TYPE_COLOR_BALANCE_TYPE (gst_color_balance_type_get_type())
+
+/* enumerations from "navigation.h" */
+GType gst_navigation_command_get_type (void);
+#define GST_TYPE_NAVIGATION_COMMAND (gst_navigation_command_get_type())
+GType gst_navigation_query_type_get_type (void);
+#define GST_TYPE_NAVIGATION_QUERY_TYPE (gst_navigation_query_type_get_type())
+GType gst_navigation_message_type_get_type (void);
+#define GST_TYPE_NAVIGATION_MESSAGE_TYPE (gst_navigation_message_type_get_type())
+GType gst_navigation_event_type_get_type (void);
+#define GST_TYPE_NAVIGATION_EVENT_TYPE (gst_navigation_event_type_get_type())
 G_END_DECLS
 
 #endif /* __GST_VIDEO_ENUM_TYPES_H__ */

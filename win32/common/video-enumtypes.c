@@ -5,6 +5,7 @@
 
 #include "video.h"
 #include "colorbalance.h"
+#include "navigation.h"
 
 /* enumerations from "video.h" */
 GType
@@ -57,6 +58,7 @@ gst_video_format_get_type (void)
       {GST_VIDEO_FORMAT_ARGB64, "GST_VIDEO_FORMAT_ARGB64", "argb64"},
       {GST_VIDEO_FORMAT_AYUV64, "GST_VIDEO_FORMAT_AYUV64", "ayuv64"},
       {GST_VIDEO_FORMAT_r210, "GST_VIDEO_FORMAT_r210", "r210"},
+      {GST_VIDEO_FORMAT_ENCODED, "GST_VIDEO_FORMAT_ENCODED", "encoded"},
       {0, NULL, NULL}
     };
     GType g_define_type_id = g_enum_register_static ("GstVideoFormat", values);
@@ -119,10 +121,6 @@ gst_video_flags_get_type (void)
   if (g_once_init_enter (&g_define_type_id__volatile)) {
     static const GFlagsValue values[] = {
       {GST_VIDEO_FLAG_NONE, "GST_VIDEO_FLAG_NONE", "none"},
-      {GST_VIDEO_FLAG_INTERLACED, "GST_VIDEO_FLAG_INTERLACED", "interlaced"},
-      {GST_VIDEO_FLAG_TFF, "GST_VIDEO_FLAG_TFF", "tff"},
-      {GST_VIDEO_FLAG_RFF, "GST_VIDEO_FLAG_RFF", "rff"},
-      {GST_VIDEO_FLAG_ONEFIELD, "GST_VIDEO_FLAG_ONEFIELD", "onefield"},
       {GST_VIDEO_FLAG_VARIABLE_FPS, "GST_VIDEO_FLAG_VARIABLE_FPS",
           "variable-fps"},
       {0, NULL, NULL}
@@ -259,13 +257,31 @@ gst_video_color_primaries_get_type (void)
 }
 
 GType
+gst_video_frame_flags_get_type (void)
+{
+  static volatile gsize g_define_type_id__volatile = 0;
+  if (g_once_init_enter (&g_define_type_id__volatile)) {
+    static const GFlagsValue values[] = {
+      {GST_VIDEO_FRAME_FLAG_NONE, "GST_VIDEO_FRAME_FLAG_NONE", "none"},
+      {GST_VIDEO_FRAME_FLAG_TFF, "GST_VIDEO_FRAME_FLAG_TFF", "tff"},
+      {GST_VIDEO_FRAME_FLAG_RFF, "GST_VIDEO_FRAME_FLAG_RFF", "rff"},
+      {GST_VIDEO_FRAME_FLAG_ONEFIELD, "GST_VIDEO_FRAME_FLAG_ONEFIELD",
+          "onefield"},
+      {0, NULL, NULL}
+    };
+    GType g_define_type_id =
+        g_flags_register_static ("GstVideoFrameFlags", values);
+    g_once_init_leave (&g_define_type_id__volatile, g_define_type_id);
+  }
+  return g_define_type_id__volatile;
+}
+
+GType
 gst_video_buffer_flags_get_type (void)
 {
   static volatile gsize g_define_type_id__volatile = 0;
   if (g_once_init_enter (&g_define_type_id__volatile)) {
     static const GFlagsValue values[] = {
-      {GST_VIDEO_BUFFER_FLAG_INTERLACED, "GST_VIDEO_BUFFER_FLAG_INTERLACED",
-          "interlaced"},
       {GST_VIDEO_BUFFER_FLAG_TFF, "GST_VIDEO_BUFFER_FLAG_TFF", "tff"},
       {GST_VIDEO_BUFFER_FLAG_RFF, "GST_VIDEO_BUFFER_FLAG_RFF", "rff"},
       {GST_VIDEO_BUFFER_FLAG_ONEFIELD, "GST_VIDEO_BUFFER_FLAG_ONEFIELD",
@@ -293,6 +309,111 @@ gst_color_balance_type_get_type (void)
     };
     GType g_define_type_id =
         g_enum_register_static ("GstColorBalanceType", values);
+    g_once_init_leave (&g_define_type_id__volatile, g_define_type_id);
+  }
+  return g_define_type_id__volatile;
+}
+
+/* enumerations from "navigation.h" */
+GType
+gst_navigation_command_get_type (void)
+{
+  static volatile gsize g_define_type_id__volatile = 0;
+  if (g_once_init_enter (&g_define_type_id__volatile)) {
+    static const GEnumValue values[] = {
+      {GST_NAVIGATION_COMMAND_INVALID, "GST_NAVIGATION_COMMAND_INVALID",
+          "invalid"},
+      {GST_NAVIGATION_COMMAND_MENU1, "GST_NAVIGATION_COMMAND_MENU1", "menu1"},
+      {GST_NAVIGATION_COMMAND_MENU2, "GST_NAVIGATION_COMMAND_MENU2", "menu2"},
+      {GST_NAVIGATION_COMMAND_MENU3, "GST_NAVIGATION_COMMAND_MENU3", "menu3"},
+      {GST_NAVIGATION_COMMAND_MENU4, "GST_NAVIGATION_COMMAND_MENU4", "menu4"},
+      {GST_NAVIGATION_COMMAND_MENU5, "GST_NAVIGATION_COMMAND_MENU5", "menu5"},
+      {GST_NAVIGATION_COMMAND_MENU6, "GST_NAVIGATION_COMMAND_MENU6", "menu6"},
+      {GST_NAVIGATION_COMMAND_MENU7, "GST_NAVIGATION_COMMAND_MENU7", "menu7"},
+      {GST_NAVIGATION_COMMAND_LEFT, "GST_NAVIGATION_COMMAND_LEFT", "left"},
+      {GST_NAVIGATION_COMMAND_RIGHT, "GST_NAVIGATION_COMMAND_RIGHT", "right"},
+      {GST_NAVIGATION_COMMAND_UP, "GST_NAVIGATION_COMMAND_UP", "up"},
+      {GST_NAVIGATION_COMMAND_DOWN, "GST_NAVIGATION_COMMAND_DOWN", "down"},
+      {GST_NAVIGATION_COMMAND_ACTIVATE, "GST_NAVIGATION_COMMAND_ACTIVATE",
+          "activate"},
+      {GST_NAVIGATION_COMMAND_PREV_ANGLE, "GST_NAVIGATION_COMMAND_PREV_ANGLE",
+          "prev-angle"},
+      {GST_NAVIGATION_COMMAND_NEXT_ANGLE, "GST_NAVIGATION_COMMAND_NEXT_ANGLE",
+          "next-angle"},
+      {0, NULL, NULL}
+    };
+    GType g_define_type_id =
+        g_enum_register_static ("GstNavigationCommand", values);
+    g_once_init_leave (&g_define_type_id__volatile, g_define_type_id);
+  }
+  return g_define_type_id__volatile;
+}
+
+GType
+gst_navigation_query_type_get_type (void)
+{
+  static volatile gsize g_define_type_id__volatile = 0;
+  if (g_once_init_enter (&g_define_type_id__volatile)) {
+    static const GEnumValue values[] = {
+      {GST_NAVIGATION_QUERY_INVALID, "GST_NAVIGATION_QUERY_INVALID", "invalid"},
+      {GST_NAVIGATION_QUERY_COMMANDS, "GST_NAVIGATION_QUERY_COMMANDS",
+          "commands"},
+      {GST_NAVIGATION_QUERY_ANGLES, "GST_NAVIGATION_QUERY_ANGLES", "angles"},
+      {0, NULL, NULL}
+    };
+    GType g_define_type_id =
+        g_enum_register_static ("GstNavigationQueryType", values);
+    g_once_init_leave (&g_define_type_id__volatile, g_define_type_id);
+  }
+  return g_define_type_id__volatile;
+}
+
+GType
+gst_navigation_message_type_get_type (void)
+{
+  static volatile gsize g_define_type_id__volatile = 0;
+  if (g_once_init_enter (&g_define_type_id__volatile)) {
+    static const GEnumValue values[] = {
+      {GST_NAVIGATION_MESSAGE_INVALID, "GST_NAVIGATION_MESSAGE_INVALID",
+          "invalid"},
+      {GST_NAVIGATION_MESSAGE_MOUSE_OVER, "GST_NAVIGATION_MESSAGE_MOUSE_OVER",
+          "mouse-over"},
+      {GST_NAVIGATION_MESSAGE_COMMANDS_CHANGED,
+          "GST_NAVIGATION_MESSAGE_COMMANDS_CHANGED", "commands-changed"},
+      {GST_NAVIGATION_MESSAGE_ANGLES_CHANGED,
+          "GST_NAVIGATION_MESSAGE_ANGLES_CHANGED", "angles-changed"},
+      {0, NULL, NULL}
+    };
+    GType g_define_type_id =
+        g_enum_register_static ("GstNavigationMessageType", values);
+    g_once_init_leave (&g_define_type_id__volatile, g_define_type_id);
+  }
+  return g_define_type_id__volatile;
+}
+
+GType
+gst_navigation_event_type_get_type (void)
+{
+  static volatile gsize g_define_type_id__volatile = 0;
+  if (g_once_init_enter (&g_define_type_id__volatile)) {
+    static const GEnumValue values[] = {
+      {GST_NAVIGATION_EVENT_INVALID, "GST_NAVIGATION_EVENT_INVALID", "invalid"},
+      {GST_NAVIGATION_EVENT_KEY_PRESS, "GST_NAVIGATION_EVENT_KEY_PRESS",
+          "key-press"},
+      {GST_NAVIGATION_EVENT_KEY_RELEASE, "GST_NAVIGATION_EVENT_KEY_RELEASE",
+          "key-release"},
+      {GST_NAVIGATION_EVENT_MOUSE_BUTTON_PRESS,
+          "GST_NAVIGATION_EVENT_MOUSE_BUTTON_PRESS", "mouse-button-press"},
+      {GST_NAVIGATION_EVENT_MOUSE_BUTTON_RELEASE,
+            "GST_NAVIGATION_EVENT_MOUSE_BUTTON_RELEASE",
+          "mouse-button-release"},
+      {GST_NAVIGATION_EVENT_MOUSE_MOVE, "GST_NAVIGATION_EVENT_MOUSE_MOVE",
+          "mouse-move"},
+      {GST_NAVIGATION_EVENT_COMMAND, "GST_NAVIGATION_EVENT_COMMAND", "command"},
+      {0, NULL, NULL}
+    };
+    GType g_define_type_id =
+        g_enum_register_static ("GstNavigationEventType", values);
     g_once_init_leave (&g_define_type_id__volatile, g_define_type_id);
   }
   return g_define_type_id__volatile;
