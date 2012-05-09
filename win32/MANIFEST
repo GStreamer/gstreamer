@@ -3,11 +3,8 @@ win32/common/_stdint.h
 win32/common/config.h
 win32/common/gstrtsp-enumtypes.c
 win32/common/gstrtsp-enumtypes.h
-win32/common/interfaces-enumtypes.c
-win32/common/interfaces-enumtypes.h
 win32/common/libgstapp.def
 win32/common/libgstaudio.def
-win32/common/libgstinterfaces.def
 win32/common/libgstpbutils.def
 win32/common/libgstriff.def
 win32/common/libgstrtp.def
