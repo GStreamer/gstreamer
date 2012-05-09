@@ -74,9 +74,6 @@ struct _GstBurn
 
   /* < private > */
 
-  gint width, height;
-
-  GstVideoInfo info;
   gint adjustment;
   gboolean silent;
 };

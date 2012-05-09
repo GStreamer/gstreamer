@@ -67,6 +67,9 @@
 #include "gstplugin.h"
 #include "gstburn.h"
 
+#define gst_burn_parent_class parent_class
+G_DEFINE_TYPE (GstBurn, gst_burn, GST_TYPE_VIDEO_FILTER);
+
 GST_DEBUG_CATEGORY_STATIC (gst_burn_debug);
 #define GST_CAT_DEFAULT gst_burn_debug
 
@@ -75,8 +78,6 @@ GST_DEBUG_CATEGORY_STATIC (gst_burn_debug);
 #else
 #define CAPS_STR GST_VIDEO_CAPS_MAKE ("{  xBGR, xRGB }")
 #endif
-
-G_DEFINE_TYPE (GstBurn, gst_burn, GST_TYPE_VIDEO_FILTER);
 
 /* Filter signals and args. */
 enum
@@ -117,10 +118,10 @@ static void gst_burn_set_property (GObject * object, guint prop_id,
 static void gst_burn_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec);
 
-static gboolean gst_burn_set_caps (GstBaseTransform * btrans,
-    GstCaps * incaps, GstCaps * outcaps);
-static GstFlowReturn gst_burn_transform (GstBaseTransform * btrans,
-    GstBuffer * in_buf, GstBuffer * out_buf);
+static void gst_burn_finalize (GObject * object);
+
+static GstFlowReturn gst_burn_transform_frame (GstVideoFilter * vfilter,
+    GstVideoFrame * in_frame, GstVideoFrame * out_frame);
 
 /* GObject vmethod implementations */
 
@@ -130,7 +131,7 @@ gst_burn_class_init (GstBurnClass * klass)
 {
   GObjectClass *gobject_class = (GObjectClass *) klass;
   GstElementClass *gstelement_class = (GstElementClass *) klass;
-  GstBaseTransformClass *trans_class = (GstBaseTransformClass *) klass;
+  GstVideoFilterClass *vfilter_class = (GstVideoFilterClass *) klass;
 
   gst_element_class_set_details_simple (gstelement_class, "Burn",
       "Filter/Effect/Video",
@@ -144,6 +145,7 @@ gst_burn_class_init (GstBurnClass * klass)
 
   gobject_class->set_property = gst_burn_set_property;
   gobject_class->get_property = gst_burn_get_property;
+  gobject_class->finalize = gst_burn_finalize;
 
   g_object_class_install_property (gobject_class, PROP_ADJUSTMENT,
       g_param_spec_uint ("adjustment", "Adjustment",
@@ -154,8 +156,7 @@ gst_burn_class_init (GstBurnClass * klass)
       g_param_spec_boolean ("silent", "Silent", "Produce verbose output ?",
           FALSE, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
-  trans_class->set_caps = GST_DEBUG_FUNCPTR (gst_burn_set_caps);
-  trans_class->transform = GST_DEBUG_FUNCPTR (gst_burn_transform);
+  vfilter_class->transform_frame = GST_DEBUG_FUNCPTR (gst_burn_transform_frame);
 }
 
 /* Initialize the element,
@@ -210,58 +211,38 @@ gst_burn_get_property (GObject * object, guint prop_id,
   GST_OBJECT_UNLOCK (filter);
 }
 
-/* GstElement vmethod implementations */
-
-/* Handle the link with other elements. */
-static gboolean
-gst_burn_set_caps (GstBaseTransform * btrans, GstCaps * incaps,
-    GstCaps * outcaps)
+static void
+gst_burn_finalize (GObject * object)
 {
-  GstBurn *burn = GST_BURN (btrans);
-  GstVideoInfo info;
-
-  if (!gst_video_info_from_caps (&info, incaps))
-    goto invalid_caps;
-
-  burn->info = info;
-
-  burn->width = GST_VIDEO_INFO_WIDTH (&info);
-  burn->height = GST_VIDEO_INFO_HEIGHT (&info);
-
-  return TRUE;
-
-  /* ERRORS */
-invalid_caps:
-  {
-    GST_DEBUG_OBJECT (btrans, "could not parse caps");
-    return FALSE;
-  }
+  G_OBJECT_CLASS (parent_class)->finalize (object);
 }
+
+/* GstElement vmethod implementations */
 
 /* Actual processing. */
 static GstFlowReturn
-gst_burn_transform (GstBaseTransform * btrans,
-    GstBuffer * in_buf, GstBuffer * out_buf)
+gst_burn_transform_frame (GstVideoFilter * vfilter,
+    GstVideoFrame * in_frame, GstVideoFrame * out_frame)
 {
-  GstBurn *filter = GST_BURN (btrans);
-  gint video_size, adjustment;
+  GstBurn *filter = GST_BURN (vfilter);
+  gint video_size, adjustment, width, height;
   guint32 *src, *dest;
   GstClockTime timestamp;
   gint64 stream_time;
-  GstVideoFrame in_frame, out_frame;
 
-  gst_video_frame_map (&in_frame, &filter->info, in_buf, GST_MAP_READ);
-  gst_video_frame_map (&out_frame, &filter->info, out_buf, GST_MAP_WRITE);
+  src = GST_VIDEO_FRAME_PLANE_DATA (in_frame, 0);
+  dest = GST_VIDEO_FRAME_PLANE_DATA (out_frame, 0);
 
-  src = GST_VIDEO_FRAME_PLANE_DATA (&in_frame, 0);
-  dest = GST_VIDEO_FRAME_PLANE_DATA (&out_frame, 0);
+  width = GST_VIDEO_FRAME_WIDTH (in_frame);
+  height = GST_VIDEO_FRAME_HEIGHT (in_frame);
 
-  video_size = filter->width * filter->height;
+  video_size = width * height;
 
   /* GstController: update the properties */
-  timestamp = GST_BUFFER_TIMESTAMP (in_buf);
+  timestamp = GST_BUFFER_TIMESTAMP (in_frame->buffer);
   stream_time =
-      gst_segment_to_stream_time (&btrans->segment, GST_FORMAT_TIME, timestamp);
+      gst_segment_to_stream_time (&GST_BASE_TRANSFORM (filter)->segment,
+      GST_FORMAT_TIME, timestamp);
 
   GST_DEBUG_OBJECT (filter, "sync to %" GST_TIME_FORMAT,
       GST_TIME_ARGS (timestamp));
