@@ -141,9 +141,9 @@ gauss_blur_class_init (GaussBlurClass * klass)
   object_class->set_property = gauss_blur_set_property;
   object_class->get_property = gauss_blur_get_property;
 
-  trans_class->stop = gauss_blur_stop;
-  trans_class->set_caps = gauss_blur_set_caps;
-  trans_class->transform = gauss_blur_process_frame;
+  trans_class->stop = GST_DEBUG_FUNCPTR (gauss_blur_stop);
+  trans_class->set_caps = GST_DEBUG_FUNCPTR (gauss_blur_set_caps);
+  trans_class->transform = GST_DEBUG_FUNCPTR (gauss_blur_process_frame);
 
   g_object_class_install_property (object_class, PROP_SIGMA,
       g_param_spec_double ("sigma", "Sigma",
@@ -188,7 +188,7 @@ static gboolean
 gauss_blur_set_caps (GstBaseTransform * btrans,
     GstCaps * incaps, GstCaps * outcaps)
 {
-  GaussBlur *gb = GAUSS_BLUR (btrans);
+  GaussBlur *filter = GAUSS_BLUR (btrans);
   GstVideoInfo info;
   GstStructure *structure;
   guint32 n_elems;
@@ -199,18 +199,17 @@ gauss_blur_set_caps (GstBaseTransform * btrans,
   if (!gst_video_info_from_caps (&info, incaps))
     goto invalid_caps;
 
-  gb->info = info;
+  filter->info = info;
 
-  gb->width = GST_VIDEO_INFO_WIDTH (&info);
-  gb->height = GST_VIDEO_INFO_HEIGHT (&info);
+  filter->width = GST_VIDEO_INFO_WIDTH (&info);
+  filter->height = GST_VIDEO_INFO_HEIGHT (&info);
 
   /* get stride */
-  gb->stride = GST_VIDEO_INFO_PLANE_STRIDE (&info, 0);
+  filter->stride = GST_VIDEO_INFO_PLANE_STRIDE (&info, 0);
 
-  n_elems = gb->stride * gb->height;
+  n_elems = filter->stride * filter->height;
 
-  gb->tempim = g_malloc (sizeof (gfloat) * n_elems);
-  //gb->smoothedim = g_malloc (sizeof (guint16) * n_elems);
+  filter->tempim = g_malloc (sizeof (gfloat) * n_elems);
 
   return TRUE;
 
