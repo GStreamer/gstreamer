@@ -33,7 +33,8 @@ int main(int argc, char *argv[]) {
   }
   
   /* Configure elements */
-  g_object_set (visual, "shader", 0, NULL);
+  g_object_set (audio_source, "freq", 215.0f, NULL);
+  g_object_set (visual, "shader", 0, "style", 1, NULL);
   
   /* Link all elements that can be automatically linked because they have "Always" pads */
   gst_bin_add_many (GST_BIN (pipeline), audio_source, tee, audio_queue, audio_convert, audio_sink,
