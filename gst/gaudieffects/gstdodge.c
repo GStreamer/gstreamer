@@ -76,6 +76,9 @@ GST_DEBUG_CATEGORY_STATIC (gst_dodge_debug);
 #define CAPS_STR GST_VIDEO_CAPS_MAKE ("{  xBGR, xRGB }")
 #endif
 
+#define gst_dodge_parent_class parent_class
+G_DEFINE_TYPE (GstDodge, gst_dodge, GST_TYPE_VIDEO_FILTER);
+
 /* Filter signals and args. */
 enum
 {
@@ -107,17 +110,14 @@ static GstStaticPadTemplate src_factory = GST_STATIC_PAD_TEMPLATE ("src",
     GST_STATIC_CAPS (CAPS_STR)
     );
 
-G_DEFINE_TYPE (GstDodge, gst_dodge, GST_TYPE_VIDEO_FILTER);
-
 static void gst_dodge_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec);
 static void gst_dodge_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec);
+static void gst_dodge_finalize (GObject * object);
 
-static gboolean gst_dodge_set_caps (GstBaseTransform * btrans,
-    GstCaps * incaps, GstCaps * outcaps);
-static GstFlowReturn gst_dodge_transform (GstBaseTransform * btrans,
-    GstBuffer * in_buf, GstBuffer * out_buf);
+static GstFlowReturn gst_dodge_transform_frame (GstVideoFilter * vfilter,
+    GstVideoFrame * in_frame, GstVideoFrame * out_frame);
 
 /* GObject vmethod implementations */
 
@@ -127,7 +127,7 @@ gst_dodge_class_init (GstDodgeClass * klass)
 {
   GObjectClass *gobject_class = (GObjectClass *) klass;
   GstElementClass *gstelement_class = (GstElementClass *) klass;
-  GstBaseTransformClass *trans_class = (GstBaseTransformClass *) klass;
+  GstVideoFilterClass *vfilter_class = (GstVideoFilterClass *) klass;
 
   gst_element_class_set_details_simple (gstelement_class,
       "Dodge",
@@ -142,13 +142,14 @@ gst_dodge_class_init (GstDodgeClass * klass)
 
   gobject_class->set_property = gst_dodge_set_property;
   gobject_class->get_property = gst_dodge_get_property;
+  gobject_class->finalize = gst_dodge_finalize;
 
   g_object_class_install_property (gobject_class, PROP_SILENT,
       g_param_spec_boolean ("silent", "Silent", "Produce verbose output ?",
           FALSE, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
-  trans_class->set_caps = GST_DEBUG_FUNCPTR (gst_dodge_set_caps);
-  trans_class->transform = GST_DEBUG_FUNCPTR (gst_dodge_transform);
+  vfilter_class->transform_frame =
+      GST_DEBUG_FUNCPTR (gst_dodge_transform_frame);
 }
 
 /* Initialize the element,
@@ -196,51 +197,44 @@ gst_dodge_get_property (GObject * object, guint prop_id,
   GST_OBJECT_UNLOCK (filter);
 }
 
-/* GstElement vmethod implementations */
-
-/* Handle the link with other elements. */
-static gboolean
-gst_dodge_set_caps (GstBaseTransform * btrans, GstCaps * incaps,
-    GstCaps * outcaps)
+static void
+gst_dodge_finalize (GObject * object)
 {
-  GstDodge *dodge = GST_DODGE (btrans);
-  GstVideoInfo info;
-
-  if (!gst_video_info_from_caps (&info, incaps))
-    goto invalid_caps;
-
-  dodge->info = info;
-
-  dodge->width = GST_VIDEO_INFO_WIDTH (&info);
-  dodge->height = GST_VIDEO_INFO_HEIGHT (&info);
-
-  return TRUE;
-
-  /* ERRORS */
-invalid_caps:
-  {
-    GST_DEBUG_OBJECT (btrans, "could not parse caps");
-    return FALSE;
-  }
+  G_OBJECT_CLASS (parent_class)->finalize (object);
 }
+
+/* GstElement vmethod implementations */
 
 /* Actual processing. */
 static GstFlowReturn
-gst_dodge_transform (GstBaseTransform * btrans,
-    GstBuffer * in_buf, GstBuffer * out_buf)
+gst_dodge_transform_frame (GstVideoFilter * vfilter,
+    GstVideoFrame * in_frame, GstVideoFrame * out_frame)
 {
-  GstDodge *filter = GST_DODGE (btrans);
+  GstDodge *filter = GST_DODGE (vfilter);
   guint32 *src, *dest;
-  gint video_size;
-  GstVideoFrame in_frame, out_frame;
+  gint video_size, width, height;
 
-  gst_video_frame_map (&in_frame, &filter->info, in_buf, GST_MAP_READ);
-  gst_video_frame_map (&out_frame, &filter->info, out_buf, GST_MAP_WRITE);
+  GstClockTime timestamp;
+  gint64 stream_time;
 
-  src = GST_VIDEO_FRAME_PLANE_DATA (&in_frame, 0);
-  dest = GST_VIDEO_FRAME_PLANE_DATA (&out_frame, 0);
+  src = GST_VIDEO_FRAME_PLANE_DATA (in_frame, 0);
+  dest = GST_VIDEO_FRAME_PLANE_DATA (out_frame, 0);
 
-  video_size = filter->width * filter->height;
+  width = GST_VIDEO_FRAME_WIDTH (in_frame);
+  height = GST_VIDEO_FRAME_HEIGHT (in_frame);
+
+  timestamp = GST_BUFFER_TIMESTAMP (in_frame->buffer);
+  stream_time =
+      gst_segment_to_stream_time (&GST_BASE_TRANSFORM (filter)->segment,
+      GST_FORMAT_TIME, timestamp);
+
+  GST_DEBUG_OBJECT (filter, "sync to %" GST_TIME_FORMAT,
+      GST_TIME_ARGS (timestamp));
+
+  if (GST_CLOCK_TIME_IS_VALID (stream_time))
+    gst_object_sync_values (GST_OBJECT (filter), stream_time);
+
+  video_size = width * height;
 
   transform (src, dest, video_size);
 

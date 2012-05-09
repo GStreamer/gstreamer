@@ -74,9 +74,6 @@ struct _GstDodge
 
   /* < private > */
 
-  GstVideoInfo info;
-  gint width, height;
-
   gboolean silent;
 };
 
