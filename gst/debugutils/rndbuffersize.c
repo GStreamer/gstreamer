@@ -93,7 +93,8 @@ static gboolean gst_rnd_buffer_size_activate_mode (GstPad * pad,
 static void gst_rnd_buffer_size_loop (GstRndBufferSize * self);
 static GstStateChangeReturn gst_rnd_buffer_size_change_state (GstElement *
     element, GstStateChange transition);
-static gboolean gst_rnd_buffer_size_src_event (GstPad * pad, GstEvent * event);
+static gboolean gst_rnd_buffer_size_src_event (GstPad * pad,
+    GstObject * parent, GstEvent * event);
 
 GType gst_rnd_buffer_size_get_type (void);
 #define gst_rnd_buffer_size_parent_class parent_class
@@ -278,7 +279,8 @@ gst_rnd_buffer_size_activate_mode (GstPad * pad, GstObject * parent,
 }
 
 static gboolean
-gst_rnd_buffer_size_src_event (GstPad * pad, GstEvent * event)
+gst_rnd_buffer_size_src_event (GstPad * pad, GstObject * parent,
+    GstEvent * event)
 {
   GstRndBufferSize *self;
   GstSeekType start_type;
@@ -291,7 +293,7 @@ gst_rnd_buffer_size_src_event (GstPad * pad, GstEvent * event)
     return FALSE;
   }
 
-  self = GST_RND_BUFFER_SIZE (GST_OBJECT_PARENT (pad));
+  self = GST_RND_BUFFER_SIZE (parent);
   gst_event_parse_seek (event, NULL, &format, &flags, &start_type, &start,
       NULL, NULL);
 
@@ -307,8 +309,8 @@ gst_rnd_buffer_size_src_event (GstPad * pad, GstEvent * event)
   if ((flags & GST_SEEK_FLAG_FLUSH)) {
     gst_pad_push_event (self->srcpad, gst_event_new_flush_start ());
     gst_pad_push_event (self->sinkpad, gst_event_new_flush_start ());
-    gst_pad_push_event (self->srcpad, gst_event_new_flush_stop ());
-    gst_pad_push_event (self->sinkpad, gst_event_new_flush_stop ());
+    gst_pad_push_event (self->srcpad, gst_event_new_flush_stop (TRUE));
+    gst_pad_push_event (self->sinkpad, gst_event_new_flush_stop (TRUE));
   } else {
     gst_pad_pause_task (self->sinkpad);
   }
