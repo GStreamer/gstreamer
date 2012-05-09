@@ -73,50 +73,26 @@ static void
 pad_removed_cb (GstElement * element, GstPad * pad, GESTrack * track);
 static void composition_duration_cb (GstElement * composition, GParamSpec * arg
     G_GNUC_UNUSED, GESTrack * obj);
-static void
-sort_track_objects_cb (GESTrackObject * child,
-    GParamSpec * arg G_GNUC_UNUSED, GESTrack * track);
 
-static void timeline_duration_cb (GESTimeline * timeline,
-    GParamSpec * arg G_GNUC_UNUSED, GESTrack * track);
+/* Private methods/functions/callbacks */
 
-static void
-ges_track_get_property (GObject * object, guint property_id,
-    GValue * value, GParamSpec * pspec)
+static gint
+objects_start_compare (GESTrackObject * a, GESTrackObject * b,
+    gpointer user_data)
 {
-  GESTrack *track = GES_TRACK (object);
 
-  switch (property_id) {
-    case ARG_CAPS:
-      gst_value_set_caps (value, track->priv->caps);
-      break;
-    case ARG_TYPE:
-      g_value_set_flags (value, track->type);
-      break;
-    case ARG_DURATION:
-      g_value_set_uint64 (value, track->priv->duration);
-      break;
-    default:
-      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, property_id, pspec);
+  if (a->start == b->start) {
+    if (a->priority < b->priority)
+      return -1;
+    if (a->priority > b->priority)
+      return 1;
+    return 0;
   }
-}
-
-static void
-ges_track_set_property (GObject * object, guint property_id,
-    const GValue * value, GParamSpec * pspec)
-{
-  GESTrack *track = GES_TRACK (object);
-
-  switch (property_id) {
-    case ARG_CAPS:
-      ges_track_set_caps (track, gst_value_get_caps (value));
-      break;
-    case ARG_TYPE:
-      track->type = g_value_get_flags (value);
-      break;
-    default:
-      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, property_id, pspec);
-  }
+  if (a->start < b->start)
+    return -1;
+  if (a->start > b->start)
+    return 1;
+  return 0;
 }
 
 static void
@@ -124,6 +100,82 @@ add_trackobj_to_list_foreach (GESTrackObject * trackobj, GList ** list)
 {
   g_object_ref (trackobj);
   *list = g_list_prepend (*list, trackobj);
+}
+
+
+static void
+sort_track_objects_cb (GESTrackObject * child,
+    GParamSpec * arg G_GNUC_UNUSED, GESTrack * track)
+{
+  g_sequence_sort (track->priv->tckobjs_by_start,
+      (GCompareDataFunc) objects_start_compare, NULL);
+}
+
+static void
+timeline_duration_cb (GESTimeline * timeline,
+    GParamSpec * arg G_GNUC_UNUSED, GESTrack * track)
+{
+  guint64 duration;
+
+  g_object_get (timeline, "duration", &duration, NULL);
+  g_object_set (GES_TRACK (track)->priv->background, "duration", duration,
+      NULL);
+
+  GST_DEBUG_OBJECT (track, "Updating background duration to %" GST_TIME_FORMAT,
+      GST_TIME_ARGS (duration));
+}
+
+static void
+pad_added_cb (GstElement * element, GstPad * pad, GESTrack * track)
+{
+  GESTrackPrivate *priv = track->priv;
+
+  GST_DEBUG ("track:%p, pad %s:%s", track, GST_DEBUG_PAD_NAME (pad));
+
+  /* ghost the pad */
+  priv->srcpad = gst_ghost_pad_new ("src", pad);
+
+  gst_pad_set_active (priv->srcpad, TRUE);
+
+  gst_element_add_pad (GST_ELEMENT (track), priv->srcpad);
+
+  GST_DEBUG ("done");
+}
+
+static void
+pad_removed_cb (GstElement * element, GstPad * pad, GESTrack * track)
+{
+  GESTrackPrivate *priv = track->priv;
+
+  GST_DEBUG ("track:%p, pad %s:%s", track, GST_DEBUG_PAD_NAME (pad));
+
+  if (G_LIKELY (priv->srcpad)) {
+    gst_pad_set_active (priv->srcpad, FALSE);
+    gst_element_remove_pad (GST_ELEMENT (track), priv->srcpad);
+    priv->srcpad = NULL;
+  }
+
+  GST_DEBUG ("done");
+}
+
+static void
+composition_duration_cb (GstElement * composition,
+    GParamSpec * arg G_GNUC_UNUSED, GESTrack * obj)
+{
+  guint64 duration;
+
+  g_object_get (composition, "duration", &duration, NULL);
+
+
+  if (obj->priv->duration != duration) {
+    GST_DEBUG ("composition duration : %" GST_TIME_FORMAT " current : %"
+        GST_TIME_FORMAT, GST_TIME_ARGS (duration),
+        GST_TIME_ARGS (obj->priv->duration));
+
+    obj->priv->duration = duration;
+
+    g_object_notify_by_pspec (G_OBJECT (obj), properties[ARG_DURATION]);
+  }
 }
 
 /* Remove @object from @track, but keeps it in the sequence this is needed
@@ -178,6 +230,46 @@ dispose_tckobjs_foreach (GESTrackObject * tckobj, GESTrack * track)
 
   remove_object_internal (track, tckobj);
   ges_timeline_object_release_track_object (tlobj, tckobj);
+}
+
+/* GObject virtual methods */
+static void
+ges_track_get_property (GObject * object, guint property_id,
+    GValue * value, GParamSpec * pspec)
+{
+  GESTrack *track = GES_TRACK (object);
+
+  switch (property_id) {
+    case ARG_CAPS:
+      gst_value_set_caps (value, track->priv->caps);
+      break;
+    case ARG_TYPE:
+      g_value_set_flags (value, track->type);
+      break;
+    case ARG_DURATION:
+      g_value_set_uint64 (value, track->priv->duration);
+      break;
+    default:
+      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, property_id, pspec);
+  }
+}
+
+static void
+ges_track_set_property (GObject * object, guint property_id,
+    const GValue * value, GParamSpec * pspec)
+{
+  GESTrack *track = GES_TRACK (object);
+
+  switch (property_id) {
+    case ARG_CAPS:
+      ges_track_set_caps (track, gst_value_get_caps (value));
+      break;
+    case ARG_TYPE:
+      track->type = g_value_get_flags (value);
+      break;
+    default:
+      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, property_id, pspec);
+  }
 }
 
 static void
@@ -470,28 +562,6 @@ ges_track_set_caps (GESTrack * track, const GstCaps * caps)
   /* FIXME : update all trackobjects ? */
 }
 
-
-/* FIXME : put the compare function in the utils */
-
-static gint
-objects_start_compare (GESTrackObject * a, GESTrackObject * b,
-    gpointer user_data)
-{
-
-  if (a->start == b->start) {
-    if (a->priority < b->priority)
-      return -1;
-    if (a->priority > b->priority)
-      return 1;
-    return 0;
-  }
-  if (a->start < b->start)
-    return -1;
-  if (a->start > b->start)
-    return 1;
-  return 0;
-}
-
 /**
  * ges_track_add_object:
  * @track: a #GESTrack
@@ -605,81 +675,6 @@ ges_track_remove_object (GESTrack * track, GESTrackObject * object)
   }
 
   return FALSE;
-}
-
-static void
-pad_added_cb (GstElement * element, GstPad * pad, GESTrack * track)
-{
-  GESTrackPrivate *priv = track->priv;
-
-  GST_DEBUG ("track:%p, pad %s:%s", track, GST_DEBUG_PAD_NAME (pad));
-
-  /* ghost the pad */
-  priv->srcpad = gst_ghost_pad_new ("src", pad);
-
-  gst_pad_set_active (priv->srcpad, TRUE);
-
-  gst_element_add_pad (GST_ELEMENT (track), priv->srcpad);
-
-  GST_DEBUG ("done");
-}
-
-static void
-pad_removed_cb (GstElement * element, GstPad * pad, GESTrack * track)
-{
-  GESTrackPrivate *priv = track->priv;
-
-  GST_DEBUG ("track:%p, pad %s:%s", track, GST_DEBUG_PAD_NAME (pad));
-
-  if (G_LIKELY (priv->srcpad)) {
-    gst_pad_set_active (priv->srcpad, FALSE);
-    gst_element_remove_pad (GST_ELEMENT (track), priv->srcpad);
-    priv->srcpad = NULL;
-  }
-
-  GST_DEBUG ("done");
-}
-
-static void
-composition_duration_cb (GstElement * composition,
-    GParamSpec * arg G_GNUC_UNUSED, GESTrack * obj)
-{
-  guint64 duration;
-
-  g_object_get (composition, "duration", &duration, NULL);
-
-
-  if (obj->priv->duration != duration) {
-    GST_DEBUG ("composition duration : %" GST_TIME_FORMAT " current : %"
-        GST_TIME_FORMAT, GST_TIME_ARGS (duration),
-        GST_TIME_ARGS (obj->priv->duration));
-
-    obj->priv->duration = duration;
-
-    g_object_notify_by_pspec (G_OBJECT (obj), properties[ARG_DURATION]);
-  }
-}
-
-static void
-sort_track_objects_cb (GESTrackObject * child,
-    GParamSpec * arg G_GNUC_UNUSED, GESTrack * track)
-{
-  g_sequence_sort (track->priv->tckobjs_by_start,
-      (GCompareDataFunc) objects_start_compare, NULL);
-}
-
-static void
-timeline_duration_cb (GESTimeline * timeline,
-    GParamSpec * arg G_GNUC_UNUSED, GESTrack * track)
-{
-  guint64 duration;
-
-  g_object_get (timeline, "duration", &duration, NULL);
-  g_object_set (GES_TRACK (track)->priv->background, "duration", duration,
-      NULL);
-
-  GST_DEBUG_OBJECT (track, "Updating background duration to %" GST_TIME_FORMAT,
-      GST_TIME_ARGS (duration));
 }
 
 /**
