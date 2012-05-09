@@ -3511,7 +3511,8 @@ void
 gst_play_sink_refresh_pad (GstPlaySink * playsink, GstPad * pad,
     GstPlaySinkType type)
 {
-  gulong *block_id;
+  gulong *block_id = NULL;
+
   GST_DEBUG_OBJECT (playsink, "refresh pad %" GST_PTR_FORMAT, pad);
 
   GST_PLAY_SINK_LOCK (playsink);
