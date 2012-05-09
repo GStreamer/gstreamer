@@ -68,10 +68,8 @@ typedef struct GstChromiumClass GstChromiumClass;
 struct GstChromium
 {
   GstVideoFilter videofilter;
-  gint width, height;
 
   /* < private > */
-  GstVideoInfo info;
   gint edge_a, edge_b;
   gboolean silent;
 };
