@@ -145,7 +145,7 @@ gst_v4l2_fill_lists (GstV4l2Object * v4l2object)
     GST_LOG_OBJECT (e, "   name:      '%s'", input.name);
     GST_LOG_OBJECT (e, "   type:      %08x", input.type);
     GST_LOG_OBJECT (e, "   audioset:  %08x", input.audioset);
-    GST_LOG_OBJECT (e, "   std:       %016x", (guint) input.std);
+    GST_LOG_OBJECT (e, "   std:       %016" G_GINT64_MODIFIER "x", input.std);
     GST_LOG_OBJECT (e, "   status:    %08x", input.status);
 
     v4l2channel = g_object_new (GST_TYPE_V4L2_TUNER_CHANNEL, NULL);
