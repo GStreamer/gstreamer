@@ -73,10 +73,6 @@ struct _GstDilate
   GstVideoFilter videofilter;
 
   /* < private > */
-
-  GstVideoInfo info;
-  gint width, height;
-
   gboolean silent;
   gboolean erode;
 };
