@@ -23,6 +23,16 @@
 #include "ges-screenshot.h"
 #include "ges-internal.h"
 
+/**
+ * ges_play_sink_convert_frame:
+ * @playsink: The olaysink to get last frame from
+ * @caps: The caps defining the format the return value will have
+ *
+ * Get the last buffer @playsink showed
+ *
+ * Returns: (transfer full): A #GstBuffer containing the last frame from
+ * @playsink in the format defined by the @caps
+ */
 GstBuffer *
 ges_play_sink_convert_frame (GstElement * playsink, GstCaps * caps)
 {

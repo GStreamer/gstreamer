@@ -56,8 +56,7 @@ G_DEFINE_TYPE (GESTimeline, ges_timeline, GST_TYPE_BIN);
 #define GES_TIMELINE_PENDINGOBJS_UNLOCK(timeline) \
   (g_mutex_unlock(GES_TIMELINE_PENDINGOBJS_GET_LOCK (timeline)))
 
-/**
- *  The move context is used for the timeline editing modes functions in order to
+/*  The move context is used for the timeline editing modes functions in order to
  *  + Ripple / Roll /  Slide / Move / Trim
  *
  * The context aims at avoiding to recalculate values/objects on each call of the

@@ -793,7 +793,7 @@ ges_track_video_transition_get_border (GESTrackVideoTransition * self)
 /**
  * ges_track_video_transition_set_inverted:
  * @self: The #GESTrackVideoTransition to set invert on
- * @value: The value of the  to set on @object
+ * @inverted: %TRUE to invert the transition %FALSE otherwise
  *
  * Set the invert property of @self, this value represents
  * the direction of the transition. In case this value does

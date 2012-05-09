@@ -1748,6 +1748,7 @@ ges_timeline_object_ripple_end (GESTimelineObject * object, guint64 end)
 
 /**
  * ges_timeline_object_roll_start:
+ * @object: The #GESTimelineObject to roll
  * @start: The new start of @object in roll mode, it will also adapat
  * the in-point of @object according
  *
