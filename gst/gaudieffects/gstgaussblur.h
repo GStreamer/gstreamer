@@ -1,6 +1,7 @@
 /*
  * GStreamer
  * Copyright (C) <2010> Jan Schmidt <thaytan@noraisin.net>
+ * Copyright (C) <2012> Luis de Bethencourt <luis@debethencourt.com>
  *
  * Chromium - burning chrome video effect.
  * Based on Pete Warden's FreeFrame plugin with the same name.
@@ -67,6 +68,8 @@ struct GaussBlur
 
   float cur_sigma, sigma;
   int windowsize;
+
+  GstVideoInfo info;
 
   float *kernel;
   float *kernel_sum;

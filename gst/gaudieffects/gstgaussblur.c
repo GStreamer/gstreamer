@@ -1,6 +1,7 @@
 /*
  * GStreamer
  * Copyright (C) <2010> Jan Schmidt <thaytan@noraisin.net>
+ * Copyright (C) <2012> Luis de Bethencourt <luis@debethencourt.com>
  *
  * Chromium - burning chrome video effect.
  * Based on Pete Warden's FreeFrame plugin with the same name.
@@ -58,7 +59,8 @@
  */
 
 #ifdef HAVE_CONFIG_H
-#  include <config.h>
+#include <config.h>
+#include <string.h>
 #endif
 
 #include <math.h>
@@ -82,12 +84,12 @@ GST_DEBUG_CATEGORY_STATIC (gst_gauss_blur_debug);
 #define GST_CAT_DEFAULT gst_gauss_blur_debug
 
 #if G_BYTE_ORDER == G_LITTLE_ENDIAN
-#define CAPS_STR_RGB GST_VIDEO_CAPS_BGRx ";" GST_VIDEO_CAPS_RGBx
+#define CAPS_STR_RGB GST_VIDEO_CAPS_MAKE ("{  BGRx, RGBx }")
 #else
-#define CAPS_STR_RGB GST_VIDEO_CAPS_xRGB ";" GST_VIDEO_CAPS_xBGR
+#define CAPS_STR_RGB GST_VIDEO_CAPS_MAKE ("{  xBGR, xRGB }")
 #endif
 
-#define CAPS_STR GST_VIDEO_CAPS_YUV("AYUV")
+#define CAPS_STR GST_VIDEO_CAPS_MAKE ("AYUV")
 
 /* The capabilities of the inputs and outputs. */
 static GstStaticPadTemplate sink_factory = GST_STATIC_PAD_TEMPLATE ("sink",
@@ -114,32 +116,27 @@ static gboolean make_gaussian_kernel (GaussBlur * gb, float sigma);
 static void gaussian_smooth (GaussBlur * gb, guint8 * image,
     guint8 * out_image);
 
-GST_BOILERPLATE (GaussBlur, gauss_blur, GstVideoFilter, GST_TYPE_VIDEO_FILTER);
+G_DEFINE_TYPE (GaussBlur, gauss_blur, GST_TYPE_VIDEO_FILTER);
 
 #define DEFAULT_SIGMA 1.2
-
-static void
-gauss_blur_base_init (gpointer gclass)
-{
-  GstElementClass *element_class = GST_ELEMENT_CLASS (gclass);
-
-  gst_element_class_set_details_simple (element_class,
-      "GaussBlur",
-      "Filter/Effect/Video",
-      "Perform Gaussian blur/sharpen on a video",
-      "Jan Schmidt <thaytan@noraisin.net>");
-
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&src_factory));
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&sink_factory));
-}
 
 static void
 gauss_blur_class_init (GaussBlurClass * klass)
 {
   GObjectClass *object_class = (GObjectClass *) klass;
+  GstElementClass *gstelement_class = (GstElementClass *) klass;
   GstBaseTransformClass *trans_class = (GstBaseTransformClass *) klass;
+
+  gst_element_class_set_details_simple (gstelement_class,
+      "GaussBlur",
+      "Filter/Effect/Video",
+      "Perform Gaussian blur/sharpen on a video",
+      "Jan Schmidt <thaytan@noraisin.net>");
+
+  gst_element_class_add_pad_template (gstelement_class,
+      gst_static_pad_template_get (&src_factory));
+  gst_element_class_add_pad_template (gstelement_class,
+      gst_static_pad_template_get (&sink_factory));
 
   object_class->set_property = gauss_blur_set_property;
   object_class->get_property = gauss_blur_get_property;
@@ -156,7 +153,7 @@ gauss_blur_class_init (GaussBlurClass * klass)
 }
 
 static void
-gauss_blur_init (GaussBlur * gb, GaussBlurClass * gclass)
+gauss_blur_init (GaussBlur * gb)
 {
   gb->sigma = DEFAULT_SIGMA;
   gb->cur_sigma = -1.0;
@@ -192,18 +189,23 @@ gauss_blur_set_caps (GstBaseTransform * btrans,
     GstCaps * incaps, GstCaps * outcaps)
 {
   GaussBlur *gb = GAUSS_BLUR (btrans);
+  GstVideoInfo info;
   GstStructure *structure;
-  GstVideoFormat format;
   guint32 n_elems;
 
   structure = gst_caps_get_structure (incaps, 0);
   g_return_val_if_fail (structure != NULL, FALSE);
 
-  if (!gst_video_format_parse_caps (incaps, &format, &gb->width, &gb->height))
-    return FALSE;
+  if (!gst_video_info_from_caps (&info, incaps))
+    goto invalid_caps;
+
+  gb->info = info;
+
+  gb->width = GST_VIDEO_INFO_WIDTH (&info);
+  gb->height = GST_VIDEO_INFO_HEIGHT (&info);
 
   /* get stride */
-  gb->stride = gst_video_format_get_row_stride (format, 0, gb->width);
+  gb->stride = GST_VIDEO_INFO_PLANE_STRIDE (&info, 0);
 
   n_elems = gb->stride * gb->height;
 
@@ -211,36 +213,45 @@ gauss_blur_set_caps (GstBaseTransform * btrans,
   //gb->smoothedim = g_malloc (sizeof (guint16) * n_elems);
 
   return TRUE;
+
+  /* ERROR */
+invalid_caps:
+  {
+    GST_DEBUG_OBJECT (btrans, "could not parse caps");
+    return FALSE;
+  }
 }
 
 static GstFlowReturn
 gauss_blur_process_frame (GstBaseTransform * btrans,
     GstBuffer * in_buf, GstBuffer * out_buf)
 {
-  GaussBlur *gb = GAUSS_BLUR (btrans);
+  GaussBlur *filter = GAUSS_BLUR (btrans);
   GstClockTime timestamp;
   gint64 stream_time;
   gfloat sigma;
+  GstMapInfo imap, omap;
 
   /* GstController: update the properties */
   timestamp = GST_BUFFER_TIMESTAMP (in_buf);
   stream_time =
       gst_segment_to_stream_time (&btrans->segment, GST_FORMAT_TIME, timestamp);
   if (GST_CLOCK_TIME_IS_VALID (stream_time))
-    gst_object_sync_values (GST_OBJECT (gb), stream_time);
+    gst_object_sync_values (GST_OBJECT (filter), stream_time);
 
-  GST_OBJECT_LOCK (gb);
-  sigma = gb->sigma;
-  GST_OBJECT_UNLOCK (gb);
+  GST_OBJECT_LOCK (filter);
+  sigma = filter->sigma;
+  GST_OBJECT_UNLOCK (filter);
 
-  if (gb->cur_sigma != sigma) {
-    g_free (gb->kernel);
-    gb->kernel = NULL;
-    g_free (gb->kernel_sum);
-    gb->kernel_sum = NULL;
-    gb->cur_sigma = sigma;
+  if (filter->cur_sigma != sigma) {
+    g_free (filter->kernel);
+    filter->kernel = NULL;
+    g_free (filter->kernel_sum);
+    filter->kernel_sum = NULL;
+    filter->cur_sigma = sigma;
   }
-  if (gb->kernel == NULL && !make_gaussian_kernel (gb, gb->cur_sigma)) {
+  if (filter->kernel == NULL &&
+      !make_gaussian_kernel (filter, filter->cur_sigma)) {
     GST_ELEMENT_ERROR (btrans, RESOURCE, NO_SPACE_LEFT, ("Out of memory"),
         ("Failed to allocation gaussian kernel"));
     return GST_FLOW_ERROR;
@@ -250,9 +261,14 @@ gauss_blur_process_frame (GstBaseTransform * btrans,
    * Perform gaussian smoothing on the image using the input standard
    * deviation.
    */
-  memcpy (GST_BUFFER_DATA (out_buf), GST_BUFFER_DATA (in_buf),
-      gb->height * gb->stride);
-  gaussian_smooth (gb, GST_BUFFER_DATA (in_buf), GST_BUFFER_DATA (out_buf));
+  gst_buffer_map (out_buf, &omap, GST_MAP_WRITE);
+  gst_buffer_map (in_buf, &imap, GST_MAP_READ);
+
+  memcpy (omap.data, imap.data, filter->height * filter->stride);
+  gaussian_smooth (filter, imap.data, omap.data);
+
+  gst_buffer_unmap (in_buf, &imap);
+  gst_buffer_unmap (out_buf, &omap);
 
   return GST_FLOW_OK;
 }
