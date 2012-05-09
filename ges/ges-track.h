@@ -48,6 +48,18 @@ G_BEGIN_DECLS
 typedef struct _GESTrackPrivate GESTrackPrivate;
 
 /**
+ * GESCreateElementForGapFunc:
+ * @track: the #GESTrack
+ *
+ * A function that will be called to create the #GstElement that will be used
+ * as a source to fill the gaps in @track.
+ *
+ * Returns: A #GstElement (must be a source) that will be used to
+ * fill the gaps (periods of time in @track that containes no source).
+ */
+typedef GstElement* (*GESCreateElementForGapFunc) (GESTrack *track);
+
+/**
  * GESTrack:
  * @type: a #GESTrackType indicting the basic type of the track.
  *
@@ -106,6 +118,10 @@ gboolean ges_track_enable_update          (GESTrack * track, gboolean enabled);
 gboolean ges_track_is_updating            (GESTrack * track);
 
 GList* ges_track_get_objects              (GESTrack *track);
+
+void
+ges_track_set_create_element_for_gap_func (GESTrack *track,
+                                           GESCreateElementForGapFunc func);
 
 G_END_DECLS
 

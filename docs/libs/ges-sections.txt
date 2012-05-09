@@ -61,6 +61,7 @@ ges_track_get_caps
 ges_track_enable_update
 ges_track_get_objects
 ges_track_is_updating
+ges_track_set_create_element_for_gap_func
 <SUBSECTION Standard>
 GESTrackClass
 GESTrackPrivate
