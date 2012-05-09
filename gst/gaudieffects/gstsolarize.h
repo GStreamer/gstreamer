@@ -74,9 +74,6 @@ struct _GstSolarize
 
   /* < private > */
 
-  GstVideoInfo info;
-  gint width, height;
-
   gint threshold, start, end;
   gboolean silent;
 };
