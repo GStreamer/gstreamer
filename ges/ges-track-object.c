@@ -198,8 +198,28 @@ static void
 ges_track_object_dispose (GObject * object)
 {
   GESTrackObjectPrivate *priv = GES_TRACK_OBJECT (object)->priv;
+
   if (priv->properties_hashtable)
     g_hash_table_destroy (priv->properties_hashtable);
+
+  if (priv->gnlobject) {
+    GstState cstate;
+
+    if (priv->track != NULL) {
+      GST_ERROR_OBJECT (object, "Still in %p, this means that you forgot"
+          " to remove it from the GESTrack it is contained in. You always need"
+          " to remove a GESTrackObject from its track before dropping the last"
+          " reference\n"
+          "This problem may also be caused by a refcounting bug in"
+          " the application or GES itself.", priv->track);
+      gst_element_get_state (priv->gnlobject, &cstate, NULL, 0);
+      if (cstate != GST_STATE_NULL)
+        gst_element_set_state (priv->gnlobject, GST_STATE_NULL);
+    }
+
+    gst_object_unref (priv->gnlobject);
+    priv->gnlobject = NULL;
+  }
 
   G_OBJECT_CLASS (ges_track_object_parent_class)->dispose (object);
 }
@@ -780,7 +800,7 @@ ensure_gnl_object (GESTrackObject * object)
 
     GST_DEBUG_OBJECT (object, "Got a valid GnlObject, now filling it in");
 
-    object->priv->gnlobject = gnlobject;
+    object->priv->gnlobject = gst_object_ref (gnlobject);
 
     if (object->priv->timelineobj)
       res = ges_timeline_object_fill_track_object (object->priv->timelineobj,
@@ -921,6 +941,8 @@ ges_track_object_get_timeline_object (GESTrackObject * object)
 GstElement *
 ges_track_object_get_gnlobject (GESTrackObject * object)
 {
+  g_return_val_if_fail (GES_IS_TRACK_OBJECT (object), NULL);
+
   return object->priv->gnlobject;
 }
 
@@ -936,6 +958,8 @@ ges_track_object_get_gnlobject (GESTrackObject * object)
 GstElement *
 ges_track_object_get_element (GESTrackObject * object)
 {
+  g_return_val_if_fail (GES_IS_TRACK_OBJECT (object), NULL);
+
   return object->priv->element;
 }
 
