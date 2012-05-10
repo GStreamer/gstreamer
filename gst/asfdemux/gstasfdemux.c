@@ -439,20 +439,43 @@ gst_asf_demux_sink_event (GstPad * pad, GstObject * parent, GstEvent * event)
 
 static gboolean
 gst_asf_demux_seek_index_lookup (GstASFDemux * demux, guint * packet,
-    GstClockTime seek_time, GstClockTime * p_idx_time, guint * speed)
+    GstClockTime seek_time, GstClockTime * p_idx_time, guint * speed,
+    gboolean next, gboolean * eos)
 {
   GstClockTime idx_time;
   guint idx;
+
+  if (eos)
+    *eos = FALSE;
 
   if (G_UNLIKELY (demux->sidx_num_entries == 0 || demux->sidx_interval == 0))
     return FALSE;
 
   idx = (guint) ((seek_time + demux->preroll) / demux->sidx_interval);
 
-  /* FIXME: seek beyond end of file should result in immediate EOS from
-   * streaming thread instead of a failed seek */
-  if (G_UNLIKELY (idx >= demux->sidx_num_entries))
+  if (next) {
+    /* if we want the next keyframe, we have to go forward till we find
+       a different packet number */
+    guint idx2 = idx;
+    if (idx >= demux->sidx_num_entries - 1) {
+      /* If we get here, we're asking for next keyframe after the last one. There isn't one. */
+      if (eos)
+        *eos = TRUE;
+      return FALSE;
+    }
+    for (idx2 = idx + 1; idx2 < demux->sidx_num_entries; ++idx2) {
+      if (demux->sidx_entries[idx].packet != demux->sidx_entries[idx2].packet) {
+        idx = idx2;
+        break;
+      }
+    }
+  }
+
+  if (G_UNLIKELY (idx >= demux->sidx_num_entries)) {
+    if (eos)
+      *eos = TRUE;
     return FALSE;
+  }
 
   *packet = demux->sidx_entries[idx].packet;
   if (speed)
@@ -538,9 +561,11 @@ gst_asf_demux_handle_seek_push (GstASFDemux * demux, GstEvent * event)
   GST_DEBUG_OBJECT (demux, "seeking to %" GST_TIME_FORMAT, GST_TIME_ARGS (cur));
 
   /* determine packet, by index or by estimation */
-  if (!gst_asf_demux_seek_index_lookup (demux, &packet, cur, NULL, NULL)) {
-    packet = (guint) gst_util_uint64_scale (demux->num_packets,
-        cur, demux->play_time);
+  if (!gst_asf_demux_seek_index_lookup (demux, &packet, cur, NULL, NULL, FALSE,
+          NULL)) {
+    packet =
+        (guint) gst_util_uint64_scale (demux->num_packets, cur,
+        demux->play_time);
   }
 
   if (packet > demux->num_packets) {
@@ -572,12 +597,13 @@ gst_asf_demux_handle_seek_event (GstASFDemux * demux, GstEvent * event)
   GstSeekType cur_type, stop_type;
   GstFormat format;
   gboolean only_need_update;
-  gboolean keyunit_sync;
+  gboolean keyunit_sync, after, before, next;
   gboolean flush;
   gdouble rate;
   gint64 cur, stop;
   gint64 seek_time;
   guint packet, speed_count = 1;
+  gboolean eos;
 
   if (G_UNLIKELY (demux->seekable == FALSE || demux->packet_size == 0 ||
           demux->num_packets == 0 || demux->play_time == 0)) {
@@ -607,6 +633,9 @@ gst_asf_demux_handle_seek_event (GstASFDemux * demux, GstEvent * event)
   demux->accurate =
       ((flags & GST_SEEK_FLAG_ACCURATE) == GST_SEEK_FLAG_ACCURATE);
   keyunit_sync = ((flags & GST_SEEK_FLAG_KEY_UNIT) == GST_SEEK_FLAG_KEY_UNIT);
+  after = ((flags & GST_SEEK_FLAG_SNAP_AFTER) == GST_SEEK_FLAG_SNAP_AFTER);
+  before = ((flags & GST_SEEK_FLAG_SNAP_BEFORE) == GST_SEEK_FLAG_SNAP_BEFORE);
+  next = after && !before;
 
   if (G_UNLIKELY (demux->streaming)) {
     /* support it safely needs more segment handling, e.g. closing etc */
@@ -672,13 +701,18 @@ gst_asf_demux_handle_seek_event (GstASFDemux * demux, GstEvent * event)
   /* FIXME: should check the KEY_UNIT flag; need to adjust position to
    * real start of data and segment_start to indexed time for key unit seek*/
   if (G_UNLIKELY (!gst_asf_demux_seek_index_lookup (demux, &packet, seek_time,
-              &idx_time, &speed_count))) {
+              &idx_time, &speed_count, next, &eos))) {
+    gint64 offset;
+
+    if (eos) {
+      demux->packet = demux->num_packets;
+      goto skip;
+    }
+
     /* First try to query our source to see if it can convert for us. This is
        the case when our source is an mms stream, notice that in this case
        gstmms will do a time based seek to get the byte offset, this is not a
        problem as the seek to this offset needs to happen anway. */
-    gint64 offset;
-
     if (gst_pad_peer_query_convert (demux->sinkpad, GST_FORMAT_TIME, seek_time,
             GST_FORMAT_BYTES, &offset)) {
       packet = (offset - demux->data_offset) / demux->packet_size;
@@ -692,7 +726,7 @@ gst_asf_demux_handle_seek_event (GstASFDemux * demux, GstEvent * event)
        * the hope of hitting a keyframe and let the sinks throw away the stuff
        * before the segment start. For audio-only this is unnecessary as every
        * frame is 'key'. */
-      if (flush && (demux->accurate || keyunit_sync)
+      if (flush && (demux->accurate || (keyunit_sync && !next))
           && demux->num_video_streams > 0) {
         seek_time -= 5 * GST_SECOND;
         if (seek_time < 0)
@@ -726,6 +760,7 @@ gst_asf_demux_handle_seek_event (GstASFDemux * demux, GstEvent * event)
   gst_asf_demux_reset_stream_state_after_discont (demux);
   GST_OBJECT_UNLOCK (demux);
 
+skip:
   /* restart our task since it might have been stopped when we did the flush */
   gst_pad_start_task (demux->sinkpad, (GstTaskFunction) gst_asf_demux_loop,
       demux);
