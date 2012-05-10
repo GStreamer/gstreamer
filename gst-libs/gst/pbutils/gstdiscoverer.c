@@ -71,6 +71,12 @@ typedef struct
   GstTagList *tags;
 } PrivateStream;
 
+typedef struct
+{
+  GstPad *pad;
+  gulong id;
+} PadWithId;
+
 struct _GstDiscovererPrivate
 {
   gboolean async;
@@ -89,6 +95,9 @@ struct _GstDiscovererPrivate
   /* TRUE if discoverer has been started */
   gboolean running;
 
+  /* TRUE if ASYNC_DONE has been received (need to check for subtitle tags) */
+  gboolean async_done;
+
   /* current items */
   GstDiscovererInfo *current_info;
   GError *current_error;
@@ -96,6 +105,9 @@ struct _GstDiscovererPrivate
 
   /* List of private streams */
   GList *streams;
+
+  /* List of these sinks and their handler IDs (to remove the probe) */
+  GList *pending_subtitle_pads;
 
   /* Global elements */
   GstBin *pipeline;
@@ -262,8 +274,11 @@ gst_discoverer_init (GstDiscoverer * dc)
 
   dc->priv->timeout = DEFAULT_PROP_TIMEOUT;
   dc->priv->async = FALSE;
+  dc->priv->async_done = FALSE;
 
   dc->priv->lock = g_mutex_new ();
+
+  dc->priv->pending_subtitle_pads = NULL;
 
   GST_LOG ("Creating pipeline");
   dc->priv->pipeline = (GstBin *) gst_pipeline_new ("Discoverer");
@@ -462,6 +477,57 @@ is_subtitle_caps (const GstCaps * caps)
 }
 
 static void
+free_pad_id (PadWithId * d)
+{
+
+  gst_pad_remove_data_probe (d->pad, d->id);
+  gst_object_unref (d->pad);
+  g_slice_free (PadWithId, d);
+
+}
+
+static void
+got_subtitle_data (GstPad * pad, GstMiniObject * obj, GstDiscoverer * dc)
+{
+
+  GList *item = NULL;
+  gboolean update;
+  gboolean is_event;
+
+  is_event = GST_IS_EVENT (obj);
+
+  if (!(GST_IS_BUFFER (obj) || (is_event
+              && GST_EVENT_TYPE ((GstEvent *) obj) == GST_EVENT_NEWSEGMENT)))
+    return;
+
+  if (is_event) {
+    gst_event_parse_new_segment ((GstEvent *) obj, &update, NULL, NULL, NULL,
+        NULL, NULL);
+    if (!update)
+      return;
+  }
+
+  DISCO_LOCK (dc);
+  for (item = dc->priv->pending_subtitle_pads; item; item = item->next) {
+    PadWithId *pad_id = (PadWithId *) item->data;
+    if (pad_id->pad == pad) {
+      dc->priv->pending_subtitle_pads =
+          g_list_remove_link (dc->priv->pending_subtitle_pads, item);
+      free_pad_id (pad_id);
+      break;
+    }
+  }
+
+  if (dc->priv->pending_subtitle_pads == NULL) {
+    GstMessage *msg = gst_message_new_application (NULL,
+        gst_structure_empty_new ("DiscovererDone"));
+    gst_element_post_message ((GstElement *) dc->priv->pipeline, msg);
+  }
+  DISCO_UNLOCK (dc);
+
+}
+
+static void
 uridecodebin_pad_added_cb (GstElement * uridecodebin, GstPad * pad,
     GstDiscoverer * dc)
 {
@@ -486,10 +552,23 @@ uridecodebin_pad_added_cb (GstElement * uridecodebin, GstPad * pad,
 
   caps = gst_pad_query_caps (pad, NULL);
 
+  sinkpad = gst_element_get_static_pad (ps->queue, "sink");
+  if (sinkpad == NULL)
+    goto error;
+
   if (is_subtitle_caps (caps)) {
     /* Subtitle streams are sparse and may not provide any information - don't
      * wait for data to preroll */
+    PadWithId *pad_id;
+    pad_id = g_slice_new0 (PadWithId);
+    pad_id->pad = GST_PAD_CAST (gst_object_ref (sinkpad));
+    pad_id->id =
+        gst_pad_add_data_probe (sinkpad, (GCallback) got_subtitle_data, dc);
     g_object_set (ps->sink, "async", FALSE, NULL);
+    DISCO_LOCK (dc);
+    dc->priv->pending_subtitle_pads =
+        g_list_prepend (dc->priv->pending_subtitle_pads, pad_id);
+    DISCO_UNLOCK (dc);
   }
 
   gst_caps_unref (caps);
@@ -504,9 +583,6 @@ uridecodebin_pad_added_cb (GstElement * uridecodebin, GstPad * pad,
   if (!gst_element_sync_state_with_parent (ps->queue))
     goto error;
 
-  sinkpad = gst_element_get_static_pad (ps->queue, "sink");
-  if (sinkpad == NULL)
-    goto error;
   if (gst_pad_link_full (pad, sinkpad,
           GST_PAD_LINK_CHECK_NOTHING) != GST_PAD_LINK_OK)
     goto error;
@@ -1175,10 +1251,30 @@ handle_message (GstDiscoverer * dc, GstMessage * msg)
       done = TRUE;
       break;
 
+    case GST_MESSAGE_APPLICATION:{
+      const gchar *name;
+      gboolean async_done;
+      name = gst_structure_get_name (gst_message_get_structure (msg));
+      /* Maybe ASYNC_DONE is received & we're just waiting for subtitle tags */
+      DISCO_LOCK (dc);
+      async_done = dc->priv->async_done;
+      DISCO_UNLOCK (dc);
+      if (g_str_equal (name, "DiscovererDone") && async_done)
+        return TRUE;
+      break;
+    }
+
     case GST_MESSAGE_ASYNC_DONE:
       if (GST_MESSAGE_SRC (msg) == (GstObject *) dc->priv->pipeline) {
         GST_DEBUG ("Finished changing state asynchronously");
-        done = TRUE;
+        DISCO_LOCK (dc);
+        if (dc->priv->pending_subtitle_pads == NULL) {
+          done = TRUE;
+        } else {
+          /* Remember that ASYNC_DONE has been received, wait for subtitles */
+          dc->priv->async_done = TRUE;
+        }
+        DISCO_UNLOCK (dc);
 
       }
       break;
@@ -1232,7 +1328,6 @@ handle_message (GstDiscoverer * dc, GstMessage * msg)
 
   return done;
 }
-
 
 static void
 handle_current_sync (GstDiscoverer * dc)
@@ -1319,6 +1414,11 @@ discoverer_cleanup (GstDiscoverer * dc)
   }
 
   dc->priv->current_info = NULL;
+
+  g_list_foreach (dc->priv->pending_subtitle_pads, (GFunc) free_pad_id, NULL);
+  g_list_free (dc->priv->pending_subtitle_pads);
+  dc->priv->pending_subtitle_pads = NULL;
+  dc->priv->async_done = FALSE;
 
   /* Try popping the next uri */
   if (dc->priv->async) {
