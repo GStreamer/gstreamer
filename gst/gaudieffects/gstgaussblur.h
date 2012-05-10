@@ -54,14 +54,14 @@
 
 G_BEGIN_DECLS
 
-#define GST_TYPE_GAUSS_BLUR (gauss_blur_get_type())
-#define GAUSS_BLUR(obj) \
-    (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_GAUSS_BLUR, GaussBlur))
+#define GST_TYPE_GAUSSIANBLUR (gst_gaussianblur_get_type())
+#define GST_GAUSSIANBLUR(obj) \
+    (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_GAUSSIANBLUR, GstGaussianBlur))
 
-typedef struct GaussBlur GaussBlur;
-typedef struct GaussBlurClass GaussBlurClass;
+typedef struct GstGaussianBlur GstGaussianBlur;
+typedef struct GstGaussianBlurClass GstGaussianBlurClass;
 
-struct GaussBlur
+struct GstGaussianBlur
 {
   GstVideoFilter videofilter;
   gint width, height, stride;
@@ -75,12 +75,12 @@ struct GaussBlur
   gint16 *smoothedim;
 };
 
-struct GaussBlurClass
+struct GstGaussianBlurClass
 {
   GstVideoFilterClass parent_class;
 };
 
-GType gauss_blur_get_type(void);
+GType gst_gaussianblur_get_type(void);
 
 G_END_DECLS
 
