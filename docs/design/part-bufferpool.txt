@@ -17,13 +17,13 @@ Requirements
  - Provide a GstBufferPool base class to help the efficient implementation of a
    list of reusable GstBuffer objects.
 
- - Let upstream elements initiate the negotiation of a bufferpool and it
+ - Let upstream elements initiate the negotiation of a bufferpool and its
    configuration. Allow downstream elements provide bufferpool properties and/or
    a bufferpool. This includes the following properties:
 
     * have minimum and maximum amount of buffers with the option of 
       preallocating buffers.
-    * alignment and padding support
+    * allocator, alignment and padding support
     * buffer metadata
     * arbitrary extra options
 
@@ -46,7 +46,7 @@ GstBufferPool
  returned to the pool.
 
  The default implementation of the bufferpool is able to allocate buffers
- from main memory with arbitrary alignment and padding/prefix.
+ from any allocator with arbitrary alignment and padding/prefix.
 
  Custom implementations of the bufferpool can override the allocation and
  free algorithms of the buffers from the pool. This should allow for
@@ -65,7 +65,8 @@ Negotiation
  caps.
 
  The srcpad can set the need-pool flag to TRUE in the query to optionally make the
- peer pad allocate a bufferpool.
+ peer pad allocate a bufferpool. It should only do this if it is able to use
+ the peer provided bufferpool.
 
  It will then inspect the returned results and configure the returned pool or
  create a new pool with the returned properties when needed.
@@ -88,33 +89,57 @@ Allocation query
   (in) "need-pool", G_TYPE_BOOLEAN
         - if a GstBufferPool is requested
 
-  (out) "size", G_TYPE_UINT
-        - the total size of the buffer memory. This size is set to 0 when the 
-          buffers are of variable size.
+  (out) "pool", G_TYPE_ARRAY of structure
+        - an array of pool configurations.
 
-  (out) "min-buffers", G_TYPE_UINT
-        - the minimum amount of buffers to allocate
+      struct {
+        GstBufferPool *pool;
+        guint          size;
+        guint          min_buffers;
+        guint          max_buffers;
+      }
 
-  (out) "max-buffers", G_TYPE_UINT
-        - the maximum amount of buffers to allocate
+      use gst_query_parse_nth_allocation_pool() to get the values.
 
-  (out) "prefix", G_TYPE_UINT
-        - the prefix of the buffer memory
+      The allocator can contain multiple pool configurations. If need-pool
+      was TRUE, the pool member might contain a GstBufferPool when the
+      downstream element can provide one.
 
-  (out) "align", G_TYPE_UINT
-        - the aligment of the memory in the buffers, the alignment will be applied
-          to the prefix. The aligment is expressed as a value ((1 << N) - 1).
-          Alignment will be done on multiples of (1 << N).
+      Size contains the size of the bufferpool buffers and is never 0.
 
-  (out) "pool", GST_TYPE_BUFFER_POOL
-        - a buffer pool when need-pool was TRUE and the peer can provide a pool.
-          This pool is inactive and can be configured when needed.
+      min_buffers and max_buffers contain the suggested min and max amount of
+      buffers that should be managed by the pool.
+
+      The upstream element can choose to use the provided pool or make its own
+      pool when none was provided or when the suggested pool was not
+      acceptable.
+
+      The pool can then be configured with the suggested min and max amount of
+      buffers or a downstream element might choose different values. 
+
+  (out) "allocator", G_TYPE_ARRAY of structure
+        - an array of allocator parameters that can be used.
+
+      struct {
+        GstAllocator *allocator;
+        GstAllocationParams params;
+      }
+
+      use gst_query_parse_nth_allocation_param() to get the values
+
+      The element performing the query can use the allocators and its
+      parameters to allocate memory for the downstream element. 
+
+      It is also possible to configure the allocator in a provided pool.
 
   (out) "metadata", G_TYPE_ARRAY of GType
         - an array of metadata API types that can be accepted.
 
-  (out) "allocator", G_TYPE_ARRAY of GstAllocator *
-        - an array of allocators that can be used.
+      These metadata items can be accepted by the downstream element when
+      placed on buffers. 
+
+      Some bufferpools have options to enable metadata on the buffers
+      allocated by the pool.
 
 
 Allocating from pool
@@ -137,7 +162,7 @@ Allocating from pool
  the inactive state we can drain all buffers from the pool. 
 
  When the pool is in the inactive state, gst_buffer_pool_acquire_buffer() will
- return GST_FLOW_WRONG_STATE immediately.
+ return GST_FLOW_FLUSHING immediately.
 
  Extra parameters can be given to the gst_buffer_pool_acquire_buffer() method to
  influence the allocation decision. GST_BUFFER_POOL_FLAG_KEY_UNIT and
@@ -281,7 +306,7 @@ Use cases
 
  When shutting down, videotestsrc will first set the bufferpool on the srcpad
  to inactive. This causes any pending (blocked) acquire to return with a 
- WRONG_STATE result and causes the streaming thread to pause.
+ FLUSHING result and causes the streaming thread to pause.
 
  
 3) .. ! myvideodecoder ! queue ! fakesink 
