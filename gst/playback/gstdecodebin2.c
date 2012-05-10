@@ -1974,13 +1974,43 @@ connect_pad (GstDecodeBin * dbin, GstElement * src, GstDecodePad * dpad,
 
     /* Set connection-speed property if needed */
     if (chain->demuxer == TRUE) {
-      if (g_object_class_find_property (G_OBJECT_GET_CLASS (element),
-              "connection-speed")) {
-        GST_DEBUG_OBJECT (dbin,
-            "setting connection-speed=%d to demuxer element",
-            dbin->connection_speed / 1000);
-        g_object_set (element, "connection-speed",
-            dbin->connection_speed / 1000, NULL);
+      GParamSpec *pspec;
+
+      if ((pspec = g_object_class_find_property (G_OBJECT_GET_CLASS (element),
+                  "connection-speed"))) {
+        guint64 speed = dbin->connection_speed / 1000;
+        gboolean wrong_type = FALSE;
+
+        if (G_PARAM_SPEC_TYPE (pspec) == G_TYPE_PARAM_UINT) {
+          GParamSpecUInt *pspecuint = G_PARAM_SPEC_UINT (pspec);
+
+          speed = CLAMP (speed, pspecuint->minimum, pspecuint->maximum);
+        } else if (G_PARAM_SPEC_TYPE (pspec) == G_TYPE_PARAM_INT) {
+          GParamSpecInt *pspecint = G_PARAM_SPEC_INT (pspec);
+
+          speed = CLAMP (speed, pspecint->minimum, pspecint->maximum);
+        } else if (G_PARAM_SPEC_TYPE (pspec) == G_TYPE_PARAM_UINT64) {
+          GParamSpecUInt64 *pspecuint = G_PARAM_SPEC_UINT64 (pspec);
+
+          speed = CLAMP (speed, pspecuint->minimum, pspecuint->maximum);
+        } else if (G_PARAM_SPEC_TYPE (pspec) == G_TYPE_PARAM_INT64) {
+          GParamSpecInt64 *pspecint = G_PARAM_SPEC_INT (pspec);
+
+          speed = CLAMP (speed, pspecint->minimum, pspecint->maximum);
+        } else {
+          GST_WARNING_OBJECT (dbin,
+              "The connection speed property %i of type %s"
+              " is not usefull not setting it", speed,
+              g_type_name (G_PARAM_SPEC_TYPE (pspec)));
+          wrong_type = TRUE;
+        }
+
+        if (wrong_type == FALSE) {
+          GST_DEBUG_OBJECT (dbin, "setting connection-speed=%d to demuxer"
+              " element", speed);
+
+          g_object_set (element, "connection-speed", speed, NULL);
+        }
       }
     }
 
