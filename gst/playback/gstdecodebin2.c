@@ -152,6 +152,7 @@ struct _GstDecodeBin
   guint max_size_buffers;
   guint64 max_size_time;
   gboolean post_stream_topology;
+  guint64 connection_speed;
 
   GstElement *typefind;         /* this holds the typefind object */
 
@@ -240,6 +241,7 @@ enum
 #define DEFAULT_MAX_SIZE_TIME     0
 #define DEFAULT_POST_STREAM_TOPOLOGY FALSE
 #define DEFAULT_EXPOSE_ALL_STREAMS  TRUE
+#define DEFAULT_CONNECTION_SPEED    0
 
 /* Properties */
 enum
@@ -256,6 +258,7 @@ enum
   PROP_MAX_SIZE_TIME,
   PROP_POST_STREAM_TOPOLOGY,
   PROP_EXPOSE_ALL_STREAMS,
+  PROP_CONNECTION_SPEED,
   PROP_LAST
 };
 
@@ -887,6 +890,19 @@ gst_decode_bin_class_init (GstDecodeBinClass * klass)
           DEFAULT_EXPOSE_ALL_STREAMS,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
+  /**
+   * GstDecodeBin2::connection-speed
+   *
+   * Network connection speed in kbps (0 = unknownw)
+   *
+   * Since: 0.10.XX
+   */
+  g_object_class_install_property (gobject_klass, PROP_CONNECTION_SPEED,
+      g_param_spec_uint64 ("connection-speed", "Connection Speed",
+          "Network connection speed in kbps (0 = unknown)",
+          0, G_MAXUINT64 / 1000, DEFAULT_CONNECTION_SPEED,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
 
 
   klass->autoplug_continue =
@@ -994,6 +1010,7 @@ gst_decode_bin_init (GstDecodeBin * decode_bin)
   decode_bin->max_size_time = DEFAULT_MAX_SIZE_TIME;
 
   decode_bin->expose_allstreams = DEFAULT_EXPOSE_ALL_STREAMS;
+  decode_bin->connection_speed = DEFAULT_CONNECTION_SPEED;
 }
 
 static void
@@ -1189,6 +1206,11 @@ gst_decode_bin_set_property (GObject * object, guint prop_id,
     case PROP_EXPOSE_ALL_STREAMS:
       dbin->expose_allstreams = g_value_get_boolean (value);
       break;
+    case PROP_CONNECTION_SPEED:
+      GST_OBJECT_LOCK (dbin);
+      dbin->connection_speed = g_value_get_uint64 (value) * 1000;
+      GST_OBJECT_UNLOCK (dbin);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -1235,6 +1257,11 @@ gst_decode_bin_get_property (GObject * object, guint prop_id,
       break;
     case PROP_EXPOSE_ALL_STREAMS:
       g_value_set_boolean (value, dbin->expose_allstreams);
+      break;
+    case PROP_CONNECTION_SPEED:
+      GST_OBJECT_LOCK (dbin);
+      g_value_set_uint64 (value, dbin->connection_speed / 1000);
+      GST_OBJECT_UNLOCK (dbin);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -1944,6 +1971,18 @@ connect_pad (GstDecodeBin * dbin, GstElement * src, GstDecodePad * dpad,
     chain->elements = g_list_prepend (chain->elements, delem);
     chain->demuxer = is_demuxer_element (element);
     CHAIN_MUTEX_UNLOCK (chain);
+
+    /* Set connection-speed property if needed */
+    if (chain->demuxer == TRUE) {
+      if (g_object_class_find_property (G_OBJECT_GET_CLASS (element),
+              "connection-speed")) {
+        GST_DEBUG_OBJECT (dbin,
+            "setting connection-speed=%d to demuxer element",
+            dbin->connection_speed / 1000);
+        g_object_set (element, "connection-speed",
+            dbin->connection_speed / 1000, NULL);
+      }
+    }
 
     /* link this element further */
     connect_element (dbin, element, chain);

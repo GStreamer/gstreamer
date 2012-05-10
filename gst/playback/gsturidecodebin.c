@@ -1690,9 +1690,9 @@ make_decoder (GstURIDecodeBin * decoder)
   if (decoder->caps)
     g_object_set (decodebin, "caps", decoder->caps, NULL);
 
-  /* Propagate expose-all-streams property */
+  /* Propagate expose-all-streams and connection-speed properties */
   g_object_set (decodebin, "expose-all-streams", decoder->expose_allstreams,
-      NULL);
+      "connection-speed", decoder->connection_speed / 1000, NULL);
 
   if (!decoder->is_stream) {
     /* propagate the use-buffering property but only when we are not already
