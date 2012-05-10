@@ -94,13 +94,15 @@ GST_DEBUG_CATEGORY_STATIC (gst_gauss_blur_debug);
 #define CAPS_STR GST_VIDEO_CAPS_MAKE ("AYUV")
 
 /* The capabilities of the inputs and outputs. */
-static GstStaticPadTemplate sink_factory = GST_STATIC_PAD_TEMPLATE ("sink",
+static GstStaticPadTemplate gst_gaussianblur_sink_template =
+GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS (CAPS_STR)
     );
 
-static GstStaticPadTemplate src_factory = GST_STATIC_PAD_TEMPLATE ("src",
+static GstStaticPadTemplate gst_gaussianblur_src_template =
+GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS (CAPS_STR)
@@ -137,9 +139,9 @@ gst_gaussianblur_class_init (GstGaussianBlurClass * klass)
       "Jan Schmidt <thaytan@noraisin.net>");
 
   gst_element_class_add_pad_template (gstelement_class,
-      gst_static_pad_template_get (&src_factory));
+      gst_static_pad_template_get (&gst_gaussianblur_sink_template));
   gst_element_class_add_pad_template (gstelement_class,
-      gst_static_pad_template_get (&sink_factory));
+      gst_static_pad_template_get (&gst_gaussianblur_src_template));
 
   gobject_class->set_property = gst_gaussianblur_set_property;
   gobject_class->get_property = gst_gaussianblur_get_property;
