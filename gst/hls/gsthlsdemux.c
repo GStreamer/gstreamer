@@ -982,27 +982,12 @@ gst_hls_demux_update_playlist (GstHLSDemux * demux, gboolean update)
 static gboolean
 gst_hls_demux_change_playlist (GstHLSDemux * demux, guint max_bitrate)
 {
-  GList *list, *previous_variant, *current_variant;
+  GList *previous_variant, *current_variant;
   gint old_bandwidth, new_bandwidth;
 
-  GST_M3U8_CLIENT_LOCK (demux->client);
-  current_variant = demux->client->main->current_variant;
-  previous_variant = current_variant;
-
-  /*  Go to the highest possible bandwidth allowed */
-  while (GST_M3U8 (current_variant->data)->bandwidth < max_bitrate) {
-    list = g_list_next (current_variant);
-    if (!list)
-      break;
-    current_variant = list;
-  }
-
-  while (GST_M3U8 (current_variant->data)->bandwidth > max_bitrate) {
-    list = g_list_previous (current_variant);
-    if (!list)
-      break;
-    current_variant = list;
-  }
+  previous_variant = demux->client->main->current_variant;
+  current_variant = gst_m3u8_client_get_playlist_for_bitrate (demux->client,
+      max_bitrate);
 
 retry_failover_protection:
   old_bandwidth = GST_M3U8 (previous_variant->data)->bandwidth;
@@ -1010,7 +995,6 @@ retry_failover_protection:
 
   /* Don't do anything else if the playlist is the same */
   if (new_bandwidth == old_bandwidth) {
-    GST_M3U8_CLIENT_UNLOCK (demux->client);
     return TRUE;
   }
 
