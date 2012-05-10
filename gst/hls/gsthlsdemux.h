@@ -65,11 +65,12 @@ struct _GstHLSDemux
   GQueue *queue;                /* Queue storing the fetched fragments */
   gboolean need_cache;          /* Wheter we need to cache some fragments before starting to push data */
   gboolean end_of_playlist;
-  gboolean do_typefind;		/* Whether we need to typefind the next buffer */
+  gboolean do_typefind;         /* Whether we need to typefind the next buffer */
 
   /* Properties */
   guint fragments_cache;        /* number of fragments needed to be cached to start playing */
-  gfloat bitrate_limit;         /*  limit of the available bitrate to use */
+  gfloat bitrate_limit;         /* limit of the available bitrate to use */
+  guint connection_speed;       /* Network connection speed in kbps (0 = unknown) */
 
   /* Streaming task */
   GstTask *stream_task;
