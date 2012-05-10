@@ -69,11 +69,12 @@
 #include "gstplugin.h"
 #include "gstgaussblur.h"
 
-static gboolean gauss_blur_stop (GstBaseTransform * btrans);
-static gboolean gauss_blur_set_caps (GstBaseTransform * btrans,
-    GstCaps * incaps, GstCaps * outcaps);
-static GstFlowReturn gauss_blur_process_frame (GstBaseTransform * btrans,
-    GstBuffer * in_buf, GstBuffer * out_buf);
+static void gauss_blur_stop (GObject * object);
+
+static gboolean gauss_blur_set_info (GstVideoFilter * filter, GstCaps * incaps,
+    GstVideoInfo * in_info, GstCaps * outcaps, GstVideoInfo * out_info);
+static GstFlowReturn gauss_blur_transform_frame (GstVideoFilter * vfilter,
+    GstVideoFrame * in_frame, GstVideoFrame * out_frame);
 
 static void gauss_blur_set_property (GObject * object,
     guint prop_id, const GValue * value, GParamSpec * pspec);
@@ -111,11 +112,11 @@ enum
   PROP_LAST
 };
 
-static void cleanup (GaussBlur * gb);
 static gboolean make_gaussian_kernel (GaussBlur * gb, float sigma);
 static void gaussian_smooth (GaussBlur * gb, guint8 * image,
     guint8 * out_image);
 
+#define gauss_blur_parent_class parent_class
 G_DEFINE_TYPE (GaussBlur, gauss_blur, GST_TYPE_VIDEO_FILTER);
 
 #define DEFAULT_SIGMA 1.2
@@ -125,7 +126,7 @@ gauss_blur_class_init (GaussBlurClass * klass)
 {
   GObjectClass *object_class = (GObjectClass *) klass;
   GstElementClass *gstelement_class = (GstElementClass *) klass;
-  GstBaseTransformClass *trans_class = (GstBaseTransformClass *) klass;
+  GstVideoFilterClass *vfilter_class = (GstVideoFilterClass *) klass;
 
   gst_element_class_set_details_simple (gstelement_class,
       "GaussBlur",
@@ -140,16 +141,35 @@ gauss_blur_class_init (GaussBlurClass * klass)
 
   object_class->set_property = gauss_blur_set_property;
   object_class->get_property = gauss_blur_get_property;
-
-  trans_class->stop = GST_DEBUG_FUNCPTR (gauss_blur_stop);
-  trans_class->set_caps = GST_DEBUG_FUNCPTR (gauss_blur_set_caps);
-  trans_class->transform = GST_DEBUG_FUNCPTR (gauss_blur_process_frame);
+  object_class->finalize = GST_DEBUG_FUNCPTR (gauss_blur_stop);
 
   g_object_class_install_property (object_class, PROP_SIGMA,
       g_param_spec_double ("sigma", "Sigma",
           "Sigma value for gaussian blur (negative for sharpen)",
           -20.0, 20.0, DEFAULT_SIGMA,
           G_PARAM_READWRITE | GST_PARAM_CONTROLLABLE | G_PARAM_STATIC_STRINGS));
+
+  vfilter_class->transform_frame =
+      GST_DEBUG_FUNCPTR (gauss_blur_transform_frame);
+  vfilter_class->set_info = GST_DEBUG_FUNCPTR (gauss_blur_set_info);
+}
+
+static gboolean
+gauss_blur_set_info (GstVideoFilter * filter, GstCaps * incaps,
+    GstVideoInfo * in_info, GstCaps * outcaps, GstVideoInfo * out_info)
+{
+  GaussBlur *gb = GAUSS_BLUR (filter);
+  guint32 n_elems;
+
+  gb->width = GST_VIDEO_INFO_WIDTH (in_info);
+  gb->height = GST_VIDEO_INFO_HEIGHT (in_info);
+
+  /* get stride */
+  gb->stride = GST_VIDEO_INFO_COMP_STRIDE (in_info, 0);
+  n_elems = gb->stride * gb->height;
+  gb->tempim = g_malloc (sizeof (gfloat) * n_elems);
+
+  return TRUE;
 }
 
 static void
@@ -160,8 +180,10 @@ gauss_blur_init (GaussBlur * gb)
 }
 
 static void
-cleanup (GaussBlur * gb)
+gauss_blur_stop (GObject * object)
 {
+  GaussBlur *gb = GAUSS_BLUR (object);
+
   g_free (gb->tempim);
   gb->tempim = NULL;
 
@@ -172,69 +194,29 @@ cleanup (GaussBlur * gb)
   gb->kernel = NULL;
   g_free (gb->kernel_sum);
   gb->kernel_sum = NULL;
-}
 
-static gboolean
-gauss_blur_stop (GstBaseTransform * btrans)
-{
-  GaussBlur *gb = GAUSS_BLUR (btrans);
-
-  cleanup (gb);
-
-  return TRUE;
-}
-
-static gboolean
-gauss_blur_set_caps (GstBaseTransform * btrans,
-    GstCaps * incaps, GstCaps * outcaps)
-{
-  GaussBlur *filter = GAUSS_BLUR (btrans);
-  GstVideoInfo info;
-  GstStructure *structure;
-  guint32 n_elems;
-
-  structure = gst_caps_get_structure (incaps, 0);
-  g_return_val_if_fail (structure != NULL, FALSE);
-
-  if (!gst_video_info_from_caps (&info, incaps))
-    goto invalid_caps;
-
-  filter->info = info;
-
-  filter->width = GST_VIDEO_INFO_WIDTH (&info);
-  filter->height = GST_VIDEO_INFO_HEIGHT (&info);
-
-  /* get stride */
-  filter->stride = GST_VIDEO_INFO_PLANE_STRIDE (&info, 0);
-
-  n_elems = filter->stride * filter->height;
-
-  filter->tempim = g_malloc (sizeof (gfloat) * n_elems);
-
-  return TRUE;
-
-  /* ERROR */
-invalid_caps:
-  {
-    GST_DEBUG_OBJECT (btrans, "could not parse caps");
-    return FALSE;
-  }
+  G_OBJECT_CLASS (parent_class)->finalize (object);
 }
 
 static GstFlowReturn
-gauss_blur_process_frame (GstBaseTransform * btrans,
-    GstBuffer * in_buf, GstBuffer * out_buf)
+gauss_blur_transform_frame (GstVideoFilter * vfilter,
+    GstVideoFrame * in_frame, GstVideoFrame * out_frame)
 {
-  GaussBlur *filter = GAUSS_BLUR (btrans);
+  GaussBlur *filter = GAUSS_BLUR (vfilter);
   GstClockTime timestamp;
   gint64 stream_time;
   gfloat sigma;
-  GstMapInfo imap, omap;
+  guint8 *src, *dest;
 
   /* GstController: update the properties */
-  timestamp = GST_BUFFER_TIMESTAMP (in_buf);
+  timestamp = GST_BUFFER_TIMESTAMP (in_frame->buffer);
   stream_time =
-      gst_segment_to_stream_time (&btrans->segment, GST_FORMAT_TIME, timestamp);
+      gst_segment_to_stream_time (&GST_BASE_TRANSFORM (filter)->segment,
+      GST_FORMAT_TIME, timestamp);
+
+  GST_DEBUG_OBJECT (filter, "sync to %" GST_TIME_FORMAT,
+      GST_TIME_ARGS (timestamp));
+
   if (GST_CLOCK_TIME_IS_VALID (stream_time))
     gst_object_sync_values (GST_OBJECT (filter), stream_time);
 
@@ -251,7 +233,7 @@ gauss_blur_process_frame (GstBaseTransform * btrans,
   }
   if (filter->kernel == NULL &&
       !make_gaussian_kernel (filter, filter->cur_sigma)) {
-    GST_ELEMENT_ERROR (btrans, RESOURCE, NO_SPACE_LEFT, ("Out of memory"),
+    GST_ELEMENT_ERROR (filter, RESOURCE, NO_SPACE_LEFT, ("Out of memory"),
         ("Failed to allocation gaussian kernel"));
     return GST_FLOW_ERROR;
   }
@@ -260,14 +242,10 @@ gauss_blur_process_frame (GstBaseTransform * btrans,
    * Perform gaussian smoothing on the image using the input standard
    * deviation.
    */
-  gst_buffer_map (out_buf, &omap, GST_MAP_WRITE);
-  gst_buffer_map (in_buf, &imap, GST_MAP_READ);
-
-  memcpy (omap.data, imap.data, filter->height * filter->stride);
-  gaussian_smooth (filter, imap.data, omap.data);
-
-  gst_buffer_unmap (in_buf, &imap);
-  gst_buffer_unmap (out_buf, &omap);
+  src = GST_VIDEO_FRAME_COMP_DATA (in_frame, 0);
+  dest = GST_VIDEO_FRAME_COMP_DATA (out_frame, 0);
+  gst_video_frame_copy (out_frame, in_frame);
+  gaussian_smooth (filter, src, dest);
 
   return GST_FLOW_OK;
 }

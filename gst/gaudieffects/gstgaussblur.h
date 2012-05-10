@@ -69,8 +69,6 @@ struct GaussBlur
   float cur_sigma, sigma;
   int windowsize;
 
-  GstVideoInfo info;
-
   float *kernel;
   float *kernel_sum;
   float *tempim;
