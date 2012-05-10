@@ -688,10 +688,10 @@ ges_track_video_transition_set_inverted_internal (GESTrackVideoTransition *
   GESTrackVideoTransitionPrivate *priv = self->priv;
 
   if (!priv->smpte) {
-    priv->pending_inverted = inverted;
+    priv->pending_inverted = !inverted;
     return;
   }
-  g_object_set (priv->smpte, "invert", inverted, NULL);
+  g_object_set (priv->smpte, "invert", !inverted, NULL);
 }
 
 
@@ -800,7 +800,7 @@ void
 ges_track_video_transition_set_inverted (GESTrackVideoTransition * self,
     gboolean inverted)
 {
-  ges_track_video_transition_set_inverted (self, inverted);
+  ges_track_video_transition_set_inverted_internal (self, inverted);
 
   g_object_notify_by_pspec (G_OBJECT (self), properties[PROP_INVERT]);
 }
@@ -825,7 +825,7 @@ ges_track_video_transition_is_inverted (GESTrackVideoTransition * self)
 
   g_object_get (self->priv->smpte, "invert", &inverted, NULL);
 
-  return inverted;
+  return !inverted;
 }
 
 /**
