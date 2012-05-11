@@ -1818,14 +1818,48 @@ mpegts_packetizer_parse_eit (MpegTSPacketizer2 * packetizer,
       if (extended_event_descriptors) {
         int i;
         guint8 *extended_descriptor;
-        /*GValue extended_items = { 0 }; */
+        GValue extended_items = { 0 };
+        GValue extended_item_value = { 0 };
+        GstStructure *extended_item;
         gchar *extended_text = NULL;
-        /*g_value_init (&extended_items, GST_TYPE_LIST); */
+        g_value_init (&extended_items, GST_TYPE_LIST);
         for (i = 0; i < extended_event_descriptors->len; i++) {
           extended_descriptor = g_array_index (extended_event_descriptors,
               guint8 *, i);
           if (DESC_DVB_EXTENDED_EVENT_descriptor_number (extended_descriptor) ==
               i) {
+            guint8 *items_aux =
+                DESC_DVB_EXTENDED_EVENT_items (extended_descriptor);
+            guint8 *items_limit =
+                items_aux +
+                DESC_DVB_EXTENDED_EVENT_items_length (extended_descriptor);
+            while (items_aux < items_limit) {
+              guint8 length_aux;
+              gchar *description, *text;
+
+              /* Item Description text */
+              length_aux = *items_aux;
+              ++items_aux;
+              description =
+                  get_encoding_and_convert ((gchar *) items_aux, length_aux);
+              items_aux += length_aux;
+
+              /* Item text */
+              length_aux = *items_aux;
+              ++items_aux;
+              text = get_encoding_and_convert ((gchar *) items_aux, length_aux);
+              items_aux += length_aux;
+
+              extended_item = gst_structure_new ("extended_item",
+                  "description", G_TYPE_STRING, description,
+                  "text", G_TYPE_STRING, text, NULL);
+
+              g_value_init (&extended_item_value, GST_TYPE_STRUCTURE);
+              g_value_take_boxed (&extended_item_value, extended_item);
+              gst_value_list_append_value (&extended_items,
+                  &extended_item_value);
+              g_value_unset (&extended_item_value);
+            }
             if (extended_text) {
               gchar *tmp;
               gchar *old_extended_text = extended_text;
@@ -1847,6 +1881,8 @@ mpegts_packetizer_parse_eit (MpegTSPacketizer2 * packetizer,
               extended_text, NULL);
           g_free (extended_text);
         }
+        gst_structure_set_value (event, "extented-items", &extended_items);
+        g_value_unset (&extended_items);
         g_array_free (extended_event_descriptors, TRUE);
       }
 
