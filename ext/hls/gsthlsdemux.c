@@ -791,7 +791,9 @@ end_of_playlist:
 
 cache_error:
   {
-    gst_task_pause (demux->stream_task);
+    /* Pausing a stopped task will start it */
+    if (GST_TASK_STATE (demux->stream_task) != GST_TASK_STOPPED)
+      gst_task_pause (demux->stream_task);
     if (!demux->cancelled) {
       GST_ELEMENT_ERROR (demux, RESOURCE, NOT_FOUND,
           ("Could not cache the first fragments"), (NULL));
@@ -802,12 +804,9 @@ cache_error:
 
 type_not_found:
   {
-    gst_task_pause (demux->stream_task);
-    if (!demux->cancelled) {
-      GST_ELEMENT_ERROR (demux, STREAM, TYPE_NOT_FOUND,
-          ("Could not determine type of stream"), (NULL));
-      gst_hls_demux_pause_tasks (demux, FALSE);
-    }
+    GST_ELEMENT_ERROR (demux, STREAM, TYPE_NOT_FOUND,
+        ("Could not determine type of stream"), (NULL));
+    gst_hls_demux_pause_tasks (demux, FALSE);
     return;
   }
 
@@ -828,7 +827,9 @@ error_pushing:
 pause_task:
   {
     GST_DEBUG_OBJECT (demux, "Pause task");
-    gst_task_pause (demux->stream_task);
+    /* Pausing a stopped task will start it */
+    if (GST_TASK_STATE (demux->stream_task) != GST_TASK_STOPPED)
+      gst_task_pause (demux->stream_task);
     return;
   }
 }
