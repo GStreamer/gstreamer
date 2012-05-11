@@ -1266,8 +1266,9 @@ gen_source_element (GstURIDecodeBin * decoder)
 
       speed = CLAMP (speed, pspecint->minimum, pspecint->maximum);
     } else {
-      GST_WARNING_OBJECT (decoder, "The connection speed property %i of type %s"
-          " is not usefull not setting it", speed,
+      GST_WARNING_OBJECT (decoder,
+          "The connection speed property %" G_GUINT64_FORMAT
+          " of type %s is not usefull not setting it", speed,
           g_type_name (G_PARAM_SPEC_TYPE (pspec)));
       wrong_type = TRUE;
     }
@@ -1276,7 +1277,8 @@ gen_source_element (GstURIDecodeBin * decoder)
       g_object_set (source, "connection-speed", speed, NULL);
 
       GST_DEBUG_OBJECT (decoder,
-          "setting connection-speed=%d to source element", speed);
+          "setting connection-speed=%" G_GUINT64_FORMAT " to source element",
+          speed);
     }
   }
 
