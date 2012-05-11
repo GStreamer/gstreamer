@@ -1,10 +1,9 @@
 #include <gst/gst.h>
 #include <string.h>
-#include <math.h>
   
 #define CHUNK_SIZE 1024   /* Amount of bytes we are sending in each buffer */
 #define SAMPLE_RATE 44100 /* Samples per second we are sending */
-#define AUDIO_CAPS "audio/x-raw-int,channels=1,rate=%d,signed=(boolean)true,width=16,depth=16,endianness=1234"
+#define AUDIO_CAPS "audio/x-raw-int,channels=1,rate=%d,signed=(boolean)true,width=16,depth=16,endianness=BYTE_ORDER"
   
 /* Structure to contain all our information, so we can pass it to callbacks */
 typedef struct _CustomData {
@@ -12,7 +11,7 @@ typedef struct _CustomData {
   GstElement *video_queue, *audio_convert2, *visual, *video_convert, *video_sink;
   GstElement *app_queue, *app_sink;
   
-  gint time;             /* For timestamp generation */
+  guint64 num_samples;   /* Number of samples generated so far (for timestamp generation) */
   gfloat a, b, c, d;     /* For waveform generation */
   
   guint sourceid;        /* To control the GSource */
@@ -28,7 +27,7 @@ static gboolean push_data (CustomData *data) {
   GstBuffer *buffer;
   GstFlowReturn ret;
   int i;
-  gshort *raw;
+  gint16 *raw;
   gint num_samples = CHUNK_SIZE / 2; /* Because each sample is 16 bits */
   gfloat freq;
   
@@ -36,20 +35,20 @@ static gboolean push_data (CustomData *data) {
   buffer = gst_buffer_new_and_alloc (CHUNK_SIZE);
   
   /* Set its timestamp and duration */
-  GST_BUFFER_TIMESTAMP (buffer) = GST_SECOND * data->time / SAMPLE_RATE;
-  GST_BUFFER_DURATION (buffer) = GST_SECOND * CHUNK_SIZE / SAMPLE_RATE;
+  GST_BUFFER_TIMESTAMP (buffer) = gst_util_uint64_scale (data->num_samples, GST_SECOND, SAMPLE_RATE);
+  GST_BUFFER_DURATION (buffer) = gst_util_uint64_scale (CHUNK_SIZE, GST_SECOND, SAMPLE_RATE);
   
   /* Generate some psychodelic waveforms */
-  raw = (gshort *)GST_BUFFER_DATA (buffer);
+  raw = (gint16 *)GST_BUFFER_DATA (buffer);
   data->c += data->d;
   data->d -= data->c / 1000;
   freq = 1100 + 1000 * data->d;
   for (i = 0; i < num_samples; i++) {
     data->a += data->b;
     data->b -= data->a / freq;
-    raw[i] = (gshort)(500 * data->a);
+    raw[i] = (gint16)(500 * data->a);
   }
-  data->time += num_samples;
+  data->num_samples += num_samples;
   
   /* Push the buffer into the appsrc */
   g_signal_emit_by_name (data->app_source, "push-buffer", buffer, &ret);
