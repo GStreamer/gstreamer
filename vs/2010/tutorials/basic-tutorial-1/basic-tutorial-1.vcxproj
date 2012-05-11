@@ -5,23 +5,34 @@
       <Configuration>Debug</Configuration>
       <Platform>Win32</Platform>
     </ProjectConfiguration>
+    <ProjectConfiguration Include="Debug|x64">
+      <Configuration>Debug</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
     <ProjectConfiguration Include="Release|Win32">
       <Configuration>Release</Configuration>
       <Platform>Win32</Platform>
     </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|x64">
+      <Configuration>Release</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="..\..\..\..\gst-sdk\tutorials\basic-tutorial-1.c" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
-    <ProjectGuid>{9DEC64B5-E1FA-4A55-9174-58FF94BDF432}</ProjectGuid>
     <Keyword>Win32Proj</Keyword>
-    <RootNamespace>basictutorial1</RootNamespace>
+    <ProjectGuid>{63AEFB51-5FB8-409B-BDF3-893A23D28BF3}</ProjectGuid>
+    <TargetFrameworkVersion>v4.0</TargetFrameworkVersion>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
+  <PropertyGroup Condition="'$(Configuration)'=='Debug'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
     <UseDebugLibraries>true</UseDebugLibraries>
     <CharacterSet>Unicode</CharacterSet>
   </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
+  <PropertyGroup Condition="'$(Configuration)'=='Release'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
     <UseDebugLibraries>false</UseDebugLibraries>
     <WholeProgramOptimization>true</WholeProgramOptimization>
@@ -30,24 +41,24 @@
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
   <ImportGroup Label="ExtensionSettings">
   </ImportGroup>
-  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+  <ImportGroup Label="PropertySheets" Condition="'$(Platform)'=='Win32'">
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
-    <Import Project="$(GSTREAMER_SDK_ROOT_X86)\share\vs\2010\libs\gstreamer-0.10.props" />
-    <Import Project="$(GSTREAMER_SDK_ROOT_X86)\share\vs\2010\msvc\x86.props" />
+    <Import Project="$(GSTREAMER_SDK_ROOT_X86)\share\vs\2010\libs\gstreamer-0.10.props" Condition="exists('$(GSTREAMER_SDK_ROOT_X86)\share\vs\2010\libs\gstreamer-0.10.props')" />
+    <Import Project="$(GSTREAMER_SDK_ROOT_X86)\share\vs\2010\msvc\x86.props" Condition="exists('$(GSTREAMER_SDK_ROOT_X86)\share\vs\2010\msvc\x86.props')" />
   </ImportGroup>
-  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+  <ImportGroup Label="PropertySheets" Condition="'$(Platform)'=='x64'">
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
-    <Import Project="$(GSTREAMER_SDK_ROOT_X86)\share\vs\2010\libs\gstreamer-0.10.props" />
-    <Import Project="$(GSTREAMER_SDK_ROOT_X86)\share\vs\2010\msvc\x86.props" />
+    <Import Project="$(GSTREAMER_SDK_ROOT_X86_64)\share\vs\2010\libs\gstreamer-0.10.props" Condition="exists('$(GSTREAMER_SDK_ROOT_X86_64)\share\vs\2010\libs\gstreamer-0.10.props')" />
+    <Import Project="$(GSTREAMER_SDK_ROOT_X86_64)\share\vs\2010\msvc\x86_64.props" Condition="exists('$(GSTREAMER_SDK_ROOT_X86_64)\share\vs\2010\msvc\x86_64.props')" />
   </ImportGroup>
   <PropertyGroup Label="UserMacros" />
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+  <PropertyGroup Condition="'$(Configuration)'=='Debug'">
     <LinkIncremental>true</LinkIncremental>
   </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+  <PropertyGroup Condition="'$(Configuration)'=='Release'">
     <LinkIncremental>false</LinkIncremental>
   </PropertyGroup>
-  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+  <ItemDefinitionGroup Condition="'$(Configuration)'=='Debug'">
     <ClCompile>
       <PrecompiledHeader>
       </PrecompiledHeader>
@@ -62,7 +73,7 @@
       <AdditionalLibraryDirectories>%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
     </Link>
   </ItemDefinitionGroup>
-  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+  <ItemDefinitionGroup Condition="'$(Configuration)'=='Release'">
     <ClCompile>
       <WarningLevel>Level3</WarningLevel>
       <PrecompiledHeader>
@@ -74,13 +85,10 @@
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
-      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <GenerateDebugInformation>false</GenerateDebugInformation>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
     </Link>
   </ItemDefinitionGroup>
-  <ItemGroup>
-    <ClCompile Include="..\..\..\..\gst-sdk\tutorials\basic-tutorial-1.c" />
-  </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
   </ImportGroup>
