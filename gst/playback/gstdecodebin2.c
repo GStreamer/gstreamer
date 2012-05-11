@@ -1994,7 +1994,7 @@ connect_pad (GstDecodeBin * dbin, GstElement * src, GstDecodePad * dpad,
 
           speed = CLAMP (speed, pspecuint->minimum, pspecuint->maximum);
         } else if (G_PARAM_SPEC_TYPE (pspec) == G_TYPE_PARAM_INT64) {
-          GParamSpecInt64 *pspecint = G_PARAM_SPEC_INT (pspec);
+          GParamSpecInt64 *pspecint = G_PARAM_SPEC_INT64 (pspec);
 
           speed = CLAMP (speed, pspecint->minimum, pspecint->maximum);
         } else {
