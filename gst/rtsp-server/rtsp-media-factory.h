@@ -41,7 +41,7 @@ G_BEGIN_DECLS
 typedef struct _GstRTSPMediaFactory GstRTSPMediaFactory;
 typedef struct _GstRTSPMediaFactoryClass GstRTSPMediaFactoryClass;
 
-#define GST_RTSP_MEDIA_FACTORY_GET_LOCK(f)       (GST_RTSP_MEDIA_FACTORY_CAST(f)->lock)
+#define GST_RTSP_MEDIA_FACTORY_GET_LOCK(f)       (&(GST_RTSP_MEDIA_FACTORY_CAST(f)->lock))
 #define GST_RTSP_MEDIA_FACTORY_LOCK(f)           (g_mutex_lock(GST_RTSP_MEDIA_FACTORY_GET_LOCK(f)))
 #define GST_RTSP_MEDIA_FACTORY_UNLOCK(f)         (g_mutex_unlock(GST_RTSP_MEDIA_FACTORY_GET_LOCK(f)))
 
@@ -62,9 +62,9 @@ typedef struct _GstRTSPMediaFactoryClass GstRTSPMediaFactoryClass;
  * can contain multiple streams like audio and video.
  */
 struct _GstRTSPMediaFactory {
-  GObject           parent;
+  GObject            parent;
 
-  GMutex            *lock;
+  GMutex             lock;
   gchar             *launch;
   gboolean           shared;
   gboolean           eos_shutdown;
@@ -73,7 +73,7 @@ struct _GstRTSPMediaFactory {
   guint              buffer_size;
   gchar             *multicast_group;
 
-  GMutex            *medias_lock;
+  GMutex             medias_lock;
   GHashTable        *medias;
 };
 

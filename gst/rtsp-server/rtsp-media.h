@@ -191,8 +191,8 @@ typedef enum {
 struct _GstRTSPMedia {
   GObject            parent;
 
-  GMutex            *lock;
-  GCond             *cond;
+  GMutex             lock;
+  GCond              cond;
 
   gboolean           shared;
   gboolean           reusable;

@@ -158,8 +158,8 @@ gst_rtsp_media_factory_init (GstRTSPMediaFactory * factory)
   factory->buffer_size = DEFAULT_BUFFER_SIZE;
   factory->multicast_group = g_strdup (DEFAULT_MULTICAST_GROUP);
 
-  factory->lock = g_mutex_new ();
-  factory->medias_lock = g_mutex_new ();
+  g_mutex_init (&factory->lock);
+  g_mutex_init (&factory->medias_lock);
   factory->medias = g_hash_table_new_full (g_str_hash, g_str_equal,
       g_free, g_object_unref);
 }
@@ -170,10 +170,10 @@ gst_rtsp_media_factory_finalize (GObject * obj)
   GstRTSPMediaFactory *factory = GST_RTSP_MEDIA_FACTORY (obj);
 
   g_hash_table_unref (factory->medias);
-  g_mutex_free (factory->medias_lock);
+  g_mutex_clear (&factory->medias_lock);
   g_free (factory->launch);
   g_free (factory->multicast_group);
-  g_mutex_free (factory->lock);
+  g_mutex_clear (&factory->lock);
   if (factory->auth)
     g_object_unref (factory->auth);
 
@@ -568,9 +568,9 @@ compare_media (gpointer key, GstRTSPMedia * media1, GstRTSPMedia * media2)
 static void
 media_unprepared (GstRTSPMedia * media, GstRTSPMediaFactory * factory)
 {
-  g_mutex_lock (factory->medias_lock);
+  g_mutex_lock (&factory->medias_lock);
   g_hash_table_foreach_remove (factory->medias, (GHRFunc) compare_media, media);
-  g_mutex_unlock (factory->medias_lock);
+  g_mutex_unlock (&factory->medias_lock);
 }
 
 /**
@@ -605,7 +605,7 @@ gst_rtsp_media_factory_construct (GstRTSPMediaFactory * factory,
   else
     key = NULL;
 
-  g_mutex_lock (factory->medias_lock);
+  g_mutex_lock (&factory->medias_lock);
   if (key) {
     /* we have a key, see if we find a cached media */
     media = g_hash_table_lookup (factory->medias, key);
@@ -649,7 +649,7 @@ gst_rtsp_media_factory_construct (GstRTSPMediaFactory * factory,
       }
     }
   }
-  g_mutex_unlock (factory->medias_lock);
+  g_mutex_unlock (&factory->medias_lock);
 
   if (key)
     g_free (key);

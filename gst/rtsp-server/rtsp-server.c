@@ -164,7 +164,7 @@ gst_rtsp_server_class_init (GstRTSPServerClass * klass)
 static void
 gst_rtsp_server_init (GstRTSPServer * server)
 {
-  server->lock = g_mutex_new ();
+  g_mutex_init (&server->lock);
   server->address = g_strdup (DEFAULT_ADDRESS);
   server->service = g_strdup (DEFAULT_SERVICE);
   server->backlog = DEFAULT_BACKLOG;
@@ -188,7 +188,7 @@ gst_rtsp_server_finalize (GObject * object)
   if (server->auth)
     g_object_unref (server->auth);
 
-  g_mutex_free (server->lock);
+  g_mutex_clear (&server->lock);
 
   G_OBJECT_CLASS (gst_rtsp_server_parent_class)->finalize (object);
 }

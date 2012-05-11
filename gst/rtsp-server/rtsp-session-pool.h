@@ -53,7 +53,7 @@ struct _GstRTSPSessionPool {
 
   guint         max_sessions;
 
-  GMutex       *lock;
+  GMutex        lock;
   GHashTable   *sessions;
 };
 

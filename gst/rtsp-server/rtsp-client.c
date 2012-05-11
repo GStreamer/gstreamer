@@ -36,7 +36,7 @@
 #include "rtsp-sdp.h"
 #include "rtsp-params.h"
 
-static GMutex *tunnels_lock;
+static GMutex tunnels_lock;
 static GHashTable *tunnels;
 
 enum
@@ -101,7 +101,7 @@ gst_rtsp_client_class_init (GstRTSPClientClass * klass)
 
   tunnels =
       g_hash_table_new_full (g_str_hash, g_str_equal, g_free, g_object_unref);
-  tunnels_lock = g_mutex_new ();
+  g_mutex_init (&tunnels_lock);
 
   GST_DEBUG_CATEGORY_INIT (rtsp_client_debug, "rtspclient", 0, "GstRTSPClient");
 }
@@ -495,10 +495,10 @@ close_connection (GstRTSPClient * client)
   GST_DEBUG ("client %p: closing connection", client);
 
   if ((tunnelid = gst_rtsp_connection_get_tunnelid (client->connection))) {
-    g_mutex_lock (tunnels_lock);
+    g_mutex_lock (&tunnels_lock);
     /* remove from tunnelids */
     g_hash_table_remove (tunnels, tunnelid);
-    g_mutex_unlock (tunnels_lock);
+    g_mutex_unlock (&tunnels_lock);
   }
 
   gst_rtsp_connection_close (client->connection);
@@ -1687,10 +1687,10 @@ closed (GstRTSPWatch * watch, gpointer user_data)
   GST_INFO ("client %p: connection closed", client);
 
   if ((tunnelid = gst_rtsp_connection_get_tunnelid (client->connection))) {
-    g_mutex_lock (tunnels_lock);
+    g_mutex_lock (&tunnels_lock);
     /* remove from tunnelids */
     g_hash_table_remove (tunnels, tunnelid);
-    g_mutex_unlock (tunnels_lock);
+    g_mutex_unlock (&tunnels_lock);
   }
 
   return GST_RTSP_OK;
@@ -1738,12 +1738,12 @@ remember_tunnel (GstRTSPClient * client)
   GST_INFO ("client %p: inserting tunnel session %s", client, tunnelid);
 
   /* we can't have two clients connecting with the same tunnelid */
-  g_mutex_lock (tunnels_lock);
+  g_mutex_lock (&tunnels_lock);
   if (g_hash_table_lookup (tunnels, tunnelid))
     goto tunnel_existed;
 
   g_hash_table_insert (tunnels, g_strdup (tunnelid), g_object_ref (client));
-  g_mutex_unlock (tunnels_lock);
+  g_mutex_unlock (&tunnels_lock);
 
   return TRUE;
 
@@ -1755,7 +1755,7 @@ no_tunnelid:
   }
 tunnel_existed:
   {
-    g_mutex_unlock (tunnels_lock);
+    g_mutex_unlock (&tunnels_lock);
     GST_ERROR ("client %p: tunnel session %s already existed", client,
         tunnelid);
     return FALSE;
@@ -1815,7 +1815,7 @@ tunnel_complete (GstRTSPWatch * watch, gpointer user_data)
   if (tunnelid == NULL)
     goto no_tunnelid;
 
-  g_mutex_lock (tunnels_lock);
+  g_mutex_lock (&tunnels_lock);
   if (!(oclient = g_hash_table_lookup (tunnels, tunnelid)))
     goto no_tunnel;
 
@@ -1826,7 +1826,7 @@ tunnel_complete (GstRTSPWatch * watch, gpointer user_data)
 
   if (oclient->watch == NULL)
     goto tunnel_closed;
-  g_mutex_unlock (tunnels_lock);
+  g_mutex_unlock (&tunnels_lock);
 
   GST_INFO ("client %p: found tunnel %p (old %p, new %p)", client, oclient,
       oclient->connection, client->connection);
@@ -1851,13 +1851,13 @@ no_tunnelid:
   }
 no_tunnel:
   {
-    g_mutex_unlock (tunnels_lock);
+    g_mutex_unlock (&tunnels_lock);
     GST_INFO ("client %p: tunnel session %s not found", client, tunnelid);
     return GST_RTSP_ERROR;
   }
 tunnel_closed:
   {
-    g_mutex_unlock (tunnels_lock);
+    g_mutex_unlock (&tunnels_lock);
     GST_INFO ("client %p: tunnel session %s was closed", client, tunnelid);
     g_object_unref (oclient);
     return GST_RTSP_ERROR;

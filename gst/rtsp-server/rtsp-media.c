@@ -81,7 +81,6 @@ static void
 gst_rtsp_media_class_init (GstRTSPMediaClass * klass)
 {
   GObjectClass *gobject_class;
-  GError *error = NULL;
 
   gobject_class = G_OBJECT_CLASS (klass);
 
@@ -139,10 +138,8 @@ gst_rtsp_media_class_init (GstRTSPMediaClass * klass)
 
   GST_DEBUG_CATEGORY_INIT (rtsp_media_debug, "rtspmedia", 0, "GstRTSPMedia");
 
-  klass->thread = g_thread_create ((GThreadFunc) do_loop, klass, TRUE, &error);
-  if (error != NULL) {
-    g_critical ("could not start bus thread: %s", error->message);
-  }
+  klass->thread = g_thread_new ("Bus Thread", (GThreadFunc) do_loop, klass);
+
   klass->handle_message = default_handle_message;
   klass->unprepare = default_unprepare;
 
@@ -153,8 +150,8 @@ static void
 gst_rtsp_media_init (GstRTSPMedia * media)
 {
   media->streams = g_array_new (FALSE, TRUE, sizeof (GstRTSPMediaStream *));
-  media->lock = g_mutex_new ();
-  media->cond = g_cond_new ();
+  g_mutex_init (&media->lock);
+  g_cond_init (&media->cond);
 
   media->shared = DEFAULT_SHARED;
   media->reusable = DEFAULT_REUSABLE;
@@ -235,8 +232,8 @@ gst_rtsp_media_finalize (GObject * obj)
     g_source_unref (media->source);
   }
   g_free (media->multicast_group);
-  g_mutex_free (media->lock);
-  g_cond_free (media->cond);
+  g_mutex_clear (&media->lock);
+  g_cond_clear (&media->cond);
 
   G_OBJECT_CLASS (gst_rtsp_media_parent_class)->finalize (obj);
 }
@@ -550,10 +547,10 @@ gst_rtsp_media_set_multicast_group (GstRTSPMedia * media, const gchar * mc)
 {
   g_return_if_fail (GST_IS_RTSP_MEDIA (media));
 
-  g_mutex_lock (media->lock);
+  g_mutex_lock (&media->lock);
   g_free (media->multicast_group);
   media->multicast_group = g_strdup (mc);
-  g_mutex_unlock (media->lock);
+  g_mutex_unlock (&media->lock);
 }
 
 /**
@@ -571,9 +568,9 @@ gst_rtsp_media_get_multicast_group (GstRTSPMedia * media)
 
   g_return_val_if_fail (GST_IS_RTSP_MEDIA (media), NULL);
 
-  g_mutex_lock (media->lock);
+  g_mutex_lock (&media->lock);
   result = g_strdup (media->multicast_group);
-  g_mutex_unlock (media->lock);
+  g_mutex_unlock (&media->lock);
 
   return result;
 }
@@ -1445,28 +1442,27 @@ unlock_streams (GstRTSPMedia * media)
 static void
 gst_rtsp_media_set_status (GstRTSPMedia * media, GstRTSPMediaStatus status)
 {
-  g_mutex_lock (media->lock);
+  g_mutex_lock (&media->lock);
   /* never overwrite the error status */
   if (media->status != GST_RTSP_MEDIA_STATUS_ERROR)
     media->status = status;
   GST_DEBUG ("setting new status to %d", status);
-  g_cond_broadcast (media->cond);
-  g_mutex_unlock (media->lock);
+  g_cond_broadcast (&media->cond);
+  g_mutex_unlock (&media->lock);
 }
 
 static GstRTSPMediaStatus
 gst_rtsp_media_get_status (GstRTSPMedia * media)
 {
   GstRTSPMediaStatus result;
-  GTimeVal timeout;
+  gint64 end_time;
 
-  g_mutex_lock (media->lock);
-  g_get_current_time (&timeout);
-  g_time_val_add (&timeout, 20 * G_USEC_PER_SEC);
+  g_mutex_lock (&media->lock);
+  end_time = g_get_monotonic_time () + 20 * G_TIME_SPAN_SECOND;
   /* while we are preparing, wait */
   while (media->status == GST_RTSP_MEDIA_STATUS_PREPARING) {
     GST_DEBUG ("waiting for status change");
-    if (!g_cond_timed_wait (media->cond, media->lock, &timeout)) {
+    if (!g_cond_wait_until (&media->cond, &media->lock, end_time)) {
       GST_DEBUG ("timeout, assuming error status");
       media->status = GST_RTSP_MEDIA_STATUS_ERROR;
     }
@@ -1474,7 +1470,7 @@ gst_rtsp_media_get_status (GstRTSPMedia * media)
   /* could be success or error */
   result = media->status;
   GST_DEBUG ("got status %d", result);
-  g_mutex_unlock (media->lock);
+  g_mutex_unlock (&media->lock);
 
   return result;
 }
