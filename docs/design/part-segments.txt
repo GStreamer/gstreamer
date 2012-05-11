@@ -40,7 +40,7 @@ Use case: FLUSHING seek
 
     Avidemux starts by sending a FLUSH_START event downstream and upstream. This
     will cause its streaming task to PAUSED because _pad_pull_range() and
-    _pad_push() will return WRONG_STATE. It then waits for the STREAM_LOCK,
+    _pad_push() will return FLUSHING. It then waits for the STREAM_LOCK,
     which will be unlocked when the streaming task pauses. At this point no
     streaming is happening anymore in the pipeline and a FLUSH_STOP is sent
     upstream and downstream.

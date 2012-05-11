@@ -40,8 +40,8 @@ waiting to be unblocked.
 
 When sending a flushing seek upstream on elem1.src, the FLUSH_START event
 will temporary unblock the streaming thread and make all pad functions that
-triggers a block (_push/_alloc_buffer/_push_event/_pull_range) return
-GST_FLOW_WRONG_STATE. This will then eventually pause the streaming thread
+can trigger a block (_push/_query/_push_event/_pull_range) return
+GST_FLOW_FLUSHING. This will then eventually pause the streaming thread
 and release the STREAM_LOCK. 
 
 Since no STREAM lock is taken after the pad block it is not needed to send

@@ -241,7 +241,7 @@ gst_my_filter_sink_event (GstPad  *pad, GstEvent * event)
         As a side-effect of flushing all data from the pipeline, this event
         unblocks the streaming thread by making all pads reject data until
         they receive a <xref linkend="section-events-flush-stop"/> signal
-        (elements trying to push data will get a WRONG_STATE flow return
+        (elements trying to push data will get a FLUSHING flow return
          and stop processing data).
       </para>
       <para>

@@ -447,14 +447,14 @@ In the next PAUSED to READY state change the pipeline has to shut down and all
 streaming threads must stop sending data. This happens in the following sequence:
 
  alsasink to READY:   alsasink unblocks from the _chain() function and returns a
-                      WRONG_STATE return value to the peer element. The sinkpad is
+                      FLUSHING return value to the peer element. The sinkpad is
                       deactivated and becomes unusable for sending more data. 
  mp3dec to READY:     the pads are deactivated and the state change completes when
                       mp3dec leaves its _chain() function. 
  filesrc to READY:    the pads are deactivated and the thread is paused.
 
 The upstream elements finish their chain() function because the downstream element
-returned an error code (WRONG_STATE) from the _push() functions. These error codes 
+returned an error code (FLUSHING) from the _push() functions. These error codes 
 are eventually returned to the element that started the streaming thread (filesrc),
 which pauses the thread and completes the state change.
 

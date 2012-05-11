@@ -164,7 +164,7 @@ The push dataflow probe behavior is the same for buffers and bidirectional event
  -------------------->O                               |
                       O                               | 
         flushing?     O                               | 
-        WRONG_STATE   O                               |
+        FLUSHING      O                               |
         < - - - - - - O                               | 
                       O-> do BLOCK probes             | 
                       O                               | 
@@ -176,7 +176,7 @@ The push dataflow probe behavior is the same for buffers and bidirectional event
                       O   gst_pad_send_event()        | 
                       O------------------------------>O
                       O                   flushing?   O 
-                      O                 WRONG_STATE   O 
+                      O                   FLUSHING    O 
                       O< - - - - - - - - - - - - - - -O 
                       O                               O-> do BLOCK probes
                       O                               O 
@@ -217,7 +217,7 @@ If there is a valid DATA item, the DATA probes are called for the item.
                    |                               O<---------------------
                    |                               O
                    |                               O  flushing?
-                   |                               O  WRONG_STATE
+                   |                               O  FLUSHING 
                    |                               O - - - - - - - - - - >
                    |             do BLOCK probes <-O
                    |                               O   no peer?
@@ -227,7 +227,7 @@ If there is a valid DATA item, the DATA probes are called for the item.
                    O<------------------------------O
                    O                               O
                    O flushing?                     O
-                   O WRONG_STATE                   O
+                   O FLUSHING                      O
                    O- - - - - - - - - - - - - - - >O
  do BLOCK probes <-O                               O
                    O                               O

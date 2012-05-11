@@ -47,12 +47,12 @@ The following conditions unlock the preroll:
  - a flush event
 
 When the preroll is unlocked by a flush event, a return value of
-GST_FLOW_WRONG_STATE is to be returned to the peer pad.
+GST_FLOW_FLUSHING is to be returned to the peer pad.
 
 When preroll is unlocked by a state change to PLAYING, playback and
 rendering of the buffers shall start.
 
 When preroll is unlocked by a state change to READY, the buffer is
-to be discarded and a GST_FLOW_WRONG_STATE shall be returned to the
+to be discarded and a GST_FLOW_FLUSHING shall be returned to the
 peer element.
 

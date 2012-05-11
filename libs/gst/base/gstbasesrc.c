@@ -1455,7 +1455,7 @@ not_ok:
  * When we are in the loop() function, we might be in the middle
  * of pushing a buffer, which might block in a sink. To make sure
  * that the push gets unblocked we push out a FLUSH_START event.
- * Our loop function will get a WRONG_STATE return value from
+ * Our loop function will get a FLUSHING return value from
  * the push and will pause, effectively releasing the STREAM_LOCK.
  *
  * For a non-flushing seek, we pause the task, which might eventually
@@ -1702,7 +1702,7 @@ gst_base_src_send_event (GstElement * element, GstEvent * event)
        *    first and do EOS instead of entering it.
        *  - If we are in the _create function or we did not manage to set the
        *    flag fast enough and we are about to enter the _create function,
-       *    we unlock it so that we exit with WRONG_STATE immediately. We then
+       *    we unlock it so that we exit with FLUSHING immediately. We then
        *    check the EOS flag and do the EOS logic.
        */
       g_atomic_int_set (&src->priv->pending_eos, TRUE);
@@ -2348,10 +2348,10 @@ again:
         gst_buffer_unref (res_buf);
 
       if (!src->live_running) {
-        /* We return WRONG_STATE when we are not running to stop the dataflow also
+        /* We return FLUSHING when we are not running to stop the dataflow also
          * get rid of the produced buffer. */
         GST_DEBUG_OBJECT (src,
-            "clock was unscheduled (%d), returning WRONG_STATE", status);
+            "clock was unscheduled (%d), returning FLUSHING", status);
         ret = GST_FLOW_FLUSHING;
       } else {
         /* If we are running when this happens, we quickly switched between
@@ -2701,7 +2701,7 @@ pause:
       gst_event_set_seqnum (event, src->priv->seqnum);
       /* for fatal errors we post an error message, post the error
        * first so the app knows about the error first.
-       * Also don't do this for WRONG_STATE because it happens
+       * Also don't do this for FLUSHING because it happens
        * due to flushing and posting an error message because of
        * that is the wrong thing to do, e.g. when we're doing
        * a flushing seek. */

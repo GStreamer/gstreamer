@@ -77,7 +77,7 @@ the following state changes are possible:
  PAUSED -> READY
    - Sinks unblock any waits in the preroll.
    - Elements unblock any waits on devices
-   - Chain or get_range functions return WRONG_STATE.
+   - Chain or get_range functions return FLUSHING.
    - The element pads are deactivated so that streaming becomes impossible and
      all streaming threads are stopped.
    - The sink forgets all negotiated formats
@@ -195,7 +195,7 @@ The children are iterated from the sink elements to the source elements. This ma
 sure that when changing the state of an element, the downstream elements are in
 the correct state to process the eventual buffers. In the case of a downwards
 state change, the sink elements will shut down first which makes the upstream
-elements shut down as well since the _push() function returns a GST_FLOW_WRONG_STATE
+elements shut down as well since the _push() function returns a GST_FLOW_FLUSHING
 error.
 
 If all the children return SUCCESS, the function returns SUCCESS as well. 

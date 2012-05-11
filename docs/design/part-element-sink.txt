@@ -81,7 +81,7 @@ sink overview
       if (need_commit)
         need_commit = FALSE
         if (!commit)
-          return WRONG_STATE
+          return FLUSHING
 
       if (need_preroll)
         # release PREROLL_LOCK and wait. prerolled can be observed
@@ -90,7 +90,7 @@ sink overview
         PREROLL_WAIT (releasing PREROLL_LOCK)
         prerolled = FALSE
         if (flushing)
-          return WRONG_STATE
+          return FLUSHING
 
     if (valid (start || stop))
       PREROLL_UNLOCK
@@ -98,7 +98,7 @@ sink overview
       ret = wait_clock (obj,start)
       PREROLL_LOCK
       if (flushing)
-        return WRONG_STATE 
+        return FLUSHING 
       # if the clock was unscheduled, we redo the
       # preroll
       if (ret == UNSCHEDULED)
@@ -124,7 +124,7 @@ sink overview
     render (buffer)          ----->|     PREROLL_WAIT (releasing PREROLL_LOCK)
                                    |     prerolled = FALSE
                                    |     if (flushing)
-                                   |       return WRONG_STATE
+                                   |       return FLUSHING
                                    | 
 
   # queue a prerollable item (EOS or buffer). It is
@@ -146,7 +146,7 @@ sink overview
         if (need_commit)
           need_commit = FALSE
           if (!commit)
-            return WRONG_STATE
+            return FLUSHING
 
       # then see if we need more preroll items before we
       # can block
@@ -173,7 +173,7 @@ sink overview
       if (flushing)
         return FALSE
       ret = queue (event, TRUE)
-      if (ret == WRONG_STATE)
+      if (ret == FLUSHING)
         return FALSE
       PREROLL_UNLOCK
       STREAM_UNLOCK
@@ -188,7 +188,7 @@ sink overview
         return FALSE
       set_clip
       ret = queue (event, FALSE)
-      if (ret == WRONG_STATE)
+      if (ret == FLUSHING)
         return FALSE
       PREROLL_UNLOCK
       STREAM_UNLOCK
@@ -225,7 +225,7 @@ sink overview
     STREAM_LOCK
     PREROLL_LOCK
     if (flushing)
-      return WRONG_STATE
+      return FLUSHING
     if (clip)
       queue (buffer, TRUE)
     PREROLL_UNLOCK
