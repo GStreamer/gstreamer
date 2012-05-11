@@ -1999,15 +1999,15 @@ connect_pad (GstDecodeBin * dbin, GstElement * src, GstDecodePad * dpad,
           speed = CLAMP (speed, pspecint->minimum, pspecint->maximum);
         } else {
           GST_WARNING_OBJECT (dbin,
-              "The connection speed property %i of type %s"
+              "The connection speed property %" G_GUINT64_FORMAT " of type %s"
               " is not usefull not setting it", speed,
               g_type_name (G_PARAM_SPEC_TYPE (pspec)));
           wrong_type = TRUE;
         }
 
         if (wrong_type == FALSE) {
-          GST_DEBUG_OBJECT (dbin, "setting connection-speed=%d to demuxer"
-              " element", speed);
+          GST_DEBUG_OBJECT (dbin, "setting connection-speed=%" G_GUINT64_FORMAT
+              " to demuxer element", speed);
 
           g_object_set (element, "connection-speed", speed, NULL);
         }
