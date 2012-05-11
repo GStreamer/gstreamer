@@ -502,7 +502,7 @@ gst_play_sink_class_init (GstPlaySinkClass * klass)
    */
   g_object_class_install_property (gobject_klass, PROP_TEXT_SINK,
       g_param_spec_object ("text-sink", "Text sink",
-          "the text output element to use (NULL = default textoverlay)",
+          "the text output element to use (NULL = default subtitleoverlay)",
           GST_TYPE_ELEMENT, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   /**
@@ -1923,7 +1923,7 @@ gen_text_chain (GstPlaySink * playsink)
     if (textsinkpad == NULL) {
       GST_ELEMENT_WARNING (playsink, CORE, MISSING_PLUGIN,
           (_("Custom text sink element is not usable.")),
-          ("fallback to default textoverlay"));
+          ("fallback to default subtitleoverlay"));
     }
   }
 

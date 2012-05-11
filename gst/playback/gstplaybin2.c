@@ -767,7 +767,7 @@ gst_play_bin_class_init (GstPlayBinClass * klass)
           GST_TYPE_ELEMENT, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (gobject_klass, PROP_TEXT_SINK,
       g_param_spec_object ("text-sink", "Text plugin",
-          "the text output element to use (NULL = default textoverlay)",
+          "the text output element to use (NULL = default subtitleoverlay)",
           GST_TYPE_ELEMENT, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   /**
