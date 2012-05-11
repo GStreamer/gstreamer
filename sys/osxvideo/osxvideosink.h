@@ -70,6 +70,7 @@ struct _GstOSXVideoSink {
   /* Our element stuff */
   GstVideoSink videosink;
   GstOSXWindow *osxwindow;
+  void *osxvideosinkobject;
   NSView *superview;
 };
 
@@ -78,6 +79,28 @@ struct _GstOSXVideoSinkClass {
 };
 
 GType gst_osx_video_sink_get_type(void);
+
+@interface GstBufferObject : NSObject
+{
+  @public
+  GstBuffer *buf;
+}
+
+-(id) initWithBuffer: (GstBuffer *) buf;
+@end
+
+
+@interface GstOSXVideoSinkObject : NSObject
+{
+  @public
+  GstOSXVideoSink *osxvideosink;
+}
+
+-(id) initWithSink: (GstOSXVideoSink *) sink;
+-(void) resize;
+-(void) destroy;
+-(void) showFrame: (GstBufferObject*) buf;
+@end
 
 G_END_DECLS
 
