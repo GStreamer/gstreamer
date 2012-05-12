@@ -765,9 +765,8 @@ gst_ogg_demux_collect_sync_time (GstOggDemux * ogg, GstOggChain * chain)
   return sync_time;
 }
 
-/* submit a packet to the oggpad, this function will run the
- * typefind code for the pad if this is the first packet for this
- * stream 
+/* submit a packet to the oggpad, this function will run the type detection
+ * code for the pad if this is the first packet for this stream
  */
 static GstFlowReturn
 gst_ogg_pad_submit_packet (GstOggPad * pad, ogg_packet * packet)
@@ -3569,9 +3568,8 @@ done:
  * structure with the results. 
  * 
  * This function will also read N pages from each stream in the
- * chain and submit them to the decoders. When the decoder has
- * decoded the first buffer, we know the timestamp of the first
- * page in the chain.
+ * chain and submit them to the internal ogg stream parser/mapper
+ * until we know the timestamp of the first page in the chain.
  */
 static GstFlowReturn
 gst_ogg_demux_read_chain (GstOggDemux * ogg, GstOggChain ** res_chain)
@@ -3585,8 +3583,8 @@ gst_ogg_demux_read_chain (GstOggDemux * ogg, GstOggChain ** res_chain)
 
   GST_LOG_OBJECT (ogg, "reading chain at %" G_GINT64_FORMAT, offset);
 
-  /* first read the BOS pages, do typefind on them, create
-   * the decoders, send data to the decoders. */
+  /* first read the BOS pages, detect the stream types, create the internal
+   * stream mappers, send data to them. */
   while (TRUE) {
     GstOggPad *pad;
     guint32 serial;
@@ -3645,11 +3643,10 @@ gst_ogg_demux_read_chain (GstOggDemux * ogg, GstOggChain ** res_chain)
   }
 
   chain->have_bos = TRUE;
-  GST_LOG_OBJECT (ogg, "read bos pages, init decoder now");
+  GST_INFO_OBJECT (ogg, "read bos pages, ");
 
-  /* now read pages until we receive a buffer from each of the
-   * stream decoders, this will tell us the timestamp of the
-   * first packet in the chain then */
+  /* now read pages until each ogg stream mapper has figured out the
+   * timestamp of the first packet in the chain */
 
   /* save the offset to the first non bos page in the chain: if searching for
    * pad->first_time we read past the end of the chain, we'll seek back to this
@@ -3676,7 +3673,7 @@ gst_ogg_demux_read_chain (GstOggDemux * ogg, GstOggChain ** res_chain)
         known_serial = TRUE;
 
         /* submit the page now, this will fill in the start_time when the
-         * internal decoder finds it */
+         * internal stream mapper finds it */
         gst_ogg_pad_submit_page (pad, &og);
 
         if (!pad->map.is_skeleton && pad->start_time == -1
