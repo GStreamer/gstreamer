@@ -2549,7 +2549,7 @@ gst_ogg_demux_activate_chain (GstOggDemux * ogg, GstOggChain * chain,
     gst_ogg_pad_mark_discont (pad);
     pad->last_ret = GST_FLOW_OK;
 
-    if (pad->map.is_skeleton || pad->added
+    if (pad->map.is_skeleton || pad->map.is_cmml || pad->added
         || !gst_pad_has_current_caps (GST_PAD_CAST (pad)))
       continue;
 
@@ -2870,7 +2870,7 @@ gst_ogg_demux_do_seek (GstOggDemux * ogg, GstSegment * segment,
     if (pad == NULL)
       continue;
 
-    if (pad->map.is_skeleton)
+    if (pad->map.is_skeleton || pad->map.is_cmml)
       goto next;
 
     granulepos = ogg_page_granulepos (&og);

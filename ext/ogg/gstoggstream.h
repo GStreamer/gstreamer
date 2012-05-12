@@ -96,6 +96,8 @@ struct _GstOggStream
   /* OGM stuff */
   gboolean is_ogm;
   gboolean is_ogm_text;
+  /* CMML */
+  gboolean is_cmml;
   /* fishead stuff */
   guint16 skeleton_major, skeleton_minor;
   gint64 prestime;

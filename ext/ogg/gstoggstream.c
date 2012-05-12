@@ -1717,6 +1717,7 @@ setup_cmml_mapper (GstOggStream * pad, ogg_packet * packet)
   pad->caps = gst_caps_new_empty_simple ("text/x-cmml");
   pad->always_flush_page = TRUE;
   pad->is_sparse = TRUE;
+  pad->is_cmml = TRUE;
 
   return TRUE;
 }
