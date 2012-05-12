@@ -6,6 +6,9 @@ autovideoconvert
 baseaudiovisualizer
 camerabin
 camerabin2
+curlfilesink
+curlftpsink
+curlhttpsink
 deinterleave
 dataurisrc
 faac
