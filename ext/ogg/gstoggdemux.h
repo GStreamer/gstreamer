@@ -74,20 +74,12 @@ struct _GstOggChain
                                    streams. */
 };
 
-/* different modes for the pad */
-typedef enum
-{
-  GST_OGG_PAD_MODE_INIT,        /* we are feeding our internal decoder to get info */
-  GST_OGG_PAD_MODE_STREAMING,   /* we are streaming buffers to the outside */
-} GstOggPadMode;
-
 /* all information needed for one ogg stream */
 struct _GstOggPad
 {
   GstPad pad;                   /* subclass GstPad */
 
   gboolean have_type;
-  GstOggPadMode mode;
 
   GstOggChain *chain;           /* the chain we are part of */
   GstOggDemux *ogg;             /* the ogg demuxer we are part of */

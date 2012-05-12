@@ -176,8 +176,6 @@ gst_ogg_pad_init (GstOggPad * pad)
       GST_DEBUG_FUNCPTR (gst_ogg_pad_src_query));
   gst_pad_use_fixed_caps (GST_PAD (pad));
 
-  pad->mode = GST_OGG_PAD_MODE_INIT;
-
   pad->current_granule = -1;
   pad->keyframe_granule = -1;
 
@@ -3714,15 +3712,6 @@ gst_ogg_demux_read_chain (GstOggDemux * ogg, GstOggChain ** res_chain)
     }
   }
   GST_LOG_OBJECT (ogg, "done reading chain");
-  /* now we can fill in the missing info using queries */
-  for (i = 0; i < chain->streams->len; i++) {
-    GstOggPad *pad = g_array_index (chain->streams, GstOggPad *, i);
-
-    if (pad->map.is_skeleton)
-      continue;
-
-    pad->mode = GST_OGG_PAD_MODE_STREAMING;
-  }
 
   if (res_chain)
     *res_chain = chain;
