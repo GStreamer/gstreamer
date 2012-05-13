@@ -1,5 +1,5 @@
 
-Release notes for GStreamer Bad Plug-ins 0.11.90 "Where the good and the bad and the worst and the best have gone to their eternal rest"
+Release notes for GStreamer Bad Plug-ins 0.11.91 "Be he alive, or be he dead"
         
 
 
@@ -58,7 +58,8 @@ contains a set of well-supported plug-ins, but might pose problems for
 
 Features of this release
     
-      * Lots of bugfixes, cleanup and other improvements
+      * Ported asfmux, camerabin, coloreffects, gaudieffects, geometrictransform, hls plugins
+      * Lots of bugfixes and other improvements
 There were no bugs fixed in this release
     
 
@@ -89,14 +90,29 @@ Applications
   
 Contributors to this release
     
+      * Aleix Conchillo Flaque
       * Alessandro Decina
       * Andoni Morales Alastruey
+      * Arun Raghavan
       * Edward Hervey
+      * Gil Pedersen
+      * Jacob Meuser
+      * Julian Scheel
+      * Luis de Bethencourt
+      * Marc-André Lureau
       * Mark Nauwelaerts
-      * Olivier Crête
+      * Matej Knopp
+      * Patricia Muscalu
+      * Raimo Järvi
+      * Reynaldo H. Verdejo Pinochet
       * Sebastian Dröge
-      * Stefan Sauer
+      * Sebastian Rasmussen
+      * Sreerenj Balachandran
+      * Thiago Santos
       * Thibault Saunier
+      * Tim-Philipp Müller
       * Wim Taymans
-      * uraeus
+      * Wind Yuan
+      * Youness Alaoui
+      * Руслан Ижбулатов
  

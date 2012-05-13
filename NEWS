@@ -1,4 +1,9 @@
-This is GStreamer Bad Plug-ins 0.11.90 "Where the good and the bad and the worst and the best have gone to their eternal rest"
+This is GStreamer Bad Plug-ins 0.11.91 "Be he alive, or be he dead"
+
+New in 0.11.91:
+
+      * Ported asfmux, camerabin, coloreffects, gaudieffects, geometrictransform, hls plugins
+      * Lots of bugfixes and other improvements
 
 New in 0.11.90:
 
