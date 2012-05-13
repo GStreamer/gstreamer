@@ -1,9 +1,619 @@
-=== release 0.11.90 ===
+=== release 0.11.91 ===
 
-2012-04-12  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+2012-05-13  Sebastian Dröge <sebastian.droege@collabora.co.uk>
 
 	* configure.ac:
-	  releasing 0.11.90, "And all with pearl and ruby glowing was the fair palace door"
+	  releasing 0.11.91, "I will give you five magic beans\!"
+
+2012-05-09 14:22:20 +0200  Sebastian Rasmussen <sebrn@axis.com>
+
+	* gst/gst.c:
+	  gst: Only include init/deinit of alloc tracing when enabled
+	  Fixes https://bugzilla.gnome.org/show_bug.cgi?id=675806
+
+2012-05-11 09:07:16 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* docs/design/part-block.txt:
+	* docs/design/part-element-sink.txt:
+	* docs/design/part-overview.txt:
+	* docs/design/part-preroll.txt:
+	* docs/design/part-probes.txt:
+	* docs/design/part-segments.txt:
+	* docs/design/part-states.txt:
+	* docs/pwg/advanced-events.xml:
+	* libs/gst/base/gstbasesrc.c:
+	  docs: fix docs
+	  GST_FLOW_WRONG_STATE -> GST_FLOW_FLUSHING
+
+2012-05-10 12:15:49 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* docs/design/part-bufferpool.txt:
+	  docs: improve bufferpool docs
+
+2012-05-08 20:12:42 +0300  Anton Belka <antonbelka@gmail.com>
+
+	* tools/gst-launch.c:
+	  gst-launch: print tags in toc
+
+2012-05-05 22:17:43 +0300  Raimo Järvi <raimo.jarvi@gmail.com>
+
+	* gst/gstpoll.c:
+	* gst/gstsystemclock.c:
+	* plugins/elements/gstfilesrc.c:
+	* tests/check/elements/filesrc.c:
+	* tests/check/gst/gstpoll.c:
+	  gst: Fix compiler warnings on mingw-w64
+	  https://bugzilla.gnome.org/show_bug.cgi?id=675525
+
+2012-05-02 14:00:43 +0300  Sreerenj Balachandran <sreerenj.balachandran@intel.com>
+
+	* gst/gstmemory.c:
+	  memory: add missing parameter to default_mem_map()
+	  Fixes function signature for correctness.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=675289
+
+2012-05-02 08:08:15 +0100  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+
+	* win32/common/libgstreamer.def:
+	  win32: update .def file for new API
+
+2012-05-01 22:35:38 +0100  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+
+	* gst/gst_private.h:
+	* gst/gsttypefindfactory.h:
+	  typefindfactory: make object struct opaque for now
+	  Make opaque until we have time to clean it up a little.
+
+2012-05-01 22:30:32 +0100  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+
+	* gst/gsttypefindfactory.c:
+	* gst/gsttypefindfactory.h:
+	  typefindfactory: fix return type of gst_type_find_factory_get_extensions()
+
+2012-05-01 22:28:11 +0100  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+
+	* libs/gst/base/gsttypefindhelper.c:
+	* tools/gst-inspect.c:
+	  tools, base: don't poke into GstTypeFindFactory struct, use public API
+
+2012-05-01 22:33:30 +0100  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+
+	* gst/gsttypefindfactory.c:
+	* gst/gsttypefindfactory.h:
+	* libs/gst/base/gsttypefindhelper.c:
+	  typefindfactory: add gst_type_find_factory_has_function()
+	  Add API so people don't have to poke the struct for this.
+
+2012-05-01 15:52:14 -0300  Thiago Santos <thiago.sousa.santos@collabora.com>
+
+	* gst/gstcaps.c:
+	  gstcaps: Update docs for gst_caps_is_equal
+	  NULL caps aren't valid caps in 1.0 and aren't accepted in
+	  gst_caps_is_equal
+
+2012-05-01 19:47:05 +0100  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+
+	* gst/gsturi.c:
+	* tests/check/gst/gsturi.c:
+	  uri: require URI protocol bit to be at least 3 characters to be valid
+	  We want to return FALSE when run on a windows-style file path.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=674296
+
+2012-04-26 17:26:50 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* libs/gst/base/gstbasesrc.c:
+	* libs/gst/base/gstbasetransform.c:
+	  basetransform/basesrc: Do bufferpool configuration inside the default decide_allocation() implementation
+	  This allows subclasses to override it, as is necessary for e.g. the
+	  video-crop meta. It is now necessary that after decide_allocation()
+	  there is always a allocator and a configured buffer pool inside the
+	  query.
+
+2012-04-28 21:37:56 +0200  Matej Knopp <matej.knopp@gmail.com>
+
+	* gst/gstghostpad.c:
+	  ghostpad: set result on accept caps query when there is no peer
+
+2012-05-01 10:50:32 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* libs/gst/base/gstadapter.c:
+	* tests/check/libs/adapter.c:
+	  adapter: remove _try_to_merge_up()
+	  It causes the timestamp to go wrong, should not cause much of a performance
+	  increase and in the cases where it is faster, it is broken in 0.10 as well.
+	  We should try to review this when rewriting the adapter for 0.11 memory
+	  features.
+	  Fixes https://bugzilla.gnome.org/show_bug.cgi?id=674791
+
+2012-05-01 09:25:25 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* libs/gst/base/gstadapter.c:
+	* libs/gst/base/gstadapter.h:
+	  adapter: make internals private
+	  Make the adapter fields private.
+
+2012-04-30 20:29:21 +0400  Руслан Ижбулатов <lrn1986@gmail.com>
+
+	* plugins/elements/gstfilesrc.c:
+	  filesrc: rearrange sys/stat.h inclusion point for MinGW
+	  gstplugin.h used to include this for us, but doesn't any longer.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=675171
+
+2012-04-30 09:58:09 +0100  Vincent Penquerc'h <vincent.penquerch@collabora.co.uk>
+
+	* docs/design/part-seeking.txt:
+	* gst/gstsegment.h:
+	* win32/common/gstenumtypes.c:
+	  event: add new seek snap flags
+	  They can be used to select snapping behavior (to previous, next, or
+	  nearest location, where relevant) when seeking.
+	  The seeking implementation (eg, demuxer) may currently ignore some
+	  or all of these flags.
+
+2012-04-29 20:06:58 +0100  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+
+	* gst/gstplugin.h:
+	  docs: remove reference to removed API in plugin docs
+
+2012-04-29 20:06:38 +0100  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+
+	* gst/gstplugin.c:
+	  plugin: avoid some relocations
+
+2012-04-29 18:35:11 +0100  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+
+	* docs/gst/gstreamer-sections.txt:
+	* gst/gstplugin.c:
+	* gst/gstplugin.h:
+	* gst/gstregistry.c:
+	* win32/common/libgstreamer.def:
+	  plugin: remove gst_plugin_name_filter
+	  It's only used internally, most other users will likely
+	  want to use gst_registry_find_plugin() directly instead
+	  (and if not, they can easily walk the list and doing the
+	  strcmp themselves).
+
+2012-04-29 17:46:32 +0100  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+
+	* gst/gst_private.h:
+	* gst/gstplugin.h:
+	* gst/gstpluginloader.c:
+	* gst/gstregistry.c:
+	* gst/gstregistrybinary.c:
+	* gst/gstregistrychunks.c:
+	* tools/gst-inspect.c:
+	  plugin: use GstObject flags for plugin flags
+
+2012-04-29 17:03:32 +0100  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+
+	* gst/gst_private.h:
+	* gst/gstplugin.h:
+	  plugin: make GstPlugin object structure opaque for now
+	  There's no reason anyone would want to derive from this, so
+	  just make opaque until we manage to make all the private bits
+	  private properly (which I'm not doing right now because it's
+	  more invasive and I have registry modifications locally which
+	  touch all that code as well).
+
+2012-04-29 16:49:57 +0100  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+
+	* tools/gst-inspect.c:
+	  tools: use public accessors for plugin description details
+	  Mostly anyway (flags still need sorting out).
+
+2012-04-29 16:46:55 +0100  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+
+	* docs/gst/gstreamer-sections.txt:
+	* gst/gstplugin.c:
+	* gst/gstplugin.h:
+	* win32/common/libgstreamer.def:
+	  plugin: remove gst_plugin_get_module()
+	  This is an implementation detail really, and it's not
+	  clear what anyone would do with this. It's unused as
+	  far as I'm aware, so just remove it for now.
+
+2012-04-29 16:20:50 +0100  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+
+	* docs/gst/gstreamer-sections.txt:
+	* gst/gstplugin.c:
+	* gst/gstplugin.h:
+	* win32/common/libgstreamer.def:
+	  plugin: add accessor for release date time string in plugin description
+	  API: gst_plugin_get_release_date_string()
+
+2012-04-29 15:53:05 +0100  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+
+	* tests/check/gst/gstplugin.c:
+	  tests: use public accessors to get plugin description details
+
+2012-04-29 13:28:09 +0100  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+
+	* gst/gstobject.c:
+	  gstobject: give the 20th queue element a different name than the first queue2 one
+	  Fixes issue with the default naming scheme.
+
+2012-04-18 17:37:25 +0400  Руслан Ижбулатов <lrn1986@gmail.com>
+
+	* gst/parse/grammar.y:
+	  Fix format string in grammar.y
+	  Fixes #674849
+
+2012-04-25 20:14:13 +0200  Stefan Sauer <ensonic@users.sf.net>
+
+	* libs/gst/controller/gstdirectcontrolbinding.c:
+	  controlbindings: add comments for sparse control source
+
+2012-04-25 20:10:11 +0200  Stefan Sauer <ensonic@users.sf.net>
+
+	* gst/gstcontrolbinding.c:
+	  controller: emulate _get_g_value_array()
+	  Add a default implementation on the baseclass.
+
+2012-04-25 09:47:10 +0200  Stefan Sauer <ensonic@users.sf.net>
+
+	* docs/gst/gstreamer-sections.txt:
+	* gst/gstcontrolbinding.c:
+	* gst/gstcontrolbinding.h:
+	* gst/gstcontrolsource.c:
+	* gst/gstobject.c:
+	* gst/gstobject.h:
+	* libs/gst/controller/gstargbcontrolbinding.c:
+	* libs/gst/controller/gstdirectcontrolbinding.c:
+	* libs/gst/controller/gstdirectcontrolbinding.h:
+	* tests/check/libs/controller.c:
+	* tests/examples/controller/control-sources.c:
+	* win32/common/libgstreamer.def:
+	  controller: expand the api to offer functions for plain and GValue arrays
+	  Rename the _get_value_array() functions to _get_g_value_array() and reintroduce
+	  the former to operate on plain unboxed c datatypes (like in 0.10). The _g_value
+	  variants are for bindings while the _value ones are more suited to processing
+	  in elements.
+
+2012-04-25 18:11:03 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* scripts/gst-uninstalled:
+	  gst-uninstalled: Add insanity, insanity-gst and gst-editing-services
+
+2012-04-25 09:06:05 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* gst/gstbufferpool.c:
+	* gst/gstbufferpool.h:
+	  bufferpool: Reset the buffer before releasing into pool
+	  Reset the buffer not after we acquire but before we release into the pool. This
+	  makes sure that the pool only has buffers in a clean state and that we can set
+	  extra metadata on buffers in the acquire method. this means that we need to
+	  remove an argument from the method.
+
+2012-04-23 15:32:04 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* gst/gstbuffer.h:
+	  buffer: MARKER is for the start of a talkspurt
+
+2012-04-24 16:01:52 +0200  Mark Nauwelaerts <mark.nauwelaerts@collabora.co.uk>
+
+	* tests/check/elements/queue2.c:
+	* tests/check/gst/gstpad.c:
+	  tests: plug some leaks
+
+2012-04-23 17:04:57 +0200  Mark Nauwelaerts <mark.nauwelaerts@collabora.co.uk>
+
+	* libs/gst/base/gstcollectpads.c:
+	  collectpads: do not unref flush_start twice
+	  Based on patch by Matej Knopp <matej.knopp@gmail.com>
+
+2012-04-23 16:57:16 +0200  Mark Nauwelaerts <mark.nauwelaerts@collabora.co.uk>
+
+	* libs/gst/base/gstadapter.c:
+	  adapter: refresh skip following merge_up attempt
+	  ... as the latter might now adjust skip as well.
+
+2012-04-23 09:18:48 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* gst/gstmessage.h:
+	  message: Remove comma at end of enum list
+	  This comma confuses some compilers.
+
+2012-04-18 15:31:23 +0400  Руслан Ижбулатов <lrn1986@gmail.com>
+
+	* plugins/elements/gsttee.c:
+	  tee: Remove unneeded unlock
+
+2012-04-18 05:12:55 +0400  Руслан Ижбулатов <lrn1986@gmail.com>
+
+	* gst/gstregistry.c:
+	  registry: fix hardcoded 0.10 version in win32 pluginscanner
+	  https://bugzilla.gnome.org/show_bug.cgi?id=674294
+
+2012-04-17 15:37:27 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* gst/gstbuffer.c:
+	* gst/gstbufferpool.c:
+	* gst/gstbufferpool.h:
+	* gst/gstmeta.h:
+	* tests/check/gst/gstmeta.c:
+	  meta: add LOCKED flag
+	  Add a new LOCKED flag to the metadata. Refuse removing LOCKED metadata from
+	  a buffer.
+	  Mark the metadata from the bufferpool LOCKED.
+	  Add unit test for LOCKED flag
+
+2012-04-17 14:38:01 +0200  Mark Nauwelaerts <mark.nauwelaerts@collabora.co.uk>
+
+	* docs/libs/gstreamer-libs-docs.sgml:
+	* docs/libs/gstreamer-libs-sections.txt:
+	* docs/libs/gstreamer-libs.types:
+	* libs/gst/base/Makefile.am:
+	* libs/gst/base/gstcollectpads.c:
+	* libs/gst/base/gstcollectpads.h:
+	* libs/gst/base/gstcollectpads2.c:
+	* libs/gst/base/gstcollectpads2.h:
+	* tests/check/Makefile.am:
+	* tests/check/libs/.gitignore:
+	* tests/check/libs/collectpads.c:
+	* tests/check/libs/collectpads2.c:
+	* tests/check/libs/gstlibscpp.cc:
+	* tests/check/libs/libsabi.c:
+	* win32/common/libgstbase.def:
+	* win32/vs10/base/base.vcxproj:
+	* win32/vs10/base/base.vcxproj.filters:
+	  collectpads2: rename to collectpads
+
+2012-04-17 12:54:45 +0200  Mark Nauwelaerts <mark.nauwelaerts@collabora.co.uk>
+
+	* libs/gst/base/gstadapter.c:
+	  adapter: ensure writable head buffer before skipping part of it
+
+2012-04-17 12:29:50 +0200  Mark Nauwelaerts <mark.nauwelaerts@collabora.co.uk>
+
+	  Merge remote-tracking branch 'origin/0.10'
+	  Conflicts:
+	  libs/gst/base/gstcollectpads2.c
+
+2012-04-17 12:23:05 +0200  Mark Nauwelaerts <mark.nauwelaerts@collabora.co.uk>
+
+	* libs/gst/base/gstcollectpads2.c:
+	  collectpads2: always recording incoming segment info if no buffer_func set
+
+2012-04-17 10:38:05 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* docs/gst/running.xml:
+	  docs: update the debug and trace env var docs
+
+2012-04-17 10:33:59 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* gst/gsttrace.c:
+	  trace: use g_parse_debug_string instead of atoi
+	  Make the GST_TRACE env variable take a comma separated list of strings
+	  describing the options to enable instead of a number.
+
+2012-04-16 21:14:17 +0000  Youness Alaoui <youness.alaoui@collabora.co.uk>
+
+	* tools/gst-inspect.c:
+	  gst-inspect: If running with --print-all, fix printing of the Children: line
+
+2012-04-16 21:14:02 +0000  Youness Alaoui <youness.alaoui@collabora.co.uk>
+
+	* tools/gst-inspect.c:
+	  gst-inspect: If running with --print-all, fix printing of signal names
+
+2012-04-16 16:36:52 +0200  Mark Nauwelaerts <mark.nauwelaerts@collabora.co.uk>
+
+	* win32/common/libgstbase.def:
+	  win32: add new collectpads2 API to .def file
+
+2012-04-16 16:29:34 +0200  Mark Nauwelaerts <mark.nauwelaerts@collabora.co.uk>
+
+	  Merge remote-tracking branch 'origin/0.10'
+	  Conflicts:
+	  libs/gst/base/gstcollectpads2.c
+
+2012-04-16 16:24:18 +0200  Mark Nauwelaerts <mark.nauwelaerts@collabora.co.uk>
+
+	* libs/gst/base/gstcollectpads2.c:
+	* libs/gst/base/gstcollectpads2.h:
+	  collectpads2: provide query default and callback handling
+	  ... which presently mainly serves to answer SEEKING query negatively
+	  to dissuade upstream encoders from doing any seeking and
+	  "header finalization" (since the returned result of pushing a
+	  sticky event is fairly useless nowadays).
+
+2012-04-16 16:24:10 +0200  Mark Nauwelaerts <mark.nauwelaerts@collabora.co.uk>
+
+	* libs/gst/base/gstcollectpads2.c:
+	* libs/gst/base/gstcollectpads2.h:
+	  collectpads2: modify event handling using a default event handler
+	  ... that elements should "chain up" to.
+
+2012-04-16 15:35:23 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* gst/gstvalue.c:
+	  segment: add rude serialization
+	  Ass serialize and deserialize functions for GstSegment so that gdp and
+	  gst_structure_to_string show the segment values. We convert to a GstSegment
+	  first to make things easier..
+	  Fixes https://bugzilla.gnome.org/show_bug.cgi?id=674100
+
+2012-02-03 17:08:35 +0000  Vincent Penquerc'h <vincent.penquerch@collabora.co.uk>
+
+	* libs/gst/base/gstcollectpads2.c:
+	  collectpads2: assume 0 based segment if no time segment was provided
+	  https://bugzilla.gnome.org/show_bug.cgi?id=669305
+
+2012-04-16 10:28:15 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* gst/gstmemory.c:
+	  memory: add size to debug log
+
+2012-04-16 10:27:29 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* plugins/elements/gstinputselector.c:
+	  inputselector: Set sequence number on segment events
+
+2012-04-16 10:22:53 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* plugins/elements/gstinputselector.c:
+	  inputselector: Forward all sticky events when switching pads
+
+2012-04-16 10:05:02 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* plugins/elements/gsttee.c:
+	  tee: Store pad state directly inside the pads instead of GObject qdata
+
+2012-04-16 09:45:27 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* plugins/elements/gstinputselector.c:
+	  inputselector: Send reconfigure event on the new active pad when pads are switched
+
+2012-04-16 09:08:46 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* common:
+	  Automatic update of common submodule
+	  From 6db25be to dc70203
+
+2012-04-14 03:27:29 +0200  Matej Knopp <matej.knopp@gmail.com>
+
+	* libs/gst/base/gstadapter.c:
+	  Remove skipped part of buffer when mapping the adapter
+	  Fixes https://bugzilla.gnome.org/show_bug.cgi?id=674085
+
+2012-04-14 10:24:38 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* tests/check/libs/adapter.c:
+	  tests: add another adapter test
+	  Test performance of merging
+
+2012-04-14 10:23:49 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* gst/gstbuffer.c:
+	  buffer: improve debug
+
+2012-04-13 14:22:34 +0200  Matej Knopp <matej.knopp@gmail.com>
+
+	* plugins/elements/gstmultiqueue.c:
+	  multiqueue: gst_single_queue_flush unlocks the queue twice
+	  https://bugzilla.gnome.org/show_bug.cgi?id=674044
+
+2012-04-13 13:36:37 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* autogen.sh:
+	* configure.ac:
+	  configure: Modernize autotools setup a bit
+	  Also we now only create tar.bz2 and tar.xz tarballs.
+
+2012-04-13 13:36:47 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* common:
+	  Automatic update of common submodule
+	  From 464fe15 to 6db25be
+
+2012-04-13 11:58:49 +0200  Mark Nauwelaerts <mark.nauwelaerts@collabora.co.uk>
+
+	* libs/gst/base/gstbasesink.c:
+	  basesink: plug caps leak
+
+2012-04-13 08:10:19 +0200  Stefan Sauer <ensonic@users.sf.net>
+
+	* gst/gstcontrolbinding.c:
+	  controlbinding: only take a weak ref on the object
+	  Fixes the leaks in the tests. Added a TODO comment to eventually rework this
+	  some more (while we can).
+
+2012-04-12 18:15:27 -0400  Reynaldo H. Verdejo Pinochet <reynaldo@collabora.com>
+
+	* Android.mk:
+	  Sync Android.mk entries to the new major version
+	  Change naming on the pkgconfig files to reflect
+	  the 0.10 -> 1.0 bump.
+
+2012-04-12 14:59:52 +0200  Edward Hervey <edward.hervey@collabora.co.uk>
+
+	* libs/gst/controller/gstargbcontrolbinding.c:
+	* libs/gst/controller/gstdirectcontrolbinding.c:
+	* libs/gst/controller/gstlfocontrolsource.c:
+	* libs/gst/controller/gsttimedvaluecontrolsource.c:
+	  controller: Chain up to parent class dispose/finalize
+	  Avoids leaks
+
+2012-04-12 14:59:31 +0200  Edward Hervey <edward.hervey@collabora.co.uk>
+
+	* libs/gst/check/gstconsistencychecker.c:
+	  consistencychecker: Use gst_object_{ref|unref} where applicable
+	  Allows us to debug object life
+
+2012-04-12 14:58:47 +0200  Edward Hervey <edward.hervey@collabora.co.uk>
+
+	* gst/gstobject.c:
+	* gst/gstpluginfeature.c:
+	  gst: Use gst_object_{ref|unref} where applicable
+	  Allows us to debug object life
+
+2012-04-12 11:53:00 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* gst/gstbuffer.c:
+	  buffer: improve arg checking
+	  Allow idx == 0 and length == -1 on empty buffers for the _range methods.
+
+2012-04-12 11:18:22 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* configure.ac:
+	  Back to development
+
+=== release 0.11.90 ===
+
+2012-04-12 09:57:01 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* ChangeLog:
+	* NEWS:
+	* RELEASE:
+	* configure.ac:
+	* docs/plugins/gstreamer-plugins.prerequisites:
+	* docs/plugins/inspect/plugin-coreelements.xml:
+	* docs/plugins/inspect/plugin-coreindexers.xml:
+	* gstreamer.doap:
+	* win32/common/config.h:
+	  Release 0.11.90
+
+2012-04-12 09:56:43 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* po/af.po:
+	* po/az.po:
+	* po/be.po:
+	* po/bg.po:
+	* po/ca.po:
+	* po/cs.po:
+	* po/da.po:
+	* po/de.po:
+	* po/el.po:
+	* po/en_GB.po:
+	* po/eo.po:
+	* po/es.po:
+	* po/eu.po:
+	* po/fi.po:
+	* po/fr.po:
+	* po/gl.po:
+	* po/hu.po:
+	* po/id.po:
+	* po/it.po:
+	* po/ja.po:
+	* po/lt.po:
+	* po/nb.po:
+	* po/nl.po:
+	* po/pl.po:
+	* po/pt_BR.po:
+	* po/ro.po:
+	* po/ru.po:
+	* po/rw.po:
+	* po/sk.po:
+	* po/sl.po:
+	* po/sq.po:
+	* po/sr.po:
+	* po/sv.po:
+	* po/tr.po:
+	* po/uk.po:
+	* po/vi.po:
+	* po/zh_CN.po:
+	* po/zh_TW.po:
+	  Update .po files
 
 2012-04-11 13:20:18 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
 

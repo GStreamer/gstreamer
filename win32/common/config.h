@@ -62,7 +62,7 @@
 #define GST_PACKAGE_ORIGIN "Unknown package origin"
 
 /* GStreamer package release date/time for plugins as YYYY-MM-DD */
-#define GST_PACKAGE_RELEASE_DATETIME "2012-04-12"
+#define GST_PACKAGE_RELEASE_DATETIME "2012-05-13"
 
 /* location of the installed gst-plugin-scanner */
 #define GST_PLUGIN_SCANNER_INSTALLED LIBDIR "\\gst-plugin-scanner"
@@ -334,7 +334,7 @@
 #define PACKAGE_NAME "GStreamer"
 
 /* Define to the full name and version of this package. */
-#define PACKAGE_STRING "GStreamer 0.11.90"
+#define PACKAGE_STRING "GStreamer 0.11.91"
 
 /* Define to the one symbol short name of this package. */
 #define PACKAGE_TARNAME "gstreamer"
@@ -343,7 +343,7 @@
 #undef PACKAGE_URL
 
 /* Define to the version of this package. */
-#define PACKAGE_VERSION "0.11.90"
+#define PACKAGE_VERSION "0.11.91"
 
 /* directory where plugins are located */
 #ifdef _DEBUG
@@ -374,7 +374,7 @@
 #undef USE_POISONING
 
 /* Version number of package */
-#define VERSION "0.11.90"
+#define VERSION "0.11.91"
 
 /* Define WORDS_BIGENDIAN to 1 if your processor stores words with the most
    significant byte first (like Motorola and SPARC, unlike Intel). */
@@ -386,6 +386,11 @@
 # ifndef WORDS_BIGENDIAN
 #  undef WORDS_BIGENDIAN
 # endif
+#endif
+
+/* Enable large inode numbers on Mac OS X 10.5.  */
+#ifndef _DARWIN_USE_64_BIT_INODE
+# define _DARWIN_USE_64_BIT_INODE 1
 #endif
 
 /* Number of bits in a file offset, on hosts where this is settable. */

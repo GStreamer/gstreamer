@@ -1,4 +1,10 @@
-This is GStreamer 0.11.90 "And all with pearl and ruby glowing was the fair palace door"
+This is GStreamer 0.11.91 "I will give you five magic beans!"
+
+New features in 0.11.91:
+
+      * API cleanup and minor improvements
+      * More hiding of structs that don't need to be public
+      * Addition of SNAP flag for seek events
 
 New features in 0.11.90:
 

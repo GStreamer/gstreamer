@@ -1,5 +1,5 @@
 
-Release notes for GStreamer 0.11.90 "And all with pearl and ruby glowing was the fair palace door"
+Release notes for GStreamer 0.11.91 "I will give you five magic beans!"
         
 
 
@@ -39,10 +39,11 @@ contains a set of less supported plug-ins that haven't passed the
 
 Features of this release
     
-      * Lots of bugfixes, cleanup and other improvements
-      * Improvements to the buffer and memory managment API
-      * A new GstTOC interface, e.g. for handling chapters
-      * The GstChildProxy interface works with any GObject now
+      * Parallel installability with 0.10.x series
+      * Threadsafe design and API
+      * API cleanup and minor improvements
+      * More hiding of structs that don't need to be public
+      * Addition of SNAP flag for seek events
 There were no bugs fixed in this release
     
 
@@ -77,20 +78,20 @@ Webkit, Jokosher, Transmageddon and others. We're working on porting more applic
   
 Contributors to this release
     
-      * Alessandro Decina
-      * Alexander Saprykin
-      * Christian Fredrik Kalager Schaller
-      * David Schleef
+      * Anton Belka
       * Edward Hervey
-      * Fabrizio (Misto) Milo
       * Mark Nauwelaerts
       * Matej Knopp
-      * Olivier Crête
-      * Ryan Lortie
+      * Raimo Järvi
+      * Reynaldo H. Verdejo Pinochet
       * Sebastian Dröge
+      * Sebastian Rasmussen
       * Sreerenj Balachandran
       * Stefan Sauer
+      * Thiago Santos
       * Tim-Philipp Müller
+      * Vincent Penquerc'h
       * Wim Taymans
+      * Youness Alaoui
       * Руслан Ижбулатов
  

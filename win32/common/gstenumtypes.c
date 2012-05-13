@@ -912,6 +912,7 @@ gst_meta_flags_get_type (void)
     {C_FLAGS (GST_META_FLAG_NONE), "GST_META_FLAG_NONE", "none"},
     {C_FLAGS (GST_META_FLAG_READONLY), "GST_META_FLAG_READONLY", "readonly"},
     {C_FLAGS (GST_META_FLAG_POOLED), "GST_META_FLAG_POOLED", "pooled"},
+    {C_FLAGS (GST_META_FLAG_LOCKED), "GST_META_FLAG_LOCKED", "locked"},
     {C_FLAGS (GST_META_FLAG_LAST), "GST_META_FLAG_LAST", "last"},
     {0, NULL, NULL}
   };
@@ -1476,6 +1477,8 @@ gst_seek_flags_get_type (void)
         "snap-before"},
     {C_FLAGS (GST_SEEK_FLAG_SNAP_AFTER), "GST_SEEK_FLAG_SNAP_AFTER",
         "snap-after"},
+    {C_FLAGS (GST_SEEK_FLAG_SNAP_NEAREST), "GST_SEEK_FLAG_SNAP_NEAREST",
+        "snap-nearest"},
     {0, NULL, NULL}
   };
 
