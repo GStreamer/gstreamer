@@ -3769,12 +3769,11 @@ dv_type_find (GstTypeFind * tf, gpointer private)
 }
 
 
-/*** Ogg and Annodex variants ***/
-static GstStaticCaps ogg_annodex_caps =
-    GST_STATIC_CAPS ("application/ogg;video/ogg;audio/ogg;"
-    "application/annodex;audio/annodex;video/annodex;application/kate");
+/*** Ogg variants ***/
+static GstStaticCaps ogg_caps =
+    GST_STATIC_CAPS ("application/ogg;video/ogg;audio/ogg;application/kate");
 
-#define OGGANX_CAPS (gst_static_caps_get(&ogg_annodex_caps))
+#define OGG_CAPS (gst_static_caps_get(&ogg_caps))
 
 typedef enum
 {
@@ -3864,15 +3863,8 @@ ogganx_type_find (GstTypeFind * tf, gpointer private)
   if (ogg_syncs == 0)
     return;
 
-  /* FIXME: what about XSPF? */
-  if (hdr_count[OGG_ANNODEX] > 0) {
-    if (hdr_count[OGG_VIDEO] > 0)
-      media_type = "video/annodex";
-    else if (hdr_count[OGG_AUDIO] > 0)
-      media_type = "audio/annodex";
-    else
-      media_type = "application/annodex";
-  } else if (hdr_count[OGG_VIDEO] > 0) {
+  /* We don't bother with annodex types. FIXME: what about XSPF? */
+  if (hdr_count[OGG_VIDEO] > 0) {
     media_type = "video/ogg";
   } else if (hdr_count[OGG_AUDIO] > 0) {
     media_type = "audio/ogg";
@@ -4729,7 +4721,7 @@ plugin_init (GstPlugin * plugin)
   TYPE_FIND_REGISTER (plugin, "video/mpegts", GST_RANK_PRIMARY,
       mpeg_ts_type_find, "ts,mts", MPEGTS_CAPS, NULL, NULL);
   TYPE_FIND_REGISTER (plugin, "application/ogg", GST_RANK_PRIMARY,
-      ogganx_type_find, "ogg,oga,ogv,ogm,ogx,spx,anx,axa,axv", OGGANX_CAPS,
+      ogganx_type_find, "ogg,oga,ogv,ogm,ogx,spx,anx,axa,axv", OGG_CAPS,
       NULL, NULL);
   TYPE_FIND_REGISTER (plugin, "video/mpeg-elementary", GST_RANK_MARGINAL,
       mpeg_video_stream_type_find, "mpv,mpeg,mpg", MPEG_VIDEO_CAPS, NULL, NULL);

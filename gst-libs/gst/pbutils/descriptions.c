@@ -65,11 +65,9 @@ typedef struct
 
 static const FormatInfo formats[] = {
   /* container/tag formats with static descriptions */
-  {"audio/annodex", "Ogg", FLAG_CONTAINER},
   {"audio/ogg", "Ogg", FLAG_CONTAINER},
   {"audio/webm", "WebM", FLAG_CONTAINER},
   {"audio/x-matroska", "Matroska", FLAG_CONTAINER},
-  {"application/annodex", "Ogg", FLAG_CONTAINER},
   {"application/gxf", "General Exchange Format (GXF)", FLAG_CONTAINER},
   {"application/ogg", "Ogg", FLAG_CONTAINER},
   {"application/kate", "Ogg", FLAG_CONTAINER},
@@ -83,7 +81,6 @@ static const FormatInfo formats[] = {
   {"application/x-pn-realaudio", "RealAudio", FLAG_CONTAINER},
   {"application/x-yuv4mpeg", "Y4M", FLAG_CONTAINER},
   {"multipart/x-mixed-replace", "Multipart", FLAG_CONTAINER},
-  {"video/annodex", "Ogg", FLAG_CONTAINER},
   {"video/ogg", "Ogg", FLAG_CONTAINER},
   {"video/x-fli", "FLI/FLC/FLX Animation", FLAG_CONTAINER},
   {"video/x-flv", "Flash", FLAG_CONTAINER},
