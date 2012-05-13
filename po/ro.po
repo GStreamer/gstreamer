@@ -5,7 +5,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-good 0.10.23.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2012-04-12 10:26+0200\n"
+"POT-Creation-Date: 2012-05-13 16:29+0200\n"
 "PO-Revision-Date: 2010-08-16 03:22+0300\n"
 "Last-Translator: Lucian Adrian Grijincu <lucian.grijincu@gmail.com>\n"
 "Language-Team: Romanian <translation-team-ro@lists.sourceforge.net>\n"
@@ -101,81 +101,6 @@ msgstr ""
 msgid "Internal data flow error."
 msgstr "Eroare internă a fluxului de date."
 
-msgid "Volume"
-msgstr "Volum"
-
-msgid "Bass"
-msgstr "Bas"
-
-msgid "Treble"
-msgstr "Înalte"
-
-msgid "Synth"
-msgstr "Synth"
-
-msgid "PCM"
-msgstr "PCM"
-
-msgid "Speaker"
-msgstr "Difuzor"
-
-msgid "Line-in"
-msgstr "Linie intrare"
-
-msgid "Microphone"
-msgstr "Microfon"
-
-msgid "CD"
-msgstr "CD"
-
-msgid "Mixer"
-msgstr "Mixer"
-
-msgid "PCM-2"
-msgstr "PCM-2"
-
-msgid "Record"
-msgstr "Înregistrare"
-
-msgid "In-gain"
-msgstr "Câștig intrare"
-
-msgid "Out-gain"
-msgstr "Câștig ieșire"
-
-msgid "Line-1"
-msgstr "Linia-1"
-
-msgid "Line-2"
-msgstr "Linia-2"
-
-msgid "Line-3"
-msgstr "Linia-3"
-
-msgid "Digital-1"
-msgstr "Digital-1"
-
-msgid "Digital-2"
-msgstr "Digital-2"
-
-msgid "Digital-3"
-msgstr "Digital-3"
-
-msgid "Phone-in"
-msgstr "Intrare telefon"
-
-msgid "Phone-out"
-msgstr "Ieșire telefon"
-
-msgid "Video"
-msgstr "Video"
-
-msgid "Radio"
-msgstr "Radio"
-
-msgid "Monitor"
-msgstr "Monitor"
-
 msgid ""
 "Could not open audio device for playback. Device is being used by another "
 "application."
@@ -203,314 +128,6 @@ msgstr ""
 msgid "Could not open audio device for recording."
 msgstr "Nu s-a putut deschide dispozitivul audio pentru înregistrare."
 
-msgid "Could not open audio device for mixer control handling."
-msgstr ""
-"Nu s-a putut deschide dispozitivul audio pentru gestionarea controlului de "
-"mixaj."
-
-msgid ""
-"Could not open audio device for mixer control handling. This version of the "
-"Open Sound System is not supported by this element."
-msgstr ""
-"Nu s-a putut deschide dispozitivul audio pentru gestionarea controlului de "
-"mixaj. Această versiune a OSS (Open Sound System) nu este suportată de acest "
-"element"
-
-msgid "Master"
-msgstr "Principal"
-
-msgid "Front"
-msgstr "Față"
-
-msgid "Rear"
-msgstr "Spate"
-
-msgid "Headphones"
-msgstr "Căști"
-
-msgid "Center"
-msgstr "Centru"
-
-msgid "LFE"
-msgstr "LFE"
-
-msgid "Surround"
-msgstr "Surround"
-
-msgid "Side"
-msgstr "Lateral"
-
-msgid "Built-in Speaker"
-msgstr "Boxe integrate"
-
-msgid "AUX 1 Out"
-msgstr "Ieșire AUX 1"
-
-msgid "AUX 2 Out"
-msgstr "Ieșire AUX 2"
-
-msgid "AUX Out"
-msgstr "Ieșire AUX"
-
-msgid "3D Depth"
-msgstr "Adâncime 3D"
-
-msgid "3D Center"
-msgstr "Centru 3D"
-
-msgid "3D Enhance"
-msgstr "Îmbunătățire 3D"
-
-msgid "Telephone"
-msgstr "Telefon"
-
-msgid "Line Out"
-msgstr "Linie ieșire"
-
-msgid "Line In"
-msgstr "Linie intrare"
-
-msgid "Internal CD"
-msgstr "CD intern"
-
-msgid "Video In"
-msgstr "Intrare video"
-
-msgid "AUX 1 In"
-msgstr "Intrare AUX 1"
-
-msgid "AUX 2 In"
-msgstr "Intrare AUX 2"
-
-msgid "AUX In"
-msgstr "Intrare AUX"
-
-msgid "Record Gain"
-msgstr "Câștig înregistrare"
-
-msgid "Output Gain"
-msgstr "Câștig ieșire"
-
-msgid "Microphone Boost"
-msgstr "Amplificare microfon"
-
-msgid "Loopback"
-msgstr "Buclă"
-
-msgid "Diagnostic"
-msgstr "Diagnostic"
-
-msgid "Bass Boost"
-msgstr "Amplificare bas"
-
-msgid "Playback Ports"
-msgstr "Porturi redare"
-
-msgid "Input"
-msgstr "Intrare"
-
-msgid "Record Source"
-msgstr "Sursă înregistrare"
-
-msgid "Monitor Source"
-msgstr "Sursă monitor"
-
-msgid "Keyboard Beep"
-msgstr "Bip tastatură"
-
-msgid "Simulate Stereo"
-msgstr "Simulează stereo"
-
-msgid "Stereo"
-msgstr "Stereo"
-
-msgid "Surround Sound"
-msgstr "Sunet surround"
-
-msgid "Microphone Gain"
-msgstr "Câștig microfon"
-
-msgid "Speaker Source"
-msgstr "Sursă difuzor"
-
-msgid "Microphone Source"
-msgstr "Sursă microfon"
-
-msgid "Jack"
-msgstr "Jack"
-
-msgid "Center / LFE"
-msgstr "Centru / LFE"
-
-msgid "Stereo Mix"
-msgstr "Stereo Mix"
-
-msgid "Mono Mix"
-msgstr "Mono Mix"
-
-msgid "Input Mix"
-msgstr "Mix intrare"
-
-msgid "SPDIF In"
-msgstr "Intrare SPDIF"
-
-msgid "SPDIF Out"
-msgstr "Ieșire SPDIF"
-
-msgid "Microphone 1"
-msgstr "Microfon 1"
-
-msgid "Microphone 2"
-msgstr "Microfon 2"
-
-msgid "Digital Out"
-msgstr "Ieșire digitală"
-
-msgid "Digital In"
-msgstr "Intrare digitală"
-
-msgid "HDMI"
-msgstr "HDMI"
-
-msgid "Modem"
-msgstr "Modem"
-
-msgid "Handset"
-msgstr "Căști"
-
-msgid "Other"
-msgstr "Altul"
-
-msgid "None"
-msgstr "Niciunul"
-
-msgid "On"
-msgstr "Activat"
-
-msgid "Off"
-msgstr "Dezactivat"
-
-msgid "Mute"
-msgstr "Mut"
-
-msgid "Fast"
-msgstr "Rapid"
-
-#. TRANSLATORS: "Very Low" is a quality setting here
-msgid "Very Low"
-msgstr "Foarte scăzută"
-
-#. TRANSLATORS: "Low" is a quality setting here
-msgid "Low"
-msgstr "Scăzută"
-
-#. TRANSLATORS: "Medium" is a quality setting here
-msgid "Medium"
-msgstr "Medie"
-
-#. TRANSLATORS: "High" is a quality setting here
-msgid "High"
-msgstr "Ridicată"
-
-#. TRANSLATORS: "Very High" is a quality setting here
-msgid "Very High"
-msgstr "Foarte ridicată"
-
-#. TRANSLATORS: "Production" is a quality setting here
-msgid "Production"
-msgstr "Producție"
-
-msgid "Front Panel Microphone"
-msgstr "Microfon panou frontal"
-
-msgid "Front Panel Line In"
-msgstr "Linie intrare panou frontal"
-
-msgid "Front Panel Headphones"
-msgstr "Căști panou frontal"
-
-msgid "Front Panel Line Out"
-msgstr "Linie ieșire panou frontal"
-
-msgid "Green Connector"
-msgstr "Conector verde"
-
-msgid "Pink Connector"
-msgstr "Conector roz"
-
-msgid "Blue Connector"
-msgstr "Conector albastru"
-
-msgid "White Connector"
-msgstr "Conector alb"
-
-msgid "Black Connector"
-msgstr "Conector negru"
-
-msgid "Gray Connector"
-msgstr "Conector gri"
-
-msgid "Orange Connector"
-msgstr "Conector portocaliu"
-
-msgid "Red Connector"
-msgstr "Conector roșu"
-
-msgid "Yellow Connector"
-msgstr "Conector galben"
-
-msgid "Green Front Panel Connector"
-msgstr "Conector verde panou frontal"
-
-msgid "Pink Front Panel Connector"
-msgstr "Conector roz panou frontal"
-
-msgid "Blue Front Panel Connector"
-msgstr "Conector albastru panou frontal"
-
-msgid "White Front Panel Connector"
-msgstr "Conector alb panou frontal"
-
-msgid "Black Front Panel Connector"
-msgstr "Conector negru panou frontal"
-
-msgid "Gray Front Panel Connector"
-msgstr "Conector gri panou frontal"
-
-msgid "Orange Front Panel Connector"
-msgstr "Conector portocaliu panou frontal"
-
-msgid "Red Front Panel Connector"
-msgstr "Conector roșu panou frontal"
-
-msgid "Yellow Front Panel Connector"
-msgstr "Conector galben panou frontal"
-
-msgid "Spread Output"
-msgstr "Împarte ieșirea"
-
-msgid "Downmix"
-msgstr "Mixaj redus"
-
-msgid "Virtual Mixer Input"
-msgstr "Intrare mixer video"
-
-msgid "Virtual Mixer Output"
-msgstr "Ieșire mixer video"
-
-msgid "Virtual Mixer Channels"
-msgstr "Canale mixer video"
-
-#. TRANSLATORS: name + number of a volume mixer control
-#, c-format
-msgid "%s %d Function"
-msgstr "Funcție %s %d"
-
-#. TRANSLATORS: name of a volume mixer control
-#, c-format
-msgid "%s Function"
-msgstr "Funcție %s"
-
 msgid ""
 "Could not open audio device for playback. This version of the Open Sound "
 "System is not supported by this element."
@@ -530,11 +147,32 @@ msgstr "Înregistrarea nu este suportată de acest dispozitiv audio."
 msgid "Error recording from audio device."
 msgstr "Eroare la înregistrarea de la dispozitivul audio."
 
+msgid "Volume"
+msgstr "Volum"
+
 msgid "Gain"
 msgstr "Amplificare"
 
+msgid "Monitor"
+msgstr "Monitor"
+
+msgid "Built-in Speaker"
+msgstr "Boxe integrate"
+
 msgid "Headphone"
 msgstr "Căști"
+
+msgid "Line Out"
+msgstr "Linie ieșire"
+
+msgid "SPDIF Out"
+msgstr "Ieșire SPDIF"
+
+msgid "AUX 1 Out"
+msgstr "Ieșire AUX 1"
+
+msgid "AUX 2 Out"
+msgstr "Ieșire AUX 2"
 
 #, c-format
 msgid "Error reading %d bytes from device '%s'."
@@ -719,6 +357,358 @@ msgstr "Schimbarea rezoluției pe durata rulării nu este incă suportată."
 
 msgid "Cannot operate without a clock"
 msgstr "Nu se poate opera fără un ceas"
+
+#~ msgid "Bass"
+#~ msgstr "Bas"
+
+#~ msgid "Treble"
+#~ msgstr "Înalte"
+
+#~ msgid "Synth"
+#~ msgstr "Synth"
+
+#~ msgid "PCM"
+#~ msgstr "PCM"
+
+#~ msgid "Speaker"
+#~ msgstr "Difuzor"
+
+#~ msgid "Line-in"
+#~ msgstr "Linie intrare"
+
+#~ msgid "Microphone"
+#~ msgstr "Microfon"
+
+#~ msgid "CD"
+#~ msgstr "CD"
+
+#~ msgid "Mixer"
+#~ msgstr "Mixer"
+
+#~ msgid "PCM-2"
+#~ msgstr "PCM-2"
+
+#~ msgid "Record"
+#~ msgstr "Înregistrare"
+
+#~ msgid "In-gain"
+#~ msgstr "Câștig intrare"
+
+#~ msgid "Out-gain"
+#~ msgstr "Câștig ieșire"
+
+#~ msgid "Line-1"
+#~ msgstr "Linia-1"
+
+#~ msgid "Line-2"
+#~ msgstr "Linia-2"
+
+#~ msgid "Line-3"
+#~ msgstr "Linia-3"
+
+#~ msgid "Digital-1"
+#~ msgstr "Digital-1"
+
+#~ msgid "Digital-2"
+#~ msgstr "Digital-2"
+
+#~ msgid "Digital-3"
+#~ msgstr "Digital-3"
+
+#~ msgid "Phone-in"
+#~ msgstr "Intrare telefon"
+
+#~ msgid "Phone-out"
+#~ msgstr "Ieșire telefon"
+
+#~ msgid "Video"
+#~ msgstr "Video"
+
+#~ msgid "Radio"
+#~ msgstr "Radio"
+
+#~ msgid "Could not open audio device for mixer control handling."
+#~ msgstr ""
+#~ "Nu s-a putut deschide dispozitivul audio pentru gestionarea controlului "
+#~ "de mixaj."
+
+#~ msgid ""
+#~ "Could not open audio device for mixer control handling. This version of "
+#~ "the Open Sound System is not supported by this element."
+#~ msgstr ""
+#~ "Nu s-a putut deschide dispozitivul audio pentru gestionarea controlului "
+#~ "de mixaj. Această versiune a OSS (Open Sound System) nu este suportată de "
+#~ "acest element"
+
+#~ msgid "Master"
+#~ msgstr "Principal"
+
+#~ msgid "Front"
+#~ msgstr "Față"
+
+#~ msgid "Rear"
+#~ msgstr "Spate"
+
+#~ msgid "Headphones"
+#~ msgstr "Căști"
+
+#~ msgid "Center"
+#~ msgstr "Centru"
+
+#~ msgid "LFE"
+#~ msgstr "LFE"
+
+#~ msgid "Surround"
+#~ msgstr "Surround"
+
+#~ msgid "Side"
+#~ msgstr "Lateral"
+
+#~ msgid "AUX Out"
+#~ msgstr "Ieșire AUX"
+
+#~ msgid "3D Depth"
+#~ msgstr "Adâncime 3D"
+
+#~ msgid "3D Center"
+#~ msgstr "Centru 3D"
+
+#~ msgid "3D Enhance"
+#~ msgstr "Îmbunătățire 3D"
+
+#~ msgid "Telephone"
+#~ msgstr "Telefon"
+
+#~ msgid "Line In"
+#~ msgstr "Linie intrare"
+
+#~ msgid "Internal CD"
+#~ msgstr "CD intern"
+
+#~ msgid "Video In"
+#~ msgstr "Intrare video"
+
+#~ msgid "AUX 1 In"
+#~ msgstr "Intrare AUX 1"
+
+#~ msgid "AUX 2 In"
+#~ msgstr "Intrare AUX 2"
+
+#~ msgid "AUX In"
+#~ msgstr "Intrare AUX"
+
+#~ msgid "Record Gain"
+#~ msgstr "Câștig înregistrare"
+
+#~ msgid "Output Gain"
+#~ msgstr "Câștig ieșire"
+
+#~ msgid "Microphone Boost"
+#~ msgstr "Amplificare microfon"
+
+#~ msgid "Loopback"
+#~ msgstr "Buclă"
+
+#~ msgid "Diagnostic"
+#~ msgstr "Diagnostic"
+
+#~ msgid "Bass Boost"
+#~ msgstr "Amplificare bas"
+
+#~ msgid "Playback Ports"
+#~ msgstr "Porturi redare"
+
+#~ msgid "Input"
+#~ msgstr "Intrare"
+
+#~ msgid "Record Source"
+#~ msgstr "Sursă înregistrare"
+
+#~ msgid "Monitor Source"
+#~ msgstr "Sursă monitor"
+
+#~ msgid "Keyboard Beep"
+#~ msgstr "Bip tastatură"
+
+#~ msgid "Simulate Stereo"
+#~ msgstr "Simulează stereo"
+
+#~ msgid "Stereo"
+#~ msgstr "Stereo"
+
+#~ msgid "Surround Sound"
+#~ msgstr "Sunet surround"
+
+#~ msgid "Microphone Gain"
+#~ msgstr "Câștig microfon"
+
+#~ msgid "Speaker Source"
+#~ msgstr "Sursă difuzor"
+
+#~ msgid "Microphone Source"
+#~ msgstr "Sursă microfon"
+
+#~ msgid "Jack"
+#~ msgstr "Jack"
+
+#~ msgid "Center / LFE"
+#~ msgstr "Centru / LFE"
+
+#~ msgid "Stereo Mix"
+#~ msgstr "Stereo Mix"
+
+#~ msgid "Mono Mix"
+#~ msgstr "Mono Mix"
+
+#~ msgid "Input Mix"
+#~ msgstr "Mix intrare"
+
+#~ msgid "SPDIF In"
+#~ msgstr "Intrare SPDIF"
+
+#~ msgid "Microphone 1"
+#~ msgstr "Microfon 1"
+
+#~ msgid "Microphone 2"
+#~ msgstr "Microfon 2"
+
+#~ msgid "Digital Out"
+#~ msgstr "Ieșire digitală"
+
+#~ msgid "Digital In"
+#~ msgstr "Intrare digitală"
+
+#~ msgid "HDMI"
+#~ msgstr "HDMI"
+
+#~ msgid "Modem"
+#~ msgstr "Modem"
+
+#~ msgid "Handset"
+#~ msgstr "Căști"
+
+#~ msgid "Other"
+#~ msgstr "Altul"
+
+#~ msgid "None"
+#~ msgstr "Niciunul"
+
+#~ msgid "On"
+#~ msgstr "Activat"
+
+#~ msgid "Off"
+#~ msgstr "Dezactivat"
+
+#~ msgid "Mute"
+#~ msgstr "Mut"
+
+#~ msgid "Fast"
+#~ msgstr "Rapid"
+
+#~ msgid "Very Low"
+#~ msgstr "Foarte scăzută"
+
+#~ msgid "Low"
+#~ msgstr "Scăzută"
+
+#~ msgid "Medium"
+#~ msgstr "Medie"
+
+#~ msgid "High"
+#~ msgstr "Ridicată"
+
+#~ msgid "Very High"
+#~ msgstr "Foarte ridicată"
+
+#~ msgid "Production"
+#~ msgstr "Producție"
+
+#~ msgid "Front Panel Microphone"
+#~ msgstr "Microfon panou frontal"
+
+#~ msgid "Front Panel Line In"
+#~ msgstr "Linie intrare panou frontal"
+
+#~ msgid "Front Panel Headphones"
+#~ msgstr "Căști panou frontal"
+
+#~ msgid "Front Panel Line Out"
+#~ msgstr "Linie ieșire panou frontal"
+
+#~ msgid "Green Connector"
+#~ msgstr "Conector verde"
+
+#~ msgid "Pink Connector"
+#~ msgstr "Conector roz"
+
+#~ msgid "Blue Connector"
+#~ msgstr "Conector albastru"
+
+#~ msgid "White Connector"
+#~ msgstr "Conector alb"
+
+#~ msgid "Black Connector"
+#~ msgstr "Conector negru"
+
+#~ msgid "Gray Connector"
+#~ msgstr "Conector gri"
+
+#~ msgid "Orange Connector"
+#~ msgstr "Conector portocaliu"
+
+#~ msgid "Red Connector"
+#~ msgstr "Conector roșu"
+
+#~ msgid "Yellow Connector"
+#~ msgstr "Conector galben"
+
+#~ msgid "Green Front Panel Connector"
+#~ msgstr "Conector verde panou frontal"
+
+#~ msgid "Pink Front Panel Connector"
+#~ msgstr "Conector roz panou frontal"
+
+#~ msgid "Blue Front Panel Connector"
+#~ msgstr "Conector albastru panou frontal"
+
+#~ msgid "White Front Panel Connector"
+#~ msgstr "Conector alb panou frontal"
+
+#~ msgid "Black Front Panel Connector"
+#~ msgstr "Conector negru panou frontal"
+
+#~ msgid "Gray Front Panel Connector"
+#~ msgstr "Conector gri panou frontal"
+
+#~ msgid "Orange Front Panel Connector"
+#~ msgstr "Conector portocaliu panou frontal"
+
+#~ msgid "Red Front Panel Connector"
+#~ msgstr "Conector roșu panou frontal"
+
+#~ msgid "Yellow Front Panel Connector"
+#~ msgstr "Conector galben panou frontal"
+
+#~ msgid "Spread Output"
+#~ msgstr "Împarte ieșirea"
+
+#~ msgid "Downmix"
+#~ msgstr "Mixaj redus"
+
+#~ msgid "Virtual Mixer Input"
+#~ msgstr "Intrare mixer video"
+
+#~ msgid "Virtual Mixer Output"
+#~ msgstr "Ieșire mixer video"
+
+#~ msgid "Virtual Mixer Channels"
+#~ msgstr "Canale mixer video"
+
+#~ msgid "%s %d Function"
+#~ msgstr "Funcție %s %d"
+
+#~ msgid "%s Function"
+#~ msgstr "Funcție %s"
 
 #~ msgid "Error reading %d bytes on device '%s'."
 #~ msgstr "Eroare citire %d octeți pe dispozitivul „%s”."

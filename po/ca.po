@@ -9,7 +9,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-good 0.10.28.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2012-04-12 10:26+0200\n"
+"POT-Creation-Date: 2012-05-13 16:29+0200\n"
 "PO-Revision-Date: 2012-01-01 14:19+0100\n"
 "Last-Translator: Gil Forcada <gforcada@gnome.org>\n"
 "Language-Team: Catalan <ca@dodds.net>\n"
@@ -102,81 +102,6 @@ msgstr ""
 msgid "Internal data flow error."
 msgstr "S'ha produït un error intern de flux de dades."
 
-msgid "Volume"
-msgstr "Volum"
-
-msgid "Bass"
-msgstr "Baixos"
-
-msgid "Treble"
-msgstr "Aguts"
-
-msgid "Synth"
-msgstr "Sintetitzador"
-
-msgid "PCM"
-msgstr "PCM"
-
-msgid "Speaker"
-msgstr "Altaveu"
-
-msgid "Line-in"
-msgstr "Línia d'entrada"
-
-msgid "Microphone"
-msgstr "Micròfon"
-
-msgid "CD"
-msgstr "CD"
-
-msgid "Mixer"
-msgstr "Mesclador"
-
-msgid "PCM-2"
-msgstr "PCM-2"
-
-msgid "Record"
-msgstr "Enregistrament"
-
-msgid "In-gain"
-msgstr "Guany d'entrada"
-
-msgid "Out-gain"
-msgstr "Guany de sortida"
-
-msgid "Line-1"
-msgstr "Línia-1"
-
-msgid "Line-2"
-msgstr "Línia-2"
-
-msgid "Line-3"
-msgstr "Línia-3"
-
-msgid "Digital-1"
-msgstr "Digital-1"
-
-msgid "Digital-2"
-msgstr "Digital-2"
-
-msgid "Digital-3"
-msgstr "Digital-3"
-
-msgid "Phone-in"
-msgstr "Entrada del telèfon"
-
-msgid "Phone-out"
-msgstr "Sortida del telèfon"
-
-msgid "Video"
-msgstr "Vídeo"
-
-msgid "Radio"
-msgstr "Ràdio"
-
-msgid "Monitor"
-msgstr "Monitor"
-
 msgid ""
 "Could not open audio device for playback. Device is being used by another "
 "application."
@@ -204,314 +129,6 @@ msgstr ""
 msgid "Could not open audio device for recording."
 msgstr "No s'ha pogut obrir el dispositiu d'àudio per a l'enregistrament."
 
-msgid "Could not open audio device for mixer control handling."
-msgstr ""
-"No s'ha pogut obrir el dispositiu d'àudio per a la gestió del control del "
-"mesclador."
-
-msgid ""
-"Could not open audio device for mixer control handling. This version of the "
-"Open Sound System is not supported by this element."
-msgstr ""
-"No s'ha pogut obrir el dispositiu d'àudio per a la gestió del control del "
-"mesclador. Aquesta versió de l'Open Sound System no és compatible amb aquest "
-"element."
-
-msgid "Master"
-msgstr "Mestre"
-
-msgid "Front"
-msgstr "Frontal"
-
-msgid "Rear"
-msgstr "Posterior"
-
-msgid "Headphones"
-msgstr "Auriculars"
-
-msgid "Center"
-msgstr "Central"
-
-msgid "LFE"
-msgstr "LFE (efectes de baixa freqüència)"
-
-msgid "Surround"
-msgstr "So envoltant"
-
-msgid "Side"
-msgstr "Lateral"
-
-msgid "Built-in Speaker"
-msgstr "Altaveu incorporat"
-
-msgid "AUX 1 Out"
-msgstr "Sortida AUX 1"
-
-msgid "AUX 2 Out"
-msgstr "Sortida AUX 2"
-
-msgid "AUX Out"
-msgstr "Sortida AUX"
-
-msgid "3D Depth"
-msgstr "Profunditat 3D"
-
-msgid "3D Center"
-msgstr "Centre 3D"
-
-msgid "3D Enhance"
-msgstr "Millora 3D"
-
-msgid "Telephone"
-msgstr "Telèfon"
-
-msgid "Line Out"
-msgstr "Línia de sortida"
-
-msgid "Line In"
-msgstr "Línia d'entrada"
-
-msgid "Internal CD"
-msgstr "CD intern"
-
-msgid "Video In"
-msgstr "Entrada de vídeo"
-
-msgid "AUX 1 In"
-msgstr "Entrada AUX 1"
-
-msgid "AUX 2 In"
-msgstr "Entrada AUX 2"
-
-msgid "AUX In"
-msgstr "Entrada AUX"
-
-msgid "Record Gain"
-msgstr "Guany d'enregistrament"
-
-msgid "Output Gain"
-msgstr "Guany de sortida"
-
-msgid "Microphone Boost"
-msgstr "Amplificació del micròfon"
-
-msgid "Loopback"
-msgstr "Bucle local"
-
-msgid "Diagnostic"
-msgstr "Diagnòstic"
-
-msgid "Bass Boost"
-msgstr "Amplificació dels baixos"
-
-msgid "Playback Ports"
-msgstr "Ports de reproducció"
-
-msgid "Input"
-msgstr "Entrada"
-
-msgid "Record Source"
-msgstr "Font d'enregistrament"
-
-msgid "Monitor Source"
-msgstr "Font del monitor"
-
-msgid "Keyboard Beep"
-msgstr "So del teclat"
-
-msgid "Simulate Stereo"
-msgstr "Estèreo simulat"
-
-msgid "Stereo"
-msgstr "Estèreo"
-
-msgid "Surround Sound"
-msgstr "So envoltant"
-
-msgid "Microphone Gain"
-msgstr "Guany del micròfon"
-
-msgid "Speaker Source"
-msgstr "Font de l'altaveu"
-
-msgid "Microphone Source"
-msgstr "Font del micròfon"
-
-msgid "Jack"
-msgstr "Jack"
-
-msgid "Center / LFE"
-msgstr "Centre / LFE (efectes de baixa freqüència)"
-
-msgid "Stereo Mix"
-msgstr "Mescla estèreo"
-
-msgid "Mono Mix"
-msgstr "Mescla mono"
-
-msgid "Input Mix"
-msgstr "Mescla d'entrada"
-
-msgid "SPDIF In"
-msgstr "Entrada SPDIF"
-
-msgid "SPDIF Out"
-msgstr "Sortida SPDIF"
-
-msgid "Microphone 1"
-msgstr "Micròfon 1"
-
-msgid "Microphone 2"
-msgstr "Micròfon 2"
-
-msgid "Digital Out"
-msgstr "Sortida digital"
-
-msgid "Digital In"
-msgstr "Entrada digital"
-
-msgid "HDMI"
-msgstr "HDMI"
-
-msgid "Modem"
-msgstr "Mòdem"
-
-msgid "Handset"
-msgstr "Comandament a distància"
-
-msgid "Other"
-msgstr "Altres"
-
-msgid "None"
-msgstr "Cap"
-
-msgid "On"
-msgstr "Encès"
-
-msgid "Off"
-msgstr "Apagat"
-
-msgid "Mute"
-msgstr "Silenci"
-
-msgid "Fast"
-msgstr "Ràpid"
-
-#. TRANSLATORS: "Very Low" is a quality setting here
-msgid "Very Low"
-msgstr "Molt baixa"
-
-#. TRANSLATORS: "Low" is a quality setting here
-msgid "Low"
-msgstr "Baixa"
-
-#. TRANSLATORS: "Medium" is a quality setting here
-msgid "Medium"
-msgstr "Mitjana"
-
-#. TRANSLATORS: "High" is a quality setting here
-msgid "High"
-msgstr "Alta"
-
-#. TRANSLATORS: "Very High" is a quality setting here
-msgid "Very High"
-msgstr "Molt alta"
-
-#. TRANSLATORS: "Production" is a quality setting here
-msgid "Production"
-msgstr "Producció"
-
-msgid "Front Panel Microphone"
-msgstr "Micròfon del quadre frontal"
-
-msgid "Front Panel Line In"
-msgstr "Línia d'entrada del quadre frontal"
-
-msgid "Front Panel Headphones"
-msgstr "Auriculars del quadre frontal"
-
-msgid "Front Panel Line Out"
-msgstr "Línia de sortida del quadre frontal"
-
-msgid "Green Connector"
-msgstr "Connector verd"
-
-msgid "Pink Connector"
-msgstr "Connector rosa"
-
-msgid "Blue Connector"
-msgstr "Connector blau"
-
-msgid "White Connector"
-msgstr "Connector blanc"
-
-msgid "Black Connector"
-msgstr "Connector negre"
-
-msgid "Gray Connector"
-msgstr "Connector gris"
-
-msgid "Orange Connector"
-msgstr "Connector taronja"
-
-msgid "Red Connector"
-msgstr "Connector vermell"
-
-msgid "Yellow Connector"
-msgstr "Connector groc"
-
-msgid "Green Front Panel Connector"
-msgstr "Connector verd del quadre frontal"
-
-msgid "Pink Front Panel Connector"
-msgstr "Connector rosa del quadre frontal"
-
-msgid "Blue Front Panel Connector"
-msgstr "Connector blau del quadre frontal"
-
-msgid "White Front Panel Connector"
-msgstr "Connector blanc del quadre frontal"
-
-msgid "Black Front Panel Connector"
-msgstr "Connector negre del quadre frontal"
-
-msgid "Gray Front Panel Connector"
-msgstr "Connector gris del quadre frontal"
-
-msgid "Orange Front Panel Connector"
-msgstr "Connector taronja del quadre frontal"
-
-msgid "Red Front Panel Connector"
-msgstr "Connector vermell del quadre frontal"
-
-msgid "Yellow Front Panel Connector"
-msgstr "Connector groc del quadre frontal"
-
-msgid "Spread Output"
-msgstr "Sortida de propagació"
-
-msgid "Downmix"
-msgstr "Downmix"
-
-msgid "Virtual Mixer Input"
-msgstr "Entrada del mesclador virtual"
-
-msgid "Virtual Mixer Output"
-msgstr "Sortida del mesclador virtual"
-
-msgid "Virtual Mixer Channels"
-msgstr "Canals del mesclador virtual"
-
-#. TRANSLATORS: name + number of a volume mixer control
-#, c-format
-msgid "%s %d Function"
-msgstr "Funció %s %d"
-
-#. TRANSLATORS: name of a volume mixer control
-#, c-format
-msgid "%s Function"
-msgstr "Funció %s"
-
 msgid ""
 "Could not open audio device for playback. This version of the Open Sound "
 "System is not supported by this element."
@@ -531,11 +148,32 @@ msgstr "Aquest dispositiu d'àudio no permet l'enregistrament."
 msgid "Error recording from audio device."
 msgstr "S'ha produït un error a l'enregistrar des del dispositiu d'àudio."
 
+msgid "Volume"
+msgstr "Volum"
+
 msgid "Gain"
 msgstr "Guany"
 
+msgid "Monitor"
+msgstr "Monitor"
+
+msgid "Built-in Speaker"
+msgstr "Altaveu incorporat"
+
 msgid "Headphone"
 msgstr "Auriculars"
+
+msgid "Line Out"
+msgstr "Línia de sortida"
+
+msgid "SPDIF Out"
+msgstr "Sortida SPDIF"
+
+msgid "AUX 1 Out"
+msgstr "Sortida AUX 1"
+
+msgid "AUX 2 Out"
+msgstr "Sortida AUX 2"
 
 #, c-format
 msgid "Error reading %d bytes from device '%s'."
@@ -731,6 +369,358 @@ msgstr "Encara no es permet el canvi de la resolució en temps d'execució."
 
 msgid "Cannot operate without a clock"
 msgstr "No es pot operar sense un rellotge"
+
+#~ msgid "Bass"
+#~ msgstr "Baixos"
+
+#~ msgid "Treble"
+#~ msgstr "Aguts"
+
+#~ msgid "Synth"
+#~ msgstr "Sintetitzador"
+
+#~ msgid "PCM"
+#~ msgstr "PCM"
+
+#~ msgid "Speaker"
+#~ msgstr "Altaveu"
+
+#~ msgid "Line-in"
+#~ msgstr "Línia d'entrada"
+
+#~ msgid "Microphone"
+#~ msgstr "Micròfon"
+
+#~ msgid "CD"
+#~ msgstr "CD"
+
+#~ msgid "Mixer"
+#~ msgstr "Mesclador"
+
+#~ msgid "PCM-2"
+#~ msgstr "PCM-2"
+
+#~ msgid "Record"
+#~ msgstr "Enregistrament"
+
+#~ msgid "In-gain"
+#~ msgstr "Guany d'entrada"
+
+#~ msgid "Out-gain"
+#~ msgstr "Guany de sortida"
+
+#~ msgid "Line-1"
+#~ msgstr "Línia-1"
+
+#~ msgid "Line-2"
+#~ msgstr "Línia-2"
+
+#~ msgid "Line-3"
+#~ msgstr "Línia-3"
+
+#~ msgid "Digital-1"
+#~ msgstr "Digital-1"
+
+#~ msgid "Digital-2"
+#~ msgstr "Digital-2"
+
+#~ msgid "Digital-3"
+#~ msgstr "Digital-3"
+
+#~ msgid "Phone-in"
+#~ msgstr "Entrada del telèfon"
+
+#~ msgid "Phone-out"
+#~ msgstr "Sortida del telèfon"
+
+#~ msgid "Video"
+#~ msgstr "Vídeo"
+
+#~ msgid "Radio"
+#~ msgstr "Ràdio"
+
+#~ msgid "Could not open audio device for mixer control handling."
+#~ msgstr ""
+#~ "No s'ha pogut obrir el dispositiu d'àudio per a la gestió del control del "
+#~ "mesclador."
+
+#~ msgid ""
+#~ "Could not open audio device for mixer control handling. This version of "
+#~ "the Open Sound System is not supported by this element."
+#~ msgstr ""
+#~ "No s'ha pogut obrir el dispositiu d'àudio per a la gestió del control del "
+#~ "mesclador. Aquesta versió de l'Open Sound System no és compatible amb "
+#~ "aquest element."
+
+#~ msgid "Master"
+#~ msgstr "Mestre"
+
+#~ msgid "Front"
+#~ msgstr "Frontal"
+
+#~ msgid "Rear"
+#~ msgstr "Posterior"
+
+#~ msgid "Headphones"
+#~ msgstr "Auriculars"
+
+#~ msgid "Center"
+#~ msgstr "Central"
+
+#~ msgid "LFE"
+#~ msgstr "LFE (efectes de baixa freqüència)"
+
+#~ msgid "Surround"
+#~ msgstr "So envoltant"
+
+#~ msgid "Side"
+#~ msgstr "Lateral"
+
+#~ msgid "AUX Out"
+#~ msgstr "Sortida AUX"
+
+#~ msgid "3D Depth"
+#~ msgstr "Profunditat 3D"
+
+#~ msgid "3D Center"
+#~ msgstr "Centre 3D"
+
+#~ msgid "3D Enhance"
+#~ msgstr "Millora 3D"
+
+#~ msgid "Telephone"
+#~ msgstr "Telèfon"
+
+#~ msgid "Line In"
+#~ msgstr "Línia d'entrada"
+
+#~ msgid "Internal CD"
+#~ msgstr "CD intern"
+
+#~ msgid "Video In"
+#~ msgstr "Entrada de vídeo"
+
+#~ msgid "AUX 1 In"
+#~ msgstr "Entrada AUX 1"
+
+#~ msgid "AUX 2 In"
+#~ msgstr "Entrada AUX 2"
+
+#~ msgid "AUX In"
+#~ msgstr "Entrada AUX"
+
+#~ msgid "Record Gain"
+#~ msgstr "Guany d'enregistrament"
+
+#~ msgid "Output Gain"
+#~ msgstr "Guany de sortida"
+
+#~ msgid "Microphone Boost"
+#~ msgstr "Amplificació del micròfon"
+
+#~ msgid "Loopback"
+#~ msgstr "Bucle local"
+
+#~ msgid "Diagnostic"
+#~ msgstr "Diagnòstic"
+
+#~ msgid "Bass Boost"
+#~ msgstr "Amplificació dels baixos"
+
+#~ msgid "Playback Ports"
+#~ msgstr "Ports de reproducció"
+
+#~ msgid "Input"
+#~ msgstr "Entrada"
+
+#~ msgid "Record Source"
+#~ msgstr "Font d'enregistrament"
+
+#~ msgid "Monitor Source"
+#~ msgstr "Font del monitor"
+
+#~ msgid "Keyboard Beep"
+#~ msgstr "So del teclat"
+
+#~ msgid "Simulate Stereo"
+#~ msgstr "Estèreo simulat"
+
+#~ msgid "Stereo"
+#~ msgstr "Estèreo"
+
+#~ msgid "Surround Sound"
+#~ msgstr "So envoltant"
+
+#~ msgid "Microphone Gain"
+#~ msgstr "Guany del micròfon"
+
+#~ msgid "Speaker Source"
+#~ msgstr "Font de l'altaveu"
+
+#~ msgid "Microphone Source"
+#~ msgstr "Font del micròfon"
+
+#~ msgid "Jack"
+#~ msgstr "Jack"
+
+#~ msgid "Center / LFE"
+#~ msgstr "Centre / LFE (efectes de baixa freqüència)"
+
+#~ msgid "Stereo Mix"
+#~ msgstr "Mescla estèreo"
+
+#~ msgid "Mono Mix"
+#~ msgstr "Mescla mono"
+
+#~ msgid "Input Mix"
+#~ msgstr "Mescla d'entrada"
+
+#~ msgid "SPDIF In"
+#~ msgstr "Entrada SPDIF"
+
+#~ msgid "Microphone 1"
+#~ msgstr "Micròfon 1"
+
+#~ msgid "Microphone 2"
+#~ msgstr "Micròfon 2"
+
+#~ msgid "Digital Out"
+#~ msgstr "Sortida digital"
+
+#~ msgid "Digital In"
+#~ msgstr "Entrada digital"
+
+#~ msgid "HDMI"
+#~ msgstr "HDMI"
+
+#~ msgid "Modem"
+#~ msgstr "Mòdem"
+
+#~ msgid "Handset"
+#~ msgstr "Comandament a distància"
+
+#~ msgid "Other"
+#~ msgstr "Altres"
+
+#~ msgid "None"
+#~ msgstr "Cap"
+
+#~ msgid "On"
+#~ msgstr "Encès"
+
+#~ msgid "Off"
+#~ msgstr "Apagat"
+
+#~ msgid "Mute"
+#~ msgstr "Silenci"
+
+#~ msgid "Fast"
+#~ msgstr "Ràpid"
+
+#~ msgid "Very Low"
+#~ msgstr "Molt baixa"
+
+#~ msgid "Low"
+#~ msgstr "Baixa"
+
+#~ msgid "Medium"
+#~ msgstr "Mitjana"
+
+#~ msgid "High"
+#~ msgstr "Alta"
+
+#~ msgid "Very High"
+#~ msgstr "Molt alta"
+
+#~ msgid "Production"
+#~ msgstr "Producció"
+
+#~ msgid "Front Panel Microphone"
+#~ msgstr "Micròfon del quadre frontal"
+
+#~ msgid "Front Panel Line In"
+#~ msgstr "Línia d'entrada del quadre frontal"
+
+#~ msgid "Front Panel Headphones"
+#~ msgstr "Auriculars del quadre frontal"
+
+#~ msgid "Front Panel Line Out"
+#~ msgstr "Línia de sortida del quadre frontal"
+
+#~ msgid "Green Connector"
+#~ msgstr "Connector verd"
+
+#~ msgid "Pink Connector"
+#~ msgstr "Connector rosa"
+
+#~ msgid "Blue Connector"
+#~ msgstr "Connector blau"
+
+#~ msgid "White Connector"
+#~ msgstr "Connector blanc"
+
+#~ msgid "Black Connector"
+#~ msgstr "Connector negre"
+
+#~ msgid "Gray Connector"
+#~ msgstr "Connector gris"
+
+#~ msgid "Orange Connector"
+#~ msgstr "Connector taronja"
+
+#~ msgid "Red Connector"
+#~ msgstr "Connector vermell"
+
+#~ msgid "Yellow Connector"
+#~ msgstr "Connector groc"
+
+#~ msgid "Green Front Panel Connector"
+#~ msgstr "Connector verd del quadre frontal"
+
+#~ msgid "Pink Front Panel Connector"
+#~ msgstr "Connector rosa del quadre frontal"
+
+#~ msgid "Blue Front Panel Connector"
+#~ msgstr "Connector blau del quadre frontal"
+
+#~ msgid "White Front Panel Connector"
+#~ msgstr "Connector blanc del quadre frontal"
+
+#~ msgid "Black Front Panel Connector"
+#~ msgstr "Connector negre del quadre frontal"
+
+#~ msgid "Gray Front Panel Connector"
+#~ msgstr "Connector gris del quadre frontal"
+
+#~ msgid "Orange Front Panel Connector"
+#~ msgstr "Connector taronja del quadre frontal"
+
+#~ msgid "Red Front Panel Connector"
+#~ msgstr "Connector vermell del quadre frontal"
+
+#~ msgid "Yellow Front Panel Connector"
+#~ msgstr "Connector groc del quadre frontal"
+
+#~ msgid "Spread Output"
+#~ msgstr "Sortida de propagació"
+
+#~ msgid "Downmix"
+#~ msgstr "Downmix"
+
+#~ msgid "Virtual Mixer Input"
+#~ msgstr "Entrada del mesclador virtual"
+
+#~ msgid "Virtual Mixer Output"
+#~ msgstr "Sortida del mesclador virtual"
+
+#~ msgid "Virtual Mixer Channels"
+#~ msgstr "Canals del mesclador virtual"
+
+#~ msgid "%s %d Function"
+#~ msgstr "Funció %s %d"
+
+#~ msgid "%s Function"
+#~ msgstr "Funció %s"
 
 #~ msgid "Could not establish connection to sound server"
 #~ msgstr "No s'ha pogut establir la connexió al servidor de so"

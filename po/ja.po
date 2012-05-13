@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-good 0.10.28.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2012-04-12 10:26+0200\n"
+"POT-Creation-Date: 2012-05-13 16:29+0200\n"
 "PO-Revision-Date: 2011-08-28 23:59+0900\n"
 "Last-Translator: Takeshi Hamasaki <hmatrjp@users.sourceforge.jp>\n"
 "Language-Team: Japanese <translation-team-ja@lists.sourceforge.net>\n"
@@ -103,105 +103,6 @@ msgstr ""
 msgid "Internal data flow error."
 msgstr "内部データフローエラー。"
 
-# SUN REVIEWED
-msgid "Volume"
-msgstr "音量"
-
-# SUN REVIEWED
-msgid "Bass"
-msgstr "低音"
-
-# SUN REVIEWED
-msgid "Treble"
-msgstr "高音"
-
-# SUN REVIEWED
-msgid "Synth"
-msgstr "シンセ"
-
-# SUN REVIEWED
-msgid "PCM"
-msgstr "PCM"
-
-# SUN REVIEWED
-msgid "Speaker"
-msgstr "スピーカ"
-
-msgid "Line-in"
-msgstr "ライン入力"
-
-# SUN REVIEWED
-msgid "Microphone"
-msgstr "マイクロフォン"
-
-# SUN REVIEWED
-msgid "CD"
-msgstr "CD"
-
-# SUN REVIEWED
-msgid "Mixer"
-msgstr "ミキサー"
-
-# SUN REVIEWED
-msgid "PCM-2"
-msgstr "PCM-2"
-
-# SUN REVIEWED
-msgid "Record"
-msgstr "録音"
-
-# SUN REVIEWED
-msgid "In-gain"
-msgstr "入力ゲイン"
-
-# SUN REVIEWED
-msgid "Out-gain"
-msgstr "出力ゲイン"
-
-# SUN REVIEWED
-msgid "Line-1"
-msgstr "ライン 1"
-
-# SUN REVIEWED
-msgid "Line-2"
-msgstr "ライン 2"
-
-# SUN REVIEWED
-msgid "Line-3"
-msgstr "ライン 3"
-
-# SUN REVIEWED
-msgid "Digital-1"
-msgstr "デジタル 1"
-
-# SUN REVIEWED
-msgid "Digital-2"
-msgstr "デジタル 2"
-
-# SUN REVIEWED
-msgid "Digital-3"
-msgstr "デジタル 3"
-
-# SUN REVIEWED
-msgid "Phone-in"
-msgstr "フォン入力"
-
-# SUN REVIEWED
-msgid "Phone-out"
-msgstr "フォン出力"
-
-# SUN REVIEWED
-msgid "Video"
-msgstr "ビデオ"
-
-# SUN REVIEWED
-msgid "Radio"
-msgstr "ラジオ"
-
-# SUN REVIEWED
-msgid "Monitor"
-msgstr "モニター"
-
 msgid ""
 "Could not open audio device for playback. Device is being used by another "
 "application."
@@ -231,323 +132,6 @@ msgstr ""
 msgid "Could not open audio device for recording."
 msgstr "音声デバイスを録音用に開くことができません。"
 
-# SUN REVIEWED
-msgid "Could not open audio device for mixer control handling."
-msgstr "音声デバイスをミキサーコントロール用に開くことができません。"
-
-msgid ""
-"Could not open audio device for mixer control handling. This version of the "
-"Open Sound System is not supported by this element."
-msgstr ""
-"ミキサーコントロール用にオーディオデバイスを開くことができませんでした。Open "
-"Sound Systemのこのバージョンではこの要素によってサポートされていません。"
-
-msgid "Master"
-msgstr "マスタ"
-
-msgid "Front"
-msgstr "フロント"
-
-msgid "Rear"
-msgstr "リア"
-
-msgid "Headphones"
-msgstr "ヘッドフォン"
-
-msgid "Center"
-msgstr "センター"
-
-msgid "LFE"
-msgstr "LFE"
-
-msgid "Surround"
-msgstr "サラウンド"
-
-msgid "Side"
-msgstr "サイド"
-
-msgid "Built-in Speaker"
-msgstr "ビルトインスピーカ"
-
-msgid "AUX 1 Out"
-msgstr "AUX 1出力"
-
-msgid "AUX 2 Out"
-msgstr "AUX 2出力"
-
-msgid "AUX Out"
-msgstr "AUX出力"
-
-#, fuzzy
-msgid "3D Depth"
-msgstr "最大深度: "
-
-msgid "3D Center"
-msgstr "3Dセンター"
-
-#, fuzzy
-msgid "3D Enhance"
-msgstr "色を強調しています"
-
-msgid "Telephone"
-msgstr "電話"
-
-msgid "Line Out"
-msgstr "ライン出力"
-
-msgid "Line In"
-msgstr "ライン入力"
-
-msgid "Internal CD"
-msgstr "内蔵CD"
-
-msgid "Video In"
-msgstr "ビデオ入力"
-
-msgid "AUX 1 In"
-msgstr "AUX 1入力"
-
-msgid "AUX 2 In"
-msgstr "AUX 2入力"
-
-msgid "AUX In"
-msgstr "AUX入力"
-
-msgid "Record Gain"
-msgstr "録音ゲイン"
-
-msgid "Output Gain"
-msgstr "出力ゲイン"
-
-msgid "Microphone Boost"
-msgstr "マイクロフォンブースト"
-
-msgid "Loopback"
-msgstr "ループバック"
-
-msgid "Diagnostic"
-msgstr "診断"
-
-msgid "Bass Boost"
-msgstr "低音ブースト"
-
-msgid "Playback Ports"
-msgstr "プレイバックポート"
-
-msgid "Input"
-msgstr "入力"
-
-msgid "Record Source"
-msgstr "録音ソース"
-
-msgid "Monitor Source"
-msgstr "モニターソース"
-
-msgid "Keyboard Beep"
-msgstr "キーボードビープ音"
-
-#, fuzzy
-msgid "Simulate Stereo"
-msgstr "彫金を表現します"
-
-msgid "Stereo"
-msgstr "ステレオ"
-
-msgid "Surround Sound"
-msgstr "サラウンドサウンド"
-
-msgid "Microphone Gain"
-msgstr "マイクロフォンゲイン"
-
-msgid "Speaker Source"
-msgstr "スピーカソース"
-
-msgid "Microphone Source"
-msgstr "マイクロフォンソース"
-
-msgid "Jack"
-msgstr "ジャック"
-
-msgid "Center / LFE"
-msgstr "センター / LFE"
-
-msgid "Stereo Mix"
-msgstr "ステレオミックス"
-
-msgid "Mono Mix"
-msgstr "モノラルミックス"
-
-msgid "Input Mix"
-msgstr "入力ミックス"
-
-msgid "SPDIF In"
-msgstr "SPDIF入力"
-
-msgid "SPDIF Out"
-msgstr "SPDIF出力"
-
-msgid "Microphone 1"
-msgstr "マイクロフォン1"
-
-msgid "Microphone 2"
-msgstr "マイクロフォン2"
-
-msgid "Digital Out"
-msgstr "デジタル出力"
-
-msgid "Digital In"
-msgstr "デジタル入力"
-
-msgid "HDMI"
-msgstr "HDMI"
-
-msgid "Modem"
-msgstr "モデム"
-
-msgid "Handset"
-msgstr "ヘッドセット"
-
-msgid "Other"
-msgstr "その他"
-
-msgid "None"
-msgstr "なし"
-
-msgid "On"
-msgstr "オン"
-
-msgid "Off"
-msgstr "オフ"
-
-msgid "Mute"
-msgstr "ミュート"
-
-#, fuzzy
-msgid "Fast"
-msgstr "速い"
-
-#. TRANSLATORS: "Very Low" is a quality setting here
-#, fuzzy
-msgid "Very Low"
-msgstr "低品位"
-
-#. TRANSLATORS: "Low" is a quality setting here
-#, fuzzy
-msgid "Low"
-msgstr "低音"
-
-#. TRANSLATORS: "Medium" is a quality setting here
-#, fuzzy
-msgid "Medium"
-msgstr "中音"
-
-#. TRANSLATORS: "High" is a quality setting here
-#, fuzzy
-msgid "High"
-msgstr "高音"
-
-#. TRANSLATORS: "Very High" is a quality setting here
-#, fuzzy
-msgid "Very High"
-msgstr "高品位"
-
-#. TRANSLATORS: "Production" is a quality setting here
-#, fuzzy
-msgid "Production"
-msgstr "プロダクション"
-
-msgid "Front Panel Microphone"
-msgstr "フロントパネルのマイクロフォン"
-
-msgid "Front Panel Line In"
-msgstr "フロントパネルのライン入力"
-
-msgid "Front Panel Headphones"
-msgstr "フロントパネルのヘッドフォン"
-
-msgid "Front Panel Line Out"
-msgstr "フロントパネルのライン出力"
-
-msgid "Green Connector"
-msgstr "緑色コネクタ"
-
-msgid "Pink Connector"
-msgstr "ピンク色コネクタ"
-
-msgid "Blue Connector"
-msgstr "青色コネクタ"
-
-msgid "White Connector"
-msgstr "白色コネクタ"
-
-msgid "Black Connector"
-msgstr "黒色コネクタ"
-
-msgid "Gray Connector"
-msgstr "グレー色コネクタ"
-
-msgid "Orange Connector"
-msgstr "オレンジ色コネクタ"
-
-msgid "Red Connector"
-msgstr "赤色コネクタ"
-
-msgid "Yellow Connector"
-msgstr "黄色コネクタ"
-
-msgid "Green Front Panel Connector"
-msgstr ""
-
-msgid "Pink Front Panel Connector"
-msgstr ""
-
-msgid "Blue Front Panel Connector"
-msgstr ""
-
-msgid "White Front Panel Connector"
-msgstr ""
-
-msgid "Black Front Panel Connector"
-msgstr ""
-
-msgid "Gray Front Panel Connector"
-msgstr ""
-
-msgid "Orange Front Panel Connector"
-msgstr ""
-
-msgid "Red Front Panel Connector"
-msgstr ""
-
-msgid "Yellow Front Panel Connector"
-msgstr ""
-
-#, fuzzy
-msgid "Spread Output"
-msgstr "情報出力:\n"
-
-msgid "Downmix"
-msgstr "ダウンミックス"
-
-msgid "Virtual Mixer Input"
-msgstr "仮想ミキサー入力"
-
-msgid "Virtual Mixer Output"
-msgstr "仮想ミキサー出力"
-
-msgid "Virtual Mixer Channels"
-msgstr "仮想ミキサーチャンネル"
-
-#. TRANSLATORS: name + number of a volume mixer control
-#, fuzzy, c-format
-msgid "%s %d Function"
-msgstr "機能"
-
-#. TRANSLATORS: name of a volume mixer control
-#, fuzzy, c-format
-msgid "%s Function"
-msgstr "機能"
-
 msgid ""
 "Could not open audio device for playback. This version of the Open Sound "
 "System is not supported by this element."
@@ -568,11 +152,34 @@ msgid "Error recording from audio device."
 msgstr "オーディオデバイスからの録音時にエラーが発生しました。"
 
 # SUN REVIEWED
+msgid "Volume"
+msgstr "音量"
+
+# SUN REVIEWED
 msgid "Gain"
 msgstr "ゲイン"
 
+# SUN REVIEWED
+msgid "Monitor"
+msgstr "モニター"
+
+msgid "Built-in Speaker"
+msgstr "ビルトインスピーカ"
+
 msgid "Headphone"
 msgstr "ヘッドフォン"
+
+msgid "Line Out"
+msgstr "ライン出力"
+
+msgid "SPDIF Out"
+msgstr "SPDIF出力"
+
+msgid "AUX 1 Out"
+msgstr "AUX 1出力"
+
+msgid "AUX 2 Out"
+msgstr "AUX 2出力"
 
 #, c-format
 msgid "Error reading %d bytes from device '%s'."
@@ -761,6 +368,365 @@ msgstr "実行時の解像度変更はサポートされていません。"
 
 msgid "Cannot operate without a clock"
 msgstr "クロックなしでは動作できません。"
+
+# SUN REVIEWED
+#~ msgid "Bass"
+#~ msgstr "低音"
+
+# SUN REVIEWED
+#~ msgid "Treble"
+#~ msgstr "高音"
+
+# SUN REVIEWED
+#~ msgid "Synth"
+#~ msgstr "シンセ"
+
+# SUN REVIEWED
+#~ msgid "PCM"
+#~ msgstr "PCM"
+
+# SUN REVIEWED
+#~ msgid "Speaker"
+#~ msgstr "スピーカ"
+
+#~ msgid "Line-in"
+#~ msgstr "ライン入力"
+
+# SUN REVIEWED
+#~ msgid "Microphone"
+#~ msgstr "マイクロフォン"
+
+# SUN REVIEWED
+#~ msgid "CD"
+#~ msgstr "CD"
+
+# SUN REVIEWED
+#~ msgid "Mixer"
+#~ msgstr "ミキサー"
+
+# SUN REVIEWED
+#~ msgid "PCM-2"
+#~ msgstr "PCM-2"
+
+# SUN REVIEWED
+#~ msgid "Record"
+#~ msgstr "録音"
+
+# SUN REVIEWED
+#~ msgid "In-gain"
+#~ msgstr "入力ゲイン"
+
+# SUN REVIEWED
+#~ msgid "Out-gain"
+#~ msgstr "出力ゲイン"
+
+# SUN REVIEWED
+#~ msgid "Line-1"
+#~ msgstr "ライン 1"
+
+# SUN REVIEWED
+#~ msgid "Line-2"
+#~ msgstr "ライン 2"
+
+# SUN REVIEWED
+#~ msgid "Line-3"
+#~ msgstr "ライン 3"
+
+# SUN REVIEWED
+#~ msgid "Digital-1"
+#~ msgstr "デジタル 1"
+
+# SUN REVIEWED
+#~ msgid "Digital-2"
+#~ msgstr "デジタル 2"
+
+# SUN REVIEWED
+#~ msgid "Digital-3"
+#~ msgstr "デジタル 3"
+
+# SUN REVIEWED
+#~ msgid "Phone-in"
+#~ msgstr "フォン入力"
+
+# SUN REVIEWED
+#~ msgid "Phone-out"
+#~ msgstr "フォン出力"
+
+# SUN REVIEWED
+#~ msgid "Video"
+#~ msgstr "ビデオ"
+
+# SUN REVIEWED
+#~ msgid "Radio"
+#~ msgstr "ラジオ"
+
+# SUN REVIEWED
+#~ msgid "Could not open audio device for mixer control handling."
+#~ msgstr "音声デバイスをミキサーコントロール用に開くことができません。"
+
+#~ msgid ""
+#~ "Could not open audio device for mixer control handling. This version of "
+#~ "the Open Sound System is not supported by this element."
+#~ msgstr ""
+#~ "ミキサーコントロール用にオーディオデバイスを開くことができませんでした。"
+#~ "Open Sound Systemのこのバージョンではこの要素によってサポートされていませ"
+#~ "ん。"
+
+#~ msgid "Master"
+#~ msgstr "マスタ"
+
+#~ msgid "Front"
+#~ msgstr "フロント"
+
+#~ msgid "Rear"
+#~ msgstr "リア"
+
+#~ msgid "Headphones"
+#~ msgstr "ヘッドフォン"
+
+#~ msgid "Center"
+#~ msgstr "センター"
+
+#~ msgid "LFE"
+#~ msgstr "LFE"
+
+#~ msgid "Surround"
+#~ msgstr "サラウンド"
+
+#~ msgid "Side"
+#~ msgstr "サイド"
+
+#~ msgid "AUX Out"
+#~ msgstr "AUX出力"
+
+#, fuzzy
+#~ msgid "3D Depth"
+#~ msgstr "最大深度: "
+
+#~ msgid "3D Center"
+#~ msgstr "3Dセンター"
+
+#, fuzzy
+#~ msgid "3D Enhance"
+#~ msgstr "色を強調しています"
+
+#~ msgid "Telephone"
+#~ msgstr "電話"
+
+#~ msgid "Line In"
+#~ msgstr "ライン入力"
+
+#~ msgid "Internal CD"
+#~ msgstr "内蔵CD"
+
+#~ msgid "Video In"
+#~ msgstr "ビデオ入力"
+
+#~ msgid "AUX 1 In"
+#~ msgstr "AUX 1入力"
+
+#~ msgid "AUX 2 In"
+#~ msgstr "AUX 2入力"
+
+#~ msgid "AUX In"
+#~ msgstr "AUX入力"
+
+#~ msgid "Record Gain"
+#~ msgstr "録音ゲイン"
+
+#~ msgid "Output Gain"
+#~ msgstr "出力ゲイン"
+
+#~ msgid "Microphone Boost"
+#~ msgstr "マイクロフォンブースト"
+
+#~ msgid "Loopback"
+#~ msgstr "ループバック"
+
+#~ msgid "Diagnostic"
+#~ msgstr "診断"
+
+#~ msgid "Bass Boost"
+#~ msgstr "低音ブースト"
+
+#~ msgid "Playback Ports"
+#~ msgstr "プレイバックポート"
+
+#~ msgid "Input"
+#~ msgstr "入力"
+
+#~ msgid "Record Source"
+#~ msgstr "録音ソース"
+
+#~ msgid "Monitor Source"
+#~ msgstr "モニターソース"
+
+#~ msgid "Keyboard Beep"
+#~ msgstr "キーボードビープ音"
+
+#, fuzzy
+#~ msgid "Simulate Stereo"
+#~ msgstr "彫金を表現します"
+
+#~ msgid "Stereo"
+#~ msgstr "ステレオ"
+
+#~ msgid "Surround Sound"
+#~ msgstr "サラウンドサウンド"
+
+#~ msgid "Microphone Gain"
+#~ msgstr "マイクロフォンゲイン"
+
+#~ msgid "Speaker Source"
+#~ msgstr "スピーカソース"
+
+#~ msgid "Microphone Source"
+#~ msgstr "マイクロフォンソース"
+
+#~ msgid "Jack"
+#~ msgstr "ジャック"
+
+#~ msgid "Center / LFE"
+#~ msgstr "センター / LFE"
+
+#~ msgid "Stereo Mix"
+#~ msgstr "ステレオミックス"
+
+#~ msgid "Mono Mix"
+#~ msgstr "モノラルミックス"
+
+#~ msgid "Input Mix"
+#~ msgstr "入力ミックス"
+
+#~ msgid "SPDIF In"
+#~ msgstr "SPDIF入力"
+
+#~ msgid "Microphone 1"
+#~ msgstr "マイクロフォン1"
+
+#~ msgid "Microphone 2"
+#~ msgstr "マイクロフォン2"
+
+#~ msgid "Digital Out"
+#~ msgstr "デジタル出力"
+
+#~ msgid "Digital In"
+#~ msgstr "デジタル入力"
+
+#~ msgid "HDMI"
+#~ msgstr "HDMI"
+
+#~ msgid "Modem"
+#~ msgstr "モデム"
+
+#~ msgid "Handset"
+#~ msgstr "ヘッドセット"
+
+#~ msgid "Other"
+#~ msgstr "その他"
+
+#~ msgid "None"
+#~ msgstr "なし"
+
+#~ msgid "On"
+#~ msgstr "オン"
+
+#~ msgid "Off"
+#~ msgstr "オフ"
+
+#~ msgid "Mute"
+#~ msgstr "ミュート"
+
+#, fuzzy
+#~ msgid "Fast"
+#~ msgstr "速い"
+
+#, fuzzy
+#~ msgid "Very Low"
+#~ msgstr "低品位"
+
+#, fuzzy
+#~ msgid "Low"
+#~ msgstr "低音"
+
+#, fuzzy
+#~ msgid "Medium"
+#~ msgstr "中音"
+
+#, fuzzy
+#~ msgid "High"
+#~ msgstr "高音"
+
+#, fuzzy
+#~ msgid "Very High"
+#~ msgstr "高品位"
+
+#, fuzzy
+#~ msgid "Production"
+#~ msgstr "プロダクション"
+
+#~ msgid "Front Panel Microphone"
+#~ msgstr "フロントパネルのマイクロフォン"
+
+#~ msgid "Front Panel Line In"
+#~ msgstr "フロントパネルのライン入力"
+
+#~ msgid "Front Panel Headphones"
+#~ msgstr "フロントパネルのヘッドフォン"
+
+#~ msgid "Front Panel Line Out"
+#~ msgstr "フロントパネルのライン出力"
+
+#~ msgid "Green Connector"
+#~ msgstr "緑色コネクタ"
+
+#~ msgid "Pink Connector"
+#~ msgstr "ピンク色コネクタ"
+
+#~ msgid "Blue Connector"
+#~ msgstr "青色コネクタ"
+
+#~ msgid "White Connector"
+#~ msgstr "白色コネクタ"
+
+#~ msgid "Black Connector"
+#~ msgstr "黒色コネクタ"
+
+#~ msgid "Gray Connector"
+#~ msgstr "グレー色コネクタ"
+
+#~ msgid "Orange Connector"
+#~ msgstr "オレンジ色コネクタ"
+
+#~ msgid "Red Connector"
+#~ msgstr "赤色コネクタ"
+
+#~ msgid "Yellow Connector"
+#~ msgstr "黄色コネクタ"
+
+#, fuzzy
+#~ msgid "Spread Output"
+#~ msgstr "情報出力:\n"
+
+#~ msgid "Downmix"
+#~ msgstr "ダウンミックス"
+
+#~ msgid "Virtual Mixer Input"
+#~ msgstr "仮想ミキサー入力"
+
+#~ msgid "Virtual Mixer Output"
+#~ msgstr "仮想ミキサー出力"
+
+#~ msgid "Virtual Mixer Channels"
+#~ msgstr "仮想ミキサーチャンネル"
+
+#, fuzzy
+#~ msgid "%s %d Function"
+#~ msgstr "機能"
+
+#, fuzzy
+#~ msgid "%s Function"
+#~ msgstr "機能"
 
 #~ msgid "Could not establish connection to sound server"
 #~ msgstr "サウンドサーバーへの接続に失敗しました"

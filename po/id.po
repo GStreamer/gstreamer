@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-good 0.10.26.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2012-04-12 10:26+0200\n"
+"POT-Creation-Date: 2012-05-13 16:29+0200\n"
 "PO-Revision-Date: 2011-02-26 18:09+0700\n"
 "Last-Translator: Andhika Padmawan <andhika.padmawan@gmail.com>\n"
 "Language-Team: Indonesian <translation-team-id@lists.sourceforge.net>\n"
@@ -97,81 +97,6 @@ msgstr ""
 msgid "Internal data flow error."
 msgstr "Galat aliran data internal."
 
-msgid "Volume"
-msgstr "Volume"
-
-msgid "Bass"
-msgstr "Bas"
-
-msgid "Treble"
-msgstr "Treble"
-
-msgid "Synth"
-msgstr "Synth"
-
-msgid "PCM"
-msgstr "PCM"
-
-msgid "Speaker"
-msgstr "Pengeras Suara"
-
-msgid "Line-in"
-msgstr "Jalur masuk"
-
-msgid "Microphone"
-msgstr "Mikrofon"
-
-msgid "CD"
-msgstr "CD"
-
-msgid "Mixer"
-msgstr "Mixer"
-
-msgid "PCM-2"
-msgstr "PCM-2"
-
-msgid "Record"
-msgstr "Rekam"
-
-msgid "In-gain"
-msgstr "Masukan-gain"
-
-msgid "Out-gain"
-msgstr "Keluaran-gain"
-
-msgid "Line-1"
-msgstr "Jalur-1"
-
-msgid "Line-2"
-msgstr "Jalur-2"
-
-msgid "Line-3"
-msgstr "Jalur-3"
-
-msgid "Digital-1"
-msgstr "Digital-1"
-
-msgid "Digital-2"
-msgstr "Digital-2"
-
-msgid "Digital-3"
-msgstr "Digital-3"
-
-msgid "Phone-in"
-msgstr "Telepon-masuk"
-
-msgid "Phone-out"
-msgstr "Telepon-keluar"
-
-msgid "Video"
-msgstr "Video"
-
-msgid "Radio"
-msgstr "Radio"
-
-msgid "Monitor"
-msgstr "Monitor"
-
 msgid ""
 "Could not open audio device for playback. Device is being used by another "
 "application."
@@ -199,311 +124,6 @@ msgstr ""
 msgid "Could not open audio device for recording."
 msgstr "Tak dapat membuka divais audio untuk merekam."
 
-msgid "Could not open audio device for mixer control handling."
-msgstr "Tak dapat membuka divais audio untuk menangani kontrol mixer."
-
-msgid ""
-"Could not open audio device for mixer control handling. This version of the "
-"Open Sound System is not supported by this element."
-msgstr ""
-"Tak dapat membuka divais audio untuk menangani kontrol mixer. Versi Open "
-"Sound System ini tidak didukung oleh elemen ini."
-
-msgid "Master"
-msgstr "Master"
-
-msgid "Front"
-msgstr "Depan"
-
-msgid "Rear"
-msgstr "Belakang"
-
-msgid "Headphones"
-msgstr "Headphone"
-
-msgid "Center"
-msgstr "Tengah"
-
-msgid "LFE"
-msgstr "LFE"
-
-msgid "Surround"
-msgstr "Sekeliling"
-
-msgid "Side"
-msgstr "Sisi"
-
-msgid "Built-in Speaker"
-msgstr "Pengeras Suara Terbina"
-
-msgid "AUX 1 Out"
-msgstr "AUX 1 Keluar"
-
-msgid "AUX 2 Out"
-msgstr "AUX 2 Keluar"
-
-msgid "AUX Out"
-msgstr "AUX Keluaran"
-
-msgid "3D Depth"
-msgstr "Kedalaman 3D"
-
-msgid "3D Center"
-msgstr "3D Tengah"
-
-msgid "3D Enhance"
-msgstr "Dipercanggih 3D"
-
-msgid "Telephone"
-msgstr "Telepon"
-
-msgid "Line Out"
-msgstr "Jalur Keluar"
-
-msgid "Line In"
-msgstr "Jalur Masuk"
-
-msgid "Internal CD"
-msgstr "CD Internal"
-
-msgid "Video In"
-msgstr "Video Masuk"
-
-msgid "AUX 1 In"
-msgstr "AUX 1 Masuk"
-
-msgid "AUX 2 In"
-msgstr "AUX 2 Masuk"
-
-msgid "AUX In"
-msgstr "AUX Masuk"
-
-msgid "Record Gain"
-msgstr "Rekam Gain"
-
-msgid "Output Gain"
-msgstr "Keluaran Gain"
-
-msgid "Microphone Boost"
-msgstr "Mikrofon Boost"
-
-msgid "Loopback"
-msgstr "Loopback"
-
-msgid "Diagnostic"
-msgstr "Diagnosis"
-
-msgid "Bass Boost"
-msgstr "Bass Boost"
-
-msgid "Playback Ports"
-msgstr "Pangkalan Putar"
-
-msgid "Input"
-msgstr "Masukan"
-
-msgid "Record Source"
-msgstr "Sumber Rekaman"
-
-msgid "Monitor Source"
-msgstr "Sumber Monitor"
-
-msgid "Keyboard Beep"
-msgstr "Bip Papan Ketik"
-
-msgid "Simulate Stereo"
-msgstr "Simulasi Stereo"
-
-msgid "Stereo"
-msgstr "Stereo"
-
-msgid "Surround Sound"
-msgstr "Suara Sekeliling"
-
-msgid "Microphone Gain"
-msgstr "Mikrofon Gain"
-
-msgid "Speaker Source"
-msgstr "Sumber Pengeras Suara"
-
-msgid "Microphone Source"
-msgstr "Sumber Mikrofon"
-
-msgid "Jack"
-msgstr "Jack"
-
-msgid "Center / LFE"
-msgstr "Tengah / LFE"
-
-msgid "Stereo Mix"
-msgstr "Mix Stereo"
-
-msgid "Mono Mix"
-msgstr "Mix Mono"
-
-msgid "Input Mix"
-msgstr "Mix Masukan"
-
-msgid "SPDIF In"
-msgstr "SPDIF Masuk"
-
-msgid "SPDIF Out"
-msgstr "SPDIF Keluar"
-
-msgid "Microphone 1"
-msgstr "Mikrofon 1"
-
-msgid "Microphone 2"
-msgstr "Mikrofon 2"
-
-msgid "Digital Out"
-msgstr "Digital Keluar"
-
-msgid "Digital In"
-msgstr "Digital Masuk"
-
-msgid "HDMI"
-msgstr "HDMI"
-
-msgid "Modem"
-msgstr "Modem"
-
-msgid "Handset"
-msgstr "Handset"
-
-msgid "Other"
-msgstr "Lainnya"
-
-msgid "None"
-msgstr "Tidak Ada"
-
-msgid "On"
-msgstr "Hidup"
-
-msgid "Off"
-msgstr "Mati"
-
-msgid "Mute"
-msgstr "Diam"
-
-msgid "Fast"
-msgstr "Cepat"
-
-#. TRANSLATORS: "Very Low" is a quality setting here
-msgid "Very Low"
-msgstr "Sangat Rendah"
-
-#. TRANSLATORS: "Low" is a quality setting here
-msgid "Low"
-msgstr "Rendah"
-
-#. TRANSLATORS: "Medium" is a quality setting here
-msgid "Medium"
-msgstr "Sedang"
-
-#. TRANSLATORS: "High" is a quality setting here
-msgid "High"
-msgstr "Tinggi"
-
-#. TRANSLATORS: "Very High" is a quality setting here
-msgid "Very High"
-msgstr "Sangat Tinggi"
-
-#. TRANSLATORS: "Production" is a quality setting here
-msgid "Production"
-msgstr "Produksi"
-
-msgid "Front Panel Microphone"
-msgstr "Mikrofon Panel Depan"
-
-msgid "Front Panel Line In"
-msgstr "Masukan Jalur Panel Depan"
-
-msgid "Front Panel Headphones"
-msgstr "Headphone Panel Depan"
-
-msgid "Front Panel Line Out"
-msgstr "Keluaran Jalur Panel Depan"
-
-msgid "Green Connector"
-msgstr "Konektor Hijau"
-
-msgid "Pink Connector"
-msgstr "Konektor Merah Jambu"
-
-msgid "Blue Connector"
-msgstr "Konektor Biru"
-
-msgid "White Connector"
-msgstr "Konektor Putih"
-
-msgid "Black Connector"
-msgstr "Konektor Hitam"
-
-msgid "Gray Connector"
-msgstr "Konektor Abu-Abu"
-
-msgid "Orange Connector"
-msgstr "Konektor Jingga"
-
-msgid "Red Connector"
-msgstr "Konektor Merah"
-
-msgid "Yellow Connector"
-msgstr "Konektor Kuning"
-
-msgid "Green Front Panel Connector"
-msgstr "Konektor Panel Depan Hijau"
-
-msgid "Pink Front Panel Connector"
-msgstr "Konektor Panel Depan Merah Jambu"
-
-msgid "Blue Front Panel Connector"
-msgstr "Konektor Panel Depan Biru"
-
-msgid "White Front Panel Connector"
-msgstr "Konektor Panel Depan Putih"
-
-msgid "Black Front Panel Connector"
-msgstr "Konektor Panel Depan Hitam"
-
-msgid "Gray Front Panel Connector"
-msgstr "Konektor Panel Depan Abu-Abu"
-
-msgid "Orange Front Panel Connector"
-msgstr "Konektor Panel Depan Jingga"
-
-msgid "Red Front Panel Connector"
-msgstr "Konektor Panel Depan Merah"
-
-msgid "Yellow Front Panel Connector"
-msgstr "Konektor Panel Depan Kuning"
-
-msgid "Spread Output"
-msgstr "Keluaran Sebar"
-
-msgid "Downmix"
-msgstr "Downmix"
-
-msgid "Virtual Mixer Input"
-msgstr "Masukan Mixer Virtual"
-
-msgid "Virtual Mixer Output"
-msgstr "Keluaran Mixer Virtual"
-
-msgid "Virtual Mixer Channels"
-msgstr "Kanal Mixer Virtual"
-
-#. TRANSLATORS: name + number of a volume mixer control
-#, c-format
-msgid "%s %d Function"
-msgstr "Fungsi %s %d"
-
-#. TRANSLATORS: name of a volume mixer control
-#, c-format
-msgid "%s Function"
-msgstr "Fungsi %s"
-
 msgid ""
 "Could not open audio device for playback. This version of the Open Sound "
 "System is not supported by this element."
@@ -523,11 +143,32 @@ msgstr "Perekaman tidak didukung oleh divais audio ini."
 msgid "Error recording from audio device."
 msgstr "Galat merekam dari divais audio."
 
+msgid "Volume"
+msgstr "Volume"
+
 msgid "Gain"
 msgstr "Gain"
 
+msgid "Monitor"
+msgstr "Monitor"
+
+msgid "Built-in Speaker"
+msgstr "Pengeras Suara Terbina"
+
 msgid "Headphone"
 msgstr "Headphone"
+
+msgid "Line Out"
+msgstr "Jalur Keluar"
+
+msgid "SPDIF Out"
+msgstr "SPDIF Keluar"
+
+msgid "AUX 1 Out"
+msgstr "AUX 1 Keluar"
+
+msgid "AUX 2 Out"
+msgstr "AUX 2 Keluar"
 
 #, c-format
 msgid "Error reading %d bytes from device '%s'."
@@ -704,6 +345,355 @@ msgstr "Mengubah resolusi saat waktu berjalan belum didukung."
 
 msgid "Cannot operate without a clock"
 msgstr "Tak dapat beroperasi tanpa jam"
+
+#~ msgid "Bass"
+#~ msgstr "Bas"
+
+#~ msgid "Treble"
+#~ msgstr "Treble"
+
+#~ msgid "Synth"
+#~ msgstr "Synth"
+
+#~ msgid "PCM"
+#~ msgstr "PCM"
+
+#~ msgid "Speaker"
+#~ msgstr "Pengeras Suara"
+
+#~ msgid "Line-in"
+#~ msgstr "Jalur masuk"
+
+#~ msgid "Microphone"
+#~ msgstr "Mikrofon"
+
+#~ msgid "CD"
+#~ msgstr "CD"
+
+#~ msgid "Mixer"
+#~ msgstr "Mixer"
+
+#~ msgid "PCM-2"
+#~ msgstr "PCM-2"
+
+#~ msgid "Record"
+#~ msgstr "Rekam"
+
+#~ msgid "In-gain"
+#~ msgstr "Masukan-gain"
+
+#~ msgid "Out-gain"
+#~ msgstr "Keluaran-gain"
+
+#~ msgid "Line-1"
+#~ msgstr "Jalur-1"
+
+#~ msgid "Line-2"
+#~ msgstr "Jalur-2"
+
+#~ msgid "Line-3"
+#~ msgstr "Jalur-3"
+
+#~ msgid "Digital-1"
+#~ msgstr "Digital-1"
+
+#~ msgid "Digital-2"
+#~ msgstr "Digital-2"
+
+#~ msgid "Digital-3"
+#~ msgstr "Digital-3"
+
+#~ msgid "Phone-in"
+#~ msgstr "Telepon-masuk"
+
+#~ msgid "Phone-out"
+#~ msgstr "Telepon-keluar"
+
+#~ msgid "Video"
+#~ msgstr "Video"
+
+#~ msgid "Radio"
+#~ msgstr "Radio"
+
+#~ msgid "Could not open audio device for mixer control handling."
+#~ msgstr "Tak dapat membuka divais audio untuk menangani kontrol mixer."
+
+#~ msgid ""
+#~ "Could not open audio device for mixer control handling. This version of "
+#~ "the Open Sound System is not supported by this element."
+#~ msgstr ""
+#~ "Tak dapat membuka divais audio untuk menangani kontrol mixer. Versi Open "
+#~ "Sound System ini tidak didukung oleh elemen ini."
+
+#~ msgid "Master"
+#~ msgstr "Master"
+
+#~ msgid "Front"
+#~ msgstr "Depan"
+
+#~ msgid "Rear"
+#~ msgstr "Belakang"
+
+#~ msgid "Headphones"
+#~ msgstr "Headphone"
+
+#~ msgid "Center"
+#~ msgstr "Tengah"
+
+#~ msgid "LFE"
+#~ msgstr "LFE"
+
+#~ msgid "Surround"
+#~ msgstr "Sekeliling"
+
+#~ msgid "Side"
+#~ msgstr "Sisi"
+
+#~ msgid "AUX Out"
+#~ msgstr "AUX Keluaran"
+
+#~ msgid "3D Depth"
+#~ msgstr "Kedalaman 3D"
+
+#~ msgid "3D Center"
+#~ msgstr "3D Tengah"
+
+#~ msgid "3D Enhance"
+#~ msgstr "Dipercanggih 3D"
+
+#~ msgid "Telephone"
+#~ msgstr "Telepon"
+
+#~ msgid "Line In"
+#~ msgstr "Jalur Masuk"
+
+#~ msgid "Internal CD"
+#~ msgstr "CD Internal"
+
+#~ msgid "Video In"
+#~ msgstr "Video Masuk"
+
+#~ msgid "AUX 1 In"
+#~ msgstr "AUX 1 Masuk"
+
+#~ msgid "AUX 2 In"
+#~ msgstr "AUX 2 Masuk"
+
+#~ msgid "AUX In"
+#~ msgstr "AUX Masuk"
+
+#~ msgid "Record Gain"
+#~ msgstr "Rekam Gain"
+
+#~ msgid "Output Gain"
+#~ msgstr "Keluaran Gain"
+
+#~ msgid "Microphone Boost"
+#~ msgstr "Mikrofon Boost"
+
+#~ msgid "Loopback"
+#~ msgstr "Loopback"
+
+#~ msgid "Diagnostic"
+#~ msgstr "Diagnosis"
+
+#~ msgid "Bass Boost"
+#~ msgstr "Bass Boost"
+
+#~ msgid "Playback Ports"
+#~ msgstr "Pangkalan Putar"
+
+#~ msgid "Input"
+#~ msgstr "Masukan"
+
+#~ msgid "Record Source"
+#~ msgstr "Sumber Rekaman"
+
+#~ msgid "Monitor Source"
+#~ msgstr "Sumber Monitor"
+
+#~ msgid "Keyboard Beep"
+#~ msgstr "Bip Papan Ketik"
+
+#~ msgid "Simulate Stereo"
+#~ msgstr "Simulasi Stereo"
+
+#~ msgid "Stereo"
+#~ msgstr "Stereo"
+
+#~ msgid "Surround Sound"
+#~ msgstr "Suara Sekeliling"
+
+#~ msgid "Microphone Gain"
+#~ msgstr "Mikrofon Gain"
+
+#~ msgid "Speaker Source"
+#~ msgstr "Sumber Pengeras Suara"
+
+#~ msgid "Microphone Source"
+#~ msgstr "Sumber Mikrofon"
+
+#~ msgid "Jack"
+#~ msgstr "Jack"
+
+#~ msgid "Center / LFE"
+#~ msgstr "Tengah / LFE"
+
+#~ msgid "Stereo Mix"
+#~ msgstr "Mix Stereo"
+
+#~ msgid "Mono Mix"
+#~ msgstr "Mix Mono"
+
+#~ msgid "Input Mix"
+#~ msgstr "Mix Masukan"
+
+#~ msgid "SPDIF In"
+#~ msgstr "SPDIF Masuk"
+
+#~ msgid "Microphone 1"
+#~ msgstr "Mikrofon 1"
+
+#~ msgid "Microphone 2"
+#~ msgstr "Mikrofon 2"
+
+#~ msgid "Digital Out"
+#~ msgstr "Digital Keluar"
+
+#~ msgid "Digital In"
+#~ msgstr "Digital Masuk"
+
+#~ msgid "HDMI"
+#~ msgstr "HDMI"
+
+#~ msgid "Modem"
+#~ msgstr "Modem"
+
+#~ msgid "Handset"
+#~ msgstr "Handset"
+
+#~ msgid "Other"
+#~ msgstr "Lainnya"
+
+#~ msgid "None"
+#~ msgstr "Tidak Ada"
+
+#~ msgid "On"
+#~ msgstr "Hidup"
+
+#~ msgid "Off"
+#~ msgstr "Mati"
+
+#~ msgid "Mute"
+#~ msgstr "Diam"
+
+#~ msgid "Fast"
+#~ msgstr "Cepat"
+
+#~ msgid "Very Low"
+#~ msgstr "Sangat Rendah"
+
+#~ msgid "Low"
+#~ msgstr "Rendah"
+
+#~ msgid "Medium"
+#~ msgstr "Sedang"
+
+#~ msgid "High"
+#~ msgstr "Tinggi"
+
+#~ msgid "Very High"
+#~ msgstr "Sangat Tinggi"
+
+#~ msgid "Production"
+#~ msgstr "Produksi"
+
+#~ msgid "Front Panel Microphone"
+#~ msgstr "Mikrofon Panel Depan"
+
+#~ msgid "Front Panel Line In"
+#~ msgstr "Masukan Jalur Panel Depan"
+
+#~ msgid "Front Panel Headphones"
+#~ msgstr "Headphone Panel Depan"
+
+#~ msgid "Front Panel Line Out"
+#~ msgstr "Keluaran Jalur Panel Depan"
+
+#~ msgid "Green Connector"
+#~ msgstr "Konektor Hijau"
+
+#~ msgid "Pink Connector"
+#~ msgstr "Konektor Merah Jambu"
+
+#~ msgid "Blue Connector"
+#~ msgstr "Konektor Biru"
+
+#~ msgid "White Connector"
+#~ msgstr "Konektor Putih"
+
+#~ msgid "Black Connector"
+#~ msgstr "Konektor Hitam"
+
+#~ msgid "Gray Connector"
+#~ msgstr "Konektor Abu-Abu"
+
+#~ msgid "Orange Connector"
+#~ msgstr "Konektor Jingga"
+
+#~ msgid "Red Connector"
+#~ msgstr "Konektor Merah"
+
+#~ msgid "Yellow Connector"
+#~ msgstr "Konektor Kuning"
+
+#~ msgid "Green Front Panel Connector"
+#~ msgstr "Konektor Panel Depan Hijau"
+
+#~ msgid "Pink Front Panel Connector"
+#~ msgstr "Konektor Panel Depan Merah Jambu"
+
+#~ msgid "Blue Front Panel Connector"
+#~ msgstr "Konektor Panel Depan Biru"
+
+#~ msgid "White Front Panel Connector"
+#~ msgstr "Konektor Panel Depan Putih"
+
+#~ msgid "Black Front Panel Connector"
+#~ msgstr "Konektor Panel Depan Hitam"
+
+#~ msgid "Gray Front Panel Connector"
+#~ msgstr "Konektor Panel Depan Abu-Abu"
+
+#~ msgid "Orange Front Panel Connector"
+#~ msgstr "Konektor Panel Depan Jingga"
+
+#~ msgid "Red Front Panel Connector"
+#~ msgstr "Konektor Panel Depan Merah"
+
+#~ msgid "Yellow Front Panel Connector"
+#~ msgstr "Konektor Panel Depan Kuning"
+
+#~ msgid "Spread Output"
+#~ msgstr "Keluaran Sebar"
+
+#~ msgid "Downmix"
+#~ msgstr "Downmix"
+
+#~ msgid "Virtual Mixer Input"
+#~ msgstr "Masukan Mixer Virtual"
+
+#~ msgid "Virtual Mixer Output"
+#~ msgstr "Keluaran Mixer Virtual"
+
+#~ msgid "Virtual Mixer Channels"
+#~ msgstr "Kanal Mixer Virtual"
+
+#~ msgid "%s %d Function"
+#~ msgstr "Fungsi %s %d"
+
+#~ msgid "%s Function"
+#~ msgstr "Fungsi %s"
 
 #~ msgid "Error reading %d bytes on device '%s'."
 #~ msgstr "Galat membaca %d bita pada divais '%s'."

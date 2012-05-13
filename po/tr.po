@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-good 0.10.26.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2012-04-12 10:26+0200\n"
+"POT-Creation-Date: 2012-05-13 16:29+0200\n"
 "PO-Revision-Date: 2011-01-08 00:03+0200\n"
 "Last-Translator: Server Acim <serveracim@gmail.com>\n"
 "Language-Team: Turkish <gnu-tr-u12a@lists.sourceforge.net>\n"
@@ -96,81 +96,6 @@ msgstr ""
 msgid "Internal data flow error."
 msgstr "İç veri akış hatası."
 
-msgid "Volume"
-msgstr "Ses Girişi"
-
-msgid "Bass"
-msgstr "Bas"
-
-msgid "Treble"
-msgstr "Tiz"
-
-msgid "Synth"
-msgstr "Synthisizer"
-
-msgid "PCM"
-msgstr "PCM"
-
-msgid "Speaker"
-msgstr "Hoparlör"
-
-msgid "Line-in"
-msgstr "Hat girişi"
-
-msgid "Microphone"
-msgstr "Mikrofon"
-
-msgid "CD"
-msgstr "CD"
-
-msgid "Mixer"
-msgstr "Karıştırıcı"
-
-msgid "PCM-2"
-msgstr "PCM-2"
-
-msgid "Record"
-msgstr "Kayıt"
-
-msgid "In-gain"
-msgstr "Kazanç-girişi"
-
-msgid "Out-gain"
-msgstr "Kazanç-çıkışı"
-
-msgid "Line-1"
-msgstr "Hat-1"
-
-msgid "Line-2"
-msgstr "Hat-2"
-
-msgid "Line-3"
-msgstr "Hat-3"
-
-msgid "Digital-1"
-msgstr "Sayısal-1"
-
-msgid "Digital-2"
-msgstr "Sayısal-2"
-
-msgid "Digital-3"
-msgstr "Sayısal-3"
-
-msgid "Phone-in"
-msgstr "Fono-giriş"
-
-msgid "Phone-out"
-msgstr "Fono-çıkış"
-
-msgid "Video"
-msgstr "Vidyo"
-
-msgid "Radio"
-msgstr "Radyo"
-
-msgid "Monitor"
-msgstr "Hoparlör"
-
 msgid ""
 "Could not open audio device for playback. Device is being used by another "
 "application."
@@ -194,311 +119,6 @@ msgstr "Kayıt için aygıtı açamıyor. Aygıtı açmak için yetkiniz yok."
 msgid "Could not open audio device for recording."
 msgstr "Aygıtı kayıt için açamıyor."
 
-msgid "Could not open audio device for mixer control handling."
-msgstr "Mikser denetimi için ses aygıtı açılamıyor."
-
-msgid ""
-"Could not open audio device for mixer control handling. This version of the "
-"Open Sound System is not supported by this element."
-msgstr ""
-"Mikser denetimi için ses aygıtı açılamıyor. Açık Ses Sisteminin bu sürümü, "
-"bu öğeyi desteklemiyor."
-
-msgid "Master"
-msgstr "Master"
-
-msgid "Front"
-msgstr "Ön"
-
-msgid "Rear"
-msgstr "Arka"
-
-msgid "Headphones"
-msgstr "Kulaklıklar"
-
-msgid "Center"
-msgstr "Merkez"
-
-msgid "LFE"
-msgstr "LFE"
-
-msgid "Surround"
-msgstr "Surround"
-
-msgid "Side"
-msgstr "Yan"
-
-msgid "Built-in Speaker"
-msgstr "Varsayılan Hoparlör"
-
-msgid "AUX 1 Out"
-msgstr "AUX 1 Çıkış"
-
-msgid "AUX 2 Out"
-msgstr "AUX 2 Çıkış"
-
-msgid "AUX Out"
-msgstr "AUX Çıkış"
-
-msgid "3D Depth"
-msgstr "3D Derinlik"
-
-msgid "3D Center"
-msgstr "3D Merkez"
-
-msgid "3D Enhance"
-msgstr "3D Genişlik"
-
-msgid "Telephone"
-msgstr "Telefon"
-
-msgid "Line Out"
-msgstr "Hat Çıkışı"
-
-msgid "Line In"
-msgstr "Hat Girişi"
-
-msgid "Internal CD"
-msgstr "Dahili CD"
-
-msgid "Video In"
-msgstr "Vidyo Girişi"
-
-msgid "AUX 1 In"
-msgstr "AUX 1 Giriş"
-
-msgid "AUX 2 In"
-msgstr "AUX 2 Giriş"
-
-msgid "AUX In"
-msgstr "AUX Giriş"
-
-msgid "Record Gain"
-msgstr "Kayıt Kazancı"
-
-msgid "Output Gain"
-msgstr "Çıkış Kazancı"
-
-msgid "Microphone Boost"
-msgstr "Mikrofon Seviye Yükseltme"
-
-msgid "Loopback"
-msgstr "Geridönüm"
-
-msgid "Diagnostic"
-msgstr "Ayarlar"
-
-msgid "Bass Boost"
-msgstr "Bass Arttırım"
-
-msgid "Playback Ports"
-msgstr "Çalma Portları"
-
-msgid "Input"
-msgstr "Giriş"
-
-msgid "Record Source"
-msgstr "Kayıt Kaynağı"
-
-msgid "Monitor Source"
-msgstr "Hoparlör Kaynağı"
-
-msgid "Keyboard Beep"
-msgstr "Klavye Biplemesi"
-
-msgid "Simulate Stereo"
-msgstr "Stereo Simülasyonu"
-
-msgid "Stereo"
-msgstr "Stereo"
-
-msgid "Surround Sound"
-msgstr "Surround Sesi"
-
-msgid "Microphone Gain"
-msgstr "Mikrofon Kazancı"
-
-msgid "Speaker Source"
-msgstr "Hoparlör Kaynağı"
-
-msgid "Microphone Source"
-msgstr "Mikrofon Kaynağı"
-
-msgid "Jack"
-msgstr "Jack"
-
-msgid "Center / LFE"
-msgstr "Merkez / LFE"
-
-msgid "Stereo Mix"
-msgstr "Stereo Mix"
-
-msgid "Mono Mix"
-msgstr "Mono Mix"
-
-msgid "Input Mix"
-msgstr "Giriş Mix"
-
-msgid "SPDIF In"
-msgstr "SPDIF Girişi"
-
-msgid "SPDIF Out"
-msgstr "SPDIF Çıkış"
-
-msgid "Microphone 1"
-msgstr "Mikrofon 1"
-
-msgid "Microphone 2"
-msgstr "Mikrofon 2"
-
-msgid "Digital Out"
-msgstr "Sayısal Çıkış"
-
-msgid "Digital In"
-msgstr "Sayısal Giriş"
-
-msgid "HDMI"
-msgstr "HDMI"
-
-msgid "Modem"
-msgstr "Modem"
-
-msgid "Handset"
-msgstr "Ahize"
-
-msgid "Other"
-msgstr "Diğer"
-
-msgid "None"
-msgstr "Hiçbiri"
-
-msgid "On"
-msgstr "Açık"
-
-msgid "Off"
-msgstr "Kapalı"
-
-msgid "Mute"
-msgstr "Sustulurmuş"
-
-msgid "Fast"
-msgstr "Hızlı"
-
-#. TRANSLATORS: "Very Low" is a quality setting here
-msgid "Very Low"
-msgstr "Çok Kalın"
-
-#. TRANSLATORS: "Low" is a quality setting here
-msgid "Low"
-msgstr "D"
-
-#. TRANSLATORS: "Medium" is a quality setting here
-msgid "Medium"
-msgstr "Orta"
-
-#. TRANSLATORS: "High" is a quality setting here
-msgid "High"
-msgstr "Tiz"
-
-#. TRANSLATORS: "Very High" is a quality setting here
-msgid "Very High"
-msgstr "Çok Tiz"
-
-#. TRANSLATORS: "Production" is a quality setting here
-msgid "Production"
-msgstr "Yapım"
-
-msgid "Front Panel Microphone"
-msgstr "Ön Panel Mikrofonu"
-
-msgid "Front Panel Line In"
-msgstr "Ön Panel Hat Girişi"
-
-msgid "Front Panel Headphones"
-msgstr "Ön Panel Kulaklıklar"
-
-msgid "Front Panel Line Out"
-msgstr "Ön Panel Hat Çıkışı"
-
-msgid "Green Connector"
-msgstr "Yeşil Konnektör"
-
-msgid "Pink Connector"
-msgstr "Pembe Konnektör"
-
-msgid "Blue Connector"
-msgstr "Mavi Konnektör"
-
-msgid "White Connector"
-msgstr "Beyaz Konnektör"
-
-msgid "Black Connector"
-msgstr "Siyah Konnektör"
-
-msgid "Gray Connector"
-msgstr "Gri Konnektör"
-
-msgid "Orange Connector"
-msgstr "Portakal Konnektör"
-
-msgid "Red Connector"
-msgstr "Kırmızı Konnektör"
-
-msgid "Yellow Connector"
-msgstr "Sarı Konnektör"
-
-msgid "Green Front Panel Connector"
-msgstr "Yeşil Ön Panel Konnektör"
-
-msgid "Pink Front Panel Connector"
-msgstr "Pembe Ön Panel Konnektör"
-
-msgid "Blue Front Panel Connector"
-msgstr "Mavi Ön Panel Konnektör"
-
-msgid "White Front Panel Connector"
-msgstr "Beyaz Ön Panel Konnektör"
-
-msgid "Black Front Panel Connector"
-msgstr "Siyah Ön Panel Konnektör"
-
-msgid "Gray Front Panel Connector"
-msgstr "Gri Ön Panel Konnektör"
-
-msgid "Orange Front Panel Connector"
-msgstr "Portakal Ön Panel Konnektör"
-
-msgid "Red Front Panel Connector"
-msgstr "Kırmızı Ön Panel Konnektör"
-
-msgid "Yellow Front Panel Connector"
-msgstr "Sarı Ön Panel Konnektör"
-
-msgid "Spread Output"
-msgstr "Çıkışı Dağıt"
-
-msgid "Downmix"
-msgstr "Miks Edilmiş"
-
-msgid "Virtual Mixer Input"
-msgstr "Sanal Mikser Girişi"
-
-msgid "Virtual Mixer Output"
-msgstr "Sanal Mikser Çıkışı"
-
-msgid "Virtual Mixer Channels"
-msgstr "Sanal Mikser Kanalları"
-
-#. TRANSLATORS: name + number of a volume mixer control
-#, c-format
-msgid "%s %d Function"
-msgstr "%s %d İşlev"
-
-#. TRANSLATORS: name of a volume mixer control
-#, c-format
-msgid "%s Function"
-msgstr "%s İşlev"
-
 msgid ""
 "Could not open audio device for playback. This version of the Open Sound "
 "System is not supported by this element."
@@ -518,11 +138,32 @@ msgstr "Bu ses aygıtı kaydetmeyi desteklemiyor."
 msgid "Error recording from audio device."
 msgstr "Ses aygıtından kaydetmekte hata."
 
+msgid "Volume"
+msgstr "Ses Girişi"
+
 msgid "Gain"
 msgstr "Kazanç"
 
+msgid "Monitor"
+msgstr "Hoparlör"
+
+msgid "Built-in Speaker"
+msgstr "Varsayılan Hoparlör"
+
 msgid "Headphone"
 msgstr "Kulaklık"
+
+msgid "Line Out"
+msgstr "Hat Çıkışı"
+
+msgid "SPDIF Out"
+msgstr "SPDIF Çıkış"
+
+msgid "AUX 1 Out"
+msgstr "AUX 1 Çıkış"
+
+msgid "AUX 2 Out"
+msgstr "AUX 2 Çıkış"
 
 #, c-format
 msgid "Error reading %d bytes from device '%s'."
@@ -699,6 +340,355 @@ msgstr "Çalışırken çözünürlüğü değiştirmek henüz desteklenmiyor."
 
 msgid "Cannot operate without a clock"
 msgstr "Saat olmadan çalışamaz"
+
+#~ msgid "Bass"
+#~ msgstr "Bas"
+
+#~ msgid "Treble"
+#~ msgstr "Tiz"
+
+#~ msgid "Synth"
+#~ msgstr "Synthisizer"
+
+#~ msgid "PCM"
+#~ msgstr "PCM"
+
+#~ msgid "Speaker"
+#~ msgstr "Hoparlör"
+
+#~ msgid "Line-in"
+#~ msgstr "Hat girişi"
+
+#~ msgid "Microphone"
+#~ msgstr "Mikrofon"
+
+#~ msgid "CD"
+#~ msgstr "CD"
+
+#~ msgid "Mixer"
+#~ msgstr "Karıştırıcı"
+
+#~ msgid "PCM-2"
+#~ msgstr "PCM-2"
+
+#~ msgid "Record"
+#~ msgstr "Kayıt"
+
+#~ msgid "In-gain"
+#~ msgstr "Kazanç-girişi"
+
+#~ msgid "Out-gain"
+#~ msgstr "Kazanç-çıkışı"
+
+#~ msgid "Line-1"
+#~ msgstr "Hat-1"
+
+#~ msgid "Line-2"
+#~ msgstr "Hat-2"
+
+#~ msgid "Line-3"
+#~ msgstr "Hat-3"
+
+#~ msgid "Digital-1"
+#~ msgstr "Sayısal-1"
+
+#~ msgid "Digital-2"
+#~ msgstr "Sayısal-2"
+
+#~ msgid "Digital-3"
+#~ msgstr "Sayısal-3"
+
+#~ msgid "Phone-in"
+#~ msgstr "Fono-giriş"
+
+#~ msgid "Phone-out"
+#~ msgstr "Fono-çıkış"
+
+#~ msgid "Video"
+#~ msgstr "Vidyo"
+
+#~ msgid "Radio"
+#~ msgstr "Radyo"
+
+#~ msgid "Could not open audio device for mixer control handling."
+#~ msgstr "Mikser denetimi için ses aygıtı açılamıyor."
+
+#~ msgid ""
+#~ "Could not open audio device for mixer control handling. This version of "
+#~ "the Open Sound System is not supported by this element."
+#~ msgstr ""
+#~ "Mikser denetimi için ses aygıtı açılamıyor. Açık Ses Sisteminin bu "
+#~ "sürümü, bu öğeyi desteklemiyor."
+
+#~ msgid "Master"
+#~ msgstr "Master"
+
+#~ msgid "Front"
+#~ msgstr "Ön"
+
+#~ msgid "Rear"
+#~ msgstr "Arka"
+
+#~ msgid "Headphones"
+#~ msgstr "Kulaklıklar"
+
+#~ msgid "Center"
+#~ msgstr "Merkez"
+
+#~ msgid "LFE"
+#~ msgstr "LFE"
+
+#~ msgid "Surround"
+#~ msgstr "Surround"
+
+#~ msgid "Side"
+#~ msgstr "Yan"
+
+#~ msgid "AUX Out"
+#~ msgstr "AUX Çıkış"
+
+#~ msgid "3D Depth"
+#~ msgstr "3D Derinlik"
+
+#~ msgid "3D Center"
+#~ msgstr "3D Merkez"
+
+#~ msgid "3D Enhance"
+#~ msgstr "3D Genişlik"
+
+#~ msgid "Telephone"
+#~ msgstr "Telefon"
+
+#~ msgid "Line In"
+#~ msgstr "Hat Girişi"
+
+#~ msgid "Internal CD"
+#~ msgstr "Dahili CD"
+
+#~ msgid "Video In"
+#~ msgstr "Vidyo Girişi"
+
+#~ msgid "AUX 1 In"
+#~ msgstr "AUX 1 Giriş"
+
+#~ msgid "AUX 2 In"
+#~ msgstr "AUX 2 Giriş"
+
+#~ msgid "AUX In"
+#~ msgstr "AUX Giriş"
+
+#~ msgid "Record Gain"
+#~ msgstr "Kayıt Kazancı"
+
+#~ msgid "Output Gain"
+#~ msgstr "Çıkış Kazancı"
+
+#~ msgid "Microphone Boost"
+#~ msgstr "Mikrofon Seviye Yükseltme"
+
+#~ msgid "Loopback"
+#~ msgstr "Geridönüm"
+
+#~ msgid "Diagnostic"
+#~ msgstr "Ayarlar"
+
+#~ msgid "Bass Boost"
+#~ msgstr "Bass Arttırım"
+
+#~ msgid "Playback Ports"
+#~ msgstr "Çalma Portları"
+
+#~ msgid "Input"
+#~ msgstr "Giriş"
+
+#~ msgid "Record Source"
+#~ msgstr "Kayıt Kaynağı"
+
+#~ msgid "Monitor Source"
+#~ msgstr "Hoparlör Kaynağı"
+
+#~ msgid "Keyboard Beep"
+#~ msgstr "Klavye Biplemesi"
+
+#~ msgid "Simulate Stereo"
+#~ msgstr "Stereo Simülasyonu"
+
+#~ msgid "Stereo"
+#~ msgstr "Stereo"
+
+#~ msgid "Surround Sound"
+#~ msgstr "Surround Sesi"
+
+#~ msgid "Microphone Gain"
+#~ msgstr "Mikrofon Kazancı"
+
+#~ msgid "Speaker Source"
+#~ msgstr "Hoparlör Kaynağı"
+
+#~ msgid "Microphone Source"
+#~ msgstr "Mikrofon Kaynağı"
+
+#~ msgid "Jack"
+#~ msgstr "Jack"
+
+#~ msgid "Center / LFE"
+#~ msgstr "Merkez / LFE"
+
+#~ msgid "Stereo Mix"
+#~ msgstr "Stereo Mix"
+
+#~ msgid "Mono Mix"
+#~ msgstr "Mono Mix"
+
+#~ msgid "Input Mix"
+#~ msgstr "Giriş Mix"
+
+#~ msgid "SPDIF In"
+#~ msgstr "SPDIF Girişi"
+
+#~ msgid "Microphone 1"
+#~ msgstr "Mikrofon 1"
+
+#~ msgid "Microphone 2"
+#~ msgstr "Mikrofon 2"
+
+#~ msgid "Digital Out"
+#~ msgstr "Sayısal Çıkış"
+
+#~ msgid "Digital In"
+#~ msgstr "Sayısal Giriş"
+
+#~ msgid "HDMI"
+#~ msgstr "HDMI"
+
+#~ msgid "Modem"
+#~ msgstr "Modem"
+
+#~ msgid "Handset"
+#~ msgstr "Ahize"
+
+#~ msgid "Other"
+#~ msgstr "Diğer"
+
+#~ msgid "None"
+#~ msgstr "Hiçbiri"
+
+#~ msgid "On"
+#~ msgstr "Açık"
+
+#~ msgid "Off"
+#~ msgstr "Kapalı"
+
+#~ msgid "Mute"
+#~ msgstr "Sustulurmuş"
+
+#~ msgid "Fast"
+#~ msgstr "Hızlı"
+
+#~ msgid "Very Low"
+#~ msgstr "Çok Kalın"
+
+#~ msgid "Low"
+#~ msgstr "D"
+
+#~ msgid "Medium"
+#~ msgstr "Orta"
+
+#~ msgid "High"
+#~ msgstr "Tiz"
+
+#~ msgid "Very High"
+#~ msgstr "Çok Tiz"
+
+#~ msgid "Production"
+#~ msgstr "Yapım"
+
+#~ msgid "Front Panel Microphone"
+#~ msgstr "Ön Panel Mikrofonu"
+
+#~ msgid "Front Panel Line In"
+#~ msgstr "Ön Panel Hat Girişi"
+
+#~ msgid "Front Panel Headphones"
+#~ msgstr "Ön Panel Kulaklıklar"
+
+#~ msgid "Front Panel Line Out"
+#~ msgstr "Ön Panel Hat Çıkışı"
+
+#~ msgid "Green Connector"
+#~ msgstr "Yeşil Konnektör"
+
+#~ msgid "Pink Connector"
+#~ msgstr "Pembe Konnektör"
+
+#~ msgid "Blue Connector"
+#~ msgstr "Mavi Konnektör"
+
+#~ msgid "White Connector"
+#~ msgstr "Beyaz Konnektör"
+
+#~ msgid "Black Connector"
+#~ msgstr "Siyah Konnektör"
+
+#~ msgid "Gray Connector"
+#~ msgstr "Gri Konnektör"
+
+#~ msgid "Orange Connector"
+#~ msgstr "Portakal Konnektör"
+
+#~ msgid "Red Connector"
+#~ msgstr "Kırmızı Konnektör"
+
+#~ msgid "Yellow Connector"
+#~ msgstr "Sarı Konnektör"
+
+#~ msgid "Green Front Panel Connector"
+#~ msgstr "Yeşil Ön Panel Konnektör"
+
+#~ msgid "Pink Front Panel Connector"
+#~ msgstr "Pembe Ön Panel Konnektör"
+
+#~ msgid "Blue Front Panel Connector"
+#~ msgstr "Mavi Ön Panel Konnektör"
+
+#~ msgid "White Front Panel Connector"
+#~ msgstr "Beyaz Ön Panel Konnektör"
+
+#~ msgid "Black Front Panel Connector"
+#~ msgstr "Siyah Ön Panel Konnektör"
+
+#~ msgid "Gray Front Panel Connector"
+#~ msgstr "Gri Ön Panel Konnektör"
+
+#~ msgid "Orange Front Panel Connector"
+#~ msgstr "Portakal Ön Panel Konnektör"
+
+#~ msgid "Red Front Panel Connector"
+#~ msgstr "Kırmızı Ön Panel Konnektör"
+
+#~ msgid "Yellow Front Panel Connector"
+#~ msgstr "Sarı Ön Panel Konnektör"
+
+#~ msgid "Spread Output"
+#~ msgstr "Çıkışı Dağıt"
+
+#~ msgid "Downmix"
+#~ msgstr "Miks Edilmiş"
+
+#~ msgid "Virtual Mixer Input"
+#~ msgstr "Sanal Mikser Girişi"
+
+#~ msgid "Virtual Mixer Output"
+#~ msgstr "Sanal Mikser Çıkışı"
+
+#~ msgid "Virtual Mixer Channels"
+#~ msgstr "Sanal Mikser Kanalları"
+
+#~ msgid "%s %d Function"
+#~ msgstr "%s %d İşlev"
+
+#~ msgid "%s Function"
+#~ msgstr "%s İşlev"
 
 #~ msgid "Could not establish connection to sound server"
 #~ msgstr "Ses sunucusuyla bağlantı kurulumayor"

@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-good 0.10.16.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2012-04-12 10:26+0200\n"
+"POT-Creation-Date: 2012-05-13 16:29+0200\n"
 "PO-Revision-Date: 2009-11-13 22:20+0800\n"
 "Last-Translator: Ji ZhengYu <zhengyuji@gmail.com>\n"
 "Language-Team: Chinese (simplified) <i18n-zh@googlegroups.com>\n"
@@ -98,81 +98,6 @@ msgstr ""
 msgid "Internal data flow error."
 msgstr "内部数据流错误。"
 
-msgid "Volume"
-msgstr "音量"
-
-msgid "Bass"
-msgstr "低音(Bass)"
-
-msgid "Treble"
-msgstr "高音(Treble)"
-
-msgid "Synth"
-msgstr "合成器"
-
-msgid "PCM"
-msgstr "波形(PCM)"
-
-msgid "Speaker"
-msgstr "扬声器(Speaker)"
-
-msgid "Line-in"
-msgstr "线路输入(Line-in)"
-
-msgid "Microphone"
-msgstr "话筒"
-
-msgid "CD"
-msgstr "CD 音频"
-
-msgid "Mixer"
-msgstr "混音器"
-
-msgid "PCM-2"
-msgstr "PCM-2"
-
-msgid "Record"
-msgstr "录音"
-
-msgid "In-gain"
-msgstr "输入增益"
-
-msgid "Out-gain"
-msgstr "输出增益"
-
-msgid "Line-1"
-msgstr "线路1"
-
-msgid "Line-2"
-msgstr "线路2"
-
-msgid "Line-3"
-msgstr "线路3"
-
-msgid "Digital-1"
-msgstr "数字线路1"
-
-msgid "Digital-2"
-msgstr "数字线路2"
-
-msgid "Digital-3"
-msgstr "数字线路3"
-
-msgid "Phone-in"
-msgstr "话筒输入"
-
-msgid "Phone-out"
-msgstr "话筒输出"
-
-msgid "Video"
-msgstr "视频"
-
-msgid "Radio"
-msgstr "广播"
-
-msgid "Monitor"
-msgstr "监控器"
-
 msgid ""
 "Could not open audio device for playback. Device is being used by another "
 "application."
@@ -195,331 +120,6 @@ msgid "Could not open audio device for recording."
 msgstr "无法打开音频设备录音。"
 
 #, fuzzy
-msgid "Could not open audio device for mixer control handling."
-msgstr "无法打开音频设备录音。"
-
-#, fuzzy
-msgid ""
-"Could not open audio device for mixer control handling. This version of the "
-"Open Sound System is not supported by this element."
-msgstr "无法打开音频设备录音。您无权使用这一设备。"
-
-msgid "Master"
-msgstr ""
-
-msgid "Front"
-msgstr ""
-
-msgid "Rear"
-msgstr ""
-
-#, fuzzy
-msgid "Headphones"
-msgstr "头戴式耳机"
-
-msgid "Center"
-msgstr ""
-
-msgid "LFE"
-msgstr ""
-
-msgid "Surround"
-msgstr ""
-
-msgid "Side"
-msgstr ""
-
-msgid "Built-in Speaker"
-msgstr "内建扬声器"
-
-msgid "AUX 1 Out"
-msgstr "AUX 1 输出"
-
-msgid "AUX 2 Out"
-msgstr "AUX 2 输出"
-
-#, fuzzy
-msgid "AUX Out"
-msgstr "AUX 1 输出"
-
-msgid "3D Depth"
-msgstr ""
-
-msgid "3D Center"
-msgstr ""
-
-msgid "3D Enhance"
-msgstr ""
-
-#, fuzzy
-msgid "Telephone"
-msgstr "头戴式耳机"
-
-msgid "Line Out"
-msgstr "线路输出"
-
-#, fuzzy
-msgid "Line In"
-msgstr "线路输入(Line-in)"
-
-msgid "Internal CD"
-msgstr ""
-
-#, fuzzy
-msgid "Video In"
-msgstr "视频"
-
-#, fuzzy
-msgid "AUX 1 In"
-msgstr "AUX 1 输出"
-
-#, fuzzy
-msgid "AUX 2 In"
-msgstr "AUX 2 输出"
-
-msgid "AUX In"
-msgstr ""
-
-#, fuzzy
-msgid "Record Gain"
-msgstr "录音"
-
-msgid "Output Gain"
-msgstr ""
-
-#, fuzzy
-msgid "Microphone Boost"
-msgstr "话筒"
-
-msgid "Loopback"
-msgstr ""
-
-msgid "Diagnostic"
-msgstr ""
-
-msgid "Bass Boost"
-msgstr ""
-
-msgid "Playback Ports"
-msgstr ""
-
-msgid "Input"
-msgstr ""
-
-#, fuzzy
-msgid "Record Source"
-msgstr "录音"
-
-#, fuzzy
-msgid "Monitor Source"
-msgstr "监控器"
-
-msgid "Keyboard Beep"
-msgstr ""
-
-msgid "Simulate Stereo"
-msgstr ""
-
-msgid "Stereo"
-msgstr ""
-
-msgid "Surround Sound"
-msgstr ""
-
-#, fuzzy
-msgid "Microphone Gain"
-msgstr "话筒"
-
-#, fuzzy
-msgid "Speaker Source"
-msgstr "扬声器(Speaker)"
-
-#, fuzzy
-msgid "Microphone Source"
-msgstr "话筒"
-
-msgid "Jack"
-msgstr ""
-
-msgid "Center / LFE"
-msgstr ""
-
-msgid "Stereo Mix"
-msgstr ""
-
-msgid "Mono Mix"
-msgstr ""
-
-msgid "Input Mix"
-msgstr ""
-
-#, fuzzy
-msgid "SPDIF In"
-msgstr "SPDIF 输出"
-
-msgid "SPDIF Out"
-msgstr "SPDIF 输出"
-
-#, fuzzy
-msgid "Microphone 1"
-msgstr "话筒"
-
-#, fuzzy
-msgid "Microphone 2"
-msgstr "话筒"
-
-#, fuzzy
-msgid "Digital Out"
-msgstr "数字线路1"
-
-#, fuzzy
-msgid "Digital In"
-msgstr "数字线路1"
-
-msgid "HDMI"
-msgstr ""
-
-msgid "Modem"
-msgstr ""
-
-msgid "Handset"
-msgstr ""
-
-msgid "Other"
-msgstr ""
-
-msgid "None"
-msgstr ""
-
-msgid "On"
-msgstr ""
-
-msgid "Off"
-msgstr ""
-
-msgid "Mute"
-msgstr ""
-
-msgid "Fast"
-msgstr ""
-
-#. TRANSLATORS: "Very Low" is a quality setting here
-msgid "Very Low"
-msgstr ""
-
-#. TRANSLATORS: "Low" is a quality setting here
-msgid "Low"
-msgstr ""
-
-#. TRANSLATORS: "Medium" is a quality setting here
-msgid "Medium"
-msgstr ""
-
-#. TRANSLATORS: "High" is a quality setting here
-msgid "High"
-msgstr ""
-
-#. TRANSLATORS: "Very High" is a quality setting here
-msgid "Very High"
-msgstr ""
-
-#. TRANSLATORS: "Production" is a quality setting here
-msgid "Production"
-msgstr ""
-
-#, fuzzy
-msgid "Front Panel Microphone"
-msgstr "话筒"
-
-msgid "Front Panel Line In"
-msgstr ""
-
-msgid "Front Panel Headphones"
-msgstr ""
-
-msgid "Front Panel Line Out"
-msgstr ""
-
-msgid "Green Connector"
-msgstr ""
-
-msgid "Pink Connector"
-msgstr ""
-
-msgid "Blue Connector"
-msgstr ""
-
-msgid "White Connector"
-msgstr ""
-
-msgid "Black Connector"
-msgstr ""
-
-msgid "Gray Connector"
-msgstr ""
-
-msgid "Orange Connector"
-msgstr ""
-
-msgid "Red Connector"
-msgstr ""
-
-msgid "Yellow Connector"
-msgstr ""
-
-msgid "Green Front Panel Connector"
-msgstr ""
-
-msgid "Pink Front Panel Connector"
-msgstr ""
-
-msgid "Blue Front Panel Connector"
-msgstr ""
-
-msgid "White Front Panel Connector"
-msgstr ""
-
-msgid "Black Front Panel Connector"
-msgstr ""
-
-msgid "Gray Front Panel Connector"
-msgstr ""
-
-msgid "Orange Front Panel Connector"
-msgstr ""
-
-msgid "Red Front Panel Connector"
-msgstr ""
-
-msgid "Yellow Front Panel Connector"
-msgstr ""
-
-msgid "Spread Output"
-msgstr ""
-
-msgid "Downmix"
-msgstr ""
-
-msgid "Virtual Mixer Input"
-msgstr ""
-
-msgid "Virtual Mixer Output"
-msgstr ""
-
-msgid "Virtual Mixer Channels"
-msgstr ""
-
-#. TRANSLATORS: name + number of a volume mixer control
-#, c-format
-msgid "%s %d Function"
-msgstr ""
-
-#. TRANSLATORS: name of a volume mixer control
-#, c-format
-msgid "%s Function"
-msgstr ""
-
-#, fuzzy
 msgid ""
 "Could not open audio device for playback. This version of the Open Sound "
 "System is not supported by this element."
@@ -538,11 +138,32 @@ msgstr ""
 msgid "Error recording from audio device."
 msgstr "从设备‘%2$s’中读取 %1$d 个字节时出错。"
 
+msgid "Volume"
+msgstr "音量"
+
 msgid "Gain"
 msgstr "增益"
 
+msgid "Monitor"
+msgstr "监控器"
+
+msgid "Built-in Speaker"
+msgstr "内建扬声器"
+
 msgid "Headphone"
 msgstr "头戴式耳机"
+
+msgid "Line Out"
+msgstr "线路输出"
+
+msgid "SPDIF Out"
+msgstr "SPDIF 输出"
+
+msgid "AUX 1 Out"
+msgstr "AUX 1 输出"
+
+msgid "AUX 2 Out"
+msgstr "AUX 2 输出"
 
 #, c-format
 msgid "Error reading %d bytes from device '%s'."
@@ -711,6 +332,165 @@ msgstr "尚不支持在运行时更改分辨率。"
 
 msgid "Cannot operate without a clock"
 msgstr "没有时钟的话无法操作"
+
+#~ msgid "Bass"
+#~ msgstr "低音(Bass)"
+
+#~ msgid "Treble"
+#~ msgstr "高音(Treble)"
+
+#~ msgid "Synth"
+#~ msgstr "合成器"
+
+#~ msgid "PCM"
+#~ msgstr "波形(PCM)"
+
+#~ msgid "Speaker"
+#~ msgstr "扬声器(Speaker)"
+
+#~ msgid "Line-in"
+#~ msgstr "线路输入(Line-in)"
+
+#~ msgid "Microphone"
+#~ msgstr "话筒"
+
+#~ msgid "CD"
+#~ msgstr "CD 音频"
+
+#~ msgid "Mixer"
+#~ msgstr "混音器"
+
+#~ msgid "PCM-2"
+#~ msgstr "PCM-2"
+
+#~ msgid "Record"
+#~ msgstr "录音"
+
+#~ msgid "In-gain"
+#~ msgstr "输入增益"
+
+#~ msgid "Out-gain"
+#~ msgstr "输出增益"
+
+#~ msgid "Line-1"
+#~ msgstr "线路1"
+
+#~ msgid "Line-2"
+#~ msgstr "线路2"
+
+#~ msgid "Line-3"
+#~ msgstr "线路3"
+
+#~ msgid "Digital-1"
+#~ msgstr "数字线路1"
+
+#~ msgid "Digital-2"
+#~ msgstr "数字线路2"
+
+#~ msgid "Digital-3"
+#~ msgstr "数字线路3"
+
+#~ msgid "Phone-in"
+#~ msgstr "话筒输入"
+
+#~ msgid "Phone-out"
+#~ msgstr "话筒输出"
+
+#~ msgid "Video"
+#~ msgstr "视频"
+
+#~ msgid "Radio"
+#~ msgstr "广播"
+
+#, fuzzy
+#~ msgid "Could not open audio device for mixer control handling."
+#~ msgstr "无法打开音频设备录音。"
+
+#, fuzzy
+#~ msgid ""
+#~ "Could not open audio device for mixer control handling. This version of "
+#~ "the Open Sound System is not supported by this element."
+#~ msgstr "无法打开音频设备录音。您无权使用这一设备。"
+
+#, fuzzy
+#~ msgid "Headphones"
+#~ msgstr "头戴式耳机"
+
+#, fuzzy
+#~ msgid "AUX Out"
+#~ msgstr "AUX 1 输出"
+
+#, fuzzy
+#~ msgid "Telephone"
+#~ msgstr "头戴式耳机"
+
+#, fuzzy
+#~ msgid "Line In"
+#~ msgstr "线路输入(Line-in)"
+
+#, fuzzy
+#~ msgid "Video In"
+#~ msgstr "视频"
+
+#, fuzzy
+#~ msgid "AUX 1 In"
+#~ msgstr "AUX 1 输出"
+
+#, fuzzy
+#~ msgid "AUX 2 In"
+#~ msgstr "AUX 2 输出"
+
+#, fuzzy
+#~ msgid "Record Gain"
+#~ msgstr "录音"
+
+#, fuzzy
+#~ msgid "Microphone Boost"
+#~ msgstr "话筒"
+
+#, fuzzy
+#~ msgid "Record Source"
+#~ msgstr "录音"
+
+#, fuzzy
+#~ msgid "Monitor Source"
+#~ msgstr "监控器"
+
+#, fuzzy
+#~ msgid "Microphone Gain"
+#~ msgstr "话筒"
+
+#, fuzzy
+#~ msgid "Speaker Source"
+#~ msgstr "扬声器(Speaker)"
+
+#, fuzzy
+#~ msgid "Microphone Source"
+#~ msgstr "话筒"
+
+#, fuzzy
+#~ msgid "SPDIF In"
+#~ msgstr "SPDIF 输出"
+
+#, fuzzy
+#~ msgid "Microphone 1"
+#~ msgstr "话筒"
+
+#, fuzzy
+#~ msgid "Microphone 2"
+#~ msgstr "话筒"
+
+#, fuzzy
+#~ msgid "Digital Out"
+#~ msgstr "数字线路1"
+
+#, fuzzy
+#~ msgid "Digital In"
+#~ msgstr "数字线路1"
+
+#, fuzzy
+#~ msgid "Front Panel Microphone"
+#~ msgstr "话筒"
 
 #~ msgid "Failed to query sound server capabilities"
 #~ msgstr "查寻音频服务器的服务失败"

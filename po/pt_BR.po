@@ -11,7 +11,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-good 0.10.26.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2012-04-12 10:26+0200\n"
+"POT-Creation-Date: 2012-05-13 16:29+0200\n"
 "PO-Revision-Date: 2011-01-08 01:28-0300\n"
 "Last-Translator: Fabrício Godoy <skarllot@gmail.com>\n"
 "Language-Team: Brazilian Portuguese <ldp-br@bazar.conectiva.com.br>\n"
@@ -102,81 +102,6 @@ msgstr ""
 msgid "Internal data flow error."
 msgstr "Erro interno no fluxo de dados."
 
-msgid "Volume"
-msgstr "Volume"
-
-msgid "Bass"
-msgstr "Grave"
-
-msgid "Treble"
-msgstr "Agudo"
-
-msgid "Synth"
-msgstr "Sintetizador"
-
-msgid "PCM"
-msgstr "PCM"
-
-msgid "Speaker"
-msgstr "Alto-falante"
-
-msgid "Line-in"
-msgstr "Entrada de linha"
-
-msgid "Microphone"
-msgstr "Microfone"
-
-msgid "CD"
-msgstr "CD"
-
-msgid "Mixer"
-msgstr "Mixer"
-
-msgid "PCM-2"
-msgstr "PCM-2"
-
-msgid "Record"
-msgstr "Gravação"
-
-msgid "In-gain"
-msgstr "Ganho de entrada"
-
-msgid "Out-gain"
-msgstr "Ganho de saída"
-
-msgid "Line-1"
-msgstr "Linha 1"
-
-msgid "Line-2"
-msgstr "Linha 2"
-
-msgid "Line-3"
-msgstr "Linha 3"
-
-msgid "Digital-1"
-msgstr "Digital 1"
-
-msgid "Digital-2"
-msgstr "Digital 2"
-
-msgid "Digital-3"
-msgstr "Digital 3"
-
-msgid "Phone-in"
-msgstr "Entrada de fone"
-
-msgid "Phone-out"
-msgstr "Saída de fone"
-
-msgid "Video"
-msgstr "Vídeo"
-
-msgid "Radio"
-msgstr "Rádio"
-
-msgid "Monitor"
-msgstr "Monitorador"
-
 msgid ""
 "Could not open audio device for playback. Device is being used by another "
 "application."
@@ -204,314 +129,6 @@ msgstr ""
 msgid "Could not open audio device for recording."
 msgstr "Não foi possível abrir o dispositivo de áudio para gravação."
 
-msgid "Could not open audio device for mixer control handling."
-msgstr ""
-"Não foi possível abrir o dispositivo de áudio para manipulação do "
-"controlador do mixer."
-
-msgid ""
-"Could not open audio device for mixer control handling. This version of the "
-"Open Sound System is not supported by this element."
-msgstr ""
-"Não foi possível abrir o dispositivo de áudio para manipulação do "
-"controlador do mixer. Não há suporte a este elemento com esta versão do "
-"Sistema Aberto de Som (OSS)."
-
-msgid "Master"
-msgstr "Principal"
-
-msgid "Front"
-msgstr "Frontal"
-
-msgid "Rear"
-msgstr "Traseira"
-
-msgid "Headphones"
-msgstr "Fones de ouvido"
-
-msgid "Center"
-msgstr "Central"
-
-msgid "LFE"
-msgstr "LFE"
-
-msgid "Surround"
-msgstr "Surround"
-
-msgid "Side"
-msgstr "Lateral"
-
-msgid "Built-in Speaker"
-msgstr "Alto-falante interno"
-
-msgid "AUX 1 Out"
-msgstr "Saída aux. 1"
-
-msgid "AUX 2 Out"
-msgstr "Saída aux. 2"
-
-msgid "AUX Out"
-msgstr "Saída aux."
-
-msgid "3D Depth"
-msgstr "Profundidade 3D"
-
-msgid "3D Center"
-msgstr "3D central"
-
-msgid "3D Enhance"
-msgstr "Realce 3D"
-
-msgid "Telephone"
-msgstr "Telefone"
-
-msgid "Line Out"
-msgstr "Saída de linha"
-
-msgid "Line In"
-msgstr "Entrada de linha"
-
-msgid "Internal CD"
-msgstr "CD interno"
-
-msgid "Video In"
-msgstr "Entrada de vídeo"
-
-msgid "AUX 1 In"
-msgstr "Entrada aux. 1"
-
-msgid "AUX 2 In"
-msgstr "Entrada aux. 2"
-
-msgid "AUX In"
-msgstr "Entrada aux."
-
-msgid "Record Gain"
-msgstr "Ganho de gravação"
-
-msgid "Output Gain"
-msgstr "Ganho de saída"
-
-msgid "Microphone Boost"
-msgstr "Aumento do microfone"
-
-msgid "Loopback"
-msgstr "Loopback"
-
-msgid "Diagnostic"
-msgstr "Diagnóstico"
-
-msgid "Bass Boost"
-msgstr "Aumento de graves"
-
-msgid "Playback Ports"
-msgstr "Portas de reprodução"
-
-msgid "Input"
-msgstr "Entrada"
-
-msgid "Record Source"
-msgstr "Origem de gravação"
-
-msgid "Monitor Source"
-msgstr "Origem de monitoração"
-
-msgid "Keyboard Beep"
-msgstr "Bip do teclado"
-
-msgid "Simulate Stereo"
-msgstr "Simular estéreo"
-
-msgid "Stereo"
-msgstr "Estéreo"
-
-msgid "Surround Sound"
-msgstr "Som surround"
-
-msgid "Microphone Gain"
-msgstr "Ganho do microfone"
-
-msgid "Speaker Source"
-msgstr "Origem do alto-falante"
-
-msgid "Microphone Source"
-msgstr "Origem do microfone"
-
-msgid "Jack"
-msgstr "Jack"
-
-msgid "Center / LFE"
-msgstr "Central/LFE"
-
-msgid "Stereo Mix"
-msgstr "Mixagem estéreo"
-
-msgid "Mono Mix"
-msgstr "Mixagem mono"
-
-msgid "Input Mix"
-msgstr "Mixagem de entrada"
-
-msgid "SPDIF In"
-msgstr "Entrada SPDIF"
-
-msgid "SPDIF Out"
-msgstr "Saída SPDIF"
-
-msgid "Microphone 1"
-msgstr "Microfone 1"
-
-msgid "Microphone 2"
-msgstr "Microfone 2"
-
-msgid "Digital Out"
-msgstr "Saída digital"
-
-msgid "Digital In"
-msgstr "Entrada digital"
-
-msgid "HDMI"
-msgstr "HDMI"
-
-msgid "Modem"
-msgstr "Modem"
-
-msgid "Handset"
-msgstr "Monofone"
-
-msgid "Other"
-msgstr "Outro"
-
-msgid "None"
-msgstr "Nenhum"
-
-msgid "On"
-msgstr "Ligado"
-
-msgid "Off"
-msgstr "Desligado"
-
-msgid "Mute"
-msgstr "Mudo"
-
-msgid "Fast"
-msgstr "Rápido"
-
-#. TRANSLATORS: "Very Low" is a quality setting here
-msgid "Very Low"
-msgstr "Muito baixa"
-
-#. TRANSLATORS: "Low" is a quality setting here
-msgid "Low"
-msgstr "Baixa"
-
-#. TRANSLATORS: "Medium" is a quality setting here
-msgid "Medium"
-msgstr "Média"
-
-#. TRANSLATORS: "High" is a quality setting here
-msgid "High"
-msgstr "Alta"
-
-#. TRANSLATORS: "Very High" is a quality setting here
-msgid "Very High"
-msgstr "Muito alta"
-
-#. TRANSLATORS: "Production" is a quality setting here
-msgid "Production"
-msgstr "Produção"
-
-msgid "Front Panel Microphone"
-msgstr "Microfone do painel frontal"
-
-msgid "Front Panel Line In"
-msgstr "Entrada de linha do painel frontal"
-
-msgid "Front Panel Headphones"
-msgstr "Fones de ouvido do painel frontal"
-
-msgid "Front Panel Line Out"
-msgstr "Saída de linha do painel frontal"
-
-msgid "Green Connector"
-msgstr "Conector verde"
-
-msgid "Pink Connector"
-msgstr "Conector rosa"
-
-msgid "Blue Connector"
-msgstr "Conector azul"
-
-msgid "White Connector"
-msgstr "Conector branco"
-
-msgid "Black Connector"
-msgstr "Conector preto"
-
-msgid "Gray Connector"
-msgstr "Conector cinza"
-
-msgid "Orange Connector"
-msgstr "Conector laranja"
-
-msgid "Red Connector"
-msgstr "Conector vermelho"
-
-msgid "Yellow Connector"
-msgstr "Conector amarelo"
-
-msgid "Green Front Panel Connector"
-msgstr "Conector verde do painel frontal"
-
-msgid "Pink Front Panel Connector"
-msgstr "Conector rosa do painel frontal"
-
-msgid "Blue Front Panel Connector"
-msgstr "Conector azul do painel frontal"
-
-msgid "White Front Panel Connector"
-msgstr "Conector branco do painel frontal"
-
-msgid "Black Front Panel Connector"
-msgstr "Conector preto do painel frontal"
-
-msgid "Gray Front Panel Connector"
-msgstr "Conector cinza do painel frontal"
-
-msgid "Orange Front Panel Connector"
-msgstr "Conector laranja do painel frontal"
-
-msgid "Red Front Panel Connector"
-msgstr "Conector vermelho do painel frontal"
-
-msgid "Yellow Front Panel Connector"
-msgstr "Conector amarelo do painel frontal"
-
-msgid "Spread Output"
-msgstr "Saída comum"
-
-msgid "Downmix"
-msgstr "Mesclar canais"
-
-msgid "Virtual Mixer Input"
-msgstr "Entrada do mixer virtual"
-
-msgid "Virtual Mixer Output"
-msgstr "Saída do mixer virtual"
-
-msgid "Virtual Mixer Channels"
-msgstr "Canais do mixer virtual"
-
-#. TRANSLATORS: name + number of a volume mixer control
-#, c-format
-msgid "%s %d Function"
-msgstr "%s %d"
-
-#. TRANSLATORS: name of a volume mixer control
-#, c-format
-msgid "%s Function"
-msgstr "%s"
-
 msgid ""
 "Could not open audio device for playback. This version of the Open Sound "
 "System is not supported by this element."
@@ -531,11 +148,32 @@ msgstr "Não há suporte a gravação por este dispositivo de áudio."
 msgid "Error recording from audio device."
 msgstr "Erro ao gravar do dispositivo de áudio."
 
+msgid "Volume"
+msgstr "Volume"
+
 msgid "Gain"
 msgstr "Ganho"
 
+msgid "Monitor"
+msgstr "Monitorador"
+
+msgid "Built-in Speaker"
+msgstr "Alto-falante interno"
+
 msgid "Headphone"
 msgstr "Fone de ouvido"
+
+msgid "Line Out"
+msgstr "Saída de linha"
+
+msgid "SPDIF Out"
+msgstr "Saída SPDIF"
+
+msgid "AUX 1 Out"
+msgstr "Saída aux. 1"
+
+msgid "AUX 2 Out"
+msgstr "Saída aux. 2"
 
 #, c-format
 msgid "Error reading %d bytes from device '%s'."
@@ -718,6 +356,358 @@ msgstr "Ainda não há suporte a mudança de resolução enquanto está executan
 
 msgid "Cannot operate without a clock"
 msgstr "Não é possível operar sem um temporizador"
+
+#~ msgid "Bass"
+#~ msgstr "Grave"
+
+#~ msgid "Treble"
+#~ msgstr "Agudo"
+
+#~ msgid "Synth"
+#~ msgstr "Sintetizador"
+
+#~ msgid "PCM"
+#~ msgstr "PCM"
+
+#~ msgid "Speaker"
+#~ msgstr "Alto-falante"
+
+#~ msgid "Line-in"
+#~ msgstr "Entrada de linha"
+
+#~ msgid "Microphone"
+#~ msgstr "Microfone"
+
+#~ msgid "CD"
+#~ msgstr "CD"
+
+#~ msgid "Mixer"
+#~ msgstr "Mixer"
+
+#~ msgid "PCM-2"
+#~ msgstr "PCM-2"
+
+#~ msgid "Record"
+#~ msgstr "Gravação"
+
+#~ msgid "In-gain"
+#~ msgstr "Ganho de entrada"
+
+#~ msgid "Out-gain"
+#~ msgstr "Ganho de saída"
+
+#~ msgid "Line-1"
+#~ msgstr "Linha 1"
+
+#~ msgid "Line-2"
+#~ msgstr "Linha 2"
+
+#~ msgid "Line-3"
+#~ msgstr "Linha 3"
+
+#~ msgid "Digital-1"
+#~ msgstr "Digital 1"
+
+#~ msgid "Digital-2"
+#~ msgstr "Digital 2"
+
+#~ msgid "Digital-3"
+#~ msgstr "Digital 3"
+
+#~ msgid "Phone-in"
+#~ msgstr "Entrada de fone"
+
+#~ msgid "Phone-out"
+#~ msgstr "Saída de fone"
+
+#~ msgid "Video"
+#~ msgstr "Vídeo"
+
+#~ msgid "Radio"
+#~ msgstr "Rádio"
+
+#~ msgid "Could not open audio device for mixer control handling."
+#~ msgstr ""
+#~ "Não foi possível abrir o dispositivo de áudio para manipulação do "
+#~ "controlador do mixer."
+
+#~ msgid ""
+#~ "Could not open audio device for mixer control handling. This version of "
+#~ "the Open Sound System is not supported by this element."
+#~ msgstr ""
+#~ "Não foi possível abrir o dispositivo de áudio para manipulação do "
+#~ "controlador do mixer. Não há suporte a este elemento com esta versão do "
+#~ "Sistema Aberto de Som (OSS)."
+
+#~ msgid "Master"
+#~ msgstr "Principal"
+
+#~ msgid "Front"
+#~ msgstr "Frontal"
+
+#~ msgid "Rear"
+#~ msgstr "Traseira"
+
+#~ msgid "Headphones"
+#~ msgstr "Fones de ouvido"
+
+#~ msgid "Center"
+#~ msgstr "Central"
+
+#~ msgid "LFE"
+#~ msgstr "LFE"
+
+#~ msgid "Surround"
+#~ msgstr "Surround"
+
+#~ msgid "Side"
+#~ msgstr "Lateral"
+
+#~ msgid "AUX Out"
+#~ msgstr "Saída aux."
+
+#~ msgid "3D Depth"
+#~ msgstr "Profundidade 3D"
+
+#~ msgid "3D Center"
+#~ msgstr "3D central"
+
+#~ msgid "3D Enhance"
+#~ msgstr "Realce 3D"
+
+#~ msgid "Telephone"
+#~ msgstr "Telefone"
+
+#~ msgid "Line In"
+#~ msgstr "Entrada de linha"
+
+#~ msgid "Internal CD"
+#~ msgstr "CD interno"
+
+#~ msgid "Video In"
+#~ msgstr "Entrada de vídeo"
+
+#~ msgid "AUX 1 In"
+#~ msgstr "Entrada aux. 1"
+
+#~ msgid "AUX 2 In"
+#~ msgstr "Entrada aux. 2"
+
+#~ msgid "AUX In"
+#~ msgstr "Entrada aux."
+
+#~ msgid "Record Gain"
+#~ msgstr "Ganho de gravação"
+
+#~ msgid "Output Gain"
+#~ msgstr "Ganho de saída"
+
+#~ msgid "Microphone Boost"
+#~ msgstr "Aumento do microfone"
+
+#~ msgid "Loopback"
+#~ msgstr "Loopback"
+
+#~ msgid "Diagnostic"
+#~ msgstr "Diagnóstico"
+
+#~ msgid "Bass Boost"
+#~ msgstr "Aumento de graves"
+
+#~ msgid "Playback Ports"
+#~ msgstr "Portas de reprodução"
+
+#~ msgid "Input"
+#~ msgstr "Entrada"
+
+#~ msgid "Record Source"
+#~ msgstr "Origem de gravação"
+
+#~ msgid "Monitor Source"
+#~ msgstr "Origem de monitoração"
+
+#~ msgid "Keyboard Beep"
+#~ msgstr "Bip do teclado"
+
+#~ msgid "Simulate Stereo"
+#~ msgstr "Simular estéreo"
+
+#~ msgid "Stereo"
+#~ msgstr "Estéreo"
+
+#~ msgid "Surround Sound"
+#~ msgstr "Som surround"
+
+#~ msgid "Microphone Gain"
+#~ msgstr "Ganho do microfone"
+
+#~ msgid "Speaker Source"
+#~ msgstr "Origem do alto-falante"
+
+#~ msgid "Microphone Source"
+#~ msgstr "Origem do microfone"
+
+#~ msgid "Jack"
+#~ msgstr "Jack"
+
+#~ msgid "Center / LFE"
+#~ msgstr "Central/LFE"
+
+#~ msgid "Stereo Mix"
+#~ msgstr "Mixagem estéreo"
+
+#~ msgid "Mono Mix"
+#~ msgstr "Mixagem mono"
+
+#~ msgid "Input Mix"
+#~ msgstr "Mixagem de entrada"
+
+#~ msgid "SPDIF In"
+#~ msgstr "Entrada SPDIF"
+
+#~ msgid "Microphone 1"
+#~ msgstr "Microfone 1"
+
+#~ msgid "Microphone 2"
+#~ msgstr "Microfone 2"
+
+#~ msgid "Digital Out"
+#~ msgstr "Saída digital"
+
+#~ msgid "Digital In"
+#~ msgstr "Entrada digital"
+
+#~ msgid "HDMI"
+#~ msgstr "HDMI"
+
+#~ msgid "Modem"
+#~ msgstr "Modem"
+
+#~ msgid "Handset"
+#~ msgstr "Monofone"
+
+#~ msgid "Other"
+#~ msgstr "Outro"
+
+#~ msgid "None"
+#~ msgstr "Nenhum"
+
+#~ msgid "On"
+#~ msgstr "Ligado"
+
+#~ msgid "Off"
+#~ msgstr "Desligado"
+
+#~ msgid "Mute"
+#~ msgstr "Mudo"
+
+#~ msgid "Fast"
+#~ msgstr "Rápido"
+
+#~ msgid "Very Low"
+#~ msgstr "Muito baixa"
+
+#~ msgid "Low"
+#~ msgstr "Baixa"
+
+#~ msgid "Medium"
+#~ msgstr "Média"
+
+#~ msgid "High"
+#~ msgstr "Alta"
+
+#~ msgid "Very High"
+#~ msgstr "Muito alta"
+
+#~ msgid "Production"
+#~ msgstr "Produção"
+
+#~ msgid "Front Panel Microphone"
+#~ msgstr "Microfone do painel frontal"
+
+#~ msgid "Front Panel Line In"
+#~ msgstr "Entrada de linha do painel frontal"
+
+#~ msgid "Front Panel Headphones"
+#~ msgstr "Fones de ouvido do painel frontal"
+
+#~ msgid "Front Panel Line Out"
+#~ msgstr "Saída de linha do painel frontal"
+
+#~ msgid "Green Connector"
+#~ msgstr "Conector verde"
+
+#~ msgid "Pink Connector"
+#~ msgstr "Conector rosa"
+
+#~ msgid "Blue Connector"
+#~ msgstr "Conector azul"
+
+#~ msgid "White Connector"
+#~ msgstr "Conector branco"
+
+#~ msgid "Black Connector"
+#~ msgstr "Conector preto"
+
+#~ msgid "Gray Connector"
+#~ msgstr "Conector cinza"
+
+#~ msgid "Orange Connector"
+#~ msgstr "Conector laranja"
+
+#~ msgid "Red Connector"
+#~ msgstr "Conector vermelho"
+
+#~ msgid "Yellow Connector"
+#~ msgstr "Conector amarelo"
+
+#~ msgid "Green Front Panel Connector"
+#~ msgstr "Conector verde do painel frontal"
+
+#~ msgid "Pink Front Panel Connector"
+#~ msgstr "Conector rosa do painel frontal"
+
+#~ msgid "Blue Front Panel Connector"
+#~ msgstr "Conector azul do painel frontal"
+
+#~ msgid "White Front Panel Connector"
+#~ msgstr "Conector branco do painel frontal"
+
+#~ msgid "Black Front Panel Connector"
+#~ msgstr "Conector preto do painel frontal"
+
+#~ msgid "Gray Front Panel Connector"
+#~ msgstr "Conector cinza do painel frontal"
+
+#~ msgid "Orange Front Panel Connector"
+#~ msgstr "Conector laranja do painel frontal"
+
+#~ msgid "Red Front Panel Connector"
+#~ msgstr "Conector vermelho do painel frontal"
+
+#~ msgid "Yellow Front Panel Connector"
+#~ msgstr "Conector amarelo do painel frontal"
+
+#~ msgid "Spread Output"
+#~ msgstr "Saída comum"
+
+#~ msgid "Downmix"
+#~ msgstr "Mesclar canais"
+
+#~ msgid "Virtual Mixer Input"
+#~ msgstr "Entrada do mixer virtual"
+
+#~ msgid "Virtual Mixer Output"
+#~ msgstr "Saída do mixer virtual"
+
+#~ msgid "Virtual Mixer Channels"
+#~ msgstr "Canais do mixer virtual"
+
+#~ msgid "%s %d Function"
+#~ msgstr "%s %d"
+
+#~ msgid "%s Function"
+#~ msgstr "%s"
 
 #~ msgid "Error reading %d bytes on device '%s'."
 #~ msgstr "Erro ao ler %d bytes no dispositivo \"%s\"."

@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-good 0.10.23.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2012-04-12 10:26+0200\n"
+"POT-Creation-Date: 2012-05-13 16:29+0200\n"
 "PO-Revision-Date: 2010-10-03 18:48+1030\n"
 "Last-Translator: Clytie Siddall <clytie@riverland.net.au>\n"
 "Language-Team: Vietnamese <vi-VN@googlegroups.com>\n"
@@ -101,81 +101,6 @@ msgstr ""
 msgid "Internal data flow error."
 msgstr "Lỗi luồng dữ liệu nội bộ."
 
-msgid "Volume"
-msgstr "Âm lượng"
-
-msgid "Bass"
-msgstr "Trầm"
-
-msgid "Treble"
-msgstr "Cao"
-
-msgid "Synth"
-msgstr "Tổng hợp"
-
-msgid "PCM"
-msgstr "PCM"
-
-msgid "Speaker"
-msgstr "Loa"
-
-msgid "Line-in"
-msgstr "Dây-vào"
-
-msgid "Microphone"
-msgstr "Micrô"
-
-msgid "CD"
-msgstr "CD"
-
-msgid "Mixer"
-msgstr "Trộn"
-
-msgid "PCM-2"
-msgstr "PCM-2"
-
-msgid "Record"
-msgstr "Ghi"
-
-msgid "In-gain"
-msgstr "Vào-gia lượng"
-
-msgid "Out-gain"
-msgstr "Ra-gia lượng"
-
-msgid "Line-1"
-msgstr "Dây-1"
-
-msgid "Line-2"
-msgstr "Dây-2"
-
-msgid "Line-3"
-msgstr "Dây-3"
-
-msgid "Digital-1"
-msgstr "Đoạn biến-1"
-
-msgid "Digital-2"
-msgstr "Đoạn biến-2"
-
-msgid "Digital-3"
-msgstr "Đoạn biến-3"
-
-msgid "Phone-in"
-msgstr "Điện thoại-vào"
-
-msgid "Phone-out"
-msgstr "Điạn thoại-ra"
-
-msgid "Video"
-msgstr "Ảnh động"
-
-msgid "Radio"
-msgstr "Thu thanh"
-
-msgid "Monitor"
-msgstr "Màn hình"
-
 msgid ""
 "Could not open audio device for playback. Device is being used by another "
 "application."
@@ -202,311 +127,6 @@ msgstr ""
 msgid "Could not open audio device for recording."
 msgstr "Không thể mở thiết bị âm thanh để thu."
 
-msgid "Could not open audio device for mixer control handling."
-msgstr "Không thể mở thiết bị âm thanh để quản lý điều khiển máy hoà tiếng."
-
-msgid ""
-"Could not open audio device for mixer control handling. This version of the "
-"Open Sound System is not supported by this element."
-msgstr ""
-"Không thể mở thiết bị âm thanh để quản lý điều khiển máy hoà tiếng. Phiên "
-"bản Hệ thống Âm thanh Mở không phải được yếu tố này hỗ trợ."
-
-msgid "Master"
-msgstr "Chủ"
-
-msgid "Front"
-msgstr "Trước"
-
-msgid "Rear"
-msgstr "Sau"
-
-msgid "Headphones"
-msgstr "Tai nghe"
-
-msgid "Center"
-msgstr "Tâm"
-
-msgid "LFE"
-msgstr "LFE"
-
-msgid "Surround"
-msgstr "Vòm"
-
-msgid "Side"
-msgstr "Bên"
-
-msgid "Built-in Speaker"
-msgstr "Loa dựng sẵn"
-
-msgid "AUX 1 Out"
-msgstr "AUX 1 Ra"
-
-msgid "AUX 2 Out"
-msgstr "AUX 2 Ra"
-
-msgid "AUX Out"
-msgstr "AUX Ra"
-
-msgid "3D Depth"
-msgstr "Sâu ba chiều"
-
-msgid "3D Center"
-msgstr "Tâm ba chiều"
-
-msgid "3D Enhance"
-msgstr "Tăng cường ba chiều"
-
-msgid "Telephone"
-msgstr "Điện thoại"
-
-msgid "Line Out"
-msgstr "Dây Ra"
-
-msgid "Line In"
-msgstr "Dây Vào"
-
-msgid "Internal CD"
-msgstr "CD ở trong"
-
-msgid "Video In"
-msgstr "Ảnh động Vào"
-
-msgid "AUX 1 In"
-msgstr "AUX 1 Vào"
-
-msgid "AUX 2 In"
-msgstr "AUX 2 Vào"
-
-msgid "AUX In"
-msgstr "AUX Vào"
-
-msgid "Record Gain"
-msgstr "Ghi lưu khuếch đại"
-
-msgid "Output Gain"
-msgstr "Khuếch đại Ra"
-
-msgid "Microphone Boost"
-msgstr "Tăng máy vi âm"
-
-msgid "Loopback"
-msgstr "Mạch nội bộ"
-
-msgid "Diagnostic"
-msgstr "Chẩn đoán"
-
-msgid "Bass Boost"
-msgstr "Tăng trầm"
-
-msgid "Playback Ports"
-msgstr "Cổng phát lại"
-
-msgid "Input"
-msgstr "Vào"
-
-msgid "Record Source"
-msgstr "Ghi lưu nguồn"
-
-msgid "Monitor Source"
-msgstr "Theo dõi nguồn"
-
-msgid "Keyboard Beep"
-msgstr "Bíp bàn phím"
-
-msgid "Simulate Stereo"
-msgstr "Mô phỏng âm lập thể"
-
-msgid "Stereo"
-msgstr "Âm lập thể"
-
-msgid "Surround Sound"
-msgstr "Âm thanh vòm"
-
-msgid "Microphone Gain"
-msgstr "Khuếch đại máy vi âm"
-
-msgid "Speaker Source"
-msgstr "Nguồn loa"
-
-msgid "Microphone Source"
-msgstr "Nguồn máy vi âm"
-
-msgid "Jack"
-msgstr "Ổ cắm"
-
-msgid "Center / LFE"
-msgstr "Tâm / LFE"
-
-msgid "Stereo Mix"
-msgstr "Hoả tiếng âm lập thể"
-
-msgid "Mono Mix"
-msgstr "Hoà tiếng đơn nguồn"
-
-msgid "Input Mix"
-msgstr "Hoà tiếng đầu vào"
-
-msgid "SPDIF In"
-msgstr "SPDIF Vào"
-
-msgid "SPDIF Out"
-msgstr "SPDIF Ra"
-
-msgid "Microphone 1"
-msgstr "Máy vi âm 1"
-
-msgid "Microphone 2"
-msgstr "Máy vi âm 2"
-
-msgid "Digital Out"
-msgstr "Điện số Ra"
-
-msgid "Digital In"
-msgstr "Điện số Vào"
-
-msgid "HDMI"
-msgstr "HDMI"
-
-msgid "Modem"
-msgstr "Bộ điều giải"
-
-msgid "Handset"
-msgstr "Cầm tay"
-
-msgid "Other"
-msgstr "Khác"
-
-msgid "None"
-msgstr "Không có"
-
-msgid "On"
-msgstr "Bật"
-
-msgid "Off"
-msgstr "Tắt"
-
-msgid "Mute"
-msgstr "Câm"
-
-msgid "Fast"
-msgstr "Nhanh"
-
-#. TRANSLATORS: "Very Low" is a quality setting here
-msgid "Very Low"
-msgstr "Rất thấp"
-
-#. TRANSLATORS: "Low" is a quality setting here
-msgid "Low"
-msgstr "Thấp"
-
-#. TRANSLATORS: "Medium" is a quality setting here
-msgid "Medium"
-msgstr "Vừa"
-
-#. TRANSLATORS: "High" is a quality setting here
-msgid "High"
-msgstr "Cao"
-
-#. TRANSLATORS: "Very High" is a quality setting here
-msgid "Very High"
-msgstr "Rất cao"
-
-#. TRANSLATORS: "Production" is a quality setting here
-msgid "Production"
-msgstr "Sản xuất"
-
-msgid "Front Panel Microphone"
-msgstr "Mặt trước: Máy vi âm"
-
-msgid "Front Panel Line In"
-msgstr "Mặt trước: Dây Vào"
-
-msgid "Front Panel Headphones"
-msgstr "Mặt trước: Tai nghe"
-
-msgid "Front Panel Line Out"
-msgstr "Mặt trước: Dây Ra"
-
-msgid "Green Connector"
-msgstr "Đầu nối màu lục"
-
-msgid "Pink Connector"
-msgstr "Đầu nối màu hồng"
-
-msgid "Blue Connector"
-msgstr "Đầu nối màu xanh"
-
-msgid "White Connector"
-msgstr "Đầu nối màu trắng"
-
-msgid "Black Connector"
-msgstr "Đầu nối màu đen"
-
-msgid "Gray Connector"
-msgstr "Đầu nối màu xám"
-
-msgid "Orange Connector"
-msgstr "Đầu nối màu cam"
-
-msgid "Red Connector"
-msgstr "Đầu nối màu đỏ"
-
-msgid "Yellow Connector"
-msgstr "Đầu nối màu vàng"
-
-msgid "Green Front Panel Connector"
-msgstr "Mặt trước: đầu nối màu lục"
-
-msgid "Pink Front Panel Connector"
-msgstr "Mặt trước: đầu nối màu hồng"
-
-msgid "Blue Front Panel Connector"
-msgstr "Mặt trước: đầu nối màu xanh"
-
-msgid "White Front Panel Connector"
-msgstr "Mặt trước: đầu nối màu trắng"
-
-msgid "Black Front Panel Connector"
-msgstr "Mặt trước: đầu nối màu đen"
-
-msgid "Gray Front Panel Connector"
-msgstr "Mặt trước: đầu nối màu xám"
-
-msgid "Orange Front Panel Connector"
-msgstr "Mặt trước: đầu nối màu cam"
-
-msgid "Red Front Panel Connector"
-msgstr "Mặt trước: đầu nối màu đỏ"
-
-msgid "Yellow Front Panel Connector"
-msgstr "Mặt trước: đầu nối màu vàng"
-
-msgid "Spread Output"
-msgstr "Mở rộng kết xuất"
-
-msgid "Downmix"
-msgstr "Hạ hoà tiếng"
-
-msgid "Virtual Mixer Input"
-msgstr "Hoà tiếng ảo : Vào"
-
-msgid "Virtual Mixer Output"
-msgstr "Hoà tiếng ảo : Ra"
-
-msgid "Virtual Mixer Channels"
-msgstr "Hoà tiếng ảo : Kênh"
-
-#. TRANSLATORS: name + number of a volume mixer control
-#, c-format
-msgid "%s %d Function"
-msgstr "Chức năng %s %d"
-
-#. TRANSLATORS: name of a volume mixer control
-#, c-format
-msgid "%s Function"
-msgstr "Chức năng %s"
-
 msgid ""
 "Could not open audio device for playback. This version of the Open Sound "
 "System is not supported by this element."
@@ -526,11 +146,32 @@ msgstr "Chức năng thu không phải được thiết bị âm thanh này hỗ
 msgid "Error recording from audio device."
 msgstr "Gặp lỗi khi thu từ thiết bị âm thanh."
 
+msgid "Volume"
+msgstr "Âm lượng"
+
 msgid "Gain"
 msgstr "Khuếch đại"
 
+msgid "Monitor"
+msgstr "Màn hình"
+
+msgid "Built-in Speaker"
+msgstr "Loa dựng sẵn"
+
 msgid "Headphone"
 msgstr "Tai nghe"
+
+msgid "Line Out"
+msgstr "Dây Ra"
+
+msgid "SPDIF Out"
+msgstr "SPDIF Ra"
+
+msgid "AUX 1 Out"
+msgstr "AUX 1 Ra"
+
+msgid "AUX 2 Out"
+msgstr "AUX 2 Ra"
 
 #, c-format
 msgid "Error reading %d bytes from device '%s'."
@@ -709,6 +350,355 @@ msgstr "Chưa hỗ trợ khả năng thay đổi độ phân giải trong khi ch
 
 msgid "Cannot operate without a clock"
 msgstr "Không thể thao tác khi không có đồng hồ."
+
+#~ msgid "Bass"
+#~ msgstr "Trầm"
+
+#~ msgid "Treble"
+#~ msgstr "Cao"
+
+#~ msgid "Synth"
+#~ msgstr "Tổng hợp"
+
+#~ msgid "PCM"
+#~ msgstr "PCM"
+
+#~ msgid "Speaker"
+#~ msgstr "Loa"
+
+#~ msgid "Line-in"
+#~ msgstr "Dây-vào"
+
+#~ msgid "Microphone"
+#~ msgstr "Micrô"
+
+#~ msgid "CD"
+#~ msgstr "CD"
+
+#~ msgid "Mixer"
+#~ msgstr "Trộn"
+
+#~ msgid "PCM-2"
+#~ msgstr "PCM-2"
+
+#~ msgid "Record"
+#~ msgstr "Ghi"
+
+#~ msgid "In-gain"
+#~ msgstr "Vào-gia lượng"
+
+#~ msgid "Out-gain"
+#~ msgstr "Ra-gia lượng"
+
+#~ msgid "Line-1"
+#~ msgstr "Dây-1"
+
+#~ msgid "Line-2"
+#~ msgstr "Dây-2"
+
+#~ msgid "Line-3"
+#~ msgstr "Dây-3"
+
+#~ msgid "Digital-1"
+#~ msgstr "Đoạn biến-1"
+
+#~ msgid "Digital-2"
+#~ msgstr "Đoạn biến-2"
+
+#~ msgid "Digital-3"
+#~ msgstr "Đoạn biến-3"
+
+#~ msgid "Phone-in"
+#~ msgstr "Điện thoại-vào"
+
+#~ msgid "Phone-out"
+#~ msgstr "Điạn thoại-ra"
+
+#~ msgid "Video"
+#~ msgstr "Ảnh động"
+
+#~ msgid "Radio"
+#~ msgstr "Thu thanh"
+
+#~ msgid "Could not open audio device for mixer control handling."
+#~ msgstr "Không thể mở thiết bị âm thanh để quản lý điều khiển máy hoà tiếng."
+
+#~ msgid ""
+#~ "Could not open audio device for mixer control handling. This version of "
+#~ "the Open Sound System is not supported by this element."
+#~ msgstr ""
+#~ "Không thể mở thiết bị âm thanh để quản lý điều khiển máy hoà tiếng. Phiên "
+#~ "bản Hệ thống Âm thanh Mở không phải được yếu tố này hỗ trợ."
+
+#~ msgid "Master"
+#~ msgstr "Chủ"
+
+#~ msgid "Front"
+#~ msgstr "Trước"
+
+#~ msgid "Rear"
+#~ msgstr "Sau"
+
+#~ msgid "Headphones"
+#~ msgstr "Tai nghe"
+
+#~ msgid "Center"
+#~ msgstr "Tâm"
+
+#~ msgid "LFE"
+#~ msgstr "LFE"
+
+#~ msgid "Surround"
+#~ msgstr "Vòm"
+
+#~ msgid "Side"
+#~ msgstr "Bên"
+
+#~ msgid "AUX Out"
+#~ msgstr "AUX Ra"
+
+#~ msgid "3D Depth"
+#~ msgstr "Sâu ba chiều"
+
+#~ msgid "3D Center"
+#~ msgstr "Tâm ba chiều"
+
+#~ msgid "3D Enhance"
+#~ msgstr "Tăng cường ba chiều"
+
+#~ msgid "Telephone"
+#~ msgstr "Điện thoại"
+
+#~ msgid "Line In"
+#~ msgstr "Dây Vào"
+
+#~ msgid "Internal CD"
+#~ msgstr "CD ở trong"
+
+#~ msgid "Video In"
+#~ msgstr "Ảnh động Vào"
+
+#~ msgid "AUX 1 In"
+#~ msgstr "AUX 1 Vào"
+
+#~ msgid "AUX 2 In"
+#~ msgstr "AUX 2 Vào"
+
+#~ msgid "AUX In"
+#~ msgstr "AUX Vào"
+
+#~ msgid "Record Gain"
+#~ msgstr "Ghi lưu khuếch đại"
+
+#~ msgid "Output Gain"
+#~ msgstr "Khuếch đại Ra"
+
+#~ msgid "Microphone Boost"
+#~ msgstr "Tăng máy vi âm"
+
+#~ msgid "Loopback"
+#~ msgstr "Mạch nội bộ"
+
+#~ msgid "Diagnostic"
+#~ msgstr "Chẩn đoán"
+
+#~ msgid "Bass Boost"
+#~ msgstr "Tăng trầm"
+
+#~ msgid "Playback Ports"
+#~ msgstr "Cổng phát lại"
+
+#~ msgid "Input"
+#~ msgstr "Vào"
+
+#~ msgid "Record Source"
+#~ msgstr "Ghi lưu nguồn"
+
+#~ msgid "Monitor Source"
+#~ msgstr "Theo dõi nguồn"
+
+#~ msgid "Keyboard Beep"
+#~ msgstr "Bíp bàn phím"
+
+#~ msgid "Simulate Stereo"
+#~ msgstr "Mô phỏng âm lập thể"
+
+#~ msgid "Stereo"
+#~ msgstr "Âm lập thể"
+
+#~ msgid "Surround Sound"
+#~ msgstr "Âm thanh vòm"
+
+#~ msgid "Microphone Gain"
+#~ msgstr "Khuếch đại máy vi âm"
+
+#~ msgid "Speaker Source"
+#~ msgstr "Nguồn loa"
+
+#~ msgid "Microphone Source"
+#~ msgstr "Nguồn máy vi âm"
+
+#~ msgid "Jack"
+#~ msgstr "Ổ cắm"
+
+#~ msgid "Center / LFE"
+#~ msgstr "Tâm / LFE"
+
+#~ msgid "Stereo Mix"
+#~ msgstr "Hoả tiếng âm lập thể"
+
+#~ msgid "Mono Mix"
+#~ msgstr "Hoà tiếng đơn nguồn"
+
+#~ msgid "Input Mix"
+#~ msgstr "Hoà tiếng đầu vào"
+
+#~ msgid "SPDIF In"
+#~ msgstr "SPDIF Vào"
+
+#~ msgid "Microphone 1"
+#~ msgstr "Máy vi âm 1"
+
+#~ msgid "Microphone 2"
+#~ msgstr "Máy vi âm 2"
+
+#~ msgid "Digital Out"
+#~ msgstr "Điện số Ra"
+
+#~ msgid "Digital In"
+#~ msgstr "Điện số Vào"
+
+#~ msgid "HDMI"
+#~ msgstr "HDMI"
+
+#~ msgid "Modem"
+#~ msgstr "Bộ điều giải"
+
+#~ msgid "Handset"
+#~ msgstr "Cầm tay"
+
+#~ msgid "Other"
+#~ msgstr "Khác"
+
+#~ msgid "None"
+#~ msgstr "Không có"
+
+#~ msgid "On"
+#~ msgstr "Bật"
+
+#~ msgid "Off"
+#~ msgstr "Tắt"
+
+#~ msgid "Mute"
+#~ msgstr "Câm"
+
+#~ msgid "Fast"
+#~ msgstr "Nhanh"
+
+#~ msgid "Very Low"
+#~ msgstr "Rất thấp"
+
+#~ msgid "Low"
+#~ msgstr "Thấp"
+
+#~ msgid "Medium"
+#~ msgstr "Vừa"
+
+#~ msgid "High"
+#~ msgstr "Cao"
+
+#~ msgid "Very High"
+#~ msgstr "Rất cao"
+
+#~ msgid "Production"
+#~ msgstr "Sản xuất"
+
+#~ msgid "Front Panel Microphone"
+#~ msgstr "Mặt trước: Máy vi âm"
+
+#~ msgid "Front Panel Line In"
+#~ msgstr "Mặt trước: Dây Vào"
+
+#~ msgid "Front Panel Headphones"
+#~ msgstr "Mặt trước: Tai nghe"
+
+#~ msgid "Front Panel Line Out"
+#~ msgstr "Mặt trước: Dây Ra"
+
+#~ msgid "Green Connector"
+#~ msgstr "Đầu nối màu lục"
+
+#~ msgid "Pink Connector"
+#~ msgstr "Đầu nối màu hồng"
+
+#~ msgid "Blue Connector"
+#~ msgstr "Đầu nối màu xanh"
+
+#~ msgid "White Connector"
+#~ msgstr "Đầu nối màu trắng"
+
+#~ msgid "Black Connector"
+#~ msgstr "Đầu nối màu đen"
+
+#~ msgid "Gray Connector"
+#~ msgstr "Đầu nối màu xám"
+
+#~ msgid "Orange Connector"
+#~ msgstr "Đầu nối màu cam"
+
+#~ msgid "Red Connector"
+#~ msgstr "Đầu nối màu đỏ"
+
+#~ msgid "Yellow Connector"
+#~ msgstr "Đầu nối màu vàng"
+
+#~ msgid "Green Front Panel Connector"
+#~ msgstr "Mặt trước: đầu nối màu lục"
+
+#~ msgid "Pink Front Panel Connector"
+#~ msgstr "Mặt trước: đầu nối màu hồng"
+
+#~ msgid "Blue Front Panel Connector"
+#~ msgstr "Mặt trước: đầu nối màu xanh"
+
+#~ msgid "White Front Panel Connector"
+#~ msgstr "Mặt trước: đầu nối màu trắng"
+
+#~ msgid "Black Front Panel Connector"
+#~ msgstr "Mặt trước: đầu nối màu đen"
+
+#~ msgid "Gray Front Panel Connector"
+#~ msgstr "Mặt trước: đầu nối màu xám"
+
+#~ msgid "Orange Front Panel Connector"
+#~ msgstr "Mặt trước: đầu nối màu cam"
+
+#~ msgid "Red Front Panel Connector"
+#~ msgstr "Mặt trước: đầu nối màu đỏ"
+
+#~ msgid "Yellow Front Panel Connector"
+#~ msgstr "Mặt trước: đầu nối màu vàng"
+
+#~ msgid "Spread Output"
+#~ msgstr "Mở rộng kết xuất"
+
+#~ msgid "Downmix"
+#~ msgstr "Hạ hoà tiếng"
+
+#~ msgid "Virtual Mixer Input"
+#~ msgstr "Hoà tiếng ảo : Vào"
+
+#~ msgid "Virtual Mixer Output"
+#~ msgstr "Hoà tiếng ảo : Ra"
+
+#~ msgid "Virtual Mixer Channels"
+#~ msgstr "Hoà tiếng ảo : Kênh"
+
+#~ msgid "%s %d Function"
+#~ msgstr "Chức năng %s %d"
+
+#~ msgid "%s Function"
+#~ msgstr "Chức năng %s"
 
 #~ msgid "Error reading %d bytes on device '%s'."
 #~ msgstr "Gặp lỗi khi đọc %d byte trên thiết bị « %s »."

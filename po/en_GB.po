@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins 0.8.1\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2012-04-12 10:26+0200\n"
+"POT-Creation-Date: 2012-05-13 16:29+0200\n"
 "PO-Revision-Date: 2004-04-26 10:41-0400\n"
 "Last-Translator: Gareth Owen <gowen72@yahoo.com>\n"
 "Language-Team: English (British) <en_gb@li.org>\n"
@@ -94,81 +94,6 @@ msgstr ""
 msgid "Internal data flow error."
 msgstr ""
 
-msgid "Volume"
-msgstr "Volume"
-
-msgid "Bass"
-msgstr "Bass"
-
-msgid "Treble"
-msgstr "Treble"
-
-msgid "Synth"
-msgstr "Synth"
-
-msgid "PCM"
-msgstr "PCM"
-
-msgid "Speaker"
-msgstr "Speaker"
-
-msgid "Line-in"
-msgstr "Line-in"
-
-msgid "Microphone"
-msgstr "Microphone"
-
-msgid "CD"
-msgstr "CD"
-
-msgid "Mixer"
-msgstr "Mixer"
-
-msgid "PCM-2"
-msgstr "PCM-2"
-
-msgid "Record"
-msgstr "Record"
-
-msgid "In-gain"
-msgstr "In-gain"
-
-msgid "Out-gain"
-msgstr "Out-gain"
-
-msgid "Line-1"
-msgstr "Line-1"
-
-msgid "Line-2"
-msgstr "Line-2"
-
-msgid "Line-3"
-msgstr "Line-3"
-
-msgid "Digital-1"
-msgstr "Digital-1"
-
-msgid "Digital-2"
-msgstr "Digital-2"
-
-msgid "Digital-3"
-msgstr "Digital-3"
-
-msgid "Phone-in"
-msgstr "Phone-in"
-
-msgid "Phone-out"
-msgstr "Phone-out"
-
-msgid "Video"
-msgstr "Video"
-
-msgid "Radio"
-msgstr "Radio"
-
-msgid "Monitor"
-msgstr "Monitor"
-
 msgid ""
 "Could not open audio device for playback. Device is being used by another "
 "application."
@@ -192,328 +117,6 @@ msgstr ""
 msgid "Could not open audio device for recording."
 msgstr "Could not open CD device for reading."
 
-#, fuzzy
-msgid "Could not open audio device for mixer control handling."
-msgstr "Could not open audio device \"%s\" for writing."
-
-msgid ""
-"Could not open audio device for mixer control handling. This version of the "
-"Open Sound System is not supported by this element."
-msgstr ""
-
-msgid "Master"
-msgstr ""
-
-msgid "Front"
-msgstr ""
-
-#, fuzzy
-msgid "Rear"
-msgstr "Record"
-
-msgid "Headphones"
-msgstr ""
-
-msgid "Center"
-msgstr ""
-
-msgid "LFE"
-msgstr ""
-
-msgid "Surround"
-msgstr ""
-
-#, fuzzy
-msgid "Side"
-msgstr "Video"
-
-#, fuzzy
-msgid "Built-in Speaker"
-msgstr "Speaker"
-
-msgid "AUX 1 Out"
-msgstr ""
-
-msgid "AUX 2 Out"
-msgstr ""
-
-msgid "AUX Out"
-msgstr ""
-
-msgid "3D Depth"
-msgstr ""
-
-msgid "3D Center"
-msgstr ""
-
-msgid "3D Enhance"
-msgstr ""
-
-msgid "Telephone"
-msgstr ""
-
-msgid "Line Out"
-msgstr ""
-
-#, fuzzy
-msgid "Line In"
-msgstr "Line-in"
-
-msgid "Internal CD"
-msgstr ""
-
-#, fuzzy
-msgid "Video In"
-msgstr "Video"
-
-msgid "AUX 1 In"
-msgstr ""
-
-msgid "AUX 2 In"
-msgstr ""
-
-msgid "AUX In"
-msgstr ""
-
-#, fuzzy
-msgid "Record Gain"
-msgstr "Record"
-
-#, fuzzy
-msgid "Output Gain"
-msgstr "Out-gain"
-
-#, fuzzy
-msgid "Microphone Boost"
-msgstr "Microphone"
-
-msgid "Loopback"
-msgstr ""
-
-msgid "Diagnostic"
-msgstr ""
-
-msgid "Bass Boost"
-msgstr ""
-
-msgid "Playback Ports"
-msgstr ""
-
-msgid "Input"
-msgstr ""
-
-#, fuzzy
-msgid "Record Source"
-msgstr "Record"
-
-#, fuzzy
-msgid "Monitor Source"
-msgstr "Monitor"
-
-msgid "Keyboard Beep"
-msgstr ""
-
-msgid "Simulate Stereo"
-msgstr ""
-
-msgid "Stereo"
-msgstr ""
-
-msgid "Surround Sound"
-msgstr ""
-
-#, fuzzy
-msgid "Microphone Gain"
-msgstr "Microphone"
-
-#, fuzzy
-msgid "Speaker Source"
-msgstr "Speaker"
-
-#, fuzzy
-msgid "Microphone Source"
-msgstr "Microphone"
-
-msgid "Jack"
-msgstr ""
-
-msgid "Center / LFE"
-msgstr ""
-
-msgid "Stereo Mix"
-msgstr ""
-
-msgid "Mono Mix"
-msgstr ""
-
-msgid "Input Mix"
-msgstr ""
-
-msgid "SPDIF In"
-msgstr ""
-
-msgid "SPDIF Out"
-msgstr ""
-
-#, fuzzy
-msgid "Microphone 1"
-msgstr "Microphone"
-
-#, fuzzy
-msgid "Microphone 2"
-msgstr "Microphone"
-
-#, fuzzy
-msgid "Digital Out"
-msgstr "Digital-1"
-
-#, fuzzy
-msgid "Digital In"
-msgstr "Digital-1"
-
-msgid "HDMI"
-msgstr ""
-
-msgid "Modem"
-msgstr ""
-
-msgid "Handset"
-msgstr ""
-
-msgid "Other"
-msgstr ""
-
-msgid "None"
-msgstr ""
-
-msgid "On"
-msgstr ""
-
-msgid "Off"
-msgstr ""
-
-msgid "Mute"
-msgstr ""
-
-msgid "Fast"
-msgstr ""
-
-#. TRANSLATORS: "Very Low" is a quality setting here
-msgid "Very Low"
-msgstr ""
-
-#. TRANSLATORS: "Low" is a quality setting here
-msgid "Low"
-msgstr ""
-
-#. TRANSLATORS: "Medium" is a quality setting here
-msgid "Medium"
-msgstr ""
-
-#. TRANSLATORS: "High" is a quality setting here
-msgid "High"
-msgstr ""
-
-#. TRANSLATORS: "Very High" is a quality setting here
-msgid "Very High"
-msgstr ""
-
-#. TRANSLATORS: "Production" is a quality setting here
-msgid "Production"
-msgstr ""
-
-#, fuzzy
-msgid "Front Panel Microphone"
-msgstr "Microphone"
-
-msgid "Front Panel Line In"
-msgstr ""
-
-msgid "Front Panel Headphones"
-msgstr ""
-
-msgid "Front Panel Line Out"
-msgstr ""
-
-msgid "Green Connector"
-msgstr ""
-
-msgid "Pink Connector"
-msgstr ""
-
-msgid "Blue Connector"
-msgstr ""
-
-msgid "White Connector"
-msgstr ""
-
-msgid "Black Connector"
-msgstr ""
-
-msgid "Gray Connector"
-msgstr ""
-
-msgid "Orange Connector"
-msgstr ""
-
-msgid "Red Connector"
-msgstr ""
-
-msgid "Yellow Connector"
-msgstr ""
-
-msgid "Green Front Panel Connector"
-msgstr ""
-
-msgid "Pink Front Panel Connector"
-msgstr ""
-
-msgid "Blue Front Panel Connector"
-msgstr ""
-
-msgid "White Front Panel Connector"
-msgstr ""
-
-msgid "Black Front Panel Connector"
-msgstr ""
-
-msgid "Gray Front Panel Connector"
-msgstr ""
-
-msgid "Orange Front Panel Connector"
-msgstr ""
-
-msgid "Red Front Panel Connector"
-msgstr ""
-
-msgid "Yellow Front Panel Connector"
-msgstr ""
-
-msgid "Spread Output"
-msgstr ""
-
-msgid "Downmix"
-msgstr ""
-
-msgid "Virtual Mixer Input"
-msgstr ""
-
-msgid "Virtual Mixer Output"
-msgstr ""
-
-msgid "Virtual Mixer Channels"
-msgstr ""
-
-#. TRANSLATORS: name + number of a volume mixer control
-#, c-format
-msgid "%s %d Function"
-msgstr ""
-
-#. TRANSLATORS: name of a volume mixer control
-#, c-format
-msgid "%s Function"
-msgstr ""
-
 msgid ""
 "Could not open audio device for playback. This version of the Open Sound "
 "System is not supported by this element."
@@ -531,10 +134,32 @@ msgstr ""
 msgid "Error recording from audio device."
 msgstr ""
 
+msgid "Volume"
+msgstr "Volume"
+
 msgid "Gain"
 msgstr ""
 
+msgid "Monitor"
+msgstr "Monitor"
+
+#, fuzzy
+msgid "Built-in Speaker"
+msgstr "Speaker"
+
 msgid "Headphone"
+msgstr ""
+
+msgid "Line Out"
+msgstr ""
+
+msgid "SPDIF Out"
+msgstr ""
+
+msgid "AUX 1 Out"
+msgstr ""
+
+msgid "AUX 2 Out"
 msgstr ""
 
 #, fuzzy, c-format
@@ -703,6 +328,147 @@ msgstr ""
 
 msgid "Cannot operate without a clock"
 msgstr ""
+
+#~ msgid "Bass"
+#~ msgstr "Bass"
+
+#~ msgid "Treble"
+#~ msgstr "Treble"
+
+#~ msgid "Synth"
+#~ msgstr "Synth"
+
+#~ msgid "PCM"
+#~ msgstr "PCM"
+
+#~ msgid "Speaker"
+#~ msgstr "Speaker"
+
+#~ msgid "Line-in"
+#~ msgstr "Line-in"
+
+#~ msgid "Microphone"
+#~ msgstr "Microphone"
+
+#~ msgid "CD"
+#~ msgstr "CD"
+
+#~ msgid "Mixer"
+#~ msgstr "Mixer"
+
+#~ msgid "PCM-2"
+#~ msgstr "PCM-2"
+
+#~ msgid "Record"
+#~ msgstr "Record"
+
+#~ msgid "In-gain"
+#~ msgstr "In-gain"
+
+#~ msgid "Out-gain"
+#~ msgstr "Out-gain"
+
+#~ msgid "Line-1"
+#~ msgstr "Line-1"
+
+#~ msgid "Line-2"
+#~ msgstr "Line-2"
+
+#~ msgid "Line-3"
+#~ msgstr "Line-3"
+
+#~ msgid "Digital-1"
+#~ msgstr "Digital-1"
+
+#~ msgid "Digital-2"
+#~ msgstr "Digital-2"
+
+#~ msgid "Digital-3"
+#~ msgstr "Digital-3"
+
+#~ msgid "Phone-in"
+#~ msgstr "Phone-in"
+
+#~ msgid "Phone-out"
+#~ msgstr "Phone-out"
+
+#~ msgid "Video"
+#~ msgstr "Video"
+
+#~ msgid "Radio"
+#~ msgstr "Radio"
+
+#, fuzzy
+#~ msgid "Could not open audio device for mixer control handling."
+#~ msgstr "Could not open audio device \"%s\" for writing."
+
+#, fuzzy
+#~ msgid "Rear"
+#~ msgstr "Record"
+
+#, fuzzy
+#~ msgid "Side"
+#~ msgstr "Video"
+
+#, fuzzy
+#~ msgid "Line In"
+#~ msgstr "Line-in"
+
+#, fuzzy
+#~ msgid "Video In"
+#~ msgstr "Video"
+
+#, fuzzy
+#~ msgid "Record Gain"
+#~ msgstr "Record"
+
+#, fuzzy
+#~ msgid "Output Gain"
+#~ msgstr "Out-gain"
+
+#, fuzzy
+#~ msgid "Microphone Boost"
+#~ msgstr "Microphone"
+
+#, fuzzy
+#~ msgid "Record Source"
+#~ msgstr "Record"
+
+#, fuzzy
+#~ msgid "Monitor Source"
+#~ msgstr "Monitor"
+
+#, fuzzy
+#~ msgid "Microphone Gain"
+#~ msgstr "Microphone"
+
+#, fuzzy
+#~ msgid "Speaker Source"
+#~ msgstr "Speaker"
+
+#, fuzzy
+#~ msgid "Microphone Source"
+#~ msgstr "Microphone"
+
+#, fuzzy
+#~ msgid "Microphone 1"
+#~ msgstr "Microphone"
+
+#, fuzzy
+#~ msgid "Microphone 2"
+#~ msgstr "Microphone"
+
+#, fuzzy
+#~ msgid "Digital Out"
+#~ msgstr "Digital-1"
+
+#, fuzzy
+#~ msgid "Digital In"
+#~ msgstr "Digital-1"
+
+#, fuzzy
+#~ msgid "Front Panel Microphone"
+#~ msgstr "Microphone"
 
 #, fuzzy
 #~ msgid "Could not enqueue buffers in device '%s'."

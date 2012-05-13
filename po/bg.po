@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-good 0.10.28.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2012-04-12 10:26+0200\n"
+"POT-Creation-Date: 2012-05-13 16:29+0200\n"
 "PO-Revision-Date: 2011-04-26 22:35+0300\n"
 "Last-Translator: Alexander Shopov <ash@kambanaria.org>\n"
 "Language-Team: Bulgarian <dict@fsa-bg.org>\n"
@@ -98,81 +98,6 @@ msgstr ""
 msgid "Internal data flow error."
 msgstr "Вътрешна грешка в потока с данни."
 
-msgid "Volume"
-msgstr "Сила на звука"
-
-msgid "Bass"
-msgstr "Баси"
-
-msgid "Treble"
-msgstr "Високи"
-
-msgid "Synth"
-msgstr "Синтезатор"
-
-msgid "PCM"
-msgstr "PCM"
-
-msgid "Speaker"
-msgstr "Високоговорител"
-
-msgid "Line-in"
-msgstr "Вход"
-
-msgid "Microphone"
-msgstr "Микрофон"
-
-msgid "CD"
-msgstr "CD"
-
-msgid "Mixer"
-msgstr "Смесител"
-
-msgid "PCM-2"
-msgstr "PCM-2"
-
-msgid "Record"
-msgstr "Запис"
-
-msgid "In-gain"
-msgstr "Входно усилване"
-
-msgid "Out-gain"
-msgstr "Изходно усилване"
-
-msgid "Line-1"
-msgstr "Вход-1"
-
-msgid "Line-2"
-msgstr "Вход-2"
-
-msgid "Line-3"
-msgstr "Вход-3"
-
-msgid "Digital-1"
-msgstr "Цифрова-1"
-
-msgid "Digital-2"
-msgstr "Цифрова-2"
-
-msgid "Digital-3"
-msgstr "Цифрова-3"
-
-msgid "Phone-in"
-msgstr "Вход за слушалки"
-
-msgid "Phone-out"
-msgstr "Изход за слушалки"
-
-msgid "Video"
-msgstr "Видео"
-
-msgid "Radio"
-msgstr "Радио"
-
-msgid "Monitor"
-msgstr "Монитор"
-
 msgid ""
 "Could not open audio device for playback. Device is being used by another "
 "application."
@@ -198,311 +123,6 @@ msgstr ""
 msgid "Could not open audio device for recording."
 msgstr "Аудио устройството не може да се отвори за запис."
 
-msgid "Could not open audio device for mixer control handling."
-msgstr "Аудио устройството не може да се отвори за управление на смесването."
-
-msgid ""
-"Could not open audio device for mixer control handling. This version of the "
-"Open Sound System is not supported by this element."
-msgstr ""
-"Аудио устройството не може да се отвори за управление на смесването. "
-"Елементът не поддържа тази версия на OSS."
-
-msgid "Master"
-msgstr "Основна"
-
-msgid "Front"
-msgstr "Отпред"
-
-msgid "Rear"
-msgstr "Отзад"
-
-msgid "Headphones"
-msgstr "Слушалки"
-
-msgid "Center"
-msgstr "Център"
-
-msgid "LFE"
-msgstr "Баси"
-
-msgid "Surround"
-msgstr "Съраунд"
-
-msgid "Side"
-msgstr "Отстрани"
-
-msgid "Built-in Speaker"
-msgstr "Вграден високоговорител"
-
-msgid "AUX 1 Out"
-msgstr "Изход AUX 1"
-
-msgid "AUX 2 Out"
-msgstr "Изход AUX 2"
-
-msgid "AUX Out"
-msgstr "Изход AUX"
-
-msgid "3D Depth"
-msgstr "3D — дълбочина"
-
-msgid "3D Center"
-msgstr "3D — център"
-
-msgid "3D Enhance"
-msgstr "3D — подобрения"
-
-msgid "Telephone"
-msgstr "Телефон"
-
-msgid "Line Out"
-msgstr "Изход"
-
-msgid "Line In"
-msgstr "Вход"
-
-msgid "Internal CD"
-msgstr "Вътрешно CD"
-
-msgid "Video In"
-msgstr "Видео вход"
-
-msgid "AUX 1 In"
-msgstr "Вход AUX 1"
-
-msgid "AUX 2 In"
-msgstr "Вход AUX 2"
-
-msgid "AUX In"
-msgstr "Вход AUX"
-
-msgid "Record Gain"
-msgstr "Усилване на записа"
-
-msgid "Output Gain"
-msgstr "Усилване на изхода"
-
-msgid "Microphone Boost"
-msgstr "Усилване на микрофона"
-
-msgid "Loopback"
-msgstr "Обратна връзка"
-
-msgid "Diagnostic"
-msgstr "Диагностика"
-
-msgid "Bass Boost"
-msgstr "Усилване на баситe"
-
-msgid "Playback Ports"
-msgstr "Изходни гнезда"
-
-msgid "Input"
-msgstr "Вход"
-
-msgid "Record Source"
-msgstr "Източник за запис"
-
-msgid "Monitor Source"
-msgstr "Източник за звуков монитор"
-
-msgid "Keyboard Beep"
-msgstr "Клавиатурен звънец"
-
-msgid "Simulate Stereo"
-msgstr "Симулирано стерео"
-
-msgid "Stereo"
-msgstr "Стерео"
-
-msgid "Surround Sound"
-msgstr "Стерео и съраунд"
-
-msgid "Microphone Gain"
-msgstr "Усилване на микрофона"
-
-msgid "Speaker Source"
-msgstr "Източник за високоговорител"
-
-msgid "Microphone Source"
-msgstr "Източник за микрофон"
-
-msgid "Jack"
-msgstr "Жак"
-
-msgid "Center / LFE"
-msgstr "Център/баси"
-
-msgid "Stereo Mix"
-msgstr "Смесител на стерео"
-
-msgid "Mono Mix"
-msgstr "Смесител на моно"
-
-msgid "Input Mix"
-msgstr "Смесител на входа"
-
-msgid "SPDIF In"
-msgstr "Вход SPDIF"
-
-msgid "SPDIF Out"
-msgstr "Изход SPDIF"
-
-msgid "Microphone 1"
-msgstr "Микрофон 1"
-
-msgid "Microphone 2"
-msgstr "Микрофон 2"
-
-msgid "Digital Out"
-msgstr "Цифров изход"
-
-msgid "Digital In"
-msgstr "Цифров вход"
-
-msgid "HDMI"
-msgstr "HDMI"
-
-msgid "Modem"
-msgstr "Модем"
-
-msgid "Handset"
-msgstr "Слушалка"
-
-msgid "Other"
-msgstr "Друго"
-
-msgid "None"
-msgstr "Няма"
-
-msgid "On"
-msgstr "Включено"
-
-msgid "Off"
-msgstr "Изключено"
-
-msgid "Mute"
-msgstr "Заглушаване"
-
-msgid "Fast"
-msgstr "Бързо"
-
-#. TRANSLATORS: "Very Low" is a quality setting here
-msgid "Very Low"
-msgstr "Много ниско"
-
-#. TRANSLATORS: "Low" is a quality setting here
-msgid "Low"
-msgstr "Ниско"
-
-#. TRANSLATORS: "Medium" is a quality setting here
-msgid "Medium"
-msgstr "Средно"
-
-#. TRANSLATORS: "High" is a quality setting here
-msgid "High"
-msgstr "Високо"
-
-#. TRANSLATORS: "Very High" is a quality setting here
-msgid "Very High"
-msgstr "Много високо"
-
-#. TRANSLATORS: "Production" is a quality setting here
-msgid "Production"
-msgstr "Професионално"
-
-msgid "Front Panel Microphone"
-msgstr "Микрофон на предния панел"
-
-msgid "Front Panel Line In"
-msgstr "Вход на предния панел"
-
-msgid "Front Panel Headphones"
-msgstr "Слушалки на предния панел"
-
-msgid "Front Panel Line Out"
-msgstr "Изход на предния панел"
-
-msgid "Green Connector"
-msgstr "Зелено гнездо"
-
-msgid "Pink Connector"
-msgstr "Розово гнездо"
-
-msgid "Blue Connector"
-msgstr "Синьо гнездо"
-
-msgid "White Connector"
-msgstr "Бяло гнездо"
-
-msgid "Black Connector"
-msgstr "Черно гнездо"
-
-msgid "Gray Connector"
-msgstr "Сиво гнездо"
-
-msgid "Orange Connector"
-msgstr "Оранжево гнездо"
-
-msgid "Red Connector"
-msgstr "Червено гнездо"
-
-msgid "Yellow Connector"
-msgstr "Жълто гнездо"
-
-msgid "Green Front Panel Connector"
-msgstr "Зелено гнездо на предния панел"
-
-msgid "Pink Front Panel Connector"
-msgstr "Розово гнездо на предния панел"
-
-msgid "Blue Front Panel Connector"
-msgstr "Синьо гнездо на предния панел"
-
-msgid "White Front Panel Connector"
-msgstr "Бяло гнездо на предния панел"
-
-msgid "Black Front Panel Connector"
-msgstr "Черно гнездо на предния панел"
-
-msgid "Gray Front Panel Connector"
-msgstr "Сиво гнездо на предния панел"
-
-msgid "Orange Front Panel Connector"
-msgstr "Оранжево гнездо на предния панел"
-
-msgid "Red Front Panel Connector"
-msgstr "Червено гнездо на предния панел"
-
-msgid "Yellow Front Panel Connector"
-msgstr "Жълто гнездо на предния панел"
-
-msgid "Spread Output"
-msgstr "Към повече изходи"
-
-msgid "Downmix"
-msgstr "Към по-малко изходи"
-
-msgid "Virtual Mixer Input"
-msgstr "Вход на виртуален смесител"
-
-msgid "Virtual Mixer Output"
-msgstr "Изход на виртуален смесител"
-
-msgid "Virtual Mixer Channels"
-msgstr "Канали на виртуален смесител"
-
-#. TRANSLATORS: name + number of a volume mixer control
-#, c-format
-msgid "%s %d Function"
-msgstr "Функция на %s № %d"
-
-#. TRANSLATORS: name of a volume mixer control
-#, c-format
-msgid "%s Function"
-msgstr "Функция на %s"
-
 msgid ""
 "Could not open audio device for playback. This version of the Open Sound "
 "System is not supported by this element."
@@ -522,11 +142,32 @@ msgstr "Това аудио устройство не поддържа запи�
 msgid "Error recording from audio device."
 msgstr "Грешка при записа от аудио устройството."
 
+msgid "Volume"
+msgstr "Сила на звука"
+
 msgid "Gain"
 msgstr "Усилване"
 
+msgid "Monitor"
+msgstr "Монитор"
+
+msgid "Built-in Speaker"
+msgstr "Вграден високоговорител"
+
 msgid "Headphone"
 msgstr "Слушалки"
+
+msgid "Line Out"
+msgstr "Изход"
+
+msgid "SPDIF Out"
+msgstr "Изход SPDIF"
+
+msgid "AUX 1 Out"
+msgstr "Изход AUX 1"
+
+msgid "AUX 2 Out"
+msgstr "Изход AUX 2"
 
 #, c-format
 msgid "Error reading %d bytes from device '%s'."
@@ -705,6 +346,356 @@ msgstr ""
 
 msgid "Cannot operate without a clock"
 msgstr "Работата без часовник е невъзможна."
+
+#~ msgid "Bass"
+#~ msgstr "Баси"
+
+#~ msgid "Treble"
+#~ msgstr "Високи"
+
+#~ msgid "Synth"
+#~ msgstr "Синтезатор"
+
+#~ msgid "PCM"
+#~ msgstr "PCM"
+
+#~ msgid "Speaker"
+#~ msgstr "Високоговорител"
+
+#~ msgid "Line-in"
+#~ msgstr "Вход"
+
+#~ msgid "Microphone"
+#~ msgstr "Микрофон"
+
+#~ msgid "CD"
+#~ msgstr "CD"
+
+#~ msgid "Mixer"
+#~ msgstr "Смесител"
+
+#~ msgid "PCM-2"
+#~ msgstr "PCM-2"
+
+#~ msgid "Record"
+#~ msgstr "Запис"
+
+#~ msgid "In-gain"
+#~ msgstr "Входно усилване"
+
+#~ msgid "Out-gain"
+#~ msgstr "Изходно усилване"
+
+#~ msgid "Line-1"
+#~ msgstr "Вход-1"
+
+#~ msgid "Line-2"
+#~ msgstr "Вход-2"
+
+#~ msgid "Line-3"
+#~ msgstr "Вход-3"
+
+#~ msgid "Digital-1"
+#~ msgstr "Цифрова-1"
+
+#~ msgid "Digital-2"
+#~ msgstr "Цифрова-2"
+
+#~ msgid "Digital-3"
+#~ msgstr "Цифрова-3"
+
+#~ msgid "Phone-in"
+#~ msgstr "Вход за слушалки"
+
+#~ msgid "Phone-out"
+#~ msgstr "Изход за слушалки"
+
+#~ msgid "Video"
+#~ msgstr "Видео"
+
+#~ msgid "Radio"
+#~ msgstr "Радио"
+
+#~ msgid "Could not open audio device for mixer control handling."
+#~ msgstr ""
+#~ "Аудио устройството не може да се отвори за управление на смесването."
+
+#~ msgid ""
+#~ "Could not open audio device for mixer control handling. This version of "
+#~ "the Open Sound System is not supported by this element."
+#~ msgstr ""
+#~ "Аудио устройството не може да се отвори за управление на смесването. "
+#~ "Елементът не поддържа тази версия на OSS."
+
+#~ msgid "Master"
+#~ msgstr "Основна"
+
+#~ msgid "Front"
+#~ msgstr "Отпред"
+
+#~ msgid "Rear"
+#~ msgstr "Отзад"
+
+#~ msgid "Headphones"
+#~ msgstr "Слушалки"
+
+#~ msgid "Center"
+#~ msgstr "Център"
+
+#~ msgid "LFE"
+#~ msgstr "Баси"
+
+#~ msgid "Surround"
+#~ msgstr "Съраунд"
+
+#~ msgid "Side"
+#~ msgstr "Отстрани"
+
+#~ msgid "AUX Out"
+#~ msgstr "Изход AUX"
+
+#~ msgid "3D Depth"
+#~ msgstr "3D — дълбочина"
+
+#~ msgid "3D Center"
+#~ msgstr "3D — център"
+
+#~ msgid "3D Enhance"
+#~ msgstr "3D — подобрения"
+
+#~ msgid "Telephone"
+#~ msgstr "Телефон"
+
+#~ msgid "Line In"
+#~ msgstr "Вход"
+
+#~ msgid "Internal CD"
+#~ msgstr "Вътрешно CD"
+
+#~ msgid "Video In"
+#~ msgstr "Видео вход"
+
+#~ msgid "AUX 1 In"
+#~ msgstr "Вход AUX 1"
+
+#~ msgid "AUX 2 In"
+#~ msgstr "Вход AUX 2"
+
+#~ msgid "AUX In"
+#~ msgstr "Вход AUX"
+
+#~ msgid "Record Gain"
+#~ msgstr "Усилване на записа"
+
+#~ msgid "Output Gain"
+#~ msgstr "Усилване на изхода"
+
+#~ msgid "Microphone Boost"
+#~ msgstr "Усилване на микрофона"
+
+#~ msgid "Loopback"
+#~ msgstr "Обратна връзка"
+
+#~ msgid "Diagnostic"
+#~ msgstr "Диагностика"
+
+#~ msgid "Bass Boost"
+#~ msgstr "Усилване на баситe"
+
+#~ msgid "Playback Ports"
+#~ msgstr "Изходни гнезда"
+
+#~ msgid "Input"
+#~ msgstr "Вход"
+
+#~ msgid "Record Source"
+#~ msgstr "Източник за запис"
+
+#~ msgid "Monitor Source"
+#~ msgstr "Източник за звуков монитор"
+
+#~ msgid "Keyboard Beep"
+#~ msgstr "Клавиатурен звънец"
+
+#~ msgid "Simulate Stereo"
+#~ msgstr "Симулирано стерео"
+
+#~ msgid "Stereo"
+#~ msgstr "Стерео"
+
+#~ msgid "Surround Sound"
+#~ msgstr "Стерео и съраунд"
+
+#~ msgid "Microphone Gain"
+#~ msgstr "Усилване на микрофона"
+
+#~ msgid "Speaker Source"
+#~ msgstr "Източник за високоговорител"
+
+#~ msgid "Microphone Source"
+#~ msgstr "Източник за микрофон"
+
+#~ msgid "Jack"
+#~ msgstr "Жак"
+
+#~ msgid "Center / LFE"
+#~ msgstr "Център/баси"
+
+#~ msgid "Stereo Mix"
+#~ msgstr "Смесител на стерео"
+
+#~ msgid "Mono Mix"
+#~ msgstr "Смесител на моно"
+
+#~ msgid "Input Mix"
+#~ msgstr "Смесител на входа"
+
+#~ msgid "SPDIF In"
+#~ msgstr "Вход SPDIF"
+
+#~ msgid "Microphone 1"
+#~ msgstr "Микрофон 1"
+
+#~ msgid "Microphone 2"
+#~ msgstr "Микрофон 2"
+
+#~ msgid "Digital Out"
+#~ msgstr "Цифров изход"
+
+#~ msgid "Digital In"
+#~ msgstr "Цифров вход"
+
+#~ msgid "HDMI"
+#~ msgstr "HDMI"
+
+#~ msgid "Modem"
+#~ msgstr "Модем"
+
+#~ msgid "Handset"
+#~ msgstr "Слушалка"
+
+#~ msgid "Other"
+#~ msgstr "Друго"
+
+#~ msgid "None"
+#~ msgstr "Няма"
+
+#~ msgid "On"
+#~ msgstr "Включено"
+
+#~ msgid "Off"
+#~ msgstr "Изключено"
+
+#~ msgid "Mute"
+#~ msgstr "Заглушаване"
+
+#~ msgid "Fast"
+#~ msgstr "Бързо"
+
+#~ msgid "Very Low"
+#~ msgstr "Много ниско"
+
+#~ msgid "Low"
+#~ msgstr "Ниско"
+
+#~ msgid "Medium"
+#~ msgstr "Средно"
+
+#~ msgid "High"
+#~ msgstr "Високо"
+
+#~ msgid "Very High"
+#~ msgstr "Много високо"
+
+#~ msgid "Production"
+#~ msgstr "Професионално"
+
+#~ msgid "Front Panel Microphone"
+#~ msgstr "Микрофон на предния панел"
+
+#~ msgid "Front Panel Line In"
+#~ msgstr "Вход на предния панел"
+
+#~ msgid "Front Panel Headphones"
+#~ msgstr "Слушалки на предния панел"
+
+#~ msgid "Front Panel Line Out"
+#~ msgstr "Изход на предния панел"
+
+#~ msgid "Green Connector"
+#~ msgstr "Зелено гнездо"
+
+#~ msgid "Pink Connector"
+#~ msgstr "Розово гнездо"
+
+#~ msgid "Blue Connector"
+#~ msgstr "Синьо гнездо"
+
+#~ msgid "White Connector"
+#~ msgstr "Бяло гнездо"
+
+#~ msgid "Black Connector"
+#~ msgstr "Черно гнездо"
+
+#~ msgid "Gray Connector"
+#~ msgstr "Сиво гнездо"
+
+#~ msgid "Orange Connector"
+#~ msgstr "Оранжево гнездо"
+
+#~ msgid "Red Connector"
+#~ msgstr "Червено гнездо"
+
+#~ msgid "Yellow Connector"
+#~ msgstr "Жълто гнездо"
+
+#~ msgid "Green Front Panel Connector"
+#~ msgstr "Зелено гнездо на предния панел"
+
+#~ msgid "Pink Front Panel Connector"
+#~ msgstr "Розово гнездо на предния панел"
+
+#~ msgid "Blue Front Panel Connector"
+#~ msgstr "Синьо гнездо на предния панел"
+
+#~ msgid "White Front Panel Connector"
+#~ msgstr "Бяло гнездо на предния панел"
+
+#~ msgid "Black Front Panel Connector"
+#~ msgstr "Черно гнездо на предния панел"
+
+#~ msgid "Gray Front Panel Connector"
+#~ msgstr "Сиво гнездо на предния панел"
+
+#~ msgid "Orange Front Panel Connector"
+#~ msgstr "Оранжево гнездо на предния панел"
+
+#~ msgid "Red Front Panel Connector"
+#~ msgstr "Червено гнездо на предния панел"
+
+#~ msgid "Yellow Front Panel Connector"
+#~ msgstr "Жълто гнездо на предния панел"
+
+#~ msgid "Spread Output"
+#~ msgstr "Към повече изходи"
+
+#~ msgid "Downmix"
+#~ msgstr "Към по-малко изходи"
+
+#~ msgid "Virtual Mixer Input"
+#~ msgstr "Вход на виртуален смесител"
+
+#~ msgid "Virtual Mixer Output"
+#~ msgstr "Изход на виртуален смесител"
+
+#~ msgid "Virtual Mixer Channels"
+#~ msgstr "Канали на виртуален смесител"
+
+#~ msgid "%s %d Function"
+#~ msgstr "Функция на %s № %d"
+
+#~ msgid "%s Function"
+#~ msgstr "Функция на %s"
 
 #~ msgid "Error reading %d bytes on device '%s'."
 #~ msgstr "Грешка при прочитане на %d байта на устройство „%s“."

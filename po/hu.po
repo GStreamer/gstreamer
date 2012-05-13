@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-good 0.10.25.3\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2012-04-12 10:26+0200\n"
+"POT-Creation-Date: 2012-05-13 16:29+0200\n"
 "PO-Revision-Date: 2010-11-04 01:21+0100\n"
 "Last-Translator: Gabor Kelemen <kelemeng@gnome.hu>\n"
 "Language-Team: Hungarian <translation-team-hu@lists.sourceforge.net>\n"
@@ -102,81 +102,6 @@ msgstr ""
 msgid "Internal data flow error."
 msgstr "Belső adatfolyam-hiba."
 
-msgid "Volume"
-msgstr "Hangerő"
-
-msgid "Bass"
-msgstr "Basszus"
-
-msgid "Treble"
-msgstr "Magas"
-
-msgid "Synth"
-msgstr "Szintet."
-
-msgid "PCM"
-msgstr "PCM"
-
-msgid "Speaker"
-msgstr "Hangfal"
-
-msgid "Line-in"
-msgstr "Vonalbemenet"
-
-msgid "Microphone"
-msgstr "Mikrofon"
-
-msgid "CD"
-msgstr "CD"
-
-msgid "Mixer"
-msgstr "Keverő"
-
-msgid "PCM-2"
-msgstr "2. PCM"
-
-msgid "Record"
-msgstr "Felvétel"
-
-msgid "In-gain"
-msgstr "Be-erősítés"
-
-msgid "Out-gain"
-msgstr "Ki-erősítés"
-
-msgid "Line-1"
-msgstr "1. vonal"
-
-msgid "Line-2"
-msgstr "2. vonal"
-
-msgid "Line-3"
-msgstr "3. vonal"
-
-msgid "Digital-1"
-msgstr "1. digitális"
-
-msgid "Digital-2"
-msgstr "2. digitális"
-
-msgid "Digital-3"
-msgstr "3. digitális"
-
-msgid "Phone-in"
-msgstr "Hang-be"
-
-msgid "Phone-out"
-msgstr "Hang-ki"
-
-msgid "Video"
-msgstr "Video"
-
-msgid "Radio"
-msgstr "Rádió"
-
-msgid "Monitor"
-msgstr "Monitor"
-
 msgid ""
 "Could not open audio device for playback. Device is being used by another "
 "application."
@@ -204,311 +129,6 @@ msgstr ""
 msgid "Could not open audio device for recording."
 msgstr "Nem nyitható meg hangeszköz a felvételhez."
 
-msgid "Could not open audio device for mixer control handling."
-msgstr "Nem nyitható meg hangeszköz a keverővezérlő kezeléséhez."
-
-msgid ""
-"Could not open audio device for mixer control handling. This version of the "
-"Open Sound System is not supported by this element."
-msgstr ""
-"Nem nyitható meg hangeszköz a keverővezérlő kezeléséhez. Az Open Sound "
-"System ezen verzióját az elem nem támogatja."
-
-msgid "Master"
-msgstr "Fő hangerő"
-
-msgid "Front"
-msgstr "Elülső"
-
-msgid "Rear"
-msgstr "Hátsó"
-
-msgid "Headphones"
-msgstr "Fülhallgató"
-
-msgid "Center"
-msgstr "Középső"
-
-msgid "LFE"
-msgstr "LFE"
-
-msgid "Surround"
-msgstr "Térhatású"
-
-msgid "Side"
-msgstr "Oldalsó"
-
-msgid "Built-in Speaker"
-msgstr "Beépített hangszóró"
-
-msgid "AUX 1 Out"
-msgstr "1. AUX ki"
-
-msgid "AUX 2 Out"
-msgstr "2. AUX ki"
-
-msgid "AUX Out"
-msgstr "AUX ki"
-
-msgid "3D Depth"
-msgstr "3D mély"
-
-msgid "3D Center"
-msgstr "3D középső"
-
-msgid "3D Enhance"
-msgstr "3D javítás"
-
-msgid "Telephone"
-msgstr "Telefon"
-
-msgid "Line Out"
-msgstr "Vonalkimenet"
-
-msgid "Line In"
-msgstr "Vonalbemenet"
-
-msgid "Internal CD"
-msgstr "Belső CD"
-
-msgid "Video In"
-msgstr "Video be"
-
-msgid "AUX 1 In"
-msgstr "1. AUX be"
-
-msgid "AUX 2 In"
-msgstr "2. AUX be"
-
-msgid "AUX In"
-msgstr "AUX be"
-
-msgid "Record Gain"
-msgstr "Felvételerősítés"
-
-msgid "Output Gain"
-msgstr "Kimeneterősítés"
-
-msgid "Microphone Boost"
-msgstr "Mikrofonerősítés"
-
-msgid "Loopback"
-msgstr "Visszacsatolás"
-
-msgid "Diagnostic"
-msgstr "Diagnosztika"
-
-msgid "Bass Boost"
-msgstr "Basszuskiemelés"
-
-msgid "Playback Ports"
-msgstr "Lejátszási portok"
-
-msgid "Input"
-msgstr "Bemenet"
-
-msgid "Record Source"
-msgstr "Felvétel forrása"
-
-msgid "Monitor Source"
-msgstr "Monitor forrása"
-
-msgid "Keyboard Beep"
-msgstr "Billentyűzetcsengő"
-
-msgid "Simulate Stereo"
-msgstr "Sztereó szimulálása"
-
-msgid "Stereo"
-msgstr "Sztereó"
-
-msgid "Surround Sound"
-msgstr "Térhatású hang"
-
-msgid "Microphone Gain"
-msgstr "Mikrofonerősítés"
-
-msgid "Speaker Source"
-msgstr "Hangfalforrás"
-
-msgid "Microphone Source"
-msgstr "Mikrofonforrás"
-
-msgid "Jack"
-msgstr "Jack"
-
-msgid "Center / LFE"
-msgstr "Középső / LFE"
-
-msgid "Stereo Mix"
-msgstr "Sztereó keverés"
-
-msgid "Mono Mix"
-msgstr "Monó keverés"
-
-msgid "Input Mix"
-msgstr "Bemeneti keverés"
-
-msgid "SPDIF In"
-msgstr "SPDIF be"
-
-msgid "SPDIF Out"
-msgstr "SPDIF ki"
-
-msgid "Microphone 1"
-msgstr "1. mikrofon"
-
-msgid "Microphone 2"
-msgstr "2. mikrofon"
-
-msgid "Digital Out"
-msgstr "Digitális ki"
-
-msgid "Digital In"
-msgstr "Digitális be"
-
-msgid "HDMI"
-msgstr "HDMI"
-
-msgid "Modem"
-msgstr "Modem"
-
-msgid "Handset"
-msgstr "Mobiltelefon"
-
-msgid "Other"
-msgstr "Egyéb"
-
-msgid "None"
-msgstr "Nincs"
-
-msgid "On"
-msgstr "Be"
-
-msgid "Off"
-msgstr "Ki"
-
-msgid "Mute"
-msgstr "Némítás"
-
-msgid "Fast"
-msgstr "Gyors"
-
-#. TRANSLATORS: "Very Low" is a quality setting here
-msgid "Very Low"
-msgstr "Nagyon alacsony"
-
-#. TRANSLATORS: "Low" is a quality setting here
-msgid "Low"
-msgstr "Alacsony"
-
-#. TRANSLATORS: "Medium" is a quality setting here
-msgid "Medium"
-msgstr "Közepes"
-
-#. TRANSLATORS: "High" is a quality setting here
-msgid "High"
-msgstr "Magas"
-
-#. TRANSLATORS: "Very High" is a quality setting here
-msgid "Very High"
-msgstr "Nagyon magas"
-
-#. TRANSLATORS: "Production" is a quality setting here
-msgid "Production"
-msgstr "Éles"
-
-msgid "Front Panel Microphone"
-msgstr "Előlapi mikrofon"
-
-msgid "Front Panel Line In"
-msgstr "Előlapi vonalbemenet"
-
-msgid "Front Panel Headphones"
-msgstr "Előlapi fülhallgató"
-
-msgid "Front Panel Line Out"
-msgstr "Előlapi vonalkimenet"
-
-msgid "Green Connector"
-msgstr "Zöld csatlakozó"
-
-msgid "Pink Connector"
-msgstr "Rózsaszín csatlakozó"
-
-msgid "Blue Connector"
-msgstr "Kék csatlakozó"
-
-msgid "White Connector"
-msgstr "Fehér csatlakozó"
-
-msgid "Black Connector"
-msgstr "Fekete csatlakozó"
-
-msgid "Gray Connector"
-msgstr "Szürke csatlakozó"
-
-msgid "Orange Connector"
-msgstr "Narancs csatlakozó"
-
-msgid "Red Connector"
-msgstr "Vörös csatlakozó"
-
-msgid "Yellow Connector"
-msgstr "Sárga csatlakozó"
-
-msgid "Green Front Panel Connector"
-msgstr "Zöld előoldali csatlakozó"
-
-msgid "Pink Front Panel Connector"
-msgstr "Rózsaszín előoldali csatlakozó"
-
-msgid "Blue Front Panel Connector"
-msgstr "Kék előoldali csatlakozó"
-
-msgid "White Front Panel Connector"
-msgstr "Fehér előoldali csatlakozó"
-
-msgid "Black Front Panel Connector"
-msgstr "Fekete előoldali csatlakozó"
-
-msgid "Gray Front Panel Connector"
-msgstr "Szürke előoldali csatlakozó"
-
-msgid "Orange Front Panel Connector"
-msgstr "Narancs előoldali csatlakozó"
-
-msgid "Red Front Panel Connector"
-msgstr "Vörös előoldali csatlakozó"
-
-msgid "Yellow Front Panel Connector"
-msgstr "Sárga előoldali csatlakozó"
-
-msgid "Spread Output"
-msgstr "Szóráskimenet"
-
-msgid "Downmix"
-msgstr "Lekeverés"
-
-msgid "Virtual Mixer Input"
-msgstr "Virtuális keverőbemenet"
-
-msgid "Virtual Mixer Output"
-msgstr "Virtuális keverőkimenet"
-
-msgid "Virtual Mixer Channels"
-msgstr "Virtuális keverőcsatornák"
-
-#. TRANSLATORS: name + number of a volume mixer control
-#, c-format
-msgid "%s %d Function"
-msgstr "%s %d funkció"
-
-#. TRANSLATORS: name of a volume mixer control
-#, c-format
-msgid "%s Function"
-msgstr "%s funkció"
-
 msgid ""
 "Could not open audio device for playback. This version of the Open Sound "
 "System is not supported by this element."
@@ -528,11 +148,32 @@ msgstr "Ez a hangeszköz nem támogatja a felvételt."
 msgid "Error recording from audio device."
 msgstr "Hiba a hangeszközről való felvételkor."
 
+msgid "Volume"
+msgstr "Hangerő"
+
 msgid "Gain"
 msgstr "Erősítés"
 
+msgid "Monitor"
+msgstr "Monitor"
+
+msgid "Built-in Speaker"
+msgstr "Beépített hangszóró"
+
 msgid "Headphone"
 msgstr "Fejhallgató"
+
+msgid "Line Out"
+msgstr "Vonalkimenet"
+
+msgid "SPDIF Out"
+msgstr "SPDIF ki"
+
+msgid "AUX 1 Out"
+msgstr "1. AUX ki"
+
+msgid "AUX 2 Out"
+msgstr "2. AUX ki"
 
 #, c-format
 msgid "Error reading %d bytes from device '%s'."
@@ -716,6 +357,355 @@ msgstr "A felbontás módosítása futás közben még nem támogatott."
 
 msgid "Cannot operate without a clock"
 msgstr "Óra nélkül lehetetlen a működés"
+
+#~ msgid "Bass"
+#~ msgstr "Basszus"
+
+#~ msgid "Treble"
+#~ msgstr "Magas"
+
+#~ msgid "Synth"
+#~ msgstr "Szintet."
+
+#~ msgid "PCM"
+#~ msgstr "PCM"
+
+#~ msgid "Speaker"
+#~ msgstr "Hangfal"
+
+#~ msgid "Line-in"
+#~ msgstr "Vonalbemenet"
+
+#~ msgid "Microphone"
+#~ msgstr "Mikrofon"
+
+#~ msgid "CD"
+#~ msgstr "CD"
+
+#~ msgid "Mixer"
+#~ msgstr "Keverő"
+
+#~ msgid "PCM-2"
+#~ msgstr "2. PCM"
+
+#~ msgid "Record"
+#~ msgstr "Felvétel"
+
+#~ msgid "In-gain"
+#~ msgstr "Be-erősítés"
+
+#~ msgid "Out-gain"
+#~ msgstr "Ki-erősítés"
+
+#~ msgid "Line-1"
+#~ msgstr "1. vonal"
+
+#~ msgid "Line-2"
+#~ msgstr "2. vonal"
+
+#~ msgid "Line-3"
+#~ msgstr "3. vonal"
+
+#~ msgid "Digital-1"
+#~ msgstr "1. digitális"
+
+#~ msgid "Digital-2"
+#~ msgstr "2. digitális"
+
+#~ msgid "Digital-3"
+#~ msgstr "3. digitális"
+
+#~ msgid "Phone-in"
+#~ msgstr "Hang-be"
+
+#~ msgid "Phone-out"
+#~ msgstr "Hang-ki"
+
+#~ msgid "Video"
+#~ msgstr "Video"
+
+#~ msgid "Radio"
+#~ msgstr "Rádió"
+
+#~ msgid "Could not open audio device for mixer control handling."
+#~ msgstr "Nem nyitható meg hangeszköz a keverővezérlő kezeléséhez."
+
+#~ msgid ""
+#~ "Could not open audio device for mixer control handling. This version of "
+#~ "the Open Sound System is not supported by this element."
+#~ msgstr ""
+#~ "Nem nyitható meg hangeszköz a keverővezérlő kezeléséhez. Az Open Sound "
+#~ "System ezen verzióját az elem nem támogatja."
+
+#~ msgid "Master"
+#~ msgstr "Fő hangerő"
+
+#~ msgid "Front"
+#~ msgstr "Elülső"
+
+#~ msgid "Rear"
+#~ msgstr "Hátsó"
+
+#~ msgid "Headphones"
+#~ msgstr "Fülhallgató"
+
+#~ msgid "Center"
+#~ msgstr "Középső"
+
+#~ msgid "LFE"
+#~ msgstr "LFE"
+
+#~ msgid "Surround"
+#~ msgstr "Térhatású"
+
+#~ msgid "Side"
+#~ msgstr "Oldalsó"
+
+#~ msgid "AUX Out"
+#~ msgstr "AUX ki"
+
+#~ msgid "3D Depth"
+#~ msgstr "3D mély"
+
+#~ msgid "3D Center"
+#~ msgstr "3D középső"
+
+#~ msgid "3D Enhance"
+#~ msgstr "3D javítás"
+
+#~ msgid "Telephone"
+#~ msgstr "Telefon"
+
+#~ msgid "Line In"
+#~ msgstr "Vonalbemenet"
+
+#~ msgid "Internal CD"
+#~ msgstr "Belső CD"
+
+#~ msgid "Video In"
+#~ msgstr "Video be"
+
+#~ msgid "AUX 1 In"
+#~ msgstr "1. AUX be"
+
+#~ msgid "AUX 2 In"
+#~ msgstr "2. AUX be"
+
+#~ msgid "AUX In"
+#~ msgstr "AUX be"
+
+#~ msgid "Record Gain"
+#~ msgstr "Felvételerősítés"
+
+#~ msgid "Output Gain"
+#~ msgstr "Kimeneterősítés"
+
+#~ msgid "Microphone Boost"
+#~ msgstr "Mikrofonerősítés"
+
+#~ msgid "Loopback"
+#~ msgstr "Visszacsatolás"
+
+#~ msgid "Diagnostic"
+#~ msgstr "Diagnosztika"
+
+#~ msgid "Bass Boost"
+#~ msgstr "Basszuskiemelés"
+
+#~ msgid "Playback Ports"
+#~ msgstr "Lejátszási portok"
+
+#~ msgid "Input"
+#~ msgstr "Bemenet"
+
+#~ msgid "Record Source"
+#~ msgstr "Felvétel forrása"
+
+#~ msgid "Monitor Source"
+#~ msgstr "Monitor forrása"
+
+#~ msgid "Keyboard Beep"
+#~ msgstr "Billentyűzetcsengő"
+
+#~ msgid "Simulate Stereo"
+#~ msgstr "Sztereó szimulálása"
+
+#~ msgid "Stereo"
+#~ msgstr "Sztereó"
+
+#~ msgid "Surround Sound"
+#~ msgstr "Térhatású hang"
+
+#~ msgid "Microphone Gain"
+#~ msgstr "Mikrofonerősítés"
+
+#~ msgid "Speaker Source"
+#~ msgstr "Hangfalforrás"
+
+#~ msgid "Microphone Source"
+#~ msgstr "Mikrofonforrás"
+
+#~ msgid "Jack"
+#~ msgstr "Jack"
+
+#~ msgid "Center / LFE"
+#~ msgstr "Középső / LFE"
+
+#~ msgid "Stereo Mix"
+#~ msgstr "Sztereó keverés"
+
+#~ msgid "Mono Mix"
+#~ msgstr "Monó keverés"
+
+#~ msgid "Input Mix"
+#~ msgstr "Bemeneti keverés"
+
+#~ msgid "SPDIF In"
+#~ msgstr "SPDIF be"
+
+#~ msgid "Microphone 1"
+#~ msgstr "1. mikrofon"
+
+#~ msgid "Microphone 2"
+#~ msgstr "2. mikrofon"
+
+#~ msgid "Digital Out"
+#~ msgstr "Digitális ki"
+
+#~ msgid "Digital In"
+#~ msgstr "Digitális be"
+
+#~ msgid "HDMI"
+#~ msgstr "HDMI"
+
+#~ msgid "Modem"
+#~ msgstr "Modem"
+
+#~ msgid "Handset"
+#~ msgstr "Mobiltelefon"
+
+#~ msgid "Other"
+#~ msgstr "Egyéb"
+
+#~ msgid "None"
+#~ msgstr "Nincs"
+
+#~ msgid "On"
+#~ msgstr "Be"
+
+#~ msgid "Off"
+#~ msgstr "Ki"
+
+#~ msgid "Mute"
+#~ msgstr "Némítás"
+
+#~ msgid "Fast"
+#~ msgstr "Gyors"
+
+#~ msgid "Very Low"
+#~ msgstr "Nagyon alacsony"
+
+#~ msgid "Low"
+#~ msgstr "Alacsony"
+
+#~ msgid "Medium"
+#~ msgstr "Közepes"
+
+#~ msgid "High"
+#~ msgstr "Magas"
+
+#~ msgid "Very High"
+#~ msgstr "Nagyon magas"
+
+#~ msgid "Production"
+#~ msgstr "Éles"
+
+#~ msgid "Front Panel Microphone"
+#~ msgstr "Előlapi mikrofon"
+
+#~ msgid "Front Panel Line In"
+#~ msgstr "Előlapi vonalbemenet"
+
+#~ msgid "Front Panel Headphones"
+#~ msgstr "Előlapi fülhallgató"
+
+#~ msgid "Front Panel Line Out"
+#~ msgstr "Előlapi vonalkimenet"
+
+#~ msgid "Green Connector"
+#~ msgstr "Zöld csatlakozó"
+
+#~ msgid "Pink Connector"
+#~ msgstr "Rózsaszín csatlakozó"
+
+#~ msgid "Blue Connector"
+#~ msgstr "Kék csatlakozó"
+
+#~ msgid "White Connector"
+#~ msgstr "Fehér csatlakozó"
+
+#~ msgid "Black Connector"
+#~ msgstr "Fekete csatlakozó"
+
+#~ msgid "Gray Connector"
+#~ msgstr "Szürke csatlakozó"
+
+#~ msgid "Orange Connector"
+#~ msgstr "Narancs csatlakozó"
+
+#~ msgid "Red Connector"
+#~ msgstr "Vörös csatlakozó"
+
+#~ msgid "Yellow Connector"
+#~ msgstr "Sárga csatlakozó"
+
+#~ msgid "Green Front Panel Connector"
+#~ msgstr "Zöld előoldali csatlakozó"
+
+#~ msgid "Pink Front Panel Connector"
+#~ msgstr "Rózsaszín előoldali csatlakozó"
+
+#~ msgid "Blue Front Panel Connector"
+#~ msgstr "Kék előoldali csatlakozó"
+
+#~ msgid "White Front Panel Connector"
+#~ msgstr "Fehér előoldali csatlakozó"
+
+#~ msgid "Black Front Panel Connector"
+#~ msgstr "Fekete előoldali csatlakozó"
+
+#~ msgid "Gray Front Panel Connector"
+#~ msgstr "Szürke előoldali csatlakozó"
+
+#~ msgid "Orange Front Panel Connector"
+#~ msgstr "Narancs előoldali csatlakozó"
+
+#~ msgid "Red Front Panel Connector"
+#~ msgstr "Vörös előoldali csatlakozó"
+
+#~ msgid "Yellow Front Panel Connector"
+#~ msgstr "Sárga előoldali csatlakozó"
+
+#~ msgid "Spread Output"
+#~ msgstr "Szóráskimenet"
+
+#~ msgid "Downmix"
+#~ msgstr "Lekeverés"
+
+#~ msgid "Virtual Mixer Input"
+#~ msgstr "Virtuális keverőbemenet"
+
+#~ msgid "Virtual Mixer Output"
+#~ msgstr "Virtuális keverőkimenet"
+
+#~ msgid "Virtual Mixer Channels"
+#~ msgstr "Virtuális keverőcsatornák"
+
+#~ msgid "%s %d Function"
+#~ msgstr "%s %d funkció"
+
+#~ msgid "%s Function"
+#~ msgstr "%s funkció"
 
 #~ msgid "Error reading %d bytes on device '%s'."
 #~ msgstr "Hiba %d bájt olvasásakor a következő eszközről: „%s”."

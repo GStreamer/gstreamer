@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-good-0.10.18.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2012-04-12 10:26+0200\n"
+"POT-Creation-Date: 2012-05-13 16:29+0200\n"
 "PO-Revision-Date: 2010-03-25 12:37+0100\n"
 "Last-Translator: Mikel Olasagasti Uranga <hey_neken@mundurat.net>\n"
 "Language-Team: Basque <translation-team-eu@lists.sourceforge.net>\n"
@@ -104,81 +104,6 @@ msgstr ""
 msgid "Internal data flow error."
 msgstr "Datu-fluxuaren barne-errorea."
 
-msgid "Volume"
-msgstr "Bolumena"
-
-msgid "Bass"
-msgstr "Baxua"
-
-msgid "Treble"
-msgstr "Altua"
-
-msgid "Synth"
-msgstr "Sintetizadorea"
-
-msgid "PCM"
-msgstr "PCM"
-
-msgid "Speaker"
-msgstr "Bozgorailua"
-
-msgid "Line-in"
-msgstr "Linea-sarrera"
-
-msgid "Microphone"
-msgstr "Mikrofonoa"
-
-msgid "CD"
-msgstr "CDa"
-
-msgid "Mixer"
-msgstr "Nahastailea"
-
-msgid "PCM-2"
-msgstr "PCM-2"
-
-msgid "Record"
-msgstr "Grabazioa"
-
-msgid "In-gain"
-msgstr "Sarrerako irabazia"
-
-msgid "Out-gain"
-msgstr "Irteerako irabazia"
-
-msgid "Line-1"
-msgstr "1. linea"
-
-msgid "Line-2"
-msgstr "2. linea"
-
-msgid "Line-3"
-msgstr "3. linea"
-
-msgid "Digital-1"
-msgstr "1. digitala"
-
-msgid "Digital-2"
-msgstr "2. digitala"
-
-msgid "Digital-3"
-msgstr "3. digitala"
-
-msgid "Phone-in"
-msgstr "Aurikularren sarrera"
-
-msgid "Phone-out"
-msgstr "Aurikularren irteera"
-
-msgid "Video"
-msgstr "Bideoa"
-
-msgid "Radio"
-msgstr "Irratia"
-
-msgid "Monitor"
-msgstr "Monitorea"
-
 msgid ""
 "Could not open audio device for playback. Device is being used by another "
 "application."
@@ -206,311 +131,6 @@ msgstr ""
 msgid "Could not open audio device for recording."
 msgstr "Ezin izan da audioaren gailua ireki grabatzeko."
 
-msgid "Could not open audio device for mixer control handling."
-msgstr "Ezin izan da audioko gailua ireki nahastailearen kontrola kudeatzeko."
-
-msgid ""
-"Could not open audio device for mixer control handling. This version of the "
-"Open Sound System is not supported by this element."
-msgstr ""
-"Ezin izan da audioko gailua ireki nahastailearen kontrola kudeatzeko. "
-"Elementu honek ez du onartzen Open Sound System-en bertsio hau."
-
-msgid "Master"
-msgstr "Maisua"
-
-msgid "Front"
-msgstr "Aurrealdekoa"
-
-msgid "Rear"
-msgstr "Atzealdekoa"
-
-msgid "Headphones"
-msgstr "Aurikularrak"
-
-msgid "Center"
-msgstr "Erdikoa"
-
-msgid "LFE"
-msgstr "LFE"
-
-msgid "Surround"
-msgstr "Inguratzailea"
-
-msgid "Side"
-msgstr "Albokoa"
-
-msgid "Built-in Speaker"
-msgstr "Barneko bozgorailua"
-
-msgid "AUX 1 Out"
-msgstr "1. irteera lagungarria"
-
-msgid "AUX 2 Out"
-msgstr "2. irteera lagungarria"
-
-msgid "AUX Out"
-msgstr "Irteera lagungarria"
-
-msgid "3D Depth"
-msgstr "3D sakonera"
-
-msgid "3D Center"
-msgstr "3D zentrua"
-
-msgid "3D Enhance"
-msgstr "3D hobetua"
-
-msgid "Telephone"
-msgstr "Telefonoa"
-
-msgid "Line Out"
-msgstr "Irteerako linea"
-
-msgid "Line In"
-msgstr "Sarrerako linea"
-
-msgid "Internal CD"
-msgstr "Barneko CDa"
-
-msgid "Video In"
-msgstr "Bideo-sarrera"
-
-msgid "AUX 1 In"
-msgstr "1. sarrera lagungarria"
-
-msgid "AUX 2 In"
-msgstr "2. sarrera lagungarria"
-
-msgid "AUX In"
-msgstr "Sarrera lagungarria"
-
-msgid "Record Gain"
-msgstr "Grabazioaren irabazia"
-
-msgid "Output Gain"
-msgstr "Irteeraren irabazia"
-
-msgid "Microphone Boost"
-msgstr "Mikrofonoaren bultzada"
-
-msgid "Loopback"
-msgstr "Atzera-begizta"
-
-msgid "Diagnostic"
-msgstr "Diagnostikoa"
-
-msgid "Bass Boost"
-msgstr "Baxuaren bultzada"
-
-msgid "Playback Ports"
-msgstr "Erreprodukzioaren atakak"
-
-msgid "Input"
-msgstr "Sarrera"
-
-msgid "Record Source"
-msgstr "Grabazioaren iturburua"
-
-msgid "Monitor Source"
-msgstr "Monitorearen iturburua"
-
-msgid "Keyboard Beep"
-msgstr "Teklatuaren soinua"
-
-msgid "Simulate Stereo"
-msgstr "Simulatu estereoa"
-
-msgid "Stereo"
-msgstr "Estereoa"
-
-msgid "Surround Sound"
-msgstr "Soinu inguratzailea"
-
-msgid "Microphone Gain"
-msgstr "Mikrofonoaren irabazia"
-
-msgid "Speaker Source"
-msgstr "Bozgorailuaren iturburua"
-
-msgid "Microphone Source"
-msgstr "Mikrofonoaren iturburua"
-
-msgid "Jack"
-msgstr "Jack"
-
-msgid "Center / LFE"
-msgstr "Zentratua / LFE"
-
-msgid "Stereo Mix"
-msgstr "Estereozko nahasketa"
-
-msgid "Mono Mix"
-msgstr "Monozko nahasketa"
-
-msgid "Input Mix"
-msgstr "Sarrerako nahasketa"
-
-msgid "SPDIF In"
-msgstr "SPDIF sarrera"
-
-msgid "SPDIF Out"
-msgstr "SPDIF irteera"
-
-msgid "Microphone 1"
-msgstr "1. mikrofonoa"
-
-msgid "Microphone 2"
-msgstr "2. mikrofonoa"
-
-msgid "Digital Out"
-msgstr "Irteera digitala"
-
-msgid "Digital In"
-msgstr "Sarrera digitala"
-
-msgid "HDMI"
-msgstr "HDMI"
-
-msgid "Modem"
-msgstr "Modema"
-
-msgid "Handset"
-msgstr "Aurikular+mikrofonoa"
-
-msgid "Other"
-msgstr "Bestelakoa"
-
-msgid "None"
-msgstr "Bat ere ez"
-
-msgid "On"
-msgstr "Piztu"
-
-msgid "Off"
-msgstr "Itzali"
-
-msgid "Mute"
-msgstr "Mututu"
-
-msgid "Fast"
-msgstr "Bizkorra"
-
-#. TRANSLATORS: "Very Low" is a quality setting here
-msgid "Very Low"
-msgstr "Oso motela"
-
-#. TRANSLATORS: "Low" is a quality setting here
-msgid "Low"
-msgstr "Motela"
-
-#. TRANSLATORS: "Medium" is a quality setting here
-msgid "Medium"
-msgstr "Tartekoa"
-
-#. TRANSLATORS: "High" is a quality setting here
-msgid "High"
-msgstr "Altua"
-
-#. TRANSLATORS: "Very High" is a quality setting here
-msgid "Very High"
-msgstr "Oso altua"
-
-#. TRANSLATORS: "Production" is a quality setting here
-msgid "Production"
-msgstr "Ekoizpena"
-
-msgid "Front Panel Microphone"
-msgstr "Aurrealdeko paneleko mikrofonoa"
-
-msgid "Front Panel Line In"
-msgstr "Aurrealdeko paneleko sarrerako linea"
-
-msgid "Front Panel Headphones"
-msgstr "Aurrealdeko paneleko aurikularrak"
-
-msgid "Front Panel Line Out"
-msgstr "Aurrealdeko paneleko irteerako linea"
-
-msgid "Green Connector"
-msgstr "Konektore berdea"
-
-msgid "Pink Connector"
-msgstr "Konektore arrosa"
-
-msgid "Blue Connector"
-msgstr "Konektore urdina"
-
-msgid "White Connector"
-msgstr "Konektore zuria"
-
-msgid "Black Connector"
-msgstr "Konektore beltza"
-
-msgid "Gray Connector"
-msgstr "Konektore grisa"
-
-msgid "Orange Connector"
-msgstr "Konektore laranja"
-
-msgid "Red Connector"
-msgstr "Konektore gorria"
-
-msgid "Yellow Connector"
-msgstr "Konektore horia"
-
-msgid "Green Front Panel Connector"
-msgstr "Aurrealdeko paneleko konektore berdea"
-
-msgid "Pink Front Panel Connector"
-msgstr "Aurrealdeko paneleko konektore arrosa"
-
-msgid "Blue Front Panel Connector"
-msgstr "Aurrealdeko paneleko konektore urdina"
-
-msgid "White Front Panel Connector"
-msgstr "Aurrealdeko paneleko konektore zuria"
-
-msgid "Black Front Panel Connector"
-msgstr "Aurrealdeko paneleko konektore beltza"
-
-msgid "Gray Front Panel Connector"
-msgstr "Aurrealdeko paneleko konektore grisa"
-
-msgid "Orange Front Panel Connector"
-msgstr "Aurrealdeko paneleko konektore laranja"
-
-msgid "Red Front Panel Connector"
-msgstr "Aurrealdeko paneleko konektore gorria"
-
-msgid "Yellow Front Panel Connector"
-msgstr "Aurrealdeko paneleko konektore horia"
-
-msgid "Spread Output"
-msgstr "Zabaldu irteera"
-
-msgid "Downmix"
-msgstr "Tolestu nahasketa"
-
-msgid "Virtual Mixer Input"
-msgstr "Nahastaile birtualaren sarrera"
-
-msgid "Virtual Mixer Output"
-msgstr "Nahastaile birtualaren irteera"
-
-msgid "Virtual Mixer Channels"
-msgstr "Nahastaile birtualaren kanalak"
-
-#. TRANSLATORS: name + number of a volume mixer control
-#, fuzzy, c-format
-msgid "%s %d Function"
-msgstr "%s funtzioa"
-
-#. TRANSLATORS: name of a volume mixer control
-#, c-format
-msgid "%s Function"
-msgstr "%s funtzioa"
-
 msgid ""
 "Could not open audio device for playback. This version of the Open Sound "
 "System is not supported by this element."
@@ -530,11 +150,32 @@ msgstr "Audio gailu honek ez du grabatzea onartzen."
 msgid "Error recording from audio device."
 msgstr "Errorea audioko gailutik grabatzean."
 
+msgid "Volume"
+msgstr "Bolumena"
+
 msgid "Gain"
 msgstr "Irabazia"
 
+msgid "Monitor"
+msgstr "Monitorea"
+
+msgid "Built-in Speaker"
+msgstr "Barneko bozgorailua"
+
 msgid "Headphone"
 msgstr "Entzungailua"
+
+msgid "Line Out"
+msgstr "Irteerako linea"
+
+msgid "SPDIF Out"
+msgstr "SPDIF irteera"
+
+msgid "AUX 1 Out"
+msgstr "1. irteera lagungarria"
+
+msgid "AUX 2 Out"
+msgstr "2. irteera lagungarria"
 
 #, c-format
 msgid "Error reading %d bytes from device '%s'."
@@ -719,6 +360,357 @@ msgstr "Oraindik ez dago onartua exekutatu bitartean bereizmena aldatzea."
 
 msgid "Cannot operate without a clock"
 msgstr "Ezin du funtzionatu erlojurik gabe"
+
+#~ msgid "Bass"
+#~ msgstr "Baxua"
+
+#~ msgid "Treble"
+#~ msgstr "Altua"
+
+#~ msgid "Synth"
+#~ msgstr "Sintetizadorea"
+
+#~ msgid "PCM"
+#~ msgstr "PCM"
+
+#~ msgid "Speaker"
+#~ msgstr "Bozgorailua"
+
+#~ msgid "Line-in"
+#~ msgstr "Linea-sarrera"
+
+#~ msgid "Microphone"
+#~ msgstr "Mikrofonoa"
+
+#~ msgid "CD"
+#~ msgstr "CDa"
+
+#~ msgid "Mixer"
+#~ msgstr "Nahastailea"
+
+#~ msgid "PCM-2"
+#~ msgstr "PCM-2"
+
+#~ msgid "Record"
+#~ msgstr "Grabazioa"
+
+#~ msgid "In-gain"
+#~ msgstr "Sarrerako irabazia"
+
+#~ msgid "Out-gain"
+#~ msgstr "Irteerako irabazia"
+
+#~ msgid "Line-1"
+#~ msgstr "1. linea"
+
+#~ msgid "Line-2"
+#~ msgstr "2. linea"
+
+#~ msgid "Line-3"
+#~ msgstr "3. linea"
+
+#~ msgid "Digital-1"
+#~ msgstr "1. digitala"
+
+#~ msgid "Digital-2"
+#~ msgstr "2. digitala"
+
+#~ msgid "Digital-3"
+#~ msgstr "3. digitala"
+
+#~ msgid "Phone-in"
+#~ msgstr "Aurikularren sarrera"
+
+#~ msgid "Phone-out"
+#~ msgstr "Aurikularren irteera"
+
+#~ msgid "Video"
+#~ msgstr "Bideoa"
+
+#~ msgid "Radio"
+#~ msgstr "Irratia"
+
+#~ msgid "Could not open audio device for mixer control handling."
+#~ msgstr ""
+#~ "Ezin izan da audioko gailua ireki nahastailearen kontrola kudeatzeko."
+
+#~ msgid ""
+#~ "Could not open audio device for mixer control handling. This version of "
+#~ "the Open Sound System is not supported by this element."
+#~ msgstr ""
+#~ "Ezin izan da audioko gailua ireki nahastailearen kontrola kudeatzeko. "
+#~ "Elementu honek ez du onartzen Open Sound System-en bertsio hau."
+
+#~ msgid "Master"
+#~ msgstr "Maisua"
+
+#~ msgid "Front"
+#~ msgstr "Aurrealdekoa"
+
+#~ msgid "Rear"
+#~ msgstr "Atzealdekoa"
+
+#~ msgid "Headphones"
+#~ msgstr "Aurikularrak"
+
+#~ msgid "Center"
+#~ msgstr "Erdikoa"
+
+#~ msgid "LFE"
+#~ msgstr "LFE"
+
+#~ msgid "Surround"
+#~ msgstr "Inguratzailea"
+
+#~ msgid "Side"
+#~ msgstr "Albokoa"
+
+#~ msgid "AUX Out"
+#~ msgstr "Irteera lagungarria"
+
+#~ msgid "3D Depth"
+#~ msgstr "3D sakonera"
+
+#~ msgid "3D Center"
+#~ msgstr "3D zentrua"
+
+#~ msgid "3D Enhance"
+#~ msgstr "3D hobetua"
+
+#~ msgid "Telephone"
+#~ msgstr "Telefonoa"
+
+#~ msgid "Line In"
+#~ msgstr "Sarrerako linea"
+
+#~ msgid "Internal CD"
+#~ msgstr "Barneko CDa"
+
+#~ msgid "Video In"
+#~ msgstr "Bideo-sarrera"
+
+#~ msgid "AUX 1 In"
+#~ msgstr "1. sarrera lagungarria"
+
+#~ msgid "AUX 2 In"
+#~ msgstr "2. sarrera lagungarria"
+
+#~ msgid "AUX In"
+#~ msgstr "Sarrera lagungarria"
+
+#~ msgid "Record Gain"
+#~ msgstr "Grabazioaren irabazia"
+
+#~ msgid "Output Gain"
+#~ msgstr "Irteeraren irabazia"
+
+#~ msgid "Microphone Boost"
+#~ msgstr "Mikrofonoaren bultzada"
+
+#~ msgid "Loopback"
+#~ msgstr "Atzera-begizta"
+
+#~ msgid "Diagnostic"
+#~ msgstr "Diagnostikoa"
+
+#~ msgid "Bass Boost"
+#~ msgstr "Baxuaren bultzada"
+
+#~ msgid "Playback Ports"
+#~ msgstr "Erreprodukzioaren atakak"
+
+#~ msgid "Input"
+#~ msgstr "Sarrera"
+
+#~ msgid "Record Source"
+#~ msgstr "Grabazioaren iturburua"
+
+#~ msgid "Monitor Source"
+#~ msgstr "Monitorearen iturburua"
+
+#~ msgid "Keyboard Beep"
+#~ msgstr "Teklatuaren soinua"
+
+#~ msgid "Simulate Stereo"
+#~ msgstr "Simulatu estereoa"
+
+#~ msgid "Stereo"
+#~ msgstr "Estereoa"
+
+#~ msgid "Surround Sound"
+#~ msgstr "Soinu inguratzailea"
+
+#~ msgid "Microphone Gain"
+#~ msgstr "Mikrofonoaren irabazia"
+
+#~ msgid "Speaker Source"
+#~ msgstr "Bozgorailuaren iturburua"
+
+#~ msgid "Microphone Source"
+#~ msgstr "Mikrofonoaren iturburua"
+
+#~ msgid "Jack"
+#~ msgstr "Jack"
+
+#~ msgid "Center / LFE"
+#~ msgstr "Zentratua / LFE"
+
+#~ msgid "Stereo Mix"
+#~ msgstr "Estereozko nahasketa"
+
+#~ msgid "Mono Mix"
+#~ msgstr "Monozko nahasketa"
+
+#~ msgid "Input Mix"
+#~ msgstr "Sarrerako nahasketa"
+
+#~ msgid "SPDIF In"
+#~ msgstr "SPDIF sarrera"
+
+#~ msgid "Microphone 1"
+#~ msgstr "1. mikrofonoa"
+
+#~ msgid "Microphone 2"
+#~ msgstr "2. mikrofonoa"
+
+#~ msgid "Digital Out"
+#~ msgstr "Irteera digitala"
+
+#~ msgid "Digital In"
+#~ msgstr "Sarrera digitala"
+
+#~ msgid "HDMI"
+#~ msgstr "HDMI"
+
+#~ msgid "Modem"
+#~ msgstr "Modema"
+
+#~ msgid "Handset"
+#~ msgstr "Aurikular+mikrofonoa"
+
+#~ msgid "Other"
+#~ msgstr "Bestelakoa"
+
+#~ msgid "None"
+#~ msgstr "Bat ere ez"
+
+#~ msgid "On"
+#~ msgstr "Piztu"
+
+#~ msgid "Off"
+#~ msgstr "Itzali"
+
+#~ msgid "Mute"
+#~ msgstr "Mututu"
+
+#~ msgid "Fast"
+#~ msgstr "Bizkorra"
+
+#~ msgid "Very Low"
+#~ msgstr "Oso motela"
+
+#~ msgid "Low"
+#~ msgstr "Motela"
+
+#~ msgid "Medium"
+#~ msgstr "Tartekoa"
+
+#~ msgid "High"
+#~ msgstr "Altua"
+
+#~ msgid "Very High"
+#~ msgstr "Oso altua"
+
+#~ msgid "Production"
+#~ msgstr "Ekoizpena"
+
+#~ msgid "Front Panel Microphone"
+#~ msgstr "Aurrealdeko paneleko mikrofonoa"
+
+#~ msgid "Front Panel Line In"
+#~ msgstr "Aurrealdeko paneleko sarrerako linea"
+
+#~ msgid "Front Panel Headphones"
+#~ msgstr "Aurrealdeko paneleko aurikularrak"
+
+#~ msgid "Front Panel Line Out"
+#~ msgstr "Aurrealdeko paneleko irteerako linea"
+
+#~ msgid "Green Connector"
+#~ msgstr "Konektore berdea"
+
+#~ msgid "Pink Connector"
+#~ msgstr "Konektore arrosa"
+
+#~ msgid "Blue Connector"
+#~ msgstr "Konektore urdina"
+
+#~ msgid "White Connector"
+#~ msgstr "Konektore zuria"
+
+#~ msgid "Black Connector"
+#~ msgstr "Konektore beltza"
+
+#~ msgid "Gray Connector"
+#~ msgstr "Konektore grisa"
+
+#~ msgid "Orange Connector"
+#~ msgstr "Konektore laranja"
+
+#~ msgid "Red Connector"
+#~ msgstr "Konektore gorria"
+
+#~ msgid "Yellow Connector"
+#~ msgstr "Konektore horia"
+
+#~ msgid "Green Front Panel Connector"
+#~ msgstr "Aurrealdeko paneleko konektore berdea"
+
+#~ msgid "Pink Front Panel Connector"
+#~ msgstr "Aurrealdeko paneleko konektore arrosa"
+
+#~ msgid "Blue Front Panel Connector"
+#~ msgstr "Aurrealdeko paneleko konektore urdina"
+
+#~ msgid "White Front Panel Connector"
+#~ msgstr "Aurrealdeko paneleko konektore zuria"
+
+#~ msgid "Black Front Panel Connector"
+#~ msgstr "Aurrealdeko paneleko konektore beltza"
+
+#~ msgid "Gray Front Panel Connector"
+#~ msgstr "Aurrealdeko paneleko konektore grisa"
+
+#~ msgid "Orange Front Panel Connector"
+#~ msgstr "Aurrealdeko paneleko konektore laranja"
+
+#~ msgid "Red Front Panel Connector"
+#~ msgstr "Aurrealdeko paneleko konektore gorria"
+
+#~ msgid "Yellow Front Panel Connector"
+#~ msgstr "Aurrealdeko paneleko konektore horia"
+
+#~ msgid "Spread Output"
+#~ msgstr "Zabaldu irteera"
+
+#~ msgid "Downmix"
+#~ msgstr "Tolestu nahasketa"
+
+#~ msgid "Virtual Mixer Input"
+#~ msgstr "Nahastaile birtualaren sarrera"
+
+#~ msgid "Virtual Mixer Output"
+#~ msgstr "Nahastaile birtualaren irteera"
+
+#~ msgid "Virtual Mixer Channels"
+#~ msgstr "Nahastaile birtualaren kanalak"
+
+#, fuzzy
+#~ msgid "%s %d Function"
+#~ msgstr "%s funtzioa"
+
+#~ msgid "%s Function"
+#~ msgstr "%s funtzioa"
 
 #~ msgid "Error reading %d bytes on device '%s'."
 #~ msgstr "Errorea gertatu da '%2$s' gailuan %1$d byte irakurtzean."

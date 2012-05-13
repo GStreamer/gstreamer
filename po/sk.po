@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-good 0.10.25.3\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2012-04-12 10:26+0200\n"
+"POT-Creation-Date: 2012-05-13 16:29+0200\n"
 "PO-Revision-Date: 2010-11-08 15:48+0100\n"
 "Last-Translator: Peter Tuhársky <tuharsky@misbb.sk>\n"
 "Language-Team: Slovak <sk-i18n@lists.linux.sk>\n"
@@ -98,81 +98,6 @@ msgstr ""
 msgid "Internal data flow error."
 msgstr "Vnútorná chyba toku údajov."
 
-msgid "Volume"
-msgstr "Hlasitosť"
-
-msgid "Bass"
-msgstr "Basy"
-
-msgid "Treble"
-msgstr "Výšky"
-
-msgid "Synth"
-msgstr "Syntetizér"
-
-msgid "PCM"
-msgstr "PCM"
-
-msgid "Speaker"
-msgstr "Reproduktor"
-
-msgid "Line-in"
-msgstr "Linkový vstup"
-
-msgid "Microphone"
-msgstr "Mikrofón"
-
-msgid "CD"
-msgstr "CD"
-
-msgid "Mixer"
-msgstr "Mixér"
-
-msgid "PCM-2"
-msgstr "PCM-2"
-
-msgid "Record"
-msgstr "Nahrávanie"
-
-msgid "In-gain"
-msgstr "Vstupný zisk"
-
-msgid "Out-gain"
-msgstr "Výstupný zisk"
-
-msgid "Line-1"
-msgstr "Linka-1"
-
-msgid "Line-2"
-msgstr "Linka-2"
-
-msgid "Line-3"
-msgstr "Linka-3"
-
-msgid "Digital-1"
-msgstr "Digitál-1"
-
-msgid "Digital-2"
-msgstr "Digitál-2"
-
-msgid "Digital-3"
-msgstr "Digitál-3"
-
-msgid "Phone-in"
-msgstr "Telefón-vstup"
-
-msgid "Phone-out"
-msgstr "Telefón-výstup"
-
-msgid "Video"
-msgstr "Video"
-
-msgid "Radio"
-msgstr "Rádio"
-
-msgid "Monitor"
-msgstr "Monitor"
-
 msgid ""
 "Could not open audio device for playback. Device is being used by another "
 "application."
@@ -200,311 +125,6 @@ msgstr ""
 msgid "Could not open audio device for recording."
 msgstr "Nepodarilo sa otvoriť zvukové zariadenie v režime záznamu."
 
-msgid "Could not open audio device for mixer control handling."
-msgstr "Nepodarilo sa otvoriť zvukové zariadenie v režime obsluhy mixéru."
-
-msgid ""
-"Could not open audio device for mixer control handling. This version of the "
-"Open Sound System is not supported by this element."
-msgstr ""
-"Nepodarilo sa otvoriť zvukové zariadenie v režime obsluhy mixéru. Táto "
-"verzia Open Sound System nie je podporovaná týmto prvkom."
-
-msgid "Master"
-msgstr "Hlavný"
-
-msgid "Front"
-msgstr "Predný"
-
-msgid "Rear"
-msgstr "Zadné"
-
-msgid "Headphones"
-msgstr "Slúchadlá"
-
-msgid "Center"
-msgstr "Stredný"
-
-msgid "LFE"
-msgstr "LFE"
-
-msgid "Surround"
-msgstr "Priestorový"
-
-msgid "Side"
-msgstr "Strana"
-
-msgid "Built-in Speaker"
-msgstr "PC reproduktor"
-
-msgid "AUX 1 Out"
-msgstr "AUX 1 výstup"
-
-msgid "AUX 2 Out"
-msgstr "AUX 2 výstup"
-
-msgid "AUX Out"
-msgstr "AUX výstup"
-
-msgid "3D Depth"
-msgstr "3D hĺbka"
-
-msgid "3D Center"
-msgstr "3D stred"
-
-msgid "3D Enhance"
-msgstr "3D vylepšenie"
-
-msgid "Telephone"
-msgstr "Telefón"
-
-msgid "Line Out"
-msgstr "Linkový výstup"
-
-msgid "Line In"
-msgstr "Linkový vstup"
-
-msgid "Internal CD"
-msgstr "Vnútorne CD"
-
-msgid "Video In"
-msgstr "Video vstup"
-
-msgid "AUX 1 In"
-msgstr "AUX 1 vstup"
-
-msgid "AUX 2 In"
-msgstr "AUX 2 vstup"
-
-msgid "AUX In"
-msgstr "AUX vstup"
-
-msgid "Record Gain"
-msgstr "Zisk záznamu"
-
-msgid "Output Gain"
-msgstr "Výstupný zisk"
-
-msgid "Microphone Boost"
-msgstr "Zosilnenie mikrofónu"
-
-msgid "Loopback"
-msgstr "Spätná slučka"
-
-msgid "Diagnostic"
-msgstr "Diagnostika"
-
-msgid "Bass Boost"
-msgstr "Zvýraznenie basov"
-
-msgid "Playback Ports"
-msgstr "Prehrávacie porty"
-
-msgid "Input"
-msgstr "Vstup"
-
-msgid "Record Source"
-msgstr "Zdroj záznamu"
-
-msgid "Monitor Source"
-msgstr "Monitor zdroja"
-
-msgid "Keyboard Beep"
-msgstr "Pípnutie klávesnice"
-
-msgid "Simulate Stereo"
-msgstr "Simulovať stereo"
-
-msgid "Stereo"
-msgstr "Stereo"
-
-msgid "Surround Sound"
-msgstr "Priestorový zvuk"
-
-msgid "Microphone Gain"
-msgstr "Zisk mikrofónu"
-
-msgid "Speaker Source"
-msgstr "Zdroj reproduktora"
-
-msgid "Microphone Source"
-msgstr "Zdroj mikrofónu"
-
-msgid "Jack"
-msgstr "Jack"
-
-msgid "Center / LFE"
-msgstr "Stred / LFE"
-
-msgid "Stereo Mix"
-msgstr "Stereo Mix"
-
-msgid "Mono Mix"
-msgstr "Mono Mix"
-
-msgid "Input Mix"
-msgstr "Vstup Mix"
-
-msgid "SPDIF In"
-msgstr "SPDIF vstup"
-
-msgid "SPDIF Out"
-msgstr "SPDIF výstup"
-
-msgid "Microphone 1"
-msgstr "Mikrofón 1"
-
-msgid "Microphone 2"
-msgstr "Mikrofón 2"
-
-msgid "Digital Out"
-msgstr "Digitálny výstup"
-
-msgid "Digital In"
-msgstr "Digitálny vstup"
-
-msgid "HDMI"
-msgstr "HDMI"
-
-msgid "Modem"
-msgstr "Modem"
-
-msgid "Handset"
-msgstr ""
-
-msgid "Other"
-msgstr "Iné"
-
-msgid "None"
-msgstr "Nič"
-
-msgid "On"
-msgstr "Zapnuté"
-
-msgid "Off"
-msgstr "Vypnuté"
-
-msgid "Mute"
-msgstr "Stlmiť"
-
-msgid "Fast"
-msgstr "Rýchlo"
-
-#. TRANSLATORS: "Very Low" is a quality setting here
-msgid "Very Low"
-msgstr "Veľmi nízke"
-
-#. TRANSLATORS: "Low" is a quality setting here
-msgid "Low"
-msgstr "Nízke"
-
-#. TRANSLATORS: "Medium" is a quality setting here
-msgid "Medium"
-msgstr "Stredné"
-
-#. TRANSLATORS: "High" is a quality setting here
-msgid "High"
-msgstr "Vysoké"
-
-#. TRANSLATORS: "Very High" is a quality setting here
-msgid "Very High"
-msgstr "Veľmi vysoké"
-
-#. TRANSLATORS: "Production" is a quality setting here
-msgid "Production"
-msgstr "Produkcia"
-
-msgid "Front Panel Microphone"
-msgstr "Mikrofón na prednom paneli"
-
-msgid "Front Panel Line In"
-msgstr "Linkový vstup na prednom paneli"
-
-msgid "Front Panel Headphones"
-msgstr "Slúchadlá na prednom paneli"
-
-msgid "Front Panel Line Out"
-msgstr "Linkový výstup na prednom paneli"
-
-msgid "Green Connector"
-msgstr "Zelený konektor"
-
-msgid "Pink Connector"
-msgstr "Ružový konektor"
-
-msgid "Blue Connector"
-msgstr "Modrý konektor"
-
-msgid "White Connector"
-msgstr "Biely konektor"
-
-msgid "Black Connector"
-msgstr "Čierny konektor"
-
-msgid "Gray Connector"
-msgstr "Šedý konektor"
-
-msgid "Orange Connector"
-msgstr "Oranžový konektor"
-
-msgid "Red Connector"
-msgstr "Červený konektor"
-
-msgid "Yellow Connector"
-msgstr "Žltý konektor"
-
-msgid "Green Front Panel Connector"
-msgstr "Zelený konektor na prednom paneli"
-
-msgid "Pink Front Panel Connector"
-msgstr "Ružový konektor na prednom paneli"
-
-msgid "Blue Front Panel Connector"
-msgstr "Modrý konektor na prednom paneli"
-
-msgid "White Front Panel Connector"
-msgstr "Biely konektor na prednom paneli"
-
-msgid "Black Front Panel Connector"
-msgstr "Čierny konektor na prednom paneli"
-
-msgid "Gray Front Panel Connector"
-msgstr "Šedý konektor na prednom paneli"
-
-msgid "Orange Front Panel Connector"
-msgstr "Oranžový konektor na prednom paneli"
-
-msgid "Red Front Panel Connector"
-msgstr "Červený konektor na prednom paneli"
-
-msgid "Yellow Front Panel Connector"
-msgstr "Žltý konektor na prednom paneli"
-
-msgid "Spread Output"
-msgstr "Rozdeliť výstup"
-
-msgid "Downmix"
-msgstr "Zmiešanie"
-
-msgid "Virtual Mixer Input"
-msgstr "Vstup virtuálneho mixéra"
-
-msgid "Virtual Mixer Output"
-msgstr "Výstup virtuálneho mixéra"
-
-msgid "Virtual Mixer Channels"
-msgstr "Kanály virtuálneho mixéra"
-
-#. TRANSLATORS: name + number of a volume mixer control
-#, c-format
-msgid "%s %d Function"
-msgstr "%s %d funkcia"
-
-#. TRANSLATORS: name of a volume mixer control
-#, c-format
-msgid "%s Function"
-msgstr "%s funkcia"
-
 msgid ""
 "Could not open audio device for playback. This version of the Open Sound "
 "System is not supported by this element."
@@ -524,11 +144,32 @@ msgstr "Záznam nie je podporovaný týmto zvukovým zariadením."
 msgid "Error recording from audio device."
 msgstr "Chyba pri zázname zo zvukového zariadenia."
 
+msgid "Volume"
+msgstr "Hlasitosť"
+
 msgid "Gain"
 msgstr "Zisk"
 
+msgid "Monitor"
+msgstr "Monitor"
+
+msgid "Built-in Speaker"
+msgstr "PC reproduktor"
+
 msgid "Headphone"
 msgstr "Slúchadlá"
+
+msgid "Line Out"
+msgstr "Linkový výstup"
+
+msgid "SPDIF Out"
+msgstr "SPDIF výstup"
+
+msgid "AUX 1 Out"
+msgstr "AUX 1 výstup"
+
+msgid "AUX 2 Out"
+msgstr "AUX 2 výstup"
 
 #, c-format
 msgid "Error reading %d bytes from device '%s'."
@@ -710,6 +351,352 @@ msgstr "Zmena rozlíšenia za chodu nie je zatiaľ podporovaná."
 
 msgid "Cannot operate without a clock"
 msgstr "Nemôžem fungovať bez hodín"
+
+#~ msgid "Bass"
+#~ msgstr "Basy"
+
+#~ msgid "Treble"
+#~ msgstr "Výšky"
+
+#~ msgid "Synth"
+#~ msgstr "Syntetizér"
+
+#~ msgid "PCM"
+#~ msgstr "PCM"
+
+#~ msgid "Speaker"
+#~ msgstr "Reproduktor"
+
+#~ msgid "Line-in"
+#~ msgstr "Linkový vstup"
+
+#~ msgid "Microphone"
+#~ msgstr "Mikrofón"
+
+#~ msgid "CD"
+#~ msgstr "CD"
+
+#~ msgid "Mixer"
+#~ msgstr "Mixér"
+
+#~ msgid "PCM-2"
+#~ msgstr "PCM-2"
+
+#~ msgid "Record"
+#~ msgstr "Nahrávanie"
+
+#~ msgid "In-gain"
+#~ msgstr "Vstupný zisk"
+
+#~ msgid "Out-gain"
+#~ msgstr "Výstupný zisk"
+
+#~ msgid "Line-1"
+#~ msgstr "Linka-1"
+
+#~ msgid "Line-2"
+#~ msgstr "Linka-2"
+
+#~ msgid "Line-3"
+#~ msgstr "Linka-3"
+
+#~ msgid "Digital-1"
+#~ msgstr "Digitál-1"
+
+#~ msgid "Digital-2"
+#~ msgstr "Digitál-2"
+
+#~ msgid "Digital-3"
+#~ msgstr "Digitál-3"
+
+#~ msgid "Phone-in"
+#~ msgstr "Telefón-vstup"
+
+#~ msgid "Phone-out"
+#~ msgstr "Telefón-výstup"
+
+#~ msgid "Video"
+#~ msgstr "Video"
+
+#~ msgid "Radio"
+#~ msgstr "Rádio"
+
+#~ msgid "Could not open audio device for mixer control handling."
+#~ msgstr "Nepodarilo sa otvoriť zvukové zariadenie v režime obsluhy mixéru."
+
+#~ msgid ""
+#~ "Could not open audio device for mixer control handling. This version of "
+#~ "the Open Sound System is not supported by this element."
+#~ msgstr ""
+#~ "Nepodarilo sa otvoriť zvukové zariadenie v režime obsluhy mixéru. Táto "
+#~ "verzia Open Sound System nie je podporovaná týmto prvkom."
+
+#~ msgid "Master"
+#~ msgstr "Hlavný"
+
+#~ msgid "Front"
+#~ msgstr "Predný"
+
+#~ msgid "Rear"
+#~ msgstr "Zadné"
+
+#~ msgid "Headphones"
+#~ msgstr "Slúchadlá"
+
+#~ msgid "Center"
+#~ msgstr "Stredný"
+
+#~ msgid "LFE"
+#~ msgstr "LFE"
+
+#~ msgid "Surround"
+#~ msgstr "Priestorový"
+
+#~ msgid "Side"
+#~ msgstr "Strana"
+
+#~ msgid "AUX Out"
+#~ msgstr "AUX výstup"
+
+#~ msgid "3D Depth"
+#~ msgstr "3D hĺbka"
+
+#~ msgid "3D Center"
+#~ msgstr "3D stred"
+
+#~ msgid "3D Enhance"
+#~ msgstr "3D vylepšenie"
+
+#~ msgid "Telephone"
+#~ msgstr "Telefón"
+
+#~ msgid "Line In"
+#~ msgstr "Linkový vstup"
+
+#~ msgid "Internal CD"
+#~ msgstr "Vnútorne CD"
+
+#~ msgid "Video In"
+#~ msgstr "Video vstup"
+
+#~ msgid "AUX 1 In"
+#~ msgstr "AUX 1 vstup"
+
+#~ msgid "AUX 2 In"
+#~ msgstr "AUX 2 vstup"
+
+#~ msgid "AUX In"
+#~ msgstr "AUX vstup"
+
+#~ msgid "Record Gain"
+#~ msgstr "Zisk záznamu"
+
+#~ msgid "Output Gain"
+#~ msgstr "Výstupný zisk"
+
+#~ msgid "Microphone Boost"
+#~ msgstr "Zosilnenie mikrofónu"
+
+#~ msgid "Loopback"
+#~ msgstr "Spätná slučka"
+
+#~ msgid "Diagnostic"
+#~ msgstr "Diagnostika"
+
+#~ msgid "Bass Boost"
+#~ msgstr "Zvýraznenie basov"
+
+#~ msgid "Playback Ports"
+#~ msgstr "Prehrávacie porty"
+
+#~ msgid "Input"
+#~ msgstr "Vstup"
+
+#~ msgid "Record Source"
+#~ msgstr "Zdroj záznamu"
+
+#~ msgid "Monitor Source"
+#~ msgstr "Monitor zdroja"
+
+#~ msgid "Keyboard Beep"
+#~ msgstr "Pípnutie klávesnice"
+
+#~ msgid "Simulate Stereo"
+#~ msgstr "Simulovať stereo"
+
+#~ msgid "Stereo"
+#~ msgstr "Stereo"
+
+#~ msgid "Surround Sound"
+#~ msgstr "Priestorový zvuk"
+
+#~ msgid "Microphone Gain"
+#~ msgstr "Zisk mikrofónu"
+
+#~ msgid "Speaker Source"
+#~ msgstr "Zdroj reproduktora"
+
+#~ msgid "Microphone Source"
+#~ msgstr "Zdroj mikrofónu"
+
+#~ msgid "Jack"
+#~ msgstr "Jack"
+
+#~ msgid "Center / LFE"
+#~ msgstr "Stred / LFE"
+
+#~ msgid "Stereo Mix"
+#~ msgstr "Stereo Mix"
+
+#~ msgid "Mono Mix"
+#~ msgstr "Mono Mix"
+
+#~ msgid "Input Mix"
+#~ msgstr "Vstup Mix"
+
+#~ msgid "SPDIF In"
+#~ msgstr "SPDIF vstup"
+
+#~ msgid "Microphone 1"
+#~ msgstr "Mikrofón 1"
+
+#~ msgid "Microphone 2"
+#~ msgstr "Mikrofón 2"
+
+#~ msgid "Digital Out"
+#~ msgstr "Digitálny výstup"
+
+#~ msgid "Digital In"
+#~ msgstr "Digitálny vstup"
+
+#~ msgid "HDMI"
+#~ msgstr "HDMI"
+
+#~ msgid "Modem"
+#~ msgstr "Modem"
+
+#~ msgid "Other"
+#~ msgstr "Iné"
+
+#~ msgid "None"
+#~ msgstr "Nič"
+
+#~ msgid "On"
+#~ msgstr "Zapnuté"
+
+#~ msgid "Off"
+#~ msgstr "Vypnuté"
+
+#~ msgid "Mute"
+#~ msgstr "Stlmiť"
+
+#~ msgid "Fast"
+#~ msgstr "Rýchlo"
+
+#~ msgid "Very Low"
+#~ msgstr "Veľmi nízke"
+
+#~ msgid "Low"
+#~ msgstr "Nízke"
+
+#~ msgid "Medium"
+#~ msgstr "Stredné"
+
+#~ msgid "High"
+#~ msgstr "Vysoké"
+
+#~ msgid "Very High"
+#~ msgstr "Veľmi vysoké"
+
+#~ msgid "Production"
+#~ msgstr "Produkcia"
+
+#~ msgid "Front Panel Microphone"
+#~ msgstr "Mikrofón na prednom paneli"
+
+#~ msgid "Front Panel Line In"
+#~ msgstr "Linkový vstup na prednom paneli"
+
+#~ msgid "Front Panel Headphones"
+#~ msgstr "Slúchadlá na prednom paneli"
+
+#~ msgid "Front Panel Line Out"
+#~ msgstr "Linkový výstup na prednom paneli"
+
+#~ msgid "Green Connector"
+#~ msgstr "Zelený konektor"
+
+#~ msgid "Pink Connector"
+#~ msgstr "Ružový konektor"
+
+#~ msgid "Blue Connector"
+#~ msgstr "Modrý konektor"
+
+#~ msgid "White Connector"
+#~ msgstr "Biely konektor"
+
+#~ msgid "Black Connector"
+#~ msgstr "Čierny konektor"
+
+#~ msgid "Gray Connector"
+#~ msgstr "Šedý konektor"
+
+#~ msgid "Orange Connector"
+#~ msgstr "Oranžový konektor"
+
+#~ msgid "Red Connector"
+#~ msgstr "Červený konektor"
+
+#~ msgid "Yellow Connector"
+#~ msgstr "Žltý konektor"
+
+#~ msgid "Green Front Panel Connector"
+#~ msgstr "Zelený konektor na prednom paneli"
+
+#~ msgid "Pink Front Panel Connector"
+#~ msgstr "Ružový konektor na prednom paneli"
+
+#~ msgid "Blue Front Panel Connector"
+#~ msgstr "Modrý konektor na prednom paneli"
+
+#~ msgid "White Front Panel Connector"
+#~ msgstr "Biely konektor na prednom paneli"
+
+#~ msgid "Black Front Panel Connector"
+#~ msgstr "Čierny konektor na prednom paneli"
+
+#~ msgid "Gray Front Panel Connector"
+#~ msgstr "Šedý konektor na prednom paneli"
+
+#~ msgid "Orange Front Panel Connector"
+#~ msgstr "Oranžový konektor na prednom paneli"
+
+#~ msgid "Red Front Panel Connector"
+#~ msgstr "Červený konektor na prednom paneli"
+
+#~ msgid "Yellow Front Panel Connector"
+#~ msgstr "Žltý konektor na prednom paneli"
+
+#~ msgid "Spread Output"
+#~ msgstr "Rozdeliť výstup"
+
+#~ msgid "Downmix"
+#~ msgstr "Zmiešanie"
+
+#~ msgid "Virtual Mixer Input"
+#~ msgstr "Vstup virtuálneho mixéra"
+
+#~ msgid "Virtual Mixer Output"
+#~ msgstr "Výstup virtuálneho mixéra"
+
+#~ msgid "Virtual Mixer Channels"
+#~ msgstr "Kanály virtuálneho mixéra"
+
+#~ msgid "%s %d Function"
+#~ msgstr "%s %d funkcia"
+
+#~ msgid "%s Function"
+#~ msgstr "%s funkcia"
 
 #~ msgid "Error reading %d bytes on device '%s'."
 #~ msgstr "Chyba pri čítaní %d bajtov na zariadení '%s'."

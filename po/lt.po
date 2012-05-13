@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-good 0.10.23.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2012-04-12 10:26+0200\n"
+"POT-Creation-Date: 2012-05-13 16:29+0200\n"
 "PO-Revision-Date: 2010-07-16 19:34+0300\n"
 "Last-Translator: Žygimantas Beručka <uid0@akl.lt>\n"
 "Language-Team: Lithuanian <komp_lt@konferencijos.lt>\n"
@@ -100,81 +100,6 @@ msgstr ""
 msgid "Internal data flow error."
 msgstr "Vidinė duomenų srauto klaida."
 
-msgid "Volume"
-msgstr "Garsumas"
-
-msgid "Bass"
-msgstr "Žemi dažniai"
-
-msgid "Treble"
-msgstr "Aukšti dažniai"
-
-msgid "Synth"
-msgstr "Sintezatorius"
-
-msgid "PCM"
-msgstr "PCM"
-
-msgid "Speaker"
-msgstr "Garsiakalbiai"
-
-msgid "Line-in"
-msgstr "Įvedimas"
-
-msgid "Microphone"
-msgstr "Mikrofonas"
-
-msgid "CD"
-msgstr "CD"
-
-msgid "Mixer"
-msgstr "Maišiklis"
-
-msgid "PCM-2"
-msgstr "PCM-2"
-
-msgid "Record"
-msgstr "Įrašymas"
-
-msgid "In-gain"
-msgstr "Garsinimo ribose"
-
-msgid "Out-gain"
-msgstr "Už garsinimo ribų"
-
-msgid "Line-1"
-msgstr "Linija-1"
-
-msgid "Line-2"
-msgstr "Linija-2"
-
-msgid "Line-3"
-msgstr "Linija-3"
-
-msgid "Digital-1"
-msgstr "Skaitmeninis-1"
-
-msgid "Digital-2"
-msgstr "Skaitmeninis-2"
-
-msgid "Digital-3"
-msgstr "Skaitmeninis-3"
-
-msgid "Phone-in"
-msgstr "Telefonas-įv"
-
-msgid "Phone-out"
-msgstr "Telefonas-išv"
-
-msgid "Video"
-msgstr "Video"
-
-msgid "Radio"
-msgstr "Radijas"
-
-msgid "Monitor"
-msgstr "Monitorius"
-
 msgid ""
 "Could not open audio device for playback. Device is being used by another "
 "application."
@@ -201,311 +126,6 @@ msgstr ""
 msgid "Could not open audio device for recording."
 msgstr "Nepavyko atverti garso įrenginio įrašymui."
 
-msgid "Could not open audio device for mixer control handling."
-msgstr "Nepavyko atverti garso įrenginio maišiklio valdymo apdorojimui."
-
-msgid ""
-"Could not open audio device for mixer control handling. This version of the "
-"Open Sound System is not supported by this element."
-msgstr ""
-"Nepavyko atverti garso įrenginio maišiklio valdymo apdorojimui. Šis "
-"elementas nepalaiko šios Open Sound System versijos."
-
-msgid "Master"
-msgstr "Pagrindinis"
-
-msgid "Front"
-msgstr "Priekinis"
-
-msgid "Rear"
-msgstr "Galinis"
-
-msgid "Headphones"
-msgstr "Ausinės"
-
-msgid "Center"
-msgstr "Vidurinis"
-
-msgid "LFE"
-msgstr "LFE"
-
-msgid "Surround"
-msgstr "Supantis"
-
-msgid "Side"
-msgstr "Šoninis"
-
-msgid "Built-in Speaker"
-msgstr "Integruotas garsiakalbis"
-
-msgid "AUX 1 Out"
-msgstr "AUX 1 išvestis"
-
-msgid "AUX 2 Out"
-msgstr "AUX 2 išvestis"
-
-msgid "AUX Out"
-msgstr "AUX išvestis"
-
-msgid "3D Depth"
-msgstr "3D giluminis"
-
-msgid "3D Center"
-msgstr "3D vidurinis"
-
-msgid "3D Enhance"
-msgstr "3D pakeltas"
-
-msgid "Telephone"
-msgstr "Telefonas"
-
-msgid "Line Out"
-msgstr "Išeinanti linija"
-
-msgid "Line In"
-msgstr "Įeinanti linija"
-
-msgid "Internal CD"
-msgstr "Vidinis CD"
-
-msgid "Video In"
-msgstr "Vaizdo įvestis"
-
-msgid "AUX 1 In"
-msgstr "AUX 1 įvestis"
-
-msgid "AUX 2 In"
-msgstr "AUX 2 įvestis"
-
-msgid "AUX In"
-msgstr "AUX įvestis"
-
-msgid "Record Gain"
-msgstr "Įrašymo garsinimas"
-
-msgid "Output Gain"
-msgstr "Išvesties garsinimas"
-
-msgid "Microphone Boost"
-msgstr "Mikrofono pagarsinimas"
-
-msgid "Loopback"
-msgstr "Perduoti ratu"
-
-msgid "Diagnostic"
-msgstr "Diagnostika"
-
-msgid "Bass Boost"
-msgstr "Žemųjų dažnių sustiprinimas"
-
-msgid "Playback Ports"
-msgstr "Grojimo prievadai"
-
-msgid "Input"
-msgstr "Įvestis"
-
-msgid "Record Source"
-msgstr "Įrašymo šaltinis"
-
-msgid "Monitor Source"
-msgstr "Monitoriaus šaltinis"
-
-msgid "Keyboard Beep"
-msgstr "Klaviatūros pypsėjimas"
-
-msgid "Simulate Stereo"
-msgstr "Imituoti stereo"
-
-msgid "Stereo"
-msgstr "Stereo"
-
-msgid "Surround Sound"
-msgstr "Erdvinis garsas"
-
-msgid "Microphone Gain"
-msgstr "Mikrofono garsinimas"
-
-msgid "Speaker Source"
-msgstr "Garsiakalbio šaltinis"
-
-msgid "Microphone Source"
-msgstr "Mikrofono šaltinis"
-
-msgid "Jack"
-msgstr "Jack"
-
-msgid "Center / LFE"
-msgstr "Centras / LFE"
-
-msgid "Stereo Mix"
-msgstr "Stereo maiša"
-
-msgid "Mono Mix"
-msgstr "Mono maiša"
-
-msgid "Input Mix"
-msgstr "Įvesties maiša"
-
-msgid "SPDIF In"
-msgstr "SPDIF įvestis"
-
-msgid "SPDIF Out"
-msgstr "SPDIF išvestis"
-
-msgid "Microphone 1"
-msgstr "Mikrofonas 1"
-
-msgid "Microphone 2"
-msgstr "Mikrofonas 2"
-
-msgid "Digital Out"
-msgstr "Skaitmeninė išvestis"
-
-msgid "Digital In"
-msgstr "Skaitmeninė įvestis"
-
-msgid "HDMI"
-msgstr "HDMI"
-
-msgid "Modem"
-msgstr "Modemas"
-
-msgid "Handset"
-msgstr "Ragelis"
-
-msgid "Other"
-msgstr "Kita"
-
-msgid "None"
-msgstr "Nėra"
-
-msgid "On"
-msgstr "Įjungta"
-
-msgid "Off"
-msgstr "Išjungta"
-
-msgid "Mute"
-msgstr "Nutildyta"
-
-msgid "Fast"
-msgstr "Greitas"
-
-#. TRANSLATORS: "Very Low" is a quality setting here
-msgid "Very Low"
-msgstr "Labai žema"
-
-#. TRANSLATORS: "Low" is a quality setting here
-msgid "Low"
-msgstr "Žema"
-
-#. TRANSLATORS: "Medium" is a quality setting here
-msgid "Medium"
-msgstr "Vidutinė"
-
-#. TRANSLATORS: "High" is a quality setting here
-msgid "High"
-msgstr "Aukšta"
-
-#. TRANSLATORS: "Very High" is a quality setting here
-msgid "Very High"
-msgstr "Labai aukšta"
-
-#. TRANSLATORS: "Production" is a quality setting here
-msgid "Production"
-msgstr "Sukūrimo"
-
-msgid "Front Panel Microphone"
-msgstr "Priekinio skydelio mikrofonas"
-
-msgid "Front Panel Line In"
-msgstr "Priekinio skydelio įeinanti linija"
-
-msgid "Front Panel Headphones"
-msgstr "Priekinio skydelio ausinės"
-
-msgid "Front Panel Line Out"
-msgstr "Priekinio skydelio išeinanti linija"
-
-msgid "Green Connector"
-msgstr "Žalias kištukas"
-
-msgid "Pink Connector"
-msgstr "Rožinis kištukas"
-
-msgid "Blue Connector"
-msgstr "Mėlynas kištukas"
-
-msgid "White Connector"
-msgstr "Baltas kištukas"
-
-msgid "Black Connector"
-msgstr "Juodas kištukas"
-
-msgid "Gray Connector"
-msgstr "Pilkas kištukas"
-
-msgid "Orange Connector"
-msgstr "Oranžinis kištukas"
-
-msgid "Red Connector"
-msgstr "Raudonas kištukas"
-
-msgid "Yellow Connector"
-msgstr "Geltonas kištukas"
-
-msgid "Green Front Panel Connector"
-msgstr "Žalias priekinio skydelio kištukas"
-
-msgid "Pink Front Panel Connector"
-msgstr "Rožinis priekinio skydelio kištukas"
-
-msgid "Blue Front Panel Connector"
-msgstr "Mėlynas priekinio skydelio kištukas"
-
-msgid "White Front Panel Connector"
-msgstr "Baltas priekinio skydelio kištukas"
-
-msgid "Black Front Panel Connector"
-msgstr "Juodas priekinio skydelio kištukas"
-
-msgid "Gray Front Panel Connector"
-msgstr "Pilkas priekinio skydelio kištukas"
-
-msgid "Orange Front Panel Connector"
-msgstr "Oranžinis priekinio skydelio kištukas"
-
-msgid "Red Front Panel Connector"
-msgstr "Raudonas priekinio skydelio kištukas"
-
-msgid "Yellow Front Panel Connector"
-msgstr "Geltonas priekinio skydelio kištukas"
-
-msgid "Spread Output"
-msgstr "Skleisti išvestį"
-
-msgid "Downmix"
-msgstr "Sumaišyti"
-
-msgid "Virtual Mixer Input"
-msgstr "Virtualaus maišiklio įvestis"
-
-msgid "Virtual Mixer Output"
-msgstr "Virtualaus maišiklio išvestis"
-
-msgid "Virtual Mixer Channels"
-msgstr "Virtualaus maišiklio kanalai"
-
-#. TRANSLATORS: name + number of a volume mixer control
-#, c-format
-msgid "%s %d Function"
-msgstr "%s %d funkcija"
-
-#. TRANSLATORS: name of a volume mixer control
-#, c-format
-msgid "%s Function"
-msgstr "%s funkcija"
-
 msgid ""
 "Could not open audio device for playback. This version of the Open Sound "
 "System is not supported by this element."
@@ -525,11 +145,32 @@ msgstr "Šis garso įrenginys nepalaiko grojimo."
 msgid "Error recording from audio device."
 msgstr "Klaida įrašant iš garso įrenginio."
 
+msgid "Volume"
+msgstr "Garsumas"
+
 msgid "Gain"
 msgstr "Garsinimas"
 
+msgid "Monitor"
+msgstr "Monitorius"
+
+msgid "Built-in Speaker"
+msgstr "Integruotas garsiakalbis"
+
 msgid "Headphone"
 msgstr "Ausinės"
+
+msgid "Line Out"
+msgstr "Išeinanti linija"
+
+msgid "SPDIF Out"
+msgstr "SPDIF išvestis"
+
+msgid "AUX 1 Out"
+msgstr "AUX 1 išvestis"
+
+msgid "AUX 2 Out"
+msgstr "AUX 2 išvestis"
 
 #, c-format
 msgid "Error reading %d bytes from device '%s'."
@@ -704,6 +345,355 @@ msgstr "Galimybės keisti skiriamąją gebą operacijos vykdymo metu dar nėra."
 
 msgid "Cannot operate without a clock"
 msgstr "Negali veikti be laikrodžio"
+
+#~ msgid "Bass"
+#~ msgstr "Žemi dažniai"
+
+#~ msgid "Treble"
+#~ msgstr "Aukšti dažniai"
+
+#~ msgid "Synth"
+#~ msgstr "Sintezatorius"
+
+#~ msgid "PCM"
+#~ msgstr "PCM"
+
+#~ msgid "Speaker"
+#~ msgstr "Garsiakalbiai"
+
+#~ msgid "Line-in"
+#~ msgstr "Įvedimas"
+
+#~ msgid "Microphone"
+#~ msgstr "Mikrofonas"
+
+#~ msgid "CD"
+#~ msgstr "CD"
+
+#~ msgid "Mixer"
+#~ msgstr "Maišiklis"
+
+#~ msgid "PCM-2"
+#~ msgstr "PCM-2"
+
+#~ msgid "Record"
+#~ msgstr "Įrašymas"
+
+#~ msgid "In-gain"
+#~ msgstr "Garsinimo ribose"
+
+#~ msgid "Out-gain"
+#~ msgstr "Už garsinimo ribų"
+
+#~ msgid "Line-1"
+#~ msgstr "Linija-1"
+
+#~ msgid "Line-2"
+#~ msgstr "Linija-2"
+
+#~ msgid "Line-3"
+#~ msgstr "Linija-3"
+
+#~ msgid "Digital-1"
+#~ msgstr "Skaitmeninis-1"
+
+#~ msgid "Digital-2"
+#~ msgstr "Skaitmeninis-2"
+
+#~ msgid "Digital-3"
+#~ msgstr "Skaitmeninis-3"
+
+#~ msgid "Phone-in"
+#~ msgstr "Telefonas-įv"
+
+#~ msgid "Phone-out"
+#~ msgstr "Telefonas-išv"
+
+#~ msgid "Video"
+#~ msgstr "Video"
+
+#~ msgid "Radio"
+#~ msgstr "Radijas"
+
+#~ msgid "Could not open audio device for mixer control handling."
+#~ msgstr "Nepavyko atverti garso įrenginio maišiklio valdymo apdorojimui."
+
+#~ msgid ""
+#~ "Could not open audio device for mixer control handling. This version of "
+#~ "the Open Sound System is not supported by this element."
+#~ msgstr ""
+#~ "Nepavyko atverti garso įrenginio maišiklio valdymo apdorojimui. Šis "
+#~ "elementas nepalaiko šios Open Sound System versijos."
+
+#~ msgid "Master"
+#~ msgstr "Pagrindinis"
+
+#~ msgid "Front"
+#~ msgstr "Priekinis"
+
+#~ msgid "Rear"
+#~ msgstr "Galinis"
+
+#~ msgid "Headphones"
+#~ msgstr "Ausinės"
+
+#~ msgid "Center"
+#~ msgstr "Vidurinis"
+
+#~ msgid "LFE"
+#~ msgstr "LFE"
+
+#~ msgid "Surround"
+#~ msgstr "Supantis"
+
+#~ msgid "Side"
+#~ msgstr "Šoninis"
+
+#~ msgid "AUX Out"
+#~ msgstr "AUX išvestis"
+
+#~ msgid "3D Depth"
+#~ msgstr "3D giluminis"
+
+#~ msgid "3D Center"
+#~ msgstr "3D vidurinis"
+
+#~ msgid "3D Enhance"
+#~ msgstr "3D pakeltas"
+
+#~ msgid "Telephone"
+#~ msgstr "Telefonas"
+
+#~ msgid "Line In"
+#~ msgstr "Įeinanti linija"
+
+#~ msgid "Internal CD"
+#~ msgstr "Vidinis CD"
+
+#~ msgid "Video In"
+#~ msgstr "Vaizdo įvestis"
+
+#~ msgid "AUX 1 In"
+#~ msgstr "AUX 1 įvestis"
+
+#~ msgid "AUX 2 In"
+#~ msgstr "AUX 2 įvestis"
+
+#~ msgid "AUX In"
+#~ msgstr "AUX įvestis"
+
+#~ msgid "Record Gain"
+#~ msgstr "Įrašymo garsinimas"
+
+#~ msgid "Output Gain"
+#~ msgstr "Išvesties garsinimas"
+
+#~ msgid "Microphone Boost"
+#~ msgstr "Mikrofono pagarsinimas"
+
+#~ msgid "Loopback"
+#~ msgstr "Perduoti ratu"
+
+#~ msgid "Diagnostic"
+#~ msgstr "Diagnostika"
+
+#~ msgid "Bass Boost"
+#~ msgstr "Žemųjų dažnių sustiprinimas"
+
+#~ msgid "Playback Ports"
+#~ msgstr "Grojimo prievadai"
+
+#~ msgid "Input"
+#~ msgstr "Įvestis"
+
+#~ msgid "Record Source"
+#~ msgstr "Įrašymo šaltinis"
+
+#~ msgid "Monitor Source"
+#~ msgstr "Monitoriaus šaltinis"
+
+#~ msgid "Keyboard Beep"
+#~ msgstr "Klaviatūros pypsėjimas"
+
+#~ msgid "Simulate Stereo"
+#~ msgstr "Imituoti stereo"
+
+#~ msgid "Stereo"
+#~ msgstr "Stereo"
+
+#~ msgid "Surround Sound"
+#~ msgstr "Erdvinis garsas"
+
+#~ msgid "Microphone Gain"
+#~ msgstr "Mikrofono garsinimas"
+
+#~ msgid "Speaker Source"
+#~ msgstr "Garsiakalbio šaltinis"
+
+#~ msgid "Microphone Source"
+#~ msgstr "Mikrofono šaltinis"
+
+#~ msgid "Jack"
+#~ msgstr "Jack"
+
+#~ msgid "Center / LFE"
+#~ msgstr "Centras / LFE"
+
+#~ msgid "Stereo Mix"
+#~ msgstr "Stereo maiša"
+
+#~ msgid "Mono Mix"
+#~ msgstr "Mono maiša"
+
+#~ msgid "Input Mix"
+#~ msgstr "Įvesties maiša"
+
+#~ msgid "SPDIF In"
+#~ msgstr "SPDIF įvestis"
+
+#~ msgid "Microphone 1"
+#~ msgstr "Mikrofonas 1"
+
+#~ msgid "Microphone 2"
+#~ msgstr "Mikrofonas 2"
+
+#~ msgid "Digital Out"
+#~ msgstr "Skaitmeninė išvestis"
+
+#~ msgid "Digital In"
+#~ msgstr "Skaitmeninė įvestis"
+
+#~ msgid "HDMI"
+#~ msgstr "HDMI"
+
+#~ msgid "Modem"
+#~ msgstr "Modemas"
+
+#~ msgid "Handset"
+#~ msgstr "Ragelis"
+
+#~ msgid "Other"
+#~ msgstr "Kita"
+
+#~ msgid "None"
+#~ msgstr "Nėra"
+
+#~ msgid "On"
+#~ msgstr "Įjungta"
+
+#~ msgid "Off"
+#~ msgstr "Išjungta"
+
+#~ msgid "Mute"
+#~ msgstr "Nutildyta"
+
+#~ msgid "Fast"
+#~ msgstr "Greitas"
+
+#~ msgid "Very Low"
+#~ msgstr "Labai žema"
+
+#~ msgid "Low"
+#~ msgstr "Žema"
+
+#~ msgid "Medium"
+#~ msgstr "Vidutinė"
+
+#~ msgid "High"
+#~ msgstr "Aukšta"
+
+#~ msgid "Very High"
+#~ msgstr "Labai aukšta"
+
+#~ msgid "Production"
+#~ msgstr "Sukūrimo"
+
+#~ msgid "Front Panel Microphone"
+#~ msgstr "Priekinio skydelio mikrofonas"
+
+#~ msgid "Front Panel Line In"
+#~ msgstr "Priekinio skydelio įeinanti linija"
+
+#~ msgid "Front Panel Headphones"
+#~ msgstr "Priekinio skydelio ausinės"
+
+#~ msgid "Front Panel Line Out"
+#~ msgstr "Priekinio skydelio išeinanti linija"
+
+#~ msgid "Green Connector"
+#~ msgstr "Žalias kištukas"
+
+#~ msgid "Pink Connector"
+#~ msgstr "Rožinis kištukas"
+
+#~ msgid "Blue Connector"
+#~ msgstr "Mėlynas kištukas"
+
+#~ msgid "White Connector"
+#~ msgstr "Baltas kištukas"
+
+#~ msgid "Black Connector"
+#~ msgstr "Juodas kištukas"
+
+#~ msgid "Gray Connector"
+#~ msgstr "Pilkas kištukas"
+
+#~ msgid "Orange Connector"
+#~ msgstr "Oranžinis kištukas"
+
+#~ msgid "Red Connector"
+#~ msgstr "Raudonas kištukas"
+
+#~ msgid "Yellow Connector"
+#~ msgstr "Geltonas kištukas"
+
+#~ msgid "Green Front Panel Connector"
+#~ msgstr "Žalias priekinio skydelio kištukas"
+
+#~ msgid "Pink Front Panel Connector"
+#~ msgstr "Rožinis priekinio skydelio kištukas"
+
+#~ msgid "Blue Front Panel Connector"
+#~ msgstr "Mėlynas priekinio skydelio kištukas"
+
+#~ msgid "White Front Panel Connector"
+#~ msgstr "Baltas priekinio skydelio kištukas"
+
+#~ msgid "Black Front Panel Connector"
+#~ msgstr "Juodas priekinio skydelio kištukas"
+
+#~ msgid "Gray Front Panel Connector"
+#~ msgstr "Pilkas priekinio skydelio kištukas"
+
+#~ msgid "Orange Front Panel Connector"
+#~ msgstr "Oranžinis priekinio skydelio kištukas"
+
+#~ msgid "Red Front Panel Connector"
+#~ msgstr "Raudonas priekinio skydelio kištukas"
+
+#~ msgid "Yellow Front Panel Connector"
+#~ msgstr "Geltonas priekinio skydelio kištukas"
+
+#~ msgid "Spread Output"
+#~ msgstr "Skleisti išvestį"
+
+#~ msgid "Downmix"
+#~ msgstr "Sumaišyti"
+
+#~ msgid "Virtual Mixer Input"
+#~ msgstr "Virtualaus maišiklio įvestis"
+
+#~ msgid "Virtual Mixer Output"
+#~ msgstr "Virtualaus maišiklio išvestis"
+
+#~ msgid "Virtual Mixer Channels"
+#~ msgstr "Virtualaus maišiklio kanalai"
+
+#~ msgid "%s %d Function"
+#~ msgstr "%s %d funkcija"
+
+#~ msgid "%s Function"
+#~ msgstr "%s funkcija"
 
 #~ msgid "Error reading %d bytes on device '%s'."
 #~ msgstr "Klaida skaitant %d baitus (-ų) įrenginyje „%s“."

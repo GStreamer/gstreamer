@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-good 0.10.25.3\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2012-04-12 10:26+0200\n"
+"POT-Creation-Date: 2012-05-13 16:29+0200\n"
 "PO-Revision-Date: 2010-10-24 21:53+0200\n"
 "Last-Translator: Kjartan Maraas <kmaraas@gnome.org>\n"
 "Language-Team: Norwegian Bokmaal <i18n-nb@lister.ping.uio.no>\n"
@@ -90,81 +90,6 @@ msgstr ""
 msgid "Internal data flow error."
 msgstr ""
 
-msgid "Volume"
-msgstr "Volum"
-
-msgid "Bass"
-msgstr "Bass"
-
-msgid "Treble"
-msgstr "Diskant"
-
-msgid "Synth"
-msgstr "Synth"
-
-msgid "PCM"
-msgstr "PCM"
-
-msgid "Speaker"
-msgstr "Høyttaler"
-
-msgid "Line-in"
-msgstr "Linje inn"
-
-msgid "Microphone"
-msgstr "Mikrofon"
-
-msgid "CD"
-msgstr "CD"
-
-msgid "Mixer"
-msgstr "Mikser"
-
-msgid "PCM-2"
-msgstr "PCM-2"
-
-msgid "Record"
-msgstr "Opptak"
-
-msgid "In-gain"
-msgstr ""
-
-msgid "Out-gain"
-msgstr ""
-
-msgid "Line-1"
-msgstr "Linje 1"
-
-msgid "Line-2"
-msgstr "Linje 2"
-
-msgid "Line-3"
-msgstr "Linje 3"
-
-msgid "Digital-1"
-msgstr "Digital 1"
-
-msgid "Digital-2"
-msgstr "Digital 2"
-
-msgid "Digital-3"
-msgstr "Digital 3"
-
-msgid "Phone-in"
-msgstr "Telefon inn"
-
-msgid "Phone-out"
-msgstr "Telefon ut"
-
-msgid "Video"
-msgstr "Video"
-
-msgid "Radio"
-msgstr "Radio"
-
-msgid "Monitor"
-msgstr "Monitor"
-
 msgid ""
 "Could not open audio device for playback. Device is being used by another "
 "application."
@@ -186,310 +111,6 @@ msgstr ""
 msgid "Could not open audio device for recording."
 msgstr "Kunne ikke åpne lydenhet for opptak."
 
-#, fuzzy
-msgid "Could not open audio device for mixer control handling."
-msgstr "Kunne ikke åpne filen «%s» for lesing."
-
-msgid ""
-"Could not open audio device for mixer control handling. This version of the "
-"Open Sound System is not supported by this element."
-msgstr ""
-
-msgid "Master"
-msgstr "Hovedvolum"
-
-msgid "Front"
-msgstr "Front"
-
-msgid "Rear"
-msgstr "Bak"
-
-msgid "Headphones"
-msgstr "Hodetelefoner"
-
-msgid "Center"
-msgstr "Senter"
-
-msgid "LFE"
-msgstr ""
-
-msgid "Surround"
-msgstr "Surround"
-
-msgid "Side"
-msgstr "Side"
-
-msgid "Built-in Speaker"
-msgstr "Innebygget høyttaler"
-
-msgid "AUX 1 Out"
-msgstr "AUX 1 ut"
-
-msgid "AUX 2 Out"
-msgstr "AUX 2 ut"
-
-msgid "AUX Out"
-msgstr "AUX ut"
-
-msgid "3D Depth"
-msgstr "3D dybde"
-
-msgid "3D Center"
-msgstr "3D senter"
-
-msgid "3D Enhance"
-msgstr ""
-
-msgid "Telephone"
-msgstr "Telefon"
-
-msgid "Line Out"
-msgstr "Linje ut"
-
-msgid "Line In"
-msgstr "Linje inn"
-
-msgid "Internal CD"
-msgstr "Intern CD"
-
-msgid "Video In"
-msgstr "Video inn"
-
-msgid "AUX 1 In"
-msgstr "AUX 1 inn"
-
-msgid "AUX 2 In"
-msgstr "AUX 2 inn"
-
-msgid "AUX In"
-msgstr "AUX inn"
-
-msgid "Record Gain"
-msgstr ""
-
-msgid "Output Gain"
-msgstr ""
-
-msgid "Microphone Boost"
-msgstr ""
-
-msgid "Loopback"
-msgstr ""
-
-msgid "Diagnostic"
-msgstr ""
-
-msgid "Bass Boost"
-msgstr ""
-
-msgid "Playback Ports"
-msgstr ""
-
-msgid "Input"
-msgstr ""
-
-msgid "Record Source"
-msgstr ""
-
-msgid "Monitor Source"
-msgstr ""
-
-msgid "Keyboard Beep"
-msgstr ""
-
-msgid "Simulate Stereo"
-msgstr ""
-
-msgid "Stereo"
-msgstr "Stereo"
-
-msgid "Surround Sound"
-msgstr ""
-
-msgid "Microphone Gain"
-msgstr ""
-
-msgid "Speaker Source"
-msgstr ""
-
-msgid "Microphone Source"
-msgstr ""
-
-msgid "Jack"
-msgstr ""
-
-msgid "Center / LFE"
-msgstr ""
-
-msgid "Stereo Mix"
-msgstr ""
-
-msgid "Mono Mix"
-msgstr ""
-
-msgid "Input Mix"
-msgstr ""
-
-msgid "SPDIF In"
-msgstr ""
-
-msgid "SPDIF Out"
-msgstr ""
-
-msgid "Microphone 1"
-msgstr "Mikrofon 1"
-
-msgid "Microphone 2"
-msgstr "Mikrofon 2"
-
-msgid "Digital Out"
-msgstr "Digital ut"
-
-msgid "Digital In"
-msgstr "Digital inn"
-
-msgid "HDMI"
-msgstr "HDMI"
-
-msgid "Modem"
-msgstr "Modem"
-
-msgid "Handset"
-msgstr "Håndsett"
-
-msgid "Other"
-msgstr "Annet"
-
-msgid "None"
-msgstr "Ingen"
-
-msgid "On"
-msgstr "På"
-
-msgid "Off"
-msgstr "Av"
-
-msgid "Mute"
-msgstr "Demp"
-
-msgid "Fast"
-msgstr "Rask"
-
-#. TRANSLATORS: "Very Low" is a quality setting here
-msgid "Very Low"
-msgstr "Meget lav"
-
-#. TRANSLATORS: "Low" is a quality setting here
-msgid "Low"
-msgstr "Lav"
-
-#. TRANSLATORS: "Medium" is a quality setting here
-msgid "Medium"
-msgstr "Middels"
-
-#. TRANSLATORS: "High" is a quality setting here
-msgid "High"
-msgstr "Høy"
-
-#. TRANSLATORS: "Very High" is a quality setting here
-msgid "Very High"
-msgstr "Meget høy"
-
-#. TRANSLATORS: "Production" is a quality setting here
-msgid "Production"
-msgstr "Produksjon"
-
-msgid "Front Panel Microphone"
-msgstr ""
-
-msgid "Front Panel Line In"
-msgstr ""
-
-msgid "Front Panel Headphones"
-msgstr ""
-
-msgid "Front Panel Line Out"
-msgstr ""
-
-msgid "Green Connector"
-msgstr ""
-
-msgid "Pink Connector"
-msgstr ""
-
-msgid "Blue Connector"
-msgstr ""
-
-msgid "White Connector"
-msgstr ""
-
-msgid "Black Connector"
-msgstr ""
-
-msgid "Gray Connector"
-msgstr ""
-
-msgid "Orange Connector"
-msgstr ""
-
-msgid "Red Connector"
-msgstr ""
-
-msgid "Yellow Connector"
-msgstr ""
-
-msgid "Green Front Panel Connector"
-msgstr ""
-
-msgid "Pink Front Panel Connector"
-msgstr ""
-
-msgid "Blue Front Panel Connector"
-msgstr ""
-
-msgid "White Front Panel Connector"
-msgstr ""
-
-msgid "Black Front Panel Connector"
-msgstr ""
-
-msgid "Gray Front Panel Connector"
-msgstr ""
-
-msgid "Orange Front Panel Connector"
-msgstr ""
-
-msgid "Red Front Panel Connector"
-msgstr ""
-
-msgid "Yellow Front Panel Connector"
-msgstr ""
-
-msgid "Spread Output"
-msgstr ""
-
-msgid "Downmix"
-msgstr ""
-
-msgid "Virtual Mixer Input"
-msgstr ""
-
-msgid "Virtual Mixer Output"
-msgstr ""
-
-msgid "Virtual Mixer Channels"
-msgstr ""
-
-#. TRANSLATORS: name + number of a volume mixer control
-#, c-format
-msgid "%s %d Function"
-msgstr ""
-
-#. TRANSLATORS: name of a volume mixer control
-#, c-format
-msgid "%s Function"
-msgstr ""
-
 msgid ""
 "Could not open audio device for playback. This version of the Open Sound "
 "System is not supported by this element."
@@ -507,11 +128,32 @@ msgstr ""
 msgid "Error recording from audio device."
 msgstr ""
 
+msgid "Volume"
+msgstr "Volum"
+
 msgid "Gain"
 msgstr ""
 
+msgid "Monitor"
+msgstr "Monitor"
+
+msgid "Built-in Speaker"
+msgstr "Innebygget høyttaler"
+
 msgid "Headphone"
 msgstr "Hodetelefon"
+
+msgid "Line Out"
+msgstr "Linje ut"
+
+msgid "SPDIF Out"
+msgstr ""
+
+msgid "AUX 1 Out"
+msgstr "AUX 1 ut"
+
+msgid "AUX 2 Out"
+msgstr "AUX 2 ut"
 
 #, fuzzy, c-format
 msgid "Error reading %d bytes from device '%s'."
@@ -679,6 +321,184 @@ msgstr ""
 
 msgid "Cannot operate without a clock"
 msgstr "Kan ikke operere uten en klokke"
+
+#~ msgid "Bass"
+#~ msgstr "Bass"
+
+#~ msgid "Treble"
+#~ msgstr "Diskant"
+
+#~ msgid "Synth"
+#~ msgstr "Synth"
+
+#~ msgid "PCM"
+#~ msgstr "PCM"
+
+#~ msgid "Speaker"
+#~ msgstr "Høyttaler"
+
+#~ msgid "Line-in"
+#~ msgstr "Linje inn"
+
+#~ msgid "Microphone"
+#~ msgstr "Mikrofon"
+
+#~ msgid "CD"
+#~ msgstr "CD"
+
+#~ msgid "Mixer"
+#~ msgstr "Mikser"
+
+#~ msgid "PCM-2"
+#~ msgstr "PCM-2"
+
+#~ msgid "Record"
+#~ msgstr "Opptak"
+
+#~ msgid "Line-1"
+#~ msgstr "Linje 1"
+
+#~ msgid "Line-2"
+#~ msgstr "Linje 2"
+
+#~ msgid "Line-3"
+#~ msgstr "Linje 3"
+
+#~ msgid "Digital-1"
+#~ msgstr "Digital 1"
+
+#~ msgid "Digital-2"
+#~ msgstr "Digital 2"
+
+#~ msgid "Digital-3"
+#~ msgstr "Digital 3"
+
+#~ msgid "Phone-in"
+#~ msgstr "Telefon inn"
+
+#~ msgid "Phone-out"
+#~ msgstr "Telefon ut"
+
+#~ msgid "Video"
+#~ msgstr "Video"
+
+#~ msgid "Radio"
+#~ msgstr "Radio"
+
+#, fuzzy
+#~ msgid "Could not open audio device for mixer control handling."
+#~ msgstr "Kunne ikke åpne filen «%s» for lesing."
+
+#~ msgid "Master"
+#~ msgstr "Hovedvolum"
+
+#~ msgid "Front"
+#~ msgstr "Front"
+
+#~ msgid "Rear"
+#~ msgstr "Bak"
+
+#~ msgid "Headphones"
+#~ msgstr "Hodetelefoner"
+
+#~ msgid "Center"
+#~ msgstr "Senter"
+
+#~ msgid "Surround"
+#~ msgstr "Surround"
+
+#~ msgid "Side"
+#~ msgstr "Side"
+
+#~ msgid "AUX Out"
+#~ msgstr "AUX ut"
+
+#~ msgid "3D Depth"
+#~ msgstr "3D dybde"
+
+#~ msgid "3D Center"
+#~ msgstr "3D senter"
+
+#~ msgid "Telephone"
+#~ msgstr "Telefon"
+
+#~ msgid "Line In"
+#~ msgstr "Linje inn"
+
+#~ msgid "Internal CD"
+#~ msgstr "Intern CD"
+
+#~ msgid "Video In"
+#~ msgstr "Video inn"
+
+#~ msgid "AUX 1 In"
+#~ msgstr "AUX 1 inn"
+
+#~ msgid "AUX 2 In"
+#~ msgstr "AUX 2 inn"
+
+#~ msgid "AUX In"
+#~ msgstr "AUX inn"
+
+#~ msgid "Stereo"
+#~ msgstr "Stereo"
+
+#~ msgid "Microphone 1"
+#~ msgstr "Mikrofon 1"
+
+#~ msgid "Microphone 2"
+#~ msgstr "Mikrofon 2"
+
+#~ msgid "Digital Out"
+#~ msgstr "Digital ut"
+
+#~ msgid "Digital In"
+#~ msgstr "Digital inn"
+
+#~ msgid "HDMI"
+#~ msgstr "HDMI"
+
+#~ msgid "Modem"
+#~ msgstr "Modem"
+
+#~ msgid "Handset"
+#~ msgstr "Håndsett"
+
+#~ msgid "Other"
+#~ msgstr "Annet"
+
+#~ msgid "None"
+#~ msgstr "Ingen"
+
+#~ msgid "On"
+#~ msgstr "På"
+
+#~ msgid "Off"
+#~ msgstr "Av"
+
+#~ msgid "Mute"
+#~ msgstr "Demp"
+
+#~ msgid "Fast"
+#~ msgstr "Rask"
+
+#~ msgid "Very Low"
+#~ msgstr "Meget lav"
+
+#~ msgid "Low"
+#~ msgstr "Lav"
+
+#~ msgid "Medium"
+#~ msgstr "Middels"
+
+#~ msgid "High"
+#~ msgstr "Høy"
+
+#~ msgid "Very High"
+#~ msgstr "Meget høy"
+
+#~ msgid "Production"
+#~ msgstr "Produksjon"
 
 #, fuzzy
 #~ msgid "Error reading %d bytes on device '%s'."

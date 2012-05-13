@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-good 0.10.28.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2012-04-12 10:26+0200\n"
+"POT-Creation-Date: 2012-05-13 16:29+0200\n"
 "PO-Revision-Date: 2011-09-02 11:23-0000\n"
 "Last-Translator: Rihards Priedītis <rprieditis@gmail.com>\n"
 "Language-Team: Latvian <translation-team-lv@lists.sourceforge.net>\n"
@@ -99,81 +99,6 @@ msgstr ""
 msgid "Internal data flow error."
 msgstr "Iekšējā datu plūsmas kļūda."
 
-msgid "Volume"
-msgstr "Skaļums"
-
-msgid "Bass"
-msgstr "Basi"
-
-msgid "Treble"
-msgstr "Diskants"
-
-msgid "Synth"
-msgstr "Sintēze"
-
-msgid "PCM"
-msgstr "PCM"
-
-msgid "Speaker"
-msgstr "Skaļrunis"
-
-msgid "Line-in"
-msgstr "Skaņas ieeja"
-
-msgid "Microphone"
-msgstr "Mikrofons"
-
-msgid "CD"
-msgstr "CD"
-
-msgid "Mixer"
-msgstr "Jaucējs"
-
-msgid "PCM-2"
-msgstr "PCM-2"
-
-msgid "Record"
-msgstr "Ierakstīt"
-
-msgid "In-gain"
-msgstr "Ievades pieaugums"
-
-msgid "Out-gain"
-msgstr "Izvades pieaugums"
-
-msgid "Line-1"
-msgstr "Līnija-1"
-
-msgid "Line-2"
-msgstr "Līnija-2"
-
-msgid "Line-3"
-msgstr "Līnija-3"
-
-msgid "Digital-1"
-msgstr "Digitālais-1"
-
-msgid "Digital-2"
-msgstr "Digitālais-2"
-
-msgid "Digital-3"
-msgstr "Digitālais-3"
-
-msgid "Phone-in"
-msgstr "Telefona ievade"
-
-msgid "Phone-out"
-msgstr "Telefona izvade"
-
-msgid "Video"
-msgstr "Video"
-
-msgid "Radio"
-msgstr "Radio"
-
-msgid "Monitor"
-msgstr "Monitors"
-
 msgid ""
 "Could not open audio device for playback. Device is being used by another "
 "application."
@@ -201,311 +126,6 @@ msgstr ""
 msgid "Could not open audio device for recording."
 msgstr "Nevarēja atvērt audio ierīci ierakstīšanai."
 
-msgid "Could not open audio device for mixer control handling."
-msgstr "Nevarēja atvērt audio ierīci miksera kontroles vadīšanai."
-
-msgid ""
-"Could not open audio device for mixer control handling. This version of the "
-"Open Sound System is not supported by this element."
-msgstr ""
-"Nevar atvērt audio ierīci miksera kontrolas vadīšanai. Šī Atvertās Skaņas "
-"Sistemas versija neatbalsta šo elementu."
-
-msgid "Master"
-msgstr "Galvenais"
-
-msgid "Front"
-msgstr "Priekšējais"
-
-msgid "Rear"
-msgstr "Sāni"
-
-msgid "Headphones"
-msgstr "Austiņas"
-
-msgid "Center"
-msgstr "Centrs"
-
-msgid "LFE"
-msgstr "LFE"
-
-msgid "Surround"
-msgstr "Ieskaujošā"
-
-msgid "Side"
-msgstr "Puse"
-
-msgid "Built-in Speaker"
-msgstr "Iebūvētais skaļrunis"
-
-msgid "AUX 1 Out"
-msgstr "AUX 1 izeja"
-
-msgid "AUX 2 Out"
-msgstr "AUX 2 izeja"
-
-msgid "AUX Out"
-msgstr "AUX izeja"
-
-msgid "3D Depth"
-msgstr "3D dziļums"
-
-msgid "3D Center"
-msgstr "3D centrs"
-
-msgid "3D Enhance"
-msgstr "3D uzlabojums"
-
-msgid "Telephone"
-msgstr "Telefons"
-
-msgid "Line Out"
-msgstr "Skaņas izeja"
-
-msgid "Line In"
-msgstr "Līnijas ieeja"
-
-msgid "Internal CD"
-msgstr "Iekšējais CD"
-
-msgid "Video In"
-msgstr "Video ieeja"
-
-msgid "AUX 1 In"
-msgstr "AUX 1 ieeja"
-
-msgid "AUX 2 In"
-msgstr "AUX 2 ieeja"
-
-msgid "AUX In"
-msgstr "AUC ieeja"
-
-msgid "Record Gain"
-msgstr "Ierakstīta pieaugums"
-
-msgid "Output Gain"
-msgstr "Izvada pieaugums"
-
-msgid "Microphone Boost"
-msgstr "Mikrofona pastiprinājums"
-
-msgid "Loopback"
-msgstr "Atpakaļcikls"
-
-msgid "Diagnostic"
-msgstr "Diagnostika"
-
-msgid "Bass Boost"
-msgstr "Bassa pastiprinājums"
-
-msgid "Playback Ports"
-msgstr "Atskaņošanas porti"
-
-msgid "Input"
-msgstr "Ievads"
-
-msgid "Record Source"
-msgstr "Ierakstīšanas avots"
-
-msgid "Monitor Source"
-msgstr "Monitora avots"
-
-msgid "Keyboard Beep"
-msgstr "Klaviatūras pīkstieni"
-
-msgid "Simulate Stereo"
-msgstr "Simulēt stereo"
-
-msgid "Stereo"
-msgstr "Stereo"
-
-msgid "Surround Sound"
-msgstr "Ieskaujošā skaņa"
-
-msgid "Microphone Gain"
-msgstr "Mikrofona pieaugums"
-
-msgid "Speaker Source"
-msgstr "Skaļruņa avots"
-
-msgid "Microphone Source"
-msgstr "Mikrofona avots"
-
-msgid "Jack"
-msgstr "Ligzda"
-
-msgid "Center / LFE"
-msgstr "Centrs / LFE"
-
-msgid "Stereo Mix"
-msgstr "Stereo mikseris"
-
-msgid "Mono Mix"
-msgstr "Mono miskeris"
-
-msgid "Input Mix"
-msgstr "Ieejas mikseris"
-
-msgid "SPDIF In"
-msgstr "SPDIF ieeja"
-
-msgid "SPDIF Out"
-msgstr "SPDIF izeja"
-
-msgid "Microphone 1"
-msgstr "Mikrofons 1"
-
-msgid "Microphone 2"
-msgstr "Mikrofons 2"
-
-msgid "Digital Out"
-msgstr "Digitālā izeja"
-
-msgid "Digital In"
-msgstr "Digitālā ieeja"
-
-msgid "HDMI"
-msgstr "HDMI"
-
-msgid "Modem"
-msgstr "Modēms"
-
-msgid "Handset"
-msgstr "Klausule"
-
-msgid "Other"
-msgstr "Cits"
-
-msgid "None"
-msgstr "Nekas"
-
-msgid "On"
-msgstr "Ieslēgts"
-
-msgid "Off"
-msgstr "Izslēgts"
-
-msgid "Mute"
-msgstr "Klusums"
-
-msgid "Fast"
-msgstr "Ātrs"
-
-#. TRANSLATORS: "Very Low" is a quality setting here
-msgid "Very Low"
-msgstr "Ļoti zems"
-
-#. TRANSLATORS: "Low" is a quality setting here
-msgid "Low"
-msgstr "Zems"
-
-#. TRANSLATORS: "Medium" is a quality setting here
-msgid "Medium"
-msgstr "Vidējs"
-
-#. TRANSLATORS: "High" is a quality setting here
-msgid "High"
-msgstr "Augsts"
-
-#. TRANSLATORS: "Very High" is a quality setting here
-msgid "Very High"
-msgstr "Ļoti augsts"
-
-#. TRANSLATORS: "Production" is a quality setting here
-msgid "Production"
-msgstr "Produkcija"
-
-msgid "Front Panel Microphone"
-msgstr "Priekšējā paneļa mikrofons"
-
-msgid "Front Panel Line In"
-msgstr "Priekšējā paneļa ieejas līnija"
-
-msgid "Front Panel Headphones"
-msgstr "Priekšējā paneļa austiņas"
-
-msgid "Front Panel Line Out"
-msgstr "Priekšējā paneļa līnijas izeja"
-
-msgid "Green Connector"
-msgstr "Zaļais savienotājs"
-
-msgid "Pink Connector"
-msgstr "Rozā savienotājs"
-
-msgid "Blue Connector"
-msgstr "Zilais savienotājs"
-
-msgid "White Connector"
-msgstr "Baltais savienotājs"
-
-msgid "Black Connector"
-msgstr "Melnais savienotājs"
-
-msgid "Gray Connector"
-msgstr "Pelākais savienotājs"
-
-msgid "Orange Connector"
-msgstr "Oranžais savienotājs"
-
-msgid "Red Connector"
-msgstr "Sarkanais savienotājs"
-
-msgid "Yellow Connector"
-msgstr "Dzeltains savienotājs"
-
-msgid "Green Front Panel Connector"
-msgstr "Zaļais priekšējā paneļa savienotājs"
-
-msgid "Pink Front Panel Connector"
-msgstr "Rozā priekšējā paneļa savienotājs"
-
-msgid "Blue Front Panel Connector"
-msgstr "Zilais priekšējā paneļa savienotājs"
-
-msgid "White Front Panel Connector"
-msgstr "Baltais priekšējā paneļa savienotājs"
-
-msgid "Black Front Panel Connector"
-msgstr "Melnais priekšējā paneļa savienotājs"
-
-msgid "Gray Front Panel Connector"
-msgstr "Pelēkais priekšējā paneļa savienotājs"
-
-msgid "Orange Front Panel Connector"
-msgstr "Oranžais priekšējā paneļa savienotājs"
-
-msgid "Red Front Panel Connector"
-msgstr "Sarkanais priekšējā paneļa savienotājs"
-
-msgid "Yellow Front Panel Connector"
-msgstr "Dzeltenais priekšējā paneļa savienotājs"
-
-msgid "Spread Output"
-msgstr "Izplest izvadu"
-
-msgid "Downmix"
-msgstr "Lejupmiksēšana"
-
-msgid "Virtual Mixer Input"
-msgstr "Virtuālā miksera ievads"
-
-msgid "Virtual Mixer Output"
-msgstr "Virtuālā miksera izvads"
-
-msgid "Virtual Mixer Channels"
-msgstr "Virtuālā miksera kanāli"
-
-#. TRANSLATORS: name + number of a volume mixer control
-#, c-format
-msgid "%s %d Function"
-msgstr "%s %d funkcija"
-
-#. TRANSLATORS: name of a volume mixer control
-#, c-format
-msgid "%s Function"
-msgstr "%s funkcija"
-
 msgid ""
 "Could not open audio device for playback. This version of the Open Sound "
 "System is not supported by this element."
@@ -525,11 +145,32 @@ msgstr "Šī audio ierīce neatablsta ierkastīšanu."
 msgid "Error recording from audio device."
 msgstr "Kļūda ierakstot no audio iekārtas."
 
+msgid "Volume"
+msgstr "Skaļums"
+
 msgid "Gain"
 msgstr "Pieaugums"
 
+msgid "Monitor"
+msgstr "Monitors"
+
+msgid "Built-in Speaker"
+msgstr "Iebūvētais skaļrunis"
+
 msgid "Headphone"
 msgstr "Austiņas"
+
+msgid "Line Out"
+msgstr "Skaņas izeja"
+
+msgid "SPDIF Out"
+msgstr "SPDIF izeja"
+
+msgid "AUX 1 Out"
+msgstr "AUX 1 izeja"
+
+msgid "AUX 2 Out"
+msgstr "AUX 2 izeja"
 
 #, c-format
 msgid "Error reading %d bytes from device '%s'."
@@ -707,6 +348,355 @@ msgstr "Izšķirtspējas mainīšana izpildlaikā pašalik netiek atbalstīta."
 
 msgid "Cannot operate without a clock"
 msgstr "Nevar veikt darbības bez pulksteņa"
+
+#~ msgid "Bass"
+#~ msgstr "Basi"
+
+#~ msgid "Treble"
+#~ msgstr "Diskants"
+
+#~ msgid "Synth"
+#~ msgstr "Sintēze"
+
+#~ msgid "PCM"
+#~ msgstr "PCM"
+
+#~ msgid "Speaker"
+#~ msgstr "Skaļrunis"
+
+#~ msgid "Line-in"
+#~ msgstr "Skaņas ieeja"
+
+#~ msgid "Microphone"
+#~ msgstr "Mikrofons"
+
+#~ msgid "CD"
+#~ msgstr "CD"
+
+#~ msgid "Mixer"
+#~ msgstr "Jaucējs"
+
+#~ msgid "PCM-2"
+#~ msgstr "PCM-2"
+
+#~ msgid "Record"
+#~ msgstr "Ierakstīt"
+
+#~ msgid "In-gain"
+#~ msgstr "Ievades pieaugums"
+
+#~ msgid "Out-gain"
+#~ msgstr "Izvades pieaugums"
+
+#~ msgid "Line-1"
+#~ msgstr "Līnija-1"
+
+#~ msgid "Line-2"
+#~ msgstr "Līnija-2"
+
+#~ msgid "Line-3"
+#~ msgstr "Līnija-3"
+
+#~ msgid "Digital-1"
+#~ msgstr "Digitālais-1"
+
+#~ msgid "Digital-2"
+#~ msgstr "Digitālais-2"
+
+#~ msgid "Digital-3"
+#~ msgstr "Digitālais-3"
+
+#~ msgid "Phone-in"
+#~ msgstr "Telefona ievade"
+
+#~ msgid "Phone-out"
+#~ msgstr "Telefona izvade"
+
+#~ msgid "Video"
+#~ msgstr "Video"
+
+#~ msgid "Radio"
+#~ msgstr "Radio"
+
+#~ msgid "Could not open audio device for mixer control handling."
+#~ msgstr "Nevarēja atvērt audio ierīci miksera kontroles vadīšanai."
+
+#~ msgid ""
+#~ "Could not open audio device for mixer control handling. This version of "
+#~ "the Open Sound System is not supported by this element."
+#~ msgstr ""
+#~ "Nevar atvērt audio ierīci miksera kontrolas vadīšanai. Šī Atvertās Skaņas "
+#~ "Sistemas versija neatbalsta šo elementu."
+
+#~ msgid "Master"
+#~ msgstr "Galvenais"
+
+#~ msgid "Front"
+#~ msgstr "Priekšējais"
+
+#~ msgid "Rear"
+#~ msgstr "Sāni"
+
+#~ msgid "Headphones"
+#~ msgstr "Austiņas"
+
+#~ msgid "Center"
+#~ msgstr "Centrs"
+
+#~ msgid "LFE"
+#~ msgstr "LFE"
+
+#~ msgid "Surround"
+#~ msgstr "Ieskaujošā"
+
+#~ msgid "Side"
+#~ msgstr "Puse"
+
+#~ msgid "AUX Out"
+#~ msgstr "AUX izeja"
+
+#~ msgid "3D Depth"
+#~ msgstr "3D dziļums"
+
+#~ msgid "3D Center"
+#~ msgstr "3D centrs"
+
+#~ msgid "3D Enhance"
+#~ msgstr "3D uzlabojums"
+
+#~ msgid "Telephone"
+#~ msgstr "Telefons"
+
+#~ msgid "Line In"
+#~ msgstr "Līnijas ieeja"
+
+#~ msgid "Internal CD"
+#~ msgstr "Iekšējais CD"
+
+#~ msgid "Video In"
+#~ msgstr "Video ieeja"
+
+#~ msgid "AUX 1 In"
+#~ msgstr "AUX 1 ieeja"
+
+#~ msgid "AUX 2 In"
+#~ msgstr "AUX 2 ieeja"
+
+#~ msgid "AUX In"
+#~ msgstr "AUC ieeja"
+
+#~ msgid "Record Gain"
+#~ msgstr "Ierakstīta pieaugums"
+
+#~ msgid "Output Gain"
+#~ msgstr "Izvada pieaugums"
+
+#~ msgid "Microphone Boost"
+#~ msgstr "Mikrofona pastiprinājums"
+
+#~ msgid "Loopback"
+#~ msgstr "Atpakaļcikls"
+
+#~ msgid "Diagnostic"
+#~ msgstr "Diagnostika"
+
+#~ msgid "Bass Boost"
+#~ msgstr "Bassa pastiprinājums"
+
+#~ msgid "Playback Ports"
+#~ msgstr "Atskaņošanas porti"
+
+#~ msgid "Input"
+#~ msgstr "Ievads"
+
+#~ msgid "Record Source"
+#~ msgstr "Ierakstīšanas avots"
+
+#~ msgid "Monitor Source"
+#~ msgstr "Monitora avots"
+
+#~ msgid "Keyboard Beep"
+#~ msgstr "Klaviatūras pīkstieni"
+
+#~ msgid "Simulate Stereo"
+#~ msgstr "Simulēt stereo"
+
+#~ msgid "Stereo"
+#~ msgstr "Stereo"
+
+#~ msgid "Surround Sound"
+#~ msgstr "Ieskaujošā skaņa"
+
+#~ msgid "Microphone Gain"
+#~ msgstr "Mikrofona pieaugums"
+
+#~ msgid "Speaker Source"
+#~ msgstr "Skaļruņa avots"
+
+#~ msgid "Microphone Source"
+#~ msgstr "Mikrofona avots"
+
+#~ msgid "Jack"
+#~ msgstr "Ligzda"
+
+#~ msgid "Center / LFE"
+#~ msgstr "Centrs / LFE"
+
+#~ msgid "Stereo Mix"
+#~ msgstr "Stereo mikseris"
+
+#~ msgid "Mono Mix"
+#~ msgstr "Mono miskeris"
+
+#~ msgid "Input Mix"
+#~ msgstr "Ieejas mikseris"
+
+#~ msgid "SPDIF In"
+#~ msgstr "SPDIF ieeja"
+
+#~ msgid "Microphone 1"
+#~ msgstr "Mikrofons 1"
+
+#~ msgid "Microphone 2"
+#~ msgstr "Mikrofons 2"
+
+#~ msgid "Digital Out"
+#~ msgstr "Digitālā izeja"
+
+#~ msgid "Digital In"
+#~ msgstr "Digitālā ieeja"
+
+#~ msgid "HDMI"
+#~ msgstr "HDMI"
+
+#~ msgid "Modem"
+#~ msgstr "Modēms"
+
+#~ msgid "Handset"
+#~ msgstr "Klausule"
+
+#~ msgid "Other"
+#~ msgstr "Cits"
+
+#~ msgid "None"
+#~ msgstr "Nekas"
+
+#~ msgid "On"
+#~ msgstr "Ieslēgts"
+
+#~ msgid "Off"
+#~ msgstr "Izslēgts"
+
+#~ msgid "Mute"
+#~ msgstr "Klusums"
+
+#~ msgid "Fast"
+#~ msgstr "Ātrs"
+
+#~ msgid "Very Low"
+#~ msgstr "Ļoti zems"
+
+#~ msgid "Low"
+#~ msgstr "Zems"
+
+#~ msgid "Medium"
+#~ msgstr "Vidējs"
+
+#~ msgid "High"
+#~ msgstr "Augsts"
+
+#~ msgid "Very High"
+#~ msgstr "Ļoti augsts"
+
+#~ msgid "Production"
+#~ msgstr "Produkcija"
+
+#~ msgid "Front Panel Microphone"
+#~ msgstr "Priekšējā paneļa mikrofons"
+
+#~ msgid "Front Panel Line In"
+#~ msgstr "Priekšējā paneļa ieejas līnija"
+
+#~ msgid "Front Panel Headphones"
+#~ msgstr "Priekšējā paneļa austiņas"
+
+#~ msgid "Front Panel Line Out"
+#~ msgstr "Priekšējā paneļa līnijas izeja"
+
+#~ msgid "Green Connector"
+#~ msgstr "Zaļais savienotājs"
+
+#~ msgid "Pink Connector"
+#~ msgstr "Rozā savienotājs"
+
+#~ msgid "Blue Connector"
+#~ msgstr "Zilais savienotājs"
+
+#~ msgid "White Connector"
+#~ msgstr "Baltais savienotājs"
+
+#~ msgid "Black Connector"
+#~ msgstr "Melnais savienotājs"
+
+#~ msgid "Gray Connector"
+#~ msgstr "Pelākais savienotājs"
+
+#~ msgid "Orange Connector"
+#~ msgstr "Oranžais savienotājs"
+
+#~ msgid "Red Connector"
+#~ msgstr "Sarkanais savienotājs"
+
+#~ msgid "Yellow Connector"
+#~ msgstr "Dzeltains savienotājs"
+
+#~ msgid "Green Front Panel Connector"
+#~ msgstr "Zaļais priekšējā paneļa savienotājs"
+
+#~ msgid "Pink Front Panel Connector"
+#~ msgstr "Rozā priekšējā paneļa savienotājs"
+
+#~ msgid "Blue Front Panel Connector"
+#~ msgstr "Zilais priekšējā paneļa savienotājs"
+
+#~ msgid "White Front Panel Connector"
+#~ msgstr "Baltais priekšējā paneļa savienotājs"
+
+#~ msgid "Black Front Panel Connector"
+#~ msgstr "Melnais priekšējā paneļa savienotājs"
+
+#~ msgid "Gray Front Panel Connector"
+#~ msgstr "Pelēkais priekšējā paneļa savienotājs"
+
+#~ msgid "Orange Front Panel Connector"
+#~ msgstr "Oranžais priekšējā paneļa savienotājs"
+
+#~ msgid "Red Front Panel Connector"
+#~ msgstr "Sarkanais priekšējā paneļa savienotājs"
+
+#~ msgid "Yellow Front Panel Connector"
+#~ msgstr "Dzeltenais priekšējā paneļa savienotājs"
+
+#~ msgid "Spread Output"
+#~ msgstr "Izplest izvadu"
+
+#~ msgid "Downmix"
+#~ msgstr "Lejupmiksēšana"
+
+#~ msgid "Virtual Mixer Input"
+#~ msgstr "Virtuālā miksera ievads"
+
+#~ msgid "Virtual Mixer Output"
+#~ msgstr "Virtuālā miksera izvads"
+
+#~ msgid "Virtual Mixer Channels"
+#~ msgstr "Virtuālā miksera kanāli"
+
+#~ msgid "%s %d Function"
+#~ msgstr "%s %d funkcija"
+
+#~ msgid "%s Function"
+#~ msgstr "%s funkcija"
 
 #~ msgid "Could not establish connection to sound server"
 #~ msgstr "Nevar izveidot savienojumu ar skaņas serveri"

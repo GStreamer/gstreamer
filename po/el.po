@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-good 0.10.25.3\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2012-04-12 10:26+0200\n"
+"POT-Creation-Date: 2012-05-13 16:29+0200\n"
 "PO-Revision-Date: 2010-10-27 12:16+0200\n"
 "Last-Translator: Michael Kotsarinis <mk73628@gmail.com>\n"
 "Language-Team: Greek <team@lists.gnome.gr>\n"
@@ -99,81 +99,6 @@ msgstr ""
 msgid "Internal data flow error."
 msgstr "Εσωτερικό σφάλμα ροής δεδομένων."
 
-msgid "Volume"
-msgstr "Ένταση"
-
-msgid "Bass"
-msgstr "Μπάσα"
-
-msgid "Treble"
-msgstr "Πρίμα (treble)"
-
-msgid "Synth"
-msgstr "Synth"
-
-msgid "PCM"
-msgstr "PCM"
-
-msgid "Speaker"
-msgstr "Μεγάφωνο"
-
-msgid "Line-in"
-msgstr "Γραμμή-εισόδου"
-
-msgid "Microphone"
-msgstr "Μικρόφωνο"
-
-msgid "CD"
-msgstr "CD"
-
-msgid "Mixer"
-msgstr "Μείκτης"
-
-msgid "PCM-2"
-msgstr "PCM-2"
-
-msgid "Record"
-msgstr "Εγγραφή"
-
-msgid "In-gain"
-msgstr "Κέρδος εισόδου"
-
-msgid "Out-gain"
-msgstr "Κέρδος εξόδου"
-
-msgid "Line-1"
-msgstr "Γραμμή-1"
-
-msgid "Line-2"
-msgstr "Γραμμή-2"
-
-msgid "Line-3"
-msgstr "Γραμμή-3"
-
-msgid "Digital-1"
-msgstr "Ψηφιακό-1"
-
-msgid "Digital-2"
-msgstr "Ψηφιακό-2"
-
-msgid "Digital-3"
-msgstr "Ψηφιακό-3"
-
-msgid "Phone-in"
-msgstr "Είσοδος τηλεφώνου"
-
-msgid "Phone-out"
-msgstr "Έξοδος τηλεφώνου"
-
-msgid "Video"
-msgstr "Βίντεο"
-
-msgid "Radio"
-msgstr "Ράδιο"
-
-msgid "Monitor"
-msgstr "Οθόνη"
-
 msgid ""
 "Could not open audio device for playback. Device is being used by another "
 "application."
@@ -201,314 +126,6 @@ msgstr ""
 msgid "Could not open audio device for recording."
 msgstr "Δεν ήταν δυνατό το άνοιγμα της συσκευής ήχου για εγγραφή. "
 
-msgid "Could not open audio device for mixer control handling."
-msgstr ""
-"Δεν ήταν δυνατό το άνοιγμα της συσκευής ήχου για χειρισμό του ελέγχου του "
-"μίκτη. "
-
-msgid ""
-"Could not open audio device for mixer control handling. This version of the "
-"Open Sound System is not supported by this element."
-msgstr ""
-"Δεν ήταν δυνατό το άνοιγμα της συσκευής ήχου για χειρισμό του ελέγχου του "
-"μίκτη. Αυτή η έκδοση του Open Sound System δεν υποστηρίζεται από αυτό οτ "
-"στοιχείο."
-
-msgid "Master"
-msgstr "Γενικός (Master)"
-
-msgid "Front"
-msgstr "Μπροστά"
-
-msgid "Rear"
-msgstr "Πίσω"
-
-msgid "Headphones"
-msgstr "Ακουστικά"
-
-msgid "Center"
-msgstr "Κέντρο"
-
-msgid "LFE"
-msgstr "Χαμηλών συχνοτήτων (LFE)"
-
-msgid "Surround"
-msgstr "Περιβάλλων (Surround)"
-
-msgid "Side"
-msgstr "Πλευρικό"
-
-msgid "Built-in Speaker"
-msgstr "Ενσωματωμένο μεγάφωνο"
-
-msgid "AUX 1 Out"
-msgstr "AUX 1 Out"
-
-msgid "AUX 2 Out"
-msgstr "AUX 2 Out"
-
-msgid "AUX Out"
-msgstr "Έξοδος AUX"
-
-msgid "3D Depth"
-msgstr "Βάθος 3D"
-
-msgid "3D Center"
-msgstr "Κέντρο 3D"
-
-msgid "3D Enhance"
-msgstr "Ενίσχυση 3D"
-
-msgid "Telephone"
-msgstr "Τηλέφωνο"
-
-msgid "Line Out"
-msgstr "Γραμμή εξόδου"
-
-msgid "Line In"
-msgstr "Είσοδος γραμμής"
-
-msgid "Internal CD"
-msgstr "Εσωτερικό CD"
-
-msgid "Video In"
-msgstr "Είσοδος βίντεο"
-
-msgid "AUX 1 In"
-msgstr "Είσοδις AUX 1"
-
-msgid "AUX 2 In"
-msgstr "Είσοδος AUX 2"
-
-msgid "AUX In"
-msgstr "Είσοδος AUX"
-
-msgid "Record Gain"
-msgstr "Κέρδος Εγγραφής"
-
-msgid "Output Gain"
-msgstr "Κέρδος εξόδου"
-
-msgid "Microphone Boost"
-msgstr "Ενίσχυση μικροφώνου"
-
-msgid "Loopback"
-msgstr "Ανατροφοδότηση"
-
-msgid "Diagnostic"
-msgstr "Διαγνωστικό"
-
-msgid "Bass Boost"
-msgstr "Ενίσχυση χαμηλών"
-
-msgid "Playback Ports"
-msgstr "Θύρες Αναπαραγωγής"
-
-msgid "Input"
-msgstr "Είσοδος"
-
-msgid "Record Source"
-msgstr "Πηγή εγγραφής"
-
-msgid "Monitor Source"
-msgstr "Παρακολούθηση πηγής"
-
-msgid "Keyboard Beep"
-msgstr "Ήχος πληκτρολογίου"
-
-msgid "Simulate Stereo"
-msgstr "Προσομοίωση στέρεο"
-
-msgid "Stereo"
-msgstr "Στέρεο"
-
-msgid "Surround Sound"
-msgstr "Ήχος Surround"
-
-msgid "Microphone Gain"
-msgstr "Κέρδος μικροφώνου"
-
-msgid "Speaker Source"
-msgstr "Πηγή μεγαφώνου"
-
-msgid "Microphone Source"
-msgstr "Πηγή μικροφώνου"
-
-msgid "Jack"
-msgstr "Βύσμα"
-
-msgid "Center / LFE"
-msgstr "Κεντρικό / Χαμηλών συχνοτήτων"
-
-msgid "Stereo Mix"
-msgstr "Στερεοφωνική μίξη"
-
-msgid "Mono Mix"
-msgstr "Μονοφωνική μίξη"
-
-msgid "Input Mix"
-msgstr "Μίξη εισόδου"
-
-msgid "SPDIF In"
-msgstr "Είσδος SPDIF"
-
-msgid "SPDIF Out"
-msgstr "SPDIF Out"
-
-msgid "Microphone 1"
-msgstr "Μικρόφωνο 1"
-
-msgid "Microphone 2"
-msgstr "Μικρόφωνο 2"
-
-msgid "Digital Out"
-msgstr "Ψηφιακή έξοδος"
-
-msgid "Digital In"
-msgstr "Ψηφιακή είσοδος"
-
-msgid "HDMI"
-msgstr "HDMI"
-
-msgid "Modem"
-msgstr "Modem"
-
-msgid "Handset"
-msgstr "Τηλεφωνική συσκευή"
-
-msgid "Other"
-msgstr "Άλλο"
-
-msgid "None"
-msgstr "Κανένα"
-
-msgid "On"
-msgstr "On"
-
-msgid "Off"
-msgstr "Off"
-
-msgid "Mute"
-msgstr "Σίγαση"
-
-msgid "Fast"
-msgstr "Γρήγορα"
-
-#. TRANSLATORS: "Very Low" is a quality setting here
-msgid "Very Low"
-msgstr "Πολύ χαμηλή"
-
-#. TRANSLATORS: "Low" is a quality setting here
-msgid "Low"
-msgstr "Χαμηλή"
-
-#. TRANSLATORS: "Medium" is a quality setting here
-msgid "Medium"
-msgstr "Μεσαία"
-
-#. TRANSLATORS: "High" is a quality setting here
-msgid "High"
-msgstr "Υψηλή"
-
-#. TRANSLATORS: "Very High" is a quality setting here
-msgid "Very High"
-msgstr "Πολύ υψηλή"
-
-#. TRANSLATORS: "Production" is a quality setting here
-msgid "Production"
-msgstr "Παραγωγής"
-
-msgid "Front Panel Microphone"
-msgstr "Μικρόφωνο μπροστινού πάνελ"
-
-msgid "Front Panel Line In"
-msgstr "Είσοδος γραμμής μπροστινού πάνελ"
-
-msgid "Front Panel Headphones"
-msgstr "Ακουστικά μπροστινού πάνελ"
-
-msgid "Front Panel Line Out"
-msgstr "Έξοδος γραμμής μπροστινού πάνελ"
-
-msgid "Green Connector"
-msgstr "Πράσινη υποδοχή"
-
-msgid "Pink Connector"
-msgstr "Ροζ υποδοχή"
-
-msgid "Blue Connector"
-msgstr "Μπλε υποδοχή"
-
-msgid "White Connector"
-msgstr "Λευκή υποδοχή"
-
-msgid "Black Connector"
-msgstr "Μαύρη υποδοχή"
-
-msgid "Gray Connector"
-msgstr "Γκρι υποδοχή"
-
-msgid "Orange Connector"
-msgstr "Πορτοκαλί υποδοχή"
-
-msgid "Red Connector"
-msgstr "Κόκκινη υποδοχή"
-
-msgid "Yellow Connector"
-msgstr "Κίτρινη υποδοχή"
-
-msgid "Green Front Panel Connector"
-msgstr "Πράσινη υποδοχή μπροστινού πάνελ"
-
-msgid "Pink Front Panel Connector"
-msgstr "Ροζ υποδοχή μπροστινού πάνελ"
-
-msgid "Blue Front Panel Connector"
-msgstr "Μπλε υποδοχή μπροστινού πάνελ"
-
-msgid "White Front Panel Connector"
-msgstr "Λευκή υποδοχή μπροστινού πάνελ"
-
-msgid "Black Front Panel Connector"
-msgstr "Μαύρη υποδοχή μπροστινού πάνελ"
-
-msgid "Gray Front Panel Connector"
-msgstr "Γκρι υποδοχή μπροστινού πάνελ"
-
-msgid "Orange Front Panel Connector"
-msgstr "Πορτοκαλί υποδοχή μπροστινού πάνελ"
-
-msgid "Red Front Panel Connector"
-msgstr "Κόκκινη υποδοχή μπροστινού πάνελ"
-
-msgid "Yellow Front Panel Connector"
-msgstr "Κίτρινη υποδοχή μπροστινού πάνελ"
-
-msgid "Spread Output"
-msgstr "Ευρεία έξοδος"
-
-msgid "Downmix"
-msgstr "Μίξη συγχώνευσης (Downmix)"
-
-msgid "Virtual Mixer Input"
-msgstr "Είσοδος εικονικού μίκτη"
-
-msgid "Virtual Mixer Output"
-msgstr "Έξοδος εικονικού μίκτη"
-
-msgid "Virtual Mixer Channels"
-msgstr "Κανάλια εικονικού μίκτη"
-
-#. TRANSLATORS: name + number of a volume mixer control
-#, c-format
-msgid "%s %d Function"
-msgstr "Λειτουργία %s %d"
-
-#. TRANSLATORS: name of a volume mixer control
-#, c-format
-msgid "%s Function"
-msgstr "Λειτουργία %s"
-
 msgid ""
 "Could not open audio device for playback. This version of the Open Sound "
 "System is not supported by this element."
@@ -528,11 +145,32 @@ msgstr "Αυτή η συσκευή ήχου δεν υποστηρίζει εγγ
 msgid "Error recording from audio device."
 msgstr "Σφάλμα κατά την εγγραφή από τη συσκευή ήχου."
 
+msgid "Volume"
+msgstr "Ένταση"
+
 msgid "Gain"
 msgstr "Κέρδος"
 
+msgid "Monitor"
+msgstr "Οθόνη"
+
+msgid "Built-in Speaker"
+msgstr "Ενσωματωμένο μεγάφωνο"
+
 msgid "Headphone"
 msgstr "Ακουστικό"
+
+msgid "Line Out"
+msgstr "Γραμμή εξόδου"
+
+msgid "SPDIF Out"
+msgstr "SPDIF Out"
+
+msgid "AUX 1 Out"
+msgstr "AUX 1 Out"
+
+msgid "AUX 2 Out"
+msgstr "AUX 2 Out"
 
 #, c-format
 msgid "Error reading %d bytes from device '%s'."
@@ -712,6 +350,358 @@ msgstr ""
 
 msgid "Cannot operate without a clock"
 msgstr "Δεν είναι δυνατή η λειτουργία χωρίς ρολόι "
+
+#~ msgid "Bass"
+#~ msgstr "Μπάσα"
+
+#~ msgid "Treble"
+#~ msgstr "Πρίμα (treble)"
+
+#~ msgid "Synth"
+#~ msgstr "Synth"
+
+#~ msgid "PCM"
+#~ msgstr "PCM"
+
+#~ msgid "Speaker"
+#~ msgstr "Μεγάφωνο"
+
+#~ msgid "Line-in"
+#~ msgstr "Γραμμή-εισόδου"
+
+#~ msgid "Microphone"
+#~ msgstr "Μικρόφωνο"
+
+#~ msgid "CD"
+#~ msgstr "CD"
+
+#~ msgid "Mixer"
+#~ msgstr "Μείκτης"
+
+#~ msgid "PCM-2"
+#~ msgstr "PCM-2"
+
+#~ msgid "Record"
+#~ msgstr "Εγγραφή"
+
+#~ msgid "In-gain"
+#~ msgstr "Κέρδος εισόδου"
+
+#~ msgid "Out-gain"
+#~ msgstr "Κέρδος εξόδου"
+
+#~ msgid "Line-1"
+#~ msgstr "Γραμμή-1"
+
+#~ msgid "Line-2"
+#~ msgstr "Γραμμή-2"
+
+#~ msgid "Line-3"
+#~ msgstr "Γραμμή-3"
+
+#~ msgid "Digital-1"
+#~ msgstr "Ψηφιακό-1"
+
+#~ msgid "Digital-2"
+#~ msgstr "Ψηφιακό-2"
+
+#~ msgid "Digital-3"
+#~ msgstr "Ψηφιακό-3"
+
+#~ msgid "Phone-in"
+#~ msgstr "Είσοδος τηλεφώνου"
+
+#~ msgid "Phone-out"
+#~ msgstr "Έξοδος τηλεφώνου"
+
+#~ msgid "Video"
+#~ msgstr "Βίντεο"
+
+#~ msgid "Radio"
+#~ msgstr "Ράδιο"
+
+#~ msgid "Could not open audio device for mixer control handling."
+#~ msgstr ""
+#~ "Δεν ήταν δυνατό το άνοιγμα της συσκευής ήχου για χειρισμό του ελέγχου του "
+#~ "μίκτη. "
+
+#~ msgid ""
+#~ "Could not open audio device for mixer control handling. This version of "
+#~ "the Open Sound System is not supported by this element."
+#~ msgstr ""
+#~ "Δεν ήταν δυνατό το άνοιγμα της συσκευής ήχου για χειρισμό του ελέγχου του "
+#~ "μίκτη. Αυτή η έκδοση του Open Sound System δεν υποστηρίζεται από αυτό οτ "
+#~ "στοιχείο."
+
+#~ msgid "Master"
+#~ msgstr "Γενικός (Master)"
+
+#~ msgid "Front"
+#~ msgstr "Μπροστά"
+
+#~ msgid "Rear"
+#~ msgstr "Πίσω"
+
+#~ msgid "Headphones"
+#~ msgstr "Ακουστικά"
+
+#~ msgid "Center"
+#~ msgstr "Κέντρο"
+
+#~ msgid "LFE"
+#~ msgstr "Χαμηλών συχνοτήτων (LFE)"
+
+#~ msgid "Surround"
+#~ msgstr "Περιβάλλων (Surround)"
+
+#~ msgid "Side"
+#~ msgstr "Πλευρικό"
+
+#~ msgid "AUX Out"
+#~ msgstr "Έξοδος AUX"
+
+#~ msgid "3D Depth"
+#~ msgstr "Βάθος 3D"
+
+#~ msgid "3D Center"
+#~ msgstr "Κέντρο 3D"
+
+#~ msgid "3D Enhance"
+#~ msgstr "Ενίσχυση 3D"
+
+#~ msgid "Telephone"
+#~ msgstr "Τηλέφωνο"
+
+#~ msgid "Line In"
+#~ msgstr "Είσοδος γραμμής"
+
+#~ msgid "Internal CD"
+#~ msgstr "Εσωτερικό CD"
+
+#~ msgid "Video In"
+#~ msgstr "Είσοδος βίντεο"
+
+#~ msgid "AUX 1 In"
+#~ msgstr "Είσοδις AUX 1"
+
+#~ msgid "AUX 2 In"
+#~ msgstr "Είσοδος AUX 2"
+
+#~ msgid "AUX In"
+#~ msgstr "Είσοδος AUX"
+
+#~ msgid "Record Gain"
+#~ msgstr "Κέρδος Εγγραφής"
+
+#~ msgid "Output Gain"
+#~ msgstr "Κέρδος εξόδου"
+
+#~ msgid "Microphone Boost"
+#~ msgstr "Ενίσχυση μικροφώνου"
+
+#~ msgid "Loopback"
+#~ msgstr "Ανατροφοδότηση"
+
+#~ msgid "Diagnostic"
+#~ msgstr "Διαγνωστικό"
+
+#~ msgid "Bass Boost"
+#~ msgstr "Ενίσχυση χαμηλών"
+
+#~ msgid "Playback Ports"
+#~ msgstr "Θύρες Αναπαραγωγής"
+
+#~ msgid "Input"
+#~ msgstr "Είσοδος"
+
+#~ msgid "Record Source"
+#~ msgstr "Πηγή εγγραφής"
+
+#~ msgid "Monitor Source"
+#~ msgstr "Παρακολούθηση πηγής"
+
+#~ msgid "Keyboard Beep"
+#~ msgstr "Ήχος πληκτρολογίου"
+
+#~ msgid "Simulate Stereo"
+#~ msgstr "Προσομοίωση στέρεο"
+
+#~ msgid "Stereo"
+#~ msgstr "Στέρεο"
+
+#~ msgid "Surround Sound"
+#~ msgstr "Ήχος Surround"
+
+#~ msgid "Microphone Gain"
+#~ msgstr "Κέρδος μικροφώνου"
+
+#~ msgid "Speaker Source"
+#~ msgstr "Πηγή μεγαφώνου"
+
+#~ msgid "Microphone Source"
+#~ msgstr "Πηγή μικροφώνου"
+
+#~ msgid "Jack"
+#~ msgstr "Βύσμα"
+
+#~ msgid "Center / LFE"
+#~ msgstr "Κεντρικό / Χαμηλών συχνοτήτων"
+
+#~ msgid "Stereo Mix"
+#~ msgstr "Στερεοφωνική μίξη"
+
+#~ msgid "Mono Mix"
+#~ msgstr "Μονοφωνική μίξη"
+
+#~ msgid "Input Mix"
+#~ msgstr "Μίξη εισόδου"
+
+#~ msgid "SPDIF In"
+#~ msgstr "Είσδος SPDIF"
+
+#~ msgid "Microphone 1"
+#~ msgstr "Μικρόφωνο 1"
+
+#~ msgid "Microphone 2"
+#~ msgstr "Μικρόφωνο 2"
+
+#~ msgid "Digital Out"
+#~ msgstr "Ψηφιακή έξοδος"
+
+#~ msgid "Digital In"
+#~ msgstr "Ψηφιακή είσοδος"
+
+#~ msgid "HDMI"
+#~ msgstr "HDMI"
+
+#~ msgid "Modem"
+#~ msgstr "Modem"
+
+#~ msgid "Handset"
+#~ msgstr "Τηλεφωνική συσκευή"
+
+#~ msgid "Other"
+#~ msgstr "Άλλο"
+
+#~ msgid "None"
+#~ msgstr "Κανένα"
+
+#~ msgid "On"
+#~ msgstr "On"
+
+#~ msgid "Off"
+#~ msgstr "Off"
+
+#~ msgid "Mute"
+#~ msgstr "Σίγαση"
+
+#~ msgid "Fast"
+#~ msgstr "Γρήγορα"
+
+#~ msgid "Very Low"
+#~ msgstr "Πολύ χαμηλή"
+
+#~ msgid "Low"
+#~ msgstr "Χαμηλή"
+
+#~ msgid "Medium"
+#~ msgstr "Μεσαία"
+
+#~ msgid "High"
+#~ msgstr "Υψηλή"
+
+#~ msgid "Very High"
+#~ msgstr "Πολύ υψηλή"
+
+#~ msgid "Production"
+#~ msgstr "Παραγωγής"
+
+#~ msgid "Front Panel Microphone"
+#~ msgstr "Μικρόφωνο μπροστινού πάνελ"
+
+#~ msgid "Front Panel Line In"
+#~ msgstr "Είσοδος γραμμής μπροστινού πάνελ"
+
+#~ msgid "Front Panel Headphones"
+#~ msgstr "Ακουστικά μπροστινού πάνελ"
+
+#~ msgid "Front Panel Line Out"
+#~ msgstr "Έξοδος γραμμής μπροστινού πάνελ"
+
+#~ msgid "Green Connector"
+#~ msgstr "Πράσινη υποδοχή"
+
+#~ msgid "Pink Connector"
+#~ msgstr "Ροζ υποδοχή"
+
+#~ msgid "Blue Connector"
+#~ msgstr "Μπλε υποδοχή"
+
+#~ msgid "White Connector"
+#~ msgstr "Λευκή υποδοχή"
+
+#~ msgid "Black Connector"
+#~ msgstr "Μαύρη υποδοχή"
+
+#~ msgid "Gray Connector"
+#~ msgstr "Γκρι υποδοχή"
+
+#~ msgid "Orange Connector"
+#~ msgstr "Πορτοκαλί υποδοχή"
+
+#~ msgid "Red Connector"
+#~ msgstr "Κόκκινη υποδοχή"
+
+#~ msgid "Yellow Connector"
+#~ msgstr "Κίτρινη υποδοχή"
+
+#~ msgid "Green Front Panel Connector"
+#~ msgstr "Πράσινη υποδοχή μπροστινού πάνελ"
+
+#~ msgid "Pink Front Panel Connector"
+#~ msgstr "Ροζ υποδοχή μπροστινού πάνελ"
+
+#~ msgid "Blue Front Panel Connector"
+#~ msgstr "Μπλε υποδοχή μπροστινού πάνελ"
+
+#~ msgid "White Front Panel Connector"
+#~ msgstr "Λευκή υποδοχή μπροστινού πάνελ"
+
+#~ msgid "Black Front Panel Connector"
+#~ msgstr "Μαύρη υποδοχή μπροστινού πάνελ"
+
+#~ msgid "Gray Front Panel Connector"
+#~ msgstr "Γκρι υποδοχή μπροστινού πάνελ"
+
+#~ msgid "Orange Front Panel Connector"
+#~ msgstr "Πορτοκαλί υποδοχή μπροστινού πάνελ"
+
+#~ msgid "Red Front Panel Connector"
+#~ msgstr "Κόκκινη υποδοχή μπροστινού πάνελ"
+
+#~ msgid "Yellow Front Panel Connector"
+#~ msgstr "Κίτρινη υποδοχή μπροστινού πάνελ"
+
+#~ msgid "Spread Output"
+#~ msgstr "Ευρεία έξοδος"
+
+#~ msgid "Downmix"
+#~ msgstr "Μίξη συγχώνευσης (Downmix)"
+
+#~ msgid "Virtual Mixer Input"
+#~ msgstr "Είσοδος εικονικού μίκτη"
+
+#~ msgid "Virtual Mixer Output"
+#~ msgstr "Έξοδος εικονικού μίκτη"
+
+#~ msgid "Virtual Mixer Channels"
+#~ msgstr "Κανάλια εικονικού μίκτη"
+
+#~ msgid "%s %d Function"
+#~ msgstr "Λειτουργία %s %d"
+
+#~ msgid "%s Function"
+#~ msgstr "Λειτουργία %s"
 
 #~ msgid "Could not establish connection to sound server"
 #~ msgstr "Δεν ήταν δυνατή η σύνδεση με τον διακομιστή ήχου"

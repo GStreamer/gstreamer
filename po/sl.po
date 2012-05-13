@@ -9,7 +9,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-good 0.10.26.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2012-04-12 10:26+0200\n"
+"POT-Creation-Date: 2012-05-13 16:29+0200\n"
 "PO-Revision-Date: 2011-03-12 18:35+0100\n"
 "Last-Translator: Klemen Košir <klemen.kosir@gmx.com>\n"
 "Language-Team: Slovenian <translation-team-sl@lists.sourceforge.net>\n"
@@ -103,81 +103,6 @@ msgstr ""
 msgid "Internal data flow error."
 msgstr "Notranja napaka pretočnosti podatkov."
 
-msgid "Volume"
-msgstr "Glasnost"
-
-msgid "Bass"
-msgstr "Bas"
-
-msgid "Treble"
-msgstr "Visoki toni"
-
-msgid "Synth"
-msgstr "Sintetizator"
-
-msgid "PCM"
-msgstr "PCM"
-
-msgid "Speaker"
-msgstr "Zvočnik"
-
-msgid "Line-in"
-msgstr "Analogni vhod"
-
-msgid "Microphone"
-msgstr "Mikrofon"
-
-msgid "CD"
-msgstr "CD"
-
-msgid "Mixer"
-msgstr "Mešalnik"
-
-msgid "PCM-2"
-msgstr "PCM-2"
-
-msgid "Record"
-msgstr "Snemanje"
-
-msgid "In-gain"
-msgstr "Vhodna ojačitev"
-
-msgid "Out-gain"
-msgstr "Izhodna ojačitev"
-
-msgid "Line-1"
-msgstr "Analogni vhod 1"
-
-msgid "Line-2"
-msgstr "Analogni vhod 2"
-
-msgid "Line-3"
-msgstr "Analogni vhod 3"
-
-msgid "Digital-1"
-msgstr "Digitalni vhod 1"
-
-msgid "Digital-2"
-msgstr "Digitalni vhod 2"
-
-msgid "Digital-3"
-msgstr "Digitalni vhod 3"
-
-msgid "Phone-in"
-msgstr "Telefonski vhod"
-
-msgid "Phone-out"
-msgstr "Telefonski izhod"
-
-msgid "Video"
-msgstr "Video"
-
-msgid "Radio"
-msgstr "Radio"
-
-msgid "Monitor"
-msgstr "Zaslon"
-
 msgid ""
 "Could not open audio device for playback. Device is being used by another "
 "application."
@@ -205,311 +130,6 @@ msgstr ""
 msgid "Could not open audio device for recording."
 msgstr "Zvočne naprave ni mogoče odpreti za snemanje."
 
-msgid "Could not open audio device for mixer control handling."
-msgstr "Zvočne naprave ni mogoče odpreti za nadzor mešalnika."
-
-msgid ""
-"Could not open audio device for mixer control handling. This version of the "
-"Open Sound System is not supported by this element."
-msgstr ""
-"Zvočne naprave ni mogoče odpreti za nadzor mešalnika. Predmet ne podpira "
-"trenutne različice sistema Open Sound System."
-
-msgid "Master"
-msgstr "Glavni"
-
-msgid "Front"
-msgstr "Sprednji"
-
-msgid "Rear"
-msgstr "Zadnji"
-
-msgid "Headphones"
-msgstr "Slušalke"
-
-msgid "Center"
-msgstr "Sredinski"
-
-msgid "LFE"
-msgstr "LFE"
-
-msgid "Surround"
-msgstr "Prostorski"
-
-msgid "Side"
-msgstr "Stranski"
-
-msgid "Built-in Speaker"
-msgstr "Vgrajen zvočnik"
-
-msgid "AUX 1 Out"
-msgstr "Izhod AUX 1"
-
-msgid "AUX 2 Out"
-msgstr "Izhod AUX 2"
-
-msgid "AUX Out"
-msgstr "Izhod AUX"
-
-msgid "3D Depth"
-msgstr "3D globina"
-
-msgid "3D Center"
-msgstr "3D sredina"
-
-msgid "3D Enhance"
-msgstr "3D izboljšava"
-
-msgid "Telephone"
-msgstr "Telefon"
-
-msgid "Line Out"
-msgstr "Analogni izhod"
-
-msgid "Line In"
-msgstr "Analogni vhod"
-
-msgid "Internal CD"
-msgstr "Notranji CD"
-
-msgid "Video In"
-msgstr "Video vhod"
-
-msgid "AUX 1 In"
-msgstr "Vhod AUX 1"
-
-msgid "AUX 2 In"
-msgstr "Vhod AUX 2"
-
-msgid "AUX In"
-msgstr "Vhod AUX"
-
-msgid "Record Gain"
-msgstr "Ojačitev snemanja"
-
-msgid "Output Gain"
-msgstr "Ojačitev izhoda"
-
-msgid "Microphone Boost"
-msgstr "Ojačitev mikrofona"
-
-msgid "Loopback"
-msgstr "Povratna zanka"
-
-msgid "Diagnostic"
-msgstr "Diagnostika"
-
-msgid "Bass Boost"
-msgstr "Ojačitev basov"
-
-msgid "Playback Ports"
-msgstr "Vrata predvajanja"
-
-msgid "Input"
-msgstr "Vhod"
-
-msgid "Record Source"
-msgstr "Snemaj vir"
-
-msgid "Monitor Source"
-msgstr "Nadzoruj vir"
-
-msgid "Keyboard Beep"
-msgstr "Pisk tipkovnice"
-
-msgid "Simulate Stereo"
-msgstr "Simuliran stereo"
-
-msgid "Stereo"
-msgstr "Stereo"
-
-msgid "Surround Sound"
-msgstr "Prostorski zvok"
-
-msgid "Microphone Gain"
-msgstr "Ojačitev mikrofona"
-
-msgid "Speaker Source"
-msgstr "Vir zvočnika"
-
-msgid "Microphone Source"
-msgstr "Vir mikrofona"
-
-msgid "Jack"
-msgstr "Priključek"
-
-msgid "Center / LFE"
-msgstr "Srednji / LFE"
-
-msgid "Stereo Mix"
-msgstr "Stereo mešanje"
-
-msgid "Mono Mix"
-msgstr "Mono mešanje"
-
-msgid "Input Mix"
-msgstr "Mešanje vhoda"
-
-msgid "SPDIF In"
-msgstr "Vhod SPDIF"
-
-msgid "SPDIF Out"
-msgstr "Izhod SPDIF"
-
-msgid "Microphone 1"
-msgstr "Mikrofon 1"
-
-msgid "Microphone 2"
-msgstr "Mikrofon 2"
-
-msgid "Digital Out"
-msgstr "Digitalni izhod"
-
-msgid "Digital In"
-msgstr "Digitalni vhod"
-
-msgid "HDMI"
-msgstr "HDMI"
-
-msgid "Modem"
-msgstr "Modem"
-
-msgid "Handset"
-msgstr "Prostoročna slušalka"
-
-msgid "Other"
-msgstr "Drugo"
-
-msgid "None"
-msgstr "Brez"
-
-msgid "On"
-msgstr "Vključeno"
-
-msgid "Off"
-msgstr "Izključeno"
-
-msgid "Mute"
-msgstr "Nemo"
-
-msgid "Fast"
-msgstr "Hitro"
-
-#. TRANSLATORS: "Very Low" is a quality setting here
-msgid "Very Low"
-msgstr "Zelo nizko"
-
-#. TRANSLATORS: "Low" is a quality setting here
-msgid "Low"
-msgstr "Nizko"
-
-#. TRANSLATORS: "Medium" is a quality setting here
-msgid "Medium"
-msgstr "Srednje"
-
-#. TRANSLATORS: "High" is a quality setting here
-msgid "High"
-msgstr "Visoko"
-
-#. TRANSLATORS: "Very High" is a quality setting here
-msgid "Very High"
-msgstr "Zelo visoko"
-
-#. TRANSLATORS: "Production" is a quality setting here
-msgid "Production"
-msgstr "Proizvodnja"
-
-msgid "Front Panel Microphone"
-msgstr "Mikrofon spredaj"
-
-msgid "Front Panel Line In"
-msgstr "Analogni vhod spredaj"
-
-msgid "Front Panel Headphones"
-msgstr "Slušalke spredaj"
-
-msgid "Front Panel Line Out"
-msgstr "Analogni izhod spredaj"
-
-msgid "Green Connector"
-msgstr "Zeleni priključek"
-
-msgid "Pink Connector"
-msgstr "Roza priključek"
-
-msgid "Blue Connector"
-msgstr "Modri priključek"
-
-msgid "White Connector"
-msgstr "Beli priključek"
-
-msgid "Black Connector"
-msgstr "Črni priključek"
-
-msgid "Gray Connector"
-msgstr "Sivi priključek"
-
-msgid "Orange Connector"
-msgstr "Oranžni priključek"
-
-msgid "Red Connector"
-msgstr "Rdeči priključek"
-
-msgid "Yellow Connector"
-msgstr "Rumeni priključek"
-
-msgid "Green Front Panel Connector"
-msgstr "Zeleni priključek spredaj"
-
-msgid "Pink Front Panel Connector"
-msgstr "Roza priključek spredaj"
-
-msgid "Blue Front Panel Connector"
-msgstr "Modri priključek spredaj"
-
-msgid "White Front Panel Connector"
-msgstr "Beli priključek spredaj"
-
-msgid "Black Front Panel Connector"
-msgstr "Črni priključek spredaj"
-
-msgid "Gray Front Panel Connector"
-msgstr "Sivi priključek spredaj"
-
-msgid "Orange Front Panel Connector"
-msgstr "Oranžni priključek spredaj"
-
-msgid "Red Front Panel Connector"
-msgstr "Rdeči priključek spredaj"
-
-msgid "Yellow Front Panel Connector"
-msgstr "Rumeni priključek spredaj"
-
-msgid "Spread Output"
-msgstr "Razširi izhod"
-
-msgid "Downmix"
-msgstr "Zmanjševanje kanalov"
-
-msgid "Virtual Mixer Input"
-msgstr "Vhod navideznega mešalnika"
-
-msgid "Virtual Mixer Output"
-msgstr "Izhod navideznega mešalnika"
-
-msgid "Virtual Mixer Channels"
-msgstr "Kanali navideznega mešalnika"
-
-#. TRANSLATORS: name + number of a volume mixer control
-#, c-format
-msgid "%s %d Function"
-msgstr "Funkcija %s %d"
-
-#. TRANSLATORS: name of a volume mixer control
-#, c-format
-msgid "%s Function"
-msgstr "Funkcija %s"
-
 msgid ""
 "Could not open audio device for playback. This version of the Open Sound "
 "System is not supported by this element."
@@ -529,11 +149,32 @@ msgstr "Snemanje s to zvočno napravo ni podprto."
 msgid "Error recording from audio device."
 msgstr "Napaka med snemanjem z zvočno napravo."
 
+msgid "Volume"
+msgstr "Glasnost"
+
 msgid "Gain"
 msgstr "Ojačitev"
 
+msgid "Monitor"
+msgstr "Zaslon"
+
+msgid "Built-in Speaker"
+msgstr "Vgrajen zvočnik"
+
 msgid "Headphone"
 msgstr "Slušalke"
+
+msgid "Line Out"
+msgstr "Analogni izhod"
+
+msgid "SPDIF Out"
+msgstr "Izhod SPDIF"
+
+msgid "AUX 1 Out"
+msgstr "Izhod AUX 1"
+
+msgid "AUX 2 Out"
+msgstr "Izhod AUX 2"
 
 #, c-format
 msgid "Error reading %d bytes from device '%s'."
@@ -713,6 +354,355 @@ msgstr "Spreminjanje ločljivosti med delovanjem še ni podprto."
 
 msgid "Cannot operate without a clock"
 msgstr "Delovanje brez ure ni mogoče"
+
+#~ msgid "Bass"
+#~ msgstr "Bas"
+
+#~ msgid "Treble"
+#~ msgstr "Visoki toni"
+
+#~ msgid "Synth"
+#~ msgstr "Sintetizator"
+
+#~ msgid "PCM"
+#~ msgstr "PCM"
+
+#~ msgid "Speaker"
+#~ msgstr "Zvočnik"
+
+#~ msgid "Line-in"
+#~ msgstr "Analogni vhod"
+
+#~ msgid "Microphone"
+#~ msgstr "Mikrofon"
+
+#~ msgid "CD"
+#~ msgstr "CD"
+
+#~ msgid "Mixer"
+#~ msgstr "Mešalnik"
+
+#~ msgid "PCM-2"
+#~ msgstr "PCM-2"
+
+#~ msgid "Record"
+#~ msgstr "Snemanje"
+
+#~ msgid "In-gain"
+#~ msgstr "Vhodna ojačitev"
+
+#~ msgid "Out-gain"
+#~ msgstr "Izhodna ojačitev"
+
+#~ msgid "Line-1"
+#~ msgstr "Analogni vhod 1"
+
+#~ msgid "Line-2"
+#~ msgstr "Analogni vhod 2"
+
+#~ msgid "Line-3"
+#~ msgstr "Analogni vhod 3"
+
+#~ msgid "Digital-1"
+#~ msgstr "Digitalni vhod 1"
+
+#~ msgid "Digital-2"
+#~ msgstr "Digitalni vhod 2"
+
+#~ msgid "Digital-3"
+#~ msgstr "Digitalni vhod 3"
+
+#~ msgid "Phone-in"
+#~ msgstr "Telefonski vhod"
+
+#~ msgid "Phone-out"
+#~ msgstr "Telefonski izhod"
+
+#~ msgid "Video"
+#~ msgstr "Video"
+
+#~ msgid "Radio"
+#~ msgstr "Radio"
+
+#~ msgid "Could not open audio device for mixer control handling."
+#~ msgstr "Zvočne naprave ni mogoče odpreti za nadzor mešalnika."
+
+#~ msgid ""
+#~ "Could not open audio device for mixer control handling. This version of "
+#~ "the Open Sound System is not supported by this element."
+#~ msgstr ""
+#~ "Zvočne naprave ni mogoče odpreti za nadzor mešalnika. Predmet ne podpira "
+#~ "trenutne različice sistema Open Sound System."
+
+#~ msgid "Master"
+#~ msgstr "Glavni"
+
+#~ msgid "Front"
+#~ msgstr "Sprednji"
+
+#~ msgid "Rear"
+#~ msgstr "Zadnji"
+
+#~ msgid "Headphones"
+#~ msgstr "Slušalke"
+
+#~ msgid "Center"
+#~ msgstr "Sredinski"
+
+#~ msgid "LFE"
+#~ msgstr "LFE"
+
+#~ msgid "Surround"
+#~ msgstr "Prostorski"
+
+#~ msgid "Side"
+#~ msgstr "Stranski"
+
+#~ msgid "AUX Out"
+#~ msgstr "Izhod AUX"
+
+#~ msgid "3D Depth"
+#~ msgstr "3D globina"
+
+#~ msgid "3D Center"
+#~ msgstr "3D sredina"
+
+#~ msgid "3D Enhance"
+#~ msgstr "3D izboljšava"
+
+#~ msgid "Telephone"
+#~ msgstr "Telefon"
+
+#~ msgid "Line In"
+#~ msgstr "Analogni vhod"
+
+#~ msgid "Internal CD"
+#~ msgstr "Notranji CD"
+
+#~ msgid "Video In"
+#~ msgstr "Video vhod"
+
+#~ msgid "AUX 1 In"
+#~ msgstr "Vhod AUX 1"
+
+#~ msgid "AUX 2 In"
+#~ msgstr "Vhod AUX 2"
+
+#~ msgid "AUX In"
+#~ msgstr "Vhod AUX"
+
+#~ msgid "Record Gain"
+#~ msgstr "Ojačitev snemanja"
+
+#~ msgid "Output Gain"
+#~ msgstr "Ojačitev izhoda"
+
+#~ msgid "Microphone Boost"
+#~ msgstr "Ojačitev mikrofona"
+
+#~ msgid "Loopback"
+#~ msgstr "Povratna zanka"
+
+#~ msgid "Diagnostic"
+#~ msgstr "Diagnostika"
+
+#~ msgid "Bass Boost"
+#~ msgstr "Ojačitev basov"
+
+#~ msgid "Playback Ports"
+#~ msgstr "Vrata predvajanja"
+
+#~ msgid "Input"
+#~ msgstr "Vhod"
+
+#~ msgid "Record Source"
+#~ msgstr "Snemaj vir"
+
+#~ msgid "Monitor Source"
+#~ msgstr "Nadzoruj vir"
+
+#~ msgid "Keyboard Beep"
+#~ msgstr "Pisk tipkovnice"
+
+#~ msgid "Simulate Stereo"
+#~ msgstr "Simuliran stereo"
+
+#~ msgid "Stereo"
+#~ msgstr "Stereo"
+
+#~ msgid "Surround Sound"
+#~ msgstr "Prostorski zvok"
+
+#~ msgid "Microphone Gain"
+#~ msgstr "Ojačitev mikrofona"
+
+#~ msgid "Speaker Source"
+#~ msgstr "Vir zvočnika"
+
+#~ msgid "Microphone Source"
+#~ msgstr "Vir mikrofona"
+
+#~ msgid "Jack"
+#~ msgstr "Priključek"
+
+#~ msgid "Center / LFE"
+#~ msgstr "Srednji / LFE"
+
+#~ msgid "Stereo Mix"
+#~ msgstr "Stereo mešanje"
+
+#~ msgid "Mono Mix"
+#~ msgstr "Mono mešanje"
+
+#~ msgid "Input Mix"
+#~ msgstr "Mešanje vhoda"
+
+#~ msgid "SPDIF In"
+#~ msgstr "Vhod SPDIF"
+
+#~ msgid "Microphone 1"
+#~ msgstr "Mikrofon 1"
+
+#~ msgid "Microphone 2"
+#~ msgstr "Mikrofon 2"
+
+#~ msgid "Digital Out"
+#~ msgstr "Digitalni izhod"
+
+#~ msgid "Digital In"
+#~ msgstr "Digitalni vhod"
+
+#~ msgid "HDMI"
+#~ msgstr "HDMI"
+
+#~ msgid "Modem"
+#~ msgstr "Modem"
+
+#~ msgid "Handset"
+#~ msgstr "Prostoročna slušalka"
+
+#~ msgid "Other"
+#~ msgstr "Drugo"
+
+#~ msgid "None"
+#~ msgstr "Brez"
+
+#~ msgid "On"
+#~ msgstr "Vključeno"
+
+#~ msgid "Off"
+#~ msgstr "Izključeno"
+
+#~ msgid "Mute"
+#~ msgstr "Nemo"
+
+#~ msgid "Fast"
+#~ msgstr "Hitro"
+
+#~ msgid "Very Low"
+#~ msgstr "Zelo nizko"
+
+#~ msgid "Low"
+#~ msgstr "Nizko"
+
+#~ msgid "Medium"
+#~ msgstr "Srednje"
+
+#~ msgid "High"
+#~ msgstr "Visoko"
+
+#~ msgid "Very High"
+#~ msgstr "Zelo visoko"
+
+#~ msgid "Production"
+#~ msgstr "Proizvodnja"
+
+#~ msgid "Front Panel Microphone"
+#~ msgstr "Mikrofon spredaj"
+
+#~ msgid "Front Panel Line In"
+#~ msgstr "Analogni vhod spredaj"
+
+#~ msgid "Front Panel Headphones"
+#~ msgstr "Slušalke spredaj"
+
+#~ msgid "Front Panel Line Out"
+#~ msgstr "Analogni izhod spredaj"
+
+#~ msgid "Green Connector"
+#~ msgstr "Zeleni priključek"
+
+#~ msgid "Pink Connector"
+#~ msgstr "Roza priključek"
+
+#~ msgid "Blue Connector"
+#~ msgstr "Modri priključek"
+
+#~ msgid "White Connector"
+#~ msgstr "Beli priključek"
+
+#~ msgid "Black Connector"
+#~ msgstr "Črni priključek"
+
+#~ msgid "Gray Connector"
+#~ msgstr "Sivi priključek"
+
+#~ msgid "Orange Connector"
+#~ msgstr "Oranžni priključek"
+
+#~ msgid "Red Connector"
+#~ msgstr "Rdeči priključek"
+
+#~ msgid "Yellow Connector"
+#~ msgstr "Rumeni priključek"
+
+#~ msgid "Green Front Panel Connector"
+#~ msgstr "Zeleni priključek spredaj"
+
+#~ msgid "Pink Front Panel Connector"
+#~ msgstr "Roza priključek spredaj"
+
+#~ msgid "Blue Front Panel Connector"
+#~ msgstr "Modri priključek spredaj"
+
+#~ msgid "White Front Panel Connector"
+#~ msgstr "Beli priključek spredaj"
+
+#~ msgid "Black Front Panel Connector"
+#~ msgstr "Črni priključek spredaj"
+
+#~ msgid "Gray Front Panel Connector"
+#~ msgstr "Sivi priključek spredaj"
+
+#~ msgid "Orange Front Panel Connector"
+#~ msgstr "Oranžni priključek spredaj"
+
+#~ msgid "Red Front Panel Connector"
+#~ msgstr "Rdeči priključek spredaj"
+
+#~ msgid "Yellow Front Panel Connector"
+#~ msgstr "Rumeni priključek spredaj"
+
+#~ msgid "Spread Output"
+#~ msgstr "Razširi izhod"
+
+#~ msgid "Downmix"
+#~ msgstr "Zmanjševanje kanalov"
+
+#~ msgid "Virtual Mixer Input"
+#~ msgstr "Vhod navideznega mešalnika"
+
+#~ msgid "Virtual Mixer Output"
+#~ msgstr "Izhod navideznega mešalnika"
+
+#~ msgid "Virtual Mixer Channels"
+#~ msgstr "Kanali navideznega mešalnika"
+
+#~ msgid "%s %d Function"
+#~ msgstr "Funkcija %s %d"
+
+#~ msgid "%s Function"
+#~ msgstr "Funkcija %s"
 
 #~ msgid "Error reading %d bytes on device '%s'."
 #~ msgstr "Napaka med branjem %d bajtov na napravi '%s'."
