@@ -1,5 +1,5 @@
 
-Release notes for GStreamer Ugly Plug-ins 0.11.90 "Is all that we see or seem but a dream within a dream?"
+Release notes for GStreamer Ugly Plug-ins 0.11.91 "I’ll grind his bones to make my bread!"
         
 
 
@@ -54,7 +54,7 @@ contains a set of less supported plug-ins that haven't passed the
 
 Features of this release
     
-      * Lots of bugfixes, cleanup and other improvements
+      * Lots of bugfixes and other improvements
 There were no bugs fixed in this release
     
 
@@ -85,8 +85,9 @@ Applications
   
 Contributors to this release
     
-      * Mark Nauwelaerts
+      * Alban Browaeys
+      * Leon Merten Lohse
       * Sebastian Dröge
       * Tim-Philipp Müller
-      * Wim Taymans
+      * Vincent Penquerc'h
  

@@ -1,9 +1,186 @@
-=== release 0.11.90 ===
+=== release 0.11.91 ===
 
-2012-04-12  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+2012-05-13  Sebastian Dröge <sebastian.droege@collabora.co.uk>
 
 	* configure.ac:
-	  releasing 0.11.90, "Is all that we see or seem but a dream within a dream?"
+	  releasing 0.11.91, "I’ll grind his bones to make my bread\!"
+
+2012-05-13 16:45:50 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	  Merge branch 'master' of ssh://git.freedesktop.org/git/gstreamer/gst-plugins-ugly
+
+2012-05-13 15:56:27 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* common:
+	  Automatic update of common submodule
+	  From dc70203 to 3429ba6
+
+2012-04-24 15:27:12 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* gst/asfdemux/asfpacket.c:
+	  asfdemux: Use correct enum type
+
+2012-05-10 10:11:44 +0100  Vincent Penquerc'h <vincent.penquerch@collabora.co.uk>
+
+	* gst/asfdemux/gstasfdemux.c:
+	  asfdemux: implement pull mode seek snap flags when an index is present
+	  Also ensure we get a proper EOS when seeking past the end of the
+	  file, or (when the snap after flag is set) between the last keyframe
+	  and the end of the file.
+
+2012-05-03 23:50:30 +0100  Leon Merten Lohse <leon@green-side.de>
+
+	* ext/cdio/gstcdio.c:
+	* ext/cdio/gstcdio.h:
+	* ext/cdio/gstcdiocddasrc.c:
+	  cdio: compensate for libcdio's recent cd-text api changes
+	  https://bugzilla.gnome.org/show_bug.cgi?id=675112
+	  Conflicts:
+	  ext/cdio/gstcdiocddasrc.c
+
+2012-04-30 21:27:52 +0100  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+
+	* ext/dvdread/dvdreadsrc.c:
+	  dvdread: fix build after recent include reshuffling in core
+	  Need to include gmodule.h ourselves now.
+
+2012-04-19 12:22:08 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* ext/mpeg2dec/gstmpeg2dec.c:
+	  video: Update for libgstvideo API changes
+
+2012-04-16 09:09:35 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* common:
+	  Automatic update of common submodule
+	  From 6db25be to dc70203
+
+2012-04-12 13:56:48 +0100  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+
+	* gst/asfdemux/asfpacket.c:
+	* gst/asfdemux/asfpacket.h:
+	  asfdemux: fix performance issue, especially with high-bitrate streams
+	  Two things were suboptimal from a performance point of view:
+	  a) consider a large media object such as a video keyframe, which
+	  may be split up into multiple fragments. We would assemble
+	  the media object as follows:
+	  buf = join (join (join (frag1, frag2), frag3), frag4)
+	  which causes many unnecessary memcpy()s, and malloc/free,
+	  which could easily add up to a multiple of the actual object
+	  size. To avoid this, we allocate a buffer of the size needed
+	  from the start and copy fragments into that directly.
+	  b) for every fragment to join, we would create a sub-buffer
+	  before joining it (which would discard the sub-buffer again),
+	  leading to unnecessary miniobject create/free churn.
+	  Conflicts:
+	  gst/asfdemux/asfpacket.c
+	  gst/asfdemux/asfpacket.h
+
+2012-04-12 14:45:51 +0100  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+
+	* gst/asfdemux/asfpacket.c:
+	  asfdemux: avoid unnecessary stream lookup
+	  We have already retrieved the stream for that stream number and
+	  made sure it's not NULL, so no need to do it again here; neither
+	  the number nor the streams changed since the last time.
+
+2012-04-02 19:31:20 +0200  Alban Browaeys <prahal@yahoo.com>
+
+	* ext/a52dec/gsta52dec.c:
+	  a52dec: fix first_access bigger than 2
+	  gst_buffer_extract returns the number of bytes extracted, here 2 max.
+	  Set size to the buffer size as was done in 0.10 to avoid first_access
+	  error when it bypass 2.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=673434
+
+2012-04-13 13:43:30 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* autogen.sh:
+	* configure.ac:
+	  configure: Modernize autotools setup a bit
+	  Also we now only create tar.bz2 and tar.xz tarballs.
+
+2012-04-13 13:37:32 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* common:
+	  Automatic update of common submodule
+	  From 464fe15 to 6db25be
+
+2012-04-12 11:19:12 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* configure.ac:
+	  Back to development
+
+=== release 0.11.90 ===
+
+2012-04-12 10:40:20 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* ChangeLog:
+	* NEWS:
+	* RELEASE:
+	* configure.ac:
+	* docs/plugins/gst-plugins-ugly-plugins.prerequisites:
+	* docs/plugins/inspect/plugin-a52dec.xml:
+	* docs/plugins/inspect/plugin-amrnb.xml:
+	* docs/plugins/inspect/plugin-amrwbdec.xml:
+	* docs/plugins/inspect/plugin-asf.xml:
+	* docs/plugins/inspect/plugin-cdio.xml:
+	* docs/plugins/inspect/plugin-dvdlpcmdec.xml:
+	* docs/plugins/inspect/plugin-dvdread.xml:
+	* docs/plugins/inspect/plugin-dvdsub.xml:
+	* docs/plugins/inspect/plugin-lame.xml:
+	* docs/plugins/inspect/plugin-mad.xml:
+	* docs/plugins/inspect/plugin-mpeg2dec.xml:
+	* docs/plugins/inspect/plugin-realmedia.xml:
+	* docs/plugins/inspect/plugin-siddec.xml:
+	* docs/plugins/inspect/plugin-twolame.xml:
+	* docs/plugins/inspect/plugin-x264.xml:
+	* gst-plugins-ugly.doap:
+	* win32/common/config.h:
+	  Release 0.11.90
+
+2012-04-12 10:39:13 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* po/af.po:
+	* po/az.po:
+	* po/bg.po:
+	* po/ca.po:
+	* po/cs.po:
+	* po/da.po:
+	* po/de.po:
+	* po/el.po:
+	* po/en_GB.po:
+	* po/eo.po:
+	* po/es.po:
+	* po/eu.po:
+	* po/fi.po:
+	* po/fr.po:
+	* po/gl.po:
+	* po/hu.po:
+	* po/id.po:
+	* po/it.po:
+	* po/ja.po:
+	* po/lt.po:
+	* po/lv.po:
+	* po/ms.po:
+	* po/mt.po:
+	* po/nb.po:
+	* po/nl.po:
+	* po/or.po:
+	* po/pl.po:
+	* po/pt_BR.po:
+	* po/ro.po:
+	* po/ru.po:
+	* po/sk.po:
+	* po/sl.po:
+	* po/sq.po:
+	* po/sr.po:
+	* po/sv.po:
+	* po/tr.po:
+	* po/uk.po:
+	* po/vi.po:
+	* po/zh_CN.po:
+	  Update .po files
 
 2012-04-10 00:48:47 +0100  Tim-Philipp Müller <tim.muller@collabora.co.uk>
 

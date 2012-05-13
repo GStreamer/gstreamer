@@ -35,6 +35,16 @@ might be widely known to present patent problems.
 
  <release>
   <Version>
+   <revision>0.11.91</revision>
+   <branch>0.11</branch>
+   <name>I’ll grind his bones to make my bread!</name>
+   <created>2012-05-13</created>
+   <file-release rdf:resource="http://gstreamer.freedesktop.org/src/gst-plugins-ugly/gst-plugins-ugly-0.11.91.tar.xz" />
+  </Version>
+ </release>
+
+ <release>
+  <Version>
    <revision>0.11.90</revision>
    <branch>0.11</branch>
    <name>Is all that we see or seem but a dream within a dream?</name>
