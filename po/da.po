@@ -33,7 +33,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-base 0.10.32.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2012-04-12 10:10+0200\n"
+"POT-Creation-Date: 2012-05-13 16:19+0200\n"
 "PO-Revision-Date: 2011-04-28 16:38+0100\n"
 "Last-Translator: Joe Hansen <joedalton2@yahoo.dk>\n"
 "Language-Team: Danish <dansk@dansk-gruppen.dk>\n"
@@ -41,39 +41,6 @@ msgstr ""
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-
-msgid "Master"
-msgstr "Master"
-
-msgid "Bass"
-msgstr "Bas"
-
-msgid "Treble"
-msgstr "Diskant"
-
-msgid "PCM"
-msgstr "Pcm"
-
-msgid "Synth"
-msgstr "Synthesizer"
-
-msgid "Line-in"
-msgstr "Linie-ind"
-
-msgid "CD"
-msgstr "Cd"
-
-msgid "Microphone"
-msgstr "Mikrofon"
-
-msgid "PC Speaker"
-msgstr "Pc-højttaler"
-
-msgid "Playback"
-msgstr "Afspilning"
-
-msgid "Capture"
-msgstr "Optage"
 
 msgid "Could not open device for playback in mono mode."
 msgstr "Kunne ikke afspille fra enheden i mono-tilstand."
@@ -558,6 +525,39 @@ msgstr "Ukendt indkodeelement"
 
 msgid "Plugin or element of unknown type"
 msgstr "Plugin eller element af ukendt type"
+
+#~ msgid "Master"
+#~ msgstr "Master"
+
+#~ msgid "Bass"
+#~ msgstr "Bas"
+
+#~ msgid "Treble"
+#~ msgstr "Diskant"
+
+#~ msgid "PCM"
+#~ msgstr "Pcm"
+
+#~ msgid "Synth"
+#~ msgstr "Synthesizer"
+
+#~ msgid "Line-in"
+#~ msgstr "Linie-ind"
+
+#~ msgid "CD"
+#~ msgstr "Cd"
+
+#~ msgid "Microphone"
+#~ msgstr "Mikrofon"
+
+#~ msgid "PC Speaker"
+#~ msgstr "Pc-højttaler"
+
+#~ msgid "Playback"
+#~ msgstr "Afspilning"
+
+#~ msgid "Capture"
+#~ msgstr "Optage"
 
 #~ msgid "Connection to %s:%d refused."
 #~ msgstr "Opkobling til %s:%d afvist."

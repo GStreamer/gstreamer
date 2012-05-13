@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-base 0.10.32.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2012-04-12 10:10+0200\n"
+"POT-Creation-Date: 2012-05-13 16:19+0200\n"
 "PO-Revision-Date: 2011-04-26 20:30+0400\n"
 "Last-Translator: Yuri Kozlov <yuray@komyakino.ru>\n"
 "Language-Team: Russian <gnu@mx.ru>\n"
@@ -19,39 +19,6 @@ msgstr ""
 "X-Generator: Lokalize 1.0\n"
 "Plural-Forms: nplurals=3; plural=(n%10==1 && n%100!=11 ? 0 : n%10>=2 && n"
 "%10<=4 && (n%100<10 || n%100>=20) ? 1 : 2);\n"
-
-msgid "Master"
-msgstr "Общий"
-
-msgid "Bass"
-msgstr "Низкие"
-
-msgid "Treble"
-msgstr "Высокие"
-
-msgid "PCM"
-msgstr "PCM"
-
-msgid "Synth"
-msgstr "Синтезатор"
-
-msgid "Line-in"
-msgstr "Линейный вход"
-
-msgid "CD"
-msgstr "CD"
-
-msgid "Microphone"
-msgstr "Микрофон"
-
-msgid "PC Speaker"
-msgstr "Внутренний динамик"
-
-msgid "Playback"
-msgstr "Воспроизведение"
-
-msgid "Capture"
-msgstr "Съёмка"
 
 msgid "Could not open device for playback in mono mode."
 msgstr "Не удалось открыть устройство для воспроизведения в режиме моно."
@@ -522,6 +489,39 @@ msgstr "Неизвестный элемент-кодировщик"
 
 msgid "Plugin or element of unknown type"
 msgstr "Модуль или элемент неизвестного типа"
+
+#~ msgid "Master"
+#~ msgstr "Общий"
+
+#~ msgid "Bass"
+#~ msgstr "Низкие"
+
+#~ msgid "Treble"
+#~ msgstr "Высокие"
+
+#~ msgid "PCM"
+#~ msgstr "PCM"
+
+#~ msgid "Synth"
+#~ msgstr "Синтезатор"
+
+#~ msgid "Line-in"
+#~ msgstr "Линейный вход"
+
+#~ msgid "CD"
+#~ msgstr "CD"
+
+#~ msgid "Microphone"
+#~ msgstr "Микрофон"
+
+#~ msgid "PC Speaker"
+#~ msgstr "Внутренний динамик"
+
+#~ msgid "Playback"
+#~ msgstr "Воспроизведение"
+
+#~ msgid "Capture"
+#~ msgstr "Съёмка"
 
 #~ msgid "Connection to %s:%d refused."
 #~ msgstr "В соединении с %s:%d отказано."

@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-base 0.10.32.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2012-04-12 10:10+0200\n"
+"POT-Creation-Date: 2012-05-13 16:19+0200\n"
 "PO-Revision-Date: 2011-04-26 22:31+0300\n"
 "Last-Translator: Alexander Shopov <ash@kambanaria.org>\n"
 "Language-Team: Bulgarian <dict@fsa-bg.org>\n"
@@ -17,39 +17,6 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=n != 1;\n"
-
-msgid "Master"
-msgstr "Главен"
-
-msgid "Bass"
-msgstr "Баси"
-
-msgid "Treble"
-msgstr "Високи"
-
-msgid "PCM"
-msgstr "PCM"
-
-msgid "Synth"
-msgstr "Синтезатор"
-
-msgid "Line-in"
-msgstr "Вход"
-
-msgid "CD"
-msgstr "CD"
-
-msgid "Microphone"
-msgstr "Микрофон"
-
-msgid "PC Speaker"
-msgstr "Високоговорител на PC"
-
-msgid "Playback"
-msgstr "Изпълнение"
-
-msgid "Capture"
-msgstr "Запис"
 
 msgid "Could not open device for playback in mono mode."
 msgstr "Устройството не може да се отвори за изпълнение в моно режим."
@@ -517,6 +484,39 @@ msgstr "Непознат елемент-кодер"
 
 msgid "Plugin or element of unknown type"
 msgstr "Приставка или елемент от непознат вид"
+
+#~ msgid "Master"
+#~ msgstr "Главен"
+
+#~ msgid "Bass"
+#~ msgstr "Баси"
+
+#~ msgid "Treble"
+#~ msgstr "Високи"
+
+#~ msgid "PCM"
+#~ msgstr "PCM"
+
+#~ msgid "Synth"
+#~ msgstr "Синтезатор"
+
+#~ msgid "Line-in"
+#~ msgstr "Вход"
+
+#~ msgid "CD"
+#~ msgstr "CD"
+
+#~ msgid "Microphone"
+#~ msgstr "Микрофон"
+
+#~ msgid "PC Speaker"
+#~ msgstr "Високоговорител на PC"
+
+#~ msgid "Playback"
+#~ msgstr "Изпълнение"
+
+#~ msgid "Capture"
+#~ msgstr "Запис"
 
 #~ msgid "Connection to %s:%d refused."
 #~ msgstr "Връзката към %s:%d е отказана."

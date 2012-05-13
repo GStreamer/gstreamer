@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-base 0.10.32.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2012-04-12 10:10+0200\n"
+"POT-Creation-Date: 2012-05-13 16:19+0200\n"
 "PO-Revision-Date: 2011-09-02 12:02-0000\n"
 "Last-Translator: Rihards Priedītis <rprieditis@gmail.com>\n"
 "Language-Team: Latvian <translation-team-lv@lists.sourceforge.net>\n"
@@ -21,39 +21,6 @@ msgstr ""
 "Plural-Forms: nplurals=3; plural=(n%10==1 && n%100!=11 ? 0 : n != 0 ? 1 : "
 "2);\n"
 "X-Generator: Lokalize 1.0\n"
-
-msgid "Master"
-msgstr "Galvenais"
-
-msgid "Bass"
-msgstr "Bass"
-
-msgid "Treble"
-msgstr "Diskants"
-
-msgid "PCM"
-msgstr "PCM"
-
-msgid "Synth"
-msgstr "Sintēze"
-
-msgid "Line-in"
-msgstr "Line-in"
-
-msgid "CD"
-msgstr "CD"
-
-msgid "Microphone"
-msgstr "Mikrofons"
-
-msgid "PC Speaker"
-msgstr "Datora skaļrunis"
-
-msgid "Playback"
-msgstr "Atskaņošana"
-
-msgid "Capture"
-msgstr "Tveršana"
 
 msgid "Could not open device for playback in mono mode."
 msgstr "Nevarēja atvērt ierīci atskaņošanai mono režīmā."
@@ -520,6 +487,39 @@ msgstr "Nezināms kodētāja elements"
 
 msgid "Plugin or element of unknown type"
 msgstr "Nezināma veida spraudnis vai elements"
+
+#~ msgid "Master"
+#~ msgstr "Galvenais"
+
+#~ msgid "Bass"
+#~ msgstr "Bass"
+
+#~ msgid "Treble"
+#~ msgstr "Diskants"
+
+#~ msgid "PCM"
+#~ msgstr "PCM"
+
+#~ msgid "Synth"
+#~ msgstr "Sintēze"
+
+#~ msgid "Line-in"
+#~ msgstr "Line-in"
+
+#~ msgid "CD"
+#~ msgstr "CD"
+
+#~ msgid "Microphone"
+#~ msgstr "Mikrofons"
+
+#~ msgid "PC Speaker"
+#~ msgstr "Datora skaļrunis"
+
+#~ msgid "Playback"
+#~ msgstr "Atskaņošana"
+
+#~ msgid "Capture"
+#~ msgstr "Tveršana"
 
 #~ msgid "Connection to %s:%d refused."
 #~ msgstr "Savienojums ar %s:%d noraidīts."

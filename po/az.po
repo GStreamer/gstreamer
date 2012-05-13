@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-0.8.0\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2012-04-12 10:10+0200\n"
+"POT-Creation-Date: 2012-05-13 16:19+0200\n"
 "PO-Revision-Date: 2004-03-19 18:29+0200\n"
 "Last-Translator: Metin Amiroff <metin@karegen.com>\n"
 "Language-Team: Azerbaijani <translation-team-az@lists.sourceforge.net>\n"
@@ -16,40 +16,6 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "X-Generator: KBabel 1.0.2\n"
-
-msgid "Master"
-msgstr ""
-
-msgid "Bass"
-msgstr "Bas"
-
-msgid "Treble"
-msgstr "İncə"
-
-msgid "PCM"
-msgstr "PCM"
-
-msgid "Synth"
-msgstr "Sint"
-
-msgid "Line-in"
-msgstr "Xətd-giriş"
-
-msgid "CD"
-msgstr "CD"
-
-msgid "Microphone"
-msgstr "Mikrofon"
-
-#, fuzzy
-msgid "PC Speaker"
-msgstr "Spiker"
-
-msgid "Playback"
-msgstr ""
-
-msgid "Capture"
-msgstr ""
 
 #, fuzzy
 msgid "Could not open device for playback in mono mode."
@@ -515,6 +481,31 @@ msgstr ""
 
 msgid "Plugin or element of unknown type"
 msgstr ""
+
+#~ msgid "Bass"
+#~ msgstr "Bas"
+
+#~ msgid "Treble"
+#~ msgstr "İncə"
+
+#~ msgid "PCM"
+#~ msgstr "PCM"
+
+#~ msgid "Synth"
+#~ msgstr "Sint"
+
+#~ msgid "Line-in"
+#~ msgstr "Xətd-giriş"
+
+#~ msgid "CD"
+#~ msgstr "CD"
+
+#~ msgid "Microphone"
+#~ msgstr "Mikrofon"
+
+#, fuzzy
+#~ msgid "PC Speaker"
+#~ msgstr "Spiker"
 
 #, fuzzy
 #~ msgid "Could not open vfs file \"%s\" for writing: %s."

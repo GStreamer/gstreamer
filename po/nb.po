@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-base 0.10.30.3\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2012-04-12 10:10+0200\n"
+"POT-Creation-Date: 2012-05-13 16:19+0200\n"
 "PO-Revision-Date: 2010-10-24 21:44+0200\n"
 "Last-Translator: Kjartan Maraas <kmaraas@gnome.org>\n"
 "Language-Team: Norwegian Bokmaal <i18n-nb@lister.ping.uio.no>\n"
@@ -15,39 +15,6 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
-
-msgid "Master"
-msgstr "Hovedvolum"
-
-msgid "Bass"
-msgstr "Bass"
-
-msgid "Treble"
-msgstr "Diskant"
-
-msgid "PCM"
-msgstr "PCM"
-
-msgid "Synth"
-msgstr "Synth"
-
-msgid "Line-in"
-msgstr "Linje inn"
-
-msgid "CD"
-msgstr "CD"
-
-msgid "Microphone"
-msgstr "Mikrofon"
-
-msgid "PC Speaker"
-msgstr "PC-høyttaler"
-
-msgid "Playback"
-msgstr "Spill av"
-
-msgid "Capture"
-msgstr "Ta opp"
 
 msgid "Could not open device for playback in mono mode."
 msgstr "Kunne ikke åpne enheten for avspilling i mono-modus."
@@ -509,6 +476,39 @@ msgstr "Ukjent element for koding"
 
 msgid "Plugin or element of unknown type"
 msgstr "Tillegg eller element av ukjent type"
+
+#~ msgid "Master"
+#~ msgstr "Hovedvolum"
+
+#~ msgid "Bass"
+#~ msgstr "Bass"
+
+#~ msgid "Treble"
+#~ msgstr "Diskant"
+
+#~ msgid "PCM"
+#~ msgstr "PCM"
+
+#~ msgid "Synth"
+#~ msgstr "Synth"
+
+#~ msgid "Line-in"
+#~ msgstr "Linje inn"
+
+#~ msgid "CD"
+#~ msgstr "CD"
+
+#~ msgid "Microphone"
+#~ msgstr "Mikrofon"
+
+#~ msgid "PC Speaker"
+#~ msgstr "PC-høyttaler"
+
+#~ msgid "Playback"
+#~ msgstr "Spill av"
+
+#~ msgid "Capture"
+#~ msgstr "Ta opp"
 
 #~ msgid "Could not open vfs file \"%s\" for writing: %s."
 #~ msgstr "Kunne ikke åpne VFS-fil «%s» for skriving: %s."

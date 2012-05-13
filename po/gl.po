@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-base 0.10.32.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2012-04-12 10:10+0200\n"
+"POT-Creation-Date: 2012-05-13 16:19+0200\n"
 "PO-Revision-Date: 2011-09-05 12:48+0200\n"
 "Last-Translator: Fran Dieguez <frandieguez@ubuntu.com>\n"
 "Language-Team: Galician <proxecto@trasno.net>\n"
@@ -18,39 +18,6 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=(n!=1);\n"
 "X-Poedit-Language: galego\n"
-
-msgid "Master"
-msgstr "Mestre"
-
-msgid "Bass"
-msgstr "Graves"
-
-msgid "Treble"
-msgstr "Agudos"
-
-msgid "PCM"
-msgstr "PCM"
-
-msgid "Synth"
-msgstr "Sintetizador"
-
-msgid "Line-in"
-msgstr "Liña de entrada"
-
-msgid "CD"
-msgstr "CD"
-
-msgid "Microphone"
-msgstr "Micrófono"
-
-msgid "PC Speaker"
-msgstr "Altofalante do PC"
-
-msgid "Playback"
-msgstr "Reproducir"
-
-msgid "Capture"
-msgstr "Capturar"
 
 msgid "Could not open device for playback in mono mode."
 msgstr "Non foi posíbel abrir o dispositivo para a reprodución en modo mono."
@@ -520,6 +487,39 @@ msgstr "O elemento codificador é descoñecido"
 
 msgid "Plugin or element of unknown type"
 msgstr "Engadido ou elemento de tipo descoñecido"
+
+#~ msgid "Master"
+#~ msgstr "Mestre"
+
+#~ msgid "Bass"
+#~ msgstr "Graves"
+
+#~ msgid "Treble"
+#~ msgstr "Agudos"
+
+#~ msgid "PCM"
+#~ msgstr "PCM"
+
+#~ msgid "Synth"
+#~ msgstr "Sintetizador"
+
+#~ msgid "Line-in"
+#~ msgstr "Liña de entrada"
+
+#~ msgid "CD"
+#~ msgstr "CD"
+
+#~ msgid "Microphone"
+#~ msgstr "Micrófono"
+
+#~ msgid "PC Speaker"
+#~ msgstr "Altofalante do PC"
+
+#~ msgid "Playback"
+#~ msgstr "Reproducir"
+
+#~ msgid "Capture"
+#~ msgstr "Capturar"
 
 #~ msgid "Connection to %s:%d refused."
 #~ msgstr "Rexeitouse a conexión a %s:%d."

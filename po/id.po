@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-base 0.10.32.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2012-04-12 10:10+0200\n"
+"POT-Creation-Date: 2012-05-13 16:19+0200\n"
 "PO-Revision-Date: 2012-01-28 11:31+0700\n"
 "Last-Translator: Andhika Padmawan <andhika.padmawan@gmail.com>\n"
 "Language-Team: Indonesian <translation-team-id@lists.sourceforge.net>\n"
@@ -14,39 +14,6 @@ msgstr ""
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=utf-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-
-msgid "Master"
-msgstr "Utama"
-
-msgid "Bass"
-msgstr "Bas"
-
-msgid "Treble"
-msgstr "Treble"
-
-msgid "PCM"
-msgstr "PCM"
-
-msgid "Synth"
-msgstr "Synth"
-
-msgid "Line-in"
-msgstr "Jalur masuk"
-
-msgid "CD"
-msgstr "CD"
-
-msgid "Microphone"
-msgstr "Mikrofon"
-
-msgid "PC Speaker"
-msgstr "Pengeras Suara PC"
-
-msgid "Playback"
-msgstr "Putar kembali"
-
-msgid "Capture"
-msgstr "Tangkap"
 
 msgid "Could not open device for playback in mono mode."
 msgstr "Tak dapat membuka divais untuk putar kembali dalam mode mono."
@@ -514,6 +481,39 @@ msgstr "Elemen penyandi tak diketahui"
 
 msgid "Plugin or element of unknown type"
 msgstr "Plugin atau elemen dari tipe yang tak diketahui"
+
+#~ msgid "Master"
+#~ msgstr "Utama"
+
+#~ msgid "Bass"
+#~ msgstr "Bas"
+
+#~ msgid "Treble"
+#~ msgstr "Treble"
+
+#~ msgid "PCM"
+#~ msgstr "PCM"
+
+#~ msgid "Synth"
+#~ msgstr "Synth"
+
+#~ msgid "Line-in"
+#~ msgstr "Jalur masuk"
+
+#~ msgid "CD"
+#~ msgstr "CD"
+
+#~ msgid "Microphone"
+#~ msgstr "Mikrofon"
+
+#~ msgid "PC Speaker"
+#~ msgstr "Pengeras Suara PC"
+
+#~ msgid "Playback"
+#~ msgstr "Putar kembali"
+
+#~ msgid "Capture"
+#~ msgstr "Tangkap"
 
 #~ msgid "Could not open vfs file \"%s\" for writing: %s."
 #~ msgstr "Tak dapat membuka berkas vfs \"%s\" untuk ditulis: %s."

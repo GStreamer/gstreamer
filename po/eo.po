@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-base 0.10.32.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2012-04-12 10:10+0200\n"
+"POT-Creation-Date: 2012-05-13 16:19+0200\n"
 "PO-Revision-Date: 2011-06-04 21:11+0100\n"
 "Last-Translator: Kristjan SCHMIDT <kristjan.schmidt@googlemail.com>\n"
 "Language-Team: Esperanto <translation-team-eo@lists.sourceforge.net>\n"
@@ -16,39 +16,6 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
-
-msgid "Master"
-msgstr "Ĉefa regilo"
-
-msgid "Bass"
-msgstr "Baso"
-
-msgid "Treble"
-msgstr ""
-
-msgid "PCM"
-msgstr ""
-
-msgid "Synth"
-msgstr "Sintezilo"
-
-msgid "Line-in"
-msgstr ""
-
-msgid "CD"
-msgstr "KD"
-
-msgid "Microphone"
-msgstr "Mikrofono"
-
-msgid "PC Speaker"
-msgstr "Komputila laŭtparolilo"
-
-msgid "Playback"
-msgstr "Reproduktado"
-
-msgid "Capture"
-msgstr "Kapti"
 
 msgid "Could not open device for playback in mono mode."
 msgstr "Ne eblis malfermi aparaton por reproduktado per unukanala reĝimo."
@@ -508,6 +475,30 @@ msgstr ""
 
 msgid "Plugin or element of unknown type"
 msgstr ""
+
+#~ msgid "Master"
+#~ msgstr "Ĉefa regilo"
+
+#~ msgid "Bass"
+#~ msgstr "Baso"
+
+#~ msgid "Synth"
+#~ msgstr "Sintezilo"
+
+#~ msgid "CD"
+#~ msgstr "KD"
+
+#~ msgid "Microphone"
+#~ msgstr "Mikrofono"
+
+#~ msgid "PC Speaker"
+#~ msgstr "Komputila laŭtparolilo"
+
+#~ msgid "Playback"
+#~ msgstr "Reproduktado"
+
+#~ msgid "Capture"
+#~ msgstr "Kapti"
 
 #~ msgid "Could not open vfs file \"%s\" for writing: %s."
 #~ msgstr "Ne eblis malfermi la vfs-dosieron \"%s\" por skribado: %s."

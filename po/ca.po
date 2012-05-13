@@ -9,7 +9,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-base 0.10.32.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2012-04-12 10:10+0200\n"
+"POT-Creation-Date: 2012-05-13 16:19+0200\n"
 "PO-Revision-Date: 2012-01-01 14:19+0100\n"
 "Last-Translator: Gil Forcada <gforcada@gnome.org>\n"
 "Language-Team: Catalan <ca@dodds.net>\n"
@@ -18,39 +18,6 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=n != 1;\n"
-
-msgid "Master"
-msgstr "Mestre"
-
-msgid "Bass"
-msgstr "Baixos"
-
-msgid "Treble"
-msgstr "Aguts"
-
-msgid "PCM"
-msgstr "PCM"
-
-msgid "Synth"
-msgstr "Sintetitzador"
-
-msgid "Line-in"
-msgstr "Línia d'entrada"
-
-msgid "CD"
-msgstr "CD"
-
-msgid "Microphone"
-msgstr "Micròfon"
-
-msgid "PC Speaker"
-msgstr "Altaveu del PC"
-
-msgid "Playback"
-msgstr "Reproducció"
-
-msgid "Capture"
-msgstr "Captura"
 
 msgid "Could not open device for playback in mono mode."
 msgstr "No s'ha pogut obrir el dispositiu per a la reproducció en mode mono."
@@ -529,6 +496,39 @@ msgstr "L'element codificador és desconegut"
 
 msgid "Plugin or element of unknown type"
 msgstr "El connector o element és de tipus desconegut"
+
+#~ msgid "Master"
+#~ msgstr "Mestre"
+
+#~ msgid "Bass"
+#~ msgstr "Baixos"
+
+#~ msgid "Treble"
+#~ msgstr "Aguts"
+
+#~ msgid "PCM"
+#~ msgstr "PCM"
+
+#~ msgid "Synth"
+#~ msgstr "Sintetitzador"
+
+#~ msgid "Line-in"
+#~ msgstr "Línia d'entrada"
+
+#~ msgid "CD"
+#~ msgstr "CD"
+
+#~ msgid "Microphone"
+#~ msgstr "Micròfon"
+
+#~ msgid "PC Speaker"
+#~ msgstr "Altaveu del PC"
+
+#~ msgid "Playback"
+#~ msgstr "Reproducció"
+
+#~ msgid "Capture"
+#~ msgstr "Captura"
 
 #~ msgid "Could not open vfs file \"%s\" for writing: %s."
 #~ msgstr "No s'ha pogut obrir el fitxer vfs «%s» per a l'escriptura: %s."

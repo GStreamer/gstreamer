@@ -9,7 +9,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-base-0.10.31.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2012-04-12 10:10+0200\n"
+"POT-Creation-Date: 2012-05-13 16:19+0200\n"
 "PO-Revision-Date: 2011-01-08 01:02-0300\n"
 "Last-Translator: Fabrício Godoy <skarllot@gmail.com>\n"
 "Language-Team: Brazilian Portuguese <ldp-br@bazar.conectiva.com.br>\n"
@@ -18,39 +18,6 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=(n > 1);\n"
-
-msgid "Master"
-msgstr "Principal"
-
-msgid "Bass"
-msgstr "Grave"
-
-msgid "Treble"
-msgstr "Agudo"
-
-msgid "PCM"
-msgstr "PCM"
-
-msgid "Synth"
-msgstr "Sintetizador"
-
-msgid "Line-in"
-msgstr "Entrada de linha"
-
-msgid "CD"
-msgstr "CD"
-
-msgid "Microphone"
-msgstr "Microfone"
-
-msgid "PC Speaker"
-msgstr "Alto-falante do PC"
-
-msgid "Playback"
-msgstr "Reprodução"
-
-msgid "Capture"
-msgstr "Captura"
 
 msgid "Could not open device for playback in mono mode."
 msgstr "Não foi possível abrir o dispositivo para reprodução em mono."
@@ -528,6 +495,39 @@ msgstr "Elemento codificador desconhecido"
 
 msgid "Plugin or element of unknown type"
 msgstr "Elemento ou plug-in de tipo desconhecido"
+
+#~ msgid "Master"
+#~ msgstr "Principal"
+
+#~ msgid "Bass"
+#~ msgstr "Grave"
+
+#~ msgid "Treble"
+#~ msgstr "Agudo"
+
+#~ msgid "PCM"
+#~ msgstr "PCM"
+
+#~ msgid "Synth"
+#~ msgstr "Sintetizador"
+
+#~ msgid "Line-in"
+#~ msgstr "Entrada de linha"
+
+#~ msgid "CD"
+#~ msgstr "CD"
+
+#~ msgid "Microphone"
+#~ msgstr "Microfone"
+
+#~ msgid "PC Speaker"
+#~ msgstr "Alto-falante do PC"
+
+#~ msgid "Playback"
+#~ msgstr "Reprodução"
+
+#~ msgid "Capture"
+#~ msgstr "Captura"
 
 #~ msgid "Connection to %s:%d refused."
 #~ msgstr "A conexão para %s:%d foi recusada."

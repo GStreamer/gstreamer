@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-base 0.10.30.3\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2012-04-12 10:10+0200\n"
+"POT-Creation-Date: 2012-05-13 16:19+0200\n"
 "PO-Revision-Date: 2010-10-27 12:05+0200\n"
 "Last-Translator: Michael Kotsarinis <mk73628@gmail.com>\n"
 "Language-Team: Greek <team@lists.gnome.gr>\n"
@@ -19,39 +19,6 @@ msgstr ""
 "Plural-Forms: nplurals=2; plural=n>1;\n"
 "X-Poedit-Language: Greek\n"
 "X-Poedit-Country: GREECE\n"
-
-msgid "Master"
-msgstr "Γενικός"
-
-msgid "Bass"
-msgstr "Μπάσα"
-
-msgid "Treble"
-msgstr "Πρίμα"
-
-msgid "PCM"
-msgstr "PCM"
-
-msgid "Synth"
-msgstr "Συνθεσάιζερ"
-
-msgid "Line-in"
-msgstr "Είσοδος γραμμής"
-
-msgid "CD"
-msgstr "CD"
-
-msgid "Microphone"
-msgstr "Μικρόφωνο"
-
-msgid "PC Speaker"
-msgstr "Ηχείο υπολογιστή"
-
-msgid "Playback"
-msgstr "Αναπαραγωγή"
-
-msgid "Capture"
-msgstr "Σύλληψη"
 
 msgid "Could not open device for playback in mono mode."
 msgstr "Αδυναμία ανοίγματος συσκευής για μονοφωνική αναπαραγωγή."
@@ -536,6 +503,39 @@ msgstr "Άγνωστο στοιχείο κωδικοποιητή"
 
 msgid "Plugin or element of unknown type"
 msgstr "Πρόσθετη λειτουργία ή στοιχείο άγνωστου τύπου"
+
+#~ msgid "Master"
+#~ msgstr "Γενικός"
+
+#~ msgid "Bass"
+#~ msgstr "Μπάσα"
+
+#~ msgid "Treble"
+#~ msgstr "Πρίμα"
+
+#~ msgid "PCM"
+#~ msgstr "PCM"
+
+#~ msgid "Synth"
+#~ msgstr "Συνθεσάιζερ"
+
+#~ msgid "Line-in"
+#~ msgstr "Είσοδος γραμμής"
+
+#~ msgid "CD"
+#~ msgstr "CD"
+
+#~ msgid "Microphone"
+#~ msgstr "Μικρόφωνο"
+
+#~ msgid "PC Speaker"
+#~ msgstr "Ηχείο υπολογιστή"
+
+#~ msgid "Playback"
+#~ msgstr "Αναπαραγωγή"
+
+#~ msgid "Capture"
+#~ msgstr "Σύλληψη"
 
 #~ msgid "Connection to %s:%d refused."
 #~ msgstr "Άρνηση σύνδεσης σε %s:%d."

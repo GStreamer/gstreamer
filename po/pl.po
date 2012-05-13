@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-base 0.10.32.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2012-04-12 10:10+0200\n"
+"POT-Creation-Date: 2012-05-13 16:19+0200\n"
 "PO-Revision-Date: 2011-04-26 18:01+0200\n"
 "Last-Translator: Jakub Bogusz <qboosh@pld-linux.org>\n"
 "Language-Team: Polish <translation-team-pl@lists.sourceforge.net>\n"
@@ -14,39 +14,6 @@ msgstr ""
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-
-msgid "Master"
-msgstr "Główny"
-
-msgid "Bass"
-msgstr "Niskie"
-
-msgid "Treble"
-msgstr "Wysokie"
-
-msgid "PCM"
-msgstr "PCM"
-
-msgid "Synth"
-msgstr "Syntezator"
-
-msgid "Line-in"
-msgstr "Wejście"
-
-msgid "CD"
-msgstr "CD"
-
-msgid "Microphone"
-msgstr "Mikrofon"
-
-msgid "PC Speaker"
-msgstr "Głośnik PC"
-
-msgid "Playback"
-msgstr "Odtwarzanie"
-
-msgid "Capture"
-msgstr "Nagrywanie"
 
 msgid "Could not open device for playback in mono mode."
 msgstr ""
@@ -522,6 +489,39 @@ msgstr "Nieznany element kodujący"
 
 msgid "Plugin or element of unknown type"
 msgstr "Wtyczka lub element nieznanego typu"
+
+#~ msgid "Master"
+#~ msgstr "Główny"
+
+#~ msgid "Bass"
+#~ msgstr "Niskie"
+
+#~ msgid "Treble"
+#~ msgstr "Wysokie"
+
+#~ msgid "PCM"
+#~ msgstr "PCM"
+
+#~ msgid "Synth"
+#~ msgstr "Syntezator"
+
+#~ msgid "Line-in"
+#~ msgstr "Wejście"
+
+#~ msgid "CD"
+#~ msgstr "CD"
+
+#~ msgid "Microphone"
+#~ msgstr "Mikrofon"
+
+#~ msgid "PC Speaker"
+#~ msgstr "Głośnik PC"
+
+#~ msgid "Playback"
+#~ msgstr "Odtwarzanie"
+
+#~ msgid "Capture"
+#~ msgstr "Nagrywanie"
 
 #~ msgid "Connection to %s:%d refused."
 #~ msgstr "Połączenie z %s:%d odrzucone."

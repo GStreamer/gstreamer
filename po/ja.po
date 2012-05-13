@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-base 0.10.30.3\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2012-04-12 10:10+0200\n"
+"POT-Creation-Date: 2012-05-13 16:19+0200\n"
 "PO-Revision-Date: 2010-10-25 10:27+0900\n"
 "Last-Translator: Makoto Kato <makoto.kt@gmail.com>\n"
 "Language-Team: Japanese <translation-team-ja@lists.sourceforge.net>\n"
@@ -16,39 +16,6 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "X-Generator: Lokalize 0.2\n"
 "Plural-Forms: nplurals=1; plural=0;\n"
-
-msgid "Master"
-msgstr "マスター"
-
-msgid "Bass"
-msgstr "低音"
-
-msgid "Treble"
-msgstr "高音"
-
-msgid "PCM"
-msgstr "PCM"
-
-msgid "Synth"
-msgstr "シンセ"
-
-msgid "Line-in"
-msgstr "ライン入力"
-
-msgid "CD"
-msgstr "CD"
-
-msgid "Microphone"
-msgstr "マイクロフォン"
-
-msgid "PC Speaker"
-msgstr "PCスピーカー"
-
-msgid "Playback"
-msgstr "再生"
-
-msgid "Capture"
-msgstr "キャプチャ"
 
 msgid "Could not open device for playback in mono mode."
 msgstr "モノラルモードで再生用にデバイスをオープンできませんでした"
@@ -520,6 +487,39 @@ msgstr "不明なエンコーダーエレメント"
 
 msgid "Plugin or element of unknown type"
 msgstr "不明な種類のプラグインまたはエレメント"
+
+#~ msgid "Master"
+#~ msgstr "マスター"
+
+#~ msgid "Bass"
+#~ msgstr "低音"
+
+#~ msgid "Treble"
+#~ msgstr "高音"
+
+#~ msgid "PCM"
+#~ msgstr "PCM"
+
+#~ msgid "Synth"
+#~ msgstr "シンセ"
+
+#~ msgid "Line-in"
+#~ msgstr "ライン入力"
+
+#~ msgid "CD"
+#~ msgstr "CD"
+
+#~ msgid "Microphone"
+#~ msgstr "マイクロフォン"
+
+#~ msgid "PC Speaker"
+#~ msgstr "PCスピーカー"
+
+#~ msgid "Playback"
+#~ msgstr "再生"
+
+#~ msgid "Capture"
+#~ msgstr "キャプチャ"
 
 #~ msgid "Connection to %s:%d refused."
 #~ msgstr "%s:%d への接続が拒否されました"

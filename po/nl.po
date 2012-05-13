@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-base 0.10.32.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2012-04-12 10:10+0200\n"
+"POT-Creation-Date: 2012-05-13 16:19+0200\n"
 "PO-Revision-Date: 2011-04-27 00:12+0200\n"
 "Last-Translator: Freek de Kruijf <f.de.kruijf@gmail.com>\n"
 "Language-Team: Dutch <vertaling@vrijschrift.org>\n"
@@ -16,39 +16,6 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "X-Generator: Lokalize 1.1\n"
 "Plural-Forms: nplurals=2; plural=n != 1;\n"
-
-msgid "Master"
-msgstr "Master"
-
-msgid "Bass"
-msgstr "Lage tonen"
-
-msgid "Treble"
-msgstr "Hoge tonen"
-
-msgid "PCM"
-msgstr "PCM"
-
-msgid "Synth"
-msgstr "Synth"
-
-msgid "Line-in"
-msgstr "Lijn-in"
-
-msgid "CD"
-msgstr "CD"
-
-msgid "Microphone"
-msgstr "Microfoon"
-
-msgid "PC Speaker"
-msgstr "PC-luidspreker"
-
-msgid "Playback"
-msgstr "Afspelen"
-
-msgid "Capture"
-msgstr "Opnemen"
 
 msgid "Could not open device for playback in mono mode."
 msgstr "Kan het apparaat niet openen voor afspelen in mono."
@@ -525,6 +492,39 @@ msgstr "Onbekend encoder-element"
 
 msgid "Plugin or element of unknown type"
 msgstr "Plugin of element van onbekend type"
+
+#~ msgid "Master"
+#~ msgstr "Master"
+
+#~ msgid "Bass"
+#~ msgstr "Lage tonen"
+
+#~ msgid "Treble"
+#~ msgstr "Hoge tonen"
+
+#~ msgid "PCM"
+#~ msgstr "PCM"
+
+#~ msgid "Synth"
+#~ msgstr "Synth"
+
+#~ msgid "Line-in"
+#~ msgstr "Lijn-in"
+
+#~ msgid "CD"
+#~ msgstr "CD"
+
+#~ msgid "Microphone"
+#~ msgstr "Microfoon"
+
+#~ msgid "PC Speaker"
+#~ msgstr "PC-luidspreker"
+
+#~ msgid "Playback"
+#~ msgstr "Afspelen"
+
+#~ msgid "Capture"
+#~ msgstr "Opnemen"
 
 #~ msgid "Connection to %s:%d refused."
 #~ msgstr "Verbinding naar %s:%d is geweigerd."

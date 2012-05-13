@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-base-0.10.32.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2012-04-12 10:10+0200\n"
+"POT-Creation-Date: 2012-05-13 16:19+0200\n"
 "PO-Revision-Date: 2011-05-29 16:49+0200\n"
 "Last-Translator: Petr Kovar <pknbe@volny.cz>\n"
 "Language-Team: Czech <translation-team-cs@lists.sourceforge.net>\n"
@@ -18,39 +18,6 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=3; plural=(n==1) ? 0 : (n>=2 && n<=4) ? 1 : 2;\n"
 "X-Generator: Lokalize 1.2\n"
-
-msgid "Master"
-msgstr "Master"
-
-msgid "Bass"
-msgstr "Basy"
-
-msgid "Treble"
-msgstr "Výšky"
-
-msgid "PCM"
-msgstr "PCM"
-
-msgid "Synth"
-msgstr "Syntezátor"
-
-msgid "Line-in"
-msgstr "Linkový vstup"
-
-msgid "CD"
-msgstr "CD"
-
-msgid "Microphone"
-msgstr "Mikrofon"
-
-msgid "PC Speaker"
-msgstr "PC Speaker"
-
-msgid "Playback"
-msgstr "Přehrávání"
-
-msgid "Capture"
-msgstr "Záznam"
 
 msgid "Could not open device for playback in mono mode."
 msgstr "Nezdařilo se otevření zařízení k přehrávání v režimu mono."
@@ -521,6 +488,39 @@ msgstr "Neznámý kodérový prvek"
 
 msgid "Plugin or element of unknown type"
 msgstr "Zásuvný modul nebo prvek neznámého typu"
+
+#~ msgid "Master"
+#~ msgstr "Master"
+
+#~ msgid "Bass"
+#~ msgstr "Basy"
+
+#~ msgid "Treble"
+#~ msgstr "Výšky"
+
+#~ msgid "PCM"
+#~ msgstr "PCM"
+
+#~ msgid "Synth"
+#~ msgstr "Syntezátor"
+
+#~ msgid "Line-in"
+#~ msgstr "Linkový vstup"
+
+#~ msgid "CD"
+#~ msgstr "CD"
+
+#~ msgid "Microphone"
+#~ msgstr "Mikrofon"
+
+#~ msgid "PC Speaker"
+#~ msgstr "PC Speaker"
+
+#~ msgid "Playback"
+#~ msgstr "Přehrávání"
+
+#~ msgid "Capture"
+#~ msgstr "Záznam"
 
 #~ msgid "Connection to %s:%d refused."
 #~ msgstr "Spojení s %s:%d bylo odmítnuto."

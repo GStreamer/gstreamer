@@ -5,7 +5,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-base 0.10.29.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2012-04-12 10:10+0200\n"
+"POT-Creation-Date: 2012-05-13 16:19+0200\n"
 "PO-Revision-Date: 2010-08-16 01:21+0300\n"
 "Last-Translator: Lucian Adrian Grijincu <lucian.grijincu@gmail.com>\n"
 "Language-Team: Romanian <translation-team-ro@lists.sourceforge.net>\n"
@@ -15,39 +15,6 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=3; plural=(n==1 ? 0 : (n==0 || (n%100 > 0 && n%100 < "
 "20)) ? 1 : 2);;\n"
-
-msgid "Master"
-msgstr "Principal"
-
-msgid "Bass"
-msgstr "Bas"
-
-msgid "Treble"
-msgstr "Înalte"
-
-msgid "PCM"
-msgstr "PCM"
-
-msgid "Synth"
-msgstr "Synth"
-
-msgid "Line-in"
-msgstr "Linie intrare"
-
-msgid "CD"
-msgstr "CD"
-
-msgid "Microphone"
-msgstr "Microfon"
-
-msgid "PC Speaker"
-msgstr "Difuzor PC"
-
-msgid "Playback"
-msgstr "Redare"
-
-msgid "Capture"
-msgstr "Captură"
 
 msgid "Could not open device for playback in mono mode."
 msgstr "Nu s-a putut deschide dispozitivul pentru redare în modul mono."
@@ -517,6 +484,39 @@ msgstr "Element codor necunoscut"
 
 msgid "Plugin or element of unknown type"
 msgstr "Modul de extensie sau element de tip necunoscut"
+
+#~ msgid "Master"
+#~ msgstr "Principal"
+
+#~ msgid "Bass"
+#~ msgstr "Bas"
+
+#~ msgid "Treble"
+#~ msgstr "Înalte"
+
+#~ msgid "PCM"
+#~ msgstr "PCM"
+
+#~ msgid "Synth"
+#~ msgstr "Synth"
+
+#~ msgid "Line-in"
+#~ msgstr "Linie intrare"
+
+#~ msgid "CD"
+#~ msgstr "CD"
+
+#~ msgid "Microphone"
+#~ msgstr "Microfon"
+
+#~ msgid "PC Speaker"
+#~ msgstr "Difuzor PC"
+
+#~ msgid "Playback"
+#~ msgstr "Redare"
+
+#~ msgid "Capture"
+#~ msgstr "Captură"
 
 #~ msgid "Connection to %s:%d refused."
 #~ msgstr "Conexiunea la %s:%d a fost refuzată."

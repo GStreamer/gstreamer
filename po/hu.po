@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-base 0.10.30.3\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2012-04-12 10:10+0200\n"
+"POT-Creation-Date: 2012-05-13 16:19+0200\n"
 "PO-Revision-Date: 2010-11-03 02:48+0100\n"
 "Last-Translator: Gabor Kelemen <kelemeng@gnome.hu>\n"
 "Language-Team: Hungarian <translation-team-hu@lists.sourceforge.net>\n"
@@ -19,39 +19,6 @@ msgstr ""
 "X-Rosetta-Export-Date: 2007-03-10 00:18+0000\n"
 "X-Generator: KBabel 1.11.4\n"
 "Plural-Forms:  nplurals=2; plural=(n != 1);\n"
-
-msgid "Master"
-msgstr "Fő hangerő"
-
-msgid "Bass"
-msgstr "Basszus"
-
-msgid "Treble"
-msgstr "Magas"
-
-msgid "PCM"
-msgstr "PCM"
-
-msgid "Synth"
-msgstr "Szintet."
-
-msgid "Line-in"
-msgstr "Vonalbemenet"
-
-msgid "CD"
-msgstr "CD"
-
-msgid "Microphone"
-msgstr "Mikrofon"
-
-msgid "PC Speaker"
-msgstr "PC hangszóró"
-
-msgid "Playback"
-msgstr "Lejátszás"
-
-msgid "Capture"
-msgstr "Felvétel"
 
 msgid "Could not open device for playback in mono mode."
 msgstr "Nem lehet lejátszásra megnyitni az eszközt mono módban."
@@ -521,6 +488,39 @@ msgstr "Ismeretlen kódolóelem"
 
 msgid "Plugin or element of unknown type"
 msgstr "Ismeretlen típusú bővítmény vagy elem"
+
+#~ msgid "Master"
+#~ msgstr "Fő hangerő"
+
+#~ msgid "Bass"
+#~ msgstr "Basszus"
+
+#~ msgid "Treble"
+#~ msgstr "Magas"
+
+#~ msgid "PCM"
+#~ msgstr "PCM"
+
+#~ msgid "Synth"
+#~ msgstr "Szintet."
+
+#~ msgid "Line-in"
+#~ msgstr "Vonalbemenet"
+
+#~ msgid "CD"
+#~ msgstr "CD"
+
+#~ msgid "Microphone"
+#~ msgstr "Mikrofon"
+
+#~ msgid "PC Speaker"
+#~ msgstr "PC hangszóró"
+
+#~ msgid "Playback"
+#~ msgstr "Lejátszás"
+
+#~ msgid "Capture"
+#~ msgstr "Felvétel"
 
 #~ msgid "Connection to %s:%d refused."
 #~ msgstr "A kapcsolat visszautasítva a következőhöz: %s:%d."

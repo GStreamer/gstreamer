@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-0.8.3\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2012-04-12 10:10+0200\n"
+"POT-Creation-Date: 2012-05-13 16:19+0200\n"
 "PO-Revision-Date: 2004-09-27 13:32+0530\n"
 "Last-Translator: Gora Mohanty <gora_mohanty@yahoo.co.in>\n"
 "Language-Team: Oriya <gora_mohanty@yahoo.co.in>\n"
@@ -16,40 +16,6 @@ msgstr ""
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-
-msgid "Master"
-msgstr ""
-
-msgid "Bass"
-msgstr "ଅନୁଚ୍ଚ ସ୍ବର"
-
-msgid "Treble"
-msgstr "ଉଚ୍ଚ ସ୍ବର"
-
-msgid "PCM"
-msgstr "ପି.ସି.ଏମ."
-
-msgid "Synth"
-msgstr "ସିନ୍ଥେସାଇଜର"
-
-msgid "Line-in"
-msgstr "ଲାଇନ-ଇନ"
-
-msgid "CD"
-msgstr "ସି.ଡି."
-
-msgid "Microphone"
-msgstr "ମାଇକ୍ରୋଫୋନ୍"
-
-#, fuzzy
-msgid "PC Speaker"
-msgstr "ସ୍ବରବର୍ଦ୍ଧକ ୟନ୍ତ୍ର"
-
-msgid "Playback"
-msgstr ""
-
-msgid "Capture"
-msgstr ""
 
 #, fuzzy
 msgid "Could not open device for playback in mono mode."
@@ -515,6 +481,31 @@ msgstr ""
 
 msgid "Plugin or element of unknown type"
 msgstr ""
+
+#~ msgid "Bass"
+#~ msgstr "ଅନୁଚ୍ଚ ସ୍ବର"
+
+#~ msgid "Treble"
+#~ msgstr "ଉଚ୍ଚ ସ୍ବର"
+
+#~ msgid "PCM"
+#~ msgstr "ପି.ସି.ଏମ."
+
+#~ msgid "Synth"
+#~ msgstr "ସିନ୍ଥେସାଇଜର"
+
+#~ msgid "Line-in"
+#~ msgstr "ଲାଇନ-ଇନ"
+
+#~ msgid "CD"
+#~ msgstr "ସି.ଡି."
+
+#~ msgid "Microphone"
+#~ msgstr "ମାଇକ୍ରୋଫୋନ୍"
+
+#, fuzzy
+#~ msgid "PC Speaker"
+#~ msgstr "ସ୍ବରବର୍ଦ୍ଧକ ୟନ୍ତ୍ର"
 
 #~ msgid "Could not open vfs file \"%s\" for writing: %s."
 #~ msgstr "ଭି.ଏଫ.ଏସ. ଫାଇଲ \"%s\" ଲେଖିବା ପାଇଁ ଖୋଲିହେଲା ନାହିଁ: %s."

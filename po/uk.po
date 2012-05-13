@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-base 0.10.32.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2012-04-12 10:10+0200\n"
+"POT-Creation-Date: 2012-05-13 16:19+0200\n"
 "PO-Revision-Date: 2011-04-27 17:49+0300\n"
 "Last-Translator: Yuri Chornoivan <yurchor@ukr.net>\n"
 "Language-Team: Ukrainian <translation-team-uk@lists.sourceforge.net>\n"
@@ -18,39 +18,6 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=1; plural=0;\n"
 "X-Generator: Lokalize 1.1\n"
-
-msgid "Master"
-msgstr "Головний"
-
-msgid "Bass"
-msgstr "Низькі"
-
-msgid "Treble"
-msgstr "Високі"
-
-msgid "PCM"
-msgstr "КІМ"
-
-msgid "Synth"
-msgstr "Синтезатор"
-
-msgid "Line-in"
-msgstr "Лінійний вхід"
-
-msgid "CD"
-msgstr "Компакт-диск"
-
-msgid "Microphone"
-msgstr "Мікрофон"
-
-msgid "PC Speaker"
-msgstr "Гучномовець"
-
-msgid "Playback"
-msgstr "Відтворення"
-
-msgid "Capture"
-msgstr "Запис"
 
 msgid "Could not open device for playback in mono mode."
 msgstr "Не вдалося відкрити пристрій відтворення у режимі моно."
@@ -529,6 +496,39 @@ msgstr "Невідомий елемент кодера"
 
 msgid "Plugin or element of unknown type"
 msgstr "Модуль або елемент невідомого типу"
+
+#~ msgid "Master"
+#~ msgstr "Головний"
+
+#~ msgid "Bass"
+#~ msgstr "Низькі"
+
+#~ msgid "Treble"
+#~ msgstr "Високі"
+
+#~ msgid "PCM"
+#~ msgstr "КІМ"
+
+#~ msgid "Synth"
+#~ msgstr "Синтезатор"
+
+#~ msgid "Line-in"
+#~ msgstr "Лінійний вхід"
+
+#~ msgid "CD"
+#~ msgstr "Компакт-диск"
+
+#~ msgid "Microphone"
+#~ msgstr "Мікрофон"
+
+#~ msgid "PC Speaker"
+#~ msgstr "Гучномовець"
+
+#~ msgid "Playback"
+#~ msgstr "Відтворення"
+
+#~ msgid "Capture"
+#~ msgstr "Запис"
 
 #~ msgid "Connection to %s:%d refused."
 #~ msgstr "У з'єднанні з %s:%d відмовлено."

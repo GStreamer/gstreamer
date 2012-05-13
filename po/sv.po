@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-base 0.10.28.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2012-04-12 10:10+0200\n"
+"POT-Creation-Date: 2012-05-13 16:19+0200\n"
 "PO-Revision-Date: 2010-06-07 18:17+0100\n"
 "Last-Translator: Daniel Nylander <po@danielnylander.se>\n"
 "Language-Team: Swedish <tp-sv@listor.tp-sv.se>\n"
@@ -16,39 +16,6 @@ msgstr ""
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-
-msgid "Master"
-msgstr "Övergripande"
-
-msgid "Bass"
-msgstr "Bas"
-
-msgid "Treble"
-msgstr "Diskant"
-
-msgid "PCM"
-msgstr "PCM"
-
-msgid "Synth"
-msgstr "Synt"
-
-msgid "Line-in"
-msgstr "Linje-in"
-
-msgid "CD"
-msgstr "Cd"
-
-msgid "Microphone"
-msgstr "Mikrofon"
-
-msgid "PC Speaker"
-msgstr "PC-högtalare"
-
-msgid "Playback"
-msgstr "Uppspelning"
-
-msgid "Capture"
-msgstr "Fångst"
 
 msgid "Could not open device for playback in mono mode."
 msgstr "Kunde inte öppna enheten för uppspelning i monoläge."
@@ -517,6 +484,39 @@ msgstr "Okänt kodarelement"
 
 msgid "Plugin or element of unknown type"
 msgstr "Insticksmodul eller element av okänd typ"
+
+#~ msgid "Master"
+#~ msgstr "Övergripande"
+
+#~ msgid "Bass"
+#~ msgstr "Bas"
+
+#~ msgid "Treble"
+#~ msgstr "Diskant"
+
+#~ msgid "PCM"
+#~ msgstr "PCM"
+
+#~ msgid "Synth"
+#~ msgstr "Synt"
+
+#~ msgid "Line-in"
+#~ msgstr "Linje-in"
+
+#~ msgid "CD"
+#~ msgstr "Cd"
+
+#~ msgid "Microphone"
+#~ msgstr "Mikrofon"
+
+#~ msgid "PC Speaker"
+#~ msgstr "PC-högtalare"
+
+#~ msgid "Playback"
+#~ msgstr "Uppspelning"
+
+#~ msgid "Capture"
+#~ msgstr "Fångst"
 
 #~ msgid "Connection to %s:%d refused."
 #~ msgstr "Anslutningen till %s:%d nekades."

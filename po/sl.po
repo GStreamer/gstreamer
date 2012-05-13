@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-base 0.10.32.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2012-04-12 10:10+0200\n"
+"POT-Creation-Date: 2012-05-13 16:19+0200\n"
 "PO-Revision-Date: 2011-04-26 15:56+0100\n"
 "Last-Translator: Klemen Košir <klemen.kosir@gmx.com>\n"
 "Language-Team: Slovenian <translation-team-sl@lists.sourceforge.net>\n"
@@ -21,39 +21,6 @@ msgstr ""
 "X-Poedit-Language: Slovenian\n"
 "X-Poedit-Country: SLOVENIA\n"
 "X-Poedit-SourceCharset: utf-8\n"
-
-msgid "Master"
-msgstr "Glavni"
-
-msgid "Bass"
-msgstr "Bas"
-
-msgid "Treble"
-msgstr "Visoki toni"
-
-msgid "PCM"
-msgstr "PCM"
-
-msgid "Synth"
-msgstr "Sintetizator"
-
-msgid "Line-in"
-msgstr "Analogni vhod"
-
-msgid "CD"
-msgstr "CD"
-
-msgid "Microphone"
-msgstr "Mikrofon"
-
-msgid "PC Speaker"
-msgstr "Računalniški zvočnik"
-
-msgid "Playback"
-msgstr "Predvajanje"
-
-msgid "Capture"
-msgstr "Zajemanje"
 
 msgid "Could not open device for playback in mono mode."
 msgstr "Naprave ni mogoče odpreti za predvajanje v mono načinu."
@@ -519,6 +486,39 @@ msgstr "Neznan predmet kodirnika"
 
 msgid "Plugin or element of unknown type"
 msgstr "Vstavek ali predmet neznane vrste"
+
+#~ msgid "Master"
+#~ msgstr "Glavni"
+
+#~ msgid "Bass"
+#~ msgstr "Bas"
+
+#~ msgid "Treble"
+#~ msgstr "Visoki toni"
+
+#~ msgid "PCM"
+#~ msgstr "PCM"
+
+#~ msgid "Synth"
+#~ msgstr "Sintetizator"
+
+#~ msgid "Line-in"
+#~ msgstr "Analogni vhod"
+
+#~ msgid "CD"
+#~ msgstr "CD"
+
+#~ msgid "Microphone"
+#~ msgstr "Mikrofon"
+
+#~ msgid "PC Speaker"
+#~ msgstr "Računalniški zvočnik"
+
+#~ msgid "Playback"
+#~ msgstr "Predvajanje"
+
+#~ msgid "Capture"
+#~ msgstr "Zajemanje"
 
 #~ msgid "Connection to %s:%d refused."
 #~ msgstr "Povezava s %s:%d zavrnjena."

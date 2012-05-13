@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-base 0.10.32.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2012-04-12 10:10+0200\n"
+"POT-Creation-Date: 2012-05-13 16:19+0200\n"
 "PO-Revision-Date: 2011-10-02 15:46+0200\n"
 "Last-Translator: Jorge González González <aloriel@gmail.com>\n"
 "Language-Team: Spanish <es@li.org>\n"
@@ -16,39 +16,6 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=(n!=1);\n"
-
-msgid "Master"
-msgstr "Maestro"
-
-msgid "Bass"
-msgstr "Bajo"
-
-msgid "Treble"
-msgstr "Agudos"
-
-msgid "PCM"
-msgstr "PCM"
-
-msgid "Synth"
-msgstr "Sintetizador"
-
-msgid "Line-in"
-msgstr "Línea de entrada"
-
-msgid "CD"
-msgstr "CD"
-
-msgid "Microphone"
-msgstr "Micrófono"
-
-msgid "PC Speaker"
-msgstr "Altavoz del equipo"
-
-msgid "Playback"
-msgstr "Reproducción"
-
-msgid "Capture"
-msgstr "Capturar"
 
 msgid "Could not open device for playback in mono mode."
 msgstr "No se pudo abrir el dispositivo para la reproducir en modo mono."
@@ -518,6 +485,39 @@ msgstr "Elemento codificador desconocido"
 
 msgid "Plugin or element of unknown type"
 msgstr "Complemento o elemento de tipo desconocido"
+
+#~ msgid "Master"
+#~ msgstr "Maestro"
+
+#~ msgid "Bass"
+#~ msgstr "Bajo"
+
+#~ msgid "Treble"
+#~ msgstr "Agudos"
+
+#~ msgid "PCM"
+#~ msgstr "PCM"
+
+#~ msgid "Synth"
+#~ msgstr "Sintetizador"
+
+#~ msgid "Line-in"
+#~ msgstr "Línea de entrada"
+
+#~ msgid "CD"
+#~ msgstr "CD"
+
+#~ msgid "Microphone"
+#~ msgstr "Micrófono"
+
+#~ msgid "PC Speaker"
+#~ msgstr "Altavoz del equipo"
+
+#~ msgid "Playback"
+#~ msgstr "Reproducción"
+
+#~ msgid "Capture"
+#~ msgstr "Capturar"
 
 #~ msgid "Connection to %s:%d refused."
 #~ msgstr "Se rechazó la conexión con %s:%d."

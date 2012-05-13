@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-base 0.10.21.3\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2012-04-12 10:10+0200\n"
+"POT-Creation-Date: 2012-05-13 16:19+0200\n"
 "PO-Revision-Date: 2009-01-14 12:41+0800\n"
 "Last-Translator: Ji ZhengYu <zhengyuji@gmail.com>\n"
 "Language-Team: Chinese (simplified) <i18n-zh@googlegroups.com>\n"
@@ -14,39 +14,6 @@ msgstr ""
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=utf-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-
-msgid "Master"
-msgstr "主音量"
-
-msgid "Bass"
-msgstr "低音(Bass)"
-
-msgid "Treble"
-msgstr "高音(Treble)"
-
-msgid "PCM"
-msgstr "波形"
-
-msgid "Synth"
-msgstr "合成器"
-
-msgid "Line-in"
-msgstr "线路输入"
-
-msgid "CD"
-msgstr "CD"
-
-msgid "Microphone"
-msgstr "话筒"
-
-msgid "PC Speaker"
-msgstr "PC 扬声器"
-
-msgid "Playback"
-msgstr "回放"
-
-msgid "Capture"
-msgstr "录音"
 
 msgid "Could not open device for playback in mono mode."
 msgstr "无法在单声道模式打开设备播放。"
@@ -514,6 +481,39 @@ msgstr "未知的编码组件"
 
 msgid "Plugin or element of unknown type"
 msgstr "未知类型的插件或组件"
+
+#~ msgid "Master"
+#~ msgstr "主音量"
+
+#~ msgid "Bass"
+#~ msgstr "低音(Bass)"
+
+#~ msgid "Treble"
+#~ msgstr "高音(Treble)"
+
+#~ msgid "PCM"
+#~ msgstr "波形"
+
+#~ msgid "Synth"
+#~ msgstr "合成器"
+
+#~ msgid "Line-in"
+#~ msgstr "线路输入"
+
+#~ msgid "CD"
+#~ msgstr "CD"
+
+#~ msgid "Microphone"
+#~ msgstr "话筒"
+
+#~ msgid "PC Speaker"
+#~ msgstr "PC 扬声器"
+
+#~ msgid "Playback"
+#~ msgstr "回放"
+
+#~ msgid "Capture"
+#~ msgstr "录音"
 
 #~ msgid "Could not open vfs file \"%s\" for writing: %s."
 #~ msgstr "无法打开 vfs 文件“%s”写入：%s。"

@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-base 0.10.30.3\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2012-04-12 10:10+0200\n"
+"POT-Creation-Date: 2012-05-13 16:19+0200\n"
 "PO-Revision-Date: 2010-11-08 15:34+0100\n"
 "Last-Translator: Peter Tuhársky <tuharsky@misbb.sk>\n"
 "Language-Team: Slovak <sk-i18n@lists.linux.sk>\n"
@@ -18,39 +18,6 @@ msgstr ""
 "X-Generator: KBabel 1.11.4\n"
 "X-Poedit-Language: Slovak\n"
 "X-Poedit-Country: SLOVAKIA\n"
-
-msgid "Master"
-msgstr "Hlavný"
-
-msgid "Bass"
-msgstr "Basy"
-
-msgid "Treble"
-msgstr "Výšky"
-
-msgid "PCM"
-msgstr "PCM"
-
-msgid "Synth"
-msgstr "Synth"
-
-msgid "Line-in"
-msgstr "Line-in"
-
-msgid "CD"
-msgstr "CD"
-
-msgid "Microphone"
-msgstr "Mikrofón"
-
-msgid "PC Speaker"
-msgstr "Reproduktor"
-
-msgid "Playback"
-msgstr "Prehrávanie"
-
-msgid "Capture"
-msgstr "Zachytávanie"
 
 msgid "Could not open device for playback in mono mode."
 msgstr "Nepodarilo sa otvoriť zariadenie pre prehrávanie v režime mono."
@@ -521,6 +488,39 @@ msgstr "Neznámy prvok enkodéra"
 
 msgid "Plugin or element of unknown type"
 msgstr "Neznámy typ zásuvného modulu alebo prvku"
+
+#~ msgid "Master"
+#~ msgstr "Hlavný"
+
+#~ msgid "Bass"
+#~ msgstr "Basy"
+
+#~ msgid "Treble"
+#~ msgstr "Výšky"
+
+#~ msgid "PCM"
+#~ msgstr "PCM"
+
+#~ msgid "Synth"
+#~ msgstr "Synth"
+
+#~ msgid "Line-in"
+#~ msgstr "Line-in"
+
+#~ msgid "CD"
+#~ msgstr "CD"
+
+#~ msgid "Microphone"
+#~ msgstr "Mikrofón"
+
+#~ msgid "PC Speaker"
+#~ msgstr "Reproduktor"
+
+#~ msgid "Playback"
+#~ msgstr "Prehrávanie"
+
+#~ msgid "Capture"
+#~ msgstr "Zachytávanie"
 
 #~ msgid "Connection to %s:%d refused."
 #~ msgstr "Spojenie s %s:%d bolo odmietnuté."

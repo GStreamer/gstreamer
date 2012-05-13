@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-base-0.10.15.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2012-04-12 10:10+0200\n"
+"POT-Creation-Date: 2012-05-13 16:19+0200\n"
 "PO-Revision-Date: 2008-03-07 23:43+0200\n"
 "Last-Translator: Gintautas Miliauskas <gintas@akl.lt>\n"
 "Language-Team: Lithuanian <komp_lt@konferencijos.lt>\n"
@@ -18,39 +18,6 @@ msgstr ""
 "X-Generator: KBabel 1.11.4\n"
 "Plural-Forms:  nplurals=3; plural=(n%10==1 && n%100!=11 ? 0 : n%10>=2 && (n"
 "%100<10 || n%100>=20) ? 1 : 2);\n"
-
-msgid "Master"
-msgstr "Pagrindinis"
-
-msgid "Bass"
-msgstr "Žemi dažniai"
-
-msgid "Treble"
-msgstr "Aukšti dažniai"
-
-msgid "PCM"
-msgstr "PCM"
-
-msgid "Synth"
-msgstr "Sintezatorius"
-
-msgid "Line-in"
-msgstr "Įvedimas"
-
-msgid "CD"
-msgstr "CD"
-
-msgid "Microphone"
-msgstr "Mikrofonas"
-
-msgid "PC Speaker"
-msgstr "PC garsiakalbis"
-
-msgid "Playback"
-msgstr "Grojimas"
-
-msgid "Capture"
-msgstr "Įrašymas"
 
 msgid "Could not open device for playback in mono mode."
 msgstr "Nepavyko atverti įrenginio monofoniniam grojimui."
@@ -522,6 +489,39 @@ msgstr "Nežinomas kodavimo elementas"
 
 msgid "Plugin or element of unknown type"
 msgstr "Nežinomo tipo įskiepis ar elementas"
+
+#~ msgid "Master"
+#~ msgstr "Pagrindinis"
+
+#~ msgid "Bass"
+#~ msgstr "Žemi dažniai"
+
+#~ msgid "Treble"
+#~ msgstr "Aukšti dažniai"
+
+#~ msgid "PCM"
+#~ msgstr "PCM"
+
+#~ msgid "Synth"
+#~ msgstr "Sintezatorius"
+
+#~ msgid "Line-in"
+#~ msgstr "Įvedimas"
+
+#~ msgid "CD"
+#~ msgstr "CD"
+
+#~ msgid "Microphone"
+#~ msgstr "Mikrofonas"
+
+#~ msgid "PC Speaker"
+#~ msgstr "PC garsiakalbis"
+
+#~ msgid "Playback"
+#~ msgstr "Grojimas"
+
+#~ msgid "Capture"
+#~ msgstr "Įrašymas"
 
 #~ msgid "Connection to %s:%d refused."
 #~ msgstr "Prisijungimas prie %s:%d atmestas."
