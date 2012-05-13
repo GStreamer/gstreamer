@@ -301,11 +301,23 @@ gst_ogg_pad_src_query (GstPad * pad, GstObject * parent, GstQuery * query)
         gboolean seekable = FALSE;
         gint64 stop = -1;
 
+        GST_CHAIN_LOCK (ogg);
         if (ogg->pullmode) {
           seekable = TRUE;
           stop = ogg->total_time;
         } else if (ogg->push_disable_seeking) {
           seekable = FALSE;
+        } else if (ogg->current_chain == NULL) {
+          GstQuery *squery;
+
+          /* assume we can seek if upstream is seekable in BYTES format */
+          GST_LOG_OBJECT (ogg, "no current chain, check upstream seekability");
+          squery = gst_query_new_seeking (GST_FORMAT_BYTES);
+          if (gst_pad_peer_query (ogg->sinkpad, squery))
+            gst_query_parse_seeking (squery, NULL, &seekable, NULL, NULL);
+          else
+            seekable = FALSE;
+          gst_query_unref (squery);
         } else if (ogg->current_chain->streams->len) {
           gint i;
 
@@ -334,6 +346,7 @@ gst_ogg_pad_src_query (GstPad * pad, GstObject * parent, GstQuery * query)
         }
 
         gst_query_set_seeking (query, GST_FORMAT_TIME, seekable, 0, stop);
+        GST_CHAIN_UNLOCK (ogg);
       } else {
         res = FALSE;
       }
