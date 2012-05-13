@@ -1,4 +1,11 @@
-This is GStreamer Base Plug-ins 0.11.90 "Golden bells! What a world of happiness their harmony foretells!"
+This is GStreamer Base Plug-ins 0.11.91 "Fee-fi-fo-fum"
+
+New in 0.11.91:
+
+      * Compressed audio passthrough support in alsasink
+      * Removal of interfaces library, mixer and tuner interface
+      * Addition of video encoder and decoder base classes
+      * Improvements/cleanup for the video library API
 
 New in 0.11.90:
 

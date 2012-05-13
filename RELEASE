@@ -1,5 +1,5 @@
 
-Release notes for GStreamer Base Plug-ins 0.11.90 "Golden bells! What a world of happiness their harmony foretells!"
+Release notes for GStreamer Base Plug-ins 0.11.91 "Fee-fi-fo-fum"
         
 
 
@@ -55,9 +55,12 @@ contains a set of less supported plug-ins that haven't passed the
 
 Features of this release
     
-      * Lots of bugfixes, cleanup and other improvements
-      * API cleanup in the audio base classes
-      * Improvements to the RTP buffer
+      * Parallel installability with 0.10.x series
+      * Threadsafe design and API
+      * Compressed audio passthrough support in alsasink
+      * Removal of interfaces library, mixer and tuner interface
+      * Addition of video encoder and decoder base classes
+      * Improvements/cleanup for the video library API
 There were no bugs fixed in this release
     
 
@@ -88,15 +91,22 @@ Applications
   
 Contributors to this release
     
-      * Alban Browaeys
+      * Akihiro Tsukada
       * Alessandro Decina
+      * Andoni Morales Alastruey
       * Edward Hervey
-      * Holger Kaelberer
-      * Jonathan Lyons
+      * Julian Scheel
       * Mark Nauwelaerts
-      * Raimo Järvi
+      * Matej Knopp
+      * Nicolas Dufresne
+      * Reynaldo H. Verdejo Pinochet
       * Sebastian Dröge
-      * Thiago Santos
+      * Sebastian Rasmussen
+      * Stefan Sauer
+      * Thibault Saunier
       * Tim-Philipp Müller
+      * Vivia Nikolaidou
+      * Víctor Manuel Jáquez Leal
       * Wim Taymans
+      * Руслан Ижбулатов
  
