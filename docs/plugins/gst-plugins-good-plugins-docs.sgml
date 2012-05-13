@@ -57,8 +57,6 @@
     <xi:include href="xml/element-cairorender.xml" />
     <xi:include href="xml/element-cairooverlay.xml" />
     <xi:include href="xml/element-capssetter.xml" />
-    <xi:include href="xml/element-cmmldec.xml" />
-    <xi:include href="xml/element-cmmlenc.xml" />
     <xi:include href="xml/element-cutter.xml" />
     <xi:include href="xml/element-dcaparse.xml" />
     <xi:include href="xml/element-deinterlace.xml" />
@@ -187,7 +185,6 @@
     <xi:include href="xml/plugin-alaw.xml" />
     <xi:include href="xml/plugin-alpha.xml" />
     <xi:include href="xml/plugin-alphacolor.xml" />
-    <xi:include href="xml/plugin-annodex.xml" />
     <xi:include href="xml/plugin-apetag.xml" />
     <xi:include href="xml/plugin-audiofx.xml" />
     <xi:include href="xml/plugin-auparse.xml" />

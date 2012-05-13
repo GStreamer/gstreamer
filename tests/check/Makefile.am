@@ -35,14 +35,6 @@ CLEANFILES = core.* test-registry.*
 
 clean-local: clean-local-check clean-local-orc
 
-if USE_ANNODEX
-check_annodex = \
-	elements/cmmldec \
-	elements/cmmlenc
-else
-check_annodex =
-endif
-
 if USE_FLAC
 check_flac = pipelines/flacdec
 else
@@ -102,7 +94,6 @@ check_PROGRAMS = \
 	elements/aacparse \
 	elements/ac3parse \
 	elements/amrparse \
-	$(check_annodex) \
 	elements/alphacolor \
 	elements/aspectratiocrop \
 	elements/audioamplify \
@@ -246,9 +237,6 @@ elements_rgvolume_LDADD = $(GST_PLUGINS_BASE_LIBS) -lgstaudio-$(GST_API_VERSION)
 
 elements_spectrum_CFLAGS = $(GST_PLUGINS_BASE_CFLAGS) $(CFLAGS) $(AM_CFLAGS)
 elements_spectrum_LDADD = $(GST_PLUGINS_BASE_LIBS) -lgstaudio-$(GST_API_VERSION) $(LDADD)
-
-elements_cmmldec_CFLAGS = $(GST_PLUGINS_BASE_CFLAGS) $(CFLAGS) $(AM_CFLAGS)
-elements_cmmlenc_CFLAGS = $(GST_PLUGINS_BASE_CFLAGS) $(CFLAGS) $(AM_CFLAGS)
 
 elements_alphacolor_CFLAGS = $(GST_PLUGINS_BASE_CFLAGS) $(CFLAGS) $(AM_CFLAGS)
 

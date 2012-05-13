@@ -686,12 +686,6 @@ AG_GST_CHECK_FEATURE(AALIB, [aalib ASCII Art library], aasink, [
   AS_SCRUB_INCLUDE(AALIB_CFLAGS)
 ])
 
-dnl *** annodex ***
-translit(dnm, m, l) AM_CONDITIONAL(USE_ANNODEX, true)
-AG_GST_CHECK_FEATURE(ANNODEX, [XML library], annodex, [
-  AG_GST_PKG_CHECK_MODULES(ANNODEX, libxml-2.0 >= 2.4.9)
-])
-
 dnl *** cairo ***
 translit(dnm, m, l) AM_CONDITIONAL(USE_CAIRO, true)
 AG_GST_CHECK_FEATURE(CAIRO, [Cairo graphics rendering], cairo, [
@@ -954,7 +948,6 @@ else
 dnl not building plugins with external dependencies,
 dnl but we still need to set the conditionals
 AM_CONDITIONAL(USE_AALIB, false)
-AM_CONDITIONAL(USE_ANNODEX, false)
 AM_CONDITIONAL(USE_BZ2, false)
 AM_CONDITIONAL(USE_CAIRO, false)
 AM_CONDITIONAL(USE_CAIRO_GOBJECT, false)
@@ -1093,7 +1086,6 @@ gst/flx/Makefile
 gst/y4m/Makefile
 ext/Makefile
 ext/aalib/Makefile
-ext/annodex/Makefile
 ext/cairo/Makefile
 ext/dv/Makefile
 ext/flac/Makefile

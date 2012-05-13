@@ -541,38 +541,6 @@ gst_caps_setter_get_type
 </SECTION>
 
 <SECTION>
-<FILE>element-cmmldec</FILE>
-<TITLE>cmmldec</TITLE>
-GstCmmlDec
-<SUBSECTION Standard>
-GstCmmlDecClass
-GST_TYPE_CMML_DEC
-GST_CMML_DEC
-GST_CMML_DEC_CLASS
-GST_CMML_DEC_GET_CLASS
-GST_IS_CMML_DEC
-GST_IS_CMML_DEC_CLASS
-gst_cmml_dec_plugin_init
-gst_cmml_dec_get_type
-</SECTION>
-
-<SECTION>
-<FILE>element-cmmlenc</FILE>
-<TITLE>cmmlenc</TITLE>
-GstCmmlEnc
-<SUBSECTION Standard>
-GstCmmlEncClass
-GST_TYPE_CMML_ENC
-GST_CMML_ENC
-GST_CMML_ENC_CLASS
-GST_CMML_ENC_GET_CLASS
-GST_IS_CMML_ENC
-GST_IS_CMML_ENC_CLASS
-gst_cmml_enc_plugin_init
-gst_cmml_enc_get_type
-</SECTION>
-
-<SECTION>
 <FILE>element-cutter</FILE>
 <TITLE>cutter</TITLE>
 GstCutter

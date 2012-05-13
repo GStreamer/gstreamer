@@ -53,8 +53,6 @@ IGNORE_CFILES =
 
 EXTRA_HFILES = \
 	$(top_srcdir)/ext/aalib/gstaasink.h \
-	$(top_srcdir)/ext/annodex/gstcmmldec.h \
-	$(top_srcdir)/ext/annodex/gstcmmlenc.h \
 	$(top_srcdir)/ext/cairo/gsttextoverlay.h \
 	$(top_srcdir)/ext/cairo/gsttimeoverlay.h \
 	$(top_srcdir)/ext/cairo/gstcairorender.h \
