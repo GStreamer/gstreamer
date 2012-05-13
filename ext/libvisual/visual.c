@@ -27,6 +27,7 @@
 #include <gst/video/gstvideopool.h>
 #include <gst/audio/audio.h>
 #include <libvisual/libvisual.h>
+#include <string.h>
 
 #define GST_TYPE_VISUAL (gst_visual_get_type())
 #define GST_IS_VISUAL(obj) (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_VISUAL))
