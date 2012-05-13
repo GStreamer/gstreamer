@@ -1,5 +1,5 @@
 
-Release notes for GStreamer Good Plug-ins 0.11.90 "From grief and moan to a gold throne"
+Release notes for GStreamer Good Plug-ins 0.11.91 "I smell the blood of an Englishman"
         
 
 
@@ -52,8 +52,8 @@ contains a set of less supported plug-ins that haven't passed the
 
 Features of this release
     
-      * Lots of bugfixes, cleanup and other improvements
-      * The interleave/deinterleave plugin was ported to 0.11
+      * Ported flx, dv1394, oss and oss4 plugins
+      * Lots of bugfixes and other improvements
 There were no bugs fixed in this release
     
 
@@ -84,15 +84,23 @@ Applications
   
 Contributors to this release
     
-      * Alexander Saprykin
+      * Alban Browaeys
+      * Bastien Nocera
+      * Chris Pankow
+      * Edward Hervey
+      * Luis de Bethencourt
       * Mark Nauwelaerts
-      * Nicolas Dufresne
-      * Olivier Crête
-      * Raimo Järvi
+      * Mart Raudsepp
+      * Pascal Buhler
+      * Peter Seiderer
       * Sebastian Dröge
-      * Stefan Sauer
+      * Thiago Santos
       * Tim-Philipp Müller
+      * Vincent Penquerc'h
+      * Víctor Manuel Jáquez Leal
       * Wim Taymans
+      * Youness Alaoui
+      * idc-dragon
       * uraeus
       * Руслан Ижбулатов
  

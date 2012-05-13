@@ -1,4 +1,9 @@
-This is GStreamer Good Plug-ins 0.11.90 "From grief and moan to a gold throne"
+This is GStreamer Good Plug-ins 0.11.91 "I smell the blood of an Englishman"
+
+New features in 0.11.91:
+
+      * Ported flx, dv1394, oss and oss4 plugins
+      * Lots of bugfixes and other improvements
 
 New features in 0.11.90:
 
