@@ -1,9 +1,95 @@
-=== release 0.11.90 ===
+=== release 0.11.91 ===
 
-2012-04-13  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+2012-05-13  Sebastian Dröge <sebastian.droege@collabora.co.uk>
 
 	* configure.ac:
-	  releasing 0.11.90, "Nameless here for evermore"
+	  releasing 0.11.91, "Help master\! A boy is stealing me\!"
+
+2012-05-13 15:57:59 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* common:
+	  Automatic update of common submodule
+	  From dc70203 to 3429ba6
+
+2012-04-22 11:52:18 +0100  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+
+	* ext/ffmpeg/gstffmpegdemux.c:
+	  ffmpegdemux: skip ffmpeg matroska,webm typefinder again
+	  Causes warnings, and shouldn't be needed.
+
+2012-04-20 16:23:41 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	  Merge remote-tracking branch 'origin/0.10'
+
+2012-04-20 16:16:25 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* ext/ffmpeg/gstffmpegdec.c:
+	  ffdec: don't flush buffers on DISCONT
+	  Don't flush the buffers that ffmpeg has on DISCONT but instead let it recover.
+	  This gives a much better image in the case of packet loss.
+	  Fixes https://bugzilla.gnome.org/show_bug.cgi?id=635020
+
+2012-04-19 15:37:06 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	  Merge remote-tracking branch 'origin/0.10'
+
+2012-04-19 15:35:48 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* ext/libpostproc/gstpostproc.c:
+	  postproc: fix compilation when ORC is missing
+	  Fix 'set but not used' compiler error when ORC is missing.
+
+2012-04-19 14:49:18 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	  Merge remote-tracking branch 'origin/0.10'
+	  Conflicts:
+	  ext/libswscale/gstffmpegscale.c
+
+2012-04-19 14:45:42 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* ext/libswscale/gstffmpegscale.c:
+	  ffscale: fix compilation when ORC is missing
+	  Fix set but not used compiler error when ORC is missing.
+
+2012-04-17 15:36:12 +0200  Mark Nauwelaerts <mark.nauwelaerts@collabora.co.uk>
+
+	* ext/ffmpeg/gstffmpegmux.c:
+	  collectpads2: rename to collectpads
+
+2012-04-16 09:11:01 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* common:
+	  Automatic update of common submodule
+	  From 6db25be to dc70203
+
+2012-04-13 13:53:37 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* autogen.sh:
+	* configure.ac:
+	  configure: Modernize autotools setup a bit
+	  Also we now only create tar.bz2 and tar.xz tarballs.
+
+2012-04-13 13:38:52 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* common:
+	  Automatic update of common submodule
+	  From 464fe15 to 6db25be
+
+2012-04-13 09:32:11 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* configure.ac:
+	  Back to development
+
+=== release 0.11.90 ===
+
+2012-04-13 09:29:45 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* ChangeLog:
+	* NEWS:
+	* RELEASE:
+	* configure.ac:
+	* gst-libav.doap:
+	  Release 0.11.90
 
 2012-04-12 19:56:12 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
 

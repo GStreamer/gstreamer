@@ -1,7 +1,6 @@
 
-Release notes for GStreamer libav Plug-ins 0.11.90 "Nameless here for evermore"
+Release notes for GStreamer libav Plug-ins 0.11.91 "Help master! A boy is stealing me!"
         
-
 
 The GStreamer team is proud to announce a new release
 in the 0.11.x unstable series of the
@@ -37,9 +36,7 @@ contains a set of less supported plug-ins that haven't passed the
 
 Features of this release
     
-      * Lots of bugfixes, cleanup and other improvements
-      * Renamed from gst-ffmpeg to libav, also all element factory names now start with an 'av' prefix instead of 'ff'
-      * Handle difference between DTS/PTS properly
+      * Lots of bugfixes and other improvements
 There were no bugs fixed in this release
     
 
@@ -70,6 +67,7 @@ Applications
   
 Contributors to this release
     
+      * Mark Nauwelaerts
       * Sebastian Dröge
       * Tim-Philipp Müller
       * Wim Taymans
