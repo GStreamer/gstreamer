@@ -127,7 +127,7 @@ gst_curl_smtp_sink_notify_transfer_end_unlocked (GstCurlSmtpSink * sink)
 {
   GST_LOG ("transfer completed: %d", sink->transfer_end);
   sink->transfer_end = TRUE;
-  g_cond_signal (sink->cond_transfer_end);
+  g_cond_signal (&sink->cond_transfer_end);
 }
 
 static void
@@ -136,7 +136,7 @@ gst_curl_smtp_sink_wait_for_transfer_end_unlocked (GstCurlSmtpSink * sink)
   GST_LOG ("waiting for final data do be sent: %d", sink->transfer_end);
 
   while (!sink->transfer_end) {
-    g_cond_wait (sink->cond_transfer_end, GST_OBJECT_GET_LOCK (sink));
+    g_cond_wait (&sink->cond_transfer_end, GST_OBJECT_GET_LOCK (sink));
   }
   GST_LOG ("final data sent");
 }
@@ -292,7 +292,7 @@ gst_curl_smtp_sink_init (GstCurlSmtpSink * sink)
   sink->payload_headers = NULL;
   sink->base64_chunk = NULL;
 
-  sink->cond_transfer_end = g_cond_new ();
+  g_cond_init (&sink->cond_transfer_end);
   sink->transfer_end = FALSE;
   sink->eos = FALSE;
 
@@ -321,7 +321,7 @@ gst_curl_smtp_sink_finalize (GObject * gobject)
   g_free (this->message_body);
   g_free (this->content_type);
 
-  g_cond_free (this->cond_transfer_end);
+  g_cond_clear (&this->cond_transfer_end);
 
   if (this->base64_chunk != NULL) {
     if (this->base64_chunk->chunk_array != NULL) {

@@ -69,7 +69,7 @@ struct _GstCurlSmtpSink
   CURL *pop_curl;
 
   gboolean transfer_end;
-  GCond *cond_transfer_end;
+  GCond cond_transfer_end;
 
   gint nbr_attachments_left;
   gboolean reset_transfer_options;

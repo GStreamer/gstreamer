@@ -210,7 +210,7 @@ gst_curl_base_sink_init (GstCurlBaseSink * sink)
 {
   sink->transfer_buf = g_malloc (sizeof (TransferBuffer));
   sink->transfer_cond = g_malloc (sizeof (TransferCondition));
-  sink->transfer_cond->cond = g_cond_new ();
+  g_cond_init (&sink->transfer_cond->cond);
   sink->transfer_cond->data_sent = FALSE;
   sink->transfer_cond->data_available = FALSE;
   sink->transfer_cond->wait_for_response = FALSE;
@@ -234,7 +234,7 @@ gst_curl_base_sink_finalize (GObject * gobject)
   }
 
   gst_curl_base_sink_transfer_cleanup (this);
-  g_cond_free (this->transfer_cond->cond);
+  g_cond_clear (&this->transfer_cond->cond);
   g_free (this->transfer_cond);
   g_free (this->transfer_buf);
 
@@ -257,7 +257,7 @@ gst_curl_base_sink_transfer_thread_notify_unlocked (GstCurlBaseSink * sink)
   sink->transfer_cond->data_available = TRUE;
   sink->transfer_cond->data_sent = FALSE;
   sink->transfer_cond->wait_for_response = TRUE;
-  g_cond_signal (sink->transfer_cond->cond);
+  g_cond_signal (&sink->transfer_cond->cond);
 }
 
 void
@@ -266,7 +266,7 @@ gst_curl_base_sink_transfer_thread_close (GstCurlBaseSink * sink)
   GST_OBJECT_LOCK (sink);
   GST_LOG_OBJECT (sink, "setting transfer thread close flag");
   sink->transfer_thread_close = TRUE;
-  g_cond_signal (sink->transfer_cond->cond);
+  g_cond_signal (&sink->transfer_cond->cond);
   GST_OBJECT_UNLOCK (sink);
 
   if (sink->transfer_thread != NULL) {
@@ -891,8 +891,8 @@ gst_curl_base_sink_transfer_start_unlocked (GstCurlBaseSink * sink)
   sink->transfer_thread_close = FALSE;
   sink->new_file = TRUE;
   sink->transfer_thread =
-      g_thread_create ((GThreadFunc) gst_curl_base_sink_transfer_thread_func,
-      sink, TRUE, &error);
+      g_thread_try_new ("Curl Transfer Thread", (GThreadFunc)
+      gst_curl_base_sink_transfer_thread_func, sink, &error);
 
   if (sink->transfer_thread == NULL || error != NULL) {
     ret = FALSE;
@@ -1055,7 +1055,7 @@ gst_curl_base_sink_wait_for_data_unlocked (GstCurlBaseSink * sink)
   GST_LOG ("waiting for data");
   while (!sink->transfer_cond->data_available &&
       !sink->transfer_thread_close && !sink->new_file) {
-    g_cond_wait (sink->transfer_cond->cond, GST_OBJECT_GET_LOCK (sink));
+    g_cond_wait (&sink->transfer_cond->cond, GST_OBJECT_GET_LOCK (sink));
   }
 
   if (sink->transfer_thread_close) {
@@ -1075,7 +1075,7 @@ gst_curl_base_sink_new_file_notify_unlocked (GstCurlBaseSink * sink)
 {
   GST_LOG ("new file name");
   sink->new_file = TRUE;
-  g_cond_signal (sink->transfer_cond->cond);
+  g_cond_signal (&sink->transfer_cond->cond);
 }
 
 static void
@@ -1089,7 +1089,7 @@ static void
    * This can therefore never happen while this function is running since this
    * function also is called by the pipeline thread (in the render function) */
   while (!sink->transfer_cond->data_sent) {
-    g_cond_wait (sink->transfer_cond->cond, GST_OBJECT_GET_LOCK (sink));
+    g_cond_wait (&sink->transfer_cond->cond, GST_OBJECT_GET_LOCK (sink));
   }
   GST_LOG ("buffer send completed");
 }
@@ -1101,7 +1101,7 @@ gst_curl_base_sink_data_sent_notify (GstCurlBaseSink * sink)
   GST_OBJECT_LOCK (sink);
   sink->transfer_cond->data_available = FALSE;
   sink->transfer_cond->data_sent = TRUE;
-  g_cond_signal (sink->transfer_cond->cond);
+  g_cond_signal (&sink->transfer_cond->cond);
   GST_OBJECT_UNLOCK (sink);
 }
 
@@ -1112,7 +1112,7 @@ gst_curl_base_sink_wait_for_response (GstCurlBaseSink * sink)
 
   GST_OBJECT_LOCK (sink);
   while (sink->transfer_cond->wait_for_response) {
-    g_cond_wait (sink->transfer_cond->cond, GST_OBJECT_GET_LOCK (sink));
+    g_cond_wait (&sink->transfer_cond->cond, GST_OBJECT_GET_LOCK (sink));
   }
   GST_OBJECT_UNLOCK (sink);
 
@@ -1126,7 +1126,7 @@ gst_curl_base_sink_got_response_notify (GstCurlBaseSink * sink)
 
   GST_OBJECT_LOCK (sink);
   sink->transfer_cond->wait_for_response = FALSE;
-  g_cond_signal (sink->transfer_cond->cond);
+  g_cond_signal (&sink->transfer_cond->cond);
   GST_OBJECT_UNLOCK (sink);
 }
 

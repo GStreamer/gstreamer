@@ -52,7 +52,7 @@ struct _TransferBuffer
 
 struct _TransferCondition
 {
-  GCond *cond;
+  GCond cond;
   gboolean data_sent;
   gboolean data_available;
   gboolean wait_for_response;
