@@ -1189,9 +1189,10 @@ gst_play_sink_find_property (GstPlaySink * playsink, GstElement * obj,
     found = gst_iterator_find_custom (it,
         (GCompareFunc) find_property, &item, &helper);
     gst_iterator_free (it);
-    if (found)
+    if (found) {
       result = g_value_dup_object (&item);
-    g_value_unset (&item);
+      g_value_unset (&item);
+    }
   } else {
     if (element_has_property (obj, name, expected_type)) {
       result = obj;
