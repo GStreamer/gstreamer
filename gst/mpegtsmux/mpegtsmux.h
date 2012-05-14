@@ -130,6 +130,10 @@ struct MpegTsMux {
   gboolean streamheader_sent;
   GstClockTime pending_key_unit_ts;
   GstEvent *force_key_unit_event;
+
+  GstBuffer *out_buffer;
+  gint out_offset;
+  gint last_size;
 };
 
 struct MpegTsMuxClass  {
