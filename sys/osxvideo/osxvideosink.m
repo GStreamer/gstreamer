@@ -148,6 +148,7 @@ gst_osx_video_sink_osxwindow_create (GstOSXVideoSink * osxvideosink, gint width,
       GST_INFO_OBJECT (osxvideosink, "no superview");
     }
   }
+  [osxwindow->gstview setNavigation: GST_NAVIGATION(osxvideosink)];
 
   [pool release];
 
@@ -416,7 +417,7 @@ gst_osx_video_sink_class_init (GstOSXVideoSinkClass * klass)
 static gboolean
 gst_osx_video_sink_interface_supported (GstImplementsInterface * iface, GType type)
 {
-  g_assert (type == GST_TYPE_X_OVERLAY);
+  g_assert (type == GST_TYPE_X_OVERLAY || type == GST_TYPE_NAVIGATION);
   return TRUE;
 }
 
@@ -424,6 +425,72 @@ static void
 gst_osx_video_sink_interface_init (GstImplementsInterfaceClass * klass)
 {
   klass->supported = gst_osx_video_sink_interface_supported;
+}
+
+static void
+gst_osx_video_sink_navigation_send_event (GstNavigation * navigation,
+    GstStructure * structure)
+{
+  GstOSXVideoSink *osxvideosink = GST_OSX_VIDEO_SINK (navigation);
+  GstPad *peer;
+  GstEvent *event;
+  GstVideoRectangle src, dst, result;
+  gdouble x, y, xscale = 1.0, yscale = 1.0;
+
+  peer = gst_pad_get_peer (GST_VIDEO_SINK_PAD (osxvideosink));
+
+  if (!peer || !osxvideosink->osxwindow)
+    return;
+
+  event = gst_event_new_navigation (structure);
+
+  /* FIXME: Use this when this sink is capable of keeping the display
+   * aspect ratio */
+  if (0) { //(osxvideosink->keep_aspect) {
+    /* We get the frame position using the calculated geometry from _setcaps
+       that respect pixel aspect ratios */
+    src.w = GST_VIDEO_SINK_WIDTH (osxvideosink);
+    src.h = GST_VIDEO_SINK_HEIGHT (osxvideosink);
+    //dst.w = osxvideosink->osxwindow->gstview->width;
+    //dst.w = osxvideosink->osxwindow->gstview->height;
+
+    gst_video_sink_center_rect (src, dst, &result, TRUE);
+    //result.x += osxvideosink->gstview->x;
+    //result.y += osxvideosink->gstview->y;
+  } else {
+    result.x = 0;
+    result.y = 0;
+    result.w = osxvideosink->osxwindow->width;
+    result.h = osxvideosink->osxwindow->height;
+  }
+
+  /* We calculate scaling using the original video frames geometry to include
+     pixel aspect ratio scaling. */
+  xscale = (gdouble) osxvideosink->osxwindow->width / result.w;
+  yscale = (gdouble) osxvideosink->osxwindow->height / result.h;
+
+  /* Converting pointer coordinates to the non scaled geometry */
+  if (gst_structure_get_double (structure, "pointer_x", &x)) {
+    x = MIN (x, result.x + result.w);
+    x = MAX (x - result.x, 0);
+    gst_structure_set (structure, "pointer_x", G_TYPE_DOUBLE,
+        (gdouble) x * xscale, NULL);
+  }
+  if (gst_structure_get_double (structure, "pointer_y", &y)) {
+    y = MIN (y, result.y + result.h);
+    y = MAX (y - result.y, 0);
+    gst_structure_set (structure, "pointer_y", G_TYPE_DOUBLE,
+        (gdouble) y * yscale, NULL);
+  }
+
+  gst_pad_send_event (peer, event);
+  gst_object_unref (peer);
+}
+
+static void
+gst_osx_video_sink_navigation_init (GstNavigationInterface * iface)
+{
+  iface->send_event = gst_osx_video_sink_navigation_send_event;
 }
 
 static void
@@ -500,6 +567,11 @@ gst_osx_video_sink_get_type (void)
       NULL,
     };
 
+    static const GInterfaceInfo navigation_info = {
+      (GInterfaceInitFunc) gst_osx_video_sink_navigation_init,
+      NULL,
+      NULL,
+    };
     osxvideosink_type = g_type_register_static (GST_TYPE_VIDEO_SINK,
         "GstOSXVideoSink", &osxvideosink_info, 0);
 

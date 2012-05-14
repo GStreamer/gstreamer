@@ -82,21 +82,6 @@
   [self setAcceptsMouseMovedEvents:YES];
 }
 
-- (void) sendEvent:(NSEvent *) event {
-  BOOL taken = NO;
-
-  GST_DEBUG ("event %p type:%d", event,(gint)[event type]);
-
-  if ([event type] == NSKeyDown) {
-  }
-  /*taken = [gstview keyDown:event]; */
-
-  if (!taken) {
-    [super sendEvent:event];
-  }
-}
-
-
 @end
 
 
@@ -143,6 +128,13 @@
   height = frame.size.height;
 
   GST_LOG ("Width: %d Height: %d", width, height);
+
+  trackingArea = [[NSTrackingArea alloc] initWithRect:[self bounds]
+      options: (NSTrackingMouseEnteredAndExited | NSTrackingMouseMoved | NSTrackingActiveInKeyWindow)
+      owner:self
+      userInfo:nil];
+
+  [self addTrackingArea:trackingArea];
 
   [self initTextures];
   return self;
@@ -429,4 +421,119 @@
 
   [super dealloc];
 }
+
+- (void)updateTrackingAreas {
+  [self removeTrackingArea:trackingArea];
+  [trackingArea release];
+  trackingArea = [[NSTrackingArea alloc] initWithRect: [self bounds]
+      options: (NSTrackingMouseEnteredAndExited | NSTrackingMouseMoved | NSTrackingActiveInKeyWindow)
+      owner:self userInfo:nil];
+  [self addTrackingArea:trackingArea];
+}
+
+- (BOOL)acceptsFirstResponder {
+    return YES;
+}
+
+- (void) setNavigation:(GstNavigation *)nav
+{
+  navigation = nav;
+}
+
+- (void)sendMouseEvent:(NSEvent *)event: (const char *)event_name
+{
+  NSPoint location;
+  NSRect bounds;
+  gint button;
+  gint view_width, view_height;
+  gdouble x, y;
+
+  if (!navigation)
+    return;
+
+  switch ([event type]) {
+    case NSMouseMoved:
+      button = 0;
+      break;
+    case NSLeftMouseDown:
+    case NSLeftMouseUp:
+      button = 1;
+      break;
+    case NSRightMouseDown:
+    case NSRightMouseUp:
+      button = 2;
+      break;
+    default:
+      button = 3;
+      break;
+  }
+
+  location = [self convertPoint:[event locationInWindow] fromView:nil];
+
+  /* scale X and Y locations to the frame size */
+  bounds = [self bounds];
+  view_width = bounds.size.width;
+  view_height = bounds.size.height;
+
+  x = ((gdouble) location.x / view_width) * width;
+  y = ((gdouble) location.y / view_height) * height;
+
+  /* invert Y */
+  y = (1 - y / height) * height;
+
+  gst_navigation_send_mouse_event (navigation, event_name, button,
+      x, y);
+}
+
+- (void)sendKeyEvent:(NSEvent *)event: (const char *)event_name
+{
+  NSString *keyCharStr = [event charactersIgnoringModifiers];
+  gchar * key_str;
+
+  if (!navigation)
+    return;
+
+  if ( [keyCharStr length] == 0 )
+    return;
+
+  if ( [keyCharStr length] == 1 ) {
+    key_str = g_strdup_printf("%c", [keyCharStr characterAtIndex:0]);
+    gst_navigation_send_key_event(navigation, event_name, (const gchar *) key_str);
+    g_free(key_str);
+  }
+}
+
+- (void)keyDown:(NSEvent *) event;
+{
+  [self sendKeyEvent: event: "key-press"];
+}
+
+- (void)keyUp:(NSEvent *) event;
+{
+  [self sendKeyEvent: event: "key-release"];
+}
+
+- (void)mouseDown:(NSEvent *) event;
+{
+  [self sendMouseEvent:event: "mouse-button-press"];
+}
+
+- (void)mouseUp:(NSEvent *) event;
+{
+  [self sendMouseEvent:event: "mouse-button-release"];
+}
+
+- (void)mouseMoved:(NSEvent *)event;
+{
+  [self sendMouseEvent:event: "mouse-move"];
+}
+
+- (void)mouseEntered:(NSEvent *)event;
+{
+}
+
+- (void)mouseExited:(NSEvent *)event;
+{
+}
+
 @end

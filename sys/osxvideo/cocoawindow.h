@@ -29,6 +29,7 @@
 #import <Cocoa/Cocoa.h>
 #import <QuickTime/QuickTime.h>
 #import <glib.h>
+#import <gst/interfaces/navigation.h>
 
 struct _GstOSXImage;
 
@@ -44,6 +45,8 @@ struct _GstOSXImage;
     BOOL fullscreen;
     NSOpenGLContext* fullScreenContext; 
     NSOpenGLContext* actualContext;
+    NSTrackingArea *trackingArea;
+    GstNavigation *navigation;
 }
 - (void) drawQuad;
 - (void) drawRect: (NSRect) rect;
@@ -60,6 +63,7 @@ struct _GstOSXImage;
 - (void) haveSuperviewReal: (NSMutableArray *)closure;
 - (void) addToSuperview: (NSView *)superview;
 - (void) removeFromSuperview: (id)unused;
+- (void) setNavigation: (GstNavigation *) nav;
 
 @end
 
