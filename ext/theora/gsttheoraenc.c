@@ -993,27 +993,28 @@ theora_enc_handle_frame (GstVideoEncoder * benc, GstVideoCodecFrame * frame)
     while (th_encode_packetout (enc->encoder, 0, &op)) {
       ret = theora_push_packet (enc, &op);
       if (ret != GST_FLOW_OK)
-        goto data_push;
+        goto beach;
     }
   }
 
+beach:
+  gst_video_codec_frame_unref (frame);
   return ret;
 
   /* ERRORS */
 multipass_read_failed:
   {
+    gst_video_codec_frame_unref (frame);
     return ret;
   }
 multipass_write_failed:
   {
-    return ret;
-  }
-data_push:
-  {
+    gst_video_codec_frame_unref (frame);
     return ret;
   }
 encoder_disabled:
   {
+    gst_video_codec_frame_unref (frame);
     GST_ELEMENT_ERROR (enc, STREAM, ENCODE, (NULL),
         ("libtheora has been compiled with the encoder disabled"));
     return GST_FLOW_ERROR;
