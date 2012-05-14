@@ -1190,6 +1190,12 @@ gst_type_find_element_activate_sink (GstPad * pad, GstObject * parent)
     g_signal_emit (typefind, gst_type_find_element_signals[HAVE_TYPE],
         0, probability, found_caps);
     typefind->mode = MODE_NORMAL;
+    /* the signal above could have made a downstream element activate
+     * the pad in pull mode, we check if the pad is already active now and if
+     * so, we are done */
+    if (gst_pad_is_active (pad))
+      return TRUE;
+
     goto typefind_push;
   }
   GST_OBJECT_UNLOCK (typefind);
