@@ -1890,7 +1890,7 @@ gen_text_chain (GstPlaySink * playsink)
                   "queue"), ("rendering might be suboptimal"));
         } else {
           g_object_set (G_OBJECT (chain->queue), "max-size-buffers", 3,
-              "max-size-bytes", 0, "max-size-time", (gint64) 0,
+              "max-size-bytes", 0, "max-size-time", (gint64) GST_SECOND,
               "silent", TRUE, NULL);
           gst_bin_add (bin, chain->queue);
         }
@@ -1979,7 +1979,7 @@ gen_text_chain (GstPlaySink * playsink)
                   "queue"), ("rendering might be suboptimal"));
         } else {
           g_object_set (G_OBJECT (element), "max-size-buffers", 3,
-              "max-size-bytes", 0, "max-size-time", (gint64) 0,
+              "max-size-bytes", 0, "max-size-time", (gint64) GST_SECOND,
               "silent", TRUE, NULL);
           gst_bin_add (bin, element);
           if (gst_element_link_pads_full (element, "src", chain->overlay,
