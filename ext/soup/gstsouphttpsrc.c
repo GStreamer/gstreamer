@@ -1312,8 +1312,9 @@ gst_soup_http_src_do_seek (GstBaseSrc * bsrc, GstSegment * segment)
 
   GST_DEBUG_OBJECT (src, "do_seek(%" G_GUINT64_FORMAT ")", segment->start);
 
-  if (src->read_position == segment->start) {
-    GST_DEBUG_OBJECT (src, "Seeking to current read position");
+  if (src->read_position == segment->start &&
+      src->request_position == src->read_position) {
+    GST_DEBUG_OBJECT (src, "Seek to current read position and no seek pending");
     return TRUE;
   }
 
