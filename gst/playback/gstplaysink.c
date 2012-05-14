@@ -3532,7 +3532,7 @@ gst_play_sink_refresh_pad (GstPlaySink * playsink, GstPad * pad,
     block_id = &playsink->text_block_id;
   }
 
-  if (type != GST_PLAY_SINK_TYPE_FLUSHING) {
+  if (type != GST_PLAY_SINK_TYPE_FLUSHING && (block_id && *block_id == 0)) {
     GstPad *blockpad =
         GST_PAD_CAST (gst_proxy_pad_get_internal (GST_PROXY_PAD (pad)));
 
