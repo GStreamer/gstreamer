@@ -66,7 +66,7 @@ static gboolean push_data (CustomData *data) {
   
 /* This signal callback triggers when appsrc needs data. Here, we add an idle handler
  * to the mainloop to start pushing data into the appsrc */
-static void start_feed (GstElement *playbin, guint size, CustomData *data) {
+static void start_feed (GstElement *source, guint size, CustomData *data) {
   if (data->sourceid == 0) {
     g_print ("Start feeding\n");
     data->sourceid = g_idle_add ((GSourceFunc) push_data, data);
@@ -75,7 +75,7 @@ static void start_feed (GstElement *playbin, guint size, CustomData *data) {
   
 /* This callback triggers when appsrc has enough data and we can stop sending.
  * We remove the idle handler from the mainloop */
-static void stop_feed (GstElement *playbin, CustomData *data) {
+static void stop_feed (GstElement *source, CustomData *data) {
   if (data->sourceid != 0) {
     g_print ("Stop feeding\n");
     g_source_remove (data->sourceid);
