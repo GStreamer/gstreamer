@@ -62,16 +62,20 @@ typedef struct _GstOSXVideoSinkClass GstOSXVideoSinkClass;
 /* OSXWindow stuff */
 struct _GstOSXWindow {
   gint width, height;
+  gboolean closed;
   gboolean internal;
   GstGLView* gstview;
+  GstOSXVideoSinkWindow* win;
 };
 
 struct _GstOSXVideoSink {
   /* Our element stuff */
   GstVideoSink videosink;
   GstOSXWindow *osxwindow;
+  gboolean app_started;
   void *osxvideosinkobject;
   NSView *superview;
+  guint cocoa_timeout;
 };
 
 struct _GstOSXVideoSinkClass {
@@ -79,6 +83,12 @@ struct _GstOSXVideoSinkClass {
 };
 
 GType gst_osx_video_sink_get_type(void);
+
+#if MAC_OS_X_VERSION_MAX_ALLOWED >= MAC_OS_X_VERSION_10_4
+@interface NSApplication(AppleMenu)
+- (void)setAppleMenu:(NSMenu *)menu;
+@end
+#endif
 
 @interface GstBufferObject : NSObject
 {
@@ -90,13 +100,24 @@ GType gst_osx_video_sink_get_type(void);
 @end
 
 
+@interface GstWindowDelegate : NSObject <NSWindowDelegate>
+{
+  @public
+  GstOSXVideoSink *osxvideosink;
+}
+-(id) initWithSink: (GstOSXVideoSink *) sink;
+@end
+
 @interface GstOSXVideoSinkObject : NSObject
 {
+  BOOL destroyed;
+
   @public
   GstOSXVideoSink *osxvideosink;
 }
 
 -(id) initWithSink: (GstOSXVideoSink *) sink;
+-(void) createInternalWindow;
 -(void) resize;
 -(void) destroy;
 -(void) showFrame: (GstBufferObject*) buf;

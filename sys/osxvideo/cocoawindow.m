@@ -42,7 +42,7 @@
 @ implementation GstOSXVideoSinkWindow
 
 /* The object has to be released */
-- (id) initWithContentRect: (NSRect) rect
+- (id) initWithContentNSRect: (NSRect) rect
 		 styleMask: (unsigned int) styleMask
 		   backing: (NSBackingStoreType) bufferingType 
 		     defer: (BOOL) flag

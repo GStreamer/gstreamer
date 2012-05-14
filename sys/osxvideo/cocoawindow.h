@@ -74,5 +74,5 @@ struct _GstOSXImage;
 
 - (void) setContentSize: (NSSize) size;
 - (GstGLView *) gstView;
-- (id)initWithContentRect:(NSRect)contentRect styleMask:(unsigned int)styleMask backing:(NSBackingStoreType)bufferingType defer:(BOOL)flag screen:(NSScreen *)aScreen;
+- (id)initWithContentNSRect:(NSRect)contentRect styleMask:(unsigned int)styleMask backing:(NSBackingStoreType)bufferingType defer:(BOOL)flag screen:(NSScreen *)aScreen;
 @end
