@@ -64,8 +64,7 @@ struct _GstFileSrc {
 
   gboolean touch;			/* whether to touch every page */
   gboolean using_mmap;                  /* whether we opened it with mmap */
-  gboolean sequential;                  /* Whether to madvise (MADV_SEQUENTIAL) 
-                                           for mmap pages */
+
   gboolean seekable;                    /* whether the file is seekable */
   gboolean is_regular;                  /* whether it's a (symlink to a)
                                            regular file */
