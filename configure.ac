@@ -425,6 +425,7 @@ AC_RUN_IFELSE([AC_LANG_SOURCE([[
 AC_MSG_RESULT($broken_poll)
 
 dnl check for mmap()
+AC_CHECK_HEADERS([sys/mman.h], [], [], [AC_INCLUDES_DEFAULT])
 AC_FUNC_MMAP
 AM_CONDITIONAL(HAVE_MMAP, test "x$ac_cv_func_mmap_fixed_mapped" = "xyes")
 

@@ -63,7 +63,7 @@
 #  include <unistd.h>
 #endif
 
-#ifdef HAVE_MMAP
+#ifdef HAVE_SYS_MMAN_H
 # include <sys/mman.h>
 #endif
 
