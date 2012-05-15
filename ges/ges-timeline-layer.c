@@ -216,17 +216,18 @@ objects_start_compare (GESTimelineObject * a, GESTimelineObject * b)
 static GList *
 track_get_by_layer (GESTimelineLayer * layer, GESTrack * track)
 {
+  GESTrackObject *tckobj;
+  guint32 layer_prio = layer->priv->priority;
+
   GList *tck_objects_list = NULL, *tmp = NULL, *return_list = NULL;
-  GESTimelineObject *tl_obj;
 
   tck_objects_list = ges_track_get_objects (track);
   for (tmp = tck_objects_list; tmp; tmp = tmp->next) {
-    tl_obj = ges_track_object_get_timeline_object (tmp->data);
+    tckobj = GES_TRACK_OBJECT (tmp->data);
 
-    if (ges_timeline_object_get_layer (tl_obj) == layer) {
+    if (tckobj->priority / LAYER_HEIGHT == layer_prio) {
       /*  We steal the reference from tck_objects_list */
       return_list = g_list_append (return_list, tmp->data);
-
     } else
       g_object_unref (tmp->data);
   }
