@@ -461,7 +461,7 @@ could_not_stat:
   }
 }
 
-/* open the file and mmap it, necessary to go to READY state */
+/* open the file, necessary to go to READY state */
 static gboolean
 gst_file_src_start (GstBaseSrc * basesrc)
 {
@@ -500,8 +500,8 @@ gst_file_src_start (GstBaseSrc * basesrc)
     off_t res = lseek (src->fd, 0, SEEK_END);
 
     if (res < 0) {
-      GST_LOG_OBJECT (src, "disabling seeking, not in mmap mode and lseek "
-          "failed: %s", g_strerror (errno));
+      GST_LOG_OBJECT (src, "disabling seeking, lseek failed: %s",
+          g_strerror (errno));
       src->seekable = FALSE;
     } else {
       src->seekable = TRUE;
