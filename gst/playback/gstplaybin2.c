@@ -334,6 +334,10 @@ struct _GstSourceGroup
   GMutex stream_changed_pending_lock;
   GList *stream_changed_pending;
 
+  /* to prevent that suburidecodebin seek flushes disrupt playback */
+  GMutex suburi_flushes_to_drop_lock;
+  GSList *suburi_flushes_to_drop;
+
   /* selectors for different streams */
   GstSourceSelect selector[PLAYBIN_STREAM_LAST];
 };
@@ -568,8 +572,7 @@ static void pad_removed_cb (GstElement * decodebin, GstPad * pad,
 
 static void gst_play_bin_suburidecodebin_block (GstSourceGroup * group,
     GstElement * suburidecodebin, gboolean block);
-static void gst_play_bin_suburidecodebin_seek_to_start (GstElement *
-    suburidecodebin);
+static void gst_play_bin_suburidecodebin_seek_to_start (GstSourceGroup * group);
 
 static GstElementClass *parent_class;
 
@@ -1248,6 +1251,13 @@ free_group (GstPlayBin * playbin, GstSourceGroup * group)
   if (group->stream_changed_pending_lock.p)
     g_mutex_clear (&group->stream_changed_pending_lock);
   group->stream_changed_pending_lock.p = NULL;
+
+  g_slist_free (group->suburi_flushes_to_drop);
+  group->suburi_flushes_to_drop = NULL;
+
+  if (group->suburi_flushes_to_drop_lock.p)
+    g_mutex_clear (&group->suburi_flushes_to_drop_lock);
+  group->suburi_flushes_to_drop_lock.p = NULL;
 }
 
 static void
@@ -1748,8 +1758,9 @@ no_channels:
 }
 
 static void
-gst_play_bin_suburidecodebin_seek_to_start (GstElement * suburidecodebin)
+gst_play_bin_suburidecodebin_seek_to_start (GstSourceGroup * group)
 {
+  GstElement *suburidecodebin = group->suburidecodebin;
   GstIterator *it = gst_element_iterate_src_pads (suburidecodebin);
   GstPad *sinkpad;
   GValue item = { 0, };
@@ -1757,16 +1768,34 @@ gst_play_bin_suburidecodebin_seek_to_start (GstElement * suburidecodebin)
   if (it && gst_iterator_next (it, &item) == GST_ITERATOR_OK
       && ((sinkpad = g_value_get_object (&item)) != NULL)) {
     GstEvent *event;
+    guint32 seqnum;
 
     event =
-        gst_event_new_seek (1.0, GST_FORMAT_BYTES, GST_SEEK_FLAG_NONE,
+        gst_event_new_seek (1.0, GST_FORMAT_BYTES, GST_SEEK_FLAG_FLUSH,
         GST_SEEK_TYPE_SET, 0, GST_SEEK_TYPE_NONE, -1);
+    seqnum = gst_event_get_seqnum (event);
+
+    /* store the seqnum to drop flushes from this seek later */
+    g_mutex_lock (&group->suburi_flushes_to_drop_lock);
+    group->suburi_flushes_to_drop =
+        g_slist_append (group->suburi_flushes_to_drop,
+        GUINT_TO_POINTER (seqnum));
+    g_mutex_unlock (&group->suburi_flushes_to_drop_lock);
+
     if (!gst_pad_send_event (sinkpad, event)) {
       event =
-          gst_event_new_seek (1.0, GST_FORMAT_TIME, GST_SEEK_FLAG_NONE,
+          gst_event_new_seek (1.0, GST_FORMAT_TIME, GST_SEEK_FLAG_FLUSH,
           GST_SEEK_TYPE_SET, 0, GST_SEEK_TYPE_NONE, -1);
-      if (!gst_pad_send_event (sinkpad, event))
+      gst_event_set_seqnum (event, seqnum);
+      if (!gst_pad_send_event (sinkpad, event)) {
         GST_DEBUG_OBJECT (suburidecodebin, "Seeking to the beginning failed!");
+
+        g_mutex_lock (&group->suburi_flushes_to_drop_lock);
+        group->suburi_flushes_to_drop =
+            g_slist_remove (group->suburi_flushes_to_drop,
+            GUINT_TO_POINTER (seqnum));
+        g_mutex_unlock (&group->suburi_flushes_to_drop_lock);
+      }
     }
 
     g_value_unset (&item);
@@ -1919,7 +1948,7 @@ gst_play_bin_set_current_text_stream (GstPlayBin * playbin, gint stream)
 
         /* seek to the beginning */
         if (need_seek)
-          gst_play_bin_suburidecodebin_seek_to_start (group->suburidecodebin);
+          gst_play_bin_suburidecodebin_seek_to_start (group);
       }
       gst_object_unref (selector);
 
@@ -2589,6 +2618,35 @@ stream_changed_data_probe (GstPad * pad, GstPadProbeInfo * info, gpointer data)
   }
 }
 
+static GstPadProbeReturn
+_suburidecodebin_event_probe (GstPad * pad, GstPadProbeInfo * info,
+    gpointer udata)
+{
+  GstPadProbeReturn ret = GST_PAD_PROBE_OK;
+  GstSourceGroup *group = udata;
+  GstEvent *event = GST_PAD_PROBE_INFO_DATA (info);
+
+  switch (GST_EVENT_TYPE (event)) {
+    case GST_EVENT_FLUSH_START:
+    case GST_EVENT_FLUSH_STOP:
+    {
+      guint32 seqnum = gst_event_get_seqnum (event);
+      GSList *item = g_slist_find (group->suburi_flushes_to_drop,
+          GUINT_TO_POINTER (seqnum));
+      if (item) {
+        ret = GST_PAD_PROBE_DROP;       /* this is from subtitle seek only, drop it */
+        if (GST_EVENT_TYPE (event) == GST_EVENT_FLUSH_STOP) {
+          group->suburi_flushes_to_drop =
+              g_slist_delete_link (group->suburi_flushes_to_drop, item);
+        }
+      }
+    }
+    default:
+      break;
+  }
+  return ret;
+}
+
 /* helper function to lookup stuff in lists */
 static gboolean
 array_has_value (const gchar * values[], const gchar * value, gboolean exact)
@@ -2791,6 +2849,13 @@ pad_added_cb (GstElement * decodebin, GstPad * pad, GstSourceGroup * group)
     g_object_set_data (G_OBJECT (pad), "playbin2.select", select);
   }
   GST_SOURCE_GROUP_UNLOCK (group);
+
+  if (decodebin == group->suburidecodebin) {
+    /* TODO store the probe id */
+    /* to avoid propagating flushes from suburi specific seeks */
+    gst_pad_add_probe (pad, GST_PAD_PROBE_TYPE_EVENT_DOWNSTREAM,
+        _suburidecodebin_event_probe, group, NULL);
+  }
 
   if (changed) {
     int signal;
@@ -3633,6 +3698,11 @@ activate_group (GstPlayBin * playbin, GstSourceGroup * group, GstState target)
   group->stream_changed_pending = NULL;
   if (!group->stream_changed_pending_lock.p)
     g_mutex_init (&group->stream_changed_pending_lock);
+
+  g_slist_free (group->suburi_flushes_to_drop);
+  group->suburi_flushes_to_drop = NULL;
+  if (!group->suburi_flushes_to_drop_lock.p)
+    g_mutex_init (&group->suburi_flushes_to_drop_lock);
 
   if (group->uridecodebin) {
     GST_DEBUG_OBJECT (playbin, "reusing existing uridecodebin");
