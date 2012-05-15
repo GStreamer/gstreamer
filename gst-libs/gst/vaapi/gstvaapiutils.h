@@ -83,6 +83,14 @@ to_GstVaapiSubpictureFlags(guint va_flags);
 
 G_GNUC_INTERNAL
 guint
+from_GstVideoOverlayFormatFlags(guint ovl_flags);
+
+G_GNUC_INTERNAL
+guint
+to_GstVideoOverlayFormatFlags(guint flags);
+
+G_GNUC_INTERNAL
+guint
 from_GstVaapiSurfaceRenderFlags(guint flags);
 
 G_GNUC_INTERNAL

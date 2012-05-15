@@ -300,17 +300,11 @@ gst_vaapi_subpicture_new_from_overlay_rectangle(
     GstVaapiImage *image;
     GstVaapiImageRaw raw_image;
     GstBuffer *buffer;
+    gfloat global_alpha;
     guint width, height, stride;
+    guint hw_flags, flags;
 
     g_return_val_if_fail(GST_IS_VIDEO_OVERLAY_RECTANGLE(rect), NULL);
-
-    buffer = gst_video_overlay_rectangle_get_pixels_unscaled_argb(
-        rect,
-        &width, &height, &stride,
-        GST_VIDEO_OVERLAY_FORMAT_FLAG_NONE
-    );
-    if (!buffer)
-        return NULL;
 
     /* XXX: use gst_vaapi_image_format_from_video() */
 #if G_BYTE_ORDER == G_LITTLE_ENDIAN
@@ -318,6 +312,17 @@ gst_vaapi_subpicture_new_from_overlay_rectangle(
 #else
     format = GST_VAAPI_IMAGE_ARGB;
 #endif
+    if (!gst_vaapi_display_has_subpicture_format(display, format, &hw_flags))
+        return NULL;
+    
+    flags = hw_flags & from_GstVideoOverlayFormatFlags(
+        gst_video_overlay_rectangle_get_flags(rect));
+
+    buffer = gst_video_overlay_rectangle_get_pixels_unscaled_argb(rect,
+        &width, &height, &stride, to_GstVideoOverlayFormatFlags(flags));
+    if (!buffer)
+        return NULL;
+
     image = gst_vaapi_image_new(display, format, width, height);
     if (!image)
         return NULL;
@@ -334,8 +339,16 @@ gst_vaapi_subpicture_new_from_overlay_rectangle(
         return NULL;
     }
 
-    subpicture = gst_vaapi_subpicture_new(image, 0);
+    subpicture = gst_vaapi_subpicture_new(image, flags);
     g_object_unref(image);
+    if (!subpicture)
+        return NULL;
+
+    if (flags & GST_VAAPI_SUBPICTURE_FLAG_GLOBAL_ALPHA) {
+        global_alpha = gst_video_overlay_rectangle_get_global_alpha(rect);
+        if (!gst_vaapi_subpicture_set_global_alpha(subpicture, global_alpha))
+            return NULL;
+    }
     return subpicture;
 }
 

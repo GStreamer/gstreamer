@@ -248,6 +248,46 @@ to_GstVaapiSubpictureFlags(guint va_flags)
 }
 
 /**
+ * from_GstVideoOverlayFormatFlags:
+ * @flags: the #GstVideoOverlayFormatFlags flags to translate
+ *
+ * Converts #GstVaapiSubpictureFlags to #GstVaapiSubpictureFlags.
+ *
+ * Return value: the #GstVaapiSubpictureFlags flags
+ */
+guint
+from_GstVideoOverlayFormatFlags(guint ovl_flags)
+{
+    guint flags = 0;
+
+    if (ovl_flags & GST_VIDEO_OVERLAY_FORMAT_FLAG_PREMULTIPLIED_ALPHA)
+        flags |= GST_VAAPI_SUBPICTURE_FLAG_PREMULTIPLIED_ALPHA;
+    if (ovl_flags & GST_VIDEO_OVERLAY_FORMAT_FLAG_GLOBAL_ALPHA)
+        flags |= GST_VAAPI_SUBPICTURE_FLAG_GLOBAL_ALPHA;
+    return flags;
+}
+
+/**
+ * to_GstVideoOverlayFormatFlags:
+ * @flags: the #GstVaapiSubpictureFlags flags to translate
+ *
+ * Converts #GstVaapiSubpictureFlags to #GstVideoOverlayFormatFlags.
+ *
+ * Return value: the #GstVideoOverlayFormatFlags flags
+ */
+guint
+to_GstVideoOverlayFormatFlags(guint flags)
+{
+    guint ovl_flags = 0;
+
+    if (flags & GST_VAAPI_SUBPICTURE_FLAG_PREMULTIPLIED_ALPHA)
+        ovl_flags |= GST_VIDEO_OVERLAY_FORMAT_FLAG_PREMULTIPLIED_ALPHA;
+    if (flags & GST_VAAPI_SUBPICTURE_FLAG_GLOBAL_ALPHA)
+        ovl_flags |= GST_VIDEO_OVERLAY_FORMAT_FLAG_GLOBAL_ALPHA;
+    return ovl_flags;
+}
+
+/**
  * from_GstVaapiSurfaceRenderFlags:
  * @flags: the #GstVaapiSurfaceRenderFlags
  *
