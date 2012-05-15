@@ -164,10 +164,11 @@ static void on_finished_cb (GstDiscoverer *discoverer, CustomData *data) {
 int main (int argc, char **argv) {
   CustomData data;
   GError *err = NULL;
+  gchar *uri = "http://docs.gstreamer.com/media/sintel_trailer-480p.webm";
   
-  if (argc != 2) {
-    g_print ("No URI to discover given\n");
-    return -1;
+  /* if a URI was provided, use it instead of the default one */
+  if (argc > 1) {
+    uri = argv[1];
   }
   
   /* Initialize cumstom data structure */
@@ -176,7 +177,7 @@ int main (int argc, char **argv) {
   /* Initialize GStreamer */
   gst_init (&argc, &argv);
   
-  g_print ("Discovering '%s'\n", argv[1]);
+  g_print ("Discovering '%s'\n", uri);
   
   /* Instantiate the Discoverer */
   data.discoverer = gst_discoverer_new (5 * GST_SECOND, &err);
@@ -194,8 +195,8 @@ int main (int argc, char **argv) {
   gst_discoverer_start (data.discoverer);
   
   /* Add a request to process asynchronously the URI passed through the command line */
-  if (!gst_discoverer_discover_uri_async (data.discoverer, argv[1])) {
-    g_print ("Failed to start discovering URI '%s'\n", argv[1]);
+  if (!gst_discoverer_discover_uri_async (data.discoverer, uri)) {
+    g_print ("Failed to start discovering URI '%s'\n", uri);
     g_object_unref (data.discoverer);
     g_main_loop_unref (data.loop);
     return -1;
