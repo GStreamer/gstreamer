@@ -16,12 +16,16 @@ CLEANFILES = core.* test-registry.xml
 
 clean-local: clean-local-check
 
+if !GST_LIBAV_ENABLE_LGPL
+postproc_tests = elements/postproc
+endif
+
 check_PROGRAMS = \
 	generic/plugin-test \
 	generic/libavcodec-locking \
 	elements/avdec_adpcm \
 	elements/avdemux_ape \
-	elements/postproc
+	$(postproc_tests)
 
 VALGRIND_TO_FIX = \
 	generic/plugin-test \
