@@ -300,8 +300,8 @@ gst_alsasink_getcaps (GstBaseSink * bsink, GstCaps * filter)
   g_return_val_if_fail (pad_template != NULL, NULL);
 
   templ_caps = gst_pad_template_get_caps (pad_template);
-  caps = gst_alsa_probe_supported_formats (GST_OBJECT (sink), sink->handle,
-      templ_caps);
+  caps = gst_alsa_probe_supported_formats (GST_OBJECT (sink), sink->device,
+      sink->handle, templ_caps);
   gst_caps_unref (templ_caps);
 
   if (caps) {
@@ -852,9 +852,9 @@ gst_alsasink_prepare (GstAudioSink * asink, GstAudioRingBufferSpec * spec)
 
   alsa = GST_ALSA_SINK (asink);
 
-  if (spec->type == GST_AUDIO_RING_BUFFER_FORMAT_TYPE_IEC958) {
+  if (alsa->iec958) {
     snd_pcm_close (alsa->handle);
-    alsa->handle = gst_alsa_open_iec958_pcm (GST_OBJECT (alsa));
+    alsa->handle = gst_alsa_open_iec958_pcm (GST_OBJECT (alsa), alsa->device);
     if (G_UNLIKELY (!alsa->handle)) {
       goto no_iec958;
     }

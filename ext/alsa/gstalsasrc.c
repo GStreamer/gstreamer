@@ -267,8 +267,8 @@ gst_alsasrc_getcaps (GstBaseSrc * bsrc, GstCaps * filter)
   templ_caps = gst_pad_template_get_caps (pad_template);
   GST_INFO_OBJECT (src, "template caps %" GST_PTR_FORMAT, templ_caps);
 
-  caps = gst_alsa_probe_supported_formats (GST_OBJECT (src), src->handle,
-      templ_caps);
+  caps = gst_alsa_probe_supported_formats (GST_OBJECT (src),
+      src->device, src->handle, templ_caps);
   gst_caps_unref (templ_caps);
 
   if (caps) {
