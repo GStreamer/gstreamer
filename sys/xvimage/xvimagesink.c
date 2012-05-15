@@ -1562,8 +1562,6 @@ gst_xvimagesink_setcaps (GstBaseSink * bsink, GstCaps * caps)
   if (!gst_video_info_from_caps (&info, caps))
     goto invalid_format;
 
-  structure = gst_caps_get_structure (caps, 0);
-
   xvimagesink->fps_n = info.fps_n;
   xvimagesink->fps_d = info.fps_d;
 
