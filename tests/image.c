@@ -341,12 +341,12 @@ image_upload(GstVaapiImage *image, GstVaapiSurface *surface)
     g_print("could not upload %" GST_FOURCC_FORMAT" image to surface\n",
             GST_FOURCC_ARGS(format));
 
-    if (!gst_vaapi_display_has_subpicture_format(display, format))
+    if (!gst_vaapi_display_has_subpicture_format(display, format, NULL))
         return FALSE;
 
     g_print("trying as a subpicture\n");
 
-    subpicture = gst_vaapi_subpicture_new(image);
+    subpicture = gst_vaapi_subpicture_new(image, 0);
     if (!subpicture)
         g_error("could not create VA subpicture");
 

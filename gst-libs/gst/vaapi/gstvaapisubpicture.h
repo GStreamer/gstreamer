@@ -99,7 +99,7 @@ GType
 gst_vaapi_subpicture_get_type(void) G_GNUC_CONST;
 
 GstVaapiSubpicture *
-gst_vaapi_subpicture_new(GstVaapiImage *image);
+gst_vaapi_subpicture_new(GstVaapiImage *image, guint flags);
 
 GstVaapiSubpicture *
 gst_vaapi_subpicture_new_from_overlay_rectangle(
@@ -110,6 +110,9 @@ gst_vaapi_subpicture_new_from_overlay_rectangle(
 GstVaapiID
 gst_vaapi_subpicture_get_id(GstVaapiSubpicture *subpicture);
 
+guint
+gst_vaapi_subpicture_get_flags(GstVaapiSubpicture *subpicture);
+
 GstVaapiImage *
 gst_vaapi_subpicture_get_image(GstVaapiSubpicture *subpicture);
 
@@ -118,6 +121,13 @@ gst_vaapi_subpicture_set_image(
     GstVaapiSubpicture *subpicture,
     GstVaapiImage      *image
 );
+
+gfloat
+gst_vaapi_subpicture_get_global_alpha(GstVaapiSubpicture *subpicture);
+
+gboolean
+gst_vaapi_subpicture_set_global_alpha(GstVaapiSubpicture *subpicture,
+    gfloat global_alpha);
 
 G_END_DECLS
 

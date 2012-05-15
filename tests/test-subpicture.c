@@ -192,7 +192,7 @@ main(int argc, char *argv[])
     if (!gst_vaapi_image_update_from_buffer (subtitle_image, buffer, NULL))
         g_error ("could not update VA image with subtitle data");
 
-    subpicture = gst_vaapi_subpicture_new (subtitle_image);
+    subpicture = gst_vaapi_subpicture_new (subtitle_image, 0);
 
     /* We position it as a subtitle, centered at the bottom. */
     sub_rect.x = (surf_width - subinfo.width) / 2;

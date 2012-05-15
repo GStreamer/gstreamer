@@ -723,7 +723,7 @@ _gst_vaapi_surface_associate_subpicture(
         &surface_id, 1,
         src_rect->x, src_rect->y, src_rect->width, src_rect->height,
         dst_rect->x, dst_rect->y, dst_rect->width, dst_rect->height,
-        0
+        from_GstVaapiSubpictureFlags(gst_vaapi_subpicture_get_flags(subpicture))
     );
     GST_VAAPI_DISPLAY_UNLOCK(display);
     if (!vaapi_check_status(status, "vaAssociateSubpicture()"))

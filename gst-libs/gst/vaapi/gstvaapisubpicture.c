@@ -44,11 +44,15 @@ G_DEFINE_TYPE(GstVaapiSubpicture, gst_vaapi_subpicture, GST_VAAPI_TYPE_OBJECT)
 
 struct _GstVaapiSubpicturePrivate {
     GstVaapiImage      *image;
+    guint               flags;
+    gfloat              global_alpha;
 };
 
 enum {
     PROP_0,
 
+    PROP_FLAGS,
+    PROP_GLOBAL_ALPHA,
     PROP_IMAGE
 };
 
@@ -128,6 +132,13 @@ gst_vaapi_subpicture_set_property(
     GstVaapiSubpicture * const subpicture = GST_VAAPI_SUBPICTURE(object);
 
     switch (prop_id) {
+    case PROP_FLAGS:
+        subpicture->priv->flags = g_value_get_uint(value);
+        break;
+    case PROP_GLOBAL_ALPHA:
+        gst_vaapi_subpicture_set_global_alpha(subpicture,
+            g_value_get_float(value));
+        break;
     case PROP_IMAGE:
         gst_vaapi_subpicture_set_image(subpicture, g_value_get_object(value));
         break;
@@ -148,6 +159,13 @@ gst_vaapi_subpicture_get_property(
     GstVaapiSubpicture * const subpicture = GST_VAAPI_SUBPICTURE(object);
 
     switch (prop_id) {
+    case PROP_FLAGS:
+        g_value_set_uint(value, subpicture->priv->flags);
+        break;
+    case PROP_GLOBAL_ALPHA:
+        g_value_set_float(value,
+            gst_vaapi_subpicture_get_global_alpha(subpicture));
+        break;
     case PROP_IMAGE:
         g_value_set_object(value, gst_vaapi_subpicture_get_image(subpicture));
         break;
@@ -167,6 +185,34 @@ gst_vaapi_subpicture_class_init(GstVaapiSubpictureClass *klass)
     object_class->finalize     = gst_vaapi_subpicture_finalize;
     object_class->set_property = gst_vaapi_subpicture_set_property;
     object_class->get_property = gst_vaapi_subpicture_get_property;
+
+    /**
+     * GstVaapiSubpicture:flags:
+     *
+     * The #GstVaapiSubpictureFlags this subpicture requires.
+     */
+    g_object_class_install_property
+        (object_class,
+         PROP_FLAGS,
+         g_param_spec_uint("flags",
+                           "Flags",
+                           "The GstVaapiSubpictureFlags this subpicture requires",
+                           0, G_MAXUINT32, 0,
+                           G_PARAM_READWRITE|G_PARAM_CONSTRUCT_ONLY));
+
+    /**
+     * GstVaapiSubpicture:global-alpha:
+     *
+     * The global-alpha value associated with this subpicture.
+     */
+    g_object_class_install_property
+        (object_class,
+         PROP_GLOBAL_ALPHA,
+         g_param_spec_float("global-alpha",
+                            "Global Alpha",
+                            "The global-alpha value associated with this subpicture",
+                            0.0f, 1.0f, 1.0f,
+                            G_PARAM_READWRITE));
 
     /**
      * GstVaapiSubpicture:image:
@@ -190,11 +236,13 @@ gst_vaapi_subpicture_init(GstVaapiSubpicture *subpicture)
 
     subpicture->priv    = priv;
     priv->image         = NULL;
+    priv->global_alpha  = 1.0f;
 }
 
 /**
  * gst_vaapi_subpicture_new:
  * @image: a #GstVaapiImage
+ * @flags: #GstVaapiSubpictureFlags, or zero
  *
  * Creates a new #GstVaapiSubpicture with @image as source pixels. The
  * newly created object holds a reference on @image.
@@ -202,17 +250,30 @@ gst_vaapi_subpicture_init(GstVaapiSubpicture *subpicture)
  * Return value: the newly allocated #GstVaapiSubpicture object
  */
 GstVaapiSubpicture *
-gst_vaapi_subpicture_new(GstVaapiImage *image)
+gst_vaapi_subpicture_new(GstVaapiImage *image, guint flags)
 {
+    GstVaapiDisplay *display;
+    GstVaapiImageFormat format;
+    guint va_flags;
+
     g_return_val_if_fail(GST_VAAPI_IS_IMAGE(image), NULL);
 
     GST_DEBUG("create from image %" GST_VAAPI_ID_FORMAT,
               GST_VAAPI_ID_ARGS(GST_VAAPI_OBJECT_ID(image)));
 
+    display = GST_VAAPI_OBJECT_DISPLAY(image);
+    format  = gst_vaapi_image_get_format(image);
+    if (!gst_vaapi_display_has_subpicture_format(display, format, &va_flags))
+        return NULL;
+    if (flags & ~va_flags)
+        return NULL;
+
     return g_object_new(GST_VAAPI_TYPE_SUBPICTURE,
-                        "display", GST_VAAPI_OBJECT_DISPLAY(image),
-                        "id",      GST_VAAPI_ID(VA_INVALID_ID),
-                        "image",   image,
+                        "display",      GST_VAAPI_OBJECT_DISPLAY(image),
+                        "id",           GST_VAAPI_ID(VA_INVALID_ID),
+                        "flags",        flags,
+                        "global-alpha", 1.0f,
+                        "image",        image,
                         NULL);
 }
 
@@ -273,7 +334,7 @@ gst_vaapi_subpicture_new_from_overlay_rectangle(
         return NULL;
     }
 
-    subpicture = gst_vaapi_subpicture_new(image);
+    subpicture = gst_vaapi_subpicture_new(image, 0);
     g_object_unref(image);
     return subpicture;
 }
@@ -292,6 +353,22 @@ gst_vaapi_subpicture_get_id(GstVaapiSubpicture *subpicture)
     g_return_val_if_fail(GST_VAAPI_IS_SUBPICTURE(subpicture), VA_INVALID_ID);
 
     return GST_VAAPI_OBJECT_ID(subpicture);
+}
+
+/**
+ * gst_vaapi_subpicture_get_flags:
+ * @subpicture: a #GstVaapiSubpicture
+ *
+ * Returns the @subpicture flags.
+ *
+ * Return value: the @subpicture flags
+ */
+guint
+gst_vaapi_subpicture_get_flags(GstVaapiSubpicture *subpicture)
+{
+    g_return_val_if_fail(GST_VAAPI_IS_SUBPICTURE(subpicture), 0);
+
+    return subpicture->priv->flags;
 }
 
 /**
@@ -331,4 +408,65 @@ gst_vaapi_subpicture_set_image(
 
     subpicture->priv->image = g_object_ref(image);
     gst_vaapi_subpicture_create(subpicture);
+}
+
+/**
+ * gst_vaapi_subpicture_get_global_alpha:
+ * @subpicture: a #GstVaapiSubpicture
+ *
+ * Returns the value of global_alpha, set for this @subpicture.
+ *
+ * Return value: the global_alpha value of this @subpicture
+ */
+gfloat
+gst_vaapi_subpicture_get_global_alpha(GstVaapiSubpicture *subpicture)
+{
+    g_return_val_if_fail(GST_VAAPI_IS_SUBPICTURE(subpicture), 1.0);
+
+    return subpicture->priv->global_alpha;
+}
+
+/**
+ * gst_vaapi_subpicture_set_global_alpha:
+ * @subpicture: a #GstVaapiSubpicture
+ * @global_alpha: value for global-alpha (range: 0.0 to 1.0, inclusive)
+ *
+ * Sets the global_alpha value of @subpicture. This function calls
+ * vaSetSubpictureGlobalAlpha() if the format of @subpicture, i.e.
+ * the current VA driver supports it.
+ *
+ * Return value: %TRUE if global_alpha could be set, %FALSE otherwise
+ */
+gboolean
+gst_vaapi_subpicture_set_global_alpha(GstVaapiSubpicture *subpicture,
+    gfloat global_alpha)
+{
+    GstVaapiSubpicturePrivate *priv;
+    GstVaapiDisplay *display;
+    VAStatus status;
+
+    g_return_val_if_fail(GST_VAAPI_IS_SUBPICTURE(subpicture), FALSE);
+
+    priv = subpicture->priv;
+
+    if (!(priv->flags & GST_VAAPI_SUBPICTURE_FLAG_GLOBAL_ALPHA))
+        return FALSE;
+
+    if (priv->global_alpha == global_alpha)
+        return TRUE;
+
+    display = GST_VAAPI_OBJECT_DISPLAY(subpicture);
+
+    GST_VAAPI_DISPLAY_LOCK(display);
+    status = vaSetSubpictureGlobalAlpha(
+        GST_VAAPI_DISPLAY_VADISPLAY(display),
+        GST_VAAPI_OBJECT_ID(subpicture),
+        global_alpha
+    );
+    GST_VAAPI_DISPLAY_UNLOCK(display);
+    if (!vaapi_check_status(status, "vaSetSubpictureGlobalAlpha()"))
+        return FALSE;
+
+    priv->global_alpha = global_alpha;
+    return TRUE;
 }

@@ -231,7 +231,8 @@ gst_vaapi_display_get_subpicture_caps(GstVaapiDisplay *display);
 gboolean
 gst_vaapi_display_has_subpicture_format(
     GstVaapiDisplay    *display,
-    GstVaapiImageFormat format
+    GstVaapiImageFormat format,
+    guint              *flags_ptr
 );
 
 gboolean

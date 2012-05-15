@@ -719,14 +719,16 @@ gst_vaapi_display_create(GstVaapiDisplay *display)
         goto end;
 
     GST_DEBUG("%d subpicture formats", n);
-    for (i = 0; i < n; i++)
+    for (i = 0; i < n; i++) {
         GST_DEBUG("  %" GST_FOURCC_FORMAT, GST_FOURCC_ARGS(formats[i].fourcc));
+        flags[i] = to_GstVaapiSubpictureFlags(flags[i]);
+    }
 
     priv->subpicture_formats =
         g_array_new(FALSE, FALSE, sizeof(GstVaapiFormatInfo));
     if (!priv->subpicture_formats)
         goto end;
-    append_formats(priv->subpicture_formats, formats, NULL, n);
+    append_formats(priv->subpicture_formats, formats, flags, n);
     g_array_sort(priv->subpicture_formats, compare_rgb_formats);
 
     if (!cached_info) {
@@ -1404,21 +1406,32 @@ gst_vaapi_display_get_subpicture_caps(GstVaapiDisplay *display)
  * gst_vaapi_display_has_subpicture_format:
  * @display: a #GstVaapiDisplay
  * @format: a #GstVaapiFormat
+ * @flags: #GstVaapiSubpictureFlags, or zero
  *
- * Returns whether VA @display supports @format subpicture format.
+ * Returns whether VA @display supports @format subpicture format with
+ * the supplied @flags.
  *
  * Return value: %TRUE if VA @display supports @format subpicture format
  */
 gboolean
 gst_vaapi_display_has_subpicture_format(
     GstVaapiDisplay    *display,
-    GstVaapiImageFormat format
+    GstVaapiImageFormat format,
+    guint              *flags_ptr
 )
 {
+    const GstVaapiFormatInfo *fip;
+
     g_return_val_if_fail(GST_VAAPI_IS_DISPLAY(display), FALSE);
     g_return_val_if_fail(format, FALSE);
 
-    return find_format(display->priv->subpicture_formats, format);
+    fip = find_format_info(display->priv->subpicture_formats, format);
+    if (!fip)
+        return FALSE;
+
+    if (flags_ptr)
+        *flags_ptr = fip->flags;
+    return TRUE;
 }
 
 /**
