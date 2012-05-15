@@ -2702,7 +2702,7 @@ gst_toc_copy
 gst_toc_find_entry
 gst_toc_entry_get_start_stop
 gst_toc_entry_set_start_stop
-gst_toc_entry_type_to_string
+gst_toc_entry_type_get_nick
 <SUBSECTION Standard>
 GST_TYPE_TOC_ENTRY_TYPE
 <SUBSECTION Private>

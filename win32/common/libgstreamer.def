@@ -1127,8 +1127,8 @@ EXPORTS
 	gst_toc_entry_new
 	gst_toc_entry_new_with_pad
 	gst_toc_entry_set_start_stop
+	gst_toc_entry_type_get_nick
 	gst_toc_entry_type_get_type
-	gst_toc_entry_type_to_string
 	gst_toc_find_entry
 	gst_toc_free
 	gst_toc_new

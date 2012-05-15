@@ -472,7 +472,7 @@ print_toc_entry (gpointer data, gpointer user_data)
   gst_toc_entry_get_start_stop (entry, &start, &stop);
 
   PRINT ("%s%s:", &spc[MAX_INDENT - indent],
-      gst_toc_entry_type_to_string (entry->type));
+      gst_toc_entry_type_get_nick (entry->type));
   if (GST_CLOCK_TIME_IS_VALID (start)) {
     PRINT (" start: %" GST_TIME_FORMAT, GST_TIME_ARGS (start));
   }

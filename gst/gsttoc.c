@@ -978,7 +978,7 @@ gst_toc_entry_get_start_stop (const GstTocEntry * entry, gint64 * start,
 }
 
 /**
- * gst_toc_entry_type_to_string:
+ * gst_toc_entry_type_get_nick:
  * @type: a #GstTocEntryType.
  *
  * Converts @type to a string representation.
@@ -987,7 +987,7 @@ gst_toc_entry_get_start_stop (const GstTocEntry * entry, gint64 * start,
  * Since: 0.11.92
  */
 const gchar *
-gst_toc_entry_type_to_string (GstTocEntryType type)
+gst_toc_entry_type_get_nick (GstTocEntryType type)
 {
   const gchar *entry_types[] = { "chapter", "edition" };
 
