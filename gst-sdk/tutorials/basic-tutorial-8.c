@@ -7,7 +7,7 @@
   
 /* Structure to contain all our information, so we can pass it to callbacks */
 typedef struct _CustomData {
-  GstElement *pipeline, *app_source, *tee, *audio_queue, *audio_convert1, *audio_sink;
+  GstElement *pipeline, *app_source, *tee, *audio_queue, *audio_convert1, *audio_resample, *audio_sink;
   GstElement *video_queue, *audio_convert2, *visual, *video_convert, *video_sink;
   GstElement *app_queue, *app_sink;
   
@@ -133,6 +133,7 @@ int main(int argc, char *argv[]) {
   data.tee = gst_element_factory_make ("tee", "tee");
   data.audio_queue = gst_element_factory_make ("queue", "audio_queue");
   data.audio_convert1 = gst_element_factory_make ("audioconvert", "audio_convert1");
+  data.audio_resample = gst_element_factory_make ("audioresample", "audio_resample");
   data.audio_sink = gst_element_factory_make ("autoaudiosink", "audio_sink");
   data.video_queue = gst_element_factory_make ("queue", "video_queue");
   data.audio_convert2 = gst_element_factory_make ("audioconvert", "audio_convert2");
@@ -145,8 +146,9 @@ int main(int argc, char *argv[]) {
   /* Create the empty pipeline */
   data.pipeline = gst_pipeline_new ("test-pipeline");
   
-  if (!data.pipeline || !data.app_source || !data.tee || !data.audio_queue || !data.audio_convert1 || !data.audio_sink ||
-      !data.video_queue || !data.audio_convert2 || !data.visual || !data.video_convert || !data.video_sink || !data.app_queue || !data.app_sink) {
+  if (!data.pipeline || !data.app_source || !data.tee || !data.audio_queue || !data.audio_convert1 ||
+      !data.audio_resample || !data.audio_sink || !data.video_queue || !data.audio_convert2 || !data.visual ||
+      !data.video_convert || !data.video_sink || !data.app_queue || !data.app_sink) {
     g_printerr ("Not all elements could be created.\n");
     return -1;
   }
@@ -168,11 +170,11 @@ int main(int argc, char *argv[]) {
   g_free (audio_caps_text);
   
   /* Link all elements that can be automatically linked because they have "Always" pads */
-  gst_bin_add_many (GST_BIN (data.pipeline), data.app_source, data.tee, data.audio_queue, data.audio_convert1,
+  gst_bin_add_many (GST_BIN (data.pipeline), data.app_source, data.tee, data.audio_queue, data.audio_convert1, data.audio_resample, 
       data.audio_sink, data.video_queue, data.audio_convert2, data.visual, data.video_convert, data.video_sink, data.app_queue,
       data.app_sink, NULL);
   if (gst_element_link_many (data.app_source, data.tee, NULL) != TRUE ||
-      gst_element_link_many (data.audio_queue, data.audio_convert1, data.audio_sink, NULL) != TRUE ||
+      gst_element_link_many (data.audio_queue, data.audio_convert1, data.audio_resample, data.audio_sink, NULL) != TRUE ||
       gst_element_link_many (data.video_queue, data.audio_convert2, data.visual, data.video_convert, data.video_sink, NULL) != TRUE ||
       gst_element_link_many (data.app_queue, data.app_sink, NULL) != TRUE) {
     g_printerr ("Elements could not be linked.\n");

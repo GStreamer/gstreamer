@@ -1,7 +1,7 @@
 #include <gst/gst.h>
   
 int main(int argc, char *argv[]) {
-  GstElement *pipeline, *audio_source, *tee, *audio_queue, *audio_convert, *audio_sink;
+  GstElement *pipeline, *audio_source, *tee, *audio_queue, *audio_convert, *audio_resample, *audio_sink;
   GstElement *video_queue, *visual, *video_convert, *video_sink;
   GstBus *bus;
   GstMessage *msg;
@@ -17,6 +17,7 @@ int main(int argc, char *argv[]) {
   tee = gst_element_factory_make ("tee", "tee");
   audio_queue = gst_element_factory_make ("queue", "audio_queue");
   audio_convert = gst_element_factory_make ("audioconvert", "audio_convert");
+  audio_resample = gst_element_factory_make ("audioresample", "audio_resample");
   audio_sink = gst_element_factory_make ("autoaudiosink", "audio_sink");
   video_queue = gst_element_factory_make ("queue", "video_queue");
   visual = gst_element_factory_make ("wavescope", "visual");
@@ -26,7 +27,7 @@ int main(int argc, char *argv[]) {
   /* Create the empty pipeline */
   pipeline = gst_pipeline_new ("test-pipeline");
   
-  if (!pipeline || !audio_source || !tee || !audio_queue || !audio_convert || !audio_sink ||
+  if (!pipeline || !audio_source || !tee || !audio_queue || !audio_convert || !audio_resample || !audio_sink ||
       !video_queue || !visual || !video_convert || !video_sink) {
     g_printerr ("Not all elements could be created.\n");
     return -1;
@@ -37,10 +38,10 @@ int main(int argc, char *argv[]) {
   g_object_set (visual, "shader", 0, "style", 1, NULL);
   
   /* Link all elements that can be automatically linked because they have "Always" pads */
-  gst_bin_add_many (GST_BIN (pipeline), audio_source, tee, audio_queue, audio_convert, audio_sink,
+  gst_bin_add_many (GST_BIN (pipeline), audio_source, tee, audio_queue, audio_convert, audio_resample, audio_sink,
       video_queue, visual, video_convert, video_sink, NULL);
   if (gst_element_link_many (audio_source, tee, NULL) != TRUE ||
-      gst_element_link_many (audio_queue, audio_convert, audio_sink, NULL) != TRUE ||
+      gst_element_link_many (audio_queue, audio_convert, audio_resample, audio_sink, NULL) != TRUE ||
       gst_element_link_many (video_queue, visual, video_convert, video_sink, NULL) != TRUE) {
     g_printerr ("Elements could not be linked.\n");
     gst_object_unref (pipeline);
