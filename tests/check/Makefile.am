@@ -16,12 +16,16 @@ CLEANFILES = core.* test-registry.xml
 
 clean-local: clean-local-check
 
+if !GST_FFMPEG_ENABLE_LGPL
+postproc_tests = elements/postproc
+endif
+
 check_PROGRAMS = \
 	generic/plugin-test \
 	generic/libavcodec-locking \
 	elements/ffdec_adpcm \
 	elements/ffdemux_ape \
-	elements/postproc
+	$(postproc_tests)
 
 VALGRIND_TO_FIX = \
 	generic/plugin-test \
