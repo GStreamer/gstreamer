@@ -159,7 +159,7 @@ gst_fragment_init (GstFragment * fragment)
 
   g_mutex_init (&fragment->priv->lock);
   priv->buffer = NULL;
-  fragment->download_start_time = g_get_real_time ();
+  fragment->download_start_time = gst_util_get_timestamp ();
   fragment->start_time = 0;
   fragment->stop_time = 0;
   fragment->index = 0;
