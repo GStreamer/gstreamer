@@ -295,6 +295,17 @@ overlay_rectangle_update_render_rect(GstVaapiOverlayRectangle *overlay,
     return overlay_rectangle_associate(overlay);
 }
 
+static inline gboolean
+overlay_rectangle_update_global_alpha(GstVaapiOverlayRectangle *overlay,
+    GstVideoOverlayRectangle *rect)
+{
+    const guint flags = gst_video_overlay_rectangle_get_flags(rect);
+    if (!(flags & GST_VIDEO_OVERLAY_FORMAT_FLAG_GLOBAL_ALPHA))
+        return TRUE;
+    return gst_vaapi_subpicture_set_global_alpha(overlay->subpicture,
+        gst_video_overlay_rectangle_get_global_alpha(rect));
+}
+
 static gboolean
 overlay_rectangle_update(GstVaapiOverlayRectangle *overlay,
     GstVideoOverlayRectangle *rect)
@@ -302,6 +313,8 @@ overlay_rectangle_update(GstVaapiOverlayRectangle *overlay,
     if (overlay_rectangle_changed_pixels(overlay, rect))
         return FALSE;
     if (!overlay_rectangle_update_render_rect(overlay, rect))
+        return FALSE;
+    if (!overlay_rectangle_update_global_alpha(overlay, rect))
         return FALSE;
     gst_video_overlay_rectangle_replace(&overlay->rect, rect);
     return TRUE;
