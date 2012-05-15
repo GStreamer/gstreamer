@@ -105,6 +105,7 @@ GstToc      *   gst_toc_copy                    (const GstToc *toc);
 
 void            gst_toc_entry_set_start_stop    (GstTocEntry *entry, gint64 start, gint64 stop);
 gboolean        gst_toc_entry_get_start_stop    (const GstTocEntry *entry, gint64 *start, gint64 *stop);
+const gchar *   gst_toc_entry_type_to_string    (GstTocEntryType type);
 
 G_END_DECLS
 

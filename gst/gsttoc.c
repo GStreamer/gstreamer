@@ -977,6 +977,25 @@ gst_toc_entry_get_start_stop (const GstTocEntry * entry, gint64 * start,
   return ret;
 }
 
+/**
+ * gst_toc_entry_type_to_string:
+ * @type: a #GstTocEntryType.
+ *
+ * Converts @type to a string representation.
+ *
+ * Returns: Returns the human-readable @type. Can be NULL if an error occurred.
+ * Since: 0.11.92
+ */
+const gchar *
+gst_toc_entry_type_to_string (GstTocEntryType type)
+{
+  const gchar *entry_types[] = { "chapter", "edition" };
+
+  g_return_val_if_fail ((gint) type >= 0
+      && (gint) type < G_N_ELEMENTS (entry_types), NULL);
+  return entry_types[type];
+}
+
 gboolean
 __gst_toc_structure_get_updated (const GstStructure * toc)
 {
