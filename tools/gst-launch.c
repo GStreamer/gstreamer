@@ -466,13 +466,13 @@ print_toc_entry (gpointer data, gpointer user_data)
 {
   GstTocEntry *entry = (GstTocEntry *) data;
   const gchar spc[MAX_INDENT + 1] = "                                        ";
-  const gchar *entry_types[] = { "chapter", "edition" };
   guint indent = MIN (GPOINTER_TO_UINT (user_data), MAX_INDENT);
   gint64 start, stop;
 
   gst_toc_entry_get_start_stop (entry, &start, &stop);
 
-  PRINT ("%s%s:", &spc[MAX_INDENT - indent], entry_types[entry->type]);
+  PRINT ("%s%s:", &spc[MAX_INDENT - indent],
+      gst_toc_entry_type_to_string (entry->type));
   if (GST_CLOCK_TIME_IS_VALID (start)) {
     PRINT (" start: %" GST_TIME_FORMAT, GST_TIME_ARGS (start));
   }
@@ -484,7 +484,7 @@ print_toc_entry (gpointer data, gpointer user_data)
 
   /* print tags */
   gst_tag_list_foreach (entry->tags, print_tag_foreach,
-      GINT_TO_POINTER (indent));
+      GUINT_TO_POINTER (indent));
 
   /* loop over sub-toc entries */
   g_list_foreach (entry->subentries, print_toc_entry,
