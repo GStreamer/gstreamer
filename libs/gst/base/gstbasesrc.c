@@ -3138,6 +3138,9 @@ gst_base_src_start_complete (GstBaseSrc * basesrc, GstFlowReturn ret)
   mode = GST_PAD_MODE (basesrc->srcpad);
   GST_OBJECT_UNLOCK (basesrc->srcpad);
 
+  /* take the stream lock here, we only want to let the task run when we have
+   * set the STARTED flag */
+  GST_PAD_STREAM_LOCK (basesrc->srcpad);
   if (mode == GST_PAD_MODE_PUSH) {
     /* do initial seek, which will start the task */
     GST_OBJECT_LOCK (basesrc);
@@ -3166,10 +3169,13 @@ gst_base_src_start_complete (GstBaseSrc * basesrc, GstFlowReturn ret)
   GST_LIVE_SIGNAL (basesrc);
   GST_LIVE_UNLOCK (basesrc);
 
+  GST_PAD_STREAM_UNLOCK (basesrc->srcpad);
+
   return;
 
 seek_failed:
   {
+    GST_PAD_STREAM_UNLOCK (basesrc->srcpad);
     GST_ERROR_OBJECT (basesrc, "Failed to perform initial seek");
     gst_base_src_set_flushing (basesrc, TRUE, FALSE, TRUE, NULL);
     if (event)
@@ -3179,6 +3185,7 @@ seek_failed:
   }
 no_get_range:
   {
+    GST_PAD_STREAM_UNLOCK (basesrc->srcpad);
     gst_base_src_set_flushing (basesrc, TRUE, FALSE, TRUE, NULL);
     GST_ERROR_OBJECT (basesrc, "Cannot operate in pull mode, stopping");
     ret = GST_FLOW_ERROR;
