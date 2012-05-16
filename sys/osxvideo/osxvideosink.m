@@ -590,6 +590,7 @@ gst_osx_video_sink_navigation_send_event (GstNavigation * navigation,
   GstPad *peer;
   GstEvent *event;
   GstVideoRectangle src, dst, result;
+  NSRect bounds;
   gdouble x, y, xscale = 1.0, yscale = 1.0;
 
   peer = gst_pad_get_peer (GST_VIDEO_SINK_PAD (osxvideosink));
@@ -599,24 +600,24 @@ gst_osx_video_sink_navigation_send_event (GstNavigation * navigation,
 
   event = gst_event_new_navigation (structure);
 
-  /* FIXME: Use this when this sink is capable of keeping the display
-   * aspect ratio */
-  if (0) { //(osxvideosink->keep_aspect) {
+  bounds = [osxvideosink->osxwindow->gstview getDrawingBounds];
+
+  if (osxvideosink->keep_par) {
     /* We get the frame position using the calculated geometry from _setcaps
        that respect pixel aspect ratios */
     src.w = GST_VIDEO_SINK_WIDTH (osxvideosink);
     src.h = GST_VIDEO_SINK_HEIGHT (osxvideosink);
-    //dst.w = osxvideosink->osxwindow->gstview->width;
-    //dst.w = osxvideosink->osxwindow->gstview->height;
+    dst.w = bounds.size.width;
+    dst.h = bounds.size.height;
 
     gst_video_sink_center_rect (src, dst, &result, TRUE);
-    //result.x += osxvideosink->gstview->x;
-    //result.y += osxvideosink->gstview->y;
+    result.x += bounds.origin.x;
+    result.y += bounds.origin.y;
   } else {
-    result.x = 0;
-    result.y = 0;
-    result.w = osxvideosink->osxwindow->width;
-    result.h = osxvideosink->osxwindow->height;
+    result.x = bounds.origin.x;
+    result.y = bounds.origin.y;
+    result.w = bounds.size.width;
+    result.h = bounds.size.height;
   }
 
   /* We calculate scaling using the original video frames geometry to include

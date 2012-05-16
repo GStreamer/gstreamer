@@ -126,6 +126,7 @@
   data = nil;
   width = frame.size.width;
   height = frame.size.height;
+  drawingBounds = NSMakeRect(0, 0, width, height);
 
   GST_LOG ("Width: %d Height: %d", width, height);
 
@@ -138,6 +139,10 @@
 
   [self initTextures];
   return self;
+}
+
+- (NSRect) getDrawingBounds {
+  return drawingBounds;
 }
 
 - (void) reshape {
@@ -180,6 +185,7 @@
     c_y = (view_height - c_height) / 2;
   }
 
+  drawingBounds = NSMakeRect(c_x, c_y, c_width, c_height);
   glViewport (c_x, c_y, (GLint) c_width, (GLint) c_height);
 }
 
@@ -475,9 +481,7 @@
 - (void)sendMouseEvent:(NSEvent *)event: (const char *)event_name
 {
   NSPoint location;
-  NSRect bounds;
   gint button;
-  gint view_width, view_height;
   gdouble x, y;
 
   if (!navigation)
@@ -502,19 +506,13 @@
 
   location = [self convertPoint:[event locationInWindow] fromView:nil];
 
-  /* scale X and Y locations to the frame size */
-  bounds = [self bounds];
-  view_width = bounds.size.width;
-  view_height = bounds.size.height;
-
-  x = ((gdouble) location.x / view_width) * width;
-  y = ((gdouble) location.y / view_height) * height;
-
+  x = location.x;
+  y = location.y;
   /* invert Y */
-  y = (1 - y / height) * height;
 
-  gst_navigation_send_mouse_event (navigation, event_name, button,
-      x, y);
+  y = (1 - ((gdouble) y) / [self bounds].size.height) * [self bounds].size.height;
+
+  gst_navigation_send_mouse_event (navigation, event_name, button, x, y);
 }
 
 - (void)sendKeyEvent:(NSEvent *)event: (const char *)event_name

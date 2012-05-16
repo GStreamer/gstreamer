@@ -48,6 +48,7 @@ struct _GstOSXImage;
     NSOpenGLContext* actualContext;
     NSTrackingArea *trackingArea;
     GstNavigation *navigation;
+    NSRect drawingBounds;
 }
 - (void) drawQuad;
 - (void) drawRect: (NSRect) rect;
@@ -61,6 +62,7 @@ struct _GstOSXImage;
 - (void) setKeepAspectRatio: (BOOL) flag;
 - (void) reshape;
 - (void) setVideoSize: (int) w: (int) h;
+- (NSRect) getDrawingBounds;
 - (BOOL) haveSuperview;
 - (void) haveSuperviewReal: (NSMutableArray *)closure;
 - (void) addToSuperview: (NSView *)superview;
