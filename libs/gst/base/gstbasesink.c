@@ -523,7 +523,7 @@ gst_base_sink_class_init (GstBaseSinkClass * klass)
    */
   g_object_class_install_property (gobject_class, PROP_THROTTLE_TIME,
       g_param_spec_uint64 ("throttle-time", "Throttle time",
-          "The time to keep between rendered buffers (unused)", 0, G_MAXUINT64,
+          "The time to keep between rendered buffers", 0, G_MAXUINT64,
           DEFAULT_THROTTLE_TIME, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   gstelement_class->change_state =
