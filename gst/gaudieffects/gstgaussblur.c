@@ -53,7 +53,7 @@
  * <refsect2>
  * <title>Example launch line</title>
  * |[
- * gst-launch -v videotestsrc ! gaussianblur ! ffmpegcolorspace ! autovideosink
+ * gst-launch -v videotestsrc ! gaussianblur ! videoconvert ! autovideosink
  * ]| This pipeline shows the effect of gaussianblur on a test stream
  * </refsect2>
  */

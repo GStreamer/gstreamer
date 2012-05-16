@@ -52,7 +52,7 @@
  * <refsect2>
  * <title>Example launch line</title>
  * |[
- * gst-launch -v videotestsrc ! dodge ! ffmpegcolorspace ! autovideosink
+ * gst-launch -v videotestsrc ! dodge ! videoconvert ! autovideosink
  * ]| This pipeline shows the effect of dodge on a test stream
  * </refsect2>
  */

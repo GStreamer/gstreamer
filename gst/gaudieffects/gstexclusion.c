@@ -52,7 +52,7 @@
  * <refsect2>
  * <title>Example launch line</title>
  * |[
- * gst-launch -v videotestsrc ! exclusion ! ffmpegcolorspace ! autovideosink
+ * gst-launch -v videotestsrc ! exclusion ! videoconvert ! autovideosink
  * ]| This pipeline shows the effect of exclusion on a test stream
  * </refsect2>
  */

@@ -52,7 +52,7 @@
  * <refsect2>
  * <title>Example launch line</title>
  * |[
- * gst-launch -v videotestsrc ! solarize ! ffmpegcolorspace ! autovideosink
+ * gst-launch -v videotestsrc ! solarize ! videoconvert ! autovideosink
  * ]| This pipeline shows the effect of solarize on a test stream
  * </refsect2>
  */
