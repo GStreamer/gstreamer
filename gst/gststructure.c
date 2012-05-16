@@ -1828,7 +1828,7 @@ priv_gst_structure_append_to_gstring (const GstStructure * structure,
  *
  * Free-function: g_free
  *
- * Returns: (transfer full)L a pointer to string allocated by g_malloc().
+ * Returns: (transfer full): a pointer to string allocated by g_malloc().
  *     g_free() after usage.
  */
 gchar *
