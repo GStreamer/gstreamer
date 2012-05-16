@@ -1572,7 +1572,8 @@ gst_ts_demux_handle_packet (GstTSDemux * demux, TSDemuxStream * stream,
     return res;
   }
 
-  if (G_UNLIKELY (packet->payload_unit_start_indicator))
+  if (G_UNLIKELY (packet->payload_unit_start_indicator) &&
+      packet->adaptation_field_control & 0x1)
     /* Flush previous data */
     res = gst_ts_demux_push_pending_data (demux, stream);
 
