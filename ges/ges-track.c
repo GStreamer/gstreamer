@@ -40,7 +40,7 @@ struct _GESTrackPrivate
 {
   /*< private > */
   GESTimeline *timeline;
-  GList *trackobjects;
+  GSequence *tckobjs_by_start;
   guint64 duration;
 
   GstCaps *caps;
@@ -120,17 +120,76 @@ ges_track_set_property (GObject * object, guint property_id,
 }
 
 static void
+add_trackobj_to_list_foreach (GESTrackObject * trackobj, GList ** list)
+{
+  g_object_ref (trackobj);
+  *list = g_list_prepend (*list, trackobj);
+}
+
+/* Remove @object from @track, but keeps it in the sequence this is needed
+ * when finalizing as we can not change a GSequence at the same time we are
+ * accessing it
+ */
+static gboolean
+remove_object_internal (GESTrack * track, GESTrackObject * object)
+{
+  GESTrackPrivate *priv;
+  GstElement *gnlobject;
+
+  GST_DEBUG ("track:%p, object:%p", track, object);
+
+  priv = track->priv;
+
+  if (G_UNLIKELY (ges_track_object_get_track (object) != track)) {
+    GST_WARNING ("Object belongs to another track");
+    return FALSE;
+  }
+
+  if ((gnlobject = ges_track_object_get_gnlobject (object))) {
+    GST_DEBUG ("Removing GnlObject '%s' from composition '%s'",
+        GST_ELEMENT_NAME (gnlobject), GST_ELEMENT_NAME (priv->composition));
+
+    if (!gst_bin_remove (GST_BIN (priv->composition), gnlobject)) {
+      GST_WARNING ("Failed to remove gnlobject from composition");
+      return FALSE;
+    }
+
+    gst_element_set_state (gnlobject, GST_STATE_NULL);
+  }
+
+  g_signal_handlers_disconnect_by_func (object, sort_track_objects_cb, NULL);
+
+  ges_track_object_set_track (object, NULL);
+
+  g_signal_emit (track, ges_track_signals[TRACK_OBJECT_REMOVED], 0,
+      GES_TRACK_OBJECT (object));
+
+  g_object_unref (object);
+
+  return TRUE;
+}
+
+static void
+dispose_tckobjs_foreach (GESTrackObject * tckobj, GESTrack * track)
+{
+  GESTimelineObject *tlobj;
+
+  tlobj = ges_track_object_get_timeline_object (tckobj);
+
+  remove_object_internal (track, tckobj);
+  ges_timeline_object_release_track_object (tlobj, tckobj);
+}
+
+static void
 ges_track_dispose (GObject * object)
 {
   GESTrack *track = (GESTrack *) object;
   GESTrackPrivate *priv = track->priv;
 
-  while (priv->trackobjects) {
-    GESTrackObject *trobj = GES_TRACK_OBJECT (priv->trackobjects->data);
-    ges_track_remove_object (track, trobj);
-    ges_timeline_object_release_track_object ((GESTimelineObject *)
-        ges_track_object_get_timeline_object (trobj), trobj);
-  }
+  /* Remove all TrackObjects and drop our reference */
+  g_sequence_foreach (track->priv->tckobjs_by_start,
+      (GFunc) dispose_tckobjs_foreach, track);
+  g_sequence_free (priv->tckobjs_by_start);
 
   if (priv->composition) {
     gst_bin_remove (GST_BIN (object), priv->composition);
@@ -287,6 +346,7 @@ ges_track_init (GESTrack * self)
 
   self->priv->composition = gst_element_factory_make ("gnlcomposition", NULL);
   self->priv->updating = TRUE;
+  self->priv->tckobjs_by_start = g_sequence_new (NULL);
 
   g_signal_connect (G_OBJECT (self->priv->composition), "notify::duration",
       G_CALLBACK (composition_duration_cb), self);
@@ -414,8 +474,10 @@ ges_track_set_caps (GESTrack * track, const GstCaps * caps)
 /* FIXME : put the compare function in the utils */
 
 static gint
-objects_start_compare (GESTrackObject * a, GESTrackObject * b)
+objects_start_compare (GESTrackObject * a, GESTrackObject * b,
+    gpointer user_data)
 {
+
   if (a->start == b->start) {
     if (a->priority < b->priority)
       return -1;
@@ -472,14 +534,16 @@ ges_track_add_object (GESTrack * track, GESTrackObject * object)
   }
 
   g_object_ref_sink (object);
-  track->priv->trackobjects =
-      g_list_insert_sorted (track->priv->trackobjects, object,
-      (GCompareFunc) objects_start_compare);
+  g_sequence_insert_sorted (track->priv->tckobjs_by_start, object,
+      (GCompareDataFunc) objects_start_compare, NULL);
 
   g_signal_emit (track, ges_track_signals[TRACK_OBJECT_ADDED], 0,
       GES_TRACK_OBJECT (object));
 
   g_signal_connect (GES_TRACK_OBJECT (object), "notify::start",
+      G_CALLBACK (sort_track_objects_cb), track);
+
+  g_signal_connect (GES_TRACK_OBJECT (object), "notify::duration",
       G_CALLBACK (sort_track_objects_cb), track);
 
   g_signal_connect (GES_TRACK_OBJECT (object), "notify::priority",
@@ -501,14 +565,11 @@ GList *
 ges_track_get_objects (GESTrack * track)
 {
   GList *ret = NULL;
-  GList *tmp;
 
   g_return_val_if_fail (GES_IS_TRACK (track), NULL);
 
-  for (tmp = track->priv->trackobjects; tmp; tmp = tmp->next) {
-    ret = g_list_prepend (ret, tmp->data);
-    g_object_ref (tmp->data);
-  }
+  g_sequence_foreach (track->priv->tckobjs_by_start,
+      (GFunc) add_trackobj_to_list_foreach, &ret);
 
   ret = g_list_reverse (ret);
   return ret;
@@ -530,45 +591,20 @@ ges_track_get_objects (GESTrack * track)
 gboolean
 ges_track_remove_object (GESTrack * track, GESTrackObject * object)
 {
-  GESTrackPrivate *priv;
-  GstElement *gnlobject;
+  GSequenceIter *it;
 
   g_return_val_if_fail (GES_IS_TRACK (track), FALSE);
   g_return_val_if_fail (GES_IS_TRACK_OBJECT (object), FALSE);
 
-  GST_DEBUG ("track:%p, object:%p", track, object);
+  if (remove_object_internal (track, object) == TRUE) {
+    it = g_sequence_lookup (track->priv->tckobjs_by_start, object,
+        (GCompareDataFunc) objects_start_compare, NULL);
+    g_sequence_remove (it);
 
-  priv = track->priv;
-
-  if (G_UNLIKELY (ges_track_object_get_track (object) != track)) {
-    GST_WARNING ("Object belongs to another track");
-    return FALSE;
+    return TRUE;
   }
 
-  if ((gnlobject = ges_track_object_get_gnlobject (object))) {
-    GST_DEBUG ("Removing GnlObject '%s' from composition '%s'",
-        GST_ELEMENT_NAME (gnlobject), GST_ELEMENT_NAME (priv->composition));
-
-    if (!gst_bin_remove (GST_BIN (priv->composition), gnlobject)) {
-      GST_WARNING ("Failed to remove gnlobject from composition");
-      return FALSE;
-    }
-
-    gst_element_set_state (gnlobject, GST_STATE_NULL);
-  }
-
-  g_signal_handlers_disconnect_by_func (object, sort_track_objects_cb, NULL);
-
-  ges_track_object_set_track (object, NULL);
-
-  g_signal_emit (track, ges_track_signals[TRACK_OBJECT_REMOVED], 0,
-      GES_TRACK_OBJECT (object));
-
-  priv->trackobjects = g_list_remove (priv->trackobjects, object);
-
-  g_object_unref (object);
-
-  return TRUE;
+  return FALSE;
 }
 
 static void
@@ -628,9 +664,8 @@ static void
 sort_track_objects_cb (GESTrackObject * child,
     GParamSpec * arg G_GNUC_UNUSED, GESTrack * track)
 {
-  track->priv->trackobjects =
-      g_list_sort (track->priv->trackobjects,
-      (GCompareFunc) objects_start_compare);
+  g_sequence_sort (track->priv->tckobjs_by_start,
+      (GCompareDataFunc) objects_start_compare, NULL);
 }
 
 static void
