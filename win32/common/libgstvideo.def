@@ -50,8 +50,9 @@ EXPORTS
 	gst_video_calculate_display_ratio
 	gst_video_chroma_site_get_type
 	gst_video_codec_frame_get_type
+	gst_video_codec_frame_get_user_data
 	gst_video_codec_frame_ref
-	gst_video_codec_frame_set_hook
+	gst_video_codec_frame_set_user_data
 	gst_video_codec_frame_unref
 	gst_video_codec_state_get_type
 	gst_video_codec_state_ref

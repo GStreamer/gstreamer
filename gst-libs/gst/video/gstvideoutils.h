@@ -236,14 +236,14 @@ struct _GstVideoCodecFrame
 
   GstClockTime deadline;	/* D */
 
+  /*< private >*/
+
   /* Events that should be pushed downstream *before*
    * the next output_buffer */
   GList *events;		/* ED */
 
-  /*< private >*/
-
-  void *coder_hook;
-  GDestroyNotify coder_hook_destroy_notify;
+  gpointer       user_data;
+  GDestroyNotify user_data_destroy_notify;
 
   void         *padding[GST_PADDING_LARGE];
 };
@@ -261,9 +261,10 @@ GType                gst_video_codec_frame_get_type (void);
 
 GstVideoCodecFrame  *gst_video_codec_frame_ref (GstVideoCodecFrame * frame);
 void                 gst_video_codec_frame_unref (GstVideoCodecFrame * frame);
-void                 gst_video_codec_frame_set_hook (GstVideoCodecFrame *frame,
-						     void *hook,
-						     GDestroyNotify notify);
+void                 gst_video_codec_frame_set_user_data (GstVideoCodecFrame *frame,
+						          gpointer user_data,
+				                          GDestroyNotify notify);
+gpointer             gst_video_codec_frame_get_user_data (GstVideoCodecFrame *frame);
 
 G_END_DECLS
 

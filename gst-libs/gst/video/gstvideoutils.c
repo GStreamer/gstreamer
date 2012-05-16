@@ -49,33 +49,48 @@ _gst_video_codec_frame_free (GstVideoCodecFrame * frame)
   g_list_foreach (frame->events, (GFunc) gst_event_unref, NULL);
   g_list_free (frame->events);
 
-  if (frame->coder_hook_destroy_notify && frame->coder_hook)
-    frame->coder_hook_destroy_notify (frame->coder_hook);
+  if (frame->user_data_destroy_notify)
+    frame->user_data_destroy_notify (frame->user_data);
 
   g_slice_free (GstVideoCodecFrame, frame);
 }
 
 /**
- * gst_video_codec_frame_set_hook:
+ * gst_video_codec_frame_set_user_data:
  * @frame: a #GstVideoCodecFrame
- * @hook: private data
- * @notify: (closure hook): a #GDestroyNotify
+ * @user_data: private data
+ * @notify: (closure user_data): a #GDestroyNotify
  *
- * Sets the #GDestroyNotify that will be called (along with the @hook) when
- * the frame is freed.
+ * Sets @user_data on the frame and the #GDestroyNotify that will be called when
+ * the frame is freed. Allows to attach private data by the subclass to frames.
  *
- * If a @hook was previously set, then the previous set @notify will be called
- * before the @hook is replaced.
+ * If a @user_data was previously set, then the previous set @notify will be called
+ * before the @user_data is replaced.
  */
 void
-gst_video_codec_frame_set_hook (GstVideoCodecFrame * frame, void *hook,
-    GDestroyNotify notify)
+gst_video_codec_frame_set_user_data (GstVideoCodecFrame * frame,
+    gpointer user_data, GDestroyNotify notify)
 {
-  if (frame->coder_hook_destroy_notify && frame->coder_hook)
-    frame->coder_hook_destroy_notify (frame->coder_hook);
+  if (frame->user_data_destroy_notify)
+    frame->user_data_destroy_notify (frame->user_data);
 
-  frame->coder_hook = hook;
-  frame->coder_hook_destroy_notify = notify;
+  frame->user_data = user_data;
+  frame->user_data_destroy_notify = notify;
+}
+
+/**
+ * gst_video_codec_frame_get_user_data:
+ * @frame: a #GstVideoCodecFrame
+ *
+ * Gets private data set on the frame by the subclass via
+ * gst_video_codec_frame_set_user_data() previously.
+ *
+ * Returns: (transfer none): The previously set user_data
+ */
+gpointer
+gst_video_codec_frame_get_user_data (GstVideoCodecFrame * frame)
+{
+  return frame->user_data;
 }
 
 /**
