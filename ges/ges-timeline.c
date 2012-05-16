@@ -1463,6 +1463,7 @@ discoverer_discovered_cb (GstDiscoverer * discoverer,
 {
   GList *tmp;
   GList *stream_list;
+  GESTimelineObject *tlobj;
   GESTrackType tfs_supportedformats;
 
   gboolean found = FALSE;
@@ -1547,18 +1548,26 @@ discoverer_discovered_cb (GstDiscoverer * discoverer,
 
 check_image:
 
+  tlobj = GES_TIMELINE_OBJECT (tfs);
   if (is_image) {
     /* don't set max-duration on still images */
     g_object_set (tfs, "is_image", (gboolean) TRUE, NULL);
+  } else {
+    GstClockTime file_duration, tlobj_max_duration;
+
+    /* Properly set duration informations from the discovery */
+    file_duration = gst_discoverer_info_get_duration (info);
+    tlobj_max_duration = ges_timeline_object_get_max_duration (tlobj);
+
+    if (tlobj_max_duration == G_MAXUINT64)
+      ges_timeline_object_set_max_duration (tlobj, file_duration);
+
+    if (GST_CLOCK_TIME_IS_VALID (tlobj->duration) == FALSE)
+      ges_timeline_object_set_duration (tlobj, file_duration);
   }
 
   /* Continue the processing on tfs */
-  add_object_to_tracks (timeline, GES_TIMELINE_OBJECT (tfs));
-
-  if (!is_image) {
-    g_object_set (tfs, "max-duration",
-        gst_discoverer_info_get_duration (info), NULL);
-  }
+  add_object_to_tracks (timeline, tlobj);
 
   /* Remove the ref as the timeline file source is no longer needed here */
   g_object_unref (tfs);
