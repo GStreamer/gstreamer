@@ -268,14 +268,18 @@ gst_osx_video_sink_osxwindow_create (GstOSXVideoSink * osxvideosink, gint width,
           @selector(addToSuperview:), osxvideosink->superview, NO);
 
     } else {
-      /* the view wasn't added to a superview. It's possible that the
-       * application handled have-ns-view, stored our view internally and is
-       * going to add it to a superview later (webkit does that now).
-       */
-      gst_osx_video_sink_start_cocoa_event_poller (osxvideosink);
-      gst_osx_video_sink_call_from_main_thread(osxvideosink->osxvideosinkobject,
+      if (osxvideosink->embed) {
+        /* the view wasn't added to a superview. It's possible that the
+         * application handled have-ns-view, stored our view internally and is
+         * going to add it to a superview later (webkit does that now).
+         */
+        GST_INFO_OBJECT (osxvideosink, "no superview");
+      } else {
+        gst_osx_video_sink_start_cocoa_event_poller (osxvideosink);
+        gst_osx_video_sink_call_from_main_thread(osxvideosink->osxvideosinkobject,
           @selector(createInternalWindow), nil, YES);
-      GST_INFO_OBJECT (osxvideosink, "no superview");
+        GST_INFO_OBJECT (osxvideosink, "No superview, creating an internal window.");
+      }
     }
   }
   [osxwindow->gstview setNavigation: GST_NAVIGATION(osxvideosink)];
@@ -446,7 +450,7 @@ gst_osx_video_sink_set_property (GObject * object, guint prop_id,
 
   switch (prop_id) {
     case ARG_EMBED:
-      /* Ignore, just here for backwards compatibility */
+      osxvideosink->embed = g_value_get_boolean(value);
       break;
     case ARG_FORCE_PAR:
       osxvideosink->keep_par = g_value_get_boolean(value);
@@ -472,7 +476,7 @@ gst_osx_video_sink_get_property (GObject * object, guint prop_id,
 
   switch (prop_id) {
     case ARG_EMBED:
-      g_value_set_boolean (value, TRUE);
+      g_value_set_boolean (value, osxvideosink->embed);
       break;
     case ARG_FORCE_PAR:
       g_value_set_boolean (value, osxvideosink->keep_par);
