@@ -198,7 +198,6 @@ int main (int argc, char **argv) {
   if (!gst_discoverer_discover_uri_async (data.discoverer, uri)) {
     g_print ("Failed to start discovering URI '%s'\n", uri);
     g_object_unref (data.discoverer);
-    g_main_loop_unref (data.loop);
     return -1;
   }
   
