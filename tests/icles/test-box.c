@@ -25,7 +25,7 @@
 
 #include <gst/gst.h>
 
-#define CAPS " capsfilter caps=\"video/x-raw-yuv, format=(fourcc)I420, width=(int)640, height=(int)480\" "
+#define CAPS " capsfilter caps=\"video/x-raw, format=(string)I420, width=(int)640, height=(int)480\" "
 
 static GstElement *
 make_pipeline (gint type)
