@@ -66,6 +66,7 @@ enum
 {
   ARG_0,
   ARG_EMBED,
+  ARG_FORCE_PAR,
 };
 
 static void gst_osx_video_sink_osxwindow_destroy (GstOSXVideoSink * osxvideosink);
@@ -278,6 +279,7 @@ gst_osx_video_sink_osxwindow_create (GstOSXVideoSink * osxvideosink, gint width,
     }
   }
   [osxwindow->gstview setNavigation: GST_NAVIGATION(osxvideosink)];
+  [osxvideosink->osxwindow->gstview setKeepAspectRatio: osxvideosink->keep_par];
 
   [pool release];
 
@@ -446,6 +448,12 @@ gst_osx_video_sink_set_property (GObject * object, guint prop_id,
     case ARG_EMBED:
       /* Ignore, just here for backwards compatibility */
       break;
+    case ARG_FORCE_PAR:
+      osxvideosink->keep_par = g_value_get_boolean(value);
+      if (osxvideosink->osxwindow)
+        [osxvideosink->osxwindow->gstview
+            setKeepAspectRatio: osxvideosink->keep_par];
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -466,6 +474,9 @@ gst_osx_video_sink_get_property (GObject * object, guint prop_id,
     case ARG_EMBED:
       g_value_set_boolean (value, TRUE);
       break;
+    case ARG_FORCE_PAR:
+      g_value_set_boolean (value, osxvideosink->keep_par);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -481,6 +492,7 @@ gst_osx_video_sink_init (GstOSXVideoSink * osxvideosink)
   osxvideosink->osxvideosinkobject = [[GstOSXVideoSinkObject alloc]
     initWithSink:osxvideosink];
   osxvideosink->app_started = FALSE;
+  osxvideosink->keep_par = FALSE;
 }
 
 static void
@@ -542,6 +554,18 @@ gst_osx_video_sink_class_init (GstOSXVideoSinkClass * klass)
 
   g_object_class_install_property (gobject_class, ARG_EMBED,
       g_param_spec_boolean ("embed", "embed", "For ABI compatiblity only, do not use",
+          FALSE, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
+  /**
+   * GstOSXVideoSink:force-aspect-ratio
+   *
+   * When enabled, scaling will respect original aspect ratio.
+   *
+   **/
+
+  g_object_class_install_property (gobject_class, ARG_FORCE_PAR,
+      g_param_spec_boolean ("force-aspect-ratio", "force aspect ration",
+          "When enabled, scaling will respect original aspect ration",
           FALSE, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 }
 

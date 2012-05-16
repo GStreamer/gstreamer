@@ -76,6 +76,7 @@ struct _GstOSXVideoSink {
   void *osxvideosinkobject;
   NSView *superview;
   guint cocoa_timeout;
+  gboolean keep_par;
 };
 
 struct _GstOSXVideoSinkClass {

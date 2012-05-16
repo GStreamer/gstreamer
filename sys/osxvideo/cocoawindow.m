@@ -142,6 +142,9 @@
 
 - (void) reshape {
   NSRect bounds;
+  gdouble frame_par, view_par;
+  gint view_height, view_width, c_height, c_width, c_x, c_y;
+
 
   GST_LOG ("reshaping");
 
@@ -152,9 +155,32 @@
   [actualContext makeCurrentContext];
 
   bounds = [self bounds];
+  view_width = bounds.size.width;
+  view_height = bounds.size.height;
 
-  glViewport (0, 0, (GLint) bounds.size.width, (GLint) bounds.size.height);
+  frame_par = (gdouble) width / height;
+  view_par = (gdouble) view_width / view_height;
+  if (!keepAspectRatio)
+    view_par = frame_par;
 
+  if (frame_par == view_par) {
+    c_height = view_height;
+    c_width = view_width;
+    c_x = 0;
+    c_y = 0;
+  } else if (frame_par < view_par) {
+    c_height = view_height;
+    c_width = c_height * frame_par;
+    c_x = (view_width - c_width) / 2;
+    c_y = 0;
+  } else {
+    c_width = view_width;
+    c_height = c_width / frame_par;
+    c_x = 0;
+    c_y = (view_height - c_height) / 2;
+  }
+
+  glViewport (c_x, c_y, (GLint) c_width, (GLint) c_height);
 }
 
 - (void) initTextures {
@@ -374,6 +400,12 @@
 
 //  data = g_malloc0 (2 * w * h);
   [self initTextures];
+  [self reshape];
+}
+
+- (void) setKeepAspectRatio: (BOOL) flag {
+  keepAspectRatio = flag;
+  [self reshape];
 }
 
 - (void) haveSuperviewReal:(NSMutableArray *)closure {
