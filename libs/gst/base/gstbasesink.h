@@ -125,15 +125,19 @@ struct _GstBaseSink {
  *     unblock any blocked function ASAP
  * @unlock_stop: Clear the previous unlock request. Subclasses should clear
  *     any state they set during unlock(), such as clearing command queues.
+ * @query: perform a #GstQuery on the element. Since: 0.10.36
  * @event: Override this to handle events arriving on the sink pad
  * @wait_eos: Override this to implement custom logic to wait for the EOS time.
  *     subclasses should always first chain up to the default implementation.
- * @preroll: Called to present the preroll buffer if desired
+ * @prepare: Called to prepare the buffer for @render and @preroll. This
+ *     function is called before synchronisation is performed.
+ * @prepare_list: Called to prepare the buffer list for @render_list. This
+ *     function is called before synchronisation is performed.
+ * @preroll: Called to present the preroll buffer if desired.
  * @render: Called when a buffer should be presented or output, at the
  *     correct moment if the #GstBaseSink has been set to sync to the clock.
  * @render_list: Same as @render but used whith buffer lists instead of
  *     buffers. Since: 0.10.24
- * @query: perform a #GstQuery on the element. Since: 0.10.36
  *
  * Subclasses can override any of the available virtual methods or not, as
  * needed. At the minimum, the @render method should be overridden to
@@ -178,6 +182,10 @@ struct _GstBaseSinkClass {
   gboolean      (*event)        (GstBaseSink *sink, GstEvent *event);
   /* wait for eos, subclasses should chain up to parent first */
   GstFlowReturn (*wait_eos)     (GstBaseSink *sink, GstEvent *event);
+
+  /* notify subclass of buffer or list before doing sync */
+  GstFlowReturn (*prepare)      (GstBaseSink *sink, GstBuffer *buffer);
+  GstFlowReturn (*prepare_list) (GstBaseSink *sink, GstBufferList *buffer_list);
 
   /* notify subclass of preroll buffer or real buffer */
   GstFlowReturn (*preroll)      (GstBaseSink *sink, GstBuffer *buffer);
