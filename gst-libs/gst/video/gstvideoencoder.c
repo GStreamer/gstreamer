@@ -1617,10 +1617,13 @@ gst_video_encoder_set_latency (GstVideoEncoder * encoder,
 /**
  * gst_video_encoder_get_latency:
  * @encoder: a #GstVideoEncoder
- * @min_latency: (out) (allow-none): the configured minimum latency
- * @max_latency: (out) (allow-none): the configured maximum latency
+ * @min_latency: (out) (allow-none): address of variable in which to store the
+ *     configured minimum latency, or %NULL
+ * @max_latency: (out) (allow-none): address of variable in which to store the
+ *     configured maximum latency, or %NULL
  *
- * Returns the configured encoding latency.
+ * Query the configured encoding latency. Results will be returned via
+ * @min_latency and @max_latency.
  *
  * Since: 0.10.36
  */

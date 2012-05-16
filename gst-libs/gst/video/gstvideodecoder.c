@@ -2541,8 +2541,7 @@ no_decide_allocation:
  * gst_video_decoder_alloc_output_buffer:
  * @decoder: a #GstVideoDecoder
  *
- * Helper function that uses @gst_pad_alloc_buffer_and_set_caps()
- * to allocate a buffer to hold a video frame for @decoder's
+ * Helper function that allocates a buffer to hold a video frame for @decoder's
  * current #GstVideoCodecState.
  *
  * Returns: (transfer full): allocated buffer
@@ -2574,12 +2573,11 @@ gst_video_decoder_alloc_output_buffer (GstVideoDecoder * decoder)
  * @decoder: a #GstVideoDecoder
  * @frame: a #GstVideoCodecFrame
  *
- * Helper function that uses @gst_pad_alloc_buffer_and_set_caps()
- * to allocate a buffer to hold a video frame for @decoder's
- * current #GstVideoCodecState.  Subclass should already have configured video state
- * and set src pad caps.
+ * Helper function that allocates a buffer to hold a video frame for @decoder's
+ * current #GstVideoCodecState.  Subclass should already have configured video
+ * state and set src pad caps.
  *
- * Returns: result from pad alloc call
+ * Returns: %GST_FLOW_OK if an output buffer could be allocated
  *
  * Since: 0.10.36
  */
@@ -2775,7 +2773,9 @@ gst_video_decoder_get_estimate_rate (GstVideoDecoder * dec)
  * @min_latency: minimum latency
  * @max_latency: maximum latency
  *
- * Informs baseclass of encoding latency.
+ * Lets #GstVideoDecoder sub-classes tell the baseclass what the decoder
+ * latency is. Will also post a LATENCY message on the bus so the pipeline
+ * can reconfigure its global latency.
  *
  * Since: 0.10.36
  */
@@ -2798,10 +2798,13 @@ gst_video_decoder_set_latency (GstVideoDecoder * decoder,
 /**
  * gst_video_decoder_get_latency:
  * @decoder: a #GstVideoDecoder
- * @min_latency: (out) (allow-none): the configured minimum latency
- * @max_latency: (out) (allow-none): the configured maximum latency
+ * @min_latency: (out) (allow-none): address of variable in which to store the
+ *     configured minimum latency, or %NULL
+ * @max_latency: (out) (allow-none): address of variable in which to store the
+ *     configured mximum latency, or %NULL
  *
- * Returns the configured encoding latency.
+ * Query the configured decoder latency. Results will be returned via
+ * @min_latency and @max_latency.
  *
  * Since: 0.10.36
  */

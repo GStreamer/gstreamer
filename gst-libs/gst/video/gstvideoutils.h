@@ -205,7 +205,6 @@ typedef enum
  * @output_buffer: the output #GstBuffer. Implementations should set this either
  *           directly, or by using the @gst_video_decoder_alloc_output_frame() or
  *           @gst_video_decoder_alloc_output_buffer() methods.
- * @field_index:
  * @n_fields: number of fields in the frame (default 2). Decoders can change
  *       this if the frame contains a different number of fields. 
  * @deadline: Running time when the frame will be used.
