@@ -449,6 +449,28 @@ sort_layers (gpointer a, gpointer b)
   return 0;
 }
 
+static void
+timeline_update_duration (GESTimeline * timeline)
+{
+  GstClockTime *cduration;
+  GSequenceIter *it = g_sequence_get_end_iter (timeline->priv->starts_ends);
+
+  it = g_sequence_iter_prev (it);
+  if (g_sequence_iter_is_end (it))
+    return;
+
+  cduration = g_sequence_get (it);
+  if (cduration && timeline->priv->duration != *cduration) {
+    GST_DEBUG ("track duration : %" GST_TIME_FORMAT " current : %"
+        GST_TIME_FORMAT, GST_TIME_ARGS (*cduration),
+        GST_TIME_ARGS (timeline->priv->duration));
+
+    timeline->priv->duration = *cduration;
+
+    g_object_notify_by_pspec (G_OBJECT (timeline), properties[PROP_DURATION]);
+  }
+}
+
 static gint
 objects_start_compare (GESTrackObject * a, GESTrackObject * b)
 {
@@ -553,6 +575,7 @@ sort_starts_ends_end (GESTimeline * timeline, GESTrackObject * obj)
   *end = obj->start + obj->duration;
 
   g_sequence_sort_changed (iter, (GCompareDataFunc) compare_uint64, NULL);
+  timeline_update_duration (timeline);
 }
 
 static inline void
@@ -567,6 +590,7 @@ sort_starts_ends_start (GESTimeline * timeline, GESTrackObject * obj)
   *start = obj->start;
 
   g_sequence_sort_changed (iter, (GCompareDataFunc) compare_uint64, NULL);
+  timeline_update_duration (timeline);
 }
 
 static inline void
@@ -590,6 +614,7 @@ resort_all_starts_ends (GESTimeline * timeline)
   }
 
   g_sequence_sort (priv->starts_ends, (GCompareDataFunc) compare_uint64, NULL);
+  timeline_update_duration (timeline);
 }
 
 static inline void
@@ -645,7 +670,7 @@ stop_tracking_for_snapping (GESTimeline * timeline, GESTrackObject * tckobj)
   g_sequence_remove (iter_start);
   g_sequence_remove (iter_end);
   g_sequence_remove (tckobj_iter);
-
+  timeline_update_duration (timeline);
 }
 
 static void
@@ -672,6 +697,8 @@ start_tracking_track_obj (GESTimeline * timeline, GESTrackObject * tckobj)
   g_hash_table_insert (priv->by_object, pend, tckobj);
 
   timeline->priv->movecontext.needs_move_ctx = TRUE;
+
+  timeline_update_duration (timeline);
 }
 
 static inline void
@@ -1707,33 +1734,6 @@ track_object_removed_cb (GESTrack * track, GESTrackObject * object,
   }
 }
 
-static void
-track_duration_cb (GstElement * track,
-    GParamSpec * arg G_GNUC_UNUSED, GESTimeline * timeline)
-{
-  guint64 duration, max_duration = 0;
-  GList *tmp;
-
-  for (tmp = timeline->priv->tracks; tmp; tmp = g_list_next (tmp)) {
-    TrackPrivate *tr_priv = (TrackPrivate *) tmp->data;
-    g_object_get (tr_priv->track, "duration", &duration, NULL);
-
-    GST_DEBUG_OBJECT (track, "track duration : %" GST_TIME_FORMAT,
-        GST_TIME_ARGS (duration));
-    max_duration = MAX (duration, max_duration);
-  }
-
-  if (timeline->priv->duration != max_duration) {
-    GST_DEBUG ("track duration : %" GST_TIME_FORMAT " current : %"
-        GST_TIME_FORMAT, GST_TIME_ARGS (max_duration),
-        GST_TIME_ARGS (timeline->priv->duration));
-
-    timeline->priv->duration = max_duration;
-
-    g_object_notify_by_pspec (G_OBJECT (timeline), properties[PROP_DURATION]);
-  }
-}
-
 static GstStateChangeReturn
 ges_timeline_change_state (GstElement * element, GstStateChange transition)
 {
@@ -2169,11 +2169,6 @@ ges_timeline_add_track (GESTimeline * timeline, GESTrack * track)
   /* ensure that each existing timeline object has the opportunity to create a
    * track object for this track*/
 
-  /* We connect to the duration change notify, so we can update
-   * our duration accordingly */
-  g_signal_connect (G_OBJECT (track), "notify::duration",
-      G_CALLBACK (track_duration_cb), timeline);
-
   /* We connect to the object for the timeline editing mode management */
   g_signal_connect (G_OBJECT (track), "track-object-added",
       G_CALLBACK (track_object_added_cb), timeline);
@@ -2191,8 +2186,6 @@ ges_timeline_add_track (GESTimeline * timeline, GESTrack * track)
     }
     g_list_free (objects);
   }
-
-  track_duration_cb (GST_ELEMENT (track), NULL, timeline);
 
   return TRUE;
 }
@@ -2246,8 +2239,6 @@ ges_timeline_remove_track (GESTimeline * timeline, GESTrack * track)
   /* Remove pad-added/-removed handlers */
   g_signal_handlers_disconnect_by_func (track, pad_added_cb, tr_priv);
   g_signal_handlers_disconnect_by_func (track, pad_removed_cb, tr_priv);
-  g_signal_handlers_disconnect_by_func (track, track_duration_cb,
-      tr_priv->track);
   g_signal_handlers_disconnect_by_func (track, track_object_added_cb, timeline);
   g_signal_handlers_disconnect_by_func (track, track_object_removed_cb,
       timeline);
