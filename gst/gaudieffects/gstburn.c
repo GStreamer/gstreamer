@@ -67,6 +67,8 @@
 #include "gstplugin.h"
 #include "gstburn.h"
 
+#include "gstgaudieffectsorc.h"
+
 #define gst_burn_parent_class parent_class
 G_DEFINE_TYPE (GstBurn, gst_burn, GST_TYPE_VIDEO_FILTER);
 
@@ -95,9 +97,6 @@ enum
 /* Initializations */
 
 #define DEFAULT_ADJUSTMENT 175
-
-static void transform (guint32 * src, guint32 * dest, gint video_area,
-    gint adjustment);
 
 /* The capabilities of the inputs and outputs. */
 
@@ -256,7 +255,8 @@ gst_burn_transform_frame (GstVideoFilter * vfilter,
   adjustment = filter->adjustment;
   GST_OBJECT_UNLOCK (filter);
 
-  transform (src, dest, video_size, adjustment);
+  /*** Now the image processing work.... ***/
+  orc_gaudi_burn (dest, src, adjustment, video_size);
 
   return GST_FLOW_OK;
 }
@@ -270,36 +270,4 @@ gst_burn_plugin_init (GstPlugin * burn)
   GST_DEBUG_CATEGORY_INIT (gst_burn_debug, "burn", 0, "Template burn");
 
   return gst_element_register (burn, "burn", GST_RANK_NONE, GST_TYPE_BURN);
-}
-
-/*** Now the image processing work.... ***/
-
-/* Transform processes each frame. */
-static void
-transform (guint32 * src, guint32 * dest, gint video_area, gint adjustment)
-{
-  guint32 in;
-  gint red, green, blue, c;
-  gint x;
-
-  for (x = 0; x < video_area; x++) {
-    in = *src++;
-
-    red = (in >> 16) & 0xff;
-    green = (in >> 8) & 0xff;
-    blue = (in) & 0xff;
-
-    c = (red + adjustment);
-    red = c ? (256 - (256 * (255 - red) / c)) : 0;
-    c = (green + adjustment);
-    green = c ? (256 - (256 * (255 - green) / c)) : 0;
-    c = (blue + adjustment);
-    blue = c ? (256 - (256 * (255 - blue) / c)) : 0;
-
-    red = CLAMP (red, 0, 255);
-    green = CLAMP (green, 0, 255);
-    blue = CLAMP (blue, 0, 255);
-
-    *dest++ = (red << 16) | (green << 8) | blue;
-  }
 }
