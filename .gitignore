@@ -13,7 +13,7 @@ missing
 ltmain.sh
 libtool
 install-sh
-gst-ffmpeg-*.tar.*
+gst-libav-*.tar.*
 depcomp
 configure
 config.sub
@@ -27,7 +27,7 @@ autoregen.sh
 autom4te.cache
 aclocal.m4
 INSTALL
-gst-ffmpeg.spec
+gst-libav.spec
 -
 m4/libtool.m4
 m4/ltoptions.m4
