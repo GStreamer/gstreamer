@@ -557,7 +557,27 @@ gst_app_src_finalize (GObject * obj)
 static GstCaps *
 gst_app_src_internal_get_caps (GstBaseSrc * bsrc, GstCaps * filter)
 {
-  return gst_app_src_get_caps (GST_APP_SRC_CAST (bsrc), filter);
+  GstAppSrc *appsrc = GST_APP_SRC (bsrc);
+  GstCaps *caps;
+
+  GST_OBJECT_LOCK (appsrc);
+  if ((caps = appsrc->priv->caps))
+    gst_caps_ref (caps);
+  GST_OBJECT_UNLOCK (appsrc);
+
+  if (filter) {
+    if (caps) {
+      GstCaps *intersection =
+          gst_caps_intersect_full (filter, caps, GST_CAPS_INTERSECT_FIRST);
+      gst_caps_unref (caps);
+      caps = intersection;
+    } else {
+      caps = gst_caps_ref (filter);
+    }
+  }
+
+  GST_DEBUG_OBJECT (appsrc, "caps: %" GST_PTR_FORMAT, caps);
+  return caps;
 }
 
 static void
@@ -623,7 +643,7 @@ gst_app_src_get_property (GObject * object, guint prop_id, GValue * value,
       GstCaps *caps;
 
       /* we're missing a _take_caps() function to transfer ownership */
-      caps = gst_app_src_get_caps (appsrc, NULL);
+      caps = gst_app_src_get_caps (appsrc);
       gst_value_set_caps (value, caps);
       if (caps)
         gst_caps_unref (caps);
@@ -1107,33 +1127,11 @@ gst_app_src_set_caps (GstAppSrc * appsrc, const GstCaps * caps)
  * Since: 0.10.22
  */
 GstCaps *
-gst_app_src_get_caps (GstAppSrc * appsrc, GstCaps * filter)
+gst_app_src_get_caps (GstAppSrc * appsrc)
 {
-  GstCaps *caps;
-  GstAppSrcPrivate *priv;
-
   g_return_val_if_fail (GST_IS_APP_SRC (appsrc), NULL);
 
-  priv = appsrc->priv;
-
-  GST_OBJECT_LOCK (appsrc);
-  if ((caps = priv->caps))
-    gst_caps_ref (caps);
-
-  if (filter) {
-    if (caps) {
-      GstCaps *intersection =
-          gst_caps_intersect_full (filter, caps, GST_CAPS_INTERSECT_FIRST);
-      gst_caps_unref (caps);
-      caps = intersection;
-    } else {
-      caps = gst_caps_ref (filter);
-    }
-  }
-  GST_DEBUG_OBJECT (appsrc, "getting caps of %" GST_PTR_FORMAT, caps);
-  GST_OBJECT_UNLOCK (appsrc);
-
-  return caps;
+  return gst_app_src_internal_get_caps (GST_BASE_SRC_CAST (appsrc), NULL);
 }
 
 /**

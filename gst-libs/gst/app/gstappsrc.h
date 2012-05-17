@@ -122,7 +122,7 @@ GType gst_app_src_get_type(void);
 GType gst_app_stream_type_get_type (void);
 
 void             gst_app_src_set_caps         (GstAppSrc *appsrc, const GstCaps *caps);
-GstCaps*         gst_app_src_get_caps         (GstAppSrc *appsrc, GstCaps * filter);
+GstCaps*         gst_app_src_get_caps         (GstAppSrc *appsrc);
 
 void             gst_app_src_set_size         (GstAppSrc *appsrc, gint64 size);
 gint64           gst_app_src_get_size         (GstAppSrc *appsrc);
