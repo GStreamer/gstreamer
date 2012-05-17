@@ -256,7 +256,7 @@ AC_SUBST(EXIF_CFLAGS)
 AM_CONDITIONAL(USE_EXIF, test "x$HAVE_EXIF" = "xyes")
 
 dnl Orc
-ORC_CHECK([0.4.11])
+ORC_CHECK([0.4.16])
 
 dnl set license and copyright notice
 GST_LICENSE="LGPL"
