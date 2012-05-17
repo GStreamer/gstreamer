@@ -508,7 +508,6 @@ gst_jpeg_dec_parse (GstVideoDecoder * bdec, GstVideoCodecFrame * frame,
       /* clear parse state */
       dec->saw_header = FALSE;
       dec->parse_resync = FALSE;
-      dec->parse_offset = 0;
       toadd = offset + 4;
       goto have_full_frame;
     }
@@ -516,7 +515,6 @@ gst_jpeg_dec_parse (GstVideoDecoder * bdec, GstVideoCodecFrame * frame,
       /* Skip this frame if we found another SOI marker */
       GST_DEBUG ("0x%08x: SOI marker before EOI, skipping", offset + 2);
       dec->parse_resync = FALSE;
-      dec->parse_offset = 0;
       /* FIXME : Need to skip data */
       toadd -= offset + 2;
       goto have_full_frame;
@@ -1475,7 +1473,6 @@ gst_jpeg_dec_start (GstVideoDecoder * bdec)
   GstJpegDec *dec = (GstJpegDec *) bdec;
 
   dec->error_count = 0;
-  dec->parse_offset = 0;
   dec->parse_entropy_len = 0;
   dec->parse_resync = FALSE;
 

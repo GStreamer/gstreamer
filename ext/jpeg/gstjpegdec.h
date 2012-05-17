@@ -76,7 +76,6 @@ struct _GstJpegDec {
 
   /* parse state */
   gboolean saw_header;
-  gint     parse_offset;
   gint     parse_entropy_len;
   gint     parse_resync;
 
