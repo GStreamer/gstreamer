@@ -50,7 +50,7 @@
  * Sample pipeline:
  * |[
  * gst-launch videotestsrc ! videobox autocrop=true ! \
- *   "video/x-raw-yuv, width=600, height=400" ! ffmpegcolorspace ! ximagesink
+ *   "video/x-raw, width=600, height=400" ! videoconvert ! ximagesink
  * ]|
  */
 
