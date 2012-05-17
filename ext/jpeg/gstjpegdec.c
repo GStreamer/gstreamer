@@ -430,7 +430,7 @@ gst_jpeg_dec_parse (GstVideoDecoder * bdec, GstVideoCodecFrame * frame,
     GstAdapter * adapter, gboolean at_eos)
 {
   guint size;
-  gint ret, toadd = 0;
+  gint toadd = 0;
   gboolean resync;
   gint offset = 0, noffset;
   GstJpegDec *dec = (GstJpegDec *) bdec;
@@ -453,17 +453,21 @@ gst_jpeg_dec_parse (GstVideoDecoder * bdec, GstVideoCodecFrame * frame,
   if (size < 8)
     goto need_more_data;
 
-  /* we expect at least 4 bytes, first of which start marker */
-  ret =
-      gst_adapter_masked_scan_uint32 (adapter, 0xffff0000, 0xffd80000, 0,
-      size - 4);
-  GST_DEBUG ("ret:%d", ret);
-  if (ret < 0)
-    goto need_more_data;
+  if (!dec->saw_header) {
+    gint ret;
+    /* we expect at least 4 bytes, first of which start marker */
+    ret =
+        gst_adapter_masked_scan_uint32 (adapter, 0xffff0000, 0xffd80000, 0,
+        size - 4);
 
-  if (ret) {
-    gst_adapter_flush (adapter, ret);
-    size -= ret;
+    GST_DEBUG ("ret:%d", ret);
+    if (ret < 0)
+      goto need_more_data;
+
+    if (ret) {
+      gst_adapter_flush (adapter, ret);
+      size -= ret;
+    }
     dec->saw_header = TRUE;
   }
 
