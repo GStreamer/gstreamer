@@ -639,16 +639,8 @@ gst_app_src_get_property (GObject * object, guint prop_id, GValue * value,
 
   switch (prop_id) {
     case PROP_CAPS:
-    {
-      GstCaps *caps;
-
-      /* we're missing a _take_caps() function to transfer ownership */
-      caps = gst_app_src_get_caps (appsrc);
-      gst_value_set_caps (value, caps);
-      if (caps)
-        gst_caps_unref (caps);
+      g_value_take_boxed (value, gst_app_src_get_caps (appsrc));
       break;
-    }
     case PROP_SIZE:
       g_value_set_int64 (value, gst_app_src_get_size (appsrc));
       break;
