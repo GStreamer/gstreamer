@@ -95,7 +95,6 @@ enum
 
 #define DEFAULT_FACTOR 175
 
-static gint gate_int (gint value, gint min, gint max);
 static void transform (guint32 * src, guint32 * dest, gint video_area,
     gint factor);
 
@@ -277,25 +276,13 @@ gst_exclusion_plugin_init (GstPlugin * exclusion)
 }
 
 /*** Now the image processing work.... ***/
-/* Keep the values inbounds. */
-static gint
-gate_int (gint value, gint min, gint max)
-{
-  if (value < min) {
-    return min;
-  } else if (value > max) {
-    return max;
-  } else {
-    return value;
-  }
-}
 
 /* Transform processes each frame. */
 static void
 transform (guint32 * src, guint32 * dest, gint video_area, gint factor)
 {
-  guint32 in, red, green, blue;
-  gint x;
+  guint32 in;
+  gint x, red, green, blue;
 
   for (x = 0; x < video_area; x++) {
     in = *src++;
@@ -313,9 +300,9 @@ transform (guint32 * src, guint32 * dest, gint video_area, gint factor)
         (((factor - blue) * (factor - blue) / factor) +
         ((blue * blue) / factor));
 
-    red = gate_int (red, 0, 255);
-    green = gate_int (green, 0, 255);
-    blue = gate_int (blue, 0, 255);
+    red = CLAMP (red, 0, 255);
+    green = CLAMP (green, 0, 255);
+    blue = CLAMP (blue, 0, 255);
 
     *dest++ = (red << 16) | (green << 8) | blue;
   }
