@@ -491,11 +491,16 @@ gst_a52dec_handle_frame (GstAudioDecoder * bdec, GstBuffer * buffer)
   /* update stream information, renegotiate or re-streaminfo if needed */
   need_reneg = FALSE;
   if (a52dec->sample_rate != sample_rate) {
+    GST_DEBUG_OBJECT (a52dec, "sample rate changed");
     need_reneg = TRUE;
     a52dec->sample_rate = sample_rate;
   }
 
   if (flags) {
+    if (a52dec->stream_channels != (flags & (A52_CHANNEL_MASK | A52_LFE))) {
+      GST_DEBUG_OBJECT (a52dec, "stream channel flags changed, marking update");
+      a52dec->flag_update = TRUE;
+    }
     a52dec->stream_channels = flags & (A52_CHANNEL_MASK | A52_LFE);
   }
 
