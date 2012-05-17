@@ -107,7 +107,6 @@ gint cosTableMask = 1023;
 
 gint cosTable[2 * 512];
 
-static gint gate_int (gint value, gint min, gint max);
 void setup_cos_table (void);
 static gint cos_from_table (int angle);
 static inline int abs_int (int val);
@@ -327,19 +326,6 @@ abs_int (int val)
   }
 }
 
-/* Keep the values inbounds. */
-static gint
-gate_int (gint value, gint min, gint max)
-{
-  if (value < min) {
-    return min;
-  } else if (value > max) {
-    return max;
-  } else {
-    return value;
-  }
-}
-
 /* Cosine from Table. */
 static gint
 cos_from_table (int angle)
@@ -353,8 +339,8 @@ static void
 transform (guint32 * src, guint32 * dest, gint video_area,
     gint edge_a, gint edge_b)
 {
-  guint32 in, red, green, blue;
-  gint x;
+  guint32 in;
+  gint x, red, green, blue;
 
   for (x = 0; x < video_area; x++) {
     in = *src++;
@@ -368,9 +354,10 @@ transform (guint32 * src, guint32 * dest, gint video_area,
             (green + edge_a) + ((green * edge_b) / 2)));
     blue = abs_int (cos_from_table ((blue + edge_a) + ((blue * edge_b) / 2)));
 
-    red = gate_int (red, 0, 255);
-    green = gate_int (green, 0, 255);
-    blue = gate_int (blue, 0, 255);
+    red = CLAMP (red, 0, 255);
+    green = CLAMP (green, 0, 255);
+    blue = CLAMP (blue, 0, 255);
+
 
     *dest++ = (red << 16) | (green << 8) | blue;
   }
