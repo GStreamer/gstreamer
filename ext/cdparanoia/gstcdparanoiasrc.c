@@ -26,6 +26,7 @@
 
 #include <string.h>
 #include <errno.h>
+#include <stdio.h>
 
 #include "gstcdparanoiasrc.h"
 #include "gst/gst-i18n-plugin.h"
