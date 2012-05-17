@@ -99,39 +99,6 @@
 #include <gst/pbutils/pbutils.h>
 #include <gst/video/video.h>
 
-#if X264_BUILD >= 71
-#define X264_DELAYED_FRAMES_API
-#endif
-
-#if X264_BUILD >= 76
-#define X264_ENC_NALS 1
-#endif
-
-#if X264_BUILD >= 69
-#define X264_MB_RC
-#endif
-
-#if X264_BUILD >= 78
-/* b-pyramid was available before but was changed from boolean here */
-#define X264_B_PYRAMID
-#endif
-
-#if X264_BUILD >= 80
-#define X264_ENH_THREADING
-#endif
-
-#if X264_BUILD >= 82
-#define X264_INTRA_REFRESH
-#endif
-
-#if X264_BUILD >= 86
-#define X264_PRESETS
-#endif
-
-#if X264_BUILD >= 95
-#define FORCE_INTRA_API
-#endif
-
 #include <string.h>
 #include <stdlib.h>
 
@@ -306,8 +273,6 @@ gst_x264_enc_analyse_get_type (void)
   return analyse_type;
 }
 
-#ifdef X264_PRESETS
-
 #define GST_X264_ENC_SPEED_PRESET_TYPE (gst_x264_enc_speed_preset_get_type())
 static GType
 gst_x264_enc_speed_preset_get_type (void)
@@ -421,9 +386,6 @@ gst_x264_enc_build_tunings_string (GstX264Enc * x264enc)
     GST_DEBUG_OBJECT (x264enc, "Constructed tunings string: %s",
         x264enc->tunings->str);
 }
-
-#endif
-
 
 static GstStaticPadTemplate sink_factory = GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
@@ -539,8 +501,6 @@ gst_x264_enc_class_init (GstX264EncClass * klass)
           0, 10000, ARG_VBV_BUF_CAPACITY_DEFAULT,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS |
           GST_PARAM_MUTABLE_PLAYING));
-
-#ifdef X264_PRESETS
   g_object_class_install_property (gobject_class, ARG_SPEED_PRESET,
       g_param_spec_enum ("speed-preset", "Speed/quality preset",
           "Preset name for speed/quality tradeoff options (can affect decode "
@@ -557,7 +517,6 @@ gst_x264_enc_class_init (GstX264EncClass * klass)
           "Preset name for non-psychovisual tuning options",
           GST_X264_ENC_TUNE_TYPE, ARG_TUNE_DEFAULT,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
-#endif /* X264_PRESETS */
   g_object_class_install_property (gobject_class, ARG_OPTION_STRING,
       g_param_spec_string ("option-string", "Option string",
           "String of x264 options (overridden by element properties)",
@@ -573,7 +532,6 @@ gst_x264_enc_class_init (GstX264EncClass * klass)
   /* NOTE: this first string append doesn't require the ':' delimiter but the
    * rest do */
   g_string_append_printf (x264enc_defaults, "threads=%d", ARG_THREADS_DEFAULT);
-#ifdef X264_ENH_THREADING
   g_object_class_install_property (gobject_class, ARG_SLICED_THREADS,
       g_param_spec_boolean ("sliced-threads", "Sliced Threads",
           "Low latency but lower efficiency threading",
@@ -588,7 +546,6 @@ gst_x264_enc_class_init (GstX264EncClass * klass)
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   g_string_append_printf (x264enc_defaults, ":sync-lookahead=%d",
       ARG_SYNC_LOOKAHEAD_DEFAULT);
-#endif
   g_object_class_install_property (gobject_class, ARG_MULTIPASS_CACHE_FILE,
       g_param_spec_string ("multipass-cache-file", "Multipass Cache File",
           "Filename for multipass cache file",
@@ -602,7 +559,6 @@ gst_x264_enc_class_init (GstX264EncClass * klass)
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   g_string_append_printf (x264enc_defaults, ":annexb=%d",
       ARG_BYTE_STREAM_DEFAULT);
-#ifdef X264_INTRA_REFRESH
   g_object_class_install_property (gobject_class, ARG_INTRA_REFRESH,
       g_param_spec_boolean ("intra-refresh", "Intra Refresh",
           "Use Periodic Intra Refresh instead of IDR frames",
@@ -610,7 +566,6 @@ gst_x264_enc_class_init (GstX264EncClass * klass)
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   g_string_append_printf (x264enc_defaults, ":intra-refresh=%d",
       ARG_INTRA_REFRESH_DEFAULT);
-#endif
   g_object_class_install_property (gobject_class, ARG_ME,
       g_param_spec_enum ("me", "Motion Estimation",
           "Integer pixel motion estimation method", GST_X264_ENC_ME_TYPE,
@@ -657,13 +612,8 @@ gst_x264_enc_class_init (GstX264EncClass * klass)
       g_param_spec_boolean ("b-pyramid", "B-Pyramid",
           "Keep some B-frames as references", ARG_B_PYRAMID_DEFAULT,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
-#ifdef X264_B_PYRAMID
   g_string_append_printf (x264enc_defaults, ":b-pyramid=%s",
       x264_b_pyramid_names[ARG_B_PYRAMID_DEFAULT]);
-#else
-  g_string_append_printf (x264enc_defaults, ":b-pyramid=%d",
-      ARG_B_PYRAMID_DEFAULT);
-#endif /* X264_B_PYRAMID */
   g_object_class_install_property (gobject_class, ARG_WEIGHTB,
       g_param_spec_boolean ("weightb", "Weighted B-Frames",
           "Weighted prediction for B-frames", ARG_WEIGHTB_DEFAULT,
@@ -725,7 +675,6 @@ gst_x264_enc_class_init (GstX264EncClass * klass)
           ARG_PB_FACTOR_DEFAULT, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   g_string_append_printf (x264enc_defaults, ":pb-factor=%f",
       ARG_PB_FACTOR_DEFAULT);
-#ifdef X264_MB_RC
   g_object_class_install_property (gobject_class, ARG_RC_MB_TREE,
       g_param_spec_boolean ("mb-tree", "Macroblock Tree",
           "Macroblock-Tree ratecontrol",
@@ -739,7 +688,6 @@ gst_x264_enc_class_init (GstX264EncClass * klass)
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   g_string_append_printf (x264enc_defaults, ":rc-lookahead=%d",
       ARG_RC_LOOKAHEAD_DEFAULT);
-#endif
   g_object_class_install_property (gobject_class, ARG_NR,
       g_param_spec_uint ("noise-reduction", "Noise Reduction",
           "Noise reduction strength",
@@ -992,7 +940,6 @@ gst_x264_enc_init_encoder (GstX264Enc * encoder)
 
   GST_OBJECT_LOCK (encoder);
 
-#ifdef X264_PRESETS
   gst_x264_enc_build_tunings_string (encoder);
 
   /* set x264 parameters and use preset/tuning if present */
@@ -1012,7 +959,6 @@ gst_x264_enc_init_encoder (GstX264Enc * encoder)
 
   /* if no preset nor tuning, use property defaults */
   if (!encoder->speed_preset && !encoder->tunings->len) {
-#endif /* X264_PRESETS */
     GST_DEBUG_OBJECT (encoder, "Applying x264enc_defaults");
     if (x264enc_defaults->len
         && gst_x264_enc_parse_options (encoder,
@@ -1021,19 +967,15 @@ gst_x264_enc_init_encoder (GstX264Enc * encoder)
           "x264enc_defaults string contains errors. This is a bug.");
       goto unlock_and_return;
     }
-#ifdef X264_PRESETS
   } else {
     /* When using presets we need to respect the default output format */
     encoder->x264param.b_aud = encoder->au_nalu;
     encoder->x264param.b_annexb = encoder->byte_stream;
   }
-#endif /* X264_PRESETS */
 
-#if X264_BUILD >= 81
   /* setup appropriate timebase for gstreamer */
   encoder->x264param.i_timebase_num = 1;
   encoder->x264param.i_timebase_den = 1000000000;
-#endif
 
   /* apply option-string property */
   if (encoder->option_string_prop && encoder->option_string_prop->len) {
@@ -1129,18 +1071,7 @@ gst_x264_enc_init_encoder (GstX264Enc * encoder)
     case 1:
       encoder->x264param.rc.b_stat_read = 0;
       encoder->x264param.rc.b_stat_write = 1;
-#ifdef X264_PRESETS
       x264_param_apply_fastfirstpass (&encoder->x264param);
-#else
-      encoder->x264param.i_frame_reference = 1;
-      encoder->x264param.analyse.b_transform_8x8 = 0;
-      encoder->x264param.analyse.inter = 0;
-      encoder->x264param.analyse.i_me_method = X264_ME_DIA;
-      encoder->x264param.analyse.i_subpel_refine =
-          MIN (2, encoder->x264param.analyse.i_subpel_refine);
-      encoder->x264param.analyse.i_trellis = 0;
-      encoder->x264param.analyse.b_fast_pskip = 1;
-#endif /* X264_PRESETS */
       break;
     case 2:
       encoder->x264param.rc.b_stat_read = 1;
@@ -1152,7 +1083,6 @@ gst_x264_enc_init_encoder (GstX264Enc * encoder)
       break;
   }
 
-#if X264_BUILD >= 81 && X264_BUILD < 106
   /* When vfr is disabled, libx264 ignores buffer timestamps. This causes
    * issues with rate control in libx264 with our nanosecond timebase. This
    * has been fixed upstream in libx264 but this workaround is required for
@@ -1168,15 +1098,12 @@ gst_x264_enc_init_encoder (GstX264Enc * encoder)
     encoder->x264param.i_timebase_num = encoder->x264param.i_fps_den;
     encoder->x264param.i_timebase_den = encoder->x264param.i_fps_num;
   }
-#endif
 
-#ifdef X264_PRESETS
   if (encoder->peer_profile) {
     if (x264_param_apply_profile (&encoder->x264param, encoder->peer_profile))
       GST_WARNING_OBJECT (encoder, "Bad downstream profile name: %s",
           encoder->peer_profile);
   }
-#endif /* X264_PRESETS */
 
   /* If using an intra profile, all frames are intra frames */
   if (encoder->peer_intra_profile)
@@ -1199,9 +1126,7 @@ gst_x264_enc_init_encoder (GstX264Enc * encoder)
 
     if (encoder->peer_level->frame_only) {
       encoder->x264param.b_interlaced = FALSE;
-#if X264_BUILD >= 95
       encoder->x264param.b_fake_interlaced = FALSE;
-#endif
     }
   }
 
@@ -1260,13 +1185,9 @@ gst_x264_enc_set_profile_and_level (GstX264Enc * encoder, GstCaps * caps)
 
   /* old style API: nal's are not encapsulated, and have no sync/size prefix,
    * new style API: nal's are encapsulated, and have 4-byte size prefix */
-#ifndef X264_ENC_NALS
-  sps = nal[sps_ni].p_payload;
-#else
   sps = nal[sps_ni].p_payload + 4;
   /* skip NAL unit type */
   sps++;
-#endif
 
   gst_codec_utils_h264_caps_set_level_and_profile (caps, sps, 3);
 
@@ -1285,9 +1206,6 @@ gst_x264_enc_header_buf (GstX264Enc * encoder)
   int header_return;
   int i_size;
   int nal_size;
-#ifndef X264_ENC_NALS
-  int i_data;
-#endif
   guint8 *buffer, *sps;
   gulong buffer_size;
   gint sei_ni = 2, sps_ni = 0, pps_ni = 1;
@@ -1330,13 +1248,9 @@ gst_x264_enc_header_buf (GstX264Enc * encoder)
 
   /* old style API: nal's are not encapsulated, and have no sync/size prefix,
    * new style API: nal's are encapsulated, and have 4-byte size prefix */
-#ifndef X264_ENC_NALS
-  sps = nal[sps_ni].p_payload;
-#else
   sps = nal[sps_ni].p_payload + 4;
   /* skip NAL unit type */
   sps++;
-#endif
 
   buffer[0] = 1;                /* AVC Decoder Configuration Record ver. 1 */
   buffer[1] = sps[0];           /* profile_idc                             */
@@ -1348,25 +1262,15 @@ gst_x264_enc_header_buf (GstX264Enc * encoder)
 
   buffer[i_size++] = 0xe0 | 1;  /* number of SPSs */
 
-#ifndef X264_ENC_NALS
-  i_data = buffer_size - i_size - 2;
-  nal_size = x264_nal_encode (buffer + i_size + 2, &i_data, 0, &nal[sps_ni]);
-#else
   nal_size = nal[sps_ni].i_payload - 4;
   memcpy (buffer + i_size + 2, nal[sps_ni].p_payload + 4, nal_size);
-#endif
   GST_WRITE_UINT16_BE (buffer + i_size, nal_size);
   i_size += nal_size + 2;
 
   buffer[i_size++] = 1;         /* number of PPSs */
 
-#ifndef X264_ENC_NALS
-  i_data = buffer_size - i_size - 2;
-  nal_size = x264_nal_encode (buffer + i_size + 2, &i_data, 0, &nal[pps_ni]);
-#else
   nal_size = nal[pps_ni].i_payload - 4;
   memcpy (buffer + i_size + 2, nal[pps_ni].p_payload + 4, nal_size);
-#endif
   GST_WRITE_UINT16_BE (buffer + i_size, nal_size);
   i_size += nal_size + 2;
 
@@ -1933,10 +1837,6 @@ gst_x264_enc_encode_frame (GstX264Enc * encoder, x264_picture_t * pic_in,
   x264_picture_t pic_out;
   x264_nal_t *nal;
   int i_size;
-#ifndef X264_ENC_NALS
-  int nal_size;
-  gint i;
-#endif
   int encoder_return;
   GstClockTime duration;
   guint8 *data;
@@ -1959,14 +1859,10 @@ gst_x264_enc_encode_frame (GstX264Enc * encoder, x264_picture_t * pic_in,
       encoder->pending_key_unit_ts = GST_CLOCK_TIME_NONE;
       gst_event_replace (&encoder->force_key_unit_event, NULL);
 
-#ifdef FORCE_INTRA_API
       if (encoder->intra_refresh)
         x264_encoder_intra_refresh (encoder->x264enc);
       else
         pic_in->i_type = X264_TYPE_IDR;
-#else
-      pic_in->i_type = X264_TYPE_IDR;
-#endif
     }
   }
   GST_OBJECT_UNLOCK (encoder);
@@ -1981,33 +1877,8 @@ gst_x264_enc_encode_frame (GstX264Enc * encoder, x264_picture_t * pic_in,
     ret = GST_FLOW_OK;
     goto out;
   }
-#ifndef X264_ENC_NALS
-  i_size = 0;
-  for (i = 0; i < *i_nal; i++) {
-    gint i_data = encoder->buffer_size - i_size - 4;
-
-    if (i_data < nal[i].i_payload * 2) {
-      encoder->buffer_size += 2 * nal[i].i_payload;
-      encoder->buffer = g_realloc (encoder->buffer, encoder->buffer_size);
-      i_data = encoder->buffer_size - i_size - 4;
-    }
-
-    nal_size =
-        x264_nal_encode (encoder->buffer + i_size + 4, &i_data, 0, &nal[i]);
-    g_assert (encoder->current_byte_stream !=
-        GST_X264_ENC_STREAM_FORMAT_FROM_PROPERTY);
-    if (encoder->current_byte_stream == GST_X264_ENC_STREAM_FORMAT_BYTE_STREAM)
-      GST_WRITE_UINT32_BE (encoder->buffer + i_size, 1);
-    else
-      GST_WRITE_UINT32_BE (encoder->buffer + i_size, nal_size);
-
-    i_size += nal_size + 4;
-  }
-  data = encoder->buffer;
-#else
   i_size = encoder_return;
   data = nal[0].p_payload;
-#endif
 
   in_buf = g_queue_pop_head (encoder->delay);
   if (in_buf) {
@@ -2040,11 +1911,7 @@ gst_x264_enc_encode_frame (GstX264Enc * encoder, x264_picture_t * pic_in,
   GST_BUFFER_PTS (out_buf) = pic_out.i_pts;
   GST_BUFFER_DURATION (out_buf) = duration;
 
-#ifdef X264_INTRA_REFRESH
   if (pic_out.b_keyframe) {
-#else
-  if (pic_out.i_type == X264_TYPE_IDR) {
-#endif
     GST_BUFFER_FLAG_UNSET (out_buf, GST_BUFFER_FLAG_DELTA_UNIT);
   } else {
     GST_BUFFER_FLAG_SET (out_buf, GST_BUFFER_FLAG_DELTA_UNIT);
@@ -2081,13 +1948,8 @@ gst_x264_enc_flush_frames (GstX264Enc * encoder, gboolean send)
   if (encoder->x264enc)
     do {
       flow_ret = gst_x264_enc_encode_frame (encoder, NULL, &i_nal, send);
-#ifdef X264_DELAYED_FRAMES_API
     } while (flow_ret == GST_FLOW_OK
         && x264_encoder_delayed_frames (encoder->x264enc) > 0);
-#else
-      /* note that this doesn't flush all frames for > 1 delayed frame */
-    } while (flow_ret == GST_FLOW_OK && i_nal > 0);
-#endif
 
   /* in any case, make sure the delay queue is emptied */
   while (!g_queue_is_empty (encoder->delay))
@@ -2267,13 +2129,8 @@ gst_x264_enc_set_property (GObject * object, guint prop_id,
       break;
     case ARG_B_PYRAMID:
       encoder->b_pyramid = g_value_get_boolean (value);
-#ifdef X264_B_PYRAMID
       g_string_append_printf (encoder->option_string, ":b-pyramid=%s",
           x264_b_pyramid_names[encoder->b_pyramid]);
-#else
-      g_string_append_printf (encoder->option_string, ":b-pyramid=%d",
-          encoder->b_pyramid);
-#endif /* X264_B_PYRAMID */
       break;
     case ARG_WEIGHTB:
       encoder->weightb = g_value_get_boolean (value);
@@ -2498,6 +2355,8 @@ plugin_init (GstPlugin * plugin)
 {
   GST_DEBUG_CATEGORY_INIT (x264_enc_debug, "x264enc", 0,
       "h264 encoding element");
+
+  GST_INFO ("x264 build: %u", X264_BUILD);
 
   return gst_element_register (plugin, "x264enc",
       GST_RANK_PRIMARY, GST_TYPE_X264_ENC);
