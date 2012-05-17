@@ -97,7 +97,6 @@ enum
 #define DEFAULT_START 50
 #define DEFAULT_END 185
 
-static gint gate_int (gint value, gint min, gint max);
 static void transform (guint32 * src, guint32 * dest, gint video_area,
     gint threshold, gint start, gint end);
 
@@ -306,18 +305,6 @@ gst_solarize_plugin_init (GstPlugin * solarize)
 }
 
 /*** Now the image processing work.... ***/
-/* Keep the values inbounds. */
-static gint
-gate_int (gint value, gint min, gint max)
-{
-  if (value < min) {
-    return min;
-  } else if (value > max) {
-    return max;
-  } else {
-    return value;
-  }
-}
 
 /* Transform processes each frame. */
 static void
@@ -377,9 +364,9 @@ transform (guint32 * src, guint32 * dest, gint video_area,
       }
     }
 
-    color[0] = gate_int (color[0], 0, 255);
-    color[1] = gate_int (color[1], 0, 255);
-    color[2] = gate_int (color[2], 0, 255);
+    color[0] = CLAMP (color[0], 0, 255);
+    color[1] = CLAMP (color[1], 0, 255);
+    color[2] = CLAMP (color[2], 0, 255);
 
     *dest++ = (color[0] << 16) | (color[1] << 8) | color[2];
   }
