@@ -338,7 +338,7 @@ mpegts_packetizer_parse_adaptation_field_control (MpegTSPacketizer2 *
   return TRUE;
 }
 
-static gboolean
+static MpegTSPacketizerPacketReturn
 mpegts_packetizer_parse_packet (MpegTSPacketizer2 * packetizer,
     MpegTSPacketizerPacket * packet)
 {
@@ -347,11 +347,26 @@ mpegts_packetizer_parse_packet (MpegTSPacketizer2 * packetizer,
   data = packet->data_start;
   data++;
 
+  /* transport_error_indicator 1 */
+  if (G_UNLIKELY (*data >> 7))
+    return PACKET_BAD;
+
+  /* payload_unit_start_indicator 1 */
   packet->payload_unit_start_indicator = (*data >> 6) & 0x01;
+
+  /* transport_priority 1 */
+  /* PID 13 */
   packet->pid = GST_READ_UINT16_BE (data) & 0x1FFF;
   data += 2;
 
+  /* transport_scrambling_control 2 */
+  if (G_UNLIKELY (*data >> 6))
+    return PACKET_BAD;
+
+  /* adaptation_field_control 2 */
   packet->adaptation_field_control = (*data >> 4) & 0x03;
+
+  /* continuity_counter 4 */
   packet->continuity_counter = *data & 0x0F;
   data += 1;
 
@@ -368,7 +383,7 @@ mpegts_packetizer_parse_packet (MpegTSPacketizer2 * packetizer,
   else
     packet->payload = NULL;
 
-  return TRUE;
+  return PACKET_OK;
 }
 
 static gboolean
