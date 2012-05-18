@@ -734,6 +734,11 @@ gst_vp8_enc_set_format (GstVideoEncoder * video_encoder,
     return FALSE;
   }
 
+  /* Scale default bitrate to our size */
+  cfg.rc_target_bitrate = gst_util_uint64_scale (cfg.rc_target_bitrate,
+      GST_VIDEO_INFO_WIDTH (info) * GST_VIDEO_INFO_HEIGHT (info),
+      cfg.g_w * cfg.g_h);
+
   cfg.g_w = GST_VIDEO_INFO_WIDTH (info);
   cfg.g_h = GST_VIDEO_INFO_HEIGHT (info);
   cfg.g_timebase.num = GST_VIDEO_INFO_FPS_D (info);
@@ -757,7 +762,6 @@ gst_vp8_enc_set_format (GstVideoEncoder * video_encoder,
   } else {
     cfg.rc_min_quantizer = (gint) (63 - encoder->quality * 6.2);
     cfg.rc_max_quantizer = (gint) (63 - encoder->quality * 6.2);
-    cfg.rc_target_bitrate = encoder->bitrate;
   }
   cfg.rc_dropframe_thresh = encoder->drop_frame;
   cfg.rc_resize_allowed = encoder->resize_allowed;
