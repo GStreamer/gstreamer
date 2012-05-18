@@ -909,7 +909,7 @@ main (int argc, char *argv[])
     {"tags", 't', 0, G_OPTION_ARG_NONE, &tags,
         N_("Output tags (also known as metadata)"), NULL},
     {"toc", 'c', 0, G_OPTION_ARG_NONE, &toc,
-        N_("Ouput TOC (chapters and editions)"), NULL},
+        N_("Output TOC (chapters and editions)"), NULL},
     {"verbose", 'v', 0, G_OPTION_ARG_NONE, &verbose,
         N_("Output status information and property notifications"), NULL},
     {"quiet", 'q', 0, G_OPTION_ARG_NONE, &quiet,
