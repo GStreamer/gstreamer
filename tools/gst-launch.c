@@ -1099,18 +1099,37 @@ main (int argc, char *argv[])
 
       tfthen = gst_util_get_timestamp ();
       caught_error = event_loop (pipeline, TRUE, GST_STATE_PLAYING);
-      if (eos_on_shutdown && caught_error == ELR_INTERRUPT) {
-        PRINT (_("EOS on shutdown enabled -- Forcing EOS on the pipeline\n"));
-        waiting_eos = TRUE;
-        gst_element_send_event (pipeline, gst_event_new_eos ());
-        PRINT (_("Waiting for EOS...\n"));
-        caught_error = event_loop (pipeline, TRUE, GST_STATE_PLAYING);
+      if (eos_on_shutdown && caught_error != ELR_NO_ERROR) {
+        gboolean ignore_errors;
 
-        if (caught_error == ELR_NO_ERROR) {
-          /* we got EOS */
-          PRINT (_("EOS received - stopping pipeline...\n"));
-        } else if (caught_error == ELR_ERROR) {
-          PRINT (_("An error happened while waiting for EOS\n"));
+        waiting_eos = TRUE;
+        if (caught_error == ELR_INTERRUPT) {
+          PRINT (_("EOS on shutdown enabled -- Forcing EOS on the pipeline\n"));
+          gst_element_send_event (pipeline, gst_event_new_eos ());
+          ignore_errors = FALSE;
+        } else {
+          PRINT (_("EOS on shutdown enabled -- waiting for EOS after Error\n"));
+          ignore_errors = TRUE;
+        }
+        PRINT (_("Waiting for EOS...\n"));
+
+        while (TRUE) {
+          caught_error = event_loop (pipeline, TRUE, GST_STATE_PLAYING);
+
+          if (caught_error == ELR_NO_ERROR) {
+            /* we got EOS */
+            PRINT (_("EOS received - stopping pipeline...\n"));
+            break;
+          } else if (caught_error == ELR_INTERRUPT) {
+            PRINT (_
+                ("Interrupt while waiting for EOS - stopping pipeline...\n"));
+            break;
+          } else if (caught_error == ELR_ERROR) {
+            if (!ignore_errors) {
+              PRINT (_("An error happened while waiting for EOS\n"));
+              break;
+            }
+          }
         }
       }
       tfnow = gst_util_get_timestamp ();
