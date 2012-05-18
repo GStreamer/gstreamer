@@ -2156,6 +2156,17 @@ gst_rtsp_connection_close (GstRTSPConnection * conn)
 {
   g_return_val_if_fail (conn != NULL, GST_RTSP_EINVAL);
 
+  /* last unref closes the connection we don't want to explicitly close here
+   * because these sockets might have been provided at construction */
+  if (conn->socket0) {
+    g_object_unref (conn->socket0);
+    conn->socket0 = NULL;
+  }
+  if (conn->socket1) {
+    g_object_unref (conn->socket1);
+    conn->socket1 = NULL;
+  }
+
   g_free (conn->ip);
   conn->ip = NULL;
 
@@ -2198,10 +2209,6 @@ gst_rtsp_connection_free (GstRTSPConnection * conn)
   g_return_val_if_fail (conn != NULL, GST_RTSP_EINVAL);
 
   res = gst_rtsp_connection_close (conn);
-  if (conn->socket0)
-    g_object_unref (conn->socket0);
-  if (conn->socket1)
-    g_object_unref (conn->socket1);
 
   if (conn->cancellable)
     g_object_unref (conn->cancellable);
