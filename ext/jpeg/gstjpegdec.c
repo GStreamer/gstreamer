@@ -288,25 +288,6 @@ gst_jpeg_dec_skip_input_data (j_decompress_ptr cinfo, glong num_bytes)
     cinfo->src->next_input_byte += (size_t) num_bytes;
     cinfo->src->bytes_in_buffer -= (size_t) num_bytes;
   }
-#if 0
-  else if (num_bytes > 0) {
-    gint available;
-
-    num_bytes -= cinfo->src->bytes_in_buffer;
-    cinfo->src->next_input_byte += (size_t) cinfo->src->bytes_in_buffer;
-    cinfo->src->bytes_in_buffer = 0;
-
-    available = gst_adapter_available (dec->adapter);
-    if (available < num_bytes || available < dec->rem_img_len) {
-      GST_WARNING_OBJECT (dec, "Less bytes to skip than available in the "
-          "adapter or the remaining image length %ld < %d or %u",
-          num_bytes, available, dec->rem_img_len);
-    }
-    num_bytes = MIN (MIN (num_bytes, available), dec->rem_img_len);
-    gst_adapter_flush (dec->adapter, num_bytes);
-    dec->rem_img_len -= num_bytes;
-  }
-#endif
 }
 
 static boolean
@@ -350,21 +331,6 @@ gst_jpeg_dec_init (GstJpegDec * dec)
 {
   GST_DEBUG ("initializing");
 
-#if 0
-  /* create the sink and src pads */
-  dec->sinkpad =
-      gst_pad_new_from_static_template (&gst_jpeg_dec_sink_pad_template,
-      "sink");
-  gst_element_add_pad (GST_ELEMENT (dec), dec->sinkpad);
-  gst_pad_set_setcaps_function (dec->sinkpad,
-      GST_DEBUG_FUNCPTR (gst_jpeg_dec_setcaps));
-
-  dec->srcpad =
-      gst_pad_new_from_static_template (&gst_jpeg_dec_src_pad_template, "src");
-  gst_pad_use_fixed_caps (dec->srcpad);
-  gst_element_add_pad (GST_ELEMENT (dec), dec->srcpad);
-#endif
-
   /* setup jpeglib */
   memset (&dec->cinfo, 0, sizeof (dec->cinfo));
   memset (&dec->jerr, 0, sizeof (dec->jerr));
@@ -387,35 +353,6 @@ gst_jpeg_dec_init (GstJpegDec * dec)
   dec->idct_method = JPEG_DEFAULT_IDCT_METHOD;
   dec->max_errors = JPEG_DEFAULT_MAX_ERRORS;
 }
-
-#if 0
-static gboolean
-gst_jpeg_dec_ensure_header (GstJpegDec * dec)
-{
-  gint av;
-  gint offset;
-
-  av = gst_adapter_available (dec->adapter);
-  /* we expect at least 4 bytes, first of which start marker */
-  offset = gst_adapter_masked_scan_uint32 (dec->adapter, 0xffffff00, 0xffd8ff00,
-      0, av);
-  if (G_UNLIKELY (offset < 0)) {
-    GST_DEBUG_OBJECT (dec, "No JPEG header in current buffer");
-    /* not found */
-    if (av > 4)
-      gst_adapter_flush (dec->adapter, av - 4);
-    return FALSE;
-  }
-
-  if (offset > 0) {
-    GST_LOG_OBJECT (dec, "Skipping %u bytes.", offset);
-    gst_adapter_flush (dec->adapter, offset);
-  }
-  GST_DEBUG_OBJECT (dec, "Found JPEG header");
-
-  return TRUE;
-}
-#endif
 
 static inline gboolean
 gst_jpeg_dec_parse_tag_has_entropy_segment (guint8 tag)
@@ -1115,31 +1052,6 @@ gst_jpeg_dec_handle_frame (GstVideoDecoder * bdec, GstVideoCodecFrame * frame)
   guint code, hdr_ok;
   gboolean need_unmap = TRUE;
   GstVideoCodecState *state = NULL;
-
-#if 0
-again:
-  if (!gst_jpeg_dec_ensure_header (dec))
-    goto need_more_data;
-
-  /* If we know that each input buffer contains data
-   * for a whole jpeg image (e.g. MJPEG streams), just 
-   * do some sanity checking instead of parsing all of 
-   * the jpeg data */
-  if (dec->packetized) {
-    img_len = gst_adapter_available (dec->adapter);
-  } else {
-    /* Parse jpeg image to handle jpeg input that
-     * is not aligned to buffer boundaries */
-    img_len = gst_jpeg_dec_parse_image_data (dec);
-
-    if (img_len == 0) {
-      goto need_more_data;
-    } else if (img_len < 0) {
-      gst_adapter_flush (dec->adapter, -img_len);
-      goto again;
-    }
-  }
-#endif
 
   dec->current_frame = frame;
   gst_buffer_map (frame->input_buffer, &dec->current_frame_map, GST_MAP_READ);
