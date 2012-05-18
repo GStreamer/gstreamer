@@ -1810,6 +1810,73 @@ track_object_removed_cb (GESTrack * track, GESTrackObject * object,
   }
 }
 
+static void
+pad_added_cb (GESTrack * track, GstPad * pad, TrackPrivate * tr_priv)
+{
+  gchar *padname;
+  gboolean no_more;
+  GList *tmp;
+
+  GST_DEBUG ("track:%p, pad:%s:%s", track, GST_DEBUG_PAD_NAME (pad));
+
+  if (G_UNLIKELY (tr_priv->pad)) {
+    GST_WARNING ("We are already controlling a pad for this track");
+    return;
+  }
+
+  /* Remember the pad */
+  GST_OBJECT_LOCK (track);
+  tr_priv->pad = pad;
+
+  no_more = TRUE;
+  for (tmp = tr_priv->timeline->priv->tracks; tmp; tmp = g_list_next (tmp)) {
+    TrackPrivate *tr_priv = (TrackPrivate *) tmp->data;
+
+    if (!tr_priv->pad) {
+      GST_LOG ("Found track without pad %p", tr_priv->track);
+      no_more = FALSE;
+    }
+  }
+  GST_OBJECT_UNLOCK (track);
+
+  /* ghost it ! */
+  GST_DEBUG ("Ghosting pad and adding it to ourself");
+  padname = g_strdup_printf ("track_%p_src", track);
+  tr_priv->ghostpad = gst_ghost_pad_new (padname, pad);
+  g_free (padname);
+  gst_pad_set_active (tr_priv->ghostpad, TRUE);
+  gst_element_add_pad (GST_ELEMENT (tr_priv->timeline), tr_priv->ghostpad);
+
+  if (no_more) {
+    GST_DEBUG ("Signaling no-more-pads");
+    gst_element_no_more_pads (GST_ELEMENT (tr_priv->timeline));
+  }
+}
+
+static void
+pad_removed_cb (GESTrack * track, GstPad * pad, TrackPrivate * tr_priv)
+{
+  GST_DEBUG ("track:%p, pad:%s:%s", track, GST_DEBUG_PAD_NAME (pad));
+
+  if (G_UNLIKELY (tr_priv->pad != pad)) {
+    GST_WARNING ("Not the pad we're controlling");
+    return;
+  }
+
+  if (G_UNLIKELY (tr_priv->ghostpad == NULL)) {
+    GST_WARNING ("We don't have a ghostpad for this pad !");
+    return;
+  }
+
+  GST_DEBUG ("Removing ghostpad");
+  gst_pad_set_active (tr_priv->ghostpad, FALSE);
+  gst_element_remove_pad (GST_ELEMENT (tr_priv->timeline), tr_priv->ghostpad);
+  tr_priv->ghostpad = NULL;
+  tr_priv->pad = NULL;
+}
+
+
+/* GstElement Virtual methods */
 static GstStateChangeReturn
 ges_timeline_change_state (GstElement * element, GstStateChange transition)
 {
@@ -1853,6 +1920,7 @@ ges_timeline_change_state (GstElement * element, GstStateChange transition)
 
 }
 
+/**** API *****/
 /**
  * ges_timeline_new:
  *
@@ -2118,71 +2186,6 @@ ges_timeline_remove_layer (GESTimeline * timeline, GESTimelineLayer * layer)
   g_object_unref (layer);
 
   return TRUE;
-}
-
-static void
-pad_added_cb (GESTrack * track, GstPad * pad, TrackPrivate * tr_priv)
-{
-  gchar *padname;
-  gboolean no_more;
-  GList *tmp;
-
-  GST_DEBUG ("track:%p, pad:%s:%s", track, GST_DEBUG_PAD_NAME (pad));
-
-  if (G_UNLIKELY (tr_priv->pad)) {
-    GST_WARNING ("We are already controlling a pad for this track");
-    return;
-  }
-
-  /* Remember the pad */
-  GST_OBJECT_LOCK (track);
-  tr_priv->pad = pad;
-
-  no_more = TRUE;
-  for (tmp = tr_priv->timeline->priv->tracks; tmp; tmp = g_list_next (tmp)) {
-    TrackPrivate *tr_priv = (TrackPrivate *) tmp->data;
-
-    if (!tr_priv->pad) {
-      GST_LOG ("Found track without pad %p", tr_priv->track);
-      no_more = FALSE;
-    }
-  }
-  GST_OBJECT_UNLOCK (track);
-
-  /* ghost it ! */
-  GST_DEBUG ("Ghosting pad and adding it to ourself");
-  padname = g_strdup_printf ("track_%p_src", track);
-  tr_priv->ghostpad = gst_ghost_pad_new (padname, pad);
-  g_free (padname);
-  gst_pad_set_active (tr_priv->ghostpad, TRUE);
-  gst_element_add_pad (GST_ELEMENT (tr_priv->timeline), tr_priv->ghostpad);
-
-  if (no_more) {
-    GST_DEBUG ("Signaling no-more-pads");
-    gst_element_no_more_pads (GST_ELEMENT (tr_priv->timeline));
-  }
-}
-
-static void
-pad_removed_cb (GESTrack * track, GstPad * pad, TrackPrivate * tr_priv)
-{
-  GST_DEBUG ("track:%p, pad:%s:%s", track, GST_DEBUG_PAD_NAME (pad));
-
-  if (G_UNLIKELY (tr_priv->pad != pad)) {
-    GST_WARNING ("Not the pad we're controlling");
-    return;
-  }
-
-  if (G_UNLIKELY (tr_priv->ghostpad == NULL)) {
-    GST_WARNING ("We don't have a ghostpad for this pad !");
-    return;
-  }
-
-  GST_DEBUG ("Removing ghostpad");
-  gst_pad_set_active (tr_priv->ghostpad, FALSE);
-  gst_element_remove_pad (GST_ELEMENT (tr_priv->timeline), tr_priv->ghostpad);
-  tr_priv->ghostpad = NULL;
-  tr_priv->pad = NULL;
 }
 
 /**
