@@ -1416,7 +1416,6 @@ gst_jpeg_dec_reset (GstVideoDecoder * bdec, gboolean hard)
   GstJpegDec *dec = (GstJpegDec *) bdec;
 
   jpeg_abort_decompress (&dec->cinfo);
-  dec->parse_offset = 0;
   dec->parse_entropy_len = 0;
   dec->parse_resync = FALSE;
   dec->saw_header = FALSE;
