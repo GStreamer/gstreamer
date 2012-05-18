@@ -1013,7 +1013,6 @@ gst_mpeg4_parse_video_object_layer (GstMpeg4VideoObjectLayer * vol,
 
       vol->latter_half_vbv_buffer_size =
           gst_bit_reader_get_bits_uint8_unchecked (&br, 3);
-      MARKER_UNCHECKED (&br);
 
       vol->vbv_buffer_size = (vol->first_half_vbv_buffer_size << 15) |
           vol->latter_half_vbv_buffer_size;
