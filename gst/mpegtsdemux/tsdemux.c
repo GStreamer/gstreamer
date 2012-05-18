@@ -1585,7 +1585,8 @@ gst_ts_demux_handle_packet (GstTSDemux * demux, TSDemuxStream * stream,
           GST_BUFFER_OFFSET (packet->buffer));
   }
 
-  if (packet->payload && (res == GST_FLOW_OK || res == GST_FLOW_NOT_LINKED)) {
+  if (packet->payload && (res == GST_FLOW_OK || res == GST_FLOW_NOT_LINKED)
+      && stream->pad) {
     gst_ts_demux_queue_data (demux, stream, packet);
     GST_DEBUG ("current_size:%d, expected_size:%d",
         stream->current_size, stream->expected_size);
