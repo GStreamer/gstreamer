@@ -1587,8 +1587,7 @@ layer_object_added_cb (GESTimelineLayer * layer, GESTimelineObject * object,
   if (ges_timeline_object_is_moving_from_layer (object)) {
     GST_DEBUG ("TimelineObject %p is moving from a layer to another, not doing"
         " anything on it", object);
-    if (!timeline->priv->movecontext.ignore_needs_ctx)
-      timeline->priv->movecontext.needs_move_ctx = TRUE;
+    timeline->priv->movecontext.needs_move_ctx = TRUE;
     return;
   }
 
@@ -1691,7 +1690,12 @@ trackobj_start_changed_cb (GESTrackObject * child,
   sort_starts_ends_start (timeline, child);
   sort_starts_ends_end (timeline, child);
 
-  if (!timeline->priv->movecontext.ignore_needs_ctx)
+  /* If the timeline is set to snap objects together, we
+   * are sure that all movement of TrackObject-s are done within
+   * the moving context, so we do not need to recalculate the
+   * move context as often */
+  if (timeline->priv->movecontext.ignore_needs_ctx &&
+      timeline->priv->snapping_distance == 0)
     timeline->priv->movecontext.needs_move_ctx = TRUE;
 }
 
@@ -1701,15 +1705,12 @@ trackobj_duration_changed_cb (GESTrackObject * child,
 {
   sort_starts_ends_end (timeline, child);
 
-  if (!timeline->priv->movecontext.ignore_needs_ctx)
-    timeline->priv->movecontext.needs_move_ctx = TRUE;
-}
-
-static void
-trackobj_inpoint_changed_cb (GESTrackObject * child,
-    GParamSpec * arg G_GNUC_UNUSED, GESTimeline * timeline)
-{
-  if (!timeline->priv->movecontext.ignore_needs_ctx)
+  /* If the timeline is set to snap objects together, we
+   * are sure that all movement of TrackObject-s are done within
+   * the moving context, so we do not need to recalculate the
+   * move context as often */
+  if (timeline->priv->movecontext.ignore_needs_ctx &&
+      timeline->priv->snapping_distance == 0)
     timeline->priv->movecontext.needs_move_ctx = TRUE;
 }
 
@@ -1725,8 +1726,6 @@ track_object_added_cb (GESTrack * track, GESTrackObject * object,
         G_CALLBACK (trackobj_start_changed_cb), timeline);
     g_signal_connect (GES_TRACK_OBJECT (object), "notify::duration",
         G_CALLBACK (trackobj_duration_changed_cb), timeline);
-    g_signal_connect (GES_TRACK_OBJECT (object), "notify::in-point",
-        G_CALLBACK (trackobj_inpoint_changed_cb), timeline);
   }
 }
 
@@ -1739,8 +1738,6 @@ track_object_removed_cb (GESTrack * track, GESTrackObject * object,
     g_signal_handlers_disconnect_by_func (object, trackobj_start_changed_cb,
         NULL);
     g_signal_handlers_disconnect_by_func (object, trackobj_duration_changed_cb,
-        NULL);
-    g_signal_handlers_disconnect_by_func (object, trackobj_inpoint_changed_cb,
         NULL);
 
     /* Make sure to reinitialise the moving context next time */
