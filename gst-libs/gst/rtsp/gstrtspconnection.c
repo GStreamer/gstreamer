@@ -426,6 +426,7 @@ do_connect (const gchar * ip, guint16 port, GSocket ** socket_out,
   if (!g_socket_connect (socket, saddr, cancellable, &err)) {
     if (!g_error_matches (err, G_IO_ERROR, G_IO_ERROR_PENDING))
       goto sys_error;
+    g_clear_error (&err);
   } else {
     goto done;
   }
