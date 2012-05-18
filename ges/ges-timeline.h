@@ -102,6 +102,8 @@ GList *ges_timeline_get_tracks (GESTimeline *timeline);
 gboolean ges_timeline_enable_update(GESTimeline * timeline, gboolean enabled);
 gboolean ges_timeline_is_updating (GESTimeline * timeline);
 
+GstClockTime ges_timeline_get_duration (GESTimeline *timeline);
+
 G_END_DECLS
 
 #endif /* _GES_TIMELINE */

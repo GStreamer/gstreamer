@@ -2397,3 +2397,19 @@ ges_timeline_enable_update (GESTimeline * timeline, gboolean enabled)
 
   return res;
 }
+
+/**
+ * ges_timeline_get_duration
+ * @timeline: a #GESTimeline
+ *
+ * Get the current duration of @timeline
+ *
+ * Returns: The current duration of @timeline
+ */
+GstClockTime
+ges_timeline_get_duration (GESTimeline * timeline)
+{
+  g_return_val_if_fail (GES_IS_TIMELINE (timeline), GST_CLOCK_TIME_NONE);
+
+  return timeline->priv->duration;
+}

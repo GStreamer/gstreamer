@@ -911,6 +911,12 @@
   (return-type "gboolean")
 )
 
+(define-method get_duration
+  (of-object "GESTimeline")
+  (c-name "ges_timeline_get_duration")
+  (return-type "guint64")
+)
+
 
 
 ;; From ges-timeline-layer.h

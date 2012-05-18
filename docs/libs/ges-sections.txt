@@ -266,6 +266,7 @@ ges_timeline_is_updating
 ges_timeline_get_tracks
 ges_timeline_get_layers
 ges_timeline_get_track_for_pad
+ges_timeline_get_duration
 <SUBSECTION Standard>
 GESTimelinePrivate
 GESTimelineClass
