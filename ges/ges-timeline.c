@@ -94,7 +94,7 @@ struct _MoveContext
   /* Last snapping  properties */
   GESTrackObject *last_snaped1;
   GESTrackObject *last_snaped2;
-  GstClockTime last_snap_ts;
+  GstClockTime *last_snap_ts;
 };
 
 struct _GESTimelinePrivate
@@ -641,7 +641,7 @@ init_movecontext (MoveContext * mv_ctx)
   mv_ctx->max_layer_prio = 0;
   mv_ctx->last_snaped1 = NULL;
   mv_ctx->last_snaped2 = NULL;
-  mv_ctx->last_snap_ts = GST_CLOCK_TIME_NONE;
+  mv_ctx->last_snap_ts = NULL;
 }
 
 static inline void
@@ -713,11 +713,18 @@ ges_timeline_emit_snappig (GESTimeline * timeline, GESTrackObject * obj1,
 {
   GESTrackObject *obj2;
   MoveContext *mv_ctx = &timeline->priv->movecontext;
+  GstClockTime snap_time = timecode ? *timecode : 0;
+  GstClockTime last_snap_ts = mv_ctx->last_snap_ts ?
+      *mv_ctx->last_snap_ts : GST_CLOCK_TIME_NONE;
+
+  GST_DEBUG_OBJECT (timeline, "Distance: %" GST_TIME_FORMAT " snapping at %"
+      GST_TIME_FORMAT, GST_TIME_ARGS (timeline->priv->snapping_distance),
+      GST_TIME_ARGS (snap_time));
 
   if (timecode == NULL) {
     if (mv_ctx->last_snaped1 != NULL && mv_ctx->last_snaped2 != NULL) {
       g_signal_emit (timeline, ges_timeline_signals[SNAPING_ENDED], 0,
-          mv_ctx->last_snaped1, mv_ctx->last_snaped2, mv_ctx->last_snap_ts);
+          mv_ctx->last_snaped1, mv_ctx->last_snaped2, last_snap_ts);
 
       /* We then need to recalculate the moving context */
       timeline->priv->movecontext.needs_move_ctx = TRUE;
@@ -728,19 +735,19 @@ ges_timeline_emit_snappig (GESTimeline * timeline, GESTrackObject * obj1,
 
   obj2 = g_hash_table_lookup (timeline->priv->by_object, timecode);
 
-  if (mv_ctx->last_snap_ts != *timecode) {
+  if (last_snap_ts != *timecode) {
     g_signal_emit (timeline, ges_timeline_signals[SNAPING_ENDED], 0,
-        mv_ctx->last_snaped1, mv_ctx->last_snaped2, mv_ctx->last_snap_ts);
+        mv_ctx->last_snaped1, mv_ctx->last_snaped2, (last_snap_ts));
 
     /* We want the snap start signal to be emited anyway */
-    mv_ctx->last_snap_ts = GST_CLOCK_TIME_NONE;
+    mv_ctx->last_snap_ts = NULL;
   }
 
-  if (GST_CLOCK_TIME_IS_VALID (mv_ctx->last_snap_ts) == FALSE) {
+  if (mv_ctx->last_snap_ts == NULL) {
 
     mv_ctx->last_snaped1 = obj1;
     mv_ctx->last_snaped2 = obj2;
-    mv_ctx->last_snap_ts = *timecode;
+    mv_ctx->last_snap_ts = timecode;
 
     g_signal_emit (timeline, ges_timeline_signals[SNAPING_STARTED], 0,
         obj1, obj2, *timecode);
@@ -757,14 +764,24 @@ ges_timeline_snap_position (GESTimeline * timeline, GESTrackObject * trackobj,
   GESTrackObject *tmp_tckobj;
   GESTimelineObject *tmp_tlobj, *tlobj;
 
+  GstClockTime *last_snap_ts = priv->movecontext.last_snap_ts;
   guint64 snap_distance = timeline->priv->snapping_distance;
-
   guint64 *prev_tc, *next_tc, *ret = NULL, off = G_MAXUINT64, off1 =
       G_MAXUINT64;
 
   /* Avoid useless calculations */
   if (snap_distance == 0)
     return NULL;
+
+  /* If we can just resnap as last snap... do it */
+  if (last_snap_ts) {
+    off = timecode > *last_snap_ts ?
+        timecode - *last_snap_ts : *last_snap_ts - timecode;
+    if (off <= snap_distance) {
+      ret = last_snap_ts;
+      goto done;
+    }
+  }
 
   tlobj = ges_track_object_get_timeline_object (trackobj);
 
@@ -806,6 +823,7 @@ ges_timeline_snap_position (GESTimeline * timeline, GESTrackObject * trackobj,
     prev_iter = g_sequence_iter_prev (prev_iter);
   }
 
+done:
   /* We emit the snapping signal only if we snapped with a different value
    * than the current one */
   if (emit) {
@@ -1305,11 +1323,12 @@ ges_timeline_move_object_simple (GESTimeline * timeline,
 {
   guint64 *snap_end, *snap_st, *cur, off1, off2, end;
 
-  GST_DEBUG_OBJECT (timeline, "Moving to %" GST_TIME_FORMAT,
-      GST_TIME_ARGS (position));
-
   end = position + object->duration;
   cur = g_hash_table_lookup (timeline->priv->by_end, object);
+
+  GST_DEBUG_OBJECT (timeline, "Moving to %" GST_TIME_FORMAT " (end %"
+      GST_TIME_FORMAT ")", GST_TIME_ARGS (position), GST_TIME_ARGS (end));
+
   snap_end = ges_timeline_snap_position (timeline, object, cur, end, FALSE);
   if (snap_end)
     off1 = end > *snap_end ? end - *snap_end : *snap_end - end;
@@ -1327,13 +1346,9 @@ ges_timeline_move_object_simple (GESTimeline * timeline,
   if (snap_end && off1 <= off2) {
     position = position + *snap_end - end;
     ges_timeline_emit_snappig (timeline, object, snap_end);
-    GST_DEBUG_OBJECT (timeline, "Real snap at %" GST_TIME_FORMAT,
-        GST_TIME_ARGS (position));
   } else if (snap_st) {
     position = position + *snap_st - position;
     ges_timeline_emit_snappig (timeline, object, snap_st);
-    GST_DEBUG_OBJECT (timeline, "Real snap at %" GST_TIME_FORMAT,
-        GST_TIME_ARGS (position));
   } else
     ges_timeline_emit_snappig (timeline, object, NULL);
 
