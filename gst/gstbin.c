@@ -2152,7 +2152,7 @@ gst_bin_element_set_state (GstBin * bin, GstElement * element,
     GstState next)
 {
   GstStateChangeReturn ret;
-  GstState pending, child_current, child_pending;
+  GstState child_current, child_pending;
   gboolean locked;
   GList *found;
 
@@ -2182,17 +2182,76 @@ gst_bin_element_set_state (GstBin * bin, GstElement * element,
     goto no_preroll;
   }
 
-  GST_OBJECT_LOCK (bin);
-  pending = GST_STATE_PENDING (bin);
+  GST_CAT_INFO_OBJECT (GST_CAT_STATES, element,
+      "current %s pending %s, desired next %s",
+      gst_element_state_get_name (child_current),
+      gst_element_state_get_name (child_pending),
+      gst_element_state_get_name (next));
 
   /* Try not to change the state of elements that are already in the state we're
    * going to */
-  if (!(next == GST_STATE_PLAYING || child_pending != GST_STATE_VOID_PENDING ||
-          (child_pending == GST_STATE_VOID_PENDING &&
-              ((pending > child_current && next > child_current) ||
-                  (pending < child_current && next < child_current)))))
+  if (child_current == next && child_pending == GST_STATE_VOID_PENDING) {
+    /* child is already at the requested state, return previous return. Note that
+     * if the child has a pending state to next, we will still call the
+     * set_state function */
     goto unneeded;
+  } else if (next > current) {
+    /* upward state change */
+    if (child_pending == GST_STATE_VOID_PENDING) {
+      /* .. and the child is not busy doing anything */
+      if (child_current > next) {
+        /* .. and is already past the requested state, assume it got there
+         * without error */
+        ret = GST_STATE_CHANGE_SUCCESS;
+        goto unneeded;
+      }
+    } else if (child_pending > child_current) {
+      /* .. and the child is busy going upwards */
+      if (child_current >= next) {
+        /* .. and is already past the requested state, assume it got there
+         * without error */
+        ret = GST_STATE_CHANGE_SUCCESS;
+        goto unneeded;
+      }
+    } else {
+      /* .. and the child is busy going downwards */
+      if (child_current > next) {
+        /* .. and is already past the requested state, assume it got there
+         * without error */
+        ret = GST_STATE_CHANGE_SUCCESS;
+        goto unneeded;
+      }
+    }
+  } else if (next < current) {
+    /* downward state change */
+    if (child_pending == GST_STATE_VOID_PENDING) {
+      /* .. and the child is not busy doing anything */
+      if (child_current < next) {
+        /* .. and is already past the requested state, assume it got there
+         * without error */
+        ret = GST_STATE_CHANGE_SUCCESS;
+        goto unneeded;
+      }
+    } else if (child_pending < child_current) {
+      /* .. and the child is busy going downwards */
+      if (child_current <= next) {
+        /* .. and is already past the requested state, assume it got there
+         * without error */
+        ret = GST_STATE_CHANGE_SUCCESS;
+        goto unneeded;
+      }
+    } else {
+      /* .. and the child is busy going upwards */
+      if (child_current < next) {
+        /* .. and is already past the requested state, assume it got there
+         * without error */
+        ret = GST_STATE_CHANGE_SUCCESS;
+        goto unneeded;
+      }
+    }
+  }
 
+  GST_OBJECT_LOCK (bin);
   /* the element was busy with an upwards async state change, we must wait for
    * an ASYNC_DONE message before we attemp to change the state. */
   if ((found =
@@ -2234,24 +2293,21 @@ locked:
     GST_STATE_UNLOCK (element);
     return ret;
   }
+unneeded:
+  {
+    GST_CAT_INFO_OBJECT (GST_CAT_STATES, element,
+        "skipping transition from %s to  %s",
+        gst_element_state_get_name (child_current),
+        gst_element_state_get_name (next));
+    GST_STATE_UNLOCK (element);
+    return ret;
+  }
 was_busy:
   {
     GST_DEBUG_OBJECT (element, "element was busy, delaying state change");
     GST_OBJECT_UNLOCK (bin);
     GST_STATE_UNLOCK (element);
     return GST_STATE_CHANGE_ASYNC;
-  }
-unneeded:
-  {
-    GST_CAT_INFO_OBJECT (GST_CAT_STATES, element,
-        "skipping transition from %s to  %s, since bin pending"
-        " is %s : last change state return follows",
-        gst_element_state_get_name (child_current),
-        gst_element_state_get_name (next),
-        gst_element_state_get_name (pending));
-    GST_OBJECT_UNLOCK (bin);
-    GST_STATE_UNLOCK (element);
-    return ret;
   }
 }
 

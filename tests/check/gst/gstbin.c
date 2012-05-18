@@ -1158,6 +1158,125 @@ GST_START_TEST (test_many_bins)
 
 GST_END_TEST;
 
+static void
+fakesrc_pad_blocked_cb (GstPad * pad, gboolean blocked, void *arg)
+{
+  GstPipeline *pipeline = (GstPipeline *) arg;
+  GstElement *src, *sink;
+  GstPad *srcpad;
+
+  if (!blocked) {
+    /* Not interested in unblocking, ignore that... */
+    return;
+  }
+
+  src = gst_bin_get_by_name (GST_BIN (pipeline), "fakesrc");
+  fail_unless (src != NULL, "Could not get fakesrc");
+
+  sink = gst_element_factory_make ("fakesink", "fakesink");
+  fail_unless (sink != NULL, "Could not create fakesink");
+
+  g_object_set (sink, "state-error", 1, NULL);
+  gst_bin_add (GST_BIN (pipeline), sink);
+
+  gst_element_link (src, sink);
+  gst_element_sync_state_with_parent (sink);
+
+  srcpad = gst_element_get_static_pad (src, "src");
+  gst_pad_set_blocked_async (srcpad, FALSE, fakesrc_pad_blocked_cb, pipeline);
+  gst_object_unref (srcpad);
+
+  gst_object_unref (src);
+}
+
+GST_START_TEST (test_state_failure_unref)
+{
+  GstElement *src, *pipeline;
+  GstPad *srcpad;
+  GstBus *bus;
+  GstStateChangeReturn ret;
+  GstMessage *msg;
+
+  pipeline = gst_pipeline_new (NULL);
+  fail_unless (pipeline != NULL, "Could not create pipeline");
+
+  src = gst_element_factory_make ("fakesrc", "fakesrc");
+  fail_unless (src != NULL, "Could not create fakesrc");
+
+  srcpad = gst_element_get_static_pad (src, "src");
+  fail_unless (srcpad != NULL, "Could not get fakesrc srcpad");
+
+  gst_pad_set_blocked_async (srcpad, TRUE, fakesrc_pad_blocked_cb, pipeline);
+  gst_object_unref (srcpad);
+
+  gst_bin_add (GST_BIN (pipeline), src);
+
+  bus = gst_pipeline_get_bus (GST_PIPELINE (pipeline));
+  fail_unless (bus != NULL, "Could not get bus");
+
+  gst_element_set_state (pipeline, GST_STATE_PLAYING);
+
+  /* Wait for an error message from our fakesink (added from the
+     pad block callback). */
+  msg = gst_bus_poll (bus, GST_MESSAGE_ERROR, GST_SECOND);
+  fail_if (msg == NULL, "No error message within 1 second");
+  gst_message_unref (msg);
+
+  /* Check that after this failure, we can still stop, and then unref, the
+     pipeline. This should always be possible. */
+  ret = gst_element_set_state (pipeline, GST_STATE_NULL);
+  fail_unless (ret == GST_STATE_CHANGE_SUCCESS, "downward state change failed");
+
+  gst_object_unref (bus);
+  gst_object_unref (pipeline);
+}
+
+GST_END_TEST;
+
+static void
+on_sync_bus_error (GstBus * bus, GstMessage * msg)
+{
+  fail_if (msg != NULL);
+}
+
+GST_START_TEST (test_state_change_skip)
+{
+  GstElement *sink, *pipeline;
+  GstStateChangeReturn ret;
+  GstBus *bus;
+
+  pipeline = gst_pipeline_new (NULL);
+  fail_unless (pipeline != NULL, "Could not create pipeline");
+
+  bus = gst_pipeline_get_bus (GST_PIPELINE (pipeline));
+  fail_unless (bus != NULL, "Could not get bus");
+
+  /* no errors */
+  gst_bus_enable_sync_message_emission (bus);
+  g_signal_connect (bus, "sync-message::error", (GCallback) on_sync_bus_error,
+      NULL);
+
+  sink = gst_element_factory_make ("fakesink", "fakesink");
+  fail_unless (sink != NULL, "Could not create fakesink");
+  gst_element_set_state (sink, GST_STATE_PAUSED);
+
+  g_object_set (sink, "state-error", 5, NULL);
+
+  gst_bin_add (GST_BIN (pipeline), sink);
+  gst_element_set_state (pipeline, GST_STATE_PLAYING);
+
+  g_object_set (sink, "state-error", 0, NULL);
+
+  /* Check that after this failure, we can still stop, and then unref, the
+     pipeline. This should always be possible. */
+  ret = gst_element_set_state (pipeline, GST_STATE_NULL);
+  fail_unless (ret == GST_STATE_CHANGE_SUCCESS, "downward state change failed");
+
+  gst_object_unref (pipeline);
+}
+
+GST_END_TEST;
+
 static Suite *
 gst_bin_suite (void)
 {
@@ -1181,6 +1300,8 @@ gst_bin_suite (void)
   tcase_add_test (tc_chain, test_iterate_sorted);
   tcase_add_test (tc_chain, test_link_structure_change);
   tcase_add_test (tc_chain, test_state_failure_remove);
+  tcase_add_test (tc_chain, test_state_failure_unref);
+  tcase_add_test (tc_chain, test_state_change_skip);
 
   /* fails on OSX build bot for some reason, and is a bit silly anyway */
   if (0)
