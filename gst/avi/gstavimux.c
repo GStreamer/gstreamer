@@ -1112,18 +1112,32 @@ gst_avi_mux_write_tag (const GstTagList * list, const gchar * tag,
     0, NULL}
   };
   gint n;
-  gchar *str;
+  gchar *str = NULL;
   GstByteWriter *bw = data;
   guint chunk;
 
   for (n = 0; rifftags[n].fcc != 0; n++) {
-    if (!strcmp (rifftags[n].tag, tag) &&
-        gst_tag_list_get_string (list, tag, &str) && str) {
-      chunk = gst_avi_mux_start_chunk (bw, NULL, rifftags[n].fcc);
-      gst_byte_writer_put_string (bw, str);
-      gst_avi_mux_end_chunk (bw, chunk);
-      g_free (str);
-      break;
+    if (!strcmp (rifftags[n].tag, tag)) {
+      if (rifftags[n].fcc == GST_RIFF_INFO_ICRD) {
+        GDate *date;
+        /* special case for the date tag */
+        if (gst_tag_list_get_date (list, tag, &date)) {
+          str =
+              g_strdup_printf ("%04d:%02d:%02d", g_date_get_year (date),
+              g_date_get_month (date), g_date_get_day (date));
+          g_date_free (date);
+        }
+      } else {
+        gst_tag_list_get_string (list, tag, &str);
+      }
+      if (str) {
+        chunk = gst_avi_mux_start_chunk (bw, NULL, rifftags[n].fcc);
+        gst_byte_writer_put_string (bw, str);
+        gst_avi_mux_end_chunk (bw, chunk);
+        g_free (str);
+        str = NULL;
+        break;
+      }
     }
   }
 }
