@@ -147,6 +147,7 @@ enum
   PROP_0,
   PROP_DURATION,
   PROP_SNAPPING_DISTANCE,
+  PROP_UPDATE,
   PROP_LAST
 };
 
@@ -177,6 +178,26 @@ static void
 discoverer_discovered_cb (GstDiscoverer * discoverer,
     GstDiscovererInfo * info, GError * err, GESTimeline * timeline);
 
+/* Internal methods */
+static gboolean
+ges_timeline_enable_update_internal (GESTimeline * timeline, gboolean enabled)
+{
+  GList *tmp;
+  gboolean res = TRUE;
+
+  GST_DEBUG_OBJECT (timeline, "%s updates", enabled ? "Enabling" : "Disabling");
+
+  for (tmp = timeline->priv->tracks; tmp; tmp = tmp->next) {
+    if (!ges_track_enable_update (((TrackPrivate *) tmp->data)->track, enabled))
+      res = FALSE;
+  }
+
+  /* Make sure we reset the context */
+  timeline->priv->movecontext.needs_move_ctx = TRUE;
+
+  return res;
+}
+
 /* GObject Standard vmethods*/
 static void
 ges_timeline_get_property (GObject * object, guint property_id,
@@ -193,6 +214,9 @@ ges_timeline_get_property (GObject * object, guint property_id,
     case PROP_SNAPPING_DISTANCE:
       g_value_set_uint64 (value, timeline->priv->snapping_distance);
       break;
+    case PROP_UPDATE:
+      g_value_set_boolean (value, ges_timeline_is_updating (timeline));
+      break;
   }
 }
 
@@ -205,6 +229,10 @@ ges_timeline_set_property (GObject * object, guint property_id,
   switch (property_id) {
     case PROP_SNAPPING_DISTANCE:
       timeline->priv->snapping_distance = g_value_get_uint64 (value);
+      break;
+    case PROP_UPDATE:
+      ges_timeline_enable_update_internal (timeline,
+          g_value_get_boolean (value));
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, property_id, pspec);
@@ -297,6 +325,27 @@ ges_timeline_class_init (GESTimelineClass * klass)
       G_MAXUINT64, 0, G_PARAM_READWRITE);
   g_object_class_install_property (object_class, PROP_SNAPPING_DISTANCE,
       properties[PROP_SNAPPING_DISTANCE]);
+
+  /**
+   * GESTimeline:update:
+   *
+   * If %TRUE, then all modifications to objects within the timeline will
+   * cause a internal pipeline update (if required).
+   * If %FALSE, then only the timeline start/duration/stop properties
+   * will be updated, and the internal pipeline will only be updated when the
+   * property is set back to %TRUE.
+   *
+   * It is recommended to temporarily set this property to %FALSE before doing
+   * more than one modification in the timeline (like adding or moving
+   * several objects at once) in order to speed up the process, and then setting
+   * back the property to %TRUE when done.
+   */
+
+  properties[PROP_UPDATE] = g_param_spec_boolean ("update", "Update",
+      "Update the internal pipeline on every modification", TRUE,
+      G_PARAM_READWRITE);
+  g_object_class_install_property (object_class, PROP_UPDATE,
+      properties[PROP_UPDATE]);
 
   /**
    * GESTimeline::track-added
@@ -2400,20 +2449,13 @@ ges_timeline_is_updating (GESTimeline * timeline)
 gboolean
 ges_timeline_enable_update (GESTimeline * timeline, gboolean enabled)
 {
-  GList *tmp;
-  gboolean res = TRUE;
+  if (ges_timeline_enable_update_internal (timeline, enabled)) {
+    g_object_notify_by_pspec (G_OBJECT (timeline), properties[PROP_UPDATE]);
 
-  GST_DEBUG_OBJECT (timeline, "%s updates", enabled ? "Enabling" : "Disabling");
-
-  for (tmp = timeline->priv->tracks; tmp; tmp = tmp->next) {
-    if (!ges_track_enable_update (((TrackPrivate *) tmp->data)->track, enabled))
-      res = FALSE;
+    return TRUE;
   }
 
-  /* Make sure we reset the context */
-  timeline->priv->movecontext.needs_move_ctx = TRUE;
-
-  return res;
+  return FALSE;
 }
 
 /**
