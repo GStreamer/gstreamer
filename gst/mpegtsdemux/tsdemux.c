@@ -992,12 +992,26 @@ gst_ts_demux_stream_removed (MpegTSBase * base, MpegTSBaseStream * bstream)
 static void
 activate_pad_for_stream (GstTSDemux * tsdemux, TSDemuxStream * stream)
 {
+  GList *tmp;
+  gboolean alldone = TRUE;
+
   if (stream->pad) {
     GST_DEBUG_OBJECT (tsdemux, "Activating pad %s:%s for stream %p",
         GST_DEBUG_PAD_NAME (stream->pad), stream);
     gst_element_add_pad ((GstElement *) tsdemux, stream->pad);
     stream->active = TRUE;
     GST_DEBUG_OBJECT (stream->pad, "done adding pad");
+
+    /* Check if all pads were activated, and if so emit no-more-pads */
+    for (tmp = tsdemux->program->stream_list; tmp; tmp = tmp->next) {
+      stream = (TSDemuxStream *) tmp->data;
+      if (stream->pad && !stream->active)
+        alldone = FALSE;
+    }
+    if (alldone) {
+      GST_DEBUG_OBJECT (tsdemux, "All pads were activated, emit no-more-pads");
+      gst_element_no_more_pads ((GstElement *) tsdemux);
+    }
   } else
     GST_WARNING_OBJECT (tsdemux,
         "stream %p (pid 0x%04x, type:0x%03x) has no pad", stream,
