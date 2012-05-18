@@ -599,7 +599,8 @@ have_full_frame:
   return gst_video_decoder_have_frame (bdec);
 
 drop_frame:
-  return GST_VIDEO_DECODER_FLOW_DROPPED;
+  gst_adapter_flush (adapter, size);
+  return GST_FLOW_OK;
 }
 
 
