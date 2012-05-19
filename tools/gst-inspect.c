@@ -185,12 +185,12 @@ static void
 print_factory_details_info (GstElementFactory * factory)
 {
   gchar **keys, **k;
+  GstRank rank;
   char s[20];
 
+  rank = gst_plugin_feature_get_rank (GST_PLUGIN_FEATURE (factory));
   n_print ("Factory Details:\n");
-  n_print ("  Rank:\t\t%s (%d)\n",
-      get_rank_name (s, GST_PLUGIN_FEATURE (factory)->rank),
-      GST_PLUGIN_FEATURE (factory)->rank);
+  n_print ("  Rank:\t\t%s (%d)\n", get_rank_name (s, rank), rank);
 
   keys = gst_element_factory_get_metadata_keys (factory);
   if (keys != NULL) {
@@ -1297,6 +1297,7 @@ static int
 print_element_info (GstElementFactory * factory, gboolean print_names)
 {
   GstElement *element;
+  GstPlugin *plugin;
   gint maxlevel = 0;
 
   factory =
@@ -1321,14 +1322,11 @@ print_element_info (GstElementFactory * factory, gboolean print_names)
     _name = NULL;
 
   print_factory_details_info (factory);
-  if (GST_PLUGIN_FEATURE (factory)->plugin_name) {
-    GstPlugin *plugin;
 
-    plugin = gst_registry_find_plugin (gst_registry_get (),
-        GST_PLUGIN_FEATURE (factory)->plugin_name);
-    if (plugin) {
-      print_plugin_info (plugin);
-    }
+  plugin = gst_plugin_feature_get_plugin (GST_PLUGIN_FEATURE (factory));
+  if (plugin) {
+    print_plugin_info (plugin);
+    gst_object_unref (plugin);
   }
 
   print_hierarchy (G_OBJECT_TYPE (element), 0, &maxlevel);
@@ -1451,10 +1449,7 @@ print_plugin_automatic_install_info_protocols (GstElementFactory * factory)
 static void
 print_plugin_automatic_install_info (GstPlugin * plugin)
 {
-  const gchar *plugin_name;
   GList *features, *l;
-
-  plugin_name = gst_plugin_get_name (plugin);
 
   /* not interested in typefind factories, only element factories */
   features = gst_registry_get_feature_list (gst_registry_get (),
@@ -1462,11 +1457,13 @@ print_plugin_automatic_install_info (GstPlugin * plugin)
 
   for (l = features; l != NULL; l = l->next) {
     GstPluginFeature *feature;
+    GstPlugin *feature_plugin;
 
     feature = GST_PLUGIN_FEATURE (l->data);
 
     /* only interested in the ones that are in the plugin we just loaded */
-    if (g_str_equal (plugin_name, feature->plugin_name)) {
+    feature_plugin = gst_plugin_feature_get_plugin (feature);
+    if (feature_plugin == plugin) {
       GstElementFactory *factory;
 
       g_print ("element-%s\n", gst_plugin_feature_get_name (feature));
@@ -1475,6 +1472,8 @@ print_plugin_automatic_install_info (GstPlugin * plugin)
       print_plugin_automatic_install_info_protocols (factory);
       print_plugin_automatic_install_info_codecs (factory);
     }
+    if (feature_plugin)
+      gst_object_unref (feature_plugin);
   }
 
   g_list_foreach (features, (GFunc) gst_object_unref, NULL);

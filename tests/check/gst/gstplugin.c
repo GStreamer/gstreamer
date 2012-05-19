@@ -161,12 +161,16 @@ GST_END_TEST;
 GST_START_TEST (test_find_feature)
 {
   GstPluginFeature *feature;
+  GstPlugin *plugin;
 
   feature = gst_registry_find_feature (gst_registry_get (),
       "identity", GST_TYPE_ELEMENT_FACTORY);
   fail_if (feature == NULL, "Failed to find identity element factory");
-  fail_if (strcmp (feature->plugin_name, "coreelements"),
-      "Expected identity to be from coreelements plugin");
+
+  plugin = gst_plugin_feature_get_plugin (feature);
+  fail_unless (plugin != NULL);
+  fail_unless_equals_string (gst_plugin_get_name (plugin), "coreelements");
+  gst_object_unref (plugin);
 
   fail_if (GST_OBJECT_REFCOUNT_VALUE (feature) != 2,
       "Refcount of feature should be 2");
