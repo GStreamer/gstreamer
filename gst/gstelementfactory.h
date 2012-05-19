@@ -85,6 +85,7 @@ GstElementFactory *     gst_element_factory_find                (const gchar *na
 GType                   gst_element_factory_get_element_type    (GstElementFactory *factory);
 
 const gchar *           gst_element_factory_get_metadata        (GstElementFactory *factory, const gchar *key);
+gchar **                gst_element_factory_get_metadata_keys   (GstElementFactory *factory);
 
 guint                   gst_element_factory_get_num_pad_templates (GstElementFactory *factory);
 const GList *           gst_element_factory_get_static_pad_templates (GstElementFactory *factory);

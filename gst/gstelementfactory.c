@@ -510,6 +510,40 @@ gst_element_factory_get_metadata (GstElementFactory * factory,
 }
 
 /**
+ * gst_element_factory_get_metadata_keys:
+ * @factory,: a #GstElementFactory
+ *
+ * Get the available keys for the metadata on @factory.
+ *
+ * Returns: a %NULL-terminated array of key strings, or %NULL when
+ * there is no metadata. Free with g_strfreev() when no longer needd.
+ */
+gchar **
+gst_element_factory_get_metadata_keys (GstElementFactory * factory)
+{
+  GstStructure *metadata;
+  gchar **arr;
+  gint i, num;
+
+  g_return_val_if_fail (GST_IS_ELEMENT_FACTORY (factory), NULL);
+
+  metadata = (GstStructure *) factory->metadata;
+  if (metadata == NULL)
+    return NULL;
+
+  num = gst_structure_n_fields (metadata);
+  if (num == 0)
+    return NULL;
+
+  arr = g_new (gchar *, num + 1);
+  for (i = 0; i < num; ++i) {
+    arr[i] = g_strdup (gst_structure_nth_field_name (metadata, i));
+  }
+  arr[i] = NULL;
+  return arr;
+}
+
+/**
  * gst_element_factory_get_num_pad_templates:
  * @factory: a #GstElementFactory
  *
