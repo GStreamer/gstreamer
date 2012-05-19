@@ -181,31 +181,29 @@ get_rank_name (char *s, gint rank)
   return s;
 }
 
-static gboolean
-print_factory_details_metadata (GQuark field_id, const GValue * value,
-    gpointer user_data)
-{
-  gchar *val = g_strdup_value_contents (value);
-  gchar *key = g_strdup (g_quark_to_string (field_id));
-
-  key[0] = g_ascii_toupper (key[0]);
-  n_print ("  %s:\t\t%s\n", key, val);
-  g_free (val);
-  g_free (key);
-  return TRUE;
-}
-
 static void
 print_factory_details_info (GstElementFactory * factory)
 {
+  gchar **keys, **k;
   char s[20];
 
   n_print ("Factory Details:\n");
   n_print ("  Rank:\t\t%s (%d)\n",
       get_rank_name (s, GST_PLUGIN_FEATURE (factory)->rank),
       GST_PLUGIN_FEATURE (factory)->rank);
-  gst_structure_foreach ((GstStructure *) factory->metadata,
-      print_factory_details_metadata, NULL);
+
+  keys = gst_element_factory_get_metadata_keys (factory);
+  if (keys != NULL) {
+    for (k = keys; *k != NULL; ++k) {
+      const gchar *val;
+      gchar *key = *k;
+
+      val = gst_element_factory_get_metadata (factory, key);
+      key[0] = g_ascii_toupper (key[0]);
+      n_print ("  %s:\t\t%s\n", key, val);
+    }
+    g_strfreev (keys);
+  }
   n_print ("\n");
 }
 
@@ -591,14 +589,14 @@ print_pad_templates_info (GstElement * element, GstElementFactory * factory)
   GstStaticPadTemplate *padtemplate;
 
   n_print ("Pad Templates:\n");
-  if (!factory->numpadtemplates) {
+  if (gst_element_factory_get_num_pad_templates (factory) == 0) {
     n_print ("  none\n");
     return;
   }
 
   gstelement_class = GST_ELEMENT_CLASS (G_OBJECT_GET_CLASS (element));
 
-  pads = factory->staticpadtemplates;
+  pads = gst_element_factory_get_static_pad_templates (factory);
   while (pads) {
     padtemplate = (GstStaticPadTemplate *) (pads->data);
     pads = g_list_next (pads);
