@@ -1496,8 +1496,9 @@ static gboolean
 _factory_can_handle_caps (GstElementFactory * factory, const GstCaps * caps,
     GstPadDirection dir, gboolean exact)
 {
-  GList *templates = factory->staticpadtemplates;
+  const GList *templates;
 
+  templates = gst_element_factory_get_static_pad_templates (factory);
   while (templates) {
     GstStaticPadTemplate *template = (GstStaticPadTemplate *) templates->data;
 
