@@ -593,14 +593,14 @@ static gboolean
 factory_can_intersect (GstAutoConvert * autoconvert,
     GstElementFactory * factory, GstPadDirection direction, GstCaps * caps)
 {
-  GList *templates;
+  const GList *templates;
   gint has_direction = FALSE;
   gboolean ret = FALSE;
 
   g_return_val_if_fail (factory != NULL, FALSE);
   g_return_val_if_fail (caps != NULL, FALSE);
 
-  templates = factory->staticpadtemplates;
+  templates = gst_element_factory_get_static_pad_templates (factory);
 
   while (templates) {
     GstStaticPadTemplate *template = (GstStaticPadTemplate *) templates->data;
