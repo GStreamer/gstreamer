@@ -319,6 +319,31 @@ struct _GstTypeFindFactoryClass {
   gpointer _gst_reserved[GST_PADDING];
 };
 
+struct _GstElementFactory {
+  GstPluginFeature      parent;
+
+  GType                 type;                   /* unique GType of element or 0 if not loaded */
+
+  gpointer              metadata;
+
+  GList *               staticpadtemplates;     /* GstStaticPadTemplate list */
+  guint                 numpadtemplates;
+
+  /* URI interface stuff */
+  GstURIType            uri_type;
+  gchar **              uri_protocols;
+
+  GList *               interfaces;             /* interface type names this element implements */
+
+  /*< private >*/
+  gpointer _gst_reserved[GST_PADDING];
+};
+
+struct _GstElementFactoryClass {
+  GstPluginFeatureClass parent_class;
+
+  gpointer _gst_reserved[GST_PADDING];
+};
 
 G_END_DECLS
 #endif /* __GST_PRIVATE_H__ */
