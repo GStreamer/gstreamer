@@ -38,6 +38,11 @@ G_BEGIN_DECLS
 #define GST_PLUGIN_FEATURE_GET_CLASS(obj)       (G_TYPE_INSTANCE_GET_CLASS ((obj), GST_TYPE_PLUGIN_FEATURE, GstPluginFeatureClass))
 #define GST_PLUGIN_FEATURE_CAST(obj)            ((GstPluginFeature*)(obj))
 
+/**
+ * GstPluginFeature:
+ *
+ * Opaque #GstPluginFeature structure.
+ */
 typedef struct _GstPluginFeature GstPluginFeature;
 typedef struct _GstPluginFeatureClass GstPluginFeatureClass;
 
@@ -83,32 +88,6 @@ typedef enum {
  * Sets the name of the plugin feature, getting rid of the old name if there was one.
  */
 #define                 gst_plugin_feature_set_name(feature,name) gst_object_set_name(GST_OBJECT_CAST(feature),name)
-
-/**
- * GstPluginFeature:
- *
- * Opaque #GstPluginFeature structure.
- */
-struct _GstPluginFeature {
-  GstObject      object;
-
-  /*< private >*/
-  gboolean       loaded;
-  guint          rank;
-
-  const gchar   *plugin_name;
-  GstPlugin     *plugin;      /* weak ref */
-
-  /*< private >*/
-  gpointer _gst_reserved[GST_PADDING];
-};
-
-struct _GstPluginFeatureClass {
-  GstObjectClass        parent_class;
-
-  /*< private >*/
-  gpointer _gst_reserved[GST_PADDING];
-};
 
 /**
  * GstPluginFeatureFilter:

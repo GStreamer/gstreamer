@@ -296,6 +296,27 @@ struct _GstPluginClass {
   gpointer _gst_reserved[GST_PADDING];
 };
 
+struct _GstPluginFeature {
+  GstObject      object;
+
+  /*< private >*/
+  gboolean       loaded;
+  guint          rank;
+
+  const gchar   *plugin_name;
+  GstPlugin     *plugin;      /* weak ref */
+
+  /*< private >*/
+  gpointer _gst_reserved[GST_PADDING];
+};
+
+struct _GstPluginFeatureClass {
+  GstObjectClass        parent_class;
+
+  /*< private >*/
+  gpointer _gst_reserved[GST_PADDING];
+};
+
 #include "gsttypefind.h"
 
 struct _GstTypeFindFactory {
