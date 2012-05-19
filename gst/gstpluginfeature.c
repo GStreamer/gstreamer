@@ -180,6 +180,26 @@ gst_plugin_feature_get_rank (GstPluginFeature * feature)
 }
 
 /**
+ * gst_plugin_feature_get_plugin:
+ * @feature: a feature
+ *
+ * Get the plugin that provides this feature.
+ *
+ * Returns: (transfer full): the plugin that provides this feature, or %NULL.
+ *     Unref with gst_object_unref() when no longer needed.
+ */
+GstPlugin *
+gst_plugin_feature_get_plugin (GstPluginFeature * feature)
+{
+  g_return_val_if_fail (GST_IS_PLUGIN_FEATURE (feature), NULL);
+
+  if (feature->plugin == NULL)
+    return NULL;
+
+  return (GstPlugin *) gst_object_ref (feature->plugin);
+}
+
+/**
  * gst_plugin_feature_list_free:
  * @list: (transfer full) (element-type Gst.PluginFeature): list
  *     of #GstPluginFeature
