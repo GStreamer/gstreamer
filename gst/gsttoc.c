@@ -135,7 +135,7 @@ gst_toc_entry_new (GstTocEntryType type, const gchar * uid)
  */
 GstTocEntry *
 gst_toc_entry_new_with_pad (GstTocEntryType type, const gchar * uid,
-    gpointer pad)
+    GstPad * pad)
 {
   GstTocEntry *entry;
 

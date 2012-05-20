@@ -93,7 +93,7 @@ struct _GstToc {
 /* functions to create new structures */
 GstToc *        gst_toc_new                     (void);
 GstTocEntry *   gst_toc_entry_new               (GstTocEntryType type, const gchar *uid);
-GstTocEntry *   gst_toc_entry_new_with_pad      (GstTocEntryType type, const gchar *uid, gpointer pad);
+GstTocEntry *   gst_toc_entry_new_with_pad      (GstTocEntryType type, const gchar *uid, GstPad * pad);
 
 /* functions to free structures */
 void            gst_toc_entry_free              (GstTocEntry *entry);
