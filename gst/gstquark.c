@@ -58,7 +58,7 @@ static const gchar *_quark_strings[] = {
   "allocator", "GstEventFlushStop", "options", "GstQueryAcceptCaps",
   "result", "GstQueryCaps", "filter", "modes", "GstEventStreamConfig",
   "setup-data", "stream-headers", "GstEventGap", "GstQueryDrain", "params",
-  "toc-select", "uid", "toc", GST_ELEMENT_METADATA_LONGNAME,
+  "GstEventTocSelect", "uid", "GstQueryToc", GST_ELEMENT_METADATA_LONGNAME,
   GST_ELEMENT_METADATA_KLASS, GST_ELEMENT_METADATA_DESCRIPTION,
   GST_ELEMENT_METADATA_AUTHOR
 };
