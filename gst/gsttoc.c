@@ -226,9 +226,7 @@ gst_toc_structure_new (GstTagList * tags, GstStructure * info)
   ret = gst_structure_new_id_empty (GST_QUARK (TOC));
 
   if (tags != NULL) {
-    // FIXME: don't use GST_TYPE_STRUCTURE for taglist
-    gst_structure_id_set (ret, GST_QUARK (TAGS), GST_TYPE_STRUCTURE, tags,
-        NULL);
+    gst_structure_id_set (ret, GST_QUARK (TAGS), GST_TYPE_TAG_LIST, tags, NULL);
   }
 
   if (info != NULL) {
@@ -252,9 +250,7 @@ gst_toc_entry_structure_new (GstTocEntryType type, const gchar * uid,
   gst_structure_id_set (ret, GST_QUARK (UID), G_TYPE_STRING, uid, NULL);
 
   if (tags != NULL) {
-    // FIXME: taglist type
-    gst_structure_id_set (ret, GST_QUARK (TAGS), GST_TYPE_STRUCTURE, tags,
-        NULL);
+    gst_structure_id_set (ret, GST_QUARK (TAGS), GST_TYPE_TAG_LIST, tags, NULL);
   }
 
   if (info != NULL) {
@@ -365,12 +361,12 @@ gst_toc_entry_from_structure (const GstStructure * entry, guint level)
     ret->subentries = g_list_reverse (ret->subentries);
   }
 
-  if (gst_structure_id_has_field_typed (entry,
-          GST_QUARK (TAGS), GST_TYPE_STRUCTURE)) {
+  if (gst_structure_id_has_field_typed (entry, GST_QUARK (TAGS),
+          GST_TYPE_TAG_LIST)) {
     val = gst_structure_id_get_value (entry, GST_QUARK (TAGS));
 
-    if (G_LIKELY (GST_IS_TAG_LIST (gst_value_get_structure (val)))) {
-      list = gst_tag_list_copy (GST_TAG_LIST (gst_value_get_structure (val)));
+    if (G_LIKELY (GST_IS_TAG_LIST (g_value_get_boxed (val)))) {
+      list = gst_tag_list_copy (GST_TAG_LIST (g_value_get_boxed (val)));
       gst_tag_list_free (ret->tags);
       ret->tags = list;
     }
@@ -449,12 +445,12 @@ __gst_toc_from_structure (const GstStructure * toc)
     ret->entries = g_list_reverse (ret->entries);
   }
 
-  if (gst_structure_id_has_field_typed (toc,
-          GST_QUARK (TAGS), GST_TYPE_STRUCTURE)) {
+  if (gst_structure_id_has_field_typed (toc, GST_QUARK (TAGS),
+          GST_TYPE_TAG_LIST)) {
     val = gst_structure_id_get_value (toc, GST_QUARK (TAGS));
 
-    if (G_LIKELY (GST_IS_TAG_LIST (gst_value_get_structure (val)))) {
-      list = gst_tag_list_copy (GST_TAG_LIST (gst_value_get_structure (val)));
+    if (G_LIKELY (GST_IS_TAG_LIST (g_value_get_boxed (val)))) {
+      list = gst_tag_list_copy (GST_TAG_LIST (g_value_get_boxed (val)));
       gst_tag_list_free (ret->tags);
       ret->tags = list;
     }
