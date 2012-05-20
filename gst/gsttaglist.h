@@ -206,7 +206,7 @@ GstTagList * gst_tag_list_new_valist        (va_list var_args) G_GNUC_MALLOC;
 gchar      * gst_tag_list_to_string         (const GstTagList * list) G_GNUC_MALLOC;
 GstTagList * gst_tag_list_new_from_string   (const gchar      * str) G_GNUC_MALLOC;
 
-gboolean     gst_is_tag_list                (gconstpointer p);
+gboolean     gst_is_tag_list                (GstTagList * taglist);
 GstTagList * gst_tag_list_copy              (const GstTagList * list) G_GNUC_MALLOC;
 gint         gst_tag_list_n_tags            (const GstTagList * list);
 const gchar* gst_tag_list_nth_tag_name      (const GstTagList * list, guint index);
