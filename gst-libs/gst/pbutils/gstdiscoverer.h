@@ -50,7 +50,6 @@ GType gst_discoverer_stream_info_get_type (void);
  *
  * As a simple example, if you run #GstDiscoverer on an AVI file with one audio
  * and one video stream, you will get a #GstDiscovererContainerInfo
- * corresponding to the AVI container, which in turn will have a
  * #GstDiscovererAudioInfo sub-stream and a #GstDiscovererVideoInfo sub-stream
  * for the audio and video streams respectively.
  *
@@ -63,6 +62,7 @@ GstDiscovererStreamInfo* gst_discoverer_stream_info_get_previous(GstDiscovererSt
 GstDiscovererStreamInfo* gst_discoverer_stream_info_get_next(GstDiscovererStreamInfo* info);
 GstCaps*                 gst_discoverer_stream_info_get_caps(GstDiscovererStreamInfo* info);
 const GstTagList*        gst_discoverer_stream_info_get_tags(GstDiscovererStreamInfo* info);
+const GstToc*            gst_discoverer_stream_info_get_toc(GstDiscovererStreamInfo* info);
 const GstStructure*      gst_discoverer_stream_info_get_misc(GstDiscovererStreamInfo* info);
 const gchar *            gst_discoverer_stream_info_get_stream_type_nick(GstDiscovererStreamInfo* info);
 
@@ -214,7 +214,8 @@ GList*                    gst_discoverer_info_get_stream_list(GstDiscovererInfo*
 GstClockTime              gst_discoverer_info_get_duration(const GstDiscovererInfo* info);
 gboolean                  gst_discoverer_info_get_seekable(const GstDiscovererInfo* info);
 const GstStructure*       gst_discoverer_info_get_misc(const GstDiscovererInfo* info);
-const GstTagList*         gst_discoverer_info_get_tags(const GstDiscovererInfo* info);
+const GstTagList*         gst_discoverer_info_get_tags(const GstDiscovererInfo* info); 
+const GstToc*             gst_discoverer_info_get_toc(const GstDiscovererInfo* info);
 
 GList *                   gst_discoverer_info_get_streams (GstDiscovererInfo *info,
 							   GType streamtype);

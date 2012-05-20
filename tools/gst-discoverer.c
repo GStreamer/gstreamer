@@ -28,6 +28,7 @@
 
 static gboolean async = FALSE;
 static gboolean silent = FALSE;
+static gboolean show_toc = FALSE;
 static gboolean verbose = FALSE;
 
 typedef struct
@@ -340,9 +341,58 @@ print_tag_each (GQuark field_id, const GValue * value, gpointer user_data)
 }
 
 static void
+print_tag_foreach (const GstTagList * tags, const gchar * tag,
+    gpointer user_data)
+{
+  GValue val = { 0, };
+  gchar *str;
+  gint depth = GPOINTER_TO_INT (user_data);
+
+  gst_tag_list_copy_value (&val, tags, tag);
+
+  if (G_VALUE_HOLDS_STRING (&val))
+    str = g_value_dup_string (&val);
+  else
+    str = gst_value_serialize (&val);
+
+  g_print ("%*s%s: %s\n", 2 * depth, " ", gst_tag_get_nick (tag), str);
+  g_free (str);
+
+  g_value_unset (&val);
+}
+
+#define MAX_INDENT 40
+
+static void
+print_toc_entry (gpointer data, gpointer user_data)
+{
+  GstTocEntry *entry = (GstTocEntry *) data;
+  gint depth = GPOINTER_TO_INT (user_data);
+  guint indent = MIN (GPOINTER_TO_UINT (user_data), MAX_INDENT);
+  gint64 start, stop;
+
+  gst_toc_entry_get_start_stop (entry, &start, &stop);
+  g_print ("%*s%s: start: %" GST_TIME_FORMAT " stop: %" GST_TIME_FORMAT "\n",
+      depth, " ", gst_toc_entry_type_get_nick (entry->type),
+      GST_TIME_ARGS (start), GST_TIME_ARGS (stop));
+  indent += 2;
+
+  /* print tags */
+  if (entry->type == GST_TOC_ENTRY_TYPE_CHAPTER)
+    g_print ("%*sTags:\n", 2 * depth, " ");
+  gst_tag_list_foreach (entry->tags, print_tag_foreach,
+      GUINT_TO_POINTER (indent));
+
+  /* loop over sub-toc entries */
+  g_list_foreach (entry->subentries, print_toc_entry,
+      GUINT_TO_POINTER (indent));
+}
+
+static void
 print_properties (GstDiscovererInfo * info, gint tab)
 {
   const GstTagList *tags;
+  const GstToc *toc;
 
   g_print ("%*sDuration: %" GST_TIME_FORMAT "\n", tab + 1, " ",
       GST_TIME_ARGS (gst_discoverer_info_get_duration (info)));
@@ -352,6 +402,10 @@ print_properties (GstDiscovererInfo * info, gint tab)
     g_print ("%*sTags: \n", tab + 1, " ");
     gst_structure_foreach ((const GstStructure *) tags, print_tag_each,
         GINT_TO_POINTER (tab + 5));
+  }
+  if (show_toc && (toc = gst_discoverer_info_get_toc (info))) {
+    g_print ("%*sTOC: \n", tab + 1, " ");
+    g_list_foreach (toc->entries, print_toc_entry, GUINT_TO_POINTER (tab + 5));
   }
 }
 
@@ -511,6 +565,8 @@ main (int argc, char **argv)
         "Specify timeout (in seconds, default 10)", "T"},
     /* {"elem", 'e', 0, G_OPTION_ARG_NONE, &elem_seek, */
     /*     "Seek on elements instead of pads", NULL}, */
+    {"toc", 'c', 0, G_OPTION_ARG_NONE, &show_toc,
+        "Output TOC (chapters and editions)", NULL},
     {"verbose", 'v', 0, G_OPTION_ARG_NONE, &verbose,
         "Verbose properties", NULL},
     {NULL}

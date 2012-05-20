@@ -67,6 +67,9 @@ gst_discoverer_stream_info_finalize (GObject * object)
   if (info->tags)
     gst_tag_list_free (info->tags);
 
+  if (info->toc)
+    gst_toc_free (info->toc);
+
   if (info->misc)
     gst_structure_free (info->misc);
 }
@@ -125,6 +128,9 @@ gst_discoverer_info_copy_int (GstDiscovererStreamInfo * info,
 
   if (info->tags)
     ret->tags = gst_tag_list_copy (info->tags);
+
+  if (info->toc)
+    ret->toc = gst_toc_copy (info->toc);
 
   if (info->misc)
     ret->misc = gst_structure_copy (info->misc);
@@ -361,6 +367,9 @@ gst_discoverer_info_finalize (GObject * object)
 
   if (info->tags)
     gst_tag_list_free (info->tags);
+
+  if (info->toc)
+    gst_toc_free (info->toc);
 }
 
 static GstDiscovererInfo *
@@ -411,6 +420,9 @@ gst_discoverer_info_copy (GstDiscovererInfo * ptr)
 
   if (ptr->tags)
     ret->tags = gst_tag_list_copy (ptr->tags);
+
+  if (ptr->toc)
+    ret->toc = gst_toc_copy (ptr->toc);
 
   g_hash_table_destroy (stream_map);
   return ret;
@@ -648,13 +660,29 @@ gst_discoverer_stream_info_get_caps (GstDiscovererStreamInfo * info)
  *
  * Since: 0.10.31
  */
-
 const GstTagList *
 gst_discoverer_stream_info_get_tags (GstDiscovererStreamInfo * info)
 {
   g_return_val_if_fail (GST_IS_DISCOVERER_STREAM_INFO (info), NULL);
 
   return info->tags;
+}
+
+/**
+ * gst_discoverer_stream_info_get_toc:
+ * @info: a #GstDiscovererStreamInfo
+ *
+ * Returns: (transfer none): the TOC contained in this stream. If you wish to
+ * use the TOC after the life-time of @info you will need to copy it.
+ *
+ * Since: 0.11.92
+ */
+const GstToc *
+gst_discoverer_stream_info_get_toc (GstDiscovererStreamInfo * info)
+{
+  g_return_val_if_fail (GST_IS_DISCOVERER_STREAM_INFO (info), NULL);
+
+  return info->toc;
 }
 
 /**
@@ -1056,6 +1084,18 @@ DISCOVERER_INFO_ACCESSOR_CODE (misc, const GstStructure *, NULL);
  */
 
 DISCOVERER_INFO_ACCESSOR_CODE (tags, const GstTagList *, NULL);
+
+/**
+ * gst_discoverer_info_get_toc:
+ * @info: a #GstDiscovererInfo
+ *
+ * Returns: (transfer none): TOC contained in the URI. If you wish to use
+ * the TOC after the life-time of @info, you will need to copy it.
+ *
+ * Since: 0.11.92
+ */
+
+DISCOVERER_INFO_ACCESSOR_CODE (toc, const GstToc *, NULL);
 
 /**
  * gst_discoverer_info_ref:

@@ -26,6 +26,7 @@ struct _GstDiscovererStreamInfo {
 
   GstCaps               *caps;
   GstTagList            *tags;
+  GstToc                *toc;
   GstStructure          *misc;
 
   gpointer _gst_reserved[GST_PADDING];
@@ -96,6 +97,7 @@ struct _GstDiscovererInfo {
   GstClockTime duration;
   GstStructure *misc;
   GstTagList *tags;
+  GstToc *toc;
   gboolean seekable;
 
   gpointer _gst_reserved[GST_PADDING];
