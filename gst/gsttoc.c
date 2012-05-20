@@ -222,22 +222,18 @@ static GstStructure *
 gst_toc_structure_new (GstTagList * tags, GstStructure * info)
 {
   GstStructure *ret;
-  GValue val = { 0 };
 
   ret = gst_structure_new_id_empty (GST_QUARK (TOC));
 
   if (tags != NULL) {
-    g_value_init (&val, GST_TYPE_STRUCTURE);
-    gst_value_set_structure (&val, GST_STRUCTURE (tags));
-    gst_structure_id_set_value (ret, GST_QUARK (TAGS), &val);
-    g_value_unset (&val);
+    // FIXME: don't use GST_TYPE_STRUCTURE for taglist
+    gst_structure_id_set (ret, GST_QUARK (TAGS), GST_TYPE_STRUCTURE, tags,
+        NULL);
   }
 
   if (info != NULL) {
-    g_value_init (&val, GST_TYPE_STRUCTURE);
-    gst_value_set_structure (&val, info);
-    gst_structure_id_set_value (ret, GST_QUARK (INFO), &val);
-    g_value_unset (&val);
+    gst_structure_id_set (ret, GST_QUARK (INFO), GST_TYPE_STRUCTURE, info,
+        NULL);
   }
 
   return ret;
@@ -247,31 +243,23 @@ static GstStructure *
 gst_toc_entry_structure_new (GstTocEntryType type, const gchar * uid,
     GstTagList * tags, GstStructure * info)
 {
-  GValue val = { 0 };
   GstStructure *ret;
 
   ret = gst_structure_new_id_empty (GST_QUARK (TOC_ENTRY));
 
   gst_structure_id_set (ret, GST_QUARK (TYPE), GST_TYPE_TOC_ENTRY_TYPE, type,
       NULL);
-
-  g_value_init (&val, G_TYPE_STRING);
-  g_value_set_string (&val, uid);
-  gst_structure_id_set_value (ret, GST_QUARK (UID), &val);
-  g_value_unset (&val);
+  gst_structure_id_set (ret, GST_QUARK (UID), G_TYPE_STRING, uid, NULL);
 
   if (tags != NULL) {
-    g_value_init (&val, GST_TYPE_STRUCTURE);
-    gst_value_set_structure (&val, GST_STRUCTURE (tags));
-    gst_structure_id_set_value (ret, GST_QUARK (TAGS), &val);
-    g_value_unset (&val);
+    // FIXME: taglist type
+    gst_structure_id_set (ret, GST_QUARK (TAGS), GST_TYPE_STRUCTURE, tags,
+        NULL);
   }
 
   if (info != NULL) {
-    g_value_init (&val, GST_TYPE_STRUCTURE);
-    gst_value_set_structure (&val, info);
-    gst_structure_id_set_value (ret, GST_QUARK (INFO), &val);
-    g_value_unset (&val);
+    gst_structure_id_set (ret, GST_QUARK (INFO), GST_TYPE_STRUCTURE, info,
+        NULL);
   }
 
   return ret;
@@ -928,14 +916,10 @@ __gst_toc_structure_get_updated (const GstStructure * toc)
 void
 __gst_toc_structure_set_updated (GstStructure * toc, gboolean updated)
 {
-  GValue val = { 0 };
-
   g_return_if_fail (toc != NULL);
 
-  g_value_init (&val, G_TYPE_BOOLEAN);
-  g_value_set_boolean (&val, updated);
-  gst_structure_id_set_value (toc, GST_QUARK (UPDATED), &val);
-  g_value_unset (&val);
+  gst_structure_id_set (toc, GST_QUARK (UPDATED), G_TYPE_BOOLEAN, updated,
+      NULL);
 }
 
 gchar *
@@ -958,13 +942,9 @@ void
 __gst_toc_structure_set_extend_uid (GstStructure * toc,
     const gchar * extend_uid)
 {
-  GValue val = { 0 };
-
   g_return_if_fail (toc != NULL);
   g_return_if_fail (extend_uid != NULL);
 
-  g_value_init (&val, G_TYPE_STRING);
-  g_value_set_string (&val, extend_uid);
-  gst_structure_id_set_value (toc, GST_QUARK (EXTEND_UID), &val);
-  g_value_unset (&val);
+  gst_structure_id_set (toc, GST_QUARK (EXTEND_UID), G_TYPE_STRING, extend_uid,
+      NULL);
 }
