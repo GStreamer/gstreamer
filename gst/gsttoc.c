@@ -70,90 +70,7 @@
 #include "gstvalue.h"
 #include "gsttoc.h"
 #include "gstpad.h"
-
-#define GST_TOC_TOC_NAME            "toc"
-#define GST_TOC_ENTRY_NAME          "entry"
-
-#define GST_TOC_TOC_UPDATED_FIELD   "updated"
-#define GST_TOC_TOC_EXTENDUID_FIELD "extenduid"
-#define GST_TOC_INFO_FIELD          "info"
-
-#define GST_TOC_ENTRY_UID_FIELD     "uid"
-#define GST_TOC_ENTRY_TYPE_FIELD    "type"
-#define GST_TOC_ENTRY_TAGS_FIELD    "tags"
-
-#define GST_TOC_TOC_ENTRIES_FIELD   "subentries"
-
-#define GST_TOC_INFO_NAME           "info-structure"
-#define GST_TOC_INFO_TIME_FIELD     "time"
-
-#define GST_TOC_TIME_NAME           "time-structure"
-#define GST_TOC_TIME_START_FIELD    "start"
-#define GST_TOC_TIME_STOP_FIELD     "stop"
-
-
-enum
-{
-  GST_TOC_TOC = 0,
-  GST_TOC_ENTRY = 1,
-  GST_TOC_UPDATED = 2,
-  GST_TOC_EXTENDUID = 3,
-  GST_TOC_UID = 4,
-  GST_TOC_TYPE = 5,
-  GST_TOC_TAGS = 6,
-  GST_TOC_SUBENTRIES = 7,
-  GST_TOC_INFO = 8,
-  GST_TOC_INFONAME = 9,
-  GST_TOC_TIME = 10,
-  GST_TOC_TIMENAME = 11,
-  GST_TOC_TIME_START = 12,
-  GST_TOC_TIME_STOP = 13,
-  GST_TOC_LAST = 14
-};
-
-static GQuark gst_toc_fields[GST_TOC_LAST] = { 0 };
-
-void
-_priv_gst_toc_initialize (void)
-{
-  static gboolean inited = FALSE;
-
-  if (G_LIKELY (!inited)) {
-    gst_toc_fields[GST_TOC_TOC] = g_quark_from_static_string (GST_TOC_TOC_NAME);
-    gst_toc_fields[GST_TOC_ENTRY] =
-        g_quark_from_static_string (GST_TOC_ENTRY_NAME);
-
-    gst_toc_fields[GST_TOC_UPDATED] =
-        g_quark_from_static_string (GST_TOC_TOC_UPDATED_FIELD);
-    gst_toc_fields[GST_TOC_EXTENDUID] =
-        g_quark_from_static_string (GST_TOC_TOC_EXTENDUID_FIELD);
-    gst_toc_fields[GST_TOC_INFO] =
-        g_quark_from_static_string (GST_TOC_INFO_FIELD);
-
-    gst_toc_fields[GST_TOC_UID] =
-        g_quark_from_static_string (GST_TOC_ENTRY_UID_FIELD);
-    gst_toc_fields[GST_TOC_TYPE] =
-        g_quark_from_static_string (GST_TOC_ENTRY_TYPE_FIELD);
-    gst_toc_fields[GST_TOC_TAGS] =
-        g_quark_from_static_string (GST_TOC_ENTRY_TAGS_FIELD);
-
-    gst_toc_fields[GST_TOC_SUBENTRIES] =
-        g_quark_from_static_string (GST_TOC_TOC_ENTRIES_FIELD);
-
-    gst_toc_fields[GST_TOC_INFONAME] =
-        g_quark_from_static_string (GST_TOC_INFO_NAME);
-    gst_toc_fields[GST_TOC_TIME] =
-        g_quark_from_static_string (GST_TOC_INFO_TIME_FIELD);
-    gst_toc_fields[GST_TOC_TIMENAME] =
-        g_quark_from_static_string (GST_TOC_TIME_NAME);
-    gst_toc_fields[GST_TOC_TIME_START] =
-        g_quark_from_static_string (GST_TOC_TIME_START_FIELD);
-    gst_toc_fields[GST_TOC_TIME_STOP] =
-        g_quark_from_static_string (GST_TOC_TIME_STOP_FIELD);
-
-    inited = TRUE;
-  }
-}
+#include "gstquark.h"
 
 /**
  * gst_toc_new:
@@ -171,7 +88,7 @@ gst_toc_new (void)
 
   toc = g_slice_new0 (GstToc);
   toc->tags = gst_tag_list_new_empty ();
-  toc->info = gst_structure_new_id_empty (gst_toc_fields[GST_TOC_INFONAME]);
+  toc->info = gst_structure_new_id_empty (GST_QUARK (INFO_STRUCTURE));
 
   return toc;
 }
@@ -198,7 +115,7 @@ gst_toc_entry_new (GstTocEntryType type, const gchar * uid)
   entry->uid = g_strdup (uid);
   entry->type = type;
   entry->tags = gst_tag_list_new_empty ();
-  entry->info = gst_structure_new_id_empty (gst_toc_fields[GST_TOC_INFONAME]);
+  entry->info = gst_structure_new_id_empty (GST_QUARK (INFO_STRUCTURE));
 
   return entry;
 }
@@ -228,7 +145,7 @@ gst_toc_entry_new_with_pad (GstTocEntryType type, const gchar * uid,
   entry->uid = g_strdup (uid);
   entry->type = type;
   entry->tags = gst_tag_list_new_empty ();
-  entry->info = gst_structure_new_id_empty (gst_toc_fields[GST_TOC_INFONAME]);
+  entry->info = gst_structure_new_id_empty (GST_QUARK (INFO_STRUCTURE));
 
   if (pad != NULL && GST_IS_PAD (pad))
     entry->pads = g_list_append (entry->pads, gst_object_ref (pad));
@@ -307,19 +224,19 @@ gst_toc_structure_new (GstTagList * tags, GstStructure * info)
   GstStructure *ret;
   GValue val = { 0 };
 
-  ret = gst_structure_new_id_empty (gst_toc_fields[GST_TOC_TOC]);
+  ret = gst_structure_new_id_empty (GST_QUARK (TOC));
 
   if (tags != NULL) {
     g_value_init (&val, GST_TYPE_STRUCTURE);
     gst_value_set_structure (&val, GST_STRUCTURE (tags));
-    gst_structure_id_set_value (ret, gst_toc_fields[GST_TOC_TAGS], &val);
+    gst_structure_id_set_value (ret, GST_QUARK (TAGS), &val);
     g_value_unset (&val);
   }
 
   if (info != NULL) {
     g_value_init (&val, GST_TYPE_STRUCTURE);
     gst_value_set_structure (&val, info);
-    gst_structure_id_set_value (ret, gst_toc_fields[GST_TOC_INFO], &val);
+    gst_structure_id_set_value (ret, GST_QUARK (INFO), &val);
     g_value_unset (&val);
   }
 
@@ -333,27 +250,27 @@ gst_toc_entry_structure_new (GstTocEntryType type, const gchar * uid,
   GValue val = { 0 };
   GstStructure *ret;
 
-  ret = gst_structure_new_id_empty (gst_toc_fields[GST_TOC_ENTRY]);
+  ret = gst_structure_new_id_empty (GST_QUARK (TOC_ENTRY));
 
-  gst_structure_id_set (ret, gst_toc_fields[GST_TOC_TYPE],
-      GST_TYPE_TOC_ENTRY_TYPE, type, NULL);
+  gst_structure_id_set (ret, GST_QUARK (TYPE), GST_TYPE_TOC_ENTRY_TYPE, type,
+      NULL);
 
   g_value_init (&val, G_TYPE_STRING);
   g_value_set_string (&val, uid);
-  gst_structure_id_set_value (ret, gst_toc_fields[GST_TOC_UID], &val);
+  gst_structure_id_set_value (ret, GST_QUARK (UID), &val);
   g_value_unset (&val);
 
   if (tags != NULL) {
     g_value_init (&val, GST_TYPE_STRUCTURE);
     gst_value_set_structure (&val, GST_STRUCTURE (tags));
-    gst_structure_id_set_value (ret, gst_toc_fields[GST_TOC_TAGS], &val);
+    gst_structure_id_set_value (ret, GST_QUARK (TAGS), &val);
     g_value_unset (&val);
   }
 
   if (info != NULL) {
     g_value_init (&val, GST_TYPE_STRUCTURE);
     gst_value_set_structure (&val, info);
-    gst_structure_id_set_value (ret, gst_toc_fields[GST_TOC_INFO], &val);
+    gst_structure_id_set_value (ret, GST_QUARK (INFO), &val);
     g_value_unset (&val);
   }
 
@@ -364,11 +281,11 @@ static guint
 gst_toc_entry_structure_n_subentries (const GstStructure * entry)
 {
   if (G_UNLIKELY (!gst_structure_id_has_field_typed (entry,
-              gst_toc_fields[GST_TOC_SUBENTRIES], GST_TYPE_ARRAY)))
+              GST_QUARK (SUB_ENTRIES), GST_TYPE_ARRAY)))
     return 0;
   else
     return gst_value_array_get_size ((gst_structure_id_get_value (entry,
-                gst_toc_fields[GST_TOC_SUBENTRIES])));
+                GST_QUARK (SUB_ENTRIES))));
 }
 
 static const GstStructure *
@@ -383,12 +300,12 @@ gst_toc_entry_structure_nth_subentry (const GstStructure * entry, guint nth)
     return NULL;
 
   if (G_UNLIKELY (!gst_structure_id_has_field_typed (entry,
-              gst_toc_fields[GST_TOC_SUBENTRIES], GST_TYPE_ARRAY)))
+              GST_QUARK (SUB_ENTRIES), GST_TYPE_ARRAY)))
     return NULL;
   else {
     array =
         gst_value_array_get_value (gst_structure_id_get_value (entry,
-            gst_toc_fields[GST_TOC_SUBENTRIES]), nth);
+            GST_QUARK (SUB_ENTRIES)), nth);
     return gst_value_get_structure (array);
   }
 }
@@ -407,20 +324,20 @@ gst_toc_entry_from_structure (const GstStructure * entry, guint level)
 
   g_return_val_if_fail (entry != NULL, NULL);
   g_return_val_if_fail (gst_structure_id_has_field_typed (entry,
-          gst_toc_fields[GST_TOC_UID], G_TYPE_STRING), NULL);
+          GST_QUARK (UID), G_TYPE_STRING), NULL);
   g_return_val_if_fail (gst_structure_id_has_field_typed (entry,
-          gst_toc_fields[GST_TOC_TYPE], GST_TYPE_TOC_ENTRY_TYPE), NULL);
+          GST_QUARK (TYPE), GST_TYPE_TOC_ENTRY_TYPE), NULL);
 
-  val = gst_structure_id_get_value (entry, gst_toc_fields[GST_TOC_UID]);
+  val = gst_structure_id_get_value (entry, GST_QUARK (UID));
   uid = g_value_get_string (val);
 
   ret = gst_toc_entry_new (GST_TOC_ENTRY_TYPE_CHAPTER, uid);
 
-  gst_structure_get_enum (entry, GST_TOC_ENTRY_TYPE_FIELD,
+  gst_structure_get_enum (entry, g_quark_to_string (GST_QUARK (TYPE)),
       GST_TYPE_TOC_ENTRY_TYPE, (gint *) & (ret->type));
 
   if (gst_structure_id_has_field_typed (entry,
-          gst_toc_fields[GST_TOC_SUBENTRIES], GST_TYPE_ARRAY)) {
+          GST_QUARK (SUB_ENTRIES), GST_TYPE_ARRAY)) {
     count = gst_toc_entry_structure_n_subentries (entry);
 
     for (i = 0; i < count; ++i) {
@@ -461,8 +378,8 @@ gst_toc_entry_from_structure (const GstStructure * entry, guint level)
   }
 
   if (gst_structure_id_has_field_typed (entry,
-          gst_toc_fields[GST_TOC_TAGS], GST_TYPE_STRUCTURE)) {
-    val = gst_structure_id_get_value (entry, gst_toc_fields[GST_TOC_TAGS]);
+          GST_QUARK (TAGS), GST_TYPE_STRUCTURE)) {
+    val = gst_structure_id_get_value (entry, GST_QUARK (TAGS));
 
     if (G_LIKELY (GST_IS_TAG_LIST (gst_value_get_structure (val)))) {
       list = gst_tag_list_copy (GST_TAG_LIST (gst_value_get_structure (val)));
@@ -472,8 +389,8 @@ gst_toc_entry_from_structure (const GstStructure * entry, guint level)
   }
 
   if (gst_structure_id_has_field_typed (entry,
-          gst_toc_fields[GST_TOC_INFO], GST_TYPE_STRUCTURE)) {
-    val = gst_structure_id_get_value (entry, gst_toc_fields[GST_TOC_INFO]);
+          GST_QUARK (INFO), GST_TYPE_STRUCTURE)) {
+    val = gst_structure_id_get_value (entry, GST_QUARK (INFO));
 
     if (G_LIKELY (GST_IS_STRUCTURE (gst_value_get_structure (val)))) {
       st = gst_structure_copy (gst_value_get_structure (val));
@@ -502,7 +419,7 @@ __gst_toc_from_structure (const GstStructure * toc)
   ret = gst_toc_new ();
 
   if (gst_structure_id_has_field_typed (toc,
-          gst_toc_fields[GST_TOC_SUBENTRIES], GST_TYPE_ARRAY)) {
+          GST_QUARK (SUB_ENTRIES), GST_TYPE_ARRAY)) {
     count = gst_toc_entry_structure_n_subentries (toc);
 
     for (i = 0; i < count; ++i) {
@@ -545,8 +462,8 @@ __gst_toc_from_structure (const GstStructure * toc)
   }
 
   if (gst_structure_id_has_field_typed (toc,
-          gst_toc_fields[GST_TOC_TAGS], GST_TYPE_STRUCTURE)) {
-    val = gst_structure_id_get_value (toc, gst_toc_fields[GST_TOC_TAGS]);
+          GST_QUARK (TAGS), GST_TYPE_STRUCTURE)) {
+    val = gst_structure_id_get_value (toc, GST_QUARK (TAGS));
 
     if (G_LIKELY (GST_IS_TAG_LIST (gst_value_get_structure (val)))) {
       list = gst_tag_list_copy (GST_TAG_LIST (gst_value_get_structure (val)));
@@ -556,8 +473,8 @@ __gst_toc_from_structure (const GstStructure * toc)
   }
 
   if (gst_structure_id_has_field_typed (toc,
-          gst_toc_fields[GST_TOC_INFO], GST_TYPE_STRUCTURE)) {
-    val = gst_structure_id_get_value (toc, gst_toc_fields[GST_TOC_INFO]);
+          GST_QUARK (INFO), GST_TYPE_STRUCTURE)) {
+    val = gst_structure_id_get_value (toc, GST_QUARK (INFO));
 
     if (G_LIKELY (GST_IS_STRUCTURE (gst_value_get_structure (val)))) {
       st = gst_structure_copy (gst_value_get_structure (val));
@@ -647,8 +564,7 @@ gst_toc_entry_to_structure (const GstTocEntry * entry, guint level)
     cur = cur->next;
   }
 
-  gst_structure_id_set_value (ret, gst_toc_fields[GST_TOC_SUBENTRIES],
-      &subentries_val);
+  gst_structure_id_set_value (ret, GST_QUARK (SUB_ENTRIES), &subentries_val);
 
   g_value_unset (&subentries_val);
   g_value_unset (&entry_val);
@@ -719,8 +635,7 @@ __gst_toc_to_structure (const GstToc * toc)
     cur = cur->next;
   }
 
-  gst_structure_id_set_value (ret, gst_toc_fields[GST_TOC_SUBENTRIES],
-      &subentries_val);
+  gst_structure_id_set_value (ret, GST_QUARK (SUB_ENTRIES), &subentries_val);
 
   g_value_unset (&val);
   g_value_unset (&subentries_val);
@@ -903,21 +818,19 @@ gst_toc_entry_set_start_stop (GstTocEntry * entry, gint64 start, gint64 stop)
   g_return_if_fail (entry != NULL);
   g_return_if_fail (GST_IS_STRUCTURE (entry->info));
 
-  if (gst_structure_id_has_field_typed (entry->info,
-          gst_toc_fields[GST_TOC_TIME], GST_TYPE_STRUCTURE)) {
-    val =
-        gst_structure_id_get_value (entry->info, gst_toc_fields[GST_TOC_TIME]);
+  if (gst_structure_id_has_field_typed (entry->info, GST_QUARK (TIME),
+          GST_TYPE_STRUCTURE)) {
+    val = gst_structure_id_get_value (entry->info, GST_QUARK (TIME));
     structure = gst_structure_copy (gst_value_get_structure (val));
   }
 
   if (structure == NULL)
-    structure = gst_structure_new_id_empty (gst_toc_fields[GST_TOC_TIMENAME]);
+    structure = gst_structure_new_id_empty (GST_QUARK (TIME_STRUCTURE));
 
-  gst_structure_id_set (structure, gst_toc_fields[GST_TOC_TIME_START],
-      G_TYPE_INT64, start, gst_toc_fields[GST_TOC_TIME_STOP], G_TYPE_INT64,
-      stop, NULL);
+  gst_structure_id_set (structure, GST_QUARK (START),
+      G_TYPE_INT64, start, GST_QUARK (STOP), G_TYPE_INT64, stop, NULL);
 
-  gst_structure_id_set (entry->info, gst_toc_fields[GST_TOC_TIME],
+  gst_structure_id_set (entry->info, GST_QUARK (TIME),
       GST_TYPE_STRUCTURE, structure, NULL);
 
   gst_structure_free (structure);
@@ -948,28 +861,28 @@ gst_toc_entry_get_start_stop (const GstTocEntry * entry, gint64 * start,
   g_return_val_if_fail (GST_IS_STRUCTURE (entry->info), FALSE);
 
   if (!gst_structure_id_has_field_typed (entry->info,
-          gst_toc_fields[GST_TOC_TIME], GST_TYPE_STRUCTURE))
+          GST_QUARK (TIME), GST_TYPE_STRUCTURE))
     return FALSE;
 
-  val = gst_structure_id_get_value (entry->info, gst_toc_fields[GST_TOC_TIME]);
+  val = gst_structure_id_get_value (entry->info, GST_QUARK (TIME));
   structure = gst_value_get_structure (val);
 
   if (start != NULL) {
     if (gst_structure_id_has_field_typed (structure,
-            gst_toc_fields[GST_TOC_TIME_START], G_TYPE_INT64))
+            GST_QUARK (START), G_TYPE_INT64))
       *start =
           g_value_get_int64 (gst_structure_id_get_value (structure,
-              gst_toc_fields[GST_TOC_TIME_START]));
+              GST_QUARK (START)));
     else
       ret = FALSE;
   }
 
   if (stop != NULL) {
     if (gst_structure_id_has_field_typed (structure,
-            gst_toc_fields[GST_TOC_TIME_STOP], G_TYPE_INT64))
+            GST_QUARK (STOP), G_TYPE_INT64))
       *stop =
           g_value_get_int64 (gst_structure_id_get_value (structure,
-              gst_toc_fields[GST_TOC_TIME_STOP]));
+              GST_QUARK (STOP)));
     else
       ret = FALSE;
   }
@@ -1004,8 +917,8 @@ __gst_toc_structure_get_updated (const GstStructure * toc)
   g_return_val_if_fail (GST_IS_STRUCTURE (toc), FALSE);
 
   if (G_LIKELY (gst_structure_id_has_field_typed (toc,
-              gst_toc_fields[GST_TOC_UPDATED], G_TYPE_BOOLEAN))) {
-    val = gst_structure_id_get_value (toc, gst_toc_fields[GST_TOC_UPDATED]);
+              GST_QUARK (UPDATED), G_TYPE_BOOLEAN))) {
+    val = gst_structure_id_get_value (toc, GST_QUARK (UPDATED));
     return g_value_get_boolean (val);
   }
 
@@ -1021,7 +934,7 @@ __gst_toc_structure_set_updated (GstStructure * toc, gboolean updated)
 
   g_value_init (&val, G_TYPE_BOOLEAN);
   g_value_set_boolean (&val, updated);
-  gst_structure_id_set_value (toc, gst_toc_fields[GST_TOC_UPDATED], &val);
+  gst_structure_id_set_value (toc, GST_QUARK (UPDATED), &val);
   g_value_unset (&val);
 }
 
@@ -1033,8 +946,8 @@ __gst_toc_structure_get_extend_uid (const GstStructure * toc)
   g_return_val_if_fail (GST_IS_STRUCTURE (toc), NULL);
 
   if (G_LIKELY (gst_structure_id_has_field_typed (toc,
-              gst_toc_fields[GST_TOC_EXTENDUID], G_TYPE_STRING))) {
-    val = gst_structure_id_get_value (toc, gst_toc_fields[GST_TOC_EXTENDUID]);
+              GST_QUARK (EXTEND_UID), G_TYPE_STRING))) {
+    val = gst_structure_id_get_value (toc, GST_QUARK (EXTEND_UID));
     return g_strdup (g_value_get_string (val));
   }
 
@@ -1052,6 +965,6 @@ __gst_toc_structure_set_extend_uid (GstStructure * toc,
 
   g_value_init (&val, G_TYPE_STRING);
   g_value_set_string (&val, extend_uid);
-  gst_structure_id_set_value (toc, gst_toc_fields[GST_TOC_EXTENDUID], &val);
+  gst_structure_id_set_value (toc, GST_QUARK (EXTEND_UID), &val);
   g_value_unset (&val);
 }

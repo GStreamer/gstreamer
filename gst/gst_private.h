@@ -113,7 +113,6 @@ void  _priv_gst_sample_initialize (void);
 void  _priv_gst_tag_initialize (void);
 void  _priv_gst_value_initialize (void);
 void  _priv_gst_debug_init (void);
-void  _priv_gst_toc_initialize (void);
 
 /* TOC functions */
 /* These functions are used to parse TOC messages, events and queries */
