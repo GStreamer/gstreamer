@@ -104,6 +104,7 @@ struct _MpegTSPacketizer2 {
   gint64         window_min;
   gint64         skew;
   gint64         prev_send_diff;
+  gint           wrap_count;
 
   /* offset/bitrate calculator */
   gboolean       calculate_offset;

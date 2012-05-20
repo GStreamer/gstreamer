@@ -33,6 +33,7 @@
 
 /* maximal PCR time */
 #define PCR_MAX_VALUE (((((guint64)1)<<33) * 300) + 298)
+#define PCR_GST_MAX_VALUE (PCR_MAX_VALUE * GST_MSECOND / (27000))
 #define PTS_DTS_MAX_VALUE (((guint64)1) << 33)
 
 #include "mpegtspacketizer.h"
@@ -2956,6 +2957,7 @@ mpegts_packetizer_reset_skew (MpegTSPacketizer2 * packetizer)
   packetizer->skew = 0;
   packetizer->prev_send_diff = GST_CLOCK_TIME_NONE;
   packetizer->prev_out_time = GST_CLOCK_TIME_NONE;
+  packetizer->wrap_count = 0;
   GST_DEBUG ("reset skew correction");
 }
 
@@ -3053,10 +3055,8 @@ calculate_skew (MpegTSPacketizer2 * packetizer, guint64 pcrtime,
   GstClockTime gstpcrtime, out_time;
   guint64 slope;
 
-  gstpcrtime = PCRTIME_TO_GSTTIME (pcrtime);
-
-  /* keep track of the last extended pcrtime */
-  packetizer->last_pcrtime = gstpcrtime;
+  gstpcrtime =
+      PCRTIME_TO_GSTTIME (pcrtime) + packetizer->wrap_count * PCR_GST_MAX_VALUE;
 
   /* first time, lock on to time and gstpcrtime */
   if (G_UNLIKELY (!GST_CLOCK_TIME_IS_VALID (packetizer->base_time))) {
@@ -3074,23 +3074,29 @@ calculate_skew (MpegTSPacketizer2 * packetizer, guint64 pcrtime,
 
   if (G_LIKELY (gstpcrtime >= packetizer->base_pcrtime))
     send_diff = gstpcrtime - packetizer->base_pcrtime;
-  else if (GST_CLOCK_TIME_IS_VALID (time)) {
-    /* elapsed time at sender, timestamps can go backwards and thus be smaller
-     * than our base time, take a new base time in that case. */
-    GST_WARNING ("backward timestamps at server, taking new base time");
-    mpegts_packetizer_resync (packetizer, time, gstpcrtime, FALSE);
-    send_diff = 0;
+  else if (GST_CLOCK_TIME_IS_VALID (time)
+      && (packetizer->last_pcrtime - gstpcrtime > PCR_GST_MAX_VALUE / 2)) {
+    /* Detect wraparounds */
+    GST_DEBUG ("PCR wrap");
+    packetizer->wrap_count++;
+    gstpcrtime =
+        PCRTIME_TO_GSTTIME (pcrtime) +
+        packetizer->wrap_count * PCR_GST_MAX_VALUE;
+    send_diff = gstpcrtime - packetizer->base_pcrtime;
   } else {
     GST_WARNING ("backward timestamps at server but no timestamps");
     send_diff = 0;
     /* at least try to get a new timestamp.. */
-    packetizer->base_time = -1;
+    packetizer->base_time = GST_CLOCK_TIME_NONE;
   }
 
   GST_DEBUG ("gstpcr %" GST_TIME_FORMAT ", buftime %" GST_TIME_FORMAT ", base %"
       GST_TIME_FORMAT ", send_diff %" GST_TIME_FORMAT,
       GST_TIME_ARGS (gstpcrtime), GST_TIME_ARGS (time),
       GST_TIME_ARGS (packetizer->base_pcrtime), GST_TIME_ARGS (send_diff));
+
+  /* keep track of the last extended pcrtime */
+  packetizer->last_pcrtime = gstpcrtime;
 
   /* we don't have an arrival timestamp so we can't do skew detection. we
    * should still apply a timestamp based on RTP timestamp and base_time */
