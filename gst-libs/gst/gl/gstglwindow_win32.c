@@ -141,7 +141,7 @@ gst_gl_window_init (GstGLWindow * window)
 
 /* Must be called in the gl thread */
 GstGLWindow *
-gst_gl_window_new (DWORD_PTR external_gl_context)
+gst_gl_window_new (guintptr external_gl_context)
 {
   GstGLWindow *window = g_object_new (GST_GL_TYPE_WINDOW, NULL);
   GstGLWindowPrivate *priv = window->priv;
@@ -178,7 +178,8 @@ gst_gl_window_new (DWORD_PTR external_gl_context)
     goto failure;
   }
 
-  g_debug ("gl window created: %lud\n", (gulong) priv->internal_win_id);
+  g_debug ("gl window created: %" G_GUINTPTR_FORMAT "\n",
+      (guintptr) priv->internal_win_id);
 
   //device is set in the window_proc
   if (!priv->device) {
@@ -201,11 +202,11 @@ gst_gl_window_error_quark (void)
   return g_quark_from_static_string ("gst-gl-window-error");
 }
 
-gulong
+guintptr
 gst_gl_window_get_internal_gl_context (GstGLWindow * window)
 {
   GstGLWindowPrivate *priv = window->priv;
-  return (gulong) priv->gl_context;
+  return (guintptr) priv->gl_context;
 }
 
 void
@@ -235,7 +236,7 @@ gst_gl_window_activate_gl_context (GstGLWindow * window, gboolean activate)
 }
 
 void
-gst_gl_window_set_external_window_id (GstGLWindow * window, gulong id)
+gst_gl_window_set_external_window_id (GstGLWindow * window, guintptr id)
 {
   GstGLWindowPrivate *priv = window->priv;
 
@@ -250,11 +251,11 @@ gst_gl_window_set_external_window_id (GstGLWindow * window, gulong id)
   if (parent_id) {
     WNDPROC parent_proc = GetProp (parent_id, "gl_window_parent_proc");
 
-    g_debug ("release parent %lud\n", (gulong) parent_id);
+    g_debug ("release parent %" G_GUINTPTR_FORMAT "\n", (guintptr) parent_id);
 
     g_return_if_fail (parent_proc);
 
-    SetWindowLongPtr (parent_id, GWL_WNDPROC, (LONG) parent_proc);
+    SetWindowLongPtr (parent_id, GWLP_WNDPROC, (LONG_PTR) parent_proc);
     SetParent (priv->internal_win_id, NULL);
 
     RemoveProp (parent_id, "gl_window_parent_proc");
@@ -263,15 +264,15 @@ gst_gl_window_set_external_window_id (GstGLWindow * window, gulong id)
   //not 0
   if (id) {
     WNDPROC window_parent_proc =
-        (WNDPROC) GetWindowLongPtr ((HWND) id, GWL_WNDPROC);
+        (WNDPROC) GetWindowLongPtr ((HWND) id, GWLP_WNDPROC);
     RECT rect;
 
-    g_debug ("set parent %lud\n", (gulong) id);
+    g_debug ("set parent %" G_GUINTPTR_FORMAT "\n", id);
 
     SetProp (priv->internal_win_id, "gl_window_parent_id", (HWND) id);
     SetProp ((HWND) id, "gl_window_id", priv->internal_win_id);
     SetProp ((HWND) id, "gl_window_parent_proc", (WNDPROC) window_parent_proc);
-    SetWindowLongPtr ((HWND) id, GWL_WNDPROC, (LONG_PTR) sub_class_proc);
+    SetWindowLongPtr ((HWND) id, GWLP_WNDPROC, (LONG_PTR) sub_class_proc);
 
     SetWindowLongPtr (priv->internal_win_id, GWL_STYLE, WS_CHILD | WS_MAXIMIZE);
     SetParent (priv->internal_win_id, (HWND) id);
@@ -474,23 +475,25 @@ window_proc (HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
       gst_gl_window_set_pixel_format (window);
       priv->gl_context = wglCreateContext (priv->device);
       if (priv->gl_context)
-        g_debug ("gl context created: %lud\n", (gulong) priv->gl_context);
+        g_debug ("gl context created: %" G_GUINTPTR_FORMAT "\n",
+            (guintptr) priv->gl_context);
       else
-        g_debug ("failed to create glcontext %lud, %lud\n", (gulong) hWnd,
-            GetLastError ());
+        g_debug ("failed to create glcontext %" G_GUINTPTR_FORMAT ", %lud\n",
+            (guintptr) hWnd, GetLastError ());
       g_assert (priv->gl_context);
       ReleaseDC (hWnd, priv->device);
       if (!wglMakeCurrent (priv->device, priv->gl_context))
-        g_debug ("failed to make opengl context current %lud, %lud\n",
-            (gulong) hWnd, GetLastError ());
+        g_debug ("failed to make opengl context current %" G_GUINTPTR_FORMAT
+            ", %lud\n", (guintptr) hWnd, GetLastError ());
 
       if (priv->external_gl_context) {
         if (!wglShareLists (priv->external_gl_context, priv->gl_context))
-          g_debug ("failed to share opengl context %lud with %lud\n",
-              (gulong) priv->gl_context, (gulong) priv->external_gl_context);
+          g_debug ("failed to share opengl context %" G_GUINTPTR_FORMAT
+              " with %" G_GUINTPTR_FORMAT "\n", (guintptr) priv->gl_context,
+              (guintptr) priv->external_gl_context);
         else
-          g_debug ("share opengl context succeed %lud\n",
-              (gulong) priv->external_gl_context);
+          g_debug ("share opengl context succeed %" G_GUINTPTR_FORMAT "\n",
+              (guintptr) priv->external_gl_context);
       }
     }
 
@@ -566,7 +569,7 @@ window_proc (HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 
           g_assert (parent_proc);
 
-          SetWindowLongPtr (parent_id, GWL_WNDPROC, (LONG) parent_proc);
+          SetWindowLongPtr (parent_id, GWLP_WNDPROC, (LONG_PTR) parent_proc);
           SetParent (hWnd, NULL);
 
           RemoveProp (parent_id, "gl_window_parent_proc");
@@ -577,19 +580,19 @@ window_proc (HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
         RemoveProp (hWnd, "gl_window");
 
         if (!wglMakeCurrent (NULL, NULL))
-          g_debug ("failed to make current %lud, %lud\n", (gulong) hWnd,
-              GetLastError ());
+          g_debug ("failed to make current %" G_GUINTPTR_FORMAT ", %lud\n",
+              (guintptr) hWnd, GetLastError ());
 
         if (priv->gl_context) {
           if (!wglDeleteContext (priv->gl_context))
-            g_debug ("failed to destroy context %lud, %lud\n",
-                (gulong) priv->gl_context, GetLastError ());
+            g_debug ("failed to destroy context %" G_GUINTPTR_FORMAT ", %lud\n",
+                (guintptr) priv->gl_context, GetLastError ());
         }
 
         if (priv->internal_win_id) {
           if (!DestroyWindow (priv->internal_win_id))
-            g_debug ("failed to destroy window %lud, %lud\n", (gulong) hWnd,
-                GetLastError ());
+            g_debug ("failed to destroy window %" G_GUINTPTR_FORMAT ", %lud\n",
+                (guintptr) hWnd, GetLastError ());
         }
 
         PostQuitMessage (0);
