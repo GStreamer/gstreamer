@@ -29,6 +29,9 @@
 
 G_BEGIN_DECLS
 
+#define GST_TYPE_TOC (gst_toc_get_type ())
+#define GST_TYPE_TOC_ENTRY (gst_toc_entry_get_type ())
+
 typedef struct _GstTocEntry GstTocEntry;
 typedef struct _GstToc GstToc;
 
@@ -89,6 +92,10 @@ struct _GstToc {
   /*< private >*/
   gpointer _gst_reserved[GST_PADDING];
 };
+
+/* functions to return type structures */
+GType           gst_toc_get_type                (void);
+GType           gst_toc_entry_get_type          (void);
 
 /* functions to create new structures */
 GstToc *        gst_toc_new                     (void);

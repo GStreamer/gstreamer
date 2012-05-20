@@ -72,6 +72,11 @@
 #include "gstpad.h"
 #include "gstquark.h"
 
+G_DEFINE_BOXED_TYPE (GstToc, gst_toc,
+    (GBoxedCopyFunc) gst_toc_copy, (GBoxedFreeFunc) gst_toc_free);
+G_DEFINE_BOXED_TYPE (GstTocEntry, gst_toc_entry,
+    (GBoxedCopyFunc) gst_toc_entry_copy, (GBoxedFreeFunc) gst_toc_entry_free);
+
 /**
  * gst_toc_new:
  *
