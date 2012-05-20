@@ -410,6 +410,10 @@ struct _GstPlayBin
                                  * input-selector, so that we only post a
                                  * warning once */
 
+  gboolean pending_flush_finish;        /* whether we are pending to send a custom
+                                         * subtitleoverlay-flush-subtitle-finish event
+                                         * on pad activation */
+
   GstElement *audio_sink;       /* configured audio sink, or NULL      */
   GstElement *video_sink;       /* configured video sink, or NULL      */
   GstElement *text_sink;        /* configured text sink, or NULL       */
@@ -1922,9 +1926,6 @@ gst_play_bin_set_current_text_stream (GstPlayBin * playbin, gint stream)
           gst_play_bin_suburidecodebin_block (group, group->suburidecodebin,
               TRUE);
 
-        /* activate the selected pad */
-        g_object_set (selector, "active-pad", sinkpad, NULL);
-
         src = gst_element_get_static_pad (GST_ELEMENT_CAST (selector), "src");
         peer = gst_pad_get_peer (src);
         if (peer) {
@@ -1937,9 +1938,13 @@ gst_play_bin_set_current_text_stream (GstPlayBin * playbin, gint stream)
           s = gst_structure_new_empty ("subtitleoverlay-flush-subtitle");
           event = gst_event_new_custom (GST_EVENT_CUSTOM_DOWNSTREAM_OOB, s);
           gst_pad_send_event (peer, event);
+          playbin->pending_flush_finish = TRUE;
           gst_object_unref (peer);
         }
         gst_object_unref (src);
+
+        /* activate the selected pad */
+        g_object_set (selector, "active-pad", sinkpad, NULL);
 
         /* Unblock pads if necessary */
         if (need_unblock)
@@ -2574,12 +2579,36 @@ selector_active_pad_changed (GObject * selector, GParamSpec * pspec,
       property = "current-text";
       playbin->current_text = get_current_stream_number (playbin,
           group->text_channels);
+
+      if (playbin->pending_flush_finish) {
+        GstEvent *ev;
+        GstStructure *s;
+        GstPad *src, *peer;
+
+        playbin->pending_flush_finish = FALSE;
+        GST_PLAY_BIN_UNLOCK (playbin);
+
+        /* Flush the subtitle renderer to remove any
+         * currently displayed subtitles. This event will
+         * never travel outside subtitleoverlay!
+         */
+        src = gst_element_get_static_pad (GST_ELEMENT_CAST (selector), "src");
+        peer = gst_pad_get_peer (src);
+        s = gst_structure_new_empty ("subtitleoverlay-flush-subtitle-finish");
+        ev = gst_event_new_custom (GST_EVENT_CUSTOM_DOWNSTREAM_OOB, s);
+        gst_pad_send_event (peer, ev);
+        gst_object_unref (peer);
+        gst_object_unref (src);
+
+        goto notify;
+      }
       break;
     default:
       property = NULL;
   }
   GST_PLAY_BIN_UNLOCK (playbin);
 
+notify:
   if (property)
     g_object_notify (G_OBJECT (playbin), property);
 }
