@@ -1771,7 +1771,7 @@ gst_video_decoder_prepare_finish_frame (GstVideoDecoder *
   GList *l, *events = NULL;
 
 #ifndef GST_DISABLE_GST_DEBUG
-  GST_LOG_OBJECT (decoder, "n %d in %d out %d",
+  GST_LOG_OBJECT (decoder, "n %d in %" G_GSIZE_FORMAT " out %" G_GSIZE_FORMAT,
       g_list_length (priv->frames),
       gst_adapter_available (priv->input_adapter),
       gst_adapter_available (priv->output_adapter));
