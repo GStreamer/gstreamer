@@ -2364,8 +2364,8 @@ gst_element_query_convert (GstElement * element, GstFormat src_format,
  * PAUSED. If the element supports seek in READY, it will always return %TRUE when
  * it receives the event in the READY state.
  *
- * Returns: %TRUE if the seek operation succeeded (the seek might not always be
- * executed instantly though)
+ * Returns: %TRUE if the seek operation succeeded. Flushing seeks will trigger a
+ * preroll, which will emit %GST_MESSAGE_ASYNC_DONE.
  *
  * Since: 0.10.7
  */
