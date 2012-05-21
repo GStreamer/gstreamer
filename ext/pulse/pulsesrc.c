@@ -1338,7 +1338,7 @@ gst_pulsesrc_prepare (GstAudioSrc * asrc, GstAudioRingBufferSpec * spec)
   /* enable event notifications */
   GST_LOG_OBJECT (pulsesrc, "subscribing to context events");
   if (!(o = pa_context_subscribe (pulsesrc->context,
-              PA_SUBSCRIPTION_MASK_SINK_INPUT, NULL, NULL))) {
+              PA_SUBSCRIPTION_MASK_SOURCE_OUTPUT, NULL, NULL))) {
     GST_ELEMENT_ERROR (pulsesrc, RESOURCE, FAILED,
         ("pa_context_subscribe() failed: %s",
             pa_strerror (pa_context_errno (pulsesrc->context))), (NULL));
