@@ -171,7 +171,7 @@ typedef struct
   gint64 buffering_left;
   GstState state;
   guint update_id;
-  guint seek_timeout_id;
+  guint seek_timeout_id;        /* Used for scrubbing in paused */
   gulong changed_id;
   guint fill_id;
 
@@ -539,11 +539,6 @@ static void
 seek_cb (GtkRange * range, PlaybackApp * app)
 {
   gint64 real;
-  /* If the timer hasn't expired yet, then the pipeline is running */
-  if (app->play_scrub && app->seek_timeout_id != 0) {
-    GST_DEBUG ("do scrub seek, PAUSED");
-    gst_element_set_state (app->pipeline, GST_STATE_PAUSED);
-  }
 
   real =
       gtk_range_get_value (GTK_RANGE (app->seek_scale)) * app->duration /
