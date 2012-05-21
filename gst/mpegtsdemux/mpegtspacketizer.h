@@ -62,28 +62,33 @@ typedef struct _MpegTSPacketizerPrivate MpegTSPacketizerPrivate;
 
 typedef struct
 {
-  guint continuity_counter;
-  GstAdapter *section_adapter;
-  guint8 section_table_id;
-  guint section_length;
+  guint   continuity_counter;
+
+  guint8 *section_data;
+  guint   section_length;
+  guint16 section_offset;
+  guint8  section_table_id;
+
   GSList *subtables;
+
+  /* Offset of the data contained in the section */
   guint64 offset;
 } MpegTSPacketizerStream;
 
 struct _MpegTSPacketizer2 {
-  GObject object;
+  GObject     parent;
 
   GstAdapter *adapter;
   /* streams hashed by pid */
   /* FIXME : be more memory efficient (see how it's done in mpegtsbase) */
   MpegTSPacketizerStream **streams;
-  gboolean disposed;
-  gboolean know_packet_size;
-  guint16 packet_size;
-  GstCaps *caps;
+  gboolean    disposed;
+  gboolean    know_packet_size;
+  guint16     packet_size;
+  GstCaps    *caps;
 
   /* current offset of the tip of the adapter */
-  guint64 offset;
+  guint64  offset;
   gboolean empty;
 
   /* clock skew calculation */
@@ -118,36 +123,38 @@ struct _MpegTSPacketizer2Class {
 
 typedef struct
 {
-  GstBuffer *buffer;
-  gint16 pid;
-  guint8 payload_unit_start_indicator;
-  guint8 adaptation_field_control;
-  guint8 continuity_counter;
+  gint16  pid;
+  guint8  payload_unit_start_indicator;
+  guint8  adaptation_field_control;
+  guint8  continuity_counter;
   guint8 *payload;
-
-  GstMapInfo bufmap;
 
   guint8 *data_start;
   guint8 *data_end;
   guint8 *data;
 
-  guint8 afc_flags;
+  guint8  afc_flags;
   guint64 pcr;
   guint64 opcr;
   guint64 offset;
+  GstClockTime origts;
 } MpegTSPacketizerPacket;
 
 typedef struct
 {
   gboolean complete;
-  GstBuffer *buffer;
-  gint16 pid;
-  guint8 table_id;
-  guint16 subtable_extension;
-  guint section_length;
-  guint8 version_number;
-  guint8 current_next_indicator;
-  guint32 crc;
+  /* GstBuffer *buffer; */
+  guint8  *data;
+  guint    section_length;
+  guint64  offset;
+
+  gint16   pid;
+  guint8   table_id;
+  guint16  subtable_extension;
+  guint8   version_number;
+  guint8   current_next_indicator;
+
+  guint32  crc;
 } MpegTSPacketizerSection; 
 
 typedef struct
