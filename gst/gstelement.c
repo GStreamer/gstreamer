@@ -1646,10 +1646,10 @@ gst_element_default_send_event (GstElement * element, GstEvent * event)
  * This function takes owership of the provided event so you should
  * gst_event_ref() it if you want to reuse the event after this call.
  *
- * Returns: %TRUE if the event was handled. Events that execute asynchronously
- * (such as flushing seeks) will emit %GST_MESSAGE_ASYNC_DONE.
- *
  * MT safe.
+ *
+ * Returns: %TRUE if the event was handled. Events that trigger a preroll (such
+ * as flushing seeks and steps) will emit %GST_MESSAGE_ASYNC_DONE.
  */
 gboolean
 gst_element_send_event (GstElement * element, GstEvent * event)
@@ -1690,9 +1690,10 @@ gst_element_send_event (GstElement * element, GstEvent * event)
  * the parameters. The seek event is sent to the element using
  * gst_element_send_event().
  *
- * Returns: %TRUE if the event was handled.
- *
  * MT safe.
+ *
+ * Returns: %TRUE if the event was handled. Flushing seeks will trigger a
+ * preroll, which will emit %GST_MESSAGE_ASYNC_DONE.
  */
 gboolean
 gst_element_seek (GstElement * element, gdouble rate, GstFormat format,
