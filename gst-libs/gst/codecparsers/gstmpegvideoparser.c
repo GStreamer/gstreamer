@@ -298,18 +298,18 @@ gst_mpeg_video_parse (const guint8 * data, gsize size, guint offset)
   GstByteReader br;
   GList *ret = NULL;
 
-  size -= offset;
-
   if (!initialized) {
     GST_DEBUG_CATEGORY_INIT (mpegvideo_parser_debug, "codecparsers_mpegvideo",
         0, "Mpegvideo parser library");
     initialized = TRUE;
   }
 
-  if (size <= 0) {
+  if (size <= offset) {
     GST_DEBUG ("Can't parse from offset %d, buffer is to small", offset);
     return NULL;
   }
+
+  size -= offset;
 
   gst_byte_reader_init (&br, &data[offset], size);
 
