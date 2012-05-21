@@ -27,6 +27,7 @@
 #endif
 
 #include <stdlib.h>
+#include <string.h>
 
 #include "mpegtsbase.h"
 #include "mpegtsparse.h"
@@ -563,7 +564,11 @@ mpegts_parse_push (MpegTSBase * base, MpegTSPacketizerPacket * packet,
     mpegts_parse_sync_program_pads (parse);
 
   pid = packet->pid;
-  buffer = packet->buffer;
+  buffer =
+      gst_buffer_new_allocate (NULL, packet->data_end - packet->data_start,
+      NULL);
+  gst_buffer_fill (buffer, 0, packet->data_start,
+      packet->data_end - packet->data_start);
 
   GST_OBJECT_LOCK (parse);
   /* clear tspad->pushed on pads */
@@ -636,7 +641,6 @@ mpegts_parse_push (MpegTSBase * base, MpegTSPacketizerPacket * packet,
   }
 
   gst_buffer_unref (buffer);
-  packet->buffer = NULL;
 
   return ret;
 }
