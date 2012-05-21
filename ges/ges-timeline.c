@@ -855,6 +855,9 @@ ges_timeline_snap_position (GESTimeline * timeline, GESTrackObject * trackobj,
     nxt_iter = g_sequence_iter_next (nxt_iter);
   }
 
+  if (ret == NULL)
+    off = G_MAXUINT64;
+
   prev_iter = g_sequence_iter_prev (iter);
   while (!g_sequence_iter_is_begin (prev_iter)) {
     prev_tc = g_sequence_get (prev_iter);
