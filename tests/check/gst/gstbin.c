@@ -1158,17 +1158,11 @@ GST_START_TEST (test_many_bins)
 
 GST_END_TEST;
 
-static void
-fakesrc_pad_blocked_cb (GstPad * pad, gboolean blocked, void *arg)
+static GstPadProbeReturn
+fakesrc_pad_blocked_cb (GstPad * pad, GstPadProbeInfo * info, void *arg)
 {
   GstPipeline *pipeline = (GstPipeline *) arg;
   GstElement *src, *sink;
-  GstPad *srcpad;
-
-  if (!blocked) {
-    /* Not interested in unblocking, ignore that... */
-    return;
-  }
 
   src = gst_bin_get_by_name (GST_BIN (pipeline), "fakesrc");
   fail_unless (src != NULL, "Could not get fakesrc");
@@ -1181,12 +1175,9 @@ fakesrc_pad_blocked_cb (GstPad * pad, gboolean blocked, void *arg)
 
   gst_element_link (src, sink);
   gst_element_sync_state_with_parent (sink);
-
-  srcpad = gst_element_get_static_pad (src, "src");
-  gst_pad_set_blocked_async (srcpad, FALSE, fakesrc_pad_blocked_cb, pipeline);
-  gst_object_unref (srcpad);
-
   gst_object_unref (src);
+
+  return GST_PAD_PROBE_REMOVE;
 }
 
 GST_START_TEST (test_state_failure_unref)
@@ -1206,7 +1197,8 @@ GST_START_TEST (test_state_failure_unref)
   srcpad = gst_element_get_static_pad (src, "src");
   fail_unless (srcpad != NULL, "Could not get fakesrc srcpad");
 
-  gst_pad_set_blocked_async (srcpad, TRUE, fakesrc_pad_blocked_cb, pipeline);
+  gst_pad_add_probe (srcpad, GST_PAD_PROBE_TYPE_BLOCK_DOWNSTREAM,
+      fakesrc_pad_blocked_cb, pipeline, NULL);
   gst_object_unref (srcpad);
 
   gst_bin_add (GST_BIN (pipeline), src);
