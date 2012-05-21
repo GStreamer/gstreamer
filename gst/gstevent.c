@@ -1252,13 +1252,13 @@ gst_event_parse_qos (GstEvent * event, GstQOSType * type,
  * from the newly configured start position. 
  *
  * For negative rates, playback will start from the newly configured stop
- * position (if any). If the stop position if updated, it must be different from
- * -1 for negative rates.
+ * position (if any). If the stop position is updated, it must be different from
+ * -1 (#GST_CLOCK_TIME_NONE) for negative rates.
  *
  * It is not possible to seek relative to the current playback position, to do
  * this, PAUSE the pipeline, query the current playback position with
  * #GST_QUERY_POSITION and update the playback segment current position with a
- * #GST_SEEK_TYPE_SET to the desired position. 
+ * #GST_SEEK_TYPE_SET to the desired position.
  *
  * Returns: (transfer full): a new seek event.
  */
