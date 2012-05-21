@@ -711,8 +711,6 @@ theora_handle_data_packet (GstTheoraDec * dec, ogg_packet * packet,
     goto wrong_dimensions;
 
   result = theora_handle_image (dec, buf, frame);
-  if (result != GST_FLOW_OK)
-    return result;
 
   return result;
 
