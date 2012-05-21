@@ -190,7 +190,7 @@ mpeg_video_parse_check_caps (guint version, guint8 * seq, gint size)
   gst_buffer_map (buf, &map, GST_MAP_READ);
   /* codec-data = header - GOP */
   assert_equals_int (map.size, size - 8);
-  fail_unless (memcmp (map.data, seq + 4, map.size) == 0);
+  fail_unless (memcmp (map.data, seq, map.size) == 0);
   gst_buffer_unmap (buf, &map);
 
   gst_caps_unref (caps);
