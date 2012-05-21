@@ -459,9 +459,9 @@ replace_mixer (GESTrackVideoTransitionPrivate * priv)
   mixer_src_pad = gst_element_get_static_pad (priv->mixer, "src");
   color_sink_pad = gst_pad_get_peer (mixer_src_pad);
 
-  gst_element_set_state (priv->mixer, GST_STATE_NULL);
   gst_bin_remove (GST_BIN (priv->topbin), priv->mixer);
 
+  gst_element_set_state (priv->mixer, GST_STATE_NULL);
   gst_object_unref (priv->mixer);
 
   priv->mixer = gst_object_ref (create_mixer (priv->topbin));
@@ -479,8 +479,7 @@ replace_mixer (GESTrackVideoTransitionPrivate * priv)
 }
 
 static void
-switch_to_smpte_cb (GstPad * sink, gboolean blocked,
-    GESTrackVideoTransition * transition)
+switch_to_smpte (GESTrackVideoTransition * transition)
 {
   GstElement *smptealpha = gst_element_factory_make ("smptealpha", NULL);
   GstElement *smptealphab = gst_element_factory_make ("smptealpha", NULL);
@@ -551,8 +550,8 @@ remove_smpte_from_bin (GESTrackVideoTransitionPrivate * priv, GstPad * sink)
   gst_pad_unlink (peer_src, smpte_sink);
   gst_pad_unlink (smpte_src, sink);
 
-  gst_element_set_state (smpte, GST_STATE_NULL);
   gst_bin_remove (GST_BIN (priv->topbin), smpte);
+  gst_element_set_state (smpte, GST_STATE_NULL);
 
   gst_object_unref (smpte);
   gst_object_unref (smpte_sink);
@@ -562,8 +561,7 @@ remove_smpte_from_bin (GESTrackVideoTransitionPrivate * priv, GstPad * sink)
 }
 
 static void
-switch_to_crossfade_cb (GstPad * sink, gboolean blocked,
-    GESTrackVideoTransition * transition)
+switch_to_crossfade (GESTrackVideoTransition * transition)
 {
   GstElement *peera;
   GstElement *peerb;
@@ -708,7 +706,7 @@ ges_track_video_transition_set_transition_type_internal (GESTrackVideoTransition
 {
   GESTrackVideoTransitionPrivate *priv = self->priv;
 
-  GST_LOG ("%p %d => %d", self, priv->type, type);
+  GST_LOG_OBJECT (self, "Changing from type %d to %d", priv->type, type);
 
   if (type == priv->type && !priv->pending_type) {
     GST_INFO ("This type is already set on this transition\n");
@@ -727,16 +725,20 @@ ges_track_video_transition_set_transition_type_internal (GESTrackVideoTransition
       if (!priv->topbin)
         return FALSE;
       priv->smpte = NULL;
-      gst_pad_set_blocked_async (gst_element_get_static_pad (priv->topbin,
-              "sinka"), TRUE, (GstPadBlockCallback) switch_to_smpte_cb, self);
+
+      gst_pad_set_blocked_async (priv->sinka, TRUE,
+          (GstPadBlockCallback) block_pad_cb, NULL);
+      switch_to_smpte (self);
     } else {
       if (!priv->topbin)
         return FALSE;
+
       priv->start_value = 1.0;
       priv->end_value = 0.0;
-      gst_pad_set_blocked_async (gst_element_get_static_pad (priv->topbin,
-              "sinka"), TRUE, (GstPadBlockCallback) switch_to_crossfade_cb,
-          self);
+
+      gst_pad_set_blocked_async (priv->sinka, TRUE,
+          (GstPadBlockCallback) block_pad_cb, NULL);
+      switch_to_crossfade (self);
     }
     return TRUE;
   }
