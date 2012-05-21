@@ -50,6 +50,7 @@ GType gst_discoverer_stream_info_get_type (void);
  *
  * As a simple example, if you run #GstDiscoverer on an AVI file with one audio
  * and one video stream, you will get a #GstDiscovererContainerInfo
+ * corresponding to the AVI container, which in turn will have a
  * #GstDiscovererAudioInfo sub-stream and a #GstDiscovererVideoInfo sub-stream
  * for the audio and video streams respectively.
  *
