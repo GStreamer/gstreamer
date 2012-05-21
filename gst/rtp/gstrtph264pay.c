@@ -273,6 +273,7 @@ gst_rtp_h264_pay_getcaps (GstRTPBasePayload * payload, GstPad * pad,
   GstCaps *template_caps;
   GstCaps *allowed_caps;
   GstCaps *caps, *icaps;
+  gboolean append_unrestricted;
   guint i;
 
   allowed_caps =
@@ -296,6 +297,7 @@ gst_rtp_h264_pay_getcaps (GstRTPBasePayload * payload, GstPad * pad,
 
   caps = gst_caps_new_empty ();
 
+  append_unrestricted = FALSE;
   for (i = 0; i < gst_caps_get_size (allowed_caps); i++) {
     GstStructure *s = gst_caps_get_structure (allowed_caps, i);
     GstStructure *new_s = gst_structure_new_empty ("video/x-h264");
@@ -364,13 +366,18 @@ gst_rtp_h264_pay_getcaps (GstRTPBasePayload * payload, GstPad * pad,
             "profile", G_TYPE_STRING, "constrained-baseline", NULL);
       }
     } else {
-      /* No profile-level-id also means baseline */
+      /* No profile-level-id means baseline or unrestricted */
 
       gst_structure_set (new_s,
           "profile", G_TYPE_STRING, "constrained-baseline", NULL);
+      append_unrestricted = TRUE;
     }
 
     caps = gst_caps_merge_structure (caps, new_s);
+  }
+
+  if (append_unrestricted) {
+    gst_caps_merge_structure (caps, gst_structure_new ("video/x-h264", NULL));
   }
 
   icaps = gst_caps_intersect (caps, template_caps);
