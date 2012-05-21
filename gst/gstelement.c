@@ -1646,7 +1646,8 @@ gst_element_default_send_event (GstElement * element, GstEvent * event)
  * This function takes owership of the provided event so you should
  * gst_event_ref() it if you want to reuse the event after this call.
  *
- * Returns: %TRUE if the event was handled.
+ * Returns: %TRUE if the event was handled. Events that execute asynchronously
+ * (such as flushing seeks) will emit %GST_MESSAGE_ASYNC_DONE.
  *
  * MT safe.
  */
