@@ -532,7 +532,8 @@ gst_a52dec_handle_frame (GstAudioDecoder * bdec, GstBuffer * buffer)
     if (caps && gst_caps_get_size (caps) > 0) {
       GstCaps *copy = gst_caps_copy_nth (caps, 0);
       GstStructure *structure = gst_caps_get_structure (copy, 0);
-      gint channels;
+      gint orig_channels = flags ? gst_a52dec_channels (flags, NULL) : 6;
+      gint fixed_channels = 0;
       const int a52_channels[6] = {
         A52_MONO,
         A52_STEREO,
@@ -546,12 +547,15 @@ gst_a52dec_handle_frame (GstAudioDecoder * bdec, GstBuffer * buffer)
        * preferred (first in the caps) downstream if possible.
        */
       gst_structure_fixate_field_nearest_int (structure, "channels",
-          flags ? gst_a52dec_channels (flags, NULL) : 6);
-      if (gst_structure_get_int (structure, "channels", &channels)
-          && channels <= 6)
-        flags = a52_channels[channels - 1];
-      else
+          orig_channels);
+
+      if (gst_structure_get_int (structure, "channels", &fixed_channels)
+          && fixed_channels <= 6) {
+        if (fixed_channels < orig_channels)
+          flags = a52_channels[fixed_channels - 1];
+      } else {
         flags = a52_channels[5];
+      }
 
       gst_caps_unref (copy);
     } else if (flags)
