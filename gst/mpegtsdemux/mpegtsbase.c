@@ -1060,15 +1060,11 @@ mpegts_base_handle_psi (MpegTSBase * base, MpegTSPacketizerSection * section)
 
   /* table ids 0x70 - 0x73 do not have a crc */
   if (G_LIKELY (section->table_id < 0x70 || section->table_id > 0x73)) {
-    GstMapInfo map;
-
-    gst_buffer_map (section->buffer, &map, GST_MAP_READ);
-    if (G_UNLIKELY (mpegts_base_calc_crc32 (map.data, map.size) != 0)) {
-      gst_buffer_unmap (section->buffer, &map);
+    if (G_UNLIKELY (mpegts_base_calc_crc32 (section->data,
+                section->section_length) != 0)) {
       GST_WARNING_OBJECT (base, "bad crc in psi pid 0x%x", section->pid);
       return FALSE;
     }
-    gst_buffer_unmap (section->buffer, &map);
   }
 
   switch (section->table_id) {
@@ -1079,10 +1075,9 @@ mpegts_base_handle_psi (MpegTSBase * base, MpegTSPacketizerSection * section)
         mpegts_base_apply_pat (base, structure);
         if (base->seen_pat == FALSE) {
           base->seen_pat = TRUE;
-          GST_DEBUG ("First PAT offset: %" G_GUINT64_FORMAT,
-              GST_BUFFER_OFFSET (section->buffer));
+          GST_DEBUG ("First PAT offset: %" G_GUINT64_FORMAT, section->offset);
           mpegts_packetizer_set_reference_offset (base->packetizer,
-              GST_BUFFER_OFFSET (section->buffer));
+              section->offset);
         }
 
       } else
@@ -1388,7 +1383,6 @@ mpegts_base_chain (GstPad * pad, GstObject * parent, GstBuffer * buf)
     if (G_UNLIKELY (pret == PACKET_BAD)) {
       /* bad header, skip the packet */
       GST_DEBUG_OBJECT (base, "bad packet, skipping");
-      gst_buffer_unref (packet.buffer);
       goto next;
     }
 
@@ -1403,10 +1397,9 @@ mpegts_base_chain (GstPad * pad, GstObject * parent, GstBuffer * buf)
       if (G_LIKELY (section.complete)) {
         /* section complete */
         based = mpegts_base_handle_psi (base, &section);
-        gst_buffer_unref (section.buffer);
+        g_free (section.data);
 
         if (G_UNLIKELY (!based)) {
-          gst_buffer_unref (packet.buffer);
           /* bad PSI table */
           goto next;
         }
@@ -1417,8 +1410,7 @@ mpegts_base_chain (GstPad * pad, GstObject * parent, GstBuffer * buf)
     } else if (MPEGTS_BIT_IS_SET (base->is_pes, packet.pid)) {
       /* push the packet downstream */
       res = mpegts_base_push (base, &packet, NULL);
-    } else
-      gst_buffer_unref (packet.buffer);
+    }
 
   next:
     mpegts_packetizer_clear_packet (base->packetizer, &packet);
