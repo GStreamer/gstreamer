@@ -48,7 +48,9 @@ check_gdkpixbuf =
 endif
 
 if USE_JPEG
-check_jpeg = elements/jpegenc
+check_jpeg = \
+        elements/jpegdec \
+        elements/jpegenc
 else
 check_jpeg =
 endif
@@ -253,6 +255,9 @@ elements_level_LDADD = $(GST_PLUGINS_BASE_LIBS) -lgstaudio-$(GST_API_VERSION) $(
 
 elements_imagefreeze_CFLAGS = $(GST_PLUGINS_BASE_CFLAGS) $(GST_BASE_CFLAGS) $(AM_CFLAGS)
 elements_imagefreeze_LDADD = $(GST_PLUGINS_BASE_LIBS) -lgstvideo-$(GST_API_VERSION) $(GST_BASE_LIBS) $(LDADD)
+
+elements_jpegdec_CFLAGS = $(GST_PLUGINS_BASE_CFLAGS) $(GST_BASE_CFLAGS) $(GIO_CFLAGS) $(AM_CFLAGS)
+elements_jpegdec_LDADD = $(GST_PLUGINS_BASE_LIBS) -lgstapp-$(GST_API_VERSION) -lgstpbutils-$(GST_API_VERSION) $(GST_BASE_LIBS) $(GIO_LIBS) $(LDADD)
 
 elements_jpegenc_CFLAGS = $(GST_PLUGINS_BASE_CFLAGS) $(GST_BASE_CFLAGS) $(AM_CFLAGS)
 elements_jpegenc_LDADD = $(GST_PLUGINS_BASE_LIBS) -lgstapp-$(GST_API_VERSION) $(GST_BASE_LIBS) $(LDADD)

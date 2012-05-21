@@ -32,6 +32,7 @@ id3demux
 id3v2mux
 imagefreeze
 interleave
+jpegdec
 jpegenc
 level
 matroskamux
