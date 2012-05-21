@@ -29,6 +29,10 @@
 G_DEFINE_TYPE (GESTrackVideoTransition, ges_track_video_transition,
     GES_TYPE_TRACK_TRANSITION);
 
+/* The description of the smpte transitions type correspond to those transition types
+ * being inverted, so in GES invert == !smptealpha.invert */
+#define DEFAULT_SMPTE_INVERT TRUE
+
 static inline void
 ges_track_video_transition_set_border_internal (GESTrackVideoTransition * self,
     guint border);
@@ -445,8 +449,9 @@ add_smpte_to_bin (GstPad * sink, GstElement * smptealpha,
 {
   GstPad *peer, *sinkpad;
 
-  g_object_set (smptealpha,
-      "type", (gint) priv->pending_type, "invert", (gboolean) TRUE, NULL);
+  g_object_set (smptealpha, "type", (gint) priv->pending_type,
+      "invert", (gboolean) DEFAULT_SMPTE_INVERT, NULL);
+
   gst_bin_add (GST_BIN (priv->topbin), smptealpha);
   gst_element_sync_state_with_parent (smptealpha);
 
