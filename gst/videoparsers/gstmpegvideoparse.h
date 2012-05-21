@@ -54,6 +54,7 @@ struct _GstMpegvParse {
   GList *typeoffsize;
   gint last_sc;
   gint seq_offset;
+  gint seq_size;
   gint pic_offset;
   gboolean update_caps;
   gboolean send_codec_tag;
