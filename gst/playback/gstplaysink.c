@@ -1926,12 +1926,12 @@ gst_play_sink_text_sink_chain (GstPad * pad, GstObject * parent,
   GST_PLAY_SINK_LOCK (playsink);
 
   if (playsink->pending_flush_stop) {
-    GstSegment *text_segment;
+    GstSegment text_segment;
     GstEvent *event;
     GstStructure *structure;
 
-    // it will be replaced in flush_stop
-    text_segment = gst_segment_copy (&playsink->text_segment);
+    /* it will be replaced in flush_stop */
+    text_segment = playsink->text_segment;
 
     /* make queue drop all cached data.
      * This event will be dropped on the src pad. */
@@ -1947,16 +1947,15 @@ gst_play_sink_text_sink_chain (GstPad * pad, GstObject * parent,
 
     /* Re-sync queue segment info after flush-stop.
      * This event will be dropped on the src pad. */
-    if (text_segment->format != GST_FORMAT_UNDEFINED) {
+    if (text_segment.format != GST_FORMAT_UNDEFINED) {
       GstEvent *event1;
 
-      _generate_update_newsegment_event (pad, text_segment, &event1);
+      _generate_update_newsegment_event (pad, &text_segment, &event1);
       GST_DEBUG_OBJECT (playsink,
           "Pushing segment event with reset "
           "segment marker set: %" GST_PTR_FORMAT, event1);
       gst_pad_send_event (pad, event1);
     }
-    gst_segment_free (text_segment);
 
     playsink->pending_flush_stop = FALSE;
   }
