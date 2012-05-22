@@ -511,7 +511,7 @@ struct _GstMpeg4VideoPacketHdr {
 /**
  * GstMpeg4Packet:
  * @type: the type of the packet that start at @offset
- * @data: the data of the packet, statring at @offset
+ * @data: the data containing packet starting at @offset
  * @offset: offset of the start of the packet (without the 3 bytes startcode), but
  * including the #GstMpeg4StartCode byte.
  * @size: The size in bytes of the packet or %G_MAXUINT if the end wasn't found.
