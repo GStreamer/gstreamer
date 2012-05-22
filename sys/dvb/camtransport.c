@@ -296,16 +296,28 @@ cam_tl_create_connection (CamTL * tl, guint8 slot,
 {
   CamReturn ret;
   CamTLConnection *conn = NULL;
+  guint count = 10;
 
   if (tl->connection_ids == 255)
     return CAM_RETURN_TRANSPORT_TOO_MANY_CONNECTIONS;
 
   conn = cam_tl_connection_new (tl, ++tl->connection_ids);
 
-  /* send a TAG_CREATE_T_C TPDU */
-  ret = cam_tl_connection_write_control_tpdu (conn, TAG_CREATE_T_C);
-  if (CAM_FAILED (ret))
-    goto error;
+  /* Some CA devices take a long time to set themselves up,
+   * therefore retry every 250ms (for a maximum of 2.5s)
+   */
+  while (TRUE) {
+    /* send a TAG_CREATE_T_C TPDU */
+    ret = cam_tl_connection_write_control_tpdu (conn, TAG_CREATE_T_C);
+    if (!CAM_FAILED (ret))
+      break;
+    if (!count)
+      goto error;
+    GST_DEBUG ("Failed sending initial connection message .. but retrying");
+    count--;
+    /* Wait 250ms */
+    g_usleep (G_USEC_PER_SEC / 4);
+  }
 
   g_hash_table_insert (tl->connections, GINT_TO_POINTER (conn->id), conn);
 
