@@ -47,6 +47,11 @@
 GST_DEBUG_CATEGORY (gst_debug_osx_video_sink);
 #define GST_CAT_DEFAULT gst_debug_osx_video_sink
 
+#ifdef RUN_NS_APP_THREAD
+extern  void _CFRunLoopSetCurrent(CFRunLoopRef rl);
+extern pthread_t _CFMainPThread;
+#endif
+
 static GstStaticPadTemplate gst_osx_video_sink_sink_template_factory =
 GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
@@ -87,44 +92,100 @@ gst_osx_video_sink_call_from_main_thread(NSObject * object, SEL function,
 
 /* Poll for cocoa events */
 static void
-cocoa_poll_events (void) {
+run_ns_app_loop (void) {
   NSEvent *event;
   NSAutoreleasePool *pool =[[NSAutoreleasePool alloc] init];
+  NSDate *pollTime = nil;
+
+#ifdef RUN_NS_APP_THREAD
+  /* when running the loop in a thread we want to sleep as long as possible */
+  pollTime = [NSDate distantFuture];
+#else
+  pollTime = [NSDate distantPast];
+#endif
 
   do {
-      event =[NSApp nextEventMatchingMask: NSAnyEventMask untilDate:
-          [NSDate distantPast] inMode:
-          NSDefaultRunLoopMode dequeue:YES];
+      event = [NSApp nextEventMatchingMask:NSAnyEventMask untilDate:pollTime
+          inMode:NSDefaultRunLoopMode dequeue:YES];
       [NSApp sendEvent:event];
     }
   while (event != nil);
   [pool release];
 }
 
+#ifdef RUN_NS_APP_THREAD
+static gpointer
+ns_app_loop_thread (gpointer data)
+{
+  NSAutoreleasePool *pool;
+
+  /* set the main runloop as the runloop for the current thread. This has the
+   * effect that calling NSApp nextEventMatchingMask:untilDate:inMode:dequeue
+   * runs the main runloop.
+   */
+  _CFRunLoopSetCurrent(CFRunLoopGetMain());
+
+  /* this is needed to make IsMainThread checks in core foundation work from the
+   * current thread
+   */
+  _CFMainPThread = pthread_self();
+
+  pool = [[NSAutoreleasePool alloc] init];
+
+  [NSApplication sharedApplication];
+  [NSApp finishLaunching];
+
+  /* run the loop */
+  run_ns_app_loop ();
+
+  [pool release];
+
+  return NULL;
+}
+#endif
+
 static void
 gst_osx_video_sink_run_cocoa_loop (GstOSXVideoSink * osxvideosink )
 {
-  /* Cocoa applications require a main run loop running to dispatch UI
+  /* Cocoa applications require a main runloop running to dispatch UI
    * events and process deferred calls to the main thread through
    * perfermSelectorOnMainThread.
    * Since the sink needs to create it's own Cocoa window when no
    * external NSView is passed to the sink through the GstXOverlay API,
-   * we need to replace cocoa's main run loop with a poller.
-   * We are also assuming that when the main run loop is not running
-   * (nor native Cocoa, nor GTK, nor QT), there is at least glib's main
-   * loop running.
+   * we need to run the cocoa mainloop somehow.
    */
   if ([[NSRunLoop mainRunLoop] currentMode] == nil) {
-    osxvideosink->cocoa_timeout = g_timeout_add (10,
-        (GSourceFunc) cocoa_poll_events, NULL);
+#ifdef RUN_NS_APP_THREAD
+  /* run the main runloop in a separate thread */
+
+  /* override [NSThread isMainThread] with our own implementation so that we can
+   * make it believe our dedicated thread is the main thread 
+   */
+  Method origIsMainThread = class_getClassMethod([NSThread class],
+      NSSelectorFromString(@"isMainThread"));
+  Method ourIsMainThread = class_getClassMethod([GstOSXVideoSinkObject class],
+      NSSelectorFromString(@"isMainThread"));
+
+  method_exchangeImplementations(origIsMainThread, ourIsMainThread);
+
+  osxvideosink->ns_app_thread = g_thread_new ("GstNSAppThread",
+      ns_app_loop_thread, NULL);
+#else
+  /* assume that there is a GMainLoop and iterate the main runloop from there
+   */
+  osxvideosink->cocoa_timeout = g_timeout_add (10,
+      (GSourceFunc) run_ns_app_loop, NULL);
+#endif
   }
 }
 
 static void
 gst_osx_video_sink_stop_cocoa_loop (GstOSXVideoSink * osxvideosink)
 {
+#ifndef RUN_NS_APP_THREAD
   if (osxvideosink->cocoa_timeout)
     g_source_remove(osxvideosink->cocoa_timeout);
+#endif
 }
 
 /* This function handles osx window creation */
@@ -416,7 +477,9 @@ gst_osx_video_sink_init (GstOSXVideoSink * osxvideosink)
   osxvideosink->superview = NULL;
   osxvideosink->osxvideosinkobject = [[GstOSXVideoSinkObject alloc]
     initWithSink:osxvideosink];
+#ifndef RUN_NS_APP_THREAD
   osxvideosink->app_started = FALSE;
+#endif
   osxvideosink->keep_par = FALSE;
 }
 
@@ -716,11 +779,13 @@ gst_osx_video_sink_get_type (void)
   rect.size.width = (float) osxwindow->width;
   rect.size.height = (float) osxwindow->height;
 
+#ifndef RUN_NS_APP_THREAD
   if (!osxvideosink->app_started) {
     [NSApplication sharedApplication];
     [NSApp finishLaunching];
     osxvideosink->app_started = TRUE;
   }
+#endif
 
   if (!GetCurrentProcess(&psn)) {
       TransformProcessType(&psn, kProcessTransformToForegroundApplication);
@@ -740,6 +805,14 @@ gst_osx_video_sink_get_type (void)
       initWithSink:osxvideosink]];
 
 }
+
+#ifdef RUN_NS_APP_THREAD
++ (BOOL) isMainThread
+{
+  /* FIXME: ideally we should return YES only for ->ns_app_thread here */
+  return YES;
+}
+#endif
 
 - (void) resize
 {

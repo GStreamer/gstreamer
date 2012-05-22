@@ -31,6 +31,7 @@
 
 #include <string.h>
 #include <math.h>
+#include <objc/runtime.h>
 #include <Cocoa/Cocoa.h>
 
 #include <QuickTime/QuickTime.h>
@@ -72,10 +73,14 @@ struct _GstOSXVideoSink {
   /* Our element stuff */
   GstVideoSink videosink;
   GstOSXWindow *osxwindow;
-  gboolean app_started;
   void *osxvideosinkobject;
   NSView *superview;
+#ifdef RUN_NS_APP_THREAD
+  GThread *ns_app_thread;
+#else
   guint cocoa_timeout;
+  gboolean app_started;
+#endif
   gboolean keep_par;
   gboolean embed;
 };
@@ -118,6 +123,9 @@ GType gst_osx_video_sink_get_type(void);
   GstOSXVideoSink *osxvideosink;
 }
 
+#ifdef RUN_NS_APP_THREAD
++ (BOOL) isMainThread;
+#endif
 -(id) initWithSink: (GstOSXVideoSink *) sink;
 -(void) createInternalWindow;
 -(void) resize;
