@@ -253,6 +253,7 @@ cam_build_ca_pmt (GstStructure * pmt, guint8 list_management, guint8 cmd_id,
       stream = g_value_get_boxed (value);
 
       value = gst_structure_get_value (stream, "descriptors");
+      len = 0;
       if (value != NULL) {
         stream_descriptors = g_value_get_boxed (value);
 
@@ -267,16 +268,28 @@ cam_build_ca_pmt (GstStructure * pmt, guint8 list_management, guint8 cmd_id,
 
     }
   }
+
+  GST_DEBUG ("Body Size %d", body_size);
+
   buffer = g_malloc0 (body_size);
   body = buffer;
 
+  /* ca_pmt_list_management 8 uimsbf */
   *body++ = list_management;
 
+  /* program_number 16 uimsbf */
   GST_WRITE_UINT16_BE (body, program_number);
   body += 2;
 
+  /* reserved 2
+   * version_number 5
+   * current_next_indicator 1
+   */
   *body++ = (version_number << 1) | 0x01;
 
+  /* Reserved 4
+   * program_info_length 12
+   */
   len = GPOINTER_TO_INT (lengths->data);
   lengths = g_list_delete_link (lengths, lengths);
   GST_WRITE_UINT16_BE (body, len);
@@ -298,7 +311,6 @@ cam_build_ca_pmt (GstStructure * pmt, guint8 list_management, guint8 cmd_id,
     gst_structure_get_uint (stream, "stream-type", &stream_type);
     gst_structure_get_uint (stream, "pid", &stream_pid);
     value = gst_structure_get_value (stream, "descriptors");
-    stream_descriptors = g_value_get_boxed (value);
 
     *body++ = stream_type;
     GST_WRITE_UINT16_BE (body, stream_pid);
@@ -310,6 +322,7 @@ cam_build_ca_pmt (GstStructure * pmt, guint8 list_management, guint8 cmd_id,
 
     if (len != 0) {
       *body++ = cmd_id;
+      stream_descriptors = g_value_get_boxed (value);
       body = write_ca_descriptors (body, stream_descriptors);
     }
   }
