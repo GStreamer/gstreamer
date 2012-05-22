@@ -113,12 +113,12 @@ gst_frei0r_klass_install_properties (GObjectClass * gobject_class,
         gdouble def = properties[i].default_value.data.d;
 
         /* If the default is NAN, +-INF we use 0.0 */
-        if (!(def <= G_MAXDOUBLE && def >= -G_MAXDOUBLE))
+        if (!(def >= 0.0 && def <= 1.0))
           def = 0.0;
 
         g_object_class_install_property (gobject_class, count++,
             g_param_spec_double (prop_name, param_info->name,
-                param_info->explanation, -G_MAXDOUBLE, G_MAXDOUBLE, def,
+                param_info->explanation, 0.0, 1.0, def,
                 G_PARAM_READWRITE | GST_PARAM_CONTROLLABLE));
         properties[i].n_prop_ids = 1;
         break;
