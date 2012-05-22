@@ -718,7 +718,7 @@ gst_dvbsrc_close_devices (GstDvbSrc * object)
 }
 
 static gboolean
-gst_dvbsrc_open_frontend (GstDvbSrc * object)
+gst_dvbsrc_open_frontend (GstDvbSrc * object, gboolean writable)
 {
   struct dvb_frontend_info fe_info;
   const char *adapter_desc = NULL;
@@ -731,7 +731,8 @@ gst_dvbsrc_open_frontend (GstDvbSrc * object)
   GST_INFO_OBJECT (object, "Using frontend device: %s", frontend_dev);
 
   /* open frontend */
-  if ((object->fd_frontend = open (frontend_dev, O_RDWR)) < 0) {
+  if ((object->fd_frontend =
+          open (frontend_dev, writable ? O_RDWR : O_RDONLY)) < 0) {
     switch (errno) {
       case ENOENT:
         GST_ELEMENT_ERROR (object, RESOURCE, NOT_FOUND,
@@ -1010,7 +1011,7 @@ gst_dvbsrc_change_state (GstElement * element, GstStateChange transition)
   switch (transition) {
     case GST_STATE_CHANGE_NULL_TO_READY:
       /* open frontend then close it again, just so caps sent */
-      gst_dvbsrc_open_frontend (src);
+      gst_dvbsrc_open_frontend (src, FALSE);
       if (src->fd_frontend) {
         close (src->fd_frontend);
       }
@@ -1028,7 +1029,7 @@ gst_dvbsrc_start (GstBaseSrc * bsrc)
 {
   GstDvbSrc *src = GST_DVBSRC (bsrc);
 
-  gst_dvbsrc_open_frontend (src);
+  gst_dvbsrc_open_frontend (src, TRUE);
   if (!gst_dvbsrc_tune (src)) {
     GST_ERROR_OBJECT (src, "Not able to lock on to the dvb channel");
     close (src->fd_frontend);
