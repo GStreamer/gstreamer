@@ -317,6 +317,9 @@ gst_osx_video_sink_change_state (GstElement * element,
     case GST_STATE_CHANGE_PAUSED_TO_READY:
       GST_VIDEO_SINK_WIDTH (osxvideosink) = 0;
       GST_VIDEO_SINK_HEIGHT (osxvideosink) = 0;
+#ifndef RUN_NS_APP_THREAD
+      osxvideosink->app_started = FALSE;
+#endif
       gst_osx_video_sink_osxwindow_destroy (osxvideosink);
       break;
     case GST_STATE_CHANGE_READY_TO_NULL:
