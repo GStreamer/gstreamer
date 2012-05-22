@@ -379,7 +379,7 @@ theora_handle_comment_packet (GstTheoraDec * dec, ogg_packet * packet)
 }
 
 static GstFlowReturn
-theora_handle_type_packet (GstTheoraDec * dec, ogg_packet * packet)
+theora_handle_type_packet (GstTheoraDec * dec)
 {
   gint par_num, par_den;
   GstFlowReturn ret = GST_FLOW_OK;
@@ -532,7 +532,7 @@ theora_handle_header_packet (GstTheoraDec * dec, ogg_packet * packet)
       res = theora_handle_comment_packet (dec, packet);
       break;
     case 0x82:
-      res = theora_handle_type_packet (dec, packet);
+      res = theora_handle_type_packet (dec);
       break;
     default:
       /* ignore */
