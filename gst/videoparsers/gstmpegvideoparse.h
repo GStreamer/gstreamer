@@ -51,7 +51,8 @@ struct _GstMpegvParse {
   GstBaseParse element;
 
   /* parse state */
-  GList *typeoffsize;
+  gint ext_offsets[10];
+  gint ext_count;
   gint last_sc;
   gint seq_offset;
   gint seq_size;

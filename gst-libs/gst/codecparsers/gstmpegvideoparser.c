@@ -229,6 +229,7 @@ failed:
   }
 }
 
+/* @size and @offset are wrt current reader position */
 static inline guint
 scan_for_start_codes (const GstByteReader * reader, guint offset, guint size)
 {
@@ -245,7 +246,7 @@ scan_for_start_codes (const GstByteReader * reader, guint offset, guint size)
 
   data = reader->data + reader->byte + offset;
 
-  while (i < (size - 4)) {
+  while (i <= (size - 4)) {
     if (data[i + 2] > 1) {
       i += 3;
     } else if (data[i + 1]) {
@@ -257,7 +258,7 @@ scan_for_start_codes (const GstByteReader * reader, guint offset, guint size)
     }
   }
 
-  if (i < (size - 4))
+  if (i <= (size - 4))
     return offset + i;
 
   /* nothing found */
@@ -275,14 +276,14 @@ scan_for_start_codes (const GstByteReader * reader, guint offset, guint size)
  * Parses the MPEG 1/2 video bitstream contained in @data , and returns the
  * detect packets as a list of #GstMpegVideoTypeOffsetSize.
  *
- * Returns: a #GList of #GstMpegVideoTypeOffsetSize
+ * Returns: TRUE if a packet start code was found
  */
-GList *
-gst_mpeg_video_parse (const guint8 * data, gsize size, guint offset)
+gboolean
+gst_mpeg_video_parse (GstMpegVideoPacket * packet,
+    const guint8 * data, gsize size, guint offset)
 {
-  gint off, rsize;
+  gint off;
   GstByteReader br;
-  GList *ret = NULL;
 
   if (!initialized) {
     GST_DEBUG_CATEGORY_INIT (mpegvideo_parser_debug, "codecparsers_mpegvideo",
@@ -292,53 +293,42 @@ gst_mpeg_video_parse (const guint8 * data, gsize size, guint offset)
 
   if (size <= offset) {
     GST_DEBUG ("Can't parse from offset %d, buffer is to small", offset);
-    return NULL;
+    return FALSE;
   }
 
   size -= offset;
-
   gst_byte_reader_init (&br, &data[offset], size);
 
   off = scan_for_start_codes (&br, 0, size);
 
   if (off < 0) {
     GST_DEBUG ("No start code prefix in this buffer");
-    return NULL;
+    return FALSE;
   }
 
-  while (off >= 0 && off + 3 < size) {
-    GstMpegVideoTypeOffsetSize *codoffsize;
+  if (gst_byte_reader_skip (&br, off + 3) == FALSE)
+    goto failed;
 
+  if (gst_byte_reader_get_uint8 (&br, &packet->type) == FALSE)
+    goto failed;
 
-    if (gst_byte_reader_skip (&br, off + 3) == FALSE)
-      goto failed;
+  packet->data = data;
+  packet->offset = offset + off + 4;
+  packet->size = -1;
 
-    codoffsize = g_malloc (sizeof (GstMpegVideoTypeOffsetSize));
-    if (gst_byte_reader_get_uint8 (&br, &codoffsize->type) == FALSE)
-      goto failed;
+  /* try to find end of packet */
+  size -= off + 4;
+  off = scan_for_start_codes (&br, 0, size);
 
-    codoffsize->offset = gst_byte_reader_get_pos (&br) + offset;
+  if (off > 0)
+    packet->size = off;
 
-    rsize = gst_byte_reader_get_remaining (&br);
-    if (rsize == 0) {
-      /* if there are no more bytes after the start code set the size to -1 */
-      off = -1;
-    } else {
-      off = scan_for_start_codes (&br, 0, rsize);
-    }
-
-    codoffsize->size = off;
-
-    ret = g_list_prepend (ret, codoffsize);
-    codoffsize = ret->data;
-  }
-
-  return g_list_reverse (ret);
+  return TRUE;
 
 failed:
   {
     GST_WARNING ("Failed to parse");
-    return g_list_reverse (ret);
+    return FALSE;
   }
 }
 
