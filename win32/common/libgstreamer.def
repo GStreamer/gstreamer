@@ -1126,6 +1126,7 @@ EXPORTS
 	gst_toc_entry_copy
 	gst_toc_entry_free
 	gst_toc_entry_get_start_stop
+	gst_toc_entry_get_type
 	gst_toc_entry_new
 	gst_toc_entry_new_with_pad
 	gst_toc_entry_set_start_stop
@@ -1133,6 +1134,7 @@ EXPORTS
 	gst_toc_entry_type_get_type
 	gst_toc_find_entry
 	gst_toc_free
+	gst_toc_get_type
 	gst_toc_new
 	gst_toc_setter_add_toc_entry
 	gst_toc_setter_get_toc
