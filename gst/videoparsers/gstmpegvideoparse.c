@@ -727,6 +727,8 @@ gst_mpegv_parse_update_src_caps (GstMpegvParse * mpvparse)
 
   gst_pad_set_caps (GST_BASE_PARSE_SRC_PAD (mpvparse), caps);
   gst_caps_unref (caps);
+
+  mpvparse->update_caps = FALSE;
 }
 
 static GstFlowReturn
