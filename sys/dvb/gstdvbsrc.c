@@ -521,7 +521,8 @@ gst_dvbsrc_set_property (GObject * _object, guint prop_id,
       break;
     case ARG_DVBSRC_FREQUENCY:
       object->freq = g_value_get_uint (value);
-      GST_INFO_OBJECT (object, "Set Property: ARG_DVBSRC_FREQUENCY");
+      GST_INFO_OBJECT (object, "Set Property: ARG_DVBSRC_FREQUENCY (%d Hz)",
+          object->freq);
       break;
     case ARG_DVBSRC_POLARITY:
     {
@@ -537,8 +538,8 @@ gst_dvbsrc_set_property (GObject * _object, guint prop_id,
     {
       gchar *pid_string;
 
-      GST_INFO_OBJECT (object, "Set Property: ARG_DVBSRC_PIDS");
       pid_string = g_value_dup_string (value);
+      GST_INFO_OBJECT (object, "Set Property: ARG_DVBSRC_PIDS %s", pid_string);
       if (!strcmp (pid_string, "8192")) {
         /* get the whole ts */
         int pid_count = 1;
@@ -564,7 +565,7 @@ gst_dvbsrc_set_property (GObject * _object, guint prop_id,
         while (*pids != NULL && pid_count < MAX_FILTERS) {
           pid = strtol (*pids, NULL, 0);
           if (pid > 1 && pid <= 8192) {
-            GST_INFO_OBJECT (object, "Parsed Pid: %d\n", pid);
+            GST_INFO_OBJECT (object, "Parsed Pid: %d", pid);
             object->pids[pid_count] = pid;
             pid_count++;
           }
@@ -588,7 +589,7 @@ gst_dvbsrc_set_property (GObject * _object, guint prop_id,
     case ARG_DVBSRC_SYM_RATE:
       object->sym_rate = g_value_get_uint (value);
       GST_INFO_OBJECT (object, "Set Property: ARG_DVBSRC_SYM_RATE to value %d",
-          g_value_get_int (value));
+          object->sym_rate);
       break;
 
     case ARG_DVBSRC_BANDWIDTH:
@@ -750,6 +751,8 @@ gst_dvbsrc_open_frontend (GstDvbSrc * object, gboolean writable)
     return FALSE;
   }
 
+  GST_DEBUG_OBJECT (object, "Device opened, querying information");
+
   if (ioctl (object->fd_frontend, FE_GET_INFO, &fe_info) < 0) {
     GST_ELEMENT_ERROR (object, RESOURCE, SETTINGS,
         (_("Could not get settings from frontend device \"%s\"."),
@@ -759,6 +762,8 @@ gst_dvbsrc_open_frontend (GstDvbSrc * object, gboolean writable)
     g_free (frontend_dev);
     return FALSE;
   }
+
+  GST_DEBUG_OBJECT (object, "Got information about adapter : %s", fe_info.name);
 
   adapter_name = g_strdup (fe_info.name);
 
@@ -1139,7 +1144,7 @@ gst_dvbsrc_frontend_status (GstDvbSrc * object)
   fe_status_t status = 0;
   gint i;
 
-  GST_INFO_OBJECT (object, "gst_dvbsrc_frontend_status\n");
+  GST_INFO_OBJECT (object, "gst_dvbsrc_frontend_status");
 
   if (object->fd_frontend < 0) {
     GST_ERROR_OBJECT (object,
@@ -1163,7 +1168,7 @@ gst_dvbsrc_frontend_status (GstDvbSrc * object)
 
   if (!(status & FE_HAS_LOCK)) {
     GST_INFO_OBJECT (object,
-        "Not able to lock to the signal on the given frequency.\n");
+        "Not able to lock to the signal on the given frequency.");
     return FALSE;
   } else
     return TRUE;
@@ -1190,7 +1195,7 @@ diseqc_send_msg (int fd, fe_sec_voltage_t v, struct diseqc_cmd *cmd,
   }
 
   usleep (15 * 1000);
-  GST_LOG ("diseqc: 0x%x 0x%x 0x%x 0x%x 0x%x 0x%x\n", cmd->cmd.msg[0],
+  GST_LOG ("diseqc: 0x%x 0x%x 0x%x 0x%x 0x%x 0x%x", cmd->cmd.msg[0],
       cmd->cmd.msg[1], cmd->cmd.msg[2], cmd->cmd.msg[3], cmd->cmd.msg[4],
       cmd->cmd.msg[5]);
   if (ioctl (fd, FE_DISEQC_SEND_MASTER_CMD, &cmd->cmd) == -1) {
@@ -1343,7 +1348,7 @@ gst_dvbsrc_tune (GstDvbSrc * object)
 #endif
         feparams.inversion = object->inversion;
 
-        GST_INFO_OBJECT (object, "tuning DVB-T to %d Hz\n", freq);
+        GST_INFO_OBJECT (object, "tuning DVB-T to %d Hz", freq);
         break;
       case FE_QAM:
         GST_INFO_OBJECT (object, "Tuning DVB-C to %d, srate=%d", freq,
