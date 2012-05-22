@@ -239,7 +239,8 @@ dvb_base_bin_class_init (DvbBaseBinClass * klass)
 
   /* install dvbsrc properties */
   dvbsrc_factory = gst_element_factory_find ("dvbsrc");
-  dvbsrc_class = g_type_class_ref (dvbsrc_factory->type);
+  dvbsrc_class =
+      g_type_class_ref (gst_element_factory_get_element_type (dvbsrc_factory));
   walk = proxyed_properties;
   while (walk->prop_name != NULL) {
     GParamSpec *pspec;

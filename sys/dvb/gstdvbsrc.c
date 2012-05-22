@@ -952,7 +952,7 @@ stopped:
     GST_DEBUG_OBJECT (object, "stop called");
     gst_buffer_unmap (buf, &map);
     gst_buffer_unref (buf);
-    return GST_FLOW_WRONG_STATE;
+    return GST_FLOW_FLUSHING;
   }
 select_error:
   {
