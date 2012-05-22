@@ -562,7 +562,7 @@ gst_rtsp_server_create_socket (GstRTSPServer * server,
 {
   GSocketConnectable *conn;
   GSocketAddressEnumerator *enumerator;
-  GSocket *socket;
+  GSocket *socket = NULL;
 #ifdef USE_SOLINGER
   struct linger linger;
 #endif
@@ -793,7 +793,7 @@ gboolean
 gst_rtsp_server_io_func (GSocket * socket, GIOCondition condition,
     GstRTSPServer * server)
 {
-  gboolean result;
+  gboolean result = TRUE;
   GstRTSPClient *client = NULL;
   GstRTSPServerClass *klass;
   GError *error = NULL;

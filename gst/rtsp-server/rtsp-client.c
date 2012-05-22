@@ -423,23 +423,6 @@ do_send_data (GstBuffer * buffer, guint8 channel, GstRTSPClient * client)
   return TRUE;
 }
 
-static gboolean
-do_send_data_list (GstBufferList * blist, guint8 channel,
-    GstRTSPClient * client)
-{
-  guint len, i;
-
-  len = gst_buffer_list_length (blist);
-
-  for (i = 0; i < len; i++) {
-    GstBuffer *group = gst_buffer_list_get (blist, i);
-
-    do_send_data (group, channel, client);
-  }
-
-  return TRUE;
-}
-
 static void
 link_stream (GstRTSPClient * client, GstRTSPSession * session,
     GstRTSPSessionStream * stream)

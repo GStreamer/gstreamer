@@ -87,8 +87,6 @@ static void
 gst_rtsp_auth_get_property (GObject * object, guint propid,
     GValue * value, GParamSpec * pspec)
 {
-  GstRTSPAuth *auth = GST_RTSP_AUTH (object);
-
   switch (propid) {
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, propid, pspec);
@@ -99,8 +97,6 @@ static void
 gst_rtsp_auth_set_property (GObject * object, guint propid,
     const GValue * value, GParamSpec * pspec)
 {
-  GstRTSPAuth *auth = GST_RTSP_AUTH (object);
-
   switch (propid) {
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, propid, pspec);
