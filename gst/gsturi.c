@@ -578,6 +578,8 @@ gst_element_make_from_uri (const GstURIType type, const gchar * uri,
   g_return_val_if_fail (GST_URI_TYPE_IS_VALID (type), NULL);
   g_return_val_if_fail (gst_uri_is_valid (uri), NULL);
 
+  GST_DEBUG ("type:%d, uri:%s, elementname:%s", type, uri, elementname);
+
   protocol = gst_uri_get_protocol (uri);
   possibilities = get_element_factories_from_uri_protocol (type, protocol);
   g_free (protocol);
@@ -598,6 +600,7 @@ gst_element_make_from_uri (const GstURIType type, const gchar * uri,
 
       if (gst_uri_handler_set_uri (handler, uri, NULL))
         break;
+      GST_WARNING ("element %s didn't accept the URI", GST_ELEMENT_NAME (ret));
       gst_object_unref (ret);
       ret = NULL;
     }
