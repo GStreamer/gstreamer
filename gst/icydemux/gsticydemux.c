@@ -231,6 +231,7 @@ gst_icydemux_add_srcpad (GstICYDemux * icydemux, GstCaps * new_caps)
     g_return_val_if_fail (icydemux->srcpad != NULL, FALSE);
 
     gst_pad_use_fixed_caps (icydemux->srcpad);
+    gst_pad_set_active (icydemux->srcpad, TRUE);
 
     if (icydemux->src_caps)
       gst_pad_set_caps (icydemux->srcpad, icydemux->src_caps);
@@ -238,7 +239,6 @@ gst_icydemux_add_srcpad (GstICYDemux * icydemux, GstCaps * new_caps)
     GST_DEBUG_OBJECT (icydemux, "Adding src pad with caps %" GST_PTR_FORMAT,
         icydemux->src_caps);
 
-    gst_pad_set_active (icydemux->srcpad, TRUE);
     if (!(gst_element_add_pad (GST_ELEMENT (icydemux), icydemux->srcpad)))
       return FALSE;
     gst_element_no_more_pads (GST_ELEMENT (icydemux));
