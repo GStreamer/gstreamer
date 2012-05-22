@@ -2056,7 +2056,7 @@ done:
 /**
  * gst_video_decoder_add_to_frame:
  * @decoder: a #GstVideoDecoder
- * @n_bytes: an encoded #GstVideoCodecFrame
+ * @n_bytes: the number of bytes to add
  *
  * Removes next @n_bytes of input data and adds it to currently parsed frame.
  *
