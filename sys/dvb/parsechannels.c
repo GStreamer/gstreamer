@@ -124,7 +124,8 @@ parse_channels_conf_from_file (const gchar * filename)
     }
     g_strfreev (lines);
     g_free (contents);
-  }
+  } else
+    GST_WARNING ("Couldn't open file");
   return res;
 }
 
