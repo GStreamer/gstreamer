@@ -16,6 +16,7 @@ bus_call (GstBus * bus, GstMessage * msg, gpointer data)
       GError *err;
 
       gst_message_parse_error (msg, &err, &debug);
+      g_printerr ("Debugging info: %s\n", (debug) ? debug : "none");
       g_free (debug);
 
       g_print ("Error: %s\n", err->message);
@@ -46,9 +47,9 @@ main (gint argc, gchar * argv[])
     return 1;
   }
 
-  playbin = gst_element_factory_make ("playbin2", NULL);
+  playbin = gst_element_factory_make ("playbin", NULL);
   if (!playbin) {
-    g_print ("'playbin2' gstreamer plugin missing\n");
+    g_print ("'playbin' gstreamer plugin missing\n");
     return 1;
   }
 
