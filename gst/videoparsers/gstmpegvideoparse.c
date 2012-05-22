@@ -513,7 +513,8 @@ retry:
 
   /* if already found a previous start code, e.g. start of frame, go for next */
   if (mpvparse->last_sc >= 0) {
-    off = mpvparse->last_sc;
+    off = packet.offset = mpvparse->last_sc;
+    packet.size = 0;
     goto next;
   }
 
@@ -550,14 +551,18 @@ retry:
 next:
   /* start is fine as of now */
   *skipsize = 0;
-  /* position a bit further than last sc */
-  off++;
-  /* so now we have start code at start of data; locate next start code */
-  if (!gst_mpeg_video_parse (&packet, data, size, off)) {
-    off = -1;
+  /* terminating start code may have been found in prev scan already */
+  if (((gint) packet.size) >= 0) {
+    off = packet.offset + packet.size;
+    /* so now we have start code at start of data; locate next start code */
+    if (!gst_mpeg_video_parse (&packet, data, size, off)) {
+      off = -1;
+    } else {
+      g_assert (packet.offset >= 4);
+      off = packet.offset - 4;
+    }
   } else {
-    g_assert (packet.offset >= 4);
-    off = packet.offset - 4;
+    off = -1;
   }
 
   GST_LOG_OBJECT (mpvparse, "next start code at %d", off);
@@ -570,8 +575,7 @@ next:
     } else {
       GST_LOG_OBJECT (mpvparse, "need more data");
       /* resume scan where we left it */
-      /* need - 4 since off is incremented later on */
-      mpvparse->last_sc = size - 4;
+      mpvparse->last_sc = size - 3;
       /* request best next available */
       off = G_MAXUINT;
       goto exit;
