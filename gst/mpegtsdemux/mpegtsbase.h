@@ -176,9 +176,9 @@ struct _MpegTSBaseClass {
   void (*eit_info) (GstStructure *eit);
 };
 
-#define MPEGTS_BIT_SET(field, offs)    ((field)[(offs) / 8] |=  (1 << ((offs) % 8)))
-#define MPEGTS_BIT_UNSET(field, offs)  ((field)[(offs) / 8] &= ~(1 << ((offs) % 8)))
-#define MPEGTS_BIT_IS_SET(field, offs) ((field)[(offs) / 8] &   (1 << ((offs) % 8)))
+#define MPEGTS_BIT_SET(field, offs)    ((field)[(offs) >> 3] |=  (1 << ((offs) & 0xf)))
+#define MPEGTS_BIT_UNSET(field, offs)  ((field)[(offs) >> 3] &= ~(1 << ((offs) & 0xf)))
+#define MPEGTS_BIT_IS_SET(field, offs) ((field)[(offs) >> 3] &   (1 << ((offs) & 0xf)))
 
 GType mpegts_base_get_type(void);
 
@@ -193,7 +193,6 @@ mpegts_base_handle_seek_event(MpegTSBase * base, GstPad * pad, GstEvent * event)
 
 gboolean gst_mpegtsbase_plugin_init (GstPlugin * plugin);
 
-gboolean mpegts_base_is_psi (MpegTSBase * base, MpegTSPacketizerPacket * packet);
 gboolean mpegts_base_handle_psi (MpegTSBase * base, MpegTSPacketizerSection * section);
 
 void mpegts_base_program_remove_stream (MpegTSBase * base, MpegTSBaseProgram * program, guint16 pid);

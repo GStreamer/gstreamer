@@ -752,12 +752,13 @@ mpegts_base_activate_program (MpegTSBase * base, MpegTSBaseProgram * program,
   GST_DEBUG_OBJECT (base, "new pmt %" GST_PTR_FORMAT, pmt_info);
 }
 
-gboolean
+static inline gboolean
 mpegts_base_is_psi (MpegTSBase * base, MpegTSPacketizerPacket * packet)
 {
   gboolean retval = FALSE;
   guint8 *data, table_id, pointer;
   int i;
+
   static const guint8 si_tables[] =
       { 0x00, 0x01, 0x02, 0x03, 0x40, 0x41, 0x42, 0x46, 0x4A,
     0x4E, 0x4F, 0x50, 0x51, 0x52, 0x53, 0x54, 0x55, 0x56, 0x57, 0x58, 0x59,
