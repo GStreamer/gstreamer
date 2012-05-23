@@ -1247,6 +1247,35 @@ colorbalance_value_changed_cb (GstColorBalance * balance,
   gst_color_balance_value_changed (GST_COLOR_BALANCE (playbin), channel, value);
 }
 
+static gint
+compare_factories_func (gconstpointer p1, gconstpointer p2)
+{
+  GstPluginFeature *f1, *f2;
+  gint diff;
+  gboolean s1, s2;
+
+  f1 = (GstPluginFeature *) p1;
+  f2 = (GstPluginFeature *) p2;
+
+  s1 = gst_element_factory_list_is_type (GST_ELEMENT_FACTORY_CAST (f1),
+      GST_ELEMENT_FACTORY_TYPE_SINK);
+  s2 = gst_element_factory_list_is_type (GST_ELEMENT_FACTORY_CAST (f2),
+      GST_ELEMENT_FACTORY_TYPE_SINK);
+
+  if (s1 && !s2)
+    return -1;
+  else if (!s1 && s2)
+    return 1;
+
+  diff = f2->rank - f1->rank;
+  if (diff != 0)
+    return diff;
+
+  diff = strcmp (f2->name, f1->name);
+
+  return diff;
+}
+
 /* Must be called with elements lock! */
 static void
 gst_play_bin_update_elements_list (GstPlayBin * playbin)
@@ -1265,8 +1294,7 @@ gst_play_bin_update_elements_list (GstPlayBin * playbin)
         gst_element_factory_list_get_elements
         (GST_ELEMENT_FACTORY_TYPE_AUDIOVIDEO_SINKS, GST_RANK_MARGINAL);
     playbin->elements = g_list_concat (res, tmp);
-    playbin->elements =
-        g_list_sort (playbin->elements, gst_plugin_feature_rank_compare_func);
+    playbin->elements = g_list_sort (playbin->elements, compare_factories_func);
     playbin->elements_cookie = cookie;
   }
 }
