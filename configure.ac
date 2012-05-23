@@ -273,6 +273,11 @@ AG_GST_SET_PACKAGE_RELEASE_DATETIME_WITH_NANO([$PACKAGE_VERSION_NANO],
   ["${srcdir}/gst-plugins-good.doap"],
   [$PACKAGE_VERSION_MAJOR.$PACKAGE_VERSION_MINOR.$PACKAGE_VERSION_MICRO])
 
+# set by AG_GST_PARSE_SUBSYSTEM_DISABLES above
+dnl make sure it doesn't complain about unused variables if debugging is disabled
+NO_WARNINGS=""
+AG_GST_CHECK_GST_DEBUG_DISABLED([NO_WARNINGS="-Wno-unused"], [NO_WARNINGS=""])
+
 dnl define an ERROR_CFLAGS Makefile variable
 dnl -Wundef: too many broken headers
 if test "x$HAVE_OSX_VIDEO" != "xyes"; then
@@ -280,7 +285,7 @@ if test "x$HAVE_OSX_VIDEO" != "xyes"; then
         -Wmissing-declarations -Wmissing-prototypes -Wredundant-decls
         -Wwrite-strings -Wold-style-definition -Waggregate-return
         -Winit-self -Wmissing-include-dirs -Waddress -Wno-multichar
-        -Wnested-externs ])
+        -Wnested-externs $NO_WARNINGS])
 else
   dnl work-around for us passing GST_CFLAGS to the ObjC-compiler, which
   dnl doesn't understand all warning flags that the C compiler knows about
@@ -289,14 +294,15 @@ else
         -Wmissing-declarations -Wmissing-prototypes -Wredundant-decls
         -Wwrite-strings -Wold-style-definition
         -Winit-self -Wmissing-include-dirs -Wno-multichar
-        -Wnested-externs ])
+        -Wnested-externs $NO_WARNINGS])
 fi
 
 dnl define an ERROR_CXXFLAGS Makefile variable
 AG_GST_SET_ERROR_CXXFLAGS($FATAL_WARNINGS, [
         -Wmissing-declarations -Wredundant-decls
         -Wwrite-strings
-        -Winit-self -Wmissing-include-dirs -Waddress -Wno-multichar ])
+        -Winit-self -Wmissing-include-dirs -Waddress -Wno-multichar
+        $NO_WARNINGS])
 
 dnl define correct level for debugging messages
 AG_GST_SET_LEVEL_DEFAULT($GST_GIT)
