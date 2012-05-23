@@ -69,63 +69,54 @@ struct window
   int width, height;
   struct wl_surface *surface;
   struct wl_shell_surface *shell_surface;
-  struct wl_buffer *buffer;
 };
 
 typedef struct _GstWaylandSink GstWaylandSink;
 typedef struct _GstWaylandSinkClass GstWaylandSinkClass;
 
-#define GST_TYPE_WLBUFFER (gst_wlbuffer_get_type())
-#define GST_IS_WLBUFFER(obj) (G_TYPE_CHECK_INSTANCE_TYPE ((obj), GST_TYPE_WLBUFFER))
-#define GST_WLBUFFER (obj) (G_TYPE_CHECK_INSTANCE_CAST ((obj), GST_TYPE_WLBUFFER, GstWlBuffer))
+typedef struct _GstWlMeta GstWlMeta;
 
-typedef struct _GstWlBuffer GstWlBuffer;
-typedef struct _GstWlBufferClass GstWlBufferClass;
+GType gst_wl_meta_api_get_type (void);
+#define GST_WL_META_API_TYPE  (gst_wl_meta_api_get_type())
+const GstMetaInfo * gst_wl_meta_get_info (void);
+#define GST_WL_META_INFO  (gst_wl_meta_get_info())
 
-struct _GstWlBuffer {
-  GstBuffer buffer; /* Extending GstBuffer */
-  
+#define gst_buffer_get_wl_meta(b) ((GstWlMeta*)gst_buffer_get_meta((b),GST_WL_META_API_TYPE))
+
+struct _GstWlMeta {
+  GstMeta meta;
+
+  GstWaylandSink *sink;
+
   struct wl_buffer *wbuffer;
-  
-  GstWaylandSink *wlsink;
-};
-
-struct _GstWlBufferClass
-{
-  GstBufferClass parent_class;
+  void *data;
+  size_t size;
 };
 
 struct _GstWaylandSink
 {
-
   GstVideoSink parent;
 
-  GstCaps *caps;
-  
   struct display *display;
   struct window *window;
   struct wl_callback *callback;
 
-  GMutex *pool_lock;
-  GSList *buffer_pool;
-
-  GMutex *wayland_lock;
+  GMutex wayland_lock;
 
   gint video_width;
   gint video_height;
   guint bpp;
 
-  gboolean render_finish;
-
+  gboolean render_busy;
 };
 
 struct _GstWaylandSinkClass
 {
-  GstVideoSinkClass parent; 
+  GstVideoSinkClass parent;
 };
 
 GType gst_wayland_sink_get_type (void) G_GNUC_CONST;
-GType gst_wlbuffer_get_type (void);
 
 G_END_DECLS
+
 #endif /* __GST_WAYLAND_VIDEO_SINK_H__ */
