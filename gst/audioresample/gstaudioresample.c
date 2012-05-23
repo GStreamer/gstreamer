@@ -58,6 +58,9 @@
 
 GST_DEBUG_CATEGORY (audio_resample_debug);
 #define GST_CAT_DEFAULT audio_resample_debug
+#if !defined(AUDIORESAMPLE_FORMAT_AUTO) || defined(DISABLE_ORC)
+GST_DEBUG_CATEGORY_STATIC (GST_CAT_PERFORMANCE);
+#endif
 
 enum
 {
@@ -1429,7 +1432,6 @@ plugin_init (GstPlugin * plugin)
 #else
   GST_WARNING ("Orc disabled, can't benchmark int vs. float resampler");
   {
-    GST_DEBUG_CATEGORY_STATIC (GST_CAT_PERFORMANCE);
     GST_DEBUG_CATEGORY_GET (GST_CAT_PERFORMANCE, "GST_PERFORMANCE");
     GST_CAT_WARNING (GST_CAT_PERFORMANCE, "orc disabled, no benchmarking done");
   }
