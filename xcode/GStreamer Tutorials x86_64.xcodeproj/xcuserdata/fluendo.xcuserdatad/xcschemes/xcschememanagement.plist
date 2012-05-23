@@ -44,6 +44,21 @@
 			<key>orderHint</key>
 			<integer>3</integer>
 		</dict>
+		<key>Tutorial 7.xcscheme</key>
+		<dict>
+			<key>orderHint</key>
+			<integer>8</integer>
+		</dict>
+		<key>Tutorial 8.xcscheme</key>
+		<dict>
+			<key>orderHint</key>
+			<integer>9</integer>
+		</dict>
+		<key>Tutorial 9.xcscheme</key>
+		<dict>
+			<key>orderHint</key>
+			<integer>10</integer>
+		</dict>
 	</dict>
 	<key>SuppressBuildableAutocreation</key>
 	<dict>
@@ -98,6 +113,21 @@
 			<true/>
 		</dict>
 		<key>63118CE9156D3A870085CF03</key>
+		<dict>
+			<key>primary</key>
+			<true/>
+		</dict>
+		<key>63DE8811156DABDF006F2D3B</key>
+		<dict>
+			<key>primary</key>
+			<true/>
+		</dict>
+		<key>63DE881F156DABE6006F2D3B</key>
+		<dict>
+			<key>primary</key>
+			<true/>
+		</dict>
+		<key>63DE882D156DABEE006F2D3B</key>
 		<dict>
 			<key>primary</key>
 			<true/>

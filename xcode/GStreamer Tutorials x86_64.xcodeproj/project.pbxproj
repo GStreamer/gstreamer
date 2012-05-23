@@ -15,6 +15,9 @@
 		63118CD4156D33040085CF03 /* playback-tutorial-1.c in Sources */ = {isa = PBXBuildFile; fileRef = 63118CD2156D32FE0085CF03 /* playback-tutorial-1.c */; };
 		63118CE5156D35610085CF03 /* playback-tutorial-2.c in Sources */ = {isa = PBXBuildFile; fileRef = 63118CE3156D35390085CF03 /* playback-tutorial-2.c */; };
 		63118CF6156D3ACB0085CF03 /* basic-tutorial-6.c in Sources */ = {isa = PBXBuildFile; fileRef = 63118CF4156D3AB60085CF03 /* basic-tutorial-6.c */; };
+		63DE883E156DAC18006F2D3B /* basic-tutorial-7.c in Sources */ = {isa = PBXBuildFile; fileRef = 63DE8838156DAC09006F2D3B /* basic-tutorial-7.c */; };
+		63DE883F156DAC1D006F2D3B /* basic-tutorial-8.c in Sources */ = {isa = PBXBuildFile; fileRef = 63DE883A156DAC0E006F2D3B /* basic-tutorial-8.c */; };
+		63DE8840156DAC21006F2D3B /* basic-tutorial-9.c in Sources */ = {isa = PBXBuildFile; fileRef = 63DE883C156DAC15006F2D3B /* basic-tutorial-9.c */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXCopyFilesBuildPhase section */
@@ -90,27 +93,61 @@
 			);
 			runOnlyForDeploymentPostprocessing = 1;
 		};
+		63DE8810156DABDF006F2D3B /* CopyFiles */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = /usr/share/man/man1/;
+			dstSubfolderSpec = 0;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 1;
+		};
+		63DE881E156DABE6006F2D3B /* CopyFiles */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = /usr/share/man/man1/;
+			dstSubfolderSpec = 0;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 1;
+		};
+		63DE882C156DABEE006F2D3B /* CopyFiles */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = /usr/share/man/man1/;
+			dstSubfolderSpec = 0;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 1;
+		};
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
-		63118C4D156D29530085CF03 /* basic-tutorial-2.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = "basic-tutorial-2.c"; path = "../../gst-sdk/tutorials/basic-tutorial-2.c"; sourceTree = SOURCE_ROOT; };
+		63118C4D156D29530085CF03 /* basic-tutorial-2.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = "basic-tutorial-2.c"; path = "../gst-sdk/tutorials/basic-tutorial-2.c"; sourceTree = SOURCE_ROOT; };
 		63118C4F156D297B0085CF03 /* gstreamer-0.10.xcconfig */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.xcconfig; name = "gstreamer-0.10.xcconfig"; path = "../../../../../../../../System/Library/Frameworks/GStreamer.framework/Version/2012.5/x86_64/share/gst-sdk/xcode/gstreamer-0.10.xcconfig"; sourceTree = "<group>"; };
 		63118C54156D29DE0085CF03 /* Turorial 3 */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = "Turorial 3"; sourceTree = BUILT_PRODUCTS_DIR; };
-		63118C60156D2AA70085CF03 /* basic-tutorial-3.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = "basic-tutorial-3.c"; path = "../../gst-sdk/tutorials/basic-tutorial-3.c"; sourceTree = SOURCE_ROOT; };
+		63118C60156D2AA70085CF03 /* basic-tutorial-3.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = "basic-tutorial-3.c"; path = "../gst-sdk/tutorials/basic-tutorial-3.c"; sourceTree = SOURCE_ROOT; };
 		63118C75156D2B970085CF03 /* Tutorial 4 */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = "Tutorial 4"; sourceTree = BUILT_PRODUCTS_DIR; };
-		63118C7F156D2BA30085CF03 /* basic-tutorial-4.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = "basic-tutorial-4.c"; path = "../../gst-sdk/tutorials/basic-tutorial-4.c"; sourceTree = SOURCE_ROOT; };
+		63118C7F156D2BA30085CF03 /* basic-tutorial-4.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = "basic-tutorial-4.c"; path = "../gst-sdk/tutorials/basic-tutorial-4.c"; sourceTree = SOURCE_ROOT; };
 		63118C88156D2D190085CF03 /* Tutorial 1 */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = "Tutorial 1"; sourceTree = BUILT_PRODUCTS_DIR; };
-		63118C92156D2D630085CF03 /* basic-tutorial-1.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = "basic-tutorial-1.c"; path = "../../gst-sdk/tutorials/basic-tutorial-1.c"; sourceTree = SOURCE_ROOT; };
+		63118C92156D2D630085CF03 /* basic-tutorial-1.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = "basic-tutorial-1.c"; path = "../gst-sdk/tutorials/basic-tutorial-1.c"; sourceTree = SOURCE_ROOT; };
 		63118C98156D2E2F0085CF03 /* Tutorial 5 */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = "Tutorial 5"; sourceTree = BUILT_PRODUCTS_DIR; };
-		63118CA2156D2E400085CF03 /* basic-tutorial-5.c */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.objc; fileEncoding = 4; name = "basic-tutorial-5.c"; path = "../../gst-sdk/tutorials/basic-tutorial-5.c"; sourceTree = SOURCE_ROOT; };
+		63118CA2156D2E400085CF03 /* basic-tutorial-5.c */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.objc; fileEncoding = 4; name = "basic-tutorial-5.c"; path = "../gst-sdk/tutorials/basic-tutorial-5.c"; sourceTree = SOURCE_ROOT; };
 		63118CA4156D2EAC0085CF03 /* gstreamer-0.10-gtk+-2.0.xcconfig */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.xcconfig; name = "gstreamer-0.10-gtk+-2.0.xcconfig"; path = "../../../../../../../../System/Library/Frameworks/GStreamer.framework/Version/2012.5/x86_64/share/gst-sdk/xcode/gstreamer-0.10-gtk+-2.0.xcconfig"; sourceTree = "<group>"; };
 		63118CB9156D31240085CF03 /* Tutorial 2 */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = "Tutorial 2"; sourceTree = BUILT_PRODUCTS_DIR; };
 		63118CC8156D32E20085CF03 /* Playback Tutorial 1 */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = "Playback Tutorial 1"; sourceTree = BUILT_PRODUCTS_DIR; };
-		63118CD2156D32FE0085CF03 /* playback-tutorial-1.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = "playback-tutorial-1.c"; path = "../../gst-sdk/tutorials/playback-tutorial-1.c"; sourceTree = SOURCE_ROOT; };
+		63118CD2156D32FE0085CF03 /* playback-tutorial-1.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = "playback-tutorial-1.c"; path = "../gst-sdk/tutorials/playback-tutorial-1.c"; sourceTree = SOURCE_ROOT; };
 		63118CD9156D34BA0085CF03 /* Playback Tutorial 2 */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = "Playback Tutorial 2"; sourceTree = BUILT_PRODUCTS_DIR; };
-		63118CE3156D35390085CF03 /* playback-tutorial-2.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = "playback-tutorial-2.c"; path = "../../gst-sdk/tutorials/playback-tutorial-2.c"; sourceTree = SOURCE_ROOT; };
+		63118CE3156D35390085CF03 /* playback-tutorial-2.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = "playback-tutorial-2.c"; path = "../gst-sdk/tutorials/playback-tutorial-2.c"; sourceTree = SOURCE_ROOT; };
 		63118CEA156D3A870085CF03 /* Tutorial 6 */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = "Tutorial 6"; sourceTree = BUILT_PRODUCTS_DIR; };
-		63118CF4156D3AB60085CF03 /* basic-tutorial-6.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = "basic-tutorial-6.c"; path = "../../gst-sdk/tutorials/basic-tutorial-6.c"; sourceTree = SOURCE_ROOT; };
+		63118CF4156D3AB60085CF03 /* basic-tutorial-6.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = "basic-tutorial-6.c"; path = "../gst-sdk/tutorials/basic-tutorial-6.c"; sourceTree = SOURCE_ROOT; };
+		63DE8812156DABDF006F2D3B /* Tutorial 7 */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = "Tutorial 7"; sourceTree = BUILT_PRODUCTS_DIR; };
+		63DE8820156DABE6006F2D3B /* Tutorial 8 */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = "Tutorial 8"; sourceTree = BUILT_PRODUCTS_DIR; };
+		63DE882E156DABEE006F2D3B /* Tutorial 9 */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = "Tutorial 9"; sourceTree = BUILT_PRODUCTS_DIR; };
+		63DE8838156DAC09006F2D3B /* basic-tutorial-7.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = "basic-tutorial-7.c"; path = "../gst-sdk/tutorials/basic-tutorial-7.c"; sourceTree = SOURCE_ROOT; };
+		63DE883A156DAC0E006F2D3B /* basic-tutorial-8.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = "basic-tutorial-8.c"; path = "../gst-sdk/tutorials/basic-tutorial-8.c"; sourceTree = SOURCE_ROOT; };
+		63DE883C156DAC15006F2D3B /* basic-tutorial-9.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = "basic-tutorial-9.c"; path = "../gst-sdk/tutorials/basic-tutorial-9.c"; sourceTree = SOURCE_ROOT; };
+		63DE8841156DACB3006F2D3B /* gstreamer-0.10-all.xcconfig */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.xcconfig; name = "gstreamer-0.10-all.xcconfig"; path = "../../../../../../../System/Library/Frameworks/GStreamer.framework/Version/2012.5/x86_64/share/gst-sdk/xcode/gstreamer-0.10-all.xcconfig"; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -170,12 +207,34 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		63DE880F156DABDF006F2D3B /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		63DE881D156DABE6006F2D3B /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		63DE882B156DABEE006F2D3B /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
 		63118C35156D29340085CF03 = {
 			isa = PBXGroup;
 			children = (
+				63DE8841156DACB3006F2D3B /* gstreamer-0.10-all.xcconfig */,
 				63118CA4156D2EAC0085CF03 /* gstreamer-0.10-gtk+-2.0.xcconfig */,
 				63118C4F156D297B0085CF03 /* gstreamer-0.10.xcconfig */,
 				63118C8A156D2D190085CF03 /* Tutorial 1 */,
@@ -186,6 +245,9 @@
 				63118CEC156D3A870085CF03 /* Tutorial 6 */,
 				63118CCA156D32E20085CF03 /* Playback Tutorial 1 */,
 				63118CDB156D34BA0085CF03 /* Playback Tutorial 2 */,
+				63DE8814156DABDF006F2D3B /* Tutorial 7 */,
+				63DE8822156DABE6006F2D3B /* Tutorial 8 */,
+				63DE8830156DABEE006F2D3B /* Tutorial 9 */,
 				63118C41156D29340085CF03 /* Products */,
 			);
 			sourceTree = "<group>";
@@ -201,6 +263,9 @@
 				63118CC8156D32E20085CF03 /* Playback Tutorial 1 */,
 				63118CD9156D34BA0085CF03 /* Playback Tutorial 2 */,
 				63118CEA156D3A870085CF03 /* Tutorial 6 */,
+				63DE8812156DABDF006F2D3B /* Tutorial 7 */,
+				63DE8820156DABE6006F2D3B /* Tutorial 8 */,
+				63DE882E156DABEE006F2D3B /* Tutorial 9 */,
 			);
 			name = Products;
 			sourceTree = SOURCE_ROOT;
@@ -269,6 +334,30 @@
 				63118CF4156D3AB60085CF03 /* basic-tutorial-6.c */,
 			);
 			path = "Tutorial 6";
+			sourceTree = "<group>";
+		};
+		63DE8814156DABDF006F2D3B /* Tutorial 7 */ = {
+			isa = PBXGroup;
+			children = (
+				63DE8838156DAC09006F2D3B /* basic-tutorial-7.c */,
+			);
+			path = "Tutorial 7";
+			sourceTree = "<group>";
+		};
+		63DE8822156DABE6006F2D3B /* Tutorial 8 */ = {
+			isa = PBXGroup;
+			children = (
+				63DE883A156DAC0E006F2D3B /* basic-tutorial-8.c */,
+			);
+			path = "Tutorial 8";
+			sourceTree = "<group>";
+		};
+		63DE8830156DABEE006F2D3B /* Tutorial 9 */ = {
+			isa = PBXGroup;
+			children = (
+				63DE883C156DAC15006F2D3B /* basic-tutorial-9.c */,
+			);
+			path = "Tutorial 9";
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -410,6 +499,57 @@
 			productReference = 63118CEA156D3A870085CF03 /* Tutorial 6 */;
 			productType = "com.apple.product-type.tool";
 		};
+		63DE8811156DABDF006F2D3B /* Tutorial 7 */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 63DE8819156DABDF006F2D3B /* Build configuration list for PBXNativeTarget "Tutorial 7" */;
+			buildPhases = (
+				63DE880E156DABDF006F2D3B /* Sources */,
+				63DE880F156DABDF006F2D3B /* Frameworks */,
+				63DE8810156DABDF006F2D3B /* CopyFiles */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = "Tutorial 7";
+			productName = "Tutorial 7";
+			productReference = 63DE8812156DABDF006F2D3B /* Tutorial 7 */;
+			productType = "com.apple.product-type.tool";
+		};
+		63DE881F156DABE6006F2D3B /* Tutorial 8 */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 63DE8827156DABE7006F2D3B /* Build configuration list for PBXNativeTarget "Tutorial 8" */;
+			buildPhases = (
+				63DE881C156DABE6006F2D3B /* Sources */,
+				63DE881D156DABE6006F2D3B /* Frameworks */,
+				63DE881E156DABE6006F2D3B /* CopyFiles */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = "Tutorial 8";
+			productName = "Tutorial 8";
+			productReference = 63DE8820156DABE6006F2D3B /* Tutorial 8 */;
+			productType = "com.apple.product-type.tool";
+		};
+		63DE882D156DABEE006F2D3B /* Tutorial 9 */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 63DE8835156DABEE006F2D3B /* Build configuration list for PBXNativeTarget "Tutorial 9" */;
+			buildPhases = (
+				63DE882A156DABEE006F2D3B /* Sources */,
+				63DE882B156DABEE006F2D3B /* Frameworks */,
+				63DE882C156DABEE006F2D3B /* CopyFiles */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = "Tutorial 9";
+			productName = "Tutorial 9";
+			productReference = 63DE882E156DABEE006F2D3B /* Tutorial 9 */;
+			productType = "com.apple.product-type.tool";
+		};
 /* End PBXNativeTarget section */
 
 /* Begin PBXProject section */
@@ -438,6 +578,9 @@
 				63118CC7156D32E20085CF03 /* Playback Tutorial 1 */,
 				63118CD8156D34BA0085CF03 /* Playback Tutorial 2 */,
 				63118CE9156D3A870085CF03 /* Tutorial 6 */,
+				63DE8811156DABDF006F2D3B /* Tutorial 7 */,
+				63DE881F156DABE6006F2D3B /* Tutorial 8 */,
+				63DE882D156DABEE006F2D3B /* Tutorial 9 */,
 			);
 		};
 /* End PBXProject section */
@@ -507,6 +650,30 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		63DE880E156DABDF006F2D3B /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				63DE883E156DAC18006F2D3B /* basic-tutorial-7.c in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		63DE881C156DABE6006F2D3B /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				63DE883F156DAC1D006F2D3B /* basic-tutorial-8.c in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		63DE882A156DABEE006F2D3B /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				63DE8840156DAC21006F2D3B /* basic-tutorial-9.c in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXSourcesBuildPhase section */
 
 /* Begin XCBuildConfiguration section */
@@ -535,6 +702,7 @@
 				MACOSX_DEPLOYMENT_TARGET = 10.7;
 				ONLY_ACTIVE_ARCH = YES;
 				SDKROOT = macosx;
+				VALID_ARCHS = x86_64;
 			};
 			name = Debug;
 		};
@@ -556,6 +724,7 @@
 				GCC_WARN_UNUSED_VARIABLE = YES;
 				MACOSX_DEPLOYMENT_TARGET = 10.7;
 				SDKROOT = macosx;
+				VALID_ARCHS = x86_64;
 			};
 			name = Release;
 		};
@@ -767,6 +936,60 @@
 			};
 			name = Release;
 		};
+		63DE881A156DABDF006F2D3B /* Debug */ = {
+			isa = XCBuildConfiguration;
+			baseConfigurationReference = 63118C4F156D297B0085CF03 /* gstreamer-0.10.xcconfig */;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = YES;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+			};
+			name = Debug;
+		};
+		63DE881B156DABDF006F2D3B /* Release */ = {
+			isa = XCBuildConfiguration;
+			baseConfigurationReference = 63118C4F156D297B0085CF03 /* gstreamer-0.10.xcconfig */;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = YES;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+			};
+			name = Release;
+		};
+		63DE8828156DABE7006F2D3B /* Debug */ = {
+			isa = XCBuildConfiguration;
+			baseConfigurationReference = 63118C4F156D297B0085CF03 /* gstreamer-0.10.xcconfig */;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = YES;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+			};
+			name = Debug;
+		};
+		63DE8829156DABE7006F2D3B /* Release */ = {
+			isa = XCBuildConfiguration;
+			baseConfigurationReference = 63118C4F156D297B0085CF03 /* gstreamer-0.10.xcconfig */;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = YES;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+			};
+			name = Release;
+		};
+		63DE8836156DABEE006F2D3B /* Debug */ = {
+			isa = XCBuildConfiguration;
+			baseConfigurationReference = 63DE8841156DACB3006F2D3B /* gstreamer-0.10-all.xcconfig */;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = YES;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+			};
+			name = Debug;
+		};
+		63DE8837156DABEE006F2D3B /* Release */ = {
+			isa = XCBuildConfiguration;
+			baseConfigurationReference = 63DE8841156DACB3006F2D3B /* gstreamer-0.10-all.xcconfig */;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = YES;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+			};
+			name = Release;
+		};
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
@@ -786,6 +1009,7 @@
 				63118C5D156D29DE0085CF03 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
 		};
 		63118C7C156D2B970085CF03 /* Build configuration list for PBXNativeTarget "Tutorial 4" */ = {
 			isa = XCConfigurationList;
@@ -794,6 +1018,7 @@
 				63118C7E156D2B970085CF03 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
 		};
 		63118C8F156D2D190085CF03 /* Build configuration list for PBXNativeTarget "Tutorial 1" */ = {
 			isa = XCConfigurationList;
@@ -802,6 +1027,7 @@
 				63118C91156D2D190085CF03 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
 		};
 		63118C9F156D2E2F0085CF03 /* Build configuration list for PBXNativeTarget "Tutorial 5" */ = {
 			isa = XCConfigurationList;
@@ -810,6 +1036,7 @@
 				63118CA1156D2E2F0085CF03 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
 		};
 		63118CC0156D31240085CF03 /* Build configuration list for PBXNativeTarget "Tutorial 2" */ = {
 			isa = XCConfigurationList;
@@ -818,6 +1045,7 @@
 				63118CC2156D31240085CF03 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
 		};
 		63118CCF156D32E20085CF03 /* Build configuration list for PBXNativeTarget "Playback Tutorial 1" */ = {
 			isa = XCConfigurationList;
@@ -826,6 +1054,7 @@
 				63118CD1156D32E20085CF03 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
 		};
 		63118CE0156D34BA0085CF03 /* Build configuration list for PBXNativeTarget "Playback Tutorial 2" */ = {
 			isa = XCConfigurationList;
@@ -834,12 +1063,38 @@
 				63118CE2156D34BA0085CF03 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
 		};
 		63118CF1156D3A870085CF03 /* Build configuration list for PBXNativeTarget "Tutorial 6" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				63118CF2156D3A870085CF03 /* Debug */,
 				63118CF3156D3A870085CF03 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		63DE8819156DABDF006F2D3B /* Build configuration list for PBXNativeTarget "Tutorial 7" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				63DE881A156DABDF006F2D3B /* Debug */,
+				63DE881B156DABDF006F2D3B /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+		};
+		63DE8827156DABE7006F2D3B /* Build configuration list for PBXNativeTarget "Tutorial 8" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				63DE8828156DABE7006F2D3B /* Debug */,
+				63DE8829156DABE7006F2D3B /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+		};
+		63DE8835156DABEE006F2D3B /* Build configuration list for PBXNativeTarget "Tutorial 9" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				63DE8836156DABEE006F2D3B /* Debug */,
+				63DE8837156DABEE006F2D3B /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 		};
