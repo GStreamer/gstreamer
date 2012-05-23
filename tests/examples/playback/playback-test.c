@@ -151,6 +151,8 @@ typedef struct
   gboolean play_scrub;
   gboolean skip_seek;
   gdouble rate;
+  gboolean snap_before;
+  gboolean snap_after;
 
   /* From commandline parameters */
   gboolean stats;
@@ -505,6 +507,10 @@ do_seek (PlaybackApp * app, GstFormat format, gint64 position)
     flags |= GST_SEEK_FLAG_SEGMENT;
   if (app->skip_seek)
     flags |= GST_SEEK_FLAG_SKIP;
+  if (app->snap_before)
+    flags |= GST_SEEK_FLAG_SNAP_BEFORE;
+  if (app->snap_after)
+    flags |= GST_SEEK_FLAG_SNAP_AFTER;
 
   if (app->rate >= 0) {
     s_event = gst_event_new_seek (app->rate,
@@ -803,6 +809,18 @@ failed:
     gtk_statusbar_push (GTK_STATUSBAR (app->statusbar), app->status_id,
         "Stop failed");
   }
+}
+
+static void
+snap_before_toggle_cb (GtkToggleButton * button, PlaybackApp * app)
+{
+  app->snap_before = gtk_toggle_button_get_active (button);
+}
+
+static void
+snap_after_toggle_cb (GtkToggleButton * button, PlaybackApp * app)
+{
+  app->snap_after = gtk_toggle_button_get_active (button);
 }
 
 static void
@@ -2545,7 +2563,7 @@ create_ui (PlaybackApp * app)
   /* seek expander */
   {
     GtkWidget *accurate_checkbox, *key_checkbox, *loop_checkbox,
-        *flush_checkbox;
+        *flush_checkbox, *snap_before_checkbox, *snap_after_checkbox;
     GtkWidget *scrub_checkbox, *play_scrub_checkbox, *rate_label;
     GtkWidget *skip_checkbox, *rate_spinbutton;
     GtkWidget *flagtable, *advanced_seek, *advanced_seek_grid;
@@ -2565,6 +2583,8 @@ create_ui (PlaybackApp * app)
     scrub_checkbox = gtk_check_button_new_with_label ("Scrub");
     play_scrub_checkbox = gtk_check_button_new_with_label ("Play Scrub");
     skip_checkbox = gtk_check_button_new_with_label ("Play Skip");
+    snap_before_checkbox = gtk_check_button_new_with_label ("Snap before");
+    snap_after_checkbox = gtk_check_button_new_with_label ("Snap after");
     rate_spinbutton = gtk_spin_button_new_with_range (-100, 100, 0.1);
     gtk_spin_button_set_digits (GTK_SPIN_BUTTON (rate_spinbutton), 3);
     rate_label = gtk_label_new ("Rate");
@@ -2583,6 +2603,10 @@ create_ui (PlaybackApp * app)
         "play video while seeking");
     gtk_widget_set_tooltip_text (skip_checkbox,
         "Skip frames while playing at high frame rates");
+    gtk_widget_set_tooltip_text (snap_before_checkbox,
+        "Favor snapping to the frame before the seek target");
+    gtk_widget_set_tooltip_text (snap_after_checkbox,
+        "Favor snapping to the frame after the seek target");
 
     gtk_toggle_button_set_active (GTK_TOGGLE_BUTTON (flush_checkbox), TRUE);
     gtk_toggle_button_set_active (GTK_TOGGLE_BUTTON (scrub_checkbox), TRUE);
@@ -2605,6 +2629,10 @@ create_ui (PlaybackApp * app)
         G_CALLBACK (skip_toggle_cb), app);
     g_signal_connect (G_OBJECT (rate_spinbutton), "value-changed",
         G_CALLBACK (rate_spinbutton_changed_cb), app);
+    g_signal_connect (G_OBJECT (snap_before_checkbox), "toggled",
+        G_CALLBACK (snap_before_toggle_cb), app);
+    g_signal_connect (G_OBJECT (snap_after_checkbox), "toggled",
+        G_CALLBACK (snap_after_toggle_cb), app);
 
     gtk_grid_attach (GTK_GRID (flagtable), accurate_checkbox, 0, 0, 1, 1);
     gtk_grid_attach (GTK_GRID (flagtable), flush_checkbox, 1, 0, 1, 1);
@@ -2615,6 +2643,8 @@ create_ui (PlaybackApp * app)
     gtk_grid_attach (GTK_GRID (flagtable), skip_checkbox, 3, 0, 1, 1);
     gtk_grid_attach (GTK_GRID (flagtable), rate_label, 4, 0, 1, 1);
     gtk_grid_attach (GTK_GRID (flagtable), rate_spinbutton, 4, 1, 1, 1);
+    gtk_grid_attach (GTK_GRID (flagtable), snap_before_checkbox, 0, 2, 1, 1);
+    gtk_grid_attach (GTK_GRID (flagtable), snap_after_checkbox, 1, 2, 1, 1);
 
     advanced_seek = gtk_frame_new ("Advanced Seeking");
     advanced_seek_grid = gtk_grid_new ();
@@ -2652,7 +2682,7 @@ create_ui (PlaybackApp * app)
         1, 1, 1);
 
     gtk_container_add (GTK_CONTAINER (advanced_seek), advanced_seek_grid);
-    gtk_grid_attach (GTK_GRID (flagtable), advanced_seek, 0, 2, 3, 2);
+    gtk_grid_attach (GTK_GRID (flagtable), advanced_seek, 0, 3, 3, 2);
     gtk_container_add (GTK_CONTAINER (seek), flagtable);
   }
 
