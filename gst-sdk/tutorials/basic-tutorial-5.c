@@ -10,7 +10,7 @@
 #elif defined (GDK_WINDOWING_WIN32)
 #include <gdk/gdkwin32.h>
 #elif defined (GDK_WINDOWING_QUARTZ)
-#include <gdk/gdkquartzwindow.h>
+#include <gdk/gdkquartz.h>
 #endif
   
 /* Structure to contain all our information, so we can pass it around */
