@@ -43,7 +43,8 @@
 /* ********************** typefinding in pull mode ************************ */
 
 static void
-helper_find_suggest (gpointer data, guint probability, GstCaps * caps);
+helper_find_suggest (gpointer data, GstTypeFindProbability probability,
+    GstCaps * caps);
 
 typedef struct
 {
