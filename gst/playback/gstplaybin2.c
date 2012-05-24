@@ -1267,11 +1267,11 @@ compare_factories_func (gconstpointer p1, gconstpointer p2)
   else if (!s1 && s2)
     return 1;
 
-  diff = f2->rank - f1->rank;
+  diff = gst_plugin_feature_get_rank (f2) - gst_plugin_feature_get_rank (f1);
   if (diff != 0)
     return diff;
 
-  diff = strcmp (f2->name, f1->name);
+  diff = strcmp (GST_OBJECT_NAME (f2), GST_OBJECT_NAME (f1));
 
   return diff;
 }
