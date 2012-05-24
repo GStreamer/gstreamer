@@ -410,8 +410,14 @@ struct _GstPlayBin
                                  * input-selector, so that we only post a
                                  * warning once */
 
-  gboolean pending_flush_finish;        /* whether we are pending to send a custom
-                                         * subtitleoverlay-flush-subtitle-finish event
+  gboolean video_pending_flush_finish;  /* whether we are pending to send a custom
+                                         * custom-video-flush-finish event
+                                         * on pad activation */
+  gboolean audio_pending_flush_finish;  /* whether we are pending to send a custom
+                                         * custom-audio-flush-finish event
+                                         * on pad activation */
+  gboolean text_pending_flush_finish;   /* whether we are pending to send a custom
+                                         * custom-subtitle-flush-finish event
                                          * on pad activation */
 
   GstElement *audio_sink;       /* configured audio sink, or NULL      */
@@ -1668,6 +1674,28 @@ get_current_stream_number (GstPlayBin * playbin, GPtrArray * channels)
 }
 
 static gboolean
+gst_playbin2_send_custom_event (GstObject * selector, const gchar * event_name)
+{
+  GstPad *src;
+  GstPad *peer;
+  GstStructure *s;
+  GstEvent *event;
+  gboolean ret = FALSE;
+
+  src = gst_element_get_static_pad (GST_ELEMENT_CAST (selector), "src");
+  peer = gst_pad_get_peer (src);
+  if (peer) {
+    s = gst_structure_new_empty (event_name);
+    event = gst_event_new_custom (GST_EVENT_CUSTOM_DOWNSTREAM_OOB, s);
+    gst_pad_send_event (peer, event);
+    gst_object_unref (peer);
+    ret = TRUE;
+  }
+  gst_object_unref (src);
+  return ret;
+}
+
+static gboolean
 gst_play_bin_set_current_video_stream (GstPlayBin * playbin, gint stream)
 {
   GstSourceGroup *group;
@@ -1698,8 +1726,19 @@ gst_play_bin_set_current_video_stream (GstPlayBin * playbin, gint stream)
     GstObject *selector;
 
     if ((selector = gst_pad_get_parent (sinkpad))) {
-      /* activate the selected pad */
-      g_object_set (selector, "active-pad", sinkpad, NULL);
+      GstPad *old_sinkpad;
+
+      g_object_get (selector, "active-pad", &old_sinkpad, NULL);
+
+      if (old_sinkpad != sinkpad) {
+        if (gst_playbin2_send_custom_event (selector,
+                "playsink-custom-video-flush"))
+          playbin->video_pending_flush_finish = TRUE;
+
+        /* activate the selected pad */
+        g_object_set (selector, "active-pad", sinkpad, NULL);
+      }
+
       gst_object_unref (selector);
     }
     gst_object_unref (sinkpad);
@@ -1745,8 +1784,18 @@ gst_play_bin_set_current_audio_stream (GstPlayBin * playbin, gint stream)
     GstObject *selector;
 
     if ((selector = gst_pad_get_parent (sinkpad))) {
-      /* activate the selected pad */
-      g_object_set (selector, "active-pad", sinkpad, NULL);
+      GstPad *old_sinkpad;
+
+      g_object_get (selector, "active-pad", &old_sinkpad, NULL);
+
+      if (old_sinkpad != sinkpad) {
+        if (gst_playbin2_send_custom_event (selector,
+                "playsink-custom-audio-flush"))
+          playbin->audio_pending_flush_finish = TRUE;
+
+        /* activate the selected pad */
+        g_object_set (selector, "active-pad", sinkpad, NULL);
+      }
       gst_object_unref (selector);
     }
     gst_object_unref (sinkpad);
@@ -1889,7 +1938,7 @@ gst_play_bin_set_current_text_stream (GstPlayBin * playbin, gint stream)
 
       if (old_sinkpad != sinkpad) {
         gboolean need_unblock, need_block, need_seek;
-        GstPad *src, *peer = NULL, *oldpeer = NULL;
+        GstPad *peer = NULL, *oldpeer = NULL;
         GstElement *parent_element = NULL, *old_parent_element = NULL;
 
         /* Now check if we need to seek the suburidecodebin to the beginning
@@ -1926,22 +1975,9 @@ gst_play_bin_set_current_text_stream (GstPlayBin * playbin, gint stream)
           gst_play_bin_suburidecodebin_block (group, group->suburidecodebin,
               TRUE);
 
-        src = gst_element_get_static_pad (GST_ELEMENT_CAST (selector), "src");
-        peer = gst_pad_get_peer (src);
-        if (peer) {
-          GstStructure *s;
-          GstEvent *event;
-          /* Flush the subtitle renderer to remove any
-           * currently displayed subtitles. This event will
-           * never travel outside subtitleoverlay!
-           */
-          s = gst_structure_new_empty ("subtitleoverlay-flush-subtitle");
-          event = gst_event_new_custom (GST_EVENT_CUSTOM_DOWNSTREAM_OOB, s);
-          gst_pad_send_event (peer, event);
-          playbin->pending_flush_finish = TRUE;
-          gst_object_unref (peer);
-        }
-        gst_object_unref (src);
+        if (gst_playbin2_send_custom_event (selector,
+                "playsink-custom-subtitle-flush"))
+          playbin->text_pending_flush_finish = TRUE;
 
         /* activate the selected pad */
         g_object_set (selector, "active-pad", sinkpad, NULL);
@@ -2568,38 +2604,39 @@ selector_active_pad_changed (GObject * selector, GParamSpec * pspec,
       property = "current-video";
       playbin->current_video = get_current_stream_number (playbin,
           group->video_channels);
+
+      if (playbin->video_pending_flush_finish) {
+        playbin->video_pending_flush_finish = FALSE;
+        GST_PLAY_BIN_UNLOCK (playbin);
+        gst_playbin2_send_custom_event (GST_OBJECT (selector),
+            "playsink-custom-video-flush-finish");
+        goto notify;
+      }
       break;
     case GST_PLAY_SINK_TYPE_AUDIO:
     case GST_PLAY_SINK_TYPE_AUDIO_RAW:
       property = "current-audio";
       playbin->current_audio = get_current_stream_number (playbin,
           group->audio_channels);
+
+      if (playbin->audio_pending_flush_finish) {
+        playbin->audio_pending_flush_finish = FALSE;
+        GST_PLAY_BIN_UNLOCK (playbin);
+        gst_playbin2_send_custom_event (GST_OBJECT (selector),
+            "playsink-custom-audio-flush-finish");
+        goto notify;
+      }
       break;
     case GST_PLAY_SINK_TYPE_TEXT:
       property = "current-text";
       playbin->current_text = get_current_stream_number (playbin,
           group->text_channels);
 
-      if (playbin->pending_flush_finish) {
-        GstEvent *ev;
-        GstStructure *s;
-        GstPad *src, *peer;
-
-        playbin->pending_flush_finish = FALSE;
+      if (playbin->text_pending_flush_finish) {
+        playbin->text_pending_flush_finish = FALSE;
         GST_PLAY_BIN_UNLOCK (playbin);
-
-        /* Flush the subtitle renderer to remove any
-         * currently displayed subtitles. This event will
-         * never travel outside subtitleoverlay!
-         */
-        src = gst_element_get_static_pad (GST_ELEMENT_CAST (selector), "src");
-        peer = gst_pad_get_peer (src);
-        s = gst_structure_new_empty ("subtitleoverlay-flush-subtitle-finish");
-        ev = gst_event_new_custom (GST_EVENT_CUSTOM_DOWNSTREAM_OOB, s);
-        gst_pad_send_event (peer, ev);
-        gst_object_unref (peer);
-        gst_object_unref (src);
-
+        gst_playbin2_send_custom_event (GST_OBJECT (selector),
+            "playsink-custom-subtitle-flush-finish");
         goto notify;
       }
       break;
@@ -2796,7 +2833,12 @@ pad_added_cb (GstElement * decodebin, GstPad * pad, GstSourceGroup * group)
           (_("Missing element '%s' - check your GStreamer installation."),
               "input-selector"), (NULL));
     } else {
-      g_object_set (select->selector, "sync-streams", TRUE, NULL);
+      /* sync-mode=1, use clock */
+      if (select->type == GST_PLAY_SINK_TYPE_TEXT)
+        g_object_set (select->selector, "sync-streams", TRUE,
+            "sync-mode", 1, "cache-buffers", TRUE, NULL);
+      else
+        g_object_set (select->selector, "sync-streams", TRUE, NULL);
 
       g_signal_connect (select->selector, "notify::active-pad",
           G_CALLBACK (selector_active_pad_changed), playbin);
