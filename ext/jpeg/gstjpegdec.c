@@ -83,7 +83,7 @@ GST_STATIC_PAD_TEMPLATE ("sink",
     GST_STATIC_CAPS ("image/jpeg, "
         "width = (int) [ " G_STRINGIFY (MIN_WIDTH) ", " G_STRINGIFY (MAX_WIDTH)
         " ], " "height = (int) [ " G_STRINGIFY (MIN_HEIGHT) ", "
-        G_STRINGIFY (MAX_HEIGHT) " ], framerate = (fraction) [ 0/1, MAX ], "
+        G_STRINGIFY (MAX_HEIGHT) " ], "
         "sof-marker = (int) { 0, 1, 2, 5, 6, 7, 9, 10, 13, 14 }")
     );
 
