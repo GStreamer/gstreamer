@@ -46,12 +46,6 @@
 # Yes, I know the default is 10 bugs.
 #
 # ----------------------------------------------------------------------------
-#
-# Known bugs:
-#   - there may be an issue with apostrophes or quotes in bug summaries,
-#     descriptions sometimes get cut off
-#
-# ----------------------------------------------------------------------------
 
 # ----------------------------------------------------------------------------
 #    subroutines
