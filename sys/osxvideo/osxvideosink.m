@@ -156,25 +156,25 @@ gst_osx_video_sink_run_cocoa_loop (GstOSXVideoSink * osxvideosink )
    */
   if ([[NSRunLoop mainRunLoop] currentMode] == nil) {
 #ifdef RUN_NS_APP_THREAD
-  /* run the main runloop in a separate thread */
+    /* run the main runloop in a separate thread */
 
-  /* override [NSThread isMainThread] with our own implementation so that we can
-   * make it believe our dedicated thread is the main thread 
-   */
-  Method origIsMainThread = class_getClassMethod([NSThread class],
-      NSSelectorFromString(@"isMainThread"));
-  Method ourIsMainThread = class_getClassMethod([GstOSXVideoSinkObject class],
-      NSSelectorFromString(@"isMainThread"));
+    /* override [NSThread isMainThread] with our own implementation so that we can
+     * make it believe our dedicated thread is the main thread 
+     */
+    Method origIsMainThread = class_getClassMethod([NSThread class],
+        NSSelectorFromString(@"isMainThread"));
+    Method ourIsMainThread = class_getClassMethod([GstOSXVideoSinkObject class],
+        NSSelectorFromString(@"isMainThread"));
 
-  method_exchangeImplementations(origIsMainThread, ourIsMainThread);
+    method_exchangeImplementations(origIsMainThread, ourIsMainThread);
 
-  osxvideosink->ns_app_thread = g_thread_new ("GstNSAppThread",
-      ns_app_loop_thread, NULL);
+    osxvideosink->ns_app_thread = g_thread_new ("GstNSAppThread",
+        ns_app_loop_thread, NULL);
 #else
   /* assume that there is a GMainLoop and iterate the main runloop from there
    */
-  osxvideosink->cocoa_timeout = g_timeout_add (10,
-      (GSourceFunc) run_ns_app_loop, NULL);
+    osxvideosink->cocoa_timeout = g_timeout_add (10,
+        (GSourceFunc) run_ns_app_loop, NULL);
 #endif
   }
 }
