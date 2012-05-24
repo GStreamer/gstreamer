@@ -572,7 +572,7 @@ update_cur_level (GstQueue2 * queue, GstQueue2Range * range)
 
 /* make a new range for @offset or reuse an existing range */
 static GstQueue2Range *
-add_range (GstQueue2 * queue, guint64 offset)
+add_range (GstQueue2 * queue, guint64 offset, gboolean update_existing)
 {
   GstQueue2Range *range, *prev, *next;
 
@@ -582,7 +582,11 @@ add_range (GstQueue2 * queue, guint64 offset)
     GST_DEBUG_OBJECT (queue,
         "reusing range %" G_GUINT64_FORMAT "-%" G_GUINT64_FORMAT, range->offset,
         range->writing_pos);
-    range->writing_pos = offset;
+    if (update_existing && range->writing_pos != offset) {
+      GST_DEBUG_OBJECT (queue, "updating range writing position to "
+          "%" G_GUINT64_FORMAT, offset);
+      range->writing_pos = offset;
+    }
   } else {
     GST_DEBUG_OBJECT (queue,
         "new range %" G_GUINT64_FORMAT "-%" G_GUINT64_FORMAT, offset, offset);
@@ -635,7 +639,7 @@ init_ranges (GstQueue2 * queue)
   /* get rid of all the current ranges */
   clean_ranges (queue);
   /* make a range for offset 0 */
-  queue->current = add_range (queue, 0);
+  queue->current = add_range (queue, 0, TRUE);
 }
 
 static gboolean
@@ -742,7 +746,7 @@ apply_segment (GstQueue2 * queue, GstEvent * event, GstSegment * segment,
   if (format == GST_FORMAT_BYTES) {
     if (!QUEUE_IS_USING_QUEUE (queue) && is_sink) {
       /* start is where we'll be getting from and as such writing next */
-      queue->current = add_range (queue, start);
+      queue->current = add_range (queue, start, TRUE);
     }
   }
 
@@ -1099,8 +1103,16 @@ perform_seek_to_offset (GstQueue2 * queue, guint64 offset)
   res = gst_pad_push_event (queue->sinkpad, event);
   GST_QUEUE2_MUTEX_LOCK (queue);
 
-  if (res)
-    queue->current = add_range (queue, offset);
+  if (res) {
+    /* Between us sending the seek event and re-acquiring the lock, the source
+     * thread might already have pushed data and moved along the range's
+     * writing_pos beyond the seek offset. In that case we don't want to set
+     * the writing position back to the requested seek position, as it would
+     * cause data to be written to the wrong offset in the file or ring buffer.
+     * We still do the add_range call to switch the current range to the
+     * requested range, or create one if one doesn't exist yet. */
+    queue->current = add_range (queue, offset, FALSE);
+  }
 
   return res;
 }
@@ -1622,6 +1634,14 @@ gst_queue2_create_write (GstQueue2 * queue, GstBuffer * buffer)
 
   GST_DEBUG_OBJECT (queue, "Writing %u bytes to %" G_GUINT64_FORMAT, size,
       writing_pos);
+
+  /* sanity check */
+  if (GST_BUFFER_OFFSET_IS_VALID (buffer) &&
+      GST_BUFFER_OFFSET (buffer) != queue->current->writing_pos) {
+    GST_WARNING_OBJECT (queue, "buffer offset does not match current writing "
+        "position! %" G_GINT64_FORMAT " != %" G_GINT64_FORMAT,
+        GST_BUFFER_OFFSET (buffer), queue->current->writing_pos);
+  }
 
   while (size > 0) {
     guint to_write;
