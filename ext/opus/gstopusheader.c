@@ -43,7 +43,7 @@ gst_opus_enc_create_id_buffer (gint nchannels, gint n_stereo_streams,
 
   /* See http://wiki.xiph.org/OggOpus */
   hdl &= gst_byte_writer_put_data (&bw, (const guint8 *) "OpusHead", 8);
-  hdl &= gst_byte_writer_put_uint8 (&bw, 0);    /* version number */
+  hdl &= gst_byte_writer_put_uint8 (&bw, 0x01); /* version number */
   hdl &= gst_byte_writer_put_uint8 (&bw, nchannels);
   hdl &= gst_byte_writer_put_uint16_le (&bw, 0);        /* pre-skip */
   hdl &= gst_byte_writer_put_uint32_le (&bw, sample_rate);
