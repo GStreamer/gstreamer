@@ -256,6 +256,7 @@ GST_START_TEST (test_filled_read)
   gst_object_unref (sinkpad);
   gst_object_unref (srcpad);
   gst_object_unref (queue2);
+  gst_buffer_unref (buffer);
 }
 
 GST_END_TEST;
