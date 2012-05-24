@@ -136,6 +136,7 @@
       userInfo:nil];
 
   [self addTrackingArea:trackingArea];
+  mainThread = [NSThread mainThread];
 
   [self initTextures];
   return self;
@@ -414,6 +415,10 @@
   [self reshape];
 }
 
+- (void) setMainThread: (NSThread *) thread {
+  mainThread = thread;
+}
+
 - (void) haveSuperviewReal:(NSMutableArray *)closure {
 	BOOL haveSuperview = [self superview] != nil;
 	[closure addObject:[NSNumber numberWithBool:haveSuperview]];
@@ -421,8 +426,9 @@
 
 - (BOOL) haveSuperview {
 	NSMutableArray *closure = [NSMutableArray arrayWithCapacity:1];
-	[self performSelectorOnMainThread:@selector(haveSuperviewReal:)
-			withObject:(id)closure waitUntilDone:YES];
+	[self performSelector:@selector(haveSuperviewReal:)
+		onThread:mainThread
+		withObject:(id)closure waitUntilDone:YES];
 
 	return [[closure objectAtIndex:0] boolValue];
 }
@@ -436,8 +442,9 @@
 }
 
 - (void) addToSuperview: (NSView *)superview {
-	[self performSelectorOnMainThread:@selector(addToSuperviewReal:)
-			withObject:superview waitUntilDone:YES];
+	[self performSelector:@selector(addToSuperviewReal:)
+		onThread:mainThread
+		withObject:superview waitUntilDone:YES];
 }
 
 - (void) removeFromSuperview: (id)unused

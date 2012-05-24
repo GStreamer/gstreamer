@@ -80,12 +80,13 @@ static GstVideoSinkClass *parent_class = NULL;
 
 /* Helper to trigger calls from the main thread */
 static void
-gst_osx_video_sink_call_from_main_thread(NSObject * object, SEL function,
-    NSObject *data, BOOL waitUntilDone)
+gst_osx_video_sink_call_from_main_thread(GstOSXVideoSink *osxvideosink,
+    NSObject * object, SEL function, NSObject *data, BOOL waitUntilDone)
 {
+
   NSAutoreleasePool *pool = [[NSAutoreleasePool alloc] init];
 
-  [object performSelectorOnMainThread:function
+  [object performSelector:function onThread:osxvideosink->ns_app_thread
           withObject:data waitUntilDone:waitUntilDone];
   [pool release];
 }
@@ -113,37 +114,6 @@ run_ns_app_loop (void) {
   [pool release];
 }
 
-#ifdef RUN_NS_APP_THREAD
-static gpointer
-ns_app_loop_thread (gpointer data)
-{
-  NSAutoreleasePool *pool;
-
-  /* set the main runloop as the runloop for the current thread. This has the
-   * effect that calling NSApp nextEventMatchingMask:untilDate:inMode:dequeue
-   * runs the main runloop.
-   */
-  _CFRunLoopSetCurrent(CFRunLoopGetMain());
-
-  /* this is needed to make IsMainThread checks in core foundation work from the
-   * current thread
-   */
-  _CFMainPThread = pthread_self();
-
-  pool = [[NSAutoreleasePool alloc] init];
-
-  [NSApplication sharedApplication];
-  [NSApp finishLaunching];
-
-  /* run the loop */
-  run_ns_app_loop ();
-
-  [pool release];
-
-  return NULL;
-}
-#endif
-
 static void
 gst_osx_video_sink_run_cocoa_loop (GstOSXVideoSink * osxvideosink )
 {
@@ -168,8 +138,10 @@ gst_osx_video_sink_run_cocoa_loop (GstOSXVideoSink * osxvideosink )
 
     method_exchangeImplementations(origIsMainThread, ourIsMainThread);
 
-    osxvideosink->ns_app_thread = g_thread_new ("GstNSAppThread",
-        ns_app_loop_thread, NULL);
+    osxvideosink->ns_app_thread = [[NSThread alloc]
+        initWithTarget:osxvideosink->osxvideosinkobject
+        selector:@selector(nsAppThread) object:nil];
+    [osxvideosink->ns_app_thread start];
 #else
   /* assume that there is a GMainLoop and iterate the main runloop from there
    */
@@ -227,7 +199,10 @@ gst_osx_video_sink_osxwindow_create (GstOSXVideoSink * osxvideosink, gint width,
 
   GST_INFO_OBJECT (osxvideosink, "'have-ns-view' message sent");
 
+  osxvideosink->ns_app_thread = [NSThread mainThread];
   gst_osx_video_sink_run_cocoa_loop (osxvideosink);
+  [osxwindow->gstview setMainThread:osxvideosink->ns_app_thread];
+
   /* check if have-ns-view was handled and osxwindow->gstview was added to a
    * superview
    */
@@ -244,7 +219,7 @@ gst_osx_video_sink_osxwindow_create (GstOSXVideoSink * osxvideosink, gint width,
        * from the main thread
        */
       GST_INFO_OBJECT (osxvideosink, "we have a superview, adding our view to it");
-      gst_osx_video_sink_call_from_main_thread(osxwindow->gstview,
+      gst_osx_video_sink_call_from_main_thread(osxvideosink, osxwindow->gstview,
           @selector(addToSuperview:), osxvideosink->superview, NO);
 
     } else {
@@ -255,7 +230,8 @@ gst_osx_video_sink_osxwindow_create (GstOSXVideoSink * osxvideosink, gint width,
          */
         GST_INFO_OBJECT (osxvideosink, "no superview");
       } else {
-        gst_osx_video_sink_call_from_main_thread(osxvideosink->osxvideosinkobject,
+        gst_osx_video_sink_call_from_main_thread(osxvideosink,
+          osxvideosink->osxvideosinkobject,
           @selector(createInternalWindow), nil, YES);
         GST_INFO_OBJECT (osxvideosink, "No superview, creating an internal window.");
       }
@@ -277,8 +253,9 @@ gst_osx_video_sink_osxwindow_destroy (GstOSXVideoSink * osxvideosink)
   g_return_if_fail (GST_IS_OSX_VIDEO_SINK (osxvideosink));
   pool = [[NSAutoreleasePool alloc] init];
 
-  gst_osx_video_sink_call_from_main_thread(osxvideosink->osxvideosinkobject,
-        @selector(destroy), (id) nil, YES);
+  gst_osx_video_sink_call_from_main_thread(osxvideosink,
+      osxvideosink->osxvideosinkobject,
+      @selector(destroy), (id) nil, YES);
   gst_osx_video_sink_stop_cocoa_loop (osxvideosink);
   [pool release];
 }
@@ -301,7 +278,8 @@ gst_osx_video_sink_osxwindow_resize (GstOSXVideoSink * osxvideosink,
 
   /* Directly resize the underlying view */
   GST_DEBUG_OBJECT (osxvideosink, "Calling setVideoSize on %p", osxwindow->gstview);
-  gst_osx_video_sink_call_from_main_thread(object, @selector(resize), (id)nil, YES);
+  gst_osx_video_sink_call_from_main_thread(osxvideosink, object,
+      @selector(resize), (id)nil, YES);
 
   [pool release];
 }
@@ -404,7 +382,8 @@ gst_osx_video_sink_show_frame (GstBaseSink * bsink, GstBuffer * buf)
 
   GST_DEBUG ("show_frame");
   bufferobject = [[GstBufferObject alloc] initWithBuffer:buf];
-  gst_osx_video_sink_call_from_main_thread(osxvideosink->osxvideosinkobject,
+  gst_osx_video_sink_call_from_main_thread(osxvideosink,
+      osxvideosink->osxvideosinkobject,
       @selector(showFrame:), bufferobject, NO);
   [pool release];
   return GST_FLOW_OK;
@@ -646,7 +625,8 @@ gst_osx_video_sink_set_window_handle (GstXOverlay * overlay, guintptr handle_id)
   if (osxvideosink->superview) {
     GST_INFO_OBJECT (osxvideosink, "old xwindow id %p", osxvideosink->superview);
     if (osxvideosink->osxwindow) {
-      gst_osx_video_sink_call_from_main_thread(osxvideosink->osxwindow->gstview,
+      gst_osx_video_sink_call_from_main_thread(osxvideosink,
+          osxvideosink->osxwindow->gstview,
           @selector(removeFromSuperview:), (id)nil, YES);
     }
     [osxvideosink->superview release];
@@ -656,7 +636,8 @@ gst_osx_video_sink_set_window_handle (GstXOverlay * overlay, guintptr handle_id)
   GST_INFO_OBJECT (osxvideosink, "set xwindow id 0x%lx", window_id);
   osxvideosink->superview = [((NSView *) window_id) retain];
   if (osxvideosink->osxwindow) {
-      gst_osx_video_sink_call_from_main_thread(osxvideosink->osxwindow->gstview,
+      gst_osx_video_sink_call_from_main_thread(osxvideosink,
+        osxvideosink->osxwindow->gstview,
         @selector(addToSuperview:), osxvideosink->superview, YES);
   }
 }
@@ -871,6 +852,34 @@ gst_osx_video_sink_get_type (void)
   }
   [pool release];
 }
+
+#ifdef RUN_NS_APP_THREAD
+-(void) nsAppThread
+{
+  NSAutoreleasePool *pool;
+
+  /* set the main runloop as the runloop for the current thread. This has the
+   * effect that calling NSApp nextEventMatchingMask:untilDate:inMode:dequeue
+   * runs the main runloop.
+   */
+  _CFRunLoopSetCurrent(CFRunLoopGetMain());
+
+  /* this is needed to make IsMainThread checks in core foundation work from the
+   * current thread
+   */
+  _CFMainPThread = pthread_self();
+
+  pool = [[NSAutoreleasePool alloc] init];
+
+  [NSApplication sharedApplication];
+  [NSApp finishLaunching];
+
+  /* run the loop */
+  run_ns_app_loop ();
+
+  [pool release];
+}
+#endif
 
 @end
 

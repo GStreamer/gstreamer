@@ -76,7 +76,7 @@ struct _GstOSXVideoSink {
   void *osxvideosinkobject;
   NSView *superview;
 #ifdef RUN_NS_APP_THREAD
-  GThread *ns_app_thread;
+  NSThread *ns_app_thread;
 #else
   guint cocoa_timeout;
   gboolean app_started;
@@ -131,6 +131,9 @@ GType gst_osx_video_sink_get_type(void);
 -(void) resize;
 -(void) destroy;
 -(void) showFrame: (GstBufferObject*) buf;
+#ifdef RUN_NS_APP_THREAD
+-(void) nsAppThread;
+#endif
 @end
 
 G_END_DECLS

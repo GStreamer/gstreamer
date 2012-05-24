@@ -49,6 +49,7 @@ struct _GstOSXImage;
     NSTrackingArea *trackingArea;
     GstNavigation *navigation;
     NSRect drawingBounds;
+    NSThread *mainThread;
 }
 - (void) drawQuad;
 - (void) drawRect: (NSRect) rect;
@@ -68,6 +69,7 @@ struct _GstOSXImage;
 - (void) addToSuperview: (NSView *)superview;
 - (void) removeFromSuperview: (id)unused;
 - (void) setNavigation: (GstNavigation *) nav;
+- (void) setMainThread: (NSThread *) thread;
 
 @end
 
