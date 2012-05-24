@@ -38,7 +38,7 @@
 #
 #   MAILTO=you@nowhere.org
 #   # send ten random buglinks every day at 16.30
-#   30 16### /usr/bin/perl  /path/to/five-bugs-a-day.pl
+#   30 16 * * *  /usr/bin/perl  /path/to/five-bugs-a-day.pl
 #
 #
 # Yes, it's PERL, sorry.
@@ -58,7 +58,6 @@ sub shuffle
     while ( --$i )
     {
         my $j = int rand( $i+1 );
-        print "j = $j, i = $i \n";
         @$array[$i,$j] = @$array[$j,$i];
     }
 
