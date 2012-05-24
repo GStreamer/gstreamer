@@ -145,7 +145,6 @@ gst_opus_parse_handle_frame (GstBaseParse * base,
   unsigned char toc;
   short frame_sizes[48];
   int payload_offset;
-  int nframes;
   int packet_offset = 0;
   gboolean is_header, is_idheader, is_commentheader;
   GstMapInfo map;
@@ -166,40 +165,42 @@ gst_opus_parse_handle_frame (GstBaseParse * base,
   is_header = is_idheader || is_commentheader;
 
   if (!is_header) {
+    int nframes;
+
     /* Next, check if there's an Opus packet there */
     nframes =
         opus_packet_parse (data, size, &toc, frames, frame_sizes,
         &payload_offset);
-  }
 
-  if (!is_header && nframes < 0) {
-    /* Then, check for the test vector framing */
-    GST_DEBUG_OBJECT (parse,
-        "No Opus packet found, trying test vector framing");
-    if (size < 4) {
-      GST_DEBUG_OBJECT (parse, "Too small");
-      goto beach;
-    }
-    packet_size = GST_READ_UINT32_BE (data);
-    GST_DEBUG_OBJECT (parse, "Packet size: %u bytes", packet_size);
-    if (packet_size > MAX_PAYLOAD_BYTES) {
-      GST_DEBUG_OBJECT (parse, "Too large");
-      goto beach;
-    }
-    if (packet_size > size - 4) {
-      GST_DEBUG_OBJECT (parse, "Truncated");
-      goto beach;
-    }
-    nframes =
-        opus_packet_parse (data + 8, packet_size, &toc, frames, frame_sizes,
-        &payload_offset);
     if (nframes < 0) {
-      GST_DEBUG_OBJECT (parse, "No test vector framing either");
-      goto beach;
-    }
+      /* Then, check for the test vector framing */
+      GST_DEBUG_OBJECT (parse,
+          "No Opus packet found, trying test vector framing");
+      if (size < 4) {
+        GST_DEBUG_OBJECT (parse, "Too small");
+        goto beach;
+      }
+      packet_size = GST_READ_UINT32_BE (data);
+      GST_DEBUG_OBJECT (parse, "Packet size: %u bytes", packet_size);
+      if (packet_size > MAX_PAYLOAD_BYTES) {
+        GST_DEBUG_OBJECT (parse, "Too large");
+        goto beach;
+      }
+      if (packet_size > size - 4) {
+        GST_DEBUG_OBJECT (parse, "Truncated");
+        goto beach;
+      }
+      nframes =
+          opus_packet_parse (data + 8, packet_size, &toc, frames, frame_sizes,
+          &payload_offset);
+      if (nframes < 0) {
+        GST_DEBUG_OBJECT (parse, "No test vector framing either");
+        goto beach;
+      }
 
-    packet_offset = 8;
-    data += packet_offset;
+      packet_offset = 8;
+      data += packet_offset;
+    }
   }
 
   if (is_header) {
