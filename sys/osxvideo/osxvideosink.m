@@ -227,6 +227,7 @@ gst_osx_video_sink_osxwindow_create (GstOSXVideoSink * osxvideosink, gint width,
 
   GST_INFO_OBJECT (osxvideosink, "'have-ns-view' message sent");
 
+  gst_osx_video_sink_run_cocoa_loop (osxvideosink);
   /* check if have-ns-view was handled and osxwindow->gstview was added to a
    * superview
    */
@@ -254,7 +255,6 @@ gst_osx_video_sink_osxwindow_create (GstOSXVideoSink * osxvideosink, gint width,
          */
         GST_INFO_OBJECT (osxvideosink, "no superview");
       } else {
-        gst_osx_video_sink_run_cocoa_loop (osxvideosink);
         gst_osx_video_sink_call_from_main_thread(osxvideosink->osxvideosinkobject,
           @selector(createInternalWindow), nil, YES);
         GST_INFO_OBJECT (osxvideosink, "No superview, creating an internal window.");
