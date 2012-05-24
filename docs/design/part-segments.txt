@@ -84,7 +84,7 @@ Use case: FLUSHING seek
     the stream_time of the seek that was performed.
 
     The stop time is important when the video format contains B frames. The
-    video decoder receives a P frame first, which is can decode but not push yet.
+    video decoder receives a P frame first, which it can decode but not push yet.
     When it receives a B frame, it can decode the B frame and push the B frame
     followed by the previously decoded P frame. If the P frame is outside of the
     segment, the decoder knows it should not send the P frame.
