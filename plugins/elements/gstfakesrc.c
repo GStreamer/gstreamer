@@ -357,7 +357,6 @@ static void
 gst_fake_src_init (GstFakeSrc * fakesrc)
 {
   fakesrc->output = FAKE_SRC_FIRST_LAST_LOOP;
-  fakesrc->buffer_count = 0;
   fakesrc->silent = DEFAULT_SILENT;
   fakesrc->signal_handoffs = DEFAULT_SIGNAL_HANDOFFS;
   fakesrc->dump = DEFAULT_DUMP;
@@ -781,7 +780,7 @@ gst_fake_src_create (GstBaseSrc * basesrc, guint64 offset, guint length,
   src = GST_FAKE_SRC (basesrc);
 
   buf = gst_fake_src_create_buffer (src, &size);
-  GST_BUFFER_OFFSET (buf) = src->buffer_count++;
+  GST_BUFFER_OFFSET (buf) = offset;
 
   if (src->datarate > 0) {
     time = (src->bytes_sent * GST_SECOND) / src->datarate;
@@ -885,7 +884,6 @@ gst_fake_src_start (GstBaseSrc * basesrc)
 
   src = GST_FAKE_SRC (basesrc);
 
-  src->buffer_count = 0;
   src->pattern_byte = 0x00;
   src->bytes_sent = 0;
 
