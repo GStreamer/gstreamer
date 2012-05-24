@@ -705,11 +705,18 @@ gst_debug_print_object (gpointer ptr)
       s = g_strdup ("(NULL)");
     }
 
-    ret = g_strdup_printf ("%s event from '%s' at time %"
-        GST_TIME_FORMAT ": %s",
-        GST_EVENT_TYPE_NAME (event), (event->src != NULL) ?
-        GST_OBJECT_NAME (event->src) : "(NULL)",
-        GST_TIME_ARGS (event->timestamp), s);
+    if (event->src && GST_IS_PAD (event->src)) {
+      ret = g_strdup_printf ("%s event from '%s:%s' at time %"
+          GST_TIME_FORMAT ": %s",
+          GST_EVENT_TYPE_NAME (event),
+          GST_DEBUG_PAD_NAME (event->src), GST_TIME_ARGS (event->timestamp), s);
+    } else {
+      ret = g_strdup_printf ("%s event from '%s' at time %"
+          GST_TIME_FORMAT ": %s",
+          GST_EVENT_TYPE_NAME (event), (event->src != NULL) ?
+          GST_OBJECT_NAME (event->src) : "(NULL)",
+          GST_TIME_ARGS (event->timestamp), s);
+    }
     g_free (s);
     return ret;
   }
