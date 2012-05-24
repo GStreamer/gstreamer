@@ -377,7 +377,9 @@ gst_rtp_h264_pay_getcaps (GstRTPBasePayload * payload, GstPad * pad,
   }
 
   if (append_unrestricted) {
-    gst_caps_merge_structure (caps, gst_structure_new ("video/x-h264", NULL));
+    caps =
+        gst_caps_merge_structure (caps, gst_structure_new ("video/x-h264", NULL,
+            NULL));
   }
 
   icaps = gst_caps_intersect (caps, template_caps);
