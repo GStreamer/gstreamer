@@ -138,7 +138,7 @@ extern gboolean _priv_gst_disable_registry_update;
 #endif
 
 #ifndef GST_DISABLE_GST_DEBUG
-extern const gchar *priv_gst_dump_dot_dir;
+const gchar *priv_gst_dump_dot_dir;
 #endif
 
 /* defaults */

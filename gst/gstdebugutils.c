@@ -54,7 +54,7 @@
 
 /*** PIPELINE GRAPHS **********************************************************/
 
-const gchar *priv_gst_dump_dot_dir;     /* NULL *//* set from gst.c */
+extern const gchar *priv_gst_dump_dot_dir;      /* NULL *//* set from gst.c */
 
 const gchar spaces[] = {
   "                                "    /* 32 */
