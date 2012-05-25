@@ -236,9 +236,10 @@ gst_audio_iec61937_payload (const guint8 * src, guint src_n, guint8 * dst,
        *     bit  0-4  - data type (11 = type I, 12 = type II,
        *                            13 = type III) */
       dst[five] = 11 + (blocksize / 1024);
-      /* Pd: bit 15-0  - frame size in bytes */
-      dst[six] = ((guint16) src_n) >> 8;
-      dst[seven] = ((guint16) src_n) & 0xff;
+      /* Pd: bit 15-0  - frame size, in bits (for type I-III) */
+      tmp = src_n * 8;
+      dst[six] = ((guint16) tmp) >> 8;
+      dst[seven] = ((guint16) tmp) & 0xff;
       break;
     }
 
