@@ -1715,6 +1715,12 @@ gst_ffmpeg_pixfmt_to_video_format (enum PixelFormat pix_fmt)
     case PIX_FMT_GRAY8:
       fmt = GST_VIDEO_FORMAT_GRAY8;
       break;
+    case PIX_FMT_YUV420P10LE:
+      fmt = GST_VIDEO_FORMAT_I420_10LE;
+      break;
+    case PIX_FMT_YUV420P10BE:
+      fmt = GST_VIDEO_FORMAT_I420_10BE;
+      break;
     default:
       /* give up ... */
       fmt = GST_VIDEO_FORMAT_UNKNOWN;
