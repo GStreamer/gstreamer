@@ -200,6 +200,9 @@ gst_opus_parse_handle_frame (GstBaseParse * base,
 
       packet_offset = 8;
       data += packet_offset;
+
+      /* for ad hoc framing, heed the framing, so we eat any padding */
+      payload_offset = packet_size;
     }
   }
 
