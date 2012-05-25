@@ -104,6 +104,8 @@ typedef struct
 
 #define MAKE_YUV_FORMAT(name, desc, fourcc, depth, pstride, plane, offs, sub ) \
  { fourcc, {GST_VIDEO_FORMAT_ ##name, G_STRINGIFY(name), desc, GST_VIDEO_FORMAT_FLAG_YUV, depth, pstride, plane, offs, sub } }
+#define MAKE_YUV_LE_FORMAT(name, desc, fourcc, depth, pstride, plane, offs, sub ) \
+ { fourcc, {GST_VIDEO_FORMAT_ ##name, G_STRINGIFY(name), desc, GST_VIDEO_FORMAT_FLAG_YUV | GST_VIDEO_FORMAT_FLAG_LE, depth, pstride, plane, offs, sub } }
 #define MAKE_YUVA_FORMAT(name, desc, fourcc, depth, pstride, plane, offs, sub) \
  { fourcc, {GST_VIDEO_FORMAT_ ##name, G_STRINGIFY(name), desc, GST_VIDEO_FORMAT_FLAG_YUV | GST_VIDEO_FORMAT_FLAG_ALPHA, depth, pstride, plane, offs, sub } }
 
@@ -123,6 +125,8 @@ static VideoFormat formats[] = {
   {0x00000000, {GST_VIDEO_FORMAT_UNKNOWN, "UNKNOWN", "unknown video", 0, DPTH0,
               PSTR0, PLANE_NA,
           OFFS0}},
+  {0x00000000, {GST_VIDEO_FORMAT_ENCODED, "ENCODED", "encoded video",
+          GST_VIDEO_FORMAT_FLAG_COMPLEX, DPTH0, PSTR0, PLANE_NA, OFFS0}},
   MAKE_YUV_FORMAT (I420, "raw video", GST_MAKE_FOURCC ('I', '4', '2', '0'),
       DPTH888, PSTR111,
       PLANE012, OFFS0, SUB420),
@@ -239,8 +243,10 @@ static VideoFormat formats[] = {
   MAKE_YUV_FORMAT (r210, "raw video", GST_MAKE_FOURCC ('r', '2', '1', '0'),
       DPTH10_10_10,
       PSTR444, PLANE0, OFFS0, SUB444),
-  {0x00000000, {GST_VIDEO_FORMAT_ENCODED, "ENCODED", "encoded video",
-          GST_VIDEO_FORMAT_FLAG_COMPLEX, DPTH0, PSTR0, PLANE_NA, OFFS0}},
+  MAKE_YUV_FORMAT (I420_10BE, "raw video", 0x00000000, DPTH10_10_10,
+      PSTR222, PLANE012, OFFS0, SUB420),
+  MAKE_YUV_LE_FORMAT (I420_10LE, "raw video", 0x00000000, DPTH10_10_10,
+      PSTR222, PLANE012, OFFS0, SUB420),
 };
 
 /**
@@ -1433,6 +1439,18 @@ fill_planes (GstVideoInfo * info)
           info->stride[1] * (GST_ROUND_UP_4 (height) / 4);
       info->size = info->offset[2] +
           info->stride[2] * (GST_ROUND_UP_4 (height) / 4);
+      break;
+    case GST_VIDEO_FORMAT_I420_10LE:
+    case GST_VIDEO_FORMAT_I420_10BE:
+      info->stride[0] = GST_ROUND_UP_4 (width * 2);
+      info->stride[1] = GST_ROUND_UP_4 (width);
+      info->stride[2] = info->stride[1];
+      info->offset[0] = 0;
+      info->offset[1] = info->stride[0] * GST_ROUND_UP_2 (height);
+      info->offset[2] = info->offset[1] +
+          info->stride[1] * (GST_ROUND_UP_2 (height) / 2);
+      info->size = info->offset[2] +
+          info->stride[2] * (GST_ROUND_UP_2 (height) / 2);
       break;
     case GST_VIDEO_FORMAT_ENCODED:
       break;

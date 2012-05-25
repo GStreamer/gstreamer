@@ -72,11 +72,14 @@ G_BEGIN_DECLS
  * @GST_VIDEO_FORMAT_ARGB64: rgb with alpha channel first, 16 bits per channel (Since: 0.10.33)
  * @GST_VIDEO_FORMAT_AYUV64: packed 4:4:4 YUV with alpha channel, 16 bits per channel (A0-Y0-U0-V0 ...) (Since: 0.10.33)
  * @GST_VIDEO_FORMAT_r210: packed 4:4:4 RGB, 10 bits per channel (Since: 0.10.33)
+ * @GST_VIDEO_FORMAT_I420_10BE: planar 4:2:0 YUV, 10 bits per channel
+ * @GST_VIDEO_FORMAT_I420_10LE: planar 4:2:0 YUV, 10 bits per channel
  *
  * Enum value describing the most common video formats.
  */
 typedef enum {
   GST_VIDEO_FORMAT_UNKNOWN,
+  GST_VIDEO_FORMAT_ENCODED,
   GST_VIDEO_FORMAT_I420,
   GST_VIDEO_FORMAT_YV12,
   GST_VIDEO_FORMAT_YUY2,
@@ -119,7 +122,8 @@ typedef enum {
   GST_VIDEO_FORMAT_ARGB64,
   GST_VIDEO_FORMAT_AYUV64,
   GST_VIDEO_FORMAT_r210,
-  GST_VIDEO_FORMAT_ENCODED
+  GST_VIDEO_FORMAT_I420_10BE,
+  GST_VIDEO_FORMAT_I420_10LE
 } GstVideoFormat;
 
 #define GST_VIDEO_MAX_PLANES 4
@@ -692,7 +696,8 @@ gboolean    gst_video_frame_copy_plane    (GstVideoFrame *dest, const GstVideoFr
     "BGRx, xRGB, xBGR, RGBA, BGRA, ARGB, ABGR, RGB, BGR, Y41B, Y42B, "  \
     "YVYU, Y444, v210, v216, NV12, NV21, GRAY8, GRAY16_BE, GRAY16_LE, " \
     "v308, Y800, Y16, RGB16, BGR16, RGB15, BGR15, UYVP, A420, "         \
-    "RGB8_PALETTED, YUV9, YVU9, IYU1, ARGB64, AYUV64, r210 }"
+    "RGB8_PALETTED, YUV9, YVU9, IYU1, ARGB64, AYUV64, r210, I420_10LE," \
+    "I420_10BE }"
 
 /**
  * GST_VIDEO_CAPS_MAKE:
