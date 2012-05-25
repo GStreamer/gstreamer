@@ -102,6 +102,8 @@ static void gst_directsound_sink_set_mute (GstDirectSoundSink * sink,
     gboolean mute);
 static gboolean gst_directsound_sink_get_mute (GstDirectSoundSink * sink);
 
+static gboolean gst_directsound_sink_is_spdif_format (GstDirectSoundSink * dsoundsink);
+
 static GstStaticPadTemplate directsoundsink_sink_factory =
     GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
@@ -324,8 +326,7 @@ gst_directsound_sink_acceptcaps (GstBaseSink * sink, GstQuery * query)
     goto done;
 
   /* Make sure input is framed (one frame per buffer) and can be payloaded */
-  switch (rbuf->spec.type) {
-    case GST_AUDIO_RING_BUFFER_FORMAT_TYPE_AC3:
+  if (gst_directsound_sink_is_spdif_format (dsink))
     {
       gboolean framed = FALSE, parsed = FALSE;
       st = gst_caps_get_structure (caps, 0);
@@ -335,9 +336,6 @@ gst_directsound_sink_acceptcaps (GstBaseSink * sink, GstQuery * query)
       if ((!framed && !parsed) || gst_audio_iec61937_frame_size (&spec) <= 0)
         goto done;
     }
-    default:{
-    }
-  }
   ret = TRUE;
 
 done:
@@ -389,7 +387,7 @@ gst_directsound_sink_open (GstAudioSink * asink)
   return TRUE;
 }
 
-static boolean
+static gboolean
 gst_directsound_sink_is_spdif_format (GstDirectSoundSink * dsoundsink)
 {
   GstAudioRingBufferFormatType type;
@@ -754,8 +752,7 @@ gst_directsound_probe_supported_formats (GstDirectSoundSink * dsoundsink,
 static GstBuffer *
 gst_directsound_sink_payload (GstAudioBaseSink * sink, GstBuffer * buf)
 {
-  switch (sink->ringbuffer->spec.type) {
-    case GST_AUDIO_RING_BUFFER_FORMAT_TYPE_AC3:
+  if (gst_directsound_sink_is_spdif_format ((GstDirectSoundSink *) sink))
     {
       gint framesize = gst_audio_iec61937_frame_size (&sink->ringbuffer->spec);
       GstBuffer *out;
@@ -794,10 +791,8 @@ gst_directsound_sink_payload (GstAudioBaseSink * sink, GstBuffer * buf)
       gst_buffer_unmap (buf, &infobuf);
       return out;
     }
-
-    default:
+  else
       return gst_buffer_ref (buf);
-  }
 }
 
 static void
