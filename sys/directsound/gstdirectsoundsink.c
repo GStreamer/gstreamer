@@ -114,7 +114,8 @@ static GstStaticPadTemplate directsoundsink_sink_factory =
         "format = (string) S8, "
         "layout = (string) interleaved, "
         "rate = (int) [ 1, MAX ], " "channels = (int) [ 1, 2 ];"
-        "audio/x-ac3, framed = (boolean) true;"));
+        "audio/x-ac3, framed = (boolean) true;"
+        "audio/x-dts, framed = (boolean) true;"));
 
 enum
 {
@@ -393,7 +394,8 @@ gst_directsound_sink_is_spdif_format (GstDirectSoundSink * dsoundsink)
 {
   GstAudioRingBufferFormatType type;
   type = GST_AUDIO_BASE_SINK (dsoundsink)->ringbuffer->spec.type;
-  return type == GST_AUDIO_RING_BUFFER_FORMAT_TYPE_AC3;
+  return type == GST_AUDIO_RING_BUFFER_FORMAT_TYPE_AC3 ||
+      type == GST_AUDIO_RING_BUFFER_FORMAT_TYPE_DTS;
 }
 
 static gboolean
@@ -731,6 +733,7 @@ gst_directsound_probe_supported_formats (GstDirectSoundSink * dsoundsink,
         "(IDirectSound_CreateSoundBuffer returned: %s)\n",
         DXGetErrorString9 (hRes));
     caps = gst_caps_subtract (caps, gst_caps_new_empty_simple ("audio/x-ac3"));
+    caps = gst_caps_subtract (caps, gst_caps_new_empty_simple ("audio/x-dts"));
   } else {
     GST_INFO_OBJECT (dsoundsink, "AC3 passthrough supported");
     hRes = IDirectSoundBuffer_Release (dsoundsink->pDSBSecondary);
@@ -742,6 +745,7 @@ gst_directsound_probe_supported_formats (GstDirectSoundSink * dsoundsink,
   }
 #else
   caps = gst_caps_subtract (caps, gst_caps_new_simple ("audio/x-ac3", NULL));
+  caps = gst_caps_subtract (caps, gst_caps_new_simple ("audio/x-dts", NULL));
 #endif
 
   return caps;
