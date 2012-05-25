@@ -1,9 +1,25 @@
 #include <gst/gst.h>
+
+#include <gst/rtsp-server/rtsp-auth.h>
 gst_rtsp_auth_get_type
+
+#include <gst/rtsp-server/rtsp-media-mapping.h>
 gst_rtsp_media_mapping_get_type
+
+#include <gst/rtsp-server/rtsp-media-factory.h>
 gst_rtsp_media_factory_get_type
+
+#include <gst/rtsp-server/rtsp-media.h>
 gst_rtsp_media_get_type
+
+#include <gst/rtsp-server/rtsp-server.h>
 gst_rtsp_server_get_type
+
+#include <gst/rtsp-server/rtsp-session-pool.h>
 gst_rtsp_session_pool_get_type
+
+#include <gst/rtsp-server/rtsp-session.h>
 gst_rtsp_session_get_type
+
+#include <gst/rtsp-server/rtsp-client.h>
 gst_rtsp_client_get_type
