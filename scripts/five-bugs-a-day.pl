@@ -149,7 +149,7 @@ my @all_bugs = keys %BUGS;
 my @bugs = shuffle (\@all_bugs);
 
 # only want first NUM_BUGS bugs
-$#bugs = $NUM_BUGS;
+@bugs = splice (@bugs, 0, $NUM_BUGS);
 
 print "\n";
 print "$NUM_BUGS random bugs:\n";
