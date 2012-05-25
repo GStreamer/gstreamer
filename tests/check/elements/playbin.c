@@ -35,6 +35,46 @@
 static GType gst_red_video_src_get_type (void);
 static GType gst_codec_src_get_type (void);
 
+GST_START_TEST (test_uri)
+{
+  GstElement *playbin, *fakesink;
+  gchar *uri;
+
+  fail_unless (gst_element_register (NULL, "redvideosrc", GST_RANK_PRIMARY,
+          gst_red_video_src_get_type ()));
+
+  playbin = gst_element_factory_make ("playbin", "playbin");
+  fail_unless (playbin != NULL, "Failed to create playbin element");
+
+  fakesink = gst_element_factory_make ("fakesink", "fakesink");
+  fail_unless (fakesink != NULL, "Failed to create fakesink element");
+
+  g_object_set (playbin, "video-sink", fakesink, NULL);
+
+  g_object_set (playbin, "uri", "redvideo://", NULL);
+  g_object_get (playbin, "uri", &uri, NULL);
+
+  fail_unless_equals_string (uri, "redvideo://");
+
+  g_object_get (playbin, "current-uri", &uri, NULL);
+  fail_unless_equals_string (uri, NULL);
+
+  fail_unless_equals_int (gst_element_set_state (playbin, GST_STATE_PAUSED),
+      GST_STATE_CHANGE_ASYNC);
+  fail_unless_equals_int (gst_element_get_state (playbin, NULL, NULL, -1),
+      GST_STATE_CHANGE_SUCCESS);
+
+  g_object_get (playbin, "uri", &uri, NULL);
+  fail_unless_equals_string (uri, NULL);
+  g_object_get (playbin, "current-uri", &uri, NULL);
+  fail_unless_equals_string (uri, "redvideo://");
+
+  gst_element_set_state (playbin, GST_STATE_NULL);
+  gst_object_unref (playbin);
+}
+
+GST_END_TEST;
+
 /* make sure the audio sink is not touched for video-only streams */
 GST_START_TEST (test_sink_usage_video_only_stream)
 {
@@ -736,6 +776,7 @@ playbin_suite (void)
   suite_add_tcase (s, tc_chain);
 
 #ifndef GST_DISABLE_REGISTRY
+  tcase_add_test (tc_chain, test_uri);
   tcase_add_test (tc_chain, test_sink_usage_video_only_stream);
   tcase_add_test (tc_chain, test_suburi_error_wrongproto);
   tcase_add_test (tc_chain, test_suburi_error_invalidfile);

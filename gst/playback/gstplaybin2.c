@@ -482,7 +482,9 @@ enum
 {
   PROP_0,
   PROP_URI,
+  PROP_CURRENT_URI,
   PROP_SUBURI,
+  PROP_CURRENT_SUBURI,
   PROP_SOURCE,
   PROP_FLAGS,
   PROP_N_VIDEO,
@@ -663,6 +665,16 @@ gst_play_bin_class_init (GstPlayBinClass * klass)
       g_param_spec_string ("uri", "URI", "URI of the media to play",
           NULL, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
+   /**
+   * GstPlayBin:current-uri
+   *
+   * The currently playing uri.
+   */
+  g_object_class_install_property (gobject_klass, PROP_CURRENT_URI,
+      g_param_spec_string ("current-uri", "Current URI",
+          "The currently playing URI", NULL,
+          G_PARAM_READABLE | G_PARAM_STATIC_STRINGS));
+
   /**
    * GstPlayBin:suburi
    *
@@ -672,6 +684,16 @@ gst_play_bin_class_init (GstPlayBinClass * klass)
   g_object_class_install_property (gobject_klass, PROP_SUBURI,
       g_param_spec_string ("suburi", ".sub-URI", "Optional URI of a subtitle",
           NULL, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
+  /**
+   * GstPlayBin:current-suburi
+   *
+   * The currently playing subtitle uri.
+   */
+  g_object_class_install_property (gobject_klass, PROP_CURRENT_SUBURI,
+      g_param_spec_string ("current-suburi", "Current .sub-URI",
+          "The currently playing URI of a subtitle",
+          NULL, G_PARAM_READABLE | G_PARAM_STATIC_STRINGS));
 
   g_object_class_install_property (gobject_klass, PROP_SOURCE,
       g_param_spec_object ("source", "Source", "Source element",
@@ -2068,12 +2090,33 @@ gst_play_bin_get_property (GObject * object, guint prop_id, GValue * value,
       GstSourceGroup *group;
 
       GST_PLAY_BIN_LOCK (playbin);
+      group = playbin->next_group;
+      g_value_set_string (value, group->uri);
+      GST_PLAY_BIN_UNLOCK (playbin);
+      break;
+      break;
+    }
+    case PROP_CURRENT_URI:
+    {
+      GstSourceGroup *group;
+
+      GST_PLAY_BIN_LOCK (playbin);
       group = get_group (playbin);
       g_value_set_string (value, group->uri);
       GST_PLAY_BIN_UNLOCK (playbin);
       break;
     }
     case PROP_SUBURI:
+    {
+      GstSourceGroup *group;
+
+      GST_PLAY_BIN_LOCK (playbin);
+      group = playbin->next_group;
+      g_value_set_string (value, group->suburi);
+      GST_PLAY_BIN_UNLOCK (playbin);
+      break;
+    }
+    case PROP_CURRENT_SUBURI:
     {
       GstSourceGroup *group;
 
