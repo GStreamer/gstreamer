@@ -1,7 +1,7 @@
 
 GstCheckABIStruct list[] = {
   {"GstAppSinkCallbacks", sizeof (GstAppSinkCallbacks), 56},
-  {"GstAppSinkClass", sizeof (GstAppSinkClass), 848},
+  {"GstAppSinkClass", sizeof (GstAppSinkClass), 864},
   {"GstAppSink", sizeof (GstAppSink), 696},
   {"GstAppSrcCallbacks", sizeof (GstAppSrcCallbacks), 56},
   {"GstAppSrcClass", sizeof (GstAppSrcClass), 872},
@@ -13,11 +13,11 @@ GstCheckABIStruct list[] = {
   {"GstAudioClock", sizeof (GstAudioClock), 240},
   {"GstAudioFilterClass", sizeof (GstAudioFilterClass), 856},
   {"GstAudioFilter", sizeof (GstAudioFilter), 920},
-  {"GstAudioSinkClass", sizeof (GstAudioSinkClass), 912},
+  {"GstAudioSinkClass", sizeof (GstAudioSinkClass), 928},
   {"GstAudioSink", sizeof (GstAudioSink), 784},
   {"GstAudioSrcClass", sizeof (GstAudioSrcClass), 984},
   {"GstAudioSrc", sizeof (GstAudioSrc), 792},
-  {"GstAudioBaseSinkClass", sizeof (GstAudioBaseSinkClass), 824},
+  {"GstAudioBaseSinkClass", sizeof (GstAudioBaseSinkClass), 840},
   {"GstAudioBaseSink", sizeof (GstAudioBaseSink), 744},
   {"GstAudioBaseSrcClass", sizeof (GstAudioBaseSrcClass), 896},
   {"GstAudioBaseSrc", sizeof (GstAudioBaseSrc), 752},
@@ -73,7 +73,7 @@ GstCheckABIStruct list[] = {
   {"GstVideoFilter", sizeof (GstVideoFilter), 864},
   {"GstVideoOrientationInterface", sizeof (GstVideoOrientationInterface), 80},
   {"GstVideoRectangle", sizeof (GstVideoRectangle), 16},
-  {"GstVideoSinkClass", sizeof (GstVideoSinkClass), 816},
+  {"GstVideoSinkClass", sizeof (GstVideoSinkClass), 832},
   {"GstVideoSink", sizeof (GstVideoSink), 696},
   {"GstVideoOverlayInterface", sizeof (GstVideoOverlayInterface), 48},
   {NULL, 0, 0}
