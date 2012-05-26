@@ -150,6 +150,86 @@ GST_START_TEST (test_funnel_simple)
 
 GST_END_TEST;
 
+guint num_eos = 0;
+
+static gboolean
+eos_event_func (GstPad * pad, GstObject * parent, GstEvent * event)
+{
+  if (GST_EVENT_TYPE (event) == GST_EVENT_EOS)
+    ++num_eos;
+
+  return gst_pad_event_default (pad, parent, event);
+}
+
+GST_START_TEST (test_funnel_eos)
+{
+  struct TestData td;
+
+  setup_test_objects (&td, chain_ok);
+
+  num_eos = 0;
+  bufcount = 0;
+
+  gst_pad_set_event_function (td.mysink, eos_event_func);
+
+  fail_unless (gst_pad_push (td.mysrc1, gst_buffer_new ()) == GST_FLOW_OK);
+  fail_unless (gst_pad_push (td.mysrc2, gst_buffer_new ()) == GST_FLOW_OK);
+
+  fail_unless (bufcount == 2);
+
+  fail_unless (gst_pad_push_event (td.mysrc1, gst_event_new_eos ()));
+  fail_unless (num_eos == 0);
+
+  fail_unless (gst_pad_push (td.mysrc1, gst_buffer_new ()) == GST_FLOW_EOS);
+  fail_unless (gst_pad_push (td.mysrc2, gst_buffer_new ()) == GST_FLOW_OK);
+
+  fail_unless (bufcount == 3);
+
+  fail_unless (gst_pad_push_event (td.mysrc2, gst_event_new_eos ()));
+  fail_unless (num_eos == 1);
+
+  fail_unless (gst_pad_push (td.mysrc1, gst_buffer_new ()) == GST_FLOW_EOS);
+  fail_unless (gst_pad_push (td.mysrc2, gst_buffer_new ()) == GST_FLOW_EOS);
+
+  fail_unless (bufcount == 3);
+
+  fail_unless (gst_pad_push_event (td.mysrc1, gst_event_new_flush_start ()));
+  fail_unless (gst_pad_push_event (td.mysrc1, gst_event_new_flush_stop (TRUE)));
+
+  fail_unless (gst_pad_push (td.mysrc1, gst_buffer_new ()) == GST_FLOW_OK);
+  fail_unless (gst_pad_push (td.mysrc2, gst_buffer_new ()) == GST_FLOW_EOS);
+
+  fail_unless (bufcount == 4);
+
+  fail_unless (gst_pad_unlink (td.mysrc1, td.funnelsink11));
+  gst_element_release_request_pad (td.funnel, td.funnelsink11);
+  gst_object_unref (td.funnelsink11);
+  fail_unless (num_eos == 2);
+
+  td.funnelsink11 = gst_element_get_request_pad (td.funnel, "sink_11");
+  fail_unless (td.funnelsink11 != NULL);
+  fail_unless (!strcmp (GST_OBJECT_NAME (td.funnelsink11), "sink_11"));
+
+  fail_unless (GST_PAD_LINK_SUCCESSFUL (gst_pad_link (td.mysrc1,
+              td.funnelsink11)));
+
+  fail_unless (gst_pad_push_event (td.mysrc1, gst_event_new_eos ()));
+  fail_unless (num_eos == 3);
+
+  fail_unless (gst_pad_unlink (td.mysrc1, td.funnelsink11));
+  gst_element_release_request_pad (td.funnel, td.funnelsink11);
+  gst_object_unref (td.funnelsink11);
+  fail_unless (num_eos == 3);
+
+  td.funnelsink11 = gst_element_get_request_pad (td.funnel, "sink_11");
+  fail_unless (td.funnelsink11 != NULL);
+  fail_unless (!strcmp (GST_OBJECT_NAME (td.funnelsink11), "sink_11"));
+
+  release_test_objects (&td);
+}
+
+GST_END_TEST;
+
 static Suite *
 funnel_suite (void)
 {
@@ -163,6 +243,7 @@ funnel_suite (void)
 
   tc_chain = tcase_create ("funnel simple");
   tcase_add_test (tc_chain, test_funnel_simple);
+  tcase_add_test (tc_chain, test_funnel_eos);
   suite_add_tcase (s, tc_chain);
 
   return s;
