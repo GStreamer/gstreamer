@@ -645,6 +645,11 @@ gst_ts_demux_create_tags (TSDemuxStream * stream)
       language_n = (gchar *)
           DESC_ISO_639_LANGUAGE_language_code_nth (desc, i);
 
+      /* Language codes should be 3 character long, we allow
+       * a bit more flexibility by allowing 2 characters. */
+      if (!language_n[0] || !language_n[1])
+        continue;
+
       GST_LOG ("Add language code for stream: %s", language_n);
 
       lang_code[0] = language_n[0];
