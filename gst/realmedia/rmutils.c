@@ -115,7 +115,7 @@ gst_rm_utils_read_tags (const guint8 * data, guint datalen,
     g_free (str);
   }
 
-  if (gst_structure_n_fields ((GstStructure *) tags) > 0)
+  if (gst_tag_list_n_tags (tags) > 0)
     return tags;
 
   gst_tag_list_free (tags);
