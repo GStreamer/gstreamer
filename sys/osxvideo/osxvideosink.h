@@ -77,10 +77,12 @@ struct _GstOSXVideoSink {
   NSView *superview;
 #ifdef RUN_NS_APP_THREAD
   NSThread *ns_app_thread;
+  GMutex *loop_thread_lock;
+  GCond *loop_thread_cond;
 #else
   guint cocoa_timeout;
-  gboolean app_started;
 #endif
+  gboolean app_started;
   gboolean keep_par;
   gboolean embed;
 };

@@ -115,7 +115,7 @@ run_ns_app_loop (void) {
 }
 
 static void
-gst_osx_video_sink_run_cocoa_loop (GstOSXVideoSink * osxvideosink )
+gst_osx_video_sink_run_cocoa_loop (GstOSXVideoSink * sink )
 {
   /* Cocoa applications require a main runloop running to dispatch UI
    * events and process deferred calls to the main thread through
@@ -138,14 +138,19 @@ gst_osx_video_sink_run_cocoa_loop (GstOSXVideoSink * osxvideosink )
 
     method_exchangeImplementations(origIsMainThread, ourIsMainThread);
 
-    osxvideosink->ns_app_thread = [[NSThread alloc]
-        initWithTarget:osxvideosink->osxvideosinkobject
+    sink->ns_app_thread = [[NSThread alloc]
+        initWithTarget:sink->osxvideosinkobject
         selector:@selector(nsAppThread) object:nil];
-    [osxvideosink->ns_app_thread start];
+    [sink->ns_app_thread start];
+
+    g_mutex_lock (sink->loop_thread_lock);
+    while (!sink->app_started)
+      g_cond_wait (sink->loop_thread_cond, sink->loop_thread_lock);
+    g_mutex_unlock (sink->loop_thread_lock);
 #else
   /* assume that there is a GMainLoop and iterate the main runloop from there
    */
-    osxvideosink->cocoa_timeout = g_timeout_add (10,
+    sink->cocoa_timeout = g_timeout_add (10,
         (GSourceFunc) run_ns_app_loop, NULL);
 #endif
   }
@@ -356,9 +361,7 @@ gst_osx_video_sink_change_state (GstElement * element,
     case GST_STATE_CHANGE_PAUSED_TO_READY:
       GST_VIDEO_SINK_WIDTH (osxvideosink) = 0;
       GST_VIDEO_SINK_HEIGHT (osxvideosink) = 0;
-#ifndef RUN_NS_APP_THREAD
       osxvideosink->app_started = FALSE;
-#endif
       gst_osx_video_sink_osxwindow_destroy (osxvideosink);
       break;
     case GST_STATE_CHANGE_READY_TO_NULL:
@@ -450,16 +453,17 @@ gst_osx_video_sink_get_property (GObject * object, guint prop_id,
 
 
 static void
-gst_osx_video_sink_init (GstOSXVideoSink * osxvideosink)
+gst_osx_video_sink_init (GstOSXVideoSink * sink)
 {
-  osxvideosink->osxwindow = NULL;
-  osxvideosink->superview = NULL;
-  osxvideosink->osxvideosinkobject = [[GstOSXVideoSinkObject alloc]
-    initWithSink:osxvideosink];
-#ifndef RUN_NS_APP_THREAD
-  osxvideosink->app_started = FALSE;
+  sink->osxwindow = NULL;
+  sink->superview = NULL;
+  sink->osxvideosinkobject = [[GstOSXVideoSinkObject alloc] initWithSink:sink];
+#ifdef RUN_NS_APP_THREAD
+  sink->loop_thread_lock = g_mutex_new ();
+  sink->loop_thread_cond = g_cond_new ();
 #endif
-  osxvideosink->keep_par = FALSE;
+  sink->app_started = FALSE;
+  sink->keep_par = FALSE;
 }
 
 static void
@@ -857,6 +861,7 @@ gst_osx_video_sink_get_type (void)
 -(void) nsAppThread
 {
   NSAutoreleasePool *pool;
+  GstOSXVideoSink *sink = osxvideosink;
 
   /* set the main runloop as the runloop for the current thread. This has the
    * effect that calling NSApp nextEventMatchingMask:untilDate:inMode:dequeue
@@ -873,6 +878,11 @@ gst_osx_video_sink_get_type (void)
 
   [NSApplication sharedApplication];
   [NSApp finishLaunching];
+
+  g_mutex_lock (sink->loop_thread_lock);
+  sink->app_started = TRUE;
+  g_cond_signal (sink->loop_thread_cond);
+  g_mutex_unlock (sink->loop_thread_lock);
 
   /* run the loop */
   run_ns_app_loop ();
