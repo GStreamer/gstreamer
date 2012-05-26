@@ -72,10 +72,16 @@
 #define DESC_STD                              0x11
 #define DESC_IBP                              0x12
 
-#define DESC_DIRAC_TC_PRIVATE                 0xAC
-
-/* DVB tags */
+/* 19-26 Defined in ISO/IEC 13818-6 (Extensions for DSM-CC) */
 #define DESC_DVB_CAROUSEL_IDENTIFIER          0x13
+
+/* 27-44 Later additions to ISO/IEC 13818-1 */
+
+/* 45-63 ITU-T Rec. H.222.0 | ISO/IEC 13818-1 Reserved */
+
+/* 64-127 DVB tags ETSI EN 300 468
+ * (Specification for Service Information (SI) in DVB systems)
+ */
 #define DESC_DVB_NETWORK_NAME                 0x40
 #define DESC_DVB_SERVICE_LIST                 0x41
 #define DESC_DVB_STUFFING                     0x42
@@ -139,10 +145,18 @@
 #define DESC_DVB_AAC                          0x7C
 /* 0x7D and 0x7E are reserved for future use */
 #define DESC_DVB_EXTENSION                    0x7F
+
 /* 0x80 - 0xFE are user defined */
 #define DESC_AC3_AUDIO_STREAM                 0x81
 #define DESC_DTG_LOGICAL_CHANNEL              0x83    /* from DTG D-Book */
+
+/* Others */
+#define DESC_DIRAC_TC_PRIVATE                 0xAC
+
+
 /* 0xFF is forbidden */
+
+
 
 /* common for all descriptors */
 #define DESC_TAG(desc) 		(desc[0])
