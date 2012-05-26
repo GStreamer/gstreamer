@@ -712,7 +712,7 @@ gst_flv_mux_create_metadata (GstFlvMux * mux, gboolean full)
 
   script_tag = gst_buffer_append (script_tag, tmp);
 
-  n_tags = (tags) ? gst_structure_n_fields ((GstStructure *) tags) : 0;
+  n_tags = (tags) ? gst_tag_list_n_tags (tags) : 0;
   _gst_buffer_new_and_alloc (5, &tmp, &data);
   data[0] = 8;                  /* ECMA array */
   GST_WRITE_UINT32_BE (data + 1, n_tags);
@@ -743,8 +743,7 @@ gst_flv_mux_create_metadata (GstFlvMux * mux, gboolean full)
 
 tags:
   for (i = 0; tags && i < n_tags; i++) {
-    const gchar *tag_name =
-        gst_structure_nth_field_name ((const GstStructure *) tags, i);
+    const gchar *tag_name = gst_tag_list_nth_tag_name (tags, i);
     if (!strcmp (tag_name, GST_TAG_DURATION)) {
       guint64 dur;
 

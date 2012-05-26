@@ -707,7 +707,7 @@ gst_matroska_read_common_parse_attachments (GstMatroskaReadCommon * common,
   }
   DEBUG_ELEMENT_STOP (common, ebml, "Attachments", ret);
 
-  if (gst_structure_n_fields (GST_STRUCTURE (taglist)) > 0) {
+  if (gst_tag_list_n_tags (taglist) > 0) {
     GST_DEBUG_OBJECT (common, "Storing attachment tags");
     gst_matroska_read_common_found_global_tag (common, el, taglist);
   } else {
