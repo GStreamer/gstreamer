@@ -137,8 +137,9 @@ mpegts_parse_pes_header (const guint8 * data, gsize length, PESHeader * res,
   /* PTS/DTS */
 
   /* PTS_DTS_flags == 0x01 is invalid */
-  if (G_UNLIKELY ((flags >> 6) == 0x01))
-    goto bad_PTS_DTS_flags;
+  if (G_UNLIKELY ((flags >> 6) == 0x01)) {
+    GST_WARNING ("Invalid PTS_DTS_flag (0x01 is forbidden)");
+  }
 
   if ((flags & 0x80) == 0x80) {
     /* PTS */
@@ -150,17 +151,18 @@ mpegts_parse_pes_header (const guint8 * data, gsize length, PESHeader * res,
     GST_LOG ("PTS %" G_GUINT64_FORMAT " %" GST_TIME_FORMAT,
         res->PTS, GST_TIME_ARGS (MPEGTIME_TO_GSTTIME (res->PTS)));
 
-    if ((flags & 0x40) == 0x40) {
-      /* DTS */
-      if (G_UNLIKELY (length < 5))
-        goto need_more_data;
+  }
 
-      READ_TS (data, res->DTS, bad_DTS_value);
-      length -= 5;
+  if ((flags & 0x40) == 0x40) {
+    /* DTS */
+    if (G_UNLIKELY (length < 5))
+      goto need_more_data;
 
-      GST_LOG ("DTS %" G_GUINT64_FORMAT " %" GST_TIME_FORMAT,
-          res->DTS, GST_TIME_ARGS (MPEGTIME_TO_GSTTIME (res->DTS)));
-    }
+    READ_TS (data, res->DTS, bad_DTS_value);
+    length -= 5;
+
+    GST_LOG ("DTS %" G_GUINT64_FORMAT " %" GST_TIME_FORMAT,
+        res->DTS, GST_TIME_ARGS (MPEGTIME_TO_GSTTIME (res->DTS)));
   }
 
   if (flags & 0x20) {
@@ -378,10 +380,6 @@ bad_start_code:
 bad_marker_1:
   GST_WARNING ("Wrong '0x10' marker before PES_scrambling_control (0x%02x)",
       val8);
-  return PES_PARSING_BAD;
-
-bad_PTS_DTS_flags:
-  GST_WARNING ("Invalid '0x01' PTS_DTS_flags");
   return PES_PARSING_BAD;
 
 bad_PTS_value:
