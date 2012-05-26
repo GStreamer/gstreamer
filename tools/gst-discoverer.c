@@ -403,11 +403,14 @@ print_properties (GstDiscovererInfo * info, gint tab)
     for (i = 0; i < num_tags; ++i) {
       const GValue *val;
       const gchar *tag_name;
+      guint num_entries, j;
 
       tag_name = gst_tag_list_nth_tag_name (tags, i);
-      /* FIXME: print all entries for a tag if there are multiple ones */
-      val = gst_tag_list_get_value_index (tags, tag_name, 0);
-      print_tag (tag_name, val, tab + 5);
+      num_entries = gst_tag_list_get_tag_size (tags, tag_name);
+      for (j = 0; j < num_entries; ++j) {
+        val = gst_tag_list_get_value_index (tags, tag_name, j);
+        print_tag (tag_name, val, tab + 5);
+      }
     }
   }
   if (show_toc && (toc = gst_discoverer_info_get_toc (info))) {
