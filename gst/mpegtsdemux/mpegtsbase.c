@@ -322,21 +322,26 @@ mpegts_get_descriptor_from_stream (MpegTSBaseStream * stream, guint8 tag)
   guint8 *retval = NULL;
   int i;
 
+  if (!gst_structure_has_field_typed (stream_info, "descriptors",
+          G_TYPE_VALUE_ARRAY))
+    goto beach;
+
   gst_structure_get (stream_info, "descriptors", G_TYPE_VALUE_ARRAY,
       &descriptors, NULL);
-  if (descriptors) {
-    for (i = 0; i < descriptors->n_values; i++) {
-      GValue *value = g_value_array_get_nth (descriptors, i);
-      GString *desc = g_value_dup_boxed (value);
-      if (DESC_TAG (desc->str) == tag) {
-        retval = (guint8 *) desc->str;
-        g_string_free (desc, FALSE);
-        break;
-      } else
-        g_string_free (desc, FALSE);
-    }
-    g_value_array_free (descriptors);
+
+  for (i = 0; i < descriptors->n_values; i++) {
+    GValue *value = g_value_array_get_nth (descriptors, i);
+    GString *desc = g_value_dup_boxed (value);
+    if (DESC_TAG (desc->str) == tag) {
+      retval = (guint8 *) desc->str;
+      g_string_free (desc, FALSE);
+      break;
+    } else
+      g_string_free (desc, FALSE);
   }
+  g_value_array_free (descriptors);
+
+beach:
   return retval;
 }
 
@@ -381,23 +386,29 @@ mpegts_get_descriptor_from_program (MpegTSBaseProgram * program, guint8 tag)
   int i;
 
   if (G_UNLIKELY (program == NULL))
-    return NULL;
+    goto beach;
+
   program_info = program->pmt_info;
+  if (!gst_structure_has_field_typed (program_info, "descriptors",
+          G_TYPE_VALUE_ARRAY))
+    goto beach;
+
   gst_structure_get (program_info, "descriptors", G_TYPE_VALUE_ARRAY,
       &descriptors, NULL);
-  if (descriptors) {
-    for (i = 0; i < descriptors->n_values; i++) {
-      GValue *value = g_value_array_get_nth (descriptors, i);
-      GString *desc = g_value_dup_boxed (value);
-      if (DESC_TAG (desc->str) == tag) {
-        retval = (guint8 *) desc->str;
-        g_string_free (desc, FALSE);
-        break;
-      } else
-        g_string_free (desc, FALSE);
-    }
-    g_value_array_free (descriptors);
+
+  for (i = 0; i < descriptors->n_values; i++) {
+    GValue *value = g_value_array_get_nth (descriptors, i);
+    GString *desc = g_value_dup_boxed (value);
+    if (DESC_TAG (desc->str) == tag) {
+      retval = (guint8 *) desc->str;
+      g_string_free (desc, FALSE);
+      break;
+    } else
+      g_string_free (desc, FALSE);
   }
+  g_value_array_free (descriptors);
+
+beach:
   return retval;
 }
 
