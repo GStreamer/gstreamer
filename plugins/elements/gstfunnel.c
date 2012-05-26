@@ -67,6 +67,7 @@ struct _GstFunnelPad
   GstPad parent;
 
   GstSegment segment;
+  gboolean got_eos;
 };
 
 struct _GstFunnelPadClass
@@ -85,6 +86,7 @@ static void
 gst_funnel_pad_reset (GstFunnelPad * pad)
 {
   gst_segment_init (&pad->segment, GST_FORMAT_UNDEFINED);
+  pad->got_eos = FALSE;
 }
 
 static void
@@ -203,16 +205,48 @@ gst_funnel_request_new_pad (GstElement * element, GstPadTemplate * templ,
   return sinkpad;
 }
 
+static gboolean
+gst_funnel_all_sinkpads_eos_unlocked (GstFunnel * funnel)
+{
+  GstElement *element = GST_ELEMENT_CAST (funnel);
+  GList *item;
+
+  if (element->numsinkpads == 0)
+    return FALSE;
+
+  for (item = element->sinkpads; item != NULL; item = g_list_next (item)) {
+    GstFunnelPad *sinkpad = item->data;
+
+    if (!sinkpad->got_eos)
+      return FALSE;
+  }
+
+  return TRUE;
+}
+
 static void
 gst_funnel_release_pad (GstElement * element, GstPad * pad)
 {
   GstFunnel *funnel = GST_FUNNEL (element);
+  GstFunnelPad *fpad = GST_FUNNEL_PAD_CAST (pad);
+  gboolean send_eos = FALSE;
 
   GST_DEBUG_OBJECT (funnel, "releasing pad");
 
   gst_pad_set_active (pad, FALSE);
 
   gst_element_remove_pad (GST_ELEMENT_CAST (funnel), pad);
+
+  GST_OBJECT_LOCK (funnel);
+  if (!fpad->got_eos && gst_funnel_all_sinkpads_eos_unlocked (funnel)) {
+    GST_DEBUG_OBJECT (funnel, "Pad removed. All others are EOS. Sending EOS");
+    send_eos = TRUE;
+  }
+  GST_OBJECT_UNLOCK (funnel);
+
+  if (send_eos)
+    if (!gst_pad_push_event (funnel->srcpad, gst_event_new_eos ()))
+      GST_WARNING_OBJECT (funnel, "Failure pushing EOS");
 }
 
 static GstFlowReturn
@@ -230,6 +264,15 @@ gst_funnel_sink_chain (GstPad * pad, GstObject * parent, GstBuffer * buffer)
   GST_DEBUG_OBJECT (funnel, "received buffer %p", buffer);
 
   GST_OBJECT_LOCK (funnel);
+
+  if (fpad->got_eos) {
+    GST_OBJECT_UNLOCK (funnel);
+    GST_WARNING_OBJECT (funnel, "Got buffer on pad that received EOS");
+    res = GST_FLOW_EOS;
+    gst_buffer_unref (buffer);
+    goto out;
+  }
+
   if (fpad->segment.format == GST_FORMAT_UNDEFINED) {
     GST_WARNING_OBJECT (funnel, "Got buffer without segment,"
         " setting segment [0,inf[");
@@ -277,9 +320,7 @@ gst_funnel_sink_chain (GstPad * pad, GstObject * parent, GstBuffer * buffer)
 
   GST_LOG_OBJECT (funnel, "handled buffer %s", gst_flow_get_name (res));
 
-#if 0
 out:
-#endif
 
   return res;
 }
@@ -307,6 +348,22 @@ gst_funnel_sink_event (GstPad * pad, GstObject * parent, GstEvent * event)
       GST_OBJECT_LOCK (funnel);
       gst_segment_init (&fpad->segment, GST_FORMAT_UNDEFINED);
       funnel->has_segment = FALSE;
+      fpad->got_eos = FALSE;
+      GST_OBJECT_UNLOCK (funnel);
+    }
+      break;
+    case GST_EVENT_EOS:
+    {
+      GST_OBJECT_LOCK (funnel);
+      fpad->got_eos = TRUE;
+
+      if (!gst_funnel_all_sinkpads_eos_unlocked (funnel)) {
+        GST_DEBUG_OBJECT (funnel,
+            "Got EOS, but not from all sinkpads. Skipping");
+        forward = FALSE;
+      } else {
+        GST_DEBUG_OBJECT (funnel, "Got EOS from all sinkpads. Forwarding");
+      }
       GST_OBJECT_UNLOCK (funnel);
       break;
     }
