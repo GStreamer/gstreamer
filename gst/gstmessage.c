@@ -480,13 +480,17 @@ gst_message_new_info (GstObject * src, GError * error, const gchar * debug)
 GstMessage *
 gst_message_new_tag (GstObject * src, GstTagList * tag_list)
 {
+  GstStructure *s;
   GstMessage *message;
+  GValue val = G_VALUE_INIT;
 
-  g_return_val_if_fail (GST_IS_STRUCTURE (tag_list), NULL);
+  g_return_val_if_fail (GST_IS_TAG_LIST (tag_list), NULL);
 
-  message =
-      gst_message_new_custom (GST_MESSAGE_TAG, src, (GstStructure *) tag_list);
-
+  s = gst_structure_new_id_empty (GST_QUARK (MESSAGE_TAG));
+  g_value_init (&val, GST_TYPE_TAG_LIST);
+  g_value_take_boxed (&val, tag_list);
+  gst_structure_id_take_value (s, GST_QUARK (TAGLIST), &val);
+  message = gst_message_new_custom (GST_MESSAGE_TAG, src, s);
   return message;
 }
 
@@ -1017,16 +1021,12 @@ gst_message_has_name (GstMessage * message, const gchar * name)
 void
 gst_message_parse_tag (GstMessage * message, GstTagList ** tag_list)
 {
-  GstStructure *ret;
-
   g_return_if_fail (GST_IS_MESSAGE (message));
   g_return_if_fail (GST_MESSAGE_TYPE (message) == GST_MESSAGE_TAG);
   g_return_if_fail (tag_list != NULL);
 
-  ret = gst_structure_copy (GST_MESSAGE_STRUCTURE (message));
-  gst_structure_remove_field (ret, "source-pad");
-
-  *tag_list = (GstTagList *) ret;
+  gst_structure_id_get (GST_MESSAGE_STRUCTURE (message),
+      GST_QUARK (TAGLIST), GST_TYPE_TAG_LIST, tag_list, NULL);
 }
 
 /**
@@ -2210,7 +2210,7 @@ gst_message_new_toc (GstObject * src, GstToc * toc, gboolean updated)
  * @toc: (out): return location for the TOC.
  * @updated: (out): return location for the updated flag.
  *
- * Extract the TOC from the #GstMessage. The TOC returned in the
+ * Extract thef TOC from the #GstMessage. The TOC returned in the
  * output argument is a copy; the caller must free it with
  * gst_toc_free() when done.
  *
