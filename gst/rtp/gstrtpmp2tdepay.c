@@ -150,7 +150,7 @@ gst_rtp_mp2t_depay_process (GstRTPBaseDepayload * depayload, GstBuffer * buf)
 {
   GstRtpMP2TDepay *rtpmp2tdepay;
   GstBuffer *outbuf;
-  gint payload_len;
+  gint payload_len, leftover;
   GstRTPBuffer rtp = { NULL };
 
   rtpmp2tdepay = GST_RTP_MP2T_DEPAY (depayload);
@@ -161,11 +161,28 @@ gst_rtp_mp2t_depay_process (GstRTPBaseDepayload * depayload, GstBuffer * buf)
   if (G_UNLIKELY (payload_len <= rtpmp2tdepay->skip_first_bytes))
     goto empty_packet;
 
-  outbuf = gst_rtp_buffer_get_payload_subbuffer (&rtp,
-      rtpmp2tdepay->skip_first_bytes, -1);
+  payload_len -= rtpmp2tdepay->skip_first_bytes;
+
+  /* RFC 2250
+   *
+   * 2. Encapsulation of MPEG System and Transport Streams
+   *
+   * For MPEG2 Transport Streams the RTP payload will contain an integral
+   * number of MPEG transport packets.
+   */
+  leftover = payload_len % 188;
+  if (G_UNLIKELY (leftover)) {
+    GST_WARNING ("We don't have an integral number of buffers (leftover: %d)",
+        leftover);
+
+    payload_len -= leftover;
+  }
+
+  outbuf =
+      gst_rtp_buffer_get_payload_subbuffer (&rtp,
+      rtpmp2tdepay->skip_first_bytes, payload_len);
 
   gst_rtp_buffer_unmap (&rtp);
-
   if (outbuf)
     GST_DEBUG ("gst_rtp_mp2t_depay_chain: pushing buffer of size %"
         G_GSIZE_FORMAT, gst_buffer_get_size (outbuf));
