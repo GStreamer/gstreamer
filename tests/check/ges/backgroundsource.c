@@ -207,8 +207,9 @@ GST_START_TEST (test_test_source_in_layer)
 GST_END_TEST;
 
 static gint
-find_composition_func (GstElement * element)
+find_composition_func (const GValue * velement)
 {
+  GstElement *element = g_value_get_object (velement);
   GstElementFactory *fac = gst_element_get_factory (element);
   const gchar *name = gst_plugin_feature_get_name (GST_PLUGIN_FEATURE (fac));
 
@@ -222,9 +223,14 @@ static GstElement *
 find_composition (GESTrack * track)
 {
   GstIterator *it = gst_bin_iterate_recurse (GST_BIN (track));
-  GstElement *ret =
-      gst_iterator_find_custom (it, (GCompareFunc) find_composition_func, NULL);
+  GValue val = { 0, };
+  GstElement *ret = NULL;
 
+  if (gst_iterator_find_custom (it, (GCompareFunc) find_composition_func, &val,
+          NULL))
+    ret = g_value_get_object (&val);
+
+  g_value_unset (&val);
   gst_iterator_free (it);
 
   return ret;
