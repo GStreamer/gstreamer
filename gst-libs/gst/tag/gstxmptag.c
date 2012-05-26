@@ -1572,8 +1572,7 @@ gst_tag_list_from_xmp_buffer (GstBuffer * buffer)
     g_slice_free (PendingXmpTag, ptag);
   }
 
-  GST_INFO ("xmp packet parsed, %d entries",
-      gst_structure_n_fields ((GstStructure *) list));
+  GST_INFO ("xmp packet parsed, %d entries", gst_tag_list_n_tags (list));
 
   /* free resources */
   i = 0;

@@ -594,7 +594,7 @@ id3v2_frames_to_tag_list (ID3TagsWorking * work, guint size)
     work->hdr.frame_data_size -= frame_size;
   }
 
-  if (gst_structure_n_fields (GST_STRUCTURE (work->tags)) == 0) {
+  if (gst_tag_list_n_tags (work->tags) == 0) {
     GST_DEBUG ("Could not extract any frames from tag. Broken or empty tag");
     gst_tag_list_free (work->tags);
     work->tags = NULL;
