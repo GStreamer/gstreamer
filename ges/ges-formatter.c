@@ -400,6 +400,7 @@ gboolean
 ges_formatter_load_from_uri (GESFormatter * formatter, GESTimeline * timeline,
     const gchar * uri)
 {
+  gboolean ret = FALSE;
   GESFormatterClass *klass = GES_FORMATTER_GET_CLASS (formatter);
 
   g_return_val_if_fail (GES_IS_FORMATTER (formatter), FALSE);
@@ -407,10 +408,13 @@ ges_formatter_load_from_uri (GESFormatter * formatter, GESTimeline * timeline,
 
   g_signal_connect (timeline, "discovery-error",
       G_CALLBACK (discovery_error_cb), formatter);
-  if (klass->load_from_uri)
-    return klass->load_from_uri (formatter, timeline, uri);
+  if (klass->load_from_uri) {
+    ges_timeline_enable_update (timeline, FALSE);
+    ret = klass->load_from_uri (formatter, timeline, uri);
+    ges_timeline_enable_update (timeline, TRUE);
+  }
 
-  return FALSE;
+  return ret;
 }
 
 static gboolean
@@ -599,6 +603,7 @@ discovery_error_cb (GESTimeline * timeline,
 static gboolean
 project_loaded (GESFormatter * formatter, GESTimeline * timeline)
 {
+  GST_INFO_OBJECT (formatter, "Emit project loaded");
   g_signal_emit (formatter, ges_formatter_signals[LOADED_SIGNAL], 0, timeline);
 
   return TRUE;

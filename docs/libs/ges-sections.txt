@@ -45,12 +45,17 @@ GES_VIDEO_TEST_PATTERN_TYPE
 ges_video_test_pattern_get_type
 GES_TYPE_PIPELINE_FLAGS
 ges_pipeline_flags_get_type
+GES_TYPE_EDGE
+ges_edge_get_type
+GES_TYPE_EDIT_MODE
+ges_edit_mode_get_type
 </SECTION>
 
 <SECTION>
 <FILE>ges-track</FILE>
 <TITLE>GESTrack</TITLE>
 GESTrack
+GESCreateElementForGapFunc
 ges_track_audio_raw_new
 ges_track_video_raw_new
 ges_track_new
@@ -61,6 +66,7 @@ ges_track_get_caps
 ges_track_enable_update
 ges_track_get_objects
 ges_track_is_updating
+ges_track_set_create_element_for_gap_func
 <SUBSECTION Standard>
 GESTrackClass
 GESTrackPrivate
@@ -266,6 +272,7 @@ ges_timeline_is_updating
 ges_timeline_get_tracks
 ges_timeline_get_layers
 ges_timeline_get_track_for_pad
+ges_timeline_get_duration
 <SUBSECTION Standard>
 GESTimelinePrivate
 GESTimelineClass
@@ -321,7 +328,6 @@ ges_timeline_object_set_duration
 ges_timeline_object_get_layer
 ges_timeline_object_find_track_object
 ges_timeline_object_add_track_object
-ges_timeline_object_release_track_object
 ges_timeline_object_get_top_effects
 ges_timeline_object_get_top_effect_position
 ges_timeline_object_move_to_layer
@@ -335,6 +341,9 @@ ges_timeline_object_ripple_end
 ges_timeline_object_roll_start
 ges_timeline_object_roll_end
 ges_timeline_object_trim_start
+ges_timeline_object_get_max_duration
+ges_timeline_object_objects_set_locked
+ges_timeline_object_set_max_duration
 <SUBSECTION Standard>
 GES_TIMELINE_OBJECT_DURATION
 GES_TIMELINE_OBJECT_INPOINT

@@ -39,10 +39,11 @@
 
 typedef struct _GESPitiviFormatterPrivate GESPitiviFormatterPrivate;
 
+
 /**
  * GESPitiviFormatter:
  *
- * Serializes a #GESTimeline to a file using
+ * Serializes a #GESTimeline to a file using the Xml PiTiVi file format
  */
 
 struct _GESPitiviFormatter {
@@ -55,7 +56,8 @@ struct _GESPitiviFormatter {
   gpointer _ges_reserved[GES_PADDING];
 };
 
-struct _GESPitiviFormatterClass {
+struct _GESPitiviFormatterClass
+{
   /*< private >*/
   GESFormatterClass parent_class;
 

@@ -17,6 +17,11 @@
  * Boston, MA 02111-1307, USA.
  */
 
+/**
+ * SECTION: ges-pitivi-formatter
+ * @short_description: A formatter for the PiTiVi project file format
+ */
+
 #include <libxml/xmlreader.h>
 #include <libxml/tree.h>
 #include <libxml/parser.h>

@@ -48,6 +48,10 @@ static inline void init_movecontext (MoveContext * mv_ctx);
 
 G_DEFINE_TYPE (GESTimeline, ges_timeline, GST_TYPE_BIN);
 
+GST_DEBUG_CATEGORY_STATIC (ges_timeline_debug);
+#undef GST_CAT_DEFAULT
+#define GST_CAT_DEFAULT ges_timeline_debug
+
 #define GES_TIMELINE_PENDINGOBJS_GET_LOCK(timeline) \
   (&GES_TIMELINE(timeline)->priv->pendingobjects_lock)
 #define GES_TIMELINE_PENDINGOBJS_LOCK(timeline) \
@@ -55,8 +59,7 @@ G_DEFINE_TYPE (GESTimeline, ges_timeline, GST_TYPE_BIN);
 #define GES_TIMELINE_PENDINGOBJS_UNLOCK(timeline) \
   (g_mutex_unlock(GES_TIMELINE_PENDINGOBJS_GET_LOCK (timeline)))
 
-/**
- *  The move context is used for the timeline editing modes functions in order to
+/*  The move context is used for the timeline editing modes functions in order to
  *  + Ripple / Roll /  Slide / Move / Trim
  *
  * The context aims at avoiding to recalculate values/objects on each call of the
@@ -90,7 +93,7 @@ struct _MoveContext
   /* Last snapping  properties */
   GESTrackObject *last_snaped1;
   GESTrackObject *last_snaped2;
-  GstClockTime last_snap_ts;
+  GstClockTime *last_snap_ts;
 };
 
 struct _GESTimelinePrivate
@@ -143,6 +146,7 @@ enum
   PROP_0,
   PROP_DURATION,
   PROP_SNAPPING_DISTANCE,
+  PROP_UPDATE,
   PROP_LAST
 };
 
@@ -173,6 +177,26 @@ static void
 discoverer_discovered_cb (GstDiscoverer * discoverer,
     GstDiscovererInfo * info, GError * err, GESTimeline * timeline);
 
+/* Internal methods */
+static gboolean
+ges_timeline_enable_update_internal (GESTimeline * timeline, gboolean enabled)
+{
+  GList *tmp;
+  gboolean res = TRUE;
+
+  GST_DEBUG_OBJECT (timeline, "%s updates", enabled ? "Enabling" : "Disabling");
+
+  for (tmp = timeline->priv->tracks; tmp; tmp = tmp->next) {
+    if (!ges_track_enable_update (((TrackPrivate *) tmp->data)->track, enabled))
+      res = FALSE;
+  }
+
+  /* Make sure we reset the context */
+  timeline->priv->movecontext.needs_move_ctx = TRUE;
+
+  return res;
+}
+
 /* GObject Standard vmethods*/
 static void
 ges_timeline_get_property (GObject * object, guint property_id,
@@ -189,6 +213,9 @@ ges_timeline_get_property (GObject * object, guint property_id,
     case PROP_SNAPPING_DISTANCE:
       g_value_set_uint64 (value, timeline->priv->snapping_distance);
       break;
+    case PROP_UPDATE:
+      g_value_set_boolean (value, ges_timeline_is_updating (timeline));
+      break;
   }
 }
 
@@ -201,6 +228,10 @@ ges_timeline_set_property (GObject * object, guint property_id,
   switch (property_id) {
     case PROP_SNAPPING_DISTANCE:
       timeline->priv->snapping_distance = g_value_get_uint64 (value);
+      break;
+    case PROP_UPDATE:
+      ges_timeline_enable_update_internal (timeline,
+          g_value_get_boolean (value));
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, property_id, pspec);
@@ -293,6 +324,27 @@ ges_timeline_class_init (GESTimelineClass * klass)
       G_MAXUINT64, 0, G_PARAM_READWRITE);
   g_object_class_install_property (object_class, PROP_SNAPPING_DISTANCE,
       properties[PROP_SNAPPING_DISTANCE]);
+
+  /**
+   * GESTimeline:update:
+   *
+   * If %TRUE, then all modifications to objects within the timeline will
+   * cause a internal pipeline update (if required).
+   * If %FALSE, then only the timeline start/duration/stop properties
+   * will be updated, and the internal pipeline will only be updated when the
+   * property is set back to %TRUE.
+   *
+   * It is recommended to temporarily set this property to %FALSE before doing
+   * more than one modification in the timeline (like adding or moving
+   * several objects at once) in order to speed up the process, and then setting
+   * back the property to %TRUE when done.
+   */
+
+  properties[PROP_UPDATE] = g_param_spec_boolean ("update", "Update",
+      "Update the internal pipeline on every modification", TRUE,
+      G_PARAM_READWRITE);
+  g_object_class_install_property (object_class, PROP_UPDATE,
+      properties[PROP_UPDATE]);
 
   /**
    * GESTimeline::track-added
@@ -397,6 +449,9 @@ ges_timeline_init (GESTimeline * self)
 {
   GESTimelinePrivate *priv;
 
+  GST_DEBUG_CATEGORY_INIT (ges_timeline_debug, "gestimeline",
+      GST_DEBUG_FG_YELLOW, "ges timeline");
+
   self->priv = G_TYPE_INSTANCE_GET_PRIVATE (self,
       GES_TYPE_TIMELINE, GESTimelinePrivate);
 
@@ -447,6 +502,28 @@ sort_layers (gpointer a, gpointer b)
     return -1;
 
   return 0;
+}
+
+static void
+timeline_update_duration (GESTimeline * timeline)
+{
+  GstClockTime *cduration;
+  GSequenceIter *it = g_sequence_get_end_iter (timeline->priv->starts_ends);
+
+  it = g_sequence_iter_prev (it);
+  if (g_sequence_iter_is_end (it))
+    return;
+
+  cduration = g_sequence_get (it);
+  if (cduration && timeline->priv->duration != *cduration) {
+    GST_DEBUG ("track duration : %" GST_TIME_FORMAT " current : %"
+        GST_TIME_FORMAT, GST_TIME_ARGS (*cduration),
+        GST_TIME_ARGS (timeline->priv->duration));
+
+    timeline->priv->duration = *cduration;
+
+    g_object_notify_by_pspec (G_OBJECT (timeline), properties[PROP_DURATION]);
+  }
 }
 
 static gint
@@ -553,6 +630,7 @@ sort_starts_ends_end (GESTimeline * timeline, GESTrackObject * obj)
   *end = obj->start + obj->duration;
 
   g_sequence_sort_changed (iter, (GCompareDataFunc) compare_uint64, NULL);
+  timeline_update_duration (timeline);
 }
 
 static inline void
@@ -567,6 +645,7 @@ sort_starts_ends_start (GESTimeline * timeline, GESTrackObject * obj)
   *start = obj->start;
 
   g_sequence_sort_changed (iter, (GCompareDataFunc) compare_uint64, NULL);
+  timeline_update_duration (timeline);
 }
 
 static inline void
@@ -590,6 +669,7 @@ resort_all_starts_ends (GESTimeline * timeline)
   }
 
   g_sequence_sort (priv->starts_ends, (GCompareDataFunc) compare_uint64, NULL);
+  timeline_update_duration (timeline);
 }
 
 static inline void
@@ -610,7 +690,7 @@ init_movecontext (MoveContext * mv_ctx)
   mv_ctx->max_layer_prio = 0;
   mv_ctx->last_snaped1 = NULL;
   mv_ctx->last_snaped2 = NULL;
-  mv_ctx->last_snap_ts = GST_CLOCK_TIME_NONE;
+  mv_ctx->last_snap_ts = NULL;
 }
 
 static inline void
@@ -645,7 +725,7 @@ stop_tracking_for_snapping (GESTimeline * timeline, GESTrackObject * tckobj)
   g_sequence_remove (iter_start);
   g_sequence_remove (iter_end);
   g_sequence_remove (tckobj_iter);
-
+  timeline_update_duration (timeline);
 }
 
 static void
@@ -672,6 +752,8 @@ start_tracking_track_obj (GESTimeline * timeline, GESTrackObject * tckobj)
   g_hash_table_insert (priv->by_object, pend, tckobj);
 
   timeline->priv->movecontext.needs_move_ctx = TRUE;
+
+  timeline_update_duration (timeline);
 }
 
 static inline void
@@ -680,11 +762,18 @@ ges_timeline_emit_snappig (GESTimeline * timeline, GESTrackObject * obj1,
 {
   GESTrackObject *obj2;
   MoveContext *mv_ctx = &timeline->priv->movecontext;
+  GstClockTime snap_time = timecode ? *timecode : 0;
+  GstClockTime last_snap_ts = mv_ctx->last_snap_ts ?
+      *mv_ctx->last_snap_ts : GST_CLOCK_TIME_NONE;
+
+  GST_DEBUG_OBJECT (timeline, "Distance: %" GST_TIME_FORMAT " snapping at %"
+      GST_TIME_FORMAT, GST_TIME_ARGS (timeline->priv->snapping_distance),
+      GST_TIME_ARGS (snap_time));
 
   if (timecode == NULL) {
     if (mv_ctx->last_snaped1 != NULL && mv_ctx->last_snaped2 != NULL) {
       g_signal_emit (timeline, ges_timeline_signals[SNAPING_ENDED], 0,
-          mv_ctx->last_snaped1, mv_ctx->last_snaped2, mv_ctx->last_snap_ts);
+          mv_ctx->last_snaped1, mv_ctx->last_snaped2, last_snap_ts);
 
       /* We then need to recalculate the moving context */
       timeline->priv->movecontext.needs_move_ctx = TRUE;
@@ -695,19 +784,19 @@ ges_timeline_emit_snappig (GESTimeline * timeline, GESTrackObject * obj1,
 
   obj2 = g_hash_table_lookup (timeline->priv->by_object, timecode);
 
-  if (mv_ctx->last_snap_ts != *timecode) {
+  if (last_snap_ts != *timecode) {
     g_signal_emit (timeline, ges_timeline_signals[SNAPING_ENDED], 0,
-        mv_ctx->last_snaped1, mv_ctx->last_snaped2, mv_ctx->last_snap_ts);
+        mv_ctx->last_snaped1, mv_ctx->last_snaped2, (last_snap_ts));
 
     /* We want the snap start signal to be emited anyway */
-    mv_ctx->last_snap_ts = GST_CLOCK_TIME_NONE;
+    mv_ctx->last_snap_ts = NULL;
   }
 
-  if (GST_CLOCK_TIME_IS_VALID (mv_ctx->last_snap_ts) == FALSE) {
+  if (mv_ctx->last_snap_ts == NULL) {
 
     mv_ctx->last_snaped1 = obj1;
     mv_ctx->last_snaped2 = obj2;
-    mv_ctx->last_snap_ts = *timecode;
+    mv_ctx->last_snap_ts = timecode;
 
     g_signal_emit (timeline, ges_timeline_signals[SNAPING_STARTED], 0,
         obj1, obj2, *timecode);
@@ -724,14 +813,24 @@ ges_timeline_snap_position (GESTimeline * timeline, GESTrackObject * trackobj,
   GESTrackObject *tmp_tckobj;
   GESTimelineObject *tmp_tlobj, *tlobj;
 
+  GstClockTime *last_snap_ts = priv->movecontext.last_snap_ts;
   guint64 snap_distance = timeline->priv->snapping_distance;
-
   guint64 *prev_tc, *next_tc, *ret = NULL, off = G_MAXUINT64, off1 =
       G_MAXUINT64;
 
   /* Avoid useless calculations */
   if (snap_distance == 0)
     return NULL;
+
+  /* If we can just resnap as last snap... do it */
+  if (last_snap_ts) {
+    off = timecode > *last_snap_ts ?
+        timecode - *last_snap_ts : *last_snap_ts - timecode;
+    if (off <= snap_distance) {
+      ret = last_snap_ts;
+      goto done;
+    }
+  }
 
   tlobj = ges_track_object_get_timeline_object (trackobj);
 
@@ -756,6 +855,9 @@ ges_timeline_snap_position (GESTimeline * timeline, GESTrackObject * trackobj,
     nxt_iter = g_sequence_iter_next (nxt_iter);
   }
 
+  if (ret == NULL)
+    off = G_MAXUINT64;
+
   prev_iter = g_sequence_iter_prev (iter);
   while (!g_sequence_iter_is_begin (prev_iter)) {
     prev_tc = g_sequence_get (prev_iter);
@@ -773,6 +875,7 @@ ges_timeline_snap_position (GESTimeline * timeline, GESTrackObject * trackobj,
     prev_iter = g_sequence_iter_prev (prev_iter);
   }
 
+done:
   /* We emit the snapping signal only if we snapped with a different value
    * than the current one */
   if (emit) {
@@ -1272,11 +1375,12 @@ ges_timeline_move_object_simple (GESTimeline * timeline,
 {
   guint64 *snap_end, *snap_st, *cur, off1, off2, end;
 
-  GST_DEBUG_OBJECT (timeline, "Moving to %" GST_TIME_FORMAT,
-      GST_TIME_ARGS (position));
-
   end = position + object->duration;
   cur = g_hash_table_lookup (timeline->priv->by_end, object);
+
+  GST_DEBUG_OBJECT (timeline, "Moving to %" GST_TIME_FORMAT " (end %"
+      GST_TIME_FORMAT ")", GST_TIME_ARGS (position), GST_TIME_ARGS (end));
+
   snap_end = ges_timeline_snap_position (timeline, object, cur, end, FALSE);
   if (snap_end)
     off1 = end > *snap_end ? end - *snap_end : *snap_end - end;
@@ -1294,13 +1398,9 @@ ges_timeline_move_object_simple (GESTimeline * timeline,
   if (snap_end && off1 <= off2) {
     position = position + *snap_end - end;
     ges_timeline_emit_snappig (timeline, object, snap_end);
-    GST_DEBUG_OBJECT (timeline, "Real snap at %" GST_TIME_FORMAT,
-        GST_TIME_ARGS (position));
   } else if (snap_st) {
     position = position + *snap_st - position;
     ges_timeline_emit_snappig (timeline, object, snap_st);
-    GST_DEBUG_OBJECT (timeline, "Real snap at %" GST_TIME_FORMAT,
-        GST_TIME_ARGS (position));
   } else
     ges_timeline_emit_snappig (timeline, object, NULL);
 
@@ -1437,6 +1537,7 @@ discoverer_discovered_cb (GstDiscoverer * discoverer,
 {
   GList *tmp;
   GList *stream_list;
+  GESTimelineObject *tlobj;
   GESTrackType tfs_supportedformats;
 
   gboolean found = FALSE;
@@ -1521,18 +1622,26 @@ discoverer_discovered_cb (GstDiscoverer * discoverer,
 
 check_image:
 
+  tlobj = GES_TIMELINE_OBJECT (tfs);
   if (is_image) {
     /* don't set max-duration on still images */
     g_object_set (tfs, "is_image", (gboolean) TRUE, NULL);
+  } else {
+    GstClockTime file_duration, tlobj_max_duration;
+
+    /* Properly set duration informations from the discovery */
+    file_duration = gst_discoverer_info_get_duration (info);
+    tlobj_max_duration = ges_timeline_object_get_max_duration (tlobj);
+
+    if (tlobj_max_duration == G_MAXUINT64)
+      ges_timeline_object_set_max_duration (tlobj, file_duration);
+
+    if (GST_CLOCK_TIME_IS_VALID (tlobj->duration) == FALSE)
+      ges_timeline_object_set_duration (tlobj, file_duration);
   }
 
   /* Continue the processing on tfs */
-  add_object_to_tracks (timeline, GES_TIMELINE_OBJECT (tfs));
-
-  if (!is_image) {
-    g_object_set (tfs, "max-duration",
-        gst_discoverer_info_get_duration (info), NULL);
-  }
+  add_object_to_tracks (timeline, tlobj);
 
   /* Remove the ref as the timeline file source is no longer needed here */
   g_object_unref (tfs);
@@ -1545,8 +1654,7 @@ layer_object_added_cb (GESTimelineLayer * layer, GESTimelineObject * object,
   if (ges_timeline_object_is_moving_from_layer (object)) {
     GST_DEBUG ("TimelineObject %p is moving from a layer to another, not doing"
         " anything on it", object);
-    if (!timeline->priv->movecontext.ignore_needs_ctx)
-      timeline->priv->movecontext.needs_move_ctx = TRUE;
+    timeline->priv->movecontext.needs_move_ctx = TRUE;
     return;
   }
 
@@ -1649,7 +1757,12 @@ trackobj_start_changed_cb (GESTrackObject * child,
   sort_starts_ends_start (timeline, child);
   sort_starts_ends_end (timeline, child);
 
-  if (!timeline->priv->movecontext.ignore_needs_ctx)
+  /* If the timeline is set to snap objects together, we
+   * are sure that all movement of TrackObject-s are done within
+   * the moving context, so we do not need to recalculate the
+   * move context as often */
+  if (timeline->priv->movecontext.ignore_needs_ctx &&
+      timeline->priv->snapping_distance == 0)
     timeline->priv->movecontext.needs_move_ctx = TRUE;
 }
 
@@ -1659,15 +1772,12 @@ trackobj_duration_changed_cb (GESTrackObject * child,
 {
   sort_starts_ends_end (timeline, child);
 
-  if (!timeline->priv->movecontext.ignore_needs_ctx)
-    timeline->priv->movecontext.needs_move_ctx = TRUE;
-}
-
-static void
-trackobj_inpoint_changed_cb (GESTrackObject * child,
-    GParamSpec * arg G_GNUC_UNUSED, GESTimeline * timeline)
-{
-  if (!timeline->priv->movecontext.ignore_needs_ctx)
+  /* If the timeline is set to snap objects together, we
+   * are sure that all movement of TrackObject-s are done within
+   * the moving context, so we do not need to recalculate the
+   * move context as often */
+  if (timeline->priv->movecontext.ignore_needs_ctx &&
+      timeline->priv->snapping_distance == 0)
     timeline->priv->movecontext.needs_move_ctx = TRUE;
 }
 
@@ -1683,8 +1793,6 @@ track_object_added_cb (GESTrack * track, GESTrackObject * object,
         G_CALLBACK (trackobj_start_changed_cb), timeline);
     g_signal_connect (GES_TRACK_OBJECT (object), "notify::duration",
         G_CALLBACK (trackobj_duration_changed_cb), timeline);
-    g_signal_connect (GES_TRACK_OBJECT (object), "notify::in-point",
-        G_CALLBACK (trackobj_inpoint_changed_cb), timeline);
   }
 }
 
@@ -1698,8 +1806,6 @@ track_object_removed_cb (GESTrack * track, GESTrackObject * object,
         NULL);
     g_signal_handlers_disconnect_by_func (object, trackobj_duration_changed_cb,
         NULL);
-    g_signal_handlers_disconnect_by_func (object, trackobj_inpoint_changed_cb,
-        NULL);
 
     /* Make sure to reinitialise the moving context next time */
     timeline->priv->movecontext.needs_move_ctx = TRUE;
@@ -1708,32 +1814,72 @@ track_object_removed_cb (GESTrack * track, GESTrackObject * object,
 }
 
 static void
-track_duration_cb (GstElement * track,
-    GParamSpec * arg G_GNUC_UNUSED, GESTimeline * timeline)
+pad_added_cb (GESTrack * track, GstPad * pad, TrackPrivate * tr_priv)
 {
-  guint64 duration, max_duration = 0;
+  gchar *padname;
+  gboolean no_more;
   GList *tmp;
 
-  for (tmp = timeline->priv->tracks; tmp; tmp = g_list_next (tmp)) {
-    TrackPrivate *tr_priv = (TrackPrivate *) tmp->data;
-    g_object_get (tr_priv->track, "duration", &duration, NULL);
+  GST_DEBUG ("track:%p, pad:%s:%s", track, GST_DEBUG_PAD_NAME (pad));
 
-    GST_DEBUG_OBJECT (track, "track duration : %" GST_TIME_FORMAT,
-        GST_TIME_ARGS (duration));
-    max_duration = MAX (duration, max_duration);
+  if (G_UNLIKELY (tr_priv->pad)) {
+    GST_WARNING ("We are already controlling a pad for this track");
+    return;
   }
 
-  if (timeline->priv->duration != max_duration) {
-    GST_DEBUG ("track duration : %" GST_TIME_FORMAT " current : %"
-        GST_TIME_FORMAT, GST_TIME_ARGS (max_duration),
-        GST_TIME_ARGS (timeline->priv->duration));
+  /* Remember the pad */
+  GST_OBJECT_LOCK (track);
+  tr_priv->pad = pad;
 
-    timeline->priv->duration = max_duration;
+  no_more = TRUE;
+  for (tmp = tr_priv->timeline->priv->tracks; tmp; tmp = g_list_next (tmp)) {
+    TrackPrivate *tr_priv = (TrackPrivate *) tmp->data;
 
-    g_object_notify_by_pspec (G_OBJECT (timeline), properties[PROP_DURATION]);
+    if (!tr_priv->pad) {
+      GST_LOG ("Found track without pad %p", tr_priv->track);
+      no_more = FALSE;
+    }
+  }
+  GST_OBJECT_UNLOCK (track);
+
+  /* ghost it ! */
+  GST_DEBUG ("Ghosting pad and adding it to ourself");
+  padname = g_strdup_printf ("track_%p_src", track);
+  tr_priv->ghostpad = gst_ghost_pad_new (padname, pad);
+  g_free (padname);
+  gst_pad_set_active (tr_priv->ghostpad, TRUE);
+  gst_element_add_pad (GST_ELEMENT (tr_priv->timeline), tr_priv->ghostpad);
+
+  if (no_more) {
+    GST_DEBUG ("Signaling no-more-pads");
+    gst_element_no_more_pads (GST_ELEMENT (tr_priv->timeline));
   }
 }
 
+static void
+pad_removed_cb (GESTrack * track, GstPad * pad, TrackPrivate * tr_priv)
+{
+  GST_DEBUG ("track:%p, pad:%s:%s", track, GST_DEBUG_PAD_NAME (pad));
+
+  if (G_UNLIKELY (tr_priv->pad != pad)) {
+    GST_WARNING ("Not the pad we're controlling");
+    return;
+  }
+
+  if (G_UNLIKELY (tr_priv->ghostpad == NULL)) {
+    GST_WARNING ("We don't have a ghostpad for this pad !");
+    return;
+  }
+
+  GST_DEBUG ("Removing ghostpad");
+  gst_pad_set_active (tr_priv->ghostpad, FALSE);
+  gst_element_remove_pad (GST_ELEMENT (tr_priv->timeline), tr_priv->ghostpad);
+  tr_priv->ghostpad = NULL;
+  tr_priv->pad = NULL;
+}
+
+
+/* GstElement Virtual methods */
 static GstStateChangeReturn
 ges_timeline_change_state (GstElement * element, GstStateChange transition)
 {
@@ -1777,6 +1923,7 @@ ges_timeline_change_state (GstElement * element, GstStateChange transition)
 
 }
 
+/**** API *****/
 /**
  * ges_timeline_new:
  *
@@ -2044,71 +2191,6 @@ ges_timeline_remove_layer (GESTimeline * timeline, GESTimelineLayer * layer)
   return TRUE;
 }
 
-static void
-pad_added_cb (GESTrack * track, GstPad * pad, TrackPrivate * tr_priv)
-{
-  gchar *padname;
-  gboolean no_more;
-  GList *tmp;
-
-  GST_DEBUG ("track:%p, pad:%s:%s", track, GST_DEBUG_PAD_NAME (pad));
-
-  if (G_UNLIKELY (tr_priv->pad)) {
-    GST_WARNING ("We are already controlling a pad for this track");
-    return;
-  }
-
-  /* Remember the pad */
-  GST_OBJECT_LOCK (track);
-  tr_priv->pad = pad;
-
-  no_more = TRUE;
-  for (tmp = tr_priv->timeline->priv->tracks; tmp; tmp = g_list_next (tmp)) {
-    TrackPrivate *tr_priv = (TrackPrivate *) tmp->data;
-
-    if (!tr_priv->pad) {
-      GST_LOG ("Found track without pad %p", tr_priv->track);
-      no_more = FALSE;
-    }
-  }
-  GST_OBJECT_UNLOCK (track);
-
-  /* ghost it ! */
-  GST_DEBUG ("Ghosting pad and adding it to ourself");
-  padname = g_strdup_printf ("track_%p_src", track);
-  tr_priv->ghostpad = gst_ghost_pad_new (padname, pad);
-  g_free (padname);
-  gst_pad_set_active (tr_priv->ghostpad, TRUE);
-  gst_element_add_pad (GST_ELEMENT (tr_priv->timeline), tr_priv->ghostpad);
-
-  if (no_more) {
-    GST_DEBUG ("Signaling no-more-pads");
-    gst_element_no_more_pads (GST_ELEMENT (tr_priv->timeline));
-  }
-}
-
-static void
-pad_removed_cb (GESTrack * track, GstPad * pad, TrackPrivate * tr_priv)
-{
-  GST_DEBUG ("track:%p, pad:%s:%s", track, GST_DEBUG_PAD_NAME (pad));
-
-  if (G_UNLIKELY (tr_priv->pad != pad)) {
-    GST_WARNING ("Not the pad we're controlling");
-    return;
-  }
-
-  if (G_UNLIKELY (tr_priv->ghostpad == NULL)) {
-    GST_WARNING ("We don't have a ghostpad for this pad !");
-    return;
-  }
-
-  GST_DEBUG ("Removing ghostpad");
-  gst_pad_set_active (tr_priv->ghostpad, FALSE);
-  gst_element_remove_pad (GST_ELEMENT (tr_priv->timeline), tr_priv->ghostpad);
-  tr_priv->ghostpad = NULL;
-  tr_priv->pad = NULL;
-}
-
 /**
  * ges_timeline_add_track:
  * @timeline: a #GESTimeline
@@ -2169,11 +2251,6 @@ ges_timeline_add_track (GESTimeline * timeline, GESTrack * track)
   /* ensure that each existing timeline object has the opportunity to create a
    * track object for this track*/
 
-  /* We connect to the duration change notify, so we can update
-   * our duration accordingly */
-  g_signal_connect (G_OBJECT (track), "notify::duration",
-      G_CALLBACK (track_duration_cb), timeline);
-
   /* We connect to the object for the timeline editing mode management */
   g_signal_connect (G_OBJECT (track), "track-object-added",
       G_CALLBACK (track_object_added_cb), timeline);
@@ -2191,8 +2268,6 @@ ges_timeline_add_track (GESTimeline * timeline, GESTrack * track)
     }
     g_list_free (objects);
   }
-
-  track_duration_cb (GST_ELEMENT (track), NULL, timeline);
 
   return TRUE;
 }
@@ -2246,8 +2321,6 @@ ges_timeline_remove_track (GESTimeline * timeline, GESTrack * track)
   /* Remove pad-added/-removed handlers */
   g_signal_handlers_disconnect_by_func (track, pad_added_cb, tr_priv);
   g_signal_handlers_disconnect_by_func (track, pad_removed_cb, tr_priv);
-  g_signal_handlers_disconnect_by_func (track, track_duration_cb,
-      tr_priv->track);
   g_signal_handlers_disconnect_by_func (track, track_object_added_cb, timeline);
   g_signal_handlers_disconnect_by_func (track, track_object_removed_cb,
       timeline);
@@ -2382,18 +2455,27 @@ ges_timeline_is_updating (GESTimeline * timeline)
 gboolean
 ges_timeline_enable_update (GESTimeline * timeline, gboolean enabled)
 {
-  GList *tmp;
-  gboolean res = TRUE;
+  if (ges_timeline_enable_update_internal (timeline, enabled)) {
+    g_object_notify_by_pspec (G_OBJECT (timeline), properties[PROP_UPDATE]);
 
-  GST_DEBUG_OBJECT (timeline, "%s updates", enabled ? "Enabling" : "Disabling");
-
-  for (tmp = timeline->priv->tracks; tmp; tmp = tmp->next) {
-    if (!ges_track_enable_update (((TrackPrivate *) tmp->data)->track, enabled))
-      res = FALSE;
+    return TRUE;
   }
 
-  /* Make sure we reset the context */
-  timeline->priv->movecontext.needs_move_ctx = TRUE;
+  return FALSE;
+}
 
-  return res;
+/**
+ * ges_timeline_get_duration
+ * @timeline: a #GESTimeline
+ *
+ * Get the current duration of @timeline
+ *
+ * Returns: The current duration of @timeline
+ */
+GstClockTime
+ges_timeline_get_duration (GESTimeline * timeline)
+{
+  g_return_val_if_fail (GES_IS_TIMELINE (timeline), GST_CLOCK_TIME_NONE);
+
+  return timeline->priv->duration;
 }
