@@ -1814,7 +1814,7 @@ update_streams (GstPipeline * pipeline)
     for (i = 0; i < n_video; i++) {
       g_signal_emit_by_name (pipeline, "get-video-tags", i, &tags);
       if (tags) {
-        str = gst_structure_to_string ((GstStructure *) tags);
+        str = gst_tag_list_to_string (tags);
         g_print ("video %d: %s\n", i, str);
         g_free (str);
       }
@@ -1831,7 +1831,7 @@ update_streams (GstPipeline * pipeline)
     for (i = 0; i < n_audio; i++) {
       g_signal_emit_by_name (pipeline, "get-audio-tags", i, &tags);
       if (tags) {
-        str = gst_structure_to_string ((GstStructure *) tags);
+        str = gst_tag_list_to_string (tags);
         g_print ("audio %d: %s\n", i, str);
         g_free (str);
       }
@@ -1852,7 +1852,7 @@ update_streams (GstPipeline * pipeline)
       if (tags) {
         const GValue *value;
 
-        str = gst_structure_to_string ((GstStructure *) tags);
+        str = gst_tag_list_to_string (tags);
         g_print ("text %d: %s\n", i, str);
         g_free (str);
 

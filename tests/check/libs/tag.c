@@ -209,27 +209,6 @@ GST_START_TEST (test_musicbrainz_tag_registration)
 
 GST_END_TEST;
 
-/* is there an easier way to compare two structures / tagslists? */
-static gboolean
-taglists_are_equal (const GstTagList * list_1, const GstTagList * list_2)
-{
-  GstCaps *c_list_1 = gst_caps_new_empty ();
-  GstCaps *c_list_2 = gst_caps_new_empty ();
-  gboolean ret;
-
-  gst_caps_append_structure (c_list_1,
-      gst_structure_copy ((GstStructure *) list_1));
-  gst_caps_append_structure (c_list_2,
-      gst_structure_copy ((GstStructure *) list_2));
-
-  ret = gst_caps_is_equal (c_list_2, c_list_1);
-
-  gst_caps_unref (c_list_1);
-  gst_caps_unref (c_list_2);
-
-  return ret;
-}
-
 GST_START_TEST (test_vorbis_tags)
 {
   GstTagList *list;
@@ -347,7 +326,7 @@ GST_START_TEST (test_vorbis_tags)
     vendor_id = NULL;
 
     GST_LOG ("new_list = %" GST_PTR_FORMAT, new_list);
-    fail_unless (taglists_are_equal (list, new_list));
+    fail_unless (gst_tag_list_is_equal (list, new_list));
 
     buf2 = gst_tag_list_to_vorbiscomment_buffer (new_list,
         (const guint8 *) "\003vorbis", 7, "libgstunittest");
@@ -360,7 +339,7 @@ GST_START_TEST (test_vorbis_tags)
     vendor_id = NULL;
 
     GST_LOG ("even_newer_list = %" GST_PTR_FORMAT, even_newer_list);
-    fail_unless (taglists_are_equal (new_list, even_newer_list));
+    fail_unless (gst_tag_list_is_equal (new_list, even_newer_list));
 
     gst_tag_list_free (new_list);
     gst_tag_list_free (even_newer_list);
@@ -466,14 +445,14 @@ GST_START_TEST (test_vorbis_tags)
     fail_unless (vendor != NULL);
     fail_unless_equals_string (vendor, "foo");
     fail_unless (list != NULL);
-    fail_unless (gst_structure_n_fields ((GstStructure *) list) == 0);
+    fail_unless (gst_tag_list_n_tags (list) == 0);
     g_free (vendor);
     gst_tag_list_free (list);
 
     /* now again without vendor */
     list = gst_tag_list_from_vorbiscomment_buffer (buf, NULL, 0, NULL);
     fail_unless (list != NULL);
-    fail_unless (gst_structure_n_fields ((GstStructure *) list) == 0);
+    fail_unless (gst_tag_list_n_tags (list) == 0);
     gst_tag_list_free (list);
 
     gst_buffer_unref (buf);
@@ -513,7 +492,7 @@ GST_START_TEST (test_vorbis_tags)
     fail_unless (vendor != NULL);
     fail_unless_equals_string (vendor, "foo");
     fail_unless (list != NULL);
-    fail_unless (gst_structure_n_fields ((GstStructure *) list) == 1);
+    fail_unless (gst_tag_list_n_tags (list) == 1);
     ASSERT_TAG_LIST_HAS_STRING (list, GST_TAG_ARTIST, "foo bar");
     g_free (vendor);
     gst_tag_list_free (list);
@@ -522,7 +501,7 @@ GST_START_TEST (test_vorbis_tags)
     list = gst_tag_list_from_vorbiscomment_buffer (buf,
         (guint8 *) "\003vorbis", 7, NULL);
     fail_unless (list != NULL);
-    fail_unless (gst_structure_n_fields ((GstStructure *) list) == 1);
+    fail_unless (gst_tag_list_n_tags (list) == 1);
     ASSERT_TAG_LIST_HAS_STRING (list, GST_TAG_ARTIST, "foo bar");
     gst_tag_list_free (list);
 
@@ -1054,7 +1033,7 @@ GST_START_TEST (test_xmp_parsing)
       if (test_data[i].result_size >= 0) {
         fail_unless (list != NULL);
 
-        result_size = gst_structure_n_fields ((GstStructure *) list);
+        result_size = gst_tag_list_n_tags (list);
         fail_unless (result_size == test_data[i].result_size);
 
         /* check the taglist content */

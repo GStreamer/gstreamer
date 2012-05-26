@@ -1081,7 +1081,7 @@ update_streams (PlaybackApp * app)
     for (i = 0; i < app->n_video; i++) {
       g_signal_emit_by_name (app->pipeline, "get-video-tags", i, &tags);
       if (tags) {
-        str = gst_structure_to_string ((GstStructure *) tags);
+        str = gst_tag_list_to_string (tags);
         g_print ("video %d: %s\n", i, str);
         g_free (str);
       }
@@ -1100,7 +1100,7 @@ update_streams (PlaybackApp * app)
     for (i = 0; i < app->n_audio; i++) {
       g_signal_emit_by_name (app->pipeline, "get-audio-tags", i, &tags);
       if (tags) {
-        str = gst_structure_to_string ((GstStructure *) tags);
+        str = gst_tag_list_to_string (tags);
         g_print ("audio %d: %s\n", i, str);
         g_free (str);
       }
@@ -1123,7 +1123,7 @@ update_streams (PlaybackApp * app)
       if (tags) {
         const GValue *value;
 
-        str = gst_structure_to_string ((GstStructure *) tags);
+        str = gst_tag_list_to_string (tags);
         g_print ("text %d: %s\n", i, str);
         g_free (str);
 
