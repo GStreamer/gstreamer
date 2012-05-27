@@ -261,13 +261,19 @@ gst_opus_dec_parse_header (GstOpusDec * dec, GstBuffer * buf)
   const GstAudioChannelPosition *posn = NULL;
   GstMapInfo map;
 
-  g_return_val_if_fail (gst_opus_header_is_id_header (buf), GST_FLOW_ERROR);
+  if (!gst_opus_header_is_id_header (buf)) {
+    GST_ERROR_OBJECT (dec, "Header is not an Opus ID header");
+    return GST_FLOW_ERROR;
+  }
 
   gst_buffer_map (buf, &map, GST_MAP_READ);
   data = map.data;
 
-  g_return_val_if_fail (dec->n_channels == 0
-      || dec->n_channels == data[9], GST_FLOW_ERROR);
+  if (!(dec->n_channels == 0 || dec->n_channels == data[9])) {
+    gst_buffer_unmap (buf, &map);
+    GST_ERROR_OBJECT (dec, "Opus ID header has invalid channels");
+    return GST_FLOW_ERROR;
+  }
 
   dec->n_channels = data[9];
   dec->pre_skip = GST_READ_UINT16_LE (data + 10);
