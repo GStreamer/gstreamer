@@ -144,14 +144,18 @@ typedef enum {
 
 /**
  * GstTagList:
+ * @mini_object: the parent type
  *
- * Opaque #GstTagList data structure.
+ * Object describing tags / metadata.
  */
 typedef struct _GstTagList GstTagList;
+struct _GstTagList {
+  GstMiniObject mini_object;
+};
 
 #define GST_TAG_LIST(x)       ((GstTagList *) (x))
-#define GST_IS_TAG_LIST(x)    ((x) != NULL && gst_is_tag_list (GST_TAG_LIST (x)))
 #define GST_TYPE_TAG_LIST     (gst_tag_list_get_type ())
+#define GST_IS_TAG_LIST(obj)  (GST_IS_MINI_OBJECT_TYPE((obj), GST_TYPE_TAG_LIST))
 
 /**
  * GstTagForeachFunc:
@@ -206,8 +210,6 @@ GstTagList * gst_tag_list_new_valist        (va_list var_args) G_GNUC_MALLOC;
 gchar      * gst_tag_list_to_string         (const GstTagList * list) G_GNUC_MALLOC;
 GstTagList * gst_tag_list_new_from_string   (const gchar      * str) G_GNUC_MALLOC;
 
-gboolean     gst_is_tag_list                (GstTagList * taglist);
-GstTagList * gst_tag_list_copy              (const GstTagList * list) G_GNUC_MALLOC;
 gint         gst_tag_list_n_tags            (const GstTagList * list);
 const gchar* gst_tag_list_nth_tag_name      (const GstTagList * list, guint index);
 gboolean     gst_tag_list_is_empty          (const GstTagList * list);
@@ -219,7 +221,6 @@ void         gst_tag_list_insert            (GstTagList       * into,
 GstTagList * gst_tag_list_merge             (const GstTagList * list1,
                                              const GstTagList * list2,
                                              GstTagMergeMode    mode) G_GNUC_MALLOC;
-void         gst_tag_list_free              (GstTagList       * list);
 guint        gst_tag_list_get_tag_size      (const GstTagList * list,
                                              const gchar      * tag);
 void         gst_tag_list_add               (GstTagList       * list,
@@ -345,6 +346,104 @@ gboolean     gst_tag_list_get_buffer_index  (const GstTagList * list,
                                              const gchar      * tag,
                                              guint              index,
                                              GstBuffer       ** value);
+
+/* refcounting */
+/**
+ * gst_tag_list_ref:
+ * @taglist: the #GstTagList to reference
+ *
+ * Add a reference to a #GstTagList mini object.
+ *
+ * From this point on, until the caller calls gst_tag_list_unref() or
+ * gst_tag_list_make_writable(), it is guaranteed that the taglist object will
+ * not change. To use a #GstTagList object, you must always have a refcount on
+ * it -- either the one made implicitly by e.g. gst_tag_list_new(), or via
+ * taking one explicitly with this function.
+ *
+ * Returns: the same #GstTagList mini object.
+ */
+#ifdef _FOOL_GTK_DOC_
+G_INLINE_FUNC GstTagList * gst_tag_list_ref (GstTagList * taglist);
+#endif
+
+static inline GstTagList *
+gst_tag_list_ref (GstTagList * taglist)
+{
+  return (GstTagList *) gst_mini_object_ref (GST_MINI_OBJECT_CAST (taglist));
+}
+
+/**
+ * gst_tag_list_unref:
+ * @taglist: a #GstTagList.
+ *
+ * Unref a #GstTagList, and and free all its memory when the refcount reaches 0.
+ */
+#ifdef _FOOL_GTK_DOC_
+G_INLINE_FUNC void gst_tag_list_unref (GstTagList * taglist);
+#endif
+
+static inline void
+gst_tag_list_unref (GstTagList * taglist)
+{
+  gst_mini_object_unref (GST_MINI_OBJECT_CAST (taglist));
+}
+
+/**
+ * gst_tag_list_copy:
+ * @taglist: a #GstTagList.
+ *
+ * Creates a new #GstTagList as a copy of the old @taglist. The new taglist
+ * will have a refcount of 1, owned by the caller, and will be writable as
+ * a result.
+ *
+ * Note that this function is the semantic equivalent of a gst_tag_list_ref()
+ * followed by a gst_tag_list_make_writable(). If you only want to hold on to a
+ * reference to the data, you should use gst_tag_list_ref().
+ *
+ * When you are finished with the taglist, call gst_tag_list_unref() on it.
+ *
+ * Returns: the new #GstTagList
+ */
+#ifdef _FOOL_GTK_DOC_
+G_INLINE_FUNC GstTagList * gst_tag_list_copy (const GstTagList * taglist);
+#endif
+
+static inline GstTagList *
+gst_tag_list_copy (const GstTagList * taglist)
+{
+  return GST_TAG_LIST (gst_mini_object_copy (GST_MINI_OBJECT_CAST (taglist)));
+}
+
+/**
+ * gst_tag_list_is_writable:
+ * @taglist: a #GstTagList
+ *
+ * Tests if you can safely modify @taglist. It is only safe to modify taglist
+ * when there is only one owner of the taglist - ie, the refcount is 1.
+ */
+#define gst_tag_list_is_writable(taglist)    gst_mini_object_is_writable (GST_MINI_OBJECT_CAST (taglist))
+
+/**
+ * gst_tag_list_make_writable:
+ * @taglist: (transfer full): a #GstTagList
+ *
+ * Returns a writable copy of @taglist.
+ *
+ * If there is only one reference count on @taglist, the caller must be the
+ * owner, and so this function will return the taglist object unchanged. If on
+ * the other hand there is more than one reference on the object, a new taglist
+ * object will be returned (which will be a copy of @taglist). The caller's
+ * reference on @taglist will be removed, and instead the caller will own a
+ * reference to the returned object.
+ *
+ * In short, this function unrefs the taglist in the argument and refs the
+ * taglist that it returns. Don't access the argument after calling this
+ * function. See also: gst_tag_list_ref().
+ *
+ * Returns: (transfer full): a writable taglist which may or may not be the
+ *     same as @taglist
+ */
+#define gst_tag_list_make_writable(taglist)   GST_TAG_LIST (gst_mini_object_make_writable (GST_MINI_OBJECT_CAST (taglist)))
 
 /* GStreamer core tags */
 /**
@@ -723,7 +822,7 @@ gboolean     gst_tag_list_get_buffer_index  (const GstTagList * list,
 /**
  * GST_TAG_IMAGE:
  *
- * image (sample) (sample caps should specify the content type and preferably
+ * image (sample) (sample taglist should specify the content type and preferably
  * also set "image-type" field as #GstTagImageType)
  *
  * Since: 0.10.6
@@ -733,7 +832,7 @@ gboolean     gst_tag_list_get_buffer_index  (const GstTagList * list,
  * GST_TAG_PREVIEW_IMAGE:
  *
  * image that is meant for preview purposes, e.g. small icon-sized version
- * (sample) (sample caps should specify the content type)
+ * (sample) (sample taglist should specify the content type)
  *
  * Since: 0.10.7
  */
@@ -742,7 +841,7 @@ gboolean     gst_tag_list_get_buffer_index  (const GstTagList * list,
 /**
  * GST_TAG_ATTACHMENT:
  *
- * generic file attachment (sample) (sample caps should specify the content
+ * generic file attachment (sample) (sample taglist should specify the content
  * type and if possible set "filename" to the file name of the
  * attachment)
  *

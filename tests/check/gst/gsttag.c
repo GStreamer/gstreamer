@@ -306,13 +306,9 @@ GST_START_TEST (test_type)
 
   taglist = gst_tag_list_new_empty ();
   fail_unless (GST_IS_TAG_LIST (taglist));
-  fail_unless (gst_is_tag_list (taglist));
   gst_tag_list_free (taglist);
 
-  /* this isn't okay */
-  ASSERT_CRITICAL (fail_if (gst_is_tag_list (NULL)));
-
-  /* this however should be fine */
+  /* this should be fine */
   fail_if (GST_IS_TAG_LIST (NULL));
 
   /* check gst_tag_list_is_empty */

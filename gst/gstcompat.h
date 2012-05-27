@@ -56,6 +56,8 @@ G_BEGIN_DECLS
 
 #define gst_adapter_prev_timestamp    gst_adapter_prev_pts
 
+#define gst_tag_list_free(taglist)    gst_tag_list_unref(taglist)
+
 #ifndef GST_DISABLE_DEPRECATED
 
 #endif /* not GST_DISABLE_DEPRECATED */

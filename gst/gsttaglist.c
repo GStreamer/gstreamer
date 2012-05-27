@@ -47,15 +47,22 @@
 #include <gobject/gvaluecollector.h>
 #include <string.h>
 
+/* FIXME: add category for tags */
+#define GST_CAT_TAGS GST_CAT_DEFAULT
+
 #define GST_TAG_IS_VALID(tag)           (gst_tag_get_info (tag) != NULL)
 
 /* FIXME 0.11: make taglists refcounted maybe? */
 /* a tag list is basically a structure, but we don't make this fact public */
-struct _GstTagList
+typedef struct _GstTagListImpl
 {
-  GType type;
+  GstTagList taglist;
+
   GstStructure *structure;
-};
+} GstTagListImpl;
+
+#define GST_TAG_LIST_STRUCTURE(taglist) ((GstTagListImpl*)(taglist))->structure
+
 
 /* FIXME 0.11: use GParamSpecs or something similar for tag registrations,
  * possibly even gst_tag_register(). Especially value ranges might be
@@ -83,8 +90,10 @@ static GMutex __tag_mutex;
 /* tags hash table: maps tag name string => GstTagInfo */
 static GHashTable *__tags;
 
-G_DEFINE_BOXED_TYPE (GstTagList, gst_tag_list,
-    (GBoxedCopyFunc) gst_tag_list_copy, (GBoxedFreeFunc) gst_tag_list_free);
+GST_DEFINE_MINI_OBJECT_TYPE (GstTagList, gst_tag_list);
+
+static void __gst_tag_list_free (GstTagList * list);
+static GstTagList *__gst_tag_list_copy (const GstTagList * list);
 
 /* FIXME: had code:
  *    g_value_register_transform_func (_gst_tag_list_type, G_TYPE_STRING,
@@ -622,6 +631,17 @@ gst_tag_is_fixed (const gchar * tag)
   return info->merge_func == NULL;
 }
 
+static void
+gst_tag_list_init (GstTagList * taglist, gsize size)
+{
+  gst_mini_object_init (GST_MINI_OBJECT_CAST (taglist),
+      gst_tag_list_get_type (), size);
+
+  taglist->mini_object.copy = (GstMiniObjectCopyFunction) __gst_tag_list_copy;
+  taglist->mini_object.dispose = NULL;
+  taglist->mini_object.free = (GstMiniObjectFreeFunction) __gst_tag_list_free;
+}
+
 /* takes ownership of the structure */
 static GstTagList *
 gst_tag_list_new_internal (GstStructure * s)
@@ -630,10 +650,43 @@ gst_tag_list_new_internal (GstStructure * s)
 
   g_assert (s != NULL);
 
-  tag_list = g_slice_new0 (GstTagList);
-  tag_list->type = GST_TYPE_TAG_LIST;
-  tag_list->structure = s;
+  tag_list = (GstTagList *) g_slice_new (GstTagListImpl);
+
+  gst_tag_list_init (tag_list, sizeof (GstTagListImpl));
+
+  GST_TAG_LIST_STRUCTURE (tag_list) = s;
+
+#ifdef DEBUG_REFCOUNT
+  GST_CAT_TRACE (GST_CAT_TAGS, "created taglist %p", tag_list);
+#endif
+
   return tag_list;
+}
+
+static void
+__gst_tag_list_free (GstTagList * list)
+{
+  g_return_if_fail (GST_IS_TAG_LIST (list));
+
+#ifdef DEBUG_REFCOUNT
+  GST_CAT_TRACE (GST_CAT_TAGS, "freeing caps %p", list);
+#endif
+
+  gst_structure_free (GST_TAG_LIST_STRUCTURE (list));
+
+  /* why not just pass sizeof (GstTagListImpl) here? */
+  g_slice_free1 (GST_MINI_OBJECT_SIZE (list), list);
+}
+
+static GstTagList *
+__gst_tag_list_copy (const GstTagList * list)
+{
+  const GstStructure *s;
+
+  g_return_val_if_fail (GST_IS_TAG_LIST (list), NULL);
+
+  s = GST_TAG_LIST_STRUCTURE (list);
+  return gst_tag_list_new_internal (gst_structure_copy (s));
 }
 
 /**
@@ -641,7 +694,7 @@ gst_tag_list_new_internal (GstStructure * s)
  *
  * Creates a new empty GstTagList.
  *
- * Free-function: gst_tag_list_free
+ * Free-function: gst_tag_list_unref
  *
  * Returns: (transfer full): An empty tag list
  */
@@ -669,9 +722,9 @@ gst_tag_list_new_empty (void)
  * function. The tag list will make copies of any arguments passed
  * (e.g. strings, buffers).
  *
- * Free-function: gst_tag_list_free
+ * Free-function: gst_tag_list_unref
  *
- * Returns: (transfer full): a new #GstTagList. Free with gst_tag_list_free()
+ * Returns: (transfer full): a new #GstTagList. Free with gst_tag_list_unref()
  *     when no longer needed.
  *
  * Since: 0.10.24
@@ -699,9 +752,9 @@ gst_tag_list_new (const gchar * tag, ...)
  * Just like gst_tag_list_new(), only that it takes a va_list argument.
  * Useful mostly for language bindings.
  *
- * Free-function: gst_tag_list_free
+ * Free-function: gst_tag_list_unref
  *
- * Returns: (transfer full): a new #GstTagList. Free with gst_tag_list_free()
+ * Returns: (transfer full): a new #GstTagList. Free with gst_tag_list_unref()
  *     when no longer needed.
  *
  * Since: 0.10.24
@@ -736,7 +789,7 @@ gst_tag_list_to_string (const GstTagList * list)
 {
   g_return_val_if_fail (GST_IS_TAG_LIST (list), NULL);
 
-  return gst_structure_to_string (list->structure);
+  return gst_structure_to_string (GST_TAG_LIST_STRUCTURE (list));
 }
 
 /**
@@ -775,7 +828,7 @@ gst_tag_list_n_tags (const GstTagList * list)
   g_return_val_if_fail (list != NULL, 0);
   g_return_val_if_fail (GST_IS_TAG_LIST (list), 0);
 
-  return gst_structure_n_fields (list->structure);
+  return gst_structure_n_fields (GST_TAG_LIST_STRUCTURE (list));
 }
 
 /**
@@ -793,7 +846,7 @@ gst_tag_list_nth_tag_name (const GstTagList * list, guint index)
   g_return_val_if_fail (list != NULL, 0);
   g_return_val_if_fail (GST_IS_TAG_LIST (list), 0);
 
-  return gst_structure_nth_field_name (list->structure, index);
+  return gst_structure_nth_field_name (GST_TAG_LIST_STRUCTURE (list), index);
 }
 
 /**
@@ -812,7 +865,7 @@ gst_tag_list_is_empty (const GstTagList * list)
   g_return_val_if_fail (list != NULL, FALSE);
   g_return_val_if_fail (GST_IS_TAG_LIST (list), FALSE);
 
-  return (gst_structure_n_fields (list->structure) == 0);
+  return (gst_structure_n_fields (GST_TAG_LIST_STRUCTURE (list)) == 0);
 }
 
 static gboolean
@@ -859,8 +912,8 @@ gst_tag_list_is_equal (const GstTagList * list1, const GstTagList * list2)
   /* we don't just use gst_structure_is_equal() here so we can add some
    * tolerance for doubles, though maybe we should just add that to
    * gst_value_compare_double() as well? */
-  s1 = list1->structure;
-  s2 = list2->structure;
+  s1 = GST_TAG_LIST_STRUCTURE (list1);
+  s2 = GST_TAG_LIST_STRUCTURE (list2);
 
   num_fields1 = gst_structure_n_fields (s1);
   num_fields2 = gst_structure_n_fields (s2);
@@ -886,22 +939,6 @@ gst_tag_list_is_equal (const GstTagList * list1, const GstTagList * list2)
   return TRUE;
 }
 
-/**
- * gst_is_tag_list:
- * @taglist: Object that might be a taglist
- *
- * Checks if the given pointer is a taglist.
- *
- * Returns: TRUE, if the given pointer is a taglist
- */
-gboolean
-gst_is_tag_list (GstTagList * taglist)
-{
-  g_return_val_if_fail (taglist != NULL, FALSE);
-
-  return taglist->type == GST_TYPE_TAG_LIST;
-}
-
 typedef struct
 {
   GstTagList *list;
@@ -913,7 +950,7 @@ static void
 gst_tag_list_add_value_internal (GstTagList * tag_list, GstTagMergeMode mode,
     const gchar * tag, const GValue * value, GstTagInfo * info)
 {
-  GstStructure *list = tag_list->structure;
+  GstStructure *list = GST_TAG_LIST_STRUCTURE (tag_list);
   const GValue *value2;
   GQuark tag_quark;
 
@@ -1008,28 +1045,10 @@ gst_tag_list_insert (GstTagList * into, const GstTagList * from,
   data.list = into;
   data.mode = mode;
   if (mode == GST_TAG_MERGE_REPLACE_ALL) {
-    gst_structure_remove_all_fields (into->structure);
+    gst_structure_remove_all_fields (GST_TAG_LIST_STRUCTURE (into));
   }
-  gst_structure_foreach (from->structure, gst_tag_list_copy_foreach, &data);
-}
-
-/**
- * gst_tag_list_copy:
- * @list: list to copy
- *
- * Copies a given #GstTagList.
- *
- * Free-function: gst_tag_list_free
- *
- * Returns: (transfer full): copy of the given list
- */
-GstTagList *
-gst_tag_list_copy (const GstTagList * list)
-{
-  g_return_val_if_fail (GST_IS_TAG_LIST (list), NULL);
-
-
-  return gst_tag_list_new_internal (gst_structure_copy (list->structure));
+  gst_structure_foreach (GST_TAG_LIST_STRUCTURE (from),
+      gst_tag_list_copy_foreach, &data);
 }
 
 /**
@@ -1041,7 +1060,7 @@ gst_tag_list_copy (const GstTagList * list)
  * Merges the two given lists into a new list. If one of the lists is NULL, a
  * copy of the other is returned. If both lists are NULL, NULL is returned.
  *
- * Free-function: gst_tag_list_free
+ * Free-function: gst_tag_list_unref
  *
  * Returns: (transfer full): the new list
  */
@@ -1068,23 +1087,9 @@ gst_tag_list_merge (const GstTagList * list1, const GstTagList * list2,
   gst_tag_list_insert (list1_cp, list2_cp, mode);
 
   if (!list2)
-    gst_tag_list_free ((GstTagList *) list2_cp);
+    gst_tag_list_unref ((GstTagList *) list2_cp);
 
   return list1_cp;
-}
-
-/**
- * gst_tag_list_free:
- * @list: (in) (transfer full): the list to free
- *
- * Frees the given list and all associated values.
- */
-void
-gst_tag_list_free (GstTagList * list)
-{
-  g_return_if_fail (GST_IS_TAG_LIST (list));
-  gst_structure_free (list->structure);
-  g_slice_free (GstTagList, list);
 }
 
 /**
@@ -1103,7 +1108,7 @@ gst_tag_list_get_tag_size (const GstTagList * list, const gchar * tag)
 
   g_return_val_if_fail (GST_IS_TAG_LIST (list), 0);
 
-  value = gst_structure_get_value (list->structure, tag);
+  value = gst_structure_get_value (GST_TAG_LIST_STRUCTURE (list), tag);
   if (value == NULL)
     return 0;
   if (G_VALUE_TYPE (value) != GST_TYPE_LIST)
@@ -1181,7 +1186,7 @@ gst_tag_list_add_valist (GstTagList * list, GstTagMergeMode mode,
   g_return_if_fail (tag != NULL);
 
   if (mode == GST_TAG_MERGE_REPLACE_ALL) {
-    gst_structure_remove_all_fields (list->structure);
+    gst_structure_remove_all_fields (GST_TAG_LIST_STRUCTURE (list));
   }
 
   while (tag != NULL) {
@@ -1225,7 +1230,7 @@ gst_tag_list_add_valist_values (GstTagList * list, GstTagMergeMode mode,
   g_return_if_fail (tag != NULL);
 
   if (mode == GST_TAG_MERGE_REPLACE_ALL) {
-    gst_structure_remove_all_fields (list->structure);
+    gst_structure_remove_all_fields (GST_TAG_LIST_STRUCTURE (list));
   }
 
   while (tag != NULL) {
@@ -1277,7 +1282,7 @@ gst_tag_list_remove_tag (GstTagList * list, const gchar * tag)
   g_return_if_fail (GST_IS_TAG_LIST (list));
   g_return_if_fail (tag != NULL);
 
-  gst_structure_remove_field (list->structure, tag);
+  gst_structure_remove_field (GST_TAG_LIST_STRUCTURE (list), tag);
 }
 
 typedef struct
@@ -1319,7 +1324,8 @@ gst_tag_list_foreach (const GstTagList * list, GstTagForeachFunc func,
   data.func = func;
   data.tag_list = list;
   data.data = user_data;
-  gst_structure_foreach (list->structure, structure_foreach_wrapper, &data);
+  gst_structure_foreach (GST_TAG_LIST_STRUCTURE (list),
+      structure_foreach_wrapper, &data);
 }
 
 /**
@@ -1343,7 +1349,7 @@ gst_tag_list_get_value_index (const GstTagList * list, const gchar * tag,
   g_return_val_if_fail (GST_IS_TAG_LIST (list), NULL);
   g_return_val_if_fail (tag != NULL, NULL);
 
-  value = gst_structure_get_value (list->structure, tag);
+  value = gst_structure_get_value (GST_TAG_LIST_STRUCTURE (list), tag);
   if (value == NULL)
     return NULL;
 
@@ -1383,7 +1389,7 @@ gst_tag_list_copy_value (GValue * dest, const GstTagList * list,
   g_return_val_if_fail (dest != NULL, FALSE);
   g_return_val_if_fail (G_VALUE_TYPE (dest) == 0, FALSE);
 
-  src = gst_structure_get_value (list->structure, tag);
+  src = gst_structure_get_value (GST_TAG_LIST_STRUCTURE (list), tag);
   if (!src)
     return FALSE;
 

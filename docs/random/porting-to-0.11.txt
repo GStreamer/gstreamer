@@ -453,12 +453,13 @@ The 0.11 porting guide
     implementations no longer need to check that as well.
 
 * GstTagList
-    is now an opaque object instead of being typedefed to a GstStructure. Cast
-    to GstStructure or use gst_structure_* API on it at your own peril (it may
-    still work for now, but might be changed in future).
+    is now an opaque mini object instead of being typedefed to a GstStructure.
+    Cast to GstStructure or use gst_structure_* API on it at your own peril
+    (it might crash if you do that)
 
     gst_tag_list_new() has been renamed to gst_tag_list_new_empty().
     gst_tag_list_new_full*() have been renamed to gst_tag_list_new*().
+    gst_tag_list_free() has been replaced by gst_tag_list_unref().
 
 * GstController:
     has now been merged into GstObject. It does not exists as a individual

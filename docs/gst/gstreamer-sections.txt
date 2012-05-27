@@ -2532,13 +2532,15 @@ gst_tag_list_new_empty
 gst_tag_list_new_valist
 gst_tag_list_new_from_string
 gst_tag_list_to_string
-gst_is_tag_list
 gst_tag_list_is_empty
 gst_tag_list_is_equal
 gst_tag_list_copy
+gst_tag_list_ref
+gst_tag_list_unref
+gst_tag_list_is_writable
+gst_tag_list_make_writable
 gst_tag_list_insert
 gst_tag_list_merge
-gst_tag_list_free
 gst_tag_list_get_tag_size
 gst_tag_list_n_tags
 gst_tag_list_nth_tag_name
