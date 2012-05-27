@@ -663,7 +663,7 @@ event_loop (GstElement * pipeline, gboolean blocking, GstState target_state)
 
           gst_message_parse_tag (message, &tag_list);
           gst_tag_list_foreach (tag_list, print_tag, NULL);
-          gst_tag_list_free (tag_list);
+          gst_tag_list_unref (tag_list);
         }
         break;
       case GST_MESSAGE_TOC:

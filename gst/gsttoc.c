@@ -175,7 +175,7 @@ gst_toc_free (GstToc * toc)
   g_list_free (toc->entries);
 
   if (toc->tags != NULL)
-    gst_tag_list_free (toc->tags);
+    gst_tag_list_unref (toc->tags);
 
   if (toc->info != NULL)
     gst_structure_free (toc->info);
@@ -206,7 +206,7 @@ gst_toc_entry_free (GstTocEntry * entry)
   g_free (entry->uid);
 
   if (entry->tags != NULL)
-    gst_tag_list_free (entry->tags);
+    gst_tag_list_unref (entry->tags);
 
   if (entry->info != NULL)
     gst_structure_free (entry->info);
@@ -372,7 +372,7 @@ gst_toc_entry_from_structure (const GstStructure * entry, guint level)
 
     if (G_LIKELY (GST_IS_TAG_LIST (g_value_get_boxed (val)))) {
       list = gst_tag_list_copy (GST_TAG_LIST (g_value_get_boxed (val)));
-      gst_tag_list_free (ret->tags);
+      gst_tag_list_unref (ret->tags);
       ret->tags = list;
     }
   }
@@ -456,7 +456,7 @@ __gst_toc_from_structure (const GstStructure * toc)
 
     if (G_LIKELY (GST_IS_TAG_LIST (g_value_get_boxed (val)))) {
       list = gst_tag_list_copy (GST_TAG_LIST (g_value_get_boxed (val)));
-      gst_tag_list_free (ret->tags);
+      gst_tag_list_unref (ret->tags);
       ret->tags = list;
     }
   }
@@ -712,7 +712,7 @@ gst_toc_entry_copy (const GstTocEntry * entry)
 
   if (GST_IS_TAG_LIST (entry->tags)) {
     list = gst_tag_list_copy (entry->tags);
-    gst_tag_list_free (ret->tags);
+    gst_tag_list_unref (ret->tags);
     ret->tags = list;
   }
 
@@ -770,7 +770,7 @@ gst_toc_copy (const GstToc * toc)
 
   if (GST_IS_TAG_LIST (toc->tags)) {
     list = gst_tag_list_copy (toc->tags);
-    gst_tag_list_free (ret->tags);
+    gst_tag_list_unref (ret->tags);
     ret->tags = list;
   }
 

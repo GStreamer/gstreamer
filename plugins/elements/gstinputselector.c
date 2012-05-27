@@ -220,7 +220,7 @@ gst_selector_pad_finalize (GObject * object)
   pad = GST_SELECTOR_PAD_CAST (object);
 
   if (pad->tags)
-    gst_tag_list_free (pad->tags);
+    gst_tag_list_unref (pad->tags);
 
   G_OBJECT_CLASS (gst_selector_pad_parent_class)->finalize (object);
 }
@@ -417,7 +417,7 @@ gst_selector_pad_event (GstPad * pad, GstObject * parent, GstEvent * event)
       newtags = gst_tag_list_merge (oldtags, tags, GST_TAG_MERGE_REPLACE);
       selpad->tags = newtags;
       if (oldtags)
-        gst_tag_list_free (oldtags);
+        gst_tag_list_unref (oldtags);
       GST_DEBUG_OBJECT (pad, "received tags %" GST_PTR_FORMAT, newtags);
       GST_OBJECT_UNLOCK (selpad);
 
@@ -1270,7 +1270,7 @@ gst_input_selector_reset (GstInputSelector * sel)
     gst_selector_pad_reset (selpad);
 
     if (selpad->tags) {
-      gst_tag_list_free (selpad->tags);
+      gst_tag_list_unref (selpad->tags);
       selpad->tags = NULL;
     }
   }

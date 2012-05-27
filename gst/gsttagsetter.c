@@ -126,7 +126,7 @@ gst_tag_data_free (gpointer p)
   GstTagData *data = (GstTagData *) p;
 
   if (data->list)
-    gst_tag_list_free (data->list);
+    gst_tag_list_unref (data->list);
 
   g_mutex_clear (&data->lock);
 
@@ -181,7 +181,7 @@ gst_tag_setter_reset_tags (GstTagSetter * setter)
 
   GST_TAG_DATA_LOCK (data);
   if (data->list) {
-    gst_tag_list_free (data->list);
+    gst_tag_list_unref (data->list);
     data->list = NULL;
   }
   GST_TAG_DATA_UNLOCK (data);
