@@ -20,6 +20,10 @@
  * Boston, MA 02111-1307, USA.
  */
 
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif
+
 #include <string.h>
 #include <time.h>
 #include <gst/check/gstcheck.h>
@@ -262,8 +266,6 @@ GST_END_TEST;
 
 GST_START_TEST (test_GstDateTime_get_utc_offset)
 {
-  GstDateTime *dt;
-  gfloat ts;
   struct tm tm;
   time_t t;
 
@@ -275,10 +277,17 @@ GST_START_TEST (test_GstDateTime_get_utc_offset)
   memcpy (&tm, localtime (&t), sizeof (struct tm));
 #endif
 
-  dt = gst_date_time_new_now_local_time ();
-  ts = gst_date_time_get_time_zone_offset (dt);
-  assert_equals_int (ts, tm.tm_gmtoff / 3600.0);
-  gst_date_time_unref (dt);
+#ifdef HAVE_TM_GMTOFF
+  {
+    GstDateTime *dt;
+    gfloat ts;
+
+    dt = gst_date_time_new_now_local_time ();
+    ts = gst_date_time_get_time_zone_offset (dt);
+    assert_equals_int (ts, tm.tm_gmtoff / 3600.0);
+    gst_date_time_unref (dt);
+  }
+#endif
 }
 
 GST_END_TEST;
