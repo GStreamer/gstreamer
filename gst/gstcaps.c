@@ -177,7 +177,7 @@ _gst_caps_free (GstCaps * caps)
   g_ptr_array_free (GST_CAPS_ARRAY (caps), TRUE);
 
 #ifdef DEBUG_REFCOUNT
-  GST_CAT_LOG (GST_CAT_CAPS, "freeing caps %p", caps);
+  GST_CAT_TRACE (GST_CAT_CAPS, "freeing caps %p", caps);
 #endif
   g_slice_free1 (GST_MINI_OBJECT_SIZE (caps), caps);
 }
