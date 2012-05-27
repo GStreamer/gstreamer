@@ -130,7 +130,9 @@ gst_check_init (int *argc, char **argv[])
       gst_check_log_critical_func, NULL);
   g_log_set_handler ("GLib-GObject", G_LOG_LEVEL_CRITICAL | G_LOG_LEVEL_WARNING,
       gst_check_log_critical_func, NULL);
-  g_log_set_handler ("Gst-Phonon", G_LOG_LEVEL_CRITICAL | G_LOG_LEVEL_WARNING,
+  g_log_set_handler ("GLib-GIO", G_LOG_LEVEL_CRITICAL | G_LOG_LEVEL_WARNING,
+      gst_check_log_critical_func, NULL);
+  g_log_set_handler ("GLib", G_LOG_LEVEL_CRITICAL | G_LOG_LEVEL_WARNING,
       gst_check_log_critical_func, NULL);
 
   print_plugins ();
