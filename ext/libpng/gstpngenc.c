@@ -31,6 +31,7 @@
 #include <gst/gst.h>
 #include "gstpngenc.h"
 #include <gst/video/video.h>
+#include <gst/video/gstvideometa.h>
 #include <zlib.h>
 
 GST_DEBUG_CATEGORY_STATIC (pngenc_debug);
@@ -43,7 +44,7 @@ enum
   LAST_SIGNAL
 };
 
-#define DEFAULT_SNAPSHOT                TRUE
+#define DEFAULT_SNAPSHOT                FALSE
 #define DEFAULT_COMPRESSION_LEVEL       6
 
 enum
@@ -63,15 +64,14 @@ GST_STATIC_PAD_TEMPLATE ("src",
     );
 
 static GstStaticPadTemplate pngenc_sink_template =
-    GST_STATIC_PAD_TEMPLATE ("sink",
+GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS (GST_VIDEO_CAPS_RGBA ";" GST_VIDEO_CAPS_RGB ";"
-        GST_VIDEO_CAPS_GRAY8 ";" GST_VIDEO_CAPS_GRAY16 ("BIG_ENDIAN"))
+    GST_STATIC_CAPS (GST_VIDEO_CAPS_MAKE ("{ RGBA, RGB, GRAY8, GRAY16_BE }"))
     );
 
-GST_BOILERPLATE (GstPngEnc, gst_pngenc, GstVideoEncoder,
-    GST_TYPE_VIDEO_ENCODER);
+#define parent_class gst_pngenc_parent_class
+G_DEFINE_TYPE (GstPngEnc, gst_pngenc, GST_TYPE_VIDEO_ENCODER);
 
 static void gst_pngenc_set_property (GObject * object,
     guint prop_id, const GValue * value, GParamSpec * pspec);
@@ -82,6 +82,8 @@ static GstFlowReturn gst_pngenc_handle_frame (GstVideoEncoder * encoder,
     GstVideoCodecFrame * frame);
 static gboolean gst_pngenc_set_format (GstVideoEncoder * encoder,
     GstVideoCodecState * state);
+static gboolean gst_pngenc_propose_allocation (GstVideoEncoder * encoder,
+    GstQuery * query);
 
 static void
 user_error_fn (png_structp png_ptr, png_const_charp error_msg)
@@ -96,27 +98,14 @@ user_warning_fn (png_structp png_ptr, png_const_charp warning_msg)
 }
 
 static void
-gst_pngenc_base_init (gpointer g_class)
-{
-  GstElementClass *element_class = GST_ELEMENT_CLASS (g_class);
-
-  gst_element_class_add_static_pad_template
-      (element_class, &pngenc_sink_template);
-  gst_element_class_add_static_pad_template
-      (element_class, &pngenc_src_template);
-  gst_element_class_set_details_simple (element_class, "PNG image encoder",
-      "Codec/Encoder/Image",
-      "Encode a video frame to a .png image",
-      "Jeremy SIMON <jsimon13@yahoo.fr>");
-}
-
-static void
 gst_pngenc_class_init (GstPngEncClass * klass)
 {
   GObjectClass *gobject_class;
+  GstElementClass *element_class;
   GstVideoEncoderClass *venc_class;
 
   gobject_class = (GObjectClass *) klass;
+  element_class = (GstElementClass *) klass;
   venc_class = (GstVideoEncoderClass *) klass;
 
   parent_class = g_type_class_peek_parent (klass);
@@ -136,8 +125,18 @@ gst_pngenc_class_init (GstPngEncClass * klass)
           DEFAULT_COMPRESSION_LEVEL,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
+  gst_element_class_add_pad_template
+      (element_class, gst_static_pad_template_get (&pngenc_sink_template));
+  gst_element_class_add_pad_template
+      (element_class, gst_static_pad_template_get (&pngenc_src_template));
+  gst_element_class_set_details_simple (element_class, "PNG image encoder",
+      "Codec/Encoder/Image",
+      "Encode a video frame to a .png image",
+      "Jeremy SIMON <jsimon13@yahoo.fr>");
+
   venc_class->set_format = gst_pngenc_set_format;
   venc_class->handle_frame = gst_pngenc_handle_frame;
+  venc_class->propose_allocation = gst_pngenc_propose_allocation;
 
   GST_DEBUG_CATEGORY_INIT (pngenc_debug, "pngenc", 0, "PNG image encoder");
 }
@@ -185,7 +184,7 @@ gst_pngenc_set_format (GstVideoEncoder * encoder, GstVideoCodecState * state)
 
   output_state =
       gst_video_encoder_set_output_state (encoder,
-      gst_caps_new_simple ("image/png", NULL), state);
+      gst_caps_new_empty_simple ("image/png"), state);
   gst_video_codec_state_unref (output_state);
 
 done:
@@ -194,7 +193,7 @@ done:
 }
 
 static void
-gst_pngenc_init (GstPngEnc * pngenc, GstPngEncClass * g_class)
+gst_pngenc_init (GstPngEnc * pngenc)
 {
   /* init settings */
   pngenc->png_struct_ptr = NULL;
@@ -213,19 +212,34 @@ static void
 user_write_data (png_structp png_ptr, png_bytep data, png_uint_32 length)
 {
   GstPngEnc *pngenc;
+  GstMemory *mem;
+  GstMapInfo minfo;
 
   pngenc = (GstPngEnc *) png_get_io_ptr (png_ptr);
 
-  if (pngenc->written + length >= GST_BUFFER_SIZE (pngenc->buffer_out)) {
-    GST_ERROR_OBJECT (pngenc, "output buffer bigger than the input buffer!?");
-    png_error (png_ptr, "output buffer bigger than the input buffer!?");
+  mem = gst_allocator_alloc (NULL, length, NULL);
+  if (!mem) {
+    GST_ERROR_OBJECT (pngenc, "Failed to allocate memory");
+    png_error (png_ptr, "Failed to allocate memory");
 
     /* never reached */
     return;
   }
 
-  memcpy (GST_BUFFER_DATA (pngenc->buffer_out) + pngenc->written, data, length);
-  pngenc->written += length;
+  if (!gst_memory_map (mem, &minfo, GST_MAP_WRITE)) {
+    GST_ERROR_OBJECT (pngenc, "Failed to map memory");
+    gst_memory_unref (mem);
+
+    png_error (png_ptr, "Failed to map memory");
+
+    /* never reached */
+    return;
+  }
+
+  memcpy (minfo.data, data, length);
+  gst_memory_unmap (mem, &minfo);
+
+  gst_buffer_append_memory (pngenc->buffer_out, mem);
 }
 
 static GstFlowReturn
@@ -236,6 +250,7 @@ gst_pngenc_handle_frame (GstVideoEncoder * encoder, GstVideoCodecFrame * frame)
   png_byte **row_pointers;
   GstFlowReturn ret = GST_FLOW_OK;
   GstVideoInfo *info;
+  GstVideoFrame vframe;
 
   pngenc = GST_PNGENC (encoder);
   info = &pngenc->input_state->info;
@@ -273,17 +288,21 @@ gst_pngenc_handle_frame (GstVideoEncoder * encoder, GstVideoCodecFrame * frame)
       (png_rw_ptr) user_write_data, user_flush_data);
 
   row_pointers = g_new (png_byte *, GST_VIDEO_INFO_HEIGHT (info));
+  if (!gst_video_frame_map (&vframe, &pngenc->input_state->info,
+          frame->input_buffer, GST_MAP_READ)) {
+    GST_ELEMENT_ERROR (pngenc, STREAM, FORMAT, (NULL),
+        ("Failed to map video frame, caps problem?"));
+    ret = GST_FLOW_ERROR;
+    goto done;
+  }
 
   for (row_index = 0; row_index < GST_VIDEO_INFO_HEIGHT (info); row_index++) {
-    row_pointers[row_index] = GST_BUFFER_DATA (frame->input_buffer) +
-        (row_index * GST_VIDEO_INFO_COMP_STRIDE (info, 0));
+    row_pointers[row_index] = GST_VIDEO_FRAME_COMP_DATA (&vframe, 0) +
+        (row_index * GST_VIDEO_FRAME_COMP_STRIDE (&vframe, 0));
   }
 
   /* allocate the output buffer */
-  pngenc->buffer_out =
-      gst_buffer_new_and_alloc (GST_VIDEO_INFO_HEIGHT (info) *
-      GST_VIDEO_INFO_COMP_STRIDE (info, 0));
-  pngenc->written = 0;
+  pngenc->buffer_out = gst_buffer_new ();
 
   png_write_info (pngenc->png_struct_ptr, pngenc->png_info_ptr);
   png_write_image (pngenc->png_struct_ptr, row_pointers);
@@ -295,7 +314,6 @@ gst_pngenc_handle_frame (GstVideoEncoder * encoder, GstVideoCodecFrame * frame)
   png_destroy_write_struct (&pngenc->png_struct_ptr, (png_infopp) NULL);
 
   /* Set final size and store */
-  GST_BUFFER_SIZE (pngenc->buffer_out) = pngenc->written;
   frame->output_buffer = pngenc->buffer_out;
 
   pngenc->buffer_out = NULL;
@@ -304,7 +322,7 @@ gst_pngenc_handle_frame (GstVideoEncoder * encoder, GstVideoCodecFrame * frame)
     goto done;
 
   if (pngenc->snapshot)
-    ret = GST_FLOW_UNEXPECTED;
+    ret = GST_FLOW_EOS;
 
 done:
   GST_DEBUG_OBJECT (pngenc, "END, ret:%d", ret);
@@ -336,6 +354,14 @@ longjmp_fail:
   }
 }
 
+static gboolean
+gst_pngenc_propose_allocation (GstVideoEncoder * encoder, GstQuery * query)
+{
+  gst_query_add_allocation_meta (query, GST_VIDEO_META_API_TYPE);
+
+  return GST_VIDEO_ENCODER_CLASS (parent_class)->propose_allocation (encoder,
+      query);
+}
 
 static void
 gst_pngenc_get_property (GObject * object,

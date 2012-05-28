@@ -30,6 +30,8 @@
 #include <stdlib.h>
 #include <string.h>
 #include <gst/video/video.h>
+#include <gst/video/gstvideometa.h>
+#include <gst/video/gstvideopool.h>
 #include <gst/gst-i18n-plugin.h>
 
 GST_DEBUG_CATEGORY_STATIC (pngdec_debug);
@@ -46,17 +48,18 @@ static gboolean gst_pngdec_set_format (GstVideoDecoder * Decoder,
     GstVideoCodecState * state);
 static GstFlowReturn gst_pngdec_handle_frame (GstVideoDecoder * decoder,
     GstVideoCodecFrame * frame);
+static gboolean gst_pngdec_decide_allocation (GstVideoDecoder * decoder,
+    GstQuery * query);
 
-GST_BOILERPLATE (GstPngDec, gst_pngdec, GstVideoDecoder,
-    GST_TYPE_VIDEO_DECODER);
+#define parent_class gst_pngdec_parent_class
+G_DEFINE_TYPE (GstPngDec, gst_pngdec, GST_TYPE_VIDEO_DECODER);
 
 static GstStaticPadTemplate gst_pngdec_src_pad_template =
-    GST_STATIC_PAD_TEMPLATE ("src",
+GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS (GST_VIDEO_CAPS_RGBA ";" GST_VIDEO_CAPS_RGB ";"
-        GST_VIDEO_CAPS_ARGB_64 ";"
-        GST_VIDEO_CAPS_GRAY8 ";" GST_VIDEO_CAPS_GRAY16 ("BIG_ENDIAN"))
+    GST_STATIC_CAPS (GST_VIDEO_CAPS_MAKE
+        ("{ RGBA, RGB, ARGB64, GRAY8, GRAY16_BE }"))
     );
 
 static GstStaticPadTemplate gst_pngdec_sink_pad_template =
@@ -67,37 +70,32 @@ GST_STATIC_PAD_TEMPLATE ("sink",
     );
 
 static void
-gst_pngdec_base_init (gpointer g_class)
+gst_pngdec_class_init (GstPngDecClass * klass)
 {
-  GstElementClass *element_class = GST_ELEMENT_CLASS (g_class);
+  GstElementClass *element_class = (GstElementClass *) klass;
+  GstVideoDecoderClass *vdec_class = (GstVideoDecoderClass *) klass;
 
-  gst_element_class_add_static_pad_template (element_class,
-      &gst_pngdec_src_pad_template);
-  gst_element_class_add_static_pad_template (element_class,
-      &gst_pngdec_sink_pad_template);
+  gst_element_class_add_pad_template (element_class,
+      gst_static_pad_template_get (&gst_pngdec_src_pad_template));
+  gst_element_class_add_pad_template (element_class,
+      gst_static_pad_template_get (&gst_pngdec_sink_pad_template));
   gst_element_class_set_details_simple (element_class, "PNG image decoder",
       "Codec/Decoder/Image",
       "Decode a png video frame to a raw image",
       "Wim Taymans <wim@fluendo.com>");
-}
-
-static void
-gst_pngdec_class_init (GstPngDecClass * klass)
-{
-  GstVideoDecoderClass *vdec_class = (GstVideoDecoderClass *) klass;
 
   vdec_class->start = gst_pngdec_start;
   vdec_class->reset = gst_pngdec_reset;
   vdec_class->set_format = gst_pngdec_set_format;
   vdec_class->handle_frame = gst_pngdec_handle_frame;
+  vdec_class->decide_allocation = gst_pngdec_decide_allocation;
 
   GST_DEBUG_CATEGORY_INIT (pngdec_debug, "pngdec", 0, "PNG image decoder");
 }
 
 static void
-gst_pngdec_init (GstPngDec * pngdec, GstPngDecClass * klass)
+gst_pngdec_init (GstPngDec * pngdec)
 {
-  pngdec->buffer_out = NULL;
   pngdec->png = NULL;
   pngdec->info = NULL;
   pngdec->endinfo = NULL;
@@ -124,8 +122,6 @@ user_info_callback (png_structp png_ptr, png_infop info)
 {
   GstPngDec *pngdec = NULL;
   GstFlowReturn ret = GST_FLOW_OK;
-  size_t buffer_size;
-  guint height;
 
   GST_LOG ("info ready");
 
@@ -136,24 +132,12 @@ user_info_callback (png_structp png_ptr, png_infop info)
     goto beach;
   }
 
-  height = GST_VIDEO_INFO_HEIGHT (&pngdec->output_state->info);
-
   /* Allocate output buffer */
-  pngdec->rowbytes = png_get_rowbytes (pngdec->png, pngdec->info);
-  GST_DEBUG ("png told us each row takes %d bytes", pngdec->rowbytes);
-  if (pngdec->rowbytes > (G_MAXUINT32 - 3)
-      || height > G_MAXUINT32 / pngdec->rowbytes) {
-    ret = GST_FLOW_ERROR;
-    goto beach;
-  }
-  pngdec->rowbytes = GST_ROUND_UP_4 (pngdec->rowbytes);
-  buffer_size = height * pngdec->rowbytes;
-
-  GST_DEBUG ("Allocating a buffer of %d bytes", buffer_size);
-
-  g_assert (pngdec->buffer_out == NULL);
-  pngdec->buffer_out = pngdec->current_frame->output_buffer =
-      gst_buffer_new_and_alloc (buffer_size);
+  ret =
+      gst_video_decoder_alloc_output_frame (GST_VIDEO_DECODER (pngdec),
+      pngdec->current_frame);
+  if (G_UNLIKELY (ret != GST_FLOW_OK))
+    GST_DEBUG_OBJECT (pngdec, "failed to acquire buffer");
 
 beach:
   pngdec->ret = ret;
@@ -185,13 +169,26 @@ user_endrow_callback (png_structp png_ptr, png_bytep new_row,
 
   /* If buffer_out doesn't exist, it means buffer_alloc failed, which 
    * will already have set the return code */
-  if (GST_IS_BUFFER (pngdec->buffer_out)) {
-    size_t offset = row_num * pngdec->rowbytes;
+  if (GST_IS_BUFFER (pngdec->current_frame->output_buffer)) {
+    GstVideoFrame frame;
+    GstBuffer *buffer = pngdec->current_frame->output_buffer;
+    size_t offset;
+    gint width;
+    guint8 *data;
 
+    if (!gst_video_frame_map (&frame, &pngdec->output_state->info, buffer,
+            GST_MAP_WRITE)) {
+      pngdec->ret = GST_FLOW_ERROR;
+      return;
+    }
+
+    data = GST_VIDEO_FRAME_COMP_DATA (&frame, 0);
+    offset = row_num * GST_VIDEO_FRAME_COMP_STRIDE (&frame, 0);
     GST_LOG ("got row %u, copying in buffer %p at offset %" G_GSIZE_FORMAT,
-        (guint) row_num, pngdec->buffer_out, offset);
-    memcpy (GST_BUFFER_DATA (pngdec->buffer_out) + offset, new_row,
-        pngdec->rowbytes);
+        (guint) row_num, pngdec->current_frame->output_buffer, offset);
+    width = GST_ROUND_UP_4 (png_get_rowbytes (pngdec->png, pngdec->info));
+    memcpy (data + offset, new_row, width);
+    gst_video_frame_unmap (&frame);
     pngdec->ret = GST_FLOW_OK;
   }
 }
@@ -205,14 +202,16 @@ user_end_callback (png_structp png_ptr, png_infop info)
 
   GST_LOG_OBJECT (pngdec, "and we are done reading this image");
 
-  if (!pngdec->buffer_out)
+  if (!pngdec->current_frame->output_buffer)
     return;
+
+  gst_buffer_unmap (pngdec->current_frame->input_buffer,
+      &pngdec->current_frame_map);
 
   pngdec->ret =
       gst_video_decoder_finish_frame (GST_VIDEO_DECODER (pngdec),
       pngdec->current_frame);
 
-  pngdec->buffer_out = NULL;
   pngdec->image_ready = TRUE;
 }
 
@@ -344,7 +343,7 @@ gst_pngdec_handle_frame (GstVideoDecoder * decoder, GstVideoCodecFrame * frame)
   GstFlowReturn ret = GST_FLOW_OK;
 
   GST_LOG_OBJECT (pngdec, "Got buffer, size=%u",
-      GST_BUFFER_SIZE (frame->input_buffer));
+      gst_buffer_get_size (frame->input_buffer));
 
   /* Let libpng come back here on error */
   if (setjmp (png_jmpbuf (pngdec->png))) {
@@ -356,9 +355,15 @@ gst_pngdec_handle_frame (GstVideoDecoder * decoder, GstVideoCodecFrame * frame)
   pngdec->current_frame = frame;
 
   /* Progressive loading of the PNG image */
+  if (!gst_buffer_map (frame->input_buffer, &pngdec->current_frame_map,
+          GST_MAP_READ)) {
+    GST_WARNING_OBJECT (pngdec, "Failed to map input buffer");
+    ret = GST_FLOW_ERROR;
+    goto beach;
+  }
+
   png_process_data (pngdec->png, pngdec->info,
-      GST_BUFFER_DATA (frame->input_buffer),
-      GST_BUFFER_SIZE (frame->input_buffer));
+      pngdec->current_frame_map.data, pngdec->current_frame_map.size);
 
   if (pngdec->image_ready) {
     if (1) {
@@ -369,9 +374,13 @@ gst_pngdec_handle_frame (GstVideoDecoder * decoder, GstVideoCodecFrame * frame)
           user_info_callback, user_endrow_callback, user_end_callback);
     } else {
       GST_LOG_OBJECT (pngdec, "sending EOS");
-      pngdec->ret = GST_FLOW_UNEXPECTED;
+      pngdec->ret = GST_FLOW_EOS;
     }
     pngdec->image_ready = FALSE;
+  } else {
+    /* An error happened and we have to unmap */
+    gst_buffer_unmap (pngdec->current_frame->input_buffer,
+        &pngdec->current_frame_map);
   }
 
   ret = pngdec->ret;
@@ -379,6 +388,31 @@ beach:
 
   return ret;
 }
+
+static gboolean
+gst_pngdec_decide_allocation (GstVideoDecoder * bdec, GstQuery * query)
+{
+  GstBufferPool *pool;
+  GstStructure *config;
+
+  if (!GST_VIDEO_DECODER_CLASS (parent_class)->decide_allocation (bdec, query))
+    return FALSE;
+
+  g_assert (gst_query_get_n_allocation_pools (query) > 0);
+  gst_query_parse_nth_allocation_pool (query, 0, &pool, NULL, NULL, NULL);
+  g_assert (pool != NULL);
+
+  config = gst_buffer_pool_get_config (pool);
+  if (gst_query_has_allocation_meta (query, GST_VIDEO_META_API_TYPE)) {
+    gst_buffer_pool_config_add_option (config,
+        GST_BUFFER_POOL_OPTION_VIDEO_META);
+  }
+  gst_buffer_pool_set_config (pool, config);
+  gst_object_unref (pool);
+
+  return TRUE;
+}
+
 
 /* Clean up the libpng structures */
 static gboolean
@@ -472,8 +506,6 @@ gst_pngdec_stop (GstVideoDecoder * decoder)
   }
 
   pngdec->color_type = -1;
-  pngdec->rowbytes = 0;
-  pngdec->buffer_out = NULL;
 
   return TRUE;
 }

@@ -44,14 +44,11 @@ struct _GstPngDec
 
   GstVideoCodecState *input_state;
   GstVideoCodecState *output_state;
+  GstMapInfo current_frame_map;
   GstVideoCodecFrame *current_frame;
 
   GstFlowReturn ret;
 
-  /* Progressive */
-  GstBuffer *buffer_out;
-  png_uint_32 rowbytes;
-  
   png_structp png;
   png_infop info;
   png_infop endinfo;

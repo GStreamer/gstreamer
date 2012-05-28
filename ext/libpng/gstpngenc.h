@@ -47,7 +47,6 @@ struct _GstPngEnc
 
   GstVideoCodecState *input_state;
   GstBuffer *buffer_out;
-  guint written;
 
   png_structp png_struct_ptr;
   png_infop png_info_ptr;
