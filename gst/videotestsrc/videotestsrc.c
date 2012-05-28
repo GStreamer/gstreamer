@@ -222,7 +222,7 @@ struct format_list_struct format_list[] = {
   {VTS_YUV, "v210", "v210", 21, paint_setup_v210, convert_hline_v210},
   {VTS_YUV, "v216", "v216", 32, paint_setup_v216, convert_hline_v216},
   {VTS_YUV, "UYVP", "UYVP", 20, paint_setup_UYVP, convert_hline_UYVP},
-  {VTS_YUV, "AY64", "AY64", 64, paint_setup_AY64, convert_hline_AY64},
+  {VTS_YUV, "AYUV64", "AY64", 64, paint_setup_AY64, convert_hline_AY64},
 
 #ifdef disabled
   {VTS_YUV, "IYU2", "IYU2", 24, paint_setup_IYU2, convert_hline_IYU2},
