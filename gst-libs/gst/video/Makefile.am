@@ -4,20 +4,12 @@ lib_LTLIBRARIES = libgstbasevideo-@GST_API_VERSION@.la
 CLEANFILES = $(BUILT_SOURCES)
 
 libgstbasevideo_@GST_API_VERSION@_la_SOURCES = \
-	gstbasevideocodec.c \
-	gstbasevideoutils.c \
-	gstbasevideodecoder.c \
-	gstbasevideoencoder.c \
 	gstsurfacemeta.c \
 	gstsurfaceconverter.c \
 	videocontext.c
 
 libgstbasevideo_@GST_API_VERSION@includedir = $(includedir)/gstreamer-@GST_API_VERSION@/gst/video
 libgstbasevideo_@GST_API_VERSION@include_HEADERS = \
-	gstbasevideocodec.h \
-	gstbasevideoutils.h \
-	gstbasevideodecoder.h \
-	gstbasevideoencoder.h \
 	gstsurfacemeta.h \
 	gstsurfaceconverter.h \
 	videocontext.h
