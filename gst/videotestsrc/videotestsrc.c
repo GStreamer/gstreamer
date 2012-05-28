@@ -125,44 +125,7 @@ static const struct vts_color_struct vts_colors_bt601_ycbcr_75[] = {
 };
 
 
-static void paint_setup_I420_YV12 (paintinfo * p, GstVideoFrame * frame);
-static void paint_setup_YUY2 (paintinfo * p, GstVideoFrame * frame);
-static void paint_setup_UYVY (paintinfo * p, GstVideoFrame * frame);
-static void paint_setup_YVYU (paintinfo * p, GstVideoFrame * frame);
-#ifdef disabled
-static void paint_setup_IYU2 (paintinfo * p, GstVideoFrame * frame);
-#endif
-static void paint_setup_Y41B (paintinfo * p, GstVideoFrame * frame);
-static void paint_setup_Y42B (paintinfo * p, GstVideoFrame * frame);
-static void paint_setup_Y444 (paintinfo * p, GstVideoFrame * frame);
-static void paint_setup_Y800 (paintinfo * p, GstVideoFrame * frame);
-static void paint_setup_AYUV (paintinfo * p, GstVideoFrame * frame);
-static void paint_setup_v308 (paintinfo * p, GstVideoFrame * frame);
-static void paint_setup_NV12 (paintinfo * p, GstVideoFrame * frame);
-static void paint_setup_NV21 (paintinfo * p, GstVideoFrame * frame);
-#ifdef disabled
-static void paint_setup_v410 (paintinfo * p, GstVideoFrame * frame);
-#endif
-static void paint_setup_v216 (paintinfo * p, GstVideoFrame * frame);
-static void paint_setup_v210 (paintinfo * p, GstVideoFrame * frame);
-static void paint_setup_UYVP (paintinfo * p, GstVideoFrame * frame);
-static void paint_setup_AY64 (paintinfo * p, GstVideoFrame * frame);
-
-static void paint_setup_YUV9 (paintinfo * p, GstVideoFrame * frame);
-static void paint_setup_YVU9 (paintinfo * p, GstVideoFrame * frame);
-static void paint_setup_ARGB8888 (paintinfo * p, GstVideoFrame * frame);
-static void paint_setup_ABGR8888 (paintinfo * p, GstVideoFrame * frame);
-static void paint_setup_RGBA8888 (paintinfo * p, GstVideoFrame * frame);
-static void paint_setup_BGRA8888 (paintinfo * p, GstVideoFrame * frame);
-static void paint_setup_xRGB8888 (paintinfo * p, GstVideoFrame * frame);
-static void paint_setup_xBGR8888 (paintinfo * p, GstVideoFrame * frame);
-static void paint_setup_RGBx8888 (paintinfo * p, GstVideoFrame * frame);
-static void paint_setup_BGRx8888 (paintinfo * p, GstVideoFrame * frame);
-static void paint_setup_RGB888 (paintinfo * p, GstVideoFrame * frame);
-static void paint_setup_BGR888 (paintinfo * p, GstVideoFrame * frame);
-static void paint_setup_RGB565 (paintinfo * p, GstVideoFrame * frame);
-static void paint_setup_xRGB1555 (paintinfo * p, GstVideoFrame * frame);
-static void paint_setup_ARGB64 (paintinfo * p, GstVideoFrame * frame);
+static void paint_setup_generic (paintinfo * p, GstVideoFrame * frame);
 
 static void paint_setup_bayer_bggr (paintinfo * p, GstVideoFrame * frame);
 static void paint_setup_bayer_rggb (paintinfo * p, GstVideoFrame * frame);
@@ -200,103 +163,109 @@ static void convert_hline_xRGB1555 (paintinfo * p, int y);
 
 static void convert_hline_bayer (paintinfo * p, int y);
 
-static void paint_setup_GRAY8 (paintinfo * p, GstVideoFrame * frame);
-static void paint_setup_GRAY16 (paintinfo * p, GstVideoFrame * frame);
 static void convert_hline_GRAY8 (paintinfo * p, int y);
 static void convert_hline_GRAY16 (paintinfo * p, int y);
+static void convert_hline_I420_10LE (paintinfo * p, int y);
+static void convert_hline_I420_10BE (paintinfo * p, int y);
 
 struct format_list_struct format_list[] = {
 /* packed */
-  {VTS_YUV, "YUY2", "YUY2", 16, paint_setup_YUY2, convert_hline_YUY2},
-  {VTS_YUV, "UYVY", "UYVY", 16, paint_setup_UYVY, convert_hline_YUY2},
+  {VTS_YUV, "YUY2", "YUY2", 16, paint_setup_generic, convert_hline_YUY2},
+  {VTS_YUV, "UYVY", "UYVY", 16, paint_setup_generic, convert_hline_YUY2},
 #ifdef disabled
-  {VTS_YUV, "Y422", "Y422", 16, paint_setup_UYVY, convert_hline_YUY2},
-  {VTS_YUV, "UYNV", "UYNV", 16, paint_setup_UYVY, convert_hline_YUY2},  /* FIXME: UYNV? */
+  {VTS_YUV, "Y422", "Y422", 16, paint_setup_generic, convert_hline_YUY2},
+  {VTS_YUV, "UYNV", "UYNV", 16, paint_setup_generic, convert_hline_YUY2},       /* FIXME: UYNV? */
 #endif
-  {VTS_YUV, "YVYU", "YVYU", 16, paint_setup_YVYU, convert_hline_YUY2},
-  {VTS_YUV, "v308", "v308", 24, paint_setup_v308, convert_hline_v308},
-  {VTS_YUV, "AYUV", "AYUV", 32, paint_setup_AYUV, convert_hline_AYUV},
+  {VTS_YUV, "YVYU", "YVYU", 16, paint_setup_generic, convert_hline_YUY2},
+  {VTS_YUV, "v308", "v308", 24, paint_setup_generic, convert_hline_v308},
+  {VTS_YUV, "AYUV", "AYUV", 32, paint_setup_generic, convert_hline_AYUV},
 #ifdef disabled
-  {VTS_YUV, "v410", "v410", 32, paint_setup_v410, convert_hline_v410},
+  {VTS_YUV, "v410", "v410", 32, paint_setup_generic, convert_hline_v410},
 #endif
-  {VTS_YUV, "v210", "v210", 21, paint_setup_v210, convert_hline_v210},
-  {VTS_YUV, "v216", "v216", 32, paint_setup_v216, convert_hline_v216},
-  {VTS_YUV, "UYVP", "UYVP", 20, paint_setup_UYVP, convert_hline_UYVP},
-  {VTS_YUV, "AYUV64", "AY64", 64, paint_setup_AY64, convert_hline_AY64},
+  {VTS_YUV, "v210", "v210", 21, paint_setup_generic, convert_hline_v210},
+  {VTS_YUV, "v216", "v216", 32, paint_setup_generic, convert_hline_v216},
+  {VTS_YUV, "UYVP", "UYVP", 20, paint_setup_generic, convert_hline_UYVP},
+  {VTS_YUV, "AYUV64", "AY64", 64, paint_setup_generic, convert_hline_AY64},
 
 #ifdef disabled
-  {VTS_YUV, "IYU2", "IYU2", 24, paint_setup_IYU2, convert_hline_IYU2},
+  {VTS_YUV, "IYU2", "IYU2", 24, paint_setup_generic, convert_hline_IYU2},
 #endif
 
 /* planar */
   /* YVU9 */
-  {VTS_YUV, "YVU9", "YVU9", 9, paint_setup_YVU9, convert_hline_YUV9},
+  {VTS_YUV, "YVU9", "YVU9", 9, paint_setup_generic, convert_hline_YUV9},
   /* YUV9 */
-  {VTS_YUV, "YUV9", "YUV9", 9, paint_setup_YUV9, convert_hline_YUV9},
+  {VTS_YUV, "YUV9", "YUV9", 9, paint_setup_generic, convert_hline_YUV9},
   /* IF09 */
   /* YV12 */
-  {VTS_YUV, "YV12", "YV12", 12, paint_setup_I420_YV12, convert_hline_I420},
+  {VTS_YUV, "YV12", "YV12", 12, paint_setup_generic, convert_hline_I420},
   /* I420 */
-  {VTS_YUV, "I420", "I420", 12, paint_setup_I420_YV12, convert_hline_I420},
+  {VTS_YUV, "I420", "I420", 12, paint_setup_generic, convert_hline_I420},
   /* NV12 */
-  {VTS_YUV, "NV12", "NV12", 12, paint_setup_NV12, convert_hline_NV12},
+  {VTS_YUV, "NV12", "NV12", 12, paint_setup_generic, convert_hline_NV12},
   /* NV21 */
-  {VTS_YUV, "NV21", "NV21", 12, paint_setup_NV21, convert_hline_NV21},
+  {VTS_YUV, "NV21", "NV21", 12, paint_setup_generic, convert_hline_NV21},
   /* CLPL */
   /* Y41B */
-  {VTS_YUV, "Y41B", "Y41B", 12, paint_setup_Y41B, convert_hline_Y41B},
+  {VTS_YUV, "Y41B", "Y41B", 12, paint_setup_generic, convert_hline_Y41B},
   /* Y42B */
-  {VTS_YUV, "Y42B", "Y42B", 16, paint_setup_Y42B, convert_hline_Y42B},
+  {VTS_YUV, "Y42B", "Y42B", 16, paint_setup_generic, convert_hline_Y42B},
   /* Y444 */
-  {VTS_YUV, "Y444", "Y444", 24, paint_setup_Y444, convert_hline_Y444},
+  {VTS_YUV, "Y444", "Y444", 24, paint_setup_generic, convert_hline_Y444},
   /* Y800 grayscale */
-  {VTS_YUV, "Y800", "Y800", 8, paint_setup_Y800, convert_hline_Y800},
+  {VTS_YUV, "Y800", "Y800", 8, paint_setup_generic, convert_hline_Y800},
+
+  {VTS_YUV, "I420_10LE", "I420-10LE", 30, paint_setup_generic,
+      convert_hline_I420_10LE},
+  {VTS_YUV, "I420_10BE", "I420-10BE", 30, paint_setup_generic,
+      convert_hline_I420_10BE},
 
   /* Not exactly YUV but it's the same as above */
-  {VTS_GRAY, "GRAY8", "GRAY8", 8, paint_setup_GRAY8, convert_hline_GRAY8},
+  {VTS_GRAY, "GRAY8", "GRAY8", 8, paint_setup_generic, convert_hline_GRAY8},
 #if G_BYTE_ORDER == G_LITTLE_ENDIAN
-  {VTS_GRAY, "GRAY16_LE", "GRAY16", 16, paint_setup_GRAY16,
+  {VTS_GRAY, "GRAY16_LE", "GRAY16", 16, paint_setup_generic,
       convert_hline_GRAY16},
 #else
-  {VTS_GRAY, "GRAY16_BE", "GRAY16", 16, paint_setup_GRAY16,
+  {VTS_GRAY, "GRAY16_BE", "GRAY16", 16, paint_setup_generic,
       convert_hline_GRAY16},
 #endif
 
-  {VTS_RGB, "xRGB", "xRGB8888", 32, paint_setup_xRGB8888, convert_hline_str4,
+  {VTS_RGB, "xRGB", "xRGB8888", 32, paint_setup_generic, convert_hline_str4,
         24,
       0x00ff0000, 0x0000ff00, 0x000000ff},
-  {VTS_RGB, "xBGR", "xBGR8888", 32, paint_setup_xBGR8888, convert_hline_str4,
+  {VTS_RGB, "xBGR", "xBGR8888", 32, paint_setup_generic, convert_hline_str4,
         24,
       0x000000ff, 0x0000ff00, 0x00ff0000},
-  {VTS_RGB, "RGBx", "RGBx8888", 32, paint_setup_RGBx8888, convert_hline_str4,
+  {VTS_RGB, "RGBx", "RGBx8888", 32, paint_setup_generic, convert_hline_str4,
         24,
       0xff000000, 0x00ff0000, 0x0000ff00},
-  {VTS_RGB, "BGRx", "BGRx8888", 32, paint_setup_BGRx8888, convert_hline_str4,
+  {VTS_RGB, "BGRx", "BGRx8888", 32, paint_setup_generic, convert_hline_str4,
         24,
       0x0000ff00, 0x00ff0000, 0xff000000},
-  {VTS_RGB, "ARGB", "ARGB8888", 32, paint_setup_ARGB8888, convert_hline_astr4,
+  {VTS_RGB, "ARGB", "ARGB8888", 32, paint_setup_generic, convert_hline_astr4,
         32,
       0x00ff0000, 0x0000ff00, 0x000000ff, 0xff000000},
-  {VTS_RGB, "ABGR", "ABGR8888", 32, paint_setup_ABGR8888, convert_hline_astr4,
+  {VTS_RGB, "ABGR", "ABGR8888", 32, paint_setup_generic, convert_hline_astr4,
         32,
       0x000000ff, 0x0000ff00, 0x00ff0000, 0xff000000},
-  {VTS_RGB, "RGBA", "RGBA8888", 32, paint_setup_RGBA8888, convert_hline_astr4,
+  {VTS_RGB, "RGBA", "RGBA8888", 32, paint_setup_generic, convert_hline_astr4,
         32,
       0xff000000, 0x00ff0000, 0x0000ff00, 0x000000ff},
-  {VTS_RGB, "BGRA", "BGRA8888", 32, paint_setup_BGRA8888, convert_hline_astr4,
+  {VTS_RGB, "BGRA", "BGRA8888", 32, paint_setup_generic, convert_hline_astr4,
         32,
       0x0000ff00, 0x00ff0000, 0xff000000, 0x000000ff},
-  {VTS_RGB, "RGB", "RGB888", 24, paint_setup_RGB888, convert_hline_str3, 24,
+  {VTS_RGB, "RGB", "RGB888", 24, paint_setup_generic, convert_hline_str3, 24,
       0x00ff0000, 0x0000ff00, 0x000000ff},
-  {VTS_RGB, "BGR", "BGR888", 24, paint_setup_BGR888, convert_hline_str3, 24,
+  {VTS_RGB, "BGR", "BGR888", 24, paint_setup_generic, convert_hline_str3, 24,
       0x000000ff, 0x0000ff00, 0x00ff0000},
-  {VTS_RGB, "RGB16", "RGB565", 16, paint_setup_RGB565, convert_hline_RGB565, 16,
+  {VTS_RGB, "RGB16", "RGB565", 16, paint_setup_generic, convert_hline_RGB565,
+        16,
       0x0000f800, 0x000007e0, 0x0000001f},
-  {VTS_RGB, "RGB15", "xRGB1555", 16, paint_setup_xRGB1555,
+  {VTS_RGB, "RGB15", "xRGB1555", 16, paint_setup_generic,
         convert_hline_xRGB1555,
         15,
       0x00007c00, 0x000003e0, 0x0000001f},
-  {VTS_RGB, "ARGB64", "ARGB8888", 64, paint_setup_ARGB64, convert_hline_astr8,
+  {VTS_RGB, "ARGB64", "ARGB8888", 64, paint_setup_generic, convert_hline_astr8,
         64,
       0x00ff0000, 0x0000ff00, 0x000000ff, 0xff000000},
 
@@ -447,7 +416,7 @@ paint_get_structure (struct format_list_struct * format)
 int
 gst_video_test_src_get_size (GstVideoTestSrc * v, int w, int h)
 {
-  paintinfo pi = { NULL, };
+  paintinfo pi = PAINT_INFO_INIT;
   paintinfo *p = &pi;
   struct format_list_struct *format;
 
@@ -639,7 +608,7 @@ gst_video_test_src_smpte (GstVideoTestSrc * v, GstVideoFrame * frame)
   int i;
   int y1, y2;
   int j;
-  paintinfo pi = { NULL, };
+  paintinfo pi = PAINT_INFO_INIT;
   paintinfo *p = &pi;
   struct format_list_struct *format;
   int w = frame->info.width, h = frame->info.height;
@@ -744,7 +713,7 @@ gst_video_test_src_smpte75 (GstVideoTestSrc * v, GstVideoFrame * frame)
 {
   int i;
   int j;
-  paintinfo pi = { NULL, };
+  paintinfo pi = PAINT_INFO_INIT;
   paintinfo *p = &pi;
   struct format_list_struct *format;
   int w = frame->info.width, h = frame->info.height;
@@ -779,7 +748,7 @@ gst_video_test_src_smpte100 (GstVideoTestSrc * v, GstVideoFrame * frame)
 {
   int i;
   int j;
-  paintinfo pi = { NULL, };
+  paintinfo pi = PAINT_INFO_INIT;
   paintinfo *p = &pi;
   struct format_list_struct *format;
   int w = frame->info.width, h = frame->info.height;
@@ -808,7 +777,7 @@ void
 gst_video_test_src_bar (GstVideoTestSrc * v, GstVideoFrame * frame)
 {
   int j;
-  paintinfo pi = { NULL, };
+  paintinfo pi = PAINT_INFO_INIT;
   paintinfo *p = &pi;
   struct format_list_struct *format;
   int w = frame->info.width, h = frame->info.height;
@@ -837,7 +806,7 @@ gst_video_test_src_snow (GstVideoTestSrc * v, GstVideoFrame * frame)
 {
   int i;
   int j;
-  paintinfo pi = { NULL, };
+  paintinfo pi = PAINT_INFO_INIT;
   paintinfo *p = &pi;
   struct format_list_struct *format;
   struct vts_color_struct color;
@@ -869,7 +838,7 @@ gst_video_test_src_unicolor (GstVideoTestSrc * v, GstVideoFrame * frame,
     int color_index)
 {
   int i;
-  paintinfo pi = { NULL, };
+  paintinfo pi = PAINT_INFO_INIT;
   paintinfo *p = &pi;
   struct format_list_struct *format;
   int w = frame->info.width, h = frame->info.height;
@@ -929,7 +898,7 @@ void
 gst_video_test_src_blink (GstVideoTestSrc * v, GstVideoFrame * frame)
 {
   int i;
-  paintinfo pi = { NULL, };
+  paintinfo pi = PAINT_INFO_INIT;
   paintinfo *p = &pi;
   struct format_list_struct *format;
   int w = frame->info.width, h = frame->info.height;
@@ -958,7 +927,7 @@ void
 gst_video_test_src_solid (GstVideoTestSrc * v, GstVideoFrame * frame)
 {
   int i;
-  paintinfo pi = { NULL, };
+  paintinfo pi = PAINT_INFO_INIT;
   paintinfo *p = &pi;
   struct format_list_struct *format;
   int w = frame->info.width, h = frame->info.height;
@@ -983,7 +952,7 @@ void
 gst_video_test_src_checkers1 (GstVideoTestSrc * v, GstVideoFrame * frame)
 {
   int x, y;
-  paintinfo pi = { NULL, };
+  paintinfo pi = PAINT_INFO_INIT;
   paintinfo *p = &pi;
   struct format_list_struct *format;
   int w = frame->info.width, h = frame->info.height;
@@ -1013,7 +982,7 @@ void
 gst_video_test_src_checkers2 (GstVideoTestSrc * v, GstVideoFrame * frame)
 {
   int x, y;
-  paintinfo pi = { NULL, };
+  paintinfo pi = PAINT_INFO_INIT;
   paintinfo *p = &pi;
   struct format_list_struct *format;
   int w = frame->info.width, h = frame->info.height;
@@ -1044,7 +1013,7 @@ void
 gst_video_test_src_checkers4 (GstVideoTestSrc * v, GstVideoFrame * frame)
 {
   int x, y;
-  paintinfo pi = { NULL, };
+  paintinfo pi = PAINT_INFO_INIT;
   paintinfo *p = &pi;
   struct format_list_struct *format;
   int w = frame->info.width, h = frame->info.height;
@@ -1075,7 +1044,7 @@ void
 gst_video_test_src_checkers8 (GstVideoTestSrc * v, GstVideoFrame * frame)
 {
   int x, y;
-  paintinfo pi = { NULL, };
+  paintinfo pi = PAINT_INFO_INIT;
   paintinfo *p = &pi;
   struct format_list_struct *format;
   int w = frame->info.width, h = frame->info.height;
@@ -1143,7 +1112,7 @@ gst_video_test_src_zoneplate (GstVideoTestSrc * v, GstVideoFrame * frame)
 {
   int i;
   int j;
-  paintinfo pi = { NULL, };
+  paintinfo pi = PAINT_INFO_INIT;
   paintinfo *p = &pi;
   struct format_list_struct *format;
   struct vts_color_struct color;
@@ -1264,7 +1233,7 @@ gst_video_test_src_chromazoneplate (GstVideoTestSrc * v, GstVideoFrame * frame)
 {
   int i;
   int j;
-  paintinfo pi = { NULL, };
+  paintinfo pi = PAINT_INFO_INIT;
   paintinfo *p = &pi;
   struct format_list_struct *format;
   struct vts_color_struct color;
@@ -1364,7 +1333,7 @@ gst_video_test_src_circular (GstVideoTestSrc * v, GstVideoFrame * frame)
 {
   int i;
   int j;
-  paintinfo pi = { NULL, };
+  paintinfo pi = PAINT_INFO_INIT;
   paintinfo *p = &pi;
   struct format_list_struct *format;
   double freq[8];
@@ -1409,7 +1378,7 @@ void
 gst_video_test_src_gamut (GstVideoTestSrc * v, GstVideoFrame * frame)
 {
   int x, y;
-  paintinfo pi = { NULL, };
+  paintinfo pi = PAINT_INFO_INIT;
   paintinfo *p = &pi;
   struct format_list_struct *format;
   struct vts_color_struct yuv_primary;
@@ -1467,7 +1436,7 @@ void
 gst_video_test_src_ball (GstVideoTestSrc * v, GstVideoFrame * frame)
 {
   int i;
-  paintinfo pi = { NULL, };
+  paintinfo pi = PAINT_INFO_INIT;
   paintinfo *p = &pi;
   struct format_list_struct *format;
   int t = v->n_frames;
@@ -1558,26 +1527,14 @@ paint_tmpline_AYUV (paintinfo * p, int x, int w)
 }
 
 static void
-paint_setup_NV12 (paintinfo * p, GstVideoFrame * frame)
+paint_setup_generic (paintinfo * p, GstVideoFrame * frame)
 {
-  p->yp = GST_VIDEO_FRAME_PLANE_DATA (frame, 0);
-  p->ystride = GST_VIDEO_FRAME_PLANE_STRIDE (frame, 0);
-  p->up = GST_VIDEO_FRAME_PLANE_DATA (frame, 1);
-  p->ustride = GST_VIDEO_FRAME_PLANE_STRIDE (frame, 1);
-  p->vp = p->up + 1;
-  p->vstride = p->ustride;
-  p->size = frame->info.size;
-}
+  gint i;
 
-static void
-paint_setup_NV21 (paintinfo * p, GstVideoFrame * frame)
-{
-  p->yp = GST_VIDEO_FRAME_PLANE_DATA (frame, 0);
-  p->ystride = GST_VIDEO_FRAME_PLANE_STRIDE (frame, 0);
-  p->vp = GST_VIDEO_FRAME_PLANE_DATA (frame, 1);
-  p->vstride = GST_VIDEO_FRAME_PLANE_STRIDE (frame, 1);
-  p->up = p->vp + 1;
-  p->ustride = p->vstride;
+  for (i = 0; i < GST_VIDEO_FRAME_N_COMPONENTS (frame); i++) {
+    p->p[i] = GST_VIDEO_FRAME_COMP_DATA (frame, i);
+    p->stride[i] = GST_VIDEO_FRAME_COMP_STRIDE (frame, i);
+  }
   p->size = frame->info.size;
 }
 
@@ -1585,9 +1542,9 @@ static void
 convert_hline_I420 (paintinfo * p, int y)
 {
   int i;
-  guint8 *Y = p->yp + y * p->ystride;
-  guint8 *U = p->up + (y / 2) * p->ustride;
-  guint8 *V = p->vp + (y / 2) * p->vstride;
+  guint8 *Y = p->p[0] + y * p->stride[0];
+  guint8 *U = p->p[1] + (y / 2) * p->stride[1];
+  guint8 *V = p->p[2] + (y / 2) * p->stride[2];
   guint8 *ayuv = p->tmpline;
 
   for (i = 0; i < p->width; i++) {
@@ -1603,9 +1560,9 @@ static void
 convert_hline_NV12 (paintinfo * p, int y)
 {
   int i;
-  guint8 *Y = p->yp + y * p->ystride;
-  guint8 *U = p->up + (y / 2) * p->ustride;
-  guint8 *V = p->vp + (y / 2) * p->vstride;
+  guint8 *Y = p->p[0] + y * p->stride[0];
+  guint8 *U = p->p[1] + (y / 2) * p->stride[1];
+  guint8 *V = p->p[2] + (y / 2) * p->stride[2];
   guint8 *ayuv = p->tmpline;
 
   for (i = 0; i < p->width; i++) {
@@ -1621,9 +1578,9 @@ static void
 convert_hline_NV21 (paintinfo * p, int y)
 {
   int i;
-  guint8 *Y = p->yp + y * p->ystride;
-  guint8 *U = p->up + (y / 2) * p->ustride;
-  guint8 *V = p->vp + (y / 2) * p->vstride;
+  guint8 *Y = p->p[0] + y * p->stride[0];
+  guint8 *U = p->p[1] + (y / 2) * p->stride[1];
+  guint8 *V = p->p[2] + (y / 2) * p->stride[2];
   guint8 *ayuv = p->tmpline;
 
   for (i = 0; i < p->width; i++) {
@@ -1636,155 +1593,12 @@ convert_hline_NV21 (paintinfo * p, int y)
 }
 
 static void
-paint_setup_I420_YV12 (paintinfo * p, GstVideoFrame * frame)
-{
-  p->yp = GST_VIDEO_FRAME_COMP_DATA (frame, GST_VIDEO_COMP_Y);
-  p->ystride = GST_VIDEO_FRAME_COMP_STRIDE (frame, GST_VIDEO_COMP_Y);
-  p->up = GST_VIDEO_FRAME_COMP_DATA (frame, GST_VIDEO_COMP_U);
-  p->ustride = GST_VIDEO_FRAME_COMP_STRIDE (frame, GST_VIDEO_COMP_U);
-  p->vp = GST_VIDEO_FRAME_COMP_DATA (frame, GST_VIDEO_COMP_V);
-  p->vstride = GST_VIDEO_FRAME_COMP_STRIDE (frame, GST_VIDEO_COMP_V);
-  p->size = frame->info.size;
-}
-
-static void
-paint_setup_v308 (paintinfo * p, GstVideoFrame * frame)
-{
-  p->yp = GST_VIDEO_FRAME_PLANE_DATA (frame, 0);
-  p->up = p->yp + 1;
-  p->vp = p->yp + 2;
-  p->ystride = GST_VIDEO_FRAME_PLANE_STRIDE (frame, 0);
-  p->ustride = p->ystride;
-  p->vstride = p->ystride;
-  p->size = frame->info.size;
-}
-
-static void
-paint_setup_AYUV (paintinfo * p, GstVideoFrame * frame)
-{
-  p->ap = GST_VIDEO_FRAME_PLANE_DATA (frame, 0);
-  p->yp = p->ap + 1;
-  p->up = p->ap + 2;
-  p->vp = p->ap + 3;
-  p->astride = GST_VIDEO_FRAME_PLANE_STRIDE (frame, 0);
-  p->ystride = p->astride;;
-  p->ustride = p->astride;
-  p->vstride = p->astride;
-  p->size = frame->info.size;
-}
-
-#ifdef disabled
-static void
-paint_setup_v410 (paintinfo * p, GstVideoFrame * frame)
-{
-  p->yp = dest + 0;
-  p->up = dest + 0;
-  p->vp = dest + 0;
-  p->ystride = p->width * 4;
-  p->endptr = dest + p->ystride * p->height;
-  p->size = frame->info.size;
-}
-#endif
-
-static void
-paint_setup_v216 (paintinfo * p, GstVideoFrame * frame)
-{
-  p->ap = GST_VIDEO_FRAME_PLANE_DATA (frame, 0);
-  p->yp = p->ap + 2;
-  p->up = p->ap + 0;
-  p->vp = p->ap + 4;
-  p->astride = GST_VIDEO_FRAME_PLANE_STRIDE (frame, 0);
-  p->ystride = p->astride;;
-  p->ustride = p->astride;
-  p->vstride = p->astride;
-  p->size = frame->info.size;
-}
-
-static void
-paint_setup_v210 (paintinfo * p, GstVideoFrame * frame)
-{
-  p->ap = GST_VIDEO_FRAME_PLANE_DATA (frame, 0);
-  p->yp = p->ap;
-  p->up = p->ap;
-  p->vp = p->ap;
-  p->astride = GST_VIDEO_FRAME_PLANE_STRIDE (frame, 0);
-  p->ystride = p->astride;;
-  p->ustride = p->astride;
-  p->vstride = p->astride;
-  p->size = frame->info.size;
-}
-
-static void
-paint_setup_UYVP (paintinfo * p, GstVideoFrame * frame)
-{
-  p->ap = GST_VIDEO_FRAME_PLANE_DATA (frame, 0);
-  p->yp = p->ap;
-  p->up = p->ap;
-  p->vp = p->ap;
-  p->astride = GST_VIDEO_FRAME_PLANE_STRIDE (frame, 0);
-  p->ystride = p->astride;;
-  p->ustride = p->astride;
-  p->vstride = p->astride;
-  p->size = frame->info.size;
-}
-
-static void
-paint_setup_YUY2 (paintinfo * p, GstVideoFrame * frame)
-{
-  p->yp = GST_VIDEO_FRAME_PLANE_DATA (frame, 0);
-  p->up = p->yp + 1;
-  p->vp = p->yp + 3;
-  p->ystride = GST_VIDEO_FRAME_PLANE_STRIDE (frame, 0);
-  p->ustride = p->ystride;
-  p->vstride = p->ystride;
-  p->size = frame->info.size;
-}
-
-static void
-paint_setup_UYVY (paintinfo * p, GstVideoFrame * frame)
-{
-  p->up = GST_VIDEO_FRAME_PLANE_DATA (frame, 0);
-  p->yp = p->up + 1;
-  p->vp = p->up + 2;
-  p->ystride = GST_VIDEO_FRAME_PLANE_STRIDE (frame, 0);
-  p->ustride = p->ystride;
-  p->vstride = p->ystride;
-  p->size = frame->info.size;
-}
-
-static void
-paint_setup_YVYU (paintinfo * p, GstVideoFrame * frame)
-{
-  p->yp = GST_VIDEO_FRAME_PLANE_DATA (frame, 0);
-  p->up = p->yp + 3;
-  p->vp = p->yp + 1;
-  p->ystride = GST_VIDEO_FRAME_PLANE_STRIDE (frame, 0);
-  p->ustride = p->ystride;
-  p->vstride = p->ystride;
-  p->size = frame->info.size;
-}
-
-static void
-paint_setup_AY64 (paintinfo * p, GstVideoFrame * frame)
-{
-  p->ap = GST_VIDEO_FRAME_PLANE_DATA (frame, 0);
-  p->yp = p->ap + 2;
-  p->up = p->ap + 4;
-  p->vp = p->ap + 6;
-  p->astride = GST_VIDEO_FRAME_PLANE_STRIDE (frame, 0);
-  p->ystride = p->astride;
-  p->ustride = p->astride;
-  p->vstride = p->astride;
-  p->size = frame->info.size;
-}
-
-static void
 convert_hline_v308 (paintinfo * p, int y)
 {
   int i;
-  guint8 *Y = p->yp + y * p->ystride;
-  guint8 *U = p->up + y * p->ustride;
-  guint8 *V = p->vp + y * p->vstride;
+  guint8 *Y = p->p[0] + y * p->stride[0];
+  guint8 *U = p->p[1] + y * p->stride[1];
+  guint8 *V = p->p[2] + y * p->stride[2];
   guint8 *ayuv = p->tmpline;
 
   for (i = 0; i < p->width; i++) {
@@ -1798,10 +1612,10 @@ static void
 convert_hline_AYUV (paintinfo * p, int y)
 {
   int i;
-  guint8 *Y = p->yp + y * p->ystride;
-  guint8 *U = p->up + y * p->ustride;
-  guint8 *V = p->vp + y * p->vstride;
-  guint8 *A = p->ap + y * p->ystride;
+  guint8 *Y = p->p[0] + y * p->stride[0];
+  guint8 *U = p->p[1] + y * p->stride[1];
+  guint8 *V = p->p[2] + y * p->stride[2];
+  guint8 *A = p->p[3] + y * p->stride[0];
   guint8 *ayuv = p->tmpline;
 
   for (i = 0; i < p->width; i++) {
@@ -1816,9 +1630,9 @@ static void
 convert_hline_v216 (paintinfo * p, int y)
 {
   int i;
-  guint8 *Y = p->yp + y * p->ystride;
-  guint8 *U = p->up + y * p->ustride;
-  guint8 *V = p->vp + y * p->vstride;
+  guint8 *Y = p->p[0] + y * p->stride[0];
+  guint8 *U = p->p[1] + y * p->stride[1];
+  guint8 *V = p->p[2] + y * p->stride[2];
   guint8 *ayuv = p->tmpline;
 
   for (i = 0; i < p->width; i++) {
@@ -1835,7 +1649,7 @@ static void
 convert_hline_v410 (paintinfo * p, int y)
 {
   int i;
-  guint8 *Y = p->yp + y * p->ystride;
+  guint8 *Y = p->p[0] + y * p->stride[0];
   guint8 *ayuv = p->tmpline;
 
   for (i = 0; i < p->width; i++) {
@@ -1852,7 +1666,7 @@ static void
 convert_hline_v210 (paintinfo * p, int y)
 {
   int i;
-  guint8 *Y = p->yp + y * p->ystride;
+  guint8 *Y = p->p[0] + y * p->stride[0];
   guint8 *ayuv = p->tmpline;
 
   for (i = 0; i < p->width + 5; i += 6) {
@@ -1903,7 +1717,7 @@ static void
 convert_hline_UYVP (paintinfo * p, int y)
 {
   int i;
-  guint8 *Y = p->yp + y * p->ystride;
+  guint8 *Y = p->p[0] + y * p->stride[0];
   guint8 *ayuv = p->tmpline;
 
   for (i = 0; i < p->width; i += 2) {
@@ -1928,9 +1742,9 @@ static void
 convert_hline_YUY2 (paintinfo * p, int y)
 {
   int i;
-  guint8 *Y = p->yp + y * p->ystride;
-  guint8 *U = p->up + y * p->ustride;
-  guint8 *V = p->vp + y * p->vstride;
+  guint8 *Y = p->p[0] + y * p->stride[0];
+  guint8 *U = p->p[1] + y * p->stride[1];
+  guint8 *V = p->p[2] + y * p->stride[2];
   guint8 *ayuv = p->tmpline;
 
   for (i = 0; i < p->width; i++) {
@@ -1946,7 +1760,7 @@ static void
 convert_hline_AY64 (paintinfo * p, int y)
 {
   int i;
-  guint16 *ayuv16 = (guint16 *) (p->ap + y * p->ystride);
+  guint16 *ayuv16 = (guint16 *) (p->p[3] + y * p->stride[0]);
   guint8 *ayuv = p->tmpline;
 
   for (i = 0; i < p->width; i++) {
@@ -1957,56 +1771,13 @@ convert_hline_AY64 (paintinfo * p, int y)
   }
 }
 
-#ifdef disabled
-static void
-paint_setup_IYU2 (paintinfo * p, GstVideoFrame * frame)
-{
-  /* untested */
-  p->up = GST_VIDEO_FRAME_PLANE_DATA (frame, 0);
-  p->yp = p->up + 1;
-  p->vp = p->up + 2;
-  p->ystride = GST_VIDEO_FRAME_PLANE_STRIDE (frame, 0);
-  p->ustride = p->ystride;
-  p->vstride = p->ystride;
-  p->size = frame->info.size;
-}
-
-static void
-convert_hline_IYU2 (paintinfo * p, int y)
-{
-  int i;
-  guint8 *Y = p->yp + y * p->ystride;
-  guint8 *U = p->up + y * p->ustride;
-  guint8 *V = p->vp + y * p->vstride;
-  guint8 *ayuv = p->tmpline;
-
-  for (i = 0; i < p->width; i++) {
-    Y[i * 3] = ayuv[4 * i + 1];
-    U[i * 3] = ayuv[4 * i + 2];
-    V[i * 3] = ayuv[4 * i + 3];
-  }
-}
-#endif
-
-static void
-paint_setup_Y41B (paintinfo * p, GstVideoFrame * frame)
-{
-  p->yp = GST_VIDEO_FRAME_PLANE_DATA (frame, 0);
-  p->up = GST_VIDEO_FRAME_PLANE_DATA (frame, 1);
-  p->vp = GST_VIDEO_FRAME_PLANE_DATA (frame, 2);
-  p->ystride = GST_VIDEO_FRAME_PLANE_STRIDE (frame, 0);
-  p->ustride = GST_VIDEO_FRAME_PLANE_STRIDE (frame, 1);
-  p->vstride = GST_VIDEO_FRAME_PLANE_STRIDE (frame, 2);
-  p->size = frame->info.size;
-}
-
 static void
 convert_hline_Y41B (paintinfo * p, int y)
 {
   int i;
-  guint8 *Y = p->yp + y * p->ystride;
-  guint8 *U = p->up + y * p->ustride;
-  guint8 *V = p->vp + y * p->vstride;
+  guint8 *Y = p->p[0] + y * p->stride[0];
+  guint8 *U = p->p[1] + y * p->stride[1];
+  guint8 *V = p->p[2] + y * p->stride[2];
   guint8 *ayuv = p->tmpline;
 
   for (i = 0; i < p->width; i++) {
@@ -2021,24 +1792,12 @@ convert_hline_Y41B (paintinfo * p, int y)
 }
 
 static void
-paint_setup_Y42B (paintinfo * p, GstVideoFrame * frame)
-{
-  p->yp = GST_VIDEO_FRAME_PLANE_DATA (frame, 0);
-  p->up = GST_VIDEO_FRAME_PLANE_DATA (frame, 1);
-  p->vp = GST_VIDEO_FRAME_PLANE_DATA (frame, 2);
-  p->ystride = GST_VIDEO_FRAME_PLANE_STRIDE (frame, 0);
-  p->ustride = GST_VIDEO_FRAME_PLANE_STRIDE (frame, 1);
-  p->vstride = GST_VIDEO_FRAME_PLANE_STRIDE (frame, 2);
-  p->size = frame->info.size;
-}
-
-static void
 convert_hline_Y42B (paintinfo * p, int y)
 {
   int i;
-  guint8 *Y = p->yp + y * p->ystride;
-  guint8 *U = p->up + y * p->ustride;
-  guint8 *V = p->vp + y * p->vstride;
+  guint8 *Y = p->p[0] + y * p->stride[0];
+  guint8 *U = p->p[1] + y * p->stride[1];
+  guint8 *V = p->p[2] + y * p->stride[2];
   guint8 *ayuv = p->tmpline;
 
   for (i = 0; i < p->width; i++) {
@@ -2051,24 +1810,12 @@ convert_hline_Y42B (paintinfo * p, int y)
 }
 
 static void
-paint_setup_Y444 (paintinfo * p, GstVideoFrame * frame)
-{
-  p->yp = GST_VIDEO_FRAME_PLANE_DATA (frame, 0);
-  p->up = GST_VIDEO_FRAME_PLANE_DATA (frame, 1);
-  p->vp = GST_VIDEO_FRAME_PLANE_DATA (frame, 2);
-  p->ystride = GST_VIDEO_FRAME_PLANE_STRIDE (frame, 0);
-  p->ustride = GST_VIDEO_FRAME_PLANE_STRIDE (frame, 1);
-  p->vstride = GST_VIDEO_FRAME_PLANE_STRIDE (frame, 2);
-  p->size = frame->info.size;
-}
-
-static void
 convert_hline_Y444 (paintinfo * p, int y)
 {
   int i;
-  guint8 *Y = p->yp + y * p->ystride;
-  guint8 *U = p->up + y * p->ustride;
-  guint8 *V = p->vp + y * p->vstride;
+  guint8 *Y = p->p[0] + y * p->stride[0];
+  guint8 *U = p->p[1] + y * p->stride[1];
+  guint8 *V = p->p[2] + y * p->stride[2];
   guint8 *ayuv = p->tmpline;
 
   for (i = 0; i < p->width; i++) {
@@ -2079,19 +1826,10 @@ convert_hline_Y444 (paintinfo * p, int y)
 }
 
 static void
-paint_setup_Y800 (paintinfo * p, GstVideoFrame * frame)
-{
-  /* untested */
-  p->yp = GST_VIDEO_FRAME_PLANE_DATA (frame, 0);
-  p->ystride = GST_VIDEO_FRAME_PLANE_STRIDE (frame, 0);
-  p->size = frame->info.size;
-}
-
-static void
 convert_hline_Y800 (paintinfo * p, int y)
 {
   int i;
-  guint8 *Y = p->yp + y * p->ystride;
+  guint8 *Y = p->p[0] + y * p->stride[0];
   guint8 *ayuv = p->tmpline;
 
   for (i = 0; i < p->width; i++) {
@@ -2100,36 +1838,12 @@ convert_hline_Y800 (paintinfo * p, int y)
 }
 
 static void
-paint_setup_YVU9 (paintinfo * p, GstVideoFrame * frame)
-{
-  p->yp = GST_VIDEO_FRAME_PLANE_DATA (frame, 0);
-  p->up = GST_VIDEO_FRAME_PLANE_DATA (frame, 1);
-  p->vp = GST_VIDEO_FRAME_PLANE_DATA (frame, 2);
-  p->ystride = GST_VIDEO_FRAME_PLANE_STRIDE (frame, 0);
-  p->ustride = GST_VIDEO_FRAME_PLANE_STRIDE (frame, 1);
-  p->vstride = GST_VIDEO_FRAME_PLANE_STRIDE (frame, 2);
-  p->size = frame->info.size;
-}
-
-static void
-paint_setup_YUV9 (paintinfo * p, GstVideoFrame * frame)
-{
-  p->yp = GST_VIDEO_FRAME_PLANE_DATA (frame, 0);
-  p->up = GST_VIDEO_FRAME_PLANE_DATA (frame, 1);
-  p->vp = GST_VIDEO_FRAME_PLANE_DATA (frame, 2);
-  p->ystride = GST_VIDEO_FRAME_PLANE_STRIDE (frame, 0);
-  p->ustride = GST_VIDEO_FRAME_PLANE_STRIDE (frame, 1);
-  p->vstride = GST_VIDEO_FRAME_PLANE_STRIDE (frame, 2);
-  p->size = frame->info.size;
-}
-
-static void
 convert_hline_YUV9 (paintinfo * p, int y)
 {
   int i;
-  guint8 *Y = p->yp + y * p->ystride;
-  guint8 *U = p->up + (y / 4) * p->ustride;
-  guint8 *V = p->vp + (y / 4) * p->vstride;
+  guint8 *Y = p->p[0] + y * p->stride[0];
+  guint8 *U = p->p[1] + (y / 4) * p->stride[1];
+  guint8 *V = p->p[2] + (y / 4) * p->stride[2];
   guint8 *ayuv = p->tmpline;
 
   for (i = 0; i < p->width; i++) {
@@ -2144,131 +1858,13 @@ convert_hline_YUV9 (paintinfo * p, int y)
 }
 
 static void
-paint_setup_ARGB8888 (paintinfo * p, GstVideoFrame * frame)
-{
-  paint_setup_xRGB8888 (p, frame);
-}
-
-static void
-paint_setup_ABGR8888 (paintinfo * p, GstVideoFrame * frame)
-{
-  paint_setup_xBGR8888 (p, frame);
-}
-
-static void
-paint_setup_RGBA8888 (paintinfo * p, GstVideoFrame * frame)
-{
-  paint_setup_RGBx8888 (p, frame);
-}
-
-static void
-paint_setup_BGRA8888 (paintinfo * p, GstVideoFrame * frame)
-{
-  paint_setup_BGRx8888 (p, frame);
-}
-
-static void
-paint_setup_xRGB8888 (paintinfo * p, GstVideoFrame * frame)
-{
-  p->ap = GST_VIDEO_FRAME_PLANE_DATA (frame, 0);
-  p->yp = p->ap + 1;
-  p->up = p->ap + 2;
-  p->vp = p->ap + 3;
-  p->astride = GST_VIDEO_FRAME_PLANE_STRIDE (frame, 0);
-  p->ystride = p->astride;
-  p->ustride = p->astride;
-  p->vstride = p->astride;
-  p->size = frame->info.size;
-}
-
-static void
-paint_setup_xBGR8888 (paintinfo * p, GstVideoFrame * frame)
-{
-  p->ap = GST_VIDEO_FRAME_PLANE_DATA (frame, 0);
-  p->yp = p->ap + 3;
-  p->up = p->ap + 2;
-  p->vp = p->ap + 1;
-  p->astride = GST_VIDEO_FRAME_PLANE_STRIDE (frame, 0);
-  p->ystride = p->astride;
-  p->ustride = p->astride;
-  p->vstride = p->astride;
-  p->size = frame->info.size;
-}
-
-static void
-paint_setup_RGBx8888 (paintinfo * p, GstVideoFrame * frame)
-{
-  p->yp = GST_VIDEO_FRAME_PLANE_DATA (frame, 0);
-  p->up = p->yp + 1;
-  p->vp = p->yp + 2;
-  p->ap = p->yp + 3;
-  p->astride = GST_VIDEO_FRAME_PLANE_STRIDE (frame, 0);
-  p->ystride = p->astride;
-  p->ustride = p->astride;
-  p->vstride = p->astride;
-  p->size = frame->info.size;
-}
-
-static void
-paint_setup_BGRx8888 (paintinfo * p, GstVideoFrame * frame)
-{
-  p->vp = GST_VIDEO_FRAME_PLANE_DATA (frame, 0);
-  p->up = p->vp + 1;
-  p->yp = p->vp + 2;
-  p->ap = p->vp + 3;
-  p->astride = GST_VIDEO_FRAME_PLANE_STRIDE (frame, 0);
-  p->ystride = p->astride;
-  p->ustride = p->astride;
-  p->vstride = p->astride;
-  p->size = frame->info.size;
-}
-
-static void
-paint_setup_RGB888 (paintinfo * p, GstVideoFrame * frame)
-{
-  p->yp = GST_VIDEO_FRAME_PLANE_DATA (frame, 0);
-  p->up = p->yp + 1;
-  p->vp = p->yp + 2;
-  p->ystride = GST_VIDEO_FRAME_PLANE_STRIDE (frame, 0);
-  p->ustride = p->ystride;
-  p->vstride = p->ystride;
-  p->size = frame->info.size;
-}
-
-static void
-paint_setup_BGR888 (paintinfo * p, GstVideoFrame * frame)
-{
-  p->vp = GST_VIDEO_FRAME_PLANE_DATA (frame, 0);
-  p->up = p->vp + 1;
-  p->yp = p->vp + 2;
-  p->ystride = GST_VIDEO_FRAME_PLANE_STRIDE (frame, 0);
-  p->ustride = p->ystride;
-  p->vstride = p->ystride;
-  p->size = frame->info.size;
-}
-
-static void
-paint_setup_ARGB64 (paintinfo * p, GstVideoFrame * frame)
-{
-  p->ap = GST_VIDEO_FRAME_PLANE_DATA (frame, 0);
-  p->yp = p->ap + 2;
-  p->up = p->ap + 4;
-  p->vp = p->ap + 6;
-  p->astride = GST_VIDEO_FRAME_PLANE_STRIDE (frame, 0);
-  p->ystride = p->astride;
-  p->ustride = p->astride;
-  p->vstride = p->astride;
-  p->size = frame->info.size;
-}
-
-static void
 convert_hline_str4 (paintinfo * p, int y)
 {
   int i;
-  guint8 *A = p->ap + y * p->ystride;
-  guint8 *R = p->yp + y * p->ystride;
-  guint8 *G = p->up + y * p->ustride;
-  guint8 *B = p->vp + y * p->vstride;
+  guint8 *A = p->p[3] + y * p->stride[0];
+  guint8 *R = p->p[0] + y * p->stride[0];
+  guint8 *G = p->p[1] + y * p->stride[1];
+  guint8 *B = p->p[2] + y * p->stride[2];
   guint8 *argb = p->tmpline;
 
   for (i = 0; i < p->width; i++) {
@@ -2283,10 +1879,10 @@ static void
 convert_hline_astr4 (paintinfo * p, int y)
 {
   int i;
-  guint8 *A = p->ap + y * p->ystride;
-  guint8 *R = p->yp + y * p->ystride;
-  guint8 *G = p->up + y * p->ustride;
-  guint8 *B = p->vp + y * p->vstride;
+  guint8 *A = p->p[3] + y * p->stride[0];
+  guint8 *R = p->p[0] + y * p->stride[0];
+  guint8 *G = p->p[1] + y * p->stride[1];
+  guint8 *B = p->p[2] + y * p->stride[2];
   guint8 *argb = p->tmpline;
 
   for (i = 0; i < p->width; i++) {
@@ -2301,10 +1897,10 @@ static void
 convert_hline_astr8 (paintinfo * p, int y)
 {
   int i;
-  guint16 *A = (guint16 *) (p->ap + y * p->ystride);
-  guint16 *R = (guint16 *) (p->yp + y * p->ystride);
-  guint16 *G = (guint16 *) (p->up + y * p->ustride);
-  guint16 *B = (guint16 *) (p->vp + y * p->vstride);
+  guint16 *A = (guint16 *) (p->p[3] + y * p->stride[0]);
+  guint16 *R = (guint16 *) (p->p[0] + y * p->stride[0]);
+  guint16 *G = (guint16 *) (p->p[1] + y * p->stride[1]);
+  guint16 *B = (guint16 *) (p->p[2] + y * p->stride[2]);
   guint8 *argb = p->tmpline;
 
   for (i = 0; i < p->width; i++) {
@@ -2319,9 +1915,9 @@ static void
 convert_hline_str3 (paintinfo * p, int y)
 {
   int i;
-  guint8 *R = p->yp + y * p->ystride;
-  guint8 *G = p->up + y * p->ustride;
-  guint8 *B = p->vp + y * p->vstride;
+  guint8 *R = p->p[0] + y * p->stride[0];
+  guint8 *G = p->p[1] + y * p->stride[1];
+  guint8 *B = p->p[2] + y * p->stride[2];
   guint8 *argb = p->tmpline;
 
   for (i = 0; i < p->width; i++) {
@@ -2332,20 +1928,10 @@ convert_hline_str3 (paintinfo * p, int y)
 }
 
 static void
-paint_setup_RGB565 (paintinfo * p, GstVideoFrame * frame)
-{
-  p->yp = GST_VIDEO_FRAME_PLANE_DATA (frame, 0);
-  p->ystride = GST_VIDEO_FRAME_PLANE_STRIDE (frame, 0);
-  p->ustride = p->ystride;
-  p->vstride = p->ystride;
-  p->size = frame->info.size;
-}
-
-static void
 convert_hline_RGB565 (paintinfo * p, int y)
 {
   int i;
-  guint8 *R = p->yp + y * p->ystride;
+  guint8 *R = p->p[0] + y * p->stride[0];
   guint8 *argb = p->tmpline;
 
   for (i = 0; i < p->width; i++) {
@@ -2363,7 +1949,7 @@ static void
 convert_hline_xRGB1555 (paintinfo * p, int y)
 {
   int i;
-  guint8 *R = p->yp + y * p->ystride;
+  guint8 *R = p->p[0] + y * p->stride[0];
   guint8 *argb = p->tmpline;
 
   for (i = 0; i < p->width; i++) {
@@ -2378,24 +1964,59 @@ convert_hline_xRGB1555 (paintinfo * p, int y)
 }
 
 static void
-paint_setup_xRGB1555 (paintinfo * p, GstVideoFrame * frame)
+convert_hline_I420_10LE (paintinfo * p, int y)
 {
-  p->yp = GST_VIDEO_FRAME_PLANE_DATA (frame, 0);
-  p->ystride = GST_VIDEO_FRAME_PLANE_STRIDE (frame, 0);
-  p->ustride = p->ystride;
-  p->vstride = p->ystride;
-  p->size = frame->info.size;
+  int i;
+  guint16 *Y = (guint16 *) (p->p[0] + y * p->stride[0]);
+  guint16 *U = (guint16 *) (p->p[1] + (y / 2) * p->stride[1]);
+  guint16 *V = (guint16 *) (p->p[2] + (y / 2) * p->stride[2]);
+  guint8 *ayuv = p->tmpline;
+
+  for (i = 0; i < p->width; i++) {
+    GST_WRITE_UINT16_LE (Y + i, TO_10 (ayuv[4 * i + 1]));
+  }
+  for (i = 0; i < (p->width + 1) / 2; i++) {
+    guint16 uval, vval;
+
+    uval = (ayuv[4 * (i * 2) + 2] + ayuv[4 * (i * 2 + 1) + 2] + 1) >> 1;
+    vval = (ayuv[4 * (i * 2) + 3] + ayuv[4 * (i * 2 + 1) + 3] + 1) >> 1;
+
+    GST_WRITE_UINT16_LE (U + i, TO_10 (uval));
+    GST_WRITE_UINT16_LE (V + i, TO_10 (vval));
+  }
 }
 
+static void
+convert_hline_I420_10BE (paintinfo * p, int y)
+{
+  int i;
+  guint16 *Y = (guint16 *) (p->p[0] + y * p->stride[0]);
+  guint16 *U = (guint16 *) (p->p[1] + (y / 2) * p->stride[1]);
+  guint16 *V = (guint16 *) (p->p[2] + (y / 2) * p->stride[2]);
+  guint8 *ayuv = p->tmpline;
+
+  for (i = 0; i < p->width; i++) {
+    GST_WRITE_UINT16_BE (Y + i, TO_10 (ayuv[4 * i + 1]));
+  }
+  for (i = 0; i < (p->width + 1) / 2; i++) {
+    guint16 uval, vval;
+
+    uval = (ayuv[4 * (i * 2) + 2] + ayuv[4 * (i * 2 + 1) + 2] + 1) >> 1;
+    vval = (ayuv[4 * (i * 2) + 3] + ayuv[4 * (i * 2 + 1) + 3] + 1) >> 1;
+
+    GST_WRITE_UINT16_BE (U + i, TO_10 (uval));
+    GST_WRITE_UINT16_BE (V + i, TO_10 (vval));
+  }
+}
 
 static void
 paint_setup_bayer_bggr (paintinfo * p, GstVideoFrame * frame)
 {
-  p->yp = GST_VIDEO_FRAME_PLANE_DATA (frame, 0);
-  p->ystride = GST_ROUND_UP_4 (p->width);
-  p->ustride = GST_ROUND_UP_4 (p->width);
-  p->vstride = GST_ROUND_UP_4 (p->width);
-  p->size = p->ystride * p->height;
+  p->p[0] = GST_VIDEO_FRAME_PLANE_DATA (frame, 0);
+  p->stride[0] = GST_ROUND_UP_4 (p->width);
+  p->stride[1] = GST_ROUND_UP_4 (p->width);
+  p->stride[2] = GST_ROUND_UP_4 (p->width);
+  p->size = p->stride[0] * p->height;
   p->bayer_x_invert = 0;
   p->bayer_y_invert = 0;
 }
@@ -2403,11 +2024,11 @@ paint_setup_bayer_bggr (paintinfo * p, GstVideoFrame * frame)
 static void
 paint_setup_bayer_rggb (paintinfo * p, GstVideoFrame * frame)
 {
-  p->yp = GST_VIDEO_FRAME_PLANE_DATA (frame, 0);
-  p->ystride = GST_ROUND_UP_4 (p->width);
-  p->ustride = GST_ROUND_UP_4 (p->width);
-  p->vstride = GST_ROUND_UP_4 (p->width);
-  p->size = p->ystride * p->height;
+  p->p[0] = GST_VIDEO_FRAME_PLANE_DATA (frame, 0);
+  p->stride[0] = GST_ROUND_UP_4 (p->width);
+  p->stride[1] = GST_ROUND_UP_4 (p->width);
+  p->stride[2] = GST_ROUND_UP_4 (p->width);
+  p->size = p->stride[0] * p->height;
   p->bayer_x_invert = 1;
   p->bayer_y_invert = 1;
 }
@@ -2415,11 +2036,11 @@ paint_setup_bayer_rggb (paintinfo * p, GstVideoFrame * frame)
 static void
 paint_setup_bayer_grbg (paintinfo * p, GstVideoFrame * frame)
 {
-  p->yp = GST_VIDEO_FRAME_PLANE_DATA (frame, 0);
-  p->ystride = GST_ROUND_UP_4 (p->width);
-  p->ustride = GST_ROUND_UP_4 (p->width);
-  p->vstride = GST_ROUND_UP_4 (p->width);
-  p->size = p->ystride * p->height;
+  p->p[0] = GST_VIDEO_FRAME_PLANE_DATA (frame, 0);
+  p->stride[0] = GST_ROUND_UP_4 (p->width);
+  p->stride[1] = GST_ROUND_UP_4 (p->width);
+  p->stride[2] = GST_ROUND_UP_4 (p->width);
+  p->size = p->stride[0] * p->height;
   p->bayer_x_invert = 0;
   p->bayer_y_invert = 1;
 }
@@ -2427,11 +2048,11 @@ paint_setup_bayer_grbg (paintinfo * p, GstVideoFrame * frame)
 static void
 paint_setup_bayer_gbrg (paintinfo * p, GstVideoFrame * frame)
 {
-  p->yp = GST_VIDEO_FRAME_PLANE_DATA (frame, 0);
-  p->ystride = GST_ROUND_UP_4 (p->width);
-  p->ustride = GST_ROUND_UP_4 (p->width);
-  p->vstride = GST_ROUND_UP_4 (p->width);
-  p->size = p->ystride * p->height;
+  p->p[0] = GST_VIDEO_FRAME_PLANE_DATA (frame, 0);
+  p->stride[0] = GST_ROUND_UP_4 (p->width);
+  p->stride[1] = GST_ROUND_UP_4 (p->width);
+  p->stride[2] = GST_ROUND_UP_4 (p->width);
+  p->size = p->stride[0] * p->height;
   p->bayer_x_invert = 1;
   p->bayer_y_invert = 0;
 }
@@ -2440,7 +2061,7 @@ static void
 convert_hline_bayer (paintinfo * p, int y)
 {
   int i;
-  guint8 *R = p->yp + y * p->ystride;
+  guint8 *R = p->p[0] + y * p->stride[0];
   guint8 *argb = p->tmpline;
   int x_inv = p->bayer_x_invert;
   int y_inv = p->bayer_y_invert;
@@ -2465,18 +2086,10 @@ convert_hline_bayer (paintinfo * p, int y)
 }
 
 static void
-paint_setup_GRAY8 (paintinfo * p, GstVideoFrame * frame)
-{
-  p->yp = GST_VIDEO_FRAME_PLANE_DATA (frame, 0);
-  p->ystride = GST_VIDEO_FRAME_PLANE_STRIDE (frame, 0);
-  p->size = frame->info.size;
-}
-
-static void
 convert_hline_GRAY8 (paintinfo * p, int y)
 {
   int i;
-  guint8 *Y = p->yp + y * p->ystride;
+  guint8 *Y = p->p[0] + y * p->stride[0];
   guint8 *ayuv = p->tmpline;
 
   /* FIXME this should use gray, not YUV */
@@ -2486,18 +2099,10 @@ convert_hline_GRAY8 (paintinfo * p, int y)
 }
 
 static void
-paint_setup_GRAY16 (paintinfo * p, GstVideoFrame * frame)
-{
-  p->yp = GST_VIDEO_FRAME_PLANE_DATA (frame, 0);
-  p->ystride = GST_VIDEO_FRAME_PLANE_STRIDE (frame, 0);
-  p->size = frame->info.size;
-}
-
-static void
 convert_hline_GRAY16 (paintinfo * p, int y)
 {
   int i;
-  guint8 *Y = p->yp + y * p->ystride;
+  guint8 *Y = p->p[0] + y * p->stride[0];
   guint8 *ayuv = p->tmpline;
 
   /* FIXME this should use gray, not YUV */

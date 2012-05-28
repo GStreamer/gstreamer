@@ -46,9 +46,9 @@ struct vts_color_struct {
 typedef struct paintinfo_struct paintinfo;
 struct paintinfo_struct
 {
-  unsigned char *ap, *yp, *up, *vp; /* pointers to first byte of each component
-                                     * for both packed/planar YUV and RGB */
-  int astride, ystride, ustride, vstride;
+  unsigned char *p[4];    /* pointers to first byte of each component
+                           * for both packed/planar YUV and RGB */
+  int stride[4];
 
   int size;                     /* size of a frame */
   int width;
@@ -71,6 +71,7 @@ struct paintinfo_struct
   struct vts_color_struct foreground_color;
   struct vts_color_struct background_color;
 };
+#define PAINT_INFO_INIT { { NULL, }, }
 
 struct format_list_struct
 {
