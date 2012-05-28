@@ -155,6 +155,7 @@ gst_schro_dec_init (GstSchroDec * schro_dec, GstSchroDecClass * klass)
       gst_schro_dec_sink_query);
 
   schro_dec->decoder = schro_decoder_new ();
+  gst_video_decoder_set_packetized (schro_dec, FALSE);
 }
 
 #define OGG_DIRAC_GRANULE_SHIFT 22
