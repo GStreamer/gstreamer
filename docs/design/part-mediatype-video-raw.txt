@@ -620,17 +620,17 @@ Formats
  "v216" packed 4:2:2 16-bit YUV, Y0-U0-Y1-V1 order
 
         Component 0: Y
-          depth:           16
+          depth:           16 LE
           pstride:         4
           offset:          0
 
         Component 1: U
-          depth            16
+          depth            16 LE
           pstride:         8
           offset:          2
 
         Component 2: V
-          depth:           16
+          depth:           16 LE
           pstride:         8
           offset:          6
 
@@ -716,7 +716,7 @@ Formats
  "Y16" same as "GRAY16_LE"
 
         Component 0: Y
-          depth:           16
+          depth:           16 LE
           offset:          0
           pstride:         2
           default rstride: RU4 (width * 2)
@@ -995,22 +995,22 @@ Formats
        +--+--+--+--+ +--+--+--+--+
 
         Component 0: R
-          depth:           16
+          depth:           16 LE
           pstride:         8
           offset:          2
 
         Component 1: G
-          depth            16
+          depth            16 LE
           pstride:         8
           offset:          4
 
         Component 2: B
-          depth:           16
+          depth:           16 LE
           pstride:         8
           offset:          6
 
         Component 3: A
-          depth:           16
+          depth:           16 LE
           pstride:         8
           offset:          0
 
@@ -1025,22 +1025,22 @@ Formats
        +--+--+--+--+ +--+--+--+--+
 
         Component 0: Y
-          depth:           16
+          depth:           16 LE
           pstride:         8
           offset:          2
 
         Component 1: U
-          depth            16
+          depth            16 LE
           pstride:         8
           offset:          4
 
         Component 2: V
-          depth:           16
+          depth:           16 LE
           pstride:         8
           offset:          6
 
         Component 3: A
-          depth:           16
+          depth:           16 LE
           pstride:         8
           offset:          0
 
@@ -1070,3 +1070,58 @@ Formats
           default rstride: width * 4
           default size:    rstride (image) * height
 
+ "I420_10LE" planar 4:2:0 YUV, 10 bits per channel LE
+
+        Component 0: Y
+          depth:           10 LE
+          pstride:         2
+          default offset:  0
+          default rstride: RU4 (width * 2)
+          default size:    rstride (component0) * RU2 (height)
+
+        Component 1: U
+          depth:           10 LE
+          pstride:         2
+          default offset:  size (component0)
+          default rstride: RU4 (width)
+          default size:    rstride (component1) * RU2 (height) / 2
+
+        Component 2: V
+          depth            10 LE
+          pstride:         2
+          default offset:  offset (component1) + size (component1)
+          default rstride: RU4 (width)
+          default size:    rstride (component2) * RU2 (height) / 2
+
+        Image
+          default size: size (component0) + 
+                        size (component1) +
+                        size (component2)
+
+ "I420_10BE" planar 4:2:0 YUV, 10 bits per channel BE
+
+        Component 0: Y
+          depth:           10 BE
+          pstride:         2
+          default offset:  0
+          default rstride: RU4 (width * 2)
+          default size:    rstride (component0) * RU2 (height)
+
+        Component 1: U
+          depth:           10 BE
+          pstride:         2
+          default offset:  size (component0)
+          default rstride: RU4 (width)
+          default size:    rstride (component1) * RU2 (height) / 2
+
+        Component 2: V
+          depth            10 BE
+          pstride:         2
+          default offset:  offset (component1) + size (component1)
+          default rstride: RU4 (width)
+          default size:    rstride (component2) * RU2 (height) / 2
+
+        Image
+          default size: size (component0) + 
+                        size (component1) +
+                        size (component2)
