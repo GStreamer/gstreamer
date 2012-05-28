@@ -577,8 +577,8 @@ putline_v216 (VideoConvert * convert, GstVideoFrame * dest, const guint8 * src,
   for (i = 0; i < convert->width / 2; i++) {
     GST_WRITE_UINT16_LE (destline + i * 8 + 0, src[(i * 2 + 0) * 4 + 2] << 8);
     GST_WRITE_UINT16_LE (destline + i * 8 + 2, src[(i * 2 + 0) * 4 + 1] << 8);
-    GST_WRITE_UINT16_LE (destline + i * 8 + 4, src[(i * 2 + 1) * 4 + 3] << 8);
-    GST_WRITE_UINT16_LE (destline + i * 8 + 8, src[(i * 2 + 0) * 4 + 1] << 8);
+    GST_WRITE_UINT16_LE (destline + i * 8 + 4, src[(i * 2 + 0) * 4 + 3] << 8);
+    GST_WRITE_UINT16_LE (destline + i * 8 + 6, src[(i * 2 + 1) * 4 + 1] << 8);
   }
 }
 
@@ -605,8 +605,8 @@ putline16_v216 (VideoConvert * convert, GstVideoFrame * dest,
   for (i = 0; i < convert->width / 2; i++) {
     GST_WRITE_UINT16_LE (destline + i * 8 + 0, src[(i * 2 + 0) * 4 + 2]);
     GST_WRITE_UINT16_LE (destline + i * 8 + 2, src[(i * 2 + 0) * 4 + 1]);
-    GST_WRITE_UINT16_LE (destline + i * 8 + 4, src[(i * 2 + 1) * 4 + 3]);
-    GST_WRITE_UINT16_LE (destline + i * 8 + 8, src[(i * 2 + 0) * 4 + 1]);
+    GST_WRITE_UINT16_LE (destline + i * 8 + 4, src[(i * 2 + 0) * 4 + 3]);
+    GST_WRITE_UINT16_LE (destline + i * 8 + 6, src[(i * 2 + 1) * 4 + 1]);
   }
 }
 
