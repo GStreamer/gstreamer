@@ -619,20 +619,24 @@ Formats
 
  "v216" packed 4:2:2 16-bit YUV, Y0-U0-Y1-V1 order
 
+       +--+--+--+--+ +--+--+--+--+
+       |U0|Y0|V0|Y1| |U1|Y2|V1|Y3| ...
+       +--+--+--+--+ +--+--+--+--+
+
         Component 0: Y
           depth:           16 LE
           pstride:         4
-          offset:          0
+          offset:          2
 
         Component 1: U
           depth            16 LE
           pstride:         8
-          offset:          2
+          offset:          0
 
         Component 2: V
           depth:           16 LE
           pstride:         8
-          offset:          6
+          offset:          4
 
         Image
           default rstride: RU8 (width * 2)
