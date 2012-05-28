@@ -1020,7 +1020,7 @@ putline_UYVP (VideoConvert * convert, GstVideoFrame * dest, const guint8 * src,
     destline[(i / 2) * 5 + 0] = u0;
     destline[(i / 2) * 5 + 1] = y0 >> 2;
     destline[(i / 2) * 5 + 2] = (y0 << 6) | (v0 >> 4);
-    destline[(i / 2) * 5 + 3] = (v0 << 4) | (y1 >> 2);
+    destline[(i / 2) * 5 + 3] = (v0 << 4) | (y1 >> 6);
     destline[(i / 2) * 5 + 4] = (y1 << 2);
   }
 }
