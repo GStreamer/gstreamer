@@ -86,7 +86,7 @@ typedef struct
 #define OFFS2103          { 2, 1, 0, 3 }
 #define OFFS3210          { 3, 2, 1, 0 }
 #define OFFS031           { 0, 3, 1, 0 }
-#define OFFS026           { 0, 2, 6, 0 }
+#define OFFS204           { 2, 0, 4, 0 }
 #define OFFS001           { 0, 0, 1, 0 }
 #define OFFS010           { 0, 1, 0, 0 }
 #define OFFS104           { 1, 0, 4, 0 }
@@ -108,6 +108,8 @@ typedef struct
  { fourcc, {GST_VIDEO_FORMAT_ ##name, G_STRINGIFY(name), desc, GST_VIDEO_FORMAT_FLAG_YUV | GST_VIDEO_FORMAT_FLAG_LE, depth, pstride, plane, offs, sub } }
 #define MAKE_YUVA_FORMAT(name, desc, fourcc, depth, pstride, plane, offs, sub) \
  { fourcc, {GST_VIDEO_FORMAT_ ##name, G_STRINGIFY(name), desc, GST_VIDEO_FORMAT_FLAG_YUV | GST_VIDEO_FORMAT_FLAG_ALPHA, depth, pstride, plane, offs, sub } }
+#define MAKE_YUV_C_FORMAT(name, desc, fourcc, depth, pstride, plane, offs, sub) \
+ { fourcc, {GST_VIDEO_FORMAT_ ##name, G_STRINGIFY(name), desc, GST_VIDEO_FORMAT_FLAG_YUV | GST_VIDEO_FORMAT_FLAG_COMPLEX, depth, pstride, plane, offs, sub } }
 
 #define MAKE_RGB_FORMAT(name, desc, depth, pstride, plane, offs, sub) \
  { 0x00000000, {GST_VIDEO_FORMAT_ ##name, G_STRINGIFY(name), desc, GST_VIDEO_FORMAT_FLAG_RGB, depth, pstride, plane, offs, sub } }
@@ -173,12 +175,12 @@ static VideoFormat formats[] = {
   MAKE_YUV_FORMAT (Y444, "raw video", GST_MAKE_FOURCC ('Y', '4', '4', '4'),
       DPTH888, PSTR111,
       PLANE012, OFFS0, SUB444),
-  MAKE_YUV_FORMAT (v210, "raw video", GST_MAKE_FOURCC ('v', '2', '1', '0'),
+  MAKE_YUV_C_FORMAT (v210, "raw video", GST_MAKE_FOURCC ('v', '2', '1', '0'),
       DPTH10_10_10,
       PSTR0, PLANE0, OFFS0, SUB422),
   MAKE_YUV_FORMAT (v216, "raw video", GST_MAKE_FOURCC ('v', '2', '1', '6'),
       DPTH16_16_16,
-      PSTR488, PLANE0, OFFS026, SUB422),
+      PSTR488, PLANE0, OFFS204, SUB422),
   MAKE_YUV_FORMAT (NV12, "raw video", GST_MAKE_FOURCC ('N', 'V', '1', '2'),
       DPTH888, PSTR122,
       PLANE011, OFFS001, SUB420),
@@ -217,7 +219,7 @@ static VideoFormat formats[] = {
   MAKE_RGB_FORMAT (BGR15, "raw video", DPTH555, PSTR222, PLANE0, OFFS0, SUB444),
 #endif
 
-  MAKE_YUV_FORMAT (UYVP, "raw video", GST_MAKE_FOURCC ('U', 'Y', 'V', 'P'),
+  MAKE_YUV_C_FORMAT (UYVP, "raw video", GST_MAKE_FOURCC ('U', 'Y', 'V', 'P'),
       DPTH10_10_10,
       PSTR0, PLANE0, OFFS0, SUB422),
   MAKE_YUVA_FORMAT (A420, "raw video", GST_MAKE_FOURCC ('A', '4', '2', '0'),
