@@ -79,8 +79,6 @@ enum
 
 static void gst_schro_dec_finalize (GObject * object);
 
-static gboolean gst_schro_dec_sink_query (GstPad * pad, GstQuery * query);
-
 static gboolean gst_schro_dec_start (GstVideoDecoder * dec);
 static gboolean gst_schro_dec_stop (GstVideoDecoder * dec);
 static gboolean gst_schro_dec_reset (GstVideoDecoder * dec, gboolean hard);
@@ -100,42 +98,36 @@ GST_STATIC_PAD_TEMPLATE ("sink",
     );
 
 static GstStaticPadTemplate gst_schro_dec_src_template =
-    GST_STATIC_PAD_TEMPLATE ("src",
+GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS (GST_VIDEO_CAPS_YUV (GST_SCHRO_YUV_LIST) ";"
-        GST_VIDEO_CAPS_ARGB)
+    GST_STATIC_CAPS (GST_VIDEO_CAPS_MAKE (GST_SCHRO_YUV_LIST))
     );
 
-GST_BOILERPLATE (GstSchroDec, gst_schro_dec, GstVideoDecoder,
-    GST_TYPE_VIDEO_DECODER);
-
-static void
-gst_schro_dec_base_init (gpointer g_class)
-{
-
-  GstElementClass *element_class = GST_ELEMENT_CLASS (g_class);
-
-  gst_element_class_add_static_pad_template (element_class,
-      &gst_schro_dec_src_template);
-  gst_element_class_add_static_pad_template (element_class,
-      &gst_schro_dec_sink_template);
-
-  gst_element_class_set_details_simple (element_class, "Dirac Decoder",
-      "Codec/Decoder/Video",
-      "Decode Dirac streams", "David Schleef <ds@schleef.org>");
-}
+#define parent_class gst_schro_dec_parent_class
+G_DEFINE_TYPE (GstSchroDec, gst_schro_dec, GST_TYPE_VIDEO_DECODER);
 
 static void
 gst_schro_dec_class_init (GstSchroDecClass * klass)
 {
   GObjectClass *gobject_class;
+  GstElementClass *element_class;
   GstVideoDecoderClass *base_video_decoder_class;
 
   gobject_class = G_OBJECT_CLASS (klass);
+  element_class = GST_ELEMENT_CLASS (klass);
   base_video_decoder_class = GST_VIDEO_DECODER_CLASS (klass);
 
   gobject_class->finalize = gst_schro_dec_finalize;
+
+  gst_element_class_add_pad_template (element_class,
+      gst_static_pad_template_get (&gst_schro_dec_src_template));
+  gst_element_class_add_pad_template (element_class,
+      gst_static_pad_template_get (&gst_schro_dec_sink_template));
+
+  gst_element_class_set_details_simple (element_class, "Dirac Decoder",
+      "Codec/Decoder/Video",
+      "Decode Dirac streams", "David Schleef <ds@schleef.org>");
 
   base_video_decoder_class->start = GST_DEBUG_FUNCPTR (gst_schro_dec_start);
   base_video_decoder_class->stop = GST_DEBUG_FUNCPTR (gst_schro_dec_stop);
@@ -147,110 +139,12 @@ gst_schro_dec_class_init (GstSchroDecClass * klass)
 }
 
 static void
-gst_schro_dec_init (GstSchroDec * schro_dec, GstSchroDecClass * klass)
+gst_schro_dec_init (GstSchroDec * schro_dec)
 {
   GST_DEBUG ("gst_schro_dec_init");
 
-  gst_pad_set_query_function (GST_VIDEO_DECODER_SINK_PAD (schro_dec),
-      gst_schro_dec_sink_query);
-
   schro_dec->decoder = schro_decoder_new ();
-  gst_video_decoder_set_packetized (schro_dec, FALSE);
-}
-
-#define OGG_DIRAC_GRANULE_SHIFT 22
-#define OGG_DIRAC_GRANULE_LOW_MASK ((1ULL<<OGG_DIRAC_GRANULE_SHIFT)-1)
-
-static gint64
-granulepos_to_frame (gint64 granulepos)
-{
-  guint64 pt;
-
-  if (granulepos == -1)
-    return -1;
-
-  pt = ((granulepos >> 22) + (granulepos & OGG_DIRAC_GRANULE_LOW_MASK)) >> 9;
-  /* dist_h = (granulepos >> 22) & 0xff;
-   * dist_l = granulepos & 0xff;
-   * dist = (dist_h << 8) | dist_l;
-   * delay = (granulepos >> 9) & 0x1fff;
-   * dt = pt - delay; */
-
-  return pt >> 1;
-}
-
-static gboolean
-gst_schro_dec_sink_convert (GstPad * pad,
-    GstFormat src_format, gint64 src_value,
-    GstFormat * dest_format, gint64 * dest_value)
-{
-  gboolean res = FALSE;
-  GstSchroDec *dec;
-  GstVideoCodecState *state;
-
-  if (src_format == *dest_format) {
-    *dest_value = src_value;
-    return TRUE;
-  }
-
-  if (src_format != GST_FORMAT_DEFAULT || *dest_format != GST_FORMAT_TIME)
-    return FALSE;
-
-  dec = GST_SCHRO_DEC (gst_pad_get_parent (pad));
-
-  /* FIXME: check if we are in a decoding state */
-
-  state = gst_video_decoder_get_output_state (GST_VIDEO_DECODER (dec));
-
-  if (G_UNLIKELY (state == NULL))
-    goto beach;
-
-  if (state->info.fps_d == 0)
-    goto beach;
-
-  *dest_value = gst_util_uint64_scale (granulepos_to_frame (src_value),
-      state->info.fps_d * GST_SECOND, state->info.fps_n);
-  res = TRUE;
-
-beach:
-  gst_object_unref (dec);
-
-  return res;
-}
-
-static gboolean
-gst_schro_dec_sink_query (GstPad * pad, GstQuery * query)
-{
-  GstSchroDec *dec;
-  gboolean res = FALSE;
-
-  dec = GST_SCHRO_DEC (gst_pad_get_parent (pad));
-
-  switch (GST_QUERY_TYPE (query)) {
-    case GST_QUERY_CONVERT:
-    {
-      GstFormat src_fmt, dest_fmt;
-      gint64 src_val, dest_val;
-
-      gst_query_parse_convert (query, &src_fmt, &src_val, &dest_fmt, &dest_val);
-      res = gst_schro_dec_sink_convert (pad, src_fmt, src_val, &dest_fmt,
-          &dest_val);
-      if (!res)
-        goto error;
-      gst_query_set_convert (query, src_fmt, src_val, dest_fmt, dest_val);
-      break;
-    }
-    default:
-      res = gst_pad_query_default (pad, query);
-      break;
-  }
-done:
-  gst_object_unref (dec);
-
-  return res;
-error:
-  GST_DEBUG_OBJECT (dec, "query failed");
-  goto done;
+  gst_video_decoder_set_packetized (GST_VIDEO_DECODER (schro_dec), FALSE);
 }
 
 static gboolean
@@ -520,12 +414,12 @@ gst_schrodec_send_tags (GstSchroDec * schro_dec)
 {
   GstTagList *list;
 
-  list = gst_tag_list_new ();
+  list = gst_tag_list_new_empty ();
   gst_tag_list_add (list, GST_TAG_MERGE_REPLACE,
       GST_TAG_VIDEO_CODEC, "Dirac", NULL);
 
-  gst_element_found_tags_for_pad (GST_ELEMENT_CAST (schro_dec),
-      GST_VIDEO_DECODER_SRC_PAD (schro_dec), list);
+  gst_pad_push_event (GST_VIDEO_DECODER_SRC_PAD (schro_dec),
+      gst_event_new_tag (list));
 }
 
 static GstFlowReturn
@@ -581,11 +475,8 @@ gst_schro_dec_process (GstSchroDec * schro_dec, gboolean eos)
         frame = tag->value;
 
         if (schro_frame) {
-          if (schro_frame->priv) {
+          if ((frame->output_buffer = gst_schro_frame_get_buffer (schro_frame))) {
             GstFlowReturn flow_ret;
-
-            frame->output_buffer =
-                gst_buffer_ref (GST_BUFFER (schro_frame->priv));
 
             flow_ret =
                 gst_video_decoder_finish_frame (GST_VIDEO_DECODER

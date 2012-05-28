@@ -105,16 +105,11 @@ static GstFlowReturn gst_schro_enc_pre_push (GstVideoEncoder *
     base_video_encoder, GstVideoCodecFrame * frame);
 static void gst_schro_enc_finalize (GObject * object);
 
-#if SCHRO_CHECK_VERSION(1,0,12)
-#define ARGB_CAPS ";" GST_VIDEO_CAPS_ARGB
-#else
-#define ARGB_CAPS
-#endif
 static GstStaticPadTemplate gst_schro_enc_sink_template =
 GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS (GST_VIDEO_CAPS_YUV (GST_SCHRO_YUV_LIST) ARGB_CAPS)
+    GST_STATIC_CAPS (GST_VIDEO_CAPS_MAKE (GST_SCHRO_YUV_LIST))
     );
 
 static GstStaticPadTemplate gst_schro_enc_src_template =
@@ -124,24 +119,8 @@ static GstStaticPadTemplate gst_schro_enc_src_template =
     GST_STATIC_CAPS ("video/x-dirac;video/x-qt-part;video/x-mp4-part")
     );
 
-GST_BOILERPLATE (GstSchroEnc, gst_schro_enc, GstVideoEncoder,
-    GST_TYPE_VIDEO_ENCODER);
-
-static void
-gst_schro_enc_base_init (gpointer g_class)
-{
-
-  GstElementClass *element_class = GST_ELEMENT_CLASS (g_class);
-
-  gst_element_class_add_static_pad_template (element_class,
-      &gst_schro_enc_src_template);
-  gst_element_class_add_static_pad_template (element_class,
-      &gst_schro_enc_sink_template);
-
-  gst_element_class_set_details_simple (element_class, "Dirac Encoder",
-      "Codec/Encoder/Video",
-      "Encode raw video into Dirac stream", "David Schleef <ds@schleef.org>");
-}
+#define parent_class gst_schro_enc_parent_class
+G_DEFINE_TYPE (GstSchroEnc, gst_schro_enc, GST_TYPE_VIDEO_ENCODER);
 
 static GType
 register_enum_list (const SchroEncoderSetting * setting)
@@ -172,10 +151,12 @@ static void
 gst_schro_enc_class_init (GstSchroEncClass * klass)
 {
   GObjectClass *gobject_class;
+  GstElementClass *element_class;
   GstVideoEncoderClass *basevideocoder_class;
   int i;
 
   gobject_class = G_OBJECT_CLASS (klass);
+  element_class = GST_ELEMENT_CLASS (klass);
   basevideocoder_class = GST_VIDEO_ENCODER_CLASS (klass);
 
   gobject_class->set_property = gst_schro_enc_set_property;
@@ -216,6 +197,15 @@ gst_schro_enc_class_init (GstSchroEncClass * klass)
     }
   }
 
+  gst_element_class_add_pad_template (element_class,
+      gst_static_pad_template_get (&gst_schro_enc_src_template));
+  gst_element_class_add_pad_template (element_class,
+      gst_static_pad_template_get (&gst_schro_enc_sink_template));
+
+  gst_element_class_set_details_simple (element_class, "Dirac Encoder",
+      "Codec/Encoder/Video",
+      "Encode raw video into Dirac stream", "David Schleef <ds@schleef.org>");
+
   basevideocoder_class->set_format =
       GST_DEBUG_FUNCPTR (gst_schro_enc_set_format);
   basevideocoder_class->start = GST_DEBUG_FUNCPTR (gst_schro_enc_start);
@@ -227,7 +217,7 @@ gst_schro_enc_class_init (GstSchroEncClass * klass)
 }
 
 static void
-gst_schro_enc_init (GstSchroEnc * schro_enc, GstSchroEncClass * klass)
+gst_schro_enc_init (GstSchroEnc * schro_enc)
 {
   GST_DEBUG ("gst_schro_enc_init");
 
@@ -364,32 +354,43 @@ gst_schro_enc_set_format (GstVideoEncoder * base_video_encoder,
 
   output_state =
       gst_video_encoder_set_output_state (base_video_encoder,
-      gst_caps_new_simple ("video/x-dirac", NULL), state);
+      gst_caps_new_empty_simple ("video/x-dirac"), state);
 
-  GST_BUFFER_FLAG_SET (seq_header_buffer, GST_BUFFER_FLAG_IN_CAPS);
+  GST_BUFFER_FLAG_SET (seq_header_buffer, GST_BUFFER_FLAG_HEADER);
   {
     GValue array = { 0 };
     GValue value = { 0 };
+    guint8 *outdata;
     GstBuffer *buf;
-    int size;
+    GstMemory *seq_header_memory, *extra_header;
+    gsize size;
 
     g_value_init (&array, GST_TYPE_ARRAY);
     g_value_init (&value, GST_TYPE_BUFFER);
-    size = GST_BUFFER_SIZE (seq_header_buffer);
-    buf = gst_buffer_new_and_alloc (size + SCHRO_PARSE_HEADER_SIZE);
+
+    buf = gst_buffer_new ();
+    /* Add the sequence header */
+    seq_header_memory = gst_buffer_get_memory (seq_header_buffer, 0);
+    gst_buffer_append_memory (buf, seq_header_memory);
+
+    size = gst_buffer_get_size (buf) + SCHRO_PARSE_HEADER_SIZE;
+    outdata = g_malloc0 (SCHRO_PARSE_HEADER_SIZE);
+
+    GST_WRITE_UINT32_BE (outdata, 0x42424344);
+    GST_WRITE_UINT8 (outdata + 4, SCHRO_PARSE_CODE_END_OF_SEQUENCE);
+    GST_WRITE_UINT32_BE (outdata + 5, 0);
+    GST_WRITE_UINT32_BE (outdata + 9, size);
+
+    extra_header = gst_memory_new_wrapped (0, outdata, SCHRO_PARSE_HEADER_SIZE,
+        0, SCHRO_PARSE_HEADER_SIZE, outdata, g_free);
+    gst_buffer_append_memory (buf, extra_header);
 
     /* ogg(mux) expects the header buffers to have 0 timestamps -
        set OFFSET and OFFSET_END accordingly */
     GST_BUFFER_OFFSET (buf) = 0;
     GST_BUFFER_OFFSET_END (buf) = 0;
-    GST_BUFFER_FLAG_SET (buf, GST_BUFFER_FLAG_IN_CAPS);
+    GST_BUFFER_FLAG_SET (buf, GST_BUFFER_FLAG_HEADER);
 
-    memcpy (GST_BUFFER_DATA (buf), GST_BUFFER_DATA (seq_header_buffer), size);
-    GST_WRITE_UINT32_BE (GST_BUFFER_DATA (buf) + size + 0, 0x42424344);
-    GST_WRITE_UINT8 (GST_BUFFER_DATA (buf) + size + 4,
-        SCHRO_PARSE_CODE_END_OF_SEQUENCE);
-    GST_WRITE_UINT32_BE (GST_BUFFER_DATA (buf) + size + 5, 0);
-    GST_WRITE_UINT32_BE (GST_BUFFER_DATA (buf) + size + 9, size);
     gst_value_set_buffer (&value, buf);
     gst_buffer_unref (buf);
     gst_value_array_append_value (&array, &value);
@@ -610,10 +611,12 @@ gst_schro_enc_process (GstSchroEnc * schro_enc)
           GstMessage *message;
           GstStructure *structure;
           GstBuffer *buf;
+          gpointer data;
 
-          buf = gst_buffer_new_and_alloc (sizeof (double) * 21);
+          data = g_malloc (sizeof (double) * 21);
           schro_encoder_get_frame_stats (schro_enc->encoder,
-              (double *) GST_BUFFER_DATA (buf), 21);
+              (double *) data, 21);
+          buf = gst_buffer_new_wrapped (data, sizeof (double) * 21);
           structure = gst_structure_new ("GstSchroEnc",
               "frame-stats", GST_TYPE_BUFFER, buf, NULL);
           gst_buffer_unref (buf);
