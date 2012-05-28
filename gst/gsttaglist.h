@@ -132,6 +132,7 @@ typedef enum {
  *
  * Extra tag flags used when registering tags.
  */
+/* FIXME: these are not really flags .. */
 typedef enum {
   GST_TAG_FLAG_UNDEFINED,
   GST_TAG_FLAG_META,
@@ -189,6 +190,13 @@ void         gst_tag_register      (const gchar     * name,
                                     const gchar     * nick,
                                     const gchar     * blurb,
                                     GstTagMergeFunc   func);
+
+void         gst_tag_register_static (const gchar   * name,
+                                      GstTagFlag      flag,
+                                      GType           type,
+                                      const gchar   * nick,
+                                      const gchar   * blurb,
+                                      GstTagMergeFunc func);
 
 /* some default merging functions */
 void      gst_tag_merge_use_first          (GValue * dest, const GValue * src);

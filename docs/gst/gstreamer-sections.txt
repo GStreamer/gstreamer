@@ -2519,6 +2519,7 @@ GST_TAG_APPLICATION_DATA
 GST_TAG_IMAGE_ORIENTATION
 
 gst_tag_register
+gst_tag_register_static
 gst_tag_merge_use_first
 gst_tag_merge_strings_with_comma
 gst_tag_exists
