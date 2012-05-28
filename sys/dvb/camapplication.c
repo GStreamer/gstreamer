@@ -25,6 +25,52 @@
 
 #define GST_CAT_DEFAULT cam_debug_cat
 
+/* Resource Manager */
+#define TAG_PROFILE_ENQUIRY 0x9F8010
+#define TAG_PROFILE_REPLY 0x9F8011
+#define TAG_PROFILE_CHANGE 0x9F8012
+
+/* Application Info */
+#define TAG_APPLICATION_INFO_ENQUIRY 0x9F8020
+#define TAG_APPLICATION_INFO_REPLY 0x9F8021
+#define TAG_APPLICATION_INFO_ENTER_MENU 0x9F8022
+
+/* Conditional Access */
+#define TAG_CONDITIONAL_ACCESS_INFO_ENQUIRY 0x9F8030
+#define TAG_CONDITIONAL_ACCESS_INFO_REPLY 0x9F8031
+#define TAG_CONDITIONAL_ACCESS_PMT 0x9F8032
+#define TAG_CONDITIONAL_ACCESS_PMT_REPLY 0x9F8033
+
+typedef struct
+{
+  guint tagid;
+  const gchar *description;
+} CamTagMessage;
+
+static CamTagMessage debugmessage[] = {
+  {TAG_PROFILE_ENQUIRY, "PROFILE_ENQUIRY"},
+  {TAG_PROFILE_REPLY, "PROFILE_REPLY"},
+  {TAG_PROFILE_CHANGE, "PROFILE_CHANGE"},
+  {TAG_APPLICATION_INFO_ENQUIRY, "APPLICATION_INFO_ENQUIRY"},
+  {TAG_APPLICATION_INFO_REPLY, "APPLICATION_INFO_REPLY"},
+  {TAG_APPLICATION_INFO_ENTER_MENU, "APPLICATION_INFO_ENTER_MENU"},
+  {TAG_CONDITIONAL_ACCESS_INFO_ENQUIRY, "CONDITIONAL_ACCESS_INFO_ENQUIRY"},
+  {TAG_CONDITIONAL_ACCESS_INFO_REPLY, "CONDITIONAL_ACCESS_INFO_REPLY"},
+  {TAG_CONDITIONAL_ACCESS_PMT, "CONDITIONAL_ACCESS_PMT"},
+  {TAG_CONDITIONAL_ACCESS_PMT_REPLY, "CONDITIONAL_ACCESS_PMT_REPLY"}
+};
+
+static inline const gchar *
+tag_get_name (guint tagid)
+{
+  guint i;
+
+  for (i = 0; i < G_N_ELEMENTS (debugmessage); i++)
+    if (debugmessage[i].tagid == tagid)
+      return debugmessage[i].description;
+  return "UNKNOWN";
+}
+
 static CamReturn open_session_request_cb (CamSL * sl,
     CamSLSession * session, CamSLResourceStatus * status);
 static CamReturn session_opened_cb (CamSL * sl, CamSLSession * session);
@@ -164,6 +210,9 @@ cam_al_application_write (CamALApplication * application,
   guint apdu_header_length;
   guint8 *apdu;
 
+  GST_DEBUG ("tag:0x%x (%s), buffer_size:%d, body_length:%d", tag,
+      tag_get_name (tag), buffer_size, body_length);
+
   length_field_len = cam_calc_length_field_size (body_length);
   apdu_header_length = 3 + length_field_len;
   apdu = (buffer + buffer_size) - body_length - apdu_header_length;
@@ -286,6 +335,8 @@ session_data_cb (CamSL * sl, CamSLSession * session, guint8 * data, guint size)
 
     return CAM_RETURN_APPLICATION_ERROR;
   }
+
+  GST_DEBUG ("Got tag 0x%x (%s) , length:%d", tag, tag_get_name (tag), length);
 
   return application->data (application, session,
       tag, data + 3 + length_field_len, length);

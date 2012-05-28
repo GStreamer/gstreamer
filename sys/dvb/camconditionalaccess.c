@@ -30,6 +30,7 @@
 #define TAG_CONDITIONAL_ACCESS_INFO_ENQUIRY 0x9F8030
 #define TAG_CONDITIONAL_ACCESS_INFO_REPLY 0x9F8031
 #define TAG_CONDITIONAL_ACCESS_PMT 0x9F8032
+#define TAG_CONDITIONAL_ACCESS_PMT_REPLY 0x9F8033
 
 static CamReturn session_request_impl (CamALApplication * application,
     CamSLSession * session, CamSLResourceStatus * status);

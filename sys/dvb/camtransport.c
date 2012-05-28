@@ -34,6 +34,7 @@
 
 #define POLL_INTERVAL 0.300
 
+/* Layer tags */
 #define TAG_SB 0x80
 #define TAG_RCV 0x81
 #define TAG_CREATE_T_C 0x82
@@ -45,6 +46,54 @@
 #define TAG_T_C_ERROR 0x88
 #define TAG_DATA_MORE 0xA1
 #define TAG_DATA_LAST 0xA0
+
+/* Session tags */
+#define TAG_SESSION_NUMBER 0x90
+#define TAG_OPEN_SESSION_REQUEST 0x91
+#define TAG_OPEN_SESSION_RESPONSE 0x92
+#define TAG_CREATE_SESSION 0x93
+#define TAG_CREATE_SESSION_RESPONSE 0x94
+#define TAG_CLOSE_SESSION_REQUEST 0x95
+#define TAG_CLOSE_SESSION_RESPONSE 0x96
+
+
+typedef struct
+{
+  guint tagid;
+  const gchar *description;
+} CamTagMessage;
+
+static CamTagMessage debugmessage[] = {
+  {TAG_SB, "SB"},
+  {TAG_RCV, "RCV"},
+  {TAG_CREATE_T_C, "CREATE_T_C"},
+  {TAG_C_T_C_REPLY, "CREATE_T_C_REPLY"},
+  {TAG_DELETE_T_C, "DELETE_T_C"},
+  {TAG_D_T_C_REPLY, "DELETE_T_C_REPLY"},
+  {TAG_REQUEST_T_C, "REQUEST_T_C"},
+  {TAG_NEW_T_C, "NEW_T_C"},
+  {TAG_T_C_ERROR, "T_C_ERROR"},
+  {TAG_SESSION_NUMBER, "SESSION_NUMBER"},
+  {TAG_OPEN_SESSION_REQUEST, "OPEN_SESSION_REQUEST"},
+  {TAG_OPEN_SESSION_RESPONSE, "OPEN_SESSION_RESPONSE"},
+  {TAG_CREATE_SESSION, "CREATE_SESSION"},
+  {TAG_CREATE_SESSION_RESPONSE, "CREATE_SESSION_RESPONSE"},
+  {TAG_CLOSE_SESSION_REQUEST, "CLOSE_SESSION_REQUEST"},
+  {TAG_CLOSE_SESSION_RESPONSE, "CLOSE_SESSION_RESPONSE"},
+  {TAG_DATA_MORE, "DATA_MORE"},
+  {TAG_DATA_LAST, "DATA_LAST"}
+};
+
+static inline const gchar *
+tag_get_name (guint tagid)
+{
+  guint i;
+
+  for (i = 0; i < G_N_ELEMENTS (debugmessage); i++)
+    if (debugmessage[i].tagid == tagid)
+      return debugmessage[i].description;
+  return "UNKNOWN";
+}
 
 /* utility struct used to store the state of the connections in cam_tl_read_next
  */
@@ -184,7 +233,8 @@ cam_tl_connection_write_tpdu (CamTLConnection * connection,
   length_field_len = cam_write_length_field (&buffer[3], body_length);
   buffer[3 + length_field_len] = connection->id;
 
-  GST_DEBUG ("writing TPDU %x connection %d", buffer[2], connection->id);
+  GST_DEBUG ("writing TPDU %x (%s) connection %d (size:%d)",
+      buffer[2], tag_get_name (buffer[2]), connection->id, buffer_size);
 
   //cam_gst_util_dump_mem (buffer, buffer_size);
 
@@ -195,6 +245,9 @@ cam_tl_connection_write_tpdu (CamTLConnection * connection,
   }
 
   tl->expected_tpdus += 1;
+
+  GST_DEBUG ("Sucess writing tpdu 0x%x (%s)", buffer[2],
+      tag_get_name (buffer[2]));
 
   return CAM_RETURN_OK;
 }
@@ -281,7 +334,8 @@ cam_tl_read_tpdu_next (CamTL * tl, CamTLConnection ** out_connection)
     connection->has_data = FALSE;
   }
 
-  GST_DEBUG ("received TPDU %x more data %d", tpdu[2], connection->has_data);
+  GST_DEBUG ("received TPDU %x (%s) more data %d", tpdu[2],
+      tag_get_name (tpdu[2]), connection->has_data);
   tl->expected_tpdus -= 1;
 
   *out_connection = connection;
