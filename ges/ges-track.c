@@ -398,6 +398,49 @@ remove_object_internal (GESTrack * track, GESTrackObject * object)
   return TRUE;
 }
 
+static GSequenceIter *
+lookup_trackobj_it (GSequence * seq, GESTrackObject * object)
+{
+  GSequenceIter *iter, *tmpiter;
+  GESTrackObject *found, *tmptckobj;
+
+  iter = g_sequence_lookup (seq, object,
+      (GCompareDataFunc) objects_start_compare, NULL);
+
+  found = g_sequence_get (iter);
+
+  /* We have the same TrackObject so we are all fine */
+  if (found == object)
+    return iter;
+
+  if (!g_sequence_iter_is_end (iter)) {
+    /* Looking frontward for the good TrackObject */
+    tmpiter = iter;
+    while ((tmpiter = g_sequence_iter_next (tmpiter))) {
+      if (g_sequence_iter_is_end (tmpiter))
+        break;
+
+      tmptckobj = g_sequence_get (tmpiter);
+      if (tmptckobj == object)
+        return tmpiter;
+    }
+  }
+
+  if (!g_sequence_iter_is_begin (iter)) {
+    /* Looking backward for the good TrackObject */
+    tmpiter = iter;
+    while ((tmpiter = g_sequence_iter_prev (tmpiter))) {
+      tmptckobj = g_sequence_get (tmpiter);
+      if (tmptckobj == object)
+        return tmpiter;
+    }
+  }
+
+  GST_ERROR_OBJECT (object, "TrackObject not found this should never happen");
+
+  return NULL;
+}
+
 static void
 dispose_tckobjs_foreach (GESTrackObject * tckobj, GESTrack * track)
 {
@@ -817,8 +860,7 @@ ges_track_remove_object (GESTrack * track, GESTrackObject * object)
   priv = track->priv;
 
   if (remove_object_internal (track, object) == TRUE) {
-    it = g_sequence_lookup (priv->tckobjs_by_start, object,
-        (GCompareDataFunc) objects_start_compare, NULL);
+    it = lookup_trackobj_it (priv->tckobjs_by_start, object);
     g_sequence_remove (it);
 
     resort_and_fill_gaps (track);
