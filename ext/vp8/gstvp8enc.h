@@ -23,7 +23,7 @@
 #define __GST_VP8_ENC_H__
 
 #include <gst/gst.h>
-#include <gst/video/gstbasevideoencoder.h>
+#include <gst/video/gstvideoencoder.h>
 
 /* FIXME: Undef HAVE_CONFIG_H because vpx_codec.h uses it,
  * which causes compilation failures */
@@ -52,7 +52,7 @@ typedef struct _GstVP8EncClass GstVP8EncClass;
 
 struct _GstVP8Enc
 {
-  GstBaseVideoEncoder base_video_encoder;
+  GstVideoEncoder base_video_encoder;
 
   /* < private > */
   vpx_codec_ctx_t encoder;
@@ -93,11 +93,13 @@ struct _GstVP8Enc
 
   int n_frames;
   int keyframe_distance;
+
+  GstVideoCodecState *input_state;
 };
 
 struct _GstVP8EncClass
 {
-  GstBaseVideoEncoderClass base_video_encoder_class;
+  GstVideoEncoderClass base_video_encoder_class;
 };
 
 GType gst_vp8_enc_get_type (void);
