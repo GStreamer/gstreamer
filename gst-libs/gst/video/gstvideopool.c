@@ -128,10 +128,11 @@ gst_video_info_align (GstVideoInfo * info, GstVideoAlignment * align)
     vedge = GST_VIDEO_FORMAT_INFO_SCALE_HEIGHT (vinfo, i, align->padding_top);
     plane = GST_VIDEO_FORMAT_INFO_PLANE (vinfo, i);
 
-    GST_DEBUG ("plane %d: hedge %d vedge %d align %d", plane, hedge, vedge,
-        align->stride_align[i]);
+    GST_DEBUG ("plane %d: hedge %d vedge %d align %d stride %d", plane, hedge,
+        vedge, align->stride_align[i], info->stride[plane]);
 
-    info->offset[plane] += (vedge * info->stride[plane]) + hedge;
+    info->offset[plane] += (vedge * info->stride[plane]) +
+        (hedge * GST_VIDEO_FORMAT_INFO_PSTRIDE (vinfo, i));
   }
 }
 
