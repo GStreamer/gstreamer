@@ -48,6 +48,18 @@ typedef struct _GstInputSelectorClass GstInputSelectorClass;
 			GST_INPUT_SELECTOR_GET_LOCK(sel)))
 #define GST_INPUT_SELECTOR_BROADCAST(sel) (g_cond_broadcast (GST_INPUT_SELECTOR_GET_COND(sel)))
 
+/**
+ * GstInputSelectorSyncMode:
+ * @GST_INPUT_SELECTOR_SYNC_MODE_ACTIVE_SEGMENT: Sync using the current active segment.
+ * @GST_INPUT_SELECTOR_SYNC_MODE_CLOCK: Sync using the clock.
+ *
+ * The different ways that input-selector can behave when in sync-streams mode.
+ */
+typedef enum {
+  GST_INPUT_SELECTOR_SYNC_MODE_ACTIVE_SEGMENT,
+  GST_INPUT_SELECTOR_SYNC_MODE_CLOCK
+} GstInputSelectorSyncMode;
+
 struct _GstInputSelector {
   GstElement element;
 
@@ -57,6 +69,8 @@ struct _GstInputSelector {
   guint n_pads;
   guint padcount;
   gboolean sync_streams;
+  GstInputSelectorSyncMode sync_mode;
+  gboolean cache_buffers;
 
   GstSegment segment;      /* the output segment */
   gboolean pending_close;  /* if we should push a close first */
