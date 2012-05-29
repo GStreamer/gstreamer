@@ -1071,12 +1071,10 @@ _get_black_for_format (GstVideoFormat format)
       return black[5];
     case GST_VIDEO_FORMAT_UYVY:
       return black[6];
-    case GST_VIDEO_FORMAT_Y800:
     case GST_VIDEO_FORMAT_GRAY8:
       return black[7];
     case GST_VIDEO_FORMAT_GRAY16_LE:
     case GST_VIDEO_FORMAT_GRAY16_BE:
-    case GST_VIDEO_FORMAT_Y16:
       return NULL;              /* Handled by the caller */
     case GST_VIDEO_FORMAT_I420:
     case GST_VIDEO_FORMAT_YV12:
@@ -1241,7 +1239,6 @@ gst_video_scale_transform_frame (GstVideoFilter * filter,
           goto unknown_mode;
       }
       break;
-    case GST_VIDEO_FORMAT_Y800:
     case GST_VIDEO_FORMAT_GRAY8:
       if (add_borders)
         vs_fill_borders_Y (&dest[0], black);
@@ -1261,7 +1258,6 @@ gst_video_scale_transform_frame (GstVideoFilter * filter,
       break;
     case GST_VIDEO_FORMAT_GRAY16_LE:
     case GST_VIDEO_FORMAT_GRAY16_BE:
-    case GST_VIDEO_FORMAT_Y16:
       if (add_borders)
         vs_fill_borders_Y16 (&dest[0], 0);
       switch (method) {

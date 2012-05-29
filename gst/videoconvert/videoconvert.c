@@ -702,29 +702,29 @@ putline_Y444 (VideoConvert * convert, GstVideoFrame * dest, const guint8 * src,
 }
 
 static void
-getline_Y800 (VideoConvert * convert, guint8 * dest, const GstVideoFrame * src,
+getline_GRAY8 (VideoConvert * convert, guint8 * dest, const GstVideoFrame * src,
     int j)
 {
   cogorc_getline_Y800 (dest, FRAME_GET_LINE (src, j), convert->width);
 }
 
 static void
-putline_Y800 (VideoConvert * convert, GstVideoFrame * dest, const guint8 * src,
+putline_GRAY8 (VideoConvert * convert, GstVideoFrame * dest, const guint8 * src,
     int j)
 {
   cogorc_putline_Y800 (FRAME_GET_LINE (dest, j), src, convert->width);
 }
 
 static void
-getline_Y16 (VideoConvert * convert, guint8 * dest, const GstVideoFrame * src,
-    int j)
+getline_GRAY16_LE (VideoConvert * convert, guint8 * dest,
+    const GstVideoFrame * src, int j)
 {
   cogorc_getline_Y16 (dest, FRAME_GET_LINE (src, j), convert->width);
 }
 
 static void
-putline_Y16 (VideoConvert * convert, GstVideoFrame * dest, const guint8 * src,
-    int j)
+putline_GRAY16_LE (VideoConvert * convert, GstVideoFrame * dest,
+    const guint8 * src, int j)
 {
   cogorc_putline_Y16 (FRAME_GET_LINE (dest, j), src, convert->width);
 }
@@ -1581,12 +1581,10 @@ static const VideoLine lines[] = {
       getline16_v216, putline16_v216},
   {GST_VIDEO_FORMAT_NV12, getline_NV12, putline_NV12},
   {GST_VIDEO_FORMAT_NV21, getline_NV21, putline_NV21},
-  //{GST_VIDEO_FORMAT_GRAY8, getline_GRAY8, putline_GRAY8},
-  //{GST_VIDEO_FORMAT_GRAY16_BE, getline_GRAY16_BE, putline_GRAY16_BE},
-  //{GST_VIDEO_FORMAT_GRAY16_LE, getline_GRAY16_LE, putline_GRAY16_LE},
   {GST_VIDEO_FORMAT_v308, getline_v308, putline_v308},
-  {GST_VIDEO_FORMAT_Y800, getline_Y800, putline_Y800},
-  {GST_VIDEO_FORMAT_Y16, getline_Y16, putline_Y16},
+  {GST_VIDEO_FORMAT_GRAY8, getline_GRAY8, putline_GRAY8},
+  {GST_VIDEO_FORMAT_GRAY16_LE, getline_GRAY16_LE, putline_GRAY16_LE},
+  //{GST_VIDEO_FORMAT_GRAY16_BE, getline_GRAY16_BE, putline_GRAY16_BE},
   {GST_VIDEO_FORMAT_RGB16, getline_RGB16, putline_RGB16},
   {GST_VIDEO_FORMAT_BGR16, getline_BGR16, putline_BGR16},
   {GST_VIDEO_FORMAT_RGB15, getline_RGB15, putline_RGB15},
