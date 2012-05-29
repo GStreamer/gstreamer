@@ -50,6 +50,9 @@
 #include "gstdshowaudiodec.h"
 #include "gstdshowvideodec.h"
 
+GST_DEBUG_CATEGORY (dshowdec_debug);
+#define GST_CAT_DEFAULT dshowdec_debug
+
 static gboolean
 plugin_init (GstPlugin * plugin)
 {
@@ -58,6 +61,9 @@ plugin_init (GstPlugin * plugin)
 
   if (!dshow_vdec_register (plugin))
     return FALSE;
+
+  GST_DEBUG_CATEGORY_INIT (dshowdec_debug, "dshowdec", 0, \
+      "DirectShow decoder");
 
   return TRUE;
 }

@@ -21,6 +21,9 @@
 
 #include "gstdshowfakesrc.h"
 
+GST_DEBUG_CATEGORY_EXTERN (dshowdec_debug);
+#define GST_CAT_DEFAULT dshowdec_debug
+
 const GUID CLSID_DecodeFakeSrc = 
 { 0x039527db, 0x6b48, 0x45a7, { 0xab, 0xcf, 0x21, 0xab, 0xc5, 0x44, 0xbb, 0xb6} };
 
