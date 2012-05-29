@@ -692,9 +692,11 @@ gst_video_test_src_setcaps (GstBaseSrc * bsrc, GstCaps * caps)
   g_free (videotestsrc->tmpline);
   g_free (videotestsrc->tmpline2);
   g_free (videotestsrc->tmpline_u8);
+  g_free (videotestsrc->tmpline_u16);
   videotestsrc->tmpline_u8 = g_malloc (info.width + 8);
   videotestsrc->tmpline = g_malloc ((info.width + 8) * 4);
   videotestsrc->tmpline2 = g_malloc ((info.width + 8) * 4);
+  videotestsrc->tmpline_u16 = g_malloc ((info.width + 16) * 8);
 
   return TRUE;
 
@@ -884,6 +886,8 @@ gst_video_test_src_stop (GstBaseSrc * basesrc)
   src->tmpline2 = NULL;
   g_free (src->tmpline_u8);
   src->tmpline_u8 = NULL;
+  g_free (src->tmpline_u16);
+  src->tmpline_u16 = NULL;
 
   return TRUE;
 }

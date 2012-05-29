@@ -46,10 +46,6 @@ struct vts_color_struct {
 typedef struct paintinfo_struct paintinfo;
 struct paintinfo_struct
 {
-  unsigned char *p[4];    /* pointers to first byte of each component
-                           * for both packed/planar YUV and RGB */
-  int stride[4];
-
   int size;                     /* size of a frame */
   int width;
   int height;
@@ -58,7 +54,7 @@ struct paintinfo_struct
   /*  const struct vts_color_struct *color; */
   void (*paint_hline) (paintinfo * p, int x, int y, int w);
   void (*paint_tmpline) (paintinfo * p, int x, int w);
-  void (*convert_tmpline) (paintinfo * p, int y);
+  void (*convert_tmpline) (paintinfo * p, GstVideoFrame *frame, int y);
   int x_offset;
 
   int bayer_x_invert;
@@ -67,25 +63,20 @@ struct paintinfo_struct
   guint8 *tmpline;
   guint8 *tmpline2;
   guint8 *tmpline_u8;
+  guint16 *tmpline_u16;
 
   struct vts_color_struct foreground_color;
   struct vts_color_struct background_color;
 };
-#define PAINT_INFO_INIT { { NULL, }, }
+#define PAINT_INFO_INIT {0, }
 
 struct format_list_struct
 {
   int type;
   const char *format;
   const char *name;
-  int bitspp;
   void (*paint_setup) (paintinfo * p, GstVideoFrame *frame);
-  void (*convert_hline) (paintinfo * p, int y);
-  int depth;
-  unsigned int red_mask;
-  unsigned int green_mask;
-  unsigned int blue_mask;
-  unsigned int alpha_mask;
+  void (*convert_hline) (paintinfo * p, GstVideoFrame *frame, int y);
 };
 
 struct format_list_struct *

@@ -161,6 +161,7 @@ struct _GstVideoTestSrc {
   guint8 *tmpline_u8;
   guint8 *tmpline;
   guint8 *tmpline2;
+  guint16 *tmpline_u16;
 };
 
 struct _GstVideoTestSrcClass {

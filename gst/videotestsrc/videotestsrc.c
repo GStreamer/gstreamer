@@ -33,7 +33,6 @@
 #include <stdlib.h>
 
 #define TO_16(x) (((x)<<8) | (x))
-#define TO_10(x) (((x)<<2) | ((x)>>6))
 
 static void paint_tmpline_ARGB (paintinfo * p, int x, int w);
 static void paint_tmpline_AYUV (paintinfo * p, int x, int w);
@@ -132,6 +131,8 @@ static void paint_setup_bayer_rggb (paintinfo * p, GstVideoFrame * frame);
 static void paint_setup_bayer_gbrg (paintinfo * p, GstVideoFrame * frame);
 static void paint_setup_bayer_grbg (paintinfo * p, GstVideoFrame * frame);
 
+static void convert_hline_generic (paintinfo * p, GstVideoFrame * frame, int y);
+#if 0
 static void convert_hline_I420 (paintinfo * p, int y);
 static void convert_hline_NV12 (paintinfo * p, int y);
 static void convert_hline_NV21 (paintinfo * p, int y);
@@ -161,118 +162,94 @@ static void convert_hline_str3 (paintinfo * p, int y);
 static void convert_hline_RGB565 (paintinfo * p, int y);
 static void convert_hline_xRGB1555 (paintinfo * p, int y);
 
-static void convert_hline_bayer (paintinfo * p, int y);
-
 static void convert_hline_GRAY8 (paintinfo * p, int y);
 static void convert_hline_GRAY16 (paintinfo * p, int y);
 static void convert_hline_I420_10LE (paintinfo * p, int y);
 static void convert_hline_I420_10BE (paintinfo * p, int y);
+#endif
+
+static void convert_hline_bayer (paintinfo * p, GstVideoFrame * frame, int y);
 
 struct format_list_struct format_list[] = {
 /* packed */
-  {VTS_YUV, "YUY2", "YUY2", 16, paint_setup_generic, convert_hline_YUY2},
-  {VTS_YUV, "UYVY", "UYVY", 16, paint_setup_generic, convert_hline_YUY2},
+  {VTS_YUV, "YUY2", "YUY2", paint_setup_generic, convert_hline_generic},
+  {VTS_YUV, "UYVY", "UYVY", paint_setup_generic, convert_hline_generic},
 #ifdef disabled
-  {VTS_YUV, "Y422", "Y422", 16, paint_setup_generic, convert_hline_YUY2},
-  {VTS_YUV, "UYNV", "UYNV", 16, paint_setup_generic, convert_hline_YUY2},       /* FIXME: UYNV? */
+  {VTS_YUV, "Y422", "Y422", paint_setup_generic, convert_hline_generic},
+  {VTS_YUV, "UYNV", "UYNV", paint_setup_generic, convert_hline_generic},        /* FIXME: UYNV? */
 #endif
-  {VTS_YUV, "YVYU", "YVYU", 16, paint_setup_generic, convert_hline_YUY2},
-  {VTS_YUV, "v308", "v308", 24, paint_setup_generic, convert_hline_v308},
-  {VTS_YUV, "AYUV", "AYUV", 32, paint_setup_generic, convert_hline_AYUV},
+  {VTS_YUV, "YVYU", "YVYU", paint_setup_generic, convert_hline_generic},
+  {VTS_YUV, "v308", "v308", paint_setup_generic, convert_hline_generic},
+  {VTS_YUV, "AYUV", "AYUV", paint_setup_generic, convert_hline_generic},
 #ifdef disabled
-  {VTS_YUV, "v410", "v410", 32, paint_setup_generic, convert_hline_v410},
+  {VTS_YUV, "v410", "v410", paint_setup_generic, convert_hline_generic},
 #endif
-  {VTS_YUV, "v210", "v210", 21, paint_setup_generic, convert_hline_v210},
-  {VTS_YUV, "v216", "v216", 32, paint_setup_generic, convert_hline_v216},
-  {VTS_YUV, "UYVP", "UYVP", 20, paint_setup_generic, convert_hline_UYVP},
-  {VTS_YUV, "AYUV64", "AY64", 64, paint_setup_generic, convert_hline_AY64},
+  {VTS_YUV, "v210", "v210", paint_setup_generic, convert_hline_generic},
+  {VTS_YUV, "v216", "v216", paint_setup_generic, convert_hline_generic},
+  {VTS_YUV, "UYVP", "UYVP", paint_setup_generic, convert_hline_generic},
+  {VTS_YUV, "AYUV64", "AY64", paint_setup_generic, convert_hline_generic},
 
 #ifdef disabled
-  {VTS_YUV, "IYU2", "IYU2", 24, paint_setup_generic, convert_hline_IYU2},
+  {VTS_YUV, "IYU2", "IYU2", paint_setup_generic, convert_hline_generic},
 #endif
 
 /* planar */
   /* YVU9 */
-  {VTS_YUV, "YVU9", "YVU9", 9, paint_setup_generic, convert_hline_YUV9},
+  {VTS_YUV, "YVU9", "YVU9", paint_setup_generic, convert_hline_generic},
   /* YUV9 */
-  {VTS_YUV, "YUV9", "YUV9", 9, paint_setup_generic, convert_hline_YUV9},
+  {VTS_YUV, "YUV9", "YUV9", paint_setup_generic, convert_hline_generic},
   /* IF09 */
   /* YV12 */
-  {VTS_YUV, "YV12", "YV12", 12, paint_setup_generic, convert_hline_I420},
+  {VTS_YUV, "YV12", "YV12", paint_setup_generic, convert_hline_generic},
   /* I420 */
-  {VTS_YUV, "I420", "I420", 12, paint_setup_generic, convert_hline_I420},
+  {VTS_YUV, "I420", "I420", paint_setup_generic, convert_hline_generic},
   /* NV12 */
-  {VTS_YUV, "NV12", "NV12", 12, paint_setup_generic, convert_hline_NV12},
+  {VTS_YUV, "NV12", "NV12", paint_setup_generic, convert_hline_generic},
   /* NV21 */
-  {VTS_YUV, "NV21", "NV21", 12, paint_setup_generic, convert_hline_NV21},
+  {VTS_YUV, "NV21", "NV21", paint_setup_generic, convert_hline_generic},
   /* CLPL */
   /* Y41B */
-  {VTS_YUV, "Y41B", "Y41B", 12, paint_setup_generic, convert_hline_Y41B},
+  {VTS_YUV, "Y41B", "Y41B", paint_setup_generic, convert_hline_generic},
   /* Y42B */
-  {VTS_YUV, "Y42B", "Y42B", 16, paint_setup_generic, convert_hline_Y42B},
+  {VTS_YUV, "Y42B", "Y42B", paint_setup_generic, convert_hline_generic},
   /* Y444 */
-  {VTS_YUV, "Y444", "Y444", 24, paint_setup_generic, convert_hline_Y444},
+  {VTS_YUV, "Y444", "Y444", paint_setup_generic, convert_hline_generic},
   /* Y800 grayscale */
-  {VTS_YUV, "Y800", "Y800", 8, paint_setup_generic, convert_hline_Y800},
+  {VTS_YUV, "Y800", "Y800", paint_setup_generic, convert_hline_generic},
 
-  {VTS_YUV, "I420_10LE", "I420-10LE", 30, paint_setup_generic,
-      convert_hline_I420_10LE},
-  {VTS_YUV, "I420_10BE", "I420-10BE", 30, paint_setup_generic,
-      convert_hline_I420_10BE},
+  {VTS_YUV, "I420_10LE", "I420-10LE", paint_setup_generic,
+      convert_hline_generic},
+  {VTS_YUV, "I420_10BE", "I420-10BE", paint_setup_generic,
+      convert_hline_generic},
 
   /* Not exactly YUV but it's the same as above */
-  {VTS_GRAY, "GRAY8", "GRAY8", 8, paint_setup_generic, convert_hline_GRAY8},
+  {VTS_GRAY, "GRAY8", "GRAY8", paint_setup_generic, convert_hline_generic},
 #if G_BYTE_ORDER == G_LITTLE_ENDIAN
-  {VTS_GRAY, "GRAY16_LE", "GRAY16", 16, paint_setup_generic,
-      convert_hline_GRAY16},
+  {VTS_GRAY, "GRAY16_LE", "GRAY16", paint_setup_generic,
+      convert_hline_generic},
 #else
-  {VTS_GRAY, "GRAY16_BE", "GRAY16", 16, paint_setup_generic,
-      convert_hline_GRAY16},
+  {VTS_GRAY, "GRAY16_BE", "GRAY16", paint_setup_generic,
+      convert_hline_generic},
 #endif
 
-  {VTS_RGB, "xRGB", "xRGB8888", 32, paint_setup_generic, convert_hline_str4,
-        24,
-      0x00ff0000, 0x0000ff00, 0x000000ff},
-  {VTS_RGB, "xBGR", "xBGR8888", 32, paint_setup_generic, convert_hline_str4,
-        24,
-      0x000000ff, 0x0000ff00, 0x00ff0000},
-  {VTS_RGB, "RGBx", "RGBx8888", 32, paint_setup_generic, convert_hline_str4,
-        24,
-      0xff000000, 0x00ff0000, 0x0000ff00},
-  {VTS_RGB, "BGRx", "BGRx8888", 32, paint_setup_generic, convert_hline_str4,
-        24,
-      0x0000ff00, 0x00ff0000, 0xff000000},
-  {VTS_RGB, "ARGB", "ARGB8888", 32, paint_setup_generic, convert_hline_astr4,
-        32,
-      0x00ff0000, 0x0000ff00, 0x000000ff, 0xff000000},
-  {VTS_RGB, "ABGR", "ABGR8888", 32, paint_setup_generic, convert_hline_astr4,
-        32,
-      0x000000ff, 0x0000ff00, 0x00ff0000, 0xff000000},
-  {VTS_RGB, "RGBA", "RGBA8888", 32, paint_setup_generic, convert_hline_astr4,
-        32,
-      0xff000000, 0x00ff0000, 0x0000ff00, 0x000000ff},
-  {VTS_RGB, "BGRA", "BGRA8888", 32, paint_setup_generic, convert_hline_astr4,
-        32,
-      0x0000ff00, 0x00ff0000, 0xff000000, 0x000000ff},
-  {VTS_RGB, "RGB", "RGB888", 24, paint_setup_generic, convert_hline_str3, 24,
-      0x00ff0000, 0x0000ff00, 0x000000ff},
-  {VTS_RGB, "BGR", "BGR888", 24, paint_setup_generic, convert_hline_str3, 24,
-      0x000000ff, 0x0000ff00, 0x00ff0000},
-  {VTS_RGB, "RGB16", "RGB565", 16, paint_setup_generic, convert_hline_RGB565,
-        16,
-      0x0000f800, 0x000007e0, 0x0000001f},
-  {VTS_RGB, "RGB15", "xRGB1555", 16, paint_setup_generic,
-        convert_hline_xRGB1555,
-        15,
-      0x00007c00, 0x000003e0, 0x0000001f},
-  {VTS_RGB, "ARGB64", "ARGB8888", 64, paint_setup_generic, convert_hline_astr8,
-        64,
-      0x00ff0000, 0x0000ff00, 0x000000ff, 0xff000000},
+  {VTS_RGB, "xRGB", "xRGB8888", paint_setup_generic, convert_hline_generic},
+  {VTS_RGB, "xBGR", "xBGR8888", paint_setup_generic, convert_hline_generic},
+  {VTS_RGB, "RGBx", "RGBx8888", paint_setup_generic, convert_hline_generic},
+  {VTS_RGB, "BGRx", "BGRx8888", paint_setup_generic, convert_hline_generic},
+  {VTS_RGB, "ARGB", "ARGB8888", paint_setup_generic, convert_hline_generic},
+  {VTS_RGB, "ABGR", "ABGR8888", paint_setup_generic, convert_hline_generic},
+  {VTS_RGB, "RGBA", "RGBA8888", paint_setup_generic, convert_hline_generic},
+  {VTS_RGB, "BGRA", "BGRA8888", paint_setup_generic, convert_hline_generic},
+  {VTS_RGB, "RGB", "RGB888", paint_setup_generic, convert_hline_generic},
+  {VTS_RGB, "BGR", "BGR888", paint_setup_generic, convert_hline_generic},
+  {VTS_RGB, "RGB16", "RGB565", paint_setup_generic, convert_hline_generic},
+  {VTS_RGB, "RGB15", "xRGB1555", paint_setup_generic, convert_hline_generic},
+  {VTS_RGB, "ARGB64", "ARGB8888", paint_setup_generic, convert_hline_generic},
 
-  {VTS_BAYER, "bggr", "Bayer", 8, paint_setup_bayer_bggr, convert_hline_bayer},
-  {VTS_BAYER, "rggb", "Bayer", 8, paint_setup_bayer_rggb, convert_hline_bayer},
-  {VTS_BAYER, "grbg", "Bayer", 8, paint_setup_bayer_grbg, convert_hline_bayer},
-  {VTS_BAYER, "gbrg", "Bayer", 8, paint_setup_bayer_gbrg, convert_hline_bayer}
+  {VTS_BAYER, "bggr", "Bayer", paint_setup_bayer_bggr, convert_hline_bayer},
+  {VTS_BAYER, "rggb", "Bayer", paint_setup_bayer_rggb, convert_hline_bayer},
+  {VTS_BAYER, "grbg", "Bayer", paint_setup_bayer_grbg, convert_hline_bayer},
+  {VTS_BAYER, "gbrg", "Bayer", paint_setup_bayer_gbrg, convert_hline_bayer}
 };
 
 int n_formats = G_N_ELEMENTS (format_list);
@@ -493,6 +470,7 @@ videotestsrc_setup_paintinfo (GstVideoTestSrc * v, paintinfo * p, int w, int h)
   p->tmpline = v->tmpline;
   p->tmpline2 = v->tmpline2;
   p->tmpline_u8 = v->tmpline_u8;
+  p->tmpline_u16 = v->tmpline_u16;
   p->x_offset = (v->horizontal_speed * v->n_frames) % p->width;
   if (p->x_offset < 0)
     p->x_offset += p->width;
@@ -538,7 +516,7 @@ videotestsrc_setup_paintinfo (GstVideoTestSrc * v, paintinfo * p, int w, int h)
 }
 
 static void
-videotestsrc_convert_tmpline (paintinfo * p, int j)
+videotestsrc_convert_tmpline (paintinfo * p, GstVideoFrame * frame, int j)
 {
   int x = p->x_offset;
   int i;
@@ -556,7 +534,7 @@ videotestsrc_convert_tmpline (paintinfo * p, int j)
     p->tmpline[4 * i + 3] = p->tmpline[4 * (p->width - 1) + 3];
   }
 
-  p->convert_tmpline (p, j);
+  p->convert_tmpline (p, frame, j);
 }
 
 #define BLEND1(a,b,x) ((a)*(x) + (b)*(255-(x)))
@@ -632,7 +610,7 @@ gst_video_test_src_smpte (GstVideoTestSrc * v, GstVideoFrame * frame)
       p->color = p->colors + i;
       p->paint_tmpline (p, x1, (x2 - x1));
     }
-    videotestsrc_convert_tmpline (p, j);
+    videotestsrc_convert_tmpline (p, frame, j);
   }
 
   /* inverse blue bars */
@@ -650,7 +628,7 @@ gst_video_test_src_smpte (GstVideoTestSrc * v, GstVideoFrame * frame)
       p->color = p->colors + k;
       p->paint_tmpline (p, x1, (x2 - x1));
     }
-    videotestsrc_convert_tmpline (p, j);
+    videotestsrc_convert_tmpline (p, frame, j);
   }
 
   for (j = y2; j < h; j++) {
@@ -703,7 +681,7 @@ gst_video_test_src_smpte (GstVideoTestSrc * v, GstVideoFrame * frame)
           &p->foreground_color, &p->background_color, w - x1);
 
     }
-    videotestsrc_convert_tmpline (p, j);
+    videotestsrc_convert_tmpline (p, frame, j);
 
   }
 }
@@ -739,7 +717,7 @@ gst_video_test_src_smpte75 (GstVideoTestSrc * v, GstVideoFrame * frame)
       p->color = p->colors + i;
       p->paint_tmpline (p, x1, (x2 - x1));
     }
-    videotestsrc_convert_tmpline (p, j);
+    videotestsrc_convert_tmpline (p, frame, j);
   }
 }
 
@@ -769,7 +747,7 @@ gst_video_test_src_smpte100 (GstVideoTestSrc * v, GstVideoFrame * frame)
       p->color = p->colors + i;
       p->paint_tmpline (p, x1, (x2 - x1));
     }
-    videotestsrc_convert_tmpline (p, j);
+    videotestsrc_convert_tmpline (p, frame, j);
   }
 }
 
@@ -797,7 +775,7 @@ gst_video_test_src_bar (GstVideoTestSrc * v, GstVideoFrame * frame)
     p->paint_tmpline (p, 0, x2);
     p->color = &p->background_color;
     p->paint_tmpline (p, x2, (w - x2));
-    videotestsrc_convert_tmpline (p, j);
+    videotestsrc_convert_tmpline (p, frame, j);
   }
 }
 
@@ -829,7 +807,7 @@ gst_video_test_src_snow (GstVideoTestSrc * v, GstVideoFrame * frame)
     }
     videotestsrc_blend_line (v, p->tmpline, p->tmpline_u8,
         &p->foreground_color, &p->background_color, p->width);
-    videotestsrc_convert_tmpline (p, j);
+    videotestsrc_convert_tmpline (p, frame, j);
   }
 }
 
@@ -860,7 +838,7 @@ gst_video_test_src_unicolor (GstVideoTestSrc * v, GstVideoFrame * frame,
 
   for (i = 0; i < h; i++) {
     p->paint_tmpline (p, 0, w);
-    videotestsrc_convert_tmpline (p, i);
+    videotestsrc_convert_tmpline (p, frame, i);
   }
 }
 
@@ -919,7 +897,7 @@ gst_video_test_src_blink (GstVideoTestSrc * v, GstVideoFrame * frame)
 
   for (i = 0; i < h; i++) {
     p->paint_tmpline (p, 0, w);
-    videotestsrc_convert_tmpline (p, i);
+    videotestsrc_convert_tmpline (p, frame, i);
   }
 }
 
@@ -944,7 +922,7 @@ gst_video_test_src_solid (GstVideoTestSrc * v, GstVideoFrame * frame)
 
   for (i = 0; i < h; i++) {
     p->paint_tmpline (p, 0, w);
-    videotestsrc_convert_tmpline (p, i);
+    videotestsrc_convert_tmpline (p, frame, i);
   }
 }
 
@@ -974,7 +952,7 @@ gst_video_test_src_checkers1 (GstVideoTestSrc * v, GstVideoFrame * frame)
       }
       p->paint_tmpline (p, x, 1);
     }
-    videotestsrc_convert_tmpline (p, y);
+    videotestsrc_convert_tmpline (p, frame, y);
   }
 }
 
@@ -1005,7 +983,7 @@ gst_video_test_src_checkers2 (GstVideoTestSrc * v, GstVideoFrame * frame)
       }
       p->paint_tmpline (p, x, len);
     }
-    videotestsrc_convert_tmpline (p, y);
+    videotestsrc_convert_tmpline (p, frame, y);
   }
 }
 
@@ -1036,7 +1014,7 @@ gst_video_test_src_checkers4 (GstVideoTestSrc * v, GstVideoFrame * frame)
       }
       p->paint_tmpline (p, x, len);
     }
-    videotestsrc_convert_tmpline (p, y);
+    videotestsrc_convert_tmpline (p, frame, y);
   }
 }
 
@@ -1067,7 +1045,7 @@ gst_video_test_src_checkers8 (GstVideoTestSrc * v, GstVideoFrame * frame)
       }
       p->paint_tmpline (p, x, len);
     }
-    videotestsrc_convert_tmpline (p, y);
+    videotestsrc_convert_tmpline (p, frame, y);
   }
 }
 
@@ -1224,7 +1202,7 @@ gst_video_test_src_zoneplate (GstVideoTestSrc * v, GstVideoFrame * frame)
     }
     videotestsrc_blend_line (v, p->tmpline, p->tmpline_u8,
         &p->foreground_color, &p->background_color, p->width);
-    videotestsrc_convert_tmpline (p, j);
+    videotestsrc_convert_tmpline (p, frame, j);
   }
 }
 
@@ -1323,7 +1301,7 @@ gst_video_test_src_chromazoneplate (GstVideoTestSrc * v, GstVideoFrame * frame)
       color.gray = color.Y << 8;
       p->paint_tmpline (p, i, 1);
     }
-    videotestsrc_convert_tmpline (p, j);
+    videotestsrc_convert_tmpline (p, frame, j);
   }
 }
 
@@ -1370,7 +1348,7 @@ gst_video_test_src_circular (GstVideoTestSrc * v, GstVideoFrame * frame)
     }
     videotestsrc_blend_line (v, p->tmpline, p->tmpline_u8,
         &p->foreground_color, &p->background_color, p->width);
-    videotestsrc_convert_tmpline (p, j);
+    videotestsrc_convert_tmpline (p, frame, j);
   }
 }
 
@@ -1428,7 +1406,7 @@ gst_video_test_src_gamut (GstVideoTestSrc * v, GstVideoFrame * frame)
       }
       p->paint_tmpline (p, x, len);
     }
-    videotestsrc_convert_tmpline (p, y);
+    videotestsrc_convert_tmpline (p, frame, y);
   }
 }
 
@@ -1486,7 +1464,7 @@ gst_video_test_src_ball (GstVideoTestSrc * v, GstVideoFrame * frame)
     }
     videotestsrc_blend_line (v, p->tmpline, p->tmpline_u8,
         &p->foreground_color, &p->background_color, p->width);
-    videotestsrc_convert_tmpline (p, i);
+    videotestsrc_convert_tmpline (p, frame, i);
   }
 }
 
@@ -1529,494 +1507,38 @@ paint_tmpline_AYUV (paintinfo * p, int x, int w)
 static void
 paint_setup_generic (paintinfo * p, GstVideoFrame * frame)
 {
-  gint i;
-
-  for (i = 0; i < GST_VIDEO_FRAME_N_COMPONENTS (frame); i++) {
-    p->p[i] = GST_VIDEO_FRAME_COMP_DATA (frame, i);
-    p->stride[i] = GST_VIDEO_FRAME_COMP_STRIDE (frame, i);
-  }
   p->size = frame->info.size;
 }
 
 static void
-convert_hline_I420 (paintinfo * p, int y)
+convert_hline_generic (paintinfo * p, GstVideoFrame * frame, int y)
 {
-  int i;
-  guint8 *Y = p->p[0] + y * p->stride[0];
-  guint8 *U = p->p[1] + (y / 2) * p->stride[1];
-  guint8 *V = p->p[2] + (y / 2) * p->stride[2];
-  guint8 *ayuv = p->tmpline;
+  const GstVideoFormatInfo *finfo = frame->info.finfo;
+  gint i, width = p->width;
+  gpointer src;
 
-  for (i = 0; i < p->width; i++) {
-    Y[i] = ayuv[4 * i + 1];
+  if (finfo->unpack_format == GST_VIDEO_FORMAT_AYUV64 ||
+      finfo->unpack_format == GST_VIDEO_FORMAT_ARGB64) {
+    /* 16 bits */
+    for (i = 0; i < width; i++) {
+      p->tmpline_u16[i * 4 + 0] = TO_16 (p->tmpline[i * 4 + 0]);
+      p->tmpline_u16[i * 4 + 1] = TO_16 (p->tmpline[i * 4 + 1]);
+      p->tmpline_u16[i * 4 + 2] = TO_16 (p->tmpline[i * 4 + 2]);
+      p->tmpline_u16[i * 4 + 3] = TO_16 (p->tmpline[i * 4 + 3]);
+    }
+    src = p->tmpline_u16;
+  } else {
+    src = p->tmpline;
   }
-  for (i = 0; i < (p->width + 1) / 2; i++) {
-    U[i] = (ayuv[4 * (i * 2) + 2] + ayuv[4 * (i * 2 + 1) + 2] + 1) >> 1;
-    V[i] = (ayuv[4 * (i * 2) + 3] + ayuv[4 * (i * 2 + 1) + 3] + 1) >> 1;
-  }
-}
-
-static void
-convert_hline_NV12 (paintinfo * p, int y)
-{
-  int i;
-  guint8 *Y = p->p[0] + y * p->stride[0];
-  guint8 *U = p->p[1] + (y / 2) * p->stride[1];
-  guint8 *V = p->p[2] + (y / 2) * p->stride[2];
-  guint8 *ayuv = p->tmpline;
-
-  for (i = 0; i < p->width; i++) {
-    Y[i] = ayuv[4 * i + 1];
-  }
-  for (i = 0; i < (p->width + 1) / 2; i++) {
-    U[i * 2] = (ayuv[4 * (i * 2) + 2] + ayuv[4 * (i * 2 + 1) + 2] + 1) >> 1;
-    V[i * 2] = (ayuv[4 * (i * 2) + 3] + ayuv[4 * (i * 2 + 1) + 3] + 1) >> 1;
-  }
-}
-
-static void
-convert_hline_NV21 (paintinfo * p, int y)
-{
-  int i;
-  guint8 *Y = p->p[0] + y * p->stride[0];
-  guint8 *U = p->p[1] + (y / 2) * p->stride[1];
-  guint8 *V = p->p[2] + (y / 2) * p->stride[2];
-  guint8 *ayuv = p->tmpline;
-
-  for (i = 0; i < p->width; i++) {
-    Y[i] = ayuv[4 * i + 1];
-  }
-  for (i = 0; i < (p->width + 1) / 2; i++) {
-    U[i * 2] = (ayuv[4 * (i * 2) + 2] + ayuv[4 * (i * 2 + 1) + 2] + 1) >> 1;
-    V[i * 2] = (ayuv[4 * (i * 2) + 3] + ayuv[4 * (i * 2 + 1) + 3] + 1) >> 1;
-  }
-}
-
-static void
-convert_hline_v308 (paintinfo * p, int y)
-{
-  int i;
-  guint8 *Y = p->p[0] + y * p->stride[0];
-  guint8 *U = p->p[1] + y * p->stride[1];
-  guint8 *V = p->p[2] + y * p->stride[2];
-  guint8 *ayuv = p->tmpline;
-
-  for (i = 0; i < p->width; i++) {
-    Y[i * 3] = ayuv[4 * i + 1];
-    U[i * 3] = ayuv[4 * i + 2];
-    V[i * 3] = ayuv[4 * i + 3];
-  }
-}
-
-static void
-convert_hline_AYUV (paintinfo * p, int y)
-{
-  int i;
-  guint8 *Y = p->p[0] + y * p->stride[0];
-  guint8 *U = p->p[1] + y * p->stride[1];
-  guint8 *V = p->p[2] + y * p->stride[2];
-  guint8 *A = p->p[3] + y * p->stride[0];
-  guint8 *ayuv = p->tmpline;
-
-  for (i = 0; i < p->width; i++) {
-    A[i * 4] = ayuv[4 * i + 0];
-    Y[i * 4] = ayuv[4 * i + 1];
-    U[i * 4] = ayuv[4 * i + 2];
-    V[i * 4] = ayuv[4 * i + 3];
-  }
-}
-
-static void
-convert_hline_v216 (paintinfo * p, int y)
-{
-  int i;
-  guint8 *Y = p->p[0] + y * p->stride[0];
-  guint8 *U = p->p[1] + y * p->stride[1];
-  guint8 *V = p->p[2] + y * p->stride[2];
-  guint8 *ayuv = p->tmpline;
-
-  for (i = 0; i < p->width; i++) {
-    GST_WRITE_UINT16_LE (Y + i * 4, TO_16 (ayuv[4 * i + 1]));
-  }
-  for (i = 0; i < (p->width + 1) / 2; i++) {
-    GST_WRITE_UINT16_LE (U + i * 8, TO_16 (ayuv[4 * (i * 2) + 2]));
-    GST_WRITE_UINT16_LE (V + i * 8, TO_16 (ayuv[4 * (i * 2) + 3]));
-  }
-}
-
-#ifdef disabled
-static void
-convert_hline_v410 (paintinfo * p, int y)
-{
-  int i;
-  guint8 *Y = p->p[0] + y * p->stride[0];
-  guint8 *ayuv = p->tmpline;
-
-  for (i = 0; i < p->width; i++) {
-    guint32 a;
-
-    a = (TO_10 (ayuv[4 * i + 2]) << 22) |
-        (TO_10 (ayuv[4 * i + 1]) << 12) | (TO_10 (ayuv[4 * i + 3]) << 2);
-    GST_WRITE_UINT32_LE (Y + i * 4, a);
-  }
-}
-#endif
-
-static void
-convert_hline_v210 (paintinfo * p, int y)
-{
-  int i;
-  guint8 *Y = p->p[0] + y * p->stride[0];
-  guint8 *ayuv = p->tmpline;
-
-  for (i = 0; i < p->width + 5; i += 6) {
-    guint32 a0, a1, a2, a3;
-    guint16 y0, y1, y2, y3, y4, y5;
-    guint16 u0, u1, u2;
-    guint16 v0, v1, v2;
-
-    y0 = ayuv[4 * (i + 0) + 1];
-    y1 = ayuv[4 * (i + 1) + 1];
-    y2 = ayuv[4 * (i + 2) + 1];
-    y3 = ayuv[4 * (i + 3) + 1];
-    y4 = ayuv[4 * (i + 4) + 1];
-    y5 = ayuv[4 * (i + 5) + 1];
-
-    u0 = (ayuv[4 * (i + 0) + 2] + ayuv[4 * (i + 1) + 2] + 1) >> 1;
-    u1 = (ayuv[4 * (i + 2) + 2] + ayuv[4 * (i + 3) + 2] + 1) >> 1;
-    u2 = (ayuv[4 * (i + 4) + 2] + ayuv[4 * (i + 5) + 2] + 1) >> 1;
-
-    v0 = (ayuv[4 * (i + 0) + 3] + ayuv[4 * (i + 1) + 3] + 1) >> 1;
-    v1 = (ayuv[4 * (i + 2) + 3] + ayuv[4 * (i + 3) + 3] + 1) >> 1;
-    v2 = (ayuv[4 * (i + 4) + 3] + ayuv[4 * (i + 5) + 3] + 1) >> 1;
-
-#if 0
-    a0 = TO_10 (ayuv[4 * (i + 0) + 2]) | (TO_10 (ayuv[4 * (i + 0) + 1]) << 10)
-        | (TO_10 (ayuv[4 * (i + 0) + 3]) << 20);
-    a1 = TO_10 (ayuv[4 * (i + 1) + 1]) | (TO_10 (ayuv[4 * (i + 2) + 2]) << 10)
-        | (TO_10 (ayuv[4 * (i + 2) + 1]) << 20);
-    a2 = TO_10 (ayuv[4 * (i + 2) + 3]) | (TO_10 (ayuv[4 * (i + 3) + 1]) << 10)
-        | (TO_10 (ayuv[4 * (i + 4) + 2]) << 20);
-    a3 = TO_10 (ayuv[4 * (i + 4) + 1]) | (TO_10 (ayuv[4 * (i + 4) + 3]) << 10)
-        | (TO_10 (ayuv[4 * (i + 5) + 1]) << 20);
-#endif
-
-    a0 = TO_10 (u0) | (TO_10 (y0) << 10) | (TO_10 (v0) << 20);
-    a1 = TO_10 (y1) | (TO_10 (u1) << 10) | (TO_10 (y2) << 20);
-    a2 = TO_10 (v1) | (TO_10 (y3) << 10) | (TO_10 (u2) << 20);
-    a3 = TO_10 (y4) | (TO_10 (v2) << 10) | (TO_10 (y5) << 20);
-
-    GST_WRITE_UINT32_LE (Y + (i / 6) * 16 + 0, a0);
-    GST_WRITE_UINT32_LE (Y + (i / 6) * 16 + 4, a1);
-    GST_WRITE_UINT32_LE (Y + (i / 6) * 16 + 8, a2);
-    GST_WRITE_UINT32_LE (Y + (i / 6) * 16 + 12, a3);
-  }
-}
-
-static void
-convert_hline_UYVP (paintinfo * p, int y)
-{
-  int i;
-  guint8 *Y = p->p[0] + y * p->stride[0];
-  guint8 *ayuv = p->tmpline;
-
-  for (i = 0; i < p->width; i += 2) {
-    guint16 y0, y1;
-    guint16 u0;
-    guint16 v0;
-
-    y0 = ayuv[4 * (i + 0) + 1];
-    y1 = ayuv[4 * (i + 1) + 1];
-    u0 = (ayuv[4 * (i + 0) + 2] + ayuv[4 * (i + 1) + 2] + 1) >> 1;
-    v0 = (ayuv[4 * (i + 0) + 3] + ayuv[4 * (i + 1) + 3] + 1) >> 1;
-
-    Y[(i / 2) * 5 + 0] = u0;
-    Y[(i / 2) * 5 + 1] = y0 >> 2;
-    Y[(i / 2) * 5 + 2] = (y0 << 6) | (v0 >> 4);
-    Y[(i / 2) * 5 + 3] = (v0 << 4) | (y1 >> 6);
-    Y[(i / 2) * 5 + 4] = (y1 << 2);
-  }
-}
-
-static void
-convert_hline_YUY2 (paintinfo * p, int y)
-{
-  int i;
-  guint8 *Y = p->p[0] + y * p->stride[0];
-  guint8 *U = p->p[1] + y * p->stride[1];
-  guint8 *V = p->p[2] + y * p->stride[2];
-  guint8 *ayuv = p->tmpline;
-
-  for (i = 0; i < p->width; i++) {
-    Y[i * 2] = ayuv[4 * i + 1];
-  }
-  for (i = 0; i < (p->width + 1) / 2; i++) {
-    U[4 * i] = (ayuv[4 * (i * 2) + 2] + ayuv[4 * (i * 2 + 1) + 2] + 1) >> 1;
-    V[4 * i] = (ayuv[4 * (i * 2) + 3] + ayuv[4 * (i * 2 + 1) + 3] + 1) >> 1;
-  }
-}
-
-static void
-convert_hline_AY64 (paintinfo * p, int y)
-{
-  int i;
-  guint16 *ayuv16 = (guint16 *) (p->p[3] + y * p->stride[0]);
-  guint8 *ayuv = p->tmpline;
-
-  for (i = 0; i < p->width; i++) {
-    GST_WRITE_UINT16_LE (ayuv16 + i * 4 + 0, TO_16 (ayuv[4 * i + 0]));
-    GST_WRITE_UINT16_LE (ayuv16 + i * 4 + 1, TO_16 (ayuv[4 * i + 1]));
-    GST_WRITE_UINT16_LE (ayuv16 + i * 4 + 2, TO_16 (ayuv[4 * i + 2]));
-    GST_WRITE_UINT16_LE (ayuv16 + i * 4 + 3, TO_16 (ayuv[4 * i + 3]));
-  }
-}
-
-static void
-convert_hline_Y41B (paintinfo * p, int y)
-{
-  int i;
-  guint8 *Y = p->p[0] + y * p->stride[0];
-  guint8 *U = p->p[1] + y * p->stride[1];
-  guint8 *V = p->p[2] + y * p->stride[2];
-  guint8 *ayuv = p->tmpline;
-
-  for (i = 0; i < p->width; i++) {
-    Y[i] = ayuv[4 * i + 1];
-  }
-  for (i = 0; i < (p->width + 3) / 4; i++) {
-    U[i] = (ayuv[4 * (i * 4) + 2] + ayuv[4 * (i * 4 + 1) + 2] +
-        ayuv[4 * (i * 4 + 2) + 2] + ayuv[4 * (i * 4 + 3) + 2] + 2) >> 2;
-    V[i] = (ayuv[4 * (i * 4) + 3] + ayuv[4 * (i * 4 + 1) + 3] +
-        ayuv[4 * (i * 4 + 2) + 3] + ayuv[4 * (i * 4 + 3) + 3] + 2) >> 2;
-  }
-}
-
-static void
-convert_hline_Y42B (paintinfo * p, int y)
-{
-  int i;
-  guint8 *Y = p->p[0] + y * p->stride[0];
-  guint8 *U = p->p[1] + y * p->stride[1];
-  guint8 *V = p->p[2] + y * p->stride[2];
-  guint8 *ayuv = p->tmpline;
-
-  for (i = 0; i < p->width; i++) {
-    Y[i] = ayuv[4 * i + 1];
-  }
-  for (i = 0; i < (p->width + 1) / 2; i++) {
-    U[i] = (ayuv[4 * (i * 2) + 2] + ayuv[4 * (i * 2 + 1) + 2] + 1) >> 1;
-    V[i] = (ayuv[4 * (i * 2) + 3] + ayuv[4 * (i * 2 + 1) + 3] + 1) >> 1;
-  }
-}
-
-static void
-convert_hline_Y444 (paintinfo * p, int y)
-{
-  int i;
-  guint8 *Y = p->p[0] + y * p->stride[0];
-  guint8 *U = p->p[1] + y * p->stride[1];
-  guint8 *V = p->p[2] + y * p->stride[2];
-  guint8 *ayuv = p->tmpline;
-
-  for (i = 0; i < p->width; i++) {
-    Y[i] = ayuv[4 * i + 1];
-    U[i] = ayuv[4 * i + 2];
-    V[i] = ayuv[4 * i + 3];
-  }
-}
-
-static void
-convert_hline_Y800 (paintinfo * p, int y)
-{
-  int i;
-  guint8 *Y = p->p[0] + y * p->stride[0];
-  guint8 *ayuv = p->tmpline;
-
-  for (i = 0; i < p->width; i++) {
-    Y[i] = ayuv[4 * i + 1];
-  }
-}
-
-static void
-convert_hline_YUV9 (paintinfo * p, int y)
-{
-  int i;
-  guint8 *Y = p->p[0] + y * p->stride[0];
-  guint8 *U = p->p[1] + (y / 4) * p->stride[1];
-  guint8 *V = p->p[2] + (y / 4) * p->stride[2];
-  guint8 *ayuv = p->tmpline;
-
-  for (i = 0; i < p->width; i++) {
-    Y[i] = ayuv[4 * i + 1];
-  }
-  for (i = 0; i < (p->width + 3) / 4; i++) {
-    U[i] = (ayuv[4 * (i * 4) + 2] + ayuv[4 * (i * 4 + 1) + 2] +
-        ayuv[4 * (i * 4 + 2) + 2] + ayuv[4 * (i * 4 + 3) + 2] + 2) >> 2;
-    V[i] = (ayuv[4 * (i * 4) + 3] + ayuv[4 * (i * 4 + 1) + 3] +
-        ayuv[4 * (i * 4 + 2) + 3] + ayuv[4 * (i * 4 + 3) + 3] + 2) >> 2;
-  }
-}
-
-static void
-convert_hline_str4 (paintinfo * p, int y)
-{
-  int i;
-  guint8 *A = p->p[3] + y * p->stride[0];
-  guint8 *R = p->p[0] + y * p->stride[0];
-  guint8 *G = p->p[1] + y * p->stride[1];
-  guint8 *B = p->p[2] + y * p->stride[2];
-  guint8 *argb = p->tmpline;
-
-  for (i = 0; i < p->width; i++) {
-    A[4 * i] = 0xff;
-    R[4 * i] = argb[4 * i + 1];
-    G[4 * i] = argb[4 * i + 2];
-    B[4 * i] = argb[4 * i + 3];
-  }
-}
-
-static void
-convert_hline_astr4 (paintinfo * p, int y)
-{
-  int i;
-  guint8 *A = p->p[3] + y * p->stride[0];
-  guint8 *R = p->p[0] + y * p->stride[0];
-  guint8 *G = p->p[1] + y * p->stride[1];
-  guint8 *B = p->p[2] + y * p->stride[2];
-  guint8 *argb = p->tmpline;
-
-  for (i = 0; i < p->width; i++) {
-    A[4 * i] = argb[4 * i + 0];
-    R[4 * i] = argb[4 * i + 1];
-    G[4 * i] = argb[4 * i + 2];
-    B[4 * i] = argb[4 * i + 3];
-  }
-}
-
-static void
-convert_hline_astr8 (paintinfo * p, int y)
-{
-  int i;
-  guint16 *A = (guint16 *) (p->p[3] + y * p->stride[0]);
-  guint16 *R = (guint16 *) (p->p[0] + y * p->stride[0]);
-  guint16 *G = (guint16 *) (p->p[1] + y * p->stride[1]);
-  guint16 *B = (guint16 *) (p->p[2] + y * p->stride[2]);
-  guint8 *argb = p->tmpline;
-
-  for (i = 0; i < p->width; i++) {
-    A[4 * i] = TO_16 (argb[4 * i + 0]);
-    R[4 * i] = TO_16 (argb[4 * i + 1]);
-    G[4 * i] = TO_16 (argb[4 * i + 2]);
-    B[4 * i] = TO_16 (argb[4 * i + 3]);
-  }
-}
-
-static void
-convert_hline_str3 (paintinfo * p, int y)
-{
-  int i;
-  guint8 *R = p->p[0] + y * p->stride[0];
-  guint8 *G = p->p[1] + y * p->stride[1];
-  guint8 *B = p->p[2] + y * p->stride[2];
-  guint8 *argb = p->tmpline;
-
-  for (i = 0; i < p->width; i++) {
-    R[3 * i] = argb[4 * i + 1];
-    G[3 * i] = argb[4 * i + 2];
-    B[3 * i] = argb[4 * i + 3];
-  }
-}
-
-static void
-convert_hline_RGB565 (paintinfo * p, int y)
-{
-  int i;
-  guint8 *R = p->p[0] + y * p->stride[0];
-  guint8 *argb = p->tmpline;
-
-  for (i = 0; i < p->width; i++) {
-    guint16 value = ((argb[4 * i + 1] & 0xf8) << 8) |
-        ((argb[4 * i + 2] & 0xfc) << 3) | ((argb[4 * i + 3] & 0xf8) >> 3);
-#if G_BYTE_ORDER == G_LITTLE_ENDIAN
-    GST_WRITE_UINT16_LE (R + 2 * i, value);
-#else
-    GST_WRITE_UINT16_BE (R + 2 * i, value);
-#endif
-  }
-}
-
-static void
-convert_hline_xRGB1555 (paintinfo * p, int y)
-{
-  int i;
-  guint8 *R = p->p[0] + y * p->stride[0];
-  guint8 *argb = p->tmpline;
-
-  for (i = 0; i < p->width; i++) {
-    guint16 value = ((argb[4 * i + 1] & 0xf8) << 7) |
-        ((argb[4 * i + 2] & 0xf8) << 2) | ((argb[4 * i + 3] & 0xf8) >> 3);
-#if G_BYTE_ORDER == G_LITTLE_ENDIAN
-    GST_WRITE_UINT16_LE (R + 2 * i, value);
-#else
-    GST_WRITE_UINT16_BE (R + 2 * i, value);
-#endif
-  }
-}
-
-static void
-convert_hline_I420_10LE (paintinfo * p, int y)
-{
-  int i;
-  guint16 *Y = (guint16 *) (p->p[0] + y * p->stride[0]);
-  guint16 *U = (guint16 *) (p->p[1] + (y / 2) * p->stride[1]);
-  guint16 *V = (guint16 *) (p->p[2] + (y / 2) * p->stride[2]);
-  guint8 *ayuv = p->tmpline;
-
-  for (i = 0; i < p->width; i++) {
-    GST_WRITE_UINT16_LE (Y + i, TO_10 (ayuv[4 * i + 1]));
-  }
-  for (i = 0; i < (p->width + 1) / 2; i++) {
-    guint16 uval, vval;
-
-    uval = (ayuv[4 * (i * 2) + 2] + ayuv[4 * (i * 2 + 1) + 2] + 1) >> 1;
-    vval = (ayuv[4 * (i * 2) + 3] + ayuv[4 * (i * 2 + 1) + 3] + 1) >> 1;
-
-    GST_WRITE_UINT16_LE (U + i, TO_10 (uval));
-    GST_WRITE_UINT16_LE (V + i, TO_10 (vval));
-  }
-}
-
-static void
-convert_hline_I420_10BE (paintinfo * p, int y)
-{
-  int i;
-  guint16 *Y = (guint16 *) (p->p[0] + y * p->stride[0]);
-  guint16 *U = (guint16 *) (p->p[1] + (y / 2) * p->stride[1]);
-  guint16 *V = (guint16 *) (p->p[2] + (y / 2) * p->stride[2]);
-  guint8 *ayuv = p->tmpline;
-
-  for (i = 0; i < p->width; i++) {
-    GST_WRITE_UINT16_BE (Y + i, TO_10 (ayuv[4 * i + 1]));
-  }
-  for (i = 0; i < (p->width + 1) / 2; i++) {
-    guint16 uval, vval;
-
-    uval = (ayuv[4 * (i * 2) + 2] + ayuv[4 * (i * 2 + 1) + 2] + 1) >> 1;
-    vval = (ayuv[4 * (i * 2) + 3] + ayuv[4 * (i * 2 + 1) + 3] + 1) >> 1;
-
-    GST_WRITE_UINT16_BE (U + i, TO_10 (uval));
-    GST_WRITE_UINT16_BE (V + i, TO_10 (vval));
-  }
+  finfo->pack_func (finfo, GST_VIDEO_PACK_FLAG_NONE,
+      src, 0, frame->data, frame->info.stride,
+      frame->info.chroma_site, y, width);
 }
 
 static void
 paint_setup_bayer_bggr (paintinfo * p, GstVideoFrame * frame)
 {
-  p->p[0] = GST_VIDEO_FRAME_PLANE_DATA (frame, 0);
-  p->stride[0] = GST_ROUND_UP_4 (p->width);
-  p->stride[1] = GST_ROUND_UP_4 (p->width);
-  p->stride[2] = GST_ROUND_UP_4 (p->width);
-  p->size = p->stride[0] * p->height;
+  p->size = GST_ROUND_UP_4 (p->width) * p->height;
   p->bayer_x_invert = 0;
   p->bayer_y_invert = 0;
 }
@@ -2024,11 +1546,7 @@ paint_setup_bayer_bggr (paintinfo * p, GstVideoFrame * frame)
 static void
 paint_setup_bayer_rggb (paintinfo * p, GstVideoFrame * frame)
 {
-  p->p[0] = GST_VIDEO_FRAME_PLANE_DATA (frame, 0);
-  p->stride[0] = GST_ROUND_UP_4 (p->width);
-  p->stride[1] = GST_ROUND_UP_4 (p->width);
-  p->stride[2] = GST_ROUND_UP_4 (p->width);
-  p->size = p->stride[0] * p->height;
+  p->size = GST_ROUND_UP_4 (p->width) * p->height;
   p->bayer_x_invert = 1;
   p->bayer_y_invert = 1;
 }
@@ -2036,11 +1554,7 @@ paint_setup_bayer_rggb (paintinfo * p, GstVideoFrame * frame)
 static void
 paint_setup_bayer_grbg (paintinfo * p, GstVideoFrame * frame)
 {
-  p->p[0] = GST_VIDEO_FRAME_PLANE_DATA (frame, 0);
-  p->stride[0] = GST_ROUND_UP_4 (p->width);
-  p->stride[1] = GST_ROUND_UP_4 (p->width);
-  p->stride[2] = GST_ROUND_UP_4 (p->width);
-  p->size = p->stride[0] * p->height;
+  p->size = GST_ROUND_UP_4 (p->width) * p->height;
   p->bayer_x_invert = 0;
   p->bayer_y_invert = 1;
 }
@@ -2048,20 +1562,17 @@ paint_setup_bayer_grbg (paintinfo * p, GstVideoFrame * frame)
 static void
 paint_setup_bayer_gbrg (paintinfo * p, GstVideoFrame * frame)
 {
-  p->p[0] = GST_VIDEO_FRAME_PLANE_DATA (frame, 0);
-  p->stride[0] = GST_ROUND_UP_4 (p->width);
-  p->stride[1] = GST_ROUND_UP_4 (p->width);
-  p->stride[2] = GST_ROUND_UP_4 (p->width);
-  p->size = p->stride[0] * p->height;
+  p->size = GST_ROUND_UP_4 (p->width) * p->height;
   p->bayer_x_invert = 1;
   p->bayer_y_invert = 0;
 }
 
 static void
-convert_hline_bayer (paintinfo * p, int y)
+convert_hline_bayer (paintinfo * p, GstVideoFrame * frame, int y)
 {
   int i;
-  guint8 *R = p->p[0] + y * p->stride[0];
+  guint8 *data = GST_VIDEO_FRAME_PLANE_DATA (frame, 0);
+  guint8 *R = data + y * GST_ROUND_UP_4 (p->width);
   guint8 *argb = p->tmpline;
   int x_inv = p->bayer_x_invert;
   int y_inv = p->bayer_y_invert;
@@ -2082,35 +1593,5 @@ convert_hline_bayer (paintinfo * p, int y)
         R[i] = argb[4 * i + 3];
       }
     }
-  }
-}
-
-static void
-convert_hline_GRAY8 (paintinfo * p, int y)
-{
-  int i;
-  guint8 *Y = p->p[0] + y * p->stride[0];
-  guint8 *ayuv = p->tmpline;
-
-  /* FIXME this should use gray, not YUV */
-  for (i = 0; i < p->width; i++) {
-    Y[i] = ayuv[4 * i + 1];
-  }
-}
-
-static void
-convert_hline_GRAY16 (paintinfo * p, int y)
-{
-  int i;
-  guint8 *Y = p->p[0] + y * p->stride[0];
-  guint8 *ayuv = p->tmpline;
-
-  /* FIXME this should use gray, not YUV */
-  for (i = 0; i < p->width; i++) {
-#if G_BYTE_ORDER == G_LITTLE_ENDIAN
-    GST_WRITE_UINT16_LE (Y + i * 2, ayuv[4 * i + 1] << 8);
-#else
-    GST_WRITE_UINT16_BE (Y + i * 2, ayuv[4 * i + 1] << 8);
-#endif
   }
 }
