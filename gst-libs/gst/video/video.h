@@ -259,6 +259,8 @@ struct _GstVideoFormatInfo {
   GstVideoFormat unpack_format;
   GstVideoFormatUnpack unpack_func;
   GstVideoFormatPack pack_func;
+
+  gpointer _gst_reserved[GST_PADDING];
 };
 
 #define GST_VIDEO_FORMAT_INFO_FORMAT(info)       ((info)->format)
