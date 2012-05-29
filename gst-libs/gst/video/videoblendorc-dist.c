@@ -99,6 +99,10 @@ void cogorc_putline_UYVY (guint8 * ORC_RESTRICT d1,
     const guint8 * ORC_RESTRICT s1, int n);
 void cogorc_getline_UYVY (guint8 * ORC_RESTRICT d1,
     const guint8 * ORC_RESTRICT s1, int n);
+void cogorc_getline_YVYU (guint8 * ORC_RESTRICT d1,
+    const guint8 * ORC_RESTRICT s1, int n);
+void cogorc_putline_YVYU (guint8 * ORC_RESTRICT d1,
+    const guint8 * ORC_RESTRICT s1, int n);
 void cogorc_getline_YUV9 (guint8 * ORC_RESTRICT d1,
     const guint8 * ORC_RESTRICT s1, const guint8 * ORC_RESTRICT s2,
     const guint8 * ORC_RESTRICT s3, int n);
@@ -2025,6 +2029,436 @@ cogorc_getline_UYVY (guint8 * ORC_RESTRICT d1, const guint8 * ORC_RESTRICT s1,
       orc_program_append_2 (p, "mergewl", 0, ORC_VAR_T4, ORC_VAR_T2, ORC_VAR_T2,
           ORC_VAR_D1);
       orc_program_append_2 (p, "mergewl", 1, ORC_VAR_D1, ORC_VAR_T3, ORC_VAR_T4,
+          ORC_VAR_D1);
+
+      orc_program_compile (p);
+    }
+    p_inited = TRUE;
+    orc_once_mutex_unlock ();
+  }
+  ex->program = p;
+
+  ex->n = n;
+  ex->arrays[ORC_VAR_D1] = d1;
+  ex->arrays[ORC_VAR_S1] = (void *) s1;
+
+  func = p->code_exec;
+  func (ex);
+}
+#endif
+
+
+/* cogorc_getline_YVYU */
+#ifdef DISABLE_ORC
+void
+cogorc_getline_YVYU (guint8 * ORC_RESTRICT d1, const guint8 * ORC_RESTRICT s1,
+    int n)
+{
+  int i;
+  orc_union64 *ORC_RESTRICT ptr0;
+  const orc_union32 *ORC_RESTRICT ptr4;
+  orc_union32 var36;
+  orc_union16 var37;
+  orc_union64 var38;
+  orc_union16 var39;
+  orc_union16 var40;
+  orc_union16 var41;
+  orc_union32 var42;
+  orc_union32 var43;
+
+  ptr0 = (orc_union64 *) d1;
+  ptr4 = (orc_union32 *) s1;
+
+  /* 3: loadpb */
+  var37.x2[0] = (int) 0x000000ff;       /* 255 or 1.25987e-321f */
+  var37.x2[1] = (int) 0x000000ff;       /* 255 or 1.25987e-321f */
+
+  for (i = 0; i < n; i++) {
+    /* 0: loadl */
+    var36 = ptr4[i];
+    /* 1: splitwb */
+    {
+      orc_union16 _src;
+      _src.i = var36.x2[0];
+      var39.x2[0] = _src.x2[1];
+      var40.x2[0] = _src.x2[0];
+    }
+    {
+      orc_union16 _src;
+      _src.i = var36.x2[1];
+      var39.x2[1] = _src.x2[1];
+      var40.x2[1] = _src.x2[0];
+    }
+    /* 2: swapw */
+    var41.i = ORC_SWAP_W (var39.i);
+    /* 4: mergebw */
+    {
+      orc_union16 _dest;
+      _dest.x2[0] = var37.x2[0];
+      _dest.x2[1] = var40.x2[0];
+      var42.x2[0] = _dest.i;
+    }
+    {
+      orc_union16 _dest;
+      _dest.x2[0] = var37.x2[1];
+      _dest.x2[1] = var40.x2[1];
+      var42.x2[1] = _dest.i;
+    }
+    /* 5: mergewl */
+    {
+      orc_union32 _dest;
+      _dest.x2[0] = var41.i;
+      _dest.x2[1] = var41.i;
+      var43.i = _dest.i;
+    }
+    /* 6: mergewl */
+    {
+      orc_union32 _dest;
+      _dest.x2[0] = var42.x2[0];
+      _dest.x2[1] = var43.x2[0];
+      var38.x2[0] = _dest.i;
+    }
+    {
+      orc_union32 _dest;
+      _dest.x2[0] = var42.x2[1];
+      _dest.x2[1] = var43.x2[1];
+      var38.x2[1] = _dest.i;
+    }
+    /* 7: storeq */
+    ptr0[i] = var38;
+  }
+
+}
+
+#else
+static void
+_backup_cogorc_getline_YVYU (OrcExecutor * ORC_RESTRICT ex)
+{
+  int i;
+  int n = ex->n;
+  orc_union64 *ORC_RESTRICT ptr0;
+  const orc_union32 *ORC_RESTRICT ptr4;
+  orc_union32 var36;
+  orc_union16 var37;
+  orc_union64 var38;
+  orc_union16 var39;
+  orc_union16 var40;
+  orc_union16 var41;
+  orc_union32 var42;
+  orc_union32 var43;
+
+  ptr0 = (orc_union64 *) ex->arrays[0];
+  ptr4 = (orc_union32 *) ex->arrays[4];
+
+  /* 3: loadpb */
+  var37.x2[0] = (int) 0x000000ff;       /* 255 or 1.25987e-321f */
+  var37.x2[1] = (int) 0x000000ff;       /* 255 or 1.25987e-321f */
+
+  for (i = 0; i < n; i++) {
+    /* 0: loadl */
+    var36 = ptr4[i];
+    /* 1: splitwb */
+    {
+      orc_union16 _src;
+      _src.i = var36.x2[0];
+      var39.x2[0] = _src.x2[1];
+      var40.x2[0] = _src.x2[0];
+    }
+    {
+      orc_union16 _src;
+      _src.i = var36.x2[1];
+      var39.x2[1] = _src.x2[1];
+      var40.x2[1] = _src.x2[0];
+    }
+    /* 2: swapw */
+    var41.i = ORC_SWAP_W (var39.i);
+    /* 4: mergebw */
+    {
+      orc_union16 _dest;
+      _dest.x2[0] = var37.x2[0];
+      _dest.x2[1] = var40.x2[0];
+      var42.x2[0] = _dest.i;
+    }
+    {
+      orc_union16 _dest;
+      _dest.x2[0] = var37.x2[1];
+      _dest.x2[1] = var40.x2[1];
+      var42.x2[1] = _dest.i;
+    }
+    /* 5: mergewl */
+    {
+      orc_union32 _dest;
+      _dest.x2[0] = var41.i;
+      _dest.x2[1] = var41.i;
+      var43.i = _dest.i;
+    }
+    /* 6: mergewl */
+    {
+      orc_union32 _dest;
+      _dest.x2[0] = var42.x2[0];
+      _dest.x2[1] = var43.x2[0];
+      var38.x2[0] = _dest.i;
+    }
+    {
+      orc_union32 _dest;
+      _dest.x2[0] = var42.x2[1];
+      _dest.x2[1] = var43.x2[1];
+      var38.x2[1] = _dest.i;
+    }
+    /* 7: storeq */
+    ptr0[i] = var38;
+  }
+
+}
+
+void
+cogorc_getline_YVYU (guint8 * ORC_RESTRICT d1, const guint8 * ORC_RESTRICT s1,
+    int n)
+{
+  OrcExecutor _ex, *ex = &_ex;
+  static volatile int p_inited = 0;
+  static OrcProgram *p = 0;
+  void (*func) (OrcExecutor *);
+
+  if (!p_inited) {
+    orc_once_mutex_lock ();
+    if (!p_inited) {
+
+      p = orc_program_new ();
+      orc_program_set_name (p, "cogorc_getline_YVYU");
+      orc_program_set_backup_function (p, _backup_cogorc_getline_YVYU);
+      orc_program_add_destination (p, 8, "d1");
+      orc_program_add_source (p, 4, "s1");
+      orc_program_add_constant (p, 2, 0x000000ff, "c1");
+      orc_program_add_temporary (p, 2, "t1");
+      orc_program_add_temporary (p, 2, "t2");
+      orc_program_add_temporary (p, 4, "t3");
+      orc_program_add_temporary (p, 4, "t4");
+
+      orc_program_append_2 (p, "splitwb", 1, ORC_VAR_T2, ORC_VAR_T1, ORC_VAR_S1,
+          ORC_VAR_D1);
+      orc_program_append_2 (p, "swapw", 0, ORC_VAR_T2, ORC_VAR_T2, ORC_VAR_D1,
+          ORC_VAR_D1);
+      orc_program_append_2 (p, "mergebw", 1, ORC_VAR_T3, ORC_VAR_C1, ORC_VAR_T1,
+          ORC_VAR_D1);
+      orc_program_append_2 (p, "mergewl", 0, ORC_VAR_T4, ORC_VAR_T2, ORC_VAR_T2,
+          ORC_VAR_D1);
+      orc_program_append_2 (p, "mergewl", 1, ORC_VAR_D1, ORC_VAR_T3, ORC_VAR_T4,
+          ORC_VAR_D1);
+
+      orc_program_compile (p);
+    }
+    p_inited = TRUE;
+    orc_once_mutex_unlock ();
+  }
+  ex->program = p;
+
+  ex->n = n;
+  ex->arrays[ORC_VAR_D1] = d1;
+  ex->arrays[ORC_VAR_S1] = (void *) s1;
+
+  func = p->code_exec;
+  func (ex);
+}
+#endif
+
+
+/* cogorc_putline_YVYU */
+#ifdef DISABLE_ORC
+void
+cogorc_putline_YVYU (guint8 * ORC_RESTRICT d1, const guint8 * ORC_RESTRICT s1,
+    int n)
+{
+  int i;
+  orc_union32 *ORC_RESTRICT ptr0;
+  const orc_union64 *ORC_RESTRICT ptr4;
+  orc_union64 var37;
+  orc_union32 var38;
+  orc_union32 var39;
+  orc_union32 var40;
+  orc_union16 var41;
+  orc_union16 var42;
+  orc_union16 var43;
+  orc_union16 var44;
+  orc_union16 var45;
+
+  ptr0 = (orc_union32 *) d1;
+  ptr4 = (orc_union64 *) s1;
+
+
+  for (i = 0; i < n; i++) {
+    /* 0: loadq */
+    var37 = ptr4[i];
+    /* 1: splitlw */
+    {
+      orc_union32 _src;
+      _src.i = var37.x2[0];
+      var39.x2[0] = _src.x2[1];
+      var40.x2[0] = _src.x2[0];
+    }
+    {
+      orc_union32 _src;
+      _src.i = var37.x2[1];
+      var39.x2[1] = _src.x2[1];
+      var40.x2[1] = _src.x2[0];
+    }
+    /* 2: splitlw */
+    {
+      orc_union32 _src;
+      _src.i = var39.i;
+      var41.i = _src.x2[1];
+      var42.i = _src.x2[0];
+    }
+    /* 3: avgub */
+    var43.x2[0] = ((orc_uint8) var41.x2[0] + (orc_uint8) var42.x2[0] + 1) >> 1;
+    var43.x2[1] = ((orc_uint8) var41.x2[1] + (orc_uint8) var42.x2[1] + 1) >> 1;
+    /* 4: select1wb */
+    {
+      orc_union16 _src;
+      _src.i = var40.x2[0];
+      var44.x2[0] = _src.x2[1];
+    }
+    {
+      orc_union16 _src;
+      _src.i = var40.x2[1];
+      var44.x2[1] = _src.x2[1];
+    }
+    /* 5: swapw */
+    var45.i = ORC_SWAP_W (var43.i);
+    /* 6: mergebw */
+    {
+      orc_union16 _dest;
+      _dest.x2[0] = var44.x2[0];
+      _dest.x2[1] = var45.x2[0];
+      var38.x2[0] = _dest.i;
+    }
+    {
+      orc_union16 _dest;
+      _dest.x2[0] = var44.x2[1];
+      _dest.x2[1] = var45.x2[1];
+      var38.x2[1] = _dest.i;
+    }
+    /* 7: storel */
+    ptr0[i] = var38;
+  }
+
+}
+
+#else
+static void
+_backup_cogorc_putline_YVYU (OrcExecutor * ORC_RESTRICT ex)
+{
+  int i;
+  int n = ex->n;
+  orc_union32 *ORC_RESTRICT ptr0;
+  const orc_union64 *ORC_RESTRICT ptr4;
+  orc_union64 var37;
+  orc_union32 var38;
+  orc_union32 var39;
+  orc_union32 var40;
+  orc_union16 var41;
+  orc_union16 var42;
+  orc_union16 var43;
+  orc_union16 var44;
+  orc_union16 var45;
+
+  ptr0 = (orc_union32 *) ex->arrays[0];
+  ptr4 = (orc_union64 *) ex->arrays[4];
+
+
+  for (i = 0; i < n; i++) {
+    /* 0: loadq */
+    var37 = ptr4[i];
+    /* 1: splitlw */
+    {
+      orc_union32 _src;
+      _src.i = var37.x2[0];
+      var39.x2[0] = _src.x2[1];
+      var40.x2[0] = _src.x2[0];
+    }
+    {
+      orc_union32 _src;
+      _src.i = var37.x2[1];
+      var39.x2[1] = _src.x2[1];
+      var40.x2[1] = _src.x2[0];
+    }
+    /* 2: splitlw */
+    {
+      orc_union32 _src;
+      _src.i = var39.i;
+      var41.i = _src.x2[1];
+      var42.i = _src.x2[0];
+    }
+    /* 3: avgub */
+    var43.x2[0] = ((orc_uint8) var41.x2[0] + (orc_uint8) var42.x2[0] + 1) >> 1;
+    var43.x2[1] = ((orc_uint8) var41.x2[1] + (orc_uint8) var42.x2[1] + 1) >> 1;
+    /* 4: select1wb */
+    {
+      orc_union16 _src;
+      _src.i = var40.x2[0];
+      var44.x2[0] = _src.x2[1];
+    }
+    {
+      orc_union16 _src;
+      _src.i = var40.x2[1];
+      var44.x2[1] = _src.x2[1];
+    }
+    /* 5: swapw */
+    var45.i = ORC_SWAP_W (var43.i);
+    /* 6: mergebw */
+    {
+      orc_union16 _dest;
+      _dest.x2[0] = var44.x2[0];
+      _dest.x2[1] = var45.x2[0];
+      var38.x2[0] = _dest.i;
+    }
+    {
+      orc_union16 _dest;
+      _dest.x2[0] = var44.x2[1];
+      _dest.x2[1] = var45.x2[1];
+      var38.x2[1] = _dest.i;
+    }
+    /* 7: storel */
+    ptr0[i] = var38;
+  }
+
+}
+
+void
+cogorc_putline_YVYU (guint8 * ORC_RESTRICT d1, const guint8 * ORC_RESTRICT s1,
+    int n)
+{
+  OrcExecutor _ex, *ex = &_ex;
+  static volatile int p_inited = 0;
+  static OrcProgram *p = 0;
+  void (*func) (OrcExecutor *);
+
+  if (!p_inited) {
+    orc_once_mutex_lock ();
+    if (!p_inited) {
+
+      p = orc_program_new ();
+      orc_program_set_name (p, "cogorc_putline_YVYU");
+      orc_program_set_backup_function (p, _backup_cogorc_putline_YVYU);
+      orc_program_add_destination (p, 4, "d1");
+      orc_program_add_source (p, 8, "s1");
+      orc_program_add_temporary (p, 2, "t1");
+      orc_program_add_temporary (p, 2, "t2");
+      orc_program_add_temporary (p, 2, "t3");
+      orc_program_add_temporary (p, 4, "t4");
+      orc_program_add_temporary (p, 4, "t5");
+
+      orc_program_append_2 (p, "splitlw", 1, ORC_VAR_T5, ORC_VAR_T4, ORC_VAR_S1,
+          ORC_VAR_D1);
+      orc_program_append_2 (p, "splitlw", 0, ORC_VAR_T2, ORC_VAR_T3, ORC_VAR_T5,
+          ORC_VAR_D1);
+      orc_program_append_2 (p, "avgub", 1, ORC_VAR_T2, ORC_VAR_T2, ORC_VAR_T3,
+          ORC_VAR_D1);
+      orc_program_append_2 (p, "select1wb", 1, ORC_VAR_T1, ORC_VAR_T4,
+          ORC_VAR_D1, ORC_VAR_D1);
+      orc_program_append_2 (p, "swapw", 0, ORC_VAR_T2, ORC_VAR_T2, ORC_VAR_D1,
+          ORC_VAR_D1);
+      orc_program_append_2 (p, "mergebw", 1, ORC_VAR_D1, ORC_VAR_T1, ORC_VAR_T2,
           ORC_VAR_D1);
 
       orc_program_compile (p);

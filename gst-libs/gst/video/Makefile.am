@@ -1,4 +1,7 @@
 # variables used for enum generation
+ORC_SOURCE=videoblendorc
+include $(top_srcdir)/common/orc.mak
+
 glib_enum_headers = video.h colorbalance.h navigation.h
 glib_enum_define = GST_VIDEO
 glib_gen_prefix = gst_video
@@ -28,7 +31,7 @@ libgstvideo_@GST_API_VERSION@_la_SOURCES = \
 	gstvideoencoder.c       \
 	gstvideoutils.c
 
-nodist_libgstvideo_@GST_API_VERSION@_la_SOURCES = $(BUILT_SOURCES)
+nodist_libgstvideo_@GST_API_VERSION@_la_SOURCES = $(BUILT_SOURCES) $(ORC_NODIST_SOURCES)
 
 libgstvideo_@GST_API_VERSION@includedir = $(includedir)/gstreamer-@GST_API_VERSION@/gst/video
 libgstvideo_@GST_API_VERSION@include_HEADERS = \
@@ -47,8 +50,9 @@ libgstvideo_@GST_API_VERSION@include_HEADERS = \
 	gstvideoutils.h
 nodist_libgstvideo_@GST_API_VERSION@include_HEADERS = $(built_headers)
 
-libgstvideo_@GST_API_VERSION@_la_CFLAGS = $(GST_PLUGINS_BASE_CFLAGS) $(GST_BASE_CFLAGS) $(GST_CFLAGS)
-libgstvideo_@GST_API_VERSION@_la_LIBADD = $(GST_BASE_LIBS) $(GST_LIBS)
+libgstvideo_@GST_API_VERSION@_la_CFLAGS = $(GST_PLUGINS_BASE_CFLAGS) $(GST_BASE_CFLAGS) $(GST_CFLAGS) \
+					$(ORC_CFLAGS)
+libgstvideo_@GST_API_VERSION@_la_LIBADD = $(GST_BASE_LIBS) $(GST_LIBS) $(ORC_LIBS)
 libgstvideo_@GST_API_VERSION@_la_LDFLAGS = $(GST_LIB_LDFLAGS) $(GST_ALL_LDFLAGS) $(GST_LT_LDFLAGS)
 
 include $(top_srcdir)/common/gst-glib-gen.mak

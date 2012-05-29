@@ -130,6 +130,8 @@ typedef enum {
 #define GST_VIDEO_MAX_COMPONENTS 4
 
 typedef struct _GstVideoFormatInfo GstVideoFormatInfo;
+typedef struct _GstVideoColorimetry GstVideoColorimetry;
+typedef enum _GstVideoChromaSite GstVideoChromaSite;
 
 /**
  * GstVideoFormatFlags:
@@ -207,21 +209,28 @@ typedef void (*GstVideoFormatUnpack)         (GstVideoFormatInfo *info,
  * @info: a #GstVideoFormatInfo
  * @flags: flags to control the packing
  * @src: a source array
+ * @sstride: the source array stride
  * @data: pointers to the destination data planes
  * @stride: strides of the destination planes
- * @x: the x position in the image to pack to
+ * @chroma_site: the chroma siting of the target when subsampled
  * @y: the y position in the image to pack to
  * @width: the amount of pixels to pack.
  *
  * Packs @width pixels from @src to the given planes and strides in the
  * format @info. The pixels from source have each component interleaved
  * and will be packed into the planes in @data.
+ *
+ * When @info refers to a format with a h_sub != 0, this function operates on
+ * (1 << h_sub) lines meaning that @src should contain at least (1 << h_sub)
+ * lines with a stride of @sstride and @y should be a multiple of (1 << h_sub).
  */
 typedef void (*GstVideoFormatPack)           (GstVideoFormatInfo *info,
-                                              GstVideoPackFlags flags, const gpointer src,
+                                              GstVideoPackFlags flags,
+                                              const gpointer src, gint sstride,
                                               gpointer data[GST_VIDEO_MAX_PLANES],
                                               const gint stride[GST_VIDEO_MAX_PLANES],
-                                              gint x, gint y, gint width);
+                                              GstVideoChromaSite chroma_site,
+                                              gint y, gint width);
 
 /**
  * GstVideoFormatInfo:
@@ -382,7 +391,7 @@ typedef enum {
  *
  * Various Chroma sitings.
  */
-typedef enum {
+enum _GstVideoChromaSite {
   GST_VIDEO_CHROMA_SITE_UNKNOWN   =  0,
   GST_VIDEO_CHROMA_SITE_NONE      = (1 << 0),
   GST_VIDEO_CHROMA_SITE_H_COSITED = (1 << 1),
@@ -393,7 +402,7 @@ typedef enum {
   GST_VIDEO_CHROMA_SITE_JPEG      = (GST_VIDEO_CHROMA_SITE_NONE),
   GST_VIDEO_CHROMA_SITE_MPEG2     = (GST_VIDEO_CHROMA_SITE_H_COSITED),
   GST_VIDEO_CHROMA_SITE_DV        = (GST_VIDEO_CHROMA_SITE_COSITED | GST_VIDEO_CHROMA_SITE_ALT_LINE),
-} GstVideoChromaSite;
+};
 
 /**
  * GstVideoColorRange:
@@ -500,12 +509,12 @@ typedef enum {
  *
  * Structure describing the color info.
  */
-typedef struct {
+struct _GstVideoColorimetry {
   GstVideoColorRange        range;
   GstVideoColorMatrix       matrix;
   GstVideoTransferFunction  transfer;
   GstVideoColorPrimaries    primaries;
-} GstVideoColorimetry;
+};
 
 /* predefined colorimetry */
 #define GST_VIDEO_COLORIMETRY_BT601       "bt601"

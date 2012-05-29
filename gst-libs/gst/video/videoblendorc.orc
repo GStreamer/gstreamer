@@ -160,6 +160,39 @@ mergewl uvuv, uv, uv
 x2 mergewl ayuv, ayay, uvuv
 
 
+.function cogorc_getline_YVYU
+.dest 8 ayuv guint8
+.source 4 uyvy guint8
+.const 2 c255 0xff
+.temp 2 yy
+.temp 2 uv
+.temp 4 ayay
+.temp 4 uvuv
+
+x2 splitwb uv, yy, uyvy
+swapw uv, uv
+x2 mergebw ayay, c255, yy
+mergewl uvuv, uv, uv
+x2 mergewl ayuv, ayay, uvuv
+
+
+.function cogorc_putline_YVYU
+.dest 4 yuy2 guint8
+.source 8 ayuv guint8
+.temp 2 yy
+.temp 2 uv1
+.temp 2 uv2
+.temp 4 ayay
+.temp 4 uvuv
+
+x2 splitlw uvuv, ayay, ayuv
+splitlw uv1, uv2, uvuv
+x2 avgub uv1, uv1, uv2
+x2 select1wb yy, ayay
+swapw uv1, uv1
+x2 mergebw yuy2, yy, uv1
+
+
 .function cogorc_getline_YUV9
 .dest 8 d guint8
 .source 2 y guint8
