@@ -2472,7 +2472,10 @@ pause:
         }
 
         GST_LOG_OBJECT (demux, "Sending EOS, at end of stream");
-        if (!gst_flv_demux_push_src_event (demux, gst_event_new_eos ()))
+        if (!demux->audio_pad && !demux->video_pad)
+          GST_ELEMENT_ERROR (demux, STREAM, FAILED,
+              ("Internal data stream error."), ("Got EOS before any data"));
+        else if (!gst_flv_demux_push_src_event (demux, gst_event_new_eos ()))
           GST_WARNING_OBJECT (demux, "failed pushing EOS on streams");
       }
     } else if (ret == GST_FLOW_NOT_LINKED || ret < GST_FLOW_EOS) {
@@ -2936,13 +2939,19 @@ gst_flv_demux_sink_event (GstPad * pad, GstObject * parent, GstEvent * event)
         gst_index_commit (index, demux->index_id);
         gst_object_unref (index);
       }
-      if (!demux->no_more_pads) {
-        gst_element_no_more_pads (GST_ELEMENT (demux));
-        demux->no_more_pads = TRUE;
-      }
 
-      if (!gst_flv_demux_push_src_event (demux, event))
-        GST_WARNING_OBJECT (demux, "failed pushing EOS on streams");
+      if (!demux->audio_pad && !demux->video_pad)
+        GST_ELEMENT_ERROR (demux, STREAM, FAILED,
+            ("Internal data stream error."), ("Got EOS before any data"));
+      else {
+        if (!demux->no_more_pads) {
+          gst_element_no_more_pads (GST_ELEMENT (demux));
+          demux->no_more_pads = TRUE;
+        }
+
+        if (!gst_flv_demux_push_src_event (demux, event))
+          GST_WARNING_OBJECT (demux, "failed pushing EOS on streams");
+      }
       ret = TRUE;
       break;
     }
