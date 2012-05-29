@@ -277,7 +277,7 @@ gst_opus_dec_parse_header (GstOpusDec * dec, GstBuffer * buf)
 
   dec->n_channels = data[9];
   dec->pre_skip = GST_READ_UINT16_LE (data + 10);
-  dec->r128_gain = GST_READ_UINT16_LE (data + 14);
+  dec->r128_gain = GST_READ_UINT16_LE (data + 16);
   dec->r128_gain_volume = gst_opus_dec_get_r128_volume (dec->r128_gain);
   GST_INFO_OBJECT (dec,
       "Found pre-skip of %u samples, R128 gain %d (volume %f)",
