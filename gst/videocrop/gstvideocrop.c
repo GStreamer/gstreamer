@@ -266,7 +266,7 @@ gst_video_crop_get_image_details_from_caps (GstVideoCrop * vcrop,
           details->macro_y_off = 0;
         }
         break;
-      case GST_VIDEO_FORMAT_Y800:
+      case GST_VIDEO_FORMAT_GRAY8:
         details->packing = VIDEO_CROP_PIXEL_FORMAT_PACKED_SIMPLE;
         break;
       case GST_VIDEO_FORMAT_I420:
