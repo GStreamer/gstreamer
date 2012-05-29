@@ -1070,6 +1070,7 @@ gst_tag_list_insert (GstTagList * into, const GstTagList * from,
   GstTagCopyData data;
 
   g_return_if_fail (GST_IS_TAG_LIST (into));
+  g_return_if_fail (gst_tag_list_is_writable (into));
   g_return_if_fail (GST_IS_TAG_LIST (from));
   g_return_if_fail (GST_TAG_MODE_IS_VALID (mode));
 
@@ -1164,6 +1165,7 @@ gst_tag_list_add (GstTagList * list, GstTagMergeMode mode, const gchar * tag,
   va_list args;
 
   g_return_if_fail (GST_IS_TAG_LIST (list));
+  g_return_if_fail (gst_tag_list_is_writable (list));
   g_return_if_fail (GST_TAG_MODE_IS_VALID (mode));
   g_return_if_fail (tag != NULL);
 
@@ -1188,6 +1190,7 @@ gst_tag_list_add_values (GstTagList * list, GstTagMergeMode mode,
   va_list args;
 
   g_return_if_fail (GST_IS_TAG_LIST (list));
+  g_return_if_fail (gst_tag_list_is_writable (list));
   g_return_if_fail (GST_TAG_MODE_IS_VALID (mode));
   g_return_if_fail (tag != NULL);
 
@@ -1213,6 +1216,7 @@ gst_tag_list_add_valist (GstTagList * list, GstTagMergeMode mode,
   gchar *error = NULL;
 
   g_return_if_fail (GST_IS_TAG_LIST (list));
+  g_return_if_fail (gst_tag_list_is_writable (list));
   g_return_if_fail (GST_TAG_MODE_IS_VALID (mode));
   g_return_if_fail (tag != NULL);
 
@@ -1257,6 +1261,7 @@ gst_tag_list_add_valist_values (GstTagList * list, GstTagMergeMode mode,
     const gchar * tag, va_list var_args)
 {
   g_return_if_fail (GST_IS_TAG_LIST (list));
+  g_return_if_fail (gst_tag_list_is_writable (list));
   g_return_if_fail (GST_TAG_MODE_IS_VALID (mode));
   g_return_if_fail (tag != NULL);
 
@@ -1294,6 +1299,7 @@ gst_tag_list_add_value (GstTagList * list, GstTagMergeMode mode,
     const gchar * tag, const GValue * value)
 {
   g_return_if_fail (GST_IS_TAG_LIST (list));
+  g_return_if_fail (gst_tag_list_is_writable (list));
   g_return_if_fail (GST_TAG_MODE_IS_VALID (mode));
   g_return_if_fail (tag != NULL);
 
