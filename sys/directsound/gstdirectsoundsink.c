@@ -311,9 +311,9 @@ gst_directsound_sink_acceptcaps (GstBaseSink * sink, GstQuery * query)
 
   pad_caps = gst_pad_query_caps (pad, NULL);
   if (pad_caps) {
-    ret = gst_caps_can_intersect (pad_caps, caps);
+    gboolean cret = gst_caps_can_intersect (pad_caps, caps);
     gst_caps_unref (pad_caps);
-    if (!ret)
+    if (!cret)
       goto done;
   }
 
@@ -326,7 +326,10 @@ gst_directsound_sink_acceptcaps (GstBaseSink * sink, GstQuery * query)
     goto done;
 
   /* Make sure input is framed (one frame per buffer) and can be payloaded */
-  if (gst_directsound_sink_is_spdif_format (dsink))
+  switch (spec.type)
+  {
+    case GST_AUDIO_RING_BUFFER_FORMAT_TYPE_AC3:
+    case GST_AUDIO_RING_BUFFER_FORMAT_TYPE_DTS:
     {
       gboolean framed = FALSE, parsed = FALSE;
       st = gst_caps_get_structure (caps, 0);
@@ -336,6 +339,9 @@ gst_directsound_sink_acceptcaps (GstBaseSink * sink, GstQuery * query)
       if ((!framed && !parsed) || gst_audio_iec61937_frame_size (&spec) <= 0)
         goto done;
     }
+    default:
+      break;
+  }
   ret = TRUE;
 
 done:
