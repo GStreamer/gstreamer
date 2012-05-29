@@ -68,33 +68,6 @@ typedef union { orc_int64 i; double f; orc_int32 x2[2]; float x2f[2]; orc_int16 
 #endif
 #endif
 void cogorc_memcpy_2d (guint8 * ORC_RESTRICT d1, int d1_stride, const guint8 * ORC_RESTRICT s1, int s1_stride, int n, int m);
-void cogorc_downsample_horiz_cosite_1tap (guint8 * ORC_RESTRICT d1, const guint8 * ORC_RESTRICT s1, int n);
-void cogorc_downsample_horiz_cosite_3tap (guint8 * ORC_RESTRICT d1, const guint8 * ORC_RESTRICT s1, const guint8 * ORC_RESTRICT s2, int n);
-void cogorc_downsample_420_jpeg (guint8 * ORC_RESTRICT d1, const guint8 * ORC_RESTRICT s1, const guint8 * ORC_RESTRICT s2, int n);
-void cogorc_downsample_vert_halfsite_2tap (guint8 * ORC_RESTRICT d1, const guint8 * ORC_RESTRICT s1, const guint8 * ORC_RESTRICT s2, int n);
-void cogorc_downsample_vert_cosite_3tap (guint8 * ORC_RESTRICT d1, const guint8 * ORC_RESTRICT s1, const guint8 * ORC_RESTRICT s2, const guint8 * ORC_RESTRICT s3, int n);
-void cogorc_downsample_vert_halfsite_4tap (guint8 * ORC_RESTRICT d1, const guint8 * ORC_RESTRICT s1, const guint8 * ORC_RESTRICT s2, const guint8 * ORC_RESTRICT s3, const guint8 * ORC_RESTRICT s4, int n);
-void cogorc_upsample_horiz_cosite_1tap (guint8 * ORC_RESTRICT d1, const guint8 * ORC_RESTRICT s1, int n);
-void cogorc_upsample_horiz_cosite (guint8 * ORC_RESTRICT d1, const guint8 * ORC_RESTRICT s1, const guint8 * ORC_RESTRICT s2, int n);
-void cogorc_upsample_vert_avgub (guint8 * ORC_RESTRICT d1, const guint8 * ORC_RESTRICT s1, const guint8 * ORC_RESTRICT s2, int n);
-void orc_unpack_yuyv_y (guint8 * ORC_RESTRICT d1, const guint8 * ORC_RESTRICT s1, int n);
-void orc_unpack_yuyv_u (guint8 * ORC_RESTRICT d1, const guint8 * ORC_RESTRICT s1, int n);
-void orc_unpack_yuyv_v (guint8 * ORC_RESTRICT d1, const guint8 * ORC_RESTRICT s1, int n);
-void orc_pack_yuyv (guint8 * ORC_RESTRICT d1, const guint8 * ORC_RESTRICT s1, const guint8 * ORC_RESTRICT s2, const guint8 * ORC_RESTRICT s3, int n);
-void orc_unpack_uyvy_y (guint8 * ORC_RESTRICT d1, const guint8 * ORC_RESTRICT s1, int n);
-void orc_unpack_uyvy_u (guint8 * ORC_RESTRICT d1, const guint8 * ORC_RESTRICT s1, int n);
-void orc_unpack_uyvy_v (guint8 * ORC_RESTRICT d1, const guint8 * ORC_RESTRICT s1, int n);
-void orc_pack_uyvy (guint8 * ORC_RESTRICT d1, const guint8 * ORC_RESTRICT s1, const guint8 * ORC_RESTRICT s2, const guint8 * ORC_RESTRICT s3, int n);
-void orc_matrix2_u8 (guint8 * ORC_RESTRICT d1, const guint8 * ORC_RESTRICT s1, const guint8 * ORC_RESTRICT s2, int p1, int p2, int p3, int n);
-void orc_matrix2_11_u8 (guint8 * ORC_RESTRICT d1, const guint8 * ORC_RESTRICT s1, const guint8 * ORC_RESTRICT s2, int p1, int p2, int n);
-void orc_matrix2_12_u8 (guint8 * ORC_RESTRICT d1, const guint8 * ORC_RESTRICT s1, const guint8 * ORC_RESTRICT s2, int p1, int p2, int n);
-void orc_matrix3_u8 (guint8 * ORC_RESTRICT d1, const guint8 * ORC_RESTRICT s1, const guint8 * ORC_RESTRICT s2, const guint8 * ORC_RESTRICT s3, int p1, int p2, int p3, int p4, int n);
-void orc_matrix3_100_u8 (guint8 * ORC_RESTRICT d1, const guint8 * ORC_RESTRICT s1, const guint8 * ORC_RESTRICT s2, const guint8 * ORC_RESTRICT s3, int p1, int p2, int p3, int n);
-void orc_matrix3_100_offset_u8 (guint8 * ORC_RESTRICT d1, const guint8 * ORC_RESTRICT s1, const guint8 * ORC_RESTRICT s2, const guint8 * ORC_RESTRICT s3, int p1, int p2, int p3, int p4, int p5, int n);
-void orc_matrix3_000_u8 (guint8 * ORC_RESTRICT d1, const guint8 * ORC_RESTRICT s1, const guint8 * ORC_RESTRICT s2, const guint8 * ORC_RESTRICT s3, int p1, int p2, int p3, int p4, int p5, int n);
-void orc_pack_123x (guint8 * ORC_RESTRICT d1, const guint8 * ORC_RESTRICT s1, const guint8 * ORC_RESTRICT s2, const guint8 * ORC_RESTRICT s3, int p1, int n);
-void orc_pack_x123 (guint8 * ORC_RESTRICT d1, const guint8 * ORC_RESTRICT s1, const guint8 * ORC_RESTRICT s2, const guint8 * ORC_RESTRICT s3, int p1, int n);
-void cogorc_combine2_u8 (guint8 * ORC_RESTRICT d1, const guint8 * ORC_RESTRICT s1, const guint8 * ORC_RESTRICT s2, int p1, int p2, int n);
 void cogorc_convert_I420_UYVY (guint8 * ORC_RESTRICT d1, guint8 * ORC_RESTRICT d2, const guint8 * ORC_RESTRICT s1, const guint8 * ORC_RESTRICT s2, const guint8 * ORC_RESTRICT s3, const guint8 * ORC_RESTRICT s4, int n);
 void cogorc_convert_I420_YUY2 (guint8 * ORC_RESTRICT d1, guint8 * ORC_RESTRICT d2, const guint8 * ORC_RESTRICT s1, const guint8 * ORC_RESTRICT s2, const guint8 * ORC_RESTRICT s3, const guint8 * ORC_RESTRICT s4, int n);
 void cogorc_convert_I420_AYUV (guint8 * ORC_RESTRICT d1, guint8 * ORC_RESTRICT d2, const guint8 * ORC_RESTRICT s1, const guint8 * ORC_RESTRICT s2, const guint8 * ORC_RESTRICT s3, const guint8 * ORC_RESTRICT s4, int n);
