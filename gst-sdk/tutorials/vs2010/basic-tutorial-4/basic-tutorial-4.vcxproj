@@ -19,7 +19,7 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="..\..\..\..\gst-sdk\tutorials\basic-tutorial-4.c" />
+    <ClCompile Include="..\..\basic-tutorial-4.c" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <Keyword>Win32Proj</Keyword>
