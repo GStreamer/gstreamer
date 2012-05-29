@@ -57,8 +57,6 @@ G_BEGIN_DECLS
  * @GST_VIDEO_FORMAT_GRAY16_BE: 16-bit grayscale, most significant byte first (Since: 0.10.29)
  * @GST_VIDEO_FORMAT_GRAY16_LE: 16-bit grayscale, least significant byte first (Since: 0.10.29)
  * @GST_VIDEO_FORMAT_v308: packed 4:4:4 YUV (Since: 0.10.29)
- * @GST_VIDEO_FORMAT_Y800: same as GST_VIDEO_FORMAT_GRAY8 (Since: 0.10.30)
- * @GST_VIDEO_FORMAT_Y16: same as GST_VIDEO_FORMAT_GRAY16_LE (Since: 0.10.30)
  * @GST_VIDEO_FORMAT_RGB16: rgb 5-6-5 bits per component (Since: 0.10.30)
  * @GST_VIDEO_FORMAT_BGR16: reverse rgb 5-6-5 bits per component (Since: 0.10.30)
  * @GST_VIDEO_FORMAT_RGB15: rgb 5-5-5 bits per component (Since: 0.10.30)
@@ -107,8 +105,6 @@ typedef enum {
   GST_VIDEO_FORMAT_GRAY16_BE,
   GST_VIDEO_FORMAT_GRAY16_LE,
   GST_VIDEO_FORMAT_v308,
-  GST_VIDEO_FORMAT_Y800,
-  GST_VIDEO_FORMAT_Y16,
   GST_VIDEO_FORMAT_RGB16,
   GST_VIDEO_FORMAT_BGR16,
   GST_VIDEO_FORMAT_RGB15,
@@ -199,7 +195,7 @@ typedef enum
  * interleaved. @dest should at least be big enough to hold @width *
  * n_components * size(unpack_format) bytes.
  */
-typedef void (*GstVideoFormatUnpack)         (GstVideoFormatInfo *info,
+typedef void (*GstVideoFormatUnpack)         (const GstVideoFormatInfo *info,
                                               GstVideoPackFlags flags, gpointer dest,
                                               const gpointer data[GST_VIDEO_MAX_PLANES],
                                               const gint stride[GST_VIDEO_MAX_PLANES],
@@ -224,7 +220,7 @@ typedef void (*GstVideoFormatUnpack)         (GstVideoFormatInfo *info,
  * (1 << h_sub) lines meaning that @src should contain at least (1 << h_sub)
  * lines with a stride of @sstride and @y should be a multiple of (1 << h_sub).
  */
-typedef void (*GstVideoFormatPack)           (GstVideoFormatInfo *info,
+typedef void (*GstVideoFormatPack)           (const GstVideoFormatInfo *info,
                                               GstVideoPackFlags flags,
                                               const gpointer src, gint sstride,
                                               gpointer data[GST_VIDEO_MAX_PLANES],
@@ -721,9 +717,8 @@ gboolean    gst_video_frame_copy_plane    (GstVideoFrame *dest, const GstVideoFr
 #define GST_VIDEO_FORMATS_ALL "{ I420, YV12, YUY2, UYVY, AYUV, RGBx, "  \
     "BGRx, xRGB, xBGR, RGBA, BGRA, ARGB, ABGR, RGB, BGR, Y41B, Y42B, "  \
     "YVYU, Y444, v210, v216, NV12, NV21, GRAY8, GRAY16_BE, GRAY16_LE, " \
-    "v308, Y800, Y16, RGB16, BGR16, RGB15, BGR15, UYVP, A420, "         \
-    "RGB8_PALETTED, YUV9, YVU9, IYU1, ARGB64, AYUV64, r210, I420_10LE," \
-    "I420_10BE }"
+    "v308, RGB16, BGR16, RGB15, BGR15, UYVP, A420, RGB8_PALETTED, " \
+    "YUV9, YVU9, IYU1, ARGB64, AYUV64, r210, I420_10LE, I420_10BE }"
 
 /**
  * GST_VIDEO_CAPS_MAKE:
