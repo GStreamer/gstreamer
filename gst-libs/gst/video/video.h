@@ -171,8 +171,20 @@ typedef enum
 #define GST_VIDEO_COMP_A  3
 
 /**
+ * GstVideoPackFlags:
+ * @GST_VIDEO_PACK_FLAG_NONE: No flag
+ *
+ * The different flags that can be used when packing and unpacking.
+ */
+typedef enum
+{
+  GST_VIDEO_PACK_FLAG_NONE       = 0
+} GstVideoPackFlags;
+
+/**
  * GstVideoFormatUnpack:
  * @info: a #GstVideoFormatInfo
+ * @flags: flags to control the unpacking
  * @dest: a destination array
  * @data: pointers to the data planes
  * @stride: strides of the planes
@@ -185,13 +197,15 @@ typedef enum
  * interleaved. @dest should at least be big enough to hold @width *
  * n_components * size(unpack_format) bytes.
  */
-typedef void (*GstVideoFormatUnpack)         (GstVideoFormatInfo *info, gpointer dest,
+typedef void (*GstVideoFormatUnpack)         (GstVideoFormatInfo *info,
+                                              GstVideoPackFlags flags, gpointer dest,
                                               const gpointer data[GST_VIDEO_MAX_PLANES],
                                               const gint stride[GST_VIDEO_MAX_PLANES],
                                               gint x, gint y, gint width);
 /**
  * GstVideoFormatPack:
  * @info: a #GstVideoFormatInfo
+ * @flags: flags to control the packing
  * @src: a source array
  * @data: pointers to the destination data planes
  * @stride: strides of the destination planes
@@ -203,7 +217,8 @@ typedef void (*GstVideoFormatUnpack)         (GstVideoFormatInfo *info, gpointer
  * format @info. The pixels from source have each component interleaved
  * and will be packed into the planes in @data.
  */
-typedef void (*GstVideoFormatPack)           (GstVideoFormatInfo *info, const gpointer src,
+typedef void (*GstVideoFormatPack)           (GstVideoFormatInfo *info,
+                                              GstVideoPackFlags flags, const gpointer src,
                                               gpointer data[GST_VIDEO_MAX_PLANES],
                                               const gint stride[GST_VIDEO_MAX_PLANES],
                                               gint x, gint y, gint width);
