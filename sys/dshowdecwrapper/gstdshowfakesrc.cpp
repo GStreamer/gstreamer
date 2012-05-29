@@ -1,4 +1,5 @@
 /* GStreamer
+ * Copyright <2006, 2007, 2008, 2009, 2010> Fluendo <support@fluendo.com>
  * Copyright (C) 2007 Sebastien Moutte <sebastien@moutte.net>
  *
  * gstdshowfakesrc.cpp:
@@ -128,6 +129,9 @@ STDMETHODIMP FakeOutputPin::PushBuffer(byte *buffer,
 
     hres = Deliver(pSample);
     pSample->Release();
+  }
+  else {
+    GST_WARNING ("unable to obtain a delivery buffer");
   }
 
   return S_OK;

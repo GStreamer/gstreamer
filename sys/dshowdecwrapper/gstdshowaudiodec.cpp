@@ -583,7 +583,7 @@ gst_dshowaudiodec_chain (GstPad * pad, GstBuffer * buffer)
     goto beach;
   }
 
-  if (adec->last_ret < GST_FLOW_UNEXPECTED) {
+  if (GST_FLOW_IS_FATAL (adec->last_ret)) {
     GST_DEBUG_OBJECT (adec, "last decoding iteration generated a fatal error "
         "%s", gst_flow_get_name (adec->last_ret));
     goto beach;
@@ -1171,7 +1171,7 @@ dshow_adec_register (GstPlugin * plugin)
           audio_dec_codecs[i].element_name, &info, (GTypeFlags)0);
       g_type_set_qdata (type, DSHOW_CODEC_QDATA, (gpointer) (audio_dec_codecs + i));
       if (!gst_element_register (plugin, audio_dec_codecs[i].element_name,
-              GST_RANK_SECONDARY, type)) {
+              GST_RANK_MARGINAL, type)) {
         return FALSE;
       }
       GST_CAT_DEBUG (dshowaudiodec_debug, "Registered %s",
