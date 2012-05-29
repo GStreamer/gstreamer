@@ -163,6 +163,17 @@ typedef enum
 } GstAudioFormatFlags;
 
 /**
+ * GstAudioPackFlags:
+ * @GST_AUDIO_PACK_FLAG_NONE: No flag
+ *
+ * The different flags that can be used when packing and unpacking.
+ */
+typedef enum
+{
+  GST_AUDIO_PACK_FLAG_NONE       = 0
+} GstAudioPackFlags;
+
+/**
  * GstAudioFormatUnpack:
  * @info: a #GstAudioFormatInfo
  * @dest: a destination array
@@ -174,7 +185,8 @@ typedef enum
  * interleaved. @dest should at least be big enough to hold @length *
  * channels * size(unpack_format) bytes.
  */
-typedef void (*GstAudioFormatUnpack)         (const GstAudioFormatInfo *info, gpointer dest,
+typedef void (*GstAudioFormatUnpack)         (const GstAudioFormatInfo *info,
+                                              GstAudioPackFlags flags, gpointer dest,
                                               const gpointer data, gint length);
 /**
  * GstAudioFormatPack:
@@ -187,7 +199,8 @@ typedef void (*GstAudioFormatUnpack)         (const GstAudioFormatInfo *info, gp
  * The samples from source have each channel interleaved
  * and will be packed into @data.
  */
-typedef void (*GstAudioFormatPack)           (const GstAudioFormatInfo *info, const gpointer src,
+typedef void (*GstAudioFormatPack)           (const GstAudioFormatInfo *info,
+                                              GstAudioPackFlags flags, const gpointer src,
                                               gpointer data, gint length);
 
 /**
