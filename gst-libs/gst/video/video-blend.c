@@ -59,18 +59,6 @@ ensure_debug_category (void)
 
 #endif /* GST_DISABLE_GST_DEBUG */
 
-#if G_BYTE_ORDER == G_LITTLE_ENDIAN
-# define ARGB_A 3
-# define ARGB_R 2
-# define ARGB_G 1
-# define ARGB_B 0
-#else
-# define ARGB_A 0
-# define ARGB_R 1
-# define ARGB_G 2
-# define ARGB_B 3
-#endif
-
 /* Copy/pasted from 0.11 video.c */
 static int
 fill_planes (GstBlendVideoFormatInfo * info)
