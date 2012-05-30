@@ -124,7 +124,7 @@
 
 /* Begin PBXFileReference section */
 		63118C4D156D29530085CF03 /* basic-tutorial-2.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = "basic-tutorial-2.c"; path = "../gst-sdk/tutorials/basic-tutorial-2.c"; sourceTree = SOURCE_ROOT; };
-		63118C4F156D297B0085CF03 /* gstreamer-0.10.xcconfig */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.xcconfig; name = "gstreamer-0.10.xcconfig"; path = "/System/Library/Frameworks/GStreamer.framework/Version/2012.5/x86_64/share/xcode/gstreamer-0.10.xcconfig"; sourceTree = "<absolute>"; };
+		63118C4F156D297B0085CF03 /* gstreamer-0.10.xcconfig */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.xcconfig; name = "gstreamer-0.10.xcconfig"; path = "/Library/Frameworks/GStreamer.framework/Version/2012.5/x86_64/share/xcode/gstreamer-0.10.xcconfig"; sourceTree = "<absolute>"; };
 		63118C54156D29DE0085CF03 /* Turorial 3 */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = "Turorial 3"; sourceTree = BUILT_PRODUCTS_DIR; };
 		63118C60156D2AA70085CF03 /* basic-tutorial-3.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = "basic-tutorial-3.c"; path = "../gst-sdk/tutorials/basic-tutorial-3.c"; sourceTree = SOURCE_ROOT; };
 		63118C75156D2B970085CF03 /* Tutorial 4 */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = "Tutorial 4"; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -133,7 +133,7 @@
 		63118C92156D2D630085CF03 /* basic-tutorial-1.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = "basic-tutorial-1.c"; path = "../gst-sdk/tutorials/basic-tutorial-1.c"; sourceTree = SOURCE_ROOT; };
 		63118C98156D2E2F0085CF03 /* Tutorial 5 */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = "Tutorial 5"; sourceTree = BUILT_PRODUCTS_DIR; };
 		63118CA2156D2E400085CF03 /* basic-tutorial-5.c */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.objc; fileEncoding = 4; name = "basic-tutorial-5.c"; path = "../gst-sdk/tutorials/basic-tutorial-5.c"; sourceTree = SOURCE_ROOT; };
-		63118CA4156D2EAC0085CF03 /* gstreamer-0.10-gtk+-2.0.xcconfig */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.xcconfig; name = "gstreamer-0.10-gtk+-2.0.xcconfig"; path = "/System/Library/Frameworks/GStreamer.framework/Version/2012.5/x86_64/share/xcode/gstreamer-0.10-gtk+-2.0.xcconfig"; sourceTree = "<absolute>"; };
+		63118CA4156D2EAC0085CF03 /* gstreamer-0.10-gtk+-2.0.xcconfig */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.xcconfig; name = "gstreamer-0.10-gtk+-2.0.xcconfig"; path = "/Library/Frameworks/GStreamer.framework/Version/2012.5/x86_64/share/xcode/gstreamer-0.10-gtk+-2.0.xcconfig"; sourceTree = "<absolute>"; };
 		63118CB9156D31240085CF03 /* Tutorial 2 */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = "Tutorial 2"; sourceTree = BUILT_PRODUCTS_DIR; };
 		63118CC8156D32E20085CF03 /* Playback Tutorial 1 */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = "Playback Tutorial 1"; sourceTree = BUILT_PRODUCTS_DIR; };
 		63118CD2156D32FE0085CF03 /* playback-tutorial-1.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = "playback-tutorial-1.c"; path = "../gst-sdk/tutorials/playback-tutorial-1.c"; sourceTree = SOURCE_ROOT; };
@@ -147,7 +147,7 @@
 		63DE8838156DAC09006F2D3B /* basic-tutorial-7.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = "basic-tutorial-7.c"; path = "../gst-sdk/tutorials/basic-tutorial-7.c"; sourceTree = SOURCE_ROOT; };
 		63DE883A156DAC0E006F2D3B /* basic-tutorial-8.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = "basic-tutorial-8.c"; path = "../gst-sdk/tutorials/basic-tutorial-8.c"; sourceTree = SOURCE_ROOT; };
 		63DE883C156DAC15006F2D3B /* basic-tutorial-9.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = "basic-tutorial-9.c"; path = "../gst-sdk/tutorials/basic-tutorial-9.c"; sourceTree = SOURCE_ROOT; };
-		63DE8841156DACB3006F2D3B /* gstreamer-0.10-all.xcconfig */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.xcconfig; name = "gstreamer-0.10-all.xcconfig"; path = "/System/Library/Frameworks/GStreamer.framework/Version/2012.5/x86_64/share/xcode/gstreamer-0.10-all.xcconfig"; sourceTree = "<absolute>"; };
+		63DE8841156DACB3006F2D3B /* gstreamer-0.10-all.xcconfig */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.xcconfig; name = "gstreamer-0.10-all.xcconfig"; path = "/Library/Frameworks/GStreamer.framework/Version/2012.5/x86_64/share/xcode/gstreamer-0.10-all.xcconfig"; sourceTree = "<absolute>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
