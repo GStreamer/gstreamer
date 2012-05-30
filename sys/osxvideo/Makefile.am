@@ -2,7 +2,9 @@
 plugin_LTLIBRARIES = libgstosxvideosink.la
 
 libgstosxvideosink_la_SOURCES = osxvideosink.m cocoawindow.m 
-libgstosxvideosink_la_CFLAGS = $(GST_OBJCFLAGS) $(GST_BASE_CFLAGS) \
+libgstosxvideosink_la_CFLAGS = $(GST_CFLAGS) $(GST_BASE_CFLAGS) \
+	$(GST_PLUGINS_BASE_CFLAGS) -DRUN_NS_APP_THREAD
+libgstosxvideosink_la_OBJCFLAGS = $(GST_OBJCFLAGS) $(GST_BASE_CFLAGS) \
 	$(GST_PLUGINS_BASE_CFLAGS) -DRUN_NS_APP_THREAD
 libgstosxvideosink_la_LIBADD =  \
 	$(GST_LIBS) \
