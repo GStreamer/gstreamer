@@ -13,12 +13,12 @@ libgstapplemedia_la_SOURCES =			\
 	dynapi.c
 
 libgstapplemedia_la_CFLAGS =			\
-	$(GST_CFLAGS)				\
+	$(GST_OBJCFLAGS)			\
 	$(GST_BASE_CFLAGS)			\
 	$(GST_PLUGINS_BASE_CFLAGS)
 
 libgstapplemedia_la_OBJCFLAGS =			\
-	$(GST_CFLAGS)				\
+	$(GST_OBJCFLAGS)			\
 	$(GST_BASE_CFLAGS)			\
 	$(GST_PLUGINS_BASE_CFLAGS)
 
