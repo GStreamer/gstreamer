@@ -214,8 +214,6 @@ struct format_list_struct format_list[] = {
   {VTS_YUV, "Y42B", "Y42B", paint_setup_generic, convert_hline_generic},
   /* Y444 */
   {VTS_YUV, "Y444", "Y444", paint_setup_generic, convert_hline_generic},
-  /* Y800 grayscale */
-  {VTS_YUV, "Y800", "Y800", paint_setup_generic, convert_hline_generic},
 
   {VTS_YUV, "I420_10LE", "I420-10LE", paint_setup_generic,
       convert_hline_generic},
@@ -224,13 +222,10 @@ struct format_list_struct format_list[] = {
 
   /* Not exactly YUV but it's the same as above */
   {VTS_GRAY, "GRAY8", "GRAY8", paint_setup_generic, convert_hline_generic},
-#if G_BYTE_ORDER == G_LITTLE_ENDIAN
   {VTS_GRAY, "GRAY16_LE", "GRAY16", paint_setup_generic,
       convert_hline_generic},
-#else
   {VTS_GRAY, "GRAY16_BE", "GRAY16", paint_setup_generic,
       convert_hline_generic},
-#endif
 
   {VTS_RGB, "xRGB", "xRGB8888", paint_setup_generic, convert_hline_generic},
   {VTS_RGB, "xBGR", "xBGR8888", paint_setup_generic, convert_hline_generic},
