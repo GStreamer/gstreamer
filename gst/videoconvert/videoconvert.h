@@ -57,12 +57,7 @@ struct _VideoConvert {
   guint16 *errline;
 
   void (*convert) (VideoConvert *convert, GstVideoFrame *dest, const GstVideoFrame *src);
-  void (*getline) (VideoConvert *convert, guint8 *dest, const GstVideoFrame *src, int j);
-  void (*putline) (VideoConvert *convert, GstVideoFrame *dest, const guint8 *src, int j);
   void (*matrix) (VideoConvert *convert);
-
-  void (*getline16) (VideoConvert *convert, guint16 *dest, const GstVideoFrame *src, int j);
-  void (*putline16) (VideoConvert *convert, GstVideoFrame *dest, const guint16 *src, int j);
   void (*matrix16) (VideoConvert *convert);
   void (*dither16) (VideoConvert *convert, int j);
 };
