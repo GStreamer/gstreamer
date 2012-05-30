@@ -107,7 +107,7 @@ GType gst_osx_video_sink_get_type(void);
 @end
 
 
-#if MAC_OS_X_VERSION_MIN_REQUIRED == MAC_OS_X_VERSION_10_6
+#if MAC_OS_X_VERSION_MIN_REQUIRED >= MAC_OS_X_VERSION_10_6
 @interface GstWindowDelegate : NSObject <NSWindowDelegate>
 #else
 @interface GstWindowDelegate : NSObject
