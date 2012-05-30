@@ -31,7 +31,7 @@ libgstvideo_@GST_API_VERSION@_la_SOURCES = \
 	gstvideoencoder.c       \
 	gstvideoutils.c
 
-nodist_libgstvideo_@GST_API_VERSION@_la_SOURCES = $(BUILT_SOURCES) $(ORC_NODIST_SOURCES)
+nodist_libgstvideo_@GST_API_VERSION@_la_SOURCES = $(BUILT_SOURCES)
 
 libgstvideo_@GST_API_VERSION@includedir = $(includedir)/gstreamer-@GST_API_VERSION@/gst/video
 libgstvideo_@GST_API_VERSION@include_HEADERS = \
