@@ -390,13 +390,16 @@ typedef enum {
  * GstVideoFlags:
  * @GST_VIDEO_FLAG_NONE: no flags
  * @GST_VIDEO_FLAG_VARIABLE_FPS: a variable fps is selected, fps_n and fps_d
- * denote the maximum fps of the video
+ *     denote the maximum fps of the video
+ * @GST_VIDEO_FLAG_PREMULTIPLIED_ALPHA: Each color has been scaled by the alpha
+ *     value.
  *
  * Extra video flags
  */
 typedef enum {
-  GST_VIDEO_FLAG_NONE         = 0,
-  GST_VIDEO_FLAG_VARIABLE_FPS = (1 << 0)
+  GST_VIDEO_FLAG_NONE                = 0,
+  GST_VIDEO_FLAG_VARIABLE_FPS        = (1 << 0),
+  GST_VIDEO_FLAG_PREMULTIPLIED_ALPHA = (1 << 1)
 } GstVideoFlags;
 
 /**
