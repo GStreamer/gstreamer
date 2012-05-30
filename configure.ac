@@ -283,22 +283,11 @@ AG_GST_CHECK_GST_DEBUG_DISABLED([NO_WARNINGS="-Wno-unused"], [NO_WARNINGS=""])
 dnl define an ERROR_CFLAGS Makefile variable
 dnl -Waggregate-return - libexif returns aggregates
 dnl -Wundef - Windows headers check _MSC_VER unconditionally
-if test "x$HAVE_APPLE_MEDIA" != "xyes"; then
-  AG_GST_SET_ERROR_CFLAGS($FATAL_WARNINGS, [
-      -Wmissing-declarations -Wmissing-prototypes -Wredundant-decls
-      -Wwrite-strings -Wformat-security -Wold-style-definition
-      -Winit-self -Wmissing-include-dirs -Waddress -Wno-multichar
-      -Wnested-externs $NO_WARNINGS])
-else
-  dnl work-around for us passing GST_CFLAGS to the ObjC-compiler, which
-  dnl doesn't understand all warning flags that the C compiler knows about
-  dnl (e.g. -Waddress) or causes problems with some flags (-Waggregate-return)
-  AG_GST_SET_ERROR_CFLAGS($FATAL_WARNINGS, [
-      -Wmissing-declarations -Wmissing-prototypes -Wredundant-decls
-      -Wwrite-strings -Wformat-security -Wold-style-definition
-      -Winit-self -Wmissing-include-dirs -Wno-multichar
-      -Wnested-externs $NO_WARNINGS])
-fi
+AG_GST_SET_ERROR_CFLAGS($FATAL_WARNINGS, [
+    -Wmissing-declarations -Wmissing-prototypes -Wredundant-decls
+    -Wwrite-strings -Wformat-security -Wold-style-definition
+    -Winit-self -Wmissing-include-dirs -Waddress -Wno-multichar
+    -Wnested-externs $NO_WARNINGS])
 
 dnl define an ERROR_CXXFLAGS Makefile variable
 AG_GST_SET_ERROR_CXXFLAGS($FATAL_WARNINGS, [
