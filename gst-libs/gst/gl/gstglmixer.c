@@ -25,7 +25,7 @@
 
 #include <gst/gst.h>
 #include <gst/base/gstcollectpads.h>
-#include <gst/controller/gstcontroller.h>
+//#include <gst/controller/gstcontroller.h>
 #include <gst/video/video.h>
 
 #ifdef HAVE_STDLIB_H
@@ -227,8 +227,9 @@ static void gst_gl_mixer_child_proxy_init (gpointer g_iface,
     gpointer iface_data);
 static void _do_init (GType object_type);
 
-GST_BOILERPLATE_FULL (GstGLMixer, gst_gl_mixer, GstElement,
-    GST_TYPE_ELEMENT, _do_init);
+#define gst_gl_mixer_parent_class parent_class
+G_DEFINE_TYPE_WITH_CODE (GstGLMixer, gst_gl_mixer, GST_TYPE_ELEMENT, _do_init);
+static void gst_gl_mixer_finalize (GObject * object);
 
 static void
 _do_init (GType object_type)
@@ -283,32 +284,28 @@ gst_gl_mixer_child_proxy_init (gpointer g_iface, gpointer iface_data)
 }
 
 static void
-gst_gl_mixer_base_init (gpointer g_class)
-{
-  GstElementClass *element_class = GST_ELEMENT_CLASS (g_class);
-
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&src_factory));
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&sink_factory));
-}
-
-static void
 gst_gl_mixer_class_init (GstGLMixerClass * klass)
 {
-  GObjectClass *gobject_class = (GObjectClass *) klass;
-  GstElementClass *gstelement_class = (GstElementClass *) klass;
+  GObjectClass *gobject_class;
+  GstElementClass *element_class;
+
+  gobject_class = (GObjectClass *) klass;
+  element_class = GST_ELEMENT_CLASS (klass);
 
   gobject_class->finalize = GST_DEBUG_FUNCPTR (gst_gl_mixer_finalize);
 
   gobject_class->get_property = gst_gl_mixer_get_property;
   gobject_class->set_property = gst_gl_mixer_set_property;
 
-  gstelement_class->request_new_pad =
+  gst_element_class_add_pad_template (element_class,
+      gst_static_pad_template_get (&src_factory));
+  gst_element_class_add_pad_template (element_class,
+      gst_static_pad_template_get (&sink_factory));
+
+  element_class->request_new_pad =
       GST_DEBUG_FUNCPTR (gst_gl_mixer_request_new_pad);
-  gstelement_class->release_pad = GST_DEBUG_FUNCPTR (gst_gl_mixer_release_pad);
-  gstelement_class->change_state =
-      GST_DEBUG_FUNCPTR (gst_gl_mixer_change_state);
+  element_class->release_pad = GST_DEBUG_FUNCPTR (gst_gl_mixer_release_pad);
+  element_class->change_state = GST_DEBUG_FUNCPTR (gst_gl_mixer_change_state);
 
   /* Register the pad class */
   (void) (GST_TYPE_GL_MIXER_PAD);
@@ -354,7 +351,7 @@ gst_gl_mixer_reset (GstGLMixer * mix)
 }
 
 static void
-gst_gl_mixer_init (GstGLMixer * mix, GstGLMixerClass * g_class)
+gst_gl_mixer_init (GstGLMixer * mix)
 {
   GstElementClass *klass = GST_ELEMENT_GET_CLASS (mix);
 
