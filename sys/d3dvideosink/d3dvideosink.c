@@ -1815,7 +1815,6 @@ gst_d3dvideosink_refresh (GstD3DVideoSink * sink)
           goto error;
       }
     }
-    gst_d3dvideosink_flush_gpu (sink);
   }
 
 /*success:*/
