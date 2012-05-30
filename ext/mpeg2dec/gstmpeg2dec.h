@@ -98,9 +98,6 @@ struct _GstMpeg2dec {
   gint           index_id;
 
   gboolean       can_allocate_aligned;
-
-  /* whether we have a pixel aspect ratio from the sink caps */
-  gboolean have_par;
 };
 
 struct _GstMpeg2decClass {

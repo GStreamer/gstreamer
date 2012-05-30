@@ -218,18 +218,11 @@ static gboolean
 gst_mpeg2dec_set_format (GstVideoDecoder * decoder, GstVideoCodecState * state)
 {
   GstMpeg2dec *mpeg2dec = GST_MPEG2DEC (decoder);
-  GstStructure *s;
 
   /* Save input state to be used as reference for output state */
   if (mpeg2dec->input_state)
     gst_video_codec_state_unref (mpeg2dec->input_state);
   mpeg2dec->input_state = gst_video_codec_state_ref (state);
-
-  s = gst_caps_get_structure (state->caps, 0);
-
-  /* parse the par, this overrides the encoded par */
-  mpeg2dec->have_par = gst_structure_get_fraction (s, "pixel-aspect-ratio",
-      &mpeg2dec->pixel_width, &mpeg2dec->pixel_height);
 
   return TRUE;
 }
@@ -486,6 +479,7 @@ gst_mpeg2dec_negotiate_format (GstMpeg2dec * mpeg2dec)
   const mpeg2_info_t *info;
   const mpeg2_sequence_t *sequence;
   gboolean ret = FALSE;
+  GstVideoInfo *vinfo;
 
   info = mpeg2_info (mpeg2dec->decoder);
   sequence = info->sequence;
@@ -505,9 +499,12 @@ gst_mpeg2dec_negotiate_format (GstMpeg2dec * mpeg2dec)
   new_state = gst_video_decoder_set_output_state (GST_VIDEO_DECODER (mpeg2dec),
       format, mpeg2dec->width, mpeg2dec->height, mpeg2dec->input_state);
 
+  vinfo = &new_state->info;
+
   /* Ensure interlace caps are set, needed if not using mpegvideoparse */
   if (mpeg2dec->interlaced)
-    new_state->info.interlace_mode = GST_VIDEO_INTERLACE_MODE_INTERLEAVED;
+    GST_VIDEO_INFO_INTERLACE_MODE (vinfo) =
+        GST_VIDEO_INTERLACE_MODE_INTERLEAVED;
 
   mpeg2dec->size = gst_video_format_get_size (format,
       mpeg2dec->decoded_width, mpeg2dec->decoded_height);
@@ -516,31 +513,14 @@ gst_mpeg2dec_negotiate_format (GstMpeg2dec * mpeg2dec)
   mpeg2dec->v_offs = gst_video_format_get_component_offset (format, 2,
       mpeg2dec->decoded_width, mpeg2dec->decoded_height);
 
-  if (mpeg2dec->pixel_width == 0 || mpeg2dec->pixel_height == 0) {
-    GValue par = { 0, };
-    GValue dar = { 0, };
-    GValue dimensions = { 0, };
-
-    /* assume display aspect ratio (DAR) of 4:3 */
-    g_value_init (&dar, GST_TYPE_FRACTION);
-    gst_value_set_fraction (&dar, 4, 3);
-    g_value_init (&dimensions, GST_TYPE_FRACTION);
-    gst_value_set_fraction (&dimensions, mpeg2dec->height, mpeg2dec->width);
-
-    g_value_init (&par, GST_TYPE_FRACTION);
-    if (!gst_value_fraction_multiply (&par, &dar, &dimensions)) {
-      gst_value_set_fraction (&dimensions, 1, 1);
-    }
-
-    mpeg2dec->pixel_width = gst_value_get_fraction_numerator (&par);
-    mpeg2dec->pixel_height = gst_value_get_fraction_denominator (&par);
-
-    GST_WARNING_OBJECT (mpeg2dec, "Unknown pixel-aspect-ratio, assuming %d:%d",
+  /* If we don't have a valid upstream PAR override it */
+  if (GST_VIDEO_INFO_PAR_N (vinfo) == 1 &&
+      GST_VIDEO_INFO_PAR_D (vinfo) == 1 &&
+      mpeg2dec->pixel_width != 0 && mpeg2dec->pixel_height != 0) {
+    GST_DEBUG_OBJECT (mpeg2dec, "Setting PAR %d x %d",
         mpeg2dec->pixel_width, mpeg2dec->pixel_height);
-
-    g_value_unset (&par);
-    g_value_unset (&dar);
-    g_value_unset (&dimensions);
+    GST_VIDEO_INFO_PAR_N (vinfo) = mpeg2dec->pixel_width;
+    GST_VIDEO_INFO_PAR_D (vinfo) = mpeg2dec->pixel_height;
   }
 
   if (new_state) {
@@ -580,11 +560,10 @@ handle_sequence (GstMpeg2dec * mpeg2dec, const mpeg2_info_t * info)
   mpeg2dec->decoded_width = info->sequence->width;
   mpeg2dec->decoded_height = info->sequence->height;
 
-  /* don't take the sequence PAR if we already have one from the sink caps */
-  if (!mpeg2dec->have_par) {
-    mpeg2dec->pixel_width = info->sequence->pixel_width;
-    mpeg2dec->pixel_height = info->sequence->pixel_height;
-  }
+  mpeg2dec->pixel_width = info->sequence->pixel_width;
+  mpeg2dec->pixel_height = info->sequence->pixel_height;
+  GST_DEBUG_OBJECT (mpeg2dec, "pixel_width:%d pixel_height:%d",
+      mpeg2dec->pixel_width, mpeg2dec->pixel_height);
 
   /* mpeg2 video can only be from 16x16 to 4096x4096. Everything
    * else is a corrupted files */
