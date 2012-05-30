@@ -49,10 +49,10 @@
 GST_DEBUG_CATEGORY_STATIC (gst_gl_display_debug);
 #define GST_CAT_DEFAULT gst_gl_display_debug
 
-#define DEBUG_INIT(bla) \
+#define DEBUG_INIT \
   GST_DEBUG_CATEGORY_INIT (gst_gl_display_debug, "gldisplay", 0, "opengl display");
 
-GST_BOILERPLATE_FULL (GstGLDisplay, gst_gl_display, GObject, G_TYPE_OBJECT,
+G_DEFINE_TYPE_WITH_CODE (GstGLDisplay, gst_gl_display, G_TYPE_OBJECT,
     DEBUG_INIT);
 static void gst_gl_display_finalize (GObject * object);
 
@@ -102,12 +102,6 @@ void gst_gl_display_thread_do_download_draw_yuv (GstGLDisplay * display);
 //------------------------------------------------------------
 //---------------------- For klass GstGLDisplay ---------------
 //------------------------------------------------------------
-
-static void
-gst_gl_display_base_init (gpointer g_class)
-{
-}
-
 static void
 gst_gl_display_class_init (GstGLDisplayClass * klass)
 {
@@ -118,7 +112,7 @@ gst_gl_display_class_init (GstGLDisplayClass * klass)
 
 
 static void
-gst_gl_display_init (GstGLDisplay * display, GstGLDisplayClass * klass)
+gst_gl_display_init (GstGLDisplay * display)
 {
   //thread safe
   display->mutex = g_mutex_new ();

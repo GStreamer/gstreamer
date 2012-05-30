@@ -119,11 +119,11 @@ enum
   PROP_EXTERNAL_OPENGL_CONTEXT
 };
 
-#define DEBUG_INIT(bla) \
+#define DEBUG_INIT \
   GST_DEBUG_CATEGORY_INIT (gst_gl_upload_debug, "glupload", 0, "glupload element");
 
-GST_BOILERPLATE_FULL (GstGLUpload, gst_gl_upload, GstBaseTransform,
-    GST_TYPE_BASE_TRANSFORM, DEBUG_INIT);
+G_DEFINE_TYPE_WITH_CODE (GstGLUpload, gst_gl_upload, GST_TYPE_BASE_TRANSFORM,
+    DEBUG_INIT);
 
 static void gst_gl_upload_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec);
@@ -152,24 +152,17 @@ static gboolean gst_gl_upload_get_unit_size (GstBaseTransform * trans,
 static void
 gst_gl_upload_base_init (gpointer klass)
 {
-  GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
-
-  gst_element_class_set_details_simple (element_class, "OpenGL upload",
-      "Filter/Effect", "A from video to GL flow filter",
-      "Julien Isorce <julien.isorce@gmail.com>");
-
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&gst_gl_upload_src_pad_template));
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&gst_gl_upload_sink_pad_template));
 }
 
 static void
 gst_gl_upload_class_init (GstGLUploadClass * klass)
 {
   GObjectClass *gobject_class;
+  GstElementClass *element_class;
 
   gobject_class = (GObjectClass *) klass;
+  element_class = GST_ELEMENT_CLASS (klass);
+
   gobject_class->set_property = gst_gl_upload_set_property;
   gobject_class->get_property = gst_gl_upload_get_property;
 
@@ -189,10 +182,19 @@ gst_gl_upload_class_init (GstGLUploadClass * klass)
           "External OpenGL context",
           "Give an external OpenGL context with which to share textures",
           0, G_MAXULONG, 0, G_PARAM_WRITABLE | G_PARAM_STATIC_STRINGS));
+
+  gst_element_class_set_details_simple (element_class, "OpenGL upload",
+      "Filter/Effect", "A from video to GL flow filter",
+      "Julien Isorce <julien.isorce@gmail.com>");
+
+  gst_element_class_add_pad_template (element_class,
+      gst_static_pad_template_get (&gst_gl_upload_src_pad_template));
+  gst_element_class_add_pad_template (element_class,
+      gst_static_pad_template_get (&gst_gl_upload_sink_pad_template));
 }
 
 static void
-gst_gl_upload_init (GstGLUpload * upload, GstGLUploadClass * klass)
+gst_gl_upload_init (GstGLUpload * upload)
 {
   GstBaseTransform *base_trans = GST_BASE_TRANSFORM (upload);
 

@@ -64,10 +64,10 @@ enum
 #define GST_CAT_DEFAULT gst_gl_filtershader_debug
 GST_DEBUG_CATEGORY_STATIC (GST_CAT_DEFAULT);
 
-#define DEBUG_INIT(bla)							\
+#define DEBUG_INIT \
   GST_DEBUG_CATEGORY_INIT (gst_gl_filtershader_debug, "glshader", 0, "glshader element");
 
-GST_BOILERPLATE_FULL (GstGLFilterShader, gst_gl_filtershader, GstGLFilter,
+G_DEFINE_TYPE_WITH_CODE (GstGLFilterShader, gst_gl_filtershader,
     GST_TYPE_GL_FILTER, DEBUG_INIT);
 
 static void gst_gl_filtershader_set_property (GObject * object, guint prop_id,
@@ -105,24 +105,14 @@ gst_gl_filtershader_reset_resources (GstGLFilter * filter)
 }
 
 static void
-gst_gl_filtershader_base_init (gpointer klass)
-{
-  GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
-
-  gst_element_class_set_details_simple (element_class,
-      "OpenGL fragment shader filter", "Filter/Effect",
-      "Load GLSL fragment shader from file", "<luc.deschenaux@freesurf.ch>");
-  /* initialize library */
-  gst_controller_init (NULL, NULL);
-
-}
-
-static void
 gst_gl_filtershader_class_init (GstGLFilterShaderClass * klass)
 {
   GObjectClass *gobject_class;
+  GstElementClass *element_class;
 
   gobject_class = (GObjectClass *) klass;
+  element_class = GST_ELEMENT_CLASS (klass);
+
   gobject_class->set_property = gst_gl_filtershader_set_property;
   gobject_class->get_property = gst_gl_filtershader_get_property;
 
@@ -141,6 +131,13 @@ gst_gl_filtershader_class_init (GstGLFilterShaderClass * klass)
           "Set the shader uniform variables", NULL,
           G_PARAM_WRITABLE | GST_PARAM_CONTROLLABLE | G_PARAM_STATIC_STRINGS));
 
+  gst_element_class_set_details_simple (element_class,
+      "OpenGL fragment shader filter", "Filter/Effect",
+      "Load GLSL fragment shader from file", "<luc.deschenaux@freesurf.ch>");
+
+  /* initialize library */
+  gst_controller_init (NULL, NULL);
+
   GST_GL_FILTER_CLASS (klass)->filter = gst_gl_filtershader_filter;
   GST_GL_FILTER_CLASS (klass)->display_init_cb =
       gst_gl_filtershader_init_resources;
@@ -151,8 +148,7 @@ gst_gl_filtershader_class_init (GstGLFilterShaderClass * klass)
 }
 
 static void
-gst_gl_filtershader_init (GstGLFilterShader * filtershader,
-    GstGLFilterShaderClass * klass)
+gst_gl_filtershader_init (GstGLFilterShader * filtershader)
 {
   filtershader->shader0 = NULL;
 }

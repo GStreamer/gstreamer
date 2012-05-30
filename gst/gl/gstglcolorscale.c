@@ -83,10 +83,10 @@ enum
   PROP_0
 };
 
-#define DEBUG_INIT(bla) \
+#define DEBUG_INIT \
   GST_DEBUG_CATEGORY_INIT (gst_gl_colorscale_debug, "glcolorscale", 0, "glcolorscale element");
 
-GST_BOILERPLATE_FULL (GstGLColorscale, gst_gl_colorscale, GstBaseTransform,
+G_DEFINE_TYPE_WITH_CODE (GstGLColorscale, gst_gl_colorscale,
     GST_TYPE_BASE_TRANSFORM, DEBUG_INIT);
 
 static void gst_gl_colorscale_set_property (GObject * object, guint prop_id,
@@ -112,7 +112,19 @@ static gboolean gst_gl_colorscale_get_unit_size (GstBaseTransform * trans,
 static void
 gst_gl_colorscale_base_init (gpointer klass)
 {
-  GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
+}
+
+static void
+gst_gl_colorscale_class_init (GstGLColorscaleClass * klass)
+{
+  GObjectClass *gobject_class;
+  GstElementClass *element_class;
+
+  gobject_class = (GObjectClass *) klass;
+  element_class = GST_ELEMENT_CLASS (klass);
+
+  gobject_class->set_property = gst_gl_colorscale_set_property;
+  gobject_class->get_property = gst_gl_colorscale_get_property;
 
   gst_element_class_set_details_simple (element_class, "OpenGL color scale",
       "Filter/Effect", "Colorspace converter and video scaler",
@@ -122,16 +134,6 @@ gst_gl_colorscale_base_init (gpointer klass)
       gst_static_pad_template_get (&gst_gl_colorscale_src_pad_template));
   gst_element_class_add_pad_template (element_class,
       gst_static_pad_template_get (&gst_gl_colorscale_sink_pad_template));
-}
-
-static void
-gst_gl_colorscale_class_init (GstGLColorscaleClass * klass)
-{
-  GObjectClass *gobject_class;
-
-  gobject_class = (GObjectClass *) klass;
-  gobject_class->set_property = gst_gl_colorscale_set_property;
-  gobject_class->get_property = gst_gl_colorscale_get_property;
 
   GST_BASE_TRANSFORM_CLASS (klass)->transform_caps =
       gst_gl_colorscale_transform_caps;
@@ -145,8 +147,7 @@ gst_gl_colorscale_class_init (GstGLColorscaleClass * klass)
 }
 
 static void
-gst_gl_colorscale_init (GstGLColorscale * colorscale,
-    GstGLColorscaleClass * klass)
+gst_gl_colorscale_init (GstGLColorscale * colorscale)
 {
   gst_gl_colorscale_reset (colorscale);
 }

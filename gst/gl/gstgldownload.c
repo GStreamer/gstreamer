@@ -115,10 +115,10 @@ enum
   PROP_0
 };
 
-#define DEBUG_INIT(bla) \
+#define DEBUG_INIT \
     GST_DEBUG_CATEGORY_INIT (gst_gl_download_debug, "gldownload", 0, "gldownload element");
 
-GST_BOILERPLATE_FULL (GstGLDownload, gst_gl_download, GstBaseTransform,
+G_DEFINE_TYPE_WITH_CODE (GstGLDownload, gst_gl_download,
     GST_TYPE_BASE_TRANSFORM, DEBUG_INIT);
 
 static void gst_gl_download_set_property (GObject * object, guint prop_id,
@@ -142,9 +142,16 @@ static gboolean gst_gl_download_get_unit_size (GstBaseTransform * trans,
 
 
 static void
-gst_gl_download_base_init (gpointer klass)
+gst_gl_download_class_init (GstGLDownloadClass * klass)
 {
-  GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
+  GObjectClass *gobject_class;
+  GstElementClass *element_class;
+
+  gobject_class = (GObjectClass *) klass;
+  element_class = GST_ELEMENT_CLASS (klass);
+
+  gobject_class->set_property = gst_gl_download_set_property;
+  gobject_class->get_property = gst_gl_download_get_property;
 
   gst_element_class_set_details_simple (element_class, "OpenGL video maker",
       "Filter/Effect", "A from GL to video flow filter",
@@ -154,17 +161,6 @@ gst_gl_download_base_init (gpointer klass)
       gst_static_pad_template_get (&gst_gl_download_src_pad_template));
   gst_element_class_add_pad_template (element_class,
       gst_static_pad_template_get (&gst_gl_download_sink_pad_template));
-}
-
-
-static void
-gst_gl_download_class_init (GstGLDownloadClass * klass)
-{
-  GObjectClass *gobject_class;
-
-  gobject_class = (GObjectClass *) klass;
-  gobject_class->set_property = gst_gl_download_set_property;
-  gobject_class->get_property = gst_gl_download_get_property;
 
   GST_BASE_TRANSFORM_CLASS (klass)->transform_caps =
       gst_gl_download_transform_caps;
@@ -178,7 +174,7 @@ gst_gl_download_class_init (GstGLDownloadClass * klass)
 
 
 static void
-gst_gl_download_init (GstGLDownload * download, GstGLDownloadClass * klass)
+gst_gl_download_init (GstGLDownload * download)
 {
   GstBaseTransform *base_trans = GST_BASE_TRANSFORM (download);
 

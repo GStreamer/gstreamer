@@ -51,11 +51,11 @@ enum
   PROP_EXTERNAL_OPENGL_CONTEXT
 };
 
-#define DEBUG_INIT(bla)							\
+#define DEBUG_INIT \
   GST_DEBUG_CATEGORY_INIT (gst_gl_filter_debug, "glfilter", 0, "glfilter element");
 
-GST_BOILERPLATE_FULL (GstGLFilter, gst_gl_filter, GstBaseTransform,
-    GST_TYPE_BASE_TRANSFORM, DEBUG_INIT);
+G_DEFINE_TYPE_WITH_CODE (GstGLFilter, gst_gl_filter, GST_TYPE_BASE_TRANSFORM,
+    DEBUG_INIT);
 
 static void gst_gl_filter_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec);
@@ -83,25 +83,16 @@ static gboolean gst_gl_filter_do_transform (GstGLFilter * filter,
 static void gst_gl_filter_start_gl (GstGLDisplay * display, gpointer data);
 static void gst_gl_filter_stop_gl (GstGLDisplay * display, gpointer data);
 
-
-static void
-gst_gl_filter_base_init (gpointer klass)
-{
-  GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
-
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&gst_gl_filter_src_pad_template));
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&gst_gl_filter_sink_pad_template));
-}
-
 static void
 gst_gl_filter_class_init (GstGLFilterClass * klass)
 {
   GObjectClass *gobject_class;
+  GstElementClass *element_class;
 
   gobject_class = (GObjectClass *) klass;
-  gobject_class->set_property = gst_gl_filter_set_property;
+  element_class = GST_ELEMENT_CLASS (klass)
+
+      gobject_class->set_property = gst_gl_filter_set_property;
   gobject_class->get_property = gst_gl_filter_get_property;
 
   GST_BASE_TRANSFORM_CLASS (klass)->transform_caps =
@@ -120,6 +111,11 @@ gst_gl_filter_class_init (GstGLFilterClass * klass)
           "Give an external OpenGL context with which to share textures",
           0, G_MAXULONG, 0, G_PARAM_WRITABLE | G_PARAM_STATIC_STRINGS));
 
+  gst_element_class_add_pad_template (element_class,
+      gst_static_pad_template_get (&gst_gl_filter_src_pad_template));
+  gst_element_class_add_pad_template (element_class,
+      gst_static_pad_template_get (&gst_gl_filter_sink_pad_template));
+
   klass->set_caps = NULL;
   klass->filter = NULL;
   klass->display_init_cb = NULL;
@@ -131,7 +127,7 @@ gst_gl_filter_class_init (GstGLFilterClass * klass)
 }
 
 static void
-gst_gl_filter_init (GstGLFilter * filter, GstGLFilterClass * klass)
+gst_gl_filter_init (GstGLFilter * filter)
 {
   GstBaseTransform *base_trans = GST_BASE_TRANSFORM (filter);
 

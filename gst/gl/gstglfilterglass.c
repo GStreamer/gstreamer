@@ -51,10 +51,10 @@ enum
   PROP_0
 };
 
-#define DEBUG_INIT(bla)							\
+#define DEBUG_INIT \
   GST_DEBUG_CATEGORY_INIT (gst_gl_filter_glass_debug, "glfilterglass", 0, "glfilterglass element");
 
-GST_BOILERPLATE_FULL (GstGLFilterGlass, gst_gl_filter_glass, GstGLFilter,
+G_DEFINE_TYPE_WITH_CODE (GstGLFilterGlass, gst_gl_filter_glass,
     GST_TYPE_GL_FILTER, DEBUG_INIT);
 
 static void gst_gl_filter_glass_set_property (GObject * object, guint prop_id,
@@ -100,23 +100,20 @@ static const gchar *glass_fragment_source =
     "  gl_FragColor = vec4(color.rgb, gl_Color.a * w);" "}";
 
 static void
-gst_gl_filter_glass_base_init (gpointer klass)
+gst_gl_filter_glass_class_init (GstGLFilterGlassClass * klass)
 {
-  GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
+  GObjectClass *gobject_class;
+  GstElementClass *element_class;
+
+  gobject_class = (GObjectClass *) klass;
+  element_class = GST_ELEMENT_CLASS (klass);
+
+  gobject_class->set_property = gst_gl_filter_glass_set_property;
+  gobject_class->get_property = gst_gl_filter_glass_get_property;
 
   gst_element_class_set_details_simple (element_class, "OpenGL glass filter",
       "Filter/Effect", "Glass Filter",
       "Julien Isorce <julien.isorce@gmail.com>");
-}
-
-static void
-gst_gl_filter_glass_class_init (GstGLFilterGlassClass * klass)
-{
-  GObjectClass *gobject_class;
-
-  gobject_class = (GObjectClass *) klass;
-  gobject_class->set_property = gst_gl_filter_glass_set_property;
-  gobject_class->get_property = gst_gl_filter_glass_get_property;
 
   GST_GL_FILTER_CLASS (klass)->filter = gst_gl_filter_glass_filter;
   GST_GL_FILTER_CLASS (klass)->onInitFBO = gst_gl_filter_glass_init_shader;
@@ -124,8 +121,7 @@ gst_gl_filter_glass_class_init (GstGLFilterGlassClass * klass)
 }
 
 static void
-gst_gl_filter_glass_init (GstGLFilterGlass * filter,
-    GstGLFilterGlassClass * klass)
+gst_gl_filter_glass_init (GstGLFilterGlass * filter)
 {
   filter->shader = NULL;
   filter->timestamp = 0;

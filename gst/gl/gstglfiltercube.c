@@ -61,10 +61,10 @@ enum
   PROP_ZFAR
 };
 
-#define DEBUG_INIT(bla) \
+#define DEBUG_INIT \
     GST_DEBUG_CATEGORY_INIT (gst_gl_filter_cube_debug, "glfiltercube", 0, "glfiltercube element");
 
-GST_BOILERPLATE_FULL (GstGLFilterCube, gst_gl_filter_cube, GstGLFilter,
+G_DEFINE_TYPE_WITH_CODE (GstGLFilterCube, gst_gl_filter_cube,
     GST_TYPE_GL_FILTER, DEBUG_INIT);
 
 static void gst_gl_filter_cube_set_property (GObject * object, guint prop_id,
@@ -128,21 +128,14 @@ static const gchar *cube_f_src =
 #endif
 
 static void
-gst_gl_filter_cube_base_init (gpointer klass)
-{
-  GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
-
-  gst_element_class_set_details_simple (element_class, "OpenGL cube filter",
-      "Filter/Effect", "Map input texture on the 6 cube faces",
-      "Julien Isorce <julien.isorce@gmail.com>");
-}
-
-static void
 gst_gl_filter_cube_class_init (GstGLFilterCubeClass * klass)
 {
   GObjectClass *gobject_class;
+  GstElementClass *element_class;
 
   gobject_class = (GObjectClass *) klass;
+  element_class = GST_ELEMENT_CLASS (klass);
+
   gobject_class->set_property = gst_gl_filter_cube_set_property;
   gobject_class->get_property = gst_gl_filter_cube_get_property;
 
@@ -183,10 +176,14 @@ gst_gl_filter_cube_class_init (GstGLFilterCubeClass * klass)
       g_param_spec_double ("zfar", "Zfar",
           "Specifies the distance from the viewer to the far clipping plane",
           0.0, 1000.0, 100.0, G_PARAM_WRITABLE | G_PARAM_STATIC_STRINGS));
+
+  gst_element_class_set_details_simple (element_class, "OpenGL cube filter",
+      "Filter/Effect", "Map input texture on the 6 cube faces",
+      "Julien Isorce <julien.isorce@gmail.com>");
 }
 
 static void
-gst_gl_filter_cube_init (GstGLFilterCube * filter, GstGLFilterCubeClass * klass)
+gst_gl_filter_cube_init (GstGLFilterCube * filter)
 {
 #ifdef OPENGL_ES
   filter->shader = NULL;

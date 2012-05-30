@@ -53,12 +53,11 @@ enum
   PROP_ZFAR
 };
 
-#define DEBUG_INIT(bla)							\
+#define DEBUG_INIT \
   GST_DEBUG_CATEGORY_INIT (gst_gl_filter_reflected_screen_debug, "glfilterreflectedscreen", 0, "glfilterreflectedscreen element");
 
-GST_BOILERPLATE_FULL (GstGLFilterReflectedScreen,
-    gst_gl_filter_reflected_screen, GstGLFilter, GST_TYPE_GL_FILTER,
-    DEBUG_INIT);
+G_DEFINE_TYPE_WITH_CODE (GstGLFilterReflectedScreen,
+    gst_gl_filter_reflected_screen, GST_TYPE_GL_FILTER, DEBUG_INIT);
 
 static void gst_gl_filter_reflected_screen_set_property (GObject * object,
     guint prop_id, const GValue * value, GParamSpec * pspec);
@@ -83,22 +82,15 @@ static GLfloat LightAmb[] = { 4.0f, 4.0f, 4.0f, 1.0f }; // Ambient Light
 static GLfloat LightDif[] = { 1.0f, 1.0f, 1.0f, 1.0f }; // Diffuse Light
 
 static void
-gst_gl_filter_reflected_screen_base_init (gpointer klass)
-{
-  GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
-
-  gst_element_class_set_details_simple (element_class,
-      "OpenGL Reflected Screen filter", "Filter/Effect",
-      "Reflected Screen Filter", "Pierre POUZOL <pierre.pouzol@hotmail.fr>");
-}
-
-static void
 gst_gl_filter_reflected_screen_class_init (GstGLFilterReflectedScreenClass *
     klass)
 {
   GObjectClass *gobject_class;
+  GstElementClass *element_class;
 
   gobject_class = (GObjectClass *) klass;
+  element_class = GST_ELEMENT_CLASS (klass);
+
   gobject_class->set_property = gst_gl_filter_reflected_screen_set_property;
   gobject_class->get_property = gst_gl_filter_reflected_screen_get_property;
 
@@ -140,11 +132,14 @@ gst_gl_filter_reflected_screen_class_init (GstGLFilterReflectedScreenClass *
       g_param_spec_double ("zfar", "Zfar",
           "Specifies the distance from the viewer to the far clipping plane",
           0.0, 1000.0, 100.0, G_PARAM_WRITABLE | G_PARAM_STATIC_STRINGS));
+
+  gst_element_class_set_details_simple (element_class,
+      "OpenGL Reflected Screen filter", "Filter/Effect",
+      "Reflected Screen Filter", "Pierre POUZOL <pierre.pouzol@hotmail.fr>");
 }
 
 static void
-gst_gl_filter_reflected_screen_init (GstGLFilterReflectedScreen * filter,
-    GstGLFilterReflectedScreenClass * klass)
+gst_gl_filter_reflected_screen_init (GstGLFilterReflectedScreen * filter)
 {
   filter->active_graphic_mode = TRUE;
   filter->separated_screen = FALSE;

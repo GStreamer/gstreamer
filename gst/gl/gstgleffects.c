@@ -44,11 +44,11 @@
 #define GST_CAT_DEFAULT gst_gl_effects_debug
 GST_DEBUG_CATEGORY_STATIC (GST_CAT_DEFAULT);
 
-#define DEBUG_INIT(bla)							\
+#define DEBUG_INIT \
   GST_DEBUG_CATEGORY_INIT (gst_gl_effects_debug, "gleffects", 0, "gleffects element");
 
-GST_BOILERPLATE_FULL (GstGLEffects, gst_gl_effects, GstGLFilter,
-    GST_TYPE_GL_FILTER, DEBUG_INIT);
+G_DEFINE_TYPE_WITH_CODE (GstGLEffects, gst_gl_effects, GST_TYPE_GL_FILTER,
+    DEBUG_INIT);
 
 static void gst_gl_effects_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec);
@@ -224,22 +224,14 @@ gst_gl_effects_reset_gl_resources (GstGLFilter * filter)
 }
 
 static void
-gst_gl_effects_base_init (gpointer klass)
-{
-  GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
-
-  gst_element_class_set_details_simple (element_class,
-      "Gstreamer OpenGL Effects", "Filter/Effect",
-      "GL Shading Language effects",
-      "Filippo Argiolas <filippo.argiolas@gmail.com>");
-}
-
-static void
 gst_gl_effects_class_init (GstGLEffectsClass * klass)
 {
   GObjectClass *gobject_class;
+  GstElementClass *element_class;
 
   gobject_class = (GObjectClass *) klass;
+  element_class = GST_ELEMENT_CLASS (klass);
+
   gobject_class->set_property = gst_gl_effects_set_property;
   gobject_class->get_property = gst_gl_effects_get_property;
 
@@ -265,6 +257,11 @@ gst_gl_effects_class_init (GstGLEffectsClass * klass)
           "Horizontal Swap",
           "Switch video texture left to right, useful with webcams",
           FALSE, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
+  gst_element_class_set_details_simple (element_class,
+      "Gstreamer OpenGL Effects", "Filter/Effect",
+      "GL Shading Language effects",
+      "Filippo Argiolas <filippo.argiolas@gmail.com>");
 }
 
 void
@@ -341,7 +338,7 @@ set_horizontal_swap (GstGLDisplay * display, gpointer data)
 }
 
 static void
-gst_gl_effects_init (GstGLEffects * effects, GstGLEffectsClass * klass)
+gst_gl_effects_init (GstGLEffects * effects)
 {
   effects->effect = gst_gl_effects_identity;
   effects->horizontal_swap = FALSE;

@@ -46,11 +46,11 @@ enum
   PROP_0
 };
 
-#define DEBUG_INIT(bla)							\
+#define DEBUG_INIT \
   GST_DEBUG_CATEGORY_INIT (gst_gl_filter_laplacian_debug, "glfilterlaplacian", 0, "glfilterlaplacian element");
 
-GST_BOILERPLATE_FULL (GstGLFilterLaplacian, gst_gl_filter_laplacian,
-    GstGLFilter, GST_TYPE_GL_FILTER, DEBUG_INIT);
+G_DEFINE_TYPE_WITH_CODE (GstGLFilterLaplacian, gst_gl_filter_laplacian,
+    GST_TYPE_GL_FILTER, DEBUG_INIT);
 
 static void gst_gl_filter_laplacian_set_property (GObject * object,
     guint prop_id, const GValue * value, GParamSpec * pspec);
@@ -97,24 +97,21 @@ static const gchar *convolution_fragment_source =
 /* *INDENT-ON* */
 
 static void
-gst_gl_filter_laplacian_base_init (gpointer klass)
+gst_gl_filter_laplacian_class_init (GstGLFilterLaplacianClass * klass)
 {
-  GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
+  GObjectClass *gobject_class;
+  GstElementClass *element_class;
+
+  gobject_class = (GObjectClass *) klass;
+  element_class = GST_ELEMENT_CLASS (klass);
+
+  gobject_class->set_property = gst_gl_filter_laplacian_set_property;
+  gobject_class->get_property = gst_gl_filter_laplacian_get_property;
 
   gst_element_class_set_details_simple (element_class,
       "OpenGL laplacian filter", "Filter/Effect",
       "Laplacian Convolution Demo Filter",
       "Filippo Argiolas <filippo.argiolas@gmail.com>");
-}
-
-static void
-gst_gl_filter_laplacian_class_init (GstGLFilterLaplacianClass * klass)
-{
-  GObjectClass *gobject_class;
-
-  gobject_class = (GObjectClass *) klass;
-  gobject_class->set_property = gst_gl_filter_laplacian_set_property;
-  gobject_class->get_property = gst_gl_filter_laplacian_get_property;
 
   GST_GL_FILTER_CLASS (klass)->filter = gst_gl_filter_laplacian_filter;
   GST_GL_FILTER_CLASS (klass)->onInitFBO = gst_gl_filter_laplacian_init_shader;
@@ -122,8 +119,7 @@ gst_gl_filter_laplacian_class_init (GstGLFilterLaplacianClass * klass)
 }
 
 static void
-gst_gl_filter_laplacian_init (GstGLFilterLaplacian * filter,
-    GstGLFilterLaplacianClass * klass)
+gst_gl_filter_laplacian_init (GstGLFilterLaplacian * filter)
 {
   filter->shader = NULL;
 }

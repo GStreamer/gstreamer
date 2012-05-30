@@ -49,11 +49,11 @@ enum
   PROP_0,
 };
 
-#define DEBUG_INIT(bla) \
+#define DEBUG_INIT \
     GST_DEBUG_CATEGORY_INIT (gst_gl_mosaic_debug, "glmosaic", 0, "glmosaic element");
 
-GST_BOILERPLATE_FULL (GstGLMosaic, gst_gl_mosaic, GstGLMixer,
-    GST_TYPE_GL_MIXER, DEBUG_INIT);
+G_DEFINE_TYPE_WITH_CODE (GstGLMosaic, gst_gl_mosaic, GST_TYPE_GL_MIXER,
+    DEBUG_INIT);
 
 static void gst_gl_mosaic_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec);
@@ -113,23 +113,20 @@ static const gchar *mosaic_f_src =
     "}                                                   \n";
 
 static void
-gst_gl_mosaic_base_init (gpointer klass)
+gst_gl_mosaic_class_init (GstGLMosaicClass * klass)
 {
-  GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
+  GObjectClass *gobject_class;
+  GstElementClass *element_class;
+
+  gobject_class = (GObjectClass *) klass;
+  element_class = GST_ELEMENT_CLASS (klass);
+
+  gobject_class->set_property = gst_gl_mosaic_set_property;
+  gobject_class->get_property = gst_gl_mosaic_get_property;
 
   gst_element_class_set_details_simple (element_class, "OpenGL mosaic",
       "Filter/Effect", "OpenGL mosaic",
       "Julien Isorce <julien.isorce@gmail.com>");
-}
-
-static void
-gst_gl_mosaic_class_init (GstGLMosaicClass * klass)
-{
-  GObjectClass *gobject_class;
-
-  gobject_class = (GObjectClass *) klass;
-  gobject_class->set_property = gst_gl_mosaic_set_property;
-  gobject_class->get_property = gst_gl_mosaic_get_property;
 
   GST_GL_MIXER_CLASS (klass)->set_caps = gst_gl_mosaic_init_shader;
   GST_GL_MIXER_CLASS (klass)->reset = gst_gl_mosaic_reset;
@@ -137,7 +134,7 @@ gst_gl_mosaic_class_init (GstGLMosaicClass * klass)
 }
 
 static void
-gst_gl_mosaic_init (GstGLMosaic * mosaic, GstGLMosaicClass * klass)
+gst_gl_mosaic_init (GstGLMosaic * mosaic)
 {
   mosaic->shader = NULL;
   mosaic->input_gl_buffers = NULL;

@@ -53,10 +53,10 @@ enum
   PROP_CLIENT_DATA
 };
 
-#define DEBUG_INIT(bla) \
+#define DEBUG_INIT \
   GST_DEBUG_CATEGORY_INIT (gst_gl_filter_app_debug, "glfilterapp", 0, "glfilterapp element");
 
-GST_BOILERPLATE_FULL (GstGLFilterApp, gst_gl_filter_app, GstGLFilter,
+G_DEFINE_TYPE_WITH_CODE (GstGLFilterApp, gst_gl_filter_app,
     GST_TYPE_GL_FILTER, DEBUG_INIT);
 
 static void gst_gl_filter_app_set_property (GObject * object, guint prop_id,
@@ -73,22 +73,14 @@ static void gst_gl_filter_app_callback (gint width, gint height, guint texture,
 
 
 static void
-gst_gl_filter_app_base_init (gpointer klass)
-{
-  GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
-
-  gst_element_class_set_details_simple (element_class,
-      "OpenGL application filter", "Filter/Effect",
-      "Use client callbacks to define the scene",
-      "Julien Isorce <julien.isorce@gmail.com>");
-}
-
-static void
 gst_gl_filter_app_class_init (GstGLFilterAppClass * klass)
 {
   GObjectClass *gobject_class;
+  GstElementClass *element_class;
 
   gobject_class = (GObjectClass *) klass;
+  element_class = GST_ELEMENT_CLASS (klass);
+
   gobject_class->set_property = gst_gl_filter_app_set_property;
   gobject_class->get_property = gst_gl_filter_app_get_property;
 
@@ -110,10 +102,15 @@ gst_gl_filter_app_class_init (GstGLFilterAppClass * klass)
       g_param_spec_pointer ("client-data", "Client data",
           "Pass data to the draw and reshape callbacks",
           G_PARAM_WRITABLE | G_PARAM_STATIC_STRINGS));
+
+  gst_element_class_set_details_simple (element_class,
+      "OpenGL application filter", "Filter/Effect",
+      "Use client callbacks to define the scene",
+      "Julien Isorce <julien.isorce@gmail.com>");
 }
 
 static void
-gst_gl_filter_app_init (GstGLFilterApp * filter, GstGLFilterAppClass * klass)
+gst_gl_filter_app_init (GstGLFilterApp * filter)
 {
   filter->clientReshapeCallback = NULL;
   filter->clientDrawCallback = NULL;

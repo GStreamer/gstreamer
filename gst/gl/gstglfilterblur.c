@@ -42,10 +42,10 @@
 #define GST_CAT_DEFAULT gst_gl_filterblur_debug
 GST_DEBUG_CATEGORY_STATIC (GST_CAT_DEFAULT);
 
-#define DEBUG_INIT(bla)							\
+#define DEBUG_INIT \
   GST_DEBUG_CATEGORY_INIT (gst_gl_filterblur_debug, "glfilterblur", 0, "glfilterblur element");
 
-GST_BOILERPLATE_FULL (GstGLFilterBlur, gst_gl_filterblur, GstGLFilter,
+G_DEFINE_TYPE_WITH_CODE (GstGLFilterBlur, gst_gl_filterblur,
     GST_TYPE_GL_FILTER, DEBUG_INIT);
 
 static void gst_gl_filterblur_set_property (GObject * object, guint prop_id,
@@ -89,23 +89,20 @@ gst_gl_filterblur_reset_resources (GstGLFilter * filter)
 }
 
 static void
-gst_gl_filterblur_base_init (gpointer klass)
+gst_gl_filterblur_class_init (GstGLFilterBlurClass * klass)
 {
-  GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
+  GObjectClass *gobject_class;
+  GstElementClass *element_class;
+
+  gobject_class = (GObjectClass *) klass;
+  element_class = GST_ELEMENT_CLASS (klass);
+
+  gobject_class->set_property = gst_gl_filterblur_set_property;
+  gobject_class->get_property = gst_gl_filterblur_get_property;
 
   gst_element_class_set_details_simple (element_class, "Gstreamer OpenGL Blur",
       "Filter/Effect", "Blur with 9x9 separable convolution",
       "Filippo Argiolas <filippo.argiolas@gmail.com>");
-}
-
-static void
-gst_gl_filterblur_class_init (GstGLFilterBlurClass * klass)
-{
-  GObjectClass *gobject_class;
-
-  gobject_class = (GObjectClass *) klass;
-  gobject_class->set_property = gst_gl_filterblur_set_property;
-  gobject_class->get_property = gst_gl_filterblur_get_property;
 
   GST_GL_FILTER_CLASS (klass)->filter = gst_gl_filterblur_filter;
   GST_GL_FILTER_CLASS (klass)->display_init_cb =
@@ -117,8 +114,7 @@ gst_gl_filterblur_class_init (GstGLFilterBlurClass * klass)
 }
 
 static void
-gst_gl_filterblur_init (GstGLFilterBlur * filterblur,
-    GstGLFilterBlurClass * klass)
+gst_gl_filterblur_init (GstGLFilterBlur * filterblur)
 {
   filterblur->shader0 = NULL;
   filterblur->shader1 = NULL;

@@ -48,10 +48,10 @@ enum
 #define GST_CAT_DEFAULT gst_gl_filtersobel_debug
 GST_DEBUG_CATEGORY_STATIC (GST_CAT_DEFAULT);
 
-#define DEBUG_INIT(bla)							\
+#define DEBUG_INIT \
   GST_DEBUG_CATEGORY_INIT (gst_gl_filtersobel_debug, "glfiltersobel", 0, "glfiltersobel element");
 
-GST_BOILERPLATE_FULL (GstGLFilterSobel, gst_gl_filtersobel, GstGLFilter,
+G_DEFINE_TYPE_WITH_CODE (GstGLFilterSobel, gst_gl_filtersobel,
     GST_TYPE_GL_FILTER, DEBUG_INIT);
 
 static void gst_gl_filtersobel_set_property (GObject * object, guint prop_id,
@@ -101,21 +101,14 @@ gst_gl_filtersobel_reset_resources (GstGLFilter * filter)
 }
 
 static void
-gst_gl_filtersobel_base_init (gpointer klass)
-{
-  GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
-
-  gst_element_class_set_details_simple (element_class,
-      "Gstreamer OpenGL Sobel", "Filter/Effect", "Sobel edge detection",
-      "Filippo Argiolas <filippo.argiolas@gmail.com>");
-}
-
-static void
 gst_gl_filtersobel_class_init (GstGLFilterSobelClass * klass)
 {
   GObjectClass *gobject_class;
+  GstElementClass *element_class;
 
   gobject_class = (GObjectClass *) klass;
+  element_class = GST_ELEMENT_CLASS (klass);
+
   gobject_class->set_property = gst_gl_filtersobel_set_property;
   gobject_class->get_property = gst_gl_filtersobel_get_property;
 
@@ -133,11 +126,14 @@ gst_gl_filtersobel_class_init (GstGLFilterSobelClass * klass)
           "Invert the colors",
           "Invert colors to get dark edges on bright background",
           FALSE, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
+  gst_element_class_set_details_simple (element_class,
+      "Gstreamer OpenGL Sobel", "Filter/Effect", "Sobel edge detection",
+      "Filippo Argiolas <filippo.argiolas@gmail.com>");
 }
 
 static void
-gst_gl_filtersobel_init (GstGLFilterSobel * filtersobel,
-    GstGLFilterSobelClass * klass)
+gst_gl_filtersobel_init (GstGLFilterSobel * filtersobel)
 {
   int i;
   filtersobel->hconv = NULL;

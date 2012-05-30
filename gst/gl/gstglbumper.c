@@ -55,11 +55,11 @@ enum
   PROP_LOCATION
 };
 
-#define DEBUG_INIT(bla) \
+#define DEBUG_INIT \
   GST_DEBUG_CATEGORY_INIT (gst_gl_bumper_debug, "glbumper", 0, "glbumper element");
 
-GST_BOILERPLATE_FULL (GstGLBumper, gst_gl_bumper, GstGLFilter,
-    GST_TYPE_GL_FILTER, DEBUG_INIT);
+G_DEFINE_TYPE_WITH_CODE (GstGLBumper, gst_gl_bumper, GST_TYPE_GL_FILTER,
+    DEBUG_INIT);
 
 static void gst_gl_bumper_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec);
@@ -264,22 +264,13 @@ gst_gl_bumper_reset_resources (GstGLFilter * filter)
 }
 
 static void
-gst_gl_bumper_base_init (gpointer klass)
-{
-  GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
-
-  gst_element_class_set_details_simple (element_class, "OpenGL bumper filter",
-      "Filter/Effect", "Bump mapping filter",
-      "Cyril Comparon <cyril.comparon@gmail.com>, "
-      "Julien Isorce <julien.isorce@gmail.com>");
-}
-
-static void
 gst_gl_bumper_class_init (GstGLBumperClass * klass)
 {
   GObjectClass *gobject_class;
+  GstElementClass *element_class;
 
   gobject_class = (GObjectClass *) klass;
+  element_class = GST_ELEMENT_CLASS (klass);
   gobject_class->set_property = gst_gl_bumper_set_property;
   gobject_class->get_property = gst_gl_bumper_get_property;
 
@@ -294,10 +285,15 @@ gst_gl_bumper_class_init (GstGLBumperClass * klass)
           "Normal map location",
           "Normal map location", NULL,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
+  gst_element_class_set_details_simple (element_class, "OpenGL bumper filter",
+      "Filter/Effect", "Bump mapping filter",
+      "Cyril Comparon <cyril.comparon@gmail.com>, "
+      "Julien Isorce <julien.isorce@gmail.com>");
 }
 
 static void
-gst_gl_bumper_init (GstGLBumper * bumper, GstGLBumperClass * klass)
+gst_gl_bumper_init (GstGLBumper * bumper)
 {
   bumper->shader = NULL;
   bumper->bumpmap = 0;

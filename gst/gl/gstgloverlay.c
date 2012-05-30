@@ -51,11 +51,11 @@
 #define GST_CAT_DEFAULT gst_gl_overlay_debug
 GST_DEBUG_CATEGORY_STATIC (GST_CAT_DEFAULT);
 
-#define DEBUG_INIT(bla) \
+#define DEBUG_INIT \
   GST_DEBUG_CATEGORY_INIT (gst_gl_overlay_debug, "gloverlay", 0, "gloverlay element");
 
-GST_BOILERPLATE_FULL (GstGLOverlay, gst_gl_overlay, GstGLFilter,
-    GST_TYPE_GL_FILTER, DEBUG_INIT);
+G_DEFINE_TYPE_WITH_CODE (GstGLOverlay, gst_gl_overlay, GST_TYPE_GL_FILTER,
+    DEBUG_INIT);
 
 static gboolean gst_gl_overlay_set_caps (GstGLFilter * filter,
     GstCaps * incaps, GstCaps * outcaps);
@@ -110,22 +110,14 @@ gst_gl_overlay_reset_gl_resources (GstGLFilter * filter)
 }
 
 static void
-gst_gl_overlay_base_init (gpointer klass)
-{
-  GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
-
-  gst_element_class_set_details_simple (element_class,
-      "Gstreamer OpenGL Overlay", "Filter/Effect",
-      "Overlay GL video texture with a PNG image",
-      "Filippo Argiolas <filippo.argiolas@gmail.com>");
-}
-
-static void
 gst_gl_overlay_class_init (GstGLOverlayClass * klass)
 {
   GObjectClass *gobject_class;
+  GstElementClass *element_class;
 
   gobject_class = (GObjectClass *) klass;
+  element_class = GST_ELEMENT_CLASS (klass);
+
   gobject_class->set_property = gst_gl_overlay_set_property;
   gobject_class->get_property = gst_gl_overlay_get_property;
 
@@ -227,6 +219,11 @@ gst_gl_overlay_class_init (GstGLOverlayClass * klass)
           "choose ratio video between 0 and 3\n \t\t\t0 : Default ratio\n\t\t\t1 : 4 / 3\n\t\t\t2 : 16 / 9\n\t\t\t3 : 16 / 10",
           "choose ratio video between 0 and 3\n \t\t\t0 : Default ratio\n\t\t\t1 : 4 / 3\n\t\t\t2 : 16 / 9\n\t\t\t3 : 16 / 10",
           0, 3, 0, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
+  gst_element_class_set_details_simple (element_class,
+      "Gstreamer OpenGL Overlay", "Filter/Effect",
+      "Overlay GL video texture with a PNG image",
+      "Filippo Argiolas <filippo.argiolas@gmail.com>");
 
   /*
      g_object_class_install_property (gobject_class,
@@ -361,7 +358,7 @@ gst_gl_overlay_load_texture (GstGLOverlay * o, GLuint tex, int flag)
 }
 
 static void
-gst_gl_overlay_init (GstGLOverlay * overlay, GstGLOverlayClass * klass)
+gst_gl_overlay_init (GstGLOverlay * overlay)
 {
   overlay->location = NULL;
   overlay->pixbuf = NULL;

@@ -46,11 +46,11 @@ enum
   PROP_0
 };
 
-#define DEBUG_INIT(bla)							\
+#define DEBUG_INIT \
   GST_DEBUG_CATEGORY_INIT (gst_gl_deinterlace_debug, "gldeinterlace", 0, "gldeinterlace element");
 
-GST_BOILERPLATE_FULL (GstGLDeinterlace, gst_gl_deinterlace,
-    GstGLFilter, GST_TYPE_GL_FILTER, DEBUG_INIT);
+G_DEFINE_TYPE_WITH_CODE (GstGLDeinterlace, gst_gl_deinterlace,
+    GST_TYPE_GL_FILTER, DEBUG_INIT);
 
 static void gst_gl_deinterlace_set_property (GObject * object,
     guint prop_id, const GValue * value, GParamSpec * pspec);
@@ -74,24 +74,21 @@ static const gchar *greedyh_fragment_source = "#extension GL_ARB_texture_rectang
     "" "    gl_FragColor = vec4(last, 1.0);\n" "  }\n" "}\n";
 
 static void
-gst_gl_deinterlace_base_init (gpointer klass)
+gst_gl_deinterlace_class_init (GstGLDeinterlaceClass * klass)
 {
-  GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
+  GObjectClass *gobject_class;
+  GstElementClass *element_class;
+
+  gobject_class = (GObjectClass *) klass;
+  element_class = GST_ELEMENT_CLASS (klass);
+
+  gobject_class->set_property = gst_gl_deinterlace_set_property;
+  gobject_class->get_property = gst_gl_deinterlace_get_property;
 
   gst_element_class_set_details_simple (element_class,
       "OpenGL deinterlacing filter", "Deinterlace",
       "Deinterlacing based on fragment shaders",
       "Julien Isorce <julien.isorce@mail.com>");
-}
-
-static void
-gst_gl_deinterlace_class_init (GstGLDeinterlaceClass * klass)
-{
-  GObjectClass *gobject_class;
-
-  gobject_class = (GObjectClass *) klass;
-  gobject_class->set_property = gst_gl_deinterlace_set_property;
-  gobject_class->get_property = gst_gl_deinterlace_get_property;
 
   GST_GL_FILTER_CLASS (klass)->filter = gst_gl_deinterlace_filter;
   GST_GL_FILTER_CLASS (klass)->onInitFBO = gst_gl_deinterlace_init_shader;
@@ -99,8 +96,7 @@ gst_gl_deinterlace_class_init (GstGLDeinterlaceClass * klass)
 }
 
 static void
-gst_gl_deinterlace_init (GstGLDeinterlace * filter,
-    GstGLDeinterlaceClass * klass)
+gst_gl_deinterlace_init (GstGLDeinterlace * filter)
 {
   filter->shader = NULL;
   filter->gl_buffer_prev = NULL;

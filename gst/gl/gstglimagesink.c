@@ -155,7 +155,7 @@ enum
   PROP_PIXEL_ASPECT_RATIO
 };
 
-GST_BOILERPLATE_FULL (GstGLImageSink, gst_glimage_sink, GstVideoSink,
+G_DEFINE_TYPE_WITH_CODE (GstGLImageSink, gst_glimage_sink,
     GST_TYPE_VIDEO_SINK, gst_glimage_sink_init_interfaces);
 
 static void
@@ -184,28 +184,17 @@ gst_glimage_sink_init_interfaces (GType type)
 }
 
 static void
-gst_glimage_sink_base_init (gpointer g_class)
-{
-  GstElementClass *element_class = GST_ELEMENT_CLASS (g_class);
-
-  gst_element_class_set_details_simple (element_class, "OpenGL video sink",
-      "Sink/Video", "A videosink based on OpenGL",
-      "Julien Isorce <julien.isorce@gmail.com>");
-
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&gst_glimage_sink_template));
-}
-
-static void
 gst_glimage_sink_class_init (GstGLImageSinkClass * klass)
 {
   GObjectClass *gobject_class;
   GstElementClass *gstelement_class;
   GstBaseSinkClass *gstbasesink_class;
+  GstElementClass *element_class;
 
   gobject_class = (GObjectClass *) klass;
   gstelement_class = (GstElementClass *) klass;
   gstbasesink_class = (GstBaseSinkClass *) klass;
+  element_class = GST_ELEMENT_CLASS (g_class);
 
   gobject_class->set_property = gst_glimage_sink_set_property;
   gobject_class->get_property = gst_glimage_sink_get_property;
@@ -241,6 +230,13 @@ gst_glimage_sink_class_init (GstGLImageSinkClass * klass)
           "The pixel aspect ratio of the device", "1/1",
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
+  gst_element_class_set_details_simple (element_class, "OpenGL video sink",
+      "Sink/Video", "A videosink based on OpenGL",
+      "Julien Isorce <julien.isorce@gmail.com>");
+
+  gst_element_class_add_pad_template (element_class,
+      gst_static_pad_template_get (&gst_glimage_sink_template));
+
   gobject_class->finalize = gst_glimage_sink_finalize;
 
   gstelement_class->change_state = gst_glimage_sink_change_state;
@@ -253,8 +249,7 @@ gst_glimage_sink_class_init (GstGLImageSinkClass * klass)
 }
 
 static void
-gst_glimage_sink_init (GstGLImageSink * glimage_sink,
-    GstGLImageSinkClass * glimage_sink_class)
+gst_glimage_sink_init (GstGLImageSink * glimage_sink)
 {
   glimage_sink->display_name = NULL;
   glimage_sink->window_id = 0;

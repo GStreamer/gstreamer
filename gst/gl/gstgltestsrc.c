@@ -61,7 +61,7 @@ enum
       /* FILL ME */
 };
 
-GST_BOILERPLATE (GstGLTestSrc, gst_gl_test_src, GstPushSrc, GST_TYPE_PUSH_SRC);
+G_DEFINE_TYPE (GstGLTestSrc, gst_gl_test_src, GST_TYPE_PUSH_SRC);
 
 static void gst_gl_test_src_set_pattern (GstGLTestSrc * gltestsrc,
     int pattern_type);
@@ -120,25 +120,12 @@ gst_gl_test_src_pattern_get_type (void)
 }
 
 static void
-gst_gl_test_src_base_init (gpointer g_class)
-{
-  GstElementClass *element_class = GST_ELEMENT_CLASS (g_class);
-
-  gst_element_class_set_details_simple (element_class, "Video test source",
-      "Source/Video", "Creates a test video stream",
-      "David A. Schleef <ds@schleef.org>");
-
-  gst_element_class_add_pad_template (element_class,
-      gst_pad_template_new ("src", GST_PAD_SRC, GST_PAD_ALWAYS,
-          gst_caps_from_string (GST_GL_VIDEO_CAPS)));
-}
-
-static void
 gst_gl_test_src_class_init (GstGLTestSrcClass * klass)
 {
   GObjectClass *gobject_class;
   GstBaseSrcClass *gstbasesrc_class;
   GstPushSrcClass *gstpushsrc_class;
+  GstElementClass *element_class;
 
   GST_DEBUG_CATEGORY_INIT (gl_test_src_debug, "gltestsrc", 0,
       "Video Test Source");
@@ -146,6 +133,7 @@ gst_gl_test_src_class_init (GstGLTestSrcClass * klass)
   gobject_class = (GObjectClass *) klass;
   gstbasesrc_class = (GstBaseSrcClass *) klass;
   gstpushsrc_class = (GstPushSrcClass *) klass;
+  element_class = GST_ELEMENT_CLASS (klass);
 
   gobject_class->set_property = gst_gl_test_src_set_property;
   gobject_class->get_property = gst_gl_test_src_get_property;
@@ -164,6 +152,14 @@ gst_gl_test_src_class_init (GstGLTestSrcClass * klass)
           "Whether to act as a live source", FALSE,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
+  gst_element_class_set_details_simple (element_class, "Video test source",
+      "Source/Video", "Creates a test video stream",
+      "David A. Schleef <ds@schleef.org>");
+
+  gst_element_class_add_pad_template (element_class,
+      gst_pad_template_new ("src", GST_PAD_SRC, GST_PAD_ALWAYS,
+          gst_caps_from_string (GST_GL_VIDEO_CAPS)));
+
   gstbasesrc_class->set_caps = gst_gl_test_src_setcaps;
   gstbasesrc_class->is_seekable = gst_gl_test_src_is_seekable;
   gstbasesrc_class->do_seek = gst_gl_test_src_do_seek;
@@ -176,7 +172,7 @@ gst_gl_test_src_class_init (GstGLTestSrcClass * klass)
 }
 
 static void
-gst_gl_test_src_init (GstGLTestSrc * src, GstGLTestSrcClass * g_class)
+gst_gl_test_src_init (GstGLTestSrc * src)
 {
   GstPad *pad = GST_BASE_SRC_PAD (src);
 
