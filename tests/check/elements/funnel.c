@@ -95,10 +95,10 @@ release_test_objects (struct TestData *td)
       GST_STATE_CHANGE_SUCCESS);
 
   gst_object_unref (td->funnelsrc);
-  gst_object_unref (td->funnelsink11);
   gst_element_release_request_pad (td->funnel, td->funnelsink11);
-  gst_object_unref (td->funnelsink22);
+  gst_object_unref (td->funnelsink11);
   gst_element_release_request_pad (td->funnel, td->funnelsink22);
+  gst_object_unref (td->funnelsink22);
 
   gst_caps_unref (td->mycaps);
   gst_object_unref (td->funnel);
