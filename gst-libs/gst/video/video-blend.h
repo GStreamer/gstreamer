@@ -27,51 +27,12 @@
 #include <gst/gst.h>
 #include <gst/video/video.h>
 
-#define MAX_VIDEO_PLANES 4
+void       gst_video_blend_scale_linear_RGBA  (GstVideoFrame * src,
+                                               gint dest_height, gint dest_width);
 
-typedef struct _GstBlendVideoFormatInfo GstBlendVideoFormatInfo;
-
-/* GstBlendVideoFormatInfo:
- * @fmt: The #GstVideoFormat describing the video format
- * @width: The width of the video
- * @height: The height of the video
- * @pixels: The buffer containing the pixels of the video
- * @size: The size in byte of @pixels
- * @offset: The offsets of the different component of the video
- * @stride: The stride of the different component of the video
- *
- * Information describing image properties containing necessary
- * fields to do video blending.
- */
-struct _GstBlendVideoFormatInfo
-{
-    GstVideoFormat  fmt;
-
-    gint            width;
-    gint            height;
-
-    guint8        * pixels;
-    gsize           size;
-
-    gboolean        premultiplied_alpha;
-
-    /* YUV components: Y=0, U=1, V=2, A=3
-     * RGB components: R=0, G=1, B=2, A=3 */
-    gint            offset[MAX_VIDEO_PLANES];
-    gint            stride[MAX_VIDEO_PLANES];
-};
-
-void       video_blend_format_info_init   (GstBlendVideoFormatInfo * info,
-                                           guint8 *pixels, guint height,
-                                           guint width, GstVideoFormat fmt,
-                                           gboolean premultiplied_alpha);
-
-void       video_blend_scale_linear_RGBA  (GstBlendVideoFormatInfo * src,
-                                           gint dest_height, gint dest_width);
-
-gboolean   video_blend                    (GstBlendVideoFormatInfo * dest,
-                                           GstBlendVideoFormatInfo * src,
-                                           guint x, guint y,
-                                           gfloat global_alpha);
+gboolean   gst_video_blend                    (GstVideoFrame * dest,
+                                               GstVideoFrame * src,
+                                               guint x, guint y,
+                                               gfloat global_alpha);
 
 #endif
