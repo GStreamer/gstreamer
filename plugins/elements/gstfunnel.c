@@ -310,6 +310,7 @@ gst_funnel_sink_chain (GstPad * pad, GstBuffer * buffer)
   if (GST_BUFFER_CAPS (buffer) && GST_BUFFER_CAPS (buffer) != padcaps) {
     if (!gst_pad_set_caps (funnel->srcpad, GST_BUFFER_CAPS (buffer))) {
       res = GST_FLOW_NOT_NEGOTIATED;
+      gst_buffer_unref (buffer);
       goto out;
     }
   }
