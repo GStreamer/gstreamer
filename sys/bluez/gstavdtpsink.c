@@ -64,10 +64,6 @@ GST_DEBUG_CATEGORY_STATIC (avdtp_sink_debug);
 		g_mutex_unlock(s->sink_lock);		\
 	} G_STMT_END
 
-#ifndef DBUS_TYPE_UNIX_FD
-#define DBUS_TYPE_UNIX_FD -1
-#endif
-
 struct bluetooth_data
 {
   struct bt_get_capabilities_rsp *caps; /* Bluetooth device caps */
