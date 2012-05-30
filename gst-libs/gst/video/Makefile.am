@@ -9,7 +9,7 @@ glib_gen_basename = video
 
 built_sources = video-enumtypes.c
 built_headers = video-enumtypes.h
-BUILT_SOURCES = $(built_sources) $(built_headers)
+BUILT_SOURCES += $(built_sources) $(built_headers)
 
 lib_LTLIBRARIES = libgstvideo-@GST_API_VERSION@.la
 
