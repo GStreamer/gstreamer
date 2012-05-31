@@ -1810,7 +1810,7 @@ type_found (GstElement * typefind, guint probability,
     gchar *temp_template, *filename;
     const gchar *tmp_dir, *prgname;
 
-    tmp_dir = g_get_tmp_dir ();
+    tmp_dir = g_get_user_cache_dir ();
     prgname = g_get_prgname ();
     if (prgname == NULL)
       prgname = "GStreamer";
