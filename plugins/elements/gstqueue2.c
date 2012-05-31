@@ -41,7 +41,7 @@
  * The default queue size limits are 100 buffers, 2MB of data, or
  * two seconds worth of data, whichever is reached first.
  *
- * If you set temp-tmpl to a value such as /tmp/gstreamer-XXXXXX, the element
+ * If you set temp-template to a value such as /tmp/gstreamer-XXXXXX, the element
  * will allocate a random free filename and buffer data in the file.
  * By using this, it will buffer the entire stream data on the file independently
  * of the queue size limits, they will only be used for buffering statistics.
@@ -3237,7 +3237,7 @@ gst_queue2_set_property (GObject * object,
     case PROP_TEMP_LOCATION:
       g_free (queue->temp_location);
       queue->temp_location = g_value_dup_string (value);
-      /* you can set the property back to NULL to make it use the temp-tmpl
+      /* you can set the property back to NULL to make it use the temp-template
        * property. */
       queue->temp_location_set = queue->temp_location != NULL;
       break;
