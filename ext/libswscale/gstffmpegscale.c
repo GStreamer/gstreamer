@@ -529,7 +529,7 @@ gst_ffmpeg_caps_to_pixfmt (const GstCaps * caps)
     case GST_VIDEO_FORMAT_RGB15:
       pix_fmt = PIX_FMT_RGB555;
       break;
-    case GST_VIDEO_FORMAT_RGB8_PALETTED:
+    case GST_VIDEO_FORMAT_RGB8P:
       pix_fmt = PIX_FMT_PAL8;
       break;
     default:

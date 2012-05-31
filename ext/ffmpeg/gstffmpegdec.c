@@ -1446,8 +1446,8 @@ gst_ffmpegdec_audio_negotiate (GstFFMpegDec * ffmpegdec, gboolean force)
   memcpy (ffmpegdec->format.audio.gst_layout,
       ffmpegdec->format.audio.ffmpeg_layout,
       sizeof (GstAudioChannelPosition) * ffmpegdec->format.audio.channels);
-  gst_audio_channel_positions_to_valid_order (ffmpegdec->format.
-      audio.gst_layout, ffmpegdec->format.audio.channels);
+  gst_audio_channel_positions_to_valid_order (ffmpegdec->format.audio.
+      gst_layout, ffmpegdec->format.audio.channels);
 
   GST_LOG_OBJECT (ffmpegdec, "output caps %" GST_PTR_FORMAT, caps);
 
@@ -1886,6 +1886,16 @@ gst_ffmpegdec_video_frame (GstFFMpegDec * ffmpegdec,
 
   /* now decode the frame */
   gst_avpacket_init (&packet, data, size);
+
+  if (ffmpegdec->context->palctrl) {
+    guint8 *pal;
+
+    pal = av_packet_new_side_data (&packet, AV_PKT_DATA_PALETTE,
+        AVPALETTE_SIZE);
+    memcpy (pal, ffmpegdec->context->palctrl->palette, AVPALETTE_SIZE);
+    GST_DEBUG_OBJECT (ffmpegdec, "copy pal %p %p", &packet, pal);
+  }
+
   len = avcodec_decode_video2 (ffmpegdec->context,
       ffmpegdec->picture, &have_data, &packet);
 
@@ -2123,14 +2133,6 @@ gst_ffmpegdec_video_frame (GstFFMpegDec * ffmpegdec,
 
   GST_LOG_OBJECT (ffmpegdec, "next out %" GST_TIME_FORMAT,
       GST_TIME_ARGS (ffmpegdec->next_out));
-
-  /* palette is not part of raw video frame in gst and the size
-   * of the outgoing buffer needs to be adjusted accordingly */
-  if (ffmpegdec->context->palctrl != NULL) {
-
-    gst_buffer_resize (*outbuf, 0,
-        gst_buffer_get_size (*outbuf) - AVPALETTE_SIZE);
-  }
 
   /* now see if we need to clip the buffer against the segment boundaries. */
   if (G_UNLIKELY (!clip_video_buffer (ffmpegdec, *outbuf, out_pts,

@@ -51,6 +51,7 @@ gst_ffmpeg_get_palette (const GstCaps * caps, AVCodecContext * context)
   /* do we have a palette? */
   if ((palette_v = gst_structure_get_value (str, "palette_data")) && context) {
     palette = gst_value_get_buffer (palette_v);
+    GST_DEBUG ("got palette data %p", palette);
     if (gst_buffer_get_size (palette) >= AVPALETTE_SIZE) {
       if (context->palctrl)
         av_free (context->palctrl);
@@ -58,6 +59,7 @@ gst_ffmpeg_get_palette (const GstCaps * caps, AVCodecContext * context)
       context->palctrl->palette_changed = 1;
       gst_buffer_extract (palette, 0, context->palctrl->palette,
           AVPALETTE_SIZE);
+      GST_DEBUG ("extracted palette data");
     }
   }
 }
@@ -1710,7 +1712,7 @@ gst_ffmpeg_pixfmt_to_video_format (enum PixelFormat pix_fmt)
       fmt = GST_VIDEO_FORMAT_RGB15;
       break;
     case PIX_FMT_PAL8:
-      fmt = GST_VIDEO_FORMAT_RGB8_PALETTED;
+      fmt = GST_VIDEO_FORMAT_RGB8P;
       break;
     case PIX_FMT_GRAY8:
       fmt = GST_VIDEO_FORMAT_GRAY8;
@@ -2005,6 +2007,8 @@ gst_ffmpeg_caps_to_pixfmt (const GstCaps * caps,
         context->sample_aspect_ratio.num);
   }
 
+  gst_ffmpeg_get_palette (caps, context);
+
   if (!raw)
     return;
 
@@ -2063,9 +2067,8 @@ gst_ffmpeg_caps_to_pixfmt (const GstCaps * caps,
     case GST_VIDEO_FORMAT_RGB15:
       context->pix_fmt = PIX_FMT_RGB555;
       break;
-    case GST_VIDEO_FORMAT_RGB8_PALETTED:
+    case GST_VIDEO_FORMAT_RGB8P:
       context->pix_fmt = PIX_FMT_PAL8;
-      gst_ffmpeg_get_palette (caps, context);
       break;
     default:
       break;
@@ -2436,7 +2439,6 @@ gst_ffmpeg_caps_with_codecid (enum CodecID codec_id,
   switch (codec_type) {
     case AVMEDIA_TYPE_VIDEO:
       gst_ffmpeg_caps_to_pixfmt (caps, context, codec_id == CODEC_ID_RAWVIDEO);
-      gst_ffmpeg_get_palette (caps, context);
       break;
     case AVMEDIA_TYPE_AUDIO:
       gst_ffmpeg_caps_to_smpfmt (caps, context, FALSE);
