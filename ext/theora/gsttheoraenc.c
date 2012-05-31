@@ -851,7 +851,7 @@ theora_enc_buffer_from_header_packet (GstTheoraEnc * enc, ogg_packet * packet)
   GST_BUFFER_TIMESTAMP (outbuf) = GST_CLOCK_TIME_NONE;
   GST_BUFFER_DURATION (outbuf) = GST_CLOCK_TIME_NONE;
 
-  GST_DEBUG ("created header packet buffer, %d bytes",
+  GST_DEBUG ("created header packet buffer, %zu bytes",
       gst_buffer_get_size (outbuf));
   return outbuf;
 }
