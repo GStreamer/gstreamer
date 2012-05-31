@@ -106,4 +106,5 @@ interface_as_function ## _color_balance_interface_init (GstColorBalanceInterface
   iface->get_balance_type = interface_as_function ## _color_balance_get_balance_type; \
 }                                                                                     \
 
+G_END_DECLS
 #endif /* __GST_V4L2_COLOR_BALANCE_H__ */

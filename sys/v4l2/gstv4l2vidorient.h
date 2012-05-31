@@ -114,4 +114,5 @@ gboolean gst_v4l2_video_orientation_set_vcenter (GstV4l2Object *v4l2object, gint
     iface->set_vcenter = interface_as_function ## _video_orientation_set_vcenter;                 \
   }
 
+G_END_DECLS
 #endif /* __GST_V4L2_VIDORIENT_H__ */
