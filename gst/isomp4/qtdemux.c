@@ -5138,7 +5138,7 @@ gst_qtdemux_add_stream (GstQTDemux * qtdemux,
         /* make sure it's not writable. We leave MALLOCDATA to NULL so that we
          * don't free any of the buffer data. */
         palette = _gst_buffer_new_wrapped ((gpointer) palette_data,
-            palette_count, NULL);
+            palette_count * 4, NULL);
 
         gst_caps_set_simple (stream->caps, "palette_data",
             GST_TYPE_BUFFER, palette, NULL);
