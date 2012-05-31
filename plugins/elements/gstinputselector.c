@@ -755,13 +755,18 @@ gst_input_selector_wait_running_time (GstInputSelector * sel,
         gst_input_selector_activate_sinkpad (sel, GST_PAD_CAST (selpad));
     active_selpad = GST_SELECTOR_PAD_CAST (active_sinkpad);
 
+    if (seg->format != GST_FORMAT_TIME) {
+      GST_INPUT_SELECTOR_UNLOCK (sel);
+      return FALSE;
+    }
+
     running_time = GST_BUFFER_TIMESTAMP (buf);
     /* If possible try to get the running time at the end of the buffer */
     if (GST_BUFFER_DURATION_IS_VALID (buf))
       running_time += GST_BUFFER_DURATION (buf);
     /* Only use the segment to convert to running time if the segment is
      * in TIME format, otherwise do our best to try to sync */
-    if (seg->format == GST_FORMAT_TIME && GST_CLOCK_TIME_IS_VALID (seg->stop)) {
+    if (GST_CLOCK_TIME_IS_VALID (seg->stop)) {
       if (running_time > seg->stop) {
         running_time = seg->stop;
       }
@@ -791,6 +796,14 @@ gst_input_selector_wait_running_time (GstInputSelector * sel,
       GstSegment *active_seg;
 
       active_seg = &active_selpad->segment;
+
+      /* If the active segment is configured but not to time format
+       * we can't do any syncing at all */
+      if (active_seg->format != GST_FORMAT_TIME
+          && active_seg->format != GST_FORMAT_UNDEFINED) {
+        GST_INPUT_SELECTOR_UNLOCK (sel);
+        return FALSE;
+      }
 
       /* Get active pad's running time, if no configured segment yet keep at -1 */
       if (active_seg->format == GST_FORMAT_TIME)
