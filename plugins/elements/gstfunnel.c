@@ -256,6 +256,7 @@ gst_funnel_release_pad (GstElement * element, GstPad * pad)
 {
   GstFunnel *funnel = GST_FUNNEL (element);
   GstFunnelPad *fpad = GST_FUNNEL_PAD_CAST (pad);
+  gboolean send_eos = FALSE;
 
   GST_DEBUG_OBJECT (funnel, "releasing pad");
 
@@ -264,25 +265,15 @@ gst_funnel_release_pad (GstElement * element, GstPad * pad)
   gst_element_remove_pad (GST_ELEMENT_CAST (funnel), pad);
 
   GST_OBJECT_LOCK (funnel);
-  if (fpad->got_eos) {
-    GST_DEBUG_OBJECT (funnel,
-        "Pad removed, but was EOS. Skip checking other pads for EOS");
-    goto out;
+  if (!fpad->got_eos && gst_funnel_all_sinkpads_eos_unlocked (funnel)) {
+    GST_DEBUG_OBJECT (funnel, "Pad removed. All others are EOS. Sending EOS");
+    send_eos = TRUE;
   }
-
-  if (!gst_funnel_all_sinkpads_eos_unlocked (funnel)) {
-    GST_DEBUG_OBJECT (funnel,
-        "Pad removed, but not all others are EOS. Not sending EOS");
-    goto out;
-  }
-
-  GST_DEBUG_OBJECT (funnel, "Pad removed. All others are EOS. Sending EOS");
-
-  if (!gst_pad_push_event (funnel->srcpad, gst_event_new_eos ()))
-    GST_WARNING_OBJECT (funnel, "Failure pushing EOS");
-
-out:
   GST_OBJECT_UNLOCK (funnel);
+
+  if (send_eos)
+    if (!gst_pad_push_event (funnel->srcpad, gst_event_new_eos ()))
+      GST_WARNING_OBJECT (funnel, "Failure pushing EOS");
 }
 
 static GstCaps *
