@@ -40,6 +40,14 @@
 GST_DEBUG_CATEGORY_EXTERN (gst_debug_osx_video_sink);
 #define GST_CAT_DEFAULT gst_debug_osx_video_sink
 
+/* The hack doesn't work on leopard, the _CFMainPThread symbol
+ * is doesn't exist in the CoreFoundation library */
+#if MAC_OS_X_VERSION_MIN_REQUIRED <= MAC_OS_X_VERSION_10_5
+#ifdef RUN_NS_APP_THREAD
+#undef RUN_NS_APP_THREAD
+#endif
+#endif
+
 G_BEGIN_DECLS
 
 #define GST_TYPE_OSX_VIDEO_SINK \
@@ -75,8 +83,8 @@ struct _GstOSXVideoSink {
   GstOSXWindow *osxwindow;
   void *osxvideosinkobject;
   NSView *superview;
-#ifdef RUN_NS_APP_THREAD
   NSThread *ns_app_thread;
+#ifdef RUN_NS_APP_THREAD
   GMutex *loop_thread_lock;
   GCond *loop_thread_cond;
 #else
@@ -129,15 +137,13 @@ GType gst_osx_video_sink_get_type(void);
   GstOSXVideoSink *osxvideosink;
 }
 
-#ifdef RUN_NS_APP_THREAD
-+ (BOOL) isMainThread;
-#endif
 -(id) initWithSink: (GstOSXVideoSink *) sink;
 -(void) createInternalWindow;
 -(void) resize;
 -(void) destroy;
 -(void) showFrame: (GstBufferObject*) buf;
 #ifdef RUN_NS_APP_THREAD
++ (BOOL) isMainThread;
 -(void) nsAppThread;
 #endif
 @end
