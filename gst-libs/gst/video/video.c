@@ -1270,6 +1270,7 @@ typedef struct
 /* depths: bits, n_components, shift, depth */
 #define DPTH0            0, 0, { 0, 0, 0, 0 }, { 0, 0, 0, 0 }
 #define DPTH8            8, 1, { 0, 0, 0, 0 }, { 8, 0, 0, 0 }
+#define DPTH8_32         8, 2, { 0, 0, 0, 0 }, { 8, 32, 0, 0 }
 #define DPTH888          8, 3, { 0, 0, 0, 0 }, { 8, 8, 8, 0 }
 #define DPTH8888         8, 4, { 0, 0, 0, 0 }, { 8, 8, 8, 8 }
 #define DPTH10_10_10     10, 3, { 0, 0, 0, 0 }, { 10, 10, 10, 0 }
@@ -1282,6 +1283,7 @@ typedef struct
 /* pixel strides */
 #define PSTR0             { 0, 0, 0, 0 }
 #define PSTR1             { 1, 0, 0, 0 }
+#define PSTR14            { 1, 4, 0, 0 }
 #define PSTR111           { 1, 1, 1, 0 }
 #define PSTR1111          { 1, 1, 1, 1 }
 #define PSTR122           { 1, 2, 2, 0 }
@@ -1297,6 +1299,7 @@ typedef struct
 /* planes */
 #define PLANE_NA          0, { 0, 0, 0, 0 }
 #define PLANE0            1, { 0, 0, 0, 0 }
+#define PLANE01           2, { 0, 1, 0, 0 }
 #define PLANE011          2, { 0, 1, 1, 0 }
 #define PLANE012          3, { 0, 1, 2, 0 }
 #define PLANE0123         4, { 0, 1, 2, 3 }
@@ -1327,6 +1330,7 @@ typedef struct
 #define SUB420            { 0, 1, 1, 0 }, { 0, 1, 1, 0 }
 #define SUB422            { 0, 1, 1, 0 }, { 0, 0, 0, 0 }
 #define SUB4              { 0, 0, 0, 0 }, { 0, 0, 0, 0 }
+#define SUB44             { 0, 0, 0, 0 }, { 0, 0, 0, 0 }
 #define SUB444            { 0, 0, 0, 0 }, { 0, 0, 0, 0 }
 #define SUB4444           { 0, 0, 0, 0 }, { 0, 0, 0, 0 }
 #define SUB4204           { 0, 1, 1, 0 }, { 0, 1, 1, 0 }
@@ -1346,6 +1350,8 @@ typedef struct
  { 0x00000000, {GST_VIDEO_FORMAT_ ##name, G_STRINGIFY(name), desc, GST_VIDEO_FORMAT_FLAG_RGB | GST_VIDEO_FORMAT_FLAG_LE, depth, pstride, plane, offs, sub, pack } }
 #define MAKE_RGBA_FORMAT(name, desc, depth, pstride, plane, offs, sub, pack) \
  { 0x00000000, {GST_VIDEO_FORMAT_ ##name, G_STRINGIFY(name), desc, GST_VIDEO_FORMAT_FLAG_RGB | GST_VIDEO_FORMAT_FLAG_ALPHA, depth, pstride, plane, offs, sub, pack } }
+#define MAKE_RGBAP_FORMAT(name, desc, depth, pstride, plane, offs, sub, pack) \
+ { 0x00000000, {GST_VIDEO_FORMAT_ ##name, G_STRINGIFY(name), desc, GST_VIDEO_FORMAT_FLAG_RGB | GST_VIDEO_FORMAT_FLAG_ALPHA | GST_VIDEO_FORMAT_FLAG_PALETTE, depth, pstride, plane, offs, sub, pack } }
 
 #define MAKE_GRAY_FORMAT(name, desc, depth, pstride, plane, offs, sub, pack) \
  { 0x00000000, {GST_VIDEO_FORMAT_ ##name, G_STRINGIFY(name), desc, GST_VIDEO_FORMAT_FLAG_GRAY, depth, pstride, plane, offs, sub, pack } }
@@ -1457,8 +1463,8 @@ static VideoFormat formats[] = {
   MAKE_YUVA_FORMAT (A420, "raw video", GST_MAKE_FOURCC ('A', '4', '2', '0'),
       DPTH8888,
       PSTR1111, PLANE0123, OFFS0, SUB4204, PACK_A420),
-  MAKE_RGBA_FORMAT (RGB8_PALETTED, "raw video", DPTH8888, PSTR1111, PLANE0,
-      OFFS0, SUB4444, PACK_RGB8P),
+  MAKE_RGBAP_FORMAT (RGB8P, "raw video", DPTH8_32, PSTR14, PLANE01,
+      OFFS0, SUB44, PACK_RGB8P),
   MAKE_YUV_FORMAT (YUV9, "raw video", GST_MAKE_FOURCC ('Y', 'U', 'V', '9'),
       DPTH888, PSTR111,
       PLANE012, OFFS0, SUB410, PACK_410),
@@ -1686,7 +1692,7 @@ gst_video_format_from_masks (gint depth, gint bpp, gint endianness,
     format = gst_video_format_from_rgb16_masks (red_mask, green_mask,
         blue_mask);
   } else if (depth == 8 && bpp == 8) {
-    format = GST_VIDEO_FORMAT_RGB8_PALETTED;
+    format = GST_VIDEO_FORMAT_RGB8P;
   } else if (depth == 64 && bpp == 64) {
     format = gst_video_format_from_rgba32_masks (red_mask, green_mask,
         blue_mask, alpha_mask);
@@ -2491,6 +2497,10 @@ gst_video_frame_copy (GstVideoFrame * dest, const GstVideoFrame * src)
       && dinfo->height == sinfo->height, FALSE);
 
   n_planes = dinfo->finfo->n_planes;
+  if (GST_VIDEO_FORMAT_INFO_HAS_PALETTE (sinfo->finfo)) {
+    memcpy (dest->data[1], src->data[1], 256 * 4);
+    n_planes = 1;
+  }
 
   for (i = 0; i < n_planes; i++)
     gst_video_frame_copy_plane (dest, src, i);
@@ -2569,10 +2579,12 @@ fill_planes (GstVideoInfo * info)
       info->offset[0] = 0;
       info->size = info->stride[0] * height;
       break;
-    case GST_VIDEO_FORMAT_RGB8_PALETTED:
+    case GST_VIDEO_FORMAT_RGB8P:
       info->stride[0] = GST_ROUND_UP_4 (width);
+      info->stride[1] = 4;
       info->offset[0] = 0;
-      info->size = info->stride[0] * height;
+      info->offset[1] = info->stride[0] * height;
+      info->size = info->offset[1] + (4 * 256);
       break;
     case GST_VIDEO_FORMAT_IYU1:
       info->stride[0] = GST_ROUND_UP_4 (GST_ROUND_UP_4 (width) +
@@ -2875,38 +2887,6 @@ gst_video_event_parse_still_frame (GstEvent * event, gboolean * in_still)
   if (in_still)
     *in_still = ev_still_state;
   return TRUE;
-}
-
-/**
- * gst_video_parse_caps_palette:
- * @caps: #GstCaps to parse
- *
- * Returns the palette data from the caps as a #GstBuffer. For
- * #GST_VIDEO_FORMAT_RGB8_PALETTED this is containing 256 #guint32
- * values, each containing ARGB colors in native endianness.
- *
- * Returns: a #GstBuffer containing the palette data. Unref after usage.
- * Since: 0.10.32
- */
-GstBuffer *
-gst_video_parse_caps_palette (GstCaps * caps)
-{
-  GstStructure *s;
-  const GValue *p_v;
-  GstBuffer *p;
-
-  if (!gst_caps_is_fixed (caps))
-    return NULL;
-
-  s = gst_caps_get_structure (caps, 0);
-
-  p_v = gst_structure_get_value (s, "palette_data");
-  if (!p_v || !GST_VALUE_HOLDS_BUFFER (p_v))
-    return NULL;
-
-  p = g_value_dup_boxed (p_v);
-
-  return p;
 }
 
 #define GST_VIDEO_EVENT_FORCE_KEY_UNIT_NAME "GstForceKeyUnit"

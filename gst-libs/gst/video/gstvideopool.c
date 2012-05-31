@@ -101,7 +101,7 @@ gst_video_info_align (GstVideoInfo * info, GstVideoAlignment * align)
   const GstVideoFormatInfo *vinfo = info->finfo;
   gint width, height;
   gint padded_width, padded_height;
-  gint i;
+  gint i, n_comp;
 
   width = GST_VIDEO_INFO_WIDTH (info);
   height = GST_VIDEO_INFO_HEIGHT (info);
@@ -119,9 +119,13 @@ gst_video_info_align (GstVideoInfo * info, GstVideoAlignment * align)
   info->width = width;
   info->height = height;
 
+  n_comp = GST_VIDEO_INFO_N_COMPONENTS (info);
+  if (GST_VIDEO_FORMAT_INFO_HAS_PALETTE (vinfo))
+    n_comp--;
+
   /* FIXME, not quite correct, NV12 would apply the vedge twice on the second
    * plane */
-  for (i = 0; i < GST_VIDEO_INFO_N_COMPONENTS (info); i++) {
+  for (i = 0; i < n_comp; i++) {
     gint vedge, hedge, plane;
 
     hedge = GST_VIDEO_FORMAT_INFO_SCALE_WIDTH (vinfo, i, align->padding_left);

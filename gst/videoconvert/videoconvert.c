@@ -94,7 +94,7 @@ videoconvert_convert_new (GstVideoFormat to_format, ColorSpaceColorSpec to_spec,
   convert->tmpline16 = g_malloc (sizeof (guint16) * (width + 8) * 4);
   convert->errline = g_malloc (sizeof (guint16) * width * 4);
 
-  if (to_format == GST_VIDEO_FORMAT_RGB8_PALETTED) {
+  if (to_format == GST_VIDEO_FORMAT_RGB8P) {
     /* build poor man's palette, taken from ffmpegcolorspace */
     static const guint8 pal_value[6] = { 0x00, 0x33, 0x66, 0x99, 0xcc, 0xff };
     guint32 *palette;

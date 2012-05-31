@@ -63,7 +63,7 @@ G_BEGIN_DECLS
  * @GST_VIDEO_FORMAT_BGR15: reverse rgb 5-5-5 bits per component (Since: 0.10.30)
  * @GST_VIDEO_FORMAT_UYVP: packed 10-bit 4:2:2 YUV (U0-Y0-V0-Y1 U2-Y2-V2-Y3 U4 ...) (Since: 0.10.31)
  * @GST_VIDEO_FORMAT_A420: planar 4:4:2:0 AYUV (Since: 0.10.31)
- * @GST_VIDEO_FORMAT_RGB8_PALETTED: 8-bit paletted RGB (Since: 0.10.32)
+ * @GST_VIDEO_FORMAT_RGB8P: 8-bit paletted RGB (Since: 0.10.32)
  * @GST_VIDEO_FORMAT_YUV9: planar 4:1:0 YUV (Since: 0.10.32)
  * @GST_VIDEO_FORMAT_YVU9: planar 4:1:0 YUV (like YUV9 but UV planes swapped) (Since: 0.10.32)
  * @GST_VIDEO_FORMAT_IYU1: packed 4:1:1 YUV (Cb-Y0-Y1-Cr-Y2-Y3 ...) (Since: 0.10.32)
@@ -111,7 +111,7 @@ typedef enum {
   GST_VIDEO_FORMAT_BGR15,
   GST_VIDEO_FORMAT_UYVP,
   GST_VIDEO_FORMAT_A420,
-  GST_VIDEO_FORMAT_RGB8_PALETTED,
+  GST_VIDEO_FORMAT_RGB8P,
   GST_VIDEO_FORMAT_YUV9,
   GST_VIDEO_FORMAT_YVU9,
   GST_VIDEO_FORMAT_IYU1,
@@ -167,7 +167,8 @@ typedef enum {
  *   the number 3.
  * @GST_VIDEO_FORMAT_FLAG_LE: The video format has data stored in little
  *   endianness.
- * @GST_VIDEO_FORMAT_FLAG_PALETTE: The video format has a palette.
+ * @GST_VIDEO_FORMAT_FLAG_PALETTE: The video format has a palette. The palette
+ *   is stored in the second plane and indexes are stored in the first plane.
  * @GST_VIDEO_FORMAT_FLAG_COMPLEX: The video format has a complex layout that
  *   can't be described with the usual information in the #GstVideoFormatInfo.
  *
@@ -184,15 +185,22 @@ typedef enum
   GST_VIDEO_FORMAT_FLAG_COMPLEX  = (1 << 6)
 } GstVideoFormatFlags;
 
+/* YUV components */
 #define GST_VIDEO_COMP_Y  0
 #define GST_VIDEO_COMP_U  1
 #define GST_VIDEO_COMP_V  2
 
+/* RGB components */
 #define GST_VIDEO_COMP_R  0
 #define GST_VIDEO_COMP_G  1
 #define GST_VIDEO_COMP_B  2
 
+/* alpha component */
 #define GST_VIDEO_COMP_A  3
+
+/* palette components */
+#define GST_VIDEO_COMP_INDEX    0
+#define GST_VIDEO_COMP_PALETTE  1
 
 /**
  * GstVideoPackFlags:
@@ -534,7 +542,6 @@ gchar *      gst_video_colorimetry_to_string   (GstVideoColorimetry *cinfo);
  * @size: the default size of one frame
  * @chroma_site: a #GstVideoChromaSite.
  * @colorimetry: the colorimetry info
- * @palette: a buffer with palette data
  * @par_n: the pixel-aspect-ratio numerator
  * @par_d: the pixel-aspect-ratio demnominator
  * @fps_n: the framerate numerator
@@ -561,8 +568,6 @@ struct _GstVideoInfo {
 
   GstVideoChromaSite        chroma_site;
   GstVideoColorimetry       colorimetry;
-
-  GstBuffer                *palette;
 
   gint                      par_n;
   gint                      par_d;
@@ -719,8 +724,8 @@ gboolean    gst_video_frame_copy_plane    (GstVideoFrame *dest, const GstVideoFr
 #define GST_VIDEO_FORMATS_ALL "{ I420, YV12, YUY2, UYVY, AYUV, RGBx, "  \
     "BGRx, xRGB, xBGR, RGBA, BGRA, ARGB, ABGR, RGB, BGR, Y41B, Y42B, "  \
     "YVYU, Y444, v210, v216, NV12, NV21, GRAY8, GRAY16_BE, GRAY16_LE, " \
-    "v308, RGB16, BGR16, RGB15, BGR15, UYVP, A420, RGB8_PALETTED, " \
-    "YUV9, YVU9, IYU1, ARGB64, AYUV64, r210, I420_10LE, I420_10BE }"
+    "v308, RGB16, BGR16, RGB15, BGR15, UYVP, A420, RGB8P, YUV9, YVU9, " \
+    "IYU1, ARGB64, AYUV64, r210, I420_10LE, I420_10BE }"
 
 /**
  * GST_VIDEO_CAPS_MAKE:
@@ -769,8 +774,6 @@ gboolean       gst_video_calculate_display_ratio (guint * dar_n,
                                                   guint   video_par_d,
                                                   guint   display_par_n,
                                                   guint   display_par_d);
-
-GstBuffer *    gst_video_parse_caps_palette      (GstCaps * caps);
 
 /* video still frame event creation and parsing */
 

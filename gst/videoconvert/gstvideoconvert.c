@@ -127,7 +127,7 @@ gst_video_convert_caps_remove_format_info (GstCaps * caps)
       continue;
 
     st = gst_structure_copy (st);
-    gst_structure_remove_fields (st, "format", "palette_data",
+    gst_structure_remove_fields (st, "format",
         "colorimetry", "chroma-site", NULL);
 
     gst_caps_append_structure (res, st);
@@ -277,12 +277,12 @@ gst_video_convert_set_info (GstVideoFilter * filter,
 
   videoconvert_convert_set_interlaced (space->convert, interlaced);
 
+#if 0
   /* palette, only for from data */
-  if (GST_VIDEO_INFO_FORMAT (in_info) ==
-      GST_VIDEO_FORMAT_RGB8_PALETTED
-      && GST_VIDEO_INFO_FORMAT (out_info) == GST_VIDEO_FORMAT_RGB8_PALETTED) {
+  if (GST_VIDEO_INFO_FORMAT (in_info) == GST_VIDEO_FORMAT_RGB8P
+      && GST_VIDEO_INFO_FORMAT (out_info) == GST_VIDEO_FORMAT_RGB8P) {
     goto format_mismatch;
-  } else if (GST_VIDEO_INFO_FORMAT (in_info) == GST_VIDEO_FORMAT_RGB8_PALETTED) {
+  } else if (GST_VIDEO_INFO_FORMAT (in_info) == GST_VIDEO_FORMAT_RGB8P) {
     GstBuffer *palette;
     GstMapInfo map;
 
@@ -299,7 +299,7 @@ gst_video_convert_set_info (GstVideoFilter * filter,
     gst_buffer_unmap (palette, &map);
 
     gst_buffer_unref (palette);
-  } else if (GST_VIDEO_INFO_FORMAT (out_info) == GST_VIDEO_FORMAT_RGB8_PALETTED) {
+  } else if (GST_VIDEO_INFO_FORMAT (out_info) == GST_VIDEO_FORMAT_RGB8P) {
     const guint32 *palette;
     GstBuffer *p_buf;
 
@@ -310,6 +310,7 @@ gst_video_convert_set_info (GstVideoFilter * filter,
     gst_caps_set_simple (outcaps, "palette_data", GST_TYPE_BUFFER, p_buf, NULL);
     gst_buffer_unref (p_buf);
   }
+#endif
 
   GST_DEBUG ("reconfigured %d %d", GST_VIDEO_INFO_FORMAT (in_info),
       GST_VIDEO_INFO_FORMAT (out_info));
@@ -327,11 +328,13 @@ no_convert:
     GST_ERROR_OBJECT (space, "could not create converter");
     return FALSE;
   }
+#if 0
 invalid_palette:
   {
     GST_ERROR_OBJECT (space, "invalid palette");
     return FALSE;
   }
+#endif
 }
 
 static void
