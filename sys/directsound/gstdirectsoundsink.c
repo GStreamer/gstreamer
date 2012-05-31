@@ -751,6 +751,7 @@ gst_directsound_probe_supported_formats (GstDirectSoundSink * dsoundsink,
   } else {
     GST_INFO_OBJECT (dsoundsink, "AC3 passthrough supported");
     hRes = IDirectSoundBuffer_Release (dsoundsink->pDSBSecondary);
+    dsoundsink->pDSBSecondary = NULL;
     if (FAILED (hRes)) {
       GST_DEBUG_OBJECT (dsoundsink,
           "(IDirectSoundBuffer_Release returned: %s)\n",
