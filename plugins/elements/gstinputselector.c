@@ -517,7 +517,6 @@ gst_selector_pad_event (GstPad * pad, GstEvent * event)
     case GST_EVENT_FLUSH_STOP:
       gst_selector_pad_reset (selpad);
       sel->pending_close = FALSE;
-      GST_INPUT_SELECTOR_BROADCAST (sel);
       break;
     case GST_EVENT_NEWSEGMENT:
     {
