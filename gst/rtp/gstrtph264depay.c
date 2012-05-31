@@ -426,8 +426,8 @@ gst_rtp_h264_set_src_caps (GstRtpH264Depay * rtph264depay)
       gst_buffer_map (g_ptr_array_index (rtph264depay->sps, i), &nalmap,
           GST_MAP_READ);
 
-      GST_DEBUG_OBJECT (rtph264depay, "copy SPS %d of length %d", i,
-          nalmap.size);
+      GST_DEBUG_OBJECT (rtph264depay, "copy SPS %d of length %u", i,
+          (guint) nalmap.size);
       GST_WRITE_UINT16_BE (data, nalmap.size);
       data += 2;
       memcpy (data, nalmap.data, nalmap.size);
@@ -442,8 +442,8 @@ gst_rtp_h264_set_src_caps (GstRtpH264Depay * rtph264depay)
       gst_buffer_map (g_ptr_array_index (rtph264depay->pps, i), &nalmap,
           GST_MAP_READ);
 
-      GST_DEBUG_OBJECT (rtph264depay, "copy PPS %d of length %d", i,
-          nalmap.size);
+      GST_DEBUG_OBJECT (rtph264depay, "copy PPS %d of length %u", i,
+          (guint) nalmap.size);
       GST_WRITE_UINT16_BE (data, nalmap.size);
       data += 2;
       memcpy (data, nalmap.data, nalmap.size);

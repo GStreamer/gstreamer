@@ -279,7 +279,8 @@ gst_pngdec_caps_create_and_set (GstPngDec * pngdec)
   png_get_IHDR (pngdec->png, pngdec->info, &width, &height,
       &bpc, &pngdec->color_type, NULL, NULL, NULL);
 
-  GST_LOG_OBJECT (pngdec, "this is a %dx%d PNG image", width, height);
+  GST_LOG_OBJECT (pngdec, "this is a %dx%d PNG image", (gint) width,
+      (gint) height);
 
   switch (pngdec->color_type) {
     case PNG_COLOR_TYPE_RGB:
@@ -343,7 +344,7 @@ gst_pngdec_handle_frame (GstVideoDecoder * decoder, GstVideoCodecFrame * frame)
   GstFlowReturn ret = GST_FLOW_OK;
 
   GST_LOG_OBJECT (pngdec, "Got buffer, size=%u",
-      gst_buffer_get_size (frame->input_buffer));
+      (guint) gst_buffer_get_size (frame->input_buffer));
 
   /* Let libpng come back here on error */
   if (setjmp (png_jmpbuf (pngdec->png))) {

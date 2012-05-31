@@ -162,8 +162,8 @@ gst_rtp_mp2t_pay_flush (GstRTPMP2TPay * rtpmp2tpay)
     GST_BUFFER_TIMESTAMP (outbuf) = rtpmp2tpay->first_ts;
     GST_BUFFER_DURATION (outbuf) = rtpmp2tpay->duration;
 
-    GST_DEBUG_OBJECT (rtpmp2tpay, "pushing buffer of size %d",
-        gst_buffer_get_size (outbuf));
+    GST_DEBUG_OBJECT (rtpmp2tpay, "pushing buffer of size %u",
+        (guint) gst_buffer_get_size (outbuf));
 
     ret = gst_rtp_base_payload_push (GST_RTP_BASE_PAYLOAD (rtpmp2tpay), outbuf);
   }
