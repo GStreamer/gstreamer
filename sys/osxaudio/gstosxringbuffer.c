@@ -329,6 +329,7 @@ gst_osx_ring_buffer_acquire (GstRingBuffer * buf, GstRingBufferSpec * spec)
   int layoutSize;
   int element;
   int i;
+  int width, depth;
   AudioUnitScope scope;
   gboolean ret = FALSE;
   GstStructure *structure;
@@ -341,10 +342,22 @@ gst_osx_ring_buffer_acquire (GstRingBuffer * buf, GstRingBufferSpec * spec)
   format.mFormatID = kAudioFormatLinearPCM;
   format.mSampleRate = (double) spec->rate;
   format.mChannelsPerFrame = spec->channels;
-  format.mFormatFlags = kAudioFormatFlagsNativeFloatPacked;
-  format.mBytesPerFrame = spec->channels * sizeof (float);
-  format.mBitsPerChannel = sizeof (float) * 8;
-  format.mBytesPerPacket = spec->channels * sizeof (float);
+  if (spec->type == GST_BUFTYPE_FLOAT) {
+    format.mFormatFlags = kAudioFormatFlagsNativeFloatPacked;
+    width = depth = spec->width;
+  } else {
+    format.mFormatFlags = kAudioFormatFlagIsSignedInteger;
+    width = spec->width;
+    depth = spec->depth;
+    if (width == depth) {
+      format.mFormatFlags |= kAudioFormatFlagIsPacked;
+    } else {
+      format.mFormatFlags |= kAudioFormatFlagIsAlignedHigh;
+    }
+  }
+  format.mBytesPerFrame = spec->channels * (width >> 3);
+  format.mBitsPerChannel = depth;
+  format.mBytesPerPacket = spec->channels * (width >> 3);
   format.mFramesPerPacket = 1;
   format.mReserved = 0;
 
