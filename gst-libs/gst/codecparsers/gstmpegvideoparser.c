@@ -236,7 +236,6 @@ scan_for_start_codes (const GstByteReader * reader, guint offset, guint size)
   const guint8 *data;
   guint i = 0;
 
-  g_return_val_if_fail (size > 0, -1);
   g_return_val_if_fail ((guint64) offset + size <= reader->size - reader->byte,
       -1);
 
