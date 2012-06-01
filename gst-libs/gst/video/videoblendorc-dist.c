@@ -86,68 +86,60 @@ void orc_blend_little (guint8 * ORC_RESTRICT d1, const guint8 * ORC_RESTRICT s1,
     int n);
 void orc_blend_big (guint8 * ORC_RESTRICT d1, const guint8 * ORC_RESTRICT s1,
     int n);
-void cogorc_getline_I420 (guint8 * ORC_RESTRICT d1,
-    const guint8 * ORC_RESTRICT s1, const guint8 * ORC_RESTRICT s2,
-    const guint8 * ORC_RESTRICT s3, int n);
-void cogorc_putline_I420 (guint8 * ORC_RESTRICT d1, guint8 * ORC_RESTRICT d2,
+void orc_unpack_I420 (guint8 * ORC_RESTRICT d1, const guint8 * ORC_RESTRICT s1,
+    const guint8 * ORC_RESTRICT s2, const guint8 * ORC_RESTRICT s3, int n);
+void orc_pack_I420 (guint8 * ORC_RESTRICT d1, guint8 * ORC_RESTRICT d2,
     guint8 * ORC_RESTRICT d3, const guint8 * ORC_RESTRICT s1, int n);
-void cogorc_getline_YUY2 (guint8 * ORC_RESTRICT d1,
-    const guint8 * ORC_RESTRICT s1, int n);
-void cogorc_putline_YUY2 (guint8 * ORC_RESTRICT d1,
-    const guint8 * ORC_RESTRICT s1, int n);
-void cogorc_putline_UYVY (guint8 * ORC_RESTRICT d1,
-    const guint8 * ORC_RESTRICT s1, int n);
-void cogorc_getline_UYVY (guint8 * ORC_RESTRICT d1,
-    const guint8 * ORC_RESTRICT s1, int n);
-void cogorc_getline_YVYU (guint8 * ORC_RESTRICT d1,
-    const guint8 * ORC_RESTRICT s1, int n);
-void cogorc_putline_YVYU (guint8 * ORC_RESTRICT d1,
-    const guint8 * ORC_RESTRICT s1, int n);
-void cogorc_getline_YUV9 (guint8 * ORC_RESTRICT d1,
-    const guint8 * ORC_RESTRICT s1, const guint8 * ORC_RESTRICT s2,
-    const guint8 * ORC_RESTRICT s3, int n);
-void cogorc_getline_Y42B (guint8 * ORC_RESTRICT d1,
-    const guint8 * ORC_RESTRICT s1, const guint8 * ORC_RESTRICT s2,
-    const guint8 * ORC_RESTRICT s3, int n);
-void cogorc_putline_Y42B (guint8 * ORC_RESTRICT d1, guint8 * ORC_RESTRICT d2,
+void orc_unpack_YUY2 (guint8 * ORC_RESTRICT d1, const guint8 * ORC_RESTRICT s1,
+    int n);
+void orc_pack_YUY2 (guint8 * ORC_RESTRICT d1, const guint8 * ORC_RESTRICT s1,
+    int n);
+void orc_pack_UYVY (guint8 * ORC_RESTRICT d1, const guint8 * ORC_RESTRICT s1,
+    int n);
+void orc_unpack_UYVY (guint8 * ORC_RESTRICT d1, const guint8 * ORC_RESTRICT s1,
+    int n);
+void orc_unpack_YVYU (guint8 * ORC_RESTRICT d1, const guint8 * ORC_RESTRICT s1,
+    int n);
+void orc_pack_YVYU (guint8 * ORC_RESTRICT d1, const guint8 * ORC_RESTRICT s1,
+    int n);
+void orc_unpack_YUV9 (guint8 * ORC_RESTRICT d1, const guint8 * ORC_RESTRICT s1,
+    const guint8 * ORC_RESTRICT s2, const guint8 * ORC_RESTRICT s3, int n);
+void orc_unpack_Y42B (guint8 * ORC_RESTRICT d1, const guint8 * ORC_RESTRICT s1,
+    const guint8 * ORC_RESTRICT s2, const guint8 * ORC_RESTRICT s3, int n);
+void orc_pack_Y42B (guint8 * ORC_RESTRICT d1, guint8 * ORC_RESTRICT d2,
     guint8 * ORC_RESTRICT d3, const guint8 * ORC_RESTRICT s1, int n);
-void cogorc_getline_Y444 (guint8 * ORC_RESTRICT d1,
-    const guint8 * ORC_RESTRICT s1, const guint8 * ORC_RESTRICT s2,
-    const guint8 * ORC_RESTRICT s3, int n);
-void cogorc_putline_Y444 (guint8 * ORC_RESTRICT d1, guint8 * ORC_RESTRICT d2,
+void orc_unpack_Y444 (guint8 * ORC_RESTRICT d1, const guint8 * ORC_RESTRICT s1,
+    const guint8 * ORC_RESTRICT s2, const guint8 * ORC_RESTRICT s3, int n);
+void orc_pack_Y444 (guint8 * ORC_RESTRICT d1, guint8 * ORC_RESTRICT d2,
     guint8 * ORC_RESTRICT d3, const guint8 * ORC_RESTRICT s1, int n);
-void cogorc_getline_Y800 (guint8 * ORC_RESTRICT d1,
+void orc_unpack_GRAY8 (guint8 * ORC_RESTRICT d1, const guint8 * ORC_RESTRICT s1,
+    int n);
+void orc_pack_GRAY8 (guint8 * ORC_RESTRICT d1, const guint8 * ORC_RESTRICT s1,
+    int n);
+void orc_unpack_BGRA (guint8 * ORC_RESTRICT d1, const guint8 * ORC_RESTRICT s1,
+    int n);
+void orc_pack_BGRA (guint8 * ORC_RESTRICT d1, const guint8 * ORC_RESTRICT s1,
+    int n);
+void orc_pack_RGBA (guint8 * ORC_RESTRICT d1, const guint8 * ORC_RESTRICT s1,
+    int n);
+void orc_unpack_RGBA (guint8 * ORC_RESTRICT d1, const guint8 * ORC_RESTRICT s1,
+    int n);
+void orc_unpack_ABGR (guint8 * ORC_RESTRICT d1, const guint8 * ORC_RESTRICT s1,
+    int n);
+void orc_pack_ABGR (guint8 * ORC_RESTRICT d1, const guint8 * ORC_RESTRICT s1,
+    int n);
+void orc_unpack_NV12 (guint8 * ORC_RESTRICT d1, const guint8 * ORC_RESTRICT s1,
+    const guint8 * ORC_RESTRICT s2, int n);
+void orc_pack_NV12 (guint8 * ORC_RESTRICT d1, guint8 * ORC_RESTRICT d2,
     const guint8 * ORC_RESTRICT s1, int n);
-void cogorc_putline_Y800 (guint8 * ORC_RESTRICT d1,
+void orc_unpack_NV21 (guint8 * ORC_RESTRICT d1, const guint8 * ORC_RESTRICT s1,
+    const guint8 * ORC_RESTRICT s2, int n);
+void orc_pack_NV21 (guint8 * ORC_RESTRICT d1, guint8 * ORC_RESTRICT d2,
     const guint8 * ORC_RESTRICT s1, int n);
-void cogorc_putline_Y16 (guint8 * ORC_RESTRICT d1,
-    const guint8 * ORC_RESTRICT s1, int n);
-void cogorc_getline_Y16 (guint8 * ORC_RESTRICT d1,
-    const guint8 * ORC_RESTRICT s1, int n);
-void cogorc_getline_BGRA (guint8 * ORC_RESTRICT d1,
-    const guint8 * ORC_RESTRICT s1, int n);
-void cogorc_putline_BGRA (guint8 * ORC_RESTRICT d1,
-    const guint8 * ORC_RESTRICT s1, int n);
-void cogorc_putline_RGBA (guint8 * ORC_RESTRICT d1,
-    const guint8 * ORC_RESTRICT s1, int n);
-void cogorc_getline_RGBA (guint8 * ORC_RESTRICT d1,
-    const guint8 * ORC_RESTRICT s1, int n);
-void cogorc_getline_ABGR (guint8 * ORC_RESTRICT d1,
-    const guint8 * ORC_RESTRICT s1, int n);
-void cogorc_putline_ABGR (guint8 * ORC_RESTRICT d1,
-    const guint8 * ORC_RESTRICT s1, int n);
-void cogorc_getline_NV12 (guint8 * ORC_RESTRICT d1,
-    const guint8 * ORC_RESTRICT s1, const guint8 * ORC_RESTRICT s2, int n);
-void cogorc_putline_NV12 (guint8 * ORC_RESTRICT d1, guint8 * ORC_RESTRICT d2,
-    const guint8 * ORC_RESTRICT s1, int n);
-void cogorc_getline_NV21 (guint8 * ORC_RESTRICT d1,
-    const guint8 * ORC_RESTRICT s1, const guint8 * ORC_RESTRICT s2, int n);
-void cogorc_putline_NV21 (guint8 * ORC_RESTRICT d1, guint8 * ORC_RESTRICT d2,
-    const guint8 * ORC_RESTRICT s1, int n);
-void cogorc_getline_A420 (guint8 * ORC_RESTRICT d1,
-    const guint8 * ORC_RESTRICT s1, const guint8 * ORC_RESTRICT s2,
-    const guint8 * ORC_RESTRICT s3, const guint8 * ORC_RESTRICT s4, int n);
-void cogorc_putline_A420 (guint8 * ORC_RESTRICT d1, guint8 * ORC_RESTRICT d2,
+void orc_unpack_A420 (guint8 * ORC_RESTRICT d1, const guint8 * ORC_RESTRICT s1,
+    const guint8 * ORC_RESTRICT s2, const guint8 * ORC_RESTRICT s3,
+    const guint8 * ORC_RESTRICT s4, int n);
+void orc_pack_A420 (guint8 * ORC_RESTRICT d1, guint8 * ORC_RESTRICT d2,
     guint8 * ORC_RESTRICT d3, guint8 * ORC_RESTRICT d4,
     const guint8 * ORC_RESTRICT s1, int n);
 void orc_resample_bilinear_u32 (guint8 * ORC_RESTRICT d1,
@@ -787,10 +779,10 @@ orc_blend_big (guint8 * ORC_RESTRICT d1, const guint8 * ORC_RESTRICT s1, int n)
 #endif
 
 
-/* cogorc_getline_I420 */
+/* orc_unpack_I420 */
 #ifdef DISABLE_ORC
 void
-cogorc_getline_I420 (guint8 * ORC_RESTRICT d1, const guint8 * ORC_RESTRICT s1,
+orc_unpack_I420 (guint8 * ORC_RESTRICT d1, const guint8 * ORC_RESTRICT s1,
     const guint8 * ORC_RESTRICT s2, const guint8 * ORC_RESTRICT s3, int n)
 {
   int i;
@@ -850,7 +842,7 @@ cogorc_getline_I420 (guint8 * ORC_RESTRICT d1, const guint8 * ORC_RESTRICT s1,
 
 #else
 static void
-_backup_cogorc_getline_I420 (OrcExecutor * ORC_RESTRICT ex)
+_backup_orc_unpack_I420 (OrcExecutor * ORC_RESTRICT ex)
 {
   int i;
   int n = ex->n;
@@ -909,7 +901,7 @@ _backup_cogorc_getline_I420 (OrcExecutor * ORC_RESTRICT ex)
 }
 
 void
-cogorc_getline_I420 (guint8 * ORC_RESTRICT d1, const guint8 * ORC_RESTRICT s1,
+orc_unpack_I420 (guint8 * ORC_RESTRICT d1, const guint8 * ORC_RESTRICT s1,
     const guint8 * ORC_RESTRICT s2, const guint8 * ORC_RESTRICT s3, int n)
 {
   OrcExecutor _ex, *ex = &_ex;
@@ -922,8 +914,8 @@ cogorc_getline_I420 (guint8 * ORC_RESTRICT d1, const guint8 * ORC_RESTRICT s1,
     if (!p_inited) {
 
       p = orc_program_new ();
-      orc_program_set_name (p, "cogorc_getline_I420");
-      orc_program_set_backup_function (p, _backup_cogorc_getline_I420);
+      orc_program_set_name (p, "orc_unpack_I420");
+      orc_program_set_backup_function (p, _backup_orc_unpack_I420);
       orc_program_add_destination (p, 4, "d1");
       orc_program_add_source (p, 1, "s1");
       orc_program_add_source (p, 1, "s2");
@@ -964,10 +956,10 @@ cogorc_getline_I420 (guint8 * ORC_RESTRICT d1, const guint8 * ORC_RESTRICT s1,
 #endif
 
 
-/* cogorc_putline_I420 */
+/* orc_pack_I420 */
 #ifdef DISABLE_ORC
 void
-cogorc_putline_I420 (guint8 * ORC_RESTRICT d1, guint8 * ORC_RESTRICT d2,
+orc_pack_I420 (guint8 * ORC_RESTRICT d1, guint8 * ORC_RESTRICT d2,
     guint8 * ORC_RESTRICT d3, const guint8 * ORC_RESTRICT s1, int n)
 {
   int i;
@@ -1064,7 +1056,7 @@ cogorc_putline_I420 (guint8 * ORC_RESTRICT d1, guint8 * ORC_RESTRICT d2,
 
 #else
 static void
-_backup_cogorc_putline_I420 (OrcExecutor * ORC_RESTRICT ex)
+_backup_orc_pack_I420 (OrcExecutor * ORC_RESTRICT ex)
 {
   int i;
   int n = ex->n;
@@ -1160,7 +1152,7 @@ _backup_cogorc_putline_I420 (OrcExecutor * ORC_RESTRICT ex)
 }
 
 void
-cogorc_putline_I420 (guint8 * ORC_RESTRICT d1, guint8 * ORC_RESTRICT d2,
+orc_pack_I420 (guint8 * ORC_RESTRICT d1, guint8 * ORC_RESTRICT d2,
     guint8 * ORC_RESTRICT d3, const guint8 * ORC_RESTRICT s1, int n)
 {
   OrcExecutor _ex, *ex = &_ex;
@@ -1173,8 +1165,8 @@ cogorc_putline_I420 (guint8 * ORC_RESTRICT d1, guint8 * ORC_RESTRICT d2,
     if (!p_inited) {
 
       p = orc_program_new ();
-      orc_program_set_name (p, "cogorc_putline_I420");
-      orc_program_set_backup_function (p, _backup_cogorc_putline_I420);
+      orc_program_set_name (p, "orc_pack_I420");
+      orc_program_set_backup_function (p, _backup_orc_pack_I420);
       orc_program_add_destination (p, 2, "d1");
       orc_program_add_destination (p, 1, "d2");
       orc_program_add_destination (p, 1, "d3");
@@ -1220,10 +1212,10 @@ cogorc_putline_I420 (guint8 * ORC_RESTRICT d1, guint8 * ORC_RESTRICT d2,
 #endif
 
 
-/* cogorc_getline_YUY2 */
+/* orc_unpack_YUY2 */
 #ifdef DISABLE_ORC
 void
-cogorc_getline_YUY2 (guint8 * ORC_RESTRICT d1, const guint8 * ORC_RESTRICT s1,
+orc_unpack_YUY2 (guint8 * ORC_RESTRICT d1, const guint8 * ORC_RESTRICT s1,
     int n)
 {
   int i;
@@ -1301,7 +1293,7 @@ cogorc_getline_YUY2 (guint8 * ORC_RESTRICT d1, const guint8 * ORC_RESTRICT s1,
 
 #else
 static void
-_backup_cogorc_getline_YUY2 (OrcExecutor * ORC_RESTRICT ex)
+_backup_orc_unpack_YUY2 (OrcExecutor * ORC_RESTRICT ex)
 {
   int i;
   int n = ex->n;
@@ -1378,7 +1370,7 @@ _backup_cogorc_getline_YUY2 (OrcExecutor * ORC_RESTRICT ex)
 }
 
 void
-cogorc_getline_YUY2 (guint8 * ORC_RESTRICT d1, const guint8 * ORC_RESTRICT s1,
+orc_unpack_YUY2 (guint8 * ORC_RESTRICT d1, const guint8 * ORC_RESTRICT s1,
     int n)
 {
   OrcExecutor _ex, *ex = &_ex;
@@ -1391,8 +1383,8 @@ cogorc_getline_YUY2 (guint8 * ORC_RESTRICT d1, const guint8 * ORC_RESTRICT s1,
     if (!p_inited) {
 
       p = orc_program_new ();
-      orc_program_set_name (p, "cogorc_getline_YUY2");
-      orc_program_set_backup_function (p, _backup_cogorc_getline_YUY2);
+      orc_program_set_name (p, "orc_unpack_YUY2");
+      orc_program_set_backup_function (p, _backup_orc_unpack_YUY2);
       orc_program_add_destination (p, 8, "d1");
       orc_program_add_source (p, 4, "s1");
       orc_program_add_constant (p, 2, 0x000000ff, "c1");
@@ -1427,11 +1419,10 @@ cogorc_getline_YUY2 (guint8 * ORC_RESTRICT d1, const guint8 * ORC_RESTRICT s1,
 #endif
 
 
-/* cogorc_putline_YUY2 */
+/* orc_pack_YUY2 */
 #ifdef DISABLE_ORC
 void
-cogorc_putline_YUY2 (guint8 * ORC_RESTRICT d1, const guint8 * ORC_RESTRICT s1,
-    int n)
+orc_pack_YUY2 (guint8 * ORC_RESTRICT d1, const guint8 * ORC_RESTRICT s1, int n)
 {
   int i;
   orc_union32 *ORC_RESTRICT ptr0;
@@ -1507,7 +1498,7 @@ cogorc_putline_YUY2 (guint8 * ORC_RESTRICT d1, const guint8 * ORC_RESTRICT s1,
 
 #else
 static void
-_backup_cogorc_putline_YUY2 (OrcExecutor * ORC_RESTRICT ex)
+_backup_orc_pack_YUY2 (OrcExecutor * ORC_RESTRICT ex)
 {
   int i;
   int n = ex->n;
@@ -1583,8 +1574,7 @@ _backup_cogorc_putline_YUY2 (OrcExecutor * ORC_RESTRICT ex)
 }
 
 void
-cogorc_putline_YUY2 (guint8 * ORC_RESTRICT d1, const guint8 * ORC_RESTRICT s1,
-    int n)
+orc_pack_YUY2 (guint8 * ORC_RESTRICT d1, const guint8 * ORC_RESTRICT s1, int n)
 {
   OrcExecutor _ex, *ex = &_ex;
   static volatile int p_inited = 0;
@@ -1596,8 +1586,8 @@ cogorc_putline_YUY2 (guint8 * ORC_RESTRICT d1, const guint8 * ORC_RESTRICT s1,
     if (!p_inited) {
 
       p = orc_program_new ();
-      orc_program_set_name (p, "cogorc_putline_YUY2");
-      orc_program_set_backup_function (p, _backup_cogorc_putline_YUY2);
+      orc_program_set_name (p, "orc_pack_YUY2");
+      orc_program_set_backup_function (p, _backup_orc_pack_YUY2);
       orc_program_add_destination (p, 4, "d1");
       orc_program_add_source (p, 8, "s1");
       orc_program_add_temporary (p, 2, "t1");
@@ -1634,11 +1624,10 @@ cogorc_putline_YUY2 (guint8 * ORC_RESTRICT d1, const guint8 * ORC_RESTRICT s1,
 #endif
 
 
-/* cogorc_putline_UYVY */
+/* orc_pack_UYVY */
 #ifdef DISABLE_ORC
 void
-cogorc_putline_UYVY (guint8 * ORC_RESTRICT d1, const guint8 * ORC_RESTRICT s1,
-    int n)
+orc_pack_UYVY (guint8 * ORC_RESTRICT d1, const guint8 * ORC_RESTRICT s1, int n)
 {
   int i;
   orc_union32 *ORC_RESTRICT ptr0;
@@ -1714,7 +1703,7 @@ cogorc_putline_UYVY (guint8 * ORC_RESTRICT d1, const guint8 * ORC_RESTRICT s1,
 
 #else
 static void
-_backup_cogorc_putline_UYVY (OrcExecutor * ORC_RESTRICT ex)
+_backup_orc_pack_UYVY (OrcExecutor * ORC_RESTRICT ex)
 {
   int i;
   int n = ex->n;
@@ -1790,8 +1779,7 @@ _backup_cogorc_putline_UYVY (OrcExecutor * ORC_RESTRICT ex)
 }
 
 void
-cogorc_putline_UYVY (guint8 * ORC_RESTRICT d1, const guint8 * ORC_RESTRICT s1,
-    int n)
+orc_pack_UYVY (guint8 * ORC_RESTRICT d1, const guint8 * ORC_RESTRICT s1, int n)
 {
   OrcExecutor _ex, *ex = &_ex;
   static volatile int p_inited = 0;
@@ -1803,8 +1791,8 @@ cogorc_putline_UYVY (guint8 * ORC_RESTRICT d1, const guint8 * ORC_RESTRICT s1,
     if (!p_inited) {
 
       p = orc_program_new ();
-      orc_program_set_name (p, "cogorc_putline_UYVY");
-      orc_program_set_backup_function (p, _backup_cogorc_putline_UYVY);
+      orc_program_set_name (p, "orc_pack_UYVY");
+      orc_program_set_backup_function (p, _backup_orc_pack_UYVY);
       orc_program_add_destination (p, 4, "d1");
       orc_program_add_source (p, 8, "s1");
       orc_program_add_temporary (p, 2, "t1");
@@ -1841,10 +1829,10 @@ cogorc_putline_UYVY (guint8 * ORC_RESTRICT d1, const guint8 * ORC_RESTRICT s1,
 #endif
 
 
-/* cogorc_getline_UYVY */
+/* orc_unpack_UYVY */
 #ifdef DISABLE_ORC
 void
-cogorc_getline_UYVY (guint8 * ORC_RESTRICT d1, const guint8 * ORC_RESTRICT s1,
+orc_unpack_UYVY (guint8 * ORC_RESTRICT d1, const guint8 * ORC_RESTRICT s1,
     int n)
 {
   int i;
@@ -1922,7 +1910,7 @@ cogorc_getline_UYVY (guint8 * ORC_RESTRICT d1, const guint8 * ORC_RESTRICT s1,
 
 #else
 static void
-_backup_cogorc_getline_UYVY (OrcExecutor * ORC_RESTRICT ex)
+_backup_orc_unpack_UYVY (OrcExecutor * ORC_RESTRICT ex)
 {
   int i;
   int n = ex->n;
@@ -1999,7 +1987,7 @@ _backup_cogorc_getline_UYVY (OrcExecutor * ORC_RESTRICT ex)
 }
 
 void
-cogorc_getline_UYVY (guint8 * ORC_RESTRICT d1, const guint8 * ORC_RESTRICT s1,
+orc_unpack_UYVY (guint8 * ORC_RESTRICT d1, const guint8 * ORC_RESTRICT s1,
     int n)
 {
   OrcExecutor _ex, *ex = &_ex;
@@ -2012,8 +2000,8 @@ cogorc_getline_UYVY (guint8 * ORC_RESTRICT d1, const guint8 * ORC_RESTRICT s1,
     if (!p_inited) {
 
       p = orc_program_new ();
-      orc_program_set_name (p, "cogorc_getline_UYVY");
-      orc_program_set_backup_function (p, _backup_cogorc_getline_UYVY);
+      orc_program_set_name (p, "orc_unpack_UYVY");
+      orc_program_set_backup_function (p, _backup_orc_unpack_UYVY);
       orc_program_add_destination (p, 8, "d1");
       orc_program_add_source (p, 4, "s1");
       orc_program_add_constant (p, 2, 0x000000ff, "c1");
@@ -2048,10 +2036,10 @@ cogorc_getline_UYVY (guint8 * ORC_RESTRICT d1, const guint8 * ORC_RESTRICT s1,
 #endif
 
 
-/* cogorc_getline_YVYU */
+/* orc_unpack_YVYU */
 #ifdef DISABLE_ORC
 void
-cogorc_getline_YVYU (guint8 * ORC_RESTRICT d1, const guint8 * ORC_RESTRICT s1,
+orc_unpack_YVYU (guint8 * ORC_RESTRICT d1, const guint8 * ORC_RESTRICT s1,
     int n)
 {
   int i;
@@ -2132,7 +2120,7 @@ cogorc_getline_YVYU (guint8 * ORC_RESTRICT d1, const guint8 * ORC_RESTRICT s1,
 
 #else
 static void
-_backup_cogorc_getline_YVYU (OrcExecutor * ORC_RESTRICT ex)
+_backup_orc_unpack_YVYU (OrcExecutor * ORC_RESTRICT ex)
 {
   int i;
   int n = ex->n;
@@ -2212,7 +2200,7 @@ _backup_cogorc_getline_YVYU (OrcExecutor * ORC_RESTRICT ex)
 }
 
 void
-cogorc_getline_YVYU (guint8 * ORC_RESTRICT d1, const guint8 * ORC_RESTRICT s1,
+orc_unpack_YVYU (guint8 * ORC_RESTRICT d1, const guint8 * ORC_RESTRICT s1,
     int n)
 {
   OrcExecutor _ex, *ex = &_ex;
@@ -2225,8 +2213,8 @@ cogorc_getline_YVYU (guint8 * ORC_RESTRICT d1, const guint8 * ORC_RESTRICT s1,
     if (!p_inited) {
 
       p = orc_program_new ();
-      orc_program_set_name (p, "cogorc_getline_YVYU");
-      orc_program_set_backup_function (p, _backup_cogorc_getline_YVYU);
+      orc_program_set_name (p, "orc_unpack_YVYU");
+      orc_program_set_backup_function (p, _backup_orc_unpack_YVYU);
       orc_program_add_destination (p, 8, "d1");
       orc_program_add_source (p, 4, "s1");
       orc_program_add_constant (p, 2, 0x000000ff, "c1");
@@ -2263,11 +2251,10 @@ cogorc_getline_YVYU (guint8 * ORC_RESTRICT d1, const guint8 * ORC_RESTRICT s1,
 #endif
 
 
-/* cogorc_putline_YVYU */
+/* orc_pack_YVYU */
 #ifdef DISABLE_ORC
 void
-cogorc_putline_YVYU (guint8 * ORC_RESTRICT d1, const guint8 * ORC_RESTRICT s1,
-    int n)
+orc_pack_YVYU (guint8 * ORC_RESTRICT d1, const guint8 * ORC_RESTRICT s1, int n)
 {
   int i;
   orc_union32 *ORC_RESTRICT ptr0;
@@ -2346,7 +2333,7 @@ cogorc_putline_YVYU (guint8 * ORC_RESTRICT d1, const guint8 * ORC_RESTRICT s1,
 
 #else
 static void
-_backup_cogorc_putline_YVYU (OrcExecutor * ORC_RESTRICT ex)
+_backup_orc_pack_YVYU (OrcExecutor * ORC_RESTRICT ex)
 {
   int i;
   int n = ex->n;
@@ -2425,8 +2412,7 @@ _backup_cogorc_putline_YVYU (OrcExecutor * ORC_RESTRICT ex)
 }
 
 void
-cogorc_putline_YVYU (guint8 * ORC_RESTRICT d1, const guint8 * ORC_RESTRICT s1,
-    int n)
+orc_pack_YVYU (guint8 * ORC_RESTRICT d1, const guint8 * ORC_RESTRICT s1, int n)
 {
   OrcExecutor _ex, *ex = &_ex;
   static volatile int p_inited = 0;
@@ -2438,8 +2424,8 @@ cogorc_putline_YVYU (guint8 * ORC_RESTRICT d1, const guint8 * ORC_RESTRICT s1,
     if (!p_inited) {
 
       p = orc_program_new ();
-      orc_program_set_name (p, "cogorc_putline_YVYU");
-      orc_program_set_backup_function (p, _backup_cogorc_putline_YVYU);
+      orc_program_set_name (p, "orc_pack_YVYU");
+      orc_program_set_backup_function (p, _backup_orc_pack_YVYU);
       orc_program_add_destination (p, 4, "d1");
       orc_program_add_source (p, 8, "s1");
       orc_program_add_temporary (p, 2, "t1");
@@ -2478,10 +2464,10 @@ cogorc_putline_YVYU (guint8 * ORC_RESTRICT d1, const guint8 * ORC_RESTRICT s1,
 #endif
 
 
-/* cogorc_getline_YUV9 */
+/* orc_unpack_YUV9 */
 #ifdef DISABLE_ORC
 void
-cogorc_getline_YUV9 (guint8 * ORC_RESTRICT d1, const guint8 * ORC_RESTRICT s1,
+orc_unpack_YUV9 (guint8 * ORC_RESTRICT d1, const guint8 * ORC_RESTRICT s1,
     const guint8 * ORC_RESTRICT s2, const guint8 * ORC_RESTRICT s3, int n)
 {
   int i;
@@ -2562,7 +2548,7 @@ cogorc_getline_YUV9 (guint8 * ORC_RESTRICT d1, const guint8 * ORC_RESTRICT s1,
 
 #else
 static void
-_backup_cogorc_getline_YUV9 (OrcExecutor * ORC_RESTRICT ex)
+_backup_orc_unpack_YUV9 (OrcExecutor * ORC_RESTRICT ex)
 {
   int i;
   int n = ex->n;
@@ -2642,7 +2628,7 @@ _backup_cogorc_getline_YUV9 (OrcExecutor * ORC_RESTRICT ex)
 }
 
 void
-cogorc_getline_YUV9 (guint8 * ORC_RESTRICT d1, const guint8 * ORC_RESTRICT s1,
+orc_unpack_YUV9 (guint8 * ORC_RESTRICT d1, const guint8 * ORC_RESTRICT s1,
     const guint8 * ORC_RESTRICT s2, const guint8 * ORC_RESTRICT s3, int n)
 {
   OrcExecutor _ex, *ex = &_ex;
@@ -2655,8 +2641,8 @@ cogorc_getline_YUV9 (guint8 * ORC_RESTRICT d1, const guint8 * ORC_RESTRICT s1,
     if (!p_inited) {
 
       p = orc_program_new ();
-      orc_program_set_name (p, "cogorc_getline_YUV9");
-      orc_program_set_backup_function (p, _backup_cogorc_getline_YUV9);
+      orc_program_set_name (p, "orc_unpack_YUV9");
+      orc_program_set_backup_function (p, _backup_orc_unpack_YUV9);
       orc_program_add_destination (p, 8, "d1");
       orc_program_add_source (p, 2, "s1");
       orc_program_add_source (p, 1, "s2");
@@ -2700,10 +2686,10 @@ cogorc_getline_YUV9 (guint8 * ORC_RESTRICT d1, const guint8 * ORC_RESTRICT s1,
 #endif
 
 
-/* cogorc_getline_Y42B */
+/* orc_unpack_Y42B */
 #ifdef DISABLE_ORC
 void
-cogorc_getline_Y42B (guint8 * ORC_RESTRICT d1, const guint8 * ORC_RESTRICT s1,
+orc_unpack_Y42B (guint8 * ORC_RESTRICT d1, const guint8 * ORC_RESTRICT s1,
     const guint8 * ORC_RESTRICT s2, const guint8 * ORC_RESTRICT s3, int n)
 {
   int i;
@@ -2784,7 +2770,7 @@ cogorc_getline_Y42B (guint8 * ORC_RESTRICT d1, const guint8 * ORC_RESTRICT s1,
 
 #else
 static void
-_backup_cogorc_getline_Y42B (OrcExecutor * ORC_RESTRICT ex)
+_backup_orc_unpack_Y42B (OrcExecutor * ORC_RESTRICT ex)
 {
   int i;
   int n = ex->n;
@@ -2864,7 +2850,7 @@ _backup_cogorc_getline_Y42B (OrcExecutor * ORC_RESTRICT ex)
 }
 
 void
-cogorc_getline_Y42B (guint8 * ORC_RESTRICT d1, const guint8 * ORC_RESTRICT s1,
+orc_unpack_Y42B (guint8 * ORC_RESTRICT d1, const guint8 * ORC_RESTRICT s1,
     const guint8 * ORC_RESTRICT s2, const guint8 * ORC_RESTRICT s3, int n)
 {
   OrcExecutor _ex, *ex = &_ex;
@@ -2877,8 +2863,8 @@ cogorc_getline_Y42B (guint8 * ORC_RESTRICT d1, const guint8 * ORC_RESTRICT s1,
     if (!p_inited) {
 
       p = orc_program_new ();
-      orc_program_set_name (p, "cogorc_getline_Y42B");
-      orc_program_set_backup_function (p, _backup_cogorc_getline_Y42B);
+      orc_program_set_name (p, "orc_unpack_Y42B");
+      orc_program_set_backup_function (p, _backup_orc_unpack_Y42B);
       orc_program_add_destination (p, 8, "d1");
       orc_program_add_source (p, 2, "s1");
       orc_program_add_source (p, 1, "s2");
@@ -2917,10 +2903,10 @@ cogorc_getline_Y42B (guint8 * ORC_RESTRICT d1, const guint8 * ORC_RESTRICT s1,
 #endif
 
 
-/* cogorc_putline_Y42B */
+/* orc_pack_Y42B */
 #ifdef DISABLE_ORC
 void
-cogorc_putline_Y42B (guint8 * ORC_RESTRICT d1, guint8 * ORC_RESTRICT d2,
+orc_pack_Y42B (guint8 * ORC_RESTRICT d1, guint8 * ORC_RESTRICT d2,
     guint8 * ORC_RESTRICT d3, const guint8 * ORC_RESTRICT s1, int n)
 {
   int i;
@@ -3000,7 +2986,7 @@ cogorc_putline_Y42B (guint8 * ORC_RESTRICT d1, guint8 * ORC_RESTRICT d2,
 
 #else
 static void
-_backup_cogorc_putline_Y42B (OrcExecutor * ORC_RESTRICT ex)
+_backup_orc_pack_Y42B (OrcExecutor * ORC_RESTRICT ex)
 {
   int i;
   int n = ex->n;
@@ -3079,7 +3065,7 @@ _backup_cogorc_putline_Y42B (OrcExecutor * ORC_RESTRICT ex)
 }
 
 void
-cogorc_putline_Y42B (guint8 * ORC_RESTRICT d1, guint8 * ORC_RESTRICT d2,
+orc_pack_Y42B (guint8 * ORC_RESTRICT d1, guint8 * ORC_RESTRICT d2,
     guint8 * ORC_RESTRICT d3, const guint8 * ORC_RESTRICT s1, int n)
 {
   OrcExecutor _ex, *ex = &_ex;
@@ -3092,8 +3078,8 @@ cogorc_putline_Y42B (guint8 * ORC_RESTRICT d1, guint8 * ORC_RESTRICT d2,
     if (!p_inited) {
 
       p = orc_program_new ();
-      orc_program_set_name (p, "cogorc_putline_Y42B");
-      orc_program_set_backup_function (p, _backup_cogorc_putline_Y42B);
+      orc_program_set_name (p, "orc_pack_Y42B");
+      orc_program_set_backup_function (p, _backup_orc_pack_Y42B);
       orc_program_add_destination (p, 2, "d1");
       orc_program_add_destination (p, 1, "d2");
       orc_program_add_destination (p, 1, "d3");
@@ -3133,10 +3119,10 @@ cogorc_putline_Y42B (guint8 * ORC_RESTRICT d1, guint8 * ORC_RESTRICT d2,
 #endif
 
 
-/* cogorc_getline_Y444 */
+/* orc_unpack_Y444 */
 #ifdef DISABLE_ORC
 void
-cogorc_getline_Y444 (guint8 * ORC_RESTRICT d1, const guint8 * ORC_RESTRICT s1,
+orc_unpack_Y444 (guint8 * ORC_RESTRICT d1, const guint8 * ORC_RESTRICT s1,
     const guint8 * ORC_RESTRICT s2, const guint8 * ORC_RESTRICT s3, int n)
 {
   int i;
@@ -3196,7 +3182,7 @@ cogorc_getline_Y444 (guint8 * ORC_RESTRICT d1, const guint8 * ORC_RESTRICT s1,
 
 #else
 static void
-_backup_cogorc_getline_Y444 (OrcExecutor * ORC_RESTRICT ex)
+_backup_orc_unpack_Y444 (OrcExecutor * ORC_RESTRICT ex)
 {
   int i;
   int n = ex->n;
@@ -3255,7 +3241,7 @@ _backup_cogorc_getline_Y444 (OrcExecutor * ORC_RESTRICT ex)
 }
 
 void
-cogorc_getline_Y444 (guint8 * ORC_RESTRICT d1, const guint8 * ORC_RESTRICT s1,
+orc_unpack_Y444 (guint8 * ORC_RESTRICT d1, const guint8 * ORC_RESTRICT s1,
     const guint8 * ORC_RESTRICT s2, const guint8 * ORC_RESTRICT s3, int n)
 {
   OrcExecutor _ex, *ex = &_ex;
@@ -3268,8 +3254,8 @@ cogorc_getline_Y444 (guint8 * ORC_RESTRICT d1, const guint8 * ORC_RESTRICT s1,
     if (!p_inited) {
 
       p = orc_program_new ();
-      orc_program_set_name (p, "cogorc_getline_Y444");
-      orc_program_set_backup_function (p, _backup_cogorc_getline_Y444);
+      orc_program_set_name (p, "orc_unpack_Y444");
+      orc_program_set_backup_function (p, _backup_orc_unpack_Y444);
       orc_program_add_destination (p, 4, "d1");
       orc_program_add_source (p, 1, "s1");
       orc_program_add_source (p, 1, "s2");
@@ -3304,10 +3290,10 @@ cogorc_getline_Y444 (guint8 * ORC_RESTRICT d1, const guint8 * ORC_RESTRICT s1,
 #endif
 
 
-/* cogorc_putline_Y444 */
+/* orc_pack_Y444 */
 #ifdef DISABLE_ORC
 void
-cogorc_putline_Y444 (guint8 * ORC_RESTRICT d1, guint8 * ORC_RESTRICT d2,
+orc_pack_Y444 (guint8 * ORC_RESTRICT d1, guint8 * ORC_RESTRICT d2,
     guint8 * ORC_RESTRICT d3, const guint8 * ORC_RESTRICT s1, int n)
 {
   int i;
@@ -3363,7 +3349,7 @@ cogorc_putline_Y444 (guint8 * ORC_RESTRICT d1, guint8 * ORC_RESTRICT d2,
 
 #else
 static void
-_backup_cogorc_putline_Y444 (OrcExecutor * ORC_RESTRICT ex)
+_backup_orc_pack_Y444 (OrcExecutor * ORC_RESTRICT ex)
 {
   int i;
   int n = ex->n;
@@ -3418,7 +3404,7 @@ _backup_cogorc_putline_Y444 (OrcExecutor * ORC_RESTRICT ex)
 }
 
 void
-cogorc_putline_Y444 (guint8 * ORC_RESTRICT d1, guint8 * ORC_RESTRICT d2,
+orc_pack_Y444 (guint8 * ORC_RESTRICT d1, guint8 * ORC_RESTRICT d2,
     guint8 * ORC_RESTRICT d3, const guint8 * ORC_RESTRICT s1, int n)
 {
   OrcExecutor _ex, *ex = &_ex;
@@ -3431,8 +3417,8 @@ cogorc_putline_Y444 (guint8 * ORC_RESTRICT d1, guint8 * ORC_RESTRICT d2,
     if (!p_inited) {
 
       p = orc_program_new ();
-      orc_program_set_name (p, "cogorc_putline_Y444");
-      orc_program_set_backup_function (p, _backup_cogorc_putline_Y444);
+      orc_program_set_name (p, "orc_pack_Y444");
+      orc_program_set_backup_function (p, _backup_orc_pack_Y444);
       orc_program_add_destination (p, 1, "d1");
       orc_program_add_destination (p, 1, "d2");
       orc_program_add_destination (p, 1, "d3");
@@ -3466,10 +3452,10 @@ cogorc_putline_Y444 (guint8 * ORC_RESTRICT d1, guint8 * ORC_RESTRICT d2,
 #endif
 
 
-/* cogorc_getline_Y800 */
+/* orc_unpack_GRAY8 */
 #ifdef DISABLE_ORC
 void
-cogorc_getline_Y800 (guint8 * ORC_RESTRICT d1, const guint8 * ORC_RESTRICT s1,
+orc_unpack_GRAY8 (guint8 * ORC_RESTRICT d1, const guint8 * ORC_RESTRICT s1,
     int n)
 {
   int i;
@@ -3514,7 +3500,7 @@ cogorc_getline_Y800 (guint8 * ORC_RESTRICT d1, const guint8 * ORC_RESTRICT s1,
 
 #else
 static void
-_backup_cogorc_getline_Y800 (OrcExecutor * ORC_RESTRICT ex)
+_backup_orc_unpack_GRAY8 (OrcExecutor * ORC_RESTRICT ex)
 {
   int i;
   int n = ex->n;
@@ -3558,7 +3544,7 @@ _backup_cogorc_getline_Y800 (OrcExecutor * ORC_RESTRICT ex)
 }
 
 void
-cogorc_getline_Y800 (guint8 * ORC_RESTRICT d1, const guint8 * ORC_RESTRICT s1,
+orc_unpack_GRAY8 (guint8 * ORC_RESTRICT d1, const guint8 * ORC_RESTRICT s1,
     int n)
 {
   OrcExecutor _ex, *ex = &_ex;
@@ -3571,8 +3557,8 @@ cogorc_getline_Y800 (guint8 * ORC_RESTRICT d1, const guint8 * ORC_RESTRICT s1,
     if (!p_inited) {
 
       p = orc_program_new ();
-      orc_program_set_name (p, "cogorc_getline_Y800");
-      orc_program_set_backup_function (p, _backup_cogorc_getline_Y800);
+      orc_program_set_name (p, "orc_unpack_GRAY8");
+      orc_program_set_backup_function (p, _backup_orc_unpack_GRAY8);
       orc_program_add_destination (p, 4, "d1");
       orc_program_add_source (p, 1, "s1");
       orc_program_add_constant (p, 1, 0x000000ff, "c1");
@@ -3601,11 +3587,10 @@ cogorc_getline_Y800 (guint8 * ORC_RESTRICT d1, const guint8 * ORC_RESTRICT s1,
 #endif
 
 
-/* cogorc_putline_Y800 */
+/* orc_pack_GRAY8 */
 #ifdef DISABLE_ORC
 void
-cogorc_putline_Y800 (guint8 * ORC_RESTRICT d1, const guint8 * ORC_RESTRICT s1,
-    int n)
+orc_pack_GRAY8 (guint8 * ORC_RESTRICT d1, const guint8 * ORC_RESTRICT s1, int n)
 {
   int i;
   orc_int8 *ORC_RESTRICT ptr0;
@@ -3641,7 +3626,7 @@ cogorc_putline_Y800 (guint8 * ORC_RESTRICT d1, const guint8 * ORC_RESTRICT s1,
 
 #else
 static void
-_backup_cogorc_putline_Y800 (OrcExecutor * ORC_RESTRICT ex)
+_backup_orc_pack_GRAY8 (OrcExecutor * ORC_RESTRICT ex)
 {
   int i;
   int n = ex->n;
@@ -3677,8 +3662,7 @@ _backup_cogorc_putline_Y800 (OrcExecutor * ORC_RESTRICT ex)
 }
 
 void
-cogorc_putline_Y800 (guint8 * ORC_RESTRICT d1, const guint8 * ORC_RESTRICT s1,
-    int n)
+orc_pack_GRAY8 (guint8 * ORC_RESTRICT d1, const guint8 * ORC_RESTRICT s1, int n)
 {
   OrcExecutor _ex, *ex = &_ex;
   static volatile int p_inited = 0;
@@ -3690,8 +3674,8 @@ cogorc_putline_Y800 (guint8 * ORC_RESTRICT d1, const guint8 * ORC_RESTRICT s1,
     if (!p_inited) {
 
       p = orc_program_new ();
-      orc_program_set_name (p, "cogorc_putline_Y800");
-      orc_program_set_backup_function (p, _backup_cogorc_putline_Y800);
+      orc_program_set_name (p, "orc_pack_GRAY8");
+      orc_program_set_backup_function (p, _backup_orc_pack_GRAY8);
       orc_program_add_destination (p, 1, "d1");
       orc_program_add_source (p, 4, "s1");
       orc_program_add_temporary (p, 2, "t1");
@@ -3718,289 +3702,10 @@ cogorc_putline_Y800 (guint8 * ORC_RESTRICT d1, const guint8 * ORC_RESTRICT s1,
 #endif
 
 
-/* cogorc_putline_Y16 */
+/* orc_unpack_BGRA */
 #ifdef DISABLE_ORC
 void
-cogorc_putline_Y16 (guint8 * ORC_RESTRICT d1, const guint8 * ORC_RESTRICT s1,
-    int n)
-{
-  int i;
-  orc_union16 *ORC_RESTRICT ptr0;
-  const orc_union32 *ORC_RESTRICT ptr4;
-  orc_union32 var34;
-  orc_union16 var35;
-  orc_union16 var36;
-  orc_int8 var37;
-  orc_union16 var38;
-
-  ptr0 = (orc_union16 *) d1;
-  ptr4 = (orc_union32 *) s1;
-
-
-  for (i = 0; i < n; i++) {
-    /* 0: loadl */
-    var34 = ptr4[i];
-    /* 1: select0lw */
-    {
-      orc_union32 _src;
-      _src.i = var34.i;
-      var36.i = _src.x2[0];
-    }
-    /* 2: select1wb */
-    {
-      orc_union16 _src;
-      _src.i = var36.i;
-      var37 = _src.x2[1];
-    }
-    /* 3: convubw */
-    var38.i = (orc_uint8) var37;
-    /* 4: shlw */
-    var35.i = var38.i << 8;
-    /* 5: storew */
-    ptr0[i] = var35;
-  }
-
-}
-
-#else
-static void
-_backup_cogorc_putline_Y16 (OrcExecutor * ORC_RESTRICT ex)
-{
-  int i;
-  int n = ex->n;
-  orc_union16 *ORC_RESTRICT ptr0;
-  const orc_union32 *ORC_RESTRICT ptr4;
-  orc_union32 var34;
-  orc_union16 var35;
-  orc_union16 var36;
-  orc_int8 var37;
-  orc_union16 var38;
-
-  ptr0 = (orc_union16 *) ex->arrays[0];
-  ptr4 = (orc_union32 *) ex->arrays[4];
-
-
-  for (i = 0; i < n; i++) {
-    /* 0: loadl */
-    var34 = ptr4[i];
-    /* 1: select0lw */
-    {
-      orc_union32 _src;
-      _src.i = var34.i;
-      var36.i = _src.x2[0];
-    }
-    /* 2: select1wb */
-    {
-      orc_union16 _src;
-      _src.i = var36.i;
-      var37 = _src.x2[1];
-    }
-    /* 3: convubw */
-    var38.i = (orc_uint8) var37;
-    /* 4: shlw */
-    var35.i = var38.i << 8;
-    /* 5: storew */
-    ptr0[i] = var35;
-  }
-
-}
-
-void
-cogorc_putline_Y16 (guint8 * ORC_RESTRICT d1, const guint8 * ORC_RESTRICT s1,
-    int n)
-{
-  OrcExecutor _ex, *ex = &_ex;
-  static volatile int p_inited = 0;
-  static OrcProgram *p = 0;
-  void (*func) (OrcExecutor *);
-
-  if (!p_inited) {
-    orc_once_mutex_lock ();
-    if (!p_inited) {
-
-      p = orc_program_new ();
-      orc_program_set_name (p, "cogorc_putline_Y16");
-      orc_program_set_backup_function (p, _backup_cogorc_putline_Y16);
-      orc_program_add_destination (p, 2, "d1");
-      orc_program_add_source (p, 4, "s1");
-      orc_program_add_constant (p, 4, 0x00000008, "c1");
-      orc_program_add_temporary (p, 2, "t1");
-      orc_program_add_temporary (p, 1, "t2");
-
-      orc_program_append_2 (p, "select0lw", 0, ORC_VAR_T1, ORC_VAR_S1,
-          ORC_VAR_D1, ORC_VAR_D1);
-      orc_program_append_2 (p, "select1wb", 0, ORC_VAR_T2, ORC_VAR_T1,
-          ORC_VAR_D1, ORC_VAR_D1);
-      orc_program_append_2 (p, "convubw", 0, ORC_VAR_T1, ORC_VAR_T2, ORC_VAR_D1,
-          ORC_VAR_D1);
-      orc_program_append_2 (p, "shlw", 0, ORC_VAR_D1, ORC_VAR_T1, ORC_VAR_C1,
-          ORC_VAR_D1);
-
-      orc_program_compile (p);
-    }
-    p_inited = TRUE;
-    orc_once_mutex_unlock ();
-  }
-  ex->program = p;
-
-  ex->n = n;
-  ex->arrays[ORC_VAR_D1] = d1;
-  ex->arrays[ORC_VAR_S1] = (void *) s1;
-
-  func = p->code_exec;
-  func (ex);
-}
-#endif
-
-
-/* cogorc_getline_Y16 */
-#ifdef DISABLE_ORC
-void
-cogorc_getline_Y16 (guint8 * ORC_RESTRICT d1, const guint8 * ORC_RESTRICT s1,
-    int n)
-{
-  int i;
-  orc_union32 *ORC_RESTRICT ptr0;
-  const orc_union16 *ORC_RESTRICT ptr4;
-  orc_union16 var34;
-  orc_int8 var35;
-  orc_union16 var36;
-  orc_union32 var37;
-  orc_int8 var38;
-  orc_union16 var39;
-
-  ptr0 = (orc_union32 *) d1;
-  ptr4 = (orc_union16 *) s1;
-
-  /* 2: loadpb */
-  var35 = (int) 0x000000ff;     /* 255 or 1.25987e-321f */
-  /* 4: loadpw */
-  var36.i = (int) 0x00008080;   /* 32896 or 1.62528e-319f */
-
-  for (i = 0; i < n; i++) {
-    /* 0: loadw */
-    var34 = ptr4[i];
-    /* 1: convhwb */
-    var38 = ((orc_uint16) var34.i) >> 8;
-    /* 3: mergebw */
-    {
-      orc_union16 _dest;
-      _dest.x2[0] = var35;
-      _dest.x2[1] = var38;
-      var39.i = _dest.i;
-    }
-    /* 5: mergewl */
-    {
-      orc_union32 _dest;
-      _dest.x2[0] = var39.i;
-      _dest.x2[1] = var36.i;
-      var37.i = _dest.i;
-    }
-    /* 6: storel */
-    ptr0[i] = var37;
-  }
-
-}
-
-#else
-static void
-_backup_cogorc_getline_Y16 (OrcExecutor * ORC_RESTRICT ex)
-{
-  int i;
-  int n = ex->n;
-  orc_union32 *ORC_RESTRICT ptr0;
-  const orc_union16 *ORC_RESTRICT ptr4;
-  orc_union16 var34;
-  orc_int8 var35;
-  orc_union16 var36;
-  orc_union32 var37;
-  orc_int8 var38;
-  orc_union16 var39;
-
-  ptr0 = (orc_union32 *) ex->arrays[0];
-  ptr4 = (orc_union16 *) ex->arrays[4];
-
-  /* 2: loadpb */
-  var35 = (int) 0x000000ff;     /* 255 or 1.25987e-321f */
-  /* 4: loadpw */
-  var36.i = (int) 0x00008080;   /* 32896 or 1.62528e-319f */
-
-  for (i = 0; i < n; i++) {
-    /* 0: loadw */
-    var34 = ptr4[i];
-    /* 1: convhwb */
-    var38 = ((orc_uint16) var34.i) >> 8;
-    /* 3: mergebw */
-    {
-      orc_union16 _dest;
-      _dest.x2[0] = var35;
-      _dest.x2[1] = var38;
-      var39.i = _dest.i;
-    }
-    /* 5: mergewl */
-    {
-      orc_union32 _dest;
-      _dest.x2[0] = var39.i;
-      _dest.x2[1] = var36.i;
-      var37.i = _dest.i;
-    }
-    /* 6: storel */
-    ptr0[i] = var37;
-  }
-
-}
-
-void
-cogorc_getline_Y16 (guint8 * ORC_RESTRICT d1, const guint8 * ORC_RESTRICT s1,
-    int n)
-{
-  OrcExecutor _ex, *ex = &_ex;
-  static volatile int p_inited = 0;
-  static OrcProgram *p = 0;
-  void (*func) (OrcExecutor *);
-
-  if (!p_inited) {
-    orc_once_mutex_lock ();
-    if (!p_inited) {
-
-      p = orc_program_new ();
-      orc_program_set_name (p, "cogorc_getline_Y16");
-      orc_program_set_backup_function (p, _backup_cogorc_getline_Y16);
-      orc_program_add_destination (p, 4, "d1");
-      orc_program_add_source (p, 2, "s1");
-      orc_program_add_constant (p, 1, 0x000000ff, "c1");
-      orc_program_add_constant (p, 2, 0x00008080, "c2");
-      orc_program_add_temporary (p, 2, "t1");
-      orc_program_add_temporary (p, 1, "t2");
-
-      orc_program_append_2 (p, "convhwb", 0, ORC_VAR_T2, ORC_VAR_S1, ORC_VAR_D1,
-          ORC_VAR_D1);
-      orc_program_append_2 (p, "mergebw", 0, ORC_VAR_T1, ORC_VAR_C1, ORC_VAR_T2,
-          ORC_VAR_D1);
-      orc_program_append_2 (p, "mergewl", 0, ORC_VAR_D1, ORC_VAR_T1, ORC_VAR_C2,
-          ORC_VAR_D1);
-
-      orc_program_compile (p);
-    }
-    p_inited = TRUE;
-    orc_once_mutex_unlock ();
-  }
-  ex->program = p;
-
-  ex->n = n;
-  ex->arrays[ORC_VAR_D1] = d1;
-  ex->arrays[ORC_VAR_S1] = (void *) s1;
-
-  func = p->code_exec;
-  func (ex);
-}
-#endif
-
-
-/* cogorc_getline_BGRA */
-#ifdef DISABLE_ORC
-void
-cogorc_getline_BGRA (guint8 * ORC_RESTRICT d1, const guint8 * ORC_RESTRICT s1,
+orc_unpack_BGRA (guint8 * ORC_RESTRICT d1, const guint8 * ORC_RESTRICT s1,
     int n)
 {
   int i;
@@ -4026,7 +3731,7 @@ cogorc_getline_BGRA (guint8 * ORC_RESTRICT d1, const guint8 * ORC_RESTRICT s1,
 
 #else
 static void
-_backup_cogorc_getline_BGRA (OrcExecutor * ORC_RESTRICT ex)
+_backup_orc_unpack_BGRA (OrcExecutor * ORC_RESTRICT ex)
 {
   int i;
   int n = ex->n;
@@ -4051,7 +3756,7 @@ _backup_cogorc_getline_BGRA (OrcExecutor * ORC_RESTRICT ex)
 }
 
 void
-cogorc_getline_BGRA (guint8 * ORC_RESTRICT d1, const guint8 * ORC_RESTRICT s1,
+orc_unpack_BGRA (guint8 * ORC_RESTRICT d1, const guint8 * ORC_RESTRICT s1,
     int n)
 {
   OrcExecutor _ex, *ex = &_ex;
@@ -4064,8 +3769,8 @@ cogorc_getline_BGRA (guint8 * ORC_RESTRICT d1, const guint8 * ORC_RESTRICT s1,
     if (!p_inited) {
 
       p = orc_program_new ();
-      orc_program_set_name (p, "cogorc_getline_BGRA");
-      orc_program_set_backup_function (p, _backup_cogorc_getline_BGRA);
+      orc_program_set_name (p, "orc_unpack_BGRA");
+      orc_program_set_backup_function (p, _backup_orc_unpack_BGRA);
       orc_program_add_destination (p, 4, "d1");
       orc_program_add_source (p, 4, "s1");
 
@@ -4089,11 +3794,10 @@ cogorc_getline_BGRA (guint8 * ORC_RESTRICT d1, const guint8 * ORC_RESTRICT s1,
 #endif
 
 
-/* cogorc_putline_BGRA */
+/* orc_pack_BGRA */
 #ifdef DISABLE_ORC
 void
-cogorc_putline_BGRA (guint8 * ORC_RESTRICT d1, const guint8 * ORC_RESTRICT s1,
-    int n)
+orc_pack_BGRA (guint8 * ORC_RESTRICT d1, const guint8 * ORC_RESTRICT s1, int n)
 {
   int i;
   orc_union32 *ORC_RESTRICT ptr0;
@@ -4118,7 +3822,7 @@ cogorc_putline_BGRA (guint8 * ORC_RESTRICT d1, const guint8 * ORC_RESTRICT s1,
 
 #else
 static void
-_backup_cogorc_putline_BGRA (OrcExecutor * ORC_RESTRICT ex)
+_backup_orc_pack_BGRA (OrcExecutor * ORC_RESTRICT ex)
 {
   int i;
   int n = ex->n;
@@ -4143,8 +3847,7 @@ _backup_cogorc_putline_BGRA (OrcExecutor * ORC_RESTRICT ex)
 }
 
 void
-cogorc_putline_BGRA (guint8 * ORC_RESTRICT d1, const guint8 * ORC_RESTRICT s1,
-    int n)
+orc_pack_BGRA (guint8 * ORC_RESTRICT d1, const guint8 * ORC_RESTRICT s1, int n)
 {
   OrcExecutor _ex, *ex = &_ex;
   static volatile int p_inited = 0;
@@ -4156,8 +3859,8 @@ cogorc_putline_BGRA (guint8 * ORC_RESTRICT d1, const guint8 * ORC_RESTRICT s1,
     if (!p_inited) {
 
       p = orc_program_new ();
-      orc_program_set_name (p, "cogorc_putline_BGRA");
-      orc_program_set_backup_function (p, _backup_cogorc_putline_BGRA);
+      orc_program_set_name (p, "orc_pack_BGRA");
+      orc_program_set_backup_function (p, _backup_orc_pack_BGRA);
       orc_program_add_destination (p, 4, "d1");
       orc_program_add_source (p, 4, "s1");
 
@@ -4181,11 +3884,10 @@ cogorc_putline_BGRA (guint8 * ORC_RESTRICT d1, const guint8 * ORC_RESTRICT s1,
 #endif
 
 
-/* cogorc_putline_RGBA */
+/* orc_pack_RGBA */
 #ifdef DISABLE_ORC
 void
-cogorc_putline_RGBA (guint8 * ORC_RESTRICT d1, const guint8 * ORC_RESTRICT s1,
-    int n)
+orc_pack_RGBA (guint8 * ORC_RESTRICT d1, const guint8 * ORC_RESTRICT s1, int n)
 {
   int i;
   orc_union32 *ORC_RESTRICT ptr0;
@@ -4258,7 +3960,7 @@ cogorc_putline_RGBA (guint8 * ORC_RESTRICT d1, const guint8 * ORC_RESTRICT s1,
 
 #else
 static void
-_backup_cogorc_putline_RGBA (OrcExecutor * ORC_RESTRICT ex)
+_backup_orc_pack_RGBA (OrcExecutor * ORC_RESTRICT ex)
 {
   int i;
   int n = ex->n;
@@ -4331,8 +4033,7 @@ _backup_cogorc_putline_RGBA (OrcExecutor * ORC_RESTRICT ex)
 }
 
 void
-cogorc_putline_RGBA (guint8 * ORC_RESTRICT d1, const guint8 * ORC_RESTRICT s1,
-    int n)
+orc_pack_RGBA (guint8 * ORC_RESTRICT d1, const guint8 * ORC_RESTRICT s1, int n)
 {
   OrcExecutor _ex, *ex = &_ex;
   static volatile int p_inited = 0;
@@ -4344,8 +4045,8 @@ cogorc_putline_RGBA (guint8 * ORC_RESTRICT d1, const guint8 * ORC_RESTRICT s1,
     if (!p_inited) {
 
       p = orc_program_new ();
-      orc_program_set_name (p, "cogorc_putline_RGBA");
-      orc_program_set_backup_function (p, _backup_cogorc_putline_RGBA);
+      orc_program_set_name (p, "orc_pack_RGBA");
+      orc_program_set_backup_function (p, _backup_orc_pack_RGBA);
       orc_program_add_destination (p, 4, "d1");
       orc_program_add_source (p, 4, "s1");
       orc_program_add_temporary (p, 1, "t1");
@@ -4387,10 +4088,10 @@ cogorc_putline_RGBA (guint8 * ORC_RESTRICT d1, const guint8 * ORC_RESTRICT s1,
 #endif
 
 
-/* cogorc_getline_RGBA */
+/* orc_unpack_RGBA */
 #ifdef DISABLE_ORC
 void
-cogorc_getline_RGBA (guint8 * ORC_RESTRICT d1, const guint8 * ORC_RESTRICT s1,
+orc_unpack_RGBA (guint8 * ORC_RESTRICT d1, const guint8 * ORC_RESTRICT s1,
     int n)
 {
   int i;
@@ -4464,7 +4165,7 @@ cogorc_getline_RGBA (guint8 * ORC_RESTRICT d1, const guint8 * ORC_RESTRICT s1,
 
 #else
 static void
-_backup_cogorc_getline_RGBA (OrcExecutor * ORC_RESTRICT ex)
+_backup_orc_unpack_RGBA (OrcExecutor * ORC_RESTRICT ex)
 {
   int i;
   int n = ex->n;
@@ -4537,7 +4238,7 @@ _backup_cogorc_getline_RGBA (OrcExecutor * ORC_RESTRICT ex)
 }
 
 void
-cogorc_getline_RGBA (guint8 * ORC_RESTRICT d1, const guint8 * ORC_RESTRICT s1,
+orc_unpack_RGBA (guint8 * ORC_RESTRICT d1, const guint8 * ORC_RESTRICT s1,
     int n)
 {
   OrcExecutor _ex, *ex = &_ex;
@@ -4550,8 +4251,8 @@ cogorc_getline_RGBA (guint8 * ORC_RESTRICT d1, const guint8 * ORC_RESTRICT s1,
     if (!p_inited) {
 
       p = orc_program_new ();
-      orc_program_set_name (p, "cogorc_getline_RGBA");
-      orc_program_set_backup_function (p, _backup_cogorc_getline_RGBA);
+      orc_program_set_name (p, "orc_unpack_RGBA");
+      orc_program_set_backup_function (p, _backup_orc_unpack_RGBA);
       orc_program_add_destination (p, 4, "d1");
       orc_program_add_source (p, 4, "s1");
       orc_program_add_temporary (p, 1, "t1");
@@ -4593,10 +4294,10 @@ cogorc_getline_RGBA (guint8 * ORC_RESTRICT d1, const guint8 * ORC_RESTRICT s1,
 #endif
 
 
-/* cogorc_getline_ABGR */
+/* orc_unpack_ABGR */
 #ifdef DISABLE_ORC
 void
-cogorc_getline_ABGR (guint8 * ORC_RESTRICT d1, const guint8 * ORC_RESTRICT s1,
+orc_unpack_ABGR (guint8 * ORC_RESTRICT d1, const guint8 * ORC_RESTRICT s1,
     int n)
 {
   int i;
@@ -4670,7 +4371,7 @@ cogorc_getline_ABGR (guint8 * ORC_RESTRICT d1, const guint8 * ORC_RESTRICT s1,
 
 #else
 static void
-_backup_cogorc_getline_ABGR (OrcExecutor * ORC_RESTRICT ex)
+_backup_orc_unpack_ABGR (OrcExecutor * ORC_RESTRICT ex)
 {
   int i;
   int n = ex->n;
@@ -4743,7 +4444,7 @@ _backup_cogorc_getline_ABGR (OrcExecutor * ORC_RESTRICT ex)
 }
 
 void
-cogorc_getline_ABGR (guint8 * ORC_RESTRICT d1, const guint8 * ORC_RESTRICT s1,
+orc_unpack_ABGR (guint8 * ORC_RESTRICT d1, const guint8 * ORC_RESTRICT s1,
     int n)
 {
   OrcExecutor _ex, *ex = &_ex;
@@ -4756,8 +4457,8 @@ cogorc_getline_ABGR (guint8 * ORC_RESTRICT d1, const guint8 * ORC_RESTRICT s1,
     if (!p_inited) {
 
       p = orc_program_new ();
-      orc_program_set_name (p, "cogorc_getline_ABGR");
-      orc_program_set_backup_function (p, _backup_cogorc_getline_ABGR);
+      orc_program_set_name (p, "orc_unpack_ABGR");
+      orc_program_set_backup_function (p, _backup_orc_unpack_ABGR);
       orc_program_add_destination (p, 4, "d1");
       orc_program_add_source (p, 4, "s1");
       orc_program_add_temporary (p, 1, "t1");
@@ -4799,11 +4500,10 @@ cogorc_getline_ABGR (guint8 * ORC_RESTRICT d1, const guint8 * ORC_RESTRICT s1,
 #endif
 
 
-/* cogorc_putline_ABGR */
+/* orc_pack_ABGR */
 #ifdef DISABLE_ORC
 void
-cogorc_putline_ABGR (guint8 * ORC_RESTRICT d1, const guint8 * ORC_RESTRICT s1,
-    int n)
+orc_pack_ABGR (guint8 * ORC_RESTRICT d1, const guint8 * ORC_RESTRICT s1, int n)
 {
   int i;
   orc_union32 *ORC_RESTRICT ptr0;
@@ -4876,7 +4576,7 @@ cogorc_putline_ABGR (guint8 * ORC_RESTRICT d1, const guint8 * ORC_RESTRICT s1,
 
 #else
 static void
-_backup_cogorc_putline_ABGR (OrcExecutor * ORC_RESTRICT ex)
+_backup_orc_pack_ABGR (OrcExecutor * ORC_RESTRICT ex)
 {
   int i;
   int n = ex->n;
@@ -4949,8 +4649,7 @@ _backup_cogorc_putline_ABGR (OrcExecutor * ORC_RESTRICT ex)
 }
 
 void
-cogorc_putline_ABGR (guint8 * ORC_RESTRICT d1, const guint8 * ORC_RESTRICT s1,
-    int n)
+orc_pack_ABGR (guint8 * ORC_RESTRICT d1, const guint8 * ORC_RESTRICT s1, int n)
 {
   OrcExecutor _ex, *ex = &_ex;
   static volatile int p_inited = 0;
@@ -4962,8 +4661,8 @@ cogorc_putline_ABGR (guint8 * ORC_RESTRICT d1, const guint8 * ORC_RESTRICT s1,
     if (!p_inited) {
 
       p = orc_program_new ();
-      orc_program_set_name (p, "cogorc_putline_ABGR");
-      orc_program_set_backup_function (p, _backup_cogorc_putline_ABGR);
+      orc_program_set_name (p, "orc_pack_ABGR");
+      orc_program_set_backup_function (p, _backup_orc_pack_ABGR);
       orc_program_add_destination (p, 4, "d1");
       orc_program_add_source (p, 4, "s1");
       orc_program_add_temporary (p, 1, "t1");
@@ -5005,10 +4704,10 @@ cogorc_putline_ABGR (guint8 * ORC_RESTRICT d1, const guint8 * ORC_RESTRICT s1,
 #endif
 
 
-/* cogorc_getline_NV12 */
+/* orc_unpack_NV12 */
 #ifdef DISABLE_ORC
 void
-cogorc_getline_NV12 (guint8 * ORC_RESTRICT d1, const guint8 * ORC_RESTRICT s1,
+orc_unpack_NV12 (guint8 * ORC_RESTRICT d1, const guint8 * ORC_RESTRICT s1,
     const guint8 * ORC_RESTRICT s2, int n)
 {
   int i;
@@ -5079,7 +4778,7 @@ cogorc_getline_NV12 (guint8 * ORC_RESTRICT d1, const guint8 * ORC_RESTRICT s1,
 
 #else
 static void
-_backup_cogorc_getline_NV12 (OrcExecutor * ORC_RESTRICT ex)
+_backup_orc_unpack_NV12 (OrcExecutor * ORC_RESTRICT ex)
 {
   int i;
   int n = ex->n;
@@ -5149,7 +4848,7 @@ _backup_cogorc_getline_NV12 (OrcExecutor * ORC_RESTRICT ex)
 }
 
 void
-cogorc_getline_NV12 (guint8 * ORC_RESTRICT d1, const guint8 * ORC_RESTRICT s1,
+orc_unpack_NV12 (guint8 * ORC_RESTRICT d1, const guint8 * ORC_RESTRICT s1,
     const guint8 * ORC_RESTRICT s2, int n)
 {
   OrcExecutor _ex, *ex = &_ex;
@@ -5162,8 +4861,8 @@ cogorc_getline_NV12 (guint8 * ORC_RESTRICT d1, const guint8 * ORC_RESTRICT s1,
     if (!p_inited) {
 
       p = orc_program_new ();
-      orc_program_set_name (p, "cogorc_getline_NV12");
-      orc_program_set_backup_function (p, _backup_cogorc_getline_NV12);
+      orc_program_set_name (p, "orc_unpack_NV12");
+      orc_program_set_backup_function (p, _backup_orc_unpack_NV12);
       orc_program_add_destination (p, 8, "d1");
       orc_program_add_source (p, 2, "s1");
       orc_program_add_source (p, 2, "s2");
@@ -5196,10 +4895,10 @@ cogorc_getline_NV12 (guint8 * ORC_RESTRICT d1, const guint8 * ORC_RESTRICT s1,
 #endif
 
 
-/* cogorc_putline_NV12 */
+/* orc_pack_NV12 */
 #ifdef DISABLE_ORC
 void
-cogorc_putline_NV12 (guint8 * ORC_RESTRICT d1, guint8 * ORC_RESTRICT d2,
+orc_pack_NV12 (guint8 * ORC_RESTRICT d1, guint8 * ORC_RESTRICT d2,
     const guint8 * ORC_RESTRICT s1, int n)
 {
   int i;
@@ -5266,7 +4965,7 @@ cogorc_putline_NV12 (guint8 * ORC_RESTRICT d1, guint8 * ORC_RESTRICT d2,
 
 #else
 static void
-_backup_cogorc_putline_NV12 (OrcExecutor * ORC_RESTRICT ex)
+_backup_orc_pack_NV12 (OrcExecutor * ORC_RESTRICT ex)
 {
   int i;
   int n = ex->n;
@@ -5332,7 +5031,7 @@ _backup_cogorc_putline_NV12 (OrcExecutor * ORC_RESTRICT ex)
 }
 
 void
-cogorc_putline_NV12 (guint8 * ORC_RESTRICT d1, guint8 * ORC_RESTRICT d2,
+orc_pack_NV12 (guint8 * ORC_RESTRICT d1, guint8 * ORC_RESTRICT d2,
     const guint8 * ORC_RESTRICT s1, int n)
 {
   OrcExecutor _ex, *ex = &_ex;
@@ -5345,8 +5044,8 @@ cogorc_putline_NV12 (guint8 * ORC_RESTRICT d1, guint8 * ORC_RESTRICT d2,
     if (!p_inited) {
 
       p = orc_program_new ();
-      orc_program_set_name (p, "cogorc_putline_NV12");
-      orc_program_set_backup_function (p, _backup_cogorc_putline_NV12);
+      orc_program_set_name (p, "orc_pack_NV12");
+      orc_program_set_backup_function (p, _backup_orc_pack_NV12);
       orc_program_add_destination (p, 2, "d1");
       orc_program_add_destination (p, 2, "d2");
       orc_program_add_source (p, 8, "s1");
@@ -5382,10 +5081,10 @@ cogorc_putline_NV12 (guint8 * ORC_RESTRICT d1, guint8 * ORC_RESTRICT d2,
 #endif
 
 
-/* cogorc_getline_NV21 */
+/* orc_unpack_NV21 */
 #ifdef DISABLE_ORC
 void
-cogorc_getline_NV21 (guint8 * ORC_RESTRICT d1, const guint8 * ORC_RESTRICT s1,
+orc_unpack_NV21 (guint8 * ORC_RESTRICT d1, const guint8 * ORC_RESTRICT s1,
     const guint8 * ORC_RESTRICT s2, int n)
 {
   int i;
@@ -5456,7 +5155,7 @@ cogorc_getline_NV21 (guint8 * ORC_RESTRICT d1, const guint8 * ORC_RESTRICT s1,
 
 #else
 static void
-_backup_cogorc_getline_NV21 (OrcExecutor * ORC_RESTRICT ex)
+_backup_orc_unpack_NV21 (OrcExecutor * ORC_RESTRICT ex)
 {
   int i;
   int n = ex->n;
@@ -5526,7 +5225,7 @@ _backup_cogorc_getline_NV21 (OrcExecutor * ORC_RESTRICT ex)
 }
 
 void
-cogorc_getline_NV21 (guint8 * ORC_RESTRICT d1, const guint8 * ORC_RESTRICT s1,
+orc_unpack_NV21 (guint8 * ORC_RESTRICT d1, const guint8 * ORC_RESTRICT s1,
     const guint8 * ORC_RESTRICT s2, int n)
 {
   OrcExecutor _ex, *ex = &_ex;
@@ -5539,8 +5238,8 @@ cogorc_getline_NV21 (guint8 * ORC_RESTRICT d1, const guint8 * ORC_RESTRICT s1,
     if (!p_inited) {
 
       p = orc_program_new ();
-      orc_program_set_name (p, "cogorc_getline_NV21");
-      orc_program_set_backup_function (p, _backup_cogorc_getline_NV21);
+      orc_program_set_name (p, "orc_unpack_NV21");
+      orc_program_set_backup_function (p, _backup_orc_unpack_NV21);
       orc_program_add_destination (p, 8, "d1");
       orc_program_add_source (p, 2, "s1");
       orc_program_add_source (p, 2, "s2");
@@ -5576,10 +5275,10 @@ cogorc_getline_NV21 (guint8 * ORC_RESTRICT d1, const guint8 * ORC_RESTRICT s1,
 #endif
 
 
-/* cogorc_putline_NV21 */
+/* orc_pack_NV21 */
 #ifdef DISABLE_ORC
 void
-cogorc_putline_NV21 (guint8 * ORC_RESTRICT d1, guint8 * ORC_RESTRICT d2,
+orc_pack_NV21 (guint8 * ORC_RESTRICT d1, guint8 * ORC_RESTRICT d2,
     const guint8 * ORC_RESTRICT s1, int n)
 {
   int i;
@@ -5649,7 +5348,7 @@ cogorc_putline_NV21 (guint8 * ORC_RESTRICT d1, guint8 * ORC_RESTRICT d2,
 
 #else
 static void
-_backup_cogorc_putline_NV21 (OrcExecutor * ORC_RESTRICT ex)
+_backup_orc_pack_NV21 (OrcExecutor * ORC_RESTRICT ex)
 {
   int i;
   int n = ex->n;
@@ -5718,7 +5417,7 @@ _backup_cogorc_putline_NV21 (OrcExecutor * ORC_RESTRICT ex)
 }
 
 void
-cogorc_putline_NV21 (guint8 * ORC_RESTRICT d1, guint8 * ORC_RESTRICT d2,
+orc_pack_NV21 (guint8 * ORC_RESTRICT d1, guint8 * ORC_RESTRICT d2,
     const guint8 * ORC_RESTRICT s1, int n)
 {
   OrcExecutor _ex, *ex = &_ex;
@@ -5731,8 +5430,8 @@ cogorc_putline_NV21 (guint8 * ORC_RESTRICT d1, guint8 * ORC_RESTRICT d2,
     if (!p_inited) {
 
       p = orc_program_new ();
-      orc_program_set_name (p, "cogorc_putline_NV21");
-      orc_program_set_backup_function (p, _backup_cogorc_putline_NV21);
+      orc_program_set_name (p, "orc_pack_NV21");
+      orc_program_set_backup_function (p, _backup_orc_pack_NV21);
       orc_program_add_destination (p, 2, "d1");
       orc_program_add_destination (p, 2, "d2");
       orc_program_add_source (p, 8, "s1");
@@ -5771,10 +5470,10 @@ cogorc_putline_NV21 (guint8 * ORC_RESTRICT d1, guint8 * ORC_RESTRICT d2,
 #endif
 
 
-/* cogorc_getline_A420 */
+/* orc_unpack_A420 */
 #ifdef DISABLE_ORC
 void
-cogorc_getline_A420 (guint8 * ORC_RESTRICT d1, const guint8 * ORC_RESTRICT s1,
+orc_unpack_A420 (guint8 * ORC_RESTRICT d1, const guint8 * ORC_RESTRICT s1,
     const guint8 * ORC_RESTRICT s2, const guint8 * ORC_RESTRICT s3,
     const guint8 * ORC_RESTRICT s4, int n)
 {
@@ -5837,7 +5536,7 @@ cogorc_getline_A420 (guint8 * ORC_RESTRICT d1, const guint8 * ORC_RESTRICT s1,
 
 #else
 static void
-_backup_cogorc_getline_A420 (OrcExecutor * ORC_RESTRICT ex)
+_backup_orc_unpack_A420 (OrcExecutor * ORC_RESTRICT ex)
 {
   int i;
   int n = ex->n;
@@ -5898,7 +5597,7 @@ _backup_cogorc_getline_A420 (OrcExecutor * ORC_RESTRICT ex)
 }
 
 void
-cogorc_getline_A420 (guint8 * ORC_RESTRICT d1, const guint8 * ORC_RESTRICT s1,
+orc_unpack_A420 (guint8 * ORC_RESTRICT d1, const guint8 * ORC_RESTRICT s1,
     const guint8 * ORC_RESTRICT s2, const guint8 * ORC_RESTRICT s3,
     const guint8 * ORC_RESTRICT s4, int n)
 {
@@ -5912,8 +5611,8 @@ cogorc_getline_A420 (guint8 * ORC_RESTRICT d1, const guint8 * ORC_RESTRICT s1,
     if (!p_inited) {
 
       p = orc_program_new ();
-      orc_program_set_name (p, "cogorc_getline_A420");
-      orc_program_set_backup_function (p, _backup_cogorc_getline_A420);
+      orc_program_set_name (p, "orc_unpack_A420");
+      orc_program_set_backup_function (p, _backup_orc_unpack_A420);
       orc_program_add_destination (p, 4, "d1");
       orc_program_add_source (p, 1, "s1");
       orc_program_add_source (p, 1, "s2");
@@ -5955,10 +5654,10 @@ cogorc_getline_A420 (guint8 * ORC_RESTRICT d1, const guint8 * ORC_RESTRICT s1,
 #endif
 
 
-/* cogorc_putline_A420 */
+/* orc_pack_A420 */
 #ifdef DISABLE_ORC
 void
-cogorc_putline_A420 (guint8 * ORC_RESTRICT d1, guint8 * ORC_RESTRICT d2,
+orc_pack_A420 (guint8 * ORC_RESTRICT d1, guint8 * ORC_RESTRICT d2,
     guint8 * ORC_RESTRICT d3, guint8 * ORC_RESTRICT d4,
     const guint8 * ORC_RESTRICT s1, int n)
 {
@@ -6072,7 +5771,7 @@ cogorc_putline_A420 (guint8 * ORC_RESTRICT d1, guint8 * ORC_RESTRICT d2,
 
 #else
 static void
-_backup_cogorc_putline_A420 (OrcExecutor * ORC_RESTRICT ex)
+_backup_orc_pack_A420 (OrcExecutor * ORC_RESTRICT ex)
 {
   int i;
   int n = ex->n;
@@ -6184,7 +5883,7 @@ _backup_cogorc_putline_A420 (OrcExecutor * ORC_RESTRICT ex)
 }
 
 void
-cogorc_putline_A420 (guint8 * ORC_RESTRICT d1, guint8 * ORC_RESTRICT d2,
+orc_pack_A420 (guint8 * ORC_RESTRICT d1, guint8 * ORC_RESTRICT d2,
     guint8 * ORC_RESTRICT d3, guint8 * ORC_RESTRICT d4,
     const guint8 * ORC_RESTRICT s1, int n)
 {
@@ -6198,8 +5897,8 @@ cogorc_putline_A420 (guint8 * ORC_RESTRICT d1, guint8 * ORC_RESTRICT d2,
     if (!p_inited) {
 
       p = orc_program_new ();
-      orc_program_set_name (p, "cogorc_putline_A420");
-      orc_program_set_backup_function (p, _backup_cogorc_putline_A420);
+      orc_program_set_name (p, "orc_pack_A420");
+      orc_program_set_backup_function (p, _backup_orc_pack_A420);
       orc_program_add_destination (p, 2, "d1");
       orc_program_add_destination (p, 1, "d2");
       orc_program_add_destination (p, 1, "d3");
