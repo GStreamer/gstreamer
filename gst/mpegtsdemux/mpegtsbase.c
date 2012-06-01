@@ -1071,10 +1071,12 @@ mpegts_base_handle_psi (MpegTSBase * base, MpegTSPacketizerSection * section)
   GstStructure *structure = NULL;
 
   /* table ids 0x70 - 0x73 do not have a crc */
-  if (G_LIKELY (section->table_id < 0x70 || section->table_id > 0x73)) {
+  if (G_LIKELY ((section->table_id < 0x70 || section->table_id > 0x73)
+          && (section->table_id < 0x80 || section->table_id > 0x8f))) {
     if (G_UNLIKELY (mpegts_base_calc_crc32 (section->data,
                 section->section_length) != 0)) {
-      GST_WARNING_OBJECT (base, "bad crc in psi pid 0x%x", section->pid);
+      GST_WARNING_OBJECT (base, "bad crc in psi pid 0x%x (table_id:0x%x)",
+          section->pid, section->table_id);
       return FALSE;
     }
   }
