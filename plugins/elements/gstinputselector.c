@@ -426,6 +426,12 @@ gst_selector_pad_free_cached_buffer (GstSelectorPadCachedBuffer * cached_buffer)
 static void
 gst_selector_pad_cache_buffer (GstSelectorPad * selpad, GstBuffer * buffer)
 {
+  if (selpad->segment.format != GST_FORMAT_TIME) {
+    GST_DEBUG_OBJECT (selpad, "Buffer %p with segment not in time format, "
+        "not caching", buffer);
+    return;
+  }
+
   GST_DEBUG_OBJECT (selpad, "Caching buffer %p", buffer);
   if (!selpad->cached_buffers)
     selpad->cached_buffers = g_queue_new ();
@@ -770,13 +776,13 @@ gst_input_selector_wait_running_time (GstInputSelector * sel,
       if (running_time > seg->stop) {
         running_time = seg->stop;
       }
-      running_time =
-          gst_segment_to_running_time (seg, GST_FORMAT_TIME, running_time);
-      /* If this is outside the segment don't sync */
-      if (running_time == -1) {
-        GST_INPUT_SELECTOR_UNLOCK (sel);
-        return FALSE;
-      }
+    }
+    running_time =
+        gst_segment_to_running_time (seg, GST_FORMAT_TIME, running_time);
+    /* If this is outside the segment don't sync */
+    if (running_time == -1) {
+      GST_INPUT_SELECTOR_UNLOCK (sel);
+      return FALSE;
     }
 
     cur_running_time = GST_CLOCK_TIME_NONE;
@@ -815,11 +821,12 @@ gst_input_selector_wait_running_time (GstInputSelector * sel,
         (sel->cache_buffers || active_selpad->pushed) &&
         (sel->blocked || cur_running_time == -1
             || running_time >= cur_running_time)) {
-      if (!sel->blocked)
+      if (!sel->blocked) {
         GST_DEBUG_OBJECT (selpad,
             "Waiting for active streams to advance. %" GST_TIME_FORMAT " >= %"
             GST_TIME_FORMAT, GST_TIME_ARGS (running_time),
             GST_TIME_ARGS (cur_running_time));
+      }
 
       GST_INPUT_SELECTOR_WAIT (sel);
     } else {
@@ -870,14 +877,9 @@ static void
 gst_input_selector_cleanup_old_cached_buffers (GstInputSelector * sel,
     GstPad * pad)
 {
-  GstSelectorPad *selpad;
-  GstSegment *seg;
   GstClock *clock;
   gint64 cur_running_time;
   GList *walk;
-
-  selpad = GST_SELECTOR_PAD_CAST (pad);
-  seg = &selpad->segment;
 
   cur_running_time = GST_CLOCK_TIME_NONE;
   if (sel->sync_mode == GST_INPUT_SELECTOR_SYNC_MODE_CLOCK) {
@@ -912,13 +914,17 @@ gst_input_selector_cleanup_old_cached_buffers (GstInputSelector * sel,
 
   GST_DEBUG_OBJECT (sel, "Cleaning up old cached buffers");
   for (walk = GST_ELEMENT_CAST (sel)->sinkpads; walk; walk = g_list_next (walk)) {
-    GstSelectorPad *selpad = GST_SELECTOR_PAD_CAST (walk->data);
+    GstSelectorPad *selpad;
+    GstSegment *seg;
     GstSelectorPadCachedBuffer *cached_buffer;
     GSList *maybe_remove;
     guint queue_position;
 
+    selpad = GST_SELECTOR_PAD_CAST (walk->data);
     if (!selpad->cached_buffers)
       continue;
+
+    seg = &selpad->segment;
 
     maybe_remove = NULL;
     queue_position = 0;
@@ -944,13 +950,13 @@ gst_input_selector_cleanup_old_cached_buffers (GstInputSelector * sel,
         running_time += GST_BUFFER_DURATION (buffer);
       /* Only use the segment to convert to running time if the segment is
        * in TIME format, otherwise do our best to try to sync */
-      if (seg->format == GST_FORMAT_TIME && GST_CLOCK_TIME_IS_VALID (seg->stop)) {
+      if (GST_CLOCK_TIME_IS_VALID (seg->stop)) {
         if (running_time > seg->stop) {
           running_time = seg->stop;
         }
-        running_time =
-            gst_segment_to_running_time (seg, GST_FORMAT_TIME, running_time);
       }
+      running_time =
+          gst_segment_to_running_time (seg, GST_FORMAT_TIME, running_time);
 
       GST_DEBUG_OBJECT (selpad,
           "checking if buffer %p running time=%" GST_TIME_FORMAT
@@ -1209,8 +1215,7 @@ ignore:
   {
     gboolean active_pad_pushed = GST_SELECTOR_PAD_CAST (active_sinkpad)->pushed;
 
-    GST_DEBUG_OBJECT (pad, "Pad not active or buffer timestamp is invalid, "
-        "discard buffer %p", buf);
+    GST_DEBUG_OBJECT (pad, "Pad not active, discard buffer %p", buf);
     /* when we drop a buffer, we're creating a discont on this pad */
     selpad->discont = TRUE;
     GST_INPUT_SELECTOR_UNLOCK (sel);
