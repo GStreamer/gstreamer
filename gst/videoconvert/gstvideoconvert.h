@@ -47,9 +47,6 @@ typedef struct _GstVideoConvertClass GstVideoConvertClass;
 struct _GstVideoConvert {
   GstVideoFilter element;
 
-  ColorSpaceColorSpec from_spec;
-  ColorSpaceColorSpec to_spec;
-
   VideoConvert *convert;
   gboolean dither;
 };

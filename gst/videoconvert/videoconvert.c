@@ -38,63 +38,31 @@ static void videoconvert_dither_halftone (VideoConvert * convert, int j);
 
 
 VideoConvert *
-videoconvert_convert_new (GstVideoFormat to_format, ColorSpaceColorSpec to_spec,
-    GstVideoFormat from_format, ColorSpaceColorSpec from_spec,
-    int width, int height)
+videoconvert_convert_new (GstVideoInfo * in_info, GstVideoInfo * out_info)
 {
-  const GstVideoFormatInfo *to_info, *from_info;
   VideoConvert *convert;
-  int i;
+  int i, width;
 
-  from_info = gst_video_format_get_info (from_format);
-  to_info = gst_video_format_get_info (to_format);
+  convert = g_malloc0 (sizeof (VideoConvert));
 
-  g_return_val_if_fail (!GST_VIDEO_FORMAT_INFO_IS_RGB (to_info)
-      || to_spec == COLOR_SPEC_RGB, NULL);
-  g_return_val_if_fail (!GST_VIDEO_FORMAT_INFO_IS_YUV (to_info)
-      || to_spec == COLOR_SPEC_YUV_BT709
-      || to_spec == COLOR_SPEC_YUV_BT470_6, NULL);
-  g_return_val_if_fail (GST_VIDEO_FORMAT_INFO_IS_RGB (to_info)
-      || GST_VIDEO_FORMAT_INFO_IS_YUV (to_info)
-      || (GST_VIDEO_FORMAT_INFO_IS_GRAY (to_info) &&
-          to_spec == COLOR_SPEC_GRAY), NULL);
-
-  g_return_val_if_fail (!GST_VIDEO_FORMAT_INFO_IS_RGB (from_info)
-      || from_spec == COLOR_SPEC_RGB, NULL);
-  g_return_val_if_fail (!GST_VIDEO_FORMAT_INFO_IS_YUV (from_info)
-      || from_spec == COLOR_SPEC_YUV_BT709
-      || from_spec == COLOR_SPEC_YUV_BT470_6, NULL);
-  g_return_val_if_fail (GST_VIDEO_FORMAT_INFO_IS_RGB (from_info)
-      || GST_VIDEO_FORMAT_INFO_IS_YUV (from_info)
-      || (GST_VIDEO_FORMAT_INFO_IS_GRAY (from_info) &&
-          from_spec == COLOR_SPEC_GRAY), NULL);
-
-  convert = g_malloc (sizeof (VideoConvert));
-  memset (convert, 0, sizeof (VideoConvert));
-
-  convert->to_format = to_format;
-  convert->to_spec = to_spec;
-  convert->from_format = from_format;
-  convert->from_spec = from_spec;
-  convert->height = height;
-  convert->width = width;
+  convert->in_info = *in_info;
+  convert->out_info = *out_info;
   convert->convert = videoconvert_convert_generic;
   convert->dither16 = videoconvert_dither_none;
-
-  if (to_info->depth[0] > 8 || from_info->depth[0] > 8) {
-    convert->use_16bit = TRUE;
-  } else {
-    convert->use_16bit = FALSE;
-  }
 
   videoconvert_convert_lookup_fastpath (convert);
   videoconvert_convert_lookup_matrix (convert);
 
+  convert->width = GST_VIDEO_INFO_WIDTH (in_info);
+  convert->height = GST_VIDEO_INFO_HEIGHT (in_info);
+
+  width = convert->width;
+
   convert->tmpline = g_malloc (sizeof (guint8) * (width + 8) * 4);
   convert->tmpline16 = g_malloc (sizeof (guint16) * (width + 8) * 4);
-  convert->errline = g_malloc (sizeof (guint16) * width * 4);
+  convert->errline = g_malloc0 (sizeof (guint16) * width * 4);
 
-  if (to_format == GST_VIDEO_FORMAT_RGB8P) {
+  if (GST_VIDEO_INFO_FORMAT (out_info) == GST_VIDEO_FORMAT_RGB8P) {
     /* build poor man's palette, taken from ffmpegcolorspace */
     static const guint8 pal_value[6] = { 0x00, 0x33, 0x66, 0x99, 0xcc, 0xff };
     guint32 *palette;
@@ -115,7 +83,6 @@ videoconvert_convert_new (GstVideoFormat to_format, ColorSpaceColorSpec to_spec,
     while (i < 256)
       palette[i++] = 0xff000000;
   }
-
   return convert;
 }
 
@@ -128,13 +95,6 @@ videoconvert_convert_free (VideoConvert * convert)
   g_free (convert->errline);
 
   g_free (convert);
-}
-
-void
-videoconvert_convert_set_interlaced (VideoConvert * convert,
-    gboolean interlaced)
-{
-  convert->interlaced = interlaced;
 }
 
 void
@@ -152,22 +112,6 @@ videoconvert_convert_set_dither (VideoConvert * convert, int type)
       convert->dither16 = videoconvert_dither_halftone;
       break;
   }
-}
-
-void
-videoconvert_convert_set_palette (VideoConvert * convert,
-    const guint32 * palette)
-{
-  if (convert->palette == NULL) {
-    convert->palette = g_malloc (sizeof (guint32) * 256);
-  }
-  memcpy (convert->palette, palette, sizeof (guint32) * 256);
-}
-
-const guint32 *
-videoconvert_convert_get_palette (VideoConvert * convert)
-{
-  return convert->palette;
 }
 
 void
@@ -465,42 +409,45 @@ matrix16_identity (VideoConvert * convert)
   /* do nothing */
 }
 
-
-
 static void
 videoconvert_convert_lookup_matrix (VideoConvert * convert)
 {
-  if (convert->from_spec == convert->to_spec) {
+  GstVideoColorMatrix in_matrix, out_matrix;
+
+  in_matrix = convert->in_info.colorimetry.matrix;
+  out_matrix = convert->out_info.colorimetry.matrix;
+
+  if (in_matrix == out_matrix) {
     GST_DEBUG ("using identity matrix");
     convert->matrix = matrix_identity;
     convert->matrix16 = matrix16_identity;
-  } else if (convert->from_spec == COLOR_SPEC_RGB
-      && convert->to_spec == COLOR_SPEC_YUV_BT470_6) {
+  } else if (in_matrix == GST_VIDEO_COLOR_MATRIX_RGB
+      && out_matrix == GST_VIDEO_COLOR_MATRIX_BT601) {
     GST_DEBUG ("using RGB -> YUV BT470_6 matrix");
     convert->matrix = matrix_rgb_to_yuv_bt470_6;
     convert->matrix16 = matrix16_rgb_to_yuv_bt470_6;
-  } else if (convert->from_spec == COLOR_SPEC_RGB
-      && convert->to_spec == COLOR_SPEC_YUV_BT709) {
+  } else if (in_matrix == GST_VIDEO_COLOR_MATRIX_RGB
+      && out_matrix == GST_VIDEO_COLOR_MATRIX_BT709) {
     GST_DEBUG ("using RGB -> YUV BT709 matrix");
     convert->matrix = matrix_rgb_to_yuv_bt709;
     convert->matrix16 = matrix16_rgb_to_yuv_bt709;
-  } else if (convert->from_spec == COLOR_SPEC_YUV_BT470_6
-      && convert->to_spec == COLOR_SPEC_RGB) {
+  } else if (in_matrix == GST_VIDEO_COLOR_MATRIX_BT601
+      && out_matrix == GST_VIDEO_COLOR_MATRIX_RGB) {
     GST_DEBUG ("using YUV BT470_6 -> RGB matrix");
     convert->matrix = matrix_yuv_bt470_6_to_rgb;
     convert->matrix16 = matrix16_yuv_bt470_6_to_rgb;
-  } else if (convert->from_spec == COLOR_SPEC_YUV_BT709
-      && convert->to_spec == COLOR_SPEC_RGB) {
+  } else if (in_matrix == GST_VIDEO_COLOR_MATRIX_BT709
+      && out_matrix == GST_VIDEO_COLOR_MATRIX_RGB) {
     GST_DEBUG ("using YUV BT709 -> RGB matrix");
     convert->matrix = matrix_yuv_bt709_to_rgb;
     convert->matrix16 = matrix16_yuv_bt709_to_rgb;
-  } else if (convert->from_spec == COLOR_SPEC_YUV_BT709
-      && convert->to_spec == COLOR_SPEC_YUV_BT470_6) {
+  } else if (in_matrix == GST_VIDEO_COLOR_MATRIX_BT709
+      && out_matrix == GST_VIDEO_COLOR_MATRIX_BT601) {
     GST_DEBUG ("using YUV BT709 -> YUV BT470_6");
     convert->matrix = matrix_yuv_bt709_to_yuv_bt470_6;
     convert->matrix16 = matrix16_yuv_bt709_to_yuv_bt470_6;
-  } else if (convert->from_spec == COLOR_SPEC_YUV_BT470_6
-      && convert->to_spec == COLOR_SPEC_YUV_BT709) {
+  } else if (in_matrix == GST_VIDEO_COLOR_MATRIX_BT601
+      && out_matrix == GST_VIDEO_COLOR_MATRIX_BT709) {
     GST_DEBUG ("using YUV BT470_6 -> YUV BT709");
     convert->matrix = matrix_yuv_bt470_6_to_yuv_bt709;
     convert->matrix16 = matrix16_yuv_bt470_6_to_yuv_bt709;
@@ -1276,96 +1223,96 @@ convert_I420_BGRA (VideoConvert * convert, GstVideoFrame * dest,
 
 typedef struct
 {
-  GstVideoFormat from_format;
-  ColorSpaceColorSpec from_spec;
-  GstVideoFormat to_format;
-  ColorSpaceColorSpec to_spec;
-  gboolean keeps_color_spec;
+  GstVideoFormat in_format;
+  GstVideoColorMatrix in_matrix;
+  GstVideoFormat out_format;
+  GstVideoColorMatrix out_matrix;
+  gboolean keeps_color_matrix;
   void (*convert) (VideoConvert * convert, GstVideoFrame * dest,
       const GstVideoFrame * src);
 } VideoTransform;
 static const VideoTransform transforms[] = {
-  {GST_VIDEO_FORMAT_I420, COLOR_SPEC_NONE, GST_VIDEO_FORMAT_YUY2,
-      COLOR_SPEC_NONE, TRUE, convert_I420_YUY2},
-  {GST_VIDEO_FORMAT_I420, COLOR_SPEC_NONE, GST_VIDEO_FORMAT_UYVY,
-      COLOR_SPEC_NONE, TRUE, convert_I420_UYVY},
-  {GST_VIDEO_FORMAT_I420, COLOR_SPEC_NONE, GST_VIDEO_FORMAT_AYUV,
-      COLOR_SPEC_NONE, TRUE, convert_I420_AYUV},
-  {GST_VIDEO_FORMAT_I420, COLOR_SPEC_NONE, GST_VIDEO_FORMAT_Y42B,
-      COLOR_SPEC_NONE, TRUE, convert_I420_Y42B},
-  {GST_VIDEO_FORMAT_I420, COLOR_SPEC_NONE, GST_VIDEO_FORMAT_Y444,
-      COLOR_SPEC_NONE, TRUE, convert_I420_Y444},
+  {GST_VIDEO_FORMAT_I420, GST_VIDEO_COLOR_MATRIX_UNKNOWN, GST_VIDEO_FORMAT_YUY2,
+      GST_VIDEO_COLOR_MATRIX_UNKNOWN, TRUE, convert_I420_YUY2},
+  {GST_VIDEO_FORMAT_I420, GST_VIDEO_COLOR_MATRIX_UNKNOWN, GST_VIDEO_FORMAT_UYVY,
+      GST_VIDEO_COLOR_MATRIX_UNKNOWN, TRUE, convert_I420_UYVY},
+  {GST_VIDEO_FORMAT_I420, GST_VIDEO_COLOR_MATRIX_UNKNOWN, GST_VIDEO_FORMAT_AYUV,
+      GST_VIDEO_COLOR_MATRIX_UNKNOWN, TRUE, convert_I420_AYUV},
+  {GST_VIDEO_FORMAT_I420, GST_VIDEO_COLOR_MATRIX_UNKNOWN, GST_VIDEO_FORMAT_Y42B,
+      GST_VIDEO_COLOR_MATRIX_UNKNOWN, TRUE, convert_I420_Y42B},
+  {GST_VIDEO_FORMAT_I420, GST_VIDEO_COLOR_MATRIX_UNKNOWN, GST_VIDEO_FORMAT_Y444,
+      GST_VIDEO_COLOR_MATRIX_UNKNOWN, TRUE, convert_I420_Y444},
 
-  {GST_VIDEO_FORMAT_YUY2, COLOR_SPEC_NONE, GST_VIDEO_FORMAT_I420,
-      COLOR_SPEC_NONE, TRUE, convert_YUY2_I420},
-  {GST_VIDEO_FORMAT_YUY2, COLOR_SPEC_NONE, GST_VIDEO_FORMAT_UYVY, COLOR_SPEC_NONE, TRUE, convert_UYVY_YUY2},    /* alias */
-  {GST_VIDEO_FORMAT_YUY2, COLOR_SPEC_NONE, GST_VIDEO_FORMAT_AYUV,
-      COLOR_SPEC_NONE, TRUE, convert_YUY2_AYUV},
-  {GST_VIDEO_FORMAT_YUY2, COLOR_SPEC_NONE, GST_VIDEO_FORMAT_Y42B,
-      COLOR_SPEC_NONE, TRUE, convert_YUY2_Y42B},
-  {GST_VIDEO_FORMAT_YUY2, COLOR_SPEC_NONE, GST_VIDEO_FORMAT_Y444,
-      COLOR_SPEC_NONE, TRUE, convert_YUY2_Y444},
+  {GST_VIDEO_FORMAT_YUY2, GST_VIDEO_COLOR_MATRIX_UNKNOWN, GST_VIDEO_FORMAT_I420,
+      GST_VIDEO_COLOR_MATRIX_UNKNOWN, TRUE, convert_YUY2_I420},
+  {GST_VIDEO_FORMAT_YUY2, GST_VIDEO_COLOR_MATRIX_UNKNOWN, GST_VIDEO_FORMAT_UYVY, GST_VIDEO_COLOR_MATRIX_UNKNOWN, TRUE, convert_UYVY_YUY2},      /* alias */
+  {GST_VIDEO_FORMAT_YUY2, GST_VIDEO_COLOR_MATRIX_UNKNOWN, GST_VIDEO_FORMAT_AYUV,
+      GST_VIDEO_COLOR_MATRIX_UNKNOWN, TRUE, convert_YUY2_AYUV},
+  {GST_VIDEO_FORMAT_YUY2, GST_VIDEO_COLOR_MATRIX_UNKNOWN, GST_VIDEO_FORMAT_Y42B,
+      GST_VIDEO_COLOR_MATRIX_UNKNOWN, TRUE, convert_YUY2_Y42B},
+  {GST_VIDEO_FORMAT_YUY2, GST_VIDEO_COLOR_MATRIX_UNKNOWN, GST_VIDEO_FORMAT_Y444,
+      GST_VIDEO_COLOR_MATRIX_UNKNOWN, TRUE, convert_YUY2_Y444},
 
-  {GST_VIDEO_FORMAT_UYVY, COLOR_SPEC_NONE, GST_VIDEO_FORMAT_I420,
-      COLOR_SPEC_NONE, TRUE, convert_UYVY_I420},
-  {GST_VIDEO_FORMAT_UYVY, COLOR_SPEC_NONE, GST_VIDEO_FORMAT_YUY2,
-      COLOR_SPEC_NONE, TRUE, convert_UYVY_YUY2},
-  {GST_VIDEO_FORMAT_UYVY, COLOR_SPEC_NONE, GST_VIDEO_FORMAT_AYUV,
-      COLOR_SPEC_NONE, TRUE, convert_UYVY_AYUV},
-  {GST_VIDEO_FORMAT_UYVY, COLOR_SPEC_NONE, GST_VIDEO_FORMAT_Y42B,
-      COLOR_SPEC_NONE, TRUE, convert_UYVY_Y42B},
-  {GST_VIDEO_FORMAT_UYVY, COLOR_SPEC_NONE, GST_VIDEO_FORMAT_Y444,
-      COLOR_SPEC_NONE, TRUE, convert_UYVY_Y444},
+  {GST_VIDEO_FORMAT_UYVY, GST_VIDEO_COLOR_MATRIX_UNKNOWN, GST_VIDEO_FORMAT_I420,
+      GST_VIDEO_COLOR_MATRIX_UNKNOWN, TRUE, convert_UYVY_I420},
+  {GST_VIDEO_FORMAT_UYVY, GST_VIDEO_COLOR_MATRIX_UNKNOWN, GST_VIDEO_FORMAT_YUY2,
+      GST_VIDEO_COLOR_MATRIX_UNKNOWN, TRUE, convert_UYVY_YUY2},
+  {GST_VIDEO_FORMAT_UYVY, GST_VIDEO_COLOR_MATRIX_UNKNOWN, GST_VIDEO_FORMAT_AYUV,
+      GST_VIDEO_COLOR_MATRIX_UNKNOWN, TRUE, convert_UYVY_AYUV},
+  {GST_VIDEO_FORMAT_UYVY, GST_VIDEO_COLOR_MATRIX_UNKNOWN, GST_VIDEO_FORMAT_Y42B,
+      GST_VIDEO_COLOR_MATRIX_UNKNOWN, TRUE, convert_UYVY_Y42B},
+  {GST_VIDEO_FORMAT_UYVY, GST_VIDEO_COLOR_MATRIX_UNKNOWN, GST_VIDEO_FORMAT_Y444,
+      GST_VIDEO_COLOR_MATRIX_UNKNOWN, TRUE, convert_UYVY_Y444},
 
-  {GST_VIDEO_FORMAT_AYUV, COLOR_SPEC_NONE, GST_VIDEO_FORMAT_I420,
-      COLOR_SPEC_NONE, TRUE, convert_AYUV_I420},
-  {GST_VIDEO_FORMAT_AYUV, COLOR_SPEC_NONE, GST_VIDEO_FORMAT_YUY2,
-      COLOR_SPEC_NONE, TRUE, convert_AYUV_YUY2},
-  {GST_VIDEO_FORMAT_AYUV, COLOR_SPEC_NONE, GST_VIDEO_FORMAT_UYVY,
-      COLOR_SPEC_NONE, TRUE, convert_AYUV_UYVY},
-  {GST_VIDEO_FORMAT_AYUV, COLOR_SPEC_NONE, GST_VIDEO_FORMAT_Y42B,
-      COLOR_SPEC_NONE, TRUE, convert_AYUV_Y42B},
-  {GST_VIDEO_FORMAT_AYUV, COLOR_SPEC_NONE, GST_VIDEO_FORMAT_Y444,
-      COLOR_SPEC_NONE, TRUE, convert_AYUV_Y444},
+  {GST_VIDEO_FORMAT_AYUV, GST_VIDEO_COLOR_MATRIX_UNKNOWN, GST_VIDEO_FORMAT_I420,
+      GST_VIDEO_COLOR_MATRIX_UNKNOWN, TRUE, convert_AYUV_I420},
+  {GST_VIDEO_FORMAT_AYUV, GST_VIDEO_COLOR_MATRIX_UNKNOWN, GST_VIDEO_FORMAT_YUY2,
+      GST_VIDEO_COLOR_MATRIX_UNKNOWN, TRUE, convert_AYUV_YUY2},
+  {GST_VIDEO_FORMAT_AYUV, GST_VIDEO_COLOR_MATRIX_UNKNOWN, GST_VIDEO_FORMAT_UYVY,
+      GST_VIDEO_COLOR_MATRIX_UNKNOWN, TRUE, convert_AYUV_UYVY},
+  {GST_VIDEO_FORMAT_AYUV, GST_VIDEO_COLOR_MATRIX_UNKNOWN, GST_VIDEO_FORMAT_Y42B,
+      GST_VIDEO_COLOR_MATRIX_UNKNOWN, TRUE, convert_AYUV_Y42B},
+  {GST_VIDEO_FORMAT_AYUV, GST_VIDEO_COLOR_MATRIX_UNKNOWN, GST_VIDEO_FORMAT_Y444,
+      GST_VIDEO_COLOR_MATRIX_UNKNOWN, TRUE, convert_AYUV_Y444},
 
-  {GST_VIDEO_FORMAT_Y42B, COLOR_SPEC_NONE, GST_VIDEO_FORMAT_I420,
-      COLOR_SPEC_NONE, TRUE, convert_Y42B_I420},
-  {GST_VIDEO_FORMAT_Y42B, COLOR_SPEC_NONE, GST_VIDEO_FORMAT_YUY2,
-      COLOR_SPEC_NONE, TRUE, convert_Y42B_YUY2},
-  {GST_VIDEO_FORMAT_Y42B, COLOR_SPEC_NONE, GST_VIDEO_FORMAT_UYVY,
-      COLOR_SPEC_NONE, TRUE, convert_Y42B_UYVY},
-  {GST_VIDEO_FORMAT_Y42B, COLOR_SPEC_NONE, GST_VIDEO_FORMAT_AYUV,
-      COLOR_SPEC_NONE, TRUE, convert_Y42B_AYUV},
-  {GST_VIDEO_FORMAT_Y42B, COLOR_SPEC_NONE, GST_VIDEO_FORMAT_Y444,
-      COLOR_SPEC_NONE, TRUE, convert_Y42B_Y444},
+  {GST_VIDEO_FORMAT_Y42B, GST_VIDEO_COLOR_MATRIX_UNKNOWN, GST_VIDEO_FORMAT_I420,
+      GST_VIDEO_COLOR_MATRIX_UNKNOWN, TRUE, convert_Y42B_I420},
+  {GST_VIDEO_FORMAT_Y42B, GST_VIDEO_COLOR_MATRIX_UNKNOWN, GST_VIDEO_FORMAT_YUY2,
+      GST_VIDEO_COLOR_MATRIX_UNKNOWN, TRUE, convert_Y42B_YUY2},
+  {GST_VIDEO_FORMAT_Y42B, GST_VIDEO_COLOR_MATRIX_UNKNOWN, GST_VIDEO_FORMAT_UYVY,
+      GST_VIDEO_COLOR_MATRIX_UNKNOWN, TRUE, convert_Y42B_UYVY},
+  {GST_VIDEO_FORMAT_Y42B, GST_VIDEO_COLOR_MATRIX_UNKNOWN, GST_VIDEO_FORMAT_AYUV,
+      GST_VIDEO_COLOR_MATRIX_UNKNOWN, TRUE, convert_Y42B_AYUV},
+  {GST_VIDEO_FORMAT_Y42B, GST_VIDEO_COLOR_MATRIX_UNKNOWN, GST_VIDEO_FORMAT_Y444,
+      GST_VIDEO_COLOR_MATRIX_UNKNOWN, TRUE, convert_Y42B_Y444},
 
-  {GST_VIDEO_FORMAT_Y444, COLOR_SPEC_NONE, GST_VIDEO_FORMAT_I420,
-      COLOR_SPEC_NONE, TRUE, convert_Y444_I420},
-  {GST_VIDEO_FORMAT_Y444, COLOR_SPEC_NONE, GST_VIDEO_FORMAT_YUY2,
-      COLOR_SPEC_NONE, TRUE, convert_Y444_YUY2},
-  {GST_VIDEO_FORMAT_Y444, COLOR_SPEC_NONE, GST_VIDEO_FORMAT_UYVY,
-      COLOR_SPEC_NONE, TRUE, convert_Y444_UYVY},
-  {GST_VIDEO_FORMAT_Y444, COLOR_SPEC_NONE, GST_VIDEO_FORMAT_AYUV,
-      COLOR_SPEC_NONE, TRUE, convert_Y444_AYUV},
-  {GST_VIDEO_FORMAT_Y444, COLOR_SPEC_NONE, GST_VIDEO_FORMAT_Y42B,
-      COLOR_SPEC_NONE, TRUE, convert_Y444_Y42B},
+  {GST_VIDEO_FORMAT_Y444, GST_VIDEO_COLOR_MATRIX_UNKNOWN, GST_VIDEO_FORMAT_I420,
+      GST_VIDEO_COLOR_MATRIX_UNKNOWN, TRUE, convert_Y444_I420},
+  {GST_VIDEO_FORMAT_Y444, GST_VIDEO_COLOR_MATRIX_UNKNOWN, GST_VIDEO_FORMAT_YUY2,
+      GST_VIDEO_COLOR_MATRIX_UNKNOWN, TRUE, convert_Y444_YUY2},
+  {GST_VIDEO_FORMAT_Y444, GST_VIDEO_COLOR_MATRIX_UNKNOWN, GST_VIDEO_FORMAT_UYVY,
+      GST_VIDEO_COLOR_MATRIX_UNKNOWN, TRUE, convert_Y444_UYVY},
+  {GST_VIDEO_FORMAT_Y444, GST_VIDEO_COLOR_MATRIX_UNKNOWN, GST_VIDEO_FORMAT_AYUV,
+      GST_VIDEO_COLOR_MATRIX_UNKNOWN, TRUE, convert_Y444_AYUV},
+  {GST_VIDEO_FORMAT_Y444, GST_VIDEO_COLOR_MATRIX_UNKNOWN, GST_VIDEO_FORMAT_Y42B,
+      GST_VIDEO_COLOR_MATRIX_UNKNOWN, TRUE, convert_Y444_Y42B},
 
 #if G_BYTE_ORDER == G_LITTLE_ENDIAN
-  {GST_VIDEO_FORMAT_AYUV, COLOR_SPEC_YUV_BT470_6, GST_VIDEO_FORMAT_ARGB,
-      COLOR_SPEC_RGB, FALSE, convert_AYUV_ARGB},
-  {GST_VIDEO_FORMAT_AYUV, COLOR_SPEC_YUV_BT470_6, GST_VIDEO_FORMAT_BGRA,
-      COLOR_SPEC_RGB, FALSE, convert_AYUV_BGRA},
-  {GST_VIDEO_FORMAT_AYUV, COLOR_SPEC_YUV_BT470_6, GST_VIDEO_FORMAT_xRGB, COLOR_SPEC_RGB, FALSE, convert_AYUV_ARGB},     /* alias */
-  {GST_VIDEO_FORMAT_AYUV, COLOR_SPEC_YUV_BT470_6, GST_VIDEO_FORMAT_BGRx, COLOR_SPEC_RGB, FALSE, convert_AYUV_BGRA},     /* alias */
-  {GST_VIDEO_FORMAT_AYUV, COLOR_SPEC_YUV_BT470_6, GST_VIDEO_FORMAT_ABGR,
-      COLOR_SPEC_RGB, FALSE, convert_AYUV_ABGR},
-  {GST_VIDEO_FORMAT_AYUV, COLOR_SPEC_YUV_BT470_6, GST_VIDEO_FORMAT_RGBA,
-      COLOR_SPEC_RGB, FALSE, convert_AYUV_RGBA},
-  {GST_VIDEO_FORMAT_AYUV, COLOR_SPEC_YUV_BT470_6, GST_VIDEO_FORMAT_xBGR, COLOR_SPEC_RGB, FALSE, convert_AYUV_ABGR},     /* alias */
-  {GST_VIDEO_FORMAT_AYUV, COLOR_SPEC_YUV_BT470_6, GST_VIDEO_FORMAT_RGBx, COLOR_SPEC_RGB, FALSE, convert_AYUV_RGBA},     /* alias */
+  {GST_VIDEO_FORMAT_AYUV, GST_VIDEO_COLOR_MATRIX_BT601, GST_VIDEO_FORMAT_ARGB,
+      GST_VIDEO_COLOR_MATRIX_RGB, FALSE, convert_AYUV_ARGB},
+  {GST_VIDEO_FORMAT_AYUV, GST_VIDEO_COLOR_MATRIX_BT601, GST_VIDEO_FORMAT_BGRA,
+      GST_VIDEO_COLOR_MATRIX_RGB, FALSE, convert_AYUV_BGRA},
+  {GST_VIDEO_FORMAT_AYUV, GST_VIDEO_COLOR_MATRIX_BT601, GST_VIDEO_FORMAT_xRGB, GST_VIDEO_COLOR_MATRIX_RGB, FALSE, convert_AYUV_ARGB},   /* alias */
+  {GST_VIDEO_FORMAT_AYUV, GST_VIDEO_COLOR_MATRIX_BT601, GST_VIDEO_FORMAT_BGRx, GST_VIDEO_COLOR_MATRIX_RGB, FALSE, convert_AYUV_BGRA},   /* alias */
+  {GST_VIDEO_FORMAT_AYUV, GST_VIDEO_COLOR_MATRIX_BT601, GST_VIDEO_FORMAT_ABGR,
+      GST_VIDEO_COLOR_MATRIX_RGB, FALSE, convert_AYUV_ABGR},
+  {GST_VIDEO_FORMAT_AYUV, GST_VIDEO_COLOR_MATRIX_BT601, GST_VIDEO_FORMAT_RGBA,
+      GST_VIDEO_COLOR_MATRIX_RGB, FALSE, convert_AYUV_RGBA},
+  {GST_VIDEO_FORMAT_AYUV, GST_VIDEO_COLOR_MATRIX_BT601, GST_VIDEO_FORMAT_xBGR, GST_VIDEO_COLOR_MATRIX_RGB, FALSE, convert_AYUV_ABGR},   /* alias */
+  {GST_VIDEO_FORMAT_AYUV, GST_VIDEO_COLOR_MATRIX_BT601, GST_VIDEO_FORMAT_RGBx, GST_VIDEO_COLOR_MATRIX_RGB, FALSE, convert_AYUV_RGBA},   /* alias */
 
-  {GST_VIDEO_FORMAT_I420, COLOR_SPEC_YUV_BT470_6, GST_VIDEO_FORMAT_BGRA,
-      COLOR_SPEC_RGB, FALSE, convert_I420_BGRA},
+  {GST_VIDEO_FORMAT_I420, GST_VIDEO_COLOR_MATRIX_BT601, GST_VIDEO_FORMAT_BGRA,
+      GST_VIDEO_COLOR_MATRIX_RGB, FALSE, convert_I420_BGRA},
 #endif
 };
 
@@ -1373,13 +1320,21 @@ static void
 videoconvert_convert_lookup_fastpath (VideoConvert * convert)
 {
   int i;
+  GstVideoFormat in_format, out_format;
+  GstVideoColorMatrix in_matrix, out_matrix;
+
+  in_format = GST_VIDEO_INFO_FORMAT (&convert->in_info);
+  out_format = GST_VIDEO_INFO_FORMAT (&convert->out_info);
+
+  in_matrix = convert->in_info.colorimetry.matrix;
+  out_matrix = convert->out_info.colorimetry.matrix;
 
   for (i = 0; i < sizeof (transforms) / sizeof (transforms[0]); i++) {
-    if (transforms[i].to_format == convert->to_format &&
-        transforms[i].from_format == convert->from_format &&
-        (transforms[i].keeps_color_spec ||
-            (transforms[i].from_spec == convert->from_spec &&
-                transforms[i].to_spec == convert->to_spec))) {
+    if (transforms[i].in_format == in_format &&
+        transforms[i].out_format == out_format &&
+        (transforms[i].keeps_color_matrix ||
+            (transforms[i].in_matrix == in_matrix &&
+                transforms[i].out_matrix == out_matrix))) {
       convert->convert = transforms[i].convert;
       return;
     }
