@@ -37,8 +37,8 @@
  */
 
 #include "config.h"
-#include <gst/interfaces/xoverlay.h>
-#include <gst/interfaces/navigation.h>
+#include <gst/video/videooverlay.h>
+#include <gst/video/navigation.h>
 
 #include "osxvideosink.h"
 #include <unistd.h>
@@ -56,14 +56,14 @@ static GstStaticPadTemplate gst_osx_video_sink_sink_template_factory =
 GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS ("video/x-raw-yuv, "
+    GST_STATIC_CAPS ("video/x-raw, "
         "framerate = (fraction) [ 0, MAX ], "
         "width = (int) [ 1, MAX ], "
         "height = (int) [ 1, MAX ], "
 #if G_BYTE_ORDER == G_BIG_ENDIAN
-       "format = (fourcc) YUY2")
+       "format = (string) YUY2")
 #else
-        "format = (fourcc) UYVY")
+        "format = (string) UYVY")
 #endif
     );
 
@@ -121,7 +121,7 @@ gst_osx_video_sink_run_cocoa_loop (GstOSXVideoSink * sink )
    * events and process deferred calls to the main thread through
    * perfermSelectorOnMainThread.
    * Since the sink needs to create it's own Cocoa window when no
-   * external NSView is passed to the sink through the GstXOverlay API,
+   * external NSView is passed to the sink through the GstVideoOverlay API,
    * we need to run the cocoa mainloop somehow.
    */
   if ([[NSRunLoop mainRunLoop] currentMode] == nil) {
@@ -215,7 +215,7 @@ gst_osx_video_sink_osxwindow_create (GstOSXVideoSink * osxvideosink, gint width,
     /* have-ns-view wasn't handled, post prepare-xwindow-id */
     if (osxvideosink->superview == NULL) {
       GST_INFO_OBJECT (osxvideosink, "emitting prepare-xwindow-id");
-      gst_x_overlay_prepare_xwindow_id (GST_X_OVERLAY (osxvideosink));
+      gst_video_overlay_prepare_window_handle (GST_VIDEO_OVERLAY (osxvideosink));
     }
 
     if (osxvideosink->superview != NULL) {
@@ -540,19 +540,6 @@ gst_osx_video_sink_class_init (GstOSXVideoSinkClass * klass)
           FALSE, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 }
 
-static gboolean
-gst_osx_video_sink_interface_supported (GstImplementsInterface * iface, GType type)
-{
-  g_assert (type == GST_TYPE_X_OVERLAY || type == GST_TYPE_NAVIGATION);
-  return TRUE;
-}
-
-static void
-gst_osx_video_sink_interface_init (GstImplementsInterfaceClass * klass)
-{
-  klass->supported = gst_osx_video_sink_interface_supported;
-}
-
 static void
 gst_osx_video_sink_navigation_send_event (GstNavigation * navigation,
     GstStructure * structure)
@@ -621,7 +608,7 @@ gst_osx_video_sink_navigation_init (GstNavigationInterface * iface)
 }
 
 static void
-gst_osx_video_sink_set_window_handle (GstXOverlay * overlay, guintptr handle_id)
+gst_osx_video_sink_set_window_handle (GstVideoOverlay * overlay, guintptr handle_id)
 {
   GstOSXVideoSink *osxvideosink = GST_OSX_VIDEO_SINK (overlay);
   gulong window_id = (gulong) handle_id;
@@ -647,7 +634,7 @@ gst_osx_video_sink_set_window_handle (GstXOverlay * overlay, guintptr handle_id)
 }
 
 static void
-gst_osx_video_sink_xoverlay_init (GstXOverlayClass * iface)
+gst_osx_video_sink_xoverlay_init (GstVideoOverlayInterface * iface)
 {
   iface->set_window_handle = gst_osx_video_sink_set_window_handle;
   iface->expose = NULL;
@@ -684,12 +671,6 @@ gst_osx_video_sink_get_type (void)
       (GInstanceInitFunc) gst_osx_video_sink_init,
     };
 
-    static const GInterfaceInfo iface_info = {
-      (GInterfaceInitFunc) gst_osx_video_sink_interface_init,
-      NULL,
-      NULL,
-    };
-
     static const GInterfaceInfo overlay_info = {
       (GInterfaceInitFunc) gst_osx_video_sink_xoverlay_init,
       NULL,
@@ -704,9 +685,7 @@ gst_osx_video_sink_get_type (void)
     osxvideosink_type = g_type_register_static (GST_TYPE_VIDEO_SINK,
         "GstOSXVideoSink", &osxvideosink_info, 0);
 
-    g_type_add_interface_static (osxvideosink_type,
-        GST_TYPE_IMPLEMENTS_INTERFACE, &iface_info);
-    g_type_add_interface_static (osxvideosink_type, GST_TYPE_X_OVERLAY,
+    g_type_add_interface_static (osxvideosink_type, GST_TYPE_VIDEO_OVERLAY,
         &overlay_info);
     g_type_add_interface_static (osxvideosink_type, GST_TYPE_NAVIGATION,
         &navigation_info);
@@ -814,16 +793,19 @@ gst_osx_video_sink_get_type (void)
 
 - (void) showFrame: (GstBufferObject *) object
 {
+  GstMapInfo info;
   guint8 *viewdata;
   NSAutoreleasePool *pool = [[NSAutoreleasePool alloc] init];
   GstBuffer *buf = object->buf;
 
   if (!destroyed)
   {
+    gst_buffer_map (buf, &info, GST_MAP_READ);
     viewdata = (guint8 *) [osxvideosink->osxwindow->gstview getTextureBuffer];
 
-    memcpy (viewdata, GST_BUFFER_DATA(buf), GST_BUFFER_SIZE(buf));
+    memcpy (viewdata, info.data, info.size);
     [osxvideosink->osxwindow->gstview displayTexture];
+    gst_buffer_unmap (buf, &info);
   }
 
   [object release];

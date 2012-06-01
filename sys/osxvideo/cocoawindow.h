@@ -29,7 +29,7 @@
 #import <Cocoa/Cocoa.h>
 #import <QuickTime/QuickTime.h>
 #import <glib.h>
-#import <gst/interfaces/navigation.h>
+#import <gst/video/navigation.h>
 
 struct _GstOSXImage;
 
