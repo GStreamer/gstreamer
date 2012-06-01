@@ -1849,6 +1849,31 @@ gst_video_format_get_info (GstVideoFormat format)
   return &formats[format].info;
 }
 
+typedef struct
+{
+  const gchar *name;
+  GstVideoColorimetry color;
+} ColorimetryInfo;
+
+#define MAKE_COLORIMETRY(n,r,m,t,p) { GST_VIDEO_COLORIMETRY_ ##n, \
+  { GST_VIDEO_COLOR_RANGE ##r, GST_VIDEO_COLOR_MATRIX_ ##m, \
+  GST_VIDEO_TRANSFER_ ##t, GST_VIDEO_COLOR_PRIMARIES_ ##p } }
+
+#define GST_VIDEO_COLORIMETRY_NONAME  ""
+
+#define DEFAULT_YUV_SD 0
+#define DEFAULT_YUV_HD 1
+#define DEFAULT_RGB    3
+#define DEFAULT_GRAY   4
+
+static const ColorimetryInfo colorimetry[] = {
+  MAKE_COLORIMETRY (BT601, _16_235, BT601, BT709, BT470M),
+  MAKE_COLORIMETRY (BT709, _16_235, BT709, BT709, BT709),
+  MAKE_COLORIMETRY (SMPTE240M, _16_235, SMPTE240M, SMPTE240M, SMPTE240M),
+  MAKE_COLORIMETRY (NONAME, _0_255, RGB, UNKNOWN, UNKNOWN),
+  MAKE_COLORIMETRY (NONAME, _0_255, BT601, UNKNOWN, UNKNOWN),
+};
+
 /**
  * gst_video_info_init:
  * @info: a #GstVideoInfo
@@ -1896,6 +1921,17 @@ gst_video_info_set_format (GstVideoInfo * info, GstVideoFormat format,
   info->finfo = finfo;
   info->width = width;
   info->height = height;
+
+  if (GST_VIDEO_FORMAT_INFO_IS_YUV (finfo)) {
+    if (width > 720)
+      info->colorimetry = colorimetry[DEFAULT_YUV_SD].color;
+    else
+      info->colorimetry = colorimetry[DEFAULT_YUV_HD].color;
+  } else if (GST_VIDEO_FORMAT_INFO_IS_GRAY (finfo)) {
+    info->colorimetry = colorimetry[DEFAULT_GRAY].color;
+  } else {
+    info->colorimetry = colorimetry[DEFAULT_RGB].color;
+  }
 
   fill_planes (info);
 }
@@ -1960,22 +1996,6 @@ gst_video_chroma_to_string (GstVideoChromaSite site)
   }
   return NULL;
 }
-
-typedef struct
-{
-  const gchar *name;
-  GstVideoColorimetry color;
-} ColorimetryInfo;
-
-#define MAKE_COLORIMETRY(n,r,m,t,p) { GST_VIDEO_COLORIMETRY_ ##n, \
-  { GST_VIDEO_COLOR_RANGE ##r, GST_VIDEO_COLOR_MATRIX_ ##m, \
-  GST_VIDEO_TRANSFER_ ##t, GST_VIDEO_COLOR_PRIMARIES_ ##p } }
-
-static const ColorimetryInfo colorimetry[] = {
-  MAKE_COLORIMETRY (BT601, _16_235, BT601, BT709, BT470M),
-  MAKE_COLORIMETRY (BT709, _16_235, BT709, BT709, BT709),
-  MAKE_COLORIMETRY (SMPTE240M, _16_235, SMPTE240M, SMPTE240M, SMPTE240M),
-};
 
 static const ColorimetryInfo *
 gst_video_get_colorimetry (const gchar * s)
@@ -2144,8 +2164,6 @@ gst_video_info_from_caps (GstVideoInfo * info, const GstCaps * caps)
 
   if ((s = gst_structure_get_string (structure, "colorimetry")))
     gst_video_colorimetry_from_string (&info->colorimetry, s);
-  else
-    memset (&info->colorimetry, 0, sizeof (GstVideoColorimetry));
 
   if (gst_structure_get_fraction (structure, "pixel-aspect-ratio",
           &par_n, &par_d)) {
