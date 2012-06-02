@@ -3226,7 +3226,7 @@ check_sticky (GstPad * pad)
       gint i, len;
 
       len = events->len;
-      for (i = 0; i < events->len; i++) {
+      for (i = 0; i < len; i++) {
         PadEvent *ev = &g_array_index (events, PadEvent, i);
 
         if (G_UNLIKELY (ev->event == NULL) || ev->received)
