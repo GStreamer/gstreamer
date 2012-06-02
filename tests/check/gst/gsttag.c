@@ -486,6 +486,30 @@ GST_START_TEST (test_equal)
 
 GST_END_TEST;
 
+GST_START_TEST (test_writability)
+{
+  GstTagList *tags, *wtags;
+
+  tags = gst_tag_list_new_empty ();
+  gst_tag_list_add (tags, GST_TAG_MERGE_APPEND, GST_TAG_ARTIST, "Foo", NULL);
+
+  /* take ref, should no longer be writable */
+  gst_tag_list_ref (tags);
+  ASSERT_CRITICAL (gst_tag_list_add (tags, GST_TAG_MERGE_APPEND,
+          GST_TAG_ARTIST, "Bar", NULL));
+
+  wtags = gst_tag_list_make_writable (tags);
+  /* should be ok now */
+  gst_tag_list_add (wtags, GST_TAG_MERGE_APPEND, GST_TAG_ARTIST, "Bar", NULL);
+  gst_tag_list_unref (wtags);
+
+  /* this too, since we dropped the second ref in make_writable */
+  gst_tag_list_add (tags, GST_TAG_MERGE_APPEND, GST_TAG_ARTIST, "Bar", NULL);
+  gst_tag_list_unref (tags);
+}
+
+GST_END_TEST;
+
 static Suite *
 gst_tag_suite (void)
 {
@@ -504,6 +528,7 @@ gst_tag_suite (void)
   tcase_add_test (tc_chain, test_empty_tags);
   tcase_add_test (tc_chain, test_new_full);
   tcase_add_test (tc_chain, test_equal);
+  tcase_add_test (tc_chain, test_writability);
 
   return s;
 }
