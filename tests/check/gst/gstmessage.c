@@ -113,7 +113,7 @@ GST_START_TEST (test_parsing)
     fail_if (tag == NULL);
     /* FIXME, check the actual tags */
     gst_message_unref (message);
-    gst_tag_list_free (tag);
+    gst_tag_list_unref (tag);
   }
   /* GST_MESSAGE_BUFFERING   */
   {

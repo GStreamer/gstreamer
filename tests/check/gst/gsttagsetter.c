@@ -112,8 +112,8 @@ GST_START_TEST (test_merge)
       NULL);
   assert_tag_setter_list_length (setter, 2);
 
-  gst_tag_list_free (list2);
-  gst_tag_list_free (list1);
+  gst_tag_list_unref (list2);
+  gst_tag_list_unref (list1);
 
   g_object_unref (enc);
 }
@@ -160,9 +160,9 @@ GST_START_TEST (test_merge_modes)
       fail_unless_equals_int (tag_list_length (gst_tag_setter_get_tag_list
               (setter)), tag_list_length (merged));
 
-      gst_tag_list_free (list1);
-      gst_tag_list_free (list2);
-      gst_tag_list_free (merged);
+      gst_tag_list_unref (list1);
+      gst_tag_list_unref (list2);
+      gst_tag_list_unref (merged);
       gst_object_unref (enc);
     }
   }
@@ -200,9 +200,9 @@ GST_START_TEST (test_merge_modes_skip_empty)
       fail_unless_equals_int (tag_list_length (gst_tag_setter_get_tag_list
               (setter)), tag_list_length (merged));
 
-      gst_tag_list_free (list1);
-      gst_tag_list_free (list2);
-      gst_tag_list_free (merged);
+      gst_tag_list_unref (list1);
+      gst_tag_list_unref (list2);
+      gst_tag_list_unref (merged);
       gst_object_unref (enc);
     }
   }

@@ -69,7 +69,7 @@ message_loop (GstElement * element, GstTagList ** tags)
         if (*tags) {
           old_tags = *tags;
           *tags = gst_tag_list_merge (old_tags, new_tags, GST_TAG_MERGE_KEEP);
-          gst_tag_list_free (old_tags);
+          gst_tag_list_unref (old_tags);
         } else
           *tags = new_tags;
         break;
@@ -178,7 +178,7 @@ main (int argc, char *argv[])
     if (tags) {
       g_print ("Metadata for %s:\n", argv[i]);
       gst_tag_list_foreach (tags, print_tag, NULL);
-      gst_tag_list_free (tags);
+      gst_tag_list_unref (tags);
       tags = NULL;
     } else
       g_print ("No metadata found for %s\n", argv[i]);

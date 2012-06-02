@@ -1008,7 +1008,7 @@ gst_message_has_name (GstMessage * message, const gchar * name)
  *       gst_message_parse_tag (msg, &amp;tags);
  *       g_print ("Got tags from element %s\n", GST_OBJECT_NAME (msg->src));
  *       handle_tags (tags);
- *       gst_tag_list_free (tags);
+ *       gst_tag_list_unref (tags);
  *       break;
  *     }
  *     ...

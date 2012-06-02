@@ -66,8 +66,8 @@ check_tags_empty (const GstTagList * list)
 
 #define NEW_LIST_FIXED(mode)                                    \
 G_STMT_START {                                                  \
-  if (list) gst_tag_list_free (list);                           \
-  list = gst_tag_list_new_empty ();                                   \
+  if (list) gst_tag_list_unref (list);                          \
+  list = gst_tag_list_new_empty ();                             \
   gst_tag_list_add (list, mode, FTAG, FIXED1, FTAG, FIXED2,     \
                     FTAG, FIXED3, FTAG, FIXED4, NULL);          \
   mark_point();                                                 \
@@ -75,8 +75,8 @@ G_STMT_START {                                                  \
 
 #define NEW_LIST_UNFIXED(mode)                                  \
 G_STMT_START {                                                  \
-  if (list) gst_tag_list_free (list);                           \
-  list = gst_tag_list_new_empty ();                                   \
+  if (list) gst_tag_list_unref (list);                          \
+  list = gst_tag_list_new_empty ();                             \
   gst_tag_list_add (list, mode, UTAG, UNFIXED1, UTAG, UNFIXED2, \
                     UTAG, UNFIXED3, UTAG, UNFIXED4, NULL);      \
   mark_point();                                                 \
@@ -84,56 +84,56 @@ G_STMT_START {                                                  \
 
 #define NEW_LISTS_FIXED(mode)                                   \
 G_STMT_START {                                                  \
-  if (list) gst_tag_list_free (list);                           \
-  list = gst_tag_list_new_empty ();                                   \
+  if (list) gst_tag_list_unref (list);                          \
+  list = gst_tag_list_new_empty ();                             \
   gst_tag_list_add (list, GST_TAG_MERGE_APPEND, FTAG, FIXED1,   \
                     FTAG, FIXED2, NULL);                        \
-  if (list2) gst_tag_list_free (list2);                         \
-  list2 = gst_tag_list_new_empty ();                                  \
+  if (list2) gst_tag_list_unref (list2);                        \
+  list2 = gst_tag_list_new_empty ();                            \
   gst_tag_list_add (list2, GST_TAG_MERGE_APPEND, FTAG, FIXED3,  \
                     FTAG, FIXED4, NULL);                        \
-  if (merge) gst_tag_list_free (merge);                         \
+  if (merge) gst_tag_list_unref (merge);                        \
   merge = gst_tag_list_merge (list, list2, mode);               \
   mark_point();                                                 \
 } G_STMT_END;
 
 #define NEW_LISTS_UNFIXED(mode)                                 \
 G_STMT_START {                                                  \
-  if (list) gst_tag_list_free (list);                           \
-  list = gst_tag_list_new_empty ();                                   \
+  if (list) gst_tag_list_unref (list);                          \
+  list = gst_tag_list_new_empty ();                             \
   gst_tag_list_add (list, GST_TAG_MERGE_APPEND, UTAG, UNFIXED1, \
                     UTAG, UNFIXED2, NULL);                      \
-  if (list2) gst_tag_list_free (list2);                         \
-  list2 = gst_tag_list_new_empty ();                                  \
+  if (list2) gst_tag_list_unref (list2);                        \
+  list2 = gst_tag_list_new_empty ();                            \
   gst_tag_list_add (list2, GST_TAG_MERGE_APPEND, UTAG, UNFIXED3,\
                     UTAG, UNFIXED4, NULL);                      \
-  if (merge) gst_tag_list_free (merge);                         \
+  if (merge) gst_tag_list_unref (merge);                        \
   merge = gst_tag_list_merge (list, list2, mode);               \
   mark_point();                                                 \
 } G_STMT_END;
 
 #define NEW_LISTS_EMPTY1(mode)                                  \
 G_STMT_START {                                                  \
-  if (list) gst_tag_list_free (list);                           \
+  if (list) gst_tag_list_unref (list);                          \
   list = NULL;                                                  \
-  if (list2) gst_tag_list_free (list2);                         \
-  list2 = gst_tag_list_new_empty ();                                  \
+  if (list2) gst_tag_list_unref (list2);                        \
+  list2 = gst_tag_list_new_empty ();                            \
   gst_tag_list_add (list2, GST_TAG_MERGE_APPEND, FTAG, FIXED3,  \
                     FTAG, FIXED4, NULL);                        \
-  if (merge) gst_tag_list_free (merge);                         \
+  if (merge) gst_tag_list_unref (merge);                        \
   merge = gst_tag_list_merge (list, list2, mode);               \
   mark_point();                                                 \
 } G_STMT_END;
 
-#define NEW_LISTS_EMPTY2(mode)                                   \
+#define NEW_LISTS_EMPTY2(mode)                                  \
 G_STMT_START {                                                  \
-  if (list) gst_tag_list_free (list);                           \
-  list = gst_tag_list_new_empty ();                                   \
+  if (list) gst_tag_list_unref (list);                          \
+  list = gst_tag_list_new_empty ();                             \
   gst_tag_list_add (list, GST_TAG_MERGE_APPEND, FTAG, FIXED1,   \
                     FTAG, FIXED2, NULL);                        \
-  if (list2) gst_tag_list_free (list2);                         \
+  if (list2) gst_tag_list_unref (list2);                        \
   list2 = NULL;                                                 \
-  if (merge) gst_tag_list_free (merge);                         \
+  if (merge) gst_tag_list_unref (merge);                        \
   merge = gst_tag_list_merge (list, list2, mode);               \
   mark_point();                                                 \
 } G_STMT_END;
@@ -185,7 +185,7 @@ GST_START_TEST (test_add)
 
   /* clean up */
   if (list)
-    gst_tag_list_free (list);
+    gst_tag_list_unref (list);
 }
 
 GST_END_TEST
@@ -256,11 +256,11 @@ GST_START_TEST (test_merge)
 
   /* clean up */
   if (list)
-    gst_tag_list_free (list);
+    gst_tag_list_unref (list);
   if (list2)
-    gst_tag_list_free (list2);
+    gst_tag_list_unref (list2);
   if (merge)
-    gst_tag_list_free (merge);
+    gst_tag_list_unref (merge);
 }
 
 GST_END_TEST
@@ -282,7 +282,7 @@ GST_START_TEST (test_date_tags)
   fail_if (tag_list2 == NULL);
   fail_if (!gst_tag_list_get_date (tag_list2, GST_TAG_DATE, &date2));
   fail_unless (gst_tag_list_is_equal (tag_list2, tag_list));
-  gst_tag_list_free (tag_list2);
+  gst_tag_list_unref (tag_list2);
   g_free (str);
 
   fail_if (g_date_compare (date, date2) != 0);
@@ -294,7 +294,7 @@ GST_START_TEST (test_date_tags)
   fail_if (g_date_get_year (date2) != 2005);
   g_date_free (date2);
 
-  gst_tag_list_free (tag_list);
+  gst_tag_list_unref (tag_list);
   g_date_free (date);
 }
 
@@ -306,7 +306,7 @@ GST_START_TEST (test_type)
 
   taglist = gst_tag_list_new_empty ();
   fail_unless (GST_IS_TAG_LIST (taglist));
-  gst_tag_list_free (taglist);
+  gst_tag_list_unref (taglist);
 
   /* this should be fine */
   fail_if (GST_IS_TAG_LIST (NULL));
@@ -317,7 +317,7 @@ GST_START_TEST (test_type)
   fail_unless (gst_tag_list_is_empty (taglist));
   gst_tag_list_add (taglist, GST_TAG_MERGE_APPEND, GST_TAG_ARTIST, "JD", NULL);
   fail_if (gst_tag_list_is_empty (taglist));
-  gst_tag_list_free (taglist);
+  gst_tag_list_unref (taglist);
 }
 
 GST_END_TEST;
@@ -336,7 +336,7 @@ GST_START_TEST (test_set_non_utf8_string)
   /* That string field with a non-UTF8 string should not have been added */
   fail_unless (gst_tag_list_is_empty (taglist));
 
-  gst_tag_list_free (taglist);
+  gst_tag_list_unref (taglist);
 }
 
 GST_END_TEST;
@@ -376,7 +376,7 @@ GST_START_TEST (test_buffer_tags)
   gst_buffer_unref (buf1);
   gst_buffer_unref (buf2);
 
-  gst_tag_list_free (tags);
+  gst_tag_list_unref (tags);
 }
 
 GST_END_TEST;
@@ -395,7 +395,7 @@ GST_START_TEST (test_empty_tags)
   ASSERT_WARNING (gst_tag_list_add (tags, GST_TAG_MERGE_APPEND,
           GST_TAG_ARTIST, "", NULL));
   gst_tag_list_add (tags, GST_TAG_MERGE_APPEND, GST_TAG_ARTIST, "xyz", NULL);
-  gst_tag_list_free (tags);
+  gst_tag_list_unref (tags);
 }
 
 GST_END_TEST;
@@ -421,7 +421,7 @@ GST_START_TEST (test_new_full)
   fail_unless_equals_float (track_gain, 4.242);
   fail_unless (tags != NULL);
 
-  gst_tag_list_free (tags);
+  gst_tag_list_unref (tags);
   g_free (artist);
   g_free (title);
 }
@@ -444,7 +444,7 @@ GST_START_TEST (test_merge_strings_with_comma)
   fail_unless (strstr (artists, "Bar") != NULL);
   fail_unless (strstr (artists, "Yay") != NULL);
   g_free (artists);
-  gst_tag_list_free (tags);
+  gst_tag_list_unref (tags);
 }
 
 GST_END_TEST;
@@ -480,8 +480,8 @@ GST_START_TEST (test_equal)
       9.87654310, NULL);
   fail_unless (!gst_tag_list_is_equal (tags2, tags));
 
-  gst_tag_list_free (tags);
-  gst_tag_list_free (tags2);
+  gst_tag_list_unref (tags);
+  gst_tag_list_unref (tags2);
 }
 
 GST_END_TEST;
