@@ -1865,9 +1865,14 @@ static void
 gst_video_decoder_do_finish_frame (GstVideoDecoder * dec,
     GstVideoCodecFrame * frame)
 {
+  GList *link;
+
   /* unref once from the list */
-  dec->priv->frames = g_list_remove (dec->priv->frames, frame);
-  gst_video_codec_frame_unref (frame);
+  link = g_list_find (dec->priv->frames, frame);
+  if (link) {
+    gst_video_codec_frame_unref (frame);
+    dec->priv->frames = g_list_delete_link (dec->priv->frames, link);
+  }
 
   /* unref because this function takes ownership */
   gst_video_codec_frame_unref (frame);
