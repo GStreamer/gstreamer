@@ -585,8 +585,10 @@ vorbis_dec_handle_frame (GstAudioDecoder * dec, GstBuffer * buffer)
       goto done;
     }
     result = vorbis_handle_header_packet (vd, packet);
+    if (result != GST_FLOW_OK)
+      goto done;
     /* consumer header packet/frame */
-    gst_audio_decoder_finish_frame (GST_AUDIO_DECODER (vd), NULL, 1);
+    result = gst_audio_decoder_finish_frame (GST_AUDIO_DECODER (vd), NULL, 1);
   } else {
     GstClockTime timestamp, duration;
 
