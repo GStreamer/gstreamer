@@ -454,8 +454,18 @@ The 0.11 porting guide
 
 * GstTagList
     is now an opaque mini object instead of being typedefed to a GstStructure.
-    Cast to GstStructure or use gst_structure_* API on it at your own peril
-    (it might crash if you do that)
+
+    While it was previously okay (and in some cases required because of
+    missing taglist API) to cast a GstTagList to a GstStructure or use
+    gst_structure_* API on taglists, you can no longer do that. Doing so will
+    cause crashes.
+
+    Also, tag lists are refcounted now, and can therefore not be freely
+    modified any longer. Make sure to call
+
+      taglist = gst_tag_list_make_writable (taglist);
+
+    before adding, removing or changing tags in the taglist.
 
     gst_tag_list_new() has been renamed to gst_tag_list_new_empty().
     gst_tag_list_new_full*() have been renamed to gst_tag_list_new*().
