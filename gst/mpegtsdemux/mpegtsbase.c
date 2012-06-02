@@ -767,7 +767,7 @@ static inline gboolean
 mpegts_base_is_psi (MpegTSBase * base, MpegTSPacketizerPacket * packet)
 {
   gboolean retval = FALSE;
-  guint8 *data, table_id, pointer;
+  guint8 *data, table_id = TABLE_ID_UNSET, pointer;
   int i;
 
   static const guint8 si_tables[] =
@@ -778,58 +778,55 @@ mpegts_base_is_psi (MpegTSBase * base, MpegTSPacketizerPacket * packet)
     0x72, 0x73, 0x7E, 0x7F, TABLE_ID_UNSET
   };
 
-  if (MPEGTS_BIT_IS_SET (base->known_psi, packet->pid))
-    retval = TRUE;
-
   /* check if it is a pes pid */
   if (MPEGTS_BIT_IS_SET (base->is_pes, packet->pid))
-    return FALSE;
+    goto invalid_pid;
 
-  if (!retval) {
-    if (packet->payload_unit_start_indicator) {
-      data = packet->data;
-      pointer = *data++;
-      data += pointer;
-      /* 'pointer' value may be invalid on malformed packet
-       * so we need to avoid out of range
-       */
-      if (!(data < packet->data_end)) {
-        GST_WARNING_OBJECT (base,
-            "Wrong offset when retrieving table id: 0x%x", pointer);
-        return FALSE;
-      }
+  /* check if it part of the PIDs we know contain PSI */
+  if (!MPEGTS_BIT_IS_SET (base->known_psi, packet->pid))
+    goto invalid_pid;
 
-      table_id = *(packet->data);
-      i = 0;
-      while (si_tables[i] != TABLE_ID_UNSET) {
-        if (G_UNLIKELY (si_tables[i] == table_id)) {
-          GST_DEBUG_OBJECT (base, "Packet has table id 0x%x", table_id);
-          retval = TRUE;
-          break;
-        }
-        i++;
-      }
-    } else {
-      MpegTSPacketizerStream *stream = (MpegTSPacketizerStream *)
-          base->packetizer->streams[packet->pid];
+  if (packet->payload_unit_start_indicator) {
+    data = packet->data;
+    pointer = *data++;
+    data += pointer;
 
-      if (stream) {
-        i = 0;
-        GST_DEBUG_OBJECT (base, "section table id: 0x%x",
-            stream->section_table_id);
-        while (si_tables[i] != TABLE_ID_UNSET) {
-          if (G_UNLIKELY (si_tables[i] == stream->section_table_id)) {
-            retval = TRUE;
-            break;
-          }
-          i++;
-        }
-      }
+    /* 'pointer' value may be invalid on malformed packet
+     * so we need to avoid out of range */
+    if (!(data < packet->data_end)) {
+      GST_WARNING_OBJECT (base,
+          "Section pointer value exceeds packet size: 0x%x", pointer);
+      return FALSE;
+    }
+
+    table_id = *(packet->data);
+  } else {
+    MpegTSPacketizerStream *stream = (MpegTSPacketizerStream *)
+        base->packetizer->streams[packet->pid];
+
+    if (stream)
+      table_id = stream->section_table_id;
+  }
+
+  if (G_UNLIKELY (table_id == TABLE_ID_UNSET))
+    goto beach;
+
+  for (i = 0; si_tables[i] != TABLE_ID_UNSET; i++) {
+    if (G_UNLIKELY (si_tables[i] == table_id)) {
+      retval = TRUE;
+      break;
     }
   }
 
-  GST_LOG_OBJECT (base, "Packet of pid 0x%x is psi: %d", packet->pid, retval);
+beach:
+  GST_DEBUG_OBJECT (base, "Packet of pid 0x%04x (table_id 0x%02x) is psi: %d",
+      packet->pid, table_id, retval);
   return retval;
+
+invalid_pid:
+  GST_LOG_OBJECT (base, "Packet of pid 0x%04x doesn't belong to a SI stream",
+      packet->pid);
+  return FALSE;
 }
 
 static void
