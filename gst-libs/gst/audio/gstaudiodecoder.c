@@ -772,8 +772,11 @@ again:
     }
 
     if (inbuf) {
-      buf = inbuf;
-      goto again;
+      if (ret == GST_FLOW_OK) {
+        buf = inbuf;
+        goto again;
+      }
+      gst_buffer_unref (inbuf);
     }
   }
 
@@ -1050,7 +1053,6 @@ gst_audio_decoder_push_buffers (GstAudioDecoder * dec, gboolean force)
   GST_DEBUG_OBJECT (dec, "available: %d", av);
 
   while (ret == GST_FLOW_OK) {
-
     flush = 0;
     ctx->eos = force;
 
@@ -1150,15 +1152,21 @@ gst_audio_decoder_drain (GstAudioDecoder * dec)
   if (dec->priv->drained && !dec->priv->gather)
     return GST_FLOW_OK;
   else {
+    GstFlowReturn ret2;
+
     /* dispatch reverse pending buffers */
     /* chain eventually calls upon drain as well, but by that time
      * gather list should be clear, so ok ... */
     if (dec->output_segment.rate < 0.0 && dec->priv->gather)
       gst_audio_decoder_chain_reverse (dec, NULL);
-    /* have subclass give all it can */
-    ret = gst_audio_decoder_push_buffers (dec, TRUE);
+    /* have subclass give all it can, if this fails we
+     * still want the subclass to output everything it
+     * can but we will return the error from here */
+    ret2 = gst_audio_decoder_push_buffers (dec, TRUE);
     /* ensure all output sent */
     ret = gst_audio_decoder_output (dec, NULL);
+    if (ret2 != GST_FLOW_OK)
+      ret = ret2;
     /* everything should be away now */
     if (dec->priv->frames.length) {
       /* not fatal/impossible though if subclass/codec eats stuff */
@@ -1334,6 +1342,8 @@ gst_audio_decoder_flush_decode (GstAudioDecoder * dec)
     /* decode buffer, resulting data prepended to output queue */
     gst_buffer_ref (buf);
     res = gst_audio_decoder_chain_forward (dec, buf);
+    if (res != GST_FLOW_OK)
+      return res;
 
     /* if we generated output, we can discard the buffer, else we
      * keep it in the queue */
