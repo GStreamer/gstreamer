@@ -3151,11 +3151,21 @@ done:
   GST_OBJECT_UNLOCK (pad);
 }
 
+typedef struct
+{
+  GstFlowReturn ret;
+
+  /* If TRUE and ret is not OK this means
+   * that pushing the EOS event failed
+   */
+  gboolean was_eos;
+} PushStickyData;
+
 /* should be called with pad LOCK */
 static gboolean
 push_sticky (GstPad * pad, PadEvent * ev, gpointer user_data)
 {
-  GstFlowReturn *data = user_data;
+  PushStickyData *data = user_data;
   GstEvent *event = ev->event;
 
   if (ev->received) {
@@ -3164,10 +3174,10 @@ push_sticky (GstPad * pad, PadEvent * ev, gpointer user_data)
     return TRUE;
   }
 
-  *data = gst_pad_push_event_unchecked (pad, gst_event_ref (event),
+  data->ret = gst_pad_push_event_unchecked (pad, gst_event_ref (event),
       GST_PAD_PROBE_TYPE_EVENT_DOWNSTREAM);
 
-  switch (*data) {
+  switch (data->ret) {
     case GST_FLOW_OK:
       ev->received = TRUE;
       GST_DEBUG_OBJECT (pad, "event %s marked received",
@@ -3177,14 +3187,18 @@ push_sticky (GstPad * pad, PadEvent * ev, gpointer user_data)
       /* not linked is not a problem, we are sticky so the event will be
        * sent later */
       GST_DEBUG_OBJECT (pad, "pad was not linked");
-      *data = GST_FLOW_OK;
+      data->ret = GST_FLOW_OK;
       /* fallthrough */
     default:
       GST_DEBUG_OBJECT (pad, "mark pending events");
       GST_OBJECT_FLAG_SET (pad, GST_PAD_FLAG_PENDING_EVENTS);
       break;
   }
-  return *data == GST_FLOW_OK;
+
+  if (data->ret != GST_FLOW_OK && GST_EVENT_TYPE (event) == GST_EVENT_EOS)
+    data->was_eos = TRUE;
+
+  return data->ret == GST_FLOW_OK;
 }
 
 /* check sticky events and push them when needed. should be called
@@ -3192,15 +3206,42 @@ push_sticky (GstPad * pad, PadEvent * ev, gpointer user_data)
 static inline GstFlowReturn
 check_sticky (GstPad * pad)
 {
-  GstFlowReturn ret = GST_FLOW_OK;
+  PushStickyData data = { GST_FLOW_OK, FALSE };
 
   if (G_UNLIKELY (GST_PAD_HAS_PENDING_EVENTS (pad))) {
     GST_OBJECT_FLAG_UNSET (pad, GST_PAD_FLAG_PENDING_EVENTS);
 
     GST_DEBUG_OBJECT (pad, "pushing all sticky events");
-    events_foreach (pad, push_sticky, &ret);
+    events_foreach (pad, push_sticky, &data);
+
+    /* If there's an EOS event we must push it downstream
+     * even if sending a previous sticky event failed.
+     * Otherwise the pipeline might wait forever for EOS.
+     *
+     * Only do this if pushing another event than the EOS
+     * event failed.
+     */
+    if (data.ret != GST_FLOW_OK && !data.was_eos) {
+      GArray *events = pad->priv->events;
+      gint i, len;
+
+      len = events->len;
+      for (i = 0; i < events->len; i++) {
+        PadEvent *ev = &g_array_index (events, PadEvent, i);
+
+        if (G_UNLIKELY (ev->event == NULL) || ev->received)
+          continue;
+
+        if (GST_EVENT_TYPE (ev->event) == GST_EVENT_EOS) {
+          gst_pad_push_event_unchecked (pad, gst_event_ref (ev->event),
+              GST_PAD_PROBE_TYPE_EVENT_DOWNSTREAM);
+
+          break;
+        }
+      }
+    }
   }
-  return ret;
+  return data.ret;
 }
 
 
