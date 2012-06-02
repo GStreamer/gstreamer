@@ -857,7 +857,7 @@ AG_GST_CHECK_FEATURE(DIRECTFB, [directfb], dfbvideosink , [
 dnl **** Wayland ****
 translit(dnm, m, l) AM_CONDITIONAL(USE_WAYLAND, true)
 AG_GST_CHECK_FEATURE(WAYLAND, [wayland sink], wayland , [
-  PKG_CHECK_MODULES(WAYLAND, wayland-client >= 0.1, [
+  PKG_CHECK_MODULES(WAYLAND, wayland-server <= 0.85.0 wayland-client <= 0.85.0, [
     AC_CHECK_HEADER(wayland-client.h, HAVE_WAYLAND_CLIENT="yes", HAVE_WAYLAND_CLIENT="no")
     AC_CHECK_HEADER(wayland-client-protocol.h, HAVE_WAYLAND_CLIENT_PROTOCOL="yes", HAVE_WAYLAND_CLIENT_PROTOCOL="no")
     if test "x$HAVE_WAYLAND_CLIENT" = "xno"; then
