@@ -200,8 +200,33 @@ mpegts_base_reset (MpegTSBase * base)
   memset (base->is_pes, 0, 1024);
   memset (base->known_psi, 0, 1024);
 
-  /* PAT */
+  /* Known PIDs : PAT, CAT, TSDT, IPMP CIT */
   MPEGTS_BIT_SET (base->known_psi, 0);
+  MPEGTS_BIT_SET (base->known_psi, 1);
+  MPEGTS_BIT_SET (base->known_psi, 2);
+  MPEGTS_BIT_SET (base->known_psi, 3);
+  /* NIT, ST */
+  MPEGTS_BIT_SET (base->known_psi, 0x10);
+  /* SDT, BAT, ST */
+  MPEGTS_BIT_SET (base->known_psi, 0x11);
+  /* EIT, ST, CIT (TS 102 323) */
+  MPEGTS_BIT_SET (base->known_psi, 0x12);
+  /* RST, ST */
+  MPEGTS_BIT_SET (base->known_psi, 0x13);
+  /* TDT, TOT, ST */
+  MPEGTS_BIT_SET (base->known_psi, 0x14);
+  /* network synchronization */
+  MPEGTS_BIT_SET (base->known_psi, 0x15);
+  /* RNT (TS 102 323) */
+  MPEGTS_BIT_SET (base->known_psi, 0x16);
+  /* inband signalling */
+  MPEGTS_BIT_SET (base->known_psi, 0x1c);
+  /* measurement */
+  MPEGTS_BIT_SET (base->known_psi, 0x1d);
+  /* DIT */
+  MPEGTS_BIT_SET (base->known_psi, 0x1e);
+  /* SIT */
+  MPEGTS_BIT_SET (base->known_psi, 0x1f);
 
   /* FIXME : Commenting the Following lines is to be in sync with the following
    * commit
