@@ -4406,7 +4406,7 @@ idle_probe_stopped:
 gboolean
 gst_pad_push_event (GstPad * pad, GstEvent * event)
 {
-  gboolean res;
+  gboolean res = TRUE;
   GstPadProbeType type;
   gboolean sticky, serialized;
 
@@ -4446,12 +4446,13 @@ gst_pad_push_event (GstPad * pad, GstEvent * event)
      * sticky events */
     res = (check_sticky (pad) == GST_FLOW_OK);
   }
-  if (!sticky) {
-    /* other events are pushed right away */
+
+  /* If pushing sticky events did not fail and this is no sticky event
+   * push it right away */
+  if (res && !sticky) {
     res = (gst_pad_push_event_unchecked (pad, event, type) == GST_FLOW_OK);
   } else {
     gst_event_unref (event);
-    res = TRUE;
   }
   GST_OBJECT_UNLOCK (pad);
 
