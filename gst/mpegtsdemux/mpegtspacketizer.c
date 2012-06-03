@@ -48,6 +48,8 @@ static GQuark QUARK_PROGRAM_NUMBER;
 static GQuark QUARK_PID;
 static GQuark QUARK_PROGRAMS;
 
+static GQuark QUARK_CAT;
+
 static GQuark QUARK_PMT;
 static GQuark QUARK_PCR_PID;
 static GQuark QUARK_VERSION_NUMBER;
@@ -520,6 +522,56 @@ mpegts_packetizer_parse_descriptors (MpegTSPacketizer2 * packetizer,
   return TRUE;
 error:
   return FALSE;
+}
+
+GstStructure *
+mpegts_packetizer_parse_cat (MpegTSPacketizer2 * packetizer,
+    MpegTSPacketizerSection * section)
+{
+  GstStructure *cat_info = NULL;
+  guint8 *data;
+  guint8 tmp;
+  GValueArray *descriptors;
+  GstMPEGDescriptor *desc;
+  guint desc_len;
+
+  /* Skip parts already parsed */
+  data = section->data + 3;
+
+  /* reserved  : 18bits */
+  data += 2;
+
+  /* version_number         : 5 bits
+   * current_next_indicator : 1 bit */
+  tmp = *data++;
+  section->version_number = (tmp >> 1) & 0x1F;
+  section->current_next_indicator = tmp & 0x01;
+
+  /* skip already handled section_number and last_section_number */
+  data += 2;
+
+  cat_info = gst_structure_new_id_empty (QUARK_CAT);
+
+  /* descriptors */
+  desc_len = section->section_length - 4 - 8;
+  desc = gst_mpeg_descriptor_parse (data, desc_len);
+  if (desc)
+    gst_mpeg_descriptor_free (desc);
+  descriptors = g_value_array_new (0);
+  if (!mpegts_packetizer_parse_descriptors (packetizer, &data, data + desc_len,
+          descriptors)) {
+    g_value_array_free (descriptors);
+    goto error;
+  }
+  gst_structure_id_set (cat_info, QUARK_DESCRIPTORS, G_TYPE_VALUE_ARRAY,
+      descriptors, NULL);
+  g_value_array_free (descriptors);
+
+  return cat_info;
+error:
+  if (cat_info)
+    gst_structure_free (cat_info);
+  return NULL;
 }
 
 GstStructure *
@@ -2578,6 +2630,8 @@ _init_local (void)
   QUARK_PROGRAM_NUMBER = g_quark_from_string ("program-number");
   QUARK_PID = g_quark_from_string ("pid");
   QUARK_PROGRAMS = g_quark_from_string ("programs");
+
+  QUARK_CAT = g_quark_from_string ("pat");
 
   QUARK_PMT = g_quark_from_string ("pmt");
   QUARK_PCR_PID = g_quark_from_string ("pcr-pid");

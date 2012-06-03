@@ -1012,6 +1012,16 @@ same_program:
 }
 
 static void
+mpegts_base_apply_cat (MpegTSBase * base, GstStructure * cat_info)
+{
+  GST_DEBUG_OBJECT (base, "CAT %" GST_PTR_FORMAT, cat_info);
+
+  gst_element_post_message (GST_ELEMENT_CAST (base),
+      gst_message_new_element (GST_OBJECT (base),
+          gst_structure_copy (cat_info)));
+}
+
+static void
 mpegts_base_apply_nit (MpegTSBase * base,
     guint16 pmt_pid, GstStructure * nit_info)
 {
@@ -1099,7 +1109,16 @@ mpegts_base_handle_psi (MpegTSBase * base, MpegTSPacketizerSection * section)
         res = FALSE;
 
       break;
+    case 0x01:
+      /* CAT */
+      structure = mpegts_packetizer_parse_cat (base->packetizer, section);
+      if (structure)
+        mpegts_base_apply_cat (base, structure);
+      else
+        res = FALSE;
+      break;
     case 0x02:
+      /* PMT */
       structure = mpegts_packetizer_parse_pmt (base->packetizer, section);
       if (G_LIKELY (structure))
         mpegts_base_apply_pmt (base, section->pid, structure);

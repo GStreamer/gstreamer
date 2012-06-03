@@ -192,6 +192,8 @@ void mpegts_packetizer_remove_stream(MpegTSPacketizer2 *packetizer,
 
 gboolean mpegts_packetizer_push_section (MpegTSPacketizer2 *packetzer,
   MpegTSPacketizerPacket *packet, MpegTSPacketizerSection *section);
+GstStructure *mpegts_packetizer_parse_cat (MpegTSPacketizer2 *packetizer,
+  MpegTSPacketizerSection *section);
 GstStructure *mpegts_packetizer_parse_pat (MpegTSPacketizer2 *packetizer,
   MpegTSPacketizerSection *section);
 GstStructure *mpegts_packetizer_parse_pmt (MpegTSPacketizer2 *packetizer,
