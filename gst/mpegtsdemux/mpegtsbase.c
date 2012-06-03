@@ -1073,11 +1073,14 @@ mpegts_base_handle_psi (MpegTSBase * base, MpegTSPacketizerSection * section)
           && (section->table_id < 0x80 || section->table_id > 0x8f))) {
     if (G_UNLIKELY (mpegts_base_calc_crc32 (section->data,
                 section->section_length) != 0)) {
-      GST_WARNING_OBJECT (base, "bad crc in psi pid 0x%x (table_id:0x%x)",
+      GST_WARNING_OBJECT (base, "bad crc in psi pid 0x%04x (table_id:0x%02x)",
           section->pid, section->table_id);
       return FALSE;
     }
   }
+
+  GST_DEBUG ("Handling PSI (pid: 0x%04x , table_id: 0x%02x)",
+      section->pid, section->table_id);
 
   switch (section->table_id) {
     case 0x00:
@@ -1174,6 +1177,8 @@ mpegts_base_handle_psi (MpegTSBase * base, MpegTSPacketizerSection * section)
         res = FALSE;
       break;
     default:
+      GST_WARNING ("Unhandled or unknown section type (table_id 0x%02x)",
+          section->table_id);
       break;
   }
 
