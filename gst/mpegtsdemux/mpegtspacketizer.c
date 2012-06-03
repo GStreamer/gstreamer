@@ -462,7 +462,7 @@ mpegts_packetizer_parse_section_header (MpegTSPacketizer2 * packetizer,
 
   if (section->version_number == subtable->version_number &&
       section->crc == subtable->crc)
-    goto not_applicable;
+    goto no_changes;
 
   subtable->version_number = section->version_number;
   subtable->crc = section->crc;
@@ -470,9 +470,18 @@ mpegts_packetizer_parse_section_header (MpegTSPacketizer2 * packetizer,
 
   return TRUE;
 
+no_changes:
+  GST_LOG
+      ("no changes. pid 0x%04x table_id 0x%02x subtable_extension %d, current_next %d version %d, crc 0x%x",
+      section->pid, section->table_id, section->subtable_extension,
+      section->current_next_indicator, section->version_number, section->crc);
+  section->complete = FALSE;
+  g_free (section->data);
+  return TRUE;
+
 not_applicable:
   GST_LOG
-      ("not applicable pid %d table_id %d subtable_extension %d, current_next %d version %d, crc 0x%x",
+      ("not applicable pid 0x%04x table_id 0x%02x subtable_extension %d, current_next %d version %d, crc 0x%x",
       section->pid, section->table_id, section->subtable_extension,
       section->current_next_indicator, section->version_number, section->crc);
   section->complete = FALSE;
@@ -2488,7 +2497,7 @@ mpegts_packetizer_push_section (MpegTSPacketizer2 * packetizer,
   if (packet->payload_unit_start_indicator == 1) {
     pointer = *data++;
     if (data + pointer > packet->data_end) {
-      GST_WARNING ("PID %d PSI section pointer points past the end "
+      GST_WARNING ("PID 0x%04x PSI section pointer points past the end "
           "of the buffer", packet->pid);
       goto out;
     }
@@ -2496,7 +2505,7 @@ mpegts_packetizer_push_section (MpegTSPacketizer2 * packetizer,
     data += pointer;
   }
 
-  GST_MEMDUMP ("section data", packet->data, 32);
+  GST_MEMDUMP ("section data", packet->data, packet->data_end - packet->data);
 
   /* TDT and TOT sections (see ETSI EN 300 468 5.2.5)
    *  these sections do not extend to several packets so we don't need to use the
@@ -2507,7 +2516,7 @@ mpegts_packetizer_push_section (MpegTSPacketizer2 * packetizer,
     section->section_length = (GST_READ_UINT24_BE (data) & 0x000FFF) + 3;
 
     if (data + section->section_length > packet->data_end) {
-      GST_WARNING ("PID %dd PSI section length extends past the end "
+      GST_WARNING ("PID 0x%04x PSI section length extends past the end "
           "of the buffer", packet->pid);
       goto out;
     }
@@ -2516,7 +2525,7 @@ mpegts_packetizer_push_section (MpegTSPacketizer2 * packetizer,
     section->table_id = table_id;
     section->complete = TRUE;
     res = TRUE;
-    GST_DEBUG ("TDT section pid:%d table_id:%d section_length: %d\n",
+    GST_DEBUG ("TDT section pid:0x%04x table_id:0x%02x section_length: %d",
         packet->pid, table_id, section->section_length);
     goto out;
   }
@@ -2537,14 +2546,14 @@ mpegts_packetizer_push_section (MpegTSPacketizer2 * packetizer,
       subtable_extension = 0;
     else
       subtable_extension = GST_READ_UINT16_BE (data + 2);
-    GST_DEBUG ("pid: %d table_id %d sub_table_extension %d",
+    GST_DEBUG ("pid: 0x%04x table_id 0x%02x sub_table_extension %d",
         packet->pid, table_id, subtable_extension);
 
     section_length = (GST_READ_UINT16_BE (data) & 0x0FFF) + 3;
 
     if (stream->continuity_counter != CONTINUITY_UNSET) {
       GST_DEBUG
-          ("PID %d table_id %d sub_table_extension %d payload_unit_start_indicator set but section "
+          ("PID 0x%04x table_id 0x%02x sub_table_extension %d payload_unit_start_indicator set but section "
           "not complete (last_continuity: %d continuity: %d sec len %d",
           packet->pid, table_id, subtable_extension, stream->continuity_counter,
           packet->continuity_counter, section_length);
@@ -2581,9 +2590,9 @@ mpegts_packetizer_push_section (MpegTSPacketizer2 * packetizer,
     res = TRUE;
   } else {
     if (stream->continuity_counter == CONTINUITY_UNSET)
-      GST_DEBUG ("PID %d waiting for pusi", packet->pid);
+      GST_DEBUG ("PID 0x%04x waiting for pusi", packet->pid);
     else
-      GST_DEBUG ("PID %d section discontinuity "
+      GST_DEBUG ("PID 0x%04x section discontinuity "
           "(last_continuity: %d continuity: %d", packet->pid,
           stream->continuity_counter, packet->continuity_counter);
     mpegts_packetizer_clear_section (stream);
