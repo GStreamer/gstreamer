@@ -44,7 +44,7 @@ typedef struct _GstGLFilterClass GstGLFilterClass;
 typedef gboolean (*GstGLFilterSetCaps) (GstGLFilter* filter,
 					GstCaps* incaps, GstCaps* outcaps);
 typedef gboolean (*GstGLFilterProcessFunc) (GstGLFilter *filter,
-					    GstGLBuffer *inbuf, GstGLBuffer *outbuf);
+					    GstBuffer *inbuf, GstBuffer *outbuf);
 typedef gboolean (*GstGLFilterOnInitFBO) (GstGLFilter *filter);
 typedef void (*GstGLFilterOnReset) (GstGLFilter *filter);
 typedef void (*GstGLFilterOnStart) (GstGLFilter *filter);
