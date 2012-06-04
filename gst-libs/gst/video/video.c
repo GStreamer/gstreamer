@@ -24,6 +24,7 @@
 #endif
 
 #include <string.h>
+#include <stdio.h>
 
 #include "video.h"
 #include "gstvideometa.h"
@@ -2034,11 +2035,14 @@ gst_video_colorimetry_from_string (GstVideoColorimetry * cinfo,
   if ((ci = gst_video_get_colorimetry (color))) {
     *cinfo = ci->color;
   } else {
-    /* FIXME, split and parse */
-    cinfo->range = GST_VIDEO_COLOR_RANGE_16_235;
-    cinfo->matrix = GST_VIDEO_COLOR_MATRIX_BT601;
-    cinfo->transfer = GST_VIDEO_TRANSFER_BT709;
-    cinfo->primaries = GST_VIDEO_COLOR_PRIMARIES_BT709;
+    gint r, m, t, p;
+
+    if (sscanf (color, "%d:%d:%d:%d", &r, &m, &t, &p) == 4) {
+      cinfo->range = r;
+      cinfo->matrix = m;
+      cinfo->transfer = t;
+      cinfo->primaries = p;
+    }
   }
   return TRUE;
 }
@@ -2047,6 +2051,7 @@ static void
 gst_video_caps_set_colorimetry (GstCaps * caps, GstVideoColorimetry * cinfo)
 {
   gint i;
+  gchar *str;
 
   for (i = 0; colorimetry[i].name; i++) {
     if (IS_EQUAL (&colorimetry[i], cinfo)) {
@@ -2055,7 +2060,11 @@ gst_video_caps_set_colorimetry (GstCaps * caps, GstVideoColorimetry * cinfo)
       return;
     }
   }
-  /* FIXME, construct colorimetry */
+  str =
+      g_strdup_printf ("%d:%d:%d:%d", cinfo->range, cinfo->matrix,
+      cinfo->transfer, cinfo->primaries);
+  gst_caps_set_simple (caps, "colorimetry", G_TYPE_STRING, str, NULL);
+  g_free (str);
 }
 
 /**
