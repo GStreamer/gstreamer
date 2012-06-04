@@ -67,9 +67,9 @@ GST_START_TEST (test_valve_basic)
 
   fail_unless (gst_pad_push_event (src, gst_event_new_eos ()) == TRUE);
   fail_unless (event_received == TRUE);
-  fail_unless (gst_pad_push (src, gst_buffer_new ()) == GST_FLOW_OK);
-  fail_unless (gst_pad_push (src, gst_buffer_new ()) == GST_FLOW_OK);
-  fail_unless (g_list_length (buffers) == 2);
+  fail_unless (gst_pad_push (src, gst_buffer_new ()) == GST_FLOW_EOS);
+  fail_unless (gst_pad_push (src, gst_buffer_new ()) == GST_FLOW_EOS);
+  fail_unless (buffers == NULL);
   caps = gst_pad_query_caps (src, NULL);
   templ_caps = gst_pad_get_pad_template_caps (src);
   fail_unless (caps && gst_caps_is_equal (caps, templ_caps));
@@ -77,13 +77,16 @@ GST_START_TEST (test_valve_basic)
   gst_caps_unref (caps);
 
   gst_check_drop_buffers ();
+  fail_unless (gst_pad_push_event (src, gst_event_new_flush_start ()) == TRUE);
+  fail_unless (gst_pad_push_event (src,
+          gst_event_new_flush_stop (TRUE)) == TRUE);
   event_received = buffer_allocated = FALSE;
 
   g_object_set (valve, "drop", TRUE, NULL);
   fail_unless (gst_pad_push_event (src, gst_event_new_eos ()) == TRUE);
   fail_unless (event_received == FALSE);
-  fail_unless (gst_pad_push (src, gst_buffer_new ()) == GST_FLOW_OK);
-  fail_unless (gst_pad_push (src, gst_buffer_new ()) == GST_FLOW_OK);
+  fail_unless (gst_pad_push (src, gst_buffer_new ()) == GST_FLOW_EOS);
+  fail_unless (gst_pad_push (src, gst_buffer_new ()) == GST_FLOW_EOS);
   fail_unless (buffers == NULL);
   caps = gst_pad_query_caps (src, NULL);
   templ_caps = gst_pad_get_pad_template_caps (src);
