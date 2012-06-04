@@ -479,21 +479,22 @@ gst_proxy_pad_fixatecaps_default (GstPad * pad, GstCaps * caps)
 gboolean
 gst_proxy_pad_setcaps_default (GstPad * pad, GstCaps * caps)
 {
-  GstPad *target;
+  GstPad *internal;
   gboolean res;
 
   g_return_val_if_fail (GST_IS_PROXY_PAD (pad), FALSE);
   g_return_val_if_fail (caps == NULL || GST_IS_CAPS (caps), FALSE);
 
-  target = gst_proxy_pad_get_target (pad);
-  if (target) {
-    res = gst_pad_set_caps (target, caps);
-    gst_object_unref (target);
+  internal = GST_PAD_CAST (gst_proxy_pad_get_internal (GST_PROXY_PAD (pad)));
+  if (internal) {
+    res = gst_pad_set_caps (internal, caps);
+    gst_object_unref (internal);
   } else {
-    /* We don't have any target, but we shouldn't return FALSE since this
+    /* We don't have any internal, but we shouldn't return FALSE since this
      * would stop the actual push of a buffer (which might trigger a pad block
      * or probe, or properly return GST_FLOW_NOT_LINKED.
      */
+    /* FIXME: Is this even possible? */
     res = TRUE;
   }
   return res;
