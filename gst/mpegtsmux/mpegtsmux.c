@@ -584,7 +584,6 @@ static MpegTsPadData *
 mpegtsmux_choose_best_stream (MpegTsMux * mux)
 {
   MpegTsPadData *best = NULL;
-  GstCollectData2 *c_best = NULL;
   GSList *walk;
 
   for (walk = mux->collect->data; walk != NULL; walk = g_slist_next (walk)) {
@@ -596,7 +595,7 @@ mpegtsmux_choose_best_stream (MpegTsMux * mux)
         GstBuffer *buf;
 
         ts_data->queued_buf = buf =
-            gst_collect_pads2_peek (mux->collect, c_data);
+            gst_collect_pads2_pop (mux->collect, c_data);
 
         if (buf != NULL) {
           if (ts_data->prepare_func) {
@@ -633,7 +632,6 @@ mpegtsmux_choose_best_stream (MpegTsMux * mux)
            * we push enough buffers from it to reach a timestamp */
           if (ts_data->last_ts == GST_CLOCK_TIME_NONE) {
             best = ts_data;
-            c_best = c_data;
           }
         } else {
           ts_data->eos = TRUE;
@@ -648,18 +646,11 @@ mpegtsmux_choose_best_stream (MpegTsMux * mux)
             best->last_ts != GST_CLOCK_TIME_NONE &&
             ts_data->last_ts < best->last_ts) {
           best = ts_data;
-          c_best = c_data;
         }
       } else {
         best = ts_data;
-        c_best = c_data;
       }
     }
-  }
-  if (c_best) {
-    GstBuffer *buffer;
-    if ((buffer = gst_collect_pads2_pop (mux->collect, c_best)))
-      gst_buffer_unref (buffer);
   }
 
   return best;
@@ -874,6 +865,9 @@ mpegtsmux_collected (GstCollectPads2 * pads, MpegTsMux * mux)
     if (prog == NULL)
       goto no_program;
 
+    g_assert (buf != NULL);
+    best->queued_buf = NULL;
+
     if (mux->force_key_unit_event != NULL && best->stream->is_video_stream) {
       GstEvent *event;
 
@@ -920,7 +914,6 @@ mpegtsmux_collected (GstCollectPads2 * pads, MpegTsMux * mux)
       tsmux_program_set_pcr_stream (prog, best->stream);
     }
 
-    g_return_val_if_fail (buf != NULL, GST_FLOW_ERROR);
     if (best->stream->is_video_stream)
       delta = GST_BUFFER_FLAG_IS_SET (buf, GST_BUFFER_FLAG_DELTA_UNIT);
     GST_DEBUG_OBJECT (mux, "delta: %d", delta);
@@ -936,7 +929,6 @@ mpegtsmux_collected (GstCollectPads2 * pads, MpegTsMux * mux)
 
     tsmux_stream_add_data (best->stream, GST_BUFFER_DATA (buf),
         GST_BUFFER_SIZE (buf), buf, pts, -1, !delta);
-    best->queued_buf = NULL;
 
     mux->is_delta = delta;
     mux->last_size = GST_BUFFER_SIZE (buf);
