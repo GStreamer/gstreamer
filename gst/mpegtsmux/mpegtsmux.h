@@ -132,7 +132,7 @@ struct MpegTsMux {
   GstCollectPads2 *collect;
 
   TsMux *tsmux;
-  TsMuxProgram **programs;
+  TsMuxProgram *programs[MAX_PROG_NUMBER];
   GstStructure *prog_map;
 
   gboolean first;

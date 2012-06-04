@@ -241,7 +241,6 @@ mpegtsmux_init (MpegTsMux * mux, MpegTsMuxClass * g_class)
   mux->tsmux = tsmux_new ();
   tsmux_set_write_func (mux->tsmux, new_packet_cb, mux);
 
-  mux->programs = g_new0 (TsMuxProgram *, MAX_PROG_NUMBER);
   mux->first = TRUE;
   mux->last_flow_ret = GST_FLOW_OK;
   mux->adapter = gst_adapter_new ();
@@ -280,10 +279,6 @@ mpegtsmux_dispose (GObject * object)
   if (mux->prog_map) {
     gst_structure_free (mux->prog_map);
     mux->prog_map = NULL;
-  }
-  if (mux->programs) {
-    g_free (mux->programs);
-    mux->programs = NULL;
   }
   if (mux->streamheader) {
     GstBuffer *buf;
