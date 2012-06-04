@@ -172,9 +172,6 @@ mpegts_packetizer_stream_new (void)
 static void
 mpegts_packetizer_clear_section (MpegTSPacketizerStream * stream)
 {
-  if (stream->section_data)
-    g_free (stream->section_data);
-  stream->section_data = NULL;
   stream->continuity_counter = CONTINUITY_UNSET;
   stream->section_length = 0;
   stream->section_offset = 0;
@@ -185,6 +182,8 @@ static void
 mpegts_packetizer_stream_free (MpegTSPacketizerStream * stream)
 {
   mpegts_packetizer_clear_section (stream);
+  if (stream->section_data)
+    g_free (stream->section_data);
   g_slist_foreach (stream->subtables, (GFunc) g_free, NULL);
   g_slist_free (stream->subtables);
   g_free (stream);
@@ -399,9 +398,8 @@ mpegts_packetizer_parse_section_header (MpegTSPacketizer2 * packetizer,
   GSList *subtable_list = NULL;
 
   section->complete = TRUE;
-  /* get the section buffer, pass the ownership to the caller */
+  /* get the section buffer, ownership stays with the stream */
   data = section->data = stream->section_data;
-  stream->section_data = NULL;
   section->offset = stream->offset;
 
   GST_MEMDUMP ("section header", data, stream->section_length);
@@ -476,7 +474,6 @@ no_changes:
       section->pid, section->table_id, section->subtable_extension,
       section->current_next_indicator, section->version_number, section->crc);
   section->complete = FALSE;
-  g_free (section->data);
   return TRUE;
 
 not_applicable:
@@ -485,7 +482,6 @@ not_applicable:
       section->pid, section->table_id, section->subtable_extension,
       section->current_next_indicator, section->version_number, section->crc);
   section->complete = FALSE;
-  g_free (section->data);
   return TRUE;
 }
 
@@ -2567,7 +2563,14 @@ mpegts_packetizer_push_section (MpegTSPacketizer2 * packetizer,
     stream->section_length = section_length;
 
     /* Create enough room to store chunks of sections, including FF padding */
-    stream->section_data = g_malloc (section_length + 188);
+    if (stream->section_allocated == 0) {
+      stream->section_data = g_malloc (section_length + 188);
+      stream->section_allocated = section_length + 188;
+    } else if (G_UNLIKELY (stream->section_allocated < section_length + 188)) {
+      stream->section_data =
+          g_realloc (stream->section_data, section_length + 188);
+      stream->section_allocated = section_length + 188;
+    }
     memcpy (stream->section_data, data_start, packet->data_end - data_start);
     stream->section_offset = packet->data_end - data_start;
 

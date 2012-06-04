@@ -64,14 +64,20 @@ typedef struct
 {
   guint   continuity_counter;
 
+  /* Section data (reused) */
   guint8 *section_data;
+  /* Expected length of the section */
   guint   section_length;
+  /* Allocated length of section_data */
+  guint   section_allocated;
+  /* Current offset in section_data */
   guint16 section_offset;
+  /* table_id of the pending section_data */
   guint8  section_table_id;
 
   GSList *subtables;
 
-  /* Offset of the data contained in the section */
+  /* Upstream offset of the data contained in the section */
   guint64 offset;
 } MpegTSPacketizerStream;
 
