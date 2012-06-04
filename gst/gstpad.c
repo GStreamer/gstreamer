@@ -3187,7 +3187,7 @@ push_sticky (GstPad * pad, PadEvent * ev, gpointer user_data)
       /* not linked is not a problem, we are sticky so the event will be
        * sent later but only for non-EOS events */
       GST_DEBUG_OBJECT (pad, "pad was not linked");
-      if (GST_EVENT_TYPE (ev) != GST_FLOW_EOS)
+      if (GST_EVENT_TYPE (ev) != GST_EVENT_EOS)
         data->ret = GST_FLOW_OK;
       /* fallthrough */
     default:
@@ -3504,6 +3504,9 @@ gst_pad_chain_data_unchecked (GstPad * pad, GstPadProbeType type, void *data)
   if (G_UNLIKELY (GST_PAD_IS_FLUSHING (pad)))
     goto flushing;
 
+  if (G_UNLIKELY (GST_PAD_IS_EOS (pad)))
+    goto eos;
+
   if (G_UNLIKELY (GST_PAD_MODE (pad) != GST_PAD_MODE_PUSH))
     goto wrong_mode;
 
@@ -3564,6 +3567,14 @@ flushing:
     GST_PAD_STREAM_UNLOCK (pad);
     gst_mini_object_unref (GST_MINI_OBJECT_CAST (data));
     return GST_FLOW_FLUSHING;
+  }
+eos:
+  {
+    GST_CAT_LOG_OBJECT (GST_CAT_SCHEDULING, pad, "chaining, but pad was EOS");
+    GST_OBJECT_UNLOCK (pad);
+    GST_PAD_STREAM_UNLOCK (pad);
+    gst_mini_object_unref (GST_MINI_OBJECT_CAST (data));
+    return GST_FLOW_EOS;
   }
 wrong_mode:
   {
@@ -3713,6 +3724,9 @@ gst_pad_push_data (GstPad * pad, GstPadProbeType type, void *data)
   if (G_UNLIKELY (GST_PAD_IS_FLUSHING (pad)))
     goto flushing;
 
+  if (G_UNLIKELY (GST_PAD_IS_EOS (pad)))
+    goto eos;
+
   if (G_UNLIKELY (GST_PAD_MODE (pad) != GST_PAD_MODE_PUSH))
     goto wrong_mode;
 
@@ -3757,6 +3771,13 @@ flushing:
     GST_OBJECT_UNLOCK (pad);
     gst_mini_object_unref (GST_MINI_OBJECT_CAST (data));
     return GST_FLOW_FLUSHING;
+  }
+eos:
+  {
+    GST_CAT_LOG_OBJECT (GST_CAT_SCHEDULING, pad, "pushing, but pad was EOS");
+    GST_OBJECT_UNLOCK (pad);
+    gst_mini_object_unref (GST_MINI_OBJECT_CAST (data));
+    return GST_FLOW_EOS;
   }
 wrong_mode:
   {
@@ -4320,6 +4341,7 @@ gst_pad_push_event_unchecked (GstPad * pad, GstEvent * event,
       /* Remove sticky EOS events */
       GST_LOG_OBJECT (pad, "Removing pending EOS events");
       remove_event_by_type (pad, GST_EVENT_EOS);
+      GST_OBJECT_FLAG_UNSET (pad, GST_PAD_FLAG_EOS);
 
       type |= GST_PAD_PROBE_TYPE_EVENT_FLUSH;
       break;
@@ -4327,6 +4349,11 @@ gst_pad_push_event_unchecked (GstPad * pad, GstEvent * event,
     {
       if (G_UNLIKELY (GST_PAD_IS_FLUSHING (pad)))
         goto flushed;
+
+      /* No need to check for EOS here as either the caller (gst_pad_push_event())
+       * checked already or this is called as part of pushing sticky events,
+       * in which case we still want to forward the EOS event downstream.
+       */
 
       switch (GST_EVENT_TYPE (event)) {
         case GST_EVENT_SEGMENT:
@@ -4465,12 +4492,17 @@ gst_pad_push_event (GstPad * pad, GstEvent * event)
     if (G_UNLIKELY (GST_PAD_IS_FLUSHING (pad)))
       goto flushed;
 
+    if (G_UNLIKELY (GST_PAD_IS_EOS (pad)))
+      goto eos;
+
     /* srcpad sticky events are store immediately, the received flag is set
      * to FALSE and will be set to TRUE when we can successfully push the
      * event to the peer pad */
     if (gst_pad_store_sticky_event (pad, event, TRUE)) {
       GST_DEBUG_OBJECT (pad, "event %s updated", GST_EVENT_TYPE_NAME (event));
     }
+    if (GST_EVENT_TYPE (event) == GST_EVENT_EOS)
+      GST_OBJECT_FLAG_SET (pad, GST_PAD_FLAG_EOS);
   }
   if (GST_PAD_IS_SRC (pad) && (serialized || sticky)) {
     /* all serialized or sticky events on the srcpad trigger push of
@@ -4511,6 +4543,13 @@ unknown_direction:
 flushed:
   {
     GST_DEBUG_OBJECT (pad, "We're flushing");
+    GST_OBJECT_UNLOCK (pad);
+    gst_event_unref (event);
+    return FALSE;
+  }
+eos:
+  {
+    GST_DEBUG_OBJECT (pad, "We're EOS");
     GST_OBJECT_UNLOCK (pad);
     gst_event_unref (event);
     return FALSE;
@@ -4584,6 +4623,7 @@ gst_pad_send_event_unchecked (GstPad * pad, GstEvent * event,
       /* Remove pending EOS events */
       GST_LOG_OBJECT (pad, "Removing pending EOS events");
       remove_event_by_type (pad, GST_EVENT_EOS);
+      GST_OBJECT_FLAG_UNSET (pad, GST_PAD_FLAG_EOS);
 
       GST_OBJECT_UNLOCK (pad);
       /* grab stream lock */
@@ -4603,6 +4643,9 @@ gst_pad_send_event_unchecked (GstPad * pad, GstEvent * event,
       if (G_UNLIKELY (GST_PAD_IS_FLUSHING (pad)))
         goto flushing;
 
+      if (G_UNLIKELY (GST_PAD_IS_EOS (pad)))
+        goto eos;
+
       if (serialized) {
         /* lock order: STREAM_LOCK, LOCK, recheck flushing. */
         GST_OBJECT_UNLOCK (pad);
@@ -4611,6 +4654,9 @@ gst_pad_send_event_unchecked (GstPad * pad, GstEvent * event,
         GST_OBJECT_LOCK (pad);
         if (G_UNLIKELY (GST_PAD_IS_FLUSHING (pad)))
           goto flushing;
+
+        if (G_UNLIKELY (GST_PAD_IS_EOS (pad)))
+          goto eos;
       }
 
       switch (GST_EVENT_TYPE (event)) {
@@ -4665,6 +4711,8 @@ gst_pad_send_event_unchecked (GstPad * pad, GstEvent * event,
       /* after the event function accepted the event, we can store the sticky
        * event on the pad */
       gst_pad_store_sticky_event (pad, event, FALSE);
+      if (event_type == GST_EVENT_EOS)
+        GST_OBJECT_FLAG_SET (pad, GST_PAD_FLAG_EOS);
     }
     gst_event_unref (event);
   }
@@ -4684,6 +4732,16 @@ flushing:
         "Received event on flushing pad. Discarding");
     gst_event_unref (event);
     return GST_FLOW_FLUSHING;
+  }
+eos:
+  {
+    GST_OBJECT_UNLOCK (pad);
+    if (need_unlock)
+      GST_PAD_STREAM_UNLOCK (pad);
+    GST_CAT_INFO_OBJECT (GST_CAT_EVENT, pad,
+        "Received event on EOS pad. Discarding");
+    gst_event_unref (event);
+    return GST_FLOW_EOS;
   }
 probe_stopped:
   {

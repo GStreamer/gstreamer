@@ -590,7 +590,8 @@ typedef gboolean  (*GstPadStickyEventsForeachFunction) (GstPad *pad, GstEvent **
 /**
  * GstPadFlags:
  * @GST_PAD_FLAG_BLOCKED: is dataflow on a pad blocked
- * @GST_PAD_FLAG_FLUSHING: is pad refusing buffers
+ * @GST_PAD_FLAG_FLUSHING: is pad flushing
+ * @GST_PAD_FLAG_EOS: is pad in EOS state
  * @GST_PAD_FLAG_BLOCKING: is pad currently blocking on a buffer or event
  * @GST_PAD_FLAG_NEED_PARENT: ensure that there is a parent object before calling
  *                       into the pad callbacks.
@@ -614,13 +615,14 @@ typedef gboolean  (*GstPadStickyEventsForeachFunction) (GstPad *pad, GstEvent **
 typedef enum {
   GST_PAD_FLAG_BLOCKED          = (GST_OBJECT_FLAG_LAST << 0),
   GST_PAD_FLAG_FLUSHING         = (GST_OBJECT_FLAG_LAST << 1),
-  GST_PAD_FLAG_BLOCKING         = (GST_OBJECT_FLAG_LAST << 2),
-  GST_PAD_FLAG_NEED_PARENT      = (GST_OBJECT_FLAG_LAST << 3),
-  GST_PAD_FLAG_NEED_RECONFIGURE = (GST_OBJECT_FLAG_LAST << 4),
-  GST_PAD_FLAG_PENDING_EVENTS   = (GST_OBJECT_FLAG_LAST << 5),
-  GST_PAD_FLAG_FIXED_CAPS       = (GST_OBJECT_FLAG_LAST << 6),
-  GST_PAD_FLAG_PROXY_CAPS       = (GST_OBJECT_FLAG_LAST << 7),
-  GST_PAD_FLAG_PROXY_ALLOCATION = (GST_OBJECT_FLAG_LAST << 8),
+  GST_PAD_FLAG_EOS              = (GST_OBJECT_FLAG_LAST << 2),
+  GST_PAD_FLAG_BLOCKING         = (GST_OBJECT_FLAG_LAST << 3),
+  GST_PAD_FLAG_NEED_PARENT      = (GST_OBJECT_FLAG_LAST << 4),
+  GST_PAD_FLAG_NEED_RECONFIGURE = (GST_OBJECT_FLAG_LAST << 5),
+  GST_PAD_FLAG_PENDING_EVENTS   = (GST_OBJECT_FLAG_LAST << 6),
+  GST_PAD_FLAG_FIXED_CAPS       = (GST_OBJECT_FLAG_LAST << 7),
+  GST_PAD_FLAG_PROXY_CAPS       = (GST_OBJECT_FLAG_LAST << 8),
+  GST_PAD_FLAG_PROXY_ALLOCATION = (GST_OBJECT_FLAG_LAST << 9),
   /* padding */
   GST_PAD_FLAG_LAST        = (GST_OBJECT_FLAG_LAST << 16)
 } GstPadFlags;
@@ -754,6 +756,8 @@ struct _GstPadClass {
 #define GST_PAD_IS_FLUSHING(pad)	(GST_OBJECT_FLAG_IS_SET (pad, GST_PAD_FLAG_FLUSHING))
 #define GST_PAD_SET_FLUSHING(pad)	(GST_OBJECT_FLAG_SET (pad, GST_PAD_FLAG_FLUSHING))
 #define GST_PAD_UNSET_FLUSHING(pad)	(GST_OBJECT_FLAG_UNSET (pad, GST_PAD_FLAG_FLUSHING))
+
+#define GST_PAD_IS_EOS(pad)	        (GST_OBJECT_FLAG_IS_SET (pad, GST_PAD_FLAG_EOS))
 
 #define GST_PAD_NEEDS_RECONFIGURE(pad)  (GST_OBJECT_FLAG_IS_SET (pad, GST_PAD_FLAG_NEED_RECONFIGURE))
 #define GST_PAD_HAS_PENDING_EVENTS(pad) (GST_OBJECT_FLAG_IS_SET (pad, GST_PAD_FLAG_PENDING_EVENTS))
