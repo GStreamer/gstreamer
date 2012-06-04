@@ -2019,6 +2019,7 @@ gst_video_get_colorimetry (const gchar * s)
                         ((ci)->color.transfer == (i)->transfer) && \
                         ((ci)->color.primaries == (i)->primaries))
 
+#define IS_UNKNOWN(ci) (IS_EQUAL (&colorimetry[DEFAULT_UNKNOWN], ci))
 
 /**
  * gst_video_colorimetry_from_string
@@ -2055,7 +2056,6 @@ static void
 gst_video_caps_set_colorimetry (GstCaps * caps, GstVideoColorimetry * cinfo)
 {
   gint i;
-  gchar *str;
 
   for (i = 0; colorimetry[i].name; i++) {
     if (IS_EQUAL (&colorimetry[i], cinfo)) {
@@ -2064,11 +2064,15 @@ gst_video_caps_set_colorimetry (GstCaps * caps, GstVideoColorimetry * cinfo)
       return;
     }
   }
-  str =
-      g_strdup_printf ("%d:%d:%d:%d", cinfo->range, cinfo->matrix,
-      cinfo->transfer, cinfo->primaries);
-  gst_caps_set_simple (caps, "colorimetry", G_TYPE_STRING, str, NULL);
-  g_free (str);
+  if (!IS_UNKNOWN (cinfo)) {
+    gchar *str;
+
+    str =
+        g_strdup_printf ("%d:%d:%d:%d", cinfo->range, cinfo->matrix,
+        cinfo->transfer, cinfo->primaries);
+    gst_caps_set_simple (caps, "colorimetry", G_TYPE_STRING, str, NULL);
+    g_free (str);
+  }
 }
 
 /**
