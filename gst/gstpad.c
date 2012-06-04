@@ -4464,7 +4464,7 @@ idle_probe_stopped:
 gboolean
 gst_pad_push_event (GstPad * pad, GstEvent * event)
 {
-  gboolean res;
+  gboolean res = FALSE;
   GstPadProbeType type;
   gboolean sticky, serialized;
 
