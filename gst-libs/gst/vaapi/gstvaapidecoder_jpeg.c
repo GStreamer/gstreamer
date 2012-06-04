@@ -433,66 +433,19 @@ decode_restart_interval(
     return GST_VAAPI_DECODER_STATUS_SUCCESS;
 }
 
-static gint32
-scan_to_end(const guint8 *start, guint32 size)
-{
-    const guint8 *pos = start, *end = start + size;
-
-    for (; pos < end; ++pos) {
-        if (*pos != 0xFF)
-            continue;
-        while (*pos == 0xFF && pos + 1 < end)
-            ++pos;
-        if (*pos == 0x00 || *pos == 0xFF ||
-            (*pos >= GST_JPEG_MARKER_RST_MIN && *pos <= GST_JPEG_MARKER_RST_MAX))
-            continue;
-        break;
-    }
-    if (pos >= end)
-        return size;
-    return pos - start - 1;
-}
-
-static gboolean
-scan_to_next_scan(guint8 *data,  guint32 size,
-           guint8 **scan, guint32 *scan_header_size, guint32 *scan_left_size)
-{
-    GList *seg_list = NULL;
-    gboolean ret = FALSE;
-
-    if (!data || !size)
-        return FALSE;
-
-    seg_list = gst_jpeg_parse(data, size, 0);
-    for (; seg_list; seg_list = seg_list->next) {
-        GstJpegTypeOffsetSize * const seg = seg_list->data;
-        if (seg->type != GST_JPEG_MARKER_SOS)
-            continue;
-        *scan = seg->offset + data;
-        *scan_header_size = seg->size;
-        *scan_left_size = size - seg->offset - seg->size;
-        ret = TRUE;
-        break;
-    }
-    g_list_free_full(seg_list, g_free);
-    return ret;
-}
-
 static GstVaapiDecoderStatus
 decode_scan(
     GstVaapiDecoderJpeg *decoder,
-    guchar              *scan,
+    guchar              *scan_header,
     guint                scan_header_size,
-    guint                scan_left_size)
+    guchar              *scan_data,
+    guint                scan_data_size)
 {
     GstVaapiDecoderJpegPrivate * const priv = decoder->priv;
     GstVaapiPicture *picture = priv->current_picture;
     GstJpegParserResult result = GST_JPEG_PARSER_OK;
     VASliceParameterBufferJPEG *slice_param;
     GstVaapiSlice *gst_slice;
-    guint8 *mcu_start, *next_mark;
-    guint8 *buf_end = scan + scan_header_size + scan_left_size;
-    guint mcu_size;
     guint total_h_samples, total_v_samples;
     GstJpegScanHdr  scan_hdr;
     guint i;
@@ -512,53 +465,40 @@ decode_scan(
         return GST_VAAPI_DECODER_STATUS_ERROR_UNKNOWN;
     }
 
-    mcu_size = scan_left_size;
-    while (scan_left_size) {
-        memset(&scan_hdr, 0, sizeof(scan_hdr));
-        result = gst_jpeg_parse_scan_hdr(&scan_hdr, scan, scan_header_size, 0);
-        if (result != GST_JPEG_PARSER_OK) {
-            GST_DEBUG("Jpeg parsed scan failed.");
-            return get_status(result);
+    memset(&scan_hdr, 0, sizeof(scan_hdr));
+    result = gst_jpeg_parse_scan_hdr(&scan_hdr, scan_header, scan_header_size, 0);
+    if (result != GST_JPEG_PARSER_OK) {
+        GST_DEBUG("Jpeg parsed scan failed.");
+        return get_status(result);
+    }
+
+    gst_slice = GST_VAAPI_SLICE_NEW(JPEG, decoder, scan_data, scan_data_size);
+    gst_vaapi_picture_add_slice(picture, gst_slice);
+
+    slice_param = gst_slice->param;
+    slice_param->num_components = scan_hdr.num_components;
+    for (i = 0; i < scan_hdr.num_components; i++) {
+        slice_param->components[i].component_id = scan_hdr.components[i].component_selector;
+        slice_param->components[i].dc_selector = scan_hdr.components[i].dc_selector;
+        slice_param->components[i].ac_selector = scan_hdr.components[i].ac_selector;
+    }
+    slice_param->restart_interval = priv->mcu_restart;
+    if (scan_hdr.num_components == 1) { /*non-interleaved*/
+        slice_param->slice_horizontal_position = 0;
+        slice_param->slice_vertical_position = 0;
+        /* Y mcu numbers*/
+        if (slice_param->components[0].component_id == priv->frame_hdr.components[0].identifier) {
+            slice_param->num_mcus = (priv->frame_hdr.width/8)*(priv->frame_hdr.height/8);
+        } else { /*Cr, Cb mcu numbers*/
+            slice_param->num_mcus = (priv->frame_hdr.width/16)*(priv->frame_hdr.height/16);
         }
-        mcu_start = scan + scan_header_size;
-        mcu_size = scan_to_end(mcu_start, scan_left_size);
-
-        gst_slice = GST_VAAPI_SLICE_NEW(JPEG, decoder, mcu_start, mcu_size);
-        gst_vaapi_picture_add_slice(picture, gst_slice);
-
-        slice_param = gst_slice->param;
-        slice_param->num_components = scan_hdr.num_components;
-        for (i = 0; i < scan_hdr.num_components; i++) {
-            slice_param->components[i].component_id = scan_hdr.components[i].component_selector;
-            slice_param->components[i].dc_selector = scan_hdr.components[i].dc_selector;
-            slice_param->components[i].ac_selector = scan_hdr.components[i].ac_selector;
-        }
-        slice_param->restart_interval = priv->mcu_restart;
-        if (scan_hdr.num_components == 1) { /*non-interleaved*/
-            slice_param->slice_horizontal_position = 0;
-            slice_param->slice_vertical_position = 0;
-            /* Y mcu numbers*/
-            if (slice_param->components[0].component_id == priv->frame_hdr.components[0].identifier) {
-                slice_param->num_mcus = (priv->frame_hdr.width/8)*(priv->frame_hdr.height/8);
-            } else { /*Cr, Cb mcu numbers*/
-                slice_param->num_mcus = (priv->frame_hdr.width/16)*(priv->frame_hdr.height/16);
-            }
-        } else { /* interleaved */
-            slice_param->slice_horizontal_position = 0;
-            slice_param->slice_vertical_position = 0;
-            total_v_samples = get_max_vertical_samples(&priv->frame_hdr);
-            total_h_samples = get_max_horizontal_samples(&priv->frame_hdr);
-            slice_param->num_mcus = ((priv->frame_hdr.width + total_h_samples*8 - 1)/(total_h_samples*8)) *
-                                    ((priv->frame_hdr.height + total_v_samples*8 -1)/(total_v_samples*8));
-        }
-
-        next_mark = mcu_start + mcu_size;
-        scan_left_size = buf_end - next_mark;
-        if (scan_left_size < 4) /* Mark_code(2-bytes) + header_length(2-bytes)*/
-            break;
-
-        if (!scan_to_next_scan(next_mark, scan_left_size, &scan, &scan_header_size, &scan_left_size))
-            break;
+    } else { /* interleaved */
+        slice_param->slice_horizontal_position = 0;
+        slice_param->slice_vertical_position = 0;
+        total_v_samples = get_max_vertical_samples(&priv->frame_hdr);
+        total_h_samples = get_max_horizontal_samples(&priv->frame_hdr);
+        slice_param->num_mcus = ((priv->frame_hdr.width + total_h_samples*8 - 1)/(total_h_samples*8)) *
+                                ((priv->frame_hdr.height + total_v_samples*8 -1)/(total_v_samples*8));
     }
 
     if (picture->slices && picture->slices->len)
@@ -608,10 +548,15 @@ decode_buffer(GstVaapiDecoderJpeg *decoder, GstBuffer *buffer)
         case GST_JPEG_MARKER_DRI:
             status = decode_restart_interval(decoder, buf + seg->offset, seg->size);
             break;
-        case GST_JPEG_MARKER_SOS:
-            status = decode_scan(decoder, buf + seg->offset, seg->size, buf_size - seg->offset - seg->size);
+        case GST_JPEG_MARKER_SOS: {
+            GstJpegScanOffsetSize * const scan = (GstJpegScanOffsetSize *)seg;
+            status = decode_scan(
+                decoder, buf + scan->header.offset, scan->header.size,
+                buf + scan->data_offset, scan->data_size
+            );
             scan_found = TRUE;
             break;
+        }
         default:
             if (seg->type >= GST_JPEG_MARKER_SOF_MIN &&
                 seg->type <= GST_JPEG_MARKER_SOF_MAX)

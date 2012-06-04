@@ -59,6 +59,7 @@ typedef struct _GstJpegScanHdr          GstJpegScanHdr;
 typedef struct _GstJpegFrameComponent   GstJpegFrameComponent;
 typedef struct _GstJpegFrameHdr         GstJpegFrameHdr;
 typedef struct _GstJpegTypeOffsetSize   GstJpegTypeOffsetSize;
+typedef struct _GstJpegScanOffsetSize   GstJpegScanOffsetSize;
 
 /**
  * GstJpegParserResult:
@@ -240,6 +241,25 @@ struct _GstJpegTypeOffsetSize
   guint offset;
   gint size;
 };
+
+/**
+ * GstJpegScanOffsetSize:
+ * @header: The header info associated to the scan
+ * @data_offset: The offset to the first entropy-coded segment in bytes
+ * @data_size: The size in bytes of the scan data, including all ECS
+ *   and RST segments, or -1 if the end was not found
+ *
+ * A structure that contains information on a scan. A scan comprises of the
+ * scan @header, and all entropy-coded segment (ECS) and restart marker (RST)
+ * associated to it. The header type MUST be set to @GST_JPEG_MARKER_SOS.
+ */
+struct _GstJpegScanOffsetSize
+{
+  GstJpegTypeOffsetSize header;
+  guint data_offset;
+  gint data_size;
+};
+
 
 /**
  * gst_jpeg_parse:

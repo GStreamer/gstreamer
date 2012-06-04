@@ -438,6 +438,41 @@ gst_jpeg_get_default_quantization_table (GstJpegQuantTable *quant_tables, guint 
            sizeof(GstJpegQuantTable));
 }
 
+static gint32
+jpeg_scan_to_end (const guint8 *start, guint32 size)
+{
+  const guint8 *pos = start, *end = start + size;
+
+  for (; pos < end; ++pos) {
+    if (*pos != 0xFF)
+      continue;
+    while (*pos == 0xFF && pos + 1 < end)
+      ++pos;
+    if (*pos == 0x00 || *pos == 0xFF ||
+        (*pos >= GST_JPEG_MARKER_RST_MIN && *pos <= GST_JPEG_MARKER_RST_MAX))
+      continue;
+    break;
+  }
+  if (pos >= end)
+    return size;
+  return pos - start - 1;
+}
+
+static GstJpegTypeOffsetSize *
+gst_jpeg_segment_new (guint8 marker, guint offset, gint size)
+{
+    GstJpegTypeOffsetSize *seg;
+
+    if (GST_JPEG_MARKER_SOS == marker)
+      seg = g_malloc0 (sizeof (GstJpegScanOffsetSize));
+    else
+      seg = g_malloc0 (sizeof (GstJpegTypeOffsetSize));
+    seg->type = marker;
+    seg->offset = offset;
+    seg->size = size;
+    return seg;
+}
+
 GList *
 gst_jpeg_parse(const guint8 * data, gsize size, guint offset)
 {
@@ -446,6 +481,8 @@ gst_jpeg_parse(const guint8 * data, gsize size, guint offset)
   guint16 header_length;
   GList *segments = NULL;
   GstJpegTypeOffsetSize *seg;
+  const guint8 *scan_start;
+  gint scan_size = 0;
 
   size -= offset;
 
@@ -470,16 +507,24 @@ gst_jpeg_parse(const guint8 * data, gsize size, guint offset)
         gst_byte_reader_get_remaining (&bytes_reader) < header_length - 2)
       goto failed;
 
-    seg = g_malloc (sizeof (GstJpegTypeOffsetSize));
-    seg->type = marker;
-    seg->offset = gst_byte_reader_get_pos(&bytes_reader) + offset;
-    seg->size = header_length - 2;
+    seg = gst_jpeg_segment_new (marker,
+                                gst_byte_reader_get_pos(&bytes_reader) + offset,
+                                header_length - 2);
     segments = g_list_prepend(segments, seg);
     gst_byte_reader_skip (&bytes_reader, header_length - 2);
 
-    /* parser should stop at first scan */
-    if (seg->type == GST_JPEG_MARKER_SOS)
-      break;
+    if (seg->type == GST_JPEG_MARKER_SOS) {
+      GstJpegScanOffsetSize * const scan_seg = (GstJpegScanOffsetSize *)seg;
+      scan_start = gst_byte_reader_peek_data_unchecked (&bytes_reader);
+      scan_size = jpeg_scan_to_end (scan_start,
+          gst_byte_reader_get_remaining (&bytes_reader));
+      if (scan_size <= 0)
+        break;
+
+      scan_seg->data_offset = gst_byte_reader_get_pos (&bytes_reader) + offset;
+      scan_seg->data_size = scan_size;
+      gst_byte_reader_skip (&bytes_reader, scan_size);
+    }
   }
   return g_list_reverse (segments);
 
