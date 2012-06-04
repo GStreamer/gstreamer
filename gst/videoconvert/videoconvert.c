@@ -221,18 +221,38 @@ videoconvert_convert_compute_matrix (VideoConvert * convert)
   else
     use_16 = FALSE;
 
-
   color_matrix_set_identity (&dst);
 
   /* 1, bring color components to [0..1.0] range */
   switch (in_info->colorimetry.range) {
     case GST_VIDEO_COLOR_RANGE_0_255:
-      if (use_16)
-        color_matrix_scale_components (&dst, (1 / 65535.0), (1 / 65535.0),
-            (1 / 65535.0));
-      else
-        color_matrix_scale_components (&dst, (1 / 255.0), (1 / 255.0),
-            (1 / 255.0));
+      switch (in_info->finfo->unpack_format) {
+        case GST_VIDEO_FORMAT_AYUV:
+        case GST_VIDEO_FORMAT_AYUV64:
+          GST_DEBUG ("using 0-255 input range YUV");
+          if (use_16) {
+            color_matrix_offset_components (&dst, 0, -32768, -32768);
+            color_matrix_scale_components (&dst, (1 / 65535.0), (1 / 65535.0),
+                (1 / 65535.0));
+          } else {
+            color_matrix_offset_components (&dst, 0, -128, -128);
+            color_matrix_scale_components (&dst, (1 / 255.0), (1 / 255.0),
+                (1 / 255.0));
+          }
+          break;
+        case GST_VIDEO_FORMAT_ARGB:
+        case GST_VIDEO_FORMAT_ARGB64:
+          GST_DEBUG ("using 0-255 input range RGB");
+          if (use_16)
+            color_matrix_scale_components (&dst, (1 / 65535.0), (1 / 65535.0),
+                (1 / 65535.0));
+          else
+            color_matrix_scale_components (&dst, (1 / 255.0), (1 / 255.0),
+                (1 / 255.0));
+          break;
+        default:
+          break;
+      }
       break;
     default:
     case GST_VIDEO_COLOR_RANGE_16_235:
@@ -240,6 +260,7 @@ videoconvert_convert_compute_matrix (VideoConvert * convert)
       switch (in_info->finfo->unpack_format) {
         case GST_VIDEO_FORMAT_AYUV:
         case GST_VIDEO_FORMAT_AYUV64:
+          GST_DEBUG ("using 16-235 input range YUV");
           if (use_16) {
             color_matrix_offset_components (&dst, -4096, -32768, -32768);
             color_matrix_scale_components (&dst, (1 / 56064.0), (1 / 57344.0),
@@ -252,6 +273,7 @@ videoconvert_convert_compute_matrix (VideoConvert * convert)
           break;
         case GST_VIDEO_FORMAT_ARGB:
         case GST_VIDEO_FORMAT_ARGB64:
+          GST_DEBUG ("using 16-235 input range RGB");
           if (use_16) {
             color_matrix_offset_components (&dst, -4096, -4096, -4096);
             color_matrix_scale_components (&dst, (1 / 56064.0), (1 / 56064.0),
@@ -316,6 +338,31 @@ videoconvert_convert_compute_matrix (VideoConvert * convert)
   /* 8, bring color components to nominal range */
   switch (out_info->colorimetry.range) {
     case GST_VIDEO_COLOR_RANGE_0_255:
+      switch (out_info->finfo->unpack_format) {
+        case GST_VIDEO_FORMAT_AYUV:
+        case GST_VIDEO_FORMAT_AYUV64:
+          GST_DEBUG ("using 0-255 output range YUV");
+          if (use_16) {
+            color_matrix_scale_components (&dst, 65535.0, 65535.0, 65535.0);
+            color_matrix_offset_components (&dst, 0, 32768, 32768);
+          } else {
+            color_matrix_scale_components (&dst, 255.0, 255.0, 255.0);
+            color_matrix_offset_components (&dst, 0, 128, 128);
+          }
+          break;
+        case GST_VIDEO_FORMAT_ARGB:
+        case GST_VIDEO_FORMAT_ARGB64:
+          GST_DEBUG ("using 0-255 output range RGB");
+          if (use_16)
+            color_matrix_scale_components (&dst, 65535.0, 65535.0, 65535.0);
+          else
+            color_matrix_scale_components (&dst, 255.0, 255.0, 255.0);
+          break;
+        default:
+          break;
+      }
+      break;
+      GST_DEBUG ("using 0-255 output range");
       if (use_16)
         color_matrix_scale_components (&dst, 65535.0, 65535.0, 65535.0);
       else
@@ -326,6 +373,7 @@ videoconvert_convert_compute_matrix (VideoConvert * convert)
       switch (out_info->finfo->unpack_format) {
         case GST_VIDEO_FORMAT_AYUV:
         case GST_VIDEO_FORMAT_AYUV64:
+          GST_DEBUG ("using 16-235 output range YUV");
           if (use_16) {
             color_matrix_scale_components (&dst, 56064.0, 57344.0, 57344.0);
             color_matrix_offset_components (&dst, 4096, 32768, 32768);
@@ -336,6 +384,7 @@ videoconvert_convert_compute_matrix (VideoConvert * convert)
           break;
         case GST_VIDEO_FORMAT_ARGB:
         case GST_VIDEO_FORMAT_ARGB64:
+          GST_DEBUG ("using 16-235 output range RGB");
           if (use_16) {
             color_matrix_scale_components (&dst, 56064.0, 56064.0, 56064.0);
             color_matrix_offset_components (&dst, 4096, 4096, 4096);
