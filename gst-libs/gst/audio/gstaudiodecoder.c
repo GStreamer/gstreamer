@@ -1632,9 +1632,8 @@ gst_audio_decoder_sink_eventfunc (GstAudioDecoder * dec, GstEvent * event)
       GstCaps *caps;
 
       gst_event_parse_caps (event, &caps);
-      gst_audio_decoder_sink_setcaps (dec, caps);
+      ret = gst_audio_decoder_sink_setcaps (dec, caps);
       gst_event_unref (event);
-      ret = TRUE;
       break;
     }
     default:
