@@ -4525,7 +4525,7 @@ flushed:
 static GstFlowReturn
 pre_eventfunc_check (GstPad * pad, GstEvent * event)
 {
-  GstCaps *caps, *templ;
+  GstCaps *caps;
 
   switch (GST_EVENT_TYPE (event)) {
     case GST_EVENT_CAPS:
@@ -4533,12 +4533,8 @@ pre_eventfunc_check (GstPad * pad, GstEvent * event)
       /* backwards compatibility mode for caps */
       gst_event_parse_caps (event, &caps);
 
-      /* See if pad accepts the caps */
-      templ = gst_pad_get_pad_template_caps (pad);
-      if (!gst_caps_is_subset (caps, templ))
+      if (!gst_pad_query_accept_caps (pad, caps))
         goto not_accepted;
-
-      gst_caps_unref (templ);
       break;
     }
     default:
@@ -4549,11 +4545,8 @@ pre_eventfunc_check (GstPad * pad, GstEvent * event)
   /* ERRORS */
 not_accepted:
   {
-    gst_caps_unref (templ);
     GST_CAT_DEBUG_OBJECT (GST_CAT_CAPS, pad,
         "caps %" GST_PTR_FORMAT " not accepted", caps);
-    GST_CAT_DEBUG_OBJECT (GST_CAT_CAPS, pad,
-        "no intersection with template %" GST_PTR_FORMAT, templ);
     return GST_FLOW_NOT_NEGOTIATED;
   }
 }
