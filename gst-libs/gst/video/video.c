@@ -1862,10 +1862,11 @@ typedef struct
 
 #define GST_VIDEO_COLORIMETRY_NONAME  NULL
 
-#define DEFAULT_YUV_SD 0
-#define DEFAULT_YUV_HD 1
-#define DEFAULT_RGB    3
-#define DEFAULT_GRAY   4
+#define DEFAULT_YUV_SD  0
+#define DEFAULT_YUV_HD  1
+#define DEFAULT_RGB     3
+#define DEFAULT_GRAY    4
+#define DEFAULT_UNKNOWN 5
 
 static const ColorimetryInfo colorimetry[] = {
   MAKE_COLORIMETRY (BT601, _16_235, BT601, BT709, BT470M),
@@ -1930,8 +1931,10 @@ gst_video_info_set_format (GstVideoInfo * info, GstVideoFormat format,
       info->colorimetry = colorimetry[DEFAULT_YUV_SD].color;
   } else if (GST_VIDEO_FORMAT_INFO_IS_GRAY (finfo)) {
     info->colorimetry = colorimetry[DEFAULT_GRAY].color;
-  } else {
+  } else if (GST_VIDEO_FORMAT_INFO_IS_RGB (finfo)) {
     info->colorimetry = colorimetry[DEFAULT_RGB].color;
+  } else {
+    info->colorimetry = colorimetry[DEFAULT_UNKNOWN].color;
   }
 
   fill_planes (info);
