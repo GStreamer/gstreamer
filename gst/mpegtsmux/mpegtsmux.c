@@ -377,128 +377,113 @@ release_buffer_cb (guint8 * data, void *user_data)
 }
 
 static GstFlowReturn
-mpegtsmux_create_stream (MpegTsMux * mux, MpegTsPadData * ts_data, GstPad * pad)
+mpegtsmux_create_stream (MpegTsMux * mux, MpegTsPadData * ts_data)
 {
   GstFlowReturn ret = GST_FLOW_ERROR;
-  GstCaps *caps = gst_pad_get_negotiated_caps (pad);
+  GstCaps *caps;
   GstStructure *s;
+  GstPad *pad;
+  TsMuxStreamType st = TSMUX_ST_RESERVED;
+  const gchar *mt;
+  const GValue *value = NULL;
+  GstBuffer *codec_data = NULL;
 
-  if (caps == NULL) {
-    GST_DEBUG_OBJECT (pad, "Sink pad caps were not set before pushing");
-    return GST_FLOW_NOT_NEGOTIATED;
-  }
+  pad = ts_data->collect.pad;
+  caps = gst_pad_get_negotiated_caps (pad);
+  if (caps == NULL)
+    goto not_negotiated;
+
+  GST_DEBUG_OBJECT (pad, "Creating stream with PID 0x%04x for caps %"
+      GST_PTR_FORMAT, caps);
 
   s = gst_caps_get_structure (caps, 0);
   g_return_val_if_fail (s != NULL, FALSE);
 
-  if (gst_structure_has_name (s, "video/x-dirac")) {
-    GST_DEBUG_OBJECT (pad, "Creating Dirac stream with PID 0x%04x",
-        ts_data->pid);
-    ts_data->stream = tsmux_create_stream (mux->tsmux, TSMUX_ST_VIDEO_DIRAC,
-        ts_data->pid);
-  } else if (gst_structure_has_name (s, "audio/x-ac3")) {
-    GST_DEBUG_OBJECT (pad, "Creating AC3 stream with PID 0x%04x", ts_data->pid);
-    ts_data->stream = tsmux_create_stream (mux->tsmux, TSMUX_ST_PS_AUDIO_AC3,
-        ts_data->pid);
-  } else if (gst_structure_has_name (s, "audio/x-dts")) {
-    GST_DEBUG_OBJECT (pad, "Creating DTS stream with PID 0x%04x", ts_data->pid);
-    ts_data->stream = tsmux_create_stream (mux->tsmux, TSMUX_ST_PS_AUDIO_DTS,
-        ts_data->pid);
-  } else if (gst_structure_has_name (s, "audio/x-lpcm")) {
-    GST_DEBUG_OBJECT (pad, "Creating LPCM stream with PID 0x%04x",
-        ts_data->pid);
-    ts_data->stream = tsmux_create_stream (mux->tsmux, TSMUX_ST_PS_AUDIO_LPCM,
-        ts_data->pid);
-  } else if (gst_structure_has_name (s, "video/x-h264")) {
-    const GValue *value;
-    GST_DEBUG_OBJECT (pad, "Creating H264 stream with PID 0x%04x",
-        ts_data->pid);
+  mt = gst_structure_get_name (s);
+  value = gst_structure_get_value (s, "codec_data");
+  if (value != NULL)
+    codec_data = gst_value_get_buffer (value);
+
+  if (strcmp (mt, "video/x-dirac") == 0) {
+    st = TSMUX_ST_VIDEO_DIRAC;
+  } else if (strcmp (mt, "audio/x-ac3") == 0) {
+    st = TSMUX_ST_PS_AUDIO_AC3;
+  } else if (strcmp (mt, "audio/x-dts") == 0) {
+    st = TSMUX_ST_PS_AUDIO_DTS;
+  } else if (strcmp (mt, "audio/x-lpcm") == 0) {
+    st = TSMUX_ST_PS_AUDIO_LPCM;
+  } else if (strcmp (mt, "video/x-h264") == 0) {
+    st = TSMUX_ST_VIDEO_H264;
     /* Codec data contains SPS/PPS which need to go in stream for valid ES */
-    value = gst_structure_get_value (s, "codec_data");
-    if (value) {
-      ts_data->codec_data = gst_buffer_ref (gst_value_get_buffer (value));
+    if (codec_data) {
       GST_DEBUG_OBJECT (pad, "we have additional codec data (%d bytes)",
-          GST_BUFFER_SIZE (ts_data->codec_data));
+          GST_BUFFER_SIZE (codec_data));
+      ts_data->codec_data = gst_buffer_ref (codec_data);
       ts_data->prepare_func = mpegtsmux_prepare_h264;
       ts_data->free_func = mpegtsmux_free_h264;
     } else {
       ts_data->codec_data = NULL;
     }
-    ts_data->stream = tsmux_create_stream (mux->tsmux, TSMUX_ST_VIDEO_H264,
-        ts_data->pid);
-  } else if (gst_structure_has_name (s, "audio/mpeg")) {
+  } else if (strcmp (mt, "audio/mpeg") == 0) {
     gint mpegversion;
+
     if (!gst_structure_get_int (s, "mpegversion", &mpegversion)) {
-      GST_ELEMENT_ERROR (pad, STREAM, FORMAT,
-          ("Invalid data format presented"),
-          ("Caps with type audio/mpeg did not have mpegversion"));
-      goto beach;
+      GST_ERROR_OBJECT (pad, "caps missing mpegversion");
+      goto not_negotiated;
     }
 
     switch (mpegversion) {
       case 1:
-        GST_DEBUG_OBJECT (pad, "Creating MPEG Audio, version 1 stream with "
-            "PID 0x%04x", ts_data->pid);
-        ts_data->stream = tsmux_create_stream (mux->tsmux, TSMUX_ST_AUDIO_MPEG1,
-            ts_data->pid);
+        st = TSMUX_ST_AUDIO_MPEG1;
         break;
       case 2:
-        GST_DEBUG_OBJECT (pad, "Creating MPEG Audio, version 2 stream with "
-            "PID 0x%04x", ts_data->pid);
-        ts_data->stream = tsmux_create_stream (mux->tsmux, TSMUX_ST_AUDIO_MPEG2,
-            ts_data->pid);
+        st = TSMUX_ST_AUDIO_MPEG2;
         break;
       case 4:
       {
-        const GValue *value;
-        /* Codec data contains SPS/PPS which need to go in stream for valid ES */
-        value = gst_structure_get_value (s, "codec_data");
-        if (value) {
-          ts_data->codec_data = gst_buffer_ref (gst_value_get_buffer (value));
+        st = TSMUX_ST_AUDIO_AAC;
+        if (codec_data) {
           GST_DEBUG_OBJECT (pad, "we have additional codec data (%d bytes)",
-              GST_BUFFER_SIZE (ts_data->codec_data));
+              GST_BUFFER_SIZE (codec_data));
+          ts_data->codec_data = gst_buffer_ref (codec_data);
           ts_data->prepare_func = mpegtsmux_prepare_aac;
         } else {
           ts_data->codec_data = NULL;
         }
-        GST_DEBUG_OBJECT (pad, "Creating MPEG Audio, version 4 stream with "
-            "PID 0x%04x", ts_data->pid);
-        ts_data->stream = tsmux_create_stream (mux->tsmux, TSMUX_ST_AUDIO_AAC,
-            ts_data->pid);
         break;
       }
       default:
         GST_WARNING_OBJECT (pad, "unsupported mpegversion %d", mpegversion);
-        goto beach;
+        goto not_negotiated;
     }
-  } else if (gst_structure_has_name (s, "video/mpeg")) {
+  } else if (strcmp (mt, "video/mpeg") == 0) {
     gint mpegversion;
+
     if (!gst_structure_get_int (s, "mpegversion", &mpegversion)) {
-      GST_ELEMENT_ERROR (mux, STREAM, FORMAT,
-          ("Invalid data format presented"),
-          ("Caps with type video/mpeg did not have mpegversion"));
-      goto beach;
+      GST_ERROR_OBJECT (pad, "caps missing mpegversion");
+      goto not_negotiated;
     }
 
-    if (mpegversion == 1) {
-      GST_DEBUG_OBJECT (pad,
-          "Creating MPEG Video, version 1 stream with PID 0x%04x",
-          ts_data->pid);
-      ts_data->stream = tsmux_create_stream (mux->tsmux, TSMUX_ST_VIDEO_MPEG1,
-          ts_data->pid);
-    } else if (mpegversion == 2) {
-      GST_DEBUG_OBJECT (pad,
-          "Creating MPEG Video, version 2 stream with PID 0x%04x",
-          ts_data->pid);
-      ts_data->stream = tsmux_create_stream (mux->tsmux, TSMUX_ST_VIDEO_MPEG2,
-          ts_data->pid);
-    } else {
-      GST_DEBUG_OBJECT (pad,
-          "Creating MPEG Video, version 4 stream with PID 0x%04x",
-          ts_data->pid);
-      ts_data->stream = tsmux_create_stream (mux->tsmux, TSMUX_ST_VIDEO_MPEG4,
-          ts_data->pid);
+    switch (mpegversion) {
+      case 1:
+        st = TSMUX_ST_VIDEO_MPEG1;
+        break;
+      case 2:
+        st = TSMUX_ST_VIDEO_MPEG2;
+        break;
+      case 4:
+        st = TSMUX_ST_VIDEO_MPEG4;
+        break;
+      default:
+        GST_WARNING_OBJECT (pad, "unsupported mpegversion %d", mpegversion);
+        goto not_negotiated;
     }
+  }
+
+  if (st != TSMUX_ST_RESERVED) {
+    ts_data->stream = tsmux_create_stream (mux->tsmux, st, ts_data->pid);
+  } else {
+    GST_DEBUG_OBJECT (pad, "Failed to determine stream type");
   }
 
   if (ts_data->stream != NULL) {
@@ -512,9 +497,17 @@ mpegtsmux_create_stream (MpegTsMux * mux, MpegTsPadData * ts_data, GstPad * pad)
     ret = GST_FLOW_OK;
   }
 
-beach:
   gst_caps_unref (caps);
   return ret;
+
+  /* ERRORS */
+not_negotiated:
+  {
+    GST_DEBUG_OBJECT (pad, "Sink pad caps were not set before pushing");
+    if (caps)
+      gst_caps_unref (caps);
+    return GST_FLOW_NOT_NEGOTIATED;
+  }
 }
 
 static GstFlowReturn
@@ -564,21 +557,27 @@ mpegtsmux_create_streams (MpegTsMux * mux)
     }
 
     if (ts_data->stream == NULL) {
-      ret = mpegtsmux_create_stream (mux, ts_data, c_data->pad);
+      ret = mpegtsmux_create_stream (mux, ts_data);
       if (ret != GST_FLOW_OK)
         goto no_stream;
     }
   }
 
   return GST_FLOW_OK;
+
+  /* ERRORS */
 no_program:
-  GST_ELEMENT_ERROR (mux, STREAM, MUX,
-      ("Could not create new program"), (NULL));
-  return GST_FLOW_ERROR;
+  {
+    GST_ELEMENT_ERROR (mux, STREAM, MUX,
+        ("Could not create new program"), (NULL));
+    return GST_FLOW_ERROR;
+  }
 no_stream:
-  GST_ELEMENT_ERROR (mux, STREAM, MUX,
-      ("Could not create handler for stream"), (NULL));
-  return ret;
+  {
+    GST_ELEMENT_ERROR (mux, STREAM, MUX,
+        ("Could not create handler for stream"), (NULL));
+    return ret;
+  }
 }
 
 static MpegTsPadData *
@@ -872,13 +871,8 @@ mpegtsmux_collected (GstCollectPads2 * pads, MpegTsMux * mux)
     gint64 pts = -1;
     gboolean delta = TRUE;
 
-    if (prog == NULL) {
-      GST_ELEMENT_ERROR (mux, STREAM, MUX,
-          ("Stream on pad %" GST_PTR_FORMAT
-              " is not associated with any program", COLLECT_DATA_PAD (best)),
-          (NULL));
-      return GST_FLOW_ERROR;
-    }
+    if (prog == NULL)
+      goto no_program;
 
     if (mux->force_key_unit_event != NULL && best->stream->is_video_stream) {
       GstEvent *event;
@@ -968,8 +962,20 @@ mpegtsmux_collected (GstCollectPads2 * pads, MpegTsMux * mux)
   }
 
   return ret;
+
+  /* ERRORS */
 write_fail:
-  return mux->last_flow_ret;
+  {
+    return mux->last_flow_ret;
+  }
+no_program:
+  {
+    GST_ELEMENT_ERROR (mux, STREAM, MUX,
+        ("Stream on pad %" GST_PTR_FORMAT
+            " is not associated with any program", COLLECT_DATA_PAD (best)),
+        (NULL));
+    return GST_FLOW_ERROR;
+  }
 }
 
 static GstPad *
@@ -1012,21 +1018,28 @@ mpegtsmux_request_new_pad (GstElement * element,
 
   return pad;
 
+  /* ERRORS */
 stream_exists:
-  GST_ELEMENT_ERROR (element, STREAM, MUX, ("Duplicate PID requested"), (NULL));
-  return NULL;
-
+  {
+    GST_ELEMENT_ERROR (element, STREAM, MUX, ("Duplicate PID requested"),
+        (NULL));
+    return NULL;
+  }
 could_not_add:
-  GST_ELEMENT_ERROR (element, STREAM, FAILED,
-      ("Internal data stream error."), ("Could not add pad to element"));
-  gst_collect_pads2_remove_pad (mux->collect, pad);
-  gst_object_unref (pad);
-  return NULL;
+  {
+    GST_ELEMENT_ERROR (element, STREAM, FAILED,
+        ("Internal data stream error."), ("Could not add pad to element"));
+    gst_collect_pads2_remove_pad (mux->collect, pad);
+    gst_object_unref (pad);
+    return NULL;
+  }
 pad_failure:
-  GST_ELEMENT_ERROR (element, STREAM, FAILED,
-      ("Internal data stream error."), ("Could not add pad to collectpads"));
-  gst_object_unref (pad);
-  return NULL;
+  {
+    GST_ELEMENT_ERROR (element, STREAM, FAILED,
+        ("Internal data stream error."), ("Could not add pad to collectpads"));
+    gst_object_unref (pad);
+    return NULL;
+  }
 }
 
 static void
