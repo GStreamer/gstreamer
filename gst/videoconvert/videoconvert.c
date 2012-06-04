@@ -36,7 +36,7 @@ static void videoconvert_convert_generic (VideoConvert * convert,
 static void videoconvert_convert_matrix (VideoConvert * convert);
 static void videoconvert_convert_matrix16 (VideoConvert * convert);
 static gboolean videoconvert_convert_lookup_fastpath (VideoConvert * convert);
-static void videoconvert_convert_compute_matrix (VideoConvert * convert);
+static gboolean videoconvert_convert_compute_matrix (VideoConvert * convert);
 static void videoconvert_dither_none (VideoConvert * convert, int j);
 static void videoconvert_dither_verterr (VideoConvert * convert, int j);
 static void videoconvert_dither_halftone (VideoConvert * convert, int j);
@@ -56,7 +56,8 @@ videoconvert_convert_new (GstVideoInfo * in_info, GstVideoInfo * out_info)
 
   if (!videoconvert_convert_lookup_fastpath (convert)) {
     convert->convert = videoconvert_convert_generic;
-    videoconvert_convert_compute_matrix (convert);
+    if (!videoconvert_convert_compute_matrix (convert))
+      goto no_convert;
   }
 
   convert->width = GST_VIDEO_INFO_WIDTH (in_info);
@@ -90,6 +91,13 @@ videoconvert_convert_new (GstVideoInfo * in_info, GstVideoInfo * out_info)
       palette[i++] = 0xff000000;
   }
   return convert;
+
+  /* ERRORS */
+no_convert:
+  {
+    videoconvert_convert_free (convert);
+    return NULL;
+  }
 }
 
 void
@@ -186,128 +194,144 @@ matrix_identity (VideoConvert * convert)
 }
 
 static void
+get_offset_scale (const GstVideoFormatInfo * finfo, GstVideoColorRange range,
+    gint depth, gint offset[4], gint scale[4])
+{
+  gint minL, minC, baseL, baseC, maxL, maxC;
+
+  if (depth < 8)
+    depth = 8;
+
+  switch (range) {
+    default:
+    case GST_VIDEO_COLOR_RANGE_0_255:
+      minL = minC = 0;
+      baseL = 0;
+      baseC = 128 << (depth - 8);
+      maxL = (1 << depth) - 1;
+      maxC = (1 << depth) - 1;
+      break;
+    case GST_VIDEO_COLOR_RANGE_16_235:
+      minL = 16 << (depth - 8);
+      minC = 16 << (depth - 8);
+      baseL = minL;
+      baseC = 128 << (depth - 8);
+      maxL = 235 << (depth - 8);
+      maxC = 240 << (depth - 8);
+      break;
+  }
+
+  if (GST_VIDEO_FORMAT_INFO_IS_YUV (finfo)) {
+    offset[0] = 0;
+    offset[1] = baseL;
+    offset[2] = offset[3] = baseC;
+    scale[0] = 0;
+    scale[1] = maxL - minL;
+    scale[2] = scale[3] = maxC - minC;
+  } else if (GST_VIDEO_FORMAT_INFO_IS_RGB (finfo)) {
+    offset[0] = 0;
+    offset[1] = offset[2] = offset[3] = baseL;
+    scale[0] = 0;
+    scale[1] = scale[2] = scale[3] = maxL - minL;
+  } else if (GST_VIDEO_FORMAT_INFO_IS_GRAY (finfo)) {
+    offset[0] = offset[2] = offset[3] = 0;
+    offset[1] = baseL;
+    scale[0] = scale[2] = scale[3] = 0;
+    scale[1] = maxL - minL;
+  } else {
+    offset[0] = offset[1] = offset[2] = offset[3] = 0;
+    scale[0] = scale[1] = scale[2] = scale[3] = (maxL - minL);
+  }
+}
+
+static gboolean
+get_Kr_Kb (GstVideoColorMatrix matrix, gdouble * Kr, gdouble * Kb)
+{
+  gboolean res = TRUE;
+
+  switch (matrix) {
+      /* RGB */
+    default:
+    case GST_VIDEO_COLOR_MATRIX_RGB:
+      res = FALSE;
+      break;
+      /* YUV */
+    case GST_VIDEO_COLOR_MATRIX_FCC:
+      *Kr = 0.30;
+      *Kb = 0.11;
+      break;
+    case GST_VIDEO_COLOR_MATRIX_BT709:
+      *Kr = 0.2126;
+      *Kb = 0.0722;
+      break;
+    case GST_VIDEO_COLOR_MATRIX_BT601:
+      *Kr = 0.2990;
+      *Kb = 0.1140;
+      break;
+    case GST_VIDEO_COLOR_MATRIX_SMPTE240M:
+      *Kr = 0.212;
+      *Kb = 0.087;
+      break;
+  }
+  return res;
+}
+
+static gboolean
 videoconvert_convert_compute_matrix (VideoConvert * convert)
 {
   GstVideoInfo *in_info, *out_info;
   ColorMatrix dst;
   gint i, j;
   const GstVideoFormatInfo *sfinfo, *dfinfo;
-  gboolean use_16;
-  gint in_bits, out_bits;
+  gint depth;
+  gint offset[4], scale[4];
+  gdouble Kr, Kb;
 
   in_info = &convert->in_info;
   out_info = &convert->out_info;
+
+  sfinfo = in_info->finfo;
+  dfinfo = out_info->finfo;
+
+  if (sfinfo->unpack_func == NULL)
+    goto no_unpack_func;
+
+  if (dfinfo->pack_func == NULL)
+    goto no_pack_func;
+
+  convert->in_bits =
+      GST_VIDEO_FORMAT_INFO_DEPTH (gst_video_format_get_info
+      (sfinfo->unpack_format), 0);
+  convert->out_bits =
+      GST_VIDEO_FORMAT_INFO_DEPTH (gst_video_format_get_info
+      (dfinfo->unpack_format), 0);
 
   if (in_info->colorimetry.range == out_info->colorimetry.range &&
       in_info->colorimetry.matrix == out_info->colorimetry.matrix) {
     GST_DEBUG ("using identity color transform");
     convert->matrix = matrix_identity;
     convert->matrix16 = matrix_identity;
-    return;
+    return TRUE;
   }
 
-  sfinfo = in_info->finfo;
-  dfinfo = out_info->finfo;
-
-  in_bits =
-      GST_VIDEO_FORMAT_INFO_DEPTH (gst_video_format_get_info
-      (sfinfo->unpack_format), 0);
-  out_bits =
-      GST_VIDEO_FORMAT_INFO_DEPTH (gst_video_format_get_info
-      (dfinfo->unpack_format), 0);
-
-  if (in_bits == 16 || out_bits == 16)
-    use_16 = TRUE;
+  if (convert->in_bits == 16 || convert->out_bits == 16)
+    depth = 16;
   else
-    use_16 = FALSE;
+    depth = 8;
 
   color_matrix_set_identity (&dst);
 
   /* 1, bring color components to [0..1.0] range */
-  switch (in_info->colorimetry.range) {
-    case GST_VIDEO_COLOR_RANGE_0_255:
-      switch (in_info->finfo->unpack_format) {
-        case GST_VIDEO_FORMAT_AYUV:
-        case GST_VIDEO_FORMAT_AYUV64:
-          GST_DEBUG ("using 0-255 input range YUV");
-          if (use_16) {
-            color_matrix_offset_components (&dst, 0, -32768, -32768);
-            color_matrix_scale_components (&dst, (1 / 65535.0), (1 / 65535.0),
-                (1 / 65535.0));
-          } else {
-            color_matrix_offset_components (&dst, 0, -128, -128);
-            color_matrix_scale_components (&dst, (1 / 255.0), (1 / 255.0),
-                (1 / 255.0));
-          }
-          break;
-        case GST_VIDEO_FORMAT_ARGB:
-        case GST_VIDEO_FORMAT_ARGB64:
-          GST_DEBUG ("using 0-255 input range RGB");
-          if (use_16)
-            color_matrix_scale_components (&dst, (1 / 65535.0), (1 / 65535.0),
-                (1 / 65535.0));
-          else
-            color_matrix_scale_components (&dst, (1 / 255.0), (1 / 255.0),
-                (1 / 255.0));
-          break;
-        default:
-          break;
-      }
-      break;
-    default:
-    case GST_VIDEO_COLOR_RANGE_16_235:
-      /* offset ans scale required to get input video black to (0.,0.,0.) */
-      switch (in_info->finfo->unpack_format) {
-        case GST_VIDEO_FORMAT_AYUV:
-        case GST_VIDEO_FORMAT_AYUV64:
-          GST_DEBUG ("using 16-235 input range YUV");
-          if (use_16) {
-            color_matrix_offset_components (&dst, -4096, -32768, -32768);
-            color_matrix_scale_components (&dst, (1 / 56064.0), (1 / 57344.0),
-                (1 / 57344.0));
-          } else {
-            color_matrix_offset_components (&dst, -16, -128, -128);
-            color_matrix_scale_components (&dst, (1 / 219.0), (1 / 224.0),
-                (1 / 224.0));
-          }
-          break;
-        case GST_VIDEO_FORMAT_ARGB:
-        case GST_VIDEO_FORMAT_ARGB64:
-          GST_DEBUG ("using 16-235 input range RGB");
-          if (use_16) {
-            color_matrix_offset_components (&dst, -4096, -4096, -4096);
-            color_matrix_scale_components (&dst, (1 / 56064.0), (1 / 56064.0),
-                (1 / 56064.0));
-          } else {
-            color_matrix_offset_components (&dst, -16, -16, -16);
-            color_matrix_scale_components (&dst, (1 / 219.0), (1 / 219.0),
-                (1 / 219.0));
-          }
-          break;
-        default:
-          break;
-      }
-      break;
-  }
+  get_offset_scale (sfinfo, in_info->colorimetry.range, depth, offset, scale);
+
+  color_matrix_offset_components (&dst, -offset[1], -offset[2], -offset[3]);
+  color_matrix_scale_components (&dst, 1 / ((float) scale[1]),
+      1 / ((float) scale[2]), 1 / ((float) scale[3]));
 
   /* 2. bring components to R'G'B' space */
-  switch (in_info->colorimetry.matrix) {
-    case GST_VIDEO_COLOR_MATRIX_RGB:
-      break;
-    case GST_VIDEO_COLOR_MATRIX_FCC:
-      color_matrix_YCbCr_to_RGB (&dst, 0.30, 0.11);
-      break;
-    case GST_VIDEO_COLOR_MATRIX_BT709:
-      color_matrix_YCbCr_to_RGB (&dst, 0.2126, 0.0722);
-      break;
-    case GST_VIDEO_COLOR_MATRIX_BT601:
-      color_matrix_YCbCr_to_RGB (&dst, 0.2990, 0.1140);
-      break;
-    case GST_VIDEO_COLOR_MATRIX_SMPTE240M:
-      color_matrix_YCbCr_to_RGB (&dst, 0.212, 0.087);
-    default:
-      break;
-  }
+  if (get_Kr_Kb (in_info->colorimetry.matrix, &Kr, &Kb))
+    color_matrix_YCbCr_to_RGB (&dst, Kr, Kb);
+
   /* 3. inverse transfer function. R'G'B' to linear RGB */
 
   /* 4. from RGB to XYZ using the primaries */
@@ -317,87 +341,15 @@ videoconvert_convert_compute_matrix (VideoConvert * convert)
   /* 6. transfer function. linear RGB to R'G'B' */
 
   /* 7. bring components to YCbCr space */
-  switch (out_info->colorimetry.matrix) {
-    case GST_VIDEO_COLOR_MATRIX_RGB:
-      break;
-    case GST_VIDEO_COLOR_MATRIX_FCC:
-      color_matrix_RGB_to_YCbCr (&dst, 0.30, 0.11);
-      break;
-    case GST_VIDEO_COLOR_MATRIX_BT709:
-      color_matrix_RGB_to_YCbCr (&dst, 0.2126, 0.0722);
-      break;
-    case GST_VIDEO_COLOR_MATRIX_BT601:
-      color_matrix_RGB_to_YCbCr (&dst, 0.2990, 0.1140);
-      break;
-    case GST_VIDEO_COLOR_MATRIX_SMPTE240M:
-      color_matrix_RGB_to_YCbCr (&dst, 0.212, 0.087);
-    default:
-      break;
-  }
+  if (get_Kr_Kb (out_info->colorimetry.matrix, &Kr, &Kb))
+    color_matrix_RGB_to_YCbCr (&dst, Kr, Kb);
 
   /* 8, bring color components to nominal range */
-  switch (out_info->colorimetry.range) {
-    case GST_VIDEO_COLOR_RANGE_0_255:
-      switch (out_info->finfo->unpack_format) {
-        case GST_VIDEO_FORMAT_AYUV:
-        case GST_VIDEO_FORMAT_AYUV64:
-          GST_DEBUG ("using 0-255 output range YUV");
-          if (use_16) {
-            color_matrix_scale_components (&dst, 65535.0, 65535.0, 65535.0);
-            color_matrix_offset_components (&dst, 0, 32768, 32768);
-          } else {
-            color_matrix_scale_components (&dst, 255.0, 255.0, 255.0);
-            color_matrix_offset_components (&dst, 0, 128, 128);
-          }
-          break;
-        case GST_VIDEO_FORMAT_ARGB:
-        case GST_VIDEO_FORMAT_ARGB64:
-          GST_DEBUG ("using 0-255 output range RGB");
-          if (use_16)
-            color_matrix_scale_components (&dst, 65535.0, 65535.0, 65535.0);
-          else
-            color_matrix_scale_components (&dst, 255.0, 255.0, 255.0);
-          break;
-        default:
-          break;
-      }
-      break;
-      GST_DEBUG ("using 0-255 output range");
-      if (use_16)
-        color_matrix_scale_components (&dst, 65535.0, 65535.0, 65535.0);
-      else
-        color_matrix_scale_components (&dst, 255.0, 255.0, 255.0);
-      break;
-    case GST_VIDEO_COLOR_RANGE_16_235:
-    default:
-      switch (out_info->finfo->unpack_format) {
-        case GST_VIDEO_FORMAT_AYUV:
-        case GST_VIDEO_FORMAT_AYUV64:
-          GST_DEBUG ("using 16-235 output range YUV");
-          if (use_16) {
-            color_matrix_scale_components (&dst, 56064.0, 57344.0, 57344.0);
-            color_matrix_offset_components (&dst, 4096, 32768, 32768);
-          } else {
-            color_matrix_scale_components (&dst, 219.0, 224.0, 224.0);
-            color_matrix_offset_components (&dst, 16, 128, 128);
-          }
-          break;
-        case GST_VIDEO_FORMAT_ARGB:
-        case GST_VIDEO_FORMAT_ARGB64:
-          GST_DEBUG ("using 16-235 output range RGB");
-          if (use_16) {
-            color_matrix_scale_components (&dst, 56064.0, 56064.0, 56064.0);
-            color_matrix_offset_components (&dst, 4096, 4096, 4096);
-          } else {
-            color_matrix_scale_components (&dst, 219.0, 219.0, 219.0);
-            color_matrix_offset_components (&dst, 16, 16, 16);
-          }
-          break;
-        default:
-          break;
-      }
-      break;
-  }
+  get_offset_scale (dfinfo, out_info->colorimetry.range, depth, offset, scale);
+  color_matrix_scale_components (&dst, (float) scale[1], (float) scale[2],
+      (float) scale[3]);
+  color_matrix_offset_components (&dst, offset[1], offset[2], offset[3]);
+
   /* because we're doing 8-bit matrix coefficients */
   color_matrix_scale_components (&dst, 256.0, 256.0, 256.0);
 
@@ -416,6 +368,22 @@ videoconvert_convert_compute_matrix (VideoConvert * convert)
 
   convert->matrix = videoconvert_convert_matrix;
   convert->matrix16 = videoconvert_convert_matrix16;
+
+  return TRUE;
+
+  /* ERRORS */
+no_unpack_func:
+  {
+    GST_ERROR ("no unpack_func for format %s",
+        gst_video_format_to_string (GST_VIDEO_INFO_FORMAT (in_info)));
+    return FALSE;
+  }
+no_pack_func:
+  {
+    GST_ERROR ("no pack_func for format %s",
+        gst_video_format_to_string (GST_VIDEO_INFO_FORMAT (out_info)));
+    return FALSE;
+  }
 }
 
 static void
@@ -479,57 +447,37 @@ videoconvert_convert_generic (VideoConvert * convert, GstVideoFrame * dest,
     const GstVideoFrame * src)
 {
   int i, j;
-  const GstVideoFormatInfo *sfinfo, *dfinfo;
   gint width, height;
-  guint src_bits, dest_bits;
-
-  sfinfo = src->info.finfo;
-  dfinfo = dest->info.finfo;
-
-  src_bits =
-      GST_VIDEO_FORMAT_INFO_DEPTH (gst_video_format_get_info
-      (sfinfo->unpack_format), 0);
-  dest_bits =
-      GST_VIDEO_FORMAT_INFO_DEPTH (gst_video_format_get_info
-      (dfinfo->unpack_format), 0);
+  guint in_bits, out_bits;
 
   height = convert->height;
   width = convert->width;
 
-  if (sfinfo->unpack_func == NULL) {
-    GST_ERROR ("no unpack_func for format %s",
-        gst_video_format_to_string (GST_VIDEO_FRAME_FORMAT (src)));
-    return;
-  }
-
-  if (dfinfo->pack_func == NULL) {
-    GST_ERROR ("no pack_func for format %s",
-        gst_video_format_to_string (GST_VIDEO_FRAME_FORMAT (dest)));
-    return;
-  }
+  in_bits = convert->in_bits;
+  out_bits = convert->out_bits;
 
   for (j = 0; j < height; j++) {
-    if (src_bits == 16) {
+    if (in_bits == 16) {
       UNPACK_FRAME (src, convert->tmpline16, j, width);
     } else {
       UNPACK_FRAME (src, convert->tmpline, j, width);
 
-      if (dest_bits == 16)
+      if (out_bits == 16)
         for (i = 0; i < width * 4; i++)
           convert->tmpline16[i] = TO_16 (convert->tmpline[i]);
     }
 
-    if (dest_bits == 16 || src_bits == 16) {
+    if (out_bits == 16 || in_bits == 16) {
       convert->matrix16 (convert);
       convert->dither16 (convert, j);
     } else {
       convert->matrix (convert);
     }
 
-    if (dest_bits == 16) {
+    if (out_bits == 16) {
       PACK_FRAME (dest, convert->tmpline16, j, width);
     } else {
-      if (src_bits == 16)
+      if (in_bits == 16)
         for (i = 0; i < width * 4; i++)
           convert->tmpline[i] = convert->tmpline16[i] >> 8;
 

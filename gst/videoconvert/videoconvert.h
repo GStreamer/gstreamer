@@ -40,6 +40,8 @@ struct _VideoConvert {
   gint width;
   gint height;
 
+  gint in_bits;
+  gint out_bits;
   gint cmatrix[4][4];
 
   guint32 *palette;
