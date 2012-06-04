@@ -1077,9 +1077,14 @@ mpegts_base_handle_psi (MpegTSBase * base, MpegTSPacketizerSection * section)
   gboolean res = TRUE;
   GstStructure *structure = NULL;
 
-  /* table ids 0x70 - 0x73 do not have a crc */
+  /* table ids 0x70 - 0x73 do not have a crc (EN 300 468) */
+  /* table ids 0x75 - 0x77 do not have a crc (TS 102 323) */
+  /* table id 0x7e does not have a crc (EN 300 468) */
+  /* table ids 0x80 - 0x8f do not have a crc (CA_message section ETR 289) */
   if (G_LIKELY ((section->table_id < 0x70 || section->table_id > 0x73)
-          && (section->table_id < 0x80 || section->table_id > 0x8f))) {
+          && (section->table_id < 0x75 || section->table_id > 0x77)
+          && (section->table_id < 0x80 || section->table_id > 0x8f)
+          && (section->table_id != 0x7e))) {
     if (G_UNLIKELY (mpegts_base_calc_crc32 (section->data,
                 section->section_length) != 0)) {
       GST_WARNING_OBJECT (base, "bad crc in psi pid 0x%04x (table_id:0x%02x)",
