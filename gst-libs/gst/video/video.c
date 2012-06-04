@@ -1859,7 +1859,7 @@ typedef struct
   { GST_VIDEO_COLOR_RANGE ##r, GST_VIDEO_COLOR_MATRIX_ ##m, \
   GST_VIDEO_TRANSFER_ ##t, GST_VIDEO_COLOR_PRIMARIES_ ##p } }
 
-#define GST_VIDEO_COLORIMETRY_NONAME  ""
+#define GST_VIDEO_COLORIMETRY_NONAME  NULL
 
 #define DEFAULT_YUV_SD 0
 #define DEFAULT_YUV_HD 1
@@ -2002,7 +2002,7 @@ gst_video_get_colorimetry (const gchar * s)
 {
   gint i;
 
-  for (i = 0; i < G_N_ELEMENTS (colorimetry); i++) {
+  for (i = 0; colorimetry[i].name; i++) {
     if (g_str_equal (colorimetry[i].name, s))
       return &colorimetry[i];
   }
@@ -2048,7 +2048,7 @@ gst_video_caps_set_colorimetry (GstCaps * caps, GstVideoColorimetry * cinfo)
 {
   gint i;
 
-  for (i = 0; i < G_N_ELEMENTS (colorimetry); i++) {
+  for (i = 0; colorimetry[i].name; i++) {
     if (IS_EQUAL (&colorimetry[i], cinfo)) {
       gst_caps_set_simple (caps, "colorimetry", G_TYPE_STRING,
           colorimetry[i].name, NULL);
