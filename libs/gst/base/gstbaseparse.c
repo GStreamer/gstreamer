@@ -1778,11 +1778,6 @@ gst_base_parse_handle_buffer (GstBaseParse * parse, GstBuffer * buffer,
   GST_LOG_OBJECT (parse, "handle_frame skipped %d, flushed %d",
       *skip, *flushed);
 
-  if (ret != GST_FLOW_OK) {
-    GST_DEBUG_OBJECT (parse, "handle_frame returned %d", ret);
-    goto exit;
-  }
-
   /* subclass can only do one of these, or semantics are too unclear */
   g_assert (*skip == 0 || *flushed == 0);
 
@@ -1817,7 +1812,6 @@ gst_base_parse_handle_buffer (GstBaseParse * parse, GstBuffer * buffer,
 
   parse->priv->offset += *flushed;
 
-exit:
   if (parse->priv->pad_mode == GST_PAD_MODE_PULL) {
     gst_adapter_clear (parse->priv->adapter);
   }
