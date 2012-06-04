@@ -1496,10 +1496,14 @@ gst_video_encoder_finish_frame (GstVideoEncoder * encoder,
 
 done:
   /* handed out */
-  priv->frames = g_list_remove (priv->frames, frame);
-  /* Remove the reference from the list and the reference that
-   * was provided to us */
-  gst_video_codec_frame_unref (frame);
+
+  /* unref once from the list */
+  l = g_list_find (priv->frames, frame);
+  if (l) {
+    gst_video_codec_frame_unref (frame);
+    priv->frames = g_list_delete_link (priv->frames, l);
+  }
+  /* unref because this function takes ownership */
   gst_video_codec_frame_unref (frame);
 
   GST_VIDEO_ENCODER_STREAM_UNLOCK (encoder);
