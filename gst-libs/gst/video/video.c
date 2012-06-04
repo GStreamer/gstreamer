@@ -1923,10 +1923,10 @@ gst_video_info_set_format (GstVideoInfo * info, GstVideoFormat format,
   info->height = height;
 
   if (GST_VIDEO_FORMAT_INFO_IS_YUV (finfo)) {
-    if (width > 720)
-      info->colorimetry = colorimetry[DEFAULT_YUV_SD].color;
-    else
+    if (height > 576)
       info->colorimetry = colorimetry[DEFAULT_YUV_HD].color;
+    else
+      info->colorimetry = colorimetry[DEFAULT_YUV_SD].color;
   } else if (GST_VIDEO_FORMAT_INFO_IS_GRAY (finfo)) {
     info->colorimetry = colorimetry[DEFAULT_GRAY].color;
   } else {
