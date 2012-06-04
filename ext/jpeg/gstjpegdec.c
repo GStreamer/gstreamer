@@ -1035,6 +1035,18 @@ gst_jpeg_dec_negotiate (GstJpegDec * dec, gint width, gint height, gint clrspc)
       gst_video_decoder_set_output_state (GST_VIDEO_DECODER (dec), format,
       width, height, dec->input_state);
 
+  switch (clrspc) {
+    case JCS_RGB:
+    case JCS_GRAYSCALE:
+      break;
+    default:
+      outstate->info.colorimetry.range = GST_VIDEO_COLOR_RANGE_0_255;
+      outstate->info.colorimetry.matrix = GST_VIDEO_COLOR_MATRIX_BT601;
+      outstate->info.colorimetry.transfer = GST_VIDEO_TRANSFER_UNKNOWN;
+      outstate->info.colorimetry.primaries = GST_VIDEO_COLOR_PRIMARIES_UNKNOWN;
+      break;
+  }
+
   gst_video_codec_state_unref (outstate);
 
   GST_DEBUG_OBJECT (dec, "max_v_samp_factor=%d", dec->cinfo.max_v_samp_factor);
