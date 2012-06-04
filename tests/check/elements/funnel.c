@@ -213,13 +213,14 @@ GST_START_TEST (test_funnel_eos)
   fail_unless (GST_PAD_LINK_SUCCESSFUL (gst_pad_link (td.mysrc1,
               td.funnelsink11)));
 
-  fail_unless (gst_pad_push_event (td.mysrc1, gst_event_new_eos ()));
-  fail_unless (num_eos == 3);
+  /* This will fail because everything is EOS already */
+  fail_if (gst_pad_push_event (td.mysrc1, gst_event_new_eos ()));
+  fail_unless (num_eos == 2);
 
   fail_unless (gst_pad_unlink (td.mysrc1, td.funnelsink11));
   gst_element_release_request_pad (td.funnel, td.funnelsink11);
   gst_object_unref (td.funnelsink11);
-  fail_unless (num_eos == 3);
+  fail_unless (num_eos == 2);
 
   td.funnelsink11 = gst_element_get_request_pad (td.funnel, "sink_11");
   fail_unless (td.funnelsink11 != NULL);
