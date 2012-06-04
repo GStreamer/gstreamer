@@ -51,7 +51,7 @@ struct _GstVaapiDecoderJpegPrivate {
     guint                       height;
     GstVaapiPicture            *current_picture;
     GstJpegFrameHdr             frame_hdr;
-    GstJpegHuffmanTable         huf_tables[GST_JPEG_MAX_SCAN_COMPONENTS*2];
+    GstJpegHuffmanTables        huf_tables;
     GstJpegQuantTable           quant_tables[GST_JPEG_MAX_SCAN_COMPONENTS];
     gboolean                    has_huf_table;
     gboolean                    has_quant_table;
@@ -257,7 +257,7 @@ fill_huffman_table(
     guint i;
 
     if (!priv->has_huf_table)
-        gst_jpeg_get_default_huffman_table(priv->huf_tables);
+        gst_jpeg_get_default_huffman_table(&priv->huf_tables);
     
     picture->huf_table = GST_VAAPI_HUFFMAN_TABLE_NEW(JPEG, decoder);
     g_assert(picture->huf_table);
@@ -265,16 +265,16 @@ fill_huffman_table(
     memset(huffman_table, 0, sizeof(VAHuffmanTableBufferJPEG));
     for (i = 0; i < GST_JPEG_MAX_SCAN_COMPONENTS; i++) {
         memcpy(huffman_table->huffman_table[i].dc_bits,
-               priv->huf_tables[i].huf_bits,
+               priv->huf_tables.dc_tables[i].huf_bits,
                16);
         memcpy(huffman_table->huffman_table[i].dc_huffval,
-               priv->huf_tables[i].huf_values,
+               priv->huf_tables.dc_tables[i].huf_values,
                16);
         memcpy(huffman_table->huffman_table[i].ac_bits,
-               priv->huf_tables[GST_JPEG_MAX_SCAN_COMPONENTS + i].huf_bits,
+               priv->huf_tables.ac_tables[i].huf_bits,
                16);
         memcpy(huffman_table->huffman_table[i].ac_huffval,
-               priv->huf_tables[GST_JPEG_MAX_SCAN_COMPONENTS + i].huf_values,
+               priv->huf_tables.ac_tables[i].huf_values,
                256);
     }
     return TRUE;
@@ -378,7 +378,7 @@ decode_huffman_table(
     GstJpegParserResult result;
 
     result = gst_jpeg_parse_huffman_table(
-        priv->huf_tables,
+        &priv->huf_tables,
         buf, buf_size, 0
     );
     if (result != GST_JPEG_PARSER_OK) {
@@ -650,7 +650,7 @@ gst_vaapi_decoder_jpeg_init(GstVaapiDecoderJpeg *decoder)
     priv->profile_changed       = TRUE;
     priv->is_constructed        = FALSE;
     memset(&priv->frame_hdr, 0, sizeof(priv->frame_hdr));
-    memset(priv->huf_tables, 0, sizeof(priv->huf_tables));
+    memset(&priv->huf_tables, 0, sizeof(priv->huf_tables));
     memset(priv->quant_tables, 0, sizeof(priv->quant_tables));
 }
 

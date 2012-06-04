@@ -54,6 +54,7 @@ G_BEGIN_DECLS
 
 typedef struct _GstJpegQuantTable       GstJpegQuantTable;
 typedef struct _GstJpegHuffmanTable     GstJpegHuffmanTable;
+typedef struct _GstJpegHuffmanTables    GstJpegHuffmanTables;
 typedef struct _GstJpegScanComponent    GstJpegScanComponent;
 typedef struct _GstJpegScanHdr          GstJpegScanHdr;
 typedef struct _GstJpegFrameComponent   GstJpegFrameComponent;
@@ -158,6 +159,20 @@ struct _GstJpegHuffmanTable
 {
   guint8 huf_bits[16];
   guint8 huf_values[256];
+};
+
+/**
+ * GstJpegHuffmanTables:
+ * @dc_tables: DC Huffman tables
+ * @ac_tables: AC Huffman tables
+ *
+ * Helper data structure that holds all AC/DC Huffman tables used to
+ * decode an image.
+ */
+struct _GstJpegHuffmanTables
+{
+  GstJpegHuffmanTable dc_tables[GST_JPEG_MAX_SCAN_COMPONENTS];
+  GstJpegHuffmanTable ac_tables[GST_JPEG_MAX_SCAN_COMPONENTS];
 };
 
 /**
@@ -343,17 +358,13 @@ GstJpegParserResult     gst_jpeg_parse_quant_table      (GstJpegQuantTable *quan
  *
  * Parses the JPEG Huffman table structure members from @data.
  *
- * Note: @huf_tables represents the user-allocated Huffman tables
- * based on the number of scan components. That is, the parser writes
- * the output Huffman table at the index specified by the Huffman
- * table destination identifier (Th). The first array of
- * <GST_JPEG_MAX_SCAN_COMPONENTS> Huffman tables are related
- * to dc tables; The second array of <GST_JPEG_MAX_SCAN_COMPONENTS>
- * of Huffman tables are related to ac tables.
+ * Note: @huf_tables represents the complete set of possible Huffman
+ * tables. However, the parser will only write to the Huffman table
+ * specified by the table destination identifier (Th).
  *
  * Returns: a #GstJpegParserResult
  */
-GstJpegParserResult     gst_jpeg_parse_huffman_table    (GstJpegHuffmanTable huf_tables[GST_JPEG_MAX_SCAN_COMPONENTS*2],
+GstJpegParserResult     gst_jpeg_parse_huffman_table    (GstJpegHuffmanTables *huf_tables,
                                                          const guint8 * data,
                                                          gsize size,
                                                          guint offset);
@@ -376,13 +387,10 @@ GstJpegParserResult     gst_jpeg_parse_restart_interval (guint * interval,
  * gst_jpeg_get_default_huffman_table:
  * @huf_tables: (out): The default dc/ac hufman tables to fill in
  *
- * DC huffman tables fill in the first 4 arrays.
- * AC huffman tables fill in the last 4 arrays.
- *
  * Returns: void
  */
 void                    gst_jpeg_get_default_huffman_table (
-                                                   GstJpegHuffmanTable huf_tables[GST_JPEG_MAX_SCAN_COMPONENTS*2]);
+                                                   GstJpegHuffmanTables *huf_tables);
 
 /**
  * gst_jpeg_get_default_quantization_table:
