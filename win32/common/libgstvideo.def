@@ -147,7 +147,7 @@ EXPORTS
 	gst_video_overlay_prepare_window_handle
 	gst_video_overlay_set_render_rectangle
 	gst_video_overlay_set_window_handle
-	gst_video_parse_caps_palette
+	gst_video_pack_flags_get_type
 	gst_video_sink_center_rect
 	gst_video_sink_get_type
 	gst_video_transfer_function_get_type
