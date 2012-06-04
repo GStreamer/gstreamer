@@ -123,31 +123,31 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
-		63118C4D156D29530085CF03 /* basic-tutorial-2.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = "basic-tutorial-2.c"; path = "../gst-sdk/tutorials/basic-tutorial-2.c"; sourceTree = SOURCE_ROOT; };
-		63118C4F156D297B0085CF03 /* gstreamer-0.10.xcconfig */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.xcconfig; name = "gstreamer-0.10.xcconfig"; path = "/Library/Frameworks/GStreamer.framework/Version/2012.5/x86_64/share/xcode/gstreamer-0.10.xcconfig"; sourceTree = "<absolute>"; };
+		63118C4D156D29530085CF03 /* basic-tutorial-2.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = "basic-tutorial-2.c"; path = "../basic-tutorial-2.c"; sourceTree = SOURCE_ROOT; };
 		63118C54156D29DE0085CF03 /* Turorial 3 */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = "Turorial 3"; sourceTree = BUILT_PRODUCTS_DIR; };
-		63118C60156D2AA70085CF03 /* basic-tutorial-3.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = "basic-tutorial-3.c"; path = "../gst-sdk/tutorials/basic-tutorial-3.c"; sourceTree = SOURCE_ROOT; };
+		63118C60156D2AA70085CF03 /* basic-tutorial-3.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = "basic-tutorial-3.c"; path = "../basic-tutorial-3.c"; sourceTree = SOURCE_ROOT; };
 		63118C75156D2B970085CF03 /* Tutorial 4 */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = "Tutorial 4"; sourceTree = BUILT_PRODUCTS_DIR; };
-		63118C7F156D2BA30085CF03 /* basic-tutorial-4.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = "basic-tutorial-4.c"; path = "../gst-sdk/tutorials/basic-tutorial-4.c"; sourceTree = SOURCE_ROOT; };
+		63118C7F156D2BA30085CF03 /* basic-tutorial-4.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = "basic-tutorial-4.c"; path = "../basic-tutorial-4.c"; sourceTree = SOURCE_ROOT; };
 		63118C88156D2D190085CF03 /* Tutorial 1 */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = "Tutorial 1"; sourceTree = BUILT_PRODUCTS_DIR; };
-		63118C92156D2D630085CF03 /* basic-tutorial-1.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = "basic-tutorial-1.c"; path = "../gst-sdk/tutorials/basic-tutorial-1.c"; sourceTree = SOURCE_ROOT; };
+		63118C92156D2D630085CF03 /* basic-tutorial-1.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = "basic-tutorial-1.c"; path = "../basic-tutorial-1.c"; sourceTree = SOURCE_ROOT; };
 		63118C98156D2E2F0085CF03 /* Tutorial 5 */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = "Tutorial 5"; sourceTree = BUILT_PRODUCTS_DIR; };
-		63118CA2156D2E400085CF03 /* basic-tutorial-5.c */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.objc; fileEncoding = 4; name = "basic-tutorial-5.c"; path = "../gst-sdk/tutorials/basic-tutorial-5.c"; sourceTree = SOURCE_ROOT; };
-		63118CA4156D2EAC0085CF03 /* gstreamer-0.10-gtk+-2.0.xcconfig */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.xcconfig; name = "gstreamer-0.10-gtk+-2.0.xcconfig"; path = "/Library/Frameworks/GStreamer.framework/Version/2012.5/x86_64/share/xcode/gstreamer-0.10-gtk+-2.0.xcconfig"; sourceTree = "<absolute>"; };
+		63118CA2156D2E400085CF03 /* basic-tutorial-5.c */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.objc; fileEncoding = 4; name = "basic-tutorial-5.c"; path = "../basic-tutorial-5.c"; sourceTree = SOURCE_ROOT; };
 		63118CB9156D31240085CF03 /* Tutorial 2 */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = "Tutorial 2"; sourceTree = BUILT_PRODUCTS_DIR; };
 		63118CC8156D32E20085CF03 /* Playback Tutorial 1 */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = "Playback Tutorial 1"; sourceTree = BUILT_PRODUCTS_DIR; };
-		63118CD2156D32FE0085CF03 /* playback-tutorial-1.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = "playback-tutorial-1.c"; path = "../gst-sdk/tutorials/playback-tutorial-1.c"; sourceTree = SOURCE_ROOT; };
+		63118CD2156D32FE0085CF03 /* playback-tutorial-1.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = "playback-tutorial-1.c"; path = "../playback-tutorial-1.c"; sourceTree = SOURCE_ROOT; };
 		63118CD9156D34BA0085CF03 /* Playback Tutorial 2 */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = "Playback Tutorial 2"; sourceTree = BUILT_PRODUCTS_DIR; };
-		63118CE3156D35390085CF03 /* playback-tutorial-2.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = "playback-tutorial-2.c"; path = "../gst-sdk/tutorials/playback-tutorial-2.c"; sourceTree = SOURCE_ROOT; };
+		63118CE3156D35390085CF03 /* playback-tutorial-2.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = "playback-tutorial-2.c"; path = "../playback-tutorial-2.c"; sourceTree = SOURCE_ROOT; };
 		63118CEA156D3A870085CF03 /* Tutorial 6 */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = "Tutorial 6"; sourceTree = BUILT_PRODUCTS_DIR; };
-		63118CF4156D3AB60085CF03 /* basic-tutorial-6.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = "basic-tutorial-6.c"; path = "../gst-sdk/tutorials/basic-tutorial-6.c"; sourceTree = SOURCE_ROOT; };
+		63118CF4156D3AB60085CF03 /* basic-tutorial-6.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = "basic-tutorial-6.c"; path = "../basic-tutorial-6.c"; sourceTree = SOURCE_ROOT; };
 		63DE8812156DABDF006F2D3B /* Tutorial 7 */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = "Tutorial 7"; sourceTree = BUILT_PRODUCTS_DIR; };
 		63DE8820156DABE6006F2D3B /* Tutorial 8 */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = "Tutorial 8"; sourceTree = BUILT_PRODUCTS_DIR; };
 		63DE882E156DABEE006F2D3B /* Tutorial 9 */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = "Tutorial 9"; sourceTree = BUILT_PRODUCTS_DIR; };
-		63DE8838156DAC09006F2D3B /* basic-tutorial-7.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = "basic-tutorial-7.c"; path = "../gst-sdk/tutorials/basic-tutorial-7.c"; sourceTree = SOURCE_ROOT; };
-		63DE883A156DAC0E006F2D3B /* basic-tutorial-8.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = "basic-tutorial-8.c"; path = "../gst-sdk/tutorials/basic-tutorial-8.c"; sourceTree = SOURCE_ROOT; };
-		63DE883C156DAC15006F2D3B /* basic-tutorial-9.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = "basic-tutorial-9.c"; path = "../gst-sdk/tutorials/basic-tutorial-9.c"; sourceTree = SOURCE_ROOT; };
-		63DE8841156DACB3006F2D3B /* gstreamer-0.10-all.xcconfig */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.xcconfig; name = "gstreamer-0.10-all.xcconfig"; path = "/Library/Frameworks/GStreamer.framework/Version/2012.5/x86_64/share/xcode/gstreamer-0.10-all.xcconfig"; sourceTree = "<absolute>"; };
+		63DE8838156DAC09006F2D3B /* basic-tutorial-7.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = "basic-tutorial-7.c"; path = "../basic-tutorial-7.c"; sourceTree = SOURCE_ROOT; };
+		63DE883A156DAC0E006F2D3B /* basic-tutorial-8.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = "basic-tutorial-8.c"; path = "../basic-tutorial-8.c"; sourceTree = SOURCE_ROOT; };
+		63DE883C156DAC15006F2D3B /* basic-tutorial-9.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = "basic-tutorial-9.c"; path = "../basic-tutorial-9.c"; sourceTree = SOURCE_ROOT; };
+		63DE8851156DAE94006F2D3B /* gstreamer-0.10-all.xcconfig */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.xcconfig; name = "gstreamer-0.10-all.xcconfig"; path = "/Library/Frameworks/GStreamer.framework/Version/2012.5/x86/share/xcode/gstreamer-0.10-all.xcconfig"; sourceTree = "<absolute>"; };
+		63DE8852156DAE94006F2D3B /* gstreamer-0.10-gtk+-2.0.xcconfig */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.xcconfig; name = "gstreamer-0.10-gtk+-2.0.xcconfig"; path = "/Library/Frameworks/GStreamer.framework/Version/2012.5/x86/share/xcode/gstreamer-0.10-gtk+-2.0.xcconfig"; sourceTree = "<absolute>"; };
+		63DE8853156DAE94006F2D3B /* gstreamer-0.10.xcconfig */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.xcconfig; name = "gstreamer-0.10.xcconfig"; path = "/Library/Frameworks/GStreamer.framework/Version/2012.5/x86/share/xcode/gstreamer-0.10.xcconfig"; sourceTree = "<absolute>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -234,20 +234,20 @@
 		63118C35156D29340085CF03 = {
 			isa = PBXGroup;
 			children = (
-				63DE8841156DACB3006F2D3B /* gstreamer-0.10-all.xcconfig */,
-				63118CA4156D2EAC0085CF03 /* gstreamer-0.10-gtk+-2.0.xcconfig */,
-				63118C4F156D297B0085CF03 /* gstreamer-0.10.xcconfig */,
+				63DE8851156DAE94006F2D3B /* gstreamer-0.10-all.xcconfig */,
+				63DE8852156DAE94006F2D3B /* gstreamer-0.10-gtk+-2.0.xcconfig */,
+				63DE8853156DAE94006F2D3B /* gstreamer-0.10.xcconfig */,
 				63118C8A156D2D190085CF03 /* Tutorial 1 */,
 				63118C43156D29340085CF03 /* Tutorial 2 */,
 				63118C56156D29DE0085CF03 /* Turorial 3 */,
 				63118C77156D2B970085CF03 /* Tutorial 4 */,
 				63118C9A156D2E2F0085CF03 /* Tutorial 5 */,
 				63118CEC156D3A870085CF03 /* Tutorial 6 */,
-				63118CCA156D32E20085CF03 /* Playback Tutorial 1 */,
-				63118CDB156D34BA0085CF03 /* Playback Tutorial 2 */,
 				63DE8814156DABDF006F2D3B /* Tutorial 7 */,
 				63DE8822156DABE6006F2D3B /* Tutorial 8 */,
 				63DE8830156DABEE006F2D3B /* Tutorial 9 */,
+				63118CCA156D32E20085CF03 /* Playback Tutorial 1 */,
+				63118CDB156D34BA0085CF03 /* Playback Tutorial 2 */,
 				63118C41156D29340085CF03 /* Products */,
 			);
 			sourceTree = "<group>";
@@ -558,7 +558,7 @@
 			attributes = {
 				LastUpgradeCheck = 0420;
 			};
-			buildConfigurationList = 63118C3A156D29340085CF03 /* Build configuration list for PBXProject "GStreamer Tutorials" */;
+			buildConfigurationList = 63118C3A156D29340085CF03 /* Build configuration list for PBXProject "GStreamer Tutorials x86" */;
 			compatibilityVersion = "Xcode 3.2";
 			developmentRegion = English;
 			hasScannedForEncodings = 0;
@@ -679,10 +679,9 @@
 /* Begin XCBuildConfiguration section */
 		63118C48156D29340085CF03 /* Debug */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = 63118C4F156D297B0085CF03 /* gstreamer-0.10.xcconfig */;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = YES;
-				ARCHS = "$(ARCHS_STANDARD_64_BIT)";
+				ARCHS = "$(ARCHS_STANDARD_32_BIT)";
 				CLANG_ENABLE_OBJC_ARC = YES;
 				COPY_PHASE_STRIP = NO;
 				GCC_C_LANGUAGE_STANDARD = gnu99;
@@ -701,17 +700,16 @@
 				GCC_WARN_UNUSED_VARIABLE = YES;
 				MACOSX_DEPLOYMENT_TARGET = 10.7;
 				ONLY_ACTIVE_ARCH = YES;
-				SDKROOT = macosx;
-				VALID_ARCHS = x86_64;
+				SDKROOT = macosx10.7;
+				VALID_ARCHS = i386;
 			};
 			name = Debug;
 		};
 		63118C49156D29340085CF03 /* Release */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = 63118C4F156D297B0085CF03 /* gstreamer-0.10.xcconfig */;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = YES;
-				ARCHS = "$(ARCHS_STANDARD_64_BIT)";
+				ARCHS = "$(ARCHS_STANDARD_32_BIT)";
 				CLANG_ENABLE_OBJC_ARC = YES;
 				COPY_PHASE_STRIP = YES;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
@@ -723,14 +721,14 @@
 				GCC_WARN_ABOUT_RETURN_TYPE = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
 				MACOSX_DEPLOYMENT_TARGET = 10.7;
-				SDKROOT = macosx;
-				VALID_ARCHS = x86_64;
+				SDKROOT = macosx10.7;
+				VALID_ARCHS = i386;
 			};
 			name = Release;
 		};
 		63118C5C156D29DE0085CF03 /* Debug */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = 63118C4F156D297B0085CF03 /* gstreamer-0.10.xcconfig */;
+			baseConfigurationReference = 63DE8853156DAE94006F2D3B /* gstreamer-0.10.xcconfig */;
 			buildSettings = {
 				PRODUCT_NAME = "$(TARGET_NAME)";
 			};
@@ -738,7 +736,7 @@
 		};
 		63118C5D156D29DE0085CF03 /* Release */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = 63118C4F156D297B0085CF03 /* gstreamer-0.10.xcconfig */;
+			baseConfigurationReference = 63DE8853156DAE94006F2D3B /* gstreamer-0.10.xcconfig */;
 			buildSettings = {
 				PRODUCT_NAME = "$(TARGET_NAME)";
 			};
@@ -746,7 +744,7 @@
 		};
 		63118C7D156D2B970085CF03 /* Debug */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = 63118C4F156D297B0085CF03 /* gstreamer-0.10.xcconfig */;
+			baseConfigurationReference = 63DE8853156DAE94006F2D3B /* gstreamer-0.10.xcconfig */;
 			buildSettings = {
 				PRODUCT_NAME = "$(TARGET_NAME)";
 			};
@@ -754,7 +752,7 @@
 		};
 		63118C7E156D2B970085CF03 /* Release */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = 63118C4F156D297B0085CF03 /* gstreamer-0.10.xcconfig */;
+			baseConfigurationReference = 63DE8853156DAE94006F2D3B /* gstreamer-0.10.xcconfig */;
 			buildSettings = {
 				PRODUCT_NAME = "$(TARGET_NAME)";
 			};
@@ -762,7 +760,7 @@
 		};
 		63118C90156D2D190085CF03 /* Debug */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = 63118C4F156D297B0085CF03 /* gstreamer-0.10.xcconfig */;
+			baseConfigurationReference = 63DE8853156DAE94006F2D3B /* gstreamer-0.10.xcconfig */;
 			buildSettings = {
 				PRODUCT_NAME = "$(TARGET_NAME)";
 			};
@@ -770,7 +768,7 @@
 		};
 		63118C91156D2D190085CF03 /* Release */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = 63118C4F156D297B0085CF03 /* gstreamer-0.10.xcconfig */;
+			baseConfigurationReference = 63DE8853156DAE94006F2D3B /* gstreamer-0.10.xcconfig */;
 			buildSettings = {
 				PRODUCT_NAME = "$(TARGET_NAME)";
 			};
@@ -778,7 +776,7 @@
 		};
 		63118CA0156D2E2F0085CF03 /* Debug */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = 63118CA4156D2EAC0085CF03 /* gstreamer-0.10-gtk+-2.0.xcconfig */;
+			baseConfigurationReference = 63DE8852156DAE94006F2D3B /* gstreamer-0.10-gtk+-2.0.xcconfig */;
 			buildSettings = {
 				OTHER_LDFLAGS = (
 					"-framework",
@@ -793,9 +791,7 @@
 					"-lgstdataprotocol-0.10",
 					"-lgstrtp-0.10",
 					"-lgstinterfaces-0.10",
-					"-lgstbasevideo-0.10",
 					"-lgstnet-0.10",
-					"-lgstphotography-0.10",
 					"-lgstcdda-0.10",
 					"-lgsttag-0.10",
 					"-lgstapp-0.10",
@@ -825,7 +821,7 @@
 		};
 		63118CA1156D2E2F0085CF03 /* Release */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = 63118CA4156D2EAC0085CF03 /* gstreamer-0.10-gtk+-2.0.xcconfig */;
+			baseConfigurationReference = 63DE8852156DAE94006F2D3B /* gstreamer-0.10-gtk+-2.0.xcconfig */;
 			buildSettings = {
 				OTHER_LDFLAGS = (
 					"-framework",
@@ -840,9 +836,7 @@
 					"-lgstdataprotocol-0.10",
 					"-lgstrtp-0.10",
 					"-lgstinterfaces-0.10",
-					"-lgstbasevideo-0.10",
 					"-lgstnet-0.10",
-					"-lgstphotography-0.10",
 					"-lgstcdda-0.10",
 					"-lgsttag-0.10",
 					"-lgstapp-0.10",
@@ -872,7 +866,7 @@
 		};
 		63118CC1156D31240085CF03 /* Debug */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = 63118C4F156D297B0085CF03 /* gstreamer-0.10.xcconfig */;
+			baseConfigurationReference = 63DE8853156DAE94006F2D3B /* gstreamer-0.10.xcconfig */;
 			buildSettings = {
 				PRODUCT_NAME = "$(TARGET_NAME)";
 			};
@@ -880,7 +874,7 @@
 		};
 		63118CC2156D31240085CF03 /* Release */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = 63118C4F156D297B0085CF03 /* gstreamer-0.10.xcconfig */;
+			baseConfigurationReference = 63DE8853156DAE94006F2D3B /* gstreamer-0.10.xcconfig */;
 			buildSettings = {
 				PRODUCT_NAME = "$(TARGET_NAME)";
 			};
@@ -888,7 +882,7 @@
 		};
 		63118CD0156D32E20085CF03 /* Debug */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = 63118C4F156D297B0085CF03 /* gstreamer-0.10.xcconfig */;
+			baseConfigurationReference = 63DE8853156DAE94006F2D3B /* gstreamer-0.10.xcconfig */;
 			buildSettings = {
 				PRODUCT_NAME = "$(TARGET_NAME)";
 			};
@@ -896,7 +890,7 @@
 		};
 		63118CD1156D32E20085CF03 /* Release */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = 63118C4F156D297B0085CF03 /* gstreamer-0.10.xcconfig */;
+			baseConfigurationReference = 63DE8853156DAE94006F2D3B /* gstreamer-0.10.xcconfig */;
 			buildSettings = {
 				PRODUCT_NAME = "$(TARGET_NAME)";
 			};
@@ -904,7 +898,7 @@
 		};
 		63118CE1156D34BA0085CF03 /* Debug */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = 63118C4F156D297B0085CF03 /* gstreamer-0.10.xcconfig */;
+			baseConfigurationReference = 63DE8853156DAE94006F2D3B /* gstreamer-0.10.xcconfig */;
 			buildSettings = {
 				PRODUCT_NAME = "$(TARGET_NAME)";
 			};
@@ -912,7 +906,7 @@
 		};
 		63118CE2156D34BA0085CF03 /* Release */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = 63118C4F156D297B0085CF03 /* gstreamer-0.10.xcconfig */;
+			baseConfigurationReference = 63DE8853156DAE94006F2D3B /* gstreamer-0.10.xcconfig */;
 			buildSettings = {
 				PRODUCT_NAME = "$(TARGET_NAME)";
 			};
@@ -920,7 +914,7 @@
 		};
 		63118CF2156D3A870085CF03 /* Debug */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = 63118C4F156D297B0085CF03 /* gstreamer-0.10.xcconfig */;
+			baseConfigurationReference = 63DE8853156DAE94006F2D3B /* gstreamer-0.10.xcconfig */;
 			buildSettings = {
 				PRODUCT_NAME = "$(TARGET_NAME)";
 			};
@@ -928,7 +922,7 @@
 		};
 		63118CF3156D3A870085CF03 /* Release */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = 63118C4F156D297B0085CF03 /* gstreamer-0.10.xcconfig */;
+			baseConfigurationReference = 63DE8853156DAE94006F2D3B /* gstreamer-0.10.xcconfig */;
 			buildSettings = {
 				PRODUCT_NAME = "$(TARGET_NAME)";
 			};
@@ -936,7 +930,7 @@
 		};
 		63DE881A156DABDF006F2D3B /* Debug */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = 63118C4F156D297B0085CF03 /* gstreamer-0.10.xcconfig */;
+			baseConfigurationReference = 63DE8853156DAE94006F2D3B /* gstreamer-0.10.xcconfig */;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = YES;
 				PRODUCT_NAME = "$(TARGET_NAME)";
@@ -945,7 +939,7 @@
 		};
 		63DE881B156DABDF006F2D3B /* Release */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = 63118C4F156D297B0085CF03 /* gstreamer-0.10.xcconfig */;
+			baseConfigurationReference = 63DE8853156DAE94006F2D3B /* gstreamer-0.10.xcconfig */;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = YES;
 				PRODUCT_NAME = "$(TARGET_NAME)";
@@ -954,7 +948,7 @@
 		};
 		63DE8828156DABE7006F2D3B /* Debug */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = 63118C4F156D297B0085CF03 /* gstreamer-0.10.xcconfig */;
+			baseConfigurationReference = 63DE8853156DAE94006F2D3B /* gstreamer-0.10.xcconfig */;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = YES;
 				PRODUCT_NAME = "$(TARGET_NAME)";
@@ -963,7 +957,7 @@
 		};
 		63DE8829156DABE7006F2D3B /* Release */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = 63118C4F156D297B0085CF03 /* gstreamer-0.10.xcconfig */;
+			baseConfigurationReference = 63DE8853156DAE94006F2D3B /* gstreamer-0.10.xcconfig */;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = YES;
 				PRODUCT_NAME = "$(TARGET_NAME)";
@@ -972,7 +966,7 @@
 		};
 		63DE8836156DABEE006F2D3B /* Debug */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = 63DE8841156DACB3006F2D3B /* gstreamer-0.10-all.xcconfig */;
+			baseConfigurationReference = 63DE8851156DAE94006F2D3B /* gstreamer-0.10-all.xcconfig */;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = YES;
 				PRODUCT_NAME = "$(TARGET_NAME)";
@@ -981,7 +975,7 @@
 		};
 		63DE8837156DABEE006F2D3B /* Release */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = 63DE8841156DACB3006F2D3B /* gstreamer-0.10-all.xcconfig */;
+			baseConfigurationReference = 63DE8851156DAE94006F2D3B /* gstreamer-0.10-all.xcconfig */;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = YES;
 				PRODUCT_NAME = "$(TARGET_NAME)";
@@ -991,7 +985,7 @@
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
-		63118C3A156D29340085CF03 /* Build configuration list for PBXProject "GStreamer Tutorials" */ = {
+		63118C3A156D29340085CF03 /* Build configuration list for PBXProject "GStreamer Tutorials x86" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				63118C48156D29340085CF03 /* Debug */,
@@ -1079,6 +1073,7 @@
 				63DE881B156DABDF006F2D3B /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
 		};
 		63DE8827156DABE7006F2D3B /* Build configuration list for PBXNativeTarget "Tutorial 8" */ = {
 			isa = XCConfigurationList;
@@ -1087,6 +1082,7 @@
 				63DE8829156DABE7006F2D3B /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
 		};
 		63DE8835156DABEE006F2D3B /* Build configuration list for PBXNativeTarget "Tutorial 9" */ = {
 			isa = XCConfigurationList;
@@ -1095,6 +1091,7 @@
 				63DE8837156DABEE006F2D3B /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
 	};
