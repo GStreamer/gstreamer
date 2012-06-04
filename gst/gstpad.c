@@ -3185,9 +3185,10 @@ push_sticky (GstPad * pad, PadEvent * ev, gpointer user_data)
       break;
     case GST_FLOW_NOT_LINKED:
       /* not linked is not a problem, we are sticky so the event will be
-       * sent later */
+       * sent later but only for non-EOS events */
       GST_DEBUG_OBJECT (pad, "pad was not linked");
-      data->ret = GST_FLOW_OK;
+      if (GST_EVENT_TYPE (ev) != GST_FLOW_EOS)
+        data->ret = GST_FLOW_OK;
       /* fallthrough */
     default:
       GST_DEBUG_OBJECT (pad, "mark pending events");
@@ -3222,22 +3223,11 @@ check_sticky (GstPad * pad)
      * event failed.
      */
     if (data.ret != GST_FLOW_OK && !data.was_eos) {
-      GArray *events = pad->priv->events;
-      gint i, len;
+      PadEvent *ev = find_event_by_type (pad, GST_EVENT_EOS, 0);
 
-      len = events->len;
-      for (i = 0; i < len; i++) {
-        PadEvent *ev = &g_array_index (events, PadEvent, i);
-
-        if (G_UNLIKELY (ev->event == NULL) || ev->received)
-          continue;
-
-        if (GST_EVENT_TYPE (ev->event) == GST_EVENT_EOS) {
-          gst_pad_push_event_unchecked (pad, gst_event_ref (ev->event),
-              GST_PAD_PROBE_TYPE_EVENT_DOWNSTREAM);
-
-          break;
-        }
+      if (ev && !ev->received) {
+        data.ret = gst_pad_push_event_unchecked (pad, gst_event_ref (ev->event),
+            GST_PAD_PROBE_TYPE_EVENT_DOWNSTREAM);
       }
     }
   }
@@ -4491,8 +4481,14 @@ gst_pad_push_event (GstPad * pad, GstEvent * event)
     /* other events are pushed right away */
     res = (gst_pad_push_event_unchecked (pad, event, type) == GST_FLOW_OK);
   } else {
+    /* Errors in sticky event pushing are no problem and ignored here
+     * as they will cause more meaningful errors during data flow.
+     * For EOS events, that are not followed by data flow, we still
+     * return FALSE here though.
+     */
+    if (GST_EVENT_TYPE (event) != GST_EVENT_EOS)
+      res = TRUE;
     gst_event_unref (event);
-    res = TRUE;
   }
   GST_OBJECT_UNLOCK (pad);
 
