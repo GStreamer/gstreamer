@@ -23,15 +23,20 @@
 #endif
 
 #include "videoconvert.h"
+
 #include <glib.h>
 #include <string.h>
+#include <math.h>
+
 #include "gstvideoconvertorc.h"
 
 
 static void videoconvert_convert_generic (VideoConvert * convert,
     GstVideoFrame * dest, const GstVideoFrame * src);
-static void videoconvert_convert_lookup_fastpath (VideoConvert * convert);
-static void videoconvert_convert_lookup_matrix (VideoConvert * convert);
+static void videoconvert_convert_matrix (VideoConvert * convert);
+static void videoconvert_convert_matrix16 (VideoConvert * convert);
+static gboolean videoconvert_convert_lookup_fastpath (VideoConvert * convert);
+static void videoconvert_convert_compute_matrix (VideoConvert * convert);
 static void videoconvert_dither_none (VideoConvert * convert, int j);
 static void videoconvert_dither_verterr (VideoConvert * convert, int j);
 static void videoconvert_dither_halftone (VideoConvert * convert, int j);
@@ -47,11 +52,12 @@ videoconvert_convert_new (GstVideoInfo * in_info, GstVideoInfo * out_info)
 
   convert->in_info = *in_info;
   convert->out_info = *out_info;
-  convert->convert = videoconvert_convert_generic;
   convert->dither16 = videoconvert_dither_none;
 
-  videoconvert_convert_lookup_fastpath (convert);
-  videoconvert_convert_lookup_matrix (convert);
+  if (!videoconvert_convert_lookup_fastpath (convert)) {
+    convert->convert = videoconvert_convert_generic;
+    videoconvert_convert_compute_matrix (convert);
+  }
 
   convert->width = GST_VIDEO_INFO_WIDTH (in_info);
   convert->height = GST_VIDEO_INFO_HEIGHT (in_info);
@@ -121,8 +127,8 @@ videoconvert_convert_convert (VideoConvert * convert,
   convert->convert (convert, dest, src);
 }
 
-static void
-matrix_rgb_to_yuv_bt470_6 (VideoConvert * convert)
+void
+videoconvert_convert_matrix (VideoConvert * convert)
 {
   int i;
   int r, g, b;
@@ -134,9 +140,12 @@ matrix_rgb_to_yuv_bt470_6 (VideoConvert * convert)
     g = tmpline[i * 4 + 2];
     b = tmpline[i * 4 + 3];
 
-    y = (66 * r + 129 * g + 25 * b + 4096) >> 8;
-    u = (-38 * r - 74 * g + 112 * b + 32768) >> 8;
-    v = (112 * r - 94 * g - 18 * b + 32768) >> 8;
+    y = (convert->cmatrix[0][0] * r + convert->cmatrix[0][1] * g +
+        convert->cmatrix[0][2] * b + convert->cmatrix[0][3]) >> 8;
+    u = (convert->cmatrix[1][0] * r + convert->cmatrix[1][1] * g +
+        convert->cmatrix[1][2] * b + convert->cmatrix[1][3]) >> 8;
+    v = (convert->cmatrix[2][0] * r + convert->cmatrix[2][1] * g +
+        convert->cmatrix[2][2] * b + convert->cmatrix[2][3]) >> 8;
 
     tmpline[i * 4 + 1] = CLAMP (y, 0, 255);
     tmpline[i * 4 + 2] = CLAMP (u, 0, 255);
@@ -144,118 +153,29 @@ matrix_rgb_to_yuv_bt470_6 (VideoConvert * convert)
   }
 }
 
-static void
-matrix_rgb_to_yuv_bt709 (VideoConvert * convert)
+void
+videoconvert_convert_matrix16 (VideoConvert * convert)
 {
   int i;
   int r, g, b;
   int y, u, v;
-  guint8 *tmpline = convert->tmpline;
+  guint16 *tmpline = convert->tmpline16;
 
   for (i = 0; i < convert->width; i++) {
     r = tmpline[i * 4 + 1];
     g = tmpline[i * 4 + 2];
     b = tmpline[i * 4 + 3];
 
-    y = (47 * r + 157 * g + 16 * b + 4096) >> 8;
-    u = (-26 * r - 87 * g + 112 * b + 32768) >> 8;
-    v = (112 * r - 102 * g - 10 * b + 32768) >> 8;
+    y = (convert->cmatrix[0][0] * r + convert->cmatrix[0][1] * g +
+        convert->cmatrix[0][2] * b + convert->cmatrix[0][3]) >> 8;
+    u = (convert->cmatrix[1][0] * r + convert->cmatrix[1][1] * g +
+        convert->cmatrix[1][2] * b + convert->cmatrix[1][3]) >> 8;
+    v = (convert->cmatrix[2][0] * r + convert->cmatrix[2][1] * g +
+        convert->cmatrix[2][2] * b + convert->cmatrix[2][3]) >> 8;
 
-    tmpline[i * 4 + 1] = CLAMP (y, 0, 255);
-    tmpline[i * 4 + 2] = CLAMP (u, 0, 255);
-    tmpline[i * 4 + 3] = CLAMP (v, 0, 255);
-  }
-}
-
-static void
-matrix_yuv_bt470_6_to_rgb (VideoConvert * convert)
-{
-  int i;
-  int r, g, b;
-  int y, u, v;
-  guint8 *tmpline = convert->tmpline;
-
-  for (i = 0; i < convert->width; i++) {
-    y = tmpline[i * 4 + 1];
-    u = tmpline[i * 4 + 2];
-    v = tmpline[i * 4 + 3];
-
-    r = (298 * y + 409 * v - 57068) >> 8;
-    g = (298 * y - 100 * u - 208 * v + 34707) >> 8;
-    b = (298 * y + 516 * u - 70870) >> 8;
-
-    tmpline[i * 4 + 1] = CLAMP (r, 0, 255);
-    tmpline[i * 4 + 2] = CLAMP (g, 0, 255);
-    tmpline[i * 4 + 3] = CLAMP (b, 0, 255);
-  }
-}
-
-static void
-matrix_yuv_bt709_to_rgb (VideoConvert * convert)
-{
-  int i;
-  int r, g, b;
-  int y, u, v;
-  guint8 *tmpline = convert->tmpline;
-
-  for (i = 0; i < convert->width; i++) {
-    y = tmpline[i * 4 + 1];
-    u = tmpline[i * 4 + 2];
-    v = tmpline[i * 4 + 3];
-
-    r = (298 * y + 459 * v - 63514) >> 8;
-    g = (298 * y - 55 * u - 136 * v + 19681) >> 8;
-    b = (298 * y + 541 * u - 73988) >> 8;
-
-    tmpline[i * 4 + 1] = CLAMP (r, 0, 255);
-    tmpline[i * 4 + 2] = CLAMP (g, 0, 255);
-    tmpline[i * 4 + 3] = CLAMP (b, 0, 255);
-  }
-}
-
-static void
-matrix_yuv_bt709_to_yuv_bt470_6 (VideoConvert * convert)
-{
-  int i;
-  int r, g, b;
-  int y, u, v;
-  guint8 *tmpline = convert->tmpline;
-
-  for (i = 0; i < convert->width; i++) {
-    y = tmpline[i * 4 + 1];
-    u = tmpline[i * 4 + 2];
-    v = tmpline[i * 4 + 3];
-
-    r = (256 * y + 25 * u + 49 * v - 9536) >> 8;
-    g = (253 * u - 28 * v + 3958) >> 8;
-    b = (-19 * u + 252 * v + 2918) >> 8;
-
-    tmpline[i * 4 + 1] = CLAMP (r, 0, 255);
-    tmpline[i * 4 + 2] = CLAMP (g, 0, 255);
-    tmpline[i * 4 + 3] = CLAMP (b, 0, 255);
-  }
-}
-
-static void
-matrix_yuv_bt470_6_to_yuv_bt709 (VideoConvert * convert)
-{
-  int i;
-  int r, g, b;
-  int y, u, v;
-  guint8 *tmpline = convert->tmpline;
-
-  for (i = 0; i < convert->width; i++) {
-    y = tmpline[i * 4 + 1];
-    u = tmpline[i * 4 + 2];
-    v = tmpline[i * 4 + 3];
-
-    r = (256 * y - 30 * u - 53 * v + 10600) >> 8;
-    g = (261 * u + 29 * v - 4367) >> 8;
-    b = (19 * u + 262 * v - 3289) >> 8;
-
-    tmpline[i * 4 + 1] = CLAMP (r, 0, 255);
-    tmpline[i * 4 + 2] = CLAMP (g, 0, 255);
-    tmpline[i * 4 + 3] = CLAMP (b, 0, 255);
+    tmpline[i * 4 + 1] = CLAMP (y, 0, 65535);
+    tmpline[i * 4 + 2] = CLAMP (u, 0, 65535);
+    tmpline[i * 4 + 3] = CLAMP (v, 0, 65535);
   }
 }
 
@@ -266,196 +186,187 @@ matrix_identity (VideoConvert * convert)
 }
 
 static void
-matrix16_rgb_to_yuv_bt470_6 (VideoConvert * convert)
+videoconvert_convert_compute_matrix (VideoConvert * convert)
 {
-  int i;
-  int r, g, b;
-  int y, u, v;
-  guint16 *tmpline = convert->tmpline16;
+  GstVideoInfo *in_info, *out_info;
+  ColorMatrix dst;
+  gint i, j;
+  const GstVideoFormatInfo *sfinfo, *dfinfo;
+  gboolean use_16;
+  gint in_bits, out_bits;
 
-  for (i = 0; i < convert->width; i++) {
-    r = tmpline[i * 4 + 1];
-    g = tmpline[i * 4 + 2];
-    b = tmpline[i * 4 + 3];
+  in_info = &convert->in_info;
+  out_info = &convert->out_info;
 
-    y = (66 * r + 129 * g + 25 * b + 4096 * 256) >> 8;
-    u = (-38 * r - 74 * g + 112 * b + 32768 * 256) >> 8;
-    v = (112 * r - 94 * g - 18 * b + 32768 * 256) >> 8;
-
-    tmpline[i * 4 + 1] = CLAMP (y, 0, 65535);
-    tmpline[i * 4 + 2] = CLAMP (u, 0, 65535);
-    tmpline[i * 4 + 3] = CLAMP (v, 0, 65535);
-  }
-}
-
-static void
-matrix16_rgb_to_yuv_bt709 (VideoConvert * convert)
-{
-  int i;
-  int r, g, b;
-  int y, u, v;
-  guint16 *tmpline = convert->tmpline16;
-
-  for (i = 0; i < convert->width; i++) {
-    r = tmpline[i * 4 + 1];
-    g = tmpline[i * 4 + 2];
-    b = tmpline[i * 4 + 3];
-
-    y = (47 * r + 157 * g + 16 * b + 4096 * 256) >> 8;
-    u = (-26 * r - 87 * g + 112 * b + 32768 * 256) >> 8;
-    v = (112 * r - 102 * g - 10 * b + 32768 * 256) >> 8;
-
-    tmpline[i * 4 + 1] = CLAMP (y, 0, 65535);
-    tmpline[i * 4 + 2] = CLAMP (u, 0, 65535);
-    tmpline[i * 4 + 3] = CLAMP (v, 0, 65535);
-  }
-}
-
-static void
-matrix16_yuv_bt470_6_to_rgb (VideoConvert * convert)
-{
-  int i;
-  int r, g, b;
-  int y, u, v;
-  guint16 *tmpline = convert->tmpline16;
-
-  for (i = 0; i < convert->width; i++) {
-    y = tmpline[i * 4 + 1];
-    u = tmpline[i * 4 + 2];
-    v = tmpline[i * 4 + 3];
-
-    r = (298 * y + 409 * v - 57068 * 256) >> 8;
-    g = (298 * y - 100 * u - 208 * v + 34707 * 256) >> 8;
-    b = (298 * y + 516 * u - 70870 * 256) >> 8;
-
-    tmpline[i * 4 + 1] = CLAMP (r, 0, 65535);
-    tmpline[i * 4 + 2] = CLAMP (g, 0, 65535);
-    tmpline[i * 4 + 3] = CLAMP (b, 0, 65535);
-  }
-}
-
-static void
-matrix16_yuv_bt709_to_rgb (VideoConvert * convert)
-{
-  int i;
-  int r, g, b;
-  int y, u, v;
-  guint16 *tmpline = convert->tmpline16;
-
-  for (i = 0; i < convert->width; i++) {
-    y = tmpline[i * 4 + 1];
-    u = tmpline[i * 4 + 2];
-    v = tmpline[i * 4 + 3];
-
-    r = (298 * y + 459 * v - 63514 * 256) >> 8;
-    g = (298 * y - 55 * u - 136 * v + 19681 * 256) >> 8;
-    b = (298 * y + 541 * u - 73988 * 256) >> 8;
-
-    tmpline[i * 4 + 1] = CLAMP (r, 0, 65535);
-    tmpline[i * 4 + 2] = CLAMP (g, 0, 65535);
-    tmpline[i * 4 + 3] = CLAMP (b, 0, 65535);
-  }
-}
-
-static void
-matrix16_yuv_bt709_to_yuv_bt470_6 (VideoConvert * convert)
-{
-  int i;
-  int r, g, b;
-  int y, u, v;
-  guint16 *tmpline = convert->tmpline16;
-
-  for (i = 0; i < convert->width; i++) {
-    y = tmpline[i * 4 + 1];
-    u = tmpline[i * 4 + 2];
-    v = tmpline[i * 4 + 3];
-
-    r = (256 * y + 25 * u + 49 * v - 9536 * 256) >> 8;
-    g = (253 * u - 28 * v + 3958 * 256) >> 8;
-    b = (-19 * u + 252 * v + 2918 * 256) >> 8;
-
-    tmpline[i * 4 + 1] = CLAMP (r, 0, 65535);
-    tmpline[i * 4 + 2] = CLAMP (g, 0, 65535);
-    tmpline[i * 4 + 3] = CLAMP (b, 0, 65535);
-  }
-}
-
-static void
-matrix16_yuv_bt470_6_to_yuv_bt709 (VideoConvert * convert)
-{
-  int i;
-  int r, g, b;
-  int y, u, v;
-  guint16 *tmpline = convert->tmpline16;
-
-  for (i = 0; i < convert->width; i++) {
-    y = tmpline[i * 4 + 1];
-    u = tmpline[i * 4 + 2];
-    v = tmpline[i * 4 + 3];
-
-    r = (256 * y - 30 * u - 53 * v + 10600 * 256) >> 8;
-    g = (261 * u + 29 * v - 4367 * 256) >> 8;
-    b = (19 * u + 262 * v - 3289 * 256) >> 8;
-
-    tmpline[i * 4 + 1] = CLAMP (r, 0, 65535);
-    tmpline[i * 4 + 2] = CLAMP (g, 0, 65535);
-    tmpline[i * 4 + 3] = CLAMP (b, 0, 65535);
-  }
-}
-
-static void
-matrix16_identity (VideoConvert * convert)
-{
-  /* do nothing */
-}
-
-static void
-videoconvert_convert_lookup_matrix (VideoConvert * convert)
-{
-  GstVideoColorMatrix in_matrix, out_matrix;
-
-  in_matrix = convert->in_info.colorimetry.matrix;
-  out_matrix = convert->out_info.colorimetry.matrix;
-
-  if (in_matrix == out_matrix) {
-    GST_DEBUG ("using identity matrix");
+  if (in_info->colorimetry.range == out_info->colorimetry.range &&
+      in_info->colorimetry.matrix == out_info->colorimetry.matrix) {
+    GST_DEBUG ("using identity color transform");
     convert->matrix = matrix_identity;
-    convert->matrix16 = matrix16_identity;
-  } else if (in_matrix == GST_VIDEO_COLOR_MATRIX_RGB
-      && out_matrix == GST_VIDEO_COLOR_MATRIX_BT601) {
-    GST_DEBUG ("using RGB -> YUV BT470_6 matrix");
-    convert->matrix = matrix_rgb_to_yuv_bt470_6;
-    convert->matrix16 = matrix16_rgb_to_yuv_bt470_6;
-  } else if (in_matrix == GST_VIDEO_COLOR_MATRIX_RGB
-      && out_matrix == GST_VIDEO_COLOR_MATRIX_BT709) {
-    GST_DEBUG ("using RGB -> YUV BT709 matrix");
-    convert->matrix = matrix_rgb_to_yuv_bt709;
-    convert->matrix16 = matrix16_rgb_to_yuv_bt709;
-  } else if (in_matrix == GST_VIDEO_COLOR_MATRIX_BT601
-      && out_matrix == GST_VIDEO_COLOR_MATRIX_RGB) {
-    GST_DEBUG ("using YUV BT470_6 -> RGB matrix");
-    convert->matrix = matrix_yuv_bt470_6_to_rgb;
-    convert->matrix16 = matrix16_yuv_bt470_6_to_rgb;
-  } else if (in_matrix == GST_VIDEO_COLOR_MATRIX_BT709
-      && out_matrix == GST_VIDEO_COLOR_MATRIX_RGB) {
-    GST_DEBUG ("using YUV BT709 -> RGB matrix");
-    convert->matrix = matrix_yuv_bt709_to_rgb;
-    convert->matrix16 = matrix16_yuv_bt709_to_rgb;
-  } else if (in_matrix == GST_VIDEO_COLOR_MATRIX_BT709
-      && out_matrix == GST_VIDEO_COLOR_MATRIX_BT601) {
-    GST_DEBUG ("using YUV BT709 -> YUV BT470_6");
-    convert->matrix = matrix_yuv_bt709_to_yuv_bt470_6;
-    convert->matrix16 = matrix16_yuv_bt709_to_yuv_bt470_6;
-  } else if (in_matrix == GST_VIDEO_COLOR_MATRIX_BT601
-      && out_matrix == GST_VIDEO_COLOR_MATRIX_BT709) {
-    GST_DEBUG ("using YUV BT470_6 -> YUV BT709");
-    convert->matrix = matrix_yuv_bt470_6_to_yuv_bt709;
-    convert->matrix16 = matrix16_yuv_bt470_6_to_yuv_bt709;
-  } else {
-    GST_DEBUG ("using identity matrix");
-    convert->matrix = matrix_identity;
-    convert->matrix16 = matrix16_identity;
+    convert->matrix16 = matrix_identity;
+    return;
   }
+
+  sfinfo = in_info->finfo;
+  dfinfo = out_info->finfo;
+
+  in_bits =
+      GST_VIDEO_FORMAT_INFO_DEPTH (gst_video_format_get_info
+      (sfinfo->unpack_format), 0);
+  out_bits =
+      GST_VIDEO_FORMAT_INFO_DEPTH (gst_video_format_get_info
+      (dfinfo->unpack_format), 0);
+
+  if (in_bits == 16 || out_bits == 16)
+    use_16 = TRUE;
+  else
+    use_16 = FALSE;
+
+
+  color_matrix_set_identity (&dst);
+
+  /* 1, bring color components to [0..1.0] range */
+  switch (in_info->colorimetry.range) {
+    case GST_VIDEO_COLOR_RANGE_0_255:
+      if (use_16)
+        color_matrix_scale_components (&dst, (1 / 65535.0), (1 / 65535.0),
+            (1 / 65535.0));
+      else
+        color_matrix_scale_components (&dst, (1 / 255.0), (1 / 255.0),
+            (1 / 255.0));
+      break;
+    default:
+    case GST_VIDEO_COLOR_RANGE_16_235:
+      /* offset ans scale required to get input video black to (0.,0.,0.) */
+      switch (in_info->finfo->unpack_format) {
+        case GST_VIDEO_FORMAT_AYUV:
+        case GST_VIDEO_FORMAT_AYUV64:
+          if (use_16) {
+            color_matrix_offset_components (&dst, -4096, -32768, -32768);
+            color_matrix_scale_components (&dst, (1 / 56064.0), (1 / 57344.0),
+                (1 / 57344.0));
+          } else {
+            color_matrix_offset_components (&dst, -16, -128, -128);
+            color_matrix_scale_components (&dst, (1 / 219.0), (1 / 224.0),
+                (1 / 224.0));
+          }
+          break;
+        case GST_VIDEO_FORMAT_ARGB:
+        case GST_VIDEO_FORMAT_ARGB64:
+          if (use_16) {
+            color_matrix_offset_components (&dst, -4096, -4096, -4096);
+            color_matrix_scale_components (&dst, (1 / 56064.0), (1 / 56064.0),
+                (1 / 56064.0));
+          } else {
+            color_matrix_offset_components (&dst, -16, -16, -16);
+            color_matrix_scale_components (&dst, (1 / 219.0), (1 / 219.0),
+                (1 / 219.0));
+          }
+          break;
+        default:
+          break;
+      }
+      break;
+  }
+
+  /* 2. bring components to R'G'B' space */
+  switch (in_info->colorimetry.matrix) {
+    case GST_VIDEO_COLOR_MATRIX_RGB:
+      break;
+    case GST_VIDEO_COLOR_MATRIX_FCC:
+      color_matrix_YCbCr_to_RGB (&dst, 0.30, 0.11);
+      break;
+    case GST_VIDEO_COLOR_MATRIX_BT709:
+      color_matrix_YCbCr_to_RGB (&dst, 0.2126, 0.0722);
+      break;
+    case GST_VIDEO_COLOR_MATRIX_BT601:
+      color_matrix_YCbCr_to_RGB (&dst, 0.2990, 0.1140);
+      break;
+    case GST_VIDEO_COLOR_MATRIX_SMPTE240M:
+      color_matrix_YCbCr_to_RGB (&dst, 0.212, 0.087);
+    default:
+      break;
+  }
+  /* 3. inverse transfer function. R'G'B' to linear RGB */
+
+  /* 4. from RGB to XYZ using the primaries */
+
+  /* 5. from XYZ to RGB using the primaries */
+
+  /* 6. transfer function. linear RGB to R'G'B' */
+
+  /* 7. bring components to YCbCr space */
+  switch (out_info->colorimetry.matrix) {
+    case GST_VIDEO_COLOR_MATRIX_RGB:
+      break;
+    case GST_VIDEO_COLOR_MATRIX_FCC:
+      color_matrix_RGB_to_YCbCr (&dst, 0.30, 0.11);
+      break;
+    case GST_VIDEO_COLOR_MATRIX_BT709:
+      color_matrix_RGB_to_YCbCr (&dst, 0.2126, 0.0722);
+      break;
+    case GST_VIDEO_COLOR_MATRIX_BT601:
+      color_matrix_RGB_to_YCbCr (&dst, 0.2990, 0.1140);
+      break;
+    case GST_VIDEO_COLOR_MATRIX_SMPTE240M:
+      color_matrix_RGB_to_YCbCr (&dst, 0.212, 0.087);
+    default:
+      break;
+  }
+
+  /* 8, bring color components to nominal range */
+  switch (out_info->colorimetry.range) {
+    case GST_VIDEO_COLOR_RANGE_0_255:
+      if (use_16)
+        color_matrix_scale_components (&dst, 65535.0, 65535.0, 65535.0);
+      else
+        color_matrix_scale_components (&dst, 255.0, 255.0, 255.0);
+      break;
+    case GST_VIDEO_COLOR_RANGE_16_235:
+    default:
+      switch (out_info->finfo->unpack_format) {
+        case GST_VIDEO_FORMAT_AYUV:
+        case GST_VIDEO_FORMAT_AYUV64:
+          if (use_16) {
+            color_matrix_scale_components (&dst, 56064.0, 57344.0, 57344.0);
+            color_matrix_offset_components (&dst, 4096, 32768, 32768);
+          } else {
+            color_matrix_scale_components (&dst, 219.0, 224.0, 224.0);
+            color_matrix_offset_components (&dst, 16, 128, 128);
+          }
+          break;
+        case GST_VIDEO_FORMAT_ARGB:
+        case GST_VIDEO_FORMAT_ARGB64:
+          if (use_16) {
+            color_matrix_scale_components (&dst, 56064.0, 56064.0, 56064.0);
+            color_matrix_offset_components (&dst, 4096, 4096, 4096);
+          } else {
+            color_matrix_scale_components (&dst, 219.0, 219.0, 219.0);
+            color_matrix_offset_components (&dst, 16, 16, 16);
+          }
+          break;
+        default:
+          break;
+      }
+      break;
+  }
+  /* because we're doing 8-bit matrix coefficients */
+  color_matrix_scale_components (&dst, 256.0, 256.0, 256.0);
+
+  for (i = 0; i < 4; i++)
+    for (j = 0; j < 4; j++)
+      convert->cmatrix[i][j] = rint (dst.m[i][j]);
+
+  GST_DEBUG ("[%6d %6d %6d %6d]", convert->cmatrix[0][0],
+      convert->cmatrix[0][1], convert->cmatrix[0][2], convert->cmatrix[0][3]);
+  GST_DEBUG ("[%6d %6d %6d %6d]", convert->cmatrix[1][0],
+      convert->cmatrix[1][1], convert->cmatrix[1][2], convert->cmatrix[1][3]);
+  GST_DEBUG ("[%6d %6d %6d %6d]", convert->cmatrix[2][0],
+      convert->cmatrix[2][1], convert->cmatrix[2][2], convert->cmatrix[2][3]);
+  GST_DEBUG ("[%6d %6d %6d %6d]", convert->cmatrix[3][0],
+      convert->cmatrix[3][1], convert->cmatrix[3][2], convert->cmatrix[3][3]);
+
+  convert->matrix = videoconvert_convert_matrix;
+  convert->matrix16 = videoconvert_convert_matrix16;
 }
 
 static void
@@ -1316,7 +1227,7 @@ static const VideoTransform transforms[] = {
 #endif
 };
 
-static void
+static gboolean
 videoconvert_convert_lookup_fastpath (VideoConvert * convert)
 {
   int i;
@@ -1336,7 +1247,8 @@ videoconvert_convert_lookup_fastpath (VideoConvert * convert)
             (transforms[i].in_matrix == in_matrix &&
                 transforms[i].out_matrix == out_matrix))) {
       convert->convert = transforms[i].convert;
-      return;
+      return TRUE;
     }
   }
+  return FALSE;
 }

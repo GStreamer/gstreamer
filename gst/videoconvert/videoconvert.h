@@ -21,6 +21,7 @@
 #define __COLORSPACE_H__
 
 #include <gst/video/video.h>
+#include "gstcms.h"
 
 G_BEGIN_DECLS
 
@@ -38,6 +39,8 @@ struct _VideoConvert {
 
   gint width;
   gint height;
+
+  gint cmatrix[4][4];
 
   guint32 *palette;
 

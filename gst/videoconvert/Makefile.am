@@ -3,7 +3,7 @@ plugin_LTLIBRARIES = libgstvideoconvert.la
 ORC_SOURCE=gstvideoconvertorc
 include $(top_srcdir)/common/orc.mak
 
-libgstvideoconvert_la_SOURCES = gstvideoconvert.c videoconvert.c
+libgstvideoconvert_la_SOURCES = gstvideoconvert.c videoconvert.c gstcms.c
 nodist_libgstvideoconvert_la_SOURCES = $(ORC_NODIST_SOURCES)
 libgstvideoconvert_la_CFLAGS = \
 	$(GST_PLUGINS_BASE_CFLAGS) \
@@ -17,7 +17,7 @@ libgstvideoconvert_la_LIBADD = \
 libgstvideoconvert_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
 libgstvideoconvert_la_LIBTOOLFLAGS = --tag=disable-static
 
-noinst_HEADERS = gstvideoconvert.h videoconvert.h
+noinst_HEADERS = gstvideoconvert.h videoconvert.h gstcms.h
 
 Android.mk: Makefile.am $(BUILT_SOURCES)
 	androgenizer \
