@@ -354,6 +354,9 @@ gst_osx_ring_buffer_acquire (GstRingBuffer * buf, GstRingBufferSpec * spec)
     } else {
       format.mFormatFlags |= kAudioFormatFlagIsAlignedHigh;
     }
+    if (spec->bigend) {
+      format.mFormatFlags |= kAudioFormatFlagIsBigEndian;
+    }
   }
   format.mBytesPerFrame = spec->channels * (width >> 3);
   format.mBitsPerChannel = depth;
