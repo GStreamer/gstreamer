@@ -358,7 +358,7 @@ video_format_is_packed (GstVideoFormat fmt)
     case GST_VIDEO_FORMAT_ABGR:
     case GST_VIDEO_FORMAT_RGB:
     case GST_VIDEO_FORMAT_BGR:
-    case GST_VIDEO_FORMAT_RGB8_PALETTED:
+    case GST_VIDEO_FORMAT_RGB8P:
       return TRUE;
     default:
       g_return_val_if_reached (FALSE);
