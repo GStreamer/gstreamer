@@ -48,7 +48,6 @@
 /* latency in mseconds */
 #define TS_LATENCY 700
 
-#define TABLE_ID_UNSET 0xFF
 #define RUNNING_STATUS_RUNNING 4
 
 GST_DEBUG_CATEGORY_STATIC (mpegts_base_debug);
@@ -1093,7 +1092,7 @@ mpegts_base_handle_psi (MpegTSBase * base, MpegTSPacketizerSection * section)
       section->pid, section->table_id);
 
   switch (section->table_id) {
-    case 0x00:
+    case TABLE_ID_PROGRAM_ASSOCIATION:
       /* PAT */
       structure = mpegts_packetizer_parse_pat (base->packetizer, section);
       if (G_LIKELY (structure)) {
@@ -1109,7 +1108,7 @@ mpegts_base_handle_psi (MpegTSBase * base, MpegTSPacketizerSection * section)
         res = FALSE;
 
       break;
-    case 0x01:
+    case TABLE_ID_CONDITIONAL_ACCESS:
       /* CAT */
       structure = mpegts_packetizer_parse_cat (base->packetizer, section);
       if (structure)
@@ -1117,7 +1116,7 @@ mpegts_base_handle_psi (MpegTSBase * base, MpegTSPacketizerSection * section)
       else
         res = FALSE;
       break;
-    case 0x02:
+    case TABLE_ID_TS_PROGRAM_MAP:
       /* PMT */
       structure = mpegts_packetizer_parse_pmt (base->packetizer, section);
       if (G_LIKELY (structure))
@@ -1126,9 +1125,9 @@ mpegts_base_handle_psi (MpegTSBase * base, MpegTSPacketizerSection * section)
         res = FALSE;
 
       break;
-    case 0x40:
+    case TABLE_ID_NETWORK_INFORMATION_ACTUAL_NETWORK:
       /* NIT, actual network */
-    case 0x41:
+    case TABLE_ID_NETWORK_INFORMATION_OTHER_NETWORK:
       /* NIT, other network */
       structure = mpegts_packetizer_parse_nit (base->packetizer, section);
       if (G_LIKELY (structure))
@@ -1137,8 +1136,8 @@ mpegts_base_handle_psi (MpegTSBase * base, MpegTSPacketizerSection * section)
         res = FALSE;
 
       break;
-    case 0x42:
-    case 0x46:
+    case TABLE_ID_SERVICE_DESCRIPTION_ACTUAL_TS:
+    case TABLE_ID_SERVICE_DESCRIPTION_OTHER_TS:
       structure = mpegts_packetizer_parse_sdt (base->packetizer, section);
       if (G_LIKELY (structure))
         mpegts_base_apply_sdt (base, section->pid, structure);
@@ -1187,7 +1186,7 @@ mpegts_base_handle_psi (MpegTSBase * base, MpegTSPacketizerSection * section)
       else
         res = FALSE;
       break;
-    case 0x70:
+    case TABLE_ID_TIME_DATE:
       /* TDT (Time and Date table) */
       structure = mpegts_packetizer_parse_tdt (base->packetizer, section);
       if (G_LIKELY (structure))
