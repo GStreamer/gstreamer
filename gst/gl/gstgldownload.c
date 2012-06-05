@@ -68,40 +68,12 @@
 #define GST_CAT_DEFAULT gst_gl_download_debug
 GST_DEBUG_CATEGORY_STATIC (GST_CAT_DEFAULT);
 
-#ifndef OPENGL_ES2
-#define ADDITIONAL_CAPS \
-
-#else
-#define ADDITIONAL_CAPS
-#endif
-
-#ifndef OPENGL_ES2
 static GstStaticPadTemplate gst_gl_download_src_pad_template =
-    GST_STATIC_PAD_TEMPLATE ("src",
+GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS (GST_VIDEO_CAPS_RGB ";"
-        GST_VIDEO_CAPS_RGBx ";"
-        GST_VIDEO_CAPS_RGBA ";"
-        GST_VIDEO_CAPS_BGR ";"
-        GST_VIDEO_CAPS_BGRx ";"
-        GST_VIDEO_CAPS_BGRA ";"
-        GST_VIDEO_CAPS_xRGB ";"
-        GST_VIDEO_CAPS_xBGR ";"
-        GST_VIDEO_CAPS_ARGB ";"
-        GST_VIDEO_CAPS_ABGR ";"
-        GST_VIDEO_CAPS_YUV ("{ I420, YV12, YUY2, UYVY, AYUV }"))
+    GST_STATIC_CAPS (GST_GL_VIDEO_CAPS)
     );
-#else
-static GstStaticPadTemplate gst_gl_download_src_pad_template =
-    GST_STATIC_PAD_TEMPLATE ("src",
-    GST_PAD_SRC,
-    GST_PAD_ALWAYS,
-    GST_STATIC_CAPS (GST_VIDEO_CAPS_RGB ";"
-        GST_VIDEO_CAPS_RGBx ";"
-        GST_VIDEO_CAPS_RGBA ";" GST_VIDEO_CAPS_YUV ("{ YUY2, UYVY, AYUV }"))
-    );
-#endif
 
 static GstStaticPadTemplate gst_gl_download_sink_pad_template =
 GST_STATIC_PAD_TEMPLATE ("sink",
@@ -126,19 +98,20 @@ static void gst_gl_download_set_property (GObject * object, guint prop_id,
 static void gst_gl_download_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec);
 
-static gboolean gst_gl_download_src_query (GstPad * pad, GstQuery * query);
+static gboolean gst_gl_download_src_query (GstPad * pad, GstObject * object,
+    GstQuery * query);
 
 static void gst_gl_download_reset (GstGLDownload * download);
 static gboolean gst_gl_download_set_caps (GstBaseTransform * bt,
     GstCaps * incaps, GstCaps * outcaps);
 static GstCaps *gst_gl_download_transform_caps (GstBaseTransform * bt,
-    GstPadDirection direction, GstCaps * caps);
+    GstPadDirection direction, GstCaps * caps, GstCaps * filter);
 static gboolean gst_gl_download_start (GstBaseTransform * bt);
 static gboolean gst_gl_download_stop (GstBaseTransform * bt);
 static GstFlowReturn gst_gl_download_transform (GstBaseTransform * trans,
     GstBuffer * inbuf, GstBuffer * outbuf);
 static gboolean gst_gl_download_get_unit_size (GstBaseTransform * trans,
-    GstCaps * caps, guint * size);
+    GstCaps * caps, gsize * size);
 
 
 static void
@@ -213,26 +186,26 @@ gst_gl_download_get_property (GObject * object, guint prop_id,
 }
 
 static gboolean
-gst_gl_download_src_query (GstPad * pad, GstQuery * query)
+gst_gl_download_src_query (GstPad * pad, GstObject * object, GstQuery * query)
 {
-  GstGLDownload *download = GST_GL_DOWNLOAD (gst_pad_get_parent (pad));
-  gboolean res = FALSE;
+  GstGLDownload *download;
+  gboolean res;
+
+  download = GST_GL_DOWNLOAD (object);
 
   switch (GST_QUERY_TYPE (query)) {
     case GST_QUERY_CUSTOM:
     {
-      GstStructure *structure = gst_query_get_structure (query);
+      GstStructure *structure = gst_query_writable_structure (query);
       gst_structure_set (structure, "gstgldisplay", G_TYPE_POINTER,
           download->display, NULL);
-      res = gst_pad_query_default (pad, query);
+      res = gst_pad_query_default (pad, object, query);
       break;
     }
     default:
-      res = gst_pad_query_default (pad, query);
+      res = gst_pad_query_default (pad, object, query);
       break;
   }
-
-  gst_object_unref (download);
 
   return res;
 }
@@ -272,56 +245,59 @@ gst_gl_download_stop (GstBaseTransform * bt)
   return TRUE;
 }
 
+/* from videoconvert code */
+/* copies the given caps */
+static GstCaps *
+gst_gl_download_caps_remove_format_info (GstCaps * caps)
+{
+  GstStructure *st;
+  gint i, n;
+  GstCaps *res;
+
+  res = gst_caps_new_empty ();
+
+  n = gst_caps_get_size (caps);
+  for (i = 0; i < n; i++) {
+    st = gst_caps_get_structure (caps, i);
+
+    /* If this is already expressed by the existing caps
+     * skip this structure */
+    if (i > 0 && gst_caps_is_subset_structure (res, st))
+      continue;
+
+    st = gst_structure_copy (st);
+    gst_structure_remove_fields (st, "format", "palette_data",
+        "colorimetry", "chroma-site", NULL);
+
+    gst_caps_append_structure (res, st);
+  }
+
+  return res;
+}
+
+/* from videoconvert code */
 static GstCaps *
 gst_gl_download_transform_caps (GstBaseTransform * bt,
-    GstPadDirection direction, GstCaps * caps)
+    GstPadDirection direction, GstCaps * caps, GstCaps * filter)
 {
-  GstStructure *structure;
-  GstCaps *newcaps, *newothercaps;
-  GstStructure *newstruct;
-  const GValue *width_value;
-  const GValue *height_value;
-  const GValue *framerate_value;
-  const GValue *par_value;
+  GstCaps *tmp, *tmp2;
+  GstCaps *result;
 
-  GST_DEBUG ("transform caps %" GST_PTR_FORMAT, caps);
+  /* Get all possible caps that we can transform to */
+  tmp = gst_gl_download_caps_remove_format_info (caps);
 
-  structure = gst_caps_get_structure (caps, 0);
+  if (filter) {
+    tmp2 = gst_caps_intersect_full (filter, tmp, GST_CAPS_INTERSECT_FIRST);
+    gst_caps_unref (tmp);
+    tmp = tmp2;
+  }
 
-  width_value = gst_structure_get_value (structure, "width");
-  height_value = gst_structure_get_value (structure, "height");
-  framerate_value = gst_structure_get_value (structure, "framerate");
-  par_value = gst_structure_get_value (structure, "pixel-aspect-ratio");
+  result = tmp;
 
-  if (direction == GST_PAD_SINK) {
-    newothercaps = gst_caps_new_simple ("video/x-raw-rgb", NULL);
-    newstruct = gst_caps_get_structure (newothercaps, 0);
-    gst_structure_set_value (newstruct, "width", width_value);
-    gst_structure_set_value (newstruct, "height", height_value);
-    gst_structure_set_value (newstruct, "framerate", framerate_value);
-    if (par_value)
-      gst_structure_set_value (newstruct, "pixel-aspect-ratio", par_value);
-    else
-      gst_structure_set (newstruct, "pixel-aspect-ratio", GST_TYPE_FRACTION,
-          1, 1, NULL);
-    newcaps = gst_caps_new_simple ("video/x-raw-yuv", NULL);
-    gst_caps_append (newcaps, newothercaps);
-  } else
-    newcaps = gst_caps_new_simple ("video/x-raw-gl", NULL);
+  GST_DEBUG_OBJECT (bt, "transformed %" GST_PTR_FORMAT " into %"
+      GST_PTR_FORMAT, caps, result);
 
-  newstruct = gst_caps_get_structure (newcaps, 0);
-  gst_structure_set_value (newstruct, "width", width_value);
-  gst_structure_set_value (newstruct, "height", height_value);
-  gst_structure_set_value (newstruct, "framerate", framerate_value);
-  if (par_value)
-    gst_structure_set_value (newstruct, "pixel-aspect-ratio", par_value);
-  else
-    gst_structure_set (newstruct, "pixel-aspect-ratio", GST_TYPE_FRACTION,
-        1, 1, NULL);
-
-  GST_DEBUG ("new caps %" GST_PTR_FORMAT, newcaps);
-
-  return newcaps;
+  return result;
 }
 
 static gboolean
@@ -329,19 +305,23 @@ gst_gl_download_set_caps (GstBaseTransform * bt, GstCaps * incaps,
     GstCaps * outcaps)
 {
   GstGLDownload *download;
+  GstVideoInfo vinfo;
   gboolean ret;
 
   download = GST_GL_DOWNLOAD (bt);
 
   GST_DEBUG ("called with %" GST_PTR_FORMAT, incaps);
 
-  ret = gst_video_format_parse_caps (outcaps, &download->video_format,
-      &download->width, &download->height);
+  ret = gst_video_info_from_caps (&vinfo, outcaps);
 
   if (!ret) {
     GST_ERROR ("bad caps");
     return FALSE;
   }
+
+  download->video_format = GST_VIDEO_INFO_FORMAT (&vinfo);
+  download->width = GST_VIDEO_INFO_WIDTH (&vinfo);
+  download->height = GST_VIDEO_INFO_HEIGHT (&vinfo);
 
   if (!download->display) {
     GST_ERROR ("display is null");
@@ -359,24 +339,14 @@ gst_gl_download_set_caps (GstBaseTransform * bt, GstCaps * incaps,
 
 static gboolean
 gst_gl_download_get_unit_size (GstBaseTransform * trans, GstCaps * caps,
-    guint * size)
+    gsize * size)
 {
   gboolean ret;
-  GstStructure *structure;
-  gint width;
-  gint height;
+  GstVideoInfo vinfo;
 
-  structure = gst_caps_get_structure (caps, 0);
-  if (gst_structure_has_name (structure, "video/x-raw-gl")) {
-    ret = gst_gl_buffer_parse_caps (caps, &width, &height);
-    if (ret)
-      *size = gst_gl_buffer_get_size (width, height);
-  } else {
-    GstVideoFormat video_format;
-    ret = gst_video_format_parse_caps (caps, &video_format, &width, &height);
-    if (ret)
-      *size = gst_video_format_get_size (video_format, width, height);
-  }
+  ret = gst_video_info_from_caps (&vinfo, caps);
+  if (ret)
+    *size = GST_VIDEO_INFO_SIZE (&vinfo);
 
   return ret;
 }
@@ -385,17 +355,16 @@ static GstFlowReturn
 gst_gl_download_transform (GstBaseTransform * trans, GstBuffer * inbuf,
     GstBuffer * outbuf)
 {
-  GstGLDownload *download = GST_GL_DOWNLOAD (trans);
-  GstGLBuffer *gl_inbuf = GST_GL_BUFFER (inbuf);
+  /*GstGLDownload *download;
 
-  GST_DEBUG ("making video %p size %d",
-      GST_BUFFER_DATA (outbuf), GST_BUFFER_SIZE (outbuf));
+     download = GST_GL_DOWNLOAD (trans); */
 
   //blocking call
-  if (gst_gl_display_do_download (download->display, gl_inbuf->texture,
-          gl_inbuf->width, gl_inbuf->height, GST_BUFFER_DATA (outbuf)))
-    return GST_FLOW_OK;
-  else
-    return GST_FLOW_UNEXPECTED;
+  /*FIXME: Use GstGLMeta
+     if (gst_gl_display_do_download (download->display, gl_inbuf->texture,
+     gl_inbuf->width, gl_inbuf->height, GST_BUFFER_DATA (outbuf)))
+     return GST_FLOW_OK;
+     else */
+  return GST_FLOW_EOS;
 
 }
