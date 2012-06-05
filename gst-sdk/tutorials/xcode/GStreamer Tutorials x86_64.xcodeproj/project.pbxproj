@@ -239,7 +239,7 @@
 				63118C4F156D297B0085CF03 /* gstreamer-0.10.xcconfig */,
 				63118C8A156D2D190085CF03 /* Tutorial 1 */,
 				63118C43156D29340085CF03 /* Tutorial 2 */,
-				63118C56156D29DE0085CF03 /* Turorial 3 */,
+				63118C56156D29DE0085CF03 /* Tutorial 3 */,
 				63118C77156D2B970085CF03 /* Tutorial 4 */,
 				63118C9A156D2E2F0085CF03 /* Tutorial 5 */,
 				63118CEC156D3A870085CF03 /* Tutorial 6 */,
@@ -279,12 +279,12 @@
 			path = "GStreamer Tutorials";
 			sourceTree = SOURCE_ROOT;
 		};
-		63118C56156D29DE0085CF03 /* Turorial 3 */ = {
+		63118C56156D29DE0085CF03 /* Tutorial 3 */ = {
 			isa = PBXGroup;
 			children = (
 				63118C60156D2AA70085CF03 /* basic-tutorial-3.c */,
 			);
-			name = "Turorial 3";
+			name = "Tutorial 3";
 			path = Turorial3;
 			sourceTree = SOURCE_ROOT;
 		};
