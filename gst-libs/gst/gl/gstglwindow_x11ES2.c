@@ -18,6 +18,8 @@
  * Boston, MA 02111-1307, USA.
  */
 
+#define GLIB_DISABLE_DEPRECATION_WARNINGS
+
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif

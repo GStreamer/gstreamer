@@ -20,6 +20,8 @@
  * Boston, MA 02111-1307, USA.
  */
 
+#define GLIB_DISABLE_DEPRECATION_WARNINGS
+
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif
@@ -2805,9 +2807,15 @@ gst_gl_display_thread_do_upload_make (GstGLDisplay * display)
 void
 gst_gl_display_thread_do_upload_fill (GstGLDisplay * display)
 {
-  gint width = display->upload_data_width;
-  gint height = display->upload_data_height;
-  gpointer data = display->upload_data;
+  GstVideoInfo vinfo;
+  gint width, height;
+  gpointer data;
+
+  width = display->upload_data_width;
+  height = display->upload_data_height;
+  data = display->upload_data;
+  gst_video_info_set_format (&vinfo, display->upload_video_format, width,
+      height);
 
   switch (display->upload_video_format) {
     case GST_VIDEO_FORMAT_RGB:
@@ -2936,17 +2944,13 @@ gst_gl_display_thread_do_upload_fill (GstGLDisplay * display)
       glTexSubImage2D (GL_TEXTURE_RECTANGLE_ARB, 0, 0, 0,
           GST_ROUND_UP_2 (width) / 2, GST_ROUND_UP_2 (height) / 2,
           GL_LUMINANCE, GL_UNSIGNED_BYTE,
-          (guint8 *) data +
-          gst_video_format_get_component_offset (display->upload_video_format,
-              1, width, height));
+          (guint8 *) data + GST_VIDEO_INFO_COMP_OFFSET (&vinfo, 2));
 
       glBindTexture (GL_TEXTURE_RECTANGLE_ARB, display->upload_intex_v);
       glTexSubImage2D (GL_TEXTURE_RECTANGLE_ARB, 0, 0, 0,
           GST_ROUND_UP_2 (width) / 2, GST_ROUND_UP_2 (height) / 2,
           GL_LUMINANCE, GL_UNSIGNED_BYTE,
-          (guint8 *) data +
-          gst_video_format_get_component_offset (display->upload_video_format,
-              2, width, height));
+          (guint8 *) data + GST_VIDEO_INFO_COMP_OFFSET (&vinfo, 2));
     }
       break;
     default:
@@ -3393,10 +3397,16 @@ gst_gl_display_thread_do_download_draw_rgb (GstGLDisplay * display)
 void
 gst_gl_display_thread_do_download_draw_yuv (GstGLDisplay * display)
 {
-  gint width = display->download_width;
-  gint height = display->download_height;
-  GstVideoFormat video_format = display->download_video_format;
-  gpointer data = display->download_data;
+  gint width, height;
+  GstVideoFormat video_format;
+  GstVideoInfo vinfo;
+  gpointer data;
+
+  width = display->download_width;
+  height = display->download_height;
+  video_format = display->download_video_format;
+  data = display->download_data;
+  gst_video_info_set_format (&vinfo, video_format, width, height);
 
 #ifdef OPENGL_ES2
   GLint viewport_dim[4];
@@ -3606,15 +3616,13 @@ gst_gl_display_thread_do_download_draw_yuv (GstGLDisplay * display)
 #endif
       glReadPixels (0, 0, GST_ROUND_UP_2 (width) / 2,
           GST_ROUND_UP_2 (height) / 2, GL_LUMINANCE, GL_UNSIGNED_BYTE,
-          (guint8 *) data + gst_video_format_get_component_offset (video_format,
-              1, width, height));
+          (guint8 *) data + GST_VIDEO_INFO_COMP_OFFSET (&vinfo, 1));
 #ifndef OPENGL_ES2
       glReadBuffer (GL_COLOR_ATTACHMENT2_EXT);
 #endif
       glReadPixels (0, 0, GST_ROUND_UP_2 (width) / 2,
           GST_ROUND_UP_2 (height) / 2, GL_LUMINANCE, GL_UNSIGNED_BYTE,
-          (guint8 *) data + gst_video_format_get_component_offset (video_format,
-              2, width, height));
+          (guint8 *) data + GST_VIDEO_INFO_COMP_OFFSET (&vinfo, 2));
     }
       break;
     default:
