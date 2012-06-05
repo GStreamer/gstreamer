@@ -252,8 +252,36 @@ mpegtsmux_init (MpegTsMux * mux, MpegTsMuxClass * g_class)
 }
 
 static void
+mpegtsmux_pad_reset (MpegTsPadData * pad_data)
+{
+  pad_data->pid = 0;
+  pad_data->last_ts = GST_CLOCK_TIME_NONE;
+  pad_data->cur_ts = GST_CLOCK_TIME_NONE;
+  pad_data->prog_id = -1;
+  pad_data->eos = FALSE;
+
+  if (pad_data->free_func)
+    pad_data->free_func (pad_data->prepare_data);
+  pad_data->prepare_data = NULL;
+  pad_data->prepare_func = NULL;
+  pad_data->free_func = NULL;
+
+  if (pad_data->queued_buf)
+    gst_buffer_replace (&pad_data->queued_buf, NULL);
+
+  if (pad_data->codec_data)
+    gst_buffer_replace (&pad_data->codec_data, NULL);
+
+  /* reference owned elsewhere */
+  pad_data->stream = NULL;
+  pad_data->prog = NULL;
+}
+
+static void
 mpegtsmux_reset (MpegTsMux * mux, gboolean alloc)
 {
+  GSList *walk;
+
   mux->first = TRUE;
   mux->last_flow_ret = GST_FLOW_OK;
   mux->first_pcr = TRUE;
@@ -285,6 +313,11 @@ mpegtsmux_reset (MpegTsMux * mux, gboolean alloc)
   }
   gst_event_replace (&mux->force_key_unit_event, NULL);
   gst_buffer_replace (&mux->out_buffer, NULL);
+
+  GST_COLLECT_PADS2_STREAM_LOCK (mux->collect);
+  for (walk = mux->collect->data; walk != NULL; walk = g_slist_next (walk))
+    mpegtsmux_pad_reset ((MpegTsPadData *) walk->data);
+  GST_COLLECT_PADS2_STREAM_UNLOCK (mux->collect);
 
   if (alloc) {
     mux->tsmux = tsmux_new ();
@@ -1008,19 +1041,14 @@ mpegtsmux_request_new_pad (GstElement * element,
   pad = gst_pad_new_from_template (templ, pad_name);
   g_free (pad_name);
 
-  pad_data = (MpegTsPadData *) gst_collect_pads2_add_pad (mux->collect, pad,
-      sizeof (MpegTsPadData));
+  pad_data = (MpegTsPadData *)
+      gst_collect_pads2_add_pad_full (mux->collect, pad, sizeof (MpegTsPadData),
+      (GstCollectData2DestroyNotify) (mpegtsmux_pad_reset), TRUE);
   if (pad_data == NULL)
     goto pad_failure;
 
+  mpegtsmux_pad_reset (pad_data);
   pad_data->pid = pid;
-  pad_data->last_ts = GST_CLOCK_TIME_NONE;
-  pad_data->codec_data = NULL;
-  pad_data->prepare_data = NULL;
-  pad_data->prepare_func = NULL;
-  pad_data->free_func = NULL;
-  pad_data->prog_id = -1;
-  pad_data->prog = NULL;
 
   if (G_UNLIKELY (!gst_element_add_pad (element, pad)))
     goto could_not_add;
