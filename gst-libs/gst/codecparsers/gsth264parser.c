@@ -188,7 +188,7 @@ nal_reader_init (NalReader * nr, const guint8 * data, guint size)
   nr->cache = 0xff;
 }
 
-static gboolean
+static inline gboolean
 nal_reader_read (NalReader * nr, guint nbits)
 {
   if (G_UNLIKELY (nr->byte * 8 + (nbits - nr->bits_in_cache) > nr->size * 8)) {
@@ -227,8 +227,6 @@ nal_reader_read (NalReader * nr, guint nbits)
 static inline gboolean
 nal_reader_skip (NalReader * nr, guint nbits)
 {
-  g_return_val_if_fail (nr != NULL, FALSE);
-
   if (G_UNLIKELY (!nal_reader_read (nr, nbits)))
     return FALSE;
 
@@ -240,8 +238,6 @@ nal_reader_skip (NalReader * nr, guint nbits)
 static inline gboolean
 nal_reader_skip_to_byte (NalReader * nr)
 {
-  g_return_val_if_fail (nr != NULL, FALSE);
-
   if (nr->bits_in_cache == 0) {
     if (G_LIKELY ((nr->size - nr->byte) > 0))
       nr->byte++;
@@ -278,10 +274,6 @@ nal_reader_get_bits_uint##bits (NalReader *nr, guint##bits *val, guint nbits) \
 { \
   guint shift; \
   \
-  g_return_val_if_fail (nr != NULL, FALSE); \
-  g_return_val_if_fail (val != NULL, FALSE); \
-  g_return_val_if_fail (nbits <= bits, FALSE); \
-  \
   if (!nal_reader_read (nr, nbits)) \
     return FALSE; \
   \
@@ -309,7 +301,6 @@ nal_reader_peek_bits_uint##bits (const NalReader *nr, guint##bits *val, guint nb
 { \
   NalReader tmp; \
   \
-  g_return_val_if_fail (nr != NULL, FALSE); \
   tmp = *nr; \
   return nal_reader_get_bits_uint##bits (&tmp, val, nbits); \
 }
@@ -345,7 +336,7 @@ nal_reader_get_ue (NalReader * nr, guint32 * val)
   return TRUE;
 }
 
-static gboolean
+static inline gboolean
 nal_reader_get_se (NalReader * nr, gint32 * val)
 {
   guint32 value;
