@@ -1025,6 +1025,7 @@ GST_START_TEST (test_pad_proxy_query_caps_aggregation)
 
   /* test intersection */
   caps = gst_caps_new_simple ("foo/bar", "barversion", G_TYPE_INT, 1, NULL);
+  GST_OBJECT_FLAG_UNSET (sink2_sink, GST_PAD_FLAG_FIXED_CAPS);
   fail_unless (gst_pad_set_caps (sink2_sink, caps));
   gst_pad_use_fixed_caps (sink2_sink);
   gst_caps_unref (caps);
