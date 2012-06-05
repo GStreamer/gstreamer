@@ -356,9 +356,13 @@ tsmux_get_new_pid (TsMux * mux)
 {
   g_return_val_if_fail (mux != NULL, -1);
 
-  /* FIXME: It's possible that this next PID is already taken if a 
-   * specific PID was requested earlier. We should find a free PID */
-  return mux->next_stream_pid++;
+  /* make sure this PID is free
+   * (and not taken by a specific earlier request) */
+  do {
+    mux->next_stream_pid++;
+  } while (tsmux_find_stream (mux, mux->next_stream_pid));
+
+  return mux->next_stream_pid;
 }
 
 /**
