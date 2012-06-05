@@ -1686,6 +1686,7 @@ error:
   return NULL;
 }
 
+/* FIXME : Can take up to 50% of total mpeg-ts demuxing cpu usage */
 GstStructure *
 mpegts_packetizer_parse_eit (MpegTSPacketizer2 * packetizer,
     MpegTSPacketizerSection * section)
@@ -2813,6 +2814,7 @@ convert_to_utf8 (const gchar * text, gint length, guint start,
 
   text += start;
 
+  /* FIXME : GByteArray has a big overhead */
   sb = g_byte_array_sized_new (length * 1.1);
 
   if (is_multibyte) {
