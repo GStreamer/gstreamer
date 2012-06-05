@@ -32,7 +32,9 @@ A pad can ask the peer pad for its supported GstCaps. It does this with
 the CAPS query. The list of supported caps can be used to choose an
 appropriate GstCaps for the data transfer.
 The CAPS query works recursively, elements should take their peers into
-consideration when constructing the possible caps.
+consideration when constructing the possible caps. Because the result caps
+can be very large, the filter can be used to restrict the caps. Only the
+caps that match the filter will be returned as the result caps.
 
  (in) "filter", GST_TYPE_CAPS (default NULL)
        - a GstCaps to filter the results against
