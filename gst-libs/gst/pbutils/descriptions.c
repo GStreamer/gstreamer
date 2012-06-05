@@ -117,6 +117,7 @@ static const FormatInfo formats[] = {
   {"audio/x-dts", "DTS", 0},
   {"audio/x-private1-dts", "DTS", 0},
   {"audio/x-dv", "DV Audio", 0},
+  {"audio/x-eac3", "E-AC-3 (ATSC A/52B)", 0},
   {"audio/x-flac", N_("Free Lossless Audio Codec (FLAC)"), 0},
   {"audio/x-gsm", "GSM", 0},
   {"audio/x-iec958", "S/PDIF IEC958", 0},       /* TODO: check description */
@@ -253,6 +254,7 @@ static const FormatInfo formats[] = {
   {"application/x-kate", "Kate", 0},
   {"subtitle/x-kate", N_("Kate subtitle format"), 0},
   {"subpicture/x-dvb", "DVB subtitles", 0},
+  {"subpicture/x-pgs", "PGS subtitles", 0},
 
   /* non-audio/video/container formats */
   {"hdv/aux-v", "HDV AUX-V", 0},
