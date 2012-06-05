@@ -88,6 +88,15 @@ ensure_debug_category (void)
     memcpy(buf, vals, length);                                  \
   } G_STMT_END
 
+#define U_READ_UINT8(reader, val) G_STMT_START {                \
+    (val) = gst_byte_reader_get_uint8_unchecked(reader);        \
+  } G_STMT_END
+
+#define U_READ_UINT16(reader, val) G_STMT_START {               \
+    (val) = gst_byte_reader_get_uint16_be_unchecked(reader);    \
+  } G_STMT_END
+
+
 static gboolean jpeg_parse_to_next_marker (GstByteReader * reader,
     guint8 * marker);
 
@@ -268,27 +277,29 @@ gst_jpeg_parse_frame_hdr (GstJpegFrameHdr * frame_hdr,
   u_int i;
 
   g_assert (frame_hdr && data && size);
-  READ_UINT8 (&bytes_reader, frame_hdr->sample_precision);
-  READ_UINT16 (&bytes_reader, frame_hdr->height);
-  READ_UINT16 (&bytes_reader, frame_hdr->width);
-  READ_UINT8 (&bytes_reader, frame_hdr->num_components);
+
+  CHECK_FAILED (gst_byte_reader_get_remaining (&bytes_reader) >= 6, GST_JPEG_PARSER_ERROR);
+  U_READ_UINT8 (&bytes_reader, frame_hdr->sample_precision);
+  U_READ_UINT16 (&bytes_reader, frame_hdr->height);
+  U_READ_UINT16 (&bytes_reader, frame_hdr->width);
+  U_READ_UINT8 (&bytes_reader, frame_hdr->num_components);
   CHECK_FAILED (frame_hdr->num_components <= GST_JPEG_MAX_SCAN_COMPONENTS,
       GST_JPEG_PARSER_ERROR);
+
+  CHECK_FAILED (gst_byte_reader_get_remaining(&bytes_reader) >= 3*frame_hdr->num_components,
+      GST_JPEG_PARSER_ERROR);
   for (i = 0; i < frame_hdr->num_components; i++) {
-    READ_UINT8 (&bytes_reader, frame_hdr->components[i].identifier);
-    READ_UINT8 (&bytes_reader, val);
+    U_READ_UINT8 (&bytes_reader, frame_hdr->components[i].identifier);
+    U_READ_UINT8 (&bytes_reader, val);
     frame_hdr->components[i].horizontal_factor = (val >> 4) & 0x0F;
     frame_hdr->components[i].vertical_factor = (val & 0x0F);
-    READ_UINT8 (&bytes_reader, frame_hdr->components[i].quant_table_selector);
+    U_READ_UINT8 (&bytes_reader, frame_hdr->components[i].quant_table_selector);
     CHECK_FAILED ((frame_hdr->components[i].horizontal_factor <= 4 &&
             frame_hdr->components[i].vertical_factor <= 4 &&
             frame_hdr->components[i].quant_table_selector < 4),
         GST_JPEG_PARSER_ERROR);
   }
   return GST_JPEG_PARSER_OK;
-
-failed:
-  return GST_JPEG_PARSER_ERROR;
 
 wrong_state:
   return result;
@@ -307,10 +318,13 @@ gst_jpeg_parse_scan_hdr (GstJpegScanHdr * scan_hdr,
   READ_UINT8 (&bytes_reader, scan_hdr->num_components);
   CHECK_FAILED (scan_hdr->num_components <= GST_JPEG_MAX_SCAN_COMPONENTS,
       GST_JPEG_PARSER_BROKEN_DATA);
+
+  CHECK_FAILED (gst_byte_reader_get_remaining (&bytes_reader) >= 2*scan_hdr->num_components,
+      GST_JPEG_PARSER_ERROR);
   for (i = 0; i < scan_hdr->num_components; i++) {
-    READ_UINT8 (&bytes_reader,
+    U_READ_UINT8 (&bytes_reader,
         scan_hdr->components[i].component_selector);
-    READ_UINT8 (&bytes_reader, val);
+    U_READ_UINT8 (&bytes_reader, val);
     scan_hdr->components[i].dc_selector = (val >> 4) & 0x0F;
     scan_hdr->components[i].ac_selector = val & 0x0F;
     g_assert (scan_hdr->components[i].dc_selector < 4 &&
@@ -344,7 +358,7 @@ gst_jpeg_parse_huffman_table (
 
   g_assert (huf_tables && data && size);
   while (gst_byte_reader_get_remaining (&bytes_reader)) {
-    READ_UINT8 (&bytes_reader, tmp_val);
+    U_READ_UINT8 (&bytes_reader, tmp_val);
     is_dc = !((tmp_val >> 4) & 0x0F);
     table_index = (tmp_val & 0x0F);
     CHECK_FAILED (table_index < GST_JPEG_MAX_SCAN_COMPONENTS,
@@ -383,25 +397,25 @@ gst_jpeg_parse_quant_table (
 
   g_assert (quant_tables && num_quant_tables && data && size);
   while (gst_byte_reader_get_remaining (&bytes_reader)) {
-    READ_UINT8 (&bytes_reader, val);
+    U_READ_UINT8 (&bytes_reader, val);
     table_index = (val & 0x0f);
     CHECK_FAILED (table_index < GST_JPEG_MAX_SCAN_COMPONENTS && table_index < num_quant_tables,
         GST_JPEG_PARSER_BROKEN_DATA);
     quant_table = &quant_tables[table_index];
     quant_table->quant_precision = ((val >> 4) & 0x0f);
+
+    CHECK_FAILED (gst_byte_reader_get_remaining(&bytes_reader) >= GST_JPEG_MAX_QUANT_ELEMENTS * (1 + !!quant_table->quant_precision),
+        GST_JPEG_PARSER_BROKEN_DATA);
     for (i = 0; i < GST_JPEG_MAX_QUANT_ELEMENTS; i++) {
         if (!quant_table->quant_precision) {        /* 8-bit values */
-          READ_UINT8(&bytes_reader, val);
+          U_READ_UINT8 (&bytes_reader, val);
           quant_table->quant_table[i] = val;
         } else {                    /* 16-bit values */
-          READ_UINT16(&bytes_reader, quant_table->quant_table[i]);
+          U_READ_UINT16 (&bytes_reader, quant_table->quant_table[i]);
         }
     }
   }
   return GST_JPEG_PARSER_OK;
-
-failed:
-  return GST_JPEG_PARSER_ERROR;
 
 wrong_state:
   return result;
