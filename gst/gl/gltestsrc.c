@@ -79,11 +79,11 @@ static const struct vts_color_struct vts_colors[] = {
 };
 
 static void
-gst_gl_test_src_unicolor (GstGLTestSrc * v, GstGLBuffer * buffer, int w,
+gst_gl_test_src_unicolor (GstGLTestSrc * v, GstBuffer * buffer, int w,
     int h, const struct vts_color_struct *color);
 
 void
-gst_gl_test_src_smpte (GstGLTestSrc * v, GstGLBuffer * buffer, int w, int h)
+gst_gl_test_src_smpte (GstGLTestSrc * v, GstBuffer * buffer, int w, int h)
 {
   int i;
 
@@ -186,7 +186,7 @@ gst_gl_test_src_smpte (GstGLTestSrc * v, GstGLBuffer * buffer, int w, int h)
 }
 
 void
-gst_gl_test_src_snow (GstGLTestSrc * v, GstGLBuffer * buffer, int w, int h)
+gst_gl_test_src_snow (GstGLTestSrc * v, GstBuffer * buffer, int w, int h)
 {
   glClearColor (0.0, 0.0, 0.0, 1.0);
   glClear (GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -208,7 +208,7 @@ gst_gl_test_src_snow (GstGLTestSrc * v, GstGLBuffer * buffer, int w, int h)
 }
 
 static void
-gst_gl_test_src_unicolor (GstGLTestSrc * v, GstGLBuffer * buffer, int w,
+gst_gl_test_src_unicolor (GstGLTestSrc * v, GstBuffer * buffer, int w,
     int h, const struct vts_color_struct *color)
 {
   glClearColor (color->R * (1 / 255.0f), color->G * (1 / 255.0f),
@@ -217,37 +217,37 @@ gst_gl_test_src_unicolor (GstGLTestSrc * v, GstGLBuffer * buffer, int w,
 }
 
 void
-gst_gl_test_src_black (GstGLTestSrc * v, GstGLBuffer * buffer, int w, int h)
+gst_gl_test_src_black (GstGLTestSrc * v, GstBuffer * buffer, int w, int h)
 {
   gst_gl_test_src_unicolor (v, buffer, w, h, vts_colors + COLOR_BLACK);
 }
 
 void
-gst_gl_test_src_white (GstGLTestSrc * v, GstGLBuffer * buffer, int w, int h)
+gst_gl_test_src_white (GstGLTestSrc * v, GstBuffer * buffer, int w, int h)
 {
   gst_gl_test_src_unicolor (v, buffer, w, h, vts_colors + COLOR_WHITE);
 }
 
 void
-gst_gl_test_src_red (GstGLTestSrc * v, GstGLBuffer * buffer, int w, int h)
+gst_gl_test_src_red (GstGLTestSrc * v, GstBuffer * buffer, int w, int h)
 {
   gst_gl_test_src_unicolor (v, buffer, w, h, vts_colors + COLOR_RED);
 }
 
 void
-gst_gl_test_src_green (GstGLTestSrc * v, GstGLBuffer * buffer, int w, int h)
+gst_gl_test_src_green (GstGLTestSrc * v, GstBuffer * buffer, int w, int h)
 {
   gst_gl_test_src_unicolor (v, buffer, w, h, vts_colors + COLOR_GREEN);
 }
 
 void
-gst_gl_test_src_blue (GstGLTestSrc * v, GstGLBuffer * buffer, int w, int h)
+gst_gl_test_src_blue (GstGLTestSrc * v, GstBuffer * buffer, int w, int h)
 {
   gst_gl_test_src_unicolor (v, buffer, w, h, vts_colors + COLOR_BLUE);
 }
 
 void
-gst_gl_test_src_checkers1 (GstGLTestSrc * v, GstGLBuffer * buffer, int w, int h)
+gst_gl_test_src_checkers1 (GstGLTestSrc * v, GstBuffer * buffer, int w, int h)
 {
 #if 0
   int x, y;
@@ -276,7 +276,7 @@ gst_gl_test_src_checkers1 (GstGLTestSrc * v, GstGLBuffer * buffer, int w, int h)
 }
 
 void
-gst_gl_test_src_checkers2 (GstGLTestSrc * v, GstGLBuffer * buffer, int w, int h)
+gst_gl_test_src_checkers2 (GstGLTestSrc * v, GstBuffer * buffer, int w, int h)
 {
 #if 0
   int x, y;
@@ -313,7 +313,7 @@ gst_gl_test_src_checkers2 (GstGLTestSrc * v, GstGLBuffer * buffer, int w, int h)
 }
 
 void
-gst_gl_test_src_checkers4 (GstGLTestSrc * v, GstGLBuffer * buffer, int w, int h)
+gst_gl_test_src_checkers4 (GstGLTestSrc * v, GstBuffer * buffer, int w, int h)
 {
 #if 0
   int x, y;
@@ -356,7 +356,7 @@ gst_gl_test_src_checkers4 (GstGLTestSrc * v, GstGLBuffer * buffer, int w, int h)
 }
 
 void
-gst_gl_test_src_checkers8 (GstGLTestSrc * v, GstGLBuffer * buffer, int w, int h)
+gst_gl_test_src_checkers8 (GstGLTestSrc * v, GstBuffer * buffer, int w, int h)
 {
 #if 0
   int x, y;
@@ -411,7 +411,7 @@ gst_gl_test_src_checkers8 (GstGLTestSrc * v, GstGLBuffer * buffer, int w, int h)
 }
 
 void
-gst_gl_test_src_circular (GstGLTestSrc * v, GstGLBuffer * buffer, int w, int h)
+gst_gl_test_src_circular (GstGLTestSrc * v, GstBuffer * buffer, int w, int h)
 {
 #if 0
   int i;

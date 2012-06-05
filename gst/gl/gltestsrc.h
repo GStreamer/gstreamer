@@ -31,28 +31,28 @@ struct vts_color_struct {
 };
 
 void    gst_gl_test_src_smpte        (GstGLTestSrc * v,
-                                         GstGLBuffer *buffer, int w, int h);
+                                         GstBuffer *buffer, int w, int h);
 void    gst_gl_test_src_snow         (GstGLTestSrc * v,
-                                         GstGLBuffer *buffer, int w, int h);
+                                         GstBuffer *buffer, int w, int h);
 void    gst_gl_test_src_black        (GstGLTestSrc * v,
-                                         GstGLBuffer *buffer, int w, int h);
+                                         GstBuffer *buffer, int w, int h);
 void    gst_gl_test_src_white        (GstGLTestSrc * v,
-                                         GstGLBuffer *buffer, int w, int h);
+                                         GstBuffer *buffer, int w, int h);
 void    gst_gl_test_src_red          (GstGLTestSrc * v,
-                                         GstGLBuffer *buffer, int w, int h);
+                                         GstBuffer *buffer, int w, int h);
 void    gst_gl_test_src_green        (GstGLTestSrc * v,
-                                         GstGLBuffer *buffer, int w, int h);
+                                         GstBuffer *buffer, int w, int h);
 void    gst_gl_test_src_blue         (GstGLTestSrc * v,
-                                         GstGLBuffer *buffer, int w, int h);
+                                         GstBuffer *buffer, int w, int h);
 void    gst_gl_test_src_checkers1    (GstGLTestSrc * v,
-                                         GstGLBuffer *buffer, int w, int h);
+                                         GstBuffer *buffer, int w, int h);
 void    gst_gl_test_src_checkers2    (GstGLTestSrc * v,
-                                         GstGLBuffer *buffer, int w, int h);
+                                         GstBuffer *buffer, int w, int h);
 void    gst_gl_test_src_checkers4    (GstGLTestSrc * v,
-                                         GstGLBuffer *buffer, int w, int h);
+                                         GstBuffer *buffer, int w, int h);
 void    gst_gl_test_src_checkers8    (GstGLTestSrc * v,
-                                         GstGLBuffer *buffer, int w, int h);
+                                         GstBuffer *buffer, int w, int h);
 void    gst_gl_test_src_circular     (GstGLTestSrc * v,
-                                         GstGLBuffer *buffer, int w, int h);
+                                         GstBuffer *buffer, int w, int h);
 
 #endif

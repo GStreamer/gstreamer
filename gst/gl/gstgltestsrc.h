@@ -101,7 +101,7 @@ struct _GstGLTestSrc {
     GLuint fbo;
     GLuint depthbuffer;
 
-    GstGLBuffer* buffer;
+    GstBuffer* buffer;
 
     /* private */
     GstGLDisplay *display;
@@ -110,7 +110,7 @@ struct _GstGLTestSrc {
     gint64 n_frames;                      /* total frames sent */
     gboolean negotiated;
 
-    void (*make_image) (GstGLTestSrc* v, GstGLBuffer* buffer, gint w, gint h);
+    void (*make_image) (GstGLTestSrc* v, GstBuffer* buffer, gint w, gint h);
 };
 
 struct _GstGLTestSrcClass {
