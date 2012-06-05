@@ -145,6 +145,7 @@ static void gst_mpegtsmux_set_property (GObject * object, guint prop_id,
 static void gst_mpegtsmux_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec);
 
+static void mpegtsmux_reset (MpegTsMux * mux, gboolean alloc);
 static void mpegtsmux_dispose (GObject * object);
 static gboolean new_packet_cb (guint8 * data, guint len, void *user_data,
     gint64 new_pcr);
@@ -238,48 +239,37 @@ mpegtsmux_init (MpegTsMux * mux, MpegTsMuxClass * g_class)
       (GstCollectPads2EventFunction) GST_DEBUG_FUNCPTR (mpegtsmux_sink_event),
       mux);
 
-  mux->tsmux = tsmux_new ();
-  tsmux_set_write_func (mux->tsmux, new_packet_cb, mux);
-
-  mux->first = TRUE;
-  mux->last_flow_ret = GST_FLOW_OK;
   mux->adapter = gst_adapter_new ();
+
+  /* properties */
   mux->m2ts_mode = FALSE;
   mux->pat_interval = TSMUX_DEFAULT_PAT_INTERVAL;
   mux->pmt_interval = TSMUX_DEFAULT_PMT_INTERVAL;
+  mux->prog_map = NULL;
+
+  /* initial state */
+  mpegtsmux_reset (mux, TRUE);
+}
+
+static void
+mpegtsmux_reset (MpegTsMux * mux, gboolean alloc)
+{
+  mux->first = TRUE;
+  mux->last_flow_ret = GST_FLOW_OK;
   mux->first_pcr = TRUE;
   mux->last_ts = 0;
   mux->is_delta = TRUE;
 
-  mux->prog_map = NULL;
   mux->streamheader = NULL;
   mux->streamheader_sent = FALSE;
   mux->force_key_unit_event = NULL;
   mux->pending_key_unit_ts = GST_CLOCK_TIME_NONE;
-}
 
-static void
-mpegtsmux_dispose (GObject * object)
-{
-  MpegTsMux *mux = GST_MPEG_TSMUX (object);
-
-  if (mux->adapter) {
-    gst_adapter_clear (mux->adapter);
-    g_object_unref (mux->adapter);
-    mux->adapter = NULL;
-  }
-  if (mux->collect) {
-    gst_object_unref (mux->collect);
-    mux->collect = NULL;
-  }
   if (mux->tsmux) {
     tsmux_free (mux->tsmux);
     mux->tsmux = NULL;
   }
-  if (mux->prog_map) {
-    gst_structure_free (mux->prog_map);
-    mux->prog_map = NULL;
-  }
+
   if (mux->streamheader) {
     GstBuffer *buf;
     GList *sh;
@@ -295,6 +285,33 @@ mpegtsmux_dispose (GObject * object)
   }
   gst_event_replace (&mux->force_key_unit_event, NULL);
   gst_buffer_replace (&mux->out_buffer, NULL);
+
+  if (alloc) {
+    mux->tsmux = tsmux_new ();
+    tsmux_set_write_func (mux->tsmux, new_packet_cb, mux);
+  }
+}
+
+static void
+mpegtsmux_dispose (GObject * object)
+{
+  MpegTsMux *mux = GST_MPEG_TSMUX (object);
+
+  mpegtsmux_reset (mux, FALSE);
+
+  if (mux->adapter) {
+    gst_adapter_clear (mux->adapter);
+    g_object_unref (mux->adapter);
+    mux->adapter = NULL;
+  }
+  if (mux->collect) {
+    gst_object_unref (mux->collect);
+    mux->collect = NULL;
+  }
+  if (mux->prog_map) {
+    gst_structure_free (mux->prog_map);
+    mux->prog_map = NULL;
+  }
   GST_CALL_PARENT (G_OBJECT_CLASS, dispose, (object));
 }
 
@@ -1353,8 +1370,6 @@ mpegtsmux_change_state (GstElement * element, GstStateChange transition)
       gst_collect_pads2_stop (mux->collect);
       break;
     case GST_STATE_CHANGE_READY_TO_NULL:
-      if (mux->adapter)
-        gst_adapter_clear (mux->adapter);
       break;
     default:
       break;
@@ -1363,6 +1378,13 @@ mpegtsmux_change_state (GstElement * element, GstStateChange transition)
   ret = GST_ELEMENT_CLASS (parent_class)->change_state (element, transition);
 
   switch (transition) {
+    case GST_STATE_CHANGE_PLAYING_TO_PAUSED:
+      break;
+    case GST_STATE_CHANGE_PAUSED_TO_READY:
+      mpegtsmux_reset (mux, TRUE);
+      break;
+    case GST_STATE_CHANGE_READY_TO_NULL:
+      break;
     default:
       break;
   }
