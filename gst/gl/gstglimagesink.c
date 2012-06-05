@@ -25,7 +25,7 @@
  *
  * glimagesink renders video frames to a drawable on a local or remote
  * display using OpenGL. This element can receive a Window ID from the
- * application through the XOverlay interface and will then render video
+ * application through the VideoOverlay interface and will then render video
  * frames in this drawable.
  * If no Window ID was provided by the application, the element will
  * create its own internal window and render into it.
@@ -83,14 +83,12 @@
 #include "config.h"
 #endif
 
-#include <gst/interfaces/xoverlay.h>
+#include <gst/video/videooverlay.h>
 
 #include "gstglimagesink.h"
 
 GST_DEBUG_CATEGORY (gst_debug_glimage_sink);
 #define GST_CAT_DEFAULT gst_debug_glimage_sink
-
-static void gst_glimage_sink_init_interfaces (GType type);
 
 static void gst_glimage_sink_finalize (GObject * object);
 static void gst_glimage_sink_set_property (GObject * object, guint prop_id,
@@ -109,40 +107,18 @@ static gboolean gst_glimage_sink_set_caps (GstBaseSink * bsink, GstCaps * caps);
 static GstFlowReturn gst_glimage_sink_render (GstBaseSink * bsink,
     GstBuffer * buf);
 
-static void gst_glimage_sink_xoverlay_init (GstXOverlayClass * iface);
-static void gst_glimage_sink_set_window_handle (GstXOverlay * overlay,
+static void gst_glimage_sink_video_overlay_init (GstVideoOverlayInterface *
+    iface);
+static void gst_glimage_sink_set_window_handle (GstVideoOverlay * overlay,
     guintptr id);
-static void gst_glimage_sink_expose (GstXOverlay * overlay);
-static gboolean gst_glimage_sink_interface_supported (GstImplementsInterface *
-    iface, GType type);
-static void gst_glimage_sink_implements_init (GstImplementsInterfaceClass *
-    klass);
+static void gst_glimage_sink_expose (GstVideoOverlay * overlay);
 
-#ifndef OPENGL_ES2
 static GstStaticPadTemplate gst_glimage_sink_template =
-    GST_STATIC_PAD_TEMPLATE ("sink",
+GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS (GST_GL_VIDEO_CAPS ";"
-        GST_VIDEO_CAPS_RGB ";" GST_VIDEO_CAPS_BGR ";"
-        GST_VIDEO_CAPS_RGBx ";" GST_VIDEO_CAPS_BGRx ";"
-        GST_VIDEO_CAPS_xRGB ";" GST_VIDEO_CAPS_xBGR ";"
-        GST_VIDEO_CAPS_RGBA ";" GST_VIDEO_CAPS_BGRA ";"
-        GST_VIDEO_CAPS_ARGB ";" GST_VIDEO_CAPS_ABGR ";"
-        GST_VIDEO_CAPS_YUV ("{ I420, YV12, YUY2, UYVY, AYUV }"))
+    GST_STATIC_CAPS (GST_GL_VIDEO_CAPS)
     );
-#else
-static GstStaticPadTemplate gst_glimage_sink_template =
-    GST_STATIC_PAD_TEMPLATE ("sink",
-    GST_PAD_SINK,
-    GST_PAD_ALWAYS,
-    GST_STATIC_CAPS (GST_GL_VIDEO_CAPS ";"
-        GST_VIDEO_CAPS_RGB ";"
-        GST_VIDEO_CAPS_RGBx ";"
-        GST_VIDEO_CAPS_RGBA ";"
-        GST_VIDEO_CAPS_YUV ("{ I420, YV12, YUY2, UYVY, AYUV }"))
-    );
-#endif
 
 enum
 {
@@ -155,33 +131,12 @@ enum
   PROP_PIXEL_ASPECT_RATIO
 };
 
+#define gst_glimage_sink_parent_class parent_class
 G_DEFINE_TYPE_WITH_CODE (GstGLImageSink, gst_glimage_sink,
-    GST_TYPE_VIDEO_SINK, gst_glimage_sink_init_interfaces);
-
-static void
-gst_glimage_sink_init_interfaces (GType type)
-{
-
-  static const GInterfaceInfo implements_info = {
-    (GInterfaceInitFunc) gst_glimage_sink_implements_init,
-    NULL,
-    NULL
-  };
-
-  static const GInterfaceInfo xoverlay_info = {
-    (GInterfaceInitFunc) gst_glimage_sink_xoverlay_init,
-    NULL,
-    NULL,
-  };
-
-  g_type_add_interface_static (type, GST_TYPE_IMPLEMENTS_INTERFACE,
-      &implements_info);
-
-  g_type_add_interface_static (type, GST_TYPE_X_OVERLAY, &xoverlay_info);
-
-  GST_DEBUG_CATEGORY_INIT (gst_debug_glimage_sink, "glimagesink", 0,
-      "OpenGL Video Sink");
-}
+    GST_TYPE_VIDEO_SINK, G_IMPLEMENT_INTERFACE (GST_TYPE_VIDEO_OVERLAY,
+        gst_glimage_sink_video_overlay_init);
+    GST_DEBUG_CATEGORY_INIT (gst_debug_glimage_sink, "glimagesink", 0,
+        "OpenGL Video Sink"));
 
 static void
 gst_glimage_sink_class_init (GstGLImageSinkClass * klass)
@@ -194,7 +149,7 @@ gst_glimage_sink_class_init (GstGLImageSinkClass * klass)
   gobject_class = (GObjectClass *) klass;
   gstelement_class = (GstElementClass *) klass;
   gstbasesink_class = (GstBaseSinkClass *) klass;
-  element_class = GST_ELEMENT_CLASS (g_class);
+  element_class = GST_ELEMENT_CLASS (klass);
 
   gobject_class->set_property = gst_glimage_sink_set_property;
   gobject_class->get_property = gst_glimage_sink_get_property;
@@ -380,7 +335,7 @@ gst_glimage_sink_query (GstElement * element, GstQuery * query)
   switch (GST_QUERY_TYPE (query)) {
     case GST_QUERY_CUSTOM:
     {
-      GstStructure *structure = gst_query_get_structure (query);
+      GstStructure *structure = gst_query_writable_structure (query);
       gst_structure_set (structure, "gstgldisplay", G_TYPE_POINTER,
           glimage_sink->display, NULL);
       res = GST_ELEMENT_CLASS (parent_class)->query (element, query);
@@ -507,37 +462,29 @@ gst_glimage_sink_set_caps (GstBaseSink * bsink, GstCaps * caps)
   gint par_n, par_d;
   gint display_par_n, display_par_d;
   guint display_ratio_num, display_ratio_den;
-  GstVideoFormat format;
-  GstStructure *structure;
-  gboolean is_gl;
+  GstVideoInfo vinfo;
 
   GST_DEBUG ("set caps with %" GST_PTR_FORMAT, caps);
 
   glimage_sink = GST_GLIMAGE_SINK (bsink);
 
-  structure = gst_caps_get_structure (caps, 0);
-  if (gst_structure_has_name (structure, "video/x-raw-gl")) {
-    is_gl = TRUE;
-    format = GST_VIDEO_FORMAT_UNKNOWN;
-    ok = gst_structure_get_int (structure, "width", &width);
-    ok &= gst_structure_get_int (structure, "height", &height);
-  } else {
-    is_gl = FALSE;
-    ok = gst_video_format_parse_caps (caps, &format, &width, &height);
+  ok = gst_video_info_from_caps (&vinfo, caps);
+  if (!ok)
+    return FALSE;
 
-    if (!ok)
-      return FALSE;
+  width = GST_VIDEO_INFO_WIDTH (&vinfo);
+  height = GST_VIDEO_INFO_HEIGHT (&vinfo);
 
-    /* init colorspace conversion if needed */
-    ok = gst_gl_display_init_upload (glimage_sink->display, format,
-        width, height, width, height);
+  /* FIXME: Cannot determine GL stream through caps */
+  /* init colorspace conversion if needed */
+  /*ok = gst_gl_display_init_upload (glimage_sink->display, format,
+     width, height, width, height);
 
-    if (!ok) {
-      GST_ELEMENT_ERROR (glimage_sink, RESOURCE, NOT_FOUND,
-          GST_GL_DISPLAY_ERR_MSG (glimage_sink->display), (NULL));
-      return FALSE;
-    }
-  }
+     if (!ok) {
+     GST_ELEMENT_ERROR (glimage_sink, RESOURCE, NOT_FOUND,
+     GST_GL_DISPLAY_ERR_MSG (glimage_sink->display), (NULL));
+     return FALSE;
+     } */
 
   gst_gl_display_set_client_reshape_callback (glimage_sink->display,
       glimage_sink->clientReshapeCallback);
@@ -548,11 +495,10 @@ gst_glimage_sink_set_caps (GstBaseSink * bsink, GstCaps * caps)
   gst_gl_display_set_client_data (glimage_sink->display,
       glimage_sink->client_data);
 
-  ok &= gst_video_parse_caps_framerate (caps, &fps_n, &fps_d);
-  ok &= gst_video_parse_caps_pixel_aspect_ratio (caps, &par_n, &par_d);
-
-  if (!ok)
-    return FALSE;
+  fps_n = GST_VIDEO_INFO_FPS_N (&vinfo);
+  fps_d = GST_VIDEO_INFO_FPS_D (&vinfo);
+  par_n = GST_VIDEO_INFO_PAR_N (&vinfo);
+  par_d = GST_VIDEO_INFO_PAR_D (&vinfo);
 
   /* get display's PAR */
   if (glimage_sink->par) {
@@ -593,7 +539,6 @@ gst_glimage_sink_set_caps (GstBaseSink * bsink, GstCaps * caps)
 
   GST_VIDEO_SINK_WIDTH (glimage_sink) = width;
   GST_VIDEO_SINK_HEIGHT (glimage_sink) = height;
-  glimage_sink->is_gl = is_gl;
   glimage_sink->width = width;
   glimage_sink->height = height;
   glimage_sink->fps_n = fps_n;
@@ -602,7 +547,7 @@ gst_glimage_sink_set_caps (GstBaseSink * bsink, GstCaps * caps)
   glimage_sink->par_d = par_d;
 
   if (!glimage_sink->window_id && !glimage_sink->new_window_id)
-    gst_x_overlay_prepare_xwindow_id (GST_X_OVERLAY (glimage_sink));
+    gst_video_overlay_prepare_window_handle (GST_VIDEO_OVERLAY (glimage_sink));
 
   return TRUE;
 }
@@ -610,31 +555,29 @@ gst_glimage_sink_set_caps (GstBaseSink * bsink, GstCaps * caps)
 static GstFlowReturn
 gst_glimage_sink_render (GstBaseSink * bsink, GstBuffer * buf)
 {
-  GstGLImageSink *glimage_sink = NULL;
-  GstGLBuffer *gl_buffer = NULL;
+  GstGLImageSink *glimage_sink;
 
   glimage_sink = GST_GLIMAGE_SINK (bsink);
 
-  GST_INFO ("buffer size: %d", GST_BUFFER_SIZE (buf));
-
+  /* FIXME: implement using GstGLMeta */
   //is gl
-  if (glimage_sink->is_gl) {
-    //increment gl buffer ref before storage
-    gl_buffer = GST_GL_BUFFER (gst_buffer_ref (buf));
-  }
-  //is not gl
-  else {
-    //blocking call
-    gl_buffer = gst_gl_buffer_new (glimage_sink->display,
-        glimage_sink->width, glimage_sink->height);
+  /*if (glimage_sink->is_gl) {
+     //increment gl buffer ref before storage
+     gl_buffer = GST_GL_BUFFER (gst_buffer_ref (buf));
+     }
+     //is not gl
+     else {
+     //blocking call
+     gl_buffer = gst_gl_buffer_new (glimage_sink->display,
+     glimage_sink->width, glimage_sink->height);
 
-    //blocking call
-    gst_gl_display_do_upload (glimage_sink->display, gl_buffer->texture,
-        glimage_sink->width, glimage_sink->height, GST_BUFFER_DATA (buf));
+     //blocking call
+     gst_gl_display_do_upload (glimage_sink->display, gl_buffer->texture,
+     glimage_sink->width, glimage_sink->height, GST_BUFFER_DATA (buf));
 
-    //gl_buffer is created in this block, so the gl buffer is already referenced
-  }
-
+     //gl_buffer is created in this block, so the gl buffer is already referenced
+     }
+   */
   if (glimage_sink->window_id != glimage_sink->new_window_id) {
     glimage_sink->window_id = glimage_sink->new_window_id;
     gst_gl_display_set_window_id (glimage_sink->display,
@@ -642,12 +585,11 @@ gst_glimage_sink_render (GstBaseSink * bsink, GstBuffer * buf)
   }
   //the buffer is cleared when an other comes in
   if (glimage_sink->stored_buffer) {
-    gst_buffer_unref (GST_BUFFER_CAST (glimage_sink->stored_buffer));
-    glimage_sink->stored_buffer = NULL;
+    gst_buffer_unref (glimage_sink->stored_buffer);
   }
   //store current buffer
-  glimage_sink->stored_buffer = gl_buffer;
-
+  glimage_sink->stored_buffer = buf;
+/*
   //redisplay opengl scene
   if (gl_buffer->texture &&
       gst_gl_display_redisplay (glimage_sink->display,
@@ -659,12 +601,13 @@ gst_glimage_sink_render (GstBaseSink * bsink, GstBuffer * buf)
     GST_ELEMENT_ERROR (glimage_sink, RESOURCE, NOT_FOUND,
         GST_GL_DISPLAY_ERR_MSG (glimage_sink->display), (NULL));
     return GST_FLOW_ERROR;
-  }
+  }*/
+  return GST_FLOW_OK;
 }
 
 
 static void
-gst_glimage_sink_xoverlay_init (GstXOverlayClass * iface)
+gst_glimage_sink_video_overlay_init (GstVideoOverlayInterface * iface)
 {
   iface->set_window_handle = gst_glimage_sink_set_window_handle;
   iface->expose = gst_glimage_sink_expose;
@@ -672,7 +615,7 @@ gst_glimage_sink_xoverlay_init (GstXOverlayClass * iface)
 
 
 static void
-gst_glimage_sink_set_window_handle (GstXOverlay * overlay, guintptr id)
+gst_glimage_sink_set_window_handle (GstVideoOverlay * overlay, guintptr id)
 {
   GstGLImageSink *glimage_sink = GST_GLIMAGE_SINK (overlay);
   gulong window_id = (gulong) id;
@@ -686,7 +629,7 @@ gst_glimage_sink_set_window_handle (GstXOverlay * overlay, guintptr id)
 
 
 static void
-gst_glimage_sink_expose (GstXOverlay * overlay)
+gst_glimage_sink_expose (GstVideoOverlay * overlay)
 {
   GstGLImageSink *glimage_sink = GST_GLIMAGE_SINK (overlay);
 
@@ -702,21 +645,4 @@ gst_glimage_sink_expose (GstXOverlay * overlay)
     gst_gl_display_redisplay (glimage_sink->display, 0, 0, 0, 0, 0,
         glimage_sink->keep_aspect_ratio);
   }
-}
-
-
-static gboolean
-gst_glimage_sink_interface_supported (GstImplementsInterface * iface,
-    GType type)
-{
-  if (type != GST_TYPE_X_OVERLAY)
-    return FALSE;
-  return TRUE;
-}
-
-
-static void
-gst_glimage_sink_implements_init (GstImplementsInterfaceClass * klass)
-{
-  klass->supported = gst_glimage_sink_interface_supported;
 }

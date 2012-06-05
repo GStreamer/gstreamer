@@ -29,6 +29,8 @@
 
 #include "gstglbuffer.h"
 
+G_BEGIN_DECLS
+
 GST_DEBUG_CATEGORY_EXTERN (gst_debug_glimage_sink);
 
 #define GST_TYPE_GLIMAGE_SINK \
@@ -66,7 +68,7 @@ struct _GstGLImageSink
     gint par_n, par_d;
 
     GstGLDisplay *display;
-    GstGLBuffer *stored_buffer;
+    GstBuffer *stored_buffer;
 
     CRCB clientReshapeCallback;
     CDCB clientDrawCallback;
@@ -82,6 +84,8 @@ struct _GstGLImageSinkClass
 };
 
 GType gst_glimage_sink_get_type(void);
+
+G_END_DECLS
 
 #endif
 
