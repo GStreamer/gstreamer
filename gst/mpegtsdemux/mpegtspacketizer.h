@@ -212,6 +212,8 @@ GstStructure *mpegts_packetizer_parse_eit (MpegTSPacketizer2 *packetizer,
   MpegTSPacketizerSection *section);
 GstStructure *mpegts_packetizer_parse_tdt (MpegTSPacketizer2 *packetizer,
   MpegTSPacketizerSection *section);
+GstStructure *mpegts_packetizer_parse_tot (MpegTSPacketizer2 *packetizer,
+  MpegTSPacketizerSection *section);
 
 /* Only valid if calculate_offset is TRUE */
 guint mpegts_packetizer_get_seen_pcr (MpegTSPacketizer2 *packetizer);

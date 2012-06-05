@@ -1200,6 +1200,14 @@ mpegts_base_handle_psi (MpegTSBase * base, MpegTSPacketizerSection * section)
       else
         res = FALSE;
       break;
+    case TABLE_ID_TIME_OFFSET:
+      /* TOT (Time Offset table) */
+      structure = mpegts_packetizer_parse_tot (base->packetizer, section);
+      if (G_LIKELY (structure))
+        mpegts_base_apply_tdt (base, section->pid, structure);
+      else
+        res = FALSE;
+      break;
     default:
       GST_WARNING ("Unhandled or unknown section type (table_id 0x%02x)",
           section->table_id);

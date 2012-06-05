@@ -2175,26 +2175,23 @@ error:
   return NULL;
 }
 
-GstStructure *
-mpegts_packetizer_parse_tdt (MpegTSPacketizer2 * packetizer,
-    MpegTSPacketizerSection * section)
+static GstStructure *
+parse_tdt_tot_common (MpegTSPacketizer2 * packetizer,
+    MpegTSPacketizerSection * section, const gchar * name)
 {
-  GstStructure *tdt = NULL;
+  GstStructure *res;
   guint16 mjd;
   guint year, month, day, hour, minute, second;
   guint8 *data, *utc_ptr;
 
-  GST_DEBUG ("TDT");
-
-  /* length always 8 */
+  /* length at least 8 */
   if (section->section_length < 8) {
-    GST_WARNING ("PID %d invalid TDT size %d",
+    GST_WARNING ("PID %d invalid TDT/TOT size %d",
         section->pid, section->section_length);
-    goto error;
+    return NULL;
   }
 
   data = section->data;
-
   data += 3;
 
   mjd = GST_READ_UINT16_BE (data);
@@ -2219,20 +2216,57 @@ mpegts_packetizer_parse_tdt (MpegTSPacketizer2 * packetizer,
     minute = ((utc_ptr[1] & 0xF0) >> 4) * 10 + (utc_ptr[1] & 0x0F);
     second = ((utc_ptr[2] & 0xF0) >> 4) * 10 + (utc_ptr[2] & 0x0F);
   }
-  tdt = gst_structure_new ("tdt",
+  res = gst_structure_new (name,
       "year", G_TYPE_UINT, year,
       "month", G_TYPE_UINT, month,
       "day", G_TYPE_UINT, day,
       "hour", G_TYPE_UINT, hour,
       "minute", G_TYPE_UINT, minute, "second", G_TYPE_UINT, second, NULL);
 
+  return res;
+}
+
+GstStructure *
+mpegts_packetizer_parse_tdt (MpegTSPacketizer2 * packetizer,
+    MpegTSPacketizerSection * section)
+{
+  GstStructure *tdt = NULL;
+  GST_DEBUG ("TDT");
+
+  tdt = parse_tdt_tot_common (packetizer, section, "tdt");
+
   return tdt;
+}
 
-error:
-  if (tdt)
-    gst_structure_free (tdt);
+GstStructure *
+mpegts_packetizer_parse_tot (MpegTSPacketizer2 * packetizer,
+    MpegTSPacketizerSection * section)
+{
+  guint8 *data;
+  GstStructure *tot = NULL;
+  GValueArray *descriptors;
+  guint16 desc_len;
 
-  return NULL;
+  GST_DEBUG ("TOT");
+
+  tot = parse_tdt_tot_common (packetizer, section, "tot");
+  data = section->data + 8;
+
+  desc_len = ((*data++) & 0xf) << 8;
+  desc_len |= *data++;
+  descriptors = g_value_array_new (0);
+
+  if (!mpegts_packetizer_parse_descriptors (packetizer, &data, data + desc_len,
+          descriptors)) {
+    g_value_array_free (descriptors);
+    gst_structure_free (tot);
+    return NULL;
+  }
+  gst_structure_id_set (tot, QUARK_DESCRIPTORS, G_TYPE_VALUE_ARRAY, descriptors,
+      NULL);
+  g_value_array_free (descriptors);
+
+  return tot;
 }
 
 void
