@@ -2637,12 +2637,6 @@ gst_pad_event_default (GstPad * pad, GstObject * parent, GstEvent * event)
   GST_LOG_OBJECT (pad, "default event handler");
 
   switch (GST_EVENT_TYPE (event)) {
-    case GST_EVENT_EOS:
-    {
-      GST_DEBUG_OBJECT (pad, "pausing task because of eos");
-      gst_pad_pause_task (pad);
-      break;
-    }
     case GST_EVENT_CAPS:
       forward = GST_PAD_IS_PROXY_CAPS (pad);
       result = TRUE;
