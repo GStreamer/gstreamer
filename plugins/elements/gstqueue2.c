@@ -2427,21 +2427,8 @@ next:
 
   if (item_type == GST_QUEUE2_ITEM_TYPE_BUFFER) {
     GstBuffer *buffer;
-#if 0
-    GstCaps *caps;
-#endif
 
     buffer = GST_BUFFER_CAST (data);
-#if 0
-    caps = GST_BUFFER_CAPS (buffer);
-#endif
-
-#if 0
-    /* set caps before pushing the buffer so that core does not try to do
-     * something fancy to check if this is possible. */
-    if (caps && caps != GST_PAD_CAPS (queue->srcpad))
-      gst_pad_set_caps (queue->srcpad, caps);
-#endif
 
     result = gst_pad_push (queue->srcpad, buffer);
 
@@ -2471,22 +2458,8 @@ next:
     GST_QUEUE2_MUTEX_LOCK_CHECK (queue, queue->srcresult, out_flushing);
   } else if (item_type == GST_QUEUE2_ITEM_TYPE_BUFFER_LIST) {
     GstBufferList *buffer_list;
-#if 0
-    GstBuffer *first_buf;
-    GstCaps *caps;
-#endif
 
     buffer_list = GST_BUFFER_LIST_CAST (data);
-
-#if 0
-    first_buf = gst_buffer_list_get (buffer_list, 0);
-    caps = (first_buf != NULL) ? GST_BUFFER_CAPS (first_buf) : NULL;
-
-    /* set caps before pushing the buffer so that core does not try to do
-     * something fancy to check if this is possible. */
-    if (caps && caps != GST_PAD_CAPS (queue->srcpad))
-      gst_pad_set_caps (queue->srcpad, caps);
-#endif
 
     result = gst_pad_push_list (queue->srcpad, buffer_list);
 
