@@ -2,7 +2,8 @@
 ORC_SOURCE=videoblendorc
 include $(top_srcdir)/common/orc.mak
 
-glib_enum_headers = video.h colorbalance.h navigation.h
+glib_enum_headers = video.h video-format.h video-color.h video-info.h \
+			colorbalance.h navigation.h
 glib_enum_define = GST_VIDEO
 glib_gen_prefix = gst_video
 glib_gen_basename = video
@@ -20,6 +21,11 @@ libgstvideo_@GST_API_VERSION@_la_SOURCES = \
 	colorbalancechannel.c   \
 	navigation.c            \
 	video.c          	\
+	video-event.c          	\
+	video-format.c         	\
+	video-color.c         	\
+	video-info.c         	\
+	video-frame.c         	\
 	gstvideosink.c   	\
 	gstvideofilter.c 	\
 	convertframe.c   	\
@@ -39,6 +45,11 @@ libgstvideo_@GST_API_VERSION@include_HEADERS = \
 	colorbalancechannel.h	\
 	navigation.h            \
 	video.h			\
+	video-event.h          	\
+	video-format.h         	\
+	video-color.h         	\
+	video-info.h         	\
+	video-frame.h         	\
 	gstvideosink.h 		\
 	gstvideofilter.h	\
 	gstvideometa.h		\
