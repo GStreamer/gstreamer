@@ -3187,7 +3187,7 @@ push_sticky (GstPad * pad, PadEvent * ev, gpointer user_data)
       /* not linked is not a problem, we are sticky so the event will be
        * sent later but only for non-EOS events */
       GST_DEBUG_OBJECT (pad, "pad was not linked");
-      if (GST_EVENT_TYPE (ev) != GST_EVENT_EOS)
+      if (GST_EVENT_TYPE (event) != GST_EVENT_EOS)
         data->ret = GST_FLOW_OK;
       /* fallthrough */
     default:
