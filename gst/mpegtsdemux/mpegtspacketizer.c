@@ -2558,8 +2558,7 @@ mpegts_packetizer_push_section (MpegTSPacketizer2 * packetizer,
           "of the buffer", packet->pid);
       goto out;
     }
-    /* FIXME : We could actually avoid any copy altogether if it gets parsed straight away */
-    section->data = g_memdup (data, section->section_length);
+    section->data = data;
     section->table_id = table_id;
     section->complete = TRUE;
     res = TRUE;
