@@ -767,10 +767,12 @@ gst_mpeg4vparse_set_caps (GstBaseParse * parse, GstCaps * caps)
 static GstCaps *
 gst_mpeg4vparse_get_caps (GstBaseParse * parse, GstCaps * filter)
 {
-  GstCaps *peercaps;
+  GstCaps *peercaps, *templ;
   GstCaps *res;
 
+  templ = gst_pad_get_pad_template_caps (GST_BASE_PARSE_SINK_PAD (parse));
   peercaps = gst_pad_get_allowed_caps (GST_BASE_PARSE_SRC_PAD (parse));
+
   if (peercaps) {
     guint i, n;
 
@@ -783,15 +785,16 @@ gst_mpeg4vparse_get_caps (GstBaseParse * parse, GstCaps * filter)
       gst_structure_remove_field (s, "parsed");
     }
 
-    res =
-        gst_caps_intersect_full (peercaps,
-        gst_pad_get_pad_template_caps (GST_BASE_PARSE_SRC_PAD (parse)),
-        GST_CAPS_INTERSECT_FIRST);
+    res = gst_caps_intersect_full (peercaps, templ, GST_CAPS_INTERSECT_FIRST);
     gst_caps_unref (peercaps);
+
+    /* Append the template caps because we still want to accept
+     * caps without any fields in the case upstream does not
+     * know anything.
+     */
+    gst_caps_append (res, templ);
   } else {
-    res =
-        gst_caps_copy (gst_pad_get_pad_template_caps (GST_BASE_PARSE_SINK_PAD
-            (parse)));
+    res = templ;
   }
 
   if (filter) {
