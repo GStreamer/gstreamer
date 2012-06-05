@@ -111,47 +111,61 @@ struct TsMuxSection {
 /* Information for the streams associated with one program */
 struct TsMuxProgram {
   TsMuxSection pmt;
+  /* PMT version */
   guint8   pmt_version;
+  /* trigger for writing PMT */
   gboolean pmt_changed;
 
+  /* interval between PMT in MPEG PTS clock time */
   guint    pmt_interval;
+  /* last time PMT written in MPEG PTS clock time */
   gint64   last_pmt_ts;
 
-  guint16 pgm_number; /* program ID for the PAT */
-  guint16 pmt_pid; /* PID to write the PMT */
+  /* program ID for the PAT */
+  guint16 pgm_number;
+  /* PID to write the PMT */
+  guint16 pmt_pid;
 
-  TsMuxStream *pcr_stream; /* Stream which carries the PCR */
-  gint64 last_pcr;
+  /* stream which carries the PCR */
+  TsMuxStream *pcr_stream;
 
-  GArray *streams; /* Array of TsMuxStream pointers */
-  guint nb_streams;
+  /* programs TsMuxStream's */
+  GArray *streams;
 };
 
 struct TsMux {
+  /* TsMuxStream* array of all streams */
   guint nb_streams;
-  GList *streams;    /* TsMuxStream* array of all streams */
+  GList *streams;
 
+  /* TsMuxProgram* array of all programs */
   guint nb_programs;
-  GList *programs;   /* TsMuxProgram* array of all programs */
+  GList *programs;
 
-  guint16 transport_id;
-
+  /* next auto-generated misc id */
   guint16 next_pgm_no;
   guint16 next_pmt_pid;
   guint16 next_stream_pid;
 
   TsMuxSection pat;
+  /* PAT transport_stream_id */
+  guint16 transport_id;
+  /* PAT version */
   guint8   pat_version;
+  /* trigger writing PAT */
   gboolean pat_changed;
-
+  /* interval between PAT in MPEG PTS clock time */
   guint    pat_interval;
+  /* last time PAT written in MPEG PTS clock time */
   gint64   last_pat_ts;
 
+  /* temp packet buffer */
   guint8 packet_buf[TSMUX_PACKET_LENGTH];
+  /* callback to write finished packet */
   TsMuxWriteFunc write_func;
   void *write_func_data;
 
-  /* Scratch space for writing ES_info descriptors */
+  /* scratch space for writing ES_info descriptors */
   guint8 es_info_buf[TSMUX_MAX_ES_INFO_LENGTH];
   gint64 new_pcr;
 };

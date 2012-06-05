@@ -149,41 +149,55 @@ enum TsMuxStreamState {
     TSMUX_STREAM_STATE_PACKET
 };
 
-/* TsMuxStream receives elementary streams for parsing.
- * Via the write_bytes() method, it can output a PES stream piecemeal */
+/* TsMuxStream receives elementary streams for parsing */
 struct TsMuxStream {
   TsMuxStreamState state;
   TsMuxPacketInfo pi;
   TsMuxStreamType stream_type;
-  guint8 id; /* stream id */
-  guint8 id_extended; /* extended stream id (13818-1 Amdt 2) */
+
+  /* stream_id (13818-1) */
+  guint8 id;
+  /* extended stream id (13818-1 Amdt 2) */
+  guint8 id_extended;
 
   gboolean is_video_stream;
 
-  /* List of data buffers available for writing out */
+  /* data available for writing out
+   * and total sum of sizes */
   GList *buffers;
   guint32 bytes_avail;
 
-  /* Current data buffer being consumed */
+  /* current data buffer being consumed
+   * and amount already consumed */
   TsMuxStreamBuffer *cur_buffer;
   guint32 cur_buffer_consumed;
 
+  /* helper to release collected buffers */
   TsMuxStreamBufferReleaseFunc buffer_release;
 
+  /* optional fixed PES size for stream type */
   guint16 pes_payload_size;
+  /* current PES payload size being written */
   guint16 cur_pes_payload_size;
+  /* ... of which already this much written */
   guint16 pes_bytes_written;
 
   /* PTS/DTS to write if the flags in the packet info are set */
+  /* in MPEG PTS clock time */
   gint64 pts;
   gint64 dts;
 
-  gint64 last_pts;
+  /* last ts written, or maybe next one ... ?! */
   gint64 last_dts;
+  gint64 last_pts;
 
+  /* count of programs using this as PCR */
   gint   pcr_ref;
+  /* last time PCR written */
   gint64 last_pcr;
 
+  /* audio parameters for stream
+   * (used in stream descriptor) */
   gint audio_sampling;
   gint audio_channels;
   gint audio_bitrate;

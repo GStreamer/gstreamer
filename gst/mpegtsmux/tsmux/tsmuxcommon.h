@@ -127,18 +127,26 @@ struct TsMuxPacketInfo {
   guint16 pid;
   guint32 flags;
 
+  gboolean packet_start_unit_indicator;
+
+  /* continuity counter */
+  guint8 packet_count;
+
+  /* payload bytes available
+   * (including PES header if applicable) */
+  guint stream_avail;
+
+  /* optional PCR */
   guint64 pcr;
+
+  /* following not really actively used */
+
   guint64 opcr;
 
   guint8 splice_countdown;
 
   guint8 private_data_len;
-  guint8 private_data [256];
-
-  guint8 packet_count; /* continuity counter */
-
-  guint stream_avail; /* Number of payload bytes available */
-  gboolean packet_start_unit_indicator;
+  guint8 private_data[256];
 };
 
 static inline void

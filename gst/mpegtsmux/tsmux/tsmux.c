@@ -253,7 +253,6 @@ tsmux_program_new (TsMux * mux)
   program->pgm_number = mux->next_pgm_no++;
   program->pmt_pid = mux->next_pmt_pid++;
   program->pcr_stream = NULL;
-  program->last_pcr = -1;
 
   program->streams = g_array_sized_new (FALSE, TRUE, sizeof (TsMuxStream *), 1);
 
@@ -312,7 +311,6 @@ tsmux_program_add_stream (TsMuxProgram * program, TsMuxStream * stream)
   g_return_if_fail (program != NULL);
   g_return_if_fail (stream != NULL);
 
-  program->nb_streams++;
   g_array_append_val (program->streams, stream);
   program->pmt_changed = TRUE;
 }
@@ -1005,7 +1003,7 @@ tsmux_write_pmt (TsMux * mux, TsMuxProgram * program)
     tsmux_put16 (&pos, 0xFCFC);
 
     /* Write out the entries */
-    for (i = 0; i < program->nb_streams; i++) {
+    for (i = 0; i < program->streams->len; i++) {
       TsMuxStream *stream = g_array_index (program->streams, TsMuxStream *, i);
       guint16 es_info_len;
 
@@ -1043,7 +1041,7 @@ tsmux_write_pmt (TsMux * mux, TsMuxProgram * program)
     tsmux_put32 (&pos, crc);
 
     TS_DEBUG ("PMT for program %d has %d streams, is %u bytes",
-        program->pgm_number, program->nb_streams, pmt->pi.stream_avail);
+        program->pgm_number, program->streams->len, pmt->pi.stream_avail);
 
     pmt->pi.pid = program->pmt_pid;
     program->pmt_changed = FALSE;
