@@ -1093,10 +1093,8 @@ gst_aac_parse_sink_getcaps (GstBaseParse * parse, GstCaps * filter)
   GstCaps *peercaps, *templ;
   GstCaps *res;
 
-  /* FIXME: handle filter caps */
-
-  templ = gst_pad_get_pad_template_caps (GST_BASE_PARSE_SINK_PAD (parse)),
-      peercaps = gst_pad_get_allowed_caps (GST_BASE_PARSE_SRC_PAD (parse));
+  templ = gst_pad_get_pad_template_caps (GST_BASE_PARSE_SINK_PAD (parse));
+  peercaps = gst_pad_get_allowed_caps (GST_BASE_PARSE_SRC_PAD (parse));
   if (peercaps) {
     guint i, n;
 
@@ -1111,9 +1109,23 @@ gst_aac_parse_sink_getcaps (GstBaseParse * parse, GstCaps * filter)
 
     res = gst_caps_intersect_full (peercaps, templ, GST_CAPS_INTERSECT_FIRST);
     gst_caps_unref (peercaps);
-    gst_caps_unref (templ);
+
+    /* Append the template caps because we still want to accept
+     * caps without any fields in the case upstream does not
+     * know anything.
+     */
+    gst_caps_append (res, templ);
   } else {
     res = templ;
+  }
+
+  if (filter) {
+    GstCaps *intersection;
+
+    intersection =
+        gst_caps_intersect_full (filter, res, GST_CAPS_INTERSECT_FIRST);
+    gst_caps_unref (res);
+    res = intersection;
   }
 
   return res;
