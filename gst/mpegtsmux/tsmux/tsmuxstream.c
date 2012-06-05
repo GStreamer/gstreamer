@@ -506,8 +506,7 @@ tsmux_stream_find_pts_dts_within (TsMuxStream * stream, guint bound,
   *pts = -1;
   *dts = -1;
 
-  for (cur = g_list_first (stream->buffers); cur != NULL;
-      cur = g_list_next (cur)) {
+  for (cur = stream->buffers; cur; cur = cur->next) {
     TsMuxStreamBuffer *curbuf = cur->data;
 
     /* FIXME: This isn't quite correct - if the 'bound' is within this

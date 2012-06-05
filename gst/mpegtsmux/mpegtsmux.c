@@ -944,8 +944,7 @@ mpegtsmux_collected (GstCollectPads2 * pads, MpegTsMux * mux)
         mux->tsmux->last_pat_ts = -1;
 
         /* output PMT for each program */
-        for (cur = g_list_first (mux->tsmux->programs); cur != NULL;
-            cur = g_list_next (cur)) {
+        for (cur = mux->tsmux->programs; cur; cur = cur->next) {
           TsMuxProgram *program = (TsMuxProgram *) cur->data;
 
           program->last_pmt_ts = -1;
