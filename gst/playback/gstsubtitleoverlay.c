@@ -2138,7 +2138,7 @@ gst_subtitle_overlay_subtitle_sink_event (GstPad * pad, GstObject * parent,
       GstFormat format = eventsegment->format;
 
       GST_DEBUG_OBJECT (pad, "Subtitle newsegment event (%s) not in TIME "
-          "format, converting", format);
+          "format, converting", gst_format_get_name (format));
       peer = gst_pad_get_peer (pad);
 
       if (peer) {
