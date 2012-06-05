@@ -79,6 +79,20 @@ enum
 };
 
 
+#define VTS_VIDEO_CAPS GST_VIDEO_CAPS_MAKE (GST_VIDEO_FORMATS_ALL) ";" \
+  "video/x-bayer, format=(string) { bggr, rggb, grbg, gbrg }, "        \
+  "width = " GST_VIDEO_SIZE_RANGE ", "                                 \
+  "height = " GST_VIDEO_SIZE_RANGE ", "                                \
+  "framerate = " GST_VIDEO_FPS_RANGE
+
+
+static GstStaticPadTemplate gst_video_test_src_template =
+GST_STATIC_PAD_TEMPLATE ("src",
+    GST_PAD_SRC,
+    GST_PAD_ALWAYS,
+    GST_STATIC_CAPS (VTS_VIDEO_CAPS)
+    );
+
 #define gst_video_test_src_parent_class parent_class
 G_DEFINE_TYPE (GstVideoTestSrc, gst_video_test_src, GST_TYPE_PUSH_SRC);
 
@@ -89,8 +103,6 @@ static void gst_video_test_src_set_property (GObject * object, guint prop_id,
 static void gst_video_test_src_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec);
 
-static GstCaps *gst_video_test_src_getcaps (GstBaseSrc * bsrc,
-    GstCaps * filter);
 static gboolean gst_video_test_src_setcaps (GstBaseSrc * bsrc, GstCaps * caps);
 static GstCaps *gst_video_test_src_src_fixate (GstBaseSrc * bsrc,
     GstCaps * caps);
@@ -154,7 +166,6 @@ gst_video_test_src_class_init (GstVideoTestSrcClass * klass)
   GstElementClass *gstelement_class;
   GstBaseSrcClass *gstbasesrc_class;
   GstPushSrcClass *gstpushsrc_class;
-  GstCaps *templ_caps;
 
   gobject_class = (GObjectClass *) klass;
   gstelement_class = (GstElementClass *) klass;
@@ -268,12 +279,9 @@ gst_video_test_src_class_init (GstVideoTestSrcClass * klass)
       "Video test source", "Source/Video",
       "Creates a test video stream", "David A. Schleef <ds@schleef.org>");
 
-  templ_caps = gst_video_test_src_getcaps (NULL, NULL);
   gst_element_class_add_pad_template (gstelement_class,
-      gst_pad_template_new ("src", GST_PAD_SRC, GST_PAD_ALWAYS, templ_caps));
-  gst_caps_unref (templ_caps);
+      gst_static_pad_template_get (&gst_video_test_src_template));
 
-  gstbasesrc_class->get_caps = gst_video_test_src_getcaps;
   gstbasesrc_class->set_caps = gst_video_test_src_setcaps;
   gstbasesrc_class->fixate = gst_video_test_src_src_fixate;
   gstbasesrc_class->is_seekable = gst_video_test_src_is_seekable;
@@ -537,36 +545,6 @@ gst_video_test_src_get_property (GObject * object, guint prop_id,
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
   }
-}
-
-/* threadsafe because this gets called as the plugin is loaded */
-static GstCaps *
-gst_video_test_src_getcaps (GstBaseSrc * bsrc, GstCaps * filter)
-{
-  static GstCaps *capslist = NULL;
-
-  if (!capslist) {
-    GstCaps *caps;
-    GstStructure *structure;
-    int i;
-
-    caps = gst_caps_new_empty ();
-    for (i = 0; i < n_formats; i++) {
-      structure = paint_get_structure (format_list + i);
-      gst_structure_set (structure,
-          "width", GST_TYPE_INT_RANGE, 1, G_MAXINT,
-          "height", GST_TYPE_INT_RANGE, 1, G_MAXINT,
-          "framerate", GST_TYPE_FRACTION_RANGE, 0, 1, G_MAXINT, 1, NULL);
-      gst_caps_append_structure (caps, structure);
-    }
-
-    capslist = caps;
-  }
-
-  if (filter)
-    return gst_caps_intersect_full (filter, capslist, GST_CAPS_INTERSECT_FIRST);
-  else
-    return gst_caps_ref (capslist);
 }
 
 static gboolean
