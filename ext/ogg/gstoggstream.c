@@ -1874,6 +1874,7 @@ setup_opus_mapper (GstOggStream * pad, ogg_packet * packet)
   pad->granuleshift = 0;
   pad->n_header_packets = 2;
   pad->first_granpos = -1;
+  pad->forbid_start_clamping = TRUE;
 
   /* pre-skip is in samples at 48000 Hz, which matches granule one for one */
   pad->granule_offset = -GST_READ_UINT16_LE (packet->packet + 10);
