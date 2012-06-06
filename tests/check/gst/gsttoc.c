@@ -278,7 +278,7 @@ GST_START_TEST (test_serializing)
   test_toc = NULL;
 
   /* check TOC event handling */
-  event = gst_event_new_toc ("test", toc, TRUE);
+  event = gst_event_new_toc (toc, TRUE);
   fail_if (event == NULL);
   fail_unless (event->type == GST_EVENT_TOC);
   ASSERT_MINI_OBJECT_REFCOUNT (GST_MINI_OBJECT (event), "GstEvent", 1);
