@@ -1641,7 +1641,7 @@ ensure_current_registry (GError ** error)
   registry_file = g_strdup (g_getenv ("GST_REGISTRY"));
   if (registry_file == NULL) {
     registry_file = g_build_filename (g_get_home_dir (),
-        ".gstreamer-" GST_MAJORMINOR, "registry." HOST_CPU ".bin", NULL);
+        ".gstreamer-" GST_MAJORMINOR, "registry." TARGET_CPU ".bin", NULL);
   }
 
   if (!_gst_disable_registry_cache) {
