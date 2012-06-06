@@ -234,7 +234,10 @@ gst_rtp_base_audio_payload_set_property (GObject * object,
 
   switch (prop_id) {
     case PROP_BUFFER_LIST:
+#if 0
       payload->priv->buffer_list = g_value_get_boolean (value);
+#endif
+      payload->priv->buffer_list = FALSE;
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
