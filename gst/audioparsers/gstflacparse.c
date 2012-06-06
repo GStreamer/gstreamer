@@ -1503,7 +1503,7 @@ gst_flac_parse_pre_push_frame (GstBaseParse * parse, GstBaseParseFrame * frame)
   /* Push tags */
   if (flacparse->tags) {
     gst_pad_push_event (GST_BASE_PARSE_SRC_PAD (flacparse),
-        gst_event_new_tag (flacparse->tags));
+        gst_event_new_tag ("GstParser", flacparse->tags));
     flacparse->tags = NULL;
   }
 

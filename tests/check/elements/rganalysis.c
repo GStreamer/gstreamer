@@ -218,7 +218,7 @@ static void
 send_tag_event (GstElement * element, GstTagList * tag_list)
 {
   GstPad *pad = gst_element_get_static_pad (element, "sink");
-  GstEvent *event = gst_event_new_tag (tag_list);
+  GstEvent *event = gst_event_new_tag ("test", tag_list);
 
   fail_unless (gst_pad_send_event (pad, event),
       "Cannot send TAG event: Not handled.");

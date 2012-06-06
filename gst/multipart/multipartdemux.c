@@ -609,7 +609,8 @@ gst_multipart_demux_chain (GstPad * pad, GstObject * parent, GstBuffer * buf)
         gst_pad_push_event (srcpad->pad, gst_event_new_segment (&segment));
 
         tags = gst_tag_list_new (GST_TAG_CONTAINER_FORMAT, "Multipart", NULL);
-        gst_pad_push_event (srcpad->pad, gst_event_new_tag (tags));
+        gst_pad_push_event (srcpad->pad, gst_event_new_tag ("GstDemuxer",
+                tags));
 
         GST_BUFFER_TIMESTAMP (outbuf) = 0;
       } else {

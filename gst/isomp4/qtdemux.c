@@ -794,7 +794,7 @@ gst_qtdemux_push_tags (GstQTDemux * qtdemux, QtDemuxStream * stream)
       GST_DEBUG_OBJECT (qtdemux, "Sending tags %" GST_PTR_FORMAT,
           stream->pending_tags);
       gst_pad_push_event (stream->pad,
-          gst_event_new_tag (stream->pending_tags));
+          gst_event_new_tag ("GstDemuxer", stream->pending_tags));
       stream->pending_tags = NULL;
     }
 
@@ -802,7 +802,8 @@ gst_qtdemux_push_tags (GstQTDemux * qtdemux, QtDemuxStream * stream)
       GST_DEBUG_OBJECT (qtdemux, "Sending global tags %" GST_PTR_FORMAT,
           qtdemux->tag_list);
       gst_pad_push_event (stream->pad,
-          gst_event_new_tag (gst_tag_list_copy (qtdemux->tag_list)));
+          gst_event_new_tag ("GstDemuxer",
+              gst_tag_list_copy (qtdemux->tag_list)));
       stream->send_global_tags = FALSE;
     }
   }

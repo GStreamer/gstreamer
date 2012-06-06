@@ -302,8 +302,8 @@ gst_dvdemux_add_pad (GstDVDemux * dvdemux, GstStaticPadTemplate * template)
 
   if (no_more_pads) {
     gst_pad_push_event (pad,
-        gst_event_new_tag (gst_tag_list_new (GST_TAG_CONTAINER_FORMAT, "DV",
-                NULL)));
+        gst_event_new_tag ("GstDemuxer",
+            gst_tag_list_new (GST_TAG_CONTAINER_FORMAT, "DV", NULL)));
   }
 
   return pad;

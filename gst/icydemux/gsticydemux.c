@@ -617,7 +617,7 @@ gst_icydemux_send_tag_event (GstICYDemux * icydemux, GstTagList * tags)
   gst_element_post_message (GST_ELEMENT (icydemux),
       gst_message_new_tag (GST_OBJECT (icydemux), gst_tag_list_copy (tags)));
 
-  event = gst_event_new_tag (tags);
+  event = gst_event_new_tag ("GstDemuxer", tags);
   GST_EVENT_TIMESTAMP (event) = 0;
 
   GST_DEBUG_OBJECT (icydemux, "Sending tag event on src pad");

@@ -1502,7 +1502,7 @@ gst_matroska_demux_send_event (GstMatroskaDemux * demux, GstEvent * event)
           GST_PTR_FORMAT, stream->pending_tags,
           GST_DEBUG_PAD_NAME (stream->pad), stream->pending_tags);
       gst_pad_push_event (stream->pad,
-          gst_event_new_tag (stream->pending_tags));
+          gst_event_new_tag ("GstDemuxer", stream->pending_tags));
       stream->pending_tags = NULL;
     }
   }
@@ -1514,7 +1514,7 @@ gst_matroska_demux_send_event (GstMatroskaDemux * demux, GstEvent * event)
     GST_DEBUG_OBJECT (demux, "Sending global_tags %p : %" GST_PTR_FORMAT,
         demux->common.global_tags, demux->common.global_tags);
 
-    tag_event = gst_event_new_tag (demux->common.global_tags);
+    tag_event = gst_event_new_tag ("GstDemuxer", demux->common.global_tags);
 
     for (i = 0; i < demux->common.src->len; i++) {
       GstMatroskaTrackContext *stream;
@@ -4371,7 +4371,7 @@ gst_matroska_demux_parse_id (GstMatroskaDemux * demux, guint32 id,
 
             if (demux->common.toc) {
               gst_matroska_demux_send_event (demux,
-                  gst_event_new_toc (demux->common.toc, FALSE));
+                  gst_event_new_toc ("GstDemuxer", demux->common.toc, FALSE));
               gst_element_post_message (GST_ELEMENT_CAST (demux),
                   gst_message_new_toc (GST_OBJECT_CAST (demux),
                       demux->common.toc, FALSE));

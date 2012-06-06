@@ -319,7 +319,7 @@ gst_flac_tag_chain (GstPad * pad, GstObject * parent, GstBuffer * buffer)
           id_data, 4, NULL);
       if (tag->tags != NULL) {
         gst_pad_push_event (tag->srcpad,
-            gst_event_new_tag (gst_tag_list_copy (tag->tags)));
+            gst_event_new_tag ("GstFlacTag", gst_tag_list_copy (tag->tags)));
       }
 
       gst_buffer_unref (tag->vorbiscomment);

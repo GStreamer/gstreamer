@@ -1786,7 +1786,8 @@ gst_wavparse_add_src_pad (GstWavParse * wav, GstBuffer * buf)
   }
 
   if (wav->tags) {
-    gst_pad_push_event (wav->srcpad, gst_event_new_tag (wav->tags));
+    gst_pad_push_event (wav->srcpad, gst_event_new_tag ("GstParser",
+            wav->tags));
     wav->tags = NULL;
   }
 }

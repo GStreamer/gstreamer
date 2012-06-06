@@ -634,7 +634,8 @@ gst_rg_analysis_handle_eos (GstRgAnalysis * filter)
           GST_TAG_REFERENCE_LEVEL, filter->reference_level, NULL);
       /* This steals our reference to the list: */
       gst_pad_push_event (GST_BASE_TRANSFORM_SRC_PAD (GST_BASE_TRANSFORM
-              (filter)), gst_event_new_tag (gst_tag_list_copy (tag_list)));
+              (filter)), gst_event_new_tag ("GstAnalysis",
+              gst_tag_list_copy (tag_list)));
       /* special case element, also post here */
       gst_element_post_message (GST_ELEMENT_CAST (filter),
           gst_message_new_tag (GST_OBJECT (filter), tag_list));

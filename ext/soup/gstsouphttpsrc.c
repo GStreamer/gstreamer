@@ -788,7 +788,8 @@ gst_soup_http_src_got_headers_cb (SoupMessage * msg, GstSoupHTTPSrc * src)
   if (!gst_tag_list_is_empty (tag_list)) {
     GST_DEBUG_OBJECT (src,
         "calling gst_element_found_tags with %" GST_PTR_FORMAT, tag_list);
-    gst_pad_push_event (GST_BASE_SRC_PAD (src), gst_event_new_tag (tag_list));
+    gst_pad_push_event (GST_BASE_SRC_PAD (src), gst_event_new_tag ("GstSrc",
+            tag_list));
   } else {
     gst_tag_list_free (tag_list);
   }

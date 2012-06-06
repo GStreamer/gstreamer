@@ -439,7 +439,7 @@ gst_matroska_read_common_found_global_tag (GstMatroskaReadCommon * common,
     gst_tag_list_insert (common->global_tags, taglist, GST_TAG_MERGE_APPEND);
     gst_tag_list_free (taglist);
   } else {
-    GstEvent *tag_event = gst_event_new_tag (taglist);
+    GstEvent *tag_event = gst_event_new_tag ("GstDemuxer", taglist);
     gint i;
 
     /* hm, already sent, no need to cache and wait anymore */
