@@ -252,9 +252,9 @@ typedef void (*GstVideoFormatUnpack)         (const GstVideoFormatInfo *info,
  * format @info. The pixels from source have each component interleaved
  * and will be packed into the planes in @data.
  *
- * When @info refers to a format with a h_sub != 0, this function operates on
- * (1 << h_sub) lines meaning that @src should contain at least (1 << h_sub)
- * lines with a stride of @sstride and @y should be a multiple of (1 << h_sub).
+ * This function operates on pack_lines lines, meaning that @src should
+ * contain at least pack_lines lines with a stride of @sstride and @y
+ * should be a multiple of pack_lines.
  */
 typedef void (*GstVideoFormatPack)           (const GstVideoFormatInfo *info,
                                               GstVideoPackFlags flags,
@@ -292,6 +292,7 @@ typedef void (*GstVideoFormatPack)           (const GstVideoFormatInfo *info,
  *     GST_VIDEO_SUB_SCALE to scale a height.
  * @unpack_format: the format of the unpacked pixels.
  * @unpack_func: an unpack function for this format
+ * @pack_lines: the amount of lines that will be packed
  * @pack_func: an pack function for this format
  *
  * Information for a video format.
@@ -314,6 +315,7 @@ struct _GstVideoFormatInfo {
 
   GstVideoFormat unpack_format;
   GstVideoFormatUnpack unpack_func;
+  gint pack_lines;
   GstVideoFormatPack pack_func;
 
   gpointer _gst_reserved[GST_PADDING];

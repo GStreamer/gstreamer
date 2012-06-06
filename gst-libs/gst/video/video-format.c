@@ -70,7 +70,7 @@
 #define GET_V_STRIDE()               GET_COMP_STRIDE(GST_VIDEO_COMP_V)
 #define GET_A_STRIDE()               GET_COMP_STRIDE(GST_VIDEO_COMP_A)
 
-#define PACK_420 GST_VIDEO_FORMAT_AYUV, unpack_planar_420, pack_planar_420
+#define PACK_420 GST_VIDEO_FORMAT_AYUV, unpack_planar_420, 1, pack_planar_420
 static void
 unpack_planar_420 (const GstVideoFormatInfo * info, GstVideoPackFlags flags,
     gpointer dest, const gpointer data[GST_VIDEO_MAX_PLANES],
@@ -90,7 +90,7 @@ pack_planar_420 (const GstVideoFormatInfo * info, GstVideoPackFlags flags,
       GET_U_LINE (y >> 1), GET_V_LINE (y >> 1), src, width / 2);
 }
 
-#define PACK_YUY2 GST_VIDEO_FORMAT_AYUV, unpack_YUY2, pack_YUY2
+#define PACK_YUY2 GST_VIDEO_FORMAT_AYUV, unpack_YUY2, 1, pack_YUY2
 static void
 unpack_YUY2 (const GstVideoFormatInfo * info, GstVideoPackFlags flags,
     gpointer dest, const gpointer data[GST_VIDEO_MAX_PLANES],
@@ -108,7 +108,7 @@ pack_YUY2 (const GstVideoFormatInfo * info, GstVideoPackFlags flags,
   orc_pack_YUY2 (GET_LINE (y), src, width / 2);
 }
 
-#define PACK_UYVY GST_VIDEO_FORMAT_AYUV, unpack_UYVY, pack_UYVY
+#define PACK_UYVY GST_VIDEO_FORMAT_AYUV, unpack_UYVY, 1, pack_UYVY
 static void
 unpack_UYVY (const GstVideoFormatInfo * info, GstVideoPackFlags flags,
     gpointer dest, const gpointer data[GST_VIDEO_MAX_PLANES],
@@ -126,7 +126,7 @@ pack_UYVY (const GstVideoFormatInfo * info, GstVideoPackFlags flags,
   orc_pack_UYVY (GET_LINE (y), src, width / 2);
 }
 
-#define PACK_YVYU GST_VIDEO_FORMAT_AYUV, unpack_YVYU, pack_YVYU
+#define PACK_YVYU GST_VIDEO_FORMAT_AYUV, unpack_YVYU, 1, pack_YVYU
 static void
 unpack_YVYU (const GstVideoFormatInfo * info, GstVideoPackFlags flags,
     gpointer dest, const gpointer data[GST_VIDEO_MAX_PLANES],
@@ -144,7 +144,7 @@ pack_YVYU (const GstVideoFormatInfo * info, GstVideoPackFlags flags,
   orc_pack_YVYU (GET_LINE (y), src, width / 2);
 }
 
-#define PACK_v308 GST_VIDEO_FORMAT_AYUV, unpack_v308, pack_v308
+#define PACK_v308 GST_VIDEO_FORMAT_AYUV, unpack_v308, 1, pack_v308
 static void
 unpack_v308 (const GstVideoFormatInfo * info, GstVideoPackFlags flags,
     gpointer dest, const gpointer data[GST_VIDEO_MAX_PLANES],
@@ -179,8 +179,8 @@ pack_v308 (const GstVideoFormatInfo * info, GstVideoPackFlags flags,
   }
 }
 
-#define PACK_AYUV GST_VIDEO_FORMAT_AYUV, unpack_copy4, pack_copy4
-#define PACK_ARGB GST_VIDEO_FORMAT_ARGB, unpack_copy4, pack_copy4
+#define PACK_AYUV GST_VIDEO_FORMAT_AYUV, unpack_copy4, 1, pack_copy4
+#define PACK_ARGB GST_VIDEO_FORMAT_ARGB, unpack_copy4, 1, pack_copy4
 static void
 unpack_copy4 (const GstVideoFormatInfo * info, GstVideoPackFlags flags,
     gpointer dest, const gpointer data[GST_VIDEO_MAX_PLANES],
@@ -198,7 +198,7 @@ pack_copy4 (const GstVideoFormatInfo * info, GstVideoPackFlags flags,
   memcpy (GET_LINE (y), src, width * 4);
 }
 
-#define PACK_v210 GST_VIDEO_FORMAT_AYUV64, unpack_v210, pack_v210
+#define PACK_v210 GST_VIDEO_FORMAT_AYUV64, unpack_v210, 1, pack_v210
 static void
 unpack_v210 (const GstVideoFormatInfo * info, GstVideoPackFlags flags,
     gpointer dest, const gpointer data[GST_VIDEO_MAX_PLANES],
@@ -309,7 +309,7 @@ pack_v210 (const GstVideoFormatInfo * info, GstVideoPackFlags flags,
   }
 }
 
-#define PACK_v216 GST_VIDEO_FORMAT_AYUV64, unpack_v216, pack_v216
+#define PACK_v216 GST_VIDEO_FORMAT_AYUV64, unpack_v216, 1, pack_v216
 static void
 unpack_v216 (const GstVideoFormatInfo * info, GstVideoPackFlags flags,
     gpointer dest, const gpointer data[GST_VIDEO_MAX_PLANES],
@@ -345,7 +345,7 @@ pack_v216 (const GstVideoFormatInfo * info, GstVideoPackFlags flags,
   }
 }
 
-#define PACK_Y41B GST_VIDEO_FORMAT_AYUV, unpack_Y41B, pack_Y41B
+#define PACK_Y41B GST_VIDEO_FORMAT_AYUV, unpack_Y41B, 1, pack_Y41B
 static void
 unpack_Y41B (const GstVideoFormatInfo * info, GstVideoPackFlags flags,
     gpointer dest, const gpointer data[GST_VIDEO_MAX_PLANES],
@@ -400,7 +400,7 @@ pack_Y41B (const GstVideoFormatInfo * info, GstVideoPackFlags flags,
   }
 }
 
-#define PACK_Y42B GST_VIDEO_FORMAT_AYUV, unpack_Y42B, pack_Y42B
+#define PACK_Y42B GST_VIDEO_FORMAT_AYUV, unpack_Y42B, 1, pack_Y42B
 static void
 unpack_Y42B (const GstVideoFormatInfo * info, GstVideoPackFlags flags,
     gpointer dest, const gpointer data[GST_VIDEO_MAX_PLANES],
@@ -420,7 +420,7 @@ pack_Y42B (const GstVideoFormatInfo * info, GstVideoPackFlags flags,
       GET_U_LINE (y), GET_V_LINE (y), src, width / 2);
 }
 
-#define PACK_Y444 GST_VIDEO_FORMAT_AYUV, unpack_Y444, pack_Y444
+#define PACK_Y444 GST_VIDEO_FORMAT_AYUV, unpack_Y444, 1, pack_Y444
 static void
 unpack_Y444 (const GstVideoFormatInfo * info, GstVideoPackFlags flags,
     gpointer dest, const gpointer data[GST_VIDEO_MAX_PLANES],
@@ -438,7 +438,7 @@ pack_Y444 (const GstVideoFormatInfo * info, GstVideoPackFlags flags,
   orc_pack_Y444 (GET_Y_LINE (y), GET_U_LINE (y), GET_V_LINE (y), src, width);
 }
 
-#define PACK_GRAY8 GST_VIDEO_FORMAT_AYUV, unpack_GRAY8, pack_GRAY8
+#define PACK_GRAY8 GST_VIDEO_FORMAT_AYUV, unpack_GRAY8, 1, pack_GRAY8
 static void
 unpack_GRAY8 (const GstVideoFormatInfo * info, GstVideoPackFlags flags,
     gpointer dest, const gpointer data[GST_VIDEO_MAX_PLANES],
@@ -456,7 +456,7 @@ pack_GRAY8 (const GstVideoFormatInfo * info, GstVideoPackFlags flags,
   orc_pack_GRAY8 (GET_LINE (y), src, width);
 }
 
-#define PACK_GRAY16_BE GST_VIDEO_FORMAT_AYUV64, unpack_GRAY16_BE, pack_GRAY16_BE
+#define PACK_GRAY16_BE GST_VIDEO_FORMAT_AYUV64, unpack_GRAY16_BE, 1, pack_GRAY16_BE
 static void
 unpack_GRAY16_BE (const GstVideoFormatInfo * info, GstVideoPackFlags flags,
     gpointer dest, const gpointer data[GST_VIDEO_MAX_PLANES],
@@ -489,7 +489,7 @@ pack_GRAY16_BE (const GstVideoFormatInfo * info, GstVideoPackFlags flags,
   }
 }
 
-#define PACK_GRAY16_LE GST_VIDEO_FORMAT_AYUV64, unpack_GRAY16_LE, pack_GRAY16_LE
+#define PACK_GRAY16_LE GST_VIDEO_FORMAT_AYUV64, unpack_GRAY16_LE, 1, pack_GRAY16_LE
 static void
 unpack_GRAY16_LE (const GstVideoFormatInfo * info, GstVideoPackFlags flags,
     gpointer dest, const gpointer data[GST_VIDEO_MAX_PLANES],
@@ -522,7 +522,7 @@ pack_GRAY16_LE (const GstVideoFormatInfo * info, GstVideoPackFlags flags,
   }
 }
 
-#define PACK_RGB16 GST_VIDEO_FORMAT_ARGB, unpack_RGB16, pack_RGB16
+#define PACK_RGB16 GST_VIDEO_FORMAT_ARGB, unpack_RGB16, 1, pack_RGB16
 static void
 unpack_RGB16 (const GstVideoFormatInfo * info, GstVideoPackFlags flags,
     gpointer dest, const gpointer data[GST_VIDEO_MAX_PLANES],
@@ -556,7 +556,7 @@ pack_RGB16 (const GstVideoFormatInfo * info, GstVideoPackFlags flags,
   }
 }
 
-#define PACK_BGR16 GST_VIDEO_FORMAT_ARGB, unpack_BGR16, pack_BGR16
+#define PACK_BGR16 GST_VIDEO_FORMAT_ARGB, unpack_BGR16, 1, pack_BGR16
 static void
 unpack_BGR16 (const GstVideoFormatInfo * info, GstVideoPackFlags flags,
     gpointer dest, const gpointer data[GST_VIDEO_MAX_PLANES],
@@ -590,7 +590,7 @@ pack_BGR16 (const GstVideoFormatInfo * info, GstVideoPackFlags flags,
   }
 }
 
-#define PACK_RGB15 GST_VIDEO_FORMAT_ARGB, unpack_RGB15, pack_RGB15
+#define PACK_RGB15 GST_VIDEO_FORMAT_ARGB, unpack_RGB15, 1, pack_RGB15
 static void
 unpack_RGB15 (const GstVideoFormatInfo * info, GstVideoPackFlags flags,
     gpointer dest, const gpointer data[GST_VIDEO_MAX_PLANES],
@@ -624,7 +624,7 @@ pack_RGB15 (const GstVideoFormatInfo * info, GstVideoPackFlags flags,
   }
 }
 
-#define PACK_BGR15 GST_VIDEO_FORMAT_ARGB, unpack_BGR15, pack_BGR15
+#define PACK_BGR15 GST_VIDEO_FORMAT_ARGB, unpack_BGR15, 1, pack_BGR15
 static void
 unpack_BGR15 (const GstVideoFormatInfo * info, GstVideoPackFlags flags,
     gpointer dest, const gpointer data[GST_VIDEO_MAX_PLANES],
@@ -658,7 +658,7 @@ pack_BGR15 (const GstVideoFormatInfo * info, GstVideoPackFlags flags,
   }
 }
 
-#define PACK_BGRA GST_VIDEO_FORMAT_ARGB, unpack_BGRA, pack_BGRA
+#define PACK_BGRA GST_VIDEO_FORMAT_ARGB, unpack_BGRA, 1, pack_BGRA
 static void
 unpack_BGRA (const GstVideoFormatInfo * info, GstVideoPackFlags flags,
     gpointer dest, const gpointer data[GST_VIDEO_MAX_PLANES],
@@ -676,7 +676,7 @@ pack_BGRA (const GstVideoFormatInfo * info, GstVideoPackFlags flags,
   orc_pack_BGRA (GET_LINE (y), src, width);
 }
 
-#define PACK_ABGR GST_VIDEO_FORMAT_ARGB, unpack_ABGR, pack_ABGR
+#define PACK_ABGR GST_VIDEO_FORMAT_ARGB, unpack_ABGR, 1, pack_ABGR
 static void
 unpack_ABGR (const GstVideoFormatInfo * info, GstVideoPackFlags flags,
     gpointer dest, const gpointer data[GST_VIDEO_MAX_PLANES],
@@ -694,7 +694,7 @@ pack_ABGR (const GstVideoFormatInfo * info, GstVideoPackFlags flags,
   orc_pack_ABGR (GET_LINE (y), src, width);
 }
 
-#define PACK_RGBA GST_VIDEO_FORMAT_ARGB, unpack_RGBA, pack_RGBA
+#define PACK_RGBA GST_VIDEO_FORMAT_ARGB, unpack_RGBA, 1, pack_RGBA
 static void
 unpack_RGBA (const GstVideoFormatInfo * info, GstVideoPackFlags flags,
     gpointer dest, const gpointer data[GST_VIDEO_MAX_PLANES],
@@ -712,7 +712,7 @@ pack_RGBA (const GstVideoFormatInfo * info, GstVideoPackFlags flags,
   orc_pack_RGBA (GET_LINE (y), src, width);
 }
 
-#define PACK_RGB GST_VIDEO_FORMAT_ARGB, unpack_RGB, pack_RGB
+#define PACK_RGB GST_VIDEO_FORMAT_ARGB, unpack_RGB, 1, pack_RGB
 static void
 unpack_RGB (const GstVideoFormatInfo * info, GstVideoPackFlags flags,
     gpointer dest, const gpointer data[GST_VIDEO_MAX_PLANES],
@@ -747,7 +747,7 @@ pack_RGB (const GstVideoFormatInfo * info, GstVideoPackFlags flags,
   }
 }
 
-#define PACK_BGR GST_VIDEO_FORMAT_ARGB, unpack_BGR, pack_BGR
+#define PACK_BGR GST_VIDEO_FORMAT_ARGB, unpack_BGR, 1, pack_BGR
 static void
 unpack_BGR (const GstVideoFormatInfo * info, GstVideoPackFlags flags,
     gpointer dest, const gpointer data[GST_VIDEO_MAX_PLANES],
@@ -782,7 +782,7 @@ pack_BGR (const GstVideoFormatInfo * info, GstVideoPackFlags flags,
   }
 }
 
-#define PACK_NV12 GST_VIDEO_FORMAT_AYUV, unpack_NV12, pack_NV12
+#define PACK_NV12 GST_VIDEO_FORMAT_AYUV, unpack_NV12, 1, pack_NV12
 static void
 unpack_NV12 (const GstVideoFormatInfo * info, GstVideoPackFlags flags,
     gpointer dest, const gpointer data[GST_VIDEO_MAX_PLANES],
@@ -802,7 +802,7 @@ pack_NV12 (const GstVideoFormatInfo * info, GstVideoPackFlags flags,
       GET_PLANE_LINE (1, y >> 1), src, width / 2);
 }
 
-#define PACK_NV21 GST_VIDEO_FORMAT_AYUV, unpack_NV21, pack_NV21
+#define PACK_NV21 GST_VIDEO_FORMAT_AYUV, unpack_NV21, 1, pack_NV21
 static void
 unpack_NV21 (const GstVideoFormatInfo * info, GstVideoPackFlags flags,
     gpointer dest, const gpointer data[GST_VIDEO_MAX_PLANES],
@@ -822,7 +822,7 @@ pack_NV21 (const GstVideoFormatInfo * info, GstVideoPackFlags flags,
       GET_PLANE_LINE (1, y >> 1), src, width / 2);
 }
 
-#define PACK_UYVP GST_VIDEO_FORMAT_AYUV64, unpack_UYVP, pack_UYVP
+#define PACK_UYVP GST_VIDEO_FORMAT_AYUV64, unpack_UYVP, 1, pack_UYVP
 static void
 unpack_UYVP (const GstVideoFormatInfo * info, GstVideoPackFlags flags,
     gpointer dest, const gpointer data[GST_VIDEO_MAX_PLANES],
@@ -881,7 +881,7 @@ pack_UYVP (const GstVideoFormatInfo * info, GstVideoPackFlags flags,
   }
 }
 
-#define PACK_A420 GST_VIDEO_FORMAT_AYUV, unpack_A420, pack_A420
+#define PACK_A420 GST_VIDEO_FORMAT_AYUV, unpack_A420, 1, pack_A420
 static void
 unpack_A420 (const GstVideoFormatInfo * info, GstVideoPackFlags flags,
     gpointer dest, const gpointer data[GST_VIDEO_MAX_PLANES],
@@ -902,7 +902,7 @@ pack_A420 (const GstVideoFormatInfo * info, GstVideoPackFlags flags,
       GET_U_LINE (y >> 1), GET_V_LINE (y >> 1), GET_A_LINE (y), src, width / 2);
 }
 
-#define PACK_RGB8P GST_VIDEO_FORMAT_ARGB, unpack_RGB8P, pack_RGB8P
+#define PACK_RGB8P GST_VIDEO_FORMAT_ARGB, unpack_RGB8P, 1, pack_RGB8P
 static void
 unpack_RGB8P (const GstVideoFormatInfo * info, GstVideoPackFlags flags,
     gpointer dest, const gpointer data[GST_VIDEO_MAX_PLANES],
@@ -944,7 +944,7 @@ pack_RGB8P (const GstVideoFormatInfo * info, GstVideoPackFlags flags,
   }
 }
 
-#define PACK_410 GST_VIDEO_FORMAT_AYUV, unpack_410, pack_410
+#define PACK_410 GST_VIDEO_FORMAT_AYUV, unpack_410, 1, pack_410
 static void
 unpack_410 (const GstVideoFormatInfo * info, GstVideoPackFlags flags,
     gpointer dest, const gpointer data[GST_VIDEO_MAX_PLANES],
@@ -1001,7 +1001,7 @@ pack_410 (const GstVideoFormatInfo * info, GstVideoPackFlags flags,
   }
 }
 
-#define PACK_IYU1 GST_VIDEO_FORMAT_AYUV, unpack_IYU1, pack_IYU1
+#define PACK_IYU1 GST_VIDEO_FORMAT_AYUV, unpack_IYU1, 1, pack_IYU1
 static void
 unpack_IYU1 (const GstVideoFormatInfo * info, GstVideoPackFlags flags,
     gpointer dest, const gpointer data[GST_VIDEO_MAX_PLANES],
@@ -1089,8 +1089,8 @@ pack_IYU1 (const GstVideoFormatInfo * info, GstVideoPackFlags flags,
   }
 }
 
-#define PACK_ARGB64 GST_VIDEO_FORMAT_ARGB64, unpack_copy8, pack_copy8
-#define PACK_AYUV64 GST_VIDEO_FORMAT_AYUV64, unpack_copy8, pack_copy8
+#define PACK_ARGB64 GST_VIDEO_FORMAT_ARGB64, unpack_copy8, 1, pack_copy8
+#define PACK_AYUV64 GST_VIDEO_FORMAT_AYUV64, unpack_copy8, 1, pack_copy8
 static void
 unpack_copy8 (const GstVideoFormatInfo * info, GstVideoPackFlags flags,
     gpointer dest, const gpointer data[GST_VIDEO_MAX_PLANES],
@@ -1108,7 +1108,7 @@ pack_copy8 (const GstVideoFormatInfo * info, GstVideoPackFlags flags,
   memcpy (GET_LINE (y), src, width * 8);
 }
 
-#define PACK_r210 GST_VIDEO_FORMAT_AYUV64, unpack_r210, pack_r210
+#define PACK_r210 GST_VIDEO_FORMAT_AYUV64, unpack_r210, 1, pack_r210
 static void
 unpack_r210 (const GstVideoFormatInfo * info, GstVideoPackFlags flags,
     gpointer dest, const gpointer data[GST_VIDEO_MAX_PLANES],
@@ -1147,7 +1147,7 @@ pack_r210 (const GstVideoFormatInfo * info, GstVideoPackFlags flags,
   }
 }
 
-#define PACK_I420_10LE GST_VIDEO_FORMAT_AYUV64, unpack_I420_10LE, pack_I420_10LE
+#define PACK_I420_10LE GST_VIDEO_FORMAT_AYUV64, unpack_I420_10LE, 1, pack_I420_10LE
 static void
 unpack_I420_10LE (const GstVideoFormatInfo * info, GstVideoPackFlags flags,
     gpointer dest, const gpointer data[GST_VIDEO_MAX_PLANES],
@@ -1202,7 +1202,7 @@ pack_I420_10LE (const GstVideoFormatInfo * info, GstVideoPackFlags flags,
   }
 }
 
-#define PACK_I420_10BE GST_VIDEO_FORMAT_AYUV64, unpack_I420_10BE, pack_I420_10BE
+#define PACK_I420_10BE GST_VIDEO_FORMAT_AYUV64, unpack_I420_10BE, 1, pack_I420_10BE
 static void
 unpack_I420_10BE (const GstVideoFormatInfo * info, GstVideoPackFlags flags,
     gpointer dest, const gpointer data[GST_VIDEO_MAX_PLANES],
