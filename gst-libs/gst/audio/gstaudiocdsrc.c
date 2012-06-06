@@ -1651,7 +1651,8 @@ gst_audio_cd_src_create (GstPushSrc * pushsrc, GstBuffer ** buffer)
         gst_tag_list_merge (src->tags,
         src->priv->tracks[src->priv->cur_track].tags, GST_TAG_MERGE_REPLACE);
     GST_LOG_OBJECT (src, "announcing tags: %" GST_PTR_FORMAT, tags);
-    gst_pad_push_event (GST_BASE_SRC_PAD (src), gst_event_new_tag (tags));
+    gst_pad_push_event (GST_BASE_SRC_PAD (src), gst_event_new_tag ("GstSrc",
+            tags));
     src->priv->prev_track = src->priv->cur_track;
 
     gst_audio_cd_src_update_duration (src);

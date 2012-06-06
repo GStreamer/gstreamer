@@ -659,7 +659,7 @@ gst_ogm_parse_stream_header (GstOgmParse * ogm, const guint8 * data, guint size)
       GstTagList *tags;
 
       tags = gst_tag_list_new (GST_TAG_SUBTITLE_CODEC, "Ogm", NULL);
-      gst_pad_push_event (ogm->srcpad, gst_event_new_tag (tags));
+      gst_pad_push_event (ogm->srcpad, gst_event_new_tag ("GstParser", tags));
     }
   }
 
@@ -701,7 +701,7 @@ gst_ogm_parse_comment_packet (GstOgmParse * ogm, GstBuffer * buf)
 
     if (tags) {
       GST_DEBUG_OBJECT (ogm, "tags = %" GST_PTR_FORMAT, tags);
-      gst_pad_push_event (ogm->srcpad, gst_event_new_tag (tags));
+      gst_pad_push_event (ogm->srcpad, gst_event_new_tag ("GstParser", tags));
     } else {
       GST_DEBUG_OBJECT (ogm, "failed to extract tags from vorbis comment");
     }

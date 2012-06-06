@@ -201,7 +201,7 @@ gst_theora_dec_init (GstTheoraDec * dec)
 
   /* input is packetized,
    * but is not marked that way so data gets parsed and keyframes marked */
-  gst_video_decoder_set_packetized (GST_VIDEO_DECODER(dec), FALSE);
+  gst_video_decoder_set_packetized (GST_VIDEO_DECODER (dec), FALSE);
 }
 
 static void
@@ -501,7 +501,7 @@ theora_handle_type_packet (GstTheoraDec * dec)
   /* FIXME :  */
   if (dec->tags) {
     gst_pad_push_event (GST_VIDEO_DECODER (dec)->srcpad,
-        gst_event_new_tag (dec->tags));
+        gst_event_new_tag ("GstDecoder", dec->tags));
     dec->tags = NULL;
   }
 

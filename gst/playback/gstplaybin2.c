@@ -3059,7 +3059,7 @@ no_more_pads_cb (GstElement * decodebin, GstSourceGroup * group)
           gst_structure_set (s, "suburi", G_TYPE_STRING, group->suburi, NULL);
         msg = gst_message_new_element (GST_OBJECT_CAST (playbin), s);
         seqnum = gst_message_get_seqnum (msg);
-        event = gst_event_new_sink_message (msg);
+        event = gst_event_new_sink_message ("GstPlaybin", msg);
         g_mutex_lock (&group->stream_changed_pending_lock);
         group->stream_changed_pending =
             g_list_prepend (group->stream_changed_pending,
