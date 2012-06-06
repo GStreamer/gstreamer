@@ -1646,7 +1646,7 @@ gst_event_new_stream_start (void)
  * Since: 0.10.37
  */
 GstEvent *
-gst_event_new_toc (const gchar * name, GstToc * toc, gboolean updated)
+gst_event_new_toc (GstToc * toc, gboolean updated)
 {
   GstStructure *toc_struct;
 

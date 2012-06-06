@@ -152,7 +152,7 @@ typedef enum {
   GST_EVENT_BUFFERSIZE            = GST_EVENT_MAKE_TYPE (90, FLAG(DOWNSTREAM) | FLAG(SERIALIZED) | FLAG(STICKY)),
   GST_EVENT_SINK_MESSAGE          = GST_EVENT_MAKE_TYPE (100, FLAG(DOWNSTREAM) | FLAG(SERIALIZED) | FLAG(STICKY) | FLAG(STICKY_MULTI)),
   GST_EVENT_EOS                   = GST_EVENT_MAKE_TYPE (110, FLAG(DOWNSTREAM) | FLAG(SERIALIZED) | FLAG(STICKY)),
-  GST_EVENT_TOC                   = GST_EVENT_MAKE_TYPE (120, FLAG(DOWNSTREAM) | FLAG(SERIALIZED) | FLAG(STICKY) | FLAG(STICKY_MULTI)),
+  GST_EVENT_TOC                   = GST_EVENT_MAKE_TYPE (120, FLAG(DOWNSTREAM) | FLAG(SERIALIZED) | FLAG(STICKY)),
 
   /* non-sticky downstream serialized */
   GST_EVENT_SEGMENT_DONE          = GST_EVENT_MAKE_TYPE (150, FLAG(DOWNSTREAM) | FLAG(SERIALIZED)),
@@ -527,7 +527,7 @@ GstEvent*       gst_event_new_tag               (const gchar *name, GstTagList *
 void            gst_event_parse_tag             (GstEvent *event, GstTagList **taglist);
 
 /* TOC event */
-GstEvent*      gst_event_new_toc                (const gchar *name, GstToc *toc, gboolean updated);
+GstEvent*      gst_event_new_toc                (GstToc *toc, gboolean updated);
 void           gst_event_parse_toc              (GstEvent *event, GstToc **toc, gboolean *updated);
 
 
