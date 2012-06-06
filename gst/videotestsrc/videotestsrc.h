@@ -22,20 +22,6 @@
 
 #include <glib.h>
 
-enum {
-  VTS_YUV,
-  VTS_RGB,
-  VTS_GRAY,
-  VTS_BAYER
-};
-
-enum {
-  VTS_BAYER_BGGR,
-  VTS_BAYER_RGGB,
-  VTS_BAYER_GRBG,
-  VTS_BAYER_GBRG
-};
-
 struct vts_color_struct {
   guint8 Y, U, V, A;
   guint8 R, G, B;
@@ -44,21 +30,19 @@ struct vts_color_struct {
 
 
 typedef struct paintinfo_struct paintinfo;
+
 struct paintinfo_struct
 {
-  int size;                     /* size of a frame */
-  int width;
-  int height;
   const struct vts_color_struct *colors;
   const struct vts_color_struct *color;
-  /*  const struct vts_color_struct *color; */
-  void (*paint_hline) (paintinfo * p, int x, int y, int w);
+
   void (*paint_tmpline) (paintinfo * p, int x, int w);
   void (*convert_tmpline) (paintinfo * p, GstVideoFrame *frame, int y);
+  void (*convert_hline) (paintinfo * p, GstVideoFrame *frame, int y);
   int x_offset;
 
-  int bayer_x_invert;
-  int bayer_y_invert;
+  int x_invert;
+  int y_invert;
 
   guint8 *tmpline;
   guint8 *tmpline2;
@@ -70,25 +54,6 @@ struct paintinfo_struct
 };
 #define PAINT_INFO_INIT {0, }
 
-struct format_list_struct
-{
-  int type;
-  const char *format;
-  const char *name;
-  void (*paint_setup) (paintinfo * p, GstVideoFrame *frame);
-  void (*convert_hline) (paintinfo * p, GstVideoFrame *frame, int y);
-};
-
-struct format_list_struct *
-        paintrect_find_format           (const gchar *find_format);
-struct format_list_struct *
-        paintrect_find_name             (const char *name);
-struct format_list_struct *
-        paintinfo_find_by_structure     (const GstStructure *structure);
-GstStructure *
-        paint_get_structure             (struct format_list_struct *format);
-
-int     gst_video_test_src_get_size     (GstVideoTestSrc * v, int w, int h);
 void    gst_video_test_src_smpte        (GstVideoTestSrc * v, GstVideoFrame *frame);
 void    gst_video_test_src_smpte75      (GstVideoTestSrc * v, GstVideoFrame *frame);
 void    gst_video_test_src_snow         (GstVideoTestSrc * v, GstVideoFrame *frame);
@@ -110,8 +75,5 @@ void    gst_video_test_src_chromazoneplate (GstVideoTestSrc * v, GstVideoFrame *
 void    gst_video_test_src_ball         (GstVideoTestSrc * v, GstVideoFrame *frame);
 void    gst_video_test_src_smpte100     (GstVideoTestSrc * v, GstVideoFrame *frame);
 void    gst_video_test_src_bar          (GstVideoTestSrc * v, GstVideoFrame *frame);
-
-extern struct format_list_struct format_list[];
-extern int n_formats;
 
 #endif
