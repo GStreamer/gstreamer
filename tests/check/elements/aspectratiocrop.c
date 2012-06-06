@@ -28,7 +28,7 @@
 #define ASPECT_RATIO_CROP_CAPS                      \
   GST_VIDEO_CAPS_MAKE ("{ RGBx, xRGB, BGRx, xBGR, " \
       "RGBA, ARGB, BGRA, ABGR, RGB, BGR, AYUV, "    \
-      "YUY2, YVYU, UYVY, Y800, I420, YV12, RGB16, " \
+      "YUY2, YVYU, UYVY, GRAY8, I420, YV12, RGB16, " \
       "RGB15 }")
 
 static GstStaticPadTemplate sinktemplate = GST_STATIC_PAD_TEMPLATE ("sink",

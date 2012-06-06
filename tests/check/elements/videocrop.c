@@ -271,10 +271,7 @@ check_1x1_buffer (GstBuffer * buf, GstCaps * caps)
 
   finfo = info.finfo;
 
-
-  if (GST_VIDEO_INFO_FORMAT (&info) == GST_VIDEO_FORMAT_Y800)
-    values = gray_values;
-  else if (GST_VIDEO_INFO_IS_YUV (&info))
+  if (GST_VIDEO_INFO_IS_YUV (&info))
     values = yuv_values;
   else if (GST_VIDEO_INFO_IS_GRAY (&info))
     values = gray_values;
