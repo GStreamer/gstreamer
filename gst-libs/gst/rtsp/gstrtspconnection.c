@@ -2096,7 +2096,7 @@ gst_rtsp_connection_receive (GstRTSPConnection * conn, GstRTSPMessage * message,
             G_IO_IN | G_IO_PRI | G_IO_ERR | G_IO_HUP, conn->cancellable,
             &err)) {
       g_socket_set_timeout (conn->read_socket, 0);
-      if (g_error_matches (err, G_IO_ERROR, G_IO_ERROR_BUSY)) {
+      if (g_error_matches (err, G_IO_ERROR, G_IO_ERROR_CANCELLED)) {
         g_clear_error (&err);
         goto stopped;
       } else if (g_error_matches (err, G_IO_ERROR, G_IO_ERROR_TIMED_OUT)) {
