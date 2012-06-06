@@ -1910,6 +1910,7 @@ gst_rtsp_client_accept (GstRTSPClient * client, GSocket * socket,
   addrlen = sizeof (addr);
   if (!g_socket_address_to_native (addres, &addr, addrlen, error))
     goto native_failed;
+  g_object_unref (addres);
 
   if (getnameinfo ((struct sockaddr *) &addr, addrlen, ip, sizeof (ip), NULL, 0,
           NI_NUMERICHOST) != 0)
@@ -1960,6 +1961,7 @@ no_address:
   }
 native_failed:
   {
+    g_object_unref (addres);
     GST_ERROR ("could not get native address %s", (*error)->message);
     return FALSE;
   }
