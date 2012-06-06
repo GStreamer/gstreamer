@@ -550,16 +550,7 @@ gst_adapter_copy (GstAdapter * adapter, gpointer dest, gsize offset, gsize size)
   copy_into_unchecked (adapter, dest, offset + adapter->skip, size);
 }
 
-/**
- * gst_adapter_flush:
- * @adapter: a #GstAdapter
- * @flush: the number of bytes to flush
- *
- * Flushes the first @flush bytes in the @adapter. The caller must ensure that
- * at least this many bytes are available.
- *
- * See also: gst_adapter_map(), gst_adapter_unmap()
- */
+/*Flushes the first @flush bytes in the @adapter*/
 static void
 gst_adapter_flush_unchecked (GstAdapter * adapter, gsize flush)
 {
@@ -615,6 +606,16 @@ gst_adapter_flush_unchecked (GstAdapter * adapter, gsize flush)
   adapter->scan_entry = NULL;
 }
 
+/**
+ * gst_adapter_flush:
+ * @adapter: a #GstAdapter
+ * @flush: the number of bytes to flush
+ *
+ * Flushes the first @flush bytes in the @adapter. The caller must ensure that
+ * at least this many bytes are available.
+ *
+ * See also: gst_adapter_map(), gst_adapter_unmap()
+ */
 void
 gst_adapter_flush (GstAdapter * adapter, gsize flush)
 {
