@@ -26,6 +26,7 @@
 #define __GST_UTILS_H__
 
 #include <glib.h>
+#include <gst/gstconfig.h>
 #include <gst/gstbin.h>
 #include <gst/gstparse.h>
 
@@ -114,20 +115,36 @@ void            gst_print_element_args          (GString *buf, gint indent, GstE
 #define _GST_PUT(__data, __idx, __size, __shift, __num) \
     (((guint8 *) (__data))[__idx] = (((guint##__size) (__num)) >> (__shift)) & 0xff)
 
+#if GST_HAVE_UNALIGNED_ACCESS
+static inline guint16 __gst_fast_read16(const guint8 *v) {
+  return *(const guint16*)(v);
+}
+static inline guint32 __gst_fast_read32(const guint8 *v) {
+  return *(const guint32*)(v);
+}
+static inline guint64 __gst_fast_read64(const guint8 *v) {
+  return *(const guint64*)(v);
+}
+static inline guint16 __gst_fast_read_swap16(const guint8 *v) {
+  return GUINT16_SWAP_LE_BE(*(const guint16*)(v));
+}
+static inline guint32 __gst_fast_read_swap32(const guint8 *v) {
+  return GUINT32_SWAP_LE_BE(*(const guint32*)(v));
+}
+static inline guint64 __gst_fast_read_swap64(const guint8 *v) {
+  return GUINT64_SWAP_LE_BE(*(const guint64*)(v));
+}
+# define _GST_FAST_READ(s, d) __gst_fast_read##s((const guint8 *)(d))
+# define _GST_FAST_READ_SWAP(s, d) __gst_fast_read_swap##s((const guint8 *)(d))
+#endif
+
+
 /**
  * GST_READ_UINT64_BE:
  * @data: memory location
  *
  * Read a 64 bit unsigned integer value in big endian format from the memory buffer.
  */
-#define GST_READ_UINT64_BE(data)        (_GST_GET (data, 0, 64, 56) | \
-                                         _GST_GET (data, 1, 64, 48) | \
-                                         _GST_GET (data, 2, 64, 40) | \
-                                         _GST_GET (data, 3, 64, 32) | \
-                                         _GST_GET (data, 4, 64, 24) | \
-                                         _GST_GET (data, 5, 64, 16) | \
-                                         _GST_GET (data, 6, 64,  8) | \
-                                         _GST_GET (data, 7, 64,  0))
 
 /**
  * GST_READ_UINT64_LE:
@@ -135,14 +152,33 @@ void            gst_print_element_args          (GString *buf, gint indent, GstE
  *
  * Read a 64 bit unsigned integer value in little endian format from the memory buffer.
  */
-#define GST_READ_UINT64_LE(data)        (_GST_GET (data, 7, 64, 56) | \
-                                         _GST_GET (data, 6, 64, 48) | \
-                                         _GST_GET (data, 5, 64, 40) | \
-                                         _GST_GET (data, 4, 64, 32) | \
-                                         _GST_GET (data, 3, 64, 24) | \
-                                         _GST_GET (data, 2, 64, 16) | \
-                                         _GST_GET (data, 1, 64,  8) | \
-                                         _GST_GET (data, 0, 64,  0))
+#if GST_HAVE_UNALIGNED_ACCESS
+# if (G_BYTE_ORDER == G_BIG_ENDIAN)
+#  define GST_READ_UINT64_BE(data)      _GST_FAST_READ (64, data)
+#  define GST_READ_UINT64_LE(data)      _GST_FAST_READ_SWAP (64, data)
+# else
+#  define GST_READ_UINT64_BE(data)      _GST_FAST_READ_SWAP (64, data)
+#  define GST_READ_UINT64_LE(data)      _GST_FAST_READ (64, data)
+# endif
+#else
+# define GST_READ_UINT64_BE(data)	(_GST_GET (data, 0, 64, 56) | \
+					 _GST_GET (data, 1, 64, 48) | \
+					 _GST_GET (data, 2, 64, 40) | \
+					 _GST_GET (data, 3, 64, 32) | \
+					 _GST_GET (data, 4, 64, 24) | \
+					 _GST_GET (data, 5, 64, 16) | \
+					 _GST_GET (data, 6, 64,  8) | \
+					 _GST_GET (data, 7, 64,  0))
+
+# define GST_READ_UINT64_LE(data)	(_GST_GET (data, 7, 64, 56) | \
+					 _GST_GET (data, 6, 64, 48) | \
+					 _GST_GET (data, 5, 64, 40) | \
+					 _GST_GET (data, 4, 64, 32) | \
+					 _GST_GET (data, 3, 64, 24) | \
+					 _GST_GET (data, 2, 64, 16) | \
+					 _GST_GET (data, 1, 64,  8) | \
+					 _GST_GET (data, 0, 64,  0))
+#endif
 
 /**
  * GST_READ_UINT32_BE:
@@ -150,10 +186,6 @@ void            gst_print_element_args          (GString *buf, gint indent, GstE
  *
  * Read a 32 bit unsigned integer value in big endian format from the memory buffer.
  */
-#define GST_READ_UINT32_BE(data)        (_GST_GET (data, 0, 32, 24) | \
-                                         _GST_GET (data, 1, 32, 16) | \
-                                         _GST_GET (data, 2, 32,  8) | \
-                                         _GST_GET (data, 3, 32,  0))
 
 /**
  * GST_READ_UINT32_LE:
@@ -161,10 +193,25 @@ void            gst_print_element_args          (GString *buf, gint indent, GstE
  *
  * Read a 32 bit unsigned integer value in little endian format from the memory buffer.
  */
-#define GST_READ_UINT32_LE(data)        (_GST_GET (data, 3, 32, 24) | \
-                                         _GST_GET (data, 2, 32, 16) | \
-                                         _GST_GET (data, 1, 32,  8) | \
-                                         _GST_GET (data, 0, 32,  0))
+#if GST_HAVE_UNALIGNED_ACCESS
+# if (G_BYTE_ORDER == G_BIG_ENDIAN)
+#  define GST_READ_UINT32_BE(data)      _GST_FAST_READ (32, data)
+#  define GST_READ_UINT32_LE(data)      _GST_FAST_READ_SWAP (32, data)
+# else
+#  define GST_READ_UINT32_BE(data)      _GST_FAST_READ_SWAP (32, data)
+#  define GST_READ_UINT32_LE(data)      _GST_FAST_READ (32, data)
+# endif
+#else
+# define GST_READ_UINT32_BE(data)	(_GST_GET (data, 0, 32, 24) | \
+					 _GST_GET (data, 1, 32, 16) | \
+					 _GST_GET (data, 2, 32,  8) | \
+					 _GST_GET (data, 3, 32,  0))
+
+# define GST_READ_UINT32_LE(data)	(_GST_GET (data, 3, 32, 24) | \
+					 _GST_GET (data, 2, 32, 16) | \
+					 _GST_GET (data, 1, 32,  8) | \
+					 _GST_GET (data, 0, 32,  0))
+#endif
 
 /**
  * GST_READ_UINT24_BE:
@@ -196,17 +243,27 @@ void            gst_print_element_args          (GString *buf, gint indent, GstE
  *
  * Read a 16 bit unsigned integer value in big endian format from the memory buffer.
  */
-#define GST_READ_UINT16_BE(data)        (_GST_GET (data, 0, 16,  8) | \
-                                         _GST_GET (data, 1, 16,  0))
-
 /**
  * GST_READ_UINT16_LE:
  * @data: memory location
  *
  * Read a 16 bit unsigned integer value in little endian format from the memory buffer.
  */
-#define GST_READ_UINT16_LE(data)        (_GST_GET (data, 1, 16,  8) | \
-                                         _GST_GET (data, 0, 16,  0))
+#if GST_HAVE_UNALIGNED_ACCESS
+# if (G_BYTE_ORDER == G_BIG_ENDIAN)
+#  define GST_READ_UINT16_BE(data)      _GST_FAST_READ (16, data)
+#  define GST_READ_UINT16_LE(data)      _GST_FAST_READ_SWAP (16, data)
+# else
+#  define GST_READ_UINT16_BE(data)      _GST_FAST_READ_SWAP (16, data)
+#  define GST_READ_UINT16_LE(data)      _GST_FAST_READ (16, data)
+# endif
+#else
+# define GST_READ_UINT16_BE(data)	(_GST_GET (data, 0, 16,  8) | \
+					 _GST_GET (data, 1, 16,  0))
+
+# define GST_READ_UINT16_LE(data)	(_GST_GET (data, 1, 16,  8) | \
+					 _GST_GET (data, 0, 16,  0))
+#endif
 
 /**
  * GST_READ_UINT8:
