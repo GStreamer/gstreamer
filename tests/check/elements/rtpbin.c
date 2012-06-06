@@ -22,6 +22,20 @@
 
 #include <gst/check/gstcheck.h>
 
+GST_START_TEST (test_pads)
+{
+  GstElement *element;
+  GstPad *pad;
+
+  element = gst_element_factory_make ("rtpsession", NULL);
+
+  pad = gst_element_get_request_pad (element, "recv_rtcp_sink");
+  gst_object_unref (pad);
+  gst_object_unref (element);
+}
+
+GST_END_TEST;
+
 GST_START_TEST (test_cleanup_send)
 {
   GstElement *rtpbin;
@@ -419,6 +433,7 @@ gstrtpbin_suite (void)
   TCase *tc_chain = tcase_create ("general");
 
   suite_add_tcase (s, tc_chain);
+  tcase_add_test (tc_chain, test_pads);
   tcase_add_test (tc_chain, test_cleanup_send);
   tcase_add_test (tc_chain, test_cleanup_recv);
   tcase_add_test (tc_chain, test_cleanup_recv2);
