@@ -523,11 +523,11 @@ void            gst_event_parse_segment         (GstEvent *event, const GstSegme
 void            gst_event_copy_segment          (GstEvent *event, GstSegment *segment);
 
 /* tag event */
-GstEvent*       gst_event_new_tag               (GstTagList *taglist) G_GNUC_MALLOC;
+GstEvent*       gst_event_new_tag               (const gchar *name, GstTagList *taglist) G_GNUC_MALLOC;
 void            gst_event_parse_tag             (GstEvent *event, GstTagList **taglist);
 
 /* TOC event */
-GstEvent*      gst_event_new_toc                (GstToc *toc, gboolean updated);
+GstEvent*      gst_event_new_toc                (const gchar *name, GstToc *toc, gboolean updated);
 void           gst_event_parse_toc              (GstEvent *event, GstToc **toc, gboolean *updated);
 
 
@@ -538,7 +538,7 @@ void            gst_event_parse_buffer_size     (GstEvent *event, GstFormat *for
                                                  gint64 *maxsize, gboolean *async);
 
 /* sink message */
-GstEvent*       gst_event_new_sink_message      (GstMessage *msg) G_GNUC_MALLOC;
+GstEvent*       gst_event_new_sink_message      (const gchar *name, GstMessage *msg) G_GNUC_MALLOC;
 void            gst_event_parse_sink_message    (GstEvent *event, GstMessage **msg);
 
 /* QOS events */

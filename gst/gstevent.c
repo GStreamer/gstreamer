@@ -992,22 +992,26 @@ gst_event_copy_segment (GstEvent * event, GstSegment * segment)
 
 /**
  * gst_event_new_tag:
+ * @name: (transfer none): the name of the event
  * @taglist: (transfer full): metadata list. The event will take ownership
  *     of the taglist.
  *
  * Generates a metadata tag event from the given @taglist.
  *
+ * Since the TAG event has the %GST_EVENT_TYPE_STICKY_MULTI flag set, the
+ * @name will be used to keep track of multiple tag events.
+ *
  * Returns: (transfer full): a new #GstEvent
  */
 GstEvent *
-gst_event_new_tag (GstTagList * taglist)
+gst_event_new_tag (const gchar * name, GstTagList * taglist)
 {
   GstStructure *s;
   GValue val = G_VALUE_INIT;
 
   g_return_val_if_fail (taglist != NULL, NULL);
 
-  s = gst_structure_new_id_empty (GST_QUARK (EVENT_TAG));
+  s = gst_structure_new_empty (name);
   g_value_init (&val, GST_TYPE_TAG_LIST);
   g_value_take_boxed (&val, taglist);
   gst_structure_id_take_value (s, GST_QUARK (TAGLIST), &val);
@@ -1551,11 +1555,14 @@ gst_event_new_reconfigure (void)
 
 /**
  * gst_event_new_sink_message:
+ * @name: a name for the event
  * @msg: (transfer none): the #GstMessage to be posted
  *
  * Create a new sink-message event. The purpose of the sink-message event is
  * to instruct a sink to post the message contained in the event synchronized
  * with the stream.
+ *
+ * @name is used to store multiple sticky events on one pad.
  *
  * Returns: (transfer full): a new #GstEvent
  *
@@ -1563,7 +1570,7 @@ gst_event_new_reconfigure (void)
  */
 /* FIXME 0.11: take ownership of msg for consistency? */
 GstEvent *
-gst_event_new_sink_message (GstMessage * msg)
+gst_event_new_sink_message (const gchar * name, GstMessage * msg)
 {
   GstEvent *event;
   GstStructure *structure;
@@ -1572,7 +1579,7 @@ gst_event_new_sink_message (GstMessage * msg)
 
   GST_CAT_INFO (GST_CAT_EVENT, "creating sink-message event");
 
-  structure = gst_structure_new_id (GST_QUARK (EVENT_SINK_MESSAGE),
+  structure = gst_structure_new_id (g_quark_from_string (name),
       GST_QUARK (MESSAGE), GST_TYPE_MESSAGE, msg, NULL);
   event = gst_event_new_custom (GST_EVENT_SINK_MESSAGE, structure);
 
@@ -1627,6 +1634,7 @@ gst_event_new_stream_start (void)
 
 /**
  * gst_event_new_toc:
+ * @name: a name for the event
  * @toc: #GstToc structure.
  * @updated: whether @toc was updated or not.
  *
@@ -1638,7 +1646,7 @@ gst_event_new_stream_start (void)
  * Since: 0.10.37
  */
 GstEvent *
-gst_event_new_toc (GstToc * toc, gboolean updated)
+gst_event_new_toc (const gchar * name, GstToc * toc, gboolean updated)
 {
   GstStructure *toc_struct;
 

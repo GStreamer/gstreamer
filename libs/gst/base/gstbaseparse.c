@@ -1407,7 +1407,8 @@ gst_base_parse_post_bitrates (GstBaseParse * parse, gboolean post_min,
       parse->priv->max_bitrate);
 
   if (taglist != NULL) {
-    gst_pad_push_event (parse->srcpad, gst_event_new_tag (taglist));
+    gst_pad_push_event (parse->srcpad, gst_event_new_tag ("GstParser",
+            taglist));
   }
 }
 

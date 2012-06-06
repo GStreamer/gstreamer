@@ -504,7 +504,7 @@ GST_START_TEST (test_element_found_tags)
   gst_element_set_state (pipeline, GST_STATE_PLAYING);
 
   srcpad = gst_element_get_static_pad (fakesrc, "src");
-  gst_pad_push_event (srcpad, gst_event_new_tag (list));
+  gst_pad_push_event (srcpad, gst_event_new_tag ("test", list));
   gst_object_unref (srcpad);
 
   bus = gst_element_get_bus (pipeline);
