@@ -1664,7 +1664,7 @@ ensure_current_registry (GError ** error)
   registry_file = g_strdup (g_getenv ("GST_REGISTRY"));
   if (registry_file == NULL) {
     registry_file = g_build_filename (g_get_user_cache_dir (),
-        "gstreamer-" GST_API_VERSION, "registry." HOST_CPU ".bin", NULL);
+        "gstreamer-" GST_API_VERSION, "registry." TARGET_CPU ".bin", NULL);
   }
 
   if (!_gst_disable_registry_cache) {
