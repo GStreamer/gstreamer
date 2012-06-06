@@ -93,6 +93,7 @@ gboolean    gst_video_frame_copy_plane    (GstVideoFrame *dest, const GstVideoFr
 
 /* dealing with components */
 #define GST_VIDEO_FRAME_N_COMPONENTS(f)   GST_VIDEO_INFO_N_COMPONENTS(&(f)->info)
+#define GST_VIDEO_FRAME_COMP_DEPTH(f,c)   GST_VIDEO_INFO_COMP_DEPTH(&(f)->info,(c))
 #define GST_VIDEO_FRAME_COMP_DATA(f,c)    GST_VIDEO_INFO_COMP_DATA(&(f)->info,(f)->data,(c))
 #define GST_VIDEO_FRAME_COMP_STRIDE(f,c)  GST_VIDEO_INFO_COMP_STRIDE(&(f)->info,(c))
 #define GST_VIDEO_FRAME_COMP_OFFSET(f,c)  GST_VIDEO_INFO_COMP_OFFSET(&(f)->info,(c))
