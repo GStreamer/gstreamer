@@ -333,7 +333,7 @@ gst_vp8_dec_send_tags (GstVP8Dec * dec)
       GST_TAG_VIDEO_CODEC, "VP8 video", NULL);
 
   gst_pad_push_event (GST_VIDEO_DECODER_SRC_PAD (dec),
-      gst_event_new_tag (list));
+      gst_event_new_tag ("GstDecoder", list));
 }
 
 static void
