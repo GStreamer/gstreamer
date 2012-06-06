@@ -93,6 +93,8 @@ struct _GstOggStream
   gboolean theora_has_zero_keyoffset;
   /* VP8 stuff */
   gboolean is_vp8;
+  /* opus stuff */
+  gint64 first_granpos;
   /* OGM stuff */
   gboolean is_ogm;
   gboolean is_ogm_text;

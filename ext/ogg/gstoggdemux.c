@@ -556,8 +556,15 @@ gst_ogg_demux_chain_peer (GstOggPad * pad, ogg_packet * packet,
     out_offset_end = -1;
   } else {
     if (packet->granulepos != -1) {
-      pad->current_granule = gst_ogg_stream_granulepos_to_granule (&pad->map,
+      gint64 granule = gst_ogg_stream_granulepos_to_granule (&pad->map,
           packet->granulepos);
+      if (granule < 0) {
+        GST_ERROR_OBJECT (ogg,
+            "granulepos %" G_GINT64_FORMAT " yielded granule %" G_GINT64_FORMAT,
+            packet->granulepos, granule);
+        return GST_FLOW_ERROR;
+      }
+      pad->current_granule = granule;
       pad->keyframe_granule =
           gst_ogg_stream_granulepos_to_key_granule (&pad->map,
           packet->granulepos);
@@ -866,6 +873,11 @@ gst_ogg_pad_submit_packet (GstOggPad * pad, ogg_packet * packet)
   if (granule != -1) {
     GST_DEBUG_OBJECT (ogg, "%p has granulepos %" G_GINT64_FORMAT, pad, granule);
     pad->current_granule = granule;
+  } else if (granule != -1) {
+    GST_ERROR_OBJECT (ogg,
+        "granulepos %" G_GINT64_FORMAT " yielded granule %" G_GINT64_FORMAT,
+        packet->granulepos, granule);
+    return GST_FLOW_ERROR;
   }
 
   /* restart header packet count when seeing a b_o_s page;
@@ -903,6 +915,12 @@ gst_ogg_pad_submit_packet (GstOggPad * pad, ogg_packet * packet)
 
         granule = gst_ogg_stream_granulepos_to_granule (&pad->map,
             packet->granulepos);
+        if (granule < 0) {
+          GST_ERROR_OBJECT (ogg,
+              "granulepos %" G_GINT64_FORMAT " yielded granule %"
+              G_GINT64_FORMAT, packet->granulepos, granule);
+          return GST_FLOW_ERROR;
+        }
 
         if (granule > pad->map.accumulated_granule)
           start_granule = granule - pad->map.accumulated_granule;
