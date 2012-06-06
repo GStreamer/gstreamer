@@ -322,10 +322,12 @@ gst_rtsp_connection_accept (GSocket * socket, GstRTSPConnection ** conn,
   ip = g_inet_address_to_string (g_inet_socket_address_get_address
       (G_INET_SOCKET_ADDRESS (addr)));
   port = g_inet_socket_address_get_port (G_INET_SOCKET_ADDRESS (addr));
+  g_object_unref (addr);
 
   ret =
       gst_rtsp_connection_create_from_socket (client_sock, ip, port, NULL,
       conn);
+  g_object_unref (client_sock);
   g_free (ip);
 
   return ret;
