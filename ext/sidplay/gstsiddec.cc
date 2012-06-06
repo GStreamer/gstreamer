@@ -272,7 +272,7 @@ update_tags (GstSidDec * siddec)
       gst_tag_list_add (list, GST_TAG_MERGE_REPLACE,
           GST_TAG_COPYRIGHT, info.copyrightString, (void *) NULL);
     }
-    gst_pad_push_event (siddec->srcpad, gst_event_new_tag (list));
+    gst_pad_push_event (siddec->srcpad, gst_event_new_tag ("GstDecoder", list));
   }
 }
 

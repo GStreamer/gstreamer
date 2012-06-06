@@ -2619,14 +2619,15 @@ gst_rmdemux_parse_packet (GstRMDemux * rmdemux, GstBuffer * in, guint16 version)
 
     if (rmdemux->pending_tags != NULL) {
       gst_rmdemux_send_event (rmdemux,
-          gst_event_new_tag (rmdemux->pending_tags));
+          gst_event_new_tag ("GstDemuxer", rmdemux->pending_tags));
       rmdemux->pending_tags = NULL;
     }
   }
 
   if (stream->pending_tags != NULL) {
     GST_LOG_OBJECT (stream->pad, "tags %" GST_PTR_FORMAT, stream->pending_tags);
-    gst_pad_push_event (stream->pad, gst_event_new_tag (stream->pending_tags));
+    gst_pad_push_event (stream->pad, gst_event_new_tag ("GstDemuxer",
+            stream->pending_tags));
     stream->pending_tags = NULL;
   }
 

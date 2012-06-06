@@ -532,7 +532,7 @@ gst_real_audio_demux_parse_data (GstRealAudioDemux * demux)
 
     if (demux->pending_tags) {
       gst_pad_push_event (demux->srcpad,
-          gst_event_new_tag (demux->pending_tags));
+          gst_event_new_tag ("GstDemuxer", demux->pending_tags));
       demux->pending_tags = NULL;
     }
 

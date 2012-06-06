@@ -1439,7 +1439,7 @@ gst_asf_demux_push_complete_payloads (GstASFDemux * demux, gboolean force)
 
       GST_DEBUG_OBJECT (demux, "global tags: %" GST_PTR_FORMAT, demux->taglist);
       gst_asf_demux_send_event_unlocked (demux,
-          gst_event_new_tag (demux->taglist));
+          gst_event_new_tag ("GstDemuxer", demux->taglist));
       demux->taglist = NULL;
 
       demux->need_newsegment = FALSE;
@@ -1450,7 +1450,7 @@ gst_asf_demux_push_complete_payloads (GstASFDemux * demux, gboolean force)
     if (G_UNLIKELY (stream->pending_tags)) {
       GST_LOG_OBJECT (stream->pad, "%" GST_PTR_FORMAT, stream->pending_tags);
       gst_pad_push_event (stream->pad,
-          gst_event_new_tag (stream->pending_tags));
+          gst_event_new_tag ("GstDemuxer", stream->pending_tags));
       stream->pending_tags = NULL;
     }
 
