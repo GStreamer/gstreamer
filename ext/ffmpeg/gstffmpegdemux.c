@@ -1221,7 +1221,7 @@ gst_ffmpegdemux_open (GstFFMpegDemux * demux)
       GST_INFO_OBJECT (stream->pad, "stream tags: %" GST_PTR_FORMAT,
           stream->tags);
       gst_pad_push_event (stream->pad,
-          gst_event_new_tag (gst_tag_list_copy (stream->tags)));
+          gst_event_new_tag ("GstDemuxer", gst_tag_list_copy (stream->tags)));
     }
   }
 
