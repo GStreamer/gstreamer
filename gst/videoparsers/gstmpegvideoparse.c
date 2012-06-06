@@ -786,7 +786,7 @@ gst_mpegv_parse_pre_push_frame (GstBaseParse * parse, GstBaseParseFrame * frame)
     g_free (codec);
 
     gst_pad_push_event (GST_BASE_PARSE_SRC_PAD (mpvparse),
-        gst_event_new_tag (taglist));
+        gst_event_new_tag ("GstParser", taglist));
 
     mpvparse->send_codec_tag = FALSE;
   }

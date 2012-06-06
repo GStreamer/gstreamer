@@ -706,7 +706,7 @@ gst_modplug_loop (GstModPlug * modplug)
         gst_tag_list_add (tags, GST_TAG_MERGE_APPEND,
             GST_TAG_COMMENT, comment, NULL);
       }
-      gst_pad_push_event (modplug->srcpad, gst_event_new_tag (tags));
+      gst_pad_push_event (modplug->srcpad, gst_event_new_tag ("GstDecoder", tags));
     } else {
       /* not fully loaded yet */
       return;
