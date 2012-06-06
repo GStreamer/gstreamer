@@ -18,6 +18,8 @@
  * Boston, MA 02111-1307, USA.
  */
 
+#define GLIB_DISABLE_DEPRECATION_WARNINGS
+
 #include <gst/gst.h>
 #include <gtk/gtk.h>
 #include <gdk/gdk.h>
@@ -25,18 +27,18 @@
 
 #include "../gstgtk.h"
 
-#include <gst/interfaces/xoverlay.h>
+#include <gst/video/videooverlay.h>
 
 
-/* TODO: use x overlay in the proper way (like suggested in docs, see gtkxoverlay example) */
+/* TODO: use video overlay in the proper way (like suggested in docs, see gtkvideooverlay example) */
 static gboolean
 expose_cb (GtkWidget * widget, GdkEventExpose * event, gpointer data)
 {
-  GstXOverlay *overlay =
-      GST_X_OVERLAY (gst_bin_get_by_interface (GST_BIN (data),
-          GST_TYPE_X_OVERLAY));
+  GstVideoOverlay *overlay =
+      GST_VIDEO_OVERLAY (gst_bin_get_by_interface (GST_BIN (data),
+          GST_TYPE_VIDEO_OVERLAY));
 
-  gst_x_overlay_set_gtk_window (overlay, widget);
+  gst_video_overlay_set_gtk_window (overlay, widget);
 
   return FALSE;
 }
@@ -149,7 +151,7 @@ main (gint argc, gchar * argv[])
   if (source_desc == NULL) {
     source_desc =
         g_strdup
-        ("videotestsrc ! video/x-raw-rgb, width=352, height=288 ! identity");
+        ("videotestsrc ! video/x-raw, width=352, height=288 ! identity");
   }
 
   sourcebin =

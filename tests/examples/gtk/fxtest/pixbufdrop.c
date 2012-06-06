@@ -18,6 +18,8 @@
  * Boston, MA 02111-1307, USA.
  */
 
+#define GLIB_DISABLE_DEPRECATION_WARNINGS
+
 #include <gst/gst.h>
 #include <gtk/gtk.h>
 #include <gdk/gdk.h>
@@ -25,7 +27,7 @@
 
 #include "../gstgtk.h"
 
-#include <gst/interfaces/xoverlay.h>
+#include <gst/video/videooverlay.h>
 
 static gint delay = 0;
 static gint saveddelay = 0;
@@ -42,15 +44,15 @@ typedef struct _SourceData SourceData;
 static GstBusSyncReply
 create_window (GstBus * bus, GstMessage * message, GtkWidget * widget)
 {
-  // ignore anything but 'prepare-xwindow-id' element messages
+  // ignore anything but 'prepare-window-handle' element messages
   if (GST_MESSAGE_TYPE (message) != GST_MESSAGE_ELEMENT)
     return GST_BUS_PASS;
 
-  if (!gst_structure_has_name (message->structure, "prepare-xwindow-id"))
+  if (!gst_is_video_overlay_prepare_window_handle_message (message))
     return GST_BUS_PASS;
 
-  gst_x_overlay_set_gtk_window (GST_X_OVERLAY (GST_MESSAGE_SRC (message)),
-      widget);
+  gst_video_overlay_set_gtk_window (GST_VIDEO_OVERLAY (GST_MESSAGE_SRC
+          (message)), widget);
 
   gst_message_unref (message);
 
@@ -80,7 +82,7 @@ realize_cb (GtkWidget * widget, GstElement * pipeline)
 static gboolean
 expose_cb (GtkWidget * widget, GdkEventExpose * event, GstElement * videosink)
 {
-  gst_x_overlay_expose (GST_X_OVERLAY (videosink));
+  gst_video_overlay_expose (GST_VIDEO_OVERLAY (videosink));
   return FALSE;
 }
 
@@ -230,7 +232,7 @@ main (gint argc, gchar * argv[])
   if (source_desc == NULL) {
     source_desc =
         g_strdup
-        ("videotestsrc ! video/x-raw-rgb, width=352, height=288 ! identity");
+        ("videotestsrc ! video/x-raw, width=352, height=288 ! identity");
   }
 
   sourcebin =

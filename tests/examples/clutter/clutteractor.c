@@ -26,7 +26,7 @@
 #include <clutter/x11/clutter-x11.h>
 #include <clutter/glx/clutter-glx.h>
 #include <gst/gst.h>
-#include <gst/interfaces/xoverlay.h>
+#include <gst/video/videooverlay.h>
 
 #define W 320
 #define H 240
@@ -100,17 +100,17 @@ static GstBusSyncReply
 create_window (GstBus * bus, GstMessage * message, gpointer data)
 {
   GstGLClutterActor *actor = (GstGLClutterActor *) data;
-  // ignore anything but 'prepare-xwindow-id' element messages
+  // ignore anything but 'prepare-window-handle' element messages
   if (GST_MESSAGE_TYPE (message) != GST_MESSAGE_ELEMENT)
     return GST_BUS_PASS;
 
-  if (!gst_structure_has_name (message->structure, "prepare-xwindow-id"))
+  if (!gst_is_video_overlay_prepare_window_handle_message (message))
     return GST_BUS_PASS;
 
   g_debug ("CREATING WINDOW");
 
-  gst_x_overlay_set_window_handle (GST_X_OVERLAY (GST_MESSAGE_SRC (message)),
-      actor->win);
+  gst_video_overlay_set_window_handle (GST_VIDEO_OVERLAY (GST_MESSAGE_SRC
+          (message)), actor->win);
   clutter_threads_add_idle ((GSourceFunc) create_actor, actor);
 
   gst_message_unref (message);
@@ -154,7 +154,7 @@ main (int argc, char *argv[])
 
   pipeline =
       GST_PIPELINE (gst_parse_launch
-      ("videotestsrc ! video/x-raw-rgb, width=320, height=240, framerate=(fraction)30/1 ! "
+      ("videotestsrc ! video/x-raw, width=320, height=240, framerate=(fraction)30/1 ! "
           "glupload ! gleffects effect=twirl ! glimagesink", NULL));
 
   bus = gst_pipeline_get_bus (GST_PIPELINE (pipeline));

@@ -18,13 +18,15 @@
  * Boston, MA 02111-1307, USA.
  */
 
+#define GLIB_DISABLE_DEPRECATION_WARNINGS
+
 #include <X11/Xlib.h>
 #include <X11/extensions/Xcomposite.h>
 #include <clutter/clutter.h>
 #include <clutter/x11/clutter-x11.h>
 #include <clutter/glx/clutter-glx.h>
 #include <gst/gst.h>
-#include <gst/interfaces/xoverlay.h>
+#include <gst/video/videooverlay.h>
 
 #define ROWS 3
 #define COLS 3
@@ -69,11 +71,11 @@ create_window (GstBus * bus, GstMessage * message, gpointer data)
   GstGLClutterActor **actor = (GstGLClutterActor **) data;
   static gint count = 0;
   static GMutex *mutex = NULL;
-  // ignore anything but 'prepare-xwindow-id' element messages
+  // ignore anything but 'prepare-window-handle' element messages
   if (GST_MESSAGE_TYPE (message) != GST_MESSAGE_ELEMENT)
     return GST_BUS_PASS;
 
-  if (!gst_structure_has_name (message->structure, "prepare-xwindow-id"))
+  if (!gst_is_video_overlay_prepare_window_handle_message (message))
     return GST_BUS_PASS;
 
   if (!mutex)
@@ -83,8 +85,8 @@ create_window (GstBus * bus, GstMessage * message, gpointer data)
 
   if (count < N_ACTORS) {
     g_message ("adding actor %d", count);
-    gst_x_overlay_set_window_handle (GST_X_OVERLAY (GST_MESSAGE_SRC (message)),
-        actor[count]->win);
+    gst_video_overlay_set_window_handle (GST_VIDEO_OVERLAY (GST_MESSAGE_SRC
+            (message)), actor[count]->win);
     clutter_threads_add_idle ((GSourceFunc) create_actor, actor[count]);
     count++;
   }
@@ -164,13 +166,13 @@ main (int argc, char *argv[])
   }
 /*
   desc = g_strdup_printf ("v4l2src ! "
-                          "video/x-raw-yuv, width=640, height=480, framerate=30/1 ! "
+                          "video/x-raw, width=640, height=480, framerate=30/1 ! "
                           "videoscale !"
-                          "video/x-raw-yuv, width=%d, height=%d ! "
+                          "video/x-raw, width=%d, height=%d ! "
                           "identity", W, H);
 */
   desc = g_strdup_printf ("videotestsrc ! "
-      "video/x-raw-rgb, width=%d, height=%d !" "identity", W, H);
+      "video/x-raw, format=RGB, width=%d, height=%d !" "identity", W, H);
   pipeline = GST_PIPELINE (gst_pipeline_new (NULL));
 
   srcbin = gst_parse_bin_from_description (desc, TRUE, NULL);
