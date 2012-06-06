@@ -2197,7 +2197,7 @@ gst_query_parse_accept_caps_result (GstQuery * query, gboolean * result)
  *
  * Constructs a new query object for querying the caps.
  *
- * The CAPS query should return the* allowable caps for a pad in the context
+ * The CAPS query should return the allowable caps for a pad in the context
  * of the element's state, its link to other elements, and the devices or files
  * it has opened. These caps must be a subset of the pad template caps. In the
  * NULL state with no links, the CAPS query should ideally return the same caps
@@ -2209,6 +2209,10 @@ gst_query_parse_accept_caps_result (GstQuery * query, gboolean * result)
  * the srcpad's getcaps function is directly related to the stream data. Again,
  * the CAPS query should return the most specific caps it reasonably can, since this
  * helps with autoplugging.
+ *
+ * The @filter is used to restrict the result caps, only the caps matching
+ * @filter should be returned from the CAPS query. Specifying a filter might
+ * greatly reduce the amount of processing an element needs to do.
  *
  * Free-function: gst_query_unref
  *
