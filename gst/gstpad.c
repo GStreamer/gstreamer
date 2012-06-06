@@ -4637,10 +4637,10 @@ gst_pad_send_event_unchecked (GstPad * pad, GstEvent * event,
       if (G_UNLIKELY (GST_PAD_IS_FLUSHING (pad)))
         goto flushing;
 
-      if (G_UNLIKELY (GST_PAD_IS_EOS (pad)))
-        goto eos;
-
       if (serialized) {
+        if (G_UNLIKELY (GST_PAD_IS_EOS (pad)))
+          goto eos;
+
         /* lock order: STREAM_LOCK, LOCK, recheck flushing. */
         GST_OBJECT_UNLOCK (pad);
         GST_PAD_STREAM_LOCK (pad);
