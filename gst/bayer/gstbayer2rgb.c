@@ -453,7 +453,7 @@ gst_bayer2rgb_transform (GstBaseTransform * base, GstBuffer * inbuf,
 
   GST_DEBUG ("transforming buffer");
   gst_buffer_map (inbuf, &map, GST_MAP_READ);
-  gst_video_frame_map (&frame, &filter->info, inbuf, GST_MAP_WRITE);
+  gst_video_frame_map (&frame, &filter->info, outbuf, GST_MAP_WRITE);
 
   output = GST_VIDEO_FRAME_PLANE_DATA (&frame, 0);
   gst_bayer2rgb_process (filter, output, filter->width * 4,
