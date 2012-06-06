@@ -325,7 +325,7 @@ gst_element_release_request_pad (GstElement * element, GstPad * pad)
   /* if the element implements a custom release function we call that, else we
    * simply remove the pad from the element */
   if (oclass->release_pad)
-    (oclass->release_pad) (element, pad);
+    oclass->release_pad (element, pad);
   else
     gst_element_remove_pad (element, pad);
 }
@@ -2828,6 +2828,7 @@ gst_element_dispose (GObject * object)
   GstClock **clock_p;
   GstBus **bus_p;
   GstElementClass *oclass;
+  GList *walk;
 
   oclass = GST_ELEMENT_GET_CLASS (element);
 
@@ -2836,23 +2837,32 @@ gst_element_dispose (GObject * object)
   if (GST_STATE (element) != GST_STATE_NULL)
     goto not_null;
 
-  GST_CAT_DEBUG_OBJECT (GST_CAT_ELEMENT_PADS, element,
-      "removing %d pads", g_list_length (element->pads));
-  /* first we break all our links with the outside */
-  while (element->pads && element->pads->data) {
-    GstPad *pad = GST_PAD_CAST (element->pads->data);
+  /* start by releasing all request pads, this might also remove some dynamic
+   * pads */
+  walk = element->pads;
+  while (walk) {
+    GstPad *pad = GST_PAD_CAST (walk->data);
 
-    /* don't call _remove_pad with NULL */
+    walk = walk->next;
+
     if (oclass->release_pad && GST_PAD_PAD_TEMPLATE (pad) &&
         GST_PAD_TEMPLATE_PRESENCE (GST_PAD_PAD_TEMPLATE (pad))
-        == GST_PAD_REQUEST)
-      (oclass->release_pad) (element, GST_PAD_CAST (element->pads->data));
-    else
-      gst_element_remove_pad (element, GST_PAD_CAST (element->pads->data));
+        == GST_PAD_REQUEST) {
+      GST_CAT_DEBUG_OBJECT (GST_CAT_ELEMENT_PADS, element,
+          "removing request pad %s:%s", GST_DEBUG_PAD_NAME (pad));
+      oclass->release_pad (element, pad);
+    }
   }
-  if (G_UNLIKELY (element->pads != NULL)) {
-    g_critical ("could not remove pads from element %s",
-        GST_STR_NULL (GST_OBJECT_NAME (object)));
+  /* remove the remaining pads */
+  while (element->pads) {
+    GstPad *pad = GST_PAD_CAST (element->pads->data);
+    GST_CAT_DEBUG_OBJECT (GST_CAT_ELEMENT_PADS, element,
+        "removing pad %s:%s", GST_DEBUG_PAD_NAME (pad));
+    if (!gst_element_remove_pad (element, pad)) {
+      /* only happens when someone unparented our pad.. */
+      g_critical ("failed to remove pad %s:%s", GST_DEBUG_PAD_NAME (pad));
+      break;
+    }
   }
 
   GST_OBJECT_LOCK (element);
