@@ -3136,7 +3136,8 @@ gst_rtspsrc_activate_streams (GstRTSPSrc * src)
 }
 
 static void
-gst_rtspsrc_configure_caps (GstRTSPSrc * src, GstSegment * segment)
+gst_rtspsrc_configure_caps (GstRTSPSrc * src, GstSegment * segment,
+    gboolean reset_manager)
 {
   GList *walk;
   guint64 start, stop;
@@ -3172,7 +3173,7 @@ gst_rtspsrc_configure_caps (GstRTSPSrc * src, GstSegment * segment)
     }
     GST_DEBUG_OBJECT (src, "stream %p, caps %" GST_PTR_FORMAT, stream, caps);
   }
-  if (src->manager) {
+  if (reset_manager && src->manager) {
     GST_DEBUG_OBJECT (src, "clear session");
     g_signal_emit_by_name (src->manager, "clear-pt-map", NULL);
   }
@@ -6185,11 +6186,12 @@ gst_rtspsrc_play (GstRTSPSrc * src, GstSegment * segment, gboolean async)
     if (control)
       break;
   }
+  /* configure the caps of the streams after we parsed all headers. Only reset
+   * the manager object when we set a new Range header (we did a seek) */
+  gst_rtspsrc_configure_caps (src, segment, src->need_range);
+
   /* set again when needed */
   src->need_range = FALSE;
-
-  /* configure the caps of the streams after we parsed all headers. */
-  gst_rtspsrc_configure_caps (src, segment);
 
   src->running = TRUE;
   src->base_time = -1;
