@@ -1164,7 +1164,6 @@ gst_dirac_enc_process (GstDiracEnc * dirac_enc, gboolean end_sequence)
 
           caps = gst_caps_new_simple ("video/x-dirac","streamheader", GST_TYPE_BUFFER, dirac_enc->codec_data, NULL);
 	  output_state = gst_video_encoder_set_output_state (GST_VIDEO_ENCODER (dirac_enc), caps, dirac_enc->input_state);
-          gst_caps_unref (caps);
 	  gst_video_codec_state_unref (output_state);
         }
 
