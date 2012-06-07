@@ -474,6 +474,12 @@ read_vts_info (resinDvdSrc * src)
     GST_ERROR ("Can't open VMG ifo");
     return FALSE;
   }
+  if (!src->vmg_file->vts_atrt) {
+    GST_INFO ("No vts_atrt - odd, but apparently OK");
+    g_array_set_size (src->vts_attrs, 0);
+    src->vts_attrs = NULL;
+    return TRUE;
+  }
   n_vts = src->vmg_file->vts_atrt->nr_of_vtss;
   memcpy (&src->vmgm_attr, src->vmg_file->vmgi_mat, sizeof (vmgi_mat_t));
 
@@ -1915,7 +1921,7 @@ rsn_dvdsrc_prepare_streamsinfo_event (resinDvdSrc * src)
   gboolean have_audio;
   gboolean have_subp;
 
-  if (src->vts_n == 0) {
+  if (src->vts_n == 0 || src->vts_attrs == NULL) {
     /* VMGM info */
     vts_attr = NULL;
     v_attr = &src->vmgm_attr.vmgm_video_attr;
