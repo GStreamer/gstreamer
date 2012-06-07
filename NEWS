@@ -1,4 +1,11 @@
-This is GStreamer 0.11.91 "I will give you five magic beans!"
+This is GStreamer 0.11.92 "High Hopes"
+
+New features in 0.11.92:
+
+      * Parallel installability with 0.10.x series
+      * API cleanup and minor API improvements
+      * GstTagList is a refcounted type now
+      * Lots of bugfixes, cleanup and other improvements
 
 New features in 0.11.91:
 

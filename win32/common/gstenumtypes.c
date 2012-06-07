@@ -1174,6 +1174,7 @@ gst_pad_flags_get_type (void)
   static const GFlagsValue values[] = {
     {C_FLAGS (GST_PAD_FLAG_BLOCKED), "GST_PAD_FLAG_BLOCKED", "blocked"},
     {C_FLAGS (GST_PAD_FLAG_FLUSHING), "GST_PAD_FLAG_FLUSHING", "flushing"},
+    {C_FLAGS (GST_PAD_FLAG_EOS), "GST_PAD_FLAG_EOS", "eos"},
     {C_FLAGS (GST_PAD_FLAG_BLOCKING), "GST_PAD_FLAG_BLOCKING", "blocking"},
     {C_FLAGS (GST_PAD_FLAG_NEED_PARENT), "GST_PAD_FLAG_NEED_PARENT",
         "need-parent"},

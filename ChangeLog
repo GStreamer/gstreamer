@@ -1,9 +1,729 @@
-=== release 0.11.91 ===
+=== release 0.11.92 ===
 
-2012-05-13  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+2012-06-07  Sebastian Dröge <sebastian.droege@collabora.co.uk>
 
 	* configure.ac:
-	  releasing 0.11.91, "I will give you five magic beans\!"
+	  releasing 0.11.92, "High Hopes"
+
+2012-06-06 18:11:13 +0200  Edward Hervey <edward.hervey@collabora.co.uk>
+
+	* gst/gstregistry.c:
+	  registry: We name the registry after the target cpu
+	  And not the host cpu
+	  Conflicts:
+	  gst/gstregistry.c
+
+2012-06-06 18:18:18 +0200  Edward Hervey <edward.hervey@collabora.co.uk>
+
+	* common:
+	  Automatic update of common submodule
+	  From 1fab359 to 03a0e57
+
+2012-06-06 15:45:11 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* tests/check/gst/gsttoc.c:
+	  tests: fix unit test after event change
+	  Someone forgot to run make check before pushing...
+
+2012-06-06 11:06:32 +0300  Sreerenj Balachandran <sreerenj.balachandran@intel.com>
+
+	* libs/gst/base/gstadapter.c:
+	  gstadapter: Align the comment description with public api instead of internal one.
+	  Fixes https://bugzilla.gnome.org/show_bug.cgi?id=677536
+
+2012-06-06 15:29:49 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* gst/gstelement.c:
+	  element: fix pad cleanup in dispose
+	  In the dispose handler we first need to release all the request pads and then
+	  remove the remaining pads. This is because it is possible that releasing the
+	  request pad might also cleanly remove some of the other dynamic pads, like
+	  what rtpsession does.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=677436
+
+2012-06-06 14:14:31 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* gst/gstevent.c:
+	* gst/gstevent.h:
+	  event: Don't make the TOC event a multi-sticky event
+	  Elements are supposed to merge upstream events.
+
+2009-10-13 17:24:34 +0200  Havard Graff <havard.graff@tandberg.com>
+
+	* gst/gstpad.c:
+	  Make sure that unlinked pads do not cause a return false on latency events.
+	  Context: Latency configuration should not be
+	  messed up because of not-linked pads. In general,
+	  one return FALSE on latency distribution causes
+	  the "overall" pipeline latency configuration to
+	  fail. This shows up as noise in logs (warning).
+	  Conflicts:
+	  gst/gstpad.c
+
+2012-06-06 12:52:09 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* gst/gstevent.c:
+	* gst/gstevent.h:
+	* libs/gst/base/gstbaseparse.c:
+	* tests/check/gst/gstevent.c:
+	* tests/check/gst/gsttoc.c:
+	* tests/check/gst/gstutils.c:
+	  event: add name to sticky_multi events
+	  The name of the event is used to store multiple sticky events of a certain type
+	  on a pad.
+	  Fixes https://bugzilla.gnome.org/show_bug.cgi?id=676859
+
+2012-06-06 09:59:55 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* docs/design/part-negotiation.txt:
+	  design: Also mention that the order of the filter caps is important
+
+2012-06-06 09:15:04 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* gst/gstquery.c:
+	  query: improve docs
+
+2012-06-06 09:13:11 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* gst/gstpad.c:
+	  pad: only serialized events can't pass after EOS
+	  Only serialized events can't be sent on pads that are EOS. Otherwise a seek
+	  event would be refused as well.
+	  Fixes https://bugzilla.gnome.org/show_bug.cgi?id=677520
+
+2012-06-05 14:38:25 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* docs/design/part-negotiation.txt:
+	  docs: talk about the filter caps
+
+2012-06-02 16:44:59 +0100  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+
+	* tests/check/gst/gsttag.c:
+	  tests: add unit test for tag list writability
+
+2012-06-02 16:38:35 +0100  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+
+	* gst/gstmessage.c:
+	* tests/check/gst/gstmessage.c:
+	* tests/check/gst/gsttag.c:
+	* tests/check/gst/gsttagsetter.c:
+	* tests/examples/metadata/read-metadata.c:
+	  gst_tag_list_free -> gst_tag_list_unref
+
+2012-06-02 16:29:45 +0100  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+
+	* docs/random/porting-to-0.11.txt:
+	  docs: expand taglist section in porting-to-0.11 docs a bit
+
+2012-06-05 11:28:38 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* docs/design/part-negotiation.txt:
+	  docs: update negotiation docs
+	  Mention that the acceptcaps query does not have to be recursive
+
+2012-06-05 09:40:14 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* plugins/elements/gstqueue2.c:
+	  queue2: remove obsolete caps code
+
+2012-06-05 09:39:41 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* gst/gstutils.c:
+	  utils: improve debug
+
+2012-06-05 09:21:10 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* tests/check/gst/gstutils.c:
+	  tests: fix unit test
+	  Before we can change the caps on a sinkpad with fixed caps we need to unfix the
+	  pad caps.
+
+2012-06-05 09:10:05 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* gst/gstpad.c:
+	  pad: don't pause task on EOS
+	  Elements should not rely on core to pause tasks on EOS.
+
+2012-06-05 09:00:01 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* gst/gstpad.c:
+	  pad: fix event type check
+
+2012-06-04 16:19:26 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* gst/gstpad.c:
+	  pad: fix 'res' may be used uninitialized in this function
+
+2012-06-04 13:00:53 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* tests/check/elements/funnel.c:
+	  funnel: Fix unit test
+
+2012-06-04 12:57:59 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* tests/check/elements/valve.c:
+	  valve: Fix unit test
+
+2012-06-04 11:46:42 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* gst/gstpad.c:
+	* gst/gstpad.h:
+	  pad: Don't accept any buffers or events after EOS
+
+2012-06-04 11:13:02 +0200  Mark Nauwelaerts <mark.nauwelaerts@collabora.co.uk>
+
+	* libs/gst/base/gstbaseparse.c:
+	  baseparse: also perform state processing upon non-OK return
+	  ... since processing might still continue (if e.g. NOT_LINKED)
+	  and then proper state (e.g. offset) needs to be maintained
+	  (e.g. to arrange for a new frame setup).
+
+2012-06-04 11:25:47 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* gst/gstpad.c:
+	  pad: Always return errors for EOS events immediately
+	  For non-EOS events things will error out later during data
+	  flow but after EOS events no data flow is happening.
+	  See bug #677340.
+
+2012-06-04 09:27:35 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* gst/gstpad.c:
+	  pad: Only forward caps events to a pad if it accepts the caps
+	  Fixes bug #677335.
+
+2012-06-02 20:01:01 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* gst/gstpad.c:
+	  Revert "pad: Return FALSE if pushing of sticky events failed"
+	  This reverts commit 0f924b922c712059d7752fc15b832551745ff27e.
+	  Sticky events should always return TRUE when pushing and will
+	  only cause failures during data flow later.
+
+2012-06-02 16:18:46 +0100  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+
+	* gst/gstpad.c:
+	  pad: fix variable-set-but-not-used compiler warning
+
+2012-06-02 16:55:07 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* gst/gstpad.c:
+	  pad: If pushing a sticky event failed, make sure to at least push any pending EOS events
+	  Otherwise a pipeline where one sticky event fails to be sent will
+	  never forward EOS events downstream. This can cause pipelines to
+	  wait forever for EOS on errors.
+
+2012-06-02 16:02:07 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* gst/gstpad.c:
+	  pad: Return FALSE if pushing of sticky events failed
+	  Instead of just ignoring failure of pushing sticky events and
+	  returning TRUE as if everything is fine.
+
+2012-06-01 16:34:16 +0200  Andre Moreira Magalhaes (andrunko) <andre.magalhaes@collabora.co.uk>
+
+	* plugins/elements/gstinputselector.c:
+	  inputselector: Correctly get current running time when syncing to the segment information
+	  Fixes bug #677263.
+
+2012-06-01 10:28:30 +0200  Edward Hervey <edward.hervey@collabora.co.uk>
+
+	* common:
+	  Automatic update of common submodule
+	  From f1b5a96 to 1fab359
+
+2012-05-25 22:58:57 -0500  Mike Ruprecht <mike.ruprecht@collabora.co.uk>
+
+	* tests/check/elements/funnel.c:
+	  tests: Add funnel test to cover EOS event handling
+	  Ported from f3b2dd6f in the 0.10 branch
+
+2012-05-25 22:52:33 -0500  Mike Ruprecht <mike.ruprecht@collabora.co.uk>
+
+	* plugins/elements/gstfunnel.c:
+	  funnel: Only emit EOS event if all sinkpads have received one
+	  If multiple sources are plugged into the funnel and one of the
+	  sources emits an EOS, that event is propogated through the funnel
+	  even though other sources connected to the funnel may still be
+	  pushing data. This patch waits to send an EOS event until the
+	  funnel has received an EOS event on each sinkpad.
+	  Ported from d397ea97 in 0.10 branch.
+
+2012-05-29 19:24:25 -0500  Mike Ruprecht <mike.ruprecht@collabora.co.uk>
+
+	* tests/check/elements/funnel.c:
+	  tests: Fix invalid read when releasing request pads in funnel tests
+
+2012-05-29 19:23:07 -0500  Mike Ruprecht <mike.ruprecht@collabora.co.uk>
+
+	* plugins/elements/gstfunnel.c:
+	  funnel: Fix buffer leak
+
+2012-05-31 17:45:29 +0200  Andre Moreira Magalhaes (andrunko) <andre.magalhaes@collabora.co.uk>
+
+	* plugins/elements/gstinputselector.c:
+	  inputselector: Don't try to sync on the segment if it has no TIME format
+	  ...and wait until it is actually configured and has a format before
+	  trying to sync.
+
+2012-05-31 17:03:54 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* plugins/elements/gstinputselector.c:
+	  inputselector: No need to broadcast the signal in flush-stop
+	  Everything stopped at this point already.
+	  Conflicts:
+	  plugins/elements/gstinputselector.c
+
+2012-05-31 13:07:49 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* common:
+	  Automatic update of common submodule
+	  From 92b7266 to f1b5a96
+
+2012-05-31 10:10:41 +0100  Bastien Nocera <hadess@hadess.net>
+
+	* plugins/elements/gstqueue2.c:
+	  queue2: Fix property name in the docs
+	  temp-template, not temp-tmpl
+	  https://bugzilla.gnome.org/show_bug.cgi?id=677170
+
+2012-05-28 14:29:00 -0300  Andre Moreira Magalhaes (andrunko) <andre.magalhaes@collabora.co.uk>
+
+	* plugins/elements/gstinputselector.c:
+	* plugins/elements/gstinputselector.h:
+	  inputselector: Properly sync when changing streams
+	  This adds properties to use the clock time for deciding when
+	  to drop buffers for inactive pads and a property to buffer all
+	  not rendered buffers for the active pad to allow pad switching
+	  without losing any buffers at all.
+	  Conflicts:
+	  plugins/elements/gstinputselector.c
+
+2012-05-30 12:44:56 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* common:
+	  Automatic update of common submodule
+	  From ec1c4a8 to 92b7266
+
+2012-05-30 11:18:39 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* common:
+	  Automatic update of common submodule
+	  From 3429ba6 to ec1c4a8
+
+2012-05-29 08:48:36 +0100  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+
+	* gst/gsttaglist.c:
+	  taglist: add guards to make sure taglist is writable when modifying it
+	  Now that taglists are refcounted we need to check if they're
+	  writable before modifying them.
+
+2012-05-28 23:54:10 +0100  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+
+	* docs/gst/gstreamer-sections.txt:
+	* gst/gsttaglist.c:
+	* gst/gsttaglist.h:
+	* win32/common/libgstreamer.def:
+	  taglist: avoid unnecessary string copying when registering tags
+	  Add gst_tag_register_static() - no need to copy all those
+	  string constants, whether translated or not.
+	  API: gst_tag_register_static()
+
+2012-05-28 00:08:56 +0100  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+
+	* libs/gst/check/gstcheck.c:
+	  check: check for GLib-GIO criticals as well
+
+2012-05-28 00:08:18 +0100  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+
+	* gst/gsttagsetter.c:
+	* gst/gsttoc.c:
+	* plugins/elements/gstinputselector.c:
+	* tools/gst-launch.c:
+	  gst_tag_list_free() -> gst_tag_list_unref()
+
+2012-05-27 23:58:27 +0100  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+
+	* docs/gst/gstreamer-sections.txt:
+	* docs/random/porting-to-0.11.txt:
+	* gst/gstcompat.h:
+	* gst/gsttaglist.c:
+	* gst/gsttaglist.h:
+	* tests/check/gst/gsttag.c:
+	* win32/common/libgstreamer.def:
+	  taglist: make GstTagList a GstMiniObject
+	  Which adds refcounting support, and other things.
+
+2012-05-27 20:31:30 +0100  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+
+	* gst/gstcaps.c:
+	  caps: log freeing of caps at same log level as creation, i.e. TRACE
+
+2012-05-26 11:37:49 +0100  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+
+	* gst/gstevent.c:
+	* gst/gstmessage.c:
+	* gst/gstquark.c:
+	* gst/gstquark.h:
+	  message, event: update for tag lists not being structures any more
+
+2012-05-21 00:31:29 +0100  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+
+	* gst/gsttaglist.c:
+	* gst/gsttaglist.h:
+	  taglist: make proper struct not just a GstStructure
+
+2012-05-25 10:28:40 +0200  Josep Torra <josep@fluendo.com>
+
+	* gst/gst.c:
+	* gst/gstdebugutils.c:
+	  debugutils: Fix static linking on OS X
+	  The linking behaviour of external variables that are not initialized
+	  in the compilation unit where they are defined is undefined. On OS X
+	  this causes a linking failure when statically linking GStreamer.
+
+2012-05-25 09:17:17 +0100  Luis de Bethencourt <luis@debethencourt.com>
+
+	* scripts/five-bugs-a-day.pl:
+	  five-bugs-a-day: use splice to trim the bug list
+
+2012-05-24 23:30:29 +0100  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+
+	* plugins/elements/gstfakesrc.c:
+	* plugins/elements/gstfakesrc.h:
+	  fakesrc: put byte position rather than buffer count into GST_BUFFER_OFFSET
+	  If we're sending a segment in BYTE format, the offset
+	  should be in bytes as well.
+
+2012-05-24 11:48:19 +0100  Luis de Bethencourt <luis@debethencourt.com>
+
+	* docs/design/part-segments.txt:
+	  docs: fix a typo in part-segments.txt
+
+2012-05-24 11:02:53 +0200  Brian Cameron <brian.cameron at oracle.com>
+
+	* libs/gst/base/gsttypefindhelper.c:
+	  typefind: fix prototype of helper_find_suggest
+	  The proto for helper_find_suggest has a different argument than the actual
+	  function in the same file has.  This causes the Sun Studio compiler to fail.
+	  Fixes https://bugzilla.gnome.org/show_bug.cgi?id=676624
+	  Conflicts:
+	  libs/gst/base/gsttypefindhelper.c
+
+2012-05-24 08:07:14 +0100  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+
+	* scripts/five-bugs-a-day.pl:
+	  scripts: remove a stray print from debugging and fix up cron entry docs
+
+2012-05-24 09:03:12 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* scripts/five-bugs-a-day.pl:
+	  five-bugs-a-day: Make #! to perl more portable
+
+2012-05-24 07:56:48 +0100  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+
+	* scripts/five-bugs-a-day.pl:
+	  scripts: remove fixed 'known issue' from five-bugs-a-day script
+	  This was with commas actually, and should be fixed now.
+
+2012-05-24 07:54:50 +0100  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+
+	* scripts/five-bugs-a-day.pl:
+	  scripts: add five-bugs-a-day script
+	  Cron fodder.
+
+2012-05-22 14:27:48 +0300  Sreerenj Balachandran <sreerenj.balachandran@intel.com>
+
+	* tests/examples/helloworld/helloworld.c:
+	  tests: rename playbin2 to playbin and adding some debug info
+
+2012-05-22 18:27:36 +0200  Edward Hervey <edward@collabora.com>
+
+	* gst/gsturi.c:
+	  uri: Add some debug statements
+
+2012-05-22 13:51:47 +0200  Edward Hervey <edward.hervey@collabora.co.uk>
+
+	* win32/common/libgstreamer.def:
+	  win32: Update defs file
+
+2012-05-21 09:14:39 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* tests/check/gst/gstbin.c:
+	  bin: port unit test to 0.11
+
+2012-05-21 15:14:51 +0200  Stefan Sauer <ensonic@users.sf.net>
+
+	* gst/gstelement.c:
+	* gst/gstutils.c:
+	  docs: improve the seeking docs more.
+	  Also mention it on _element_seek{,_simple} and be more precise why it happens.
+
+2012-05-21 13:17:21 +0200  Stefan Sauer <ensonic@users.sf.net>
+
+	* gst/gstelement.c:
+	* gst/gstevent.c:
+	  docs: fix a typo and clarify event handling a bit more
+	  Tell about async_done messages for some events and review the _event_new_seek
+	  docs.
+
+2012-05-18 15:04:35 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* gst/gstbin.c:
+	* tests/check/gst/gstbin.c:
+	  bin: try harder to avoid state changes in wrong direction
+	  When the bin does an upward state change, try to avoid doing a downward state
+	  change on the child and vice versa.
+	  Add some more unit tests for this fix.
+	  Fixes https://bugzilla.gnome.org/show_bug.cgi?id=621833
+
+2012-05-18 20:11:55 +0300  Anton Belka <antonbelka@gmail.com>
+
+	* tools/gst-launch.c:
+	  gst-launch: fix -c, --toc message
+
+2012-05-21 01:48:29 +0300  Anton Belka <antonbelka@gmail.com>
+
+	* gst/gsttoc.c:
+	* gst/gsttoc.h:
+	  toc: Add boxed types for GstToc and GstTocEntry
+
+2012-05-20 18:23:57 +0100  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+
+	* gst/gsttoc.c:
+	* gst/gsttoc.h:
+	  toc: fix type of pad parameter to gst_toc_entry_new_with_pad()
+
+2012-05-20 18:16:45 +0100  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+
+	* gst/gsttoc.c:
+	  toc: use correct GType for tag lists
+
+2012-05-20 18:06:22 +0100  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+
+	* gst/gsttoc.c:
+	  toc: avoid unnecessary GValue acrobatics
+
+2012-05-20 17:48:55 +0100  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+
+	* gst/gst.c:
+	* gst/gst_private.h:
+	* gst/gstquark.c:
+	* gst/gstquark.h:
+	* gst/gsttoc.c:
+	  toc: use global quark table
+
+2012-05-20 17:10:24 +0100  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+
+	* gst/gstquark.c:
+	  toc: fix internal TOC query and event structure names
+	  Make them consistent with all the other query and event names.
+
+2012-05-19 17:24:52 +0100  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+
+	* gst/gst_private.h:
+	* gst/gstpluginfeature.h:
+	  pluginfeature: make GstPluginFeature structure private
+	  Make GstPluginFeature opaque until we have time to
+	  clean it up a little. Only GstElementFactory and
+	  GstTypefindFactory derive from it, and they are
+	  opaque already, and we currently don't support
+	  custom plugin features in the registry anyway.
+
+2012-05-19 17:23:43 +0100  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+
+	* tests/check/gst/gstplugin.c:
+	* tools/gst-inspect.c:
+	  tools, tests: don't access the GstPluginFeature structure directly
+
+2012-05-19 17:16:35 +0100  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+
+	* docs/gst/gstreamer-sections.txt:
+	* gst/gstpluginfeature.c:
+	* gst/gstpluginfeature.h:
+	* win32/common/libgstreamer.def:
+	  pluginfeature: add gst_plugin_feature_get_plugin()
+	  Add function to retrieve plugin that provides this feature.
+	  API: gst_plugin_feature_get_plugin()
+
+2012-05-19 16:21:39 +0100  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+
+	* common:
+	  common: update for gstscanobj changes
+
+2012-05-19 15:51:53 +0100  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+
+	* gst/gst_private.h:
+	* gst/gstelementfactory.h:
+	* tests/check/gst/gstelementfactory.c:
+	  elementfactory: make object struct opaque for now
+	  Make GstElementFactory opaque until we have time to
+	  clean it up a little. It's not something anyone
+	  would need to derive from.
+
+2012-05-19 14:59:14 +0100  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+
+	* tools/gst-inspect.c:
+	  tools: don't use private GstElementFactory API in gst-inspect
+
+2012-05-19 14:52:29 +0100  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+
+	* docs/gst/gstreamer-sections.txt:
+	* gst/gstelementfactory.c:
+	* gst/gstelementfactory.h:
+	* win32/common/libgstreamer.def:
+	  elementfactory: add gst_element_factory_get_metadata_keys()
+	  API: gst_element_factory_get_metadata_keys()
+
+2012-05-18 09:52:09 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* tools/gst-launch.c:
+	  launch: improve EOS on shutdown handling
+	  When the -e option is selected, also wait for EOS when the pipeline produced an
+	  error.
+	  Fixes https://bugzilla.gnome.org/show_bug.cgi?id=630997
+
+2012-05-16 18:53:15 +0300  Anton Belka <antonbelka@gmail.com>
+
+	* gst/gststructure.c:
+	  docs: fix gst_structure_to_string() docs
+
+2012-05-16 13:24:23 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* libs/gst/base/gstbasesink.c:
+	  basesink: throttle-time is used
+
+2012-05-16 12:08:44 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* libs/gst/base/gstbasesink.c:
+	* libs/gst/base/gstbasesink.h:
+	  basesink: add prepare method
+	  Add a prepare method that is called before sync happens. The purpose of this
+	  method is to prepare the rendering of the giving buffer so that the following
+	  render() call after sync is a quick as possible.
+
+2012-05-16 09:16:26 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* libs/gst/base/gstbasesrc.c:
+	  basesrc: avoid potential deadlock
+	  In gst_base_src_start_complete() we do a perform_seek() that will eventually
+	  start the streaming thread which acquires the live lock and then goes to sleep
+	  in the case of appsrc. Right after we perform seek we also try to acquire the
+	  live lock which might then deadlock.
+	  fix this by taking the stream lock before performing the seek. This makes sure
+	  that the streaming thread cannot start and grab the live lock until we are done
+	  and release the stream lock again.
+	  Fixes https://bugzilla.gnome.org/show_bug.cgi?id=676048
+
+2012-05-15 19:11:15 +0100  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+
+	* plugins/elements/gstfilesrc.c:
+	  filesrc: remove references to mmap in comments and debug messages
+
+2012-05-15 16:38:30 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* docs/gst/gstreamer-sections.txt:
+	* gst/gsttoc.c:
+	* gst/gsttoc.h:
+	* tools/gst-launch.c:
+	* win32/common/libgstreamer.def:
+	  gst: Rename gst_toc_entry_type_to_string() to gst_toc_entry_type_get_nick()
+	  It's more consistent.
+
+2012-05-15 14:59:07 +0300  Anton Belka <antonbelka@gmail.com>
+
+	* tools/gst-launch.c:
+	  gst-launch: fix print_toc_entry()
+
+2012-05-15 14:48:35 +0300  Anton Belka <antonbelka@gmail.com>
+
+	* docs/gst/gstreamer-sections.txt:
+	* gst/gsttoc.c:
+	* gst/gsttoc.h:
+	* win32/common/libgstreamer.def:
+	  toc: API: Add gst_toc_entry_type_to_string()
+
+2012-05-14 03:57:50 +0200  Alban Browaeys <prahal@yahoo.com>
+
+	* plugins/elements/gsttypefindelement.c:
+	  typefindelement: if sink pad is activated do not change mode
+	  In commit bf0964b6 a check for pad is activated was not carried.
+	  This leads to attempt to pull while in push mode when force_caps
+	  is set. In this case without the attached check even when activated
+	  in pull mode we activate back to push mode.
+	  This is from comment in previous code , case number eight:
+	  8. if the sink pad is activated, we are in pull mode. succeed.
+	  -     otherwise activate both pads in push mode and succeed.
+	  Putting it back fixes playback of webm in webkit+gstreamer 1.0 .
+	  Fixes https://bugzilla.gnome.org/show_bug.cgi?id=676003
+
+2012-05-13 16:59:24 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* configure.ac:
+	  Back to development
+
+=== release 0.11.91 ===
+
+2012-05-13 16:02:36 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* ChangeLog:
+	* NEWS:
+	* RELEASE:
+	* common:
+	* configure.ac:
+	* docs/plugins/inspect/plugin-coreelements.xml:
+	* gstreamer.doap:
+	* win32/common/config.h:
+	* win32/common/gstenumtypes.c:
+	  Release 0.11.91
+
+2012-05-13 16:02:18 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* po/af.po:
+	* po/az.po:
+	* po/be.po:
+	* po/bg.po:
+	* po/ca.po:
+	* po/cs.po:
+	* po/da.po:
+	* po/de.po:
+	* po/el.po:
+	* po/en_GB.po:
+	* po/eo.po:
+	* po/es.po:
+	* po/eu.po:
+	* po/fi.po:
+	* po/fr.po:
+	* po/gl.po:
+	* po/hu.po:
+	* po/id.po:
+	* po/it.po:
+	* po/ja.po:
+	* po/lt.po:
+	* po/nb.po:
+	* po/nl.po:
+	* po/pl.po:
+	* po/pt_BR.po:
+	* po/ro.po:
+	* po/ru.po:
+	* po/rw.po:
+	* po/sk.po:
+	* po/sl.po:
+	* po/sq.po:
+	* po/sr.po:
+	* po/sv.po:
+	* po/tr.po:
+	* po/uk.po:
+	* po/vi.po:
+	* po/zh_CN.po:
+	* po/zh_TW.po:
+	  Update .po files
+
+2012-05-13 15:55:43 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* common:
+	  Automatic update of common submodule
+	  From dc70203 to 3429ba6
 
 2012-05-09 14:22:20 +0200  Sebastian Rasmussen <sebrn@axis.com>
 

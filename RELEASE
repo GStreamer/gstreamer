@@ -1,5 +1,5 @@
 
-Release notes for GStreamer 0.11.91 "I will give you five magic beans!"
+Release notes for GStreamer 0.11.92 "High Hopes"
         
 
 
@@ -8,10 +8,12 @@ in the 0.11.x unstable series of the
 core of the GStreamer streaming media framework.
 
 
+
 The 0.11.x series is an unstable series targeted at developers and will
 eventually lead up to the stable 1.0 series.
 It is not API or ABI compatible with the stable 0.10.x series.
 It is, however, parallel installable with the 0.10.x series.
+
 
 
 The 0.11.x series has improved memory management and features
@@ -40,10 +42,9 @@ contains a set of less supported plug-ins that haven't passed the
 Features of this release
     
       * Parallel installability with 0.10.x series
-      * Threadsafe design and API
-      * API cleanup and minor improvements
-      * More hiding of structs that don't need to be public
-      * Addition of SNAP flag for seek events
+      * API cleanup and minor API improvements
+      * GstTagList is a refcounted type now
+      * Lots of bugfixes, cleanup and other improvements
 There were no bugs fixed in this release
     
 
@@ -72,26 +73,25 @@ will create more lists as necessary.
         
 Applications
 
-Various applications have early ports to GStreamer 0.11 including Totem, RhythmBox,
-Webkit, Jokosher, Transmageddon and others. We're working on porting more applications.
+Various applications have early ports to GStreamer 0.11 including Totem, RhythmBox, Webkit, Jokosher, Transmageddon and others. We're working on porting more applications.
 
   
 Contributors to this release
     
+      * Alban Browaeys
+      * Andre Moreira Magalhaes (andrunko)
       * Anton Belka
+      * Bastien Nocera
+      * Brian Cameron
       * Edward Hervey
+      * Havard Graff
+      * Josep Torra
+      * Luis de Bethencourt
       * Mark Nauwelaerts
-      * Matej Knopp
-      * Raimo Järvi
-      * Reynaldo H. Verdejo Pinochet
+      * Mike Ruprecht
       * Sebastian Dröge
-      * Sebastian Rasmussen
       * Sreerenj Balachandran
       * Stefan Sauer
-      * Thiago Santos
       * Tim-Philipp Müller
-      * Vincent Penquerc'h
       * Wim Taymans
-      * Youness Alaoui
-      * Руслан Ижбулатов
  

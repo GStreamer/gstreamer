@@ -1084,7 +1084,27 @@
 <RANGE></RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>Sync Streams</NICK>
-<BLURB>Synchronize inactive streams to the running time of the active stream.</BLURB>
+<BLURB>Synchronize inactive streams to the running time of the active stream or to the current clock.</BLURB>
 <DEFAULT>TRUE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstInputSelector::cache-buffers</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Cache Buffers</NICK>
+<BLURB>Cache buffers for active-pad.</BLURB>
+<DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstInputSelector::sync-mode</NAME>
+<TYPE>GstInputSelectorSyncMode</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Sync mode</NICK>
+<BLURB>Behavior in sync-streams mode.</BLURB>
+<DEFAULT>Sync using the current active segment</DEFAULT>
 </ARG>
 
