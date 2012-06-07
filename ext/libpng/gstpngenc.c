@@ -85,6 +85,8 @@ static gboolean gst_pngenc_set_format (GstVideoEncoder * encoder,
 static gboolean gst_pngenc_propose_allocation (GstVideoEncoder * encoder,
     GstQuery * query);
 
+static void gst_pngenc_finalize (GObject * object);
+
 static void
 user_error_fn (png_structp png_ptr, png_const_charp error_msg)
 {
@@ -137,6 +139,7 @@ gst_pngenc_class_init (GstPngEncClass * klass)
   venc_class->set_format = gst_pngenc_set_format;
   venc_class->handle_frame = gst_pngenc_handle_frame;
   venc_class->propose_allocation = gst_pngenc_propose_allocation;
+  gobject_class->finalize = gst_pngenc_finalize;
 
   GST_DEBUG_CATEGORY_INIT (pngenc_debug, "pngenc", 0, "PNG image encoder");
 }
@@ -201,6 +204,17 @@ gst_pngenc_init (GstPngEnc * pngenc)
 
   pngenc->snapshot = DEFAULT_SNAPSHOT;
   pngenc->compression_level = DEFAULT_COMPRESSION_LEVEL;
+}
+
+static void
+gst_pngenc_finalize (GObject * object)
+{
+  GstPngEnc *pngenc = GST_PNGENC (object);
+
+  if (pngenc->input_state)
+    gst_video_codec_state_unref (pngenc->input_state);
+
+  G_OBJECT_CLASS (parent_class)->finalize (object);
 }
 
 static void
