@@ -316,6 +316,10 @@ gst_vp8_dec_reset (GstVideoDecoder * base_video_decoder, gboolean hard)
     gst_video_codec_state_unref (decoder->output_state);
     decoder->output_state = NULL;
   }
+  if (hard && decoder->input_state) {
+    gst_video_codec_state_unref (decoder->input_state);
+    decoder->input_state = NULL;
+  }
   if (decoder->decoder_inited)
     vpx_codec_destroy (&decoder->decoder);
   decoder->decoder_inited = FALSE;
