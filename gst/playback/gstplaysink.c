@@ -1986,14 +1986,10 @@ gst_play_sink_sink_chain (GstPad * pad, GstObject * parent, GstBuffer * buffer,
   GST_PLAY_SINK_LOCK (playsink);
 
   if (*sink_pending_flush) {
-    GstSegment segment_copy;
     GstEvent *event;
     GstStructure *structure;
 
     *sink_pending_flush = FALSE;
-
-    /* sink_segment will be updated in flush */
-    segment_copy = *sink_segment;
 
     GST_PLAY_SINK_UNLOCK (playsink);
 
@@ -2740,7 +2736,7 @@ setup_audio_chain (GstPlaySink * playsink, gboolean raw)
   } else if (conv) {
     /* no volume, we need to add a volume element when we can */
     g_object_set (chain->conv, "use-volume",
-        !!(playsink->flags & GST_PLAY_FLAG_SOFT_VOLUME), NULL);
+        ! !(playsink->flags & GST_PLAY_FLAG_SOFT_VOLUME), NULL);
     GST_DEBUG_OBJECT (playsink, "the sink has no volume property");
 
     /* Disconnect signals */
@@ -3861,14 +3857,14 @@ caps_notify_cb (GstPad * pad, GParamSpec * unused, GstPlaySink * playsink)
 
   if (pad == playsink->audio_pad) {
     raw = is_raw_pad (pad);
-    reconfigure = (!!playsink->audio_pad_raw != !!raw)
+    reconfigure = (! !playsink->audio_pad_raw != ! !raw)
         && playsink->audiochain;
     GST_DEBUG_OBJECT (pad,
         "Audio caps changed: raw %d reconfigure %d caps %" GST_PTR_FORMAT, raw,
         reconfigure, caps);
   } else if (pad == playsink->video_pad) {
     raw = is_raw_pad (pad);
-    reconfigure = (!!playsink->video_pad_raw != !!raw)
+    reconfigure = (! !playsink->video_pad_raw != ! !raw)
         && playsink->videochain;
     GST_DEBUG_OBJECT (pad,
         "Video caps changed: raw %d reconfigure %d caps %" GST_PTR_FORMAT, raw,
