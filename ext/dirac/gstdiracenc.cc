@@ -407,6 +407,9 @@ gst_dirac_enc_finalize (GObject * object)
     dirac_enc->codec_data = NULL;
   }
 
+  if (dirac_enc->input_state)
+    gst_video_codec_state_unref (dirac_enc->input_state);
+
   G_OBJECT_CLASS (parent_class)->finalize (object);
 }
 
