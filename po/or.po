@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-0.8.3\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2012-05-13 16:29+0200\n"
+"POT-Creation-Date: 2012-06-07 16:10+0200\n"
 "PO-Revision-Date: 2004-09-27 13:32+0530\n"
 "Last-Translator: Gora Mohanty <gora_mohanty@yahoo.co.in>\n"
 "Language-Team: Oriya <gora_mohanty@yahoo.co.in>\n"
@@ -23,9 +23,6 @@ msgid "'%s' by '%s'"
 msgstr ""
 
 msgid "Failed to decode JPEG image"
-msgstr ""
-
-msgid "Internal data stream error."
 msgstr ""
 
 #, fuzzy
@@ -55,6 +52,9 @@ msgid "Server sent bad data."
 msgstr ""
 
 msgid "No URL set."
+msgstr ""
+
+msgid "Internal data stream error."
 msgstr ""
 
 msgid "No or invalid input audio, AVI stream will be corrupt."

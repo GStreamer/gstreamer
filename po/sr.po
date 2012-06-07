@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-good-0.10.28.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2012-05-13 16:29+0200\n"
+"POT-Creation-Date: 2012-06-07 16:10+0200\n"
 "PO-Revision-Date: 2011-12-04 16:44+0200\n"
 "Last-Translator: Мирослав Николић <miroslavnikolic@rocketmail.com>\n"
 "Language-Team: Serbian <gnu@prevod.org>\n"
@@ -27,9 +27,6 @@ msgstr "„%s“ изводи „%s“"
 
 msgid "Failed to decode JPEG image"
 msgstr "Нисам успео да декодирам ЈПЕГ слику"
-
-msgid "Internal data stream error."
-msgstr "Унутрашња грешка тока података."
 
 msgid "Could not connect to server"
 msgstr "Не могу да се повежем са сервером"
@@ -55,6 +52,9 @@ msgstr "Сервер је послао лоше податке."
 
 msgid "No URL set."
 msgstr "Није подешена адреса."
+
+msgid "Internal data stream error."
+msgstr "Унутрашња грешка тока података."
 
 msgid "No or invalid input audio, AVI stream will be corrupt."
 msgstr "Улазног звука нема или је неисправан, АВИ ток ће бити оштећен."

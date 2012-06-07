@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-good 0.10.23.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2012-05-13 16:29+0200\n"
+"POT-Creation-Date: 2012-06-07 16:10+0200\n"
 "PO-Revision-Date: 2010-10-03 18:48+1030\n"
 "Last-Translator: Clytie Siddall <clytie@riverland.net.au>\n"
 "Language-Team: Vietnamese <vi-VN@googlegroups.com>\n"
@@ -25,9 +25,6 @@ msgstr "« %s » bởi « %s »"
 
 msgid "Failed to decode JPEG image"
 msgstr "Lỗi giải mã ảnh JPEG"
-
-msgid "Internal data stream error."
-msgstr "Lỗi luồng dữ liệu nội bộ."
 
 msgid "Could not connect to server"
 msgstr "Không thể kết nối tới máy phục vụ"
@@ -55,6 +52,9 @@ msgstr ""
 
 msgid "No URL set."
 msgstr ""
+
+msgid "Internal data stream error."
+msgstr "Lỗi luồng dữ liệu nội bộ."
 
 msgid "No or invalid input audio, AVI stream will be corrupt."
 msgstr ""

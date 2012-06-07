@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-good 0.10.25.3\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2012-05-13 16:29+0200\n"
+"POT-Creation-Date: 2012-06-07 16:10+0200\n"
 "PO-Revision-Date: 2010-11-04 01:21+0100\n"
 "Last-Translator: Gabor Kelemen <kelemeng@gnome.hu>\n"
 "Language-Team: Hungarian <translation-team-hu@lists.sourceforge.net>\n"
@@ -28,9 +28,6 @@ msgstr "„%s” ettől: „%s”"
 
 msgid "Failed to decode JPEG image"
 msgstr "A JPEG kép visszafejtése meghiúsult"
-
-msgid "Internal data stream error."
-msgstr "Belső adatfolyam-hiba."
 
 msgid "Could not connect to server"
 msgstr "Nem lehet csatlakozni a kiszolgálóhoz"
@@ -57,6 +54,9 @@ msgstr "A kiszolgáló hibás adatokat küldött."
 
 msgid "No URL set."
 msgstr "Nincs beállítva URL."
+
+msgid "Internal data stream error."
+msgstr "Belső adatfolyam-hiba."
 
 msgid "No or invalid input audio, AVI stream will be corrupt."
 msgstr "Nincs vagy érvénytelen bemeneti hang, az AVI-folyam sérült lesz."

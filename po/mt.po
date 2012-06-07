@@ -5,7 +5,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-good-0.10.10.3\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2012-05-13 16:29+0200\n"
+"POT-Creation-Date: 2012-06-07 16:10+0200\n"
 "PO-Revision-Date: 2008-10-26 19:09+0100\n"
 "Last-Translator: Michel Bugeja <michelbugeja@rabatmalta.com>\n"
 "Language-Team: Maltese <translation-team-mt@lists.sourceforge.net>\n"
@@ -23,9 +23,6 @@ msgstr ""
 
 msgid "Failed to decode JPEG image"
 msgstr "Problem fid-decoding tal-istampa JPEG"
-
-msgid "Internal data stream error."
-msgstr "Problema interna fid-data stream"
 
 msgid "Could not connect to server"
 msgstr "Mhux possibli naqbad mas-server"
@@ -54,6 +51,9 @@ msgstr ""
 
 msgid "No URL set."
 msgstr ""
+
+msgid "Internal data stream error."
+msgstr "Problema interna fid-data stream"
 
 msgid "No or invalid input audio, AVI stream will be corrupt."
 msgstr "Input audio ma nstabx jew mhux validu. AVI stream jista jkun korrott."

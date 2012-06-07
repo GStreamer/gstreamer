@@ -5,7 +5,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-good 0.10.23.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2012-05-13 16:29+0200\n"
+"POT-Creation-Date: 2012-06-07 16:10+0200\n"
 "PO-Revision-Date: 2010-08-16 03:22+0300\n"
 "Last-Translator: Lucian Adrian Grijincu <lucian.grijincu@gmail.com>\n"
 "Language-Team: Romanian <translation-team-ro@lists.sourceforge.net>\n"
@@ -25,9 +25,6 @@ msgstr "„%s” de „%s”"
 
 msgid "Failed to decode JPEG image"
 msgstr "Nu s-a putut decoda imaginea JPEG"
-
-msgid "Internal data stream error."
-msgstr "Eroare internă a fluxului de date."
 
 msgid "Could not connect to server"
 msgstr "Nu se poate stabili o conexiune la server"
@@ -55,6 +52,9 @@ msgstr ""
 
 msgid "No URL set."
 msgstr ""
+
+msgid "Internal data stream error."
+msgstr "Eroare internă a fluxului de date."
 
 msgid "No or invalid input audio, AVI stream will be corrupt."
 msgstr ""

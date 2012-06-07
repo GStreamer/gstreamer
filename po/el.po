@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-good 0.10.25.3\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2012-05-13 16:29+0200\n"
+"POT-Creation-Date: 2012-06-07 16:10+0200\n"
 "PO-Revision-Date: 2010-10-27 12:16+0200\n"
 "Last-Translator: Michael Kotsarinis <mk73628@gmail.com>\n"
 "Language-Team: Greek <team@lists.gnome.gr>\n"
@@ -25,9 +25,6 @@ msgstr "'%s' από '%s'"
 
 msgid "Failed to decode JPEG image"
 msgstr "Αποτυχία αποκωδικοποίησης της εικόνας JPEG"
-
-msgid "Internal data stream error."
-msgstr "Εσωτερικό σφάλμα ροής δεδομένων."
 
 msgid "Could not connect to server"
 msgstr "Δεν ήταν δυνατή η σύνδεση με τον διακομιστή"
@@ -54,6 +51,9 @@ msgstr "Ο διακομιστής έστειλε λάθος δεδομένα."
 
 msgid "No URL set."
 msgstr "Δεν ορίσθηκε URL."
+
+msgid "Internal data stream error."
+msgstr "Εσωτερικό σφάλμα ροής δεδομένων."
 
 msgid "No or invalid input audio, AVI stream will be corrupt."
 msgstr "Καμία ή άκυρη εισαγωγή ήχου, η AVI ροή θα καταρρεύσει."

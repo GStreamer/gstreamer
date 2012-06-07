@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-good 0.10.25.3\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2012-05-13 16:29+0200\n"
+"POT-Creation-Date: 2012-06-07 16:10+0200\n"
 "PO-Revision-Date: 2010-10-24 21:53+0200\n"
 "Last-Translator: Kjartan Maraas <kmaraas@gnome.org>\n"
 "Language-Team: Norwegian Bokmaal <i18n-nb@lister.ping.uio.no>\n"
@@ -22,9 +22,6 @@ msgstr "«%s» av «%s»"
 
 msgid "Failed to decode JPEG image"
 msgstr "Klarte ikke å dekode JPEG-bilde"
-
-msgid "Internal data stream error."
-msgstr "Intern feil i datastrøm."
 
 msgid "Could not connect to server"
 msgstr "Kunne ikke koble til tjener."
@@ -50,6 +47,9 @@ msgstr "Tjener sendte ugyldige data."
 
 msgid "No URL set."
 msgstr "Ingen URL satt."
+
+msgid "Internal data stream error."
+msgstr "Intern feil i datastrøm."
 
 msgid "No or invalid input audio, AVI stream will be corrupt."
 msgstr ""

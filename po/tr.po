@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-good 0.10.26.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2012-05-13 16:29+0200\n"
+"POT-Creation-Date: 2012-06-07 16:10+0200\n"
 "PO-Revision-Date: 2011-01-08 00:03+0200\n"
 "Last-Translator: Server Acim <serveracim@gmail.com>\n"
 "Language-Team: Turkish <gnu-tr-u12a@lists.sourceforge.net>\n"
@@ -22,9 +22,6 @@ msgstr "'%s' tarafından '%s'"
 
 msgid "Failed to decode JPEG image"
 msgstr "JPEG görüntüsünü çözümlenemedi"
-
-msgid "Internal data stream error."
-msgstr "İç veri akım hatası."
 
 msgid "Could not connect to server"
 msgstr "Sunucuya bağlanamıyor"
@@ -52,6 +49,9 @@ msgstr "Sunucu yetersiz veri gönderdi."
 
 msgid "No URL set."
 msgstr "Hiç bir URL ayarlanmamış."
+
+msgid "Internal data stream error."
+msgstr "İç veri akım hatası."
 
 msgid "No or invalid input audio, AVI stream will be corrupt."
 msgstr "Geçerli bir ses girişi bulunamadı. AVI akışı kesilecek."

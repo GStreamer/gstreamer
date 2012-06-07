@@ -11,7 +11,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-good 0.10.26.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2012-05-13 16:29+0200\n"
+"POT-Creation-Date: 2012-06-07 16:10+0200\n"
 "PO-Revision-Date: 2011-01-08 01:28-0300\n"
 "Last-Translator: Fabrício Godoy <skarllot@gmail.com>\n"
 "Language-Team: Brazilian Portuguese <ldp-br@bazar.conectiva.com.br>\n"
@@ -28,9 +28,6 @@ msgstr "\"%s\" por \"%s\""
 
 msgid "Failed to decode JPEG image"
 msgstr "Falha ao decodificar a imagem JPEG"
-
-msgid "Internal data stream error."
-msgstr "Erro interno no fluxo de dados."
 
 msgid "Could not connect to server"
 msgstr "Não foi possível conectar ao servidor"
@@ -57,6 +54,9 @@ msgstr "O servidor enviou dados ruins."
 
 msgid "No URL set."
 msgstr "Nenhum URL definido."
+
+msgid "Internal data stream error."
+msgstr "Erro interno no fluxo de dados."
 
 msgid "No or invalid input audio, AVI stream will be corrupt."
 msgstr "Entrada de áudio nula ou inválida, o fluxo AVI pode estar corrompido."
