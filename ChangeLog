@@ -1,9 +1,1020 @@
-=== release 0.11.91 ===
+=== release 0.11.92 ===
 
-2012-05-13  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+2012-06-07  Sebastian Dröge <sebastian.droege@collabora.co.uk>
 
 	* configure.ac:
-	  releasing 0.11.91, "Fee-fi-fo-fum"
+	  releasing 0.11.92, "Comfortably Numb"
+
+2012-06-07 13:24:48 +0100  Vincent Penquerc'h <vincent.penquerch@collabora.co.uk>
+
+	* ext/theora/gsttheoradec.c:
+	  theoradec: fix frame leaks
+
+2012-06-07 11:16:13 +0100  Vincent Penquerc'h <vincent.penquerch@collabora.co.uk>
+
+	* ext/theora/gsttheoradec.c:
+	  theoradec: fix video state leaks
+
+2012-06-07 11:15:57 +0100  Vincent Penquerc'h <vincent.penquerch@collabora.co.uk>
+
+	* gst-libs/gst/video/gstvideoutils.c:
+	  video: fix memory leak
+
+2012-06-07 10:52:53 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* gst/playback/gstplaysink.c:
+	  playsink: fix compilation
+
+2012-05-24 11:02:59 -0300  Andre Moreira Magalhaes (andrunko) <andre.magalhaes@collabora.co.uk>
+
+	* gst/playback/gstplaybin2.c:
+	* gst/playback/gstplaysink.c:
+	* gst/playback/gstsubtitleoverlay.c:
+	  playbin2: Send flush events when changing subtitle tracks and use new input-selector modes for subtitle tracks
+	  For audio/video we should flush too for fastest stream switches but this
+	  currently isn't possible because the flushes would need to go to the sink,
+	  which then causes state changes and causes all timing information to be
+	  changed.
+	  Should work out of the box in 0.11 with the flush-stop that doesn't reset
+	  the times.
+	  Conflicts:
+	  gst/playback/gstplaybin2.c
+	  gst/playback/gstplaysink.c
+	  gst/playback/gstsubtitleoverlay.c
+
+2012-05-21 09:06:18 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* gst/playback/gstplaysink.c:
+	  playsink: Don't use // comments and prevent unnecessary memory allocation
+	  Conflicts:
+	  gst/playback/gstplaysink.c
+
+2012-05-20 12:51:17 -0300  Andre Moreira Magalhaes (andrunko) <andre.magalhaes@collabora.co.uk>
+
+	* gst/playback/gstplaybin2.c:
+	* gst/playback/gstplaysink.c:
+	  playbin2: Properly change subtitles
+	  Conflicts:
+	  gst/playback/gstplaysink.c
+
+2012-05-15 12:56:13 -0300  Thiago Santos <thiago.sousa.santos@collabora.com>
+
+	* gst/playback/gstplaybin2.c:
+	  playbin2: fix subtitle only seeks when switching to external subs
+	  Sending a non-flushing seek might not be enough for switching
+	  to an external sub that has already been used because the flushes
+	  are needed to reset the state of its decodebin's queue.
+	  For example, if the subtitle is short enough, the queue might get
+	  and EOS and keep its 'unexpected' return state. If the user switches
+	  to another subtitle and back to the external one, the buffers
+	  won't get past the queue.
+	  This patch fixes this by adding the flush flag to the seek and
+	  preventing that this flush leaves the suburidecodebin.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=638168
+	  Conflicts:
+	  gst/playback/gstplaybin2.c
+
+2012-05-16 10:41:41 -0300  Andre Moreira Magalhaes (andrunko) <andre.magalhaes@collabora.co.uk>
+
+	* gst/playback/gstplaysink.c:
+	  gstplaysink: Properly reset chain when receiving a custom flush event.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=638168
+	  Conflicts:
+	  gst/playback/gstplaysink.c
+
+2012-05-14 11:52:12 -0300  Thiago Santos <thiago.sousa.santos@collabora.com>
+
+	* gst/playback/gstplaysink.c:
+	  playsink: do not store more than a second of subtitles
+	  Use a shorter queue for subtitles to avoid switches for subtitles
+	  taking longer than they already take.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=638168
+
+2012-06-05 18:12:52 -0300  Thiago Santos <thiago.sousa.santos@collabora.com>
+
+	* gst/playback/gstsubtitleoverlay.c:
+	  subtitleoverlay: pass correct parameter to debug message
+	  Get the format name to pass to the debug message, as it expects a string
+
+2012-05-10 12:17:45 -0300  Andre Moreira Magalhaes (andrunko) <andre.magalhaes@collabora.co.uk>
+
+	* gst/playback/gstsubtitleoverlay.c:
+	  gstsuboverlay: Convert NewSegment events to always be in the TIME format.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=638168
+	  Conflicts:
+	  gst/playback/gstsubtitleoverlay.c
+
+2012-06-06 17:42:36 +0100  Vincent Penquerc'h <vincent.penquerch@collabora.co.uk>
+
+	* ext/ogg/gstoggdemux.c:
+	  oggdemux: reject opus streams with negative start time
+	  This is used by Vorbis for sample accurate clipping, but this is
+	  deemed an invalid stream by the opus spec.
+
+2012-06-06 17:41:55 +0100  Vincent Penquerc'h <vincent.penquerch@collabora.co.uk>
+
+	* ext/ogg/gstoggstream.c:
+	* ext/ogg/gstoggstream.h:
+	  oggstream: add a flag to say whether start granule clamping is to be done
+
+2012-06-06 18:18:29 +0200  Edward Hervey <edward.hervey@collabora.co.uk>
+
+	* common:
+	  Automatic update of common submodule
+	  From 1fab359 to 03a0e57
+
+2012-06-06 16:41:03 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* gst-libs/gst/rtsp/gstrtspconnection.c:
+	  rtspconnection: handle cancellation correctly
+
+2012-06-06 16:40:24 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* gst-libs/gst/rtp/gstrtpbaseaudiopayload.c:
+	  audiopayload: disable broken bufferlist handling
+	  The bufferlist handling is broken so make sure it is never enabled.
+
+2012-06-06 14:53:43 +0200  David Svensson Fors <davidsf at axis.com>
+
+	* gst-libs/gst/rtsp/gstrtspconnection.c:
+	  rtsp: don't leak address and socket
+	  Fixes https://bugzilla.gnome.org/show_bug.cgi?id=677466
+
+2012-06-06 12:55:15 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* ext/ogg/gstoggdemux.c:
+	* ext/ogg/gstogmparse.c:
+	* ext/theora/gsttheoradec.c:
+	* gst-libs/gst/audio/gstaudiocdsrc.c:
+	* gst-libs/gst/audio/gstaudiodecoder.c:
+	* gst-libs/gst/audio/gstaudioencoder.c:
+	* gst-libs/gst/tag/gsttagdemux.c:
+	* gst-libs/gst/tag/gsttagmux.c:
+	* gst/audiotestsrc/gstaudiotestsrc.c:
+	* gst/playback/gstplaybin2.c:
+	* gst/subparse/gstssaparse.c:
+	* gst/subparse/gstsubparse.c:
+	  update for tag event change
+
+2012-06-06 11:01:13 +0100  Vincent Penquerc'h <vincent.penquerch@collabora.co.uk>
+
+	* ext/ogg/gstoggdemux.c:
+	* ext/ogg/gstoggstream.c:
+	* ext/ogg/gstoggstream.h:
+	  oggstream: reject Ogg/Opus streams with nonsensical preskip/granpos setup
+	  As the spec mandates.
+
+2012-06-06 11:38:00 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* gst-libs/gst/video/video-format.c:
+	* gst-libs/gst/video/video-format.h:
+	  video: add pack_lines variable
+	  Use a separate variable to describe the amount of lines that will be used in
+	  packing instead of abusing the h_sub variable. Some formats might have no
+	  subsampling but need to operate on multipe lines.
+
+2012-06-06 11:15:50 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* gst/videotestsrc/gstvideotestsrc.c:
+	* gst/videotestsrc/gstvideotestsrc.h:
+	* gst/videotestsrc/videotestsrc.c:
+	* gst/videotestsrc/videotestsrc.h:
+	  videotestsrc: Remove more redundant code
+	  Use the video library to do the setup instead of keeping a separate incomplete
+	  list.
+
+2012-06-06 10:21:55 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* gst-libs/gst/video/video-frame.h:
+	  video: add macro for component depth
+
+2012-06-05 16:58:19 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* gst/videotestsrc/gstvideotestsrc.c:
+	  videotestsrc: don't artificially restrict caps
+	  Use all the formats that the video library supports without any restrictions on
+	  colorimetry or other parameters such as chroma-siting.
+
+2012-06-05 12:27:09 +0200  Edward Hervey <edward.hervey@collabora.co.uk>
+
+	* gst-libs/gst/pbutils/descriptions.c:
+	  pbutils: Add descriptor for E-AC3 and PGS subtitles
+
+2012-06-05 16:09:56 +0100  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+
+	* win32/common/libgstvideo.def:
+	  win32: update .def file for new video API
+
+2012-06-05 12:47:22 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* gst-libs/gst/video/Makefile.am:
+	* gst-libs/gst/video/video-color.c:
+	* gst-libs/gst/video/video-color.h:
+	* gst-libs/gst/video/video-event.c:
+	* gst-libs/gst/video/video-event.h:
+	* gst-libs/gst/video/video-format.c:
+	* gst-libs/gst/video/video-format.h:
+	* gst-libs/gst/video/video-frame.c:
+	* gst-libs/gst/video/video-frame.h:
+	* gst-libs/gst/video/video-info.c:
+	* gst-libs/gst/video/video-info.h:
+	* gst-libs/gst/video/video.c:
+	* gst-libs/gst/video/video.h:
+	  video: move methods into separate files
+	  Move different video functionalities into different files
+
+2012-06-04 20:36:10 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* gst/videoconvert/videoconvert.c:
+	* gst/videoconvert/videoconvert.h:
+	  videoconvert: refactor matrix setup
+
+2012-06-04 18:24:03 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* gst-libs/gst/video/video.c:
+	  video: don't add unknown colorimetry
+
+2012-06-04 18:17:42 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* gst-libs/gst/video/gstvideodecoder.c:
+	  videodecoder: only copy known colorimetry values
+	  Avoid overriding the default colorimetry values.
+
+2012-06-04 18:08:11 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* gst-libs/gst/video/video.c:
+	  video: add unknown colorimetry parameters as well..
+
+2012-06-04 18:00:42 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* gst-libs/gst/video/video.c:
+	  video: use unknown colorimetry for unknown formats
+	  Use the default RGB colorimetry into only on RGB formats and use an unknown set
+	  of defaults for the unknown format.
+
+2012-06-04 16:15:25 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* gst-libs/gst/video/video.c:
+	  video: (de)serialize colorimetry on caps
+
+2012-06-04 16:13:48 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* gst/videoconvert/videoconvert.c:
+	  videoconvert: fix 0_255 handling
+	  We also need to apply an offset to the Cb and Cr samples in the 0-255 case.
+
+2012-06-04 15:26:21 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* gst-libs/gst/video/video.c:
+	  video: don't add empty colorimetry to caps
+	  Don't use extra default colorimetry entries in the table to construct an output
+	  colorimetry shortcut because they don't have a name.
+
+2012-06-04 14:51:41 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* gst-libs/gst/video/video.c:
+	  video: fix default colorspace settings
+	  HD content is defined as height > 576
+
+2012-06-04 14:46:21 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* gst/videoconvert/Makefile.am:
+	* gst/videoconvert/gstcms.c:
+	* gst/videoconvert/gstcms.h:
+	* gst/videoconvert/videoconvert.c:
+	* gst/videoconvert/videoconvert.h:
+	  videoconvert: improve color transform setup
+	  Remove hardcoded color matrices and compute the matrices using the cms helper
+	  library that was in cogcolorspace before.
+
+2012-06-04 10:08:59 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* gst-libs/gst/video/video.h:
+	  video: add generic film primaries
+
+2012-06-04 13:07:36 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* tests/check/libs/video.c:
+	  video: Fix build of unit test
+
+2012-06-04 13:04:00 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* win32/common/libgstaudio.def:
+	* win32/common/libgstvideo.def:
+	  win32: Update exported symbols list
+
+2012-06-04 10:46:13 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* gst-libs/gst/video/gstvideoencoder.c:
+	  videoencoder: Don't unref frame twice if not in the list
+
+2012-06-02 09:34:15 -0400  Matej Knopp <matej.knopp@gmail.com>
+
+	* gst-libs/gst/video/gstvideodecoder.c:
+	  videodecoder: Do not unref frame if not in the list
+
+2012-06-04 10:01:42 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* gst-libs/gst/audio/gstaudiodecoder.c:
+	  Revert "audiodecoder: Error out earlier in a few places if something goes wrong"
+	  This reverts commit eb68a2d5a7e4e9598df6eb812589c092fe2cc89a.
+	  This sometimes errors out too early now, needs some more thoughts.
+
+2012-06-04 09:56:30 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* gst-libs/gst/audio/gstaudiodecoder.c:
+	  audiodecoder: Return setcaps return value instead of always TRUE
+
+2012-06-02 17:15:42 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* gst-libs/gst/audio/gstaudiodecoder.c:
+	  audiodecoder: Error out earlier in a few places if something goes wrong
+
+2012-06-02 17:02:10 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* ext/vorbis/gstvorbisdec.c:
+	  vorbisdec: Error out if handling a header packet failed instead of just finishing the frame
+
+2012-06-01 12:02:57 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* gst/videoconvert/gstvideoconvert.c:
+	* gst/videoconvert/gstvideoconvert.h:
+	* gst/videoconvert/videoconvert.c:
+	* gst/videoconvert/videoconvert.h:
+	  videoconvert: use video helper library more
+	  Use VideoInfo to setup the conversion.
+	  Use the color matrix from the video info.
+
+2012-06-01 11:58:18 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* gst-libs/gst/video/video.c:
+	  video: set default colorimetry info
+	  Set default colorimetry info when not otherwise specified in caps.
+
+2012-06-01 10:02:02 +0100  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+
+	* gst-libs/gst/video/videoblendorc-dist.c:
+	* gst-libs/gst/video/videoblendorc-dist.h:
+	  video: update disted orc backup files for recent changes
+
+2012-06-01 10:28:41 +0200  Edward Hervey <edward.hervey@collabora.co.uk>
+
+	* common:
+	  Automatic update of common submodule
+	  From f1b5a96 to 1fab359
+
+2012-05-31 18:55:32 -0300  Thiago Santos <thiago.sousa.santos@collabora.com>
+
+	* ext/theora/gsttheoraenc.c:
+	  theoraenc: do not use %zu, it is C99
+	  Cast the variables instead and fallback to %u
+
+2012-05-31 18:28:14 -0300  Thiago Santos <thiago.sousa.santos@collabora.com>
+
+	* ext/theora/gsttheoraenc.c:
+	  theoraenc: fix printf format variable
+
+2012-05-31 13:38:54 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* gst-libs/gst/video/gstvideopool.c:
+	* gst-libs/gst/video/video.c:
+	* gst-libs/gst/video/video.h:
+	* gst/videoconvert/gstvideoconvert.c:
+	* gst/videoconvert/videoconvert.c:
+	  video: fix paletted format
+	  RGB8_PALETTED -> RGB8P
+	  Fix the definition of paletted formats, store the palette in the second
+	  plane.
+	  Make sure we copy the palette correctly in gst_video_frame_copy()
+	  Don't do alignment on the palette in videopool
+
+2012-05-31 13:08:04 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* common:
+	  Automatic update of common submodule
+	  From 92b7266 to f1b5a96
+
+2012-05-31 11:29:44 +0100  Bastien Nocera <hadess@hadess.net>
+
+	* gst/playback/gsturidecodebin.c:
+	  uridecodebin: Use cache dir for download buffering
+	  Instead of the temp directory. See:
+	  http://0pointer.de/blog/projects/tmp.html
+	  https://bugzilla.gnome.org/show_bug.cgi?id=677181
+
+2012-05-30 17:08:56 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* gst/videoconvert/videoconvert.c:
+	* gst/videoconvert/videoconvert.h:
+	  videoconvert: use video library pack/unpack
+	  Remove obsolete code and use the video pack/unpack functions
+
+2012-05-30 16:51:16 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* gst/videotestsrc/videotestsrc.c:
+	  videotestsrc: enable more formats
+
+2012-05-30 13:07:57 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* gst-libs/gst/video/Makefile.am:
+	  video: And fix the build of the ORC sources
+
+2012-05-30 13:06:11 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* gst-libs/gst/video/Makefile.am:
+	  video: Fix generation of orc sources
+
+2012-05-30 12:45:09 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* common:
+	  Automatic update of common submodule
+	  From ec1c4a8 to 92b7266
+
+2012-05-30 11:23:23 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* common:
+	  Automatic update of common submodule
+	  From 3429ba6 to ec1c4a8
+
+2012-05-30 09:25:12 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* gst-libs/gst/video/video-blend.c:
+	* gst-libs/gst/video/video-blend.h:
+	  video-blend: prepare for 0.11 porting
+	  Remove obsolete code.
+	  Remove the BlendInfo structure, we can do this better with GstVideoFrame
+	  Use GstVideoFrame in the API
+	  Prefix functions with gst_
+
+2012-05-30 09:21:46 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* gst-libs/gst/video/video.h:
+	  video: add support for premultiplied alpha
+
+2012-05-29 17:48:45 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* gst/videotestsrc/gstvideotestsrc.c:
+	* gst/videotestsrc/gstvideotestsrc.h:
+	* gst/videotestsrc/videotestsrc.c:
+	* gst/videotestsrc/videotestsrc.h:
+	  videotestsrc: use generic packing code
+	  Use the pack functions of the video library to construct the target
+	  image.
+	  Remove redundant functions.
+
+2012-05-29 17:47:54 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* gst/videoconvert/videoconvert.c:
+	* gst/videoscale/gstvideoscale.c:
+	  video: update for removed formats
+
+2012-05-29 17:45:33 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* gst-libs/gst/video/video.h:
+	  video: move enum difinition
+	  c++ doesn't seem to like the typedef
+
+2012-05-29 17:34:29 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* gst-libs/gst/video/video.c:
+	* gst-libs/gst/video/video.h:
+	* gst-libs/gst/video/videoblendorc.orc:
+	  video: Remove duplicate formats
+	  Remove Y800 and Y16 wich are the same as GRAY8 and GRAY16_LE
+	  Add const to the GstVideoFormatInfo when used in argument
+	  Add GRAY8 and GRAY16 pack/unpack functions
+
+2012-05-29 15:20:08 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* gst-libs/gst/video/video.c:
+	* gst-libs/gst/video/videoblendorc.orc:
+	  video: rename orc function names
+
+2012-05-29 15:12:16 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* gst-libs/gst/video/Makefile.am:
+	* gst-libs/gst/video/video.c:
+	* gst-libs/gst/video/video.h:
+	* gst-libs/gst/video/videoblendorc-dist.c:
+	* gst-libs/gst/video/videoblendorc-dist.h:
+	* gst-libs/gst/video/videoblendorc.orc:
+	  video: fill in the pack/unpack functions
+	  Add support for supporting chroma subsampling correctly in the pack
+	  function.
+	  Fill in the pack and unpack functions for most formats.
+	  Add some missing pack/unpack functions to the orc file.
+
+2012-05-29 10:45:23 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* gst/videoconvert/gstvideoconvertorc-dist.c:
+	* gst/videoconvert/gstvideoconvertorc-dist.h:
+	* gst/videoconvert/gstvideoconvertorc.orc:
+	  videoconvert: remove unused functions
+
+2012-05-29 10:44:59 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* gst-libs/gst/video/video-blend.c:
+	  video-blend: remove unused defines
+
+2012-05-28 14:18:10 -0300  Andre Moreira Magalhaes (andrunko) <andre.magalhaes@collabora.co.uk>
+
+	* ext/pango/gstbasetextoverlay.c:
+	* ext/pango/gstbasetextoverlay.h:
+	  textoverlay: Use an external lock
+	  Conflicts:
+	  ext/pango/gsttextoverlay.c
+	  ext/pango/gsttextoverlay.h
+
+2012-05-29 09:54:43 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* gst-libs/gst/audio/audio.h:
+	  audio: add flags for the pack/unpack functions
+	  Add a flag argument to the pack and unpack function so that we can expand it
+	  later when needed. We could for example prefer a High Quality pack/unpack
+	  operation later.
+
+2012-05-29 09:53:15 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* gst-libs/gst/video/video.h:
+	  video: add flags for the pack/unpack functions
+	  Add a flag argument to the pack and unpack function so that we can expand it
+	  later when needed. We could for example prefer a High Quality pack/unpack
+	  operation later.
+
+2012-05-29 09:52:40 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* gst-libs/gst/video/video.h:
+	  video: add padding
+
+2012-05-28 17:11:46 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* gst/videoconvert/videoconvert.c:
+	* gst/videotestsrc/videotestsrc.c:
+	  video: fix UYVP packing function
+
+2012-05-28 16:30:56 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* gst/videoconvert/videoconvert.c:
+	  videoconvert: fix v216
+
+2012-05-28 16:16:24 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* gst/videotestsrc/videotestsrc.c:
+	* gst/videotestsrc/videotestsrc.h:
+	  videotestsrc: add support for I420_10 format
+	  Add support for the I420_10 formats
+	  Use the video frame api to get pixels and strides instead of our own
+	  custom versions. Fixes the YVU9 format and probably some others.
+
+2012-05-28 16:14:30 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* gst-libs/gst/video/video.c:
+	  video: fix v216 format description
+	  Fix the offsets of v216 video
+	  Add the complex flag to some formats
+
+2012-05-28 16:13:42 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* docs/design/part-mediatype-video-raw.txt:
+	  docs: update v216 format
+	  Fix the v216 format description
+
+2012-05-28 14:58:52 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* gst/videotestsrc/videotestsrc.c:
+	  videotestsrc: fix AYUV64 format string
+
+2012-05-28 14:49:52 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* docs/design/part-mediatype-video-raw.txt:
+	  docs: update video formats document
+
+2012-05-28 12:50:49 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* gst/videoconvert/videoconvert.c:
+	  videoconvert: add support for 10bit I420
+	  Add support for 10bit I420
+	  Reorganize some macros, have separate plane and component macros, fix
+	  a problem with YV12 in the process.
+	  Fixes https://bugzilla.gnome.org/show_bug.cgi?id=665034
+
+2012-05-28 11:08:18 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* gst-libs/gst/video/gstvideopool.c:
+	  videopool: take pixel stride into account
+	  When we need to add borders, take the pixel stride into account to move to the
+	  right horizintal offset.
+
+2012-05-26 19:56:48 +0100  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+
+	* tests/check/libs/tag.c:
+	* tests/examples/playback/playback-test.c:
+	* tests/examples/seek/jsseek.c:
+	  tests: don't use GstStructure API on tag lists
+
+2012-05-26 19:56:30 +0100  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+
+	* gst-libs/gst/tag/gstxmptag.c:
+	* gst-libs/gst/tag/id3v2.c:
+	  tag: don't use GstStructure API on tag lists
+
+2012-05-26 19:53:50 +0100  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+
+	* tools/gst-discoverer.c:
+	  gst-discoverer: print all entries for a certain tag
+	  If there are multiple entries for a tag, print all of them
+	  individually.
+
+2012-05-26 19:50:46 +0100  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+
+	* tools/gst-discoverer.c:
+	  gst-discoverer: don't use GstStructure API on tag lists
+
+2012-05-25 16:58:50 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* gst-libs/gst/video/video.c:
+	* gst-libs/gst/video/video.h:
+	  video: add 10 bits I420 format
+	  Add 10 bits I420 format definitions
+	  Move encoded format as second entry in the array so that it doesn't end up in a
+	  weird place when we add formats.
+	  See https://bugzilla.gnome.org/show_bug.cgi?id=665034
+
+2012-05-25 16:05:29 +0200  Edward Hervey <edward.hervey@collabora.co.uk>
+
+	* tests/check/libs/video.c:
+	  check: Update video test for GST_VIDEO_FORMAT_ENCODED
+
+2012-05-25 16:05:06 +0200  Edward Hervey <edward.hervey@collabora.co.uk>
+
+	* tests/check/libs/struct_x86_64.h:
+	  tests: Update ABI libs structure
+
+2012-05-25 15:12:53 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* gst/playback/gstplaybin2.c:
+	* tests/check/elements/playbin.c:
+	  playbin: add current-*uri properties
+	  Make the uri property getter return the next uri, like it was configured in the
+	  setter.
+	  Make a new current-uri and current-suburi property that reflects the currently
+	  playing uri and suburi.
+	  Fixes https://bugzilla.gnome.org/show_bug.cgi?id=676665
+
+2012-05-25 15:57:45 +0530  Arun Raghavan <arun.raghavan@collabora.co.uk>
+
+	* gst-libs/gst/audio/gstaudioiec61937.c:
+	  audio: Fix DTS IEC61937 payloading
+	  DTS type I-III specify the burst length in bits. Only type IV (which we
+	  do not currently support) needs it to be specified in bytes. Thanks to
+	  Julien Moutte for pointing this out.
+
+2012-05-24 13:43:06 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* gst/playback/gstplaybin2.c:
+	  playbin: fix compilation
+
+2012-05-24 13:28:33 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* ext/cdparanoia/gstcdparanoiasrc.c:
+	  cdparanoia: always set the read_speed
+	  Always set the read speed to the configured value. Clarify that 0 or -1
+	  speed means full speed.
+	  Fixes https://bugzilla.gnome.org/show_bug.cgi?id=676361
+
+2012-05-24 12:31:34 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* common:
+	  Automatic update of common submodule
+	  From dc70203 to 3429ba6
+
+2012-05-23 16:34:37 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* gst/playback/gstplaybin2.c:
+	  playbin2: Put sinks before the other element factories in the autoplug factory list
+	  This makes sure that we always prefer sinks that support a format without
+	  decoding, independant of its rank. Previously we only sorted by rank.
+	  Conflicts:
+	  gst/playback/gstplaybin2.c
+
+2012-05-21 13:34:02 +0300  Sreerenj Balachandran <sreerenj.balachandran@intel.com>
+
+	* ext/theora/gsttheoradec.c:
+	  theoradec: remove usless checking of return val.
+	  fixes https://bugzilla.gnome.org/show_bug.cgi?id=676525
+
+2012-05-20 23:27:42 +0300  Raimo Järvi <raimo.jarvi@gmail.com>
+
+	* gst-libs/gst/video/gstvideodecoder.c:
+	* gst-libs/gst/video/gstvideoencoder.c:
+	  video: Fix printf format warnings on mingw-w64
+	  https://bugzilla.gnome.org/show_bug.cgi?id=676442
+
+2012-05-23 16:09:37 +0200  Sebastian Rasmussen <sebrn@axis.com>
+
+	* gst/audioresample/gstaudioresample.c:
+	  Fix bug where debug category was declared inside a function
+	  Fixes https://bugzilla.gnome.org/show_bug.cgi?id=676670
+
+2012-05-22 16:49:58 +0300  Sreerenj Balachandran <sreerenj.balachandran@intel.com>
+
+	* gst-libs/gst/video/gstvideodecoder.c:
+	  videodecoder: improve doc
+
+2012-05-23 01:49:49 +0300  Sreerenj Balachandran <sreerenj.balachandran@intel.com>
+
+	* ext/theora/gsttheoradec.c:
+	  theoradec: remove the nonuse parameter from handle_type_packet() method
+
+2012-05-22 15:24:36 +0300  Sreerenj Balachandran <sreerenj.balachandran@intel.com>
+
+	* gst-libs/gst/video/gstvideoutils.h:
+	  videoutils: improve doc
+
+2012-05-22 15:17:37 +0300  Sreerenj Balachandran <sreerenj.balachandran@intel.com>
+
+	* ext/theora/gsttheoradec.c:
+	  theoradec: stream is marking as non-packeized so that the data gets parsed and keyframes marked
+
+2012-05-22 13:52:28 +0200  Edward Hervey <edward.hervey@collabora.co.uk>
+
+	* win32/common/libgstpbutils.def:
+	  win32: Update defs file
+
+2012-05-21 13:14:32 +0200  Andoni Morales Alastruey <ylatuya@gmail.com>
+
+	* configure.ac:
+	* tests/examples/playback/Makefile.am:
+	* tests/examples/playback/playback-test.c:
+	  playback: Fix compilation with the GDK Quartz backend
+
+2012-05-21 08:01:09 +0200  Stefan Sauer <ensonic@users.sf.net>
+
+	* tests/examples/playback/playback-test.c:
+	  playback-test: remove not needed state-change
+	  We go back to paused if needed (scrubbing in paused) in stop_seek().
+
+2012-05-21 10:08:33 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* gst-libs/gst/pbutils/gstdiscoverer.h:
+	  discoverer: Put back accidentially deleted line
+
+2012-05-21 02:01:17 +0300  Anton Belka <antonbelka@gmail.com>
+
+	* docs/libs/gst-plugins-base-libs-sections.txt:
+	* gst-libs/gst/pbutils/gstdiscoverer-types.c:
+	* gst-libs/gst/pbutils/gstdiscoverer.c:
+	* gst-libs/gst/pbutils/gstdiscoverer.h:
+	* gst-libs/gst/pbutils/pbutils-private.h:
+	* tools/gst-discoverer.c:
+	  discoverer: Add TOC support to discoverer and add -c/--toc parameters to gst-discoverer utility
+
+2012-05-19 15:17:18 +0100  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+
+	* gst/encoding/gstencodebin.c:
+	  encodebin: don't access GstElementFactory structure directly
+
+2012-05-15 16:09:05 +0300  Sreerenj Balachandran <sreerenj.balachandran@intel.com>
+
+	* sys/xvimage/xvimagesink.c:
+	  xvimagesink: remove unused assignment
+	  https://bugzilla.gnome.org/show_bug.cgi?id=676344
+
+2012-05-16 12:25:09 +0300  Sreerenj Balachandran <sreerenj.balachandran@intel.com>
+
+	* tests/icles/test-box.c:
+	  tests/icles: fix type of format field in 0.11 video caps
+	  https://bugzilla.gnome.org/show_bug.cgi?id=676344
+
+2012-05-15 19:21:15 +0200  Andoni Morales Alastruey <ylatuya@gmail.com>
+
+	* ext/alsa/gstalsa.c:
+	* ext/alsa/gstalsa.h:
+	* ext/alsa/gstalsasink.c:
+	* ext/alsa/gstalsasrc.c:
+	  alsasink: check for spdif support only in the current device
+
+2012-05-18 09:20:54 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* gst-libs/gst/rtsp/gstrtspconnection.c:
+	  rtsp: unref sockets in _close
+	  When closing the connection, unref the currently used sockets. This should close
+	  them when not in use. We need to do this because else we cannot reconnect
+	  anymore after a close, the connect function requires that the sockets are NULL.
+
+2012-05-18 09:18:29 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* gst-libs/gst/rtsp/gstrtspconnection.c:
+	  rtsp: clear the GError for pending connect
+	  Clear the GError after g_socket_connect tells us that the connection is pending.
+	  If we don't do this, glib complains when we try to reuse the non-NULL GError
+	  variable a little below.
+
+2012-05-17 22:06:45 +0100  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+
+	* gst-libs/gst/app/gstappsrc.c:
+	  appsrc: simplify get_property for "caps" property
+
+2012-05-17 22:04:24 +0100  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+
+	* gst-libs/gst/app/gstappsrc.c:
+	* gst-libs/gst/app/gstappsrc.h:
+	  appsrc: remove filter argument from gst_app_src_get_caps()
+	  Was presumably added by mistaken in the grand _get_caps()
+	  conversion. Doesn't really make sense for a property accessor.
+
+2012-05-17 16:38:58 +0100  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+
+	* ext/cdparanoia/gstcdparanoiasrc.c:
+	  cdparanoiasrc: include stdio.h for SEEK_SET
+	  https://bugzilla.gnome.org/show_bug.cgi?id=676255
+
+2012-05-16 15:10:41 +0100  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+
+	* ext/vorbis/gstvorbisdeclib.h:
+	  vorbis: give libvorbis-based decoder and vorbisidec decoder different type names
+	  Should fix "cannot register existing type `GstVorbisDec'" criticals
+	  when both libvorbis and vorbisidec are available.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=673333
+
+2012-05-16 13:46:57 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* docs/libs/gst-plugins-base-libs-sections.txt:
+	* gst-libs/gst/video/gstvideoutils.c:
+	* gst-libs/gst/video/gstvideoutils.h:
+	* win32/common/libgstvideo.def:
+	  video: Rename gst_video_codec_frame_set_hook() to gst_video_codec_frame_set_user_data()
+	  And also add a getter and allow to set NULL user_data but still call
+	  the passed destroy notify.
+
+2012-05-16 12:40:07 +0100  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+
+	* gst-libs/gst/video/gstvideodecoder.c:
+	* gst-libs/gst/video/gstvideoencoder.c:
+	* gst-libs/gst/video/gstvideoutils.h:
+	  docs: fix up video decoder/encoder docs a bit
+	  Makes gtk-doc happy.
+
+2012-01-01 20:48:29 +0100  Idar Tollefsen <itollefs@cisco.com>
+
+	* configure.ac:
+	  build: Make sure AC_INCLUDES_DEFAULT is used.
+	  Without using AC_INCLUDES_DEFAULT explicitly,
+	  certain platforms will complain that the header
+	  was found, but not usable by the compiler.
+	  This happens for instance on Solaris where certain
+	  headers are needed to pull in proper defines.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=667307
+	  Conflicts:
+	  configure.ac
+
+2012-05-16 09:12:44 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* configure.ac:
+	  configure: Require core/base 0.11.91
+
+2012-01-13 17:58:37 -0500  Matej Knopp <matej.knopp@gmail.com>
+
+	* .gitignore:
+	  .gitignore: add visual studio IDE files and OS X .DS_Store files
+	  https://bugzilla.gnome.org/show_bug.cgi?id=667899
+
+2012-05-14 07:01:18 +0200  Alban Browaeys <prahal@yahoo.com>
+
+	* gst/playback/gstplaysink.c:
+	  playsink: do not abort if a property is not found.
+	  If a property is not found (for example last-sample when
+	  gst_debug_bin_to_dot_file is used while the pipeline is
+	  slightly broken (thus no last-sample) the unref of the item
+	  gvalue which is not refed fails. Only unref if it was found.
+
+2012-05-14 20:08:38 +0200  Alban Browaeys <prahal@yahoo.com>
+
+	* gst/playback/gstplaysink.c:
+	  playsink: missing guard around gst pad add probe
+	  This miss prevent from switching from one track to the other.
+	  Issue encountered with rhythmbox and totem ports.
+
+2012-05-14 17:53:59 +0200  Edward Hervey <edward.hervey@collabora.co.uk>
+
+	* ext/theora/gsttheoraenc.c:
+	  theoraenc: Don't leak incoming frames (and buffers)
+	  We get given a reference in ::handle_frame(), remove it when we're done.
+
+2012-05-11 10:58:45 +0200  Mark Nauwelaerts <mark.nauwelaerts@collabora.co.uk>
+
+	* gst/playback/gstplaybin2.c:
+	* gst/playback/gstplaysink.c:
+	  playbin2: default text element is now subtitleoverlay
+	  ... and not so much textoverlay, though the former also uses the latter.
+
+2012-05-13 23:11:20 +0100  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+
+	* ext/ogg/gstoggdemux.c:
+	  oggdemux: fix potential crash in SEEKING query handler
+	  Take chain lock when accessing chains. Fall back gracefully
+	  when there's no current chain Hopefully fixes crash when
+	  seeking in Jamendo or Magnatune streams in Amarok.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=675609
+
+2012-05-13 18:49:31 +0100  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+
+	* ext/ogg/gstoggdemux.c:
+	* gst-libs/gst/pbutils/descriptions.c:
+	* gst/typefind/gsttypefindfunctions.c:
+	  typefinding, ogg: don't bother with annodex media types
+	  They're hardly used, and probably more confusing than anything
+	  else, and it's not clear that anyone would really need to be
+	  able to tell them apart at the media type level.
+
+2012-05-12 14:36:09 +0100  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+
+	* ext/ogg/gstoggdemux.c:
+	* ext/ogg/gstoggstream.c:
+	* ext/ogg/gstoggstream.h:
+	  oggdemux: don't expose Annodex CMML streams any more
+	  This never really took off - it's hardly used anywhere
+	  and deprecated in favour of Kate. Exposing pads just
+	  leads to confusing 'you are missing a plug-in' messages
+	  when people come across such streams. We could still post
+	  the data on the bus for applications to parse.
+
+2012-05-12 14:24:24 +0100  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+
+	* ext/ogg/gstoggdemux.c:
+	  oggdemux: update some comments that refer to internal decoders
+	  We don't do that any more, we now have stream mappers for this.
+
+2012-05-12 14:22:23 +0100  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+
+	* ext/ogg/gstoggdemux.c:
+	* ext/ogg/gstoggdemux.h:
+	  oggdemux: remove unused GstOggPadMode enum
+
+2012-05-13 17:10:57 +0100  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+
+	* ext/libvisual/visual.c:
+	  libvisual: include string.h for strcmp()
+
+2012-05-13 16:59:42 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* configure.ac:
+	  Back to development
+
+=== release 0.11.91 ===
+
+2012-05-13 16:20:00 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* ChangeLog:
+	* NEWS:
+	* RELEASE:
+	* common:
+	* configure.ac:
+	* gst-plugins-base.doap:
+	* win32/common/_stdint.h:
+	* win32/common/config.h:
+	  Release 0.11.91
+
+2012-05-13 16:19:32 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* po/af.po:
+	* po/az.po:
+	* po/bg.po:
+	* po/ca.po:
+	* po/cs.po:
+	* po/da.po:
+	* po/de.po:
+	* po/el.po:
+	* po/en_GB.po:
+	* po/eo.po:
+	* po/es.po:
+	* po/eu.po:
+	* po/fi.po:
+	* po/fr.po:
+	* po/gl.po:
+	* po/hu.po:
+	* po/id.po:
+	* po/it.po:
+	* po/ja.po:
+	* po/lt.po:
+	* po/lv.po:
+	* po/nb.po:
+	* po/nl.po:
+	* po/or.po:
+	* po/pl.po:
+	* po/pt_BR.po:
+	* po/ro.po:
+	* po/ru.po:
+	* po/sk.po:
+	* po/sl.po:
+	* po/sq.po:
+	* po/sr.po:
+	* po/sv.po:
+	* po/tr.po:
+	* po/uk.po:
+	* po/vi.po:
+	* po/zh_CN.po:
+	  Update .po files
 
 2012-05-13 15:55:54 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
 

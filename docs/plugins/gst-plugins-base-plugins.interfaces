@@ -33,8 +33,10 @@ GstTheoraEnc GstPreset
 GstURIDecodeBin GstChildProxy
 GstV4lElement GstImplementsInterface GstTuner GstXOverlay GstColorBalance GstPropertyProbe
 GstV4lSrc GstImplementsInterface GstTuner GstXOverlay GstColorBalance GstPropertyProbe
+GstVideoEncoder GstPreset
 GstVolume GstImplementsInterface GstMixer GstStreamVolume
 GstVolume GstMixer GstStreamVolume
+GstVolume GstStreamVolume
 GstVorbisEnc GstPreset GstTagSetter
 GstVorbisEnc GstTagSetter GstPreset
 GstVorbisTag GstTagSetter

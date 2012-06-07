@@ -1,4 +1,11 @@
-This is GStreamer Base Plug-ins 0.11.91 "Fee-fi-fo-fum"
+This is GStreamer Base Plug-ins 0.11.92 "Comfortably Numb"
+
+New in 0.11.92:
+
+      * Parallel installability with 0.10.x series
+      * API cleanup and minor API improvements
+      * Major cleanup of video/audio libraries
+      * Lots of bugfixes, cleanup and other improvements
 
 New in 0.11.91:
 

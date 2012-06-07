@@ -12,7 +12,6 @@ GObject
       GstControlSource
       GstElement
         GstAdder
-        GstAlsaMixerElement
         GstAudioDecoder
           GstVorbisDec
         GstAudioEncoder
@@ -83,9 +82,11 @@ GObject
         GstSsaParse
         GstSubParse
         GstTextRender
-        GstTheoraDec
-        GstTheoraEnc
         GstTheoraParse
+        GstVideoDecoder
+          GstTheoraDec
+        GstVideoEncoder
+          GstTheoraEnc
         GstVisual
           GstVisualbumpscope
           GstVisualcorona
@@ -111,7 +112,6 @@ GObject
   GSocket
   GstColorBalanceChannel
   GstEncodingProfile
-  GstMixerTrack
   PangoContext
   PangoFontMap
     PangoFcFontMap
@@ -122,7 +122,6 @@ GInterface
   GTypePlugin
   GstChildProxy
   GstColorBalance
-  GstMixer
   GstNavigation
   GstPreset
   GstStreamVolume

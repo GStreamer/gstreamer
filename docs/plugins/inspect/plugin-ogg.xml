@@ -3,7 +3,7 @@
   <description>ogg stream manipulation (info about ogg: http://xiph.org)</description>
   <filename>../../ext/ogg/.libs/libgstogg.so</filename>
   <basename>libgstogg.so</basename>
-  <version>0.11.90</version>
+  <version>0.11.92</version>
   <license>LGPL</license>
   <source>gst-plugins-base</source>
   <package>GStreamer Base Plug-ins source release</package>
@@ -41,7 +41,7 @@
           <name>sink</name>
           <direction>sink</direction>
           <presence>always</presence>
-          <details>application/ogg; application/x-annodex</details>
+          <details>application/ogg; audio/ogg; video/ogg; application/kate</details>
         </caps>
         <caps>
           <name>src_%08x</name>
@@ -80,7 +80,7 @@
           <name>src</name>
           <direction>source</direction>
           <presence>always</presence>
-          <details>application/ogg</details>
+          <details>application/ogg; audio/ogg; video/ogg</details>
         </caps>
       </pads>
     </element>

@@ -1,11 +1,12 @@
 
-Release notes for GStreamer Base Plug-ins 0.11.91 "Fee-fi-fo-fum"
+Release notes for GStreamer Base Plug-ins 0.11.92 "Comfortably Numb"
         
 
 
 The GStreamer team is proud to announce a new release
 in the 0.11.x unstable series of the
 GStreamer Base Plug-ins.
+
 
 
 The 0.11.x series is an unstable series targeted at developers.
@@ -56,11 +57,9 @@ contains a set of less supported plug-ins that haven't passed the
 Features of this release
     
       * Parallel installability with 0.10.x series
-      * Threadsafe design and API
-      * Compressed audio passthrough support in alsasink
-      * Removal of interfaces library, mixer and tuner interface
-      * Addition of video encoder and decoder base classes
-      * Improvements/cleanup for the video library API
+      * API cleanup and minor API improvements
+      * Major cleanup of video/audio libraries
+      * Lots of bugfixes, cleanup and other improvements
 There were no bugs fixed in this release
     
 
@@ -91,22 +90,24 @@ Applications
   
 Contributors to this release
     
-      * Akihiro Tsukada
-      * Alessandro Decina
+      * Alban Browaeys
       * Andoni Morales Alastruey
+      * Andre Moreira Magalhaes (andrunko)
+      * Anton Belka
+      * Arun Raghavan
+      * Bastien Nocera
+      * David Svensson Fors
       * Edward Hervey
-      * Julian Scheel
+      * Idar Tollefsen
       * Mark Nauwelaerts
       * Matej Knopp
-      * Nicolas Dufresne
-      * Reynaldo H. Verdejo Pinochet
+      * Raimo Järvi
       * Sebastian Dröge
       * Sebastian Rasmussen
+      * Sreerenj Balachandran
       * Stefan Sauer
-      * Thibault Saunier
+      * Thiago Santos
       * Tim-Philipp Müller
-      * Vivia Nikolaidou
-      * Víctor Manuel Jáquez Leal
+      * Vincent Penquerc'h
       * Wim Taymans
-      * Руслан Ижбулатов
  

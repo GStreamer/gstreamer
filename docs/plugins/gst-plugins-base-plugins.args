@@ -1059,6 +1059,16 @@
 </ARG>
 
 <ARG>
+<NAME>GstDecodeBin::connection-speed</NAME>
+<TYPE>guint64</TYPE>
+<RANGE><= 18446744073709551</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Connection Speed</NICK>
+<BLURB>Network connection speed in kbps (0 = unknown).</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
 <NAME>GstPlayBin::audio-sink</NAME>
 <TYPE>GstElement*</TYPE>
 <RANGE></RANGE>
@@ -1294,7 +1304,7 @@
 <RANGE></RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>Text plugin</NICK>
-<BLURB>the text output element to use (NULL = default textoverlay).</BLURB>
+<BLURB>the text output element to use (NULL = default subtitleoverlay).</BLURB>
 <DEFAULT></DEFAULT>
 </ARG>
 
@@ -1305,6 +1315,26 @@
 <FLAGS>rw</FLAGS>
 <NICK>URI</NICK>
 <BLURB>URI of the media to play.</BLURB>
+<DEFAULT>NULL</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstPlayBin::current-suburi</NAME>
+<TYPE>gchar*</TYPE>
+<RANGE></RANGE>
+<FLAGS>r</FLAGS>
+<NICK>Current .sub-URI</NICK>
+<BLURB>The currently playing URI of a subtitle.</BLURB>
+<DEFAULT>NULL</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstPlayBin::current-uri</NAME>
+<TYPE>gchar*</TYPE>
+<RANGE></RANGE>
+<FLAGS>r</FLAGS>
+<NICK>Current URI</NICK>
+<BLURB>The currently playing URI.</BLURB>
 <DEFAULT>NULL</DEFAULT>
 </ARG>
 
@@ -1551,10 +1581,10 @@
 <ARG>
 <NAME>GstTheoraEnc::speed-level</NAME>
 <TYPE>gint</TYPE>
-<RANGE>[0,2]</RANGE>
-<FLAGS>rwx</FLAGS>
+<RANGE>[0,3]</RANGE>
+<FLAGS>rw</FLAGS>
 <NICK>Speed level</NICK>
-<BLURB>Controls the amount of analysis performed when encoding. Higher values trade compression quality for speed. This property requires libtheora version >= 1.0, and the maximum value may vary based on encoder version.</BLURB>
+<BLURB>Controls the amount of motion vector searching done while encoding.  This property requires libtheora version >= 1.0.</BLURB>
 <DEFAULT>1</DEFAULT>
 </ARG>
 
@@ -1563,8 +1593,8 @@
 <TYPE>gboolean</TYPE>
 <RANGE></RANGE>
 <FLAGS>rw</FLAGS>
-<NICK>Cap Overflow</NICK>
-<BLURB>Enable capping of bit reservoir overflows.</BLURB>
+<NICK>VP3 Compatible</NICK>
+<BLURB>Enable capping of bit reservoir overflows.  This property requires libtheora version >= 1.1.</BLURB>
 <DEFAULT>TRUE</DEFAULT>
 </ARG>
 
@@ -1573,8 +1603,8 @@
 <TYPE>gboolean</TYPE>
 <RANGE></RANGE>
 <FLAGS>rw</FLAGS>
-<NICK>Cap Underflow</NICK>
-<BLURB>Enable capping of bit reservoir underflows.</BLURB>
+<NICK>VP3 Compatible</NICK>
+<BLURB>Enable capping of bit reservoir underflows.  This property requires libtheora version >= 1.1.</BLURB>
 <DEFAULT>FALSE</DEFAULT>
 </ARG>
 
@@ -1583,8 +1613,8 @@
 <TYPE>gboolean</TYPE>
 <RANGE></RANGE>
 <FLAGS>rw</FLAGS>
-<NICK>Drop Frames</NICK>
-<BLURB>Allow or disallow frame dropping.</BLURB>
+<NICK>VP3 Compatible</NICK>
+<BLURB>Allow or disallow frame dropping.  This property requires libtheora version >= 1.1.</BLURB>
 <DEFAULT>TRUE</DEFAULT>
 </ARG>
 
@@ -1594,7 +1624,7 @@
 <RANGE>[0,1000]</RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>Rate Control Buffer</NICK>
-<BLURB>Sets the size of the rate control buffer, in units of frames.  The default value of 0 instructs the encoder to automatically select an appropriate value.</BLURB>
+<BLURB>Sets the size of the rate control buffer, in units of frames.  The default value of 0 instructs the encoder to automatically select an appropriate value.  This property requires libtheora version >= 1.1.</BLURB>
 <DEFAULT>0</DEFAULT>
 </ARG>
 
@@ -1604,7 +1634,7 @@
 <RANGE></RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>VP3 Compatible</NICK>
-<BLURB>Disables non-VP3 compatible features.</BLURB>
+<BLURB>Disables non-VP3 compatible features.  This property requires libtheora version >= 1.1.</BLURB>
 <DEFAULT>FALSE</DEFAULT>
 </ARG>
 
@@ -2584,7 +2614,7 @@
 <RANGE>>= G_MAXULONG</RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>Read speed</NICK>
-<BLURB>Read from device at specified speed.</BLURB>
+<BLURB>Read from device at specified speed (-1 and 0 = full speed).</BLURB>
 <DEFAULT>-1</DEFAULT>
 </ARG>
 
@@ -3804,7 +3834,7 @@
 <RANGE></RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>Text sink</NICK>
-<BLURB>the text output element to use (NULL = default textoverlay).</BLURB>
+<BLURB>the text output element to use (NULL = default subtitleoverlay).</BLURB>
 <DEFAULT></DEFAULT>
 </ARG>
 
