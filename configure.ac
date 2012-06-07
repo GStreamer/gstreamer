@@ -170,6 +170,32 @@ else
   AC_MSG_WARN([Sissy ! By asking to not build the tests known to fail, you hereby waive your right to customer support.  If you do not agree with this EULA, please press Ctrl-C before the next line is printed.  By allowing the next line to be printed, you expressly acknowledge your acceptance of this EULA.])
 fi
 
+dnl building of benchmarks
+AC_ARG_ENABLE(benchmarks,
+  AC_HELP_STRING([--disable-benchmarks], [disable building benchmarks apps]),
+  [
+    case "${enableval}" in
+      yes) BUILD_BENCHMARKS=yes ;;
+      no)  BUILD_BENCHMARKS=no ;;
+      *)   AC_MSG_ERROR(bad value ${enableval} for --disable-benchmarks) ;;
+    esac
+  ],
+[BUILD_BENCHMARKS=yes]) dnl Default value
+AM_CONDITIONAL(BUILD_BENCHMARKS, test "x$BUILD_BENCHMARKS" = "xyes")
+
+dnl building of tools
+AC_ARG_ENABLE(tools,
+  AC_HELP_STRING([--disable-tools], [disable building tools]),
+  [
+    case "${enableval}" in
+      yes) BUILD_TOOLS=yes ;;
+      no)  BUILD_TOOLS=no ;;
+      *)   AC_MSG_ERROR(bad value ${enableval} for --disable-tools) ;;
+    esac
+  ],
+[BUILD_TOOLS=yes]) dnl Default value
+AM_CONDITIONAL(BUILD_TOOLS, test "x$BUILD_TOOLS" = "xyes")
+
 dnl poison destroyed objects
 AC_ARG_ENABLE(poisoning,
   AC_HELP_STRING([--enable-poisoning],
@@ -894,7 +920,9 @@ Configuration
 	Debug                      : ${USE_DEBUG}
 	Profiling                  : ${USE_PROFILING}
 
+	Building benchmarks        : ${BUILD_BENCHMARKS}
 	Building examples          : ${BUILD_EXAMPLES}
 	Building test apps         : ${BUILD_TESTS}
 	Building tests that fail   : ${BUILD_FAILING_TESTS}
+	Building tools             : ${BUILD_TOOLS}
 "
