@@ -979,6 +979,11 @@ mpegtsmux_collected (GstCollectPads2 * pads, MpegTsMux * mux)
     tsmux_stream_add_data (best->stream, GST_BUFFER_DATA (buf),
         GST_BUFFER_SIZE (buf), buf, pts, -1, !delta);
 
+    /* outgoing ts follows ts of PCR program stream */
+    if (prog->pcr_stream == best->stream) {
+      mux->last_ts = best->last_ts;
+    }
+
     mux->is_delta = delta;
     mux->last_size = GST_BUFFER_SIZE (buf);
     while (tsmux_stream_bytes_in_buffer (best->stream) > 0) {
@@ -993,9 +998,6 @@ mpegtsmux_collected (GstCollectPads2 * pads, MpegTsMux * mux)
     }
     /* flush packet cache */
     mpegtsmux_collect_packet (mux, NULL, 0);
-    if (prog->pcr_stream == best->stream) {
-      mux->last_ts = best->last_ts;
-    }
   } else {
     /* FIXME: Drain all remaining streams */
     /* At EOS */
@@ -1198,6 +1200,7 @@ new_packet_m2ts (MpegTsMux * mux, guint8 * data, guint len, gint64 new_pcr)
   memcpy (GST_BUFFER_DATA (buf) + 4, data, len);
   /* After copying the data into the buffer, do other common init (flags and streamheaders) */
   new_packet_common_init (mux, buf, data, len);
+  GST_BUFFER_TIMESTAMP (buf) = mux->last_ts;
 
   if (new_pcr < 0) {
     /* If theres no pcr in current ts packet then just add the packet
@@ -1241,7 +1244,7 @@ new_packet_m2ts (MpegTsMux * mux, guint8 * data, guint len, gint64 new_pcr)
         G_GUINT64_FORMAT, ts_rate);
 
     while (1) {
-      guint64 cur_pcr;
+      guint64 cur_pcr, ts;
 
       /* Loop, pulling packets of the adapter, updating their 4 byte
        * timestamp header and pushing */
@@ -1252,11 +1255,12 @@ new_packet_m2ts (MpegTsMux * mux, guint8 * data, guint len, gint64 new_pcr)
       cur_pcr = (mux->previous_pcr +
           gst_util_uint64_scale (pcr_bytes, CLOCK_FREQ_SCR, ts_rate));
 
+      ts = gst_adapter_prev_timestamp (mux->adapter, NULL);
       out_buf = gst_adapter_take_buffer (mux->adapter, M2TS_PACKET_LENGTH);
       if (G_UNLIKELY (!out_buf))
         break;
       gst_buffer_set_caps (out_buf, GST_PAD_CAPS (mux->srcpad));
-      GST_BUFFER_TIMESTAMP (out_buf) = MPEG_SYS_TIME_TO_GSTTIME (cur_pcr);
+      GST_BUFFER_TIMESTAMP (out_buf) = ts;
 
       /* Write the 4 byte timestamp value, bottom 30 bits only = PCR */
       GST_WRITE_UINT32_BE (GST_BUFFER_DATA (out_buf), cur_pcr & 0x3FFFFFFF);
@@ -1275,7 +1279,6 @@ new_packet_m2ts (MpegTsMux * mux, guint8 * data, guint len, gint64 new_pcr)
   /* Finally, output the passed in packet */
   /* Only write the bottom 30 bits of the PCR */
   GST_WRITE_UINT32_BE (GST_BUFFER_DATA (buf), new_pcr & 0x3FFFFFFF);
-  GST_BUFFER_TIMESTAMP (buf) = MPEG_SYS_TIME_TO_GSTTIME (new_pcr);
 
   GST_LOG_OBJECT (mux, "Outputting a packet of length %d PCR %"
       G_GUINT64_FORMAT, M2TS_PACKET_LENGTH, new_pcr);
@@ -1362,8 +1365,9 @@ mpegtsdemux_set_header_on_caps (MpegTsMux * mux)
 static void
 mpegtsdemux_prepare_srcpad (MpegTsMux * mux)
 {
+  /* we are not going to seek */
   GstEvent *new_seg =
-      gst_event_new_new_segment (FALSE, 1.0, GST_FORMAT_BYTES, 0, -1, 0);
+      gst_event_new_new_segment (FALSE, 1.0, GST_FORMAT_TIME, 0, -1, 0);
   GstCaps *caps = gst_caps_new_simple ("video/mpegts",
       "systemstream", G_TYPE_BOOLEAN, TRUE,
       "packetsize", G_TYPE_INT,
