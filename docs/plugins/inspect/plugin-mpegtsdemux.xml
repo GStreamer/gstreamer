@@ -3,7 +3,7 @@
   <description>MPEG TS demuxer</description>
   <filename>../../gst/mpegtsdemux/.libs/libgstmpegtsdemux.so</filename>
   <basename>libgstmpegtsdemux.so</basename>
-  <version>0.11.2</version>
+  <version>0.11.92</version>
   <license>unknown</license>
   <source>gst-plugins-bad</source>
   <package>GStreamer Bad Plug-ins source release</package>
@@ -27,7 +27,7 @@ Edward Hervey &lt;edward.hervey@collabora.co.uk&gt;</author>
           <name>audio_%04x</name>
           <direction>source</direction>
           <presence>sometimes</presence>
-          <details>audio/mpeg, mpegversion=(int)1; audio/mpeg, mpegversion=(int)4, stream-format=(string){ adts, loas }; audio/x-lpcm, width=(int){ 16, 20, 24 }, rate=(int){ 48000, 96000 }, channels=(int)[ 1, 8 ], dynamic_range=(int)[ 0, 255 ], emphasis=(boolean){ false, true }, mute=(boolean){ false, true }; audio/x-ac3; audio/x-eac3; audio/x-dts; audio/x-private-ts-lpcm</details>
+          <details>audio/mpeg, mpegversion=(int)1; audio/mpeg, mpegversion=(int)2, stream-format=(string)adts; audio/mpeg, mpegversion=(int)4, stream-format=(string)latm; audio/x-lpcm, width=(int){ 16, 20, 24 }, rate=(int){ 48000, 96000 }, channels=(int)[ 1, 8 ], dynamic_range=(int)[ 0, 255 ], emphasis=(boolean){ false, true }, mute=(boolean){ false, true }; audio/x-ac3; audio/x-eac3; audio/x-dts; audio/x-private-ts-lpcm</details>
         </caps>
         <caps>
           <name>private_%04x</name>

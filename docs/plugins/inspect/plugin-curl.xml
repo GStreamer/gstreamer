@@ -3,17 +3,62 @@
   <description>libcurl-based elements</description>
   <filename>../../ext/curl/.libs/libgstcurl.so</filename>
   <basename>libgstcurl.so</basename>
-  <version>0.10.23.1</version>
+  <version>0.11.92</version>
   <license>LGPL</license>
   <source>gst-plugins-bad</source>
-  <package>GStreamer Bad Plug-ins git</package>
+  <package>GStreamer Bad Plug-ins source release</package>
   <origin>Unknown package origin</origin>
   <elements>
     <element>
-      <name>curlsink</name>
-      <longname>Curl sink</longname>
+      <name>curlfilesink</name>
+      <longname>Curl file sink</longname>
       <class>Sink/Network</class>
-      <description>Upload data over the network to a server using libcurl</description>
+      <description>Upload data over FILE protocol using libcurl</description>
+      <author>Patricia Muscalu &lt;patricia@axis.com&gt;</author>
+      <pads>
+        <caps>
+          <name>sink</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>ANY</details>
+        </caps>
+      </pads>
+    </element>
+    <element>
+      <name>curlftpsink</name>
+      <longname>Curl ftp sink</longname>
+      <class>Sink/Network</class>
+      <description>Upload data over FTP protocol using libcurl</description>
+      <author>Patricia Muscalu &lt;patricia@axis.com&gt;</author>
+      <pads>
+        <caps>
+          <name>sink</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>ANY</details>
+        </caps>
+      </pads>
+    </element>
+    <element>
+      <name>curlhttpsink</name>
+      <longname>Curl http sink</longname>
+      <class>Sink/Network</class>
+      <description>Upload data over HTTP/HTTPS protocol using libcurl</description>
+      <author>Patricia Muscalu &lt;patricia@axis.com&gt;</author>
+      <pads>
+        <caps>
+          <name>sink</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>ANY</details>
+        </caps>
+      </pads>
+    </element>
+    <element>
+      <name>curlsmtpsink</name>
+      <longname>Curl smtp sink</longname>
+      <class>Sink/Network</class>
+      <description>Upload data over SMTP protocol using libcurl</description>
       <author>Patricia Muscalu &lt;patricia@axis.com&gt;</author>
       <pads>
         <caps>

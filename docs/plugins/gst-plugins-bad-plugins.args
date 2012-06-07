@@ -23025,7 +23025,7 @@
 
 <ARG>
 <NAME>GstCameraBin::mode</NAME>
-<TYPE>GstCameraBinMode</TYPE>
+<TYPE>GstCameraBin2Mode</TYPE>
 <RANGE></RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>Mode</NICK>
@@ -23039,7 +23039,7 @@
 <RANGE></RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>Mute</NICK>
-<BLURB>True to mute the recording. False to record with audio.</BLURB>
+<BLURB>If the audio recording should be muted. Note that this still saves audio data to the resulting file, but they are silent. Use a video-profile without audio to disable audio completely.</BLURB>
 <DEFAULT>FALSE</DEFAULT>
 </ARG>
 
@@ -23099,7 +23099,7 @@
 <RANGE>[1,10]</RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>Zoom</NICK>
-<BLURB>The zoom. 1.0 for 1x, 2.0 for 2x and so on.</BLURB>
+<BLURB>Digital zoom factor (e.g. 1.5 means 1.5x).</BLURB>
 <DEFAULT>1</DEFAULT>
 </ARG>
 
@@ -23109,7 +23109,7 @@
 <RANGE></RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>Preview caps</NICK>
-<BLURB>Caps defining the preview image format.</BLURB>
+<BLURB>The caps of the preview image to be posted.</BLURB>
 <DEFAULT></DEFAULT>
 </ARG>
 
@@ -23128,8 +23128,8 @@
 <TYPE>GstElement*</TYPE>
 <RANGE></RANGE>
 <FLAGS>rw</FLAGS>
-<NICK>Audio source element</NICK>
-<BLURB>Audio source GStreamer element (NULL = default audio src).</BLURB>
+<NICK>Audio source</NICK>
+<BLURB>The audio source element to be used on video recordings. It is only taken into use on the next null to ready transition.</BLURB>
 <DEFAULT></DEFAULT>
 </ARG>
 
@@ -23209,18 +23209,18 @@
 <RANGE></RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>Viewfinder sink</NICK>
-<BLURB>Viewfinder sink GStreamer element (NULL = default video sink).</BLURB>
+<BLURB>The video sink of the viewfinder. It is only taken into use on the next null to ready transition.</BLURB>
 <DEFAULT></DEFAULT>
 </ARG>
 
 <ARG>
 <NAME>GstCameraBin::flags</NAME>
-<TYPE>GstCameraBinFlags</TYPE>
+<TYPE>GstCamFlags</TYPE>
 <RANGE></RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>Flags</NICK>
 <BLURB>Flags to control behaviour.</BLURB>
-<DEFAULT>Enable source crop and scale|Enable scale for viewfinder|Enable audio conversion for video capture|Enable colorspace conversion for still image|Enable colorspace conversion for video capture</DEFAULT>
+<DEFAULT></DEFAULT>
 </ARG>
 
 <ARG>
@@ -23298,8 +23298,8 @@
 <TYPE>GstElement*</TYPE>
 <RANGE></RANGE>
 <FLAGS>rw</FLAGS>
-<NICK>viewfinder filter element</NICK>
-<BLURB>viewfinder filter GStreamer element.</BLURB>
+<NICK>Viewfinder filter</NICK>
+<BLURB>The element that will process frames going to the viewfinder. (Should be set on NULL state).</BLURB>
 <DEFAULT></DEFAULT>
 </ARG>
 
@@ -23308,8 +23308,8 @@
 <TYPE>gboolean</TYPE>
 <RANGE></RANGE>
 <FLAGS>r</FLAGS>
-<NICK>Indicates if data is being processed (recording/capturing/saving)</NICK>
-<BLURB>Indicates if data is being processed (recording/capturing/saving).</BLURB>
+<NICK>Idle</NICK>
+<BLURB>If camerabin2 is idle (not doing captures).</BLURB>
 <DEFAULT>TRUE</DEFAULT>
 </ARG>
 
@@ -23340,6 +23340,186 @@
 <FLAGS>rw</FLAGS>
 <NICK>Image formatter</NICK>
 <BLURB>Image formatter GStreamer element (default is jifmux).</BLURB>
+<DEFAULT></DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstCameraBin::audio-capture-caps</NAME>
+<TYPE>GstCaps*</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Audio capture caps</NICK>
+<BLURB>Format to capture audio for video recording represented as GstCaps.</BLURB>
+<DEFAULT></DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstCameraBin::audio-capture-supported-caps</NAME>
+<TYPE>GstCaps*</TYPE>
+<RANGE></RANGE>
+<FLAGS>r</FLAGS>
+<NICK>Audio capture supported caps</NICK>
+<BLURB>Formats supported for capturing audio represented as GstCaps.</BLURB>
+<DEFAULT></DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstCameraBin::audio-filter</NAME>
+<TYPE>GstElement*</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Audio filter</NICK>
+<BLURB>The element that will process captured audio buffers when recording. (Should be set on NULL state).</BLURB>
+<DEFAULT></DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstCameraBin::camera-source</NAME>
+<TYPE>GstElement*</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Camera source</NICK>
+<BLURB>The camera source element to be used. It is only taken into use on the next null to ready transition.</BLURB>
+<DEFAULT></DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstCameraBin::image-capture-caps</NAME>
+<TYPE>GstCaps*</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Image capture caps</NICK>
+<BLURB>Caps for image capture.</BLURB>
+<DEFAULT></DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstCameraBin::image-capture-supported-caps</NAME>
+<TYPE>GstCaps*</TYPE>
+<RANGE></RANGE>
+<FLAGS>r</FLAGS>
+<NICK>Image capture supported caps</NICK>
+<BLURB>Formats supported for capturing images represented as GstCaps.</BLURB>
+<DEFAULT></DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstCameraBin::image-filter</NAME>
+<TYPE>GstElement*</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Image filter</NICK>
+<BLURB>The element that will process captured image frames. (Should be set on NULL state).</BLURB>
+<DEFAULT></DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstCameraBin::image-profile</NAME>
+<TYPE>GstEncodingProfile*</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Image Profile</NICK>
+<BLURB>The GstEncodingProfile to use for image captures.</BLURB>
+<DEFAULT></DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstCameraBin::location</NAME>
+<TYPE>gchar*</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Location</NICK>
+<BLURB>Location to save the captured files. A %d might be used on thefilename as a placeholder for a numeric index of the capture.Default is cap_%d.</BLURB>
+<DEFAULT>"cap_%d"</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstCameraBin::max-zoom</NAME>
+<TYPE>gfloat</TYPE>
+<RANGE>>= 1</RANGE>
+<FLAGS>r</FLAGS>
+<NICK>Maximum zoom level (note: may change depending on resolution/implementation)</NICK>
+<BLURB>Digital zoom factor (e.g. 1.5 means 1.5x).</BLURB>
+<DEFAULT>10</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstCameraBin::post-previews</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Post Previews</NICK>
+<BLURB>If capture preview images should be posted to the bus.</BLURB>
+<DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstCameraBin::preview-filter</NAME>
+<TYPE>GstElement*</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Preview filter</NICK>
+<BLURB>The element that will process preview buffers. (Should be set on NULL state).</BLURB>
+<DEFAULT></DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstCameraBin::video-capture-caps</NAME>
+<TYPE>GstCaps*</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Video capture caps</NICK>
+<BLURB>Caps for video capture.</BLURB>
+<DEFAULT></DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstCameraBin::video-capture-supported-caps</NAME>
+<TYPE>GstCaps*</TYPE>
+<RANGE></RANGE>
+<FLAGS>r</FLAGS>
+<NICK>Video capture supported caps</NICK>
+<BLURB>Formats supported for capturing videos represented as GstCaps.</BLURB>
+<DEFAULT></DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstCameraBin::video-filter</NAME>
+<TYPE>GstElement*</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Video filter</NICK>
+<BLURB>The element that will process captured video frames. (Should be set on NULL state).</BLURB>
+<DEFAULT></DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstCameraBin::video-profile</NAME>
+<TYPE>GstEncodingProfile*</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Video Profile</NICK>
+<BLURB>The GstEncodingProfile to use for video recording. Audio is enabled when this profile supports audio.</BLURB>
+<DEFAULT></DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstCameraBin::viewfinder-caps</NAME>
+<TYPE>GstCaps*</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Viewfinder caps</NICK>
+<BLURB>Restricts the caps that can be used on the viewfinder.</BLURB>
+<DEFAULT></DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstCameraBin::viewfinder-supported-caps</NAME>
+<TYPE>GstCaps*</TYPE>
+<RANGE></RANGE>
+<FLAGS>r</FLAGS>
+<NICK>Camera source Viewfinder pad supported caps</NICK>
+<BLURB>The caps that the camera source can produce on the viewfinder pad.</BLURB>
 <DEFAULT></DEFAULT>
 </ARG>
 
@@ -47764,6 +47944,26 @@
 </ARG>
 
 <ARG>
+<NAME>GstHLSDemux::bitrate-limit</NAME>
+<TYPE>gfloat</TYPE>
+<RANGE>[0,1]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Bitrate limit in %</NICK>
+<BLURB>Limit of the available bitrate to use when switching to alternates.</BLURB>
+<DEFAULT>0.8</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstHLSDemux::connection-speed</NAME>
+<TYPE>guint</TYPE>
+<RANGE><= 4294967</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Connection Speed</NICK>
+<BLURB>Network connection speed in kbps (0 = unknown).</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
 <NAME>GstWrapperCameraBinSrc::video-src</NAME>
 <TYPE>GstElement*</TYPE>
 <RANGE></RANGE>
@@ -57951,5 +58151,345 @@
 <NICK>Bitrate</NICK>
 <BLURB>Target Audio Bitrate.</BLURB>
 <DEFAULT>128000</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstGaussianBlur::sigma</NAME>
+<TYPE>gdouble</TYPE>
+<RANGE>[-20,20]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Sigma</NICK>
+<BLURB>Sigma value for gaussian blur (negative for sharpen).</BLURB>
+<DEFAULT>1.2</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstCurlSmtpSink::content-type</NAME>
+<TYPE>gchar*</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Content type</NICK>
+<BLURB>The mime type of the body of the request.</BLURB>
+<DEFAULT>NULL</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstCurlSmtpSink::mail-from</NAME>
+<TYPE>gchar*</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Mail sender</NICK>
+<BLURB>Single address that the given mail should get sent from.</BLURB>
+<DEFAULT>NULL</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstCurlSmtpSink::mail-rcpt</NAME>
+<TYPE>gchar*</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Mail recipient</NICK>
+<BLURB>Single address that the given mail should get sent to.</BLURB>
+<DEFAULT>NULL</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstCurlSmtpSink::message-body</NAME>
+<TYPE>gchar*</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>UTF-8 encoded message body</NICK>
+<BLURB>Message body.</BLURB>
+<DEFAULT>NULL</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstCurlSmtpSink::nbr-attachments</NAME>
+<TYPE>gint</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Number attachments</NICK>
+<BLURB>Number attachments to send.</BLURB>
+<DEFAULT>1</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstCurlSmtpSink::pop-location</NAME>
+<TYPE>gchar*</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>POP location</NICK>
+<BLURB>URL POP used for authentication.</BLURB>
+<DEFAULT>NULL</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstCurlSmtpSink::pop-passwd</NAME>
+<TYPE>gchar*</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>User password</NICK>
+<BLURB>User password to use for POP server authentication.</BLURB>
+<DEFAULT>NULL</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstCurlSmtpSink::pop-user</NAME>
+<TYPE>gchar*</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>User name</NICK>
+<BLURB>User name to use for POP server authentication.</BLURB>
+<DEFAULT>NULL</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstCurlSmtpSink::subject</NAME>
+<TYPE>gchar*</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>UTF-8 encoded mail subject</NICK>
+<BLURB>Mail subject.</BLURB>
+<DEFAULT>NULL</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstCurlSmtpSink::use-ssl</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Use SSL</NICK>
+<BLURB>Use SSL/TLS for the connection.</BLURB>
+<DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstCurlHttpSink::content-type</NAME>
+<TYPE>gchar*</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Content type</NICK>
+<BLURB>The mime type of the body of the request.</BLURB>
+<DEFAULT>NULL</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstCurlHttpSink::proxy</NAME>
+<TYPE>gchar*</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Proxy</NICK>
+<BLURB>HTTP proxy server URI.</BLURB>
+<DEFAULT>NULL</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstCurlHttpSink::proxy-passwd</NAME>
+<TYPE>gchar*</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Proxy user password</NICK>
+<BLURB>Proxy user password to use for proxy authentication.</BLURB>
+<DEFAULT>NULL</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstCurlHttpSink::proxy-port</NAME>
+<TYPE>gint</TYPE>
+<RANGE>>= 0</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Proxy port</NICK>
+<BLURB>HTTP proxy server port.</BLURB>
+<DEFAULT>3128</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstCurlHttpSink::proxy-user</NAME>
+<TYPE>gchar*</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Proxy user name</NICK>
+<BLURB>Proxy user name to use for proxy authentication.</BLURB>
+<DEFAULT>NULL</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstCurlHttpSink::use-content-length</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Use content length header</NICK>
+<BLURB>Use the Content-Length HTTP header instead of Transfer-Encoding header.</BLURB>
+<DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstCurlFtpSink::create-dirs</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Create missing directories</NICK>
+<BLURB>Attempt to create missing directory included in the path.</BLURB>
+<DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstCurlFtpSink::epsv-mode</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Extended passive mode</NICK>
+<BLURB>Enable the use of the EPSV command when doing passive FTP transfers.</BLURB>
+<DEFAULT>TRUE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstCurlFtpSink::ftp-port</NAME>
+<TYPE>gchar*</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>IP address for FTP PORT instruction</NICK>
+<BLURB>The PORT instruction tells the remote server to connect to the IP address.</BLURB>
+<DEFAULT>""</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstCurlFileSink::create-dirs</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Create missing directories</NICK>
+<BLURB>Attempt to create missing directory included in the path.</BLURB>
+<DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstOpusEnc::audio</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Audio or voice</NICK>
+<BLURB>Audio or voice.</BLURB>
+<DEFAULT>TRUE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstOpusEnc::bandwidth</NAME>
+<TYPE>GstOpusEncBandwidth</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Band Width</NICK>
+<BLURB>Audio Band Width.</BLURB>
+<DEFAULT>Full band</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstOpusEnc::bitrate</NAME>
+<TYPE>gint</TYPE>
+<RANGE>[4000,650000]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Encoding Bit-rate</NICK>
+<BLURB>Specify an encoding bit-rate (in bps).</BLURB>
+<DEFAULT>64000</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstOpusEnc::cbr</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Constant bit rate</NICK>
+<BLURB>Constant bit rate.</BLURB>
+<DEFAULT>TRUE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstOpusEnc::complexity</NAME>
+<TYPE>gint</TYPE>
+<RANGE>[0,10]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Complexity</NICK>
+<BLURB>Complexity.</BLURB>
+<DEFAULT>10</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstOpusEnc::constrained-vbr</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Constrained VBR</NICK>
+<BLURB>Constrained VBR.</BLURB>
+<DEFAULT>TRUE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstOpusEnc::dtx</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>DTX</NICK>
+<BLURB>DTX.</BLURB>
+<DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstOpusEnc::frame-size</NAME>
+<TYPE>GstOpusEncFrameSize</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Frame Size</NICK>
+<BLURB>The duration of an audio frame, in ms.</BLURB>
+<DEFAULT>20</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstOpusEnc::inband-fec</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>In-band FEC</NICK>
+<BLURB>Enable forward error correction.</BLURB>
+<DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstOpusEnc::max-payload-size</NAME>
+<TYPE>guint</TYPE>
+<RANGE>[2,1275]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Max payload size</NICK>
+<BLURB>Maximum payload size in bytes.</BLURB>
+<DEFAULT>1024</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstOpusEnc::packet-loss-percentage</NAME>
+<TYPE>gint</TYPE>
+<RANGE>[0,100]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Loss percentage</NICK>
+<BLURB>Packet loss percentage.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstOpusDec::apply-gain</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Apply gain</NICK>
+<BLURB>Apply gain if any is specified in the header.</BLURB>
+<DEFAULT>TRUE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstOpusDec::use-inband-fec</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Use in-band FEC</NICK>
+<BLURB>Use forward error correction if available.</BLURB>
+<DEFAULT>FALSE</DEFAULT>
 </ARG>
 

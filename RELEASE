@@ -1,11 +1,12 @@
 
-Release notes for GStreamer Bad Plug-ins 0.11.91 "Be he alive, or be he dead"
+Release notes for GStreamer Bad Plug-ins 0.11.92 "Shine On You Crazy Diamond"
         
 
 
 The GStreamer team is proud to announce a new release
 in the 0.11.x unstable series of the
-GStreamer Ugly Plug-ins.
+GStreamer Bad Plug-ins.
+
 
 
 The 0.11.x series is an unstable series targeted at developers and will
@@ -13,6 +14,9 @@ eventually lead up to the stable 1.0 series.
 It is not API or ABI compatible with the stable 0.10.x series.
 It is, however, parallel installable with the 0.10.x series.
 
+
+
+"That an accusation?"
 
 
 No perfectly groomed moustache or any amount of fine clothing is going to
@@ -58,8 +62,9 @@ contains a set of well-supported plug-ins, but might pose problems for
 
 Features of this release
     
-      * Ported asfmux, camerabin, coloreffects, gaudieffects, geometrictransform, hls plugins
-      * Lots of bugfixes and other improvements
+      * Parallel installability with 0.10.x series
+      * API cleanup and minor API improvements
+      * Lots of bugfixes, cleanup and other improvements
 There were no bugs fixed in this release
     
 
@@ -90,29 +95,23 @@ Applications
   
 Contributors to this release
     
-      * Aleix Conchillo Flaque
-      * Alessandro Decina
+      * Albert Astrals Cid
       * Andoni Morales Alastruey
-      * Arun Raghavan
+      * Andre Moreira Magalhaes (andrunko)
       * Edward Hervey
-      * Gil Pedersen
-      * Jacob Meuser
+      * John Hein
       * Julian Scheel
       * Luis de Bethencourt
-      * Marc-André Lureau
       * Mark Nauwelaerts
       * Matej Knopp
-      * Patricia Muscalu
-      * Raimo Järvi
-      * Reynaldo H. Verdejo Pinochet
+      * Nicolas Dufresne
       * Sebastian Dröge
       * Sebastian Rasmussen
       * Sreerenj Balachandran
+      * Stefan Sauer
       * Thiago Santos
-      * Thibault Saunier
       * Tim-Philipp Müller
+      * Vincent Penquerc'h
       * Wim Taymans
-      * Wind Yuan
-      * Youness Alaoui
       * Руслан Ижбулатов
  

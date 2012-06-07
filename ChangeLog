@@ -1,9 +1,986 @@
-=== release 0.11.91 ===
+=== release 0.11.92 ===
 
-2012-05-13  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+2012-06-07  Sebastian Dröge <sebastian.droege@collabora.co.uk>
 
 	* configure.ac:
-	  releasing 0.11.91, "Be he alive, or be he dead"
+	  releasing 0.11.92, "Shine On You Crazy Diamond"
+
+2012-06-07 12:33:31 +0100  Vincent Penquerc'h <vincent.penquerch@collabora.co.uk>
+
+	* ext/vp8/gstvp8dec.c:
+	* ext/vp8/gstvp8enc.c:
+	  vp8: fix codec state leaks
+	  I only tested that vp8enc ! vp8dec does not crash, as valgrind does not grok
+	  at least one of the instructions used by vp8enc, preventing me from checking
+	  a leak, and the lack of one after the patch.
+
+2012-06-07 12:25:03 +0100  Vincent Penquerc'h <vincent.penquerch@collabora.co.uk>
+
+	* ext/dirac/gstdiracenc.cc:
+	  diracenc: fix buffer leak
+
+2012-06-07 12:16:21 +0100  Vincent Penquerc'h <vincent.penquerch@collabora.co.uk>
+
+	* ext/dirac/gstdiracenc.cc:
+	  diracenc: fix frame leaks
+
+2012-06-07 12:01:31 +0100  Vincent Penquerc'h <vincent.penquerch@collabora.co.uk>
+
+	* ext/dirac/gstdiracenc.cc:
+	  diracenc: fix codec state leak
+
+2012-06-07 11:58:53 +0100  Vincent Penquerc'h <vincent.penquerch@collabora.co.uk>
+
+	* ext/dirac/gstdiracenc.cc:
+	  diracenc: fix stray unref causing access to freed memory
+
+2012-06-07 11:52:12 +0100  Vincent Penquerc'h <vincent.penquerch@collabora.co.uk>
+
+	* ext/schroedinger/gstschrodec.c:
+	* ext/schroedinger/gstschroenc.c:
+	  schroedinger: fix video codec state leaks
+
+2012-06-06 18:18:54 +0200  Edward Hervey <edward.hervey@collabora.co.uk>
+
+	* common:
+	  Automatic update of common submodule
+	  From 1fab359 to 03a0e57
+
+2012-06-06 16:00:45 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* ext/gme/gstgme.c:
+	  gme: update for tag event change
+
+2012-06-03 01:58:12 +0300  Sreerenj Balachandran <sreerenj.balachandran@intel.com>
+
+	* configure.ac:
+	  configure: Fix the wayland version
+	  Fixes https://bugzilla.gnome.org/show_bug.cgi?id=677362
+
+2012-06-06 13:02:40 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* ext/modplug/gstmodplug.cc:
+	* ext/schroedinger/gstschrodec.c:
+	* ext/vp8/gstvp8dec.c:
+	* gst/camerabin2/gstcamerabin2.c:
+	* gst/mpegtsdemux/mpegtsparse.c:
+	* gst/mpegtsdemux/tsdemux.c:
+	* gst/videoparsers/gstmpegvideoparse.c:
+	  update for tag event change
+
+2012-06-06 11:14:14 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* gst/bayer/gstbayer2rgb.c:
+	  bayer: fix output frame map
+
+2012-06-05 17:57:41 +0200  Edward Hervey <edward.hervey@collabora.co.uk>
+
+	* gst-libs/gst/codecparsers/gsth264parser.c:
+	  h264parser: Remove un-needed checks and inline some functions
+	  val and nr always exist (&nr, &value)
+	  bits is always called smaller than the width
+	  Makes parsing 30% faster
+
+2012-06-05 18:03:10 +0200  Mark Nauwelaerts <mark.nauwelaerts@collabora.co.uk>
+
+	* gst/mpegtsmux/tsmux/tsmux.c:
+	* gst/mpegtsmux/tsmux/tsmux.h:
+	* gst/mpegtsmux/tsmux/tsmuxcommon.h:
+	* gst/mpegtsmux/tsmux/tsmuxstream.c:
+	* gst/mpegtsmux/tsmux/tsmuxstream.h:
+	  mpegtsmux: more header clarifications and remove some redundant fields
+
+2012-06-05 14:18:34 +0200  Mark Nauwelaerts <mark.nauwelaerts@collabora.co.uk>
+
+	* gst/mpegtsmux/tsmux/tsmux.c:
+	  mpegtsmux: avoid PID collision for auto-generated PID
+
+2012-06-05 16:59:44 +0200  Edward Hervey <edward.hervey@collabora.co.uk>
+
+	* gst/mpegtsmux/tsmux/tsmuxstream.c:
+	  tsmux: inline more code
+	  With the previous commit, makes mpegtsmux 10 to 15% faster
+
+2012-06-05 16:58:43 +0200  Edward Hervey <edward.hervey@collabora.co.uk>
+
+	* gst/mpegtsmux/mpegtsmux.c:
+	* gst/mpegtsmux/tsmux/tsmux.c:
+	* gst/mpegtsmux/tsmux/tsmuxstream.c:
+	  mpegtsmux: Don't use g_list_first ()
+	  Seriously ...
+
+2012-06-05 12:17:26 +0200  Mark Nauwelaerts <mark.nauwelaerts@collabora.co.uk>
+
+	* gst/mpegtsmux/mpegtsmux.c:
+	  mpegtsmux: also properly reset and free pad data
+
+2012-06-05 11:52:14 +0200  Mark Nauwelaerts <mark.nauwelaerts@collabora.co.uk>
+
+	* gst/mpegtsmux/mpegtsmux.c:
+	  mpegtsmux: refactor init using _reset to cater for proper reuse
+
+2012-06-04 16:24:05 +0200  Mark Nauwelaerts <mark.nauwelaerts@collabora.co.uk>
+
+	* gst/mpegtsmux/mpegtsmux.h:
+	  mpegtsmux: header cleanups and clarifications
+
+2012-06-04 16:05:03 +0200  Mark Nauwelaerts <mark.nauwelaerts@collabora.co.uk>
+
+	* gst/mpegtsmux/mpegtsmux.c:
+	  mpegtsmux: tweak buffer handling
+	  ... for clarity and to avoid mixing _peek/_pop
+
+2012-06-04 16:03:20 +0200  Mark Nauwelaerts <mark.nauwelaerts@collabora.co.uk>
+
+	* gst/mpegtsmux/mpegtsmux.c:
+	  mpegtsmux: misc code cleanups and refactoring
+
+2012-06-04 14:54:55 +0200  Mark Nauwelaerts <mark.nauwelaerts@collabora.co.uk>
+
+	* gst/mpegtsmux/mpegtsmux.c:
+	* gst/mpegtsmux/mpegtsmux.h:
+	  mpegtsmux: avoid separate allocation for list of programs
+
+2012-06-04 14:54:08 +0200  Mark Nauwelaerts <mark.nauwelaerts@collabora.co.uk>
+
+	* gst/mpegtsmux/mpegtsmux.h:
+	  mpegtsmux: rearrange define's
+
+2012-06-04 14:48:29 +0200  Mark Nauwelaerts <mark.nauwelaerts@collabora.co.uk>
+
+	* gst/mpegtsmux/mpegtsmux.c:
+	* gst/mpegtsmux/mpegtsmux.h:
+	  mpegtsmux: removed hacked event handling
+	  Conflicts:
+	  gst/mpegtsmux/mpegtsmux.c
+	  Reverted back to 0.10 state as it wasn't really ported
+	  yet anyway.
+
+2012-06-05 09:54:53 +0200  Edward Hervey <edward.hervey@collabora.co.uk>
+
+	* gst/mpegtsdemux/mpegtsbase.c:
+	* gst/mpegtsdemux/mpegtspacketizer.c:
+	* gst/mpegtsdemux/mpegtspacketizer.h:
+	  mpegtsdemux: Also parse TOT (Time Offset Section)
+	  It's the same as TDT, except with descriptors at the end
+
+2012-06-05 09:52:42 +0200  Edward Hervey <edward.hervey@collabora.co.uk>
+
+	* gst/mpegtsdemux/mpegtsbase.c:
+	* gst/mpegtsdemux/mpegtspacketizer.c:
+	  mpegtsdemux: FIXME/Comment about issues/errors
+
+2012-06-05 09:48:04 +0200  Edward Hervey <edward.hervey@collabora.co.uk>
+
+	* gst/mpegtsdemux/mpegtspacketizer.c:
+	  mpegtspacketizer: Fix leak
+
+2012-06-05 09:44:45 +0200  Edward Hervey <edward.hervey@collabora.co.uk>
+
+	* gst/mpegtsdemux/mpegtspacketizer.c:
+	  mpegtspacketizer: Reduce usage of GstAdapter
+	  Peek as much as possible in one go. Ideally we should remove usage of
+	  adapter altogether, but for the time being it provides a big enough
+	  speedup (around 2 times faster per packet processed).
+
+2012-06-04 08:39:11 +0200  Edward Hervey <edward.hervey@collabora.co.uk>
+
+	* gst/mpegtsdemux/mpegtsbase.c:
+	* gst/mpegtsdemux/mpegtspacketizer.c:
+	* gst/mpegtsdemux/mpegtspacketizer.h:
+	  mpegtspacketizer: Avoid alloc/free where possible
+	  Helps for streams with a lot of sections, like EIT
+
+2012-06-04 08:37:44 +0200  Edward Hervey <edward.hervey@collabora.co.uk>
+
+	* gst/mpegtsdemux/mpegtsbase.c:
+	  mpegtbase: Add more sections that don't have a CRC
+
+2012-06-04 08:32:51 +0200  Edward Hervey <edward.hervey@collabora.co.uk>
+
+	* gst/mpegtsdemux/gstmpegdefs.h:
+	* gst/mpegtsdemux/mpegtsbase.c:
+	  mpegdefs: Add list of known table_id
+	  Along with the specifications from which they come. Avoids having
+	  to search for which spec a table_id belongs to
+
+2012-06-03 10:58:20 +0200  Edward Hervey <edward.hervey@collabora.co.uk>
+
+	* gst/mpegtsdemux/mpegtspacketizer.c:
+	  mpegtspacketizer: Clarify debug statements
+	  Use hex values in more cases (since that's how PID/table_id/... are
+	  represented in the various specs).
+
+2012-06-03 10:56:28 +0200  Edward Hervey <edward.hervey@collabora.co.uk>
+
+	* gst/mpegtsdemux/mpegtsbase.c:
+	* gst/mpegtsdemux/mpegtspacketizer.c:
+	* gst/mpegtsdemux/mpegtspacketizer.h:
+	  mpegtsbase/packetizer: Add CAT section handling
+	  Allows reporting the global EMM
+
+2012-06-03 10:53:52 +0200  Edward Hervey <edward.hervey@collabora.co.uk>
+
+	* gst/mpegtsdemux/mpegtsbase.c:
+	  mpegtbase: Add more debug in PSI handling
+	  Allows us to identify which SI we don't handle
+
+2012-06-03 10:53:13 +0200  Edward Hervey <edward.hervey@collabora.co.uk>
+
+	* gst/mpegtsdemux/mpegtsbase.c:
+	  mpegtbase: Add more default known PSI table_id
+
+2012-06-02 08:06:24 +0200  Edward Hervey <edward.hervey@collabora.co.uk>
+
+	* gst/mpegtsdemux/mpegtsbase.c:
+	  mpegtbase: Refactor PSI detection
+
+2012-06-05 09:30:35 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* win32/common/config.h:
+	  win32: Update config.h
+
+2012-06-05 09:30:00 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* gst/videoparsers/gstdiracparse.c:
+	* gst/videoparsers/gsth263parse.c:
+	* gst/videoparsers/gsth264parse.c:
+	* gst/videoparsers/gstmpeg4videoparse.c:
+	* gst/videoparsers/gstmpegvideoparse.c:
+	  videoparsers: Fix GstBaseParse::get_sink_caps() implementations
+	  They should take the filter caps into account and always return
+	  the template caps appended to the actual caps. Otherwise the
+	  parsers stop to accept unparsed streams where upstream does not
+	  know about width, height, etc.
+	  Fixes bug #677401.
+
+2012-06-01 16:29:03 +0200  Edward Hervey <edward.hervey@collabora.co.uk>
+
+	* gst/mpegtsdemux/mpegtsbase.c:
+	  mpegtbase: ECM/CA sections don't have a CRC
+	  So don't check for it :)
+	  Also add a bit more info in the warning message to speed up detecting
+	  whether it's a false-positive or not.
+
+2012-06-01 10:59:22 +0200  Mark Nauwelaerts <mark.nauwelaerts@collabora.co.uk>
+
+	* gst-libs/gst/codecparsers/gstmpegvideoparser.c:
+	  codecparsers: mpeg: relax entry constraint
+	  ... since it is acceptable and properly handled further on.
+
+2012-06-01 10:29:06 +0200  Edward Hervey <edward.hervey@collabora.co.uk>
+
+	* common:
+	  Automatic update of common submodule
+	  From f1b5a96 to 1fab359
+
+2012-05-31 13:08:34 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* common:
+	  Automatic update of common submodule
+	  From 92b7266 to f1b5a96
+
+2012-05-29 10:48:54 -0700  Andoni Morales Alastruey <ylatuya@gmail.com>
+
+	* sys/dshowdecwrapper/gstdshowaudiodec.cpp:
+	* sys/dshowdecwrapper/gstdshowfakesrc.cpp:
+	* sys/dshowdecwrapper/gstdshowvideodec.cpp:
+	  dshowdecwrapper: add support for VC1 and fix plugins ranks
+
+2012-05-29 10:48:03 -0700  Andoni Morales Alastruey <ylatuya@gmail.com>
+
+	* sys/dshowdecwrapper/gstdshowdecwrapper.cpp:
+	* sys/dshowdecwrapper/gstdshowfakesrc.cpp:
+	  dshowdecwrapper: initialize debug properly
+
+2012-05-29 10:43:43 -0700  Andoni Morales Alastruey <ylatuya@gmail.com>
+
+	* sys/dshowdecwrapper/gstdshowaudiodec.cpp:
+	* sys/dshowdecwrapper/gstdshowvideodec.cpp:
+	  dshowdecwrapper: fix object disposal and finalization
+
+2012-05-30 10:34:44 -0700  Andoni Morales Alastruey <ylatuya@gmail.com>
+
+	* sys/d3dvideosink/d3dvideosink.c:
+	  d3dvideosink: don't flush after a device lost
+
+2012-05-30 13:54:11 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* sys/applemedia/Makefile.am:
+	  applemedia: Put the right flags into the right variable
+
+2012-05-30 12:45:36 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* common:
+	  Automatic update of common submodule
+	  From ec1c4a8 to 92b7266
+
+2012-05-30 11:32:01 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* configure.ac:
+	  configure: Revert accidentially committed stuff in last commit
+
+2012-05-30 11:24:06 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* configure.ac:
+	* sys/applemedia/Makefile.am:
+	  configure: Add OBJC specific compiler flags
+	  See bug #643939.
+
+2012-05-30 11:23:52 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* common:
+	  Automatic update of common submodule
+	  From 3429ba6 to ec1c4a8
+
+2012-05-29 17:24:02 +0100  Vincent Penquerc'h <vincent.penquerch@collabora.co.uk>
+
+	* ext/opus/gstopusdec.c:
+	  opusdec: read gain from the right place in the header
+	  It's at byte offset 16, not 14.
+
+2012-05-24 11:11:00 -0300  Andre Moreira Magalhaes (andrunko) <andre.magalhaes@collabora.co.uk>
+
+	* ext/assrender/gstassrender.c:
+	* ext/assrender/gstassrender.h:
+	  assrender: Refactoring and make core more similar to textoverlay
+	  Especially the combining of the text and video buffers is now
+	  almost the same as in textoverlay.
+	  We should really get a base class for this.
+	  Conflicts:
+	  ext/assrender/gstassrender.c
+	  ext/assrender/gstassrender.h
+
+2012-05-28 15:48:33 +0200  Edward Hervey <edward@collabora.com>
+
+	* sys/dvb/camapplication.c:
+	* sys/dvb/camconditionalaccess.c:
+	* sys/dvb/camtransport.c:
+	  dvb: Add more debugging to cam support
+
+2012-04-24 11:09:11 +0200  Edward Hervey <edward.hervey@collabora.co.uk>
+
+	* ext/dirac/Makefile.am:
+	* ext/dirac/gstdirac.cc:
+	* ext/dirac/gstdiracdec.cc:
+	* ext/dirac/gstdiracenc.cc:
+	  dirac: Port to -base video classes
+	  Conflicts:
+	  ext/dirac/Makefile.am
+
+2012-05-28 16:42:59 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* gst-libs/gst/video/Makefile.am:
+	* gst-libs/gst/video/gstbasevideocodec.c:
+	* gst-libs/gst/video/gstbasevideocodec.h:
+	* gst-libs/gst/video/gstbasevideodecoder.c:
+	* gst-libs/gst/video/gstbasevideodecoder.h:
+	* gst-libs/gst/video/gstbasevideoencoder.c:
+	* gst-libs/gst/video/gstbasevideoencoder.h:
+	* gst-libs/gst/video/gstbasevideoutils.c:
+	* gst-libs/gst/video/gstbasevideoutils.h:
+	  basevideo: Remove old video base classes
+
+2012-05-28 16:42:08 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* ext/schroedinger/gstschrodec.c:
+	* ext/schroedinger/gstschroenc.c:
+	* ext/schroedinger/gstschroutils.c:
+	* ext/schroedinger/gstschroutils.h:
+	  schroedinger: Port to 0.11 again
+
+2012-05-28 07:58:52 +0200  Edward Hervey <edward.hervey@collabora.co.uk>
+
+	* ext/schroedinger/gstschrodec.c:
+	  schrodec: We don't assume packetized input
+	  Otherwise the parse vmethod nevers gets called
+
+2012-04-24 11:08:58 +0200  Edward Hervey <edward.hervey@collabora.co.uk>
+
+	* ext/schroedinger/Makefile.am:
+	* ext/schroedinger/gstschro.c:
+	* ext/schroedinger/gstschrodec.c:
+	* ext/schroedinger/gstschroenc.c:
+	* ext/schroedinger/gstschroutils.c:
+	* ext/schroedinger/gstschroutils.h:
+	  schroedinger: Port to -base video classes
+	  Conflicts:
+	  ext/schroedinger/Makefile.am
+	  ext/schroedinger/gstschrodec.c
+	  ext/schroedinger/gstschroenc.c
+	  Back to 0.10 state, needs porting again.
+
+2012-05-28 16:05:21 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* ext/vp8/gstvp8dec.c:
+	* ext/vp8/gstvp8enc.c:
+	  vp8: Port to 0.11 again
+
+2012-05-18 12:46:55 +0100  Vincent Penquerc'h <vincent.penquerch@collabora.co.uk>
+
+	* ext/vp8/gstvp8enc.c:
+	  vp8enc: fix target bitrate config with libvpx 1.1.0
+	  libvpx 1.1.0 disallows a bitrate of 0, which was used by
+	  vp8enc as a default value.
+	  Instead, we use the default libvpx bitrate, scaled to our
+	  video size, if no bitrate was specified.
+	  This fixes encoding VP8 video with libvpx 1.1.0.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=676245
+
+2012-05-16 14:04:28 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* ext/vp8/gstvp8enc.c:
+	  vp8enc: Update for GstVideoCodecFrame API changes
+
+2012-04-27 18:22:42 -0300  Thiago Santos <thiago.sousa.santos@collabora.com>
+
+	* ext/vp8/gstvp8dec.c:
+	* ext/vp8/gstvp8dec.h:
+	  vp8dec: Improve output_state handling
+	  Avoid getting output_state for every buffer as that requires
+	  getting the objectlock and doing reference counting. Store it locally
+	  when it is created and use it.
+
+2012-04-27 09:05:57 -0300  Thiago Santos <thiago.sousa.santos@collabora.com>
+
+	* ext/vp8/gstvp8dec.c:
+	  vp8dec: Use outputstate when copying output buffer data
+	  Using the input state was causing a crash because the strides/offsets
+	  would be wrong. Fix it by using the output as we are dealing with
+	  the decoded frame.
+
+2012-04-24 11:08:41 +0200  Edward Hervey <edward.hervey@collabora.co.uk>
+
+	* ext/vp8/Makefile.am:
+	* ext/vp8/gstvp8dec.c:
+	* ext/vp8/gstvp8dec.h:
+	* ext/vp8/gstvp8enc.c:
+	* ext/vp8/gstvp8enc.h:
+	  vp8: Port to -base video base classes
+	  Conflicts:
+	  ext/vp8/Makefile.am
+	  ext/vp8/gstvp8dec.c
+	  ext/vp8/gstvp8enc.c
+	  Back to 0.10 state for now, need to be ported again.
+
+2012-05-27 23:41:24 +0100  Vincent Penquerc'h <vincent.penquerch@collabora.co.uk>
+
+	* ext/opus/gstopusdec.c:
+	  opusdec: do not assert on bad header, error out instead
+
+2012-05-27 00:00:20 +0100  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+
+	* tests/check/elements/jifmux.c:
+	  tests: don't use GstStructure API on tag lists
+
+2012-05-26 14:57:50 +0200  Edward Hervey <edward.hervey@collabora.co.uk>
+
+	* gst/mpegtsdemux/gstmpegdesc.h:
+	  mpegdesc: Add more comments/info
+	  Namely where they belong to
+
+2012-05-26 14:57:23 +0200  Edward Hervey <edward.hervey@collabora.co.uk>
+
+	* gst/mpegtsdemux/tsdemux.c:
+	  tsdemux: Make sure we have a language code before using it
+
+2012-05-26 14:11:24 +0200  Edward Hervey <edward.hervey@collabora.co.uk>
+
+	* gst/mpegtsdemux/mpegtsbase.c:
+	  mpegtsbase: Check before getting descriptors from structure
+	  Avoids spurious warnings. Not having those descriptors is nothing
+	  fatal, so check their presence before trying to get them.
+
+2012-05-26 14:08:41 +0200  Edward Hervey <edward.hervey@collabora.co.uk>
+
+	* gst/mpegtsdemux/pesparse.c:
+	  pesparse: Be a bit more permissive with PTS/DTS parsing
+	  According to the specifications a PTS_DTS_flags value of 0x01 is forbidden.
+	  ... but there are some rare files out there that do that.
+	  Instead of erroring out, let's warn, carry on parsing accordingly.
+	  If the packet is really corrupted there are enough checks afterward to
+	  detect that.
+
+2012-05-25 22:20:07 +0100  Vincent Penquerc'h <vincent.penquerch@collabora.co.uk>
+
+	* ext/opus/gstopusparse.c:
+	  opusparse: heed test vector framing to eat any padding
+	  This fixes parsing on one particular test vector where payload
+	  data is smaller than the actual audio payload.
+
+2012-05-25 14:15:44 +0200  Edward Hervey <edward.hervey@collabora.co.uk>
+
+	* gst/mpegtsdemux/mpegtsbase.h:
+	  mpegtsbase: Fix bit operation
+	  "a % 8" corresponds to "a & 0x7" (and not 0xf).
+	  spotted by Julian Scheel
+
+2012-05-24 16:22:42 +0200  Edward Hervey <edward.hervey@collabora.co.uk>
+
+	* ext/opus/gstopusparse.c:
+	  opusparse: Simplify check
+	  Avoids a unset variable warning (for nframes) with gcc 4.7.0
+
+2012-05-24 22:12:56 +0100  Vincent Penquerc'h <vincent.penquerch@collabora.co.uk>
+
+	* ext/opus/gstopusheader.c:
+	  opus: reject major version number above what we grok
+
+2012-05-24 21:58:44 +0100  Vincent Penquerc'h <vincent.penquerch@collabora.co.uk>
+
+	* ext/opus/gstopusheader.c:
+	  opus: bump written version from 0 to 0x01
+	  as per the spec update at https://wiki.xiph.org/OggOpus#ID_Header
+
+2012-04-30 14:40:02 +0100  Vincent Penquerc'h <vincent.penquerch@collabora.co.uk>
+
+	* ext/opus/gstopusdec.c:
+	  opusdec: fix lost packet handling for FEC/PLC
+	  The base audio decoder sends zero size packets, not NULL buffers,
+	  to signal dropped packets.
+
+2012-05-24 12:32:03 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* common:
+	  Automatic update of common submodule
+	  From dc70203 to 3429ba6
+
+2012-05-23 18:19:52 +0200  Sebastian Rasmussen <sebrn@axis.com>
+
+	* configure.ac:
+	  configure: suppress some warnings when debug is disabled
+	  Warnings about unused variables should be suppressed if core has the
+	  debug system disabled.
+	  Fixes https://bugzilla.gnome.org/show_bug.cgi?id=676672
+
+2012-04-25 21:21:43 +0400  Руслан Ижбулатов <lrn1986@gmail.com>
+
+	* configure.ac:
+	* sys/d3dvideosink/Makefile.am:
+	* sys/d3dvideosink/d3dvideosink.c:
+	* sys/d3dvideosink/d3dvideosink.h:
+	* sys/d3dvideosink/directx/d3d.c:
+	* sys/d3dvideosink/directx/d3d.h:
+	* sys/d3dvideosink/directx/directx.h:
+	* sys/d3dvideosink/directx/directx10/dx10_d3d.h:
+	* sys/d3dvideosink/directx/directx11/dx11_d3d.h:
+	* sys/d3dvideosink/directx/directx9/dx9_d3d.c:
+	* sys/d3dvideosink/directx/directx9/dx9_d3d.h:
+	* sys/d3dvideosink/directx/directx_d3d.c:
+	* sys/d3dvideosink/directx/directx_d3d.h:
+	  Port d3dvideosink to 0.11
+	  Fixes #674817
+
+2012-05-23 12:07:14 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* ext/wayland/gstwaylandsink.c:
+	* ext/wayland/gstwaylandsink.h:
+	  wayland: port to 0.11
+
+2012-05-22 18:55:38 +0200  Edward Hervey <edward@collabora.com>
+
+	* sys/dvb/dvbbasebin.c:
+	  dvbbasebin: Emit no-more-pads when pad is added
+	  This avoids an endless hang with playbin2, which sees dvbbasesbin as
+	  having dynamic pads ... but never emitted no-more-pads.
+
+2012-05-22 18:53:16 +0200  Edward Hervey <edward@collabora.com>
+
+	* sys/dvb/camutils.c:
+	  camutils: Fix PMT message construction
+	  The size of the message ended up being bigger than its content.
+	  That cause some CA modules to just hang.
+
+2012-05-22 18:51:34 +0200  Edward Hervey <edward@collabora.com>
+
+	* sys/dvb/camtransport.c:
+	  camtransport: Allow delay when setting up cam device
+	  Some CA devices take a long time to set themselves up,
+	  therefore retry every 250ms (for a maximum of 2.5s)
+
+2012-05-22 18:49:54 +0200  Edward Hervey <edward@collabora.com>
+
+	* sys/dvb/gstdvbsrc.c:
+	  dvbsrc: Fixup/add debug statements
+
+2012-05-22 18:48:07 +0200  Edward Hervey <edward@collabora.com>
+
+	* sys/dvb/gstdvbsrc.c:
+	  dvbsrc: Only open device read/write when needed
+	  Avoid starting up kernel thread when not needed
+
+2012-05-22 18:46:09 +0200  Edward Hervey <edward@collabora.com>
+
+	* sys/dvb/parsechannels.c:
+	  dvb: Add warning when dvb channels file isn't present
+
+2012-05-23 08:39:21 +0200  Edward Hervey <edward.hervey@collabora.co.uk>
+
+	* gst/mpegtsdemux/mpegtsbase.c:
+	* gst/mpegtsdemux/mpegtsbase.h:
+	  mpegtsbase: Speed up _is_psi()
+	  By making it inline and simplifying the bit macros
+
+2012-05-22 21:00:31 +0200  Mark Nauwelaerts <mark.nauwelaerts@collabora.co.uk>
+
+	* gst/videoparsers/gstmpegvideoparse.c:
+	  mpegvideoparse: avoid scanning for start codes twice
+	  ... since a previous terminating start code serves as subsequent start code.
+
+2012-05-22 19:11:29 +0200  Edward Hervey <edward.hervey@collabora.co.uk>
+
+	* sys/dvb/dvbbasebin.c:
+	* sys/dvb/gstdvbsrc.c:
+	  dvb: Fixups for latest API changes
+
+2012-04-10 12:36:15 +0200  Julian Scheel <julian@jusst.de>
+
+	* gst/mpegtsdemux/tsdemux.c:
+	  tsdemux: Add language code to taglist.
+	  Read the language codes for tracks from the mpegts descriptors and add it into
+	  the pads taglist.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=673896
+
+2012-05-21 17:53:37 +0200  Edward Hervey <edward.hervey@collabora.co.uk>
+
+	* gst/mpegtsdemux/tsdemux.c:
+	  tsdemux: Adapt to new packetizer API
+	  We no longer use GstBufferList and instead copy the incoming data
+	  into newly allocated memory.
+	  This makes tsdemux behaviour 3 to 4 times faster.
+
+2012-05-21 17:53:15 +0200  Edward Hervey <edward.hervey@collabora.co.uk>
+
+	* gst/mpegtsdemux/mpegtsparse.c:
+	  tsparse: Adapt to new packetizer API
+
+2012-05-21 17:52:46 +0200  Edward Hervey <edward.hervey@collabora.co.uk>
+
+	* gst/mpegtsdemux/mpegtsbase.c:
+	  mpegtsbase: Adapt to new packetizer behaviour
+
+2012-05-21 17:48:54 +0200  Edward Hervey <edward.hervey@collabora.co.uk>
+
+	* gst/mpegtsdemux/mpegtspacketizer.c:
+	* gst/mpegtsdemux/mpegtspacketizer.h:
+	  mpegtspacketizer: Avoid usage of GstBuffer internally
+	  The overhead of creating/using 188 byte GstBuffer from GstAdapter
+	  is too expensive.
+	  We now peek the next packet, and provide a data/size which is only
+	  valid until the packetizerpacket is cleared.
+	  In addition, cleanup all the internal code to deal with that new
+	  behaviour and remove double-checks which are no longer needed.
+	  The section_length is now the corrected section_length (i.e. with
+	  the additional 3 bytes).
+	  Avoid using gst_adapter_prev_timestamp and instead track
+	  the timestamp ourself.
+
+2012-05-20 13:27:29 +0200  Edward Hervey <edward.hervey@collabora.co.uk>
+
+	* gst/mpegtsdemux/mpegtspacketizer.c:
+	* gst/mpegtsdemux/mpegtspacketizer.h:
+	  mpegtspacketizer: Detect PCR wraparound in skew code
+	  If the received PCR is going backwards (by a safe margin), include
+	  that wraparound for further calculation.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=674536
+
+2012-05-22 14:48:40 +0200  Mark Nauwelaerts <mark.nauwelaerts@collabora.co.uk>
+
+	* gst/videoparsers/gstmpegvideoparse.c:
+	  videoparsers: avoid repeated caps setting
+
+2012-05-22 14:00:36 +0200  Mark Nauwelaerts <mark.nauwelaerts@collabora.co.uk>
+
+	* gst-libs/gst/codecparsers/gstmpegvideoparser.c:
+	* gst-libs/gst/codecparsers/gstmpegvideoparser.h:
+	* gst/videoparsers/gstmpegvideoparse.c:
+	* gst/videoparsers/gstmpegvideoparse.h:
+	  mpegvideoparse: tweak codec parser API and adjust parser element
+	  ... to allow for more efficient parsing and (more) consistent parsing API
+	  among various codec parsers.
+	  Fixes #672701.
+	  Conflicts:
+	  gst/videoparsers/gstmpegvideoparse.c
+
+2012-05-22 12:30:07 +0200  Mark Nauwelaerts <mark.nauwelaerts@collabora.co.uk>
+
+	* gst-libs/gst/codecparsers/gstmpeg4parser.h:
+	  codecparsers: mpeg4: fixup documentation spelling
+
+2012-05-08 16:51:11 -0400  Nicolas Dufresne <nicolas.dufresne@collabora.com>
+
+	* gst-libs/gst/codecparsers/gstmpegvideoparser.c:
+	  mpegvideoparser: Optimize scanning for start code
+	  https://bugzilla.gnome.org/show_bug.cgi?id=672701
+
+2012-05-18 12:46:55 +0100  Vincent Penquerc'h <vincent.penquerch@collabora.co.uk>
+
+	* ext/vp8/gstvp8enc.c:
+	  vp8enc: fix target bitrate config with libvpx 1.1.0
+	  libvpx 1.1.0 disallows a bitrate of 0, which was used by
+	  vp8enc as a default value.
+	  Instead, we use the default libvpx bitrate, scaled to our
+	  video size, if no bitrate was specified.
+	  This fixes encoding VP8 video with libvpx 1.1.0.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=676245
+
+2012-05-22 11:10:24 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* gst/frei0r/gstfrei0r.c:
+	  frei0r: Double properties are supposed in the range [0.0, 1.0]
+	  Fixes bug #676137.
+
+2012-05-21 19:22:19 +0200  Mark Nauwelaerts <mark.nauwelaerts@collabora.co.uk>
+
+	* gst/videoparsers/gstmpegvideoparse.c:
+	* gst/videoparsers/gstmpegvideoparse.h:
+	  mpegvideoparse: unobfuscate frame parsing
+	  ... and add comments and debug statements.
+	  Fixes #674202.
+	  Conflicts:
+	  gst/videoparsers/gstmpegvideoparse.c
+
+2012-05-21 16:37:37 +0200  Mark Nauwelaerts <mark.nauwelaerts@collabora.co.uk>
+
+	* gst/videoparsers/gstmpegvideoparse.c:
+	  mpegvideoparse: Revert "fix crash"
+	  This reverts commit 91210831ee672343a296f31357144359d5c2e768.
+	  Such explicit reset should not be needed as it is arranged for by
+	  the baseclass in unison with monitoring for a new frame by subclass.
+	  As such it might wrongfully hide something else going on ...
+	  See #674073.
+
+2012-05-21 15:24:25 +0200  Mark Nauwelaerts <mark.nauwelaerts@collabora.co.uk>
+
+	* gst-libs/gst/codecparsers/gstmpegvideoparser.c:
+	  codecparsers: mpegvideoparser: fix buffer size check
+	  ... to mind unsigned integer wrap
+	  Based on patch by Alban Browaeys <prahal@yahoo.com>
+	  Fixes https://bugzilla.gnome.org/show_bug.cgi?id=673436
+
+2012-05-21 15:09:02 +0200  Mark Nauwelaerts <mark.nauwelaerts@collabora.co.uk>
+
+	* tests/check/elements/mpegvideoparse.c:
+	  tests: mpegvideoparse: fix unit test regression
+	  Fixes https://bugzilla.gnome.org/show_bug.cgi?id=676097
+	  Conflicts:
+	  tests/check/elements/mpegvideoparse.c
+
+2012-05-19 15:34:25 +0100  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+
+	* gst/autoconvert/gstautoconvert.c:
+	  autoconvert: don't access GstElementFactory structure directly
+
+2012-05-18 16:17:13 +0200  Mark Nauwelaerts <mark.nauwelaerts@collabora.co.uk>
+
+	* gst-libs/gst/codecparsers/gstmpeg4parser.c:
+	  codecparsers: mpeg4: do not expect a marker bit where not specified
+	  Fixes #672447.
+
+2012-05-16 16:15:58 +0200  Julian Scheel <julian@jusst.de>
+
+	* gst/mpegtsdemux/tsdemux.c:
+	  tsdemux: flush on pusi only for payload packets
+	  Data should not be flushed out of the tsdemux because a payload unit start
+	  indicator (pusi) is seen in a adaptation only ts packet. If the package contains no
+	  payload a pusi does not indicate a new PES packet, but PSI information, etc.
+	  This fixes playback of several TS files which contain ts packets without
+	  payload but with pusi set to 1.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=676168
+
+2012-05-18 10:15:15 +0200  Edward Hervey <edward@collabora.com>
+
+	* gst/mpegtsdemux/tsdemux.c:
+	  tsdemux: Don't queue data for streams that don't have a pad
+	  This would result in an error further down, and it also avoids processing
+	  for that data which we wouldn't be using anyway.
+
+2012-05-18 10:13:19 +0200  Edward Hervey <edward@collabora.com>
+
+	* gst/mpegtsdemux/mpegtspacketizer.c:
+	  tsdemux: Detect and handle scrambled packets
+	  Users (tsdemux/mpegtsparse) can decide what to do with that
+
+2012-05-18 10:07:56 +0200  Edward Hervey <edward@collabora.com>
+
+	* gst/mpegtsdemux/tsdemux.c:
+	  tsdemux: Emit no-more-pads when all pads are activated
+	  Fixes #670921 again
+
+2012-05-17 11:15:22 +0100  Luis de Bethencourt <luis@debethencourt.com>
+
+	* gst/gaudieffects/gstgaudieffectsorc-dist.c:
+	* gst/gaudieffects/gstgaudieffectsorc-dist.h:
+	  gaudieffects: add fallback code for orc
+	  this includes an improved version of the burn filter, with a ~40% speed
+	  improvement.
+
+2012-05-17 10:49:11 +0100  Luis de Bethencourt <luis@debethencourt.com>
+
+	* configure.ac:
+	  configure: bump the orc version required to 0.4.16
+	  Some opcodes have changed so they would fail to build with 0.4.14
+
+2012-05-17 09:47:08 +0100  Luis de Bethencourt <luis@debethencourt.com>
+
+	* gst/gaudieffects/gstsolarize.c:
+	  gaudieffects: use CLAMP in solarize
+	  No need to have a gate_int () function duplicating the already existing and
+	  established CLAMP () function.
+
+2012-05-17 09:46:37 +0100  Luis de Bethencourt <luis@debethencourt.com>
+
+	* gst/gaudieffects/gstexclusion.c:
+	  gaudieffects: use CLAMP in exclusion
+	  No need to have a gate_int () function duplicating the already existing and
+	  established CLAMP () function.
+
+2012-05-17 09:45:52 +0100  Luis de Bethencourt <luis@debethencourt.com>
+
+	* gst/gaudieffects/gstdodge.c:
+	  gaudieffects: use CLAMP in dodge
+	  No need to have a gate_int () function duplicating the already existing and
+	  established CLAMP () function.
+
+2012-05-17 09:44:29 +0100  Luis de Bethencourt <luis@debethencourt.com>
+
+	* gst/gaudieffects/gstchromium.c:
+	  gaudieffects: use CLAMP in chromium
+	  No need to have a gate_int () function duplicating the already existing and
+	  established CLAMP () function.
+
+2012-05-17 11:47:19 +0200  Mark Nauwelaerts <mark.nauwelaerts@collabora.co.uk>
+
+	* gst/videoparsers/gsth264parse.c:
+	  h264parse: also consider nal_length_size when inserting codec data
+	  See #676174.
+
+2012-05-16 21:50:48 +0100  John Hein <n4kdlmx02@sneakemail.com>
+
+	* gst/y4m/Makefile.am:
+	  y4m: link against the right libgstvideo
+	  https://bugzilla.gnome.org/show_bug.cgi?id=676189
+
+2012-05-16 17:50:43 +0100  Luis de Bethencourt <luis@debethencourt.com>
+
+	* gst/gaudieffects/gstburn.c:
+	* gst/gaudieffects/gstchromium.c:
+	* gst/gaudieffects/gstdilate.c:
+	* gst/gaudieffects/gstdodge.c:
+	* gst/gaudieffects/gstexclusion.c:
+	* gst/gaudieffects/gstgaussblur.c:
+	* gst/gaudieffects/gstsolarize.c:
+	  gaudieffects: example pipelines with videoconvert
+
+2012-05-16 17:49:12 +0100  Luis de Bethencourt <luis@debethencourt.com>
+
+	* gst/gaudieffects/Makefile.am:
+	* gst/gaudieffects/gstburn.c:
+	* gst/gaudieffects/gstgaudieffectsorc.orc:
+	  gaudieffects: orc-ify burn filter
+
+2012-05-16 09:12:32 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* configure.ac:
+	  configure: Require core/base 0.11.91
+
+2012-01-13 18:57:20 -0500  Matej Knopp <matej.knopp@gmail.com>
+
+	* .gitignore:
+	  .gitignore: add visual studio IDE files and OS X .DS_Store files
+	  https://bugzilla.gnome.org/show_bug.cgi?id=667899
+
+2012-05-15 15:46:28 +0200  Stefan Sauer <ensonic@users.sf.net>
+
+	* gst/hls/gstfragment.c:
+	* gst/hls/gsturidownloader.c:
+	  hls: use gst api for timestamps instead of the (wrong) api from a too new glib
+	  Conflicts:
+	  gst/hls/gstfragment.c
+
+2012-05-14 11:38:21 +0200  Mark Nauwelaerts <mark.nauwelaerts@collabora.co.uk>
+
+	* gst/mpegtsmux/mpegtsmux.c:
+	* gst/mpegtsmux/mpegtsmux.h:
+	  mpegtsmux: optimize output by aggregating packets
+	  ... rather than pushing each (small) packet in a separate buffer.
+	  m2ts mode not yet optimized though.
+
+2012-05-11 11:46:58 +0200  Albert Astrals Cid <albert.astals at canonical.com>
+
+	* gst/mpegtsdemux/mpegtspacketizer.c:
+	  mpegts: support items in extended event descriptor
+	  Fixes https://bugzilla.gnome.org/show_bug.cgi?id=672478
+
+2012-05-14 09:15:55 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* ext/curl/gstcurlbasesink.c:
+	* ext/curl/gstcurlbasesink.h:
+	* ext/curl/gstcurlsmtpsink.c:
+	* ext/curl/gstcurlsmtpsink.h:
+	  curl: fix compilation
+	  Don't use deprecated thread API
+
+2012-05-13 17:00:39 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* configure.ac:
+	  Back to development
+
+=== release 0.11.91 ===
+
+2012-05-13 16:43:25 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* ChangeLog:
+	* NEWS:
+	* RELEASE:
+	* common:
+	* configure.ac:
+	* gst-plugins-bad.doap:
+	* win32/common/config.h:
+	  Release 0.11.91
+
+2012-05-13 16:43:02 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* po/af.po:
+	* po/az.po:
+	* po/bg.po:
+	* po/ca.po:
+	* po/cs.po:
+	* po/da.po:
+	* po/de.po:
+	* po/el.po:
+	* po/en_GB.po:
+	* po/eo.po:
+	* po/es.po:
+	* po/eu.po:
+	* po/fi.po:
+	* po/fr.po:
+	* po/gl.po:
+	* po/hu.po:
+	* po/id.po:
+	* po/it.po:
+	* po/ja.po:
+	* po/ky.po:
+	* po/lt.po:
+	* po/lv.po:
+	* po/mt.po:
+	* po/nb.po:
+	* po/nl.po:
+	* po/or.po:
+	* po/pl.po:
+	* po/pt_BR.po:
+	* po/ro.po:
+	* po/ru.po:
+	* po/sk.po:
+	* po/sl.po:
+	* po/sq.po:
+	* po/sr.po:
+	* po/sv.po:
+	* po/tr.po:
+	* po/uk.po:
+	* po/vi.po:
+	* po/zh_CN.po:
+	  Update .po files
 
 2012-05-13 15:56:17 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
 

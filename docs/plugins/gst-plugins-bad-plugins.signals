@@ -178,6 +178,20 @@ gint  arg4
 </SIGNAL>
 
 <SIGNAL>
+<NAME>GstCameraBin::start-capture</NAME>
+<RETURNS>void</RETURNS>
+<FLAGS>la</FLAGS>
+GstCameraBin *gstcamerabin
+</SIGNAL>
+
+<SIGNAL>
+<NAME>GstCameraBin::stop-capture</NAME>
+<RETURNS>void</RETURNS>
+<FLAGS>la</FLAGS>
+GstCameraBin *gstcamerabin
+</SIGNAL>
+
+<SIGNAL>
 <NAME>GstRTPDTMFMux::locking</NAME>
 <RETURNS>void</RETURNS>
 <FLAGS>l</FLAGS>

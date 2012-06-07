@@ -11,6 +11,7 @@ GstBaseVideoEncoder GstPreset
 GstBin GstChildProxy
 GstCDAudio GstURIHandler
 GstCameraBin GstChildProxy GstImplementsInterface GstColorBalance GstTagSetter
+GstCameraBin GstChildProxy GstTagSetter
 GstCameraBin2 GstChildProxy GstTagSetter
 GstCeltEnc GstPreset GstTagSetter
 GstCeltEnc GstTagSetter GstPreset
@@ -36,6 +37,7 @@ GstMMS GstURIHandler
 GstMpeg2enc GstPreset
 GstMythtvSrc GstURIHandler
 GstNeonhttpSrc GstURIHandler
+GstOpusEnc GstPreset GstTagSetter
 GstPipeline GstChildProxy
 GstRTMPSink GstURIHandler
 GstRTMPSrc GstURIHandler
@@ -45,6 +47,7 @@ GstSchroEnc GstPreset
 GstVCDSrc GstURIHandler
 GstVP8Enc GstPreset GstTagSetter
 GstVP8Enc GstTagSetter GstPreset
+GstVideoEncoder GstPreset
 GstViewfinderBin GstChildProxy
 GstVoAacEnc GstPreset
 GstVoAmrWbEnc GstPreset

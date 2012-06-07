@@ -39,7 +39,7 @@ noinst_HEADERS = \
         gstplugin.h \
         gstsolarize.h
 
-EXTRA_PROGRAMS = blur-example.py  burn-example.py
+EXTRA_SCRIPTS = blur-example.py  burn-example.py
 
 Android.mk: Makefile.am $(BUILT_SOURCES)
 	androgenizer \

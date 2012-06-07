@@ -256,12 +256,13 @@ orc_same_parity_sad_planar_yuv (guint32 * ORC_RESTRICT a1,
 {
   OrcExecutor _ex, *ex = &_ex;
   static volatile int p_inited = 0;
-  static OrcProgram *p = 0;
+  static OrcCode *c = 0;
   void (*func) (OrcExecutor *);
 
   if (!p_inited) {
     orc_once_mutex_lock ();
     if (!p_inited) {
+      OrcProgram *p;
 
       p = orc_program_new ();
       orc_program_set_name (p, "orc_same_parity_sad_planar_yuv");
@@ -294,18 +295,21 @@ orc_same_parity_sad_planar_yuv (guint32 * ORC_RESTRICT a1,
           ORC_VAR_D1);
 
       orc_program_compile (p);
+      c = orc_program_take_code (p);
+      orc_program_free (p);
     }
     p_inited = TRUE;
     orc_once_mutex_unlock ();
   }
-  ex->program = p;
+  ex->arrays[ORC_VAR_A2] = c;
+  ex->program = 0;
 
   ex->n = n;
   ex->arrays[ORC_VAR_S1] = (void *) s1;
   ex->arrays[ORC_VAR_S2] = (void *) s2;
   ex->params[ORC_VAR_P2] = p2;
 
-  func = p->code_exec;
+  func = c->exec;
   func (ex);
   *a1 = orc_executor_get_accumulator (ex, ORC_VAR_A1);
 }
@@ -419,12 +423,13 @@ orc_same_parity_ssd_planar_yuv (guint32 * ORC_RESTRICT a1,
 {
   OrcExecutor _ex, *ex = &_ex;
   static volatile int p_inited = 0;
-  static OrcProgram *p = 0;
+  static OrcCode *c = 0;
   void (*func) (OrcExecutor *);
 
   if (!p_inited) {
     orc_once_mutex_lock ();
     if (!p_inited) {
+      OrcProgram *p;
 
       p = orc_program_new ();
       orc_program_set_name (p, "orc_same_parity_ssd_planar_yuv");
@@ -455,18 +460,21 @@ orc_same_parity_ssd_planar_yuv (guint32 * ORC_RESTRICT a1,
           ORC_VAR_D1);
 
       orc_program_compile (p);
+      c = orc_program_take_code (p);
+      orc_program_free (p);
     }
     p_inited = TRUE;
     orc_once_mutex_unlock ();
   }
-  ex->program = p;
+  ex->arrays[ORC_VAR_A2] = c;
+  ex->program = 0;
 
   ex->n = n;
   ex->arrays[ORC_VAR_S1] = (void *) s1;
   ex->arrays[ORC_VAR_S2] = (void *) s2;
   ex->params[ORC_VAR_P2] = p2;
 
-  func = p->code_exec;
+  func = c->exec;
   func (ex);
   *a1 = orc_executor_get_accumulator (ex, ORC_VAR_A1);
 }
@@ -690,12 +698,13 @@ orc_same_parity_3_tap_planar_yuv (guint32 * ORC_RESTRICT a1,
 {
   OrcExecutor _ex, *ex = &_ex;
   static volatile int p_inited = 0;
-  static OrcProgram *p = 0;
+  static OrcCode *c = 0;
   void (*func) (OrcExecutor *);
 
   if (!p_inited) {
     orc_once_mutex_lock ();
     if (!p_inited) {
+      OrcProgram *p;
 
       p = orc_program_new ();
       orc_program_set_name (p, "orc_same_parity_3_tap_planar_yuv");
@@ -757,11 +766,14 @@ orc_same_parity_3_tap_planar_yuv (guint32 * ORC_RESTRICT a1,
           ORC_VAR_D1);
 
       orc_program_compile (p);
+      c = orc_program_take_code (p);
+      orc_program_free (p);
     }
     p_inited = TRUE;
     orc_once_mutex_unlock ();
   }
-  ex->program = p;
+  ex->arrays[ORC_VAR_A2] = c;
+  ex->program = 0;
 
   ex->n = n;
   ex->arrays[ORC_VAR_S1] = (void *) s1;
@@ -772,7 +784,7 @@ orc_same_parity_3_tap_planar_yuv (guint32 * ORC_RESTRICT a1,
   ex->arrays[ORC_VAR_S6] = (void *) s6;
   ex->params[ORC_VAR_P2] = p2;
 
-  func = p->code_exec;
+  func = c->exec;
   func (ex);
   *a1 = orc_executor_get_accumulator (ex, ORC_VAR_A1);
 }
@@ -990,12 +1002,13 @@ orc_opposite_parity_5_tap_planar_yuv (guint32 * ORC_RESTRICT a1,
 {
   OrcExecutor _ex, *ex = &_ex;
   static volatile int p_inited = 0;
-  static OrcProgram *p = 0;
+  static OrcCode *c = 0;
   void (*func) (OrcExecutor *);
 
   if (!p_inited) {
     orc_once_mutex_lock ();
     if (!p_inited) {
+      OrcProgram *p;
 
       p = orc_program_new ();
       orc_program_set_name (p, "orc_opposite_parity_5_tap_planar_yuv");
@@ -1054,11 +1067,14 @@ orc_opposite_parity_5_tap_planar_yuv (guint32 * ORC_RESTRICT a1,
           ORC_VAR_D1);
 
       orc_program_compile (p);
+      c = orc_program_take_code (p);
+      orc_program_free (p);
     }
     p_inited = TRUE;
     orc_once_mutex_unlock ();
   }
-  ex->program = p;
+  ex->arrays[ORC_VAR_A2] = c;
+  ex->program = 0;
 
   ex->n = n;
   ex->arrays[ORC_VAR_S1] = (void *) s1;
@@ -1068,7 +1084,7 @@ orc_opposite_parity_5_tap_planar_yuv (guint32 * ORC_RESTRICT a1,
   ex->arrays[ORC_VAR_S5] = (void *) s5;
   ex->params[ORC_VAR_P2] = p2;
 
-  func = p->code_exec;
+  func = c->exec;
   func (ex);
   *a1 = orc_executor_get_accumulator (ex, ORC_VAR_A1);
 }

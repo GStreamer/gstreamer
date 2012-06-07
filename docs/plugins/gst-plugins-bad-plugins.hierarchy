@@ -6,6 +6,8 @@ GObject
       GstControlBinding
       GstControlSource
       GstElement
+        GstAsfMux
+        GstAsfParse
         GstAssRender
         GstAudioDecoder
           ADPCMDec
@@ -13,11 +15,13 @@ GObject
           GstDtsDec
           GstFaad
           GstGSMDec
+          GstOpusDec
         GstAudioEncoder
           ADPCMEnc
           GstCeltEnc
           GstFaac
           GstGSMEnc
+          GstOpusEnc
           GstVoAacEnc
           GstVoAmrWbEnc
         GstBaseAudioVisualizer
@@ -32,8 +36,15 @@ GObject
           GstIRTSPParse
           GstMpeg4VParse
           GstMpegvParse
+          GstOpusParse
         GstBaseSink
           GstChecksumSink
+          GstCurlBaseSink
+            GstCurlFileSink
+            GstCurlTlsSink
+              GstCurlFtpSink
+              GstCurlHttpSink
+              GstCurlSmtpSink
           GstRTMPSink
           GstShmSink
         GstBaseSrc
@@ -53,15 +64,34 @@ GObject
           GstRemoveSilence
           GstScaletempo
           GstVideoFilter
+            GstBurn
+            GstChromaHold
+            GstChromium
+            GstColorEffects
+            GstDilate
+            GstDodge
+            GstExclusion
+            GstGaussianBlur
+            GstGeometricTransform
+              GstCircleGeometricTransform
+                GstBulge
+                GstCircle
+                GstKaleidoscope
+                GstPinch
+                GstSphere
+                GstStretch
+                GstTunnel
+                GstTwirl
+                GstWaterRipple
+              GstDiffuse
+              GstFisheye
+              GstMarble
+              GstMirror
+              GstRotate
+              GstSquare
             GstSmooth
+            GstSolarize
             GstZBar
-        GstBaseVideoCodec
-          GstBaseVideoDecoder
-            GstSchroDec
-            GstVP8Dec
-          GstBaseVideoEncoder
-            GstSchroEnc
-            GstVP8Enc
         GstBin
           GstAutoConvert
           GstAutoVideoConvert
@@ -69,7 +99,7 @@ GObject
             GstWrapperCameraBinSrc
           GstFPSDisplaySink
           GstPipeline
-            GstCameraBin2
+            GstCameraBin
           GstSDPDemux
           GstViewfinderBin
         GstBz2dec
@@ -79,13 +109,17 @@ GObject
         GstDVBSubOverlay
         GstDVDSpu
         GstGmeDec
+        GstHLSDemux
         GstModPlug
         GstMpegPSDemux
         GstPcapParse
         GstRTPBaseDepayload
+          GstRTPOpusDepay
           GstRtpDTMFDepay
           GstRtpVP8Depay
         GstRTPBasePayload
+          GstRtpAsfPay
+          GstRtpOPUSPay
           GstRtpVP8Pay
         GstRTPMux
           GstRTPDTMFMux
@@ -95,7 +129,16 @@ GObject
         GstSegmentClip
           GstAudioSegmentClip
           GstVideoSegmentClip
+        GstVideoDecoder
+          GstSchroDec
+          GstVP8Dec
+        GstVideoEncoder
+          GstSchroEnc
+          GstVP8Enc
         GstY4mDec
+        MpegTSBase
+          GstTSDemux
+          MpegTSParse2
       GstPad
       GstPadTemplate
       GstPlugin
