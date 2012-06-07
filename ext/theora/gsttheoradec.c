@@ -59,6 +59,11 @@ GST_DEBUG_CATEGORY_EXTERN (GST_CAT_PERFORMANCE);
 #define THEORA_DEF_TELEMETRY_QI 0
 #define THEORA_DEF_TELEMETRY_BITS 0
 
+/* This was removed from the base class, this is used as a
+   temporary return to signal the need to call _drop_frame,
+   and does not leave theoraenc. */
+#define GST_CUSTOM_FLOW_DROP GST_FLOW_CUSTOM_SUCCESS_1
+
 enum
 {
   PROP_0,
@@ -733,7 +738,7 @@ dropping:
 dropping_qos:
   {
     GST_WARNING_OBJECT (dec, "dropping frame because of QoS");
-    return GST_VIDEO_DECODER_FLOW_NEED_DATA;
+    return GST_CUSTOM_FLOW_DROP;
   }
 decode_error:
   {
@@ -809,8 +814,17 @@ theora_dec_handle_frame (GstVideoDecoder * bdec, GstVideoCodecFrame * frame)
   dec = GST_THEORA_DEC (bdec);
 
   res = theora_dec_decode_buffer (dec, frame->input_buffer, frame);
-  if (res == GST_FLOW_OK)
-    res = gst_video_decoder_finish_frame (bdec, frame);
+  switch (res) {
+    case GST_FLOW_OK:
+      res = gst_video_decoder_finish_frame (bdec, frame);
+      break;
+    case GST_CUSTOM_FLOW_DROP:
+      res = gst_video_decoder_drop_frame (bdec, frame);
+      break;
+    default:
+      gst_video_codec_frame_unref (frame);
+      break;
+  }
 
   return res;
 }
