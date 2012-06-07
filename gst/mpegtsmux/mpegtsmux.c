@@ -108,8 +108,12 @@ enum
   ARG_PROG_MAP,
   ARG_M2TS_MODE,
   ARG_PAT_INTERVAL,
-  ARG_PMT_INTERVAL
+  ARG_PMT_INTERVAL,
+  ARG_ALIGNMENT
 };
+
+#define MPEGTSMUX_DEFAULT_ALIGNMENT    -1
+#define MPEGTSMUX_DEFAULT_M2TS         FALSE
 
 static GstStaticPadTemplate mpegtsmux_sink_factory =
     GST_STATIC_PAD_TEMPLATE ("sink_%d",
@@ -151,7 +155,8 @@ static gboolean new_packet_cb (guint8 * data, guint len, void *user_data,
     gint64 new_pcr);
 static void release_buffer_cb (guint8 * data, void *user_data);
 static GstFlowReturn mpegtsmux_collect_packet (MpegTsMux * mux,
-    guint8 * data, guint len);
+    GstBuffer * buf);
+static GstFlowReturn mpegtsmux_push_packets (MpegTsMux * mux, gboolean force);
 
 static void mpegtsdemux_prepare_srcpad (MpegTsMux * mux);
 static GstFlowReturn mpegtsmux_collected (GstCollectPads2 * pads,
@@ -207,8 +212,8 @@ mpegtsmux_class_init (MpegTsMuxClass * klass)
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_M2TS_MODE,
       g_param_spec_boolean ("m2ts-mode", "M2TS(192 bytes) Mode",
           "Set to TRUE to output Blu-Ray disc format with 192 byte packets. "
-          "FALSE for standard TS format with 188 byte packets.", FALSE,
-          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+          "FALSE for standard TS format with 188 byte packets.",
+          MPEGTSMUX_DEFAULT_M2TS, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_PAT_INTERVAL,
       g_param_spec_uint ("pat-interval", "PAT interval",
@@ -220,6 +225,13 @@ mpegtsmux_class_init (MpegTsMuxClass * klass)
       g_param_spec_uint ("pmt-interval", "PMT interval",
           "Set the interval (in ticks of the 90kHz clock) for writing out the PMT table",
           1, G_MAXUINT, TSMUX_DEFAULT_PMT_INTERVAL,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
+  g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_ALIGNMENT,
+      g_param_spec_int ("alignment", "packet alignment",
+          "Number of packets per buffer (padded with dummy packets on EOS) "
+          "(-1 = auto, 0 = all available packets)",
+          -1, G_MAXINT, MPEGTSMUX_DEFAULT_ALIGNMENT,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 }
 
@@ -240,12 +252,14 @@ mpegtsmux_init (MpegTsMux * mux, MpegTsMuxClass * g_class)
       mux);
 
   mux->adapter = gst_adapter_new ();
+  mux->out_adapter = gst_adapter_new ();
 
   /* properties */
-  mux->m2ts_mode = FALSE;
+  mux->m2ts_mode = MPEGTSMUX_DEFAULT_M2TS;
   mux->pat_interval = TSMUX_DEFAULT_PAT_INTERVAL;
   mux->pmt_interval = TSMUX_DEFAULT_PMT_INTERVAL;
   mux->prog_map = NULL;
+  mux->alignment = MPEGTSMUX_DEFAULT_ALIGNMENT;
 
   /* initial state */
   mpegtsmux_reset (mux, TRUE);
@@ -293,6 +307,9 @@ mpegtsmux_reset (MpegTsMux * mux, gboolean alloc)
   mux->force_key_unit_event = NULL;
   mux->pending_key_unit_ts = GST_CLOCK_TIME_NONE;
 
+  gst_adapter_clear (mux->adapter);
+  gst_adapter_clear (mux->out_adapter);
+
   if (mux->tsmux) {
     tsmux_free (mux->tsmux);
     mux->tsmux = NULL;
@@ -333,9 +350,12 @@ mpegtsmux_dispose (GObject * object)
   mpegtsmux_reset (mux, FALSE);
 
   if (mux->adapter) {
-    gst_adapter_clear (mux->adapter);
     g_object_unref (mux->adapter);
     mux->adapter = NULL;
+  }
+  if (mux->out_adapter) {
+    g_object_unref (mux->out_adapter);
+    mux->out_adapter = NULL;
   }
   if (mux->collect) {
     gst_object_unref (mux->collect);
@@ -388,6 +408,9 @@ gst_mpegtsmux_set_property (GObject * object, guint prop_id,
         walk = g_slist_next (walk);
       }
       break;
+    case ARG_ALIGNMENT:
+      mux->alignment = g_value_get_int (value);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -412,6 +435,9 @@ gst_mpegtsmux_get_property (GObject * object, guint prop_id,
       break;
     case ARG_PMT_INTERVAL:
       g_value_set_uint (value, mux->pmt_interval);
+      break;
+    case ARG_ALIGNMENT:
+      g_value_set_int (value, mux->alignment);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -997,7 +1023,7 @@ mpegtsmux_collected (GstCollectPads2 * pads, MpegTsMux * mux)
       }
     }
     /* flush packet cache */
-    mpegtsmux_collect_packet (mux, NULL, 0);
+    mpegtsmux_push_packets (mux, FALSE);
   } else {
     /* FIXME: Drain all remaining streams */
     /* At EOS */
@@ -1137,70 +1163,106 @@ new_packet_common_init (MpegTsMux * mux, GstBuffer * buf, guint8 * data,
 }
 
 static GstFlowReturn
-mpegtsmux_collect_packet (MpegTsMux * mux, guint8 * data, guint len)
+mpegtsmux_push_packets (MpegTsMux * mux, gboolean force)
 {
+  gint align = mux->alignment;
+  gint av, packet_size;
   GstBuffer *buf;
   GstFlowReturn ret = GST_FLOW_OK;
+  GstClockTime ts;
 
-  GST_LOG_OBJECT (mux, "collecting packet size %d", len);
-again:
-  if (!mux->out_buffer && data) {
-    /* some extra spare slack for header overhead and PAT/PMT */
-    mux->out_buffer =
-        gst_buffer_new_and_alloc (MAX (mux->last_size * 2 + 1024, len));
-    mux->out_offset = 0;
-    GST_DEBUG_OBJECT (mux, "created new packet cache size %d",
-        GST_BUFFER_SIZE (mux->out_buffer));
+  if (mux->m2ts_mode) {
+    packet_size = M2TS_PACKET_LENGTH;
+    if (align < 0)
+      align = 32;
+  } else {
+    packet_size = NORMAL_TS_PACKET_LENGTH;
+    if (align < 0)
+      align = 0;
   }
 
-  buf = mux->out_buffer;
-  if (data && (len + mux->out_offset <= GST_BUFFER_SIZE (buf))) {
-    GST_LOG_OBJECT (mux, "collecting packet");
-    memcpy (GST_BUFFER_DATA (buf) + mux->out_offset, data, len);
-    mux->out_offset += len;
-    ret = GST_FLOW_OK;
-  } else if (buf) {
-    GST_LOG_OBJECT (mux, "pushing packet cache");
-    GST_BUFFER_TIMESTAMP (buf) = mux->last_ts;
-    GST_BUFFER_SIZE (buf) = mux->out_offset;
-    new_packet_common_init (mux, buf, NULL, 0);
-    mux->out_buffer = NULL;
-    mux->out_offset = 0;
+  av = gst_adapter_available (mux->out_adapter);
+  GST_LOG_OBJECT (mux, "align %d, av %d", align, av);
+
+  if (!align)
+    align = av;
+  else
+    align *= packet_size;
+
+  GST_LOG_OBJECT (mux, "aligning to %d bytes", align);
+  if (G_LIKELY ((align <= av) && av)) {
+    GST_LOG_OBJECT (mux, "pushing %d aligned bytes", av - (av % align));
+    ts = gst_adapter_prev_timestamp (mux->out_adapter, NULL);
+    buf = gst_adapter_take_buffer (mux->out_adapter, av - (av % align));
+    g_assert (buf);
+    GST_BUFFER_TIMESTAMP (buf) = ts;
+    gst_buffer_set_caps (buf, GST_PAD_CAPS (mux->srcpad));
     ret = gst_pad_push (mux->srcpad, buf);
-    if (data)
-      goto again;
+    av = av % align;
+  }
+
+  if (av && force) {
+    guint8 *data;
+    guint32 header;
+    gint dummy;
+
+    GST_LOG_OBJECT (mux, "handling %d leftover bytes", av);
+    buf = gst_buffer_new_and_alloc (align);
+    ts = gst_adapter_prev_timestamp (mux->out_adapter, NULL);
+    gst_adapter_copy (mux->out_adapter, GST_BUFFER_DATA (buf), 0, av);
+    gst_adapter_clear (mux->out_adapter);
+    GST_BUFFER_TIMESTAMP (buf) = ts;
+    gst_buffer_set_caps (buf, GST_PAD_CAPS (mux->srcpad));
+
+    data = GST_BUFFER_DATA (buf) + av;
+    header = GST_READ_UINT32_BE (data - packet_size);
+
+    dummy = (GST_BUFFER_SIZE (buf) - av) / packet_size;
+    GST_LOG_OBJECT (mux, "adding %d null packets", dummy);
+
+    for (; dummy > 0; dummy--) {
+      gint offset;
+
+      if (packet_size > NORMAL_TS_PACKET_LENGTH) {
+        GST_WRITE_UINT32_BE (data, header);
+        /* simply increase header a bit and never mind too much */
+        header++;
+        offset = 4;
+      } else {
+        offset = 0;
+      }
+      GST_WRITE_UINT8 (data + offset, TSMUX_SYNC_BYTE);
+      /* null packet PID */
+      GST_WRITE_UINT16_BE (data + offset + 1, 0x1FFF);
+      /* no adaptation field exists | continuity counter undefined */
+      GST_WRITE_UINT8 (data + offset + 3, 0x10);
+      /* payload */
+      memset (data + offset + 4, 0, NORMAL_TS_PACKET_LENGTH - 4);
+      data += packet_size;
+    }
+
+    ret = gst_pad_push (mux->srcpad, buf);
   }
 
   return ret;
 }
 
-static gboolean
-new_packet_m2ts (MpegTsMux * mux, guint8 * data, guint len, gint64 new_pcr)
+static GstFlowReturn
+mpegtsmux_collect_packet (MpegTsMux * mux, GstBuffer * buf)
 {
-  GstBuffer *buf, *out_buf;
-  GstFlowReturn ret;
+  GST_LOG_OBJECT (mux, "collecting packet size %d", GST_BUFFER_SIZE (buf));
+  gst_adapter_push (mux->out_adapter, buf);
+
+  return GST_FLOW_OK;
+}
+
+static gboolean
+new_packet_m2ts (MpegTsMux * mux, GstBuffer * buf, gint64 new_pcr)
+{
+  GstBuffer *out_buf;
   int chunk_bytes;
 
-  /* FIXME also collect packets
-   * although no more separate timestamp for each one then ?? */
-
-  GST_LOG_OBJECT (mux, "Have buffer with new_pcr=%" G_GINT64_FORMAT " size %d",
-      new_pcr, len);
-
-  buf = gst_buffer_new_and_alloc (M2TS_PACKET_LENGTH);
-  if (G_UNLIKELY (buf == NULL)) {
-    GST_ELEMENT_ERROR (mux, STREAM, MUX,
-        ("Failed allocating output buffer"), (NULL));
-    mux->last_flow_ret = GST_FLOW_ERROR;
-    return FALSE;
-  }
-
-  /* copies the TS data of 188 bytes to the m2ts buffer at an offset
-     of 4 bytes to leave space for writing the timestamp later */
-  memcpy (GST_BUFFER_DATA (buf) + 4, data, len);
-  /* After copying the data into the buffer, do other common init (flags and streamheaders) */
-  new_packet_common_init (mux, buf, data, len);
-  GST_BUFFER_TIMESTAMP (buf) = mux->last_ts;
+  GST_LOG_OBJECT (mux, "Have buffer with new_pcr=%" G_GINT64_FORMAT, new_pcr);
 
   if (new_pcr < 0) {
     /* If there is no pcr in current ts packet then just add the packet
@@ -1263,11 +1325,7 @@ new_packet_m2ts (MpegTsMux * mux, guint8 * data, guint len, gint64 new_pcr)
 
       GST_LOG_OBJECT (mux, "Outputting a packet of length %d PCR %"
           G_GUINT64_FORMAT, M2TS_PACKET_LENGTH, cur_pcr);
-      ret = gst_pad_push (mux->srcpad, out_buf);
-      if (G_UNLIKELY (ret != GST_FLOW_OK)) {
-        mux->last_flow_ret = ret;
-        return FALSE;
-      }
+      mpegtsmux_collect_packet (mux, out_buf);
     }
   }
 
@@ -1277,11 +1335,7 @@ new_packet_m2ts (MpegTsMux * mux, guint8 * data, guint len, gint64 new_pcr)
 
   GST_LOG_OBJECT (mux, "Outputting a packet of length %d PCR %"
       G_GUINT64_FORMAT, M2TS_PACKET_LENGTH, new_pcr);
-  ret = gst_pad_push (mux->srcpad, buf);
-  if (G_UNLIKELY (ret != GST_FLOW_OK)) {
-    mux->last_flow_ret = ret;
-    return FALSE;
-  }
+  mpegtsmux_collect_packet (mux, buf);
 
   if (new_pcr != mux->previous_pcr) {
     mux->previous_pcr = new_pcr;
@@ -1291,38 +1345,30 @@ new_packet_m2ts (MpegTsMux * mux, guint8 * data, guint len, gint64 new_pcr)
   return TRUE;
 }
 
-static gboolean
-new_packet_normal_ts (MpegTsMux * mux, guint8 * data, guint len, gint64 new_pcr)
-{
-  GstFlowReturn ret;
-
-  /* Output a normal TS packet */
-  GST_LOG_OBJECT (mux, "Pushing a packet of length %d", len);
-
-  /* do common init (flags and streamheaders) */
-  new_packet_common_init (mux, NULL, data, len);
-  ret = mpegtsmux_collect_packet (mux, data, len);
-
-  if (G_UNLIKELY (ret != GST_FLOW_OK)) {
-    mux->last_flow_ret = ret;
-    return FALSE;
-  }
-
-  return TRUE;
-}
-
+/* Called when the TsMux has prepared a packet for output. Return FALSE
+ * on error */
 static gboolean
 new_packet_cb (guint8 * data, guint len, void *user_data, gint64 new_pcr)
 {
-  /* Called when the TsMux has prepared a packet for output. Return FALSE
-   * on error */
   MpegTsMux *mux = (MpegTsMux *) user_data;
+  gint offset = 0;
+  GstBuffer *buf;
 
-  if (mux->m2ts_mode == TRUE) {
-    return new_packet_m2ts (mux, data, len, new_pcr);
-  }
+  if (mux->m2ts_mode == TRUE)
+    offset = 4;
 
-  return new_packet_normal_ts (mux, data, len, new_pcr);
+  buf = gst_buffer_new_and_alloc (NORMAL_TS_PACKET_LENGTH + offset);
+  GST_BUFFER_TIMESTAMP (buf) = mux->last_ts;
+  memcpy (GST_BUFFER_DATA (buf) + offset, data, len);
+  /* do common init (flags and streamheaders) */
+  new_packet_common_init (mux, buf, data, len);
+
+  if (offset)
+    return new_packet_m2ts (mux, buf, new_pcr);
+  else
+    mpegtsmux_collect_packet (mux, buf);
+
+  return TRUE;
 }
 
 static void

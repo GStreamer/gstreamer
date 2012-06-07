@@ -139,6 +139,7 @@ struct MpegTsMux {
   GstStructure *prog_map;
   guint pat_interval;
   guint pmt_interval;
+  gint alignment;
 
   /* state */
   gboolean first;
@@ -158,6 +159,7 @@ struct MpegTsMux {
   GstAdapter *adapter;
 
   /* output buffer aggregation */
+  GstAdapter *out_adapter;
   GstBuffer *out_buffer;
   gint out_offset;
   gint last_size;
