@@ -156,6 +156,8 @@ struct MpegTsMux {
   /* m2ts specific */
   gint64 previous_pcr;
   gint64 previous_offset;
+  gint64 pcr_rate_num;
+  gint64 pcr_rate_den;
   GstAdapter *adapter;
 
   /* output buffer aggregation */

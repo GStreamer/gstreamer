@@ -157,6 +157,8 @@ static void release_buffer_cb (guint8 * data, void *user_data);
 static GstFlowReturn mpegtsmux_collect_packet (MpegTsMux * mux,
     GstBuffer * buf);
 static GstFlowReturn mpegtsmux_push_packets (MpegTsMux * mux, gboolean force);
+static gboolean new_packet_m2ts (MpegTsMux * mux, GstBuffer * buf,
+    gint64 new_pcr);
 
 static void mpegtsdemux_prepare_srcpad (MpegTsMux * mux);
 static GstFlowReturn mpegtsmux_collected (GstCollectPads2 * pads,
@@ -299,6 +301,7 @@ mpegtsmux_reset (MpegTsMux * mux, gboolean alloc)
   mux->first = TRUE;
   mux->last_flow_ret = GST_FLOW_OK;
   mux->previous_pcr = -1;
+  mux->pcr_rate_num = mux->pcr_rate_den = 1;
   mux->last_ts = 0;
   mux->is_delta = TRUE;
 
@@ -1025,8 +1028,10 @@ mpegtsmux_collected (GstCollectPads2 * pads, MpegTsMux * mux)
     /* flush packet cache */
     mpegtsmux_push_packets (mux, FALSE);
   } else {
-    /* FIXME: Drain all remaining streams */
-    /* At EOS */
+    /* EOS */
+    /* drain some possibly cached data */
+    new_packet_m2ts (mux, NULL, -1);
+    mpegtsmux_push_packets (mux, TRUE);
     gst_pad_push_event (mux->srcpad, gst_event_new_eos ());
   }
 
@@ -1262,26 +1267,31 @@ new_packet_m2ts (MpegTsMux * mux, GstBuffer * buf, gint64 new_pcr)
   GstBuffer *out_buf;
   int chunk_bytes;
 
-  GST_LOG_OBJECT (mux, "Have buffer with new_pcr=%" G_GINT64_FORMAT, new_pcr);
-
-  if (new_pcr < 0) {
-    /* If there is no pcr in current ts packet then just add the packet
-       to the adapter for later output when we see a PCR */
-    GST_LOG_OBJECT (mux, "Accumulating non-PCR packet");
-    gst_adapter_push (mux->adapter, buf);
-    return TRUE;
-  }
+  GST_LOG_OBJECT (mux, "Have buffer %p with new_pcr=%" G_GINT64_FORMAT,
+      buf, new_pcr);
 
   chunk_bytes = gst_adapter_available (mux->adapter);
 
-  /* no first interpolation point yet, then this is the one,
-   * otherwise it is the second interpolation point */
-  if (mux->previous_pcr < 0 && chunk_bytes) {
-    mux->previous_pcr = new_pcr;
-    mux->previous_offset = chunk_bytes;
-    GST_LOG_OBJECT (mux, "Accumulating non-PCR packet");
-    gst_adapter_push (mux->adapter, buf);
-    return TRUE;
+  if (G_LIKELY (buf)) {
+    if (new_pcr < 0) {
+      /* If there is no pcr in current ts packet then just add the packet
+         to the adapter for later output when we see a PCR */
+      GST_LOG_OBJECT (mux, "Accumulating non-PCR packet");
+      gst_adapter_push (mux->adapter, buf);
+      goto exit;
+    }
+
+    /* no first interpolation point yet, then this is the one,
+     * otherwise it is the second interpolation point */
+    if (mux->previous_pcr < 0 && chunk_bytes) {
+      mux->previous_pcr = new_pcr;
+      mux->previous_offset = chunk_bytes;
+      GST_LOG_OBJECT (mux, "Accumulating non-PCR packet");
+      gst_adapter_push (mux->adapter, buf);
+      goto exit;
+    }
+  } else {
+    g_assert (new_pcr == -1);
   }
 
   /* interpolate if needed, and 2 points available */
@@ -1295,6 +1305,12 @@ new_packet_m2ts (MpegTsMux * mux, GstBuffer * buf, gint64 new_pcr)
         new_pcr, (gint) chunk_bytes);
 
     g_assert (chunk_bytes > mux->previous_offset);
+    /* if draining, use previous rate */
+    if (G_LIKELY (new_pcr > 0)) {
+      mux->pcr_rate_num = new_pcr - mux->previous_pcr;
+      mux->pcr_rate_den = chunk_bytes - mux->previous_offset;
+    }
+
     while (offset < chunk_bytes) {
       guint64 cur_pcr, ts;
 
@@ -1305,11 +1321,11 @@ new_packet_m2ts (MpegTsMux * mux, GstBuffer * buf, gint64 new_pcr)
       if (G_LIKELY (offset >= mux->previous_offset))
         cur_pcr = mux->previous_pcr +
             gst_util_uint64_scale (offset - mux->previous_offset,
-            new_pcr - mux->previous_pcr, chunk_bytes - mux->previous_offset);
+            mux->pcr_rate_num, mux->pcr_rate_den);
       else
         cur_pcr = mux->previous_pcr -
             gst_util_uint64_scale (mux->previous_offset - offset,
-            new_pcr - mux->previous_pcr, chunk_bytes - mux->previous_offset);
+            mux->pcr_rate_num, mux->pcr_rate_den);
 
       ts = gst_adapter_prev_timestamp (mux->adapter, NULL);
       out_buf = gst_adapter_take_buffer (mux->adapter, M2TS_PACKET_LENGTH);
@@ -1329,6 +1345,9 @@ new_packet_m2ts (MpegTsMux * mux, GstBuffer * buf, gint64 new_pcr)
     }
   }
 
+  if (G_UNLIKELY (!buf))
+    goto exit;
+
   /* Finally, output the passed in packet */
   /* Only write the bottom 30 bits of the PCR */
   GST_WRITE_UINT32_BE (GST_BUFFER_DATA (buf), new_pcr & 0x3FFFFFFF);
@@ -1342,6 +1361,7 @@ new_packet_m2ts (MpegTsMux * mux, GstBuffer * buf, gint64 new_pcr)
     mux->previous_offset = -M2TS_PACKET_LENGTH;
   }
 
+exit:
   return TRUE;
 }
 
