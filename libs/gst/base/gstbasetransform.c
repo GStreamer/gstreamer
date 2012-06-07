@@ -256,8 +256,6 @@ struct _GstBaseTransformPrivate
 
   gboolean gap_aware;
 
-  gboolean reconfigure;
-
   /* QoS stats */
   guint64 processed;
   guint64 dropped;
@@ -1318,11 +1316,6 @@ gst_base_transform_setcaps (GstBaseTransform * trans, GstPad * pad,
   if (!(ret = gst_base_transform_configure_caps (trans, incaps, outcaps)))
     goto failed_configure;
 
-  GST_OBJECT_LOCK (trans->sinkpad);
-  GST_OBJECT_FLAG_UNSET (trans->srcpad, GST_PAD_FLAG_NEED_RECONFIGURE);
-  trans->priv->reconfigure = FALSE;
-  GST_OBJECT_UNLOCK (trans->sinkpad);
-
   /* let downstream know about our caps */
   gst_pad_push_event (trans->srcpad, gst_event_new_caps (outcaps));
 
@@ -1813,6 +1806,8 @@ gst_base_transform_sink_eventfunc (GstBaseTransform * trans, GstEvent * event)
       GstCaps *caps;
 
       gst_event_parse_caps (event, &caps);
+      /* clear any pending reconfigure flag */
+      gst_pad_check_reconfigure (trans->srcpad);
       ret = gst_base_transform_setcaps (trans, trans->sinkpad, caps);
 
       forward = FALSE;
@@ -1908,12 +1903,7 @@ gst_base_transform_handle_buffer (GstBaseTransform * trans, GstBuffer * inbuf,
 
   bclass = GST_BASE_TRANSFORM_GET_CLASS (trans);
 
-  GST_OBJECT_LOCK (trans->sinkpad);
-  reconfigure = GST_PAD_NEEDS_RECONFIGURE (trans->srcpad)
-      || priv->reconfigure;
-  GST_OBJECT_FLAG_UNSET (trans->srcpad, GST_PAD_FLAG_NEED_RECONFIGURE);
-  priv->reconfigure = FALSE;
-  GST_OBJECT_UNLOCK (trans->sinkpad);
+  reconfigure = gst_pad_check_reconfigure (trans->srcpad);
 
   if (G_UNLIKELY (reconfigure)) {
     GstCaps *incaps;
@@ -2635,8 +2625,5 @@ gst_base_transform_reconfigure_src (GstBaseTransform * trans)
 {
   g_return_if_fail (GST_IS_BASE_TRANSFORM (trans));
 
-  GST_OBJECT_LOCK (trans);
-  GST_DEBUG_OBJECT (trans, "marking reconfigure");
-  trans->priv->reconfigure = TRUE;
-  GST_OBJECT_UNLOCK (trans);
+  gst_pad_mark_reconfigure (trans->srcpad);
 }
