@@ -153,8 +153,8 @@ struct MpegTsMux {
   GstClockTime last_ts;
 
   /* m2ts specific */
-  gboolean first_pcr;
   gint64 previous_pcr;
+  gint64 previous_offset;
   GstAdapter *adapter;
 
   /* output buffer aggregation */

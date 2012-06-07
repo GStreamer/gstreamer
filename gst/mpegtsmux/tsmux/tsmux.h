@@ -167,7 +167,6 @@ struct TsMux {
 
   /* scratch space for writing ES_info descriptors */
   guint8 es_info_buf[TSMUX_MAX_ES_INFO_LENGTH];
-  gint64 new_pcr;
 };
 
 /* create/free new muxer session */

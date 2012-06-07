@@ -284,7 +284,7 @@ mpegtsmux_reset (MpegTsMux * mux, gboolean alloc)
 
   mux->first = TRUE;
   mux->last_flow_ret = GST_FLOW_OK;
-  mux->first_pcr = TRUE;
+  mux->previous_pcr = -1;
   mux->last_ts = 0;
   mux->is_delta = TRUE;
 
@@ -1203,7 +1203,7 @@ new_packet_m2ts (MpegTsMux * mux, guint8 * data, guint len, gint64 new_pcr)
   GST_BUFFER_TIMESTAMP (buf) = mux->last_ts;
 
   if (new_pcr < 0) {
-    /* If theres no pcr in current ts packet then just add the packet
+    /* If there is no pcr in current ts packet then just add the packet
        to the adapter for later output when we see a PCR */
     GST_LOG_OBJECT (mux, "Accumulating non-PCR packet");
     gst_adapter_push (mux->adapter, buf);
@@ -1212,57 +1212,53 @@ new_packet_m2ts (MpegTsMux * mux, guint8 * data, guint len, gint64 new_pcr)
 
   chunk_bytes = gst_adapter_available (mux->adapter);
 
-  /* We have a new PCR, output anything in the adapter */
-  if (mux->first_pcr) {
-    /* We can't generate sensible timestamps for anything that might
-     * be in the adapter preceding the first PCR and will hit a divide
-     * by zero, so empty the adapter. This is probably a null op. */
-    gst_adapter_clear (mux->adapter);
-    /* Warn if we threw anything away */
-    if (chunk_bytes) {
-      GST_ELEMENT_WARNING (mux, STREAM, MUX,
-          ("Discarding %d bytes from stream preceding first PCR",
-              chunk_bytes / M2TS_PACKET_LENGTH * NORMAL_TS_PACKET_LENGTH),
-          (NULL));
-      chunk_bytes = 0;
-    }
-    mux->first_pcr = FALSE;
+  /* no first interpolation point yet, then this is the one,
+   * otherwise it is the second interpolation point */
+  if (mux->previous_pcr < 0 && chunk_bytes) {
+    mux->previous_pcr = new_pcr;
+    mux->previous_offset = chunk_bytes;
+    GST_LOG_OBJECT (mux, "Accumulating non-PCR packet");
+    gst_adapter_push (mux->adapter, buf);
+    return TRUE;
   }
 
-  if (chunk_bytes) {
-    /* Start the PCR offset counting at 192 bytes: At the end of the packet
-     * that had the last PCR */
-    guint64 pcr_bytes = M2TS_PACKET_LENGTH, ts_rate;
+  /* interpolate if needed, and 2 points available */
+  if (chunk_bytes && (new_pcr != mux->previous_pcr)) {
+    gint64 offset = 0;
 
-    /* Include the pending packet size to get the ts_rate right */
-    chunk_bytes += M2TS_PACKET_LENGTH;
+    GST_LOG_OBJECT (mux, "Processing pending packets; "
+        "previous pcr %" G_GINT64_FORMAT ", previous offset %d, "
+        "current pcr %" G_GINT64_FORMAT ", current offset %d",
+        mux->previous_pcr, (gint) mux->previous_offset,
+        new_pcr, (gint) chunk_bytes);
 
-    /* calculate rate based on latest and previous pcr values */
-    ts_rate = gst_util_uint64_scale (chunk_bytes, CLOCK_FREQ_SCR,
-        (new_pcr - mux->previous_pcr));
-    GST_LOG_OBJECT (mux, "Processing pending packets with ts_rate %"
-        G_GUINT64_FORMAT, ts_rate);
-
-    while (1) {
+    g_assert (chunk_bytes > mux->previous_offset);
+    while (offset < chunk_bytes) {
       guint64 cur_pcr, ts;
 
       /* Loop, pulling packets of the adapter, updating their 4 byte
        * timestamp header and pushing */
 
-      /* The header is the bottom 30 bits of the PCR, apparently not
-       * encoded into base + ext as in the packets themselves, so
-       * we can just interpolate, mask and insert */
-      cur_pcr = (mux->previous_pcr +
-          gst_util_uint64_scale (pcr_bytes, CLOCK_FREQ_SCR, ts_rate));
+      /* interpolate PCR */
+      if (G_LIKELY (offset >= mux->previous_offset))
+        cur_pcr = mux->previous_pcr +
+            gst_util_uint64_scale (offset - mux->previous_offset,
+            new_pcr - mux->previous_pcr, chunk_bytes - mux->previous_offset);
+      else
+        cur_pcr = mux->previous_pcr -
+            gst_util_uint64_scale (mux->previous_offset - offset,
+            new_pcr - mux->previous_pcr, chunk_bytes - mux->previous_offset);
 
       ts = gst_adapter_prev_timestamp (mux->adapter, NULL);
       out_buf = gst_adapter_take_buffer (mux->adapter, M2TS_PACKET_LENGTH);
-      if (G_UNLIKELY (!out_buf))
-        break;
+      g_assert (out_buf);
+      offset += M2TS_PACKET_LENGTH;
+
       gst_buffer_set_caps (out_buf, GST_PAD_CAPS (mux->srcpad));
       GST_BUFFER_TIMESTAMP (out_buf) = ts;
 
-      /* Write the 4 byte timestamp value, bottom 30 bits only = PCR */
+      /* The header is the bottom 30 bits of the PCR, apparently not
+       * encoded into base + ext as in the packets themselves */
       GST_WRITE_UINT32_BE (GST_BUFFER_DATA (out_buf), cur_pcr & 0x3FFFFFFF);
 
       GST_LOG_OBJECT (mux, "Outputting a packet of length %d PCR %"
@@ -1272,7 +1268,6 @@ new_packet_m2ts (MpegTsMux * mux, guint8 * data, guint len, gint64 new_pcr)
         mux->last_flow_ret = ret;
         return FALSE;
       }
-      pcr_bytes += M2TS_PACKET_LENGTH;
     }
   }
 
@@ -1288,7 +1283,10 @@ new_packet_m2ts (MpegTsMux * mux, guint8 * data, guint len, gint64 new_pcr)
     return FALSE;
   }
 
-  mux->previous_pcr = new_pcr;
+  if (new_pcr != mux->previous_pcr) {
+    mux->previous_pcr = new_pcr;
+    mux->previous_offset = -M2TS_PACKET_LENGTH;
+  }
 
   return TRUE;
 }

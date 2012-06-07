@@ -108,6 +108,10 @@
 /* Times per second to write PCR */
 #define TSMUX_DEFAULT_PCR_FREQ (25)
 
+/* Base for all written PCR and DTS/PTS,
+ * so we have some slack to go backwards */
+#define CLOCK_BASE (TSMUX_CLOCK_FREQ * 10 * 360)
+
 static gboolean tsmux_write_pat (TsMux * mux);
 static gboolean tsmux_write_pmt (TsMux * mux, TsMuxProgram * program);
 
@@ -431,13 +435,13 @@ tsmux_find_stream (TsMux * mux, guint16 pid)
 }
 
 static gboolean
-tsmux_packet_out (TsMux * mux)
+tsmux_packet_out (TsMux * mux, gint64 pcr)
 {
   if (G_UNLIKELY (mux->write_func == NULL))
     return TRUE;
 
   return mux->write_func (mux->packet_buf, TSMUX_PACKET_LENGTH,
-      mux->write_func_data, mux->new_pcr);
+      mux->write_func_data, pcr);
 }
 
 /*
@@ -702,18 +706,17 @@ tsmux_write_stream_packet (TsMux * mux, TsMuxStream * stream)
   guint payload_len, payload_offs;
   TsMuxPacketInfo *pi = &stream->pi;
   gboolean res;
+  gint64 cur_pcr = -1;
 
-
-  mux->new_pcr = -1;
   g_return_val_if_fail (mux != NULL, FALSE);
   g_return_val_if_fail (stream != NULL, FALSE);
 
   if (tsmux_stream_is_pcr (stream)) {
-    gint64 cur_pcr = 0;
     gint64 cur_pts = tsmux_stream_get_pts (stream);
     gboolean write_pat;
     GList *cur;
 
+    cur_pcr = 0;
     if (cur_pts != -1) {
       TS_DEBUG ("TS for PCR stream is %" G_GINT64_FORMAT, cur_pts);
     }
@@ -724,6 +727,8 @@ tsmux_write_stream_packet (TsMux * mux, TsMuxStream * stream)
       cur_pcr = (cur_pts - TSMUX_PCR_OFFSET) *
           (TSMUX_SYS_CLOCK_FREQ / TSMUX_CLOCK_FREQ);
 
+    cur_pcr += CLOCK_BASE * (TSMUX_SYS_CLOCK_FREQ / TSMUX_CLOCK_FREQ);
+
     /* Need to decide whether to write a new PCR in this packet */
     if (stream->last_pcr == -1 ||
         (cur_pcr - stream->last_pcr >
@@ -733,7 +738,8 @@ tsmux_write_stream_packet (TsMux * mux, TsMuxStream * stream)
           TSMUX_PACKET_FLAG_ADAPTATION | TSMUX_PACKET_FLAG_WRITE_PCR;
       stream->pi.pcr = cur_pcr;
       stream->last_pcr = cur_pcr;
-      mux->new_pcr = cur_pcr;
+    } else {
+      cur_pcr = -1;
     }
 
     /* check if we need to rewrite pat */
@@ -771,8 +777,13 @@ tsmux_write_stream_packet (TsMux * mux, TsMuxStream * stream)
   }
 
   pi->packet_start_unit_indicator = tsmux_stream_at_pes_start (stream);
-  if (pi->packet_start_unit_indicator)
+  if (pi->packet_start_unit_indicator) {
     tsmux_stream_initialize_pes_packet (stream);
+    if (stream->dts != -1)
+      stream->dts += CLOCK_BASE;
+    if (stream->pts != -1)
+      stream->pts += CLOCK_BASE;
+  }
   pi->stream_avail = tsmux_stream_bytes_avail (stream);
 
   if (!tsmux_write_ts_header (mux->packet_buf, pi, &payload_len, &payload_offs))
@@ -782,7 +793,7 @@ tsmux_write_stream_packet (TsMux * mux, TsMuxStream * stream)
           payload_len))
     return FALSE;
 
-  res = tsmux_packet_out (mux);
+  res = tsmux_packet_out (mux, cur_pcr);
 
   /* Reset all dynamic flags */
   stream->pi.flags &= TSMUX_PACKET_FLAG_PES_FULL_HEADER;
@@ -853,11 +864,10 @@ tsmux_write_section (TsMux * mux, TsMuxSection * section)
     cur_in += payload_len;
     payload_remain -= payload_len;
 
-    if (G_UNLIKELY (!tsmux_packet_out (mux))) {
-      mux->new_pcr = -1;
+    /* we do not write PCR in section */
+    if (G_UNLIKELY (!tsmux_packet_out (mux, -1))) {
       return FALSE;
     }
-    mux->new_pcr = -1;
   }
 
   return TRUE;
