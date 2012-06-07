@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 0.10.30.3\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2012-05-13 15:53+0200\n"
+"POT-Creation-Date: 2012-06-07 15:42+0200\n"
 "PO-Revision-Date: 2010-11-06 22:52+0100\n"
 "Last-Translator: Mogens Jaeger <mogensjaeger@gmail.com>\n"
 "Language-Team: Danish <dansk@dansk-gruppen.dk>\n"
@@ -1131,7 +1131,7 @@ msgstr "intet element \"%s\""
 msgid "Output tags (also known as metadata)"
 msgstr "Uddatamærkater (også kendt som metadata)"
 
-msgid "Ouput TOC (chapters and editions)"
+msgid "Output TOC (chapters and editions)"
 msgstr ""
 
 msgid "Output status information and property notifications"
@@ -1200,11 +1200,20 @@ msgid "EOS on shutdown enabled -- Forcing EOS on the pipeline\n"
 msgstr ""
 "Medieslut ved nedlukning aktiveret -- Gennemtving medieslut på rørledningen\n"
 
+#, fuzzy
+msgid "EOS on shutdown enabled -- waiting for EOS after Error\n"
+msgstr ""
+"Medieslut ved nedlukning aktiveret -- Gennemtving medieslut på rørledningen\n"
+
 msgid "Waiting for EOS...\n"
 msgstr "Venter på medieslut...\n"
 
 msgid "EOS received - stopping pipeline...\n"
 msgstr "Medieslut modtaget - stopper rørledning...\n"
+
+#, fuzzy
+msgid "Interrupt while waiting for EOS - stopping pipeline...\n"
+msgstr "Afbrydelse: Stopper rørledning...\n"
 
 msgid "An error happened while waiting for EOS\n"
 msgstr "En fejl opstod mens der ventedes på medieslut\n"

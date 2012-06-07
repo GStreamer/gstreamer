@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer-0.10.30.3\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2012-05-13 15:53+0200\n"
+"POT-Creation-Date: 2012-06-07 15:42+0200\n"
 "PO-Revision-Date: 2010-11-29 11:14+0200\n"
 "Last-Translator: Michael Kotsarinis <mk73628@gmail.com>\n"
 "Language-Team: Greek <team@lists.gnome.gr>\n"
@@ -1144,7 +1144,7 @@ msgstr "δεν υπάρχει στοιχείο «%s»"
 msgid "Output tags (also known as metadata)"
 msgstr "Ετικέτες εξόδου (επίσης γνωστές ως μεταδεδομένα)"
 
-msgid "Ouput TOC (chapters and editions)"
+msgid "Output TOC (chapters and editions)"
 msgstr ""
 
 msgid "Output status information and property notifications"
@@ -1213,11 +1213,20 @@ msgid "EOS on shutdown enabled -- Forcing EOS on the pipeline\n"
 msgstr ""
 "Ενεργοποίηση του EOS κατά τον τερματισμό -- Επιβολή του EOS στη διασωλήνωση\n"
 
+#, fuzzy
+msgid "EOS on shutdown enabled -- waiting for EOS after Error\n"
+msgstr ""
+"Ενεργοποίηση του EOS κατά τον τερματισμό -- Επιβολή του EOS στη διασωλήνωση\n"
+
 msgid "Waiting for EOS...\n"
 msgstr "Αναμονή για EOS…\n"
 
 msgid "EOS received - stopping pipeline...\n"
 msgstr "Λήψη EOS - διακοπή διασωλήνωσης…\n"
+
+#, fuzzy
+msgid "Interrupt while waiting for EOS - stopping pipeline...\n"
+msgstr "Διακοπή: Τερματισμός διασωλήνωσης…\n"
 
 msgid "An error happened while waiting for EOS\n"
 msgstr "Προέκυψε σφάλμα κατά την αναμονή για EOS\n"

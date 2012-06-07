@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 0.10.30.3\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2012-05-13 15:53+0200\n"
+"POT-Creation-Date: 2012-06-07 15:42+0200\n"
 "PO-Revision-Date: 2010-11-08 16:13+0100\n"
 "Last-Translator: Peter Tuhársky <tuharsky@misbb.sk>\n"
 "Language-Team: Slovak <sk-i18n@lists.linux.sk>\n"
@@ -1144,7 +1144,7 @@ msgstr "prvok \"%s\" neexistuje"
 msgid "Output tags (also known as metadata)"
 msgstr "Vypísať značky (známe tiež ako metadáta)"
 
-msgid "Ouput TOC (chapters and editions)"
+msgid "Output TOC (chapters and editions)"
 msgstr ""
 
 msgid "Output status information and property notifications"
@@ -1215,11 +1215,19 @@ msgstr "CHYBA: Rúra nechce hrať.\n"
 msgid "EOS on shutdown enabled -- Forcing EOS on the pipeline\n"
 msgstr "EOS pri vypnutí je povolený -- Vynucujem EOS pre rúru\n"
 
+#, fuzzy
+msgid "EOS on shutdown enabled -- waiting for EOS after Error\n"
+msgstr "EOS pri vypnutí je povolený -- Vynucujem EOS pre rúru\n"
+
 msgid "Waiting for EOS...\n"
 msgstr "Čakám na EOS...\n"
 
 msgid "EOS received - stopping pipeline...\n"
 msgstr "Prijatý EOS - zastavujem rúru ...\n"
+
+#, fuzzy
+msgid "Interrupt while waiting for EOS - stopping pipeline...\n"
+msgstr "Prerušenie: Zastavujem rúru ...\n"
 
 msgid "An error happened while waiting for EOS\n"
 msgstr "Počas čakania na EOS nastala chyba\n"

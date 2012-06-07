@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 0.10.31.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2012-05-13 15:53+0200\n"
+"POT-Creation-Date: 2012-06-07 15:42+0200\n"
 "PO-Revision-Date: 2011-01-09 19:46+0100\n"
 "Last-Translator: Daniel Nylander <po@danielnylander.se>\n"
 "Language-Team: Swedish <tp-sv@listor.tp-sv.se>\n"
@@ -1140,7 +1140,7 @@ msgstr "inget \"%s\"-element"
 msgid "Output tags (also known as metadata)"
 msgstr "Utmatningstaggar (även känt som metadata)"
 
-msgid "Ouput TOC (chapters and editions)"
+msgid "Output TOC (chapters and editions)"
 msgstr ""
 
 msgid "Output status information and property notifications"
@@ -1209,12 +1209,20 @@ msgstr "FEL: rörledningen vill inte spela.\n"
 msgid "EOS on shutdown enabled -- Forcing EOS on the pipeline\n"
 msgstr "EOS vid avständning aktiverad -- Tvingar EOS på rörledningen\n"
 
+#, fuzzy
+msgid "EOS on shutdown enabled -- waiting for EOS after Error\n"
+msgstr "EOS vid avständning aktiverad -- Tvingar EOS på rörledningen\n"
+
 # EOS = End Of Stream
 msgid "Waiting for EOS...\n"
 msgstr "Väntar på EOS...\n"
 
 msgid "EOS received - stopping pipeline...\n"
 msgstr "EOS togs emot - stoppar rörledning...\n"
+
+#, fuzzy
+msgid "Interrupt while waiting for EOS - stopping pipeline...\n"
+msgstr "Avbrott: Stoppar rörledningen ...\n"
 
 msgid "An error happened while waiting for EOS\n"
 msgstr "Ett fel inträffade vid väntan på EOS\n"
