@@ -1053,6 +1053,167 @@ GST_START_TEST (test_greatest_common_divisor)
 
 GST_END_TEST;
 
+GST_START_TEST (test_read_macros)
+{
+  guint8 carray[] = "ABCDEFGH"; /* 0x41 ... 0x48 */
+  guint32 uarray[2];
+  guint8 *cpointer;
+
+#define fail_unless_equals_int_hex(a, b)                                \
+G_STMT_START {								\
+  int first = a;							\
+  int second = b;							\
+  fail_unless(first == second,						\
+    "'" #a "' (0x%08x) is not equal to '" #b"' (0x%08x)", first, second);	\
+} G_STMT_END;
+
+#define fail_unless_equals_int64_hex(a, b)                                \
+G_STMT_START {								\
+  gint64 first = a;							\
+  gint64 second = b;							\
+  fail_unless(first == second,						\
+    "'" #a "' (0x%016x) is not equal to '" #b"' (0x%016x)", first, second);	\
+} G_STMT_END;
+
+  memcpy (uarray, carray, 8);
+  cpointer = carray;
+
+  /* 16 bit */
+  /* First try the standard pointer variants */
+  fail_unless_equals_int_hex (GST_READ_UINT16_BE (cpointer), 0x4142);
+  fail_unless_equals_int_hex (GST_READ_UINT16_BE (cpointer + 1), 0x4243);
+  fail_unless_equals_int_hex (GST_READ_UINT16_BE (cpointer + 2), 0x4344);
+  fail_unless_equals_int_hex (GST_READ_UINT16_BE (cpointer + 3), 0x4445);
+  fail_unless_equals_int_hex (GST_READ_UINT16_BE (cpointer + 4), 0x4546);
+  fail_unless_equals_int_hex (GST_READ_UINT16_BE (cpointer + 5), 0x4647);
+  fail_unless_equals_int_hex (GST_READ_UINT16_BE (cpointer + 6), 0x4748);
+
+  fail_unless_equals_int_hex (GST_READ_UINT16_LE (cpointer), 0x4241);
+  fail_unless_equals_int_hex (GST_READ_UINT16_LE (cpointer + 1), 0x4342);
+  fail_unless_equals_int_hex (GST_READ_UINT16_LE (cpointer + 2), 0x4443);
+  fail_unless_equals_int_hex (GST_READ_UINT16_LE (cpointer + 3), 0x4544);
+  fail_unless_equals_int_hex (GST_READ_UINT16_LE (cpointer + 4), 0x4645);
+  fail_unless_equals_int_hex (GST_READ_UINT16_LE (cpointer + 5), 0x4746);
+  fail_unless_equals_int_hex (GST_READ_UINT16_LE (cpointer + 6), 0x4847);
+
+  /* On an array of guint8 */
+  fail_unless_equals_int_hex (GST_READ_UINT16_BE (carray), 0x4142);
+  fail_unless_equals_int_hex (GST_READ_UINT16_BE (carray + 1), 0x4243);
+  fail_unless_equals_int_hex (GST_READ_UINT16_BE (carray + 2), 0x4344);
+  fail_unless_equals_int_hex (GST_READ_UINT16_BE (carray + 3), 0x4445);
+  fail_unless_equals_int_hex (GST_READ_UINT16_BE (carray + 4), 0x4546);
+  fail_unless_equals_int_hex (GST_READ_UINT16_BE (carray + 5), 0x4647);
+  fail_unless_equals_int_hex (GST_READ_UINT16_BE (carray + 6), 0x4748);
+
+  fail_unless_equals_int_hex (GST_READ_UINT16_LE (carray), 0x4241);
+  fail_unless_equals_int_hex (GST_READ_UINT16_LE (carray + 1), 0x4342);
+  fail_unless_equals_int_hex (GST_READ_UINT16_LE (carray + 2), 0x4443);
+  fail_unless_equals_int_hex (GST_READ_UINT16_LE (carray + 3), 0x4544);
+  fail_unless_equals_int_hex (GST_READ_UINT16_LE (carray + 4), 0x4645);
+  fail_unless_equals_int_hex (GST_READ_UINT16_LE (carray + 5), 0x4746);
+  fail_unless_equals_int_hex (GST_READ_UINT16_LE (carray + 6), 0x4847);
+
+  /* On an array of guint32 */
+  fail_unless_equals_int_hex (GST_READ_UINT16_BE (uarray), 0x4142);
+  fail_unless_equals_int_hex (GST_READ_UINT16_BE (uarray + 1), 0x4546);
+
+  fail_unless_equals_int_hex (GST_READ_UINT16_LE (uarray), 0x4241);
+  fail_unless_equals_int_hex (GST_READ_UINT16_LE (uarray + 1), 0x4645);
+
+
+  /* 24bit */
+  /* First try the standard pointer variants */
+  fail_unless_equals_int_hex (GST_READ_UINT24_BE (cpointer), 0x414243);
+  fail_unless_equals_int_hex (GST_READ_UINT24_BE (cpointer + 1), 0x424344);
+  fail_unless_equals_int_hex (GST_READ_UINT24_BE (cpointer + 2), 0x434445);
+  fail_unless_equals_int_hex (GST_READ_UINT24_BE (cpointer + 3), 0x444546);
+  fail_unless_equals_int_hex (GST_READ_UINT24_BE (cpointer + 4), 0x454647);
+  fail_unless_equals_int_hex (GST_READ_UINT24_BE (cpointer + 5), 0x464748);
+
+  fail_unless_equals_int_hex (GST_READ_UINT24_LE (cpointer), 0x434241);
+  fail_unless_equals_int_hex (GST_READ_UINT24_LE (cpointer + 1), 0x444342);
+  fail_unless_equals_int_hex (GST_READ_UINT24_LE (cpointer + 2), 0x454443);
+  fail_unless_equals_int_hex (GST_READ_UINT24_LE (cpointer + 3), 0x464544);
+  fail_unless_equals_int_hex (GST_READ_UINT24_LE (cpointer + 4), 0x474645);
+  fail_unless_equals_int_hex (GST_READ_UINT24_LE (cpointer + 5), 0x484746);
+
+  /* On an array of guint8 */
+  fail_unless_equals_int_hex (GST_READ_UINT24_BE (carray), 0x414243);
+  fail_unless_equals_int_hex (GST_READ_UINT24_BE (carray + 1), 0x424344);
+  fail_unless_equals_int_hex (GST_READ_UINT24_BE (carray + 2), 0x434445);
+  fail_unless_equals_int_hex (GST_READ_UINT24_BE (carray + 3), 0x444546);
+  fail_unless_equals_int_hex (GST_READ_UINT24_BE (carray + 4), 0x454647);
+  fail_unless_equals_int_hex (GST_READ_UINT24_BE (carray + 5), 0x464748);
+
+  fail_unless_equals_int_hex (GST_READ_UINT24_LE (carray), 0x434241);
+  fail_unless_equals_int_hex (GST_READ_UINT24_LE (carray + 1), 0x444342);
+  fail_unless_equals_int_hex (GST_READ_UINT24_LE (carray + 2), 0x454443);
+  fail_unless_equals_int_hex (GST_READ_UINT24_LE (carray + 3), 0x464544);
+  fail_unless_equals_int_hex (GST_READ_UINT24_LE (carray + 4), 0x474645);
+  fail_unless_equals_int_hex (GST_READ_UINT24_LE (carray + 5), 0x484746);
+
+  /* On an array of guint32 */
+  fail_unless_equals_int_hex (GST_READ_UINT24_BE (uarray), 0x414243);
+  fail_unless_equals_int_hex (GST_READ_UINT24_BE (uarray + 1), 0x454647);
+
+  fail_unless_equals_int_hex (GST_READ_UINT24_LE (uarray), 0x434241);
+  fail_unless_equals_int_hex (GST_READ_UINT24_LE (uarray + 1), 0x474645);
+
+
+  /* 32bit */
+  /* First try the standard pointer variants */
+  fail_unless_equals_int_hex (GST_READ_UINT32_BE (cpointer), 0x41424344);
+  fail_unless_equals_int_hex (GST_READ_UINT32_BE (cpointer + 1), 0x42434445);
+  fail_unless_equals_int_hex (GST_READ_UINT32_BE (cpointer + 2), 0x43444546);
+  fail_unless_equals_int_hex (GST_READ_UINT32_BE (cpointer + 3), 0x44454647);
+  fail_unless_equals_int_hex (GST_READ_UINT32_BE (cpointer + 4), 0x45464748);
+
+  fail_unless_equals_int_hex (GST_READ_UINT32_LE (cpointer), 0x44434241);
+  fail_unless_equals_int_hex (GST_READ_UINT32_LE (cpointer + 1), 0x45444342);
+  fail_unless_equals_int_hex (GST_READ_UINT32_LE (cpointer + 2), 0x46454443);
+  fail_unless_equals_int_hex (GST_READ_UINT32_LE (cpointer + 3), 0x47464544);
+  fail_unless_equals_int_hex (GST_READ_UINT32_LE (cpointer + 4), 0x48474645);
+
+  /* On an array of guint8 */
+  fail_unless_equals_int_hex (GST_READ_UINT32_BE (carray), 0x41424344);
+  fail_unless_equals_int_hex (GST_READ_UINT32_BE (carray + 1), 0x42434445);
+  fail_unless_equals_int_hex (GST_READ_UINT32_BE (carray + 2), 0x43444546);
+  fail_unless_equals_int_hex (GST_READ_UINT32_BE (carray + 3), 0x44454647);
+  fail_unless_equals_int_hex (GST_READ_UINT32_BE (carray + 4), 0x45464748);
+
+  fail_unless_equals_int_hex (GST_READ_UINT32_LE (carray), 0x44434241);
+  fail_unless_equals_int_hex (GST_READ_UINT32_LE (carray + 1), 0x45444342);
+  fail_unless_equals_int_hex (GST_READ_UINT32_LE (carray + 2), 0x46454443);
+  fail_unless_equals_int_hex (GST_READ_UINT32_LE (carray + 3), 0x47464544);
+  fail_unless_equals_int_hex (GST_READ_UINT32_LE (carray + 4), 0x48474645);
+
+  /* On an array of guint32 */
+  fail_unless_equals_int_hex (GST_READ_UINT32_BE (uarray), 0x41424344);
+  fail_unless_equals_int_hex (GST_READ_UINT32_BE (uarray + 1), 0x45464748);
+
+  fail_unless_equals_int_hex (GST_READ_UINT32_LE (uarray), 0x44434241);
+  fail_unless_equals_int_hex (GST_READ_UINT32_LE (uarray + 1), 0x48474645);
+
+
+  /* 64bit */
+  fail_unless_equals_int64_hex (GST_READ_UINT64_BE (cpointer),
+      0x4142434445464748);
+  fail_unless_equals_int64_hex (GST_READ_UINT64_LE (cpointer),
+      0x4847464544434241);
+
+  fail_unless_equals_int64_hex (GST_READ_UINT64_BE (carray),
+      0x4142434445464748);
+  fail_unless_equals_int64_hex (GST_READ_UINT64_LE (carray),
+      0x4847464544434241);
+
+  fail_unless_equals_int64_hex (GST_READ_UINT64_BE (uarray),
+      0x4142434445464748);
+  fail_unless_equals_int64_hex (GST_READ_UINT64_LE (uarray),
+      0x4847464544434241);
+}
+
+GST_END_TEST;
+
 static Suite *
 gst_utils_suite (void)
 {
@@ -1086,6 +1247,8 @@ gst_utils_suite (void)
 
   tcase_add_test (tc_chain, test_pad_proxy_getcaps_aggregation);
   tcase_add_test (tc_chain, test_greatest_common_divisor);
+
+  tcase_add_test (tc_chain, test_read_macros);
   return s;
 }
 
