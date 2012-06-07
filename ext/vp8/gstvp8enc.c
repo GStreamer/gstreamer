@@ -467,6 +467,9 @@ gst_vp8_enc_finalize (GObject * object)
   g_free (gst_vp8_enc->multipass_cache_file);
   gst_vp8_enc->multipass_cache_file = NULL;
 
+  if (gst_vp8_enc->input_state)
+    gst_video_codec_state_unref (gst_vp8_enc->input_state);
+
   G_OBJECT_CLASS (parent_class)->finalize (object);
 
 }
