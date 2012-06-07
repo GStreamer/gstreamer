@@ -117,6 +117,8 @@ gst_jpeg_dec_finalize (GObject * object)
   GstJpegDec *dec = GST_JPEG_DEC (object);
 
   jpeg_destroy_decompress (&dec->cinfo);
+  if (dec->input_state)
+    gst_video_codec_state_unref (dec->input_state);
 
   G_OBJECT_CLASS (parent_class)->finalize (object);
 }
