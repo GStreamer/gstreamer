@@ -928,6 +928,7 @@ gst_dirac_enc_handle_frame (GstVideoEncoder * base_video_encoder,
   }
   if (r != (int) GST_BUFFER_SIZE (frame->input_buffer)) {
     GST_ERROR ("failed to push picture");
+    gst_video_codec_frame_unref (frame);
     return GST_FLOW_ERROR;
   }
 
@@ -941,6 +942,7 @@ gst_dirac_enc_handle_frame (GstVideoEncoder * base_video_encoder,
 
   ret = gst_dirac_enc_process (dirac_enc, FALSE);
 
+  gst_video_codec_frame_unref (frame);
   return ret;
 }
 
