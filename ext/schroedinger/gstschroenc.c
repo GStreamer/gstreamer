@@ -242,6 +242,8 @@ gst_schro_enc_finalize (GObject * object)
     g_free (schro_enc->video_format);
     schro_enc->video_format = NULL;
   }
+  if (schro_enc->input_state)
+    gst_video_codec_state_unref (schro_enc->input_state);
 
   G_OBJECT_CLASS (parent_class)->finalize (object);
 }
