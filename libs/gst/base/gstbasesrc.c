@@ -1912,7 +1912,7 @@ gst_base_src_do_sync (GstBaseSrc * basesrc, GstBuffer * buffer)
   GstClockTime base_time;
   GstClock *clock;
   GstClockTime now = GST_CLOCK_TIME_NONE, timestamp;
-  gboolean do_timestamp, first, pseudo_live;
+  gboolean do_timestamp, first, pseudo_live, is_live;
 
   bclass = GST_BASE_SRC_GET_CLASS (basesrc);
 
@@ -1927,8 +1927,9 @@ gst_base_src_do_sync (GstBaseSrc * basesrc, GstBuffer * buffer)
    * latency. */
   GST_OBJECT_LOCK (basesrc);
 
+  is_live = basesrc->is_live;
   /* if we are asked to sync against the clock we are a pseudo live element */
-  pseudo_live = (start != -1 && basesrc->is_live);
+  pseudo_live = (start != -1 && is_live);
   /* check for the first buffer */
   first = (basesrc->priv->latency == -1);
 
@@ -1956,17 +1957,20 @@ gst_base_src_do_sync (GstBaseSrc * basesrc, GstBuffer * buffer)
     }
   } else if (first) {
     GST_DEBUG_OBJECT (basesrc, "no latency needed, live %d, sync %d",
-        basesrc->is_live, start != -1);
+        is_live, start != -1);
     basesrc->priv->latency = 0;
   }
 
   /* get clock, if no clock, we can't sync or do timestamps */
   if ((clock = GST_ELEMENT_CLOCK (basesrc)) == NULL)
     goto no_clock;
+  else
+    gst_object_ref (clock);
 
   base_time = GST_ELEMENT_CAST (basesrc)->base_time;
 
   do_timestamp = basesrc->priv->do_timestamp;
+  GST_OBJECT_UNLOCK (basesrc);
 
   /* first buffer, calculate the timestamp offset */
   if (first) {
@@ -2024,7 +2028,7 @@ gst_base_src_do_sync (GstBaseSrc * basesrc, GstBuffer * buffer)
   if (!GST_CLOCK_TIME_IS_VALID (start))
     goto no_sync;
 
-  if (basesrc->is_live && GST_CLOCK_TIME_IS_VALID (timestamp)) {
+  if (is_live && GST_CLOCK_TIME_IS_VALID (timestamp)) {
     /* for pseudo live sources, add our ts_offset to the timestamp */
     GST_BUFFER_TIMESTAMP (buffer) += basesrc->priv->ts_offset;
     start += basesrc->priv->ts_offset;
@@ -2034,9 +2038,10 @@ gst_base_src_do_sync (GstBaseSrc * basesrc, GstBuffer * buffer)
       "waiting for clock, base time %" GST_TIME_FORMAT
       ", stream_start %" GST_TIME_FORMAT,
       GST_TIME_ARGS (base_time), GST_TIME_ARGS (start));
-  GST_OBJECT_UNLOCK (basesrc);
 
   result = gst_base_src_wait (basesrc, clock, start + base_time);
+
+  gst_object_unref (clock);
 
   GST_LOG_OBJECT (basesrc, "clock entry done: %d", result);
 
@@ -2052,7 +2057,7 @@ no_clock:
 no_sync:
   {
     GST_DEBUG_OBJECT (basesrc, "no sync needed");
-    GST_OBJECT_UNLOCK (basesrc);
+    gst_object_unref (clock);
     return GST_CLOCK_OK;
   }
 }
