@@ -1,11 +1,11 @@
 
-Release notes for GStreamer Ugly Plug-ins 0.11.91 "I’ll grind his bones to make my bread!"
+Release notes for GStreamer Ugly Plug-ins 0.11.92 "Hey You"
         
-
 
 The GStreamer team is proud to announce a new release
 in the 0.11.x unstable series of the
-GStreamer Bad Plug-ins.
+GStreamer Ugly Plug-ins.
+
 
 
 The 0.11.x series is an unstable series targeted at developers and will
@@ -13,6 +13,9 @@ eventually lead up to the stable 1.0 series.
 It is not API or ABI compatible with the stable 0.10.x series.
 It is, however, parallel installable with the 0.10.x series.
 
+
+
+"When you have to shoot, shoot.  Don't talk."
 
 
 There are times when the world needs a color between black and white.
@@ -54,7 +57,9 @@ contains a set of less supported plug-ins that haven't passed the
 
 Features of this release
     
-      * Lots of bugfixes and other improvements
+      * Parallel installability with 0.10.x series
+      * API cleanup and minor API improvements
+      * Lots of bugfixes, cleanup and other improvements
 There were no bugs fixed in this release
     
 
@@ -85,9 +90,12 @@ Applications
   
 Contributors to this release
     
-      * Alban Browaeys
-      * Leon Merten Lohse
+      * Edward Hervey
+      * Julien Isorce
+      * Mark Nauwelaerts
+      * Matej Knopp
       * Sebastian Dröge
       * Tim-Philipp Müller
-      * Vincent Penquerc'h
+      * Wim Taymans
+      * Руслан Ижбулатов
  

@@ -1,4 +1,10 @@
-This is GStreamer Ugly Plug-ins 0.11.91 "I’ll grind his bones to make my bread!"
+This is GStreamer Ugly Plug-ins 0.11.92 "Hey You"
+
+New in 0.11.92:
+
+      * Parallel installability with 0.10.x series
+      * API cleanup and minor API improvements
+      * Lots of bugfixes, cleanup and other improvements
 
 New in 0.11.91:
 

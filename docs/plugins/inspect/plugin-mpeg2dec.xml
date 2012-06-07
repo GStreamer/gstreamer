@@ -3,7 +3,7 @@
   <description>LibMpeg2 decoder</description>
   <filename>../../ext/mpeg2dec/.libs/libgstmpeg2dec.so</filename>
   <basename>libgstmpeg2dec.so</basename>
-  <version>0.11.90</version>
+  <version>0.11.92</version>
   <license>GPL</license>
   <source>gst-plugins-ugly</source>
   <package>GStreamer Ugly Plug-ins source release</package>
