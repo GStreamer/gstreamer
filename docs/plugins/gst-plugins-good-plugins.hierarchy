@@ -2,6 +2,7 @@ GObject
   GInitiallyUnowned
     GstObject
       GstAudioRingBuffer
+        GstAudioSinkRingBuffer
         GstAudioSrcRingBuffer
         GstJackAudioSinkRingBuffer
         GstJackAudioSrcRingBuffer
@@ -38,6 +39,9 @@ GObject
           GstWavpackParse
         GstBaseSink
           GstAudioBaseSink
+            GstAudioSink
+              GstOss4Sink
+              GstOssSink
             GstJackAudioSink
             GstPulseSink
           GstCACASink
@@ -55,8 +59,12 @@ GObject
           GstPushSrc
             GstAudioBaseSrc
               GstAudioSrc
+                GstOss4Source
+                GstOssSrc
                 GstPulseSrc
               GstJackAudioSrc
+            GstDV1394Src
+            GstHDV1394Src
             GstMultiFileSrc
             GstSoupHTTPSrc
             GstUDPSrc
@@ -112,6 +120,7 @@ GObject
             GstStreakTV
             GstVertigoTV
             GstVideoBalance
+            GstVideoBox
             GstVideoFlip
             GstWarpTV
         GstBin
@@ -135,6 +144,7 @@ GObject
         GstFlacTag
         GstFlvDemux
         GstFlvMux
+        GstFlxDec
         GstGPPMux
         GstGoom
         GstGoom2k1
@@ -142,8 +152,6 @@ GObject
         GstISMLMux
         GstImageFreeze
         GstInterleave
-        GstJpegDec
-        GstJpegEnc
         GstMJ2Mux
         GstMP4Mux
         GstMatroskaDemux
@@ -154,9 +162,6 @@ GObject
         GstMuLawEnc
         GstMultipartDemux
         GstMultipartMux
-        GstPngDec
-        GstPngEnc
-        GstPulseMixer
         GstQTDemux
         GstQTMux
         GstRTPBaseDepayload
@@ -245,6 +250,12 @@ GObject
           GstApev2Mux
           GstId3v2Mux
         GstV4l2Radio
+        GstVideoDecoder
+          GstJpegDec
+          GstPngDec
+        GstVideoEncoder
+          GstJpegEnc
+          GstPngEnc
         GstVideoMixer2
         GstWavEnc
         GstWavParse
@@ -274,7 +285,6 @@ GInterface
   GTypePlugin
   GstChildProxy
   GstColorBalance
-  GstMixer
   GstNavigation
   GstPreset
   GstStreamVolume

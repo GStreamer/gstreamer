@@ -1,9 +1,709 @@
-=== release 0.11.91 ===
+=== release 0.11.92 ===
 
-2012-05-13  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+2012-06-07  Sebastian Dröge <sebastian.droege@collabora.co.uk>
 
 	* configure.ac:
-	  releasing 0.11.91, "I smell the blood of an Englishman"
+	  releasing 0.11.92, "Money"
+
+2012-06-07 15:03:02 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* ext/pulse/pulsesrc.c:
+	  pulsesrc: improve clock handling
+	  Post the notify outside of the pa_lock to avoid a deadlock caused by basesrc
+	  calling get_time with the object lock.
+	  Reset the clock on connect.
+	  Post clock-lost and clock-provide messages.
+	  Fixes https://bugzilla.gnome.org/show_bug.cgi?id=673977
+	  Conflicts:
+	  ext/pulse/pulsesrc.c
+
+2012-04-12 13:21:17 +0300  Mohammed Sameer <msameer@foolab.org>
+
+	* ext/pulse/pulsesrc.c:
+	  Better GstClock for pulsesrc
+	  This clock uses the actual stream time (pa_stream_get_time) to get a more accurate timestamp.
+	  Conflicts:
+	  ext/pulse/pulsesrc.c
+
+2012-06-07 11:16:50 +0100  Vincent Penquerc'h <vincent.penquerch@collabora.co.uk>
+
+	* ext/libpng/gstpngdec.c:
+	* ext/libpng/gstpngenc.c:
+	  png: fix video state leaks
+
+2012-06-07 11:16:37 +0100  Vincent Penquerc'h <vincent.penquerch@collabora.co.uk>
+
+	* ext/jpeg/gstjpegdec.c:
+	  jpegdec: fix video state leak
+
+2012-06-07 12:11:14 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* gst/rtsp/gstrtspsrc.c:
+	  rtspsrc: only reset the manager object when we did a seek
+	  Only reset the manager object when we used a Range header, ie. when we did a
+	  seek. Otherwise we just paused and we can resume just fine.
+	  Fixes https://bugzilla.gnome.org/show_bug.cgi?id=677475
+
+2012-06-06 16:13:29 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* tests/check/elements/rtpbin.c:
+	  tests: add test for rtpsession cleanup
+
+2012-06-06 18:18:41 +0200  Edward Hervey <edward.hervey@collabora.co.uk>
+
+	* common:
+	  Automatic update of common submodule
+	  From 1fab359 to 03a0e57
+
+2012-06-06 14:17:08 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* gst/matroska/matroska-demux.c:
+	  matroskademux: Update for TOC event API change
+
+2012-06-06 13:02:12 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* ext/dv/gstdvdemux.c:
+	* ext/flac/gstflactag.c:
+	* ext/soup/gstsouphttpsrc.c:
+	* gst/audioparsers/gstflacparse.c:
+	* gst/audioparsers/gstmpegaudioparse.c:
+	* gst/avi/gstavidemux.c:
+	* gst/avi/gstavisubtitle.c:
+	* gst/debugutils/gsttaginject.c:
+	* gst/flv/gstflvdemux.c:
+	* gst/icydemux/gsticydemux.c:
+	* gst/isomp4/qtdemux.c:
+	* gst/matroska/matroska-demux.c:
+	* gst/matroska/matroska-read-common.c:
+	* gst/multipart/multipartdemux.c:
+	* gst/replaygain/gstrganalysis.c:
+	* gst/wavparse/gstwavparse.c:
+	* tests/check/elements/rganalysis.c:
+	* tests/check/elements/rgvolume.c:
+	  update for tag event change
+
+2012-06-06 13:00:58 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* gst/videocrop/gstaspectratiocrop.c:
+	* gst/videocrop/gstvideocrop.c:
+	* tests/check/elements/aspectratiocrop.c:
+	* tests/check/elements/videocrop.c:
+	  fix Y800 format
+
+2012-06-01 01:19:35 -0300  Thiago Santos <thiago.sousa.santos@collabora.com>
+
+	* configure.ac:
+	* sys/osxvideo/cocoawindow.h:
+	* sys/osxvideo/osxvideosink.m:
+	  osxvideo: straightforward port to 0.11
+
+2012-05-31 18:39:25 -0300  Thiago Santos <thiago.sousa.santos@collabora.com>
+
+	* ext/libpng/gstpngdec.c:
+	* gst/rtp/gstrtph264depay.c:
+	* gst/rtp/gstrtpmp2tpay.c:
+	  Some printf variable format fixes
+	  The osx compiler complains about those
+
+2012-06-05 09:18:12 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* gst/audioparsers/gstaacparse.c:
+	* gst/audioparsers/gstac3parse.c:
+	* gst/audioparsers/gstamrparse.c:
+	* gst/audioparsers/gstdcaparse.c:
+	* gst/audioparsers/gstflacparse.c:
+	* gst/audioparsers/gstmpegaudioparse.c:
+	* gst/audioparsers/gstwavpackparse.c:
+	  audioparsers: Fix GstBaseParse::get_sink_caps() implementations
+	  They should take the filter caps into account and always return
+	  the template caps appended to the actual caps. Otherwise the
+	  parsers stop to accept unparsed streams where upstream does not
+	  know about channels, rate, etc.
+	  Fixes bug #677401.
+
+2012-06-04 16:17:51 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* ext/jpeg/gstjpegdec.c:
+	  jpegdec: set colorimetry on output info
+
+2012-06-04 08:10:15 +0200  Josep Torra <n770galaxy@gmail.com>
+
+	* sys/osxaudio/gstosxringbuffer.c:
+	  osxaudiosink: Handle endianness correctly
+
+2012-06-01 16:37:00 +0200  Josep Torra <n770galaxy@gmail.com>
+
+	* sys/osxaudio/gstosxaudiosink.c:
+	* sys/osxaudio/gstosxringbuffer.c:
+	  osxaudiosink: Add support for int audio
+
+2012-06-01 10:28:53 +0200  Edward Hervey <edward.hervey@collabora.co.uk>
+
+	* common:
+	  Automatic update of common submodule
+	  From f1b5a96 to 1fab359
+
+2012-05-31 13:36:32 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* gst/isomp4/qtdemux.c:
+	  qtdemux: set the palette size correctly
+
+2012-05-31 10:15:43 +0200  Michael Jones <michael.jones@matrix-vision.de>
+
+	* sys/v4l2/gstv4l2colorbalance.h:
+	* sys/v4l2/gstv4l2vidorient.h:
+	  v4l2: add missing G_END_DECLS
+	  G_BEGIN_DECLS didn't have matching G_END_DECLS
+	  https://bugzilla.gnome.org/show_bug.cgi?id=677165
+
+2012-05-31 13:08:19 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* common:
+	  Automatic update of common submodule
+	  From 92b7266 to f1b5a96
+
+2012-05-31 10:26:27 +0200  Josep Torra <n770galaxy@gmail.com>
+
+	* sys/osxvideo/osxvideosink.h:
+	  osxvideosink: Really fix the build on 10.5
+	  The API that we use to run the Cocoa loop in another
+	  thread does not exist in 10.5 or earlier.
+
+2012-05-26 12:21:18 +0200  Alessandro Decina <alessandro.decina@collabora.co.uk>
+
+	* sys/osxvideo/osxvideosink.h:
+	* sys/osxvideo/osxvideosink.m:
+	  osxvideosink: fix race in starting the runloop thread
+	  Block gst_osx_video_sink_run_cocoa_loop until the loop thread has started and
+	  finished initializing NSApp. Fixes occasional warnings/crashes due to two
+	  threads going inside NSApp before finishLaunching had completed.
+
+2012-05-30 16:03:55 +0200  Josep Torra <n770galaxy@gmail.com>
+
+	* sys/osxvideo/osxvideosink.h:
+	  osxvideosink: Fix last commit to actually work
+	  MAC_OS_X_VERSION_10_6 is obviously not defined on 10.5.
+
+2012-05-30 13:51:35 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* sys/osxvideo/Makefile.am:
+	  osxvideosink: Put the right flags in the right variable
+
+2012-05-30 13:24:03 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* configure.ac:
+	  configure: Fix GST_OBJCFLAGS
+
+2012-05-30 12:45:23 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* common:
+	  Automatic update of common submodule
+	  From ec1c4a8 to 92b7266
+
+2012-05-30 12:43:37 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* sys/osxvideo/osxvideosink.h:
+	  osxvideosink: NSWindowDelegate is available in all OSX versions newer than 10.6
+
+2012-05-30 12:40:57 +0200  Josep Torra <n770galaxy@gmail.com>
+
+	* sys/osxvideo/osxvideosink.h:
+	  osxvideosink: Fix build with older OSX versions
+
+2012-05-30 11:09:25 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* configure.ac:
+	* sys/osxvideo/Makefile.am:
+	  configure: Add OBJC specific compiler flags
+	  See bug #643939.
+
+2012-05-30 11:23:36 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* common:
+	  Automatic update of common submodule
+	  From 3429ba6 to ec1c4a8
+
+2012-05-29 17:50:21 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* gst/videocrop/gstvideocrop.c:
+	  video: remove duplicate format
+
+2012-05-29 16:52:02 +0200  Edward Hervey <edward.hervey@collabora.co.uk>
+
+	* gst/flv/gstflvdemux.c:
+	  flvdemux: Post error message if EOS before pads were created
+	  Happens with some files with only headers
+
+2012-05-28 15:22:26 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* ext/libpng/gstpngdec.c:
+	* ext/libpng/gstpngdec.h:
+	* ext/libpng/gstpngenc.c:
+	* ext/libpng/gstpngenc.h:
+	  png: Port to 0.11 again
+
+2012-05-14 12:46:57 +0200  Jens Georg <mail@jensge.org>
+
+	* ext/soup/gstsouphttpsrc.c:
+	  soup: Drop transferMode.dlna.org header
+	  Leave it to the application to decide on the header. No header at all
+	  is better than having the wrong header as DLNA mandates that a missing
+	  header has to be tolerated while a wrong header is an error.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=676020
+
+2012-04-07 09:52:09 +0200  Edward Hervey <edward.hervey@collabora.co.uk>
+
+	* ext/libpng/gstpngdec.c:
+	* ext/libpng/gstpngdec.h:
+	* ext/libpng/gstpngenc.c:
+	* ext/libpng/gstpngenc.h:
+	  png: Port to base video classes
+	  Conflicts:
+	  ext/libpng/gstpngdec.c
+	  ext/libpng/gstpngdec.h
+	  ext/libpng/gstpngenc.c
+	  ext/libpng/gstpngenc.h
+	  Reverted to 0.10, needs to be ported again.
+
+2012-05-27 00:02:08 +0100  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+
+	* gst/flv/gstflvmux.c:
+	* gst/matroska/matroska-read-common.c:
+	  flv, matroska: don't use GstStructure API on tag lists
+
+2012-05-26 11:57:16 +0200  Edward Hervey <edward.hervey@collabora.co.uk>
+
+	* gst/rtp/gstrtpmp2tdepay.c:
+	  rtpmp2tdepay: Only output integral mpeg-ts packets
+	  From RFC 2250
+	  2. Encapsulation of MPEG System and Transport Streams
+	  ...
+	  For MPEG2 Transport Streams the RTP payload will contain an integral
+	  number of MPEG transport packets.  To avoid end system
+	  inefficiencies, data from multiple small MTS packets (normally fixed
+	  in size at 188 bytes) are aggregated into a single RTP packet.  The
+	  number of transport packets contained is computed by dividing RTP
+	  payload length by the length of an MTS packet (188).
+	  ....
+	  Since it needs to contain "an integral number of MPEG transport packets", a
+	  simple fix is to check that's the case, and strip off any leftover data.
+	  Fixes #676799
+	  Conflicts:
+	  gst/rtp/gstrtpmp2tdepay.c
+
+2012-05-24 20:43:16 +0200  Andoni Morales Alastruey <ylatuya@gmail.com>
+
+	* sys/osxvideo/cocoawindow.h:
+	* sys/osxvideo/cocoawindow.m:
+	* sys/osxvideo/osxvideosink.h:
+	* sys/osxvideo/osxvideosink.m:
+	  osxvideosink: make sure all selectors are performed on the same thread
+	  When we are using a dedicated thread to run the main run loop we
+	  must make sure that all selectors are performed on this same thread.
+	  For instance if performSelectorOnMainThread is called from the real
+	  main thread, it will not go through the message queue and will be
+	  executed from the real main thread. By forcing the target thread,
+	  we ensure that all functions will be called either from the real
+	  main thread when the main run loop is running or from our thread
+	  spinning the main loop.
+
+2012-05-24 16:09:54 +0200  Mathias Hasselmann <mathias.hasselmann at gmx.de>
+
+	* ext/jpeg/gstjpegdec.c:
+	  jpegdec: remove framerate
+	  The jpeg decoder doesn't need/care about the framerate to so it should
+	  not be in the caps.
+	  Fixes https://bugzilla.gnome.org/show_bug.cgi?id=676302
+
+2012-05-24 13:08:35 +0200  Alessandro Decina <alessandro.decina@collabora.co.uk>
+
+	* sys/osxvideo/osxvideosink.m:
+	  osxvideosink: start the loop before calling [gstview haveSuperview]
+	  ...as haveSuperview requires the mainloop to be running
+
+2012-05-24 13:08:13 +0200  Alessandro Decina <alessandro.decina@collabora.co.uk>
+
+	* sys/osxvideo/osxvideosink.m:
+	  osxvideosink: fix indentation
+
+2012-05-22 16:47:36 +0200  Alessandro Decina <alessandro.decina@collabora.co.uk>
+
+	* sys/osxvideo/Makefile.am:
+	  osxvideosink: enable running the cocoa main runloop in a thread
+
+2012-05-22 16:45:28 +0200  Alessandro Decina <alessandro.decina@collabora.co.uk>
+
+	* sys/osxvideo/osxvideosink.h:
+	* sys/osxvideo/osxvideosink.m:
+	  osxvideosink: add code to optionally run the cocoa main runloop in a separate thread
+	  Add a little hack to run the cocoa main runloop from a separate thread _when_
+	  the main runloop is not being run (which means that the app doesn't use cocoa).
+	  Runloops are thread specific, so the hack boils down to getting the runloop for
+	  the main thread and setting it as the runloop for our dedicated thread.
+
+2012-05-22 16:32:53 +0200  Alessandro Decina <alessandro.decina@collabora.co.uk>
+
+	* sys/osxvideo/osxvideosink.m:
+	  osxvideosink: reset app_started to FALSE when shutting down
+
+2012-05-22 14:49:17 +0200  Alessandro Decina <alessandro.decina@collabora.co.uk>
+
+	* sys/osxvideo/osxvideosink.m:
+	  osxvideosink: rename cocoa runloop helper funcs
+
+2012-05-22 14:26:13 +0200  Alessandro Decina <alessandro.decina@collabora.co.uk>
+
+	* sys/osxvideo/osxvideosink.m:
+	  osxvideosink: don't create application menus
+
+2012-05-16 21:52:45 +0200  Andoni Morales Alastruey <ylatuya@gmail.com>
+
+	* sys/osxvideo/osxvideosink.h:
+	* sys/osxvideo/osxvideosink.m:
+	  osxvideosink: reset the embed property for backward compatilibity
+
+2012-05-16 21:12:22 +0200  Andoni Morales Alastruey <ylatuya@gmail.com>
+
+	* sys/osxvideo/cocoawindow.h:
+	* sys/osxvideo/cocoawindow.m:
+	* sys/osxvideo/osxvideosink.m:
+	  osxvideosink: fix navigation when force-aspect-ratio is activated
+
+2012-05-16 18:52:45 +0200  Andoni Morales Alastruey <ylatuya@gmail.com>
+
+	* sys/osxvideo/cocoawindow.h:
+	* sys/osxvideo/cocoawindow.m:
+	* sys/osxvideo/osxvideosink.h:
+	* sys/osxvideo/osxvideosink.m:
+	  osxvideosink: add force-aspect-ratio property
+
+2012-05-14 18:01:02 +0200  Andoni Morales Alastruey <ylatuya@gmail.com>
+
+	* sys/osxvideo/cocoawindow.h:
+	* sys/osxvideo/cocoawindow.m:
+	* sys/osxvideo/osxvideosink.h:
+	* sys/osxvideo/osxvideosink.m:
+	  osxvideosink: start internal window if no view is provided
+
+2012-05-14 14:27:58 +0200  Andoni Morales Alastruey <ylatuya@gmail.com>
+
+	* sys/osxvideo/cocoawindow.h:
+	* sys/osxvideo/cocoawindow.m:
+	* sys/osxvideo/osxvideosink.m:
+	  osxvideosink: implement the navigation interface
+
+2012-05-11 18:24:08 +0200  Andoni Morales Alastruey <ylatuya@gmail.com>
+
+	* sys/osxvideo/osxvideosink.h:
+	* sys/osxvideo/osxvideosink.m:
+	  osvideosink: create, destroy, resize and draw from the main thread
+
+2012-04-19 08:37:28 +0200  Alessandro Decina <alessandro.d@gmail.com>
+
+	* gst/matroska/matroska-demux.c:
+	  matroskademux: increase NEWSEGMENT accuracy after seeking
+	  demux->common.segment is populated during seek handling with the target
+	  start/stop positions. Don't override them when sending out a NEWSEGMENT.
+	  Conflicts:
+	  gst/matroska/matroska-demux.c
+
+2012-04-19 08:31:00 +0200  Alessandro Decina <alessandro.d@gmail.com>
+
+	* gst/matroska/matroska-demux.c:
+	  matroskademux: don't discard the incoming seek segment on push based seeking
+	  The incoming seek segment was being discarded leading to push based seeking
+	  being potentially inaccurate.
+
+2012-05-23 18:12:24 +0200  Sebastian Rasmussen <sebrn@axis.com>
+
+	* common:
+	  common: Update so the plugin scanner changes are included
+	  Fixes https://bugzilla.gnome.org/show_bug.cgi?id=676674
+
+2012-05-23 18:07:35 +0200  Sebastian Rasmussen <sebrn@axis.com>
+
+	* configure.ac:
+	  configure: suppress some warnings when debug is disabled
+	  Warnings about unused variables should be suppressed if core has the
+	  debug system disabled.
+	  Fixes https://bugzilla.gnome.org/show_bug.cgi?id=676671
+
+2012-05-24 09:29:25 +0100  Luis de Bethencourt <luis@debethencourt.com>
+
+	* gst/rtp/gstrtph264pay.c:
+	  rtp: fix build issue in gstrtph264pay.c
+
+2012-05-21 12:17:35 +0200  Jonas Holmberg <jonashg@axis.com>
+
+	* gst/rtp/gstrtph264pay.c:
+	  rtph264pay: Add unrestricted caps
+	  If there are no profile restrictions downstream, return caps with
+	  profile=constrained-baseline in the first structure and append
+	  unrestricted caps as the last structure.
+	  Fixes bug #672019
+
+2012-05-24 09:57:31 +0200  Maria Giovanna Chiossa <mariagiovanna.chiossa at selexelsag.com>
+
+	* gst/rtsp/gstrtspsrc.c:
+	  rtsp: add the Scale header when needed
+	  Setting GST_SEEK_FLAG_SKIP when sending a seek event in rtspsrc should
+	  set the "Scale" field in the rtsp PLAY header.
+	  Because the boolean "src->skip" is set after the call, "Speed" instead
+	  of "Scale" is always set. Move the assignment before issuing the _play
+	  request.
+	  Fixes https://bugzilla.gnome.org/show_bug.cgi?id=676618
+
+2012-05-17 16:23:59 +0300  Sreerenj Balachandran <sreerenj.balachandran@intel.com>
+
+	* gst/videobox/gstvideobox.c:
+	  videobox: Fix the sample pipeline.
+
+2012-05-22 12:35:04 +0400  Anton Novikov <random.plant@gmail.com>
+
+	* gst/icydemux/gsticydemux.c:
+	  icydemux: warning if setting srcpad caps fails
+
+2012-05-22 12:35:29 +0400  Anton Novikov <random.plant@gmail.com>
+
+	* gst/icydemux/gsticydemux.c:
+	  icydemux: activate srcpad before setting caps
+	  Before gst_pad_set_active() is called, the pad has
+	  FLUSHING flag set, so setting the caps fails
+
+2012-05-22 13:46:27 +0100  Luis de Bethencourt <luis@debethencourt.com>
+
+	* ext/Makefile.am:
+	* ext/libmng/Makefile.am:
+	* ext/libmng/gstmng.c:
+	* ext/libmng/gstmng.h:
+	* ext/libmng/gstmngdec.c:
+	* ext/libmng/gstmngdec.h:
+	* ext/libmng/gstmngenc.c:
+	* ext/libmng/gstmngenc.h:
+	  mng: remove ext/libmng
+	  Port to 0.10 was never finished.
+	  Interest was lost.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=324364
+
+2012-05-18 16:37:04 -0300  Thiago Santos <thiago.sousa.santos@collabora.com>
+
+	* gst/avi/gstavimux.c:
+	  avimux: fix assertion when handling a date tag as a string
+	  Date tags are GDate, not strings. Add a special case to convert
+	  it to the exif date format representation in string to avoid
+	  the assertion
+
+2012-05-21 11:47:07 +0200  Sjoerd Simons <sjoerd@luon.net>
+
+	* ext/pulse/pulsesrc.c:
+	  pulsesrc: Listen to source output events, not sink input
+
+2012-05-18 12:53:44 +0200  Mark Nauwelaerts <mark.nauwelaerts@collabora.co.uk>
+
+	* gst/rtp/gstrtpmp2tpay.c:
+	  rtpmp2tpay: respect mtu and packet boundaries
+	  See #659915.
+
+2012-05-18 11:10:46 +0200  Edward Hervey <edward.hervey@collabora.co.uk>
+
+	* ext/jpeg/gstjpegdec.c:
+	  jpeg: Remove dead code
+	  Conflicts:
+	  ext/jpeg/gstjpegdec.c
+
+2012-05-18 11:05:35 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* ext/jpeg/gstjpegdec.c:
+	  jpegdec: Fix compilation
+
+2012-05-18 11:02:52 +0200  Edward Hervey <edward.hervey@collabora.co.uk>
+
+	* ext/jpeg/gstjpegdec.c:
+	  jpegdec: When dropping frames on EOS, flush out data
+	  Cleaner way of handling stray data
+
+2012-05-17 09:34:03 +0200  Edward Hervey <edward.hervey@collabora.co.uk>
+
+	* ext/jpeg/gstjpegdec.c:
+	* ext/jpeg/gstjpegdec.h:
+	  jpegdec: Remove unused variable
+	  Conflicts:
+	  ext/jpeg/gstjpegdec.c
+
+2012-05-17 09:33:18 +0200  Edward Hervey <edward.hervey@collabora.co.uk>
+
+	* ext/jpeg/gstjpegdec.c:
+	  jpegdec: Only parse for SOI when we didn't see it before
+
+2012-05-17 09:31:41 +0200  Edward Hervey <edward.hervey@collabora.co.uk>
+
+	* ext/jpeg/gstjpegdec.c:
+	  jpegdec: Remember if we saw SOI and handle stray data on EOS
+
+2012-05-15 20:58:25 +0000  Youness Alaoui <youness.alaoui@collabora.co.uk>
+
+	* gst/rtp/gstrtpjpegpay.c:
+	  rtpjpegpay: Allow U and V components to use different quant tables if they contain the same data
+	  This allows some cameras (Logitech C920) that specify different quant
+	  tables but both with the same data, to work.
+	  Bug reported by Robert Krakora
+
+2012-05-14 15:51:29 +0100  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+
+	* ext/soup/gstsouphttpsrc.c:
+	  souphttpsrc: fix possible data corruption after seeking
+	  Consider a downstream element that may issue seeks in very short
+	  succession (e.g. queue2), depending on the access pattern of
+	  the downstream element (e.g. qtdemux with audio/video chunks
+	  interleaved so that there's always a sizeable gap between the
+	  current chunks for each stream). In this case, queue2 will maintain
+	  two ranges, and even when it serves a chunk from memory, it will
+	  switch ranges and make souphttpsrc seek to the end of the available
+	  data for that range, assuming that that's where we'll want to
+	  continue reading from next.
+	  This may lead to the following seek request pattern:
+	  - source reading position A
+	  - seek to B
+	  - now reading position still A, requested_postion is B
+	  - streaming thread to be restarted to continue from B
+	  - seek to A, before streaming thread had time to do the seek
+	  - do_seek() now sees reading position == seek position and
+	  returns early.
+	  - however, requested position is still B from the earlier
+	  seek request
+	  - streaming thread starts up, sees that a seek to B is pending
+	  and requests data from B from the server, while the GstBaseSrc
+	  segment has of course been updated/reset to position A, which
+	  was the last seek request.
+	  - we will now send data for position B and pretend that's the
+	  data from position A (via the newsegment event, etc.)
+	  - this causes data corruption
+	  Reproducible doing seek-emulated fast-forward/backward on 006648.
+
+2012-05-16 09:12:55 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* configure.ac:
+	  configure: Require core/base 0.11.91
+
+2012-01-13 18:09:50 -0500  Matej Knopp <matej.knopp@gmail.com>
+
+	* .gitignore:
+	  .gitignore: add visual studio IDE files and OS X .DS_Store files
+	  https://bugzilla.gnome.org/show_bug.cgi?id=667899
+
+2012-05-03 09:32:50 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* ext/jpeg/gstjpegdec.c:
+	* ext/jpeg/gstjpegdec.h:
+	* ext/jpeg/gstjpegenc.c:
+	* ext/jpeg/gstjpegenc.h:
+	  jpeg: Port to 0.11 again
+
+2012-04-06 12:13:24 +0200  Edward Hervey <edward.hervey@collabora.co.uk>
+
+	* ext/jpeg/gstjpegdec.c:
+	* ext/jpeg/gstjpegdec.h:
+	* ext/jpeg/gstjpegenc.c:
+	* ext/jpeg/gstjpegenc.h:
+	  jpeg: Port jpegdec/jpegenc to base video classes
+	  Conflicts:
+	  ext/jpeg/gstjpegdec.c
+	  ext/jpeg/gstjpegdec.h
+	  ext/jpeg/gstjpegenc.c
+	  ext/jpeg/gstjpegenc.h
+	  Reverted to 0.10 versions for now, next port again.
+
+2012-05-13 19:21:19 +0100  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+
+	* configure.ac:
+	* docs/plugins/Makefile.am:
+	* docs/plugins/gst-plugins-good-plugins-docs.sgml:
+	* docs/plugins/gst-plugins-good-plugins-sections.txt:
+	* docs/plugins/inspect/plugin-annodex.xml:
+	* ext/Makefile.am:
+	* ext/annodex/Makefile.am:
+	* ext/annodex/gstannodex.c:
+	* ext/annodex/gstannodex.h:
+	* ext/annodex/gstcmmldec.c:
+	* ext/annodex/gstcmmldec.h:
+	* ext/annodex/gstcmmlenc.c:
+	* ext/annodex/gstcmmlenc.h:
+	* ext/annodex/gstcmmlparser.c:
+	* ext/annodex/gstcmmlparser.h:
+	* ext/annodex/gstcmmltag.c:
+	* ext/annodex/gstcmmltag.h:
+	* ext/annodex/gstcmmlutils.c:
+	* ext/annodex/gstcmmlutils.h:
+	* tests/check/Makefile.am:
+	* tests/check/elements/.gitignore:
+	* tests/check/elements/cmmldec.c:
+	* tests/check/elements/cmmlenc.c:
+	  annodex: remove annodex plugin and CMML elements
+	  This never really took off and is most likely completely
+	  unused. If there is still a need for this, it should
+	  probably be done differently, perhaps inside oggdemux/mux.
+
+2012-05-13 16:59:58 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* configure.ac:
+	  Back to development
+
+=== release 0.11.91 ===
+
+2012-05-13 16:31:03 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* ChangeLog:
+	* NEWS:
+	* RELEASE:
+	* common:
+	* configure.ac:
+	* gst-plugins-good.doap:
+	* win32/common/config.h:
+	  Release 0.11.91
+
+2012-05-13 16:30:03 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* po/af.po:
+	* po/az.po:
+	* po/bg.po:
+	* po/ca.po:
+	* po/cs.po:
+	* po/da.po:
+	* po/de.po:
+	* po/el.po:
+	* po/en_GB.po:
+	* po/eo.po:
+	* po/es.po:
+	* po/eu.po:
+	* po/fi.po:
+	* po/fr.po:
+	* po/gl.po:
+	* po/hu.po:
+	* po/id.po:
+	* po/it.po:
+	* po/ja.po:
+	* po/lt.po:
+	* po/lv.po:
+	* po/mt.po:
+	* po/nb.po:
+	* po/nl.po:
+	* po/or.po:
+	* po/pl.po:
+	* po/pt_BR.po:
+	* po/ro.po:
+	* po/ru.po:
+	* po/sk.po:
+	* po/sl.po:
+	* po/sq.po:
+	* po/sr.po:
+	* po/sv.po:
+	* po/tr.po:
+	* po/uk.po:
+	* po/vi.po:
+	* po/zh_CN.po:
+	* po/zh_HK.po:
+	* po/zh_TW.po:
+	  Update .po files
 
 2012-05-13 15:56:05 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
 

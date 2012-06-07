@@ -1,4 +1,10 @@
-This is GStreamer Good Plug-ins 0.11.91 "I smell the blood of an Englishman"
+This is GStreamer Good Plug-ins 0.11.92 "Money"
+
+New features in 0.11.92:
+
+      * Parallel installability with 0.10.x series
+      * API cleanup and minor API improvements
+      * Lots of bugfixes, cleanup and other improvements
 
 New features in 0.11.91:
 

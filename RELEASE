@@ -1,5 +1,5 @@
 
-Release notes for GStreamer Good Plug-ins 0.11.91 "I smell the blood of an Englishman"
+Release notes for GStreamer Good Plug-ins 0.11.92 "Money"
         
 
 
@@ -8,11 +8,15 @@ in the 0.11.x unstable series of the
 GStreamer Good Plug-ins.
 
 
+
 The 0.11.x series is an unstable series targeted at developers and will
 eventually lead up to the stable 1.0 series.
 It is not API or ABI compatible with the stable 0.10.x series.
 It is, however, parallel installable with the 0.10.x series.
 
+
+
+"Such ingratitude.  After all the times I've saved your life."
 
 
 A collection of plug-ins you'd want to have right next to you on the
@@ -52,8 +56,9 @@ contains a set of less supported plug-ins that haven't passed the
 
 Features of this release
     
-      * Ported flx, dv1394, oss and oss4 plugins
-      * Lots of bugfixes and other improvements
+      * Parallel installability with 0.10.x series
+      * API cleanup and minor API improvements
+      * Lots of bugfixes, cleanup and other improvements
 There were no bugs fixed in this release
     
 
@@ -84,23 +89,27 @@ Applications
   
 Contributors to this release
     
-      * Alban Browaeys
-      * Bastien Nocera
-      * Chris Pankow
+      * Alessandro Decina
+      * Andoni Morales Alastruey
+      * Anton Novikov
       * Edward Hervey
+      * Jens Georg
+      * Jonas Holmberg
+      * Josep Torra
       * Luis de Bethencourt
+      * Maria Giovanna Chiossa
       * Mark Nauwelaerts
-      * Mart Raudsepp
-      * Pascal Buhler
-      * Peter Seiderer
+      * Matej Knopp
+      * Mathias Hasselmann
+      * Michael Jones
+      * Mohammed Sameer
       * Sebastian Dröge
+      * Sebastian Rasmussen
+      * Sjoerd Simons
+      * Sreerenj Balachandran
       * Thiago Santos
       * Tim-Philipp Müller
       * Vincent Penquerc'h
-      * Víctor Manuel Jáquez Leal
       * Wim Taymans
       * Youness Alaoui
-      * idc-dragon
-      * uraeus
-      * Руслан Ижбулатов
  

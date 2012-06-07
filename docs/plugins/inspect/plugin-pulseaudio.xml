@@ -3,21 +3,12 @@
   <description>PulseAudio plugin library</description>
   <filename>../../ext/pulse/.libs/libgstpulse.so</filename>
   <basename>libgstpulse.so</basename>
-  <version>0.11.90</version>
+  <version>0.11.92</version>
   <license>LGPL</license>
   <source>gst-plugins-good</source>
   <package>GStreamer Good Plug-ins source release</package>
   <origin>Unknown package origin</origin>
   <elements>
-    <element>
-      <name>pulsemixer</name>
-      <longname>PulseAudio Mixer</longname>
-      <class>Generic/Audio</class>
-      <description>Control sound input and output levels for PulseAudio</description>
-      <author>Lennart Poettering</author>
-      <pads>
-      </pads>
-    </element>
     <element>
       <name>pulsesink</name>
       <longname>PulseAudio Audio Sink</longname>

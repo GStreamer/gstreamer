@@ -3,7 +3,7 @@
   <description>Matroska and WebM stream handling</description>
   <filename>../../gst/matroska/.libs/libgstmatroska.so</filename>
   <basename>libgstmatroska.so</basename>
-  <version>0.11.90</version>
+  <version>0.11.92</version>
   <license>LGPL</license>
   <source>gst-plugins-good</source>
   <package>GStreamer Good Plug-ins source release</package>
@@ -20,7 +20,7 @@
           <name>sink</name>
           <direction>sink</direction>
           <presence>always</presence>
-          <details>video/x-matroska; video/webm</details>
+          <details>audio/x-matroska; video/x-matroska; video/x-matroska-3d; audio/webm; video/webm</details>
         </caps>
         <caps>
           <name>audio_%u</name>
@@ -71,7 +71,7 @@
           <name>src</name>
           <direction>source</direction>
           <presence>always</presence>
-          <details>video/x-matroska</details>
+          <details>video/x-matroska; video/x-matroska-3d; audio/x-matroska</details>
         </caps>
       </pads>
     </element>
@@ -86,13 +86,13 @@
           <name>sink</name>
           <direction>sink</direction>
           <presence>always</presence>
-          <details>video/x-matroska; video/webm</details>
+          <details>audio/x-matroska; video/x-matroska; video/x-matroska-3d; audio/webm; video/webm</details>
         </caps>
         <caps>
           <name>src</name>
           <direction>source</direction>
           <presence>always</presence>
-          <details>video/x-matroska; video/webm</details>
+          <details>audio/x-matroska; video/x-matroska; video/x-matroska-3d; audio/webm; video/webm</details>
         </caps>
       </pads>
     </element>
@@ -125,7 +125,7 @@
           <name>src</name>
           <direction>source</direction>
           <presence>always</presence>
-          <details>video/webm</details>
+          <details>video/webm; audio/webm</details>
         </caps>
       </pads>
     </element>

@@ -3,10 +3,10 @@
   <description>FLC/FLI/FLX video decoder</description>
   <filename>../../gst/flx/.libs/libgstflxdec.so</filename>
   <basename>libgstflxdec.so</basename>
-  <version>0.10.30.1</version>
+  <version>0.11.92</version>
   <license>LGPL</license>
   <source>gst-plugins-good</source>
-  <package>GStreamer Good Plug-ins git</package>
+  <package>GStreamer Good Plug-ins source release</package>
   <origin>Unknown package origin</origin>
   <elements>
     <element>
@@ -26,7 +26,7 @@
           <name>src</name>
           <direction>source</direction>
           <presence>always</presence>
-          <details>video/x-raw-rgb, bpp=(int)32, depth=(int)24, endianness=(int)4321, red_mask=(int)65280, green_mask=(int)16711680, blue_mask=(int)-16777216, width=(int)[ 1, 2147483647 ], height=(int)[ 1, 2147483647 ], framerate=(fraction)[ 0/1, 2147483647/1 ]</details>
+          <details>video/x-raw, format=(string)BGRx, width=(int)[ 1, 2147483647 ], height=(int)[ 1, 2147483647 ], framerate=(fraction)[ 0/1, 2147483647/1 ]</details>
         </caps>
       </pads>
     </element>

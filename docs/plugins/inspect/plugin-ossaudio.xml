@@ -3,21 +3,12 @@
   <description>OSS (Open Sound System) support for GStreamer</description>
   <filename>../../sys/oss/.libs/libgstossaudio.so</filename>
   <basename>libgstossaudio.so</basename>
-  <version>0.10.30.1</version>
+  <version>0.11.92</version>
   <license>LGPL</license>
   <source>gst-plugins-good</source>
-  <package>GStreamer Good Plug-ins git</package>
+  <package>GStreamer Good Plug-ins source release</package>
   <origin>Unknown package origin</origin>
   <elements>
-    <element>
-      <name>ossmixer</name>
-      <longname>OSS Mixer</longname>
-      <class>Generic/Audio</class>
-      <description>Control sound input and output levels with OSS</description>
-      <author>Andrew Vander Wingo &lt;wingo@pobox.com&gt;</author>
-      <pads>
-      </pads>
-    </element>
     <element>
       <name>osssink</name>
       <longname>Audio Sink (OSS)</longname>
@@ -29,7 +20,7 @@
           <name>sink</name>
           <direction>sink</direction>
           <presence>always</presence>
-          <details>audio/x-raw-int, endianness=(int){ 1234 }, signed=(boolean){ true, false }, width=(int)16, depth=(int)16, rate=(int)[ 1, 2147483647 ], channels=(int)[ 1, 2 ]; audio/x-raw-int, signed=(boolean){ true, false }, width=(int)8, depth=(int)8, rate=(int)[ 1, 2147483647 ], channels=(int)[ 1, 2 ]</details>
+          <details>audio/x-raw, format=(string){ S16LE, U16LE, S8, U8 }, layout=(string)interleaved, rate=(int)[ 1, 2147483647 ], channels=(int)1; audio/x-raw, format=(string){ S16LE, U16LE, S8, U8 }, layout=(string)interleaved, rate=(int)[ 1, 2147483647 ], channels=(int)2, channel-mask=(bitmask)0x0000000000000003</details>
         </caps>
       </pads>
     </element>
@@ -44,7 +35,7 @@
           <name>src</name>
           <direction>source</direction>
           <presence>always</presence>
-          <details>audio/x-raw-int, endianness=(int){ 1234 }, signed=(boolean){ true, false }, width=(int)16, depth=(int)16, rate=(int)[ 1, 2147483647 ], channels=(int)[ 1, 2 ]; audio/x-raw-int, signed=(boolean){ true, false }, width=(int)8, depth=(int)8, rate=(int)[ 1, 2147483647 ], channels=(int)[ 1, 2 ]</details>
+          <details>audio/x-raw, format=(string){ S16LE, U16LE, S8, U8 }, layout=(string)interleaved, rate=(int)[ 1, 2147483647 ], channels=(int)1; audio/x-raw, format=(string){ S16LE, U16LE, S8, U8 }, layout=(string)interleaved, rate=(int)[ 1, 2147483647 ], channels=(int)2, channel-mask=(bitmask)0x0000000000000003</details>
         </caps>
       </pads>
     </element>
