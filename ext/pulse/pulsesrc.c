@@ -295,13 +295,12 @@ gst_pulsesrc_init (GstPulseSrc * pulsesrc)
       GST_AUDIO_BASE_SRC_SLAVE_SKEW);
 
   /* override with a custom clock */
-  if (GST_AUDIO_BASE_SRC (pulsesrc)->clock) {
+  if (GST_AUDIO_BASE_SRC (pulsesrc)->clock)
     gst_object_unref (GST_AUDIO_BASE_SRC (pulsesrc)->clock);
-  }
 
   GST_AUDIO_BASE_SRC (pulsesrc)->clock =
       gst_audio_clock_new ("GstPulseSrcClock",
-      (GstAudioClockGetTimeFunc) gst_pulsesrc_get_time, pulsesrc);
+      (GstAudioClockGetTimeFunc) gst_pulsesrc_get_time, pulsesrc, NULL);
 }
 
 static void
@@ -996,13 +995,13 @@ gst_pulsesrc_read (GstAudioSrc * asrc, gpointer data, guint length)
   GstPulseSrc *pulsesrc = GST_PULSESRC_CAST (asrc);
   size_t sum = 0;
 
-  pa_threaded_mainloop_lock (pulsesrc->mainloop);
-  pulsesrc->in_read = TRUE;
-
   if (g_atomic_int_compare_and_exchange (&pulsesrc->notify, 1, 0)) {
     g_object_notify (G_OBJECT (pulsesrc), "volume");
     g_object_notify (G_OBJECT (pulsesrc), "mute");
   }
+
+  pa_threaded_mainloop_lock (pulsesrc->mainloop);
+  pulsesrc->in_read = TRUE;
 
   if (pulsesrc->paused)
     goto was_paused;
@@ -1333,6 +1332,7 @@ gst_pulsesrc_prepare (GstAudioSrc * asrc, GstAudioRingBufferSpec * spec)
   GstPulseSrc *pulsesrc = GST_PULSESRC_CAST (asrc);
   pa_stream_flags_t flags;
   pa_operation *o;
+  GstAudioClock *clock;
 
   pa_threaded_mainloop_lock (pulsesrc->mainloop);
 
@@ -1381,6 +1381,10 @@ gst_pulsesrc_prepare (GstAudioSrc * asrc, GstAudioRingBufferSpec * spec)
           flags) < 0) {
     goto connect_failed;
   }
+
+  /* our clock will now start from 0 again */
+  clock = GST_AUDIO_CLOCK (GST_AUDIO_BASE_SRC (pulsesrc)->clock);
+  gst_audio_clock_reset (clock, 0);
 
   pulsesrc->corked = TRUE;
 
@@ -1617,6 +1621,11 @@ gst_pulsesrc_change_state (GstElement * element, GstStateChange transition)
         goto mainloop_start_failed;
       }
       break;
+    case GST_STATE_CHANGE_READY_TO_PAUSED:
+      gst_element_post_message (element,
+          gst_message_new_clock_provide (GST_OBJECT_CAST (element),
+              GST_AUDIO_BASE_SRC (this)->clock, TRUE));
+      break;
     case GST_STATE_CHANGE_PAUSED_TO_PLAYING:
       /* uncork and start recording */
       gst_pulsesrc_play (this);
@@ -1649,6 +1658,12 @@ gst_pulsesrc_change_state (GstElement * element, GstStateChange transition)
         pa_threaded_mainloop_free (this->mainloop);
         this->mainloop = NULL;
       }
+      break;
+    case GST_STATE_CHANGE_PAUSED_TO_READY:
+      /* format_lost is reset in release() in baseaudiosink */
+      gst_element_post_message (element,
+          gst_message_new_clock_lost (GST_OBJECT_CAST (element),
+              GST_AUDIO_BASE_SRC (this)->clock));
       break;
     default:
       break;
