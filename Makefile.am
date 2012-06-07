@@ -7,11 +7,15 @@ aclocaldir = $(datadir)/aclocal
 aclocal_DATA = gst-element-check-@GST_API_VERSION@.m4
 
 SUBDIRS = pkgconfig \
-	gst libs plugins tools tests \
+	gst libs plugins tests \
 	docs \
 	po \
 	m4 \
 	common
+
+if BUILD_TOOLS
+SUBDIRS += tools
+endif
 
 # These are all the possible subdirs
 DIST_SUBDIRS = pkgconfig \
