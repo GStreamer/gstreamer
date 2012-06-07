@@ -1143,6 +1143,8 @@ gst_dirac_enc_process (GstDiracEnc * dirac_enc, gboolean end_sequence)
             GST_DEBUG ("pad_push returned %d", ret);
             return ret;
           }
+        } else {
+          gst_buffer_unref (outbuf);
         }
         break;
       case ENC_STATE_AVAIL:
