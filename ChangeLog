@@ -1,9 +1,113 @@
-=== release 0.11.91 ===
+=== release 0.11.92 ===
 
-2012-05-13  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+2012-06-07  Sebastian Dröge <sebastian.droege@collabora.co.uk>
 
 	* configure.ac:
-	  releasing 0.11.91, "Help master\! A boy is stealing me\!"
+	  releasing 0.11.92, "Wish You Were Here"
+
+2012-06-07 12:26:55 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* gst-libs/ext/libav:
+	  libav: Update to 0.8.3 release
+
+2012-06-06 18:20:06 +0200  Edward Hervey <edward.hervey@collabora.co.uk>
+
+	* common:
+	  Automatic update of common submodule
+	  From 1fab359 to 03a0e57
+
+2012-06-06 13:03:18 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* ext/ffmpeg/gstffmpegdemux.c:
+	  update for tag event change
+
+2012-06-01 10:30:15 +0200  Edward Hervey <edward.hervey@collabora.co.uk>
+
+	* common:
+	  Automatic update of common submodule
+	  From f1b5a96 to 1fab359
+
+2012-05-31 13:43:48 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* ext/ffmpeg/gstffmpegcodecmap.c:
+	* ext/ffmpeg/gstffmpegdec.c:
+	* ext/libswscale/gstffmpegscale.c:
+	  avdec: fix paletted formats
+	  Pass the palette as the side data for AVPacket so that it is written in the
+	  second plane of output AVFrame.
+
+2012-05-31 13:10:20 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* common:
+	  Automatic update of common submodule
+	  From 92b7266 to f1b5a96
+
+2012-05-30 12:47:45 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* common:
+	  Automatic update of common submodule
+	  From ec1c4a8 to 92b7266
+
+2012-05-30 11:26:18 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* common:
+	  Automatic update of common submodule
+	  From 3429ba6 to ec1c4a8
+
+2012-05-25 17:03:06 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* ext/ffmpeg/gstffmpegcodecmap.c:
+	  libav: add support for 10 bits I420
+	  See https://bugzilla.gnome.org/show_bug.cgi?id=665034
+
+2012-05-24 12:33:58 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* common:
+	  Automatic update of common submodule
+	  From dc70203 to 3429ba6
+
+2012-05-22 12:56:16 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* gst-libs/ext/libav:
+	  libav: Update to 0.8.2 release
+
+2012-05-16 08:16:50 +0100  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+
+	* .gitignore:
+	  .gitignore: update for module name change
+
+2012-01-13 19:20:28 -0500  Matej Knopp <matej.knopp@gmail.com>
+
+	* .gitignore:
+	  .gitignore: add visual studio IDE files and OS X .DS_Store files
+	  https://bugzilla.gnome.org/show_bug.cgi?id=667899
+
+2012-05-16 09:13:15 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* configure.ac:
+	  configure: Require core/base 0.11.91
+
+2012-05-15 14:41:18 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* tests/check/Makefile.am:
+	  tests: Don't run the postproc test if compiled as an LGPL plugin
+
+2012-05-13 17:01:02 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* configure.ac:
+	  Back to development
+
+=== release 0.11.91 ===
+
+2012-05-13 16:54:19 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* ChangeLog:
+	* NEWS:
+	* RELEASE:
+	* common:
+	* configure.ac:
+	* gst-libav.doap:
+	  Release 0.11.91
 
 2012-05-13 15:57:59 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
 

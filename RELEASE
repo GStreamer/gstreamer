@@ -1,5 +1,5 @@
 
-Release notes for GStreamer libav Plug-ins 0.11.91 "Help master! A boy is stealing me!"
+Release notes for GStreamer libav Plug-ins 0.11.92 "Wish You Were Here"
         
 
 The GStreamer team is proud to announce a new release
@@ -7,11 +7,11 @@ in the 0.11.x unstable series of the
 GStreamer libav Plug-ins.
 
 
+
 The 0.11.x series is an unstable series targeted at developers and will
 eventually lead up to the stable 1.0 series.
 It is not API or ABI compatible with the stable 0.10.x series.
 It is, however, parallel installable with the 0.10.x series.
-
 
 
 This module contains plug-ins using libraries from the libav project.
@@ -36,7 +36,9 @@ contains a set of less supported plug-ins that haven't passed the
 
 Features of this release
     
-      * Lots of bugfixes and other improvements
+      * Parallel installability with 0.10.x series
+      * API cleanup and minor API improvements
+      * Lots of bugfixes, cleanup and other improvements
 There were no bugs fixed in this release
     
 
@@ -67,7 +69,8 @@ Applications
   
 Contributors to this release
     
-      * Mark Nauwelaerts
+      * Edward Hervey
+      * Matej Knopp
       * Sebastian Dröge
       * Tim-Philipp Müller
       * Wim Taymans
