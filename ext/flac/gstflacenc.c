@@ -649,7 +649,7 @@ gst_flac_enc_getcaps (GstAudioEncoder * enc, GstCaps * filter)
         guint64 channel_mask;
 
         gst_audio_channel_positions_to_mask (channel_positions[i - 1], i,
-            &channel_mask);
+            FALSE, &channel_mask);
         gst_structure_set (s2, "channels", G_TYPE_INT, i, "channel-mask",
             GST_TYPE_BITMASK, channel_mask, NULL);
       }

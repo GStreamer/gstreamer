@@ -565,7 +565,7 @@ gst_wavpack_parse_handle_frame (GstBaseParse * parse,
         if (!gst_wavpack_get_channel_positions (chans, mask, pos)) {
           GST_WARNING_OBJECT (wvparse, "Failed to determine channel layout");
         } else {
-          gst_audio_channel_positions_to_mask (pos, chans, &gmask);
+          gst_audio_channel_positions_to_mask (pos, chans, FALSE, &gmask);
           if (gmask)
             gst_caps_set_simple (caps,
                 "channel-mask", GST_TYPE_BITMASK, gmask, NULL);

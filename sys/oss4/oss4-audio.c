@@ -309,7 +309,8 @@ gst_oss4_audio_add_channel_layout (GstObject * obj, guint64 layout,
   g_return_if_fail (num_channels <= G_N_ELEMENTS (ch_layout));
 
   gst_oss4_audio_get_channel_layout (obj, layout, num_channels, ch_layout);
-  if (gst_audio_channel_positions_to_mask (ch_layout, num_channels, &mask))
+  if (gst_audio_channel_positions_to_mask (ch_layout, num_channels, FALSE,
+          &mask))
     gst_structure_set (s, "channel-mask", GST_TYPE_BITMASK, mask, NULL);
 
   return;

@@ -456,17 +456,17 @@ sink_handoff_float32 (GstElement * element, GstBuffer * buffer, GstPad * pad,
   if (n == 0) {
     GstAudioChannelPosition pos[2] =
         { GST_AUDIO_CHANNEL_POSITION_NONE, GST_AUDIO_CHANNEL_POSITION_NONE };
-    gst_audio_channel_positions_to_mask (pos, 2, &mask);
+    gst_audio_channel_positions_to_mask (pos, 2, FALSE, &mask);
   } else if (n == 1) {
     GstAudioChannelPosition pos[2] = { GST_AUDIO_CHANNEL_POSITION_FRONT_LEFT,
       GST_AUDIO_CHANNEL_POSITION_FRONT_RIGHT
     };
-    gst_audio_channel_positions_to_mask (pos, 2, &mask);
+    gst_audio_channel_positions_to_mask (pos, 2, FALSE, &mask);
   } else if (n == 2) {
     GstAudioChannelPosition pos[2] = { GST_AUDIO_CHANNEL_POSITION_FRONT_CENTER,
       GST_AUDIO_CHANNEL_POSITION_REAR_CENTER
     };
-    gst_audio_channel_positions_to_mask (pos, 2, &mask);
+    gst_audio_channel_positions_to_mask (pos, 2, FALSE, &mask);
   }
 
   caps = gst_caps_new_simple ("audio/x-raw",

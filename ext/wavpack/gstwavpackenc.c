@@ -400,7 +400,7 @@ gst_wavpack_enc_set_format (GstAudioEncoder * benc, GstAudioInfo * info)
       enc->channel_mapping);
 
   /* wavpack caps hold gst mask, not wavpack mask */
-  gst_audio_channel_positions_to_mask (opos, enc->channels, &mask);
+  gst_audio_channel_positions_to_mask (opos, enc->channels, FALSE, &mask);
 
   /* set fixed src pad caps now that we know what we will get */
   caps = gst_caps_new_simple ("audio/x-wavpack",
