@@ -201,6 +201,10 @@ GST_START_TEST (test_force_key_unit_event_downstream)
   g_thread_join (thread_data_3->thread);
   fail_unless (test_data.sink_event == NULL);
 
+  g_free (thread_data_1);
+  g_free (thread_data_2);
+  g_free (thread_data_3);
+
   /* push again on all src so that the buffer on src2 is collected */
   thread_data_1 = pad_push (src1, gst_buffer_new (), 4 * GST_SECOND);
   thread_data_2 = pad_push (src2, gst_buffer_new (), 5 * GST_SECOND);
@@ -280,6 +284,10 @@ GST_START_TEST (test_force_key_unit_event_upstream)
   g_thread_join (thread_data_2->thread);
   g_thread_join (thread_data_3->thread);
   fail_unless (test_data.sink_event == NULL);
+
+  g_free (thread_data_1);
+  g_free (thread_data_2);
+  g_free (thread_data_3);
 
   /* push again on all src so that the buffer on src2 is collected */
   thread_data_1 = pad_push (src1, gst_buffer_new (), 4 * GST_SECOND);
