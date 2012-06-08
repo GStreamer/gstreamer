@@ -773,7 +773,7 @@ gst_base_text_overlay_setcaps (GstBaseTextOverlay * overlay, GstCaps * caps)
   overlay->width = GST_VIDEO_INFO_WIDTH (&info);
   overlay->height = GST_VIDEO_INFO_HEIGHT (&info);
 
-  ret = gst_pad_push_event (overlay->srcpad, gst_event_new_caps (caps));
+  ret = gst_pad_set_caps (overlay->srcpad, caps);
 
   if (ret) {
     GST_BASE_TEXT_OVERLAY_LOCK (overlay);

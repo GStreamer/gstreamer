@@ -371,7 +371,7 @@ gst_text_render_src_setcaps (GstTextRender * render, GstCaps * caps)
 
   gst_text_render_check_argb (render);
 
-  ret = gst_pad_push_event (render->srcpad, gst_event_new_caps (caps));
+  ret = gst_pad_set_caps (render->srcpad, caps);
 
   return ret;
 }

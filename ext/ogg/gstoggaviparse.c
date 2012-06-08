@@ -254,7 +254,7 @@ gst_ogg_avi_parse_setcaps (GstPad * pad, GstCaps * caps)
 
   /* set caps */
   outcaps = gst_caps_new_empty_simple ("audio/x-vorbis");
-  gst_pad_push_event (ogg->srcpad, gst_event_new_caps (outcaps));
+  gst_pad_set_caps (ogg->srcpad, outcaps);
   gst_caps_unref (outcaps);
 
   /* copy header data */

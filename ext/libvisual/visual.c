@@ -373,7 +373,7 @@ gst_visual_src_setcaps (GstVisual * visual, GstCaps * caps)
   visual->duration =
       gst_util_uint64_scale_int (GST_SECOND, visual->fps_d, visual->fps_n);
 
-  res = gst_pad_push_event (visual->srcpad, gst_event_new_caps (caps));
+  res = gst_pad_set_caps (visual->srcpad, caps);
 
   return res;
 

@@ -420,7 +420,7 @@ verify_convert (const gchar * which, void *in, int inlength,
           GST_STATE_PLAYING) == GST_STATE_CHANGE_SUCCESS,
       "could not set to playing");
 
-  gst_pad_push_event (mysrcpad, gst_event_new_caps (incaps));
+  gst_pad_set_caps (mysrcpad, incaps);
 
   GST_DEBUG ("Creating buffer of %d bytes", inlength);
   inbuffer = gst_buffer_new_and_alloc (inlength);
