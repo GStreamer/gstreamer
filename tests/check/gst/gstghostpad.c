@@ -670,109 +670,6 @@ GST_START_TEST (test_ghost_pads_new_no_target_from_template)
 
 GST_END_TEST;
 
-static void
-ghost_notify_caps (GObject * object, GParamSpec * pspec, gpointer * user_data)
-{
-  GST_DEBUG ("caps notify called");
-  (*(gint *) user_data)++;
-}
-
-GST_START_TEST (test_ghost_pads_forward_setcaps)
-{
-  GstCaps *templ_caps, *caps1, *caps2;
-  GstPadTemplate *src_template, *sink_template;
-  GstPad *src, *ghost, *sink;
-  gint notify_counter = 0;
-
-  templ_caps = gst_caps_from_string ("meh; muh");
-  src_template = gst_pad_template_new ("src", GST_PAD_SRC,
-      GST_PAD_ALWAYS, templ_caps);
-
-  templ_caps = gst_caps_from_string ("muh; meh");
-  sink_template = gst_pad_template_new ("sink", GST_PAD_SINK,
-      GST_PAD_ALWAYS, templ_caps);
-
-  src = gst_pad_new_from_template (src_template, "src");
-  sink = gst_pad_new_from_template (sink_template, "sink");
-
-  /* ghost source pad, setting caps on the source influences the caps of the
-   * ghostpad. */
-  ghost = gst_ghost_pad_new ("ghostsrc", src);
-  g_signal_connect (ghost, "notify::caps",
-      G_CALLBACK (ghost_notify_caps), &notify_counter);
-  fail_unless (gst_pad_link (ghost, sink) == GST_PAD_LINK_OK);
-
-  caps1 = gst_caps_from_string ("meh");
-  fail_unless (gst_pad_set_caps (src, caps1));
-  caps2 = GST_PAD_CAPS (ghost);
-  fail_unless (gst_caps_is_equal (caps1, caps2));
-  fail_unless_equals_int (notify_counter, 1);
-
-  gst_object_unref (ghost);
-  gst_caps_unref (caps1);
-
-  fail_unless (gst_pad_set_caps (src, NULL));
-
-  /* source 2, setting the caps on the ghostpad does not influence the caps of
-   * the target */
-  notify_counter = 0;
-  ghost = gst_ghost_pad_new ("ghostsrc", src);
-  g_signal_connect (ghost, "notify::caps",
-      G_CALLBACK (ghost_notify_caps), &notify_counter);
-  fail_unless (gst_pad_link (ghost, sink) == GST_PAD_LINK_OK);
-
-  caps1 = gst_caps_from_string ("meh");
-  fail_unless (gst_pad_set_caps (ghost, caps1));
-  caps2 = GST_PAD_CAPS (src);
-  fail_unless (caps2 == NULL);
-  fail_unless_equals_int (notify_counter, 1);
-
-  gst_object_unref (ghost);
-  gst_caps_unref (caps1);
-
-
-  /* ghost sink pad. Setting caps on the ghostpad will also set those caps on
-   * the target pad. */
-  notify_counter = 0;
-  ghost = gst_ghost_pad_new ("ghostsink", sink);
-  g_signal_connect (ghost, "notify::caps",
-      G_CALLBACK (ghost_notify_caps), &notify_counter);
-  fail_unless (gst_pad_link (src, ghost) == GST_PAD_LINK_OK);
-
-  caps1 = gst_caps_from_string ("muh");
-  fail_unless (gst_pad_set_caps (ghost, caps1));
-  caps2 = GST_PAD_CAPS (sink);
-  fail_unless (gst_caps_is_equal (caps1, caps2));
-  fail_unless_equals_int (notify_counter, 1);
-
-  gst_object_unref (ghost);
-  gst_caps_unref (caps1);
-
-  /* sink pad 2, setting caps just on the target pad should not influence the caps
-   * on the ghostpad. */
-  notify_counter = 0;
-  ghost = gst_ghost_pad_new ("ghostsink", sink);
-  g_signal_connect (ghost, "notify::caps",
-      G_CALLBACK (ghost_notify_caps), &notify_counter);
-  fail_unless (gst_pad_link (src, ghost) == GST_PAD_LINK_OK);
-
-  caps1 = gst_caps_from_string ("muh");
-  fail_unless (gst_pad_set_caps (sink, caps1));
-  caps2 = GST_PAD_CAPS (ghost);
-  fail_unless (caps2 == NULL);
-  fail_unless_equals_int (notify_counter, 0);
-
-  gst_object_unref (ghost);
-  gst_caps_unref (caps1);
-
-  gst_object_unref (src);
-  gst_object_unref (sink);
-  gst_object_unref (src_template);
-  gst_object_unref (sink_template);
-}
-
-GST_END_TEST;
-
 static gint linked_count1;
 static gint unlinked_count1;
 static gint linked_count2;
@@ -1099,7 +996,6 @@ gst_ghost_pad_suite (void)
   tcase_add_test (tc_chain, test_ghost_pads_probes);
   tcase_add_test (tc_chain, test_ghost_pads_new_from_template);
   tcase_add_test (tc_chain, test_ghost_pads_new_no_target_from_template);
-  tcase_add_test (tc_chain, test_ghost_pads_forward_setcaps);
   tcase_add_test (tc_chain, test_ghost_pads_sink_link_unlink);
   tcase_add_test (tc_chain, test_ghost_pads_src_link_unlink);
   tcase_add_test (tc_chain, test_ghost_pads_change_when_linked);

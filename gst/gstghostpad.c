@@ -74,9 +74,6 @@ static xmlNodePtr gst_proxy_pad_save_thyself (GstObject * object,
     xmlNodePtr parent);
 #endif
 
-static void on_src_target_notify (GstPad * target,
-    GParamSpec * unused, gpointer user_data);
-
 static GParamSpec *pspec_caps = NULL;
 
 /**
@@ -678,8 +675,6 @@ struct _GstGhostPadPrivate
 {
   /* with PROXY_LOCK */
   gulong notify_id;
-  gulong target_caps_notify_id;
-  gulong target_unlinked_id;
 
   gboolean constructed;
 };
@@ -901,65 +896,6 @@ on_int_notify (GstPad * internal, GParamSpec * unused, GstGhostPad * pad)
 
   if (caps)
     gst_caps_unref (caps);
-}
-
-static void
-on_src_target_notify (GstPad * target, GParamSpec * unused, gpointer user_data)
-{
-  GstProxyPad *proxypad;
-  GstGhostPad *gpad;
-  GstCaps *caps;
-
-  g_object_get (target, "caps", &caps, NULL);
-
-  GST_OBJECT_LOCK (target);
-  /* First check if the peer is still available and our proxy pad */
-  if (!GST_PAD_PEER (target) || !GST_IS_PROXY_PAD (GST_PAD_PEER (target))) {
-    GST_OBJECT_UNLOCK (target);
-    goto done;
-  }
-
-  proxypad = GST_PROXY_PAD (GST_PAD_PEER (target));
-  GST_OBJECT_LOCK (proxypad);
-  /* Now check if the proxypad's internal pad is still there and
-   * a ghostpad */
-  if (!GST_PROXY_PAD_INTERNAL (proxypad) ||
-      !GST_IS_GHOST_PAD (GST_PROXY_PAD_INTERNAL (proxypad))) {
-    GST_OBJECT_UNLOCK (proxypad);
-    GST_OBJECT_UNLOCK (target);
-    goto done;
-  }
-  gpad = GST_GHOST_PAD (GST_PROXY_PAD_INTERNAL (proxypad));
-  g_object_ref (gpad);
-  GST_OBJECT_UNLOCK (proxypad);
-  GST_OBJECT_UNLOCK (target);
-
-  gst_pad_set_caps (GST_PAD_CAST (gpad), caps);
-
-  g_object_unref (gpad);
-
-done:
-  if (caps)
-    gst_caps_unref (caps);
-}
-
-static void
-on_src_target_unlinked (GstPad * pad, GstPad * peer, GstGhostPad * gpad)
-{
-  GST_DEBUG_OBJECT (pad, "unlinked");
-  GST_DEBUG_OBJECT (gpad, "unlinked");
-
-  if (GST_GHOST_PAD_PRIVATE (gpad)->target_caps_notify_id) {
-    g_signal_handler_disconnect (pad,
-        GST_GHOST_PAD_PRIVATE (gpad)->target_caps_notify_id);
-    GST_GHOST_PAD_PRIVATE (gpad)->target_caps_notify_id = 0;
-  }
-  /* And remove our signal */
-  if (GST_GHOST_PAD_PRIVATE (gpad)->target_unlinked_id) {
-    g_signal_handler_disconnect (pad,
-        GST_GHOST_PAD_PRIVATE (gpad)->target_unlinked_id);
-    GST_GHOST_PAD_PRIVATE (gpad)->target_unlinked_id = 0;
-  }
 }
 
 /**
@@ -1428,15 +1364,6 @@ gst_ghost_pad_set_target (GstGhostPad * gpad, GstPad * newtarget)
   }
 
   if (newtarget) {
-    if (GST_PAD_IS_SRC (newtarget)) {
-      GST_GHOST_PAD_PRIVATE (gpad)->target_caps_notify_id =
-          g_signal_connect (newtarget, "notify::caps",
-          G_CALLBACK (on_src_target_notify), NULL);
-      GST_GHOST_PAD_PRIVATE (gpad)->target_unlinked_id =
-          g_signal_connect (newtarget, "unlinked",
-          G_CALLBACK (on_src_target_unlinked), gpad);
-    }
-
     /* and link to internal pad without any checks */
     GST_DEBUG_OBJECT (gpad, "connecting internal pad to target");
 
