@@ -342,7 +342,7 @@ gst_synaesthesia_src_setcaps (GstSynaesthesia * synaesthesia, GstCaps * caps)
       synaesthesia->width, synaesthesia->height,
       synaesthesia->fps_n, synaesthesia->fps_d, synaesthesia->spf);
 
-  res = gst_pad_push_event (synaesthesia->srcpad, gst_event_new_caps (caps));
+  res = gst_pad_set_caps (synaesthesia->srcpad, caps);
 
 done:
   return res;

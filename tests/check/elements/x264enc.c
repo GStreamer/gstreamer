@@ -142,7 +142,7 @@ test_video_profile (const gchar * profile, gint profile_id)
   gst_pad_use_fixed_caps (mysinkpad);
 
   caps = gst_caps_from_string (VIDEO_CAPS_STRING);
-  fail_unless (gst_pad_push_event (mysrcpad, gst_event_new_caps (caps)));
+  fail_unless (gst_pad_set_caps (mysrcpad, caps));
   gst_caps_unref (caps);
 
   /* corresponds to I420 buffer for the size mentioned in the caps */
