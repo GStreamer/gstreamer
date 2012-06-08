@@ -1589,10 +1589,18 @@ gst_v4l2_object_probe_caps_for_format_and_size (GstV4l2Object * v4l2object,
   gint int_width = width;
   gint int_height = height;
 
-  /* interlaced detection using VIDIOC_TRY/S_FMT */
-  if (!gst_v4l2_object_get_nearest_size (v4l2object, pixelformat,
-          &int_width, &int_height, &interlaced))
-    return NULL;
+  if (!strcmp((char *)v4l2object->vcap.driver, "uvcvideo")) {
+    /*
+     * UVC devices are never interlaced, and doing VIDIOC_TRY_FMT on them
+     * causes expensive and slow USB IO, so don't probe them for interlaced
+     */
+     interlaced = FALSE;
+  } else {
+    /* Interlaced detection using VIDIOC_TRY/S_FMT */
+    if (!gst_v4l2_object_get_nearest_size (v4l2object, pixelformat,
+            &int_width, &int_height, &interlaced))
+      return NULL;
+  }
 
   memset (&ival, 0, sizeof (struct v4l2_frmivalenum));
   ival.index = 0;
