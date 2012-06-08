@@ -1317,7 +1317,7 @@ gst_base_transform_setcaps (GstBaseTransform * trans, GstPad * pad,
     goto failed_configure;
 
   /* let downstream know about our caps */
-  gst_pad_push_event (trans->srcpad, gst_event_new_caps (outcaps));
+  ret = gst_pad_set_caps (trans->srcpad, outcaps);
 
   if (ret) {
     /* try to get a pool when needed */
