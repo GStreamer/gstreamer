@@ -649,7 +649,7 @@ gst_base_audio_visualizer_src_setcaps (GstBaseAudioVisualizer * scope,
   GST_DEBUG_OBJECT (scope, "blocks: spf %u, req_spf %u",
       scope->spf, scope->req_spf);
 
-  res = gst_pad_push_event (scope->srcpad, gst_event_new_caps (caps));
+  res = gst_pad_set_caps (scope->srcpad, caps);
 
   return res;
 

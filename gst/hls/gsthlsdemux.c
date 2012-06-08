@@ -616,7 +616,6 @@ switch_pads (GstHLSDemux * demux, GstCaps * newcaps)
   gst_pad_set_active (demux->srcpad, TRUE);
   gst_pad_push_event (demux->srcpad, gst_event_new_stream_start ());
   gst_pad_set_caps (demux->srcpad, newcaps);
-  gst_pad_push_event (demux->srcpad, gst_event_new_caps (newcaps));
   gst_element_add_pad (GST_ELEMENT (demux), demux->srcpad);
 
   gst_element_no_more_pads (GST_ELEMENT (demux));
