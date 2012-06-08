@@ -3971,6 +3971,8 @@ uridecodebin_failure:
     }
     group->video_sink = NULL;
 
+    gst_bin_remove (GST_BIN_CAST (playbin), uridecodebin);
+
     GST_DEBUG_OBJECT (playbin, "failed state change of uridecodebin");
     return FALSE;
   }
