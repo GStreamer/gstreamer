@@ -859,7 +859,7 @@ gst_audio_decoder_finish_frame (GstAudioDecoder * dec, GstBuffer * buf,
 
   GST_AUDIO_DECODER_STREAM_LOCK (dec);
 
-  if (priv->pending_events) {
+  if (buf && priv->pending_events) {
     GList *pending_events, *l;
 
     pending_events = priv->pending_events;
