@@ -234,7 +234,7 @@ gst_goom_src_setcaps (GstGoom * goom, GstCaps * caps)
   GST_DEBUG_OBJECT (goom, "dimension %dx%d, framerate %d/%d, spf %d",
       goom->width, goom->height, goom->fps_n, goom->fps_d, goom->spf);
 
-  return gst_pad_push_event (goom->srcpad, gst_event_new_caps (caps));
+  return gst_pad_set_caps (goom->srcpad, caps);
 
   /* ERRORS */
 error:

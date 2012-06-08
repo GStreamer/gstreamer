@@ -521,7 +521,7 @@ gst_rtp_dec_chain_rtp (GstPad * pad, GstObject * parent, GstBuffer * buffer)
     session->recv_rtp_src = gst_pad_new_from_template (templ, name);
     g_free (name);
 
-    gst_pad_push_event (session->recv_rtp_src, gst_event_new_caps (caps));
+    gst_pad_set_caps (session->recv_rtp_src, caps);
 
     gst_pad_set_element_private (session->recv_rtp_src, session);
     gst_pad_set_query_function (session->recv_rtp_src, gst_rtp_dec_query_src);

@@ -214,7 +214,7 @@ gst_monoscope_src_setcaps (GstMonoscope * monoscope, GstCaps * caps)
 
   monoscope->visstate = monoscope_init (monoscope->width, monoscope->height);
 
-  res = gst_pad_push_event (monoscope->srcpad, gst_event_new_caps (caps));
+  res = gst_pad_set_caps (monoscope->srcpad, caps);
 
   return res && (monoscope->visstate != NULL);
 }

@@ -2299,7 +2299,7 @@ gst_avi_demux_parse_stream (GstAviDemux * avi, GstBuffer * buf)
   avi->num_streams++;
 
   gst_pad_set_active (pad, TRUE);
-  gst_pad_push_event (pad, gst_event_new_caps (caps));
+  gst_pad_set_caps (pad, caps);
   gst_caps_unref (caps);
 
   /* make tags */
