@@ -197,7 +197,7 @@ gst_rfb_src_init (GstRfbSrc * src, GstRfbSrcClass * klass)
     WSADATA wsa_data;
 
     if (WSAStartup (MAKEWORD (2, 2), &wsa_data) != 0) {
-      GST_ERROR_OBJECT (sink, "WSAStartup failed: 0x%08x", WSAGetLastError ());
+      GST_ERROR_OBJECT (src, "WSAStartup failed: 0x%08x", WSAGetLastError ());
     }
   }
 #endif
