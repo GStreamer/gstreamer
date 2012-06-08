@@ -1997,7 +1997,9 @@ gst_video_decoder_finish_frame (GstVideoDecoder * decoder,
 
   /* Check for clipping */
   start = frame->pts;
-  stop = start >= 0 ? frame->pts + frame->duration : GST_CLOCK_TIME_NONE;
+  stop =
+      GST_CLOCK_TIME_IS_VALID (start) ? frame->pts +
+      frame->duration : GST_CLOCK_TIME_NONE;
 
   segment = &decoder->output_segment;
   if (gst_segment_clip (segment, GST_FORMAT_TIME, start, stop, &start, &stop)) {
