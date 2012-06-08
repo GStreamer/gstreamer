@@ -68,41 +68,37 @@ static GstMpegVideoPacketTypeCode ordercode[] = {
 
 GST_START_TEST (test_mpeg_parse)
 {
-  gint i;
-  GList *list, *tmp;
-  GstMpegVideoTypeOffsetSize *typeoffsz;
+  gint i, off;
+  GstMpegVideoPacket packet;
 
-  list = gst_mpeg_video_parse (mpeg2_seq, sizeof (mpeg2_seq), 12);
-
-  assert_equals_int (g_list_length (list), 4);
-  for (tmp = list, i = 0; tmp; tmp = g_list_next (tmp), i++) {
-    typeoffsz = tmp->data;
+  off = 12;
+  for (i = 0; i < 4; ++i) {
+    fail_unless (gst_mpeg_video_parse (&packet, mpeg2_seq, sizeof (mpeg2_seq),
+            off));
+    fail_unless (packet.offset == off + 4);
     if (i == 3) {
-      fail_unless (GST_MPEG_VIDEO_PACKET_SLICE_MIN <= typeoffsz->type &&
-          typeoffsz->type <= GST_MPEG_VIDEO_PACKET_SLICE_MAX);
-      fail_unless (typeoffsz->size < 0);
-    } else
-      assert_equals_int (ordercode[i], typeoffsz->type);
+      fail_unless (GST_MPEG_VIDEO_PACKET_SLICE_MIN <= packet.type &&
+          packet.type <= GST_MPEG_VIDEO_PACKET_SLICE_MAX);
+      fail_unless (packet.size < 0);
+    } else {
+      assert_equals_int (ordercode[i], packet.type);
+    }
+    off = packet.offset + packet.size;
   }
-
-  g_list_foreach (list, (GFunc) g_free, NULL);
-  g_list_free (list);
 }
 
 GST_END_TEST;
 
 GST_START_TEST (test_mpeg_parse_sequence_header)
 {
-  GList *list;
-  GstMpegVideoTypeOffsetSize *typeoffsz;
   GstMpegVideoSequenceHdr seqhdr;
+  GstMpegVideoPacket packet;
 
-  list = gst_mpeg_video_parse (mpeg2_seq, sizeof (mpeg2_seq), 12);
+  gst_mpeg_video_parse (&packet, mpeg2_seq, sizeof (mpeg2_seq), 12);
 
-  typeoffsz = list->data;
-  fail_unless (typeoffsz->type == GST_MPEG_VIDEO_PACKET_SEQUENCE);
+  fail_unless (packet.type == GST_MPEG_VIDEO_PACKET_SEQUENCE);
   fail_unless (gst_mpeg_video_parse_sequence_header (&seqhdr, mpeg2_seq,
-          sizeof (mpeg2_seq), typeoffsz->offset));
+          sizeof (mpeg2_seq), packet.offset));
   assert_equals_int (seqhdr.width, 1920);
   assert_equals_int (seqhdr.height, 1080);
   assert_equals_int (seqhdr.aspect_ratio_info, 3);
@@ -115,25 +111,20 @@ GST_START_TEST (test_mpeg_parse_sequence_header)
   assert_equals_int (seqhdr.bitrate, 0);
   assert_equals_int (seqhdr.vbv_buffer_size_value, 512);
   fail_unless (seqhdr.constrained_parameters_flag == FALSE);
-
-  g_list_foreach (list, (GFunc) g_free, NULL);
-  g_list_free (list);
 }
 
 GST_END_TEST;
 
 GST_START_TEST (test_mpeg_parse_sequence_extension)
 {
-  GList *list;
-  GstMpegVideoTypeOffsetSize *typeoffsz;
   GstMpegVideoSequenceExt seqext;
+  GstMpegVideoPacket packet;
 
-  list = gst_mpeg_video_parse (mpeg2_seq, sizeof (mpeg2_seq), 12);
+  gst_mpeg_video_parse (&packet, mpeg2_seq, sizeof (mpeg2_seq), 24);
 
-  typeoffsz = list->next->data;
-  fail_unless (typeoffsz->type == GST_MPEG_VIDEO_PACKET_EXTENSION);
+  fail_unless (packet.type == GST_MPEG_VIDEO_PACKET_EXTENSION);
   fail_unless (gst_mpeg_video_parse_sequence_extension (&seqext,
-          mpeg2_seq, sizeof (mpeg2_seq), typeoffsz->offset));
+          mpeg2_seq, sizeof (mpeg2_seq), packet.offset));
   assert_equals_int (seqext.profile, 4);
   assert_equals_int (seqext.level, 8);
   assert_equals_int (seqext.progressive, 1);
@@ -146,33 +137,29 @@ GST_START_TEST (test_mpeg_parse_sequence_extension)
   assert_equals_int (seqext.low_delay, 0);
   assert_equals_int (seqext.fps_n_ext, 3);
   assert_equals_int (seqext.fps_d_ext, 2);
-
-  g_list_foreach (list, (GFunc) g_free, NULL);
-  g_list_free (list);
 }
 
 GST_END_TEST;
 
 GST_START_TEST (test_mis_identified_datas)
 {
-  GList *list, *tmp;
-  GstMpegVideoTypeOffsetSize *typeoffsz;
+  GstMpegVideoPacket packet = { 0, };
   const guint8 *data = mis_identified_datas;
+  gint i, off;
 
-  list = gst_mpeg_video_parse (mis_identified_datas,
-      sizeof (mis_identified_datas), 0);
-
-  assert_equals_int (g_list_length (list), 2);
-  for (tmp = list; tmp; tmp = g_list_next (tmp)) {
-    typeoffsz = tmp->data;
-
-    assert_equals_int (data[typeoffsz->offset - 4], 0);
-    assert_equals_int (data[typeoffsz->offset - 3], 0);
-    assert_equals_int (data[typeoffsz->offset - 2], 1);
+  off = 0;
+  for (i = 0; i < 2; i++) {
+    gst_mpeg_video_parse (&packet, mis_identified_datas,
+        sizeof (mis_identified_datas), off);
+    assert_equals_int (data[packet.offset - 4], 0);
+    assert_equals_int (data[packet.offset - 3], 0);
+    assert_equals_int (data[packet.offset - 2], 1);
+    off = packet.offset + packet.size;
+    if (i == 1)
+      fail_unless (packet.size < 0);
+    else
+      fail_unless (packet.size > 0);
   }
-
-  g_list_foreach (list, (GFunc) g_free, NULL);
-  g_list_free (list);
 }
 
 GST_END_TEST;
