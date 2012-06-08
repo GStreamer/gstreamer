@@ -13,7 +13,8 @@ libgstvideoconvert_la_LIBADD = \
 	$(top_builddir)/gst-libs/gst/video/libgstvideo-$(GST_API_VERSION).la \
 	$(GST_BASE_LIBS) \
 	$(GST_LIBS) \
-	$(ORC_LIBS)
+	$(ORC_LIBS) \
+	$(LIBM)
 libgstvideoconvert_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
 libgstvideoconvert_la_LIBTOOLFLAGS = --tag=disable-static
 
