@@ -30,8 +30,10 @@ G_BEGIN_DECLS
 
 #if G_BYTE_ORDER == G_BIG_ENDIAN
 #define _GST_AUDIO_FORMAT_NE(fmt) GST_AUDIO_FORMAT_ ## fmt ## BE
+#define _GST_AUDIO_FORMAT_OE(fmt) GST_AUDIO_FORMAT_ ## fmt ## LE
 #elif G_BYTE_ORDER == G_LITTLE_ENDIAN
 #define _GST_AUDIO_FORMAT_NE(fmt) GST_AUDIO_FORMAT_ ## fmt ## LE
+#define _GST_AUDIO_FORMAT_OE(fmt) GST_AUDIO_FORMAT_ ## fmt ## BE
 #endif
 
 /**
@@ -152,6 +154,8 @@ typedef struct _GstAudioFormatInfo GstAudioFormatInfo;
  * @GST_AUDIO_FORMAT_FLAG_FLOAT: float samples
  * @GST_AUDIO_FORMAT_FLAG_SIGNED: signed samples
  * @GST_AUDIO_FORMAT_FLAG_COMPLEX: complex layout
+ * @GST_AUDIO_FORMAT_FLAG_UNPACK: the format can be used in
+ * #GstAudioFormatUnpack and #GstAudioFormatPack functions
  *
  * The different audio flags that a format info can have.
  */
@@ -160,7 +164,8 @@ typedef enum
   GST_AUDIO_FORMAT_FLAG_INTEGER  = (1 << 0),
   GST_AUDIO_FORMAT_FLAG_FLOAT    = (1 << 1),
   GST_AUDIO_FORMAT_FLAG_SIGNED   = (1 << 2),
-  GST_AUDIO_FORMAT_FLAG_COMPLEX  = (1 << 4)
+  GST_AUDIO_FORMAT_FLAG_COMPLEX  = (1 << 4),
+  GST_AUDIO_FORMAT_FLAG_UNPACK   = (1 << 5)
 } GstAudioFormatFlags;
 
 /**

@@ -26,7 +26,10 @@
 #include "audio-format.h"
 
 #define SINT (GST_AUDIO_FORMAT_FLAG_INTEGER | GST_AUDIO_FORMAT_FLAG_SIGNED)
+#define SINT_PACK (SINT | GST_AUDIO_FORMAT_FLAG_UNPACK)
 #define UINT (GST_AUDIO_FORMAT_FLAG_INTEGER)
+#define FLOAT (GST_AUDIO_FORMAT_FLAG_FLOAT)
+#define FLOAT_PACK (FLOAT | GST_AUDIO_FORMAT_FLAG_UNPACK)
 
 #define MAKE_FORMAT(str,desc,flags,end,width,depth,silent) \
   { GST_AUDIO_FORMAT_ ##str, G_STRINGIFY(str), desc, flags, end, width, depth, silent }
@@ -72,10 +75,19 @@ static GstAudioFormatInfo formats[] = {
   MAKE_FORMAT (U24_32BE, "24-bit unsigned PCM audio", UINT, G_BIG_ENDIAN, 32,
       24, SILENT_U24_32BE),
   /* 32 bit */
-  MAKE_FORMAT (S32LE, "32-bit signed PCM audio", SINT, G_LITTLE_ENDIAN, 32, 32,
+#if G_BYTE_ORDER == G_LITTLE_ENDIAN
+  MAKE_FORMAT (S32LE, "32-bit signed PCM audio", SINT_PACK, G_LITTLE_ENDIAN, 32,
+      32,
       SILENT_0),
   MAKE_FORMAT (S32BE, "32-bit signed PCM audio", SINT, G_BIG_ENDIAN, 32, 32,
       SILENT_0),
+#else
+  MAKE_FORMAT (S32LE, "32-bit signed PCM audio", SINT, G_LITTLE_ENDIAN, 32, 32,
+      SILENT_0),
+  MAKE_FORMAT (S32BE, "32-bit signed PCM audio", SINT_PACK, G_BIG_ENDIAN, 32,
+      32,
+      SILENT_0),
+#endif
   MAKE_FORMAT (U32LE, "32-bit unsigned PCM audio", UINT, G_LITTLE_ENDIAN, 32,
       32, SILENT_U32LE),
   MAKE_FORMAT (U32BE, "32-bit unsigned PCM audio", UINT, G_BIG_ENDIAN, 32, 32,
@@ -109,17 +121,20 @@ static GstAudioFormatInfo formats[] = {
       SILENT_U18BE),
   /* float */
   MAKE_FORMAT (F32LE, "32-bit floating-point audio",
-      GST_AUDIO_FORMAT_FLAG_FLOAT, G_LITTLE_ENDIAN, 32, 32,
-      SILENT_0),
+      GST_AUDIO_FORMAT_FLAG_FLOAT, G_LITTLE_ENDIAN, 32, 32, SILENT_0),
   MAKE_FORMAT (F32BE, "32-bit floating-point audio",
-      GST_AUDIO_FORMAT_FLAG_FLOAT, G_BIG_ENDIAN, 32, 32,
-      SILENT_0),
+      GST_AUDIO_FORMAT_FLAG_FLOAT, G_BIG_ENDIAN, 32, 32, SILENT_0),
+#if G_BYTE_ORDER == G_LITTLE_ENDIAN
   MAKE_FORMAT (F64LE, "64-bit floating-point audio",
-      GST_AUDIO_FORMAT_FLAG_FLOAT, G_LITTLE_ENDIAN, 64, 64,
-      SILENT_0),
+      FLOAT_PACK, G_LITTLE_ENDIAN, 64, 64, SILENT_0),
   MAKE_FORMAT (F64BE, "64-bit floating-point audio",
-      GST_AUDIO_FORMAT_FLAG_FLOAT, G_BIG_ENDIAN, 64, 64,
-      SILENT_0)
+      FLOAT, G_BIG_ENDIAN, 64, 64, SILENT_0)
+#else
+  MAKE_FORMAT (F64LE, "64-bit floating-point audio",
+      FLOAT, G_LITTLE_ENDIAN, 64, 64, SILENT_0),
+  MAKE_FORMAT (F64BE, "64-bit floating-point audio",
+      FLOAT_PACK, G_BIG_ENDIAN, 64, 64, SILENT_0)
+#endif
 };
 
 G_DEFINE_POINTER_TYPE (GstAudioFormatInfo, gst_audio_format_info);
