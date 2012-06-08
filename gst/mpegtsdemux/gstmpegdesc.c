@@ -34,14 +34,6 @@
 GST_DEBUG_CATEGORY (gstmpegtsdesc_debug);
 #define GST_CAT_DEFAULT (gstmpegtsdesc_debug)
 
-void
-gst_mpeg_descriptor_free (GstMPEGDescriptor * desc)
-{
-  g_return_if_fail (desc != NULL);
-
-  g_free (desc);
-}
-
 static guint
 gst_mpeg_descriptor_parse_1 (guint8 * data, guint size)
 {
@@ -66,18 +58,19 @@ gst_mpeg_descriptor_parse_1 (guint8 * data, guint size)
   return length + 2;
 }
 
-GstMPEGDescriptor *
-gst_mpeg_descriptor_parse (guint8 * data, guint size)
+gboolean
+gst_mpeg_descriptor_parse (GstMPEGDescriptor * result, guint8 * data,
+    guint size)
 {
   guint8 *current;
   guint consumed, total, n_desc;
-  GstMPEGDescriptor *result;
 
-  g_return_val_if_fail (data != NULL, NULL);
+  g_return_val_if_fail (data != NULL, FALSE);
 
   current = data;
   total = 0;
   n_desc = 0;
+  result->n_desc = 0;
 
   do {
     consumed = gst_mpeg_descriptor_parse_1 (current, size);
@@ -94,16 +87,13 @@ gst_mpeg_descriptor_parse (guint8 * data, guint size)
   GST_DEBUG ("parsed %d descriptors", n_desc);
 
   if (total == 0)
-    return NULL;
+    return FALSE;
 
-  result = g_malloc (sizeof (GstMPEGDescriptor) + total);
   result->n_desc = n_desc;
   result->data_length = total;
-  result->data = ((guint8 *) result) + sizeof (GstMPEGDescriptor);
+  result->data = data;
 
-  memcpy (result->data, data, total);
-
-  return result;
+  return TRUE;
 }
 
 guint

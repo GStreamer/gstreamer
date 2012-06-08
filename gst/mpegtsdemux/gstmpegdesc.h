@@ -349,8 +349,7 @@ typedef struct
 } GstMPEGDescriptor;
 
 void gst_mpegtsdesc_init_debug (void);
-GstMPEGDescriptor *gst_mpeg_descriptor_parse (guint8 * data, guint size);
-void gst_mpeg_descriptor_free                (GstMPEGDescriptor * desc);
+gboolean gst_mpeg_descriptor_parse (GstMPEGDescriptor *result, guint8 * data, guint size);
 
 guint gst_mpeg_descriptor_n_desc             (GstMPEGDescriptor * desc);
 guint8 *gst_mpeg_descriptor_find             (GstMPEGDescriptor * desc, gint tag);
