@@ -41,7 +41,7 @@ libgstaudio_@GST_API_VERSION@_la_SOURCES = \
 	streamvolume.c \
 	gstaudioiec61937.c
 
-nodist_libgstaudio_@GST_API_VERSION@_la_SOURCES = $(built_sources) $(built_headers)
+nodist_libgstaudio_@GST_API_VERSION@_la_SOURCES = $(BUILT_SOURCES)
 
 libgstaudio_@GST_API_VERSION@includedir = $(includedir)/gstreamer-@GST_API_VERSION@/gst/audio
 libgstaudio_@GST_API_VERSION@include_HEADERS = \
