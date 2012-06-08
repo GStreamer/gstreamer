@@ -339,7 +339,8 @@ gst_ff_aud_caps_new (AVCodecContext * context, enum CodecID codec_id,
     if (gst_ffmpeg_channel_layout_to_gst (context, pos)) {
       guint64 mask;
 
-      if (gst_audio_channel_positions_to_mask (pos, context->channels, &mask)) {
+      if (gst_audio_channel_positions_to_mask (pos, context->channels, FALSE,
+              &mask)) {
         gst_caps_set_simple (caps, "channel-mask", GST_TYPE_BITMASK, mask,
             NULL);
       }
