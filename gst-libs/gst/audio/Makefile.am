@@ -1,4 +1,7 @@
 # variables used for enum/marshal generation
+ORC_SOURCE=gstaudiopack
+include $(top_srcdir)/common/orc.mak
+
 glib_enum_headers= 		\
 	audio.h			\
 	audio-format.h			\
@@ -12,7 +15,7 @@ glib_gen_basename = audio
 
 built_sources = audio-enumtypes.c
 built_headers = audio-enumtypes.h
-BUILT_SOURCES = $(built_sources) $(built_headers)
+BUILT_SOURCES += $(built_sources) $(built_headers)
 
 lib_LTLIBRARIES = \
 	libgstaudio-@GST_API_VERSION@.la
@@ -63,10 +66,11 @@ libgstaudio_@GST_API_VERSION@include_HEADERS = \
 nodist_libgstaudio_@GST_API_VERSION@include_HEADERS = \
 	audio-enumtypes.h
 
-libgstaudio_@GST_API_VERSION@_la_CFLAGS = $(GST_PLUGINS_BASE_CFLAGS) $(GST_BASE_CFLAGS) $(GST_CFLAGS)
+libgstaudio_@GST_API_VERSION@_la_CFLAGS = $(GST_PLUGINS_BASE_CFLAGS) $(GST_BASE_CFLAGS) $(GST_CFLAGS) \
+		$(ORC_CFLAGS)
 libgstaudio_@GST_API_VERSION@_la_LIBADD = \
   $(top_builddir)/gst-libs/gst/tag/libgsttag-@GST_API_VERSION@.la \
-  $(GST_BASE_LIBS) $(GST_LIBS) $(LIBM)
+  $(GST_BASE_LIBS) $(GST_LIBS) $(LIBM) $(ORC_LIBS)
 libgstaudio_@GST_API_VERSION@_la_LDFLAGS = $(GST_LIB_LDFLAGS) $(GST_ALL_LDFLAGS) $(GST_LT_LDFLAGS)
 
 include $(top_srcdir)/common/gst-glib-gen.mak
