@@ -116,8 +116,6 @@ EXPORTS
 	gst_audio_info_set_format
 	gst_audio_info_to_caps
 	gst_audio_layout_get_type
-	gst_audio_marshal_VOID__OBJECT_INT
-	gst_audio_marshal_VOID__OBJECT_ULONG
 	gst_audio_pack_flags_get_type
 	gst_audio_reorder_channels
 	gst_audio_ring_buffer_acquire

@@ -10,14 +10,12 @@ glib_enum_define = GST_AUDIO
 glib_gen_prefix = gst_audio
 glib_gen_basename = audio
 
-built_sources = audio-enumtypes.c audio-marshal.c
-built_headers = audio-enumtypes.h audio-marshal.h
+built_sources = audio-enumtypes.c
+built_headers = audio-enumtypes.h
 BUILT_SOURCES = $(built_sources) $(built_headers)
 
 lib_LTLIBRARIES = \
 	libgstaudio-@GST_API_VERSION@.la
-
-EXTRA_DIST = audio-marshal.list
 
 CLEANFILES = $(BUILT_SOURCES)
 
