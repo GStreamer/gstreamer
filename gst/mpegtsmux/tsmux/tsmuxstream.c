@@ -214,7 +214,19 @@ tsmux_stream_get_pid (TsMuxStream * stream)
 void
 tsmux_stream_free (TsMuxStream * stream)
 {
+  GList *cur;
+
   g_return_if_fail (stream != NULL);
+
+  /* free buffers */
+  for (cur = stream->buffers; cur; cur = cur->next) {
+    TsMuxStreamBuffer *tmbuf = (TsMuxStreamBuffer *) cur->data;
+
+    if (stream->buffer_release)
+      stream->buffer_release (tmbuf->data, tmbuf->user_data);
+    g_slice_free (TsMuxStreamBuffer, tmbuf);
+  }
+  g_list_free (stream->buffers);
 
   g_slice_free (TsMuxStream, stream);
 }
