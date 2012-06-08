@@ -1,6 +1,9 @@
 # variables used for enum/marshal generation
 glib_enum_headers= 		\
 	audio.h			\
+	audio-format.h			\
+	audio-channels.h			\
+	audio-info.h			\
 	gstaudioringbuffer.h
 
 glib_enum_define = GST_AUDIO
@@ -20,6 +23,9 @@ CLEANFILES = $(BUILT_SOURCES)
 
 libgstaudio_@GST_API_VERSION@_la_SOURCES = \
 	audio.c \
+	audio-format.c \
+	audio-channels.c \
+	audio-info.c \
 	gstaudioringbuffer.c \
 	gstaudioclock.c \
 	gstaudiocdsrc.c \
@@ -39,6 +45,9 @@ nodist_libgstaudio_@GST_API_VERSION@_la_SOURCES = $(built_sources) $(built_heade
 libgstaudio_@GST_API_VERSION@includedir = $(includedir)/gstreamer-@GST_API_VERSION@/gst/audio
 libgstaudio_@GST_API_VERSION@include_HEADERS = \
 	audio.h \
+	audio-format.h \
+	audio-channels.h \
+	audio-info.h \
 	gstaudioringbuffer.h \
 	gstaudioclock.h \
 	gstaudiofilter.h \
