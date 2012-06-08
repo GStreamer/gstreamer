@@ -866,10 +866,11 @@ gst_base_src_set_caps (GstBaseSrc * src, GstCaps * caps)
   bclass = GST_BASE_SRC_GET_CLASS (src);
 
   gst_base_src_send_stream_start (src);
-  gst_pad_push_event (src->srcpad, gst_event_new_caps (caps));
 
   if (bclass->set_caps)
     res = bclass->set_caps (src, caps);
+  if (res)
+    res = gst_pad_set_caps (src->srcpad, caps);
 
   return res;
 }
