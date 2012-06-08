@@ -173,6 +173,8 @@ const gchar *         gst_video_chroma_to_string     (GstVideoChromaSite site);
  *   is stored in the second plane and indexes are stored in the first plane.
  * @GST_VIDEO_FORMAT_FLAG_COMPLEX: The video format has a complex layout that
  *   can't be described with the usual information in the #GstVideoFormatInfo.
+ * @GST_VIDEO_FORMAT_FLAG_UNPACK: This format can be used in a
+ *   #GstVideoFormatUnpack and #GstVideoFormatPack function.
  *
  * The different video flags that a format info can have.
  */
@@ -184,7 +186,8 @@ typedef enum
   GST_VIDEO_FORMAT_FLAG_ALPHA    = (1 << 3),
   GST_VIDEO_FORMAT_FLAG_LE       = (1 << 4),
   GST_VIDEO_FORMAT_FLAG_PALETTE  = (1 << 5),
-  GST_VIDEO_FORMAT_FLAG_COMPLEX  = (1 << 6)
+  GST_VIDEO_FORMAT_FLAG_COMPLEX  = (1 << 6),
+  GST_VIDEO_FORMAT_FLAG_UNPACK   = (1 << 7)
 } GstVideoFormatFlags;
 
 /* YUV components */
@@ -290,7 +293,8 @@ typedef void (*GstVideoFormatPack)           (const GstVideoFormatInfo *info,
  *     GST_VIDEO_SUB_SCALE to scale a width.
  * @h_sub: subsampling factor of the height for the component. Use
  *     GST_VIDEO_SUB_SCALE to scale a height.
- * @unpack_format: the format of the unpacked pixels.
+ * @unpack_format: the format of the unpacked pixels. This format must have the
+ *     #GST_VIDEO_FORMAT_FLAG_UNPACK flag set.
  * @unpack_func: an unpack function for this format
  * @pack_lines: the amount of lines that will be packed
  * @pack_func: an pack function for this format
