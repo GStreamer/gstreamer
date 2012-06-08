@@ -188,7 +188,7 @@ gst_type_find_element_have_type (GstTypeFindElement * typefind,
   typefind->caps = gst_caps_ref (caps);
   GST_OBJECT_UNLOCK (typefind);
 
-  gst_pad_push_event (typefind->src, gst_event_new_caps (caps));
+  gst_pad_set_caps (typefind->src, caps);
 }
 
 static void
@@ -979,12 +979,12 @@ gst_type_find_element_activate_src_mode (GstPad * pad, GstObject * parent,
        * activation might happen from the streaming thread. */
       gst_pad_pause_task (typefind->sink);
       res = gst_pad_activate_mode (typefind->sink, mode, active);
-      if (typefind->caps) {
+      if (res && typefind->caps) {
         GstCaps *caps;
         GST_OBJECT_LOCK (typefind);
         caps = gst_caps_ref (typefind->caps);
         GST_OBJECT_UNLOCK (typefind);
-        gst_pad_push_event (typefind->src, gst_event_new_caps (caps));
+        res = gst_pad_set_caps (typefind->src, caps);
         gst_caps_unref (caps);
       }
       break;
