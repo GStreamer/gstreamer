@@ -929,7 +929,8 @@ gst_ffmpegmux_register (GstPlugin * plugin)
         (!strncmp (in_plugin->name, "rtp", 3)) ||
         (!strncmp (in_plugin->name, "ass", 3)) ||
         (!strncmp (in_plugin->name, "ffmetadata", 10)) ||
-        (!strncmp (in_plugin->name, "srt", 3))
+        (!strncmp (in_plugin->name, "srt", 3)) ||
+        !strcmp (in_plugin->name, "segment")
         ) {
       GST_LOG ("Ignoring muxer %s", in_plugin->name);
       goto next;
