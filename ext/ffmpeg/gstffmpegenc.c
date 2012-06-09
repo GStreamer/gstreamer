@@ -214,13 +214,10 @@ gst_ffmpegenc_class_init (GstFFMpegEncClass * klass)
             GST_TYPE_ME_METHOD, ME_EPZS,
             G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
-    /* FIXME 0.11: Make this property read-only */
     g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_BUFSIZE,
         g_param_spec_int ("buffer-size", "Buffer Size",
-            "Size of the video buffers. "
-            "Note: Setting this property has no effect "
-            "and is deprecated!", 0, G_MAXINT, 0,
-            G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+            "Size of the video buffers (read-only)", 0, G_MAXINT, 0,
+            G_PARAM_READABLE | G_PARAM_STATIC_STRINGS));
     g_object_class_install_property (G_OBJECT_CLASS (klass),
         ARG_RTP_PAYLOAD_SIZE, g_param_spec_int ("rtp-payload-size",
             "RTP Payload Size", "Target GOB length", 0, G_MAXINT, 0,
