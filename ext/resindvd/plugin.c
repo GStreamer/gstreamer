@@ -35,7 +35,7 @@ plugin_init (GstPlugin * plugin)
 {
   gboolean result = TRUE;
 
-  GST_DEBUG_CATEGORY_INIT (resindvd_debug, "resindvd elements",
+  GST_DEBUG_CATEGORY_INIT (resindvd_debug, "resindvd",
       0, "DVD playback elements from resindvd");
 
 #ifdef ENABLE_NLS

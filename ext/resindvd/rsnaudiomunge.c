@@ -103,8 +103,6 @@ static void
 rsn_audiomunge_init (RsnAudioMunge * munge)
 {
   munge->sinkpad = gst_pad_new_from_static_template (&sink_template, "sink");
-  gst_pad_set_setcaps_function (munge->sinkpad,
-      GST_DEBUG_FUNCPTR (rsn_audiomunge_set_caps));
   gst_pad_set_getcaps_function (munge->sinkpad,
       GST_DEBUG_FUNCPTR (gst_pad_proxy_getcaps));
   gst_pad_set_chain_function (munge->sinkpad,
@@ -156,7 +154,6 @@ rsn_audiomunge_set_caps (GstPad * pad, GstCaps * caps)
 
   otherpad = (pad == munge->srcpad) ? munge->sinkpad : munge->srcpad;
 
-  ret = gst_pad_set_caps (otherpad, caps);
   gst_object_unref (munge);
   return ret;
 }
@@ -238,6 +235,14 @@ rsn_audiomunge_sink_event (GstPad * pad, GstEvent * event)
   RsnAudioMunge *munge = RSN_AUDIOMUNGE (gst_pad_get_parent (pad));
 
   switch (GST_EVENT_TYPE (event)) {
+    case GST_EVENT_CAPS:
+    {
+      GstCaps *caps;
+
+      gst_event_parse_caps (event, &caps);
+      ret = gst_pad_set_caps (munge->src_pad, caps);
+      gst_event_unref (caps);
+    }
     case GST_EVENT_FLUSH_STOP:
       rsn_audiomunge_reset (munge);
       ret = gst_pad_push_event (munge->srcpad, event);

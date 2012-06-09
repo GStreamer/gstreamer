@@ -1,23 +1,45 @@
-/* 
- * The contents of this file are subject to the Mozilla Public License
- * Version 1.1 (the "License"); you may not use this file except in
- * compliance with the License. You may obtain a copy of the License at
- * http://www.mozilla.org/MPL/.
- *
- * Software distributed under the License is distributed on an "AS IS"
- * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied. See the
- * License for the specific language governing rights and limitations
- * under the License.
- *
- * The Original Code is Fluendo MPEG Demuxer plugin.
- *
- * The Initial Developer of the Original Code is Fluendo, S.L.
- * Portions created by Fluendo, S.L. are Copyright (C) 2005
- * Fluendo, S.L. All Rights Reserved.
- *
- * Contributor(s): Wim Taymans <wim@fluendo.com>
- *                 Jan Schmidt <thaytan@noraisin.net>
- */
+ /*
+  * This library is licensed under 2 different licenses and you
+  * can choose to use it under the terms of either one of them. The
+  * two licenses are the MPL 1.1 and the LGPL.
+  *
+  * MPL:
+  *
+  * The contents of this file are subject to the Mozilla Public License
+  * Version 1.1 (the "License"); you may not use this file except in
+  * compliance with the License. You may obtain a copy of the License at
+  * http://www.mozilla.org/MPL/.
+  *
+  * Software distributed under the License is distributed on an "AS IS"
+  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied. See the
+  * License for the specific language governing rights and limitations
+  * under the License.
+  *
+  * LGPL:
+  *
+  * This library is free software; you can redistribute it and/or
+  * modify it under the terms of the GNU Library General Public
+  * License as published by the Free Software Foundation; either
+  * version 2 of the License, or (at your option) any later version.
+  *
+  * This library is distributed in the hope that it will be useful,
+  * but WITHOUT ANY WARRANTY; without even the implied warranty of
+  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+  * Library General Public License for more details.
+  *
+  * You should have received a copy of the GNU Library General Public
+  * License along with this library; if not, write to the
+  * Free Software Foundation, Inc., 59 Temple Place - Suite 330,
+  * Boston, MA 02111-1307, USA.
+  *
+  * The Original Code is Fluendo MPEG Demuxer plugin.
+  *
+  * The Initial Developer of the Original Code is Fluendo, S.L.
+  * Portions created by Fluendo, S.L. are Copyright (C) 2005
+  * Fluendo, S.L. All Rights Reserved.
+  *
+  * Contributor(s): Wim Taymans <wim@fluendo.com>
+  */
 
 #ifdef HAVE_CONFIG_H
 #include "config.h"
@@ -26,8 +48,8 @@
 #include "gstmpegdefs.h"
 #include "gstpesfilter.h"
 
-GST_DEBUG_CATEGORY (gstflupesfilter_debug);
-#define GST_CAT_DEFAULT (gstflupesfilter_debug)
+GST_DEBUG_CATEGORY (mpegpspesfilter_debug);
+#define GST_CAT_DEFAULT (mpegpspesfilter_debug)
 
 static GstFlowReturn gst_pes_filter_data_push (GstPESFilter * filter,
     gboolean first, GstBuffer * buffer);
@@ -75,17 +97,6 @@ gst_pes_filter_set_callbacks (GstPESFilter * filter,
   filter->user_data = user_data;
 }
 
-/* sync:4 == 00xx ! pts:3 ! 1 ! pts:15 ! 1 | pts:15 ! 1 */
-#define READ_TS(data, target, lost_sync_label)          \
-    if ((*data & 0x01) != 0x01) goto lost_sync_label;   \
-    target  = ((guint64) (*data++ & 0x0E)) << 29;	\
-    target |= ((guint64) (*data++       )) << 22;	\
-    if ((*data & 0x01) != 0x01) goto lost_sync_label;   \
-    target |= ((guint64) (*data++ & 0xFE)) << 14;	\
-    target |= ((guint64) (*data++       )) << 7;	\
-    if ((*data & 0x01) != 0x01) goto lost_sync_label;   \
-    target |= ((guint64) (*data++ & 0xFE)) >> 1;
-
 static gboolean
 gst_pes_filter_is_sync (guint32 sync)
 {
@@ -101,14 +112,20 @@ gst_pes_filter_parse (GstPESFilter * filter)
   GstFlowReturn ret;
   guint32 start_code;
 
+  gboolean STD_buffer_bound_scale G_GNUC_UNUSED;
   guint16 STD_buffer_size_bound;
   const guint8 *data;
   gint avail, datalen;
   gboolean have_size = FALSE;
 
-  /* read start code and length */
-  if (!(data = gst_adapter_peek (filter->adapter, 6)))
+  avail = gst_adapter_available (filter->adapter);
+
+  if (avail < 6)
     goto need_more_data;
+
+  data = gst_adapter_map (filter->adapter, 6);
+
+  /* read start code and length */
 
   /* get start code */
   start_code = GST_READ_UINT32_BE (data);
@@ -124,9 +141,6 @@ gst_pes_filter_parse (GstPESFilter * filter)
   /* start parsing length */
   filter->length = GST_READ_UINT16_BE (data);
 
-  /* see how much is available */
-  avail = gst_adapter_available (filter->adapter);
-
   GST_DEBUG ("id 0x%02x length %d, avail %d start code 0x%02x", filter->id,
       filter->length, avail, filter->start_code);
 
@@ -139,6 +153,7 @@ gst_pes_filter_parse (GstPESFilter * filter)
    * to set the allow_unbounded flag if they want */
   if (filter->length == 0 &&
       ((filter->start_code & 0xFFFFFFF0) == PACKET_VIDEO_START_CODE ||
+          filter->start_code == ID_EXTENDED_STREAM_ID ||
           filter->allow_unbounded)) {
     GST_DEBUG ("id 0x%02x, unbounded length", filter->id);
     filter->unbounded_packet = TRUE;
@@ -155,10 +170,14 @@ gst_pes_filter_parse (GstPESFilter * filter)
     avail = MIN (avail, filter->length + 6);
   }
 
+  if (avail < 6)
+    goto need_more_data;
+
+  gst_adapter_unmap (filter->adapter);
+
   /* read more data, either the whole packet if there is a length
    * or whatever we have available if this in an unbounded packet. */
-  if (!(data = gst_adapter_peek (filter->adapter, avail)))
-    goto need_more_data;
+  data = gst_adapter_map (filter->adapter, avail);
 
   /* This will make us flag LOST_SYNC if we run out of data from here onward */
   have_size = TRUE;
@@ -177,7 +196,8 @@ gst_pes_filter_parse (GstPESFilter * filter)
     case ID_PROGRAM_STREAM_DIRECTORY:
     case ID_DSMCC_STREAM:
     case ID_ITU_TREC_H222_TYPE_E_STREAM:
-      goto skip;
+      /* Push directly out */
+      goto push_out;
     case ID_PADDING_STREAM:
       GST_DEBUG ("skipping padding stream");
       goto skip;
@@ -185,9 +205,8 @@ gst_pes_filter_parse (GstPESFilter * filter)
       break;
   }
 
-  if (datalen < 1)
+  if (datalen == 0)
     goto need_more_data;
-
   filter->pts = filter->dts = -1;
 
   /* stuffing bits, first two bits are '10' for mpeg2 pes so this code is
@@ -212,7 +231,7 @@ gst_pes_filter_parse (GstPESFilter * filter)
     if (datalen < 3)
       goto need_more_data;
 
-    /* STD_buffer_bound_scale = *data & 0x20; */
+    STD_buffer_bound_scale = *data & 0x20;
     STD_buffer_size_bound = ((guint16) (*data++ & 0x1F)) << 8;
     STD_buffer_size_bound |= *data++;
 
@@ -264,7 +283,7 @@ gst_pes_filter_parse (GstPESFilter * filter)
 
     /* check PES scrambling control */
     if ((flags & 0x30) != 0)
-      goto encrypted;
+      GST_DEBUG ("PES scrambling control: %x", (flags >> 4) & 0x3);
 
     /* 2: PTS_DTS_flags
      * 1: ESCR_flag
@@ -376,9 +395,53 @@ gst_pes_filter_parse (GstPESFilter * filter)
     }
     /* PES_extension_flag  */
     if ((flags & 0x01)) {
-      GST_DEBUG ("%x PES_extension", filter->id);
+      flags = *data++;
+      header_data_length -= 1;
+      datalen -= 1;
+      GST_DEBUG ("%x PES_extension, flags 0x%02x", filter->id, flags);
+      /* PES_private_data_flag */
+      if ((flags & 0x80)) {
+        GST_DEBUG ("%x PES_private_data_flag", filter->id);
+        data += 16;
+        header_data_length -= 16;
+        datalen -= 16;
+      }
+      /* pack_header_field_flag */
+      if ((flags & 0x40)) {
+        guint8 pack_field_length = *data;
+        GST_DEBUG ("%x pack_header_field_flag, pack_field_length %d",
+            filter->id, pack_field_length);
+        data += pack_field_length + 1;
+        header_data_length -= pack_field_length + 1;
+        datalen -= pack_field_length + 1;
+      }
+      /* program_packet_sequence_counter_flag */
+      if ((flags & 0x20)) {
+        GST_DEBUG ("%x program_packet_sequence_counter_flag", filter->id);
+        data += 2;
+        header_data_length -= 2;
+        datalen -= 2;
+      }
+      /* P-STD_buffer_flag */
+      if ((flags & 0x10)) {
+        GST_DEBUG ("%x P-STD_buffer_flag", filter->id);
+        data += 2;
+        header_data_length -= 2;
+        datalen -= 2;
+      }
+      /* PES_extension_flag_2 */
+      if ((flags & 0x01)) {
+        guint8 PES_extension_field_length = *data++;
+        GST_DEBUG ("%x PES_extension_flag_2, len %d",
+            filter->id, PES_extension_field_length & 0x7f);
+        if (PES_extension_field_length == 0x81) {
+          GST_DEBUG ("%x substream id 0x%02x", filter->id, *data);
+        }
+        data += PES_extension_field_length & 0x7f;
+        header_data_length -= (PES_extension_field_length & 0x7f) + 1;
+        datalen -= (PES_extension_field_length & 0x7f) + 1;
+      }
     }
-
     /* calculate the amount of real data in this PES packet */
     data += header_data_length;
     datalen -= header_data_length;
@@ -392,6 +455,7 @@ gst_pes_filter_parse (GstPESFilter * filter)
     goto lost_sync;
   }
 
+push_out:
   {
     GstBuffer *out;
     guint16 consumed;
@@ -408,11 +472,8 @@ gst_pes_filter_parse (GstPESFilter * filter)
     }
 
     if (datalen > 0) {
-      out = gst_buffer_new ();
-      GST_BUFFER_DATA (out) = g_memdup (data, datalen);
-      GST_BUFFER_SIZE (out) = datalen;
-      GST_BUFFER_MALLOCDATA (out) = GST_BUFFER_DATA (out);
-
+      out = gst_buffer_new_allocate (NULL, datalen, NULL);
+      gst_buffer_fill (out, 0, data, datalen);
       ret = gst_pes_filter_data_push (filter, TRUE, out);
       filter->first = FALSE;
     } else {
@@ -425,6 +486,7 @@ gst_pes_filter_parse (GstPESFilter * filter)
       filter->state = STATE_DATA_PUSH;
   }
 
+  gst_adapter_unmap (filter->adapter);
   gst_adapter_flush (filter->adapter, avail);
   ADAPTER_OFFSET_FLUSH (avail);
 
@@ -434,36 +496,27 @@ need_more_data:
   {
     if (filter->unbounded_packet == FALSE) {
       if (have_size == TRUE) {
-        GST_DEBUG ("bounded need more data %d, lost sync",
+        GST_DEBUG ("bounded need more data %" G_GSIZE_FORMAT " , lost sync",
             gst_adapter_available (filter->adapter));
         ret = GST_FLOW_LOST_SYNC;
       } else {
-        GST_DEBUG ("bounded need more data %d, breaking for more",
-            gst_adapter_available (filter->adapter));
+        GST_DEBUG ("bounded need more data %" G_GSIZE_FORMAT
+            ", breaking for more", gst_adapter_available (filter->adapter));
         ret = GST_FLOW_NEED_MORE_DATA;
       }
     } else {
-      GST_DEBUG ("unbounded need more data %d",
+      GST_DEBUG ("unbounded need more data %" G_GSIZE_FORMAT,
           gst_adapter_available (filter->adapter));
       ret = GST_FLOW_NEED_MORE_DATA;
     }
-
+    gst_adapter_unmap (filter->adapter);
     return ret;
   }
 skip:
   {
-    GST_DEBUG ("skipping 0x%02x", filter->id);
-    gst_adapter_flush (filter->adapter, avail);
-    ADAPTER_OFFSET_FLUSH (avail);
+    gst_adapter_unmap (filter->adapter);
 
-    filter->length -= avail - 6;
-    if (filter->length > 0 || filter->unbounded_packet)
-      filter->state = STATE_DATA_SKIP;
-    return GST_FLOW_OK;
-  }
-encrypted:
-  {
-    GST_DEBUG ("skipping encrypted 0x%02x", filter->id);
+    GST_DEBUG ("skipping 0x%02x", filter->id);
     gst_adapter_flush (filter->adapter, avail);
     ADAPTER_OFFSET_FLUSH (avail);
 
@@ -474,6 +527,7 @@ encrypted:
   }
 lost_sync:
   {
+    gst_adapter_unmap (filter->adapter);
     GST_DEBUG ("lost sync");
     gst_adapter_flush (filter->adapter, 4);
     ADAPTER_OFFSET_FLUSH (4);
@@ -562,14 +616,8 @@ gst_pes_filter_process (GstPESFilter * filter)
           ret = GST_FLOW_OK;
         } else {
           GstBuffer *out;
-          guint8 *data;
 
-          data = gst_adapter_take (filter->adapter, avail);
-
-          out = gst_buffer_new ();
-          GST_BUFFER_DATA (out) = data;
-          GST_BUFFER_SIZE (out) = avail;
-          GST_BUFFER_MALLOCDATA (out) = data;
+          out = gst_adapter_take_buffer (filter->adapter, avail);
 
           ret = gst_pes_filter_data_push (filter, filter->first, out);
           filter->first = FALSE;
