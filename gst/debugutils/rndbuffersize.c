@@ -46,8 +46,8 @@ struct _GstRndBufferSize
 
   /*< private > */
   GRand *rand;
-  gulong seed;
-  glong min, max;
+  guint seed;
+  gint min, max;
 
   GstPad *sinkpad, *srcpad;
   guint64 offset;
@@ -125,20 +125,17 @@ gst_rnd_buffer_size_class_init (GstRndBufferSizeClass * klass)
   gstelement_class->change_state =
       GST_DEBUG_FUNCPTR (gst_rnd_buffer_size_change_state);
 
-  /* FIXME 0.11: these should all be int instead of long, to avoid bugs
-   * when passing these as varargs with g_object_set(), and there was no
-   * reason to use long in the first place here */
   g_object_class_install_property (gobject_class, ARG_SEED,
-      g_param_spec_ulong ("seed", "random number seed",
+      g_param_spec_uint ("seed", "random number seed",
           "seed for randomness (initialized when going from READY to PAUSED)",
           0, G_MAXUINT32, DEFAULT_SEED,
           G_PARAM_READWRITE | G_PARAM_CONSTRUCT | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (gobject_class, ARG_MINIMUM,
-      g_param_spec_long ("min", "mininum", "mininum buffer size",
+      g_param_spec_int ("min", "mininum", "mininum buffer size",
           0, G_MAXINT32, DEFAULT_MIN,
           G_PARAM_READWRITE | G_PARAM_CONSTRUCT | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (gobject_class, ARG_MAXIMUM,
-      g_param_spec_long ("max", "maximum", "maximum buffer size",
+      g_param_spec_int ("max", "maximum", "maximum buffer size",
           1, G_MAXINT32, DEFAULT_MAX,
           G_PARAM_READWRITE | G_PARAM_CONSTRUCT | G_PARAM_STATIC_STRINGS));
 }
@@ -182,13 +179,13 @@ gst_rnd_buffer_size_set_property (GObject * object, guint prop_id,
 
   switch (prop_id) {
     case ARG_SEED:
-      self->seed = g_value_get_ulong (value);
+      self->seed = g_value_get_uint (value);
       break;
     case ARG_MINIMUM:
-      self->min = g_value_get_long (value);
+      self->min = g_value_get_int (value);
       break;
     case ARG_MAXIMUM:
-      self->max = g_value_get_long (value);
+      self->max = g_value_get_int (value);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -205,13 +202,13 @@ gst_rnd_buffer_size_get_property (GObject * object, guint prop_id,
 
   switch (prop_id) {
     case ARG_SEED:
-      g_value_set_ulong (value, self->seed);
+      g_value_set_uint (value, self->seed);
       break;
     case ARG_MINIMUM:
-      g_value_set_long (value, self->min);
+      g_value_set_int (value, self->min);
       break;
     case ARG_MAXIMUM:
-      g_value_set_long (value, self->max);
+      g_value_set_int (value, self->max);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
