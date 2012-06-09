@@ -823,15 +823,6 @@ gst_ffmpeg_cfg_install_property (GstFFMpegEncClass * klass, guint base)
               : puint->default_value, pspec->flags);
           break;
         }
-        case G_TYPE_ULONG:{
-          GParamSpecULong *pulong = G_PARAM_SPEC_ULONG (pspec);
-
-          pspec = g_param_spec_ulong (name, nick, blurb,
-              pulong->minimum, pulong->maximum,
-              lavc_default ? G_STRUCT_MEMBER (gulong, ctx, ctx_offset)
-              : pulong->default_value, pspec->flags);
-          break;
-        }
         case G_TYPE_FLOAT:{
           GParamSpecFloat *pfloat = G_PARAM_SPEC_FLOAT (pspec);
 
@@ -913,11 +904,6 @@ gst_ffmpeg_cfg_set_property (GObject * object,
       G_STRUCT_MEMBER (gint, ffmpegenc, qdata->offset) =
           g_value_get_int (value);
       break;
-    case G_TYPE_ULONG:
-      g_return_val_if_fail (qdata->size == sizeof (gulong), TRUE);
-      G_STRUCT_MEMBER (glong, ffmpegenc, qdata->offset) =
-          g_value_get_ulong (value);
-      break;
     case G_TYPE_FLOAT:
       g_return_val_if_fail (qdata->size == sizeof (gfloat), TRUE);
       G_STRUCT_MEMBER (gfloat, ffmpegenc, qdata->offset) =
@@ -979,11 +965,6 @@ gst_ffmpeg_cfg_get_property (GObject * object,
     case G_TYPE_INT:
       g_return_val_if_fail (qdata->size == sizeof (gint), TRUE);
       g_value_set_int (value, G_STRUCT_MEMBER (gint, ffmpegenc, qdata->offset));
-      break;
-    case G_TYPE_ULONG:
-      g_return_val_if_fail (qdata->size == sizeof (gulong), TRUE);
-      g_value_set_ulong (value,
-          G_STRUCT_MEMBER (glong, ffmpegenc, qdata->offset));
       break;
     case G_TYPE_FLOAT:
       g_return_val_if_fail (qdata->size == sizeof (gfloat), TRUE);

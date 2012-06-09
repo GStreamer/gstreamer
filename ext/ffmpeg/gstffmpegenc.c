@@ -198,9 +198,11 @@ gst_ffmpegenc_class_init (GstFFMpegEncClass * klass)
   gobject_class->get_property = gst_ffmpegenc_get_property;
 
   if (klass->in_plugin->type == AVMEDIA_TYPE_VIDEO) {
+    /* FIXME: could use -1 for a sensible per-codec default based on
+     * e.g. input resolution and framerate */
     g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_BIT_RATE,
-        g_param_spec_ulong ("bitrate", "Bit Rate",
-            "Target Video Bitrate", 0, G_MAXULONG, DEFAULT_VIDEO_BITRATE,
+        g_param_spec_int ("bitrate", "Bit Rate",
+            "Target Video Bitrate", 0, G_MAXINT, DEFAULT_VIDEO_BITRATE,
             G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
     g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_GOP_SIZE,
         g_param_spec_int ("gop-size", "GOP Size",
@@ -214,22 +216,23 @@ gst_ffmpegenc_class_init (GstFFMpegEncClass * klass)
 
     /* FIXME 0.11: Make this property read-only */
     g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_BUFSIZE,
-        g_param_spec_ulong ("buffer-size", "Buffer Size",
+        g_param_spec_int ("buffer-size", "Buffer Size",
             "Size of the video buffers. "
             "Note: Setting this property has no effect "
-            "and is deprecated!", 0, G_MAXULONG, 0,
+            "and is deprecated!", 0, G_MAXINT, 0,
             G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
     g_object_class_install_property (G_OBJECT_CLASS (klass),
-        ARG_RTP_PAYLOAD_SIZE, g_param_spec_ulong ("rtp-payload-size",
-            "RTP Payload Size", "Target GOB length", 0, G_MAXULONG, 0,
+        ARG_RTP_PAYLOAD_SIZE, g_param_spec_int ("rtp-payload-size",
+            "RTP Payload Size", "Target GOB length", 0, G_MAXINT, 0,
             G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
     /* register additional properties, possibly dependent on the exact CODEC */
     gst_ffmpeg_cfg_install_property (klass, ARG_CFG_BASE);
   } else if (klass->in_plugin->type == AVMEDIA_TYPE_AUDIO) {
+    /* FIXME: could use -1 for a sensible per-codec defaults */
     g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_BIT_RATE,
-        g_param_spec_ulong ("bitrate", "Bit Rate",
-            "Target Audio Bitrate", 0, G_MAXULONG, DEFAULT_AUDIO_BITRATE,
+        g_param_spec_int ("bitrate", "Bit Rate",
+            "Target Audio Bitrate", 0, G_MAXINT, DEFAULT_AUDIO_BITRATE,
             G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   }
 
@@ -1285,7 +1288,7 @@ gst_ffmpegenc_set_property (GObject * object,
   /* Check the argument id to see which argument we're setting. */
   switch (prop_id) {
     case ARG_BIT_RATE:
-      ffmpegenc->bitrate = g_value_get_ulong (value);
+      ffmpegenc->bitrate = g_value_get_int (value);
       break;
     case ARG_GOP_SIZE:
       ffmpegenc->gop_size = g_value_get_int (value);
@@ -1296,7 +1299,7 @@ gst_ffmpegenc_set_property (GObject * object,
     case ARG_BUFSIZE:
       break;
     case ARG_RTP_PAYLOAD_SIZE:
-      ffmpegenc->rtp_payload_size = g_value_get_ulong (value);
+      ffmpegenc->rtp_payload_size = g_value_get_int (value);
       break;
     default:
       if (!gst_ffmpeg_cfg_set_property (object, value, pspec))
@@ -1317,7 +1320,7 @@ gst_ffmpegenc_get_property (GObject * object,
 
   switch (prop_id) {
     case ARG_BIT_RATE:
-      g_value_set_ulong (value, ffmpegenc->bitrate);
+      g_value_set_int (value, ffmpegenc->bitrate);
       break;
     case ARG_GOP_SIZE:
       g_value_set_int (value, ffmpegenc->gop_size);
@@ -1326,10 +1329,10 @@ gst_ffmpegenc_get_property (GObject * object,
       g_value_set_enum (value, ffmpegenc->me_method);
       break;
     case ARG_BUFSIZE:
-      g_value_set_ulong (value, ffmpegenc->buffer_size);
+      g_value_set_int (value, ffmpegenc->buffer_size);
       break;
     case ARG_RTP_PAYLOAD_SIZE:
-      g_value_set_ulong (value, ffmpegenc->rtp_payload_size);
+      g_value_set_int (value, ffmpegenc->rtp_payload_size);
       break;
     default:
       if (!gst_ffmpeg_cfg_get_property (object, value, pspec))

@@ -47,11 +47,11 @@ struct _GstFFMpegEnc
   gboolean discont;
 
   /* cache */
-  gulong bitrate;
+  gint bitrate;
   gint me_method;
   gint gop_size;
-  gulong buffer_size;
-  gulong rtp_payload_size;
+  gint buffer_size;
+  gint rtp_payload_size;
 
   guint8 *working_buf;
   gulong working_buf_size;
