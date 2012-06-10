@@ -899,9 +899,7 @@ static gboolean
 gst_flups_demux_sink_event (GstPad * pad, GstObject * parent, GstEvent * event)
 {
   gboolean res = TRUE;
-  GstFluPSDemux *demux;
-
-  demux = GST_FLUPS_DEMUX (gst_pad_get_parent (pad));
+  GstFluPSDemux *demux = GST_FLUPS_DEMUX (parent);
 
   switch (GST_EVENT_TYPE (event)) {
     case GST_EVENT_FLUSH_START:
@@ -971,8 +969,6 @@ gst_flups_demux_sink_event (GstPad * pad, GstObject * parent, GstEvent * event)
       gst_flups_demux_send_event (demux, event);
       break;
   }
-
-  gst_object_unref (demux);
 
   return res;
 }
@@ -1276,9 +1272,7 @@ static gboolean
 gst_flups_demux_src_event (GstPad * pad, GstObject * parent, GstEvent * event)
 {
   gboolean res = FALSE;
-  GstFluPSDemux *demux;
-
-  demux = GST_FLUPS_DEMUX (gst_pad_get_parent (pad));
+  GstFluPSDemux *demux = GST_FLUPS_DEMUX (parent);
 
   switch (GST_EVENT_TYPE (event)) {
     case GST_EVENT_SEEK:
@@ -1293,8 +1287,6 @@ gst_flups_demux_src_event (GstPad * pad, GstObject * parent, GstEvent * event)
       break;
   }
 
-  gst_object_unref (demux);
-
   return res;
 }
 
@@ -1302,9 +1294,7 @@ static gboolean
 gst_flups_demux_src_query (GstPad * pad, GstObject * parent, GstQuery * query)
 {
   gboolean res = FALSE;
-  GstFluPSDemux *demux;
-
-  demux = GST_FLUPS_DEMUX (gst_pad_get_parent (pad));
+  GstFluPSDemux *demux = GST_FLUPS_DEMUX (parent);
 
   GST_LOG_OBJECT (demux, "Have query of type %d on pad %" GST_PTR_FORMAT,
       GST_QUERY_TYPE (query), pad);
@@ -1465,16 +1455,9 @@ gst_flups_demux_src_query (GstPad * pad, GstObject * parent, GstQuery * query)
   }
 
 beach:
-  gst_object_unref (demux);
-
   return res;
-
 not_supported:
-  {
-    gst_object_unref (demux);
-
-    return FALSE;
-  }
+  return FALSE;
 }
 
 static void
@@ -2900,9 +2883,7 @@ static gboolean
 gst_flups_demux_sink_activate_push (GstPad * sinkpad, GstObject * parent,
     gboolean active)
 {
-  GstFluPSDemux *demux;
-
-  demux = GST_FLUPS_DEMUX (parent);
+  GstFluPSDemux *demux = GST_FLUPS_DEMUX (parent);
 
   demux->random_access = FALSE;
 
@@ -2916,19 +2897,15 @@ static gboolean
 gst_flups_demux_sink_activate_pull (GstPad * sinkpad, GstObject * parent,
     gboolean active)
 {
-  GstFluPSDemux *demux;
-
-  demux = GST_FLUPS_DEMUX (gst_pad_get_parent (sinkpad));
+  GstFluPSDemux *demux = GST_FLUPS_DEMUX (parent);
 
   if (active) {
     GST_DEBUG ("pull mode activated");
     demux->random_access = TRUE;
-    gst_object_unref (demux);
     return gst_pad_start_task (sinkpad, (GstTaskFunction) gst_flups_demux_loop,
         sinkpad, NULL);
   } else {
     demux->random_access = FALSE;
-    gst_object_unref (demux);
     return gst_pad_stop_task (sinkpad);
   }
 }
@@ -2949,7 +2926,7 @@ gst_flups_demux_sink_activate_mode (GstPad * pad, GstObject * parent,
 static GstFlowReturn
 gst_flups_demux_chain (GstPad * pad, GstObject * parent, GstBuffer * buffer)
 {
-  GstFluPSDemux *demux = GST_FLUPS_DEMUX (gst_pad_get_parent (pad));
+  GstFluPSDemux *demux = GST_FLUPS_DEMUX (parent);
   GstFlowReturn ret = GST_FLOW_OK;
   guint32 avail;
   gboolean save, discont;
@@ -3081,8 +3058,6 @@ gst_flups_demux_chain (GstPad * pad, GstObject * parent, GstBuffer * buffer)
     }
   }
 done:
-  gst_object_unref (demux);
-
   return ret;
 }
 
