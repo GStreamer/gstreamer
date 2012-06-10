@@ -591,11 +591,12 @@ gstspu_vobsub_render (GstDVDSpu * dvdspu, GstVideoFrame * frame)
   }
 
   /* for debugging purposes, draw a faint rectangle at the edges of the disp_rect */
-  if (FALSE) {
+  if ((dvdspu_debug_flags & GST_DVD_SPU_DEBUG_RENDER_RECTANGLE) != 0) {
     gstspu_vobsub_draw_highlight (state, frame, &state->vobsub.disp_rect);
   }
   /* For debugging purposes, draw a faint rectangle around the highlight rect */
-  if (FALSE && state->vobsub.hl_rect.top != -1) {
+  if ((dvdspu_debug_flags & GST_DVD_SPU_DEBUG_HIGHLIGHT_RECTANGLE) != 0
+      && state->vobsub.hl_rect.top != -1) {
     gstspu_vobsub_draw_highlight (state, frame, &state->vobsub.hl_rect);
   }
 }

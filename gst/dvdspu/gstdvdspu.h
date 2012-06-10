@@ -124,6 +124,14 @@ struct _GstDVDSpuClass {
 
 GType gst_dvd_spu_get_type (void);
 
+typedef enum {
+  GST_DVD_SPU_DEBUG_RENDER_RECTANGLE = (1 << 0),
+  GST_DVD_SPU_DEBUG_HIGHLIGHT_RECTANGLE = (1 << 1)
+} GstDVDSPUDebugFlags;
+
+extern GstDVDSPUDebugFlags dvdspu_debug_flags;
+
+
 G_END_DECLS
 
 #endif /* __GST_DVD_SPU_H__ */
