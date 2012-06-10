@@ -2851,6 +2851,10 @@ gst_element_dispose (GObject * object)
       GST_CAT_DEBUG_OBJECT (GST_CAT_ELEMENT_PADS, element,
           "removing request pad %s:%s", GST_DEBUG_PAD_NAME (pad));
       oclass->release_pad (element, pad);
+
+      /* in case the release_pad function removed the next pad too */
+      if (walk && g_list_position (element->pads, walk) == -1)
+        walk = element->pads;
     }
   }
   /* remove the remaining pads */
