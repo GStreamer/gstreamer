@@ -729,7 +729,7 @@ mpegts_base_activate_program (MpegTSBase * base, MpegTSBaseProgram * program,
   if (program->pmt_info)
     gst_structure_free (program->pmt_info);
 
-  program->pmt_info = gst_structure_copy (pmt_info);
+  program->pmt_info = pmt_info;
   program->pmt_pid = pmt_pid;
   program->pcr_pid = pcr_pid;
 
@@ -852,7 +852,7 @@ mpegts_base_apply_pat (MpegTSBase * base, GstStructure * pat_info)
    */
 
   old_pat = base->pat;
-  base->pat = gst_structure_copy (pat_info);
+  base->pat = pat_info;
 
   gst_element_post_message (GST_ELEMENT_CAST (base),
       gst_message_new_element (GST_OBJECT (base),
@@ -983,13 +983,10 @@ mpegts_base_apply_pmt (MpegTSBase * base,
   } else
     program = old_program;
 
-  /* First activate program */
+  /* activate program */
+  /* Ownership of pmt_info is given to the program */
   mpegts_base_activate_program (base, program, pmt_pid, pmt_info,
       initial_program);
-
-  /* if (program->pmt_info) */
-  /*   gst_structure_free (program->pmt_info); */
-  /* program->pmt_info = NULL; */
 
   gst_element_post_message (GST_ELEMENT_CAST (base),
       gst_message_new_element (GST_OBJECT (base),
@@ -1000,12 +997,14 @@ mpegts_base_apply_pmt (MpegTSBase * base,
 no_program:
   {
     GST_ERROR ("Attempted to apply a PMT on a program that wasn't created");
+    gst_structure_free (pmt_info);
     return;
   }
 
 same_program:
   {
     GST_DEBUG ("Not applying identical program");
+    gst_structure_free (pmt_info);
     return;
   }
 }
@@ -1016,8 +1015,7 @@ mpegts_base_apply_cat (MpegTSBase * base, GstStructure * cat_info)
   GST_DEBUG_OBJECT (base, "CAT %" GST_PTR_FORMAT, cat_info);
 
   gst_element_post_message (GST_ELEMENT_CAST (base),
-      gst_message_new_element (GST_OBJECT (base),
-          gst_structure_copy (cat_info)));
+      gst_message_new_element (GST_OBJECT (base), cat_info));
 }
 
 static void
@@ -1027,8 +1025,7 @@ mpegts_base_apply_nit (MpegTSBase * base,
   GST_DEBUG_OBJECT (base, "NIT %" GST_PTR_FORMAT, nit_info);
 
   gst_element_post_message (GST_ELEMENT_CAST (base),
-      gst_message_new_element (GST_OBJECT (base),
-          gst_structure_copy (nit_info)));
+      gst_message_new_element (GST_OBJECT (base), nit_info));
 }
 
 static void
@@ -1040,8 +1037,7 @@ mpegts_base_apply_sdt (MpegTSBase * base,
   mpegts_base_get_tags_from_sdt (base, sdt_info);
 
   gst_element_post_message (GST_ELEMENT_CAST (base),
-      gst_message_new_element (GST_OBJECT (base),
-          gst_structure_copy (sdt_info)));
+      gst_message_new_element (GST_OBJECT (base), sdt_info));
 }
 
 static void
@@ -1053,8 +1049,7 @@ mpegts_base_apply_eit (MpegTSBase * base,
   mpegts_base_get_tags_from_eit (base, eit_info);
 
   gst_element_post_message (GST_ELEMENT_CAST (base),
-      gst_message_new_element (GST_OBJECT (base),
-          gst_structure_copy (eit_info)));
+      gst_message_new_element (GST_OBJECT (base), eit_info));
 }
 
 static void
@@ -1066,8 +1061,7 @@ mpegts_base_apply_tdt (MpegTSBase * base,
           gst_structure_copy (tdt_info)));
 
   GST_MPEGTS_BASE_GET_CLASS (base)->push_event (base,
-      gst_event_new_custom (GST_EVENT_CUSTOM_DOWNSTREAM,
-          gst_structure_copy (tdt_info)));
+      gst_event_new_custom (GST_EVENT_CUSTOM_DOWNSTREAM, tdt_info));
 }
 
 
@@ -1213,9 +1207,6 @@ mpegts_base_handle_psi (MpegTSBase * base, MpegTSPacketizerSection * section)
           section->table_id);
       break;
   }
-
-  if (structure)
-    gst_structure_free (structure);
 
   return res;
 }
