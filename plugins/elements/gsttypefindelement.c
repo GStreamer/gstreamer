@@ -460,7 +460,7 @@ gst_type_find_element_seek (GstTypeFindElement * typefind, GstEvent * event)
   gst_segment_do_seek (&seeksegment, rate, format, flags,
       cur_type, cur, stop_type, stop, NULL);
 
-  flush = ! !(flags & GST_SEEK_FLAG_FLUSH);
+  flush = !!(flags & GST_SEEK_FLAG_FLUSH);
 
   GST_DEBUG_OBJECT (typefind, "New segment %" GST_SEGMENT_FORMAT, &seeksegment);
 
@@ -979,7 +979,7 @@ gst_type_find_element_activate_src_mode (GstPad * pad, GstObject * parent,
        * activation might happen from the streaming thread. */
       gst_pad_pause_task (typefind->sink);
       res = gst_pad_activate_mode (typefind->sink, mode, active);
-      if (res && typefind->caps) {
+      if (active && res && typefind->caps) {
         GstCaps *caps;
         GST_OBJECT_LOCK (typefind);
         caps = gst_caps_ref (typefind->caps);
