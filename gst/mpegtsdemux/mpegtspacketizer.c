@@ -2829,7 +2829,7 @@ convert_to_utf8 (const gchar * text, gint length, guint start,
     const gchar * encoding, gboolean is_multibyte, GError ** error)
 {
   gchar *new_text;
-  GByteArray *sb;
+  gchar *tmp, *pos;
   gint i;
 
   g_return_val_if_fail (text != NULL, NULL);
@@ -2837,8 +2837,7 @@ convert_to_utf8 (const gchar * text, gint length, guint start,
 
   text += start;
 
-  /* FIXME : GByteArray has a big overhead */
-  sb = g_byte_array_sized_new (length * 1.1);
+  pos = tmp = g_malloc (length * 2);
 
   if (is_multibyte) {
     if (length == -1) {
@@ -2851,12 +2850,15 @@ convert_to_utf8 (const gchar * text, gint length, guint start,
             /* skip it */
             break;
           case 0xE08A:{
-            guint8 nl[] = { 0x00, 0x0A };       /* new line */
-            g_byte_array_append (sb, nl, 2);
+            pos[0] = 0x00;      /* 0x00 0x0A is a new line */
+            pos[1] = 0x0A;
+            pos += 2;
             break;
           }
           default:
-            g_byte_array_append (sb, (guint8 *) text, 2);
+            pos[0] = text[0];
+            pos[1] = text[1];
+            pos += 2;
             break;
         }
 
@@ -2872,12 +2874,15 @@ convert_to_utf8 (const gchar * text, gint length, guint start,
             /* skip it */
             break;
           case 0xE08A:{
-            guint8 nl[] = { 0x00, 0x0A };       /* new line */
-            g_byte_array_append (sb, nl, 2);
+            pos[0] = 0x00;      /* 0x00 0x0A is a new line */
+            pos[1] = 0x0A;
+            pos += 2;
             break;
           }
           default:
-            g_byte_array_append (sb, (guint8 *) text, 2);
+            pos[0] = text[0];
+            pos[1] = text[1];
+            pos += 2;
             break;
         }
 
@@ -2895,10 +2900,12 @@ convert_to_utf8 (const gchar * text, gint length, guint start,
             /* skip it */
             break;
           case 0x8A:
-            g_byte_array_append (sb, (guint8 *) "\n", 1);
+            *pos = '\n';
+            pos += 1;
             break;
           default:
-            g_byte_array_append (sb, &code, 1);
+            *pos = *text;
+            pos += 1;
             break;
         }
 
@@ -2914,10 +2921,12 @@ convert_to_utf8 (const gchar * text, gint length, guint start,
             /* skip it */
             break;
           case 0x8A:
-            g_byte_array_append (sb, (guint8 *) "\n", 1);
+            *pos = '\n';
+            pos += 1;
             break;
           default:
-            g_byte_array_append (sb, &code, 1);
+            *pos = *text;
+            pos += 1;
             break;
         }
 
@@ -2926,15 +2935,16 @@ convert_to_utf8 (const gchar * text, gint length, guint start,
     }
   }
 
-  if (sb->len > 0) {
+  if (pos > tmp) {
+    gsize bread = 0;
     new_text =
-        g_convert ((gchar *) sb->data, sb->len, "utf-8", encoding, NULL, NULL,
-        error);
+        g_convert (tmp, pos - tmp, "utf-8", encoding, &bread, NULL, error);
+    GST_DEBUG ("Converted to : %s", new_text);
   } else {
     new_text = g_strdup ("");
   }
 
-  g_byte_array_free (sb, TRUE);
+  g_free (tmp);
 
   return new_text;
 }
