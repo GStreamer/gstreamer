@@ -28,11 +28,6 @@ static void cb_message (GstBus *bus, GstMessage *msg, CustomData *data) {
       gst_element_set_state (data->pipeline, GST_STATE_READY);
       g_main_loop_quit (data->loop);
       break;
-    case GST_MESSAGE_CLOCK_LOST:
-      /* Get a new clock */
-      gst_element_set_state (data->pipeline, GST_STATE_PAUSED);
-      gst_element_set_state (data->pipeline, GST_STATE_PLAYING);
-      break;
     case GST_MESSAGE_BUFFERING: {
       gint percent = 0;
       
@@ -48,6 +43,11 @@ static void cb_message (GstBus *bus, GstMessage *msg, CustomData *data) {
         gst_element_set_state (data->pipeline, GST_STATE_PLAYING);
       break;
     }
+    case GST_MESSAGE_CLOCK_LOST:
+      /* Get a new clock */
+      gst_element_set_state (data->pipeline, GST_STATE_PAUSED);
+      gst_element_set_state (data->pipeline, GST_STATE_PLAYING);
+      break;
     default:
       /* Unhandled message */
       break;
