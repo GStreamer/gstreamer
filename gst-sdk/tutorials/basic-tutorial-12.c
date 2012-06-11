@@ -7,11 +7,6 @@ typedef struct _CustomData {
   GMainLoop *loop;
 } CustomData;
   
-/* playbin2 flags */
-typedef enum {
-  GST_PLAY_FLAG_BUFFERING     = (1 << 8)  /* We want to allow buffering */
-} GstPlayFlags;
-  
 static void cb_message (GstBus *bus, GstMessage *msg, CustomData *data) {
   
   switch (GST_MESSAGE_TYPE (msg)) {
@@ -33,11 +28,6 @@ static void cb_message (GstBus *bus, GstMessage *msg, CustomData *data) {
       gst_element_set_state (data->pipeline, GST_STATE_READY);
       g_main_loop_quit (data->loop);
       break;
-    case GST_MESSAGE_CLOCK_LOST:
-      /* Get a new clock */
-      gst_element_set_state (data->pipeline, GST_STATE_PAUSED);
-      gst_element_set_state (data->pipeline, GST_STATE_PLAYING);
-      break;
     case GST_MESSAGE_BUFFERING: {
       gint percent = 0;
       
@@ -53,6 +43,11 @@ static void cb_message (GstBus *bus, GstMessage *msg, CustomData *data) {
         gst_element_set_state (data->pipeline, GST_STATE_PLAYING);
       break;
     }
+    case GST_MESSAGE_CLOCK_LOST:
+      /* Get a new clock */
+      gst_element_set_state (data->pipeline, GST_STATE_PAUSED);
+      gst_element_set_state (data->pipeline, GST_STATE_PLAYING);
+      break;
     default:
       /* Unhandled message */
       break;
@@ -65,7 +60,6 @@ int main(int argc, char *argv[]) {
   GstStateChangeReturn ret;
   GMainLoop *main_loop;
   CustomData data;
-  guint flags;
   
   /* Initialize GStreamer */
   gst_init (&argc, &argv);
@@ -77,11 +71,6 @@ int main(int argc, char *argv[]) {
   pipeline = gst_parse_launch ("playbin2 uri=http://docs.gstreamer.com/media/sintel_trailer-480p.webm", NULL);
   bus = gst_element_get_bus (pipeline);
   
-  /* Set the buffering flag */
-  g_object_get (pipeline, "flags", &flags, NULL);
-  flags |= GST_PLAY_FLAG_BUFFERING;
-  g_object_set (pipeline, "flags", flags, NULL);
-   
   /* Start playing */
   ret = gst_element_set_state (pipeline, GST_STATE_PLAYING);
   if (ret == GST_STATE_CHANGE_FAILURE) {
