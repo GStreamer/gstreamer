@@ -313,8 +313,6 @@ typedef enum /*< flags=0 >*/
 
 /**
  * GstElementFlags:
- * @GST_ELEMENT_FLAG_UNPARENTING: Child is being removed from the parent bin.
- *  gst_bin_remove() on a child already being removed immediately returns FALSE
  * @GST_ELEMENT_FLAG_LOCKED_STATE: ignore state changes from parent
  * @GST_ELEMENT_FLAG_SINK: the element is a sink
  * @GST_ELEMENT_FLAG_SOURCE: the element is a source. Since 0.10.31
@@ -327,13 +325,12 @@ typedef enum /*< flags=0 >*/
  */
 typedef enum
 {
-  GST_ELEMENT_FLAG_UNPARENTING    = (GST_OBJECT_FLAG_LAST << 0),
-  GST_ELEMENT_FLAG_LOCKED_STATE   = (GST_OBJECT_FLAG_LAST << 1),
-  GST_ELEMENT_FLAG_SINK           = (GST_OBJECT_FLAG_LAST << 2),
-  GST_ELEMENT_FLAG_SOURCE         = (GST_OBJECT_FLAG_LAST << 3),
-  GST_ELEMENT_FLAG_PROVIDE_CLOCK  = (GST_OBJECT_FLAG_LAST << 4),
-  GST_ELEMENT_FLAG_REQUIRE_CLOCK  = (GST_OBJECT_FLAG_LAST << 5),
-  GST_ELEMENT_FLAG_INDEXABLE      = (GST_OBJECT_FLAG_LAST << 6),
+  GST_ELEMENT_FLAG_LOCKED_STATE   = (GST_OBJECT_FLAG_LAST << 0),
+  GST_ELEMENT_FLAG_SINK           = (GST_OBJECT_FLAG_LAST << 1),
+  GST_ELEMENT_FLAG_SOURCE         = (GST_OBJECT_FLAG_LAST << 2),
+  GST_ELEMENT_FLAG_PROVIDE_CLOCK  = (GST_OBJECT_FLAG_LAST << 3),
+  GST_ELEMENT_FLAG_REQUIRE_CLOCK  = (GST_OBJECT_FLAG_LAST << 4),
+  GST_ELEMENT_FLAG_INDEXABLE      = (GST_OBJECT_FLAG_LAST << 5),
   /* padding */
   GST_ELEMENT_FLAG_LAST           = (GST_OBJECT_FLAG_LAST << 10)
 } GstElementFlags;
