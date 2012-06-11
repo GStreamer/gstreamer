@@ -450,7 +450,7 @@ gst_child_proxy_set (GstObject * object, const gchar * first_property_name, ...)
 void
 gst_child_proxy_child_added (GstObject * object, GstObject * child)
 {
-  g_signal_emit (G_OBJECT (object), signals[CHILD_ADDED], 0, child);
+  g_signal_emit (object, signals[CHILD_ADDED], 0, child);
 }
 
 /**
@@ -463,7 +463,7 @@ gst_child_proxy_child_added (GstObject * object, GstObject * child)
 void
 gst_child_proxy_child_removed (GstObject * object, GstObject * child)
 {
-  g_signal_emit (G_OBJECT (object), signals[CHILD_REMOVED], 0, child);
+  g_signal_emit (object, signals[CHILD_REMOVED], 0, child);
 }
 
 /* gobject methods */
