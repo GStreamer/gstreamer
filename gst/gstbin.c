@@ -1268,16 +1268,18 @@ gst_bin_remove_func (GstBin * bin, GstElement * element)
 
   GST_DEBUG_OBJECT (bin, "element :%s", GST_ELEMENT_NAME (element));
 
-  GST_OBJECT_LOCK (element);
-  /* Check if the element is already being removed and immediately
-   * return */
-  if (G_UNLIKELY (GST_OBJECT_FLAG_IS_SET (element,
-              GST_ELEMENT_FLAG_UNPARENTING)))
-    goto already_removing;
+  GST_OBJECT_LOCK (bin);
 
-  GST_OBJECT_FLAG_SET (element, GST_ELEMENT_FLAG_UNPARENTING);
-  /* grab element name so we can print it */
+  GST_OBJECT_LOCK (element);
   elem_name = g_strdup (GST_ELEMENT_NAME (element));
+
+  if (GST_OBJECT_PARENT (element) != GST_OBJECT_CAST (bin))
+    goto not_in_bin;
+
+  /* remove the parent ref */
+  GST_OBJECT_PARENT (element) = NULL;
+
+  /* grab element name so we can print it */
   is_sink = GST_OBJECT_FLAG_IS_SET (element, GST_ELEMENT_FLAG_SINK);
   is_source = GST_OBJECT_FLAG_IS_SET (element, GST_ELEMENT_FLAG_SOURCE);
   provides_clock =
@@ -1286,12 +1288,6 @@ gst_bin_remove_func (GstBin * bin, GstElement * element)
       GST_OBJECT_FLAG_IS_SET (element, GST_ELEMENT_FLAG_REQUIRE_CLOCK);
   GST_OBJECT_UNLOCK (element);
 
-  /* unlink all linked pads */
-  it = gst_element_iterate_pads (element);
-  gst_iterator_foreach (it, (GstIteratorForeachFunction) unlink_pads, NULL);
-  gst_iterator_free (it);
-
-  GST_OBJECT_LOCK (bin);
   found = FALSE;
   othersink = FALSE;
   othersource = FALSE;
@@ -1474,27 +1470,22 @@ gst_bin_remove_func (GstBin * bin, GstElement * element)
     GST_STATE_RETURN (bin) = ret;
   }
 no_state_recalc:
+  /* clear bus */
+  gst_element_set_bus (element, NULL);
+  /* Clear the clock we provided to the element */
+  gst_element_set_clock (element, NULL);
   GST_OBJECT_UNLOCK (bin);
 
   if (clock_message)
     gst_element_post_message (GST_ELEMENT_CAST (bin), clock_message);
 
+  /* unlink all linked pads */
+  it = gst_element_iterate_pads (element);
+  gst_iterator_foreach (it, (GstIteratorForeachFunction) unlink_pads, NULL);
+  gst_iterator_free (it);
+
   GST_CAT_INFO_OBJECT (GST_CAT_PARENTAGE, bin, "removed child \"%s\"",
       elem_name);
-
-  gst_element_set_bus (element, NULL);
-
-  /* Clear the clock we provided to the element */
-  gst_element_set_clock (element, NULL);
-
-  /* we ref here because after the _unparent() the element can be disposed
-   * and we still need it to reset the UNPARENTING flag and fire a signal. */
-  gst_object_ref (element);
-  gst_object_unparent (GST_OBJECT_CAST (element));
-
-  GST_OBJECT_LOCK (element);
-  GST_OBJECT_FLAG_UNSET (element, GST_ELEMENT_FLAG_UNPARENTING);
-  GST_OBJECT_UNLOCK (element);
 
   g_signal_emit (bin, gst_bin_signals[ELEMENT_REMOVED], 0, element);
   gst_child_proxy_child_removed ((GObject *) bin, (GObject *) element,
@@ -1511,14 +1502,9 @@ not_in_bin:
   {
     g_warning ("Element '%s' is not in bin '%s'", elem_name,
         GST_ELEMENT_NAME (bin));
+    GST_OBJECT_UNLOCK (element);
     GST_OBJECT_UNLOCK (bin);
     g_free (elem_name);
-    return FALSE;
-  }
-already_removing:
-  {
-    GST_CAT_INFO_OBJECT (GST_CAT_PARENTAGE, bin, "already removing child");
-    GST_OBJECT_UNLOCK (element);
     return FALSE;
   }
 }
