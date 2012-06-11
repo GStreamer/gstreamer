@@ -653,14 +653,14 @@ gst_iir_equalizer_compute_frequencies (GstIirEqualizer * equ, guint new_count)
       GST_DEBUG ("adding band[%d]=%p", i, equ->bands[i]);
 
       gst_object_set_parent (GST_OBJECT (equ->bands[i]), GST_OBJECT (equ));
-      gst_child_proxy_child_added (G_OBJECT (equ),
+      gst_child_proxy_child_added (GST_CHILD_PROXY (equ),
           G_OBJECT (equ->bands[i]), name);
     }
   } else {
     /* free unused bands */
     for (i = new_count; i < old_count; i++) {
       GST_DEBUG ("removing band[%d]=%p", i, equ->bands[i]);
-      gst_child_proxy_child_removed (G_OBJECT (equ),
+      gst_child_proxy_child_removed (GST_CHILD_PROXY (equ),
           G_OBJECT (equ->bands[i]), GST_OBJECT_NAME (equ->bands[i]));
       gst_object_unparent (GST_OBJECT (equ->bands[i]));
       equ->bands[i] = NULL;

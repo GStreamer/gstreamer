@@ -146,38 +146,38 @@ static void
 gst_iir_equalizer_10bands_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec)
 {
-  GstIirEqualizer *equ = GST_IIR_EQUALIZER (object);
+  GstChildProxy *equ = GST_CHILD_PROXY (object);
 
   switch (prop_id) {
     case PROP_BAND0:
-      gst_child_proxy_set_property (G_OBJECT (equ), "band0::gain", value);
+      gst_child_proxy_set_property (equ, "band0::gain", value);
       break;
     case PROP_BAND1:
-      gst_child_proxy_set_property (G_OBJECT (equ), "band1::gain", value);
+      gst_child_proxy_set_property (equ, "band1::gain", value);
       break;
     case PROP_BAND2:
-      gst_child_proxy_set_property (G_OBJECT (equ), "band2::gain", value);
+      gst_child_proxy_set_property (equ, "band2::gain", value);
       break;
     case PROP_BAND3:
-      gst_child_proxy_set_property (G_OBJECT (equ), "band3::gain", value);
+      gst_child_proxy_set_property (equ, "band3::gain", value);
       break;
     case PROP_BAND4:
-      gst_child_proxy_set_property (G_OBJECT (equ), "band4::gain", value);
+      gst_child_proxy_set_property (equ, "band4::gain", value);
       break;
     case PROP_BAND5:
-      gst_child_proxy_set_property (G_OBJECT (equ), "band5::gain", value);
+      gst_child_proxy_set_property (equ, "band5::gain", value);
       break;
     case PROP_BAND6:
-      gst_child_proxy_set_property (G_OBJECT (equ), "band6::gain", value);
+      gst_child_proxy_set_property (equ, "band6::gain", value);
       break;
     case PROP_BAND7:
-      gst_child_proxy_set_property (G_OBJECT (equ), "band7::gain", value);
+      gst_child_proxy_set_property (equ, "band7::gain", value);
       break;
     case PROP_BAND8:
-      gst_child_proxy_set_property (G_OBJECT (equ), "band8::gain", value);
+      gst_child_proxy_set_property (equ, "band8::gain", value);
       break;
     case PROP_BAND9:
-      gst_child_proxy_set_property (G_OBJECT (equ), "band9::gain", value);
+      gst_child_proxy_set_property (equ, "band9::gain", value);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -189,38 +189,38 @@ static void
 gst_iir_equalizer_10bands_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec)
 {
-  GstIirEqualizer *equ = GST_IIR_EQUALIZER (object);
+  GstChildProxy *equ = GST_CHILD_PROXY (object);
 
   switch (prop_id) {
     case PROP_BAND0:
-      gst_child_proxy_get_property (G_OBJECT (equ), "band0::gain", value);
+      gst_child_proxy_get_property (equ, "band0::gain", value);
       break;
     case PROP_BAND1:
-      gst_child_proxy_get_property (G_OBJECT (equ), "band1::gain", value);
+      gst_child_proxy_get_property (equ, "band1::gain", value);
       break;
     case PROP_BAND2:
-      gst_child_proxy_get_property (G_OBJECT (equ), "band2::gain", value);
+      gst_child_proxy_get_property (equ, "band2::gain", value);
       break;
     case PROP_BAND3:
-      gst_child_proxy_get_property (G_OBJECT (equ), "band3::gain", value);
+      gst_child_proxy_get_property (equ, "band3::gain", value);
       break;
     case PROP_BAND4:
-      gst_child_proxy_get_property (G_OBJECT (equ), "band4::gain", value);
+      gst_child_proxy_get_property (equ, "band4::gain", value);
       break;
     case PROP_BAND5:
-      gst_child_proxy_get_property (G_OBJECT (equ), "band5::gain", value);
+      gst_child_proxy_get_property (equ, "band5::gain", value);
       break;
     case PROP_BAND6:
-      gst_child_proxy_get_property (G_OBJECT (equ), "band6::gain", value);
+      gst_child_proxy_get_property (equ, "band6::gain", value);
       break;
     case PROP_BAND7:
-      gst_child_proxy_get_property (G_OBJECT (equ), "band7::gain", value);
+      gst_child_proxy_get_property (equ, "band7::gain", value);
       break;
     case PROP_BAND8:
-      gst_child_proxy_get_property (G_OBJECT (equ), "band8::gain", value);
+      gst_child_proxy_get_property (equ, "band8::gain", value);
       break;
     case PROP_BAND9:
-      gst_child_proxy_get_property (G_OBJECT (equ), "band9::gain", value);
+      gst_child_proxy_get_property (equ, "band9::gain", value);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);

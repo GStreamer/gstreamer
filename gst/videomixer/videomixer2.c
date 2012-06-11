@@ -1805,7 +1805,7 @@ gst_videomixer2_request_new_pad (GstElement * element,
 
   /* add the pad to the element */
   gst_element_add_pad (element, GST_PAD (mixpad));
-  gst_child_proxy_child_added (G_OBJECT (mix), G_OBJECT (mixpad),
+  gst_child_proxy_child_added (GST_CHILD_PROXY (mix), G_OBJECT (mixpad),
       GST_OBJECT_NAME (mixpad));
 
   return GST_PAD (mixpad);
@@ -1829,7 +1829,7 @@ gst_videomixer2_release_pad (GstElement * element, GstPad * pad)
   mixpad = GST_VIDEO_MIXER2_PAD (pad);
 
   mix->sinkpads = g_slist_remove (mix->sinkpads, pad);
-  gst_child_proxy_child_removed (G_OBJECT (mix), G_OBJECT (mixpad),
+  gst_child_proxy_child_removed (GST_CHILD_PROXY (mix), G_OBJECT (mixpad),
       GST_OBJECT_NAME (mixpad));
   mix->numpads--;
 
