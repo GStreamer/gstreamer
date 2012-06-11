@@ -188,7 +188,7 @@ gst_child_proxy_lookup (GObject * object, const gchar * name,
   g_return_val_if_fail (G_IS_OBJECT (object), FALSE);
   g_return_val_if_fail (name != NULL, FALSE);
 
-  gst_object_ref (object);
+  g_object_ref (object);
 
   current = names = g_strsplit (name, "::", -1);
   while (current[1]) {
@@ -206,7 +206,7 @@ gst_child_proxy_lookup (GObject * object, const gchar * name,
       GST_INFO ("no such object %s", current[0]);
       break;
     }
-    gst_object_unref (object);
+    g_object_unref (object);
     object = next;
     current++;
   }
@@ -219,13 +219,13 @@ gst_child_proxy_lookup (GObject * object, const gchar * name,
       if (pspec)
         *pspec = spec;
       if (target) {
-        gst_object_ref (object);
+        g_object_ref (object);
         *target = object;
       }
       res = TRUE;
     }
   }
-  gst_object_unref (object);
+  g_object_unref (object);
   g_strfreev (names);
   return res;
 }
@@ -240,21 +240,21 @@ gst_child_proxy_lookup (GObject * object, const gchar * name,
  * You are responsible for freeing it by calling g_value_unset()
  */
 void
-gst_child_proxy_get_property (GObject * object, const gchar * name,
+gst_child_proxy_get_property (GstChildProxy * object, const gchar * name,
     GValue * value)
 {
   GParamSpec *pspec;
   GObject *target;
 
-  g_return_if_fail (G_IS_OBJECT (object));
+  g_return_if_fail (GST_IS_CHILD_PROXY (object));
   g_return_if_fail (name != NULL);
   g_return_if_fail (G_IS_VALUE (value));
 
-  if (!gst_child_proxy_lookup (object, name, &target, &pspec))
+  if (!gst_child_proxy_lookup ((GObject *) object, name, &target, &pspec))
     goto not_found;
 
-  g_object_get_property (G_OBJECT (target), pspec->name, value);
-  gst_object_unref (target);
+  g_object_get_property (target, pspec->name, value);
+  g_object_unref (target);
 
   return;
 
@@ -275,7 +275,7 @@ not_found:
  * Gets properties of the parent object and its children.
  */
 void
-gst_child_proxy_get_valist (GObject * object,
+gst_child_proxy_get_valist (GstChildProxy * object,
     const gchar * first_property_name, va_list var_args)
 {
   const gchar *name;
@@ -284,18 +284,18 @@ gst_child_proxy_get_valist (GObject * object,
   GParamSpec *pspec;
   GObject *target;
 
-  g_return_if_fail (G_IS_OBJECT (object));
+  g_return_if_fail (GST_IS_CHILD_PROXY (object));
 
   name = first_property_name;
 
   /* iterate over pairs */
   while (name) {
-    if (!gst_child_proxy_lookup (object, name, &target, &pspec))
+    if (!gst_child_proxy_lookup ((GObject *) object, name, &target, &pspec))
       goto not_found;
 
     g_value_init (&value, pspec->value_type);
-    g_object_get_property (G_OBJECT (target), pspec->name, &value);
-    gst_object_unref (target);
+    g_object_get_property (target, pspec->name, &value);
+    g_object_unref (target);
 
     G_VALUE_LCOPY (&value, var_args, 0, &error);
     if (error)
@@ -329,11 +329,12 @@ cant_copy:
  * Gets properties of the parent object and its children.
  */
 void
-gst_child_proxy_get (GObject * object, const gchar * first_property_name, ...)
+gst_child_proxy_get (GstChildProxy * object, const gchar * first_property_name,
+    ...)
 {
   va_list var_args;
 
-  g_return_if_fail (G_IS_OBJECT (object));
+  g_return_if_fail (GST_IS_CHILD_PROXY (object));
 
   va_start (var_args, first_property_name);
   gst_child_proxy_get_valist (object, first_property_name, var_args);
@@ -349,21 +350,21 @@ gst_child_proxy_get (GObject * object, const gchar * first_property_name, ...)
  * Sets a single property using the GstChildProxy mechanism.
  */
 void
-gst_child_proxy_set_property (GObject * object, const gchar * name,
+gst_child_proxy_set_property (GstChildProxy * object, const gchar * name,
     const GValue * value)
 {
   GParamSpec *pspec;
   GObject *target;
 
-  g_return_if_fail (G_IS_OBJECT (object));
+  g_return_if_fail (GST_IS_CHILD_PROXY (object));
   g_return_if_fail (name != NULL);
   g_return_if_fail (G_IS_VALUE (value));
 
-  if (!gst_child_proxy_lookup (object, name, &target, &pspec))
+  if (!gst_child_proxy_lookup ((GObject *) object, name, &target, &pspec))
     goto not_found;
 
-  g_object_set_property (G_OBJECT (target), pspec->name, value);
-  gst_object_unref (target);
+  g_object_set_property (target, pspec->name, value);
+  g_object_unref (target);
   return;
 
 not_found:
@@ -383,7 +384,7 @@ not_found:
  * Sets properties of the parent object and its children.
  */
 void
-gst_child_proxy_set_valist (GObject * object,
+gst_child_proxy_set_valist (GstChildProxy * object,
     const gchar * first_property_name, va_list var_args)
 {
   const gchar *name;
@@ -392,13 +393,13 @@ gst_child_proxy_set_valist (GObject * object,
   GParamSpec *pspec;
   GObject *target;
 
-  g_return_if_fail (G_IS_OBJECT (object));
+  g_return_if_fail (GST_IS_CHILD_PROXY (object));
 
   name = first_property_name;
 
   /* iterate over pairs */
   while (name) {
-    if (!gst_child_proxy_lookup (object, name, &target, &pspec))
+    if (!gst_child_proxy_lookup ((GObject *) object, name, &target, &pspec))
       goto not_found;
 
     G_VALUE_COLLECT_INIT (&value, pspec->value_type, var_args,
@@ -407,8 +408,8 @@ gst_child_proxy_set_valist (GObject * object,
     if (error)
       goto cant_copy;
 
-    g_object_set_property (G_OBJECT (target), pspec->name, &value);
-    gst_object_unref (target);
+    g_object_set_property (target, pspec->name, &value);
+    g_object_unref (target);
 
     g_value_unset (&value);
     name = va_arg (var_args, gchar *);
@@ -426,7 +427,7 @@ cant_copy:
     g_warning ("error copying value %s in object %s: %s", pspec->name,
         (GST_IS_OBJECT (object) ? GST_OBJECT_NAME (object) : ""), error);
     g_value_unset (&value);
-    gst_object_unref (target);
+    g_object_unref (target);
     return;
   }
 }
@@ -440,11 +441,12 @@ cant_copy:
  * Sets properties of the parent object and its children.
  */
 void
-gst_child_proxy_set (GObject * object, const gchar * first_property_name, ...)
+gst_child_proxy_set (GstChildProxy * object, const gchar * first_property_name,
+    ...)
 {
   va_list var_args;
 
-  g_return_if_fail (G_IS_OBJECT (object));
+  g_return_if_fail (GST_IS_CHILD_PROXY (object));
 
   va_start (var_args, first_property_name);
   gst_child_proxy_set_valist (object, first_property_name, var_args);
@@ -460,10 +462,10 @@ gst_child_proxy_set (GObject * object, const gchar * first_property_name, ...)
  * Emits the "child-added" signal.
  */
 void
-gst_child_proxy_child_added (GObject * object, GObject * child,
+gst_child_proxy_child_added (GstChildProxy * object, GObject * child,
     const gchar * name)
 {
-  g_signal_emit (G_OBJECT (object), signals[CHILD_ADDED], 0, child, name);
+  g_signal_emit (object, signals[CHILD_ADDED], 0, child, name);
 }
 
 /**
@@ -475,10 +477,10 @@ gst_child_proxy_child_added (GObject * object, GObject * child,
  * Emits the "child-removed" signal.
  */
 void
-gst_child_proxy_child_removed (GObject * object, GObject * child,
+gst_child_proxy_child_removed (GstChildProxy * object, GObject * child,
     const gchar * name)
 {
-  g_signal_emit (G_OBJECT (object), signals[CHILD_REMOVED], 0, child, name);
+  g_signal_emit (object, signals[CHILD_REMOVED], 0, child, name);
 }
 
 /* gobject methods */

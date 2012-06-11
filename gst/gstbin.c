@@ -1162,7 +1162,8 @@ no_state_recalc:
       elem_name);
 
   g_signal_emit (bin, gst_bin_signals[ELEMENT_ADDED], 0, element);
-  gst_child_proxy_child_added ((GObject *) bin, (GObject *) element, elem_name);
+  gst_child_proxy_child_added ((GstChildProxy *) bin, (GObject *) element,
+      elem_name);
 
   g_free (elem_name);
 
@@ -1488,7 +1489,7 @@ no_state_recalc:
       elem_name);
 
   g_signal_emit (bin, gst_bin_signals[ELEMENT_REMOVED], 0, element);
-  gst_child_proxy_child_removed ((GObject *) bin, (GObject *) element,
+  gst_child_proxy_child_removed ((GstChildProxy *) bin, (GObject *) element,
       elem_name);
 
   g_free (elem_name);
