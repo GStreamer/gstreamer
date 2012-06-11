@@ -99,7 +99,8 @@ G_BEGIN_DECLS
 typedef struct TsMuxSection TsMuxSection;
 typedef struct TsMux TsMux;
 
-typedef gboolean (*TsMuxWriteFunc) (guint8 *data, guint len, void *user_data, gint64 new_pcr);
+typedef gboolean (*TsMuxWriteFunc) (GstBuffer * buf, void *user_data, gint64 new_pcr);
+typedef void (*TsMuxAllocFunc) (GstBuffer ** buf, void *user_data);
 
 struct TsMuxSection {
   TsMuxPacketInfo pi;
@@ -159,11 +160,12 @@ struct TsMux {
   /* last time PAT written in MPEG PTS clock time */
   gint64   last_pat_ts;
 
-  /* temp packet buffer */
-  guint8 packet_buf[TSMUX_PACKET_LENGTH];
   /* callback to write finished packet */
   TsMuxWriteFunc write_func;
   void *write_func_data;
+  /* callback to alloc new packet buffer */
+  TsMuxAllocFunc alloc_func;
+  void *alloc_func_data;
 
   /* scratch space for writing ES_info descriptors */
   guint8 es_info_buf[TSMUX_MAX_ES_INFO_LENGTH];
@@ -175,6 +177,7 @@ void 		tsmux_free 			(TsMux *mux);
 
 /* Setting muxing session properties */
 void 		tsmux_set_write_func 		(TsMux *mux, TsMuxWriteFunc func, void *user_data);
+void 		tsmux_set_alloc_func 		(TsMux *mux, TsMuxAllocFunc func, void *user_data);
 void 		tsmux_set_pat_interval          (TsMux *mux, guint interval);
 guint 		tsmux_get_pat_interval          (TsMux *mux);
 guint16		tsmux_get_new_pid 		(TsMux *mux);

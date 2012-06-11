@@ -151,7 +151,8 @@ static void gst_mpegtsmux_get_property (GObject * object, guint prop_id,
 
 static void mpegtsmux_reset (MpegTsMux * mux, gboolean alloc);
 static void mpegtsmux_dispose (GObject * object);
-static gboolean new_packet_cb (guint8 * data, guint len, void *user_data,
+static void alloc_packet_cb (GstBuffer ** _buf, void *user_data);
+static gboolean new_packet_cb (GstBuffer * buf, void *user_data,
     gint64 new_pcr);
 static void release_buffer_cb (guint8 * data, void *user_data);
 static GstFlowReturn mpegtsmux_collect_packet (MpegTsMux * mux,
@@ -342,6 +343,7 @@ mpegtsmux_reset (MpegTsMux * mux, gboolean alloc)
   if (alloc) {
     mux->tsmux = tsmux_new ();
     tsmux_set_write_func (mux->tsmux, new_packet_cb, mux);
+    tsmux_set_alloc_func (mux->tsmux, alloc_packet_cb, mux);
   }
 }
 
@@ -1368,20 +1370,20 @@ exit:
 /* Called when the TsMux has prepared a packet for output. Return FALSE
  * on error */
 static gboolean
-new_packet_cb (guint8 * data, guint len, void *user_data, gint64 new_pcr)
+new_packet_cb (GstBuffer * buf, void *user_data, gint64 new_pcr)
 {
   MpegTsMux *mux = (MpegTsMux *) user_data;
   gint offset = 0;
-  GstBuffer *buf;
 
-  if (mux->m2ts_mode == TRUE)
-    offset = 4;
-
-  buf = gst_buffer_new_and_alloc (NORMAL_TS_PACKET_LENGTH + offset);
+  offset = GST_BUFFER_DATA (buf) - GST_BUFFER_MALLOCDATA (buf);
   GST_BUFFER_TIMESTAMP (buf) = mux->last_ts;
-  memcpy (GST_BUFFER_DATA (buf) + offset, data, len);
   /* do common init (flags and streamheaders) */
-  new_packet_common_init (mux, buf, data, len);
+  new_packet_common_init (mux, buf,
+      GST_BUFFER_DATA (buf), GST_BUFFER_SIZE (buf));
+
+  /* all is meant for downstream, including any prefix */
+  GST_BUFFER_DATA (buf) = GST_BUFFER_MALLOCDATA (buf);
+  GST_BUFFER_SIZE (buf) += offset;
 
   if (offset)
     return new_packet_m2ts (mux, buf, new_pcr);
@@ -1389,6 +1391,26 @@ new_packet_cb (guint8 * data, guint len, void *user_data, gint64 new_pcr)
     mpegtsmux_collect_packet (mux, buf);
 
   return TRUE;
+}
+
+/* called when TsMux needs new packet to write into */
+static void
+alloc_packet_cb (GstBuffer ** _buf, void *user_data)
+{
+  MpegTsMux *mux = (MpegTsMux *) user_data;
+  GstBuffer *buf;
+  gint offset = 0;
+
+  if (mux->m2ts_mode == TRUE)
+    offset = 4;
+
+  /* TODO might be even more efficient to avoid later memcpy
+   * if these are subbuffer from a larger buffer or so */
+  buf = gst_buffer_new_and_alloc (NORMAL_TS_PACKET_LENGTH + offset);
+  GST_BUFFER_DATA (buf) += offset;
+  GST_BUFFER_SIZE (buf) -= offset;
+
+  *_buf = buf;
 }
 
 static void

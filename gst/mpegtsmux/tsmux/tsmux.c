@@ -161,6 +161,25 @@ tsmux_set_write_func (TsMux * mux, TsMuxWriteFunc func, void *user_data)
 }
 
 /**
+ * tsmux_set_alloc_func:
+ * @mux: a #TsMux
+ * @func: a user callback function
+ * @user_data: user data passed to @func
+ *
+ * Set the callback function and user data to be called when @mux needs
+ * a new buffer to write a packet into.
+ * @user_data will be passed as user data in @func.
+ */
+void
+tsmux_set_alloc_func (TsMux * mux, TsMuxAllocFunc func, void *user_data)
+{
+  g_return_if_fail (mux != NULL);
+
+  mux->alloc_func = func;
+  mux->alloc_func_data = user_data;
+}
+
+/**
  * tsmux_set_pat_interval:
  * @mux: a #TsMux
  * @freq: a new PAT interval
@@ -435,13 +454,32 @@ tsmux_find_stream (TsMux * mux, guint16 pid)
 }
 
 static gboolean
-tsmux_packet_out (TsMux * mux, gint64 pcr)
+tsmux_get_buffer (TsMux * mux, GstBuffer ** buf)
 {
-  if (G_UNLIKELY (mux->write_func == NULL))
-    return TRUE;
+  g_return_val_if_fail (buf, FALSE);
 
-  return mux->write_func (mux->packet_buf, TSMUX_PACKET_LENGTH,
-      mux->write_func_data, pcr);
+  if (G_UNLIKELY (!mux->alloc_func))
+    return FALSE;
+
+  mux->alloc_func (buf, mux->alloc_func_data);
+
+  if (!*buf)
+    return FALSE;
+
+  g_assert (GST_BUFFER_SIZE (*buf) == TSMUX_PACKET_LENGTH);
+  return TRUE;
+}
+
+static gboolean
+tsmux_packet_out (TsMux * mux, GstBuffer * buf, gint64 pcr)
+{
+  if (G_UNLIKELY (mux->write_func == NULL)) {
+    if (buf)
+      gst_buffer_unref (buf);
+    return TRUE;
+  }
+
+  return mux->write_func (buf, mux->write_func_data, pcr);
 }
 
 /*
@@ -707,6 +745,8 @@ tsmux_write_stream_packet (TsMux * mux, TsMuxStream * stream)
   TsMuxPacketInfo *pi = &stream->pi;
   gboolean res;
   gint64 cur_pcr = -1;
+  GstBuffer *buf = NULL;
+  guint8 *data;
 
   g_return_val_if_fail (mux != NULL, FALSE);
   g_return_val_if_fail (stream != NULL, FALSE);
@@ -786,19 +826,32 @@ tsmux_write_stream_packet (TsMux * mux, TsMuxStream * stream)
   }
   pi->stream_avail = tsmux_stream_bytes_avail (stream);
 
-  if (!tsmux_write_ts_header (mux->packet_buf, pi, &payload_len, &payload_offs))
+  /* obtain buffer */
+  if (!tsmux_get_buffer (mux, &buf))
     return FALSE;
 
-  if (!tsmux_stream_get_data (stream, mux->packet_buf + payload_offs,
-          payload_len))
-    return FALSE;
+  data = GST_BUFFER_DATA (buf);
 
-  res = tsmux_packet_out (mux, cur_pcr);
+  if (!tsmux_write_ts_header (data, pi, &payload_len, &payload_offs))
+    goto fail;
+
+  if (!tsmux_stream_get_data (stream, data + payload_offs, payload_len))
+    goto fail;
+
+  res = tsmux_packet_out (mux, buf, cur_pcr);
 
   /* Reset all dynamic flags */
   stream->pi.flags &= TSMUX_PACKET_FLAG_PES_FULL_HEADER;
 
   return res;
+
+  /* ERRORS */
+fail:
+  {
+    if (buf)
+      gst_buffer_unref (buf);
+    return FALSE;
+  }
 }
 
 /**
@@ -824,6 +877,7 @@ tsmux_write_section (TsMux * mux, TsMuxSection * section)
   guint payload_remain;
   guint payload_len, payload_offs;
   TsMuxPacketInfo *pi;
+  GstBuffer *buf = NULL;
 
   pi = &section->pi;
 
@@ -833,44 +887,61 @@ tsmux_write_section (TsMux * mux, TsMuxSection * section)
   payload_remain = pi->stream_avail;
 
   while (payload_remain > 0) {
+    guint8 *data;
+
+    /* obtain buffer */
+    if (!tsmux_get_buffer (mux, &buf))
+      goto fail;
+
+    data = GST_BUFFER_DATA (buf);
+
     if (pi->packet_start_unit_indicator) {
       /* Need to write an extra single byte start pointer */
       pi->stream_avail++;
 
-      if (!tsmux_write_ts_header (mux->packet_buf, pi,
-              &payload_len, &payload_offs)) {
+      if (!tsmux_write_ts_header (data, pi, &payload_len, &payload_offs)) {
         pi->stream_avail--;
-        return FALSE;
+        goto fail;
       }
       pi->stream_avail--;
 
       /* Write the pointer byte */
-      mux->packet_buf[payload_offs] = 0x00;
+      data[payload_offs] = 0x00;
 
       payload_offs++;
       payload_len--;
       pi->packet_start_unit_indicator = FALSE;
     } else {
-      if (!tsmux_write_ts_header (mux->packet_buf, pi,
-              &payload_len, &payload_offs))
-        return FALSE;
+      if (!tsmux_write_ts_header (data, pi, &payload_len, &payload_offs))
+        goto fail;
     }
 
     TS_DEBUG ("Outputting %d bytes to section. %d remaining after",
         payload_len, payload_remain - payload_len);
 
-    memcpy (mux->packet_buf + payload_offs, cur_in, payload_len);
+    memcpy (data + payload_offs, cur_in, payload_len);
 
     cur_in += payload_len;
     payload_remain -= payload_len;
 
     /* we do not write PCR in section */
-    if (G_UNLIKELY (!tsmux_packet_out (mux, -1))) {
-      return FALSE;
+    if (G_UNLIKELY (!tsmux_packet_out (mux, buf, -1))) {
+      /* buffer given away */
+      buf = NULL;
+      goto fail;
     }
+    buf = NULL;
   }
 
   return TRUE;
+
+  /* ERRORS */
+fail:
+  {
+    if (buf)
+      gst_buffer_unref (buf);
+    return FALSE;
+  }
 }
 
 static void
