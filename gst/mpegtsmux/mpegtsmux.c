@@ -213,9 +213,10 @@ mpegtsmux_class_init (MpegTsMuxClass * klass)
   gobject_class->get_property = GST_DEBUG_FUNCPTR (gst_mpegtsmux_get_property);
   gobject_class->dispose = mpegtsmux_dispose;
 
-  gstelement_class->request_new_pad = mpegtsmux_request_new_pad;
-  gstelement_class->release_pad = mpegtsmux_release_pad;
-  gstelement_class->change_state = mpegtsmux_change_state;
+  gstelement_class->request_new_pad =
+      GST_DEBUG_FUNCPTR (mpegtsmux_request_new_pad);
+  gstelement_class->release_pad = GST_DEBUG_FUNCPTR (mpegtsmux_release_pad);
+  gstelement_class->change_state = GST_DEBUG_FUNCPTR (mpegtsmux_change_state);
 
   gstelement_class->set_index = GST_DEBUG_FUNCPTR (mpegtsmux_set_index);
   gstelement_class->get_index = GST_DEBUG_FUNCPTR (mpegtsmux_get_index);
