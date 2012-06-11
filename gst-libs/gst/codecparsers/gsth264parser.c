@@ -326,7 +326,8 @@ nal_reader_get_ue (NalReader * nr, guint32 * val)
           return FALSE;
   }
 
-  g_return_val_if_fail (i <= 32, FALSE);
+  if (G_UNLIKELY (i > 32))
+    return FALSE;
 
   if (G_UNLIKELY (!nal_reader_get_bits_uint32 (nr, &value, i)))
     return FALSE;
