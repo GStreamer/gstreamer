@@ -174,6 +174,12 @@ static GstStateChangeReturn mpegtsmux_change_state (GstElement * element,
 static void mpegtsdemux_set_header_on_caps (MpegTsMux * mux);
 static gboolean mpegtsmux_src_event (GstPad * pad, GstEvent * event);
 
+static void mpegtsmux_set_index (GstElement * element, GstIndex * index);
+static GstIndex *mpegtsmux_get_index (GstElement * element);
+
+static GstFormat pts_format;
+static GstFormat spn_format;
+
 GST_BOILERPLATE (MpegTsMux, mpegtsmux, GstElement, GST_TYPE_ELEMENT);
 
 static void
@@ -191,6 +197,10 @@ mpegtsmux_base_init (gpointer g_class)
       "MPEG Transport Stream Muxer", "Codec/Muxer",
       "Multiplexes media streams into an MPEG Transport Stream",
       "Fluendo <contact@fluendo.com>");
+
+  pts_format =
+      gst_format_register ("PTS", "MPEG System Presentation Time Stamp");
+  spn_format = gst_format_register ("SPN", "Source Packet Number");
 }
 
 static void
@@ -206,6 +216,9 @@ mpegtsmux_class_init (MpegTsMuxClass * klass)
   gstelement_class->request_new_pad = mpegtsmux_request_new_pad;
   gstelement_class->release_pad = mpegtsmux_release_pad;
   gstelement_class->change_state = mpegtsmux_change_state;
+
+  gstelement_class->set_index = GST_DEBUG_FUNCPTR (mpegtsmux_set_index);
+  gstelement_class->get_index = GST_DEBUG_FUNCPTR (mpegtsmux_get_index);
 
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_PROG_MAP,
       g_param_spec_boxed ("prog-map", "Program map",
@@ -276,6 +289,7 @@ mpegtsmux_pad_reset (MpegTsPadData * pad_data)
   pad_data->cur_ts = GST_CLOCK_TIME_NONE;
   pad_data->prog_id = -1;
   pad_data->eos = FALSE;
+  pad_data->element_index_writer_id = -1;
 
   if (pad_data->free_func)
     pad_data->free_func (pad_data->prepare_data);
@@ -310,6 +324,13 @@ mpegtsmux_reset (MpegTsMux * mux, gboolean alloc)
   mux->streamheader_sent = FALSE;
   mux->force_key_unit_event = NULL;
   mux->pending_key_unit_ts = GST_CLOCK_TIME_NONE;
+
+  mux->spn_count = 0;
+
+  if (mux->element_index) {
+    gst_object_unref (mux->element_index);
+    mux->element_index = NULL;
+  }
 
   gst_adapter_clear (mux->adapter);
   gst_adapter_clear (mux->out_adapter);
@@ -451,6 +472,36 @@ gst_mpegtsmux_get_property (GObject * object, guint prop_id,
 }
 
 static void
+mpegtsmux_set_index (GstElement * element, GstIndex * index)
+{
+  MpegTsMux *mux = GST_MPEG_TSMUX (element);
+
+  GST_OBJECT_LOCK (mux);
+  if (mux->element_index)
+    gst_object_unref (mux->element_index);
+  mux->element_index = index ? gst_object_ref (index) : NULL;
+  GST_OBJECT_UNLOCK (mux);
+
+  GST_DEBUG_OBJECT (mux, "Set index %" GST_PTR_FORMAT, mux->element_index);
+}
+
+static GstIndex *
+mpegtsmux_get_index (GstElement * element)
+{
+  GstIndex *result = NULL;
+  MpegTsMux *mux = GST_MPEG_TSMUX (element);
+
+  GST_OBJECT_LOCK (mux);
+  if (mux->element_index)
+    result = gst_object_ref (mux->element_index);
+  GST_OBJECT_UNLOCK (mux);
+
+  GST_DEBUG_OBJECT (mux, "Returning index %" GST_PTR_FORMAT, result);
+
+  return result;
+}
+
+static void
 release_buffer_cb (guint8 * data, void *user_data)
 {
   GstBuffer *buf = (GstBuffer *) user_data;
@@ -577,6 +628,29 @@ mpegtsmux_create_stream (MpegTsMux * mux, MpegTsPadData * ts_data)
 
     ret = GST_FLOW_OK;
   }
+
+  GST_OBJECT_LOCK (mux);
+  if (mux->element_index) {
+    gboolean parsed = FALSE;
+
+    if (ts_data->stream->is_video_stream) {
+      if (gst_structure_get_boolean (s, "parsed", &parsed) && parsed) {
+        if (ts_data->element_index_writer_id == -1) {
+          gst_index_get_writer_id (mux->element_index, GST_OBJECT (mux),
+              &ts_data->element_index_writer_id);
+          GST_DEBUG_OBJECT (mux, "created GstIndex writer_id = %d for stream",
+              ts_data->element_index_writer_id);
+          gst_index_add_format (mux->element_index,
+              ts_data->element_index_writer_id, pts_format);
+          gst_index_add_format (mux->element_index,
+              ts_data->element_index_writer_id, spn_format);
+        }
+      } else {
+        GST_WARNING_OBJECT (pad, "no indexing for (unparsed) stream !");
+      }
+    }
+  }
+  GST_OBJECT_UNLOCK (mux);
 
   gst_caps_unref (caps);
   return ret;
@@ -994,10 +1068,6 @@ mpegtsmux_collected (GstCollectPads2 * pads, MpegTsMux * mux)
       tsmux_program_set_pcr_stream (prog, best->stream);
     }
 
-    if (best->stream->is_video_stream)
-      delta = GST_BUFFER_FLAG_IS_SET (buf, GST_BUFFER_FLAG_DELTA_UNIT);
-    GST_DEBUG_OBJECT (mux, "delta: %d", delta);
-
     GST_DEBUG_OBJECT (COLLECT_DATA_PAD (best),
         "Chose stream for output (PID: 0x%04x)", best->pid);
 
@@ -1006,6 +1076,19 @@ mpegtsmux_collected (GstCollectPads2 * pads, MpegTsMux * mux)
       GST_DEBUG_OBJECT (mux, "Buffer has TS %" GST_TIME_FORMAT " pts %"
           G_GINT64_FORMAT, GST_TIME_ARGS (best->cur_ts), pts);
     }
+
+    if (best->stream->is_video_stream) {
+      delta = GST_BUFFER_FLAG_IS_SET (buf, GST_BUFFER_FLAG_DELTA_UNIT);
+      GST_OBJECT_LOCK (mux);
+      if (mux->element_index && !delta && best->element_index_writer_id != -1) {
+        gst_index_add_association (mux->element_index,
+            best->element_index_writer_id,
+            GST_ASSOCIATION_FLAG_KEY_UNIT, spn_format, mux->spn_count,
+            pts_format, pts, NULL);
+      }
+      GST_OBJECT_UNLOCK (mux);
+    }
+    GST_DEBUG_OBJECT (mux, "delta: %d", delta);
 
     tsmux_stream_add_data (best->stream, GST_BUFFER_DATA (buf),
         GST_BUFFER_SIZE (buf), buf, pts, -1, !delta);
@@ -1374,6 +1457,9 @@ new_packet_cb (GstBuffer * buf, void *user_data, gint64 new_pcr)
 {
   MpegTsMux *mux = (MpegTsMux *) user_data;
   gint offset = 0;
+
+  GST_LOG_OBJECT (mux, "handling packet %d", mux->spn_count);
+  mux->spn_count++;
 
   offset = GST_BUFFER_DATA (buf) - GST_BUFFER_MALLOCDATA (buf);
   GST_BUFFER_TIMESTAMP (buf) = mux->last_ts;

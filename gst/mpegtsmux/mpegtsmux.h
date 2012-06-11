@@ -165,6 +165,10 @@ struct MpegTsMux {
   GstBuffer *out_buffer;
   gint out_offset;
   gint last_size;
+
+  /* SPN/PTS index handling */
+  GstIndex *element_index;
+  gint spn_count;
 };
 
 struct MpegTsMuxClass {
@@ -186,6 +190,9 @@ struct MpegTsPadData {
   GstClockTime cur_ts;
   /* most recent valid TS for this stream */
   GstClockTime last_ts;
+
+  /* (optional) index writing */
+  gint element_index_writer_id;
 
   /* optional codec data available in the caps */
   GstBuffer *codec_data;
