@@ -1980,6 +1980,10 @@ gst_matroska_demux_handle_seek_event (GstMatroskaDemux * demux,
   after = ! !(flags & GST_SEEK_FLAG_SNAP_AFTER);
   before = ! !(flags & GST_SEEK_FLAG_SNAP_BEFORE);
 
+  /* always do full update if flushing,
+   * otherwise problems might arise downstream with missing keyframes etc */
+  update = update || flush;
+
   GST_DEBUG_OBJECT (demux, "New segment %" GST_SEGMENT_FORMAT, &seeksegment);
 
   if (!update) {
