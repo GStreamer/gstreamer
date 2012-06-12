@@ -732,7 +732,7 @@ init:
   info.error = 0;
 
   do {
-    GstMapInfo map;
+    GstMapInfo omap;
 
     if (!faad->packetised) {
       /* faad only really parses ADTS header at Init time, not when decoding,
@@ -775,11 +775,11 @@ init:
       /* FIXME, add bufferpool and allocator support to the base class */
       outbuf = gst_buffer_new_allocate (NULL, info.samples * faad->bps, NULL);
 
-      gst_buffer_map (outbuf, &map, GST_MAP_READWRITE);
+      gst_buffer_map (outbuf, &omap, GST_MAP_READWRITE);
       if (faad->need_reorder) {
         gint16 *dest, *src, i, j;
 
-        dest = (gint16 *) map.data;
+        dest = (gint16 *) omap.data;
         src = (gint16 *) out;
 
         for (i = 0; i < samples; i++) {
@@ -789,16 +789,19 @@ init:
           dest += channels;
         }
       } else {
-        memcpy (map.data, out, map.size);
+        memcpy (omap.data, out, omap.size);
       }
-      gst_buffer_unmap (outbuf, &map);
+      gst_buffer_unmap (outbuf, &omap);
+      gst_buffer_unmap (buffer, &map);
+      buffer = NULL;
 
       ret = gst_audio_decoder_finish_frame (dec, outbuf, 1);
     }
   } while (FALSE);
 
 out:
-  gst_buffer_unmap (buffer, &map);
+  if (buffer)
+    gst_buffer_unmap (buffer, &map);
 
   return ret;
 
