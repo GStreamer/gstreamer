@@ -228,7 +228,6 @@ make ERROR_CFLAGS='' ERROR_CXXFLAGS=''
 # %{_libdir}/gstreamer-%{majorminor}/libgstid3tag.so
 # %{_libdir}/gstreamer-%{majorminor}/libgstivfparse.so
 # %{_libdir}/gstreamer-%{majorminor}/libgstjpegformat.so
-# %{_libdir}/gstreamer-%{majorminor}/libgstlegacyresample.so
 # %{_libdir}/gstreamer-%{majorminor}/libgstliveadder.so
 %{_libdir}/gstreamer-%{majorminor}/libgstmpegdemux.so
 # %{_libdir}/gstreamer-%{majorminor}/libgstmve.so

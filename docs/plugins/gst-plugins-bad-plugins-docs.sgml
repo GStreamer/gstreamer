@@ -71,7 +71,6 @@
     <xi:include href="xml/element-kateparse.xml" />
     <xi:include href="xml/element-katetag.xml" />
     <xi:include href="xml/element-ladspa.xml" />
-    <xi:include href="xml/element-legacyresample.xml" />
     <xi:include href="xml/element-liveadder.xml" />
     <xi:include href="xml/element-marble.xml" />
     <xi:include href="xml/element-mimenc.xml" />

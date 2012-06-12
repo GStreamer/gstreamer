@@ -750,20 +750,6 @@ gst_jpeg_parse_get_type
 </SECTION>
 
 <SECTION>
-<FILE>element-legacyresample</FILE>
-<TITLE>legacyresample</TITLE>
-GstLegacyresample
-<SUBSECTION Standard>
-GstLegacyresampleClass
-GST_LEGACYRESAMPLE
-GST_LEGACYRESAMPLE_CLASS
-GST_IS_LEGACYRESAMPLE
-GST_IS_LEGACYRESAMPLE_CLASS
-GST_TYPE_LEGACYRESAMPLE
-gst_legacyresample_get_type
-</SECTION>
-
-<SECTION>
 <FILE>element-liveadder</FILE>
 <TITLE>liveadder</TITLE>
 GstLiveAdder

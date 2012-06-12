@@ -42,7 +42,6 @@ GST_PLUGINS_BAD_BUILT_SOURCES := \
 	gst/mxf/Android.mk \
 	gst/cdxaparse/Android.mk \
 	gst/mpegpsmux/Android.mk \
-	gst/legacyresample/Android.mk \
 	gst/gaudieffects/Android.mk \
 	gst/liveadder/Android.mk \
 	gst/nsf/Android.mk \
@@ -137,7 +136,6 @@ CONFIGURE_TARGETS += gst-plugins-bad-configure
 -include $(GST_PLUGINS_BAD_TOP)/gst/mxf/Android.mk
 -include $(GST_PLUGINS_BAD_TOP)/gst/cdxaparse/Android.mk
 -include $(GST_PLUGINS_BAD_TOP)/gst/mpegpsmux/Android.mk
--include $(GST_PLUGINS_BAD_TOP)/gst/legacyresample/Android.mk
 -include $(GST_PLUGINS_BAD_TOP)/gst/gaudieffects/Android.mk
 -include $(GST_PLUGINS_BAD_TOP)/gst/liveadder/Android.mk
 -include $(GST_PLUGINS_BAD_TOP)/gst/nsf/Android.mk

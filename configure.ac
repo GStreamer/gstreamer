@@ -315,7 +315,7 @@ GST_PLUGINS_NONPORTED=" aiff \
  dccp faceoverlay festival \
  fieldanalysis freeverb freeze frei0r \
  hdvparse id3tag inter interlace ivfparse jpegformat jp2kdecimator \
- kate liveadder legacyresample librfb mpegtsmux \
+ kate liveadder librfb mpegtsmux \
  mpegpsmux mve mxf mythtv nsf nuvdemux \
  patchdetect pnm real \
  sdi siren speed subenc stereo tta videofilters \
@@ -361,7 +361,6 @@ AG_GST_CHECK_PLUGIN(interlace)
 AG_GST_CHECK_PLUGIN(ivfparse)
 AG_GST_CHECK_PLUGIN(jp2kdecimator)
 AG_GST_CHECK_PLUGIN(jpegformat)
-AG_GST_CHECK_PLUGIN(legacyresample)
 AG_GST_CHECK_PLUGIN(librfb)
 AG_GST_CHECK_PLUGIN(liveadder)
 AG_GST_CHECK_PLUGIN(mpegdemux)
@@ -1974,7 +1973,6 @@ gst/interlace/Makefile
 gst/ivfparse/Makefile
 gst/jp2kdecimator/Makefile
 gst/jpegformat/Makefile
-gst/legacyresample/Makefile
 gst/librfb/Makefile
 gst/liveadder/Makefile
 gst/mpegdemux/Makefile
