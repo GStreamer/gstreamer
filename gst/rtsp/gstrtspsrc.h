@@ -178,9 +178,9 @@ struct _GstRTSPSrc {
   GstClockTime     base_time;
 
   /* UDP mode loop */
-  gint             loop_cmd;
+  gint             pending_cmd;
+  gint             busy_cmd;
   gboolean         ignore_timeout;
-  gboolean         waiting;
   gboolean         open_error;
 
   /* mutex for protecting state changes */
