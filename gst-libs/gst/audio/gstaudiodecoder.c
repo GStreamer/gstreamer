@@ -521,7 +521,7 @@ gst_audio_decoder_set_output_format (GstAudioDecoder * dec,
 {
   gboolean res = TRUE;
   guint old_rate;
-  GstCaps *caps;
+  GstCaps *caps = NULL;
   GstCaps *templ_caps;
 
   GST_DEBUG_OBJECT (dec, "Setting output format");
@@ -537,6 +537,8 @@ gst_audio_decoder_set_output_format (GstAudioDecoder * dec,
   /* Only allow caps that are a subset of the template caps */
   templ_caps = gst_pad_get_pad_template_caps (dec->srcpad);
   if (!gst_caps_is_subset (caps, templ_caps)) {
+    GST_WARNING_OBJECT (dec, "Requested output format %" GST_PTR_FORMAT
+        " do not match template %" GST_PTR_FORMAT, caps, templ_caps);
     gst_caps_unref (caps);
     gst_caps_unref (templ_caps);
     goto refuse_caps;
