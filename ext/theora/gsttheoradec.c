@@ -819,6 +819,7 @@ theora_dec_handle_frame (GstVideoDecoder * bdec, GstVideoCodecFrame * frame)
       res = gst_video_decoder_finish_frame (bdec, frame);
       break;
     case GST_CUSTOM_FLOW_DROP:
+    case GST_VIDEO_DECODER_FLOW_NEED_DATA:
       res = gst_video_decoder_drop_frame (bdec, frame);
       break;
     default:
