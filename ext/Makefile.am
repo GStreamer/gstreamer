@@ -34,12 +34,6 @@ ARTSC_DIR=
 AUDIOFILE_DIR=
 # endif
 
-# if USE_AUDIORESAMPLE
-# AUDIORESAMPLE_DIR=audioresample
-# else
-AUDIORESAMPLE_DIR=
-# endif
-
 if USE_BZ2
 BZ2_DIR=bz2
 else
@@ -405,7 +399,6 @@ SUBDIRS=\
 	$(ARTS_DIR) \
 	$(ARTSC_DIR) \
 	$(AUDIOFILE_DIR) \
-	$(AUDIORESAMPLE_DIR) \
 	$(BZ2_DIR) \
 	$(CDAUDIO_DIR) \
 	$(CELT_DIR) \
