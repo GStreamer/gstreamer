@@ -750,6 +750,7 @@ gst_rtsp_media_factory_collect_streams (GstRTSPMediaFactory * factory,
 
       /* ghost the pad of the payloader to the element */
       stream->srcpad = gst_ghost_pad_new (name, pad);
+      g_object_unref (pad);
       gst_pad_set_active (stream->srcpad, TRUE);
       gst_element_add_pad (media->element, stream->srcpad);
       gst_object_unref (elem);
