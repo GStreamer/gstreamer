@@ -23,7 +23,6 @@ cdparanoia       libcdparanoia    (http://www.xiph.org/paranoia/)
 dtsdec           libdts           (http://www.videolan.org/dtsdec.html)
 dvdnavsrc        libdvdnav        (http://dvd.sourceforge.net/)
 dxr3                              (http://dxr3.sourceforge.net/)
-icecastsend      libshout         (http://www.icecast.org)
 mad              libmad           (http://www.mars.org/home/rob/proj/mpeg/)
 mpeg2dec         libmpeg2         (http://libmpeg2.sourceforge.net/)
 mpeg2enc         libmpeg2enc      (http://mjpeg.sourceforge.net/)
@@ -74,7 +73,6 @@ ossaudio                          (http://www.opensound.com/)
 qcamsrc
 rfbenc           librfb
 sdlvideosink     libsdl           (http://www.libsdl.org/)
-shout2send       libshout2        (http://www.icecast.org)
 smoothwave      
 swfdec                            (http://swfdec.sourceforge.net/)
 tarkin                            (http://svn.xiph.org/trunk/tarkin/)

@@ -294,12 +294,6 @@ else
 SDL_DIR=
 endif
 
-# if USE_SHOUT
-# SHOUT_DIR=shout
-# else
-SHOUT_DIR=
-# endif
-
 # if USE_SMOOTHWAVE
 # SMOOTHWAVE_DIR=smoothwave
 # else
@@ -434,7 +428,6 @@ SUBDIRS=\
 	$(RSVG_DIR) \
 	$(SCHRO_DIR) \
 	$(SDL_DIR) \
-	$(SHOUT_DIR) \
 	$(SMOOTHWAVE_DIR) \
 	$(SNDFILE_DIR) \
 	$(SNDIO_DIR) \
