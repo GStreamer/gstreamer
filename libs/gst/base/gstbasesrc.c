@@ -1675,9 +1675,19 @@ gst_base_src_send_event (GstElement * element, GstEvent * event)
   switch (GST_EVENT_TYPE (event)) {
       /* bidirectional events */
     case GST_EVENT_FLUSH_START:
+      GST_DEBUG_OBJECT (src, "pushing flush-start event downstream");
+      result = gst_pad_push_event (src->srcpad, event);
+      event = NULL;
+      break;
     case GST_EVENT_FLUSH_STOP:
+      GST_LIVE_LOCK (src->srcpad);
+      src->priv->segment_pending = TRUE;
       /* sending random flushes downstream can break stuff,
        * especially sync since all segment info will get flushed */
+      GST_DEBUG_OBJECT (src, "pushing flush-stop event downstream");
+      result = gst_pad_push_event (src->srcpad, event);
+      GST_LIVE_UNLOCK (src->srcpad);
+      event = NULL;
       break;
 
       /* downstream serialized events */
