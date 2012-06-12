@@ -275,12 +275,20 @@ EXPORTS
 	gst_date_time_get_time_zone_offset
 	gst_date_time_get_type
 	gst_date_time_get_year
+	gst_date_time_has_day
+	gst_date_time_has_month
+	gst_date_time_has_second
+	gst_date_time_has_time
+	gst_date_time_has_year
 	gst_date_time_new
 	gst_date_time_new_from_unix_epoch_local_time
 	gst_date_time_new_from_unix_epoch_utc
 	gst_date_time_new_local_time
 	gst_date_time_new_now_local_time
 	gst_date_time_new_now_utc
+	gst_date_time_new_y
+	gst_date_time_new_ym
+	gst_date_time_new_ymd
 	gst_date_time_ref
 	gst_date_time_unref
 	gst_debug_add_log_function
