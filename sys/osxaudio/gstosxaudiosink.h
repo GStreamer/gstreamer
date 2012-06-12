@@ -2,6 +2,7 @@
  * GStreamer
  * Copyright (C) 2005-2006 Zaheer Abbas Merali <zaheerabbas at merali dot org>
  * Copyright (C) 2007 Pioneers of the Inevitable <songbird@songbirdnest.com>
+ * Copyright (C) 2012 Fluendo S.A. <support@fluendo.com>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"),
@@ -72,9 +73,10 @@ struct _GstOsxAudioSink
   AudioDeviceID device_id;
   AudioUnit audiounit;
   double volume;
+  GstCaps *cached_caps;
 };
 
-struct _GstOsxAudioSinkClass 
+struct _GstOsxAudioSinkClass
 {
   GstBaseAudioSinkClass parent_class;
 };
@@ -84,3 +86,4 @@ GType gst_osx_audio_sink_get_type (void);
 G_END_DECLS
 
 #endif /* __GST_OSXAUDIOSINK_H__ */
+
