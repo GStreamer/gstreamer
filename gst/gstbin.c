@@ -2175,6 +2175,10 @@ gst_bin_element_set_state (GstBin * bin, GstElement * element,
       gst_element_state_get_name (child_pending),
       gst_element_state_get_name (next));
 
+  /* always recurse into bins so that we can set the base time */
+  if (GST_IS_BIN (element))
+    goto do_state;
+
   /* Try not to change the state of elements that are already in the state we're
    * going to */
   if (child_current == next && child_pending == GST_STATE_VOID_PENDING) {
@@ -2238,6 +2242,7 @@ gst_bin_element_set_state (GstBin * bin, GstElement * element,
     }
   }
 
+do_state:
   GST_OBJECT_LOCK (bin);
   /* the element was busy with an upwards async state change, we must wait for
    * an ASYNC_DONE message before we attemp to change the state. */
