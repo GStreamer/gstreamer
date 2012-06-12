@@ -932,7 +932,7 @@ gst_dvd_spu_subpic_chain (GstPad * pad, GstObject * parent, GstBuffer * buf)
   switch (dvdspu->spu_input_type) {
     case SPU_INPUT_TYPE_VOBSUB:
       if (size > 4) {
-        guint8 *header[2];
+        guint8 header[2];
         guint16 packet_size;
 
         gst_buffer_extract (dvdspu->partial_spu, 0, header, 2);
