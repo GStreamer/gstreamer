@@ -532,11 +532,11 @@ G_STMT_START {                                                          \
  * state will yield the running_time against the clock.
  * @start_time: the running_time of the last PAUSED state
  * @numpads: number of pads of the element, includes both source and sink pads.
- * @pads: list of pads
+ * @pads: (element-type Gst.Pad): list of pads
  * @numsrcpads: number of source pads of the element.
- * @srcpads: list of source pads
+ * @srcpads: (element-type Gst.Pad): list of source pads
  * @numsinkpads: number of sink pads of the element.
- * @sinkpads: list of sink pads
+ * @sinkpads: (element-type Gst.Pad): list of sink pads
  * @pads_cookie: updated whenever the a pad is added or removed
  *
  * GStreamer element abstract base class.

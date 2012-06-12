@@ -126,6 +126,7 @@ struct _GstPadTemplate {
   GstPadPresence   presence;
   GstCaps	  *caps;
 
+  /*< private >*/
   gpointer _gst_reserved[GST_PADDING];
 };
 
@@ -135,6 +136,7 @@ struct _GstPadTemplateClass {
   /* signal callbacks */
   void (*pad_created)	(GstPadTemplate *templ, GstPad *pad);
 
+  /*< private >*/
   gpointer _gst_reserved[GST_PADDING];
 };
 

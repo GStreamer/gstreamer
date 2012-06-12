@@ -362,6 +362,7 @@ struct _GstClockEntry {
   gboolean               unscheduled;
   gboolean               woken_up;
 
+  /*< private >*/
   gpointer _gst_reserved[GST_PADDING];
 };
 

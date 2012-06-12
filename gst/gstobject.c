@@ -229,7 +229,7 @@ gst_object_init (GstObject * object)
 
 /**
  * gst_object_ref:
- * @object: a #GstObject to reference
+ * @object: (type Gst.Object): a #GstObject to reference
  *
  * Increments the reference count on @object. This function
  * does not take the lock on @object because it relies on
@@ -239,7 +239,7 @@ gst_object_init (GstObject * object)
  * constructs like :
  *  result = gst_object_ref (object->parent);
  *
- * Returns: (transfer full): A pointer to @object
+ * Returns: (transfer full) (type Gst.Object): A pointer to @object
  */
 gpointer
 gst_object_ref (gpointer object)
@@ -257,7 +257,7 @@ gst_object_ref (gpointer object)
 
 /**
  * gst_object_unref:
- * @object: a #GstObject to unreference
+ * @object: (type Gst.Object): a #GstObject to unreference
  *
  * Decrements the reference count on @object.  If reference count hits
  * zero, destroy @object. This function does not take the lock
