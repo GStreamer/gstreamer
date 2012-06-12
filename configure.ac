@@ -902,73 +902,6 @@ AG_GST_CHECK_FEATURE(DTS, [dts library], dtsdec, [
   AC_SUBST(DTS_LIBS)
 ])
 
-dnl *** DIVX ***
-translit(dnm, m, l) AM_CONDITIONAL(USE_DIVX, true)
-AG_GST_CHECK_FEATURE(DIVX, [divx plugins], divx, [
-  HAVE_DIVX=yes
-  AC_CHECK_HEADER(encore2.h, , [
-    AC_MSG_WARN([Divx4linux encore headers not found])
-    HAVE_DIVX=no
-  ])
-  if [ test x$HAVE_DIVX = xyes ]; then
-    AC_MSG_CHECKING([Checking for valid divx4linux encore version])
-    AC_TRY_COMPILE([
-#include <encore2.h>
-#if ENCORE_VERSION != 20021024
-#error Wrong version of divx encore libraries
-#endif
-    ], [
-return 0;
-    ], [
-      HAVE_DIVX=yes
-    ], [
-      HAVE_DIVX=no
-      AC_MSG_WARN([Wrong version of divx4linux installed])
-    ])
-  fi
-  if [ test x$HAVE_DIVX = xyes ]; then
-    AC_CHECK_HEADER(decore.h, , [
-      AC_MSG_WARN([Divx4linux decoder headers not found])
-      HAVE_DIVX=no
-    ])
-  fi
-  if [ test x$HAVE_DIVX = xyes ]; then
-    AC_MSG_CHECKING([Checking for valid divx4linux decore version])
-    AC_TRY_COMPILE([
-#include <decore.h>
-#if DECORE_VERSION != 20021112
-#error Wrong version of divx decore libraries
-#endif
-    ], [
-return 0;
-    ], [
-      HAVE_DIVX=yes
-    ], [
-      HAVE_DIVX=no
-      AC_MSG_WARN([Wrong version of divx4linux installed])
-    ])
-  fi
-  LIBS="$LIBM"
-  if test x$HAVE_DIVX = xyes; then
-    AC_CHECK_LIB(divxencore, encore, , [
-      AC_MSG_WARN([Divx4linux encore libs not found])
-      HAVE_DIVX=no
-    ])
-  fi
-  if test x$HAVE_DIVX = xyes; then
-    AC_CHECK_LIB(divxdecore, decore, , [
-      AC_MSG_WARN([Divx4linux decore libs not found])
-      HAVE_DIVX=no
-  ])
-  fi
-  if test x$HAVE_DIVX = xyes; then
-    DIVXENC_LIBS="-ldivxencore $LIBM"
-    DIVXDEC_LIBS="-ldivxdecore $LIBM"
-    AC_SUBST(DIVXENC_LIBS)
-    AC_SUBST(DIVXDEC_LIBS)
-  fi
-])
-
 dnl *** resindvd ***
 translit(dnm, m, l) AM_CONDITIONAL(USE_RESINDVD, true)
 AG_GST_CHECK_FEATURE(RESINDVD, [resindvd plugin], resindvd, [
@@ -1877,7 +1810,6 @@ AM_CONDITIONAL(USE_DIRECTFB, false)
 AM_CONDITIONAL(USE_WAYLAND, false)
 AM_CONDITIONAL(USE_DIRAC, false)
 AM_CONDITIONAL(USE_DTS, false)
-AM_CONDITIONAL(USE_DIVX, false)
 AM_CONDITIONAL(USE_EXIF, false)
 AM_CONDITIONAL(USE_RESINDVD, false)
 AM_CONDITIONAL(USE_FAAC, false)
@@ -2136,7 +2068,6 @@ ext/dc1394/Makefile
 ext/dirac/Makefile
 ext/directfb/Makefile
 ext/wayland/Makefile
-ext/divx/Makefile
 ext/dts/Makefile
 ext/faac/Makefile
 ext/faad/Makefile

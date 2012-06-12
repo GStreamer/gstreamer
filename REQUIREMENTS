@@ -49,8 +49,6 @@ swfdec		(for the swfdec (flash) plugin)
 			http://www.schleef.org/swfdec/
 dtsdec		(for DTS audio decoding)
 			http://www.videolan.org/libdca.html
-divx		(for divx decoding)
-			http://www.divx.com/divx/linux/
 musepack	(for musepack audio codec/format)
 			(http://www.musepack.net/)
 nas		(for the NAS sound server sink)

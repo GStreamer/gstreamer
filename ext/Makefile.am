@@ -100,12 +100,6 @@ else
 WAYLAND_DIR=
 endif
 
-if USE_DIVX
-DIVX_DIR=divx
-else
-DIVX_DIR=
-endif
-
 if USE_DTS
 DTS_DIR=dts
 else
@@ -422,7 +416,6 @@ SUBDIRS=\
 	$(DIRAC_DIR) \
 	$(DIRECTFB_DIR) \
 	$(WAYLAND_DIR) \
-	$(DIVX_DIR) \
 	$(DTS_DIR) \
 	$(RESINDVD_DIR) \
 	$(FAAC_DIR) \
@@ -495,7 +488,6 @@ DIST_SUBDIRS = \
 	libmms \
 	lv2 \
 	dts \
-	divx \
 	modplug \
 	mimic \
 	mpeg2enc \

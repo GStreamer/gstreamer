@@ -41,13 +41,6 @@ gint64  arg3
 </SIGNAL>
 
 <SIGNAL>
-<NAME>GstDivxEnc::frame-encoded</NAME>
-<RETURNS>void</RETURNS>
-<FLAGS>l</FLAGS>
-GstDivxEnc *gstdivxenc
-</SIGNAL>
-
-<SIGNAL>
 <NAME>GstDCCPClientSrc::connected</NAME>
 <RETURNS>void</RETURNS>
 <FLAGS>f</FLAGS>

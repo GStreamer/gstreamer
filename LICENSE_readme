@@ -120,7 +120,6 @@ mngdec/mngenc	libmng	    	(http://gjuyn.xs4all.nl/libmng)
  - license 	 PNG license
 
 Plugins using non-free libraries:
-divxdec, divxenc                        (http://www.divx.com/)
 osxaudio                                (http://www.apple.com/macosx/)
 sunaudiosink                            (http://www.sun.com/)
 
