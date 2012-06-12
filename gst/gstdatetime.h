@@ -36,6 +36,13 @@ G_BEGIN_DECLS
  */
 typedef struct _GstDateTime GstDateTime;
 
+gboolean        gst_date_time_has_year     (const GstDateTime * datetime);
+gboolean        gst_date_time_has_month    (const GstDateTime * datetime);
+gboolean        gst_date_time_has_day      (const GstDateTime * datetime);
+gboolean        gst_date_time_has_hour     (const GstDateTime * datetime);
+gboolean        gst_date_time_has_minute   (const GstDateTime * datetime);
+gboolean        gst_date_time_has_second   (const GstDateTime * datetime);
+
 gint    gst_date_time_get_year             (const GstDateTime * datetime);
 gint    gst_date_time_get_month            (const GstDateTime * datetime);
 gint    gst_date_time_get_day              (const GstDateTime * datetime);
@@ -51,6 +58,15 @@ GstDateTime *   gst_date_time_new_local_time            (gint year, gint month,
                                                          gint day, gint hour,
                                                          gint minute,
                                                          gdouble seconds) G_GNUC_MALLOC;
+GstDateTime *   gst_date_time_new_y                     (gint year) G_GNUC_MALLOC;
+GstDateTime *   gst_date_time_new_ym                    (gint year, gint month) G_GNUC_MALLOC;
+GstDateTime *   gst_date_time_new_ymd                   (gint year, gint month,
+                                                         gint day) G_GNUC_MALLOC;
+GstDateTime *   gst_date_time_new_ymd_h                 (gint year, gint month,
+                                                         gint day, gint hour) G_GNUC_MALLOC;
+GstDateTime *   gst_date_time_new_ymd_hm                (gint year, gint month,
+                                                         gint day, gint hour,
+                                                         gint minute) G_GNUC_MALLOC;
 GstDateTime *   gst_date_time_new                       (gfloat tzoffset,
                                                          gint year, gint month,
                                                          gint day, gint hour,
