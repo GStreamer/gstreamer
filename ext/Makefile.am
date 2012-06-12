@@ -16,18 +16,6 @@ else
 APEXSINK_DIR =
 endif
 
-# if USE_ARTS
-# ARTS_DIR=arts
-# else
-ARTS_DIR=
-# endif
-
-# if USE_ARTSC
-# ARTSC_DIR=artsd
-# else
-ARTSC_DIR=
-# endif
-
 # if USE_AUDIOFILE
 # AUDIOFILE_DIR=audiofile
 # else
@@ -384,8 +372,6 @@ SUBDIRS=\
 	$(ASSRENDER_DIR) \
 	$(VOAMRWBENC_DIR) \
 	$(APEXSINK_DIR) \
-	$(ARTS_DIR) \
-	$(ARTSC_DIR) \
 	$(AUDIOFILE_DIR) \
 	$(BZ2_DIR) \
 	$(CDAUDIO_DIR) \

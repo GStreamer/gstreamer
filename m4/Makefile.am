@@ -1,7 +1,6 @@
 EXTRA_DIST = \
 	a52.m4 \
 	aalib.m4 \
-	as-arts.m4 \
 	as-ffmpeg.m4 \
 	as-liblame.m4 \
 	as-slurp-ffmpeg.m4 \
@@ -11,7 +10,6 @@ EXTRA_DIST = \
 	gconf-2.m4 \
 	gettext.m4 \
 	glibc21.m4 \
-	gst-artsc.m4 \
 	gst-fionread.m4 \
 	gst-sdl.m4 \
 	gst-sid.m4 \

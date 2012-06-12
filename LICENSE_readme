@@ -49,7 +49,6 @@ vbidec           None             (Algorithm by Billy Biggs, Doug Bell,
 Plugins which use a LGPL library are as follows:
 
 alsa             alsa             (http://alsa-project.org/)
-artsdsink        aRts             (http://arts-project.org/)
 cacasink         libcaca          (http://sam.zoy.org/projects/libcaca/)
 colorspacelcs    libcolorspace    
 dvdec            libdv            (http://libdv.sourceforge.net/)
@@ -59,7 +58,6 @@ fameenc          libfame          (http://fame.sourceforge.net/)
 ffmpeg           ffmpeg           (http://ffmpeg.sourceforge.net/)
 gdkpixbuf        GTK+             (http://www.gtk.org/)
 gnomevfs         gnome-vfs        (ftp.gnome.org//pub/GNOME/stable/sources/gnome-vfs/)
-gst_arts         aRts             (http://arts-project.org/)
 gst1394          libraw1394       (http://www.linux1394.org/)
 gstaf            libaudiofile     (http://www.68k.org/~michael/audiofile/)
 gstsf            libsndfile       (http://www.mega-nerd.com/libsndfile/)

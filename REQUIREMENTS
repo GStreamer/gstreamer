@@ -32,8 +32,6 @@ ext/(library)
 
 dirac		(Dirac video codec)
 			http://www.bbc.co.uk/rd/projects/dirac/index.shtml
-aRts		(for the arts plugin wrapper, and the artsd sink)
-			http://www.arts-project.org
 libdvdread	(for the dvdsrc)
 			http://www.dtek.chalmers.se/groups/dvd/
 			(optional: libcss for encrypted DVDs)
