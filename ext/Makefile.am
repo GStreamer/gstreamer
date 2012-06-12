@@ -142,12 +142,6 @@ else
 GSM_DIR=
 endif
 
-# if USE_HERMES
-# HERMES_DIR=hermes
-# else
-HERMES_DIR=
-# endif
-
 if USE_JP2K
 JP2K_DIR = jp2k
 else
@@ -417,7 +411,6 @@ SUBDIRS=\
 	$(GSETTINGS_DIR) \
 	$(GSM_DIR) \
 	$(G729_DIR) \
-	$(HERMES_DIR) \
 	$(JP2K_DIR) \
 	$(KATE_DIR) \
 	$(LADSPA_DIR) \
