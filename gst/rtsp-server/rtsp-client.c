@@ -1019,7 +1019,6 @@ not_found:
 no_stream:
   {
     send_generic_response (client, GST_RTSP_STS_NOT_FOUND, state);
-    g_object_unref (media);
     g_object_unref (session);
     return FALSE;
   }
