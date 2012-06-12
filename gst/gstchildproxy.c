@@ -172,11 +172,11 @@ gst_child_proxy_get_children_count (GstChildProxy * parent)
  *
  * Looks up which object and #GParamSpec would be effected by the given @name.
  *
+ * MT safe.
+ *
  * Returns: TRUE if @target and @pspec could be found. FALSE otherwise. In that
  * case the values for @pspec and @target are not modified. Unref @target after
- * usage.
- *
- * MT safe.
+ * usage. For plain GObjects @target is the same as @object.
  */
 gboolean
 gst_child_proxy_lookup (GObject * object, const gchar * name,
@@ -191,6 +191,7 @@ gst_child_proxy_lookup (GObject * object, const gchar * name,
   g_object_ref (object);
 
   current = names = g_strsplit (name, "::", -1);
+  // find the owner of the property
   while (current[1]) {
     GObject *next;
 
@@ -210,6 +211,8 @@ gst_child_proxy_lookup (GObject * object, const gchar * name,
     object = next;
     current++;
   }
+
+  // look for psec
   if (current[1] == NULL) {
     GParamSpec *spec =
         g_object_class_find_property (G_OBJECT_GET_CLASS (object), current[0]);
