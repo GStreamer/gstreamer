@@ -41,7 +41,7 @@ static const gchar *_quark_strings[] = {
   "latency", "uri", "object", "taglist", "GstEventSegment",
   "GstEventBufferSize", "GstEventQOS", "GstEventSeek", "GstEventLatency",
   "GstMessageError", "GstMessageWarning", "GstMessageInfo",
-  "GstMessageBuffering", "GstMessageState", "GstMessageClockProvide",
+  "GstMessageBuffering", "GstMessageStateChanged", "GstMessageClockProvide",
   "GstMessageClockLost", "GstMessageNewClock", "GstMessageStructureChange",
   "GstMessageSegmentStart", "GstMessageSegmentDone", "GstMessageDuration",
   "GstMessageAsyncDone", "GstMessageRequestState", "GstMessageStreamStatus",

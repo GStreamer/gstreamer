@@ -557,7 +557,7 @@ gst_message_new_state_changed (GstObject * src,
   GstMessage *message;
   GstStructure *structure;
 
-  structure = gst_structure_new_id (GST_QUARK (MESSAGE_STATE),
+  structure = gst_structure_new_id (GST_QUARK (MESSAGE_STATE_CHANGED),
       GST_QUARK (OLD_STATE), GST_TYPE_STATE, (gint) oldstate,
       GST_QUARK (NEW_STATE), GST_TYPE_STATE, (gint) newstate,
       GST_QUARK (PENDING_STATE), GST_TYPE_STATE, (gint) pending, NULL);
