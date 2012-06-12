@@ -2935,7 +2935,7 @@ gst_date_time_has_year
 
 gst_date_time_new_y
 gst_date_time_new_ym
-gst_date_time_new_gst_date_time_ref
+gst_date_time_new
 </SECTION>
 
 <SECTION>
