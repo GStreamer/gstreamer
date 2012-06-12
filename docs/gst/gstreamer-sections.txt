@@ -2926,6 +2926,16 @@ gst_date_time_new_now_local_time
 gst_date_time_new_now_utc
 gst_date_time_ref
 gst_date_time_unref
+
+gst_date_time_has_day
+gst_date_time_has_month
+gst_date_time_has_second
+gst_date_time_has_time
+gst_date_time_has_year
+
+gst_date_time_new_y
+gst_date_time_new_ym
+gst_date_time_new_gst_date_time_ref
 </SECTION>
 
 <SECTION>
