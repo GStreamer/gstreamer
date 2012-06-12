@@ -154,12 +154,6 @@ else
 LV2_DIR =
 endif
 
-# if USE_LCS
-# LCS_DIR=lcs
-# else
-LCS_DIR=
-# endif
-
 # if USE_LIBFAME
 # LIBFAME_DIR=libfame
 # else
@@ -395,7 +389,6 @@ SUBDIRS=\
 	$(KATE_DIR) \
 	$(LADSPA_DIR) \
 	$(LV2_DIR) \
-	$(LCS_DIR) \
 	$(LIBFAME_DIR) \
 	$(LIBMMS_DIR) \
 	$(MODPLUG_DIR) \

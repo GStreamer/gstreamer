@@ -50,7 +50,6 @@ Plugins which use a LGPL library are as follows:
 
 alsa             alsa             (http://alsa-project.org/)
 cacasink         libcaca          (http://sam.zoy.org/projects/libcaca/)
-colorspacelcs    libcolorspace    
 dvdec            libdv            (http://libdv.sourceforge.net/)
 esdmon,esdsink   libesd           (ftp.gnome.org/pub/GNOME/stable/sources/esound/)
 faac             libfaac          (http://www.audiocoding.com/modules/mydownloads/)
