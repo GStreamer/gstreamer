@@ -1294,21 +1294,37 @@ compare_factories_func (gconstpointer p1, gconstpointer p2)
 {
   GstPluginFeature *f1, *f2;
   gint diff;
-  gboolean s1, s2;
+  gboolean is_sink1, is_sink2;
+  gboolean is_parser1, is_parser2;
 
   f1 = (GstPluginFeature *) p1;
   f2 = (GstPluginFeature *) p2;
 
-  s1 = gst_element_factory_list_is_type (GST_ELEMENT_FACTORY_CAST (f1),
+  is_sink1 = gst_element_factory_list_is_type (GST_ELEMENT_FACTORY_CAST (f1),
       GST_ELEMENT_FACTORY_TYPE_SINK);
-  s2 = gst_element_factory_list_is_type (GST_ELEMENT_FACTORY_CAST (f2),
+  is_sink2 = gst_element_factory_list_is_type (GST_ELEMENT_FACTORY_CAST (f2),
       GST_ELEMENT_FACTORY_TYPE_SINK);
+  is_parser1 = gst_element_factory_list_is_type (GST_ELEMENT_FACTORY_CAST (f1),
+      GST_ELEMENT_FACTORY_TYPE_PARSER);
+  is_parser2 = gst_element_factory_list_is_type (GST_ELEMENT_FACTORY_CAST (f2),
+      GST_ELEMENT_FACTORY_TYPE_PARSER);
 
-  if (s1 && !s2)
+  /* First we want all sinks as we prefer a sink if it directly
+   * supports the current caps */
+  if (is_sink1 && !is_sink2)
     return -1;
-  else if (!s1 && s2)
+  else if (!is_sink1 && is_sink2)
     return 1;
 
+  /* Then we want all parsers as we always want to plug parsers
+   * before decoders */
+  if (is_parser1 && !is_parser2)
+    return -1;
+  else if (!is_parser1 && is_parser2)
+    return 1;
+
+  /* And if it's a both a parser or sink we first sort by rank
+   * and then by factory name */
   diff = gst_plugin_feature_get_rank (f2) - gst_plugin_feature_get_rank (f1);
   if (diff != 0)
     return diff;

@@ -101,6 +101,9 @@
 
 #include "gst/glib-compat-private.h"
 
+/* Also used by gsturidecodebin.c */
+gint _decode_bin_compare_factories_func (gconstpointer p1, gconstpointer p2);
+
 /* generic templates */
 static GstStaticPadTemplate decoder_bin_sink_template =
 GST_STATIC_PAD_TEMPLATE ("sink",
@@ -930,6 +933,40 @@ gst_decode_bin_class_init (GstDecodeBinClass * klass)
       GST_DEBUG_FUNCPTR (gst_decode_bin_handle_message);
 }
 
+gint
+_decode_bin_compare_factories_func (gconstpointer p1, gconstpointer p2)
+{
+  GstPluginFeature *f1, *f2;
+  gint diff;
+  gboolean is_parser1, is_parser2;
+
+  f1 = (GstPluginFeature *) p1;
+  f2 = (GstPluginFeature *) p2;
+
+  is_parser1 = gst_element_factory_list_is_type (GST_ELEMENT_FACTORY_CAST (f1),
+      GST_ELEMENT_FACTORY_TYPE_PARSER);
+  is_parser2 = gst_element_factory_list_is_type (GST_ELEMENT_FACTORY_CAST (f2),
+      GST_ELEMENT_FACTORY_TYPE_PARSER);
+
+
+  /* We want all parsers first as we always want to plug parsers
+   * before decoders */
+  if (is_parser1 && !is_parser2)
+    return -1;
+  else if (!is_parser1 && is_parser2)
+    return 1;
+
+  /* And if it's a both a parser we first sort by rank
+   * and then by factory name */
+  diff = gst_plugin_feature_get_rank (f2) - gst_plugin_feature_get_rank (f1);
+  if (diff != 0)
+    return diff;
+
+  diff = strcmp (GST_OBJECT_NAME (f2), GST_OBJECT_NAME (f1));
+
+  return diff;
+}
+
 /* Must be called with factories lock! */
 static void
 gst_decode_bin_update_factories_list (GstDecodeBin * dbin)
@@ -943,6 +980,8 @@ gst_decode_bin_update_factories_list (GstDecodeBin * dbin)
     dbin->factories =
         gst_element_factory_list_get_elements
         (GST_ELEMENT_FACTORY_TYPE_DECODABLE, GST_RANK_MARGINAL);
+    dbin->factories =
+        g_list_sort (dbin->factories, _decode_bin_compare_factories_func);
     dbin->factories_cookie = cookie;
   }
 }

@@ -44,6 +44,9 @@
 
 #include "gst/glib-compat-private.h"
 
+/* From gstdecodebin2.c */
+gint _decode_bin_compare_factories_func (gconstpointer p1, gconstpointer p2);
+
 #define GST_TYPE_URI_DECODE_BIN \
   (gst_uri_decode_bin_get_type())
 #define GST_URI_DECODE_BIN(obj) \
@@ -292,6 +295,8 @@ gst_uri_decode_bin_update_factories_list (GstURIDecodeBin * dec)
     dec->factories =
         gst_element_factory_list_get_elements
         (GST_ELEMENT_FACTORY_TYPE_DECODABLE, GST_RANK_MARGINAL);
+    dec->factories =
+        g_list_sort (dec->factories, _decode_bin_compare_factories_func);
     dec->factories_cookie = cookie;
   }
 }
