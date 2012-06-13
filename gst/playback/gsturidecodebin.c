@@ -858,7 +858,9 @@ do_async_done (GstURIDecodeBin * dbin)
 
   if (dbin->async_pending) {
     GST_DEBUG_OBJECT (dbin, "posting ASYNC_DONE");
-    message = gst_message_new_async_done (GST_OBJECT_CAST (dbin), FALSE);
+    message =
+        gst_message_new_async_done (GST_OBJECT_CAST (dbin),
+        GST_CLOCK_TIME_NONE);
     GST_BIN_CLASS (parent_class)->handle_message (GST_BIN_CAST (dbin), message);
 
     dbin->async_pending = FALSE;

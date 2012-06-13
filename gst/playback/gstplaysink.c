@@ -1266,7 +1266,9 @@ do_async_done (GstPlaySink * playsink)
 
   if (playsink->async_pending) {
     GST_INFO_OBJECT (playsink, "Sending async_done message");
-    message = gst_message_new_async_done (GST_OBJECT_CAST (playsink), FALSE);
+    message =
+        gst_message_new_async_done (GST_OBJECT_CAST (playsink),
+        GST_CLOCK_TIME_NONE);
     GST_BIN_CLASS (gst_play_sink_parent_class)->handle_message (GST_BIN_CAST
         (playsink), message);
 
