@@ -218,6 +218,7 @@
 
 #define MIN_FRAMES_TO_POST_BITRATE 10
 #define TARGET_DIFFERENCE          (20 * GST_SECOND)
+#define MAX_INDEX_ENTRIES          4096
 
 GST_DEBUG_CATEGORY_STATIC (gst_base_parse_debug);
 #define GST_CAT_DEFAULT gst_base_parse_debug
@@ -304,6 +305,7 @@ struct _GstBaseParsePrivate
   gint64 upstream_size;
   /* minimum distance between two index entries */
   GstClockTimeDiff idx_interval;
+  guint64 idx_byte_interval;
   /* ts and offset of last entry added */
   GstClockTime index_last_ts;
   gint64 index_last_offset;
@@ -743,6 +745,7 @@ gst_base_parse_reset (GstBaseParse * parse)
   parse->priv->upstream_size = 0;
   parse->priv->upstream_has_duration = FALSE;
   parse->priv->idx_interval = 0;
+  parse->priv->idx_byte_interval = 0;
   parse->priv->exact_position = TRUE;
   parse->priv->seen_keyframe = FALSE;
 
@@ -1565,9 +1568,11 @@ gst_base_parse_add_index_entry (GstBaseParse * parse, guint64 offset,
 
     /* FIXME need better helper data structure that handles these issues
      * related to ongoing collecting of index entries */
-    if (parse->priv->index_last_offset >= (gint64) offset) {
-      GST_DEBUG_OBJECT (parse, "already have entries up to offset "
-          "0x%08" G_GINT64_MODIFIER "x", parse->priv->index_last_offset);
+    if (parse->priv->index_last_offset + parse->priv->idx_byte_interval >=
+        (gint64) offset) {
+      GST_LOG_OBJECT (parse,
+          "already have entries up to offset 0x%08" G_GINT64_MODIFIER "x",
+          parse->priv->index_last_offset + parse->priv->idx_byte_interval);
       goto exit;
     }
 
@@ -1627,6 +1632,7 @@ gst_base_parse_check_seekability (GstBaseParse * parse)
   gboolean seekable = FALSE;
   gint64 start = -1, stop = -1;
   guint idx_interval = 0;
+  guint64 idx_byte_interval = 0;
 
   query = gst_query_new_seeking (GST_FORMAT_BYTES);
   if (!gst_pad_peer_query (parse->sinkpad, query)) {
@@ -1657,6 +1663,14 @@ gst_base_parse_check_seekability (GstBaseParse * parse)
       idx_interval = 500;
     else
       idx_interval = 1000;
+
+    /* ensure that even for large files (e.g. very long audio files), the index
+     * stays reasonably-size, with some arbitrary limit to the total number of
+     * index entries */
+    idx_byte_interval = (stop - start) / MAX_INDEX_ENTRIES;
+    GST_DEBUG_OBJECT (parse,
+        "Limiting index entries to %d, indexing byte interval %"
+        G_GUINT64_FORMAT " bytes", MAX_INDEX_ENTRIES, idx_byte_interval);
   }
 
 done:
@@ -1669,6 +1683,7 @@ done:
 
   GST_DEBUG_OBJECT (parse, "idx_interval: %ums", idx_interval);
   parse->priv->idx_interval = idx_interval * GST_MSECOND;
+  parse->priv->idx_byte_interval = idx_byte_interval;
 }
 
 /* some misc checks on upstream */
