@@ -183,7 +183,8 @@ typedef enum _GstQuarkId
   GST_QUARK_TIME_STRUCTURE = 154,
   GST_QUARK_MESSAGE_TAG = 155,
   GST_QUARK_EVENT_TAG = 156,
-  GST_QUARK_MAX = 157
+  GST_QUARK_MESSAGE_RESET_TIME = 157,
+  GST_QUARK_MAX = 158
 } GstQuarkId;
 
 extern GQuark _priv_gst_quark_table[GST_QUARK_MAX];

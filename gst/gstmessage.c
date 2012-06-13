@@ -2231,3 +2231,52 @@ gst_message_parse_toc (GstMessage * message, GstToc ** toc, gboolean * updated)
     *updated =
         __gst_toc_structure_get_updated (GST_MESSAGE_STRUCTURE (message));
 }
+
+/**
+ * gst_message_new_reset_time:
+ * @src: (transfer none): The object originating the message.
+ * @running_time: the requested running-time
+ *
+ * This message is posted when the pipeline running-time should be reset to
+ * @running_time, like after a flushing seek.
+ *
+ * Returns: (transfer full): The new reset_time message.
+ *
+ * MT safe.
+ */
+GstMessage *
+gst_message_new_reset_time (GstObject * src, GstClockTime running_time)
+{
+  GstMessage *message;
+  GstStructure *structure;
+
+  structure = gst_structure_new_id (GST_QUARK (MESSAGE_RESET_TIME),
+      GST_QUARK (RUNNING_TIME), G_TYPE_UINT64, running_time, NULL);
+  message = gst_message_new_custom (GST_MESSAGE_RESET_TIME, src, structure);
+
+  return message;
+}
+
+/**
+ * gst_message_parse_reset_time:
+ * @message: A valid #GstMessage of type GST_MESSAGE_RESET_TIME.
+ * @running_time: (out): Result location for the running_time or NULL
+ *
+ * Extract the running-time from the RESET_TIME message.
+ *
+ * MT safe.
+ */
+void
+gst_message_parse_reset_time (GstMessage * message, GstClockTime * running_time)
+{
+  GstStructure *structure;
+
+  g_return_if_fail (GST_IS_MESSAGE (message));
+  g_return_if_fail (GST_MESSAGE_TYPE (message) == GST_MESSAGE_RESET_TIME);
+
+  structure = GST_MESSAGE_STRUCTURE (message);
+  if (running_time)
+    *running_time =
+        g_value_get_uint64 (gst_structure_id_get_value (structure,
+            GST_QUARK (RUNNING_TIME)));
+}

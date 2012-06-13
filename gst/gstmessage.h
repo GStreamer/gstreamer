@@ -127,6 +127,7 @@ typedef enum
   GST_MESSAGE_QOS               = (1 << 24),
   GST_MESSAGE_PROGRESS          = (1 << 25),
   GST_MESSAGE_TOC               = (1 << 26),
+  GST_MESSAGE_RESET_TIME        = (1 << 27),
   GST_MESSAGE_ANY               = ~0
 } GstMessageType;
 
@@ -552,6 +553,10 @@ void            gst_message_parse_progress         (GstMessage * message, GstPro
 /* TOC */
 GstMessage *    gst_message_new_toc             (GstObject *src, GstToc *toc, gboolean updated);
 void            gst_message_parse_toc           (GstMessage *message, GstToc **toc, gboolean *updated);
+
+/* RESET_TIME */
+GstMessage *    gst_message_new_reset_time      (GstObject * src, GstClockTime running_time) G_GNUC_MALLOC;
+void            gst_message_parse_reset_time    (GstMessage *message, GstClockTime *running_time);
 
 G_END_DECLS
 

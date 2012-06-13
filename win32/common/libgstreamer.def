@@ -547,6 +547,7 @@ EXPORTS
 	gst_message_new_progress
 	gst_message_new_qos
 	gst_message_new_request_state
+	gst_message_new_reset_time
 	gst_message_new_segment_done
 	gst_message_new_segment_start
 	gst_message_new_state_changed
@@ -572,6 +573,7 @@ EXPORTS
 	gst_message_parse_qos_stats
 	gst_message_parse_qos_values
 	gst_message_parse_request_state
+	gst_message_parse_reset_time
 	gst_message_parse_segment_done
 	gst_message_parse_segment_start
 	gst_message_parse_state_changed
