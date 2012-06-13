@@ -1465,7 +1465,8 @@ gst_base_sink_commit_state (GstBaseSink * basesink)
   if (post_async_done) {
     GST_DEBUG_OBJECT (basesink, "posting async-done message");
     gst_element_post_message (GST_ELEMENT_CAST (basesink),
-        gst_message_new_async_done (GST_OBJECT_CAST (basesink), FALSE));
+        gst_message_new_async_done (GST_OBJECT_CAST (basesink),
+            GST_CLOCK_TIME_NONE));
   }
   if (post_playing) {
     GST_DEBUG_OBJECT (basesink, "posting PLAYING state change message");
@@ -4804,7 +4805,8 @@ gst_base_sink_change_state (GstElement * element, GstStateChange transition)
                   GST_STATE_PLAYING, GST_STATE_PAUSED, GST_STATE_READY));
 
           gst_element_post_message (GST_ELEMENT_CAST (basesink),
-              gst_message_new_async_done (GST_OBJECT_CAST (basesink), FALSE));
+              gst_message_new_async_done (GST_OBJECT_CAST (basesink),
+                  GST_CLOCK_TIME_NONE));
         }
         priv->commited = TRUE;
       } else {

@@ -502,8 +502,8 @@ GstMessage *    gst_message_new_latency         (GstObject * src) G_GNUC_MALLOC;
 GstMessage *    gst_message_new_async_start     (GstObject * src) G_GNUC_MALLOC;
 
 /* ASYNC_DONE */
-GstMessage *    gst_message_new_async_done      (GstObject * src, gboolean reset_time) G_GNUC_MALLOC;
-void            gst_message_parse_async_done    (GstMessage *message, gboolean *reset_time);
+GstMessage *    gst_message_new_async_done      (GstObject * src, GstClockTime running_time) G_GNUC_MALLOC;
+void            gst_message_parse_async_done    (GstMessage *message, GstClockTime *running_time);
 
 /* STRUCTURE CHANGE */
 GstMessage *    gst_message_new_structure_change   (GstObject * src, GstStructureChangeType type,

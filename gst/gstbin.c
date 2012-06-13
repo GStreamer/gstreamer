@@ -221,7 +221,7 @@ static void gst_bin_state_changed (GstElement * element, GstState oldstate,
 static GstStateChangeReturn gst_bin_get_state_func (GstElement * element,
     GstState * state, GstState * pending, GstClockTime timeout);
 static void bin_handle_async_done (GstBin * bin, GstStateChangeReturn ret,
-    gboolean flag_pending, gboolean reset_time);
+    gboolean flag_pending, GstClockTime running_time);
 static void bin_handle_async_start (GstBin * bin);
 static void bin_push_state_continue (BinContinueData * data);
 static void bin_do_eos (GstBin * bin);
@@ -1134,7 +1134,7 @@ gst_bin_add_func (GstBin * bin, GstElement * element)
     }
     case GST_STATE_CHANGE_NO_PREROLL:
       /* ignore all async elements we might have and commit our state */
-      bin_handle_async_done (bin, ret, FALSE, FALSE);
+      bin_handle_async_done (bin, ret, FALSE, GST_CLOCK_TIME_NONE);
       break;
     case GST_STATE_CHANGE_FAILURE:
       break;
@@ -1451,7 +1451,7 @@ gst_bin_remove_func (GstBin * bin, GstElement * element)
     else
       ret = GST_STATE_CHANGE_SUCCESS;
 
-    bin_handle_async_done (bin, ret, FALSE, FALSE);
+    bin_handle_async_done (bin, ret, FALSE, GST_CLOCK_TIME_NONE);
   } else {
     GST_DEBUG_OBJECT (bin,
         "recalc state preroll: %d, other async: %d, this async %d",
@@ -2696,7 +2696,8 @@ done:
     bin_remove_messages (bin, NULL, GST_MESSAGE_ASYNC_DONE);
 
     GST_DEBUG_OBJECT (bin, "async elements commited");
-    bin_handle_async_done (bin, GST_STATE_CHANGE_SUCCESS, FALSE, FALSE);
+    bin_handle_async_done (bin, GST_STATE_CHANGE_SUCCESS, FALSE,
+        GST_CLOCK_TIME_NONE);
   }
 
 state_end:
@@ -2955,7 +2956,7 @@ was_no_preroll:
  */
 static void
 bin_handle_async_done (GstBin * bin, GstStateChangeReturn ret,
-    gboolean flag_pending, gboolean reset_time)
+    gboolean flag_pending, GstClockTime running_time)
 {
   GstState current, pending, target;
   GstStateChangeReturn old_ret;
@@ -2983,7 +2984,7 @@ bin_handle_async_done (GstBin * bin, GstStateChangeReturn ret,
   target = GST_STATE_TARGET (bin);
   pending = GST_STATE_PENDING (bin) = target;
 
-  amessage = gst_message_new_async_done (GST_OBJECT_CAST (bin), reset_time);
+  amessage = gst_message_new_async_done (GST_OBJECT_CAST (bin), running_time);
 
   old_state = GST_STATE (bin);
   /* this is the state we should go to next */
@@ -3413,13 +3414,13 @@ gst_bin_handle_message_func (GstBin * bin, GstMessage * message)
     }
     case GST_MESSAGE_ASYNC_DONE:
     {
-      gboolean reset_time;
+      GstClockTime running_time;
       GstState target;
 
       GST_DEBUG_OBJECT (bin, "ASYNC_DONE message %p, %s", message,
           src ? GST_OBJECT_NAME (src) : "(NULL)");
 
-      gst_message_parse_async_done (message, &reset_time);
+      gst_message_parse_async_done (message, &running_time);
 
       GST_OBJECT_LOCK (bin);
       bin_do_message_forward (bin, message);
@@ -3441,7 +3442,8 @@ gst_bin_handle_message_func (GstBin * bin, GstMessage * message)
          * need to set the pending_done flag so that at the end of the state
          * change we can see if we need to verify pending async elements, hence
          * the TRUE argument here. */
-        bin_handle_async_done (bin, GST_STATE_CHANGE_SUCCESS, TRUE, reset_time);
+        bin_handle_async_done (bin, GST_STATE_CHANGE_SUCCESS, TRUE,
+            running_time);
       } else {
         GST_DEBUG_OBJECT (bin, "there are more async elements pending");
       }

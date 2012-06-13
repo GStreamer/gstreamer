@@ -870,24 +870,26 @@ gst_message_new_async_start (GstObject * src)
 /**
  * gst_message_new_async_done:
  * @src: (transfer none): The object originating the message.
- * @reset_time: if the running_time should be reset
+ * @running_time: the desired running_time
  *
  * The message is posted when elements completed an ASYNC state change.
- * @reset_time is set to TRUE when the element requests a new running_time
- * before going to PLAYING.
+ * @running_time contains the time of the desired running_time when this
+ * elements goes to PLAYING. A value of #GST_CLOCK_TIME_NONE for @running_time
+ * means that the element has no clock interaction and thus doesn't care about
+ * the running_time of the pipeline.
  *
  * Returns: (transfer full): The new async_done message.
  *
  * MT safe.
  */
 GstMessage *
-gst_message_new_async_done (GstObject * src, gboolean reset_time)
+gst_message_new_async_done (GstObject * src, GstClockTime running_time)
 {
   GstMessage *message;
   GstStructure *structure;
 
   structure = gst_structure_new_id (GST_QUARK (MESSAGE_ASYNC_DONE),
-      GST_QUARK (RESET_TIME), G_TYPE_BOOLEAN, reset_time, NULL);
+      GST_QUARK (RUNNING_TIME), G_TYPE_UINT64, running_time, NULL);
   message = gst_message_new_custom (GST_MESSAGE_ASYNC_DONE, src, structure);
 
   return message;
@@ -1542,14 +1544,14 @@ gst_message_parse_duration (GstMessage * message, GstFormat * format,
 /**
  * gst_message_parse_async_done:
  * @message: A valid #GstMessage of type GST_MESSAGE_ASYNC_DONE.
- * @reset_time: (out): Result location for the reset_time or NULL
+ * @running_time: (out): Result location for the running_time or NULL
  *
- * Extract the reset_time from the async_done message.
+ * Extract the running_time from the async_done message.
  *
  * MT safe.
  */
 void
-gst_message_parse_async_done (GstMessage * message, gboolean * reset_time)
+gst_message_parse_async_done (GstMessage * message, GstClockTime * running_time)
 {
   GstStructure *structure;
 
@@ -1557,10 +1559,10 @@ gst_message_parse_async_done (GstMessage * message, gboolean * reset_time)
   g_return_if_fail (GST_MESSAGE_TYPE (message) == GST_MESSAGE_ASYNC_DONE);
 
   structure = GST_MESSAGE_STRUCTURE (message);
-  if (reset_time)
-    *reset_time =
-        g_value_get_boolean (gst_structure_id_get_value (structure,
-            GST_QUARK (RESET_TIME)));
+  if (running_time)
+    *running_time =
+        g_value_get_uint64 (gst_structure_id_get_value (structure,
+            GST_QUARK (RUNNING_TIME)));
 }
 
 /**
