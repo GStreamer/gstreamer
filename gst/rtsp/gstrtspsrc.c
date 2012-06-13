@@ -1664,8 +1664,6 @@ gst_rtspsrc_flush (GstRTSPSrc * src, gboolean flush, gboolean playing)
   gint cmd, i;
   GstState state;
   GList *walk;
-  GstClock *clock;
-  GstClockTime base_time = GST_CLOCK_TIME_NONE;
 
   if (flush) {
     event = gst_event_new_flush_start ();
@@ -1673,31 +1671,20 @@ gst_rtspsrc_flush (GstRTSPSrc * src, gboolean flush, gboolean playing)
     cmd = CMD_WAIT;
     state = GST_STATE_PAUSED;
   } else {
-    event = gst_event_new_flush_stop (TRUE);
+    event = gst_event_new_flush_stop (FALSE);
     GST_DEBUG_OBJECT (src, "stop flush; playing %d", playing);
     cmd = CMD_LOOP;
     if (playing)
       state = GST_STATE_PLAYING;
     else
       state = GST_STATE_PAUSED;
-    clock = gst_element_get_clock (GST_ELEMENT_CAST (src));
-    if (clock) {
-      base_time = gst_clock_get_time (clock);
-      gst_object_unref (clock);
-    }
   }
   gst_rtspsrc_push_event (src, event);
   gst_rtspsrc_loop_send_cmd (src, cmd, CMD_LOOP);
 
-  /* set up manager before data-flow resumes */
   /* to manage jitterbuffer buffer mode */
-  if (src->manager) {
-    gst_element_set_base_time (GST_ELEMENT_CAST (src->manager), base_time);
-    /* and to have base_time trickle further down,
-     * e.g. to jitterbuffer for its timeout handling */
-    if (base_time != -1)
-      gst_element_set_state (GST_ELEMENT_CAST (src->manager), state);
-  }
+  if (src->manager)
+    gst_element_set_state (GST_ELEMENT_CAST (src->manager), state);
 
   /* make running time start start at 0 again */
   for (walk = src->streams; walk; walk = g_list_next (walk)) {
@@ -1706,15 +1693,10 @@ gst_rtspsrc_flush (GstRTSPSrc * src, gboolean flush, gboolean playing)
     for (i = 0; i < 2; i++) {
       /* for udp case */
       if (stream->udpsrc[i]) {
-        if (base_time != -1)
-          gst_element_set_base_time (stream->udpsrc[i], base_time);
         gst_element_set_state (stream->udpsrc[i], state);
       }
     }
   }
-  /* for tcp interleaved case */
-  if (base_time != -1)
-    gst_element_set_base_time (GST_ELEMENT_CAST (src), base_time);
 }
 
 static GstRTSPResult
