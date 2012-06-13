@@ -261,8 +261,6 @@ struct _GstBaseSinkPrivate
   /* for throttling and QoS */
   GstClockTime earliest_in_time;
   GstClockTime throttle_time;
-
-  gboolean reset_time;
 };
 
 #define DO_RUNNING_AVG(avg,val,size) (((val) + ((size)-1) * (avg)) / (size))
@@ -1408,7 +1406,6 @@ gst_base_sink_commit_state (GstBaseSink * basesink)
   gboolean post_paused = FALSE;
   gboolean post_async_done = FALSE;
   gboolean post_playing = FALSE;
-  gboolean reset_time;
 
   /* we are certainly not playing async anymore now */
   basesink->playing_async = FALSE;
@@ -1418,8 +1415,6 @@ gst_base_sink_commit_state (GstBaseSink * basesink)
   next = GST_STATE_NEXT (basesink);
   pending = GST_STATE_PENDING (basesink);
   post_pending = pending;
-  reset_time = basesink->priv->reset_time;
-  basesink->priv->reset_time = FALSE;
 
   switch (pending) {
     case GST_STATE_PLAYING:
@@ -1470,7 +1465,7 @@ gst_base_sink_commit_state (GstBaseSink * basesink)
   if (post_async_done) {
     GST_DEBUG_OBJECT (basesink, "posting async-done message");
     gst_element_post_message (GST_ELEMENT_CAST (basesink),
-        gst_message_new_async_done (GST_OBJECT_CAST (basesink), reset_time));
+        gst_message_new_async_done (GST_OBJECT_CAST (basesink), FALSE));
   }
   if (post_playing) {
     GST_DEBUG_OBJECT (basesink, "posting PLAYING state change message");
@@ -2003,8 +1998,8 @@ gst_base_sink_wait_clock (GstBaseSink * sink, GstClockTime time,
   /* FIXME: Casting to GstClockEntry only works because the types
    * are the same */
   if (G_LIKELY (sink->priv->cached_clock_id != NULL
-          && GST_CLOCK_ENTRY_CLOCK ((GstClockEntry *) sink->
-              priv->cached_clock_id) == clock)) {
+          && GST_CLOCK_ENTRY_CLOCK ((GstClockEntry *) sink->priv->
+              cached_clock_id) == clock)) {
     if (!gst_clock_single_shot_id_reinit (clock, sink->priv->cached_clock_id,
             time)) {
       gst_clock_id_unref (sink->priv->cached_clock_id);
@@ -2824,8 +2819,13 @@ gst_base_sink_flush_stop (GstBaseSink * basesink, GstPad * pad,
       gst_segment_init (&basesink->segment, GST_FORMAT_UNDEFINED);
     }
   }
-  basesink->priv->reset_time = reset_time;
   GST_OBJECT_UNLOCK (basesink);
+
+  if (reset_time) {
+    GST_DEBUG_OBJECT (basesink, "posting reset-time message");
+    gst_element_post_message (GST_ELEMENT_CAST (basesink),
+        gst_message_new_reset_time (GST_OBJECT_CAST (basesink), 0));
+  }
 }
 
 static GstFlowReturn
@@ -4643,7 +4643,6 @@ gst_base_sink_change_state (GstElement * element, GstStateChange transition)
       priv->step_unlock = FALSE;
       basesink->need_preroll = TRUE;
       basesink->playing_async = TRUE;
-      basesink->priv->reset_time = FALSE;
       priv->current_sstart = GST_CLOCK_TIME_NONE;
       priv->current_sstop = GST_CLOCK_TIME_NONE;
       priv->eos_rtime = GST_CLOCK_TIME_NONE;

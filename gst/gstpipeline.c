@@ -279,12 +279,12 @@ gst_pipeline_get_property (GObject * object, guint prop_id,
 /* set the start_time to 0, this will cause us to select a new base_time and
  * make the running_time start from 0 again. */
 static void
-reset_start_time (GstPipeline * pipeline)
+reset_start_time (GstPipeline * pipeline, GstClockTime start_time)
 {
   GST_OBJECT_LOCK (pipeline);
   if (GST_ELEMENT_START_TIME (pipeline) != GST_CLOCK_TIME_NONE) {
     GST_DEBUG_OBJECT (pipeline, "reset start_time to 0");
-    GST_ELEMENT_START_TIME (pipeline) = 0;
+    GST_ELEMENT_START_TIME (pipeline) = start_time;
     pipeline->priv->last_start_time = -1;
   } else {
     GST_DEBUG_OBJECT (pipeline, "application asked to not reset stream_time");
@@ -476,7 +476,8 @@ gst_pipeline_change_state (GstElement * element, GstStateChange transition)
       break;
     case GST_STATE_CHANGE_READY_TO_PAUSED:
     {
-      reset_start_time (pipeline);
+      /* READY to PAUSED starts running_time from 0 */
+      reset_start_time (pipeline, 0);
       break;
     }
     case GST_STATE_CHANGE_PAUSED_TO_PLAYING:
@@ -544,17 +545,15 @@ gst_pipeline_handle_message (GstBin * bin, GstMessage * message)
   GstPipeline *pipeline = GST_PIPELINE_CAST (bin);
 
   switch (GST_MESSAGE_TYPE (message)) {
-    case GST_MESSAGE_ASYNC_DONE:
+    case GST_MESSAGE_RESET_TIME:
     {
-      gboolean reset_time;
+      GstClockTime running_time;
 
-      gst_message_parse_async_done (message, &reset_time);
+      gst_message_parse_reset_time (message, &running_time);
 
       /* reset our running time if we need to distribute a new base_time to the
        * children. */
-      if (reset_time)
-        reset_start_time (pipeline);
-
+      reset_start_time (pipeline, running_time);
       break;
     }
     case GST_MESSAGE_CLOCK_LOST:
