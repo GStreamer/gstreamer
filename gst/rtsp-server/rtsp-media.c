@@ -2017,7 +2017,8 @@ gst_rtsp_media_set_state (GstRTSPMedia * media, GstState state,
   }
 
   /* remember where we are */
-  if (state == GST_STATE_PAUSED || old_active != media->active)
+  if (state != GST_STATE_NULL && (state == GST_STATE_PAUSED ||
+          old_active != media->active))
     collect_media_stats (media);
 
   return TRUE;
