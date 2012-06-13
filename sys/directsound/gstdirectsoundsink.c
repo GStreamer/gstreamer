@@ -102,7 +102,8 @@ static void gst_directsound_sink_set_mute (GstDirectSoundSink * sink,
     gboolean mute);
 static gboolean gst_directsound_sink_get_mute (GstDirectSoundSink * sink);
 
-static gboolean gst_directsound_sink_is_spdif_format (GstDirectSoundSink * dsoundsink);
+static gboolean gst_directsound_sink_is_spdif_format (GstDirectSoundSink *
+    dsoundsink);
 
 static GstStaticPadTemplate directsoundsink_sink_factory =
     GST_STATIC_PAD_TEMPLATE ("sink",
@@ -705,6 +706,7 @@ gst_directsound_probe_supported_formats (GstDirectSoundSink * dsoundsink,
   DSBUFFERDESC descSecondary;
   WAVEFORMATEX wfx;
   GstCaps *caps;
+  GstCaps *tmp, *tmp2;
 
   caps = gst_caps_copy (template_caps);
 
@@ -736,8 +738,16 @@ gst_directsound_probe_supported_formats (GstDirectSoundSink * dsoundsink,
     GST_INFO_OBJECT (dsoundsink, "AC3 passthrough not supported "
         "(IDirectSound_CreateSoundBuffer returned: %s)\n",
         DXGetErrorString9 (hRes));
-    caps = gst_caps_subtract (caps, gst_caps_new_empty_simple ("audio/x-ac3"));
-    caps = gst_caps_subtract (caps, gst_caps_new_empty_simple ("audio/x-dts"));
+    tmp = gst_caps_new_empty_simple ("audio/x-ac3");
+    tmp2 = gst_caps_subtract (caps, tmp);
+    gst_caps_unref (tmp);
+    gst_caps_unref (caps);
+    caps = tmp2;
+    tmp = gst_caps_new_empty_simple ("audio/x-dts");
+    tmp2 = gst_caps_subtract (caps, tmp);
+    gst_caps_unref (tmp);
+    gst_caps_unref (caps);
+    caps = tmp2;
   } else {
     GST_INFO_OBJECT (dsoundsink, "AC3 passthrough supported");
     hRes = IDirectSoundBuffer_Release (dsoundsink->pDSBSecondary);
@@ -748,8 +758,16 @@ gst_directsound_probe_supported_formats (GstDirectSoundSink * dsoundsink,
     }
   }
 #else
-  caps = gst_caps_subtract (caps, gst_caps_new_simple ("audio/x-ac3", NULL));
-  caps = gst_caps_subtract (caps, gst_caps_new_simple ("audio/x-dts", NULL));
+  tmp = gst_caps_new_empty_simple ("audio/x-ac3");
+  tmp2 = gst_caps_subtract (caps, tmp);
+  gst_caps_unref (tmp);
+  gst_caps_unref (caps);
+  caps = tmp2;
+  tmp = gst_caps_new_empty_simple ("audio/x-dts");
+  tmp2 = gst_caps_subtract (caps, tmp);
+  gst_caps_unref (tmp);
+  gst_caps_unref (caps);
+  caps = tmp2;
 #endif
 
   return caps;
