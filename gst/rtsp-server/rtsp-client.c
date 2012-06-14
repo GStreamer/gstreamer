@@ -1012,6 +1012,7 @@ not_found:
   {
     send_generic_response (client, GST_RTSP_STS_NOT_FOUND, state);
     g_object_unref (session);
+    gst_rtsp_transport_free (ct);
     return FALSE;
   }
 no_stream:
@@ -1035,11 +1036,13 @@ unsupported_transports:
 no_pool:
   {
     send_generic_response (client, GST_RTSP_STS_SERVICE_UNAVAILABLE, state);
+    gst_rtsp_transport_free (ct);
     return FALSE;
   }
 service_unavailable:
   {
     send_generic_response (client, GST_RTSP_STS_SERVICE_UNAVAILABLE, state);
+    gst_rtsp_transport_free (ct);
     return FALSE;
   }
 }
