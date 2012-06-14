@@ -92,12 +92,9 @@ typedef struct
 {
   GstEvent event;
 
-  gsize slice_size;
-
   GstStructure *structure;
 } GstEventImpl;
 
-#define GST_EVENT_SLICE_SIZE(e) (((GstEventImpl *)(e))->slice_size)
 #define GST_EVENT_STRUCTURE(e)  (((GstEventImpl *)(e))->structure)
 
 typedef struct
@@ -232,11 +229,10 @@ _gst_event_free (GstEvent * event)
     gst_structure_free (s);
   }
 
-  g_slice_free1 (GST_EVENT_SLICE_SIZE (event), event);
+  g_slice_free1 (sizeof (GstEventImpl), event);
 }
 
-static void gst_event_init (GstEventImpl * event, gsize size,
-    GstEventType type);
+static void gst_event_init (GstEventImpl * event, GstEventType type);
 
 static GstEvent *
 _gst_event_copy (GstEvent * event)
@@ -246,7 +242,7 @@ _gst_event_copy (GstEvent * event)
 
   copy = g_slice_new0 (GstEventImpl);
 
-  gst_event_init (copy, sizeof (GstEventImpl), GST_EVENT_TYPE (event));
+  gst_event_init (copy, GST_EVENT_TYPE (event));
 
   GST_EVENT_TIMESTAMP (copy) = GST_EVENT_TIMESTAMP (event);
   GST_EVENT_SEQNUM (copy) = GST_EVENT_SEQNUM (event);
@@ -263,14 +259,12 @@ _gst_event_copy (GstEvent * event)
 }
 
 static void
-gst_event_init (GstEventImpl * event, gsize size, GstEventType type)
+gst_event_init (GstEventImpl * event, GstEventType type)
 {
   gst_mini_object_init (GST_MINI_OBJECT_CAST (event), _gst_event_type);
 
   event->event.mini_object.copy = (GstMiniObjectCopyFunction) _gst_event_copy;
   event->event.mini_object.free = (GstMiniObjectFreeFunction) _gst_event_free;
-
-  GST_EVENT_SLICE_SIZE (event) = size;
 
   GST_EVENT_TYPE (event) = type;
   GST_EVENT_TIMESTAMP (event) = GST_CLOCK_TIME_NONE;
@@ -314,7 +308,7 @@ gst_event_new_custom (GstEventType type, GstStructure * structure)
       goto had_parent;
 
   }
-  gst_event_init (event, sizeof (GstEventImpl), type);
+  gst_event_init (event, type);
 
   GST_EVENT_STRUCTURE (event) = structure;
 
@@ -323,7 +317,7 @@ gst_event_new_custom (GstEventType type, GstStructure * structure)
   /* ERRORS */
 had_parent:
   {
-    g_slice_free1 (GST_EVENT_SLICE_SIZE (event), event);
+    g_slice_free1 (sizeof (GstEventImpl), event);
     g_warning ("structure is already owned by another object");
     return NULL;
   }
