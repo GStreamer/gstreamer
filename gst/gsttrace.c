@@ -165,8 +165,8 @@ gst_alloc_trace_print (const GstAllocTrace * trace)
 
         if (type == GST_TYPE_CAPS) {
           extra = gst_caps_to_string (data);
-          refcount = GST_MINI_OBJECT_REFCOUNT_VALUE (data);
         }
+        refcount = GST_MINI_OBJECT_REFCOUNT_VALUE (data);
       }
 
       if (extra) {
