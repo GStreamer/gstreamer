@@ -2076,6 +2076,128 @@ gst_ffmpeg_caps_to_pixfmt (const GstCaps * caps,
   }
 }
 
+typedef struct
+{
+  GstVideoFormat format;
+  enum PixelFormat pixfmt;
+} PixToFmt;
+
+/* FIXME : FILLME */
+static const PixToFmt pixtofmttable[] = {
+  /* GST_VIDEO_FORMAT_I420, */
+  {GST_VIDEO_FORMAT_I420, PIX_FMT_YUV420P},
+  /* Note : this should use a different chroma placement */
+  {GST_VIDEO_FORMAT_I420, PIX_FMT_YUVJ420P},
+
+  /* GST_VIDEO_FORMAT_YV12, */
+  /* GST_VIDEO_FORMAT_YUY2, */
+  {GST_VIDEO_FORMAT_YUY2, PIX_FMT_YUYV422},
+  /* GST_VIDEO_FORMAT_UYVY, */
+  {GST_VIDEO_FORMAT_UYVY, PIX_FMT_UYVY422},
+  /* GST_VIDEO_FORMAT_AYUV, */
+  /* GST_VIDEO_FORMAT_RGBx, */
+  /* GST_VIDEO_FORMAT_BGRx, */
+  /* GST_VIDEO_FORMAT_xRGB, */
+  /* GST_VIDEO_FORMAT_xBGR, */
+  /* GST_VIDEO_FORMAT_RGBA, */
+  {GST_VIDEO_FORMAT_RGBA, PIX_FMT_RGB32},
+  /* GST_VIDEO_FORMAT_BGRA, */
+  {GST_VIDEO_FORMAT_BGRA, PIX_FMT_BGR32},
+  /* GST_VIDEO_FORMAT_ARGB, */
+  /* GST_VIDEO_FORMAT_ABGR, */
+  /* GST_VIDEO_FORMAT_RGB, */
+  {GST_VIDEO_FORMAT_RGB, PIX_FMT_RGB24},
+  /* GST_VIDEO_FORMAT_BGR, */
+  {GST_VIDEO_FORMAT_BGR, PIX_FMT_BGR24},
+  /* GST_VIDEO_FORMAT_Y41B, */
+  {GST_VIDEO_FORMAT_Y41B, PIX_FMT_YUV410P},
+  /* GST_VIDEO_FORMAT_Y42B, */
+  {GST_VIDEO_FORMAT_Y42B, PIX_FMT_YUV422P},
+  {GST_VIDEO_FORMAT_Y42B, PIX_FMT_YUVJ422P},
+  /* GST_VIDEO_FORMAT_YVYU, */
+  /* GST_VIDEO_FORMAT_Y444, */
+  {GST_VIDEO_FORMAT_Y444, PIX_FMT_YUV444P},
+  {GST_VIDEO_FORMAT_Y444, PIX_FMT_YUVJ444P},
+  /* GST_VIDEO_FORMAT_v210, */
+  /* GST_VIDEO_FORMAT_v216, */
+  /* GST_VIDEO_FORMAT_NV12, */
+  {GST_VIDEO_FORMAT_NV12, PIX_FMT_NV12},
+  /* GST_VIDEO_FORMAT_NV21, */
+  {GST_VIDEO_FORMAT_NV21, PIX_FMT_NV21},
+  /* GST_VIDEO_FORMAT_GRAY8, */
+  {GST_VIDEO_FORMAT_GRAY8, PIX_FMT_GRAY8},
+  /* GST_VIDEO_FORMAT_GRAY16_BE, */
+  {GST_VIDEO_FORMAT_GRAY16_BE, PIX_FMT_GRAY16BE},
+  /* GST_VIDEO_FORMAT_GRAY16_LE, */
+  {GST_VIDEO_FORMAT_GRAY16_LE, PIX_FMT_GRAY16LE},
+  /* GST_VIDEO_FORMAT_v308, */
+  /* GST_VIDEO_FORMAT_Y800, */
+  /* GST_VIDEO_FORMAT_Y16, */
+  /* GST_VIDEO_FORMAT_RGB16, */
+  {GST_VIDEO_FORMAT_RGB16, PIX_FMT_RGB565},
+  /* GST_VIDEO_FORMAT_BGR16, */
+  /* GST_VIDEO_FORMAT_RGB15, */
+  {GST_VIDEO_FORMAT_RGB15, PIX_FMT_RGB555},
+  /* GST_VIDEO_FORMAT_BGR15, */
+  /* GST_VIDEO_FORMAT_UYVP, */
+  /* GST_VIDEO_FORMAT_A420, */
+  {GST_VIDEO_FORMAT_A420, PIX_FMT_YUVA420P},
+  /* GST_VIDEO_FORMAT_RGB8_PALETTED, */
+  {GST_VIDEO_FORMAT_RGB8P, PIX_FMT_PAL8},
+  /* GST_VIDEO_FORMAT_YUV9, */
+  /* GST_VIDEO_FORMAT_YVU9, */
+  /* GST_VIDEO_FORMAT_IYU1, */
+  /* GST_VIDEO_FORMAT_ARGB64, */
+  /* GST_VIDEO_FORMAT_AYUV64, */
+  /* GST_VIDEO_FORMAT_r210, */
+};
+
+GstVideoFormat
+gst_ffmpeg_pixfmt_to_videoformat (enum PixelFormat pixfmt)
+{
+  guint i;
+
+  for (i = 0; i < G_N_ELEMENTS (pixtofmttable); i++)
+    if (pixtofmttable[i].pixfmt == pixfmt)
+      return pixtofmttable[i].format;
+
+  GST_WARNING ("Unknown pixel format %d", pixfmt);
+  return GST_VIDEO_FORMAT_UNKNOWN;
+}
+
+enum PixelFormat
+gst_ffmpeg_videoformat_to_pixfmt (GstVideoFormat format)
+{
+  guint i;
+
+  for (i = 0; i < G_N_ELEMENTS (pixtofmttable); i++)
+    if (pixtofmttable[i].format == format)
+      return pixtofmttable[i].pixfmt;
+  return PIX_FMT_NONE;
+}
+
+void
+gst_ffmpeg_videoinfo_to_context (GstVideoInfo * info, AVCodecContext * context)
+{
+  gint i, bpp = 0;
+
+  context->width = GST_VIDEO_INFO_WIDTH (info);
+  context->height = GST_VIDEO_INFO_HEIGHT (info);
+  for (i = 0; i < GST_VIDEO_INFO_N_COMPONENTS (info); i++)
+    bpp += GST_VIDEO_INFO_COMP_DEPTH (info, i);
+  context->bits_per_coded_sample = bpp;
+
+  context->ticks_per_frame = 1;
+  context->time_base.den = GST_VIDEO_INFO_FPS_N (info);
+  context->time_base.num = GST_VIDEO_INFO_FPS_D (info);
+
+  context->sample_aspect_ratio.num = GST_VIDEO_INFO_PAR_N (info);
+  context->sample_aspect_ratio.den = GST_VIDEO_INFO_PAR_D (info);
+
+  context->pix_fmt =
+      gst_ffmpeg_videoformat_to_pixfmt (GST_VIDEO_INFO_FORMAT (info));
+}
+
 /* Convert a GstCaps and a FFMPEG codec Type to a
  * AVCodecContext. If the context is ommitted, no fixed values
  * for video/audio size will be included in the context

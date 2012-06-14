@@ -21,62 +21,75 @@
  * object definition and other useful things.
  */
 
-#ifndef __GST_FFMPEGAUDENC_H__
-#define __GST_FFMPEGAUDENC_H__
+#ifndef __GST_FFMPEGVIDENC_H__
+#define __GST_FFMPEGVIDENC_H__
 
 G_BEGIN_DECLS
 
-#include <gst/base/gstadapter.h>
+#include <gst/video/gstvideoencoder.h>
 
-typedef struct _GstFFMpegAudEnc GstFFMpegAudEnc;
+typedef struct _GstFFMpegVidEnc GstFFMpegVidEnc;
 
-struct _GstFFMpegAudEnc
+struct _GstFFMpegVidEnc
 {
-  GstElement element;
+  GstVideoEncoder parent;
 
-  /* We need to keep track of our pads, so we do so here. */
-  GstPad *srcpad;
-  GstPad *sinkpad;
+  GstVideoCodecState *input_state;
 
   AVCodecContext *context;
+  AVFrame *picture;
   gboolean opened;
-  GstClockTime adapter_ts;
-  guint64 adapter_consumed;
-  GstAdapter *adapter;
   gboolean discont;
 
   /* cache */
-  gint bitrate;
-  gint buffer_size;
-  gint rtp_payload_size;
+  gulong bitrate;
+  gint me_method;
+  gint gop_size;
+  gulong buffer_size;
+  gulong rtp_payload_size;
+
+  guint8 *working_buf;
+  gulong working_buf_size;
+
+  /* settings with some special handling */
+  guint pass;
+  gfloat quantizer;
+  gchar *filename;
+  guint lmin;
+  guint lmax;
+  gint max_key_interval;
+  gboolean interlaced;
+
+  /* statistics file */
+  FILE *file;
 
   /* other settings are copied over straight,
    * include a context here, rather than copy-and-past it from avcodec.h */
   AVCodecContext config;
 };
 
-typedef struct _GstFFMpegAudEncClass GstFFMpegAudEncClass;
+typedef struct _GstFFMpegVidEncClass GstFFMpegVidEncClass;
 
-struct _GstFFMpegAudEncClass
+struct _GstFFMpegVidEncClass
 {
-  GstElementClass parent_class;
+  GstVideoEncoderClass parent_class;
 
   AVCodec *in_plugin;
   GstPadTemplate *srctempl, *sinktempl;
   GstCaps *sinkcaps;
 };
 
-#define GST_TYPE_FFMPEGAUDENC \
-  (gst_ffmpegaudenc_get_type())
-#define GST_FFMPEGAUDENC(obj) \
-  (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_FFMPEGAUDENC,GstFFMpegAudEnc))
-#define GST_FFMPEGAUDENC_CLASS(klass) \
-  (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_FFMPEGAUDENC,GstFFMpegAudEncClass))
-#define GST_IS_FFMPEGAUDENC(obj) \
-  (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_FFMPEGAUDENC))
-#define GST_IS_FFMPEGAUDENC_CLASS(klass) \
-  (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_FFMPEGAUDENC))
+#define GST_TYPE_FFMPEGVIDENC \
+  (gst_ffmpegvidenc_get_type())
+#define GST_FFMPEGVIDENC(obj) \
+  (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_FFMPEGVIDENC,GstFFMpegVidEnc))
+#define GST_FFMPEGVIDENC_CLASS(klass) \
+  (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_FFMPEGVIDENC,GstFFMpegVidEncClass))
+#define GST_IS_FFMPEGVIDENC(obj) \
+  (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_FFMPEGVIDENC))
+#define GST_IS_FFMPEGVIDENC_CLASS(klass) \
+  (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_FFMPEGVIDENC))
 
 G_END_DECLS
 
-#endif /* __GST_FFMPEGAUDENC_H__ */
+#endif /* __GST_FFMPEGVIDENC_H__ */

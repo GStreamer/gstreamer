@@ -25,7 +25,7 @@ G_BEGIN_DECLS
 
 void gst_ffmpeg_cfg_init (void);
 
-void gst_ffmpeg_cfg_install_property (GstFFMpegEncClass * klass, guint base);
+void gst_ffmpeg_cfg_install_property (GstFFMpegVidEncClass * klass, guint base);
 
 gboolean gst_ffmpeg_cfg_set_property (GObject * object,
     const GValue * value, GParamSpec * pspec);
@@ -33,9 +33,9 @@ gboolean gst_ffmpeg_cfg_set_property (GObject * object,
 gboolean gst_ffmpeg_cfg_get_property (GObject * object,
     GValue * value, GParamSpec * pspec);
 
-void gst_ffmpeg_cfg_fill_context (GstFFMpegEnc * ffmpegenc, AVCodecContext * context);
-void gst_ffmpeg_cfg_set_defaults (GstFFMpegEnc * ffmpegenc);
-void gst_ffmpeg_cfg_finalize (GstFFMpegEnc * ffmpegenc);
+void gst_ffmpeg_cfg_fill_context (GstFFMpegVidEnc * ffmpegenc, AVCodecContext * context);
+void gst_ffmpeg_cfg_set_defaults (GstFFMpegVidEnc * ffmpegenc);
+void gst_ffmpeg_cfg_finalize (GstFFMpegVidEnc * ffmpegenc);
 
 G_END_DECLS
 
