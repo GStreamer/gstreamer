@@ -466,7 +466,7 @@ tsmux_get_buffer (TsMux * mux, GstBuffer ** buf)
   if (!*buf)
     return FALSE;
 
-  g_assert (GST_BUFFER_SIZE (*buf) == TSMUX_PACKET_LENGTH);
+  g_assert (gst_buffer_get_size (*buf) == TSMUX_PACKET_LENGTH);
   return TRUE;
 }
 
@@ -746,7 +746,7 @@ tsmux_write_stream_packet (TsMux * mux, TsMuxStream * stream)
   gboolean res;
   gint64 cur_pcr = -1;
   GstBuffer *buf = NULL;
-  guint8 *data;
+  GstMapInfo map;
 
   g_return_val_if_fail (mux != NULL, FALSE);
   g_return_val_if_fail (stream != NULL, FALSE);
@@ -767,7 +767,7 @@ tsmux_write_stream_packet (TsMux * mux, TsMuxStream * stream)
       cur_pcr = (cur_pts - TSMUX_PCR_OFFSET) *
           (TSMUX_SYS_CLOCK_FREQ / TSMUX_CLOCK_FREQ);
 
-    cur_pcr += CLOCK_BASE * (TSMUX_SYS_CLOCK_FREQ / TSMUX_CLOCK_FREQ);
+    cur_pcr += (gint64) CLOCK_BASE *(TSMUX_SYS_CLOCK_FREQ / TSMUX_CLOCK_FREQ);
 
     /* Need to decide whether to write a new PCR in this packet */
     if (stream->last_pcr == -1 ||
@@ -830,13 +830,16 @@ tsmux_write_stream_packet (TsMux * mux, TsMuxStream * stream)
   if (!tsmux_get_buffer (mux, &buf))
     return FALSE;
 
-  data = GST_BUFFER_DATA (buf);
+  gst_buffer_map (buf, &map, GST_MAP_READ);
 
-  if (!tsmux_write_ts_header (data, pi, &payload_len, &payload_offs))
+  if (!tsmux_write_ts_header (map.data, pi, &payload_len, &payload_offs))
     goto fail;
 
-  if (!tsmux_stream_get_data (stream, data + payload_offs, payload_len))
+
+  if (!tsmux_stream_get_data (stream, map.data + payload_offs, payload_len))
     goto fail;
+
+  gst_buffer_unmap (buf, &map);
 
   res = tsmux_packet_out (mux, buf, cur_pcr);
 
@@ -848,6 +851,7 @@ tsmux_write_stream_packet (TsMux * mux, TsMuxStream * stream)
   /* ERRORS */
 fail:
   {
+    gst_buffer_unmap (buf, &map);
     if (buf)
       gst_buffer_unref (buf);
     return FALSE;
@@ -878,6 +882,7 @@ tsmux_write_section (TsMux * mux, TsMuxSection * section)
   guint payload_len, payload_offs;
   TsMuxPacketInfo *pi;
   GstBuffer *buf = NULL;
+  GstMapInfo map;
 
   pi = &section->pi;
 
@@ -887,42 +892,44 @@ tsmux_write_section (TsMux * mux, TsMuxSection * section)
   payload_remain = pi->stream_avail;
 
   while (payload_remain > 0) {
-    guint8 *data;
 
     /* obtain buffer */
+    map.data = NULL;
     if (!tsmux_get_buffer (mux, &buf))
       goto fail;
 
-    data = GST_BUFFER_DATA (buf);
+    gst_buffer_map (buf, &map, GST_MAP_WRITE);
 
     if (pi->packet_start_unit_indicator) {
       /* Need to write an extra single byte start pointer */
       pi->stream_avail++;
 
-      if (!tsmux_write_ts_header (data, pi, &payload_len, &payload_offs)) {
+      if (!tsmux_write_ts_header (map.data, pi, &payload_len, &payload_offs)) {
         pi->stream_avail--;
         goto fail;
       }
       pi->stream_avail--;
 
       /* Write the pointer byte */
-      data[payload_offs] = 0x00;
+      map.data[payload_offs] = 0x00;
 
       payload_offs++;
       payload_len--;
       pi->packet_start_unit_indicator = FALSE;
     } else {
-      if (!tsmux_write_ts_header (data, pi, &payload_len, &payload_offs))
+      if (!tsmux_write_ts_header (map.data, pi, &payload_len, &payload_offs))
         goto fail;
     }
 
     TS_DEBUG ("Outputting %d bytes to section. %d remaining after",
         payload_len, payload_remain - payload_len);
 
-    memcpy (data + payload_offs, cur_in, payload_len);
+    memcpy (map.data + payload_offs, cur_in, payload_len);
 
     cur_in += payload_len;
     payload_remain -= payload_len;
+
+    gst_buffer_unmap (buf, &map);
 
     /* we do not write PCR in section */
     if (G_UNLIKELY (!tsmux_packet_out (mux, buf, -1))) {
@@ -938,6 +945,8 @@ tsmux_write_section (TsMux * mux, TsMuxSection * section)
   /* ERRORS */
 fail:
   {
+    if (map.data && buf)
+      gst_buffer_unmap (buf, &map);
     if (buf)
       gst_buffer_unref (buf);
     return FALSE;

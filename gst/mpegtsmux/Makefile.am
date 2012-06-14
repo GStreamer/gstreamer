@@ -4,7 +4,6 @@ SUBDIRS = tsmux
 
 libgstmpegtsmux_la_SOURCES = \
 	mpegtsmux.c \
-	mpegtsmux_h264.c \
 	mpegtsmux_aac.c
 
 libgstmpegtsmux_la_CFLAGS = $(GST_PLUGINS_BASE_CFLAGS) $(GST_BASE_CFLAGS) $(GST_CFLAGS)
@@ -15,5 +14,4 @@ libgstmpegtsmux_la_LIBTOOLFLAGS = --tag=disable-static
 
 noinst_HEADERS = \
 	mpegtsmux.h \
-	mpegtsmux_h264.h \
 	mpegtsmux_aac.h
