@@ -80,8 +80,7 @@ static GstAllocTrace *_gst_allocator_trace;
 G_DEFINE_BOXED_TYPE (GstMemory, gst_memory, (GBoxedCopyFunc) gst_memory_ref,
     (GBoxedFreeFunc) gst_memory_unref);
 
-G_DEFINE_BOXED_TYPE (GstAllocator, gst_allocator,
-    (GBoxedCopyFunc) gst_allocator_ref, (GBoxedFreeFunc) gst_allocator_unref);
+GST_DEFINE_MINI_OBJECT_TYPE (GstAllocator, gst_allocator);
 
 G_DEFINE_BOXED_TYPE (GstAllocationParams, gst_allocation_params,
     (GBoxedCopyFunc) gst_allocation_params_copy,
@@ -101,7 +100,7 @@ size_t gst_memory_alignment = 0;
 
 struct _GstAllocator
 {
-  gint refcount;
+  GstMiniObject mini_object;
 
   GstMemoryInfo info;
 
@@ -812,6 +811,48 @@ gst_memory_is_span (GstMemory * mem1, GstMemory * mem2, gsize * offset)
   return TRUE;
 }
 
+static void
+_gst_allocator_free (GstAllocator * allocator)
+{
+  if (allocator->notify)
+    allocator->notify (allocator->user_data);
+
+  g_slice_free1 (GST_MINI_OBJECT_SIZE (allocator), allocator);
+}
+
+static void gst_allocator_init (GstAllocator * allocator,
+    const GstMemoryInfo * info, gsize size);
+
+static GstAllocator *
+_gst_allocator_copy (GstAllocator * allocator)
+{
+  GstAllocator *copy;
+
+  copy = g_slice_new (GstAllocator);
+
+  gst_allocator_init (copy, &allocator->info, sizeof (GstAllocator));
+
+  return copy;
+}
+
+static void
+gst_allocator_init (GstAllocator * allocator, const GstMemoryInfo * info,
+    gsize size)
+{
+  gst_mini_object_init (GST_MINI_OBJECT_CAST (allocator),
+      gst_allocator_get_type (), size);
+
+  allocator->mini_object.copy = (GstMiniObjectCopyFunction) _gst_allocator_copy;
+  allocator->mini_object.free = (GstMiniObjectFreeFunction) _gst_allocator_free;
+
+  allocator->info = *info;
+#define INSTALL_FALLBACK(_t) \
+  if (allocator->info._t == NULL) allocator->info._t = _fallback_ ##_t;
+  INSTALL_FALLBACK (mem_copy);
+  INSTALL_FALLBACK (mem_is_span);
+#undef INSTALL_FALLBACK
+}
+
 /**
  * gst_allocator_new:
  * @info: a #GstMemoryInfo
@@ -834,9 +875,6 @@ gst_allocator_new (const GstMemoryInfo * info, gpointer user_data,
 {
   GstAllocator *allocator;
 
-#define INSTALL_FALLBACK(_t) \
-  if (allocator->info._t == NULL) allocator->info._t = _fallback_ ##_t;
-
   g_return_val_if_fail (info != NULL, NULL);
   g_return_val_if_fail (info->alloc != NULL, NULL);
   g_return_val_if_fail (info->mem_map != NULL, NULL);
@@ -845,19 +883,13 @@ gst_allocator_new (const GstMemoryInfo * info, gpointer user_data,
   g_return_val_if_fail (info->mem_share != NULL, NULL);
 
   allocator = g_slice_new (GstAllocator);
-  allocator->refcount = 1;
-  allocator->info = *info;
+
+  gst_allocator_init (allocator, info, sizeof (GstAllocator));
+
   allocator->user_data = user_data;
   allocator->notify = notify;
-  INSTALL_FALLBACK (mem_copy);
-  INSTALL_FALLBACK (mem_is_span);
-#undef INSTALL_FALLBACK
 
   GST_CAT_DEBUG (GST_CAT_MEMORY, "new allocator %p", allocator);
-
-#ifndef GST_DISABLE_TRACE
-  _gst_alloc_trace_new (_gst_allocator_trace, allocator);
-#endif
 
   return allocator;
 }
@@ -876,52 +908,6 @@ gst_allocator_get_memory_type (GstAllocator * allocator)
   g_return_val_if_fail (allocator != NULL, NULL);
 
   return allocator->info.mem_type;
-}
-
-/**
- * gst_allocator_ref:
- * @allocator: a #GstAllocator
- *
- * Increases the refcount of @allocator.
- *
- * Returns: @allocator with increased refcount
- */
-GstAllocator *
-gst_allocator_ref (GstAllocator * allocator)
-{
-  g_return_val_if_fail (allocator != NULL, NULL);
-
-  GST_CAT_TRACE (GST_CAT_MEMORY, "allocator %p, %d->%d", allocator,
-      allocator->refcount, allocator->refcount + 1);
-
-  g_atomic_int_inc (&allocator->refcount);
-
-  return allocator;
-}
-
-/**
- * gst_allocator_unref:
- * @allocator: a #GstAllocator
- *
- * Decreases the refcount of @allocator. When the refcount reaches 0, the notify
- * function of @allocator will be called and the allocator will be freed.
- */
-void
-gst_allocator_unref (GstAllocator * allocator)
-{
-  g_return_if_fail (allocator != NULL);
-
-  GST_CAT_TRACE (GST_CAT_MEMORY, "allocator %p, %d->%d", allocator,
-      allocator->refcount, allocator->refcount - 1);
-
-  if (g_atomic_int_dec_and_test (&allocator->refcount)) {
-    if (allocator->notify)
-      allocator->notify (allocator->user_data);
-#ifndef GST_DISABLE_TRACE
-    _gst_alloc_trace_free (_gst_allocator_trace, allocator);
-#endif
-    g_slice_free1 (sizeof (GstAllocator), allocator);
-  }
 }
 
 /**

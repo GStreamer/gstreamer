@@ -59,10 +59,8 @@ EXPORTS
 	gst_allocator_get_memory_type
 	gst_allocator_get_type
 	gst_allocator_new
-	gst_allocator_ref
 	gst_allocator_register
 	gst_allocator_set_default
-	gst_allocator_unref
 	gst_atomic_queue_length
 	gst_atomic_queue_new
 	gst_atomic_queue_peek

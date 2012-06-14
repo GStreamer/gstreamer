@@ -368,8 +368,39 @@ GstAllocator * gst_allocator_new             (const GstMemoryInfo * info,
                                               gpointer user_data, GDestroyNotify notify);
 const gchar *  gst_allocator_get_memory_type (GstAllocator * allocator);
 
-GstAllocator * gst_allocator_ref             (GstAllocator * allocator);
-void           gst_allocator_unref           (GstAllocator * allocator);
+/**
+ * gst_allocator_ref:
+ * @allocator: The allocator to refcount
+ *
+ * Increase the refcount of this allocator.
+ *
+ * Returns: (transfer full): @allocator (for convenience when doing assignments)
+ */
+#ifdef _FOOL_GTK_DOC_
+G_INLINE_FUNC GstAllocator * gst_allocator_ref (GstAllocator * allocator);
+#endif
+
+static inline GstAllocator *
+gst_allocator_ref (GstAllocator * allocator)
+{
+  return (GstAllocator *) gst_mini_object_ref (GST_MINI_OBJECT_CAST (allocator));
+}
+
+/**
+ * gst_allocator_unref:
+ * @allocator: (transfer full): the allocator to refcount
+ *
+ * Decrease the refcount of an allocator, freeing it if the refcount reaches 0.
+ */
+#ifdef _FOOL_GTK_DOC_
+G_INLINE_FUNC void gst_allocator_unref (GstAllocator * allocator);
+#endif
+
+static inline void
+gst_allocator_unref (GstAllocator * allocator)
+{
+  gst_mini_object_unref (GST_MINI_OBJECT_CAST (allocator));
+}
 
 void           gst_allocator_register        (const gchar *name, GstAllocator *allocator);
 GstAllocator * gst_allocator_find            (const gchar *name);
