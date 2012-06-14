@@ -37,8 +37,6 @@ struct _GstSample
 {
   GstMiniObject mini_object;
 
-  gsize slice_size;
-
   GstBuffer *buffer;
   GstCaps *caps;
   GstSegment segment;
@@ -76,7 +74,7 @@ _gst_sample_free (GstSample * sample)
   if (sample->caps)
     gst_caps_unref (sample->caps);
 
-  g_slice_free1 (sample->slice_size, sample);
+  g_slice_free1 (sizeof (GstSample), sample);
 }
 
 /**
@@ -110,7 +108,6 @@ gst_sample_new (GstBuffer * buffer, GstCaps * caps, const GstSegment * segment,
   sample->mini_object.copy = (GstMiniObjectCopyFunction) _gst_sample_copy;
   sample->mini_object.free = (GstMiniObjectFreeFunction) _gst_sample_free;
 
-  sample->slice_size = sizeof (GstSample);
   sample->buffer = buffer ? gst_buffer_ref (buffer) : NULL;
   sample->caps = caps ? gst_caps_ref (caps) : NULL;
 
