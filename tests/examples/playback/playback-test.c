@@ -3218,6 +3218,9 @@ create_ui (PlaybackApp * app)
 
   g_signal_connect (G_OBJECT (app->window), "delete-event",
       G_CALLBACK (delete_event_cb), app);
+
+  gtk_widget_set_can_default (play_button, TRUE);
+  gtk_widget_grab_default (play_button);
 }
 
 static void
