@@ -1372,9 +1372,11 @@ gst_d3dvideosink_prepare_window (GstD3DVideoSink * sink)
   }
 
   /* If the app supplied one, use it. Otherwise, go ahead
-   * and create (and use) our own window */
+   * and create (and use) our own window, if we didn't create
+   * one before */
   if (sink->window_handle) {
-    gst_d3dvideosink_set_window_for_renderer (sink);
+    if (!sink->is_new_window)
+      gst_d3dvideosink_set_window_for_renderer (sink);
   } else {
     gst_d3dvideosink_create_default_window (sink);
   }
@@ -1412,7 +1414,9 @@ gst_d3dvideosink_change_state (GstElement * element, GstStateChange transition)
     case GST_STATE_CHANGE_PLAYING_TO_PAUSED:
       break;
     case GST_STATE_CHANGE_PAUSED_TO_READY:
-      gst_d3dvideosink_remove_window_for_renderer (sink);
+      if (!sink->is_new_window) {
+        gst_d3dvideosink_remove_window_for_renderer (sink);
+      }
       break;
     case GST_STATE_CHANGE_READY_TO_NULL:
       gst_d3dvideosink_release_direct3d (sink);
