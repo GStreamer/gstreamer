@@ -28,13 +28,14 @@
 #include <glib/gstdio.h>
 #include <errno.h>
 
-#ifdef HAVE_FFMPEG_UNINSTALLED
+#ifdef HAVE_LIBAV_UNINSTALLED
 #include <avcodec.h>
 #else
 #include <libavcodec/avcodec.h>
 #endif
 
 #include <gst/gst.h>
+#include <gst/video/gstvideometa.h>
 
 #include "gstffmpeg.h"
 #include "gstffmpegcodecmap.h"
@@ -100,8 +101,11 @@ static gboolean gst_ffmpegvidenc_stop (GstVideoEncoder * encoder);
 static GstFlowReturn gst_ffmpegvidenc_finish (GstVideoEncoder * encoder);
 static gboolean gst_ffmpegvidenc_set_format (GstVideoEncoder * encoder,
     GstVideoCodecState * state);
+static gboolean gst_ffmpegvidenc_propose_allocation (GstVideoEncoder * encoder,
+    GstQuery * query);
 
-static GstCaps *gst_ffmpegvidenc_getcaps (GstVideoEncoder * encoder);
+static GstCaps *gst_ffmpegvidenc_getcaps (GstVideoEncoder * encoder,
+    GstCaps * filter);
 static GstFlowReturn gst_ffmpegvidenc_handle_frame (GstVideoEncoder * encoder,
     GstVideoCodecFrame * frame);
 
@@ -110,7 +114,7 @@ static void gst_ffmpegvidenc_set_property (GObject * object,
 static void gst_ffmpegvidenc_get_property (GObject * object,
     guint prop_id, GValue * value, GParamSpec * pspec);
 
-#define GST_FFENC_PARAMS_QDATA g_quark_from_static_string("ffenc-params")
+#define GST_FFENC_PARAMS_QDATA g_quark_from_static_string("avenc-params")
 
 static GstElementClass *parent_class = NULL;
 
@@ -131,9 +135,9 @@ gst_ffmpegvidenc_base_init (GstFFMpegVidEncClass * klass)
   g_assert (in_plugin != NULL);
 
   /* construct the element details struct */
-  longname = g_strdup_printf ("FFmpeg %s encoder", in_plugin->long_name);
-  description = g_strdup_printf ("FFmpeg %s encoder", in_plugin->name);
-  gst_element_class_set_details_simple (element_class, longname,
+  longname = g_strdup_printf ("libav %s encoder", in_plugin->long_name);
+  description = g_strdup_printf ("libav %s encoder", in_plugin->name);
+  gst_element_class_set_metadata (element_class, longname,
       "Codec/Encoder/Video", description,
       "Wim Taymans <wim.taymans@gmail.com>, "
       "Ronald Bultje <rbultje@ronald.bitfreak.net>");
@@ -142,11 +146,10 @@ gst_ffmpegvidenc_base_init (GstFFMpegVidEncClass * klass)
 
   if (!(srccaps = gst_ffmpeg_codecid_to_caps (in_plugin->id, NULL, TRUE))) {
     GST_DEBUG ("Couldn't get source caps for encoder '%s'", in_plugin->name);
-    srccaps = gst_caps_new_simple ("unknown/unknown", NULL);
+    srccaps = gst_caps_new_empty_simple ("unknown/unknown");
   }
 
-  sinkcaps = gst_caps_from_string
-      ("video/x-raw-rgb; video/x-raw-yuv; video/x-raw-gray");
+  sinkcaps = gst_caps_new_empty_simple ("video/x-raw");
 
   /* pad templates */
   sinktempl = gst_pad_template_new ("sink", GST_PAD_SINK,
@@ -178,9 +181,11 @@ gst_ffmpegvidenc_class_init (GstFFMpegVidEncClass * klass)
   gobject_class->set_property = gst_ffmpegvidenc_set_property;
   gobject_class->get_property = gst_ffmpegvidenc_get_property;
 
+  /* FIXME: could use -1 for a sensible per-codec default based on
+   * e.g. input resolution and framerate */
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_BIT_RATE,
-      g_param_spec_ulong ("bitrate", "Bit Rate",
-          "Target Video Bitrate", 0, G_MAXULONG, DEFAULT_VIDEO_BITRATE,
+      g_param_spec_int ("bitrate", "Bit Rate",
+          "Target Video Bitrate", 0, G_MAXINT, DEFAULT_VIDEO_BITRATE,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_GOP_SIZE,
       g_param_spec_int ("gop-size", "GOP Size",
@@ -191,16 +196,13 @@ gst_ffmpegvidenc_class_init (GstFFMpegVidEncClass * klass)
           GST_TYPE_ME_METHOD, ME_EPZS,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
-  /* FIXME 0.11: Make this property read-only */
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_BUFSIZE,
-      g_param_spec_ulong ("buffer-size", "Buffer Size",
-          "Size of the video buffers. "
-          "Note: Setting this property has no effect "
-          "and is deprecated!", 0, G_MAXULONG, 0,
-          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+      g_param_spec_int ("buffer-size", "Buffer Size",
+          "Size of the video buffers", 0, G_MAXINT, 0,
+          G_PARAM_READABLE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (G_OBJECT_CLASS (klass),
-      ARG_RTP_PAYLOAD_SIZE, g_param_spec_ulong ("rtp-payload-size",
-          "RTP Payload Size", "Target GOB length", 0, G_MAXULONG, 0,
+      ARG_RTP_PAYLOAD_SIZE, g_param_spec_int ("rtp-payload-size",
+          "RTP Payload Size", "Target GOB length", 0, G_MAXINT, 0,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   /* register additional properties, possibly dependent on the exact CODEC */
@@ -211,6 +213,7 @@ gst_ffmpegvidenc_class_init (GstFFMpegVidEncClass * klass)
   venc_class->handle_frame = gst_ffmpegvidenc_handle_frame;
   venc_class->getcaps = gst_ffmpegvidenc_getcaps;
   venc_class->set_format = gst_ffmpegvidenc_set_format;
+  venc_class->propose_allocation = gst_ffmpegvidenc_propose_allocation;
 
   gobject_class->finalize = gst_ffmpegvidenc_finalize;
 }
@@ -261,7 +264,7 @@ gst_ffmpegvidenc_finalize (GObject * object)
 }
 
 static GstCaps *
-gst_ffmpegvidenc_getcaps (GstVideoEncoder * encoder)
+gst_ffmpegvidenc_getcaps (GstVideoEncoder * encoder, GstCaps * filter)
 {
   GstFFMpegVidEnc *ffmpegenc = (GstFFMpegVidEnc *) encoder;
   GstFFMpegVidEncClass *oclass =
@@ -275,7 +278,7 @@ gst_ffmpegvidenc_getcaps (GstVideoEncoder * encoder)
 
   /* cached */
   if (oclass->sinkcaps) {
-    caps = gst_video_encoder_proxy_getcaps (encoder, oclass->sinkcaps);
+    caps = gst_video_encoder_proxy_getcaps (encoder, oclass->sinkcaps, filter);
     GST_DEBUG_OBJECT (ffmpegenc, "return cached caps %" GST_PTR_FORMAT, caps);
     return caps;
   }
@@ -372,9 +375,9 @@ gst_ffmpegvidenc_getcaps (GstVideoEncoder * encoder)
   _shut_up_I_am_probing = FALSE;
 #endif
 
-  oclass->sinkcaps = gst_video_encoder_proxy_getcaps (encoder, caps);
+  oclass->sinkcaps = caps;
 
-  return gst_caps_ref (oclass->sinkcaps);
+  return gst_video_encoder_proxy_getcaps (encoder, caps, filter);
 }
 
 static gboolean
@@ -394,12 +397,6 @@ gst_ffmpegvidenc_set_format (GstVideoEncoder * encoder,
   if (ffmpegenc->opened) {
     gst_ffmpeg_avcodec_close (ffmpegenc->context);
     ffmpegenc->opened = FALSE;
-#if 0
-    /* FIXME : Is this still needed with GstVideoEncoder ?? */
-    /* fixed src caps;
-     * so clear src caps for proper (re-)negotiation */
-    gst_pad_set_caps (ffmpegenc->srcpad, NULL);
-#endif
   }
 
   /* set defaults */
@@ -532,8 +529,7 @@ gst_ffmpegvidenc_set_format (GstVideoEncoder * encoder,
     /* we need to copy because get_allowed_caps returns a ref, and
      * get_pad_template_caps doesn't */
     allowed_caps =
-        gst_caps_copy (gst_pad_get_pad_template_caps (GST_VIDEO_ENCODER_SRC_PAD
-            (encoder)));
+        gst_pad_get_pad_template_caps (GST_VIDEO_ENCODER_SRC_PAD (encoder));
   }
   GST_DEBUG_OBJECT (ffmpegenc, "chose caps %" GST_PTR_FORMAT, allowed_caps);
   gst_ffmpeg_caps_with_codecid (oclass->in_plugin->id,
@@ -543,8 +539,10 @@ gst_ffmpegvidenc_set_format (GstVideoEncoder * encoder,
   other_caps = gst_ffmpeg_codecid_to_caps (oclass->in_plugin->id,
       ffmpegenc->context, TRUE);
 
-  if (!other_caps)
+  if (!other_caps) {
+    gst_caps_unref (allowed_caps);
     goto unsupported_codec;
+  }
 
   icaps = gst_caps_intersect (allowed_caps, other_caps);
   gst_caps_unref (allowed_caps);
@@ -599,7 +597,7 @@ open_codec_fail:
       gst_ffmpeg_avcodec_close (ffmpegenc->context);
     if (ffmpegenc->context->stats_in)
       g_free (ffmpegenc->context->stats_in);
-    GST_DEBUG_OBJECT (ffmpegenc, "ffenc_%s: Failed to open FFMPEG codec",
+    GST_DEBUG_OBJECT (ffmpegenc, "avenc_%s: Failed to open libav codec",
         oclass->in_plugin->name);
     return FALSE;
   }
@@ -608,14 +606,14 @@ pix_fmt_err:
   {
     gst_ffmpeg_avcodec_close (ffmpegenc->context);
     GST_DEBUG_OBJECT (ffmpegenc,
-        "ffenc_%s: AV wants different colourspace (%d given, %d wanted)",
+        "avenc_%s: AV wants different colourspace (%d given, %d wanted)",
         oclass->in_plugin->name, pix_fmt, ffmpegenc->context->pix_fmt);
     return FALSE;
   }
 
 bad_input_fmt:
   {
-    GST_DEBUG_OBJECT (ffmpegenc, "ffenc_%s: Failed to determine input format",
+    GST_DEBUG_OBJECT (ffmpegenc, "avenc_%s: Failed to determine input format",
         oclass->in_plugin->name);
     return FALSE;
   }
@@ -626,6 +624,17 @@ unsupported_codec:
     GST_DEBUG ("Unsupported codec - no caps found");
     return FALSE;
   }
+}
+
+
+static gboolean
+gst_ffmpegvidenc_propose_allocation (GstVideoEncoder * encoder,
+    GstQuery * query)
+{
+  gst_query_add_allocation_meta (query, GST_VIDEO_META_API_TYPE);
+
+  return GST_VIDEO_ENCODER_CLASS (parent_class)->propose_allocation (encoder,
+      query);
 }
 
 static void
@@ -655,16 +664,22 @@ gst_ffmpegvidenc_handle_frame (GstVideoEncoder * encoder,
   GstBuffer *outbuf;
   gint ret_size = 0, c;
   GstVideoInfo *info = &ffmpegenc->input_state->info;
-  guint8 *data = GST_BUFFER_DATA (frame->input_buffer);
+  GstVideoFrame vframe;
 
   if (GST_VIDEO_CODEC_FRAME_IS_FORCE_KEYFRAME (frame))
     ffmpegenc->picture->pict_type = FF_I_TYPE;
 
+  if (!gst_video_frame_map (&vframe, info, frame->input_buffer, GST_MAP_READ)) {
+    GST_ERROR_OBJECT (encoder, "Failed to map input buffer");
+    return GST_FLOW_ERROR;
+  }
+
   /* Fill avpicture */
   for (c = 0; c < AV_NUM_DATA_POINTERS; c++) {
     if (c < GST_VIDEO_INFO_N_COMPONENTS (info)) {
-      ffmpegenc->picture->data[c] = data + GST_VIDEO_INFO_COMP_OFFSET (info, c);
-      ffmpegenc->picture->linesize[c] = GST_VIDEO_INFO_COMP_STRIDE (info, c);
+      ffmpegenc->picture->data[c] = GST_VIDEO_FRAME_PLANE_DATA (&vframe, c);
+      ffmpegenc->picture->linesize[c] =
+          GST_VIDEO_FRAME_PLANE_STRIDE (&vframe, c);
     } else {
       ffmpegenc->picture->data[c] = NULL;
       ffmpegenc->picture->linesize[c] = 0;
@@ -679,6 +694,8 @@ gst_ffmpegvidenc_handle_frame (GstVideoEncoder * encoder,
 
   ret_size = avcodec_encode_video (ffmpegenc->context,
       ffmpegenc->working_buf, ffmpegenc->working_buf_size, ffmpegenc->picture);
+
+  gst_video_frame_unmap (&vframe);
 
   if (ret_size < 0)
     goto encode_fail;
@@ -699,7 +716,7 @@ gst_ffmpegvidenc_handle_frame (GstVideoEncoder * encoder,
 
   /* Allocate output buffer */
   frame->output_buffer = outbuf = gst_buffer_new_and_alloc (ret_size);
-  memcpy (GST_BUFFER_DATA (outbuf), ffmpegenc->working_buf, ret_size);
+  gst_buffer_fill (outbuf, 0, ffmpegenc->working_buf, ret_size);
 
   /* buggy codec may not set coded_frame */
   if (ffmpegenc->context->coded_frame) {
@@ -721,7 +738,7 @@ encode_fail:
     GstFFMpegVidEncClass *oclass =
         (GstFFMpegVidEncClass *) (G_OBJECT_GET_CLASS (ffmpegenc));
     GST_ERROR_OBJECT (ffmpegenc,
-        "ffenc_%s: failed to encode buffer", oclass->in_plugin->name);
+        "avenc_%s: failed to encode buffer", oclass->in_plugin->name);
 #endif /* GST_DISABLE_GST_DEBUG */
     return GST_FLOW_OK;
   }
@@ -753,7 +770,7 @@ gst_ffmpegvidenc_flush_buffers (GstFFMpegVidEnc * ffmpegenc, gboolean send)
       GstFFMpegVidEncClass *oclass =
           (GstFFMpegVidEncClass *) (G_OBJECT_GET_CLASS (ffmpegenc));
       GST_WARNING_OBJECT (ffmpegenc,
-          "ffenc_%s: failed to flush buffer", oclass->in_plugin->name);
+          "avenc_%s: failed to flush buffer", oclass->in_plugin->name);
 #endif /* GST_DISABLE_GST_DEBUG */
       break;
     }
@@ -766,7 +783,7 @@ gst_ffmpegvidenc_flush_buffers (GstFFMpegVidEnc * ffmpegenc, gboolean send)
             GST_ERROR_SYSTEM);
 
     frame->output_buffer = outbuf = gst_buffer_new_and_alloc (ret_size);
-    memcpy (GST_BUFFER_DATA (outbuf), ffmpegenc->working_buf, ret_size);
+    gst_buffer_fill (outbuf, 0, ffmpegenc->working_buf, ret_size);
 
     if (ffmpegenc->context->coded_frame->key_frame)
       GST_VIDEO_CODEC_FRAME_SET_SYNC_POINT (frame);
@@ -794,7 +811,7 @@ gst_ffmpegvidenc_set_property (GObject * object,
   /* Check the argument id to see which argument we're setting. */
   switch (prop_id) {
     case ARG_BIT_RATE:
-      ffmpegenc->bitrate = g_value_get_ulong (value);
+      ffmpegenc->bitrate = g_value_get_int (value);
       break;
     case ARG_GOP_SIZE:
       ffmpegenc->gop_size = g_value_get_int (value);
@@ -805,7 +822,7 @@ gst_ffmpegvidenc_set_property (GObject * object,
     case ARG_BUFSIZE:
       break;
     case ARG_RTP_PAYLOAD_SIZE:
-      ffmpegenc->rtp_payload_size = g_value_get_ulong (value);
+      ffmpegenc->rtp_payload_size = g_value_get_int (value);
       break;
     default:
       if (!gst_ffmpeg_cfg_set_property (object, value, pspec))
@@ -826,7 +843,7 @@ gst_ffmpegvidenc_get_property (GObject * object,
 
   switch (prop_id) {
     case ARG_BIT_RATE:
-      g_value_set_ulong (value, ffmpegenc->bitrate);
+      g_value_set_int (value, ffmpegenc->bitrate);
       break;
     case ARG_GOP_SIZE:
       g_value_set_int (value, ffmpegenc->gop_size);
@@ -835,10 +852,10 @@ gst_ffmpegvidenc_get_property (GObject * object,
       g_value_set_enum (value, ffmpegenc->me_method);
       break;
     case ARG_BUFSIZE:
-      g_value_set_ulong (value, ffmpegenc->buffer_size);
+      g_value_set_int (value, ffmpegenc->buffer_size);
       break;
     case ARG_RTP_PAYLOAD_SIZE:
-      g_value_set_ulong (value, ffmpegenc->rtp_payload_size);
+      g_value_set_int (value, ffmpegenc->rtp_payload_size);
       break;
     default:
       if (!gst_ffmpeg_cfg_get_property (object, value, pspec))
@@ -914,10 +931,7 @@ gst_ffmpegvidenc_register (GstPlugin * plugin)
     if (in_plugin->id == CODEC_ID_RAWVIDEO ||
         in_plugin->id == CODEC_ID_V210 ||
         in_plugin->id == CODEC_ID_V210X ||
-        in_plugin->id == CODEC_ID_R210 ||
-        in_plugin->id == CODEC_ID_ZLIB ||
-        (in_plugin->id >= CODEC_ID_PCM_S16LE &&
-            in_plugin->id <= CODEC_ID_PCM_BLURAY)) {
+        in_plugin->id == CODEC_ID_R210 || in_plugin->id == CODEC_ID_ZLIB) {
       goto next;
     }
 
@@ -948,7 +962,7 @@ gst_ffmpegvidenc_register (GstPlugin * plugin)
     }
 
     /* construct the type */
-    type_name = g_strdup_printf ("ffenc_%s", in_plugin->name);
+    type_name = g_strdup_printf ("avenc_%s", in_plugin->name);
 
     type = g_type_from_name (type_name);
 
