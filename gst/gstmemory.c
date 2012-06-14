@@ -71,14 +71,7 @@
 #include "gst_private.h"
 #include "gstmemory.h"
 
-#ifndef GST_DISABLE_TRACE
-#include "gsttrace.h"
-static GstAllocTrace *_gst_memory_trace;
-static GstAllocTrace *_gst_allocator_trace;
-#endif
-
-G_DEFINE_BOXED_TYPE (GstMemory, gst_memory, (GBoxedCopyFunc) gst_memory_ref,
-    (GBoxedFreeFunc) gst_memory_unref);
+GST_DEFINE_MINI_OBJECT_TYPE (GstMemory, gst_memory);
 
 GST_DEFINE_MINI_OBJECT_TYPE (GstAllocator, gst_allocator);
 
@@ -112,7 +105,6 @@ struct _GstAllocator
 typedef struct
 {
   GstMemory mem;
-  gsize slice_size;
   guint8 *data;
   gpointer user_data;
   GDestroyNotify notify;
@@ -124,6 +116,20 @@ static GstAllocator *_default_allocator;
 /* our predefined allocators */
 static GstAllocator *_default_mem_impl;
 
+static GstMemory *
+_gst_memory_copy (GstMemory * mem)
+{
+  return gst_memory_copy (mem, 0, -1);
+}
+
+static void
+_gst_memory_free (GstMemory * mem)
+{
+  /* there should be no outstanding mappings */
+  g_return_if_fail (g_atomic_int_get (&mem->state) < 4);
+  mem->allocator->info.mem_free (mem);
+}
+
 /* initialize the fields */
 static void
 _default_mem_init (GstMemoryDefault * mem, GstMemoryFlags flags,
@@ -131,16 +137,21 @@ _default_mem_init (GstMemoryDefault * mem, GstMemoryFlags flags,
     gsize maxsize, gsize offset, gsize size, gsize align,
     gpointer user_data, GDestroyNotify notify)
 {
+  gst_mini_object_init (GST_MINI_OBJECT_CAST (mem), GST_TYPE_MEMORY,
+      slice_size);
+
+  mem->mem.mini_object.copy = (GstMiniObjectCopyFunction) _gst_memory_copy;
+  mem->mem.mini_object.dispose = NULL;
+  mem->mem.mini_object.free = (GstMiniObjectFreeFunction) _gst_memory_free;
+  mem->mem.mini_object.flags = flags;
+
   mem->mem.allocator = _default_mem_impl;
-  mem->mem.flags = flags;
-  mem->mem.refcount = 1;
   mem->mem.parent = parent ? gst_memory_ref (parent) : NULL;
   mem->mem.state = (flags & GST_MEMORY_FLAG_READONLY ? 0x1 : 0);
   mem->mem.maxsize = maxsize;
   mem->mem.align = align;
   mem->mem.offset = offset;
   mem->mem.size = size;
-  mem->slice_size = slice_size;
   mem->data = data;
   mem->user_data = user_data;
   mem->notify = notify;
@@ -243,7 +254,7 @@ _default_mem_free (GstMemoryDefault * mem)
   if (mem->notify)
     mem->notify (mem->user_data);
 
-  g_slice_free1 (mem->slice_size, mem);
+  g_slice_free1 (GST_MINI_OBJECT_SIZE (mem), mem);
 }
 
 static GstMemoryDefault *
@@ -279,7 +290,7 @@ _default_mem_share (GstMemoryDefault * mem, gssize offset, gsize size)
     size = mem->mem.size - offset;
 
   sub =
-      _default_mem_new (parent->flags, parent, mem->data,
+      _default_mem_new (GST_MINI_OBJECT_FLAGS (parent), parent, mem->data,
       mem->mem.maxsize, mem->mem.offset + offset, size, mem->mem.align, NULL,
       NULL);
 
@@ -363,11 +374,6 @@ _priv_gst_memory_initialize (void)
     (GstMemoryIsSpanFunction) _default_mem_is_span,
   };
 
-#ifndef GST_DISABLE_TRACE
-  _gst_memory_trace = _gst_alloc_trace_register ("GstMemory", -1);
-  _gst_allocator_trace = _gst_alloc_trace_register ("GstAllocator", -1);
-#endif
-
   g_rw_lock_init (&lock);
   allocators = g_hash_table_new (g_str_hash, g_str_equal);
 
@@ -418,58 +424,7 @@ gst_memory_new_wrapped (GstMemoryFlags flags, gpointer data,
       _default_mem_new (flags, NULL, data, maxsize, offset, size, 0, user_data,
       notify);
 
-#ifndef GST_DISABLE_TRACE
-  _gst_alloc_trace_new (_gst_memory_trace, mem);
-#endif
-
   return (GstMemory *) mem;
-}
-
-/**
- * gst_memory_ref:
- * @mem: a #GstMemory
- *
- * Increases the refcount of @mem.
- *
- * Returns: @mem with increased refcount
- */
-GstMemory *
-gst_memory_ref (GstMemory * mem)
-{
-  g_return_val_if_fail (mem != NULL, NULL);
-
-  GST_CAT_TRACE (GST_CAT_MEMORY, "memory %p, %d->%d", mem, mem->refcount,
-      mem->refcount + 1);
-
-  g_atomic_int_inc (&mem->refcount);
-
-  return mem;
-}
-
-/**
- * gst_memory_unref:
- * @mem: a #GstMemory
- *
- * Decreases the refcount of @mem. When the refcount reaches 0, the free
- * function of @mem will be called.
- */
-void
-gst_memory_unref (GstMemory * mem)
-{
-  g_return_if_fail (mem != NULL);
-  g_return_if_fail (mem->allocator != NULL);
-
-  GST_CAT_TRACE (GST_CAT_MEMORY, "memory %p, %d->%d", mem, mem->refcount,
-      mem->refcount - 1);
-
-  if (g_atomic_int_dec_and_test (&mem->refcount)) {
-    /* there should be no outstanding mappings */
-    g_return_if_fail (g_atomic_int_get (&mem->state) < 4);
-#ifndef GST_DISABLE_TRACE
-    _gst_alloc_trace_free (_gst_memory_trace, mem);
-#endif
-    mem->allocator->info.mem_free (mem);
-  }
 }
 
 /**
@@ -484,7 +439,7 @@ gst_memory_is_exclusive (GstMemory * mem)
 {
   g_return_val_if_fail (mem != NULL, FALSE);
 
-  return (g_atomic_int_get (&mem->refcount) == 1);
+  return GST_MINI_OBJECT_REFCOUNT_VALUE (mem) == 1;
 }
 
 /**
@@ -737,10 +692,6 @@ gst_memory_copy (GstMemory * mem, gssize offset, gssize size)
 
   copy = mem->allocator->info.mem_copy (mem, offset, size);
 
-#ifndef GST_DISABLE_TRACE
-  _gst_alloc_trace_new (_gst_memory_trace, copy);
-#endif
-
   return copy;
 }
 
@@ -767,10 +718,6 @@ gst_memory_share (GstMemory * mem, gssize offset, gssize size)
       NULL);
 
   shared = mem->allocator->info.mem_share (mem, offset, size);
-
-#ifndef GST_DISABLE_TRACE
-  _gst_alloc_trace_new (_gst_memory_trace, shared);
-#endif
 
   return shared;
 }
@@ -855,10 +802,10 @@ gst_allocator_new (const GstMemoryInfo * info, gpointer user_data,
   g_return_val_if_fail (info->mem_free != NULL, NULL);
   g_return_val_if_fail (info->mem_share != NULL, NULL);
 
-  allocator = g_slice_new (GstAllocator);
+  allocator = g_slice_new0 (GstAllocator);
 
   gst_mini_object_init (GST_MINI_OBJECT_CAST (allocator),
-      gst_allocator_get_type (), sizeof (GstAllocator));
+      GST_TYPE_ALLOCATOR, sizeof (GstAllocator));
 
   allocator->mini_object.copy = (GstMiniObjectCopyFunction) _gst_allocator_copy;
   allocator->mini_object.free = (GstMiniObjectFreeFunction) _gst_allocator_free;
@@ -1057,8 +1004,5 @@ gst_allocator_alloc (GstAllocator * allocator, gsize size,
 
   mem = allocator->info.alloc (allocator, size, params, allocator->user_data);
 
-#ifndef GST_DISABLE_TRACE
-  _gst_alloc_trace_new (_gst_memory_trace, mem);
-#endif
   return mem;
 }

@@ -214,7 +214,7 @@ _get_merged_memory (GstBuffer * buffer, guint idx, guint length)
 
     if (G_UNLIKELY (_is_span (mem + idx, length, &poffset, &parent))) {
 
-      if (parent->flags & GST_MEMORY_FLAG_NO_SHARE) {
+      if (GST_MEMORY_IS_NO_SHARE (parent)) {
         GST_CAT_DEBUG (GST_CAT_PERFORMANCE, "copy for merge %p", parent);
         result = gst_memory_copy (parent, poffset, size);
       } else {
@@ -402,7 +402,7 @@ gst_buffer_copy_into (GstBuffer * dest, GstBuffer * src,
         gsize tocopy;
 
         tocopy = MIN (bsize - skip, left);
-        if (mem->flags & GST_MEMORY_FLAG_NO_SHARE) {
+        if (GST_MEMORY_IS_NO_SHARE (mem)) {
           /* no share, always copy then */
           mem = gst_memory_copy (mem, skip, tocopy);
           skip = 0;
@@ -1118,7 +1118,7 @@ gst_buffer_resize_range (GstBuffer * buffer, guint idx, gint length,
       } else {
         GstMemory *tmp;
 
-        if (mem->flags & GST_MEMORY_FLAG_NO_SHARE)
+        if (GST_MEMORY_IS_NO_SHARE (mem))
           tmp = gst_memory_copy (mem, offset, left);
         else
           tmp = gst_memory_share (mem, offset, left);

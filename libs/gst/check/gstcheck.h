@@ -490,14 +490,6 @@ G_STMT_START {                                                          \
 #define ASSERT_BUFFER_REFCOUNT(buffer, name, value)             \
         ASSERT_MINI_OBJECT_REFCOUNT(buffer, name, value)
 
-#define ASSERT_MEMORY_REFCOUNT(memory, name, value)             \
-G_STMT_START {                                                  \
-  int rc;                                                       \
-  rc = memory->refcount;                                        \
-  fail_unless (rc == value,                                     \
-               name " (%p) refcount is %d instead of %d", memory, rc, value); \
-} G_STMT_END
-
 #define ASSERT_MINI_OBJECT_REFCOUNT(miniobj, name, value)       \
 G_STMT_START {                                                  \
   int rc;                                                       \

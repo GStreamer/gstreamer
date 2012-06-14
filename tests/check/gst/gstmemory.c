@@ -55,7 +55,7 @@ GST_START_TEST (test_submemory)
   fail_unless (sinfo.size == 2, "submemory has wrong size");
   fail_unless (memcmp (info.data + 1, sinfo.data, 2) == 0,
       "submemory contains the wrong data");
-  ASSERT_MEMORY_REFCOUNT (sub, "submemory", 1);
+  ASSERT_MINI_OBJECT_REFCOUNT (sub, "submemory", 1);
   gst_memory_unmap (sub, &sinfo);
   gst_memory_unref (sub);
 
@@ -66,7 +66,7 @@ GST_START_TEST (test_submemory)
   fail_unless (sinfo.size == 0, "submemory has wrong size");
   fail_unless (memcmp (info.data + 1, sinfo.data, 0) == 0,
       "submemory contains the wrong data");
-  ASSERT_MEMORY_REFCOUNT (sub, "submemory", 1);
+  ASSERT_MINI_OBJECT_REFCOUNT (sub, "submemory", 1);
   gst_memory_unmap (sub, &sinfo);
   gst_memory_unref (sub);
 
@@ -197,11 +197,11 @@ GST_START_TEST (test_copy)
   GstMapInfo info, sinfo;
 
   memory = gst_allocator_alloc (NULL, 4, NULL);
-  ASSERT_MEMORY_REFCOUNT (memory, "memory", 1);
+  ASSERT_MINI_OBJECT_REFCOUNT (memory, "memory", 1);
 
   copy = gst_memory_copy (memory, 0, -1);
-  ASSERT_MEMORY_REFCOUNT (memory, "memory", 1);
-  ASSERT_MEMORY_REFCOUNT (copy, "copy", 1);
+  ASSERT_MINI_OBJECT_REFCOUNT (memory, "memory", 1);
+  ASSERT_MINI_OBJECT_REFCOUNT (copy, "copy", 1);
   /* memorys are copied and must point to different memory */
   fail_if (memory == copy);
 

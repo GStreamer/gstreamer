@@ -66,12 +66,12 @@ GST_EXPORT gsize gst_memory_alignment;
  * Flags for wrapped memory.
  */
 typedef enum {
-  GST_MEMORY_FLAG_READONLY      = (1 << 0),
-  GST_MEMORY_FLAG_NO_SHARE      = (1 << 1),
-  GST_MEMORY_FLAG_ZERO_PREFIXED = (1 << 2),
-  GST_MEMORY_FLAG_ZERO_PADDED   = (1 << 3),
+  GST_MEMORY_FLAG_READONLY      = (GST_MINI_OBJECT_FLAG_LAST << 0),
+  GST_MEMORY_FLAG_NO_SHARE      = (GST_MINI_OBJECT_FLAG_LAST << 1),
+  GST_MEMORY_FLAG_ZERO_PREFIXED = (GST_MINI_OBJECT_FLAG_LAST << 2),
+  GST_MEMORY_FLAG_ZERO_PADDED   = (GST_MINI_OBJECT_FLAG_LAST << 3),
 
-  GST_MEMORY_FLAG_LAST          = (1 << 16)
+  GST_MEMORY_FLAG_LAST          = (GST_MINI_OBJECT_FLAG_LAST << 16)
 } GstMemoryFlags;
 
 /**
@@ -80,7 +80,7 @@ typedef enum {
  *
  * A flags word containing #GstMemoryFlags flags set on @mem
  */
-#define GST_MEMORY_FLAGS(mem)  (GST_MEMORY_CAST (mem)->flags)
+#define GST_MEMORY_FLAGS(mem)  GST_MINI_OBJECT_FLAGS (mem)
 /**
  * GST_MEMORY_FLAG_IS_SET:
  * @mem: a #GstMemory.
@@ -88,7 +88,7 @@ typedef enum {
  *
  * Gives the status of a specific flag on a @mem.
  */
-#define GST_MEMORY_FLAG_IS_SET(mem,flag)   !!(GST_MEMORY_FLAGS (mem) & (flag))
+#define GST_MEMORY_FLAG_IS_SET(mem,flag)   GST_MINI_OBJECT_FLAG_IS_SET (mem,flag)
 /**
  * GST_MEMORY_FLAG_UNSET:
  * @mem: a #GstMemory.
@@ -96,7 +96,7 @@ typedef enum {
  *
  * Clear a specific flag on a @mem.
  */
-#define GST_MEMORY_FLAG_UNSET(mem,flag)   (GST_MEMORY_FLAGS (mem) &= ~(flag))
+#define GST_MEMORY_FLAG_UNSET(mem,flag)   GST_MINI_OBJECT_FLAG_UNSET (mem, flag)
 
 /**
  * GST_MEMORY_IS_READONLY:
@@ -105,6 +105,13 @@ typedef enum {
  * Check if @mem is readonly.
  */
 #define GST_MEMORY_IS_READONLY(mem)        GST_MEMORY_FLAG_IS_SET(mem,GST_MEMORY_FLAG_READONLY)
+/**
+ * GST_MEMORY_IS_NO_SHARE:
+ * @mem: a #GstMemory.
+ *
+ * Check if @mem cannot be shared between buffers
+ */
+#define GST_MEMORY_IS_NO_SHARE(mem)        GST_MEMORY_FLAG_IS_SET(mem,GST_MEMORY_FLAG_NO_SHARE)
 /**
  * GST_MEMORY_IS_ZERO_PREFIXED:
  * @mem: a #GstMemory.
@@ -123,9 +130,8 @@ typedef enum {
 
 /**
  * GstMemory:
+ * @mini_object: parent structure
  * @allocator: pointer to the #GstAllocator
- * @flags: memory flags
- * @refcount: refcount
  * @parent: parent memory block
  * @state: private state
  * @maxsize: the maximum size allocated
@@ -137,10 +143,10 @@ typedef enum {
  * as the first member of their structure.
  */
 struct _GstMemory {
+  GstMiniObject   mini_object;
+
   GstAllocator   *allocator;
 
-  GstMemoryFlags  flags;
-  gint            refcount;
   GstMemory      *parent;
   volatile gint   state;
   gsize           maxsize;
@@ -421,8 +427,39 @@ GstMemory *    gst_memory_new_wrapped  (GstMemoryFlags flags, gpointer data, gsi
                                         GDestroyNotify notify);
 
 /* refcounting */
-GstMemory *    gst_memory_ref          (GstMemory *mem);
-void           gst_memory_unref        (GstMemory *mem);
+/**
+ * gst_memory_ref:
+ * @memory: The memory to refcount
+ *
+ * Increase the refcount of this memory.
+ *
+ * Returns: (transfer full): @memory (for convenience when doing assignments)
+ */
+#ifdef _FOOL_GTK_DOC_
+G_INLINE_FUNC GstMemory * gst_memory_ref (GstMemory * memory);
+#endif
+
+static inline GstMemory *
+gst_memory_ref (GstMemory * memory)
+{
+  return (GstMemory *) gst_mini_object_ref (GST_MINI_OBJECT_CAST (memory));
+}
+
+/**
+ * gst_memory_unref:
+ * @memory: (transfer full): the memory to refcount
+ *
+ * Decrease the refcount of an memory, freeing it if the refcount reaches 0.
+ */
+#ifdef _FOOL_GTK_DOC_
+G_INLINE_FUNC void gst_memory_unref (GstMemory * memory);
+#endif
+
+static inline void
+gst_memory_unref (GstMemory * memory)
+{
+  gst_mini_object_unref (GST_MINI_OBJECT_CAST (memory));
+}
 
 gboolean       gst_memory_is_exclusive (GstMemory *mem);
 

@@ -518,11 +518,9 @@ EXPORTS
 	gst_memory_make_mapped
 	gst_memory_map
 	gst_memory_new_wrapped
-	gst_memory_ref
 	gst_memory_resize
 	gst_memory_share
 	gst_memory_unmap
-	gst_memory_unref
 	gst_message_get_seqnum
 	gst_message_get_stream_status_object
 	gst_message_get_structure
