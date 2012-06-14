@@ -541,11 +541,9 @@ gst_rtp_theora_depay_process (GstRTPBaseDepayload * depayload, GstBuffer * buf)
 
     /* create buffer for packet */
     if (G_UNLIKELY (to_free)) {
-      outbuf = gst_buffer_new ();
-      gst_buffer_append_memory (buf,
-          gst_memory_new_wrapped (0, to_free,
-              (payload - to_free) + length, payload - to_free, length, to_free,
-              g_free));
+      outbuf =
+          gst_buffer_new_wrapped_full (0, to_free, (payload - to_free) + length,
+          payload - to_free, length, to_free, g_free);
       to_free = NULL;
     } else {
       outbuf = gst_buffer_new_and_alloc (length);
