@@ -820,37 +820,10 @@ _gst_allocator_free (GstAllocator * allocator)
   g_slice_free1 (GST_MINI_OBJECT_SIZE (allocator), allocator);
 }
 
-static void gst_allocator_init (GstAllocator * allocator,
-    const GstMemoryInfo * info, gsize size);
-
 static GstAllocator *
 _gst_allocator_copy (GstAllocator * allocator)
 {
-  GstAllocator *copy;
-
-  copy = g_slice_new (GstAllocator);
-
-  gst_allocator_init (copy, &allocator->info, sizeof (GstAllocator));
-
-  return copy;
-}
-
-static void
-gst_allocator_init (GstAllocator * allocator, const GstMemoryInfo * info,
-    gsize size)
-{
-  gst_mini_object_init (GST_MINI_OBJECT_CAST (allocator),
-      gst_allocator_get_type (), size);
-
-  allocator->mini_object.copy = (GstMiniObjectCopyFunction) _gst_allocator_copy;
-  allocator->mini_object.free = (GstMiniObjectFreeFunction) _gst_allocator_free;
-
-  allocator->info = *info;
-#define INSTALL_FALLBACK(_t) \
-  if (allocator->info._t == NULL) allocator->info._t = _fallback_ ##_t;
-  INSTALL_FALLBACK (mem_copy);
-  INSTALL_FALLBACK (mem_is_span);
-#undef INSTALL_FALLBACK
+  return gst_allocator_ref (allocator);
 }
 
 /**
@@ -884,10 +857,21 @@ gst_allocator_new (const GstMemoryInfo * info, gpointer user_data,
 
   allocator = g_slice_new (GstAllocator);
 
-  gst_allocator_init (allocator, info, sizeof (GstAllocator));
+  gst_mini_object_init (GST_MINI_OBJECT_CAST (allocator),
+      gst_allocator_get_type (), sizeof (GstAllocator));
 
+  allocator->mini_object.copy = (GstMiniObjectCopyFunction) _gst_allocator_copy;
+  allocator->mini_object.free = (GstMiniObjectFreeFunction) _gst_allocator_free;
+
+  allocator->info = *info;
   allocator->user_data = user_data;
   allocator->notify = notify;
+
+#define INSTALL_FALLBACK(_t) \
+  if (allocator->info._t == NULL) allocator->info._t = _fallback_ ##_t;
+  INSTALL_FALLBACK (mem_copy);
+  INSTALL_FALLBACK (mem_is_span);
+#undef INSTALL_FALLBACK
 
   GST_CAT_DEBUG (GST_CAT_MEMORY, "new allocator %p", allocator);
 
