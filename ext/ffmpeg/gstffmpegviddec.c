@@ -413,7 +413,7 @@ gst_ffmpegviddec_set_format (GstVideoDecoder * decoder,
 {
   GstFFMpegVidDec *ffmpegdec;
   GstFFMpegVidDecClass *oclass;
-  gboolean ret = TRUE;
+  gboolean ret = FALSE;
 
   ffmpegdec = (GstFFMpegVidDec *) decoder;
   oclass = (GstFFMpegVidDecClass *) (G_OBJECT_GET_CLASS (ffmpegdec));
@@ -527,6 +527,8 @@ gst_ffmpegviddec_set_format (GstVideoDecoder * decoder,
   if (ffmpegdec->input_state)
     gst_video_codec_state_unref (ffmpegdec->input_state);
   ffmpegdec->input_state = gst_video_codec_state_ref (state);
+
+  ret = TRUE;
 
 done:
   GST_OBJECT_UNLOCK (ffmpegdec);
