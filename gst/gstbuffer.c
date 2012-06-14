@@ -138,6 +138,7 @@ struct _GstMetaItem
 
 #define GST_BUFFER_MEM_MAX         16
 
+#define GST_BUFFER_SLICE_SIZE(b)   (((GstBufferImpl *)(b))->slice_size)
 #define GST_BUFFER_MEM_LEN(b)      (((GstBufferImpl *)(b))->len)
 #define GST_BUFFER_MEM_ARRAY(b)    (((GstBufferImpl *)(b))->mem)
 #define GST_BUFFER_MEM_PTR(b,i)    (((GstBufferImpl *)(b))->mem[i])
@@ -147,6 +148,8 @@ struct _GstMetaItem
 typedef struct
 {
   GstBuffer buffer;
+
+  gsize slice_size;
 
   /* the memory blocks */
   guint len;
@@ -505,7 +508,7 @@ _gst_buffer_free (GstBuffer * buffer)
 
   /* get the size, when unreffing the memory, we could also unref the buffer
    * itself */
-  msize = GST_MINI_OBJECT_SIZE (buffer);
+  msize = GST_BUFFER_SLICE_SIZE (buffer);
 
   /* free our memory */
   len = GST_BUFFER_MEM_LEN (buffer);
@@ -522,7 +525,7 @@ _gst_buffer_free (GstBuffer * buffer)
 static void
 gst_buffer_init (GstBufferImpl * buffer, gsize size)
 {
-  gst_mini_object_init (GST_MINI_OBJECT_CAST (buffer), _gst_buffer_type, size);
+  gst_mini_object_init (GST_MINI_OBJECT_CAST (buffer), _gst_buffer_type);
 
   buffer->buffer.mini_object.copy =
       (GstMiniObjectCopyFunction) _gst_buffer_copy;
@@ -530,6 +533,8 @@ gst_buffer_init (GstBufferImpl * buffer, gsize size)
       (GstMiniObjectDisposeFunction) _gst_buffer_dispose;
   buffer->buffer.mini_object.free =
       (GstMiniObjectFreeFunction) _gst_buffer_free;
+
+  GST_BUFFER_SLICE_SIZE (buffer) = size;
 
   GST_BUFFER (buffer)->pool = NULL;
   GST_BUFFER_PTS (buffer) = GST_CLOCK_TIME_NONE;

@@ -64,10 +64,13 @@ typedef struct
 {
   GstMessage message;
 
+  gsize slice_size;
+
   GstStructure *structure;
 } GstMessageImpl;
 
-#define GST_MESSAGE_STRUCTURE(m) (((GstMessageImpl *)(m))->structure)
+#define GST_MESSAGE_SLICE_SIZE(m) (((GstMessageImpl *)(m))->slice_size)
+#define GST_MESSAGE_STRUCTURE(m)  (((GstMessageImpl *)(m))->structure)
 
 typedef struct
 {
@@ -198,7 +201,7 @@ _gst_message_free (GstMessage * message)
     gst_structure_free (structure);
   }
 
-  g_slice_free1 (GST_MINI_OBJECT_SIZE (message), message);
+  g_slice_free1 (GST_MESSAGE_SLICE_SIZE (message), message);
 }
 
 static void
@@ -239,13 +242,14 @@ static void
 gst_message_init (GstMessageImpl * message, gsize size, GstMessageType type,
     GstObject * src)
 {
-  gst_mini_object_init (GST_MINI_OBJECT_CAST (message), _gst_message_type,
-      size);
+  gst_mini_object_init (GST_MINI_OBJECT_CAST (message), _gst_message_type);
 
   message->message.mini_object.copy =
       (GstMiniObjectCopyFunction) _gst_message_copy;
   message->message.mini_object.free =
       (GstMiniObjectFreeFunction) _gst_message_free;
+
+  GST_MESSAGE_SLICE_SIZE (message) = size;
 
   GST_MESSAGE_TYPE (message) = type;
   if (src)
@@ -298,7 +302,7 @@ gst_message_new_custom (GstMessageType type, GstObject * src,
   /* ERRORS */
 had_parent:
   {
-    g_slice_free1 (GST_MINI_OBJECT_SIZE (message), message);
+    g_slice_free1 (GST_MESSAGE_SLICE_SIZE (message), message);
     g_warning ("structure is already owned by another object");
     return NULL;
   }

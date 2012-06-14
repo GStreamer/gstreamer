@@ -77,10 +77,12 @@ static GType _gst_query_type = 0;
 typedef struct
 {
   GstQuery query;
+  gsize slice_size;
 
   GstStructure *structure;
 } GstQueryImpl;
 
+#define GST_QUERY_SLICE_SIZE(q) (((GstQueryImpl *)(q))->slice_size)
 #define GST_QUERY_STRUCTURE(q)  (((GstQueryImpl *)(q))->structure)
 
 
@@ -202,7 +204,7 @@ _gst_query_free (GstQuery * query)
     gst_structure_free (s);
   }
 
-  g_slice_free1 (GST_MINI_OBJECT_SIZE (query), query);
+  g_slice_free1 (GST_QUERY_SLICE_SIZE (query), query);
 }
 
 static GstQuery *
@@ -223,11 +225,12 @@ _gst_query_copy (GstQuery * query)
 static void
 gst_query_init (GstQueryImpl * query, gsize size, GstQueryType type)
 {
-  gst_mini_object_init (GST_MINI_OBJECT_CAST (query), _gst_query_type, size);
+  gst_mini_object_init (GST_MINI_OBJECT_CAST (query), _gst_query_type);
 
   query->query.mini_object.copy = (GstMiniObjectCopyFunction) _gst_query_copy;
   query->query.mini_object.free = (GstMiniObjectFreeFunction) _gst_query_free;
 
+  GST_QUERY_SLICE_SIZE (query) = size;
   GST_QUERY_TYPE (query) = type;
 }
 
@@ -711,7 +714,7 @@ gst_query_new_custom (GstQueryType type, GstStructure * structure)
   /* ERRORS */
 had_parent:
   {
-    g_slice_free1 (GST_MINI_OBJECT_SIZE (query), query);
+    g_slice_free1 (GST_QUERY_SLICE_SIZE (query), query);
     g_warning ("structure is already owned by another object");
     return NULL;
   }

@@ -95,6 +95,8 @@ struct _GstAllocator
 {
   GstMiniObject mini_object;
 
+  gsize slice_size;
+
   GstMemoryInfo info;
 
   gpointer user_data;
@@ -105,6 +107,7 @@ struct _GstAllocator
 typedef struct
 {
   GstMemory mem;
+  gsize slice_size;
   guint8 *data;
   gpointer user_data;
   GDestroyNotify notify;
@@ -137,8 +140,7 @@ _default_mem_init (GstMemoryDefault * mem, GstMemoryFlags flags,
     gsize maxsize, gsize offset, gsize size, gsize align,
     gpointer user_data, GDestroyNotify notify)
 {
-  gst_mini_object_init (GST_MINI_OBJECT_CAST (mem), GST_TYPE_MEMORY,
-      slice_size);
+  gst_mini_object_init (GST_MINI_OBJECT_CAST (mem), GST_TYPE_MEMORY);
 
   mem->mem.mini_object.copy = (GstMiniObjectCopyFunction) _gst_memory_copy;
   mem->mem.mini_object.dispose = NULL;
@@ -152,6 +154,7 @@ _default_mem_init (GstMemoryDefault * mem, GstMemoryFlags flags,
   mem->mem.align = align;
   mem->mem.offset = offset;
   mem->mem.size = size;
+  mem->slice_size = slice_size;
   mem->data = data;
   mem->user_data = user_data;
   mem->notify = notify;
@@ -254,7 +257,7 @@ _default_mem_free (GstMemoryDefault * mem)
   if (mem->notify)
     mem->notify (mem->user_data);
 
-  g_slice_free1 (GST_MINI_OBJECT_SIZE (mem), mem);
+  g_slice_free1 (mem->slice_size, mem);
 }
 
 static GstMemoryDefault *
@@ -764,7 +767,7 @@ _gst_allocator_free (GstAllocator * allocator)
   if (allocator->notify)
     allocator->notify (allocator->user_data);
 
-  g_slice_free1 (GST_MINI_OBJECT_SIZE (allocator), allocator);
+  g_slice_free1 (allocator->slice_size, allocator);
 }
 
 static GstAllocator *
@@ -804,12 +807,12 @@ gst_allocator_new (const GstMemoryInfo * info, gpointer user_data,
 
   allocator = g_slice_new0 (GstAllocator);
 
-  gst_mini_object_init (GST_MINI_OBJECT_CAST (allocator),
-      GST_TYPE_ALLOCATOR, sizeof (GstAllocator));
+  gst_mini_object_init (GST_MINI_OBJECT_CAST (allocator), GST_TYPE_ALLOCATOR);
 
   allocator->mini_object.copy = (GstMiniObjectCopyFunction) _gst_allocator_copy;
   allocator->mini_object.free = (GstMiniObjectFreeFunction) _gst_allocator_free;
 
+  allocator->slice_size = sizeof (GstAllocator);
   allocator->info = *info;
   allocator->user_data = user_data;
   allocator->notify = notify;

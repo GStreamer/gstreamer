@@ -54,6 +54,8 @@ struct _GstBufferList
 {
   GstMiniObject mini_object;
 
+  gsize slice_size;
+
   GArray *array;
 };
 
@@ -97,17 +99,18 @@ _gst_buffer_list_free (GstBufferList * list)
     gst_buffer_unref (g_array_index (list->array, GstBuffer *, i));
   g_array_free (list->array, TRUE);
 
-  g_slice_free1 (GST_MINI_OBJECT_SIZE (list), list);
+  g_slice_free1 (list->slice_size, list);
 }
 
 static void
 gst_buffer_list_init (GstBufferList * list, gsize size, guint asize)
 {
-  gst_mini_object_init (GST_MINI_OBJECT_CAST (list), _gst_buffer_list_type,
-      size);
+  gst_mini_object_init (GST_MINI_OBJECT_CAST (list), _gst_buffer_list_type);
 
   list->mini_object.copy = (GstMiniObjectCopyFunction) _gst_buffer_list_copy;
   list->mini_object.free = (GstMiniObjectFreeFunction) _gst_buffer_list_free;
+
+  list->slice_size = size;
 
   list->array = g_array_sized_new (FALSE, FALSE, sizeof (GstBuffer *), asize);
 

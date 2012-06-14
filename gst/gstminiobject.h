@@ -150,14 +150,6 @@ typedef enum
 #define GST_MINI_OBJECT_REFCOUNT_VALUE(obj)     (g_atomic_int_get (&(GST_MINI_OBJECT_CAST(obj))->refcount))
 
 /**
- * GST_MINI_OBJECT_SIZE:
- * @obj: a #GstMiniObject
- *
- * Get the allocated size of @obj.
- */
-#define GST_MINI_OBJECT_SIZE(obj)              ((GST_MINI_OBJECT_CAST(obj))->size)
-
-/**
  * GstMiniObject:
  * @type: the GType of the object
  * @refcount: atomic refcount
@@ -179,7 +171,6 @@ struct _GstMiniObject {
   /*< public >*/ /* with COW */
   gint    refcount;
   guint   flags;
-  gsize   size;
 
   GstMiniObjectCopyFunction copy;
   GstMiniObjectDisposeFunction dispose;
@@ -195,8 +186,7 @@ struct _GstMiniObject {
   } *weak_refs;
 };
 
-void            gst_mini_object_init            (GstMiniObject *mini_object,
-                                                 GType type, gsize size);
+void            gst_mini_object_init            (GstMiniObject *mini_object, GType type);
 
 GstMiniObject * gst_mini_object_copy		(const GstMiniObject *mini_object) G_GNUC_MALLOC;
 gboolean        gst_mini_object_is_writable	(const GstMiniObject *mini_object);

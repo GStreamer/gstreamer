@@ -75,9 +75,12 @@ typedef struct _GstCapsImpl
 {
   GstCaps caps;
 
+  gsize slice_size;
+
   GPtrArray *array;
 } GstCapsImpl;
 
+#define GST_CAPS_SLICE_SIZE(c) (((GstCapsImpl *)(c))->slice_size)
 #define GST_CAPS_ARRAY(c) (((GstCapsImpl *)(c))->array)
 
 #define GST_CAPS_LEN(c)   (GST_CAPS_ARRAY(c)->len)
@@ -179,18 +182,19 @@ _gst_caps_free (GstCaps * caps)
 #ifdef DEBUG_REFCOUNT
   GST_CAT_TRACE (GST_CAT_CAPS, "freeing caps %p", caps);
 #endif
-  g_slice_free1 (GST_MINI_OBJECT_SIZE (caps), caps);
+  g_slice_free1 (GST_CAPS_SLICE_SIZE (caps), caps);
 }
 
 static void
 gst_caps_init (GstCaps * caps, gsize size)
 {
-  gst_mini_object_init (GST_MINI_OBJECT_CAST (caps), _gst_caps_type, size);
+  gst_mini_object_init (GST_MINI_OBJECT_CAST (caps), _gst_caps_type);
 
   caps->mini_object.copy = (GstMiniObjectCopyFunction) _gst_caps_copy;
   caps->mini_object.dispose = NULL;
   caps->mini_object.free = (GstMiniObjectFreeFunction) _gst_caps_free;
 
+  GST_CAPS_SLICE_SIZE (caps) = size;
   /* the 32 has been determined by logging caps sizes in _gst_caps_free
    * but g_ptr_array uses 16 anyway if it expands once, so this does not help
    * in practice

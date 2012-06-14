@@ -80,12 +80,11 @@ _priv_gst_mini_object_initialize (void)
  * Returns: (transfer full): the new mini-object.
  */
 void
-gst_mini_object_init (GstMiniObject * mini_object, GType type, gsize size)
+gst_mini_object_init (GstMiniObject * mini_object, GType type)
 {
   mini_object->type = type;
   mini_object->refcount = 1;
   mini_object->flags = 0;
-  mini_object->size = size;
   mini_object->n_weak_refs = 0;
   mini_object->weak_refs = NULL;
 
