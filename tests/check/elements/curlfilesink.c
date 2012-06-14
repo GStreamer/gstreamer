@@ -93,25 +93,6 @@ test_set_and_fail_to_play_buffer (const gchar * _data)
   fail_unless (gst_pad_push (srcpad, buffer) == GST_FLOW_ERROR);
 }
 
-static gboolean
-sebras_gst_pad_set_caps (GstPad * pad, GstCaps * caps)
-{
-  GstEvent *event;
-  gboolean res = TRUE;
-
-  GST_WARNING ("sebraz: a %p %p", pad, caps);
-  g_return_val_if_fail (GST_IS_PAD (pad), FALSE);
-  GST_WARNING ("sebraz: b");
-  g_return_val_if_fail (caps != NULL && gst_caps_is_fixed (caps), FALSE);
-  GST_WARNING ("sebraz: c");
-
-  GST_WARNING ("sebraz: d");
-  res = gst_pad_set_caps (pad, caps);
-  GST_WARNING ("sebraz: e");
-
-  return res;
-}
-
 GST_START_TEST (test_properties)
 {
   GstElement *sink;
@@ -124,68 +105,48 @@ GST_START_TEST (test_properties)
   gboolean res_create_dirs = FALSE;
   gchar *path = NULL;
 
-  GST_WARNING ("sebras: a");
-
   sink = setup_curlfilesink ();
-  GST_WARNING ("sebras: b");
 
   g_object_set (G_OBJECT (sink), "location", "mylocation", NULL);
   g_object_set (G_OBJECT (sink), "file-name", "myfile", NULL);
   g_object_set (G_OBJECT (sink), "create-dirs", TRUE, NULL);
-  GST_WARNING ("sebras: c");
 
   g_object_get (sink,
       "location", &res_location,
       "file-name", &res_file_name, "create-dirs", &res_create_dirs, NULL);
-  GST_WARNING ("sebras: d");
 
   fail_unless (strncmp (res_location, "mylocation", strlen ("mylocation"))
       == 0);
-  GST_WARNING ("sebras: e");
   fail_unless (strncmp (res_file_name, "myfile", strlen ("myfile"))
       == 0);
-  GST_WARNING ("sebras: f");
   fail_unless (res_create_dirs == TRUE);
-  GST_WARNING ("sebras: g");
   g_free (res_location);
   g_free (res_file_name);
-  GST_WARNING ("sebras: h");
 
   /* change properties */
   g_object_set (G_OBJECT (sink), "location", location, NULL);
   g_object_set (G_OBJECT (sink), "file-name", file_name, NULL);
   g_object_set (G_OBJECT (sink), "create-dirs", FALSE, NULL);
-  GST_WARNING ("sebras: i");
 
   g_object_get (sink,
       "location", &res_location,
       "file-name", &res_file_name, "create-dirs", &res_create_dirs, NULL);
-  GST_WARNING ("sebras: j");
 
   fail_unless (strncmp (res_location, location, strlen (location))
       == 0);
-  GST_WARNING ("sebras: k");
   fail_unless (strncmp (res_file_name, file_name, strlen (file_name))
       == 0);
-  GST_WARNING ("sebras: l");
   fail_unless (res_create_dirs == FALSE);
-  GST_WARNING ("sebras: m");
   g_free (res_location);
   g_free (res_file_name);
-  GST_WARNING ("sebras: n");
 
   /* start playing */
   ASSERT_SET_STATE (sink, GST_STATE_PLAYING, GST_STATE_CHANGE_ASYNC);
-  GST_WARNING ("sebras: o");
   caps = gst_caps_from_string ("application/x-gst-check");
-  GST_WARNING ("sebras: p");
-  fail_unless (sebras_gst_pad_set_caps (srcpad, caps));
   fail_unless (gst_pad_set_caps (srcpad, caps));
-  GST_WARNING ("sebras: q");
 
   /* setup buffer */
   test_set_and_play_buffer (file_contents);
-  GST_WARNING ("sebras: r");
 
   /* try to change location property while in PLAYING state */
   g_object_set (G_OBJECT (sink), "location", "newlocation", NULL);
