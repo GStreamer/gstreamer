@@ -242,6 +242,7 @@ struct _GstPlaySink
   gboolean mute_changed;        /* ... has been created yet */
   gint64 av_offset;
   GstPlaySinkSendEventMode send_event_mode;
+  gboolean force_aspect_ratio;
 
   /* videooverlay proxy interface */
   GstVideoOverlay *overlay_element;     /* protected with LOCK */
@@ -331,6 +332,7 @@ enum
   PROP_AUDIO_SINK,
   PROP_TEXT_SINK,
   PROP_SEND_EVENT_MODE,
+  PROP_FORCE_ASPECT_RATIO,
   PROP_LAST
 };
 
@@ -556,6 +558,18 @@ gst_play_sink_class_init (GstPlaySinkClass * klass)
           GST_TYPE_PLAY_SINK_SEND_EVENT_MODE, MODE_DEFAULT,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
+  /**
+   * GstPlaySink::force-aspect-ratio:
+   *
+   * Requests the video sink to enforce the video display aspect ratio.
+   *
+   * Since: 0.10.37
+   */
+  g_object_class_install_property (gobject_klass, PROP_FORCE_ASPECT_RATIO,
+      g_param_spec_boolean ("force-aspect-ratio", "Force Aspect Ratio",
+          "When enabled, scaling will respect original aspect ratio", TRUE,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
   g_signal_new ("reconfigure", G_TYPE_FROM_CLASS (klass),
       G_SIGNAL_RUN_LAST | G_SIGNAL_ACTION, G_STRUCT_OFFSET (GstPlaySinkClass,
           reconfigure), NULL, NULL, g_cclosure_marshal_generic, G_TYPE_BOOLEAN,
@@ -628,6 +642,7 @@ gst_play_sink_init (GstPlaySink * playsink)
   playsink->subtitle_encoding = NULL;
   playsink->flags = DEFAULT_FLAGS;
   playsink->send_event_mode = MODE_DEFAULT;
+  playsink->force_aspect_ratio = TRUE;
 
   playsink->stream_synchronizer =
       g_object_new (GST_TYPE_STREAM_SYNCHRONIZER, NULL);
@@ -1610,7 +1625,8 @@ gen_video_chain (GstPlaySink * playsink, gboolean raw, gboolean async)
       gst_play_sink_find_property_sinks (playsink, chain->sink,
       "force-aspect-ratio", G_TYPE_BOOLEAN);
   if (elem)
-    g_object_set (elem, "force-aspect-ratio", TRUE, NULL);
+    g_object_set (elem, "force-aspect-ratio", playsink->force_aspect_ratio,
+        NULL);
 
   /* find ts-offset element */
   gst_object_replace ((GstObject **) & chain->ts_offset, (GstObject *)
@@ -1854,7 +1870,8 @@ setup_video_chain (GstPlaySink * playsink, gboolean raw, gboolean async)
       gst_play_sink_find_property_sinks (playsink, chain->sink,
       "force-aspect-ratio", G_TYPE_BOOLEAN);
   if (elem)
-    g_object_set (elem, "force-aspect-ratio", TRUE, NULL);
+    g_object_set (elem, "force-aspect-ratio", playsink->force_aspect_ratio,
+        NULL);
 
   GST_OBJECT_LOCK (playsink);
   if (playsink->colorbalance_element) {
@@ -4599,6 +4616,29 @@ gst_play_sink_set_property (GObject * object, guint prop_id,
     case PROP_SEND_EVENT_MODE:
       playsink->send_event_mode = g_value_get_enum (value);
       break;
+    case PROP_FORCE_ASPECT_RATIO:{
+      GstPlayVideoChain *chain;
+      GstElement *elem;
+
+      playsink->force_aspect_ratio = g_value_get_boolean (value);
+
+      GST_PLAY_SINK_LOCK (playsink);
+      if (playsink->videochain) {
+        chain = (GstPlayVideoChain *) playsink->videochain;
+
+        if (chain->sink) {
+          elem =
+              gst_play_sink_find_property_sinks (playsink, chain->sink,
+              "force-aspect-ratio", G_TYPE_BOOLEAN);
+
+          if (elem)
+            g_object_set (elem, "force-aspect-ratio",
+                playsink->force_aspect_ratio, NULL);
+        }
+      }
+      GST_PLAY_SINK_UNLOCK (playsink);
+      break;
+    }
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, spec);
       break;
@@ -4650,6 +4690,9 @@ gst_play_sink_get_property (GObject * object, guint prop_id,
       break;
     case PROP_SEND_EVENT_MODE:
       g_value_set_enum (value, playsink->send_event_mode);
+      break;
+    case PROP_FORCE_ASPECT_RATIO:
+      g_value_set_boolean (value, playsink->force_aspect_ratio);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, spec);
