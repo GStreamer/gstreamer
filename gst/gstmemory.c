@@ -95,8 +95,6 @@ struct _GstAllocator
 {
   GstMiniObject mini_object;
 
-  gsize slice_size;
-
   GstMemoryInfo info;
 
   gpointer user_data;
@@ -767,7 +765,7 @@ _gst_allocator_free (GstAllocator * allocator)
   if (allocator->notify)
     allocator->notify (allocator->user_data);
 
-  g_slice_free1 (allocator->slice_size, allocator);
+  g_slice_free1 (sizeof (GstAllocator), allocator);
 }
 
 static GstAllocator *
@@ -812,7 +810,6 @@ gst_allocator_new (const GstMemoryInfo * info, gpointer user_data,
   allocator->mini_object.copy = (GstMiniObjectCopyFunction) _gst_allocator_copy;
   allocator->mini_object.free = (GstMiniObjectFreeFunction) _gst_allocator_free;
 
-  allocator->slice_size = sizeof (GstAllocator);
   allocator->info = *info;
   allocator->user_data = user_data;
   allocator->notify = notify;
