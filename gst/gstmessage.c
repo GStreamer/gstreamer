@@ -64,12 +64,9 @@ typedef struct
 {
   GstMessage message;
 
-  gsize slice_size;
-
   GstStructure *structure;
 } GstMessageImpl;
 
-#define GST_MESSAGE_SLICE_SIZE(m) (((GstMessageImpl *)(m))->slice_size)
 #define GST_MESSAGE_STRUCTURE(m)  (((GstMessageImpl *)(m))->structure)
 
 typedef struct
@@ -201,11 +198,11 @@ _gst_message_free (GstMessage * message)
     gst_structure_free (structure);
   }
 
-  g_slice_free1 (GST_MESSAGE_SLICE_SIZE (message), message);
+  g_slice_free1 (sizeof (GstMessageImpl), message);
 }
 
 static void
-gst_message_init (GstMessageImpl * message, gsize size, GstMessageType type,
+gst_message_init (GstMessageImpl * message, GstMessageType type,
     GstObject * src);
 
 static GstMessage *
@@ -220,7 +217,7 @@ _gst_message_copy (GstMessage * message)
 
   copy = g_slice_new0 (GstMessageImpl);
 
-  gst_message_init (copy, sizeof (GstMessageImpl), GST_MESSAGE_TYPE (message),
+  gst_message_init (copy, GST_MESSAGE_TYPE (message),
       GST_MESSAGE_SRC (message));
 
   GST_MESSAGE_TIMESTAMP (copy) = GST_MESSAGE_TIMESTAMP (message);
@@ -239,7 +236,7 @@ _gst_message_copy (GstMessage * message)
 }
 
 static void
-gst_message_init (GstMessageImpl * message, gsize size, GstMessageType type,
+gst_message_init (GstMessageImpl * message, GstMessageType type,
     GstObject * src)
 {
   gst_mini_object_init (GST_MINI_OBJECT_CAST (message), _gst_message_type);
@@ -248,8 +245,6 @@ gst_message_init (GstMessageImpl * message, gsize size, GstMessageType type,
       (GstMiniObjectCopyFunction) _gst_message_copy;
   message->message.mini_object.free =
       (GstMiniObjectFreeFunction) _gst_message_free;
-
-  GST_MESSAGE_SLICE_SIZE (message) = size;
 
   GST_MESSAGE_TYPE (message) = type;
   if (src)
@@ -293,7 +288,7 @@ gst_message_new_custom (GstMessageType type, GstObject * src,
             &message->message.mini_object.refcount))
       goto had_parent;
   }
-  gst_message_init (message, sizeof (GstMessageImpl), type, src);
+  gst_message_init (message, type, src);
 
   GST_MESSAGE_STRUCTURE (message) = structure;
 
@@ -302,7 +297,7 @@ gst_message_new_custom (GstMessageType type, GstObject * src,
   /* ERRORS */
 had_parent:
   {
-    g_slice_free1 (GST_MESSAGE_SLICE_SIZE (message), message);
+    g_slice_free1 (sizeof (GstMessageImpl), message);
     g_warning ("structure is already owned by another object");
     return NULL;
   }
