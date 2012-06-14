@@ -413,7 +413,7 @@ gst_ffmpegviddec_set_format (GstVideoDecoder * decoder,
 {
   GstFFMpegVidDec *ffmpegdec;
   GstFFMpegVidDecClass *oclass;
-  gboolean ret = TRUE;
+  gboolean ret = FALSE;
 
   ffmpegdec = (GstFFMpegVidDec *) decoder;
   oclass = (GstFFMpegVidDecClass *) (G_OBJECT_GET_CLASS (ffmpegdec));
@@ -527,6 +527,8 @@ gst_ffmpegviddec_set_format (GstVideoDecoder * decoder,
   if (ffmpegdec->input_state)
     gst_video_codec_state_unref (ffmpegdec->input_state);
   ffmpegdec->input_state = gst_video_codec_state_ref (state);
+
+  ret = TRUE;
 
 done:
   GST_OBJECT_UNLOCK (ffmpegdec);
@@ -1071,20 +1073,21 @@ gst_ffmpegviddec_video_frame (GstFFMpegVidDec * ffmpegdec,
       (guint64) ffmpegdec->picture->reordered_opaque);
   GST_DEBUG_OBJECT (ffmpegdec, "repeat_pict:%d",
       ffmpegdec->picture->repeat_pict);
-  GST_DEBUG_OBJECT (ffmpegdec, "interlaced_frame:%d",
-      ffmpegdec->picture->interlaced_frame);
+  GST_DEBUG_OBJECT (ffmpegdec, "interlaced_frame:%d (current:%d)",
+      ffmpegdec->picture->interlaced_frame,
+      GST_VIDEO_INFO_IS_INTERLACED (&ffmpegdec->input_state->info));
 
-  if (G_UNLIKELY (ffmpegdec->output_state
+  if (G_UNLIKELY (ffmpegdec->input_state
           && ffmpegdec->picture->interlaced_frame !=
-          GST_VIDEO_INFO_IS_INTERLACED (&ffmpegdec->output_state->info))) {
+          GST_VIDEO_INFO_IS_INTERLACED (&ffmpegdec->input_state->info))) {
     GST_WARNING ("Change in interlacing ! picture:%d, recorded:%d",
         ffmpegdec->picture->interlaced_frame,
-        GST_VIDEO_INFO_IS_INTERLACED (&ffmpegdec->output_state->info));
+        GST_VIDEO_INFO_IS_INTERLACED (&ffmpegdec->input_state->info));
     if (ffmpegdec->picture->interlaced_frame)
-      GST_VIDEO_INFO_INTERLACE_MODE (&ffmpegdec->output_state->info) =
+      GST_VIDEO_INFO_INTERLACE_MODE (&ffmpegdec->input_state->info) =
           GST_VIDEO_INTERLACE_MODE_INTERLEAVED;
     else
-      GST_VIDEO_INFO_INTERLACE_MODE (&ffmpegdec->output_state->info) =
+      GST_VIDEO_INFO_INTERLACE_MODE (&ffmpegdec->input_state->info) =
           GST_VIDEO_INTERLACE_MODE_PROGRESSIVE;
     gst_ffmpegviddec_negotiate (ffmpegdec, TRUE);
   }
@@ -1095,17 +1098,17 @@ gst_ffmpegviddec_video_frame (GstFFMpegVidDec * ffmpegdec,
   if (G_UNLIKELY (*ret != GST_FLOW_OK))
     goto no_output;
 
-  if (G_UNLIKELY (ffmpegdec->output_state
+  if (G_UNLIKELY (ffmpegdec->input_state
           && ffmpegdec->picture->interlaced_frame !=
-          GST_VIDEO_INFO_IS_INTERLACED (&ffmpegdec->output_state->info))) {
+          GST_VIDEO_INFO_IS_INTERLACED (&ffmpegdec->input_state->info))) {
     GST_WARNING ("Change in interlacing ! picture:%d, recorded:%d",
         ffmpegdec->picture->interlaced_frame,
-        GST_VIDEO_INFO_IS_INTERLACED (&ffmpegdec->output_state->info));
+        GST_VIDEO_INFO_IS_INTERLACED (&ffmpegdec->input_state->info));
     if (ffmpegdec->picture->interlaced_frame)
-      GST_VIDEO_INFO_INTERLACE_MODE (&ffmpegdec->output_state->info) =
+      GST_VIDEO_INFO_INTERLACE_MODE (&ffmpegdec->input_state->info) =
           GST_VIDEO_INTERLACE_MODE_INTERLEAVED;
     else
-      GST_VIDEO_INFO_INTERLACE_MODE (&ffmpegdec->output_state->info) =
+      GST_VIDEO_INFO_INTERLACE_MODE (&ffmpegdec->input_state->info) =
           GST_VIDEO_INTERLACE_MODE_PROGRESSIVE;
     gst_ffmpegviddec_negotiate (ffmpegdec, TRUE);
   }
