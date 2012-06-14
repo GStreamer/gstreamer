@@ -56,6 +56,10 @@
 /* stop duration checks within this much of EOS */
 #define EOS_AVOIDANCE_THRESHOLD 8192
 
+/* An Ogg page can not be larger than 255 segments of 255 bytes, plus
+   26 bytes of header */
+#define MAX_OGG_PAGE_SIZE (255 * 255 + 26)
+
 #define GST_FLOW_LIMIT GST_FLOW_CUSTOM_ERROR
 #define GST_FLOW_SKIP_PUSH GST_FLOW_CUSTOM_SUCCESS_1
 
@@ -2397,10 +2401,18 @@ gst_ogg_demux_get_prev_page (GstOggDemux * ogg, ogg_page * og, gint64 * offset)
      * start, we save it. It might not be the final page as there could be
      * another page after this one. */
     while (ogg->offset < end) {
-      gint64 new_offset;
+      gint64 new_offset, boundary;
 
-      ret =
-          gst_ogg_demux_get_next_page (ogg, og, end - ogg->offset, &new_offset);
+      /* An Ogg page cannot be more than a bit less than 64 KB, so we can
+         bound the boundary to that size when searching backwards if we
+         haven't found a page yet. So the most we have to look at is twice
+         the max page size, which is the worst case if we start scanning
+         just after a large page, after which also lies a large page. */
+      boundary = end - ogg->offset;
+      if (boundary > 2 * MAX_OGG_PAGE_SIZE)
+        boundary = 2 * MAX_OGG_PAGE_SIZE;
+
+      ret = gst_ogg_demux_get_next_page (ogg, og, boundary, &new_offset);
       /* we hit the upper limit, offset contains the last page start */
       if (ret == GST_FLOW_LIMIT) {
         GST_LOG_OBJECT (ogg, "hit limit");
