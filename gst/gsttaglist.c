@@ -58,12 +58,9 @@ typedef struct _GstTagListImpl
 {
   GstTagList taglist;
 
-  gsize slice_size;
-
   GstStructure *structure;
 } GstTagListImpl;
 
-#define GST_TAG_LIST_SLICE_SIZE(taglist) ((GstTagListImpl*)(taglist))->slice_size
 #define GST_TAG_LIST_STRUCTURE(taglist)  ((GstTagListImpl*)(taglist))->structure
 
 
@@ -666,7 +663,7 @@ gst_tag_is_fixed (const gchar * tag)
 }
 
 static void
-gst_tag_list_init (GstTagList * taglist, gsize size)
+gst_tag_list_init (GstTagList * taglist)
 {
   gst_mini_object_init (GST_MINI_OBJECT_CAST (taglist),
       gst_tag_list_get_type ());
@@ -674,8 +671,6 @@ gst_tag_list_init (GstTagList * taglist, gsize size)
   taglist->mini_object.copy = (GstMiniObjectCopyFunction) __gst_tag_list_copy;
   taglist->mini_object.dispose = NULL;
   taglist->mini_object.free = (GstMiniObjectFreeFunction) __gst_tag_list_free;
-
-  GST_TAG_LIST_SLICE_SIZE (taglist) = size;
 }
 
 /* takes ownership of the structure */
@@ -688,7 +683,7 @@ gst_tag_list_new_internal (GstStructure * s)
 
   tag_list = (GstTagList *) g_slice_new (GstTagListImpl);
 
-  gst_tag_list_init (tag_list, sizeof (GstTagListImpl));
+  gst_tag_list_init (tag_list);
 
   GST_TAG_LIST_STRUCTURE (tag_list) = s;
 
@@ -710,8 +705,7 @@ __gst_tag_list_free (GstTagList * list)
 
   gst_structure_free (GST_TAG_LIST_STRUCTURE (list));
 
-  /* why not just pass sizeof (GstTagListImpl) here? */
-  g_slice_free1 (GST_TAG_LIST_SLICE_SIZE (list), list);
+  g_slice_free1 (sizeof (GstTagListImpl), list);
 }
 
 static GstTagList *
