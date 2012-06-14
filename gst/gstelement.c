@@ -725,7 +725,7 @@ no_direction:
 /**
  * gst_element_remove_pad:
  * @element: a #GstElement to remove pad from.
- * @pad: (transfer none): the #GstPad to remove from the element.
+ * @pad: (transfer full): the #GstPad to remove from the element.
  *
  * Removes @pad from @element. @pad will be destroyed if it has not been
  * referenced elsewhere using gst_object_unparent().
