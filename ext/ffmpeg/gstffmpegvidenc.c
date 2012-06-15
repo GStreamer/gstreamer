@@ -85,8 +85,7 @@ gst_ffmpegvidenc_me_method_get_type (void)
   };
   if (!ffmpegenc_me_method_type) {
     ffmpegenc_me_method_type =
-        g_enum_register_static ("GstFFMpegVidEncMeMethod",
-        ffmpegenc_me_methods);
+        g_enum_register_static ("GstLibAVVidEncMeMethod", ffmpegenc_me_methods);
   }
   return ffmpegenc_me_method_type;
 }
@@ -679,7 +678,7 @@ gst_ffmpegvidenc_handle_frame (GstVideoEncoder * encoder,
     if (c < GST_VIDEO_INFO_N_COMPONENTS (info)) {
       ffmpegenc->picture->data[c] = GST_VIDEO_FRAME_PLANE_DATA (&vframe, c);
       ffmpegenc->picture->linesize[c] =
-          GST_VIDEO_FRAME_PLANE_STRIDE (&vframe, c);
+          GST_VIDEO_FRAME_COMP_STRIDE (&vframe, c);
     } else {
       ffmpegenc->picture->data[c] = NULL;
       ffmpegenc->picture->linesize[c] = 0;
