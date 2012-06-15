@@ -91,13 +91,13 @@ enum
 static GstStaticPadTemplate sink_factory = GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS (GST_VIDEO_CAPS_MAKE ("RGB"))
+    GST_STATIC_CAPS (GST_VIDEO_CAPS_MAKE ("BGR"))
     );
 
 static GstStaticPadTemplate src_factory = GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS (GST_VIDEO_CAPS_MAKE ("RGB"))
+    GST_STATIC_CAPS (GST_VIDEO_CAPS_MAKE ("BGR"))
     );
 
 G_DEFINE_TYPE (GstTemplateMatch, gst_template_match, GST_TYPE_ELEMENT);
