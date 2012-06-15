@@ -1633,7 +1633,6 @@ gst_event_new_stream_start (void)
 
 /**
  * gst_event_new_toc:
- * @name: a name for the event
  * @toc: #GstToc structure.
  * @updated: whether @toc was updated or not.
  *

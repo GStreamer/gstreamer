@@ -475,8 +475,6 @@ void            gst_query_parse_caps               (GstQuery *query, GstCaps **f
 void            gst_query_set_caps_result          (GstQuery *query, GstCaps *caps);
 void            gst_query_parse_caps_result        (GstQuery *query, GstCaps **caps);
 
-void            gst_query_intersect_caps_result    (GstQuery *query, GstCaps *filter,
-                                                    GstCapsIntersectMode mode);
 /* drain query */
 GstQuery *      gst_query_new_drain                (void) G_GNUC_MALLOC;
 

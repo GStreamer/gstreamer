@@ -188,8 +188,12 @@ gst_buffer_unref
 
 gst_buffer_get_sizes
 gst_buffer_get_size
+gst_buffer_get_sizes_range
+gst_buffer_resize_range
 gst_buffer_resize
 gst_buffer_set_size
+
+gst_buffer_peek_memory
 
 gst_buffer_n_memory
 gst_buffer_insert_memory
@@ -208,6 +212,7 @@ gst_buffer_remove_memory
 gst_buffer_remove_all_memory
 
 gst_buffer_map
+gst_buffer_map_range
 gst_buffer_unmap
 
 gst_buffer_memcmp
@@ -1282,6 +1287,7 @@ GST_MEMORY_FLAGS
 GST_MEMORY_FLAG_IS_SET
 GST_MEMORY_FLAG_UNSET
 GST_MEMORY_IS_READONLY
+GST_MEMORY_IS_NO_SHARE
 GST_MEMORY_IS_ZERO_PADDED
 GST_MEMORY_IS_ZERO_PREFIXED
 
@@ -1425,6 +1431,8 @@ gst_message_parse_qos_values
 gst_message_parse_qos_stats
 gst_message_new_toc
 gst_message_parse_toc
+gst_message_new_reset_time
+gst_message_parse_reset_time
 
 GstStructureChangeType
 gst_message_new_structure_change
@@ -1487,7 +1495,6 @@ GST_MINI_OBJECT_FLAG_SET
 GST_MINI_OBJECT_FLAG_UNSET
 GST_MINI_OBJECT_REFCOUNT
 GST_MINI_OBJECT_REFCOUNT_VALUE
-GST_MINI_OBJECT_SIZE
 
 GST_DEFINE_MINI_OBJECT_TYPE
 gst_mini_object_init
@@ -1501,6 +1508,9 @@ gst_mini_object_unref
 
 gst_mini_object_weak_ref
 gst_mini_object_weak_unref
+
+gst_mini_object_get_qdata
+gst_mini_object_set_qdata
 
 gst_mini_object_replace
 gst_mini_object_steal
@@ -1837,6 +1847,7 @@ GST_PAD_EVENTFUNC
 GST_PAD_GETRANGEFUNC
 GST_PAD_ITERINTLINKFUNC
 GST_PAD_IS_FLUSHING
+GST_PAD_IS_EOS
 GST_PAD_LINKFUNC
 GST_PAD_UNLINKFUNC
 GST_PAD_QUERYFUNC
@@ -2185,7 +2196,6 @@ gst_query_new_caps
 gst_query_parse_caps
 gst_query_set_caps_result
 gst_query_parse_caps_result
-gst_query_intersect_caps_result
 
 gst_query_new_accept_caps
 gst_query_parse_accept_caps
@@ -2532,6 +2542,7 @@ gst_tag_list_new
 gst_tag_list_new_empty
 gst_tag_list_new_valist
 gst_tag_list_new_from_string
+gst_tag_list_free
 gst_tag_list_to_string
 gst_tag_list_is_empty
 gst_tag_list_is_equal
@@ -2709,8 +2720,12 @@ gst_toc_entry_get_start_stop
 gst_toc_entry_set_start_stop
 gst_toc_entry_type_get_nick
 <SUBSECTION Standard>
+GST_TYPE_TOC
+GST_TYPE_TOC_ENTRY
 GST_TYPE_TOC_ENTRY_TYPE
 <SUBSECTION Private>
+gst_toc_get_type
+gst_toc_entry_get_type
 gst_toc_entry_type_get_type
 </SECTION>
 
@@ -2764,6 +2779,7 @@ GstTypeFindFactory
 gst_type_find_factory_get_list
 gst_type_find_factory_get_extensions
 gst_type_find_factory_get_caps
+gst_type_find_factory_has_function
 gst_type_find_factory_call_function
 <SUBSECTION Standard>
 GstTypeFindFactoryClass

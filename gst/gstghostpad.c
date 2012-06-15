@@ -322,8 +322,9 @@ gst_proxy_pad_chain_list_default (GstPad * pad, GstObject * parent,
 }
 
 /**
- * gst_proxy_pad_get_range_default:
+ * gst_proxy_pad_getrange_default:
  * @pad: a src #GstPad, returns #GST_FLOW_ERROR if not.
+ * @parent: the parent of @pad
  * @offset: The start offset of the buffer
  * @size: The length of the buffer
  * @buffer: (out callee-allocates): a pointer to hold the #GstBuffer,

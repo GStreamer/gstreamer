@@ -255,6 +255,13 @@ gst_buffer_list_get (GstBufferList * list, guint idx)
 }
 
 /**
+ * gst_buffer_list_add:
+ * @l: a #GstBufferList
+ * @b: a #GstBuffer
+ *
+ * Append @b at the end of @l.
+ */
+/**
  * gst_buffer_list_insert:
  * @list: a #GstBufferList
  * @idx: the index

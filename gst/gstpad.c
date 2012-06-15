@@ -1375,6 +1375,14 @@ gst_pad_mark_reconfigure (GstPad * pad)
 }
 
 /**
+ * gst_pad_set_activate_function:
+ * @p: a #GstPad.
+ * @f: the #GstPadActivateFunction to set.
+ *
+ * Calls gst_pad_set_activate_function_full() with NULL for the user_data and
+ * notify.
+ */
+/**
  * gst_pad_set_activate_function_full:
  * @pad: a #GstPad.
  * @activate: the #GstPadActivateFunction to set.
@@ -1404,6 +1412,14 @@ gst_pad_set_activate_function_full (GstPad * pad,
 }
 
 /**
+ * gst_pad_set_activatemode_function:
+ * @p: a #GstPad.
+ * @f: the #GstPadActivateModeFunction to set.
+ *
+ * Calls gst_pad_set_activatemode_function_full() with NULL for the user_data and
+ * notify.
+ */
+/**
  * gst_pad_set_activatemode_function_full:
  * @pad: a #GstPad.
  * @activatemode: the #GstPadActivateModeFunction to set.
@@ -1431,6 +1447,14 @@ gst_pad_set_activatemode_function_full (GstPad * pad,
 }
 
 /**
+ * gst_pad_set_chain_function:
+ * @p: a sink #GstPad.
+ * @f: the #GstPadChainFunction to set.
+ *
+ * Calls gst_pad_set_chain_function_full() with NULL for the user_data and
+ * notify.
+ */
+/**
  * gst_pad_set_chain_function_full:
  * @pad: a sink #GstPad.
  * @chain: the #GstPadChainFunction to set.
@@ -1457,6 +1481,14 @@ gst_pad_set_chain_function_full (GstPad * pad, GstPadChainFunction chain,
       GST_DEBUG_FUNCPTR_NAME (chain));
 }
 
+/**
+ * gst_pad_set_chain_list_function:
+ * @p: a sink #GstPad.
+ * @f: the #GstPadChainListFunction to set.
+ *
+ * Calls gst_pad_set_chain_list_function_full() with NULL for the user_data and
+ * notify.
+ */
 /**
  * gst_pad_set_chain_list_function_full:
  * @pad: a sink #GstPad.
@@ -1489,6 +1521,14 @@ gst_pad_set_chain_list_function_full (GstPad * pad,
 }
 
 /**
+ * gst_pad_set_getrange_function:
+ * @p: a source #GstPad.
+ * @f: the #GstPadGetRangeFunction to set.
+ *
+ * Calls gst_pad_set_getrange_function_full() with NULL for the user_data and
+ * notify.
+ */
+/**
  * gst_pad_set_getrange_function_full:
  * @pad: a source #GstPad.
  * @get: the #GstPadGetRangeFunction to set.
@@ -1517,6 +1557,14 @@ gst_pad_set_getrange_function_full (GstPad * pad, GstPadGetRangeFunction get,
 }
 
 /**
+ * gst_pad_set_event_function:
+ * @p: a #GstPad of either direction.
+ * @f: the #GstPadEventFunction to set.
+ *
+ * Calls gst_pad_set_event_function_full() with NULL for the user_data and
+ * notify.
+ */
+/**
  * gst_pad_set_event_function_full:
  * @pad: a #GstPad of either direction.
  * @event: the #GstPadEventFunction to set.
@@ -1542,6 +1590,14 @@ gst_pad_set_event_function_full (GstPad * pad, GstPadEventFunction event,
 }
 
 /**
+ * gst_pad_set_query_function:
+ * @p: a #GstPad of either direction.
+ * @f: the #GstPadQueryFunction to set.
+ *
+ * Calls gst_pad_set_query_function_full() with NULL for the user_data and
+ * notify.
+ */
+/**
  * gst_pad_set_query_function_full:
  * @pad: a #GstPad of either direction.
  * @query: the #GstPadQueryFunction to set.
@@ -1566,6 +1622,14 @@ gst_pad_set_query_function_full (GstPad * pad, GstPadQueryFunction query,
       GST_DEBUG_FUNCPTR_NAME (query));
 }
 
+/**
+ * gst_pad_set_iterate_internal_links_function:
+ * @p: a #GstPad of either direction.
+ * @f: the #GstPadIterIntLinkFunction to set.
+ *
+ * Calls gst_pad_set_iterate_internal_links_function_full() with NULL
+ * for the user_data and notify.
+ */
 /**
  * gst_pad_set_iterate_internal_links_function_full:
  * @pad: a #GstPad of either direction.
@@ -1594,6 +1658,14 @@ gst_pad_set_iterate_internal_links_function_full (GstPad * pad,
       GST_DEBUG_FUNCPTR_NAME (iterintlink));
 }
 
+/**
+ * gst_pad_set_link_function:
+ * @p: a #GstPad.
+ * @f: the #GstPadLinkFunction to set.
+ *
+ * Calls gst_pad_set_link_function_full() with NULL
+ * for the user_data and notify.
+ */
 /**
  * gst_pad_set_link_function_full:
  * @pad: a #GstPad.
@@ -1629,6 +1701,14 @@ gst_pad_set_link_function_full (GstPad * pad, GstPadLinkFunction link,
       GST_DEBUG_FUNCPTR_NAME (link));
 }
 
+/**
+ * gst_pad_set_unlink_function:
+ * @p: a #GstPad.
+ * @f: the #GstPadUnlinkFunction to set.
+ *
+ * Calls gst_pad_set_unlink_function_full() with NULL
+ * for the user_data and notify.
+ */
 /**
  * gst_pad_set_unlink_function_full:
  * @pad: a #GstPad.

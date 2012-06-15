@@ -494,7 +494,7 @@ gst_element_factory_get_element_type (GstElementFactory * factory)
 
 /**
  * gst_element_factory_get_metadata:
- * @factory,: a #GstElementFactory
+ * @factory: a #GstElementFactory
  * @key: a key
  *
  * Get the metadata on @factory with @key.
@@ -511,7 +511,7 @@ gst_element_factory_get_metadata (GstElementFactory * factory,
 
 /**
  * gst_element_factory_get_metadata_keys:
- * @factory,: a #GstElementFactory
+ * @factory: a #GstElementFactory
  *
  * Get the available keys for the metadata on @factory.
  *

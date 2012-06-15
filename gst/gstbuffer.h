@@ -276,16 +276,9 @@ void        gst_buffer_remove_memory_range  (GstBuffer *buffer, guint idx, gint 
 #define     gst_buffer_prepend_memory(b,m)     gst_buffer_insert_memory ((b), 0, (m))
 #define     gst_buffer_append_memory(b,m)      gst_buffer_insert_memory ((b), -1, (m))
 #define     gst_buffer_replace_memory(b,i,m)   gst_buffer_replace_memory_range ((b), (i), 1, (m))
-#define     gst_buffer_replace_all_memory(b,m) gst_buffer_replace_memory ((b), 0, -1, (m))
+#define     gst_buffer_replace_all_memory(b,m) gst_buffer_replace_memory_range ((b), 0, -1, (m))
 #define     gst_buffer_get_memory(b,i)         gst_buffer_get_memory_range ((b), (i), 1)
 #define     gst_buffer_get_all_memory(b)       gst_buffer_get_memory_range ((b), 0, -1)
-/**
- * gst_buffer_remove_memory:
- * @b: a #GstBuffer.
- * @i: an index
- *
- * Remove the memory block in @b at @i.
- */
 #define     gst_buffer_remove_memory(b,i)      gst_buffer_remove_memory_range ((b), (i), 1)
 #define     gst_buffer_remove_all_memory(b)    gst_buffer_remove_memory_range ((b), 0, -1)
 
@@ -307,22 +300,8 @@ void        gst_buffer_resize_range        (GstBuffer *buffer, guint idx, gint l
                                             gssize offset, gssize size);
 
 #define     gst_buffer_get_sizes(b,of,ms)  gst_buffer_get_sizes_range ((b), 0, -1, (of), (ms))
-/**
- * gst_buffer_get_size:
- * @b: a #GstBuffer.
- *
- * Get the size of @b.
- */
 #define     gst_buffer_get_size(b)         gst_buffer_get_sizes_range ((b), 0, -1, NULL, NULL)
 #define     gst_buffer_resize(b,of,s)      gst_buffer_resize_range ((b), 0, -1, (of), (s))
-/**
- * gst_buffer_set_size:
- * @b: a #GstBuffer.
- * @s: a new size
- *
- * Set the size of @b to @s. This will remove or trim the memory blocks
- * in the buffer.
- */
 #define     gst_buffer_set_size(b,s)       gst_buffer_resize_range ((b), 0, -1, 0, (s))
 
 gboolean    gst_buffer_map_range           (GstBuffer *buffer, guint idx, gint length,

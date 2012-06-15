@@ -82,7 +82,6 @@ _priv_gst_mini_object_initialize (void)
  * gst_mini_object_init:
  * @mini_object: a #GstMiniObject 
  * @type: the #GType of the mini-object to create
- * @size: the size of the data
  *
  * Initializes a mini-object with the desired type and size.
  *

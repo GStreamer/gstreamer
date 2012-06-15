@@ -2166,6 +2166,13 @@ gst_query_parse_accept_caps (GstQuery * query, GstCaps ** caps)
           GST_QUARK (CAPS)));
 }
 
+/**
+ * gst_query_set_accept_caps_result:
+ * @query: a GST_QUERY_ACCEPT_CAPS type query #GstQuery
+ * @result: the result to set
+ *
+ * Set @result as the result for the @query.
+ */
 void
 gst_query_set_accept_caps_result (GstQuery * query, gboolean result)
 {
@@ -2179,6 +2186,13 @@ gst_query_set_accept_caps_result (GstQuery * query, gboolean result)
       GST_QUARK (RESULT), G_TYPE_BOOLEAN, result, NULL);
 }
 
+/**
+ * gst_query_parse_accept_caps_result:
+ * @query: a GST_QUERY_ACCEPT_CAPS type query #GstQuery
+ * @result: location for the result
+ *
+ * Parse the result from @query and store in @result.
+ */
 void
 gst_query_parse_accept_caps_result (GstQuery * query, gboolean * result)
 {
@@ -2293,6 +2307,7 @@ gst_query_parse_caps_result (GstQuery * query, GstCaps ** caps)
           GST_QUARK (CAPS)));
 }
 
+#if 0
 void
 gst_query_intersect_caps_result (GstQuery * query, GstCaps * filter,
     GstCapsIntersectMode mode)
@@ -2304,6 +2319,7 @@ gst_query_intersect_caps_result (GstQuery * query, GstCaps * filter,
   gst_query_set_caps_result (query, res);
   gst_caps_unref (res);
 }
+#endif
 
 /**
  * gst_query_new_drain:

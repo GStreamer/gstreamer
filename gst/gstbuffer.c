@@ -743,6 +743,22 @@ gst_buffer_n_memory (GstBuffer * buffer)
 }
 
 /**
+ * gst_buffer_prepend_memory:
+ * @b: a #GstBuffer.
+ * @m: (transfer full): a #GstMemory.
+ *
+ * Prepend the memory block @m to @b. This function takes ownership
+ * of @m and thus doesn't increase its refcount.
+ */
+/**
+ * gst_buffer_append_memory:
+ * @b: a #GstBuffer.
+ * @m: (transfer full): a #GstMemory.
+ *
+ * Append the memory block @m to @b. This function takes ownership
+ * of @m and thus doesn't increase its refcount.
+ */
+/**
  * gst_buffer_insert_memory:
  * @buffer: a #GstBuffer.
  * @idx: the index to add the memory at, or -1 to append it to the end
@@ -811,6 +827,26 @@ gst_buffer_peek_memory (GstBuffer * buffer, guint idx)
 }
 
 /**
+ * gst_buffer_get_memory:
+ * @b: a #GstBuffer.
+ * @i: an index
+ *
+ * Get the memory block at index @i in @buffer.
+ *
+ * Returns: (transfer full): a #GstMemory that contains the data of the
+ * memory block at @idx. Use gst_memory_unref () after usage.
+ */
+/**
+ * gst_buffer_get_all_memory:
+ * @b: a #GstBuffer.
+ *
+ * Get all the memory block in @buffer. The memory blocks will be merged
+ * into one large #GstMemory.
+ *
+ * Returns: (transfer full): a #GstMemory that contains the merged memory.
+ * Use gst_memory_unref () after usage.
+ */
+/**
  * gst_buffer_get_memory_range:
  * @buffer: a #GstBuffer.
  * @idx: an index
@@ -843,6 +879,21 @@ gst_buffer_get_memory_range (GstBuffer * buffer, guint idx, gint length)
 }
 
 /**
+ * gst_buffer_replace_memory:
+ * @b: a #GstBuffer.
+ * @i: an index
+ * @m: (transfer full): a #GstMemory
+ *
+ * Replaces the memory block at index @i in @b with @m.
+ */
+/**
+ * gst_buffer_replace_all_memory:
+ * @b: a #GstBuffer.
+ * @m: (transfer full): a #GstMemory
+ *
+ * Replaces all memory in @b with @m.
+ */
+/**
  * gst_buffer_replace_memory_range:
  * @buffer: a #GstBuffer.
  * @idx: an index
@@ -874,6 +925,19 @@ gst_buffer_replace_memory_range (GstBuffer * buffer, guint idx, gint length,
   _replace_memory (buffer, len, idx, length, mem);
 }
 
+/**
+ * gst_buffer_remove_memory:
+ * @b: a #GstBuffer.
+ * @i: an index
+ *
+ * Remove the memory block in @b at index @i.
+ */
+/**
+ * gst_buffer_remove_all_memory:
+ * @b: a #GstBuffer.
+ *
+ * Remove all the memory blocks in @b.
+ */
 /**
  * gst_buffer_remove_memory_range:
  * @buffer: a #GstBuffer.
@@ -976,6 +1040,30 @@ gst_buffer_find_memory (GstBuffer * buffer, gsize offset, gsize size,
 }
 
 /**
+ * gst_buffer_get_sizes:
+ * @b: a #GstBuffer.
+ * @of: a pointer to the offset
+ * @ms: a pointer to the maxsize
+ *
+ * Get the total size of the memory blocks in @b.
+ *
+ * When not %NULL, @of will contain the offset of the data in the first
+ * memory block in @buffer and @maxsize will contain the sum of the size
+ * and @of and the amount of extra padding on the last memory block.
+ * @of and @ms can be used to resize the buffer memory blocks with
+ * gst_buffer_resize().
+ *
+ * Returns: total size of the memory blocks in @b.
+ */
+/**
+ * gst_buffer_get_size:
+ * @b: a #GstBuffer.
+ *
+ * Get the total size of the memory blocks in @b.
+ *
+ * Returns: total size of the memory blocks in @b.
+ */
+/**
  * gst_buffer_get_sizes_range:
  * @buffer: a #GstBuffer.
  * @idx: an index
@@ -992,7 +1080,7 @@ gst_buffer_find_memory (GstBuffer * buffer, gsize offset, gsize size,
  * @offset and @maxsize can be used to resize the buffer memory blocks with
  * gst_buffer_resize_range().
  *
- * Returns: total size @length memory blocks starting at @idx in @buffer.
+ * Returns: total size of @length memory blocks starting at @idx in @buffer.
  */
 gsize
 gst_buffer_get_sizes_range (GstBuffer * buffer, guint idx, gint length,
@@ -1047,6 +1135,21 @@ gst_buffer_get_sizes_range (GstBuffer * buffer, guint idx, gint length,
   return size;
 }
 
+/**
+ * gst_buffer_resize:
+ * @b: a #GstBuffer.
+ * @of: the offset adjustement
+ * @s: the new size or -1 to just adjust the offset
+ *
+ * Set the offset and total size of the memory blocks in @b.
+ */
+/**
+ * gst_buffer_set_size:
+ * @b: a #GstBuffer.
+ * @s: the new size
+ *
+ * Set the total size of the memory blocks in @b.
+ */
 /**
  * gst_buffer_resize_range:
  * @buffer: a #GstBuffer.
@@ -1140,6 +1243,27 @@ gst_buffer_resize_range (GstBuffer * buffer, guint idx, gint length,
 }
 
 /**
+ * gst_buffer_map:
+ * @b: a #GstBuffer.
+ * @i: (out): info about the mapping
+ * @f: flags for the mapping
+ *
+ * This function fills @i with the #GstMapInfo of all merged memory blocks
+ * in @buffer.
+ *
+ * @flags describe the desired access of the memory. When @flags is
+ * #GST_MAP_WRITE, @buffer should be writable (as returned from
+ * gst_buffer_is_writable()).
+ *
+ * When @buffer is writable but the memory isn't, a writable copy will
+ * automatically be created and returned. The readonly copy of the buffer memory
+ * will then also be replaced with this writable copy.
+ *
+ * The memory in @i should be unmapped with gst_buffer_unmap() after usage.
+ *
+ * Returns: %TRUE if the map succeeded and @i contains valid data.
+ */
+/**
  * gst_buffer_map_range:
  * @buffer: a #GstBuffer.
  * @idx: an index
@@ -1150,6 +1274,7 @@ gst_buffer_resize_range (GstBuffer * buffer, guint idx, gint length,
  * This function fills @info with the #GstMapInfo of @length merged memory blocks
  * starting at @idx in @buffer. When @length is -1, all memory blocks starting
  * from @idx are merged and mapped.
+ *
  * @flags describe the desired access of the memory. When @flags is
  * #GST_MAP_WRITE, @buffer should be writable (as returned from
  * gst_buffer_is_writable()).
@@ -1160,7 +1285,7 @@ gst_buffer_resize_range (GstBuffer * buffer, guint idx, gint length,
  *
  * The memory in @info should be unmapped with gst_buffer_unmap() after usage.
  *
- * Returns: (transfer full): %TRUE if the map succeeded and @info contains valid
+ * Returns: %TRUE if the map succeeded and @info contains valid
  * data.
  */
 gboolean
