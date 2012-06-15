@@ -40,7 +40,15 @@
  * object. gst_mini_object_make_writable() will return a writable version of the
  * object, which might be a new copy when the refcount was not 1.
  *
- * Last reviewed on 2012-03-28 (0.11.3)
+ * Opaque data can be associated with a #GstMiniObject with
+ * gst_mini_object_set_qdata() and gst_mini_object_get_qdata(). The data is
+ * meant to be specific to the particular object and is not automatically copied
+ * with gst_mini_object_copy() or similar methods.
+ *
+ * A weak reference can be added and remove with gst_mini_object_weak_ref()
+ * and gst_mini_object_weak_unref() respectively.
+ *
+ * Last reviewed on 2012-06-15 (0.11.93)
  */
 #ifdef HAVE_CONFIG_H
 #include "config.h"
