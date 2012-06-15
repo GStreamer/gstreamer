@@ -398,29 +398,12 @@ gst_mini_object_weak_ref (GstMiniObject * object,
   g_return_if_fail (GST_MINI_OBJECT_REFCOUNT_VALUE (object) >= 1);
 
   G_LOCK (weak_refs_mutex);
-
-  if (object->n_weak_refs) {
-    /* Don't add the weak reference if it already exists. */
-    for (i = 0; i < object->n_weak_refs; i++) {
-      if (object->weak_refs[i].notify == notify &&
-          object->weak_refs[i].data == data) {
-        g_warning ("%s: Attempt to re-add existing weak ref %p(%p) failed.",
-            G_STRFUNC, notify, data);
-        goto found;
-      }
-    }
-
-    i = object->n_weak_refs++;
-    object->weak_refs =
-        g_realloc (object->weak_refs, sizeof (object->weak_refs[0]) * i);
-  } else {
-    object->weak_refs = g_malloc0 (sizeof (object->weak_refs[0]));
-    object->n_weak_refs = 1;
-    i = 0;
-  }
+  i = object->n_weak_refs++;
+  object->weak_refs =
+      g_realloc (object->weak_refs,
+      sizeof (object->weak_refs[0]) * object->n_weak_refs);
   object->weak_refs[i].notify = notify;
   object->weak_refs[i].data = data;
-found:
   G_UNLOCK (weak_refs_mutex);
 }
 
@@ -438,28 +421,28 @@ void
 gst_mini_object_weak_unref (GstMiniObject * object,
     GstMiniObjectWeakNotify notify, gpointer data)
 {
+  guint i;
   gboolean found_one = FALSE;
 
   g_return_if_fail (object != NULL);
   g_return_if_fail (notify != NULL);
 
   G_LOCK (weak_refs_mutex);
-
-  if (object->n_weak_refs) {
-    guint i;
-
-    for (i = 0; i < object->n_weak_refs; i++)
-      if (object->weak_refs[i].notify == notify &&
-          object->weak_refs[i].data == data) {
-        found_one = TRUE;
-        object->n_weak_refs -= 1;
-        if (i != object->n_weak_refs)
-          object->weak_refs[i] = object->weak_refs[object->n_weak_refs];
-
-        break;
-      }
+  for (i = 0; i < object->n_weak_refs; i++) {
+    if (object->weak_refs[i].notify == notify &&
+        object->weak_refs[i].data == data) {
+      found_one = TRUE;
+      if (--object->n_weak_refs == 0) {
+        /* we don't shrink but free when everything is gone */
+        g_free (object->weak_refs);
+        object->weak_refs = NULL;
+      } else if (i != object->n_weak_refs)
+        object->weak_refs[i] = object->weak_refs[object->n_weak_refs];
+      break;
+    }
   }
   G_UNLOCK (weak_refs_mutex);
+
   if (!found_one)
     g_warning ("%s: couldn't find weak ref %p(%p)", G_STRFUNC, notify, data);
 }
