@@ -39,6 +39,10 @@
  * Since: 0.10.33
  */
 
+G_DEFINE_BOXED_TYPE (GstAtomicQueue, gst_atomic_queue,
+    (GBoxedCopyFunc) gst_atomic_queue_ref,
+    (GBoxedFreeFunc) gst_atomic_queue_unref);
+
 /* By default the queue uses 2 * sizeof(gpointer) * clp2 (max_items) of
  * memory. clp2(x) is the next power of two >= than x.
  *

@@ -27,6 +27,8 @@
 
 G_BEGIN_DECLS
 
+#define GST_TYPE_ATOMIC_QUEUE (gst_atomic_queue_get_type())
+
 /**
  * GstAtomicQueue:
  *
@@ -38,6 +40,8 @@ G_BEGIN_DECLS
  */
 typedef struct _GstAtomicQueue GstAtomicQueue;
 
+
+GType              gst_atomic_queue_get_type    (void);
 
 GstAtomicQueue *   gst_atomic_queue_new         (guint initial_size) G_GNUC_MALLOC;
 
