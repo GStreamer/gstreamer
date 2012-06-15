@@ -18,7 +18,6 @@ We want to be able to implement the following features:
  - caching of semi-live streams to a local, on disk, ringbuffer with seeking in
    the cached area. This is similar to tivo-like timeshifting.
  - progress report about the buffering operations
- - easy (backward compatible) application notification of buffering
  - the possibility for the application to do more complex buffering
 
 Some use cases:
@@ -211,6 +210,17 @@ range in a specific format and the estimated time to complete:
     this information to estimate the amount of remaining time to download the
     complete file.
 
+  "buffering-ranges", G_TYPE_ARRAY of GstQueryBufferingRange
+    - contains optionally the downloaded areas in the format given above. One
+      of the ranges contains the same start/stop position as above.
+
+      typedef struct
+      {
+        gint64 start;
+        gint64 stop;
+      } GstQueryBufferingRange;
+
+
 For the "download" and "timeshift" buffering-modes, the start and stop positions
 specify the ranges where efficient seeking in the downloaded media is possible.
 Seeking outside of these ranges might be slow or not at all possible.
@@ -235,6 +245,7 @@ A GstBaseSrc with random access replies to the BUFFERING query with:
   "start" = 0
   "stop" = the total filesize
   "estimated-total" = 0
+  "buffering-ranges" = NULL
 
 A GstBaseSrc in push mode replies to the BUFFERING query with:
 
@@ -247,6 +258,7 @@ A GstBaseSrc in push mode replies to the BUFFERING query with:
   "start" = current position
   "stop" = current position
   "estimated-total" = -1
+  "buffering-ranges" = NULL
 
 
 Buffering strategies
