@@ -621,8 +621,10 @@ gst_opus_enc_set_format (GstAudioEncoder * benc, GstAudioInfo * info)
     opus_multistream_encoder_destroy (enc->state);
     enc->state = NULL;
   }
-  if (!gst_opus_enc_setup (enc))
+  if (!gst_opus_enc_setup (enc)) {
+    g_mutex_unlock (enc->property_lock);
     return FALSE;
+  }
 
   enc->frame_samples = gst_opus_enc_get_frame_samples (enc);
 
