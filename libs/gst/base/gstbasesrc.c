@@ -1483,7 +1483,7 @@ not_ok:
  * instead of EOS when doing a segment seek.
  */
 static gboolean
-gst_base_src_perform_seek (GstBaseSrc * src, GstEvent * event)
+gst_base_src_perform_seek (GstBaseSrc * src, GstEvent * event, gboolean unlock)
 {
   gboolean res = TRUE, tres;
   gdouble rate;
@@ -1542,7 +1542,8 @@ gst_base_src_perform_seek (GstBaseSrc * src, GstEvent * event)
     gst_pad_pause_task (src->srcpad);
 
   /* unblock streaming thread. */
-  gst_base_src_set_flushing (src, TRUE, FALSE, &playing);
+  if (unlock)
+    gst_base_src_set_flushing (src, TRUE, FALSE, &playing);
 
   /* grab streaming lock, this should eventually be possible, either
    * because the task is paused, our streaming thread stopped
@@ -1557,7 +1558,8 @@ gst_base_src_perform_seek (GstBaseSrc * src, GstEvent * event)
     GST_DEBUG_OBJECT (src, "seek with seqnum %" G_GUINT32_FORMAT, seqnum);
   }
 
-  gst_base_src_set_flushing (src, FALSE, playing, NULL);
+  if (unlock)
+    gst_base_src_set_flushing (src, FALSE, playing, NULL);
 
   /* If we configured the seeksegment above, don't overwrite it now. Otherwise
    * copy the current segment info into the temp segment that we can actually
@@ -1772,7 +1774,7 @@ gst_base_src_send_event (GstElement * element, GstEvent * event)
         GST_DEBUG_OBJECT (src, "performing seek");
         /* when we are running in push mode, we can execute the
          * seek right now. */
-        result = gst_base_src_perform_seek (src, event);
+        result = gst_base_src_perform_seek (src, event, TRUE);
       } else {
         GstEvent **event_p;
 
@@ -1867,7 +1869,7 @@ gst_base_src_default_event (GstBaseSrc * src, GstEvent * event)
       if (!gst_base_src_seekable (src))
         goto not_seekable;
 
-      result = gst_base_src_perform_seek (src, event);
+      result = gst_base_src_perform_seek (src, event, TRUE);
       break;
     case GST_EVENT_FLUSH_START:
       /* cancel any blocking getrange, is normally called
@@ -3157,8 +3159,9 @@ gst_base_src_start_complete (GstBaseSrc * basesrc, GstFlowReturn ret)
     basesrc->pending_seek = NULL;
     GST_OBJECT_UNLOCK (basesrc);
 
-    /* The perform seek code will start the task when finished. */
-    if (G_UNLIKELY (!gst_base_src_perform_seek (basesrc, event)))
+    /* The perform seek code will start the task when finished. We don't have to
+     * unlock the streaming thread because it is not running yet */
+    if (G_UNLIKELY (!gst_base_src_perform_seek (basesrc, event, FALSE)))
       goto seek_failed;
 
     if (event)
@@ -3294,6 +3297,8 @@ gst_base_src_set_flushing (GstBaseSrc * basesrc,
   GstBaseSrcClass *bclass;
 
   bclass = GST_BASE_SRC_GET_CLASS (basesrc);
+
+  GST_DEBUG_OBJECT (basesrc, "flushing %d, live_play %d", flushing, live_play);
 
   if (flushing) {
     gst_base_src_activate_pool (basesrc, FALSE);
