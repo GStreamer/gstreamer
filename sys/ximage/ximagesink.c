@@ -1473,14 +1473,15 @@ gst_ximagesink_propose_allocation (GstBaseSink * bsink, GstQuery * query)
     if (!gst_buffer_pool_set_config (pool, config))
       goto config_failed;
   }
-  /* we need at least 2 buffer because we hold on to the last one */
-  gst_query_add_allocation_pool (query, pool, size, 2, 0);
+  if (pool) {
+    /* we need at least 2 buffer because we hold on to the last one */
+    gst_query_add_allocation_pool (query, pool, size, 2, 0);
+    gst_object_unref (pool);
+  }
 
   /* we also support various metadata */
   gst_query_add_allocation_meta (query, GST_VIDEO_META_API_TYPE);
   gst_query_add_allocation_meta (query, GST_VIDEO_CROP_META_API_TYPE);
-
-  gst_object_unref (pool);
 
   return TRUE;
 
