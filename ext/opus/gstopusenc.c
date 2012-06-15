@@ -208,7 +208,7 @@ gst_opus_enc_class_init (GstOpusEncClass * klass)
   gst_element_class_set_details_simple (gstelement_class, "Opus audio encoder",
       "Codec/Encoder/Audio",
       "Encodes audio in Opus format",
-      "Sebastian Dröge <sebastian.droege@collabora.co.uk>");
+      "Vincent Penquerc'h <vincent.penquerch@collabora.co.uk>");
 
   base_class->start = GST_DEBUG_FUNCPTR (gst_opus_enc_start);
   base_class->stop = GST_DEBUG_FUNCPTR (gst_opus_enc_stop);
