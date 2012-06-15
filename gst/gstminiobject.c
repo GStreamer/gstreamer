@@ -57,11 +57,14 @@ static GstAllocTrace *_gst_mini_object_trace;
 #endif
 
 /* Mutex used for weak referencing */
-G_LOCK_DEFINE_STATIC (weak_refs_mutex);
+G_LOCK_DEFINE_STATIC (qdata_mutex);
+static GQuark weak_ref_quark;
 
 void
 _priv_gst_mini_object_initialize (void)
 {
+  weak_ref_quark = g_quark_from_static_string ("GstMiniObjectWeakRefQuark");
+
 #ifndef GST_DISABLE_TRACE
   _gst_mini_object_trace = _gst_alloc_trace_register ("GstMiniObject", 0);
 #endif
@@ -85,8 +88,8 @@ gst_mini_object_init (GstMiniObject * mini_object, GType type)
   mini_object->type = type;
   mini_object->refcount = 1;
   mini_object->flags = 0;
-  mini_object->n_weak_refs = 0;
-  mini_object->weak_refs = NULL;
+  mini_object->n_qdata = 0;
+  mini_object->qdata = NULL;
 
 #ifndef GST_DISABLE_TRACE
   _gst_alloc_trace_new (_gst_mini_object_trace, mini_object);
@@ -205,13 +208,13 @@ gst_mini_object_ref (GstMiniObject * mini_object)
 }
 
 static void
-weak_refs_notify (GstMiniObject * obj)
+qdata_notify (GstMiniObject * obj)
 {
   guint i;
 
-  for (i = 0; i < obj->n_weak_refs; i++)
-    obj->weak_refs[i].notify (obj->weak_refs[i].data, obj);
-  g_free (obj->weak_refs);
+  for (i = 0; i < obj->n_qdata; i++)
+    obj->qdata[i].notify (obj->qdata[i].data, obj);
+  g_free (obj->qdata);
 }
 
 /**
@@ -245,8 +248,8 @@ gst_mini_object_unref (GstMiniObject * mini_object)
      * want to free the instance anymore */
     if (G_LIKELY (do_free)) {
       /* The weak reference stack is freed in the notification function */
-      if (mini_object->n_weak_refs)
-        weak_refs_notify (mini_object);
+      if (mini_object->n_qdata)
+        qdata_notify (mini_object);
 
 #ifndef GST_DISABLE_TRACE
       _gst_alloc_trace_free (_gst_mini_object_trace, mini_object);
@@ -397,14 +400,14 @@ gst_mini_object_weak_ref (GstMiniObject * object,
   g_return_if_fail (notify != NULL);
   g_return_if_fail (GST_MINI_OBJECT_REFCOUNT_VALUE (object) >= 1);
 
-  G_LOCK (weak_refs_mutex);
-  i = object->n_weak_refs++;
-  object->weak_refs =
-      g_realloc (object->weak_refs,
-      sizeof (object->weak_refs[0]) * object->n_weak_refs);
-  object->weak_refs[i].notify = notify;
-  object->weak_refs[i].data = data;
-  G_UNLOCK (weak_refs_mutex);
+  G_LOCK (qdata_mutex);
+  i = object->n_qdata++;
+  object->qdata =
+      g_realloc (object->qdata, sizeof (object->qdata[0]) * object->n_qdata);
+  object->qdata[i].quark = weak_ref_quark;
+  object->qdata[i].notify = notify;
+  object->qdata[i].data = data;
+  G_UNLOCK (qdata_mutex);
 }
 
 /**
@@ -427,22 +430,118 @@ gst_mini_object_weak_unref (GstMiniObject * object,
   g_return_if_fail (object != NULL);
   g_return_if_fail (notify != NULL);
 
-  G_LOCK (weak_refs_mutex);
-  for (i = 0; i < object->n_weak_refs; i++) {
-    if (object->weak_refs[i].notify == notify &&
-        object->weak_refs[i].data == data) {
+  G_LOCK (qdata_mutex);
+  for (i = 0; i < object->n_qdata; i++) {
+    if (object->qdata[i].quark == weak_ref_quark &&
+        object->qdata[i].notify == notify && object->qdata[i].data == data) {
       found_one = TRUE;
-      if (--object->n_weak_refs == 0) {
+      if (--object->n_qdata == 0) {
         /* we don't shrink but free when everything is gone */
-        g_free (object->weak_refs);
-        object->weak_refs = NULL;
-      } else if (i != object->n_weak_refs)
-        object->weak_refs[i] = object->weak_refs[object->n_weak_refs];
+        g_free (object->qdata);
+        object->qdata = NULL;
+      } else if (i != object->n_qdata)
+        object->qdata[i] = object->qdata[object->n_qdata];
       break;
     }
   }
-  G_UNLOCK (weak_refs_mutex);
+  G_UNLOCK (qdata_mutex);
 
   if (!found_one)
     g_warning ("%s: couldn't find weak ref %p(%p)", G_STRFUNC, notify, data);
+}
+
+/**
+ * gst_mini_object_set_qdata:
+ * @object: a #GstMiniObject
+ * @quark: A #GQuark, naming the user data pointer
+ * @data: An opaque user data pointer
+ * @destroy: Function to invoke with @data as argument, when @data
+ *           needs to be freed
+ *
+ * This sets an opaque, named pointer on a miniobject.
+ * The name is specified through a #GQuark (retrived e.g. via
+ * g_quark_from_static_string()), and the pointer
+ * can be gotten back from the @object with gst_mini_object_get_qdata()
+ * until the @object is disposed.
+ * Setting a previously set user data pointer, overrides (frees)
+ * the old pointer set, using #NULL as pointer essentially
+ * removes the data stored.
+ *
+ * @destroy may be specified which is called with @data as argument
+ * when the @object is disposed, or the data is being overwritten by
+ * a call to gst_mini_object_set_qdata() with the same @quark.
+ */
+void
+gst_mini_object_set_qdata (GstMiniObject * object, GQuark quark,
+    gpointer data, GDestroyNotify destroy)
+{
+  guint i;
+  gpointer old_data = NULL;
+  GDestroyNotify old_notify = NULL;
+
+  g_return_if_fail (object != NULL);
+  g_return_if_fail (quark > 0);
+
+  G_LOCK (qdata_mutex);
+  for (i = 0; i < object->n_qdata; i++) {
+    if (object->qdata[i].quark == quark) {
+      old_data = object->qdata[i].data;
+      old_notify = (GDestroyNotify) object->qdata[i].notify;
+
+      if (data == NULL) {
+        /* remove item */
+        if (--object->n_qdata == 0) {
+          /* we don't shrink but free when everything is gone */
+          g_free (object->qdata);
+          object->qdata = NULL;
+        } else if (i != object->n_qdata)
+          object->qdata[i] = object->qdata[object->n_qdata];
+      }
+      break;
+    }
+  }
+  if (!old_data) {
+    /* add item */
+    i = object->n_qdata++;
+    object->qdata =
+        g_realloc (object->qdata, sizeof (object->qdata[0]) * object->n_qdata);
+  }
+  object->qdata[i].quark = quark;
+  object->qdata[i].data = data;
+  object->qdata[i].notify = (GstMiniObjectWeakNotify) destroy;
+  G_UNLOCK (qdata_mutex);
+
+  if (old_notify)
+    old_notify (old_data);
+}
+
+/**
+ * gst_mini_object_get_qdata:
+ * @object: The GstMiniObject to get a stored user data pointer from
+ * @quark: A #GQuark, naming the user data pointer
+ *
+ * This function gets back user data pointers stored via
+ * gst_mini_object_set_qdata().
+ *
+ * Returns: (transfer none): The user data pointer set, or %NULL
+ */
+gpointer
+gst_mini_object_get_qdata (GstMiniObject * object, GQuark quark)
+{
+  guint i;
+  gpointer result = NULL;
+
+  g_return_val_if_fail (object != NULL, NULL);
+  g_return_val_if_fail (quark > 0, NULL);
+
+  G_LOCK (qdata_mutex);
+  for (i = 0; i < object->n_qdata; i++) {
+    if (object->qdata[i].quark == quark) {
+      result = object->qdata[i].data;
+      break;
+    }
+  }
+  G_UNLOCK (qdata_mutex);
+
+  return result;
 }

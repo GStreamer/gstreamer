@@ -177,13 +177,14 @@ struct _GstMiniObject {
   GstMiniObjectFreeFunction free;
 
   /* < private > */
-  /* Used to keep track of weak ref notifies */
-  guint n_weak_refs;
+  /* Used to keep track of weak ref notifies and qdata */
+  guint n_qdata;
   struct
   {
+    GQuark quark;
     GstMiniObjectWeakNotify notify;
     gpointer data;
-  } *weak_refs;
+  } *qdata;
 };
 
 void            gst_mini_object_init            (GstMiniObject *mini_object, GType type);
@@ -202,6 +203,11 @@ void            gst_mini_object_weak_ref        (GstMiniObject *object,
 void            gst_mini_object_weak_unref	(GstMiniObject *object,
 					         GstMiniObjectWeakNotify notify,
 					         gpointer data);
+
+void            gst_mini_object_set_qdata       (GstMiniObject *object, GQuark quark,
+                                                 gpointer data, GDestroyNotify destroy);
+gpointer        gst_mini_object_get_qdata       (GstMiniObject *object, GQuark quark);
+
 
 gboolean        gst_mini_object_replace         (GstMiniObject **olddata, GstMiniObject *newdata);
 gboolean        gst_mini_object_take            (GstMiniObject **olddata, GstMiniObject *newdata);
