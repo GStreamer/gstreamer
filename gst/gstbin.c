@@ -367,7 +367,7 @@ gst_bin_class_init (GstBinClass * klass)
   gobject_class->get_property = gst_bin_get_property;
 
   /**
-   * GstBin:async-handling
+   * GstBin:async-handling:
    *
    * If set to #TRUE, the bin will handle asynchronous state changes.
    * This should be used only if the bin subclass is modifying the state
@@ -427,7 +427,7 @@ gst_bin_class_init (GstBinClass * klass)
       G_TYPE_BOOLEAN, 0, G_TYPE_NONE);
 
   /**
-   * GstBin:message-forward
+   * GstBin:message-forward:
    *
    * Forward all children messages, even those that would normally be filtered by
    * the bin. This can be interesting when one wants to be notified of the EOS

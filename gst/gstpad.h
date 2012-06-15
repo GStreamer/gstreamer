@@ -405,7 +405,7 @@ typedef gboolean		(*GstPadQueryFunction)		(GstPad *pad, GstObject *parent,
 
 /* linking */
 /**
- * GstPadLinkFunction
+ * GstPadLinkFunction:
  * @pad: the #GstPad that is linked.
  * @peer: the peer #GstPad of the link
  *
@@ -415,7 +415,7 @@ typedef gboolean		(*GstPadQueryFunction)		(GstPad *pad, GstObject *parent,
  */
 typedef GstPadLinkReturn	(*GstPadLinkFunction)		(GstPad *pad, GstPad *peer);
 /**
- * GstPadUnlinkFunction
+ * GstPadUnlinkFunction:
  * @pad: the #GstPad that is linked.
  *
  * Function signature to handle a unlinking the pad prom its peer.
@@ -553,7 +553,7 @@ struct _GstPadProbeInfo
 #define GST_PAD_PROBE_INFO_SIZE(d)         ((d)->size)
 
 /**
- * GstPadProbeCallback
+ * GstPadProbeCallback:
  * @pad: the #GstPad that is blocked
  * @info: #GstPadProbeInfo
  * @user_data: the gpointer to optional user data.

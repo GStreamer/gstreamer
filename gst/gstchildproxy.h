@@ -95,9 +95,9 @@ void      gst_child_proxy_set                (GstChildProxy * object,
                                               const gchar * first_property_name,
                                               ...) G_GNUC_NULL_TERMINATED;
 
-void      gst_child_proxy_child_added        (GstChildProxy * object, GObject * child,
+void      gst_child_proxy_child_added        (GstChildProxy * parent, GObject * child,
                                               const gchar *name);
-void      gst_child_proxy_child_removed      (GstChildProxy * object, GObject * child,
+void      gst_child_proxy_child_removed      (GstChildProxy * parent, GObject * child,
                                               const gchar *name);
 
 G_END_DECLS

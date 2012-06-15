@@ -120,7 +120,7 @@ gst_control_source_get_value (GstControlSource * self, GstClockTime timestamp,
  * @timestamp: the first timestamp
  * @interval: the time steps
  * @n_values: the number of values to fetch
- * @value_array: array to put control-values in
+ * @values: array to put control-values in
  *
  * Gets an array of values for for this #GstControlSource. Values that are
  * undefined contain NANs.

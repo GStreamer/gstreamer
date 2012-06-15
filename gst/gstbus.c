@@ -874,9 +874,10 @@ gst_bus_add_watch_full_unlocked (GstBus * bus, gint priority,
  * The watch can be removed using g_source_remove() or by returning FALSE
  * from @func.
  *
+ * MT safe.
+ *
  * Returns: The event source id.
  * Rename to: gst_bus_add_watch
- * MT safe.
  */
 guint
 gst_bus_add_watch_full (GstBus * bus, gint priority,

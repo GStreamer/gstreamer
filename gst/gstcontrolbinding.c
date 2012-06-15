@@ -103,7 +103,7 @@ gst_control_binding_class_init (GstControlBindingClass * klass)
 }
 
 static void
-gst_control_binding_init (GstControlBinding * self)
+gst_control_binding_init (GstControlBinding * binding)
 {
 }
 
@@ -111,32 +111,33 @@ static GObject *
 gst_control_binding_constructor (GType type, guint n_construct_params,
     GObjectConstructParam * construct_params)
 {
-  GstControlBinding *self;
+  GstControlBinding *binding;
   GParamSpec *pspec;
 
-  self = GST_CONTROL_BINDING (G_OBJECT_CLASS (gst_control_binding_parent_class)
+  binding =
+      GST_CONTROL_BINDING (G_OBJECT_CLASS (gst_control_binding_parent_class)
       ->constructor (type, n_construct_params, construct_params));
 
-  GST_INFO_OBJECT (self->object, "trying to put property '%s' under control",
-      self->name);
+  GST_INFO_OBJECT (binding->object, "trying to put property '%s' under control",
+      binding->name);
 
   /* check if the object has a property of that name */
   if ((pspec =
-          g_object_class_find_property (G_OBJECT_GET_CLASS (self->object),
-              self->name))) {
-    GST_DEBUG_OBJECT (self->object, "  psec->flags : 0x%08x", pspec->flags);
+          g_object_class_find_property (G_OBJECT_GET_CLASS (binding->object),
+              binding->name))) {
+    GST_DEBUG_OBJECT (binding->object, "  psec->flags : 0x%08x", pspec->flags);
 
     /* check if this param is witable && controlable && !construct-only */
     if ((pspec->flags & (G_PARAM_WRITABLE | GST_PARAM_CONTROLLABLE |
                 G_PARAM_CONSTRUCT_ONLY)) ==
         (G_PARAM_WRITABLE | GST_PARAM_CONTROLLABLE)) {
-      self->pspec = pspec;
+      binding->pspec = pspec;
     }
   } else {
-    GST_WARNING_OBJECT (self->object, "class '%s' has no property '%s'",
-        G_OBJECT_TYPE_NAME (self->object), self->name);
+    GST_WARNING_OBJECT (binding->object, "class '%s' has no property '%s'",
+        G_OBJECT_TYPE_NAME (binding->object), binding->name);
   }
-  return (GObject *) self;
+  return (GObject *) binding;
 }
 
 static void
@@ -207,7 +208,7 @@ gst_control_binding_get_property (GObject * object, guint prop_id,
 
 /**
  * gst_control_binding_sync_values:
- * @self: the control binding
+ * @binding: the control binding
  * @object: the object that has controlled properties
  * @timestamp: the time that should be processed
  * @last_sync: the last time this was called
@@ -222,30 +223,30 @@ gst_control_binding_get_property (GObject * object, guint prop_id,
  * property, %FALSE otherwise
  */
 gboolean
-gst_control_binding_sync_values (GstControlBinding * self, GstObject * object,
-    GstClockTime timestamp, GstClockTime last_sync)
+gst_control_binding_sync_values (GstControlBinding * binding,
+    GstObject * object, GstClockTime timestamp, GstClockTime last_sync)
 {
   GstControlBindingClass *klass;
   gboolean ret = FALSE;
 
-  g_return_val_if_fail (GST_IS_CONTROL_BINDING (self), FALSE);
+  g_return_val_if_fail (GST_IS_CONTROL_BINDING (binding), FALSE);
 
-  if (self->disabled)
+  if (binding->disabled)
     return TRUE;
 
-  klass = GST_CONTROL_BINDING_GET_CLASS (self);
+  klass = GST_CONTROL_BINDING_GET_CLASS (binding);
 
   if (G_LIKELY (klass->sync_values != NULL)) {
-    ret = klass->sync_values (self, object, timestamp, last_sync);
+    ret = klass->sync_values (binding, object, timestamp, last_sync);
   } else {
-    GST_WARNING_OBJECT (self, "missing sync_values implementation");
+    GST_WARNING_OBJECT (binding, "missing sync_values implementation");
   }
   return ret;
 }
 
 /**
  * gst_control_binding_get_value:
- * @self: the control binding
+ * @binding: the control binding
  * @timestamp: the time the control-change should be read from
  *
  * Gets the value for the given controlled property at the requested time.
@@ -254,27 +255,28 @@ gst_control_binding_sync_values (GstControlBinding * self, GstObject * object,
  * property isn't controlled.
  */
 GValue *
-gst_control_binding_get_value (GstControlBinding * self, GstClockTime timestamp)
+gst_control_binding_get_value (GstControlBinding * binding,
+    GstClockTime timestamp)
 {
   GstControlBindingClass *klass;
   GValue *ret = NULL;
 
-  g_return_val_if_fail (GST_IS_CONTROL_BINDING (self), NULL);
+  g_return_val_if_fail (GST_IS_CONTROL_BINDING (binding), NULL);
   g_return_val_if_fail (GST_CLOCK_TIME_IS_VALID (timestamp), NULL);
 
-  klass = GST_CONTROL_BINDING_GET_CLASS (self);
+  klass = GST_CONTROL_BINDING_GET_CLASS (binding);
 
   if (G_LIKELY (klass->get_value != NULL)) {
-    ret = klass->get_value (self, timestamp);
+    ret = klass->get_value (binding, timestamp);
   } else {
-    GST_WARNING_OBJECT (self, "missing get_value implementation");
+    GST_WARNING_OBJECT (binding, "missing get_value implementation");
   }
   return ret;
 }
 
 /**
  * gst_control_binding_get_value_array:
- * @self: the control binding
+ * @binding: the control binding
  * @timestamp: the time that should be processed
  * @interval: the time spacing between subsequent values
  * @n_values: the number of values
@@ -294,24 +296,25 @@ gst_control_binding_get_value (GstControlBinding * self, GstClockTime timestamp)
  * Returns: %TRUE if the given array could be filled, %FALSE otherwise
  */
 gboolean
-gst_control_binding_get_value_array (GstControlBinding * self,
+gst_control_binding_get_value_array (GstControlBinding * binding,
     GstClockTime timestamp, GstClockTime interval, guint n_values,
     gpointer values)
 {
   GstControlBindingClass *klass;
   gboolean ret = FALSE;
 
-  g_return_val_if_fail (GST_IS_CONTROL_BINDING (self), FALSE);
+  g_return_val_if_fail (GST_IS_CONTROL_BINDING (binding), FALSE);
   g_return_val_if_fail (GST_CLOCK_TIME_IS_VALID (timestamp), FALSE);
   g_return_val_if_fail (GST_CLOCK_TIME_IS_VALID (interval), FALSE);
   g_return_val_if_fail (values, FALSE);
 
-  klass = GST_CONTROL_BINDING_GET_CLASS (self);
+  klass = GST_CONTROL_BINDING_GET_CLASS (binding);
 
   if (G_LIKELY (klass->get_value_array != NULL)) {
-    ret = klass->get_value_array (self, timestamp, interval, n_values, values);
+    ret =
+        klass->get_value_array (binding, timestamp, interval, n_values, values);
   } else {
-    GST_WARNING_OBJECT (self, "missing get_value_array implementation");
+    GST_WARNING_OBJECT (binding, "missing get_value_array implementation");
   }
   return ret;
 }
@@ -319,7 +322,7 @@ gst_control_binding_get_value_array (GstControlBinding * self,
 #define CONVERT_ARRAY(type,TYPE) \
 { \
   g##type *v = g_new (g##type,n_values); \
-  ret = gst_control_binding_get_value_array (self, timestamp, interval, \
+  ret = gst_control_binding_get_value_array (binding, timestamp, interval, \
       n_values, v); \
   if (ret) { \
     for (i = 0; i < n_values; i++) { \
@@ -332,7 +335,7 @@ gst_control_binding_get_value_array (GstControlBinding * self,
 
 /**
  * gst_control_binding_get_g_value_array:
- * @self: the control binding
+ * @binding: the control binding
  * @timestamp: the time that should be processed
  * @interval: the time spacing between subsequent values
  * @n_values: the number of values
@@ -348,32 +351,33 @@ gst_control_binding_get_value_array (GstControlBinding * self,
  * Returns: %TRUE if the given array could be filled, %FALSE otherwise
  */
 gboolean
-gst_control_binding_get_g_value_array (GstControlBinding * self,
+gst_control_binding_get_g_value_array (GstControlBinding * binding,
     GstClockTime timestamp, GstClockTime interval, guint n_values,
     GValue * values)
 {
   GstControlBindingClass *klass;
   gboolean ret = FALSE;
 
-  g_return_val_if_fail (GST_IS_CONTROL_BINDING (self), FALSE);
+  g_return_val_if_fail (GST_IS_CONTROL_BINDING (binding), FALSE);
   g_return_val_if_fail (GST_CLOCK_TIME_IS_VALID (timestamp), FALSE);
   g_return_val_if_fail (GST_CLOCK_TIME_IS_VALID (interval), FALSE);
   g_return_val_if_fail (values, FALSE);
 
-  klass = GST_CONTROL_BINDING_GET_CLASS (self);
+  klass = GST_CONTROL_BINDING_GET_CLASS (binding);
 
   if (G_LIKELY (klass->get_g_value_array != NULL)) {
     ret =
-        klass->get_g_value_array (self, timestamp, interval, n_values, values);
+        klass->get_g_value_array (binding, timestamp, interval, n_values,
+        values);
   } else {
     guint i;
     GType type, base;
 
-    base = type = G_PARAM_SPEC_VALUE_TYPE (GST_CONTROL_BINDING_PSPEC (self));
+    base = type = G_PARAM_SPEC_VALUE_TYPE (GST_CONTROL_BINDING_PSPEC (binding));
     while ((type = g_type_parent (type)))
       base = type;
 
-    GST_INFO_OBJECT (self, "missing get_g_value_array implementation, we're "
+    GST_INFO_OBJECT (binding, "missing get_g_value_array implementation, we're "
         "emulating it");
     switch (base) {
       case G_TYPE_INT:
@@ -406,7 +410,7 @@ gst_control_binding_get_g_value_array (GstControlBinding * self,
       case G_TYPE_ENUM:
       {
         gint *v = g_new (gint, n_values);
-        ret = gst_control_binding_get_value_array (self, timestamp, interval,
+        ret = gst_control_binding_get_value_array (binding, timestamp, interval,
             n_values, v);
         if (ret) {
           for (i = 0; i < n_values; i++) {
@@ -419,8 +423,8 @@ gst_control_binding_get_g_value_array (GstControlBinding * self,
         break;
       default:
         GST_WARNING ("incomplete implementation for paramspec type '%s'",
-            G_PARAM_SPEC_TYPE_NAME (GST_CONTROL_BINDING_PSPEC (self)));
-        GST_CONTROL_BINDING_PSPEC (self) = NULL;
+            G_PARAM_SPEC_TYPE_NAME (GST_CONTROL_BINDING_PSPEC (binding)));
+        GST_CONTROL_BINDING_PSPEC (binding) = NULL;
         break;
     }
   }
@@ -429,7 +433,7 @@ gst_control_binding_get_g_value_array (GstControlBinding * self,
 
 /**
  * gst_control_binding_set_disabled:
- * @self: the control binding
+ * @binding: the control binding
  * @disabled: boolean that specifies whether to disable the controller
  * or not.
  *
@@ -437,23 +441,24 @@ gst_control_binding_get_g_value_array (GstControlBinding * self,
  * gst_object_sync_values() will do nothing.
  */
 void
-gst_control_binding_set_disabled (GstControlBinding * self, gboolean disabled)
+gst_control_binding_set_disabled (GstControlBinding * binding,
+    gboolean disabled)
 {
-  g_return_if_fail (GST_IS_CONTROL_BINDING (self));
-  self->disabled = disabled;
+  g_return_if_fail (GST_IS_CONTROL_BINDING (binding));
+  binding->disabled = disabled;
 }
 
 /**
  * gst_control_binding_is_disabled:
- * @self: the control binding
+ * @binding: the control binding
  *
  * Check if the control binding is disabled.
  *
  * Returns: %TRUE if the binding is inactive
  */
 gboolean
-gst_control_binding_is_disabled (GstControlBinding * self)
+gst_control_binding_is_disabled (GstControlBinding * binding)
 {
-  g_return_val_if_fail (GST_IS_CONTROL_BINDING (self), TRUE);
-  return (self->disabled == TRUE);
+  g_return_val_if_fail (GST_IS_CONTROL_BINDING (binding), TRUE);
+  return (binding->disabled == TRUE);
 }

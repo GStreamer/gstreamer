@@ -2339,7 +2339,7 @@ gst_element_query_convert (GstElement * element, GstFormat src_format,
 }
 
 /**
- * gst_element_seek_simple
+ * gst_element_seek_simple:
  * @element: a #GstElement to seek on
  * @format: a #GstFormat to execute the seek in, such as #GST_FORMAT_TIME
  * @seek_flags: seek options; playback applications will usually want to use

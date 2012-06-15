@@ -580,7 +580,7 @@ gst_tag_get_type (const gchar * tag)
 }
 
 /**
- * gst_tag_get_nick
+ * gst_tag_get_nick:
  * @tag: the tag
  *
  * Returns the human-readable name of this tag, You must not change or free

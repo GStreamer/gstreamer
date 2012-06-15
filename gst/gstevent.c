@@ -1610,7 +1610,7 @@ gst_event_parse_sink_message (GstEvent * event, GstMessage ** msg)
 }
 
 /**
- * gst_event_new_stream_start
+ * gst_event_new_stream_start:
  *
  * Create a new STREAM_START event. The stream start event can only
  * travel downstream synchronized with the buffer flow. It is expected

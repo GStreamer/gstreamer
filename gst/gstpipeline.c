@@ -155,7 +155,7 @@ gst_pipeline_class_init (GstPipelineClass * klass)
   gobject_class->get_property = gst_pipeline_get_property;
 
   /**
-   * GstPipeline:delay
+   * GstPipeline:delay:
    *
    * The expected delay needed for elements to spin up to the
    * PLAYING state expressed in nanoseconds.

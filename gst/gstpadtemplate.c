@@ -160,7 +160,7 @@ gst_pad_template_class_init (GstPadTemplateClass * klass)
   gobject_class->set_property = gst_pad_template_set_property;
 
   /**
-   * GstPadTemplate:name-template
+   * GstPadTemplate:name-template:
    *
    * The name template of the pad template.
    *
@@ -172,7 +172,7 @@ gst_pad_template_class_init (GstPadTemplateClass * klass)
           G_PARAM_READWRITE | G_PARAM_CONSTRUCT_ONLY | G_PARAM_STATIC_STRINGS));
 
   /**
-   * GstPadTemplate:direction
+   * GstPadTemplate:direction:
    *
    * The direction of the pad described by the pad template.
    *
@@ -185,7 +185,7 @@ gst_pad_template_class_init (GstPadTemplateClass * klass)
           G_PARAM_READWRITE | G_PARAM_CONSTRUCT_ONLY | G_PARAM_STATIC_STRINGS));
 
   /**
-   * GstPadTemplate:presence
+   * GstPadTemplate:presence:
    *
    * When the pad described by the pad template will become available.
    *
@@ -198,7 +198,7 @@ gst_pad_template_class_init (GstPadTemplateClass * klass)
           G_PARAM_READWRITE | G_PARAM_CONSTRUCT_ONLY | G_PARAM_STATIC_STRINGS));
 
   /**
-   * GstPadTemplate:caps
+   * GstPadTemplate:caps:
    *
    * The capabilities of the pad described by the pad template.
    *

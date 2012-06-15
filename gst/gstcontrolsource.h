@@ -63,7 +63,7 @@ struct _GstTimedValue
 };
 
 /**
- * GstControlSourceGetValue
+ * GstControlSourceGetValue:
  * @self: the #GstControlSource instance
  * @timestamp: timestamp for which a value should be calculated
  * @value: a #GValue which will be set to the result. It must be initialized to the correct type.
@@ -77,7 +77,7 @@ typedef gboolean (* GstControlSourceGetValue) (GstControlSource *self,
     GstClockTime timestamp, gdouble *value);
 
 /**
- * GstControlSourceGetValueArray
+ * GstControlSourceGetValueArray:
  * @self: the #GstControlSource instance
  * @timestamp: timestamp for which a value should be calculated
  * @interval: the time spacing between subsequent values

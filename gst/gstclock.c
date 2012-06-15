@@ -413,7 +413,7 @@ gst_clock_new_periodic_id (GstClock * clock, GstClockTime start_time,
 }
 
 /**
- * gst_clock_id_compare_func
+ * gst_clock_id_compare_func:
  * @id1: A #GstClockID
  * @id2: A #GstClockID to compare with
  *
@@ -442,7 +442,7 @@ gst_clock_id_compare_func (gconstpointer id1, gconstpointer id2)
 }
 
 /**
- * gst_clock_id_get_time
+ * gst_clock_id_get_time:
  * @id: The #GstClockID to query
  *
  * Get the time of the clock ID
@@ -460,7 +460,7 @@ gst_clock_id_get_time (GstClockID id)
 }
 
 /**
- * gst_clock_id_wait
+ * gst_clock_id_wait:
  * @id: The #GstClockID to wait on
  * @jitter: (out) (allow-none): a pointer that will contain the jitter,
  *     can be %NULL.
@@ -762,7 +762,7 @@ gst_clock_finalize (GObject * object)
 }
 
 /**
- * gst_clock_set_resolution
+ * gst_clock_set_resolution:
  * @clock: a #GstClock
  * @resolution: The resolution to set
  *
@@ -794,7 +794,7 @@ gst_clock_set_resolution (GstClock * clock, GstClockTime resolution)
 }
 
 /**
- * gst_clock_get_resolution
+ * gst_clock_get_resolution:
  * @clock: a #GstClock
  *
  * Get the accuracy of the clock. The accuracy of the clock is the granularity
@@ -820,7 +820,7 @@ gst_clock_get_resolution (GstClock * clock)
 }
 
 /**
- * gst_clock_adjust_unlocked
+ * gst_clock_adjust_unlocked:
  * @clock: a #GstClock to use
  * @internal: a clock time
  *
@@ -876,7 +876,7 @@ gst_clock_adjust_unlocked (GstClock * clock, GstClockTime internal)
 }
 
 /**
- * gst_clock_unadjust_unlocked
+ * gst_clock_unadjust_unlocked:
  * @clock: a #GstClock to use
  * @external: an external clock time
  *
@@ -924,7 +924,7 @@ gst_clock_unadjust_unlocked (GstClock * clock, GstClockTime external)
 }
 
 /**
- * gst_clock_get_internal_time
+ * gst_clock_get_internal_time:
  * @clock: a #GstClock to query
  *
  * Gets the current internal time of the given clock. The time is returned
@@ -965,7 +965,7 @@ not_supported:
 }
 
 /**
- * gst_clock_get_time
+ * gst_clock_get_time:
  * @clock: a #GstClock to query
  *
  * Gets the current time of the given clock. The time is always
@@ -1002,7 +1002,7 @@ gst_clock_get_time (GstClock * clock)
 }
 
 /**
- * gst_clock_set_calibration
+ * gst_clock_set_calibration:
  * @clock: a #GstClock to calibrate
  * @internal: a reference internal time
  * @external: a reference external time
@@ -1061,7 +1061,7 @@ gst_clock_set_calibration (GstClock * clock, GstClockTime internal, GstClockTime
 }
 
 /**
- * gst_clock_get_calibration
+ * gst_clock_get_calibration:
  * @clock: a #GstClock 
  * @internal: (out) (allow-none): a location to store the internal time
  * @external: (out) (allow-none): a location to store the external time
@@ -1125,7 +1125,7 @@ gst_clock_slave_callback (GstClock * master, GstClockTime time,
 }
 
 /**
- * gst_clock_set_master
+ * gst_clock_set_master:
  * @clock: a #GstClock 
  * @master: (allow-none): a master #GstClock 
  *
@@ -1358,7 +1358,7 @@ invalid:
 }
 
 /**
- * gst_clock_add_observation
+ * gst_clock_add_observation:
  * @clock: a #GstClock 
  * @slave: a time on the slave
  * @master: a time on the master
