@@ -1374,8 +1374,10 @@ gst_d3dvideosink_prepare_window (GstD3DVideoSink * sink)
   /* If the app supplied one, use it. Otherwise, go ahead
    * and create (and use) our own window, if we didn't create
    * one before */
+  if (sink->window_handle && sink->is_new_window) {
+    return;
+  }
   if (sink->window_handle) {
-    if (!sink->is_new_window)
       gst_d3dvideosink_set_window_for_renderer (sink);
   } else {
     gst_d3dvideosink_create_default_window (sink);
