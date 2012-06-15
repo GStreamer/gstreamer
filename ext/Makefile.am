@@ -130,10 +130,10 @@ else
 GSM_DIR=
 endif
 
-if USE_JP2K
-JP2K_DIR = jp2k
+if USE_JASPER
+JASPER_DIR = jasper
 else
-JP2K_DIR =
+JASPER_DIR =
 endif
 
 if USE_KATE
@@ -385,7 +385,7 @@ SUBDIRS=\
 	$(GSETTINGS_DIR) \
 	$(GSM_DIR) \
 	$(G729_DIR) \
-	$(JP2K_DIR) \
+	$(JASPER_DIR) \
 	$(KATE_DIR) \
 	$(LADSPA_DIR) \
 	$(LV2_DIR) \
@@ -441,7 +441,7 @@ DIST_SUBDIRS = \
 	gsettings \
 	gsm \
 	ladspa \
-	jp2k \
+	jasper \
 	kate \
 	libmms \
 	lv2 \

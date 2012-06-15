@@ -322,7 +322,7 @@ GST_PLUGINS_NONPORTED=" aiff \
  videomeasure videosignal vmnc \
  decklink fbdev linsys vcd \
  apexsink cdaudio cog dc1394 dirac directfb resindvd \
- gsettings jp2k ladspa mimic \
+ gsettings jasper ladspa mimic \
  musepack musicbrainz nas neon ofa openal opencv rsvg sdl sndfile soundtouch spandsp spc timidity \
  directsound directdraw direct3d9 acm wininet \
  wildmidi xvid lv2 teletextdec dvb sndio"
@@ -1006,12 +1006,12 @@ AG_GST_CHECK_FEATURE(GSM, [GSM library], gsmenc gsmdec, [
   AC_SUBST(GSM_LIBS)
 ])
 
-dnl *** jp2k ***
-translit(dnm, m, l) AM_CONDITIONAL(USE_JP2K, true)
-AG_GST_CHECK_FEATURE(JP2K, [jp2k], jp2kdec jp2kenc, [
-  AG_GST_CHECK_LIBHEADER(JP2K, jasper, jas_stream_fopen, , jasper/jasper.h,
-    JP2K_LIBS="-ljasper")
-  AC_SUBST(JP2K_LIBS)
+dnl *** jasper ***
+translit(dnm, m, l) AM_CONDITIONAL(USE_JASPER, true)
+AG_GST_CHECK_FEATURE(JASPER, [jasper], jasperdec jasperenc, [
+  AG_GST_CHECK_LIBHEADER(JASPER, jasper, jas_stream_fopen, , jasper/jasper.h,
+    JASPER_LIBS="-ljasper")
+  AC_SUBST(JASPER_LIBS)
 ])
 
 dnl *** kate ***
@@ -1816,7 +1816,7 @@ AM_CONDITIONAL(USE_FAAD, false)
 AM_CONDITIONAL(USE_FBDEV, false)
 AM_CONDITIONAL(USE_FLITE, false)
 AM_CONDITIONAL(USE_GSM, false)
-AM_CONDITIONAL(USE_JP2K, false)
+AM_CONDITIONAL(USE_JASPER, false)
 AM_CONDITIONAL(USE_KATE, false)
 AM_CONDITIONAL(USE_TIGER, false)
 AM_CONDITIONAL(USE_LADSPA, false)
@@ -2071,7 +2071,7 @@ ext/faac/Makefile
 ext/faad/Makefile
 ext/flite/Makefile
 ext/gsm/Makefile
-ext/jp2k/Makefile
+ext/jasper/Makefile
 ext/kate/Makefile
 ext/ladspa/Makefile
 ext/lv2/Makefile

@@ -32,11 +32,11 @@
 static gboolean
 plugin_init (GstPlugin * plugin)
 {
-  if (!gst_element_register (plugin, "jp2kdec", GST_RANK_MARGINAL,
+  if (!gst_element_register (plugin, "jasperdec", GST_RANK_MARGINAL,
           GST_TYPE_JASPER_DEC))
     return FALSE;
 
-  if (!gst_element_register (plugin, "jp2kenc", GST_RANK_MARGINAL,
+  if (!gst_element_register (plugin, "jasperenc", GST_RANK_MARGINAL,
           GST_TYPE_JASPER_ENC))
     return FALSE;
 
@@ -49,6 +49,6 @@ plugin_init (GstPlugin * plugin)
  * so keep the name plugin_desc, or you cannot get your plug-in registered */
 GST_PLUGIN_DEFINE (GST_VERSION_MAJOR,
     GST_VERSION_MINOR,
-    jp2k,
+    jasper,
     "Jasper-based JPEG2000 image decoder/encoder",
     plugin_init, VERSION, "LGPL", GST_PACKAGE_NAME, GST_PACKAGE_ORIGIN)

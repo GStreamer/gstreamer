@@ -85,10 +85,7 @@ static void gst_jasper_dec_read_qos (GstJasperDec * dec, gdouble * proportion,
  * keep original naming but use unique name here for a happy type system
  */
 
-typedef GstJasperDec GstJp2kDec;
-typedef GstJasperDecClass GstJp2kDecClass;
-
-GST_BOILERPLATE (GstJp2kDec, gst_jasper_dec, GstElement, GST_TYPE_ELEMENT);
+GST_BOILERPLATE (GstJasperDec, gst_jasper_dec, GstElement, GST_TYPE_ELEMENT);
 
 static void
 gst_jasper_dec_base_init (gpointer g_class)
@@ -113,7 +110,7 @@ gst_jasper_dec_class_init (GstJasperDecClass * klass)
 
   gstelement_class = (GstElementClass *) klass;
 
-  GST_DEBUG_CATEGORY_INIT (gst_jasper_dec_debug, "jp2kdec", 0,
+  GST_DEBUG_CATEGORY_INIT (gst_jasper_dec_debug, "jasperdec", 0,
       "Jasper JPEG2000 decoder");
 
   gstelement_class->change_state =

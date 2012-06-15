@@ -75,9 +75,6 @@ static GstFlowReturn gst_jasper_enc_chain (GstPad * pad, GstBuffer * buffer);
  * keep original naming but use unique name here for a happy type system
  */
 
-typedef GstJasperEnc GstJp2kEnc;
-typedef GstJasperEncClass GstJp2kEncClass;
-
 static void
 _do_init (GType object_type)
 {
@@ -91,8 +88,8 @@ _do_init (GType object_type)
       &preset_interface_info);
 }
 
-GST_BOILERPLATE_FULL (GstJp2kEnc, gst_jasper_enc, GstElement, GST_TYPE_ELEMENT,
-    _do_init);
+GST_BOILERPLATE_FULL (GstJasperEnc, gst_jasper_enc, GstElement,
+    GST_TYPE_ELEMENT, _do_init);
 
 static void
 gst_jasper_enc_base_init (gpointer g_class)
@@ -117,7 +114,7 @@ gst_jasper_enc_class_init (GstJasperEncClass * klass)
 
   gstelement_class = (GstElementClass *) klass;
 
-  GST_DEBUG_CATEGORY_INIT (gst_jasper_enc_debug, "jp2kenc", 0,
+  GST_DEBUG_CATEGORY_INIT (gst_jasper_enc_debug, "jasperenc", 0,
       "Jasper JPEG2000 encoder");
 
   /* FIXME add some encoder properties */
