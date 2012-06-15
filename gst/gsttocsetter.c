@@ -69,7 +69,7 @@ gst_toc_setter_get_type (void)
   if (g_once_init_enter (&toc_setter_type)) {
     GType _type;
     static const GTypeInfo toc_setter_info = {
-      sizeof (GstTocSetterIFace),       /* class_size */
+      sizeof (GstTocSetterInterface),   /* class_size */
       NULL,                     /* base_init */
       NULL,                     /* base_finalize */
       NULL,
