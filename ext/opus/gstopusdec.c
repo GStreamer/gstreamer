@@ -2,6 +2,7 @@
  * Copyright (C) 2004 Wim Taymans <wim@fluendo.com>
  * Copyright (C) 2006 Tim-Philipp Müller <tim centricular net>
  * Copyright (C) 2008 Sebastian Dröge <sebastian.droege@collabora.co.uk>
+ * Copyright (C) 2011-2012 Vincent Penquerc'h <vincent.penquerch@collabora.co.uk>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -123,7 +124,7 @@ gst_opus_dec_class_init (GstOpusDecClass * klass)
   gst_element_class_set_details_simple (element_class, "Opus audio decoder",
       "Codec/Decoder/Audio",
       "decode opus streams to audio",
-      "Sebastian Dröge <sebastian.droege@collabora.co.uk>");
+      "Vincent Penquerc'h <vincent.penquerch@collabora.co.uk>");
   g_object_class_install_property (gobject_class, PROP_USE_INBAND_FEC,
       g_param_spec_boolean ("use-inband-fec", "Use in-band FEC",
           "Use forward error correction if available", DEFAULT_USE_INBAND_FEC,
