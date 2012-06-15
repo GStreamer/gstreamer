@@ -160,8 +160,7 @@ gst_byte_writer_init_with_size (GstByteWriter * writer, guint size,
 /**
  * gst_byte_writer_init_with_data:
  * @writer: #GstByteWriter instance
- * @data: (in callee-allocated) (array length=size) (transfer none): Memory
- *     area for writing
+ * @data: (array length=size) (transfer none): Memory area for writing
  * @size: Size of @data in bytes
  * @initialized: If %TRUE the complete data can be read from the beginning
  *

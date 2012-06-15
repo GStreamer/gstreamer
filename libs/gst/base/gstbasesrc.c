@@ -3084,7 +3084,7 @@ could_not_start:
 
 /**
  * gst_base_src_start_complete:
- * @src: base source instance
+ * @basesrc: base source instance
  * @ret: a #GstFlowReturn
  *
  * Complete an asynchronous start operation. When the subclass overrides the
@@ -3214,8 +3214,7 @@ error:
 
 /**
  * gst_base_src_start_wait:
- * @src: base source instance
- * @ret: a #GstFlowReturn
+ * @basesrc: base source instance
  *
  * Wait until the start operation completes.
  *

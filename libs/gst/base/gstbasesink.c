@@ -20,7 +20,7 @@
  */
 
 /**
- * SECTION:gstbasesink
+ * SECTION:gstbasesink:
  * @short_description: Base class for sink elements
  * @see_also: #GstBaseTransform, #GstBaseSrc
  *
@@ -430,7 +430,7 @@ gst_base_sink_class_init (GstBaseSinkClass * klass)
           "Generate Quality-of-Service events upstream", DEFAULT_QOS,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   /**
-   * GstBaseSink:async
+   * GstBaseSink:async:
    *
    * If set to #TRUE, the basesink will perform asynchronous state changes.
    * When set to #FALSE, the sink will not signal the parent when it prerolls.
@@ -444,7 +444,7 @@ gst_base_sink_class_init (GstBaseSinkClass * klass)
           "Go asynchronously to PAUSED", DEFAULT_ASYNC,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   /**
-   * GstBaseSink:ts-offset
+   * GstBaseSink:ts-offset:
    *
    * Controls the final synchronisation, a negative value will render the buffer
    * earlier while a positive value delays playback. This property can be
@@ -458,7 +458,7 @@ gst_base_sink_class_init (GstBaseSinkClass * klass)
           DEFAULT_TS_OFFSET, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   /**
-   * GstBaseSink:enable-last-sample
+   * GstBaseSink:enable-last-sample:
    *
    * Enable the last-sample property. If FALSE, basesink doesn't keep a
    * reference to the last buffer arrived and the last-sample property is always
@@ -473,7 +473,7 @@ gst_base_sink_class_init (GstBaseSinkClass * klass)
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   /**
-   * GstBaseSink:last-sample
+   * GstBaseSink:last-sample:
    *
    * The last buffer that arrived in the sink and was used for preroll or for
    * rendering. This property can be used to generate thumbnails. This property
@@ -486,7 +486,7 @@ gst_base_sink_class_init (GstBaseSinkClass * klass)
           "The last sample received in the sink", GST_TYPE_SAMPLE,
           G_PARAM_READABLE | G_PARAM_STATIC_STRINGS));
   /**
-   * GstBaseSink:blocksize
+   * GstBaseSink:blocksize:
    *
    * The amount of bytes to pull when operating in pull mode.
    *
@@ -498,7 +498,7 @@ gst_base_sink_class_init (GstBaseSinkClass * klass)
           "Size in bytes to pull per buffer (0 = default)", 0, G_MAXUINT,
           DEFAULT_BLOCKSIZE, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   /**
-   * GstBaseSink:render-delay
+   * GstBaseSink:render-delay:
    *
    * The additional delay between synchronisation and actual rendering of the
    * media. This property will add additional latency to the device in order to
@@ -511,7 +511,7 @@ gst_base_sink_class_init (GstBaseSinkClass * klass)
           "Additional render delay of the sink in nanoseconds", 0, G_MAXUINT64,
           DEFAULT_RENDER_DELAY, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   /**
-   * GstBaseSink:throttle-time
+   * GstBaseSink:throttle-time:
    *
    * The time to insert between buffers. This property can be used to control
    * the maximum amount of buffers per second to render. Setting this property
