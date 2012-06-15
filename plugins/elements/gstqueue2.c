@@ -2723,7 +2723,9 @@ gst_queue2_handle_src_query (GstPad * pad, GstObject * parent, GstQuery * query)
             start = 0;
             /* get our available data relative to the duration */
             if (duration != -1)
-              stop = GST_FORMAT_PERCENT_MAX * writing_pos / duration;
+              stop =
+                  gst_util_uint64_scale (GST_FORMAT_PERCENT_MAX, writing_pos,
+                  duration);
             else
               stop = -1;
             break;
@@ -2747,8 +2749,12 @@ gst_queue2_handle_src_query (GstPad * pad, GstObject * parent, GstQuery * query)
                 range_stop = 0;
                 break;
               }
-              range_start = 100 * queued_ranges->offset / duration;
-              range_stop = 100 * queued_ranges->writing_pos / duration;
+              range_start =
+                  gst_util_uint64_scale (GST_FORMAT_PERCENT_MAX,
+                  queued_ranges->offset, duration);
+              range_stop =
+                  gst_util_uint64_scale (GST_FORMAT_PERCENT_MAX,
+                  queued_ranges->writing_pos, duration);
               break;
             case GST_FORMAT_BYTES:
               range_start = queued_ranges->offset;
