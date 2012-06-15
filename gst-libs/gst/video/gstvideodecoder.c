@@ -287,6 +287,8 @@ static gboolean gst_video_decoder_src_event_default (GstVideoDecoder * decoder,
     GstEvent * event);
 static gboolean gst_video_decoder_decide_allocation_default (GstVideoDecoder *
     decoder, GstQuery * query);
+static gboolean gst_video_decoder_propose_allocation_default (GstVideoDecoder *
+    decoder, GstQuery * query);
 
 /* we can't use G_DEFINE_ABSTRACT_TYPE because we need the klass in the _init
  * method to get to the padtemplates */
@@ -339,6 +341,7 @@ gst_video_decoder_class_init (GstVideoDecoderClass * klass)
   klass->sink_event = gst_video_decoder_sink_event_default;
   klass->src_event = gst_video_decoder_src_event_default;
   klass->decide_allocation = gst_video_decoder_decide_allocation_default;
+  klass->propose_allocation = gst_video_decoder_propose_allocation_default;
 }
 
 static void
@@ -1228,6 +1231,13 @@ gst_video_decoder_sink_query (GstPad * pad, GstObject * parent,
       if (!res)
         goto error;
       gst_query_set_convert (query, src_fmt, src_val, dest_fmt, dest_val);
+      break;
+    }
+    case GST_QUERY_ALLOCATION:{
+      GstVideoDecoderClass *klass = GST_VIDEO_DECODER_GET_CLASS (decoder);
+
+      if (klass->propose_allocation)
+        res = klass->propose_allocation (decoder, query);
       break;
     }
     default:
@@ -2444,6 +2454,13 @@ gst_video_decoder_decide_allocation_default (GstVideoDecoder * decoder,
   if (pool)
     gst_object_unref (pool);
 
+  return TRUE;
+}
+
+static gboolean
+gst_video_decoder_propose_allocation_default (GstVideoDecoder * decoder,
+    GstQuery * query)
+{
   return TRUE;
 }
 

@@ -251,6 +251,8 @@ struct _GstVideoDecoder
  *                     Setup the allocation parameters for allocating output
  *                     buffers. The passed in query contains the result of the
  *                     downstream allocation query.
+ * @propose_allocation: Optional.
+ *                      Propose buffer allocation parameters for upstream elements.
  *
  * Subclasses can override any of the available virtual methods or not, as
  * needed. At minimum @handle_frame needs to be overridden, and @set_format
@@ -297,6 +299,7 @@ struct _GstVideoDecoderClass
 
   gboolean      (*decide_allocation)  (GstVideoDecoder *decoder, GstQuery *query);
 
+  gboolean      (*propose_allocation) (GstVideoDecoder *decoder, GstQuery * query);
 
   /*< private >*/
   /* FIXME before moving to base */
