@@ -33,10 +33,14 @@
 #include <gst/gst.h>
 #include <gst/video/video.h>
 #include <gst/video/gstvideodecoder.h>
+#include <gst/video/gstvideometa.h>
+#include <gst/video/gstvideopool.h>
 
 #include "gstffmpeg.h"
 #include "gstffmpegcodecmap.h"
 #include "gstffmpegutils.h"
+
+GST_DEBUG_CATEGORY_EXTERN (GST_CAT_PERFORMANCE);
 
 typedef struct _GstFFMpegVidDec GstFFMpegVidDec;
 
@@ -63,23 +67,16 @@ struct _GstFFMpegVidDec
   guint8 *padded;
   guint padded_size;
 
-  GValue *par;                  /* pixel aspect ratio of incoming data */
   gboolean current_dr;          /* if direct rendering is enabled */
-  gboolean extra_ref;           /* keep extra ref around in get/release */
 
   /* some properties */
   enum AVDiscard skip_frame;
   gint lowres;
   gboolean direct_rendering;
-  gboolean do_padding;
   gboolean debug_mv;
-  gboolean crop;
   int max_threads;
 
   gboolean is_realvideo;
-
-  /* Can downstream allocate 16bytes aligned data. */
-  gboolean can_allocate_aligned;
 };
 
 typedef struct _GstFFMpegVidDecClass GstFFMpegVidDecClass;
@@ -105,9 +102,7 @@ struct _GstFFMpegVidDecClass
 #define DEFAULT_LOWRES			0
 #define DEFAULT_SKIPFRAME		0
 #define DEFAULT_DIRECT_RENDERING	TRUE
-#define DEFAULT_DO_PADDING		TRUE
 #define DEFAULT_DEBUG_MV		FALSE
-#define DEFAULT_CROP			TRUE
 #define DEFAULT_MAX_THREADS		0
 
 enum
@@ -116,9 +111,7 @@ enum
   PROP_LOWRES,
   PROP_SKIPFRAME,
   PROP_DIRECT_RENDERING,
-  PROP_DO_PADDING,
   PROP_DEBUG_MV,
-  PROP_CROP,
   PROP_MAX_THREADS,
   PROP_LAST
 };
@@ -136,6 +129,10 @@ static GstFlowReturn gst_ffmpegviddec_handle_frame (GstVideoDecoder * decoder,
 static gboolean gst_ffmpegviddec_stop (GstVideoDecoder * decoder);
 static gboolean gst_ffmpegviddec_reset (GstVideoDecoder * decoder,
     gboolean hard);
+static gboolean gst_ffmpegviddec_decide_allocation (GstVideoDecoder * decoder,
+    GstQuery * query);
+static gboolean gst_ffmpegviddec_propose_allocation (GstVideoDecoder * decoder,
+    GstQuery * query);
 
 static void gst_ffmpegviddec_set_property (GObject * object,
     guint prop_id, const GValue * value, GParamSpec * pspec);
@@ -273,10 +270,6 @@ gst_ffmpegviddec_class_init (GstFFMpegVidDecClass * klass)
       g_param_spec_boolean ("direct-rendering", "Direct Rendering",
           "Enable direct rendering", DEFAULT_DIRECT_RENDERING,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
-  g_object_class_install_property (gobject_class, PROP_DO_PADDING,
-      g_param_spec_boolean ("do-padding", "Do Padding",
-          "Add 0 padding before decoding data", DEFAULT_DO_PADDING,
-          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (gobject_class, PROP_DEBUG_MV,
       g_param_spec_boolean ("debug-mv", "Debug motion vectors",
           "Whether libav should print motion vectors on top of the image",
@@ -296,6 +289,8 @@ gst_ffmpegviddec_class_init (GstFFMpegVidDecClass * klass)
   viddec_class->stop = gst_ffmpegviddec_stop;
   viddec_class->reset = gst_ffmpegviddec_reset;
   viddec_class->finish = gst_ffmpegviddec_finish;
+  viddec_class->decide_allocation = gst_ffmpegviddec_decide_allocation;
+  viddec_class->propose_allocation = gst_ffmpegviddec_propose_allocation;
 }
 
 static void
@@ -308,13 +303,8 @@ gst_ffmpegviddec_init (GstFFMpegVidDec * ffmpegdec)
   ffmpegdec->waiting_for_key = TRUE;
   ffmpegdec->skip_frame = ffmpegdec->lowres = 0;
   ffmpegdec->direct_rendering = DEFAULT_DIRECT_RENDERING;
-  ffmpegdec->do_padding = DEFAULT_DO_PADDING;
   ffmpegdec->debug_mv = DEFAULT_DEBUG_MV;
-  ffmpegdec->crop = DEFAULT_CROP;
   ffmpegdec->max_threads = DEFAULT_MAX_THREADS;
-
-  /* We initially assume downstream can allocate 16 bytes aligned buffers */
-  ffmpegdec->can_allocate_aligned = TRUE;
 }
 
 static void
@@ -457,41 +447,6 @@ gst_ffmpegviddec_set_format (GstVideoDecoder * decoder,
     ffmpegdec->context->time_base.den = 25;
   }
 
-  /* figure out if we can use direct rendering */
-  ffmpegdec->current_dr = FALSE;
-  ffmpegdec->extra_ref = FALSE;
-  if (ffmpegdec->direct_rendering) {
-    GST_DEBUG_OBJECT (ffmpegdec, "trying to enable direct rendering");
-    if (oclass->in_plugin->capabilities & CODEC_CAP_DR1) {
-      if (oclass->in_plugin->id == CODEC_ID_H264) {
-        GST_DEBUG_OBJECT (ffmpegdec, "disable direct rendering setup for H264");
-        /* does not work, many stuff reads outside of the planes */
-        ffmpegdec->current_dr = FALSE;
-        ffmpegdec->extra_ref = TRUE;
-      } else if ((oclass->in_plugin->id == CODEC_ID_SVQ1) ||
-          (oclass->in_plugin->id == CODEC_ID_VP5) ||
-          (oclass->in_plugin->id == CODEC_ID_VP6) ||
-          (oclass->in_plugin->id == CODEC_ID_VP6F) ||
-          (oclass->in_plugin->id == CODEC_ID_VP6A)) {
-        GST_DEBUG_OBJECT (ffmpegdec,
-            "disable direct rendering setup for broken stride support");
-        /* does not work, uses a incompatible stride. See #610613 */
-        ffmpegdec->current_dr = FALSE;
-        ffmpegdec->extra_ref = TRUE;
-      } else {
-        GST_DEBUG_OBJECT (ffmpegdec, "enabled direct rendering");
-        ffmpegdec->current_dr = TRUE;
-      }
-    } else {
-      GST_DEBUG_OBJECT (ffmpegdec, "direct rendering not supported");
-    }
-  }
-  if (ffmpegdec->current_dr) {
-    /* do *not* draw edges when in direct rendering, for some reason it draws
-     * outside of the memory. */
-    ffmpegdec->context->flags |= CODEC_FLAG_EMU_EDGE;
-  }
-
   /* workaround encoder bugs */
   ffmpegdec->context->workaround_bugs |= FF_BUG_AUTODETECT;
   ffmpegdec->context->error_recognition = 1;
@@ -539,77 +494,6 @@ open_failed:
   }
 }
 
-static GstFlowReturn
-alloc_output_buffer (GstFFMpegVidDec * ffmpegdec, GstVideoCodecFrame * frame)
-{
-  GstFlowReturn ret;
-  gint fsize;
-
-  ret = GST_FLOW_ERROR;
-
-  GST_LOG_OBJECT (ffmpegdec, "alloc output buffer");
-
-  /* see if we need renegotiation */
-  if (G_UNLIKELY (!gst_ffmpegviddec_negotiate (ffmpegdec, FALSE)))
-    goto negotiate_failed;
-
-  /* get the size of the gstreamer output buffer given a
-   * width/height/format */
-  fsize = GST_VIDEO_INFO_SIZE (&ffmpegdec->output_state->info);
-
-  if (!ffmpegdec->context->palctrl && ffmpegdec->can_allocate_aligned) {
-    GstMapInfo minfo;
-
-    GST_LOG_OBJECT (ffmpegdec, "calling pad_alloc");
-    /* no pallete, we can use the buffer size to alloc */
-    ret =
-        gst_video_decoder_alloc_output_frame (GST_VIDEO_DECODER (ffmpegdec),
-        frame);
-    if (G_UNLIKELY (ret != GST_FLOW_OK))
-      goto alloc_failed;
-
-    /* If buffer isn't 128-bit aligned, create a memaligned one ourselves */
-    if (!gst_buffer_map (frame->output_buffer, &minfo,
-            GST_MAP_READ | GST_MAP_WRITE))
-      goto alloc_failed;
-
-    if (((uintptr_t) minfo.data) % 16) {
-      gst_buffer_unmap (frame->output_buffer, &minfo);
-      GST_DEBUG_OBJECT (ffmpegdec,
-          "Downstream can't allocate aligned buffers.");
-      ffmpegdec->can_allocate_aligned = FALSE;
-      gst_buffer_unref (frame->output_buffer);
-      frame->output_buffer = new_aligned_buffer (fsize);
-    } else {
-      gst_buffer_unmap (frame->output_buffer, &minfo);
-    }
-  } else {
-    GST_LOG_OBJECT (ffmpegdec,
-        "not calling pad_alloc, we have a pallete or downstream can't give 16 byte aligned buffers.");
-    /* for paletted data we can't use pad_alloc_buffer(), because
-     * fsize contains the size of the palette, so the overall size
-     * is bigger than ffmpegcolorspace's unit size, which will
-     * prompt GstBaseTransform to complain endlessly ... */
-    frame->output_buffer = new_aligned_buffer (fsize);
-    ret = GST_FLOW_OK;
-  }
-
-  return ret;
-
-  /* special cases */
-negotiate_failed:
-  {
-    GST_DEBUG_OBJECT (ffmpegdec, "negotiate failed");
-    return GST_FLOW_NOT_NEGOTIATED;
-  }
-alloc_failed:
-  {
-    GST_DEBUG_OBJECT (ffmpegdec, "pad_alloc failed %d (%s)", ret,
-        gst_flow_get_name (ret));
-    return ret;
-  }
-}
-
 typedef struct
 {
   GstVideoCodecFrame *frame;
@@ -637,15 +521,14 @@ gst_ffmpegviddec_video_frame_free (GstFFMpegVidDecVideoFrame * frame)
   g_slice_free (GstFFMpegVidDecVideoFrame, frame);
 }
 
+/* called when ffmpeg wants us to allocate a buffer to write the decoded frame
+ * into. We try to give it memory from our pool */
 static int
 gst_ffmpegviddec_get_buffer (AVCodecContext * context, AVFrame * picture)
 {
   GstVideoCodecFrame *frame;
   GstFFMpegVidDecVideoFrame *dframe;
   GstFFMpegVidDec *ffmpegdec;
-  gint width, height;
-  gint coded_width, coded_height;
-  gint res;
   gint c;
   GstVideoInfo *info;
   GstFlowReturn ret;
@@ -666,55 +549,26 @@ gst_ffmpegviddec_get_buffer (AVCodecContext * context, AVFrame * picture)
     goto no_frame;
 
   picture->opaque = dframe = gst_ffmpegviddec_video_frame_new (frame);
+  ffmpegdec->context->pix_fmt = context->pix_fmt;
 
-  if (!ffmpegdec->current_dr) {
-    GST_LOG_OBJECT (ffmpegdec, "direct rendering disabled, fallback alloc");
-    res = avcodec_default_get_buffer (context, picture);
+  /* see if we need renegotiation */
+  if (G_UNLIKELY (!gst_ffmpegviddec_negotiate (ffmpegdec, FALSE)))
+    goto negotiate_failed;
 
-    GST_LOG_OBJECT (ffmpegdec, "linsize %d %d %d", picture->linesize[0],
-        picture->linesize[1], picture->linesize[2]);
-    GST_LOG_OBJECT (ffmpegdec, "data %u %u %u", 0,
-        (guint) (picture->data[1] - picture->data[0]),
-        (guint) (picture->data[2] - picture->data[0]));
-    return res;
-  }
+  if (!ffmpegdec->current_dr)
+    goto no_dr;
 
-  /* take width and height before clipping */
-  width = context->width;
-  height = context->height;
-  coded_width = context->coded_width;
-  coded_height = context->coded_height;
-
-  GST_LOG_OBJECT (ffmpegdec, "dimension %dx%d, coded %dx%d", width, height,
-      coded_width, coded_height);
-
-  /* this is the size ffmpeg needs for the buffer */
-  avcodec_align_dimensions (context, &width, &height);
-  GST_LOG_OBJECT (ffmpegdec, "Aligned dimensions %dx%d", width, height);
-
-  if (width != context->width || height != context->height) {
-    /* We can't alloc if we need to clip the output buffer later */
-    GST_LOG_OBJECT (ffmpegdec, "we need clipping, fallback alloc");
-    return avcodec_default_get_buffer (context, picture);
-  }
-
-  /* alloc with aligned dimensions for ffmpeg */
-  ret = alloc_output_buffer (ffmpegdec, frame);
-  if (G_UNLIKELY (ret != GST_FLOW_OK)) {
-    /* alloc default buffer when we can't get one from downstream */
-    GST_LOG_OBJECT (ffmpegdec, "alloc failed, fallback alloc");
-    return avcodec_default_get_buffer (context, picture);
-  }
+  ret =
+      gst_video_decoder_alloc_output_frame (GST_VIDEO_DECODER (ffmpegdec),
+      frame);
+  if (ret != GST_FLOW_OK)
+    goto alloc_failed;
 
   /* Fill avpicture */
   info = &ffmpegdec->output_state->info;
   if (!gst_video_frame_map (&dframe->vframe, info, dframe->frame->output_buffer,
-          GST_MAP_READ | GST_MAP_WRITE)) {
-    GST_LOG_OBJECT (ffmpegdec, "failed to map frame, fallback alloc");
-    gst_buffer_unref (frame->output_buffer);
-    frame->output_buffer = NULL;
-    return avcodec_default_get_buffer (context, picture);
-  }
+          GST_MAP_READ | GST_MAP_WRITE))
+    goto invalid_frame;
   dframe->mapped = TRUE;
 
   for (c = 0; c < AV_NUM_DATA_POINTERS; c++) {
@@ -740,11 +594,41 @@ gst_ffmpegviddec_get_buffer (AVCodecContext * context, AVFrame * picture)
 
   return 0;
 
+  /* fallbacks */
+negotiate_failed:
+  {
+    GST_DEBUG_OBJECT (ffmpegdec, "negotiate failed");
+    goto fallback;
+  }
+no_dr:
+  {
+    GST_LOG_OBJECT (ffmpegdec, "direct rendering disabled, fallback alloc");
+    goto fallback;
+  }
+alloc_failed:
+  {
+    /* alloc default buffer when we can't get one from downstream */
+    GST_LOG_OBJECT (ffmpegdec, "alloc failed, fallback alloc");
+    goto fallback;
+  }
+invalid_frame:
+  {
+    /* alloc default buffer when we can't get one from downstream */
+    GST_LOG_OBJECT (ffmpegdec, "failed to map frame, fallback alloc");
+    gst_buffer_unref (frame->output_buffer);
+    frame->output_buffer = NULL;
+    goto fallback;
+  }
+fallback:
+  {
+    return avcodec_default_get_buffer (context, picture);
+  }
 no_frame:
   GST_WARNING_OBJECT (ffmpegdec, "Couldn't get codec frame !");
   return -1;
 }
 
+/* called when ffmpeg is done with our buffer */
 static void
 gst_ffmpegviddec_release_buffer (AVCodecContext * context, AVFrame * picture)
 {
@@ -952,7 +836,9 @@ get_output_buffer (GstFFMpegVidDec * ffmpegdec, GstVideoCodecFrame * frame)
 
   GST_LOG_OBJECT (ffmpegdec, "get output buffer");
 
-  ret = alloc_output_buffer (ffmpegdec, frame);
+  ret =
+      gst_video_decoder_alloc_output_frame (GST_VIDEO_DECODER (ffmpegdec),
+      frame);
   if (G_UNLIKELY (ret != GST_FLOW_OK))
     goto alloc_failed;
 
@@ -1185,12 +1071,10 @@ gst_ffmpegviddec_video_frame (GstFFMpegVidDec * ffmpegdec,
     /* we have a keyframe, we can stop waiting for one */
     ffmpegdec->waiting_for_key = FALSE;
   }
-#if 0
-  /* FIXME : How should we properly handle this with base classes */
-  frame->n_fields = ffmpegdec->picture->repeat_pict;
-#endif
 
   /* mark as keyframe or delta unit */
+  if (ffmpegdec->picture->repeat_pict)
+    GST_BUFFER_FLAG_SET (out_frame->output_buffer, GST_VIDEO_BUFFER_FLAG_RFF);
   if (ffmpegdec->picture->top_field_first)
     GST_BUFFER_FLAG_SET (out_frame->output_buffer, GST_VIDEO_BUFFER_FLAG_TFF);
 
@@ -1321,6 +1205,7 @@ gst_ffmpegviddec_handle_frame (GstVideoDecoder * decoder,
   gint size, len, have_data, bsize;
   GstMapInfo minfo;
   GstFlowReturn ret = GST_FLOW_OK;
+  gboolean do_padding;
 
   /* do early keyframe check pretty bad to rely on the keyframe flag in the
    * source for this as it might not even be parsed (UDP/file/..).  */
@@ -1339,16 +1224,16 @@ gst_ffmpegviddec_handle_frame (GstVideoDecoder * decoder,
       gst_buffer_get_size (frame->input_buffer),
       GST_TIME_ARGS (frame->pts), GST_TIME_ARGS (frame->duration));
 
-  frame->input_buffer = gst_buffer_make_writable (frame->input_buffer);
-  if (!gst_buffer_map (frame->input_buffer, &minfo,
-          GST_MAP_READ | GST_MAP_WRITE)) {
-    g_assert_not_reached ();
+  if (!gst_buffer_map (frame->input_buffer, &minfo, GST_MAP_READ)) {
+    GST_ERROR_OBJECT (ffmpegdec, "Failed to map buffer");
+    return GST_FLOW_ERROR;
   }
 
   bdata = minfo.data;
   bsize = minfo.size;
 
-  if (ffmpegdec->do_padding) {
+  if (!GST_MEMORY_IS_ZERO_PADDED (minfo.memory)
+      || (minfo.maxsize - minfo.size) < FF_INPUT_BUFFER_PADDING_SIZE) {
     /* add padding */
     if (ffmpegdec->padded_size < bsize + FF_INPUT_BUFFER_PADDING_SIZE) {
       ffmpegdec->padded_size = bsize + FF_INPUT_BUFFER_PADDING_SIZE;
@@ -1356,10 +1241,15 @@ gst_ffmpegviddec_handle_frame (GstVideoDecoder * decoder,
       GST_LOG_OBJECT (ffmpegdec, "resized padding buffer to %d",
           ffmpegdec->padded_size);
     }
+    GST_CAT_TRACE_OBJECT (GST_CAT_PERFORMANCE, ffmpegdec,
+        "Copy input to add padding");
     memcpy (ffmpegdec->padded, bdata, bsize);
     memset (ffmpegdec->padded + bsize, 0, FF_INPUT_BUFFER_PADDING_SIZE);
 
     bdata = ffmpegdec->padded;
+    do_padding = TRUE;
+  } else {
+    do_padding = FALSE;
   }
 
   do {
@@ -1369,8 +1259,10 @@ gst_ffmpegviddec_handle_frame (GstVideoDecoder * decoder,
     data = bdata;
     size = bsize;
 
-    if (ffmpegdec->do_padding) {
+    if (do_padding) {
       /* add temporary padding */
+      GST_CAT_TRACE_OBJECT (GST_CAT_PERFORMANCE, ffmpegdec,
+          "Add temporary input padding");
       memcpy (tmp_padding, data + size, FF_INPUT_BUFFER_PADDING_SIZE);
       memset (data + size, 0, FF_INPUT_BUFFER_PADDING_SIZE);
     }
@@ -1379,7 +1271,7 @@ gst_ffmpegviddec_handle_frame (GstVideoDecoder * decoder,
     len =
         gst_ffmpegviddec_frame (ffmpegdec, data, size, &have_data, frame, &ret);
 
-    if (ffmpegdec->do_padding) {
+    if (do_padding) {
       memcpy (data + size, tmp_padding, FF_INPUT_BUFFER_PADDING_SIZE);
     }
 
@@ -1412,6 +1304,8 @@ gst_ffmpegviddec_handle_frame (GstVideoDecoder * decoder,
     bsize -= len;
     bdata += len;
 
+    do_padding = TRUE;
+
     GST_LOG_OBJECT (ffmpegdec, "Before (while bsize>0).  bsize:%d , bdata:%p",
         bsize, bdata);
   } while (bsize > 0);
@@ -1440,7 +1334,6 @@ gst_ffmpegviddec_stop (GstVideoDecoder * decoder)
   g_free (ffmpegdec->padded);
   ffmpegdec->padded = NULL;
   ffmpegdec->padded_size = 0;
-  ffmpegdec->can_allocate_aligned = TRUE;
   if (ffmpegdec->input_state)
     gst_video_codec_state_unref (ffmpegdec->input_state);
   ffmpegdec->input_state = NULL;
@@ -1475,6 +1368,131 @@ gst_ffmpegviddec_reset (GstVideoDecoder * decoder, gboolean hard)
   return TRUE;
 }
 
+static gboolean
+gst_ffmpegviddec_decide_allocation (GstVideoDecoder * decoder, GstQuery * query)
+{
+  GstFFMpegVidDec *ffmpegdec = (GstFFMpegVidDec *) decoder;
+  GstVideoCodecState *state;
+  GstBufferPool *pool;
+  guint size, min, max;
+  GstStructure *config;
+  gboolean have_videometa, have_alignment;
+  GstAllocationParams params = { 0, 0, 0, 15, };
+
+  if (!GST_VIDEO_DECODER_CLASS (parent_class)->decide_allocation (decoder,
+          query))
+    return FALSE;
+
+  state = gst_video_decoder_get_output_state (decoder);
+
+  gst_query_parse_nth_allocation_pool (query, 0, &pool, &size, &min, &max);
+
+  config = gst_buffer_pool_get_config (pool);
+  gst_buffer_pool_config_set_params (config, state->caps, size, min, max);
+  /* we are happy with the default allocator but we would like to have 16 bytes
+   * aligned memory */
+  gst_buffer_pool_config_set_allocator (config, NULL, &params);
+
+  have_videometa =
+      gst_query_has_allocation_meta (query, GST_VIDEO_META_API_TYPE);
+  if (have_videometa)
+    gst_buffer_pool_config_add_option (config,
+        GST_BUFFER_POOL_OPTION_VIDEO_META);
+
+  have_alignment =
+      gst_buffer_pool_has_option (pool, GST_BUFFER_POOL_OPTION_VIDEO_ALIGNMENT);
+
+  /* we can only enable the alignment if downstream supports the
+   * videometa api */
+  if (have_alignment && have_videometa) {
+    GstVideoAlignment align;
+    gint width, height;
+    gint linesize_align[4];
+    gint i;
+    guint edge;
+
+    width = GST_VIDEO_INFO_WIDTH (&state->info);
+    height = GST_VIDEO_INFO_HEIGHT (&state->info);
+    /* let ffmpeg find the alignment and padding */
+    avcodec_align_dimensions2 (ffmpegdec->context, &width, &height,
+        linesize_align);
+    edge =
+        ffmpegdec->
+        context->flags & CODEC_FLAG_EMU_EDGE ? 0 : avcodec_get_edge_width ();
+    /* increase the size for the padding */
+    width += edge << 1;
+    height += edge << 1;
+
+    align.padding_top = edge;
+    align.padding_left = edge;
+    align.padding_right = width - GST_VIDEO_INFO_WIDTH (&state->info) - edge;
+    align.padding_bottom = height - GST_VIDEO_INFO_HEIGHT (&state->info) - edge;
+    for (i = 0; i < GST_VIDEO_MAX_PLANES; i++)
+      align.stride_align[i] =
+          (linesize_align[i] > 0 ? linesize_align[i] - 1 : 0);
+
+    GST_DEBUG_OBJECT (ffmpegdec, "aligned dimension %dx%d -> %dx%d "
+        "padding t:%u l:%u r:%u b:%u, stride_align %d:%d:%d:%d",
+        GST_VIDEO_INFO_WIDTH (&state->info),
+        GST_VIDEO_INFO_HEIGHT (&state->info), width, height, align.padding_top,
+        align.padding_left, align.padding_right, align.padding_bottom,
+        align.stride_align[0], align.stride_align[1], align.stride_align[2],
+        align.stride_align[3]);
+
+    gst_buffer_pool_config_add_option (config,
+        GST_BUFFER_POOL_OPTION_VIDEO_ALIGNMENT);
+    gst_buffer_pool_config_set_video_alignment (config, &align);
+
+    if (ffmpegdec->direct_rendering) {
+      GstFFMpegVidDecClass *oclass;
+
+      GST_DEBUG_OBJECT (ffmpegdec, "trying to enable direct rendering");
+
+      oclass = (GstFFMpegVidDecClass *) (G_OBJECT_GET_CLASS (ffmpegdec));
+
+      if (oclass->in_plugin->capabilities & CODEC_CAP_DR1) {
+        GST_DEBUG_OBJECT (ffmpegdec, "enabled direct rendering");
+        ffmpegdec->current_dr = TRUE;
+      } else {
+        GST_DEBUG_OBJECT (ffmpegdec, "direct rendering not supported");
+      }
+    }
+  } else {
+    GST_DEBUG_OBJECT (ffmpegdec,
+        "alignment or videometa not supported, disable direct rendering");
+
+    /* disable direct rendering. This will make us use the fallback ffmpeg
+     * picture allocation code with padding etc. We will then do the final
+     * copy (with cropping) into a buffer from our pool */
+    ffmpegdec->current_dr = FALSE;
+  }
+
+  /* and store */
+  gst_buffer_pool_set_config (pool, config);
+
+  gst_object_unref (pool);
+  gst_video_codec_state_unref (state);
+
+  return TRUE;
+}
+
+static gboolean
+gst_ffmpegviddec_propose_allocation (GstVideoDecoder * decoder,
+    GstQuery * query)
+{
+  GstAllocationParams params;
+
+  gst_allocation_params_init (&params);
+  params.flags = GST_MEMORY_FLAG_ZERO_PADDED;
+  params.padding = FF_INPUT_BUFFER_PADDING_SIZE;
+  /* we would like to have some padding so that we don't have to
+   * memcpy. We don't suggest an allocator. */
+  gst_query_add_allocation_param (query, NULL, &params);
+
+  return GST_VIDEO_DECODER_CLASS (parent_class)->propose_allocation (decoder,
+      query);
+}
+
 static void
 gst_ffmpegviddec_set_property (GObject * object,
     guint prop_id, const GValue * value, GParamSpec * pspec)
@@ -1492,15 +1510,9 @@ gst_ffmpegviddec_set_property (GObject * object,
     case PROP_DIRECT_RENDERING:
       ffmpegdec->direct_rendering = g_value_get_boolean (value);
       break;
-    case PROP_DO_PADDING:
-      ffmpegdec->do_padding = g_value_get_boolean (value);
-      break;
     case PROP_DEBUG_MV:
       ffmpegdec->debug_mv = ffmpegdec->context->debug_mv =
           g_value_get_boolean (value);
-      break;
-    case PROP_CROP:
-      ffmpegdec->crop = g_value_get_boolean (value);
       break;
     case PROP_MAX_THREADS:
       ffmpegdec->max_threads = g_value_get_int (value);
@@ -1527,14 +1539,8 @@ gst_ffmpegviddec_get_property (GObject * object,
     case PROP_DIRECT_RENDERING:
       g_value_set_boolean (value, ffmpegdec->direct_rendering);
       break;
-    case PROP_DO_PADDING:
-      g_value_set_boolean (value, ffmpegdec->do_padding);
-      break;
     case PROP_DEBUG_MV:
       g_value_set_boolean (value, ffmpegdec->context->debug_mv);
-      break;
-    case PROP_CROP:
-      g_value_set_boolean (value, ffmpegdec->crop);
       break;
     case PROP_MAX_THREADS:
       g_value_set_int (value, ffmpegdec->max_threads);
