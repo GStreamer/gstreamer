@@ -1089,7 +1089,8 @@ gst_ffmpegviddec_video_frame (GstFFMpegVidDec * ffmpegdec,
     else
       GST_VIDEO_INFO_INTERLACE_MODE (&ffmpegdec->input_state->info) =
           GST_VIDEO_INTERLACE_MODE_PROGRESSIVE;
-    gst_ffmpegviddec_negotiate (ffmpegdec, TRUE);
+    if (!gst_ffmpegviddec_negotiate (ffmpegdec, TRUE))
+      goto negotiation_error;
   }
 
   if (G_UNLIKELY (out_frame->output_buffer == NULL))
@@ -1110,7 +1111,8 @@ gst_ffmpegviddec_video_frame (GstFFMpegVidDec * ffmpegdec,
     else
       GST_VIDEO_INFO_INTERLACE_MODE (&ffmpegdec->input_state->info) =
           GST_VIDEO_INTERLACE_MODE_PROGRESSIVE;
-    gst_ffmpegviddec_negotiate (ffmpegdec, TRUE);
+    if (!gst_ffmpegviddec_negotiate (ffmpegdec, TRUE))
+      goto negotiation_error;
   }
 
   /* check if we are dealing with a keyframe here, this will also check if we
@@ -1161,6 +1163,13 @@ no_output:
     GST_DEBUG_OBJECT (ffmpegdec, "no output buffer");
     gst_video_decoder_drop_frame (GST_VIDEO_DECODER (ffmpegdec), out_frame);
     len = -1;
+    goto beach;
+  }
+
+negotiation_error:
+  {
+    GST_WARNING_OBJECT (ffmpegdec, "Error negotiating format");
+    *ret = GST_FLOW_NOT_NEGOTIATED;
     goto beach;
   }
 }
