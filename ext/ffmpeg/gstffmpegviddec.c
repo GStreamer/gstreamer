@@ -24,7 +24,7 @@
 #include <assert.h>
 #include <string.h>
 
-#ifdef HAVE_FFMPEG_UNINSTALLED
+#ifdef HAVE_LIBAV_UNINSTALLED
 #include <avcodec.h>
 #else
 #include <libavcodec/avcodec.h>
@@ -91,7 +91,6 @@ struct _GstFFMpegVidDecClass
   AVCodec *in_plugin;
 };
 
-
 #define GST_TYPE_FFMPEGDEC \
   (gst_ffmpegviddec_get_type())
 #define GST_FFMPEGDEC(obj) \
@@ -155,7 +154,7 @@ static void gst_ffmpegviddec_release_buffer (AVCodecContext * context,
 static GstFlowReturn gst_ffmpegviddec_finish (GstVideoDecoder * decoder);
 static void gst_ffmpegviddec_drain (GstFFMpegVidDec * ffmpegdec);
 
-#define GST_FFDEC_PARAMS_QDATA g_quark_from_static_string("ffdec-params")
+#define GST_FFDEC_PARAMS_QDATA g_quark_from_static_string("avdec-params")
 
 static GstElementClass *parent_class = NULL;
 
@@ -174,7 +173,7 @@ gst_ffmpegviddec_lowres_get_type (void)
     };
 
     ffmpegdec_lowres_type =
-        g_enum_register_static ("GstFFMpegVidDecLowres", ffmpegdec_lowres);
+        g_enum_register_static ("GstLibAVVidDecLowres", ffmpegdec_lowres);
   }
 
   return ffmpegdec_lowres_type;
@@ -196,8 +195,7 @@ gst_ffmpegviddec_skipframe_get_type (void)
     };
 
     ffmpegdec_skipframe_type =
-        g_enum_register_static ("GstFFMpegVidDecSkipFrame",
-        ffmpegdec_skipframe);
+        g_enum_register_static ("GstLibAVVidDecSkipFrame", ffmpegdec_skipframe);
   }
 
   return ffmpegdec_skipframe_type;
@@ -218,9 +216,9 @@ gst_ffmpegviddec_base_init (GstFFMpegVidDecClass * klass)
   g_assert (in_plugin != NULL);
 
   /* construct the element details struct */
-  longname = g_strdup_printf ("FFmpeg %s decoder", in_plugin->long_name);
-  description = g_strdup_printf ("FFmpeg %s decoder", in_plugin->name);
-  gst_element_class_set_details_simple (element_class, longname,
+  longname = g_strdup_printf ("libav %s decoder", in_plugin->long_name);
+  description = g_strdup_printf ("libav %s decoder", in_plugin->name);
+  gst_element_class_set_metadata (element_class, longname,
       "Codec/Decoder/Video", description,
       "Wim Taymans <wim.taymans@gmail.com>, "
       "Ronald Bultje <rbultje@ronald.bitfreak.net>, "
@@ -232,11 +230,9 @@ gst_ffmpegviddec_base_init (GstFFMpegVidDecClass * klass)
   sinkcaps = gst_ffmpeg_codecid_to_caps (in_plugin->id, NULL, FALSE);
   if (!sinkcaps) {
     GST_DEBUG ("Couldn't get sink caps for decoder '%s'", in_plugin->name);
-    sinkcaps = gst_caps_from_string ("unknown/unknown");
+    sinkcaps = gst_caps_new_empty_simple ("unknown/unknown");
   }
-  srccaps =
-      gst_caps_from_string
-      ("video/x-raw-rgb; video/x-raw-yuv; video/x-raw-gray");
+  srccaps = gst_caps_new_empty_simple ("video/x-raw");
 
   /* pad templates */
   sinktempl = gst_pad_template_new ("sink", GST_PAD_SINK,
@@ -283,7 +279,7 @@ gst_ffmpegviddec_class_init (GstFFMpegVidDecClass * klass)
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (gobject_class, PROP_DEBUG_MV,
       g_param_spec_boolean ("debug-mv", "Debug motion vectors",
-          "Whether ffmpeg should print motion vectors on top of the image",
+          "Whether libav should print motion vectors on top of the image",
           DEFAULT_DEBUG_MV, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   caps = klass->in_plugin->capabilities;
@@ -378,7 +374,7 @@ gst_ffmpegviddec_open (GstFFMpegVidDec * ffmpegdec)
   ffmpegdec->opened = TRUE;
   ffmpegdec->is_realvideo = FALSE;
 
-  GST_LOG_OBJECT (ffmpegdec, "Opened ffmpeg codec %s, id %d",
+  GST_LOG_OBJECT (ffmpegdec, "Opened libav codec %s, id %d",
       oclass->in_plugin->name, oclass->in_plugin->id);
 
   switch (oclass->in_plugin->id) {
@@ -401,7 +397,7 @@ gst_ffmpegviddec_open (GstFFMpegVidDec * ffmpegdec)
 could_not_open:
   {
     gst_ffmpegviddec_close (ffmpegdec);
-    GST_DEBUG_OBJECT (ffmpegdec, "ffdec_%s: Failed to open FFMPEG codec",
+    GST_DEBUG_OBJECT (ffmpegdec, "avdec_%s: Failed to open libav codec",
         oclass->in_plugin->name);
     return FALSE;
   }
@@ -562,6 +558,8 @@ alloc_output_buffer (GstFFMpegVidDec * ffmpegdec, GstVideoCodecFrame * frame)
   fsize = GST_VIDEO_INFO_SIZE (&ffmpegdec->output_state->info);
 
   if (!ffmpegdec->context->palctrl && ffmpegdec->can_allocate_aligned) {
+    GstMapInfo minfo;
+
     GST_LOG_OBJECT (ffmpegdec, "calling pad_alloc");
     /* no pallete, we can use the buffer size to alloc */
     ret =
@@ -571,12 +569,19 @@ alloc_output_buffer (GstFFMpegVidDec * ffmpegdec, GstVideoCodecFrame * frame)
       goto alloc_failed;
 
     /* If buffer isn't 128-bit aligned, create a memaligned one ourselves */
-    if (((uintptr_t) GST_BUFFER_DATA (frame->output_buffer)) % 16) {
+    if (!gst_buffer_map (frame->output_buffer, &minfo,
+            GST_MAP_READ | GST_MAP_WRITE))
+      goto alloc_failed;
+
+    if (((uintptr_t) minfo.data) % 16) {
+      gst_buffer_unmap (frame->output_buffer, &minfo);
       GST_DEBUG_OBJECT (ffmpegdec,
           "Downstream can't allocate aligned buffers.");
       ffmpegdec->can_allocate_aligned = FALSE;
       gst_buffer_unref (frame->output_buffer);
-      frame->output_buffer = new_aligned_buffer (fsize, NULL);
+      frame->output_buffer = new_aligned_buffer (fsize);
+    } else {
+      gst_buffer_unmap (frame->output_buffer, &minfo);
     }
   } else {
     GST_LOG_OBJECT (ffmpegdec,
@@ -585,7 +590,7 @@ alloc_output_buffer (GstFFMpegVidDec * ffmpegdec, GstVideoCodecFrame * frame)
      * fsize contains the size of the palette, so the overall size
      * is bigger than ffmpegcolorspace's unit size, which will
      * prompt GstBaseTransform to complain endlessly ... */
-    frame->output_buffer = new_aligned_buffer (fsize, NULL);
+    frame->output_buffer = new_aligned_buffer (fsize);
     ret = GST_FLOW_OK;
   }
 
@@ -605,10 +610,38 @@ alloc_failed:
   }
 }
 
+typedef struct
+{
+  GstVideoCodecFrame *frame;
+  gboolean mapped;
+  GstVideoFrame vframe;
+} GstFFMpegVidDecVideoFrame;
+
+static GstFFMpegVidDecVideoFrame *
+gst_ffmpegviddec_video_frame_new (GstVideoCodecFrame * frame)
+{
+  GstFFMpegVidDecVideoFrame *dframe;
+
+  dframe = g_slice_new0 (GstFFMpegVidDecVideoFrame);
+  dframe->frame = gst_video_codec_frame_ref (frame);
+
+  return dframe;
+}
+
+static void
+gst_ffmpegviddec_video_frame_free (GstFFMpegVidDecVideoFrame * frame)
+{
+  if (frame->mapped)
+    gst_video_frame_unmap (&frame->vframe);
+  gst_video_codec_frame_unref (frame->frame);
+  g_slice_free (GstFFMpegVidDecVideoFrame, frame);
+}
+
 static int
 gst_ffmpegviddec_get_buffer (AVCodecContext * context, AVFrame * picture)
 {
   GstVideoCodecFrame *frame;
+  GstFFMpegVidDecVideoFrame *dframe;
   GstFFMpegVidDec *ffmpegdec;
   gint width, height;
   gint coded_width, coded_height;
@@ -616,7 +649,6 @@ gst_ffmpegviddec_get_buffer (AVCodecContext * context, AVFrame * picture)
   gint c;
   GstVideoInfo *info;
   GstFlowReturn ret;
-
 
   ffmpegdec = (GstFFMpegVidDec *) context->opaque;
 
@@ -633,7 +665,7 @@ gst_ffmpegviddec_get_buffer (AVCodecContext * context, AVFrame * picture)
   if (G_UNLIKELY (frame == NULL))
     goto no_frame;
 
-  picture->opaque = frame;
+  picture->opaque = dframe = gst_ffmpegviddec_video_frame_new (frame);
 
   if (!ffmpegdec->current_dr) {
     GST_LOG_OBJECT (ffmpegdec, "direct rendering disabled, fallback alloc");
@@ -676,12 +708,19 @@ gst_ffmpegviddec_get_buffer (AVCodecContext * context, AVFrame * picture)
 
   /* Fill avpicture */
   info = &ffmpegdec->output_state->info;
+  if (!gst_video_frame_map (&dframe->vframe, info, dframe->frame->output_buffer,
+          GST_MAP_READ | GST_MAP_WRITE)) {
+    GST_LOG_OBJECT (ffmpegdec, "failed to map frame, fallback alloc");
+    gst_buffer_unref (frame->output_buffer);
+    frame->output_buffer = NULL;
+    return avcodec_default_get_buffer (context, picture);
+  }
+  dframe->mapped = TRUE;
+
   for (c = 0; c < AV_NUM_DATA_POINTERS; c++) {
     if (c < GST_VIDEO_INFO_N_PLANES (info)) {
-      picture->data[c] =
-          GST_BUFFER_DATA (frame->output_buffer) +
-          GST_VIDEO_INFO_PLANE_OFFSET (info, c);
-      picture->linesize[c] = GST_VIDEO_INFO_PLANE_STRIDE (info, c);
+      picture->data[c] = GST_VIDEO_FRAME_PLANE_DATA (&dframe->vframe, c);
+      picture->linesize[c] = GST_VIDEO_FRAME_COMP_STRIDE (&dframe->vframe, c);
     } else {
       picture->data[c] = NULL;
       picture->linesize[c] = 0;
@@ -710,12 +749,13 @@ static void
 gst_ffmpegviddec_release_buffer (AVCodecContext * context, AVFrame * picture)
 {
   gint i;
-  GstVideoCodecFrame *frame;
+  GstFFMpegVidDecVideoFrame *frame;
   GstFFMpegVidDec *ffmpegdec;
 
   ffmpegdec = (GstFFMpegVidDec *) context->opaque;
-  frame = (GstVideoCodecFrame *) picture->opaque;
-  GST_DEBUG_OBJECT (ffmpegdec, "release frame %d", frame->system_frame_number);
+  frame = (GstFFMpegVidDecVideoFrame *) picture->opaque;
+  GST_DEBUG_OBJECT (ffmpegdec, "release frame %d",
+      frame->frame->system_frame_number);
 
   /* check if it was our buffer */
   if (picture->type != FF_BUFFER_TYPE_USER) {
@@ -726,7 +766,7 @@ gst_ffmpegviddec_release_buffer (AVCodecContext * context, AVFrame * picture)
   /* we remove the opaque data now */
   picture->opaque = NULL;
 
-  gst_video_codec_frame_unref (frame);
+  gst_ffmpegviddec_video_frame_free (frame);
 
   /* zero out the reference in ffmpeg */
   for (i = 0; i < 4; i++) {
@@ -906,6 +946,7 @@ get_output_buffer (GstFFMpegVidDec * ffmpegdec, GstVideoCodecFrame * frame)
 {
   GstFlowReturn ret = GST_FLOW_OK;
   AVPicture pic, *outpic;
+  GstVideoFrame vframe;
   GstVideoInfo *info;
   gint c;
 
@@ -919,12 +960,14 @@ get_output_buffer (GstFFMpegVidDec * ffmpegdec, GstVideoCodecFrame * frame)
    * This patched up version does */
   /* Fill avpicture */
   info = &ffmpegdec->output_state->info;
+  if (!gst_video_frame_map (&vframe, info, frame->output_buffer,
+          GST_MAP_READ | GST_MAP_WRITE))
+    goto alloc_failed;
+
   for (c = 0; c < AV_NUM_DATA_POINTERS; c++) {
     if (c < GST_VIDEO_INFO_N_COMPONENTS (info)) {
-      pic.data[c] =
-          GST_BUFFER_DATA (frame->output_buffer) +
-          GST_VIDEO_INFO_COMP_OFFSET (info, c);
-      pic.linesize[c] = GST_VIDEO_INFO_COMP_STRIDE (info, c);
+      pic.data[c] = GST_VIDEO_FRAME_PLANE_DATA (&vframe, c);
+      pic.linesize[c] = GST_VIDEO_FRAME_COMP_STRIDE (&vframe, c);
     } else {
       pic.data[c] = NULL;
       pic.linesize[c] = 0;
@@ -941,6 +984,8 @@ get_output_buffer (GstFFMpegVidDec * ffmpegdec, GstVideoCodecFrame * frame)
 
   av_picture_copy (&pic, outpic, ffmpegdec->context->pix_fmt,
       GST_VIDEO_INFO_WIDTH (info), GST_VIDEO_INFO_HEIGHT (info));
+
+  gst_video_frame_unmap (&vframe);
 
   ffmpegdec->picture->reordered_opaque = -1;
 
@@ -985,6 +1030,7 @@ gst_ffmpegviddec_video_frame (GstFFMpegVidDec * ffmpegdec,
   gboolean decode;
   gint skip_frame = AVDISCARD_DEFAULT;
   GstVideoCodecFrame *out_frame;
+  GstFFMpegVidDecVideoFrame *out_dframe;
   AVPacket packet;
 
   *ret = GST_FLOW_OK;
@@ -1034,6 +1080,16 @@ gst_ffmpegviddec_video_frame (GstFFMpegVidDec * ffmpegdec,
 
   /* now decode the frame */
   gst_avpacket_init (&packet, data, size);
+
+  if (ffmpegdec->context->palctrl) {
+    guint8 *pal;
+
+    pal = av_packet_new_side_data (&packet, AV_PKT_DATA_PALETTE,
+        AVPALETTE_SIZE);
+    memcpy (pal, ffmpegdec->context->palctrl->palette, AVPALETTE_SIZE);
+    GST_DEBUG_OBJECT (ffmpegdec, "copy pal %p %p", &packet, pal);
+  }
+
   len = avcodec_decode_video2 (ffmpegdec->context,
       ffmpegdec->picture, &have_data, &packet);
 
@@ -1054,7 +1110,8 @@ gst_ffmpegviddec_video_frame (GstFFMpegVidDec * ffmpegdec,
     goto beach;
 
   /* get the output picture timing info again */
-  out_frame = ffmpegdec->picture->opaque;
+  out_dframe = ffmpegdec->picture->opaque;
+  out_frame = out_dframe->frame;
 
   GST_DEBUG_OBJECT (ffmpegdec,
       "pts %" G_GUINT64_FORMAT " duration %" G_GUINT64_FORMAT,
@@ -1133,15 +1190,9 @@ gst_ffmpegviddec_video_frame (GstFFMpegVidDec * ffmpegdec,
   frame->n_fields = ffmpegdec->picture->repeat_pict;
 #endif
 
-  /* palette is not part of raw video frame in gst and the size
-   * of the outgoing buffer needs to be adjusted accordingly */
-  if (ffmpegdec->context->palctrl != NULL)
-    GST_BUFFER_SIZE (out_frame->output_buffer) -= AVPALETTE_SIZE;
-
   /* mark as keyframe or delta unit */
   if (ffmpegdec->picture->top_field_first)
-    GST_VIDEO_CODEC_FRAME_FLAG_SET (out_frame, GST_VIDEO_CODEC_FRAME_FLAG_TFF);
-
+    GST_BUFFER_FLAG_SET (out_frame->output_buffer, GST_VIDEO_BUFFER_FLAG_TFF);
 
   *ret =
       gst_video_decoder_finish_frame (GST_VIDEO_DECODER (ffmpegdec), out_frame);
@@ -1214,7 +1265,7 @@ gst_ffmpegviddec_frame (GstFFMpegVidDec * ffmpegdec,
 
   if (len < 0 || have_data < 0) {
     GST_WARNING_OBJECT (ffmpegdec,
-        "ffdec_%s: decoding error (len: %d, have_data: %d)",
+        "avdec_%s: decoding error (len: %d, have_data: %d)",
         oclass->in_plugin->name, len, have_data);
     *got_data = 0;
     goto beach;
@@ -1267,7 +1318,8 @@ gst_ffmpegviddec_handle_frame (GstVideoDecoder * decoder,
 {
   GstFFMpegVidDec *ffmpegdec = (GstFFMpegVidDec *) decoder;
   guint8 *data, *bdata;
-  gint size, bsize, len, have_data;
+  gint size, len, have_data, bsize;
+  GstMapInfo minfo;
   GstFlowReturn ret = GST_FLOW_OK;
 
   /* do early keyframe check pretty bad to rely on the keyframe flag in the
@@ -1284,11 +1336,17 @@ gst_ffmpegviddec_handle_frame (GstVideoDecoder * decoder,
   GST_LOG_OBJECT (ffmpegdec,
       "Received new data of size %u, pts:%"
       GST_TIME_FORMAT ", dur:%" GST_TIME_FORMAT,
-      GST_BUFFER_SIZE (frame->input_buffer),
+      gst_buffer_get_size (frame->input_buffer),
       GST_TIME_ARGS (frame->pts), GST_TIME_ARGS (frame->duration));
 
-  bdata = GST_BUFFER_DATA (frame->input_buffer);
-  bsize = GST_BUFFER_SIZE (frame->input_buffer);
+  frame->input_buffer = gst_buffer_make_writable (frame->input_buffer);
+  if (!gst_buffer_map (frame->input_buffer, &minfo,
+          GST_MAP_READ | GST_MAP_WRITE)) {
+    g_assert_not_reached ();
+  }
+
+  bdata = minfo.data;
+  bsize = minfo.size;
 
   if (ffmpegdec->do_padding) {
     /* add padding */
@@ -1576,7 +1634,7 @@ gst_ffmpegviddec_register (GstPlugin * plugin)
     /* construct the type */
     plugin_name = g_strdup ((gchar *) in_plugin->name);
     g_strdelimit (plugin_name, NULL, '_');
-    type_name = g_strdup_printf ("ffdec_%s", plugin_name);
+    type_name = g_strdup_printf ("avdec_%s", plugin_name);
     g_free (plugin_name);
 
     type = g_type_from_name (type_name);
