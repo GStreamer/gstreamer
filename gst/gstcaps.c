@@ -1061,8 +1061,6 @@ gst_caps_is_equal (const GstCaps * caps1, const GstCaps * caps2)
  *
  * Checks if the given caps are exactly the same set of caps.
  *
- * This function deals correctly with passing NULL for any of the caps.
- *
  * Returns: TRUE if both caps are strictly equal.
  *
  * Since: 0.10.36
