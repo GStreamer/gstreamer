@@ -180,8 +180,8 @@ tsmux_stream_new (guint16 pid, TsMuxStreamType stream_type)
       break;
   }
 
-//  stream->last_pts = -1;
-//  stream->last_dts = -1;
+  stream->last_pts = -1;
+  stream->last_dts = -1;
 
   stream->pcr_ref = 0;
   stream->last_pcr = -1;
