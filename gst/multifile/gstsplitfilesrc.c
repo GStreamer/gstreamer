@@ -91,22 +91,9 @@ GST_DEBUG_CATEGORY_STATIC (splitfilesrc_debug);
 #define GST_CAT_DEFAULT splitfilesrc_debug
 
 
-G_DEFINE_TYPE (GstSplitFileSrc, gst_split_file_src, GST_TYPE_BASE_SRC);
-
-static void
-_do_init (GType type)
-{
-  static const GInterfaceInfo urihandler_info = {
-    gst_split_file_src_uri_handler_init,
-    NULL,
-    NULL
-  };
-
-  g_type_add_interface_static (type, GST_TYPE_URI_HANDLER, &urihandler_info);
-
-  GST_DEBUG_CATEGORY_INIT (splitfilesrc_debug, "splitfilesrc", 0,
-      "Split File src");
-}
+G_DEFINE_TYPE_WITH_CODE (GstSplitFileSrc, gst_split_file_src, GST_TYPE_BASE_SRC,
+    G_IMPLEMENT_INTERFACE (GST_TYPE_URI_HANDLER,
+        gst_split_file_src_uri_handler_init));
 
 #ifdef G_OS_WIN32
 #define WIN32_BLURB " Location string must be in UTF-8 encoding (on Windows)."
@@ -633,20 +620,20 @@ cancelled:
 }
 
 static guint
-gst_split_file_src_uri_get_type (void)
+gst_split_file_src_uri_get_type (GType type)
 {
   return GST_URI_SRC;
 }
 
-static gchar **
-gst_split_file_src_uri_get_protocols (void)
+static const gchar *const *
+gst_split_file_src_uri_get_protocols (GType type)
 {
   static const gchar *protocols[] = { "splitfile", NULL };
 
-  return (gchar **) protocols;
+  return (const gchar * const *) protocols;
 }
 
-static const gchar *
+static gchar *
 gst_split_file_src_uri_get_uri (GstURIHandler * handler)
 {
   GstSplitFileSrc *src = GST_SPLIT_FILE_SRC (handler);
@@ -663,7 +650,8 @@ gst_split_file_src_uri_get_uri (GstURIHandler * handler)
 }
 
 static gboolean
-gst_split_file_src_uri_set_uri (GstURIHandler * handler, const gchar * uri)
+gst_split_file_src_uri_set_uri (GstURIHandler * handler, const gchar * uri,
+    GError ** error)
 {
   GstSplitFileSrc *src = GST_SPLIT_FILE_SRC (handler);
 
