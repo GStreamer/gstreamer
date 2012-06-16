@@ -332,9 +332,6 @@ mpegtsmux_pad_reset (MpegTsPadData * pad_data)
   pad_data->prepare_func = NULL;
   pad_data->free_func = NULL;
 
-  if (pad_data->queued_buf)
-    gst_buffer_replace (&pad_data->queued_buf, NULL);
-
   if (pad_data->codec_data)
     gst_buffer_replace (&pad_data->codec_data, NULL);
 
@@ -1065,7 +1062,6 @@ mpegtsmux_collected (GstCollectPads * pads, GstCollectData * data,
       goto no_program;
 
     g_assert (buf != NULL);
-    best->queued_buf = NULL;
 
     if (mux->force_key_unit_event != NULL && best->stream->is_video_stream) {
       GstEvent *event;

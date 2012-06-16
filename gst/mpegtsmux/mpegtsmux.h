@@ -186,8 +186,6 @@ struct MpegTsPadData {
   gint pid;
   TsMuxStream *stream;
 
-  /* currently pulled buffer */
-  GstBuffer *queued_buf;
   /* most recent valid TS for this stream */
   GstClockTime last_pts;
   GstClockTime last_dts;
