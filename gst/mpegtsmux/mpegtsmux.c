@@ -1613,12 +1613,7 @@ mpegtsdemux_prepare_srcpad (MpegTsMux * mux)
       (mux->m2ts_mode ? M2TS_PACKET_LENGTH : NORMAL_TS_PACKET_LENGTH),
       NULL);
 
-  seg.rate = 1.0;
-  seg.format = GST_FORMAT_TIME;
-  seg.start = 0;
-  seg.stop = -1;
-  seg.position = 0;
-
+  gst_segment_init (&seg, GST_FORMAT_TIME);
   new_seg = gst_event_new_segment (&seg);
 
   /* Set caps on src pad from our template and push new segment */
