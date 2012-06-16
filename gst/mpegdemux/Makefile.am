@@ -4,14 +4,6 @@ libgstmpegdemux_la_SOURCES = \
 	flumpegdemux.c \
 	gstmpegdemux.c \
 	gstpesfilter.c 
-#	flutspatinfo.c 
-#	flutspmtinfo.c 
-#	flutspmtstreaminfo.c
-#	gstmpegdesc.c \
-#	gstmpegtsdemux.c \
-#	gstsectionfilter.c \
-#	mpegtsparse.c \
-#	mpegtspacketizer.c
 
 libgstmpegdemux_la_CFLAGS = \
 	$(GST_PLUGINS_BASE_CFLAGS) \
@@ -24,16 +16,8 @@ libgstmpegdemux_la_LIBTOOLFLAGS = --tag=disable-static
 
 noinst_HEADERS = \
 	gstmpegdefs.h   \
-	gstmpegdesc.h   \
 	gstmpegdemux.h  \
-	gstpesfilter.h  \
-	gstmpegtsdemux.h \
-	flutspatinfo.h \
-	flutspmtinfo.h \
-	flutspmtstreaminfo.h \
-	gstsectionfilter.h \
-	mpegtspacketizer.h \
-	mpegtsparse.h
+	gstpesfilter.h
 
 Android.mk: Makefile.am $(BUILT_SOURCES)
 	androgenizer \

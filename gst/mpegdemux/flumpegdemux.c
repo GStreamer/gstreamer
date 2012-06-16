@@ -46,31 +46,18 @@
 #endif
 
 #include "gstmpegdemux.h"
-#include "gstmpegtsdemux.h"
-#include "mpegtsparse.h"
-#include "mpegtspacketizer.h"
 
 GST_DEBUG_CATEGORY_EXTERN (gstflupesfilter_debug);
-#if 0
-GST_DEBUG_CATEGORY_EXTERN (gstflusectionfilter_debug);
-#endif
+
 static gboolean
 plugin_init (GstPlugin * plugin)
 {
   GST_DEBUG_CATEGORY_INIT (gstflupesfilter_debug, "mpegpesfilter", 0,
       "MPEG-TS/PS PES filter output");
-#if 0
-  GST_DEBUG_CATEGORY_INIT (gstflusectionfilter_debug, "mpegsectionfilter", 0,
-      "MPEG-TS Section filter output");
-#endif
+
   if (!gst_flups_demux_plugin_init (plugin))
     return FALSE;
-#if 0
-  if (!gst_mpegts_demux_plugin_init (plugin))
-    return FALSE;
-  if (!gst_mpegtsparse_plugin_init (plugin))
-    return FALSE;
-#endif
+
   return TRUE;
 }
 
