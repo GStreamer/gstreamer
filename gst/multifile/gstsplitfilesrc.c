@@ -30,17 +30,16 @@
  * directories). The results will be sorted.
  *
  * <refsect2>
- * <title>Example launch line</title>
+ * <title>Example launch lines</title>
  * |[
- * gst-launch splitfilesrc location="/path/to/part-*.mpg" ! decodebin ! ... \
+ * gst-launch splitfilesrc location="/path/to/part-*.mpg" ! decodebin ! ...
  * ]| Plays the different parts as if they were one single MPEG file.
+ * |[
+ * gst-launch playbin2 uri="splitfile://path/to/foo.avi.*"
+ * ]| Plays the different parts as if they were one single AVI file.
  * </refsect2>
  *
  * Since: 0.10.31
- */
-
-/* TODO:
- *  - implement splitfile:// URI handler?
  */
 
 #ifdef HAVE_CONFIG_H
@@ -194,7 +193,7 @@ gst_split_file_src_set_location (GstSplitFileSrc * src, const char *location)
   g_free (src->location);
 
   if (location != NULL && g_str_has_prefix (location, "splitfile://"))
-    src->location = g_strdup (location + strlen ("splitfile://"));
+    src->location = gst_uri_get_location (location);
   else
     src->location = g_strdup (location);
 #ifdef G_OS_WIN32
