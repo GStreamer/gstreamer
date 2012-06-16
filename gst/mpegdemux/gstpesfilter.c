@@ -48,8 +48,8 @@
 #include "gstmpegdefs.h"
 #include "gstpesfilter.h"
 
-GST_DEBUG_CATEGORY (gstflupesfilter_debug);
-#define GST_CAT_DEFAULT (gstflupesfilter_debug)
+GST_DEBUG_CATEGORY (mpegpspesfilter_debug);
+#define GST_CAT_DEFAULT (mpegpspesfilter_debug)
 
 static GstFlowReturn gst_pes_filter_data_push (GstPESFilter * filter,
     gboolean first, GstBuffer * buffer);

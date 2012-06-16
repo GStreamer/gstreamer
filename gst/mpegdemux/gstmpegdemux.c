@@ -3168,14 +3168,3 @@ gst_segment_set_duration (GstSegment * segment, GstFormat format,
   }
   segment->duration = duration;
 }
-
-
-gboolean
-gst_flups_demux_plugin_init (GstPlugin * plugin)
-{
-  if (!gst_element_register (plugin, "mpegpsdemux",
-          GST_RANK_PRIMARY, GST_TYPE_FLUPS_DEMUX))
-    return FALSE;
-
-  return TRUE;
-}

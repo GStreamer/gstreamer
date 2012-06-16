@@ -161,7 +161,5 @@ struct _GstFluPSDemuxClass
 
 GType gst_flups_demux_get_type (void);
 
-gboolean gst_flups_demux_plugin_init (GstPlugin * plugin);
-
 G_END_DECLS
 #endif /* __GST_FLUPS_DEMUX_H__ */
