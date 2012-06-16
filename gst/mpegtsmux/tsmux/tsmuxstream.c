@@ -578,7 +578,11 @@ tsmux_stream_write_pes_header (TsMuxStream * stream, guint8 * data)
     guint8 flags = 0;
 
     /* Not scrambled, original, not-copyrighted, data_alignment not specified */
-    *data++ = 0x81;
+    flags = 0x81;
+    if (stream->pi.flags & TSMUX_PACKET_FLAG_PES_DATA_ALIGNMENT)
+      flags |= 0x4;
+    *data++ = flags;
+    flags = 0;
 
     /* Flags */
     if (stream->pi.flags & TSMUX_PACKET_FLAG_PES_WRITE_PTS_DTS)
