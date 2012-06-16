@@ -391,7 +391,7 @@ tsmux_stream_initialize_pes_packet (TsMuxStream * stream)
   stream->pi.flags &= ~(TSMUX_PACKET_FLAG_PES_WRITE_PTS_DTS |
       TSMUX_PACKET_FLAG_PES_WRITE_PTS);
 
-  if (stream->pts != -1 && stream->dts != -1)
+  if (stream->pts != -1 && stream->dts != -1 && stream->pts != stream->dts)
     stream->pi.flags |= TSMUX_PACKET_FLAG_PES_WRITE_PTS_DTS;
   else {
     if (stream->pts != -1)
