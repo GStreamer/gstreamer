@@ -175,6 +175,18 @@ tsmux_stream_new (guint16 pid, TsMuxStreamType stream_type)
           TSMUX_PACKET_FLAG_PES_FULL_HEADER |
           TSMUX_PACKET_FLAG_PES_EXT_STREAMID;
       break;
+    case TSMUX_ST_PS_TELETEXT:
+      /* needs fixes PES header length */
+      stream->pi.pes_header_length = 36;
+    case TSMUX_ST_PS_DVB_SUBPICTURE:
+      /* private stream 1 */
+      stream->id = 0xBD;
+      stream->stream_type = TSMUX_ST_PRIVATE_DATA;
+      stream->pi.flags |=
+          TSMUX_PACKET_FLAG_PES_FULL_HEADER |
+          TSMUX_PACKET_FLAG_PES_DATA_ALIGNMENT;
+
+      break;
     default:
       g_critical ("Stream type 0x%0x not yet implemented", stream_type);
       break;
@@ -864,6 +876,20 @@ tsmux_stream_get_es_descrs (TsMuxStream * stream, guint8 * buf, guint16 * len)
       break;
     case TSMUX_ST_PS_AUDIO_LPCM:
       /* FIXME */
+      break;
+    case TSMUX_ST_PS_DVB_SUBPICTURE:
+      /* tag */
+      *pos++ = 0x59;
+      /* FIXME empty descriptor for now;
+       * should be provided by upstream in event or so ? */
+      *pos = 0;
+      break;
+    case TSMUX_ST_PS_TELETEXT:
+      /* tag */
+      *pos++ = 0x56;
+      /* FIXME empty descriptor for now;
+       * should be provided by upstream in event or so ? */
+      *pos = 0;
       break;
     default:
       break;

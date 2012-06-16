@@ -138,6 +138,8 @@ enum TsMuxStreamType {
   TSMUX_ST_PS_AUDIO_AC3               = 0x81,
   TSMUX_ST_PS_AUDIO_DTS               = 0x8a,
   TSMUX_ST_PS_AUDIO_LPCM              = 0x8b,
+  TSMUX_ST_PS_DVB_SUBPICTURE          = 0x8c,
+  TSMUX_ST_PS_TELETEXT                = 0x8d,
   TSMUX_ST_PS_DVD_SUBPICTURE          = 0xff,
 
   /* Non-standard definitions */
