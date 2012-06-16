@@ -65,6 +65,8 @@ enum
 
 #define DEFAULT_LOCATION NULL
 
+static void gst_split_file_src_uri_handler_init (gpointer g_iface,
+    gpointer iface_data);
 static void gst_split_file_src_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec);
 static void gst_split_file_src_get_property (GObject * object, guint prop_id,
@@ -88,7 +90,23 @@ GST_STATIC_PAD_TEMPLATE ("src",
 GST_DEBUG_CATEGORY_STATIC (splitfilesrc_debug);
 #define GST_CAT_DEFAULT splitfilesrc_debug
 
+
 G_DEFINE_TYPE (GstSplitFileSrc, gst_split_file_src, GST_TYPE_BASE_SRC);
+
+static void
+_do_init (GType type)
+{
+  static const GInterfaceInfo urihandler_info = {
+    gst_split_file_src_uri_handler_init,
+    NULL,
+    NULL
+  };
+
+  g_type_add_interface_static (type, GST_TYPE_URI_HANDLER, &urihandler_info);
+
+  GST_DEBUG_CATEGORY_INIT (splitfilesrc_debug, "splitfilesrc", 0,
+      "Split File src");
+}
 
 #ifdef G_OS_WIN32
 #define WIN32_BLURB " Location string must be in UTF-8 encoding (on Windows)."
@@ -183,6 +201,25 @@ gst_split_file_src_get_size (GstBaseSrc * basesrc, guint64 * size)
 }
 
 static void
+gst_split_file_src_set_location (GstSplitFileSrc * src, const char *location)
+{
+  GST_OBJECT_LOCK (src);
+  g_free (src->location);
+
+  if (location != NULL && g_str_has_prefix (location, "splitfile://"))
+    src->location = g_strdup (location + strlen ("splitfile://"));
+  else
+    src->location = g_strdup (location);
+#ifdef G_OS_WIN32
+  if (!g_utf8_validate (src->location, -1, NULL)) {
+    g_warning ("splitfilesrc 'location' property must be in UTF-8 "
+        "encoding on Windows");
+  }
+#endif
+  GST_OBJECT_UNLOCK (src);
+}
+
+static void
 gst_split_file_src_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec)
 {
@@ -190,16 +227,7 @@ gst_split_file_src_set_property (GObject * object, guint prop_id,
 
   switch (prop_id) {
     case PROP_LOCATION:
-      GST_OBJECT_LOCK (src);
-      g_free (src->location);
-      src->location = g_value_dup_string (value);
-#ifdef G_OS_WIN32
-      if (!g_utf8_validate (src->location, -1, NULL)) {
-        g_warning ("splitfilesrc 'location' property must be in UTF-8 "
-            "encoding on Windows");
-      }
-#endif
-      GST_OBJECT_UNLOCK (src);
+      gst_split_file_src_set_location (src, g_value_get_string (value));
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -602,4 +630,55 @@ cancelled:
     gst_buffer_unref (buf);
     return GST_FLOW_FLUSHING;
   }
+}
+
+static guint
+gst_split_file_src_uri_get_type (void)
+{
+  return GST_URI_SRC;
+}
+
+static gchar **
+gst_split_file_src_uri_get_protocols (void)
+{
+  static const gchar *protocols[] = { "splitfile", NULL };
+
+  return (gchar **) protocols;
+}
+
+static const gchar *
+gst_split_file_src_uri_get_uri (GstURIHandler * handler)
+{
+  GstSplitFileSrc *src = GST_SPLIT_FILE_SRC (handler);
+  gchar *ret;
+
+  GST_OBJECT_LOCK (src);
+  if (src->location != NULL)
+    ret = g_strdup_printf ("splitfile://%s", src->location);
+  else
+    ret = NULL;
+  GST_OBJECT_UNLOCK (src);
+
+  return ret;
+}
+
+static gboolean
+gst_split_file_src_uri_set_uri (GstURIHandler * handler, const gchar * uri)
+{
+  GstSplitFileSrc *src = GST_SPLIT_FILE_SRC (handler);
+
+  gst_split_file_src_set_location (src, uri);
+
+  return TRUE;
+}
+
+static void
+gst_split_file_src_uri_handler_init (gpointer g_iface, gpointer iface_data)
+{
+  GstURIHandlerInterface *iface = (GstURIHandlerInterface *) g_iface;
+
+  iface->get_type = gst_split_file_src_uri_get_type;
+  iface->get_protocols = gst_split_file_src_uri_get_protocols;
+  iface->get_uri = gst_split_file_src_uri_get_uri;
+  iface->set_uri = gst_split_file_src_uri_set_uri;
 }
