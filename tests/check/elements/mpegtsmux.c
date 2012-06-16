@@ -169,7 +169,7 @@ GST_START_TEST (test_force_key_unit_event_downstream)
   GstClockTime timestamp, stream_time, running_time;
   gboolean all_headers = TRUE;
   gint count = 0;
-  ThreadData *thread_data_1, *thread_data_2, *thread_data_3;
+  ThreadData *thread_data_1, *thread_data_2, *thread_data_3, *thread_data_4;
   TestData test_data = { 0, };
 
   mpegtsmux = gst_check_setup_element ("mpegtsmux");
@@ -197,30 +197,23 @@ GST_START_TEST (test_force_key_unit_event_downstream)
   thread_data_3 = pad_push (src3, gst_buffer_new (), 3 * GST_SECOND);
 
   g_thread_join (thread_data_1->thread);
-  g_thread_join (thread_data_2->thread);
-  g_thread_join (thread_data_3->thread);
   fail_unless (test_data.sink_event == NULL);
 
-  g_free (thread_data_1);
-  g_free (thread_data_2);
-  g_free (thread_data_3);
+  /* push again on src1 so that the buffer on src2 is collected */
+  thread_data_4 = pad_push (src1, gst_buffer_new (), 4 * GST_SECOND);
 
-  /* push again on all src so that the buffer on src2 is collected */
-  thread_data_1 = pad_push (src1, gst_buffer_new (), 4 * GST_SECOND);
-  thread_data_2 = pad_push (src2, gst_buffer_new (), 5 * GST_SECOND);
-  thread_data_3 = pad_push (src3, gst_buffer_new (), 6 * GST_SECOND);
-
-  g_thread_join (thread_data_1->thread);
+  g_thread_join (thread_data_2->thread);
   fail_unless (test_data.sink_event != NULL);
 
   gst_element_set_state (mpegtsmux, GST_STATE_NULL);
 
-  g_thread_join (thread_data_2->thread);
   g_thread_join (thread_data_3->thread);
+  g_thread_join (thread_data_4->thread);
 
   g_free (thread_data_1);
   g_free (thread_data_2);
   g_free (thread_data_3);
+  g_free (thread_data_4);
   gst_object_unref (src1);
   gst_object_unref (src2);
   gst_object_unref (src3);
@@ -242,7 +235,7 @@ GST_START_TEST (test_force_key_unit_event_upstream)
   gboolean all_headers = TRUE;
   gint count = 0;
   TestData test_data = { 0, };
-  ThreadData *thread_data_1, *thread_data_2, *thread_data_3;
+  ThreadData *thread_data_1, *thread_data_2, *thread_data_3, *thread_data_4;
 
   mpegtsmux = gst_check_setup_element ("mpegtsmux");
   gst_element_set_state (mpegtsmux, GST_STATE_PLAYING);
@@ -281,30 +274,23 @@ GST_START_TEST (test_force_key_unit_event_upstream)
   thread_data_3 = pad_push (src3, gst_buffer_new (), 3 * GST_SECOND);
 
   g_thread_join (thread_data_1->thread);
-  g_thread_join (thread_data_2->thread);
-  g_thread_join (thread_data_3->thread);
   fail_unless (test_data.sink_event == NULL);
 
-  g_free (thread_data_1);
-  g_free (thread_data_2);
-  g_free (thread_data_3);
+  /* push again on src1 so that the buffer on src2 is collected */
+  thread_data_4 = pad_push (src1, gst_buffer_new (), 4 * GST_SECOND);
 
-  /* push again on all src so that the buffer on src2 is collected */
-  thread_data_1 = pad_push (src1, gst_buffer_new (), 4 * GST_SECOND);
-  thread_data_2 = pad_push (src2, gst_buffer_new (), 5 * GST_SECOND);
-  thread_data_3 = pad_push (src3, gst_buffer_new (), 6 * GST_SECOND);
-
-  g_thread_join (thread_data_1->thread);
+  g_thread_join (thread_data_2->thread);
   fail_unless (test_data.sink_event != NULL);
 
   gst_element_set_state (mpegtsmux, GST_STATE_NULL);
 
-  g_thread_join (thread_data_2->thread);
   g_thread_join (thread_data_3->thread);
+  g_thread_join (thread_data_4->thread);
 
   g_free (thread_data_1);
   g_free (thread_data_2);
   g_free (thread_data_3);
+  g_free (thread_data_4);
 
   gst_object_unref (src1);
   gst_object_unref (src2);
