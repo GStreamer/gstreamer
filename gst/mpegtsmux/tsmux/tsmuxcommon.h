@@ -127,6 +127,7 @@ typedef struct TsMuxStream TsMuxStream;
 struct TsMuxPacketInfo {
   guint16 pid;
   guint32 flags;
+  guint32 pes_header_length;
 
   gboolean packet_start_unit_indicator;
 

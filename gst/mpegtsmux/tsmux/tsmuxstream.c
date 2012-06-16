@@ -512,6 +512,11 @@ tsmux_stream_pes_header_length (TsMuxStream * stream)
        * length + extended stream id */
       packet_len += 3;
     }
+    if (stream->pi.pes_header_length) {
+      /* check for consistency, then we can add stuffing */
+      g_assert (packet_len <= stream->pi.pes_header_length + 6 + 3);
+      packet_len = stream->pi.pes_header_length + 6 + 3;
+    }
   }
 
   return packet_len;
@@ -556,6 +561,7 @@ tsmux_stream_write_pes_header (TsMuxStream * stream, guint8 * data)
 {
   guint16 length_to_write;
   guint8 hdr_len = tsmux_stream_pes_header_length (stream);
+  guint8 *orig_data = data;
 
   /* start_code prefix + stream_id + pes_packet_length = 6 bytes */
   data[0] = 0x00;
@@ -615,6 +621,10 @@ tsmux_stream_write_pes_header (TsMuxStream * stream, guint8 * data)
       /* Write the extended streamID */
       *data++ = stream->id_extended;
     }
+    /* write stuffing bytes if fixed PES header length requested */
+    if (stream->pi.pes_header_length)
+      while (data < orig_data + stream->pi.pes_header_length + 9)
+        *data++ = 0xff;
   }
 }
 
