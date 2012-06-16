@@ -188,10 +188,6 @@ struct MpegTsPadData {
 
   /* currently pulled buffer */
   GstBuffer *queued_buf;
-  /* adjusted TS for the pulled buffer */
-  GstClockTime cur_pts;
-  GstClockTime cur_dts;
-    
   /* most recent valid TS for this stream */
   GstClockTime last_pts;
   GstClockTime last_dts;
@@ -211,8 +207,6 @@ struct MpegTsPadData {
   MpegTsPadDataPrepareFunction prepare_func;
   /* handler to free the private data */
   MpegTsPadDataFreePrepareDataFunction free_func;
-
-  gboolean eos;
 
   /* program id == idx to which it is attached to (not program pid) */
   gint prog_id;
