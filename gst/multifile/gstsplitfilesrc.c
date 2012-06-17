@@ -35,7 +35,7 @@
  * gst-launch splitfilesrc location="/path/to/part-*.mpg" ! decodebin ! ...
  * ]| Plays the different parts as if they were one single MPEG file.
  * |[
- * gst-launch playbin2 uri="splitfile://path/to/foo.avi.*"
+ * gst-launch playbin uri="splitfile://path/to/foo.avi.*"
  * ]| Plays the different parts as if they were one single AVI file.
  * </refsect2>
  *
