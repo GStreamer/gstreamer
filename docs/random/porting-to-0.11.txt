@@ -441,6 +441,13 @@ The 0.11 porting guide
     allows bindings to properly use GstIterator and prevents complex
     return value ownership issues.
 
+* GstNavigationInterface
+    Now part of the video library in gst-plugins-base, and the interfaces library no
+    longer exists.
+
+* GstMixerInterface / GstTunerInterface
+    Removed - no replacement?
+
 * GstURIHandler
     gst_uri_handler_get_uri() and the get_uri vfunc now return a copy of
     the URI string
