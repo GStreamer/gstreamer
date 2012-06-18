@@ -1970,11 +1970,11 @@ gst_xvimagesink_propose_allocation (GstBaseSink * bsink, GstQuery * query)
   if (pool == NULL && need_pool) {
     GstVideoInfo info;
 
-    GST_DEBUG_OBJECT (xvimagesink, "create new pool");
-    pool = gst_xvimage_buffer_pool_new (xvimagesink);
-
     if (!gst_video_info_from_caps (&info, caps))
       goto invalid_caps;
+
+    GST_DEBUG_OBJECT (xvimagesink, "create new pool");
+    pool = gst_xvimage_buffer_pool_new (xvimagesink);
 
     /* the normal size of a frame */
     size = info.size;
@@ -2010,6 +2010,7 @@ invalid_caps:
 config_failed:
   {
     GST_DEBUG_OBJECT (bsink, "failed setting config");
+    gst_object_unref (pool);
     return FALSE;
   }
 }
