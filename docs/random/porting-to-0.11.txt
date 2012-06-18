@@ -95,10 +95,6 @@ The 0.11 porting guide
     Removed GST_PAD_CAPS() use gst_pad_get_current_caps() to get a handle to the
     currently configured caps.
 
-    GstPadGetCapsFunction, gst_pad_get_caps(), gst_pad_peer_get_caps(),
-    gst_pad_proxy_getcaps() now takes a GstCaps* parameter to inform
-    the other side about the possible caps and preferences.
-
     gst_pad_get_pad_template_caps() and gst_pad_get_pad_template()
     return a new reference of the caps or template now and the return
     value needs to be unreffed after usage.
@@ -142,7 +138,8 @@ The 0.11 porting guide
     if appropriate.
 
     The GstPadGetCapsFunction was removed and replaced with a GST_QUERY_CAPS
-    query.
+    query. The query takes a GstCaps* parameter to inform the other side about
+    the possible caps and preferences.  
 
     gst_pad_proxy_getcaps() -> gst_pad_proxy_query_caps()
     gst_pad_get_caps() -> gst_pad_query_caps()
