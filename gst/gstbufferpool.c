@@ -685,6 +685,7 @@ gst_buffer_pool_config_set_params (GstStructure * config, GstCaps * caps,
 {
   g_return_if_fail (config != NULL);
   g_return_if_fail (max_buffers == 0 || min_buffers <= max_buffers);
+  g_return_if_fail (caps == NULL || gst_caps_is_fixed (caps));
 
   gst_structure_id_set (config,
       GST_QUARK (CAPS), GST_TYPE_CAPS, caps,
