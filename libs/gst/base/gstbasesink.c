@@ -2200,19 +2200,21 @@ preroll_failed:
 }
 
 /**
- * gst_base_sink_wait_eos:
+ * gst_base_sink_wait:
  * @sink: the sink
  * @time: the running_time to be reached
  * @jitter: (out) (allow-none): the jitter to be filled with time diff, or NULL
  *
- * This function will block until @time is reached. It is usually called by
- * subclasses that use their own internal synchronisation but want to let the
- * EOS be handled by the base class.
+ * This function will wait for preroll to complete and will then block until @time
+ * is reached. It is usually called by subclasses that use their own internal
+ * synchronisation but want to let some synchronization (like EOS) be handled
+ * by the base class.
  *
- * This function should only be called with the PREROLL_LOCK held, like when
- * receiving an EOS event in the ::event vmethod.
+ * This function should only be called with the PREROLL_LOCK held (like when
+ * receiving an EOS event in the ::event vmethod or when handling buffers in
+ * ::render).
  *
- * The @time argument should be the running_time of when the EOS should happen
+ * The @time argument should be the running_time of when the timeout should happen
  * and will be adjusted with any latency and offset configured in the sink.
  *
  * Returns: #GstFlowReturn
@@ -2220,7 +2222,7 @@ preroll_failed:
  * Since: 0.10.15
  */
 GstFlowReturn
-gst_base_sink_wait_eos (GstBaseSink * sink, GstClockTime time,
+gst_base_sink_wait (GstBaseSink * sink, GstClockTime time,
     GstClockTimeDiff * jitter)
 {
   GstClockReturn status;

@@ -246,7 +246,7 @@ guint64         gst_base_sink_get_throttle_time (GstBaseSink *sink);
 
 GstClockReturn  gst_base_sink_wait_clock        (GstBaseSink *sink, GstClockTime time,
                                                  GstClockTimeDiff * jitter);
-GstFlowReturn   gst_base_sink_wait_eos          (GstBaseSink *sink, GstClockTime time,
+GstFlowReturn   gst_base_sink_wait              (GstBaseSink *sink, GstClockTime time,
                                                  GstClockTimeDiff *jitter);
 
 G_END_DECLS
