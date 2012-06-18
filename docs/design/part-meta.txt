@@ -361,6 +361,13 @@ etc in the metadata.
 A scheme like this would still allow us to functionally specify the desired
 video resolution while the implementation details would be inside the metadata.
 
+Relationship with GstMiniObject qdata
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+qdata on a miniobject is element private and is not visible to other element.
+Therefore qdata never contains essential information that describes the buffer
+content. 
+
 
 Compatibility
 ~~~~~~~~~~~~~
