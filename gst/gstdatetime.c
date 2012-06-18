@@ -26,6 +26,7 @@
 #include "gstdatetime.h"
 #include <glib.h>
 #include <math.h>
+#include <stdio.h>
 
 /**
  * SECTION:gstdatetime
@@ -620,6 +621,152 @@ gst_date_time_new (gfloat tzoffset, gint year, gint month, gint day, gint hour,
 
   return datetime;
 }
+
+
+/**
+ * gst_date_time_to_iso8601_string:
+ * @datetime: GstDateTime.
+ *
+ * Create a minimal string compatible with ISO-8601. Possible output formats
+ * are (for example): 2012, 2012-06, 2012-06-23, 2012-06-23T23:30Z,
+ * 2012-06-23T23:30+0100, 2012-06-23T23:30:59Z, 2012-06-23T23:30:59+0100
+ *
+ * Returns: a newly allocated string formatted according to ISO 8601 and
+ *     only including the datetime fields that are valid, or NULL in case
+ *     there was an error. The string should be freed with g_free().
+ */
+gchar *
+gst_date_time_to_iso8601_string (GstDateTime * datetime)
+{
+  gfloat gmt_offset;
+
+  switch (datetime->fields) {
+    case GST_DATE_TIME_FIELDS_Y:
+      return g_date_time_format (datetime->datetime, "%Y");
+    case GST_DATE_TIME_FIELDS_YM:
+      return g_date_time_format (datetime->datetime, "%Y-%m");
+    case GST_DATE_TIME_FIELDS_YMD:
+      return g_date_time_format (datetime->datetime, "%F");
+    case GST_DATE_TIME_FIELDS_YMD_HM:
+      gmt_offset = gst_date_time_get_time_zone_offset (datetime);
+      if (gmt_offset == 0)
+        return g_date_time_format (datetime->datetime, "%FT%RZ");
+      else
+        return g_date_time_format (datetime->datetime, "%FT%R%z");
+    case GST_DATE_TIME_FIELDS_YMD_HMS:
+      gmt_offset = gst_date_time_get_time_zone_offset (datetime);
+      if (gmt_offset == 0)
+        return g_date_time_format (datetime->datetime, "%FT%TZ");
+      else
+        return g_date_time_format (datetime->datetime, "%FT%T%z");
+    default:
+      return NULL;
+  }
+}
+
+/**
+ * gst_date_time_new_from_iso8601_string:
+ * @string: ISO 8601-formatted datetime string.
+ *
+ * Tries to parse common variants of ISO-8601 datetime strings into a
+ * #GstDateTime.
+ *
+ * Free-function: gst_date_time_unref
+ *
+ * Returns: (transfer full): a newly created #GstDateTime, or NULL on error
+ */
+GstDateTime *
+gst_date_time_new_from_iso8601_string (const gchar * string)
+{
+  gint year = -1, month = -1, day = -1, hour = -1, minute = -1, second = -1;
+  gfloat tzoffset = 0.0;
+  gint len, ret;
+
+  len = strlen (string);
+
+  g_return_val_if_fail (len >= 4, NULL);
+  g_return_val_if_fail (g_ascii_isdigit (*string), NULL);
+
+  GST_DEBUG ("Parsing %s into a datetime", string);
+
+  ret = sscanf (string, "%04d-%02d-%02d", &year, &month, &day);
+
+  if (ret == 0)
+    return NULL;
+  else if (ret >= 1 && len < 16)
+    /* YMD is 10 chars. XMD + HM will be 16 chars. if it is less,
+     * it make no sense to continue. We will stay with YMD. */
+    goto ymd;
+
+  string += 10;
+  /* Exit if there is no expeceted value on this stage */
+  if (!(*string == 'T' || *string == '-' || *string == ' '))
+    goto ymd;
+
+  /* if hour or minute fails, then we will use onlly ymd. */
+  hour = g_ascii_strtoull (string + 1, (gchar **) & string, 10);
+  if (hour > 24 || *string != ':')
+    goto ymd;
+
+  minute = g_ascii_strtoull (string + 1, (gchar **) & string, 10);
+  if (minute > 59)
+    goto ymd;
+
+  if (*string == ':') {
+    second = g_ascii_strtoull (string + 1, (gchar **) & string, 10);
+    /* if we fail here, we still can reuse hour and minute. We
+     * will also fall of to tzoffset = 0.0 */
+    if (second > 59)
+      goto ymd_hms;
+  }
+
+  if (*string == 'Z')
+    goto ymd_hms;
+  else {
+    /* reuse some code from gst-plugins-base/gst-libs/gst/tag/gstxmptag.c */
+    gint gmt_offset_hour = -1, gmt_offset_min = -1, gmt_offset = -1;
+    gchar *plus_pos = NULL;
+    gchar *neg_pos = NULL;
+    gchar *pos = NULL;
+
+    GST_LOG ("Checking for timezone information");
+
+    /* check if there is timezone info */
+    plus_pos = strrchr (string, '+');
+    neg_pos = strrchr (string, '-');
+    if (plus_pos)
+      pos = plus_pos + 1;
+    else if (neg_pos)
+      pos = neg_pos + 1;
+
+    if (pos) {
+      gint ret_tz;
+      if (pos[2] == ':')
+        ret_tz = sscanf (pos, "%d:%d", &gmt_offset_hour, &gmt_offset_min);
+      else
+        ret_tz = sscanf (pos, "%02d%02d", &gmt_offset_hour, &gmt_offset_min);
+
+      GST_DEBUG ("Parsing timezone: %s", pos);
+
+      if (ret_tz == 2) {
+        gmt_offset = gmt_offset_hour * 60 + gmt_offset_min;
+        if (neg_pos != NULL && neg_pos + 1 == pos)
+          gmt_offset *= -1;
+
+        tzoffset = gmt_offset / 60.0;
+
+        GST_LOG ("Timezone offset: %f (%d minutes)", tzoffset, gmt_offset);
+      } else
+        GST_WARNING ("Failed to parse timezone information");
+    }
+  }
+
+ymd_hms:
+  return gst_date_time_new (tzoffset, year, month, day, hour, minute, second);
+ymd:
+  return gst_date_time_new_ymd (year, month, day);
+}
+
 
 static void
 gst_date_time_free (GstDateTime * datetime)
