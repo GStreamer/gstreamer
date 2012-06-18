@@ -288,6 +288,8 @@ gst_teletextdec_init (GstTeletextDec * teletext, GstTeletextDecClass * klass)
 
   teletext->frame = g_new0 (GstTeletextFrame, 1);
   teletext->frame->sliced_begin = g_new (vbi_sliced, MAX_SLICES);
+  teletext->frame->current_slice = teletext->frame->sliced_begin;
+  teletext->frame->sliced_end = teletext->frame->sliced_begin + MAX_SLICES;
 
   teletext->last_ts = 0;
 
