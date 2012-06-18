@@ -60,7 +60,7 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="glib-2.0.lib gobject-2.0.lib gthread-2.0.lib gmodule-2.0.lib libxml2.lib wsock32.lib intl.lib"
+				AdditionalDependencies="glib-2.0.lib gobject-2.0.lib gthread-2.0.lib gmodule-2.0.lib libxml2.lib ws2_32.lib"
 				OutputFile="$(OutDir)/libgstreamer-0.10.dll"
 				LinkIncremental="2"
 				AdditionalLibraryDirectories="&quot;C:\Program Files\Microsoft Visual Studio .NET 2003\Vc7\crt\src\intel\dll_lib&quot;"
@@ -197,11 +197,19 @@
 				>
 			</File>
 			<File
+				RelativePath="..\..\gst\gstatomicqueue.c"
+				>
+			</File>
+			<File
 				RelativePath="..\..\gst\gstbin.c"
 				>
 			</File>
 			<File
 				RelativePath="..\..\gst\gstbuffer.c"
+				>
+			</File>
+			<File
+				RelativePath="..\..\gst\gstbufferlist.c"
 				>
 			</File>
 			<File
@@ -218,6 +226,10 @@
 			</File>
 			<File
 				RelativePath="..\..\gst\gstclock.c"
+				>
+			</File>
+			<File
+				RelativePath="..\..\gst\gstdatetime.c"
 				>
 			</File>
 			<File
@@ -321,6 +333,18 @@
 				>
 			</File>
 			<File
+				RelativePath="..\..\gst\gstpluginloader.c"
+				>
+			</File>
+			<File
+				RelativePath="..\..\gst\gstpoll.c"
+				>
+			</File>
+			<File
+				RelativePath="..\..\gst\gstpreset.c"
+				>
+			</File>
+			<File
 				RelativePath="..\..\gst\gstquark.c"
 				>
 			</File>
@@ -333,7 +357,11 @@
 				>
 			</File>
 			<File
-				RelativePath="..\..\gst\gstregistryxml.c"
+				RelativePath="..\..\gst\gstregistrybinary.c"
+				>
+			</File>
+			<File
+				RelativePath="..\..\gst\gstregistrychunks.c"
 				>
 			</File>
 			<File
@@ -358,6 +386,10 @@
 			</File>
 			<File
 				RelativePath="..\..\gst\gsttask.c"
+				>
+			</File>
+			<File
+				RelativePath="..\..\gst\gsttaskpool.c"
 				>
 			</File>
 			<File
@@ -389,7 +421,7 @@
 				>
 			</File>
 			<File
-				RelativePath="..\..\gst\parse\lex._gst_parse_yy.c"
+				RelativePath="..\..\gst\parse\lex.priv_gst_parse_yy.c"
 				>
 			</File>
 		</Filter>

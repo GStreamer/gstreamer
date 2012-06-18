@@ -60,7 +60,7 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="glib-2.0.lib gobject-2.0.lib gthread-2.0.lib gmodule-2.0.lib libxml2.lib wsock32.lib intl.lib"
+				AdditionalDependencies="glib-2.0.lib gobject-2.0.lib gthread-2.0.lib gmodule-2.0.lib libxml2.lib wsock32.lib"
 				OutputFile="$(OutDir)/libgstcoreelements.dll"
 				LinkIncremental="2"
 				GenerateDebugInformation="true"
@@ -182,10 +182,6 @@
 			UniqueIdentifier="{4FC737F1-C7A5-4376-A066-2A32D752A2FF}"
 			>
 			<File
-				RelativePath="..\..\plugins\elements\gstbufferstore.c"
-				>
-			</File>
-			<File
 				RelativePath="..\..\plugins\elements\gstcapsfilter.c"
 				>
 			</File>
@@ -202,6 +198,14 @@
 				>
 			</File>
 			<File
+				RelativePath="..\..\plugins\elements\gstfdsink.c"
+				>
+			</File>
+			<File
+				RelativePath="..\..\plugins\elements\gstfdsrc.c"
+				>
+			</File>
+			<File
 				RelativePath="..\..\plugins\elements\gstfilesink.c"
 				>
 			</File>
@@ -210,7 +214,15 @@
 				>
 			</File>
 			<File
+				RelativePath="..\..\plugins\elements\gstfunnel.c"
+				>
+			</File>
+			<File
 				RelativePath="..\..\plugins\elements\gstidentity.c"
+				>
+			</File>
+			<File
+				RelativePath="..\..\plugins\elements\gstinputselector.c"
 				>
 			</File>
 			<File
@@ -218,7 +230,15 @@
 				>
 			</File>
 			<File
+				RelativePath="..\..\plugins\elements\gstoutputselector.c"
+				>
+			</File>
+			<File
 				RelativePath="..\..\plugins\elements\gstqueue.c"
+				>
+			</File>
+			<File
+				RelativePath="..\..\plugins\elements\gstqueue2.c"
 				>
 			</File>
 			<File
@@ -227,6 +247,10 @@
 			</File>
 			<File
 				RelativePath="..\..\plugins\elements\gsttypefindelement.c"
+				>
+			</File>
+			<File
+				RelativePath="..\..\plugins\elements\gstvalve.c"
 				>
 			</File>
 		</Filter>

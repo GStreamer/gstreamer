@@ -60,7 +60,7 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="glib-2.0.lib gobject-2.0.lib gthread-2.0.lib gmodule-2.0.lib libxml2.lib wsock32.lib intl.lib"
+				AdditionalDependencies="glib-2.0.lib gobject-2.0.lib gthread-2.0.lib gmodule-2.0.lib libxml2.lib wsock32.lib"
 				OutputFile="$(OutDir)/gst-launch-0.10.exe"
 				LinkIncremental="2"
 				GenerateDebugInformation="true"

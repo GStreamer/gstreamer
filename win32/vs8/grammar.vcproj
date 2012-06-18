@@ -67,8 +67,8 @@
 				>
 				<Tool
 					Name="VCCustomBuildTool"
-					CommandLine="bison -d -v -p_gst_parse_yy ..\..\gst\parse\grammar.y -o ..\..\gst\parse\grammar.tab.c&#x0D;&#x0A;flex -P_gst_parse_yy -o..\..\gst\parse\lex._gst_parse_yy.c ..\..\gst\parse\parse.l&#x0D;&#x0A;"
-					Outputs="..\..\gst\parse\lex._gst_parse_yy.c;..\..\gst\parse\grammar.tab.c;..\..\gst\parse\grammar.tab.h"
+					CommandLine="bison -d -v -ppriv_gst_parse_yy ..\..\gst\parse\grammar.y -o ..\..\gst\parse\grammar.tab.c&#x0D;&#x0A;flex -P_gst_parse_yy -o..\..\gst\parse\lex._gst_parse_yy.c ..\..\gst\parse\parse.l&#x0D;&#x0A;"
+					Outputs="..\..\gst\parse\lex.priv_gst_parse_yy.c;..\..\gst\parse\grammar.tab.c;..\..\gst\parse\grammar.tab.h"
 				/>
 			</FileConfiguration>
 			<FileConfiguration

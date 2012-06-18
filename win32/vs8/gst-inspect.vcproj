@@ -61,7 +61,7 @@
 			<Tool
 				Name="VCLinkerTool"
 				IgnoreImportLibrary="true"
-				AdditionalDependencies="glib-2.0.lib gobject-2.0.lib gthread-2.0.lib gmodule-2.0.lib libxml2.lib wsock32.lib intl.lib"
+				AdditionalDependencies="glib-2.0.lib gobject-2.0.lib gthread-2.0.lib gmodule-2.0.lib libxml2.lib wsock32.lib"
 				OutputFile="$(OutDir)/gst-inspect-0.10.exe"
 				LinkIncremental="1"
 				GenerateDebugInformation="true"
