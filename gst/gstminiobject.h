@@ -178,12 +178,7 @@ struct _GstMiniObject {
   /* < private > */
   /* Used to keep track of weak ref notifies and qdata */
   guint n_qdata;
-  struct
-  {
-    GQuark quark;
-    GstMiniObjectWeakNotify notify;
-    gpointer data;
-  } *qdata;
+  gpointer qdata;
 };
 
 void            gst_mini_object_init            (GstMiniObject *mini_object, GType type);

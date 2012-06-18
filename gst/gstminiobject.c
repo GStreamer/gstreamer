@@ -68,6 +68,18 @@ static GstAllocTrace *_gst_mini_object_trace;
 G_LOCK_DEFINE_STATIC (qdata_mutex);
 static GQuark weak_ref_quark;
 
+typedef struct
+{
+  GQuark quark;
+  GstMiniObjectWeakNotify notify;
+  gpointer data;
+} GstQData;
+
+#define QDATA(o,i)        ((GstQData *)(o)->qdata)[(i)]
+#define QDATA_QUARK(o,i)  (QDATA(o,i).quark)
+#define QDATA_NOTIFY(o,i) (QDATA(o,i).notify)
+#define QDATA_DATA(o,i)   (QDATA(o,i).data)
+
 void
 _priv_gst_mini_object_initialize (void)
 {
@@ -220,7 +232,7 @@ qdata_notify (GstMiniObject * obj)
   guint i;
 
   for (i = 0; i < obj->n_qdata; i++)
-    obj->qdata[i].notify (obj->qdata[i].data, obj);
+    QDATA_NOTIFY (obj, i) (QDATA_DATA (obj, i), obj);
   g_free (obj->qdata);
 }
 
@@ -410,10 +422,10 @@ gst_mini_object_weak_ref (GstMiniObject * object,
   G_LOCK (qdata_mutex);
   i = object->n_qdata++;
   object->qdata =
-      g_realloc (object->qdata, sizeof (object->qdata[0]) * object->n_qdata);
-  object->qdata[i].quark = weak_ref_quark;
-  object->qdata[i].notify = notify;
-  object->qdata[i].data = data;
+      g_realloc (object->qdata, sizeof (GstQData) * object->n_qdata);
+  QDATA_QUARK (object, i) = weak_ref_quark;
+  QDATA_NOTIFY (object, i) = notify;
+  QDATA_DATA (object, i) = data;
   G_UNLOCK (qdata_mutex);
 }
 
@@ -439,15 +451,15 @@ gst_mini_object_weak_unref (GstMiniObject * object,
 
   G_LOCK (qdata_mutex);
   for (i = 0; i < object->n_qdata; i++) {
-    if (object->qdata[i].quark == weak_ref_quark &&
-        object->qdata[i].notify == notify && object->qdata[i].data == data) {
+    if (QDATA_QUARK (object, i) == weak_ref_quark &&
+        QDATA_NOTIFY (object, i) == notify && QDATA_DATA (object, i) == data) {
       found_one = TRUE;
       if (--object->n_qdata == 0) {
         /* we don't shrink but free when everything is gone */
         g_free (object->qdata);
         object->qdata = NULL;
       } else if (i != object->n_qdata)
-        object->qdata[i] = object->qdata[object->n_qdata];
+        QDATA (object, i) = QDATA (object, object->n_qdata);
       break;
     }
   }
@@ -491,9 +503,9 @@ gst_mini_object_set_qdata (GstMiniObject * object, GQuark quark,
 
   G_LOCK (qdata_mutex);
   for (i = 0; i < object->n_qdata; i++) {
-    if (object->qdata[i].quark == quark) {
-      old_data = object->qdata[i].data;
-      old_notify = (GDestroyNotify) object->qdata[i].notify;
+    if (QDATA_QUARK (object, i) == quark) {
+      old_data = QDATA_DATA (object, i);
+      old_notify = (GDestroyNotify) QDATA_NOTIFY (object, i);
 
       if (data == NULL) {
         /* remove item */
@@ -502,7 +514,7 @@ gst_mini_object_set_qdata (GstMiniObject * object, GQuark quark,
           g_free (object->qdata);
           object->qdata = NULL;
         } else if (i != object->n_qdata)
-          object->qdata[i] = object->qdata[object->n_qdata];
+          QDATA (object, i) = QDATA (object, object->n_qdata);
       }
       break;
     }
@@ -511,11 +523,11 @@ gst_mini_object_set_qdata (GstMiniObject * object, GQuark quark,
     /* add item */
     i = object->n_qdata++;
     object->qdata =
-        g_realloc (object->qdata, sizeof (object->qdata[0]) * object->n_qdata);
+        g_realloc (object->qdata, sizeof (GstQData) * object->n_qdata);
   }
-  object->qdata[i].quark = quark;
-  object->qdata[i].data = data;
-  object->qdata[i].notify = (GstMiniObjectWeakNotify) destroy;
+  QDATA_QUARK (object, i) = quark;
+  QDATA_DATA (object, i) = data;
+  QDATA_NOTIFY (object, i) = (GstMiniObjectWeakNotify) destroy;
   G_UNLOCK (qdata_mutex);
 
   if (old_notify)
@@ -543,8 +555,8 @@ gst_mini_object_get_qdata (GstMiniObject * object, GQuark quark)
 
   G_LOCK (qdata_mutex);
   for (i = 0; i < object->n_qdata; i++) {
-    if (object->qdata[i].quark == quark) {
-      result = object->qdata[i].data;
+    if (QDATA_QUARK (object, i) == quark) {
+      result = QDATA_DATA (object, i);
       break;
     }
   }
