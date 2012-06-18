@@ -183,10 +183,10 @@ typedef gpointer GstClockID;
  */
 #define GST_TIME_TO_TIMEVAL(t,tv)                               \
 G_STMT_START {                                                  \
-  (tv).tv_sec  = ((GstClockTime) (t)) / GST_SECOND;             \
-  (tv).tv_usec = (((GstClockTime) (t)) -                        \
+  (tv).tv_sec  = (glong) (((GstClockTime) (t)) / GST_SECOND);   \
+  (tv).tv_usec = (glong) ((((GstClockTime) (t)) -               \
                   ((GstClockTime) (tv).tv_sec) * GST_SECOND)    \
-                 / GST_USECOND;                                 \
+                 / GST_USECOND);                                \
 } G_STMT_END
 
 /**
@@ -205,8 +205,8 @@ G_STMT_START {                                                  \
  */
 #define GST_TIME_TO_TIMESPEC(t,ts)                      \
 G_STMT_START {                                          \
-  (ts).tv_sec  =  (t) / GST_SECOND;                     \
-  (ts).tv_nsec = ((t) - (ts).tv_sec * GST_SECOND) / GST_NSECOND;        \
+  (ts).tv_sec  =  (glong) ((t) / GST_SECOND);                     \
+  (ts).tv_nsec = (glong) (((t) - (ts).tv_sec * GST_SECOND) / GST_NSECOND);        \
 } G_STMT_END
 
 /* timestamp debugging macros */
