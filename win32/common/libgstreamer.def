@@ -61,6 +61,7 @@ EXPORTS
 	gst_allocator_new
 	gst_allocator_register
 	gst_allocator_set_default
+	gst_atomic_queue_get_type
 	gst_atomic_queue_length
 	gst_atomic_queue_new
 	gst_atomic_queue_peek
