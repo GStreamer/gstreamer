@@ -58,6 +58,26 @@ G_BEGIN_DECLS
 
 #define gst_tag_list_free(taglist)    gst_tag_list_unref(taglist)
 
+static inline gboolean
+gst_pad_set_caps (GstPad * pad, GstCaps * caps)
+{
+  GstEvent *event;
+  gboolean res = TRUE;
+
+  g_return_val_if_fail (GST_IS_PAD (pad), FALSE);
+  g_return_val_if_fail (caps != NULL && gst_caps_is_fixed (caps), FALSE);
+
+  event = gst_event_new_caps (caps);
+
+  if (GST_PAD_IS_SRC (pad))
+    res = gst_pad_push_event (pad, event);
+  else
+    res = gst_pad_send_event (pad, event);
+
+  return res;
+}
+
+
 #ifndef GST_DISABLE_DEPRECATED
 
 #endif /* not GST_DISABLE_DEPRECATED */

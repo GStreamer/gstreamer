@@ -1623,7 +1623,6 @@ gst_pad_can_link
 gst_pad_get_allowed_caps
 gst_pad_get_current_caps
 gst_pad_get_pad_template_caps
-gst_pad_set_caps
 
 gst_pad_get_peer
 gst_pad_use_fixed_caps

@@ -2337,41 +2337,6 @@ gst_pad_get_current_caps (GstPad * pad)
 }
 
 /**
- * gst_pad_set_caps:
- * @pad: a  #GstPad to set the capabilities of.
- * @caps: (transfer none): a #GstCaps to set.
- *
- * Sets the capabilities of this pad. The caps must be fixed. Any previous
- * caps on the pad will be unreffed. This function refs the caps so you should
- * unref if as soon as you don't need it anymore.
- * It is possible to set NULL caps, which will make the pad unnegotiated
- * again.
- *
- * Returns: TRUE if the caps could be set. FALSE if the caps were not fixed
- * or bad parameters were provided to this function.
- *
- * MT safe.
- */
-gboolean
-gst_pad_set_caps (GstPad * pad, GstCaps * caps)
-{
-  GstEvent *event;
-  gboolean res = TRUE;
-
-  g_return_val_if_fail (GST_IS_PAD (pad), FALSE);
-  g_return_val_if_fail (caps != NULL && gst_caps_is_fixed (caps), FALSE);
-
-  event = gst_event_new_caps (caps);
-
-  if (GST_PAD_IS_SRC (pad))
-    res = gst_pad_push_event (pad, event);
-  else
-    res = gst_pad_send_event (pad, event);
-
-  return res;
-}
-
-/**
  * gst_pad_get_pad_template_caps:
  * @pad: a #GstPad to get the template capabilities from.
  *
