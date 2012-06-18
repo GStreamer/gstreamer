@@ -1009,7 +1009,7 @@ gst_audio_base_sink_drain (GstAudioBaseSink * sink)
 
     /* wait for the EOS time to be reached, this is the time when the last
      * sample is played. */
-    gst_base_sink_wait_eos (GST_BASE_SINK (sink), sink->priv->eos_time, NULL);
+    gst_base_sink_wait (GST_BASE_SINK (sink), sink->priv->eos_time, NULL);
 
     GST_DEBUG_OBJECT (sink, "drained audio");
   }
