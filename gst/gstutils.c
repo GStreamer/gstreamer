@@ -2385,11 +2385,12 @@ gst_element_seek_simple (GstElement * element, GstFormat format,
  * @pad: the pad to use
  *
  * A helper function you can use that sets the FIXED_CAPS flag
- * This way the default getcaps function will always return the negotiated caps
+ * This way the default CAPS query will always return the negotiated caps
  * or in case the pad is not negotiated, the padtemplate caps.
  *
- * Use this function on a pad that, once gst_pad_set_caps() has been called
- * on it, cannot be renegotiated to something else.
+ * The negotiated caps are the caps of the last CAPS event that passed on the
+ * pad. Use this function on a pad that, once it negotiated to a CAPS, cannot
+ * be renegotiated to something else.
  */
 void
 gst_pad_use_fixed_caps (GstPad * pad)
