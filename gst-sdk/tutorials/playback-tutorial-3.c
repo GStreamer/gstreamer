@@ -5,7 +5,7 @@
 
 /* playbin2 flags */
 typedef enum {
-  GST_PLAY_FLAG_DOWNLOAD      = (1 << 7) /* Enable progressive download buffering for selected formats. */
+  GST_PLAY_FLAG_DOWNLOAD      = (1 << 7) /* Enable progressive download (on selected formats) */
 } GstPlayFlags;
   
 typedef struct _CustomData {
@@ -14,6 +14,14 @@ typedef struct _CustomData {
   GMainLoop *loop;
   gint buffering_level;
 } CustomData;
+  
+static void got_location (GstObject *gstobject, GstObject *prop_object, GParamSpec *prop, gpointer data) {
+  gchar *location;
+  g_object_get (G_OBJECT (prop_object), "temp-location", &location, NULL);
+  g_print ("Temporary file: %s\n", location);
+  /* Uncomment this line to keep the temporary file after the program exits */
+  /* g_object_set (G_OBJECT (prop_object), "temp-remove", FALSE, NULL); */
+}
   
 static void cb_message (GstBus *bus, GstMessage *msg, CustomData *data) {
   
@@ -120,7 +128,6 @@ int main(int argc, char *argv[]) {
   
   /* Build the pipeline */
   pipeline = gst_parse_launch ("playbin2 uri=http://docs.gstreamer.com/media/sintel_trailer-480p.webm", NULL);
-//  pipeline = gst_parse_launch ("playbin2 uri=http://micro.autom.teithe.gr/~vivia/oldmovies/peta.mp4", NULL);
   bus = gst_element_get_bus (pipeline);
   
   /* Set the download flag */
@@ -144,6 +151,7 @@ int main(int argc, char *argv[]) {
   
   gst_bus_add_signal_watch (bus);
   g_signal_connect (bus, "message", G_CALLBACK (cb_message), &data);
+  g_signal_connect (pipeline, "deep-notify::temp-location", G_CALLBACK (got_location), NULL);
   
   /* Register a function that GLib will call every second */
   g_timeout_add_seconds (1, (GSourceFunc)refresh_ui, &data);
