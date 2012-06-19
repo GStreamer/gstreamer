@@ -21,7 +21,6 @@
 #define __GL_TEST_SRC_H__
 
 #include <glib.h>
-#include "gstglbuffer.h"
 #include "gstgltestsrc.h"
 
 struct vts_color_struct {

@@ -26,7 +26,7 @@
 #include <gst/gst.h>
 #include <gst/base/gstpushsrc.h>
 
-#include "gstglbuffer.h"
+#include "gstglmeta.h"
 
 G_BEGIN_DECLS
 
