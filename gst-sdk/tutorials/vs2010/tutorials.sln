@@ -25,7 +25,7 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "basic-tutorial-9", "basic-t
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "basic-tutorial-12", "basic-tutorial-12\basic-tutorial-12.vcxproj", "{A2E63C29-3375-4930-B7D3-2F23EC824EAF}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "playback-tutorial-3", "playback-tutorial-3\playback-tutorial-3.vcxproj", "{0342A79A-3522-416B-A4F8-58F5664B8415}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "playback-tutorial-4", "playback-tutorial-4\playback-tutorial-4.vcxproj", "{0342A79A-3522-416B-A4F8-58F5664B8415}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
