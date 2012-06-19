@@ -71,6 +71,7 @@ struct _GstOsxAudioSink
   GstBaseAudioSink sink;
 
   AudioDeviceID device_id;
+
   AudioUnit audiounit;
   double volume;
   GstCaps *cached_caps;

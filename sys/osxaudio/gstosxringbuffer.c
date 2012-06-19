@@ -131,7 +131,6 @@ gst_osx_ring_buffer_init (GstOsxRingBuffer * ringbuffer,
     GstOsxRingBufferClass * g_class)
 {
   /* Nothing to do right now */
-  ringbuffer->is_spdif_capable = FALSE;
   ringbuffer->is_passthrough = FALSE;
   ringbuffer->hog_pid = -1;
   ringbuffer->disabled_mixing = FALSE;
@@ -256,13 +255,6 @@ gst_osx_ring_buffer_open_device (GstRingBuffer * buf)
   /* The following is needed to instruct HAL to create their own
    * thread to handle the notifications. */
   _audio_system_set_runloop (NULL);
-
-  osxbuf->is_spdif_capable = _audio_device_is_spdif_avail (osxbuf->device_id);
-
-  if (osxbuf->is_spdif_capable) {
-    GST_DEBUG_OBJECT (osxbuf, "device %u is SPDIF capable",
-        (unsigned) osxbuf->device_id);
-  }
 
   osxbuf->audiounit = gst_osx_ring_buffer_create_audio_unit (osxbuf,
       osxbuf->is_src, osxbuf->device_id);

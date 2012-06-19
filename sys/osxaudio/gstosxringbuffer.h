@@ -48,6 +48,8 @@
 #include <gst/gst.h>
 #include <gst/audio/gstringbuffer.h>
 #include <CoreAudio/CoreAudio.h>
+#include <AudioToolbox/AudioToolbox.h>
+
 #include "gstosxaudioelement.h"
 
 G_BEGIN_DECLS
@@ -74,7 +76,6 @@ struct _GstOsxRingBuffer
 {
   GstRingBuffer object;
 
-  gboolean is_spdif_capable;
   gboolean is_src;
   gboolean is_passthrough;
   gint stream_idx;

@@ -347,7 +347,7 @@ _audio_device_get_channel_layout (AudioDeviceID device_id)
 {
   OSStatus status = noErr;
   UInt32 propertySize = 0;
-  AudioChannelLayout *channel_layout = NULL;
+  AudioChannelLayout *layout = NULL;
 
   AudioObjectPropertyAddress channelLayoutAddress = {
     kAudioDevicePropertyPreferredChannelLayout,
@@ -359,20 +359,50 @@ _audio_device_get_channel_layout (AudioDeviceID device_id)
   status = AudioObjectGetPropertyDataSize (device_id,
       &channelLayoutAddress, 0, NULL, &propertySize);
   if (status != noErr) {
+    GST_ERROR ("failed to get prefered layout: %" GST_FOURCC_FORMAT,
+        GST_FOURCC_ARGS (status));
     goto beach;
   }
 
   /* Get the default channel layout of the device */
-  channel_layout = (AudioChannelLayout *) g_malloc (propertySize);
+  layout = (AudioChannelLayout *) g_malloc (propertySize);
   status = AudioObjectGetPropertyData (device_id,
-      &channelLayoutAddress, 0, NULL, &propertySize, channel_layout);
+      &channelLayoutAddress, 0, NULL, &propertySize, layout);
   if (status != noErr) {
-    g_free (channel_layout);
-    channel_layout = NULL;
+    GST_ERROR ("failed to get prefered layout: %" GST_FOURCC_FORMAT,
+        GST_FOURCC_ARGS (status));
+    goto failed;
+  }
+
+  if (layout->mChannelLayoutTag == kAudioChannelLayoutTag_UseChannelBitmap) {
+    /* bitmap defined channellayout */
+    status =
+        AudioFormatGetProperty (kAudioFormatProperty_ChannelLayoutForBitmap,
+            sizeof (UInt32), &layout->mChannelBitmap, &propertySize, layout);
+    if (status != noErr) {
+      GST_ERROR ("failed to get layout for bitmap: %" GST_FOURCC_FORMAT,
+          GST_FOURCC_ARGS (status));
+      goto failed;
+    }
+  } else if (layout->mChannelLayoutTag !=
+      kAudioChannelLayoutTag_UseChannelDescriptions) {
+      /* layouttags defined channellayout */
+      status = AudioFormatGetProperty (kAudioFormatProperty_ChannelLayoutForTag,
+          sizeof(AudioChannelLayoutTag), &layout->mChannelLayoutTag,
+          &propertySize, layout);
+    if (status != noErr) {
+      GST_ERROR ("failed to get layout for tag: %" GST_FOURCC_FORMAT,
+          GST_FOURCC_ARGS (status));
+      goto failed;
+    }
   }
 
 beach:
-  return channel_layout;
+  return layout;
+
+failed:
+  g_free (layout);
+  return NULL;
 }
 
 static inline AudioStreamID *
