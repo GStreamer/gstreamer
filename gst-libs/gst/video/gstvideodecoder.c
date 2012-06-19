@@ -423,8 +423,6 @@ static gboolean gst_video_decoder_set_src_caps (GstVideoDecoder * decoder);
 
 static void gst_video_decoder_release_frame (GstVideoDecoder * dec,
     GstVideoCodecFrame * frame);
-static GstClockTime gst_video_decoder_get_timestamp (GstVideoDecoder * decoder,
-    GstVideoCodecFrame * frame);
 static GstClockTime gst_video_decoder_get_frame_duration (GstVideoDecoder *
     decoder, GstVideoCodecFrame * frame);
 static GstVideoCodecFrame *gst_video_decoder_new_frame (GstVideoDecoder *
@@ -2022,25 +2020,23 @@ gst_video_decoder_prepare_finish_frame (GstVideoDecoder *
     }
   }
 
-  if (frame->pts == GST_CLOCK_TIME_NONE) {
-    frame->pts = gst_video_decoder_get_timestamp (decoder, frame);
+  if (frame->duration == GST_CLOCK_TIME_NONE) {
     frame->duration = gst_video_decoder_get_frame_duration (decoder, frame);
+    GST_LOG_OBJECT (decoder,
+        "Guessing duration %" GST_TIME_FORMAT " for frame...",
+        GST_TIME_ARGS (frame->duration));
+  }
 
+  if (frame->pts == GST_CLOCK_TIME_NONE) {
     /* Last ditch timestamp guess: Just add the duration to the previous
      * frame */
-    if (frame->pts == GST_CLOCK_TIME_NONE &&
-        priv->last_timestamp_out != GST_CLOCK_TIME_NONE &&
+    if (priv->last_timestamp_out != GST_CLOCK_TIME_NONE &&
         frame->duration != GST_CLOCK_TIME_NONE) {
       frame->pts = priv->last_timestamp_out + frame->duration;
       GST_LOG_OBJECT (decoder,
           "Guessing timestamp %" GST_TIME_FORMAT " for frame...",
           GST_TIME_ARGS (frame->pts));
     }
-  } else if (frame->duration == GST_CLOCK_TIME_NONE) {
-    frame->duration = gst_video_decoder_get_frame_duration (decoder, frame);
-    GST_LOG_OBJECT (decoder,
-        "Guessing duration %" GST_TIME_FORMAT " for frame...",
-        GST_TIME_ARGS (frame->duration));
   }
 
   if (GST_CLOCK_TIME_IS_VALID (priv->last_timestamp_out)) {
@@ -2321,42 +2317,6 @@ gst_video_decoder_add_to_frame (GstVideoDecoder * decoder, int n_bytes)
 
   gst_adapter_push (priv->output_adapter, buf);
   GST_VIDEO_DECODER_STREAM_UNLOCK (decoder);
-}
-
-static GstClockTime
-gst_video_decoder_get_timestamp (GstVideoDecoder * decoder,
-    GstVideoCodecFrame * frame)
-{
-  GstVideoDecoderPrivate *priv = decoder->priv;
-  GstVideoCodecState *state = priv->output_state;
-  guint64 picture_number = frame->decode_frame_number;
-  GstClockTime res = GST_CLOCK_TIME_NONE;
-
-  if (state->info.fps_d == 0 || state->info.fps_n == 0) {
-    return GST_CLOCK_TIME_NONE;
-  }
-
-  if (priv->base_timestamp != GST_CLOCK_TIME_NONE) {
-    if (picture_number < priv->base_picture_number) {
-      GstClockTime offset;
-
-      offset = gst_util_uint64_scale (priv->base_picture_number
-          - picture_number, state->info.fps_d * GST_SECOND, state->info.fps_n);
-
-      if (offset <= priv->base_timestamp)
-        res = priv->base_timestamp - offset;
-    } else {
-      res = priv->base_timestamp +
-          gst_util_uint64_scale (picture_number - priv->base_picture_number,
-          state->info.fps_d * GST_SECOND, state->info.fps_n);
-    }
-    GST_LOG_OBJECT (decoder, "Interpolated TS %" GST_TIME_FORMAT
-        " for picture %" G_GUINT64_FORMAT " from base time %" GST_TIME_FORMAT
-        " and pic %" G_GUINT64_FORMAT, GST_TIME_ARGS (res), picture_number,
-        GST_TIME_ARGS (priv->base_timestamp), priv->base_picture_number);
-  }
-
-  return res;
 }
 
 static guint64
