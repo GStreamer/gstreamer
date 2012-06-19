@@ -846,8 +846,8 @@ gst_video_decoder_flush (GstVideoDecoder * dec, gboolean hard)
     gst_segment_init (&dec->output_segment, GST_FORMAT_UNDEFINED);
     gst_video_decoder_clear_queues (dec);
     priv->error_count = 0;
-    g_list_foreach (priv->current_frame_events, (GFunc) gst_event_unref, NULL);
-    g_list_free (priv->current_frame_events);
+    g_list_free_full (priv->current_frame_events,
+        (GDestroyNotify) gst_event_unref);
     priv->current_frame_events = NULL;
   }
   /* and get (re)set for the sequel */
@@ -1501,7 +1501,6 @@ static void
 gst_video_decoder_reset (GstVideoDecoder * decoder, gboolean full)
 {
   GstVideoDecoderPrivate *priv = decoder->priv;
-  GList *g;
 
   GST_DEBUG_OBJECT (decoder, "reset full %d", full);
 
@@ -1546,10 +1545,8 @@ gst_video_decoder_reset (GstVideoDecoder * decoder, gboolean full)
 
   priv->decode_frame_number = 0;
   priv->base_picture_number = 0;
-  for (g = priv->frames; g; g = g->next) {
-    gst_video_codec_frame_unref ((GstVideoCodecFrame *) g->data);
-  }
-  g_list_free (priv->frames);
+
+  g_list_free_full (priv->frames, (GDestroyNotify) gst_video_codec_frame_unref);
   priv->frames = NULL;
 
   priv->bytes_out = 0;
@@ -1797,11 +1794,9 @@ static GstFlowReturn
 gst_video_decoder_chain (GstPad * pad, GstObject * parent, GstBuffer * buf)
 {
   GstVideoDecoder *decoder;
-  GstVideoDecoderPrivate *priv;
   GstFlowReturn ret = GST_FLOW_OK;
 
   decoder = GST_VIDEO_DECODER (parent);
-  priv = decoder->priv;
 
   GST_LOG_OBJECT (decoder,
       "chain %" GST_TIME_FORMAT " duration %" GST_TIME_FORMAT " size %"
@@ -1828,24 +1823,6 @@ gst_video_decoder_chain (GstPad * pad, GstObject * parent, GstBuffer * buf)
 
     decoder->priv->current_frame_events =
         g_list_prepend (decoder->priv->current_frame_events, event);
-  }
-
-  if (G_UNLIKELY (GST_BUFFER_IS_DISCONT (buf))) {
-    gint64 ts;
-
-    GST_DEBUG_OBJECT (decoder, "received DISCONT buffer");
-
-    /* track present position */
-    ts = priv->base_timestamp;
-
-    /* buffer may claim DISCONT loudly, if it can't tell us where we are now,
-     * we'll stick to where we were ...
-     * Particularly useful/needed for upstream BYTE based */
-    if (decoder->input_segment.rate > 0.0
-        && !GST_BUFFER_TIMESTAMP_IS_VALID (buf)) {
-      GST_DEBUG_OBJECT (decoder, "... but restoring previous ts tracking");
-      priv->base_timestamp = ts;
-    }
   }
 
   if (decoder->input_segment.rate > 0.0)
@@ -1891,9 +1868,8 @@ gst_video_decoder_change_state (GstElement * element, GstStateChange transition)
 
       GST_VIDEO_DECODER_STREAM_LOCK (decoder);
       gst_video_decoder_reset (decoder, TRUE);
-      g_list_foreach (decoder->priv->current_frame_events,
-          (GFunc) gst_event_unref, NULL);
-      g_list_free (decoder->priv->current_frame_events);
+      g_list_free_full (decoder->priv->current_frame_events,
+          (GDestroyNotify) gst_event_unref);
       decoder->priv->current_frame_events = NULL;
       GST_VIDEO_DECODER_STREAM_UNLOCK (decoder);
       break;
@@ -1982,8 +1958,11 @@ gst_video_decoder_prepare_finish_frame (GstVideoDecoder *
 #endif
 
   GST_LOG_OBJECT (decoder,
-      "finish frame %p sync=%d pts=%" GST_TIME_FORMAT, frame,
-      GST_VIDEO_CODEC_FRAME_IS_SYNC_POINT (frame), GST_TIME_ARGS (frame->pts));
+      "finish frame %p (#%d) sync:%d pts:%" GST_TIME_FORMAT " dts:%"
+      GST_TIME_FORMAT,
+      frame, frame->system_frame_number,
+      GST_VIDEO_CODEC_FRAME_IS_SYNC_POINT (frame), GST_TIME_ARGS (frame->pts),
+      GST_TIME_ARGS (frame->dts));
 
   /* Push all pending events that arrived before this frame */
   for (l = priv->frames; l; l = l->next) {
@@ -1998,7 +1977,7 @@ gst_video_decoder_prepare_finish_frame (GstVideoDecoder *
       break;
   }
 
-  for (l = g_list_last (events); l; l = l->prev) {
+  for (l = g_list_last (events); l; l = g_list_previous (l)) {
     GST_LOG_OBJECT (decoder, "pushing %s event", GST_EVENT_TYPE_NAME (l->data));
     gst_video_decoder_push_event (decoder, l->data);
   }
@@ -2009,7 +1988,7 @@ gst_video_decoder_prepare_finish_frame (GstVideoDecoder *
   if (GST_VIDEO_CODEC_FRAME_IS_DECODE_ONLY (frame))
     return;
 
-  /* If the frame is meant to be outputted but we don't have an output buffer
+  /* If the frame is meant to be output but we don't have an output_buffer
    * we have a problem :) */
   if (G_UNLIKELY ((frame->output_buffer == NULL) && !dropping))
     goto no_output_buffer;
