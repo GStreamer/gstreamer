@@ -24,7 +24,7 @@
 #include <gst/gst.h>
 #include <gst/base/gstcollectpads.h>
 
-#include "gstglbuffer.h"
+#include "gstglmeta.h"
 
 G_BEGIN_DECLS
 
