@@ -44,6 +44,7 @@ AS_LIBTOOL(GST, 0, 0, 0)
 dnl *** required versions of GStreamer stuff ***
 GST_REQ=0.11.0
 GSTPB_REQ=0.11.0
+GSTPG_REQ=0.11.0
 
 dnl *** autotools stuff ****
 
@@ -141,6 +142,11 @@ AG_GST_CHECK_GST_PLUGINS_BASE($GST_API_VERSION, [$GSTPB_REQ], [yes])
 GSTPB_PLUGINS_DIR=`$PKG_CONFIG gstreamer-plugins-base-$GST_API_VERSION --variable pluginsdir`
 AC_SUBST(GSTPB_PLUGINS_DIR)
 AC_MSG_NOTICE(Using GStreamer Base Plugins in $GSTPB_PLUGINS_DIR)
+
+AG_GST_CHECK_GST_PLUGINS_GOOD($GST_API_VERSION, [$GSTPG_REQ], [yes])
+GSTPG_PLUGINS_DIR=`$PKG_CONFIG gstreamer-plugins-good-$GST_API_VERSION --variable pluginsdir`
+AC_SUBST(GSTPG_PLUGINS_DIR)
+AC_MSG_NOTICE(Using GStreamer Good Plugins in $GSTPG_PLUGINS_DIR)
 
 AG_GST_CHECK_GST_CHECK($GST_API_VERSION, [$GST_REQ], no)
 
@@ -250,6 +256,7 @@ gst/Makefile
 gst/rtsp-server/Makefile
 examples/Makefile
 tests/Makefile
+tests/check/Makefile
 bindings/Makefile
 bindings/vala/Makefile
 pkgconfig/Makefile
