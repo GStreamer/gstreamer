@@ -575,11 +575,32 @@ gst_selector_pad_query (GstPad * pad, GstObject * parent, GstQuery * query)
   gboolean res = FALSE;
 
   switch (GST_QUERY_TYPE (query)) {
+    case GST_QUERY_ALLOCATION:{
+      GstPad *active_sinkpad;
+      GstInputSelector *sel = GST_INPUT_SELECTOR (parent);
+
+      /* Only do the allocation query for the active sinkpad,
+       * after switching a reconfigure event is sent and upstream
+       * should reconfigure and do a new allocation query
+       */
+      if (GST_PAD_DIRECTION (pad) == GST_PAD_SINK) {
+        GST_INPUT_SELECTOR_LOCK (sel);
+        active_sinkpad = gst_input_selector_activate_sinkpad (sel, pad);
+        GST_INPUT_SELECTOR_UNLOCK (sel);
+
+        if (pad != active_sinkpad) {
+          res = FALSE;
+          goto done;
+        }
+      }
+    }
+      /* fall through */
     default:
       res = gst_pad_query_default (pad, parent, query);
       break;
   }
 
+done:
   return res;
 }
 
@@ -1327,6 +1348,11 @@ gst_input_selector_set_active_pad (GstInputSelector * self, GstPad * pad)
 
   active_pad_p = &self->active_sinkpad;
   gst_object_replace ((GstObject **) active_pad_p, GST_OBJECT_CAST (pad));
+
+  if (old && old != new)
+    gst_pad_push_event (GST_PAD_CAST (old), gst_event_new_reconfigure ());
+  if (new)
+    gst_pad_push_event (GST_PAD_CAST (new), gst_event_new_reconfigure ());
 
   GST_DEBUG_OBJECT (self, "New active pad is %" GST_PTR_FORMAT,
       self->active_sinkpad);
