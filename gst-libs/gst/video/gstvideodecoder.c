@@ -2360,7 +2360,7 @@ gst_video_decoder_get_oldest_frame (GstVideoDecoder * decoder)
  *
  * Get a pending unfinished #GstVideoCodecFrame
  * 
- * Returns: (transfer none): pending unfinished #GstVideoCodecFrame identified by @frame_number.
+ * Returns: (transfer full): pending unfinished #GstVideoCodecFrame identified by @frame_number.
  *
  * Since: 0.10.36
  */
@@ -2377,7 +2377,7 @@ gst_video_decoder_get_frame (GstVideoDecoder * decoder, int frame_number)
     GstVideoCodecFrame *tmp = g->data;
 
     if (tmp->system_frame_number == frame_number) {
-      frame = tmp;
+      frame = gst_video_codec_frame_ref (tmp);
       break;
     }
   }
