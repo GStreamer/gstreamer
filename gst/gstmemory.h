@@ -218,7 +218,7 @@ typedef struct {
  * GstAllocationParams:
  * @flags: flags to control allocation
  * @align: the desired alignment of the memory
- * @prefix: the disired prefix
+ * @prefix: the desired prefix
  * @padding: the desired padding
  *
  * Parameters to control the allocation of memory
