@@ -52,6 +52,10 @@ struct _GstX264Enc
   x264_param_t x264param;
   gint current_byte_stream;
 
+  /* List of frame/buffer mapping structs for
+   * pending frames */
+  GList *pending_frames;
+
   /* properties */
   guint threads;
   gboolean sliced_threads;
@@ -90,7 +94,6 @@ struct _GstX264Enc
   gint psy_tune;
   guint tune;
   GString *tunings;
-  gint profile;
   GString *option_string_prop; /* option-string property */
   GString *option_string; /* used by set prop */
 
