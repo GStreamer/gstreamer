@@ -360,8 +360,8 @@ struct _GstVideoDecoderPrivate
   GList *parse_gather;
   /* frames to be handled == decoded */
   GList *decode;
-  /* collected output */
-  GList *queued;
+  /* collected output - of buffer objects, not frames */
+  GList *output_queued;
 
   /* FIXME : base_picture_number is never set */
   guint64 base_picture_number;
@@ -1468,9 +1468,10 @@ gst_video_decoder_clear_queues (GstVideoDecoder * dec)
 {
   GstVideoDecoderPrivate *priv = dec->priv;
 
-  g_list_foreach (priv->queued, (GFunc) gst_mini_object_unref, NULL);
-  g_list_free (priv->queued);
-  priv->queued = NULL;
+  g_list_free_full (priv->output_queued,
+      (GDestroyNotify) gst_mini_object_unref);
+  priv->output_queued = NULL;
+
   g_list_foreach (priv->gather, (GFunc) gst_mini_object_unref, NULL);
   g_list_free (priv->gather);
   priv->gather = NULL;
@@ -1700,16 +1701,11 @@ gst_video_decoder_flush_parse (GstVideoDecoder * dec)
   }
 
   /* now send queued data downstream */
-  while (priv->queued) {
-    GstBuffer *buf = GST_BUFFER_CAST (priv->queued->data);
+  walk = priv->output_queued;
+  while (walk) {
+    GstBuffer *buf = GST_BUFFER_CAST (walk->data);
 
     if (G_LIKELY (res == GST_FLOW_OK)) {
-      GST_DEBUG_OBJECT (dec, "pushing buffer %p of size %" G_GSIZE_FORMAT ", "
-          "time %" GST_TIME_FORMAT ", dur %" GST_TIME_FORMAT, buf,
-          gst_buffer_get_size (buf), GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (buf)),
-          GST_TIME_ARGS (GST_BUFFER_DURATION (buf)));
-      /* should be already, but let's be sure */
-      buf = gst_buffer_make_writable (buf);
       /* avoid stray DISCONT from forward processing,
        * which have no meaning in reverse pushing */
       GST_BUFFER_FLAG_UNSET (buf, GST_BUFFER_FLAG_DISCONT);
@@ -1718,7 +1714,9 @@ gst_video_decoder_flush_parse (GstVideoDecoder * dec)
       gst_buffer_unref (buf);
     }
 
-    priv->queued = g_list_delete_link (priv->queued, priv->queued);
+    priv->output_queued =
+        g_list_delete_link (priv->output_queued, priv->output_queued);
+    walk = priv->output_queued;
   }
 
   return res;
@@ -2220,7 +2218,7 @@ gst_video_decoder_finish_frame (GstVideoDecoder * decoder,
     priv->error_count--;
   if (decoder->output_segment.rate < 0.0) {
     GST_LOG_OBJECT (decoder, "queued buffer");
-    priv->queued = g_list_prepend (priv->queued, output_buffer);
+    priv->output_queued = g_list_prepend (priv->output_queued, output_buffer);
   } else {
     ret = gst_pad_push (decoder->srcpad, output_buffer);
   }
