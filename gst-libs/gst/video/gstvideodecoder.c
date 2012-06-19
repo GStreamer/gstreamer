@@ -426,7 +426,8 @@ static guint64 gst_video_decoder_get_frame_duration (GstVideoDecoder * decoder,
     GstVideoCodecFrame * frame);
 static GstVideoCodecFrame *gst_video_decoder_new_frame (GstVideoDecoder *
     decoder);
-
+static GstFlowReturn gst_video_decoder_clip_and_push_buf (GstVideoDecoder *
+    decoder, GstBuffer * buf);
 static void gst_video_decoder_clear_queues (GstVideoDecoder * dec);
 
 static gboolean gst_video_decoder_sink_event_default (GstVideoDecoder * decoder,
@@ -2121,11 +2122,9 @@ GstFlowReturn
 gst_video_decoder_finish_frame (GstVideoDecoder * decoder,
     GstVideoCodecFrame * frame)
 {
+  GstFlowReturn ret = GST_FLOW_OK;
   GstVideoDecoderPrivate *priv = decoder->priv;
   GstBuffer *output_buffer;
-  GstFlowReturn ret = GST_FLOW_OK;
-  guint64 start, stop;
-  GstSegment *segment;
 
   GST_LOG_OBJECT (decoder, "finish frame %p", frame);
 
@@ -2137,6 +2136,7 @@ gst_video_decoder_finish_frame (GstVideoDecoder * decoder,
 
   gst_video_decoder_prepare_finish_frame (decoder, frame, FALSE);
   priv->processed++;
+
   /* no buffer data means this frame is skipped */
   if (!frame->output_buffer || GST_VIDEO_CODEC_FRAME_IS_DECODE_ONLY (frame)) {
     GST_DEBUG_OBJECT (decoder, "skipping frame %" GST_TIME_FORMAT,
@@ -2153,28 +2153,62 @@ gst_video_decoder_finish_frame (GstVideoDecoder * decoder,
 
   GST_BUFFER_FLAG_UNSET (output_buffer, GST_BUFFER_FLAG_DELTA_UNIT);
 
+  GST_BUFFER_TIMESTAMP (output_buffer) = frame->pts;
+  GST_BUFFER_DURATION (output_buffer) = frame->duration;
+
+  GST_BUFFER_OFFSET (output_buffer) = GST_BUFFER_OFFSET_NONE;
+  GST_BUFFER_OFFSET_END (output_buffer) = GST_BUFFER_OFFSET_NONE;
+
   if (priv->discont) {
     GST_BUFFER_FLAG_SET (output_buffer, GST_BUFFER_FLAG_DISCONT);
     priv->discont = FALSE;
   }
 
+  if (decoder->output_segment.rate < 0.0) {
+    GST_LOG_OBJECT (decoder, "queued frame");
+    priv->output_queued = g_list_prepend (priv->output_queued, output_buffer);
+  } else {
+    ret = gst_video_decoder_clip_and_push_buf (decoder, output_buffer);
+  }
+
+done:
+  gst_video_decoder_do_finish_frame (decoder, frame);
+  GST_VIDEO_DECODER_STREAM_UNLOCK (decoder);
+  return ret;
+}
+
+
+/* With stream lock, takes the frame reference */
+static GstFlowReturn
+gst_video_decoder_clip_and_push_buf (GstVideoDecoder * decoder, GstBuffer * buf)
+{
+  GstFlowReturn ret = GST_FLOW_OK;
+  GstVideoDecoderPrivate *priv = decoder->priv;
+  guint64 start, stop;
+  GstSegment *segment;
+  GstClockTime duration;
+
   /* Check for clipping */
-  start = frame->pts;
-  stop =
-      GST_CLOCK_TIME_IS_VALID (start) ? frame->pts +
-      frame->duration : GST_CLOCK_TIME_NONE;
+  start = GST_BUFFER_TIMESTAMP (buf);
+  duration = GST_BUFFER_DURATION (buf);
+
+  stop = GST_CLOCK_TIME_NONE;
+
+  if (GST_CLOCK_TIME_IS_VALID (start) && GST_CLOCK_TIME_IS_VALID (duration)) {
+    stop = start + duration;
+  }
 
   segment = &decoder->output_segment;
   if (gst_segment_clip (segment, GST_FORMAT_TIME, start, stop, &start, &stop)) {
-    GST_BUFFER_TIMESTAMP (output_buffer) = start;
-    GST_BUFFER_DURATION (output_buffer) = stop - start;
+    GST_BUFFER_TIMESTAMP (buf) = start;
+    GST_BUFFER_DURATION (buf) = stop - start;
     GST_LOG_OBJECT (decoder,
         "accepting buffer inside segment: %" GST_TIME_FORMAT " %"
         GST_TIME_FORMAT " seg %" GST_TIME_FORMAT " to %" GST_TIME_FORMAT
         " time %" GST_TIME_FORMAT,
-        GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (output_buffer)),
-        GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (output_buffer) +
-            GST_BUFFER_DURATION (output_buffer)),
+        GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (buf)),
+        GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (buf) +
+            GST_BUFFER_DURATION (buf)),
         GST_TIME_ARGS (segment->start), GST_TIME_ARGS (segment->stop),
         GST_TIME_ARGS (segment->time));
   } else {
@@ -2183,22 +2217,17 @@ gst_video_decoder_finish_frame (GstVideoDecoder * decoder,
         " %" GST_TIME_FORMAT
         " seg %" GST_TIME_FORMAT " to %" GST_TIME_FORMAT
         " time %" GST_TIME_FORMAT,
-        GST_TIME_ARGS (frame->pts),
-        GST_TIME_ARGS (frame->pts + frame->duration),
+        GST_TIME_ARGS (start), GST_TIME_ARGS (stop),
         GST_TIME_ARGS (segment->start),
         GST_TIME_ARGS (segment->stop), GST_TIME_ARGS (segment->time));
-    gst_buffer_unref (output_buffer);
-    ret = GST_FLOW_OK;
+    gst_buffer_unref (buf);
     goto done;
   }
 
-  GST_BUFFER_OFFSET (output_buffer) = GST_BUFFER_OFFSET_NONE;
-  GST_BUFFER_OFFSET_END (output_buffer) = GST_BUFFER_OFFSET_NONE;
-
   /* update rate estimate */
-  priv->bytes_out += gst_buffer_get_size (output_buffer);
-  if (GST_CLOCK_TIME_IS_VALID (frame->duration)) {
-    priv->time += frame->duration;
+  priv->bytes_out += gst_buffer_get_size (buf);
+  if (GST_CLOCK_TIME_IS_VALID (duration)) {
+    priv->time += duration;
   } else {
     /* FIXME : Use difference between current and previous outgoing
      * timestamp, and relate to difference between current and previous
@@ -2207,28 +2236,25 @@ gst_video_decoder_finish_frame (GstVideoDecoder * decoder,
     priv->time = GST_CLOCK_TIME_NONE;
   }
 
-  GST_LOG_OBJECT (decoder, "pushing frame ts %" GST_TIME_FORMAT
-      ", duration %" GST_TIME_FORMAT,
-      GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (output_buffer)),
-      GST_TIME_ARGS (GST_BUFFER_DURATION (output_buffer)));
+  gst_buffer_set_caps (buf, GST_PAD_CAPS (decoder->srcpad));
 
-  /* we got data, so note things are looking up again */
-  /* FIXME : Shouldn't we avoid going under zero ? */
+  GST_LOG_OBJECT (decoder, "pushing buffer %p of size %u ts %" GST_TIME_FORMAT
+      ", duration %" GST_TIME_FORMAT, buf, gst_buffer_get_size (buf),
+      GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (buf)),
+      GST_TIME_ARGS (GST_BUFFER_DURATION (buf)));
+
+  /* we got data, so note things are looking up again, reduce
+   * the error count, if there is one */
   if (G_UNLIKELY (priv->error_count))
     priv->error_count--;
   if (decoder->output_segment.rate < 0.0) {
     GST_LOG_OBJECT (decoder, "queued buffer");
-    priv->output_queued = g_list_prepend (priv->output_queued, output_buffer);
+    priv->output_queued = g_list_prepend (priv->output_queued, buf);
   } else {
-    ret = gst_pad_push (decoder->srcpad, output_buffer);
+    ret = gst_pad_push (decoder->srcpad, buf);
   }
 
 done:
-
-  gst_video_decoder_do_finish_frame (decoder, frame);
-
-  GST_VIDEO_DECODER_STREAM_UNLOCK (decoder);
-
   return ret;
 }
 
