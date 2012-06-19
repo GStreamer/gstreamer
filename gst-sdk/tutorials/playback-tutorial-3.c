@@ -119,7 +119,6 @@ static void source_setup (GstElement *pipeline, GstElement *source, CustomData *
 int main(int argc, char *argv[]) {
   CustomData data;
   GstBus *bus;
-  guint flags;
   
   /* Initialize cumstom data structure */
   memset (&data, 0, sizeof (data));
