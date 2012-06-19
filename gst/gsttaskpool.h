@@ -40,13 +40,13 @@ typedef struct _GstTaskPoolClass GstTaskPoolClass;
 
 /**
  * GstTaskPoolFunction:
- * @data: user data for the task function
+ * @user_data: user data for the task function
  *
  * Task function, see gst_task_pool_push().
  *
  * Since: 0.10.24
  */
-typedef void   (*GstTaskPoolFunction)          (void *data);
+typedef void   (*GstTaskPoolFunction)          (void *user_data);
 
 /**
  * GstTaskPool:

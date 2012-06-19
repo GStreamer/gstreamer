@@ -72,7 +72,7 @@ typedef enum
  * GstBusSyncHandler:
  * @bus: the #GstBus that sent the message
  * @message: the #GstMessage
- * @data: user data that has been given, when registering the handler
+ * @user_data: user data that has been given, when registering the handler
  *
  * Handler will be invoked synchronously, when a new message has been injected
  * into the bus. This function is mostly used internally. Only one sync handler
@@ -83,13 +83,13 @@ typedef enum
  *
  * Returns: #GstBusSyncReply stating what to do with the message
  */
-typedef GstBusSyncReply (*GstBusSyncHandler)    (GstBus * bus, GstMessage * message, gpointer data);
+typedef GstBusSyncReply (*GstBusSyncHandler)    (GstBus * bus, GstMessage * message, gpointer user_data);
 
 /**
  * GstBusFunc:
  * @bus: the #GstBus that sent the message
  * @message: the #GstMessage
- * @data: user data that has been given, when registering the handler
+ * @user_data: user data that has been given, when registering the handler
  *
  * Specifies the type of function passed to gst_bus_add_watch() or
  * gst_bus_add_watch_full(), which is called from the mainloop when a message
@@ -103,7 +103,7 @@ typedef GstBusSyncReply (*GstBusSyncHandler)    (GstBus * bus, GstMessage * mess
  *
  * Returns: %FALSE if the event source should be removed.
  */
-typedef gboolean        (*GstBusFunc)           (GstBus * bus, GstMessage * message, gpointer data);
+typedef gboolean        (*GstBusFunc)           (GstBus * bus, GstMessage * message, gpointer user_data);
 
 /**
  * GstBus:

@@ -69,7 +69,7 @@ typedef void (*GstMiniObjectFreeFunction) (GstMiniObject *obj);
 
  /**
  * GstMiniObjectWeakNotify:
- * @data: data that was provided when the weak reference was established
+ * @user_data: data that was provided when the weak reference was established
  * @where_the_mini_object_was: the mini object being finalized
  *
  * A #GstMiniObjectWeakNotify function can be added to a mini object as a
@@ -80,7 +80,7 @@ typedef void (*GstMiniObjectFreeFunction) (GstMiniObject *obj);
  *
  * Since: 0.10.35
  */
-typedef void (*GstMiniObjectWeakNotify) (gpointer data,
+typedef void (*GstMiniObjectWeakNotify) (gpointer user_data,
     GstMiniObject * where_the_mini_object_was);
 
 /**

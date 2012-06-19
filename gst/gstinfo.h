@@ -241,7 +241,7 @@ typedef struct _GstDebugMessage GstDebugMessage;
  * @line: line number
  * @object: a #GObject
  * @message: the message
- * @data: user data for the log function
+ * @user_data: user data for the log function
  *
  * Function prototype for a logging function that can be registered with
  * gst_debug_add_log_function().
@@ -254,7 +254,7 @@ typedef void (*GstLogFunction)  (GstDebugCategory * category,
                                  gint               line,
                                  GObject          * object,
                                  GstDebugMessage  * message,
-                                 gpointer           data);
+                                 gpointer           user_data);
 
 #ifdef GST_USING_PRINTF_EXTENSION
 

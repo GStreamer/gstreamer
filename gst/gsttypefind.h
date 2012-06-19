@@ -36,11 +36,11 @@ typedef struct _GstTypeFind GstTypeFind;
 /**
  * GstTypeFindFunction:
  * @find: A #GstTypeFind structure
- * @data: optionnal data to pass to the function
+ * @user_data: optionnal data to pass to the function
  *
  * A function that will be called by typefinding.
  */
-typedef void (* GstTypeFindFunction) (GstTypeFind *find, gpointer data);
+typedef void (* GstTypeFindFunction) (GstTypeFind *find, gpointer user_data);
 
 /**
  * GstTypeFindProbability:

@@ -30,12 +30,12 @@ G_BEGIN_DECLS
 
 /**
  * GstTaskFunction:
- * @data: user data passed to the function
+ * @user_data: user data passed to the function
  *
  * A function that will repeatedly be called in the thread created by
  * a #GstTask.
  */
-typedef void         (*GstTaskFunction)          (void *data);
+typedef void         (*GstTaskFunction)          (void *user_data);
 
 /* --- standard type macros --- */
 #define GST_TYPE_TASK                   (gst_task_get_type ())
