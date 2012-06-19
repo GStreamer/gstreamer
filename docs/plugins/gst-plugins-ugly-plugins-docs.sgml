@@ -31,7 +31,6 @@
     <xi:include href="xml/element-rtspwms.xml" />
     <xi:include href="xml/element-siddec.xml" />
     <xi:include href="xml/element-twolamemp2enc.xml" />
-    <xi:include href="xml/element-synaesthesia.xml" />
     <xi:include href="xml/element-x264enc.xml" />
     <xi:include href="xml/element-xingmux.xml" />
   </chapter>
@@ -51,7 +50,6 @@
     <xi:include href="xml/plugin-mpeg2dec.xml" />
     <xi:include href="xml/plugin-realmedia.xml" />
     <xi:include href="xml/plugin-siddec.xml" />
-    <xi:include href="xml/plugin-synaesthesia.xml" />
     <xi:include href="xml/plugin-twolame.xml" />
     <xi:include href="xml/plugin-x264.xml" />
   </chapter>

@@ -41,7 +41,6 @@ monoscope        None             (Algorithm by Ralph Loader, Joerg Walter,
                                    Richard Boulton, and Andy Lo A Foe)
 rtjpeg           None             (Erik Walthinsen's algorithm)
 rtp              None             (http://www.linphone.org/ortp/)
-synaesthesia                      (http://www.logarithmic.net/pfh/synaesthesia)
 system_encode    None             (Algorithm by Chrisoph Moar, Wim Tayman's and
                                    Erik Walthinsen)
 vbidec           None             (Algorithm by Billy Biggs, Doug Bell, 

@@ -217,20 +217,6 @@ gst_siddec_get_type
 </SECTION>
 
 <SECTION>
-<FILE>element-synaesthesia</FILE>
-<TITLE>synaesthesia</TITLE>
-GstSynaesthesia
-<SUBSECTION Standard>
-GstSynaesthesiaClass
-GST_SYNAESTHESIA
-GST_SYNAESTHESIA_CLASS
-GST_IS_SYNAESTHESIA
-GST_IS_SYNAESTHESIA_CLASS
-GST_TYPE_SYNAESTHESIA
-gst_synaesthesia_get_type
-</SECTION>
-
-<SECTION>
 <FILE>element-twolamemp2enc</FILE>
 <TITLE>twolame</TITLE>
 GstTwoLame
