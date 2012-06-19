@@ -183,6 +183,8 @@ typedef gpointer GstClockID;
  */
 #define GST_TIME_TO_TIMEVAL(t,tv)                               \
 G_STMT_START {                                                  \
+  g_assert ("Value of time " #t " is out of timeval's range" && \
+      ((t) / GST_SECOND) < G_MAXLONG);                          \
   (tv).tv_sec  = (glong) (((GstClockTime) (t)) / GST_SECOND);   \
   (tv).tv_usec = (glong) ((((GstClockTime) (t)) -               \
                   ((GstClockTime) (tv).tv_sec) * GST_SECOND)    \
@@ -203,8 +205,10 @@ G_STMT_START {                                                  \
  *
  * Convert a #GstClockTime to a struct timespec (see man pselect)
  */
-#define GST_TIME_TO_TIMESPEC(t,ts)                      \
-G_STMT_START {                                          \
+#define GST_TIME_TO_TIMESPEC(t,ts)                                \
+G_STMT_START {                                                    \
+  g_assert ("Value of time " #t " is out of timespec's range" &&  \
+      ((t) / GST_SECOND) < G_MAXLONG);                            \
   (ts).tv_sec  =  (glong) ((t) / GST_SECOND);                     \
   (ts).tv_nsec = (glong) (((t) - (ts).tv_sec * GST_SECOND) / GST_NSECOND);        \
 } G_STMT_END
