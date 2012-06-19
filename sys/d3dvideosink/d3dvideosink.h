@@ -63,8 +63,9 @@ G_BEGIN_DECLS
 typedef struct _GstD3DVideoSink GstD3DVideoSink;
 typedef struct _GstD3DVideoSinkClass GstD3DVideoSinkClass;
 
-#define GST_D3DVIDEOSINK_SWAP_CHAIN_LOCK(sink)	  g_mutex_lock (GST_D3DVIDEOSINK (sink)->d3d_swap_chain_lock);
-#define GST_D3DVIDEOSINK_SWAP_CHAIN_UNLOCK(sink)  g_mutex_unlock (GST_D3DVIDEOSINK (sink)->d3d_swap_chain_lock);
+#define GST_D3DVIDEOSINK_D3D_DEVICE_LOCK(sink) g_mutex_lock (GST_D3DVIDEOSINK (sink)->d3d_device_lock)
+#define GST_D3DVIDEOSINK_D3D_DEVICE_TRYLOCK(sink) g_mutex_trylock (GST_D3DVIDEOSINK (sink)->d3d_device_lock)
+#define GST_D3DVIDEOSINK_D3D_DEVICE_UNLOCK(sink) g_mutex_unlock (GST_D3DVIDEOSINK (sink)->d3d_device_lock)
 
 struct _GstD3DVideoSink
 {
@@ -99,7 +100,7 @@ struct _GstD3DVideoSink
   WNDPROC prevWndProc;
   gboolean is_hooked;
 
-  GMutex *d3d_swap_chain_lock;
+  GMutex *d3d_device_lock;
   LPDIRECT3DSURFACE9 d3d_offscreen_surface;
   LPDIRECT3DDEVICE9 d3ddev;
   D3DPRESENT_PARAMETERS d3dpp;
