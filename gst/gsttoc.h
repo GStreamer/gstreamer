@@ -54,8 +54,10 @@ typedef enum {
  * without meaning (e.g. applications should not assume the /editionX/chapterY/chapter/Z structure,
  * other demuxers could do something else), it should help to track updates of certain entries.
  * @type: #GstTocEntryType of this entry.
- * @subentries: list of #GstTocEntry children.
- * @pads: list of #GstPad objects, related to this #GstTocEntry.
+ * @subentries: (element-type GstTocEntry): list of #GstTocEntry
+ * children.
+ * @pads: (element-type GstPad): list of #GstPad objects, related to
+ * this #GstTocEntry.
  * @tags: tags related to this entry.
  * @info: extra information related to this entry.
  *
@@ -78,7 +80,8 @@ struct _GstTocEntry {
 
 /**
  * GstToc:
- * @entries: list of #GstTocEntry entries of the TOC.
+ * @entries: (element-type GstTocEntry): list of #GstTocEntry entries
+ *   of the TOC.
  * @tags: tags related to the whole TOC.
  * @info: extra information related to the TOC.
  *
