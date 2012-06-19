@@ -1431,6 +1431,9 @@ static void
 gst_video_decoder_get_timestamp_at_offset (GstVideoDecoder *
     decoder, guint64 offset, GstClockTime * timestamp, GstClockTime * duration)
 {
+#ifndef GST_DISABLE_GST_DEBUG
+  guint64 got_offset = 0;
+#endif
   Timestamp *ts;
   GList *g;
 
@@ -1441,6 +1444,9 @@ gst_video_decoder_get_timestamp_at_offset (GstVideoDecoder *
   while (g) {
     ts = g->data;
     if (ts->offset <= offset) {
+#ifndef GST_DISABLE_GST_DEBUG
+      got_offset = ts->offset;
+#endif
       *timestamp = ts->timestamp;
       *duration = ts->duration;
       g_free (ts);
@@ -1452,8 +1458,9 @@ gst_video_decoder_get_timestamp_at_offset (GstVideoDecoder *
   }
 
   GST_LOG_OBJECT (decoder,
-      "got timestamp %" GST_TIME_FORMAT " (offset:%" G_GUINT64_FORMAT ")",
-      GST_TIME_ARGS (*timestamp), offset);
+      "got timestamp %" GST_TIME_FORMAT " @ offs %" G_GUINT64_FORMAT
+      " (wanted offset:%" G_GUINT64_FORMAT ")", GST_TIME_ARGS (*timestamp),
+      got_offset, offset);
 }
 
 static void
@@ -1620,8 +1627,8 @@ gst_video_decoder_flush_decode (GstVideoDecoder * dec)
     GstVideoCodecFrame *frame = (GstVideoCodecFrame *) (walk->data);
     GstBuffer *buf = frame->input_buffer;
 
-    GST_DEBUG_OBJECT (dec, "decoding frame %p, ts %" GST_TIME_FORMAT,
-        buf, GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (buf)));
+    GST_DEBUG_OBJECT (dec, "decoding frame %p buffer %p, ts %" GST_TIME_FORMAT,
+        frame, buf, GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (buf)));
 
     next = walk->next;
 
@@ -2322,18 +2329,17 @@ gst_video_decoder_have_frame (GstVideoDecoder * decoder)
 
   GST_VIDEO_DECODER_STREAM_LOCK (decoder);
 
-  n_available = gst_adapter_available (decoder->priv->output_adapter);
+  n_available = gst_adapter_available (priv->output_adapter);
   if (n_available) {
-    buffer =
-        gst_adapter_take_buffer (decoder->priv->output_adapter, n_available);
+    buffer = gst_adapter_take_buffer (priv->output_adapter, n_available);
   } else {
     buffer = gst_buffer_new_and_alloc (0);
   }
 
-  decoder->priv->current_frame->input_buffer = buffer;
+  priv->current_frame->input_buffer = buffer;
 
   gst_video_decoder_get_timestamp_at_offset (decoder,
-      decoder->priv->frame_offset, &timestamp, &duration);
+      priv->frame_offset, &timestamp, &duration);
 
   GST_BUFFER_TIMESTAMP (buffer) = timestamp;
   GST_BUFFER_DURATION (buffer) = duration;
