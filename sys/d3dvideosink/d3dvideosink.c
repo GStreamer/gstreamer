@@ -1375,9 +1375,8 @@ gst_d3dvideosink_prepare_window (GstD3DVideoSink * sink)
    * and create (and use) our own window, if we didn't create
    * one before */
   if (sink->window_handle && sink->is_new_window) {
-    return;
-  }
-  if (sink->window_handle) {
+    gst_d3dvideosink_release_d3d_device (sink);
+  } else if (sink->window_handle) {
       gst_d3dvideosink_set_window_for_renderer (sink);
   } else {
     gst_d3dvideosink_create_default_window (sink);
