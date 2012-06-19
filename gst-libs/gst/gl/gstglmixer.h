@@ -56,36 +56,31 @@ struct _GstGLMixer
   GstPad *srcpad;
 
   /* Lock to prevent the state to change while blending */
-  GMutex *state_lock;
+  GMutex lock;
   /* Sink pads using Collect Pads from core's base library */
   GstCollectPads *collect;
+
   /* sinkpads, a GSList of GstGLMixerPads */
   GSList *sinkpads;
-
-  GPtrArray *array_buffers;
-
   gint numpads;
-
-  GstClockTime last_ts;
-
-  /* the master pad */
-  GstGLMixerPad *master;
-
-  gint width;
-  gint height;
-  gboolean setcaps;
-  gboolean sendseg;
-
-  gint fps_n;
-  gint fps_d;
-
   /* Next available sinkpad index */
   gint next_sinkpad;
 
+  GPtrArray *array_buffers;
+
+  GstVideoInfo info;
+
+  gboolean newseg_pending;
+  gboolean flush_stop_pending;
+
+  GstSegment segment;
+  GstClockTime ts_offset;
+  guint64 nframes;
+
   /* sink event handling */
-  GstPadEventFunction collect_event;
-  guint64	segment_position;
-  gdouble	segment_rate;
+  gdouble proportion;
+  GstClockTime earliest_time;
+  guint64 qos_processed, qos_dropped;
 
   GstGLDisplay *display;
   GLuint fbo;

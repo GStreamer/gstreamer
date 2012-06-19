@@ -46,7 +46,11 @@ struct _GstGLMixerCollect
 {
   GstCollectData collect;       /* we extend the CollectData */
 
+  GstBuffer *queued;
+
   GstBuffer *buffer;            /* the queued buffer for this pad */
+  GstClockTime start_time;
+  GstClockTime end_time;
 
   GstGLMixerPad *mixpad;
 };
@@ -56,12 +60,8 @@ struct _GstGLMixerPad
 {
   GstPad parent;                /* subclass the pad */
 
-  gint64 queued;
-
-  gint width;
-  gint height;
-  gint fps_n;
-  gint fps_d;
+  /* <private> */
+  GstVideoInfo info;
 
   GstGLDisplay *display;
 
@@ -72,6 +72,8 @@ struct _GstGLMixerPadClass
 {
   GstPadClass parent_class;
 };
+
+GType gst_gl_mixer_pad_get_type (void);
 
 G_END_DECLS
 #endif /* __GST_GL_MIXER_PAD_H__ */
