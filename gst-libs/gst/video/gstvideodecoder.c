@@ -2853,7 +2853,8 @@ gst_video_decoder_get_max_decode_time (GstVideoDecoder *
 
   GST_OBJECT_LOCK (decoder);
   earliest_time = decoder->priv->earliest_time;
-  if (GST_CLOCK_TIME_IS_VALID (earliest_time))
+  if (GST_CLOCK_TIME_IS_VALID (earliest_time)
+      && GST_CLOCK_TIME_IS_VALID (frame->deadline))
     deadline = GST_CLOCK_DIFF (earliest_time, frame->deadline);
   else
     deadline = G_MAXINT64;
