@@ -1759,10 +1759,11 @@ gst_base_sink_get_sync_times (GstBaseSink * basesink, GstMiniObject * obj,
 
   bclass = GST_BASE_SINK_GET_CLASS (basesink);
 
+again:
   /* start with nothing */
   start = stop = GST_CLOCK_TIME_NONE;
+  eos = FALSE;
 
-again:
   if (G_UNLIKELY (GST_IS_EVENT (obj))) {
     GstEvent *event = GST_EVENT_CAST (obj);
 
@@ -1795,17 +1796,26 @@ again:
         eos = TRUE;
         goto eos_done;
       }
+      case GST_EVENT_GAP:
+      {
+        GstClockTime timestamp, duration;
+        gst_event_parse_gap (event, &timestamp, &duration);
+
+        if (GST_CLOCK_TIME_IS_VALID (timestamp)) {
+          start = timestamp;
+          if (GST_CLOCK_TIME_IS_VALID (duration))
+            stop = start + duration;
+        }
+        *do_sync = TRUE;
+        break;
+      }
       default:
         /* other events do not need syncing */
         return FALSE;
     }
   } else {
     /* else do buffer sync code */
-    GstBuffer *buffer;
-
-    eos = FALSE;
-
-    buffer = GST_BUFFER_CAST (obj);
+    GstBuffer *buffer = GST_BUFFER_CAST (obj);
 
     /* just get the times to see if we need syncing, if the start returns -1 we
      * don't sync. */
