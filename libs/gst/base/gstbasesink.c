@@ -1745,7 +1745,6 @@ gst_base_sink_get_sync_times (GstBaseSink * basesink, GstMiniObject * obj,
     gboolean * stepped, GstStepInfo * step, gboolean * step_end)
 {
   GstBaseSinkClass *bclass;
-  GstBuffer *buffer;
   GstClockTime start, stop;     /* raw start/stop timestamps */
   guint64 cstart, cstop;        /* clipped raw timestamps */
   guint64 rstart, rstop;        /* clipped timestamps converted to running time */
@@ -1758,9 +1757,12 @@ gst_base_sink_get_sync_times (GstBaseSink * basesink, GstMiniObject * obj,
   priv = basesink->priv;
   segment = &basesink->segment;
 
+  bclass = GST_BASE_SINK_GET_CLASS (basesink);
+
   /* start with nothing */
   start = stop = GST_CLOCK_TIME_NONE;
 
+again:
   if (G_UNLIKELY (GST_IS_EVENT (obj))) {
     GstEvent *event = GST_EVENT_CAST (obj);
 
@@ -1797,28 +1799,27 @@ gst_base_sink_get_sync_times (GstBaseSink * basesink, GstMiniObject * obj,
         /* other events do not need syncing */
         return FALSE;
     }
-  }
-
-  eos = FALSE;
-
-again:
-  /* else do buffer sync code */
-  buffer = GST_BUFFER_CAST (obj);
-
-  bclass = GST_BASE_SINK_GET_CLASS (basesink);
-
-  /* just get the times to see if we need syncing, if the start returns -1 we
-   * don't sync. */
-  if (bclass->get_times)
-    bclass->get_times (basesink, buffer, &start, &stop);
-
-  if (!GST_CLOCK_TIME_IS_VALID (start)) {
-    /* we don't need to sync but we still want to get the timestamps for
-     * tracking the position */
-    gst_base_sink_default_get_times (basesink, buffer, &start, &stop);
-    *do_sync = FALSE;
   } else {
-    *do_sync = TRUE;
+    /* else do buffer sync code */
+    GstBuffer *buffer;
+
+    eos = FALSE;
+
+    buffer = GST_BUFFER_CAST (obj);
+
+    /* just get the times to see if we need syncing, if the start returns -1 we
+     * don't sync. */
+    if (bclass->get_times)
+      bclass->get_times (basesink, buffer, &start, &stop);
+
+    if (!GST_CLOCK_TIME_IS_VALID (start)) {
+      /* we don't need to sync but we still want to get the timestamps for
+       * tracking the position */
+      gst_base_sink_default_get_times (basesink, buffer, &start, &stop);
+      *do_sync = FALSE;
+    } else {
+      *do_sync = TRUE;
+    }
   }
 
   GST_DEBUG_OBJECT (basesink, "got times start: %" GST_TIME_FORMAT
