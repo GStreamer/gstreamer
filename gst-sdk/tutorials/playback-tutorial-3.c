@@ -1,8 +1,8 @@
 #include <gst/gst.h>
 #include <string.h>
-
+  
 #define GRAPH_LENGTH 80
-
+  
 /* playbin2 flags */
 typedef enum {
   GST_PLAY_FLAG_DOWNLOAD      = (1 << 7) /* Enable progressive download (on selected formats) */
@@ -70,7 +70,7 @@ static void cb_message (GstBus *bus, GstMessage *msg, CustomData *data) {
 static gboolean refresh_ui (CustomData *data) {
   GstQuery *query;
   gboolean result;
-
+  
   query = gst_query_new_buffering (GST_FORMAT_PERCENT);
   result = gst_element_query (data->pipeline, query);
   if (result) {
@@ -78,10 +78,10 @@ static gboolean refresh_ui (CustomData *data) {
     gchar graph[GRAPH_LENGTH + 1];
     GstFormat format = GST_FORMAT_TIME;
     gint64 position = 0, duration = 0;
-
+    
     memset (graph, ' ', GRAPH_LENGTH);
     graph[GRAPH_LENGTH] = '\0';
-
+    
     n_ranges = gst_query_get_n_buffering_ranges (query);
     for (range = 0; range < n_ranges; range++) {
       gint64 start, stop;
@@ -106,9 +106,9 @@ static gboolean refresh_ui (CustomData *data) {
     }
     g_print ("\r");
   }
-
+  
   return TRUE;
-
+  
 }
   
 int main(int argc, char *argv[]) {
