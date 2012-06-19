@@ -1489,10 +1489,13 @@ gst_video_encoder_finish_frame (GstVideoEncoder * encoder,
   if (encoder_class->pre_push)
     ret = encoder_class->pre_push (encoder, frame);
 
+  /* A reference always needs to be owned by the frame on the buffer.
+   * For that reason, we use a complete sub-buffer (zero-cost) to push
+   * downstream.
+   * The original buffer will be free-ed only when downstream AND the
+   * current implementation are done with the frame. */
   if (ret == GST_FLOW_OK)
-    ret = gst_pad_push (encoder->srcpad, frame->output_buffer);
-
-  frame->output_buffer = NULL;
+    ret = gst_pad_push (encoder->srcpad, gst_buffer_ref (frame->output_buffer));
 
 done:
   /* handed out */
