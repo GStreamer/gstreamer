@@ -362,9 +362,6 @@ struct _GstVideoDecoderPrivate
   GList *decode;
   /* collected output */
   GList *queued;
-  /* Used internally for avoiding processing of frames to flush */
-  gboolean process;
-
 
   /* FIXME : base_picture_number is never set */
   guint64 base_picture_number;
@@ -419,7 +416,8 @@ static gboolean gst_video_decoder_src_query (GstPad * pad, GstObject * parent,
     GstQuery * query);
 static void gst_video_decoder_reset (GstVideoDecoder * decoder, gboolean full);
 
-static GstFlowReturn gst_video_decoder_have_frame_2 (GstVideoDecoder * decoder);
+static GstFlowReturn gst_video_decoder_decode_frame (GstVideoDecoder * decoder,
+    GstVideoCodecFrame * frame);
 static gboolean gst_video_decoder_set_src_caps (GstVideoDecoder * decoder);
 
 static guint64
@@ -1560,9 +1558,8 @@ gst_video_decoder_chain_forward (GstVideoDecoder * decoder, GstBuffer * buf)
 
   g_return_val_if_fail (priv->packetized || klass->parse, GST_FLOW_ERROR);
 
-  if (priv->current_frame == NULL) {
+  if (priv->current_frame == NULL)
     priv->current_frame = gst_video_decoder_new_frame (decoder);
-  }
 
   if (GST_BUFFER_TIMESTAMP_IS_VALID (buf)) {
     gst_video_decoder_add_timestamp (decoder, buf);
@@ -1570,13 +1567,19 @@ gst_video_decoder_chain_forward (GstVideoDecoder * decoder, GstBuffer * buf)
   priv->input_offset += gst_buffer_get_size (buf);
 
   if (priv->packetized) {
-    priv->current_frame->input_buffer = buf;
-
     if (!GST_BUFFER_FLAG_IS_SET (buf, GST_BUFFER_FLAG_DELTA_UNIT)) {
       GST_VIDEO_CODEC_FRAME_SET_SYNC_POINT (priv->current_frame);
     }
 
-    ret = gst_video_decoder_have_frame_2 (decoder);
+    priv->current_frame->input_buffer = buf;
+
+    if (decoder->input_segment.rate < 0.0) {
+      priv->parse_gather =
+          g_list_prepend (priv->parse_gather, priv->current_frame);
+    } else {
+      ret = gst_video_decoder_decode_frame (decoder, priv->current_frame);
+    }
+    priv->current_frame = NULL;
   } else {
 
     gst_adapter_push (priv->input_adapter, buf);
@@ -1589,7 +1592,6 @@ gst_video_decoder_chain_forward (GstVideoDecoder * decoder, GstBuffer * buf)
           klass->parse (decoder, priv->current_frame, priv->input_adapter,
           FALSE);
     } while (ret == GST_FLOW_OK && gst_adapter_available (priv->input_adapter));
-
   }
 
 beach:
@@ -1613,9 +1615,6 @@ gst_video_decoder_flush_decode (GstVideoDecoder * dec)
   /* clear buffer and decoder state */
   gst_video_decoder_flush (dec, FALSE);
 
-  /* signal have_frame it should not capture frames */
-  priv->process = TRUE;
-
   while (walk) {
     GList *next;
     GstVideoCodecFrame *frame = (GstVideoCodecFrame *) (walk->data);
@@ -1625,18 +1624,13 @@ gst_video_decoder_flush_decode (GstVideoDecoder * dec)
         buf, GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (buf)));
 
     next = walk->next;
-    if (priv->current_frame)
-      gst_video_codec_frame_unref (priv->current_frame);
-    priv->current_frame = frame;
-    gst_video_codec_frame_ref (priv->current_frame);
 
     /* decode buffer, resulting data prepended to queue */
-    res = gst_video_decoder_have_frame_2 (dec);
+    gst_video_codec_frame_ref (frame);
+    res = gst_video_decoder_decode_frame (dec, frame);
 
     walk = next;
   }
-
-  priv->process = FALSE;
 
   return res;
 }
@@ -2317,6 +2311,7 @@ gst_video_decoder_get_frame_duration (GstVideoDecoder * decoder,
 GstFlowReturn
 gst_video_decoder_have_frame (GstVideoDecoder * decoder)
 {
+  GstVideoDecoderPrivate *priv = decoder->priv;
   GstBuffer *buffer;
   int n_available;
   GstClockTime timestamp;
@@ -2347,18 +2342,30 @@ gst_video_decoder_have_frame (GstVideoDecoder * decoder)
       "ts %" GST_TIME_FORMAT ", dur %" GST_TIME_FORMAT,
       n_available, GST_TIME_ARGS (timestamp), GST_TIME_ARGS (duration));
 
-  ret = gst_video_decoder_have_frame_2 (decoder);
+  /* In reverse playback, just capture and queue frames for later processing */
+  if (decoder->output_segment.rate < 0.0) {
+    priv->parse_gather =
+        g_list_prepend (priv->parse_gather, priv->current_frame);
+  } else {
+    /* Otherwise, decode the frame, which gives away our ref */
+    ret = gst_video_decoder_decode_frame (decoder, priv->current_frame);
+  }
+  /* Current frame is gone now, either way */
+  priv->current_frame = NULL;
 
   GST_VIDEO_DECODER_STREAM_UNLOCK (decoder);
 
   return ret;
 }
 
+/* Pass the frame in priv->current_frame through the
+ * handle_frame() callback for decoding and passing to gvd_finish_frame(), 
+ * or dropping by passing to gvd_drop_frame() */
 static GstFlowReturn
-gst_video_decoder_have_frame_2 (GstVideoDecoder * decoder)
+gst_video_decoder_decode_frame (GstVideoDecoder * decoder,
+    GstVideoCodecFrame * frame)
 {
   GstVideoDecoderPrivate *priv = decoder->priv;
-  GstVideoCodecFrame *frame = priv->current_frame;
   GstVideoDecoderClass *decoder_class;
   GstFlowReturn ret = GST_FLOW_OK;
 
@@ -2367,12 +2374,6 @@ gst_video_decoder_have_frame_2 (GstVideoDecoder * decoder)
   /* FIXME : This should only have to be checked once (either the subclass has an 
    * implementation, or it doesn't) */
   g_return_val_if_fail (decoder_class->handle_frame != NULL, GST_FLOW_ERROR);
-
-  /* capture frames and queue for later processing */
-  if (decoder->output_segment.rate < 0.0 && !priv->process) {
-    priv->parse_gather = g_list_prepend (priv->parse_gather, frame);
-    goto exit;
-  }
 
   frame->distance_from_sync = priv->distance_from_sync;
   priv->distance_from_sync++;
@@ -2397,12 +2398,8 @@ gst_video_decoder_have_frame_2 (GstVideoDecoder * decoder)
   if (ret != GST_FLOW_OK)
     GST_DEBUG_OBJECT (decoder, "flow error %s", gst_flow_get_name (ret));
 
-exit:
-  /* current frame has either been added to parse_gather or sent to
+  /* the frame has either been added to parse_gather or sent to
      handle frame so there is no need to unref it */
-
-  /* create new frame */
-  priv->current_frame = gst_video_decoder_new_frame (decoder);
   return ret;
 }
 
