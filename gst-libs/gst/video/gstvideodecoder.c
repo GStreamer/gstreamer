@@ -431,7 +431,8 @@ static GstVideoCodecFrame *gst_video_decoder_new_frame (GstVideoDecoder *
     decoder);
 static GstFlowReturn gst_video_decoder_clip_and_push_buf (GstVideoDecoder *
     decoder, GstBuffer * buf);
-static GstFlowReturn gst_video_decoder_flush_parse (GstVideoDecoder * dec);
+static GstFlowReturn gst_video_decoder_flush_parse (GstVideoDecoder * dec,
+    gboolean at_eos);
 
 static void gst_video_decoder_clear_queues (GstVideoDecoder * dec);
 
@@ -856,7 +857,6 @@ gst_video_decoder_flush (GstVideoDecoder * dec, gboolean hard)
   return ret;
 }
 
-
 static gboolean
 gst_video_decoder_push_event (GstVideoDecoder * decoder, GstEvent * event)
 {
@@ -888,16 +888,47 @@ gst_video_decoder_push_event (GstVideoDecoder * decoder, GstEvent * event)
   return gst_pad_push_event (decoder->srcpad, event);
 }
 
+static GstFlowReturn
+gst_video_decoder_handle_eos (GstVideoDecoder * dec)
+{
+  GstVideoDecoderClass *decoder_class = GST_VIDEO_DECODER_GET_CLASS (dec);
+  GstVideoDecoderPrivate *priv = dec->priv;
+  GstFlowReturn ret = GST_FLOW_OK;
+
+  GST_VIDEO_DECODER_STREAM_LOCK (dec);
+
+  if (dec->input_segment.rate > 0.0) {
+    /* Forward mode, if unpacketized, give the child class
+     * a final chance to flush out packets */
+    if (!priv->packetized) {
+      if (priv->current_frame == NULL)
+        priv->current_frame = gst_video_decoder_new_frame (dec);
+
+      while (ret == GST_FLOW_OK && gst_adapter_available (priv->input_adapter))
+        ret = decoder_class->parse (dec, priv->current_frame,
+            priv->input_adapter, TRUE);
+    }
+  } else {
+    /* Reverse playback mode */
+    ret = gst_video_decoder_flush_parse (dec, TRUE);
+  }
+
+  if (decoder_class->finish)
+    ret = decoder_class->finish (dec);
+
+  GST_VIDEO_DECODER_STREAM_UNLOCK (dec);
+
+  return ret;
+}
+
 static gboolean
 gst_video_decoder_sink_event_default (GstVideoDecoder * decoder,
     GstEvent * event)
 {
-  GstVideoDecoderClass *decoder_class;
   GstVideoDecoderPrivate *priv;
   gboolean ret = FALSE;
 
   priv = decoder->priv;
-  decoder_class = GST_VIDEO_DECODER_GET_CLASS (decoder);
 
   switch (GST_EVENT_TYPE (event)) {
     case GST_EVENT_CAPS:
@@ -914,22 +945,9 @@ gst_video_decoder_sink_event_default (GstVideoDecoder * decoder,
     {
       GstFlowReturn flow_ret = GST_FLOW_OK;
 
-      GST_VIDEO_DECODER_STREAM_LOCK (decoder);
-      if (!priv->packetized)
-        while (flow_ret == GST_FLOW_OK &&
-            gst_adapter_available (priv->input_adapter))
-          flow_ret =
-              decoder_class->parse (decoder, priv->current_frame,
-              priv->input_adapter, TRUE);
-
-      if (decoder_class->finish) {
-        flow_ret = decoder_class->finish (decoder);
-      } else {
-        flow_ret = GST_FLOW_OK;
-      }
-
+      flow_ret = gst_video_decoder_handle_eos (decoder);
       ret = (flow_ret == GST_FLOW_OK);
-      GST_VIDEO_DECODER_STREAM_UNLOCK (decoder);
+
       break;
     }
     case GST_EVENT_SEGMENT:
@@ -1559,7 +1577,8 @@ gst_video_decoder_reset (GstVideoDecoder * decoder, gboolean full)
 }
 
 static GstFlowReturn
-gst_video_decoder_chain_forward (GstVideoDecoder * decoder, GstBuffer * buf)
+gst_video_decoder_chain_forward (GstVideoDecoder * decoder,
+    GstBuffer * buf, gboolean at_eos)
 {
   GstVideoDecoderPrivate *priv;
   GstVideoDecoderClass *klass;
@@ -1600,9 +1619,8 @@ gst_video_decoder_chain_forward (GstVideoDecoder * decoder, GstBuffer * buf)
       goto beach;
 
     do {
-      ret =
-          klass->parse (decoder, priv->current_frame, priv->input_adapter,
-          FALSE);
+      ret = klass->parse (decoder, priv->current_frame,
+          priv->input_adapter, at_eos);
     } while (ret == GST_FLOW_OK && gst_adapter_available (priv->input_adapter));
   }
 
@@ -1658,7 +1676,7 @@ gst_video_decoder_flush_decode (GstVideoDecoder * dec)
  * decoder and frames gathered for reversed output
  */
 static GstFlowReturn
-gst_video_decoder_flush_parse (GstVideoDecoder * dec)
+gst_video_decoder_flush_parse (GstVideoDecoder * dec, gboolean at_eos)
 {
   GstVideoDecoderPrivate *priv = dec->priv;
   GstFlowReturn res = GST_FLOW_OK;
@@ -1685,7 +1703,7 @@ gst_video_decoder_flush_parse (GstVideoDecoder * dec)
 
     /* parse buffer, resulting frames prepended to parse_gather queue */
     gst_buffer_ref (buf);
-    res = gst_video_decoder_chain_forward (dec, buf);
+    res = gst_video_decoder_chain_forward (dec, buf, at_eos);
 
     /* if we generated output, we can discard the buffer, else we
      * keep it in the queue */
@@ -1774,7 +1792,7 @@ gst_video_decoder_chain_reverse (GstVideoDecoder * dec, GstBuffer * buf)
     GST_DEBUG_OBJECT (dec, "received discont");
 
     /* parse and decode stuff in the gather and parse queues */
-    gst_video_decoder_flush_parse (dec);
+    gst_video_decoder_flush_parse (dec, FALSE);
   }
 
   if (G_LIKELY (buf)) {
@@ -1826,7 +1844,7 @@ gst_video_decoder_chain (GstPad * pad, GstObject * parent, GstBuffer * buf)
   }
 
   if (decoder->input_segment.rate > 0.0)
-    ret = gst_video_decoder_chain_forward (decoder, buf);
+    ret = gst_video_decoder_chain_forward (decoder, buf, FALSE);
   else
     ret = gst_video_decoder_chain_reverse (decoder, buf);
 
