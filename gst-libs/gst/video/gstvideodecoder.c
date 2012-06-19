@@ -30,20 +30,23 @@
  * This base class is for video decoders turning encoded data into raw video
  * frames.
  *
- * GstVideoDecoder and subclass should cooperate as follows.
+ * The GstVideoDecoder base class and derived subclasses should cooperate as follows:
  * <orderedlist>
  * <listitem>
  *   <itemizedlist><title>Configuration</title>
  *   <listitem><para>
  *     Initially, GstVideoDecoder calls @start when the decoder element
- *     is activated, which allows subclass to perform any global setup.
+ *     is activated, which allows the subclass to perform any global setup.
  *   </para></listitem>
  *   <listitem><para>
- *     GstVideoDecoder calls @set_format to inform subclass of caps
+ *     GstVideoDecoder calls @set_format to inform the subclass of caps
  *     describing input video data that it is about to receive, including
  *     possibly configuration data.
  *     While unlikely, it might be called more than once, if changing input
  *     parameters require reconfiguration.
+ *   </para></listitem>
+ *   <listitem><para>
+ *     Incoming data buffers are processed as needed, described in Data Processing below.
  *   </para></listitem>
  *   <listitem><para>
  *     GstVideoDecoder calls @stop at end of all processing.
@@ -54,72 +57,98 @@
  *   <itemizedlist>
  *   <title>Data processing</title>
  *     <listitem><para>
- *       Base class gathers input data, and optionally allows subclass
+ *       The base class gathers input data, and optionally allows subclass
  *       to parse this into subsequently manageable chunks, typically
  *       corresponding to and referred to as 'frames'.
  *     </para></listitem>
  *     <listitem><para>
- *       Input frame is provided to subclass' @handle_frame. The ownership of
- *       the frame is given to @handle_frame.
+ *       Each input frame is provided in turn to the subclass' @handle_frame callback.
+ *       The ownership of the frame is given to the @handle_frame callback.
  *     </para></listitem>
  *     <listitem><para>
- *       If codec processing results in decoded data, subclass should call
+ *       If codec processing results in decoded data, the subclass should call
  *       @gst_video_decoder_finish_frame to have decoded data pushed.
- *       downstream.
+ *       downstream. Otherwise, the subclass must call @gst_video_decoder_drop_frame, to
+ *       allow the base class to do timestamp and offset tracking, and possibly to
+ *       requeue the frame for a later attempt in the case of reverse playback.
  *     </para></listitem>
  *   </itemizedlist>
  * </listitem>
  * <listitem>
  *   <itemizedlist><title>Shutdown phase</title>
  *   <listitem><para>
- *     GstVideoDecoder class calls @stop to inform the subclass that data
+ *     The GstVideoDecoder class calls @stop to inform the subclass that data
  *     parsing will be stopped.
  *   </para></listitem>
  *   </itemizedlist>
  * </listitem>
+ * <listitem>
+ *   <itemizedlist><title>Additional Notes</title>
+ *   <listitem>
+ *     <itemizedlist><title>Seeking/Flushing</title>
+ *     <listitem><para>
+ *   When the pipeline is seeked or otherwise flushed, the subclass is informed via a call
+ *   to its @reset callback, with the hard parameter set to true. This indicates the
+ *   subclass should drop any internal data queues and timestamps and prepare for a fresh
+ *   set of buffers to arrive for parsing and decoding.
+ *     </para></listitem>
+ *     </itemizedlist>
+ *   </listitem>
+ *   <listitem>
+ *     <itemizedlist><title>End Of Stream</title>
+ *     <listitem><para>
+ *   At end-of-stream, the subclass @parse function may be called some final times with the 
+ *   at_eos parameter set to true, indicating that the element should not expect any more data
+ *   to be arriving, and it should parse and remaining frames and call
+ *   gst_video_decoder_have_frame() if possible.
+ *     </para></listitem>
+ *     </itemizedlist>
+ *   </listitem>
+ *   </itemizedlist>
+ * </listitem>
  * </orderedlist>
  *
- * Subclass is responsible for providing pad template caps for
+ * The subclass is responsible for providing pad template caps for
  * source and sink pads. The pads need to be named "sink" and "src". It also
- * needs to set the fixed caps on srcpad, when the format is ensured.  This
- * is typically when base class calls subclass' @set_format function, though
- * it might be delayed until calling @gst_video_decoder_finish_frame.
+ * needs to provide information about the ouptput caps, when they are known.
+ * This may be when the base class calls the subclass' @set_format function,
+ * though it might be during decoding, before calling
+ * @gst_video_decoder_finish_frame. This is done via
+ * @gst_video_decoder_set_output_state
  *
- * Subclass is also responsible for providing (presentation) timestamps
+ * The subclass is also responsible for providing (presentation) timestamps
  * (likely based on corresponding input ones).  If that is not applicable
- * or possible, baseclass provides limited framerate based interpolation.
+ * or possible, the base class provides limited framerate based interpolation.
  *
- * Similarly, the baseclass provides some limited (legacy) seeking support
- * (upon explicit subclass request), as full-fledged support
+ * Similarly, the base class provides some limited (legacy) seeking support
+ * if specifically requested by the subclass, as full-fledged support
  * should rather be left to upstream demuxer, parser or alike.  This simple
  * approach caters for seeking and duration reporting using estimated input
- * bitrates.
+ * bitrates. To enable it, a subclass should call
+ * @gst_video_decoder_set_estimate_rate to enable handling of incoming byte-streams.
  *
- * Baseclass provides some support for reverse playback, in particular
+ * The base class provides some support for reverse playback, in particular
  * in case incoming data is not packetized or upstream does not provide
- * fragments on keyframe boundaries.  However, subclass should then be prepared
- * for the parsing and frame processing stage to occur separately (rather
- * than otherwise the latter immediately following the former),
- * and should ensure the parsing stage properly marks keyframes or rely on
- * upstream to do so properly for incoming data.
+ * fragments on keyframe boundaries.  However, the subclass should then be prepared
+ * for the parsing and frame processing stage to occur separately (in normal
+ * forward processing, the latter immediately follows the former),
+ * The subclass also needs to ensure the parsing stage properly marks keyframes,
+ * unless it knows the upstream elements will do so properly for incoming data.
  *
- * Things that subclass need to take care of:
+ * The bare minimum that a functional subclass needs to implement is:
  * <itemizedlist>
  *   <listitem><para>Provide pad templates</para></listitem>
  *   <listitem><para>
- *      Set source pad caps when appropriate
+ *      Inform the base class of output caps via @gst_video_decoder_set_output_state
  *   </para></listitem>
  *   <listitem><para>
- *      Configure some baseclass behaviour parameters.
- *   </para></listitem>
- *   <listitem><para>
- *      Optionally parse input data, if it is not considered packetized.
+ *      Parse input data, if it is not considered packetized from upstream
  *      Data will be provided to @parse which should invoke @gst_video_decoder_add_to_frame and
- *      @gst_video_decoder_have_frame as appropriate.
+ *      @gst_video_decoder_have_frame to separate the data belonging to each video frame.
  *   </para></listitem>
  *   <listitem><para>
  *      Accept data in @handle_frame and provide decoded results to
- *      @gst_video_decoder_finish_frame.
+ *      @gst_video_decoder_finish_frame, or call @gst_video_decoder_drop_frame.
  *   </para></listitem>
  * </itemizedlist>
  */
@@ -141,6 +170,127 @@
  *   and if it exceeds the recorded one, save it and emit a GST_MESSAGE_LATENCY
  * * Emit latency message when it changes
  *
+ */
+
+/* Implementation notes:
+ * The Video Decoder base class operates in 2 primary processing modes, depending
+ * on whether forward or reverse playback is requested.
+ *
+ * Forward playback:
+ *   * Incoming buffer -> @parse() -> add_to_frame()/have_frame() -> handle_frame() -> 
+ *     push downstream
+ *
+ * Reverse playback is more complicated, since it involves gathering incoming data regions
+ * as we loop backwards through the upstream data. The processing concept (using incoming
+ * buffers as containing one frame each to simplify things) is:
+ *
+ * Upstream data we want to play:
+ *  Buffer encoded order:  1  2  3  4  5  6  7  8  9  EOS
+ *  Keyframe flag:            K        K        
+ *  Groupings:             AAAAAAA  BBBBBBB  CCCCCCC
+ *
+ * Input:
+ *  Buffer reception order:  7  8  9  4  5  6  1  2  3  EOS
+ *  Keyframe flag:                       K        K
+ *  Discont flag:            D        D        D
+ *
+ * - Each Discont marks a discont in the decoding order.
+ * - The keyframes mark where we can start decoding.
+ *
+ * Initially, we prepend incoming buffers to the gather queue. Whenever the
+ * discont flag is set on an incoming buffer, the gather queue is flushed out
+ * before the new buffer is collected.
+ *
+ * The above data will be accumulated in the gather queue like this:
+ *
+ *   gather queue:  9  8  7
+ *                        D
+ *
+ * Whe buffer 4 is received (with a DISCONT), we flush the gather queue like
+ * this:
+ *
+ *   while (gather)
+ *     take head of queue and prepend to parse queue (this reverses the sequence,
+ *     so parse queue is 7 -> 8 -> 9)
+ *
+ *   Next, we process the parse queue, which now contains all un-parsed packets (including
+ *   any leftover ones from the previous decode section)
+ *
+ *   for each buffer now in the parse queue:
+ *     Call the subclass parse function, prepending each resulting frame to
+ *     the parse_gather queue. Buffers which precede the first one that
+ *     produces a parsed frame are retained in the parse queue for re-processing on
+ *     the next cycle of parsing.
+ *
+ *   The parse_gather queue now contains frame objects ready for decoding, in reverse order.
+ *   parse_gather: 9 -> 8 -> 7
+ *
+ *   while (parse_gather)
+ *     Take the head of the queue and prepend it to the decode queue
+ *     If the frame was a keyframe, process the decode queue
+ *   decode is now 7-8-9
+ *
+ *  Processing the decode queue results in frames with attached output buffers
+ *  stored in the 'output_queue' ready for outputting in reverse order.
+ *
+ * After we flushed the gather queue and parsed it, we add 4 to the (now empty) gather queue.
+ * We get the following situation:
+ *
+ *  gather queue:    4
+ *  decode queue:    7  8  9
+ *
+ * After we received 5 (Keyframe) and 6:
+ *
+ *  gather queue:    6  5  4
+ *  decode queue:    7  8  9
+ *
+ * When we receive 1 (DISCONT) which triggers a flush of the gather queue:
+ *
+ *   Copy head of the gather queue (6) to decode queue:
+ *
+ *    gather queue:    5  4
+ *    decode queue:    6  7  8  9
+ *
+ *   Copy head of the gather queue (5) to decode queue. This is a keyframe so we
+ *   can start decoding.
+ *
+ *    gather queue:    4
+ *    decode queue:    5  6  7  8  9
+ *
+ *   Decode frames in decode queue, store raw decoded data in output queue, we
+ *   can take the head of the decode queue and prepend the decoded result in the
+ *   output queue:
+ *
+ *    gather queue:    4
+ *    decode queue:    
+ *    output queue:    9  8  7  6  5
+ *
+ *   Now output all the frames in the output queue, picking a frame from the
+ *   head of the queue.
+ *
+ *   Copy head of the gather queue (4) to decode queue, we flushed the gather
+ *   queue and can now store input buffer in the gather queue:
+ *
+ *    gather queue:    1
+ *    decode queue:    4
+ *
+ *  When we receive EOS, the queue looks like:
+ *
+ *    gather queue:    3  2  1
+ *    decode queue:    4
+ *
+ *  Fill decode queue, first keyframe we copy is 2:
+ *
+ *    gather queue:    1
+ *    decode queue:    2  3  4
+ *
+ *  Decoded output:
+ *
+ *    gather queue:    1
+ *    decode queue:    
+ *    output queue:    4  3  2
+ *
+ *  Leftover buffer 1 cannot be decoded and must be discarded.
  */
 
 #include "gstvideodecoder.h"
