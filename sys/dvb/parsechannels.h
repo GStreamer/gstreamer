@@ -24,8 +24,7 @@
 #ifndef PARSE_CHANNELS_H
 #define PARSE_CHANNELS_H
 
-GHashTable* parse_channels_conf_from_file(const gchar* filename);
-gboolean set_properties_for_channel(GObject *dvbbasebin, 
+gboolean set_properties_for_channel(GstElement *dvbbasebin, 
   const gchar* channel_name);
 
 #endif

@@ -987,7 +987,7 @@ dvb_base_bin_uri_set_uri (GstURIHandler * handler, const gchar * uri,
   if (location == NULL)
     goto no_location;
 
-  if (!set_properties_for_channel (G_OBJECT (dvbbasebin), location))
+  if (!set_properties_for_channel (GST_ELEMENT (dvbbasebin), location))
     goto set_properties_failed;
 
   /* FIXME: here is where we parse channels.conf */
