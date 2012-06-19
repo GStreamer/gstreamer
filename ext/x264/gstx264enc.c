@@ -1648,7 +1648,6 @@ gst_x264_enc_encode_frame (GstX264Enc * encoder, x264_picture_t * pic_in,
   int encoder_return;
   GstFlowReturn ret;
   guint8 *data;
-  GstPad *srcpad;
   gboolean update_latency = FALSE;
 
   if (G_UNLIKELY (encoder->x264enc == NULL)) {
@@ -1712,7 +1711,6 @@ gst_x264_enc_encode_frame (GstX264Enc * encoder, x264_picture_t * pic_in,
     goto out;
   }
 
-  srcpad = GST_VIDEO_ENCODER_SRC_PAD (encoder);
   out_buf = gst_buffer_new_allocate (NULL, i_size, NULL);
   gst_buffer_fill (out_buf, 0, data, i_size);
   frame->output_buffer = out_buf;
