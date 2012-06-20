@@ -1323,7 +1323,7 @@ gst_tag_demux_sink_activate (GstPad * sinkpad, GstObject * parent)
 
   /* only start our task if we ourselves decide to start in pull mode */
   return gst_pad_start_task (sinkpad,
-      (GstTaskFunction) gst_tag_demux_element_loop, demux);
+      (GstTaskFunction) gst_tag_demux_element_loop, demux, NULL);
 
 activate_push:
   {

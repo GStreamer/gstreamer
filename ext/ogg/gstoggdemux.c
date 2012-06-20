@@ -3246,7 +3246,7 @@ gst_ogg_demux_perform_seek_pull (GstOggDemux * ogg, GstEvent * event)
     /* restart our task since it might have been stopped when we did the 
      * flush. */
     gst_pad_start_task (ogg->sinkpad, (GstTaskFunction) gst_ogg_demux_loop,
-        ogg->sinkpad);
+        ogg->sinkpad, NULL);
   }
 
   /* streaming can continue now */
@@ -4592,7 +4592,7 @@ gst_ogg_demux_sink_activate_mode (GstPad * sinkpad, GstObject * parent,
         ogg->pullmode = TRUE;
 
         res = gst_pad_start_task (sinkpad, (GstTaskFunction) gst_ogg_demux_loop,
-            sinkpad);
+            sinkpad, NULL);
       } else {
         res = gst_pad_stop_task (sinkpad);
       }
