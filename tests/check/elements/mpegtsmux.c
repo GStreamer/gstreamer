@@ -82,7 +82,6 @@ link_sinks (GstElement * mpegtsmux,
     GstPad ** src1, GstPad ** src2, GstPad ** src3, TestData * test_data)
 {
   GstPad *mux_sink1, *mux_sink2, *mux_sink3;
-  GstCaps *caps;
 
   /* link 3 sink pads, 2 video 1 audio */
   *src1 = gst_pad_new_from_static_template (&video_src_template, "src1");
@@ -106,14 +105,6 @@ link_sinks (GstElement * mpegtsmux,
   mux_sink3 = gst_element_get_request_pad (mpegtsmux, "sink_3");
   fail_unless (gst_pad_link (*src3, mux_sink3) == GST_PAD_LINK_OK);
 
-  caps = gst_caps_new_empty_simple ("video/x-h264");
-  gst_pad_set_caps (mux_sink1, caps);
-  gst_pad_set_caps (mux_sink2, caps);
-  gst_caps_unref (caps);
-  caps = gst_caps_new_simple ("audio/mpeg", "mpegversion", G_TYPE_INT, 4, NULL);
-  gst_pad_set_caps (mux_sink3, caps);
-  gst_caps_unref (caps);
-
   gst_object_unref (mux_sink1);
   gst_object_unref (mux_sink2);
   gst_object_unref (mux_sink3);
@@ -132,6 +123,22 @@ link_src (GstElement * mpegtsmux, GstPad ** sink, TestData * test_data)
   fail_unless (gst_pad_link (mux_src, *sink) == GST_PAD_LINK_OK);
 
   gst_object_unref (mux_src);
+}
+
+static void
+setup_caps (GstElement * mpegtsmux, GstPad * src1, GstPad * src2, GstPad * src3)
+{
+  GstCaps *caps;
+
+  caps = gst_caps_new_simple ("video/x-h264",
+      "stream-format", G_TYPE_STRING, "byte-stream", NULL);
+  gst_pad_set_caps (src1, caps);
+  gst_pad_set_caps (src2, caps);
+  gst_caps_unref (caps);
+  caps = gst_caps_new_simple ("audio/mpeg", "mpegversion", G_TYPE_INT, 4,
+      "stream-format", G_TYPE_STRING, "raw", NULL);
+  gst_pad_set_caps (src3, caps);
+  gst_caps_unref (caps);
 }
 
 static gpointer
@@ -171,16 +178,24 @@ GST_START_TEST (test_force_key_unit_event_downstream)
   gint count = 0;
   ThreadData *thread_data_1, *thread_data_2, *thread_data_3, *thread_data_4;
   TestData test_data = { 0, };
+  GstSegment segment;
+  GstEvent *event;
 
   mpegtsmux = gst_check_setup_element ("mpegtsmux");
-  gst_element_set_state (mpegtsmux, GST_STATE_PLAYING);
 
   link_src (mpegtsmux, &sink, &test_data);
   link_sinks (mpegtsmux, &src1, &src2, &src3, &test_data);
+  gst_element_set_state (mpegtsmux, GST_STATE_PLAYING);
+  setup_caps (mpegtsmux, src1, src2, src3);
 
-  /* hack: make sure collectpads builds collect->data */
-  gst_pad_push_event (src1, gst_event_new_flush_start ());
-  gst_pad_push_event (src1, gst_event_new_flush_stop (FALSE));
+  /* send segment info */
+  gst_segment_init (&segment, GST_FORMAT_TIME);
+  event = gst_event_new_segment (&segment);
+  fail_unless (gst_pad_push_event (src1, event));
+  event = gst_event_new_segment (&segment);
+  fail_unless (gst_pad_push_event (src2, event));
+  event = gst_event_new_segment (&segment);
+  fail_unless (gst_pad_push_event (src3, event));
 
   /* send a force-key-unit event with running_time=2s */
   timestamp = stream_time = running_time = 2 * GST_SECOND;
@@ -236,16 +251,23 @@ GST_START_TEST (test_force_key_unit_event_upstream)
   gint count = 0;
   TestData test_data = { 0, };
   ThreadData *thread_data_1, *thread_data_2, *thread_data_3, *thread_data_4;
+  GstSegment segment;
 
   mpegtsmux = gst_check_setup_element ("mpegtsmux");
-  gst_element_set_state (mpegtsmux, GST_STATE_PLAYING);
 
   link_src (mpegtsmux, &sink, &test_data);
   link_sinks (mpegtsmux, &src1, &src2, &src3, &test_data);
+  gst_element_set_state (mpegtsmux, GST_STATE_PLAYING);
+  setup_caps (mpegtsmux, src1, src2, src3);
 
-  /* hack: make sure collectpads builds collect->data */
-  gst_pad_push_event (src1, gst_event_new_flush_start ());
-  gst_pad_push_event (src1, gst_event_new_flush_stop (FALSE));
+  /* send segment info */
+  gst_segment_init (&segment, GST_FORMAT_TIME);
+  event = gst_event_new_segment (&segment);
+  fail_unless (gst_pad_push_event (src1, event));
+  event = gst_event_new_segment (&segment);
+  fail_unless (gst_pad_push_event (src2, event));
+  event = gst_event_new_segment (&segment);
+  fail_unless (gst_pad_push_event (src3, event));
 
   /* send an upstream force-key-unit event with running_time=2s */
   timestamp = stream_time = running_time = 2 * GST_SECOND;
