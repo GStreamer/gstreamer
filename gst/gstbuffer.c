@@ -1664,7 +1664,7 @@ gst_buffer_append (GstBuffer * buf1, GstBuffer * buf2)
  * Get the metadata for @api on buffer. When there is no such
  * metadata, NULL is returned.
  *
- * Returns: the metadata for @api on @buffer.
+ * Returns: (transfer none): the metadata for @api on @buffer.
  */
 GstMeta *
 gst_buffer_get_meta (GstBuffer * buffer, GType api)
@@ -1793,7 +1793,8 @@ gst_buffer_remove_meta (GstBuffer * buffer, GstMeta * meta)
  *
  * @state will be updated with an opage state pointer 
  *
- * Returns: The next #GstMeta or %NULL when there are no more items.
+ * Returns: (transfer none): The next #GstMeta or %NULL when there are
+ * no more items.
  */
 GstMeta *
 gst_buffer_iterate_meta (GstBuffer * buffer, gpointer * state)

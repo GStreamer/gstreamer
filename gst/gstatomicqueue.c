@@ -222,7 +222,8 @@ gst_atomic_queue_unref (GstAtomicQueue * queue)
  *
  * Peek the head element of the queue without removing it from the queue.
  *
- * Returns: the head element of @queue or NULL when the queue is empty.
+ * Returns: (transfer none): the head element of @queue or NULL when
+ * the queue is empty.
  *
  * Since: 0.10.33
  */
@@ -273,7 +274,8 @@ gst_atomic_queue_peek (GstAtomicQueue * queue)
  *
  * Get the head element of the queue.
  *
- * Returns: the head element of @queue or NULL when the queue is empty.
+ * Returns: (transfer full): the head element of @queue or NULL when
+ * the queue is empty.
  *
  * Since: 0.10.33
  */

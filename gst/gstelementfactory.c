@@ -515,8 +515,9 @@ gst_element_factory_get_metadata (GstElementFactory * factory,
  *
  * Get the available keys for the metadata on @factory.
  *
- * Returns: a %NULL-terminated array of key strings, or %NULL when
- * there is no metadata. Free with g_strfreev() when no longer needd.
+ * Returns: (transfer full) (element-type utf8) (array zero-terminated=1):
+ * a %NULL-terminated array of key strings, or %NULL when there is no
+ * metadata. Free with g_strfreev() when no longer needed.
  */
 gchar **
 gst_element_factory_get_metadata_keys (GstElementFactory * factory)

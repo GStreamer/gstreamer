@@ -229,9 +229,9 @@ gst_task_pool_cleanup (GstTaskPool * pool)
  *
  * Start the execution of a new thread from @pool.
  *
- * Returns: a pointer that should be used for the gst_task_pool_join
- * function. This pointer can be NULL, you must check @error to detect
- * errors.
+ * Returns: (transfer none): a pointer that should be used for the
+ * gst_task_pool_join function. This pointer can be NULL, you must
+ * check @error to detect errors.
  *
  * Since: 0.10.24
  */
