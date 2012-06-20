@@ -150,7 +150,7 @@ GST_START_TEST (test_single_shot)
 
   id = gst_clock_new_single_shot_id (clock, base + 2 * TIME_UNIT);
   GST_DEBUG ("waiting one second async id %p", id);
-  result = gst_clock_id_wait_async (id, ok_callback, NULL);
+  result = gst_clock_id_wait_async (id, ok_callback, NULL, NULL);
   fail_unless (result == GST_CLOCK_OK, "Waiting did not return OK");
   g_usleep (TIME_UNIT / (2 * 1000));
   gst_clock_id_unschedule (id);
@@ -158,7 +158,7 @@ GST_START_TEST (test_single_shot)
 
   id = gst_clock_new_single_shot_id (clock, base + 5 * TIME_UNIT);
   GST_DEBUG ("waiting one second async, with cancel on id %p", id);
-  result = gst_clock_id_wait_async (id, error_callback, NULL);
+  result = gst_clock_id_wait_async (id, error_callback, NULL, NULL);
   fail_unless (result == GST_CLOCK_OK, "Waiting did not return OK");
   g_usleep (TIME_UNIT / (2 * 1000));
   GST_DEBUG ("cancel id %p after half a time unit", id);
@@ -170,11 +170,11 @@ GST_START_TEST (test_single_shot)
   id = gst_clock_new_single_shot_id (clock, base + 5 * TIME_UNIT);
   id2 = gst_clock_new_single_shot_id (clock, base + 6 * TIME_UNIT);
   GST_DEBUG ("waiting id %p", id);
-  result = gst_clock_id_wait_async (id, ok_callback, NULL);
+  result = gst_clock_id_wait_async (id, ok_callback, NULL, NULL);
   fail_unless (result == GST_CLOCK_OK, "Waiting did not return OK");
 
   GST_DEBUG ("waiting id %p", id2);
-  result = gst_clock_id_wait_async (id2, error_callback, NULL);
+  result = gst_clock_id_wait_async (id2, error_callback, NULL, NULL);
   fail_unless (result == GST_CLOCK_OK, "Waiting did not return OK");
   g_usleep (TIME_UNIT / (2 * 1000));
   GST_DEBUG ("cancel id %p after half a time unit", id2);
@@ -221,12 +221,12 @@ GST_START_TEST (test_periodic_shot)
   fail_unless (result == GST_CLOCK_OK, "Waiting did not return OK");
 
   GST_DEBUG ("waiting for the next async %p", id);
-  result = gst_clock_id_wait_async (id, ok_callback, NULL);
+  result = gst_clock_id_wait_async (id, ok_callback, NULL, NULL);
   fail_unless (result == GST_CLOCK_OK, "Waiting did not return OK");
   g_usleep (TIME_UNIT / (2 * 1000));
 
   GST_DEBUG ("waiting some more for the next async %p", id);
-  result = gst_clock_id_wait_async (id, ok_callback, NULL);
+  result = gst_clock_id_wait_async (id, ok_callback, NULL, NULL);
   fail_unless (result == GST_CLOCK_OK, "Waiting did not return OK");
   g_usleep (TIME_UNIT / (2 * 1000));
 
@@ -234,7 +234,7 @@ GST_START_TEST (test_periodic_shot)
   fail_unless (id2 != NULL, "Could not create second periodic id");
 
   GST_DEBUG ("waiting some more for another async %p", id2);
-  result = gst_clock_id_wait_async (id2, ok_callback, NULL);
+  result = gst_clock_id_wait_async (id2, ok_callback, NULL, NULL);
   fail_unless (result == GST_CLOCK_OK, "Waiting did not return OK");
   g_usleep (TIME_UNIT / (2 * 1000));
 
@@ -242,7 +242,7 @@ GST_START_TEST (test_periodic_shot)
   gst_clock_id_unschedule (id);
 
   /* entry cannot be used again */
-  result = gst_clock_id_wait_async (id, error_callback, NULL);
+  result = gst_clock_id_wait_async (id, error_callback, NULL, NULL);
   fail_unless (result == GST_CLOCK_UNSCHEDULED,
       "Waiting did not return UNSCHEDULED");
   result = gst_clock_id_wait (id, NULL);
@@ -278,10 +278,10 @@ GST_START_TEST (test_async_order)
 
   id1 = gst_clock_new_single_shot_id (clock, base + 2 * TIME_UNIT);
   id2 = gst_clock_new_single_shot_id (clock, base + 1 * TIME_UNIT);
-  result = gst_clock_id_wait_async (id1, store_callback, &cb_list);
+  result = gst_clock_id_wait_async (id1, store_callback, &cb_list, NULL);
   fail_unless (result == GST_CLOCK_OK, "Waiting did not return OK");
   g_usleep (TIME_UNIT / (2 * 1000));
-  result = gst_clock_id_wait_async (id2, store_callback, &cb_list);
+  result = gst_clock_id_wait_async (id2, store_callback, &cb_list, NULL);
   fail_unless (result == GST_CLOCK_OK, "Waiting did not return OK");
   g_usleep (TIME_UNIT / 1000);
   /* at this point at least one of the timers should have timed out */
@@ -379,7 +379,7 @@ GST_START_TEST (test_async_sync_interaction)
     g_mutex_unlock (td.lock);
 
     result = gst_clock_id_wait_async (td.async_id,
-        test_async_sync_interaction_cb, &td);
+        test_async_sync_interaction_cb, &td, NULL);
     fail_unless (result == GST_CLOCK_OK, "Waiting did not return OK");
 
     /* Wait 10ms, then unschedule async_id and schedule async_id2 */
@@ -388,13 +388,13 @@ GST_START_TEST (test_async_sync_interaction)
         "Waiting did not return OK or EARLY");
     /* async_id2 is earlier than async_id - should become head of the queue */
     result = gst_clock_id_wait_async (td.async_id2,
-        test_async_sync_interaction_cb, &td);
+        test_async_sync_interaction_cb, &td, NULL);
     fail_unless (result == GST_CLOCK_OK, "Waiting did not return OK");
     gst_clock_id_unschedule (td.async_id);
 
     /* async_id3 is earlier than async_id2 - should become head of the queue */
     result = gst_clock_id_wait_async (td.async_id3,
-        test_async_sync_interaction_cb, &td);
+        test_async_sync_interaction_cb, &td, NULL);
     fail_unless (result == GST_CLOCK_OK, "Waiting did not return OK");
 
     /* While this is sleeping, the async3 id should fire and unschedule it */
@@ -444,7 +444,8 @@ GST_START_TEST (test_periodic_multi)
   clock_id_async =
       gst_clock_new_periodic_id (clock, base + TIME_UNIT, TIME_UNIT);
   result =
-      gst_clock_id_wait_async (clock_id_async, notify_callback, &got_callback);
+      gst_clock_id_wait_async (clock_id_async, notify_callback, &got_callback,
+      NULL);
   fail_unless (result == GST_CLOCK_OK, "Async waiting did not return OK");
 
   result = gst_clock_id_wait (clock_id, NULL);
@@ -544,7 +545,7 @@ GST_START_TEST (test_mixed)
   g_usleep (G_USEC_PER_SEC / 2);
 
   /* start scheduling the entry */
-  gst_clock_id_wait_async (id, mixed_async_cb, NULL);
+  gst_clock_id_wait_async (id, mixed_async_cb, NULL, NULL);
 
   /* wait for thread to finish */
   g_thread_join (thread);
@@ -609,7 +610,7 @@ GST_START_TEST (test_async_full)
   g_mutex_lock (af_lock);
   clockid = gst_clock_new_periodic_id (master,
       gst_clock_get_time (master), gst_clock_get_timeout (slave));
-  gst_clock_id_wait_async_full (clockid,
+  gst_clock_id_wait_async (clockid,
       (GstClockCallback) test_async_full_slave_callback,
       gst_object_ref (slave), (GDestroyNotify) gst_object_unref);
 

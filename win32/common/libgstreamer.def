@@ -241,7 +241,6 @@ EXPORTS
 	gst_clock_id_unschedule
 	gst_clock_id_wait
 	gst_clock_id_wait_async
-	gst_clock_id_wait_async_full
 	gst_clock_new_periodic_id
 	gst_clock_new_single_shot_id
 	gst_clock_periodic_id_reinit

@@ -361,6 +361,10 @@ The 0.11 porting guide
       gst_caps_union() -> gst_caps_merge():  Be careful because _merge takes
                  ownership of the arguments.
 
+* GstClock
+    gst_clock_id_wait_async_full() was renamed to gst_clock_id_wait_async() and
+    the old gst_clock_id_wait_async() function was removed.
+
 * GstSegment
     abs_rate was removed from the public fields, it can be trivially calculated
     from the rate field.

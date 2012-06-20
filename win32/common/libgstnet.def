@@ -4,6 +4,9 @@ EXPORTS
 	gst_net_address_meta_get_info
 	gst_net_client_clock_get_type
 	gst_net_client_clock_new
+	gst_net_time_packet_copy
+	gst_net_time_packet_free
+	gst_net_time_packet_get_type
 	gst_net_time_packet_new
 	gst_net_time_packet_receive
 	gst_net_time_packet_send
