@@ -241,7 +241,7 @@ gst_video_blend_scale_linear_RGBA (GstVideoInfo * src, GstBuffer * src_buffer,
  */
 gboolean
 gst_video_blend (GstVideoFrame * dest,
-    GstVideoFrame * src, guint x, guint y, gfloat global_alpha)
+    GstVideoFrame * src, gint x, gint y, gfloat global_alpha)
 {
   guint i, j, global_alpha_val, src_width, src_height, dest_width, dest_height;
   gint xoff;

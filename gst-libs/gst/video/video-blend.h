@@ -33,7 +33,7 @@ void       gst_video_blend_scale_linear_RGBA  (GstVideoInfo * src, GstBuffer * s
 
 gboolean   gst_video_blend                    (GstVideoFrame * dest,
                                                GstVideoFrame * src,
-                                               guint x, guint y,
+                                               gint x, gint y,
                                                gfloat global_alpha);
 
 #endif
