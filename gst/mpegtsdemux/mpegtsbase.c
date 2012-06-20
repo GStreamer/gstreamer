@@ -1328,7 +1328,7 @@ mpegts_base_sink_event (GstPad * pad, GstObject * parent, GstEvent * event)
   gboolean res = TRUE;
   MpegTSBase *base = GST_MPEGTS_BASE (parent);
 
-  GST_WARNING_OBJECT (base, "Got event %s",
+  GST_DEBUG_OBJECT (base, "Got event %s",
       gst_event_type_get_name (GST_EVENT_TYPE (event)));
 
   switch (GST_EVENT_TYPE (event)) {
@@ -1341,7 +1341,7 @@ mpegts_base_sink_event (GstPad * pad, GstObject * parent, GstEvent * event)
       break;
     case GST_EVENT_EOS:
       res = gst_mpegts_base_handle_eos (base);
-      gst_event_unref (event);
+      res = GST_MPEGTS_BASE_GET_CLASS (base)->push_event (base, event);
       break;
     case GST_EVENT_CAPS:
       /* FIXME, do something */
