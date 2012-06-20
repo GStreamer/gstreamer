@@ -2523,7 +2523,7 @@ connect_bus_signals (GstElement * pipeline)
 #ifdef HAVE_X
   /* handle prepare-window-handle element message synchronously */
   gst_bus_set_sync_handler (bus, (GstBusSyncHandler) bus_sync_handler,
-      pipeline);
+      pipeline, NULL);
 #endif
 
   gst_bus_add_signal_watch_full (bus, G_PRIORITY_HIGH);

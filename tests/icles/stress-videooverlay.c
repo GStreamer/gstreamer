@@ -226,7 +226,8 @@ main (int argc, char **argv)
   open_display ();
 
   bus = gst_pipeline_get_bus (GST_PIPELINE (pipeline));
-  gst_bus_set_sync_handler (bus, (GstBusSyncHandler) create_window, pipeline);
+  gst_bus_set_sync_handler (bus, (GstBusSyncHandler) create_window, pipeline,
+      NULL);
 
   gst_element_set_state (pipeline, GST_STATE_PLAYING);
 

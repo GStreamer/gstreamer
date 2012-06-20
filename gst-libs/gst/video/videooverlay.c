@@ -88,7 +88,8 @@
  * {
  * ...
  *  bus = gst_pipeline_get_bus (GST_PIPELINE (pipeline));
- *  gst_bus_set_sync_handler (bus, (GstBusSyncHandler) create_window, pipeline);
+ *  gst_bus_set_sync_handler (bus, (GstBusSyncHandler) create_window, pipeline,
+        NULL);
  * ...
  * }
  * ]|
@@ -229,7 +230,8 @@
  *   ...
  *   // set up sync handler for setting the xid once the pipeline is started
  *   bus = gst_pipeline_get_bus (GST_PIPELINE (pipeline));
- *   gst_bus_set_sync_handler (bus, (GstBusSyncHandler) bus_sync_handler, NULL);
+ *   gst_bus_set_sync_handler (bus, (GstBusSyncHandler) bus_sync_handler, NULL,
+ *       NULL);
  *   gst_object_unref (bus);
  *   ...
  *   gst_element_set_state (pipeline, GST_STATE_PLAYING);

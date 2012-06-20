@@ -2279,7 +2279,8 @@ connect_bus_signals (PlaybackApp * app)
 #if defined (GDK_WINDOWING_X11) || defined (GDK_WINDOWING_WIN32) || defined (GDK_WINDOWING_QUARTZ)
   if (app->pipeline_type != 0) {
     /* handle prepare-xwindow-id element message synchronously, but only for non-playbin */
-    gst_bus_set_sync_handler (bus, (GstBusSyncHandler) bus_sync_handler, app);
+    gst_bus_set_sync_handler (bus, (GstBusSyncHandler) bus_sync_handler, app,
+        NULL);
   }
 #endif
 
