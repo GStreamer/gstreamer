@@ -31,9 +31,9 @@ GST_DEBUG_CATEGORY_STATIC (gst_omx_mpeg4_video_dec_debug_category);
 
 /* prototypes */
 static gboolean gst_omx_mpeg4_video_dec_is_format_change (GstOMXVideoDec * dec,
-    GstOMXPort * port, GstVideoState * state);
+    GstOMXPort * port, GstVideoCodecState * state);
 static gboolean gst_omx_mpeg4_video_dec_set_format (GstOMXVideoDec * dec,
-    GstOMXPort * port, GstVideoState * state);
+    GstOMXPort * port, GstVideoCodecState * state);
 
 enum
 {
@@ -81,14 +81,14 @@ gst_omx_mpeg4_video_dec_init (GstOMXMPEG4VideoDec * self)
 
 static gboolean
 gst_omx_mpeg4_video_dec_is_format_change (GstOMXVideoDec * dec,
-    GstOMXPort * port, GstVideoState * state)
+    GstOMXPort * port, GstVideoCodecState * state)
 {
   return FALSE;
 }
 
 static gboolean
 gst_omx_mpeg4_video_dec_set_format (GstOMXVideoDec * dec, GstOMXPort * port,
-    GstVideoState * state)
+    GstVideoCodecState * state)
 {
   gboolean ret;
   OMX_PARAM_PORTDEFINITIONTYPE port_def;

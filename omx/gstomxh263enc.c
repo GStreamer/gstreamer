@@ -31,9 +31,9 @@ GST_DEBUG_CATEGORY_STATIC (gst_omx_h263_enc_debug_category);
 
 /* prototypes */
 static gboolean gst_omx_h263_enc_set_format (GstOMXVideoEnc * enc,
-    GstOMXPort * port, GstVideoInfo * state);
+    GstOMXPort * port, GstVideoCodecState * state);
 static GstCaps *gst_omx_h263_enc_get_caps (GstOMXVideoEnc * enc,
-    GstOMXPort * port, GstVideoState * state);
+    GstOMXPort * port, GstVideoCodecState * state);
 
 enum
 {
@@ -77,7 +77,7 @@ gst_omx_h263_enc_init (GstOMXH263Enc * self)
 
 static gboolean
 gst_omx_h263_enc_set_format (GstOMXVideoEnc * enc, GstOMXPort * port,
-    GstVideoInfo * info)
+    GstVideoCodecState * state)
 {
   GstOMXH263Enc *self = GST_OMX_H263_ENC (enc);
   GstCaps *peercaps;
@@ -87,8 +87,8 @@ gst_omx_h263_enc_set_format (GstOMXVideoEnc * enc, GstOMXPort * port,
   OMX_ERRORTYPE err;
   guint profile_id, level_id;
 
-  peercaps = gst_pad_peer_query_caps (GST_BASE_VIDEO_CODEC_SRC_PAD (enc),
-      gst_pad_get_pad_template_caps (GST_BASE_VIDEO_CODEC_SRC_PAD (enc)));
+  peercaps = gst_pad_peer_query_caps (GST_VIDEO_ENCODER_SRC_PAD (enc),
+      gst_pad_get_pad_template_caps (GST_VIDEO_ENCODER_SRC_PAD (enc)));
   if (peercaps) {
     GstStructure *s;
 
@@ -195,7 +195,7 @@ unsupported_level:
 
 static GstCaps *
 gst_omx_h263_enc_get_caps (GstOMXVideoEnc * enc, GstOMXPort * port,
-    GstVideoState * state)
+    GstVideoCodecState * state)
 {
   GstOMXH263Enc *self = GST_OMX_H263_ENC (enc);
   GstCaps *caps;
@@ -203,16 +203,7 @@ gst_omx_h263_enc_get_caps (GstOMXVideoEnc * enc, GstOMXPort * port,
   OMX_VIDEO_PARAM_PROFILELEVELTYPE param;
   guint profile, level;
 
-  caps =
-      gst_caps_new_simple ("video/x-h263", "width", G_TYPE_INT, state->width,
-      "height", G_TYPE_INT, state->height, NULL);
-
-  if (state->fps_n != 0)
-    gst_caps_set_simple (caps, "framerate", GST_TYPE_FRACTION, state->fps_n,
-        state->fps_d, NULL);
-  if (state->par_n != 1 || state->par_d != 1)
-    gst_caps_set_simple (caps, "pixel-aspect-ratio", GST_TYPE_FRACTION,
-        state->par_n, state->par_d, NULL);
+  caps = gst_caps_new_empty_simple ("video/x-h263");
 
   GST_OMX_INIT_STRUCT (&param);
   param.nPortIndex = GST_OMX_VIDEO_ENC (self)->out_port->index;

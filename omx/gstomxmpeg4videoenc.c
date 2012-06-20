@@ -31,9 +31,9 @@ GST_DEBUG_CATEGORY_STATIC (gst_omx_mpeg4_video_enc_debug_category);
 
 /* prototypes */
 static gboolean gst_omx_mpeg4_video_enc_set_format (GstOMXVideoEnc * enc,
-    GstOMXPort * port, GstVideoInfo * info);
+    GstOMXPort * port, GstVideoCodecState * state);
 static GstCaps *gst_omx_mpeg4_video_enc_get_caps (GstOMXVideoEnc * enc,
-    GstOMXPort * port, GstVideoState * state);
+    GstOMXPort * port, GstVideoCodecState * state);
 
 enum
 {
@@ -81,7 +81,7 @@ gst_omx_mpeg4_video_enc_init (GstOMXMPEG4VideoEnc * self)
 
 static gboolean
 gst_omx_mpeg4_video_enc_set_format (GstOMXVideoEnc * enc, GstOMXPort * port,
-    GstVideoInfo * info)
+    GstVideoCodecState * state)
 {
   GstOMXMPEG4VideoEnc *self = GST_OMX_MPEG4_VIDEO_ENC (enc);
   GstCaps *peercaps, *intersection;
@@ -91,13 +91,13 @@ gst_omx_mpeg4_video_enc_set_format (GstOMXVideoEnc * enc, GstOMXPort * port,
   OMX_ERRORTYPE err;
   const gchar *profile_string, *level_string;
 
-  peercaps = gst_pad_peer_query_caps (GST_BASE_VIDEO_CODEC_SRC_PAD (enc), NULL);
+  peercaps = gst_pad_peer_query_caps (GST_VIDEO_ENCODER_SRC_PAD (enc), NULL);
   if (peercaps) {
     GstStructure *s;
 
     intersection =
         gst_caps_intersect (peercaps,
-        gst_pad_get_pad_template_caps (GST_BASE_VIDEO_CODEC_SRC_PAD (enc)));
+        gst_pad_get_pad_template_caps (GST_VIDEO_ENCODER_SRC_PAD (enc)));
 
     gst_caps_unref (peercaps);
     if (gst_caps_is_empty (intersection)) {
@@ -204,7 +204,7 @@ unsupported_level:
 
 static GstCaps *
 gst_omx_mpeg4_video_enc_get_caps (GstOMXVideoEnc * enc, GstOMXPort * port,
-    GstVideoState * state)
+    GstVideoCodecState * state)
 {
   GstOMXMPEG4VideoEnc *self = GST_OMX_MPEG4_VIDEO_ENC (enc);
   GstCaps *caps;
@@ -214,15 +214,7 @@ gst_omx_mpeg4_video_enc_get_caps (GstOMXVideoEnc * enc, GstOMXPort * port,
 
   caps =
       gst_caps_new_simple ("video/mpeg", "mpegversion", G_TYPE_INT, 4,
-      "systemstream", G_TYPE_BOOLEAN, FALSE, "width", G_TYPE_INT, state->width,
-      "height", G_TYPE_INT, state->height, NULL);
-
-  if (state->fps_n != 0)
-    gst_caps_set_simple (caps, "framerate", GST_TYPE_FRACTION, state->fps_n,
-        state->fps_d, NULL);
-  if (state->par_n != 1 || state->par_d != 1)
-    gst_caps_set_simple (caps, "pixel-aspect-ratio", GST_TYPE_FRACTION,
-        state->par_n, state->par_d, NULL);
+      "systemstream", G_TYPE_BOOLEAN, FALSE, NULL);
 
   GST_OMX_INIT_STRUCT (&param);
   param.nPortIndex = GST_OMX_VIDEO_ENC (self)->out_port->index;

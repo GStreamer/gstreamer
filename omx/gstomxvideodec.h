@@ -22,7 +22,7 @@
 #define __GST_OMX_VIDEO_DEC_H__
 
 #include <gst/gst.h>
-#include "gstbasevideodecoder.h"
+#include <gst/video/gstvideodecoder.h>
 
 #include "gstomx.h"
 
@@ -46,7 +46,7 @@ typedef struct _GstOMXVideoDecClass GstOMXVideoDecClass;
 
 struct _GstOMXVideoDec
 {
-  GstBaseVideoDecoder parent;
+  GstVideoDecoder parent;
 
   /* < protected > */
   GstOMXCore *core;
@@ -54,6 +54,7 @@ struct _GstOMXVideoDec
   GstOMXPort *in_port, *out_port;
 
   /* < private > */
+  GstVideoCodecState *input_state;
   GstBuffer *codec_data;
   /* TRUE if the component is configured and saw
    * the first buffer */
@@ -75,13 +76,13 @@ struct _GstOMXVideoDec
 
 struct _GstOMXVideoDecClass
 {
-  GstBaseVideoDecoderClass parent_class;
+  GstVideoDecoderClass parent_class;
 
   GstOMXClassData cdata;
 
-  gboolean (*is_format_change) (GstOMXVideoDec * self, GstOMXPort * port, GstVideoState * state);
-  gboolean (*set_format)       (GstOMXVideoDec * self, GstOMXPort * port, GstVideoState * state);
-  GstFlowReturn (*prepare_frame)   (GstOMXVideoDec * self, GstVideoFrameState *frame);
+  gboolean (*is_format_change) (GstOMXVideoDec * self, GstOMXPort * port, GstVideoCodecState * state);
+  gboolean (*set_format)       (GstOMXVideoDec * self, GstOMXPort * port, GstVideoCodecState * state);
+  GstFlowReturn (*prepare_frame)   (GstOMXVideoDec * self, GstVideoCodecFrame *frame);
 };
 
 GType gst_omx_video_dec_get_type (void);

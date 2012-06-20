@@ -22,7 +22,7 @@
 #define __GST_OMX_VIDEO_ENC_H__
 
 #include <gst/gst.h>
-#include "gstbasevideoencoder.h"
+#include <gst/video/gstvideoencoder.h>
 
 #include "gstomx.h"
 
@@ -46,7 +46,7 @@ typedef struct _GstOMXVideoEncClass GstOMXVideoEncClass;
 
 struct _GstOMXVideoEnc
 {
-  GstBaseVideoEncoder parent;
+  GstVideoEncoder parent;
 
   /* < protected > */
 
@@ -57,6 +57,7 @@ struct _GstOMXVideoEnc
   GstOMXPort *in_port, *out_port;
 
   /* < private > */
+  GstVideoCodecState *input_state;
   /* TRUE if the component is configured and saw
    * the first buffer */
   gboolean started;
@@ -84,13 +85,13 @@ struct _GstOMXVideoEnc
 
 struct _GstOMXVideoEncClass
 {
-  GstBaseVideoEncoderClass parent_class;
+  GstVideoEncoderClass parent_class;
 
   GstOMXClassData cdata;
 
-  gboolean (*set_format)       (GstOMXVideoEnc * self, GstOMXPort * port, GstVideoInfo * info   );
-  GstCaps *(*get_caps)         (GstOMXVideoEnc * self, GstOMXPort * port, GstVideoState * state);
-  GstFlowReturn (*handle_output_frame) (GstOMXVideoEnc * self, GstOMXPort * port, GstOMXBuffer * buffer, GstVideoFrameState * frame);
+  gboolean            (*set_format)          (GstOMXVideoEnc * self, GstOMXPort * port, GstVideoCodecState * state);
+  GstCaps            *(*get_caps)           (GstOMXVideoEnc * self, GstOMXPort * port, GstVideoCodecState * state);
+  GstFlowReturn       (*handle_output_frame) (GstOMXVideoEnc * self, GstOMXPort * port, GstOMXBuffer * buffer, GstVideoCodecFrame * frame);
 };
 
 GType gst_omx_video_enc_get_type (void);

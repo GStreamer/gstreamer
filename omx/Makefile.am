@@ -13,10 +13,6 @@ libgstopenmax_la_SOURCES = \
 	gstomxh264enc.c \
 	gstomxh263enc.c \
 	gstomxaacenc.c \
-	gstbasevideocodec.c \
-	gstbasevideodecoder.c \
-	gstbasevideoencoder.c \
-	gstbasevideoutils.c \
 	gstomxrecmutex.c
 
 noinst_HEADERS = \
@@ -32,27 +28,14 @@ noinst_HEADERS = \
 	gstomxh264enc.h \
 	gstomxh263enc.h \
 	gstomxaacenc.h \
-	gstbasevideocodec.h \
-	gstbasevideodecoder.h \
-	gstbasevideoencoder.h \
-	gstbasevideoutils.h \
 	gstomxrecmutex.h
-
-fixbaseclasses = \
-        -DGstBaseVideoCodec=OMXBaseVideoCodec \
-        -DGstBaseVideoCodecClass=OMXBaseVideoCodecClass \
-        -DGstBaseVideoEncoder=OMXBaseVideoEncoder \
-        -DGstBaseVideoEncoderClass=OMXBaseVideoEncoderClass \
-        -DGstBaseVideoDecoder=OMXBaseVideoDecoder \
-        -DGstBaseVideoDecoderClass=OMXBaseVideoDecoderClass
 
 libgstopenmax_la_CFLAGS = \
 	-DGST_USE_UNSTABLE_API=1 \
 	-I$(abs_srcdir)/openmax \
 	$(GST_PLUGINS_BASE_CFLAGS) \
 	$(GST_BASE_CFLAGS) \
-	$(GST_CFLAGS) \
-	$(fixbaseclasses)
+	$(GST_CFLAGS)
 libgstopenmax_la_LIBADD = \
 	$(GST_PLUGINS_BASE_LIBS) \
 	-lgstaudio-@GST_API_VERSION@ \
@@ -76,5 +59,5 @@ Android.mk: Makefile.am $(BUILT_SOURCES)
 	           $(libgstopenmax_la_LIBADD) \
 	           -ldl \
 	 -:PASSTHROUGH LOCAL_ARM_MODE:=arm \
-		       LOCAL_MODULE_PATH:='$$(TARGET_OUT)/lib/gstreamer-0.10' \
+		       LOCAL_MODULE_PATH:='$$(TARGET_OUT)/lib/gstreamer-$(GST_API_VERSION)' \
 	> $@

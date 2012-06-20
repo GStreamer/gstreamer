@@ -31,11 +31,11 @@ GST_DEBUG_CATEGORY_STATIC (gst_omx_h264_enc_debug_category);
 
 /* prototypes */
 static gboolean gst_omx_h264_enc_set_format (GstOMXVideoEnc * enc,
-    GstOMXPort * port, GstVideoInfo * info);
+    GstOMXPort * port, GstVideoCodecState * state);
 static GstCaps *gst_omx_h264_enc_get_caps (GstOMXVideoEnc * enc,
-    GstOMXPort * port, GstVideoState * state);
+    GstOMXPort * port, GstVideoCodecState * state);
 static GstFlowReturn gst_omx_h264_enc_handle_output_frame (GstOMXVideoEnc *
-    self, GstOMXPort * port, GstOMXBuffer * buf, GstVideoFrameState * frame);
+    self, GstOMXPort * port, GstOMXBuffer * buf, GstVideoCodecFrame * frame);
 
 enum
 {
@@ -81,7 +81,7 @@ gst_omx_h264_enc_init (GstOMXH264Enc * self)
 
 static gboolean
 gst_omx_h264_enc_set_format (GstOMXVideoEnc * enc, GstOMXPort * port,
-    GstVideoInfo * info)
+    GstVideoCodecState * state)
 {
   GstOMXH264Enc *self = GST_OMX_H264_ENC (enc);
   GstCaps *peercaps;
@@ -91,8 +91,8 @@ gst_omx_h264_enc_set_format (GstOMXVideoEnc * enc, GstOMXPort * port,
   OMX_ERRORTYPE err;
   const gchar *profile_string, *level_string;
 
-  peercaps = gst_pad_peer_query_caps (GST_BASE_VIDEO_CODEC_SRC_PAD (enc),
-      gst_pad_get_pad_template_caps (GST_BASE_VIDEO_CODEC_SRC_PAD (enc)));
+  peercaps = gst_pad_peer_query_caps (GST_VIDEO_ENCODER_SRC_PAD (enc),
+      gst_pad_get_pad_template_caps (GST_VIDEO_ENCODER_SRC_PAD (enc)));
   if (peercaps) {
     GstStructure *s;
 
@@ -197,7 +197,7 @@ unsupported_level:
 
 static GstCaps *
 gst_omx_h264_enc_get_caps (GstOMXVideoEnc * enc, GstOMXPort * port,
-    GstVideoState * state)
+    GstVideoCodecState * state)
 {
   GstOMXH264Enc *self = GST_OMX_H264_ENC (enc);
   GstCaps *caps;
@@ -205,16 +205,7 @@ gst_omx_h264_enc_get_caps (GstOMXVideoEnc * enc, GstOMXPort * port,
   OMX_VIDEO_PARAM_PROFILELEVELTYPE param;
   const gchar *profile, *level;
 
-  caps =
-      gst_caps_new_simple ("video/x-h264", "width", G_TYPE_INT, state->width,
-      "height", G_TYPE_INT, state->height, NULL);
-
-  if (state->fps_n != 0)
-    gst_caps_set_simple (caps, "framerate", GST_TYPE_FRACTION, state->fps_n,
-        state->fps_d, NULL);
-  if (state->par_n != 1 || state->par_d != 1)
-    gst_caps_set_simple (caps, "pixel-aspect-ratio", GST_TYPE_FRACTION,
-        state->par_n, state->par_d, NULL);
+  caps = gst_caps_new_empty_simple ("video/x-h264");
 
   GST_OMX_INIT_STRUCT (&param);
   param.nPortIndex = GST_OMX_VIDEO_ENC (self)->out_port->index;
@@ -315,7 +306,7 @@ gst_omx_h264_enc_get_caps (GstOMXVideoEnc * enc, GstOMXPort * port,
 
 static GstFlowReturn
 gst_omx_h264_enc_handle_output_frame (GstOMXVideoEnc * self, GstOMXPort * port,
-    GstOMXBuffer * buf, GstVideoFrameState * frame)
+    GstOMXBuffer * buf, GstVideoCodecFrame * frame)
 {
   if (buf->omx_buf->nFlags & OMX_BUFFERFLAG_CODECCONFIG) {
     /* The codec data is SPS/PPS with a startcode => bytestream stream format
@@ -325,6 +316,7 @@ gst_omx_h264_enc_handle_output_frame (GstOMXVideoEnc * self, GstOMXPort * port,
     if (buf->omx_buf->nFilledLen >= 4 &&
         GST_READ_UINT32_BE (buf->omx_buf->pBuffer +
             buf->omx_buf->nOffset) == 0x00000001) {
+      GList *l = NULL;
       GstBuffer *hdrs;
       GstMapInfo map = GST_MAP_INFO_INIT;
 
@@ -338,8 +330,8 @@ gst_omx_h264_enc_handle_output_frame (GstOMXVideoEnc * self, GstOMXPort * port,
           buf->omx_buf->pBuffer + buf->omx_buf->nOffset,
           buf->omx_buf->nFilledLen);
       gst_buffer_unmap (hdrs, &map);
-      gst_base_video_encoder_set_headers (GST_BASE_VIDEO_ENCODER (self), hdrs);
-      gst_buffer_unref (hdrs);
+      l = g_list_append (l, hdrs);
+      gst_video_encoder_set_headers (GST_VIDEO_ENCODER (self), l);
     }
   }
 
