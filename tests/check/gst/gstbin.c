@@ -989,7 +989,7 @@ GST_START_TEST (test_link_structure_change)
 
   /* use the sync signal handler to link elements while the pipeline is still
    * doing the state change */
-  gst_bus_set_sync_handler (bus, gst_bus_sync_signal_handler, pipeline);
+  gst_bus_set_sync_handler (bus, gst_bus_sync_signal_handler, pipeline, NULL);
   g_object_connect (bus, "signal::sync-message::state-changed",
       G_CALLBACK (test_link_structure_change_state_changed_sync_cb), pipeline,
       NULL);
@@ -1061,7 +1061,7 @@ GST_START_TEST (test_state_failure_remove)
   bus = gst_pipeline_get_bus (GST_PIPELINE (pipeline));
   fail_unless (bus != NULL, "Could not get bus");
 
-  gst_bus_set_sync_handler (bus, sync_handler_remove_sink, pipeline);
+  gst_bus_set_sync_handler (bus, sync_handler_remove_sink, pipeline, NULL);
 
   ret = gst_element_set_state (pipeline, GST_STATE_READY);
   fail_unless (ret == GST_STATE_CHANGE_SUCCESS,

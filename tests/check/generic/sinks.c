@@ -1074,7 +1074,8 @@ GST_START_TEST (test_async_done)
   /* set bus on element synchronously listen for ASYNC_DONE */
   bus = gst_bus_new ();
   gst_element_set_bus (sink, bus);
-  gst_bus_set_sync_handler (bus, (GstBusSyncHandler) async_done_func, sink);
+  gst_bus_set_sync_handler (bus, (GstBusSyncHandler) async_done_func, sink,
+      NULL);
 
   /* make newsegment, this sets the position to 10sec when the buffer prerolls */
   GST_DEBUG ("sending segment");
@@ -1183,7 +1184,8 @@ GST_START_TEST (test_async_done_eos)
   /* set bus on element synchronously listen for ASYNC_DONE */
   bus = gst_bus_new ();
   gst_element_set_bus (sink, bus);
-  gst_bus_set_sync_handler (bus, (GstBusSyncHandler) async_done_eos_func, sink);
+  gst_bus_set_sync_handler (bus, (GstBusSyncHandler) async_done_eos_func, sink,
+      NULL);
 
   /* make newsegment, this sets the position to 10sec when the buffer prerolls */
   GST_DEBUG ("sending segment");

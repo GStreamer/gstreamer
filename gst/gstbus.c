@@ -100,6 +100,7 @@ enum
 };
 
 static void gst_bus_dispose (GObject * object);
+static void gst_bus_finalize (GObject * object);
 
 static guint gst_bus_signals[LAST_SIGNAL] = { 0 };
 
@@ -110,6 +111,7 @@ struct _GstBusPrivate
 
   GstBusSyncHandler sync_handler;
   gpointer sync_handler_data;
+  GDestroyNotify sync_handler_notify;
 
   guint signal_watch_id;
   guint num_signal_watchers;
@@ -158,6 +160,7 @@ gst_bus_class_init (GstBusClass * klass)
   GObjectClass *gobject_class = (GObjectClass *) klass;
 
   gobject_class->dispose = gst_bus_dispose;
+  gobject_class->finalize = gst_bus_finalize;
   gobject_class->set_property = gst_bus_set_property;
   gobject_class->constructed = gst_bus_constructed;
 
@@ -253,6 +256,17 @@ gst_bus_dispose (GObject * object)
   }
 
   G_OBJECT_CLASS (parent_class)->dispose (object);
+}
+
+static void
+gst_bus_finalize (GObject * object)
+{
+  GstBus *bus = GST_BUS (object);
+
+  if (bus->priv->sync_handler_notify)
+    bus->priv->sync_handler_notify (bus->priv->sync_handler_data);
+
+  G_OBJECT_CLASS (parent_class)->finalize (object);
 }
 
 /**
@@ -655,7 +669,8 @@ gst_bus_peek (GstBus * bus)
  * gst_bus_set_sync_handler:
  * @bus: a #GstBus to install the handler on
  * @func: The handler function to install
- * @data: User data that will be sent to the handler function.
+ * @user_data: User data that will be sent to the handler function.
+ * @notify: called when @user_data becomes unused
  *
  * Sets the synchronous handler on the bus. The function will be called
  * every time a new message is posted on the bus. Note that the function
@@ -668,19 +683,33 @@ gst_bus_peek (GstBus * bus)
  * function, which will clear the existing handler.
  */
 void
-gst_bus_set_sync_handler (GstBus * bus, GstBusSyncHandler func, gpointer data)
+gst_bus_set_sync_handler (GstBus * bus, GstBusSyncHandler func,
+    gpointer user_data, GDestroyNotify notify)
 {
+  GDestroyNotify old_notify;
+
   g_return_if_fail (GST_IS_BUS (bus));
 
   GST_OBJECT_LOCK (bus);
-
   /* Assert if the user attempts to replace an existing sync_handler,
    * other than to clear it */
   if (func != NULL && bus->priv->sync_handler != NULL)
     goto no_replace;
 
+  if ((old_notify = bus->priv->sync_handler_notify)) {
+    gpointer old_data = bus->priv->sync_handler_data;
+
+    bus->priv->sync_handler_data = NULL;
+    bus->priv->sync_handler_notify = NULL;
+    GST_OBJECT_UNLOCK (bus);
+
+    old_notify (old_data);
+
+    GST_OBJECT_LOCK (bus);
+  }
   bus->priv->sync_handler = func;
-  bus->priv->sync_handler_data = data;
+  bus->priv->sync_handler_data = user_data;
+  bus->priv->sync_handler_notify = notify;
   GST_OBJECT_UNLOCK (bus);
 
   return;

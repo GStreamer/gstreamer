@@ -154,7 +154,8 @@ main (int argc, char *argv[])
 
   /* get the bus, we need to install a sync handler */
   bus = gst_pipeline_get_bus (GST_PIPELINE (bin));
-  gst_bus_set_sync_handler (bus, (GstBusSyncHandler) sync_bus_handler, bin);
+  gst_bus_set_sync_handler (bus, (GstBusSyncHandler) sync_bus_handler, bin,
+      NULL);
 
   /* start playing */
   ret = gst_element_set_state (bin, GST_STATE_PLAYING);

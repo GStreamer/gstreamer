@@ -1041,7 +1041,7 @@ main (int argc, char *argv[])
 #endif
 
     bus = gst_element_get_bus (pipeline);
-    gst_bus_set_sync_handler (bus, bus_sync_handler, (gpointer) pipeline);
+    gst_bus_set_sync_handler (bus, bus_sync_handler, (gpointer) pipeline, NULL);
     gst_object_unref (bus);
 
     PRINT (_("Setting pipeline to PAUSED ...\n"));

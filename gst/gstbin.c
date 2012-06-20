@@ -500,7 +500,8 @@ gst_bin_init (GstBin * bin)
   bin->child_bus = bus;
   GST_DEBUG_OBJECT (bin, "using bus %" GST_PTR_FORMAT " to listen to children",
       bus);
-  gst_bus_set_sync_handler (bus, (GstBusSyncHandler) bin_bus_handler, bin);
+  gst_bus_set_sync_handler (bus, (GstBusSyncHandler) bin_bus_handler, bin,
+      NULL);
 
   bin->priv = GST_BIN_GET_PRIVATE (bin);
   bin->priv->asynchandling = DEFAULT_ASYNC_HANDLING;
