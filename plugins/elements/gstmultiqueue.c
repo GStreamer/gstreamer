@@ -794,7 +794,7 @@ gst_single_queue_flush (GstMultiQueue * mq, GstSingleQueue * sq, gboolean flush)
     GST_LOG_OBJECT (mq, "SingleQueue %d : starting task", sq->id);
     result =
         gst_pad_start_task (sq->srcpad, (GstTaskFunction) gst_multi_queue_loop,
-        sq->srcpad);
+        sq->srcpad, NULL);
   }
   return result;
 }

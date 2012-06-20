@@ -208,7 +208,7 @@ GST_START_TEST (test_parsing)
 
     /* create a task with some dummy function, we're not actually going to run
      * the task here */
-    task = gst_task_new ((GstTaskFunction) gst_object_unref, NULL);
+    task = gst_task_new ((GstTaskFunction) gst_object_unref, NULL, NULL);
 
     ASSERT_OBJECT_REFCOUNT (task, "task", 1);
 

@@ -952,7 +952,7 @@ gboolean		gst_pad_send_event			(GstPad *pad, GstEvent *event);
 
 /* pad tasks */
 gboolean		gst_pad_start_task			(GstPad *pad, GstTaskFunction func,
-								 gpointer data);
+								 gpointer user_data, GDestroyNotify notify);
 gboolean		gst_pad_pause_task			(GstPad *pad);
 gboolean		gst_pad_stop_task			(GstPad *pad);
 

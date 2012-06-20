@@ -735,7 +735,7 @@ gst_queue_handle_sink_event (GstPad * pad, GstObject * parent, GstEvent * event)
       queue->eos = FALSE;
       queue->unexpected = FALSE;
       gst_pad_start_task (queue->srcpad, (GstTaskFunction) gst_queue_loop,
-          queue->srcpad);
+          queue->srcpad, NULL);
       GST_QUEUE_MUTEX_UNLOCK (queue);
 
       STATUS (queue, pad, "after flush");
@@ -1314,7 +1314,8 @@ gst_queue_src_activate_mode (GstPad * pad, GstObject * parent, GstPadMode mode,
         queue->eos = FALSE;
         queue->unexpected = FALSE;
         result =
-            gst_pad_start_task (pad, (GstTaskFunction) gst_queue_loop, pad);
+            gst_pad_start_task (pad, (GstTaskFunction) gst_queue_loop, pad,
+            NULL);
         GST_QUEUE_MUTEX_UNLOCK (queue);
       } else {
         /* step 1, unblock loop function */

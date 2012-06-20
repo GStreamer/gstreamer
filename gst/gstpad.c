@@ -5079,9 +5079,10 @@ static GstTaskThreadCallbacks thr_callbacks = {
  * gst_pad_start_task:
  * @pad: the #GstPad to start the task of
  * @func: the task function to call
- * @data: data passed to the task function
+ * @user_data: user data passed to the task function
+ * @notify: called when @user_data is no longer referenced
  *
- * Starts a task that repeatedly calls @func with @data. This function
+ * Starts a task that repeatedly calls @func with @user_data. This function
  * is mostly used in pad activation functions to start the dataflow.
  * The #GST_PAD_STREAM_LOCK of @pad will automatically be acquired
  * before @func is called.
@@ -5089,7 +5090,8 @@ static GstTaskThreadCallbacks thr_callbacks = {
  * Returns: a %TRUE if the task could be started.
  */
 gboolean
-gst_pad_start_task (GstPad * pad, GstTaskFunction func, gpointer data)
+gst_pad_start_task (GstPad * pad, GstTaskFunction func, gpointer user_data,
+    GDestroyNotify notify)
 {
   GstTask *task;
   gboolean res;
@@ -5102,7 +5104,7 @@ gst_pad_start_task (GstPad * pad, GstTaskFunction func, gpointer data)
   GST_OBJECT_LOCK (pad);
   task = GST_PAD_TASK (pad);
   if (task == NULL) {
-    task = gst_task_new (func, data);
+    task = gst_task_new (func, user_data, notify);
     gst_task_set_lock (task, GST_PAD_GET_STREAM_LOCK (pad));
     gst_task_set_thread_callbacks (task, &thr_callbacks, pad, NULL);
     GST_INFO_OBJECT (pad, "created task %p", task);

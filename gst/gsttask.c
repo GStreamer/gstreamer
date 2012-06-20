@@ -208,6 +208,9 @@ gst_task_finalize (GObject * object)
   priv->thr_notify = NULL;
   priv->thr_user_data = NULL;
 
+  if (task->notify)
+    task->notify (task->user_data);
+
   gst_object_unref (priv->pool);
 
   /* task thread cannot be running here since it holds a ref
@@ -305,7 +308,7 @@ gst_task_func (GstTask * task)
       GST_OBJECT_UNLOCK (task);
     }
 
-    task->func (task->data);
+    task->func (task->user_data);
   }
 done:
   g_rec_mutex_unlock (lock);
@@ -365,10 +368,11 @@ gst_task_cleanup_all (void)
 /**
  * gst_task_new:
  * @func: The #GstTaskFunction to use
- * @data: (closure): User data to pass to @func
+ * @user_data: User data to pass to @func
+ * @notify: the function to call when @user_data is no longer needed.
  *
  * Create a new Task that will repeatedly call the provided @func
- * with @data as a parameter. Typically the task will run in
+ * with @user_data as a parameter. Typically the task will run in
  * a new thread.
  *
  * The function cannot be changed after the task has been created. You
@@ -386,13 +390,14 @@ gst_task_cleanup_all (void)
  * MT safe.
  */
 GstTask *
-gst_task_new (GstTaskFunction func, gpointer data)
+gst_task_new (GstTaskFunction func, gpointer user_data, GDestroyNotify notify)
 {
   GstTask *task;
 
   task = g_object_newv (GST_TYPE_TASK, 0, NULL);
   task->func = func;
-  task->data = data;
+  task->user_data = user_data;
+  task->notify = notify;
 
   GST_DEBUG ("Created task %p", task);
 

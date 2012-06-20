@@ -35,7 +35,7 @@ G_BEGIN_DECLS
  * A function that will repeatedly be called in the thread created by
  * a #GstTask.
  */
-typedef void         (*GstTaskFunction)          (void *user_data);
+typedef void         (*GstTaskFunction)          (gpointer user_data);
 
 /* --- standard type macros --- */
 #define GST_TYPE_TASK                   (gst_task_get_type ())
@@ -134,7 +134,8 @@ typedef struct {
  * @cond: used to pause/resume the task
  * @lock: The lock taken when iterating the task function
  * @func: the function executed by this task
- * @data: data passed to the task function
+ * @user_data: user_data passed to the task function
+ * @notify: GDestroyNotify for @user_data
  * @running: a flag indicating that the task is running
  *
  * The #GstTask object.
@@ -149,7 +150,8 @@ struct _GstTask {
   GRecMutex       *lock;
 
   GstTaskFunction  func;
-  gpointer         data;
+  gpointer         user_data;
+  GDestroyNotify   notify;
 
   gboolean         running;
 
@@ -175,7 +177,9 @@ void            gst_task_cleanup_all    (void);
 
 GType           gst_task_get_type       (void);
 
-GstTask*        gst_task_new            (GstTaskFunction func, gpointer data);
+GstTask*        gst_task_new            (GstTaskFunction func,
+                                         gpointer user_data, GDestroyNotify notify);
+
 void            gst_task_set_lock       (GstTask *task, GRecMutex *mutex);
 
 GstTaskPool *   gst_task_get_pool       (GstTask *task);

@@ -460,7 +460,7 @@ gst_type_find_element_seek (GstTypeFindElement * typefind, GstEvent * event)
   gst_segment_do_seek (&seeksegment, rate, format, flags,
       cur_type, cur, stop_type, stop, NULL);
 
-  flush = !!(flags & GST_SEEK_FLAG_FLUSH);
+  flush = ! !(flags & GST_SEEK_FLAG_FLUSH);
 
   GST_DEBUG_OBJECT (typefind, "New segment %" GST_SEGMENT_FORMAT, &seeksegment);
 
@@ -504,7 +504,7 @@ gst_type_find_element_seek (GstTypeFindElement * typefind, GstEvent * event)
   /* restart our task since it might have been stopped when we did the
    * flush. */
   gst_pad_start_task (typefind->sink,
-      (GstTaskFunction) gst_type_find_element_loop, typefind->sink);
+      (GstTaskFunction) gst_type_find_element_loop, typefind->sink, NULL);
 
   /* streaming can continue now */
   GST_PAD_STREAM_UNLOCK (typefind->sink);
@@ -1218,7 +1218,7 @@ gst_type_find_element_activate_sink (GstPad * pad, GstObject * parent)
 
   /* only start our task if we ourselves decide to start in pull mode */
   return gst_pad_start_task (pad, (GstTaskFunction) gst_type_find_element_loop,
-      pad);
+      pad, NULL);
 
 typefind_push:
   {
