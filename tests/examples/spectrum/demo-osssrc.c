@@ -145,7 +145,7 @@ message_handler (GstBus * bus, GstMessage * message, gpointer data)
         clock_id =
             gst_clock_new_single_shot_id (sync_clock, waittime + basetime);
         gst_clock_id_wait_async (clock_id, delayed_spectrum_update,
-            (gpointer) spect);
+            (gpointer) spect, NULL);
         gst_clock_id_unref (clock_id);
       }
     }

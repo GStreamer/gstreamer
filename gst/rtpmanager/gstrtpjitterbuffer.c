@@ -1637,7 +1637,7 @@ again:
           GST_INFO_OBJECT (jitterbuffer, "scheduling timeout");
           id = gst_clock_new_single_shot_id (clock, sync_time);
           gst_clock_id_wait_async (id, (GstClockCallback) eos_reached,
-              jitterbuffer);
+              jitterbuffer, NULL);
         }
         GST_OBJECT_UNLOCK (jitterbuffer);
       }
