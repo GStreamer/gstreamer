@@ -865,7 +865,7 @@ gst_omx_video_enc_start (GstBaseVideoEncoder * encoder)
   self->downstream_flow_ret = GST_FLOW_OK;
   ret =
       gst_pad_start_task (GST_BASE_VIDEO_CODEC_SRC_PAD (self),
-      (GstTaskFunction) gst_omx_video_enc_loop, self);
+      (GstTaskFunction) gst_omx_video_enc_loop, self, NULL);
 
   return ret;
 }
@@ -1013,7 +1013,7 @@ gst_omx_video_enc_set_format (GstBaseVideoEncoder * encoder,
   /* Start the srcpad loop again */
   self->downstream_flow_ret = GST_FLOW_OK;
   gst_pad_start_task (GST_BASE_VIDEO_CODEC_SRC_PAD (self),
-      (GstTaskFunction) gst_omx_video_enc_loop, encoder);
+      (GstTaskFunction) gst_omx_video_enc_loop, encoder, NULL);
 
   return TRUE;
 }
@@ -1048,7 +1048,7 @@ gst_omx_video_enc_reset (GstBaseVideoEncoder * encoder)
   self->eos = FALSE;
   self->downstream_flow_ret = GST_FLOW_OK;
   gst_pad_start_task (GST_BASE_VIDEO_CODEC_SRC_PAD (self),
-      (GstTaskFunction) gst_omx_video_enc_loop, encoder);
+      (GstTaskFunction) gst_omx_video_enc_loop, encoder, NULL);
 
   return TRUE;
 }

@@ -497,7 +497,7 @@ gst_omx_audio_enc_start (GstAudioEncoder * encoder)
   self->downstream_flow_ret = GST_FLOW_OK;
   ret =
       gst_pad_start_task (GST_AUDIO_ENCODER_SRC_PAD (self),
-      (GstTaskFunction) gst_omx_audio_enc_loop, self);
+      (GstTaskFunction) gst_omx_audio_enc_loop, self, NULL);
 
   return ret;
 }
@@ -691,7 +691,7 @@ gst_omx_audio_enc_set_format (GstAudioEncoder * encoder, GstAudioInfo * info)
   /* Start the srcpad loop again */
   self->downstream_flow_ret = GST_FLOW_OK;
   gst_pad_start_task (GST_AUDIO_ENCODER_SRC_PAD (self),
-      (GstTaskFunction) gst_omx_audio_enc_loop, encoder);
+      (GstTaskFunction) gst_omx_audio_enc_loop, encoder, NULL);
 
   return TRUE;
 }
@@ -724,7 +724,7 @@ gst_omx_audio_enc_flush (GstAudioEncoder * encoder)
   self->downstream_flow_ret = GST_FLOW_OK;
   self->eos = FALSE;
   gst_pad_start_task (GST_AUDIO_ENCODER_SRC_PAD (self),
-      (GstTaskFunction) gst_omx_audio_enc_loop, encoder);
+      (GstTaskFunction) gst_omx_audio_enc_loop, encoder, NULL);
 }
 
 static GstFlowReturn
