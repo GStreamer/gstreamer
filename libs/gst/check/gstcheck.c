@@ -174,7 +174,14 @@ gst_check_chain_func (GstPad * pad, GstObject * parent, GstBuffer * buffer)
   return GST_FLOW_OK;
 }
 
-/* setup an element for a filter test with mysrcpad and mysinkpad */
+/**
+ * gst_check_setup_element:
+ * @factory: factory
+ *
+ * setup an element for a filter test with mysrcpad and mysinkpad
+ *
+ * Returns: (transfer full): a new element
+ */
 GstElement *
 gst_check_setup_element (const gchar * factory)
 {
@@ -199,12 +206,27 @@ gst_check_teardown_element (GstElement * element)
   gst_object_unref (element);
 }
 
+/**
+ * gst_check_setup_src_pad:
+ * @element: element to setup pad on
+ * @tmpl: pad template
+ *
+ * Returns: (transfer full): a new pad
+ */
 GstPad *
 gst_check_setup_src_pad (GstElement * element, GstStaticPadTemplate * tmpl)
 {
   return gst_check_setup_src_pad_by_name (element, tmpl, "sink");
 }
 
+/**
+ * gst_check_setup_src_pad_by_name:
+ * @element: element to setup pad on
+ * @tmpl: pad template
+ * @name: name
+ *
+ * Returns: (transfer full): a new pad
+ */
 GstPad *
 gst_check_setup_src_pad_by_name (GstElement * element,
     GstStaticPadTemplate * tmpl, const gchar * name)
@@ -270,12 +292,27 @@ gst_check_teardown_src_pad (GstElement * element)
   gst_check_teardown_pad_by_name (element, "sink");
 }
 
+/**
+ * gst_check_setup_sink_pad:
+ * @element: element to setup pad on
+ * @tmpl: pad template
+ *
+ * Returns: (transfer full): a new pad
+ */
 GstPad *
 gst_check_setup_sink_pad (GstElement * element, GstStaticPadTemplate * tmpl)
 {
   return gst_check_setup_sink_pad_by_name (element, tmpl, "src");
 }
 
+/**
+ * gst_check_setup_sink_pad_by_name:
+ * @element: element to setup pad on
+ * @tmpl: pad template
+ * @name: name
+ *
+ * Returns: (transfer full): a new pad
+ */
 GstPad *
 gst_check_setup_sink_pad_by_name (GstElement * element,
     GstStaticPadTemplate * tmpl, const gchar * name)
