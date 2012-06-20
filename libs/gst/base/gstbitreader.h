@@ -31,7 +31,8 @@ G_BEGIN_DECLS
 
 /**
  * GstBitReader:
- * @data: Data from which the bit reader will read
+ * @data: (array length=size): Data from which the bit reader will
+ *   read
  * @size: Size of @data in bytes
  * @byte: Current byte position
  * @bit: Bit position in the current byte

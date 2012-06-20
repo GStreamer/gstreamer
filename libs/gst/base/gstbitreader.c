@@ -38,7 +38,8 @@
 
 /**
  * gst_bit_reader_new:
- * @data: Data from which the #GstBitReader should read
+ * @data: (array length=size): Data from which the #GstBitReader
+ *   should read
  * @size: Size of @data in bytes
  *
  * Create a new #GstBitReader instance, which will read from @data.

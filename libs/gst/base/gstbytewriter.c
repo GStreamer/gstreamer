@@ -212,7 +212,8 @@ gst_byte_writer_reset (GstByteWriter * writer)
  *
  * Free-function: g_free
  *
- * Returns: (transfer full): the current data. g_free() after usage.
+ * Returns: (array) (transfer full): the current data. g_free() after
+ * usage.
  *
  * Since: 0.10.26
  */
