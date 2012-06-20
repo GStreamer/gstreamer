@@ -428,7 +428,8 @@ gst_mpeg2dec_discard_buffer (GstMpeg2dec * mpeg2dec, gint id)
     g_slice_free (GstMpeg2DecBuffer, mbuf);
     mpeg2dec->buffers = g_list_delete_link (mpeg2dec->buffers, l);
   } else {
-    GST_WARNING ("Could not find buffer %u, will be leaked until next reset");
+    GST_WARNING ("Could not find buffer %d, will be leaked until next reset",
+        id);
   }
 }
 
