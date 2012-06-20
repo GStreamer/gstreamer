@@ -1135,11 +1135,14 @@ gst_teletextdec_line_address (GstTeletextDec * teletext,
       return VBI_NEW_FRAME;
     }
 
+    /* FIXME : This never happens, since lofp is a guint8 */
+#if 0
     /* new segment flag */
     if (lofp < 0) {
       GST_LOG_OBJECT (teletext, "New frame");
       return VBI_NEW_FRAME;
     }
+#endif
 
     frame->last_field = field;
     frame->last_field_line = field_line;
