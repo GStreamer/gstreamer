@@ -82,7 +82,7 @@ decode_file (const gchar * file, gboolean push_mode)
 
   /* kids, don't use a sync handler for this at home, really; we do because
    * we just want to abort and nothing else */
-  gst_bus_set_sync_handler (bus, error_cb, (gpointer) file);
+  gst_bus_set_sync_handler (bus, error_cb, (gpointer) file, NULL);
 
   gst_bin_add_many (GST_BIN (pipeline), src, queue, dec, sink, NULL);
   gst_element_link_many (src, queue, dec, NULL);
