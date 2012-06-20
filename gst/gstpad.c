@@ -2559,7 +2559,7 @@ no_parent:
 /**
  * gst_pad_forward:
  * @pad: a #GstPad
- * @forward: a #GstPadForwardFunction
+ * @forward: (scope call): a #GstPadForwardFunction
  * @user_data: user data passed to @forward
  *
  * Calls @forward for all internally linked pads of @pad. This function deals with
