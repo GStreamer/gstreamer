@@ -180,7 +180,6 @@ gst_template_match_init (GstTemplateMatch * filter)
   filter->cvDistImage = NULL;
   filter->cvImage = NULL;
   filter->method = DEFAULT_METHOD;
-  gst_template_match_load_template (filter);
 }
 
 static void
