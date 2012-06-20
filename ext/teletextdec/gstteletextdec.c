@@ -911,7 +911,7 @@ gst_teletextdec_export_html_page (GstTeletextDec * teletext, vbi_page * page,
   GstCaps *caps;
   GstFlowReturn ret;
   gchar *html;
-  guint size;
+  gssize size;
   vbi_export *ex;
   gchar *err;
 
