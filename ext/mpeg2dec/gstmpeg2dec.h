@@ -71,33 +71,13 @@ struct _GstMpeg2dec {
    */
   DiscontState   discont_state;
 
-  /* the timestamp of the next frame */
-  GstClockTime   next_time;
-
   /* video state */
   GstVideoCodecState *input_state;
-  gint           width;
-  gint           height;
-  gint           decoded_width;
-  gint           decoded_height;
-  gint           pixel_width;
-  gint           pixel_height;
-  gint64         frame_period;
-  gboolean       interlaced;
+  GstVideoInfo        decoded_info;
+  gboolean       need_cropping;
+  gboolean       has_cropping;
 
-  gint           size;
-  gint           u_offs;
-  gint           v_offs;
   guint8        *dummybuf[4];
-
-  guint64        offset;
-  gint           fps_n;
-  gint           fps_d;
-
-  GstIndex      *index;
-  gint           index_id;
-
-  gboolean       can_allocate_aligned;
 };
 
 struct _GstMpeg2decClass {
