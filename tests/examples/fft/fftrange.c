@@ -181,4 +181,6 @@ main (gint argc, gchar * argv[])
   test_f64 ("300, bartlett", num_bands, GST_FFT_WINDOW_BARTLETT);
   test_f64 ("300, blackman", num_bands, GST_FFT_WINDOW_BLACKMAN);
   puts ("\n");
+
+  return 0;
 }
