@@ -26,6 +26,7 @@
 #include "config.h"
 #endif
 
+#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
@@ -47,8 +48,6 @@ typedef struct _MpegTSParsePad MpegTSParsePad;
 typedef struct
 {
   MpegTSBaseProgram program;
-  gint selected;
-  gboolean active;
   MpegTSParsePad *tspad;
 } MpegTSParseProgram;
 
@@ -65,27 +64,23 @@ struct _MpegTSParsePad
 
   /* the return of the latest push */
   GstFlowReturn flow_return;
-
-  GstTagList *tags;
-  guint event_id;
 };
 
 static GstStaticPadTemplate src_template =
-GST_STATIC_PAD_TEMPLATE ("src_%u", GST_PAD_SRC,
-    GST_PAD_REQUEST,
+GST_STATIC_PAD_TEMPLATE ("src", GST_PAD_SRC,
+    GST_PAD_ALWAYS,
     GST_STATIC_CAPS ("video/mpegts, " "systemstream = (boolean) true ")
     );
 
 static GstStaticPadTemplate program_template =
 GST_STATIC_PAD_TEMPLATE ("program_%u", GST_PAD_SRC,
-    GST_PAD_SOMETIMES,
+    GST_PAD_REQUEST,
     GST_STATIC_CAPS ("video/mpegts, " "systemstream = (boolean) true ")
     );
 
 enum
 {
   ARG_0,
-  PROP_PROGRAM_NUMBERS,
   /* FILL ME */
 };
 
@@ -97,20 +92,11 @@ mpegts_parse_program_stopped (MpegTSBase * base, MpegTSBaseProgram * program);
 static GstFlowReturn
 mpegts_parse_push (MpegTSBase * base, MpegTSPacketizerPacket * packet,
     MpegTSPacketizerSection * section);
-static void mpegts_parse_set_property (GObject * object, guint prop_id,
-    const GValue * value, GParamSpec * pspec);
-static void mpegts_parse_get_property (GObject * object, guint prop_id,
-    GValue * value, GParamSpec * pspec);
-static void mpegts_parse_finalize (GObject * object);
 
 static MpegTSParsePad *mpegts_parse_create_tspad (MpegTSParse2 * parse,
     const gchar * name);
 static void mpegts_parse_destroy_tspad (MpegTSParse2 * parse,
     MpegTSParsePad * tspad);
-static GstPad *mpegts_parse_activate_program (MpegTSParse2 * parse,
-    MpegTSParseProgram * program);
-static void mpegts_parse_reset_selected_programs (MpegTSParse2 * parse,
-    gchar * programs);
 
 static void mpegts_parse_pad_removed (GstElement * element, GstPad * pad);
 static GstPad *mpegts_parse_request_new_pad (GstElement * element,
@@ -126,7 +112,6 @@ G_DEFINE_TYPE (MpegTSParse2, mpegts_parse, GST_TYPE_MPEGTS_BASE);
 static void
 mpegts_parse_class_init (MpegTSParse2Class * klass)
 {
-  GObjectClass *gobject_class;
   GstElementClass *element_class;
   MpegTSBaseClass *ts_class;
 
@@ -140,22 +125,11 @@ mpegts_parse_class_init (MpegTSParse2Class * klass)
   gst_element_class_add_pad_template (element_class,
       gst_static_pad_template_get (&program_template));
 
-  gst_element_class_set_details_simple (element_class,
+  gst_element_class_set_static_metadata (element_class,
       "MPEG transport stream parser", "Codec/Parser",
       "Parses MPEG2 transport streams",
       "Alessandro Decina <alessandro@nnva.org>, "
       "Zaheer Abbas Merali <zaheerabbas at merali dot org>");
-
-  gobject_class = G_OBJECT_CLASS (klass);
-  gobject_class->set_property = mpegts_parse_set_property;
-  gobject_class->get_property = mpegts_parse_get_property;
-  gobject_class->finalize = mpegts_parse_finalize;
-
-  g_object_class_install_property (gobject_class, PROP_PROGRAM_NUMBERS,
-      g_param_spec_string ("program-numbers",
-          "Program Numbers",
-          "Colon separated list of programs", "",
-          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   ts_class = GST_MPEGTS_BASE_CLASS (klass);
   ts_class->push = GST_DEBUG_FUNCPTR (mpegts_parse_push);
@@ -167,74 +141,10 @@ mpegts_parse_class_init (MpegTSParse2Class * klass)
 static void
 mpegts_parse_init (MpegTSParse2 * parse)
 {
-  parse->need_sync_program_pads = FALSE;
-  parse->program_numbers = g_strdup ("");
-  parse->pads_to_add = NULL;
-  parse->pads_to_remove = NULL;
   GST_MPEGTS_BASE (parse)->program_size = sizeof (MpegTSParseProgram);
-}
 
-static void
-mpegts_parse_finalize (GObject * object)
-{
-  MpegTSParse2 *parse = GST_MPEGTS_PARSE (object);
-
-  g_free (parse->program_numbers);
-
-  if (G_OBJECT_CLASS (parent_class)->finalize)
-    G_OBJECT_CLASS (parent_class)->finalize (object);
-}
-
-static void
-mpegts_parse_set_property (GObject * object, guint prop_id,
-    const GValue * value, GParamSpec * pspec)
-{
-  MpegTSParse2 *parse = GST_MPEGTS_PARSE (object);
-
-  switch (prop_id) {
-    case PROP_PROGRAM_NUMBERS:
-      mpegts_parse_reset_selected_programs (parse, g_value_dup_string (value));
-      break;
-    default:
-      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
-  }
-}
-
-static void
-mpegts_parse_get_property (GObject * object, guint prop_id,
-    GValue * value, GParamSpec * pspec)
-{
-  MpegTSParse2 *parse = GST_MPEGTS_PARSE (object);
-
-  switch (prop_id) {
-    case PROP_PROGRAM_NUMBERS:
-      g_value_set_string (value, parse->program_numbers);
-      break;
-    default:
-      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
-  }
-}
-
-static GstPad *
-mpegts_parse_activate_program (MpegTSParse2 * parse,
-    MpegTSParseProgram * program)
-{
-  MpegTSParsePad *tspad;
-  gchar *pad_name;
-
-  pad_name =
-      g_strdup_printf ("program_%u",
-      ((MpegTSBaseProgram *) program)->program_number);
-
-  tspad = mpegts_parse_create_tspad (parse, pad_name);
-  tspad->program_number = ((MpegTSBaseProgram *) program)->program_number;
-  tspad->program = program;
-  program->tspad = tspad;
-  g_free (pad_name);
-  gst_pad_set_active (tspad->pad, TRUE);
-  program->active = TRUE;
-
-  return tspad->pad;
+  parse->srcpad = gst_pad_new_from_static_template (&src_template, "src");
+  gst_element_add_pad (GST_ELEMENT (parse), parse->srcpad);
 }
 
 static gboolean
@@ -243,7 +153,7 @@ push_event (MpegTSBase * base, GstEvent * event)
   MpegTSParse2 *parse = (MpegTSParse2 *) base;
   GList *tmp;
 
-  for (tmp = GST_ELEMENT_CAST (parse)->srcpads; tmp; tmp = tmp->next) {
+  for (tmp = parse->srcpads; tmp; tmp = tmp->next) {
     GstPad *pad = (GstPad *) tmp->data;
     if (pad) {
       gst_event_ref (event);
@@ -251,132 +161,10 @@ push_event (MpegTSBase * base, GstEvent * event)
     }
   }
 
-  gst_event_unref (event);
+  gst_pad_push_event (parse->srcpad, event);
 
   return TRUE;
 }
-
-static GstPad *
-mpegts_parse_deactivate_program (MpegTSParse2 * parse,
-    MpegTSParseProgram * program)
-{
-  MpegTSParsePad *tspad;
-
-  tspad = program->tspad;
-  gst_pad_set_active (tspad->pad, FALSE);
-  program->active = FALSE;
-
-  /* tspad will be destroyed in GstElementClass::pad_removed */
-
-  return tspad->pad;
-}
-
-static void
-mpegts_parse_sync_program_pads (MpegTSParse2 * parse)
-{
-  GList *walk;
-
-  GST_INFO_OBJECT (parse, "begin sync pads");
-  for (walk = parse->pads_to_remove; walk; walk = walk->next)
-    gst_element_remove_pad (GST_ELEMENT (parse), GST_PAD (walk->data));
-
-  for (walk = parse->pads_to_add; walk; walk = walk->next)
-    gst_element_add_pad (GST_ELEMENT (parse), GST_PAD (walk->data));
-
-  if (parse->pads_to_add)
-    g_list_free (parse->pads_to_add);
-
-  if (parse->pads_to_remove)
-    g_list_free (parse->pads_to_remove);
-
-  GST_OBJECT_LOCK (parse);
-  parse->pads_to_remove = NULL;
-  parse->pads_to_add = NULL;
-  parse->need_sync_program_pads = FALSE;
-  GST_OBJECT_UNLOCK (parse);
-
-  GST_INFO_OBJECT (parse, "end sync pads");
-}
-
-static void
-foreach_program_activate_or_deactivate (gpointer key, gpointer value,
-    gpointer data)
-{
-  MpegTSParse2 *parse = GST_MPEGTS_PARSE (data);
-  MpegTSParseProgram *program = (MpegTSParseProgram *) value;
-
-  /* at this point selected programs have program->selected == 2,
-   * unselected programs thay may have to be deactivated have selected == 1 and
-   * unselected inactive programs have selected == 0 */
-
-  switch (--program->selected) {
-    case 1:
-      /* selected */
-      if (!program->active
-          && ((MpegTSBaseProgram *) program)->pmt_pid != G_MAXUINT16)
-        parse->pads_to_add =
-            g_list_append (parse->pads_to_add,
-            mpegts_parse_activate_program (parse, program));
-      else {
-        program->selected = 2;
-      }
-      break;
-    case 0:
-      /* unselected */
-      if (program->active)
-        parse->pads_to_remove = g_list_append (parse->pads_to_remove,
-            mpegts_parse_deactivate_program (parse, program));
-      break;
-    case -1:
-      /* was already unselected */
-      program->selected = 0;
-      break;
-    default:
-      g_return_if_reached ();
-  }
-}
-
-static void
-mpegts_parse_reset_selected_programs (MpegTSParse2 * parse,
-    gchar * program_numbers)
-{
-  GST_OBJECT_LOCK (parse);
-  if (parse->program_numbers)
-    g_free (parse->program_numbers);
-
-  parse->program_numbers = program_numbers;
-
-  if (*parse->program_numbers != '\0') {
-    gint program_number;
-    MpegTSParseProgram *program;
-    gchar **progs, **walk;
-
-    progs = g_strsplit (parse->program_numbers, ":", 0);
-
-    walk = progs;
-    while (*walk != NULL) {
-      program_number = strtol (*walk, NULL, 0);
-      program =
-          (MpegTSParseProgram *) mpegts_base_get_program ((MpegTSBase *) parse,
-          program_number);
-      if (program == NULL)
-        /* create the program, it will get activated once we get a PMT for it */
-        program = (MpegTSParseProgram *) mpegts_base_add_program ((MpegTSBase *)
-            parse, program_number, G_MAXUINT16);
-      program->selected = 2;
-      ++walk;
-    }
-    g_strfreev (progs);
-  }
-
-  g_hash_table_foreach (((MpegTSBase *) parse)->programs,
-      foreach_program_activate_or_deactivate, parse);
-
-  if (parse->pads_to_remove || parse->pads_to_add)
-    parse->need_sync_program_pads = TRUE;
-  GST_OBJECT_UNLOCK (parse);
-}
-
 
 static MpegTSParsePad *
 mpegts_parse_create_tspad (MpegTSParse2 * parse, const gchar * pad_name)
@@ -403,10 +191,6 @@ mpegts_parse_create_tspad (MpegTSParse2 * parse, const gchar * pad_name)
 static void
 mpegts_parse_destroy_tspad (MpegTSParse2 * parse, MpegTSParsePad * tspad)
 {
-  if (tspad->tags) {
-    gst_tag_list_free (tspad->tags);
-  }
-
   /* free the wrapper */
   g_free (tspad);
 }
@@ -421,7 +205,11 @@ mpegts_parse_pad_removed (GstElement * element, GstPad * pad)
     return;
 
   tspad = (MpegTSParsePad *) gst_pad_get_element_private (pad);
-  mpegts_parse_destroy_tspad (parse, tspad);
+  if (tspad) {
+    mpegts_parse_destroy_tspad (parse, tspad);
+
+    parse->srcpads = g_list_remove_all (parse->srcpads, pad);
+  }
 
   if (GST_ELEMENT_CLASS (parent_class)->pad_removed)
     GST_ELEMENT_CLASS (parent_class)->pad_removed (element, pad);
@@ -429,26 +217,42 @@ mpegts_parse_pad_removed (GstElement * element, GstPad * pad)
 
 static GstPad *
 mpegts_parse_request_new_pad (GstElement * element, GstPadTemplate * template,
-    const gchar * unused, const GstCaps * caps)
+    const gchar * padname, const GstCaps * caps)
 {
   MpegTSParse2 *parse;
-  gchar *name;
+  MpegTSParsePad *tspad;
+  MpegTSParseProgram *parseprogram;
   GstPad *pad;
+  gint program_num = -1;
 
   g_return_val_if_fail (template != NULL, NULL);
   g_return_val_if_fail (GST_IS_MPEGTS_PARSE (element), NULL);
+  g_return_val_if_fail (padname != NULL, NULL);
+
+  sscanf (padname + 8, "%d", &program_num);
+
+  GST_DEBUG_OBJECT (element, "padname:%s, program:%d", padname, program_num);
 
   parse = GST_MPEGTS_PARSE (element);
 
-  GST_OBJECT_LOCK (element);
-  name = g_strdup_printf ("src_%u", parse->req_pads++);
-  GST_OBJECT_UNLOCK (element);
+  tspad = mpegts_parse_create_tspad (parse, padname);
+  tspad->program_number = program_num;
 
-  pad = mpegts_parse_create_tspad (parse, name)->pad;
+  /* Find if the program is already active */
+  parseprogram =
+      (MpegTSParseProgram *) mpegts_base_get_program (GST_MPEGTS_BASE (parse),
+      program_num);
+  if (parseprogram) {
+    tspad->program = parseprogram;
+    parseprogram->tspad = tspad;
+  }
+
+  pad = tspad->pad;
+  parse->srcpads = g_list_append (parse->srcpads, pad);
+
   gst_pad_set_active (pad, TRUE);
   gst_pad_push_event (pad, gst_event_new_stream_start ());
   gst_element_add_pad (element, pad);
-  g_free (name);
 
   return pad;
 }
@@ -456,8 +260,6 @@ mpegts_parse_request_new_pad (GstElement * element, GstPadTemplate * template,
 static void
 mpegts_parse_release_pad (GstElement * element, GstPad * pad)
 {
-  g_return_if_fail (GST_IS_MPEGTS_PARSE (element));
-
   gst_pad_set_active (pad, FALSE);
   /* we do the cleanup in GstElement::pad-removed */
   gst_element_remove_pad (element, pad);
@@ -465,9 +267,9 @@ mpegts_parse_release_pad (GstElement * element, GstPad * pad)
 
 static GstFlowReturn
 mpegts_parse_tspad_push_section (MpegTSParse2 * parse, MpegTSParsePad * tspad,
-    MpegTSPacketizerSection * section, GstBuffer * buffer)
+    MpegTSPacketizerSection * section, MpegTSPacketizerPacket * packet)
 {
-  GstFlowReturn ret = GST_FLOW_NOT_LINKED;
+  GstFlowReturn ret = GST_FLOW_OK;
   gboolean to_push = TRUE;
 
   if (tspad->program_number != -1) {
@@ -483,18 +285,19 @@ mpegts_parse_tspad_push_section (MpegTSParse2 * parse, MpegTSParsePad * tspad,
       /* there's a program filter on the pad but the PMT for the program has not
        * been parsed yet, ignore the pad until we get a PMT */
       to_push = FALSE;
-      ret = GST_FLOW_OK;
     }
   }
+
   GST_DEBUG_OBJECT (parse,
       "pushing section: %d program number: %d table_id: %d", to_push,
       tspad->program_number, section->table_id);
+
   if (to_push) {
-    ret = gst_pad_push (tspad->pad, buffer);
-  } else {
-    gst_buffer_unref (buffer);
-    if (gst_pad_is_linked (tspad->pad))
-      ret = GST_FLOW_OK;
+    GstBuffer *buf =
+        gst_buffer_new_and_alloc (packet->data_end - packet->data_start);
+    gst_buffer_fill (buf, 0, packet->data_start,
+        packet->data_end - packet->data_start);
+    ret = gst_pad_push (tspad->pad, buf);
   }
 
   return ret;
@@ -502,36 +305,29 @@ mpegts_parse_tspad_push_section (MpegTSParse2 * parse, MpegTSParsePad * tspad,
 
 static GstFlowReturn
 mpegts_parse_tspad_push (MpegTSParse2 * parse, MpegTSParsePad * tspad,
-    guint16 pid, GstBuffer * buffer)
+    MpegTSPacketizerPacket * packet)
 {
-  GstFlowReturn ret = GST_FLOW_NOT_LINKED;
+  GstFlowReturn ret = GST_FLOW_OK;
   MpegTSBaseStream **pad_pids = NULL;
 
   if (tspad->program_number != -1) {
     if (tspad->program) {
       MpegTSBaseProgram *bp = (MpegTSBaseProgram *) tspad->program;
       pad_pids = bp->streams;
-      if (bp->tags) {
-        gst_pad_push_event (tspad->pad, gst_event_new_tag ("GstParser",
-                bp->tags));
-        bp->tags = NULL;
-      }
     } else {
       /* there's a program filter on the pad but the PMT for the program has not
        * been parsed yet, ignore the pad until we get a PMT */
-      gst_buffer_unref (buffer);
-      ret = GST_FLOW_OK;
       goto out;
     }
   }
 
-  if (pad_pids == NULL || pad_pids[pid]) {
+  if (pad_pids == NULL || pad_pids[packet->pid]) {
+    GstBuffer *buf =
+        gst_buffer_new_and_alloc (packet->data_end - packet->data_start);
+    gst_buffer_fill (buf, 0, packet->data_start,
+        packet->data_end - packet->data_start);
     /* push if there's no filter or if the pid is in the filter */
-    ret = gst_pad_push (tspad->pad, buffer);
-  } else {
-    gst_buffer_unref (buffer);
-    if (gst_pad_is_linked (tspad->pad))
-      ret = GST_FLOW_OK;
+    ret = gst_pad_push (tspad->pad, buf);
   }
 
 out:
@@ -556,33 +352,25 @@ mpegts_parse_push (MpegTSBase * base, MpegTSPacketizerPacket * packet,
   gboolean done = FALSE;
   GstPad *pad = NULL;
   MpegTSParsePad *tspad;
-  guint16 pid;
-  GstBuffer *buffer;
   GstFlowReturn ret;
   GList *srcpads;
 
-  if (G_UNLIKELY (parse->need_sync_program_pads))
-    mpegts_parse_sync_program_pads (parse);
-
-  pid = packet->pid;
-  buffer =
-      gst_buffer_new_allocate (NULL, packet->data_end - packet->data_start,
-      NULL);
-  gst_buffer_fill (buffer, 0, packet->data_start,
-      packet->data_end - packet->data_start);
+  /* Shortcut: If no request pads exist, just return */
+  if (parse->srcpads == NULL)
+    return GST_FLOW_OK;
 
   GST_OBJECT_LOCK (parse);
+  srcpads = parse->srcpads;
+
   /* clear tspad->pushed on pads */
-  g_list_foreach (GST_ELEMENT_CAST (parse)->srcpads,
-      (GFunc) pad_clear_for_push, parse);
-  if (GST_ELEMENT_CAST (parse)->srcpads)
+  g_list_foreach (srcpads, (GFunc) pad_clear_for_push, parse);
+  if (srcpads)
     ret = GST_FLOW_NOT_LINKED;
   else
     ret = GST_FLOW_OK;
 
   /* Get cookie and source pads list */
   pads_cookie = GST_ELEMENT_CAST (parse)->pads_cookie;
-  srcpads = GST_ELEMENT_CAST (parse)->srcpads;
   if (G_LIKELY (srcpads)) {
     pad = GST_PAD_CAST (srcpads->data);
     g_object_ref (pad);
@@ -593,15 +381,11 @@ mpegts_parse_push (MpegTSBase * base, MpegTSPacketizerPacket * packet,
     tspad = gst_pad_get_element_private (pad);
 
     if (G_LIKELY (!tspad->pushed)) {
-      /* ref the buffer as gst_pad_push takes a ref but we want to reuse the
-       * same buffer for next pushes */
-      gst_buffer_ref (buffer);
       if (section) {
         tspad->flow_return =
-            mpegts_parse_tspad_push_section (parse, tspad, section, buffer);
+            mpegts_parse_tspad_push_section (parse, tspad, section, packet);
       } else {
-        tspad->flow_return =
-            mpegts_parse_tspad_push (parse, tspad, pid, buffer);
+        tspad->flow_return = mpegts_parse_tspad_push (parse, tspad, packet);
       }
       tspad->pushed = TRUE;
 
@@ -625,7 +409,7 @@ mpegts_parse_push (MpegTSBase * base, MpegTSPacketizerPacket * packet,
         /* resync */
         GST_DEBUG ("resync");
         pads_cookie = GST_ELEMENT_CAST (parse)->pads_cookie;
-        srcpads = GST_ELEMENT_CAST (parse)->srcpads;
+        srcpads = parse->srcpads;
       } else {
         GST_DEBUG ("getting next pad");
         /* Get next pad */
@@ -641,9 +425,22 @@ mpegts_parse_push (MpegTSBase * base, MpegTSPacketizerPacket * packet,
     }
   }
 
-  gst_buffer_unref (buffer);
-
   return ret;
+}
+
+static MpegTSParsePad *
+find_pad_for_program (MpegTSParse2 * parse, guint program_number)
+{
+  GList *tmp;
+
+  for (tmp = parse->srcpads; tmp; tmp = tmp->next) {
+    MpegTSParsePad *tspad = gst_pad_get_element_private ((GstPad *) tmp->data);
+
+    if (tspad->program_number == program_number)
+      return tspad;
+  }
+
+  return NULL;
 }
 
 static void
@@ -651,14 +448,15 @@ mpegts_parse_program_started (MpegTSBase * base, MpegTSBaseProgram * program)
 {
   MpegTSParse2 *parse = GST_MPEGTS_PARSE (base);
   MpegTSParseProgram *parseprogram = (MpegTSParseProgram *) program;
-  if (parseprogram->selected == 2) {
-    parse->pads_to_add =
-        g_list_append (parse->pads_to_add,
-        mpegts_parse_activate_program (parse, parseprogram));
-    parseprogram->selected = 1;
-    parse->need_sync_program_pads = TRUE;
-  }
+  MpegTSParsePad *tspad;
 
+  /* If we have a request pad for that program, activate it */
+  tspad = find_pad_for_program (parse, program->program_number);
+
+  if (tspad) {
+    tspad->program = parseprogram;
+    parseprogram->tspad = tspad;
+  }
 }
 
 static void
@@ -666,12 +464,14 @@ mpegts_parse_program_stopped (MpegTSBase * base, MpegTSBaseProgram * program)
 {
   MpegTSParse2 *parse = GST_MPEGTS_PARSE (base);
   MpegTSParseProgram *parseprogram = (MpegTSParseProgram *) program;
+  MpegTSParsePad *tspad;
 
-  if (parseprogram->active) {
-    parse->pads_to_remove =
-        g_list_append (parse->pads_to_remove,
-        mpegts_parse_deactivate_program (parse, parseprogram));
-    parse->need_sync_program_pads = TRUE;
+  /* If we have a request pad for that program, activate it */
+  tspad = find_pad_for_program (parse, program->program_number);
+
+  if (tspad) {
+    tspad->program = NULL;
+    parseprogram->tspad = NULL;
   }
 }
 

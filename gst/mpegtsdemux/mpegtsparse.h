@@ -48,14 +48,10 @@ typedef struct _MpegTSParse2Class MpegTSParse2Class;
 struct _MpegTSParse2 {
   MpegTSBase parent;
 
-  /* the following vars must be protected with the OBJECT_LOCK as they can be
-   * accessed from the application thread and the streaming thread */
-  gchar *program_numbers;
-  GList *pads_to_add;
-  GList *pads_to_remove;
-  guint req_pads;
+  /* Always present source pad */
+  GstPad *srcpad;
 
-  gboolean need_sync_program_pads;
+  GList *srcpads;
 };
 
 struct _MpegTSParse2Class {
