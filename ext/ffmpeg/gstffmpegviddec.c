@@ -87,6 +87,8 @@ struct _GstFFMpegVidDec
   int max_threads;
 
   gboolean is_realvideo;
+
+  GstCaps *last_caps;
 };
 
 typedef struct _GstFFMpegVidDecClass GstFFMpegVidDecClass;
@@ -345,6 +347,8 @@ gst_ffmpegviddec_close (GstFFMpegVidDec * ffmpegdec)
 
   GST_LOG_OBJECT (ffmpegdec, "closing ffmpeg codec");
 
+  gst_caps_replace (&ffmpegdec->last_caps, NULL);
+
   if (ffmpegdec->context->priv_data)
     gst_ffmpeg_avcodec_close (ffmpegdec->context);
   ffmpegdec->opened = FALSE;
@@ -411,6 +415,13 @@ gst_ffmpegviddec_set_format (GstVideoDecoder * decoder,
 
   ffmpegdec = (GstFFMpegVidDec *) decoder;
   oclass = (GstFFMpegVidDecClass *) (G_OBJECT_GET_CLASS (ffmpegdec));
+
+  if (ffmpegdec->last_caps != NULL &&
+      gst_caps_is_equal (ffmpegdec->last_caps, state->caps)) {
+    return TRUE;
+  }
+
+  gst_caps_replace (&ffmpegdec->last_caps, state->caps);
 
   GST_DEBUG_OBJECT (ffmpegdec, "setcaps called");
 
@@ -557,6 +568,10 @@ gst_ffmpegviddec_get_buffer (AVCodecContext * context, AVFrame * picture)
     goto no_frame;
 
   picture->opaque = dframe = gst_ffmpegviddec_video_frame_new (frame);
+
+  /* ffmpegviddec_video_frame will keep the frame retained */
+  gst_video_codec_frame_unref (frame);
+
   ffmpegdec->context->pix_fmt = context->pix_fmt;
 
   /* see if we need renegotiation */
@@ -1421,6 +1436,8 @@ gst_ffmpegviddec_handle_frame (GstVideoDecoder * decoder,
   if (bsize > 0)
     GST_DEBUG_OBJECT (ffmpegdec, "Dropping %d bytes of data", bsize);
 
+  gst_buffer_unmap (frame->input_buffer, &minfo);
+
   return ret;
 
   /* ERRORS */
@@ -1468,8 +1485,6 @@ gst_ffmpegviddec_reset (GstVideoDecoder * decoder, gboolean hard)
   GstFFMpegVidDec *ffmpegdec = (GstFFMpegVidDec *) decoder;
 
   if (ffmpegdec->opened) {
-    if (!hard)
-      gst_ffmpegviddec_drain (ffmpegdec);
     avcodec_flush_buffers (ffmpegdec->context);
   }
 
@@ -1525,8 +1540,8 @@ gst_ffmpegviddec_decide_allocation (GstVideoDecoder * decoder, GstQuery * query)
     avcodec_align_dimensions2 (ffmpegdec->context, &width, &height,
         linesize_align);
     edge =
-        ffmpegdec->context->
-        flags & CODEC_FLAG_EMU_EDGE ? 0 : avcodec_get_edge_width ();
+        ffmpegdec->
+        context->flags & CODEC_FLAG_EMU_EDGE ? 0 : avcodec_get_edge_width ();
     /* increase the size for the padding */
     width += edge << 1;
     height += edge << 1;
