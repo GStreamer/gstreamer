@@ -223,7 +223,7 @@ gst_task_pool_cleanup (GstTaskPool * pool)
 /**
  * gst_task_pool_push:
  * @pool: a #GstTaskPool
- * @func: the function to call
+ * @func: (scope async): the function to call
  * @user_data: (closure): data to pass to @func
  * @error: return location for an error
  *
