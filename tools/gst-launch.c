@@ -1251,7 +1251,6 @@ main (int argc, char *argv[])
   end:
     PRINT (_("Setting pipeline to NULL ...\n"));
     gst_element_set_state (pipeline, GST_STATE_NULL);
-    gst_element_get_state (pipeline, &state, &pending, GST_CLOCK_TIME_NONE);
   }
 
   PRINT (_("Freeing pipeline ...\n"));
