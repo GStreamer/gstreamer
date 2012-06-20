@@ -556,7 +556,7 @@ gst_lfo_control_source_class_init (GstLFOControlSourceClass * klass)
   gobject_class->get_property = gst_lfo_control_source_get_property;
 
   /**
-   * GstLFOControlSource:waveform
+   * GstLFOControlSource:waveform:
    *
    * Specifies the waveform that should be used for this #GstLFOControlSource.
    */
@@ -566,7 +566,7 @@ gst_lfo_control_source_class_init (GstLFOControlSourceClass * klass)
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   /**
-   * GstLFOControlSource:frequency
+   * GstLFOControlSource:frequency:
    *
    * Specifies the frequency that should be used for the waveform
    * of this #GstLFOControlSource. It should be large enough
@@ -578,7 +578,7 @@ gst_lfo_control_source_class_init (GstLFOControlSourceClass * klass)
           G_PARAM_READWRITE | GST_PARAM_CONTROLLABLE | G_PARAM_STATIC_STRINGS));
 
   /**
-   * GstLFOControlSource:timeshift
+   * GstLFOControlSource:timeshift:
    *
    * Specifies the timeshift to the right that should be used for the waveform
    * of this #GstLFOControlSource in nanoseconds.
@@ -593,7 +593,7 @@ gst_lfo_control_source_class_init (GstLFOControlSourceClass * klass)
           G_PARAM_READWRITE | GST_PARAM_CONTROLLABLE | G_PARAM_STATIC_STRINGS));
 
   /**
-   * GstLFOControlSource:amplitude
+   * GstLFOControlSource:amplitude:
    *
    * Specifies the amplitude for the waveform of this #GstLFOControlSource.
    */
@@ -603,7 +603,7 @@ gst_lfo_control_source_class_init (GstLFOControlSourceClass * klass)
           G_PARAM_READWRITE | GST_PARAM_CONTROLLABLE | G_PARAM_STATIC_STRINGS));
 
   /**
-   * GstLFOControlSource:offset
+   * GstLFOControlSource:offset:
    *
    * Specifies the value offset for the waveform of this #GstLFOControlSource.
    */

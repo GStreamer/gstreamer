@@ -48,6 +48,7 @@ G_BEGIN_DECLS
 typedef struct _GstTimedValueControlSource GstTimedValueControlSource;
 typedef struct _GstTimedValueControlSourceClass GstTimedValueControlSourceClass;
 typedef struct _GstTimedValueControlSourcePrivate GstTimedValueControlSourcePrivate;
+typedef struct _GstControlPoint GstControlPoint;
 
 /**
  * GstControlPoint:
@@ -56,7 +57,7 @@ typedef struct _GstTimedValueControlSourcePrivate GstTimedValueControlSourcePriv
  * values used for interpolation. This "inherits" from
  * GstTimedValue.
  */
-typedef struct _GstControlPoint
+struct _GstControlPoint
 {
   /* fields from GstTimedValue. DO NOT CHANGE! */
   GstClockTime timestamp;       /* timestamp of the value change */
@@ -73,7 +74,7 @@ typedef struct _GstControlPoint
     } cubic;
   } cache;
 
-} GstControlPoint;
+};
 
 /**
  * GstTimedValueControlSource:
@@ -90,6 +91,7 @@ struct _GstTimedValueControlSource {
   gint nvalues;                 /* Number of control points */
   gboolean valid_cache;
 
+  /*< private >*/
   GstTimedValueControlSourcePrivate *priv;
   gpointer _gst_reserved[GST_PADDING];
 };

@@ -478,7 +478,7 @@ gst_direct_control_binding_get_g_value_array (GstControlBinding * _self,
  * gst_direct_control_binding_new:
  * @object: the object of the property
  * @property_name: the property-name to attach the control source
- * @csource: the control source
+ * @cs: the control source
  *
  * Create a new control-binding that attaches the #GstControlSource to the
  * #GObject property.
