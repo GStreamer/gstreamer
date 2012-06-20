@@ -585,7 +585,7 @@ gst_rmdemux_perform_seek (GstRMDemux * rmdemux, GstEvent * event)
     /* restart our task since it might have been stopped when we did the 
      * flush. */
     gst_pad_start_task (rmdemux->sinkpad, (GstTaskFunction) gst_rmdemux_loop,
-        rmdemux->sinkpad);
+        rmdemux->sinkpad, NULL);
   }
 
 done:
@@ -791,7 +791,7 @@ gst_rmdemux_sink_activate_mode (GstPad * sinkpad, GstObject * parent,
         demux->data_offset = G_MAXUINT;
         res =
             gst_pad_start_task (sinkpad, (GstTaskFunction) gst_rmdemux_loop,
-            sinkpad);
+            sinkpad, NULL);
       } else {
         res = gst_pad_stop_task (sinkpad);
       }

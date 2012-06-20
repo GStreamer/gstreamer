@@ -588,7 +588,7 @@ gst_rdt_manager_src_activate_mode (GstPad * pad, GstObject * parent,
         GST_DEBUG_OBJECT (rdtmanager, "Starting task on srcpad");
         result =
             gst_pad_start_task (pad, (GstTaskFunction) gst_rdt_manager_loop,
-            pad);
+            pad, NULL);
       } else {
         /* make sure all data processing stops ASAP */
         JBUF_LOCK (session);

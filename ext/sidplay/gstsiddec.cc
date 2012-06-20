@@ -453,7 +453,7 @@ start_play_tune (GstSidDec * siddec)
       gst_event_new_segment (&segment));
 
   res = gst_pad_start_task (siddec->srcpad,
-      (GstTaskFunction) play_loop, siddec->srcpad);
+      (GstTaskFunction) play_loop, siddec->srcpad, NULL);
   return res;
 
   /* ERRORS */
