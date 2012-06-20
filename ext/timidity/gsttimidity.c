@@ -407,7 +407,7 @@ gst_timidity_src_event (GstPad * pad, GstEvent * event)
       gst_segment_set_seek (timidity->o_segment, rate, dst_format, flags,
           start_type, start, stop_type, stop, &update);
 
-      if ((flags && GST_SEEK_FLAG_SEGMENT) == GST_SEEK_FLAG_SEGMENT) {
+      if (flags & GST_SEEK_FLAG_SEGMENT) {
         GST_DEBUG_OBJECT (timidity, "received segment seek %d, %d",
             (gint) start_type, (gint) stop_type);
       } else {
