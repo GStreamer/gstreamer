@@ -256,7 +256,7 @@ gst_gme_dec_src_event (GstPad * pad, GstObject * parent, GstEvent * event)
         gme->seeking = TRUE;
 
         gst_pad_start_task (gme->srcpad, (GstTaskFunction) gst_gme_play,
-            gme->srcpad);
+            gme->srcpad, NULL);
 
         GST_PAD_STREAM_UNLOCK (gme->srcpad);
         result = TRUE;
@@ -461,7 +461,8 @@ gme_setup (GstGmeDec * gme)
   gst_segment_init (&seg, GST_FORMAT_TIME);
   gst_pad_push_event (gme->srcpad, gst_event_new_segment (&seg));
 
-  gst_pad_start_task (gme->srcpad, (GstTaskFunction) gst_gme_play, gme->srcpad);
+  gst_pad_start_task (gme->srcpad, (GstTaskFunction) gst_gme_play, gme->srcpad,
+      NULL);
 
   gme->initialized = TRUE;
   gme->seeking = FALSE;

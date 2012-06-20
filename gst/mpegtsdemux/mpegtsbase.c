@@ -1712,7 +1712,8 @@ mpegts_base_handle_seek_event (MpegTSBase * base, GstPad * pad,
   }
   //else
 done:
-  gst_pad_start_task (base->sinkpad, (GstTaskFunction) mpegts_base_loop, base);
+  gst_pad_start_task (base->sinkpad, (GstTaskFunction) mpegts_base_loop, base,
+      NULL);
 push_mode:
   GST_PAD_STREAM_UNLOCK (base->sinkpad);
   return ret == GST_FLOW_OK;
@@ -1766,7 +1767,8 @@ mpegts_base_sink_activate_mode (GstPad * pad, GstObject * parent,
         base->mode = BASE_MODE_SCANNING;
         base->packetizer->calculate_offset = TRUE;
         res =
-            gst_pad_start_task (pad, (GstTaskFunction) mpegts_base_loop, base);
+            gst_pad_start_task (pad, (GstTaskFunction) mpegts_base_loop, base,
+            NULL);
       } else
         res = gst_pad_stop_task (pad);
       break;

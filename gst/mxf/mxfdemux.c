@@ -3360,7 +3360,7 @@ gst_mxf_demux_seek_pull (GstMXFDemux * demux, GstEvent * event)
   demux->seqnum = seqnum;
 
   gst_pad_start_task (demux->sinkpad,
-      (GstTaskFunction) gst_mxf_demux_loop, demux->sinkpad);
+      (GstTaskFunction) gst_mxf_demux_loop, demux->sinkpad, NULL);
 
   GST_PAD_STREAM_UNLOCK (demux->sinkpad);
 
@@ -3380,7 +3380,7 @@ wrong_rate:
 unresolved_metadata:
   {
     gst_pad_start_task (demux->sinkpad,
-        (GstTaskFunction) gst_mxf_demux_loop, demux->sinkpad);
+        (GstTaskFunction) gst_mxf_demux_loop, demux->sinkpad, NULL);
     GST_PAD_STREAM_UNLOCK (demux->sinkpad);
     GST_WARNING_OBJECT (demux, "metadata can't be resolved");
     return FALSE;
@@ -3592,7 +3592,7 @@ gst_mxf_demux_sink_activate_pull (GstPad * sinkpad, gboolean active)
     demux->random_access = TRUE;
     gst_object_unref (demux);
     return gst_pad_start_task (sinkpad, (GstTaskFunction) gst_mxf_demux_loop,
-        sinkpad);
+        sinkpad, NULL);
   } else {
     demux->random_access = FALSE;
     gst_object_unref (demux);

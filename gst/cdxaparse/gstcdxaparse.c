@@ -192,7 +192,7 @@ gst_cdxa_parse_sink_activate_pull (GstPad * sinkpad, gboolean active)
   if (active) {
     /* if we have a scheduler we can start the task */
     gst_pad_start_task (sinkpad, (GstTaskFunction) gst_cdxa_parse_loop,
-        sinkpad);
+        sinkpad, NULL);
   } else {
     gst_pad_stop_task (sinkpad);
   }
@@ -466,7 +466,7 @@ gst_cdxa_parse_do_seek (GstCDXAParse * cdxa, GstEvent * event)
 
   /* and restart */
   gst_pad_start_task (cdxa->sinkpad,
-      (GstTaskFunction) gst_cdxa_parse_loop, cdxa->sinkpad);
+      (GstTaskFunction) gst_cdxa_parse_loop, cdxa->sinkpad, NULL);
 
   GST_PAD_STREAM_UNLOCK (cdxa->sinkpad);
   return TRUE;

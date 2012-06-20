@@ -458,7 +458,7 @@ gst_live_adder_src_activate_push (GstPad * pad, gboolean active)
     /* start pushing out buffers */
     GST_DEBUG_OBJECT (adder, "Starting task on srcpad");
     gst_pad_start_task (adder->srcpad,
-        (GstTaskFunction) gst_live_adder_loop, adder);
+        (GstTaskFunction) gst_live_adder_loop, adder, NULL);
   } else {
     /* make sure all data processing stops ASAP */
     gst_live_adder_flush_start (adder);

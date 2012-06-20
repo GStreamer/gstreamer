@@ -597,7 +597,8 @@ gst_mim_enc_change_state (GstElement * element, GstStateChange transition)
       }
       GST_OBJECT_UNLOCK (mimenc);
       if (paused_mode) {
-        if (!gst_pad_start_task (mimenc->srcpad, paused_mode_task, mimenc)) {
+        if (!gst_pad_start_task (mimenc->srcpad, paused_mode_task, mimenc,
+                NULL)) {
           ret = GST_STATE_CHANGE_FAILURE;
           GST_ERROR_OBJECT (mimenc, "Can not start task");
         }

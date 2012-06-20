@@ -524,7 +524,7 @@ gst_wildmidi_do_seek (GstWildmidi * wildmidi, GstEvent * event)
       gst_wildmidi_get_new_segment_event (wildmidi, GST_FORMAT_TIME));
 
   gst_pad_start_task (wildmidi->sinkpad,
-      (GstTaskFunction) gst_wildmidi_loop, wildmidi->sinkpad);
+      (GstTaskFunction) gst_wildmidi_loop, wildmidi->sinkpad, NULL);
 
   wildmidi->discont = TRUE;
   GST_PAD_STREAM_UNLOCK (wildmidi->sinkpad);
@@ -567,7 +567,8 @@ static gboolean
 gst_wildmidi_activatepull (GstPad * pad, gboolean active)
 {
   if (active) {
-    return gst_pad_start_task (pad, (GstTaskFunction) gst_wildmidi_loop, pad);
+    return gst_pad_start_task (pad, (GstTaskFunction) gst_wildmidi_loop, pad,
+        NULL);
   } else {
     return gst_pad_stop_task (pad);
   }
@@ -777,7 +778,7 @@ gst_wildmidi_sink_event (GstPad * pad, GstEvent * event)
       wildmidi->state = GST_WILDMIDI_STATE_PARSE;
       /* now start the parsing task */
       gst_pad_start_task (wildmidi->sinkpad,
-          (GstTaskFunction) gst_wildmidi_loop, wildmidi->sinkpad);
+          (GstTaskFunction) gst_wildmidi_loop, wildmidi->sinkpad, NULL);
       /* don't forward the event */
       gst_event_unref (event);
       break;

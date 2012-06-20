@@ -215,7 +215,7 @@ gst_tta_parse_src_event (GstPad * pad, GstEvent * event)
                 ttaparse->num_frames * FRAME_TIME * GST_SECOND, 0));
 
         gst_pad_start_task (ttaparse->sinkpad,
-            (GstTaskFunction) gst_tta_parse_loop, ttaparse);
+            (GstTaskFunction) gst_tta_parse_loop, ttaparse, NULL);
 
         GST_PAD_STREAM_UNLOCK (ttaparse->sinkpad);
 
@@ -312,7 +312,8 @@ gst_tta_parse_activate_pull (GstPad * pad, gboolean active)
   GstTtaParse *ttaparse = GST_TTA_PARSE (GST_OBJECT_PARENT (pad));
 
   if (active) {
-    gst_pad_start_task (pad, (GstTaskFunction) gst_tta_parse_loop, ttaparse);
+    gst_pad_start_task (pad, (GstTaskFunction) gst_tta_parse_loop, ttaparse,
+        NULL);
   } else {
     gst_pad_stop_task (pad);
   }

@@ -1243,7 +1243,7 @@ gst_flups_demux_handle_seek_pull (GstFluPSDemux * demux, GstEvent * event)
   gst_flups_demux_mark_discont (demux, TRUE, TRUE);
 
   gst_pad_start_task (demux->sinkpad,
-      (GstTaskFunction) gst_flups_demux_loop, demux->sinkpad);
+      (GstTaskFunction) gst_flups_demux_loop, demux->sinkpad, NULL);
 
   GST_PAD_STREAM_UNLOCK (demux->sinkpad);
 
@@ -2920,7 +2920,7 @@ gst_flups_demux_sink_activate_pull (GstPad * sinkpad, GstObject * parent,
     demux->random_access = TRUE;
     gst_object_unref (demux);
     return gst_pad_start_task (sinkpad, (GstTaskFunction) gst_flups_demux_loop,
-        sinkpad);
+        sinkpad, NULL);
   } else {
     demux->random_access = FALSE;
     gst_object_unref (demux);

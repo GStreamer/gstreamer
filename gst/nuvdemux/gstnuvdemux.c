@@ -824,7 +824,8 @@ gst_nuv_demux_sink_activate_pull (GstPad * sinkpad, gboolean active)
   GstNuvDemux *nuv = GST_NUV_DEMUX (gst_pad_get_parent (sinkpad));
 
   if (active) {
-    gst_pad_start_task (sinkpad, (GstTaskFunction) gst_nuv_demux_loop, sinkpad);
+    gst_pad_start_task (sinkpad, (GstTaskFunction) gst_nuv_demux_loop, sinkpad,
+        NULL);
   } else {
     gst_pad_stop_task (sinkpad);
   }

@@ -234,14 +234,14 @@ gst_hls_demux_init (GstHLSDemux * demux)
   /* Updates task */
   g_rec_mutex_init (&demux->updates_lock);
   demux->updates_task =
-      gst_task_new ((GstTaskFunction) gst_hls_demux_updates_loop, demux);
+      gst_task_new ((GstTaskFunction) gst_hls_demux_updates_loop, demux, NULL);
   gst_task_set_lock (demux->updates_task, &demux->updates_lock);
   g_mutex_init (&demux->updates_timed_lock);
 
   /* Streaming task */
   g_rec_mutex_init (&demux->stream_lock);
   demux->stream_task =
-      gst_task_new ((GstTaskFunction) gst_hls_demux_stream_loop, demux);
+      gst_task_new ((GstTaskFunction) gst_hls_demux_stream_loop, demux, NULL);
   gst_task_set_lock (demux->stream_task, &demux->stream_lock);
 }
 

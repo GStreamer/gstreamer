@@ -864,7 +864,8 @@ gst_raw_parse_handle_seek_pull (GstRawParse * rp, GstEvent * event)
   rp->discont = TRUE;
 
   GST_LOG_OBJECT (rp, "start streaming");
-  gst_pad_start_task (rp->sinkpad, (GstTaskFunction) gst_raw_parse_loop, rp);
+  gst_pad_start_task (rp->sinkpad, (GstTaskFunction) gst_raw_parse_loop, rp,
+      NULL);
 
   GST_PAD_STREAM_UNLOCK (rp->sinkpad);
 

@@ -316,7 +316,7 @@ gst_freeze_sink_activate_pull (GstPad * sinkpad, gboolean active)
   if (active) {
     /* if we have a scheduler we can start the task */
     result = gst_pad_start_task (sinkpad,
-        (GstTaskFunction) gst_freeze_loop, sinkpad);
+        (GstTaskFunction) gst_freeze_loop, sinkpad, NULL);
   } else {
     result = gst_pad_stop_task (sinkpad);
   }

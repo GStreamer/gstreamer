@@ -100,7 +100,8 @@ gst_asf_parse_sink_activate_mode (GstPad * pad, GstObject * parent,
     case GST_PAD_MODE_PULL:
       if (active) {
         res =
-            gst_pad_start_task (pad, (GstTaskFunction) gst_asf_parse_loop, pad);
+            gst_pad_start_task (pad, (GstTaskFunction) gst_asf_parse_loop, pad,
+            NULL);
       } else {
         res = gst_pad_stop_task (pad);
       }

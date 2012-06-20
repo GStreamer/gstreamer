@@ -406,7 +406,7 @@ gst_mpeg2enc_setcaps (GstMpeg2enc * enc, GstPad * pad, GstCaps * caps)
 
   /* now that we have all the setup and buffers are expected incoming;
    * task can get going */
-  gst_pad_start_task (enc->srcpad, (GstTaskFunction) gst_mpeg2enc_loop, enc);
+  gst_pad_start_task (enc->srcpad, (GstTaskFunction) gst_mpeg2enc_loop, enc, NULL);
 
   return TRUE;
 
