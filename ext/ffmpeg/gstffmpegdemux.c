@@ -267,7 +267,8 @@ gst_ffmpegdemux_init (GstFFMpegDemux * demux)
   gst_pad_set_chain_function (demux->sinkpad,
       GST_DEBUG_FUNCPTR (gst_ffmpegdemux_chain));
   /* task for driving ffmpeg in loop function */
-  demux->task = gst_task_new ((GstTaskFunction) gst_ffmpegdemux_loop, demux);
+  demux->task =
+      gst_task_new ((GstTaskFunction) gst_ffmpegdemux_loop, demux, NULL);
   g_rec_mutex_init (&demux->task_lock);
   gst_task_set_lock (demux->task, &demux->task_lock);
 
@@ -630,7 +631,7 @@ gst_ffmpegdemux_perform_seek (GstFFMpegDemux * demux, GstEvent * event)
   /* and restart the task in case it got paused explicitely or by
    * the FLUSH_START event we pushed out. */
   gst_pad_start_task (demux->sinkpad, (GstTaskFunction) gst_ffmpegdemux_loop,
-      demux->sinkpad);
+      demux->sinkpad, NULL);
 
   /* and release the lock again so we can continue streaming */
   GST_PAD_STREAM_UNLOCK (demux->sinkpad);
@@ -1778,7 +1779,7 @@ gst_ffmpegdemux_sink_activate_pull (GstPad * sinkpad, GstObject * parent,
   if (active) {
     demux->seekable = TRUE;
     res = gst_pad_start_task (sinkpad, (GstTaskFunction) gst_ffmpegdemux_loop,
-        demux);
+        demux, NULL);
   } else {
     res = gst_pad_stop_task (sinkpad);
     demux->seekable = FALSE;
