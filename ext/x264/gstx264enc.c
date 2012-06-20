@@ -1646,7 +1646,7 @@ gst_x264_enc_encode_frame (GstX264Enc * encoder, x264_picture_t * pic_in,
   x264_nal_t *nal;
   int i_size;
   int encoder_return;
-  GstFlowReturn ret;
+  GstFlowReturn ret = GST_FLOW_OK;
   guint8 *data;
   gboolean update_latency = FALSE;
 

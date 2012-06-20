@@ -355,11 +355,8 @@ gst_mpeg2dec_alloc_sized_buf (GstMpeg2dec * mpeg2dec, guint size,
 {
   GstFlowReturn ret = GST_FLOW_OK;
   GstVideoCodecState *state;
-  GstVideoInfo *vinfo, *dinfo;
 
   state = gst_video_decoder_get_output_state (GST_VIDEO_DECODER (mpeg2dec));
-  vinfo = &state->info;
-  dinfo = &mpeg2dec->decoded_info;
 
   if (!mpeg2dec->need_cropping || mpeg2dec->has_cropping) {
     ret =
@@ -797,7 +794,6 @@ handle_slice (GstMpeg2dec * mpeg2dec, const mpeg2_info_t * info)
   const mpeg2_picture_t *picture;
   gboolean key_frame = FALSE;
   GstVideoCodecState *state;
-  GstVideoInfo *vinfo, *dinfo;
 
   GST_DEBUG_OBJECT (mpeg2dec, "picture slice/end %p %p %p %p",
       info->display_fbuf, info->display_picture, info->current_picture,
@@ -838,8 +834,6 @@ handle_slice (GstMpeg2dec * mpeg2dec, const mpeg2_info_t * info)
   }
 
   state = gst_video_decoder_get_output_state (GST_VIDEO_DECODER (mpeg2dec));
-  vinfo = &state->info;
-  dinfo = &mpeg2dec->decoded_info;
 
   /* do cropping if the target region is smaller than the input one */
   if (mpeg2dec->need_cropping && !mpeg2dec->has_cropping) {
