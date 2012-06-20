@@ -866,7 +866,6 @@ mpegtsmux_src_event (GstPad * pad, GstObject * parent, GstEvent * event)
       done = FALSE;
       while (!done) {
         gboolean res = FALSE, tmp;
-        g_value_reset (&sinkpad_value);
         iter_ret = gst_iterator_next (iter, &sinkpad_value);
         sinkpad = g_value_get_object (&sinkpad_value);
 
@@ -881,7 +880,6 @@ mpegtsmux_src_event (GstPad * pad, GstObject * parent, GstEvent * event)
             GST_INFO_OBJECT (mux, "result %d", tmp);
             /* succeed if at least one pad succeeds */
             res |= tmp;
-            gst_object_unref (sinkpad);
             break;
           case GST_ITERATOR_ERROR:
             done = TRUE;
@@ -889,8 +887,9 @@ mpegtsmux_src_event (GstPad * pad, GstObject * parent, GstEvent * event)
           case GST_ITERATOR_RESYNC:
             break;
         }
+        g_value_reset (&sinkpad_value);
       }
-      g_value_reset (&sinkpad_value);
+      g_value_unset (&sinkpad_value);
       gst_iterator_free (iter);
       break;
     }
