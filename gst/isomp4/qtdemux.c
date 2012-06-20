@@ -1419,7 +1419,7 @@ gst_qtdemux_do_seek (GstQTDemux * qtdemux, GstPad * pad, GstEvent * event)
     qtdemux->streams[i]->last_ret = GST_FLOW_OK;
 
   gst_pad_start_task (qtdemux->sinkpad, (GstTaskFunction) gst_qtdemux_loop,
-      qtdemux->sinkpad);
+      qtdemux->sinkpad, NULL);
 
   GST_PAD_STREAM_UNLOCK (qtdemux->sinkpad);
 
@@ -4490,7 +4490,7 @@ qtdemux_sink_activate_mode (GstPad * sinkpad, GstObject * parent,
       if (active) {
         demux->pullbased = TRUE;
         res = gst_pad_start_task (sinkpad, (GstTaskFunction) gst_qtdemux_loop,
-            sinkpad);
+            sinkpad, NULL);
       } else {
         res = gst_pad_stop_task (sinkpad);
       }

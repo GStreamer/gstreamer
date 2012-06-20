@@ -649,7 +649,7 @@ gst_image_freeze_src_event (GstPad * pad, GstObject * parent, GstEvent * event)
 
         if (self->buffer != NULL)
           gst_pad_start_task (self->srcpad,
-              (GstTaskFunction) gst_image_freeze_src_loop, self->srcpad);
+              (GstTaskFunction) gst_image_freeze_src_loop, self->srcpad, NULL);
 
         g_mutex_unlock (&self->lock);
       }
@@ -685,7 +685,7 @@ gst_image_freeze_sink_chain (GstPad * pad, GstObject * parent,
   self->buffer = buffer;
 
   gst_pad_start_task (self->srcpad, (GstTaskFunction) gst_image_freeze_src_loop,
-      self->srcpad);
+      self->srcpad, NULL);
   g_mutex_unlock (&self->lock);
   return GST_FLOW_EOS;
 }

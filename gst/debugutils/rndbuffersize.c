@@ -261,7 +261,7 @@ gst_rnd_buffer_size_activate_mode (GstPad * pad, GstObject * parent,
         GST_INFO_OBJECT (self, "starting pull");
         res =
             gst_pad_start_task (pad, (GstTaskFunction) gst_rnd_buffer_size_loop,
-            self);
+            self, NULL);
         self->need_newsegment = TRUE;
       } else {
         GST_INFO_OBJECT (self, "stopping pull");
@@ -323,7 +323,7 @@ gst_rnd_buffer_size_src_event (GstPad * pad, GstObject * parent,
   self->need_newsegment = TRUE;
 
   gst_pad_start_task (self->sinkpad, (GstTaskFunction) gst_rnd_buffer_size_loop,
-      self);
+      self, NULL);
 
   GST_PAD_STREAM_UNLOCK (self->sinkpad);
   return TRUE;

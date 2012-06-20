@@ -6494,7 +6494,7 @@ gst_rtspsrc_start (GstRTSPSrc * src)
   src->pending_cmd = CMD_WAIT;
 
   if (src->task == NULL) {
-    src->task = gst_task_new ((GstTaskFunction) gst_rtspsrc_thread, src);
+    src->task = gst_task_new ((GstTaskFunction) gst_rtspsrc_thread, src, NULL);
     if (src->task == NULL)
       goto task_error;
 
