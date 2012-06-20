@@ -43,6 +43,8 @@
 
 #include "gstnettimepacket.h"
 
+G_DEFINE_BOXED_TYPE (GstNetTimePacket, gst_net_time_packet,
+    gst_net_time_packet_copy, gst_net_time_packet_free);
 
 /**
  * gst_net_time_packet_new:
@@ -55,7 +57,7 @@
  * If @buffer is #NULL, the local and remote times will be set to
  * #GST_CLOCK_TIME_NONE.
  *
- * MT safe. Caller owns return value (g_free to free).
+ * MT safe. Caller owns return value (gst_net_time_packet_free to free).
  *
  * Returns: The new #GstNetTimePacket.
  */
@@ -75,6 +77,38 @@ gst_net_time_packet_new (const guint8 * buffer)
     ret->local_time = GST_CLOCK_TIME_NONE;
     ret->remote_time = GST_CLOCK_TIME_NONE;
   }
+
+  return ret;
+}
+
+/**
+ * gst_net_time_packet_free:
+ * @packet: the #GstNetTimePacket
+ *
+ * Free @packet.
+ */
+void
+gst_net_time_packet_free (GstNetTimePacket * packet)
+{
+  g_free (packet);
+}
+
+/**
+ * gst_net_time_packet_copy:
+ * @packet: the #GstNetTimePacket
+ *
+ * Make a copy of @packet.
+ *
+ * Returns: a copy of @packet, free with gst_net_time_packet_free().
+ */
+GstNetTimePacket *
+gst_net_time_packet_copy (const GstNetTimePacket * packet)
+{
+  GstNetTimePacket *ret;
+
+  ret = g_new0 (GstNetTimePacket, 1);
+  ret->local_time = packet->local_time;
+  ret->remote_time = packet->remote_time;
 
   return ret;
 }
@@ -117,7 +151,7 @@ gst_net_time_packet_serialize (const GstNetTimePacket * packet)
  * calls, but otherwise returns NULL on error.
  *
  * Returns: (transfer full): a new #GstNetTimePacket, or NULL on error. Free
- *    with g_free() when done.
+ *    with gst_net_time_packet_free() when done.
  */
 GstNetTimePacket *
 gst_net_time_packet_receive (GSocket * socket,
