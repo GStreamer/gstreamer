@@ -66,7 +66,7 @@ mux_pcm_audio (guint num_buffers, guint repeat)
 
   /* kids, don't use a sync handler for this at home, really; we do because
    * we just want to abort and nothing else */
-  gst_bus_set_sync_handler (GST_ELEMENT_BUS (pipeline), error_cb, NULL);
+  gst_bus_set_sync_handler (GST_ELEMENT_BUS (pipeline), error_cb, NULL, NULL);
 
   src = gst_element_factory_make ("audiotestsrc", "audiotestsrc");
   fail_unless (src != NULL, "Failed to create 'audiotestsrc' element!");
