@@ -92,9 +92,13 @@ GST_DEBUG_CATEGORY_STATIC (task_debug);
 struct _GstTaskPrivate
 {
   /* callbacks for managing the thread of this task */
-  GstTaskThreadCallbacks thr_callbacks;
-  gpointer thr_user_data;
-  GDestroyNotify thr_notify;
+  GstTaskThreadFunc enter_func;
+  gpointer enter_user_data;
+  GDestroyNotify enter_notify;
+
+  GstTaskThreadFunc leave_func;
+  gpointer leave_user_data;
+  GDestroyNotify leave_notify;
 
   /* configured pool */
   GstTaskPool *pool;
@@ -203,10 +207,11 @@ gst_task_finalize (GObject * object)
 
   GST_DEBUG ("task %p finalize", task);
 
-  if (priv->thr_notify)
-    priv->thr_notify (priv->thr_user_data);
-  priv->thr_notify = NULL;
-  priv->thr_user_data = NULL;
+  if (priv->enter_notify)
+    priv->enter_notify (priv->enter_user_data);
+
+  if (priv->leave_notify)
+    priv->leave_notify (priv->leave_user_data);
 
   if (task->notify)
     task->notify (task->user_data);
@@ -276,9 +281,9 @@ gst_task_func (GstTask * task)
   task->thread = tself;
   GST_OBJECT_UNLOCK (task);
 
-  /* fire the enter_thread callback when we need to */
-  if (priv->thr_callbacks.enter_thread)
-    priv->thr_callbacks.enter_thread (task, tself, priv->thr_user_data);
+  /* fire the enter_func callback when we need to */
+  if (priv->enter_func)
+    priv->enter_func (task, tself, priv->enter_user_data);
 
   /* locking order is TASK_LOCK, LOCK */
   g_rec_mutex_lock (lock);
@@ -317,11 +322,11 @@ done:
   task->thread = NULL;
 
 exit:
-  if (priv->thr_callbacks.leave_thread) {
-    /* fire the leave_thread callback when we need to. We need to do this before
+  if (priv->leave_func) {
+    /* fire the leave_func callback when we need to. We need to do this before
      * we signal the task and with the task lock released. */
     GST_OBJECT_UNLOCK (task);
-    priv->thr_callbacks.leave_thread (task, tself, priv->thr_user_data);
+    priv->leave_func (task, tself, priv->leave_user_data);
     GST_OBJECT_LOCK (task);
   }
   /* now we allow messing with the lock again by setting the running flag to
@@ -503,56 +508,79 @@ gst_task_set_pool (GstTask * task, GstTaskPool * pool)
     gst_object_unref (old);
 }
 
-
 /**
- * gst_task_set_thread_callbacks:
+ * gst_task_set_enter_callback:
  * @task: The #GstTask to use
- * @callbacks: (in): a #GstTaskThreadCallbacks pointer
- * @user_data: (closure): user data passed to the callbacks
+ * @enter_func: (in): a #GstTaskThreadFunc
+ * @user_data: user data passed to @enter_func
  * @notify: called when @user_data is no longer referenced
  *
- * Set callbacks which will be executed when a new thread is needed, the thread
- * function is entered and left and when the thread is joined.
- *
- * By default a thread for @task will be created from a default thread pool.
- *
- * Objects can use custom GThreads or can perform additional configuration of
- * the threads (such as changing the thread priority) by installing callbacks.
- *
- * MT safe.
- *
- * Since: 0.10.24
+ * Call @enter_func when the task function of @task is entered. @user_data will
+ * be passed to @enter_func and @notify will be called when @user_data is no
+ * longer referenced.
  */
 void
-gst_task_set_thread_callbacks (GstTask * task,
-    GstTaskThreadCallbacks * callbacks, gpointer user_data,
-    GDestroyNotify notify)
+gst_task_set_enter_callback (GstTask * task, GstTaskThreadFunc enter_func,
+    gpointer user_data, GDestroyNotify notify)
 {
   GDestroyNotify old_notify;
 
   g_return_if_fail (task != NULL);
   g_return_if_fail (GST_IS_TASK (task));
-  g_return_if_fail (callbacks != NULL);
 
   GST_OBJECT_LOCK (task);
-  old_notify = task->priv->thr_notify;
+  if ((old_notify = task->priv->enter_notify)) {
+    gpointer old_data = task->priv->enter_user_data;
 
-  if (old_notify) {
-    gpointer old_data;
-
-    old_data = task->priv->thr_user_data;
-
-    task->priv->thr_user_data = NULL;
-    task->priv->thr_notify = NULL;
+    task->priv->enter_user_data = NULL;
+    task->priv->enter_notify = NULL;
     GST_OBJECT_UNLOCK (task);
 
     old_notify (old_data);
 
     GST_OBJECT_LOCK (task);
   }
-  task->priv->thr_callbacks = *callbacks;
-  task->priv->thr_user_data = user_data;
-  task->priv->thr_notify = notify;
+  task->priv->enter_func = enter_func;
+  task->priv->enter_user_data = user_data;
+  task->priv->enter_notify = notify;
+  GST_OBJECT_UNLOCK (task);
+}
+
+/**
+ * gst_task_set_leave_callback:
+ * @task: The #GstTask to use
+ * @leave_func: (in): a #GstTaskThreadFunc
+ * @user_data: user data passed to @leave_func
+ * @notify: called when @user_data is no longer referenced
+ *
+ * Call @leave_func when the task function of @task is left. @user_data will
+ * be passed to @leave_func and @notify will be called when @user_data is no
+ * longer referenced.
+ */
+void
+gst_task_set_leave_callback (GstTask * task, GstTaskThreadFunc leave_func,
+    gpointer user_data, GDestroyNotify notify)
+{
+  GDestroyNotify old_notify;
+
+  g_return_if_fail (task != NULL);
+  g_return_if_fail (GST_IS_TASK (task));
+
+  GST_OBJECT_LOCK (task);
+  if ((old_notify = task->priv->leave_notify)) {
+    gpointer old_data = task->priv->leave_user_data;
+
+    task->priv->leave_user_data = NULL;
+    task->priv->leave_notify = NULL;
+    GST_OBJECT_UNLOCK (task);
+
+    old_notify (old_data);
+
+    GST_OBJECT_LOCK (task);
+  }
+  task->priv->leave_func = leave_func;
+  task->priv->leave_user_data = user_data;
+  task->priv->leave_notify = notify;
   GST_OBJECT_UNLOCK (task);
 }
 

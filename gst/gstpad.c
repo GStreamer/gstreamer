@@ -5070,11 +5070,6 @@ pad_leave_thread (GstTask * task, GThread * thread, gpointer user_data)
       thread, task);
 }
 
-static GstTaskThreadCallbacks thr_callbacks = {
-  pad_enter_thread,
-  pad_leave_thread,
-};
-
 /**
  * gst_pad_start_task:
  * @pad: the #GstPad to start the task of
@@ -5106,7 +5101,8 @@ gst_pad_start_task (GstPad * pad, GstTaskFunction func, gpointer user_data,
   if (task == NULL) {
     task = gst_task_new (func, user_data, notify);
     gst_task_set_lock (task, GST_PAD_GET_STREAM_LOCK (pad));
-    gst_task_set_thread_callbacks (task, &thr_callbacks, pad, NULL);
+    gst_task_set_enter_callback (task, pad_enter_thread, pad, NULL);
+    gst_task_set_leave_callback (task, pad_leave_thread, pad, NULL);
     GST_INFO_OBJECT (pad, "created task %p", task);
     GST_PAD_TASK (pad) = task;
     gst_object_ref (task);

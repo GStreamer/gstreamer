@@ -54,6 +54,10 @@ gst_atomic_queue_peek
 gst_atomic_queue_pop
 
 gst_atomic_queue_length
+
+<SUBSECTION Standard>
+GST_TYPE_ATOMIC_QUEUE
+gst_atomic_queue_get_type
 </SECTION>
 
 <SECTION>
@@ -582,6 +586,7 @@ gst_element_factory_get_klass
 gst_element_factory_get_longname
 gst_pad_get_caps_reffed
 gst_pad_peer_get_caps_reffed
+gst_pad_set_caps
 gst_buffer_new_and_alloc
 GST_BUFFER_TIMESTAMP
 GST_BUFFER_TIMESTAMP_IS_VALID
@@ -2672,8 +2677,9 @@ gst_task_set_lock
 gst_task_set_pool
 gst_task_get_pool
 
-GstTaskThreadCallbacks
-gst_task_set_thread_callbacks
+GstTaskThreadFunc
+gst_task_set_enter_callback
+gst_task_set_leave_callback
 
 gst_task_get_state
 gst_task_set_state

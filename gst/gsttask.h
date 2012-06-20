@@ -110,23 +110,14 @@ typedef enum {
 #define GST_TASK_GET_LOCK(task)         (GST_TASK_CAST(task)->lock)
 
 /**
- * GstTaskThreadCallbacks:
- * @enter_thread: a thread is entered, this callback is called when the new
- *   thread enters its function.
- * @leave_thread: a thread is exiting, this is called when the thread is about
- *   to leave its function
+ * GstTaskThreadFunc:
+ * @task: The #GstTask
+ * @thread: The #GThread
+ * @user_data: user data
  *
  * Custom GstTask thread callback functions that can be installed.
- *
- * Since: 0.10.24
  */
-typedef struct {
-  /* manage the lifetime of the thread */
-  void      (*enter_thread)     (GstTask *task, GThread *thread, gpointer user_data);
-  void      (*leave_thread)     (GstTask *task, GThread *thread, gpointer user_data);
-  /*< private >*/
-  gpointer     _gst_reserved[GST_PADDING];
-} GstTaskThreadCallbacks;
+typedef void (*GstTaskThreadFunc) (GstTask *task, GThread *thread, gpointer user_data);
 
 /**
  * GstTask:
@@ -185,10 +176,14 @@ void            gst_task_set_lock       (GstTask *task, GRecMutex *mutex);
 GstTaskPool *   gst_task_get_pool       (GstTask *task);
 void            gst_task_set_pool       (GstTask *task, GstTaskPool *pool);
 
-void            gst_task_set_thread_callbacks  (GstTask *task,
-                                                GstTaskThreadCallbacks *callbacks,
-                                                gpointer user_data,
-                                                GDestroyNotify notify);
+void            gst_task_set_enter_callback  (GstTask *task,
+                                              GstTaskThreadFunc enter_func,
+                                              gpointer user_data,
+                                              GDestroyNotify notify);
+void            gst_task_set_leave_callback  (GstTask *task,
+                                              GstTaskThreadFunc leave_func,
+                                              gpointer user_data,
+                                              GDestroyNotify notify);
 
 GstTaskState    gst_task_get_state      (GstTask *task);
 gboolean        gst_task_set_state      (GstTask *task, GstTaskState state);
