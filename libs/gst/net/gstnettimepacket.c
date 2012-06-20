@@ -110,8 +110,8 @@ gst_net_time_packet_serialize (const GstNetTimePacket * packet)
 /**
  * gst_net_time_packet_receive:
  * @socket: socket to receive the time packet on
- * @src_addr: (out): address of variable to return sender address
- * @err: return address for a #GError, or NULL
+ * @src_address: (out): address of variable to return sender address
+ * @error: return address for a #GError, or NULL
  *
  * Receives a #GstNetTimePacket over a socket. Handles interrupted system
  * calls, but otherwise returns NULL on error.
@@ -169,8 +169,8 @@ short_packet:
  * gst_net_time_packet_send:
  * @packet: the #GstNetTimePacket to send
  * @socket: socket to send the time packet on
- * @dest_addr: address to send the time packet to
- * @err: return address for a #GError, or NULL
+ * @dest_address: address to send the time packet to
+ * @error: return address for a #GError, or NULL
  *
  * Sends a #GstNetTimePacket over a socket.
  *
