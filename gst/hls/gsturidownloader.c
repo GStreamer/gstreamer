@@ -202,7 +202,7 @@ gst_uri_downloader_bus_handler (GstBus * bus,
     g_free (dbg_info);
 
     /* remove the sync handler to avoid duplicated messages */
-    gst_bus_set_sync_handler (downloader->priv->bus, NULL, NULL);
+    gst_bus_set_sync_handler (downloader->priv->bus, NULL, NULL, NULL);
     gst_uri_downloader_cancel (downloader);
   }
 
@@ -248,7 +248,7 @@ gst_uri_downloader_stop (GstUriDownloader * downloader)
   GST_DEBUG_OBJECT (downloader, "Stopping source element");
 
   /* remove the bus' sync handler */
-  gst_bus_set_sync_handler (downloader->priv->bus, NULL, NULL);
+  gst_bus_set_sync_handler (downloader->priv->bus, NULL, NULL, NULL);
   /* unlink the source element from the internal pad */
   pad = gst_pad_get_peer (downloader->priv->pad);
   if (pad) {
@@ -296,7 +296,7 @@ gst_uri_downloader_set_uri (GstUriDownloader * downloader, const gchar * uri)
   gst_element_set_bus (GST_ELEMENT (downloader->priv->urisrc),
       downloader->priv->bus);
   gst_bus_set_sync_handler (downloader->priv->bus,
-      gst_uri_downloader_bus_handler, downloader);
+      gst_uri_downloader_bus_handler, downloader, NULL);
 
   pad = gst_element_get_static_pad (downloader->priv->urisrc, "src");
   if (!pad)

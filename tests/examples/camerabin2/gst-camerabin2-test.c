@@ -672,7 +672,7 @@ setup_pipeline (void)
 
   bus = gst_pipeline_get_bus (GST_PIPELINE (camerabin));
   /* Add sync handler for time critical messages that need to be handled fast */
-  gst_bus_set_sync_handler (bus, sync_bus_callback, NULL);
+  gst_bus_set_sync_handler (bus, sync_bus_callback, NULL, NULL);
   /* Handle normal messages asynchronously */
   gst_bus_add_watch (bus, bus_callback, NULL);
   gst_object_unref (bus);

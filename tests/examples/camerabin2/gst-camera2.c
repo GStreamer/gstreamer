@@ -301,7 +301,7 @@ main (int argc, char *argv[])
   camera = gst_element_factory_make ("camerabin", "camera");
   bus = gst_pipeline_get_bus (GST_PIPELINE (camera));
   gst_bus_add_watch (bus, bus_callback, NULL);
-  gst_bus_set_sync_handler (bus, bus_sync_callback, NULL);
+  gst_bus_set_sync_handler (bus, bus_sync_callback, NULL, NULL);
   gst_object_unref (bus);
 
   if (!init_gtkwidgets_data ()) {

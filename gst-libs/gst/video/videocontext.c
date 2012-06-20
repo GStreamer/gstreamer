@@ -162,7 +162,7 @@
  *
  *   #if CLUTTER_WINDOWING_X11
  *   gst_bus_set_sync_handler (priv->bus, on_sync_message,
- *       clutter_x11_get_default_display ());
+ *       clutter_x11_get_default_display (), NULL);
  *   #endif
  *
  *   gst_object_unref (GST_OBJECT (priv->bus));
