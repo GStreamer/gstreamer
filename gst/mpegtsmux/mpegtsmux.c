@@ -1549,6 +1549,8 @@ new_packet_cb (GstBuffer * buf, void *user_data, gint64 new_pcr)
   /* do common init (flags and streamheaders) */
   new_packet_common_init (mux, buf, map.data + offset, map.size);
 
+  gst_buffer_unmap (buf, &map);
+
   /* all is meant for downstream, including any prefix */
   if (offset)
     return new_packet_m2ts (mux, buf, new_pcr);
