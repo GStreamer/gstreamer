@@ -370,13 +370,23 @@ gst_template_match_chain (GstPad * pad, GstObject * parent, GstBuffer * buf)
 
     if (filter->display) {
       CvPoint corner = best_pos;
+      CvScalar color;
+      if (filter->method == CV_TM_SQDIFF_NORMED
+          || filter->method == CV_TM_CCORR_NORMED
+          || filter->method == CV_TM_CCOEFF_NORMED) {
+        /* Yellow growing redder as match certainty approaches 1.0.  This can
+           only be applied with method == *_NORMED as the other match methods
+           aren't normalized to be in range 0.0 - 1.0 */
+        color = CV_RGB (255, 255 - pow (255, best_res), 32);
+      } else {
+        color = CV_RGB (255, 32, 32);
+      }
 
       buf = gst_buffer_make_writable (buf);
 
       corner.x += filter->cvTemplateImage->width;
       corner.y += filter->cvTemplateImage->height;
-      cvRectangle (filter->cvImage, best_pos, corner, CV_RGB (255, 32, 32), 3,
-          8, 0);
+      cvRectangle (filter->cvImage, best_pos, corner, color, 3, 8, 0);
     }
 
   }
