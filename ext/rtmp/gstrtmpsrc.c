@@ -345,8 +345,8 @@ gst_rtmp_src_create (GstPushSrc * pushsrc, GstBuffer ** buffer)
       todo -= read;
       bsize += read;
     } else {
-      todo = 0;
       bsize += todo;
+      todo = 0;
     }
     GST_LOG ("  got size %d", read);
   }
