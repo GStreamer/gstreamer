@@ -330,7 +330,8 @@ void            gst_debug_log_default    (GstDebugCategory * category,
 const gchar *   gst_debug_level_get_name (GstDebugLevel level);
 
 void            gst_debug_add_log_function            (GstLogFunction func,
-                                                       gpointer       data);
+                                                       gpointer       user_data,
+                                                       GDestroyNotify notify);
 
 guint           gst_debug_remove_log_function         (GstLogFunction func);
 guint           gst_debug_remove_log_function_by_data (gpointer       data);
@@ -365,13 +366,13 @@ gint    gst_debug_construct_win_color  (guint colorinfo);
 
 #ifndef GST_DISABLE_GST_DEBUG
 
-#define gst_debug_add_log_function(func,data) \
-G_STMT_START{                                 \
-  if (func == gst_debug_log_default) {        \
-    gst_debug_add_log_function(NULL,data);    \
-  } else {                                    \
-    gst_debug_add_log_function(func,data);    \
-  }                                           \
+#define gst_debug_add_log_function(func,data,notify) \
+G_STMT_START{                                        \
+  if (func == gst_debug_log_default) {               \
+    gst_debug_add_log_function(NULL,data,notify);    \
+  } else {                                           \
+    gst_debug_add_log_function(func,data,notify);    \
+  }                                                  \
 }G_STMT_END
 
 #define gst_debug_remove_log_function(func)   \
@@ -1262,7 +1263,7 @@ GST_TRACE (const char *format, ...)
 
 #define gst_debug_level_get_name(level)				("NONE")
 #define gst_debug_message_get(message)  			("")
-#define gst_debug_add_log_function(func,data)		G_STMT_START{ }G_STMT_END
+#define gst_debug_add_log_function(func,data,notify)    G_STMT_START{ }G_STMT_END
 #define gst_debug_set_active(active)			G_STMT_START{ }G_STMT_END
 #define gst_debug_is_active()				(FALSE)
 #define gst_debug_set_colored(colored)			G_STMT_START{ }G_STMT_END

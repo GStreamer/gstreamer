@@ -49,7 +49,7 @@ GST_START_TEST (info_ptr_format_printf_extension)
   /* set up our own log function to make sure the code in gstinfo is actually
    * executed without GST_DEBUG being set or it being output to stdout */
   gst_debug_remove_log_function (gst_debug_log_default);
-  gst_debug_add_log_function (printf_extension_log_func, NULL);
+  gst_debug_add_log_function (printf_extension_log_func, NULL, NULL);
 
   gst_debug_set_default_threshold (GST_LEVEL_LOG);
 
@@ -105,7 +105,7 @@ GST_START_TEST (info_ptr_format_printf_extension)
 
   /* clean up */
   gst_debug_set_default_threshold (GST_LEVEL_NONE);
-  gst_debug_add_log_function (gst_debug_log_default, NULL);
+  gst_debug_add_log_function (gst_debug_log_default, NULL, NULL);
   gst_debug_remove_log_function (printf_extension_log_func);
 }
 
@@ -117,7 +117,7 @@ GST_START_TEST (info_segment_format_printf_extension)
   /* set up our own log function to make sure the code in gstinfo is actually
    * executed without GST_DEBUG being set or it being output to stdout */
   gst_debug_remove_log_function (gst_debug_log_default);
-  gst_debug_add_log_function (printf_extension_log_func, NULL);
+  gst_debug_add_log_function (printf_extension_log_func, NULL, NULL);
 
   gst_debug_set_default_threshold (GST_LEVEL_LOG);
 
@@ -183,7 +183,7 @@ GST_START_TEST (info_segment_format_printf_extension)
 
   /* clean up */
   gst_debug_set_default_threshold (GST_LEVEL_NONE);
-  gst_debug_add_log_function (gst_debug_log_default, NULL);
+  gst_debug_add_log_function (gst_debug_log_default, NULL, NULL);
   gst_debug_remove_log_function (printf_extension_log_func);
 }
 
