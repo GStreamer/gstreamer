@@ -57,7 +57,13 @@ typedef struct {
   guint8        prop_flags;        /* payload length types                 */
 } AsfPacket;
 
-gboolean   gst_asf_demux_parse_packet (GstASFDemux * demux, GstBuffer * buf);
+typedef enum {
+  GST_ASF_DEMUX_PARSE_PACKET_ERROR_NONE,
+  GST_ASF_DEMUX_PARSE_PACKET_ERROR_RECOVERABLE,
+  GST_ASF_DEMUX_PARSE_PACKET_ERROR_FATAL
+} GstAsfDemuxParsePacketError;
+
+GstAsfDemuxParsePacketError gst_asf_demux_parse_packet (GstASFDemux * demux, GstBuffer * buf);
 
 #define gst_asf_payload_is_complete(payload) \
     ((payload)->buf_filled >= (payload)->mo_size)
