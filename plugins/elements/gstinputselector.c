@@ -454,6 +454,7 @@ gst_selector_pad_event (GstPad * pad, GstObject * parent, GstEvent * event)
 {
   gboolean res = TRUE;
   gboolean forward;
+  gboolean new_tags = FALSE;
   GstInputSelector *sel;
   GstSelectorPad *selpad;
   GstPad *prev_active_sinkpad;
@@ -524,7 +525,7 @@ gst_selector_pad_event (GstPad * pad, GstObject * parent, GstEvent * event)
         gst_tag_list_unref (oldtags);
       GST_DEBUG_OBJECT (pad, "received tags %" GST_PTR_FORMAT, newtags);
 
-      g_object_notify (G_OBJECT (selpad), "tags");
+      new_tags = TRUE;
       break;
     }
     case GST_EVENT_EOS:
@@ -551,6 +552,8 @@ gst_selector_pad_event (GstPad * pad, GstObject * parent, GstEvent * event)
       break;
   }
   GST_INPUT_SELECTOR_UNLOCK (sel);
+  if (new_tags)
+    g_object_notify (G_OBJECT (selpad), "tags");
   if (forward) {
     GST_DEBUG_OBJECT (pad, "forwarding event");
     res = gst_pad_push_event (sel->srcpad, event);
