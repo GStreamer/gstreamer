@@ -734,14 +734,14 @@ gst_omx_component_set_last_error (GstOMXComponent * comp, OMX_ERRORTYPE err)
 
   GST_ERROR_OBJECT (comp->parent, "Setting last error: %s (0x%08x)",
       gst_omx_error_to_string (err), err);
-  gst_omx_rec_mutex_lock (&comp->state_lock);
+  gst_omx_rec_mutex_recursive_lock (&comp->state_lock);
   /* We only set the first error ever from which
    * we can't recover anymore.
    */
   if (comp->last_error == OMX_ErrorNone)
     comp->last_error = err;
   g_cond_broadcast (comp->state_cond);
-  gst_omx_rec_mutex_unlock (&comp->state_lock);
+  gst_omx_rec_mutex_recursive_unlock (&comp->state_lock);
 
   /* Now notify all ports, no locking needed
    * here because the ports are allocated in the
@@ -752,9 +752,9 @@ gst_omx_component_set_last_error (GstOMXComponent * comp, OMX_ERRORTYPE err)
   for (i = 0; i < n; i++) {
     GstOMXPort *tmp = g_ptr_array_index (comp->ports, i);
 
-    gst_omx_rec_mutex_lock (&tmp->port_lock);
+    gst_omx_rec_mutex_recursive_lock (&tmp->port_lock);
     g_cond_broadcast (tmp->port_cond);
-    gst_omx_rec_mutex_unlock (&tmp->port_lock);
+    gst_omx_rec_mutex_recursive_unlock (&tmp->port_lock);
   }
 }
 
