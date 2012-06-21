@@ -53,6 +53,7 @@ G_BEGIN_DECLS
 #define GST_JPEG_MAX_QUANT_ELEMENTS     64
 
 typedef struct _GstJpegQuantTable       GstJpegQuantTable;
+typedef struct _GstJpegQuantTables      GstJpegQuantTables;
 typedef struct _GstJpegHuffmanTable     GstJpegHuffmanTable;
 typedef struct _GstJpegHuffmanTables    GstJpegHuffmanTables;
 typedef struct _GstJpegScanComponent    GstJpegScanComponent;
@@ -139,6 +140,8 @@ typedef enum {
  * GstJpegQuantTable:
  * @quant_precision: Quantization table element precision (Pq)
  * @quant_table: Quantization table elements (Qk)
+ * @valid: If the quantization table is valid, which means it has
+ *   already been parsed
  *
  * Quantization table.
  */
@@ -146,12 +149,27 @@ struct _GstJpegQuantTable
 {
   guint8 quant_precision;
   guint16 quant_table[GST_JPEG_MAX_QUANT_ELEMENTS];
+  gboolean valid;
+};
+
+/**
+ * GstJpegQuantTables:
+ * @quant_tables: All quantization tables
+ *
+ * Helper data structure that holds all quantization tables used to
+ * decode an image.
+ */
+struct _GstJpegQuantTables
+{
+  GstJpegQuantTable quant_tables[GST_JPEG_MAX_SCAN_COMPONENTS];
 };
 
 /**
  * GstJpegHuffmanTable:
  * @huf_bits: Number of Huffman codes of length i + 1 (Li)
  * @huf_vales: Value associated with each Huffman code (Vij)
+ * @valid: If the Huffman table is valid, which means it has already
+ *   been parsed
  *
  * Huffman table.
  */
@@ -159,6 +177,7 @@ struct _GstJpegHuffmanTable
 {
   guint8 huf_bits[16];
   guint8 huf_values[256];
+  gboolean valid;
 };
 
 /**
@@ -334,17 +353,15 @@ GstJpegParserResult     gst_jpeg_parse_scan_hdr         (GstJpegScanHdr * hdr,
  *
  * Parses the JPEG quantization table structure members from @data.
  *
- * Note: @quant_tables represents the user-allocated quantization
- * tables based on the number of scan components. That is, the parser
- * writes the output quantization table at the index specified by the
- * quantization table destination identifier (Tq). So, the array of
- * quantization tables shall be large enough to hold the table for the
- * last component.
+ * Note: @quant_tables represents the complete set of possible
+ * quantization tables. However, the parser will only write to the
+ * quantization table specified by the table destination identifier
+ * (Tq). While doing so, the @valid flag of the specified quantization
+ * table will also be set to %TRUE.
  *
  * Returns: a #GstJpegParserResult
  */
-GstJpegParserResult     gst_jpeg_parse_quant_table      (GstJpegQuantTable *quant_tables,
-                                                         guint num_quant_tables,
+GstJpegParserResult     gst_jpeg_parse_quant_table      (GstJpegQuantTables *quant_tables,
                                                          const guint8 * data,
                                                          gsize size,
                                                          guint offset);
@@ -360,7 +377,9 @@ GstJpegParserResult     gst_jpeg_parse_quant_table      (GstJpegQuantTable *quan
  *
  * Note: @huf_tables represents the complete set of possible Huffman
  * tables. However, the parser will only write to the Huffman table
- * specified by the table destination identifier (Th).
+ * specified by the table destination identifier (Th). While doing so,
+ * the @valid flag of the specified Huffman table will also be set to
+ * %TRUE;
  *
  * Returns: a #GstJpegParserResult
  */
@@ -384,24 +403,23 @@ GstJpegParserResult     gst_jpeg_parse_restart_interval (guint * interval,
                                                          guint offset);
 
 /**
- * gst_jpeg_get_default_huffman_table:
- * @huf_tables: (out): The default dc/ac hufman tables to fill in
+ * gst_jpeg_get_default_huffman_tables:
+ * @huf_tables: (out): The default DC/AC Huffman tables to fill in
  *
- * Returns: void
+ * Fills in @huf_tables with the default AC/DC Huffman tables, as
+ * specified by the JPEG standard.
  */
-void                    gst_jpeg_get_default_huffman_table (
+void                    gst_jpeg_get_default_huffman_tables (
                                                    GstJpegHuffmanTables *huf_tables);
 
 /**
  * gst_jpeg_get_default_quantization_table:
  * @quant_tables: (out): The default luma/chroma quant-tables in zigzag mode
- * @num_quant_tables: The number of allocated quantization tables in @quant_tables
  *
  * Fills in @quant_tables with the default quantization tables, as
  * specified by the JPEG standard.
  */
-void                    gst_jpeg_get_default_quantization_table (GstJpegQuantTable *quant_tables,
-                                                            guint num_quant_tables);
+void                    gst_jpeg_get_default_quantization_tables (GstJpegQuantTables *quant_tables);
 
 G_END_DECLS
 

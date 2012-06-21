@@ -52,7 +52,7 @@ struct _GstVaapiDecoderJpegPrivate {
     GstVaapiPicture            *current_picture;
     GstJpegFrameHdr             frame_hdr;
     GstJpegHuffmanTables        huf_tables;
-    GstJpegQuantTable           quant_tables[GST_JPEG_MAX_SCAN_COMPONENTS];
+    GstJpegQuantTables          quant_tables;
     gboolean                    has_huf_table;
     gboolean                    has_quant_table;
     guint                       mcu_restart;
@@ -225,22 +225,24 @@ fill_quantization_table(
     guint i, j;
 
     if (!priv->has_quant_table)
-        gst_jpeg_get_default_quantization_table(priv->quant_tables, GST_JPEG_MAX_SCAN_COMPONENTS);
+        gst_jpeg_get_default_quantization_tables(&priv->quant_tables);
     
     picture->iq_matrix = GST_VAAPI_IQ_MATRIX_NEW(JPEG, decoder);
     g_assert(picture->iq_matrix);
     iq_matrix = picture->iq_matrix->param;
     memset(iq_matrix, 0, sizeof(VAIQMatrixBufferJPEG));
     for (i = 0; i < GST_JPEG_MAX_SCAN_COMPONENTS; i++) {
-        iq_matrix->precision[i] = priv->quant_tables[i].quant_precision;
+        GstJpegQuantTable * const quant_table =
+            &priv->quant_tables.quant_tables[i];
+        iq_matrix->precision[i] = quant_table->quant_precision;
         if (iq_matrix->precision[i] == 0) /* 8-bit values */
             for (j = 0; j < GST_JPEG_MAX_QUANT_ELEMENTS; j++) {
                 iq_matrix->quantiser_matrix[i][j] =
-                    priv->quant_tables[i].quant_table[j];
+                    quant_table->quant_table[j];
             }
         else
             memcpy(iq_matrix->quantiser_matrix[i],
-                   priv->quant_tables[i].quant_table,
+                   quant_table->quant_table,
                    128);
     }
     return TRUE;
@@ -257,7 +259,7 @@ fill_huffman_table(
     guint i;
 
     if (!priv->has_huf_table)
-        gst_jpeg_get_default_huffman_table(&priv->huf_tables);
+        gst_jpeg_get_default_huffman_tables(&priv->huf_tables);
     
     picture->huf_table = GST_VAAPI_HUFFMAN_TABLE_NEW(JPEG, decoder);
     g_assert(picture->huf_table);
@@ -399,11 +401,7 @@ decode_quant_table(
     GstVaapiDecoderJpegPrivate * const priv = decoder->priv;
     GstJpegParserResult result;
 
-    result = gst_jpeg_parse_quant_table(
-        priv->quant_tables,
-        GST_JPEG_MAX_SCAN_COMPONENTS,
-        buf, buf_size, 0
-    );
+    result = gst_jpeg_parse_quant_table(&priv->quant_tables, buf, buf_size, 0);
     if (result != GST_JPEG_PARSER_OK) {
         GST_DEBUG("failed to parse quantization table");
         return get_status(result);
@@ -651,7 +649,7 @@ gst_vaapi_decoder_jpeg_init(GstVaapiDecoderJpeg *decoder)
     priv->is_constructed        = FALSE;
     memset(&priv->frame_hdr, 0, sizeof(priv->frame_hdr));
     memset(&priv->huf_tables, 0, sizeof(priv->huf_tables));
-    memset(priv->quant_tables, 0, sizeof(priv->quant_tables));
+    memset(&priv->quant_tables, 0, sizeof(priv->quant_tables));
 }
 
 /**
