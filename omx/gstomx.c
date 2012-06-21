@@ -1005,8 +1005,7 @@ retry:
     GST_DEBUG_OBJECT (comp->parent, "Queue of port %u is empty", port->index);
     g_cond_wait (port->port_cond, port->port_lock.lock);
   } else {
-    GST_DEBUG_OBJECT (comp->parent, "Port %u has pending buffers",
-        port->pending_buffers);
+    GST_DEBUG_OBJECT (comp->parent, "Port %u has pending buffers", port->index);
     _buf = g_queue_pop_head (port->pending_buffers);
     ret = GST_OMX_ACQUIRE_BUFFER_OK;
     goto done;
