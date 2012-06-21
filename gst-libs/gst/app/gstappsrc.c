@@ -116,6 +116,7 @@ struct _GstAppSrcPrivate
   guint64 max_bytes;
   GstFormat format;
   gboolean block;
+  gchar *uri;
 
   gboolean flushing;
   gboolean started;
@@ -550,6 +551,8 @@ gst_app_src_finalize (GObject * obj)
   g_mutex_free (priv->mutex);
   g_cond_free (priv->cond);
   g_queue_free (priv->queue);
+
+  g_free (priv->uri);
 
   G_OBJECT_CLASS (parent_class)->finalize (obj);
 }
@@ -1649,14 +1652,20 @@ gst_app_src_uri_get_protocols (GType type)
 static gchar *
 gst_app_src_uri_get_uri (GstURIHandler * handler)
 {
-  return g_strdup ("appsrc");
+  GstAppSrc *appsrc = GST_APP_SRC (handler);
+
+  return appsrc->priv->uri ? g_strdup (appsrc->priv->uri) : NULL;
 }
 
 static gboolean
 gst_app_src_uri_set_uri (GstURIHandler * handler, const gchar * uri,
     GError ** error)
 {
-  /* GstURIHandler checks the protocol for us */
+  GstAppSrc *appsrc = GST_APP_SRC (handler);
+
+  g_free (appsrc->priv->uri);
+  appsrc->priv->uri = uri ? g_strdup (uri) : NULL;
+
   return TRUE;
 }
 
