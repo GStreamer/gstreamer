@@ -763,11 +763,12 @@ tsmux_write_stream_packet (TsMux * mux, TsMuxStream * stream)
 
     /* FIXME: The current PCR needs more careful calculation than just
      * writing a fixed offset */
-    if (cur_pts != -1 && (cur_pts >= TSMUX_PCR_OFFSET))
+    if (cur_pts != -1) {
+      /* CLOCK_BASE >= TSMUX_PCR_OFFSET */
+      cur_pts += CLOCK_BASE;
       cur_pcr = (cur_pts - TSMUX_PCR_OFFSET) *
           (TSMUX_SYS_CLOCK_FREQ / TSMUX_CLOCK_FREQ);
-
-    cur_pcr += (gint64) CLOCK_BASE *(TSMUX_SYS_CLOCK_FREQ / TSMUX_CLOCK_FREQ);
+    }
 
     /* Need to decide whether to write a new PCR in this packet */
     if (stream->last_pcr == -1 ||
