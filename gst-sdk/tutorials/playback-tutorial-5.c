@@ -56,7 +56,6 @@ static void toggle_deinterlace (GstElement *pipeline) {
   /* Find current position, since it will be lost when we stop */
   gst_element_query_position (pipeline, &format, &current_position);
   /* Stop */
-  GST_DEBUG_BIN_TO_DOT_FILE(GST_BIN (pipeline), GST_DEBUG_GRAPH_SHOW_ALL, "before.dot");
   gst_element_set_state (pipeline, GST_STATE_READY);
   /* Toggle deinterlacing flag (it will be ignored while PLAYING) */
   g_object_get (pipeline, "flags", &flags, NULL);
@@ -66,7 +65,6 @@ static void toggle_deinterlace (GstElement *pipeline) {
   gst_element_set_state (pipeline, GST_STATE_PLAYING);
   /* Wait until the state change takes effect */
   gst_element_get_state (pipeline, NULL, NULL, GST_CLOCK_TIME_NONE);
-  GST_DEBUG_BIN_TO_DOT_FILE(GST_BIN (pipeline), GST_DEBUG_GRAPH_SHOW_ALL, "after.dot");
   /* Set current position, if we were able to recover it previously */
   if (GST_CLOCK_TIME_IS_VALID (current_position)) {
     gst_element_seek_simple (pipeline, format, GST_SEEK_FLAG_FLUSH | GST_SEEK_FLAG_ACCURATE, current_position);
