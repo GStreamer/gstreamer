@@ -46,8 +46,8 @@ _gst_video_codec_frame_free (GstVideoCodecFrame * frame)
     gst_buffer_unref (frame->output_buffer);
   }
 
-  g_list_foreach (frame->events, (GFunc) gst_event_unref, NULL);
-  g_list_free (frame->events);
+  g_list_free_full (frame->events, (GDestroyNotify) gst_event_unref);
+  frame->events = NULL;
 
   if (frame->user_data_destroy_notify)
     frame->user_data_destroy_notify (frame->user_data);
