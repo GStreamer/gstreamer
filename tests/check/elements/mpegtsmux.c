@@ -39,6 +39,303 @@ static GstStaticPadTemplate audio_src_template = GST_STATIC_PAD_TEMPLATE ("src",
     GST_STATIC_CAPS ("audio/mpeg")
     );
 
+/* For ease of programming we use globals to keep refs for our floating
+ * src and sink pads we create; otherwise we always have to do get_pad,
+ * get_peer, and then remove references in every test function */
+static GstPad *mysrcpad, *mysinkpad;
+
+#define AUDIO_CAPS_STRING "audio/mpeg, " \
+                        "channels = (int) 1, " \
+                        "rate = (int) 8000, " \
+                        "mpegversion = (int) 1"
+#define VIDEO_CAPS_STRING "video/x-h264, " \
+                           "format = (string) byte-stream"
+
+/* setup and teardown needs some special handling for muxer */
+static GstPad *
+setup_src_pad (GstElement * element,
+    GstStaticPadTemplate * template, GstCaps * caps, const gchar * sinkname,
+    gchar ** padname)
+{
+  GstPad *srcpad, *sinkpad;
+
+  GST_DEBUG_OBJECT (element, "setting up sending pad");
+  /* sending pad */
+  srcpad = gst_pad_new_from_static_template (template, "src");
+  fail_if (srcpad == NULL, "Could not create a srcpad");
+  ASSERT_OBJECT_REFCOUNT (srcpad, "srcpad", 1);
+
+  if (!(sinkpad = gst_element_get_static_pad (element, sinkname)))
+    sinkpad = gst_element_get_request_pad (element, sinkname);
+  fail_if (sinkpad == NULL, "Could not get sink pad from %s",
+      GST_ELEMENT_NAME (element));
+  /* references are owned by: 1) us, 2) tsmux, 3) collect pads */
+  ASSERT_OBJECT_REFCOUNT (sinkpad, "sinkpad", 3);
+  if (caps)
+    fail_unless (gst_pad_set_caps (srcpad, caps));
+  fail_unless (gst_pad_link (srcpad, sinkpad) == GST_PAD_LINK_OK,
+      "Could not link source and %s sink pads", GST_ELEMENT_NAME (element));
+  gst_object_unref (sinkpad);   /* because we got it higher up */
+
+  /* references are owned by: 1) tsmux, 2) collect pads */
+  ASSERT_OBJECT_REFCOUNT (sinkpad, "sinkpad", 2);
+
+  if (padname)
+    *padname = g_strdup (GST_PAD_NAME (sinkpad));
+
+  return srcpad;
+}
+
+static void
+teardown_src_pad (GstElement * element, const gchar * sinkname)
+{
+  GstPad *srcpad, *sinkpad;
+
+  /* clean up floating src pad */
+  if (!(sinkpad = gst_element_get_static_pad (element, sinkname)))
+    sinkpad = gst_element_get_request_pad (element, sinkname);
+  /* pad refs held by 1) tsmux 2) collectpads and 3) us (through _get) */
+  ASSERT_OBJECT_REFCOUNT (sinkpad, "sinkpad", 3);
+  srcpad = gst_pad_get_peer (sinkpad);
+
+  gst_pad_unlink (srcpad, sinkpad);
+  GST_DEBUG ("src %p", srcpad);
+
+  /* after unlinking, pad refs still held by
+   * 1) tsmux and 2) collectpads and 3) us (through _get) */
+  ASSERT_OBJECT_REFCOUNT (sinkpad, "sinkpad", 3);
+  gst_object_unref (sinkpad);
+  /* one more ref is held by element itself */
+
+  /* pad refs held by both creator and this function (through _get_peer) */
+  ASSERT_OBJECT_REFCOUNT (srcpad, "srcpad", 2);
+  gst_object_unref (srcpad);
+  gst_object_unref (srcpad);
+
+}
+
+static GstElement *
+setup_tsmux (GstStaticPadTemplate * srctemplate, const gchar * sinkname,
+    gchar ** padname)
+{
+  GstElement *mux;
+
+  GST_DEBUG ("setup_tsmux");
+  mux = gst_check_setup_element ("mpegtsmux");
+  mysrcpad = setup_src_pad (mux, srctemplate, NULL, sinkname, padname);
+  mysinkpad = gst_check_setup_sink_pad (mux, &sink_template);
+  gst_pad_set_active (mysrcpad, TRUE);
+  gst_pad_set_active (mysinkpad, TRUE);
+
+  return mux;
+}
+
+static void
+cleanup_tsmux (GstElement * mux, const gchar * sinkname)
+{
+  GST_DEBUG ("cleanup_mux");
+  gst_element_set_state (mux, GST_STATE_NULL);
+
+  gst_pad_set_active (mysrcpad, FALSE);
+  gst_pad_set_active (mysinkpad, FALSE);
+  teardown_src_pad (mux, sinkname);
+  gst_check_teardown_sink_pad (mux);
+  gst_check_teardown_element (mux);
+}
+
+static void
+check_tsmux_pad (GstStaticPadTemplate * srctemplate,
+    const gchar * src_caps_string, gint pes_id, gint pmt_id,
+    const gchar * sinkname)
+{
+  GstElement *mux;
+  GstBuffer *inbuffer, *outbuffer;
+  GstCaps *caps;
+  gint num_buffers;
+  gint i;
+  gint pmt_pid = -1, el_pid = -1, pcr_pid = -1, packets = 0;
+  gchar *padname;
+  GstSegment segment;
+
+  mux = setup_tsmux (srctemplate, sinkname, &padname);
+  fail_unless (gst_element_set_state (mux,
+          GST_STATE_PLAYING) == GST_STATE_CHANGE_SUCCESS,
+      "could not set to playing");
+
+  gst_segment_init (&segment, GST_FORMAT_TIME);
+  fail_unless (gst_pad_push_event (mysrcpad, gst_event_new_segment (&segment)));
+
+  inbuffer = gst_buffer_new_and_alloc (1);
+  caps = gst_caps_from_string (src_caps_string);
+  gst_pad_set_caps (mysrcpad, caps);
+  gst_caps_unref (caps);
+  GST_BUFFER_TIMESTAMP (inbuffer) = 0;
+  ASSERT_BUFFER_REFCOUNT (inbuffer, "inbuffer", 1);
+  fail_unless (gst_pad_push (mysrcpad, inbuffer) == GST_FLOW_OK);
+  num_buffers = g_list_length (buffers);
+  /* all output might get aggregated */
+  fail_unless (num_buffers >= 1);
+
+  /* collect buffers in adapter for convenience */
+  for (i = 0; i < num_buffers; ++i) {
+    guint8 *odata;
+    gint size;
+    GstMapInfo map;
+
+    outbuffer = GST_BUFFER (buffers->data);
+    fail_if (outbuffer == NULL);
+    buffers = g_list_remove (buffers, outbuffer);
+    ASSERT_BUFFER_REFCOUNT (outbuffer, "outbuffer", 1);
+
+    gst_buffer_map (outbuffer, &map, GST_MAP_READ);
+    odata = map.data;
+    size = map.size;
+    fail_unless (size % 188 == 0);
+
+    for (; size; odata += 188, size -= 188) {
+      guint pid, y;
+      guint8 *data = odata;
+
+      /* need sync_byte */
+      fail_unless (*data == 0x47);
+      data++;
+
+      y = GST_READ_UINT16_BE (data);
+      pid = y & (0x1FFF);
+      data += 2;
+      GST_DEBUG ("pid: %d", pid);
+
+      y = (y >> 14) & 0x1;
+      /* only check packets with payload_start_indicator == 1 */
+      if (!y) {
+        GST_DEBUG ("not at start");
+        continue;
+      }
+
+      y = *data;
+      data++;
+
+      if (y & 0x20) {
+        /* adaptation field */
+        y = *data;
+        data++;
+        data += y;
+        GST_DEBUG ("adaptation %d", y);
+      }
+
+      if (pid == 0) {
+        /* look for PAT */
+        /* pointer field */
+        y = *data;
+        data++;
+        data += y;
+        /* table_id */
+        y = *data;
+        data++;
+        fail_unless (y == 0x0);
+        /* skip */
+        data += 5;
+        /* section_number */
+        y = *data;
+        fail_unless (y == 0);
+        data++;
+        /* last_section_number */
+        y = *data;
+        fail_unless (y == 0);
+        data++;
+        /* program_number */
+        y = GST_READ_UINT16_BE (data);
+        fail_unless (y != 0);
+        data += 2;
+        /* program_map_PID */
+        y = GST_READ_UINT16_BE (data);
+        pmt_pid = y & 0x1FFF;
+        fail_unless (pmt_pid > 0x10 && pmt_pid != 0x1FF);
+      } else if (pid == pmt_pid) {
+        /* look for PMT */
+        /* pointer field */
+        y = *data;
+        data++;
+        data += y;
+        /* table_id */
+        y = *data;
+        data++;
+        fail_unless (y == 0x2);
+        /* skip */
+        data += 5;
+        /* section_number */
+        y = *data;
+        fail_unless (y == 0);
+        data++;
+        /* last_section_number */
+        y = *data;
+        fail_unless (y == 0);
+        data++;
+        /* PCR_PID */
+        y = GST_READ_UINT16_BE (data);
+        data += 2;
+        pcr_pid = y & 0x1FFF;
+        /* program_info_length */
+        y = GST_READ_UINT16_BE (data);
+        data += 2;
+        y = y & 0x0FFF;
+        data += y;
+        /* parsing only ES stream */
+        /* stream_type */
+        y = *data;
+        data++;
+        fail_unless (y == pmt_id);
+        /* elementary_PID */
+        y = GST_READ_UINT16_BE (data);
+        data += 2;
+        el_pid = y & 0x1FFF;
+        fail_unless (el_pid > 0x10 && el_pid != 0x1FF);
+      } else if (pid == el_pid) {
+        packets++;
+        /* expect to see a PES packet start */
+        y = GST_READ_UINT32_BE (data);
+        fail_unless (y >> 8 == 0x1);
+        /* stream_id */
+        y = y & 0xFF;
+        fail_unless ((pes_id & 0xF0) == (y & 0xF0));
+      }
+    }
+    gst_buffer_unmap (outbuffer, &map);
+    gst_buffer_unref (outbuffer);
+    outbuffer = NULL;
+  }
+
+  fail_unless (pmt_pid > 0);
+  fail_unless (el_pid > 0);
+  fail_unless (pcr_pid == el_pid);
+  fail_unless (packets > 0);
+
+  g_list_free (buffers);
+  buffers = NULL;
+
+  cleanup_tsmux (mux, padname);
+  g_free (padname);
+}
+
+
+GST_START_TEST (test_video)
+{
+  check_tsmux_pad (&video_src_template, VIDEO_CAPS_STRING, 0xE0, 0x1b,
+      "sink_%d");
+}
+
+GST_END_TEST;
+
+
+GST_START_TEST (test_audio)
+{
+  check_tsmux_pad (&audio_src_template, AUDIO_CAPS_STRING, 0xC0, 0x03,
+      "sink_%d");
+}
+
+GST_END_TEST;
+
+
 typedef struct _TestData
 {
   GstEvent *sink_event;
@@ -331,6 +628,8 @@ mpegtsmux_suite (void)
 
   suite_add_tcase (s, tc_chain);
 
+  tcase_add_test (tc_chain, test_audio);
+  tcase_add_test (tc_chain, test_video);
   tcase_add_test (tc_chain, test_force_key_unit_event_downstream);
   tcase_add_test (tc_chain, test_force_key_unit_event_upstream);
 
