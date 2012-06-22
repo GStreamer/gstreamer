@@ -804,6 +804,17 @@ gst_soup_http_src_got_headers_cb (SoupMessage * msg, GstSoupHTTPSrc * src)
         ("Server does not accept Range HTTP header, URL: %s", src->location));
     src->ret = GST_FLOW_ERROR;
   }
+
+  /* If we are going to error out, stop all processing right here, so we
+   * don't output any data (such as an error html page), and return
+   * GST_FLOW_ERROR from the create function instead of having
+   * got_chunk_cb overwrite src->ret with FLOW_OK again. */
+  if (src->ret == GST_FLOW_ERROR) {
+    gst_soup_http_src_session_pause_message (src);
+
+    if (src->loop)
+      g_main_loop_quit (src->loop);
+  }
 }
 
 /* Have body. Signal EOS. */
