@@ -974,7 +974,8 @@ gst_sdp_demux_stream_configure_udp (GstSDPDemux * demux, GstSDPStream * stream)
         stream->rtp_port);
 
     uri = g_strdup_printf ("udp://%s:%d", destination, stream->rtp_port);
-    stream->udpsrc[0] = gst_element_make_from_uri (GST_URI_SRC, uri, NULL);
+    stream->udpsrc[0] =
+        gst_element_make_from_uri (GST_URI_SRC, uri, NULL, NULL);
     g_free (uri);
     if (stream->udpsrc[0] == NULL)
       goto no_element;
@@ -1013,7 +1014,8 @@ gst_sdp_demux_stream_configure_udp (GstSDPDemux * demux, GstSDPStream * stream)
     GST_DEBUG_OBJECT (demux, "receiving RTCP from %s:%d", destination,
         stream->rtcp_port);
     uri = g_strdup_printf ("udp://%s:%d", destination, stream->rtcp_port);
-    stream->udpsrc[1] = gst_element_make_from_uri (GST_URI_SRC, uri, NULL);
+    stream->udpsrc[1] =
+        gst_element_make_from_uri (GST_URI_SRC, uri, NULL, NULL);
     g_free (uri);
     if (stream->udpsrc[1] == NULL)
       goto no_element;
@@ -1060,7 +1062,7 @@ gst_sdp_demux_stream_configure_udp_sink (GstSDPDemux * demux,
   GST_DEBUG_OBJECT (demux, "configure UDP sink for %s:%d", destination, port);
 
   uri = g_strdup_printf ("udp://%s:%d", destination, port);
-  stream->udpsink = gst_element_make_from_uri (GST_URI_SINK, uri, NULL);
+  stream->udpsink = gst_element_make_from_uri (GST_URI_SINK, uri, NULL, NULL);
   g_free (uri);
   if (stream->udpsink == NULL)
     goto no_sink_element;
