@@ -2000,15 +2000,15 @@ gst_value_compare_buffer (const GValue * value1, const GValue * value2)
     return GST_VALUE_UNORDERED;
 
   if (!gst_buffer_map (buf2, &info2, GST_MAP_READ)) {
-    gst_buffer_unmap (buf1, &info2);
+    gst_buffer_unmap (buf1, &info1);
     return GST_VALUE_UNORDERED;
   }
 
   if (memcmp (info1.data, info2.data, info1.size) == 0)
     result = GST_VALUE_EQUAL;
 
-  gst_buffer_unmap (buf2, &info1);
-  gst_buffer_unmap (buf1, &info2);
+  gst_buffer_unmap (buf1, &info1);
+  gst_buffer_unmap (buf2, &info2);
 
   return result;
 }
