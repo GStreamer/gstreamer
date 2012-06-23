@@ -1517,7 +1517,7 @@ again:
       tmp_rtp >= src->client_port_range.max)
     goto no_ports;
 
-  udpsrc0 = gst_element_make_from_uri (GST_URI_SRC, host, NULL);
+  udpsrc0 = gst_element_make_from_uri (GST_URI_SRC, host, NULL, NULL);
   if (udpsrc0 == NULL)
     goto no_udp_protocol;
   g_object_set (G_OBJECT (udpsrc0), "port", tmp_rtp, "reuse", FALSE, NULL);
@@ -1566,7 +1566,7 @@ again:
   }
 
   /* allocate port+1 for RTCP now */
-  udpsrc1 = gst_element_make_from_uri (GST_URI_SRC, host, NULL);
+  udpsrc1 = gst_element_make_from_uri (GST_URI_SRC, host, NULL, NULL);
   if (udpsrc1 == NULL)
     goto no_udp_rtcp_protocol;
 
@@ -2675,7 +2675,8 @@ gst_rtspsrc_stream_configure_mcast (GstRTSPSrc * src, GstRTSPStream * stream,
   /* creating UDP source for RTP */
   if (min != -1) {
     uri = g_strdup_printf ("udp://%s:%d", destination, min);
-    stream->udpsrc[0] = gst_element_make_from_uri (GST_URI_SRC, uri, NULL);
+    stream->udpsrc[0] =
+        gst_element_make_from_uri (GST_URI_SRC, uri, NULL, NULL);
     g_free (uri);
     if (stream->udpsrc[0] == NULL)
       goto no_element;
@@ -2690,7 +2691,8 @@ gst_rtspsrc_stream_configure_mcast (GstRTSPSrc * src, GstRTSPStream * stream,
   /* creating another UDP source for RTCP */
   if (max != -1) {
     uri = g_strdup_printf ("udp://%s:%d", destination, max);
-    stream->udpsrc[1] = gst_element_make_from_uri (GST_URI_SRC, uri, NULL);
+    stream->udpsrc[1] =
+        gst_element_make_from_uri (GST_URI_SRC, uri, NULL, NULL);
     g_free (uri);
     if (stream->udpsrc[1] == NULL)
       goto no_element;
@@ -2817,7 +2819,8 @@ gst_rtspsrc_stream_configure_udp_sinks (GstRTSPSrc * src,
         rtp_port);
 
     uri = g_strdup_printf ("udp://%s:%d", destination, rtp_port);
-    stream->udpsink[0] = gst_element_make_from_uri (GST_URI_SINK, uri, NULL);
+    stream->udpsink[0] =
+        gst_element_make_from_uri (GST_URI_SINK, uri, NULL, NULL);
     g_free (uri);
     if (stream->udpsink[0] == NULL)
       goto no_sink_element;
@@ -2869,7 +2872,8 @@ gst_rtspsrc_stream_configure_udp_sinks (GstRTSPSrc * src,
         rtcp_port);
 
     uri = g_strdup_printf ("udp://%s:%d", destination, rtcp_port);
-    stream->udpsink[1] = gst_element_make_from_uri (GST_URI_SINK, uri, NULL);
+    stream->udpsink[1] =
+        gst_element_make_from_uri (GST_URI_SINK, uri, NULL, NULL);
     g_free (uri);
     if (stream->udpsink[1] == NULL)
       goto no_sink_element;
