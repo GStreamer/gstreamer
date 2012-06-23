@@ -869,7 +869,7 @@ alloc_udp_ports (GstRTSPMedia * media, GstRTSPMediaStream * stream)
   /* try to allocate 2 UDP ports, the RTP port should be an even
    * number and the RTCP port should be the next (uneven) port */
 again:
-  udpsrc0 = gst_element_make_from_uri (GST_URI_SRC, host, NULL);
+  udpsrc0 = gst_element_make_from_uri (GST_URI_SRC, host, NULL, NULL);
   if (udpsrc0 == NULL)
     goto no_udp_protocol;
   g_object_set (G_OBJECT (udpsrc0), "port", tmp_rtp, NULL);
@@ -905,7 +905,7 @@ again:
   }
 
   /* allocate port+1 for RTCP now */
-  udpsrc1 = gst_element_make_from_uri (GST_URI_SRC, host, NULL);
+  udpsrc1 = gst_element_make_from_uri (GST_URI_SRC, host, NULL, NULL);
   if (udpsrc1 == NULL)
     goto no_udp_rtcp_protocol;
 
