@@ -40,7 +40,7 @@ GQuark gst_uri_error_quark (void);
 
 /**
  * GstURIError:
- * @GST_URI_ERROR_BAD_PROTOCOL: The protocol is not supported
+ * @GST_URI_ERROR_UNSUPPORTED_PROTOCOL: The protocol is not supported
  * @GST_URI_ERROR_BAD_URI: There was a problem with the URI
  * @GST_URI_ERROR_BAD_STATE: Could not set or change the URI because the
  *     URI handler was in a state where that is not possible or not permitted
@@ -51,7 +51,7 @@ GQuark gst_uri_error_quark (void);
  */
 typedef enum
 {
-  GST_URI_ERROR_BAD_PROTOCOL,
+  GST_URI_ERROR_UNSUPPORTED_PROTOCOL,
   GST_URI_ERROR_BAD_URI,
   GST_URI_ERROR_BAD_STATE,
   GST_URI_ERROR_BAD_REFERENCE
@@ -138,7 +138,8 @@ gchar *         gst_filename_to_uri             (const gchar * filename,
 
 GstElement *    gst_element_make_from_uri       (const GstURIType type,
                                                  const gchar *    uri,
-                                                 const gchar *    elementname) G_GNUC_MALLOC;
+                                                 const gchar *    elementname,
+                                                 GError      **   error) G_GNUC_MALLOC;
 
 /* accessing the interface */
 GType                 gst_uri_handler_get_type (void);
