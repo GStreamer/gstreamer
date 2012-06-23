@@ -684,7 +684,7 @@ __gst_tag_list_free (GstTagList * list)
   g_return_if_fail (GST_IS_TAG_LIST (list));
 
 #ifdef DEBUG_REFCOUNT
-  GST_CAT_TRACE (GST_CAT_TAGS, "freeing caps %p", list);
+  GST_CAT_TRACE (GST_CAT_TAGS, "freeing taglist %p", list);
 #endif
 
   gst_structure_free (GST_TAG_LIST_STRUCTURE (list));
