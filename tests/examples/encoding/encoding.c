@@ -289,7 +289,7 @@ transcode_file (gchar * uri, gchar * outputuri, GstEncodingProfile * prof)
   g_print (" Input URI  : %s\n", uri);
   g_print (" Output URI : %s\n", outputuri);
 
-  sink = gst_element_make_from_uri (GST_URI_SINK, outputuri, "sink");
+  sink = gst_element_make_from_uri (GST_URI_SINK, outputuri, "sink", NULL);
   if (G_UNLIKELY (sink == NULL)) {
     g_print ("Can't create output sink, most likely invalid output URI !\n");
     return;

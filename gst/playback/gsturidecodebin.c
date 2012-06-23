@@ -1226,7 +1226,8 @@ gen_source_element (GstURIDecodeBin * decoder)
   if (IS_BLACKLISTED_URI (decoder->uri))
     goto uri_blacklisted;
 
-  source = gst_element_make_from_uri (GST_URI_SRC, decoder->uri, "source");
+  source =
+      gst_element_make_from_uri (GST_URI_SRC, decoder->uri, "source", NULL);
   if (!source)
     goto no_source;
 
