@@ -79,9 +79,9 @@ if HAVE_INTROSPECTION
 BUILT_GIRSOURCES = GstAudio-@GST_API_VERSION@.gir
 
 gir_headers=$(patsubst %,$(srcdir)/%, $(libgstaudio_@GST_API_VERSION@include_HEADERS))
-gir_headers+=$(patsubst %,$(builddir)/%, $(nodist_libgstaudio_@GST_API_VERSION@include_HEADERS))
+gir_headers+=$(patsubst %,$(builddir)/%, $(built_headers))
 gir_sources=$(patsubst %,$(srcdir)/%, $(libgstaudio_@GST_API_VERSION@_la_SOURCES))
-gir_sources+=$(patsubst %,$(builddir)/%, $(nodist_libgstaudio_@GST_API_VERSION@_la_SOURCES))
+gir_sources+=$(patsubst %,$(builddir)/%, $(built_sources))
 gir_cincludes=$(patsubst %,--c-include='gst/audio/%',$(libgstaudio_@GST_API_VERSION@include_HEADERS))
 gir_cincludes+=$(patsubst %,--c-include='gst/audio/%',$(nodist_libgstaudio_@GST_API_VERSION@include_HEADERS))
 
