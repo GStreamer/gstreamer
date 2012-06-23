@@ -452,6 +452,8 @@ GST_END_TEST;
 GST_START_TEST (test_equal)
 {
   GstTagList *tags, *tags2;
+  GstSample *sample1, *sample2, *sample11;
+  GstBuffer *buf;
 
   tags = gst_tag_list_new_empty ();
   gst_tag_list_add (tags, GST_TAG_MERGE_APPEND, GST_TAG_ARTIST, "Foo", NULL);
@@ -482,6 +484,48 @@ GST_START_TEST (test_equal)
 
   gst_tag_list_unref (tags);
   gst_tag_list_unref (tags2);
+
+  /* samples */
+  buf = gst_buffer_new_wrapped (g_strdup ("test 1-2-3"), 10);
+  sample1 = gst_sample_new (buf, NULL, NULL, NULL);
+  gst_buffer_unref (buf);
+
+  buf = gst_buffer_new_wrapped (g_strdup ("test 1-2-3"), 10);
+  sample11 = gst_sample_new (buf, NULL, NULL, NULL);
+  gst_buffer_unref (buf);
+
+  buf = gst_buffer_new_wrapped (g_strdup ("test 2-3-4-5"), 12);
+  sample2 = gst_sample_new (buf, NULL, NULL, NULL);
+  gst_buffer_unref (buf);
+
+  tags = gst_tag_list_new_empty ();
+  gst_tag_list_add (tags, GST_TAG_MERGE_APPEND, GST_TAG_IMAGE, sample1, NULL);
+
+  tags2 = gst_tag_list_new_empty ();
+  fail_unless (!gst_tag_list_is_equal (tags2, tags));
+
+  /* sample sample, should be very equal now */
+  gst_tag_list_add (tags2, GST_TAG_MERGE_APPEND, GST_TAG_IMAGE, sample1, NULL);
+  fail_unless (gst_tag_list_is_equal (tags2, tags));
+  gst_tag_list_unref (tags2);
+
+  /* same buffer content, but different buffer instances, still rather equal */
+  tags2 = gst_tag_list_new_empty ();
+  gst_tag_list_add (tags2, GST_TAG_MERGE_APPEND, GST_TAG_IMAGE, sample11, NULL);
+  fail_unless (gst_tag_list_is_equal (tags2, tags));
+  gst_tag_list_unref (tags2);
+
+  /* different buffer content, should not be equal */
+  tags2 = gst_tag_list_new_empty ();
+  gst_tag_list_add (tags2, GST_TAG_MERGE_APPEND, GST_TAG_IMAGE, sample2, NULL);
+  fail_unless (!gst_tag_list_is_equal (tags2, tags));
+  gst_tag_list_unref (tags2);
+
+  gst_tag_list_unref (tags);
+
+  gst_sample_unref (sample1);
+  gst_sample_unref (sample11);
+  gst_sample_unref (sample2);
 }
 
 GST_END_TEST;

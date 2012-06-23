@@ -1979,13 +1979,14 @@ gst_value_deserialize_structure (GValue * dest, const gchar * s)
  *************/
 
 static gint
-gst_value_compare_buffer (const GValue * value1, const GValue * value2)
+compare_buffer (GstBuffer * buf1, GstBuffer * buf2)
 {
-  GstBuffer *buf1 = gst_value_get_buffer (value1);
-  GstBuffer *buf2 = gst_value_get_buffer (value2);
   gsize size1, size2;
   GstMapInfo info1, info2;
-  gint result = GST_VALUE_UNORDERED;
+  gint result, mret;
+
+  if (buf1 == buf2)
+    return GST_VALUE_EQUAL;
 
   size1 = gst_buffer_get_size (buf1);
   size2 = gst_buffer_get_size (buf2);
@@ -2004,13 +2005,27 @@ gst_value_compare_buffer (const GValue * value1, const GValue * value2)
     return GST_VALUE_UNORDERED;
   }
 
-  if (memcmp (info1.data, info2.data, info1.size) == 0)
+  mret = memcmp (info1.data, info2.data, info1.size);
+  if (mret == 0)
     result = GST_VALUE_EQUAL;
+  else if (mret < 0)
+    result = GST_VALUE_LESS_THAN;
+  else
+    result = GST_VALUE_GREATER_THAN;
 
   gst_buffer_unmap (buf1, &info1);
   gst_buffer_unmap (buf2, &info2);
 
   return result;
+}
+
+static gint
+gst_value_compare_buffer (const GValue * value1, const GValue * value2)
+{
+  GstBuffer *buf1 = gst_value_get_buffer (value1);
+  GstBuffer *buf2 = gst_value_get_buffer (value2);
+
+  return compare_buffer (buf1, buf2);
 }
 
 static gchar *
@@ -2094,6 +2109,20 @@ wrong_char:
   }
 }
 
+/*************
+ * GstSample *
+ *************/
+
+/* This function is mostly used for comparing image/buffer tags in taglists */
+static gint
+gst_value_compare_sample (const GValue * value1, const GValue * value2)
+{
+  GstBuffer *buf1 = gst_sample_get_buffer (gst_value_get_sample (value1));
+  GstBuffer *buf2 = gst_sample_get_buffer (gst_value_get_sample (value2));
+
+  /* FIXME: should we take into account anything else such as caps? */
+  return compare_buffer (buf1, buf2);
+}
 
 /***********
  * boolean *
@@ -5761,6 +5790,17 @@ _priv_gst_value_initialize (void)
     };
 
     gst_value.type = GST_TYPE_BUFFER;
+    gst_value_register (&gst_value);
+  }
+  {
+    static GstValueTable gst_value = {
+      0,
+      gst_value_compare_sample,
+      NULL,
+      NULL,
+    };
+
+    gst_value.type = GST_TYPE_SAMPLE;
     gst_value_register (&gst_value);
   }
   {
