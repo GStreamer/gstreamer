@@ -68,7 +68,7 @@ enum
 static void
 _do_init (void)
 {
-  INTERNAL_ELEMENT = g_quark_from_string ("internal-element");
+  INTERNAL_ELEMENT = g_quark_from_static_string ("internal-element");
 };
 
 G_DEFINE_TYPE_EXTENDED (GstSmartEncoder, gst_smart_encoder, GST_TYPE_ELEMENT, 0,
