@@ -52,8 +52,6 @@
 
 #define GST_TAG_IS_VALID(tag)           (gst_tag_get_info (tag) != NULL)
 
-/* FIXME 0.11: make taglists refcounted maybe? */
-/* a tag list is basically a structure, but we don't make this fact public */
 typedef struct _GstTagListImpl
 {
   GstTagList taglist;
@@ -62,11 +60,6 @@ typedef struct _GstTagListImpl
 } GstTagListImpl;
 
 #define GST_TAG_LIST_STRUCTURE(taglist)  ((GstTagListImpl*)(taglist))->structure
-
-
-/* FIXME 0.11: use GParamSpecs or something similar for tag registrations,
- * possibly even gst_tag_register(). Especially value ranges might be
- * useful for some tags. */
 
 typedef struct
 {
