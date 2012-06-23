@@ -185,11 +185,9 @@ _gst_caps_free (GstCaps * caps)
 static void
 gst_caps_init (GstCaps * caps)
 {
-  gst_mini_object_init (GST_MINI_OBJECT_CAST (caps), _gst_caps_type);
-
-  caps->mini_object.copy = (GstMiniObjectCopyFunction) _gst_caps_copy;
-  caps->mini_object.dispose = NULL;
-  caps->mini_object.free = (GstMiniObjectFreeFunction) _gst_caps_free;
+  gst_mini_object_init (GST_MINI_OBJECT_CAST (caps), _gst_caps_type,
+      (GstMiniObjectCopyFunction) _gst_caps_copy, NULL,
+      (GstMiniObjectFreeFunction) _gst_caps_free);
 
   /* the 32 has been determined by logging caps sizes in _gst_caps_free
    * but g_ptr_array uses 16 anyway if it expands once, so this does not help

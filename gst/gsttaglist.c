@@ -655,17 +655,6 @@ gst_tag_is_fixed (const gchar * tag)
   return info->merge_func == NULL;
 }
 
-static void
-gst_tag_list_init (GstTagList * taglist)
-{
-  gst_mini_object_init (GST_MINI_OBJECT_CAST (taglist),
-      gst_tag_list_get_type ());
-
-  taglist->mini_object.copy = (GstMiniObjectCopyFunction) __gst_tag_list_copy;
-  taglist->mini_object.dispose = NULL;
-  taglist->mini_object.free = (GstMiniObjectFreeFunction) __gst_tag_list_free;
-}
-
 /* takes ownership of the structure */
 static GstTagList *
 gst_tag_list_new_internal (GstStructure * s)
@@ -676,7 +665,9 @@ gst_tag_list_new_internal (GstStructure * s)
 
   tag_list = (GstTagList *) g_slice_new (GstTagListImpl);
 
-  gst_tag_list_init (tag_list);
+  gst_mini_object_init (GST_MINI_OBJECT_CAST (tag_list), GST_TYPE_TAG_LIST,
+      (GstMiniObjectCopyFunction) __gst_tag_list_copy, NULL,
+      (GstMiniObjectFreeFunction) __gst_tag_list_free);
 
   GST_TAG_LIST_STRUCTURE (tag_list) = s;
 

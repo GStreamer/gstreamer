@@ -220,17 +220,6 @@ _gst_query_copy (GstQuery * query)
   return copy;
 }
 
-static void
-gst_query_init (GstQueryImpl * query, GstQueryType type)
-{
-  gst_mini_object_init (GST_MINI_OBJECT_CAST (query), _gst_query_type);
-
-  query->query.mini_object.copy = (GstMiniObjectCopyFunction) _gst_query_copy;
-  query->query.mini_object.free = (GstMiniObjectFreeFunction) _gst_query_free;
-
-  GST_QUERY_TYPE (query) = type;
-}
-
 /**
  * gst_query_new_position:
  * @format: the default #GstFormat for the new query
@@ -702,8 +691,12 @@ gst_query_new_custom (GstQueryType type, GstStructure * structure)
             &query->query.mini_object.refcount))
       goto had_parent;
   }
-  gst_query_init (query, type);
 
+  gst_mini_object_init (GST_MINI_OBJECT_CAST (query), _gst_query_type,
+      (GstMiniObjectCopyFunction) _gst_query_copy, NULL,
+      (GstMiniObjectFreeFunction) _gst_query_free);
+
+  GST_QUERY_TYPE (query) = type;
   GST_QUERY_STRUCTURE (query) = structure;
 
   return GST_QUERY_CAST (query);

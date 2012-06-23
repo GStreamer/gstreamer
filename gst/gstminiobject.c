@@ -91,22 +91,34 @@ _priv_gst_mini_object_initialize (void)
 }
 
 /**
- * gst_mini_object_init:
+ * gst_mini_object_init: (skip)
  * @mini_object: a #GstMiniObject 
  * @type: the #GType of the mini-object to create
+ * @copy_func: the copy function, or NULL
+ * @dispose_func: the dispose function, or NULL
+ * @free_func: the free function or NULL
  *
- * Initializes a mini-object with the desired type and size.
+ * Initializes a mini-object with the desired type and copy/dispose/free
+ * functions.
  *
  * MT safe
  *
  * Returns: (transfer full): the new mini-object.
  */
 void
-gst_mini_object_init (GstMiniObject * mini_object, GType type)
+gst_mini_object_init (GstMiniObject * mini_object, GType type,
+    GstMiniObjectCopyFunction copy_func,
+    GstMiniObjectDisposeFunction dispose_func,
+    GstMiniObjectFreeFunction free_func)
 {
   mini_object->type = type;
   mini_object->refcount = 1;
   mini_object->flags = 0;
+
+  mini_object->copy = copy_func;
+  mini_object->dispose = dispose_func;
+  mini_object->free = free_func;
+
   mini_object->n_qdata = 0;
   mini_object->qdata = NULL;
 

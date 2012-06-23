@@ -181,7 +181,10 @@ struct _GstMiniObject {
   gpointer qdata;
 };
 
-void            gst_mini_object_init            (GstMiniObject *mini_object, GType type);
+void            gst_mini_object_init (GstMiniObject *mini_object, GType type,
+                                      GstMiniObjectCopyFunction copy_func,
+                                      GstMiniObjectDisposeFunction dispose_func,
+                                      GstMiniObjectFreeFunction free_func);
 
 GstMiniObject * gst_mini_object_copy		(const GstMiniObject *mini_object) G_GNUC_MALLOC;
 gboolean        gst_mini_object_is_writable	(const GstMiniObject *mini_object);

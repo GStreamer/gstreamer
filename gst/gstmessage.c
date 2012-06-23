@@ -239,12 +239,9 @@ static void
 gst_message_init (GstMessageImpl * message, GstMessageType type,
     GstObject * src)
 {
-  gst_mini_object_init (GST_MINI_OBJECT_CAST (message), _gst_message_type);
-
-  message->message.mini_object.copy =
-      (GstMiniObjectCopyFunction) _gst_message_copy;
-  message->message.mini_object.free =
-      (GstMiniObjectFreeFunction) _gst_message_free;
+  gst_mini_object_init (GST_MINI_OBJECT_CAST (message), _gst_message_type,
+      (GstMiniObjectCopyFunction) _gst_message_copy, NULL,
+      (GstMiniObjectFreeFunction) _gst_message_free);
 
   GST_MESSAGE_TYPE (message) = type;
   if (src)

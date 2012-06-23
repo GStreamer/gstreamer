@@ -103,10 +103,9 @@ _gst_buffer_list_free (GstBufferList * list)
 static void
 gst_buffer_list_init (GstBufferList * list, guint asize)
 {
-  gst_mini_object_init (GST_MINI_OBJECT_CAST (list), _gst_buffer_list_type);
-
-  list->mini_object.copy = (GstMiniObjectCopyFunction) _gst_buffer_list_copy;
-  list->mini_object.free = (GstMiniObjectFreeFunction) _gst_buffer_list_free;
+  gst_mini_object_init (GST_MINI_OBJECT_CAST (list), _gst_buffer_list_type,
+      (GstMiniObjectCopyFunction) _gst_buffer_list_copy, NULL,
+      (GstMiniObjectFreeFunction) _gst_buffer_list_free);
 
   list->array = g_array_sized_new (FALSE, FALSE, sizeof (GstBuffer *), asize);
 

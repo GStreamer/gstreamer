@@ -138,11 +138,10 @@ _default_mem_init (GstMemoryDefault * mem, GstMemoryFlags flags,
     gsize maxsize, gsize offset, gsize size, gsize align,
     gpointer user_data, GDestroyNotify notify)
 {
-  gst_mini_object_init (GST_MINI_OBJECT_CAST (mem), GST_TYPE_MEMORY);
+  gst_mini_object_init (GST_MINI_OBJECT_CAST (mem), GST_TYPE_MEMORY,
+      (GstMiniObjectCopyFunction) _gst_memory_copy, NULL,
+      (GstMiniObjectFreeFunction) _gst_memory_free);
 
-  mem->mem.mini_object.copy = (GstMiniObjectCopyFunction) _gst_memory_copy;
-  mem->mem.mini_object.dispose = NULL;
-  mem->mem.mini_object.free = (GstMiniObjectFreeFunction) _gst_memory_free;
   mem->mem.mini_object.flags = flags;
 
   mem->mem.allocator = _default_mem_impl;
@@ -805,10 +804,9 @@ gst_allocator_new (const GstMemoryInfo * info, gpointer user_data,
 
   allocator = g_slice_new0 (GstAllocator);
 
-  gst_mini_object_init (GST_MINI_OBJECT_CAST (allocator), GST_TYPE_ALLOCATOR);
-
-  allocator->mini_object.copy = (GstMiniObjectCopyFunction) _gst_allocator_copy;
-  allocator->mini_object.free = (GstMiniObjectFreeFunction) _gst_allocator_free;
+  gst_mini_object_init (GST_MINI_OBJECT_CAST (allocator), GST_TYPE_ALLOCATOR,
+      (GstMiniObjectCopyFunction) _gst_allocator_copy, NULL,
+      (GstMiniObjectFreeFunction) _gst_allocator_free);
 
   allocator->info = *info;
   allocator->user_data = user_data;

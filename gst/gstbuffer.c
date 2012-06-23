@@ -525,14 +525,10 @@ _gst_buffer_free (GstBuffer * buffer)
 static void
 gst_buffer_init (GstBufferImpl * buffer, gsize size)
 {
-  gst_mini_object_init (GST_MINI_OBJECT_CAST (buffer), _gst_buffer_type);
-
-  buffer->buffer.mini_object.copy =
-      (GstMiniObjectCopyFunction) _gst_buffer_copy;
-  buffer->buffer.mini_object.dispose =
-      (GstMiniObjectDisposeFunction) _gst_buffer_dispose;
-  buffer->buffer.mini_object.free =
-      (GstMiniObjectFreeFunction) _gst_buffer_free;
+  gst_mini_object_init (GST_MINI_OBJECT_CAST (buffer), _gst_buffer_type,
+      (GstMiniObjectCopyFunction) _gst_buffer_copy,
+      (GstMiniObjectDisposeFunction) _gst_buffer_dispose,
+      (GstMiniObjectFreeFunction) _gst_buffer_free);
 
   GST_BUFFER_SLICE_SIZE (buffer) = size;
 
