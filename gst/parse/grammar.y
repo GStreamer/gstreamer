@@ -811,7 +811,8 @@ chain:   	element			      { $$ = gst_parse_chain_new ();
 	|	PARSE_URL chain		      { $$ = $2;
 						if ($$->front) {
 						  GstElement *element =
-							  gst_element_make_from_uri (GST_URI_SRC, $1, NULL);
+							  gst_element_make_from_uri (GST_URI_SRC, $1, NULL, NULL);
+						  /* FIXME: get and parse error properly */
 						  if (!element) {
 						    SET_ERROR (graph->error, GST_PARSE_ERROR_NO_SUCH_ELEMENT,
 							    _("no source element for URI \"%s\""), $1);
@@ -829,7 +830,8 @@ chain:   	element			      { $$ = gst_parse_chain_new ();
 						g_free ($1);
 					      }
 	|	link PARSE_URL		      { GstElement *element =
-							  gst_element_make_from_uri (GST_URI_SINK, $2, NULL);
+							  gst_element_make_from_uri (GST_URI_SINK, $2, NULL, NULL);
+						/* FIXME: get and parse error properly */
 						if (!element) {
 						  SET_ERROR (graph->error, GST_PARSE_ERROR_NO_SUCH_ELEMENT,
 							  _("no sink element for URI \"%s\""), $2);
