@@ -174,7 +174,7 @@ typedef enum {
  * GstMapInfo:
  * @memory: a pointer to the mapped memory
  * @flags: flags used when mapping the memory
- * @data: a pointer to the mapped data
+ * @data: (array length=size): a pointer to the mapped data
  * @size: the valid size in @data
  * @maxsize: the maximum bytes in @data
  * @user_data: extra private user_data that the implementation of the memory
