@@ -3178,13 +3178,16 @@ gst_value_intersect_int_range_int_range (GValue * dest, const GValue * src1,
   return FALSE;
 }
 
+#define INT64_RANGE_MIN_VAL(v) (INT64_RANGE_MIN (v) * INT64_RANGE_STEP (v))
+#define INT64_RANGE_MAX_VAL(v) (INT64_RANGE_MAX (v) * INT64_RANGE_STEP (v))
+
 static gboolean
 gst_value_intersect_int64_int64_range (GValue * dest, const GValue * src1,
     const GValue * src2)
 {
-  if (INT64_RANGE_MIN (src2) * INT64_RANGE_STEP (src2) <= src1->data[0].v_int &&
-      INT64_RANGE_MAX (src2) * INT64_RANGE_STEP (src2) >= src1->data[0].v_int &&
-      src1->data[0].v_int % INT64_RANGE_STEP (src2) == 0) {
+  if (INT64_RANGE_MIN_VAL (src2) <= src1->data[0].v_int64 &&
+      INT64_RANGE_MAX_VAL (src2) >= src1->data[0].v_int64 &&
+      src1->data[0].v_int64 % INT64_RANGE_STEP (src2) == 0) {
     if (dest)
       gst_value_init_and_copy (dest, src1);
     return TRUE;
