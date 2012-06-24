@@ -1008,7 +1008,7 @@ gst_matroska_read_common_parse_chapter_element (GstMatroskaReadCommon * common,
 
     toc_entry->subentries = g_list_append (toc_entry->subentries, chapter_info);
   } else
-    gst_toc_entry_free (chapter_info);
+    gst_toc_entry_unref (chapter_info);
 
   gst_tag_list_free (titles);
   return ret;
@@ -1076,7 +1076,7 @@ gst_matroska_read_common_parse_chapter_edition (GstMatroskaReadCommon * common,
   else {
     GST_DEBUG_OBJECT (common,
         "Skipping empty or hidden edition in the chapters TOC");
-    gst_toc_entry_free (edition_info);
+    gst_toc_entry_unref (edition_info);
   }
 
   return ret;
@@ -1123,7 +1123,7 @@ gst_matroska_read_common_parse_chapters (GstMatroskaReadCommon * common,
 
     common->toc = toc;
   } else
-    gst_toc_free (toc);
+    gst_toc_unref (toc);
 
   common->chapters_parsed = TRUE;
 

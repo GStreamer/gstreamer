@@ -813,7 +813,7 @@ gst_matroska_mux_handle_sink_event (GstCollectPads * pads,
         }
 
         gst_toc_setter_set_toc (GST_TOC_SETTER (mux), toc);
-        gst_toc_free (toc);
+        gst_toc_unref (toc);
       }
 
       gst_event_unref (event);
@@ -2676,7 +2676,7 @@ gst_matroska_mux_start (GstMatroskaMux * mux)
     if (toc_entry != NULL) {
       g_list_free (toc_entry->subentries);
       toc_entry->subentries = NULL;
-      gst_toc_entry_free (toc_entry);
+      gst_toc_entry_unref (toc_entry);
       g_list_free (to_write);
     }
   }

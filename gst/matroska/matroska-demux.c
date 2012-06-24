@@ -481,7 +481,7 @@ gst_matroska_demux_reset (GstElement * element)
 
   /* free chapters TOC if any */
   if (demux->common.toc) {
-    gst_toc_free (demux->common.toc);
+    gst_toc_unref (demux->common.toc);
     demux->common.toc = NULL;
   }
 
@@ -1443,7 +1443,7 @@ gst_matroska_demux_query (GstMatroskaDemux * demux, GstPad * pad,
       gst_query_set_toc (query, toc, 0);
       res = TRUE;
       if (!demux->common.toc)
-        gst_toc_free (toc);
+        gst_toc_unref (toc);
       GST_OBJECT_UNLOCK (demux);
       break;
     }
