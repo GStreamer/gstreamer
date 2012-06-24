@@ -274,7 +274,7 @@ GST_START_TEST (test_serializing)
   test_toc = gst_toc_copy (toc);
   fail_if (test_toc == NULL);
   CHECK_TOC (test_toc);
-  gst_toc_free (test_toc);
+  gst_toc_unref (test_toc);
   test_toc = NULL;
 
   /* check TOC event handling */
@@ -287,7 +287,7 @@ GST_START_TEST (test_serializing)
   fail_unless (updated == TRUE);
   fail_if (test_toc == NULL);
   CHECK_TOC (test_toc);
-  gst_toc_free (test_toc);
+  gst_toc_unref (test_toc);
   gst_event_unref (event);
   updated = FALSE;
   test_toc = NULL;
@@ -302,7 +302,7 @@ GST_START_TEST (test_serializing)
   fail_unless (updated == TRUE);
   fail_if (test_toc == NULL);
   CHECK_TOC (test_toc);
-  gst_toc_free (test_toc);
+  gst_toc_unref (test_toc);
   gst_message_unref (message);
   test_toc = NULL;
 
@@ -328,7 +328,7 @@ GST_START_TEST (test_serializing)
   fail_unless_equals_string (uid, TEST_UID);
   fail_if (test_toc == NULL);
   CHECK_TOC (test_toc);
-  gst_toc_free (test_toc);
+  gst_toc_unref (test_toc);
   gst_query_unref (query);
   g_free (uid);
 
@@ -339,13 +339,13 @@ GST_START_TEST (test_serializing)
 
   /* and yet another one */
   toc->entries = g_list_remove (toc->entries, ch);
-  gst_toc_entry_free (ch);
+  gst_toc_entry_unref (ch);
   ed = gst_toc_entry_new (GST_TOC_ENTRY_TYPE_EDITION, ENTRY_ED3);
   ch = (GstTocEntry *) (toc->entries->data);
   ch->subentries = g_list_prepend (ch->subentries, ed);
   ASSERT_WARNING (message = gst_message_new_toc (NULL, toc, TRUE));
 
-  gst_toc_free (toc);
+  gst_toc_unref (toc);
 }
 
 GST_END_TEST;

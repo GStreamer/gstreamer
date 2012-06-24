@@ -101,7 +101,7 @@ gst_toc_data_free (gpointer p)
   GstTocData *data = (GstTocData *) p;
 
   if (data->toc)
-    gst_toc_free (data->toc);
+    gst_toc_unref (data->toc);
 
   g_mutex_clear (&data->lock);
 
@@ -153,7 +153,7 @@ gst_toc_setter_reset_toc (GstTocSetter * setter)
 
   g_mutex_lock (&data->lock);
   if (data->toc) {
-    gst_toc_free (data->toc);
+    gst_toc_unref (data->toc);
     data->toc = NULL;
   }
   g_mutex_unlock (&data->lock);
@@ -188,7 +188,7 @@ gst_toc_setter_get_toc (GstTocSetter * setter)
  * Return current TOC the setter uses. The difference between this
  * function and gst_toc_setter_get_toc() is that this function returns deep
  * copy of the TOC, so you can modify it in any way. This function is thread-safe.
- * Free it when done with gst_toc_free().
+ * Free it when done with gst_toc_unref().
  *
  * Returns: a copy of the current snapshot of the TOC used in the setter
  *          or NULL if none is used.
@@ -235,7 +235,7 @@ gst_toc_setter_set_toc (GstTocSetter * setter, const GstToc * toc)
 
   g_mutex_lock (&data->lock);
   if (data->toc)
-    gst_toc_free (data->toc);
+    gst_toc_unref (data->toc);
 
   data->toc = gst_toc_copy (toc);
 

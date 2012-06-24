@@ -254,7 +254,7 @@ GST_START_TEST (test_set)
 
   gst_toc_setter_set_toc (setter, toc);
 
-  gst_toc_free (toc);
+  gst_toc_unref (toc);
   toc = gst_toc_setter_get_toc_copy (setter);
 
   CHECK_TOC (toc);
@@ -266,8 +266,8 @@ GST_START_TEST (test_set)
   gst_toc_setter_set_toc (setter, toc);
   gst_toc_setter_add_toc_entry (setter, "0", entry);
 
-  gst_toc_free (toc);
-  gst_toc_entry_free (entry);
+  gst_toc_unref (toc);
+  gst_toc_entry_unref (entry);
   toc = gst_toc_setter_get_toc_copy (setter);
 
   CHECK_TOC (toc);
@@ -283,7 +283,7 @@ GST_START_TEST (test_set)
 
   CHECK_TOC (toc);
 
-  gst_toc_free (toc);
+  gst_toc_unref (toc);
   gst_toc_setter_reset_toc (setter);
   toc = gst_toc_setter_get_toc_copy (setter);
 
@@ -317,7 +317,7 @@ test_threads_thread_func1 (gpointer data)
   while (g_timer_elapsed (timer, NULL) < THREADS_TEST_SECONDS)
     gst_toc_setter_set_toc (setter, toc);
 
-  gst_toc_free (toc);
+  gst_toc_unref (toc);
   g_timer_destroy (timer);
   GST_INFO ("Done");
 
@@ -344,7 +344,7 @@ test_threads_thread_func2 (gpointer data)
   while (g_timer_elapsed (timer, NULL) < THREADS_TEST_SECONDS)
     gst_toc_setter_set_toc (setter, toc);
 
-  gst_toc_free (toc);
+  gst_toc_unref (toc);
   g_timer_destroy (timer);
   GST_INFO ("Done");
 

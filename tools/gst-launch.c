@@ -685,7 +685,7 @@ event_loop (GstElement * pipeline, gboolean blocking, GstState target_state)
           /* recursively loop over toc entries */
           g_list_foreach (toc_msg->entries, print_toc_entry,
               GUINT_TO_POINTER (0));
-          gst_toc_free (toc_msg);
+          gst_toc_unref (toc_msg);
         }
         break;
       case GST_MESSAGE_INFO:{
