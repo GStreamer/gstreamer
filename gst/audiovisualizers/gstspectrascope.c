@@ -217,10 +217,12 @@ gst_spectra_scope_render (GstBaseAudioVisualizer * bscope, GstBuffer * audio,
     y = h - y;
     off = (y * w) + x;
     vdata[off] = 0x00FFFFFF;
-    for (l = y + 1; l <= h; l++) {
+    for (l = y; l < h; l++) {
       off += w;
       add_pixel (&vdata[off], 0x007F7F7F);
     }
+    /* ensure bottom line is full bright (especially in move-up mode) */
+    add_pixel (&vdata[off], 0x007F7F7F);
   }
   gst_buffer_unmap (video, &vmap);
   gst_buffer_unmap (audio, &amap);
