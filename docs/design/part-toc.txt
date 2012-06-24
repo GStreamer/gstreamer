@@ -53,7 +53,7 @@ pads related to the item. It can be used for example to link a TOC with
 specific pad. Field 'tags' is a list of tags related to the item. And field
 'info' is similar to GstToc.info described above.
 
-So, a little more about managing GstToc. Use gst_toc_new() and gst_toc_free()
+So, a little more about managing GstToc. Use gst_toc_new() and gst_toc_unref()
 to create/free it. GstTocEntry can be created using gst_toc_entry_new() and
 gst_toc_entry_new_with_pad(). The latter method used to create GstTocEntry
 linked to particular pad. While building GstToc you can set start and stop
