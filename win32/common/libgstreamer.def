@@ -1127,9 +1127,6 @@ EXPORTS
 	gst_task_start
 	gst_task_state_get_type
 	gst_task_stop
-	gst_toc_copy
-	gst_toc_entry_copy
-	gst_toc_entry_free
 	gst_toc_entry_get_start_stop
 	gst_toc_entry_get_type
 	gst_toc_entry_new
@@ -1138,7 +1135,6 @@ EXPORTS
 	gst_toc_entry_type_get_nick
 	gst_toc_entry_type_get_type
 	gst_toc_find_entry
-	gst_toc_free
 	gst_toc_get_type
 	gst_toc_new
 	gst_toc_setter_add_toc_entry

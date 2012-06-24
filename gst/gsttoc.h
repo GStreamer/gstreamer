@@ -23,6 +23,7 @@
 #define __GST_TOC_H__
 
 #include <gst/gstconfig.h>
+#include <gst/gstminiobject.h>
 #include <gst/gststructure.h>
 #include <gst/gsttaglist.h>
 #include <gst/gstformat.h>
@@ -64,6 +65,8 @@ typedef enum {
  * Definition of TOC entry structure.
  */
 struct _GstTocEntry {
+  GstMiniObject mini_object;
+
   gchar *uid;
   GstTocEntryType type;
   GList *subentries;
@@ -88,6 +91,8 @@ struct _GstTocEntry {
  * Definition of TOC structure.
  */
 struct _GstToc {
+  GstMiniObject mini_object;
+
   GList *entries;
   GstTagList *tags;
   GstStructure *info;
@@ -100,18 +105,24 @@ struct _GstToc {
 GType           gst_toc_get_type                (void);
 GType           gst_toc_entry_get_type          (void);
 
-/* functions to create new structures */
+/* functions to create, ref and unref/free TOCs */
 GstToc *        gst_toc_new                     (void);
+
+#define gst_toc_ref(toc)            (GstToc*)gst_mini_object_ref(GST_MINI_OBJECT_CAST(toc))
+#define gst_toc_unref(toc)          gst_mini_object_unref(GST_MINI_OBJECT_CAST(toc))
+#define gst_toc_copy(toc)           (GstToc*)gst_mini_object_copy(GST_MINI_OBJECT_CAST(toc))
+#define gst_toc_make_writable(toc)  (GstToc*)gst_mini_object_make_writable(GST_MINI_OBJECT_CAST(toc))
+
+/* functions to create, ref and unref/free TOC entries */
 GstTocEntry *   gst_toc_entry_new               (GstTocEntryType type, const gchar *uid);
 GstTocEntry *   gst_toc_entry_new_with_pad      (GstTocEntryType type, const gchar *uid, GstPad * pad);
 
-/* functions to free structures */
-void            gst_toc_entry_free              (GstTocEntry *entry);
-void            gst_toc_free                    (GstToc *toc);
+#define gst_toc_entry_ref(entry)            (GstTocEntry*)gst_mini_object_ref(GST_MINI_OBJECT_CAST(entry))
+#define gst_toc_entry_unref(entry)          gst_mini_object_unref(GST_MINI_OBJECT_CAST(entry))
+#define gst_toc_entry_copy(entry)           (GstTocEntry*)gst_mini_object_copy(GST_MINI_OBJECT_CAST(entry))
+#define gst_toc_entry_make_writable(entry)  (GstTocEntry*)gst_mini_object_make_writable(GST_MINI_OBJECT_CAST(entry))
 
 GstTocEntry *   gst_toc_find_entry              (const GstToc *toc, const gchar *uid);
-GstTocEntry *   gst_toc_entry_copy              (const GstTocEntry *entry);
-GstToc      *   gst_toc_copy                    (const GstToc *toc);
 
 void            gst_toc_entry_set_start_stop    (GstTocEntry *entry, gint64 start, gint64 stop);
 gboolean        gst_toc_entry_get_start_stop    (const GstTocEntry *entry, gint64 *start, gint64 *stop);

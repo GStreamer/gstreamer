@@ -72,17 +72,23 @@
 #include "gstpad.h"
 #include "gstquark.h"
 
-G_DEFINE_BOXED_TYPE (GstToc, gst_toc,
-    (GBoxedCopyFunc) gst_toc_copy, (GBoxedFreeFunc) gst_toc_free);
-G_DEFINE_BOXED_TYPE (GstTocEntry, gst_toc_entry,
-    (GBoxedCopyFunc) gst_toc_entry_copy, (GBoxedFreeFunc) gst_toc_entry_free);
+#undef gst_toc_copy
+static GstToc *gst_toc_copy (const GstToc * toc);
+static void gst_toc_free (GstToc * toc);
+#undef gst_toc_entry_copy
+static GstTocEntry *gst_toc_entry_copy (const GstTocEntry * toc);
+static void gst_toc_entry_free (GstTocEntry * toc);
+
+GST_DEFINE_MINI_OBJECT_TYPE (GstToc, gst_toc);
+GST_DEFINE_MINI_OBJECT_TYPE (GstTocEntry, gst_toc_entry);
 
 /**
  * gst_toc_new:
  *
- * Create new #GstToc structure.
+ * Create a new #GstToc structure.
  *
- * Returns: newly allocated #GstToc structure, free it with gst_toc_free().
+ * Returns: (transfer full): newly allocated #GstToc structure, free it
+ *     with gst_toc_unref().
  *
  * Since: 0.10.37
  */
@@ -92,61 +98,29 @@ gst_toc_new (void)
   GstToc *toc;
 
   toc = g_slice_new0 (GstToc);
+
+  gst_mini_object_init (GST_MINI_OBJECT_CAST (toc), GST_TYPE_TOC,
+      (GstMiniObjectCopyFunction) gst_toc_copy, NULL,
+      (GstMiniObjectFreeFunction) gst_toc_free);
+
   toc->tags = gst_tag_list_new_empty ();
   toc->info = gst_structure_new_id_empty (GST_QUARK (INFO_STRUCTURE));
 
   return toc;
 }
 
-/**
- * gst_toc_entry_new:
- * @type: entry type.
- * @uid: unique ID (UID) in the whole TOC.
- *
- * Create new #GstTocEntry structure.
- *
- * Returns: newly allocated #GstTocEntry structure, free it with gst_toc_entry_free().
- *
- * Since: 0.10.37
- */
-GstTocEntry *
-gst_toc_entry_new (GstTocEntryType type, const gchar * uid)
-{
-  GstTocEntry *entry;
-
-  g_return_val_if_fail (uid != NULL, NULL);
-
-  entry = g_slice_new0 (GstTocEntry);
-  entry->uid = g_strdup (uid);
-  entry->type = type;
-  entry->tags = gst_tag_list_new_empty ();
-  entry->info = gst_structure_new_id_empty (GST_QUARK (INFO_STRUCTURE));
-
-  return entry;
-}
-
-/**
- * gst_toc_entry_new_with_pad:
- * @type: entry type.
- * @uid: unique ID (UID) in the whole TOC.
- * @pad: #GstPad related to this entry.
- *
- * Create new #GstTocEntry structure with #GstPad related.
- *
- * Returns: newly allocated #GstTocEntry structure, free it with gst_toc_entry_free()
- * when done.
- *
- * Since: 0.10.37
- */
-GstTocEntry *
-gst_toc_entry_new_with_pad (GstTocEntryType type, const gchar * uid,
+static GstTocEntry *
+gst_toc_entry_new_internal (GstTocEntryType type, const gchar * uid,
     GstPad * pad)
 {
   GstTocEntry *entry;
 
-  g_return_val_if_fail (uid != NULL, NULL);
-
   entry = g_slice_new0 (GstTocEntry);
+
+  gst_mini_object_init (GST_MINI_OBJECT_CAST (entry), GST_TYPE_TOC_ENTRY,
+      (GstMiniObjectCopyFunction) gst_toc_entry_copy, NULL,
+      (GstMiniObjectFreeFunction) gst_toc_entry_free);
+
   entry->uid = g_strdup (uid);
   entry->type = type;
   entry->tags = gst_tag_list_new_empty ();
@@ -159,19 +133,50 @@ gst_toc_entry_new_with_pad (GstTocEntryType type, const gchar * uid,
 }
 
 /**
- * gst_toc_free:
- * @toc: #GstToc structure to free.
+ * gst_toc_entry_new:
+ * @type: entry type.
+ * @uid: unique ID (UID) in the whole TOC.
  *
- * Free unused #GstToc structure.
+ * Create new #GstTocEntry structure.
+ *
+ * Returns: newly allocated #GstTocEntry structure, free it with gst_toc_entry_unref().
  *
  * Since: 0.10.37
  */
-void
+GstTocEntry *
+gst_toc_entry_new (GstTocEntryType type, const gchar * uid)
+{
+  g_return_val_if_fail (uid != NULL, NULL);
+
+  return gst_toc_entry_new_internal (type, uid, NULL);
+}
+
+/**
+ * gst_toc_entry_new_with_pad:
+ * @type: entry type.
+ * @uid: unique ID (UID) in the whole TOC.
+ * @pad: #GstPad related to this entry.
+ *
+ * Create new #GstTocEntry structure with #GstPad related.
+ *
+ * Returns: newly allocated #GstTocEntry structure, free it with gst_toc_entry_unref()
+ * when done.
+ *
+ * Since: 0.10.37
+ */
+GstTocEntry *
+gst_toc_entry_new_with_pad (GstTocEntryType type, const gchar * uid,
+    GstPad * pad)
+{
+  g_return_val_if_fail (uid != NULL, NULL);
+
+  return gst_toc_entry_new_internal (type, uid, pad);
+}
+
+static void
 gst_toc_free (GstToc * toc)
 {
-  g_return_if_fail (toc != NULL);
-
-  g_list_foreach (toc->entries, (GFunc) gst_toc_entry_free, NULL);
+  g_list_foreach (toc->entries, (GFunc) gst_mini_object_unref, NULL);
   g_list_free (toc->entries);
 
   if (toc->tags != NULL)
@@ -183,24 +188,14 @@ gst_toc_free (GstToc * toc)
   g_slice_free (GstToc, toc);
 }
 
-/**
- * gst_toc_entry_free:
- * @entry: #GstTocEntry structure to free.
- *
- * Free unused #GstTocEntry structure. Note that #GstTocEntry.uid will
- * be freed with g_free() and all #GstPad objects in the #GstTocEntry.pads
- * list will be unrefed with gst_object_unref().
- *
- * Since: 0.10.37
- */
-void
+static void
 gst_toc_entry_free (GstTocEntry * entry)
 {
   GList *cur;
 
   g_return_if_fail (entry != NULL);
 
-  g_list_foreach (entry->subentries, (GFunc) gst_toc_entry_free, NULL);
+  g_list_foreach (entry->subentries, (GFunc) gst_mini_object_unref, NULL);
   g_list_free (entry->subentries);
 
   g_free (entry->uid);
@@ -350,13 +345,13 @@ gst_toc_entry_from_structure (const GstStructure * entry, guint level)
       if (G_UNLIKELY (chapters_count > 0 && editions_count > 0)) {
         g_critical
             ("Mixed editions and chapters in the TOC contents, the TOC is broken");
-        gst_toc_entry_free (subentry);
-        gst_toc_entry_free (ret);
+        gst_toc_entry_unref (subentry);
+        gst_toc_entry_unref (ret);
         return NULL;
       }
 
       if (G_UNLIKELY (subentry == NULL)) {
-        gst_toc_entry_free (ret);
+        gst_toc_entry_unref (ret);
         return NULL;
       }
 
@@ -439,7 +434,7 @@ __gst_toc_from_structure (const GstStructure * toc)
       if (G_UNLIKELY (chapters_count > 0 && editions_count > 0)) {
         g_critical
             ("Mixed editions and chapters in the TOC contents, the TOC is broken");
-        gst_toc_entry_free (subentry);
+        gst_toc_entry_unref (subentry);
         gst_toc_free (ret);
         return NULL;
       }
@@ -688,11 +683,11 @@ gst_toc_find_entry (const GstToc * toc, const gchar * uid)
  * Copy #GstTocEntry with all subentries (deep copy).
  *
  * Returns: newly allocated #GstTocEntry in case of success, NULL otherwise;
- * free it when done with gst_toc_entry_free().
+ * free it when done with gst_toc_entry_unref().
  *
  * Since: 0.10.37
  */
-GstTocEntry *
+static GstTocEntry *
 gst_toc_entry_copy (const GstTocEntry * entry)
 {
   GstTocEntry *ret, *sub;
@@ -749,7 +744,7 @@ gst_toc_entry_copy (const GstTocEntry * entry)
  *
  * Since: 0.10.37
  */
-GstToc *
+static GstToc *
 gst_toc_copy (const GstToc * toc)
 {
   GstToc *ret;
