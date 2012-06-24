@@ -75,6 +75,7 @@ GST_DEBUG="*:2,*scope*:4"
 
 GST_PLUGIN_PATH=$GST_PLUGIN_PATH:$PWD gst-inspect scopes
 
+== 0.10 ==
 GST_PLUGIN_PATH=$GST_PLUGIN_PATH:$PWD gst-launch audiotestsrc ! audioconvert ! wavescope ! colorspace ! ximagesink
 GST_PLUGIN_PATH=$GST_PLUGIN_PATH:$PWD gst-launch filesrc location=$HOME/Music/1.mp3 ! decodebin2 ! audioconvert ! wavescope ! colorspace ! ximagesink
 GST_PLUGIN_PATH=$GST_PLUGIN_PATH:$PWD gst-launch filesrc location=$HOME/Music/1.mp3 ! decodebin2 ! audioconvert ! wavescope style=lines shade-amount=0x00080402 ! edgetv ! vertigotv ! ximagesink
@@ -87,5 +88,11 @@ GST_PLUGIN_PATH=$GST_PLUGIN_PATH:$PWD gst-launch filesrc location=$HOME/Music/1.
 
 GST_PLUGIN_PATH=$GST_PLUGIN_PATH:$PWD gst-launch filesrc location=$HOME/Music/1.mp3 ! decodebin2 ! tee name=t ! queue ! audioconvert ! synaesthesia ! ximagesink t. ! queue ! synaescope shade-amount=0x00040404 ! colorspace ! ximagesink
 
-gst-launch filesrc location=$HOME/Music/1.mp3 ! decodebin2 ! tee name=t ! queue ! audioconvert ! wavescope style=color-lines shade-amount=0x00080402 ! alpha alpha=0.5 ! videomixer2 name=m background=black ! colorspace ! vertigotv ! ximagesink t. ! queue ! audioconvert ! spacescope style=color-lines shade-amount=0x00080402 ! alpha alpha=0.5 ! m. t. ! queue ! pulsesink
+== 0.11/1.0 ==
+gst-launch-1.0 audiotestsrc ! audioconvert ! wavescope ! videoconvert ! ximagesink
+
+gst-launch-1.0 filesrc location=$HOME/Music/1.mp3 ! decodebin ! audioconvert ! spectrascope ! videoconvert ! ximagesink
+
+gst-launch-1.0 filesrc location=$HOME/Music/1.mp3 ! decodebin ! tee name=t ! queue ! audioconvert ! wavescope style=color-lines shade-amount=0x00080402 ! alpha alpha=0.5 ! videomixer name=m background=black ! videoconvert ! vertigotv ! ximagesink t. ! queue ! audioconvert ! spacescope style=color-lines shade-amount=0x00080402 ! alpha alpha=0.5 ! m. t. ! queue ! autoaudiosink
+
 
