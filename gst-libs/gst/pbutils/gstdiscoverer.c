@@ -634,7 +634,7 @@ uridecodebin_pad_removed_cb (GstElement * uridecodebin, GstPad * pad,
     gst_tag_list_free (ps->tags);
   }
   if (ps->toc) {
-    gst_toc_free (ps->toc);
+    gst_toc_unref (ps->toc);
   }
 
   g_slice_free (PrivateStream, ps);

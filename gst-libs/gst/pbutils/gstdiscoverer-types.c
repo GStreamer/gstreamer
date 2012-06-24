@@ -68,7 +68,7 @@ gst_discoverer_stream_info_finalize (GObject * object)
     gst_tag_list_free (info->tags);
 
   if (info->toc)
-    gst_toc_free (info->toc);
+    gst_toc_unref (info->toc);
 
   if (info->misc)
     gst_structure_free (info->misc);
@@ -130,7 +130,7 @@ gst_discoverer_info_copy_int (GstDiscovererStreamInfo * info,
     ret->tags = gst_tag_list_copy (info->tags);
 
   if (info->toc)
-    ret->toc = gst_toc_copy (info->toc);
+    ret->toc = gst_toc_ref (info->toc);
 
   if (info->misc)
     ret->misc = gst_structure_copy (info->misc);
@@ -369,7 +369,7 @@ gst_discoverer_info_finalize (GObject * object)
     gst_tag_list_free (info->tags);
 
   if (info->toc)
-    gst_toc_free (info->toc);
+    gst_toc_unref (info->toc);
 }
 
 static GstDiscovererInfo *
@@ -422,7 +422,7 @@ gst_discoverer_info_copy (GstDiscovererInfo * ptr)
     ret->tags = gst_tag_list_copy (ptr->tags);
 
   if (ptr->toc)
-    ret->toc = gst_toc_copy (ptr->toc);
+    ret->toc = gst_toc_ref (ptr->toc);
 
   g_hash_table_destroy (stream_map);
   return ret;
