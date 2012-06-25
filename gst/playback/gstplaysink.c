@@ -3115,8 +3115,10 @@ gst_play_sink_reconfigure (GstPlaySink * playsink)
       GST_DEBUG_OBJECT (playsink, "ghosting video sinkpad");
       gst_pad_unlink (playsink->video_srcpad_stream_synchronizer,
           playsink->videochain->sinkpad);
-      gst_pad_unlink (playsink->videodeinterlacechain->srcpad,
-          playsink->videochain->sinkpad);
+      if (playsink->videodeinterlacechain
+          && playsink->videodeinterlacechain->srcpad)
+        gst_pad_unlink (playsink->videodeinterlacechain->srcpad,
+            playsink->videochain->sinkpad);
       if (need_deinterlace)
         gst_pad_link_full (playsink->videodeinterlacechain->srcpad,
             playsink->videochain->sinkpad, GST_PAD_LINK_CHECK_NOTHING);
