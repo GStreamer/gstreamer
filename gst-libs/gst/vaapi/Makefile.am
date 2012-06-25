@@ -24,6 +24,7 @@ libgstvaapi_libs =				\
 	$(GST_BASE_LIBS)			\
 	$(GST_BASEVIDEO_LIBS)			\
 	$(GST_LIBS)				\
+	$(GST_VIDEO_LIBS)			\
 	$(LIBVA_LIBS)				\
 	$(NULL)
 
