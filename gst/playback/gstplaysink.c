@@ -3094,6 +3094,8 @@ gst_play_sink_reconfigure (GstPlaySink * playsink)
       add_chain (GST_PLAY_CHAIN (playsink->videodeinterlacechain), TRUE);
       activate_chain (GST_PLAY_CHAIN (playsink->videodeinterlacechain), TRUE);
 
+      gst_pad_unlink (playsink->video_srcpad_stream_synchronizer,
+          playsink->videochain->sinkpad);
       gst_pad_link_full (playsink->video_srcpad_stream_synchronizer,
           playsink->videodeinterlacechain->sinkpad, GST_PAD_LINK_CHECK_NOTHING);
     } else {
@@ -3111,6 +3113,10 @@ gst_play_sink_reconfigure (GstPlaySink * playsink)
     if (!need_vis && !need_text && (!playsink->textchain
             || !playsink->text_pad)) {
       GST_DEBUG_OBJECT (playsink, "ghosting video sinkpad");
+      gst_pad_unlink (playsink->video_srcpad_stream_synchronizer,
+          playsink->videochain->sinkpad);
+      gst_pad_unlink (playsink->videodeinterlacechain->srcpad,
+          playsink->videochain->sinkpad);
       if (need_deinterlace)
         gst_pad_link_full (playsink->videodeinterlacechain->srcpad,
             playsink->videochain->sinkpad, GST_PAD_LINK_CHECK_NOTHING);
