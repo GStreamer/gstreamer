@@ -246,6 +246,28 @@ gst_mpeg2dec_decide_allocation (GstVideoDecoder * decoder, GstQuery * query)
   GstBufferPool *pool;
   guint size, min, max;
   GstStructure *config;
+  GstAllocator *allocator;
+  GstAllocationParams params;
+  gboolean update_allocator;
+
+  /* Set allocation parameters to guarantee 16-byte aligned output buffers */
+  if (gst_query_get_n_allocation_params (query) > 0) {
+    gst_query_parse_nth_allocation_param (query, 0, &allocator, &params);
+    update_allocator = TRUE;
+  } else {
+    allocator = NULL;
+    gst_allocation_params_init (&params);
+    update_allocator = FALSE;
+  }
+
+  params.align = MAX (params.align, 15);
+
+  if (update_allocator)
+    gst_query_set_nth_allocation_param (query, 0, allocator, &params);
+  else
+    gst_query_add_allocation_param (query, allocator, &params);
+  if (allocator)
+    gst_allocator_unref (allocator);
 
   if (!GST_VIDEO_DECODER_CLASS (parent_class)->decide_allocation (decoder,
           query))
