@@ -94,7 +94,7 @@ static void print_current_values (GstElement *pipeline) {
 static gboolean handle_keyboard (GIOChannel *source, GIOCondition cond, CustomData *data) {
   gchar *str = NULL;
   
-  if (!g_io_channel_read_line (source, &str, NULL, NULL, NULL) == G_IO_STATUS_NORMAL) {
+  if (g_io_channel_read_line (source, &str, NULL, NULL, NULL) != G_IO_STATUS_NORMAL) {
     return TRUE;
   }
   
