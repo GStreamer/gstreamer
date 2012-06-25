@@ -880,18 +880,74 @@ gst_toc_entry_get_start_stop (const GstTocEntry * entry, gint64 * start,
  *
  * Converts @type to a string representation.
  *
- * Returns: Returns the human-readable @type. Can be NULL if an error occurred.
- * Since: 0.11.92
+ * Returns: Returns a human-readable string for @type. This string is
+ *    only for debugging purpose and should not be displayed in a user
+ *    interface.
  */
 const gchar *
 gst_toc_entry_type_get_nick (GstTocEntryType type)
 {
-  const gchar *entry_types[] = { "chapter", "edition" };
-
-  g_return_val_if_fail ((gint) type >= 0
-      && (gint) type < G_N_ELEMENTS (entry_types), NULL);
-  return entry_types[type];
+  switch (type) {
+    case GST_TOC_ENTRY_TYPE_ANGLE:
+      return "angle";
+    case GST_TOC_ENTRY_TYPE_VERSION:
+      return "version";
+    case GST_TOC_ENTRY_TYPE_EDITION:
+      return "edition";
+    case GST_TOC_ENTRY_TYPE_TITLE:
+      return "title";
+    case GST_TOC_ENTRY_TYPE_TRACK:
+      return "track";
+    case GST_TOC_ENTRY_TYPE_CHAPTER:
+      return "chapter";
+    default:
+      break;
+  }
+  return "invalid";
 }
+
+/**
+ * gst_toc_entry_get_entry_type:
+ * @entry: a #GstTocEntry
+ *
+ * Returns: @entry's entry type
+ */
+GstTocEntryType
+gst_toc_entry_get_entry_type (GstTocEntry * entry)
+{
+  g_return_val_if_fail (entry != NULL, GST_TOC_ENTRY_TYPE_INVALID);
+
+  return entry->type;
+}
+
+/**
+ * gst_toc_entry_is_alternative:
+ * @entry: a #GstTocEntry
+ *
+ * Returns: %TRUE if @entry's type is an alternative type, otherwise %FALSE
+ */
+gboolean
+gst_toc_entry_is_alternative (GstTocEntry * entry)
+{
+  g_return_val_if_fail (entry != NULL, FALSE);
+
+  return GST_TOC_ENTRY_TYPE_IS_ALTERNATIVE (entry->type);
+}
+
+/**
+ * gst_toc_entry_is_sequence:
+ * @entry: a #GstTocEntry
+ *
+ * Returns: %TRUE if @entry's type is a sequence type, otherwise %FALSE
+ */
+gboolean
+gst_toc_entry_is_sequence (GstTocEntry * entry)
+{
+  g_return_val_if_fail (entry != NULL, FALSE);
+
+  return GST_TOC_ENTRY_TYPE_IS_SEQUENCE (entry->type);
+}
+
 
 gboolean
 __gst_toc_structure_get_updated (const GstStructure * toc)

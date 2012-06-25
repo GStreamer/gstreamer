@@ -2726,6 +2726,11 @@ gst_toc_find_entry
 gst_toc_entry_get_start_stop
 gst_toc_entry_set_start_stop
 gst_toc_entry_type_get_nick
+gst_toc_entry_get_entry_type
+gst_toc_entry_is_alternative
+gst_toc_entry_is_sequence
+GST_TOC_ENTRY_TYPE_IS_ALTERNATIVE
+GST_TOC_ENTRY_TYPE_IS_SEQUENCE
 <SUBSECTION Standard>
 GST_TYPE_TOC
 GST_TYPE_TOC_ENTRY

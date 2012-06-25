@@ -38,15 +38,30 @@ typedef struct _GstToc GstToc;
 
 /**
  * GstTocEntryType:
- * @GST_TOC_ENTRY_TYPE_CHAPTER: a chapter type entry.
- * @GST_TOC_ENTRY_TYPE_EDITION: an edition entry (angle or alternative in other terms).
+ * @GST_TOC_ENTRY_TYPE_ANGLE: entry is an angle (i.e. an alternative)
+ * @GST_TOC_ENTRY_TYPE_VERSION: entry is a version (i.e. alternative)
+ * @GST_TOC_ENTRY_TYPE_EDITION: entry is an edition (i.e. alternative)
+ * @GST_TOC_ENTRY_TYPE_INVALID: invalid entry type value
+ * @GST_TOC_ENTRY_TYPE_TITLE: entry is a title (i.e. a part of a sequence)
+ * @GST_TOC_ENTRY_TYPE_TRACK: entry is a track (i.e. a part of a sequence)
+ * @GST_TOC_ENTRY_TYPE_CHAPTER: entry is a chapter (i.e. a part of a sequence)
  *
- * The different types of TOC entry.
+ * The different types of TOC entries (see #GstTocEntry).
+ *
+ * There are two types of TOC entries: alternatives or parts in a sequence.
  */
 typedef enum {
-  GST_TOC_ENTRY_TYPE_CHAPTER     = 0,
-  GST_TOC_ENTRY_TYPE_EDITION     = 1
+  GST_TOC_ENTRY_TYPE_ANGLE       = -3,
+  GST_TOC_ENTRY_TYPE_VERSION     = -2,
+  GST_TOC_ENTRY_TYPE_EDITION     = -1,
+  GST_TOC_ENTRY_TYPE_INVALID     = 0,
+  GST_TOC_ENTRY_TYPE_TITLE       = 1,
+  GST_TOC_ENTRY_TYPE_TRACK       = 2,
+  GST_TOC_ENTRY_TYPE_CHAPTER     = 3,
 } GstTocEntryType;
+
+#define GST_TOC_ENTRY_TYPE_IS_ALTERNATIVE(entry_type)  (entry_type < 0)
+#define GST_TOC_ENTRY_TYPE_IS_SEQUENCE(entry_type)     (entry_type > 0)
 
 /**
  * GstTocEntry:
@@ -123,6 +138,11 @@ GstTocEntry *   gst_toc_entry_new_with_pad      (GstTocEntryType type, const gch
 #define gst_toc_entry_make_writable(entry)  (GstTocEntry*)gst_mini_object_make_writable(GST_MINI_OBJECT_CAST(entry))
 
 GstTocEntry *   gst_toc_find_entry              (const GstToc *toc, const gchar *uid);
+
+GstTocEntryType gst_toc_entry_get_entry_type    (GstTocEntry * entry);
+
+gboolean        gst_toc_entry_is_alternative    (GstTocEntry * entry);
+gboolean        gst_toc_entry_is_sequence       (GstTocEntry * entry);
 
 void            gst_toc_entry_set_start_stop    (GstTocEntry *entry, gint64 start, gint64 stop);
 gboolean        gst_toc_entry_get_start_stop    (const GstTocEntry *entry, gint64 *start, gint64 *stop);
