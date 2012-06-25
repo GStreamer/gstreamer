@@ -647,7 +647,7 @@ gst_matroska_mux_reset (GstElement * element)
   mux->tags_pos = 0;
 
   /* reset chapters */
-  gst_toc_setter_reset_toc (GST_TOC_SETTER (mux));
+  gst_toc_setter_reset (GST_TOC_SETTER (mux));
 
   mux->chapters_pos = 0;
 }
@@ -798,7 +798,7 @@ gst_matroska_mux_handle_sink_event (GstCollectPads * pads,
       break;
     }
     case GST_EVENT_TOC:{
-      GstToc *toc;
+      GstToc *toc, *old_toc;
 
       if (mux->chapters_pos > 0)
         break;
@@ -807,9 +807,11 @@ gst_matroska_mux_handle_sink_event (GstCollectPads * pads,
       gst_event_parse_toc (event, &toc, NULL);
 
       if (toc != NULL) {
-        if (gst_toc_setter_get_toc (GST_TOC_SETTER (mux)) != NULL) {
-          gst_toc_setter_reset_toc (GST_TOC_SETTER (mux));
-          GST_INFO_OBJECT (pad, "Replacing TOC with a new one");
+        old_toc = gst_toc_setter_get_toc (GST_TOC_SETTER (mux));
+        if (old_toc != NULL) {
+          if (old_toc != toc)
+            GST_INFO_OBJECT (pad, "Replacing TOC with a new one");
+          gst_toc_unref (old_toc);
         }
 
         gst_toc_setter_set_toc (GST_TOC_SETTER (mux), toc);
@@ -2468,6 +2470,7 @@ gst_matroska_mux_start (GstMatroskaMux * mux)
   GstClockTime duration = 0;
   guint32 segment_uid[4];
   GTimeVal time = { 0, 0 };
+  GstToc *toc;
 
   /* if not streaming, check if downstream is seekable */
   if (!mux->streamable) {
@@ -2620,16 +2623,14 @@ gst_matroska_mux_start (GstMatroskaMux * mux)
   gst_ebml_write_master_finish (ebml, master);
 
   /* chapters */
-  if (gst_toc_setter_get_toc (GST_TOC_SETTER (mux)) != NULL && !mux->streamable) {
+  toc = gst_toc_setter_get_toc (GST_TOC_SETTER (mux));
+  if (toc != NULL && !mux->streamable) {
     guint64 master_chapters = 0;
     GstTocEntry *toc_entry;
-    const GstToc *toc;
     GList *cur, *to_write = NULL;
     gint64 start, stop;
 
     GST_DEBUG ("Writing chapters");
-
-    toc = gst_toc_setter_get_toc (GST_TOC_SETTER (mux));
 
     /* check whether we have editions or chapters at the root level */
     toc_entry = toc->entries->data;
@@ -2683,6 +2684,9 @@ gst_matroska_mux_start (GstMatroskaMux * mux)
 
   /* lastly, flush the cache */
   gst_ebml_write_flush_cache (ebml, FALSE, 0);
+
+  if (toc != NULL)
+    gst_toc_unref (toc);
 }
 
 static void
