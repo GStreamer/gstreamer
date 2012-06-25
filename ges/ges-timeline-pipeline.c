@@ -684,6 +684,8 @@ gboolean
 ges_timeline_pipeline_set_render_settings (GESTimelinePipeline * pipeline,
     gchar * output_uri, GstEncodingProfile * profile)
 {
+  GError *err = NULL;
+
   /* Clear previous URI sink if it existed */
   /* FIXME : We should figure out if it was added to the pipeline,
    * and if so, remove it. */
@@ -693,10 +695,12 @@ ges_timeline_pipeline_set_render_settings (GESTimelinePipeline * pipeline,
   }
 
   pipeline->priv->urisink =
-      gst_element_make_from_uri (GST_URI_SINK, output_uri, "urisink");
+      gst_element_make_from_uri (GST_URI_SINK, output_uri, "urisink", &err);
   if (G_UNLIKELY (pipeline->priv->urisink == NULL)) {
-    GST_ERROR_OBJECT (pipeline, "Couldn't not create sink for URI %s",
-        output_uri);
+    GST_ERROR_OBJECT (pipeline, "Couldn't not create sink for URI %s: '%s'",
+        output_uri, ((err
+                && err->message) ? err->message : "failed to create element"));
+    g_clear_error (&err);
     return FALSE;
   }
 
