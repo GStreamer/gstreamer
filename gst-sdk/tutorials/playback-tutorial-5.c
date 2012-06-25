@@ -36,11 +36,11 @@ static void update_color_channel (const gchar *channel_name, gboolean increase, 
   step = 0.1 * (channel->max_value - channel->min_value);
   value = gst_color_balance_get_value (cb, channel);
   if (increase) {
-    value += step;
+    value = (gint)(value + step);
     if (value > channel->max_value)
         value = channel->max_value;
   } else {
-    value -= step;
+    value = (gint)(value - step);
     if (value < channel->min_value)
         value = channel->min_value;
   }
