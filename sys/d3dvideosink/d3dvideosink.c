@@ -2243,19 +2243,19 @@ error:
 static gboolean
 gst_d3dvideosink_release_d3d_device (GstD3DVideoSink * sink)
 {
-  if (sink->d3ddev) {
-    int ref_count;
-    ref_count = IDirect3DDevice9_Release (sink->d3ddev);
-    sink->d3ddev = NULL;
-    GST_DEBUG_OBJECT (sink, "Direct3D device released. Reference count: %d",
-        ref_count);
-  }
   if (sink->d3d_offscreen_surface) {
     int ref_count;
     ref_count = IDirect3DSurface9_Release (sink->d3d_offscreen_surface);
     sink->d3d_offscreen_surface = NULL;
     GST_DEBUG_OBJECT (sink,
         "Direct3D offscreen surface released. Reference count: %d", ref_count);
+  }
+  if (sink->d3ddev) {
+    int ref_count;
+    ref_count = IDirect3DDevice9_Release (sink->d3ddev);
+    sink->d3ddev = NULL;
+    GST_DEBUG_OBJECT (sink, "Direct3D device released. Reference count: %d",
+        ref_count);
   }
   return TRUE;
 }
