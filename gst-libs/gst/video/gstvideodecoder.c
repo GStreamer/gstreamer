@@ -1655,7 +1655,6 @@ gst_video_decoder_flush_decode (GstVideoDecoder * dec)
     priv->decode = g_list_delete_link (priv->decode, walk);
 
     /* decode buffer, resulting data prepended to queue */
-    gst_video_codec_frame_ref (frame);
     res = gst_video_decoder_decode_frame (dec, frame);
     if (res != GST_FLOW_OK)
       break;
