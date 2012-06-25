@@ -247,7 +247,9 @@ struct _GstAllocationParams {
  * be filled with 0 if @params flags contains #GST_MEMORY_FLAG_ZERO_PREFIXED and
  * #GST_MEMORY_FLAG_ZERO_PADDED respectively.
  *
- * @user_data is the data that was used when creating @allocator.
+ * @user_data is extra data passed to this function. The default
+ * gst_allocator_alloc() passes the user_data that was used when creating
+ * @allocator.
  *
  * Returns: a newly allocated #GstMemory. Free with gst_memory_unref()
  */
