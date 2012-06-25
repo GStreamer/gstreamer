@@ -269,6 +269,8 @@ gst_mpeg2dec_decide_allocation (GstVideoDecoder * decoder, GstQuery * query)
   if (allocator)
     gst_allocator_unref (allocator);
 
+  /* Now chain up to the parent class to guarantee that we can
+   * get a buffer pool from the query */
   if (!GST_VIDEO_DECODER_CLASS (parent_class)->decide_allocation (decoder,
           query))
     return FALSE;
