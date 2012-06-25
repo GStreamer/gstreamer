@@ -41,7 +41,11 @@ LDADD = $(GST_LIBS) $(GST_CHECK_LIBS) $(GST_RTSP_SERVER_LIBS)
 
 SUPPRESSIONS = $(top_srcdir)/common/gst.supp
 
+gst_rtspserver_SOURCES = gst/rtspserver.c \
+	$(top_srcdir)/gst/rtsp-server/rtsp-server.h
+
 gst_rtspserver_CFLAGS = \
+	-I$(top_srcdir)/gst/rtsp-server \
 	$(GST_PLUGINS_GOOD_CFLAGS) \
 	$(GST_PLUGINS_BASE_CFLAGS) \
 	$(GST_BASE_CFLAGS) \

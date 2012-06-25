@@ -22,11 +22,12 @@
  */
 
 #include <gst/check/gstcheck.h>
-#include <gst/rtsp-server/rtsp-server.h>
 #include <gst/sdp/gstsdpmessage.h>
 
 #include <stdio.h>
 #include <netinet/in.h>
+
+#include "rtsp-server.h"
 
 #define VIDEO_PIPELINE "videotestsrc ! " \
   "video/x-raw,width=352,height=288 ! " \
