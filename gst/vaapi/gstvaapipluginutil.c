@@ -29,7 +29,7 @@
 
 #include <string.h>
 
-#ifdef USE_VAAPI_GLX
+#if USE_VAAPI_GLX
 #include <gst/vaapi/gstvaapidisplay_glx.h>
 #else
 #include <gst/vaapi/gstvaapidisplay_x11.h>
