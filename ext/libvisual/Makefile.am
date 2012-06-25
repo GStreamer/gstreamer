@@ -1,6 +1,6 @@
 plugin_LTLIBRARIES = libgstlibvisual.la
 
-libgstlibvisual_la_SOURCES = visual.c 
+libgstlibvisual_la_SOURCES = plugin.c visual.c 
 libgstlibvisual_la_CFLAGS = $(GST_PLUGINS_BASE_CFLAGS) $(GST_BASE_CFLAGS) $(GST_CFLAGS) $(LIBVISUAL_CFLAGS)
 libgstlibvisual_la_LIBADD = \
         $(top_builddir)/gst-libs/gst/audio/libgstaudio-$(GST_API_VERSION).la \
@@ -9,3 +9,4 @@ libgstlibvisual_la_LIBADD = \
 libgstlibvisual_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
 libgstlibvisual_la_LIBTOOLFLAGS = --tag=disable-static
 
+noinst_HEADERS = visual.h

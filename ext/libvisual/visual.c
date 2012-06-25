@@ -1,5 +1,6 @@
 /* GStreamer
  * Copyright (C) 2004 Benjamin Otte <otte@gnome.org>
+ *               2012 Stefan Sauer <ensonic@users.sf.net>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -21,25 +22,9 @@
 #include "config.h"
 #endif
 
-#include <gst/gst.h>
-#include <gst/base/gstadapter.h>
-#include <gst/video/video.h>
-#include <gst/video/gstvideopool.h>
-#include <gst/audio/audio.h>
-#include <libvisual/libvisual.h>
-#include <string.h>
+#include "visual.h"
 
-#define GST_TYPE_VISUAL (gst_visual_get_type())
-#define GST_IS_VISUAL(obj) (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_VISUAL))
-#define GST_VISUAL(obj) (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_VISUAL,GstVisual))
-#define GST_IS_VISUAL_CLASS(klass) (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_VISUAL))
-#define GST_VISUAL_CLASS(klass) (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_VISUAL,GstVisualClass))
-#define GST_VISUAL_GET_CLASS(obj)   (G_TYPE_INSTANCE_GET_CLASS ((obj), GST_TYPE_VISUAL, GstVisualClass))
-
-typedef struct _GstVisual GstVisual;
-typedef struct _GstVisualClass GstVisualClass;
-
-GST_DEBUG_CATEGORY_STATIC (libvisual_debug);
+GST_DEBUG_CATEGORY_EXTERN (libvisual_debug);
 #define GST_CAT_DEFAULT (libvisual_debug)
 
 /* amounf of samples before we can feed libvisual */
@@ -49,54 +34,6 @@ GST_DEBUG_CATEGORY_STATIC (libvisual_debug);
 #define DEFAULT_HEIGHT  240
 #define DEFAULT_FPS_N   25
 #define DEFAULT_FPS_D   1
-
-struct _GstVisual
-{
-  GstElement element;
-
-  /* pads */
-  GstPad *sinkpad;
-  GstPad *srcpad;
-  GstSegment segment;
-
-  /* libvisual stuff */
-  VisAudio *audio;
-  VisVideo *video;
-  VisActor *actor;
-
-  /* audio/video state */
-  GstAudioInfo info;
-
-  /* framerate numerator & denominator */
-  gint fps_n;
-  gint fps_d;
-  gint width;
-  gint height;
-  GstClockTime duration;
-  guint outsize;
-  GstBufferPool *pool;
-
-  /* samples per frame based on caps */
-  guint spf;
-
-  /* state stuff */
-  GstAdapter *adapter;
-  guint count;
-
-  /* QoS stuff *//* with LOCK */
-  gdouble proportion;
-  GstClockTime earliest_time;
-};
-
-struct _GstVisualClass
-{
-  GstElementClass parent_class;
-
-  VisPluginRef *plugin;
-};
-
-GType gst_visual_get_type (void);
-
 
 static GstStaticPadTemplate src_template = GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
@@ -125,7 +62,7 @@ static GstStaticPadTemplate sink_template = GST_STATIC_PAD_TEMPLATE ("sink",
     );
 
 
-static void gst_visual_class_init (gpointer g_class, gpointer class_data);
+
 static void gst_visual_init (GstVisual * visual);
 static void gst_visual_finalize (GObject * object);
 
@@ -143,8 +80,6 @@ static gboolean gst_visual_src_query (GstPad * pad, GstObject * parent,
 
 static gboolean gst_visual_sink_setcaps (GstPad * pad, GstCaps * caps);
 static GstCaps *gst_visual_getcaps (GstPad * pad, GstCaps * filter);
-static void libvisual_log_handler (const char *message, const char *funcname,
-    void *priv);
 
 static GstElementClass *parent_class = NULL;
 
@@ -171,14 +106,7 @@ gst_visual_get_type (void)
   return type;
 }
 
-static void
-libvisual_log_handler (const char *message, const char *funcname, void *priv)
-{
-  GST_CAT_LEVEL_LOG (libvisual_debug, (GstDebugLevel) (priv), NULL, "%s - %s",
-      funcname, message);
-}
-
-static void
+void
 gst_visual_class_init (gpointer g_class, gpointer class_data)
 {
   GstVisualClass *klass = GST_VISUAL_CLASS (g_class);
@@ -192,7 +120,7 @@ gst_visual_class_init (gpointer g_class, gpointer class_data)
   if (class_data == NULL) {
     parent_class = g_type_class_peek_parent (g_class);
   } else {
-    char *longname = g_strdup_printf ("libvisual %s plugin v.%s",
+    gchar *longname = g_strdup_printf ("libvisual %s plugin v.%s",
         klass->plugin->info->name, klass->plugin->info->version);
 
     /* FIXME: improve to only register what plugin supports? */
@@ -904,8 +832,8 @@ gst_visual_change_state (GstElement * element, GstStateChange transition)
   switch (transition) {
     case GST_STATE_CHANGE_NULL_TO_READY:
       visual->actor =
-          visual_actor_new (GST_VISUAL_GET_CLASS (visual)->plugin->
-          info->plugname);
+          visual_actor_new (GST_VISUAL_GET_CLASS (visual)->plugin->info->
+          plugname);
       visual->video = visual_video_new ();
       visual->audio = visual_audio_new ();
       /* can't have a play without actors */
@@ -963,146 +891,3 @@ no_realize:
     return GST_STATE_CHANGE_FAILURE;
   }
 }
-
-static void
-make_valid_name (char *name)
-{
-  /*
-   * Replace invalid chars with _ in the type name
-   */
-  static const gchar extra_chars[] = "-_+";
-  gchar *p = name;
-
-  for (; *p; p++) {
-    int valid = ((p[0] >= 'A' && p[0] <= 'Z') ||
-        (p[0] >= 'a' && p[0] <= 'z') ||
-        (p[0] >= '0' && p[0] <= '9') || strchr (extra_chars, p[0]));
-    if (!valid)
-      *p = '_';
-  }
-}
-
-static gboolean
-gst_visual_actor_plugin_is_gl (VisObject * plugin, const gchar * name)
-{
-  gboolean is_gl;
-  gint depth;
-
-#if !defined(VISUAL_API_VERSION)
-
-  depth = VISUAL_PLUGIN_ACTOR (plugin)->depth;
-  is_gl = (depth == VISUAL_VIDEO_DEPTH_GL);
-
-#elif VISUAL_API_VERSION >= 4000 && VISUAL_API_VERSION < 5000
-
-  depth = VISUAL_ACTOR_PLUGIN (plugin)->vidoptions.depth;
-  /* FIXME: how to figure this out correctly in 0.4? */
-  is_gl = (depth & VISUAL_VIDEO_DEPTH_GL) == VISUAL_VIDEO_DEPTH_GL;
-
-#else
-# error what libvisual version is this?
-#endif
-
-  if (!is_gl) {
-    GST_DEBUG ("plugin %s is not a GL plugin (%d), registering", name, depth);
-  } else {
-    GST_DEBUG ("plugin %s is a GL plugin (%d), ignoring", name, depth);
-  }
-
-  return is_gl;
-}
-
-static gboolean
-plugin_init (GstPlugin * plugin)
-{
-  guint i, count;
-  VisList *list;
-
-  GST_DEBUG_CATEGORY_INIT (libvisual_debug, "libvisual", 0,
-      "libvisual audio visualisations");
-
-#ifdef LIBVISUAL_PLUGINSBASEDIR
-  gst_plugin_add_dependency_simple (plugin, "HOME/.libvisual/actor",
-      LIBVISUAL_PLUGINSBASEDIR "/actor", NULL, GST_PLUGIN_DEPENDENCY_FLAG_NONE);
-#endif
-
-  visual_log_set_verboseness (VISUAL_LOG_VERBOSENESS_LOW);
-  visual_log_set_info_handler (libvisual_log_handler, (void *) GST_LEVEL_INFO);
-  visual_log_set_warning_handler (libvisual_log_handler,
-      (void *) GST_LEVEL_WARNING);
-  visual_log_set_critical_handler (libvisual_log_handler,
-      (void *) GST_LEVEL_ERROR);
-  visual_log_set_error_handler (libvisual_log_handler,
-      (void *) GST_LEVEL_ERROR);
-
-  if (!visual_is_initialized ())
-    if (visual_init (NULL, NULL) != 0)
-      return FALSE;
-
-  list = visual_actor_get_list ();
-
-#if !defined(VISUAL_API_VERSION)
-  count = visual_list_count (list);
-#elif VISUAL_API_VERSION >= 4000 && VISUAL_API_VERSION < 5000
-  count = visual_collection_size (VISUAL_COLLECTION (list));
-#endif
-
-  for (i = 0; i < count; i++) {
-    VisPluginRef *ref = visual_list_get (list, i);
-    VisPluginData *visplugin = NULL;
-    gboolean skip = FALSE;
-    GType type;
-    gchar *name;
-    GTypeInfo info = {
-      sizeof (GstVisualClass),
-      NULL,
-      NULL,
-      gst_visual_class_init,
-      NULL,
-      ref,
-      sizeof (GstVisual),
-      0,
-      NULL
-    };
-
-    visplugin = visual_plugin_load (ref);
-
-    if (ref->info->plugname == NULL)
-      continue;
-
-    /* Blacklist some plugins */
-    if (strcmp (ref->info->plugname, "gstreamer") == 0 ||
-        strcmp (ref->info->plugname, "gdkpixbuf") == 0) {
-      skip = TRUE;
-    } else {
-      /* Ignore plugins that only support GL output for now */
-      skip = gst_visual_actor_plugin_is_gl (visplugin->info->plugin,
-          visplugin->info->plugname);
-    }
-
-    visual_plugin_unload (visplugin);
-
-    if (!skip) {
-      name = g_strdup_printf ("GstVisual%s", ref->info->plugname);
-      make_valid_name (name);
-      type = g_type_register_static (GST_TYPE_VISUAL, name, &info, 0);
-      g_free (name);
-
-      name = g_strdup_printf ("libvisual_%s", ref->info->plugname);
-      make_valid_name (name);
-      if (!gst_element_register (plugin, name, GST_RANK_NONE, type)) {
-        g_free (name);
-        return FALSE;
-      }
-      g_free (name);
-    }
-  }
-
-  return TRUE;
-}
-
-GST_PLUGIN_DEFINE (GST_VERSION_MAJOR,
-    GST_VERSION_MINOR,
-    libvisual,
-    "libvisual visualization plugins",
-    plugin_init, VERSION, "LGPL", GST_PACKAGE_NAME, GST_PACKAGE_ORIGIN)
