@@ -25,6 +25,7 @@
 #include <gst/gst.h>
 
 G_BEGIN_DECLS
+
 #define GST_TYPE_TOC_SETTER              (gst_toc_setter_get_type ())
 #define GST_TOC_SETTER(obj)              (G_TYPE_CHECK_INSTANCE_CAST ((obj), GST_TYPE_TOC_SETTER, GstTocSetter))
 #define GST_IS_TOC_SETTER(obj)           (G_TYPE_CHECK_INSTANCE_TYPE ((obj), GST_TYPE_TOC_SETTER))
@@ -53,15 +54,15 @@ struct _GstTocSetterInterface
   /* virtual table */
 };
 
-GType               gst_toc_setter_get_type (void);
-void                gst_toc_setter_reset_toc (GstTocSetter *setter);
-const GstToc *      gst_toc_setter_get_toc (GstTocSetter *setter);
-GstToc *            gst_toc_setter_get_toc_copy (GstTocSetter *setter);
-void                gst_toc_setter_set_toc (GstTocSetter *setter, const GstToc *toc);
-const GstTocEntry * gst_toc_setter_get_toc_entry (GstTocSetter *setter, const gchar *uid);
-GstTocEntry *       gst_toc_setter_get_toc_entry_copy (GstTocSetter *setter, const gchar *uid);
-gboolean            gst_toc_setter_add_toc_entry (GstTocSetter *setter, const gchar *parent_uid, const GstTocEntry *entry);
+GType         gst_toc_setter_get_type (void);
+
+void          gst_toc_setter_reset   (GstTocSetter *setter);
+
+GstToc *      gst_toc_setter_get_toc (GstTocSetter *setter);
+
+void          gst_toc_setter_set_toc (GstTocSetter *setter, GstToc *toc);
 
 G_END_DECLS
+
 #endif /* __GST_TOC_SETTER_H__ */
 

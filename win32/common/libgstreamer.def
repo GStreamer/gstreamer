@@ -1137,13 +1137,9 @@ EXPORTS
 	gst_toc_find_entry
 	gst_toc_get_type
 	gst_toc_new
-	gst_toc_setter_add_toc_entry
 	gst_toc_setter_get_toc
-	gst_toc_setter_get_toc_copy
-	gst_toc_setter_get_toc_entry
-	gst_toc_setter_get_toc_entry_copy
 	gst_toc_setter_get_type
-	gst_toc_setter_reset_toc
+	gst_toc_setter_reset
 	gst_toc_setter_set_toc
 	gst_type_find_factory_call_function
 	gst_type_find_factory_get_caps

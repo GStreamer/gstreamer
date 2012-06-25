@@ -2741,14 +2741,10 @@ gst_toc_entry_type_get_type
 <FILE>gsttocsetter</FILE>
 <TITLE>GstTocSetter</TITLE>
 GstTocSetter
-GstTocSetterIFace
-gst_toc_setter_get_toc
-gst_toc_setter_get_toc_copy
-gst_toc_setter_reset_toc
+GstTocSetterInterface
 gst_toc_setter_set_toc
-gst_toc_setter_get_toc_entry
-gst_toc_setter_get_toc_entry_copy
-gst_toc_setter_add_toc_entry
+gst_toc_setter_get_toc
+gst_toc_setter_reset
 <SUBSECTION Standard>
 GST_IS_TOC_SETTER
 GST_TOC_SETTER
