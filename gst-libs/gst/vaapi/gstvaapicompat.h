@@ -94,6 +94,7 @@ typedef struct _VASliceParameterBufferBase {
 /* Compatibility glue with VA-API 0.34 */
 #if VA_CHECK_VERSION(0,34,0)
 # include <va/va_compat.h>
+# include <va/va_dec_jpeg.h>
 #endif
 
 #endif /* GST_VAAPI_COMPAT_H */

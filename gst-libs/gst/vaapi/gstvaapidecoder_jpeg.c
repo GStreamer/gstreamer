@@ -27,6 +27,7 @@
 #include "sysdeps.h"
 #include <string.h>
 #include <gst/codecparsers/gstjpegparser.h>
+#include "gstvaapicompat.h"
 #include "gstvaapidecoder_jpeg.h"
 #include "gstvaapidecoder_objects.h"
 #include "gstvaapidecoder_priv.h"
@@ -95,7 +96,6 @@ gst_vaapi_decoder_jpeg_close(GstVaapiDecoderJpeg *decoder)
     priv->height                = 0;
     priv->is_opened             = FALSE;
     priv->profile_changed       = TRUE;
-    priv->is_constructed        = FALSE;
 }
 
 static gboolean
@@ -191,10 +191,9 @@ fill_picture(
     g_assert(pic_param);
 
     memset(pic_param, 0, sizeof(VAPictureParameterBufferJPEG));
-    pic_param->type             = jpeg_frame_hdr->profile;
     pic_param->sample_precision = jpeg_frame_hdr->sample_precision;
-    pic_param->image_width      = jpeg_frame_hdr->width;
-    pic_param->image_height     = jpeg_frame_hdr->height;
+    pic_param->picture_width    = jpeg_frame_hdr->width;
+    pic_param->picture_height   = jpeg_frame_hdr->height;
 
     /* XXX: ROI + rotation */
 
@@ -222,7 +221,7 @@ fill_quantization_table(
 {
     GstVaapiDecoderJpegPrivate * const priv = decoder->priv;
     VAIQMatrixBufferJPEG *iq_matrix;
-    guint i, j;
+    guint i, j, num_tables;
 
     if (!priv->has_quant_table)
         gst_jpeg_get_default_quantization_tables(&priv->quant_tables);
@@ -230,20 +229,23 @@ fill_quantization_table(
     picture->iq_matrix = GST_VAAPI_IQ_MATRIX_NEW(JPEG, decoder);
     g_assert(picture->iq_matrix);
     iq_matrix = picture->iq_matrix->param;
-    memset(iq_matrix, 0, sizeof(VAIQMatrixBufferJPEG));
-    for (i = 0; i < GST_JPEG_MAX_SCAN_COMPONENTS; i++) {
+
+    num_tables = MIN(G_N_ELEMENTS(iq_matrix->quantiser_table),
+                     GST_JPEG_MAX_QUANT_ELEMENTS);
+
+    for (i = 0; i < num_tables; i++) {
         GstJpegQuantTable * const quant_table =
             &priv->quant_tables.quant_tables[i];
-        iq_matrix->precision[i] = quant_table->quant_precision;
-        if (iq_matrix->precision[i] == 0) /* 8-bit values */
-            for (j = 0; j < GST_JPEG_MAX_QUANT_ELEMENTS; j++) {
-                iq_matrix->quantiser_matrix[i][j] =
-                    quant_table->quant_table[j];
-            }
-        else
-            memcpy(iq_matrix->quantiser_matrix[i],
-                   quant_table->quant_table,
-                   128);
+
+        iq_matrix->load_quantiser_table[i] = quant_table->valid;
+        if (!iq_matrix->load_quantiser_table[i])
+            continue;
+
+        g_assert(quant_table->quant_precision == 0);
+        for (j = 0; j < GST_JPEG_MAX_QUANT_ELEMENTS; j++)
+            iq_matrix->quantiser_table[i][j] = quant_table->quant_table[j];
+        iq_matrix->load_quantiser_table[i] = 1;
+        quant_table->valid = FALSE;
     }
     return TRUE;
 }
@@ -255,8 +257,9 @@ fill_huffman_table(
 )
 {
     GstVaapiDecoderJpegPrivate * const priv = decoder->priv;
+    GstJpegHuffmanTables * const huf_tables = &priv->huf_tables;
     VAHuffmanTableBufferJPEG *huffman_table;
-    guint i;
+    guint i, num_tables;
 
     if (!priv->has_huf_table)
         gst_jpeg_get_default_huffman_tables(&priv->huf_tables);
@@ -264,20 +267,28 @@ fill_huffman_table(
     picture->huf_table = GST_VAAPI_HUFFMAN_TABLE_NEW(JPEG, decoder);
     g_assert(picture->huf_table);
     huffman_table = picture->huf_table->param;
-    memset(huffman_table, 0, sizeof(VAHuffmanTableBufferJPEG));
-    for (i = 0; i < GST_JPEG_MAX_SCAN_COMPONENTS; i++) {
-        memcpy(huffman_table->huffman_table[i].dc_bits,
-               priv->huf_tables.dc_tables[i].huf_bits,
-               16);
-        memcpy(huffman_table->huffman_table[i].dc_huffval,
-               priv->huf_tables.dc_tables[i].huf_values,
-               16);
-        memcpy(huffman_table->huffman_table[i].ac_bits,
-               priv->huf_tables.ac_tables[i].huf_bits,
-               16);
-        memcpy(huffman_table->huffman_table[i].ac_huffval,
-               priv->huf_tables.ac_tables[i].huf_values,
-               256);
+
+    num_tables = MIN(G_N_ELEMENTS(huffman_table->huffman_table),
+                     GST_JPEG_MAX_SCAN_COMPONENTS);
+
+    for (i = 0; i < num_tables; i++) {
+        huffman_table->load_huffman_table[i] =
+            huf_tables->dc_tables[i].valid && huf_tables->ac_tables[i].valid;
+        if (!huffman_table->load_huffman_table[i])
+            continue;
+
+        memcpy(huffman_table->huffman_table[i].num_dc_codes,
+               huf_tables->dc_tables[i].huf_bits,
+               sizeof(huffman_table->huffman_table[i].num_dc_codes));
+        memcpy(huffman_table->huffman_table[i].dc_values,
+               huf_tables->dc_tables[i].huf_values,
+               sizeof(huffman_table->huffman_table[i].dc_values));
+        memcpy(huffman_table->huffman_table[i].num_ac_codes,
+               huf_tables->ac_tables[i].huf_bits,
+               sizeof(huffman_table->huffman_table[i].num_ac_codes));
+        memcpy(huffman_table->huffman_table[i].ac_values,
+               huf_tables->ac_tables[i].huf_values,
+               sizeof(huffman_table->huffman_table[i].ac_values));
     }
     return TRUE;
 }
@@ -476,16 +487,19 @@ decode_scan(
     slice_param = gst_slice->param;
     slice_param->num_components = scan_hdr.num_components;
     for (i = 0; i < scan_hdr.num_components; i++) {
-        slice_param->components[i].component_id = scan_hdr.components[i].component_selector;
-        slice_param->components[i].dc_selector = scan_hdr.components[i].dc_selector;
-        slice_param->components[i].ac_selector = scan_hdr.components[i].ac_selector;
+        slice_param->components[i].component_selector =
+            scan_hdr.components[i].component_selector;
+        slice_param->components[i].dc_table_selector =
+            scan_hdr.components[i].dc_selector;
+        slice_param->components[i].ac_table_selector =
+            scan_hdr.components[i].ac_selector;
     }
     slice_param->restart_interval = priv->mcu_restart;
     if (scan_hdr.num_components == 1) { /*non-interleaved*/
         slice_param->slice_horizontal_position = 0;
         slice_param->slice_vertical_position = 0;
         /* Y mcu numbers*/
-        if (slice_param->components[0].component_id == priv->frame_hdr.components[0].identifier) {
+        if (slice_param->components[0].component_selector == priv->frame_hdr.components[0].identifier) {
             slice_param->num_mcus = (priv->frame_hdr.width/8)*(priv->frame_hdr.height/8);
         } else { /*Cr, Cb mcu numbers*/
             slice_param->num_mcus = (priv->frame_hdr.width/16)*(priv->frame_hdr.height/16);
