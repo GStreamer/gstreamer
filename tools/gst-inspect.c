@@ -1550,7 +1550,7 @@ main (int argc, char *argv[])
   gst_init (&argc, &argv);
 #endif
 
-  gst_tools_print_version ("gst-inspect");
+  gst_tools_print_version ();
 
   if (print_all && argc > 1) {
     g_print ("-a requires no extra arguments\n");

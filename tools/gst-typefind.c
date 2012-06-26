@@ -164,7 +164,7 @@ main (int argc, char *argv[])
   }
   g_option_context_free (ctx);
 
-  gst_tools_print_version ("gst-typefind");
+  gst_tools_print_version ();
 
   if (filenames == NULL || *filenames == NULL) {
     g_print ("Please give a filename to typefind\n\n");

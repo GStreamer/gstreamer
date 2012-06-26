@@ -42,7 +42,7 @@ static gboolean __gst_tools_version = FALSE;
       N_("Print version information and exit"), NULL }
 
 static void
-gst_tools_print_version (const gchar * tool)
+gst_tools_print_version (void)
 {
   if (__gst_tools_version) {
     gchar *version_str;

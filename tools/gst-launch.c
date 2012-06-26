@@ -967,7 +967,7 @@ main (int argc, char *argv[])
   gst_init (&argc, &argv);
 #endif
 
-  gst_tools_print_version ("gst-launch");
+  gst_tools_print_version ();
 
 #ifndef DISABLE_FAULT_HANDLER
   if (!no_fault)
