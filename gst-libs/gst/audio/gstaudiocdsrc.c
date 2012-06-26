@@ -87,6 +87,7 @@
 
 #include <string.h>
 #include <stdlib.h>             /* for strtol */
+#include <stdio.h>
 
 #include <gst/tag/tag.h>
 #include <gst/audio/audio.h>
@@ -144,6 +145,8 @@ struct _GstAudioCdSrcPrivate
 
   gint toc_offset;
   gboolean toc_bias;
+
+  GstToc *toc;
 };
 
 static void gst_audio_cd_src_uri_handler_init (gpointer g_iface,
@@ -726,6 +729,13 @@ gst_audio_cd_src_query (GstBaseSrc * basesrc, GstQuery * query)
       gst_query_set_convert (query, src_format, src_val, dest_format, dest_val);
       break;
     }
+    case GST_QUERY_TOC:{
+      if (src->priv->toc == NULL)
+        return FALSE;
+
+      gst_query_set_toc (query, src->priv->toc, NULL);
+      break;
+    }
     default:{
       GST_DEBUG_OBJECT (src, "unhandled query, chaining up to parent class");
       return GST_BASE_SRC_CLASS (parent_class)->query (basesrc, query);
@@ -936,6 +946,17 @@ gst_audio_cd_src_handle_event (GstBaseSrc * basesrc, GstEvent * event)
             gst_format_get_name (format));
         event = gst_event_ref (event);
         ret = GST_BASE_SRC_CLASS (parent_class)->event (basesrc, event);
+      }
+      break;
+    }
+    case GST_EVENT_TOC_SELECT:{
+      guint track_num = 0;
+      gchar *uid = NULL;
+
+      gst_event_parse_toc_select (event, &uid);
+      if (uid != NULL && sscanf (uid, "audiocd-track-%03u", &track_num) == 1) {
+        ret = gst_audio_cd_src_handle_track_seek (src, 1.0, GST_SEEK_FLAG_FLUSH,
+            GST_SEEK_TYPE_SET, track_num, GST_SEEK_TYPE_NONE, -1);
       }
       break;
     }
@@ -1375,6 +1396,56 @@ gst_audio_cd_src_add_tags (GstAudioCdSrc * src)
   GST_DEBUG ("src->tags = %" GST_PTR_FORMAT, src->tags);
 }
 
+static void
+gst_audio_cd_src_add_toc (GstAudioCdSrc * src)
+{
+  GQueue entries = G_QUEUE_INIT;
+  GstToc *toc;
+  gint i;
+
+  toc = gst_toc_new ();
+
+  for (i = 0; i < src->priv->num_tracks; ++i) {
+    GstAudioCdSrcTrack *track;
+    gint64 start_time, stop_time;
+    GstTocEntry *entry;
+    gchar *uid;
+
+    track = &src->priv->tracks[i];
+
+    /* keep uid in sync with toc select event handler below */
+    uid = g_strdup_printf ("audiocd-track-%03u", track->num);
+    entry = gst_toc_entry_new (GST_TOC_ENTRY_TYPE_TRACK, uid);
+    /* FIXME: why does it alloc an empty tag list? */
+    if (entry->tags != NULL)
+      gst_tag_list_free (entry->tags);
+    entry->tags = gst_tag_list_ref (track->tags);
+
+    gst_audio_cd_src_convert (src, sector_format, track->start,
+        GST_FORMAT_TIME, &start_time);
+    gst_audio_cd_src_convert (src, sector_format, track->end + 1,
+        GST_FORMAT_TIME, &stop_time);
+
+    GST_INFO ("Track %03u  %" GST_TIME_FORMAT " - %" GST_TIME_FORMAT,
+        track->num, GST_TIME_ARGS (start_time), GST_TIME_ARGS (stop_time));
+
+    gst_toc_entry_set_start_stop (entry, start_time, stop_time);
+    g_queue_push_tail (&entries, entry);
+    g_free (uid);
+  }
+  toc->entries = entries.head;
+
+  gst_element_post_message (GST_ELEMENT_CAST (src),
+      gst_message_new_toc (GST_OBJECT (src), toc, FALSE));
+
+  /* should we also push a TOC event downstream? Might only make sense if
+   * we're in continuous mode. e.g. matroska-mux will just write the TOC to
+   * file, but we might only be outputting a single track, so that doesn't
+   * make sense. */
+
+  src->priv->toc = toc;
+}
+
 #if 0
 static void
 gst_audio_cd_src_add_index_associations (GstAudioCdSrc * src)
@@ -1523,6 +1594,7 @@ gst_audio_cd_src_start (GstBaseSrc * basesrc)
     goto no_tracks;
 
   gst_audio_cd_src_add_tags (src);
+  gst_audio_cd_src_add_toc (src);
 
 #if 0
   if (src->priv->index && GST_INDEX_IS_WRITABLE (src->priv->index))
@@ -1597,6 +1669,11 @@ gst_audio_cd_src_stop (GstBaseSrc * basesrc)
   if (src->tags) {
     gst_tag_list_free (src->tags);
     src->tags = NULL;
+  }
+
+  if (src->priv->toc) {
+    gst_toc_unref (src->priv->toc);
+    src->priv->toc = NULL;
   }
 
   src->priv->prev_track = -1;
