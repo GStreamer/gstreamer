@@ -305,17 +305,6 @@ gst_v4l2_buffer_pool_set_config (GstBufferPool * bpool, GstStructure * config)
       else
         num_buffers = max_buffers;
 
-      /* Free the buffers from the kernel */
-      GST_DEBUG_OBJECT (pool, "Freeing the buffers from the kernel");
-
-      memset (&breq, 0, sizeof (struct v4l2_requestbuffers));
-      breq.type = obj->type;
-      breq.count = 0;
-      breq.memory = V4L2_MEMORY_MMAP;
-
-      if (v4l2_ioctl (pool->video_fd, VIDIOC_REQBUFS, &breq) < 0)
-        goto reqbufs_failed;
-
       /* first, lets request buffers, and see how many we can get: */
       GST_DEBUG_OBJECT (pool, "starting, requesting %d MMAP buffers",
           num_buffers);
