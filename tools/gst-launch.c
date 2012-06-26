@@ -949,7 +949,7 @@ main (int argc, char *argv[])
   textdomain (GETTEXT_PACKAGE);
 #endif
 
-  gst_tools_set_prgname ("gst-launch");
+  g_set_prgname ("gst-launch-" GST_API_VERSION);
 
 #ifndef GST_DISABLE_OPTION_PARSING
   ctx = g_option_context_new ("PIPELINE-DESCRIPTION");

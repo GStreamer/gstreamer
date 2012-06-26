@@ -153,7 +153,7 @@ main (int argc, char *argv[])
   textdomain (GETTEXT_PACKAGE);
 #endif
 
-  gst_tools_set_prgname ("gst-typefind");
+  g_set_prgname ("gst-typefind-" GST_API_VERSION);
 
   ctx = g_option_context_new ("FILES");
   g_option_context_add_main_entries (ctx, options, GETTEXT_PACKAGE);

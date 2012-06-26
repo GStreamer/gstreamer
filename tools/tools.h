@@ -57,14 +57,4 @@ gst_tools_print_version (const gchar * tool)
   }
 }
 
-static void
-gst_tools_set_prgname (const gchar * tool)
-{
-  gchar *s;
-
-  s = g_strdup_printf ("%s-%u.%u", tool, GST_VERSION_MAJOR, GST_VERSION_MINOR);
-  g_set_prgname (s);
-  g_free (s);
-}
-
 #endif /* __GST_TOOLS_H__ */
