@@ -622,7 +622,7 @@ gst_play_sink_class_init (GstPlaySinkClass * klass)
   gstbin_klass->handle_message =
       GST_DEBUG_FUNCPTR (gst_play_sink_handle_message);
 
-  klass->reconfigure = GST_DEBUG_FUNCPTR (gst_play_sink_do_reconfigure);
+  klass->reconfigure = GST_DEBUG_FUNCPTR (gst_play_sink_reconfigure);
   klass->convert_sample = GST_DEBUG_FUNCPTR (gst_play_sink_convert_sample);
 
   _playsink_reset_segment_event_marker_id =
