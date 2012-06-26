@@ -109,6 +109,8 @@ static gboolean push_event (MpegTSBase * base, GstEvent * event);
 #define mpegts_parse_parent_class parent_class
 G_DEFINE_TYPE (MpegTSParse2, mpegts_parse, GST_TYPE_MPEGTS_BASE);
 static void mpegts_parse_reset (MpegTSBase * base);
+static GstFlowReturn mpegts_parse_input_done (MpegTSBase * base,
+    GstBuffer * buffer);
 
 static void
 mpegts_parse_class_init (MpegTSParse2Class * klass)
@@ -138,6 +140,7 @@ mpegts_parse_class_init (MpegTSParse2Class * klass)
   ts_class->program_started = GST_DEBUG_FUNCPTR (mpegts_parse_program_started);
   ts_class->program_stopped = GST_DEBUG_FUNCPTR (mpegts_parse_program_stopped);
   ts_class->reset = GST_DEBUG_FUNCPTR (mpegts_parse_reset);
+  ts_class->input_done = GST_DEBUG_FUNCPTR (mpegts_parse_input_done);
 }
 
 static void
@@ -461,6 +464,14 @@ mpegts_parse_push (MpegTSBase * base, MpegTSPacketizerPacket * packet,
   }
 
   return ret;
+}
+
+static GstFlowReturn
+mpegts_parse_input_done (MpegTSBase * base, GstBuffer * buffer)
+{
+  MpegTSParse2 *parse = GST_MPEGTS_PARSE (base);
+
+  return gst_pad_push (parse->srcpad, buffer);
 }
 
 static MpegTSParsePad *
