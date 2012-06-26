@@ -1491,8 +1491,8 @@ gst_asf_demux_push_complete_payloads (GstASFDemux * demux, gboolean force)
           payload->interlaced);
       stream->interlaced = payload->interlaced;
       stream->caps = gst_caps_make_writable (stream->caps);
-      gst_caps_set_simple (stream->caps, "interlaced", G_TYPE_BOOLEAN,
-          stream->interlaced, NULL);
+      gst_caps_set_simple (stream->caps, "interlace-mode", G_TYPE_BOOLEAN,
+          (stream->interlaced ? "mixed" : "progressive"), NULL);
       gst_pad_set_caps (stream->pad, stream->caps);
     }
 
