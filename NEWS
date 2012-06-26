@@ -1,9 +1,9 @@
-gst-vaapi NEWS -- summary of changes.  2012-04-DD
+gst-vaapi NEWS -- summary of changes.  2012-06-26
 Copyright (C) 2010-2011 Splitted-Desktop Systems
 Copyright (C) 2011-2012 Intel Corporation
 Copyright (C) 2011 Collabora
 
-Version 0.3.7 - DD.Apr.2012
+Version 0.3.7 - 26.Jun.2012
 * Fix vaapidecode to report unsupported codec profiles
 * Fix MPEG-2 decoding of streams with extra slice() information
 * Map MPEG-2 compatible High profile streams to Main profile
