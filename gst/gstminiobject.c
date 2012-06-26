@@ -71,14 +71,16 @@ static GQuark weak_ref_quark;
 typedef struct
 {
   GQuark quark;
-  GstMiniObjectWeakNotify notify;
+  GstMiniObjectNotify notify;
   gpointer data;
+  GDestroyNotify destroy;
 } GstQData;
 
-#define QDATA(o,i)        ((GstQData *)(o)->qdata)[(i)]
-#define QDATA_QUARK(o,i)  (QDATA(o,i).quark)
-#define QDATA_NOTIFY(o,i) (QDATA(o,i).notify)
-#define QDATA_DATA(o,i)   (QDATA(o,i).data)
+#define QDATA(o,i)          ((GstQData *)(o)->qdata)[(i)]
+#define QDATA_QUARK(o,i)    (QDATA(o,i).quark)
+#define QDATA_NOTIFY(o,i)   (QDATA(o,i).notify)
+#define QDATA_DATA(o,i)     (QDATA(o,i).data)
+#define QDATA_DESTROY(o,i)  (QDATA(o,i).destroy)
 
 void
 _priv_gst_mini_object_initialize (void)
@@ -238,14 +240,62 @@ gst_mini_object_ref (GstMiniObject * mini_object)
   return mini_object;
 }
 
-static void
-qdata_notify (GstMiniObject * obj)
+static gint
+find_notify (GstMiniObject * object, GQuark quark, gboolean match_notify,
+    GstMiniObjectNotify notify, gpointer data)
 {
   guint i;
 
-  for (i = 0; i < obj->n_qdata; i++)
-    QDATA_NOTIFY (obj, i) (QDATA_DATA (obj, i), obj);
-  g_free (obj->qdata);
+  for (i = 0; i < object->n_qdata; i++) {
+    if (QDATA_QUARK (object, i) == quark) {
+      /* check if we need to match the callback too */
+      if (!match_notify || (QDATA_NOTIFY (object, i) == notify &&
+              QDATA_DATA (object, i) == data))
+        return i;
+    }
+  }
+  return -1;
+}
+
+static void
+remove_notify (GstMiniObject * object, gint index)
+{
+  /* remove item */
+  if (--object->n_qdata == 0) {
+    /* we don't shrink but free when everything is gone */
+    g_free (object->qdata);
+    object->qdata = NULL;
+  } else if (index != object->n_qdata)
+    QDATA (object, index) = QDATA (object, object->n_qdata);
+}
+
+static void
+set_notify (GstMiniObject * object, gint index, GQuark quark,
+    GstMiniObjectNotify notify, gpointer data, GDestroyNotify destroy)
+{
+  if (index == -1) {
+    /* add item */
+    index = object->n_qdata++;
+    object->qdata =
+        g_realloc (object->qdata, sizeof (GstQData) * object->n_qdata);
+  }
+  QDATA_QUARK (object, index) = quark;
+  QDATA_NOTIFY (object, index) = notify;
+  QDATA_DATA (object, index) = data;
+  QDATA_DESTROY (object, index) = destroy;
+}
+
+static void
+call_finalize_notify (GstMiniObject * obj)
+{
+  guint i;
+
+  for (i = 0; i < obj->n_qdata; i++) {
+    if (QDATA_QUARK (obj, i) == weak_ref_quark)
+      QDATA_NOTIFY (obj, i) (QDATA_DATA (obj, i), obj);
+    if (QDATA_DESTROY (obj, i))
+      QDATA_DESTROY (obj, i) (QDATA_DATA (obj, i));
+  }
 }
 
 /**
@@ -278,10 +328,10 @@ gst_mini_object_unref (GstMiniObject * mini_object)
     /* if the subclass recycled the object (and returned FALSE) we don't
      * want to free the instance anymore */
     if (G_LIKELY (do_free)) {
-      /* The weak reference stack is freed in the notification function */
-      if (mini_object->n_qdata)
-        qdata_notify (mini_object);
-
+      if (mini_object->n_qdata) {
+        call_finalize_notify (mini_object);
+        g_free (mini_object->qdata);
+      }
 #ifndef GST_DISABLE_TRACE
       _gst_alloc_trace_free (_gst_mini_object_trace, mini_object);
 #endif
@@ -423,21 +473,14 @@ gst_mini_object_take (GstMiniObject ** olddata, GstMiniObject * newdata)
  */
 void
 gst_mini_object_weak_ref (GstMiniObject * object,
-    GstMiniObjectWeakNotify notify, gpointer data)
+    GstMiniObjectNotify notify, gpointer data)
 {
-  guint i;
-
   g_return_if_fail (object != NULL);
   g_return_if_fail (notify != NULL);
   g_return_if_fail (GST_MINI_OBJECT_REFCOUNT_VALUE (object) >= 1);
 
   G_LOCK (qdata_mutex);
-  i = object->n_qdata++;
-  object->qdata =
-      g_realloc (object->qdata, sizeof (GstQData) * object->n_qdata);
-  QDATA_QUARK (object, i) = weak_ref_quark;
-  QDATA_NOTIFY (object, i) = notify;
-  QDATA_DATA (object, i) = data;
+  set_notify (object, -1, weak_ref_quark, notify, data, NULL);
   G_UNLOCK (qdata_mutex);
 }
 
@@ -447,38 +490,26 @@ gst_mini_object_weak_ref (GstMiniObject * object,
  * @notify: callback to search for
  * @data: data to search for
  *
- * Removes a weak reference callback to a mini object.
+ * Removes a weak reference callback from a mini object.
  *
  * Since: 0.10.35
  */
 void
 gst_mini_object_weak_unref (GstMiniObject * object,
-    GstMiniObjectWeakNotify notify, gpointer data)
+    GstMiniObjectNotify notify, gpointer data)
 {
-  guint i;
-  gboolean found_one = FALSE;
+  gint i;
 
   g_return_if_fail (object != NULL);
   g_return_if_fail (notify != NULL);
 
   G_LOCK (qdata_mutex);
-  for (i = 0; i < object->n_qdata; i++) {
-    if (QDATA_QUARK (object, i) == weak_ref_quark &&
-        QDATA_NOTIFY (object, i) == notify && QDATA_DATA (object, i) == data) {
-      found_one = TRUE;
-      if (--object->n_qdata == 0) {
-        /* we don't shrink but free when everything is gone */
-        g_free (object->qdata);
-        object->qdata = NULL;
-      } else if (i != object->n_qdata)
-        QDATA (object, i) = QDATA (object, object->n_qdata);
-      break;
-    }
+  if ((i = find_notify (object, weak_ref_quark, TRUE, notify, data)) != -1) {
+    remove_notify (object, i);
+  } else {
+    g_warning ("%s: couldn't find weak ref %p(%p)", G_STRFUNC, notify, data);
   }
   G_UNLOCK (qdata_mutex);
-
-  if (!found_one)
-    g_warning ("%s: couldn't find weak ref %p(%p)", G_STRFUNC, notify, data);
 }
 
 /**
@@ -506,7 +537,7 @@ void
 gst_mini_object_set_qdata (GstMiniObject * object, GQuark quark,
     gpointer data, GDestroyNotify destroy)
 {
-  guint i;
+  gint i;
   gpointer old_data = NULL;
   GDestroyNotify old_notify = NULL;
 
@@ -514,32 +545,16 @@ gst_mini_object_set_qdata (GstMiniObject * object, GQuark quark,
   g_return_if_fail (quark > 0);
 
   G_LOCK (qdata_mutex);
-  for (i = 0; i < object->n_qdata; i++) {
-    if (QDATA_QUARK (object, i) == quark) {
-      old_data = QDATA_DATA (object, i);
-      old_notify = (GDestroyNotify) QDATA_NOTIFY (object, i);
+  if ((i = find_notify (object, quark, FALSE, NULL, NULL)) != -1) {
 
-      if (data == NULL) {
-        /* remove item */
-        if (--object->n_qdata == 0) {
-          /* we don't shrink but free when everything is gone */
-          g_free (object->qdata);
-          object->qdata = NULL;
-        } else if (i != object->n_qdata)
-          QDATA (object, i) = QDATA (object, object->n_qdata);
-      }
-      break;
-    }
+    old_data = QDATA_DATA (object, i);
+    old_notify = QDATA_DESTROY (object, i);
+
+    if (data == NULL)
+      remove_notify (object, i);
   }
-  if (!old_data) {
-    /* add item */
-    i = object->n_qdata++;
-    object->qdata =
-        g_realloc (object->qdata, sizeof (GstQData) * object->n_qdata);
-  }
-  QDATA_QUARK (object, i) = quark;
-  QDATA_DATA (object, i) = data;
-  QDATA_NOTIFY (object, i) = (GstMiniObjectWeakNotify) destroy;
+  if (data != NULL)
+    set_notify (object, i, quark, NULL, data, destroy);
   G_UNLOCK (qdata_mutex);
 
   if (old_notify)
@@ -560,17 +575,47 @@ gpointer
 gst_mini_object_get_qdata (GstMiniObject * object, GQuark quark)
 {
   guint i;
-  gpointer result = NULL;
+  gpointer result;
 
   g_return_val_if_fail (object != NULL, NULL);
   g_return_val_if_fail (quark > 0, NULL);
 
   G_LOCK (qdata_mutex);
-  for (i = 0; i < object->n_qdata; i++) {
-    if (QDATA_QUARK (object, i) == quark) {
-      result = QDATA_DATA (object, i);
-      break;
-    }
+  if ((i = find_notify (object, quark, FALSE, NULL, NULL)) != -1)
+    result = QDATA_DATA (object, i);
+  else
+    result = NULL;
+  G_UNLOCK (qdata_mutex);
+
+  return result;
+}
+
+/**
+ * gst_mini_object_steal_qdata:
+ * @object: The GstMiniObject to get a stored user data pointer from
+ * @quark: A #GQuark, naming the user data pointer
+ *
+ * This function gets back user data pointers stored via gst_mini_object_set_qdata()
+ * and removes the data from @object without invoking its destroy() function (if
+ * any was set).
+ *
+ * Returns: (transfer full): The user data pointer set, or %NULL
+ */
+gpointer
+gst_mini_object_steal_qdata (GstMiniObject * object, GQuark quark)
+{
+  guint i;
+  gpointer result;
+
+  g_return_val_if_fail (object != NULL, NULL);
+  g_return_val_if_fail (quark > 0, NULL);
+
+  G_LOCK (qdata_mutex);
+  if ((i = find_notify (object, quark, FALSE, NULL, NULL)) != -1) {
+    result = QDATA_DATA (object, i);
+    remove_notify (object, i);
+  } else {
+    result = NULL;
   }
   G_UNLOCK (qdata_mutex);
 

@@ -68,20 +68,14 @@ typedef gboolean (*GstMiniObjectDisposeFunction) (GstMiniObject *obj);
 typedef void (*GstMiniObjectFreeFunction) (GstMiniObject *obj);
 
  /**
- * GstMiniObjectWeakNotify:
- * @user_data: data that was provided when the weak reference was established
- * @where_the_mini_object_was: the mini object being finalized
+ * GstMiniObjectNotify:
+ * @user_data: data that was provided when the notify was added
+ * @obj: the mini object
  *
- * A #GstMiniObjectWeakNotify function can be added to a mini object as a
- * callback that gets triggered when the mini object is finalized. Since the
- * mini object is already being finalized when the #GstMiniObjectWeakNotify is
- * called, there's not much you could do with the object, apart from e.g. using
- * its adress as hash-index or the like.
- *
- * Since: 0.10.35
+ * A #GstMiniObjectNotify function can be added to a mini object as a
+ * callback that gets triggered with gst_mini_object_notify().
  */
-typedef void (*GstMiniObjectWeakNotify) (gpointer user_data,
-    GstMiniObject * where_the_mini_object_was);
+typedef void (*GstMiniObjectNotify) (gpointer user_data, GstMiniObject * obj);
 
 /**
  * GST_MINI_OBJECT_TYPE:
@@ -195,15 +189,16 @@ GstMiniObject * gst_mini_object_ref		(GstMiniObject *mini_object);
 void            gst_mini_object_unref		(GstMiniObject *mini_object);
 
 void            gst_mini_object_weak_ref        (GstMiniObject *object,
-					         GstMiniObjectWeakNotify notify,
+					         GstMiniObjectNotify notify,
 					         gpointer data);
 void            gst_mini_object_weak_unref	(GstMiniObject *object,
-					         GstMiniObjectWeakNotify notify,
+					         GstMiniObjectNotify notify,
 					         gpointer data);
 
 void            gst_mini_object_set_qdata       (GstMiniObject *object, GQuark quark,
                                                  gpointer data, GDestroyNotify destroy);
 gpointer        gst_mini_object_get_qdata       (GstMiniObject *object, GQuark quark);
+gpointer        gst_mini_object_steal_qdata     (GstMiniObject *object, GQuark quark);
 
 
 gboolean        gst_mini_object_replace         (GstMiniObject **olddata, GstMiniObject *newdata);

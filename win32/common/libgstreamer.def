@@ -603,6 +603,7 @@ EXPORTS
 	gst_mini_object_replace
 	gst_mini_object_set_qdata
 	gst_mini_object_steal
+	gst_mini_object_steal_qdata
 	gst_mini_object_take
 	gst_mini_object_unref
 	gst_mini_object_weak_ref
