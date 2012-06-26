@@ -136,14 +136,15 @@ fault_spin (void)
   int spinning = TRUE;
 
   glib_on_error_halt = FALSE;
-  g_on_error_stack_trace ("gst-launch");
+  g_on_error_stack_trace ("gst-launch-" GST_API_VERSION);
 
   wait (NULL);
 
   /* FIXME how do we know if we were run by libtool? */
   fprintf (stderr,
-      "Spinning.  Please run 'gdb gst-launch %d' to continue debugging, "
-      "Ctrl-C to quit, or Ctrl-\\ to dump core.\n", (gint) getpid ());
+      "Spinning.  Please run 'gdb gst-launch- " GST_API_VERSION " %d' to "
+      "continue debugging, Ctrl-C to quit, or Ctrl-\\ to dump core.\n",
+      (gint) getpid ());
   while (spinning)
     g_usleep (1000000);
 }
