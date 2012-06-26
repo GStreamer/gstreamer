@@ -382,6 +382,8 @@ static void notify_mute_cb (GObject * object, GParamSpec * pspec,
 
 static void update_av_offset (GstPlaySink * playsink);
 
+static gboolean gst_play_sink_do_reconfigure (GstPlaySink * playsink);
+
 static GQuark _playsink_reset_segment_event_marker_id = 0;
 
 /* static guint gst_play_sink_signals[LAST_SIGNAL] = { 0 }; */
@@ -620,7 +622,7 @@ gst_play_sink_class_init (GstPlaySinkClass * klass)
   gstbin_klass->handle_message =
       GST_DEBUG_FUNCPTR (gst_play_sink_handle_message);
 
-  klass->reconfigure = GST_DEBUG_FUNCPTR (gst_play_sink_reconfigure);
+  klass->reconfigure = GST_DEBUG_FUNCPTR (gst_play_sink_do_reconfigure);
   klass->convert_sample = GST_DEBUG_FUNCPTR (gst_play_sink_convert_sample);
 
   _playsink_reset_segment_event_marker_id =
@@ -2930,8 +2932,8 @@ link_failed:
  * have to construct the final pipeline. Based on the flags we construct the
  * final output pipelines.
  */
-gboolean
-gst_play_sink_reconfigure (GstPlaySink * playsink)
+static gboolean
+gst_play_sink_do_reconfigure (GstPlaySink * playsink)
 {
   GstPlayFlags flags;
   gboolean need_audio, need_video, need_deinterlace, need_vis, need_text;
@@ -3833,6 +3835,20 @@ text_set_blocked (GstPlaySink * playsink, gboolean blocked)
   }
 }
 
+gboolean
+gst_play_sink_reconfigure (GstPlaySink * playsink)
+{
+  GST_LOG_OBJECT (playsink, "Triggering reconfiguration");
+
+  GST_PLAY_SINK_LOCK (playsink);
+  video_set_blocked (playsink, TRUE);
+  audio_set_blocked (playsink, TRUE);
+  text_set_blocked (playsink, TRUE);
+  GST_PLAY_SINK_UNLOCK (playsink);
+
+  return TRUE;
+}
+
 static GstPadProbeReturn
 sinkpad_blocked_cb (GstPad * blockedpad, GstPadProbeInfo * info,
     gpointer user_data)
@@ -3879,7 +3895,7 @@ sinkpad_blocked_cb (GstPad * blockedpad, GstPadProbeInfo * info,
           playsink->audio_pad_raw);
     }
 
-    gst_play_sink_reconfigure (playsink);
+    gst_play_sink_do_reconfigure (playsink);
 
     video_set_blocked (playsink, FALSE);
     audio_set_blocked (playsink, FALSE);
@@ -3922,13 +3938,8 @@ caps_notify_cb (GstPad * pad, GParamSpec * unused, GstPlaySink * playsink)
 
   gst_caps_unref (caps);
 
-  if (reconfigure) {
-    GST_PLAY_SINK_LOCK (playsink);
-    video_set_blocked (playsink, TRUE);
-    audio_set_blocked (playsink, TRUE);
-    text_set_blocked (playsink, TRUE);
-    GST_PLAY_SINK_UNLOCK (playsink);
-  }
+  if (reconfigure)
+    gst_play_sink_reconfigure (playsink);
 }
 
 void
@@ -4386,40 +4397,8 @@ gst_play_sink_change_state (GstElement * element, GstStateChange transition)
       ret = GST_STATE_CHANGE_ASYNC;
 
       /* block all pads here */
-      GST_PLAY_SINK_LOCK (playsink);
-      if (playsink->video_pad && playsink->video_block_id == 0) {
-        GstPad *opad =
-            GST_PAD_CAST (gst_proxy_pad_get_internal (GST_PROXY_PAD
-                (playsink->video_pad)));
-        playsink->video_block_id =
-            gst_pad_add_probe (opad, GST_PAD_PROBE_TYPE_BLOCK_DOWNSTREAM,
-            sinkpad_blocked_cb, playsink, NULL);
-        PENDING_FLAG_SET (playsink, GST_PLAY_SINK_TYPE_VIDEO);
-        gst_object_unref (opad);
-      }
-
-      if (playsink->audio_pad && playsink->audio_block_id == 0) {
-        GstPad *opad =
-            GST_PAD_CAST (gst_proxy_pad_get_internal (GST_PROXY_PAD
-                (playsink->audio_pad)));
-        playsink->audio_block_id =
-            gst_pad_add_probe (opad, GST_PAD_PROBE_TYPE_BLOCK_DOWNSTREAM,
-            sinkpad_blocked_cb, playsink, NULL);
-        PENDING_FLAG_SET (playsink, GST_PLAY_SINK_TYPE_AUDIO);
-        gst_object_unref (opad);
-      }
-
-      if (playsink->text_pad && playsink->text_block_id == 0) {
-        GstPad *opad =
-            GST_PAD_CAST (gst_proxy_pad_get_internal (GST_PROXY_PAD
-                (playsink->text_pad)));
-        playsink->text_block_id =
-            gst_pad_add_probe (opad, GST_PAD_PROBE_TYPE_BLOCK_DOWNSTREAM,
-            sinkpad_blocked_cb, playsink, NULL);
-        PENDING_FLAG_SET (playsink, GST_PLAY_SINK_TYPE_TEXT);
-        gst_object_unref (opad);
-      }
-      GST_PLAY_SINK_UNLOCK (playsink);
+      if (!gst_play_sink_reconfigure (playsink))
+        ret = GST_STATE_CHANGE_FAILURE;
       break;
     case GST_STATE_CHANGE_PAUSED_TO_READY:
       /* unblock all pads here */
