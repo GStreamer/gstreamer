@@ -536,11 +536,11 @@ setup_dirac_mapper (GstOggStream * pad, ogg_packet * packet)
   pad->caps = gst_caps_new_simple ("video/x-dirac",
       "width", G_TYPE_INT, header.width,
       "height", G_TYPE_INT, header.height,
-      "interlaced", G_TYPE_BOOLEAN, header.interlaced,
-      "pixel-aspect-ratio", GST_TYPE_FRACTION,
-      header.aspect_ratio_numerator, header.aspect_ratio_denominator,
-      "framerate", GST_TYPE_FRACTION, header.frame_rate_numerator,
-      header.frame_rate_denominator, NULL);
+      "interlace-mode", G_TYPE_STRING,
+      (header.interlaced ? "mixed" : "progressive"), "pixel-aspect-ratio",
+      GST_TYPE_FRACTION, header.aspect_ratio_numerator,
+      header.aspect_ratio_denominator, "framerate", GST_TYPE_FRACTION,
+      header.frame_rate_numerator, header.frame_rate_denominator, NULL);
 
   return TRUE;
 }

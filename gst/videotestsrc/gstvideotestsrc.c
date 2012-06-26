@@ -330,8 +330,9 @@ gst_video_test_src_src_fixate (GstBaseSrc * bsrc, GstCaps * caps)
   if (gst_structure_has_field (structure, "chroma-site"))
     gst_structure_fixate_field_string (structure, "chroma-site", "mpeg2");
 
-  if (gst_structure_has_field (structure, "interlaced"))
-    gst_structure_fixate_field_boolean (structure, "interlaced", FALSE);
+  if (gst_structure_has_field (structure, "interlace-mode"))
+    gst_structure_fixate_field_string (structure, "interlace-mode",
+        "progressive");
 
   caps = GST_BASE_SRC_CLASS (parent_class)->fixate (bsrc, caps);
 
