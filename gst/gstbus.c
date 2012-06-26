@@ -817,7 +817,7 @@ static GSourceFuncs gst_bus_source_funcs = {
 };
 
 /**
- * gst_bus_create_watch: (skip)
+ * gst_bus_create_watch:
  * @bus: a #GstBus to create the watch for
  *
  * Create watch for this bus. The GSource will be dispatched whenever
