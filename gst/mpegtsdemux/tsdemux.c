@@ -405,7 +405,8 @@ gst_ts_demux_srcpad_query (GstPad * pad, GstObject * parent, GstQuery * query)
             res = FALSE;
           else {
             GstClockTime dur =
-                mpegts_packetizer_offset_to_ts (base->packetizer, val);
+                mpegts_packetizer_offset_to_ts (base->packetizer, val,
+                demux->program->pcr_pid);
             if (GST_CLOCK_TIME_IS_VALID (dur))
               gst_query_set_duration (query, GST_FORMAT_TIME, dur);
             else
@@ -523,7 +524,7 @@ gst_ts_demux_do_seek (MpegTSBase * base, GstEvent * event)
   /* Convert start/stop to offset */
   start_offset =
       mpegts_packetizer_ts_to_offset (base->packetizer, MAX (0,
-          start - SEEK_TIMESTAMP_OFFSET));
+          start - SEEK_TIMESTAMP_OFFSET), demux->program->pcr_pid);
 
   if (G_UNLIKELY (start_offset == -1)) {
     GST_WARNING ("Couldn't convert start position to an offset");
@@ -1434,7 +1435,9 @@ calculate_and_push_newsegment (GstTSDemux * demux, TSDemuxStream * stream)
     }
   }
   if (GST_CLOCK_TIME_IS_VALID (lowest_pts))
-    firstts = mpegts_packetizer_pts_to_ts (base->packetizer, lowest_pts);
+    firstts =
+        mpegts_packetizer_pts_to_ts (base->packetizer, lowest_pts,
+        demux->program->pcr_pid);
   GST_DEBUG ("lowest_pts %" G_GUINT64_FORMAT " => clocktime %" GST_TIME_FORMAT,
       lowest_pts, GST_TIME_ARGS (firstts));
 
@@ -1536,10 +1539,12 @@ gst_ts_demux_push_pending_data (GstTSDemux * demux, TSDemuxStream * stream)
       GST_TIME_ARGS (stream->pts));
   if (GST_CLOCK_TIME_IS_VALID (stream->pts))
     GST_BUFFER_PTS (buffer) =
-        mpegts_packetizer_pts_to_ts (packetizer, stream->pts);
+        mpegts_packetizer_pts_to_ts (packetizer, stream->pts,
+        demux->program->pcr_pid);
   if (GST_CLOCK_TIME_IS_VALID (stream->dts))
     GST_BUFFER_DTS (buffer) =
-        mpegts_packetizer_pts_to_ts (packetizer, stream->dts);
+        mpegts_packetizer_pts_to_ts (packetizer, stream->dts,
+        demux->program->pcr_pid);
 
   GST_DEBUG_OBJECT (stream->pad,
       "Pushing buffer with timestamp: %" GST_TIME_FORMAT,
