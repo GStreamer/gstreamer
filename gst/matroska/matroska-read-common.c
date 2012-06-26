@@ -816,6 +816,8 @@ gst_matroska_read_common_postprocess_toc_entries (GList * toc_entries,
     iter_digit = g_strdup_printf ("%d", i);
 
     switch (cur_info->type) {
+      case GST_TOC_ENTRY_TYPE_ANGLE:
+      case GST_TOC_ENTRY_TYPE_VERSION:
       case GST_TOC_ENTRY_TYPE_EDITION:
         /* in Matroska terms edition has duration of full track */
         gst_toc_entry_set_start_stop (cur_info, 0, max);
@@ -829,6 +831,8 @@ gst_matroska_read_common_postprocess_toc_entries (GList * toc_entries,
             max, cur_info->uid);
         break;
 
+      case GST_TOC_ENTRY_TYPE_TITLE:
+      case GST_TOC_ENTRY_TYPE_TRACK:
       case GST_TOC_ENTRY_TYPE_CHAPTER:
         prev_list = cur_list->prev;
         next_list = cur_list->next;
@@ -872,6 +876,8 @@ gst_matroska_read_common_postprocess_toc_entries (GList * toc_entries,
           gst_matroska_read_common_postprocess_toc_entries
               (cur_info->subentries, stop, cur_info->uid);
         }
+        break;
+      case GST_TOC_ENTRY_TYPE_INVALID:
         break;
     }
     cur_list = cur_list->next;
