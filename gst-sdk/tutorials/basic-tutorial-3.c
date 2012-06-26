@@ -28,7 +28,7 @@ int main(int argc, char *argv[]) {
   
   /* Create the empty pipeline */
   data.pipeline = gst_pipeline_new ("test-pipeline");
-   
+  
   if (!data.pipeline || !data.source || !data.convert || !data.sink) {
     g_printerr ("Not all elements could be created.\n");
     return -1;
