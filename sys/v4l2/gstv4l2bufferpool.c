@@ -190,16 +190,28 @@ gst_v4l2_buffer_pool_alloc_buffer (GstBufferPool * bpool, GstBuffer ** buffer,
 
       /* add metadata to raw video buffers */
       if (pool->add_videometa && info->finfo) {
+        const GstVideoFormatInfo *finfo = info->finfo;
         gsize offset[GST_VIDEO_MAX_PLANES];
-        gint stride[GST_VIDEO_MAX_PLANES];
+        gint width, height, n_planes, offs, i, stride[GST_VIDEO_MAX_PLANES];
 
-        offset[0] = 0;
-        stride[0] = obj->bytesperline;
+        width = GST_VIDEO_INFO_WIDTH (info);
+        height = GST_VIDEO_INFO_HEIGHT (info);
+        n_planes = GST_VIDEO_INFO_N_PLANES (info);
 
-        GST_DEBUG_OBJECT (pool, "adding video meta, stride %d", stride[0]);
+        GST_DEBUG_OBJECT (pool, "adding video meta, bytesperline %d",
+            obj->bytesperline);
+
+        offs = 0;
+        for (i = 0; i < n_planes; i++) {
+          offset[i] = offs;
+          stride[i] =
+              GST_VIDEO_FORMAT_INFO_SCALE_WIDTH (finfo, i, obj->bytesperline);
+
+          offs +=
+              stride[i] * GST_VIDEO_FORMAT_INFO_SCALE_HEIGHT (finfo, i, height);
+        }
         gst_buffer_add_video_meta_full (newbuf, GST_VIDEO_FRAME_FLAG_NONE,
-            GST_VIDEO_INFO_FORMAT (info), GST_VIDEO_INFO_WIDTH (info),
-            GST_VIDEO_INFO_HEIGHT (info), GST_VIDEO_INFO_N_PLANES (info),
+            GST_VIDEO_INFO_FORMAT (info), width, height, n_planes,
             offset, stride);
       }
       break;
