@@ -77,8 +77,9 @@ gst_video_frame_map_id (GstVideoFrame * frame, GstVideoInfo * info,
     frame->flags = meta->flags;
 
     for (i = 0; i < info->finfo->n_planes; i++)
-      gst_video_meta_map (meta, i, &frame->map[i], &frame->data[i],
-          &frame->info.stride[i], flags);
+      if (!gst_video_meta_map (meta, i, &frame->map[i], &frame->data[i],
+              &frame->info.stride[i], flags))
+        goto frame_map_failed;
   } else {
     /* no metadata, we really need to have the metadata when the id is
      * specified. */
@@ -97,7 +98,8 @@ gst_video_frame_map_id (GstVideoFrame * frame, GstVideoInfo * info,
         frame->flags |= GST_VIDEO_FRAME_FLAG_ONEFIELD;
     }
 
-    gst_buffer_map (buffer, &frame->map[0], flags);
+    if (!gst_buffer_map (buffer, &frame->map[0], flags))
+      goto map_failed;
 
     /* do some sanity checks */
     if (frame->map[0].size < info->size)
@@ -117,6 +119,20 @@ gst_video_frame_map_id (GstVideoFrame * frame, GstVideoInfo * info,
 no_metadata:
   {
     GST_ERROR ("no GstVideoMeta for id %d", id);
+    return FALSE;
+  }
+frame_map_failed:
+  {
+    GST_ERROR ("failed to map video frame plane %d", i);
+    do {
+      i--;
+      gst_video_meta_unmap (meta, i, &frame->map[i]);
+    } while (i > 0);
+    return FALSE;
+  }
+map_failed:
+  {
+    GST_ERROR ("failed to map buffer");
     return FALSE;
   }
 invalid_size:
