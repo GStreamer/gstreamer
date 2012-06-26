@@ -92,9 +92,11 @@ static const GstVaapiProfileMap gst_vaapi_profiles[] = {
     { GST_VAAPI_PROFILE_VC1_ADVANCED, VAProfileVC1Advanced,
       "video/x-wmv, wmvversion=3, format=(fourcc)WVC1", "advanced"
     },
+#if VA_CHECK_VERSION(0,32,0)
     { GST_VAAPI_PROFILE_JPEG_BASELINE, VAProfileJPEGBaseline,
       "image/jpeg", "baseline"
     },
+#endif
     { 0, }
 };
 
