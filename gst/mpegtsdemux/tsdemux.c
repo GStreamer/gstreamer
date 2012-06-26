@@ -1132,53 +1132,6 @@ gst_ts_demux_program_started (MpegTSBase * base, MpegTSBaseProgram * program)
 
 
 
-static inline void
-gst_ts_demux_record_pcr (GstTSDemux * demux, TSDemuxStream * stream,
-    guint64 pcr, guint64 offset)
-{
-  MpegTSBaseStream *bs = (MpegTSBaseStream *) stream;
-
-  GST_LOG ("pid 0x%04x pcr:%" GST_TIME_FORMAT " at offset %"
-      G_GUINT64_FORMAT, bs->pid,
-      GST_TIME_ARGS (PCRTIME_TO_GSTTIME (pcr)), offset);
-
-  /* FIXME : packetizer should record this */
-
-  if (G_UNLIKELY (demux->emit_statistics)) {
-    GstStructure *st;
-    st = gst_structure_new_id_empty (QUARK_TSDEMUX);
-    gst_structure_id_set (st,
-        QUARK_PID, G_TYPE_UINT, bs->pid,
-        QUARK_OFFSET, G_TYPE_UINT64, offset, QUARK_PCR, G_TYPE_UINT64, pcr,
-        NULL);
-    gst_element_post_message (GST_ELEMENT_CAST (demux),
-        gst_message_new_element (GST_OBJECT (demux), st));
-  }
-}
-
-static inline void
-gst_ts_demux_record_opcr (GstTSDemux * demux, TSDemuxStream * stream,
-    guint64 opcr, guint64 offset)
-{
-  MpegTSBaseStream *bs = (MpegTSBaseStream *) stream;
-
-  GST_LOG ("pid 0x%04x opcr:%" GST_TIME_FORMAT " at offset %"
-      G_GUINT64_FORMAT, bs->pid,
-      GST_TIME_ARGS (PCRTIME_TO_GSTTIME (opcr)), offset);
-
-  /* FIXME : packetizer should record this */
-
-  if (G_UNLIKELY (demux->emit_statistics)) {
-    GstStructure *st;
-    st = gst_structure_new_id_empty (QUARK_TSDEMUX);
-    gst_structure_id_set (st,
-        QUARK_PID, G_TYPE_UINT, bs->pid,
-        QUARK_OFFSET, G_TYPE_UINT64, offset,
-        QUARK_OPCR, G_TYPE_UINT64, opcr, NULL);
-    gst_element_post_message (GST_ELEMENT_CAST (demux),
-        gst_message_new_element (GST_OBJECT (demux), st));
-  }
-}
 
 static inline void
 gst_ts_demux_record_pts (GstTSDemux * demux, TSDemuxStream * stream,
@@ -1587,13 +1540,6 @@ gst_ts_demux_handle_packet (GstTSDemux * demux, TSDemuxStream * stream,
       packet->adaptation_field_control & 0x1)
     /* Flush previous data */
     res = gst_ts_demux_push_pending_data (demux, stream);
-
-  if (packet->adaptation_field_control & 0x2) {
-    if (packet->afc_flags & MPEGTS_AFC_PCR_FLAG)
-      gst_ts_demux_record_pcr (demux, stream, packet->pcr, packet->offset);
-    if (packet->afc_flags & MPEGTS_AFC_OPCR_FLAG)
-      gst_ts_demux_record_opcr (demux, stream, packet->opcr, packet->offset);
-  }
 
   if (packet->payload && (res == GST_FLOW_OK || res == GST_FLOW_NOT_LINKED)
       && stream->pad) {
