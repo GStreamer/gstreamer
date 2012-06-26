@@ -710,6 +710,8 @@ gst_ffmpegvidenc_handle_frame (GstVideoEncoder * encoder,
           (("Could not write to file \"%s\"."), ffmpegenc->filename),
           GST_ERROR_SYSTEM);
 
+  gst_video_codec_frame_unref (frame);
+
   /* Get oldest frame */
   frame = gst_video_encoder_get_oldest_frame (encoder);
 
