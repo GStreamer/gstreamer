@@ -442,11 +442,20 @@ The 0.11 porting guide
     return value ownership issues.
 
 * GstNavigationInterface
-    Now part of the video library in gst-plugins-base, and the interfaces library no
-    longer exists.
+    Now part of the video library in gst-plugins-base, and the interfaces
+    library no longer exists.
 
 * GstMixerInterface / GstTunerInterface
     Removed - no replacement?
+
+* GstXOverlay interface
+    Renamed to GstVideoOverlay, and now part of the video library in
+    gst-plugins-base, as the interfaces library no longer exists.
+
+* GstPropertyProbe interface
+    Removed - no replacement yet, but a more featureful replacement
+    for device discovery and feature querying is planned, see
+    https://bugzilla.gnome.org/show_bug.cgi?id=678402
 
 * GstURIHandler
     gst_uri_handler_get_uri() and the get_uri vfunc now return a copy of
