@@ -114,7 +114,7 @@ gst_v4l2_buffer_pool_free_buffer (GstBufferPool * bpool, GstBuffer * buffer)
 
       index = meta->vbuffer.index;
       GST_LOG_OBJECT (pool,
-          "mmap buffer %p idx %d (data %p, len %u) freed, unmapping", buffer,
+          "unmap buffer %p idx %d (data %p, len %u)", buffer,
           index, meta->mem, meta->vbuffer.length);
 
       v4l2_munmap (meta->mem, meta->vbuffer.length);
@@ -496,6 +496,7 @@ gst_v4l2_buffer_pool_stop (GstBufferPool * bpool)
   for (n = 0; n < pool->num_queued; n++) {
     gst_v4l2_buffer_pool_free_buffer (bpool, pool->buffers[n]);
   }
+  pool->num_queued = 0;
   g_free (pool->buffers);
   pool->buffers = NULL;
 
