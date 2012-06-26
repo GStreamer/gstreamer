@@ -1632,13 +1632,13 @@ gst_event_new_stream_start (void)
 
 /**
  * gst_event_new_toc:
- * @toc: #GstToc structure.
+ * @toc: (transfer none): #GstToc structure.
  * @updated: whether @toc was updated or not.
  *
  * Generate a TOC event from the given @toc. The purpose of the TOC event is to
  * inform elements that some kind of the TOC was found.
  *
- * Returns: a new #GstEvent.
+ * Returns: (transfer full): a new #GstEvent.
  *
  * Since: 0.10.37
  */
@@ -1651,19 +1651,17 @@ gst_event_new_toc (GstToc * toc, gboolean updated)
 
   GST_CAT_INFO (GST_CAT_EVENT, "creating toc event");
 
-  toc_struct = __gst_toc_to_structure (toc);
+  toc_struct = gst_structure_new_id (GST_QUARK (EVENT_TOC),
+      GST_QUARK (TOC), GST_TYPE_TOC, toc,
+      GST_QUARK (UPDATED), G_TYPE_BOOLEAN, updated, NULL);
 
-  if (G_LIKELY (toc_struct != NULL)) {
-    __gst_toc_structure_set_updated (toc_struct, updated);
-    return gst_event_new_custom (GST_EVENT_TOC, toc_struct);
-  } else
-    return NULL;
+  return gst_event_new_custom (GST_EVENT_TOC, toc_struct);
 }
 
 /**
  * gst_event_parse_toc:
  * @event: a TOC event.
- * @toc: (out): pointer to #GstToc structure.
+ * @toc: (out) (transfer full): pointer to #GstToc structure.
  * @updated: (out): pointer to store TOC updated flag.
  *
  * Parse a TOC @event and store the results in the given @toc and @updated locations.
@@ -1680,10 +1678,10 @@ gst_event_parse_toc (GstEvent * event, GstToc ** toc, gboolean * updated)
   g_return_if_fail (toc != NULL);
 
   structure = gst_event_get_structure (event);
-  *toc = __gst_toc_from_structure (structure);
 
-  if (updated != NULL)
-    *updated = __gst_toc_structure_get_updated (structure);
+  gst_structure_id_get (structure,
+      GST_QUARK (TOC), GST_TYPE_TOC, toc,
+      GST_QUARK (UPDATED), G_TYPE_BOOLEAN, updated, NULL);
 }
 
 /**

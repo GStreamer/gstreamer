@@ -62,7 +62,8 @@ static const gchar *_quark_strings[] = {
   GST_ELEMENT_METADATA_KLASS, GST_ELEMENT_METADATA_DESCRIPTION,
   GST_ELEMENT_METADATA_AUTHOR, "toc", "toc-entry", "updated", "extend-uid",
   "uid", "tags", "sub-entries", "info", "info-structure",
-  "time-structure", "GstMessageTag", "GstEventTag", "GstMessageResetTime"
+  "time-structure", "GstMessageTag", "GstEventTag", "GstMessageResetTime",
+  "GstMessageToc", "GstEventToc"
 };
 
 GQuark _priv_gst_quark_table[GST_QUARK_MAX];

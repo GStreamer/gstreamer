@@ -2174,13 +2174,13 @@ gst_message_parse_progress (GstMessage * message, GstProgressType * type,
 /**
  * gst_message_new_toc:
  * @src: the object originating the message.
- * @toc: #GstToc structure for the message.
+ * @toc: (transfer none): #GstToc structure for the message.
  * @updated: whether TOC was updated or not.
  *
  * Create a new TOC message. The message is posted by elements
  * that discovered or updated a TOC.
  *
- * Returns: a new TOC message.
+ * Returns: (transfer full): a new TOC message.
  *
  * MT safe.
  *
@@ -2193,24 +2193,22 @@ gst_message_new_toc (GstObject * src, GstToc * toc, gboolean updated)
 
   g_return_val_if_fail (toc != NULL, NULL);
 
-  toc_struct = __gst_toc_to_structure (toc);
+  toc_struct = gst_structure_new_id (GST_QUARK (MESSAGE_TOC),
+      GST_QUARK (TOC), GST_TYPE_TOC, toc,
+      GST_QUARK (UPDATED), G_TYPE_BOOLEAN, updated, NULL);
 
-  if (G_LIKELY (toc_struct != NULL)) {
-    __gst_toc_structure_set_updated (toc_struct, updated);
-    return gst_message_new_custom (GST_MESSAGE_TOC, src, toc_struct);
-  } else
-    return NULL;
+  return gst_message_new_custom (GST_MESSAGE_TOC, src, toc_struct);
 }
 
 /**
  * gst_message_parse_toc:
  * @message: a valid #GstMessage of type GST_MESSAGE_TOC.
- * @toc: (out): return location for the TOC.
+ * @toc: (out) (transfer full): return location for the TOC.
  * @updated: (out): return location for the updated flag.
  *
  * Extract thef TOC from the #GstMessage. The TOC returned in the
  * output argument is a copy; the caller must free it with
- * gst_toc_free() when done.
+ * gst_toc_unref() when done.
  *
  * MT safe.
  *
@@ -2223,11 +2221,9 @@ gst_message_parse_toc (GstMessage * message, GstToc ** toc, gboolean * updated)
   g_return_if_fail (GST_MESSAGE_TYPE (message) == GST_MESSAGE_TOC);
   g_return_if_fail (toc != NULL);
 
-  *toc = __gst_toc_from_structure (GST_MESSAGE_STRUCTURE (message));
-
-  if (updated != NULL)
-    *updated =
-        __gst_toc_structure_get_updated (GST_MESSAGE_STRUCTURE (message));
+  gst_structure_id_get (GST_MESSAGE_STRUCTURE (message),
+      GST_QUARK (TOC), GST_TYPE_TOC, toc,
+      GST_QUARK (UPDATED), G_TYPE_BOOLEAN, updated, NULL);
 }
 
 /**

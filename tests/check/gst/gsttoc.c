@@ -133,6 +133,8 @@
   CHECK_TOC_ENTRY (subentry_t, GST_TOC_ENTRY_TYPE_CHAPTER, ENTRY_SUB1);  \
 }
 
+/* This whole test is a bit pointless now that we just stuff a ref of
+ * the original TOC into the message/query/event */
 GST_START_TEST (test_serializing)
 {
   GstStructure *structure;
@@ -332,6 +334,9 @@ GST_START_TEST (test_serializing)
   gst_query_unref (query);
   g_free (uid);
 
+  /* FIXME: toc validation / verification should probably be done on the fly
+   * while creating it, and not when putting the toc in events or messages ? */
+#if 0
   /* that's wrong code, we should fail */
   ch = gst_toc_entry_new (GST_TOC_ENTRY_TYPE_CHAPTER, ENTRY_CH4);
   toc->entries = g_list_prepend (toc->entries, ch);
@@ -344,6 +349,7 @@ GST_START_TEST (test_serializing)
   ch = (GstTocEntry *) (toc->entries->data);
   ch->subentries = g_list_prepend (ch->subentries, ed);
   ASSERT_WARNING (message = gst_message_new_toc (NULL, toc, TRUE));
+#endif
 
   gst_toc_unref (toc);
 }
