@@ -5173,7 +5173,8 @@ gst_matroska_demux_video_caps (GstMatroskaTrackVideoContext *
       }
 
       if (videocontext->parent.flags & GST_MATROSKA_VIDEOTRACK_INTERLACED)
-        gst_structure_set (structure, "interlaced", G_TYPE_BOOLEAN, TRUE, NULL);
+        gst_structure_set (structure, "interlace-mode", G_TYPE_STRING,
+            "mixed", NULL);
     }
 
     caps = gst_caps_simplify (caps);
