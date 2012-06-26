@@ -168,6 +168,9 @@ struct _MpegTSBaseClass {
   /* flush all streams */
   void (*flush) (MpegTSBase * base);
 
+  /* Notifies subclasses input buffer has been handled */
+  GstFlowReturn (*input_done) (MpegTSBase *base, GstBuffer *buffer);
+
   /* signals */
   void (*pat_info) (GstStructure *pat);
   void (*pmt_info) (GstStructure *pmt);

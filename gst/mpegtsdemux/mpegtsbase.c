@@ -1409,13 +1409,19 @@ mpegts_base_chain (GstPad * pad, GstObject * parent, GstBuffer * buf)
   MpegTSPacketizerPacketReturn pret;
   MpegTSPacketizer2 *packetizer;
   MpegTSPacketizerPacket packet;
+  MpegTSBaseClass *klass;
 
   base = GST_MPEGTS_BASE (parent);
+  klass = GST_MPEGTS_BASE_GET_CLASS (base);
+
   packetizer = base->packetizer;
 
   if (G_UNLIKELY (base->queried_latency == FALSE)) {
     query_upstream_latency (base);
   }
+
+  if (klass->input_done)
+    gst_buffer_ref (buf);
 
   mpegts_packetizer_push (base->packetizer, buf);
 
@@ -1463,6 +1469,13 @@ mpegts_base_chain (GstPad * pad, GstObject * parent, GstBuffer * buf)
 
   next:
     mpegts_packetizer_clear_packet (base->packetizer, &packet);
+  }
+
+  if (klass->input_done) {
+    if (res == GST_FLOW_OK)
+      res = klass->input_done (base, buf);
+    else
+      gst_buffer_unref (buf);
   }
 
   return res;
