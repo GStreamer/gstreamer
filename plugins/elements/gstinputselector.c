@@ -85,15 +85,6 @@ gst_input_selector_sync_mode_get_type (void)
   return type;
 }
 
-#if GLIB_CHECK_VERSION(2, 26, 0)
-#define NOTIFY_MUTEX_LOCK()
-#define NOTIFY_MUTEX_UNLOCK()
-#else
-static GStaticRecMutex notify_mutex = G_STATIC_REC_MUTEX_INIT;
-#define NOTIFY_MUTEX_LOCK() g_static_rec_mutex_lock (&notify_mutex)
-#define NOTIFY_MUTEX_UNLOCK() g_static_rec_mutex_unlock (&notify_mutex)
-#endif
-
 #define GST_INPUT_SELECTOR_GET_LOCK(sel) (&((GstInputSelector*)(sel))->lock)
 #define GST_INPUT_SELECTOR_GET_COND(sel) (&((GstInputSelector*)(sel))->cond)
 #define GST_INPUT_SELECTOR_LOCK(sel) (g_mutex_lock (GST_INPUT_SELECTOR_GET_LOCK(sel)))
