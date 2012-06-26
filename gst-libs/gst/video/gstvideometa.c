@@ -119,8 +119,8 @@ static gboolean
 default_map (GstVideoMeta * meta, guint plane, GstMapInfo * info,
     gpointer * data, gint * stride, GstMapFlags flags)
 {
-  guint offset, idx, length;
-  gsize skip;
+  guint idx, length;
+  gsize offset, skip;
   GstBuffer *buffer = meta->buffer;
 
   offset = meta->offset[plane];
@@ -141,12 +141,12 @@ default_map (GstVideoMeta * meta, guint plane, GstMapInfo * info,
   /* ERRORS */
 no_memory:
   {
-    GST_DEBUG ("no memory");
+    GST_DEBUG ("plane %u, no memory at offset %" G_GSIZE_FORMAT, plane, offset);
     return FALSE;
   }
 cannot_map:
   {
-    GST_DEBUG ("cannot map memory");
+    GST_DEBUG ("cannot map memory range %u-%u", idx, length);
     return FALSE;
   }
 }
