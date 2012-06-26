@@ -101,8 +101,8 @@ AC_ARG_ENABLE(vaapisink-glx,
 
 AC_ARG_ENABLE(ffmpeg,
     AC_HELP_STRING([--enable-ffmpeg],
-                   [enable bitstream parsing from FFmpeg @<:@default=yes@:>@]),
-    [], [enable_ffmpeg="yes"])
+                   [enable bitstream parsing from FFmpeg @<:@default=no@:>@]),
+    [], [enable_ffmpeg="no"])
 
 AC_ARG_ENABLE(codecparsers,
     AC_HELP_STRING([--enable-codecparsers],
