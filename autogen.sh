@@ -1,16 +1,17 @@
 #!/bin/sh
 
-srcdir=`dirname $0`
-test -z "$srcdir" && srcdir=.
+PROJECT="gstreamer-vaapi"
 
-PROJECT=gstreamer-vaapi
-TEST_TYPE=-d
-FILE=gst-libs
+test -n "$srcdir" || srcdir="`dirname \"$0\"`"
+test -n "$srcdir" || srcdir=.
 
-test $TEST_TYPE $FILE || {
-    echo "You must run this script in the top-level $PROJECT directory"
+if ! test -f "$srcdir/configure.ac"; then
+    echo "Failed to find the top-level $PROJECT directory"
     exit 1
-}
+fi
+
+olddir="`pwd`"
+cd "$srcdir"
 
 mkdir -p m4
 
@@ -30,6 +31,8 @@ else
     autoreconf -v --install || exit $?
 fi
 
+cd "$olddir"
+
 if test -z "$NO_CONFIGURE"; then
-    ./configure "$@" && echo "Now type 'make' to compile $PROJECT."
+    $srcdir/configure "$@" && echo "Now type 'make' to compile $PROJECT."
 fi
