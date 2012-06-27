@@ -354,6 +354,225 @@ GST_START_TEST (test_GstDateTime_partial_fields)
 
 GST_END_TEST;
 
+static gboolean
+date_times_are_equal (GstDateTime * d1, GstDateTime * d2)
+{
+  GValue val1 = G_VALUE_INIT;
+  GValue val2 = G_VALUE_INIT;
+  int ret;
+
+  g_value_init (&val1, GST_TYPE_DATE_TIME);
+  g_value_set_boxed (&val1, d1);
+  g_value_init (&val2, GST_TYPE_DATE_TIME);
+  g_value_set_boxed (&val2, d2);
+  ret = gst_value_compare (&val1, &val2);
+  g_value_unset (&val2);
+  g_value_unset (&val1);
+
+  return ret == GST_VALUE_EQUAL;
+}
+
+GST_START_TEST (test_GstDateTime_iso8601)
+{
+  GstDateTime *dt, *dt2;
+  gchar *str, *str2;
+
+  dt = gst_date_time_new_now_utc ();
+  fail_unless (gst_date_time_has_year (dt));
+  fail_unless (gst_date_time_has_month (dt));
+  fail_unless (gst_date_time_has_day (dt));
+  fail_unless (gst_date_time_has_time (dt));
+  fail_unless (gst_date_time_has_second (dt));
+  str = gst_date_time_to_iso8601_string (dt);
+  fail_unless (str != NULL);
+  fail_unless_equals_int (strlen (str), strlen ("2012-06-26T22:46:43Z"));
+  fail_unless (g_str_has_suffix (str, "Z"));
+  dt2 = gst_date_time_new_from_iso8601_string (str);
+  fail_unless (gst_date_time_get_year (dt) == gst_date_time_get_year (dt2));
+  fail_unless (gst_date_time_get_month (dt) == gst_date_time_get_month (dt2));
+  fail_unless (gst_date_time_get_day (dt) == gst_date_time_get_day (dt2));
+  fail_unless (gst_date_time_get_hour (dt) == gst_date_time_get_hour (dt2));
+  fail_unless (gst_date_time_get_minute (dt) == gst_date_time_get_minute (dt2));
+  fail_unless (gst_date_time_get_second (dt) == gst_date_time_get_second (dt2));
+  /* This will succeed because we're not comparing microseconds when
+   * checking for equality */
+  fail_unless (date_times_are_equal (dt, dt2));
+  str2 = gst_date_time_to_iso8601_string (dt2);
+  fail_unless_equals_string (str, str2);
+  g_free (str2);
+  gst_date_time_unref (dt2);
+  g_free (str);
+  gst_date_time_unref (dt);
+
+  /* ---- year only ---- */
+
+  dt = gst_date_time_new_y (2010);
+  fail_unless (gst_date_time_has_year (dt));
+  fail_unless (!gst_date_time_has_month (dt));
+  fail_unless (!gst_date_time_has_day (dt));
+  fail_unless (!gst_date_time_has_time (dt));
+  fail_unless (!gst_date_time_has_second (dt));
+  str = gst_date_time_to_iso8601_string (dt);
+  fail_unless (str != NULL);
+  fail_unless_equals_string (str, "2010");
+  dt2 = gst_date_time_new_from_iso8601_string (str);
+  fail_unless (gst_date_time_get_year (dt) == gst_date_time_get_year (dt2));
+  fail_unless (date_times_are_equal (dt, dt2));
+  str2 = gst_date_time_to_iso8601_string (dt2);
+  fail_unless_equals_string (str, str2);
+  g_free (str2);
+  gst_date_time_unref (dt2);
+  g_free (str);
+  gst_date_time_unref (dt);
+
+  /* ---- year and month ---- */
+
+  dt = gst_date_time_new_ym (2010, 10);
+  fail_unless (gst_date_time_has_year (dt));
+  fail_unless (gst_date_time_has_month (dt));
+  fail_unless (!gst_date_time_has_day (dt));
+  fail_unless (!gst_date_time_has_time (dt));
+  fail_unless (!gst_date_time_has_second (dt));
+  str = gst_date_time_to_iso8601_string (dt);
+  fail_unless (str != NULL);
+  fail_unless_equals_string (str, "2010-10");
+  dt2 = gst_date_time_new_from_iso8601_string (str);
+  fail_unless (gst_date_time_get_year (dt) == gst_date_time_get_year (dt2));
+  fail_unless (gst_date_time_get_month (dt) == gst_date_time_get_month (dt2));
+  fail_unless (date_times_are_equal (dt, dt2));
+  str2 = gst_date_time_to_iso8601_string (dt2);
+  fail_unless_equals_string (str, str2);
+  g_free (str2);
+  gst_date_time_unref (dt2);
+  g_free (str);
+  gst_date_time_unref (dt);
+
+  /* ---- year and month ---- */
+
+  dt = gst_date_time_new_ymd (2010, 10, 30);
+  fail_unless (gst_date_time_has_year (dt));
+  fail_unless (gst_date_time_has_month (dt));
+  fail_unless (gst_date_time_has_day (dt));
+  fail_unless (!gst_date_time_has_time (dt));
+  fail_unless (!gst_date_time_has_second (dt));
+  str = gst_date_time_to_iso8601_string (dt);
+  fail_unless (str != NULL);
+  fail_unless_equals_string (str, "2010-10-30");
+  dt2 = gst_date_time_new_from_iso8601_string (str);
+  fail_unless (gst_date_time_get_year (dt) == gst_date_time_get_year (dt2));
+  fail_unless (gst_date_time_get_month (dt) == gst_date_time_get_month (dt2));
+  fail_unless (gst_date_time_get_day (dt) == gst_date_time_get_day (dt2));
+  fail_unless (date_times_are_equal (dt, dt2));
+  str2 = gst_date_time_to_iso8601_string (dt2);
+  fail_unless_equals_string (str, str2);
+  g_free (str2);
+  gst_date_time_unref (dt2);
+  g_free (str);
+  gst_date_time_unref (dt);
+
+  /* ---- data and time, but no seconds ---- */
+
+  dt = gst_date_time_new (-4.5, 2010, 10, 30, 15, 50, -1);
+  fail_unless (gst_date_time_has_year (dt));
+  fail_unless (gst_date_time_has_month (dt));
+  fail_unless (gst_date_time_has_day (dt));
+  fail_unless (gst_date_time_has_time (dt));
+  fail_unless (!gst_date_time_has_second (dt));
+  str = gst_date_time_to_iso8601_string (dt);
+  fail_unless (str != NULL);
+  fail_unless_equals_string (str, "2010-10-30T15:50-0430");
+  dt2 = gst_date_time_new_from_iso8601_string (str);
+  fail_unless (gst_date_time_get_year (dt) == gst_date_time_get_year (dt2));
+  fail_unless (gst_date_time_get_month (dt) == gst_date_time_get_month (dt2));
+  fail_unless (gst_date_time_get_day (dt) == gst_date_time_get_day (dt2));
+  fail_unless (gst_date_time_get_hour (dt) == gst_date_time_get_hour (dt2));
+  fail_unless (gst_date_time_get_minute (dt) == gst_date_time_get_minute (dt2));
+  fail_unless (date_times_are_equal (dt, dt2));
+  str2 = gst_date_time_to_iso8601_string (dt2);
+  fail_unless_equals_string (str, str2);
+  g_free (str2);
+  gst_date_time_unref (dt2);
+  g_free (str);
+  gst_date_time_unref (dt);
+
+  /* ---- data and time, but no seconds (UTC) ---- */
+
+  dt = gst_date_time_new (0, 2010, 10, 30, 15, 50, -1);
+  fail_unless (gst_date_time_has_year (dt));
+  fail_unless (gst_date_time_has_month (dt));
+  fail_unless (gst_date_time_has_day (dt));
+  fail_unless (gst_date_time_has_time (dt));
+  fail_unless (!gst_date_time_has_second (dt));
+  str = gst_date_time_to_iso8601_string (dt);
+  fail_unless (str != NULL);
+  fail_unless_equals_string (str, "2010-10-30T15:50Z");
+  dt2 = gst_date_time_new_from_iso8601_string (str);
+  fail_unless (gst_date_time_get_year (dt) == gst_date_time_get_year (dt2));
+  fail_unless (gst_date_time_get_month (dt) == gst_date_time_get_month (dt2));
+  fail_unless (gst_date_time_get_day (dt) == gst_date_time_get_day (dt2));
+  fail_unless (gst_date_time_get_hour (dt) == gst_date_time_get_hour (dt2));
+  fail_unless (gst_date_time_get_minute (dt) == gst_date_time_get_minute (dt2));
+  fail_unless (date_times_are_equal (dt, dt2));
+  str2 = gst_date_time_to_iso8601_string (dt2);
+  fail_unless_equals_string (str, str2);
+  g_free (str2);
+  gst_date_time_unref (dt2);
+  g_free (str);
+  gst_date_time_unref (dt);
+
+  /* ---- data and time, with seconds ---- */
+
+  dt = gst_date_time_new (-4.5, 2010, 10, 30, 15, 50, 0);
+  fail_unless (gst_date_time_has_year (dt));
+  fail_unless (gst_date_time_has_month (dt));
+  fail_unless (gst_date_time_has_day (dt));
+  fail_unless (gst_date_time_has_time (dt));
+  fail_unless (gst_date_time_has_second (dt));
+  str = gst_date_time_to_iso8601_string (dt);
+  fail_unless (str != NULL);
+  fail_unless_equals_string (str, "2010-10-30T15:50:00-0430");
+  dt2 = gst_date_time_new_from_iso8601_string (str);
+  fail_unless (gst_date_time_get_year (dt) == gst_date_time_get_year (dt2));
+  fail_unless (gst_date_time_get_month (dt) == gst_date_time_get_month (dt2));
+  fail_unless (gst_date_time_get_day (dt) == gst_date_time_get_day (dt2));
+  fail_unless (gst_date_time_get_hour (dt) == gst_date_time_get_hour (dt2));
+  fail_unless (gst_date_time_get_minute (dt) == gst_date_time_get_minute (dt2));
+  fail_unless (date_times_are_equal (dt, dt2));
+  str2 = gst_date_time_to_iso8601_string (dt2);
+  fail_unless_equals_string (str, str2);
+  g_free (str2);
+  gst_date_time_unref (dt2);
+  g_free (str);
+  gst_date_time_unref (dt);
+
+  /* ---- data and time, with seconds (UTC) ---- */
+
+  dt = gst_date_time_new (0, 2010, 10, 30, 15, 50, 0);
+  fail_unless (gst_date_time_has_year (dt));
+  fail_unless (gst_date_time_has_month (dt));
+  fail_unless (gst_date_time_has_day (dt));
+  fail_unless (gst_date_time_has_time (dt));
+  fail_unless (gst_date_time_has_second (dt));
+  str = gst_date_time_to_iso8601_string (dt);
+  fail_unless (str != NULL);
+  fail_unless_equals_string (str, "2010-10-30T15:50:00Z");
+  dt2 = gst_date_time_new_from_iso8601_string (str);
+  fail_unless (gst_date_time_get_year (dt) == gst_date_time_get_year (dt2));
+  fail_unless (gst_date_time_get_month (dt) == gst_date_time_get_month (dt2));
+  fail_unless (gst_date_time_get_day (dt) == gst_date_time_get_day (dt2));
+  fail_unless (gst_date_time_get_hour (dt) == gst_date_time_get_hour (dt2));
+  fail_unless (gst_date_time_get_minute (dt) == gst_date_time_get_minute (dt2));
+  fail_unless (date_times_are_equal (dt, dt2));
+  str2 = gst_date_time_to_iso8601_string (dt2);
+  fail_unless_equals_string (str, str2);
+  g_free (str2);
+  gst_date_time_unref (dt2);
+  g_free (str);
+  gst_date_time_unref (dt);
+}
+
+GST_END_TEST;
+
 static Suite *
 gst_date_time_suite (void)
 {
@@ -373,6 +592,7 @@ gst_date_time_suite (void)
   tcase_add_test (tc_chain, test_GstDateTime_now);
   tcase_add_test (tc_chain, test_GstDateTime_utc_now);
   tcase_add_test (tc_chain, test_GstDateTime_partial_fields);
+  tcase_add_test (tc_chain, test_GstDateTime_iso8601);
 
   return s;
 }
