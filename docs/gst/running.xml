@@ -95,7 +95,7 @@ to print out different types of debugging information to stderr.
   <para>
 The variable takes a comma-separated list of "category_name:level" pairs
 to set specific levels for the individual categories.
-The level value ranges from 0 (nothing) to 5 (LOG).
+The level value ranges from 0 (nothing) to 9 (MEMDUMP).
     <variablelist>
 
       <varlistentry>
@@ -151,6 +151,40 @@ these include streaming and steady-state conditions.
 </para>
         </listitem>
       </varlistentry>
+
+      <varlistentry>
+        <term>6 - <option>FIXME</option></term>
+        <listitem>
+<para>
+Logs all fixme messages. Fixme messages are messages that indicate that something
+in the executed code path is not fully implemented or handled yet.  The purpose
+of this message is to make it easier to spot incomplete/unfinished pieces of
+code when reading the debug log.
+</para>
+        </listitem>
+      </varlistentry>
+
+      <varlistentry>
+        <term>7 - <option>TRACE</option></term>
+        <listitem>
+<para>
+Logs all trace messages.  These messages for events
+that happen repeatedly during an object's lifetime such as the
+ref/unref cycles.
+</para>
+        </listitem>
+      </varlistentry>
+
+      <varlistentry>
+        <term>9 - <option>MEMDUMP</option></term>
+        <listitem>
+<para>
+Log all memory dump messages. Memory dump messages are used to log
+(small) chunks of data as memory dumps in the log. They will be displayed
+as hexdump with ASCII characters.
+</para>
+        </listitem>
+      </varlistentry>
     </variablelist>
 
  The category_name can contain "<option>*"</option> as a wildcard.
@@ -167,7 +201,7 @@ For example, setting <envar>GST_DEBUG</envar> to
   <para>
 To get all possible debug output, set
 <envar>GST_DEBUG</envar>
-to <option>*:5</option>
+to <option>*:9</option>
   </para>
 
 </formalpara>
