@@ -1502,21 +1502,16 @@ gst_video_decoder_clear_queues (GstVideoDecoder * dec)
       (GDestroyNotify) gst_mini_object_unref);
   priv->output_queued = NULL;
 
-  g_list_foreach (priv->gather, (GFunc) gst_mini_object_unref, NULL);
-  g_list_free (priv->gather);
+  g_list_free_full (priv->gather, (GDestroyNotify) gst_mini_object_unref);
   priv->gather = NULL;
-  g_list_foreach (priv->decode, (GFunc) gst_video_codec_frame_unref, NULL);
-  g_list_free (priv->decode);
+  g_list_free_full (priv->decode, (GDestroyNotify) gst_video_codec_frame_unref);
   priv->decode = NULL;
-  g_list_foreach (priv->parse, (GFunc) gst_mini_object_unref, NULL);
-  g_list_free (priv->parse);
+  g_list_free_full (priv->parse, (GDestroyNotify) gst_mini_object_unref);
   priv->parse = NULL;
-  g_list_foreach (priv->parse_gather, (GFunc) gst_video_codec_frame_unref,
-      NULL);
-  g_list_free (priv->parse_gather);
+  g_list_free_full (priv->parse_gather,
+      (GDestroyNotify) gst_video_codec_frame_unref);
   priv->parse_gather = NULL;
-  g_list_foreach (priv->frames, (GFunc) gst_video_codec_frame_unref, NULL);
-  g_list_free (priv->frames);
+  g_list_free_full (priv->frames, (GDestroyNotify) gst_video_codec_frame_unref);
   priv->frames = NULL;
 }
 
@@ -1554,8 +1549,7 @@ gst_video_decoder_reset (GstVideoDecoder * decoder, gboolean full)
   priv->frame_offset = 0;
   gst_adapter_clear (priv->input_adapter);
   gst_adapter_clear (priv->output_adapter);
-  g_list_foreach (priv->timestamps, (GFunc) g_free, NULL);
-  g_list_free (priv->timestamps);
+  g_list_free_full (priv->timestamps, (GDestroyNotify) g_free);
   priv->timestamps = NULL;
 
   if (priv->current_frame) {
@@ -2447,13 +2441,14 @@ gst_video_decoder_decode_frame (GstVideoDecoder * decoder,
   GST_LOG_OBJECT (decoder, "PTS %" GST_TIME_FORMAT ", DTS %" GST_TIME_FORMAT,
       GST_TIME_ARGS (frame->pts), GST_TIME_ARGS (frame->dts));
   GST_LOG_OBJECT (decoder, "dist %d", frame->distance_from_sync);
+
+  gst_video_codec_frame_ref (frame);
   priv->frames = g_list_append (priv->frames, frame);
   frame->deadline =
       gst_segment_to_running_time (&decoder->input_segment, GST_FORMAT_TIME,
       frame->pts);
 
   /* do something with frame */
-  gst_video_codec_frame_ref (frame);
   ret = decoder_class->handle_frame (decoder, frame);
   if (ret != GST_FLOW_OK)
     GST_DEBUG_OBJECT (decoder, "flow error %s", gst_flow_get_name (ret));
