@@ -270,6 +270,44 @@ plugins frequently, it will save time when doing gst_init().
 
 </formalpara>
 
+<formalpara id="GST_TRACE">
+  <title><envar>GST_TRACE</envar></title>
+
+  <para>
+    Enable memory allocation tracing. Most GStreamer objects have support for
+    tracing the number of unfreed objects and their memory pointers.
+  </para>
+  <para>
+The variable takes a comma-separated list of tracing options to enable.
+    <variablelist>
+
+      <varlistentry>
+        <term>live</term>
+        <listitem>
+<para>
+  Counts all live objects and dumps an overview of the number of unfreed
+  objects at program exit.
+</para>
+        </listitem>
+      </varlistentry>
+
+      <varlistentry>
+        <term>mem-live</term>
+        <listitem>
+<para>
+  Keep track of the unfreed memory pointers and dump an overview of all unfreed
+  memory at program exit. Together with a level 9 debug log this can be used to
+  follow the lifecycle of leaked objects in order to track down where they are
+  leaked.
+</para>
+        </listitem>
+      </varlistentry>
+    </variablelist>
+
+ Use <option>all</option> to enable all tracing flags.
+  </para>
+</formalpara>
+
 <formalpara id="ORC_CODE">
   <title><envar>ORC_CODE</envar></title>
 
