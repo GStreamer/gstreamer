@@ -470,7 +470,7 @@ GST_START_TEST (test_GstDateTime_iso8601)
   g_free (str);
   gst_date_time_unref (dt);
 
-  /* ---- data and time, but no seconds ---- */
+  /* ---- date and time, but no seconds ---- */
 
   dt = gst_date_time_new (-4.5, 2010, 10, 30, 15, 50, -1);
   fail_unless (gst_date_time_has_year (dt));
@@ -495,7 +495,7 @@ GST_START_TEST (test_GstDateTime_iso8601)
   g_free (str);
   gst_date_time_unref (dt);
 
-  /* ---- data and time, but no seconds (UTC) ---- */
+  /* ---- date and time, but no seconds (UTC) ---- */
 
   dt = gst_date_time_new (0, 2010, 10, 30, 15, 50, -1);
   fail_unless (gst_date_time_has_year (dt));
@@ -520,7 +520,7 @@ GST_START_TEST (test_GstDateTime_iso8601)
   g_free (str);
   gst_date_time_unref (dt);
 
-  /* ---- data and time, with seconds ---- */
+  /* ---- date and time, with seconds ---- */
 
   dt = gst_date_time_new (-4.5, 2010, 10, 30, 15, 50, 0);
   fail_unless (gst_date_time_has_year (dt));
@@ -545,7 +545,7 @@ GST_START_TEST (test_GstDateTime_iso8601)
   g_free (str);
   gst_date_time_unref (dt);
 
-  /* ---- data and time, with seconds (UTC) ---- */
+  /* ---- date and time, with seconds (UTC) ---- */
 
   dt = gst_date_time_new (0, 2010, 10, 30, 15, 50, 0);
   fail_unless (gst_date_time_has_year (dt));
@@ -568,6 +568,60 @@ GST_START_TEST (test_GstDateTime_iso8601)
   g_free (str2);
   gst_date_time_unref (dt2);
   g_free (str);
+  gst_date_time_unref (dt);
+
+  /* ---- date and time, but without the 'T' and without timezone */
+  dt = gst_date_time_new_from_iso8601_string ("2010-10-30 15:50");
+  fail_unless (gst_date_time_get_year (dt) == 2010);
+  fail_unless (gst_date_time_get_month (dt) == 10);
+  fail_unless (gst_date_time_get_day (dt) == 30);
+  fail_unless (gst_date_time_get_hour (dt) == 15);
+  fail_unless (gst_date_time_get_minute (dt) == 50);
+  fail_unless (!gst_date_time_has_second (dt));
+  gst_date_time_unref (dt);
+
+  /* ---- date and time+secs, but without the 'T' and without timezone */
+  dt = gst_date_time_new_from_iso8601_string ("2010-10-30 15:50:33");
+  fail_unless (gst_date_time_get_year (dt) == 2010);
+  fail_unless (gst_date_time_get_month (dt) == 10);
+  fail_unless (gst_date_time_get_day (dt) == 30);
+  fail_unless (gst_date_time_get_hour (dt) == 15);
+  fail_unless (gst_date_time_get_minute (dt) == 50);
+  fail_unless (gst_date_time_get_second (dt) == 33);
+  gst_date_time_unref (dt);
+
+  /* ---- dates with 00s */
+  dt = gst_date_time_new_from_iso8601_string ("2010-10-00");
+  fail_unless (gst_date_time_get_year (dt) == 2010);
+  fail_unless (gst_date_time_get_month (dt) == 10);
+  fail_unless (!gst_date_time_has_day (dt));
+  fail_unless (!gst_date_time_has_time (dt));
+  gst_date_time_unref (dt);
+
+  dt = gst_date_time_new_from_iso8601_string ("2010-00-00");
+  fail_unless (gst_date_time_get_year (dt) == 2010);
+  fail_unless (!gst_date_time_has_month (dt));
+  fail_unless (!gst_date_time_has_day (dt));
+  fail_unless (!gst_date_time_has_time (dt));
+  gst_date_time_unref (dt);
+
+  dt = gst_date_time_new_from_iso8601_string ("2010-00-30");
+  fail_unless (gst_date_time_get_year (dt) == 2010);
+  fail_unless (!gst_date_time_has_month (dt));
+  fail_unless (!gst_date_time_has_day (dt));
+  fail_unless (!gst_date_time_has_time (dt));
+  gst_date_time_unref (dt);
+
+  /* completely invalid */
+  dt = gst_date_time_new_from_iso8601_string ("0000-00-00");
+  fail_unless (dt == NULL);
+
+  /* partially invalid - here we'll just extract the year */
+  dt = gst_date_time_new_from_iso8601_string ("2010/05/30");
+  fail_unless (gst_date_time_get_year (dt) == 2010);
+  fail_unless (!gst_date_time_has_month (dt));
+  fail_unless (!gst_date_time_has_day (dt));
+  fail_unless (!gst_date_time_has_time (dt));
   gst_date_time_unref (dt);
 }
 
