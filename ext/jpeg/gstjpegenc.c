@@ -248,6 +248,8 @@ gst_jpegenc_term_destination (j_compress_ptr cinfo)
 
   gst_video_frame_unmap (&jpegenc->current_vframe);
 
+  GST_VIDEO_CODEC_FRAME_SET_SYNC_POINT (jpegenc->current_frame);
+
   gst_video_encoder_finish_frame (GST_VIDEO_ENCODER (jpegenc),
       jpegenc->current_frame);
   jpegenc->current_frame = NULL;
