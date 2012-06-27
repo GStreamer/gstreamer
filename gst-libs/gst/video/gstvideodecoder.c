@@ -2342,6 +2342,11 @@ gst_video_decoder_get_frame_duration (GstVideoDecoder * decoder,
 {
   GstVideoCodecState *state = decoder->priv->output_state;
 
+  /* it's possible that we don't have a state yet when we are dropping the
+   * initial buffers */
+  if (state == NULL)
+    return GST_CLOCK_TIME_NONE;
+
   if (state->info.fps_d == 0 || state->info.fps_n == 0) {
     return GST_CLOCK_TIME_NONE;
   }
