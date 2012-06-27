@@ -102,7 +102,10 @@ m4_ifdef([AM_SILENT_RULES], [AM_SILENT_RULES([yes])], [
 dnl Check for tools
 AC_PROG_CC
 AM_PROG_CC_C_O
-AC_PROG_LIBTOOL
+
+dnl Initialize libtool
+LT_PREREQ([2.2])
+LT_INIT
 
 AC_ARG_ENABLE(drm,
     AS_HELP_STRING([--enable-drm],
