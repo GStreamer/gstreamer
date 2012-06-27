@@ -748,7 +748,7 @@ gst_video_test_src_get_times (GstBaseSrc * basesrc, GstBuffer * buffer,
 {
   /* for live sources, sync on the timestamp of the buffer */
   if (gst_base_src_is_live (basesrc)) {
-    GstClockTime timestamp = GST_BUFFER_TIMESTAMP (buffer);
+    GstClockTime timestamp = GST_BUFFER_DTS (buffer);
 
     if (GST_CLOCK_TIME_IS_VALID (timestamp)) {
       /* get duration to calculate end time */
@@ -830,7 +830,8 @@ gst_video_test_src_fill (GstPushSrc * psrc, GstBuffer * buffer)
 
   gst_video_frame_unmap (&frame);
 
-  GST_BUFFER_TIMESTAMP (buffer) = src->timestamp_offset + src->running_time;
+  GST_BUFFER_DTS (buffer) = src->timestamp_offset + src->running_time;
+  GST_BUFFER_PTS (buffer) = GST_BUFFER_DTS (buffer);
   GST_BUFFER_OFFSET (buffer) = src->n_frames;
   src->n_frames++;
   GST_BUFFER_OFFSET_END (buffer) = src->n_frames;
