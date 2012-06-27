@@ -64,7 +64,7 @@ static const GstTagEntryMatch tag_matches[] = {
   {GST_TAG_ORGANIZATION, "ORGANIZATION"},
   {GST_TAG_DESCRIPTION, "DESCRIPTION"},
   {GST_TAG_GENRE, "GENRE"},
-  {GST_TAG_DATE, "DATE"},
+  {GST_TAG_DATE_TIME, "DATE"},
   {GST_TAG_CONTACT, "CONTACT"},
   {GST_TAG_ISRC, "ISRC"},
   {GST_TAG_COMMENT, "COMMENT"},
@@ -272,38 +272,17 @@ gst_vorbis_tag_add (GstTagList * list, const gchar * tag, const gchar * value)
       break;
     }
     default:{
-      if (tag_type == G_TYPE_DATE) {
-        guint y, d = 1, m = 1;
-        gchar *check = (gchar *) value;
+      if (tag_type == GST_TYPE_DATE_TIME) {
+        GstDateTime *datetime;
 
-        y = strtoul (check, &check, 10);
-        if (*check == '-') {
-          check++;
-          m = strtoul (check, &check, 10);
-          if (*check == '-') {
-            check++;
-            d = strtoul (check, &check, 10);
-          }
-        }
+        datetime = gst_date_time_new_from_iso8601_string (value);
 
-        /* accept dates like 2007-00-00 and 2007-05-00 */
-        if (y != 0) {
-          if (m == 0 && d == 0)
-            m = d = 1;
-          else if (m != 0 && d == 0)
-            d = 1;
-        }
-
-        /* date might be followed by a time */
-        if ((*check == '\0' || g_ascii_isspace (*check)) && y != 0 &&
-            g_date_valid_dmy (d, m, y)) {
-          GDate *date;
-
-          date = g_date_new_dmy (d, m, y);
-          gst_tag_list_add (list, GST_TAG_MERGE_APPEND, gst_tag, date, NULL);
-          g_date_free (date);
+        if (datetime) {
+          gst_tag_list_add (list, GST_TAG_MERGE_APPEND, gst_tag, datetime,
+              NULL);
+          gst_date_time_unref (datetime);
         } else {
-          GST_DEBUG ("skipping invalid date '%s' (%u,%u,%u)", value, y, m, d);
+          GST_WARNING ("could not parse datetime string '%s'", value);
         }
       } else {
         GST_WARNING ("Unhandled tag of type '%s' (%d)",
@@ -728,18 +707,20 @@ gst_tag_to_vorbis_comments (const GstTagList * list, const gchar * tag)
         break;
       }
       default:{
-        if (tag_type == G_TYPE_DATE) {
-          GDate *date;
+        if (tag_type == GST_TYPE_DATE_TIME) {
+          GstDateTime *datetime;
 
-          if (!gst_tag_list_get_date_index (list, tag, i, &date))
-            g_return_val_if_reached (NULL);
+          if (gst_tag_list_get_date_time_index (list, tag, i, &datetime)) {
+            gchar *string;
 
-          /* vorbis suggests using ISO date formats */
-          result =
-              g_strdup_printf ("%s=%04d-%02d-%02d", vorbis_tag,
-              (gint) g_date_get_year (date), (gint) g_date_get_month (date),
-              (gint) g_date_get_day (date));
-          g_date_free (date);
+            /* vorbis suggests using ISO date formats:
+             * http://wiki.xiph.org/VorbisComment#Date_and_time */
+            string = gst_date_time_to_iso8601_string (datetime);
+            result = g_strdup_printf ("%s=%s", vorbis_tag, string);
+            g_free (string);
+
+            gst_date_time_unref (datetime);
+          }
         } else {
           GST_DEBUG ("Couldn't write tag %s", tag);
           continue;
