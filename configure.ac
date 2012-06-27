@@ -159,15 +159,11 @@ PKG_CHECK_MODULES([GLIB], [glib-2.0 >= glib_version])
 AC_CHECK_LIB([glib-2.0], [g_list_free_full], [
     AC_DEFINE([HAVE_G_LIST_FREE_FULL], [1],
               [Define to 1 if g_list_free_full() is available.])])
-AC_SUBST(GLIB_CFLAGS)
-AC_SUBST(GLIB_LIBS)
 
 dnl Check for GStreamer
 PKG_CHECK_MODULES([GST],
     [gstreamer-$GST_MAJORMINOR >= $GST_VERSION_REQUIRED]
 )
-AC_SUBST(GST_CFLAGS)
-AC_SUBST(GST_LIBS)
 
 AC_CACHE_CHECK([for GstBaseSink::query hook], ac_cv_have_gst_base_sink_query, [
     saved_CFLAGS="$CFLAGS"
@@ -191,8 +187,6 @@ dnl Check for GStreamer plugins-base
 PKG_CHECK_MODULES([GST_PLUGINS_BASE],
     [gstreamer-plugins-base-$GST_MAJORMINOR >= $GST_PLUGINS_BASE_VERSION_REQUIRED]
 )
-AC_SUBST(GST_PLUGINS_BASE_CFLAGS)
-AC_SUBST(GST_PLUGINS_BASE_LIBS)
 
 V=`$PKG_CONFIG --modversion gstreamer-plugins-base-$GST_MAJORMINOR`
 GST_PLUGINS_BASE_MAJOR_VERSION=`echo "$V" | cut -d'.' -f1`
@@ -206,15 +200,11 @@ dnl Check for GStreamer base
 PKG_CHECK_MODULES([GST_BASE],
     [gstreamer-base-$GST_MAJORMINOR >= $GST_VERSION_REQUIRED]
 )
-AC_SUBST(GST_BASE_CFLAGS)
-AC_SUBST(GST_BASE_LIBS)
 
 dnl Check for GStreamer video
 PKG_CHECK_MODULES([GST_VIDEO],
     [gstreamer-video-$GST_MAJORMINOR >= $GST_VERSION_REQUIRED]
 )
-AC_SUBST(GST_VIDEO_CFLAGS)
-AC_SUBST(GST_VIDEO_LIBS)
 
 AC_CACHE_CHECK([for GstVideoOverlayComposition],
     ac_cv_have_gst_video_overlay_composition, [
@@ -239,8 +229,6 @@ dnl Check for GStreamer basevideo
 PKG_CHECK_MODULES([GST_BASEVIDEO],
     [gstreamer-basevideo-$GST_MAJORMINOR >= $GST_PLUGINS_BAD_VERSION_REQUIRED]
 )
-AC_SUBST(GST_BASEVIDEO_CFLAGS)
-AC_SUBST(GST_BASEVIDEO_LIBS)
 
 dnl Check for GStreamer codec parsers
 USE_CODEC_PARSERS=0
@@ -307,8 +295,6 @@ dnl Check for GStreamer interfaces
 PKG_CHECK_MODULES([GST_INTERFACES],
     [gstreamer-interfaces-$GST_MAJORMINOR >= $GST_PLUGINS_BASE_VERSION_REQUIRED]
 )
-AC_SUBST(GST_INTERFACES_CFLAGS)
-AC_SUBST(GST_INTERFACES_LIBS)
 
 dnl GST_ALL_LDFLAGS:
 dnl LDFLAGS really should only contain flags, not libs - they get added before
