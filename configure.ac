@@ -154,8 +154,10 @@ AC_CHECK_LIB(m, tan)
 
 dnl Check for Gtk doc
 GTKDOC_VERSION=gtkdoc_version
-GTK_DOC_CHECK([$GTKDOC_VERSION])
-AM_CONDITIONAL([BUILD_GTK_DOC], [test "x$enable_gtk_doc" = "xyes"])
+# gtkdocize greps for '^GTK_DOC_CHECK', so it needs to be on its own line
+m4_ifdef([GTK_DOC_CHECK], [
+GTK_DOC_CHECK([$GTKDOC_VERSION], [--flavour no-tmpl])], [
+AM_CONDITIONAL([ENABLE_GTK_DOC], [false])])
 AC_SUBST(GTKDOC_VERSION)
 
 dnl Check for GLib

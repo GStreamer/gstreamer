@@ -1,6 +1,6 @@
 SUBDIRS =
 
-if BUILD_GTK_DOC
+if ENABLE_GTK_DOC
 SUBDIRS += reference
 endif
 
