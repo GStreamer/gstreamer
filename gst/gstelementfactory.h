@@ -132,6 +132,9 @@ typedef guint64 GstElementFactoryListType;
  * Elements of any of the defined GST_ELEMENT_FACTORY_LIST types
  *
  * Since: 0.10.31
+ *
+ * Value: 562949953421311
+ * Type: GstElementFactoryListType
  */
 #define  GST_ELEMENT_FACTORY_TYPE_ANY ((G_GUINT64_CONSTANT (1) << 49) - 1)
 
@@ -145,6 +148,9 @@ typedef guint64 GstElementFactoryListType;
  * GST_ELEMENT_FACTORY_TYPE_MEDIA flag.
  *
  * Since: 0.10.31
+ *
+ * Value: 18446462598732840960
+ * Type: GstElementFactoryListType
  */
 #define GST_ELEMENT_FACTORY_TYPE_MEDIA_ANY (~G_GUINT64_CONSTANT (0) << 48)
 
@@ -154,6 +160,9 @@ typedef guint64 GstElementFactoryListType;
  * All encoders handling video or image media types
  *
  * Since: 0.10.31
+ *
+ * Value: 2814749767106562
+ * Type: GstElementFactoryListType
  */
 #define GST_ELEMENT_FACTORY_TYPE_VIDEO_ENCODER (GST_ELEMENT_FACTORY_TYPE_ENCODER | GST_ELEMENT_FACTORY_TYPE_MEDIA_VIDEO | GST_ELEMENT_FACTORY_TYPE_MEDIA_IMAGE)
 
@@ -163,6 +172,9 @@ typedef guint64 GstElementFactoryListType;
  * All encoders handling audio media types
  *
  * Since: 0.10.31
+ *
+ * Value: 1125899906842626
+ * Type: GstElementFactoryListType
  */
 #define GST_ELEMENT_FACTORY_TYPE_AUDIO_ENCODER (GST_ELEMENT_FACTORY_TYPE_ENCODER | GST_ELEMENT_FACTORY_TYPE_MEDIA_AUDIO)
 
@@ -172,6 +184,9 @@ typedef guint64 GstElementFactoryListType;
  * All sinks handling audio, video or image media types
  *
  * Since: 0.10.31
+ *
+ * Value: 3940649673949188
+ * Type: GstElementFactoryListType
  */
 #define GST_ELEMENT_FACTORY_TYPE_AUDIOVIDEO_SINKS (GST_ELEMENT_FACTORY_TYPE_SINK | GST_ELEMENT_FACTORY_TYPE_MEDIA_AUDIO | GST_ELEMENT_FACTORY_TYPE_MEDIA_VIDEO | GST_ELEMENT_FACTORY_TYPE_MEDIA_IMAGE)
 
@@ -181,6 +196,9 @@ typedef guint64 GstElementFactoryListType;
  * All elements used to 'decode' streams (decoders, demuxers, parsers, depayloaders)
  *
  * Since: 0.10.31
+ *
+ * Value: 353
+ * Type: GstElementFactoryListType
  */
 #define GST_ELEMENT_FACTORY_TYPE_DECODABLE \
   (GST_ELEMENT_FACTORY_TYPE_DECODER | GST_ELEMENT_FACTORY_TYPE_DEMUXER | GST_ELEMENT_FACTORY_TYPE_DEPAYLOADER | GST_ELEMENT_FACTORY_TYPE_PARSER)
