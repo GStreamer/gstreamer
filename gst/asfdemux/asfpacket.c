@@ -512,7 +512,8 @@ gst_asf_demux_parse_packet (GstASFDemux * demux, GstBuffer * buf)
   /* need at least two payload flag bytes, send time, and duration */
   if (G_UNLIKELY (size < 2 + 4 + 2)) {
     GST_WARNING_OBJECT (demux, "Packet size is < 8");
-    return GST_ASF_DEMUX_PARSE_PACKET_ERROR_RECOVERABLE;
+    ret = GST_ASF_DEMUX_PARSE_PACKET_ERROR_RECOVERABLE;
+    goto done;
   }
 
   packet.buf = buf;
@@ -538,7 +539,8 @@ gst_asf_demux_parse_packet (GstASFDemux * demux, GstBuffer * buf)
     /* still need at least two payload flag bytes, send time, and duration */
     if (size <= (1 + ec_len) + 2 + 4 + 2) {
       GST_WARNING_OBJECT (demux, "Packet size is < 8 with Error Correction");
-      return GST_ASF_DEMUX_PARSE_PACKET_ERROR_FATAL;
+      ret = GST_ASF_DEMUX_PARSE_PACKET_ERROR_FATAL;
+      goto done;
     }
 
     data += 1 + ec_len;
@@ -562,7 +564,8 @@ gst_asf_demux_parse_packet (GstASFDemux * demux, GstBuffer * buf)
 
   if (G_UNLIKELY (size < 6)) {
     GST_WARNING_OBJECT (demux, "Packet size is < 6");
-    return GST_ASF_DEMUX_PARSE_PACKET_ERROR_FATAL;
+    ret = GST_ASF_DEMUX_PARSE_PACKET_ERROR_FATAL;
+    goto done;
   }
 
   packet.send_time = GST_READ_UINT32_LE (data) * GST_MSECOND;
@@ -583,7 +586,8 @@ gst_asf_demux_parse_packet (GstASFDemux * demux, GstBuffer * buf)
 
   if (G_UNLIKELY (packet.padding == (guint) - 1 || size < packet.padding)) {
     GST_WARNING_OBJECT (demux, "No padding, or padding bigger than buffer");
-    return GST_ASF_DEMUX_PARSE_PACKET_ERROR_RECOVERABLE;
+    ret = GST_ASF_DEMUX_PARSE_PACKET_ERROR_RECOVERABLE;
+    goto done;
   }
 
   size -= packet.padding;
@@ -597,7 +601,8 @@ gst_asf_demux_parse_packet (GstASFDemux * demux, GstBuffer * buf)
     if (size < demux->packet_size - packet.length) {
       /* the buffer is smaller than the implicit padding */
       GST_WARNING_OBJECT (demux, "Buffer is smaller than the implicit padding");
-      return GST_ASF_DEMUX_PARSE_PACKET_ERROR_RECOVERABLE;
+      ret = GST_ASF_DEMUX_PARSE_PACKET_ERROR_RECOVERABLE;
+      goto done;
     } else {
       /* subtract the implicit padding */
       size -= (demux->packet_size - packet.length);
@@ -609,7 +614,8 @@ gst_asf_demux_parse_packet (GstASFDemux * demux, GstBuffer * buf)
 
     if (G_UNLIKELY (size < 1)) {
       GST_WARNING_OBJECT (demux, "No room more in buffer");
-      return GST_ASF_DEMUX_PARSE_PACKET_ERROR_RECOVERABLE;
+      ret = GST_ASF_DEMUX_PARSE_PACKET_ERROR_RECOVERABLE;
+      goto done;
     }
 
     num = (GST_READ_UINT8 (data) & 0x3F) >> 0;
@@ -640,6 +646,7 @@ gst_asf_demux_parse_packet (GstASFDemux * demux, GstBuffer * buf)
     }
   }
 
+done:
   gst_buffer_unmap (buf, &map);
   return ret;
 }
