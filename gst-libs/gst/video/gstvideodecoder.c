@@ -1433,12 +1433,18 @@ struct _Timestamp
 };
 
 static void
+timestamp_free (Timestamp * ts)
+{
+  g_slice_free (Timestamp, ts);
+}
+
+static void
 gst_video_decoder_add_timestamp (GstVideoDecoder * decoder, GstBuffer * buffer)
 {
   GstVideoDecoderPrivate *priv = decoder->priv;
   Timestamp *ts;
 
-  ts = g_malloc (sizeof (Timestamp));
+  ts = g_slice_new (Timestamp);
 
   GST_LOG_OBJECT (decoder,
       "adding PTS %" GST_TIME_FORMAT " DTS %" GST_TIME_FORMAT
@@ -1479,7 +1485,7 @@ gst_video_decoder_get_timestamp_at_offset (GstVideoDecoder *
       *pts = ts->pts;
       *dts = ts->dts;
       *duration = ts->duration;
-      g_free (ts);
+      timestamp_free (ts);
       g = g->next;
       decoder->priv->timestamps = g_list_remove (decoder->priv->timestamps, ts);
     } else {
@@ -1549,7 +1555,7 @@ gst_video_decoder_reset (GstVideoDecoder * decoder, gboolean full)
   priv->frame_offset = 0;
   gst_adapter_clear (priv->input_adapter);
   gst_adapter_clear (priv->output_adapter);
-  g_list_free_full (priv->timestamps, (GDestroyNotify) g_free);
+  g_list_free_full (priv->timestamps, (GDestroyNotify) timestamp_free);
   priv->timestamps = NULL;
 
   if (priv->current_frame) {
