@@ -711,6 +711,20 @@ gst_date_time_new_from_iso8601_string (const gchar * string)
 
   if (ret == 0)
     return NULL;
+
+  if (ret == 3 && day <= 0) {
+    ret = 2;
+    day = -1;
+  }
+
+  if (ret >= 2 && month <= 0) {
+    ret = 1;
+    month = day = -1;
+  }
+
+  if (ret >= 1 && year <= 0)
+    return NULL;
+
   else if (ret >= 1 && len < 16)
     /* YMD is 10 chars. XMD + HM will be 16 chars. if it is less,
      * it make no sense to continue. We will stay with YMD. */
