@@ -2277,6 +2277,7 @@ gst_asf_demux_add_video_stream (GstASFDemux * demux,
   GstBuffer *extradata = NULL;
   GstPad *src_pad;
   GstCaps *caps;
+  gchar *str;
   gchar *name = NULL;
   gchar *codec_name = NULL;
   gint size_left = video->size - 40;
@@ -2331,7 +2332,9 @@ gst_asf_demux_add_video_stream (GstASFDemux * demux,
   }
 
   /* add fourcc format to caps, some proprietary decoders seem to need it */
-  gst_caps_set_simple (caps, "format", G_TYPE_UINT, video->tag, NULL);
+  str = g_strdup_printf ("%" GST_FOURCC_FORMAT, GST_FOURCC_ARGS (video->tag));
+  gst_caps_set_simple (caps, "format", G_TYPE_STRING, str, NULL);
+  g_free (str);
 
   if (codec_name) {
     tags = gst_tag_list_new (GST_TAG_VIDEO_CODEC, codec_name, NULL);
