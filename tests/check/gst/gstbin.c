@@ -1265,6 +1265,7 @@ GST_START_TEST (test_state_change_skip)
   fail_unless (ret == GST_STATE_CHANGE_SUCCESS, "downward state change failed");
 
   gst_object_unref (pipeline);
+  gst_object_unref (bus);
 }
 
 GST_END_TEST;
