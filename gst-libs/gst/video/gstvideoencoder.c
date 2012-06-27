@@ -215,7 +215,8 @@ static gboolean gst_video_encoder_sink_query (GstPad * pad, GstObject * parent,
 static gboolean gst_video_encoder_src_query (GstPad * pad, GstObject * parent,
     GstQuery * query);
 static GstVideoCodecFrame *gst_video_encoder_new_frame (GstVideoEncoder *
-    encoder, GstBuffer * buf, GstClockTime timestamp, GstClockTime duration);
+    encoder, GstBuffer * buf, GstClockTime pts, GstClockTime dts,
+    GstClockTime duration);
 
 static gboolean gst_video_encoder_sink_event_default (GstVideoEncoder * encoder,
     GstEvent * event);
@@ -1066,7 +1067,7 @@ error:
 
 static GstVideoCodecFrame *
 gst_video_encoder_new_frame (GstVideoEncoder * encoder, GstBuffer * buf,
-    GstClockTime timestamp, GstClockTime duration)
+    GstClockTime pts, GstClockTime dts, GstClockTime duration)
 {
   GstVideoEncoderPrivate *priv = encoder->priv;
   GstVideoCodecFrame *frame;
@@ -1086,7 +1087,8 @@ gst_video_encoder_new_frame (GstVideoEncoder * encoder, GstBuffer * buf,
   frame->events = priv->current_frame_events;
   priv->current_frame_events = NULL;
   frame->input_buffer = buf;
-  frame->pts = timestamp;
+  frame->pts = pts;
+  frame->dts = dts;
   frame->duration = duration;
 
   return frame;
@@ -1100,8 +1102,9 @@ gst_video_encoder_chain (GstPad * pad, GstObject * parent, GstBuffer * buf)
   GstVideoEncoderPrivate *priv;
   GstVideoEncoderClass *klass;
   GstVideoCodecFrame *frame;
+  GstClockTime pts, dts, duration;
   GstFlowReturn ret = GST_FLOW_OK;
-  guint64 start, stop = GST_CLOCK_TIME_NONE, cstart, cstop;
+  guint64 start, stop, cstart, cstop;
 
   encoder = GST_VIDEO_ENCODER (parent);
   priv = encoder->priv;
@@ -1111,19 +1114,26 @@ gst_video_encoder_chain (GstPad * pad, GstObject * parent, GstBuffer * buf)
 
   GST_VIDEO_ENCODER_STREAM_LOCK (encoder);
 
-  start = GST_BUFFER_TIMESTAMP (buf);
-  if (GST_CLOCK_TIME_IS_VALID (GST_BUFFER_DURATION (buf)))
-    stop = start + GST_BUFFER_DURATION (buf);
+  pts = GST_BUFFER_PTS (buf);
+  dts = GST_BUFFER_DTS (buf);
+  duration = GST_BUFFER_DURATION (buf);
 
   GST_LOG_OBJECT (encoder,
-      "received buffer of size %" G_GSIZE_FORMAT " with ts %" GST_TIME_FORMAT
-      ", duration %" GST_TIME_FORMAT, gst_buffer_get_size (buf),
-      GST_TIME_ARGS (start), GST_TIME_ARGS (GST_BUFFER_DURATION (buf)));
+      "received buffer of size %" G_GSIZE_FORMAT " with PTS %" GST_TIME_FORMAT
+      ", PTS %" GST_TIME_FORMAT ", duration %" GST_TIME_FORMAT,
+      gst_buffer_get_size (buf), GST_TIME_ARGS (pts), GST_TIME_ARGS (dts),
+      GST_TIME_ARGS (duration));
 
   if (priv->at_eos) {
     ret = GST_FLOW_EOS;
     goto done;
   }
+
+  start = pts;
+  if (GST_CLOCK_TIME_IS_VALID (duration))
+    stop = start + duration;
+  else
+    stop = GST_CLOCK_TIME_NONE;
 
   /* Drop buffers outside of segment */
   if (!gst_segment_clip (&encoder->output_segment,
@@ -1133,7 +1143,8 @@ gst_video_encoder_chain (GstPad * pad, GstObject * parent, GstBuffer * buf)
     goto done;
   }
 
-  frame = gst_video_encoder_new_frame (encoder, buf, cstart, cstop - cstart);
+  frame =
+      gst_video_encoder_new_frame (encoder, buf, cstart, dts, cstop - cstart);
 
   GST_OBJECT_LOCK (encoder);
   if (priv->force_key_unit) {
@@ -1143,7 +1154,7 @@ gst_video_encoder_chain (GstPad * pad, GstObject * parent, GstBuffer * buf)
 
     running_time =
         gst_segment_to_running_time (&encoder->output_segment, GST_FORMAT_TIME,
-        GST_BUFFER_TIMESTAMP (buf));
+        cstart);
 
     for (l = priv->force_key_unit; l; l = l->next) {
       ForcedKeyUnitEvent *tmp = l->data;
@@ -1177,6 +1188,7 @@ gst_video_encoder_chain (GstPad * pad, GstObject * parent, GstBuffer * buf)
   }
   GST_OBJECT_UNLOCK (encoder);
 
+  gst_video_codec_frame_ref (frame);
   priv->frames = g_list_append (priv->frames, frame);
 
   /* new data, more finish needed */
@@ -1185,7 +1197,6 @@ gst_video_encoder_chain (GstPad * pad, GstObject * parent, GstBuffer * buf)
   GST_LOG_OBJECT (encoder, "passing frame pfn %d to subclass",
       frame->presentation_frame_number);
 
-  gst_video_codec_frame_ref (frame);
   ret = klass->handle_frame (encoder, frame);
 
 done:
@@ -1439,7 +1450,8 @@ gst_video_encoder_finish_frame (GstVideoEncoder * encoder,
   frame->distance_from_sync = priv->distance_from_sync;
   priv->distance_from_sync++;
 
-  GST_BUFFER_TIMESTAMP (frame->output_buffer) = frame->pts;
+  GST_BUFFER_PTS (frame->output_buffer) = frame->pts;
+  GST_BUFFER_DTS (frame->output_buffer) = frame->dts;
   GST_BUFFER_DURATION (frame->output_buffer) = frame->duration;
 
   /* update rate estimate */
