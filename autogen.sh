@@ -12,6 +12,8 @@ test $TEST_TYPE $FILE || {
     exit 1
 }
 
+mkdir -p m4
+
 GTKDOCIZE=`which gtkdocize`
 if test -z $GTKDOCIZE; then
     echo "*** No gtk-doc support ***"
@@ -33,7 +35,7 @@ if test -z $AUTORECONF; then
     echo "*** No autoreconf found ***"
     exit 1
 else
-    ACLOCAL="${ACLOCAL-aclocal} $ACLOCAL_FLAGS" autoreconf -v --install || exit $?
+    autoreconf -v --install || exit $?
 fi
 
 if test -z "$NO_CONFIGURE"; then

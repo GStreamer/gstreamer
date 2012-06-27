@@ -1,3 +1,5 @@
+ACLOCAL_AMFLAGS = -I m4 ${ACLOCAL_FLAGS}
+
 AUTOMAKE_OPTIONS = foreign
 
 SUBDIRS = debian.upstream gst-libs gst pkgconfig tests docs

@@ -59,10 +59,15 @@ AC_PREREQ([2.58])
 AC_INIT([gst_vaapi], [gst_vaapi_version],
     [gwenole.beauchesne@intel.com],
     [gstreamer-vaapi])
-AC_CONFIG_SRCDIR([Makefile.am])
-AC_CANONICAL_TARGET
-AM_INIT_AUTOMAKE
+
 AC_CONFIG_HEADERS([config.h])
+AC_CONFIG_SRCDIR([Makefile.am])
+AC_CONFIG_MACRO_DIR([m4])
+AC_CONFIG_AUX_DIR([build-aux])
+
+AC_CANONICAL_TARGET
+
+AM_INIT_AUTOMAKE
 
 TODAY="`LC_ALL=C date +'%a, %d %b %Y %X %z'`"
 AC_SUBST(TODAY)
