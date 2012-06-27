@@ -24,6 +24,7 @@
 #include "glib-compat-private.h"
 #include "gst_private.h"
 #include "gstdatetime.h"
+#include "gstvalue.h"
 #include <glib.h>
 #include <math.h>
 #include <stdio.h>
@@ -51,6 +52,8 @@ typedef enum
   GST_DATE_TIME_FIELDS_YMD,     /* have year, month and day */
   GST_DATE_TIME_FIELDS_YMD_HM,
   GST_DATE_TIME_FIELDS_YMD_HMS
+      /* Note: if we ever add more granularity here, e.g. for microsecs,
+       * the compare function will need updating */
 } GstDateTimeFields;
 
 struct _GstDateTime
@@ -543,11 +546,26 @@ gst_date_time_new_now_utc (void)
 }
 
 gint
-priv_gst_date_time_compare (gconstpointer dt1, gconstpointer dt2)
+__gst_date_time_compare (const GstDateTime * dt1, const GstDateTime * dt2)
 {
-  const GstDateTime *datetime1 = dt1;
-  const GstDateTime *datetime2 = dt2;
-  return g_date_time_compare (datetime1->datetime, datetime2->datetime);
+  gint64 diff;
+
+  /* we assume here that GST_DATE_TIME_FIELDS_YMD_HMS is the highest
+   * resolution, and ignore microsecond differences on purpose for now */
+  if (dt1->fields != dt2->fields)
+    return GST_VALUE_UNORDERED;
+
+  /* This will round down to nearest second, which is what we want. We're
+   * not comparing microseconds on purpose here, since we're not
+   * serialising them when doing new_utc_now() + to_string() */
+  diff =
+      g_date_time_to_unix (dt1->datetime) - g_date_time_to_unix (dt2->datetime);
+  if (diff < 0)
+    return GST_VALUE_LESS_THAN;
+  else if (diff > 0)
+    return GST_VALUE_GREATER_THAN;
+  else
+    return GST_VALUE_EQUAL;
 }
 
 /**

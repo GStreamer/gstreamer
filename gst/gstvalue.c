@@ -5240,7 +5240,6 @@ gst_value_compare_date_time (const GValue * value1, const GValue * value2)
 {
   const GstDateTime *date1 = (const GstDateTime *) g_value_get_boxed (value1);
   const GstDateTime *date2 = (const GstDateTime *) g_value_get_boxed (value2);
-  gint ret;
 
   if (date1 == date2)
     return GST_VALUE_EQUAL;
@@ -5252,14 +5251,8 @@ gst_value_compare_date_time (const GValue * value1, const GValue * value2)
     return GST_VALUE_LESS_THAN;
   }
 
-  ret = priv_gst_date_time_compare (date1, date2);
-
-  if (ret == 0)
-    return GST_VALUE_EQUAL;
-  else if (ret < 0)
-    return GST_VALUE_LESS_THAN;
-  else
-    return GST_VALUE_GREATER_THAN;
+  /* returns GST_VALUE_* */
+  return __gst_date_time_compare (date1, date2);
 }
 
 static gchar *

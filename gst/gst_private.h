@@ -57,6 +57,8 @@ extern const char             g_log_domain_gstreamer[];
 /* for GstToc */
 #include "gsttoc.h"
 
+#include "gstdatetime.h"
+
 G_BEGIN_DECLS
 
 /* used by gstparse.c and grammar.y */
@@ -144,7 +146,7 @@ void      __gst_element_factory_add_interface           (GstElementFactory    * 
     ((c) == '.'))
 
 /* This is only meant for internal uses */
-gint priv_gst_date_time_compare (gconstpointer dt1, gconstpointer dt2);
+gint __gst_date_time_compare (const GstDateTime * dt1, const GstDateTime * dt2);
 
 #ifndef GST_DISABLE_REGISTRY
 /* Secret variable to initialise gst without registry cache */
