@@ -3,6 +3,7 @@
 
 #include <gst/gst.h>
 #include <gst/video/video.h>
+#include <gst/video/video-overlay-composition.h>
 #include <pango/pangocairo.h>
 
 G_BEGIN_DECLS
@@ -140,7 +141,7 @@ struct _GstBaseTextOverlay {
     PangoLayout             *layout;
     gdouble                  shadow_offset;
     gdouble                  outline_offset;
-    guchar                  *text_image;
+    GstBuffer               *text_image;
     gint                     image_width;
     gint                     image_height;
     gint                     baseline_y;
@@ -152,6 +153,10 @@ struct _GstBaseTextOverlay {
 
     gboolean                 have_pango_markup;
     gboolean                 use_vertical_render;
+
+    gboolean                 attach_compo_to_buffer;
+
+    GstVideoOverlayComposition *composition;
 };
 
 struct _GstBaseTextOverlayClass {
