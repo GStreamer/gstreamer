@@ -108,6 +108,7 @@ static gboolean push_event (MpegTSBase * base, GstEvent * event);
 
 #define mpegts_parse_parent_class parent_class
 G_DEFINE_TYPE (MpegTSParse2, mpegts_parse, GST_TYPE_MPEGTS_BASE);
+static void mpegts_parse_reset (MpegTSBase * base);
 
 static void
 mpegts_parse_class_init (MpegTSParse2Class * klass)
@@ -136,6 +137,7 @@ mpegts_parse_class_init (MpegTSParse2Class * klass)
   ts_class->push_event = GST_DEBUG_FUNCPTR (push_event);
   ts_class->program_started = GST_DEBUG_FUNCPTR (mpegts_parse_program_started);
   ts_class->program_stopped = GST_DEBUG_FUNCPTR (mpegts_parse_program_stopped);
+  ts_class->reset = GST_DEBUG_FUNCPTR (mpegts_parse_reset);
 }
 
 static void
@@ -145,6 +147,34 @@ mpegts_parse_init (MpegTSParse2 * parse)
 
   parse->srcpad = gst_pad_new_from_static_template (&src_template, "src");
   gst_element_add_pad (GST_ELEMENT (parse), parse->srcpad);
+}
+
+static void
+mpegts_parse_reset (MpegTSBase * base)
+{
+  /* Set the various know PIDs we are interested in */
+
+  /* CAT */
+  MPEGTS_BIT_SET (base->known_psi, 1);
+  /* NIT, ST */
+  MPEGTS_BIT_SET (base->known_psi, 0x10);
+  /* SDT, BAT, ST */
+  MPEGTS_BIT_SET (base->known_psi, 0x11);
+  /* EIT, ST, CIT (TS 102 323) */
+  MPEGTS_BIT_SET (base->known_psi, 0x12);
+  /* RST, ST */
+  MPEGTS_BIT_SET (base->known_psi, 0x13);
+  /* RNT (TS 102 323) */
+  MPEGTS_BIT_SET (base->known_psi, 0x16);
+  /* inband signalling */
+  MPEGTS_BIT_SET (base->known_psi, 0x1c);
+  /* measurement */
+  MPEGTS_BIT_SET (base->known_psi, 0x1d);
+  /* DIT */
+  MPEGTS_BIT_SET (base->known_psi, 0x1e);
+  /* SIT */
+  MPEGTS_BIT_SET (base->known_psi, 0x1f);
+
 }
 
 static gboolean
