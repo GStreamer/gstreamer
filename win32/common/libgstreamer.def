@@ -89,7 +89,7 @@ EXPORTS
 	gst_bin_remove_many
 	gst_bitmask_get_type
 	gst_buffer_add_meta
-	gst_buffer_append
+	gst_buffer_append_region
 	gst_buffer_copy_flags_get_type
 	gst_buffer_copy_into
 	gst_buffer_copy_region

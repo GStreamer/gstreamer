@@ -1614,8 +1614,23 @@ gst_buffer_copy_region (GstBuffer * buffer, GstBufferCopyFlags flags,
  * Returns: (transfer full): the new #GstBuffer that contains the memory
  *     of the two source buffers.
  */
+/**
+ * gst_buffer_append_region:
+ * @buf1: (transfer full): the first source #GstBuffer to append.
+ * @buf2: (transfer full): the second source #GstBuffer to append.
+ * @offset: the offset in @buf2
+ * @size: the size or -1 of @buf2
+ *
+ * Append @size bytes at @offset from @buf2 to @buf1. The result buffer will
+ * contain a concatenation of the memory of @buf1 and the requested region of
+ * @buf2.
+ *
+ * Returns: (transfer full): the new #GstBuffer that contains the memory
+ *     of the two source buffers.
+ */
 GstBuffer *
-gst_buffer_append (GstBuffer * buf1, GstBuffer * buf2)
+gst_buffer_append_region (GstBuffer * buf1, GstBuffer * buf2, gssize offset,
+    gssize size)
 {
   gsize i, len;
 
@@ -1625,6 +1640,8 @@ gst_buffer_append (GstBuffer * buf1, GstBuffer * buf2)
   buf1 = gst_buffer_make_writable (buf1);
   buf2 = gst_buffer_make_writable (buf2);
 
+  gst_buffer_resize (buf2, offset, size);
+
   len = GST_BUFFER_MEM_LEN (buf2);
   for (i = 0; i < len; i++) {
     GstMemory *mem;
@@ -1632,18 +1649,6 @@ gst_buffer_append (GstBuffer * buf1, GstBuffer * buf2)
     mem = GST_BUFFER_MEM_PTR (buf2, i);
     GST_BUFFER_MEM_PTR (buf2, i) = NULL;
     _memory_add (buf1, -1, mem);
-  }
-
-  /* we can calculate the duration too. Also make sure we're not messing
-   * with invalid DURATIONS */
-  if (GST_BUFFER_DURATION_IS_VALID (buf1) &&
-      GST_BUFFER_DURATION_IS_VALID (buf2)) {
-    /* add duration */
-    GST_BUFFER_DURATION (buf1) += GST_BUFFER_DURATION (buf2);
-  }
-  if (GST_BUFFER_OFFSET_END_IS_VALID (buf2)) {
-    /* set offset_end */
-    GST_BUFFER_OFFSET_END (buf1) = GST_BUFFER_OFFSET_END (buf2);
   }
 
   GST_BUFFER_MEM_LEN (buf2) = 0;

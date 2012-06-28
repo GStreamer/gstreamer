@@ -476,7 +476,9 @@ GstBuffer*      gst_buffer_copy_region          (GstBuffer *parent, GstBufferCop
                                                  gsize offset, gsize size);
 
 /* append two buffers */
-GstBuffer*      gst_buffer_append               (GstBuffer *buf1, GstBuffer *buf2);
+GstBuffer*      gst_buffer_append_region        (GstBuffer *buf1, GstBuffer *buf2,
+                                                 gssize offset, gssize size);
+#define         gst_buffer_append(b1,b2)        gst_buffer_append_region ((b1), (b2), 0, -1)
 
 /* metadata */
 #include <gst/gstmeta.h>

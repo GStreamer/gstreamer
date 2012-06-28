@@ -236,6 +236,7 @@ gst_buffer_make_writable
 gst_buffer_replace
 
 gst_buffer_append
+gst_buffer_append_region
 
 gst_buffer_get_meta
 gst_buffer_add_meta
