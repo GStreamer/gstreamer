@@ -64,6 +64,23 @@ static GQuark QUARK_ACTUAL_NETWORK;
 static GQuark QUARK_NETWORK_NAME;
 static GQuark QUARK_ORIGINAL_NETWORK_ID;
 static GQuark QUARK_TRANSPORTS;
+static GQuark QUARK_TERRESTRIAL;
+static GQuark QUARK_CABLE;
+static GQuark QUARK_FREQUENCY;
+static GQuark QUARK_MODULATION;
+static GQuark QUARK_BANDWIDTH;
+static GQuark QUARK_CONSTELLATION;
+static GQuark QUARK_HIERARCHY;
+static GQuark QUARK_CODE_RATE_HP;
+static GQuark QUARK_CODE_RATE_LP;
+static GQuark QUARK_GUARD_INTERVAL;
+static GQuark QUARK_TRANSMISSION_MODE;
+static GQuark QUARK_OTHER_FREQUENCY;
+static GQuark QUARK_SYMBOL_RATE;
+static GQuark QUARK_INNER_FEC;
+static GQuark QUARK_DELIVERY;
+static GQuark QUARK_CHANNELS;
+static GQuark QUARK_LOGICAL_CHANNEL_NUMBER;
 
 static GQuark QUARK_SDT;
 static GQuark QUARK_ACTUAL_TRANSPORT_STREAM;
@@ -75,6 +92,22 @@ static GQuark QUARK_PRESENT_FOLLOWING;
 static GQuark QUARK_SEGMENT_LAST_SECTION_NUMBER;
 static GQuark QUARK_LAST_TABLE_ID;
 static GQuark QUARK_EVENTS;
+static GQuark QUARK_NAME;
+static GQuark QUARK_DESCRIPTION;
+static GQuark QUARK_EXTENDED_ITEM;
+static GQuark QUARK_EXTENDED_ITEMS;
+static GQuark QUARK_TEXT;
+static GQuark QUARK_EXTENDED_TEXT;
+static GQuark QUARK_EVENT_ID;
+static GQuark QUARK_YEAR;
+static GQuark QUARK_MONTH;
+static GQuark QUARK_DAY;
+static GQuark QUARK_HOUR;
+static GQuark QUARK_MINUTE;
+static GQuark QUARK_SECOND;
+static GQuark QUARK_DURATION;
+static GQuark QUARK_RUNNING_STATUS;
+static GQuark QUARK_FREE_CA_MODE;
 
 
 #define MPEGTS_PACKETIZER_GET_PRIVATE(obj)  \
@@ -1180,7 +1213,7 @@ mpegts_packetizer_parse_nit (MpegTSPacketizer2 * packetizer,
             "polarization", G_TYPE_STRING, polarization_str,
             "symbol-rate", G_TYPE_UINT, symbol_rate,
             "inner-fec", G_TYPE_STRING, fec_inner_str, NULL);
-        gst_structure_set (transport, "delivery", GST_TYPE_STRUCTURE,
+        gst_structure_id_set (transport, QUARK_DELIVERY, GST_TYPE_STRUCTURE,
             delivery_structure, NULL);
       } else if ((delivery = gst_mpeg_descriptor_find (&mpegdescriptor,
                   DESC_DVB_TERRESTRIAL_DELIVERY_SYSTEM))) {
@@ -1298,17 +1331,17 @@ mpegts_packetizer_parse_nit (MpegTSPacketizer2 * packetizer,
           default:
             transmission_mode_str = "reserved";
         }
-        delivery_structure = gst_structure_new ("terrestrial",
-            "frequency", G_TYPE_UINT, frequency,
-            "bandwidth", G_TYPE_UINT, bandwidth,
-            "constellation", G_TYPE_STRING, constellation_str,
-            "hierarchy", G_TYPE_UINT, hierarchy,
-            "code-rate-hp", G_TYPE_STRING, code_rate_hp_str,
-            "code-rate-lp", G_TYPE_STRING, code_rate_lp_str,
-            "guard-interval", G_TYPE_UINT, guard_interval,
-            "transmission-mode", G_TYPE_STRING, transmission_mode_str,
-            "other-frequency", G_TYPE_BOOLEAN, other_frequency, NULL);
-        gst_structure_set (transport, "delivery", GST_TYPE_STRUCTURE,
+        delivery_structure = gst_structure_new_id (QUARK_TERRESTRIAL,
+            QUARK_FREQUENCY, G_TYPE_UINT, frequency,
+            QUARK_BANDWIDTH, G_TYPE_UINT, bandwidth,
+            QUARK_CONSTELLATION, G_TYPE_STRING, constellation_str,
+            QUARK_HIERARCHY, G_TYPE_UINT, hierarchy,
+            QUARK_CODE_RATE_HP, G_TYPE_STRING, code_rate_hp_str,
+            QUARK_CODE_RATE_LP, G_TYPE_STRING, code_rate_lp_str,
+            QUARK_GUARD_INTERVAL, G_TYPE_UINT, guard_interval,
+            QUARK_TRANSMISSION_MODE, G_TYPE_STRING, transmission_mode_str,
+            QUARK_OTHER_FREQUENCY, G_TYPE_BOOLEAN, other_frequency, NULL);
+        gst_structure_id_set (transport, QUARK_DELIVERY, GST_TYPE_STRUCTURE,
             delivery_structure, NULL);
       } else if ((delivery = gst_mpeg_descriptor_find (&mpegdescriptor,
                   DESC_DVB_CABLE_DELIVERY_SYSTEM))) {
@@ -1392,12 +1425,12 @@ mpegts_packetizer_parse_nit (MpegTSPacketizer2 * packetizer,
           default:
             modulation_str = "reserved";
         }
-        delivery_structure = gst_structure_new ("cable",
-            "modulation", G_TYPE_STRING, modulation_str,
-            "frequency", G_TYPE_UINT, frequency,
-            "symbol-rate", G_TYPE_UINT, symbol_rate,
-            "inner-fec", G_TYPE_STRING, fec_inner_str, NULL);
-        gst_structure_set (transport, "delivery", GST_TYPE_STRUCTURE,
+        delivery_structure = gst_structure_new_id (QUARK_CABLE,
+            QUARK_MODULATION, G_TYPE_STRING, modulation_str,
+            QUARK_FREQUENCY, G_TYPE_UINT, frequency,
+            QUARK_SYMBOL_RATE, G_TYPE_UINT, symbol_rate,
+            QUARK_INNER_FEC, G_TYPE_STRING, fec_inner_str, NULL);
+        gst_structure_id_set (transport, QUARK_DELIVERY, GST_TYPE_STRUCTURE,
             delivery_structure, NULL);
       }
       /* free the temporary delivery structure */
@@ -1419,9 +1452,9 @@ mpegts_packetizer_parse_nit (MpegTSPacketizer2 * packetizer,
 
           current_pos += 2;
           logical_channel_number = GST_READ_UINT16_BE (current_pos) & 0x03ff;
-          channel =
-              gst_structure_new ("channels", "service-id", G_TYPE_UINT,
-              service_id, "logical-channel-number", G_TYPE_UINT,
+          channel = gst_structure_new_id (QUARK_CHANNELS,
+              QUARK_SERVICE_ID, G_TYPE_UINT,
+              service_id, QUARK_LOGICAL_CHANNEL_NUMBER, G_TYPE_UINT,
               logical_channel_number, NULL);
           g_value_init (&channel_value, GST_TYPE_STRUCTURE);
           g_value_take_boxed (&channel_value, channel);
@@ -1429,7 +1462,8 @@ mpegts_packetizer_parse_nit (MpegTSPacketizer2 * packetizer,
           g_value_unset (&channel_value);
           current_pos += 2;
         }
-        gst_structure_set_value (transport, "channels", &channel_numbers);
+        gst_structure_id_set_value (transport, QUARK_CHANNELS,
+            &channel_numbers);
         g_value_unset (&channel_numbers);
       }
       if ((delivery = gst_mpeg_descriptor_find (&mpegdescriptor,
@@ -1858,18 +1892,19 @@ mpegts_packetizer_parse_eit (MpegTSPacketizer2 * packetizer,
 
     /* TODO: send tag event down relevant pad saying what is currently playing */
     event_name = g_strdup_printf ("event-%d", event_id);
-    event = gst_structure_new (event_name,
-        "event-id", G_TYPE_UINT, event_id,
-        "year", G_TYPE_UINT, year,
-        "month", G_TYPE_UINT, month,
-        "day", G_TYPE_UINT, day,
-        "hour", G_TYPE_UINT, hour,
-        "minute", G_TYPE_UINT, minute,
-        "second", G_TYPE_UINT, second,
-        "duration", G_TYPE_UINT, duration,
-        "running-status", G_TYPE_UINT, running_status,
-        "free-ca-mode", G_TYPE_BOOLEAN, free_ca_mode, NULL);
+    event = gst_structure_new_empty (event_name);
     g_free (event_name);
+    gst_structure_id_set (event,
+        QUARK_EVENT_ID, G_TYPE_UINT, event_id,
+        QUARK_YEAR, G_TYPE_UINT, year,
+        QUARK_MONTH, G_TYPE_UINT, month,
+        QUARK_DAY, G_TYPE_UINT, day,
+        QUARK_HOUR, G_TYPE_UINT, hour,
+        QUARK_MINUTE, G_TYPE_UINT, minute,
+        QUARK_SECOND, G_TYPE_UINT, second,
+        QUARK_DURATION, G_TYPE_UINT, duration,
+        QUARK_RUNNING_STATUS, G_TYPE_UINT, running_status,
+        QUARK_FREE_CA_MODE, G_TYPE_BOOLEAN, free_ca_mode, NULL);
 
     if (descriptors_loop_length) {
       guint8 *event_descriptor;
@@ -1906,12 +1941,13 @@ mpegts_packetizer_parse_eit (MpegTSPacketizer2 * packetizer,
               get_encoding_and_convert (eventdescription,
               eventdescription_length);
 
-          gst_structure_set (event, "name", G_TYPE_STRING, eventname_tmp,
-              "description", G_TYPE_STRING, eventdescription_tmp, NULL);
+          gst_structure_id_set (event, QUARK_NAME, G_TYPE_STRING, eventname_tmp,
+              QUARK_DESCRIPTION, G_TYPE_STRING, eventdescription_tmp, NULL);
           g_free (eventname_tmp);
           g_free (eventdescription_tmp);
         }
       }
+
       extended_event_descriptors =
           gst_mpeg_descriptor_find_all (&mpegdescriptor,
           DESC_DVB_EXTENDED_EVENT);
@@ -1950,9 +1986,9 @@ mpegts_packetizer_parse_eit (MpegTSPacketizer2 * packetizer,
               text = get_encoding_and_convert ((gchar *) items_aux, length_aux);
               items_aux += length_aux;
 
-              extended_item = gst_structure_new ("extended_item",
-                  "description", G_TYPE_STRING, description,
-                  "text", G_TYPE_STRING, text, NULL);
+              extended_item = gst_structure_new_id (QUARK_EXTENDED_ITEM,
+                  QUARK_DESCRIPTION, G_TYPE_STRING, description,
+                  QUARK_TEXT, G_TYPE_STRING, text, NULL);
 
               g_value_init (&extended_item_value, GST_TYPE_STRUCTURE);
               g_value_take_boxed (&extended_item_value, extended_item);
@@ -1960,6 +1996,7 @@ mpegts_packetizer_parse_eit (MpegTSPacketizer2 * packetizer,
                   &extended_item_value);
               g_value_unset (&extended_item_value);
             }
+
             if (extended_text) {
               gchar *tmp;
               gchar *old_extended_text = extended_text;
@@ -1977,12 +2014,12 @@ mpegts_packetizer_parse_eit (MpegTSPacketizer2 * packetizer,
           }
         }
         if (extended_text) {
-          gst_structure_set (event, "extended-text", G_TYPE_STRING,
+          gst_structure_id_set (event, QUARK_EXTENDED_TEXT, G_TYPE_STRING,
               extended_text, NULL);
           g_free (extended_text);
         }
-        gst_structure_set_value (event, "extented-items", &extended_items);
-        g_value_unset (&extended_items);
+        gst_structure_id_take_value (event, QUARK_EXTENDED_ITEMS,
+            &extended_items);
         g_array_free (extended_event_descriptors, TRUE);
       }
 
@@ -2790,6 +2827,23 @@ _init_local (void)
   QUARK_NETWORK_NAME = g_quark_from_string ("network-name");
   QUARK_ORIGINAL_NETWORK_ID = g_quark_from_string ("original-network-id");
   QUARK_TRANSPORTS = g_quark_from_string ("transports");
+  QUARK_TERRESTRIAL = g_quark_from_string ("terrestrial");
+  QUARK_CABLE = g_quark_from_string ("cable");
+  QUARK_FREQUENCY = g_quark_from_string ("frequency");
+  QUARK_MODULATION = g_quark_from_string ("modulation");
+  QUARK_BANDWIDTH = g_quark_from_string ("bandwidth");
+  QUARK_CONSTELLATION = g_quark_from_string ("constellation");
+  QUARK_HIERARCHY = g_quark_from_string ("hierarchy");
+  QUARK_CODE_RATE_HP = g_quark_from_string ("code-rate-hp");
+  QUARK_CODE_RATE_LP = g_quark_from_string ("code-rate-lp");
+  QUARK_GUARD_INTERVAL = g_quark_from_string ("guard-interval");
+  QUARK_TRANSMISSION_MODE = g_quark_from_string ("transmission-mode");
+  QUARK_OTHER_FREQUENCY = g_quark_from_string ("other-frequency");
+  QUARK_SYMBOL_RATE = g_quark_from_string ("symbol-rate");
+  QUARK_INNER_FEC = g_quark_from_string ("inner-fec");
+  QUARK_DELIVERY = g_quark_from_string ("delivery");
+  QUARK_CHANNELS = g_quark_from_string ("channels");
+  QUARK_LOGICAL_CHANNEL_NUMBER = g_quark_from_string ("logical-channel-number");
 
   QUARK_SDT = g_quark_from_string ("sdt");
   QUARK_ACTUAL_TRANSPORT_STREAM =
@@ -2803,6 +2857,22 @@ _init_local (void)
       g_quark_from_string ("segment-last-section-number");
   QUARK_LAST_TABLE_ID = g_quark_from_string ("last-table-id");
   QUARK_EVENTS = g_quark_from_string ("events");
+  QUARK_NAME = g_quark_from_string ("name");
+  QUARK_DESCRIPTION = g_quark_from_string ("description");
+  QUARK_EXTENDED_ITEM = g_quark_from_string ("extended_item");
+  QUARK_EXTENDED_ITEMS = g_quark_from_string ("extended-items");
+  QUARK_TEXT = g_quark_from_string ("text");
+  QUARK_EXTENDED_TEXT = g_quark_from_string ("extended-text");
+  QUARK_EVENT_ID = g_quark_from_string ("event-id");
+  QUARK_YEAR = g_quark_from_string ("year");
+  QUARK_MONTH = g_quark_from_string ("month");
+  QUARK_DAY = g_quark_from_string ("day");
+  QUARK_HOUR = g_quark_from_string ("hour");
+  QUARK_MINUTE = g_quark_from_string ("minute");
+  QUARK_SECOND = g_quark_from_string ("second");
+  QUARK_DURATION = g_quark_from_string ("duration");
+  QUARK_RUNNING_STATUS = g_quark_from_string ("running-status");
+  QUARK_FREE_CA_MODE = g_quark_from_string ("free-ca-mode");
 }
 
 /**
