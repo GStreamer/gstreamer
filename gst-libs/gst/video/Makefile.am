@@ -35,7 +35,9 @@ libgstvideo_@GST_API_VERSION@_la_SOURCES = \
 	videooverlay.c          \
 	gstvideodecoder.c       \
 	gstvideoencoder.c       \
-	gstvideoutils.c
+	gstvideoutils.c		\
+	video-blend.c		\
+	video-overlay-composition.c
 
 nodist_libgstvideo_@GST_API_VERSION@_la_SOURCES = $(BUILT_SOURCES)
 
@@ -58,7 +60,10 @@ libgstvideo_@GST_API_VERSION@include_HEADERS = \
 	videooverlay.h          \
 	gstvideodecoder.h       \
 	gstvideoencoder.h       \
-	gstvideoutils.h
+	gstvideoutils.h		\
+	video-blend.h		\
+	video-overlay-composition.h
+
 nodist_libgstvideo_@GST_API_VERSION@include_HEADERS = $(built_headers)
 
 libgstvideo_@GST_API_VERSION@_la_CFLAGS = $(GST_PLUGINS_BASE_CFLAGS) $(GST_BASE_CFLAGS) $(GST_CFLAGS) \

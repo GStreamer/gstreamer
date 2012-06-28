@@ -27,8 +27,9 @@
 #include <gst/gst.h>
 #include <gst/video/video.h>
 
-void       gst_video_blend_scale_linear_RGBA  (GstVideoFrame * src,
-                                               gint dest_height, gint dest_width);
+void       gst_video_blend_scale_linear_RGBA  (GstVideoInfo * src, GstBuffer * src_buffer,
+                                               gint dest_height, gint dest_width,
+                                               GstVideoInfo * dest, GstBuffer ** dest_buffer);
 
 gboolean   gst_video_blend                    (GstVideoFrame * dest,
                                                GstVideoFrame * src,

@@ -37,10 +37,12 @@ G_BEGIN_DECLS
  */
 #define GST_TYPE_VIDEO_OVERLAY_RECTANGLE			\
   (gst_video_overlay_rectangle_get_type ())
+#define GST_VIDEO_OVERLAY_RECTANGLE_CAST(obj)			\
+  ((GstVideoOverlayRectangle *)(obj)
 #define GST_VIDEO_OVERLAY_RECTANGLE(obj)			\
-  (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_VIDEO_OVERLAY_RECTANGLE, GstVideoOverlayRectangle))
+  (GST_VIDEO_OVERLAY_RECTANGLE_CAST(obj))
 #define GST_IS_VIDEO_OVERLAY_RECTANGLE(obj)			\
-  (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_VIDEO_OVERLAY_RECTANGLE))
+  (GST_IS_MINI_OBJECT_TYPE(obj, GST_TYPE_VIDEO_OVERLAY_RECTANGLE))
 
 typedef struct _GstVideoOverlayRectangle      GstVideoOverlayRectangle;
 typedef struct _GstVideoOverlayRectangleClass GstVideoOverlayRectangleClass;
@@ -158,10 +160,12 @@ void                         gst_video_overlay_rectangle_set_global_alpha       
  */
 #define GST_TYPE_VIDEO_OVERLAY_COMPOSITION			\
   (gst_video_overlay_composition_get_type ())
+#define GST_VIDEO_OVERLAY_COMPOSITION_CAST(obj)			\
+  ((GstVideoOverlayComposition *)(obj)
 #define GST_VIDEO_OVERLAY_COMPOSITION(obj)			\
-  (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_VIDEO_OVERLAY_COMPOSITION, GstVideoOverlayComposition))
+  (GST_VIDEO_OVERLAY_COMPOSITION_CAST(obj))
 #define GST_IS_VIDEO_OVERLAY_COMPOSITION(obj)			\
-  (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_VIDEO_OVERLAY_COMPOSITION))
+  (GST_IS_MINI_OBJECT_TYPE(obj, GST_TYPE_VIDEO_OVERLAY_COMPOSITION))
 
 typedef struct _GstVideoOverlayComposition      GstVideoOverlayComposition;
 typedef struct _GstVideoOverlayCompositionClass GstVideoOverlayCompositionClass;
@@ -231,7 +235,7 @@ guint                        gst_video_overlay_composition_get_seqnum    (GstVid
 /* blend composition onto raw video buffer */
 
 gboolean                     gst_video_overlay_composition_blend         (GstVideoOverlayComposition * comp,
-                                                                          GstBuffer                  * video_buf);
+                                                                          GstVideoFrame              * video_buf);
 
 /* attach/retrieve composition from buffers */
 

@@ -146,10 +146,11 @@ G_STMT_START { \
   ret = v0 + (v1 * (255 - alpha)) / 255; \
 } G_STMT_END
 
-/* returns newly-allocated pixels in src->pixels, which caller must g_free() */
+/* returns newly-allocated buffer, which caller must unref */
 void
-gst_video_blend_scale_linear_RGBA (GstVideoFrame * src,
-    gint dest_height, gint dest_width)
+gst_video_blend_scale_linear_RGBA (GstVideoInfo * src, GstBuffer * src_buffer,
+    gint dest_height, gint dest_width, GstVideoInfo * dest,
+    GstBuffer ** dest_buffer)
 {
   const guint8 *src_pixels;
   int acc;
@@ -162,11 +163,20 @@ gst_video_blend_scale_linear_RGBA (GstVideoFrame * src,
   int dest_size;
   guint dest_stride = dest_width * 4;
   guint src_stride = src->width * 4;
-
+  guint8 *dest_pixels;
   guint8 *tmpbuf = g_malloc (dest_width * 8 * 4);
-  guint8 *dest_pixels =
-      g_malloc (gst_video_format_get_size (src->fmt, dest_height,
-          dest_width));
+  GstVideoFrame src_frame, dest_frame;
+
+  g_return_if_fail (dest_buffer != NULL);
+
+  gst_video_info_init (dest);
+  gst_video_info_set_format (dest, GST_VIDEO_INFO_FORMAT (src),
+      dest_width, dest_height);
+
+  *dest_buffer = gst_buffer_new_and_alloc (GST_VIDEO_INFO_SIZE (dest));
+
+  gst_video_frame_map (&src_frame, src, src_buffer, GST_MAP_READ);
+  gst_video_frame_map (&dest_frame, dest, *dest_buffer, GST_MAP_WRITE);
 
   if (dest_height == 1)
     y_increment = 0;
@@ -182,7 +192,8 @@ gst_video_blend_scale_linear_RGBA (GstVideoFrame * src,
 
 #define LINE(x) ((tmpbuf) + (dest_size)*((x)&1))
 
-  src_pixels = src->pixels;
+  dest_pixels = GST_VIDEO_FRAME_PLANE_DATA (&dest_frame, 0);
+  src_pixels = GST_VIDEO_FRAME_PLANE_DATA (&src_frame, 0);
 
   acc = 0;
   orc_resample_bilinear_u32 (LINE (0), src_pixels, 0, x_increment, dest_width);
@@ -211,9 +222,8 @@ gst_video_blend_scale_linear_RGBA (GstVideoFrame * src,
     acc += y_increment;
   }
 
-  /* Update src, our reference to the old src->pixels is lost */
-  video_blend_format_info_init (src, dest_pixels, dest_height, dest_width,
-      src->fmt, src->premultiplied_alpha);
+  gst_video_frame_unmap (&src_frame);
+  gst_video_frame_unmap (&dest_frame);
 
   g_free (tmpbuf);
 }
@@ -233,78 +243,90 @@ gboolean
 gst_video_blend (GstVideoFrame * dest,
     GstVideoFrame * src, guint x, guint y, gfloat global_alpha)
 {
-  guint i, j, global_alpha_val, src_width, src_height;
-  GetPutLine getputdest, getputsrc;
-  gint src_stride;
+  guint i, j, global_alpha_val, src_width, src_height, dest_width, dest_height;
+  gint xoff;
   guint8 *tmpdestline = NULL, *tmpsrcline = NULL;
-  gboolean src_premultiplied_alpha;
+  gboolean src_premultiplied_alpha, dest_premultiplied_alpha;
+  void (*matrix) (guint8 * tmpline, guint width);
+  const GstVideoFormatInfo *sinfo, *dinfo;
 
   g_assert (dest != NULL);
   g_assert (src != NULL);
 
   global_alpha_val = 256.0 * global_alpha;
 
+  dest_premultiplied_alpha =
+      GST_VIDEO_INFO_FLAGS (&dest->info) & GST_VIDEO_FLAG_PREMULTIPLIED_ALPHA;
+  src_premultiplied_alpha =
+      GST_VIDEO_INFO_FLAGS (&src->info) & GST_VIDEO_FLAG_PREMULTIPLIED_ALPHA;
+
   /* we do no support writing to premultiplied alpha, though that should
      just be a matter of adding blenders below (BLEND01 and BLEND11) */
-  g_return_val_if_fail (!dest->premultiplied_alpha, FALSE);
-  src_premultiplied_alpha = src->premultiplied_alpha;
+  g_return_val_if_fail (!dest_premultiplied_alpha, FALSE);
 
-  src_stride = src->width * 4;
-  tmpdestline = g_malloc (sizeof (guint8) * (dest->width + 8) * 4);
-  tmpsrcline = g_malloc (sizeof (guint8) * (dest->width + 8) * 4);
+  src_width = GST_VIDEO_FRAME_WIDTH (src);
+  src_height = GST_VIDEO_FRAME_HEIGHT (src);
+
+  dest_width = GST_VIDEO_FRAME_WIDTH (dest);
+  dest_height = GST_VIDEO_FRAME_HEIGHT (dest);
+
+  tmpdestline = g_malloc (sizeof (guint8) * (dest_width + 8) * 4);
+  tmpsrcline = g_malloc (sizeof (guint8) * (dest_width + 8) * 4);
 
   ensure_debug_category ();
 
+  dinfo = gst_video_format_get_info (GST_VIDEO_FRAME_FORMAT (dest));
+  sinfo = gst_video_format_get_info (GST_VIDEO_FRAME_FORMAT (src));
 
-  if (!lookup_getput (&getputdest, dest->fmt))
+  if (!sinfo || !dinfo)
     goto failed;
 
-  if (!lookup_getput (&getputsrc, src->fmt))
-    goto failed;
-
-  if (gst_video_format_is_rgb (src->fmt) != gst_video_format_is_rgb (dest->fmt)) {
-    if (gst_video_format_is_rgb (src->fmt)) {
+  matrix = matrix_identity;
+  if (GST_VIDEO_INFO_IS_RGB (&src->info) != GST_VIDEO_INFO_IS_RGB (&dest->info)) {
+    if (GST_VIDEO_INFO_IS_RGB (&src->info)) {
       if (src_premultiplied_alpha) {
-        getputsrc.matrix = matrix_prea_rgb_to_yuv;
+        matrix = matrix_prea_rgb_to_yuv;
         src_premultiplied_alpha = FALSE;
       } else {
-        getputsrc.matrix = matrix_rgb_to_yuv;
+        matrix = matrix_rgb_to_yuv;
       }
     } else {
-      getputsrc.matrix = matrix_yuv_to_rgb;
+      matrix = matrix_yuv_to_rgb;
     }
   }
 
+  xoff = 0;
+
   /* adjust src pointers for negative sizes */
   if (x < 0) {
-    src += -x * 4;
-    src->width -= -x;
+    src_width -= -x;
     x = 0;
+    xoff = -x;
   }
 
   if (y < 0) {
-    src += -y * src_stride;
-    src->height -= -y;
+    src_height -= -y;
     y = 0;
   }
 
   /* adjust width/height if the src is bigger than dest */
-  if (x + src->width > dest->width)
-    src->width = dest->width - x;
+  if (x + src_width > dest_width)
+    src_width = dest_width - x;
 
-  if (y + src->height > dest->height)
-    src->height = dest->height - y;
-
-  src_width = src->width;
-  src_height = src->height;
+  if (y + src_height > dest_height)
+    src_height = dest_height - y;
 
   /* Mainloop doing the needed conversions, and blending */
   for (i = y; i < y + src_height; i++) {
 
-    getputdest.getline (tmpdestline, dest, x, i);
-    getputsrc.getline (tmpsrcline, src, 0, (i - y));
+    dinfo->unpack_func (dinfo, 0, tmpdestline, dest->data, dest->info.stride,
+        0, i, dest_width);
+    sinfo->unpack_func (sinfo, 0, tmpsrcline, src->data, src->info.stride,
+        xoff, i - y, src_width - xoff);
 
-    getputsrc.matrix (tmpsrcline, src_width);
+    matrix (tmpsrcline, src_width);
+
+    tmpdestline += 4 * x;
 
     /* Here dest and src are both either in AYUV or ARGB
      * TODO: Make the orc version working properly*/
@@ -322,21 +344,21 @@ gst_video_blend (GstVideoFrame * dest,
   } while(0)
 
     if (G_LIKELY (global_alpha == 1.0)) {
-      if (src_premultiplied_alpha && dest->premultiplied_alpha) {
+      if (src_premultiplied_alpha && dest_premultiplied_alpha) {
         /* BLENDLOOP (BLEND11, 1, 1); */
-      } else if (!src_premultiplied_alpha && dest->premultiplied_alpha) {
+      } else if (!src_premultiplied_alpha && dest_premultiplied_alpha) {
         /* BLENDLOOP (BLEND01, 1, 1); */
-      } else if (src_premultiplied_alpha && !dest->premultiplied_alpha) {
+      } else if (src_premultiplied_alpha && !dest_premultiplied_alpha) {
         BLENDLOOP (BLEND10, 1, 1);
       } else {
         BLENDLOOP (BLEND00, 1, 1);
       }
     } else {
-      if (src_premultiplied_alpha && dest->premultiplied_alpha) {
+      if (src_premultiplied_alpha && dest_premultiplied_alpha) {
         /* BLENDLOOP (BLEND11, global_alpha_val, 256); */
-      } else if (!src_premultiplied_alpha && dest->premultiplied_alpha) {
+      } else if (!src_premultiplied_alpha && dest_premultiplied_alpha) {
         /* BLENDLOOP (BLEND01, global_alpha_val, 256); */
-      } else if (src_premultiplied_alpha && !dest->premultiplied_alpha) {
+      } else if (src_premultiplied_alpha && !dest_premultiplied_alpha) {
         BLENDLOOP (BLEND10, global_alpha_val, 256);
       } else {
         BLENDLOOP (BLEND00, global_alpha_val, 256);
@@ -344,6 +366,8 @@ gst_video_blend (GstVideoFrame * dest,
     }
 
 #undef BLENDLOOP
+
+    tmpdestline -= 4 * x;
 
     /* FIXME
      * #if G_BYTE_ORDER == LITTLE_ENDIAN
@@ -353,8 +377,8 @@ gst_video_blend (GstVideoFrame * dest,
      * #endif
      */
 
-    getputdest.putline (dest, src, tmpdestline, x, i);
-
+    dinfo->pack_func (dinfo, 0, tmpdestline, dest_width,
+        dest->data, dest->info.stride, dest->info.chroma_site, i, dest_width);
   }
 
   g_free (tmpdestline);
