@@ -69,8 +69,6 @@ struct _GstFFMpegVidDec
   gint ctx_time_n;
   gint ctx_interlaced;
 
-  gboolean waiting_for_key;
-
   /* for tracking DTS/PTS */
   gboolean has_b_frames;
 
@@ -312,7 +310,6 @@ gst_ffmpegviddec_init (GstFFMpegVidDec * ffmpegdec)
   ffmpegdec->context = avcodec_alloc_context ();
   ffmpegdec->picture = avcodec_alloc_frame ();
   ffmpegdec->opened = FALSE;
-  ffmpegdec->waiting_for_key = TRUE;
   ffmpegdec->skip_frame = ffmpegdec->lowres = 0;
   ffmpegdec->direct_rendering = DEFAULT_DIRECT_RENDERING;
   ffmpegdec->debug_mv = DEFAULT_DEBUG_MV;
@@ -897,18 +894,12 @@ gst_ffmpegviddec_do_qos (GstFFMpegVidDec * ffmpegdec,
     goto normal_mode;
 
   if (diff <= 0) {
-    if (ffmpegdec->waiting_for_key)
-      goto skipping;
     goto skip_frame;
   }
 
 no_qos:
   return TRUE;
 
-skipping:
-  {
-    return FALSE;
-  }
 normal_mode:
   {
     if (ffmpegdec->context->skip_frame != AVDISCARD_DEFAULT) {
@@ -928,47 +919,6 @@ skip_frame:
     }
     return FALSE;
   }
-}
-
-/* figure out if the current picture is a keyframe, return TRUE if that is
- * the case. */
-static gboolean
-check_keyframe (GstFFMpegVidDec * ffmpegdec)
-{
-  GstFFMpegVidDecClass *oclass;
-  gboolean is_itype = FALSE;
-  gboolean is_reference = FALSE;
-  gboolean iskeyframe;
-
-  /* figure out if we are dealing with a keyframe */
-  oclass = (GstFFMpegVidDecClass *) (G_OBJECT_GET_CLASS (ffmpegdec));
-
-  /* remember that we have B frames, we need this for the DTS -> PTS conversion
-   * code */
-  if (!ffmpegdec->has_b_frames && ffmpegdec->picture->pict_type == FF_B_TYPE) {
-    GST_DEBUG_OBJECT (ffmpegdec, "we have B frames");
-    ffmpegdec->has_b_frames = TRUE;
-    /* FIXME : set latency on base video class */
-    /* Emit latency message to recalculate it */
-    gst_element_post_message (GST_ELEMENT_CAST (ffmpegdec),
-        gst_message_new_latency (GST_OBJECT_CAST (ffmpegdec)));
-  }
-
-  is_itype = (ffmpegdec->picture->pict_type == FF_I_TYPE);
-  is_reference = (ffmpegdec->picture->reference == 1);
-
-  iskeyframe = (is_itype || is_reference || ffmpegdec->picture->key_frame)
-      || (oclass->in_plugin->id == CODEC_ID_INDEO3)
-      || (oclass->in_plugin->id == CODEC_ID_MSZH)
-      || (oclass->in_plugin->id == CODEC_ID_ZLIB)
-      || (oclass->in_plugin->id == CODEC_ID_VP3)
-      || (oclass->in_plugin->id == CODEC_ID_HUFFYUV);
-
-  GST_LOG_OBJECT (ffmpegdec,
-      "current picture: type: %d, is_keyframe:%d, is_itype:%d, is_reference:%d",
-      ffmpegdec->picture->pict_type, iskeyframe, is_itype, is_reference);
-
-  return iskeyframe;
 }
 
 /* get an outbuf buffer with the current picture */
@@ -1058,7 +1008,6 @@ gst_ffmpegviddec_video_frame (GstFFMpegVidDec * ffmpegdec,
 {
   gint len = -1;
   gint have_data;
-  gboolean iskeyframe;
   gboolean mode_switch;
   gboolean decode;
   gint skip_frame = AVDISCARD_DEFAULT;
@@ -1181,21 +1130,7 @@ gst_ffmpegviddec_video_frame (GstFFMpegVidDec * ffmpegdec,
   if (G_UNLIKELY (*ret != GST_FLOW_OK))
     goto no_output;
 
-  /* check if we are dealing with a keyframe here, this will also check if we
-   * are dealing with B frames. */
-  iskeyframe = check_keyframe (ffmpegdec);
-
-  /* when we're waiting for a keyframe, see if we have one or drop the current
-   * non-keyframe */
-  if (G_UNLIKELY (ffmpegdec->waiting_for_key)) {
-    if (G_LIKELY (!iskeyframe))
-      goto drop_non_keyframe;
-
-    /* we have a keyframe, we can stop waiting for one */
-    ffmpegdec->waiting_for_key = FALSE;
-  }
-
-  /* mark as keyframe or delta unit */
+  /* set interlaced flags */
   if (ffmpegdec->picture->repeat_pict)
     GST_BUFFER_FLAG_SET (out_frame->output_buffer, GST_VIDEO_BUFFER_FLAG_RFF);
   if (ffmpegdec->picture->top_field_first)
@@ -1209,13 +1144,6 @@ beach:
   return len;
 
   /* special cases */
-drop_non_keyframe:
-  {
-    GST_WARNING_OBJECT (ffmpegdec, "Dropping non-keyframe (seek/init)");
-    gst_video_decoder_drop_frame (GST_VIDEO_DECODER (ffmpegdec), out_frame);
-    goto beach;
-  }
-
 no_output:
   {
     GST_DEBUG_OBJECT (ffmpegdec, "no output buffer");
@@ -1330,17 +1258,6 @@ gst_ffmpegviddec_handle_frame (GstVideoDecoder * decoder,
   GstFlowReturn ret = GST_FLOW_OK;
   gboolean do_padding;
 
-  /* do early keyframe check pretty bad to rely on the keyframe flag in the
-   * source for this as it might not even be parsed (UDP/file/..).  */
-  if (G_UNLIKELY (ffmpegdec->waiting_for_key)) {
-    GST_DEBUG_OBJECT (ffmpegdec, "waiting for keyframe");
-    if (!GST_VIDEO_CODEC_FRAME_IS_SYNC_POINT (frame))
-      goto skip_keyframe;
-
-    GST_DEBUG_OBJECT (ffmpegdec, "got keyframe");
-    ffmpegdec->waiting_for_key = FALSE;
-  }
-
   GST_LOG_OBJECT (ffmpegdec,
       "Received new data of size %u, pts:%"
       GST_TIME_FORMAT ", dur:%" GST_TIME_FORMAT,
@@ -1439,13 +1356,6 @@ gst_ffmpegviddec_handle_frame (GstVideoDecoder * decoder,
   gst_buffer_unmap (frame->input_buffer, &minfo);
 
   return ret;
-
-  /* ERRORS */
-skip_keyframe:
-  {
-    GST_DEBUG_OBJECT (ffmpegdec, "skipping non keyframe");
-    return gst_video_decoder_drop_frame (decoder, frame);
-  }
 }
 
 static gboolean
