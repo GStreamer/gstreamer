@@ -2025,7 +2025,7 @@ gst_base_src_do_sync (GstBaseSrc * basesrc, GstBuffer * buffer)
   GstBaseSrcClass *bclass;
   GstClockTime base_time;
   GstClock *clock;
-  GstClockTime now = GST_CLOCK_TIME_NONE, timestamp;
+  GstClockTime now = GST_CLOCK_TIME_NONE, pts, dts, timestamp;
   gboolean do_timestamp, first, pseudo_live, is_live;
 
   bclass = GST_BASE_SRC_GET_CLASS (basesrc);
@@ -2035,7 +2035,13 @@ gst_base_src_do_sync (GstBaseSrc * basesrc, GstBuffer * buffer)
     bclass->get_times (basesrc, buffer, &start, &end);
 
   /* get buffer timestamp */
-  timestamp = GST_BUFFER_TIMESTAMP (buffer);
+  dts = GST_BUFFER_DTS (buffer);
+  pts = GST_BUFFER_PTS (buffer);
+
+  if (GST_CLOCK_TIME_IS_VALID (dts))
+    timestamp = dts;
+  else
+    timestamp = pts;
 
   /* grab the lock to prepare for clocking and calculate the startup
    * latency. */
@@ -2094,9 +2100,9 @@ gst_base_src_do_sync (GstBaseSrc * basesrc, GstBuffer * buffer)
     running_time = now - base_time;
 
     GST_LOG_OBJECT (basesrc,
-        "startup timestamp: %" GST_TIME_FORMAT ", running_time %"
-        GST_TIME_FORMAT, GST_TIME_ARGS (timestamp),
-        GST_TIME_ARGS (running_time));
+        "startup PTS: %" GST_TIME_FORMAT ", DTS %" GST_TIME_FORMAT
+        ", running_time %" GST_TIME_FORMAT, GST_TIME_ARGS (pts),
+        GST_TIME_ARGS (dts), GST_TIME_ARGS (running_time));
 
     if (pseudo_live && timestamp != -1) {
       /* live source and we need to sync, add startup latency to all timestamps
@@ -2111,40 +2117,50 @@ gst_base_src_do_sync (GstBaseSrc * basesrc, GstBuffer * buffer)
       GST_LOG_OBJECT (basesrc, "no timestamp offset needed");
     }
 
-    if (!GST_CLOCK_TIME_IS_VALID (timestamp)) {
-      if (do_timestamp)
-        timestamp = running_time;
-      else
-        timestamp = 0;
+    if (!GST_CLOCK_TIME_IS_VALID (dts)) {
+      if (do_timestamp) {
+        dts = running_time;
+      } else {
+        dts = 0;
+      }
+      GST_BUFFER_DTS (buffer) = dts;
 
-      GST_BUFFER_TIMESTAMP (buffer) = timestamp;
-
-      GST_LOG_OBJECT (basesrc, "created timestamp: %" GST_TIME_FORMAT,
-          GST_TIME_ARGS (timestamp));
+      GST_LOG_OBJECT (basesrc, "created DTS %" GST_TIME_FORMAT,
+          GST_TIME_ARGS (dts));
     }
-
-    /* add the timestamp offset we need for sync */
-    timestamp += basesrc->priv->ts_offset;
   } else {
     /* not the first buffer, the timestamp is the diff between the clock and
      * base_time */
-    if (do_timestamp && !GST_CLOCK_TIME_IS_VALID (timestamp)) {
+    if (do_timestamp && !GST_CLOCK_TIME_IS_VALID (dts)) {
       now = gst_clock_get_time (clock);
 
-      GST_BUFFER_TIMESTAMP (buffer) = now - base_time;
+      dts = now - base_time;
+      GST_BUFFER_DTS (buffer) = dts;
 
-      GST_LOG_OBJECT (basesrc, "created timestamp: %" GST_TIME_FORMAT,
-          GST_TIME_ARGS (now - base_time));
+      GST_LOG_OBJECT (basesrc, "created DTS %" GST_TIME_FORMAT,
+          GST_TIME_ARGS (dts));
     }
+  }
+  if (!GST_CLOCK_TIME_IS_VALID (pts)) {
+    if (!GST_BUFFER_FLAG_IS_SET (buffer, GST_BUFFER_FLAG_DELTA_UNIT))
+      pts = dts;
+
+    GST_BUFFER_PTS (buffer) = dts;
+
+    GST_LOG_OBJECT (basesrc, "created PTS %" GST_TIME_FORMAT,
+        GST_TIME_ARGS (pts));
   }
 
   /* if we don't have a buffer timestamp, we don't sync */
   if (!GST_CLOCK_TIME_IS_VALID (start))
     goto no_sync;
 
-  if (is_live && GST_CLOCK_TIME_IS_VALID (timestamp)) {
+  if (is_live) {
     /* for pseudo live sources, add our ts_offset to the timestamp */
-    GST_BUFFER_TIMESTAMP (buffer) += basesrc->priv->ts_offset;
+    if (GST_CLOCK_TIME_IS_VALID (pts))
+      GST_BUFFER_PTS (buffer) += basesrc->priv->ts_offset;
+    if (GST_CLOCK_TIME_IS_VALID (dts))
+      GST_BUFFER_DTS (buffer) += basesrc->priv->ts_offset;
     start += basesrc->priv->ts_offset;
   }
 
@@ -2329,10 +2345,10 @@ again:
 
   /* no timestamp set and we are at offset 0, we can timestamp with 0 */
   if (offset == 0 && src->segment.time == 0
-      && GST_BUFFER_TIMESTAMP (res_buf) == -1 && !src->is_live) {
+      && GST_BUFFER_DTS (res_buf) == -1 && !src->is_live) {
     GST_DEBUG_OBJECT (src, "setting first timestamp to 0");
     res_buf = gst_buffer_make_writable (res_buf);
-    GST_BUFFER_TIMESTAMP (res_buf) = 0;
+    GST_BUFFER_DTS (res_buf) = 0;
   }
 
   /* now sync before pushing the buffer */
