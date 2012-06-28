@@ -201,7 +201,12 @@ For example, setting <envar>GST_DEBUG</envar> to
   <para>
 To get all possible debug output, set
 <envar>GST_DEBUG</envar>
-to <option>*:9</option>
+to <option>*:9</option>. For debugging purposes a <option>*:6</option> debug
+log is usually the most useful, as it contains all important information, but
+hides a lot of noise such as refs/unrefs. For bug reporting purposes, a
+<option>*:6</option> log is also what will be requested usually. It's often
+also worth running with <option>*:3</option> to see if there are any
+non-fatal errors or warnings that might be related to the problem at hand.
   </para>
 
 </formalpara>
@@ -298,7 +303,8 @@ The variable takes a comma-separated list of tracing options to enable.
   Keep track of the unfreed memory pointers and dump an overview of all unfreed
   memory at program exit. Together with a level 9 debug log this can be used to
   follow the lifecycle of leaked objects in order to track down where they are
-  leaked.
+  leaked. This can be useful for debugging memory leaks in situations where
+  tools such as valgrind are not available, or not an option.
 </para>
         </listitem>
       </varlistentry>
