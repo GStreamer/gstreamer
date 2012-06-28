@@ -1488,8 +1488,11 @@ gst_qtdemux_handle_src_event (GstPad * pad, GstObject * parent,
     }
       if (qtdemux->pullbased) {
         res = gst_qtdemux_do_seek (qtdemux, pad, event);
-      } else if (qtdemux->state == QTDEMUX_STATE_MOVIE && qtdemux->n_streams &&
-          !qtdemux->fragmented) {
+      } else if (gst_pad_push_event (qtdemux->sinkpad, gst_event_ref (event))) {
+        GST_DEBUG_OBJECT (qtdemux, "Upstream successfully seeked");
+        res = TRUE;
+      } else if (qtdemux->state == QTDEMUX_STATE_MOVIE && qtdemux->n_streams
+          && !qtdemux->fragmented) {
         res = gst_qtdemux_do_push_seek (qtdemux, pad, event);
       } else {
         GST_DEBUG_OBJECT (qtdemux,
