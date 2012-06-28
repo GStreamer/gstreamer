@@ -60,7 +60,7 @@ typedef struct _GstVaapiDownload                GstVaapiDownload;
 typedef struct _GstVaapiDownloadClass           GstVaapiDownloadClass;
 
 GType
-gst_vaapidownload_get_type(void);
+gst_vaapidownload_get_type(void) G_GNUC_CONST;
 
 G_END_DECLS
 
