@@ -172,7 +172,7 @@ struct _TSDemuxStream
       "stream-format = (string) adts; " \
     "audio/mpeg, " \
       "mpegversion = (int) 4, " \
-      "stream-format = (string) latm; " \
+      "stream-format = (string) loas; " \
     "audio/x-lpcm, " \
       "width = (int) { 16, 20, 24 }, " \
       "rate = (int) { 48000, 96000 }, " \
@@ -810,7 +810,7 @@ create_pad_for_stream (MpegTSBase * base, MpegTSBaseStream * bstream,
       name = g_strdup_printf ("audio_%04x", bstream->pid);
       caps = gst_caps_new_simple ("audio/mpeg",
           "mpegversion", G_TYPE_INT, 4,
-          "stream-format", G_TYPE_STRING, "latm", NULL);
+          "stream-format", G_TYPE_STRING, "loas", NULL);
       break;
     case ST_VIDEO_MPEG4:
       template = gst_static_pad_template_get (&video_template);
