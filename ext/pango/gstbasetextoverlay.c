@@ -200,14 +200,14 @@ static GstStaticPadTemplate src_template_factory =
 GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS (GST_VIDEO_CAPS_MAKE (VIDEO_FORMATS) "; video/x-surface")
+    GST_STATIC_CAPS (GST_VIDEO_CAPS_MAKE (VIDEO_FORMATS))
     );
 
 static GstStaticPadTemplate video_sink_template_factory =
 GST_STATIC_PAD_TEMPLATE ("video_sink",
     GST_PAD_SINK,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS (GST_VIDEO_CAPS_MAKE (VIDEO_FORMATS) "; video/x-surface")
+    GST_STATIC_CAPS (GST_VIDEO_CAPS_MAKE (VIDEO_FORMATS))
     );
 
 #define GST_TYPE_BASE_TEXT_OVERLAY_VALIGN (gst_base_text_overlay_valign_get_type())
@@ -783,7 +783,9 @@ gst_base_text_overlay_setcaps (GstBaseTextOverlay * overlay, GstCaps * caps)
   ret = gst_pad_set_caps (overlay->srcpad, caps);
 
   if (ret) {
+#if 0
     GstStructure *structure;
+#endif
 
     GST_BASE_TEXT_OVERLAY_LOCK (overlay);
     g_mutex_lock (GST_BASE_TEXT_OVERLAY_GET_CLASS (overlay)->pango_lock);
@@ -791,11 +793,16 @@ gst_base_text_overlay_setcaps (GstBaseTextOverlay * overlay, GstCaps * caps)
     /* FIXME Use the query to the sink to do that when implemented */
     /* Update wether to attach composition to buffer or do the composition
      * ourselves */
+#if 0
     structure = gst_caps_get_structure (caps, 0);
     if (gst_structure_has_name (structure, "video/x-surface"))
       overlay->attach_compo_to_buffer = TRUE;
     else
       overlay->attach_compo_to_buffer = FALSE;
+#else
+    GST_FIXME_OBJECT (overlay, "query downstream for overlay support");
+    overlay->attach_compo_to_buffer = FALSE;
+#endif
 
     gst_base_text_overlay_update_wrap_mode (overlay);
     g_mutex_unlock (GST_BASE_TEXT_OVERLAY_GET_CLASS (overlay)->pango_lock);
