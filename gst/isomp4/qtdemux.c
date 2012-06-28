@@ -720,12 +720,16 @@ gst_qtdemux_handle_src_query (GstPad * pad, GstObject * parent,
 
       gst_query_parse_duration (query, &fmt, NULL);
       if (fmt == GST_FORMAT_TIME) {
-        gint64 duration = -1;
+        /* First try to query upstream */
+        res = gst_pad_query_default (pad, parent, query);
+        if (!res) {
+          gint64 duration = -1;
 
-        gst_qtdemux_get_duration (qtdemux, &duration);
-        if (duration > 0) {
-          gst_query_set_duration (query, GST_FORMAT_TIME, duration);
-          res = TRUE;
+          gst_qtdemux_get_duration (qtdemux, &duration);
+          if (duration > 0) {
+            gst_query_set_duration (query, GST_FORMAT_TIME, duration);
+            res = TRUE;
+          }
         }
       }
       break;
