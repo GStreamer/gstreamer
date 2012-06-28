@@ -33,7 +33,7 @@
 
 #include "gstargbcontrolbinding.h"
 
-#include <math.h>
+#include <gst/math-compat.h>
 
 #define GST_CAT_DEFAULT control_binding_debug
 GST_DEBUG_CATEGORY_STATIC (GST_CAT_DEFAULT);
