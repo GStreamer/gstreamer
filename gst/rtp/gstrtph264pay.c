@@ -49,9 +49,9 @@ static GstStaticPadTemplate gst_rtp_h264_pay_sink_template =
     GST_PAD_SINK,
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS ("video/x-h264, "
-        "stream-format = (string) byte-stream, alignment = (string) { nal, au };"
+        "stream-format = (string) avc, alignment = (string) au;"
         "video/x-h264, "
-        "stream-format = (string) avc, alignment = (string) au")
+        "stream-format = (string) byte-stream, alignment = (string) { nal, au }")
     );
 
 static GstStaticPadTemplate gst_rtp_h264_pay_src_template =
