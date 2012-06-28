@@ -146,6 +146,7 @@ struct _GstAudioCdSrcPrivate
   gint toc_offset;
   gboolean toc_bias;
 
+  GstEvent *toc_event;          /* pending TOC event */
   GstToc *toc;
 };
 
@@ -1438,10 +1439,11 @@ gst_audio_cd_src_add_toc (GstAudioCdSrc * src)
   gst_element_post_message (GST_ELEMENT_CAST (src),
       gst_message_new_toc (GST_OBJECT (src), toc, FALSE));
 
-  /* should we also push a TOC event downstream? Might only make sense if
-   * we're in continuous mode. e.g. matroska-mux will just write the TOC to
-   * file, but we might only be outputting a single track, so that doesn't
-   * make sense. */
+  /* If we're in continuous mode (stream = whole disc), send a TOC event
+   * downstream, so matroskamux etc. can write a TOC to indicate where the
+   * various tracks are */
+  if (src->priv->mode == GST_AUDIO_CD_SRC_MODE_CONTINUOUS)
+    src->priv->toc_event = gst_event_new_toc (toc, FALSE);
 
   src->priv->toc = toc;
 }
@@ -1671,6 +1673,8 @@ gst_audio_cd_src_stop (GstBaseSrc * basesrc)
     src->tags = NULL;
   }
 
+  gst_event_replace (&src->priv->toc_event, NULL);
+
   if (src->priv->toc) {
     gst_toc_unref (src->priv->toc);
     src->priv->toc = NULL;
@@ -1719,6 +1723,11 @@ gst_audio_cd_src_create (GstPushSrc * pushsrc, GstBuffer ** buffer)
         src->priv->cur_sector, src->priv->cur_track, src->priv->mode);
     /* base class will send EOS for us */
     return GST_FLOW_EOS;
+  }
+
+  if (src->priv->toc_event != NULL) {
+    gst_pad_push_event (GST_BASE_SRC_PAD (src), src->priv->toc_event);
+    src->priv->toc_event = NULL;
   }
 
   if (src->priv->prev_track != src->priv->cur_track) {
