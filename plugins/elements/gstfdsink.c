@@ -41,14 +41,6 @@
 
 #include <sys/types.h>
 
-#ifdef G_OS_WIN32
-#include <io.h>                 /* lseek, open, close, read */
-#undef lseek
-#define lseek _lseeki64
-#undef off_t
-#define off_t guint64
-#endif
-
 #include <sys/stat.h>
 #ifdef HAVE_SYS_SOCKET_H
 #include <sys/socket.h>
@@ -68,6 +60,14 @@
 #include <string.h>
 
 #include "gstfdsink.h"
+
+#ifdef G_OS_WIN32
+#include <io.h>                 /* lseek, open, close, read */
+#undef lseek
+#define lseek _lseeki64
+#undef off_t
+#define off_t guint64
+#endif
 
 static GstStaticPadTemplate sinktemplate = GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
