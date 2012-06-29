@@ -47,11 +47,9 @@ typedef struct _DvbBaseBinClass DvbBaseBinClass;
 struct _DvbBaseBin {
   GstBin bin;
 
-  GstPad *ts_pad;
-
   GstElement *dvbsrc;
   GstElement *buffer_queue;
-  GstElement *mpegtsparse;
+  GstElement *tsparse;
   CamDevice *hwcam;
   GList *pmtlist;
   gboolean pmtlist_changed;
@@ -59,6 +57,9 @@ struct _DvbBaseBin {
   GHashTable *streams;
   GHashTable *programs;
   gboolean disposed;
+
+  /* Cached value */
+  gchar *program_numbers;
 };
 
 struct _DvbBaseBinClass {
