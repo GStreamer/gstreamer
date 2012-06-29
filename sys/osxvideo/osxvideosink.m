@@ -537,7 +537,7 @@ gst_osx_video_sink_class_init (GstOSXVideoSinkClass * klass)
   g_object_class_install_property (gobject_class, ARG_FORCE_PAR,
       g_param_spec_boolean ("force-aspect-ratio", "force aspect ration",
           "When enabled, scaling will respect original aspect ration",
-          FALSE, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+          TRUE, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 }
 
 static void
