@@ -104,6 +104,7 @@ cam_device_open (CamDevice * device, const char *filename)
   ca_caps_t ca_caps;
   int ret;
   int i;
+  int count = 10;
 
   g_return_val_if_fail (device != NULL, FALSE);
   g_return_val_if_fail (device->state == CAM_DEVICE_STATE_CLOSED, FALSE);
@@ -117,17 +118,31 @@ cam_device_open (CamDevice * device, const char *filename)
     return FALSE;
   }
 
+  GST_DEBUG ("Successfully opened device %s", filename);
+
   device->fd = ret;
 
   ret = ioctl (device->fd, CA_RESET);
-  sleep (1);
 
-  /* get the capabilities of the CA */
-  ret = ioctl (device->fd, CA_GET_CAP, &ca_caps);
-  if (ret == -1) {
-    GST_ERROR ("CA_GET_CAP ioctl failed: %s", strerror (errno));
-    reset_state (device);
-    return FALSE;
+  g_usleep (G_USEC_PER_SEC / 10);
+
+  while (TRUE) {
+    /* get the capabilities of the CA */
+    ret = ioctl (device->fd, CA_GET_CAP, &ca_caps);
+    if (ret == -1) {
+      GST_ERROR ("CA_GET_CAP ioctl failed: %s", strerror (errno));
+      reset_state (device);
+      return FALSE;
+    }
+    if (ca_caps.slot_num > 0)
+      break;
+    if (!count) {
+      GST_ERROR ("CA_GET_CAP succeeded but not slots");
+      reset_state (device);
+      return FALSE;
+    }
+    count--;
+    g_usleep (G_USEC_PER_SEC / 5);
   }
 
   device->tl = cam_tl_new (device->fd);
