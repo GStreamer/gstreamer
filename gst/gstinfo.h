@@ -346,6 +346,7 @@ void            gst_debug_set_default_threshold      (GstDebugLevel level);
 GstDebugLevel   gst_debug_get_default_threshold      (void);
 void            gst_debug_set_threshold_for_name     (const gchar * name,
                                                       GstDebugLevel level);
+void            gst_debug_set_threshold_from_string  (const gchar * list, gboolean reset);
 void            gst_debug_unset_threshold_for_name   (const gchar * name);
 
 

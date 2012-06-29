@@ -1144,6 +1144,7 @@ gst_debug_is_active
 gst_debug_set_colored
 gst_debug_is_colored
 gst_debug_set_default_threshold
+gst_debug_set_threshold_from_string
 gst_debug_get_default_threshold
 gst_debug_set_threshold_for_name
 gst_debug_unset_threshold_for_name

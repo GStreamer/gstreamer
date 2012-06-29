@@ -1601,6 +1601,94 @@ _gst_debug_get_category (const gchar * name)
   return NULL;
 }
 
+static gboolean
+parse_debug_category (gchar * str, const gchar ** category)
+{
+  if (!str)
+    return FALSE;
+
+  /* works in place */
+  g_strstrip (str);
+
+  if (str[0] != '\0') {
+    *category = str;
+    return TRUE;
+  }
+
+  return FALSE;
+}
+
+static gboolean
+parse_debug_level (gchar * str, GstDebugLevel * level)
+{
+  if (!str)
+    return FALSE;
+
+  /* works in place */
+  g_strstrip (str);
+
+  if (str[0] != '\0' && str[1] == '\0'
+      && str[0] >= '0' && str[0] < '0' + GST_LEVEL_COUNT) {
+    *level = (GstDebugLevel) (str[0] - '0');
+    return TRUE;
+  }
+
+  return FALSE;
+}
+
+/**
+ * gst_debug_set_threshold_from_string:
+ * @list: comma-separated list of "category:level" pairs to be used
+ *     as debug logging levels
+ * @reset: %TRUE to clear all previously-set debug levels before setting
+ *     new thresholds
+ * %FALSE if adding the threshold described by @list to the one already set.
+ *
+ * Sets the debug logging wanted in the same form as with the GST_DEBUG
+ * environment variable. You can use wildcards such as '*', but note that
+ * the order matters when you use wild cards, e.g. "foosrc:6,*src:3,*:2" sets
+ * everything to log level 2.
+ *
+ * Since: 1.2.0
+ */
+void
+gst_debug_set_threshold_from_string (const gchar * list, gboolean reset)
+{
+  gchar **split;
+  gchar **walk;
+
+  g_assert (list);
+
+  if (reset == TRUE)
+    gst_debug_set_default_threshold (0);
+
+  split = g_strsplit (list, ",", 0);
+
+  for (walk = split; *walk; walk++) {
+    if (strchr (*walk, ':')) {
+      gchar **values = g_strsplit (*walk, ":", 2);
+
+      if (values[0] && values[1]) {
+        GstDebugLevel level;
+        const gchar *category;
+
+        if (parse_debug_category (values[0], &category)
+            && parse_debug_level (values[1], &level))
+          gst_debug_set_threshold_for_name (category, level);
+      }
+
+      g_strfreev (values);
+    } else {
+      GstDebugLevel level;
+
+      if (parse_debug_level (*walk, &level))
+        gst_debug_set_default_threshold (level);
+    }
+  }
+
+  g_strfreev (split);
+}
+
 /*** FUNCTION POINTERS ********************************************************/
 
 static GHashTable *__gst_function_pointers;     /* NULL */
@@ -1871,6 +1959,11 @@ gboolean
 gst_debug_is_colored (void)
 {
   return FALSE;
+}
+
+void
+gst_debug_set_threshold_from_string (const gchar * list)
+{
 }
 
 void
