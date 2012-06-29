@@ -100,13 +100,13 @@ struct _GstAppSrcClass
   GstBaseSrcClass basesrc_class;
 
   /* signals */
-  void          (*need_data)       (GstAppSrc *src, guint length);
-  void          (*enough_data)     (GstAppSrc *src);
-  gboolean      (*seek_data)       (GstAppSrc *src, guint64 offset);
+  void          (*need_data)       (GstAppSrc *appsrc, guint length);
+  void          (*enough_data)     (GstAppSrc *appsrc);
+  gboolean      (*seek_data)       (GstAppSrc *appsrc, guint64 offset);
 
   /* actions */
-  GstFlowReturn (*push_buffer)     (GstAppSrc *src, GstBuffer *buffer);
-  GstFlowReturn (*end_of_stream)   (GstAppSrc *src);
+  GstFlowReturn (*push_buffer)     (GstAppSrc *appsrc, GstBuffer *buffer);
+  GstFlowReturn (*end_of_stream)   (GstAppSrc *appsrc);
 
   /*< private >*/
   gpointer     _gst_reserved[GST_PADDING];

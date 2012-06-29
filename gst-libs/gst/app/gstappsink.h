@@ -61,9 +61,9 @@ typedef struct _GstAppSinkPrivate GstAppSinkPrivate;
  * gst_app_sink_set_callbacks().
  */
 typedef struct {
-  void          (*eos)              (GstAppSink *sink, gpointer user_data);
-  GstFlowReturn (*new_preroll)      (GstAppSink *sink, gpointer user_data);
-  GstFlowReturn (*new_sample)       (GstAppSink *sink, gpointer user_data);
+  void          (*eos)              (GstAppSink *appsink, gpointer user_data);
+  GstFlowReturn (*new_preroll)      (GstAppSink *appsink, gpointer user_data);
+  GstFlowReturn (*new_sample)       (GstAppSink *appsink, gpointer user_data);
 
   /*< private >*/
   gpointer     _gst_reserved[GST_PADDING];
@@ -85,13 +85,13 @@ struct _GstAppSinkClass
   GstBaseSinkClass basesink_class;
 
   /* signals */
-  void        (*eos)              (GstAppSink *sink);
-  void        (*new_preroll)      (GstAppSink *sink);
-  void        (*new_sample)       (GstAppSink *sink);
+  void        (*eos)              (GstAppSink *appsink);
+  void        (*new_preroll)      (GstAppSink *appsink);
+  void        (*new_sample)       (GstAppSink *appsink);
 
   /* actions */
-  GstSample     * (*pull_preroll)      (GstAppSink *sink);
-  GstSample     * (*pull_sample)       (GstAppSink *sink);
+  GstSample     * (*pull_preroll)      (GstAppSink *appsink);
+  GstSample     * (*pull_sample)       (GstAppSink *appsink);
 
   /*< private >*/
   gpointer     _gst_reserved[GST_PADDING];
