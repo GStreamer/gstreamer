@@ -61,7 +61,7 @@ struct _GstVaapiVideoSinkInterface {
 };
 
 GType
-gst_vaapi_video_sink_get_type(void);
+gst_vaapi_video_sink_get_type(void) G_GNUC_CONST;
 
 GstVaapiDisplay *
 gst_vaapi_video_sink_get_display(GstVaapiVideoSink *sink);

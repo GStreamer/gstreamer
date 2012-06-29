@@ -83,7 +83,7 @@ struct _GstVaapiVideoBufferClass {
 };
 
 GType
-gst_vaapi_video_buffer_get_type(void);
+gst_vaapi_video_buffer_get_type(void) G_GNUC_CONST;
 
 GstBuffer *
 gst_vaapi_video_buffer_new(GstVaapiDisplay *display);

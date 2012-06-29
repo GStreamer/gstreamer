@@ -78,7 +78,7 @@ struct _GstVaapiDecoderMpeg2Class {
 };
 
 GType
-gst_vaapi_decoder_mpeg2_get_type(void);
+gst_vaapi_decoder_mpeg2_get_type(void) G_GNUC_CONST;
 
 GstVaapiDecoder *
 gst_vaapi_decoder_mpeg2_new(GstVaapiDisplay *display, GstCaps *caps);

@@ -121,7 +121,7 @@ struct _GstVaapiImageRaw {
 };
 
 GType
-gst_vaapi_image_get_type(void);
+gst_vaapi_image_get_type(void) G_GNUC_CONST;
 
 GstVaapiImage *
 gst_vaapi_image_new(

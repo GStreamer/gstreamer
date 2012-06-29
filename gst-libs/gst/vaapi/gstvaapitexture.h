@@ -81,7 +81,7 @@ struct _GstVaapiTextureClass {
 };
 
 GType
-gst_vaapi_texture_get_type(void);
+gst_vaapi_texture_get_type(void) G_GNUC_CONST;
 
 GstVaapiTexture *
 gst_vaapi_texture_new(

@@ -45,7 +45,7 @@ G_BEGIN_DECLS
 #define GST_VAAPI_VALUE_HOLDS_ID(x) (G_VALUE_HOLDS((x), GST_VAAPI_TYPE_ID))
 
 GType
-gst_vaapi_id_get_type(void);
+gst_vaapi_id_get_type(void) G_GNUC_CONST;
 
 GstVaapiID
 gst_vaapi_value_get_id(const GValue *value);

@@ -117,7 +117,7 @@ struct _GstVaapiSurfaceProxyClass {
 };
 
 GType
-gst_vaapi_surface_proxy_get_type(void);
+gst_vaapi_surface_proxy_get_type(void) G_GNUC_CONST;
 
 GstVaapiSurfaceProxy *
 gst_vaapi_surface_proxy_new(GstVaapiContext *context, GstVaapiSurface *surface);

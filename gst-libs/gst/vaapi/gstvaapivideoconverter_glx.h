@@ -61,7 +61,7 @@ struct _GstVaapiVideoConverterGLXClass {
     GObjectClass parent_class;
 };
 
-GType                 gst_vaapi_video_converter_glx_get_type (void);
+GType                 gst_vaapi_video_converter_glx_get_type (void) G_GNUC_CONST;
 
 GstSurfaceConverter  *gst_vaapi_video_converter_glx_new      (GstSurfaceBuffer *buffer,
                                                               const gchar      *type,

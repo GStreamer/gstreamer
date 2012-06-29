@@ -77,7 +77,7 @@ struct _GstVaapiDisplayGLXClass {
 };
 
 GType
-gst_vaapi_display_glx_get_type(void);
+gst_vaapi_display_glx_get_type(void) G_GNUC_CONST;
 
 GstVaapiDisplay *
 gst_vaapi_display_glx_new(const gchar *display_name);

@@ -55,7 +55,7 @@ struct _GstVaapiParamSpecID {
                                 GstVaapiParamSpecID))
 
 GType
-gst_vaapi_param_spec_id_get_type(void);
+gst_vaapi_param_spec_id_get_type(void) G_GNUC_CONST;
 
 GParamSpec *
 gst_vaapi_param_spec_id(

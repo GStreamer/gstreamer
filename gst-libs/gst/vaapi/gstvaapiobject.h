@@ -82,7 +82,7 @@ struct _GstVaapiObjectClass {
 };
 
 GType
-gst_vaapi_object_get_type(void);
+gst_vaapi_object_get_type(void) G_GNUC_CONST;
 
 GstVaapiDisplay *
 gst_vaapi_object_get_display(GstVaapiObject *object);

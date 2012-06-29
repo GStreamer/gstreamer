@@ -81,7 +81,7 @@ struct _GstVaapiSubpictureClass {
 };
 
 GType
-gst_vaapi_subpicture_get_type(void);
+gst_vaapi_subpicture_get_type(void) G_GNUC_CONST;
 
 GstVaapiSubpicture *
 gst_vaapi_subpicture_new(GstVaapiImage *image);

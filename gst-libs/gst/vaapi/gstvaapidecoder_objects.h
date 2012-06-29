@@ -164,7 +164,7 @@ struct _GstVaapiPictureClass {
 };
 
 GType
-gst_vaapi_picture_get_type(void)
+gst_vaapi_picture_get_type(void) G_GNUC_CONST
     attribute_hidden;
 
 GstVaapiPicture *
@@ -263,7 +263,7 @@ struct _GstVaapiSliceClass {
 };
 
 GType
-gst_vaapi_slice_get_type(void)
+gst_vaapi_slice_get_type(void) G_GNUC_CONST
     attribute_hidden;
 
 GstVaapiSlice *

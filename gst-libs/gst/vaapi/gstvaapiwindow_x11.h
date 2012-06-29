@@ -95,7 +95,7 @@ struct _GstVaapiWindowX11Class {
 };
 
 GType
-gst_vaapi_window_x11_get_type(void);
+gst_vaapi_window_x11_get_type(void) G_GNUC_CONST;
 
 GstVaapiWindow *
 gst_vaapi_window_x11_new(GstVaapiDisplay *display, guint width, guint height);

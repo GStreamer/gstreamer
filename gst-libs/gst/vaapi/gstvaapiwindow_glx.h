@@ -80,7 +80,7 @@ struct _GstVaapiWindowGLXClass {
 };
 
 GType
-gst_vaapi_window_glx_get_type(void);
+gst_vaapi_window_glx_get_type(void) G_GNUC_CONST;
 
 GstVaapiWindow *
 gst_vaapi_window_glx_new(GstVaapiDisplay *display, guint width, guint height);

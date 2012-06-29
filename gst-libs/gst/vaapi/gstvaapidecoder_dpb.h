@@ -92,7 +92,7 @@ struct _GstVaapiDpbClass {
 };
 
 GType
-gst_vaapi_dpb_get_type(void)
+gst_vaapi_dpb_get_type(void) G_GNUC_CONST
     attribute_hidden;
 
 void
@@ -171,7 +171,7 @@ struct _GstVaapiDpbMpeg2Class {
 };
 
 GType
-gst_vaapi_dpb_mpeg2_get_type(void)
+gst_vaapi_dpb_mpeg2_get_type(void) G_GNUC_CONST
     attribute_hidden;
 
 GstVaapiDpb *

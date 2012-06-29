@@ -78,7 +78,7 @@ struct _GstVaapiDecoderVC1Class {
 };
 
 GType
-gst_vaapi_decoder_vc1_get_type(void);
+gst_vaapi_decoder_vc1_get_type(void) G_GNUC_CONST;
 
 GstVaapiDecoder *
 gst_vaapi_decoder_vc1_new(GstVaapiDisplay *display, GstCaps *caps);

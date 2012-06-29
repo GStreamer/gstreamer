@@ -78,7 +78,7 @@ struct _GstVaapiImagePoolClass {
 };
 
 GType
-gst_vaapi_image_pool_get_type(void);
+gst_vaapi_image_pool_get_type(void) G_GNUC_CONST;
 
 GstVaapiVideoPool *
 gst_vaapi_image_pool_new(GstVaapiDisplay *display, GstCaps *caps);

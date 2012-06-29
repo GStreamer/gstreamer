@@ -84,7 +84,7 @@ struct _GstVaapiDisplayX11Class {
 };
 
 GType
-gst_vaapi_display_x11_get_type(void);
+gst_vaapi_display_x11_get_type(void) G_GNUC_CONST;
 
 GstVaapiDisplay *
 gst_vaapi_display_x11_new(const gchar *display_name);

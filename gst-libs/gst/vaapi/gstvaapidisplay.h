@@ -122,7 +122,7 @@ struct _GstVaapiDisplayClass {
 };
 
 GType
-gst_vaapi_display_get_type(void);
+gst_vaapi_display_get_type(void) G_GNUC_CONST;
 
 GstVaapiDisplay *
 gst_vaapi_display_new_with_display(VADisplay va_display);

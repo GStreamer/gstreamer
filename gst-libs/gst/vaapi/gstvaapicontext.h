@@ -82,7 +82,7 @@ struct _GstVaapiContextClass {
 };
 
 GType
-gst_vaapi_context_get_type(void);
+gst_vaapi_context_get_type(void) G_GNUC_CONST;
 
 GstVaapiContext *
 gst_vaapi_context_new(

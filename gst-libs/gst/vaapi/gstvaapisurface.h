@@ -168,7 +168,7 @@ struct _GstVaapiSurfaceClass {
 };
 
 GType
-gst_vaapi_surface_get_type(void);
+gst_vaapi_surface_get_type(void) G_GNUC_CONST;
 
 GstVaapiSurface *
 gst_vaapi_surface_new(

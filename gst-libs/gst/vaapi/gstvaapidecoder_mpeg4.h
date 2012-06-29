@@ -78,7 +78,7 @@ struct _GstVaapiDecoderMpeg4Class {
 };
 
 GType
-gst_vaapi_decoder_mpeg4_get_type(void);
+gst_vaapi_decoder_mpeg4_get_type(void) G_GNUC_CONST;
 
 GstVaapiDecoder *
 gst_vaapi_decoder_mpeg4_new(GstVaapiDisplay *display, GstCaps *caps);
