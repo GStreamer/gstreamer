@@ -328,7 +328,9 @@ gst_video_buffer_set_overlay_composition (GstBuffer * buf,
     ometa = (GstVideoOverlayCompositionMeta *)
         gst_buffer_add_meta (buf, GST_VIDEO_OVERLAY_COMPOSITION_META_INFO,
         NULL);
-    ometa->overlay = comp;
+    /* buffer might not be writable or so */
+    if (ometa)
+      ometa->overlay = gst_video_overlay_composition_ref (comp);
   }
 }
 
