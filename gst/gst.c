@@ -195,82 +195,6 @@ enum
  * val ::= [0-5]
  */
 
-#ifndef NUL
-#define NUL '\0'
-#endif
-
-#ifndef GST_DISABLE_GST_DEBUG
-static gboolean
-parse_debug_category (gchar * str, const gchar ** category)
-{
-  if (!str)
-    return FALSE;
-
-  /* works in place */
-  g_strstrip (str);
-
-  if (str[0] != NUL) {
-    *category = str;
-    return TRUE;
-  }
-
-  return FALSE;
-}
-
-static gboolean
-parse_debug_level (gchar * str, GstDebugLevel * level)
-{
-  if (!str)
-    return FALSE;
-
-  /* works in place */
-  g_strstrip (str);
-
-  if (str[0] != NUL && str[1] == NUL
-      && str[0] >= '0' && str[0] < '0' + GST_LEVEL_COUNT) {
-    *level = (GstDebugLevel) (str[0] - '0');
-    return TRUE;
-  }
-
-  return FALSE;
-}
-
-static void
-parse_debug_list (const gchar * list)
-{
-  gchar **split;
-  gchar **walk;
-
-  g_assert (list);
-
-  split = g_strsplit (list, ",", 0);
-
-  for (walk = split; *walk; walk++) {
-    if (strchr (*walk, ':')) {
-      gchar **values = g_strsplit (*walk, ":", 2);
-
-      if (values[0] && values[1]) {
-        GstDebugLevel level;
-        const gchar *category;
-
-        if (parse_debug_category (values[0], &category)
-            && parse_debug_level (values[1], &level))
-          gst_debug_set_threshold_for_name (category, level);
-      }
-
-      g_strfreev (values);
-    } else {
-      GstDebugLevel level;
-
-      if (parse_debug_level (*walk, &level))
-        gst_debug_set_default_threshold (level);
-    }
-  }
-
-  g_strfreev (split);
-}
-#endif
-
 #ifdef G_OS_WIN32
 BOOL WINAPI DllMain (HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpvReserved);
 BOOL WINAPI
@@ -568,7 +492,7 @@ init_pre (GOptionContext * context, GOptionGroup * group, gpointer data,
 
     debug_list = g_getenv ("GST_DEBUG");
     if (debug_list) {
-      parse_debug_list (debug_list);
+      gst_debug_set_threshold_from_string (debug_list, FALSE);
     }
   }
 
@@ -894,7 +818,7 @@ parse_one_option (gint opt, const gchar * arg, GError ** err)
       break;
     }
     case ARG_DEBUG:
-      parse_debug_list (arg);
+      gst_debug_set_threshold_from_string (arg, FALSE);
       break;
     case ARG_DEBUG_NO_COLOR:
       gst_debug_set_colored (FALSE);
