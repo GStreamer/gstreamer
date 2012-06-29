@@ -809,8 +809,7 @@ mpegts_packetizer_parse_pat (MpegTSPacketizer2 * packetizer,
     g_value_unset (&value);
   }
 
-  gst_structure_id_set_value (pat_info, QUARK_PROGRAMS, &entries);
-  g_value_unset (&entries);
+  gst_structure_id_take_value (pat_info, QUARK_PROGRAMS, &entries);
 
   if (data != end - 4) {
     /* FIXME: check the CRC before parsing the packet */
@@ -1017,8 +1016,7 @@ mpegts_packetizer_parse_pmt (MpegTSPacketizer2 * packetizer,
     g_value_unset (&stream_value);
   }
 
-  gst_structure_id_set_value (pmt, QUARK_STREAMS, &programs);
-  g_value_unset (&programs);
+  gst_structure_id_take_value (pmt, QUARK_STREAMS, &programs);
 
   g_assert (data == end - 4);
 
@@ -1527,9 +1525,8 @@ mpegts_packetizer_parse_nit (MpegTSPacketizer2 * packetizer,
           g_value_unset (&channel_value);
           current_pos += 2;
         }
-        gst_structure_id_set_value (transport, QUARK_CHANNELS,
+        gst_structure_id_take_value (transport, QUARK_CHANNELS,
             &channel_numbers);
-        g_value_unset (&channel_numbers);
       }
       if ((delivery = gst_mpeg_descriptor_find (&mpegdescriptor,
                   DESC_DVB_FREQUENCY_LIST))) {
@@ -1598,8 +1595,7 @@ mpegts_packetizer_parse_nit (MpegTSPacketizer2 * packetizer,
               break;
           }
 
-          gst_structure_set_value (transport, fieldname, &frequencies);
-          g_value_unset (&frequencies);
+          gst_structure_take_value (transport, fieldname, &frequencies);
         }
       }
 
@@ -1630,8 +1626,7 @@ mpegts_packetizer_parse_nit (MpegTSPacketizer2 * packetizer,
     goto error;
   }
 
-  gst_structure_id_set_value (nit, QUARK_TRANSPORTS, &transports);
-  g_value_unset (&transports);
+  gst_structure_id_take_value (nit, QUARK_TRANSPORTS, &transports);
 
   GST_DEBUG ("NIT %" GST_PTR_FORMAT, nit);
 
@@ -1827,8 +1822,7 @@ mpegts_packetizer_parse_sdt (MpegTSPacketizer2 * packetizer,
     goto error;
   }
 
-  gst_structure_id_set_value (sdt, QUARK_SERVICES, &services);
-  g_value_unset (&services);
+  gst_structure_id_take_value (sdt, QUARK_SERVICES, &services);
 
   return sdt;
 
@@ -2291,8 +2285,7 @@ mpegts_packetizer_parse_eit (MpegTSPacketizer2 * packetizer,
             component = NULL;
           }
         }
-        gst_structure_set_value (event, "components", &components);
-        g_value_unset (&components);
+        gst_structure_take_value (event, "components", &components);
         g_array_free (component_descriptors, TRUE);
       }
 
@@ -2320,8 +2313,7 @@ mpegts_packetizer_parse_eit (MpegTSPacketizer2 * packetizer,
     goto error;
   }
 
-  gst_structure_id_set_value (eit, QUARK_EVENTS, &events);
-  g_value_unset (&events);
+  gst_structure_id_take_value (eit, QUARK_EVENTS, &events);
 
   GST_DEBUG ("EIT %" GST_PTR_FORMAT, eit);
 
