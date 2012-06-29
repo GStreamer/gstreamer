@@ -335,6 +335,33 @@ GST_START_TEST (test_copy)
 
   gst_buffer_unref (copy);
   gst_buffer_unref (buffer);
+
+  /* check if copy is an independent copy when written to */
+  buffer = gst_buffer_new_and_alloc (4);
+  gst_buffer_memset (buffer, 0, 0, 4);
+  copy = gst_buffer_copy (buffer);
+  fail_unless (gst_buffer_is_writable (copy));
+  gst_buffer_memset (copy, 0, 0x80, 4);
+  gst_buffer_map (buffer, &info, GST_MAP_READ);
+  fail_if (gst_buffer_memcmp (copy, 0, info.data, info.size) == 0);
+  gst_buffer_unmap (buffer, &info);
+
+  gst_buffer_unref (copy);
+  gst_buffer_unref (buffer);
+
+  /* check if a writable clone of a buffer is independent when written to */
+  buffer = gst_buffer_new_and_alloc (4);
+  gst_buffer_memset (buffer, 0, 0, 4);
+  copy = gst_buffer_ref (buffer);
+  copy = gst_buffer_make_writable (copy);
+  fail_unless (gst_buffer_is_writable (copy));
+  gst_buffer_memset (copy, 0, 0x80, 4);
+  gst_buffer_map (buffer, &info, GST_MAP_READ);
+  fail_if (gst_buffer_memcmp (copy, 0, info.data, info.size) == 0);
+  gst_buffer_unmap (buffer, &info);
+
+  gst_buffer_unref (copy);
+  gst_buffer_unref (buffer);
 }
 
 GST_END_TEST;
