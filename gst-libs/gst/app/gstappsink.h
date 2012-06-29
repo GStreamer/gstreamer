@@ -43,7 +43,7 @@ typedef struct _GstAppSinkClass GstAppSinkClass;
 typedef struct _GstAppSinkPrivate GstAppSinkPrivate;
 
 /**
- * GstAppSinkCallbacks:
+ * GstAppSinkCallbacks: (skip)
  * @eos: Called when the end-of-stream has been reached. This callback
  *       is called from the steaming thread.
  * @new_preroll: Called when a new preroll sample is available.

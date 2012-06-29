@@ -43,7 +43,7 @@ typedef struct _GstAppSrcClass GstAppSrcClass;
 typedef struct _GstAppSrcPrivate GstAppSrcPrivate;
 
 /**
- * GstAppSrcCallbacks:
+ * GstAppSrcCallbacks: (skip)
  * @need_data: Called when the appsrc needs more data. A buffer or EOS should be
  *    pushed to appsrc from this thread or another thread. @length is just a hint
  *    and when it is set to -1, any number of bytes can be pushed into @appsrc.

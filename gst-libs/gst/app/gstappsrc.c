@@ -1572,7 +1572,7 @@ flushing:
 }
 
 /**
- * gst_app_src_set_callbacks:
+ * gst_app_src_set_callbacks: (skip)
  * @appsrc: a #GstAppSrc
  * @callbacks: the callbacks
  * @user_data: a user_data argument for the callbacks

@@ -1214,7 +1214,7 @@ not_started:
 }
 
 /**
- * gst_app_sink_set_callbacks:
+ * gst_app_sink_set_callbacks: (skip)
  * @appsink: a #GstAppSink
  * @callbacks: the callbacks
  * @user_data: a user_data argument for the callbacks
