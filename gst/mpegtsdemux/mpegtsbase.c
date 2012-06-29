@@ -1805,6 +1805,15 @@ mpegts_base_change_state (GstElement * element, GstStateChange transition)
   GstStateChangeReturn ret;
 
   base = GST_MPEGTS_BASE (element);
+
+  switch (transition) {
+    case GST_STATE_CHANGE_READY_TO_PAUSED:
+      mpegts_base_reset (base);
+      break;
+    default:
+      break;
+  }
+
   ret = GST_ELEMENT_CLASS (parent_class)->change_state (element, transition);
 
   switch (transition) {
