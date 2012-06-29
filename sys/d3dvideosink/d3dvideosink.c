@@ -264,7 +264,7 @@ gst_d3dvideosink_class_init (GstD3DVideoSinkClass * klass)
   g_object_class_install_property (G_OBJECT_CLASS (klass),
       PROP_KEEP_ASPECT_RATIO, g_param_spec_boolean ("force-aspect-ratio",
           "Force aspect ratio",
-          "When enabled, scaling will respect original aspect ratio", FALSE,
+          "When enabled, scaling will respect original aspect ratio", TRUE,
           (GParamFlags) G_PARAM_READWRITE));
   g_object_class_install_property (G_OBJECT_CLASS (klass),
       PROP_PIXEL_ASPECT_RATIO, g_param_spec_string ("pixel-aspect-ratio",

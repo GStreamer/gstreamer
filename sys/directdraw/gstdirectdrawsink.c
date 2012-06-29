@@ -429,7 +429,7 @@ gst_directdraw_sink_class_init (GstDirectDrawSinkClass * klass)
   g_object_class_install_property (G_OBJECT_CLASS (klass),
       PROP_KEEP_ASPECT_RATIO, g_param_spec_boolean ("force-aspect-ratio",
           "Force aspect ratio",
-          "When enabled, scaling will respect original aspect ratio", FALSE,
+          "When enabled, scaling will respect original aspect ratio", TRUE,
           G_PARAM_READWRITE));
 }
 

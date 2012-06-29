@@ -1219,7 +1219,7 @@ gst_vdp_vpp_class_init (GstVdpVideoPostProcessClass * klass)
   g_object_class_install_property (gobject_class, PROP_FORCE_ASPECT_RATIO,
       g_param_spec_boolean ("force-aspect-ratio", "Force aspect ratio",
           "When enabled, the plugin will only scale up the input surface to the"
-          "maximum size where the aspect ratio can be preserved", FALSE,
+          "maximum size where the aspect ratio can be preserved", TRUE,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   g_object_class_install_property (gobject_class, PROP_DEINTERLACE_MODE,
