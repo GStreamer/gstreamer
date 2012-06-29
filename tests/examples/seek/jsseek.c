@@ -2443,11 +2443,6 @@ bus_sync_handler (GstBus * bus, GstMessage * message, GstPipeline * data)
 
   g_print ("got prepare-window-handle, setting XID %lu\n", embed_xid);
 
-  if (g_object_class_find_property (G_OBJECT_GET_CLASS (element),
-          "force-aspect-ratio")) {
-    g_object_set (element, "force-aspect-ratio", TRUE, NULL);
-  }
-
   /* Should have been initialised from main thread before (can't use
    * GDK_WINDOW_XID here with Gtk+ >= 2.18, because the sync handler will
    * be called from a streaming thread and GDK_WINDOW_XID maps to more than
