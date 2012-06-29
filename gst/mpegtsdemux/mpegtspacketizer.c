@@ -109,6 +109,60 @@ static GQuark QUARK_DURATION;
 static GQuark QUARK_RUNNING_STATUS;
 static GQuark QUARK_FREE_CA_MODE;
 
+#define MAX_KNOWN_ICONV 25
+/* All these conversions will be to UTF8 */
+typedef enum
+{
+  _ICONV_UNKNOWN = -1,
+  _ICONV_ISO8859_1,
+  _ICONV_ISO8859_2,
+  _ICONV_ISO8859_3,
+  _ICONV_ISO8859_4,
+  _ICONV_ISO8859_5,
+  _ICONV_ISO8859_6,
+  _ICONV_ISO8859_7,
+  _ICONV_ISO8859_8,
+  _ICONV_ISO8859_9,
+  _ICONV_ISO8859_10,
+  _ICONV_ISO8859_11,
+  _ICONV_ISO8859_12,
+  _ICONV_ISO8859_13,
+  _ICONV_ISO8859_14,
+  _ICONV_ISO8859_15,
+  _ICONV_ISO10646_UC2,
+  _ICONV_EUC_KR,
+  _ICONV_GB2312,
+  _ICONV_UTF_16BE,
+  _ICONV_ISO10646_UTF8,
+  _ICONV_ISO6937,
+  /* Insert more here if needed */
+  _ICONV_MAX
+} LocalIconvCode;
+
+static const gchar *iconvtablename[] = {
+  "iso-8859-1",
+  "iso-8859-2",
+  "iso-8859-3",
+  "iso-8859-4",
+  "iso-8859-5",
+  "iso-8859-6",
+  "iso-8859-7",
+  "iso-8859-8",
+  "iso-8859-9",
+  "iso-8859-10",
+  "iso-8859-11",
+  "iso-8859-12",
+  "iso-8859-13",
+  "iso-8859-14",
+  "iso-8859-15",
+  "ISO-10646/UCS2",
+  "EUC-KR",
+  "GB2312",
+  "UTF-16BE",
+  "ISO-10646/UTF8",
+  "iso6937"
+      /* Insert more here if needed */
+};
 
 #define MPEGTS_PACKETIZER_GET_PRIVATE(obj)  \
    (G_TYPE_INSTANCE_GET_PRIVATE ((obj), GST_TYPE_MPEGTS_PACKETIZER, MpegTSPacketizerPrivate))
@@ -172,17 +226,17 @@ struct _MpegTSPacketizerPrivate
   guint8 pcrtablelut[0x2000];
   MpegTSPCR *observations[MAX_PCR_OBS_CHANNELS];
   guint8 lastobsid;
+
+  /* Conversion tables */
+  GIConv iconvs[_ICONV_MAX];
 };
 
 static void mpegts_packetizer_dispose (GObject * object);
 static void mpegts_packetizer_finalize (GObject * object);
-static gchar *convert_to_utf8 (const gchar * text, gint length, guint start,
-    const gchar * encoding, gboolean is_multibyte, GError ** error);
-static gchar *get_encoding (const gchar * text, guint * start_text,
-    gboolean * is_multibyte);
-static gchar *get_encoding_and_convert (const gchar * text, guint length);
-static GstClockTime calculate_skew (MpegTSPCR * pcr,
-    guint64 pcrtime, GstClockTime time);
+static gchar *get_encoding_and_convert (MpegTSPacketizer2 * packetizer,
+    const gchar * text, guint length);
+static GstClockTime calculate_skew (MpegTSPCR * pcr, guint64 pcrtime,
+    GstClockTime time);
 static void record_pcr (MpegTSPacketizer2 * packetizer, MpegTSPCR * pcrtable,
     guint64 pcr, guint64 offset);
 
@@ -310,6 +364,7 @@ static void
 mpegts_packetizer_init (MpegTSPacketizer2 * packetizer)
 {
   MpegTSPacketizerPrivate *priv;
+  guint i;
 
   priv = packetizer->priv = MPEGTS_PACKETIZER_GET_PRIVATE (packetizer);
   packetizer->adapter = gst_adapter_new ();
@@ -327,6 +382,9 @@ mpegts_packetizer_init (MpegTSPacketizer2 * packetizer)
 
   memset (priv->pcrtablelut, 0xff, 0x200);
   memset (priv->observations, 0x0, sizeof (priv->observations));
+  for (i = 0; i < _ICONV_MAX; i++)
+    priv->iconvs[i] = (GIConv) - 1;
+
   priv->lastobsid = 0;
 
   priv->nb_seen_offsets = 0;
@@ -338,6 +396,7 @@ static void
 mpegts_packetizer_dispose (GObject * object)
 {
   MpegTSPacketizer2 *packetizer = GST_MPEGTS_PACKETIZER (object);
+  guint i;
 
   if (!packetizer->disposed) {
     if (packetizer->know_packet_size && packetizer->caps != NULL) {
@@ -359,6 +418,11 @@ mpegts_packetizer_dispose (GObject * object)
     packetizer->disposed = TRUE;
     packetizer->offset = 0;
     packetizer->empty = TRUE;
+
+    for (i = 0; i < _ICONV_MAX; i++)
+      if (packetizer->priv->iconvs[i] != (GIConv) - 1)
+        g_iconv_close (packetizer->priv->iconvs[i]);
+
   }
 
   if (G_OBJECT_CLASS (mpegts_packetizer_parent_class)->dispose)
@@ -1039,7 +1103,8 @@ mpegts_packetizer_parse_nit (MpegTSPacketizer2 * packetizer,
             (gchar *) DESC_DVB_NETWORK_NAME_text (networkname_descriptor);
 
         networkname_tmp =
-            get_encoding_and_convert (networkname, networkname_length);
+            get_encoding_and_convert (packetizer, networkname,
+            networkname_length);
         gst_structure_id_set (nit, QUARK_NETWORK_NAME, G_TYPE_STRING,
             networkname_tmp, NULL);
         g_free (networkname_tmp);
@@ -1717,9 +1782,10 @@ mpegts_packetizer_parse_sdt (MpegTSPacketizer2 * packetizer,
               running_status_tmp = "reserved";
           }
           servicename_tmp =
-              get_encoding_and_convert (servicename, servicename_length);
+              get_encoding_and_convert (packetizer, servicename,
+              servicename_length);
           serviceprovider_name_tmp =
-              get_encoding_and_convert (serviceprovider_name,
+              get_encoding_and_convert (packetizer, serviceprovider_name,
               serviceprovider_name_length);
 
           gst_structure_set (service,
@@ -1936,9 +2002,10 @@ mpegts_packetizer_parse_eit (MpegTSPacketizer2 * packetizer,
             DESC_LENGTH (event_descriptor)) {
 
           eventname_tmp =
-              get_encoding_and_convert (eventname, eventname_length);
+              get_encoding_and_convert (packetizer, eventname,
+              eventname_length);
           eventdescription_tmp =
-              get_encoding_and_convert (eventdescription,
+              get_encoding_and_convert (packetizer, eventdescription,
               eventdescription_length);
 
           gst_structure_id_set (event, QUARK_NAME, G_TYPE_STRING, eventname_tmp,
@@ -1977,13 +2044,16 @@ mpegts_packetizer_parse_eit (MpegTSPacketizer2 * packetizer,
               length_aux = *items_aux;
               ++items_aux;
               description =
-                  get_encoding_and_convert ((gchar *) items_aux, length_aux);
+                  get_encoding_and_convert (packetizer, (gchar *) items_aux,
+                  length_aux);
               items_aux += length_aux;
 
               /* Item text */
               length_aux = *items_aux;
               ++items_aux;
-              text = get_encoding_and_convert ((gchar *) items_aux, length_aux);
+              text =
+                  get_encoding_and_convert (packetizer, (gchar *) items_aux,
+                  length_aux);
               items_aux += length_aux;
 
               extended_item = gst_structure_new_id (QUARK_EXTENDED_ITEM,
@@ -2000,14 +2070,14 @@ mpegts_packetizer_parse_eit (MpegTSPacketizer2 * packetizer,
             if (extended_text) {
               gchar *tmp;
               gchar *old_extended_text = extended_text;
-              tmp = get_encoding_and_convert ((gchar *)
+              tmp = get_encoding_and_convert (packetizer, (gchar *)
                   DESC_DVB_EXTENDED_EVENT_text (extended_descriptor),
                   DESC_DVB_EXTENDED_EVENT_text_length (extended_descriptor));
               extended_text = g_strdup_printf ("%s%s", extended_text, tmp);
               g_free (old_extended_text);
               g_free (tmp);
             } else {
-              extended_text = get_encoding_and_convert ((gchar *)
+              extended_text = get_encoding_and_convert (packetizer, (gchar *)
                   DESC_DVB_EXTENDED_EVENT_text (extended_descriptor),
                   DESC_DVB_EXTENDED_EVENT_text_length (extended_descriptor));
             }
@@ -2880,70 +2950,98 @@ _init_local (void)
  * @start_text: Location where the beginning of the actual text is stored
  * @is_multibyte: Location where information whether it's a multibyte encoding
  * or not is stored
- * @returns: Name of encoding or NULL of encoding could not be detected.
- *
- * The returned string should be freed with g_free () when no longer needed.
+ * @returns: GIconv for conversion or NULL
  */
-static gchar *
-get_encoding (const gchar * text, guint * start_text, gboolean * is_multibyte)
+static LocalIconvCode
+get_encoding (MpegTSPacketizer2 * packetizer, const gchar * text,
+    guint * start_text, gboolean * is_multibyte)
 {
-  gchar *encoding;
+  LocalIconvCode encoding;
   guint8 firstbyte;
 
-  g_return_val_if_fail (text != NULL, NULL);
+  *is_multibyte = FALSE;
+  *start_text = 0;
 
   firstbyte = (guint8) text[0];
 
-  /* ETSI EN 300 468, "Selection of character table" */
+  /* A wrong value */
+  g_return_val_if_fail (firstbyte != 0x00, _ICONV_UNKNOWN);
+
   if (firstbyte <= 0x0B) {
-    encoding = g_strdup_printf ("iso8859-%u", firstbyte + 4);
+    /* 0x01 => iso 8859-5 */
+    encoding = firstbyte + _ICONV_ISO8859_4;
     *start_text = 1;
-    *is_multibyte = FALSE;
-  } else if (firstbyte >= 0x20) {
-    encoding = g_strdup ("iso6937");
-    *start_text = 0;
-    *is_multibyte = FALSE;
-  } else if (firstbyte == 0x10) {
-    guint16 table;
-    gchar table_str[6];
-
-    text++;
-    table = GST_READ_UINT16_BE (text);
-    g_snprintf (table_str, 6, "%d", table);
-
-    encoding = g_strconcat ("iso8859-", table_str, NULL);
-    *start_text = 3;
-    *is_multibyte = FALSE;
-  } else if (firstbyte == 0x11) {
-    encoding = g_strdup ("ISO-10646/UCS2");
-    *start_text = 1;
-    *is_multibyte = TRUE;
-  } else if (firstbyte == 0x12) {
-    /*  EUC-KR implements KSX1001 */
-    encoding = g_strdup ("EUC-KR");
-    *start_text = 1;
-    *is_multibyte = TRUE;
-  } else if (firstbyte == 0x13) {
-    encoding = g_strdup ("GB2312");
-    *start_text = 1;
-    *is_multibyte = FALSE;
-  } else if (firstbyte == 0x14) {
-    encoding = g_strdup ("UTF-16BE");
-    *start_text = 1;
-    *is_multibyte = TRUE;
-  } else if (firstbyte == 0x15) {
-    encoding = g_strdup ("ISO-10646/UTF8");
-    *start_text = 1;
-    *is_multibyte = FALSE;
-  } else {
-    /* reserved */
-    encoding = NULL;
-    *start_text = 0;
-    *is_multibyte = FALSE;
+    goto beach;
   }
 
+  /* ETSI EN 300 468, "Selection of character table" */
+  switch (firstbyte) {
+    case 0x0C:
+    case 0x0D:
+    case 0x0E:
+    case 0x0F:
+      /* RESERVED */
+      encoding = _ICONV_UNKNOWN;
+      break;
+    case 0x10:
+    {
+      guint16 table;
+
+      table = GST_READ_UINT16_BE (text + 1);
+
+      if (table < 17)
+        encoding = _ICONV_UNKNOWN + table;
+      else
+        encoding = _ICONV_UNKNOWN;;
+      *start_text = 3;
+      break;
+    }
+    case 0x11:
+      encoding = _ICONV_ISO10646_UC2;
+      *start_text = 1;
+      *is_multibyte = TRUE;
+      break;
+    case 0x12:
+      /*  EUC-KR implements KSX1001 */
+      encoding = _ICONV_EUC_KR;
+      *start_text = 1;
+      *is_multibyte = TRUE;
+      break;
+    case 0x13:
+      encoding = _ICONV_GB2312;
+      *start_text = 1;
+      break;
+    case 0x14:
+      encoding = _ICONV_UTF_16BE;
+      *start_text = 1;
+      *is_multibyte = TRUE;
+      break;
+    case 0x15:
+      /* TODO : Where does this come from ?? */
+      encoding = _ICONV_ISO10646_UTF8;
+      *start_text = 1;
+      break;
+    case 0x16:
+    case 0x17:
+    case 0x18:
+    case 0x19:
+    case 0x1A:
+    case 0x1B:
+    case 0x1C:
+    case 0x1D:
+    case 0x1E:
+    case 0x1F:
+      /* RESERVED */
+      encoding = _ICONV_UNKNOWN;
+      break;
+    default:
+      encoding = _ICONV_ISO6937;
+      break;
+  }
+
+beach:
   GST_DEBUG
-      ("Found encoding %s, first byte is 0x%02x, start_text: %u, is_multibyte: %d",
+      ("Found encoding %d, first byte is 0x%02x, start_text: %u, is_multibyte: %d",
       encoding, firstbyte, *start_text, *is_multibyte);
 
   return encoding;
@@ -2962,14 +3060,11 @@ get_encoding (const gchar * text, guint * start_text, gboolean * is_multibyte)
  */
 static gchar *
 convert_to_utf8 (const gchar * text, gint length, guint start,
-    const gchar * encoding, gboolean is_multibyte, GError ** error)
+    GIConv iconv, gboolean is_multibyte, GError ** error)
 {
   gchar *new_text;
   gchar *tmp, *pos;
   gint i;
-
-  g_return_val_if_fail (text != NULL, NULL);
-  g_return_val_if_fail (encoding != NULL, NULL);
 
   text += start;
 
@@ -3073,8 +3168,9 @@ convert_to_utf8 (const gchar * text, gint length, guint start,
 
   if (pos > tmp) {
     gsize bread = 0;
+
     new_text =
-        g_convert (tmp, pos - tmp, "utf-8", encoding, &bread, NULL, error);
+        g_convert_with_iconv (tmp, pos - tmp, iconv, &bread, NULL, error);
     GST_DEBUG ("Converted to : %s", new_text);
   } else {
     new_text = g_strdup ("");
@@ -3086,62 +3182,91 @@ convert_to_utf8 (const gchar * text, gint length, guint start,
 }
 
 static gchar *
-get_encoding_and_convert (const gchar * text, guint length)
+get_encoding_and_convert (MpegTSPacketizer2 * packetizer, const gchar * text,
+    guint length)
 {
   GError *error = NULL;
   gchar *converted_str;
-  gchar *encoding;
   guint start_text = 0;
   gboolean is_multibyte;
+  LocalIconvCode encoding;
+  GIConv iconv = (GIConv) - 1;
 
   g_return_val_if_fail (text != NULL, NULL);
 
-  if (length == 0)
+  if (text == NULL || length == 0)
     return g_strdup ("");
 
-  encoding = get_encoding (text, &start_text, &is_multibyte);
+  encoding = get_encoding (packetizer, text, &start_text, &is_multibyte);
 
-  if (encoding == NULL) {
+  if (encoding > _ICONV_UNKNOWN && encoding < _ICONV_MAX) {
+    GST_DEBUG ("Encoding %s", iconvtablename[encoding]);
+    if (packetizer->priv->iconvs[encoding] == (GIConv) - 1)
+      packetizer->priv->iconvs[encoding] =
+          g_iconv_open ("utf-8", iconvtablename[encoding]);
+    iconv = packetizer->priv->iconvs[encoding];
+  }
+
+  if (iconv == (GIConv) - 1) {
     GST_WARNING ("Could not detect encoding");
     converted_str = g_strndup (text, length);
-  } else {
-    converted_str = convert_to_utf8 (text, length - start_text, start_text,
-        encoding, is_multibyte, &error);
-    if (error != NULL) {
-      GST_WARNING ("Could not convert string, encoding is %s: %s",
-          encoding, error->message);
-      g_error_free (error);
-      error = NULL;
+    goto beach;
+  }
+
+  converted_str = convert_to_utf8 (text, length - start_text, start_text,
+      iconv, is_multibyte, &error);
+  if (error != NULL) {
+    GST_WARNING ("Could not convert string: %s", error->message);
+    g_error_free (error);
+    error = NULL;
+
+    if (encoding >= _ICONV_ISO8859_2 && encoding <= _ICONV_ISO8859_15) {
+      /* Sometimes using the standard 8859-1 set fixes issues */
+      GST_DEBUG ("Encoding %s", iconvtablename[_ICONV_ISO8859_1]);
+      if (packetizer->priv->iconvs[_ICONV_ISO8859_1] == (GIConv) - 1)
+        packetizer->priv->iconvs[_ICONV_ISO8859_1] =
+            g_iconv_open ("utf-8", iconvtablename[_ICONV_ISO8859_1]);
+      iconv = packetizer->priv->iconvs[_ICONV_ISO8859_1];
+
+      GST_INFO ("Trying encoding ISO 8859-1");
+      converted_str = convert_to_utf8 (text, length, 1, iconv, FALSE, &error);
+      if (error != NULL) {
+        GST_WARNING
+            ("Could not convert string while assuming encoding ISO 8859-1: %s",
+            error->message);
+        g_error_free (error);
+        goto failed;
+      }
+    } else if (encoding == _ICONV_ISO6937) {
 
       /* The first part of ISO 6937 is identical to ISO 8859-9, but
        * they differ in the second part. Some channels don't
        * provide the first byte that indicates ISO 8859-9 encoding.
        * If decoding from ISO 6937 failed, we try ISO 8859-9 here.
        */
-      if (strcmp (encoding, "iso6937") == 0) {
-        GST_INFO ("Trying encoding ISO 8859-9");
-        converted_str = convert_to_utf8 (text, length, 0,
-            "iso8859-9", FALSE, &error);
-        if (error != NULL) {
-          GST_WARNING
-              ("Could not convert string while assuming encoding ISO 8859-9: %s",
-              error->message);
-          g_error_free (error);
-          goto failed;
-        }
-      } else {
+      if (packetizer->priv->iconvs[_ICONV_ISO8859_9] == (GIConv) - 1)
+        packetizer->priv->iconvs[_ICONV_ISO8859_9] =
+            g_iconv_open ("utf-8", iconvtablename[_ICONV_ISO8859_9]);
+      iconv = packetizer->priv->iconvs[_ICONV_ISO8859_9];
+
+      GST_INFO ("Trying encoding ISO 8859-9");
+      converted_str = convert_to_utf8 (text, length, 0, iconv, FALSE, &error);
+      if (error != NULL) {
+        GST_WARNING
+            ("Could not convert string while assuming encoding ISO 8859-9: %s",
+            error->message);
+        g_error_free (error);
         goto failed;
       }
-    }
-
-    g_free (encoding);
+    } else
+      goto failed;
   }
 
+beach:
   return converted_str;
 
 failed:
   {
-    g_free (encoding);
     text += start_text;
     return g_strndup (text, length - start_text);
   }
