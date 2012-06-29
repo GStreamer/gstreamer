@@ -154,17 +154,16 @@ gst_opencv_face_detect_flags_get_type (void)
 static GstStaticPadTemplate sink_factory = GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS (GST_VIDEO_CAPS_RGB)
+    GST_STATIC_CAPS (GST_VIDEO_CAPS_MAKE ("RGB"))
     );
 
 static GstStaticPadTemplate src_factory = GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS (GST_VIDEO_CAPS_RGB)
+    GST_STATIC_CAPS (GST_VIDEO_CAPS_MAKE ("RGB"))
     );
 
-GST_BOILERPLATE (GstFaceDetect, gst_face_detect, GstOpencvVideoFilter,
-    GST_TYPE_OPENCV_VIDEO_FILTER);
+G_DEFINE_TYPE (GstFaceDetect, gst_face_detect, GST_TYPE_OPENCV_VIDEO_FILTER);
 
 static void gst_face_detect_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec);
@@ -205,26 +204,7 @@ gst_face_detect_finalize (GObject * obj)
   if (filter->cvEyesDetect)
     cvReleaseHaarClassifierCascade (&filter->cvEyesDetect);
 
-  G_OBJECT_CLASS (parent_class)->finalize (obj);
-}
-
-
-/* GObject vmethod implementations */
-static void
-gst_face_detect_base_init (gpointer gclass)
-{
-  GstElementClass *element_class = GST_ELEMENT_CLASS (gclass);
-
-  gst_element_class_set_details_simple (element_class,
-      "facedetect",
-      "Filter/Effect/Video",
-      "Performs face detection on videos and images, providing detected positions via bus messages",
-      "Michael Sheldon <mike@mikeasoft.com>");
-
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&src_factory));
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&sink_factory));
+  G_OBJECT_CLASS (gst_face_detect_parent_class)->finalize (obj);
 }
 
 /* initialize the facedetect's class */
@@ -234,6 +214,7 @@ gst_face_detect_class_init (GstFaceDetectClass * klass)
   GObjectClass *gobject_class;
   GstOpencvVideoFilterClass *gstopencvbasefilter_class;
 
+  GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
   gobject_class = (GObjectClass *) klass;
   gstopencvbasefilter_class = (GstOpencvVideoFilterClass *) klass;
 
@@ -288,13 +269,24 @@ gst_face_detect_class_init (GstFaceDetectClass * klass)
       g_param_spec_int ("min-size-height", "Minimum face height",
           "Minimum area height to be recognized as a face", 0, G_MAXINT,
           DEFAULT_MIN_SIZE_HEIGHT, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
+  gst_element_class_set_details_simple (element_class,
+      "facedetect",
+      "Filter/Effect/Video",
+      "Performs face detection on videos and images, providing detected positions via bus messages",
+      "Michael Sheldon <mike@mikeasoft.com>");
+
+  gst_element_class_add_pad_template (element_class,
+      gst_static_pad_template_get (&src_factory));
+  gst_element_class_add_pad_template (element_class,
+      gst_static_pad_template_get (&sink_factory));
 }
 
 /* initialize the new element
  * initialize instance structure
  */
 static void
-gst_face_detect_init (GstFaceDetect * filter, GstFaceDetectClass * gclass)
+gst_face_detect_init (GstFaceDetect * filter)
 {
   filter->face_profile = g_strdup (DEFAULT_FACE_PROFILE);
   filter->nose_profile = g_strdup (DEFAULT_NOSE_PROFILE);
@@ -679,7 +671,8 @@ gst_face_detect_transform_ip (GstOpencvVideoFilter * base, GstBuffer * buf,
       }
     }
 
-    gst_structure_set_value (msg->structure, "faces", &facelist);
+    gst_structure_set_value ((GstStructure *) gst_message_get_structure (msg),
+        "faces", &facelist);
     g_value_unset (&facelist);
     gst_element_post_message (GST_ELEMENT (filter), msg);
   }

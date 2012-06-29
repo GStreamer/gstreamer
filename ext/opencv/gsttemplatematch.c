@@ -91,17 +91,16 @@ enum
 static GstStaticPadTemplate sink_factory = GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS (GST_VIDEO_CAPS_RGB)
+    GST_STATIC_CAPS (GST_VIDEO_CAPS_MAKE ("RGB"))
     );
 
 static GstStaticPadTemplate src_factory = GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS (GST_VIDEO_CAPS_RGB)
+    GST_STATIC_CAPS (GST_VIDEO_CAPS_MAKE ("RGB"))
     );
 
-GST_BOILERPLATE (GstTemplateMatch, gst_template_match, GstElement,
-    GST_TYPE_ELEMENT);
+G_DEFINE_TYPE (GstTemplateMatch, gst_template_match, GST_TYPE_ELEMENT);
 
 static void gst_template_match_finalize (GObject * object);
 static void gst_template_match_set_property (GObject * object, guint prop_id,
@@ -109,37 +108,23 @@ static void gst_template_match_set_property (GObject * object, guint prop_id,
 static void gst_template_match_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec);
 
-static gboolean gst_template_match_set_caps (GstPad * pad, GstCaps * caps);
-static GstFlowReturn gst_template_match_chain (GstPad * pad, GstBuffer * buf);
+static gboolean gst_template_match_handle_sink_event (GstPad * pad,
+    GstObject * parent, GstEvent * event);
+static GstFlowReturn gst_template_match_chain (GstPad * pad, GstObject * parent,
+    GstBuffer * buf);
 
 static void gst_template_match_load_template (GstTemplateMatch * filter);
 static void gst_template_match_match (IplImage * input, IplImage * template,
     IplImage * dist_image, double *best_res, CvPoint * best_pos, int method);
 
-/* GObject vmethod implementations */
 
-static void
-gst_template_match_base_init (gpointer gclass)
-{
-  GstElementClass *element_class = GST_ELEMENT_CLASS (gclass);
-
-  gst_element_class_set_details_simple (element_class,
-      "templatematch",
-      "Filter/Effect/Video",
-      "Performs template matching on videos and images, providing detected positions via bus messages.",
-      "Noam Lewis <jones.noamle@gmail.com>");
-
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&src_factory));
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&sink_factory));
-}
 
 /* initialize the templatematch's class */
 static void
 gst_template_match_class_init (GstTemplateMatchClass * klass)
 {
   GObjectClass *gobject_class;
+  GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
 
   gobject_class = (GObjectClass *) klass;
 
@@ -158,6 +143,17 @@ gst_template_match_class_init (GstTemplateMatchClass * klass)
       g_param_spec_boolean ("display", "Display",
           "Sets whether the detected template should be highlighted in the output",
           TRUE, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
+  gst_element_class_set_details_simple (element_class,
+      "templatematch",
+      "Filter/Effect/Video",
+      "Performs template matching on videos and images, providing detected positions via bus messages.",
+      "Noam Lewis <jones.noamle@gmail.com>");
+
+  gst_element_class_add_pad_template (element_class,
+      gst_static_pad_template_get (&src_factory));
+  gst_element_class_add_pad_template (element_class,
+      gst_static_pad_template_get (&sink_factory));
 }
 
 /* initialize the new element
@@ -166,20 +162,15 @@ gst_template_match_class_init (GstTemplateMatchClass * klass)
  * initialize instance structure
  */
 static void
-gst_template_match_init (GstTemplateMatch * filter,
-    GstTemplateMatchClass * gclass)
+gst_template_match_init (GstTemplateMatch * filter)
 {
   filter->sinkpad = gst_pad_new_from_static_template (&sink_factory, "sink");
-  gst_pad_set_setcaps_function (filter->sinkpad,
-      GST_DEBUG_FUNCPTR (gst_template_match_set_caps));
-  gst_pad_set_getcaps_function (filter->sinkpad,
-      GST_DEBUG_FUNCPTR (gst_pad_proxy_getcaps));
+  gst_pad_set_event_function (filter->sinkpad,
+      GST_DEBUG_FUNCPTR (gst_template_match_handle_sink_event));
   gst_pad_set_chain_function (filter->sinkpad,
       GST_DEBUG_FUNCPTR (gst_template_match_chain));
 
   filter->srcpad = gst_pad_new_from_static_template (&src_factory, "src");
-  gst_pad_set_getcaps_function (filter->srcpad,
-      GST_DEBUG_FUNCPTR (gst_pad_proxy_getcaps));
 
   gst_element_add_pad (GST_ELEMENT (filter), filter->sinkpad);
   gst_element_add_pad (GST_ELEMENT (filter), filter->srcpad);
@@ -260,25 +251,35 @@ gst_template_match_get_property (GObject * object, guint prop_id,
 
 /* this function handles the link with other elements */
 static gboolean
-gst_template_match_set_caps (GstPad * pad, GstCaps * caps)
+gst_template_match_handle_sink_event (GstPad * pad, GstObject * parent,
+    GstEvent * event)
 {
   GstTemplateMatch *filter;
-  GstPad *otherpad;
-  gint width, height;
-  GstStructure *structure;
+  GstVideoInfo info;
+  gboolean res = TRUE;
 
-  filter = GST_TEMPLATE_MATCH (gst_pad_get_parent (pad));
-  structure = gst_caps_get_structure (caps, 0);
-  gst_structure_get_int (structure, "width", &width);
-  gst_structure_get_int (structure, "height", &height);
+  filter = GST_TEMPLATE_MATCH (parent);
+  switch (GST_EVENT_TYPE (event)) {
+    case GST_EVENT_CAPS:
+    {
+      GstCaps *caps;
+      gst_event_parse_caps (event, &caps);
+      gst_video_info_from_caps (&info, caps);
 
-  filter->cvImage =
-      cvCreateImageHeader (cvSize (width, height), IPL_DEPTH_8U, 3);
+      filter->cvImage =
+          cvCreateImageHeader (cvSize (info.width, info.height), IPL_DEPTH_8U,
+          3);
+      break;
+    }
+    default:
+      break;
+  }
 
-  otherpad = (pad == filter->srcpad) ? filter->sinkpad : filter->srcpad;
-  gst_object_unref (filter);
+  res = gst_pad_event_default (pad, parent, event);
 
-  return gst_pad_set_caps (otherpad, caps);
+  return res;
+
+
 }
 
 static void
@@ -297,29 +298,32 @@ gst_template_match_finalize (GObject * object)
     cvReleaseImage (&filter->cvTemplateImage);
   }
 
-  GST_CALL_PARENT (G_OBJECT_CLASS, finalize, (object));
+  G_OBJECT_CLASS (gst_template_match_parent_class)->finalize (object);
 }
 
 /* chain function
  * this function does the actual processing
  */
 static GstFlowReturn
-gst_template_match_chain (GstPad * pad, GstBuffer * buf)
+gst_template_match_chain (GstPad * pad, GstObject * parent, GstBuffer * buf)
 {
   GstTemplateMatch *filter;
   CvPoint best_pos;
   double best_res;
+  GstMapInfo info;
 
-  filter = GST_TEMPLATE_MATCH (GST_OBJECT_PARENT (pad));
+  filter = GST_TEMPLATE_MATCH (parent);
 
   /* FIXME Why template == NULL returns OK?
    * shouldn't it be a passthrough instead? */
   if ((!filter) || (!buf) || filter->template == NULL) {
     return GST_FLOW_OK;
   }
-  GST_DEBUG_OBJECT (filter, "Buffer size %u ", GST_BUFFER_SIZE (buf));
+  GST_DEBUG_OBJECT (filter, "Buffer size %u ", gst_buffer_get_size (buf));
 
-  filter->cvImage->imageData = (char *) GST_BUFFER_DATA (buf);
+  buf = gst_buffer_make_writable (buf);
+  gst_buffer_map (buf, &info, GST_MAP_READWRITE);
+  filter->cvImage->imageData = (char *) info.data;
 
   if (!filter->cvDistImage) {
     if (filter->cvTemplateImage->width > filter->cvImage->width) {

@@ -106,8 +106,7 @@ gst_cv_smooth_type_get_type (void)
 #define DEFAULT_PARAM3 0.0
 #define DEFAULT_PARAM4 0.0
 
-GST_BOILERPLATE (GstCvSmooth, gst_cv_smooth, GstOpencvVideoFilter,
-    GST_TYPE_OPENCV_VIDEO_FILTER);
+G_DEFINE_TYPE (GstCvSmooth, gst_cv_smooth, GST_TYPE_OPENCV_VIDEO_FILTER);
 
 static void gst_cv_smooth_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec);
@@ -119,44 +118,18 @@ static GstFlowReturn gst_cv_smooth_transform_ip (GstOpencvVideoFilter *
 static GstFlowReturn gst_cv_smooth_transform (GstOpencvVideoFilter * filter,
     GstBuffer * buf, IplImage * img, GstBuffer * outbuf, IplImage * outimg);
 
-/* GObject vmethod implementations */
-
-static void
-gst_cv_smooth_base_init (gpointer gclass)
-{
-  GstElementClass *element_class = GST_ELEMENT_CLASS (gclass);
-  GstCaps *caps;
-  GstPadTemplate *templ;
-
-  gst_element_class_set_details_simple (element_class,
-      "cvsmooth",
-      "Transform/Effect/Video",
-      "Applies cvSmooth OpenCV function to the image",
-      "Thiago Santos<thiago.sousa.santos@collabora.co.uk>");
-
-  /* add sink and source pad templates */
-  caps = gst_opencv_caps_from_cv_image_type (CV_8UC3);
-  gst_caps_append (caps, gst_opencv_caps_from_cv_image_type (CV_8UC1));
-  templ = gst_pad_template_new ("sink", GST_PAD_SINK, GST_PAD_ALWAYS,
-      gst_caps_ref (caps));
-  gst_element_class_add_pad_template (element_class, templ);
-  gst_object_unref (templ);
-  templ = gst_pad_template_new ("src", GST_PAD_SRC, GST_PAD_ALWAYS, caps);
-  gst_element_class_add_pad_template (element_class, templ);
-  gst_object_unref (templ);
-}
-
 /* initialize the cvsmooth's class */
 static void
 gst_cv_smooth_class_init (GstCvSmoothClass * klass)
 {
   GObjectClass *gobject_class;
   GstOpencvVideoFilterClass *gstopencvbasefilter_class;
+  GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
+  GstCaps *caps;
+  GstPadTemplate *templ;
 
   gobject_class = (GObjectClass *) klass;
   gstopencvbasefilter_class = (GstOpencvVideoFilterClass *) klass;
-
-  parent_class = g_type_class_peek_parent (klass);
 
   gobject_class->set_property = gst_cv_smooth_set_property;
   gobject_class->get_property = gst_cv_smooth_get_property;
@@ -201,6 +174,21 @@ gst_cv_smooth_class_init (GstCvSmoothClass * klass)
           "/documentation/image_filtering.html#cvSmooth",
           0, G_MAXDOUBLE, DEFAULT_PARAM4,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
+  gst_element_class_set_details_simple (element_class,
+      "cvsmooth",
+      "Transform/Effect/Video",
+      "Applies cvSmooth OpenCV function to the image",
+      "Thiago Santos<thiago.sousa.santos@collabora.co.uk>");
+
+  /* add sink and source pad templates */
+  caps = gst_opencv_caps_from_cv_image_type (CV_8UC3);
+  gst_caps_append (caps, gst_opencv_caps_from_cv_image_type (CV_8UC1));
+  templ = gst_pad_template_new ("sink", GST_PAD_SINK, GST_PAD_ALWAYS,
+      gst_caps_ref (caps));
+  gst_element_class_add_pad_template (element_class, templ);
+  templ = gst_pad_template_new ("src", GST_PAD_SRC, GST_PAD_ALWAYS, caps);
+  gst_element_class_add_pad_template (element_class, templ);
 }
 
 /* initialize the new element
@@ -209,7 +197,7 @@ gst_cv_smooth_class_init (GstCvSmoothClass * klass)
  * initialize instance structure
  */
 static void
-gst_cv_smooth_init (GstCvSmooth * filter, GstCvSmoothClass * gclass)
+gst_cv_smooth_init (GstCvSmooth * filter)
 {
   filter->type = DEFAULT_CV_SMOOTH_TYPE;
   filter->param1 = DEFAULT_PARAM1;

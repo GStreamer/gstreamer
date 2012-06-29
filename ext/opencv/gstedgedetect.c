@@ -91,24 +91,26 @@ enum
 static GstStaticPadTemplate sink_factory = GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS (GST_VIDEO_CAPS_RGB)
+    GST_STATIC_CAPS (GST_VIDEO_CAPS_MAKE ("RGB"))
     );
 
 static GstStaticPadTemplate src_factory = GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS (GST_VIDEO_CAPS_RGB)
+    GST_STATIC_CAPS (GST_VIDEO_CAPS_MAKE ("RGB"))
     );
 
-GST_BOILERPLATE (GstEdgeDetect, gst_edge_detect, GstElement, GST_TYPE_ELEMENT);
+G_DEFINE_TYPE (GstEdgeDetect, gst_edge_detect, GST_TYPE_ELEMENT);
 
 static void gst_edge_detect_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec);
 static void gst_edge_detect_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec);
 
-static gboolean gst_edge_detect_set_caps (GstPad * pad, GstCaps * caps);
-static GstFlowReturn gst_edge_detect_chain (GstPad * pad, GstBuffer * buf);
+static gboolean gst_edge_detect_handle_sink_event (GstPad * pad,
+    GstObject * parent, GstEvent * event);
+static GstFlowReturn gst_edge_detect_chain (GstPad * pad, GstObject * parent,
+    GstBuffer * buf);
 
 /* Clean up */
 static void
@@ -123,25 +125,7 @@ gst_edge_detect_finalize (GObject * obj)
     cvReleaseImage (&filter->cvEdge);
   }
 
-  G_OBJECT_CLASS (parent_class)->finalize (obj);
-}
-
-/* GObject vmethod implementations */
-static void
-gst_edge_detect_base_init (gpointer gclass)
-{
-  GstElementClass *element_class = GST_ELEMENT_CLASS (gclass);
-
-  gst_element_class_set_details_simple (element_class,
-      "edgedetect",
-      "Filter/Effect/Video",
-      "Performs canny edge detection on videos and images.",
-      "Michael Sheldon <mike@mikeasoft.com>");
-
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&src_factory));
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&sink_factory));
+  G_OBJECT_CLASS (gst_edge_detect_parent_class)->finalize (obj);
 }
 
 /* initialize the edgedetect's class */
@@ -150,6 +134,7 @@ gst_edge_detect_class_init (GstEdgeDetectClass * klass)
 {
   GObjectClass *gobject_class;
 
+  GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
   gobject_class = (GObjectClass *) klass;
 
   gobject_class->finalize = GST_DEBUG_FUNCPTR (gst_edge_detect_finalize);
@@ -172,6 +157,17 @@ gst_edge_detect_class_init (GstEdgeDetectClass * klass)
       g_param_spec_int ("aperture", "Aperture",
           "Aperture size for Sobel operator (Must be either 3, 5 or 7", 3, 7, 3,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
+  gst_element_class_set_details_simple (element_class,
+      "edgedetect",
+      "Filter/Effect/Video",
+      "Performs canny edge detection on videos and images.",
+      "Michael Sheldon <mike@mikeasoft.com>");
+
+  gst_element_class_add_pad_template (element_class,
+      gst_static_pad_template_get (&src_factory));
+  gst_element_class_add_pad_template (element_class,
+      gst_static_pad_template_get (&sink_factory));
 }
 
 /* initialize the new element
@@ -180,19 +176,17 @@ gst_edge_detect_class_init (GstEdgeDetectClass * klass)
  * initialize instance structure
  */
 static void
-gst_edge_detect_init (GstEdgeDetect * filter, GstEdgeDetectClass * gclass)
+gst_edge_detect_init (GstEdgeDetect * filter)
 {
   filter->sinkpad = gst_pad_new_from_static_template (&sink_factory, "sink");
-  gst_pad_set_setcaps_function (filter->sinkpad,
-      GST_DEBUG_FUNCPTR (gst_edge_detect_set_caps));
-  gst_pad_set_getcaps_function (filter->sinkpad,
-      GST_DEBUG_FUNCPTR (gst_pad_proxy_getcaps));
+  GST_PAD_SET_PROXY_CAPS (filter->sinkpad);
+  gst_pad_set_event_function (filter->sinkpad,
+      GST_DEBUG_FUNCPTR (gst_edge_detect_handle_sink_event));
   gst_pad_set_chain_function (filter->sinkpad,
       GST_DEBUG_FUNCPTR (gst_edge_detect_chain));
 
   filter->srcpad = gst_pad_new_from_static_template (&src_factory, "src");
-  gst_pad_set_getcaps_function (filter->srcpad,
-      GST_DEBUG_FUNCPTR (gst_pad_proxy_getcaps));
+  GST_PAD_SET_PROXY_CAPS (filter->srcpad);
 
   gst_element_add_pad (GST_ELEMENT (filter), filter->sinkpad);
   gst_element_add_pad (GST_ELEMENT (filter), filter->srcpad);
@@ -256,41 +250,58 @@ gst_edge_detect_get_property (GObject * object, guint prop_id,
 
 /* this function handles the link with other elements */
 static gboolean
-gst_edge_detect_set_caps (GstPad * pad, GstCaps * caps)
+gst_edge_detect_handle_sink_event (GstPad * pad, GstObject * parent,
+    GstEvent * event)
 {
   GstEdgeDetect *filter;
-  GstPad *otherpad;
   gint width, height;
   GstStructure *structure;
+  gboolean res = TRUE;
 
-  filter = GST_EDGE_DETECT (gst_pad_get_parent (pad));
-  structure = gst_caps_get_structure (caps, 0);
-  gst_structure_get_int (structure, "width", &width);
-  gst_structure_get_int (structure, "height", &height);
+  filter = GST_EDGE_DETECT (parent);
 
-  filter->cvImage = cvCreateImage (cvSize (width, height), IPL_DEPTH_8U, 3);
-  filter->cvCEdge = cvCreateImage (cvSize (width, height), IPL_DEPTH_8U, 3);
-  filter->cvGray = cvCreateImage (cvSize (width, height), IPL_DEPTH_8U, 1);
-  filter->cvEdge = cvCreateImage (cvSize (width, height), IPL_DEPTH_8U, 1);
+  switch (GST_EVENT_TYPE (event)) {
+    case GST_EVENT_CAPS:
+    {
+      GstCaps *caps;
+      gst_event_parse_caps (event, &caps);
 
-  otherpad = (pad == filter->srcpad) ? filter->sinkpad : filter->srcpad;
-  gst_object_unref (filter);
+      structure = gst_caps_get_structure (caps, 0);
+      gst_structure_get_int (structure, "width", &width);
+      gst_structure_get_int (structure, "height", &height);
 
-  return gst_pad_set_caps (otherpad, caps);
+      filter->cvImage = cvCreateImage (cvSize (width, height), IPL_DEPTH_8U, 3);
+      filter->cvCEdge = cvCreateImage (cvSize (width, height), IPL_DEPTH_8U, 3);
+      filter->cvGray = cvCreateImage (cvSize (width, height), IPL_DEPTH_8U, 1);
+      filter->cvEdge = cvCreateImage (cvSize (width, height), IPL_DEPTH_8U, 1);
+      break;
+    }
+    default:
+      break;
+  }
+
+  res = gst_pad_event_default (pad, parent, event);
+
+  return res;
+
 }
 
 /* chain function
  * this function does the actual processing
  */
 static GstFlowReturn
-gst_edge_detect_chain (GstPad * pad, GstBuffer * buf)
+gst_edge_detect_chain (GstPad * pad, GstObject * parent, GstBuffer * buf)
 {
   GstEdgeDetect *filter;
   GstBuffer *outbuf;
+  GstMapInfo in_info;
+  GstMapInfo out_info;
 
-  filter = GST_EDGE_DETECT (GST_OBJECT_PARENT (pad));
+  filter = GST_EDGE_DETECT (parent);
 
-  filter->cvImage->imageData = (char *) GST_BUFFER_DATA (buf);
+  buf = gst_buffer_make_writable (buf);
+  gst_buffer_map (buf, &in_info, GST_MAP_WRITE);
+  filter->cvImage->imageData = (char *) in_info.data;
 
   cvCvtColor (filter->cvImage, filter->cvGray, CV_RGB2GRAY);
   cvSmooth (filter->cvGray, filter->cvEdge, CV_BLUR, 3, 3, 0, 0);
@@ -306,10 +317,14 @@ gst_edge_detect_chain (GstPad * pad, GstBuffer * buf)
   }
 
   outbuf = gst_buffer_new_and_alloc (filter->cvCEdge->imageSize);
-  gst_buffer_copy_metadata (outbuf, buf, GST_BUFFER_COPY_ALL);
-  memcpy (GST_BUFFER_DATA (outbuf), filter->cvCEdge->imageData,
-      GST_BUFFER_SIZE (outbuf));
+  gst_buffer_copy_into (outbuf, buf, GST_BUFFER_COPY_METADATA, 0, -1);
 
+  gst_buffer_map (outbuf, &out_info, GST_MAP_WRITE);
+  memcpy (out_info.data, filter->cvCEdge->imageData,
+      gst_buffer_get_size (outbuf));
+
+  gst_buffer_unmap (buf, &in_info);
+  gst_buffer_unmap (outbuf, &out_info);
   gst_buffer_unref (buf);
   return gst_pad_push (filter->srcpad, outbuf);
 }

@@ -56,26 +56,29 @@ GST_DEBUG_CATEGORY_STATIC (gst_cv_equalize_hist_debug);
 static GstStaticPadTemplate sink_factory = GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS (GST_VIDEO_CAPS_GRAY8));
+    GST_STATIC_CAPS (GST_VIDEO_CAPS_MAKE ("GRAY8")));
 
 static GstStaticPadTemplate src_factory = GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS (GST_VIDEO_CAPS_GRAY8));
+    GST_STATIC_CAPS (GST_VIDEO_CAPS_MAKE ("GRAY8")));
 
-GST_BOILERPLATE (GstCvEqualizeHist, gst_cv_equalize_hist,
-    GstOpencvVideoFilter, GST_TYPE_OPENCV_VIDEO_FILTER);
+G_DEFINE_TYPE (GstCvEqualizeHist, gst_cv_equalize_hist,
+    GST_TYPE_OPENCV_VIDEO_FILTER);
 
 static GstFlowReturn gst_cv_equalize_hist_transform (GstOpencvVideoFilter *
     filter, GstBuffer * buf, IplImage * img, GstBuffer * outbuf,
     IplImage * outimg);
 
 
-/* GObject vmethod implementations */
 static void
-gst_cv_equalize_hist_base_init (gpointer gclass)
+gst_cv_equalize_hist_class_init (GstCvEqualizeHistClass * klass)
 {
-  GstElementClass *element_class = GST_ELEMENT_CLASS (gclass);
+  GstOpencvVideoFilterClass *gstopencvbasefilter_class;
+  GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
+  gstopencvbasefilter_class = (GstOpencvVideoFilterClass *) klass;
+
+  gstopencvbasefilter_class->cv_trans_func = gst_cv_equalize_hist_transform;
 
   gst_element_class_add_pad_template (element_class,
       gst_static_pad_template_get (&src_factory));
@@ -90,19 +93,7 @@ gst_cv_equalize_hist_base_init (gpointer gclass)
 }
 
 static void
-gst_cv_equalize_hist_class_init (GstCvEqualizeHistClass * klass)
-{
-  GstOpencvVideoFilterClass *gstopencvbasefilter_class;
-
-  gstopencvbasefilter_class = (GstOpencvVideoFilterClass *) klass;
-
-  parent_class = g_type_class_peek_parent (klass);
-  gstopencvbasefilter_class->cv_trans_func = gst_cv_equalize_hist_transform;
-}
-
-static void
-gst_cv_equalize_hist_init (GstCvEqualizeHist * filter,
-    GstCvEqualizeHistClass * gclass)
+gst_cv_equalize_hist_init (GstCvEqualizeHist * filter)
 {
   gst_base_transform_set_in_place (GST_BASE_TRANSFORM (filter), FALSE);
 }

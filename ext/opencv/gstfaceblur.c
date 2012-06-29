@@ -89,24 +89,26 @@ enum
 static GstStaticPadTemplate sink_factory = GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS (GST_VIDEO_CAPS_RGB)
+    GST_STATIC_CAPS (GST_VIDEO_CAPS_MAKE ("RGB"))
     );
 
 static GstStaticPadTemplate src_factory = GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS (GST_VIDEO_CAPS_RGB)
+    GST_STATIC_CAPS (GST_VIDEO_CAPS_MAKE ("RGB"))
     );
 
-GST_BOILERPLATE (GstFaceBlur, gst_face_blur, GstElement, GST_TYPE_ELEMENT);
+G_DEFINE_TYPE (GstFaceBlur, gst_face_blur, GST_TYPE_ELEMENT);
 
 static void gst_face_blur_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec);
 static void gst_face_blur_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec);
 
-static gboolean gst_face_blur_set_caps (GstPad * pad, GstCaps * caps);
-static GstFlowReturn gst_face_blur_chain (GstPad * pad, GstBuffer * buf);
+static gboolean gst_face_blur_handle_sink_event (GstPad * pad,
+    GstObject * parent, GstEvent * event);
+static GstFlowReturn gst_face_blur_chain (GstPad * pad, GstObject * parent,
+    GstBuffer * buf);
 
 static void gst_face_blur_load_profile (GstFaceBlur * filter);
 
@@ -123,15 +125,27 @@ gst_face_blur_finalize (GObject * obj)
 
   g_free (filter->profile);
 
-  G_OBJECT_CLASS (parent_class)->finalize (obj);
+  G_OBJECT_CLASS (gst_face_blur_parent_class)->finalize (obj);
 }
 
 
-/* GObject vmethod implementations */
+/* initialize the faceblur's class */
 static void
-gst_face_blur_base_init (gpointer gclass)
+gst_face_blur_class_init (GstFaceBlurClass * klass)
 {
-  GstElementClass *element_class = GST_ELEMENT_CLASS (gclass);
+  GObjectClass *gobject_class;
+
+  GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
+  gobject_class = (GObjectClass *) klass;
+
+  gobject_class->finalize = GST_DEBUG_FUNCPTR (gst_face_blur_finalize);
+  gobject_class->set_property = gst_face_blur_set_property;
+  gobject_class->get_property = gst_face_blur_get_property;
+
+  g_object_class_install_property (gobject_class, PROP_PROFILE,
+      g_param_spec_string ("profile", "Profile",
+          "Location of Haar cascade file to use for face blurion",
+          DEFAULT_PROFILE, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   gst_element_class_set_details_simple (element_class,
       "faceblur",
@@ -145,44 +159,23 @@ gst_face_blur_base_init (gpointer gclass)
       gst_static_pad_template_get (&sink_factory));
 }
 
-/* initialize the faceblur's class */
-static void
-gst_face_blur_class_init (GstFaceBlurClass * klass)
-{
-  GObjectClass *gobject_class;
-
-  gobject_class = (GObjectClass *) klass;
-  parent_class = g_type_class_peek_parent (klass);
-
-  gobject_class->finalize = GST_DEBUG_FUNCPTR (gst_face_blur_finalize);
-  gobject_class->set_property = gst_face_blur_set_property;
-  gobject_class->get_property = gst_face_blur_get_property;
-
-  g_object_class_install_property (gobject_class, PROP_PROFILE,
-      g_param_spec_string ("profile", "Profile",
-          "Location of Haar cascade file to use for face blurion",
-          DEFAULT_PROFILE, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
-}
-
 /* initialize the new element
  * instantiate pads and add them to element
  * set pad calback functions
  * initialize instance structure
  */
 static void
-gst_face_blur_init (GstFaceBlur * filter, GstFaceBlurClass * gclass)
+gst_face_blur_init (GstFaceBlur * filter)
 {
   filter->sinkpad = gst_pad_new_from_static_template (&sink_factory, "sink");
-  gst_pad_set_setcaps_function (filter->sinkpad,
-      GST_DEBUG_FUNCPTR (gst_face_blur_set_caps));
-  gst_pad_set_getcaps_function (filter->sinkpad,
-      GST_DEBUG_FUNCPTR (gst_pad_proxy_getcaps));
+  GST_PAD_SET_PROXY_CAPS (filter->sinkpad);
+  gst_pad_set_event_function (filter->sinkpad,
+      GST_DEBUG_FUNCPTR (gst_face_blur_handle_sink_event));
   gst_pad_set_chain_function (filter->sinkpad,
       GST_DEBUG_FUNCPTR (gst_face_blur_chain));
 
   filter->srcpad = gst_pad_new_from_static_template (&src_factory, "src");
-  gst_pad_set_getcaps_function (filter->srcpad,
-      GST_DEBUG_FUNCPTR (gst_pad_proxy_getcaps));
+  GST_PAD_SET_PROXY_CAPS (filter->srcpad);
 
   gst_element_add_pad (GST_ELEMENT (filter), filter->sinkpad);
   gst_element_add_pad (GST_ELEMENT (filter), filter->srcpad);
@@ -228,41 +221,56 @@ gst_face_blur_get_property (GObject * object, guint prop_id,
 
 /* this function handles the link with other elements */
 static gboolean
-gst_face_blur_set_caps (GstPad * pad, GstCaps * caps)
+gst_face_blur_handle_sink_event (GstPad * pad, GstObject * parent,
+    GstEvent * event)
 {
   GstFaceBlur *filter;
-  GstPad *otherpad;
   gint width, height;
   GstStructure *structure;
+  gboolean res = TRUE;
 
-  filter = GST_FACE_BLUR (gst_pad_get_parent (pad));
-  structure = gst_caps_get_structure (caps, 0);
-  gst_structure_get_int (structure, "width", &width);
-  gst_structure_get_int (structure, "height", &height);
+  filter = GST_FACE_BLUR (parent);
 
-  filter->cvImage = cvCreateImage (cvSize (width, height), IPL_DEPTH_8U, 3);
-  filter->cvGray = cvCreateImage (cvSize (width, height), IPL_DEPTH_8U, 1);
-  filter->cvStorage = cvCreateMemStorage (0);
+  switch (GST_EVENT_TYPE (event)) {
+    case GST_EVENT_CAPS:
+    {
+      GstCaps *caps;
+      gst_event_parse_caps (event, &caps);
 
-  otherpad = (pad == filter->srcpad) ? filter->sinkpad : filter->srcpad;
-  gst_object_unref (filter);
+      structure = gst_caps_get_structure (caps, 0);
+      gst_structure_get_int (structure, "width", &width);
+      gst_structure_get_int (structure, "height", &height);
 
-  return gst_pad_set_caps (otherpad, caps);
+      filter->cvImage = cvCreateImage (cvSize (width, height), IPL_DEPTH_8U, 3);
+      filter->cvGray = cvCreateImage (cvSize (width, height), IPL_DEPTH_8U, 1);
+      filter->cvStorage = cvCreateMemStorage (0);
+      break;
+    }
+    default:
+      break;
+  }
+
+  res = gst_pad_event_default (pad, parent, event);
+
+  return res;
 }
 
 /* chain function
  * this function does the actual processing
  */
 static GstFlowReturn
-gst_face_blur_chain (GstPad * pad, GstBuffer * buf)
+gst_face_blur_chain (GstPad * pad, GstObject * parent, GstBuffer * buf)
 {
   GstFaceBlur *filter;
   CvSeq *faces;
+  GstMapInfo info;
   int i;
 
   filter = GST_FACE_BLUR (GST_OBJECT_PARENT (pad));
 
-  filter->cvImage->imageData = (char *) GST_BUFFER_DATA (buf);
+  buf = gst_buffer_make_writable (buf);
+  gst_buffer_map (buf, &info, GST_MAP_READWRITE);
+  filter->cvImage->imageData = (char *) info.data;
 
   cvCvtColor (filter->cvImage, filter->cvGray, CV_RGB2GRAY);
   cvClearMemStorage (filter->cvStorage);

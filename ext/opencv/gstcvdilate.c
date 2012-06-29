@@ -52,39 +52,29 @@
 GST_DEBUG_CATEGORY_STATIC (gst_cv_dilate_debug);
 #define GST_CAT_DEFAULT gst_cv_dilate_debug
 
-GST_BOILERPLATE (GstCvDilate, gst_cv_dilate, GstCvDilateErode,
-    GST_TYPE_CV_DILATE_ERODE);
+G_DEFINE_TYPE (GstCvDilate, gst_cv_dilate, GST_TYPE_CV_DILATE_ERODE);
 
 static GstFlowReturn gst_cv_dilate_transform_ip (GstOpencvVideoFilter *
     filter, GstBuffer * buf, IplImage * img);
 static GstFlowReturn gst_cv_dilate_transform (GstOpencvVideoFilter * filter,
     GstBuffer * buf, IplImage * img, GstBuffer * outbuf, IplImage * outimg);
 
-/* GObject vmethod implementations */
-static void
-gst_cv_dilate_base_init (gpointer gclass)
-{
-  GstElementClass *element_class = GST_ELEMENT_CLASS (gclass);
-
-  gst_element_class_set_details_simple (element_class,
-      "cvdilate",
-      "Transform/Effect/Video",
-      "Applies cvDilate OpenCV function to the image",
-      "Thiago Santos<thiago.sousa.santos@collabora.co.uk>");
-}
-
 /* initialize the cvdilate's class */
 static void
 gst_cv_dilate_class_init (GstCvDilateClass * klass)
 {
   GstOpencvVideoFilterClass *gstopencvbasefilter_class;
+  GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
 
   gstopencvbasefilter_class = (GstOpencvVideoFilterClass *) klass;
 
-  parent_class = g_type_class_peek_parent (klass);
-
   gstopencvbasefilter_class->cv_trans_ip_func = gst_cv_dilate_transform_ip;
   gstopencvbasefilter_class->cv_trans_func = gst_cv_dilate_transform;
+  gst_element_class_set_details_simple (element_class,
+      "cvdilate",
+      "Transform/Effect/Video",
+      "Applies cvDilate OpenCV function to the image",
+      "Thiago Santos<thiago.sousa.santos@collabora.co.uk>");
 }
 
 /* initialize the new element
@@ -93,7 +83,7 @@ gst_cv_dilate_class_init (GstCvDilateClass * klass)
  * initialize instance structure
  */
 static void
-gst_cv_dilate_init (GstCvDilate * filter, GstCvDilateClass * gclass)
+gst_cv_dilate_init (GstCvDilate * filter)
 {
 }
 

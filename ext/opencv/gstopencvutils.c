@@ -29,30 +29,33 @@ static gboolean
 gst_opencv_get_ipl_depth_and_channels (GstStructure * structure,
     gint * ipldepth, gint * channels, GError ** err)
 {
-  gint depth, bpp;
+  GstVideoFormat format = GST_VIDEO_FORMAT_UNKNOWN;
+  const GstVideoFormatInfo *info;
+  gint depth = 0, i;
+  const gchar *s;
 
-  if (!gst_structure_get_int (structure, "depth", &depth) ||
-      !gst_structure_get_int (structure, "bpp", &bpp)) {
+  if (gst_structure_has_name (structure, "video/x-raw")) {
+    if (!(s = gst_structure_get_string (structure, "format")))
+      return FALSE;
+    format = gst_video_format_from_string (s);
+    if (format == GST_VIDEO_FORMAT_UNKNOWN)
+      return FALSE;
+  }
+
+  info = gst_video_format_get_info (format);
+
+  if (GST_VIDEO_FORMAT_INFO_IS_RGB (info))
+    *channels=3;
+  else if (GST_VIDEO_FORMAT_INFO_IS_GRAY (info))
+    *channels=1;
+  else {
     g_set_error (err, GST_CORE_ERROR, GST_CORE_ERROR_NEGOTIATION,
-        "No depth/bpp in caps");
+        "Unsupported structure %s", gst_structure_get_name (structure));
     return FALSE;
   }
 
-  if (depth != bpp) {
-    g_set_error (err, GST_CORE_ERROR, GST_CORE_ERROR_NEGOTIATION,
-        "Depth and bpp should be equal");
-    return FALSE;
-  }
-
-  if (gst_structure_has_name (structure, "video/x-raw-rgb")) {
-    *channels = 3;
-  } else if (gst_structure_has_name (structure, "video/x-raw-gray")) {
-    *channels = 1;
-  } else {
-    g_set_error (err, GST_CORE_ERROR, GST_CORE_ERROR_NEGOTIATION,
-        "Unsupported caps %s", gst_structure_get_name (structure));
-    return FALSE;
-  }
+  for (i = 0; i < GST_VIDEO_FORMAT_INFO_N_COMPONENTS (info); i++)
+    depth += GST_VIDEO_FORMAT_INFO_DEPTH (info, i);
 
   if (depth / *channels == 8) {
     /* TODO signdness? */
@@ -92,9 +95,42 @@ gboolean
 gst_opencv_parse_iplimage_params_from_caps (GstCaps * caps, gint * width,
     gint * height, gint * ipldepth, gint * channels, GError ** err)
 {
-  return
-      gst_opencv_parse_iplimage_params_from_structure (gst_caps_get_structure
-      (caps, 0), width, height, ipldepth, channels, err);
+  GstVideoInfo info;
+  gint i, depth = 0;
+
+  if (!gst_video_info_from_caps (&info, caps)) {
+    GST_ERROR ("Failed to get the videoinfo from caps");
+    g_set_error (err, GST_CORE_ERROR, GST_CORE_ERROR_NEGOTIATION,
+        "No width/heighti/depth/channels in caps");
+    return FALSE;
+  }
+
+  *width = GST_VIDEO_INFO_WIDTH (&info);
+  *height = GST_VIDEO_INFO_HEIGHT (&info);
+  if (GST_VIDEO_INFO_IS_RGB (&info))
+    *channels = 3;
+  else if (GST_VIDEO_INFO_IS_GRAY (&info))
+    *channels = 1;
+  else {
+    g_set_error (err, GST_CORE_ERROR, GST_CORE_ERROR_NEGOTIATION,
+        "Unsupported caps %s", gst_caps_to_string(caps));
+    return FALSE;
+  }
+
+  for (i = 0; i < GST_VIDEO_INFO_N_COMPONENTS (&info); i++)
+    depth += GST_VIDEO_INFO_COMP_DEPTH (&info, i);
+
+  if (depth / *channels == 8) {
+    /* TODO signdness? */
+    *ipldepth = IPL_DEPTH_8U;
+  } else if (depth / *channels == 16) {
+    *ipldepth = IPL_DEPTH_16U;
+  } else {
+    g_set_error (err, GST_CORE_ERROR, GST_CORE_ERROR_NEGOTIATION,
+        "Unsupported depth/channels %d/%d", depth, *channels);
+    return FALSE;
+  }
+  return TRUE;
 }
 
 GstCaps *

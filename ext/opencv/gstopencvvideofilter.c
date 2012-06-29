@@ -73,7 +73,6 @@ static void gst_opencv_video_filter_class_init (GstOpencvVideoFilterClass *
     klass);
 static void gst_opencv_video_filter_init (GstOpencvVideoFilter * trans,
     GstOpencvVideoFilterClass * klass);
-static void gst_opencv_video_filter_base_init (gpointer gclass);
 
 static gboolean gst_opencv_video_filter_set_caps (GstBaseTransform * trans,
     GstCaps * incaps, GstCaps * outcaps);
@@ -96,7 +95,7 @@ gst_opencv_video_filter_get_type (void)
     GType _type;
     static const GTypeInfo opencv_base_transform_info = {
       sizeof (GstOpencvVideoFilterClass),
-      (GBaseInitFunc) gst_opencv_video_filter_base_init,
+      NULL,
       NULL,
       (GClassInitFunc) gst_opencv_video_filter_class_init,
       NULL,
@@ -128,12 +127,6 @@ gst_opencv_video_filter_finalize (GObject * obj)
   G_OBJECT_CLASS (parent_class)->finalize (obj);
 }
 
-/* GObject vmethod implementations */
-static void
-gst_opencv_video_filter_base_init (gpointer gclass)
-{
-}
-
 static void
 gst_opencv_video_filter_class_init (GstOpencvVideoFilterClass * klass)
 {
@@ -159,7 +152,7 @@ gst_opencv_video_filter_class_init (GstOpencvVideoFilterClass * klass)
 
 static void
 gst_opencv_video_filter_init (GstOpencvVideoFilter * transform,
-    GstOpencvVideoFilterClass * bclass)
+    GstOpencvVideoFilterClass * klass)
 {
 }
 
@@ -169,6 +162,8 @@ gst_opencv_video_filter_transform (GstBaseTransform * trans,
 {
   GstOpencvVideoFilter *transform;
   GstOpencvVideoFilterClass *fclass;
+  GstMapInfo in_info;
+  GstMapInfo out_info;
   GstFlowReturn ret;
 
   transform = GST_OPENCV_VIDEO_FILTER (trans);
@@ -178,16 +173,17 @@ gst_opencv_video_filter_transform (GstBaseTransform * trans,
   g_return_val_if_fail (transform->cvImage != NULL, GST_FLOW_ERROR);
   g_return_val_if_fail (transform->out_cvImage != NULL, GST_FLOW_ERROR);
 
-  transform->cvImage->imageData = (char *) gst_buffer_map (inbuf,
-      NULL, NULL, GST_MAP_READ);
-  transform->out_cvImage->imageData = (char *) gst_buffer_map (outbuf,
-      NULL, NULL, GST_MAP_WRITE);
+  gst_buffer_map (inbuf, &in_info, GST_MAP_READ);
+  transform->cvImage->imageData = (char *) in_info.data;
+
+  gst_buffer_map (outbuf, &out_info, GST_MAP_WRITE);
+  transform->out_cvImage->imageData = (char *) out_info.data;
 
   ret = fclass->cv_trans_func (transform, inbuf, transform->cvImage, outbuf,
       transform->out_cvImage);
 
-  gst_buffer_unmap (inbuf, transform->cvImage->imageData, -1);
-  gst_buffer_unmap (outbuf, transform->out_cvImage->imageData, -1);
+  gst_buffer_unmap (inbuf, &in_info);
+  gst_buffer_unmap (outbuf, &out_info);
 
   return ret;
 }
@@ -198,6 +194,7 @@ gst_opencv_video_filter_transform_ip (GstBaseTransform * trans,
 {
   GstOpencvVideoFilter *transform;
   GstOpencvVideoFilterClass *fclass;
+  GstMapInfo info;
   GstFlowReturn ret;
 
   transform = GST_OPENCV_VIDEO_FILTER (trans);
@@ -210,13 +207,13 @@ gst_opencv_video_filter_transform_ip (GstBaseTransform * trans,
    * level */
   buffer = gst_buffer_make_writable (buffer);
 
-  transform->cvImage->imageData = (char *) gst_buffer_map (buffer,
-      NULL, NULL, GST_MAP_READWRITE);
+  gst_buffer_map (buffer, &info, GST_MAP_READWRITE);
+  transform->cvImage->imageData = (char *) info.data;
 
   /* FIXME how to release buffer? */
   ret = fclass->cv_trans_ip_func (transform, buffer, transform->cvImage);
 
-  gst_buffer_unmap (buffer, transform->cvImage->imageData, -1);
+  gst_buffer_unmap (buffer, &info);
 
   return ret;
 }

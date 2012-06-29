@@ -143,23 +143,24 @@ enum
 static GstStaticPadTemplate sink_factory = GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS (GST_VIDEO_CAPS_RGB));
+    GST_STATIC_CAPS (GST_VIDEO_CAPS_MAKE ("RGB")));
 
 static GstStaticPadTemplate src_factory = GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS (GST_VIDEO_CAPS_RGB));
+    GST_STATIC_CAPS (GST_VIDEO_CAPS_MAKE ("RGB")));
 
-GST_BOILERPLATE (GstMotioncells, gst_motion_cells, GstElement,
-    GST_TYPE_ELEMENT);
+G_DEFINE_TYPE (GstMotioncells, gst_motion_cells, GST_TYPE_ELEMENT);
 
 static void gst_motion_cells_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec);
 static void gst_motion_cells_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec);
 
-static gboolean gst_motion_cells_set_caps (GstPad * pad, GstCaps * caps);
-static GstFlowReturn gst_motion_cells_chain (GstPad * pad, GstBuffer * buf);
+static gboolean gst_motion_cells_handle_sink_event (GstPad * pad,
+    GstObject * parent, GstEvent * event);
+static GstFlowReturn gst_motion_cells_chain (GstPad * pad, GstObject * parent,
+    GstBuffer * buf);
 
 static void gst_motioncells_update_motion_cells (GstMotioncells * filter);
 static void gst_motioncells_update_motion_masks (GstMotioncells * filter);
@@ -194,25 +195,7 @@ gst_motion_cells_finalize (GObject * obj)
   GFREE (filter->basename_datafile);
   GFREE (filter->datafile_extension);
 
-  G_OBJECT_CLASS (parent_class)->finalize (obj);
-}
-
-/* GObject vmethod implementations */
-static void
-gst_motion_cells_base_init (gpointer gclass)
-{
-  GstElementClass *element_class = GST_ELEMENT_CLASS (gclass);
-
-  gst_element_class_set_details_simple (element_class,
-      "motioncells",
-      "Filter/Effect/Video",
-      "Performs motion detection on videos and images, providing detected motion cells index via bus messages",
-      "Robert Jobbagy <jobbagy dot robert at gmail dot com>, Nicola Murino <nicola dot murino at gmail.com>");
-
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&src_factory));
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&sink_factory));
+  G_OBJECT_CLASS (gst_motion_cells_parent_class)->finalize (obj);
 }
 
 /* initialize the motioncells's class */
@@ -221,8 +204,8 @@ gst_motion_cells_class_init (GstMotioncellsClass * klass)
 {
   GObjectClass *gobject_class;
 
+  GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
   gobject_class = (GObjectClass *) klass;
-  parent_class = g_type_class_peek_parent (klass);
 
   gobject_class->finalize = GST_DEBUG_FUNCPTR (gst_motion_cells_finalize);
   gobject_class->set_property = gst_motion_cells_set_property;
@@ -316,6 +299,17 @@ gst_motion_cells_class_init (GstMotioncellsClass * klass)
           "Motion Cell Border Thickness, if it's -1 then motion cell will be fill",
           THICKNESS_MIN, THICKNESS_MAX, THICKNESS_DEF,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
+  gst_element_class_set_details_simple (element_class,
+      "motioncells",
+      "Filter/Effect/Video",
+      "Performs motion detection on videos and images, providing detected motion cells index via bus messages",
+      "Robert Jobbagy <jobbagy dot robert at gmail dot com>, Nicola Murino <nicola dot murino at gmail.com>");
+
+  gst_element_class_add_pad_template (element_class,
+      gst_static_pad_template_get (&src_factory));
+  gst_element_class_add_pad_template (element_class,
+      gst_static_pad_template_get (&sink_factory));
 }
 
 /* initialize the new element
@@ -324,19 +318,18 @@ gst_motion_cells_class_init (GstMotioncellsClass * klass)
  * initialize instance structure
  */
 static void
-gst_motion_cells_init (GstMotioncells * filter, GstMotioncellsClass * gclass)
+gst_motion_cells_init (GstMotioncells * filter)
 {
   filter->sinkpad = gst_pad_new_from_static_template (&sink_factory, "sink");
-  gst_pad_set_setcaps_function (filter->sinkpad,
-      GST_DEBUG_FUNCPTR (gst_motion_cells_set_caps));
-  gst_pad_set_getcaps_function (filter->sinkpad,
-      GST_DEBUG_FUNCPTR (gst_pad_proxy_getcaps));
+  GST_PAD_SET_PROXY_CAPS (filter->sinkpad);
+
+  gst_pad_set_event_function (filter->sinkpad,
+      GST_DEBUG_FUNCPTR (gst_motion_cells_handle_sink_event));
   gst_pad_set_chain_function (filter->sinkpad,
       GST_DEBUG_FUNCPTR (gst_motion_cells_chain));
 
   filter->srcpad = gst_pad_new_from_static_template (&src_factory, "src");
-  gst_pad_set_getcaps_function (filter->srcpad,
-      GST_DEBUG_FUNCPTR (gst_pad_proxy_getcaps));
+  GST_PAD_SET_PROXY_CAPS (filter->srcpad);
 
   gst_element_add_pad (GST_ELEMENT (filter), filter->sinkpad);
   gst_element_add_pad (GST_ELEMENT (filter), filter->srcpad);
@@ -817,38 +810,53 @@ gst_motioncells_update_motion_masks (GstMotioncells * filter)
 
 /* this function handles the link with other elements */
 static gboolean
-gst_motion_cells_set_caps (GstPad * pad, GstCaps * caps)
+gst_motion_cells_handle_sink_event (GstPad * pad, GstObject * parent,
+    GstEvent * event)
 {
   GstMotioncells *filter;
-  GstPad *otherpad;
-  GstStructure *structure;
-  int numerator, denominator;
+  GstVideoInfo info;
+  gboolean res = TRUE;
 
-  filter = gst_motion_cells (gst_pad_get_parent (pad));
-  structure = gst_caps_get_structure (caps, 0);
-  gst_structure_get_int (structure, "width", &filter->width);
-  gst_structure_get_int (structure, "height", &filter->height);
-  gst_structure_get_fraction (structure, "framerate", &numerator, &denominator);
-  filter->framerate = (double) numerator / (double) denominator;
-  if (filter->cvImage)
-    cvReleaseImage (&filter->cvImage);
-  filter->cvImage =
-      cvCreateImage (cvSize (filter->width, filter->height), IPL_DEPTH_8U, 3);
+  filter = gst_motion_cells (parent);
 
-  otherpad = (pad == filter->srcpad) ? filter->sinkpad : filter->srcpad;
-  gst_object_unref (filter);
+  switch (GST_EVENT_TYPE (event)) {
+    case GST_EVENT_CAPS:
+    {
+      GstCaps *caps;
+      gst_event_parse_caps (event, &caps);
+      gst_video_info_from_caps (&info, caps);
 
-  return gst_pad_set_caps (otherpad, caps);
+      filter->width = info.width;
+      filter->height = info.height;
+
+      filter->framerate = (double) info.fps_n / (double) info.fps_d;
+      if (filter->cvImage)
+        cvReleaseImage (&filter->cvImage);
+      filter->cvImage =
+          cvCreateImage (cvSize (filter->width, filter->height), IPL_DEPTH_8U,
+          3);
+      break;
+    }
+    default:
+      break;
+  }
+
+  res = gst_pad_event_default (pad, parent, event);
+
+  return res;
+
+
 }
 
 /* chain function
  * this function does the actual processing
  */
 static GstFlowReturn
-gst_motion_cells_chain (GstPad * pad, GstBuffer * buf)
+gst_motion_cells_chain (GstPad * pad, GstObject * parent, GstBuffer * buf)
 {
   GstMotioncells *filter;
-  filter = gst_motion_cells (GST_OBJECT_PARENT (pad));
+  GstMapInfo info;
+  filter = gst_motion_cells (parent);
   GST_OBJECT_LOCK (filter);
   if (filter->calculate_motion) {
     double sensitivity;
@@ -865,8 +873,10 @@ gst_motion_cells_chain (GstPad * pad, GstBuffer * buf)
     motioncellidx *motionmaskcellsidx;
     cellscolor motioncellscolor;
     motioncellidx *motioncellsidx;
+
     buf = gst_buffer_make_writable (buf);
-    filter->cvImage->imageData = (char *) GST_BUFFER_DATA (buf);
+    gst_buffer_map (buf, &info, GST_MAP_WRITE);
+    filter->cvImage->imageData = (char *) info.data;
     if (filter->firstframe) {
       setPrevFrame (filter->cvImage, filter->id);
       filter->firstframe = FALSE;

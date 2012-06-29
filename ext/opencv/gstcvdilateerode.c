@@ -75,9 +75,6 @@ enum
 
 #define DEFAULT_ITERATIONS 1
 
-static GstElementClass *parent_class = NULL;
-
-static void gst_cv_dilate_erode_base_init (gpointer gclass);
 static void gst_cv_dilate_erode_class_init (GstCvDilateErodeClass * klass);
 static void gst_cv_dilate_erode_init (GstCvDilateErode * filter,
     GstCvDilateErodeClass * gclass);
@@ -96,7 +93,7 @@ gst_cv_dilate_erode_get_type (void)
     GType _type;
     static const GTypeInfo opencv_dilate_erode_info = {
       sizeof (GstCvDilateErodeClass),
-      (GBaseInitFunc) gst_cv_dilate_erode_base_init,
+      NULL,
       NULL,
       (GClassInitFunc) gst_cv_dilate_erode_class_init,
       NULL,
@@ -117,14 +114,24 @@ gst_cv_dilate_erode_get_type (void)
   return opencv_dilate_erode_type;
 }
 
-/* GObject vmethod implementations */
-
+/* initialize the cvdilate_erode's class */
 static void
-gst_cv_dilate_erode_base_init (gpointer gclass)
+gst_cv_dilate_erode_class_init (GstCvDilateErodeClass * klass)
 {
-  GstElementClass *element_class = GST_ELEMENT_CLASS (gclass);
+  GObjectClass *gobject_class;
+  GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
   GstCaps *caps;
   GstPadTemplate *templ;
+
+  gobject_class = (GObjectClass *) klass;
+
+  gobject_class->set_property = gst_cv_dilate_erode_set_property;
+  gobject_class->get_property = gst_cv_dilate_erode_get_property;
+
+  g_object_class_install_property (gobject_class, PROP_ITERATIONS,
+      g_param_spec_int ("iterations", "iterations",
+          "Number of iterations to run the algorithm", 1, G_MAXINT,
+          DEFAULT_ITERATIONS, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   /* add sink and source pad templates */
   caps = gst_opencv_caps_from_cv_image_type (CV_16UC1);
@@ -134,29 +141,8 @@ gst_cv_dilate_erode_base_init (gpointer gclass)
   templ = gst_pad_template_new ("sink", GST_PAD_SINK, GST_PAD_ALWAYS,
       gst_caps_ref (caps));
   gst_element_class_add_pad_template (element_class, templ);
-  gst_object_unref (templ);
   templ = gst_pad_template_new ("src", GST_PAD_SRC, GST_PAD_ALWAYS, caps);
   gst_element_class_add_pad_template (element_class, templ);
-  gst_object_unref (templ);
-}
-
-/* initialize the cvdilate_erode's class */
-static void
-gst_cv_dilate_erode_class_init (GstCvDilateErodeClass * klass)
-{
-  GObjectClass *gobject_class;
-
-  gobject_class = (GObjectClass *) klass;
-
-  parent_class = g_type_class_peek_parent (klass);
-
-  gobject_class->set_property = gst_cv_dilate_erode_set_property;
-  gobject_class->get_property = gst_cv_dilate_erode_get_property;
-
-  g_object_class_install_property (gobject_class, PROP_ITERATIONS,
-      g_param_spec_int ("iterations", "iterations",
-          "Number of iterations to run the algorithm", 1, G_MAXINT,
-          DEFAULT_ITERATIONS, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 }
 
 /* initialize the new element

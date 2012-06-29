@@ -56,20 +56,22 @@ GST_DEBUG_CATEGORY_STATIC (gst_cv_laplace_debug);
 static GstStaticPadTemplate sink_factory = GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS (GST_VIDEO_CAPS_GRAY8)
+    GST_STATIC_CAPS (GST_VIDEO_CAPS_MAKE ("GRAY8"))
     );
 
 #if G_BYTE_ORDER == G_BIG_ENDIAN
-#define BYTE_ORDER_STRING "BIG_ENDIAN"
-#else
-#define BYTE_ORDER_STRING "LITTLE_ENDIAN"
-#endif
-
 static GstStaticPadTemplate src_factory = GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS (GST_VIDEO_CAPS_GRAY16 (BYTE_ORDER_STRING))
+    GST_STATIC_CAPS (GST_VIDEO_CAPS_MAKE ("GRAY16_BE"))
     );
+#else
+static GstStaticPadTemplate src_factory = GST_STATIC_PAD_TEMPLATE ("src",
+    GST_PAD_SRC,
+    GST_PAD_ALWAYS,
+    GST_STATIC_CAPS (GST_VIDEO_CAPS_MAKE ("GRAY16_LE"))
+    );
+#endif
 
 /* Filter signals and args */
 enum
@@ -85,8 +87,7 @@ enum
 
 #define DEFAULT_APERTURE_SIZE 3
 
-GST_BOILERPLATE (GstCvLaplace, gst_cv_laplace, GstOpencvVideoFilter,
-    GST_TYPE_OPENCV_VIDEO_FILTER);
+G_DEFINE_TYPE (GstCvLaplace, gst_cv_laplace, GST_TYPE_OPENCV_VIDEO_FILTER);
 
 static void gst_cv_laplace_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec);
@@ -94,7 +95,7 @@ static void gst_cv_laplace_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec);
 
 static GstCaps *gst_cv_laplace_transform_caps (GstBaseTransform * trans,
-    GstPadDirection dir, GstCaps * caps);
+    GstPadDirection dir, GstCaps * caps, GstCaps * filter);
 
 static GstFlowReturn gst_cv_laplace_transform (GstOpencvVideoFilter * filter,
     GstBuffer * buf, IplImage * img, GstBuffer * outbuf, IplImage * outimg);
@@ -112,26 +113,7 @@ gst_cv_laplace_finalize (GObject * obj)
   if (filter->intermediary_img)
     cvReleaseImage (&filter->intermediary_img);
 
-  G_OBJECT_CLASS (parent_class)->finalize (obj);
-}
-
-/* GObject vmethod implementations */
-
-static void
-gst_cv_laplace_base_init (gpointer gclass)
-{
-  GstElementClass *element_class = GST_ELEMENT_CLASS (gclass);
-
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&src_factory));
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&sink_factory));
-
-  gst_element_class_set_details_simple (element_class,
-      "cvlaplace",
-      "Transform/Effect/Video",
-      "Applies cvLaplace OpenCV function to the image",
-      "Thiago Santos<thiago.sousa.santos@collabora.co.uk>");
+  G_OBJECT_CLASS (gst_cv_laplace_parent_class)->finalize (obj);
 }
 
 /* initialize the cvlaplace's class */
@@ -141,12 +123,11 @@ gst_cv_laplace_class_init (GstCvLaplaceClass * klass)
   GObjectClass *gobject_class;
   GstBaseTransformClass *gstbasetransform_class;
   GstOpencvVideoFilterClass *gstopencvbasefilter_class;
+  GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
 
   gobject_class = (GObjectClass *) klass;
   gstbasetransform_class = (GstBaseTransformClass *) klass;
   gstopencvbasefilter_class = (GstOpencvVideoFilterClass *) klass;
-
-  parent_class = g_type_class_peek_parent (klass);
 
   gobject_class->finalize = GST_DEBUG_FUNCPTR (gst_cv_laplace_finalize);
   gobject_class->set_property = gst_cv_laplace_set_property;
@@ -161,10 +142,21 @@ gst_cv_laplace_class_init (GstCvLaplaceClass * klass)
       g_param_spec_int ("aperture-size", "aperture size",
           "Size of the extended Laplace Kernel (1, 3, 5 or 7)", 1, 7,
           DEFAULT_APERTURE_SIZE, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
+  gst_element_class_add_pad_template (element_class,
+      gst_static_pad_template_get (&src_factory));
+  gst_element_class_add_pad_template (element_class,
+      gst_static_pad_template_get (&sink_factory));
+
+  gst_element_class_set_details_simple (element_class,
+      "cvlaplace",
+      "Transform/Effect/Video",
+      "Applies cvLaplace OpenCV function to the image",
+      "Thiago Santos<thiago.sousa.santos@collabora.co.uk>");
 }
 
 static void
-gst_cv_laplace_init (GstCvLaplace * filter, GstCvLaplaceClass * gclass)
+gst_cv_laplace_init (GstCvLaplace * filter)
 {
   filter->aperture_size = DEFAULT_APERTURE_SIZE;
 
@@ -189,7 +181,6 @@ gst_cv_laplace_cv_set_caps (GstOpencvVideoFilter * trans, gint in_width,
       GST_WARNING_OBJECT (filter, "Unsupported output depth %d", out_depth);
       return FALSE;
   }
-
   if (filter->intermediary_img) {
     cvReleaseImage (&filter->intermediary_img);
   }
@@ -202,41 +193,71 @@ gst_cv_laplace_cv_set_caps (GstOpencvVideoFilter * trans, gint in_width,
 
 static GstCaps *
 gst_cv_laplace_transform_caps (GstBaseTransform * trans, GstPadDirection dir,
-    GstCaps * caps)
+    GstCaps * caps, GstCaps * filter)
 {
-  GstCaps *output = NULL;
+  GstCaps *to, *ret;
+  GstCaps *templ;
   GstStructure *structure;
+  GstPad *other;
   gint i;
 
-  output = gst_caps_copy (caps);
+  to = gst_caps_new_empty ();
 
-  /* we accept anything from the template caps for either side */
-  switch (dir) {
-    case GST_PAD_SINK:
-      for (i = 0; i < gst_caps_get_size (output); i++) {
-        structure = gst_caps_get_structure (output, i);
-        gst_structure_set (structure,
-            "depth", G_TYPE_INT, 16,
-            "bpp", G_TYPE_INT, 16,
-            "endianness", G_TYPE_INT, G_BYTE_ORDER, NULL);
-      }
-      break;
-    case GST_PAD_SRC:
-      for (i = 0; i < gst_caps_get_size (output); i++) {
-        structure = gst_caps_get_structure (output, i);
-        gst_structure_set (structure,
-            "depth", G_TYPE_INT, 8, "bpp", G_TYPE_INT, 8, NULL);
-        gst_structure_remove_field (structure, "endianness");
-      }
-      break;
-    default:
-      gst_caps_unref (output);
-      output = NULL;
-      g_assert_not_reached ();
-      break;
+  for (i = 0; i < gst_caps_get_size (caps); i++) {
+    const GValue *v;
+    GValue list = { 0, };
+    GValue val = { 0, };
+
+    structure = gst_structure_copy (gst_caps_get_structure (caps, i));
+
+    g_value_init (&list, GST_TYPE_LIST);
+
+    g_value_init (&val, G_TYPE_STRING);
+    g_value_set_string (&val, "GRAY8");
+    gst_value_list_append_value (&list, &val);
+    g_value_unset (&val);
+
+    g_value_init (&val, G_TYPE_STRING);
+#if G_BYTE_ORDER == G_BIG_ENDIAN
+    g_value_set_string (&val, "GRAY16_BE");
+#else
+    g_value_set_string (&val, "GRAY16_LE");
+#endif
+    gst_value_list_append_value (&list, &val);
+    g_value_unset (&val);
+
+    v = gst_structure_get_value (structure, "format");
+
+    gst_value_list_merge (&val, v, &list);
+    gst_structure_set_value (structure, "format", &val);
+    g_value_unset (&val);
+    g_value_unset (&list);
+
+    gst_structure_remove_field (structure, "colorimetry");
+    gst_structure_remove_field (structure, "chroma-site");
+
+    gst_caps_append_structure (to, structure);
+
   }
 
-  return output;
+  /* filter against set allowed caps on the pad */
+  other = (dir == GST_PAD_SINK) ? trans->srcpad : trans->sinkpad;
+  templ = gst_pad_get_pad_template_caps (other);
+  ret = gst_caps_intersect (to, templ);
+  gst_caps_unref (to);
+  gst_caps_unref (templ);
+
+  if (ret && filter) {
+    GstCaps *intersection;
+
+    intersection =
+        gst_caps_intersect_full (filter, ret, GST_CAPS_INTERSECT_FIRST);
+    gst_caps_unref (ret);
+    ret = intersection;
+  }
+
+  return ret;
+
 }
 
 static void

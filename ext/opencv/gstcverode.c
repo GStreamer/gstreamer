@@ -52,39 +52,29 @@
 GST_DEBUG_CATEGORY_STATIC (gst_cv_erode_debug);
 #define GST_CAT_DEFAULT gst_cv_erode_debug
 
-GST_BOILERPLATE (GstCvErode, gst_cv_erode, GstCvDilateErode,
-    GST_TYPE_CV_DILATE_ERODE);
+G_DEFINE_TYPE (GstCvErode, gst_cv_erode, GST_TYPE_CV_DILATE_ERODE);
 
 static GstFlowReturn gst_cv_erode_transform_ip (GstOpencvVideoFilter *
     filter, GstBuffer * buf, IplImage * img);
 static GstFlowReturn gst_cv_erode_transform (GstOpencvVideoFilter * filter,
     GstBuffer * buf, IplImage * img, GstBuffer * outbuf, IplImage * outimg);
 
-/* GObject vmethod implementations */
-static void
-gst_cv_erode_base_init (gpointer gclass)
-{
-  GstElementClass *element_class = GST_ELEMENT_CLASS (gclass);
-
-  gst_element_class_set_details_simple (element_class,
-      "cverode",
-      "Transform/Effect/Video",
-      "Applies cvErode OpenCV function to the image",
-      "Thiago Santos<thiago.sousa.santos@collabora.co.uk>");
-}
-
 /* initialize the cverode's class */
 static void
 gst_cv_erode_class_init (GstCvErodeClass * klass)
 {
   GstOpencvVideoFilterClass *gstopencvbasefilter_class;
+  GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
 
   gstopencvbasefilter_class = (GstOpencvVideoFilterClass *) klass;
 
-  parent_class = g_type_class_peek_parent (klass);
-
   gstopencvbasefilter_class->cv_trans_ip_func = gst_cv_erode_transform_ip;
   gstopencvbasefilter_class->cv_trans_func = gst_cv_erode_transform;
+  gst_element_class_set_details_simple (element_class,
+      "cverode",
+      "Transform/Effect/Video",
+      "Applies cvErode OpenCV function to the image",
+      "Thiago Santos<thiago.sousa.santos@collabora.co.uk>");
 }
 
 /* initialize the new element
@@ -93,7 +83,7 @@ gst_cv_erode_class_init (GstCvErodeClass * klass)
  * initialize instance structure
  */
 static void
-gst_cv_erode_init (GstCvErode * filter, GstCvErodeClass * gclass)
+gst_cv_erode_init (GstCvErode * filter)
 {
 }
 

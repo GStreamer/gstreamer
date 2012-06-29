@@ -47,7 +47,7 @@
 #define __GST_OPENCV_TEXT_OVERLAY_H__
 
 #include <gst/gst.h>
-
+#include "gstopencvutils.h"
 G_BEGIN_DECLS
 
 /* #defines don't like whitespacey bits */
