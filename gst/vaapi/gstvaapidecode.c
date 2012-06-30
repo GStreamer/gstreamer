@@ -459,10 +459,7 @@ gst_vaapidecode_finalize(GObject *object)
         decode->srcpad_caps = NULL;
     }
 
-    if (decode->display) {
-        g_object_unref(decode->display);
-        decode->display = NULL;
-    }
+    g_clear_object(&decode->display);
 
     if (decode->allowed_caps) {
         gst_caps_unref(decode->allowed_caps);
@@ -546,10 +543,7 @@ gst_vaapidecode_change_state(GstElement *element, GstStateChange transition)
         break;
     case GST_STATE_CHANGE_READY_TO_NULL:
         gst_vaapidecode_destroy(decode);
-        if (decode->display) {
-            g_object_unref(decode->display);
-            decode->display = NULL;
-        }
+        g_clear_object(&decode->display);
         decode->is_ready = FALSE;
         break;
     default:

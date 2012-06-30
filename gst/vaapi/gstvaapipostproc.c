@@ -213,10 +213,7 @@ gst_vaapipostproc_destroy(GstVaapiPostproc *postproc)
 {
     gst_caps_replace(&postproc->postproc_caps, NULL);
 
-    if (postproc->display) {
-        g_object_unref(postproc->display);
-        postproc->display = NULL;
-    }
+    g_clear_object(&postproc->display);
 }
 
 static gboolean

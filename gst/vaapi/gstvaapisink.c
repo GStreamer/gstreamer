@@ -229,15 +229,8 @@ gst_vaapisink_xoverlay_iface_init(GstXOverlayClass *iface)
 static void
 gst_vaapisink_destroy(GstVaapiSink *sink)
 {
-    if (sink->texture) {
-        g_object_unref(sink->texture);
-        sink->texture = NULL;
-    }
-
-    if (sink->display) {
-        g_object_unref(sink->display);
-        sink->display = NULL;
-    }
+    g_clear_object(&sink->texture);
+    g_clear_object(&sink->display);
 
     gst_caps_replace(&sink->caps, NULL);
 }
@@ -402,10 +395,7 @@ gst_vaapisink_ensure_window_xid(GstVaapiSink *sink, guintptr window_id)
         gst_vaapi_window_x11_get_xid(GST_VAAPI_WINDOW_X11(sink->window)) == xid)
         return TRUE;
 
-    if (sink->window) {
-        g_object_unref(sink->window);
-        sink->window = NULL;
-    }
+    g_clear_object(&sink->window);
 
 #if USE_VAAPISINK_GLX
     if (sink->use_glx)
@@ -429,15 +419,9 @@ gst_vaapisink_stop(GstBaseSink *base_sink)
 {
     GstVaapiSink * const sink = GST_VAAPISINK(base_sink);
 
-    if (sink->window) {
-        g_object_unref(sink->window);
-        sink->window = NULL;
-    }
+    g_clear_object(&sink->window);
+    g_clear_object(&sink->display);
 
-    if (sink->display) {
-        g_object_unref(sink->display);
-        sink->display = NULL;
-    }
     return TRUE;
 }
 
@@ -688,8 +672,7 @@ gst_vaapisink_show_frame(GstBaseSink *base_sink, GstBuffer *buffer)
         gst_video_buffer_get_overlay_composition(buffer);
 
     if (sink->display != gst_vaapi_video_buffer_get_display (vbuffer)) {
-      if (sink->display)
-        g_object_unref (sink->display);
+      g_clear_object(&sink->display);
       sink->display = g_object_ref (gst_vaapi_video_buffer_get_display (vbuffer));
     }
 

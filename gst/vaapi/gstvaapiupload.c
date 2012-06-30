@@ -208,20 +208,9 @@ gst_video_context_interface_init(GstVideoContextInterface *iface)
 static void
 gst_vaapiupload_destroy(GstVaapiUpload *upload)
 {
-    if (upload->images) {
-        g_object_unref(upload->images);
-        upload->images = NULL;
-    }
-
-    if (upload->surfaces) {
-        g_object_unref(upload->surfaces);
-        upload->surfaces = NULL;
-    }
-
-    if (upload->display) {
-        g_object_unref(upload->display);
-        upload->display = NULL;
-    }
+    g_clear_object(&upload->images);
+    g_clear_object(&upload->surfaces);
+    g_clear_object(&upload->display);
 }
 
 static void
@@ -394,10 +383,8 @@ gst_vaapiupload_stop(GstBaseTransform *trans)
 {
     GstVaapiUpload * const upload = GST_VAAPIUPLOAD(trans);
 
-    if (upload->display) {
-        g_object_unref(upload->display);
-        upload->display = NULL;
-    }
+    g_clear_object(&upload->display);
+
     return TRUE;
 }
 
@@ -523,8 +510,7 @@ gst_vaapiupload_ensure_image_pool(GstVaapiUpload *upload, GstCaps *caps)
     if (width != upload->image_width || height != upload->image_height) {
         upload->image_width  = width;
         upload->image_height = height;
-        if (upload->images)
-            g_object_unref(upload->images);
+        g_clear_object(&upload->images);
         upload->images = gst_vaapi_image_pool_new(upload->display, caps);
         if (!upload->images)
             return FALSE;
@@ -545,8 +531,7 @@ gst_vaapiupload_ensure_surface_pool(GstVaapiUpload *upload, GstCaps *caps)
     if (width != upload->surface_width || height != upload->surface_height) {
         upload->surface_width  = width;
         upload->surface_height = height;
-        if (upload->surfaces)
-            g_object_unref(upload->surfaces);
+        g_clear_object(&upload->surfaces);
         upload->surfaces = gst_vaapi_surface_pool_new(upload->display, caps);
         if (!upload->surfaces)
             return FALSE;

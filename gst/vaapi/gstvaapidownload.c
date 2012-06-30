@@ -222,15 +222,8 @@ gst_vaapidownload_destroy(GstVaapiDownload *download)
         download->allowed_caps = NULL;
     }
 
-    if (download->images) {
-        g_object_unref(download->images);
-        download->images = NULL;
-    }
-
-    if (download->display) {
-        g_object_unref(download->display);
-        download->display = NULL;
-    }
+    g_clear_object(&download->images);
+    g_clear_object(&download->display);
 }
 
 static void
@@ -319,10 +312,8 @@ gst_vaapidownload_stop(GstBaseTransform *trans)
 {
     GstVaapiDownload * const download = GST_VAAPIDOWNLOAD(trans);
 
-    if (download->display) {
-        g_object_unref(download->display);
-        download->display = NULL;
-    }
+    g_clear_object(&download->display);
+
     return TRUE;
 }
 
@@ -531,8 +522,7 @@ gst_vaapidownload_ensure_image_pool(GstVaapiDownload *download, GstCaps *caps)
         download->image_format = format;
         download->image_width  = width;
         download->image_height = height;
-        if (download->images)
-            g_object_unref(download->images);
+        g_clear_object(&download->images);
         download->images = gst_vaapi_image_pool_new(download->display, caps);
         if (!download->images)
             return FALSE;
