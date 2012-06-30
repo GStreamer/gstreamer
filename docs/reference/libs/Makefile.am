@@ -66,7 +66,6 @@ IGNORE_HFILES = \
 	gstvaapidisplay_priv.h \
 	gstvaapidisplay_glx_priv.h \
 	gstvaapidisplay_x11_priv.h \
-	gstvaapimarshal.h \
 	gstvaapiobject_priv.h \
 	gstvaapiutils.h \
 	gstvaapiutils_glx.h \
@@ -75,7 +74,6 @@ IGNORE_HFILES = \
 	$(NULL)
 
 EXTRA_HFILES = \
-	gstvaapimarshal.c \
 	$(NULL)
 
 # Images to copy into HTML directory.

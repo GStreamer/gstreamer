@@ -36,7 +36,6 @@ libgstvaapi_source_c =				\
 	gstvaapiimage.c				\
 	gstvaapiimageformat.c			\
 	gstvaapiimagepool.c			\
-	gstvaapimarshal.c			\
 	gstvaapiobject.c			\
 	gstvaapiparamspecs.c			\
 	gstvaapiprofile.c			\
@@ -271,36 +270,3 @@ libgstvaapi_glx_@GST_MAJORMINOR@_la_LDFLAGS =	\
 
 # Extra clean files so that maintainer-clean removes *everything*
 MAINTAINERCLEANFILES = Makefile.in
-
-# glib-genmarshal rules
-glib_marshal_list = gstvaapimarshal.list
-glib_marshal_prefix = gst_vaapi_marshal
-
-marshal_h = $(glib_marshal_list:.list=.h)
-marshal_c = $(glib_marshal_list:.list=.c)
-
-CLEANFILES	= stamp-marshal
-DISTCLEANFILES	= $(marshal_h) $(marshal_c)
-BUILT_SOURCES	= $(marshal_h) $(marshal_c)
-EXTRA_DIST	= $(srcdir)/$(glib_marshal_list)
-
-stamp-marshal: $(glib_marshal_list)
-	$(GLIB_GENMARSHAL) \
-		--prefix=$(glib_marshal_prefix) \
-		--header \
-	$(srcdir)/$(glib_marshal_list) > xgen-mh \
-	&& (cmp -s xgen-mh $(marshal_h) || cp -f xgen-mh $(marshal_h)) \
-	&& rm -f xgen-mh \
-	&& echo timestamp > $(@F)
-
-$(marshal_h): stamp-marshal
-	@true
-
-$(marshal_c): $(marshal_h)
-	(echo "#include \"$(marshal_h)\"" ; \
-	$(GLIB_GENMARSHAL) \
-		--prefix=$(glib_marshal_prefix) \
-		--body \
-	$(srcdir)/$(glib_marshal_list)) > xgen-mc \
-	&& cp xgen-mc $(marshal_c) \
-	&& rm -f xgen-mc

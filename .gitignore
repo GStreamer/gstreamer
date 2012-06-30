@@ -55,9 +55,6 @@ docs/reference/plugins/tmpl*
 docs/reference/plugins/xml*
 docs/reference/plugins/*.stamp
 gst-libs/gst/gstutils_version.h
-gst-libs/gst/vaapi/gstvaapimarshal.c
-gst-libs/gst/vaapi/gstvaapimarshal.h
-gst-libs/gst/vaapi/stamp-marshal
 gtk-doc.make
 pkgconfig/gstreamer-vaapi-0.10.pc
 pkgconfig/gstreamer-vaapi-glx-0.10.pc

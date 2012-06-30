@@ -161,7 +161,6 @@ AM_CONDITIONAL([ENABLE_GTK_DOC], [false])])
 AC_SUBST(GTKDOC_VERSION)
 
 dnl Check for GLib
-AC_PATH_PROG([GLIB_GENMARSHAL], [glib-genmarshal])
 PKG_CHECK_MODULES([GLIB], [glib-2.0 >= glib_version])
 
 dnl Check for GStreamer

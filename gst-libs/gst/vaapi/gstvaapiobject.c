@@ -29,7 +29,6 @@
 #include "gstvaapi_priv.h"
 #include "gstvaapiparamspecs.h"
 #include "gstvaapivalue.h"
-#include "gstvaapimarshal.h"
 
 #define DEBUG 1
 #include "gstvaapidebug.h"
@@ -179,7 +178,7 @@ gst_vaapi_object_class_init(GstVaapiObjectClass *klass)
         G_SIGNAL_RUN_CLEANUP | G_SIGNAL_NO_RECURSE | G_SIGNAL_NO_HOOKS,
         G_STRUCT_OFFSET(GstVaapiObjectClass, destroy),
         NULL, NULL,
-        gst_vaapi_marshal_VOID__VOID,
+        g_cclosure_marshal_VOID__VOID,
         G_TYPE_NONE, 0
     );
 }
