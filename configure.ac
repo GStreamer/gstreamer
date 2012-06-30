@@ -11,7 +11,7 @@ m4_append([gst_vaapi_version], gst_vaapi_pre_version, [.pre])
 
 # glib version number
 m4_define([glib_major_version], [2])
-m4_define([glib_minor_version], [4])
+m4_define([glib_minor_version], [28])
 m4_define([glib_micro_version], [0])
 m4_define([glib_major_minor_version],
           [glib_major_version.glib_minor_version])
@@ -161,7 +161,9 @@ AM_CONDITIONAL([ENABLE_GTK_DOC], [false])])
 AC_SUBST(GTKDOC_VERSION)
 
 dnl Check for GLib
-PKG_CHECK_MODULES([GLIB], [glib-2.0 >= glib_version])
+GLIB_VERSION_REQUIRED=glib_version
+PKG_CHECK_MODULES([GLIB], [glib-2.0 >= $GLIB_VERSION_REQUIRED])
+AC_SUBST(GLIB_VERSION_REQUIRED)
 
 dnl Check for GStreamer
 PKG_CHECK_MODULES([GST],

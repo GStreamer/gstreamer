@@ -4,7 +4,7 @@ Priority: optional
 Maintainer: Gwenole Beauchesne <gwenole.beauchesne@intel.com>
 Build-Depends: debhelper (>= 5),
 	       cdbs,
-	       libglib2.0-dev,
+	       libglib2.0-dev (>= @GLIB_VERSION_REQUIRED@),
 	       libgstreamer@GST_MAJORMINOR@-dev (>= @GST_VERSION_REQUIRED@),
 	       libgstreamer-plugins-base@GST_MAJORMINOR@-dev (>= @GST_PLUGINS_BASE_VERSION_REQUIRED@),
 	       libva-dev (>= @LIBVA_PACKAGE_VERSION@)
