@@ -196,7 +196,7 @@ gst_format_get_by_nick (const gchar * nick)
 
 /**
  * gst_formats_contains:
- * @formats: The format array to search
+ * @formats: (array zero-terminated=1): The format array to search
  * @format: the format to find
  *
  * See if the given format is inside the format array.
