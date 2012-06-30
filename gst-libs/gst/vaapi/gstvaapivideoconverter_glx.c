@@ -44,10 +44,7 @@ gst_vaapi_video_converter_glx_dispose(GObject *object)
     GstVaapiVideoConverterGLXPrivate *priv =
       GST_VAAPI_VIDEO_CONVERTER_GLX (object)->priv;
 
-    if (priv->texture)
-      g_object_unref (priv->texture);
-
-    priv->texture = NULL;
+    g_clear_object(&priv->texture);
 
     G_OBJECT_CLASS (gst_vaapi_video_converter_glx_parent_class)->dispose (object);
 }

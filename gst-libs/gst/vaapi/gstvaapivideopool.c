@@ -95,10 +95,7 @@ gst_vaapi_video_pool_destroy(GstVaapiVideoPool *pool)
         priv->caps = NULL;
     }
 
-    if (priv->display) {
-        g_object_unref(priv->display);
-        priv->display = NULL;
-    }
+    g_clear_object(&priv->display);
 }
 
 static void

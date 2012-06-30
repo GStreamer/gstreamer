@@ -79,10 +79,7 @@ gst_vaapi_subpicture_destroy(GstVaapiSubpicture *subpicture)
         GST_VAAPI_OBJECT_ID(subpicture) = VA_INVALID_ID;
     }
 
-    if (priv->image) {
-        g_object_unref(priv->image);
-        priv->image = NULL;
-    }
+    g_clear_object(&priv->image);
 }
 
 static gboolean

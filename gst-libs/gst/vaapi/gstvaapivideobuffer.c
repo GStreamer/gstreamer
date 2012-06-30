@@ -58,10 +58,7 @@ set_display(GstVaapiVideoBuffer *buffer, GstVaapiDisplay *display)
 {
     GstVaapiVideoBufferPrivate * const priv = buffer->priv;
 
-    if (priv->display) {
-        g_object_unref(priv->display);
-        priv->display = NULL;
-    }
+    g_clear_object(&priv->display);
 
     if (display)
         priv->display = g_object_ref(display);
@@ -94,10 +91,7 @@ gst_vaapi_video_buffer_destroy_image(GstVaapiVideoBuffer *buffer)
         priv->image = NULL;
     }
 
-    if (priv->image_pool) {
-        g_object_unref(priv->image_pool);
-        priv->image_pool = NULL;
-    }
+    g_clear_object(&priv->image_pool);
 }
 
 static void
@@ -105,10 +99,7 @@ gst_vaapi_video_buffer_destroy_surface(GstVaapiVideoBuffer *buffer)
 {
     GstVaapiVideoBufferPrivate * const priv = buffer->priv;
 
-    if (priv->proxy) {
-        g_object_unref(priv->proxy);
-        priv->proxy = NULL;
-    }
+    g_clear_object(&priv->proxy);
 
     if (priv->surface) {
         if (priv->surface_pool)
@@ -118,10 +109,7 @@ gst_vaapi_video_buffer_destroy_surface(GstVaapiVideoBuffer *buffer)
         priv->surface = NULL;
     }
 
-    if (priv->surface_pool) {
-        g_object_unref(priv->surface_pool);
-        priv->surface_pool = NULL;
-    }
+    g_clear_object(&priv->surface_pool);
 
     if (priv->buffer) {
         gst_buffer_unref(priv->buffer);

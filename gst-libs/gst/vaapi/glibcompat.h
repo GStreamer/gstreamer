@@ -23,6 +23,7 @@
 #define GLIB_COMPAT_H
 
 #include <glib.h>
+#include <glib-object.h>
 
 #if !GLIB_CHECK_VERSION(2,27,2)
 static inline void
@@ -31,6 +32,24 @@ g_list_free_full(GList *list, GDestroyNotify free_func)
     g_list_foreach(list, (GFunc)free_func, NULL);
     g_list_free(list);
 }
+#endif
+
+#if !GLIB_CHECK_VERSION(2,28,0)
+static inline void
+g_clear_object_inline(volatile GObject **object_ptr)
+{
+    gpointer * const ptr = (gpointer)object_ptr;
+    gpointer old;
+
+    do {
+        old = g_atomic_pointer_get(ptr);
+    } while G_UNLIKELY(!g_atomic_pointer_compare_and_exchange(ptr, old, NULL));
+
+    if (old)
+        g_object_unref(old);
+}
+#undef  g_clear_object
+#define g_clear_object(obj) g_clear_object_inline((volatile GObject **)(obj))
 #endif
 
 #if GLIB_CHECK_VERSION(2,31,2)

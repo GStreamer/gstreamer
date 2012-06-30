@@ -444,10 +444,7 @@ gst_vaapi_surface_set_parent_context(
 
     priv = surface->priv;
 
-    if (priv->parent_context) {
-        g_object_unref(priv->parent_context);
-        priv->parent_context = NULL;
-    }
+    g_clear_object(&priv->parent_context);
 
     if (context)
         priv->parent_context = g_object_ref(context);

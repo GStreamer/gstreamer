@@ -158,10 +158,7 @@ gst_vaapi_context_destroy_surfaces(GstVaapiContext *context)
         priv->surfaces = NULL;
     }
 
-    if (priv->surfaces_pool) {
-        g_object_unref(priv->surfaces_pool);
-        priv->surfaces_pool = NULL;
-    }
+    g_clear_object(&priv->surfaces_pool);
 }
 
 static void

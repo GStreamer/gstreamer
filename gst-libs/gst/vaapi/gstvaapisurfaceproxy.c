@@ -260,10 +260,7 @@ gst_vaapi_surface_proxy_set_context(
 
     priv = proxy->priv;
 
-    if (priv->context) {
-        g_object_unref(priv->context);
-        priv->context = NULL;
-    }
+    g_clear_object(&priv->context);
 
     if (context)
         priv->context = g_object_ref(context);

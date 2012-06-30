@@ -352,10 +352,7 @@ gst_vaapi_display_destroy(GstVaapiDisplay *display)
             klass->close_display(display);
     }
 
-    if (priv->parent) {
-        g_object_unref(priv->parent);
-        priv->parent = NULL;
-    }
+    g_clear_object(&priv->parent);
 
     if (g_display_cache) {
         gst_vaapi_display_cache_remove(get_display_cache(), display);
@@ -408,8 +405,7 @@ gst_vaapi_display_create(GstVaapiDisplay *display)
         info.va_display
     );
     if (cached_info) {
-        if (priv->parent)
-            g_object_unref(priv->parent);
+        g_clear_object(&priv->parent);
         priv->parent = g_object_ref(cached_info->display);
     }
 

@@ -71,10 +71,7 @@ gst_vaapi_object_finalize(GObject *object)
 
     priv->id = GST_VAAPI_ID_NONE;
 
-    if (priv->display) {
-        g_object_unref(priv->display);
-        priv->display = NULL;
-    }
+    g_clear_object(&priv->display);
 
     G_OBJECT_CLASS(gst_vaapi_object_parent_class)->finalize(object);
 }
