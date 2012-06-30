@@ -636,6 +636,49 @@ GST_START_TEST (test_GstDateTime_iso8601)
 
 GST_END_TEST;
 
+GST_START_TEST (test_GstDateTime_to_g_date_time)
+{
+  GDateTime *gdt1;
+  GDateTime *gdt2;
+  GstDateTime *dt;
+
+  gdt1 = g_date_time_new_now_utc ();
+  dt = gst_date_time_new_from_g_date_time (gdt1);
+  gdt2 = gst_date_time_to_g_date_time (dt);
+
+  fail_unless (g_date_time_compare (gdt1, gdt2) == 0);
+
+  g_date_time_unref (gdt1);
+  g_date_time_unref (gdt2);
+}
+
+GST_END_TEST;
+
+GST_START_TEST (test_GstDateTime_new_from_g_date_time)
+{
+  GDateTime *gdt;
+  GstDateTime *dt;
+
+  gdt = g_date_time_new_now_utc ();
+  dt = gst_date_time_new_from_g_date_time (gdt);
+
+  assert_equals_int (gst_date_time_get_year (dt), g_date_time_get_year (gdt));
+  assert_equals_int (gst_date_time_get_month (dt), g_date_time_get_month (gdt));
+  assert_equals_int (gst_date_time_get_day (dt),
+      g_date_time_get_day_of_month (gdt));
+  assert_equals_int (gst_date_time_get_hour (dt), g_date_time_get_hour (gdt));
+  assert_equals_int (gst_date_time_get_minute (dt),
+      g_date_time_get_minute (gdt));
+  assert_equals_int (gst_date_time_get_second (dt),
+      g_date_time_get_second (gdt));
+  assert_equals_int (gst_date_time_get_microsecond (dt),
+      g_date_time_get_microsecond (gdt));
+
+  g_date_time_unref (gdt);
+}
+
+GST_END_TEST;
+
 static Suite *
 gst_date_time_suite (void)
 {
@@ -656,6 +699,8 @@ gst_date_time_suite (void)
   tcase_add_test (tc_chain, test_GstDateTime_utc_now);
   tcase_add_test (tc_chain, test_GstDateTime_partial_fields);
   tcase_add_test (tc_chain, test_GstDateTime_iso8601);
+  tcase_add_test (tc_chain, test_GstDateTime_to_g_date_time);
+  tcase_add_test (tc_chain, test_GstDateTime_new_from_g_date_time);
 
   return s;
 }

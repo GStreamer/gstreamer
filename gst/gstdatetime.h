@@ -91,6 +91,10 @@ GstDateTime *   gst_date_time_new_now_utc        (void) G_GNUC_MALLOC;
 gchar *         gst_date_time_to_iso8601_string  (GstDateTime * datetime) G_GNUC_MALLOC;
 GstDateTime *   gst_date_time_new_from_iso8601_string  (const gchar * string) G_GNUC_MALLOC;
 
+GDateTime *     gst_date_time_to_g_date_time       (GstDateTime * datetime);
+
+GstDateTime *   gst_date_time_new_from_g_date_time (GDateTime * dt);
+
 /* refcounting */
 
 GstDateTime *   gst_date_time_ref                (GstDateTime * datetime);

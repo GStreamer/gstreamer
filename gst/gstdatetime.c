@@ -64,8 +64,18 @@ struct _GstDateTime
   volatile gint ref_count;
 };
 
-static GstDateTime *
-gst_date_time_new_from_gdatetime (GDateTime * dt)
+/**
+ * gst_date_time_new_from_g_date_time:
+ * @dt: (transfer full): the #GDateTime. The new #GstDateTime takes ownership.
+ *
+ * Creates a new #GstDateTime from a #GDateTime object.
+ *
+ * Free-function: gst_date_time_unref
+ *
+ * Returns: (transfer full): a newly created #GstDateTime, or NULL on error
+ */
+GstDateTime *
+gst_date_time_new_from_g_date_time (GDateTime * dt)
 {
   GstDateTime *gst_dt;
 
@@ -77,6 +87,27 @@ gst_date_time_new_from_gdatetime (GDateTime * dt)
   gst_dt->fields = GST_DATE_TIME_FIELDS_YMD_HMS;
   gst_dt->ref_count = 1;
   return gst_dt;
+}
+
+/**
+ * gst_date_time_to_g_date_time:
+ * @datetime: GstDateTime.
+ *
+ * Creates a new #GDateTime from a fully defined #GstDateTime object.
+ *
+ * Free-function: g_date_time_unref
+ *
+ * Returns: (transfer full): a newly created #GDateTime, or NULL on error
+ */
+GDateTime *
+gst_date_time_to_g_date_time (GstDateTime * datetime)
+{
+  g_return_val_if_fail (datetime != NULL, NULL);
+
+  if (datetime->fields != GST_DATE_TIME_FIELDS_YMD_HMS)
+    return NULL;
+
+  return g_date_time_add (datetime->datetime, 0);
 }
 
 /**
@@ -192,7 +223,7 @@ gst_date_time_get_month (const GstDateTime * datetime)
  * gst_date_time_get_day:
  * @datetime: a #GstDateTime
  *
- * Returns the day of this #GstDateTime.
+ * Returns the day of the month of this #GstDateTime.
  * Call gst_date_time_has_day before, to avoid warnings.
  *
  * Return value: The day of this #GstDateTime
@@ -403,10 +434,10 @@ gst_date_time_new_ymd (gint year, gint month, gint day)
 GstDateTime *
 gst_date_time_new_from_unix_epoch_local_time (gint64 secs)
 {
-  GstDateTime *datetime;
-  datetime =
-      gst_date_time_new_from_gdatetime (g_date_time_new_from_unix_local (secs));
-  return datetime;
+  GDateTime *datetime;
+
+  datetime = g_date_time_new_from_unix_local (secs);
+  return gst_date_time_new_from_g_date_time (datetime);
 }
 
 /**
@@ -427,7 +458,7 @@ gst_date_time_new_from_unix_epoch_utc (gint64 secs)
 {
   GstDateTime *datetime;
   datetime =
-      gst_date_time_new_from_gdatetime (g_date_time_new_from_unix_utc (secs));
+      gst_date_time_new_from_g_date_time (g_date_time_new_from_unix_utc (secs));
   return datetime;
 }
 
@@ -501,7 +532,7 @@ gst_date_time_new_local_time (gint year, gint month, gint day, gint hour,
   fields = gst_date_time_check_fields (&year, &month, &day,
       &hour, &minute, &seconds);
 
-  datetime = gst_date_time_new_from_gdatetime (g_date_time_new_local (year,
+  datetime = gst_date_time_new_from_g_date_time (g_date_time_new_local (year,
           month, day, hour, minute, seconds));
 
   datetime->fields = fields;
@@ -523,7 +554,7 @@ gst_date_time_new_local_time (gint year, gint month, gint day, gint hour,
 GstDateTime *
 gst_date_time_new_now_local_time (void)
 {
-  return gst_date_time_new_from_gdatetime (g_date_time_new_now_local ());
+  return gst_date_time_new_from_g_date_time (g_date_time_new_now_local ());
 }
 
 /**
@@ -542,7 +573,7 @@ gst_date_time_new_now_local_time (void)
 GstDateTime *
 gst_date_time_new_now_utc (void)
 {
-  return gst_date_time_new_from_gdatetime (g_date_time_new_now_utc ());
+  return gst_date_time_new_from_g_date_time (g_date_time_new_now_utc ());
 }
 
 gint
@@ -634,7 +665,7 @@ gst_date_time_new (gfloat tzoffset, gint year, gint month, gint day, gint hour,
   dt = g_date_time_new (tz, year, month, day, hour, minute, seconds);
   g_time_zone_unref (tz);
 
-  datetime = gst_date_time_new_from_gdatetime (dt);
+  datetime = gst_date_time_new_from_g_date_time (dt);
   datetime->fields = fields;
 
   return datetime;
