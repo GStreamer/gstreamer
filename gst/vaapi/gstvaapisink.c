@@ -77,14 +77,25 @@ static GstStaticPadTemplate gst_vaapisink_sink_factory =
         GST_PAD_ALWAYS,
         GST_STATIC_CAPS(GST_VAAPI_SURFACE_CAPS));
 
-static void gst_vaapisink_iface_init(GType type);
+static void
+gst_vaapisink_implements_iface_init(GstImplementsInterfaceClass *iface);
 
-GST_BOILERPLATE_FULL(
+static void
+gst_vaapisink_video_context_iface_init(GstVideoContextInterface *iface);
+
+static void
+gst_vaapisink_xoverlay_iface_init(GstXOverlayClass *iface);
+
+G_DEFINE_TYPE_WITH_CODE(
     GstVaapiSink,
     gst_vaapisink,
-    GstVideoSink,
     GST_TYPE_VIDEO_SINK,
-    gst_vaapisink_iface_init);
+    G_IMPLEMENT_INTERFACE(GST_TYPE_IMPLEMENTS_INTERFACE,
+                          gst_vaapisink_implements_iface_init);
+    G_IMPLEMENT_INTERFACE(GST_TYPE_VIDEO_CONTEXT,
+                          gst_vaapisink_video_context_iface_init);
+    G_IMPLEMENT_INTERFACE(GST_TYPE_X_OVERLAY,
+                          gst_vaapisink_xoverlay_iface_init));
 
 enum {
     PROP_0,
@@ -213,19 +224,6 @@ gst_vaapisink_xoverlay_iface_init(GstXOverlayClass *iface)
     iface->set_render_rectangle = gst_vaapisink_xoverlay_set_render_rectangle;
 #endif
     iface->expose               = gst_vaapisink_xoverlay_expose;
-}
-
-static void
-gst_vaapisink_iface_init(GType type)
-{
-    const GType g_define_type_id = type;
-
-    G_IMPLEMENT_INTERFACE(GST_TYPE_IMPLEMENTS_INTERFACE,
-                          gst_vaapisink_implements_iface_init);
-    G_IMPLEMENT_INTERFACE(GST_TYPE_VIDEO_CONTEXT,
-                          gst_vaapisink_video_context_iface_init);
-    G_IMPLEMENT_INTERFACE(GST_TYPE_X_OVERLAY,
-                          gst_vaapisink_xoverlay_iface_init);
 }
 
 static void
@@ -733,7 +731,7 @@ gst_vaapisink_finalize(GObject *object)
 {
     gst_vaapisink_destroy(GST_VAAPISINK(object));
 
-    G_OBJECT_CLASS(parent_class)->finalize(object);
+    G_OBJECT_CLASS(gst_vaapisink_parent_class)->finalize(object);
 }
 
 static void
@@ -795,29 +793,12 @@ gst_vaapisink_get_property(
 }
 
 static void
-gst_vaapisink_base_init(gpointer klass)
-{
-    GstElementClass * const element_class = GST_ELEMENT_CLASS(klass);
-    GstPadTemplate *pad_template;
-
-    gst_element_class_set_details_simple(
-        element_class,
-        gst_vaapisink_details.longname,
-        gst_vaapisink_details.klass,
-        gst_vaapisink_details.description,
-        gst_vaapisink_details.author
-    );
-
-    pad_template = gst_static_pad_template_get(&gst_vaapisink_sink_factory);
-    gst_element_class_add_pad_template(element_class, pad_template);
-    gst_object_unref(pad_template);
-}
-
-static void
 gst_vaapisink_class_init(GstVaapiSinkClass *klass)
 {
     GObjectClass * const     object_class   = G_OBJECT_CLASS(klass);
+    GstElementClass * const  element_class  = GST_ELEMENT_CLASS(klass);
     GstBaseSinkClass * const basesink_class = GST_BASE_SINK_CLASS(klass);
+    GstPadTemplate *pad_template;
 
     GST_DEBUG_CATEGORY_INIT(gst_debug_vaapisink,
                             GST_PLUGIN_NAME, 0, GST_PLUGIN_DESC);
@@ -832,6 +813,18 @@ gst_vaapisink_class_init(GstVaapiSinkClass *klass)
     basesink_class->preroll      = gst_vaapisink_show_frame;
     basesink_class->render       = gst_vaapisink_show_frame;
     basesink_class->query        = gst_vaapisink_query;
+
+    gst_element_class_set_details_simple(
+        element_class,
+        gst_vaapisink_details.longname,
+        gst_vaapisink_details.klass,
+        gst_vaapisink_details.description,
+        gst_vaapisink_details.author
+    );
+
+    pad_template = gst_static_pad_template_get(&gst_vaapisink_sink_factory);
+    gst_element_class_add_pad_template(element_class, pad_template);
+    gst_object_unref(pad_template);
 
 #if USE_VAAPISINK_GLX
     g_object_class_install_property
@@ -879,7 +872,7 @@ gst_vaapisink_class_init(GstVaapiSinkClass *klass)
 }
 
 static void
-gst_vaapisink_init(GstVaapiSink *sink, GstVaapiSinkClass *klass)
+gst_vaapisink_init(GstVaapiSink *sink)
 {
     sink->caps           = NULL;
     sink->display        = NULL;

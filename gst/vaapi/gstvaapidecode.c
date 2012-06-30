@@ -104,15 +104,16 @@ static GstStaticPadTemplate gst_vaapidecode_src_factory =
         GST_PAD_ALWAYS,
         GST_STATIC_CAPS(gst_vaapidecode_src_caps_str));
 
+static void
+gst_video_context_interface_init(GstVideoContextInterface *iface);
+
 #define GstVideoContextClass GstVideoContextInterface
-GST_BOILERPLATE_WITH_INTERFACE(
+G_DEFINE_TYPE_WITH_CODE(
     GstVaapiDecode,
     gst_vaapidecode,
-    GstElement,
     GST_TYPE_ELEMENT,
-    GstVideoContext,
-    GST_TYPE_VIDEO_CONTEXT,
-    gst_video_context);
+    G_IMPLEMENT_INTERFACE(GST_TYPE_VIDEO_CONTEXT,
+                          gst_video_context_interface_init));
 
 enum {
     PROP_0,
@@ -426,31 +427,6 @@ gst_video_context_interface_init(GstVideoContextInterface *iface)
 }
 
 static void
-gst_vaapidecode_base_init(gpointer klass)
-{
-    GstElementClass * const element_class = GST_ELEMENT_CLASS(klass);
-    GstPadTemplate *pad_template;
-
-    gst_element_class_set_details_simple(
-        element_class,
-        gst_vaapidecode_details.longname,
-        gst_vaapidecode_details.klass,
-        gst_vaapidecode_details.description,
-        gst_vaapidecode_details.author
-    );
-
-    /* sink pad */
-    pad_template = gst_static_pad_template_get(&gst_vaapidecode_sink_factory);
-    gst_element_class_add_pad_template(element_class, pad_template);
-    gst_object_unref(pad_template);
-
-    /* src pad */
-    pad_template = gst_static_pad_template_get(&gst_vaapidecode_src_factory);
-    gst_element_class_add_pad_template(element_class, pad_template);
-    gst_object_unref(pad_template);
-}
-
-static void
 gst_vaapidecode_finalize(GObject *object)
 {
     GstVaapiDecode * const decode = GST_VAAPIDECODE(object);
@@ -482,7 +458,7 @@ gst_vaapidecode_finalize(GObject *object)
         decode->delayed_new_seg = NULL;
     }
 
-    G_OBJECT_CLASS(parent_class)->finalize(object);
+    G_OBJECT_CLASS(gst_vaapidecode_parent_class)->finalize(object);
 }
 
 static void
@@ -543,7 +519,7 @@ gst_vaapidecode_change_state(GstElement *element, GstStateChange transition)
         break;
     }
 
-    ret = GST_ELEMENT_CLASS(parent_class)->change_state(element, transition);
+    ret = GST_ELEMENT_CLASS(gst_vaapidecode_parent_class)->change_state(element, transition);
     if (ret != GST_STATE_CHANGE_SUCCESS)
         return ret;
 
@@ -571,6 +547,7 @@ gst_vaapidecode_class_init(GstVaapiDecodeClass *klass)
 {
     GObjectClass * const object_class = G_OBJECT_CLASS(klass);
     GstElementClass * const element_class = GST_ELEMENT_CLASS(klass);
+    GstPadTemplate *pad_template;
 
     GST_DEBUG_CATEGORY_INIT(gst_debug_vaapidecode,
                             GST_PLUGIN_NAME, 0, GST_PLUGIN_DESC);
@@ -580,6 +557,24 @@ gst_vaapidecode_class_init(GstVaapiDecodeClass *klass)
     object_class->get_property  = gst_vaapidecode_get_property;
 
     element_class->change_state = gst_vaapidecode_change_state;
+
+    gst_element_class_set_details_simple(
+        element_class,
+        gst_vaapidecode_details.longname,
+        gst_vaapidecode_details.klass,
+        gst_vaapidecode_details.description,
+        gst_vaapidecode_details.author
+    );
+
+    /* sink pad */
+    pad_template = gst_static_pad_template_get(&gst_vaapidecode_sink_factory);
+    gst_element_class_add_pad_template(element_class, pad_template);
+    gst_object_unref(pad_template);
+
+    /* src pad */
+    pad_template = gst_static_pad_template_get(&gst_vaapidecode_src_factory);
+    gst_element_class_add_pad_template(element_class, pad_template);
+    gst_object_unref(pad_template);
 
 #if USE_FFMPEG
     g_object_class_install_property
@@ -764,8 +759,9 @@ gst_vaapidecode_query (GstPad *pad, GstQuery *query) {
 }
 
 static void
-gst_vaapidecode_init(GstVaapiDecode *decode, GstVaapiDecodeClass *klass)
+gst_vaapidecode_init(GstVaapiDecode *decode)
 {
+    GstVaapiDecodeClass *klass = GST_VAAPIDECODE_GET_CLASS(decode);
     GstElementClass * const element_class = GST_ELEMENT_CLASS(klass);
 
     decode->display             = NULL;

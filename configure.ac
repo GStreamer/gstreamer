@@ -9,6 +9,15 @@ m4_if(gst_vaapi_pre_version, [0], [], [
 m4_append([gst_vaapi_version], gst_vaapi_pre_version, [.pre])
 ])
 
+# glib version number
+m4_define([glib_major_version], [2])
+m4_define([glib_minor_version], [4])
+m4_define([glib_micro_version], [0])
+m4_define([glib_major_minor_version],
+          [glib_major_version.glib_minor_version])
+m4_define([glib_version],
+          [glib_major_version.glib_minor_version.glib_micro_version])
+
 # gst version number
 m4_define([gst_major_version], [0])
 m4_define([gst_minor_version], [10])
@@ -146,7 +155,7 @@ AC_SUBST(GTKDOC_VERSION)
 
 dnl Check for GLib
 AC_PATH_PROG([GLIB_GENMARSHAL], [glib-genmarshal])
-PKG_CHECK_MODULES([GLIB], [glib-2.0])
+PKG_CHECK_MODULES([GLIB], [glib-2.0 >= glib_version])
 AC_CHECK_LIB([glib-2.0], [g_list_free_full], [
     AC_DEFINE([HAVE_G_LIST_FREE_FULL], [1],
               [Define to 1 if g_list_free_full() is available.])])

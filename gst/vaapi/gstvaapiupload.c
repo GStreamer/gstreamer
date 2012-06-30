@@ -84,15 +84,16 @@ static GstStaticPadTemplate gst_vaapiupload_src_factory =
         GST_PAD_ALWAYS,
         GST_STATIC_CAPS(gst_vaapiupload_vaapi_caps_str));
 
+static void
+gst_video_context_interface_init(GstVideoContextInterface *iface);
+
 #define GstVideoContextClass GstVideoContextInterface
-GST_BOILERPLATE_WITH_INTERFACE(
+G_DEFINE_TYPE_WITH_CODE(
     GstVaapiUpload,
     gst_vaapiupload,
-    GstBaseTransform,
     GST_TYPE_BASE_TRANSFORM,
-    GstVideoContext,
-    GST_TYPE_VIDEO_CONTEXT,
-    gst_video_context);
+    G_IMPLEMENT_INTERFACE(GST_TYPE_VIDEO_CONTEXT,
+                          gst_video_context_interface_init));
 
 /*
  * Direct rendering levels (direct-rendering)
@@ -208,36 +209,11 @@ gst_vaapiupload_destroy(GstVaapiUpload *upload)
 }
 
 static void
-gst_vaapiupload_base_init(gpointer klass)
-{
-    GstElementClass * const element_class = GST_ELEMENT_CLASS(klass);
-    GstPadTemplate *pad_template;
-
-    gst_element_class_set_details_simple(
-        element_class,
-        gst_vaapiupload_details.longname,
-        gst_vaapiupload_details.klass,
-        gst_vaapiupload_details.description,
-        gst_vaapiupload_details.author
-    );
-
-    /* sink pad */
-    pad_template = gst_static_pad_template_get(&gst_vaapiupload_sink_factory);
-    gst_element_class_add_pad_template(element_class, pad_template);
-    gst_object_unref(pad_template);
-
-    /* src pad */
-    pad_template = gst_static_pad_template_get(&gst_vaapiupload_src_factory);
-    gst_element_class_add_pad_template(element_class, pad_template);
-    gst_object_unref(pad_template);
-}
-
-static void
 gst_vaapiupload_finalize(GObject *object)
 {
     gst_vaapiupload_destroy(GST_VAAPIUPLOAD(object));
 
-    G_OBJECT_CLASS(parent_class)->finalize(object);
+    G_OBJECT_CLASS(gst_vaapiupload_parent_class)->finalize(object);
 }
 
 
@@ -287,7 +263,9 @@ static void
 gst_vaapiupload_class_init(GstVaapiUploadClass *klass)
 {
     GObjectClass * const object_class = G_OBJECT_CLASS(klass);
+    GstElementClass * const element_class = GST_ELEMENT_CLASS(klass);
     GstBaseTransformClass * const trans_class = GST_BASE_TRANSFORM_CLASS(klass);
+    GstPadTemplate *pad_template;
 
     GST_DEBUG_CATEGORY_INIT(gst_debug_vaapiupload,
                             GST_PLUGIN_NAME, 0, GST_PLUGIN_DESC);
@@ -303,6 +281,24 @@ gst_vaapiupload_class_init(GstVaapiUploadClass *klass)
     trans_class->set_caps       = gst_vaapiupload_set_caps;
     trans_class->get_unit_size  = gst_vaapiupload_get_unit_size;
     trans_class->prepare_output_buffer = gst_vaapiupload_prepare_output_buffer;
+
+    gst_element_class_set_details_simple(
+        element_class,
+        gst_vaapiupload_details.longname,
+        gst_vaapiupload_details.klass,
+        gst_vaapiupload_details.description,
+        gst_vaapiupload_details.author
+    );
+
+    /* sink pad */
+    pad_template = gst_static_pad_template_get(&gst_vaapiupload_sink_factory);
+    gst_element_class_add_pad_template(element_class, pad_template);
+    gst_object_unref(pad_template);
+
+    /* src pad */
+    pad_template = gst_static_pad_template_get(&gst_vaapiupload_src_factory);
+    gst_element_class_add_pad_template(element_class, pad_template);
+    gst_object_unref(pad_template);
 
     /**
      * GstVaapiUpload:direct-rendering:
@@ -335,7 +331,7 @@ gst_vaapiupload_class_init(GstVaapiUploadClass *klass)
 }
 
 static void
-gst_vaapiupload_init(GstVaapiUpload *upload, GstVaapiUploadClass *klass)
+gst_vaapiupload_init(GstVaapiUpload *upload)
 {
     GstPad *sinkpad, *srcpad;
 
