@@ -48,7 +48,7 @@ G_DEFINE_BOXED_TYPE (GstNetTimePacket, gst_net_time_packet,
 
 /**
  * gst_net_time_packet_new:
- * @buffer: a buffer from which to construct the packet, or NULL
+ * @buffer: (array): a buffer from which to construct the packet, or NULL
  *
  * Creates a new #GstNetTimePacket from a buffer received over the network. The
  * caller is responsible for ensuring that @buffer is at least
