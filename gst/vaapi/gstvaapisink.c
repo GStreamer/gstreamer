@@ -364,7 +364,7 @@ gst_vaapisink_ensure_window(GstVaapiSink *sink, guint width, guint height)
 #endif
             sink->window = gst_vaapi_window_x11_new(display, width, height);
         if (sink->window)
-            gst_x_overlay_got_xwindow_id(
+            gst_x_overlay_got_window_handle(
                 GST_X_OVERLAY(sink),
                 gst_vaapi_window_x11_get_xid(GST_VAAPI_WINDOW_X11(sink->window))
             );

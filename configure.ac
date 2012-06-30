@@ -21,7 +21,7 @@ m4_define([gst_version],
 # gst plugins-base version number
 m4_define([gst_plugins_base_major_version], [0])
 m4_define([gst_plugins_base_minor_version], [10])
-m4_define([gst_plugins_base_micro_version], [16])
+m4_define([gst_plugins_base_micro_version], [31])
 m4_define([gst_plugins_base_version],
           [gst_plugins_base_major_version.gst_plugins_base_minor_version.gst_plugins_base_micro_version])
 
