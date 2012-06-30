@@ -213,7 +213,13 @@ gst_vaapiupload_base_init(gpointer klass)
     GstElementClass * const element_class = GST_ELEMENT_CLASS(klass);
     GstPadTemplate *pad_template;
 
-    gst_element_class_set_details(element_class, &gst_vaapiupload_details);
+    gst_element_class_set_details_simple(
+        element_class,
+        gst_vaapiupload_details.longname,
+        gst_vaapiupload_details.klass,
+        gst_vaapiupload_details.description,
+        gst_vaapiupload_details.author
+    );
 
     /* sink pad */
     pad_template = gst_static_pad_template_get(&gst_vaapiupload_sink_factory);

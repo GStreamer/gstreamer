@@ -12,7 +12,7 @@ m4_append([gst_vaapi_version], gst_vaapi_pre_version, [.pre])
 # gst version number
 m4_define([gst_major_version], [0])
 m4_define([gst_minor_version], [10])
-m4_define([gst_micro_version], [10])
+m4_define([gst_micro_version], [14])
 m4_define([gst_major_minor_version],
           [gst_major_version.gst_minor_version])
 m4_define([gst_version],

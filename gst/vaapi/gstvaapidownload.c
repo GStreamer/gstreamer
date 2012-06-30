@@ -222,7 +222,13 @@ gst_vaapidownload_base_init(gpointer klass)
     GstElementClass * const element_class = GST_ELEMENT_CLASS(klass);
     GstPadTemplate *pad_template;
 
-    gst_element_class_set_details(element_class, &gst_vaapidownload_details);
+    gst_element_class_set_details_simple(
+        element_class,
+        gst_vaapidownload_details.longname,
+        gst_vaapidownload_details.klass,
+        gst_vaapidownload_details.description,
+        gst_vaapidownload_details.author
+    );
 
     /* sink pad */
     pad_template = gst_static_pad_template_get(&gst_vaapidownload_sink_factory);
