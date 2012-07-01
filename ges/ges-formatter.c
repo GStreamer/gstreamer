@@ -341,6 +341,7 @@ ges_formatter_load (GESFormatter * formatter, GESTimeline * timeline)
 {
   GESFormatterClass *klass;
 
+  formatter->timeline = timeline;
   klass = GES_FORMATTER_GET_CLASS (formatter);
 
   if (klass->load)
@@ -411,6 +412,7 @@ ges_formatter_load_from_uri (GESFormatter * formatter, GESTimeline * timeline,
       G_CALLBACK (discovery_error_cb), formatter);
   if (klass->load_from_uri) {
     ges_timeline_enable_update (timeline, FALSE);
+    formatter->timeline = timeline;
     ret = klass->load_from_uri (formatter, timeline, uri);
     ges_timeline_enable_update (timeline, TRUE);
   }

@@ -55,8 +55,11 @@ struct _GESFormatter {
   /*< private >*/
   GESFormatterPrivate *priv;
 
+  /*< protected >*/
+  GESTimeline *timeline;
+
   /* Padding for API extension */
-  gpointer _ges_reserved[GES_PADDING];
+  gpointer _ges_reserved[GES_PADDING - 1];
 };
 
 typedef gboolean (*GESFormatterCanLoadURIMethod) (const gchar * uri);
