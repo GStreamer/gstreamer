@@ -807,12 +807,8 @@ track_object_added_cb (GESTimelineObject * object,
     g_hash_table_steal (props_table, "current-formatter");
 
     priv->sources_to_load = g_list_remove (priv->sources_to_load, object);
-    if (!priv->sources_to_load) {
-      GESFormatterClass *klass = GES_FORMATTER_GET_CLASS (formatter);
-
-      klass->project_loaded (GES_FORMATTER (formatter),
-          GES_FORMATTER (formatter)->timeline);
-    }
+    if (!priv->sources_to_load)
+      ges_formatter_emit_loaded (GES_FORMATTER (formatter));
   }
 
   if (lockedstr && !g_strcmp0 (lockedstr, "(bool)False"))
@@ -909,7 +905,7 @@ make_source (GESFormatter * self, GList * reflist, GHashTable * source_table)
     if (!(layer = g_hash_table_lookup (priv->layers_table, &prio))) {
       layer = ges_timeline_layer_new ();
       g_object_set (layer, "auto-transition", TRUE, "priority", prio, NULL);
-      ges_timeline_add_layer (priv->timeline, layer);
+      ges_timeline_add_layer (self->timeline, layer);
       g_hash_table_insert (priv->layers_table, g_memdup (&prio,
               sizeof (guint64)), layer);
     }
@@ -1106,9 +1102,7 @@ load_pitivi_file_from_uri (GESFormatter * self,
    * 'project-loaded' signal.
    */
   if (!g_hash_table_size (priv->timeline_objects_table)) {
-    GESFormatterClass *klass = GES_FORMATTER_GET_CLASS (self);
-
-    klass->project_loaded (self, self->timeline);
+    ges_formatter_emit_loaded (self);
   } else {
     if (!make_timeline_objects (self)) {
       GST_ERROR ("Couldn't deserialise the project properly");
