@@ -1592,9 +1592,21 @@ gst_base_text_overlay_push_frame (GstBaseTextOverlay * overlay,
   gint xpos, ypos;
   GstVideoFrame frame;
 
+  if (overlay->composition == NULL)
+    goto done;
+
   video_frame = gst_buffer_make_writable (video_frame);
 
-  if (!gst_video_frame_map (&frame, &overlay->info, video_frame, GST_MAP_WRITE))
+  if (overlay->attach_compo_to_buffer) {
+    GST_DEBUG_OBJECT (overlay, "Attaching text overlay image to video buffer");
+    gst_video_buffer_set_overlay_composition (video_frame,
+        overlay->composition);
+    /* FIXME: emulate shaded background box if want_shading=true */
+    goto done;
+  }
+
+  if (!gst_video_frame_map (&frame, &overlay->info, video_frame,
+          GST_MAP_READWRITE))
     goto invalid_frame;
 
   gst_base_text_overlay_get_pos (overlay, &xpos, &ypos);
@@ -1660,17 +1672,11 @@ gst_base_text_overlay_push_frame (GstBaseTextOverlay * overlay,
     }
   }
 
-  if (overlay->composition) {
-    if (overlay->attach_compo_to_buffer) {
-      GST_DEBUG_OBJECT (overlay, "Attaching text to the buffer");
-      gst_video_buffer_set_overlay_composition (video_frame,
-          overlay->composition);
-    } else {
-      gst_video_overlay_composition_blend (overlay->composition, &frame);
-    }
-  }
+  gst_video_overlay_composition_blend (overlay->composition, &frame);
 
   gst_video_frame_unmap (&frame);
+
+done:
 
   return gst_pad_push (overlay->srcpad, video_frame);
 
