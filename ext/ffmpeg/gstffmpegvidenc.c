@@ -409,7 +409,7 @@ gst_ffmpegvidenc_set_format (GstVideoEncoder * encoder,
   ffmpegenc->context->bit_rate_tolerance = ffmpegenc->bitrate;
   ffmpegenc->context->gop_size = ffmpegenc->gop_size;
   ffmpegenc->context->me_method = ffmpegenc->me_method;
-  GST_DEBUG_OBJECT (ffmpegenc, "Setting avcontext to bitrate %lu, gop_size %d",
+  GST_DEBUG_OBJECT (ffmpegenc, "Setting avcontext to bitrate %d, gop_size %d",
       ffmpegenc->bitrate, ffmpegenc->gop_size);
 
   /* RTP payload used for GOB production (for Asterisk) */
