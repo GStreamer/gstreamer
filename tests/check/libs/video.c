@@ -540,6 +540,7 @@ GST_START_TEST (test_video_formats_rgb)
   GstCaps *caps;
   GstStructure *structure;
 
+  gst_video_info_init (&vinfo);
   gst_video_info_set_format (&vinfo, GST_VIDEO_FORMAT_RGB, 800, 600);
   vinfo.par_n = 1;
   vinfo.par_d = 1;
@@ -840,6 +841,7 @@ GST_START_TEST (test_convert_frame_async)
 
   gst_sample_unref (cf_data.sample);
   gst_caps_unref (to_caps);
+  gst_sample_unref (from_sample);
 
   g_main_loop_unref (loop);
 }
