@@ -793,16 +793,6 @@ ges_formatter_new_for_uri
 ges_formatter_can_load_uri
 ges_formatter_can_save_uri
 ges_formatter_update_source_uri
-<SUBSECTION Standard>
-ges_formatter_get_type
-GES_FORMATTER
-GES_FORMATTER_CLASS
-GES_FORMATTER_GET_CLASS
-GES_IS_FORMATTER
-GES_IS_FORMATTER_CLASS
-GES_TYPE_FORMATTER
-<SUBSECTION Private>
-GESFormatterPrivate
 ges_formatter_load
 ges_formatter_save
 ges_formatter_set_data
@@ -812,6 +802,18 @@ GESFormatterCanLoadURIMethod
 GESFormatterCanSaveURIMethod
 GESFormatterLoadMethod
 GESFormatterSaveMethod
+<SUBSECTION>
+ges_formatter_emit_loaded
+<SUBSECTION Standard>
+GES_FORMATTER
+GES_FORMATTER_CLASS
+GES_FORMATTER_GET_CLASS
+GES_IS_FORMATTER
+GES_IS_FORMATTER_CLASS
+GES_TYPE_FORMATTER
+<SUBSECTION Private>
+ges_formatter_get_type
+GESFormatterPrivate
 </SECTION>
 
 <SECTION>

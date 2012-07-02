@@ -55,8 +55,11 @@ struct _GESFormatter {
   /*< private >*/
   GESFormatterPrivate *priv;
 
+  /*< protected >*/
+  GESTimeline *timeline;
+
   /* Padding for API extension */
-  gpointer _ges_reserved[GES_PADDING];
+  gpointer _ges_reserved[GES_PADDING - 1];
 };
 
 typedef gboolean (*GESFormatterCanLoadURIMethod) (const gchar * uri);
@@ -137,7 +140,6 @@ typedef gboolean (*GESFormatterLoadedMethod) (GESFormatter *formatter,
  * @save_to_uri: class method to serialize data to a URI
  * @update_source_uri: virtual method to specify that a source has moved, and thus its URI
  * must be set to its new location (specified by the user)
- * @project_loaded: Must be called by subclasses when done loading a project
  *
  * GES Formatter class. Override the vmethods to implement the formatter functionnality.
  */
@@ -150,7 +152,6 @@ struct _GESFormatterClass {
   GESFormatterLoadFromURIMethod load_from_uri;
   GESFormatterSaveToURIMethod save_to_uri;
   GESFormatterSourceMovedMethod update_source_uri;
-  GESFormatterLoadedMethod project_loaded;
 
   /*< private >*/
   /* FIXME : formatter name */
@@ -184,6 +185,10 @@ gboolean ges_formatter_save_to_uri      (GESFormatter * formatter,
 gboolean
 ges_formatter_update_source_uri         (GESFormatter * formatter,
     GESTimelineFileSource * source, gchar * new_uri);
+
+/*< protected >*/
+gboolean
+ges_formatter_emit_loaded       (GESFormatter * formatter);
 
 /* Non-standard methods. WILL BE DEPRECATED */
 gboolean ges_formatter_load             (GESFormatter * formatter,

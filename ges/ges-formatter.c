@@ -39,8 +39,8 @@
  * Support for saving or loading new formats can be added by creating a subclass of
  * #GESFormatter and implement the various vmethods of #GESFormatterClass.
  *
- * Note that subclasses should call project_loaded wen they are done loading
- * a project.
+ * Note that subclasses should call ges_formatter_project_loaded when they are done
+ * loading a project.
  **/
 
 #include <gst/gst.h>
@@ -74,9 +74,6 @@ static gboolean default_can_load_uri (const gchar * uri);
 static gboolean default_can_save_uri (const gchar * uri);
 static void discovery_error_cb (GESTimeline * timeline,
     GESTimelineFileSource * tfs, GError * error, GESFormatter * formatter);
-
-static gboolean project_loaded (GESFormatter * formatter,
-    GESTimeline * timeline);
 
 enum
 {
@@ -122,7 +119,6 @@ ges_formatter_class_init (GESFormatterClass * klass)
   klass->load_from_uri = load_from_uri;
   klass->save_to_uri = save_to_uri;
   klass->update_source_uri = NULL;
-  klass->project_loaded = project_loaded;
 }
 
 static void
@@ -340,6 +336,7 @@ ges_formatter_load (GESFormatter * formatter, GESTimeline * timeline)
 {
   GESFormatterClass *klass;
 
+  formatter->timeline = timeline;
   klass = GES_FORMATTER_GET_CLASS (formatter);
 
   if (klass->load)
@@ -410,6 +407,7 @@ ges_formatter_load_from_uri (GESFormatter * formatter, GESTimeline * timeline,
       G_CALLBACK (discovery_error_cb), formatter);
   if (klass->load_from_uri) {
     ges_timeline_enable_update (timeline, FALSE);
+    formatter->timeline = timeline;
     ret = klass->load_from_uri (formatter, timeline, uri);
     ges_timeline_enable_update (timeline, TRUE);
   }
@@ -469,15 +467,6 @@ ges_formatter_save_to_uri (GESFormatter * formatter, GESTimeline *
     timeline, const gchar * uri)
 {
   GESFormatterClass *klass = GES_FORMATTER_GET_CLASS (formatter);
-  GList *layers;
-
-  /* Saving an empty timeline is not allowed */
-  /* FIXME : Having a ges_timeline_is_empty() would be more efficient maybe */
-  layers = ges_timeline_get_layers (timeline);
-
-  g_return_val_if_fail (layers != NULL, FALSE);
-  g_list_foreach (layers, (GFunc) g_object_unref, NULL);
-  g_list_free (layers);
 
   if (klass->save_to_uri)
     return klass->save_to_uri (formatter, timeline, uri);
@@ -600,11 +589,22 @@ discovery_error_cb (GESTimeline * timeline,
   }
 }
 
-static gboolean
-project_loaded (GESFormatter * formatter, GESTimeline * timeline)
+/*< protected >*/
+/**
+ * ges_formatter_emit_loaded:
+ * @formatter: The #GESFormatter from which to emit the "project-loaded" signal
+ *
+ * Emits the "loaded" signal. This method should be called by sublasses when
+ * the project is fully loaded.
+ *
+ * Returns: %TRUE if the signale could be emitted %FALSE otherwize
+ */
+gboolean
+ges_formatter_emit_loaded (GESFormatter * formatter)
 {
   GST_INFO_OBJECT (formatter, "Emit project loaded");
-  g_signal_emit (formatter, ges_formatter_signals[LOADED_SIGNAL], 0, timeline);
+  g_signal_emit (formatter, ges_formatter_signals[LOADED_SIGNAL], 0,
+      formatter->timeline);
 
   return TRUE;
 }

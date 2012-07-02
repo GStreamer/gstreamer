@@ -560,7 +560,7 @@ create_tracks (GESFormatter * self)
   GESPitiviFormatterPrivate *priv = GES_PITIVI_FORMATTER (self)->priv;
   GList *tracks = NULL;
 
-  tracks = ges_timeline_get_tracks (priv->timeline);
+  tracks = ges_timeline_get_tracks (self->timeline);
 
   GST_DEBUG ("Creating tracks, current number of tracks %d",
       g_list_length (tracks));
@@ -584,11 +584,11 @@ create_tracks (GESFormatter * self)
   priv->tracka = ges_track_audio_raw_new ();
   priv->trackv = ges_track_video_raw_new ();
 
-  if (!ges_timeline_add_track (priv->timeline, priv->trackv)) {
+  if (!ges_timeline_add_track (self->timeline, priv->trackv)) {
     return FALSE;
   }
 
-  if (!ges_timeline_add_track (priv->timeline, priv->tracka)) {
+  if (!ges_timeline_add_track (self->timeline, priv->tracka)) {
     return FALSE;
   }
 
@@ -807,12 +807,8 @@ track_object_added_cb (GESTimelineObject * object,
     g_hash_table_steal (props_table, "current-formatter");
 
     priv->sources_to_load = g_list_remove (priv->sources_to_load, object);
-    if (!priv->sources_to_load) {
-      GESFormatterClass *klass = GES_FORMATTER_GET_CLASS (formatter);
-
-      klass->project_loaded (GES_FORMATTER (formatter),
-          formatter->priv->timeline);
-    }
+    if (!priv->sources_to_load)
+      ges_formatter_emit_loaded (GES_FORMATTER (formatter));
   }
 
   if (lockedstr && !g_strcmp0 (lockedstr, "(bool)False"))
@@ -909,7 +905,7 @@ make_source (GESFormatter * self, GList * reflist, GHashTable * source_table)
     if (!(layer = g_hash_table_lookup (priv->layers_table, &prio))) {
       layer = ges_timeline_layer_new ();
       g_object_set (layer, "auto-transition", TRUE, "priority", prio, NULL);
-      ges_timeline_add_layer (priv->timeline, layer);
+      ges_timeline_add_layer (self->timeline, layer);
       g_hash_table_insert (priv->layers_table, g_memdup (&prio,
               sizeof (guint64)), layer);
     }
@@ -1068,7 +1064,6 @@ load_pitivi_file_from_uri (GESFormatter * self,
   g_object_set (layer, "auto-transition", TRUE, NULL);
 
   g_hash_table_insert (priv->layers_table, prio, layer);
-  priv->timeline = timeline;
   g_object_set (layer, "priority", (gint32) 0, NULL);
 
   if (!ges_timeline_add_layer (timeline, layer)) {
@@ -1101,9 +1096,18 @@ load_pitivi_file_from_uri (GESFormatter * self,
     return FALSE;
   }
 
-  if (!make_timeline_objects (self)) {
-    GST_ERROR ("Couldn't deserialise the project properly");
-    return FALSE;
+
+
+  /* If there are no timeline objects to load we should emit
+   * 'project-loaded' signal.
+   */
+  if (!g_hash_table_size (priv->timeline_objects_table)) {
+    ges_formatter_emit_loaded (self);
+  } else {
+    if (!make_timeline_objects (self)) {
+      GST_ERROR ("Couldn't deserialise the project properly");
+      return FALSE;
+    }
   }
 
   xmlXPathFreeContext (priv->xpathCtx);
