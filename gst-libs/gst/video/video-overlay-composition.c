@@ -1015,6 +1015,22 @@ gst_video_overlay_rectangle_apply_global_alpha (GstVideoOverlayRectangle * rect,
   rect->applied_global_alpha = global_alpha;
 }
 
+/* need real independent buffer copy;
+ * see also https://bugzilla.gnome.org/show_bug.cgi?id=679145 */
+static GstBuffer *
+__gst_buffer_copy (GstBuffer * buf)
+{
+  GstBuffer *newb;
+  GstMapInfo map;
+
+  newb = gst_buffer_new_and_alloc (gst_buffer_get_size (buf));
+  gst_buffer_map (buf, &map, GST_MAP_READ);
+  gst_buffer_fill (newb, 0, map.data, map.size);
+  gst_buffer_unmap (buf, &map);
+
+  return newb;
+}
+
 static GstBuffer *
 gst_video_overlay_rectangle_get_pixels_argb_internal (GstVideoOverlayRectangle *
     rectangle, guint * stride, GstVideoOverlayFormatFlags flags,
@@ -1096,7 +1112,7 @@ gst_video_overlay_rectangle_get_pixels_argb_internal (GstVideoOverlayRectangle *
   } else {
     /* if we don't have to scale, we have to modify the alpha values, so we
      * need to make a copy of the pixel memory (and we take ownership below) */
-    buf = gst_buffer_copy (rectangle->pixels);
+    buf = __gst_buffer_copy (rectangle->pixels);
   }
 
   new_flags = rectangle->flags;
