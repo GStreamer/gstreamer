@@ -304,9 +304,7 @@ gst_system_clock_obtain (void)
     clock = g_object_new (GST_TYPE_SYSTEM_CLOCK,
         "name", "GstSystemClock", NULL);
 
-    /* we created the global clock; take ownership so
-     * we can hand out instances later */
-    gst_object_ref_sink (clock);
+    g_assert (!g_object_is_floating (G_OBJECT (clock)));
 
     _the_system_clock = clock;
     g_mutex_unlock (&_gst_sysclock_mutex);

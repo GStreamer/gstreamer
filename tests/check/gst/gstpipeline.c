@@ -125,6 +125,9 @@ GST_START_TEST (test_get_bus)
   ASSERT_OBJECT_REFCOUNT (pipeline, "pipeline after get_bus", 1);
   ASSERT_OBJECT_REFCOUNT (bus, "bus", 2);
 
+  /* bindings don't like the floating flag to be set here */
+  fail_if (g_object_is_floating (bus));
+
   gst_object_unref (pipeline);
 
   ASSERT_OBJECT_REFCOUNT (bus, "bus after unref pipeline", 1);

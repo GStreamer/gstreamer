@@ -699,6 +699,9 @@ gst_clock_init (GstClock * clock)
   priv->time_index = 0;
   priv->timeout = DEFAULT_TIMEOUT;
   priv->times = g_new0 (GstClockTime, 4 * priv->window_size);
+
+  /* clear floating flag */
+  gst_object_ref_sink (clock);
 }
 
 static void
