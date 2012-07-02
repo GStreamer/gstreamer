@@ -1173,12 +1173,6 @@ gst_base_text_overlay_adjust_values_with_fontdesc (GstBaseTextOverlay * overlay,
     overlay->outline_offset = MINIMUM_OUTLINE_OFFSET;
 }
 
-#define CAIRO_UNPREMULTIPLY(a,r,g,b) G_STMT_START { \
-  *b = (a > 0) ? MIN ((*b * 255 + a / 2) / a, 255) : 0; \
-  *g = (a > 0) ? MIN ((*g * 255 + a / 2) / a, 255) : 0; \
-  *r = (a > 0) ? MIN ((*r * 255 + a / 2) / a, 255) : 0; \
-} G_STMT_END
-
 static void
 gst_base_text_overlay_get_pos (GstBaseTextOverlay * overlay,
     gint * xpos, gint * ypos)
@@ -1246,27 +1240,6 @@ gst_base_text_overlay_get_pos (GstBaseTextOverlay * overlay,
 }
 
 static inline void
-gst_base_text_overlay_unpremultiply (GstBaseTextOverlay * overlay)
-{
-  guint i, j;
-  guint8 *pimage, *text_image;
-  GstMapInfo map;
-
-  gst_buffer_map (overlay->text_image, &map, GST_MAP_READ);
-  text_image = map.data;
-  for (i = 0; i < overlay->image_height; i++) {
-    pimage = text_image + 4 * (i * overlay->image_width);
-    for (j = 0; j < overlay->image_width; j++) {
-      CAIRO_UNPREMULTIPLY (pimage[CAIRO_ARGB_A], &pimage[CAIRO_ARGB_R],
-          &pimage[CAIRO_ARGB_G], &pimage[CAIRO_ARGB_B]);
-
-      pimage += 4;
-    }
-  }
-  gst_buffer_unmap (overlay->text_image, &map);
-}
-
-static inline void
 gst_base_text_overlay_set_composition (GstBaseTextOverlay * overlay)
 {
   gint xpos, ypos;
@@ -1278,7 +1251,7 @@ gst_base_text_overlay_set_composition (GstBaseTextOverlay * overlay)
     rectangle = gst_video_overlay_rectangle_new_argb (overlay->text_image,
         overlay->image_width, overlay->image_height, 4 * overlay->image_width,
         xpos, ypos, overlay->image_width, overlay->image_height,
-        GST_VIDEO_OVERLAY_FORMAT_FLAG_NONE);
+        GST_VIDEO_OVERLAY_FORMAT_FLAG_PREMULTIPLIED_ALPHA);
 
     if (overlay->composition)
       gst_video_overlay_composition_unref (overlay->composition);
@@ -1443,9 +1416,6 @@ gst_base_text_overlay_render_pangocairo (GstBaseTextOverlay * overlay,
   overlay->baseline_y = ink_rect.y;
   g_mutex_unlock (GST_BASE_TEXT_OVERLAY_GET_CLASS (overlay)->pango_lock);
 
-  /* As the GstVideoOverlayComposition supports only unpremultiply ARGB,
-   * we need to unpremultiply it */
-  gst_base_text_overlay_unpremultiply (overlay);
   gst_base_text_overlay_set_composition (overlay);
 }
 
