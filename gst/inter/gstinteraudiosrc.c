@@ -178,7 +178,7 @@ static void
 gst_inter_audio_src_init (GstInterAudioSrc * interaudiosrc,
     GstInterAudioSrcClass * interaudiosrc_class)
 {
-
+  gst_base_src_set_format (GST_BASE_SRC (interaudiosrc), GST_FORMAT_TIME);
   gst_base_src_set_live (GST_BASE_SRC (interaudiosrc), TRUE);
   gst_base_src_set_blocksize (GST_BASE_SRC (interaudiosrc), -1);
 
