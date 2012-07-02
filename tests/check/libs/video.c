@@ -631,7 +631,8 @@ GST_START_TEST (test_parse_caps_rgb)
     gst_caps_set_simple (caps, "width", G_TYPE_INT, 2 * (i + 1), "height",
         G_TYPE_INT, i + 1, "framerate", GST_TYPE_FRACTION, 15, 1,
         "pixel-aspect-ratio", GST_TYPE_FRACTION, 1, 1,
-        "interlace-mode", G_TYPE_STRING, "progressive", NULL);
+        "interlace-mode", G_TYPE_STRING, "progressive",
+        "colorimetry", G_TYPE_STRING, "1:1:0:0", NULL);
     g_assert (gst_caps_is_fixed (caps));
 
     GST_DEBUG ("testing caps: %" GST_PTR_FORMAT, caps);
