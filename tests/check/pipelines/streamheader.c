@@ -33,7 +33,7 @@
 #ifndef GST_DISABLE_PARSE
 
 /* this tests a gdp-serialized tag from audiotestsrc being sent only once
- * to clients of multisocketsink */
+ * to clients of multifdsink */
 
 static int n_tags = 0;
 
@@ -62,19 +62,18 @@ tag_event_probe_cb (GstPad * pad, GstPadProbeInfo * info, gpointer user_data)
   return GST_PAD_PROBE_OK;
 }
 
-GST_START_TEST (test_multisocketsink_gdp_tag)
+GST_START_TEST (test_multifdsink_gdp_tag)
 {
   GstElement *p1, *p2;
   GstElement *src, *sink, *depay;
   GstPad *pad;
   GMainLoop *loop;
   int pfd[2];
-  GSocket *s[2] = { NULL, };
 
   loop = g_main_loop_new (NULL, FALSE);
 
   p1 = gst_parse_launch ("audiotestsrc num-buffers=10 ! gdppay"
-      " ! multisocketsink name=p1sink", NULL);
+      " ! multifdsink name=p1sink", NULL);
   fail_if (p1 == NULL);
   p2 = gst_parse_launch ("fdsrc name=p2src ! gdpdepay name=depay"
       " ! fakesink name=p2sink signal-handoffs=True", NULL);
@@ -82,12 +81,10 @@ GST_START_TEST (test_multisocketsink_gdp_tag)
 
   fail_if (pipe (pfd) == -1);
 
-  s[0] = g_socket_new_from_fd (pfd[0], NULL);
-
   gst_element_set_state (p1, GST_STATE_READY);
 
   sink = gst_bin_get_by_name (GST_BIN (p1), "p1sink");
-  g_signal_emit_by_name (sink, "add", s[1], NULL);
+  g_signal_emit_by_name (sink, "add", pfd[1], NULL);    ///s[1]
   gst_object_unref (sink);
 
   src = gst_bin_get_by_name (GST_BIN (p2), "p2src");
@@ -121,7 +118,7 @@ GST_END_TEST;
 
 #ifdef HAVE_VORBIS
 /* this tests gdp-serialized Vorbis header pages being sent only once
- * to clients of multisocketsink; the gdp depayloader should deserialize
+ * to clients of multifdsink; the gdp depayloader should deserialize
  * exactly three in_caps buffers for the three header packets */
 
 static int n_in_caps = 0;
@@ -178,19 +175,18 @@ buffer_probe_cb (GstPad * pad, GstPadProbeInfo * info, gpointer user_data)
   return TRUE;
 }
 
-GST_START_TEST (test_multisocketsink_gdp_vorbisenc)
+GST_START_TEST (test_multifdsink_gdp_vorbisenc)
 {
   GstElement *p1, *p2;
   GstElement *src, *sink, *depay;
   GstPad *pad;
   GMainLoop *loop;
   int pfd[2];
-  GSocket *s[2] = { NULL, };
 
   loop = g_main_loop_new (NULL, FALSE);
 
   p1 = gst_parse_launch ("audiotestsrc num-buffers=10 ! audioconvert "
-      " ! vorbisenc ! gdppay ! multisocketsink name=p1sink", NULL);
+      " ! vorbisenc ! gdppay ! multifdsink name=p1sink", NULL);
   fail_if (p1 == NULL);
   p2 = gst_parse_launch ("fdsrc name=p2src ! gdpdepay name=depay"
       " ! fakesink name=p2sink signal-handoffs=True", NULL);
@@ -198,12 +194,10 @@ GST_START_TEST (test_multisocketsink_gdp_vorbisenc)
 
   fail_if (pipe (pfd) == -1);
 
-  s[0] = g_socket_new_from_fd (pfd[0], NULL);
-
   gst_element_set_state (p1, GST_STATE_READY);
 
   sink = gst_bin_get_by_name (GST_BIN (p1), "p1sink");
-  g_signal_emit_by_name (sink, "add", s[1], NULL);
+  g_signal_emit_by_name (sink, "add", pfd[1], NULL);
   gst_object_unref (sink);
 
   src = gst_bin_get_by_name (GST_BIN (p2), "p2src");
@@ -248,9 +242,9 @@ streamheader_suite (void)
 
   suite_add_tcase (s, tc_chain);
 #ifndef GST_DISABLE_PARSE
-  tcase_add_test (tc_chain, test_multisocketsink_gdp_tag);
+  tcase_add_test (tc_chain, test_multifdsink_gdp_tag);
 #ifdef HAVE_VORBIS
-  tcase_add_test (tc_chain, test_multisocketsink_gdp_vorbisenc);
+  tcase_add_test (tc_chain, test_multifdsink_gdp_vorbisenc);
 #endif
 #endif
 
