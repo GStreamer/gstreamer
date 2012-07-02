@@ -263,7 +263,7 @@ gst_ffmpegaudenc_setcaps (GstFFMpegAudEnc * ffmpegaudenc, GstCaps * caps)
   /* user defined properties */
   ffmpegaudenc->context->bit_rate = ffmpegaudenc->bitrate;
   ffmpegaudenc->context->bit_rate_tolerance = ffmpegaudenc->bitrate;
-  GST_DEBUG_OBJECT (ffmpegaudenc, "Setting avcontext to bitrate %lu",
+  GST_DEBUG_OBJECT (ffmpegaudenc, "Setting avcontext to bitrate %d",
       ffmpegaudenc->bitrate);
 
   /* RTP payload used for GOB production (for Asterisk) */
