@@ -1266,6 +1266,21 @@ gst_decklink_src_task (void *priv)
     decklinksrc->dropped_frames_old = decklinksrc->dropped_frames;
   }
 
+  if (!decklinksrc->video_new_segment) {
+    GstEvent *event;
+    gboolean ret;
+
+    event = gst_event_new_new_segment (FALSE, 1.0, GST_FORMAT_TIME,
+        0, GST_CLOCK_TIME_NONE, 0);
+
+    ret = gst_pad_push_event (decklinksrc->videosrcpad, event);
+    if (!ret) {
+      GST_WARNING ("new segment event not handled");
+    }
+
+    decklinksrc->video_new_segment = TRUE;
+  }
+
   mode = gst_decklink_get_mode (decklinksrc->mode);
 
   video_frame->GetBytes (&data);
@@ -1340,6 +1355,21 @@ gst_decklink_src_task (void *priv)
   }
 
   if (gst_pad_is_linked (decklinksrc->audiosrcpad)) {
+    if (!decklinksrc->audio_new_segment) {
+      GstEvent *event;
+      gboolean ret;
+
+      event = gst_event_new_new_segment (FALSE, 1.0, GST_FORMAT_TIME,
+          0, GST_CLOCK_TIME_NONE, 0);
+
+      ret = gst_pad_push_event (decklinksrc->audiosrcpad, event);
+      if (!ret) {
+        GST_WARNING ("new segment event not handled");
+      }
+
+      decklinksrc->audio_new_segment = TRUE;
+    }
+
     n_samples = audio_frame->GetSampleFrameCount ();
     audio_frame->GetBytes (&data);
     audio_buffer = gst_buffer_new_and_alloc (n_samples * 2 * 2);

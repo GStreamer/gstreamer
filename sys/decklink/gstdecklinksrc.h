@@ -67,6 +67,8 @@ struct _GstDecklinkSrc
   int height;
   gboolean interlaced;
   BMDDisplayMode bmd_mode;
+  gboolean video_new_segment;
+  gboolean audio_new_segment;
 
   /* properties */
   gboolean copy_data;
