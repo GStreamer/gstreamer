@@ -3600,8 +3600,10 @@ update_av_offset (GstPlaySink * playsink)
   vchain = (GstPlayVideoChain *) playsink->videochain;
 
   if (achain && vchain && achain->ts_offset && vchain->ts_offset) {
-    g_object_set (achain->ts_offset, "ts-offset", MAX (0, -av_offset), NULL);
-    g_object_set (vchain->ts_offset, "ts-offset", MAX (0, av_offset), NULL);
+    g_object_set (achain->ts_offset,
+        "ts-offset", MAX (G_GINT64_CONSTANT (0), -av_offset), NULL);
+    g_object_set (vchain->ts_offset,
+        "ts-offset", MAX (G_GINT64_CONSTANT (0), av_offset), NULL);
   } else {
     GST_LOG_OBJECT (playsink, "no ts_offset elements");
   }
