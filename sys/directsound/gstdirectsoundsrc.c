@@ -77,7 +77,7 @@ enum
 static HRESULT (WINAPI * pDSoundCaptureCreate) (LPGUID,
     LPDIRECTSOUNDCAPTURE *, LPUNKNOWN);
 
-static void gst_directsound_src_finalise (GObject * object);
+static void gst_directsound_src_finalize (GObject * object);
 
 static void gst_directsound_src_set_property (GObject * object,
     guint prop_id, const GValue * value, GParamSpec * pspec);
@@ -137,11 +137,13 @@ gst_directsound_src_dispose (GObject * object)
 }
 
 static void
-gst_directsound_src_finalise (GObject * object)
+gst_directsound_src_finalize (GObject * object)
 {
   GstDirectSoundSrc *dsoundsrc = GST_DIRECTSOUND_SRC (object);
 
   g_mutex_free (dsoundsrc->dsound_lock);
+
+  G_OBJECT_CLASS (parent_class)->finalize (object);
 }
 
 static void
@@ -179,7 +181,7 @@ gst_directsound_src_class_init (GstDirectSoundSrcClass * klass)
 
   GST_DEBUG ("initializing directsoundsrc class\n");
 
-  gobject_class->finalize = GST_DEBUG_FUNCPTR (gst_directsound_src_finalise);
+  gobject_class->finalize = GST_DEBUG_FUNCPTR (gst_directsound_src_finalize);
   gobject_class->dispose = GST_DEBUG_FUNCPTR (gst_directsound_src_dispose);
   gobject_class->get_property =
       GST_DEBUG_FUNCPTR (gst_directsound_src_get_property);
@@ -420,8 +422,8 @@ gst_directsound_src_prepare (GstAudioSrc * asrc, GstRingBufferSpec * spec)
   spec->bytes_per_sample = (spec->width / 8) * spec->channels;
   dsoundsrc->bytes_per_sample = spec->bytes_per_sample;
 
-  GST_DEBUG ("latency time: %" G_GUINT64_FORMAT " - buffer time: %" G_GUINT64_FORMAT,
-      spec->latency_time, spec->buffer_time);
+  GST_DEBUG ("latency time: %" G_GUINT64_FORMAT " - buffer time: %"
+      G_GUINT64_FORMAT, spec->latency_time, spec->buffer_time);
 
   /* Buffer-time should be allways more than 2*latency */
   if (spec->buffer_time < spec->latency_time * 2) {
