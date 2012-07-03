@@ -13,9 +13,15 @@ Media Types
   channels, G_TYPE_INT, mandatory
    The number of channels
 
-  channel-positions, G_TYPE_VALUE_ARRAY
-   An array with a channel position for each channel. The number of items in
-   this array must be the same as the channels property.
+  channel-mask, GST_TYPE_BITMASK, mandatory for more than 2 channels
+   Bitmask of channel positions present. May be omitted for mono and
+   stereo. May be set to 0 to denote that the channels are unpositioned.
+
+  layout, G_TYPE_STRING, mandatory
+   The layout of channels within a buffer. Possible values are
+   "interleaved" (for LRLRLRLR) and "non-interleaved" (LLLLRRRR)
+
+Use GstAudioInfo and related helper API to create and parse raw audio caps.
 
 
 Metadata
