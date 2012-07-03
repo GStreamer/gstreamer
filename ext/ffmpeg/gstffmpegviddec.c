@@ -1091,7 +1091,7 @@ gst_ffmpegviddec_video_frame (GstFFMpegVidDec * ffmpegdec,
 
   /* get the output picture timing info again */
   out_dframe = ffmpegdec->picture->opaque;
-  out_frame = out_dframe->frame;
+  out_frame = gst_video_codec_frame_ref (out_dframe->frame);
 
   GST_DEBUG_OBJECT (ffmpegdec,
       "pts %" G_GUINT64_FORMAT " duration %" G_GUINT64_FORMAT,
@@ -1138,7 +1138,8 @@ gst_ffmpegviddec_video_frame (GstFFMpegVidDec * ffmpegdec,
       gst_video_decoder_finish_frame (GST_VIDEO_DECODER (ffmpegdec), out_frame);
 
 beach:
-  GST_DEBUG_OBJECT (ffmpegdec, "return flow %d, len %d", *ret, len);
+  GST_DEBUG_OBJECT (ffmpegdec, "return flow %s, len %d",
+      gst_flow_get_name (*ret), len);
   return len;
 
   /* special cases */
@@ -1352,6 +1353,7 @@ gst_ffmpegviddec_handle_frame (GstVideoDecoder * decoder,
     GST_DEBUG_OBJECT (ffmpegdec, "Dropping %d bytes of data", bsize);
 
   gst_buffer_unmap (frame->input_buffer, &minfo);
+  gst_video_codec_frame_unref (frame);
 
   return ret;
 }
@@ -1448,8 +1450,8 @@ gst_ffmpegviddec_decide_allocation (GstVideoDecoder * decoder, GstQuery * query)
     avcodec_align_dimensions2 (ffmpegdec->context, &width, &height,
         linesize_align);
     edge =
-        ffmpegdec->
-        context->flags & CODEC_FLAG_EMU_EDGE ? 0 : avcodec_get_edge_width ();
+        ffmpegdec->context->
+        flags & CODEC_FLAG_EMU_EDGE ? 0 : avcodec_get_edge_width ();
     /* increase the size for the padding */
     width += edge << 1;
     height += edge << 1;
