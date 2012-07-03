@@ -34,90 +34,75 @@
 
 #define ENTRY_TAG       "EntryTag"
 #define TOC_TAG         "TocTag"
-#define INFO_NAME       "gst-toc-setter-check"
-#define INFO_FIELD      "info-test"
-#define INFO_TEXT_EN    "info-text-entry"
-#define INFO_TEXT_TOC   "info-text-toc"
 
 #define CHECK_TOC_ENTRY(entry_c,type_c,uid_c)                            \
 {                                                                        \
+  GstTagList *tags;                                                      \
   gchar *tag_c;                                                          \
-  const GValue *val;                                                     \
-  GstStructure *struct_c;                                                \
                                                                          \
-  fail_unless_equals_string (entry_c->uid, uid_c);                       \
-  fail_unless (entry_c->type == type_c);                                 \
-  fail_unless (entry_c->tags != NULL);                                   \
-  fail_unless (entry_c->pads == NULL);                                   \
+  fail_unless_equals_string (gst_toc_entry_get_uid (entry_c), uid_c);    \
+  fail_unless (gst_toc_entry_get_entry_type (entry_c) == type_c);        \
                                                                          \
-  fail_unless (entry_c->info != NULL);                                   \
-  gst_structure_get (entry_c->info, INFO_NAME, GST_TYPE_STRUCTURE,       \
-      &struct_c, NULL);                                                  \
-  fail_unless (struct_c != NULL);                                        \
-  val = gst_structure_get_value (struct_c, INFO_FIELD);             \
-  fail_unless (val != NULL);                                             \
-  fail_unless_equals_string (g_value_get_string (val), INFO_TEXT_EN);    \
-                                                                         \
-  fail_unless (gst_tag_list_get_string (entry_c->tags,                   \
+  tags = gst_toc_entry_get_tags (entry_c);                               \
+  fail_unless (tags != NULL);                                            \
+  fail_unless (gst_tag_list_get_string (tags,                            \
                GST_TAG_TITLE, &tag_c));                                  \
   fail_unless_equals_string (tag_c, ENTRY_TAG);                          \
   g_free (tag_c);                                                        \
-  gst_structure_free (struct_c);                                         \
 }
 
 #define CHECK_TOC(toc_t)                                                 \
 {                                                                        \
   GstTocEntry *entry_t, *subentry_t;                                     \
+  GstTagList *tags;                                                      \
+  GList *entries, *subentries, *subsubentries;                           \
   gchar *tag_t;                                                          \
-  const GValue *val;                                                     \
-  GstStructure *struct_toc;                                              \
                                                                          \
   /* check TOC */                                                        \
-  fail_unless (g_list_length (toc_t->entries) == 2);                     \
-  fail_unless (toc_t->tags != NULL);                                     \
-  fail_unless (gst_tag_list_get_string (toc_t->tags,                     \
+  tags = gst_toc_get_tags (toc_t);                                       \
+  fail_unless (tags != NULL);                                            \
+  fail_unless (gst_tag_list_get_string (tags,                            \
                GST_TAG_TITLE, &tag_t));                                  \
   fail_unless_equals_string (tag_t, TOC_TAG);                            \
   g_free (tag_t);                                                        \
                                                                          \
-  fail_unless (toc_t->info != NULL);                                     \
-  gst_structure_get (toc_t->info, INFO_NAME, GST_TYPE_STRUCTURE,         \
-      &struct_toc, NULL);                                                \
-  fail_unless (struct_toc != NULL);                                      \
-  val = gst_structure_get_value (struct_toc, INFO_FIELD);                \
-  fail_unless (val != NULL);                                             \
-  fail_unless_equals_string (g_value_get_string (val), INFO_TEXT_TOC);   \
-  gst_structure_free (struct_toc);                                       \
-                                                                         \
+  entries = gst_toc_get_entries (toc_t);                                 \
+  fail_unless_equals_int (g_list_length (entries), 2);                   \
   /* check edition1 */                                                   \
-  entry_t = g_list_nth_data (toc_t->entries, 0);                         \
+  entry_t = g_list_nth_data (entries, 0);                                \
   fail_if (entry_t == NULL);                                             \
-  fail_unless (g_list_length (entry_t->subentries) == 2);                \
+  subentries = gst_toc_entry_get_sub_entries (entry_t);                  \
+  fail_unless_equals_int (g_list_length (subentries), 2);                \
   CHECK_TOC_ENTRY (entry_t, GST_TOC_ENTRY_TYPE_EDITION, ENTRY_ED1);      \
   /* check chapter1 */                                                   \
-  subentry_t = g_list_nth_data (entry_t->subentries, 0);                 \
+  subentry_t = g_list_nth_data (subentries, 0);                          \
   fail_if (subentry_t == NULL);                                          \
-  fail_unless (g_list_length (subentry_t->subentries) == 0);             \
+  subsubentries = gst_toc_entry_get_sub_entries (subentry_t);            \
+  fail_unless_equals_int (g_list_length (subsubentries), 0);             \
   CHECK_TOC_ENTRY (subentry_t, GST_TOC_ENTRY_TYPE_CHAPTER, ENTRY_CH1);   \
   /* check chapter2 */                                                   \
-  subentry_t = g_list_nth_data (entry_t->subentries, 1);                 \
+  subentry_t = g_list_nth_data (subentries, 1);                          \
   fail_if (subentry_t == NULL);                                          \
-  fail_unless (g_list_length (subentry_t->subentries) == 0);             \
+  subsubentries = gst_toc_entry_get_sub_entries (subentry_t);            \
+  fail_unless_equals_int (g_list_length (subsubentries), 0);             \
   CHECK_TOC_ENTRY (subentry_t, GST_TOC_ENTRY_TYPE_CHAPTER, ENTRY_CH2);   \
   /* check edition2 */                                                   \
-  entry_t = g_list_nth_data (toc_t->entries, 1);                         \
+  entry_t = g_list_nth_data (entries, 1);                                \
   fail_if (entry_t == NULL);                                             \
-  fail_unless (g_list_length (entry_t->subentries) == 1);                \
+  subentries = gst_toc_entry_get_sub_entries (entry_t);                  \
+  fail_unless_equals_int (g_list_length (subentries), 1);                \
   CHECK_TOC_ENTRY (entry_t, GST_TOC_ENTRY_TYPE_EDITION, ENTRY_ED2);      \
   /* check chapter3 */                                                   \
-  subentry_t = g_list_nth_data (entry_t->subentries, 0);                 \
+  subentry_t = g_list_nth_data (subentries, 0);                          \
   fail_if (subentry_t == NULL);                                          \
-  fail_unless (g_list_length (subentry_t->subentries) == 1);             \
+  subsubentries = gst_toc_entry_get_sub_entries (subentry_t);            \
+  fail_unless_equals_int (g_list_length (subsubentries), 1);             \
   CHECK_TOC_ENTRY (subentry_t, GST_TOC_ENTRY_TYPE_CHAPTER, ENTRY_CH3);   \
   /* check subchapter1 */                                                \
-  subentry_t = g_list_nth_data (subentry_t->subentries, 0);              \
+  subentry_t = g_list_nth_data (subentries, 0);                          \
   fail_if (subentry_t == NULL);                                          \
-  fail_unless (g_list_length (subentry_t->subentries) == 0);             \
+  subsubentries = gst_toc_entry_get_sub_entries (subentry_t);            \
+  fail_unless_equals_int (g_list_length (subsubentries), 0);             \
   CHECK_TOC_ENTRY (subentry_t, GST_TOC_ENTRY_TYPE_CHAPTER, ENTRY_SUB1);  \
 }
 
@@ -144,95 +129,66 @@ gst_dummy_enc_init (GstDummyEnc * enc)
 static GstToc *
 create_toc (void)
 {
-  GstStructure *structure;
   GstToc *toc;
   GstTocEntry *ed, *ch, *subch;
+  GstTagList *tags;
 
   toc = gst_toc_new ();
-  gst_tag_list_add (toc->tags, GST_TAG_MERGE_APPEND, GST_TAG_TITLE,
-      TOC_TAG, NULL);
-  structure =
-      gst_structure_new (INFO_NAME, INFO_FIELD, G_TYPE_STRING, INFO_TEXT_TOC,
-      NULL);
-  gst_structure_set (toc->info, INFO_NAME, GST_TYPE_STRUCTURE, structure, NULL);
-  gst_structure_free (structure);
+  tags = gst_tag_list_new_empty ();
+  gst_tag_list_add (tags, GST_TAG_MERGE_APPEND, GST_TAG_TITLE, TOC_TAG, NULL);
+  gst_toc_set_tags (toc, tags);
 
   /* create edition1 */
   ed = gst_toc_entry_new (GST_TOC_ENTRY_TYPE_EDITION, ENTRY_ED1);
-  gst_tag_list_add (ed->tags, GST_TAG_MERGE_APPEND, GST_TAG_TITLE,
-      ENTRY_TAG, NULL);
-  structure =
-      gst_structure_new (INFO_NAME, INFO_FIELD, G_TYPE_STRING, INFO_TEXT_EN,
-      NULL);
-  gst_structure_set (ed->info, INFO_NAME, GST_TYPE_STRUCTURE, structure, NULL);
-  gst_structure_free (structure);
+  tags = gst_tag_list_new_empty ();
+  gst_tag_list_add (tags, GST_TAG_MERGE_APPEND, GST_TAG_TITLE, ENTRY_TAG, NULL);
+  gst_toc_entry_set_tags (ed, tags);
 
   /* append chapter1 to edition1 */
   ch = gst_toc_entry_new (GST_TOC_ENTRY_TYPE_CHAPTER, ENTRY_CH1);
-  gst_tag_list_add (ch->tags, GST_TAG_MERGE_APPEND, GST_TAG_TITLE,
-      ENTRY_TAG, NULL);
-  structure =
-      gst_structure_new (INFO_NAME, INFO_FIELD, G_TYPE_STRING, INFO_TEXT_EN,
-      NULL);
-  gst_structure_set (ch->info, INFO_NAME, GST_TYPE_STRUCTURE, structure, NULL);
-  gst_structure_free (structure);
+  tags = gst_tag_list_new_empty ();
+  gst_tag_list_add (tags, GST_TAG_MERGE_APPEND, GST_TAG_TITLE, ENTRY_TAG, NULL);
+  gst_toc_entry_set_tags (ch, tags);
 
-  ed->subentries = g_list_append (ed->subentries, ch);
+  gst_toc_entry_append_sub_entry (ed, ch);
 
   /* append chapter2 to edition1 */
   ch = gst_toc_entry_new (GST_TOC_ENTRY_TYPE_CHAPTER, ENTRY_CH2);
-  gst_tag_list_add (ch->tags, GST_TAG_MERGE_APPEND, GST_TAG_TITLE,
-      ENTRY_TAG, NULL);
-  structure =
-      gst_structure_new (INFO_NAME, INFO_FIELD, G_TYPE_STRING, INFO_TEXT_EN,
-      NULL);
-  gst_structure_set (ch->info, INFO_NAME, GST_TYPE_STRUCTURE, structure, NULL);
-  gst_structure_free (structure);
+  tags = gst_tag_list_new_empty ();
+  gst_tag_list_add (tags, GST_TAG_MERGE_APPEND, GST_TAG_TITLE, ENTRY_TAG, NULL);
+  gst_toc_entry_set_tags (ch, tags);
 
-  ed->subentries = g_list_append (ed->subentries, ch);
+  gst_toc_entry_append_sub_entry (ed, ch);
 
   /* append edition1 to the TOC */
-  toc->entries = g_list_append (toc->entries, ed);
+  gst_toc_append_entry (toc, ed);
 
   /* create edition2 */
   ed = gst_toc_entry_new (GST_TOC_ENTRY_TYPE_EDITION, ENTRY_ED2);
-  gst_tag_list_add (ed->tags, GST_TAG_MERGE_APPEND, GST_TAG_TITLE,
-      ENTRY_TAG, NULL);
-  structure =
-      gst_structure_new (INFO_NAME, INFO_FIELD, G_TYPE_STRING, INFO_TEXT_EN,
-      NULL);
-  gst_structure_set (ed->info, INFO_NAME, GST_TYPE_STRUCTURE, structure, NULL);
-  gst_structure_free (structure);
+  tags = gst_tag_list_new_empty ();
+  gst_tag_list_add (tags, GST_TAG_MERGE_APPEND, GST_TAG_TITLE, ENTRY_TAG, NULL);
+  gst_toc_entry_set_tags (ed, tags);
 
   /* create chapter3 */
   ch = gst_toc_entry_new (GST_TOC_ENTRY_TYPE_CHAPTER, ENTRY_CH3);
-  gst_tag_list_add (ch->tags, GST_TAG_MERGE_APPEND, GST_TAG_TITLE,
-      ENTRY_TAG, NULL);
-  structure =
-      gst_structure_new (INFO_NAME, INFO_FIELD, G_TYPE_STRING, INFO_TEXT_EN,
-      NULL);
-  gst_structure_set (ch->info, INFO_NAME, GST_TYPE_STRUCTURE, structure, NULL);
-  gst_structure_free (structure);
+  tags = gst_tag_list_new_empty ();
+  gst_tag_list_add (tags, GST_TAG_MERGE_APPEND, GST_TAG_TITLE, ENTRY_TAG, NULL);
+  gst_toc_entry_set_tags (ch, tags);
 
   /* create subchapter1 */
   subch = gst_toc_entry_new (GST_TOC_ENTRY_TYPE_CHAPTER, ENTRY_SUB1);
-  gst_tag_list_add (subch->tags, GST_TAG_MERGE_APPEND, GST_TAG_TITLE,
-      ENTRY_TAG, NULL);
-  structure =
-      gst_structure_new (INFO_NAME, INFO_FIELD, G_TYPE_STRING, INFO_TEXT_EN,
-      NULL);
-  gst_structure_set (subch->info, INFO_NAME, GST_TYPE_STRUCTURE, structure,
-      NULL);
-  gst_structure_free (structure);
+  tags = gst_tag_list_new_empty ();
+  gst_tag_list_add (tags, GST_TAG_MERGE_APPEND, GST_TAG_TITLE, ENTRY_TAG, NULL);
+  gst_toc_entry_set_tags (subch, tags);
 
   /* append subchapter1 to chapter3 */
-  ch->subentries = g_list_append (ch->subentries, subch);
+  gst_toc_entry_append_sub_entry (ch, subch);
 
   /* append chapter3 to edition2 */
-  ed->subentries = g_list_append (ed->subentries, ch);
+  gst_toc_entry_append_sub_entry (ed, ch);
 
   /* finally append edition2 to the TOC */
-  toc->entries = g_list_append (toc->entries, ed);
+  gst_toc_append_entry (toc, ed);
 
   return toc;
 }

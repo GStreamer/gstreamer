@@ -48,15 +48,12 @@ select event with UID to seek on. Field 'subentries' of type GList contains
 children items of type GstTocEntry. Thus you can achieve arbitrary hierarchy
 level. Field 'type' can be either GST_TOC_ENTRY_TYPE_CHAPTER or
 GST_TOC_ENTRY_TYPE_EDITION which corresponds to chapter or edition type of
-item respectively. Field 'pads' of type GList contains list of GStreamer
-pads related to the item. It can be used for example to link a TOC with
-specific pad. Field 'tags' is a list of tags related to the item. And field
+item respectively. Field 'tags' is a list of tags related to the item. And field
 'info' is similar to GstToc.info described above.
 
 So, a little more about managing GstToc. Use gst_toc_new() and gst_toc_unref()
-to create/free it. GstTocEntry can be created using gst_toc_entry_new() and
-gst_toc_entry_new_with_pad(). The latter method used to create GstTocEntry
-linked to particular pad. While building GstToc you can set start and stop
+to create/free it. GstTocEntry can be created using gst_toc_entry_new().
+While building GstToc you can set start and stop
 timestamps for each item using gst_toc_entry_set_start_stop().
 The best way to process already created GstToc is to recursively go through
 the 'entries' and 'subentries' fields.

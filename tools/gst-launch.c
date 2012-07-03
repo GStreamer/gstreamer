@@ -468,12 +468,14 @@ print_toc_entry (gpointer data, gpointer user_data)
   GstTocEntry *entry = (GstTocEntry *) data;
   const gchar spc[MAX_INDENT + 1] = "                                        ";
   guint indent = MIN (GPOINTER_TO_UINT (user_data), MAX_INDENT);
+  const GstTagList *tags;
+  GList *subentries;
   gint64 start, stop;
 
-  gst_toc_entry_get_start_stop (entry, &start, &stop);
+  gst_toc_entry_get_start_stop_times (entry, &start, &stop);
 
   PRINT ("%s%s:", &spc[MAX_INDENT - indent],
-      gst_toc_entry_type_get_nick (entry->type));
+      gst_toc_entry_type_get_nick (gst_toc_entry_get_entry_type (entry)));
   if (GST_CLOCK_TIME_IS_VALID (start)) {
     PRINT (" start: %" GST_TIME_FORMAT, GST_TIME_ARGS (start));
   }
@@ -484,12 +486,13 @@ print_toc_entry (gpointer data, gpointer user_data)
   indent += 2;
 
   /* print tags */
-  gst_tag_list_foreach (entry->tags, print_tag_foreach,
-      GUINT_TO_POINTER (indent));
+  tags = gst_toc_entry_get_tags (entry);
+  if (tags)
+    gst_tag_list_foreach (tags, print_tag_foreach, GUINT_TO_POINTER (indent));
 
   /* loop over sub-toc entries */
-  g_list_foreach (entry->subentries, print_toc_entry,
-      GUINT_TO_POINTER (indent));
+  subentries = gst_toc_entry_get_sub_entries (entry);
+  g_list_foreach (subentries, print_toc_entry, GUINT_TO_POINTER (indent));
 }
 
 #ifndef DISABLE_FAULT_HANDLER
@@ -669,7 +672,8 @@ event_loop (GstElement * pipeline, gboolean blocking, GstState target_state)
         break;
       case GST_MESSAGE_TOC:
         if (toc) {
-          GstToc *toc_msg;
+          GstToc *toc;
+          GList *entries;
           gboolean updated;
 
           if (GST_IS_ELEMENT (GST_MESSAGE_SRC (message))) {
@@ -682,11 +686,11 @@ event_loop (GstElement * pipeline, gboolean blocking, GstState target_state)
             PRINT (_("FOUND TOC\n"));
           }
 
-          gst_message_parse_toc (message, &toc_msg, &updated);
+          gst_message_parse_toc (message, &toc, &updated);
           /* recursively loop over toc entries */
-          g_list_foreach (toc_msg->entries, print_toc_entry,
-              GUINT_TO_POINTER (0));
-          gst_toc_unref (toc_msg);
+          entries = gst_toc_get_entries (toc);
+          g_list_foreach (entries, print_toc_entry, GUINT_TO_POINTER (0));
+          gst_toc_unref (toc);
         }
         break;
       case GST_MESSAGE_INFO:{
