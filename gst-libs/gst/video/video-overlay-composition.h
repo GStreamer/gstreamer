@@ -45,7 +45,6 @@ G_BEGIN_DECLS
   (GST_IS_MINI_OBJECT_TYPE(obj, GST_TYPE_VIDEO_OVERLAY_RECTANGLE))
 
 typedef struct _GstVideoOverlayRectangle      GstVideoOverlayRectangle;
-typedef struct _GstVideoOverlayRectangleClass GstVideoOverlayRectangleClass;
 
 /**
  * gst_video_overlay_rectangle_ref:
@@ -168,7 +167,6 @@ void                         gst_video_overlay_rectangle_set_global_alpha       
   (GST_IS_MINI_OBJECT_TYPE(obj, GST_TYPE_VIDEO_OVERLAY_COMPOSITION))
 
 typedef struct _GstVideoOverlayComposition      GstVideoOverlayComposition;
-typedef struct _GstVideoOverlayCompositionClass GstVideoOverlayCompositionClass;
 
 /**
  * gst_video_overlay_composition_ref:
