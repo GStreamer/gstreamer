@@ -153,7 +153,6 @@ _default_mem_init (GstMemoryDefault * mem, GstMemoryFlags flags,
   mem->mem.allocator = _default_mem_impl;
   mem->mem.parent = parent ? gst_memory_ref (parent) : NULL;
   mem->mem.state = (flags & GST_MEMORY_FLAG_READONLY ? GST_LOCK_FLAG_READ : 0);
-  mem->mem.state |= (flags & GST_MEMORY_FLAG_NO_SHARE ? SHARE_ONE : 0);
   mem->mem.maxsize = maxsize;
   mem->mem.align = align;
   mem->mem.offset = offset;
