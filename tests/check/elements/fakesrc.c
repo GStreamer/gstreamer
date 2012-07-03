@@ -234,6 +234,87 @@ GST_START_TEST (test_no_preroll)
 
 GST_END_TEST;
 
+static void
+handoff_cb (GstElement * element, GstBuffer * buf, GstPad * pad,
+    gint * p_counter)
+{
+  *p_counter += 1;
+  GST_LOG ("counter = %d", *p_counter);
+}
+
+GST_START_TEST (test_reuse_push)
+{
+  GstElement *src, *sep, *sink, *pipeline;
+  GstBus *bus;
+  gint counter, repeat = 3, num_buffers = 10;
+
+  pipeline = gst_pipeline_new ("pipeline");
+  fail_unless (pipeline != NULL, "Failed to create pipeline!");
+
+  bus = gst_element_get_bus (pipeline);
+
+  src = gst_element_factory_make ("fakesrc", "fakesrc");
+  fail_unless (src != NULL, "Failed to create 'fakesrc' element!");
+
+  sep = gst_element_factory_make ("queue", "queue");
+  fail_unless (sep != NULL, "Failed to create 'queue' element");
+
+  sink = gst_element_factory_make ("fakesink", "fakesink");
+  fail_unless (sink != NULL, "Failed to create 'fakesink' element!");
+
+  g_object_set (sink, "signal-handoffs", TRUE, NULL);
+  g_signal_connect (sink, "handoff", G_CALLBACK (handoff_cb), &counter);
+
+  gst_bin_add_many (GST_BIN (pipeline), src, sep, sink, NULL);
+
+  fail_unless (gst_element_link (src, sep));
+  fail_unless (gst_element_link (sep, sink));
+
+  g_object_set (src, "num-buffers", num_buffers, NULL);
+
+  do {
+    GstStateChangeReturn state_ret;
+    GstMessage *msg;
+
+    GST_INFO ("====================== round %d ======================", repeat);
+
+    counter = 0;
+
+    state_ret = gst_element_set_state (pipeline, GST_STATE_PAUSED);
+    fail_unless (state_ret != GST_STATE_CHANGE_FAILURE);
+
+    if (state_ret == GST_STATE_CHANGE_ASYNC) {
+      GST_LOG ("waiting for pipeline to reach PAUSED state");
+      state_ret = gst_element_get_state (pipeline, NULL, NULL, -1);
+      fail_unless_equals_int (state_ret, GST_STATE_CHANGE_SUCCESS);
+    }
+
+    GST_LOG ("PAUSED, let's read all of it");
+
+    state_ret = gst_element_set_state (pipeline, GST_STATE_PLAYING);
+    fail_unless (state_ret != GST_STATE_CHANGE_FAILURE);
+
+    msg = gst_bus_poll (bus, GST_MESSAGE_EOS, -1);
+    fail_unless (msg != NULL, "Expected EOS message on bus!");
+
+    gst_message_unref (msg);
+
+    if (num_buffers >= 0) {
+      fail_unless_equals_int (counter, num_buffers);
+    }
+
+    fail_unless_equals_int (gst_element_set_state (pipeline, GST_STATE_NULL),
+        GST_STATE_CHANGE_SUCCESS);
+
+    --repeat;
+  } while (repeat > 0);
+
+  gst_object_unref (bus);
+  gst_object_unref (pipeline);
+}
+
+GST_END_TEST;
+
 static Suite *
 fakesrc_suite (void)
 {
@@ -246,6 +327,7 @@ fakesrc_suite (void)
   tcase_add_test (tc_chain, test_sizetype_fixed);
   tcase_add_test (tc_chain, test_sizetype_random);
   tcase_add_test (tc_chain, test_no_preroll);
+  tcase_add_test (tc_chain, test_reuse_push);
 
   return s;
 }
