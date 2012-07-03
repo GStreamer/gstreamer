@@ -3,12 +3,44 @@
   
 typedef struct _CustomData {
   GstElement *pipeline;
+  GstElement *video_sink;
   GMainLoop *loop;
   
   gboolean playing;  /* Playing or Paused */
-  gdouble rate;      /* Current playback rate */
-  gboolean backward; /* Forward or backwards */
+  gdouble rate;      /* Current playback rate (can be negative) */
 } CustomData;
+  
+/* Send seek event to change rate */
+static void send_seek_event (CustomData *data) {
+  gint64 position;
+  GstFormat format = GST_FORMAT_TIME;
+  GstEvent *seek_event;
+  
+  /* Obtain the current position, needed for the seek event */
+  if (!gst_element_query_position (data->pipeline, &format, &position)) {
+    g_printerr ("Unable to retrieve current position.\n");
+    return;
+  }
+  
+  /* Create the seek event */
+  if (data->rate > 0) {
+    seek_event = gst_event_new_seek (data->rate, GST_FORMAT_TIME, GST_SEEK_FLAG_FLUSH | GST_SEEK_FLAG_ACCURATE,
+        GST_SEEK_TYPE_SET, position, GST_SEEK_TYPE_NONE, 0);
+  } else {
+    seek_event = gst_event_new_seek (data->rate, GST_FORMAT_TIME, GST_SEEK_FLAG_FLUSH | GST_SEEK_FLAG_ACCURATE,
+        GST_SEEK_TYPE_NONE, 0, GST_SEEK_TYPE_SET, position);
+  }
+  
+  if (data->video_sink == NULL) {
+    /* If we have not done so, obtain the sink through which we will send the seek events */
+    g_object_get (data->pipeline, "video_sink", &data->video_sink, NULL);
+  }
+  
+  /* Send the event */
+  gst_element_send_event (data->video_sink, seek_event);
+  
+  g_print ("Current rate: %g\n", data->rate);
+}
   
 /* Process keyboard input */
 static gboolean handle_keyboard (GIOChannel *source, GIOCondition cond, CustomData *data) {
@@ -30,16 +62,11 @@ static gboolean handle_keyboard (GIOChannel *source, GIOCondition cond, CustomDa
     } else {
       data->rate /= 2.0;
     }
-    gst_element_send_event (data->pipeline,
-        gst_event_new_step (GST_FORMAT_TIME, -1, data->rate, TRUE, FALSE));
-    g_print ("Current rate: %g\n", data->rate);
+    send_seek_event (data);
     break;
   case 'd':
-    data->backward = !data->backward;
-    gst_element_send_event (data->pipeline,
-        gst_event_new_seek (data->backward ? -data->rate : data->rate,
-            GST_FORMAT_TIME, GST_SEEK_FLAG_NONE, GST_SEEK_TYPE_NONE, 0, GST_SEEK_TYPE_NONE, 0));
-    g_print ("Going %s\n", data->backward ? "backwards" : "forward");
+    data->rate *= -1.0;
+    send_seek_event (data);
     break;
   case 'n':
     gst_element_send_event (data->pipeline,
@@ -107,6 +134,8 @@ int main(int argc, char *argv[]) {
   g_main_loop_unref (data.loop);
   g_io_channel_unref (io_stdin);
   gst_element_set_state (data.pipeline, GST_STATE_NULL);
+  if (data.video_sink != NULL)
+    gst_object_unref (data.video_sink);
   gst_object_unref (data.pipeline);
   return 0;
 }
