@@ -1016,7 +1016,7 @@ gst_pad_activate_mode (GstPad * pad, GstPadMode mode, gboolean active)
   if (old == new)
     goto was_ok;
 
-  if (active && old != mode) {
+  if (active && old != mode && old != GST_PAD_MODE_NONE) {
     /* pad was activate in the wrong direction, deactivate it
      * and reactivate it in the requested mode */
     GST_DEBUG_OBJECT (pad, "deactivating pad from %s mode",
