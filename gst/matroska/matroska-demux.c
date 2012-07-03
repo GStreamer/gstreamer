@@ -4371,9 +4371,6 @@ gst_matroska_demux_parse_id (GstMatroskaDemux * demux, guint32 id,
             if (demux->common.toc) {
               gst_matroska_demux_send_event (demux,
                   gst_event_new_toc (demux->common.toc, FALSE));
-              gst_element_post_message (GST_ELEMENT_CAST (demux),
-                  gst_message_new_toc (GST_OBJECT_CAST (demux),
-                      demux->common.toc, FALSE));
             }
           } else
             GST_READ_CHECK (gst_matroska_demux_flush (demux, read));
