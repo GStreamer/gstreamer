@@ -218,7 +218,6 @@ _get_merged_memory (GstBuffer * buffer, guint idx, guint length)
     size = gst_buffer_get_size (buffer);
 
     if (G_UNLIKELY (_is_span (mem + idx, length, &poffset, &parent))) {
-
       if (GST_MEMORY_IS_NO_SHARE (parent)) {
         GST_CAT_DEBUG (GST_CAT_PERFORMANCE, "copy for merge %p", parent);
         result = gst_memory_copy (parent, poffset, size);
@@ -1177,7 +1176,6 @@ gst_buffer_resize_range (GstBuffer * buffer, guint idx, gint length,
 {
   guint i, len, end;
   gsize bsize, bufsize, bufoffs, bufmax;
-  GstMemory *mem;
 
   g_return_if_fail (gst_buffer_is_writable (buffer));
   g_return_if_fail (size >= -1);
@@ -1211,6 +1209,7 @@ gst_buffer_resize_range (GstBuffer * buffer, guint idx, gint length,
   end = idx + length;
   /* copy and trim */
   for (i = idx; i < end; i++) {
+    GstMemory *mem;
     gsize left, noffs;
 
     mem = GST_BUFFER_MEM_PTR (buffer, i);
@@ -1234,22 +1233,22 @@ gst_buffer_resize_range (GstBuffer * buffer, guint idx, gint length,
       if (gst_memory_is_exclusive (mem)) {
         gst_memory_resize (mem, offset, left);
       } else {
-        GstMemory *tmp;
+        GstMemory *newmem;
 
         if (GST_MEMORY_IS_NO_SHARE (mem))
-          tmp = gst_memory_copy (mem, offset, left);
+          newmem = gst_memory_copy (mem, offset, left);
         else
-          tmp = gst_memory_share (mem, offset, left);
+          newmem = gst_memory_share (mem, offset, left);
 
+        gst_memory_lock (newmem, GST_LOCK_FLAG_EXCLUSIVE);
+        GST_BUFFER_MEM_PTR (buffer, i) = newmem;
+        gst_memory_unlock (mem, GST_LOCK_FLAG_EXCLUSIVE);
         gst_memory_unref (mem);
-        mem = tmp;
       }
     }
+
     offset = noffs;
     size -= left;
-
-    /* FIXME, update exclusive counters */
-    GST_BUFFER_MEM_PTR (buffer, i) = mem;
   }
 }
 
