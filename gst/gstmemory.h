@@ -156,6 +156,23 @@ struct _GstMemory {
 };
 
 /**
+ * GstLockFlags:
+ * @GST_LOCK_FLAG_READ: lock for read access
+ * @GST_LOCK_FLAG_WRITE: lock for write access
+ * @GST_LOCK_FLAG_EXCLUSIVE: lock for exclusive access
+ * @GST_LOCK_FLAG_LAST: first flag that can be used for custom purposes
+ *
+ * Flags used when locking memory
+ */
+typedef enum {
+  GST_LOCK_FLAG_READ      = (1 << 0),
+  GST_LOCK_FLAG_WRITE     = (1 << 1),
+  GST_LOCK_FLAG_EXCLUSIVE = (1 << 2),
+
+  GST_LOCK_FLAG_LAST      = (1 << 4)
+} GstLockFlags;
+
+/**
  * GstMapFlags:
  * @GST_MAP_READ: map for read access
  * @GST_MAP_WRITE: map for write access
@@ -164,8 +181,8 @@ struct _GstMemory {
  * Flags used when mapping memory
  */
 typedef enum {
-  GST_MAP_READ      = (1 << 0),
-  GST_MAP_WRITE     = (1 << 1),
+  GST_MAP_READ      = GST_LOCK_FLAG_READ,
+  GST_MAP_WRITE     = GST_LOCK_FLAG_WRITE,
 
   GST_MAP_FLAG_LAST = (1 << 16)
 } GstMapFlags;
@@ -464,22 +481,6 @@ gst_memory_unref (GstMemory * memory)
 }
 
 /* locking */
-/**
- * GstLockFlags:
- * @GST_LOCK_FLAG_READ: lock for read access
- * @GST_LOCK_FLAG_WRITE: lock for write access
- * @GST_LOCK_FLAG_EXCLUSIVE: lock for exclusive access
- * @GST_LOCK_FLAG_LAST: first flag that can be used for custom purposes
- *
- * Flags used when locking memory
- */
-typedef enum {
-  GST_LOCK_FLAG_READ      = (1 << 0),
-  GST_LOCK_FLAG_WRITE     = (1 << 1),
-  GST_LOCK_FLAG_EXCLUSIVE = (1 << 2),
-
-  GST_LOCK_FLAG_LAST = (1 << 4)
-} GstLockFlags;
 
 gboolean       gst_memory_is_exclusive (GstMemory *mem);
 
