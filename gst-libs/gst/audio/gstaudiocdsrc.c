@@ -1436,9 +1436,6 @@ gst_audio_cd_src_add_toc (GstAudioCdSrc * src)
   }
   toc->entries = entries.head;
 
-  gst_element_post_message (GST_ELEMENT_CAST (src),
-      gst_message_new_toc (GST_OBJECT (src), toc, FALSE));
-
   /* If we're in continuous mode (stream = whole disc), send a TOC event
    * downstream, so matroskamux etc. can write a TOC to indicate where the
    * various tracks are */
