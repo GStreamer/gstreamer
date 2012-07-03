@@ -766,6 +766,48 @@ gst_base_text_overlay_setcaps_txt (GstBaseTextOverlay * overlay, GstCaps * caps)
 
 /* FIXME: upstream nego (e.g. when the video window is resized) */
 
+/* only negotiate/query video overlay composition support for now */
+static gboolean
+gst_base_text_overlay_negotiate (GstBaseTextOverlay * overlay)
+{
+  GstCaps *target;
+  GstQuery *query;
+  gboolean attach = FALSE;
+
+  GST_DEBUG_OBJECT (overlay, "performing negotiation");
+
+  target = gst_pad_get_current_caps (overlay->srcpad);
+
+  if (!target || gst_caps_is_empty (target))
+    goto no_format;
+
+  /* find supported meta */
+  query = gst_query_new_allocation (target, TRUE);
+
+  if (!gst_pad_peer_query (overlay->srcpad, query)) {
+    /* no problem, we use the query defaults */
+    GST_DEBUG_OBJECT (overlay, "ALLOCATION query failed");
+  }
+
+  if (gst_query_has_allocation_meta (query,
+          GST_VIDEO_OVERLAY_COMPOSITION_META_API_TYPE))
+    attach = TRUE;
+
+  overlay->attach_compo_to_buffer = attach;
+
+  gst_query_unref (query);
+  gst_caps_unref (target);
+
+  return TRUE;
+
+no_format:
+  {
+    if (target)
+      gst_caps_unref (target);
+    return FALSE;
+  }
+}
+
 static gboolean
 gst_base_text_overlay_setcaps (GstBaseTextOverlay * overlay, GstCaps * caps)
 {
@@ -783,27 +825,9 @@ gst_base_text_overlay_setcaps (GstBaseTextOverlay * overlay, GstCaps * caps)
   ret = gst_pad_set_caps (overlay->srcpad, caps);
 
   if (ret) {
-#if 0
-    GstStructure *structure;
-#endif
-
     GST_BASE_TEXT_OVERLAY_LOCK (overlay);
     g_mutex_lock (GST_BASE_TEXT_OVERLAY_GET_CLASS (overlay)->pango_lock);
-
-    /* FIXME Use the query to the sink to do that when implemented */
-    /* Update wether to attach composition to buffer or do the composition
-     * ourselves */
-#if 0
-    structure = gst_caps_get_structure (caps, 0);
-    if (gst_structure_has_name (structure, "video/x-surface"))
-      overlay->attach_compo_to_buffer = TRUE;
-    else
-      overlay->attach_compo_to_buffer = FALSE;
-#else
-    GST_FIXME_OBJECT (overlay, "query downstream for overlay support");
-    overlay->attach_compo_to_buffer = FALSE;
-#endif
-
+    gst_base_text_overlay_negotiate (overlay);
     gst_base_text_overlay_update_wrap_mode (overlay);
     g_mutex_unlock (GST_BASE_TEXT_OVERLAY_GET_CLASS (overlay)->pango_lock);
     GST_BASE_TEXT_OVERLAY_UNLOCK (overlay);
@@ -1594,6 +1618,9 @@ gst_base_text_overlay_push_frame (GstBaseTextOverlay * overlay,
 
   if (overlay->composition == NULL)
     goto done;
+
+  if (gst_pad_check_reconfigure (overlay->srcpad))
+    gst_base_text_overlay_negotiate (overlay);
 
   video_frame = gst_buffer_make_writable (video_frame);
 
