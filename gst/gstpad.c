@@ -808,6 +808,24 @@ gst_pad_activate_default (GstPad * pad, GstObject * parent)
   return gst_pad_activate_mode (pad, GST_PAD_MODE_PUSH, TRUE);
 }
 
+#ifndef GST_DISABLE_GST_DEBUG
+static const gchar *
+gst_pad_mode_get_name (GstPadMode mode)
+{
+  switch (mode) {
+    case GST_PAD_MODE_NONE:
+      return "none";
+    case GST_PAD_MODE_PUSH:
+      return "push";
+    case GST_PAD_MODE_PULL:
+      return "pull";
+    default:
+      break;
+  }
+  return "unknown";
+}
+#endif
+
 static void
 pre_activate (GstPad * pad, GstPadMode new_mode)
 {
@@ -824,7 +842,8 @@ pre_activate (GstPad * pad, GstPadMode new_mode)
     case GST_PAD_MODE_PUSH:
     case GST_PAD_MODE_PULL:
       GST_OBJECT_LOCK (pad);
-      GST_DEBUG_OBJECT (pad, "setting PAD_MODE %d, unset flushing", new_mode);
+      GST_DEBUG_OBJECT (pad, "setting pad into %s mode, unset flushing",
+          gst_pad_mode_get_name (new_mode));
       GST_PAD_UNSET_FLUSHING (pad);
       GST_PAD_MODE (pad) = new_mode;
       if (GST_PAD_IS_SINK (pad)) {
@@ -911,7 +930,8 @@ gst_pad_set_active (GstPad * pad, gboolean active)
       GST_DEBUG_OBJECT (pad, "activating pad from none");
       ret = (GST_PAD_ACTIVATEFUNC (pad)) (pad, parent);
     } else {
-      GST_DEBUG_OBJECT (pad, "pad was active in mode %d", old);
+      GST_DEBUG_OBJECT (pad, "pad was active in %s mode",
+          gst_pad_mode_get_name (old));
       ret = TRUE;
     }
   } else {
@@ -919,7 +939,8 @@ gst_pad_set_active (GstPad * pad, gboolean active)
       GST_DEBUG_OBJECT (pad, "pad was inactive");
       ret = TRUE;
     } else {
-      GST_DEBUG_OBJECT (pad, "deactivating pad from mode %d", old);
+      GST_DEBUG_OBJECT (pad, "deactivating pad from %s mode",
+          gst_pad_mode_get_name (old));
       ret = gst_pad_activate_mode (pad, old, FALSE);
     }
   }
@@ -998,7 +1019,9 @@ gst_pad_activate_mode (GstPad * pad, GstPadMode mode, gboolean active)
   if (active && old != mode) {
     /* pad was activate in the wrong direction, deactivate it
      * and reactivate it in the requested mode */
-    GST_DEBUG_OBJECT (pad, "deactivating pad from mode %d", old);
+    GST_DEBUG_OBJECT (pad, "deactivating pad from %s mode",
+        gst_pad_mode_get_name (old));
+
     if (G_UNLIKELY (!gst_pad_activate_mode (pad, old, FALSE)))
       goto deactivate_failed;
   }
@@ -1044,8 +1067,8 @@ gst_pad_activate_mode (GstPad * pad, GstPadMode mode, gboolean active)
 
   post_activate (pad, new);
 
-  GST_CAT_DEBUG_OBJECT (GST_CAT_PADS, pad, "%s in mode %d",
-      active ? "activated" : "deactivated", mode);
+  GST_CAT_DEBUG_OBJECT (GST_CAT_PADS, pad, "%s in %s mode",
+      active ? "activated" : "deactivated", gst_pad_mode_get_name (mode));
 
 exit_success:
   res = TRUE;
@@ -1062,15 +1085,16 @@ no_parent:
   }
 was_ok:
   {
-    GST_CAT_DEBUG_OBJECT (GST_CAT_PADS, pad, "already %s in mode %d",
-        active ? "activated" : "deactivated", mode);
+    GST_CAT_DEBUG_OBJECT (GST_CAT_PADS, pad, "already %s in %s mode",
+        active ? "activated" : "deactivated", gst_pad_mode_get_name (mode));
     goto exit_success;
   }
 deactivate_failed:
   {
     GST_CAT_DEBUG_OBJECT (GST_CAT_PADS, pad,
-        "failed to %s in switch to mode %d from mode %d",
-        (active ? "activate" : "deactivate"), mode, old);
+        "failed to %s in switch to %s mode from %s mode",
+        (active ? "activate" : "deactivate"), gst_pad_mode_get_name (mode),
+        gst_pad_mode_get_name (old));
     goto exit;
   }
 peer_failed:
@@ -1091,8 +1115,8 @@ not_linked:
 failure:
   {
     GST_OBJECT_LOCK (pad);
-    GST_CAT_INFO_OBJECT (GST_CAT_PADS, pad, "failed to %s in mode %d",
-        active ? "activate" : "deactivate", mode);
+    GST_CAT_INFO_OBJECT (GST_CAT_PADS, pad, "failed to %s in %s mode",
+        active ? "activate" : "deactivate", gst_pad_mode_get_name (mode));
     GST_PAD_SET_FLUSHING (pad);
     GST_PAD_MODE (pad) = old;
     GST_OBJECT_UNLOCK (pad);

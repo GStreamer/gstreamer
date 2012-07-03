@@ -2362,7 +2362,7 @@ gst_bin_src_pads_activate (GstBin * bin, gboolean active)
   GstIterator *iter;
   gboolean fold_ok;
 
-  GST_DEBUG_OBJECT (bin, "src_pads_activate with active %d", active);
+  GST_DEBUG_OBJECT (bin, "%s pads", active ? "activate" : "deactivate");
 
   iter = gst_element_iterate_src_pads ((GstElement *) bin);
   fold_ok = iterator_activate_fold_with_resync (iter, &active);
@@ -2370,14 +2370,14 @@ gst_bin_src_pads_activate (GstBin * bin, gboolean active)
   if (G_UNLIKELY (!fold_ok))
     goto failed;
 
-  GST_DEBUG_OBJECT (bin, "pads_activate successful");
+  GST_DEBUG_OBJECT (bin, "pad %sactivation successful", active ? "" : "de");
 
   return TRUE;
 
   /* ERRORS */
 failed:
   {
-    GST_DEBUG_OBJECT (bin, "source pads_activate failed");
+    GST_DEBUG_OBJECT (bin, "pad %sactivation failed", active ? "" : "de");
     return FALSE;
   }
 }

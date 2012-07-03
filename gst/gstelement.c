@@ -2699,7 +2699,7 @@ gst_element_pads_activate (GstElement * element, gboolean active)
   gboolean res;
 
   GST_CAT_DEBUG_OBJECT (GST_CAT_ELEMENT_PADS, element,
-      "pads_activate with active %d", active);
+      "%s pads", active ? "activate" : "deactivate");
 
   iter = gst_element_iterate_src_pads (element);
   res =
@@ -2718,7 +2718,7 @@ gst_element_pads_activate (GstElement * element, gboolean active)
     goto sink_failed;
 
   GST_CAT_DEBUG_OBJECT (GST_CAT_ELEMENT_PADS, element,
-      "pads_activate successful");
+      "pad %sactivation successful", active ? "" : "de");
 
   return TRUE;
 
@@ -2726,7 +2726,7 @@ gst_element_pads_activate (GstElement * element, gboolean active)
 src_failed:
   {
     GST_CAT_DEBUG_OBJECT (GST_CAT_ELEMENT_PADS, element,
-        "source pads_activate failed");
+        "pad %sactivation failed", active ? "" : "de");
     return FALSE;
   }
 sink_failed:
