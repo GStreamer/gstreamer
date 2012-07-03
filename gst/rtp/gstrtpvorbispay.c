@@ -103,7 +103,6 @@ gst_rtp_vorbis_pay_class_init (GstRtpVorbisPayClass * klass)
 static void
 gst_rtp_vorbis_pay_init (GstRtpVorbisPay * rtpvorbispay)
 {
-  /* needed because of GST_BOILERPLATE */
 }
 
 static void

@@ -87,7 +87,6 @@ gst_rtp_mpa_depay_class_init (GstRtpMPADepayClass * klass)
 static void
 gst_rtp_mpa_depay_init (GstRtpMPADepay * rtpmpadepay)
 {
-  /* needed because of GST_BOILERPLATE */
 }
 
 static gboolean

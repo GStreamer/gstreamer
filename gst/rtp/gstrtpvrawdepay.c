@@ -94,7 +94,6 @@ gst_rtp_vraw_depay_class_init (GstRtpVRawDepayClass * klass)
 static void
 gst_rtp_vraw_depay_init (GstRtpVRawDepay * rtpvrawdepay)
 {
-  /* needed because of GST_BOILERPLATE */
 }
 
 static void

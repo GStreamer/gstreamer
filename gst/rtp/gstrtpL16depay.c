@@ -101,7 +101,6 @@ gst_rtp_L16_depay_class_init (GstRtpL16DepayClass * klass)
 static void
 gst_rtp_L16_depay_init (GstRtpL16Depay * rtpL16depay)
 {
-  /* needed because of GST_BOILERPLATE */
 }
 
 static gint
