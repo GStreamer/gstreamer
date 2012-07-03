@@ -260,15 +260,19 @@ _replace_memory (GstBuffer * buffer, guint len, guint idx, guint length,
   gsize end, i;
 
   end = idx + length;
+
   GST_LOG ("buffer %p replace %u-%" G_GSIZE_FORMAT " with memory %p", buffer,
       idx, end, mem);
 
   /* unref old memory */
-  for (i = idx; i < end; i++)
+  for (i = idx; i < end; i++) {
+    gst_memory_unlock (GST_BUFFER_MEM_PTR (buffer, i), GST_LOCK_FLAG_EXCLUSIVE);
     gst_memory_unref (GST_BUFFER_MEM_PTR (buffer, i));
+  }
 
   if (mem != NULL) {
     /* replace with single memory */
+    gst_memory_lock (mem, GST_LOCK_FLAG_EXCLUSIVE);
     GST_BUFFER_MEM_PTR (buffer, idx) = mem;
     idx++;
     length--;
@@ -282,11 +286,11 @@ _replace_memory (GstBuffer * buffer, guint len, guint idx, guint length,
 }
 
 static inline void
-_memory_add (GstBuffer * buffer, gint idx, GstMemory * mem)
+_memory_add (GstBuffer * buffer, gint idx, GstMemory * mem, gboolean lock)
 {
   guint i, len = GST_BUFFER_MEM_LEN (buffer);
 
-  GST_LOG ("buffer %p, idx %d, mem %p", buffer, idx, mem);
+  GST_LOG ("buffer %p, idx %d, mem %p, lock %d", buffer, idx, mem, lock);
 
   if (G_UNLIKELY (len >= GST_BUFFER_MEM_MAX)) {
     /* too many buffer, span them. */
@@ -308,6 +312,8 @@ _memory_add (GstBuffer * buffer, gint idx, GstMemory * mem)
     GST_BUFFER_MEM_PTR (buffer, i) = GST_BUFFER_MEM_PTR (buffer, i - 1);
   }
   /* and insert the new buffer */
+  if (lock)
+    gst_memory_lock (mem, GST_LOCK_FLAG_EXCLUSIVE);
   GST_BUFFER_MEM_PTR (buffer, idx) = mem;
   GST_BUFFER_MEM_LEN (buffer) = len + 1;
 }
@@ -420,7 +426,7 @@ gst_buffer_copy_into (GstBuffer * dest, GstBuffer * src,
         } else {
           mem = gst_memory_ref (mem);
         }
-        _memory_add (dest, -1, mem);
+        _memory_add (dest, -1, mem, TRUE);
         left -= tocopy;
       }
     }
@@ -516,8 +522,10 @@ _gst_buffer_free (GstBuffer * buffer)
 
   /* free our memory */
   len = GST_BUFFER_MEM_LEN (buffer);
-  for (i = 0; i < len; i++)
+  for (i = 0; i < len; i++) {
+    gst_memory_unlock (GST_BUFFER_MEM_PTR (buffer, i), GST_LOCK_FLAG_EXCLUSIVE);
     gst_memory_unref (GST_BUFFER_MEM_PTR (buffer, i));
+  }
 
   /* we set msize to 0 when the buffer is part of the memory block */
   if (msize)
@@ -612,7 +620,7 @@ gst_buffer_new_allocate (GstAllocator * allocator, gsize size,
   newbuf = gst_buffer_new ();
 
   if (mem != NULL)
-    _memory_add (newbuf, -1, mem);
+    _memory_add (newbuf, -1, mem, TRUE);
 
   GST_CAT_LOG (GST_CAT_BUFFER,
       "new buffer %p of size %" G_GSIZE_FORMAT " from allocator %p", newbuf,
@@ -631,7 +639,7 @@ gst_buffer_new_allocate (GstAllocator * allocator, gsize size,
   if (size > 0) {
     mem = gst_memory_new_wrapped (0, data + sizeof (GstBufferImpl), NULL,
         size, 0, size);
-    _memory_add (newbuf, -1, mem);
+    _memory_add (newbuf, -1, mem, TRUE);
   }
 #endif
 
@@ -658,7 +666,7 @@ gst_buffer_new_allocate (GstAllocator * allocator, gsize size,
   GST_BUFFER_BUFMEM (newbuf) = mem;
 
   if (size > 0)
-    _memory_add (newbuf, -1, gst_memory_ref (mem));
+    _memory_add (newbuf, -1, gst_memory_ref (mem), TRUE);
 #endif
 
   return newbuf;
@@ -776,7 +784,7 @@ gst_buffer_insert_memory (GstBuffer * buffer, gint idx, GstMemory * mem)
   g_return_if_fail (idx == -1 ||
       (idx >= 0 && idx <= GST_BUFFER_MEM_LEN (buffer)));
 
-  _memory_add (buffer, idx, mem);
+  _memory_add (buffer, idx, mem, TRUE);
 }
 
 static GstMemory *
@@ -789,9 +797,12 @@ _get_mapped (GstBuffer * buffer, guint idx, GstMapInfo * info,
 
   mapped = gst_memory_make_mapped (mem, info, flags);
 
-  if (mapped && mapped != mem) {
-    /* new memory, replace old memory */
+  if (mapped != mem) {
+    /* memory changed, lock new memory */
+    gst_memory_lock (mapped, GST_LOCK_FLAG_EXCLUSIVE);
     GST_BUFFER_MEM_PTR (buffer, idx) = mapped;
+    /* unlock old memory */
+    gst_memory_unlock (mem, GST_LOCK_FLAG_EXCLUSIVE);
   }
   gst_memory_unref (mem);
 
@@ -1237,6 +1248,7 @@ gst_buffer_resize_range (GstBuffer * buffer, guint idx, gint length,
     offset = noffs;
     size -= left;
 
+    /* FIXME, update exclusive counters */
     GST_BUFFER_MEM_PTR (buffer, i) = mem;
   }
 }
@@ -1666,7 +1678,7 @@ gst_buffer_append_region (GstBuffer * buf1, GstBuffer * buf2, gssize offset,
 
     mem = GST_BUFFER_MEM_PTR (buf2, i);
     GST_BUFFER_MEM_PTR (buf2, i) = NULL;
-    _memory_add (buf1, -1, mem);
+    _memory_add (buf1, -1, mem, FALSE);
   }
 
   GST_BUFFER_MEM_LEN (buf2) = 0;
