@@ -585,7 +585,7 @@ gst_ffmpegviddec_get_buffer (AVCodecContext * context, AVFrame * picture)
   /* Fill avpicture */
   info = &ffmpegdec->output_state->info;
   if (!gst_video_frame_map (&dframe->vframe, info, dframe->frame->output_buffer,
-          GST_MAP_READ | GST_MAP_WRITE))
+          GST_MAP_READWRITE))
     goto invalid_frame;
   dframe->mapped = TRUE;
 
