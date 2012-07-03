@@ -520,26 +520,31 @@ gst_memory_lock (GstMemory * mem, GstLockFlags flags)
   access_mode = flags & FLAG_MASK;
 
   do {
-    state = g_atomic_int_get (&mem->state);
-    if (flags == GST_LOCK_FLAG_EXCLUSIVE) {
+    newstate = state = g_atomic_int_get (&mem->state);
+
+    GST_CAT_TRACE (GST_CAT_MEMORY, "lock %p: state %08x, access_mode %d",
+        mem, state, access_mode);
+
+    if (access_mode & GST_LOCK_FLAG_EXCLUSIVE) {
       /* shared ref */
-      newstate = state + SHARE_ONE;
-      flags &= ~GST_LOCK_FLAG_EXCLUSIVE;
+      newstate += SHARE_ONE;
+      access_mode &= ~GST_LOCK_FLAG_EXCLUSIVE;
     }
 
-    /* shared counter > 1 and write access */
-    if (state > SHARE_ONE && flags & GST_LOCK_FLAG_WRITE)
-      goto lock_failed;
-
-    if ((state & LOCK_FLAG_MASK) == 0) {
-      /* nothing mapped, set access_mode and refcount */
-      newstate = state | LOCK_ONE | access_mode;
-    } else {
-      /* access_mode must match */
-      if ((state & access_mode) != access_mode)
-        goto lock_failed;
+    if (access_mode) {
+      if ((state & LOCK_FLAG_MASK) == 0) {
+        /* shared counter > 1 and write access */
+        if (state > SHARE_ONE && access_mode & GST_LOCK_FLAG_WRITE)
+          goto lock_failed;
+        /* nothing mapped, set access_mode */
+        newstate |= access_mode;
+      } else {
+        /* access_mode must match */
+        if ((state & access_mode) != access_mode)
+          goto lock_failed;
+      }
       /* increase refcount */
-      newstate = state + LOCK_ONE;
+      newstate += LOCK_ONE;
     }
   } while (!g_atomic_int_compare_and_exchange (&mem->state, state, newstate));
 
@@ -547,7 +552,7 @@ gst_memory_lock (GstMemory * mem, GstLockFlags flags)
 
 lock_failed:
   {
-    GST_CAT_DEBUG (GST_CAT_MEMORY, "lock failed %p: state %d, access_mode %d",
+    GST_CAT_DEBUG (GST_CAT_MEMORY, "lock failed %p: state %08x, access_mode %d",
         mem, state, access_mode);
     return FALSE;
   }
@@ -565,24 +570,29 @@ gst_memory_unlock (GstMemory * mem, GstLockFlags flags)
 {
   gint access_mode, state, newstate;
 
-  access_mode = flags & 3;
+  access_mode = flags & FLAG_MASK;
 
   do {
-    state = g_atomic_int_get (&mem->state);
-    if (flags == GST_LOCK_FLAG_EXCLUSIVE) {
+    newstate = state = g_atomic_int_get (&mem->state);
+
+    GST_CAT_TRACE (GST_CAT_MEMORY, "unlock %p: state %08x, access_mode %d",
+        mem, state, access_mode);
+
+    if (access_mode & GST_LOCK_FLAG_EXCLUSIVE) {
       /* shared counter */
       g_return_if_fail (state >= SHARE_ONE);
       newstate = state - SHARE_ONE;
-      flags &= ~GST_LOCK_FLAG_EXCLUSIVE;
+      access_mode &= ~GST_LOCK_FLAG_EXCLUSIVE;
     }
 
-    g_return_if_fail ((state & access_mode) == access_mode);
-    /* decrease the refcount */
-    newstate = state - LOCK_ONE;
-    /* last refcount, unset access_mode */
-    if ((newstate & LOCK_FLAG_MASK) == access_mode)
-      newstate = state & ~LOCK_FLAG_MASK;
-
+    if (access_mode) {
+      g_return_if_fail ((state & access_mode) == access_mode);
+      /* decrease the refcount */
+      newstate -= LOCK_ONE;
+      /* last refcount, unset access_mode */
+      if ((newstate & LOCK_FLAG_MASK) == access_mode)
+        newstate &= ~LOCK_FLAG_MASK;
+    }
   } while (!g_atomic_int_compare_and_exchange (&mem->state, state, newstate));
 }
 
