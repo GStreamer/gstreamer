@@ -334,9 +334,11 @@ gst_audio_panorama_transform_caps (GstBaseTransform * base,
   if (direction == GST_PAD_SRC) {
     GST_INFO ("allow 1-2 channels");
     gst_structure_set (structure, "channels", GST_TYPE_INT_RANGE, 1, 2, NULL);
+    gst_structure_remove_field (structure, "channel-mask");
   } else {
     GST_INFO ("allow 2 channels");
     gst_structure_set (structure, "channels", G_TYPE_INT, 2, NULL);
+    gst_structure_remove_field (structure, "channel-mask");
   }
 
   return res;
