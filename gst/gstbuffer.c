@@ -785,18 +785,17 @@ _get_mapped (GstBuffer * buffer, guint idx, GstMapInfo * info,
 {
   GstMemory *mem, *mapped;
 
-  mem = GST_BUFFER_MEM_PTR (buffer, idx);
+  mem = gst_memory_ref (GST_BUFFER_MEM_PTR (buffer, idx));
 
   mapped = gst_memory_make_mapped (mem, info, flags);
-  if (!mapped)
-    return NULL;
 
-  if (mapped != mem) {
+  if (mapped && mapped != mem) {
+    /* new memory, replace old memory */
     GST_BUFFER_MEM_PTR (buffer, idx) = mapped;
-    gst_memory_unref (mem);
-    mem = mapped;
   }
-  return mem;
+  gst_memory_unref (mem);
+
+  return mapped;
 }
 
 /**
