@@ -237,10 +237,37 @@ gboolean                     gst_video_overlay_composition_blend         (GstVid
 
 /* attach/retrieve composition from buffers */
 
-void                         gst_video_buffer_set_overlay_composition (GstBuffer                  * buf,
-                                                                       GstVideoOverlayComposition * comp);
+#define GST_VIDEO_OVERLAY_COMPOSITION_META_API_TYPE \
+    (gst_video_overlay_composition_meta_api_get_type())
+#define GST_VIDEO_OVERLAY_COMPOSITION_META_INFO \
+    (gst_video_overlay_composition_meta_get_info())
 
-GstVideoOverlayComposition * gst_video_buffer_get_overlay_composition (GstBuffer * buf);
+typedef struct _GstVideoOverlayCompositionMeta GstVideoOverlayCompositionMeta;
+
+/**
+ * GstVideoOverlayCompositionMeta:
+ * @meta: parent #GstMeta
+ * @overlay: the attached #GstVideoOverlayComposition
+ *
+ * Extra buffer metadata describing image overlay data.
+ */
+struct _GstVideoOverlayCompositionMeta
+{
+  GstMeta meta;
+
+  GstVideoOverlayComposition *overlay;
+};
+
+GType gst_video_overlay_composition_meta_api_get_type (void);
+const GstMetaInfo *gst_video_overlay_composition_meta_get_info (void);
+
+GstVideoOverlayCompositionMeta * gst_buffer_add_video_overlay_composition_meta (GstBuffer                  * buf,
+                                                                                GstVideoOverlayComposition * comp);
+
+#define gst_buffer_get_video_overlay_composition_meta(b) \
+  ((GstVideoOverlayCompositionMeta*)gst_buffer_get_meta((b),GST_VIDEO_OVERLAY_COMPOSITION_META_API_TYPE))
+#define gst_buffer_remove_video_overlay_composition_meta(b,m) \
+  gst_buffer_remove_meta((b),((GstMeta *) m))
 
 G_END_DECLS
 

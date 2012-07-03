@@ -190,32 +190,6 @@ gst_video_overlay_get_seqnum (void)
   return (guint) g_atomic_int_add (&seqnum, 1);
 }
 
-/* TODO ??
- * maybe this should be in public header and expose a more meta oriented API,
- * rather than hiding it here internally ? */
-
-#define GST_VIDEO_OVERLAY_COMPOSITION_META_API_TYPE \
-    (gst_video_overlay_composition_meta_api_get_type())
-#define GST_VIDEO_OVERLAY_COMPOSITION_META_INFO \
-    (gst_video_overlay_composition_meta_get_info())
-typedef struct _GstVideoOverlayCompositionMeta GstVideoOverlayCompositionMeta;
-
-static const GstMetaInfo *gst_video_overlay_composition_meta_get_info (void);
-
-/**
- * GstVideoOverlayCompositionMeta:
- * @meta: parent #GstMeta
- * @overlay: the attached #GstVideoOverlayComposition
- *
- * Extra buffer metadata describing image overlay data.
- */
-struct _GstVideoOverlayCompositionMeta
-{
-  GstMeta meta;
-
-  GstVideoOverlayComposition *overlay;
-};
-
 static void
 gst_video_overlay_composition_meta_free (GstMeta * meta, GstBuffer * buf)
 {
@@ -251,7 +225,7 @@ gst_video_overlay_composition_meta_transform (GstBuffer * dest, GstMeta * meta,
   return TRUE;
 }
 
-static GType
+GType
 gst_video_overlay_composition_meta_api_get_type (void)
 {
   static volatile GType type = 0;
@@ -266,7 +240,7 @@ gst_video_overlay_composition_meta_api_get_type (void)
 }
 
 /* video overlay composition metadata */
-static const GstMetaInfo *
+const GstMetaInfo *
 gst_video_overlay_composition_meta_get_info (void)
 {
   static const GstMetaInfo *video_overlay_composition_meta_info = NULL;
@@ -283,28 +257,10 @@ gst_video_overlay_composition_meta_get_info (void)
   return video_overlay_composition_meta_info;
 }
 
-static GstVideoOverlayCompositionMeta *
-gst_video_buffer_get_overlay_composition_meta (GstBuffer * buf)
-{
-  gpointer state = NULL;
-  GstMeta *meta;
-  const GstMetaInfo *info = GST_VIDEO_OVERLAY_COMPOSITION_META_INFO;
-
-  while ((meta = gst_buffer_iterate_meta (buf, &state))) {
-    if (meta->info->api == info->api) {
-      GstVideoOverlayCompositionMeta *ometa =
-          (GstVideoOverlayCompositionMeta *) meta;
-      return ometa;
-    }
-  }
-  return NULL;
-}
-
 /**
- * gst_video_buffer_set_overlay_composition:
+ * gst_buffer_add_video_overlay_composition_meta:
  * @buf: a #GstBuffer
- * @comp: (allow-none): a #GstVideoOverlayComposition, or NULL to clear a
- *     previously-set composition
+ * @comp: (allow-none): a #GstVideoOverlayComposition
  *
  * Sets an overlay composition on a buffer. The buffer will obtain its own
  * reference to the composition, meaning this function does not take ownership
@@ -312,52 +268,20 @@ gst_video_buffer_get_overlay_composition_meta (GstBuffer * buf)
  *
  * Since: 0.11.x
  */
-void
-gst_video_buffer_set_overlay_composition (GstBuffer * buf,
+GstVideoOverlayCompositionMeta *
+gst_buffer_add_video_overlay_composition_meta (GstBuffer * buf,
     GstVideoOverlayComposition * comp)
 {
-  /* FIXME MT safety ? */
-
   GstVideoOverlayCompositionMeta *ometa;
 
-  ometa = gst_video_buffer_get_overlay_composition_meta (buf);
-  if (ometa) {
-    gst_mini_object_replace ((GstMiniObject **) & ometa->overlay,
-        (GstMiniObject *) comp);
-  } else {
-    ometa = (GstVideoOverlayCompositionMeta *)
-        gst_buffer_add_meta (buf, GST_VIDEO_OVERLAY_COMPOSITION_META_INFO,
-        NULL);
-    /* buffer might not be writable or so */
-    if (ometa)
-      ometa->overlay = gst_video_overlay_composition_ref (comp);
-  }
-}
+  g_return_val_if_fail (gst_buffer_is_writable (buf), NULL);
 
-/**
- * gst_video_buffer_get_overlay_composition:
- * @buf: a #GstBuffer
- *
- * Get the overlay composition that has previously been attached to a buffer
- * with gst_video_buffer_get_overlay_composition(), usually by another element
- * upstream.
- *
- * Returns: (transfer none): the #GstVideoOverlayComposition attached to
- *    this buffer, or NULL. Does not return a reference to the composition,
- *    caller must obtain her own ref via gst_video_overlay_composition_ref()
- *    if needed.
- *
- * Since: 0.11.x
- */
-GstVideoOverlayComposition *
-gst_video_buffer_get_overlay_composition (GstBuffer * buf)
-{
-  GstVideoOverlayCompositionMeta *ometa;
+  ometa = (GstVideoOverlayCompositionMeta *)
+      gst_buffer_add_meta (buf, GST_VIDEO_OVERLAY_COMPOSITION_META_INFO, NULL);
 
-  ometa = gst_video_buffer_get_overlay_composition_meta (buf);
-  if (ometa)
-    return ometa->overlay;
-  return NULL;
+  ometa->overlay = gst_video_overlay_composition_ref (comp);
+
+  return ometa;
 }
 
 /* ------------------------------ composition ------------------------------ */

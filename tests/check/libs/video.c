@@ -869,6 +869,7 @@ GST_START_TEST (test_overlay_composition)
 {
   GstVideoOverlayComposition *comp1, *comp2;
   GstVideoOverlayRectangle *rect1, *rect2;
+  GstVideoOverlayCompositionMeta *ometa;
   GstBuffer *pix1, *pix2, *buf;
   guint seq1, seq2;
   guint w, h, stride;
@@ -986,26 +987,31 @@ GST_START_TEST (test_overlay_composition)
 
   /* test attaching and retrieving of compositions to/from buffers */
   buf = gst_buffer_new ();
-  fail_unless (gst_video_buffer_get_overlay_composition (buf) == NULL);
+  fail_unless (gst_buffer_get_video_overlay_composition_meta (buf) == NULL);
 
   gst_buffer_ref (buf);
   /* buffer now has refcount of 2, so its metadata is not writable.
    * only check this if we are not running in valgrind, as it leaks */
 #ifdef HAVE_VALGRIND
   if (!RUNNING_ON_VALGRIND) {
-    ASSERT_CRITICAL (gst_video_buffer_set_overlay_composition (buf, comp1));
+    ASSERT_CRITICAL (gst_buffer_add_video_overlay_composition_meta (buf,
+            comp1));
   }
 #endif
   gst_buffer_unref (buf);
-  gst_video_buffer_set_overlay_composition (buf, comp1);
-  fail_unless (gst_video_buffer_get_overlay_composition (buf) == comp1);
-  gst_video_buffer_set_overlay_composition (buf, comp2);
-  fail_unless (gst_video_buffer_get_overlay_composition (buf) == comp2);
-  gst_video_buffer_set_overlay_composition (buf, NULL);
-  fail_unless (gst_video_buffer_get_overlay_composition (buf) == NULL);
+  gst_buffer_add_video_overlay_composition_meta (buf, comp1);
+  ometa = gst_buffer_get_video_overlay_composition_meta (buf);
+  fail_unless (ometa != NULL);
+  fail_unless (ometa->overlay == comp1);
+  fail_unless (gst_buffer_remove_video_overlay_composition_meta (buf, ometa));
+  gst_buffer_add_video_overlay_composition_meta (buf, comp2);
+  ometa = gst_buffer_get_video_overlay_composition_meta (buf);
+  fail_unless (ometa->overlay == comp2);
+  fail_unless (gst_buffer_remove_video_overlay_composition_meta (buf, ometa));
+  fail_unless (gst_buffer_get_video_overlay_composition_meta (buf) == NULL);
 
   /* make sure the buffer cleans up its composition ref when unreffed */
-  gst_video_buffer_set_overlay_composition (buf, comp2);
+  gst_buffer_add_video_overlay_composition_meta (buf, comp2);
   gst_buffer_unref (buf);
 
   gst_video_overlay_composition_unref (comp2);
