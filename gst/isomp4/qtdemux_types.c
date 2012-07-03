@@ -171,6 +171,7 @@ static const QtNodeType qt_node_types[] = {
       qtdemux_dump_mehd},
   {FOURCC_ovc1, "ovc1", 0},
   {FOURCC_owma, "owma", 0},
+  {FOURCC_tfdt, "Track fragment decode time", 0, qtdemux_dump_tfdt},
   {0, "unknown", 0,},
 };
 

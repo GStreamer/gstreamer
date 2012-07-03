@@ -2373,11 +2373,43 @@ unknown_stream:
 }
 
 static gboolean
+qtdemux_parse_tfdt (GstQTDemux * qtdemux, GstByteReader * br,
+    guint64 * decode_time)
+{
+  guint32 version = 0;
+
+  if (!gst_byte_reader_get_uint32_be (br, &version))
+    return FALSE;
+
+  version >>= 24;
+  if (version == 1) {
+    if (!gst_byte_reader_get_uint64_be (br, decode_time))
+      goto failed;
+  } else {
+    guint32 dec_time = 0;
+    if (!gst_byte_reader_get_uint32_be (br, &dec_time))
+      goto failed;
+    *decode_time = dec_time;
+  }
+
+  GST_INFO_OBJECT (qtdemux, "Track fragment decode time: %" G_GUINT64_FORMAT,
+      *decode_time);
+
+  return TRUE;
+
+failed:
+  {
+    GST_DEBUG_OBJECT (qtdemux, "parsing tfdt failed");
+    return FALSE;
+  }
+}
+
+static gboolean
 qtdemux_parse_moof (GstQTDemux * qtdemux, const guint8 * buffer, guint length,
     guint64 moof_offset, QtDemuxStream * stream)
 {
-  GNode *moof_node, *traf_node, *tfhd_node, *trun_node;
-  GstByteReader trun_data, tfhd_data;
+  GNode *moof_node, *traf_node, *tfhd_node, *trun_node, *tfdt_node;
+  GstByteReader trun_data, tfhd_data, tfdt_data;
   guint32 ds_size = 0, ds_duration = 0, ds_flags = 0;
   gint64 base_offset, running_offset;
 
@@ -2400,6 +2432,22 @@ qtdemux_parse_moof (GstQTDemux * qtdemux, const guint8 * buffer, guint length,
     if (!qtdemux_parse_tfhd (qtdemux, &tfhd_data, &stream, &ds_duration,
             &ds_size, &ds_flags, &base_offset))
       goto missing_tfhd;
+    tfdt_node =
+        qtdemux_tree_get_child_by_type_full (traf_node, FOURCC_tfdt,
+        &tfdt_data);
+    if (tfdt_node) {
+      guint64 decode_time = 0;
+      qtdemux_parse_tfdt (qtdemux, &tfdt_data, &decode_time);
+      /* If there is a new segment pending, update the time/position */
+      if (qtdemux->pending_newsegment) {
+        gst_event_replace (&qtdemux->pending_newsegment,
+            gst_event_new_new_segment (FALSE, 1.0, GST_FORMAT_TIME,
+                0, GST_CLOCK_TIME_NONE,
+                gst_util_uint64_scale (decode_time,
+                    GST_SECOND, stream->timescale)));
+      }
+    }
+
     if (G_UNLIKELY (!stream)) {
       /* we lost track of offset, we'll need to regain it,
        * but can delay complaining until later or avoid doing so altogether */

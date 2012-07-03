@@ -230,6 +230,9 @@ G_BEGIN_DECLS
 #define FOURCC_ovc1     GST_MAKE_FOURCC('o','v','c','1')
 #define FOURCC_owma     GST_MAKE_FOURCC('o','w','m','a')
 
+/* MPEG DASH */
+#define FOURCC_tfdt     GST_MAKE_FOURCC('t','f','d','t')
+
 G_END_DECLS
 
 #endif /* __GST_QTDEMUX_FOURCC_H__ */

@@ -721,6 +721,28 @@ qtdemux_dump_mehd (GstQTDemux * qtdemux, GstByteReader * data, int depth)
 }
 
 gboolean
+qtdemux_dump_tfdt (GstQTDemux * qtdemux, GstByteReader * data, int depth)
+{
+  guint32 version = 0;
+  guint64 decode_time;
+  guint value_size;
+
+  if (!gst_byte_reader_get_uint32_be (data, &version))
+    return FALSE;
+
+  GST_LOG ("%*s  version/flags: %08x", depth, "", version);
+
+  value_size = ((version >> 24) == 1) ? sizeof (guint64) : sizeof (guint32);
+  if (qt_atom_parser_get_offset (data, value_size, &decode_time)) {
+    GST_LOG ("%*s  Track fragment decode time: %" G_GUINT64_FORMAT,
+        depth, "", decode_time);
+    return TRUE;
+  }
+
+  return FALSE;
+}
+
+gboolean
 qtdemux_dump_sdtp (GstQTDemux * qtdemux, GstByteReader * data, int depth)
 {
   guint32 version;
