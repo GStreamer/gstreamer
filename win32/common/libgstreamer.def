@@ -511,6 +511,7 @@ EXPORTS
 	gst_iterator_resync
 	gst_library_error_get_type
 	gst_library_error_quark
+	gst_lock_flags_get_type
 	gst_map_flags_get_type
 	gst_memory_alignment DATA
 	gst_memory_copy
@@ -519,11 +520,13 @@ EXPORTS
 	gst_memory_get_type
 	gst_memory_is_exclusive
 	gst_memory_is_span
+	gst_memory_lock
 	gst_memory_make_mapped
 	gst_memory_map
 	gst_memory_new_wrapped
 	gst_memory_resize
 	gst_memory_share
+	gst_memory_unlock
 	gst_memory_unmap
 	gst_message_get_seqnum
 	gst_message_get_stream_status_object

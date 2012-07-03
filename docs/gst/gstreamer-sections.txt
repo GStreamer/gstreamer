@@ -1356,6 +1356,8 @@ gst_memory_is_span
 GST_TYPE_MEMORY
 gst_memory_get_type
 GST_MEMORY_CAST
+GST_TYPE_LOCK_FLAGS
+gst_lock_flags_get_type
 GST_TYPE_MAP_FLAGS
 gst_map_flags_get_type
 GST_TYPE_MEMORY_FLAGS
