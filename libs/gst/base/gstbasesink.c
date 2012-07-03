@@ -2960,6 +2960,19 @@ gst_base_sink_default_event (GstBaseSink * basesink, GstEvent * event)
               gst_tag_list_copy (taglist)));
       break;
     }
+    case GST_EVENT_TOC:
+    {
+      GstToc *toc;
+      gboolean updated;
+
+      gst_event_parse_toc (event, &toc, &updated);
+
+      gst_element_post_message (GST_ELEMENT_CAST (basesink),
+          gst_message_new_toc (GST_OBJECT_CAST (basesink), toc, updated));
+
+      gst_toc_unref (toc);
+      break;
+    }
     case GST_EVENT_SINK_MESSAGE:
     {
       GstMessage *msg = NULL;
