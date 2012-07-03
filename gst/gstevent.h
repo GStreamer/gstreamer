@@ -83,7 +83,7 @@ typedef enum {
  *                 other serialized event and only sent at the start of a new stream,
  *                 not after flushing seeks.
  * @GST_EVENT_CAPS: #GstCaps event. Notify the pad of a new media type.
- * @GST_EVENT_STREAM_CONFIG: contains configuration information for the stream,
+ * @GST_EVENT_STREAM_CONFIG: (unimplemented) contains configuration information for the stream,
  *                 for example stream-headers and codec-data.
  * @GST_EVENT_SEGMENT: A new media segment follows in the dataflow. The
  *                 segment events contains information for clipping buffers and
@@ -99,7 +99,7 @@ typedef enum {
  * @GST_EVENT_EOS: End-Of-Stream. No more data is to be expected to follow
  *                 without a SEGMENT event.
  * @GST_EVENT_SEGMENT_DONE: (unimplemented) Marks the end of a segment playback.
- * @GST_EVENT_GAP: (unimplemented) Marks a gap in the datastream.
+ * @GST_EVENT_GAP: Marks a gap in the datastream.
  * @GST_EVENT_TOC: An event which indicates that a new table of contents (TOC)
  *                 was found or updated. Since: 0.10.37
  * @GST_EVENT_QOS: A quality message. Used to indicate to upstream elements
