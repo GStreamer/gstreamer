@@ -932,6 +932,7 @@ gst_pad_set_active (GstPad * pad, gboolean active)
   if (!active) {
     GST_OBJECT_LOCK (pad);
     GST_OBJECT_FLAG_UNSET (pad, GST_PAD_FLAG_NEED_RECONFIGURE);
+    GST_OBJECT_FLAG_UNSET (pad, GST_PAD_FLAG_EOS);
     GST_OBJECT_UNLOCK (pad);
   }
   return ret;
