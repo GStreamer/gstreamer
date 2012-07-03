@@ -294,6 +294,7 @@ gst_decklink_sink_init (GstDecklinkSink * decklinksink,
       GST_DEBUG_FUNCPTR (gst_decklink_sink_audiosink_iterintlink));
   gst_element_add_pad (GST_ELEMENT (decklinksink), decklinksink->audiosinkpad);
 
+  GST_OBJECT_FLAG_SET (decklinksink, GST_ELEMENT_IS_SINK);
 
   decklinksink->cond = g_cond_new ();
   decklinksink->mutex = g_mutex_new ();
