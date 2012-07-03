@@ -116,6 +116,8 @@ GstRTSPMediaMapping * gst_rtsp_server_get_media_mapping    (GstRTSPServer *serve
 void                  gst_rtsp_server_set_auth             (GstRTSPServer *server, GstRTSPAuth *auth);
 GstRTSPAuth *         gst_rtsp_server_get_auth             (GstRTSPServer *server);
 
+gboolean              gst_rtsp_server_transfer_connection  (GstRTSPServer * server, GSocket *socket, const gchar * ip, gint port, const gchar *initial_buffer);
+
 gboolean              gst_rtsp_server_io_func              (GSocket *socket, GIOCondition condition,
                                                             GstRTSPServer *server);
 

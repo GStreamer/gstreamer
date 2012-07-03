@@ -136,6 +136,13 @@ gboolean              gst_rtsp_client_accept            (GstRTSPClient *client,
                                                          GCancellable *cancellable,
                                                          GError **error);
 
+gboolean              gst_rtsp_client_create_from_socket(GstRTSPClient * client,
+                                                         GSocket *socket,
+                                                         const gchar * ip,
+                                                         gint port,
+                                                         const gchar *initial_buffer,
+                                                         GError **error);
+
 G_END_DECLS
 
 #endif /* __GST_RTSP_CLIENT_H__ */

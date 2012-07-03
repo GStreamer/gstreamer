@@ -780,6 +780,65 @@ accept_failed:
 }
 
 /**
+ * gst_rtsp_server_transfer_connection:
+ * @server: a #GstRTSPServer
+ * @socket: a network socket
+ * @ip: the IP address of the remote client
+ * @port: the port used by the other end
+ * @initial_buffer: any initial data that was already read from the socket
+ *
+ * Take an existing network socket and use it for an RTSP connection. This
+ * is used when transferring a socket from an HTTP server which should be used
+ * as an RTSP over HTTP tunnel. The @initial_buffer contains any remaining data
+ * that the HTTP server read from the socket while parsing the HTTP header.
+ *
+ * Returns: TRUE if all was ok, FALSE if an error occured.
+ */
+gboolean
+gst_rtsp_server_transfer_connection (GstRTSPServer * server, GSocket * socket,
+    const gchar * ip, gint port, const gchar *initial_buffer)
+{
+  GstRTSPClient *client = NULL;
+  GstRTSPServerClass *klass;
+  GError *error = NULL;
+
+  klass = GST_RTSP_SERVER_GET_CLASS (server);
+
+  if (klass->create_client)
+    client = klass->create_client (server);
+  if (client == NULL)
+    goto client_failed;
+
+  /* a new client connected, create a client object to handle the client. */
+  if (!gst_rtsp_client_create_from_socket (client, socket, ip, port,
+      initial_buffer, &error)) {
+    goto transfer_failed;
+  }
+
+  /* manage the client connection */
+  manage_client (server, client);
+
+  g_signal_emit (server, gst_rtsp_server_signals[SIGNAL_CLIENT_CONNECTED], 0,
+      client);
+
+  return TRUE;
+
+  /* ERRORS */
+client_failed:
+  {
+    GST_ERROR_OBJECT (server, "failed to create a client");
+    return FALSE;
+  }
+transfer_failed:
+  {
+    GST_ERROR_OBJECT (server, "failed to accept client: %s", error->message);
+    g_error_free (error);
+    gst_object_unref (client);
+    return FALSE;
+  }
+}
+
+/**
  * gst_rtsp_server_io_func:
  * @socket: a #GSocket
  * @condition: the condition on @source

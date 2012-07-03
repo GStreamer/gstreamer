@@ -1904,26 +1904,10 @@ client_watch_notify (GstRTSPClient * client)
   g_object_unref (client);
 }
 
-/**
- * gst_rtsp_client_attach:
- * @client: a #GstRTSPClient
- * @socket: a #GSocket
- * @cancellable: a #GCancellable
- * @error: a #GError
- *
- * Accept a new connection for @client on @socket.
- *
- * This function should be called when the client properties and urls are fully
- * configured and the client is ready to start.
- *
- * Returns: %TRUE if the client could be accepted.
- */
-gboolean
-gst_rtsp_client_accept (GstRTSPClient * client, GSocket * socket,
-    GCancellable * cancellable, GError ** error)
+static gboolean
+attach_client (GstRTSPClient * client, GSocket * socket,
+    GstRTSPConnection *conn, GError ** error)
 {
-  GstRTSPConnection *conn;
-  GstRTSPResult res;
   GSocket *read_socket;
   GSocketAddress *addres;
   GSource *source;
@@ -1932,10 +1916,6 @@ gst_rtsp_client_accept (GstRTSPClient * client, GSocket * socket,
   struct sockaddr_storage addr;
   socklen_t addrlen;
   gchar ip[INET6_ADDRSTRLEN];
-
-  /* a new client connected. */
-  GST_RTSP_CHECK (gst_rtsp_connection_accept (socket, &conn, cancellable),
-      accept_failed);
 
   read_socket = gst_rtsp_connection_get_read_socket (conn);
   client->is_ipv6 = g_socket_get_family (socket) == G_SOCKET_FAMILY_IPV6;
@@ -1982,14 +1962,6 @@ gst_rtsp_client_accept (GstRTSPClient * client, GSocket * socket,
   return TRUE;
 
   /* ERRORS */
-accept_failed:
-  {
-    gchar *str = gst_rtsp_strresult (res);
-
-    GST_ERROR ("Could not accept client on server socket %p: %s", socket, str);
-    g_free (str);
-    return FALSE;
-  }
 no_address:
   {
     GST_ERROR ("could not get remote address %s", (*error)->message);
@@ -2004,6 +1976,80 @@ native_failed:
 getnameinfo_failed:
   {
     GST_ERROR ("getnameinfo failed: %s", g_strerror (errno));
+    return FALSE;
+  }
+}
+
+/**
+ * gst_rtsp_client_create_from_socket:
+ * @client: a #GstRTSPClient
+ * @socket: a #GSocket
+ * @ip: the IP address of the remote client
+ * @port: the port used by the other end
+ * @initial_buffer: any initial data that was already read from the socket
+ * @error: a #GError
+ *
+ * Take an existing network socket and use it for an RTSP connection.
+ *
+ * Returns: %TRUE on success.
+ */
+gboolean
+gst_rtsp_client_create_from_socket (GstRTSPClient * client, GSocket * socket,
+    const gchar * ip, gint port, const gchar * initial_buffer, GError ** error)
+{
+  GstRTSPConnection *conn;
+  GstRTSPResult res;
+
+  GST_RTSP_CHECK (gst_rtsp_connection_create_from_socket (socket, ip, port,
+      initial_buffer, &conn), no_connection);
+
+  return attach_client (client, socket, conn, error);
+
+  /* ERRORS */
+no_connection:
+  {
+    gchar *str = gst_rtsp_strresult (res);
+
+    GST_ERROR ("could not create connection from socket %p: %s", socket, str);
+    g_free (str);
+    return FALSE;
+  }
+}
+
+/**
+ * gst_rtsp_client_attach:
+ * @client: a #GstRTSPClient
+ * @socket: a #GSocket
+ * @cancellable: a #GCancellable
+ * @error: a #GError
+ *
+ * Accept a new connection for @client on @socket.
+ *
+ * This function should be called when the client properties and urls are fully
+ * configured and the client is ready to start.
+ *
+ * Returns: %TRUE if the client could be accepted.
+ */
+gboolean
+gst_rtsp_client_accept (GstRTSPClient * client, GSocket * socket,
+    GCancellable * cancellable, GError ** error)
+{
+  GstRTSPConnection *conn;
+  GstRTSPResult res;
+
+  /* a new client connected. */
+  GST_RTSP_CHECK (gst_rtsp_connection_accept (socket, &conn, cancellable),
+      accept_failed);
+
+  return attach_client (client, socket, conn, error);
+
+  /* ERRORS */
+accept_failed:
+  {
+    gchar *str = gst_rtsp_strresult (res);
+
+    GST_ERROR ("Could not accept client on server socket %p: %s", socket, str);
+    g_free (str);
     return FALSE;
   }
 }
