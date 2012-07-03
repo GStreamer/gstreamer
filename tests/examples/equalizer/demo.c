@@ -177,7 +177,7 @@ main (int argc, char *argv[])
   appwindow = gtk_window_new (GTK_WINDOW_TOPLEVEL);
   g_signal_connect (G_OBJECT (appwindow), "destroy",
       G_CALLBACK (on_window_destroy), NULL);
-  vbox = gtk_vbox_new (FALSE, 6);
+  vbox = gtk_box_new (GTK_ORIENTATION_VERTICAL, 6);
 
   drawingarea = gtk_drawing_area_new ();
   gtk_widget_set_size_request (drawingarea, spect_bands, spect_height);
@@ -185,7 +185,7 @@ main (int argc, char *argv[])
       G_CALLBACK (on_configure_event), (gpointer) spectrum);
   gtk_box_pack_start (GTK_BOX (vbox), drawingarea, TRUE, TRUE, 0);
 
-  hbox = gtk_hbox_new (FALSE, 20);
+  hbox = gtk_box_new (GTK_ORIENTATION_HORIZONTAL, 20);
 
   for (i = 0; i < NBANDS; i++) {
     GObject *band;
@@ -205,9 +205,10 @@ main (int argc, char *argv[])
     frame = gtk_frame_new (label);
     g_free (label);
 
-    scales_hbox = gtk_hbox_new (FALSE, 6);
+    scales_hbox = gtk_box_new (GTK_ORIENTATION_HORIZONTAL, 6);
 
-    widget = gtk_vscale_new_with_range (-24.0, 12.0, 0.5);
+    widget = gtk_scale_new_with_range (GTK_ORIENTATION_VERTICAL,
+        -24.0, 12.0, 0.5);
     gtk_scale_set_draw_value (GTK_SCALE (widget), TRUE);
     gtk_scale_set_value_pos (GTK_SCALE (widget), GTK_POS_TOP);
     gtk_range_set_value (GTK_RANGE (widget), gain);
@@ -216,7 +217,8 @@ main (int argc, char *argv[])
         G_CALLBACK (on_gain_changed), (gpointer) band);
     gtk_box_pack_start (GTK_BOX (scales_hbox), widget, FALSE, FALSE, 0);
 
-    widget = gtk_vscale_new_with_range (0.0, 20000.0, 5.0);
+    widget = gtk_scale_new_with_range (GTK_ORIENTATION_VERTICAL,
+        0.0, 20000.0, 5.0);
     gtk_scale_set_draw_value (GTK_SCALE (widget), TRUE);
     gtk_scale_set_value_pos (GTK_SCALE (widget), GTK_POS_TOP);
     gtk_range_set_value (GTK_RANGE (widget), bw);
@@ -225,7 +227,8 @@ main (int argc, char *argv[])
         G_CALLBACK (on_bandwidth_changed), (gpointer) band);
     gtk_box_pack_start (GTK_BOX (scales_hbox), widget, TRUE, TRUE, 0);
 
-    widget = gtk_vscale_new_with_range (20.0, 20000.0, 5.0);
+    widget = gtk_scale_new_with_range (GTK_ORIENTATION_VERTICAL,
+        20.0, 20000.0, 5.0);
     gtk_scale_set_draw_value (GTK_SCALE (widget), TRUE);
     gtk_scale_set_value_pos (GTK_SCALE (widget), GTK_POS_TOP);
     gtk_range_set_value (GTK_RANGE (widget), freq);

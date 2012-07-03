@@ -239,9 +239,9 @@ main (int argc, char *argv[])
   appwindow = gtk_window_new (GTK_WINDOW_TOPLEVEL);
   g_signal_connect (G_OBJECT (appwindow), "destroy",
       G_CALLBACK (on_window_destroy), NULL);
-  vbox = gtk_vbox_new (FALSE, 6);
+  vbox = gtk_box_new (GTK_ORIENTATION_VERTICAL, 6);
 
-  hbox = gtk_hbox_new (FALSE, 6);
+  hbox = gtk_box_new (GTK_ORIENTATION_HORIZONTAL, 6);
   widget = gtk_check_button_new_with_label ("Fast");
   g_signal_connect (G_OBJECT (widget), "toggled",
       G_CALLBACK (on_fast_slow_mode_changed), (gpointer) spectrum);
@@ -251,7 +251,8 @@ main (int argc, char *argv[])
 
   gtk_box_pack_start (GTK_BOX (vbox), hbox, FALSE, FALSE, 0);
 
-  widget = gtk_hscale_new_with_range (50.0, 20000.0, 10);
+  widget = gtk_scale_new_with_range (GTK_ORIENTATION_HORIZONTAL,
+      50.0, 20000.0, 10);
   gtk_scale_set_draw_value (GTK_SCALE (widget), TRUE);
   gtk_scale_set_value_pos (GTK_SCALE (widget), GTK_POS_TOP);
   gtk_range_set_value (GTK_RANGE (widget), 440.0);

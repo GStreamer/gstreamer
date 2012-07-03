@@ -283,14 +283,14 @@ run_gui (const gchar * filename)
   g_signal_connect (info->win, "delete-event", G_CALLBACK (gtk_main_quit),
       NULL);
 
-  vbox = gtk_vbox_new (FALSE, 6);
+  vbox = gtk_box_new (GTK_ORIENTATION_VERTICAL, 6);
   gtk_container_set_border_width (GTK_CONTAINER (vbox), 12);
   gtk_container_add (GTK_CONTAINER (info->win), vbox);
 
   info->img = gtk_image_new ();
   gtk_box_pack_start (GTK_BOX (vbox), info->img, FALSE, FALSE, 6);
 
-  hbox = gtk_hbox_new (FALSE, 6);
+  hbox = gtk_box_new (GTK_ORIENTATION_HORIZONTAL, 6);
   gtk_box_pack_start (GTK_BOX (vbox), hbox, FALSE, FALSE, 6);
 
   info->accurate_cb = gtk_check_button_new_with_label ("accurate seek "
@@ -299,7 +299,8 @@ run_gui (const gchar * filename)
   g_signal_connect (info->accurate_cb, "toggled",
       G_CALLBACK (accurate_toggled_cb), info);
 
-  info->slider = gtk_hscale_new_with_range (0.0, 1.0, 0.001);
+  info->slider = gtk_scale_new_with_range (GTK_ORIENTATION_HORIZONTAL,
+      0.0, 1.0, 0.001);
   gtk_box_pack_start (GTK_BOX (vbox), info->slider, FALSE, FALSE, 6);
   g_signal_connect (info->slider, "value-changed",
       G_CALLBACK (slider_cb), info);
