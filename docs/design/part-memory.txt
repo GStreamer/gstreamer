@@ -68,6 +68,31 @@ can free the memory. The GstMemoryFreeFunction of the allocator will be called
 to cleanup the memory.
 
 
+Sharing
+-------
+
+GstMemory objects can be shared between multiple GstBuffer objects. It is
+important that when a thread writes to the shared memory that the other
+buffer don't not see the changes.
+
+We add a separate shared counter that counts the amount of objects that share
+this GstMemory object. The counter is initially 0, meaning that the object is
+not shared with any object. When a GstBuffer (or other object) adds a ref to
+the GstMemorty, it will also increase the shared count.
+
+When the GstMemory is removed from the buffer, the ref count and the shared
+counter will be decreased.
+
+We don't want to use the refcount for this purpose because language bindings
+might keep arbitrary references to the object.
+
+A GstMemory object with a shared counter > 1 is not writable. Any attempt to
+map with WRITE access or resize will fail. _make_mapped() with WRITE access
+will make a copy.
+
+
+
+
 Memory layout
 ~~~~~~~~~~~~~
 

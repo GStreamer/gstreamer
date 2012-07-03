@@ -117,6 +117,12 @@ static GstAllocator *_default_allocator;
 /* our predefined allocators */
 static GstAllocator *_default_mem_impl;
 
+#define SHARE_ONE (1 << 16)
+#define LOCK_ONE (GST_LOCK_FLAG_LAST)
+#define FLAG_MASK (GST_LOCK_FLAG_LAST - 1)
+#define LOCK_MASK ((SHARE_ONE - 1) - FLAG_MASK)
+#define LOCK_FLAG_MASK (SHARE_ONE - 1)
+
 static GstMemory *
 _gst_memory_copy (GstMemory * mem)
 {
@@ -146,7 +152,8 @@ _default_mem_init (GstMemoryDefault * mem, GstMemoryFlags flags,
 
   mem->mem.allocator = _default_mem_impl;
   mem->mem.parent = parent ? gst_memory_ref (parent) : NULL;
-  mem->mem.state = (flags & GST_MEMORY_FLAG_READONLY ? 0x1 : 0);
+  mem->mem.state = (flags & GST_MEMORY_FLAG_READONLY ? GST_LOCK_FLAG_READ : 0);
+  mem->mem.state |= (flags & GST_MEMORY_FLAG_NO_SHARE ? SHARE_ONE : 0);
   mem->mem.maxsize = maxsize;
   mem->mem.align = align;
   mem->mem.offset = offset;
@@ -496,24 +503,43 @@ gst_memory_resize (GstMemory * mem, gssize offset, gsize size)
   mem->size = size;
 }
 
-static gboolean
-gst_memory_lock (GstMemory * mem, GstMapFlags flags)
+/**
+ * gst_memory_lock:
+ * @mem: a #GstMemory
+ * @flags: #GstLockFlags
+ *
+ * Lock the memory with the specified access mode in @flags.
+ *
+ * Returns: %TRUE if the memory could be locked.
+ */
+gboolean
+gst_memory_lock (GstMemory * mem, GstLockFlags flags)
 {
   gint access_mode, state, newstate;
 
-  access_mode = flags & 3;
+  access_mode = flags & FLAG_MASK;
 
   do {
     state = g_atomic_int_get (&mem->state);
-    if (state == 0) {
+    if (flags == GST_LOCK_FLAG_EXCLUSIVE) {
+      /* shared ref */
+      newstate = state + SHARE_ONE;
+      flags &= ~GST_LOCK_FLAG_EXCLUSIVE;
+    }
+
+    /* shared counter > 1 and write access */
+    if (state > SHARE_ONE && flags & GST_LOCK_FLAG_WRITE)
+      goto lock_failed;
+
+    if ((state & LOCK_FLAG_MASK) == 0) {
       /* nothing mapped, set access_mode and refcount */
-      newstate = 4 | access_mode;
+      newstate = state | LOCK_ONE | access_mode;
     } else {
       /* access_mode must match */
       if ((state & access_mode) != access_mode)
         goto lock_failed;
       /* increase refcount */
-      newstate = state + 4;
+      newstate = state + LOCK_ONE;
     }
   } while (!g_atomic_int_compare_and_exchange (&mem->state, state, newstate));
 
@@ -527,21 +553,38 @@ lock_failed:
   }
 }
 
-static void
-gst_memory_unlock (GstMemory * mem)
+/**
+ * gst_memory_unlock:
+ * @mem: a #GstMemory
+ * @flags: #GstLockFlags
+ *
+ * Unlock the memory with the specified access mode in @flags.
+ */
+void
+gst_memory_unlock (GstMemory * mem, GstLockFlags flags)
 {
-  gint state, newstate;
+  gint access_mode, state, newstate;
+
+  access_mode = flags & 3;
 
   do {
     state = g_atomic_int_get (&mem->state);
+    if (flags == GST_LOCK_FLAG_EXCLUSIVE) {
+      /* shared counter */
+      g_return_if_fail (state >= SHARE_ONE);
+      newstate = state - SHARE_ONE;
+      flags &= ~GST_LOCK_FLAG_EXCLUSIVE;
+    }
+
+    g_return_if_fail ((state & access_mode) == access_mode);
     /* decrease the refcount */
-    newstate = state - 4;
+    newstate = state - LOCK_ONE;
     /* last refcount, unset access_mode */
-    if (newstate < 4)
-      newstate = 0;
+    if ((newstate & LOCK_FLAG_MASK) == access_mode)
+      newstate = state & ~LOCK_FLAG_MASK;
+
   } while (!g_atomic_int_compare_and_exchange (&mem->state, state, newstate));
 }
-
 
 /**
  * gst_memory_make_mapped:
@@ -646,7 +689,7 @@ error:
   {
     /* something went wrong, restore the orginal state again */
     GST_CAT_ERROR (GST_CAT_MEMORY, "mem %p: map failed", mem);
-    gst_memory_unlock (mem);
+    gst_memory_unlock (mem, flags);
     return FALSE;
   }
 }
@@ -668,7 +711,7 @@ gst_memory_unmap (GstMemory * mem, GstMapInfo * info)
   g_return_if_fail (g_atomic_int_get (&mem->state) >= 4);
 
   mem->allocator->info.mem_unmap (mem);
-  gst_memory_unlock (mem);
+  gst_memory_unlock (mem, info->flags);
 }
 
 /**
