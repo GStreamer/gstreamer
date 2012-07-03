@@ -61,8 +61,8 @@ static const gchar *_quark_strings[] = {
   "GstEventTocSelect", "uid", "GstQueryToc", GST_ELEMENT_METADATA_LONGNAME,
   GST_ELEMENT_METADATA_KLASS, GST_ELEMENT_METADATA_DESCRIPTION,
   GST_ELEMENT_METADATA_AUTHOR, "toc", "toc-entry", "updated", "extend-uid",
-  "uid", "tags", "sub-entries", "info", "info-structure",
-  "time-structure", "GstMessageTag", "GstEventTag", "GstMessageResetTime",
+  "uid", "tags", "sub-entries", "info", "GstMessageTag", "GstEventTag",
+  "GstMessageResetTime",
   "GstMessageToc", "GstEventToc"
 };
 
