@@ -523,7 +523,7 @@ gst_ffmpegviddec_video_frame_new (GstVideoCodecFrame * frame)
   GstFFMpegVidDecVideoFrame *dframe;
 
   dframe = g_slice_new0 (GstFFMpegVidDecVideoFrame);
-  dframe->frame = gst_video_codec_frame_ref (frame);
+  dframe->frame = frame;
 
   return dframe;
 }
@@ -564,10 +564,8 @@ gst_ffmpegviddec_get_buffer (AVCodecContext * context, AVFrame * picture)
   if (G_UNLIKELY (frame == NULL))
     goto no_frame;
 
+  /* GstFFMpegVidDecVideoFrame receives the frame ref */
   picture->opaque = dframe = gst_ffmpegviddec_video_frame_new (frame);
-
-  /* ffmpegviddec_video_frame will keep the frame retained */
-  gst_video_codec_frame_unref (frame);
 
   ffmpegdec->context->pix_fmt = context->pix_fmt;
 
