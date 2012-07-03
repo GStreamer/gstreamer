@@ -203,6 +203,8 @@ _get_merged_memory (GstBuffer * buffer, guint idx, guint length)
 {
   GstMemory **mem, *result;
 
+  GST_LOG ("buffer %p, idx %u, length %u", buffer, idx, length);
+
   mem = GST_BUFFER_MEM_ARRAY (buffer);
 
   if (G_UNLIKELY (length == 0)) {
@@ -280,9 +282,11 @@ _replace_memory (GstBuffer * buffer, guint len, guint idx, guint length,
 }
 
 static inline void
-_memory_add (GstBuffer * buffer, guint idx, GstMemory * mem)
+_memory_add (GstBuffer * buffer, gint idx, GstMemory * mem)
 {
   guint i, len = GST_BUFFER_MEM_LEN (buffer);
+
+  GST_LOG ("buffer %p, idx %d, mem %p", buffer, idx, mem);
 
   if (G_UNLIKELY (len >= GST_BUFFER_MEM_MAX)) {
     /* too many buffer, span them. */
@@ -1299,6 +1303,9 @@ gst_buffer_map_range (GstBuffer * buffer, guint idx, gint length,
       (length == -1 && idx < len) || (length > 0
           && length + idx <= len), FALSE);
 
+  GST_LOG ("buffer %p, idx %u, length %d, flags %04x", buffer, idx, length,
+      flags);
+
   write = (flags & GST_MAP_WRITE) != 0;
   writable = gst_buffer_is_writable (buffer);
 
@@ -1401,6 +1408,9 @@ gst_buffer_fill (GstBuffer * buffer, gsize offset, gconstpointer src,
   g_return_val_if_fail (gst_buffer_is_writable (buffer), 0);
   g_return_val_if_fail (src != NULL, 0);
 
+  GST_LOG ("buffer %p, offset %" G_GSIZE_FORMAT ", size %" G_GSIZE_FORMAT,
+      buffer, offset, size);
+
   len = GST_BUFFER_MEM_LEN (buffer);
   left = size;
 
@@ -1446,6 +1456,9 @@ gst_buffer_extract (GstBuffer * buffer, gsize offset, gpointer dest, gsize size)
 
   g_return_val_if_fail (GST_IS_BUFFER (buffer), 0);
   g_return_val_if_fail (dest != NULL, 0);
+
+  GST_LOG ("buffer %p, offset %" G_GSIZE_FORMAT ", size %" G_GSIZE_FORMAT,
+      buffer, offset, size);
 
   len = GST_BUFFER_MEM_LEN (buffer);
   left = size;
@@ -1494,6 +1507,9 @@ gst_buffer_memcmp (GstBuffer * buffer, gsize offset, gconstpointer mem,
   g_return_val_if_fail (GST_IS_BUFFER (buffer), 0);
   g_return_val_if_fail (mem != NULL, 0);
 
+  GST_LOG ("buffer %p, offset %" G_GSIZE_FORMAT ", size %" G_GSIZE_FORMAT,
+      buffer, offset, size);
+
   len = GST_BUFFER_MEM_LEN (buffer);
 
   for (i = 0; i < len && size > 0 && res == 0; i++) {
@@ -1537,6 +1553,9 @@ gst_buffer_memset (GstBuffer * buffer, gsize offset, guint8 val, gsize size)
 
   g_return_val_if_fail (GST_IS_BUFFER (buffer), 0);
   g_return_val_if_fail (gst_buffer_is_writable (buffer), 0);
+
+  GST_LOG ("buffer %p, offset %" G_GSIZE_FORMAT ", val %02x, size %"
+      G_GSIZE_FORMAT, buffer, offset, val, size);
 
   len = GST_BUFFER_MEM_LEN (buffer);
   left = size;
