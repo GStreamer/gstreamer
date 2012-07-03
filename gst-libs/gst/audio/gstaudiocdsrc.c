@@ -1400,7 +1400,6 @@ gst_audio_cd_src_add_tags (GstAudioCdSrc * src)
 static void
 gst_audio_cd_src_add_toc (GstAudioCdSrc * src)
 {
-  GQueue entries = G_QUEUE_INIT;
   GstToc *toc;
   gint i;
 
@@ -1417,10 +1416,7 @@ gst_audio_cd_src_add_toc (GstAudioCdSrc * src)
     /* keep uid in sync with toc select event handler below */
     uid = g_strdup_printf ("audiocd-track-%03u", track->num);
     entry = gst_toc_entry_new (GST_TOC_ENTRY_TYPE_TRACK, uid);
-    /* FIXME: why does it alloc an empty tag list? */
-    if (entry->tags != NULL)
-      gst_tag_list_free (entry->tags);
-    entry->tags = gst_tag_list_ref (track->tags);
+    gst_toc_entry_set_tags (entry, gst_tag_list_ref (track->tags));
 
     gst_audio_cd_src_convert (src, sector_format, track->start,
         GST_FORMAT_TIME, &start_time);
@@ -1430,11 +1426,10 @@ gst_audio_cd_src_add_toc (GstAudioCdSrc * src)
     GST_INFO ("Track %03u  %" GST_TIME_FORMAT " - %" GST_TIME_FORMAT,
         track->num, GST_TIME_ARGS (start_time), GST_TIME_ARGS (stop_time));
 
-    gst_toc_entry_set_start_stop (entry, start_time, stop_time);
-    g_queue_push_tail (&entries, entry);
+    gst_toc_entry_set_start_stop_times (entry, start_time, stop_time);
+    gst_toc_append_entry (toc, entry);
     g_free (uid);
   }
-  toc->entries = entries.head;
 
   /* If we're in continuous mode (stream = whole disc), send a TOC event
    * downstream, so matroskamux etc. can write a TOC to indicate where the
