@@ -1599,7 +1599,7 @@ gst_base_text_overlay_push_frame (GstBaseTextOverlay * overlay,
 
   if (overlay->attach_compo_to_buffer) {
     GST_DEBUG_OBJECT (overlay, "Attaching text overlay image to video buffer");
-    gst_video_buffer_set_overlay_composition (video_frame,
+    gst_buffer_add_video_overlay_composition_meta (video_frame,
         overlay->composition);
     /* FIXME: emulate shaded background box if want_shading=true */
     goto done;
