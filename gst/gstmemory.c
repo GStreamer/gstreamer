@@ -133,7 +133,7 @@ static void
 _gst_memory_free (GstMemory * mem)
 {
   /* there should be no outstanding mappings */
-  g_return_if_fail (g_atomic_int_get (&mem->state) < 4);
+  g_return_if_fail ((g_atomic_int_get (&mem->state) & LOCK_MASK) < 4);
   mem->allocator->info.mem_free (mem);
 }
 
