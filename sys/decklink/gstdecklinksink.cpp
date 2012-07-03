@@ -299,6 +299,7 @@ gst_decklink_sink_init (GstDecklinkSink * decklinksink,
   decklinksink->cond = g_cond_new ();
   decklinksink->mutex = g_mutex_new ();
   decklinksink->audio_mutex = g_mutex_new ();
+  decklinksink->audio_cond = g_cond_new ();
 
   decklinksink->mode = GST_DECKLINK_MODE_NTSC;
   decklinksink->device = 0;
@@ -430,6 +431,7 @@ gst_decklink_sink_finalize (GObject * object)
   /* clean up object here */
   g_cond_free (decklinksink->cond);
   g_mutex_free (decklinksink->mutex);
+  g_cond_free (decklinksink->audio_cond);
   g_mutex_free (decklinksink->audio_mutex);
 
   delete decklinksink->callback;
@@ -462,14 +464,15 @@ gst_decklink_sink_start (GstDecklinkSink * decklinksink)
   BMDAudioSampleType sample_depth;
 
   decklinksink->decklink = gst_decklink_get_nth_device (decklinksink->device);
-  if (decklinksink->decklink) {
+  if (!decklinksink->decklink) {
+    GST_WARNING ("failed to get device %d", decklinksink->device);
     return FALSE;
   }
 
   ret = decklinksink->decklink->QueryInterface (IID_IDeckLinkOutput,
       (void **) &decklinksink->output);
   if (ret != S_OK) {
-    GST_ERROR ("selected device does not have output interface");
+    GST_WARNING ("selected device does not have output interface");
     return FALSE;
   }
 
@@ -480,7 +483,7 @@ gst_decklink_sink_start (GstDecklinkSink * decklinksink)
   ret = decklinksink->output->EnableVideoOutput (mode->mode,
       bmdVideoOutputFlagDefault);
   if (ret != S_OK) {
-    GST_ERROR ("failed to enable video output");
+    GST_WARNING ("failed to enable video output");
     return FALSE;
   }
   //decklinksink->video_enabled = TRUE;
@@ -492,10 +495,10 @@ gst_decklink_sink_start (GstDecklinkSink * decklinksink)
   ret = decklinksink->output->EnableAudioOutput (bmdAudioSampleRate48kHz,
       sample_depth, 2, bmdAudioOutputStreamContinuous);
   if (ret != S_OK) {
-    GST_ERROR ("failed to enable audio output");
+    GST_WARNING ("failed to enable audio output");
     return FALSE;
   }
-  decklinksink->audio_buffer = gst_buffer_new ();
+  decklinksink->audio_adapter = gst_adapter_new ();
 
   decklinksink->num_frames = 0;
 
@@ -509,6 +512,10 @@ gst_decklink_sink_force_stop (GstDecklinkSink * decklinksink)
   decklinksink->stop = TRUE;
   g_cond_signal (decklinksink->cond);
   g_mutex_unlock (decklinksink->mutex);
+
+  g_mutex_lock (decklinksink->audio_mutex);
+  g_cond_signal (decklinksink->audio_cond);
+  g_mutex_unlock (decklinksink->audio_mutex);
 
   return TRUE;
 }
@@ -748,7 +755,7 @@ gst_decklink_sink_videosink_chain (GstPad * pad, GstBuffer * buffer)
     ret = decklinksink->output->EnableVideoOutput (decklinksink->display_mode,
         bmdVideoOutputFlagDefault);
     if (ret != S_OK) {
-      GST_ERROR ("failed to enable video output");
+      GST_WARNING ("failed to enable video output");
       //return FALSE;
     }
     decklinksink->video_enabled = TRUE;
@@ -820,6 +827,18 @@ gst_decklink_sink_videosink_event (GstPad * pad, GstEvent * event)
   GST_DEBUG_OBJECT (decklinksink, "event");
 
   switch (GST_EVENT_TYPE (event)) {
+    case GST_EVENT_EOS:
+      decklinksink->video_eos = TRUE;
+      decklinksink->video_seqnum = gst_event_get_seqnum (event);
+      {
+        GstMessage *message;
+
+        message = gst_message_new_eos (GST_OBJECT_CAST (decklinksink));
+        gst_message_set_seqnum (message, decklinksink->video_seqnum);
+        gst_element_post_message (GST_ELEMENT_CAST (decklinksink), message);
+      }
+
+      break;
     default:
       res = gst_pad_event_default (pad, event);
       break;
@@ -1001,13 +1020,17 @@ gst_decklink_sink_audiosink_chain (GstPad * pad, GstBuffer * buffer)
 
   GST_DEBUG_OBJECT (decklinksink, "chain");
 
-  // concatenate both buffers
-  g_mutex_lock (decklinksink->audio_mutex);
-  decklinksink->audio_buffer =
-      gst_buffer_append (decklinksink->audio_buffer, buffer);
-  g_mutex_unlock (decklinksink->audio_mutex);
+  if (decklinksink->stop) {
+    return GST_FLOW_WRONG_STATE;
+  }
 
-  // GST_DEBUG("Audio Buffer Size: %d", GST_BUFFER_SIZE (decklinksink->audio_buffer));
+  g_mutex_lock (decklinksink->audio_mutex);
+  while (!decklinksink->stop &&
+      gst_adapter_available (decklinksink->audio_adapter) > 1600 * 4 * 2) {
+    g_cond_wait (decklinksink->audio_cond, decklinksink->audio_mutex);
+  }
+  gst_adapter_push (decklinksink->audio_adapter, buffer);
+  g_mutex_unlock (decklinksink->audio_mutex);
 
   gst_object_unref (decklinksink);
 
@@ -1040,6 +1063,10 @@ gst_decklink_sink_audiosink_event (GstPad * pad, GstEvent * event)
   GST_DEBUG_OBJECT (decklinksink, "event");
 
   switch (GST_EVENT_TYPE (event)) {
+    case GST_EVENT_EOS:
+      decklinksink->audio_eos = TRUE;
+      decklinksink->audio_seqnum = gst_event_get_seqnum (event);
+      break;
     default:
       res = gst_pad_event_default (pad, event);
       break;
@@ -1122,7 +1149,7 @@ HRESULT
 HRESULT
 Output::ScheduledPlaybackHasStopped ()
 {
-  GST_ERROR ("ScheduledPlaybackHasStopped");
+  GST_DEBUG ("ScheduledPlaybackHasStopped");
   return S_OK;
 }
 
@@ -1130,7 +1157,6 @@ HRESULT
 Output::RenderAudioSamples (bool preroll)
 {
   uint32_t samplesWritten;
-  GstBuffer *buffer;
 
   // guint64 samplesToWrite;
 
@@ -1139,22 +1165,31 @@ Output::RenderAudioSamples (bool preroll)
     decklinksink->output->BeginAudioPreroll ();
     // running = true;
   } else {
+    int n;
+    const guint8 *data;
+
     g_mutex_lock (decklinksink->audio_mutex);
-    decklinksink->output->ScheduleAudioSamples (GST_BUFFER_DATA (decklinksink->audio_buffer), GST_BUFFER_SIZE (decklinksink->audio_buffer) / 4, // 2 bytes per sample, stereo
-        0, 0, &samplesWritten);
 
-    buffer =
-        gst_buffer_new_and_alloc (GST_BUFFER_SIZE (decklinksink->audio_buffer) -
-        (samplesWritten * 4));
+    n = gst_adapter_available (decklinksink->audio_adapter);
+    if (n > 0) {
+      data = gst_adapter_peek (decklinksink->audio_adapter, n);
 
-    memcpy (GST_BUFFER_DATA (buffer),
-        GST_BUFFER_DATA (decklinksink->audio_buffer) + (samplesWritten * 4),
-        GST_BUFFER_SIZE (decklinksink->audio_buffer) - (samplesWritten * 4));
+      decklinksink->output->ScheduleAudioSamples ((void *) data, n / 4,
+          0, 0, &samplesWritten);
 
-    gst_buffer_unref (decklinksink->audio_buffer);
+      gst_adapter_flush (decklinksink->audio_adapter, samplesWritten * 4);
+      GST_DEBUG ("wrote %d samples, %d available", samplesWritten, n / 4);
 
-    decklinksink->audio_buffer = buffer;
+      g_cond_signal (decklinksink->audio_cond);
+    } else {
+      if (decklinksink->audio_eos) {
+        GstMessage *message;
 
+        message = gst_message_new_eos (GST_OBJECT_CAST (decklinksink));
+        gst_message_set_seqnum (message, decklinksink->audio_seqnum);
+        gst_element_post_message (GST_ELEMENT_CAST (decklinksink), message);
+      }
+    }
     g_mutex_unlock (decklinksink->audio_mutex);
 
   }

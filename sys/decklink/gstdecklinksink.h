@@ -21,6 +21,7 @@
 #define _GST_DECKLINK_SINK_H_
 
 #include <gst/gst.h>
+#include <gst/base/gstadapter.h>
 #include "gstdecklink.h"
 
 G_BEGIN_DECLS
@@ -51,7 +52,7 @@ public IDeckLinkAudioOutputCallback
 struct _GstDecklinkSink
 {
   GstElement base_decklinksink;
-  GstBuffer *audio_buffer;
+  GstAdapter *audio_adapter;
 
   GstPad *videosinkpad;
   GstPad *audiosinkpad;
@@ -59,9 +60,13 @@ struct _GstDecklinkSink
   GMutex *mutex;
   GCond *cond;
   GMutex *audio_mutex;
-//   GCond *audio_cond;
+  GCond *audio_cond;
   int queued_frames;
   gboolean stop;
+  gboolean video_eos;
+  gboolean audio_eos;
+  int video_seqnum;
+  int audio_seqnum;
 
   IDeckLink *decklink;
   IDeckLinkOutput *output;
