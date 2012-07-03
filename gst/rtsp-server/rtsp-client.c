@@ -818,6 +818,31 @@ do_keepalive (GstRTSPSession * session)
 }
 
 static gboolean
+handle_blocksize (GstRTSPMedia * media, GstRTSPMessage * request)
+{
+  gchar *blocksize_str;
+  gboolean ret = TRUE;
+
+  if (gst_rtsp_message_get_header (request, GST_RTSP_HDR_BLOCKSIZE,
+      &blocksize_str, 0) == GST_RTSP_OK) {
+    guint64 blocksize;
+    gchar *end;
+
+    blocksize = g_ascii_strtoull (blocksize_str, &end, 10);
+    if (end == blocksize_str) {
+      GST_ERROR ("failed to parse blocksize");
+      ret = FALSE;
+    } else {
+      if (blocksize > G_MAXUINT)
+        blocksize = G_MAXUINT;
+      gst_rtsp_media_handle_mtu (media, (guint)blocksize);
+    }
+  }
+
+  return ret;
+}
+
+static gboolean
 handle_setup_request (GstRTSPClient * client, GstRTSPClientState * state)
 {
   GstRTSPResult res;
@@ -944,6 +969,9 @@ handle_setup_request (GstRTSPClient * client, GstRTSPClientState * state)
 
   state->sessmedia = media;
 
+  if (!handle_blocksize (media->media, state->request))
+    goto invalid_blocksize;
+
   /* we have a valid transport now, set the destination of the client. */
   g_free (ct->destination);
   if (ct->lower_transport == GST_RTSP_LOWER_TRANS_UDP_MCAST) {
@@ -1011,6 +1039,13 @@ bad_request:
 not_found:
   {
     send_generic_response (client, GST_RTSP_STS_NOT_FOUND, state);
+    g_object_unref (session);
+    gst_rtsp_transport_free (ct);
+    return FALSE;
+  }
+invalid_blocksize:
+  {
+    send_generic_response (client, GST_RTSP_STS_BAD_REQUEST, state);
     g_object_unref (session);
     gst_rtsp_transport_free (ct);
     return FALSE;

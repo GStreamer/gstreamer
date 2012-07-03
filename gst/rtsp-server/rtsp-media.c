@@ -72,6 +72,7 @@ static gboolean default_handle_message (GstRTSPMedia * media,
     GstMessage * message);
 static gboolean default_unprepare (GstRTSPMedia * media);
 static void unlock_streams (GstRTSPMedia * media);
+static void default_handle_mtu (GstRTSPMedia * media, guint mtu);
 
 static guint gst_rtsp_media_signals[SIGNAL_LAST] = { 0 };
 
@@ -142,6 +143,7 @@ gst_rtsp_media_class_init (GstRTSPMediaClass * klass)
 
   klass->handle_message = default_handle_message;
   klass->unprepare = default_unprepare;
+  klass->handle_mtu = default_handle_mtu;
 
   ssrc_stream_map_key = g_quark_from_static_string ("GstRTSPServer.stream");
 }
@@ -2077,4 +2079,38 @@ gst_rtsp_media_remove_elements (GstRTSPMedia * media)
 
   gst_object_unref (media->pipeline);
   media->pipeline = NULL;
+}
+
+static void
+default_handle_mtu (GstRTSPMedia * media, guint mtu)
+{
+  gint i;
+
+  for (i = 0; i < media->streams->len; i++) {
+    GstRTSPMediaStream *stream;
+
+    GST_INFO ("Setting mtu %d for stream %d", mtu, i);
+
+    stream = g_array_index (media->streams, GstRTSPMediaStream *, i);
+
+    g_object_set (G_OBJECT (stream->payloader), "mtu", mtu, NULL);
+  }
+}
+
+/**
+ * gst_rtsp_media_handle_mtu:
+ * @media: a #GstRTSPMedia
+ * @mtu: the mtu
+ *
+ * Set maximum size of one RTP packet on the payloaders.
+ */
+void
+gst_rtsp_media_handle_mtu (GstRTSPMedia * media, guint mtu)
+{
+  GstRTSPMediaClass *klass;
+
+  klass = GST_RTSP_MEDIA_GET_CLASS (media);
+
+  if (klass->handle_mtu)
+    klass->handle_mtu (media, mtu);
 }

@@ -238,6 +238,7 @@ struct _GstRTSPMedia {
  * @handle_message: handle a message
  * @unprepare: the default implementation sets the pipeline's state
  *             to GST_STATE_NULL.
+ * @handle_mtu: handle a mtu
  *
  * The RTSP media class
  */
@@ -252,6 +253,7 @@ struct _GstRTSPMediaClass {
   /* vmethods */
   gboolean     (*handle_message)  (GstRTSPMedia *media, GstMessage *message);
   gboolean     (*unprepare)       (GstRTSPMedia *media);
+  void         (*handle_mtu)      (GstRTSPMedia *media, guint mtu);
 
   /* signals */
   gboolean     (*prepared)        (GstRTSPMedia *media);
@@ -305,6 +307,8 @@ GstFlowReturn         gst_rtsp_media_stream_rtcp      (GstRTSPMediaStream *strea
 gboolean              gst_rtsp_media_set_state        (GstRTSPMedia *media, GstState state, GArray *transports);
 
 void                  gst_rtsp_media_remove_elements  (GstRTSPMedia *media);
+
+void                  gst_rtsp_media_handle_mtu       (GstRTSPMedia *media, guint mtu);
 
 void                  gst_rtsp_media_trans_cleanup    (GstRTSPMediaTrans *trans);
 
