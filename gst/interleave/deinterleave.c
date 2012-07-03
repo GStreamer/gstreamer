@@ -409,7 +409,9 @@ gst_deinterleave_sink_setcaps (GstDeinterleave * self, GstCaps * caps)
 
 cannot_change_caps:
   {
-    GST_ERROR_OBJECT (self, "can't set new caps: %" GST_PTR_FORMAT, caps);
+    GST_WARNING_OBJECT (self, "caps change from %" GST_PTR_FORMAT
+        " to %" GST_PTR_FORMAT " not supported: channel number or channel "
+        "positions change", self->sinkcaps, caps);
     return FALSE;
   }
 unsupported_caps:
