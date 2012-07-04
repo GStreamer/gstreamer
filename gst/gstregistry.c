@@ -1121,11 +1121,9 @@ gst_registry_scan_plugin_file (GstRegistryScanContext * context,
             filename, file_size, file_mtime)) {
       g_warning ("External plugin loader failed. This most likely means that "
           "the plugin loader helper binary was not found or could not be run. "
-          "%s",
-          (g_getenv ("GST_PLUGIN_PATH") || g_getenv ("GST_PLUGIN_PATH_1_0")) ?
-          "If you are running an uninstalled GStreamer setup, you might need "
-          "to update your gst-uninstalled script so that the "
-          "GST_PLUGIN_SCANNER environment variable gets set." : "");
+          "You might need to set the GST_PLUGIN_SCANNER environment variable "
+          "if your setup is unusual. This should normally not be required "
+          "though.");
       context->helper_state = REGISTRY_SCAN_HELPER_DISABLED;
     }
   }
