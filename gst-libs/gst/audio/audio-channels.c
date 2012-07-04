@@ -147,12 +147,13 @@ check_valid_channel_positions (const GstAudioChannelPosition * position,
 
 /**
  * gst_audio_reorder_channels:
- * @data: The pointer to the memory.
+ * @data: (array length=size) (element-type guint8): The pointer to
+ *   the memory.
  * @size: The size of the memory.
  * @format: The %GstAudioFormat of the buffer.
  * @channels: The number of channels.
- * @from: The channel positions in the buffer.
- * @to: The channel positions to convert to.
+ * @from: (array): The channel positions in the buffer.
+ * @to: (array): The channel positions to convert to.
  *
  * Reorders @data from the channel positions @from to the channel
  * positions @to. @from and @to must contain the same number of
@@ -215,8 +216,8 @@ gst_audio_reorder_channels (gpointer data, gsize size, GstAudioFormat format,
  * @buffer: The buffer to reorder.
  * @format: The %GstAudioFormat of the buffer.
  * @channels: The number of channels.
- * @from: The channel positions in the buffer.
- * @to: The channel positions to convert to.
+ * @from: (array): The channel positions in the buffer.
+ * @to: (array): The channel positions to convert to.
  *
  * Reorders @buffer from the channel positions @from to the channel
  * positions @to. @from and @to must contain the same number of
@@ -249,7 +250,8 @@ gst_audio_buffer_reorder_channels (GstBuffer * buffer,
 
 /**
  * gst_audio_check_valid_channel_positions:
- * @position: The %GstAudioChannelPositions to check.
+ * @position: (array length=channels): The %GstAudioChannelPositions
+ *   to check.
  * @channels: The number of channels.
  * @force_order: Only consider the GStreamer channel order.
  *
@@ -268,10 +270,10 @@ gst_audio_check_valid_channel_positions (const GstAudioChannelPosition *
 
 /**
  * gst_audio_channel_positions_to_mask:
- * @position: The %GstAudioChannelPositions
+ * @position: (array length=channels): The %GstAudioChannelPositions
  * @channels: The number of channels.
  * @force_order: Only consider the GStreamer channel order.
- * @channel_mask: the output channel mask
+ * @channel_mask: (array): the output channel mask
  *
  * Convert the @position array of @channels channels to a bitmask.
  *
@@ -292,7 +294,8 @@ gst_audio_channel_positions_to_mask (const GstAudioChannelPosition * position,
  * gst_audio_channel_positions_from_mask:
  * @channels: The number of channels
  * @channel_mask: The input channel_mask
- * @position: The %GstAudioChannelPositions
+ * @position: (array length=channels): The
+ *   %GstAudioChannelPosition<!-- -->s
  *
  * Convert the @channels present in @channel_mask to a @position array
  * (which should have at least @channels entries ensured by caller).
@@ -358,9 +361,9 @@ invalid_channel_mask:
 /**
  * gst_audio_get_channel_reorder_map:
  * @channels: The number of channels.
- * @from: The channel positions to reorder from.
- * @to: The channel positions to reorder to.
- * @reorder_map: Pointer to the reorder map.
+ * @from: (array): The channel positions to reorder from.
+ * @to: (array): The channel positions to reorder to.
+ * @reorder_map: (array): Pointer to the reorder map.
  *
  * Returns a reorder map for @from to @to that can be used in
  * custom channel reordering code, e.g. to convert from or to the
@@ -419,7 +422,8 @@ gst_audio_get_channel_reorder_map (gint channels,
 
 /**
  * gst_audio_channel_positions_to_valid_order:
- * @position: The channel positions to reorder to.
+ * @position: (array length=channels): The channel positions to
+ *   reorder to.
  * @channels: The number of channels.
  *
  * Reorders the channel positions in @position from any order to
