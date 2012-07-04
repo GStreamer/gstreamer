@@ -812,7 +812,7 @@ gst_video_decoder_finalize (GObject * object)
 
   if (decoder->priv->allocator) {
     gst_allocator_unref (decoder->priv->allocator);
-    decoder->priv->pool = NULL;
+    decoder->priv->allocator = NULL;
   }
 
   G_OBJECT_CLASS (parent_class)->finalize (object);
