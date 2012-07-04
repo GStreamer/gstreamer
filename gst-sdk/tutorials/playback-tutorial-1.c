@@ -193,6 +193,8 @@ static gboolean handle_message (GstBus *bus, GstMessage *msg, CustomData *data) 
         }
       }
     } break;
+    default:
+      break;
   }
   
   /* We want to keep receiving messages */
