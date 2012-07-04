@@ -2897,8 +2897,6 @@ GFLOAT_TO_LE
 
 gst_flow_get_name
 gst_flow_to_quark
-gst_print_element_args
-gst_print_pad_caps
 gst_guint64_to_gdouble
 gst_gdouble_to_guint64
 gst_util_dump_mem

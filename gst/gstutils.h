@@ -75,9 +75,6 @@ guint64         gst_util_uint64_scale_int_ceil  (guint64 val, gint num, gint den
 guint32         gst_util_seqnum_next            (void);
 gint32          gst_util_seqnum_compare         (guint32 s1, guint32 s2);
 
-void            gst_print_pad_caps              (GString *buf, gint indent, GstPad *pad);
-void            gst_print_element_args          (GString *buf, gint indent, GstElement *element);
-
 
 /**
  * GST_CALL_PARENT:

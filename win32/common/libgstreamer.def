@@ -818,8 +818,6 @@ EXPORTS
 	gst_preset_save_preset
 	gst_preset_set_app_dir
 	gst_preset_set_meta
-	gst_print_element_args
-	gst_print_pad_caps
 	gst_progress_type_get_type
 	gst_proxy_pad_chain_default
 	gst_proxy_pad_chain_list_default
