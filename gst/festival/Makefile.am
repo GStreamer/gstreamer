@@ -6,7 +6,7 @@ libgstfestival_la_CFLAGS = $(GST_CFLAGS) $(GST_PLUGINS_BASE_CFLAGS)
 # we use net connection now... perhaps use the lib later
 # libgstfestival_la_LIBADD = $(FESTIVAL_LIBS)
 libgstfestival_la_LIBADD = $(GST_LIBS) $(GST_PLUGINS_BASE_LIBS) \
-                           -lgstaudio-0.10 $(WINSOCK2_LIBS)
+                           -lgstaudio-1.0 $(WINSOCK2_LIBS)
 libgstfestival_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
 libgstfestival_la_LIBTOOLFLAGS = --tag=disable-static
 
@@ -23,5 +23,5 @@ Android.mk: Makefile.am $(BUILT_SOURCES)
 	           $(libgstfestival_la_LIBADD) \
 	           -ldl \
 	 -:PASSTHROUGH LOCAL_ARM_MODE:=arm \
-		       LOCAL_MODULE_PATH:='$$(TARGET_OUT)/lib/gstreamer-0.10' \
+		       LOCAL_MODULE_PATH:='$$(TARGET_OUT)/lib/gstreamer-1.0' \
 	> $@

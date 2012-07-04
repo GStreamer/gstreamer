@@ -312,7 +312,7 @@ dnl Non ported plugins (non-dependant, then dependant)
 dnl Make sure you have a space before and after all plugins
 GST_PLUGINS_NONPORTED=" aiff \
  cdxaparse \
- dccp faceoverlay festival \
+ dccp faceoverlay \
  fieldanalysis freeverb freeze frei0r \
  hdvparse id3tag inter ivfparse jpegformat jp2kdecimator \
  kate liveadder librfb \
