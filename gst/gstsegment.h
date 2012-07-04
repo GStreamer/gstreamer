@@ -130,6 +130,7 @@ typedef enum {
  * Flags for the GstSegment structure. Currently mapped to the corresponding
  * values of the seek flags.
  */
+/* Note: update gst_segment_do_seek() when adding new flags here */
 typedef enum {
   GST_SEGMENT_FLAG_NONE            = GST_SEEK_FLAG_NONE,
   GST_SEGMENT_FLAG_RESET           = GST_SEEK_FLAG_FLUSH,

@@ -317,7 +317,12 @@ gst_segment_do_seek (GstSegment * segment, gdouble rate,
   segment->rate = rate;
   segment->applied_rate = 1.0;
   segment->base = base;
-  segment->flags = (GstSegmentFlags) flags;
+  /* be explicit about our GstSeekFlag -> GstSegmentFlag conversion */
+  segment->flags = GST_SEGMENT_FLAG_NONE;
+  if ((flags & GST_SEEK_FLAG_FLUSH) != 0)
+    segment->flags |= GST_SEGMENT_FLAG_RESET;
+  if ((flags & GST_SEEK_FLAG_SKIP) != 0)
+    segment->flags |= GST_SEGMENT_FLAG_SKIP;
   segment->start = start;
   segment->stop = stop;
   segment->time = start;

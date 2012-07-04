@@ -64,7 +64,7 @@ Use case: FLUSHING seek
     When it reaches timestamp 5, it does not decode and push frames anymore.
 
     The video sink receives a frame of timestamp 1. It takes the start value of 
-    the previous segment and aplies the folowing (simplified) formula:
+    the previous segment and aplies the following (simplified) formula:
 
         render_time = BUFFER_TIMESTAMP - segment_start + element->base_time
 
