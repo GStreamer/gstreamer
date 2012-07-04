@@ -643,6 +643,7 @@ GST_START_TEST (test_GstDateTime_to_g_date_time)
   GstDateTime *dt;
 
   gdt1 = g_date_time_new_now_utc ();
+  g_date_time_ref (gdt1);       /* keep it alive for compare below */
   dt = gst_date_time_new_from_g_date_time (gdt1);
   gdt2 = gst_date_time_to_g_date_time (dt);
 
@@ -650,6 +651,7 @@ GST_START_TEST (test_GstDateTime_to_g_date_time)
 
   g_date_time_unref (gdt1);
   g_date_time_unref (gdt2);
+  gst_date_time_unref (dt);
 }
 
 GST_END_TEST;
@@ -660,6 +662,7 @@ GST_START_TEST (test_GstDateTime_new_from_g_date_time)
   GstDateTime *dt;
 
   gdt = g_date_time_new_now_utc ();
+  g_date_time_ref (gdt);        /* keep it alive for compare below */
   dt = gst_date_time_new_from_g_date_time (gdt);
 
   assert_equals_int (gst_date_time_get_year (dt), g_date_time_get_year (gdt));
@@ -675,6 +678,7 @@ GST_START_TEST (test_GstDateTime_new_from_g_date_time)
       g_date_time_get_microsecond (gdt));
 
   g_date_time_unref (gdt);
+  gst_date_time_unref (dt);
 }
 
 GST_END_TEST;
