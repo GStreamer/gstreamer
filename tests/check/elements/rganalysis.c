@@ -195,14 +195,42 @@ set_playing_state (GstElement * element)
 }
 
 static void
+send_flush_events (GstElement * element)
+{
+  gboolean res;
+  GstPad *pad;
+
+  pad = gst_element_get_static_pad (element, "sink");
+  res = gst_pad_send_event (pad, gst_event_new_flush_start ());
+  fail_unless (res, "flush-start even not handledt");
+  res = gst_pad_send_event (pad, gst_event_new_flush_stop (TRUE));
+  fail_unless (res, "flush-stop event not handled");
+  gst_object_unref (pad);
+}
+
+static void
+send_segment_event (GstElement * element)
+{
+  GstSegment segment;
+  gboolean res;
+  GstPad *pad;
+
+  pad = gst_element_get_static_pad (element, "sink");
+  gst_segment_init (&segment, GST_FORMAT_TIME);
+  res = gst_pad_send_event (pad, gst_event_new_segment (&segment));
+  fail_unless (res, "SEGMENT event not handled");
+  gst_object_unref (pad);
+}
+
+static void
 send_eos_event (GstElement * element)
 {
   GstBus *bus = gst_element_get_bus (element);
   GstPad *pad = gst_element_get_static_pad (element, "sink");
-  GstEvent *event = gst_event_new_eos ();
+  gboolean res;
 
-  fail_unless (gst_pad_send_event (pad, event),
-      "Cannot send EOS event: Not handled.");
+  res = gst_pad_send_event (pad, gst_event_new_eos ());
+  fail_unless (res, "EOS event not handled");
 
   /* There is no sink element, so _we_ post the EOS message on the bus here.  Of
    * course we generate any EOS ourselves, but this allows us to poll for the
@@ -649,20 +677,27 @@ GST_START_TEST (test_no_buffer_album_1)
   set_playing_state (element);
 
   /* Single track: */
+  send_segment_event (element);
   send_eos_event (element);
   poll_eos (element);
 
   /* First album: */
   g_object_set (element, "num-tracks", 3, NULL);
 
+  send_flush_events (element);
+  send_segment_event (element);
   send_eos_event (element);
   poll_eos (element);
   fail_unless_num_tracks (element, 2);
 
+  send_flush_events (element);
+  send_segment_event (element);
   send_eos_event (element);
   poll_eos (element);
   fail_unless_num_tracks (element, 1);
 
+  send_flush_events (element);
+  send_segment_event (element);
   send_eos_event (element);
   poll_eos (element);
   fail_unless_num_tracks (element, 0);
@@ -670,15 +705,21 @@ GST_START_TEST (test_no_buffer_album_1)
   /* Second album: */
   g_object_set (element, "num-tracks", 2, NULL);
 
+  send_flush_events (element);
+  send_segment_event (element);
   send_eos_event (element);
   poll_eos (element);
   fail_unless_num_tracks (element, 1);
 
+  send_flush_events (element);
+  send_segment_event (element);
   send_eos_event (element);
   poll_eos (element);
   fail_unless_num_tracks (element, 0);
 
   /* Single track: */
+  send_flush_events (element);
+  send_segment_event (element);
   send_eos_event (element);
   poll_eos (element);
   fail_unless_num_tracks (element, 0);
@@ -700,6 +741,7 @@ GST_START_TEST (test_no_buffer_album_2)
 
   /* No buffer for the first track. */
 
+  send_segment_event (element);
   send_eos_event (element);
   /* No tags should be posted, there was nothing to analyze: */
   poll_eos (element);
@@ -707,6 +749,8 @@ GST_START_TEST (test_no_buffer_album_2)
 
   /* A test waveform with known gain result as second track: */
 
+  send_flush_events (element);
+  send_segment_event (element);
   for (i = 20; i--;)
     push_buffer (test_buffer_square_float_mono (&accumulator, 44100, 512,
             0.25));
@@ -721,6 +765,8 @@ GST_START_TEST (test_no_buffer_album_2)
 
   /* No buffer for the last track. */
 
+  send_flush_events (element);
+  send_segment_event (element);
   send_eos_event (element);
 
   tag_list = poll_tags (element);
@@ -743,6 +789,7 @@ GST_START_TEST (test_empty_buffers)
   set_playing_state (element);
 
   /* Single track: */
+  send_segment_event (element);
   push_buffer (test_buffer_const_float_stereo (44100, 0, 0.0, 0.0));
   send_eos_event (element);
   poll_eos (element);
@@ -750,11 +797,15 @@ GST_START_TEST (test_empty_buffers)
   /* First album: */
   g_object_set (element, "num-tracks", 2, NULL);
 
+  send_flush_events (element);
+  send_segment_event (element);
   push_buffer (test_buffer_const_float_stereo (44100, 0, 0.0, 0.0));
   send_eos_event (element);
   poll_eos (element);
   fail_unless_num_tracks (element, 1);
 
+  send_flush_events (element);
+  send_segment_event (element);
   push_buffer (test_buffer_const_float_stereo (44100, 0, 0.0, 0.0));
   send_eos_event (element);
   poll_eos (element);
@@ -762,12 +813,16 @@ GST_START_TEST (test_empty_buffers)
 
   /* Second album, with a single track: */
   g_object_set (element, "num-tracks", 1, NULL);
+  send_flush_events (element);
+  send_segment_event (element);
   push_buffer (test_buffer_const_float_stereo (44100, 0, 0.0, 0.0));
   send_eos_event (element);
   poll_eos (element);
   fail_unless_num_tracks (element, 0);
 
   /* Single track: */
+  send_flush_events (element);
+  send_segment_event (element);
   push_buffer (test_buffer_const_float_stereo (44100, 0, 0.0, 0.0));
   send_eos_event (element);
   poll_eos (element);
@@ -794,6 +849,7 @@ GST_START_TEST (test_peak_float)
   GstTagList *tag_list;
 
   set_playing_state (element);
+  send_segment_event (element);
   push_buffer (test_buffer_const_float_stereo (8000, 512, -1.369, 0.0));
   send_eos_event (element);
   tag_list = poll_tags (element);
@@ -801,6 +857,8 @@ GST_START_TEST (test_peak_float)
   gst_tag_list_free (tag_list);
 
   /* Swapped channels. */
+  send_flush_events (element);
+  send_segment_event (element);
   push_buffer (test_buffer_const_float_stereo (8000, 512, 0.0, -1.369));
   send_eos_event (element);
   tag_list = poll_tags (element);
@@ -808,6 +866,8 @@ GST_START_TEST (test_peak_float)
   gst_tag_list_free (tag_list);
 
   /* Mono. */
+  send_flush_events (element);
+  send_segment_event (element);
   push_buffer (test_buffer_const_float_mono (8000, 512, -1.369));
   send_eos_event (element);
   tag_list = poll_tags (element);
@@ -827,6 +887,7 @@ GST_START_TEST (test_peak_int16_16)
   set_playing_state (element);
 
   /* Half amplitude. */
+  send_segment_event (element);
   push_buffer (test_buffer_const_int16_stereo (8000, 16, 512, 1 << 14, 0));
   send_eos_event (element);
   tag_list = poll_tags (element);
@@ -834,6 +895,8 @@ GST_START_TEST (test_peak_int16_16)
   gst_tag_list_free (tag_list);
 
   /* Swapped channels. */
+  send_flush_events (element);
+  send_segment_event (element);
   push_buffer (test_buffer_const_int16_stereo (8000, 16, 512, 0, 1 << 14));
   send_eos_event (element);
   tag_list = poll_tags (element);
@@ -841,6 +904,8 @@ GST_START_TEST (test_peak_int16_16)
   gst_tag_list_free (tag_list);
 
   /* Mono. */
+  send_flush_events (element);
+  send_segment_event (element);
   push_buffer (test_buffer_const_int16_mono (8000, 16, 512, 1 << 14));
   send_eos_event (element);
   tag_list = poll_tags (element);
@@ -848,6 +913,8 @@ GST_START_TEST (test_peak_int16_16)
   gst_tag_list_free (tag_list);
 
   /* Half amplitude, negative variant. */
+  send_flush_events (element);
+  send_segment_event (element);
   push_buffer (test_buffer_const_int16_stereo (8000, 16, 512, -1 << 14, 0));
   send_eos_event (element);
   tag_list = poll_tags (element);
@@ -855,6 +922,8 @@ GST_START_TEST (test_peak_int16_16)
   gst_tag_list_free (tag_list);
 
   /* Swapped channels. */
+  send_flush_events (element);
+  send_segment_event (element);
   push_buffer (test_buffer_const_int16_stereo (8000, 16, 512, 0, -1 << 14));
   send_eos_event (element);
   tag_list = poll_tags (element);
@@ -862,6 +931,8 @@ GST_START_TEST (test_peak_int16_16)
   gst_tag_list_free (tag_list);
 
   /* Mono. */
+  send_flush_events (element);
+  send_segment_event (element);
   push_buffer (test_buffer_const_int16_mono (8000, 16, 512, -1 << 14));
   send_eos_event (element);
   tag_list = poll_tags (element);
@@ -874,6 +945,8 @@ GST_START_TEST (test_peak_int16_16)
    * highest positive amplitude we do not reach 1.0, only for
    * -32768! */
 
+  send_flush_events (element);
+  send_segment_event (element);
   push_buffer (test_buffer_const_int16_stereo (8000, 16, 512, 32767, 0));
   send_eos_event (element);
   tag_list = poll_tags (element);
@@ -881,6 +954,8 @@ GST_START_TEST (test_peak_int16_16)
   gst_tag_list_free (tag_list);
 
   /* Swapped channels. */
+  send_flush_events (element);
+  send_segment_event (element);
   push_buffer (test_buffer_const_int16_stereo (8000, 16, 512, 0, 32767));
   send_eos_event (element);
   tag_list = poll_tags (element);
@@ -888,6 +963,8 @@ GST_START_TEST (test_peak_int16_16)
   gst_tag_list_free (tag_list);
 
   /* Mono. */
+  send_flush_events (element);
+  send_segment_event (element);
   push_buffer (test_buffer_const_int16_mono (8000, 16, 512, 32767));
   send_eos_event (element);
   tag_list = poll_tags (element);
@@ -896,6 +973,8 @@ GST_START_TEST (test_peak_int16_16)
 
 
   /* Negative variant, reaching 1.0. */
+  send_flush_events (element);
+  send_segment_event (element);
   push_buffer (test_buffer_const_int16_stereo (8000, 16, 512, -32768, 0));
   send_eos_event (element);
   tag_list = poll_tags (element);
@@ -903,6 +982,8 @@ GST_START_TEST (test_peak_int16_16)
   gst_tag_list_free (tag_list);
 
   /* Swapped channels. */
+  send_flush_events (element);
+  send_segment_event (element);
   push_buffer (test_buffer_const_int16_stereo (8000, 16, 512, 0, -32768));
   send_eos_event (element);
   tag_list = poll_tags (element);
@@ -910,6 +991,8 @@ GST_START_TEST (test_peak_int16_16)
   gst_tag_list_free (tag_list);
 
   /* Mono. */
+  send_flush_events (element);
+  send_segment_event (element);
   push_buffer (test_buffer_const_int16_mono (8000, 16, 512, -32768));
   send_eos_event (element);
   tag_list = poll_tags (element);
@@ -929,6 +1012,7 @@ GST_START_TEST (test_peak_album)
   g_object_set (element, "num-tracks", 2, NULL);
   set_playing_state (element);
 
+  send_segment_event (element);
   push_buffer (test_buffer_const_float_stereo (8000, 1024, 1.0, 0.0));
   send_eos_event (element);
   tag_list = poll_tags (element);
@@ -937,6 +1021,8 @@ GST_START_TEST (test_peak_album)
   gst_tag_list_free (tag_list);
   fail_unless_num_tracks (element, 1);
 
+  send_flush_events (element);
+  send_segment_event (element);
   push_buffer (test_buffer_const_float_stereo (8000, 1024, 0.0, 0.5));
   send_eos_event (element);
   tag_list = poll_tags (element);
@@ -948,6 +1034,8 @@ GST_START_TEST (test_peak_album)
   /* Try a second album: */
   g_object_set (element, "num-tracks", 3, NULL);
 
+  send_flush_events (element);
+  send_segment_event (element);
   push_buffer (test_buffer_const_float_stereo (8000, 1024, 0.4, 0.4));
   send_eos_event (element);
   tag_list = poll_tags (element);
@@ -956,6 +1044,8 @@ GST_START_TEST (test_peak_album)
   gst_tag_list_free (tag_list);
   fail_unless_num_tracks (element, 2);
 
+  send_flush_events (element);
+  send_segment_event (element);
   push_buffer (test_buffer_const_float_stereo (8000, 1024, 0.45, 0.45));
   send_eos_event (element);
   tag_list = poll_tags (element);
@@ -964,6 +1054,8 @@ GST_START_TEST (test_peak_album)
   gst_tag_list_free (tag_list);
   fail_unless_num_tracks (element, 1);
 
+  send_flush_events (element);
+  send_segment_event (element);
   push_buffer (test_buffer_const_float_stereo (8000, 1024, 0.2, 0.2));
   send_eos_event (element);
   tag_list = poll_tags (element);
@@ -974,6 +1066,8 @@ GST_START_TEST (test_peak_album)
 
   /* And now a single track, not in album mode (num-tracks is 0
    * now): */
+  send_flush_events (element);
+  send_segment_event (element);
   push_buffer (test_buffer_const_float_stereo (8000, 1024, 0.1, 0.1));
   send_eos_event (element);
   tag_list = poll_tags (element);
@@ -995,6 +1089,7 @@ GST_START_TEST (test_peak_track_album)
 
   set_playing_state (element);
 
+  send_segment_event (element);
   push_buffer (test_buffer_const_float_mono (8000, 1024, 1.0));
   send_eos_event (element);
   tag_list = poll_tags (element);
@@ -1003,6 +1098,8 @@ GST_START_TEST (test_peak_track_album)
   gst_tag_list_free (tag_list);
 
   g_object_set (element, "num-tracks", 1, NULL);
+  send_flush_events (element);
+  send_segment_event (element);
   push_buffer (test_buffer_const_float_mono (8000, 1024, 0.5));
   send_eos_event (element);
   tag_list = poll_tags (element);
@@ -1029,6 +1126,7 @@ GST_START_TEST (test_peak_album_abort_to_track)
   g_object_set (element, "num-tracks", 2, NULL);
   set_playing_state (element);
 
+  send_segment_event (element);
   push_buffer (test_buffer_const_float_stereo (8000, 1024, 1.0, 0.0));
   send_eos_event (element);
   tag_list = poll_tags (element);
@@ -1039,6 +1137,8 @@ GST_START_TEST (test_peak_album_abort_to_track)
 
   g_object_set (element, "num-tracks", 0, NULL);
 
+  send_flush_events (element);
+  send_segment_event (element);
   push_buffer (test_buffer_const_float_stereo (8000, 1024, 0.0, 0.5));
   send_eos_event (element);
   tag_list = poll_tags (element);
@@ -1063,7 +1163,7 @@ GST_START_TEST (test_gain_album)
 
   /* The three tracks are constructed such that if any of these is in fact
    * ignored for the album gain, the album gain will differ. */
-
+  send_segment_event (element);
   accumulator = 0;
   for (i = 8; i--;)
     push_buffer (test_buffer_square_float_stereo (&accumulator, 44100, 512,
@@ -1075,6 +1175,8 @@ GST_START_TEST (test_gain_album)
   fail_if_album_tags (tag_list);
   gst_tag_list_free (tag_list);
 
+  send_flush_events (element);
+  send_segment_event (element);
   accumulator = 0;
   for (i = 12; i--;)
     push_buffer (test_buffer_square_float_stereo (&accumulator, 44100, 512,
@@ -1086,6 +1188,8 @@ GST_START_TEST (test_gain_album)
   fail_if_album_tags (tag_list);
   gst_tag_list_free (tag_list);
 
+  send_flush_events (element);
+  send_segment_event (element);
   accumulator = 0;
   for (i = 180; i--;)
     push_buffer (test_buffer_square_float_stereo (&accumulator, 44100, 512,
@@ -1118,6 +1222,7 @@ GST_START_TEST (test_forced)
   g_object_set (element, "forced", FALSE, NULL);
   set_playing_state (element);
 
+  send_segment_event (element);
   tag_list = gst_tag_list_new_empty ();
   /* Provided values are totally arbitrary. */
   gst_tag_list_add (tag_list, GST_TAG_MERGE_APPEND,
@@ -1132,6 +1237,8 @@ GST_START_TEST (test_forced)
 
   /* Now back to a track without tags. */
 
+  send_flush_events (element);
+  send_segment_event (element);
   for (i = 20; i--;)
     push_buffer (test_buffer_square_float_stereo (&accumulator, 44100, 512,
             0.25, 0.25));
@@ -1158,6 +1265,7 @@ GST_START_TEST (test_forced_separate)
   g_object_set (element, "forced", FALSE, NULL);
   set_playing_state (element);
 
+  send_segment_event (element);
   tag_list = gst_tag_list_new_empty ();
   gst_tag_list_add (tag_list, GST_TAG_MERGE_APPEND, GST_TAG_TRACK_GAIN, 2.21,
       NULL);
@@ -1176,7 +1284,8 @@ GST_START_TEST (test_forced_separate)
   poll_eos (element);
 
   /* Now a track without tags. */
-
+  send_flush_events (element);
+  send_segment_event (element);
   accumulator = 0;
   for (i = 20; i--;)
     push_buffer (test_buffer_square_float_stereo (&accumulator, 44100, 512,
@@ -1209,6 +1318,7 @@ GST_START_TEST (test_forced_after_data)
   g_object_set (element, "forced", FALSE, NULL);
   set_playing_state (element);
 
+  send_segment_event (element);
   for (i = 20; i--;)
     push_buffer (test_buffer_const_float_stereo (8000, 512, 0.5, 0.5));
 
@@ -1220,6 +1330,8 @@ GST_START_TEST (test_forced_after_data)
   send_eos_event (element);
   poll_eos (element);
 
+  send_flush_events (element);
+  send_segment_event (element);
   /* Now back to a normal track, this one has no tags: */
   for (i = 20; i--;)
     push_buffer (test_buffer_square_float_stereo (&accumulator, 8000, 512, 0.25,
@@ -1248,6 +1360,7 @@ GST_START_TEST (test_forced_album)
   g_object_set (element, "forced", FALSE, NULL);
   set_playing_state (element);
 
+  send_segment_event (element);
   tag_list = gst_tag_list_new_empty ();
   /* Provided values are totally arbitrary. */
   gst_tag_list_add (tag_list, GST_TAG_MERGE_APPEND,
@@ -1265,6 +1378,8 @@ GST_START_TEST (test_forced_album)
   /* Now an album without tags. */
   g_object_set (element, "num-tracks", 2, NULL);
 
+  send_flush_events (element);
+  send_segment_event (element);
   accumulator = 0;
   for (i = 20; i--;)
     push_buffer (test_buffer_square_float_stereo (&accumulator, 44100, 512,
@@ -1277,6 +1392,8 @@ GST_START_TEST (test_forced_album)
   gst_tag_list_free (tag_list);
   fail_unless_num_tracks (element, 1);
 
+  send_flush_events (element);
+  send_segment_event (element);
   accumulator = 0;
   for (i = 20; i--;)
     push_buffer (test_buffer_square_float_stereo (&accumulator, 44100, 512,
@@ -1305,6 +1422,7 @@ GST_START_TEST (test_forced_album_skip)
   g_object_set (element, "forced", FALSE, "num-tracks", 2, NULL);
   set_playing_state (element);
 
+  send_segment_event (element);
   tag_list = gst_tag_list_new_empty ();
   /* Provided values are totally arbitrary. */
   gst_tag_list_add (tag_list, GST_TAG_MERGE_APPEND,
@@ -1321,6 +1439,8 @@ GST_START_TEST (test_forced_album_skip)
 
   /* This track has no tags, but needs to be skipped anyways since we
    * are in album processing mode. */
+  send_flush_events (element);
+  send_segment_event (element);
   for (i = 20; i--;)
     push_buffer (test_buffer_const_float_stereo (8000, 512, 0.0, 0.0));
   send_eos_event (element);
@@ -1328,6 +1448,8 @@ GST_START_TEST (test_forced_album_skip)
   fail_unless_num_tracks (element, 0);
 
   /* Normal track after the album.  Of course not to be skipped. */
+  send_flush_events (element);
+  send_segment_event (element);
   accumulator = 0;
   for (i = 20; i--;)
     push_buffer (test_buffer_square_float_stereo (&accumulator, 8000, 512, 0.25,
@@ -1354,6 +1476,7 @@ GST_START_TEST (test_forced_album_no_skip)
   g_object_set (element, "forced", FALSE, "num-tracks", 2, NULL);
   set_playing_state (element);
 
+  send_segment_event (element);
   for (i = 20; i--;)
     push_buffer (test_buffer_square_float_stereo (&accumulator, 8000, 512, 0.25,
             0.25));
@@ -1367,6 +1490,8 @@ GST_START_TEST (test_forced_album_no_skip)
 
   /* The second track has indeed full tags, but although being not forced, this
    * one has to be processed because album processing is on. */
+  send_flush_events (element);
+  send_segment_event (element);
   tag_list = gst_tag_list_new_empty ();
   /* Provided values are totally arbitrary. */
   gst_tag_list_add (tag_list, GST_TAG_MERGE_APPEND,
@@ -1403,6 +1528,7 @@ GST_START_TEST (test_forced_abort_album_no_skip)
   g_object_set (element, "forced", FALSE, "num-tracks", 2, NULL);
   set_playing_state (element);
 
+  send_segment_event (element);
   for (i = 20; i--;)
     push_buffer (test_buffer_square_float_stereo (&accumulator, 8000, 512, 0.25,
             0.25));
@@ -1416,6 +1542,9 @@ GST_START_TEST (test_forced_abort_album_no_skip)
 
   /* Disabling album processing before end of album: */
   g_object_set (element, "num-tracks", 0, NULL);
+
+  send_flush_events (element);
+  send_segment_event (element);
 
   /* Processing a track that has to be skipped. */
   tag_list = gst_tag_list_new_empty ();
@@ -1444,6 +1573,7 @@ GST_START_TEST (test_reference_level)
 
   set_playing_state (element);
 
+  send_segment_event (element);
   for (i = 20; i--;)
     push_buffer (test_buffer_square_float_stereo (&accumulator, 44100, 512,
             0.25, 0.25));
@@ -1459,6 +1589,8 @@ GST_START_TEST (test_reference_level)
 
   g_object_set (element, "reference-level", 83., "num-tracks", 2, NULL);
 
+  send_flush_events (element);
+  send_segment_event (element);
   for (i = 20; i--;)
     push_buffer (test_buffer_square_float_stereo (&accumulator, 44100, 512,
             0.25, 0.25));
@@ -1472,6 +1604,8 @@ GST_START_TEST (test_reference_level)
       "Incorrect reference level tag");
   gst_tag_list_free (tag_list);
 
+  send_flush_events (element);
+  send_segment_event (element);
   accumulator = 0;
   for (i = 20; i--;)
     push_buffer (test_buffer_square_float_stereo (&accumulator, 44100, 512,
@@ -1503,6 +1637,8 @@ GST_START_TEST (test_all_formats)
 
   set_playing_state (element);
   for (i = G_N_ELEMENTS (supported_rates); i--;) {
+    send_flush_events (element);
+    send_segment_event (element);
     accumulator = 0;
     for (j = 0; j < 4; j++)
       push_buffer (test_buffer_square_float_stereo (&accumulator,
