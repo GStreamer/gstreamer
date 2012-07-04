@@ -42,7 +42,7 @@ GST_EXPORT GType _gst_sample_type;
  *
  * The opaque structure of a #GstSample. A sample contains a typed memory
  * block and the associated timing information. It is mainly used to
- * exchange buffers with and application.
+ * exchange buffers with an application.
  */
 typedef struct _GstSample GstSample;
 
