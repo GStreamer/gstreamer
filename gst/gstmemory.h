@@ -173,6 +173,13 @@ typedef enum {
 } GstLockFlags;
 
 /**
+ * GST_LOCK_FLAG_READWRITE:
+ *
+ * GstLockFlags value alias for GST_LOCK_FLAG_READ | GST_LOCK_FLAG_WRITE
+ */
+#define GST_LOCK_FLAG_READWRITE  (GST_LOCK_FLAG_READ | GST_LOCK_FLAG_WRITE)
+
+/**
  * GstMapFlags:
  * @GST_MAP_READ: map for read access
  * @GST_MAP_WRITE: map for write access
@@ -186,6 +193,13 @@ typedef enum {
 
   GST_MAP_FLAG_LAST = (1 << 16)
 } GstMapFlags;
+/**
+ * GST_MAP_READWRITE:
+ *
+ * GstMapFlags value alias for GST_MAP_READ | GST_MAP_WRITE
+ */
+#define GST_MAP_READWRITE      (GST_MAP_READ | GST_MAP_WRITE)
+
 
 /**
  * GstMapInfo:
@@ -216,13 +230,6 @@ typedef struct {
  * Initializer for #GstMapInfo
  */
 #define GST_MAP_INFO_INIT { NULL, 0, NULL, 0, 0, }
-
-/**
- * GST_MAP_READWRITE:
- *
- * Map for readwrite access
- */
-#define GST_MAP_READWRITE      (GST_MAP_READ | GST_MAP_WRITE)
 
 /**
  * GST_ALLOCATOR_SYSMEM:
