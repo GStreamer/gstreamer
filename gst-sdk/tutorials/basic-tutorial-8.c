@@ -20,7 +20,7 @@ typedef struct _CustomData {
 } CustomData;
   
 /* This method is called by the idle GSource in the mainloop, to feed CHUNK_SIZE bytes into appsrc.
- * The ide handler is added to the mainloop when appsrc requests us to start sending data (need-data signal)
+ * The idle handler is added to the mainloop when appsrc requests us to start sending data (need-data signal)
  * and is removed when appsrc has enough data (enough-data signal).
  */
 static gboolean push_data (CustomData *data) {
