@@ -337,7 +337,7 @@ gst_video_overlay_composition_new (GstVideoOverlayRectangle * rectangle)
 
   comp = (GstVideoOverlayComposition *) g_slice_new0 (GstVideoOverlayRectangle);
 
-  gst_mini_object_init (GST_MINI_OBJECT_CAST (comp),
+  gst_mini_object_init (GST_MINI_OBJECT_CAST (comp), 0,
       GST_TYPE_VIDEO_OVERLAY_COMPOSITION,
       (GstMiniObjectCopyFunction) gst_video_overlay_composition_copy,
       NULL, (GstMiniObjectFreeFunction) gst_video_overlay_composition_free);
@@ -708,7 +708,7 @@ gst_video_overlay_rectangle_new_argb (GstBuffer * pixels,
 
   rect = (GstVideoOverlayRectangle *) g_slice_new0 (GstVideoOverlayRectangle);
 
-  gst_mini_object_init (GST_MINI_OBJECT_CAST (rect),
+  gst_mini_object_init (GST_MINI_OBJECT_CAST (rect), 0,
       GST_TYPE_VIDEO_OVERLAY_RECTANGLE,
       (GstMiniObjectCopyFunction) gst_video_overlay_rectangle_copy,
       NULL, (GstMiniObjectFreeFunction) gst_video_overlay_rectangle_free);
