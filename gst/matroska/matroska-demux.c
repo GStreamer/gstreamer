@@ -2276,7 +2276,7 @@ gst_matroska_demux_handle_src_event (GstPad * pad, GstObject * parent,
             GST_WARNING_OBJECT (demux, "no TOC entry with given UID: %s", uid);
             res = FALSE;
           } else {
-            gst_toc_entry_get_start_stop (entry, &start_pos, NULL);
+            gst_toc_entry_get_start_stop_times (entry, &start_pos, NULL);
             GST_OBJECT_UNLOCK (demux);
             seek_event = gst_event_new_seek (1.0,
                 GST_FORMAT_TIME,

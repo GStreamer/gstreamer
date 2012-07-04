@@ -2338,6 +2338,7 @@ gst_matroska_mux_track_header (GstMatroskaMux * mux,
         context->codec_priv, context->codec_priv_size);
 }
 
+#if 0
 static void
 gst_matroska_mux_write_chapter_title (const gchar * title, GstEbmlWrite * ebml)
 {
@@ -2385,7 +2386,7 @@ gst_matroska_mux_write_chapter (GstMatroskaMux * mux, GstTocEntry * edition,
   }
 
   uid = gst_matroska_mux_create_uid ();
-  gst_toc_entry_get_start_stop (entry, &start, &stop);
+  gst_toc_entry_get_start_stop_times (entry, &start, &stop);
 
   master_chapteratom =
       gst_ebml_write_master_start (ebml, GST_MATROSKA_ID_CHAPTERATOM);
@@ -2430,7 +2431,7 @@ gst_matroska_mux_write_chapter_edition (GstMatroskaMux * mux,
   GList *cur;
   GstTocEntry *subentry;
 
-  cur = entry->subentries;
+  cur = gst_toc_entry_get_sub_entries (entry);
   while (cur != NULL) {
     subentry = cur->data;
     gst_matroska_mux_write_chapter (mux, entry, subentry, ebml, master_chapters,
@@ -2442,6 +2443,7 @@ gst_matroska_mux_write_chapter_edition (GstMatroskaMux * mux,
   if (G_LIKELY (master_edition != 0))
     gst_ebml_write_master_finish (ebml, master_edition);
 }
+#endif
 
 /**
  * gst_matroska_mux_start:
@@ -2470,7 +2472,9 @@ gst_matroska_mux_start (GstMatroskaMux * mux)
   GstClockTime duration = 0;
   guint32 segment_uid[4];
   GTimeVal time = { 0, 0 };
+#if 0
   GstToc *toc;
+#endif
 
   /* if not streaming, check if downstream is seekable */
   if (!mux->streamable) {
@@ -2622,6 +2626,9 @@ gst_matroska_mux_start (GstMatroskaMux * mux)
   }
   gst_ebml_write_master_finish (ebml, master);
 
+  /* FIXME: Check if we get a TOC that is supported by Matroska
+   * and clean up the code below */
+#if 0
   /* chapters */
   toc = gst_toc_setter_get_toc (GST_TOC_SETTER (mux));
   if (toc != NULL && !mux->streamable) {
@@ -2637,22 +2644,22 @@ gst_matroska_mux_start (GstMatroskaMux * mux)
 
     if (toc_entry->type != GST_TOC_ENTRY_TYPE_EDITION) {
       toc_entry = gst_toc_entry_new (GST_TOC_ENTRY_TYPE_EDITION, "");
-      gst_toc_entry_set_start_stop (toc_entry, -1, -1);
+      gst_toc_entry_set_start_stop_times (toc_entry, -1, -1);
 
       /* aggregate all chapters without root edition */
-      cur = toc->entries;
+      cur = gst_toc_get_entries (toc);
       while (cur != NULL) {
         toc_entry->subentries =
             g_list_prepend (toc_entry->subentries, cur->data);
         cur = cur->next;
       }
 
-      gst_toc_entry_get_start_stop (((GstTocEntry *) toc_entry->subentries->
-              data), &start, NULL);
+      gst_toc_entry_get_start_stop_times (((GstTocEntry *)
+              toc_entry->subentries->data), &start, NULL);
       toc_entry->subentries = g_list_reverse (toc_entry->subentries);
-      gst_toc_entry_get_start_stop (((GstTocEntry *) toc_entry->subentries->
-              data), NULL, &stop);
-      gst_toc_entry_set_start_stop (toc_entry, start, stop);
+      gst_toc_entry_get_start_stop_times (((GstTocEntry *)
+              toc_entry->subentries->data), NULL, &stop);
+      gst_toc_entry_set_start_stop_times (toc_entry, start, stop);
 
       to_write = g_list_append (to_write, toc_entry);
     } else {
@@ -2681,12 +2688,15 @@ gst_matroska_mux_start (GstMatroskaMux * mux)
       g_list_free (to_write);
     }
   }
+#endif
 
   /* lastly, flush the cache */
   gst_ebml_write_flush_cache (ebml, FALSE, 0);
 
+#if 0
   if (toc != NULL)
     gst_toc_unref (toc);
+#endif
 }
 
 static void
@@ -2748,6 +2758,7 @@ gst_matroska_mux_write_simple_tag (const GstTagList * list, const gchar * tag,
   }
 }
 
+#if 0
 static void
 gst_matroska_mux_write_toc_entry_tags (GstMatroskaMux * mux,
     const GstTocEntry * entry, guint64 * master_tags)
@@ -2786,6 +2797,7 @@ gst_matroska_mux_write_toc_entry_tags (GstMatroskaMux * mux,
     cur = cur->next;
   }
 }
+#endif
 
 /**
  * gst_matroska_mux_finish:
@@ -2842,12 +2854,15 @@ gst_matroska_mux_finish (GstMatroskaMux * mux)
   if ((tags != NULL && !gst_tag_list_is_empty (tags))
       || gst_toc_setter_get_toc (GST_TOC_SETTER (mux)) != NULL) {
     guint64 master_tags = 0, master_tag;
-    GList *cur;
+#if 0
     const GstToc *toc;
+#endif
 
     GST_DEBUG_OBJECT (mux, "Writing tags");
 
+#if 0
     toc = gst_toc_setter_get_toc (GST_TOC_SETTER (mux));
+#endif
 
     if (tags != NULL) {
       /* TODO: maybe limit via the TARGETS id by looking at the source pad */
@@ -2857,13 +2872,15 @@ gst_matroska_mux_finish (GstMatroskaMux * mux)
 
       if (tags != NULL)
         gst_tag_list_foreach (tags, gst_matroska_mux_write_simple_tag, ebml);
+#if 0
       if (toc != NULL)
         gst_tag_list_foreach (toc->tags, gst_matroska_mux_write_simple_tag,
             ebml);
+#endif
 
       gst_ebml_write_master_finish (ebml, master_tag);
     }
-
+#if 0
     if (toc != NULL) {
       cur = toc->entries;
       while (cur != NULL) {
@@ -2871,6 +2888,7 @@ gst_matroska_mux_finish (GstMatroskaMux * mux)
         cur = cur->next;
       }
     }
+#endif
 
     if (master_tags != 0)
       gst_ebml_write_master_finish (ebml, master_tags);
