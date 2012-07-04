@@ -89,6 +89,12 @@ The 0.11 porting guide
     now when negotiating formats to obtain a reference to a bufferpool object
     that can be used to allocate buffers using gst_buffer_pool_acquire_buffer().
 
+    gst_pad_set_setcaps_function() => GST_EVENT_CAPS in event handler
+
+    gst_pad_set_getcaps_function() => GST_QUERY_CAPS in query handler
+
+    gst_pad_set_acceptcaps_function() => GST_QUERY_ACCEPT_CAPS in query handler
+
     removed sched_private, it should not be used, use g_object_set_qdata() or
     use element_private.
 
