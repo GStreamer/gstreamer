@@ -714,7 +714,7 @@ gst_image_freeze_src_loop (GstPad * pad)
   if (self->need_segment) {
     GstEvent *e;
 
-    GST_DEBUG_OBJECT (pad, "Pushing NEWSEGMENT event: %" GST_SEGMENT_FORMAT,
+    GST_DEBUG_OBJECT (pad, "Pushing SEGMENT event: %" GST_SEGMENT_FORMAT,
         &self->segment);
     e = gst_event_new_segment (&self->segment);
 
@@ -777,7 +777,8 @@ gst_image_freeze_src_loop (GstPad * pad)
   if (in_seg) {
     GstFlowReturn ret;
 
-    GST_BUFFER_TIMESTAMP (buffer) = cstart;
+    GST_BUFFER_DTS (buffer) = GST_CLOCK_TIME_NONE;
+    GST_BUFFER_PTS (buffer) = cstart;
     GST_BUFFER_DURATION (buffer) = cstop - cstart;
     GST_BUFFER_OFFSET (buffer) = offset;
     GST_BUFFER_OFFSET_END (buffer) = offset + 1;
