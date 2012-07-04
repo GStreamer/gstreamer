@@ -431,6 +431,13 @@ deinterlace_suite (void)
 
   suite_add_tcase (s, tc_chain);
   tcase_set_timeout (tc_chain, 180);
+
+  if (!gst_registry_check_feature_version (gst_registry_get (), "deinterlace",
+          GST_VERSION_MAJOR, GST_VERSION_MINOR, GST_VERSION_MICRO)) {
+    GST_ERROR ("FIXME: port deinterlace element");
+    return s;
+  }
+
   tcase_add_test (tc_chain, test_create_and_unref);
   tcase_add_test (tc_chain, test_mode_auto_accept_caps);
   tcase_add_test (tc_chain, test_mode_forced_accept_caps);
