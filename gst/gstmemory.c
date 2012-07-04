@@ -118,6 +118,7 @@ static GstAllocator *_default_allocator;
 static GstAllocator *_default_mem_impl;
 
 #define SHARE_ONE (1 << 16)
+#define SHARE_MASK (~(SHARE_ONE - 1))
 #define LOCK_ONE (GST_LOCK_FLAG_LAST)
 #define FLAG_MASK (GST_LOCK_FLAG_LAST - 1)
 #define LOCK_MASK ((SHARE_ONE - 1) - FLAG_MASK)
@@ -437,15 +438,19 @@ gst_memory_new_wrapped (GstMemoryFlags flags, gpointer data,
  * gst_memory_is_exclusive:
  * @mem: a #GstMemory
  *
- * Check if the current ref to @mem is exclusive, this means that no other
- * references exist other than @mem.
+ * Check if the current EXCLUSIVE lock on @mem is the only one, this means that
+ * changes to the object will not be visible to any other object.
  */
 gboolean
 gst_memory_is_exclusive (GstMemory * mem)
 {
+  gint state;
+
   g_return_val_if_fail (mem != NULL, FALSE);
 
-  return GST_MINI_OBJECT_REFCOUNT_VALUE (mem) == 1;
+  state = g_atomic_int_get (&mem->state);
+
+  return (state & SHARE_MASK) < 2;
 }
 
 /**
