@@ -236,6 +236,7 @@ typedef struct _GstDiscovererPrivate GstDiscovererPrivate;
 struct _GstDiscoverer {
   GObject parent;
 
+  /*< private >*/
   GstDiscovererPrivate *priv;
 
   gpointer _reserved[GST_PADDING];
