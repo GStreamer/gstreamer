@@ -428,7 +428,6 @@ GST_START_TEST (test_map_nested)
   fail_unless (gst_memory_map (mem, &info2, GST_MAP_READ));
   gst_memory_unmap (mem, &info2);
   gst_memory_unmap (mem, &info1);
-  fail_unless (mem->state == 0);
 
   fail_unless (gst_memory_map (mem, &info1, GST_MAP_WRITE));
   /* not allowed */

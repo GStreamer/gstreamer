@@ -185,7 +185,7 @@ _gst_caps_free (GstCaps * caps)
 static void
 gst_caps_init (GstCaps * caps)
 {
-  gst_mini_object_init (GST_MINI_OBJECT_CAST (caps), _gst_caps_type,
+  gst_mini_object_init (GST_MINI_OBJECT_CAST (caps), 0, _gst_caps_type,
       (GstMiniObjectCopyFunction) _gst_caps_copy, NULL,
       (GstMiniObjectFreeFunction) _gst_caps_free);
 

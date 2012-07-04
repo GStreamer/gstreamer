@@ -84,6 +84,7 @@ typedef void (*GstMiniObjectNotify) (gpointer user_data, GstMiniObject * obj);
  * This macro returns the type of the mini-object.
  */
 #define GST_MINI_OBJECT_TYPE(obj)  (GST_MINI_OBJECT_CAST(obj)->type)
+
 /**
  * GST_MINI_OBJECT_FLAGS:
  * @obj: MiniObject to return flags for.
@@ -118,15 +119,54 @@ typedef void (*GstMiniObjectNotify) (gpointer user_data, GstMiniObject * obj);
 
 /**
  * GstMiniObjectFlags:
+ * @GST_MINI_OBJECT_FLAG_LOCKABLE: the object can be locked and unlocked with
+ * gst_mini_object_lock() and gst_mini_object_unlock().
+ * @GST_MINI_OBJECT_FLAG_LOCK_READONLY: the object is permanently locked in
+ * READONLY mode. Only read locks can be performed on the object.
  * @GST_MINI_OBJECT_FLAG_LAST: first flag that can be used by subclasses.
  *
  * Flags for the mini object
  */
 typedef enum
 {
+  GST_MINI_OBJECT_FLAG_LOCKABLE      = (1 << 0),
+  GST_MINI_OBJECT_FLAG_LOCK_READONLY = (1 << 1),
   /* padding */
-  GST_MINI_OBJECT_FLAG_LAST = (1<<4)
+  GST_MINI_OBJECT_FLAG_LAST          = (1 << 4)
 } GstMiniObjectFlags;
+
+/**
+ * GST_MINI_OBJECT_IS_LOCKABLE:
+ * @obj: a #GstMiniObject
+ *
+ * Check if @obj is lockable. A lockable object can be locked and unlocked with
+ * gst_mini_object_lock() and gst_mini_object_unlock().
+ */
+#define GST_MINI_OBJECT_IS_LOCKABLE(obj)  GST_MINI_OBJECT_FLAG_IS_SET(obj, GST_MINI_OBJECT_FLAG_LOCKABLE)
+
+/**
+ * GstLockFlags:
+ * @GST_LOCK_FLAG_READ: lock for read access
+ * @GST_LOCK_FLAG_WRITE: lock for write access
+ * @GST_LOCK_FLAG_EXCLUSIVE: lock for exclusive access
+ * @GST_LOCK_FLAG_LAST: first flag that can be used for custom purposes
+ *
+ * Flags used when locking miniobjects
+ */
+typedef enum {
+  GST_LOCK_FLAG_READ      = (1 << 0),
+  GST_LOCK_FLAG_WRITE     = (1 << 1),
+  GST_LOCK_FLAG_EXCLUSIVE = (1 << 2),
+
+  GST_LOCK_FLAG_LAST      = (1 << 4)
+} GstLockFlags;
+
+/**
+ * GST_LOCK_FLAG_READWRITE:
+ *
+ * GstLockFlags value alias for GST_LOCK_FLAG_READ | GST_LOCK_FLAG_WRITE
+ */
+#define GST_LOCK_FLAG_READWRITE  (GST_LOCK_FLAG_READ | GST_LOCK_FLAG_WRITE)
 
 /**
  * GST_MINI_OBJECT_REFCOUNT:
@@ -147,6 +187,7 @@ typedef enum
  * GstMiniObject:
  * @type: the GType of the object
  * @refcount: atomic refcount
+ * @lockstate: atomic state of the locks
  * @flags: extra flags.
  * @copy: a copy function
  * @dispose: a dispose function
@@ -163,6 +204,7 @@ struct _GstMiniObject {
 
   /*< public >*/ /* with COW */
   gint    refcount;
+  gint    lockstate;
   guint   flags;
 
   GstMiniObjectCopyFunction copy;
@@ -175,14 +217,12 @@ struct _GstMiniObject {
   gpointer qdata;
 };
 
-void            gst_mini_object_init (GstMiniObject *mini_object, GType type,
+void            gst_mini_object_init (GstMiniObject *mini_object,
+                                      guint flags, GType type,
                                       GstMiniObjectCopyFunction copy_func,
                                       GstMiniObjectDisposeFunction dispose_func,
                                       GstMiniObjectFreeFunction free_func);
 
-GstMiniObject * gst_mini_object_copy		(const GstMiniObject *mini_object) G_GNUC_MALLOC;
-gboolean        gst_mini_object_is_writable	(const GstMiniObject *mini_object);
-GstMiniObject * gst_mini_object_make_writable	(GstMiniObject *mini_object);
 
 /* refcounting */
 GstMiniObject * gst_mini_object_ref		(GstMiniObject *mini_object);
@@ -194,6 +234,17 @@ void            gst_mini_object_weak_ref        (GstMiniObject *object,
 void            gst_mini_object_weak_unref	(GstMiniObject *object,
 					         GstMiniObjectNotify notify,
 					         gpointer data);
+
+/* locking */
+gboolean        gst_mini_object_lock            (GstMiniObject *object, GstLockFlags flags);
+void            gst_mini_object_unlock          (GstMiniObject *object, GstLockFlags flags);
+
+gboolean        gst_mini_object_is_writable     (const GstMiniObject *mini_object);
+GstMiniObject * gst_mini_object_make_writable	(GstMiniObject *mini_object);
+
+/* copy */
+GstMiniObject * gst_mini_object_copy		(const GstMiniObject *mini_object) G_GNUC_MALLOC;
+
 
 void            gst_mini_object_set_qdata       (GstMiniObject *object, GQuark quark,
                                                  gpointer data, GDestroyNotify destroy);

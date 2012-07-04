@@ -1339,7 +1339,7 @@ gst_memory_new_wrapped
 gst_memory_ref
 gst_memory_unref
 
-gst_memory_is_exclusive
+gst_memory_is_writable
 
 gst_memory_get_sizes
 gst_memory_resize

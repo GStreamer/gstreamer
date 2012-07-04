@@ -68,6 +68,13 @@ static GstAllocTrace *_gst_mini_object_trace;
 G_LOCK_DEFINE_STATIC (qdata_mutex);
 static GQuark weak_ref_quark;
 
+#define SHARE_ONE (1 << 16)
+#define SHARE_MASK (~(SHARE_ONE - 1))
+#define LOCK_ONE (GST_LOCK_FLAG_LAST)
+#define FLAG_MASK (GST_LOCK_FLAG_LAST - 1)
+#define LOCK_MASK ((SHARE_ONE - 1) - FLAG_MASK)
+#define LOCK_FLAG_MASK (SHARE_ONE - 1)
+
 typedef struct
 {
   GQuark quark;
@@ -94,7 +101,7 @@ _priv_gst_mini_object_initialize (void)
 
 /**
  * gst_mini_object_init: (skip)
- * @mini_object: a #GstMiniObject 
+ * @mini_object: a #GstMiniObject
  * @type: the #GType of the mini-object to create
  * @copy_func: the copy function, or NULL
  * @dispose_func: the dispose function, or NULL
@@ -108,14 +115,16 @@ _priv_gst_mini_object_initialize (void)
  * Returns: (transfer full): the new mini-object.
  */
 void
-gst_mini_object_init (GstMiniObject * mini_object, GType type,
+gst_mini_object_init (GstMiniObject * mini_object, guint flags, GType type,
     GstMiniObjectCopyFunction copy_func,
     GstMiniObjectDisposeFunction dispose_func,
     GstMiniObjectFreeFunction free_func)
 {
   mini_object->type = type;
   mini_object->refcount = 1;
-  mini_object->flags = 0;
+  mini_object->lockstate =
+      (flags & GST_MINI_OBJECT_FLAG_LOCK_READONLY ? GST_LOCK_FLAG_READ : 0);
+  mini_object->flags = flags;
 
   mini_object->copy = copy_func;
   mini_object->dispose = dispose_func;
@@ -155,23 +164,137 @@ gst_mini_object_copy (const GstMiniObject * mini_object)
 }
 
 /**
+ * gst_mini_object_lock:
+ * @object: the mini-object to lock
+ * @flags: #GstLockFlags
+ *
+ * Lock the mini-object with the specified access mode in @flags.
+ *
+ * Returns: %TRUE if @object could be locked.
+ */
+gboolean
+gst_mini_object_lock (GstMiniObject * object, GstLockFlags flags)
+{
+  gint access_mode, state, newstate;
+
+  g_return_val_if_fail (object != NULL, FALSE);
+  g_return_val_if_fail (GST_MINI_OBJECT_IS_LOCKABLE (object), FALSE);
+
+  access_mode = flags & FLAG_MASK;
+
+  do {
+    newstate = state = g_atomic_int_get (&object->lockstate);
+
+    GST_CAT_TRACE (GST_CAT_LOCKING, "lock %p: state %08x, access_mode %d",
+        object, state, access_mode);
+
+    if (access_mode & GST_LOCK_FLAG_EXCLUSIVE) {
+      /* shared ref */
+      newstate += SHARE_ONE;
+      access_mode &= ~GST_LOCK_FLAG_EXCLUSIVE;
+    }
+
+    if (access_mode) {
+      if ((state & LOCK_FLAG_MASK) == 0) {
+        /* shared counter > 1 and write access */
+        if (state > SHARE_ONE && access_mode & GST_LOCK_FLAG_WRITE)
+          goto lock_failed;
+        /* nothing mapped, set access_mode */
+        newstate |= access_mode;
+      } else {
+        /* access_mode must match */
+        if ((state & access_mode) != access_mode)
+          goto lock_failed;
+      }
+      /* increase refcount */
+      newstate += LOCK_ONE;
+    }
+  } while (!g_atomic_int_compare_and_exchange (&object->lockstate, state,
+          newstate));
+
+  return TRUE;
+
+lock_failed:
+  {
+    GST_CAT_DEBUG (GST_CAT_LOCKING,
+        "lock failed %p: state %08x, access_mode %d", object, state,
+        access_mode);
+    return FALSE;
+  }
+}
+
+/**
+ * gst_mini_object_unlock:
+ * @object: the mini-object to unlock
+ * @flags: #GstLockFlags
+ *
+ * Unlock the mini-object with the specified access mode in @flags.
+ */
+void
+gst_mini_object_unlock (GstMiniObject * object, GstLockFlags flags)
+{
+  gint access_mode, state, newstate;
+
+  g_return_if_fail (object != NULL);
+  g_return_if_fail (GST_MINI_OBJECT_IS_LOCKABLE (object));
+
+  access_mode = flags & FLAG_MASK;
+
+  do {
+    newstate = state = g_atomic_int_get (&object->lockstate);
+
+    GST_CAT_TRACE (GST_CAT_LOCKING, "unlock %p: state %08x, access_mode %d",
+        object, state, access_mode);
+
+    if (access_mode & GST_LOCK_FLAG_EXCLUSIVE) {
+      /* shared counter */
+      g_return_if_fail (state >= SHARE_ONE);
+      newstate -= SHARE_ONE;
+      access_mode &= ~GST_LOCK_FLAG_EXCLUSIVE;
+    }
+
+    if (access_mode) {
+      g_return_if_fail ((state & access_mode) == access_mode);
+      /* decrease the refcount */
+      newstate -= LOCK_ONE;
+      /* last refcount, unset access_mode */
+      if ((newstate & LOCK_FLAG_MASK) == access_mode)
+        newstate &= ~LOCK_FLAG_MASK;
+    }
+  } while (!g_atomic_int_compare_and_exchange (&object->lockstate, state,
+          newstate));
+}
+
+/**
  * gst_mini_object_is_writable:
  * @mini_object: the mini-object to check
  *
- * Checks if a mini-object is writable.  A mini-object is writable
- * if the reference count is one. Modification of a mini-object should
- * only be done after verifying that it is writable.
+ * If @mini_object has the LOCKABLE flag set, check if the current EXCLUSIVE
+ * lock on @object is the only one, this means that changes to the object will
+ * not be visible to any other object.
  *
- * MT safe
+ * If the LOCKABLE flag is not set, check if the refcount of @mini_object is
+ * exactly 1, meaning that no other reference exists to the object and that the
+ * object is therefore writable.
+ *
+ * Modification of a mini-object should only be done after verifying that it
+ * is writable.
  *
  * Returns: TRUE if the object is writable.
  */
 gboolean
 gst_mini_object_is_writable (const GstMiniObject * mini_object)
 {
+  gboolean result;
+
   g_return_val_if_fail (mini_object != NULL, FALSE);
 
-  return (GST_MINI_OBJECT_REFCOUNT_VALUE (mini_object) == 1);
+  if (GST_MINI_OBJECT_IS_LOCKABLE (mini_object)) {
+    result = (g_atomic_int_get (&mini_object->lockstate) & SHARE_MASK) < 2;
+  } else {
+    result = (GST_MINI_OBJECT_REFCOUNT_VALUE (mini_object) == 1);
+  }
+  return result;
 }
 
 /**
@@ -328,6 +451,10 @@ gst_mini_object_unref (GstMiniObject * mini_object)
     /* if the subclass recycled the object (and returned FALSE) we don't
      * want to free the instance anymore */
     if (G_LIKELY (do_free)) {
+      /* there should be no outstanding locks */
+      g_return_if_fail ((g_atomic_int_get (&mini_object->lockstate) & LOCK_MASK)
+          < 4);
+
       if (mini_object->n_qdata) {
         call_finalize_notify (mini_object);
         g_free (mini_object->qdata);

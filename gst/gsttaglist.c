@@ -665,7 +665,7 @@ gst_tag_list_new_internal (GstStructure * s)
 
   tag_list = (GstTagList *) g_slice_new (GstTagListImpl);
 
-  gst_mini_object_init (GST_MINI_OBJECT_CAST (tag_list), GST_TYPE_TAG_LIST,
+  gst_mini_object_init (GST_MINI_OBJECT_CAST (tag_list), 0, GST_TYPE_TAG_LIST,
       (GstMiniObjectCopyFunction) __gst_tag_list_copy, NULL,
       (GstMiniObjectFreeFunction) __gst_tag_list_free);
 

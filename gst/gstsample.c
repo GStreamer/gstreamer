@@ -103,7 +103,7 @@ gst_sample_new (GstBuffer * buffer, GstCaps * caps, const GstSegment * segment,
 
   GST_LOG ("new %p", sample);
 
-  gst_mini_object_init (GST_MINI_OBJECT_CAST (sample), _gst_sample_type,
+  gst_mini_object_init (GST_MINI_OBJECT_CAST (sample), 0, _gst_sample_type,
       (GstMiniObjectCopyFunction) _gst_sample_copy, NULL,
       (GstMiniObjectFreeFunction) _gst_sample_free);
 

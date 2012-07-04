@@ -133,8 +133,6 @@ _gst_memory_copy (GstMemory * mem)
 static void
 _gst_memory_free (GstMemory * mem)
 {
-  /* there should be no outstanding mappings */
-  g_return_if_fail ((g_atomic_int_get (&mem->state) & LOCK_MASK) < 4);
   mem->allocator->info.mem_free (mem);
 }
 
@@ -145,15 +143,13 @@ _default_mem_init (GstMemoryDefault * mem, GstMemoryFlags flags,
     gsize maxsize, gsize offset, gsize size, gsize align,
     gpointer user_data, GDestroyNotify notify)
 {
-  gst_mini_object_init (GST_MINI_OBJECT_CAST (mem), GST_TYPE_MEMORY,
+  gst_mini_object_init (GST_MINI_OBJECT_CAST (mem),
+      flags | GST_MINI_OBJECT_FLAG_LOCKABLE, GST_TYPE_MEMORY,
       (GstMiniObjectCopyFunction) _gst_memory_copy, NULL,
       (GstMiniObjectFreeFunction) _gst_memory_free);
 
-  mem->mem.mini_object.flags = flags;
-
   mem->mem.allocator = _default_mem_impl;
   mem->mem.parent = parent ? gst_memory_ref (parent) : NULL;
-  mem->mem.state = (flags & GST_MEMORY_FLAG_READONLY ? GST_LOCK_FLAG_READ : 0);
   mem->mem.maxsize = maxsize;
   mem->mem.align = align;
   mem->mem.offset = offset;
@@ -435,25 +431,6 @@ gst_memory_new_wrapped (GstMemoryFlags flags, gpointer data,
 }
 
 /**
- * gst_memory_is_exclusive:
- * @mem: a #GstMemory
- *
- * Check if the current EXCLUSIVE lock on @mem is the only one, this means that
- * changes to the object will not be visible to any other object.
- */
-gboolean
-gst_memory_is_exclusive (GstMemory * mem)
-{
-  gint state;
-
-  g_return_val_if_fail (mem != NULL, FALSE);
-
-  state = g_atomic_int_get (&mem->state);
-
-  return (state & SHARE_MASK) < 2;
-}
-
-/**
  * gst_memory_get_sizes:
  * @mem: a #GstMemory
  * @offset: pointer to offset
@@ -505,99 +482,6 @@ gst_memory_resize (GstMemory * mem, gssize offset, gsize size)
 
   mem->offset += offset;
   mem->size = size;
-}
-
-/**
- * gst_memory_lock:
- * @mem: a #GstMemory
- * @flags: #GstLockFlags
- *
- * Lock the memory with the specified access mode in @flags.
- *
- * Returns: %TRUE if the memory could be locked.
- */
-gboolean
-gst_memory_lock (GstMemory * mem, GstLockFlags flags)
-{
-  gint access_mode, state, newstate;
-
-  access_mode = flags & FLAG_MASK;
-
-  do {
-    newstate = state = g_atomic_int_get (&mem->state);
-
-    GST_CAT_TRACE (GST_CAT_MEMORY, "lock %p: state %08x, access_mode %d",
-        mem, state, access_mode);
-
-    if (access_mode & GST_LOCK_FLAG_EXCLUSIVE) {
-      /* shared ref */
-      newstate += SHARE_ONE;
-      access_mode &= ~GST_LOCK_FLAG_EXCLUSIVE;
-    }
-
-    if (access_mode) {
-      if ((state & LOCK_FLAG_MASK) == 0) {
-        /* shared counter > 1 and write access */
-        if (state > SHARE_ONE && access_mode & GST_LOCK_FLAG_WRITE)
-          goto lock_failed;
-        /* nothing mapped, set access_mode */
-        newstate |= access_mode;
-      } else {
-        /* access_mode must match */
-        if ((state & access_mode) != access_mode)
-          goto lock_failed;
-      }
-      /* increase refcount */
-      newstate += LOCK_ONE;
-    }
-  } while (!g_atomic_int_compare_and_exchange (&mem->state, state, newstate));
-
-  return TRUE;
-
-lock_failed:
-  {
-    GST_CAT_DEBUG (GST_CAT_MEMORY, "lock failed %p: state %08x, access_mode %d",
-        mem, state, access_mode);
-    return FALSE;
-  }
-}
-
-/**
- * gst_memory_unlock:
- * @mem: a #GstMemory
- * @flags: #GstLockFlags
- *
- * Unlock the memory with the specified access mode in @flags.
- */
-void
-gst_memory_unlock (GstMemory * mem, GstLockFlags flags)
-{
-  gint access_mode, state, newstate;
-
-  access_mode = flags & FLAG_MASK;
-
-  do {
-    newstate = state = g_atomic_int_get (&mem->state);
-
-    GST_CAT_TRACE (GST_CAT_MEMORY, "unlock %p: state %08x, access_mode %d",
-        mem, state, access_mode);
-
-    if (access_mode & GST_LOCK_FLAG_EXCLUSIVE) {
-      /* shared counter */
-      g_return_if_fail (state >= SHARE_ONE);
-      newstate -= SHARE_ONE;
-      access_mode &= ~GST_LOCK_FLAG_EXCLUSIVE;
-    }
-
-    if (access_mode) {
-      g_return_if_fail ((state & access_mode) == access_mode);
-      /* decrease the refcount */
-      newstate -= LOCK_ONE;
-      /* last refcount, unset access_mode */
-      if ((newstate & LOCK_FLAG_MASK) == access_mode)
-        newstate &= ~LOCK_FLAG_MASK;
-    }
-  } while (!g_atomic_int_compare_and_exchange (&mem->state, state, newstate));
 }
 
 /**
@@ -721,8 +605,6 @@ gst_memory_unmap (GstMemory * mem, GstMapInfo * info)
   g_return_if_fail (mem != NULL);
   g_return_if_fail (info != NULL);
   g_return_if_fail (info->memory == mem);
-  /* there must be a ref */
-  g_return_if_fail (g_atomic_int_get (&mem->state) >= 4);
 
   mem->allocator->info.mem_unmap (mem);
   gst_memory_unlock (mem, info->flags);
@@ -861,7 +743,7 @@ gst_allocator_new (const GstMemoryInfo * info, gpointer user_data,
 
   allocator = g_slice_new0 (GstAllocator);
 
-  gst_mini_object_init (GST_MINI_OBJECT_CAST (allocator), GST_TYPE_ALLOCATOR,
+  gst_mini_object_init (GST_MINI_OBJECT_CAST (allocator), 0, GST_TYPE_ALLOCATOR,
       (GstMiniObjectCopyFunction) _gst_allocator_copy, NULL,
       (GstMiniObjectFreeFunction) _gst_allocator_free);
 

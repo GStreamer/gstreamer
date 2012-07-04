@@ -66,10 +66,10 @@ GST_EXPORT gsize gst_memory_alignment;
  * Flags for wrapped memory.
  */
 typedef enum {
-  GST_MEMORY_FLAG_READONLY      = (GST_MINI_OBJECT_FLAG_LAST << 0),
-  GST_MEMORY_FLAG_NO_SHARE      = (GST_MINI_OBJECT_FLAG_LAST << 1),
-  GST_MEMORY_FLAG_ZERO_PREFIXED = (GST_MINI_OBJECT_FLAG_LAST << 2),
-  GST_MEMORY_FLAG_ZERO_PADDED   = (GST_MINI_OBJECT_FLAG_LAST << 3),
+  GST_MEMORY_FLAG_READONLY      = GST_MINI_OBJECT_FLAG_LOCK_READONLY,
+  GST_MEMORY_FLAG_NO_SHARE      = (GST_MINI_OBJECT_FLAG_LAST << 0),
+  GST_MEMORY_FLAG_ZERO_PREFIXED = (GST_MINI_OBJECT_FLAG_LAST << 1),
+  GST_MEMORY_FLAG_ZERO_PADDED   = (GST_MINI_OBJECT_FLAG_LAST << 2),
 
   GST_MEMORY_FLAG_LAST          = (GST_MINI_OBJECT_FLAG_LAST << 16)
 } GstMemoryFlags;
@@ -133,7 +133,6 @@ typedef enum {
  * @mini_object: parent structure
  * @allocator: pointer to the #GstAllocator
  * @parent: parent memory block
- * @state: private state
  * @maxsize: the maximum size allocated
  * @align: the alignment of the memory
  * @offset: the offset where valid data starts
@@ -148,36 +147,11 @@ struct _GstMemory {
   GstAllocator   *allocator;
 
   GstMemory      *parent;
-  volatile gint   state;
   gsize           maxsize;
   gsize           align;
   gsize           offset;
   gsize           size;
 };
-
-/**
- * GstLockFlags:
- * @GST_LOCK_FLAG_READ: lock for read access
- * @GST_LOCK_FLAG_WRITE: lock for write access
- * @GST_LOCK_FLAG_EXCLUSIVE: lock for exclusive access
- * @GST_LOCK_FLAG_LAST: first flag that can be used for custom purposes
- *
- * Flags used when locking memory
- */
-typedef enum {
-  GST_LOCK_FLAG_READ      = (1 << 0),
-  GST_LOCK_FLAG_WRITE     = (1 << 1),
-  GST_LOCK_FLAG_EXCLUSIVE = (1 << 2),
-
-  GST_LOCK_FLAG_LAST      = (1 << 4)
-} GstLockFlags;
-
-/**
- * GST_LOCK_FLAG_READWRITE:
- *
- * GstLockFlags value alias for GST_LOCK_FLAG_READ | GST_LOCK_FLAG_WRITE
- */
-#define GST_LOCK_FLAG_READWRITE  (GST_LOCK_FLAG_READ | GST_LOCK_FLAG_WRITE)
 
 /**
  * GstMapFlags:
@@ -487,16 +461,13 @@ gst_memory_unref (GstMemory * memory)
   gst_mini_object_unref (GST_MINI_OBJECT_CAST (memory));
 }
 
-/* locking */
-
-gboolean       gst_memory_is_exclusive (GstMemory *mem);
-
-gboolean       gst_memory_lock         (GstMemory *mem, GstLockFlags flags);
-void           gst_memory_unlock       (GstMemory *mem, GstLockFlags flags);
-
 /* getting/setting memory properties */
 gsize          gst_memory_get_sizes    (GstMemory *mem, gsize *offset, gsize *maxsize);
 void           gst_memory_resize       (GstMemory *mem, gssize offset, gsize size);
+
+#define        gst_memory_lock(m,f)        gst_mini_object_lock (GST_MINI_OBJECT_CAST (m), (f))
+#define        gst_memory_unlock(m,f)      gst_mini_object_unlock (GST_MINI_OBJECT_CAST (m), (f))
+#define        gst_memory_is_writable(m)   gst_mini_object_is_writable (GST_MINI_OBJECT_CAST (m))
 
 /* retrieving data */
 GstMemory *    gst_memory_make_mapped  (GstMemory *mem, GstMapInfo *info, GstMapFlags flags);

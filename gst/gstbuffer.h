@@ -319,9 +319,8 @@ void        gst_buffer_unmap               (GstBuffer *buffer, GstMapInfo *info)
  * Increases the refcount of the given buffer by one.
  *
  * Note that the refcount affects the writeability
- * of @buf and its metadata, see gst_buffer_is_writable() and
- * gst_buffer_is_metadata_writable(). It is
- * important to note that keeping additional references to
+ * of @buf and its metadata, see gst_buffer_is_writable().
+ * It is important to note that keeping additional references to
  * GstBuffer instances can potentially increase the number
  * of memcpy operations in a pipeline.
  *
@@ -426,10 +425,9 @@ void            gst_buffer_copy_into            (GstBuffer *dest, GstBuffer *src
  * gst_buffer_is_writable:
  * @buf: a #GstBuffer
  *
- * Tests if you can safely write data into a buffer's data array or validly
- * modify the caps and timestamp metadata. Metadata in a GstBuffer is always
- * writable, but it is only safe to change it when there is only one owner
- * of the buffer - ie, the refcount is 1.
+ * Tests if you can safely write to a buffer's metadata or its memory array.
+ * It is only safe to change buffer metadata when the current reference is
+ * writable, i.e. nobody can see the modifications you will make.
  */
 #define         gst_buffer_is_writable(buf)     gst_mini_object_is_writable (GST_MINI_OBJECT_CAST (buf))
 /**

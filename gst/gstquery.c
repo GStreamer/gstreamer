@@ -692,7 +692,7 @@ gst_query_new_custom (GstQueryType type, GstStructure * structure)
       goto had_parent;
   }
 
-  gst_mini_object_init (GST_MINI_OBJECT_CAST (query), _gst_query_type,
+  gst_mini_object_init (GST_MINI_OBJECT_CAST (query), 0, _gst_query_type,
       (GstMiniObjectCopyFunction) _gst_query_copy, NULL,
       (GstMiniObjectFreeFunction) _gst_query_free);
 

@@ -10,6 +10,7 @@ EXPORTS
 	GST_CAT_ERROR_SYSTEM DATA
 	GST_CAT_EVENT DATA
 	GST_CAT_GST_INIT DATA
+	GST_CAT_LOCKING DATA
 	GST_CAT_MEMORY DATA
 	GST_CAT_MESSAGE DATA
 	GST_CAT_META DATA
@@ -518,15 +519,12 @@ EXPORTS
 	gst_memory_flags_get_type
 	gst_memory_get_sizes
 	gst_memory_get_type
-	gst_memory_is_exclusive
 	gst_memory_is_span
-	gst_memory_lock
 	gst_memory_make_mapped
 	gst_memory_map
 	gst_memory_new_wrapped
 	gst_memory_resize
 	gst_memory_share
-	gst_memory_unlock
 	gst_memory_unmap
 	gst_message_get_seqnum
 	gst_message_get_stream_status_object
@@ -605,6 +603,7 @@ EXPORTS
 	gst_mini_object_get_qdata
 	gst_mini_object_init
 	gst_mini_object_is_writable
+	gst_mini_object_lock
 	gst_mini_object_make_writable
 	gst_mini_object_ref
 	gst_mini_object_replace
@@ -612,6 +611,7 @@ EXPORTS
 	gst_mini_object_steal
 	gst_mini_object_steal_qdata
 	gst_mini_object_take
+	gst_mini_object_unlock
 	gst_mini_object_unref
 	gst_mini_object_weak_ref
 	gst_mini_object_weak_unref

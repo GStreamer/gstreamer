@@ -262,7 +262,7 @@ gst_caps_copy (const GstCaps * caps)
  * @caps: a #GstCaps
  *
  * Tests if you can safely modify @caps. It is only safe to modify caps when
- * there is only one owner of the caps - ie, the refcount is 1.
+ * there is only one owner of the caps - ie, the object is writable.
  */
 #define         gst_caps_is_writable(caps)     gst_mini_object_is_writable (GST_MINI_OBJECT_CAST (caps))
 

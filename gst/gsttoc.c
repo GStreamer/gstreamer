@@ -99,7 +99,7 @@ gst_toc_new (void)
 
   toc = g_slice_new0 (GstToc);
 
-  gst_mini_object_init (GST_MINI_OBJECT_CAST (toc), GST_TYPE_TOC,
+  gst_mini_object_init (GST_MINI_OBJECT_CAST (toc), 0, GST_TYPE_TOC,
       (GstMiniObjectCopyFunction) gst_toc_copy, NULL,
       (GstMiniObjectFreeFunction) gst_toc_free);
 
@@ -117,7 +117,7 @@ gst_toc_entry_new_internal (GstTocEntryType type, const gchar * uid,
 
   entry = g_slice_new0 (GstTocEntry);
 
-  gst_mini_object_init (GST_MINI_OBJECT_CAST (entry), GST_TYPE_TOC_ENTRY,
+  gst_mini_object_init (GST_MINI_OBJECT_CAST (entry), 0, GST_TYPE_TOC_ENTRY,
       (GstMiniObjectCopyFunction) gst_toc_entry_copy, NULL,
       (GstMiniObjectFreeFunction) gst_toc_entry_free);
 

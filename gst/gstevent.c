@@ -261,7 +261,7 @@ _gst_event_copy (GstEvent * event)
 static void
 gst_event_init (GstEventImpl * event, GstEventType type)
 {
-  gst_mini_object_init (GST_MINI_OBJECT_CAST (event), _gst_event_type,
+  gst_mini_object_init (GST_MINI_OBJECT_CAST (event), 0, _gst_event_type,
       (GstMiniObjectCopyFunction) _gst_event_copy, NULL,
       (GstMiniObjectFreeFunction) _gst_event_free);
 

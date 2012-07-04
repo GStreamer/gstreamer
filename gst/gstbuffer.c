@@ -265,8 +265,10 @@ _replace_memory (GstBuffer * buffer, guint len, guint idx, guint length,
 
   /* unref old memory */
   for (i = idx; i < end; i++) {
-    gst_memory_unlock (GST_BUFFER_MEM_PTR (buffer, i), GST_LOCK_FLAG_EXCLUSIVE);
-    gst_memory_unref (GST_BUFFER_MEM_PTR (buffer, i));
+    GstMemory *old = GST_BUFFER_MEM_PTR (buffer, i);
+
+    gst_memory_unlock (old, GST_LOCK_FLAG_EXCLUSIVE);
+    gst_memory_unref (old);
   }
 
   if (mem != NULL) {
@@ -536,7 +538,7 @@ _gst_buffer_free (GstBuffer * buffer)
 static void
 gst_buffer_init (GstBufferImpl * buffer, gsize size)
 {
-  gst_mini_object_init (GST_MINI_OBJECT_CAST (buffer), _gst_buffer_type,
+  gst_mini_object_init (GST_MINI_OBJECT_CAST (buffer), 0, _gst_buffer_type,
       (GstMiniObjectCopyFunction) _gst_buffer_copy,
       (GstMiniObjectDisposeFunction) _gst_buffer_dispose,
       (GstMiniObjectFreeFunction) _gst_buffer_free);
@@ -818,7 +820,7 @@ _get_mapped (GstBuffer * buffer, guint idx, GstMapInfo * info,
  * any call that modifies the memory in @buffer.
  *
  * Since this call does not influence the refcount of the memory,
- * gst_memory_is_exclusive() can be used to check if @buffer is the sole owner
+ * gst_memory_is_writable() can be used to check if @buffer is the sole owner
  * of the returned memory.
  *
  * Returns: (transfer none): the #GstMemory at @idx.
@@ -924,6 +926,7 @@ gst_buffer_replace_memory_range (GstBuffer * buffer, guint idx, gint length,
 
   g_return_if_fail (GST_IS_BUFFER (buffer));
   g_return_if_fail (gst_buffer_is_writable (buffer));
+
   len = GST_BUFFER_MEM_LEN (buffer);
   g_return_if_fail ((len == 0 && idx == 0 && length == -1) ||
       (length == -1 && idx < len) || (length > 0 && length + idx <= len));
@@ -1230,7 +1233,7 @@ gst_buffer_resize_range (GstBuffer * buffer, guint idx, gint length,
       left = MIN (bsize - offset, size);
 
     if (offset != 0 || left != bsize) {
-      if (gst_memory_is_exclusive (mem)) {
+      if (gst_memory_is_writable (mem)) {
         gst_memory_resize (mem, offset, left);
       } else {
         GstMemory *newmem;
