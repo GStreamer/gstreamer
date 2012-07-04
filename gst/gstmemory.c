@@ -580,7 +580,7 @@ gst_memory_unlock (GstMemory * mem, GstLockFlags flags)
     if (access_mode & GST_LOCK_FLAG_EXCLUSIVE) {
       /* shared counter */
       g_return_if_fail (state >= SHARE_ONE);
-      newstate = state - SHARE_ONE;
+      newstate -= SHARE_ONE;
       access_mode &= ~GST_LOCK_FLAG_EXCLUSIVE;
     }
 
