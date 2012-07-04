@@ -112,16 +112,17 @@ GST_END_TEST;
 
 GST_START_TEST (test_uri_misc)
 {
-  /* require at least three characters for the protocol */
+  /* require at least two characters for the protocol */
   fail_if (gst_uri_is_valid ("B:\\foo.txt"));
   fail_if (gst_uri_is_valid ("B:/foo.txt"));
   fail_if (gst_uri_is_valid ("B://foo.txt"));
   fail_if (gst_uri_is_valid ("B:foo.txt"));
 
-  fail_if (gst_uri_is_valid ("AB:\\foo.txt"));
-  fail_if (gst_uri_is_valid ("AB:/foo.txt"));
-  fail_if (gst_uri_is_valid ("AB://foo.txt"));
-  fail_if (gst_uri_is_valid ("AB:foo.txt"));
+  fail_unless (gst_uri_is_valid ("fd://0"));
+  fail_unless (gst_uri_is_valid ("AB:\\foo.txt"));
+  fail_unless (gst_uri_is_valid ("AB:/foo.txt"));
+  fail_unless (gst_uri_is_valid ("AB://foo.txt"));
+  fail_unless (gst_uri_is_valid ("AB:foo.txt"));
 
   fail_unless (gst_uri_is_valid ("ABC:/foo.txt"));
   fail_unless (gst_uri_is_valid ("ABC://foo.txt"));

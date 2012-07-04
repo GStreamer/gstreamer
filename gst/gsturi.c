@@ -314,7 +314,7 @@ gst_uri_protocol_is_valid (const gchar * protocol)
 
   gst_uri_protocol_check_internal (protocol, &endptr);
 
-  return *endptr == '\0' && ((gsize) (endptr - protocol)) >= 3;
+  return *endptr == '\0' && ((gsize) (endptr - protocol)) >= 2;
 }
 
 /**
@@ -335,7 +335,7 @@ gst_uri_is_valid (const gchar * uri)
 
   gst_uri_protocol_check_internal (uri, &endptr);
 
-  return *endptr == ':' && ((gsize) (endptr - uri)) >= 3;
+  return *endptr == ':' && ((gsize) (endptr - uri)) >= 2;
 }
 
 /**
