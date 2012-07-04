@@ -1121,7 +1121,8 @@ gst_registry_scan_plugin_file (GstRegistryScanContext * context,
             filename, file_size, file_mtime)) {
       g_warning ("External plugin loader failed. This most likely means that "
           "the plugin loader helper binary was not found or could not be run. "
-          "%s", (g_getenv ("GST_PLUGIN_PATH") != NULL) ?
+          "%s",
+          (g_getenv ("GST_PLUGIN_PATH") || g_getenv ("GST_PLUGIN_PATH_1_0")) ?
           "If you are running an uninstalled GStreamer setup, you might need "
           "to update your gst-uninstalled script so that the "
           "GST_PLUGIN_SCANNER environment variable gets set." : "");
@@ -1553,7 +1554,9 @@ scan_and_update_registry (GstRegistry * default_registry,
 
   /* GST_PLUGIN_PATH specifies a list of directories to scan for
    * additional plugins.  These take precedence over the system plugins */
-  plugin_path = g_getenv ("GST_PLUGIN_PATH");
+  plugin_path = g_getenv ("GST_PLUGIN_PATH_1_0");
+  if (plugin_path == NULL)
+    plugin_path = g_getenv ("GST_PLUGIN_PATH");
   if (plugin_path) {
     char **list;
     int i;
@@ -1571,7 +1574,9 @@ scan_and_update_registry (GstRegistry * default_registry,
   /* GST_PLUGIN_SYSTEM_PATH specifies a list of plugins that are always
    * loaded by default.  If not set, this defaults to the system-installed
    * path, and the plugins installed in the user's home directory */
-  plugin_path = g_getenv ("GST_PLUGIN_SYSTEM_PATH");
+  plugin_path = g_getenv ("GST_PLUGIN_SYSTEM_PATH_1_0");
+  if (plugin_path == NULL)
+    plugin_path = g_getenv ("GST_PLUGIN_SYSTEM_PATH");
   if (plugin_path == NULL) {
     char *home_plugins;
 
@@ -1661,7 +1666,10 @@ ensure_current_registry (GError ** error)
   gboolean have_cache = TRUE;
 
   default_registry = gst_registry_get ();
-  registry_file = g_strdup (g_getenv ("GST_REGISTRY"));
+
+  registry_file = g_strdup (g_getenv ("GST_REGISTRY_1_0"));
+  if (registry_file == NULL)
+    registry_file = g_strdup (g_getenv ("GST_REGISTRY"));
   if (registry_file == NULL) {
     registry_file = g_build_filename (g_get_user_cache_dir (),
         "gstreamer-" GST_API_VERSION, "registry." TARGET_CPU ".bin", NULL);
