@@ -2092,7 +2092,8 @@ gst_audio_encoder_get_latency (GstAudioEncoder * enc,
 /**
  * gst_audio_encoder_set_headers:
  * @enc: a #GstAudioEncoder
- * @headers: (transfer full) (element-type GstBuffer): a list of #GstBuffer containing the codec header
+ * @headers: (transfer full) (element-type Gst.Buffer): a list of
+ *   #GstBuffer containing the codec header
  *
  * Set the codec headers to be sent downstream whenever requested.
  */
