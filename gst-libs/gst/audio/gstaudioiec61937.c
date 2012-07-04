@@ -128,10 +128,10 @@ gst_audio_iec61937_frame_size (const GstAudioRingBufferSpec * spec)
 
 /**
  * gst_audio_iec61937_payload:
- * @src: a buffer containing the data to payload
+ * @src: (array length=src_n): a buffer containing the data to payload
  * @src_n: size of @src in bytes
- * @dst: the destination buffer to store the payloaded contents in. Should not
- *       overlap with @src
+ * @dst: (array length=dst_n): the destination buffer to store the
+ *       payloaded contents in. Should not overlap with @src
  * @dst_n: size of @dst in bytes
  * @spec: the ringbufer spec for @src
  *

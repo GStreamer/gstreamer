@@ -435,7 +435,8 @@ gst_audio_format_get_info (GstAudioFormat format)
 /**
  * gst_audio_format_fill_silence:
  * @info: a #GstAudioFormatInfo
- * @dest: a destination to fill
+ * @dest: (array length=length) (element-type guint8): a destination
+ *   to fill
  * @length: the length to fill
  *
  * Fill @length bytes in @dest with silence samples for @info.

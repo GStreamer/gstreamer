@@ -43,7 +43,7 @@ typedef struct _GstAudioRingBufferSpec GstAudioRingBufferSpec;
 /**
  * GstAudioRingBufferCallback:
  * @rbuf: a #GstAudioRingBuffer
- * @data: target to fill
+ * @data: (array length=len): target to fill
  * @len: amount to fill
  * @user_data: user data
  *
