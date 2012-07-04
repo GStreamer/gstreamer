@@ -313,17 +313,26 @@ gst_directsound_sink_acceptcaps (GstBaseSink * sink, GstQuery * query)
     gboolean cret = gst_caps_can_intersect (pad_caps, caps);
     gst_caps_unref (pad_caps);
     if (!cret)
+    {
+      GST_DEBUG_OBJECT (dsink, "Can't intersect caps, not accepting caps");
       goto done;
+    }
   }
 
   /* If we've not got fixed caps, creating a stream might fail, so let's just
    * return from here with default acceptcaps behaviour */
   if (!gst_caps_is_fixed (caps))
+  {
+    GST_DEBUG_OBJECT (dsink, "Caps are not fixed, not accepting caps");
     goto done;
+  }
 
   spec.latency_time = GST_SECOND;
   if (!gst_audio_ring_buffer_parse_caps (&spec, caps))
+  {
+    GST_DEBUG_OBJECT (dsink, "Failed to parse caps, not accepting");
     goto done;
+  }
 
   /* Make sure input is framed (one frame per buffer) and can be payloaded */
   switch (spec.type)
@@ -337,15 +346,18 @@ gst_directsound_sink_acceptcaps (GstBaseSink * sink, GstQuery * query)
       gst_structure_get_boolean (st, "framed", &framed);
       gst_structure_get_boolean (st, "parsed", &parsed);
       if ((!framed && !parsed) || gst_audio_iec61937_frame_size (&spec) <= 0)
+      {
+        GST_DEBUG_OBJECT (dsink, "Wrong AC3/DTS caps, not accepting");
         goto done;
+      }
     }
     default:
       break;
   }
   ret = TRUE;
+  GST_DEBUG_OBJECT (dsink, "Accepting caps");
 
 done:
-  gst_object_unref (dsink);
   gst_query_set_accept_caps_result (query, ret);
   return TRUE;
 }
@@ -360,7 +372,7 @@ gst_directsound_sink_query (GstBaseSink * sink, GstQuery * query)
       res = gst_directsound_sink_acceptcaps (sink, query);
       break;
     default:
-      res = FALSE;
+      res = GST_BASE_SINK_CLASS (parent_class)->query (sink, query);
   }
 
   return res;
