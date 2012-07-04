@@ -2840,6 +2840,7 @@ gst_video_decoder_alloc_output_frame (GstVideoDecoder *
   int num_bytes = GST_VIDEO_INFO_SIZE (&state->info);
 
   g_return_val_if_fail (num_bytes != 0, GST_FLOW_ERROR);
+  g_return_val_if_fail (frame->output_buffer == NULL, GST_FLOW_ERROR);
 
   if (G_UNLIKELY (decoder->priv->output_state_changed
           || (decoder->priv->output_state
