@@ -2923,7 +2923,8 @@ pause:
             (GST_ELEMENT_CAST (parse),
             gst_message_new_segment_done (GST_OBJECT_CAST (parse),
                 GST_FORMAT_TIME, stop));
-        gst_pad_push_event (parse->srcpad, gst_event_new_segment_done ());
+        gst_pad_push_event (parse->srcpad,
+            gst_event_new_segment_done (GST_FORMAT_TIME, stop));
       } else {
         /* If we STILL have zero frames processed, fire an error */
         if (parse->priv->framecount == 0) {

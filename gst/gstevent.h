@@ -577,7 +577,8 @@ GstEvent*       gst_event_new_toc_select        (const gchar *uid) G_GNUC_MALLOC
 void            gst_event_parse_toc_select      (GstEvent *event, gchar **uid);
 
 /* segment-done event */
-GstEvent*       gst_event_new_segment_done      (void) G_GNUC_MALLOC;
+GstEvent*       gst_event_new_segment_done      (GstFormat format, gint64 position) G_GNUC_MALLOC;
+void            gst_event_parse_segment_done    (GstEvent *event, GstFormat *format, gint64 *position);
 
 G_END_DECLS
 

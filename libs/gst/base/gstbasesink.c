@@ -3751,7 +3751,9 @@ paused:
         gst_element_post_message (GST_ELEMENT_CAST (basesink),
             gst_message_new_segment_done (GST_OBJECT_CAST (basesink),
                 basesink->segment.format, basesink->segment.position));
-        gst_base_sink_event (pad, parent, gst_event_new_segment_done ());
+        gst_base_sink_event (pad, parent,
+            gst_event_new_segment_done (basesink->segment.format,
+                basesink->segment.position));
       } else {
         gst_base_sink_event (pad, parent, gst_event_new_eos ());
       }

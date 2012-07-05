@@ -1739,7 +1739,9 @@ gst_event_parse_toc_select (GstEvent * event, gchar ** uid)
 
 /**
  * gst_event_new_segment_done:
-
+ * @format: The format of the position being done
+ * @position: The position of the segment being done
+ *
  * Create a new segment-done event. This event is sent by elements that
  * finish playback of a segment as a result of a segment seek.
  *
@@ -1748,13 +1750,48 @@ gst_event_parse_toc_select (GstEvent * event, gchar ** uid)
  * Since: 0.11.0
  */
 GstEvent *
-gst_event_new_segment_done (void)
+gst_event_new_segment_done (GstFormat format, gint64 position)
 {
   GstEvent *event;
+  GstStructure *structure;
 
   GST_CAT_INFO (GST_CAT_EVENT, "creating segment-done event");
 
-  event = gst_event_new_custom (GST_EVENT_SEGMENT_DONE, NULL);
+  structure = gst_structure_new_id (GST_QUARK (EVENT_SEGMENT_DONE),
+      GST_QUARK (FORMAT), GST_TYPE_FORMAT, format,
+      GST_QUARK (POSITION), G_TYPE_INT64, position, NULL);
+
+  event = gst_event_new_custom (GST_EVENT_SEGMENT_DONE, structure);
 
   return event;
+}
+
+/**
+ * gst_event_parse_segment_done:
+ * @event: A valid #GstEvent of type GST_EVENT_SEGMENT_DONE.
+ * @format: (out): Result location for the format, or NULL
+ * @position: (out): Result location for the position, or NULL
+ *
+ * Extracts the position and format from the segment done message.
+ *
+ */
+void
+gst_event_parse_segment_done (GstEvent * event, GstFormat * format,
+    gint64 * position)
+{
+  const GstStructure *structure;
+  const GValue *val;
+
+  g_return_if_fail (event != NULL);
+  g_return_if_fail (GST_EVENT_TYPE (event) == GST_EVENT_SEGMENT_DONE);
+
+  structure = gst_event_get_structure (event);
+
+  val = gst_structure_id_get_value (structure, GST_QUARK (FORMAT));
+  if (format != NULL)
+    *format = g_value_get_enum (val);
+
+  val = gst_structure_id_get_value (structure, GST_QUARK (POSITION));
+  if (position != NULL)
+    *position = g_value_get_int64 (val);
 }

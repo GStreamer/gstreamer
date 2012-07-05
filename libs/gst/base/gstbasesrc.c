@@ -2718,7 +2718,7 @@ pause:
             format, position);
         gst_message_set_seqnum (message, src->priv->seqnum);
         gst_element_post_message (GST_ELEMENT_CAST (src), message);
-        event = gst_event_new_segment_done ();
+        event = gst_event_new_segment_done (format, position);
         gst_event_set_seqnum (event, src->priv->seqnum);
         gst_pad_push_event (pad, event);
       } else {
