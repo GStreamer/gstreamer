@@ -763,6 +763,7 @@ tests/examples/stepping/Makefile
 tests/examples/helloworld/Makefile
 tests/examples/launch/Makefile
 tests/examples/manual/Makefile
+tests/examples/memory/Makefile
 tests/examples/metadata/Makefile
 tests/examples/queue/Makefile
 tests/examples/streams/Makefile

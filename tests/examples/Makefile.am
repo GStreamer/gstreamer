@@ -15,6 +15,7 @@ always_dirs = \
 	controller \
 	helloworld \
 	manual     \
+	memory   \
 	metadata   \
 	queue      \
 	stepping \
