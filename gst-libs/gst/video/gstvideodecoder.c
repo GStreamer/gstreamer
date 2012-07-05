@@ -2189,27 +2189,27 @@ gst_video_decoder_finish_frame (GstVideoDecoder * decoder,
     goto done;
   }
 
-  GST_BUFFER_FLAG_UNSET (frame->output_buffer, GST_BUFFER_FLAG_DELTA_UNIT);
-
-  /* set PTS and DTS to both the PTS for decoded frames */
-  GST_BUFFER_PTS (frame->output_buffer) = frame->pts;
-  GST_BUFFER_DTS (frame->output_buffer) = frame->pts;
-  GST_BUFFER_DURATION (frame->output_buffer) = frame->duration;
-
-  GST_BUFFER_OFFSET (frame->output_buffer) = GST_BUFFER_OFFSET_NONE;
-  GST_BUFFER_OFFSET_END (frame->output_buffer) = GST_BUFFER_OFFSET_NONE;
-
-  if (priv->discont) {
-    GST_BUFFER_FLAG_SET (frame->output_buffer, GST_BUFFER_FLAG_DISCONT);
-    priv->discont = FALSE;
-  }
-
   /* A reference always needs to be owned by the frame on the buffer.
    * For that reason, we use a complete sub-buffer (zero-cost) to push
    * downstream.
    * The original buffer will be free-ed only when downstream AND the
    * current implementation are done with the frame. */
   output_buffer = gst_buffer_copy (frame->output_buffer);
+
+  GST_BUFFER_FLAG_UNSET (output_buffer, GST_BUFFER_FLAG_DELTA_UNIT);
+
+  /* set PTS and DTS to both the PTS for decoded frames */
+  GST_BUFFER_PTS (output_buffer) = frame->pts;
+  GST_BUFFER_DTS (output_buffer) = frame->pts;
+  GST_BUFFER_DURATION (output_buffer) = frame->duration;
+
+  GST_BUFFER_OFFSET (output_buffer) = GST_BUFFER_OFFSET_NONE;
+  GST_BUFFER_OFFSET_END (output_buffer) = GST_BUFFER_OFFSET_NONE;
+
+  if (priv->discont) {
+    GST_BUFFER_FLAG_SET (output_buffer, GST_BUFFER_FLAG_DISCONT);
+    priv->discont = FALSE;
+  }
 
   if (decoder->output_segment.rate < 0.0) {
     GST_LOG_OBJECT (decoder, "queued frame");
