@@ -2927,7 +2927,7 @@ gst_video_decoder_negotiate_default (GstVideoDecoder * decoder)
       state->info.par_n, state->info.par_d,
       state->info.fps_n, state->info.fps_d);
 
-  if (G_UNLIKELY (state->caps == NULL))
+  if (state->caps == NULL)
     state->caps = gst_video_info_to_caps (&state->info);
 
   GST_DEBUG_OBJECT (decoder, "setting caps %" GST_PTR_FORMAT, state->caps);
