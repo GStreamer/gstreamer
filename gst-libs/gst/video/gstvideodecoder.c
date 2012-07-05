@@ -2159,6 +2159,10 @@ gst_video_decoder_drop_frame (GstVideoDecoder * dec, GstVideoCodecFrame * frame)
  * If no output data is provided, @frame is considered skipped.
  * In any case, the frame is considered finished and released.
  *
+ * After calling this function the output buffer of the frame is to be
+ * considered read-only. This function will also change the metadata
+ * of the buffer.
+ *
  * Returns: a #GstFlowReturn resulting from sending data downstream
  *
  * Since: 0.10.36
@@ -2189,12 +2193,7 @@ gst_video_decoder_finish_frame (GstVideoDecoder * decoder,
     goto done;
   }
 
-  /* A reference always needs to be owned by the frame on the buffer.
-   * For that reason, we use a complete sub-buffer (zero-cost) to push
-   * downstream.
-   * The original buffer will be free-ed only when downstream AND the
-   * current implementation are done with the frame. */
-  output_buffer = gst_buffer_copy (frame->output_buffer);
+  output_buffer = frame->output_buffer;
 
   GST_BUFFER_FLAG_UNSET (output_buffer, GST_BUFFER_FLAG_DELTA_UNIT);
 
@@ -2211,6 +2210,12 @@ gst_video_decoder_finish_frame (GstVideoDecoder * decoder,
     priv->discont = FALSE;
   }
 
+  /* Get an additional ref to the buffer, which is going to be pushed
+   * downstream, the original ref is owned by the frame
+   *
+   * FIXME: clip_and_push_buf() changes buffer metadata but the buffer
+   * might have a refcount > 1 */
+  output_buffer = gst_buffer_ref (output_buffer);
   if (decoder->output_segment.rate < 0.0) {
     GST_LOG_OBJECT (decoder, "queued frame");
     priv->output_queued = g_list_prepend (priv->output_queued, output_buffer);
@@ -2826,6 +2831,9 @@ gst_video_decoder_alloc_output_buffer (GstVideoDecoder * decoder)
  * Helper function that allocates a buffer to hold a video frame for @decoder's
  * current #GstVideoCodecState.  Subclass should already have configured video
  * state and set src pad caps.
+ *
+ * The buffer allocated here is owned by the frame and you should only
+ * keep references to the frame, not the buffer.
  *
  * Returns: %GST_FLOW_OK if an output buffer could be allocated
  *

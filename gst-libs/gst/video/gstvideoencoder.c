@@ -1328,6 +1328,10 @@ gst_video_encoder_set_src_caps (GstVideoEncoder * encoder)
  * It is subsequently pushed downstream or provided to @pre_push.
  * In any case, the frame is considered finished and released.
  *
+ * After calling this function the output buffer of the frame is to be
+ * considered read-only. This function will also change the metadata
+ * of the buffer.
+ *
  * Returns: a #GstFlowReturn resulting from sending data downstream
  *
  * Since: 0.10.36
