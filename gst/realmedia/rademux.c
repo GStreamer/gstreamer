@@ -697,6 +697,8 @@ eos:
       gst_element_post_message (GST_ELEMENT (demux),
           gst_message_new_segment_done (GST_OBJECT (demux), GST_FORMAT_TIME,
               stop));
+      gst_pad_push_event (demux->srcpad,
+          gst_event_new_segment_done (GST_FORMAT_TIME, stop));
     } else {
       /* normal playback, send EOS event downstream */
       GST_DEBUG_OBJECT (demux, "sending EOS event, at end of stream");

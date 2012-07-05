@@ -1730,6 +1730,8 @@ eos:
       gst_element_post_message (GST_ELEMENT_CAST (demux),
           gst_message_new_segment_done (GST_OBJECT (demux), GST_FORMAT_TIME,
               stop));
+      gst_asf_demux_send_event_unlocked (demux,
+          gst_event_new_segment_done (GST_FORMAT_TIME, stop));
     } else if (flow != GST_FLOW_EOS) {
       /* check if we have a chained asf, in case, we don't eos yet */
       if (gst_asf_demux_check_chained_asf (demux)) {

@@ -922,6 +922,8 @@ need_pause:
         gst_element_post_message (GST_ELEMENT (rmdemux),
             gst_message_new_segment_done (GST_OBJECT (rmdemux),
                 GST_FORMAT_TIME, stop));
+        gst_rmdemux_send_event (rmdemux,
+            gst_event_new_segment_done (GST_FORMAT_TIME, stop));
       } else {
         /* normal playback, send EOS to all linked pads */
         GST_LOG_OBJECT (rmdemux, "Sending EOS, at end of stream");
