@@ -295,6 +295,10 @@ gst_flac_parse_finalize (GObject * object)
     gst_tag_list_free (flacparse->tags);
     flacparse->tags = NULL;
   }
+  if (flacparse->toc) {
+    gst_toc_unref (flacparse->toc);
+    flacparse->toc = NULL;
+  }
 
   g_list_foreach (flacparse->headers, (GFunc) gst_mini_object_unref, NULL);
   g_list_free (flacparse->headers);
@@ -345,6 +349,10 @@ gst_flac_parse_stop (GstBaseParse * parse)
   if (flacparse->tags) {
     gst_tag_list_free (flacparse->tags);
     flacparse->tags = NULL;
+  }
+  if (flacparse->toc) {
+    gst_toc_unref (flacparse->toc);
+    flacparse->toc = NULL;
   }
 
   g_list_foreach (flacparse->headers, (GFunc) gst_mini_object_unref, NULL);
@@ -970,6 +978,108 @@ gst_flac_parse_handle_vorbiscomment (GstFlacParse * flacparse,
 }
 
 static gboolean
+gst_flac_parse_handle_cuesheet (GstFlacParse * flacparse, GstBuffer * buffer)
+{
+  GstByteReader reader;
+  GstMapInfo map;
+  guint i, j;
+  guint8 n_tracks, track_num, index;
+  guint64 offset;
+  gint64 start, stop;
+  gchar *id;
+  gchar isrc[13];
+  GstTagList *tags;
+  GstToc *toc;
+  GstTocEntry *cur_entry = NULL, *prev_entry = NULL;
+
+  gst_buffer_map (buffer, &map, GST_MAP_READ);
+  gst_byte_reader_init (&reader, map.data, map.size);
+
+  toc = gst_toc_new ();
+
+  /* skip 4 bytes METADATA_BLOCK_HEADER */
+  /* http://flac.sourceforge.net/format.html#metadata_block_header */
+  if (!gst_byte_reader_skip (&reader, 4))
+    goto error;
+
+  /* skip 395 bytes from METADATA_BLOCK_CUESHEET */
+  /* http://flac.sourceforge.net/format.html#metadata_block_cuesheet */
+  if (!gst_byte_reader_skip (&reader, 395))
+    goto error;
+
+  if (!gst_byte_reader_get_uint8 (&reader, &n_tracks))
+    goto error;
+
+  /* CUESHEET_TRACK */
+  /* http://flac.sourceforge.net/format.html#cuesheet_track */
+  for (i = 0; i < n_tracks; i++) {
+    if (!gst_byte_reader_get_uint64_be (&reader, &offset))
+      goto error;
+    if (!gst_byte_reader_get_uint8 (&reader, &track_num))
+      goto error;
+    if (!gst_byte_reader_skip (&reader, 12))
+      goto error;
+    memcpy (isrc, map.data + gst_byte_reader_get_pos (&reader), 12);
+    /* skip 14 bytes from CUESHEET_TRACK */
+    if (!gst_byte_reader_skip (&reader, 14))
+      goto error;
+    if (!gst_byte_reader_get_uint8 (&reader, &index))
+      goto error;
+    /* add tracks in TOC */
+    /* lead-out tack has number 170 or 255 */
+    if (track_num != 170 && track_num != 255) {
+      prev_entry = cur_entry;
+      /* previous track stop time = current track start time */
+      if (prev_entry != NULL) {
+        gst_toc_entry_get_start_stop_times (prev_entry, &start, NULL);
+        stop =
+            gst_util_uint64_scale_round (offset, GST_SECOND,
+            flacparse->samplerate);
+        gst_toc_entry_set_start_stop_times (prev_entry, start, stop);
+      }
+      id = g_strdup_printf ("%08x", track_num);
+      cur_entry = gst_toc_entry_new (GST_TOC_ENTRY_TYPE_TRACK, id);
+      g_free (id);
+      start =
+          gst_util_uint64_scale_round (offset, GST_SECOND,
+          flacparse->samplerate);
+      gst_toc_entry_set_start_stop_times (cur_entry, start, -1);
+      /* add ISRC as tag in track */
+      if (strlen (isrc) != 0) {
+        tags = gst_tag_list_new_empty ();
+        gst_tag_list_add (tags, GST_TAG_MERGE_APPEND, GST_TAG_ISRC, isrc, NULL);
+        gst_toc_entry_set_tags (cur_entry, tags);
+      }
+      gst_toc_append_entry (toc, cur_entry);
+      /* CUESHEET_TRACK_INDEX */
+      /* http://flac.sourceforge.net/format.html#cuesheet_track_index */
+      for (j = 0; j < index; j++) {
+        if (!gst_byte_reader_skip (&reader, 12))
+          goto error;
+      }
+    } else {
+      /* set stop time in last track */
+      stop =
+          gst_util_uint64_scale_round (offset, GST_SECOND,
+          flacparse->samplerate);
+      gst_toc_entry_set_start_stop_times (cur_entry, start, stop);
+    }
+  }
+
+  /* send data as TOC */
+  if (!flacparse->toc)
+    flacparse->toc = toc;
+
+  gst_buffer_unmap (buffer, &map);
+  return TRUE;
+
+error:
+  GST_ERROR_OBJECT (flacparse, "Error reading data");
+  gst_buffer_unmap (buffer, &map);
+  return FALSE;
+}
+
+static gboolean
 gst_flac_parse_handle_picture (GstFlacParse * flacparse, GstBuffer * buffer)
 {
   GstByteReader reader;
@@ -1391,13 +1501,16 @@ gst_flac_parse_parse_frame (GstBaseParse * parse, GstBaseParseFrame * frame,
         if (!gst_flac_parse_handle_vorbiscomment (flacparse, sbuffer))
           goto cleanup;
         break;
+      case 5:                  /* CUESHEET */
+        if (!gst_flac_parse_handle_cuesheet (flacparse, sbuffer))
+          goto cleanup;
+        break;
       case 6:                  /* PICTURE */
         if (!gst_flac_parse_handle_picture (flacparse, sbuffer))
           goto cleanup;
         break;
       case 1:                  /* PADDING */
       case 2:                  /* APPLICATION */
-      case 5:                  /* CUESHEET */
       default:                 /* RESERVED */
         break;
     }
@@ -1515,6 +1628,12 @@ gst_flac_parse_pre_push_frame (GstBaseParse * parse, GstBaseParseFrame * frame)
     gst_pad_push_event (GST_BASE_PARSE_SRC_PAD (flacparse),
         gst_event_new_tag ("GstParser", flacparse->tags));
     flacparse->tags = NULL;
+  }
+  /* Push toc */
+  if (flacparse->toc) {
+    gst_pad_push_event (GST_BASE_PARSE_SRC_PAD (flacparse),
+        gst_event_new_toc (flacparse->toc, FALSE));
+    flacparse->toc = NULL;
   }
 
   frame->flags |= GST_BASE_PARSE_FRAME_FLAG_CLIP;

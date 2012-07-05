@@ -77,6 +77,7 @@ struct _GstFlacParse {
   gboolean strategy_checked;
 
   GstTagList *tags;
+  GstToc *toc;
 
   GList *headers;
   GstBuffer *seektable;
