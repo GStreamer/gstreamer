@@ -414,10 +414,10 @@ GstAllocator * gst_allocator_find            (const gchar *name);
 void           gst_allocator_set_default     (GstAllocator * allocator);
 
 /* allocating memory blocks */
-void           gst_allocation_params_init     (GstAllocationParams *params);
+void           gst_allocation_params_init    (GstAllocationParams *params);
 GstAllocationParams *
-               gst_allocation_params_copy     (const GstAllocationParams *params) G_GNUC_MALLOC;
-void           gst_allocation_params_free     (GstAllocationParams *params);
+               gst_allocation_params_copy    (const GstAllocationParams *params) G_GNUC_MALLOC;
+void           gst_allocation_params_free    (GstAllocationParams *params);
 
 GstMemory *    gst_allocator_alloc           (GstAllocator * allocator, gsize size,
                                               GstAllocationParams *params);
@@ -425,6 +425,11 @@ GstMemory *    gst_allocator_alloc           (GstAllocator * allocator, gsize si
 GstMemory *    gst_memory_new_wrapped  (GstMemoryFlags flags, gpointer data, gsize maxsize,
                                         gsize offset, gsize size, gpointer user_data,
                                         GDestroyNotify notify);
+
+void           gst_memory_init         (GstMemory *mem, GstMemoryFlags flags,
+                                        GstAllocator *allocator, GstMemory *parent,
+                                        gsize maxsize, gsize align,
+                                        gsize offset, gsize size);
 
 /* refcounting */
 /**

@@ -127,47 +127,83 @@ static GstAllocator *_default_mem_impl;
 static GstMemory *
 _gst_memory_copy (GstMemory * mem)
 {
+  GST_CAT_DEBUG (GST_CAT_MEMORY, "copy memory %p", mem);
   return gst_memory_copy (mem, 0, -1);
 }
 
 static void
 _gst_memory_free (GstMemory * mem)
 {
+  GST_CAT_DEBUG (GST_CAT_MEMORY, "free memory %p", mem);
+
+  if (mem->parent) {
+    gst_memory_unlock (mem->parent, GST_LOCK_FLAG_EXCLUSIVE);
+    gst_memory_unref (mem->parent);
+  }
+
   mem->allocator->info.mem_free (mem);
 }
 
-/* initialize the fields */
-static void
-_default_mem_init (GstMemoryDefault * mem, GstMemoryFlags flags,
-    GstMemory * parent, gsize slice_size, gpointer data,
-    gsize maxsize, gsize offset, gsize size, gsize align,
-    gpointer user_data, GDestroyNotify notify)
+/**
+ * gst_memory_init: (skip)
+ * @mem: a #GstMemory
+ * @flags: #GstMemoryFlags
+ * @allocator: the #GstAllocator
+ * @parent: the parent of @mem
+ * @maxsize: the total size of the memory
+ * @align: the alignment of the memory
+ * @offset: The offset in the memory
+ * @size: the size of valid data in the memory
+
+ * Initializes a newly allocated @mem with the given parameters. This function
+ * will call gst_mini_object_init() with the default memory parameters.
+ */
+void
+gst_memory_init (GstMemory * mem, GstMemoryFlags flags,
+    GstAllocator * allocator, GstMemory * parent, gsize maxsize, gsize align,
+    gsize offset, gsize size)
 {
   gst_mini_object_init (GST_MINI_OBJECT_CAST (mem),
       flags | GST_MINI_OBJECT_FLAG_LOCKABLE, GST_TYPE_MEMORY,
       (GstMiniObjectCopyFunction) _gst_memory_copy, NULL,
       (GstMiniObjectFreeFunction) _gst_memory_free);
 
-  mem->mem.allocator = _default_mem_impl;
-  mem->mem.parent = parent ? gst_memory_ref (parent) : NULL;
-  mem->mem.maxsize = maxsize;
-  mem->mem.align = align;
-  mem->mem.offset = offset;
-  mem->mem.size = size;
-  mem->slice_size = slice_size;
-  mem->data = data;
-  mem->user_data = user_data;
-  mem->notify = notify;
+  mem->allocator = allocator;
+  if (parent) {
+    gst_memory_lock (parent, GST_LOCK_FLAG_EXCLUSIVE);
+    gst_memory_ref (parent);
+  }
+  mem->parent = parent;
+  mem->maxsize = maxsize;
+  mem->align = align;
+  mem->offset = offset;
+  mem->size = size;
 
   GST_CAT_DEBUG (GST_CAT_MEMORY, "new memory %p, maxsize:%" G_GSIZE_FORMAT
       " offset:%" G_GSIZE_FORMAT " size:%" G_GSIZE_FORMAT, mem, maxsize,
       offset, size);
 }
 
+/* initialize the fields */
+static inline void
+_default_mem_init (GstMemoryDefault * mem, GstMemoryFlags flags,
+    GstMemory * parent, gsize slice_size, gpointer data,
+    gsize maxsize, gsize align, gsize offset, gsize size,
+    gpointer user_data, GDestroyNotify notify)
+{
+  gst_memory_init (GST_MEMORY_CAST (mem),
+      flags, _default_mem_impl, parent, maxsize, align, offset, size);
+
+  mem->slice_size = slice_size;
+  mem->data = data;
+  mem->user_data = user_data;
+  mem->notify = notify;
+}
+
 /* create a new memory block that manages the given memory */
-static GstMemoryDefault *
+static inline GstMemoryDefault *
 _default_mem_new (GstMemoryFlags flags, GstMemory * parent, gpointer data,
-    gsize maxsize, gsize offset, gsize size, gsize align, gpointer user_data,
+    gsize maxsize, gsize align, gsize offset, gsize size, gpointer user_data,
     GDestroyNotify notify)
 {
   GstMemoryDefault *mem;
@@ -177,7 +213,7 @@ _default_mem_new (GstMemoryFlags flags, GstMemory * parent, gpointer data,
 
   mem = g_slice_alloc (slice_size);
   _default_mem_init (mem, flags, parent, slice_size,
-      data, maxsize, offset, size, align, user_data, notify);
+      data, maxsize, align, offset, size, user_data, notify);
 
   return mem;
 }
@@ -219,7 +255,7 @@ _default_mem_new_block (GstMemoryFlags flags, gsize maxsize, gsize align,
     memset (data + offset + size, 0, padding);
 
   _default_mem_init (mem, flags, NULL, slice_size, data, maxsize,
-      offset, size, align, NULL, NULL);
+      align, offset, size, NULL, NULL);
 
   return mem;
 }
@@ -249,11 +285,6 @@ _default_mem_unmap (GstMemoryDefault * mem)
 static void
 _default_mem_free (GstMemoryDefault * mem)
 {
-  GST_CAT_DEBUG (GST_CAT_MEMORY, "free memory %p", mem);
-
-  if (mem->mem.parent)
-    gst_memory_unref (mem->mem.parent);
-
   if (mem->notify)
     mem->notify (mem->user_data);
 
@@ -292,10 +323,11 @@ _default_mem_share (GstMemoryDefault * mem, gssize offset, gsize size)
   if (size == -1)
     size = mem->mem.size - offset;
 
+  /* the shared memory is always readonly */
   sub =
-      _default_mem_new (GST_MINI_OBJECT_FLAGS (parent), parent, mem->data,
-      mem->mem.maxsize, mem->mem.offset + offset, size, mem->mem.align, NULL,
-      NULL);
+      _default_mem_new (GST_MINI_OBJECT_FLAGS (parent) |
+      GST_MINI_OBJECT_FLAG_LOCK_READONLY, parent, mem->data, mem->mem.maxsize,
+      mem->mem.align, mem->mem.offset + offset, size, NULL, NULL);
 
   return sub;
 }
@@ -424,7 +456,7 @@ gst_memory_new_wrapped (GstMemoryFlags flags, gpointer data,
   g_return_val_if_fail (offset + size <= maxsize, NULL);
 
   mem =
-      _default_mem_new (flags, NULL, data, maxsize, offset, size, 0, user_data,
+      _default_mem_new (flags, NULL, data, maxsize, 0, offset, size, user_data,
       notify);
 
   return (GstMemory *) mem;
@@ -586,7 +618,7 @@ lock_failed:
 error:
   {
     /* something went wrong, restore the orginal state again */
-    GST_CAT_ERROR (GST_CAT_MEMORY, "mem %p: map failed", mem);
+    GST_CAT_ERROR (GST_CAT_MEMORY, "mem %p: subclass map failed", mem);
     gst_memory_unlock (mem, flags);
     return FALSE;
   }
