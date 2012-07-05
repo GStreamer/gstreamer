@@ -2984,6 +2984,8 @@ pause:
         gst_element_post_message (GST_ELEMENT (parse),
             gst_message_new_segment_done (GST_OBJECT (parse), GST_FORMAT_TIME,
                 stop));
+        gst_matroska_parse_send_event (parse,
+            gst_event_new_segment_done (GST_FORMAT_TIME, stop));
       } else {
         push_eos = TRUE;
       }

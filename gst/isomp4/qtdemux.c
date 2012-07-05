@@ -3887,12 +3887,17 @@ pause:
           gst_element_post_message (GST_ELEMENT_CAST (qtdemux),
               gst_message_new_segment_done (GST_OBJECT_CAST (qtdemux),
                   GST_FORMAT_TIME, stop));
+          gst_qtdemux_push_event (qtdemux,
+              gst_event_new_segment_done (GST_FORMAT_TIME, stop));
         } else {
           /*  For Reverse Playback */
           GST_LOG_OBJECT (qtdemux, "Sending segment done, at start of segment");
           gst_element_post_message (GST_ELEMENT_CAST (qtdemux),
               gst_message_new_segment_done (GST_OBJECT_CAST (qtdemux),
                   GST_FORMAT_TIME, qtdemux->segment.start));
+          gst_qtdemux_push_event (qtdemux,
+              gst_event_new_segment_done (GST_FORMAT_TIME,
+                  qtdemux->segment.start));
         }
       } else {
         GST_LOG_OBJECT (qtdemux, "Sending EOS at end of segment");

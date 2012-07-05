@@ -4583,6 +4583,8 @@ pause:
         gst_element_post_message (GST_ELEMENT (demux),
             gst_message_new_segment_done (GST_OBJECT (demux), GST_FORMAT_TIME,
                 stop));
+        gst_matroska_demux_send_event (demux,
+            gst_event_new_segment_done (GST_FORMAT_TIME, stop));
       } else {
         push_eos = TRUE;
       }

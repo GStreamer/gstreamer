@@ -794,15 +794,20 @@ gst_image_freeze_src_loop (GstPad * pad)
   if (eos) {
     if ((self->segment.flags & GST_SEEK_FLAG_SEGMENT)) {
       GstMessage *m;
+      GstEvent *e;
 
       GST_DEBUG_OBJECT (pad, "Sending segment done at end of segment");
-      if (self->segment.rate >= 0)
+      if (self->segment.rate >= 0) {
         m = gst_message_new_segment_done (GST_OBJECT_CAST (self),
             GST_FORMAT_TIME, self->segment.stop);
-      else
+        e = gst_event_new_segment_done (GST_FORMAT_TIME, self->segment.stop);
+      } else {
         m = gst_message_new_segment_done (GST_OBJECT_CAST (self),
             GST_FORMAT_TIME, self->segment.start);
+        e = gst_event_new_segment_done (GST_FORMAT_TIME, self->segment.start);
+      }
       gst_element_post_message (GST_ELEMENT_CAST (self), m);
+      gst_pad_push_event (self->srcpad, e);
     } else {
       GST_DEBUG_OBJECT (pad, "Sending EOS at end of segment");
       gst_pad_push_event (self->srcpad, gst_event_new_eos ());

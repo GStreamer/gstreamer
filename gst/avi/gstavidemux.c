@@ -5212,6 +5212,8 @@ pause:{
             (GST_ELEMENT_CAST (avi),
             gst_message_new_segment_done (GST_OBJECT_CAST (avi),
                 GST_FORMAT_TIME, stop));
+        gst_avi_demux_push_event (avi,
+            gst_event_new_segment_done (GST_FORMAT_TIME, stop));
       } else {
         push_eos = TRUE;
       }

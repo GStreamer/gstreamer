@@ -1741,6 +1741,9 @@ pause:
         gst_element_post_message (GST_ELEMENT (dvdemux),
             gst_message_new_segment_done (GST_OBJECT_CAST (dvdemux),
                 dvdemux->time_segment.format, dvdemux->time_segment.position));
+        gst_dvdemux_push_event (dvdemux,
+            gst_event_new_segment_done (dvdemux->time_segment.format,
+                dvdemux->time_segment.position));
       } else {
         gst_dvdemux_push_event (dvdemux, gst_event_new_eos ());
       }

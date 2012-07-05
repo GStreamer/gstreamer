@@ -4119,6 +4119,9 @@ pause:
         gst_element_post_message (GST_ELEMENT_CAST (src),
             gst_message_new_segment_done (GST_OBJECT_CAST (src),
                 src->segment.format, src->segment.position));
+        gst_rtspsrc_push_event (src,
+            gst_event_new_segment_done (src->segment.format,
+                src->segment.position));
       } else {
         gst_rtspsrc_push_event (src, gst_event_new_eos ());
       }

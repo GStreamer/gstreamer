@@ -2072,6 +2072,8 @@ pause:
         gst_element_post_message (GST_ELEMENT_CAST (wav),
             gst_message_new_segment_done (GST_OBJECT_CAST (wav),
                 wav->segment.format, stop));
+        gst_pad_push_event (wav->srcpad,
+            gst_event_new_segment_done (wav->segment.format, stop));
       } else {
         gst_pad_push_event (wav->srcpad, gst_event_new_eos ());
       }
