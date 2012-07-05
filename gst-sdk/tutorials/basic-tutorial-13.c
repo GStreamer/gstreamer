@@ -69,7 +69,12 @@ static gboolean handle_keyboard (GIOChannel *source, GIOCondition cond, CustomDa
     send_seek_event (data);
     break;
   case 'n':
-    gst_element_send_event (data->pipeline,
+    if (data->video_sink == NULL) {
+      /* If we have not done so, obtain the sink through which we will send the step events */
+      g_object_get (data->pipeline, "video-sink", &data->video_sink, NULL);
+    }
+    
+    gst_element_send_event (data->video_sink,
         gst_event_new_step (GST_FORMAT_BUFFERS, 1, data->rate, TRUE, FALSE));
     g_print ("Stepping one frame\n");
     break;
@@ -106,7 +111,8 @@ int main(int argc, char *argv[]) {
     " 'Q' to quit\n");
   
   /* Build the pipeline */
-  data.pipeline = gst_parse_launch ("playbin2 uri=http://docs.gstreamer.com/media/sintel_trailer-480p.webm", NULL);
+//  data.pipeline = gst_parse_launch ("playbin2 uri=http://docs.gstreamer.com/media/sintel_trailer-480p.webm", NULL);
+  data.pipeline = gst_parse_launch ("playbin2 uri=file:///f:/media/sintel/sintel_trailer-480p.webm", NULL);
   
   /* Add a keyboard watch so we get notified of keystrokes */
 #ifdef _WIN32
