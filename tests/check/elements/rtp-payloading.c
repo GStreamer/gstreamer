@@ -478,8 +478,8 @@ static int rtp_h263p_frame_count = 1;
 GST_START_TEST (rtp_h263p)
 {
   rtp_pipeline_test (rtp_h263p_frame_data, rtp_h263p_frame_data_size,
-      rtp_h263p_frame_count, "video/x-h263,variant=(string)itu", "rtph263ppay",
-      "rtph263pdepay", 0, 0, FALSE);
+      rtp_h263p_frame_count, "video/x-h263,variant=(string)itu,"
+      "h263version=(string)h263", "rtph263ppay", "rtph263pdepay", 0, 0, FALSE);
 }
 
 GST_END_TEST;
