@@ -29,7 +29,7 @@ mplex            libmplex         (http://mjpeg.sourceforge.net/)
 siddec           libsidplay 1.36  (http://www.geocities.com/SiliconValley/Lakes/5147/sidplay/,
                                    http://sourceforge.net/projects/sidplay2/)
 trm              libmusicbrainz   (http://www.musicbrainz.org/)
-xine             libxine          (http://xinehq.de/)
+x264             libx264          (http://http://www.videolan.org/developers/x264.html)
 xvid             libxvidcore      (http://www.xvid.org/)
 
 Plugins derived from GPL code are as follows:
@@ -64,7 +64,6 @@ gst1394          libraw1394       (http://www.linux1394.org/)
 gstaf            libaudiofile     (http://www.68k.org/~michael/audiofile/)
 gstsf            libsndfile       (http://www.mega-nerd.com/libsndfile/)
 hermescolorspace Hermes           (http://www.clanlib.org/hermes/)
-kio              KDE              (http://www.kde.org/)
 ladspa                            (http://www.ladspa.org/)
 lame             libmp3lame       (http://lame.sourceforge.net/)
 libvisual        libvisual        (http://libvisual.sourceforge.net/)
