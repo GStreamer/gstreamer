@@ -1485,6 +1485,8 @@ pause:
         gst_element_post_message (GST_ELEMENT (demux),
             gst_message_new_segment_done (GST_OBJECT (demux),
                 demux->segment.format, stop));
+        gst_ffmpegdemux_push_event (demux,
+            gst_event_new_segment_done (demux->segment.format, stop));
       } else {
         GST_LOG_OBJECT (demux, "pushing eos");
         gst_ffmpegdemux_push_event (demux, gst_event_new_eos ());
