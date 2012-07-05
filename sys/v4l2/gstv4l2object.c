@@ -2461,7 +2461,7 @@ invalid_pixelformat:
 get_parm_failed:
   {
     /* it's possible that this call is not supported */
-    if (errno != EINVAL) {
+    if (errno != EINVAL && errno != ENOTTY) {
       GST_ELEMENT_WARNING (v4l2object->element, RESOURCE, SETTINGS,
           (_("Could not get parameters on device '%s'"),
               v4l2object->videodev), GST_ERROR_SYSTEM);
