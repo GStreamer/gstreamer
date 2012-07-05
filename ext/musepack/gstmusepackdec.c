@@ -601,6 +601,8 @@ gst_musepackdec_loop (GstPad * sinkpad)
     gst_element_post_message (GST_ELEMENT (musepackdec),
         gst_message_new_segment_done (GST_OBJECT (musepackdec),
             GST_FORMAT_TIME, stop_time));
+    gst_pad_push_event (musepackdec->srcpad,
+        gst_event_new_segment_done (GST_FORMAT_TIME, stop_time));
 
     goto pause_task;
   }

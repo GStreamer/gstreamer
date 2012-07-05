@@ -2773,6 +2773,7 @@ pause:
       if (demux->segment.flags & GST_SEEK_FLAG_SEGMENT) {
         gint64 stop;
         GstMessage *m;
+        GstEvent *e;
 
         /* for segment playback we need to post when (in stream time)
          * we stopped, this is either stop (when set) or the duration. */
@@ -2784,6 +2785,9 @@ pause:
             GST_FORMAT_TIME, stop);
         gst_message_set_seqnum (m, demux->seqnum);
         gst_element_post_message (GST_ELEMENT_CAST (demux), m);
+        e = gst_event_new_segment_done (GST_FORMAT_TIME, stop);
+        gst_event_set_seqnum (e, demux->seqnum);
+        gst_mxf_demux_push_src_event (demux, e);
       } else {
         GstEvent *e;
 

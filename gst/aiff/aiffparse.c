@@ -1314,6 +1314,8 @@ pause:
         gst_element_post_message (GST_ELEMENT_CAST (aiff),
             gst_message_new_segment_done (GST_OBJECT_CAST (aiff),
                 aiff->segment.format, stop));
+        gst_pad_push_event (aiff->srcpad,
+            gst_evnet_new_segment_done (aiff->segment.format, stop));
       } else {
         gst_pad_push_event (aiff->srcpad, gst_event_new_eos ());
       }

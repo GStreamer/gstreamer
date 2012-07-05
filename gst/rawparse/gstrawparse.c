@@ -436,6 +436,8 @@ pause:
         gst_element_post_message (GST_ELEMENT_CAST (rp),
             gst_message_new_segment_done (GST_OBJECT_CAST (rp),
                 rp->segment.format, stop));
+        gst_pad_push_event (rp->srcpad,
+            gst_event_new_segment_done (rp->segment.format, stop));
       } else {
         GST_LOG_OBJECT (rp, "Sending EOS, at end of stream");
         gst_pad_push_event (rp->srcpad, gst_event_new_eos ());

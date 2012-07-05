@@ -2838,12 +2838,17 @@ pause:
           gst_element_post_message (GST_ELEMENT_CAST (demux),
               gst_message_new_segment_done (GST_OBJECT_CAST (demux),
                   GST_FORMAT_TIME, stop));
+          gst_flups_demux_send_event (demux,
+              gst_event_new_segment_done (GST_FORMAT_TIME, stop));
         } else {                /* Reverse playback */
           GST_LOG_OBJECT (demux, "Sending segment done, at beginning of "
               "segment");
           gst_element_post_message (GST_ELEMENT_CAST (demux),
               gst_message_new_segment_done (GST_OBJECT_CAST (demux),
                   GST_FORMAT_TIME, demux->src_segment.start));
+          gst_flups_demux_send_event (demux,
+              gst_event_new_segment_done (GST_FORMAT_TIME,
+                  demux->src_segment.start));
         }
       } else {
         /* normal playback, send EOS to all linked pads */
