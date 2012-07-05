@@ -58,16 +58,7 @@ timestamps for each item using gst_toc_entry_set_start_stop().
 The best way to process already created GstToc is to recursively go through
 the 'entries' and 'subentries' fields.
 
-2. Working with GstQuery
-
-GstQuery with GstToc can be created using gst_query_new_toc(). Use
-gst_query_set_toc() to set TOC into the query and parse it with
-gst_query_parse_toc(). The 'extend_uid' parameter (0 for root level) in two
-last methods should be used for TOC extending: get GstTocEntry with
-gst_toc_find_entry() by given UID and use it to add your own chapters/editions.
-The common action on such query is to set TOC for it.
-
-3. Working with GstMessage
+2. Working with GstMessage
 
 GstMessage with GstToc can be created using gst_message_new_toc() and parsed
 with gst_message_parse_toc(). The 'updated' parameter in these methods indicates
@@ -75,7 +66,7 @@ whether the TOC was just discovered (set to false) or TOC was already found and
 have been updated (set to true). The common usage for such message is to post it
 to pipeline in case you have discovered TOC data within your element.
 
-4. Working with GstEvent
+3. Working with GstEvent
 
 GstToc supports select event through GstEvent infrastructure. The idea is the
 following: when you receive TOC select event, parse it with
