@@ -127,7 +127,6 @@ GST_START_TEST (test_serializing)
   GstTagList *tags;
   GstEvent *event;
   GstMessage *message;
-  GstQuery *query;
   gboolean updated;
   gchar *uid;
   gint64 start = -1, stop = -1;
@@ -277,21 +276,6 @@ GST_START_TEST (test_serializing)
   gst_event_parse_toc_select (event, &uid);
   fail_unless_equals_string (uid, TEST_UID);
   gst_event_unref (event);
-  g_free (uid);
-
-  /* check TOC query handling */
-  query = gst_query_new_toc ();
-  fail_if (query == NULL);
-  gst_query_set_toc (query, toc, TEST_UID);
-  fail_unless (query->type == GST_QUERY_TOC);
-  ASSERT_MINI_OBJECT_REFCOUNT (GST_MINI_OBJECT (query), "GstQuery", 1);
-
-  gst_query_parse_toc (query, &test_toc, &uid);
-  fail_unless_equals_string (uid, TEST_UID);
-  fail_if (test_toc == NULL);
-  CHECK_TOC (test_toc);
-  gst_toc_unref (test_toc);
-  gst_query_unref (query);
   g_free (uid);
 
   /* FIXME: toc validation / verification should probably be done on the fly
