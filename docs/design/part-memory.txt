@@ -14,118 +14,6 @@ Requirements
    and trim.
 
 
-Allocators
-~~~~~~~~~~
-
- GstMemory objects are created by allocators. Allocators are created from
- a GstMemoryInfo structure.
-
-  struct _GstMemoryInfo {
-    const gchar              *mem_type;
-
-    GstAllocatorAllocFunction alloc;
-
-    GstMemoryMapFunction      mem_map;
-    GstMemoryUnmapFunction    mem_unmap;
-    GstMemoryFreeFunction     mem_free;
-
-    GstMemoryCopyFunction     mem_copy;
-    GstMemoryShareFunction    mem_share;
-    GstMemoryIsSpanFunction   mem_is_span;
-  };
-
- Allocators are refcounted. It is also possible to register the allocator to the
- GStreamer system. This way, the allocator can be retrieved by name.
-
- After an allocator is created, new GstMemory can be created with 
-
-   GstMemory * gst_allocator_alloc (const GstAllocator * allocator,
-                                    gsize maxsize, gsize align);
-
- The GstMemory object is a refcounted object that must be freed with
- gst_memory_unref ().
-
- It is also possible to create a new GstMemory object that wraps existing
- memory with:
-  
-   GstMemory * gst_memory_new_wrapped  (GstMemoryFlags flags,
-                                        gpointer data, gsize maxsize,
-                                        gsize offset, gsize size,
-                                        gpointer user_data,
-                                        GDestroyNotify notify);
-
-Lifecycle
-~~~~~~~~~
-
-GstMemory objects are refcounted. When the GstMemory object is first created, it
-has a refcount of 1. 
-
-Each variable holding a reference to the GstMemory object is responsible for
-updating the refcount.
-
-When the refcount reaches 0, and thus no objects hold a reference anymore, we
-can free the memory. The GstMemoryFreeFunction of the allocator will be called
-to cleanup the memory.
-
-
-Access management
------------------
-
-GstMemory objects can be shared between multiple GstBuffer objects. It is
-important that when a thread writes to the shared GstMemory that the other
-buffers don't not see the changes.
-
-We need 2 concepts:
-
- - count how many objects are sharing this GstMemory (exclusive counter)
- - control the READ/WRITE access to the GstMemory (locking)
-
-* exclusive counter
-
- Each object that wants to keep a reference to the GstMemory and doesn't want to
- see the changes from other owners of the same GstMemory needs to lock the
- GstMemory in EXCLUSIVE mode, which will increase the exclusive counter.
-
- The exclusive counter counts the amount of objects that share this GstMemory
- object. The counter is initially 0, meaning that the object is not shared with
- any object. When a GstBuffer (or other object) receives a ref to a GstMemory,
- it will lock in EXCLUSIVE mode.
-
- When the GstMemory is removed from the buffer, both the ref count and the
- exclusive counter will be decreased with gst_object_unref() and
- gst_memory_unlock () respectively.
-
-* locking
-
- All read and write access must be performed between a gst_memory_lock() and
- gst_memory_unlock() pair with the requested access method.
-
- A gst_memory_lock() can fail when a WRITE lock is requested and the exclusive
- counter is > 1. Indeed a GstMemory object with an exclusive counter > 1 is
- locked EXCLUSIVELY by at least 2 objects and is therefore not writable. 
- 
- Once the memory is locked with a certain access mode, it can be recursively
- locked with the same or narrower access mode. For example, first locking the
- memory in READWRITE mode allows you to recusively lock the memory in
- READWRITE, READ and WRITE mode. Memory locked in READ mode cannot be locked
- recursively in WRITE or READWRITE mode. 
-
- Note that multiple threads can READ lock the memory concurrently but cannot
- lock the memory in WRITE mode because the exclusive counter must be > 1.
-
- All calls to gst_memory_lock() need to be paired with one gst_memory_unlock()
- call with the same access mode. When the last refcount of the memory is
- removed, the should be no more outstanding locks.
-
-Note that a shared counter of both 0 and 1 leaves the memory writable. The
-reason is to make it easy to create and pass ownership of the memory to
-another object while keeping it the memory writable. When the memory is
-created with a shared count of 0, it is writable. When the memory is then
-added to another object, the shared count is incremented to 1 and the memory
-remains writable. The 0 share counter has a similar purpose as the floating
-reference in GObject.
-
-
 Memory layout
 ~~~~~~~~~~~~~
 
@@ -153,12 +41,67 @@ Memory layout
    void        gst_memory_resize     (GstMemory *mem, gssize offset, gsize size);
 
 
+Allocators
+~~~~~~~~~~
+
+ GstMemory objects are created by allocators. Allocators are created from
+ a GstMemoryInfo structure.
+
+  struct _GstMemoryInfo {
+    const gchar              *mem_type;
+
+    GstAllocatorAllocFunction alloc;
+
+    GstMemoryMapFunction      mem_map;
+    GstMemoryUnmapFunction    mem_unmap;
+    GstMemoryFreeFunction     mem_free;
+
+    GstMemoryCopyFunction     mem_copy;
+    GstMemoryShareFunction    mem_share;
+    GstMemoryIsSpanFunction   mem_is_span;
+  };
+
+ Allocators are refcounted. It is also possible to register the allocator to the
+ GStreamer system. This way, the allocator can be retrieved by name.
+
+ After an allocator is created, new GstMemory can be created with 
+
+   GstMemory * gst_allocator_alloc (const GstAllocator * allocator,
+                                    gsize size,
+                                    GstAllocationParams *params);
+
+ GstAllocationParams contain extra info such as flags, alignment, prefix and
+ padding.                                   
+
+ The GstMemory object is a refcounted object that must be freed with
+ gst_memory_unref ().
+
+ It is also possible to create a new GstMemory object that wraps existing
+ memory with:
+  
+   GstMemory * gst_memory_new_wrapped  (GstMemoryFlags flags,
+                                        gpointer data, gsize maxsize,
+                                        gsize offset, gsize size,
+                                        gpointer user_data,
+                                        GDestroyNotify notify);
+
+Lifecycle
+~~~~~~~~~
+
+GstMemory extends from GstMiniObject and therefore uses its lifecycle
+management (See part-miniobject.txt).
+
+
+
 Data Access
 ~~~~~~~~~~~
 
  Access to the memory region is always controlled with a map and unmap method
  call. This allows the implementation to monitor the access patterns or set up
  the required memory mappings when needed.
+
+ The access of the memory object is controlled with the locking mechanism on
+ GstMiniObject (See part-miniobject.txt).
 
  Mapping a memory region requires the caller to specify the access method: READ
  and/or WRITE. Mapping a memory region will first try to get a lock on the
@@ -170,10 +113,10 @@ Data Access
  After the data has been accessed in the object, the unmap call must be
  performed, which will unlock the memory again.
 
- It is allowed to map multiple times with different access modes. for each of
- the map calls, an corresponding unmap call needs to be made. WRITE-only memory
- cannot be mapped in READ mode and READ-only memory cannot be mapped in WRITE
- mode.
+ It is allowed to recusively map multiple times with the same or narrower
+ access modes. for each of the map calls, an corresponding unmap call needs to
+ be made. WRITE-only memory cannot be mapped in READ mode and READ-only memory
+ cannot be mapped in WRITE mode.
  
  The memory pointer returned from the map call is guaranteed to remain valid in
  the requested mapping mode until the corresponding unmap call is performed on

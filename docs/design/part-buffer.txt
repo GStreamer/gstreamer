@@ -15,10 +15,16 @@ Requirements
  - Must be able to attach artibtrary metadata to buffers
  - efficient handling of subbuffer, copy, span, trim
 
-Writability
------------
+Lifecycle
+~~~~~~~~~
 
-The Buffers is writable when the refcount is 1. This means that:
+GstMemory extends from GstMiniObject and therefore uses its lifecycle
+management (See part-miniobject.txt).
+
+Writability
+~~~~~~~~~~~
+
+When a Buffers is writable as returned from gst_buffer_is_writable():
 
  - metadata can be added/removed and the metadata can be changed
  - GstMemory blocks can be added/removed
