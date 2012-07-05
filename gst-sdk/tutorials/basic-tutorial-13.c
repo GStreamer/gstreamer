@@ -28,7 +28,7 @@ static void send_seek_event (CustomData *data) {
         GST_SEEK_TYPE_SET, position, GST_SEEK_TYPE_NONE, 0);
   } else {
     seek_event = gst_event_new_seek (data->rate, GST_FORMAT_TIME, GST_SEEK_FLAG_FLUSH | GST_SEEK_FLAG_ACCURATE,
-        GST_SEEK_TYPE_NONE, 0, GST_SEEK_TYPE_SET, position);
+        GST_SEEK_TYPE_SET, 0, GST_SEEK_TYPE_SET, position);
   }
   
   if (data->video_sink == NULL) {
