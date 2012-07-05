@@ -1736,3 +1736,25 @@ gst_event_parse_toc_select (GstEvent * event, gchar ** uid)
     *uid = g_strdup (g_value_get_string (val));
 
 }
+
+/**
+ * gst_event_new_segment_done:
+
+ * Create a new segment-done event. This event is sent by elements that
+ * finish playback of a segment as a result of a segment seek.
+ *
+ * Returns: (transfer full): a new #GstEvent
+ *
+ * Since: 0.11.0
+ */
+GstEvent *
+gst_event_new_segment_done (void)
+{
+  GstEvent *event;
+
+  GST_CAT_INFO (GST_CAT_EVENT, "creating segment-done event");
+
+  event = gst_event_new_custom (GST_EVENT_SEGMENT_DONE, NULL);
+
+  return event;
+}

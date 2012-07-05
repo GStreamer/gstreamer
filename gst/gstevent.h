@@ -98,7 +98,7 @@ typedef enum {
  *                          Since: 0.10.26
  * @GST_EVENT_EOS: End-Of-Stream. No more data is to be expected to follow
  *                 without a SEGMENT event.
- * @GST_EVENT_SEGMENT_DONE: (unimplemented) Marks the end of a segment playback.
+ * @GST_EVENT_SEGMENT_DONE: Marks the end of a segment playback.
  * @GST_EVENT_GAP: Marks a gap in the datastream.
  * @GST_EVENT_TOC: An event which indicates that a new table of contents (TOC)
  *                 was found or updated. Since: 0.10.37
@@ -575,6 +575,9 @@ GstEvent*       gst_event_new_reconfigure       (void) G_GNUC_MALLOC;
 /* TOC select event */
 GstEvent*       gst_event_new_toc_select        (const gchar *uid) G_GNUC_MALLOC;
 void            gst_event_parse_toc_select      (GstEvent *event, gchar **uid);
+
+/* segment-done event */
+GstEvent*       gst_event_new_segment_done      (void) G_GNUC_MALLOC;
 
 G_END_DECLS
 

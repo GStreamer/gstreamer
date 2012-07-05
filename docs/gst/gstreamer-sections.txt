@@ -1026,6 +1026,8 @@ gst_event_parse_toc
 
 gst_event_new_toc_select
 gst_event_parse_toc_select
+
+gst_event_new_segment_done
 <SUBSECTION Standard>
 GstEventClass
 GST_EVENT
