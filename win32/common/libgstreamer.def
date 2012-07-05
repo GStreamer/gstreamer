@@ -862,7 +862,6 @@ EXPORTS
 	gst_query_new_scheduling
 	gst_query_new_seeking
 	gst_query_new_segment
-	gst_query_new_toc
 	gst_query_new_uri
 	gst_query_parse_accept_caps
 	gst_query_parse_accept_caps_result
@@ -886,7 +885,6 @@ EXPORTS
 	gst_query_parse_scheduling
 	gst_query_parse_seeking
 	gst_query_parse_segment
-	gst_query_parse_toc
 	gst_query_parse_uri
 	gst_query_remove_nth_allocation_meta
 	gst_query_set_accept_caps_result
@@ -905,7 +903,6 @@ EXPORTS
 	gst_query_set_scheduling
 	gst_query_set_seeking
 	gst_query_set_segment
-	gst_query_set_toc
 	gst_query_set_uri
 	gst_query_type_flags_get_type
 	gst_query_type_get_flags
