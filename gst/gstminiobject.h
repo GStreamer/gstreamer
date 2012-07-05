@@ -158,7 +158,7 @@ typedef enum {
   GST_LOCK_FLAG_WRITE     = (1 << 1),
   GST_LOCK_FLAG_EXCLUSIVE = (1 << 2),
 
-  GST_LOCK_FLAG_LAST      = (1 << 4)
+  GST_LOCK_FLAG_LAST      = (1 << 8)
 } GstLockFlags;
 
 /**
