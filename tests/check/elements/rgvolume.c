@@ -25,7 +25,7 @@
 
 #include <math.h>
 
-GList *events = NULL;
+static GList *events = NULL;
 
 /* For ease of programming we use globals to keep refs for our floating src and
  * sink pads we create; otherwise we always have to do get_pad, get_peer, and
@@ -161,6 +161,43 @@ set_null_state (GstElement * element)
   fail_unless (gst_element_set_state (element,
           GST_STATE_NULL) == GST_STATE_CHANGE_SUCCESS,
       "Could not set state to NULL");
+}
+
+static void
+clear_last_event (GstEventType type)
+{
+  GList *last = g_list_last (events);
+
+  fail_unless (last != NULL);
+  fail_unless_equals_int (GST_EVENT_TYPE (last->data), type);
+  gst_event_unref (GST_EVENT (last->data));
+  events = g_list_delete_link (events, last);
+}
+
+static void
+send_flush_events (GstElement * element)
+{
+  gboolean res;
+
+  res = gst_pad_push_event (mysrcpad, gst_event_new_flush_start ());
+  fail_unless (res, "flush-start even not handled");
+  clear_last_event (GST_EVENT_FLUSH_START);
+
+  res = gst_pad_push_event (mysrcpad, gst_event_new_flush_stop (TRUE));
+  fail_unless (res, "flush-stop event not handled");
+  clear_last_event (GST_EVENT_FLUSH_STOP);
+}
+
+static void
+send_segment_event (GstElement * element)
+{
+  GstSegment segment;
+  gboolean res;
+
+  gst_segment_init (&segment, GST_FORMAT_TIME);
+  res = gst_pad_push_event (mysrcpad, gst_event_new_segment (&segment));
+  fail_unless (res, "SEGMENT event not handled");
+  clear_last_event (GST_EVENT_SEGMENT);
 }
 
 static void
@@ -399,6 +436,9 @@ GST_START_TEST (test_simple)
 
   g_object_set (element, "album-mode", TRUE, NULL);
 
+  send_flush_events (element);
+  send_segment_event (element);
+
   tag_list = gst_tag_list_new_empty ();
   gst_tag_list_add (tag_list, GST_TAG_MERGE_REPLACE,
       GST_TAG_TRACK_GAIN, -3.45, GST_TAG_TRACK_PEAK, 1.0,
@@ -442,6 +482,8 @@ GST_START_TEST (test_fallback_gain)
   send_eos_event (element);
 
   /* Now a track completely missing tags. */
+  send_flush_events (element);
+  send_segment_event (element);
 
   fail_unless_gain (element, -9.00);    /* pre-amp + fallback-gain */
 
@@ -453,6 +495,8 @@ GST_START_TEST (test_fallback_gain)
 
   /* Verify that result gain is set to +0.00 with pre-amp + fallback-gain >
    * +0.00 and no headroom. */
+  send_flush_events (element);
+  send_segment_event (element);
 
   g_object_set (element, "fallback-gain", +12.00, "headroom", +0.00, NULL);
   fail_unless_target_gain (element, +6.00);     /* pre-amp + fallback-gain */
@@ -540,6 +584,9 @@ GST_START_TEST (test_headroom)
   fail_unless_result_gain (element, +0.00);
   send_eos_event (element);
 
+  send_flush_events (element);
+  send_segment_event (element);
+
   g_object_set (element, "headroom", +2.00, NULL);
   tag_list = gst_tag_list_new_empty ();
   gst_tag_list_add (tag_list, GST_TAG_MERGE_REPLACE,
@@ -550,6 +597,9 @@ GST_START_TEST (test_headroom)
   /* Result is 20. * log10 (1. / peak) + headroom. */
   fail_unless_result_gain (element, 5.2589816238303335);
   send_eos_event (element);
+
+  send_flush_events (element);
+  send_segment_event (element);
 
   g_object_set (element, "album-mode", TRUE, NULL);
   tag_list = gst_tag_list_new_empty ();
@@ -591,6 +641,8 @@ GST_START_TEST (test_reference_level)
   g_object_set (element, "album-mode", TRUE, NULL);
 
   /* Same as above, but with album gain. */
+  send_flush_events (element);
+  send_segment_event (element);
 
   tag_list = gst_tag_list_new_empty ();
   gst_tag_list_add (tag_list, GST_TAG_MERGE_REPLACE,
