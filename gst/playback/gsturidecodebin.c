@@ -1477,7 +1477,6 @@ analyse_source (GstURIDecodeBin * decoder, gboolean * is_raw,
             sinkpad = gst_element_get_static_pad (outelem, "sink");
             gst_pad_link (pad, sinkpad);
             gst_object_unref (sinkpad);
-            gst_object_unref (pad);
 
             /* save queue pointer so we can remove it later */
             decoder->queue = outelem;
