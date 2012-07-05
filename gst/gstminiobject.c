@@ -109,10 +109,6 @@ _priv_gst_mini_object_initialize (void)
  *
  * Initializes a mini-object with the desired type and copy/dispose/free
  * functions.
- *
- * MT safe
- *
- * Returns: (transfer full): the new mini-object.
  */
 void
 gst_mini_object_init (GstMiniObject * mini_object, guint flags, GType type,
