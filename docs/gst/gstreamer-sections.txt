@@ -2254,10 +2254,6 @@ gst_query_parse_nth_scheduling_mode
 gst_query_has_scheduling_mode
 
 gst_query_new_drain
-
-gst_query_new_toc
-gst_query_parse_toc
-gst_query_set_toc
 <SUBSECTION Standard>
 GstQueryClass
 GST_QUERY

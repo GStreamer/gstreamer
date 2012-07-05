@@ -102,8 +102,6 @@ typedef enum {
  * @GST_QUERY_ACCEPT_CAPS: the accept caps query
  * @GST_QUERY_CAPS: the caps query
  * @GST_QUERY_DRAIN: wait till all serialized data is consumed downstream
- * @GST_QUERY_TOC: query the full table of contents (TOC) with the marker
- * for an entry which can be used to extend received TOC. Since 0.10.37.
  *
  * Standard predefined Query types
  */
@@ -127,8 +125,7 @@ typedef enum {
   GST_QUERY_SCHEDULING   = GST_QUERY_MAKE_TYPE (150, FLAG(UPSTREAM)),
   GST_QUERY_ACCEPT_CAPS  = GST_QUERY_MAKE_TYPE (160, FLAG(BOTH)),
   GST_QUERY_CAPS         = GST_QUERY_MAKE_TYPE (170, FLAG(BOTH)),
-  GST_QUERY_DRAIN        = GST_QUERY_MAKE_TYPE (180, FLAG(DOWNSTREAM) | FLAG(SERIALIZED)),
-  GST_QUERY_TOC          = GST_QUERY_MAKE_TYPE (190, FLAG(BOTH))
+  GST_QUERY_DRAIN        = GST_QUERY_MAKE_TYPE (180, FLAG(DOWNSTREAM) | FLAG(SERIALIZED))
 } GstQueryType;
 #undef FLAG
 
@@ -477,11 +474,6 @@ void            gst_query_parse_caps_result        (GstQuery *query, GstCaps **c
 
 /* drain query */
 GstQuery *      gst_query_new_drain                (void) G_GNUC_MALLOC;
-
-/* TOC query */
-GstQuery *      gst_query_new_toc                 (void);
-void            gst_query_set_toc                 (GstQuery *query, GstToc *toc, const gchar *extend_uid);
-void            gst_query_parse_toc               (GstQuery *query, GstToc **toc, gchar **extend_uid);
 
 G_END_DECLS
 
