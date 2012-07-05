@@ -28,12 +28,12 @@ static void send_seek_event (CustomData *data) {
         GST_SEEK_TYPE_SET, position, GST_SEEK_TYPE_NONE, 0);
   } else {
     seek_event = gst_event_new_seek (data->rate, GST_FORMAT_TIME, GST_SEEK_FLAG_FLUSH | GST_SEEK_FLAG_ACCURATE,
-        GST_SEEK_TYPE_NONE, 0, GST_SEEK_TYPE_SET, position);
+        GST_SEEK_TYPE_SET, 0, GST_SEEK_TYPE_SET, position);
   }
   
   if (data->video_sink == NULL) {
     /* If we have not done so, obtain the sink through which we will send the seek events */
-    g_object_get (data->pipeline, "video_sink", &data->video_sink, NULL);
+    g_object_get (data->pipeline, "video-sink", &data->video_sink, NULL);
   }
   
   /* Send the event */
