@@ -730,13 +730,6 @@ gst_audio_cd_src_query (GstBaseSrc * basesrc, GstQuery * query)
       gst_query_set_convert (query, src_format, src_val, dest_format, dest_val);
       break;
     }
-    case GST_QUERY_TOC:{
-      if (src->priv->toc == NULL)
-        return FALSE;
-
-      gst_query_set_toc (query, src->priv->toc, NULL);
-      break;
-    }
     default:{
       GST_DEBUG_OBJECT (src, "unhandled query, chaining up to parent class");
       return GST_BASE_SRC_CLASS (parent_class)->query (basesrc, query);
