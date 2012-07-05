@@ -366,23 +366,27 @@ print_toc_entry (gpointer data, gpointer user_data)
   GstTocEntry *entry = (GstTocEntry *) data;
   gint depth = GPOINTER_TO_INT (user_data);
   guint indent = MIN (GPOINTER_TO_UINT (user_data), MAX_INDENT);
+  GstTagList *tags;
+  GList *subentries;
   gint64 start, stop;
 
-  gst_toc_entry_get_start_stop (entry, &start, &stop);
+  gst_toc_entry_get_start_stop_times (entry, &start, &stop);
   g_print ("%*s%s: start: %" GST_TIME_FORMAT " stop: %" GST_TIME_FORMAT "\n",
-      depth, " ", gst_toc_entry_type_get_nick (entry->type),
+      depth, " ",
+      gst_toc_entry_type_get_nick (gst_toc_entry_get_entry_type (entry)),
       GST_TIME_ARGS (start), GST_TIME_ARGS (stop));
   indent += 2;
 
   /* print tags */
-  if (entry->type == GST_TOC_ENTRY_TYPE_CHAPTER)
+  tags = gst_toc_entry_get_tags (entry);
+  if (tags) {
     g_print ("%*sTags:\n", 2 * depth, " ");
-  gst_tag_list_foreach (entry->tags, print_tag_foreach,
-      GUINT_TO_POINTER (indent));
+    gst_tag_list_foreach (tags, print_tag_foreach, GUINT_TO_POINTER (indent));
+  }
 
   /* loop over sub-toc entries */
-  g_list_foreach (entry->subentries, print_toc_entry,
-      GUINT_TO_POINTER (indent));
+  subentries = gst_toc_entry_get_sub_entries (entry);
+  g_list_foreach (subentries, print_toc_entry, GUINT_TO_POINTER (indent));
 }
 
 static void
@@ -414,8 +418,11 @@ print_properties (GstDiscovererInfo * info, gint tab)
     }
   }
   if (show_toc && (toc = gst_discoverer_info_get_toc (info))) {
+    GList *entries;
+
     g_print ("%*sTOC: \n", tab + 1, " ");
-    g_list_foreach (toc->entries, print_toc_entry, GUINT_TO_POINTER (tab + 5));
+    entries = gst_toc_get_entries (toc);
+    g_list_foreach (entries, print_toc_entry, GUINT_TO_POINTER (tab + 5));
   }
 }
 
