@@ -19,7 +19,13 @@
 
 #include <gst/gst.h>
 
-/* example of an allocator that delays allocation of the memory
- * until the memory is mapped */
-void my_memory_init (void);
+/* example of an allocator that needs a custom alloc function */
+void my_vidmem_init (void);
+
+GstMemory * my_vidmem_alloc             (guint format, guint width, guint height);
+
+gboolean    my_is_vidmem                (GstMemory *mem);
+
+void        my_vidmem_get_format        (GstMemory *mem, guint *format,
+                                         guint *width, guint *height);
 
