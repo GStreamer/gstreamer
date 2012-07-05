@@ -1431,22 +1431,6 @@ gst_matroska_demux_query (GstMatroskaDemux * demux, GstPad * pad,
       GST_OBJECT_UNLOCK (demux);
       break;
     }
-
-    case GST_QUERY_TOC:
-    {
-      GstToc *toc = NULL;
-
-      GST_OBJECT_LOCK (demux);
-      if (demux->common.toc) {
-        toc = demux->common.toc;
-        res = TRUE;
-      } else {
-        res = FALSE;
-      }
-      gst_query_set_toc (query, toc, 0);
-      GST_OBJECT_UNLOCK (demux);
-      break;
-    }
     default:
       res = gst_pad_query_default (pad, (GstObject *) demux, query);
       break;
