@@ -4485,6 +4485,11 @@ pause:
         gst_message_set_seqnum (message, ogg->seqnum);
 
         gst_element_post_message (GST_ELEMENT (ogg), message);
+
+        event = gst_event_new_segment_done (GST_FORMAT_TIME, stop);
+        gst_event_set_seqnum (event, ogg->seqnum);
+        gst_ogg_demux_send_event (ogg, event);
+        event = NULL;
       } else {
         /* normal playback, send EOS to all linked pads */
         GST_LOG_OBJECT (ogg, "Sending EOS, at end of stream");

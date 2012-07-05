@@ -1252,6 +1252,8 @@ pause:
         gst_element_post_message (GST_ELEMENT_CAST (demux),
             gst_message_new_segment_done (GST_OBJECT_CAST (demux),
                 GST_FORMAT_BYTES, stop));
+        gst_pad_push_event (demux->priv->srcpad,
+            gst_event_new_segment_done (GST_FORMAT_BYTES, stop));
       } else {
         push_eos = TRUE;
       }
