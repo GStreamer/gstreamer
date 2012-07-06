@@ -349,7 +349,7 @@ gst_aasink_propose_allocation (GstBaseSink * bsink, GstQuery * query)
   gst_query_add_allocation_pool (query, NULL, size, 2, 0);
 
   /* we support various metadata */
-  gst_query_add_allocation_meta (query, GST_VIDEO_META_API_TYPE, 0);
+  gst_query_add_allocation_meta (query, GST_VIDEO_META_API_TYPE, NULL);
 
   return TRUE;
 
