@@ -1,8 +1,3 @@
-#include <stdlib.h>
-#include <string.h>
-#include <unistd.h>
-#include <sys/times.h>
-
 #include <gst/gst.h>
 
 #include "my-memory.h"
