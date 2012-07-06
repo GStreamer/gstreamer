@@ -25,6 +25,7 @@
 #endif
 #include <gst/gst.h>
 #include <gst/check/gstcheck.h>
+#include <gst/check/gstconsistencychecker.h>
 #include <gst/base/gstbasesrc.h>
 
 static GstPadProbeReturn
@@ -54,6 +55,7 @@ GST_START_TEST (basesrc_eos_events_push_live_op)
   GstBus *bus;
   GstPad *srcpad;
   guint probe, num_eos = 0;
+  GstStreamConsistency *consistency;
 
   pipe = gst_pipeline_new ("pipeline");
   sink = gst_element_factory_make ("fakesink", "sink");
@@ -77,6 +79,8 @@ GST_START_TEST (basesrc_eos_events_push_live_op)
   /* set up event probe to count EOS events */
   srcpad = gst_element_get_static_pad (src, "src");
   fail_unless (srcpad != NULL);
+
+  consistency = gst_consistency_checker_new (srcpad);
 
   probe = gst_pad_add_probe (srcpad, GST_PAD_PROBE_TYPE_EVENT_BOTH,
       (GstPadProbeCallback) eos_event_counter, &num_eos, NULL);
@@ -108,6 +112,8 @@ GST_START_TEST (basesrc_eos_events_push_live_op)
   /* make sure source hasn't sent a second one when going PAUSED => READY */
   fail_unless (num_eos == 1);
 
+  gst_consistency_checker_free (consistency);
+
   gst_pad_remove_probe (srcpad, probe);
   gst_object_unref (srcpad);
   gst_message_unref (msg);
@@ -131,6 +137,7 @@ GST_START_TEST (basesrc_eos_events_push)
   GstBus *bus;
   GstPad *srcpad;
   guint probe, num_eos = 0;
+  GstStreamConsistency *consistency;
 
   pipe = gst_pipeline_new ("pipeline");
   sink = gst_element_factory_make ("fakesink", "sink");
@@ -156,6 +163,8 @@ GST_START_TEST (basesrc_eos_events_push)
   srcpad = gst_element_get_static_pad (src, "src");
   fail_unless (srcpad != NULL);
 
+  consistency = gst_consistency_checker_new (srcpad);
+
   probe = gst_pad_add_probe (srcpad, GST_PAD_PROBE_TYPE_EVENT_BOTH,
       (GstPadProbeCallback) eos_event_counter, &num_eos, NULL);
 
@@ -178,6 +187,8 @@ GST_START_TEST (basesrc_eos_events_push)
 
   /* make sure source hasn't sent a second one when going PAUSED => READY */
   fail_unless (num_eos == 1);
+
+  gst_consistency_checker_free (consistency);
 
   gst_pad_remove_probe (srcpad, probe);
   gst_object_unref (srcpad);
