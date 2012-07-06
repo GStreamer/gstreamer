@@ -46,10 +46,8 @@
  * By using this, it will buffer the entire stream data on the file independently
  * of the queue size limits, they will only be used for buffering statistics.
  *
- * Since 0.10.24, setting the temp-location property with a filename is deprecated
- * because it's impossible to securely open a temporary file in this way. The
- * property will still be used to notify the application of the allocated
- * filename, though.
+ * The temp-location property will be used to notify the application of the
+ * allocated filename.
  *
  * Last reviewed on 2009-07-10 (0.10.24)
  */
@@ -98,7 +96,7 @@ enum
 
 /* other defines */
 #define DEFAULT_BUFFER_SIZE 4096
-#define QUEUE_IS_USING_TEMP_FILE(queue) ((queue)->temp_location_set || (queue)->temp_template != NULL)
+#define QUEUE_IS_USING_TEMP_FILE(queue) ((queue)->temp_template != NULL)
 #define QUEUE_IS_USING_RING_BUFFER(queue) ((queue)->ring_buffer_max_size != 0)  /* for consistency with the above macro */
 #define QUEUE_IS_USING_QUEUE(queue) (!QUEUE_IS_USING_TEMP_FILE(queue) && !QUEUE_IS_USING_RING_BUFFER (queue))
 
@@ -334,9 +332,9 @@ gst_queue2_class_init (GstQueue2Class * klass)
 
   g_object_class_install_property (gobject_class, PROP_TEMP_LOCATION,
       g_param_spec_string ("temp-location", "Temporary File Location",
-          "Location to store temporary files in (Deprecated: Only read this "
-          "property, use temp-template to configure the name template)",
-          NULL, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+          "Location to store temporary files in (Only read this property, "
+          "use temp-template to configure the name template)",
+          NULL, G_PARAM_READABLE | G_PARAM_STATIC_STRINGS));
 
   /**
    * GstQueue2:temp-remove
@@ -451,7 +449,6 @@ gst_queue2_init (GstQueue2 * queue)
   /* tempfile related */
   queue->temp_template = NULL;
   queue->temp_location = NULL;
-  queue->temp_location_set = FALSE;
   queue->temp_remove = DEFAULT_TEMP_REMOVE;
 
   queue->ring_buffer = NULL;
@@ -1374,45 +1371,34 @@ gst_queue2_open_temp_location_file (GstQueue2 * queue)
 
   GST_DEBUG_OBJECT (queue, "opening temp file %s", queue->temp_template);
 
-  /* we have two cases:
-   * - temp_location was set to something !NULL (Deprecated). in this case we
-   *   open the specified filename.
-   * - temp_template was set, allocate a filename and open that filename
-   */
-  if (!queue->temp_location_set) {
-    /* nothing to do */
-    if (queue->temp_template == NULL)
-      goto no_directory;
+  /* If temp_template was set, allocate a filename and open that filen */
 
-    /* make copy of the template, we don't want to change this */
-    name = g_strdup (queue->temp_template);
-    fd = g_mkstemp (name);
-    if (fd == -1)
-      goto mkstemp_failed;
+  /* nothing to do */
+  if (queue->temp_template == NULL)
+    goto no_directory;
 
-    /* open the file for update/writing */
-    queue->temp_file = fdopen (fd, "wb+");
-    /* error creating file */
-    if (queue->temp_file == NULL)
-      goto open_failed;
+  /* make copy of the template, we don't want to change this */
+  name = g_strdup (queue->temp_template);
+  fd = g_mkstemp (name);
+  if (fd == -1)
+    goto mkstemp_failed;
 
-    g_free (queue->temp_location);
-    queue->temp_location = name;
+  /* open the file for update/writing */
+  queue->temp_file = fdopen (fd, "wb+");
+  /* error creating file */
+  if (queue->temp_file == NULL)
+    goto open_failed;
 
-    GST_QUEUE2_MUTEX_UNLOCK (queue);
+  g_free (queue->temp_location);
+  queue->temp_location = name;
 
-    /* we can't emit the notify with the lock */
-    g_object_notify (G_OBJECT (queue), "temp-location");
+  GST_QUEUE2_MUTEX_UNLOCK (queue);
 
-    GST_QUEUE2_MUTEX_LOCK (queue);
-  } else {
-    /* open the file for update/writing, this is deprecated but we still need to
-     * support it for API/ABI compatibility */
-    queue->temp_file = g_fopen (queue->temp_location, "wb+");
-    /* error creating file */
-    if (queue->temp_file == NULL)
-      goto open_failed;
-  }
+  /* we can't emit the notify with the lock */
+  g_object_notify (G_OBJECT (queue), "temp-location");
+
+  GST_QUEUE2_MUTEX_LOCK (queue);
+
   GST_DEBUG_OBJECT (queue, "opened temp file %s", queue->temp_template);
 
   return TRUE;
@@ -3198,13 +3184,6 @@ gst_queue2_set_property (GObject * object,
       break;
     case PROP_TEMP_TEMPLATE:
       gst_queue2_set_temp_template (queue, g_value_get_string (value));
-      break;
-    case PROP_TEMP_LOCATION:
-      g_free (queue->temp_location);
-      queue->temp_location = g_value_dup_string (value);
-      /* you can set the property back to NULL to make it use the temp-template
-       * property. */
-      queue->temp_location_set = queue->temp_location != NULL;
       break;
     case PROP_TEMP_REMOVE:
       queue->temp_remove = g_value_get_boolean (value);
