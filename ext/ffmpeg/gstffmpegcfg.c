@@ -401,11 +401,6 @@ gst_ffmpeg_cfg_init (void)
       G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS);
   gst_ffmpeg_add_pspec (pspec, quantizer, FALSE, mpeg, NULL);
 
-  pspec = g_param_spec_string ("statsfile", "Statistics Filename",
-      "Filename to store data for 2-pass encoding (deprecated, use multipass-cache-file)",
-      "stats.log", G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS);
-  gst_ffmpeg_add_pspec (pspec, filename, FALSE, mpeg, NULL);
-
   pspec = g_param_spec_string ("multipass-cache-file", "Multipass Cache File",
       "Filename for multipass cache file", "stats.log",
       G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS);
@@ -486,16 +481,6 @@ gst_ffmpeg_cfg_init (void)
       "Maximum Quantizer Difference between frames",
       1, 31, 3, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS);
   gst_ffmpeg_add_pspec (pspec, config.max_qdiff, FALSE, mpeg, NULL);
-
-  pspec = g_param_spec_int ("mb-qmin", "Minimum MB Quantizer (DEPRECATED)",
-      "Minimum MB Quantizer (DEPRECATED, use qmin instead)", 0, 31, 2,
-      G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS);
-  gst_ffmpeg_add_pspec (pspec, config.qmin, FALSE, mpeg, NULL);
-
-  pspec = g_param_spec_int ("mb-qmax", "Maximum MB Quantizer (DEPRECATED)",
-      "Maximum MB Quantizer (DEPRECATED, use qmax instead)", 0, 31, 31,
-      G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS);
-  gst_ffmpeg_add_pspec (pspec, config.qmax, FALSE, mpeg, NULL);
 
   pspec = g_param_spec_int ("lmin", "Minimum Lagrange Multiplier",
       "Minimum Lagrange Multiplier", 1, 31, 2,
