@@ -427,9 +427,10 @@ void            gst_query_set_nth_allocation_param   (GstQuery *query, guint ind
                                                       const GstAllocationParams *params);
 
 /* metadata */
-void            gst_query_add_allocation_meta        (GstQuery *query, GType api, guint flags);
+void            gst_query_add_allocation_meta        (GstQuery *query, GType api, GstStructure *params);
 guint           gst_query_get_n_allocation_metas     (GstQuery *query);
-GType           gst_query_parse_nth_allocation_meta  (GstQuery *query, guint index, guint *flags);
+GType           gst_query_parse_nth_allocation_meta  (GstQuery *query, guint index,
+                                                      const GstStructure **params);
 void            gst_query_remove_nth_allocation_meta (GstQuery *query, guint index);
 gboolean        gst_query_find_allocation_meta       (GstQuery *query, GType api, guint *index);
 

@@ -226,7 +226,7 @@ struct _GstBaseTransformClass {
   /* decide allocation query for output buffers */
   gboolean      (*decide_allocation)  (GstBaseTransform *trans, GstQuery *query);
   gboolean      (*filter_meta)        (GstBaseTransform *trans, GstQuery *query,
-                                       GType api, guint flags);
+                                       GType api, const GstStructure *params);
 
   /* propose allocation query parameters for input buffers */
   gboolean      (*propose_allocation) (GstBaseTransform *trans, GstQuery *decide_query,

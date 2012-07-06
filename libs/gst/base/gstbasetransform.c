@@ -813,10 +813,10 @@ gst_base_transform_default_decide_allocation (GstBaseTransform * trans,
   n_metas = gst_query_get_n_allocation_metas (query);
   for (i = 0; i < n_metas; i++) {
     GType api;
-    guint flags;
+    const GstStructure *params;
     gboolean remove;
 
-    api = gst_query_parse_nth_allocation_meta (query, i, &flags);
+    api = gst_query_parse_nth_allocation_meta (query, i, &params);
 
     /* by default we remove all metadata, subclasses should implement a
      * filter_meta function */
@@ -828,7 +828,7 @@ gst_base_transform_default_decide_allocation (GstBaseTransform * trans,
       remove = TRUE;
     } else if (G_LIKELY (klass->filter_meta)) {
       /* remove if the subclass said so */
-      remove = !klass->filter_meta (trans, query, api, flags);
+      remove = !klass->filter_meta (trans, query, api, params);
       GST_LOG_OBJECT (trans, "filter_meta for api %s returned: %s",
           g_type_name (api), (remove ? "remove" : "keep"));
     } else {
@@ -1369,11 +1369,11 @@ gst_base_transform_default_propose_allocation (GstBaseTransform * trans,
     n_metas = gst_query_get_n_allocation_metas (decide_query);
     for (i = 0; i < n_metas; i++) {
       GType api;
-      guint flags;
+      const GstStructure *params;
 
-      api = gst_query_parse_nth_allocation_meta (decide_query, i, &flags);
+      api = gst_query_parse_nth_allocation_meta (decide_query, i, &params);
       GST_DEBUG_OBJECT (trans, "proposing metadata %s", g_type_name (api));
-      gst_query_add_allocation_meta (query, api, flags);
+      gst_query_add_allocation_meta (query, api, gst_structure_copy (params));
     }
     ret = TRUE;
   }

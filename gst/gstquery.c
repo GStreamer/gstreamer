@@ -1661,19 +1661,27 @@ gst_query_set_nth_allocation_pool (GstQuery * query, guint index,
 typedef struct
 {
   GType api;
-  guint flags;
+  GstStructure *params;
 } AllocationMeta;
+
+static void
+allocation_meta_free (AllocationMeta * am)
+{
+  if (am->params)
+    gst_structure_free (am->params);
+}
 
 /**
  * gst_query_add_allocation_meta:
  * @query: a GST_QUERY_ALLOCATION type query #GstQuery
  * @api: the metadata API
- * @flags: API specific flags
+ * @params: (transfer full) (allow-none): API specific parameters
  *
- * Add @api with @flags as one of the supported metadata API to @query.
+ * Add @api with @params as one of the supported metadata API to @query.
  */
 void
-gst_query_add_allocation_meta (GstQuery * query, GType api, guint flags)
+gst_query_add_allocation_meta (GstQuery * query, GType api,
+    GstStructure * params)
 {
   GArray *array;
   GstStructure *structure;
@@ -1685,10 +1693,11 @@ gst_query_add_allocation_meta (GstQuery * query, GType api, guint flags)
 
   structure = GST_QUERY_STRUCTURE (query);
   array =
-      ensure_array (structure, GST_QUARK (META), sizeof (AllocationMeta), NULL);
+      ensure_array (structure, GST_QUARK (META), sizeof (AllocationMeta),
+      (GDestroyNotify) allocation_meta_free);
 
   am.api = api;
-  am.flags = flags;
+  am.params = params;
 
   g_array_append_val (array, am);
 }
@@ -1712,7 +1721,8 @@ gst_query_get_n_allocation_metas (GstQuery * query)
 
   structure = GST_QUERY_STRUCTURE (query);
   array =
-      ensure_array (structure, GST_QUARK (META), sizeof (AllocationMeta), NULL);
+      ensure_array (structure, GST_QUARK (META), sizeof (AllocationMeta),
+      (GDestroyNotify) allocation_meta_free);
 
   return array->len;
 }
@@ -1721,7 +1731,7 @@ gst_query_get_n_allocation_metas (GstQuery * query)
  * gst_query_parse_nth_allocation_meta:
  * @query: a GST_QUERY_ALLOCATION type query #GstQuery
  * @index: position in the metadata API array to read
- * @flags: (out) (allow-none): API specific flags
+ * @params: (out) (allow-none): API specific flags
  *
  * Parse an available query and get the metadata API
  * at @index of the metadata API array.
@@ -1730,7 +1740,7 @@ gst_query_get_n_allocation_metas (GstQuery * query)
  */
 GType
 gst_query_parse_nth_allocation_meta (GstQuery * query, guint index,
-    guint * flags)
+    const GstStructure ** params)
 {
   GArray *array;
   GstStructure *structure;
@@ -1740,14 +1750,15 @@ gst_query_parse_nth_allocation_meta (GstQuery * query, guint index,
 
   structure = GST_QUERY_STRUCTURE (query);
   array =
-      ensure_array (structure, GST_QUARK (META), sizeof (AllocationMeta), NULL);
+      ensure_array (structure, GST_QUARK (META), sizeof (AllocationMeta),
+      (GDestroyNotify) allocation_meta_free);
 
   g_return_val_if_fail (index < array->len, 0);
 
   am = &g_array_index (array, AllocationMeta, index);
 
-  if (flags)
-    *flags = am->flags;
+  if (params)
+    *params = am->params;
 
   return am->api;
 }
@@ -1770,7 +1781,8 @@ gst_query_remove_nth_allocation_meta (GstQuery * query, guint index)
 
   structure = GST_QUERY_STRUCTURE (query);
   array =
-      ensure_array (structure, GST_QUARK (META), sizeof (AllocationMeta), NULL);
+      ensure_array (structure, GST_QUARK (META), sizeof (AllocationMeta),
+      (GDestroyNotify) allocation_meta_free);
   g_return_if_fail (index < array->len);
 
   g_array_remove_index (array, index);
@@ -1800,7 +1812,8 @@ gst_query_find_allocation_meta (GstQuery * query, GType api, guint * index)
 
   structure = GST_QUERY_STRUCTURE (query);
   array =
-      ensure_array (structure, GST_QUARK (META), sizeof (AllocationMeta), NULL);
+      ensure_array (structure, GST_QUARK (META), sizeof (AllocationMeta),
+      (GDestroyNotify) allocation_meta_free);
 
   len = array->len;
   for (i = 0; i < len; i++) {
@@ -1830,8 +1843,8 @@ allocation_param_free (AllocationParam * ap)
 /**
  * gst_query_add_allocation_param:
  * @query: a GST_QUERY_ALLOCATION type query #GstQuery
- * @allocator: the memory allocator
- * @params: a #GstAllocationParams
+ * @allocator: (transfer none) (allow-none): the memory allocator
+ * @params: (transfer none) (allow-none): a #GstAllocationParams
  *
  * Add @allocator and its @params as a supported memory allocator.
  */
@@ -1892,8 +1905,8 @@ gst_query_get_n_allocation_params (GstQuery * query)
  * gst_query_parse_nth_allocation_param:
  * @query: a GST_QUERY_ALLOCATION type query #GstQuery
  * @index: position in the allocator array to read
- * @allocator: (transfer none): variable to hold the result
- * @params: parameters for the allocator
+ * @allocator: (out) (transfer none) (allow-none): variable to hold the result
+ * @params: (out) (allow-none): parameters for the allocator
  *
  * Parse an available query and get the alloctor and its params
  * at @index of the allocator array.
@@ -1926,8 +1939,8 @@ gst_query_parse_nth_allocation_param (GstQuery * query, guint index,
  * gst_query_set_nth_allocation_param:
  * @query: a GST_QUERY_ALLOCATION type query #GstQuery
  * @index: position in the allocator array to set
- * @allocator: (transfer full): new allocator to set
- * @params: parameters for the allocator
+ * @allocator: (transfer none) (allow-none): new allocator to set
+ * @params: (transfer none) (allow-none): parameters for the allocator
  *
  * Parse an available query and get the alloctor and its params
  * at @index of the allocator array.
