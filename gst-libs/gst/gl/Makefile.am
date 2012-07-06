@@ -10,6 +10,7 @@ EXTRA_DIST = \
 
 libgstgl_@GST_API_VERSION@_la_SOURCES = \
 	gstgldisplay.c \
+	gstglmemory.c \
 	gstglfilter.c \
 	gstglmixer.c \
         gstglshader.c \
@@ -32,6 +33,7 @@ libgstgl_@GST_API_VERSION@includedir = $(includedir)/gstreamer-@GST_API_VERSION@
 libgstgl_@GST_API_VERSION@include_HEADERS = \
 	gstglwindow.h \
 	gstgldisplay.h \
+	gstglmemory.h \
 	gstgles2.h \
 	gstglfilter.h \
 	gstglmixer.h \
