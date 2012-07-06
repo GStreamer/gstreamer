@@ -192,7 +192,6 @@ enum
   LAST_SIGNAL
 };
 
-#define DEFAULT_NTP_NS_BASE          0
 #define DEFAULT_BANDWIDTH            RTP_STATS_BANDWIDTH
 #define DEFAULT_RTCP_FRACTION        (RTP_STATS_BANDWIDTH * RTP_STATS_RTCP_FRACTION)
 #define DEFAULT_RTCP_RR_BANDWIDTH    -1
@@ -206,7 +205,6 @@ enum
 enum
 {
   PROP_0,
-  PROP_NTP_NS_BASE,
   PROP_BANDWIDTH,
   PROP_RTCP_FRACTION,
   PROP_RTCP_RR_BANDWIDTH,
@@ -242,8 +240,6 @@ struct _GstRtpSessionPrivate
   /* caps mapping */
   GHashTable *ptmap;
 
-  /* NTP base time */
-  guint64 ntpnsbase;
   gboolean use_pipeline_clock;
 };
 
@@ -518,12 +514,6 @@ gst_rtp_session_class_init (GstRtpSessionClass * klass)
           on_sender_timeout), NULL, NULL, g_cclosure_marshal_VOID__UINT,
       G_TYPE_NONE, 1, G_TYPE_UINT);
 
-  g_object_class_install_property (gobject_class, PROP_NTP_NS_BASE,
-      g_param_spec_uint64 ("ntp-ns-base", "NTP base time",
-          "The NTP base time corresponding to running_time 0 (deprecated)", 0,
-          G_MAXUINT64, DEFAULT_NTP_NS_BASE,
-          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
-
   g_object_class_install_property (gobject_class, PROP_BANDWIDTH,
       g_param_spec_double ("bandwidth", "Bandwidth",
           "The bandwidth of the session in bytes per second (0 for auto-discover)",
@@ -682,13 +672,6 @@ gst_rtp_session_set_property (GObject * object, guint prop_id,
   priv = rtpsession->priv;
 
   switch (prop_id) {
-    case PROP_NTP_NS_BASE:
-      GST_OBJECT_LOCK (rtpsession);
-      priv->ntpnsbase = g_value_get_uint64 (value);
-      GST_DEBUG_OBJECT (rtpsession, "setting NTP base to %" GST_TIME_FORMAT,
-          GST_TIME_ARGS (priv->ntpnsbase));
-      GST_OBJECT_UNLOCK (rtpsession);
-      break;
     case PROP_BANDWIDTH:
       g_object_set_property (G_OBJECT (priv->session), "bandwidth", value);
       break;
@@ -730,11 +713,6 @@ gst_rtp_session_get_property (GObject * object, guint prop_id,
   priv = rtpsession->priv;
 
   switch (prop_id) {
-    case PROP_NTP_NS_BASE:
-      GST_OBJECT_LOCK (rtpsession);
-      g_value_set_uint64 (value, priv->ntpnsbase);
-      GST_OBJECT_UNLOCK (rtpsession);
-      break;
     case PROP_BANDWIDTH:
       g_object_get_property (G_OBJECT (priv->session), "bandwidth", value);
       break;
