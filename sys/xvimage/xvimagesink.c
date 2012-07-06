@@ -1991,8 +1991,8 @@ gst_xvimagesink_propose_allocation (GstBaseSink * bsink, GstQuery * query)
   }
 
   /* we also support various metadata */
-  gst_query_add_allocation_meta (query, GST_VIDEO_META_API_TYPE, 0);
-  gst_query_add_allocation_meta (query, GST_VIDEO_CROP_META_API_TYPE, 0);
+  gst_query_add_allocation_meta (query, GST_VIDEO_META_API_TYPE, NULL);
+  gst_query_add_allocation_meta (query, GST_VIDEO_CROP_META_API_TYPE, NULL);
 
   return TRUE;
 

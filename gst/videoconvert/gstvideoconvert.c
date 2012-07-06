@@ -160,7 +160,7 @@ gst_video_convert_fixate_caps (GstBaseTransform * trans,
 
 static gboolean
 gst_video_convert_filter_meta (GstBaseTransform * trans, GstQuery * query,
-    GType api, guint flags)
+    GType api, const GstStructure * params)
 {
   /* propose all metadata upstream */
   return TRUE;
