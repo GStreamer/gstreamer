@@ -987,8 +987,6 @@ gst_aac_parse_handle_frame (GstBaseParse * parse,
       aacparse->sample_rate = rate;
       aacparse->channels = channels;
 
-      GST_DEBUG_OBJECT (aacparse, "here");
-
       if (!gst_aac_parse_set_src_caps (aacparse, NULL)) {
         /* If linking fails, we need to return appropriate error */
         ret = GST_FLOW_NOT_LINKED;
