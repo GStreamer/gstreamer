@@ -526,7 +526,7 @@ gst_vp8_dec_decide_allocation (GstVideoDecoder * bdec, GstQuery * query)
   g_assert (pool != NULL);
 
   config = gst_buffer_pool_get_config (pool);
-  if (gst_query_has_allocation_meta (query, GST_VIDEO_META_API_TYPE)) {
+  if (gst_query_find_allocation_meta (query, GST_VIDEO_META_API_TYPE, NULL)) {
     gst_buffer_pool_config_add_option (config,
         GST_BUFFER_POOL_OPTION_VIDEO_META);
   }
