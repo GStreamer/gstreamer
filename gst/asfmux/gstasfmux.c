@@ -45,7 +45,7 @@
  *
  * <title>Live streaming</title>
  * asfmux and rtpasfpay are capable of generating a live asf stream.
- * asfmux has to set its 'is-live' property to true, because in this 
+ * asfmux has to set its 'streamable' property to true, because in this 
  * mode it won't try to seek back to the start of the file to replace
  * some fields that couldn't be known at the file start. In this mode,
  * it won't also send indexes at the end of the data packets (the actual
@@ -54,7 +54,7 @@
  * <para>(write everything in one line, without the backslash characters)</para>
  * Server (sender)
  * |[
- * gst-launch -ve videotestsrc ! ffenc_wmv2 ! asfmux name=mux is-live=true \
+ * gst-launch -ve videotestsrc ! ffenc_wmv2 ! asfmux name=mux streamable=true \
  * ! rtpasfpay ! udpsink host=127.0.0.1 port=3333 \
  * audiotestsrc ! ffenc_wmav2 ! mux.
  * ]|
@@ -90,7 +90,6 @@ enum
   PROP_PREROLL,
   PROP_MERGE_STREAM_TAGS,
   PROP_PADDING,
-  PROP_IS_LIVE,
   PROP_STREAMABLE
 };
 
@@ -260,10 +259,6 @@ gst_asf_mux_class_init (GstAsfMuxClass * klass)
           0, G_MAXUINT64,
           DEFAULT_PADDING,
           G_PARAM_READWRITE | G_PARAM_CONSTRUCT | G_PARAM_STATIC_STRINGS));
-  g_object_class_install_property (gobject_class, PROP_IS_LIVE,
-      g_param_spec_boolean ("is-live", "Is Live (deprecated)",
-          "Deprecated in 0.10.20, use 'streamable' instead",
-          DEFAULT_STREAMABLE, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (gobject_class, PROP_STREAMABLE,
       g_param_spec_boolean ("streamable", "Streamable",
           "If set to true, the output should be as if it is to be streamed "
@@ -2333,11 +2328,6 @@ gst_asf_mux_get_property (GObject * object,
     case PROP_PADDING:
       g_value_set_uint64 (value, asfmux->prop_padding);
       break;
-    case PROP_IS_LIVE:
-      GST_WARNING_OBJECT (object, "The 'is-live' property is deprecated, use "
-          "the 'streamable' property instead");
-      g_value_set_boolean (value, asfmux->prop_streamable);
-      break;
     case PROP_STREAMABLE:
       g_value_set_boolean (value, asfmux->prop_streamable);
       break;
@@ -2366,10 +2356,6 @@ gst_asf_mux_set_property (GObject * object,
       break;
     case PROP_PADDING:
       asfmux->prop_padding = g_value_get_uint64 (value);
-      break;
-    case PROP_IS_LIVE:
-      g_warning ("This property is deprecated, use 'streamable' instead");
-      asfmux->prop_streamable = g_value_get_boolean (value);
       break;
     case PROP_STREAMABLE:
       asfmux->prop_streamable = g_value_get_boolean (value);
