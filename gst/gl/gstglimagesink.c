@@ -106,6 +106,8 @@ static void gst_glimage_sink_get_times (GstBaseSink * bsink, GstBuffer * buf,
 static gboolean gst_glimage_sink_set_caps (GstBaseSink * bsink, GstCaps * caps);
 static GstFlowReturn gst_glimage_sink_render (GstBaseSink * bsink,
     GstBuffer * buf);
+static gboolean gst_glimage_sink_propose_allocation (GstBaseSink * bsink,
+    GstQuery * query);
 
 static void gst_glimage_sink_video_overlay_init (GstVideoOverlayInterface *
     iface);
@@ -201,6 +203,7 @@ gst_glimage_sink_class_init (GstGLImageSinkClass * klass)
   gstbasesink_class->get_times = gst_glimage_sink_get_times;
   gstbasesink_class->preroll = gst_glimage_sink_render;
   gstbasesink_class->render = gst_glimage_sink_render;
+  gstbasesink_class->propose_allocation = gst_glimage_sink_propose_allocation;
 }
 
 static void
@@ -556,28 +559,17 @@ static GstFlowReturn
 gst_glimage_sink_render (GstBaseSink * bsink, GstBuffer * buf)
 {
   GstGLImageSink *glimage_sink;
+  GstGLMeta *gl_meta;
+  GstVideoMeta *v_meta;
 
   glimage_sink = GST_GLIMAGE_SINK (bsink);
 
-  /* FIXME: implement using GstGLMeta */
-  //is gl
-  /*if (glimage_sink->is_gl) {
-     //increment gl buffer ref before storage
-     gl_buffer = GST_GL_BUFFER (gst_buffer_ref (buf));
-     }
-     //is not gl
-     else {
-     //blocking call
-     gl_buffer = gst_gl_buffer_new (glimage_sink->display,
-     glimage_sink->width, glimage_sink->height);
+  if (!(v_meta = gst_buffer_get_video_meta (buf)))
+    goto no_video_meta;
 
-     //blocking call
-     gst_gl_display_do_upload (glimage_sink->display, gl_buffer->texture,
-     glimage_sink->width, glimage_sink->height, GST_BUFFER_DATA (buf));
+  if (!(gl_meta = gst_buffer_get_gl_meta (buf)))
+    goto no_gl_meta;
 
-     //gl_buffer is created in this block, so the gl buffer is already referenced
-     }
-   */
   if (glimage_sink->window_id != glimage_sink->new_window_id) {
     glimage_sink->window_id = glimage_sink->new_window_id;
     gst_gl_display_set_window_id (glimage_sink->display,
@@ -588,21 +580,36 @@ gst_glimage_sink_render (GstBaseSink * bsink, GstBuffer * buf)
     gst_buffer_unref (glimage_sink->stored_buffer);
   }
   //store current buffer
-  glimage_sink->stored_buffer = buf;
-/*
+  glimage_sink->stored_buffer = gst_buffer_ref (buf);
+
   //redisplay opengl scene
-  if (gl_buffer->texture &&
-      gst_gl_display_redisplay (glimage_sink->display,
-          gl_buffer->texture, gl_buffer->width, gl_buffer->height,
+  if (!gst_gl_display_redisplay (glimage_sink->display,
+          gl_meta->memory->tex_id, v_meta->width, v_meta->height,
           glimage_sink->window_width, glimage_sink->window_height,
           glimage_sink->keep_aspect_ratio))
-    return GST_FLOW_OK;
-  else {
+    goto redisplay_failed;
+
+  return GST_FLOW_OK;
+
+/* ERRORS */
+no_video_meta:
+  {
+    GST_ERROR ("Buffer %" GST_PTR_FORMAT " is missing required GstVideoMeta");
+    return GST_FLOW_ERROR;
+  }
+
+no_gl_meta:
+  {
+    GST_ERROR ("Buffer %" GST_PTR_FORMAT " is missing required GstGLMeta");
+    return GST_FLOW_ERROR;
+  }
+
+redisplay_failed:
+  {
     GST_ELEMENT_ERROR (glimage_sink, RESOURCE, NOT_FOUND,
         GST_GL_DISPLAY_ERR_MSG (glimage_sink->display), (NULL));
     return GST_FLOW_ERROR;
-  }*/
-  return GST_FLOW_OK;
+  }
 }
 
 
@@ -644,5 +651,84 @@ gst_glimage_sink_expose (GstVideoOverlay * overlay)
 
     gst_gl_display_redisplay (glimage_sink->display, 0, 0, 0, 0, 0,
         glimage_sink->keep_aspect_ratio);
+  }
+}
+
+static gboolean
+gst_glimage_sink_propose_allocation (GstBaseSink * bsink, GstQuery * query)
+{
+  GstGLImageSink *glimage_sink = GST_GLIMAGE_SINK (bsink);
+  GstBufferPool *pool;
+  GstStructure *config;
+  GstCaps *caps;
+  guint size;
+  gboolean need_pool;
+
+  gst_query_parse_allocation (query, &caps, &need_pool);
+
+  if (caps == NULL)
+    goto no_caps;
+
+  if ((pool = glimage_sink->pool))
+    gst_object_ref (pool);
+
+  if (pool != NULL) {
+    GstCaps *pcaps;
+
+    /* we had a pool, check caps */
+    GST_DEBUG_OBJECT (glimage_sink, "check existing pool caps");
+    config = gst_buffer_pool_get_config (pool);
+    gst_buffer_pool_config_get_params (config, &pcaps, &size, NULL, NULL);
+
+    if (!gst_caps_is_equal (caps, pcaps)) {
+      GST_DEBUG_OBJECT (glimage_sink, "pool has different caps");
+      /* different caps, we can't use this pool */
+      gst_object_unref (pool);
+      pool = NULL;
+    }
+    gst_structure_free (config);
+  }
+  if (pool == NULL && need_pool) {
+    GstVideoInfo info;
+
+    if (!gst_video_info_from_caps (&info, caps))
+      goto invalid_caps;
+
+    GST_DEBUG_OBJECT (glimage_sink, "create new pool");
+    pool = gst_gl_buffer_pool_new (glimage_sink->display);
+
+    /* the normal size of a frame */
+    size = info.size;
+
+    config = gst_buffer_pool_get_config (pool);
+    gst_buffer_pool_config_set_params (config, caps, size, 0, 0);
+    if (!gst_buffer_pool_set_config (pool, config))
+      goto config_failed;
+  }
+  /* we need at least 2 buffer because we hold on to the last one */
+  gst_query_add_allocation_pool (query, pool, size, 2, 0);
+
+  /* we also support various metadata */
+  gst_query_add_allocation_meta (query, GST_VIDEO_META_API_TYPE);
+
+  gst_object_unref (pool);
+
+  return TRUE;
+
+  /* ERRORS */
+no_caps:
+  {
+    GST_DEBUG_OBJECT (bsink, "no caps specified");
+    return FALSE;
+  }
+invalid_caps:
+  {
+    GST_DEBUG_OBJECT (bsink, "invalid caps specified");
+    return FALSE;
+  }
+config_failed:
+  {
+    GST_DEBUG_OBJECT (bsink, "failed setting config");
+    return FALSE;
   }
 }

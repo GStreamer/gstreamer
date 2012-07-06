@@ -27,7 +27,7 @@
 #include <gst/video/gstvideosink.h>
 #include <gst/video/video.h>
 
-#include "gstglmeta.h"
+#include "gstglbufferpool.h"
 
 G_BEGIN_DECLS
 
@@ -63,7 +63,6 @@ struct _GstGLImageSink
     gint height;
     gint window_width;
     gint window_height;
-    gboolean is_gl;
     gint fps_n, fps_d;
     gint par_n, par_d;
 
@@ -76,6 +75,8 @@ struct _GstGLImageSink
 
     gboolean keep_aspect_ratio;
     GValue *par;
+
+    GstBufferPool *pool;
 };
 
 struct _GstGLImageSinkClass
