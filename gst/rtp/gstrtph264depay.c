@@ -31,17 +31,10 @@
 GST_DEBUG_CATEGORY_STATIC (rtph264depay_debug);
 #define GST_CAT_DEFAULT (rtph264depay_debug)
 
-#define DEFAULT_BYTE_STREAM	TRUE
-#define DEFAULT_ACCESS_UNIT	FALSE
-
-enum
-{
-  PROP_0,
-  PROP_BYTE_STREAM,
-  PROP_ACCESS_UNIT,
-  PROP_LAST
-};
-
+/* This is what we'll default to when downstream hasn't
+ * expressed a restriction or preference via caps */
+#define DEFAULT_BYTE_STREAM   TRUE
+#define DEFAULT_ACCESS_UNIT   FALSE
 
 /* 3 zero bytes syncword */
 static const guint8 sync_bytes[] = { 0, 0, 0, 1 };
@@ -88,10 +81,6 @@ G_DEFINE_TYPE (GstRtpH264Depay, gst_rtp_h264_depay,
     GST_TYPE_RTP_BASE_DEPAYLOAD);
 
 static void gst_rtp_h264_depay_finalize (GObject * object);
-static void gst_rtp_h264_depay_set_property (GObject * object, guint prop_id,
-    const GValue * value, GParamSpec * pspec);
-static void gst_rtp_h264_depay_get_property (GObject * object, guint prop_id,
-    GValue * value, GParamSpec * pspec);
 
 static GstStateChangeReturn gst_rtp_h264_depay_change_state (GstElement *
     element, GstStateChange transition);
@@ -115,18 +104,6 @@ gst_rtp_h264_depay_class_init (GstRtpH264DepayClass * klass)
   gstrtpbasedepayload_class = (GstRTPBaseDepayloadClass *) klass;
 
   gobject_class->finalize = gst_rtp_h264_depay_finalize;
-
-  gobject_class->set_property = gst_rtp_h264_depay_set_property;
-  gobject_class->get_property = gst_rtp_h264_depay_get_property;
-
-  g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_BYTE_STREAM,
-      g_param_spec_boolean ("byte-stream", "Byte Stream",
-          "Generate byte stream format of NALU (deprecated; use caps)",
-          DEFAULT_BYTE_STREAM, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
-  g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_ACCESS_UNIT,
-      g_param_spec_boolean ("access-unit", "Access Unit",
-          "Merge NALU into AU (picture) (deprecated; use caps)",
-          DEFAULT_ACCESS_UNIT, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   gst_element_class_add_pad_template (gstelement_class,
       gst_static_pad_template_get (&gst_rtp_h264_depay_src_template));
@@ -195,48 +172,6 @@ gst_rtp_h264_depay_finalize (GObject * object)
 }
 
 static void
-gst_rtp_h264_depay_set_property (GObject * object, guint prop_id,
-    const GValue * value, GParamSpec * pspec)
-{
-  GstRtpH264Depay *rtph264depay;
-
-  rtph264depay = GST_RTP_H264_DEPAY (object);
-
-  switch (prop_id) {
-    case PROP_BYTE_STREAM:
-      rtph264depay->byte_stream = g_value_get_boolean (value);
-      break;
-    case PROP_ACCESS_UNIT:
-      rtph264depay->merge = g_value_get_boolean (value);
-      break;
-    default:
-      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
-      break;
-  }
-}
-
-static void
-gst_rtp_h264_depay_get_property (GObject * object, guint prop_id,
-    GValue * value, GParamSpec * pspec)
-{
-  GstRtpH264Depay *rtph264depay;
-
-  rtph264depay = GST_RTP_H264_DEPAY (object);
-
-  switch (prop_id) {
-    case PROP_BYTE_STREAM:
-      g_value_set_boolean (value, rtph264depay->byte_stream);
-      break;
-    case PROP_ACCESS_UNIT:
-      g_value_set_boolean (value, rtph264depay->merge);
-      break;
-    default:
-      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
-      break;
-  }
-}
-
-static void
 gst_rtp_h264_depay_negotiate (GstRtpH264Depay * rtph264depay)
 {
   GstCaps *caps;
@@ -276,22 +211,22 @@ gst_rtp_h264_depay_negotiate (GstRtpH264Depay * rtph264depay)
     gst_caps_unref (caps);
   }
 
-  if (byte_stream >= 0) {
+  if (byte_stream != -1) {
     GST_DEBUG_OBJECT (rtph264depay, "downstream requires byte-stream %d",
         byte_stream);
-    if (rtph264depay->byte_stream != byte_stream) {
-      GST_WARNING_OBJECT (rtph264depay,
-          "overriding property setting based on caps");
-      rtph264depay->byte_stream = byte_stream;
-    }
+    rtph264depay->byte_stream = byte_stream;
+  } else {
+    GST_DEBUG_OBJECT (rtph264depay, "defaulting to byte-stream %d",
+        DEFAULT_BYTE_STREAM);
+    rtph264depay->byte_stream = DEFAULT_BYTE_STREAM;
   }
-  if (merge >= 0) {
+  if (merge != -1) {
     GST_DEBUG_OBJECT (rtph264depay, "downstream requires merge %d", merge);
-    if (rtph264depay->merge != merge) {
-      GST_WARNING_OBJECT (rtph264depay,
-          "overriding property setting based on caps");
-      rtph264depay->merge = merge;
-    }
+    rtph264depay->merge = merge;
+  } else {
+    GST_DEBUG_OBJECT (rtph264depay, "defaulting to merge %d",
+        DEFAULT_ACCESS_UNIT);
+    rtph264depay->merge = DEFAULT_ACCESS_UNIT;
   }
 }
 
