@@ -61,7 +61,7 @@
  * ISO 14496-12 (except for some media specific parts).
  * In turn, the latter ISO Base Media format was further specialized as a
  * Motion JPEG-2000 file format in ISO 15444-3 (mj2mux)
- * and in various 3GPP(2) specs (gppmux).
+ * and in various 3GPP(2) specs (3gppmux).
  * The fragmented file features defined (only) in ISO Base Media are used by
  * ISMV files making up (a.o.) Smooth Streaming (ismlmux).
  *
@@ -125,7 +125,7 @@
  * ISO 14496-12 (except for some media specific parts).
  * In turn, the latter ISO Base Media format was further specialized as a
  * Motion JPEG-2000 file format in ISO 15444-3 (mj2mux)
- * and in various 3GPP(2) specs (gppmux).
+ * and in various 3GPP(2) specs (3gppmux).
  * The fragmented file features defined (only) in ISO Base Media are used by
  * ISMV files making up (a.o.) Smooth Streaming (ismlmux).
  *
@@ -162,7 +162,7 @@
  * <refsect2>
  * <title>Example pipelines</title>
  * |[
- * gst-launch v4l2src num-buffers=50 ! queue ! ffenc_h263 ! gppmux ! filesink location=video.3gp
+ * gst-launch v4l2src num-buffers=50 ! queue ! ffenc_h263 ! 3gppmux ! filesink location=video.3gp
  * ]|
  * Records a video stream captured from a v4l2 device, encodes it into H.263
  * and muxes it into an 3gp file.
@@ -189,7 +189,7 @@
  * ISO 14496-12 (except for some media specific parts).
  * In turn, the latter ISO Base Media format was further specialized as a
  * Motion JPEG-2000 file format in ISO 15444-3 (mj2mux)
- * and in various 3GPP(2) specs (gppmux).
+ * and in various 3GPP(2) specs (3gppmux).
  * The fragmented file features defined (only) in ISO Base Media are used by
  * ISMV files making up (a.o.) Smooth Streaming (ismlmux).
  *
@@ -253,7 +253,7 @@
  * ISO 14496-12 (except for some media specific parts).
  * In turn, the latter ISO Base Media format was further specialized as a
  * Motion JPEG-2000 file format in ISO 15444-3 (mj2mux)
- * and in various 3GPP(2) specs (gppmux).
+ * and in various 3GPP(2) specs (3gppmux).
  * The fragmented file features defined (only) in ISO Base Media are used by
  * ISMV files making up (a.o.) Smooth Streaming (ismlmux).
  *
