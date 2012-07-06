@@ -498,7 +498,7 @@ gst_riff_parse_strf_auds (GstElement * element,
   if (info.size > sizeof (gst_riff_strf_auds) + 2) {
     gint len;
 
-    len = GST_READ_UINT16_LE (&data[16]);
+    len = GST_READ_UINT16_LE (&info.data[16]);
     if (len + 2 + sizeof (gst_riff_strf_auds) > info.size) {
       GST_WARNING_OBJECT (element,
           "Extradata indicated %d bytes, but only %" G_GSSIZE_FORMAT
