@@ -74,7 +74,6 @@ struct _GstTee {
   guint           pad_counter;
 
   gboolean        has_chain;
-  gboolean        has_sink_loop;
   gboolean        silent;
   gchar          *last_message;
 

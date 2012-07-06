@@ -83,7 +83,6 @@ gst_tee_pull_mode_get_type (void)
 #define GST_TEE_DYN_UNLOCK(tee) g_mutex_unlock (&(tee)->dyn_lock)
 
 #define DEFAULT_PROP_NUM_SRC_PADS	0
-#define DEFAULT_PROP_HAS_SINK_LOOP	FALSE
 #define DEFAULT_PROP_HAS_CHAIN		TRUE
 #define DEFAULT_PROP_SILENT		TRUE
 #define DEFAULT_PROP_LAST_MESSAGE	NULL
@@ -93,7 +92,6 @@ enum
 {
   PROP_0,
   PROP_NUM_SRC_PADS,
-  PROP_HAS_SINK_LOOP,
   PROP_HAS_CHAIN,
   PROP_SILENT,
   PROP_LAST_MESSAGE,
@@ -245,11 +243,6 @@ gst_tee_class_init (GstTeeClass * klass)
       g_param_spec_int ("num-src-pads", "Num Src Pads",
           "The number of source pads", 0, G_MAXINT, DEFAULT_PROP_NUM_SRC_PADS,
           G_PARAM_READABLE | G_PARAM_STATIC_STRINGS));
-  g_object_class_install_property (gobject_class, PROP_HAS_SINK_LOOP,
-      g_param_spec_boolean ("has-sink-loop", "Has Sink Loop",
-          "If the element should spawn a thread (unimplemented and deprecated)",
-          DEFAULT_PROP_HAS_SINK_LOOP,
-          G_PARAM_CONSTRUCT | G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (gobject_class, PROP_HAS_CHAIN,
       g_param_spec_boolean ("has-chain", "Has Chain",
           "If the element can operate in push mode", DEFAULT_PROP_HAS_CHAIN,
@@ -443,12 +436,6 @@ gst_tee_set_property (GObject * object, guint prop_id, const GValue * value,
 
   GST_OBJECT_LOCK (tee);
   switch (prop_id) {
-    case PROP_HAS_SINK_LOOP:
-      tee->has_sink_loop = g_value_get_boolean (value);
-      if (tee->has_sink_loop) {
-        g_warning ("tee will never implement has-sink-loop==TRUE");
-      }
-      break;
     case PROP_HAS_CHAIN:
       tee->has_chain = g_value_get_boolean (value);
       break;
@@ -487,9 +474,6 @@ gst_tee_get_property (GObject * object, guint prop_id, GValue * value,
   switch (prop_id) {
     case PROP_NUM_SRC_PADS:
       g_value_set_int (value, GST_ELEMENT (tee)->numsrcpads);
-      break;
-    case PROP_HAS_SINK_LOOP:
-      g_value_set_boolean (value, tee->has_sink_loop);
       break;
     case PROP_HAS_CHAIN:
       g_value_set_boolean (value, tee->has_chain);
