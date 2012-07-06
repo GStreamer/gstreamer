@@ -1777,16 +1777,19 @@ gst_query_remove_nth_allocation_meta (GstQuery * query, guint index)
 }
 
 /**
- * gst_query_has_allocation_meta:
+ * gst_query_find_allocation_meta:
  * @query: a GST_QUERY_ALLOCATION type query #GstQuery
  * @api: the metadata API
+ * @index: (out) (allow-none): the index
  *
- * Check if @query has metadata @api set.
+ * Check if @query has metadata @api set. When this function returns TRUE,
+ * @index will contain the index where the requested API and the flags can be
+ * found.
  *
  * Returns: TRUE when @api is in the list of metadata.
  */
 gboolean
-gst_query_has_allocation_meta (GstQuery * query, GType api)
+gst_query_find_allocation_meta (GstQuery * query, GType api, guint * index)
 {
   GArray *array;
   GstStructure *structure;
@@ -1802,8 +1805,11 @@ gst_query_has_allocation_meta (GstQuery * query, GType api)
   len = array->len;
   for (i = 0; i < len; i++) {
     AllocationMeta *am = &g_array_index (array, AllocationMeta, i);
-    if (am->api == api)
+    if (am->api == api) {
+      if (index)
+        *index = i;
       return TRUE;
+    }
   }
   return FALSE;
 }

@@ -431,7 +431,7 @@ void            gst_query_add_allocation_meta        (GstQuery *query, GType api
 guint           gst_query_get_n_allocation_metas     (GstQuery *query);
 GType           gst_query_parse_nth_allocation_meta  (GstQuery *query, guint index, guint *flags);
 void            gst_query_remove_nth_allocation_meta (GstQuery *query, guint index);
-gboolean        gst_query_has_allocation_meta        (GstQuery *query, GType api);
+gboolean        gst_query_find_allocation_meta       (GstQuery *query, GType api, guint *index);
 
 
 /* scheduling query */

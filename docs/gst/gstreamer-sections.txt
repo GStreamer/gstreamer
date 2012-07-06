@@ -2245,7 +2245,7 @@ gst_query_add_allocation_meta
 gst_query_get_n_allocation_metas
 gst_query_parse_nth_allocation_meta
 gst_query_remove_nth_allocation_meta
-gst_query_has_allocation_meta
+gst_query_find_allocation_meta
 
 GstSchedulingFlags
 gst_query_new_scheduling
