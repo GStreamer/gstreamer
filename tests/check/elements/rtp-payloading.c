@@ -480,6 +480,26 @@ GST_START_TEST (rtp_h263p)
   rtp_pipeline_test (rtp_h263p_frame_data, rtp_h263p_frame_data_size,
       rtp_h263p_frame_count, "video/x-h263,variant=(string)itu,"
       "h263version=(string)h263", "rtph263ppay", "rtph263pdepay", 0, 0, FALSE);
+
+  /* payloader should accept any input that matches the template caps
+   * if there's just a udpsink or fakesink downstream */
+  rtp_pipeline_test (rtp_h263p_frame_data, rtp_h263p_frame_data_size,
+      rtp_h263p_frame_count, "video/x-h263,variant=(string)itu,"
+      "h263version=(string)h263", "rtph263ppay", "identity", 0, 0, FALSE);
+
+  /* default output of avenc_h263p */
+  rtp_pipeline_test (rtp_h263p_frame_data, rtp_h263p_frame_data_size,
+      rtp_h263p_frame_count, "video/x-h263,variant=(string)itu,"
+      "h263version=(string)h263p, annex-f=(boolean)true, "
+      "annex-j=(boolean)true, annex-i=(boolean)true, annex-t=(boolean)true",
+      "rtph263ppay", "identity", 0, 0, FALSE);
+
+  /* pay ! depay should also work with any input */
+  rtp_pipeline_test (rtp_h263p_frame_data, rtp_h263p_frame_data_size,
+      rtp_h263p_frame_count, "video/x-h263,variant=(string)itu,"
+      "h263version=(string)h263p, annex-f=(boolean)true, "
+      "annex-j=(boolean)true, annex-i=(boolean)true, annex-t=(boolean)true",
+      "rtph263ppay", "rtph263pdepay", 0, 0, FALSE);
 }
 
 GST_END_TEST;

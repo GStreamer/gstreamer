@@ -63,7 +63,7 @@ static GstStaticPadTemplate gst_rtp_h263p_pay_sink_template =
 GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS ("video/x-h263, " "variant = (string) \"itu\"")
+    GST_STATIC_CAPS ("video/x-h263, variant = (string) itu")
     );
 
 /*
@@ -244,7 +244,20 @@ gst_rtp_h263p_pay_sink_getcaps (GstRTPBasePayload * payload, GstPad * pad,
 
   peercaps =
       gst_pad_peer_query_caps (GST_RTP_BASE_PAYLOAD_SRCPAD (payload), filter);
-  if (!peercaps)
+
+  /* if we're just outputting to udpsink or fakesink or so, we should also
+   * accept any input compatible with our sink template caps */
+  if (!peercaps || gst_caps_is_any (peercaps))
+    return
+        gst_pad_get_pad_template_caps (GST_RTP_BASE_PAYLOAD_SINKPAD (payload));
+
+  /* We basically need to differentiate two use-cases here: One where there's
+   * a capsfilter after the payloader with caps created from an SDP; in this
+   * case the filter caps are fixed and we want to signal to an encoder what
+   * we want it to produce. The second case is simply payloader ! depayloader
+   * where we are dealing with the depayloader's template caps. In this case
+   * we should accept any input compatible with our sink template caps. */
+  if (!gst_caps_is_fixed (peercaps))
     return
         gst_pad_get_pad_template_caps (GST_RTP_BASE_PAYLOAD_SINKPAD (payload));
 
