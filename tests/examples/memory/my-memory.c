@@ -113,6 +113,12 @@ _my_mem_share (MyMemory * mem, gssize offset, gsize size)
   return sub;
 }
 
+static void
+free_allocator (GstMiniObject * obj)
+{
+  g_slice_free (GstAllocator, (GstAllocator *) obj);
+}
+
 void
 my_memory_init (void)
 {
@@ -127,7 +133,8 @@ my_memory_init (void)
     (GstMemoryIsSpanFunction) NULL,
   };
 
-  _my_allocator = gst_allocator_new (&info, NULL, NULL);
+  _my_allocator = g_slice_new (GstAllocator);
+  gst_allocator_init (_my_allocator, 0, &info, free_allocator);
 
   gst_allocator_register ("MyMemory", gst_allocator_ref (_my_allocator));
 }

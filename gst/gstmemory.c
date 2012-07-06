@@ -91,16 +91,6 @@ size_t gst_memory_alignment = MEMORY_ALIGNMENT - 1;
 size_t gst_memory_alignment = 0;
 #endif
 
-struct _GstAllocator
-{
-  GstMiniObject mini_object;
-
-  GstMemoryInfo info;
-
-  gpointer user_data;
-  GDestroyNotify notify;
-};
-
 /* default memory implementation */
 typedef struct
 {
@@ -390,7 +380,7 @@ static GRWLock lock;
 static GHashTable *allocators;
 
 static void
-_priv_sysmem_notify (gpointer user_data)
+_priv_sysmem_free (GstMiniObject * obj)
 {
   g_warning ("The default memory allocator was freed!");
 }
@@ -421,7 +411,8 @@ _priv_gst_memory_initialize (void)
   GST_CAT_DEBUG (GST_CAT_MEMORY, "memory alignment: %" G_GSIZE_FORMAT,
       gst_memory_alignment);
 
-  _default_mem_impl = gst_allocator_new (&_mem_info, NULL, _priv_sysmem_notify);
+  _default_mem_impl = g_slice_new (GstAllocator);
+  gst_allocator_init (_default_mem_impl, 0, &_mem_info, _priv_sysmem_free);
 
   _default_allocator = gst_allocator_ref (_default_mem_impl);
   gst_allocator_register (GST_ALLOCATOR_SYSMEM,
@@ -729,15 +720,6 @@ gst_memory_is_span (GstMemory * mem1, GstMemory * mem2, gsize * offset)
   return TRUE;
 }
 
-static void
-_gst_allocator_free (GstAllocator * allocator)
-{
-  if (allocator->notify)
-    allocator->notify (allocator->user_data);
-
-  g_slice_free1 (sizeof (GstAllocator), allocator);
-}
-
 static GstAllocator *
 _gst_allocator_copy (GstAllocator * allocator)
 {
@@ -745,43 +727,37 @@ _gst_allocator_copy (GstAllocator * allocator)
 }
 
 /**
- * gst_allocator_new:
+ * gst_allocator_init:
+ * @allocator: a #GstAllocator
+ * @flags: #GstAllocatorFlags
  * @info: a #GstMemoryInfo
- * @user_data: user data
- * @notify: a #GDestroyNotify for @user_data
+ * @free_func: a function to free @allocator
  *
- * Create a new memory allocator with @info and @user_data.
+ * Initialize a new memory allocator. The caller should have allocated the
+ * memory to hold at least sizeof (GstAllocator) bytes.
  *
  * All functions in @info are mandatory exept the copy and is_span
  * functions, which will have a default implementation when left NULL.
  *
- * The @user_data will be passed to all calls of the alloc function. @notify
- * will be called with @user_data when the allocator is freed.
- *
  * Returns: a new #GstAllocator.
  */
-GstAllocator *
-gst_allocator_new (const GstMemoryInfo * info, gpointer user_data,
-    GDestroyNotify notify)
+void
+gst_allocator_init (GstAllocator * allocator, GstAllocatorFlags flags,
+    const GstMemoryInfo * info, GstMiniObjectFreeFunction free_func)
 {
-  GstAllocator *allocator;
+  g_return_if_fail (allocator != NULL);
+  g_return_if_fail (info != NULL);
+  g_return_if_fail (info->alloc != NULL);
+  g_return_if_fail (info->mem_map != NULL);
+  g_return_if_fail (info->mem_unmap != NULL);
+  g_return_if_fail (info->mem_free != NULL);
+  g_return_if_fail (info->mem_share != NULL);
 
-  g_return_val_if_fail (info != NULL, NULL);
-  g_return_val_if_fail (info->alloc != NULL, NULL);
-  g_return_val_if_fail (info->mem_map != NULL, NULL);
-  g_return_val_if_fail (info->mem_unmap != NULL, NULL);
-  g_return_val_if_fail (info->mem_free != NULL, NULL);
-  g_return_val_if_fail (info->mem_share != NULL, NULL);
-
-  allocator = g_slice_new0 (GstAllocator);
-
-  gst_mini_object_init (GST_MINI_OBJECT_CAST (allocator), 0, GST_TYPE_ALLOCATOR,
-      (GstMiniObjectCopyFunction) _gst_allocator_copy, NULL,
-      (GstMiniObjectFreeFunction) _gst_allocator_free);
+  gst_mini_object_init (GST_MINI_OBJECT_CAST (allocator), flags,
+      GST_TYPE_ALLOCATOR, (GstMiniObjectCopyFunction) _gst_allocator_copy, NULL,
+      (GstMiniObjectFreeFunction) free_func);
 
   allocator->info = *info;
-  allocator->user_data = user_data;
-  allocator->notify = notify;
 
 #define INSTALL_FALLBACK(_t) \
   if (allocator->info._t == NULL) allocator->info._t = _fallback_ ##_t;
@@ -789,25 +765,7 @@ gst_allocator_new (const GstMemoryInfo * info, gpointer user_data,
   INSTALL_FALLBACK (mem_is_span);
 #undef INSTALL_FALLBACK
 
-  GST_CAT_DEBUG (GST_CAT_MEMORY, "new allocator %p", allocator);
-
-  return allocator;
-}
-
-/**
- * gst_allocator_get_memory_type:
- * @allocator: a #GstAllocator
- *
- * Get the memory type allocated by this allocator
- *
- * Returns: the memory type provided by @allocator
- */
-const gchar *
-gst_allocator_get_memory_type (GstAllocator * allocator)
-{
-  g_return_val_if_fail (allocator != NULL, NULL);
-
-  return allocator->info.mem_type;
+  GST_CAT_DEBUG (GST_CAT_MEMORY, "init allocator %p", allocator);
 }
 
 /**
@@ -971,7 +929,7 @@ gst_allocator_alloc (GstAllocator * allocator, gsize size,
   if (allocator == NULL)
     allocator = _default_allocator;
 
-  mem = allocator->info.alloc (allocator, size, params, allocator->user_data);
+  mem = allocator->info.alloc (allocator, size, params, NULL);
 
   return mem;
 }

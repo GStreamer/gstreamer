@@ -246,8 +246,8 @@ struct _GstAllocationParams {
  * #GST_MEMORY_FLAG_ZERO_PADDED respectively.
  *
  * @user_data is extra data passed to this function. The default
- * gst_allocator_alloc() passes the user_data that was used when creating
- * @allocator.
+ * gst_allocator_alloc() passes the NULL but other implementations could pass
+ * custom data.
  *
  * Returns: a newly allocated #GstMemory. Free with gst_memory_unref()
  */
@@ -332,6 +332,20 @@ typedef GstMemory * (*GstMemoryShareFunction)     (GstMemory *mem, gssize offset
 typedef gboolean    (*GstMemoryIsSpanFunction)    (GstMemory *mem1, GstMemory *mem2, gsize *offset);
 
 /**
+ * GstAllocatorFlags:
+ * @GST_ALLOCATOR_CUSTOM_ALLOC: The allocator has a custom alloc function.
+ * @GST_ALLOCATOR_FLAG_LAST: first flag that can be used for custom purposes
+ *
+ * Flags for allocators.
+ */
+typedef enum {
+  GST_ALLOCATOR_FLAG_CUSTOM_ALLOC  = (GST_MINI_OBJECT_FLAG_LAST << 0),
+
+  GST_ALLOCATOR_FLAG_LAST          = (GST_MINI_OBJECT_FLAG_LAST << 16)
+} GstAllocatorFlags;
+
+
+/**
  * GstMemoryInfo:
  * @mem_type: the memory type this allocator provides
  * @alloc: the implementation of the GstAllocatorAllocFunction
@@ -342,7 +356,7 @@ typedef gboolean    (*GstMemoryIsSpanFunction)    (GstMemory *mem1, GstMemory *m
  * @mem_share: the implementation of the GstMemoryShareFunction
  * @mem_is_span: the implementation of the GstMemoryIsSpanFunction
  *
- * The #GstMemoryInfo is used to register new memory allocators and contain
+ * The #GstMemoryInfo is used to initialize new memory allocators and contain
  * the implementations for various memory operations.
  */
 struct _GstMemoryInfo {
@@ -364,15 +378,27 @@ struct _GstMemoryInfo {
 
 /**
  * GstAllocator:
+ * @mini_object: parent structure
+ * @info: a #GstMemoryInfo with the implementation
  *
- * An opaque type returned from gst_allocator_new() or gst_allocator_find()
- * that can be used to allocator memory.
+ * The #GstAllocator is used to create new memory and should be
+ * initialized with gst_allocator_init().
  */
+struct _GstAllocator
+{
+  GstMiniObject  mini_object;
+
+  GstMemoryInfo  info;
+
+  /*< private >*/
+  gpointer _gst_reserved[GST_PADDING];
+};
 
 /* allocators */
-GstAllocator * gst_allocator_new             (const GstMemoryInfo * info,
-                                              gpointer user_data, GDestroyNotify notify);
-const gchar *  gst_allocator_get_memory_type (GstAllocator * allocator);
+void           gst_allocator_init            (GstAllocator * allocator,
+                                              GstAllocatorFlags flags,
+                                              const GstMemoryInfo *info,
+                                              GstMiniObjectFreeFunction free_func);
 
 /**
  * gst_allocator_ref:
