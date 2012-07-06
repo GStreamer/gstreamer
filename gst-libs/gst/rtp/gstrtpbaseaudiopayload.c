@@ -980,7 +980,7 @@ gst_rtp_base_payload_audio_sink_event (GstRTPBasePayload * basep,
  *
  * Gets the internal adapter used by the depayloader.
  *
- * Returns: a #GstAdapter.
+ * Returns: (transfer full): a #GstAdapter.
  */
 GstAdapter *
 gst_rtp_base_audio_payload_get_adapter (GstRTPBaseAudioPayload
