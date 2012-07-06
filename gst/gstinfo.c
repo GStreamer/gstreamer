@@ -1819,7 +1819,8 @@ gst_debug_level_get_name (GstDebugLevel level)
 }
 
 void
-gst_debug_add_log_function (GstLogFunction func, gpointer data)
+gst_debug_add_log_function (GstLogFunction func, gpointer user_data,
+    GDestroyNotify notify)
 {
 }
 
