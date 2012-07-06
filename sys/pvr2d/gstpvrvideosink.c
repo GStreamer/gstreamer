@@ -1024,7 +1024,7 @@ gst_pvrvideosink_propose_allocation (GstBaseSink * bsink, GstQuery * query)
   gst_query_set_allocation_params (query, size, 3, 0, 0, 0, pool);
 
   /* we also support various metadata */
-  gst_query_add_allocation_meta (query, GST_VIDEO_CROP_META_API);
+  gst_query_add_allocation_meta (query, GST_VIDEO_CROP_META_API, NULL);
 
   gst_object_unref (pool);
 
