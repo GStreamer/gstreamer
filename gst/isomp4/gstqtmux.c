@@ -252,9 +252,8 @@ gst_qt_mux_base_init (gpointer g_class)
 
   /* construct the element details struct */
   longname = g_strdup_printf ("%s Muxer", params->prop->long_name);
-  description = g_strdup_printf ("Multiplex audio and video into a %s file%s",
-      params->prop->long_name,
-      (params->prop->rank == GST_RANK_NONE) ? " (deprecated)" : "");
+  description = g_strdup_printf ("Multiplex audio and video into a %s file",
+      params->prop->long_name);
   gst_element_class_set_static_metadata (element_class, longname,
       "Codec/Muxer", description,
       "Thiago Sousa Santos <thiagoss@embedded.ufcg.edu.br>");

@@ -288,7 +288,7 @@ GST_START_TEST (test_common_tags)
   }
   test_tags (COMMON_TAGS, H264_CAPS, "qtmux", "qtdemux");
   test_tags (COMMON_TAGS, H264_CAPS, "mp4mux", "qtdemux");
-  test_tags (COMMON_TAGS, H264_CAPS, "gppmux", "qtdemux");
+  test_tags (COMMON_TAGS, H264_CAPS, "3gppmux", "qtdemux");
 }
 
 GST_END_TEST;
@@ -310,7 +310,7 @@ GST_START_TEST (test_geo_location_tags)
   }
   test_tags (GEO_LOCATION_TAGS, H264_CAPS, "qtmux", "qtdemux");
   test_tags (GEO_LOCATION_TAGS, H264_CAPS, "mp4mux", "qtdemux");
-  test_tags (GEO_LOCATION_TAGS, H264_CAPS, "gppmux", "qtdemux");
+  test_tags (GEO_LOCATION_TAGS, H264_CAPS, "3gppmux", "qtdemux");
 }
 
 GST_END_TEST;
@@ -329,7 +329,7 @@ GST_START_TEST (test_user_tags)
 
   test_tags (USER_TAGS, H264_CAPS, "qtmux", "qtdemux");
   test_tags (USER_TAGS, H264_CAPS, "mp4mux", "qtdemux");
-  test_tags (USER_TAGS, H264_CAPS, "gppmux", "qtdemux");
+  test_tags (USER_TAGS, H264_CAPS, "3gppmux", "qtdemux");
 }
 
 GST_END_TEST;

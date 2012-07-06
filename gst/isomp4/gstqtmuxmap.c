@@ -210,21 +210,6 @@ GstQTMuxFormatProp gst_qt_mux_format_list[] = {
         GST_STATIC_CAPS (AMR_CAPS "; " MP3_CAPS "; " AAC_CAPS)
       }
   ,
-#ifndef GST_REMOVE_DEPRECATED
-  /* 3GPP Technical Specification 26.244 V7.3.0
-   * (extended in 3GPP2 File Formats for Multimedia Services) */
-  {
-        GST_QT_MUX_FORMAT_3GP,
-        GST_RANK_NONE,
-        "gppmux",
-        "3GPP",
-        "GstGPPMux",
-        GST_STATIC_CAPS ("video/quicktime, variant = (string) 3gpp"),
-        GST_STATIC_CAPS (H263_CAPS "; " MPEG4V_CAPS "; " H264_CAPS),
-        GST_STATIC_CAPS (AMR_CAPS "; " MP3_CAPS "; " AAC_CAPS)
-      }
-  ,
-#endif
   /* ISO 15444-3: Motion-JPEG-2000 (also ISO base media extension) */
   {
         GST_QT_MUX_FORMAT_MJ2,
