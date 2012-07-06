@@ -55,14 +55,12 @@ GST_STATIC_PAD_TEMPLATE ("src",
     )
     );
 
-#define DEFAULT_SEND_CONFIG     FALSE
 #define DEFAULT_BUFFER_LIST     FALSE
 #define DEFAULT_CONFIG_INTERVAL 0
 
 enum
 {
   ARG_0,
-  ARG_SEND_CONFIG,
   ARG_BUFFER_LIST,
   ARG_CONFIG_INTERVAL
 };
@@ -108,12 +106,6 @@ G_DEFINE_TYPE (GstRtpMP4VPay, gst_rtp_mp4v_pay, GST_TYPE_RTP_BASE_PAYLOAD)
       "Payload MPEG-4 video as RTP packets (RFC 3016)",
       "Wim Taymans <wim.taymans@gmail.com>");
 
-  g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_SEND_CONFIG,
-      g_param_spec_boolean ("send-config", "Send Config",
-          "Send the config parameters in RTP packets as well(deprecated "
-          "see config-interval)",
-          DEFAULT_SEND_CONFIG, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
-
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_BUFFER_LIST,
       g_param_spec_boolean ("buffer-list", "Buffer Array",
           "Use Buffer Arrays",
@@ -144,7 +136,6 @@ gst_rtp_mp4v_pay_init (GstRtpMP4VPay * rtpmp4vpay)
   rtpmp4vpay->rate = 90000;
   rtpmp4vpay->profile = 1;
   rtpmp4vpay->buffer_list = DEFAULT_BUFFER_LIST;
-  rtpmp4vpay->send_config = DEFAULT_SEND_CONFIG;
   rtpmp4vpay->need_config = TRUE;
   rtpmp4vpay->config_interval = DEFAULT_CONFIG_INTERVAL;
   rtpmp4vpay->last_config = -1;
@@ -609,13 +600,6 @@ gst_rtp_mp4v_pay_set_property (GObject * object, guint prop_id,
   rtpmp4vpay = GST_RTP_MP4V_PAY (object);
 
   switch (prop_id) {
-    case ARG_SEND_CONFIG:
-      rtpmp4vpay->send_config = g_value_get_boolean (value);
-      /* send the configuration once every minute */
-      if (rtpmp4vpay->send_config && !(rtpmp4vpay->config_interval > 0)) {
-        rtpmp4vpay->config_interval = 60;
-      }
-      break;
     case ARG_BUFFER_LIST:
       rtpmp4vpay->buffer_list = g_value_get_boolean (value);
       break;
@@ -636,9 +620,6 @@ gst_rtp_mp4v_pay_get_property (GObject * object, guint prop_id,
   rtpmp4vpay = GST_RTP_MP4V_PAY (object);
 
   switch (prop_id) {
-    case ARG_SEND_CONFIG:
-      g_value_set_boolean (value, rtpmp4vpay->send_config);
-      break;
     case ARG_BUFFER_LIST:
       g_value_set_boolean (value, rtpmp4vpay->buffer_list);
       break;
