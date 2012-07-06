@@ -630,7 +630,7 @@ static gboolean
 gst_ffmpegvidenc_propose_allocation (GstVideoEncoder * encoder,
     GstQuery * query)
 {
-  gst_query_add_allocation_meta (query, GST_VIDEO_META_API_TYPE);
+  gst_query_add_allocation_meta (query, GST_VIDEO_META_API_TYPE, 0);
 
   return GST_VIDEO_ENCODER_CLASS (parent_class)->propose_allocation (encoder,
       query);
