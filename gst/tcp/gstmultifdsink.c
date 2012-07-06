@@ -145,39 +145,14 @@ enum
 };
 
 /* this is really arbitrarily chosen */
-#define DEFAULT_MODE                    1
-
 #define DEFAULT_HANDLE_READ             TRUE
 
 enum
 {
   PROP_0,
-  PROP_MODE,
-
   PROP_HANDLE_READ,
-
   PROP_LAST
 };
-
-/* For backward compat, we can't really select the poll mode anymore with
- * GstPoll. */
-#define GST_TYPE_FDSET_MODE (gst_fdset_mode_get_type())
-static GType
-gst_fdset_mode_get_type (void)
-{
-  static GType fdset_mode_type = 0;
-  static const GEnumValue fdset_mode[] = {
-    {0, "Select", "select"},
-    {1, "Poll", "poll"},
-    {2, "EPoll", "epoll"},
-    {0, NULL, NULL},
-  };
-
-  if (!fdset_mode_type) {
-    fdset_mode_type = g_enum_register_static ("GstFDSetMode", fdset_mode);
-  }
-  return fdset_mode_type;
-}
 
 static void gst_multi_fd_sink_stop_pre (GstMultiHandleSink * mhsink);
 static void gst_multi_fd_sink_stop_post (GstMultiHandleSink * mhsink);
@@ -220,20 +195,6 @@ gst_multi_fd_sink_class_init (GstMultiFdSinkClass * klass)
 
   gobject_class->set_property = gst_multi_fd_sink_set_property;
   gobject_class->get_property = gst_multi_fd_sink_get_property;
-
-  /**
-   * GstMultiFdSink::mode
-   *
-   * The mode for selecting activity on the fds. 
-   *
-   * This property is deprecated since 0.10.18, if will now automatically
-   * select and use the most optimal method.
-   */
-  g_object_class_install_property (gobject_class, PROP_MODE,
-      g_param_spec_enum ("mode", "Mode",
-          "The mode for selecting activity on the fds (deprecated)",
-          GST_TYPE_FDSET_MODE, DEFAULT_MODE,
-          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   /**
    * GstMultiFdSink::handle-read
@@ -421,8 +382,6 @@ static void
 gst_multi_fd_sink_init (GstMultiFdSink * this)
 {
   GstMultiHandleSink *mhsink = GST_MULTI_HANDLE_SINK (this);
-
-  this->mode = DEFAULT_MODE;
 
   mhsink->handle_hash = g_hash_table_new (g_direct_hash, g_direct_equal);
 
@@ -999,9 +958,6 @@ gst_multi_fd_sink_set_property (GObject * object, guint prop_id,
   multifdsink = GST_MULTI_FD_SINK (object);
 
   switch (prop_id) {
-    case PROP_MODE:
-      multifdsink->mode = g_value_get_enum (value);
-      break;
     case PROP_HANDLE_READ:
       multifdsink->handle_read = g_value_get_boolean (value);
       break;
@@ -1021,9 +977,6 @@ gst_multi_fd_sink_get_property (GObject * object, guint prop_id, GValue * value,
   multifdsink = GST_MULTI_FD_SINK (object);
 
   switch (prop_id) {
-    case PROP_MODE:
-      g_value_set_enum (value, multifdsink->mode);
-      break;
     case PROP_HANDLE_READ:
       g_value_set_boolean (value, multifdsink->handle_read);
       break;
@@ -1039,7 +992,7 @@ gst_multi_fd_sink_start_pre (GstMultiHandleSink * mhsink)
 {
   GstMultiFdSink *mfsink = GST_MULTI_FD_SINK (mhsink);
 
-  GST_INFO_OBJECT (mfsink, "starting in mode %d", mfsink->mode);
+  GST_INFO_OBJECT (mfsink, "starting");
   if ((mfsink->fdset = gst_poll_new (TRUE)) == NULL)
     goto socket_pair;
 

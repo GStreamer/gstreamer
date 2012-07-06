@@ -66,7 +66,6 @@ struct _GstMultiFdSink {
   GstMultiHandleSink element;
 
   /*< private >*/
-  gint mode;
   GstPoll *fdset;
 
   gboolean handle_read;
