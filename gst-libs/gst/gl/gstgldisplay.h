@@ -118,6 +118,7 @@ struct _GstGLDisplay
   GLuint gen_texture;
   GLuint gen_texture_width;
   GLuint gen_texture_height;
+  GstVideoFormat gen_texture_video_format;
 
   //client callbacks
   CRCB clientReshapeCallback;
@@ -137,7 +138,7 @@ struct _GstGLDisplay
   GstGLDisplayConversion upload_colorspace_conversion;
   gint upload_data_width;
   gint upload_data_height;
-  gpointer upload_data;
+  GstVideoFrame *upload_frame;
 
   //foreign gl context
   gulong external_gl_context;
@@ -255,15 +256,16 @@ void gst_gl_display_thread_add (GstGLDisplay * display,
     GstGLDisplayThreadFunc func, gpointer data);
 
 void gst_gl_display_gen_texture (GstGLDisplay * display, GLuint * pTexture,
-    GLint width, GLint height);
-void gst_gl_display_del_texture (GstGLDisplay * display, GLuint texture,
-    GLint width, GLint height);
+    GstVideoFormat v_format, GLint width, GLint height);
+void gst_gl_display_gen_texture_thread (GstGLDisplay * display, GLuint * pTexture,
+    GstVideoFormat v_format, GLint width, GLint height);
+void gst_gl_display_del_texture (GstGLDisplay * display, GLuint * pTexture);
 
 gboolean gst_gl_display_init_upload (GstGLDisplay * display,
     GstVideoFormat video_format, guint gl_width, guint gl_height,
     gint video_width, gint video_height);
 gboolean gst_gl_display_do_upload (GstGLDisplay * display, GLuint texture,
-    gint data_width, gint data_height, gpointer data);
+    GstVideoFrame * frame);
 gboolean gst_gl_display_init_download (GstGLDisplay * display,
     GstVideoFormat video_format, gint width, gint height);
 gboolean gst_gl_display_do_download (GstGLDisplay * display, GLuint texture,
