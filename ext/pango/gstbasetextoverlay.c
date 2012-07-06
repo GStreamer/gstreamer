@@ -98,8 +98,6 @@ GST_DEBUG_CATEGORY (pango_debug);
 #define DEFAULT_PROP_SHADING	FALSE
 #define DEFAULT_PROP_VALIGNMENT	GST_BASE_TEXT_OVERLAY_VALIGN_BASELINE
 #define DEFAULT_PROP_HALIGNMENT	GST_BASE_TEXT_OVERLAY_HALIGN_CENTER
-#define DEFAULT_PROP_VALIGN	"baseline"
-#define DEFAULT_PROP_HALIGN	"center"
 #define DEFAULT_PROP_XPAD	25
 #define DEFAULT_PROP_YPAD	25
 #define DEFAULT_PROP_DELTAX	0
@@ -169,8 +167,6 @@ enum
   PROP_0,
   PROP_TEXT,
   PROP_SHADING,
-  PROP_VALIGN,                  /* deprecated */
-  PROP_HALIGN,                  /* deprecated */
   PROP_HALIGNMENT,
   PROP_VALIGNMENT,
   PROP_XPAD,
@@ -445,14 +441,6 @@ gst_base_text_overlay_class_init (GstBaseTextOverlayClass * klass)
       g_param_spec_enum ("halignment", "horizontal alignment",
           "Horizontal alignment of the text", GST_TYPE_BASE_TEXT_OVERLAY_HALIGN,
           DEFAULT_PROP_HALIGNMENT, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
-  g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_VALIGN,
-      g_param_spec_string ("valign", "vertical alignment",
-          "Vertical alignment of the text (deprecated; use valignment)",
-          DEFAULT_PROP_VALIGN, G_PARAM_WRITABLE | G_PARAM_STATIC_STRINGS));
-  g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_HALIGN,
-      g_param_spec_string ("halign", "horizontal alignment",
-          "Horizontal alignment of the text (deprecated; use halignment)",
-          DEFAULT_PROP_HALIGN, G_PARAM_WRITABLE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_XPAD,
       g_param_spec_int ("xpad", "horizontal paddding",
           "Horizontal paddding when using left/right alignment", 0, G_MAXINT,
@@ -877,34 +865,6 @@ gst_base_text_overlay_set_property (GObject * object, guint prop_id,
     case PROP_YPOS:
       overlay->ypos = g_value_get_double (value);
       break;
-    case PROP_HALIGN:{
-      const gchar *s = g_value_get_string (value);
-
-      if (s && g_ascii_strcasecmp (s, "left") == 0)
-        overlay->halign = GST_BASE_TEXT_OVERLAY_HALIGN_LEFT;
-      else if (s && g_ascii_strcasecmp (s, "center") == 0)
-        overlay->halign = GST_BASE_TEXT_OVERLAY_HALIGN_CENTER;
-      else if (s && g_ascii_strcasecmp (s, "right") == 0)
-        overlay->halign = GST_BASE_TEXT_OVERLAY_HALIGN_RIGHT;
-      else
-        g_warning ("Invalid value '%s' for textoverlay property 'halign'",
-            GST_STR_NULL (s));
-      break;
-    }
-    case PROP_VALIGN:{
-      const gchar *s = g_value_get_string (value);
-
-      if (s && g_ascii_strcasecmp (s, "baseline") == 0)
-        overlay->valign = GST_BASE_TEXT_OVERLAY_VALIGN_BASELINE;
-      else if (s && g_ascii_strcasecmp (s, "bottom") == 0)
-        overlay->valign = GST_BASE_TEXT_OVERLAY_VALIGN_BOTTOM;
-      else if (s && g_ascii_strcasecmp (s, "top") == 0)
-        overlay->valign = GST_BASE_TEXT_OVERLAY_VALIGN_TOP;
-      else
-        g_warning ("Invalid value '%s' for textoverlay property 'valign'",
-            GST_STR_NULL (s));
-      break;
-    }
     case PROP_VALIGNMENT:
       overlay->valign = g_value_get_enum (value);
       break;
