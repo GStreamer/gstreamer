@@ -62,14 +62,12 @@ GST_STATIC_PAD_TEMPLATE ("src",
         "clock-rate = (int) 90000, " "encoding-name = (string) \"H264\"")
     );
 
-#define DEFAULT_PROFILE_LEVEL_ID        NULL
 #define DEFAULT_SPROP_PARAMETER_SETS    NULL
 #define DEFAULT_CONFIG_INTERVAL		      0
 
 enum
 {
   PROP_0,
-  PROP_PROFILE_LEVEL_ID,
   PROP_SPROP_PARAMETER_SETS,
   PROP_CONFIG_INTERVAL,
   PROP_LAST
@@ -111,13 +109,6 @@ gst_rtp_h264_pay_class_init (GstRtpH264PayClass * klass)
 
   gobject_class->set_property = gst_rtp_h264_pay_set_property;
   gobject_class->get_property = gst_rtp_h264_pay_get_property;
-
-  g_object_class_install_property (G_OBJECT_CLASS (klass),
-      PROP_PROFILE_LEVEL_ID, g_param_spec_string ("profile-level-id",
-          "profile-level-id",
-          "The base64 profile-level-id to set in the sink caps (deprecated)",
-          DEFAULT_PROFILE_LEVEL_ID,
-          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   g_object_class_install_property (G_OBJECT_CLASS (klass),
       PROP_SPROP_PARAMETER_SETS, g_param_spec_string ("sprop-parameter-sets",
@@ -1392,8 +1383,6 @@ gst_rtp_h264_pay_set_property (GObject * object, guint prop_id,
   rtph264pay = GST_RTP_H264_PAY (object);
 
   switch (prop_id) {
-    case PROP_PROFILE_LEVEL_ID:
-      break;
     case PROP_SPROP_PARAMETER_SETS:
       g_free (rtph264pay->sprop_parameter_sets);
       rtph264pay->sprop_parameter_sets = g_value_dup_string (value);
@@ -1417,8 +1406,6 @@ gst_rtp_h264_pay_get_property (GObject * object, guint prop_id,
   rtph264pay = GST_RTP_H264_PAY (object);
 
   switch (prop_id) {
-    case PROP_PROFILE_LEVEL_ID:
-      break;
     case PROP_SPROP_PARAMETER_SETS:
       g_value_set_string (value, rtph264pay->sprop_parameter_sets);
       break;
