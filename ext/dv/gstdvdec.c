@@ -288,7 +288,7 @@ gst_dvdec_negotiate_pool (GstDVDec * dec, GstCaps * caps, GstVideoInfo * info)
   config = gst_buffer_pool_get_config (pool);
   gst_buffer_pool_config_set_params (config, caps, size, min, max);
 
-  if (gst_query_has_allocation_meta (query, GST_VIDEO_META_API_TYPE)) {
+  if (gst_query_find_allocation_meta (query, GST_VIDEO_META_API_TYPE, NULL)) {
     /* just set the option, if the pool can support it we will transparently use
      * it through the video info API. We could also see if the pool support this
      * option and only activate it then. */

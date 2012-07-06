@@ -609,7 +609,7 @@ gst_v4l2src_decide_allocation (GstBaseSrc * bsrc, GstQuery * query)
     gst_buffer_pool_config_set_params (config, caps, size, min, max);
 
     /* if downstream supports video metadata, add this to the pool config */
-    if (gst_query_has_allocation_meta (query, GST_VIDEO_META_API_TYPE)) {
+    if (gst_query_find_allocation_meta (query, GST_VIDEO_META_API_TYPE, NULL)) {
       GST_DEBUG_OBJECT (pool, "activate Video Meta");
       gst_buffer_pool_config_add_option (config,
           GST_BUFFER_POOL_OPTION_VIDEO_META);

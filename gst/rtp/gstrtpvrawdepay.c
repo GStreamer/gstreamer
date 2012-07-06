@@ -148,7 +148,7 @@ gst_rtp_vraw_depay_negotiate_pool (GstRtpVRawDepay * depay, GstCaps * caps,
 
   config = gst_buffer_pool_get_config (pool);
   gst_buffer_pool_config_set_params (config, caps, size, min, max);
-  if (gst_query_has_allocation_meta (query, GST_VIDEO_META_API_TYPE)) {
+  if (gst_query_find_allocation_meta (query, GST_VIDEO_META_API_TYPE, NULL)) {
     /* just set the metadata, if the pool can support it we will transparently use
      * it through the video info API. We could also see if the pool support this
      * metadata and only activate it then. */
