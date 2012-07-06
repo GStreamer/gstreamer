@@ -879,8 +879,9 @@ _setup_renderer (GstSubtitleOverlay * self, GstElement * renderer)
 
   if (strcmp (name, "textoverlay") == 0) {
     /* Set some textoverlay specific properties */
-    g_object_set (G_OBJECT (renderer),
-        "halign", "center", "valign", "bottom", "wait-text", FALSE, NULL);
+    gst_util_set_object_arg (G_OBJECT (renderer), "halignment", "center");
+    gst_util_set_object_arg (G_OBJECT (renderer), "valignment", "bottom");
+    g_object_set (G_OBJECT (renderer), "wait-text", FALSE, NULL);
     if (self->font_desc)
       g_object_set (G_OBJECT (renderer), "font-desc", self->font_desc, NULL);
     self->silent_property = "silent";
