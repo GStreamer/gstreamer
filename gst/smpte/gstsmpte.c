@@ -84,7 +84,6 @@ enum
 #define DEFAULT_PROP_TYPE	1
 #define DEFAULT_PROP_BORDER	0
 #define DEFAULT_PROP_DEPTH	16
-#define DEFAULT_PROP_FPS	0.
 #define DEFAULT_PROP_DURATION	GST_SECOND
 #define DEFAULT_PROP_INVERT   FALSE
 
@@ -94,7 +93,6 @@ enum
   PROP_TYPE,
   PROP_BORDER,
   PROP_DEPTH,
-  PROP_FPS,
   PROP_DURATION,
   PROP_INVERT,
   PROP_LAST,
@@ -184,11 +182,6 @@ gst_smpte_class_init (GstSMPTEClass * klass)
   g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_TYPE,
       g_param_spec_enum ("type", "Type", "The type of transition to use",
           GST_TYPE_SMPTE_TRANSITION_TYPE, DEFAULT_PROP_TYPE,
-          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
-  g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_FPS,
-      g_param_spec_float ("fps", "FPS",
-          "Frames per second if no input files are given (deprecated)", 0.,
-          G_MAXFLOAT, DEFAULT_PROP_FPS,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_BORDER,
       g_param_spec_int ("border", "Border",
@@ -288,9 +281,6 @@ gst_smpte_setcaps (GstPad * pad, GstCaps * caps)
   smpte->fps_num = GST_VIDEO_INFO_FPS_N (&vinfo);
   smpte->fps_denom = GST_VIDEO_INFO_FPS_D (&vinfo);
 
-  /* for backward compat, we store these here */
-  smpte->fps = ((gdouble) smpte->fps_num) / smpte->fps_denom;
-
   /* figure out the duration in frames */
   smpte->end_position = gst_util_uint64_scale (smpte->duration,
       smpte->fps_num, GST_SECOND * smpte->fps_denom);
@@ -370,7 +360,6 @@ gst_smpte_init (GstSMPTE * smpte)
   gst_collect_pads_add_pad (smpte->collect, smpte->sinkpad2,
       sizeof (GstCollectData));
 
-  smpte->fps = DEFAULT_PROP_FPS;
   smpte->type = DEFAULT_PROP_TYPE;
   smpte->border = DEFAULT_PROP_BORDER;
   smpte->depth = DEFAULT_PROP_DEPTH;
@@ -598,9 +587,6 @@ gst_smpte_set_property (GObject * object, guint prop_id,
     case PROP_BORDER:
       smpte->border = g_value_get_int (value);
       break;
-    case PROP_FPS:
-      smpte->fps = g_value_get_float (value);
-      break;
     case PROP_DEPTH:
       smpte->depth = g_value_get_int (value);
       break;
@@ -627,9 +613,6 @@ gst_smpte_get_property (GObject * object, guint prop_id,
   switch (prop_id) {
     case PROP_TYPE:
       g_value_set_enum (value, smpte->type);
-      break;
-    case PROP_FPS:
-      g_value_set_float (value, smpte->fps);
       break;
     case PROP_BORDER:
       g_value_set_int (value, smpte->border);
