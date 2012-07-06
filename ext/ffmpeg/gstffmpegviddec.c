@@ -1427,7 +1427,7 @@ gst_ffmpegviddec_decide_allocation (GstVideoDecoder * decoder, GstQuery * query)
   gst_buffer_pool_config_set_allocator (config, NULL, &params);
 
   have_videometa =
-      gst_query_has_allocation_meta (query, GST_VIDEO_META_API_TYPE);
+      gst_query_find_allocation_meta (query, GST_VIDEO_META_API_TYPE, NULL);
   if (have_videometa)
     gst_buffer_pool_config_add_option (config,
         GST_BUFFER_POOL_OPTION_VIDEO_META);
