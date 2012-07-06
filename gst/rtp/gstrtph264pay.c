@@ -194,7 +194,7 @@ gst_rtp_h264_pay_finalize (GObject * object)
   G_OBJECT_CLASS (parent_class)->finalize (object);
 }
 
-static const gchar *all_levels[] = {
+static const gchar all_levels[][4] = {
   "1",
   "1b",
   "1.1",
@@ -210,8 +210,7 @@ static const gchar *all_levels[] = {
   "4.1",
   "4.2",
   "5",
-  "5.1",
-  NULL
+  "5.1"
 };
 
 static GstCaps *
@@ -299,7 +298,7 @@ gst_rtp_h264_pay_getcaps (GstRTPBasePayload * payload, GstPad * pad,
           g_value_init (&levels, GST_TYPE_LIST);
           g_value_init (&val, G_TYPE_STRING);
 
-          for (j = 0; all_levels[j]; j++) {
+          for (j = 0; j < G_N_ELEMENTS (all_levels); j++) {
             g_value_set_static_string (&val, all_levels[j]);
             gst_value_list_prepend_value (&levels, &val);
             if (!strcmp (level, all_levels[j]))
