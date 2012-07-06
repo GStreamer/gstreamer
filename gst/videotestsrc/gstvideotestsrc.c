@@ -637,7 +637,7 @@ gst_video_test_src_decide_allocation (GstBaseSrc * bsrc, GstQuery * query)
   }
 
   config = gst_buffer_pool_get_config (pool);
-  if (gst_query_has_allocation_meta (query, GST_VIDEO_META_API_TYPE)) {
+  if (gst_query_find_allocation_meta (query, GST_VIDEO_META_API_TYPE, NULL)) {
     gst_buffer_pool_config_add_option (config,
         GST_BUFFER_POOL_OPTION_VIDEO_META);
   }

@@ -789,8 +789,8 @@ gst_base_text_overlay_negotiate (GstBaseTextOverlay * overlay)
     GST_DEBUG_OBJECT (overlay, "ALLOCATION query failed");
   }
 
-  if (gst_query_has_allocation_meta (query,
-          GST_VIDEO_OVERLAY_COMPOSITION_META_API_TYPE))
+  if (gst_query_find_allocation_meta (query,
+          GST_VIDEO_OVERLAY_COMPOSITION_META_API_TYPE, NULL))
     attach = TRUE;
 
   overlay->attach_compo_to_buffer = attach;
