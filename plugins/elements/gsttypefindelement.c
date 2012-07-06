@@ -39,7 +39,7 @@
  * 1) get a list of all typefind functions sorted best to worst
  * 2) if all elements have been called with all requested data goto 8
  * 3) call all functions once with all available data
- * 4) if a function returns a value >= PROP_MAXIMUM goto 8
+ * 4) if a function returns a value >= PROP_MAXIMUM goto 8 (never implemented))
  * 5) all functions with a result > PROP_MINIMUM or functions that did not get
  *    all requested data (where peek returned NULL) stay in list
  * 6) seek to requested offset of best function that still has open data
@@ -111,7 +111,6 @@ enum
   PROP_0,
   PROP_CAPS,
   PROP_MINIMUM,
-  PROP_MAXIMUM,
   PROP_FORCE_CAPS,
   PROP_LAST
 };
@@ -210,11 +209,6 @@ gst_type_find_element_class_init (GstTypeFindElementClass * typefind_class)
           "minimum probability required to accept caps", GST_TYPE_FIND_MINIMUM,
           GST_TYPE_FIND_MAXIMUM, GST_TYPE_FIND_MINIMUM,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
-  g_object_class_install_property (gobject_class, PROP_MAXIMUM,
-      g_param_spec_uint ("maximum", _("maximum"),
-          "probability to stop typefinding (deprecated; non-functional)",
-          GST_TYPE_FIND_MINIMUM, GST_TYPE_FIND_MAXIMUM, GST_TYPE_FIND_MAXIMUM,
-          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (gobject_class, PROP_FORCE_CAPS,
       g_param_spec_boxed ("force-caps", _("force caps"),
           _("force caps without doing a typefind"), GST_TYPE_CAPS,
@@ -288,7 +282,6 @@ gst_type_find_element_init (GstTypeFindElement * typefind)
   typefind->mode = MODE_TYPEFIND;
   typefind->caps = NULL;
   typefind->min_probability = 1;
-  typefind->max_probability = GST_TYPE_FIND_MAXIMUM;
 
   typefind->adapter = gst_adapter_new ();
 }
@@ -323,9 +316,6 @@ gst_type_find_element_set_property (GObject * object, guint prop_id,
     case PROP_MINIMUM:
       typefind->min_probability = g_value_get_uint (value);
       break;
-    case PROP_MAXIMUM:
-      typefind->max_probability = g_value_get_uint (value);
-      break;
     case PROP_FORCE_CAPS:
       GST_OBJECT_LOCK (typefind);
       if (typefind->force_caps)
@@ -355,9 +345,6 @@ gst_type_find_element_get_property (GObject * object, guint prop_id,
       break;
     case PROP_MINIMUM:
       g_value_set_uint (value, typefind->min_probability);
-      break;
-    case PROP_MAXIMUM:
-      g_value_set_uint (value, typefind->max_probability);
       break;
     case PROP_FORCE_CAPS:
       GST_OBJECT_LOCK (typefind);
