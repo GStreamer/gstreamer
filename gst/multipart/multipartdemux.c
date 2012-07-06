@@ -55,21 +55,12 @@
 GST_DEBUG_CATEGORY_STATIC (gst_multipart_demux_debug);
 #define GST_CAT_DEFAULT gst_multipart_demux_debug
 
-/* signals and args */
-enum
-{
-  /* FILL ME */
-  LAST_SIGNAL
-};
-
-#define DEFAULT_AUTOSCAN		FALSE
 #define DEFAULT_BOUNDARY		NULL
 #define DEFAULT_SINGLE_STREAM	FALSE
 
 enum
 {
   PROP_0,
-  PROP_AUTOSCAN,
   PROP_BOUNDARY,
   PROP_SINGLE_STREAM
 };
@@ -148,11 +139,6 @@ gst_multipart_demux_class_init (GstMultipartDemuxClass * klass)
           DEFAULT_BOUNDARY,
           G_PARAM_READWRITE | G_PARAM_CONSTRUCT | G_PARAM_STATIC_STRINGS));
 
-  g_object_class_install_property (gobject_class, PROP_AUTOSCAN,
-      g_param_spec_boolean ("autoscan", "autoscan",
-          "Try to autofind the prefix (deprecated unused, see boundary)",
-          DEFAULT_AUTOSCAN, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
-
   /**
    * GstMultipartDemux::single-stream:
    *
@@ -203,7 +189,6 @@ gst_multipart_demux_init (GstMultipartDemux * multipart)
   multipart->content_length = -1;
   multipart->header_completed = FALSE;
   multipart->scanpos = 0;
-  multipart->autoscan = DEFAULT_AUTOSCAN;
   multipart->singleStream = DEFAULT_SINGLE_STREAM;
 }
 
@@ -675,7 +660,6 @@ gst_multipart_set_property (GObject * object, guint prop_id,
 {
   GstMultipartDemux *filter;
 
-  g_return_if_fail (GST_IS_MULTIPART_DEMUX (object));
   filter = GST_MULTIPART_DEMUX (object);
 
   switch (prop_id) {
@@ -686,9 +670,6 @@ gst_multipart_set_property (GObject * object, guint prop_id,
       if (filter->boundary != NULL) {
         filter->boundary_len = strlen (filter->boundary);
       }
-      break;
-    case PROP_AUTOSCAN:
-      filter->autoscan = g_value_get_boolean (value);
       break;
     case PROP_SINGLE_STREAM:
       filter->singleStream = g_value_get_boolean (value);
@@ -705,15 +686,11 @@ gst_multipart_get_property (GObject * object, guint prop_id,
 {
   GstMultipartDemux *filter;
 
-  g_return_if_fail (GST_IS_MULTIPART_DEMUX (object));
   filter = GST_MULTIPART_DEMUX (object);
 
   switch (prop_id) {
     case PROP_BOUNDARY:
       g_value_set_string (value, filter->boundary);
-      break;
-    case PROP_AUTOSCAN:
-      g_value_set_boolean (value, filter->autoscan);
       break;
     case PROP_SINGLE_STREAM:
       g_value_set_boolean (value, filter->singleStream);

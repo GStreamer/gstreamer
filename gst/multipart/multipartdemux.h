@@ -79,9 +79,6 @@ struct _GstMultipartDemux
   gchar *mime_type;
   gint content_length;
 
-  /* deprecated, unused */
-  gboolean autoscan;
-
   /* Index inside the current data when manually looking for the boundary */
   gint scanpos;
 
