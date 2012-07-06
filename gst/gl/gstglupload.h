@@ -26,6 +26,7 @@
 #include <gst/video/video.h>
 
 #include "gstglmeta.h"
+#include "gstglbufferpool.h"
 
 G_BEGIN_DECLS
 
@@ -49,11 +50,11 @@ struct _GstGLUpload
 
     GstGLDisplay *display;
 
-    GstVideoFormat video_format;
-    gint video_width;
-    gint video_height;
-    gint gl_width;
-    gint gl_height;
+    GstVideoInfo out_info;
+    GstVideoInfo in_info;
+
+    GstBufferPool *pool;
+
     gulong external_gl_context;
 };
 

@@ -124,7 +124,10 @@ static GstFlowReturn gst_gl_upload_transform (GstBaseTransform * trans,
     GstBuffer * inbuf, GstBuffer * outbuf);
 static gboolean gst_gl_upload_get_unit_size (GstBaseTransform * trans,
     GstCaps * caps, gsize * size);
-
+static gboolean gst_gl_upload_decide_allocation (GstBaseTransform * trans,
+    GstQuery * query);
+static gboolean gst_gl_upload_propose_allocation (GstBaseTransform * trans,
+    GstQuery * decide_allocation, GstQuery * query);
 
 static void
 gst_gl_upload_class_init (GstGLUploadClass * klass)
@@ -146,6 +149,10 @@ gst_gl_upload_class_init (GstGLUploadClass * klass)
   GST_BASE_TRANSFORM_CLASS (klass)->stop = gst_gl_upload_stop;
   GST_BASE_TRANSFORM_CLASS (klass)->set_caps = gst_gl_upload_set_caps;
   GST_BASE_TRANSFORM_CLASS (klass)->get_unit_size = gst_gl_upload_get_unit_size;
+  GST_BASE_TRANSFORM_CLASS (klass)->decide_allocation =
+      gst_gl_upload_decide_allocation;
+  GST_BASE_TRANSFORM_CLASS (klass)->propose_allocation =
+      gst_gl_upload_propose_allocation;
 
   g_object_class_install_property (gobject_class, PROP_EXTERNAL_OPENGL_CONTEXT,
       g_param_spec_ulong ("external-opengl-context",
@@ -299,25 +306,14 @@ gst_gl_upload_transform_caps (GstBaseTransform * bt,
     GstPadDirection direction, GstCaps * caps, GstCaps * filter)
 {
   //GstGLUpload* upload = GST_GL_UPLOAD (bt);
-  GstStructure *structure;
   GstCaps *newcaps;
-  const GValue *framerate_value;
 
   GST_DEBUG ("transform caps %" GST_PTR_FORMAT, caps);
 
-  structure = gst_caps_get_structure (caps, 0);
-  framerate_value = gst_structure_get_value (structure, "framerate");
-  newcaps = gst_caps_new_empty_simple ("video/x-raw");
-
-  structure = gst_caps_get_structure (newcaps, 0);
-
-  gst_structure_set (structure,
-      "width", GST_TYPE_INT_RANGE, 1, G_MAXINT,
-      "height", GST_TYPE_INT_RANGE, 1, G_MAXINT, NULL);
-
-  gst_structure_set_value (structure, "framerate", framerate_value);
-
-  newcaps = gst_caps_merge_structure (newcaps, gst_structure_copy (structure));
+  if (filter)
+    newcaps = gst_caps_intersect (caps, filter);
+  else
+    newcaps = gst_caps_ref (caps);
 
   GST_DEBUG ("new caps %" GST_PTR_FORMAT, newcaps);
 
@@ -346,7 +342,7 @@ gst_gl_upload_fixate_caps (GstBaseTransform * base, GstPadDirection direction,
   from_par = gst_structure_get_value (ins, "pixel-aspect-ratio");
   to_par = gst_structure_get_value (outs, "pixel-aspect-ratio");
 
-  /* If we're fixating from the sinkpad we always set the PAR and
+  /* If we're fixating from the sinkpad we always set the PAR andcould not cop
    * assume that missing PAR on the sinkpad means 1/1 and
    * missing PAR on the srcpad means undefined
    */
@@ -782,17 +778,16 @@ gst_gl_upload_set_caps (GstBaseTransform * bt, GstCaps * incaps,
     return FALSE;
   }
 
-  upload->video_format = GST_VIDEO_INFO_FORMAT (&in_vinfo);
-  upload->video_width = GST_VIDEO_INFO_WIDTH (&in_vinfo);
-  upload->video_height = GST_VIDEO_INFO_HEIGHT (&in_vinfo);
-
-  upload->gl_width = GST_VIDEO_INFO_WIDTH (&out_vinfo);
-  upload->gl_height = GST_VIDEO_INFO_HEIGHT (&out_vinfo);
+  upload->in_info = in_vinfo;
+  upload->out_info = out_vinfo;
 
   //init colorspace conversion if needed
-  ret = gst_gl_display_init_upload (upload->display, upload->video_format,
-      upload->gl_width, upload->gl_height,
-      upload->video_width, upload->video_height);
+  ret = gst_gl_display_init_upload (upload->display,
+      GST_VIDEO_INFO_FORMAT (&upload->in_info),
+      GST_VIDEO_INFO_WIDTH (&upload->out_info),
+      GST_VIDEO_INFO_HEIGHT (&upload->out_info),
+      GST_VIDEO_INFO_WIDTH (&upload->in_info),
+      GST_VIDEO_INFO_HEIGHT (&upload->in_info));
 
   if (!ret)
     GST_ELEMENT_ERROR (upload, RESOURCE, NOT_FOUND,
@@ -819,23 +814,169 @@ static GstFlowReturn
 gst_gl_upload_transform (GstBaseTransform * trans, GstBuffer * inbuf,
     GstBuffer * outbuf)
 {
-  /*GstGLUpload *upload = GST_GL_UPLOAD (trans); */
+  GstGLUpload *upload = GST_GL_UPLOAD (trans);
+  GstVideoMeta *smeta, *dmeta;
+  GstGLMeta *gl_meta;
+  GstVideoFrame frame;
 
-  /*FIXME: implement using GstGLMeta */
-/*  GstGLBuffer *gl_outbuf = GST_GL_BUFFER (outbuf);
+  smeta = gst_buffer_get_video_meta (inbuf);
+  dmeta = gst_buffer_get_video_meta (outbuf);
+  gl_meta = gst_buffer_get_gl_meta (outbuf);
 
-  GST_DEBUG ("Upload %p size %d",
-      GST_BUFFER_DATA (inbuf), GST_BUFFER_SIZE (inbuf));
+  if (!smeta) {
+    GST_ERROR ("Input buffer does not have required GstVideoMeta");
+    goto error;
+  }
+  if (!dmeta || !gl_meta) {
+    GST_ERROR
+        ("Output buffer does not have required GstVideoMeta or GstGLMeta");
+    goto error;
+  }
 
-  //blocking call.
-  //Depending on the colorspace, video is upload into several textures.
-  //However, there is only one output texture. The one attached
-  //to the upload FBO.
-  if (gst_gl_display_do_upload (upload->display, gl_outbuf->texture,
-          upload->video_width, upload->video_height, GST_BUFFER_DATA (inbuf)))
-    return GST_FLOW_OK;
-  else
-    return GST_FLOW_EOS;
-*/
+  if (!gst_video_frame_map (&frame, &upload->in_info, inbuf, GST_MAP_READ)) {
+    GST_WARNING ("Could not map data for reading");
+    goto error;
+  }
+
+  if (!gst_gl_display_do_upload (upload->display, gl_meta->memory->tex_id,
+          &frame)) {
+    GST_WARNING ("Failed to upload data");
+  }
+
+  gst_video_frame_unmap (&frame);
+
   return GST_FLOW_OK;
+
+/* ERRORS */
+error:
+  {
+    return GST_FLOW_ERROR;
+  }
+}
+
+static gboolean
+gst_gl_upload_decide_allocation (GstBaseTransform * trans, GstQuery * query)
+{
+  GstGLUpload *upload = GST_GL_UPLOAD (trans);
+  GstBufferPool *pool = NULL;
+  GstStructure *config;
+  GstCaps *caps;
+  guint min, max, size;
+  gboolean update_pool;
+
+  gst_query_parse_allocation (query, &caps, NULL);
+
+  if (gst_query_get_n_allocation_pools (query) > 0) {
+    gst_query_parse_nth_allocation_pool (query, 0, &pool, &size, &min, &max);
+
+    update_pool = TRUE;
+  } else {
+    GstVideoInfo vinfo;
+
+    gst_video_info_init (&vinfo);
+    gst_video_info_from_caps (&vinfo, caps);
+    size = vinfo.size;
+    min = max = 0;
+    update_pool = FALSE;
+  }
+
+  if (!pool)
+    pool = gst_gl_buffer_pool_new (upload->display);
+
+  config = gst_buffer_pool_get_config (pool);
+  gst_buffer_pool_config_set_params (config, caps, size, min, max);
+  gst_buffer_pool_config_add_option (config, GST_BUFFER_POOL_OPTION_VIDEO_META);
+  gst_buffer_pool_config_add_option (config, GST_BUFFER_POOL_OPTION_GL_META);
+  gst_buffer_pool_set_config (pool, config);
+
+  if (update_pool)
+    gst_query_set_nth_allocation_pool (query, 0, pool, size, min, max);
+  else
+    gst_query_add_allocation_pool (query, pool, size, min, max);
+
+  gst_object_unref (pool);
+
+  return TRUE;
+}
+
+static gboolean
+gst_gl_upload_propose_allocation (GstBaseTransform * trans,
+    GstQuery * decide_query, GstQuery * query)
+{
+  GstGLUpload *upload = GST_GL_UPLOAD (trans);
+  GstBufferPool *pool;
+  GstStructure *config;
+  GstCaps *caps;
+  guint size;
+  gboolean need_pool;
+
+  gst_query_parse_allocation (query, &caps, &need_pool);
+
+  if (caps == NULL)
+    goto no_caps;
+
+  if ((pool = upload->pool))
+    gst_object_ref (pool);
+
+  if (pool != NULL) {
+    GstCaps *pcaps;
+
+    /* we had a pool, check caps */
+    GST_DEBUG_OBJECT (upload, "check existing pool caps");
+    config = gst_buffer_pool_get_config (pool);
+    gst_buffer_pool_config_get_params (config, &pcaps, &size, NULL, NULL);
+
+    if (!gst_caps_is_equal (caps, pcaps)) {
+      GST_DEBUG_OBJECT (upload, "pool has different caps");
+      /* different caps, we can't use this pool */
+      gst_object_unref (pool);
+      pool = NULL;
+    }
+    gst_structure_free (config);
+  }
+  if (pool == NULL && need_pool) {
+    GstVideoInfo info;
+
+    if (!gst_video_info_from_caps (&info, caps))
+      goto invalid_caps;
+
+    GST_DEBUG_OBJECT (upload, "create new pool");
+    pool = gst_video_buffer_pool_new ();
+
+    /* the normal size of a frame */
+    size = info.size;
+
+    config = gst_buffer_pool_get_config (pool);
+    gst_buffer_pool_config_set_params (config, caps, size, 0, 0);
+    if (!gst_buffer_pool_set_config (pool, config))
+      goto config_failed;
+  }
+  /* we need at least 2 buffer because we hold on to the last one */
+  gst_query_add_allocation_pool (query, pool, size, 2, 0);
+
+  /* we also support various metadata */
+  gst_query_add_allocation_meta (query, GST_VIDEO_META_API_TYPE);
+  //gst_query_add_allocation_meta (query, GST_VIDEO_CROP_META_API_TYPE);
+  gst_query_add_allocation_meta (query, GST_GL_META_API_TYPE);
+
+  gst_object_unref (pool);
+
+  return TRUE;
+
+  /* ERRORS */
+no_caps:
+  {
+    GST_DEBUG_OBJECT (trans, "no caps specified");
+    return FALSE;
+  }
+invalid_caps:
+  {
+    GST_DEBUG_OBJECT (trans, "invalid caps specified");
+    return FALSE;
+  }
+config_failed:
+  {
+    GST_DEBUG_OBJECT (trans, "failed setting config");
+    return FALSE;
+  }
 }
