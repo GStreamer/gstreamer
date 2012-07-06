@@ -67,7 +67,6 @@ enum
 #define DEFAULT_SINGLE_SEGMENT          FALSE
 #define DEFAULT_DUMP                    FALSE
 #define DEFAULT_SYNC                    FALSE
-#define DEFAULT_CHECK_PERFECT           FALSE
 #define DEFAULT_CHECK_IMPERFECT_TIMESTAMP FALSE
 #define DEFAULT_CHECK_IMPERFECT_OFFSET    FALSE
 #define DEFAULT_SIGNAL_HANDOFFS           TRUE
@@ -84,7 +83,6 @@ enum
   PROP_LAST_MESSAGE,
   PROP_DUMP,
   PROP_SYNC,
-  PROP_CHECK_PERFECT,
   PROP_CHECK_IMPERFECT_TIMESTAMP,
   PROP_CHECK_IMPERFECT_OFFSET,
   PROP_SIGNAL_HANDOFFS
@@ -178,12 +176,6 @@ gst_identity_class_init (GstIdentityClass * klass)
       g_param_spec_boolean ("sync", "Synchronize",
           "Synchronize to pipeline clock", DEFAULT_SYNC,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
-  g_object_class_install_property (gobject_class, PROP_CHECK_PERFECT,
-      g_param_spec_boolean ("check-perfect", "Check For Perfect Stream",
-          "Verify that the stream is time- and data-contiguous. "
-          "This only logs in the debug log.  This will be deprecated in favor "
-          "of the check-imperfect-timestamp/offset properties.",
-          DEFAULT_CHECK_PERFECT, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (gobject_class,
       PROP_CHECK_IMPERFECT_TIMESTAMP,
       g_param_spec_boolean ("check-imperfect-timestamp",
@@ -256,7 +248,6 @@ gst_identity_init (GstIdentity * identity)
   identity->silent = DEFAULT_SILENT;
   identity->single_segment = DEFAULT_SINGLE_SEGMENT;
   identity->sync = DEFAULT_SYNC;
-  identity->check_perfect = DEFAULT_CHECK_PERFECT;
   identity->check_imperfect_timestamp = DEFAULT_CHECK_IMPERFECT_TIMESTAMP;
   identity->check_imperfect_offset = DEFAULT_CHECK_IMPERFECT_OFFSET;
   identity->dump = DEFAULT_DUMP;
@@ -348,51 +339,6 @@ gst_identity_sink_event (GstBaseTransform * trans, GstEvent * event)
   }
 
   return ret;
-}
-
-static void
-gst_identity_check_perfect (GstIdentity * identity, GstBuffer * buf)
-{
-  GstClockTime timestamp;
-
-  timestamp = GST_BUFFER_TIMESTAMP (buf);
-
-  /* see if we need to do perfect stream checking */
-  /* invalid timestamp drops us out of check.  FIXME: maybe warn ? */
-  if (timestamp != GST_CLOCK_TIME_NONE) {
-    /* check if we had a previous buffer to compare to */
-    if (identity->prev_timestamp != GST_CLOCK_TIME_NONE &&
-        identity->prev_duration != GST_CLOCK_TIME_NONE) {
-      guint64 offset, t_expected;
-      gint64 dt;
-
-      t_expected = identity->prev_timestamp + identity->prev_duration;
-      dt = timestamp - t_expected;
-      if (dt != 0) {
-        GST_WARNING_OBJECT (identity,
-            "Buffer not time-contiguous with previous one: " "prev ts %"
-            GST_TIME_FORMAT ", prev dur %" GST_TIME_FORMAT ", new ts %"
-            GST_TIME_FORMAT " (expected ts %" GST_TIME_FORMAT ", delta=%c%"
-            GST_TIME_FORMAT ")", GST_TIME_ARGS (identity->prev_timestamp),
-            GST_TIME_ARGS (identity->prev_duration), GST_TIME_ARGS (timestamp),
-            GST_TIME_ARGS (t_expected), (dt < 0) ? '-' : '+',
-            GST_TIME_ARGS ((dt < 0) ? (GstClockTime) (-dt) : dt));
-      }
-
-      offset = GST_BUFFER_OFFSET (buf);
-      if (identity->prev_offset_end != offset &&
-          identity->prev_offset_end != GST_BUFFER_OFFSET_NONE &&
-          offset != GST_BUFFER_OFFSET_NONE) {
-        GST_WARNING_OBJECT (identity,
-            "Buffer not data-contiguous with previous one: "
-            "prev offset_end %" G_GINT64_FORMAT ", new offset %"
-            G_GINT64_FORMAT, identity->prev_offset_end, offset);
-      }
-    } else {
-      GST_DEBUG_OBJECT (identity, "can't check time-contiguity, no timestamp "
-          "and/or duration were set on previous buffer");
-    }
-  }
 }
 
 static void
@@ -555,8 +501,6 @@ gst_identity_transform_ip (GstBaseTransform * trans, GstBuffer * buf)
 
   size = gst_buffer_get_size (buf);
 
-  if (identity->check_perfect)
-    gst_identity_check_perfect (identity, buf);
   if (identity->check_imperfect_timestamp)
     gst_identity_check_imperfect_timestamp (identity, buf);
   if (identity->check_imperfect_offset)
@@ -698,9 +642,6 @@ gst_identity_set_property (GObject * object, guint prop_id,
     case PROP_SYNC:
       identity->sync = g_value_get_boolean (value);
       break;
-    case PROP_CHECK_PERFECT:
-      identity->check_perfect = g_value_get_boolean (value);
-      break;
     case PROP_CHECK_IMPERFECT_TIMESTAMP:
       identity->check_imperfect_timestamp = g_value_get_boolean (value);
       break;
@@ -757,9 +698,6 @@ gst_identity_get_property (GObject * object, guint prop_id, GValue * value,
       break;
     case PROP_SYNC:
       g_value_set_boolean (value, identity->sync);
-      break;
-    case PROP_CHECK_PERFECT:
-      g_value_set_boolean (value, identity->check_perfect);
       break;
     case PROP_CHECK_IMPERFECT_TIMESTAMP:
       g_value_set_boolean (value, identity->check_imperfect_timestamp);
