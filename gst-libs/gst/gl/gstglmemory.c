@@ -266,9 +266,11 @@ _gl_mem_is_span_func (GstGLMemory * mem1, GstGLMemory * mem2, gsize * offset)
 }
 
 static void
-_gl_mem_destroy_notify (gpointer user_data)
+_gl_mem_destroy_free (GstMiniObject * allocator)
 {
   GST_LOG ("GLTexture memory allocator freed");
+
+  g_slice_free (GstAllocator, (GstAllocator *) allocator);
 }
 
 /**
@@ -312,9 +314,12 @@ gst_gl_memory_init (void)
   };
 
   if (g_once_init_enter (&_init)) {
-    _gl_allocator = gst_allocator_new (&mem_info, NULL, _gl_mem_destroy_notify);
+    _gl_allocator = g_slice_new (GstAllocator);
+    gst_allocator_init (_gl_allocator, GST_ALLOCATOR_FLAG_CUSTOM_ALLOC,
+        &mem_info, _gl_mem_destroy_free);
     gst_allocator_register (GST_GL_MEMORY_ALLOCATOR,
         gst_allocator_ref (_gl_allocator));
+
     g_once_init_leave (&_init, 1);
   }
 }
