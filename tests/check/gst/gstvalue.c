@@ -2022,6 +2022,7 @@ GST_START_TEST (test_date_time)
 {
   GstStructure *s;
   GstDateTime *datetime, *datetime2;
+  GValue val = { 0, };
   gchar *str;
 
   /* utc timezone */
@@ -2191,6 +2192,122 @@ GST_START_TEST (test_date_time)
 
   g_free (str);
   str = NULL;
+
+  /* test partial dates */
+  datetime = gst_date_time_new (0.0, 2010, -1, -1, -1, -1, -1.0);
+  g_value_init (&val, GST_TYPE_DATE_TIME);
+  g_value_take_boxed (&val, datetime);
+  str = gst_value_serialize (&val);
+  g_value_reset (&val);
+  fail_unless_equals_string (str, "2010");
+  fail_unless (gst_value_deserialize (&val, str));
+  datetime = g_value_get_boxed (&val);
+  fail_if (!gst_date_time_has_year (datetime));
+  fail_if (gst_date_time_has_month (datetime));
+  fail_if (gst_date_time_has_day (datetime));
+  fail_if (gst_date_time_has_time (datetime));
+  g_value_unset (&val);
+  g_free (str);
+
+  datetime = gst_date_time_new (0.0, 2010, 9, -1, -1, -1, -1.0);
+  g_value_init (&val, GST_TYPE_DATE_TIME);
+  g_value_take_boxed (&val, datetime);
+  str = gst_value_serialize (&val);
+  g_value_reset (&val);
+  fail_unless_equals_string (str, "2010-09");
+  fail_unless (gst_value_deserialize (&val, str));
+  datetime = g_value_get_boxed (&val);
+  fail_if (!gst_date_time_has_year (datetime));
+  fail_if (!gst_date_time_has_month (datetime));
+  fail_if (gst_date_time_has_day (datetime));
+  fail_if (gst_date_time_has_time (datetime));
+  g_value_unset (&val);
+  g_free (str);
+
+  datetime = gst_date_time_new (0.0, 1983, 11, 30, -1, -1, -1.0);
+  g_value_init (&val, GST_TYPE_DATE_TIME);
+  g_value_take_boxed (&val, datetime);
+  str = gst_value_serialize (&val);
+  g_value_reset (&val);
+  fail_unless_equals_string (str, "1983-11-30");
+  fail_unless (gst_value_deserialize (&val, str));
+  datetime = g_value_get_boxed (&val);
+  fail_if (!gst_date_time_has_year (datetime));
+  fail_if (!gst_date_time_has_month (datetime));
+  fail_if (!gst_date_time_has_day (datetime));
+  fail_if (gst_date_time_has_time (datetime));
+  g_value_unset (&val);
+  g_free (str);
+
+  datetime = gst_date_time_new (0.0, 1983, 11, 30, 3, 52, -1.0);
+  g_value_init (&val, GST_TYPE_DATE_TIME);
+  g_value_take_boxed (&val, datetime);
+  str = gst_value_serialize (&val);
+  g_value_reset (&val);
+  fail_unless_equals_string (str, "1983-11-30T03:52Z");
+  fail_unless (gst_value_deserialize (&val, str));
+  datetime = g_value_get_boxed (&val);
+  fail_if (!gst_date_time_has_year (datetime));
+  fail_if (!gst_date_time_has_month (datetime));
+  fail_if (!gst_date_time_has_day (datetime));
+  fail_if (!gst_date_time_has_time (datetime));
+  fail_if (gst_date_time_has_second (datetime));
+  fail_unless_equals_float (gst_date_time_get_time_zone_offset (datetime), 0.0);
+  g_value_unset (&val);
+  g_free (str);
+
+  datetime = gst_date_time_new (-4.5, 1983, 11, 30, 3, 52, -1.0);
+  g_value_init (&val, GST_TYPE_DATE_TIME);
+  g_value_take_boxed (&val, datetime);
+  str = gst_value_serialize (&val);
+  g_value_reset (&val);
+  fail_unless_equals_string (str, "1983-11-30T03:52-0430");
+  fail_unless (gst_value_deserialize (&val, str));
+  datetime = g_value_get_boxed (&val);
+  fail_if (!gst_date_time_has_year (datetime));
+  fail_if (!gst_date_time_has_month (datetime));
+  fail_if (!gst_date_time_has_day (datetime));
+  fail_if (!gst_date_time_has_time (datetime));
+  fail_if (gst_date_time_has_second (datetime));
+  fail_unless_equals_float (gst_date_time_get_time_zone_offset (datetime),
+      -4.5);
+  g_value_unset (&val);
+  g_free (str);
+
+  datetime = gst_date_time_new (4.5, 1983, 11, 30, 14, 52, 9);
+  g_value_init (&val, GST_TYPE_DATE_TIME);
+  g_value_take_boxed (&val, datetime);
+  str = gst_value_serialize (&val);
+  g_value_reset (&val);
+  fail_unless_equals_string (str, "1983-11-30T14:52:09+0430");
+  fail_unless (gst_value_deserialize (&val, str));
+  datetime = g_value_get_boxed (&val);
+  fail_if (!gst_date_time_has_year (datetime));
+  fail_if (!gst_date_time_has_month (datetime));
+  fail_if (!gst_date_time_has_day (datetime));
+  fail_if (!gst_date_time_has_time (datetime));
+  fail_if (!gst_date_time_has_second (datetime));
+  fail_unless_equals_float (gst_date_time_get_time_zone_offset (datetime), 4.5);
+  g_value_unset (&val);
+  g_free (str);
+
+  datetime = gst_date_time_new (-4.5, 1983, 11, 30, 14, 52, 9.702);
+  g_value_init (&val, GST_TYPE_DATE_TIME);
+  g_value_take_boxed (&val, datetime);
+  str = gst_value_serialize (&val);
+  g_value_reset (&val);
+  fail_unless_equals_string (str, "1983-11-30T14:52:09.702-0430");
+  fail_unless (gst_value_deserialize (&val, str));
+  datetime = g_value_get_boxed (&val);
+  fail_if (!gst_date_time_has_year (datetime));
+  fail_if (!gst_date_time_has_month (datetime));
+  fail_if (!gst_date_time_has_day (datetime));
+  fail_if (!gst_date_time_has_time (datetime));
+  fail_if (!gst_date_time_has_second (datetime));
+  fail_unless_equals_float (gst_date_time_get_time_zone_offset (datetime),
+      -4.5);
+  g_value_unset (&val);
+  g_free (str);
 }
 
 GST_END_TEST;
