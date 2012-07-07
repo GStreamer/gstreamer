@@ -955,9 +955,9 @@ gst_gl_upload_propose_allocation (GstBaseTransform * trans,
   gst_query_add_allocation_pool (query, pool, size, 2, 0);
 
   /* we also support various metadata */
-  gst_query_add_allocation_meta (query, GST_VIDEO_META_API_TYPE);
+  gst_query_add_allocation_meta (query, GST_VIDEO_META_API_TYPE, 0);
   //gst_query_add_allocation_meta (query, GST_VIDEO_CROP_META_API_TYPE);
-  gst_query_add_allocation_meta (query, GST_GL_META_API_TYPE);
+  gst_query_add_allocation_meta (query, GST_GL_META_API_TYPE, 0);
 
   gst_object_unref (pool);
 
