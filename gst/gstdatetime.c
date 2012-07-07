@@ -771,16 +771,19 @@ gst_date_time_new_from_iso8601_string (const gchar * string)
   if (hour > 24 || *string != ':')
     goto ymd;
 
+  /* minute */
   minute = g_ascii_strtoull (string + 1, (gchar **) & string, 10);
   if (minute > 59)
     goto ymd;
 
+  /* second */
   if (*string == ':') {
     second = g_ascii_strtoull (string + 1, (gchar **) & string, 10);
     /* if we fail here, we still can reuse hour and minute. We
-     * will also fall of to tzoffset = 0.0 */
-    if (second > 59)
-      goto ymd_hms;
+     * will still attempt to parse any timezone information */
+    if (second > 59) {
+      second = -1.0;
+    }
   }
 
   if (*string == 'Z')
