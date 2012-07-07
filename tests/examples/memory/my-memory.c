@@ -92,7 +92,8 @@ _my_mem_share (MyMemory * mem, gssize offset, gsize size)
   MyMemory *sub;
   GstMemory *parent;
 
-  GST_DEBUG ("%p: share %" G_GSSIZE_FORMAT, G_GSIZE_FORMAT, mem, offset, size);
+  GST_DEBUG ("%p: share %" G_GSSIZE_FORMAT " %" G_GSIZE_FORMAT, mem, offset,
+      size);
 
   /* find the real parent */
   if ((parent = mem->mem.parent) == NULL)
