@@ -201,7 +201,7 @@ gst_gl_display_init (GstGLDisplay * display)
   display->download_width = 0;
   display->download_height = 0;
   display->download_video_format = 0;
-  display->download_data = NULL;
+  display->download_frame = NULL;
   display->ouput_texture = 0;
   display->ouput_texture_width = 0;
   display->ouput_texture_height = 0;
@@ -1549,7 +1549,10 @@ gst_gl_display_thread_init_download (GstGLDisplay * display)
 void
 gst_gl_display_thread_do_download (GstGLDisplay * display)
 {
-  switch (display->download_video_format) {
+  GstVideoFormat video_format =
+      GST_VIDEO_INFO_FORMAT (&display->download_frame->info);
+
+  switch (video_format) {
     case GST_VIDEO_FORMAT_RGBx:
     case GST_VIDEO_FORMAT_BGRx:
     case GST_VIDEO_FORMAT_xRGB:
@@ -1573,7 +1576,7 @@ gst_gl_display_thread_do_download (GstGLDisplay * display)
       break;
     default:
       gst_gl_display_set_error (display, "Unsupported download video format %d",
-          display->download_video_format);
+          video_format);
   }
 }
 
@@ -2312,7 +2315,7 @@ gst_gl_display_init_download (GstGLDisplay * display,
 /* Called by the gldownload and glcolorscale element */
 gboolean
 gst_gl_display_do_download (GstGLDisplay * display, GLuint texture,
-    gint width, gint height, gpointer data)
+    GstVideoFrame * frame)
 {
   gboolean isAlive = TRUE;
 
@@ -2320,10 +2323,8 @@ gst_gl_display_do_download (GstGLDisplay * display, GLuint texture,
   isAlive = display->isAlive;
   if (isAlive) {
     //data size is aocciated to the glcontext size
-    display->download_data = data;
+    display->download_frame = frame;
     display->ouput_texture = texture;
-    display->ouput_texture_width = width;
-    display->ouput_texture_height = height;
     gst_gl_window_send_message (display->gl_window,
         GST_GL_WINDOW_CB (gst_gl_display_thread_do_download), display);
     isAlive = display->isAlive;
@@ -3208,7 +3209,7 @@ void
 gst_gl_display_thread_do_download_draw_rgb (GstGLDisplay * display)
 {
   GstVideoFormat video_format = display->download_video_format;
-  gpointer data = display->download_data;
+  GstVideoFrame *frame = display->download_frame;
 
 #ifndef OPENGL_ES2
   if (display->upload_colorspace_conversion == GST_GL_DISPLAY_CONVERSION_GLSL)
@@ -3216,8 +3217,8 @@ gst_gl_display_thread_do_download_draw_rgb (GstGLDisplay * display)
   glEnable (GL_TEXTURE_RECTANGLE_ARB);
   glBindTexture (GL_TEXTURE_RECTANGLE_ARB, display->ouput_texture);
 #else
-  gint width = display->ouput_texture_width;
-  gint height = display->ouput_texture_height;
+  gint width = GST_VIDEO_INFO_WIDTH (&frame->info);
+  gint height = GST_VIDEO_INFO_HEIGHT (&frame->info);
 
   const GLfloat vVertices[] = { 1.0f, -1.0f, 0.0f,
     1.0f, 0.0f,
@@ -3262,9 +3263,10 @@ gst_gl_display_thread_do_download_draw_rgb (GstGLDisplay * display)
     case GST_VIDEO_FORMAT_ARGB:
 #ifndef OPENGL_ES2
       glGetTexImage (GL_TEXTURE_RECTANGLE_ARB, 0, GL_RGBA,
-          GL_UNSIGNED_BYTE, data);
+          GL_UNSIGNED_BYTE, frame->data[0]);
 #else
-      glReadPixels (0, 0, width, height, GL_RGBA, GL_UNSIGNED_BYTE, data);
+      glReadPixels (0, 0, width, height, GL_RGBA, GL_UNSIGNED_BYTE,
+          frame->data[0]);
 #endif
       break;
     case GST_VIDEO_FORMAT_BGRx:
@@ -3273,21 +3275,22 @@ gst_gl_display_thread_do_download_draw_rgb (GstGLDisplay * display)
     case GST_VIDEO_FORMAT_ABGR:
 #ifndef OPENGL_ES2
       glGetTexImage (GL_TEXTURE_RECTANGLE_ARB, 0, GL_BGRA,
-          GL_UNSIGNED_BYTE, data);
+          GL_UNSIGNED_BYTE, frame->data[0]);
 #endif
       break;
     case GST_VIDEO_FORMAT_RGB:
 #ifndef OPENGL_ES2
       glGetTexImage (GL_TEXTURE_RECTANGLE_ARB, 0, GL_RGB,
-          GL_UNSIGNED_BYTE, data);
+          GL_UNSIGNED_BYTE, frame->data[0]);
 #else
-      glReadPixels (0, 0, width, height, GL_RGB, GL_UNSIGNED_BYTE, data);
+      glReadPixels (0, 0, width, height, GL_RGB, GL_UNSIGNED_BYTE,
+          frame->data[0]);
 #endif
       break;
     case GST_VIDEO_FORMAT_BGR:
 #ifndef OPENGL_ES2
       glGetTexImage (GL_TEXTURE_RECTANGLE_ARB, 0, GL_BGR,
-          GL_UNSIGNED_BYTE, data);
+          GL_UNSIGNED_BYTE, frame->data[0]);
 #endif
       break;
     default:
@@ -3309,13 +3312,13 @@ gst_gl_display_thread_do_download_draw_yuv (GstGLDisplay * display)
   gint width, height;
   GstVideoFormat video_format;
   GstVideoInfo vinfo;
-  gpointer data;
+  GstVideoFrame *frame;
 
-  width = display->download_width;
-  height = display->download_height;
-  video_format = display->download_video_format;
-  data = display->download_data;
-  gst_video_info_set_format (&vinfo, video_format, width, height);
+  frame = display->download_frame;
+  vinfo = frame->info;
+  width = GST_VIDEO_INFO_WIDTH (&vinfo);
+  height = GST_VIDEO_INFO_HEIGHT (&vinfo);
+  video_format = GST_VIDEO_INFO_FORMAT (&vinfo);
 
 #ifdef OPENGL_ES2
   GLint viewport_dim[4];
@@ -3508,30 +3511,31 @@ gst_gl_display_thread_do_download_draw_yuv (GstGLDisplay * display)
     case GST_VIDEO_FORMAT_AYUV:
     case GST_VIDEO_FORMAT_xRGB:
       glReadPixels (0, 0, width, height, GL_BGRA,
-          GL_UNSIGNED_INT_8_8_8_8, data);
+          GL_UNSIGNED_INT_8_8_8_8, frame->data[0]);
       break;
     case GST_VIDEO_FORMAT_YUY2:
     case GST_VIDEO_FORMAT_UYVY:
       glReadPixels (0, 0, GST_ROUND_UP_2 (width) / 2, height, GL_BGRA,
-          GL_UNSIGNED_INT_8_8_8_8_REV, data);
+          GL_UNSIGNED_INT_8_8_8_8_REV, frame->data[0]);
       break;
     case GST_VIDEO_FORMAT_I420:
     case GST_VIDEO_FORMAT_YV12:
     {
-      glReadPixels (0, 0, width, height, GL_LUMINANCE, GL_UNSIGNED_BYTE, data);
+      glReadPixels (0, 0, width, height, GL_LUMINANCE, GL_UNSIGNED_BYTE,
+          frame->data[0]);
 
 #ifndef OPENGL_ES2
       glReadBuffer (GL_COLOR_ATTACHMENT1_EXT);
 #endif
       glReadPixels (0, 0, GST_ROUND_UP_2 (width) / 2,
           GST_ROUND_UP_2 (height) / 2, GL_LUMINANCE, GL_UNSIGNED_BYTE,
-          (guint8 *) data + GST_VIDEO_INFO_COMP_OFFSET (&vinfo, 1));
+          frame->data[1]);
 #ifndef OPENGL_ES2
       glReadBuffer (GL_COLOR_ATTACHMENT2_EXT);
 #endif
       glReadPixels (0, 0, GST_ROUND_UP_2 (width) / 2,
           GST_ROUND_UP_2 (height) / 2, GL_LUMINANCE, GL_UNSIGNED_BYTE,
-          (guint8 *) data + GST_VIDEO_INFO_COMP_OFFSET (&vinfo, 2));
+          frame->data[2]);
     }
       break;
     default:
