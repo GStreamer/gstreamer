@@ -25,6 +25,7 @@
 #include <gst/base/gstbasetransform.h>
 #include <gst/video/video.h>
 
+#include "gstglbufferpool.h"
 #include "gstglmeta.h"
 
 G_BEGIN_DECLS
@@ -44,9 +45,10 @@ struct _GstGLDownload
     GstBaseTransform base_transform;
 
     GstGLDisplay *display;
-    GstVideoFormat video_format;
-    gint width;
-    gint height;
+
+    GstVideoInfo in_info, out_info;
+
+    GstBufferPool *pool;
 };
 
 struct _GstGLDownloadClass
