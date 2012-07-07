@@ -727,8 +727,10 @@ gst_date_time_to_iso8601_string (GstDateTime * datetime)
 GstDateTime *
 gst_date_time_new_from_iso8601_string (const gchar * string)
 {
-  gint year = -1, month = -1, day = -1, hour = -1, minute = -1, second = -1;
+  gint year = -1, month = -1, day = -1, hour = -1, minute = -1;
+  gdouble second = -1.0;
   gfloat tzoffset = 0.0;
+  guint64 usecs;
   gint len, ret;
 
   len = strlen (string);
@@ -783,6 +785,18 @@ gst_date_time_new_from_iso8601_string (const gchar * string)
      * will still attempt to parse any timezone information */
     if (second > 59) {
       second = -1.0;
+    } else {
+      /* microseconds */
+      if (*string == '.' || *string == ',') {
+        const gchar *usec_start = string + 1;
+        guint digits;
+
+        usecs = g_ascii_strtoull (string + 1, (gchar **) & string, 10);
+        if (usecs != G_MAXUINT64 && string > usec_start) {
+          digits = (guint) (string - usec_start);
+          second += (gdouble) usecs / pow (10.0, digits);
+        }
+      }
     }
   }
 
