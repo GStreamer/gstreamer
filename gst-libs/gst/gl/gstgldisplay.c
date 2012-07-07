@@ -57,6 +57,7 @@ GST_DEBUG_CATEGORY_STATIC (gst_gl_display_debug);
 G_DEFINE_TYPE_WITH_CODE (GstGLDisplay, gst_gl_display, G_TYPE_OBJECT,
     DEBUG_INIT);
 static void gst_gl_display_finalize (GObject * object);
+void gst_gl_display_check_framebuffer_status (void);
 
 /* Called in the gl thread, protected by lock and unlock */
 gpointer gst_gl_display_thread_create_context (GstGLDisplay * display);
