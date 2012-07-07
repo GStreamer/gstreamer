@@ -180,7 +180,7 @@ struct _GstGLDisplay
   gint download_width;
   gint download_height;
   GstVideoFormat download_video_format;
-  gpointer download_data;
+  GstVideoFrame *download_frame;
   GLenum multipleRT[3];
   GLuint ouput_texture;
   GLuint ouput_texture_width;
@@ -269,7 +269,7 @@ gboolean gst_gl_display_do_upload (GstGLDisplay * display, GLuint texture,
 gboolean gst_gl_display_init_download (GstGLDisplay * display,
     GstVideoFormat video_format, gint width, gint height);
 gboolean gst_gl_display_do_download (GstGLDisplay * display, GLuint texture,
-    gint width, gint height, gpointer data);
+    GstVideoFrame *frame);
 
 gboolean gst_gl_display_gen_fbo (GstGLDisplay * display, gint width, gint height,
     GLuint * fbo, GLuint * depthbuffer);
