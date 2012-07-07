@@ -211,6 +211,7 @@ GST_STATIC_PAD_TEMPLATE ("src",
         "rate = " GST_AUDIO_RATE_RANGE ", " "channels = (int) 1")
     );
 
+#define parent_class gst_dtmf_src_parent_class
 G_DEFINE_TYPE (GstDTMFSrc, gst_dtmf_src, GST_TYPE_BASE_SRC);
 
 static void gst_dtmf_src_finalize (GObject * object);
@@ -319,9 +320,11 @@ gst_dtmf_src_finalize (GObject * object)
 }
 
 static gboolean
-gst_dtmf_src_handle_dtmf_event (GstDTMFSrc * dtmfsrc,
-    const GstStructure * event_structure)
+gst_dtmf_src_handle_dtmf_event (GstDTMFSrc * dtmfsrc, GstEvent * event)
 {
+  const GstStructure *event_structure;
+  GstStateChangeReturn sret;
+  GstState state;
   gint event_type;
   gboolean start;
   gint method;
@@ -329,6 +332,14 @@ gst_dtmf_src_handle_dtmf_event (GstDTMFSrc * dtmfsrc,
   gint event_number;
   gint event_volume;
   gboolean correct_order;
+
+  sret = gst_element_get_state (GST_ELEMENT (dtmfsrc), &state, NULL, 0);
+  if (sret != GST_STATE_CHANGE_SUCCESS || state != GST_STATE_PLAYING) {
+    GST_DEBUG_OBJECT (dtmfsrc, "dtmf-event, but not in PLAYING state");
+    goto failure;
+  }
+
+  event_structure = gst_event_get_structure (event);
 
   if (!gst_structure_get_int (event_structure, "type", &event_type) ||
       !gst_structure_get_boolean (event_structure, "start", &start) ||
@@ -376,29 +387,6 @@ failure:
 }
 
 static gboolean
-gst_dtmf_src_handle_custom_upstream (GstDTMFSrc * dtmfsrc, GstEvent * event)
-{
-  gboolean result = FALSE;
-  const GstStructure *structure;
-  GstState state;
-  GstStateChangeReturn ret;
-
-  ret = gst_element_get_state (GST_ELEMENT (dtmfsrc), &state, NULL, 0);
-  if (ret != GST_STATE_CHANGE_SUCCESS || state != GST_STATE_PLAYING) {
-    GST_DEBUG_OBJECT (dtmfsrc, "Received event while not in PLAYING state");
-    goto ret;
-  }
-
-  GST_DEBUG_OBJECT (dtmfsrc, "Received event is of our interest");
-  structure = gst_event_get_structure (event);
-  if (structure && gst_structure_has_name (structure, "dtmf-event"))
-    result = gst_dtmf_src_handle_dtmf_event (dtmfsrc, structure);
-
-ret:
-  return result;
-}
-
-static gboolean
 gst_dtmf_src_handle_event (GstBaseSrc * src, GstEvent * event)
 {
   GstDTMFSrc *dtmfsrc;
@@ -406,9 +394,19 @@ gst_dtmf_src_handle_event (GstBaseSrc * src, GstEvent * event)
 
   dtmfsrc = GST_DTMF_SRC (src);
 
-  GST_DEBUG_OBJECT (dtmfsrc, "Received an event on the src pad");
-  if (GST_EVENT_TYPE (event) == GST_EVENT_CUSTOM_UPSTREAM) {
-    result = gst_dtmf_src_handle_custom_upstream (dtmfsrc, event);
+  GST_LOG_OBJECT (dtmfsrc, "Received an %s event on the src pad",
+      GST_EVENT_TYPE_NAME (event));
+
+  switch (GST_EVENT_TYPE (event)) {
+    case GST_EVENT_CUSTOM_UPSTREAM:
+      if (gst_event_has_name (event, "dtmf-event")) {
+        result = gst_dtmf_src_handle_dtmf_event (dtmfsrc, event);
+        break;
+      }
+      /* fall through */
+    default:
+      result = GST_BASE_SRC_CLASS (parent_class)->event (src, event);
+      break;
   }
 
   return result;
@@ -418,12 +416,29 @@ gst_dtmf_src_handle_event (GstBaseSrc * src, GstEvent * event)
 static gboolean
 gst_dtmf_src_send_event (GstElement * element, GstEvent * event)
 {
+  GstDTMFSrc *dtmfsrc = GST_DTMF_SRC (element);
+  gboolean ret;
 
-  if (gst_dtmf_src_handle_event (GST_BASE_SRC (element), event))
-    return TRUE;
+  GST_LOG_OBJECT (dtmfsrc, "Received an %s event via send_event",
+      GST_EVENT_TYPE_NAME (event));
 
-  return GST_ELEMENT_CLASS (gst_dtmf_src_parent_class)->send_event
-      (element, event);
+  switch (GST_EVENT_TYPE (event)) {
+    case GST_EVENT_CUSTOM_BOTH:
+    case GST_EVENT_CUSTOM_BOTH_OOB:
+    case GST_EVENT_CUSTOM_UPSTREAM:
+    case GST_EVENT_CUSTOM_DOWNSTREAM:
+    case GST_EVENT_CUSTOM_DOWNSTREAM_OOB:
+      if (gst_event_has_name (event, "dtmf-event")) {
+        ret = gst_dtmf_src_handle_dtmf_event (dtmfsrc, event);
+        break;
+      }
+      /* fall through */
+    default:
+      ret = GST_ELEMENT_CLASS (parent_class)->send_event (element, event);
+      break;
+  }
+
+  return ret;
 }
 
 static void
