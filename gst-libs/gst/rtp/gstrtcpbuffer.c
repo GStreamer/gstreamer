@@ -50,7 +50,7 @@
 
 /**
  * gst_rtcp_buffer_new_take_data:
- * @data: data for the new buffer
+ * @data: (array length=len) (element-type guint8): data for the new buffer
  * @len: the length of data
  *
  * Create a new buffer and set the data and size of the buffer to @data and @len
@@ -74,7 +74,7 @@ gst_rtcp_buffer_new_take_data (gpointer data, guint len)
 
 /**
  * gst_rtcp_buffer_new_copy_data:
- * @data: data for the new buffer
+ * @data: (array length=len) (element-type guint8): data for the new buffer
  * @len: the length of data
  *
  * Create a new buffer and set the data to a copy of @len
@@ -91,7 +91,7 @@ gst_rtcp_buffer_new_copy_data (gpointer data, guint len)
 
 /**
  * gst_rtcp_buffer_validate_data:
- * @data: the data to validate
+ * @data: (array length=len): the data to validate
  * @len: the length of @data to validate
  *
  * Check if the @data and @size point to the data of a valid RTCP (compound)
@@ -1174,8 +1174,8 @@ gst_rtcp_packet_sdes_next_entry (GstRTCPPacket * packet)
  * gst_rtcp_packet_sdes_get_entry:
  * @packet: a valid SDES #GstRTCPPacket
  * @type: result of the entry type
- * @len: result length of the entry data
- * @data: result entry data
+ * @len: (out): result length of the entry data
+ * @data: (out) (array length=len) (transfer none): result entry data
  *
  * Get the data of the current SDES item entry. @type (when not NULL) will
  * contain the type of the entry. @data (when not NULL) will point to @len
@@ -1224,8 +1224,8 @@ gst_rtcp_packet_sdes_get_entry (GstRTCPPacket * packet,
  * gst_rtcp_packet_sdes_copy_entry:
  * @packet: a valid SDES #GstRTCPPacket
  * @type: result of the entry type
- * @len: result length of the entry data
- * @data: result entry data
+ * @len: (out): result length of the entry data
+ * @data: (out) (array length=len): result entry data
  *
  * This function is like gst_rtcp_packet_sdes_get_entry() but it returns a
  * null-terminated copy of the data instead. use g_free() after usage.
@@ -1331,7 +1331,7 @@ no_next:
  * @packet: a valid SDES #GstRTCPPacket
  * @type: the #GstRTCPSDESType of the SDES entry
  * @len: the data length
- * @data: the data
+ * @data: (array length=len): the data
  *
  * Add a new SDES entry to the current item in @packet.
  *

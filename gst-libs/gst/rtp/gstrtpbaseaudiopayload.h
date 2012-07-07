@@ -58,6 +58,7 @@ struct _GstRTPBaseAudioPayload
 
   gint sample_size;
 
+  /*< private >*/
   gpointer _gst_reserved[GST_PADDING];
 };
 

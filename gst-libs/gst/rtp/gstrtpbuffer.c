@@ -134,7 +134,8 @@ gst_rtp_buffer_allocate_data (GstBuffer * buffer, guint payload_len,
 
 /**
  * gst_rtp_buffer_new_take_data:
- * @data: data for the new buffer
+ * @data: (array length=len) (transfer full) (element-type guint8):
+ *   data for the new buffer
  * @len: the length of data
  *
  * Create a new buffer and set the data and size of the buffer to @data and @len
@@ -154,7 +155,8 @@ gst_rtp_buffer_new_take_data (gpointer data, gsize len)
 
 /**
  * gst_rtp_buffer_new_copy_data:
- * @data: data for the new buffer
+ * @data: (array length=len) (element-type guint8): data for the new
+ *   buffer
  * @len: the length of data
  *
  * Create a new buffer and set the data to a copy of @len
@@ -377,7 +379,8 @@ dump_packet:
 
 /**
  * gst_rtp_buffer_validate_data:
- * @data: the data to validate
+ * @data: (array length=len) (element-type guint8): the data to
+ *   validate
  * @len: the length of @data to validate
  *
  * Check if the @data and @size point to the data of a valid RTP packet.
@@ -626,9 +629,9 @@ gst_rtp_buffer_set_extension (GstRTPBuffer * rtp, gboolean extension)
 /**
  * gst_rtp_buffer_get_extension_data:
  * @rtp: the RTP packet
- * @bits: location for result bits
- * @data: location for data
- * @wordlen: location for length of @data in 32 bits words
+ * @bits: (out): location for result bits
+ * @data: (out) (array) (element-type guint8) (transfer none): location for data
+ * @wordlen: (out): location for length of @data in 32 bits words
  *
  * Get the extension data. @bits will contain the extension 16 bits of custom
  * data. @data will point to the data in the extension and @wordlen will contain
@@ -997,7 +1000,8 @@ gst_rtp_buffer_get_payload_len (GstRTPBuffer * rtp)
  * Get a pointer to the payload data in @buffer. This pointer is valid as long
  * as a reference to @buffer is held.
  *
- * Returns: A pointer to the payload data in @buffer.
+ * Returns: (array) (element-type guint8) (transfer none): A pointer
+ * to the payload data in @buffer.
  */
 gpointer
 gst_rtp_buffer_get_payload (GstRTPBuffer * rtp)
@@ -1099,8 +1103,9 @@ gst_rtp_buffer_ext_timestamp (guint64 * exttimestamp, guint32 timestamp)
  * @rtp: the RTP packet
  * @id: The ID of the header extension to be read (between 1 and 14).
  * @nth: Read the nth extension packet with the requested ID
- * @data: location for data
- * @size: the size of the data in bytes
+ * @data: (out) (array length=size) (element-type guint8) (transfer none):
+ *   location for data
+ * @size: (out): the size of the data in bytes
  *
  * Parses RFC 5285 style header extensions with a one byte header. It will
  * return the nth extension with the requested id.
@@ -1174,11 +1179,12 @@ gst_rtp_buffer_get_extension_onebyte_header (GstRTPBuffer * rtp, guint8 id,
 /**
  * gst_rtp_buffer_get_extension_twobytes_header:
  * @rtp: the RTP packet
- * @appbits: Application specific bits
+ * @appbits: (out): Application specific bits
  * @id: The ID of the header extension to be read (between 1 and 14).
  * @nth: Read the nth extension packet with the requested ID
- * @data: location for data
- * @size: the size of the data in bytes
+ * @data: (out) (array length=size) (element-type guint8) (transfer none):
+ *   location for data
+ * @size: (out): the size of the data in bytes
  *
  * Parses RFC 5285 style header extensions with a two bytes header. It will
  * return the nth extension with the requested id.
@@ -1287,7 +1293,7 @@ get_onebyte_header_end_offset (guint8 * pdata, guint wordlen)
  * gst_rtp_buffer_add_extension_onebyte_header:
  * @rtp: the RTP packet
  * @id: The ID of the header extension (between 1 and 14).
- * @data: location for data
+ * @data: (array length=size) (element-type guint8): location for data
  * @size: the size of the data in bytes
  *
  * Adds a RFC 5285 header extension with a one byte header to the end of the
@@ -1406,7 +1412,7 @@ get_twobytes_header_end_offset (guint8 * pdata, guint wordlen)
  * @rtp: the RTP packet
  * @appbits: Application specific bits
  * @id: The ID of the header extension
- * @data: location for data
+ * @data: (array length=size) (element-type guint8): location for data
  * @size: the size of the data in bytes
  *
  * Adds a RFC 5285 header extension with a two bytes header to the end of the
