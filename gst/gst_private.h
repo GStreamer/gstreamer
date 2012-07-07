@@ -148,6 +148,8 @@ void      __gst_element_factory_add_interface           (GstElementFactory    * 
 /* This is only meant for internal uses */
 gint __gst_date_time_compare (const GstDateTime * dt1, const GstDateTime * dt2);
 
+gchar * __gst_date_time_serialize (GstDateTime * datetime, gboolean with_usecs);
+
 #ifndef GST_DISABLE_REGISTRY
 /* Secret variable to initialise gst without registry cache */
 GST_EXPORT gboolean _gst_disable_registry_cache;

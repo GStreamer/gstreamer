@@ -2046,8 +2046,8 @@ GST_START_TEST (test_date_time)
   gst_structure_free (s);
   s = NULL;
 
-  fail_unless (g_str_equal (str,
-          "media/x-type, SOME_DATE_TIME_TAG=(datetime)\"2010-06-23T07:40:10.000000+0000\";"));
+  fail_unless_equals_string (str,
+      "media/x-type, SOME_DATE_TIME_TAG=(datetime)2010-06-23T07:40:10Z;");
 
   s = gst_structure_from_string (str, NULL);
   g_free (str);
@@ -2075,8 +2075,8 @@ GST_START_TEST (test_date_time)
   gst_structure_free (s);
   s = NULL;
 
-  fail_unless (g_str_equal (str,
-          "media/x-type, SOME_DATE_TIME_TAG=(datetime)\"2010-06-23T07:40:10.000000+0000\";"));
+  fail_unless_equals_string (str,
+      "media/x-type, SOME_DATE_TIME_TAG=(datetime)2010-06-23T07:40:10Z;");
   g_free (str);
   str = NULL;
 
@@ -2102,8 +2102,8 @@ GST_START_TEST (test_date_time)
   gst_structure_free (s);
   s = NULL;
 
-  fail_unless (g_str_equal (str,
-          "media/x-type, SOME_DATE_TIME_TAG=(datetime)\"2010-06-23T07:40:10.000001-0300\";"));
+  fail_unless_equals_string (str,
+      "media/x-type, SOME_DATE_TIME_TAG=(datetime)2010-06-23T07:40:10.000001-0300;");
 
   s = gst_structure_from_string (str, NULL);
   g_free (str);
@@ -2130,8 +2130,8 @@ GST_START_TEST (test_date_time)
   str = gst_structure_to_string (s);
   gst_structure_free (s);
   s = NULL;
-  fail_unless (g_str_equal (str,
-          "media/x-type, SOME_DATE_TIME_TAG=(datetime)\"2010-06-23T07:40:10.000001-0300\";"));
+  fail_unless_equals_string (str,
+      "media/x-type, SOME_DATE_TIME_TAG=(datetime)2010-06-23T07:40:10.000001-0300;");
 
   g_free (str);
   str = NULL;
@@ -2158,8 +2158,8 @@ GST_START_TEST (test_date_time)
   gst_structure_free (s);
   s = NULL;
 
-  fail_unless (g_str_equal (str,
-          "media/x-type, SOME_DATE_TIME_TAG=(datetime)\"2010-06-23T07:40:10.000001+0200\";"));
+  fail_unless_equals_string (str,
+      "media/x-type, SOME_DATE_TIME_TAG=(datetime)2010-06-23T07:40:10.000001+0200;");
 
   s = gst_structure_from_string (str, NULL);
   g_free (str);
@@ -2186,12 +2186,11 @@ GST_START_TEST (test_date_time)
   str = gst_structure_to_string (s);
   gst_structure_free (s);
   s = NULL;
-  fail_unless (g_str_equal (str,
-          "media/x-type, SOME_DATE_TIME_TAG=(datetime)\"2010-06-23T07:40:10.000001+0200\";"));
+  fail_unless_equals_string (str,
+      "media/x-type, SOME_DATE_TIME_TAG=(datetime)2010-06-23T07:40:10.000001+0200;");
 
   g_free (str);
   str = NULL;
-
 }
 
 GST_END_TEST;
