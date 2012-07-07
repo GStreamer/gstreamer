@@ -312,32 +312,6 @@ print_topology (GstDiscovererStreamInfo * info, gint depth)
 }
 
 static void
-print_tag (const gchar * tag_name, const GValue * value, gint tab)
-{
-  gchar *ser;
-
-  if (G_VALUE_HOLDS_STRING (value))
-    ser = g_value_dup_string (value);
-  else if (GST_VALUE_HOLDS_SAMPLE (value)) {
-    GstSample *smpl = gst_value_get_sample (value);
-    GstBuffer *buf = gst_sample_get_buffer (smpl);
-    GstCaps *caps = gst_sample_get_caps (smpl);
-    gchar *caps_str;
-
-    caps_str = caps ? gst_caps_to_string (caps) : g_strdup ("unknown");
-    ser =
-        g_strdup_printf ("<GstSample [%" G_GSIZE_FORMAT " bytes, type %s]>",
-        gst_buffer_get_size (buf), caps_str);
-    g_free (caps_str);
-  } else
-    ser = gst_value_serialize (value);
-
-  g_print ("%*s%s: %s\n", tab, " ", gst_tag_get_nick (tag_name), ser);
-  g_free (ser);
-}
-
-/* FIXME: this function is almost identical to print_tag() */
-static void
 print_tag_foreach (const GstTagList * tags, const gchar * tag,
     gpointer user_data)
 {
@@ -400,22 +374,8 @@ print_properties (GstDiscovererInfo * info, gint tab)
   g_print ("%*sSeekable: %s\n", tab + 1, " ",
       (gst_discoverer_info_get_seekable (info) ? "yes" : "no"));
   if ((tags = gst_discoverer_info_get_tags (info))) {
-    guint num_tags, i;
-
     g_print ("%*sTags: \n", tab + 1, " ");
-    num_tags = gst_tag_list_n_tags (tags);
-    for (i = 0; i < num_tags; ++i) {
-      const GValue *val;
-      const gchar *tag_name;
-      guint num_entries, j;
-
-      tag_name = gst_tag_list_nth_tag_name (tags, i);
-      num_entries = gst_tag_list_get_tag_size (tags, tag_name);
-      for (j = 0; j < num_entries; ++j) {
-        val = gst_tag_list_get_value_index (tags, tag_name, j);
-        print_tag (tag_name, val, tab + 5);
-      }
-    }
+    gst_tag_list_foreach (tags, print_tag_foreach, GUINT_TO_POINTER (tab + 2));
   }
   if (show_toc && (toc = gst_discoverer_info_get_toc (info))) {
     GList *entries;
