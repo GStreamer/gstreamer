@@ -28,6 +28,8 @@
 #include <gst/audio/audio.h>
 #include <libvisual/libvisual.h>
 
+#include "gstbaseaudiovisualizer.h"
+
 G_BEGIN_DECLS
 
 #define GST_TYPE_VISUAL (gst_visual_get_type())
@@ -42,45 +44,17 @@ typedef struct _GstVisualClass GstVisualClass;
 
 struct _GstVisual
 {
-  GstElement element;
-
-  /* pads */
-  GstPad *sinkpad;
-  GstPad *srcpad;
-  GstSegment segment;
+  GstBaseAudioVisualizer element;
 
   /* libvisual stuff */
   VisAudio *audio;
   VisVideo *video;
   VisActor *actor;
-
-  /* audio/video state */
-  GstAudioInfo info;
-
-  /* framerate numerator & denominator */
-  gint fps_n;
-  gint fps_d;
-  gint width;
-  gint height;
-  GstClockTime duration;
-  guint outsize;
-  GstBufferPool *pool;
-
-  /* samples per frame based on caps */
-  guint spf;
-
-  /* state stuff */
-  GstAdapter *adapter;
-  guint count;
-
-  /* QoS stuff *//* with LOCK */
-  gdouble proportion;
-  GstClockTime earliest_time;
 };
 
 struct _GstVisualClass
 {
-  GstElementClass parent_class;
+  GstBaseAudioVisualizerClass parent_class;
 
   VisPluginRef *plugin;
 };
