@@ -84,13 +84,15 @@ static gboolean gst_gl_test_src_query (GstBaseSrc * bsrc, GstQuery * query);
 
 static void gst_gl_test_src_get_times (GstBaseSrc * basesrc,
     GstBuffer * buffer, GstClockTime * start, GstClockTime * end);
-static GstFlowReturn gst_gl_test_src_create (GstPushSrc * psrc,
-    GstBuffer ** buffer);
+static GstFlowReturn gst_gl_test_src_fill (GstPushSrc * psrc,
+    GstBuffer * buffer);
 static gboolean gst_gl_test_src_start (GstBaseSrc * basesrc);
 static gboolean gst_gl_test_src_stop (GstBaseSrc * basesrc);
+static gboolean gst_gl_test_src_decide_allocation (GstBaseSrc * basesrc,
+    GstQuery * query);
 
-/*static void gst_gl_test_src_callback (gint width, gint height, guint texture,
-    gpointer stuff); */
+static void gst_gl_test_src_callback (gint width, gint height, guint texture,
+    gpointer stuff);
 
 #define GST_TYPE_GL_TEST_SRC_PATTERN (gst_gl_test_src_pattern_get_type ())
 static GType
@@ -170,8 +172,9 @@ gst_gl_test_src_class_init (GstGLTestSrcClass * klass)
   gstbasesrc_class->start = gst_gl_test_src_start;
   gstbasesrc_class->stop = gst_gl_test_src_stop;
   gstbasesrc_class->fixate = gst_gl_test_src_fixate;
+  gstbasesrc_class->decide_allocation = gst_gl_test_src_decide_allocation;
 
-  gstpushsrc_class->create = gst_gl_test_src_create;
+  gstpushsrc_class->fill = gst_gl_test_src_fill;
 }
 
 static void
@@ -205,6 +208,8 @@ gst_gl_test_src_fixate (GstBaseSrc * bsrc, GstCaps * caps)
   gst_structure_fixate_field_nearest_int (structure, "width", 320);
   gst_structure_fixate_field_nearest_int (structure, "height", 240);
   gst_structure_fixate_field_nearest_fraction (structure, "framerate", 30, 1);
+
+  caps = GST_BASE_SRC_CLASS (parent_class)->fixate (bsrc, caps);
 
   return caps;
 }
@@ -327,73 +332,36 @@ gst_gl_test_src_src_query (GstPad * pad, GstObject * object, GstQuery * query)
 }
 
 static gboolean
-gst_gl_test_src_parse_caps (const GstCaps * caps,
-    gint * width, gint * height, gint * rate_numerator, gint * rate_denominator)
-{
-  const GstStructure *structure;
-  GstPadLinkReturn ret;
-  const GValue *framerate;
-
-  GST_DEBUG ("parsing caps");
-
-  if (gst_caps_get_size (caps) < 1)
-    return FALSE;
-
-  structure = gst_caps_get_structure (caps, 0);
-
-  ret = gst_structure_get_int (structure, "width", width);
-  ret &= gst_structure_get_int (structure, "height", height);
-  framerate = gst_structure_get_value (structure, "framerate");
-
-  if (framerate) {
-    *rate_numerator = gst_value_get_fraction_numerator (framerate);
-    *rate_denominator = gst_value_get_fraction_denominator (framerate);
-  } else
-    goto no_framerate;
-
-  return ret;
-
-  /* ERRORS */
-no_framerate:
-  {
-    GST_DEBUG ("gltestsrc no framerate given");
-    return FALSE;
-  }
-}
-
-static gboolean
 gst_gl_test_src_setcaps (GstBaseSrc * bsrc, GstCaps * caps)
 {
   gboolean res = FALSE;
-  gint width, height, rate_denominator, rate_numerator;
+  GstVideoInfo vinfo;
   GstGLTestSrc *gltestsrc = GST_GL_TEST_SRC (bsrc);
 
   GST_DEBUG ("setcaps");
 
-  res = gst_gl_test_src_parse_caps (caps, &width, &height,
-      &rate_numerator, &rate_denominator);
-  if (res) {
-    /* looks ok here */
-    gltestsrc->width = width;
-    gltestsrc->height = height;
-    gltestsrc->rate_numerator = rate_numerator;
-    gltestsrc->rate_denominator = rate_denominator;
-    gltestsrc->negotiated = TRUE;
+  if (!gst_video_info_from_caps (&vinfo, caps))
+    goto wrong_caps;
 
-    GST_DEBUG_OBJECT (gltestsrc, "size %dx%d, %d/%d fps",
-        gltestsrc->width, gltestsrc->height,
-        gltestsrc->rate_numerator, gltestsrc->rate_denominator);
+  gltestsrc->out_info = vinfo;
+  gltestsrc->negotiated = TRUE;
 
+  if (!(res = gst_gl_display_gen_fbo (gltestsrc->display,
+              GST_VIDEO_INFO_WIDTH (&gltestsrc->out_info),
+              GST_VIDEO_INFO_HEIGHT (&gltestsrc->out_info),
+              &gltestsrc->fbo, &gltestsrc->depthbuffer)))
+    GST_ELEMENT_ERROR (gltestsrc, RESOURCE, NOT_FOUND,
+        GST_GL_DISPLAY_ERR_MSG (gltestsrc->display), (NULL));
 
-    res = gst_gl_display_gen_fbo (gltestsrc->display, gltestsrc->width,
-        gltestsrc->height, &gltestsrc->fbo, &gltestsrc->depthbuffer);
-
-    if (!res)
-      GST_ELEMENT_ERROR (gltestsrc, RESOURCE, NOT_FOUND,
-          GST_GL_DISPLAY_ERR_MSG (gltestsrc->display), (NULL));
-  }
   return res;
+
+wrong_caps:
+  {
+    GST_WARNING ("wrong caps");
+    return FALSE;
+  }
 }
+
 
 static gboolean
 gst_gl_test_src_query (GstBaseSrc * bsrc, GstQuery * query)
@@ -410,59 +378,17 @@ gst_gl_test_src_query (GstBaseSrc * bsrc, GstQuery * query)
       gint64 src_val, dest_val;
 
       gst_query_parse_convert (query, &src_fmt, &src_val, &dest_fmt, &dest_val);
-      if (src_fmt == dest_fmt) {
-        dest_val = src_val;
-        goto done;
-      }
-
-      switch (src_fmt) {
-        case GST_FORMAT_DEFAULT:
-          switch (dest_fmt) {
-            case GST_FORMAT_TIME:
-              /* frames to time */
-              if (src->rate_numerator) {
-                dest_val = gst_util_uint64_scale (src_val,
-                    src->rate_denominator * GST_SECOND, src->rate_numerator);
-              } else
-                dest_val = 0;
-              break;
-            default:
-              goto error;
-          }
-          break;
-        case GST_FORMAT_TIME:
-          switch (dest_fmt) {
-            case GST_FORMAT_DEFAULT:
-              /* time to frames */
-              if (src->rate_numerator) {
-                dest_val = gst_util_uint64_scale (src_val,
-                    src->rate_numerator, src->rate_denominator * GST_SECOND);
-              } else
-                dest_val = 0;
-              break;
-            default:
-              goto error;
-          }
-          break;
-        default:
-          goto error;
-      }
-    done:
+      res =
+          gst_video_info_convert (&src->out_info, src_fmt, src_val, dest_fmt,
+          &dest_val);
       gst_query_set_convert (query, src_fmt, src_val, dest_fmt, dest_val);
-      res = TRUE;
       break;
     }
     default:
       res = GST_BASE_SRC_CLASS (parent_class)->query (bsrc, query);
   }
-  return res;
 
-  /* ERROR */
-error:
-  {
-    GST_DEBUG_OBJECT (src, "query failed");
-    return FALSE;
-  }
+  return res;
 }
 
 static void
@@ -499,15 +425,15 @@ gst_gl_test_src_do_seek (GstBaseSrc * bsrc, GstSegment * segment)
   time = segment->position;
 
   /* now move to the time indicated */
-  if (src->rate_numerator) {
+  if (src->out_info.fps_n) {
     src->n_frames = gst_util_uint64_scale (time,
-        src->rate_numerator, src->rate_denominator * GST_SECOND);
+        src->out_info.fps_n, src->out_info.fps_d * GST_SECOND);
   } else
     src->n_frames = 0;
 
-  if (src->rate_numerator) {
+  if (src->out_info.fps_n) {
     src->running_time = gst_util_uint64_scale (src->n_frames,
-        src->rate_denominator * GST_SECOND, src->rate_numerator);
+        src->out_info.fps_d * GST_SECOND, src->out_info.fps_n);
   } else {
     /* FIXME : Not sure what to set here */
     src->running_time = 0;
@@ -526,34 +452,27 @@ gst_gl_test_src_is_seekable (GstBaseSrc * psrc)
 }
 
 static GstFlowReturn
-gst_gl_test_src_create (GstPushSrc * psrc, GstBuffer ** buffer)
+gst_gl_test_src_fill (GstPushSrc * psrc, GstBuffer * buffer)
 {
   GstGLTestSrc *src;
-
-  //GstFlowReturn res;
+  GstGLMeta *gl_meta;
+  GstVideoMeta *v_meta;
   GstClockTime next_time;
+  gint width, height;
 
   src = GST_GL_TEST_SRC (psrc);
 
   if (G_UNLIKELY (!src->negotiated))
     goto not_negotiated;
 
+  width = GST_VIDEO_INFO_WIDTH (&src->out_info);
+  height = GST_VIDEO_INFO_HEIGHT (&src->out_info);
+
   /* 0 framerate and we are at the second frame, eos */
-  if (G_UNLIKELY (src->rate_numerator == 0 && src->n_frames == 1))
+  if (G_UNLIKELY (GST_VIDEO_INFO_FPS_N (&src->out_info) == 0
+          && src->n_frames == 1))
     goto eos;
 
-  GST_LOG_OBJECT (src, "creating buffer %dx%d image for frame %d",
-      src->width, src->height, (gint) src->n_frames);
-
-  /*outbuf = gst_gl_buffer_new (src->display, src->width, src->height);
-
-     if (!outbuf->texture) {
-     goto eos;
-     }
-
-     gst_buffer_set_caps (GST_BUFFER (outbuf),
-     gst_pad_get_negotiated_caps (GST_BASE_SRC_PAD (psrc)));
-   */
   if (src->pattern_type == GST_GL_TEST_SRC_BLINK) {
     if (src->n_frames & 0x1)
       src->make_image = gst_gl_test_src_white;
@@ -561,27 +480,35 @@ gst_gl_test_src_create (GstPushSrc * psrc, GstBuffer ** buffer)
       src->make_image = gst_gl_test_src_black;
   }
 
-  src->buffer = gst_buffer_ref (*buffer);
-/* FIXME: use GstGLMeta
-  //blocking call, generate a FBO
-  if (!gst_gl_display_use_fbo (src->display, src->width, src->height, src->fbo, src->depthbuffer, outbuf->texture, gst_gl_test_src_callback, 0, 0, 0,   //no input texture
-          0, src->width, 0, src->height,
-          GST_GL_DISPLAY_PROJECTION_ORTHO2D, (gpointer) src)) {
-    goto eos;
-  } */
+  src->buffer = gst_buffer_ref (buffer);
+  gl_meta = gst_buffer_get_gl_meta (src->buffer);
+  v_meta = gst_buffer_get_video_meta (src->buffer);
 
-  GST_BUFFER_TIMESTAMP (*buffer) = src->timestamp_offset + src->running_time;
-  GST_BUFFER_OFFSET (*buffer) = src->n_frames;
+  if (!gl_meta || !v_meta) {
+    GST_ERROR
+        ("Output buffer does not contain required GstVideoMeta or GstGLMeta");
+    goto eos;
+  }
+  //blocking call, generate a FBO
+  if (!gst_gl_display_use_fbo (src->display, width, height, src->fbo,
+          src->depthbuffer, gl_meta->memory->tex_id, gst_gl_test_src_callback,
+          0, 0, 0, 0, width, 0, height, GST_GL_DISPLAY_PROJECTION_ORTHO2D,
+          (gpointer) src)) {
+    goto eos;
+  }
+
+  GST_BUFFER_TIMESTAMP (buffer) = src->timestamp_offset + src->running_time;
+  GST_BUFFER_OFFSET (buffer) = src->n_frames;
   src->n_frames++;
-  GST_BUFFER_OFFSET_END (*buffer) = src->n_frames;
-  if (src->rate_numerator) {
+  GST_BUFFER_OFFSET_END (buffer) = src->n_frames;
+  if (src->out_info.fps_n) {
     next_time = gst_util_uint64_scale_int (src->n_frames * GST_SECOND,
-        src->rate_denominator, src->rate_numerator);
-    GST_BUFFER_DURATION (*buffer) = next_time - src->running_time;
+        src->out_info.fps_d, src->out_info.fps_n);
+    GST_BUFFER_DURATION (buffer) = next_time - src->running_time;
   } else {
     next_time = src->timestamp_offset;
     /* NONE means forever */
-    GST_BUFFER_DURATION (*buffer) = GST_CLOCK_TIME_NONE;
+    GST_BUFFER_DURATION (buffer) = GST_CLOCK_TIME_NONE;
   }
 
   src->running_time = next_time;
@@ -664,12 +591,57 @@ gst_gl_test_src_stop (GstBaseSrc * basesrc)
   return TRUE;
 }
 
+static gboolean
+gst_gl_test_src_decide_allocation (GstBaseSrc * trans, GstQuery * query)
+{
+  GstBufferPool *pool = NULL;
+  GstStructure *config;
+  GstCaps *caps;
+  guint min, max, size;
+  gboolean update_pool;
+
+  gst_query_parse_allocation (query, &caps, NULL);
+
+  if (gst_query_get_n_allocation_pools (query) > 0) {
+    gst_query_parse_nth_allocation_pool (query, 0, &pool, &size, &min, &max);
+
+    update_pool = TRUE;
+  } else {
+    GstVideoInfo vinfo;
+
+    gst_video_info_init (&vinfo);
+    gst_video_info_from_caps (&vinfo, caps);
+    size = vinfo.size;
+    min = max = 0;
+    update_pool = FALSE;
+  }
+
+  if (!pool)
+    pool = gst_video_buffer_pool_new ();
+
+  config = gst_buffer_pool_get_config (pool);
+  gst_buffer_pool_config_set_params (config, caps, size, min, max);
+  gst_buffer_pool_config_add_option (config, GST_BUFFER_POOL_OPTION_VIDEO_META);
+  gst_buffer_pool_config_add_option (config, GST_BUFFER_POOL_OPTION_GL_META);
+  gst_buffer_pool_set_config (pool, config);
+
+  if (update_pool)
+    gst_query_set_nth_allocation_pool (query, 0, pool, size, min, max);
+  else
+    gst_query_add_allocation_pool (query, pool, size, min, max);
+
+  gst_object_unref (pool);
+
+  return TRUE;
+}
+
 //opengl scene
-/*static void
+static void
 gst_gl_test_src_callback (gint width, gint height, guint texture,
     gpointer stuff)
 {
   GstGLTestSrc *src = GST_GL_TEST_SRC (stuff);
 
-  src->make_image (src, src->buffer, src->width, src->height);
-} */
+  src->make_image (src, src->buffer, GST_VIDEO_INFO_WIDTH (&src->out_info),
+      GST_VIDEO_INFO_HEIGHT (&src->out_info));
+}

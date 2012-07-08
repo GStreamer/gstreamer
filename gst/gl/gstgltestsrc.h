@@ -26,6 +26,7 @@
 #include <gst/gst.h>
 #include <gst/base/gstpushsrc.h>
 
+#include "gstglbufferpool.h"
 #include "gstglmeta.h"
 
 G_BEGIN_DECLS
@@ -93,15 +94,13 @@ struct _GstGLTestSrc {
 
     /* video state */
     char *format_name;
-    gint width;
-    gint height;
-    gint rate_numerator;
-    gint rate_denominator;
+    GstVideoInfo out_info;
 
     GLuint fbo;
     GLuint depthbuffer;
 
     GstBuffer* buffer;
+    GstBufferPool *pool;
 
     /* private */
     GstGLDisplay *display;
