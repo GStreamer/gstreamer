@@ -1,8 +1,7 @@
 /* GStreamer
- *
- * unit test for jpegenc
- *
+ * unit test for jpegdec
  * Copyright (C) <2010> Thiago Santos <thiago.sousa.santos@collabora.co.uk>
+ * Copyright (C) <2012> Mathias Hasselmann <mathias@openismus.com>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -30,23 +29,17 @@
 /* Verify jpegdec is working when explictly requested by a pipeline. */
 GST_START_TEST (test_jpegdec_explicit)
 {
-  GError *error = NULL;
-  GstElement *pipeline;
-  GstElement *source;
-  GstElement *sink;
+  GstElement *pipeline, *source, *dec, *sink;
   GstSample *sample;
 
   /* construct a pipeline that explicitly uses jpegdec */
-  pipeline = gst_parse_launch
-      ("filesrc name=source ! jpegdec ! appsink name=sink", &error);
-  fail_unless (GST_IS_PIPELINE (pipeline));
-  fail_unless (error == NULL, "%s", (error ? error->message : ""));
+  pipeline = gst_pipeline_new (NULL);
+  source = gst_element_factory_make ("filesrc", NULL);
+  dec = gst_element_factory_make ("jpegdec", NULL);
+  sink = gst_element_factory_make ("appsink", NULL);
 
-  source = gst_bin_get_by_name (GST_BIN (pipeline), "source");
-  sink = gst_bin_get_by_name (GST_BIN (pipeline), "sink");
-
-  fail_unless (GST_IS_ELEMENT (source));
-  fail_unless (GST_IS_APP_SINK (sink));
+  gst_bin_add_many (GST_BIN (pipeline), source, dec, sink, NULL);
+  gst_element_link_many (source, dec, sink, NULL);
 
   /* point that pipeline to our test image */
   {
@@ -58,11 +51,7 @@ GST_START_TEST (test_jpegdec_explicit)
   gst_element_set_state (pipeline, GST_STATE_PLAYING);
 
   sample = gst_app_sink_pull_sample (GST_APP_SINK (sink));
-
   fail_unless (GST_IS_SAMPLE (sample));
-  fail_unless (gst_app_sink_is_eos (GST_APP_SINK (sink)));
-
-  gst_element_set_state (pipeline, GST_STATE_NULL);
 
   /* do some basic checks to verify image decoding */
   {
@@ -76,10 +65,14 @@ GST_START_TEST (test_jpegdec_explicit)
 
     gst_caps_unref (expected);
   }
-
   gst_sample_unref (sample);
-  gst_object_unref (sink);
-  gst_object_unref (source);
+
+  /* wait for EOS */
+  sample = gst_app_sink_pull_sample (GST_APP_SINK (sink));
+  fail_unless (sample == NULL);
+  fail_unless (gst_app_sink_is_eos (GST_APP_SINK (sink)));
+
+  gst_element_set_state (pipeline, GST_STATE_NULL);
   gst_object_unref (pipeline);
 }
 
@@ -124,6 +117,7 @@ GST_START_TEST (test_jpegdec_discover)
   fail_unless_equals_int (gst_discoverer_video_info_get_width (video), 120);
   fail_unless_equals_int (gst_discoverer_video_info_get_height (video), 160);
 
+  gst_discoverer_info_unref (video);
   gst_discoverer_info_unref (info);
   g_free (uri);
   g_object_unref (disco);
