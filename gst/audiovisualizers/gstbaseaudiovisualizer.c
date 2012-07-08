@@ -502,8 +502,9 @@ gst_base_audio_visualizer_init (GstBaseAudioVisualizer * scope,
   scope->fps_d = 1;
   scope->frame_duration = GST_CLOCK_TIME_NONE;
 
-  /* reset the initial audio state */
+  /* reset the initial state */
   gst_audio_info_init (&scope->ainfo);
+  gst_video_info_init (&scope->vinfo);
 
   g_mutex_init (&scope->config_lock);
 }
@@ -614,20 +615,25 @@ static gboolean
 gst_base_audio_visualizer_src_setcaps (GstBaseAudioVisualizer * scope,
     GstCaps * caps)
 {
+  GstVideoInfo info;
   GstBaseAudioVisualizerClass *klass;
   GstStructure *structure;
   gboolean res;
+
+  if (!gst_video_info_from_caps (&info, caps))
+    goto wrong_caps;
 
   structure = gst_caps_get_structure (caps, 0);
   if (!gst_structure_get_int (structure, "width", &scope->width) ||
       !gst_structure_get_int (structure, "height", &scope->height) ||
       !gst_structure_get_fraction (structure, "framerate", &scope->fps_n,
           &scope->fps_d))
-    goto error;
+    goto wrong_caps;
 
   klass = GST_BASE_AUDIO_VISUALIZER_CLASS (G_OBJECT_GET_CLASS (scope));
 
-  //scope->video_format = format; ??
+  scope->vinfo = info;
+  scope->video_format = info.finfo->format;
 
   scope->frame_duration = gst_util_uint64_scale_int (GST_SECOND,
       scope->fps_d, scope->fps_n);
@@ -654,7 +660,7 @@ gst_base_audio_visualizer_src_setcaps (GstBaseAudioVisualizer * scope,
   return res;
 
   /* ERRORS */
-error:
+wrong_caps:
   {
     GST_DEBUG_OBJECT (scope, "error parsing caps");
     return FALSE;
@@ -963,6 +969,11 @@ gst_base_audio_visualizer_src_event (GstPad * pad, GstObject * parent,
       res = gst_pad_push_event (scope->sinkpad, event);
       break;
     }
+    case GST_EVENT_RECONFIGURE:
+      /* dont't forward */
+      gst_event_unref (event);
+      res = TRUE;
+      break;
     default:
       res = gst_pad_push_event (scope->sinkpad, event);
       break;

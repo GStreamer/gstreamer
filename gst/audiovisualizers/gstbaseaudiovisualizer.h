@@ -87,6 +87,7 @@ struct _GstBaseAudioVisualizer
   guint req_spf;                /* min samples per frame wanted by the subclass */
 
   /* video state */
+  GstVideoInfo vinfo;
   GstVideoFormat video_format;
   gint fps_n, fps_d;
   gint width;
