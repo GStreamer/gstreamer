@@ -72,7 +72,7 @@ static GstStaticPadTemplate gst_gl_download_src_pad_template =
 GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS (GST_GL_VIDEO_CAPS)
+    GST_STATIC_CAPS (GST_GL_DOWNLOAD_VIDEO_CAPS)
     );
 
 static GstStaticPadTemplate gst_gl_download_sink_pad_template =
@@ -276,7 +276,6 @@ gst_gl_download_caps_remove_format_info (GstCaps * caps)
     st = gst_structure_copy (st);
     gst_structure_remove_fields (st, "format", "palette_data",
         "colorimetry", "chroma-site", NULL);
-
     gst_caps_append_structure (res, st);
   }
 
@@ -320,7 +319,8 @@ gst_gl_download_set_caps (GstBaseTransform * bt, GstCaps * incaps,
 
   download = GST_GL_DOWNLOAD (bt);
 
-  GST_DEBUG ("called with %" GST_PTR_FORMAT, incaps);
+  GST_DEBUG ("called with in: %" GST_PTR_FORMAT " and out: %" GST_PTR_FORMAT,
+      incaps, outcaps);
 
   ret = gst_video_info_from_caps (&in_vinfo, incaps);
   ret |= gst_video_info_from_caps (&out_vinfo, outcaps);
@@ -332,9 +332,9 @@ gst_gl_download_set_caps (GstBaseTransform * bt, GstCaps * incaps,
 
   download->out_info = out_vinfo;
   download->in_info = in_vinfo;
-  video_format = GST_VIDEO_INFO_FORMAT (&in_vinfo);
-  width = GST_VIDEO_INFO_WIDTH (&in_vinfo);
-  height = GST_VIDEO_INFO_HEIGHT (&in_vinfo);
+  video_format = GST_VIDEO_INFO_FORMAT (&out_vinfo);
+  width = GST_VIDEO_INFO_WIDTH (&out_vinfo);
+  height = GST_VIDEO_INFO_HEIGHT (&out_vinfo);
 
   if (!download->display) {
     GST_ERROR ("display is null");
