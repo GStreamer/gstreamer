@@ -204,9 +204,9 @@ video_buffer_pool_set_config (GstBufferPool * pool, GstStructure * config)
 
   priv->params = params;
   if (priv->allocator)
-    gst_allocator_unref (priv->allocator);
+    gst_object_unref (priv->allocator);
   if ((priv->allocator = allocator))
-    gst_allocator_ref (allocator);
+    gst_object_ref (allocator);
 
   /* enable metadata based on config of the pool */
   priv->add_videometa =
@@ -334,7 +334,7 @@ gst_video_buffer_pool_finalize (GObject * object)
     gst_caps_unref (priv->caps);
 
   if (priv->allocator)
-    gst_allocator_unref (priv->allocator);
+    gst_object_unref (priv->allocator);
 
   G_OBJECT_CLASS (gst_video_buffer_pool_parent_class)->finalize (object);
 }

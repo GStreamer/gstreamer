@@ -811,7 +811,7 @@ gst_video_decoder_finalize (GObject * object)
   }
 
   if (decoder->priv->allocator) {
-    gst_allocator_unref (decoder->priv->allocator);
+    gst_object_unref (decoder->priv->allocator);
     decoder->priv->allocator = NULL;
   }
 
@@ -2666,7 +2666,7 @@ gst_video_decoder_decide_allocation_default (GstVideoDecoder * decoder,
   else
     gst_query_add_allocation_param (query, allocator, &params);
   if (allocator)
-    gst_allocator_unref (allocator);
+    gst_object_unref (allocator);
 
   if (update_pool)
     gst_query_set_nth_allocation_pool (query, 0, pool, size, min, max);
@@ -2757,13 +2757,13 @@ gst_video_decoder_set_src_caps (GstVideoDecoder * decoder)
     gst_query_parse_nth_allocation_pool (query, 0, &pool, NULL, NULL, NULL);
   if (!pool) {
     if (allocator)
-      gst_allocator_unref (allocator);
+      gst_object_unref (allocator);
     ret = FALSE;
     goto no_decide_allocation;
   }
 
   if (decoder->priv->allocator)
-    gst_allocator_unref (decoder->priv->allocator);
+    gst_object_unref (decoder->priv->allocator);
   decoder->priv->allocator = allocator;
   decoder->priv->params = params;
 
