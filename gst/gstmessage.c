@@ -105,6 +105,7 @@ static GstMessageQuarks message_quarks[] = {
   {GST_MESSAGE_QOS, "qos", 0},
   {GST_MESSAGE_PROGRESS, "progress", 0},
   {GST_MESSAGE_TOC, "toc", 0},
+  {GST_MESSAGE_STREAM_START, "stream-start", 0},
   {0, NULL, 0}
 };
 
@@ -2273,4 +2274,26 @@ gst_message_parse_reset_time (GstMessage * message, GstClockTime * running_time)
     *running_time =
         g_value_get_uint64 (gst_structure_id_get_value (structure,
             GST_QUARK (RUNNING_TIME)));
+}
+
+/**
+ * gst_message_new_stream_start:
+ * @src: (transfer none): The object originating the message.
+ *
+ * Create a new stream_start message. This message is generated and posted in
+ * the sink elements of a GstBin. The bin will only forward the STREAM_START
+ * message to the application if all sinks have posted an STREAM_START message.
+ *
+ * Returns: (transfer full): The new stream_start message.
+ *
+ * MT safe.
+ */
+GstMessage *
+gst_message_new_stream_start (GstObject * src)
+{
+  GstMessage *message;
+
+  message = gst_message_new_custom (GST_MESSAGE_STREAM_START, src, NULL);
+
+  return message;
 }
