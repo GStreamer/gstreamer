@@ -2280,6 +2280,7 @@ gst_base_src_get_range (GstBaseSrc * src, guint64 offset, guint length,
   GstBaseSrcClass *bclass;
   GstClockReturn status;
   GstBuffer *res_buf;
+  GstBuffer *in_buf;
 
   bclass = GST_BASE_SRC_GET_CLASS (src);
 
@@ -2325,7 +2326,7 @@ again:
       "calling create offset %" G_GUINT64_FORMAT " length %u, time %"
       G_GINT64_FORMAT, offset, length, src->segment.time);
 
-  res_buf = *buf;
+  res_buf = in_buf = *buf;
 
   ret = bclass->create (src, offset, length, &res_buf);
 
@@ -2342,6 +2343,25 @@ again:
 
   if (G_UNLIKELY (ret != GST_FLOW_OK))
     goto not_ok;
+
+  /* fallback in case the create function didn't fill a provided buffer */
+  if (in_buf != NULL && res_buf != in_buf) {
+    GstMapInfo info;
+    gsize copied_size;
+
+    GST_CAT_DEBUG_OBJECT (GST_CAT_PERFORMANCE, src, "create function didn't "
+        "fill the provided buffer, copying");
+
+    gst_buffer_map (in_buf, &info, GST_MAP_WRITE);
+    copied_size = gst_buffer_extract (res_buf, 0, info.data, info.size);
+    gst_buffer_unmap (in_buf, &info);
+    gst_buffer_set_size (in_buf, copied_size);
+
+    gst_buffer_copy_into (in_buf, res_buf, GST_BUFFER_COPY_METADATA, 0, -1);
+
+    gst_buffer_unref (res_buf);
+    res_buf = in_buf;
+  }
 
   /* no timestamp set and we are at offset 0, we can timestamp with 0 */
   if (offset == 0 && src->segment.time == 0
