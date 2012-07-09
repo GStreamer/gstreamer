@@ -139,15 +139,13 @@ GST_START_TEST (test_serializing)
 
   toc = gst_toc_new ();
   fail_if (toc == NULL);
-  tags = gst_tag_list_new_empty ();
-  gst_tag_list_add (tags, GST_TAG_MERGE_APPEND, GST_TAG_TITLE, TOC_TAG, NULL);
+  tags = gst_tag_list_new (GST_TAG_TITLE, TOC_TAG, NULL);
   gst_toc_set_tags (toc, tags);
 
   /* create edition1 */
   ed = gst_toc_entry_new (GST_TOC_ENTRY_TYPE_EDITION, ENTRY_ED1);
   fail_if (ed == NULL);
-  tags = gst_tag_list_new_empty ();
-  gst_tag_list_add (tags, GST_TAG_MERGE_APPEND, GST_TAG_TITLE, ENTRY_TAG, NULL);
+  tags = gst_tag_list_new (GST_TAG_TITLE, ENTRY_TAG, NULL);
   gst_toc_entry_set_tags (ed, tags);
 
   CHECK_TOC_ENTRY (ed, GST_TOC_ENTRY_TYPE_EDITION, ENTRY_ED1);
@@ -155,8 +153,7 @@ GST_START_TEST (test_serializing)
   /* append chapter1 to edition1 */
   ch = gst_toc_entry_new (GST_TOC_ENTRY_TYPE_CHAPTER, ENTRY_CH1);
   fail_if (ch == NULL);
-  tags = gst_tag_list_new_empty ();
-  gst_tag_list_add (tags, GST_TAG_MERGE_APPEND, GST_TAG_TITLE, ENTRY_TAG, NULL);
+  tags = gst_tag_list_new (GST_TAG_TITLE, ENTRY_TAG, NULL);
   gst_toc_entry_set_tags (ch, tags);
 
   CHECK_TOC_ENTRY (ch, GST_TOC_ENTRY_TYPE_CHAPTER, ENTRY_CH1);
@@ -168,8 +165,7 @@ GST_START_TEST (test_serializing)
   /* append chapter2 to edition1 */
   ch = gst_toc_entry_new (GST_TOC_ENTRY_TYPE_CHAPTER, ENTRY_CH2);
   fail_if (ch == NULL);
-  tags = gst_tag_list_new_empty ();
-  gst_tag_list_add (tags, GST_TAG_MERGE_APPEND, GST_TAG_TITLE, ENTRY_TAG, NULL);
+  tags = gst_tag_list_new (GST_TAG_TITLE, ENTRY_TAG, NULL);
   gst_toc_entry_set_tags (ch, tags);
 
   CHECK_TOC_ENTRY (ch, GST_TOC_ENTRY_TYPE_CHAPTER, ENTRY_CH2);
@@ -199,8 +195,7 @@ GST_START_TEST (test_serializing)
   /* create edition2 */
   ed = gst_toc_entry_new (GST_TOC_ENTRY_TYPE_EDITION, ENTRY_ED2);
   fail_if (ed == NULL);
-  tags = gst_tag_list_new_empty ();
-  gst_tag_list_add (tags, GST_TAG_MERGE_APPEND, GST_TAG_TITLE, ENTRY_TAG, NULL);
+  tags = gst_tag_list_new (GST_TAG_TITLE, ENTRY_TAG, NULL);
   gst_toc_entry_set_tags (ed, tags);
 
   CHECK_TOC_ENTRY (ed, GST_TOC_ENTRY_TYPE_EDITION, ENTRY_ED2);
@@ -208,8 +203,7 @@ GST_START_TEST (test_serializing)
   /* create chapter3 */
   ch = gst_toc_entry_new (GST_TOC_ENTRY_TYPE_CHAPTER, ENTRY_CH3);
   fail_if (ch == NULL);
-  tags = gst_tag_list_new_empty ();
-  gst_tag_list_add (tags, GST_TAG_MERGE_APPEND, GST_TAG_TITLE, ENTRY_TAG, NULL);
+  tags = gst_tag_list_new (GST_TAG_TITLE, ENTRY_TAG, NULL);
   gst_toc_entry_set_tags (ch, tags);
 
   CHECK_TOC_ENTRY (ch, GST_TOC_ENTRY_TYPE_CHAPTER, ENTRY_CH3);
@@ -217,8 +211,7 @@ GST_START_TEST (test_serializing)
   /* create subchapter1 */
   subch = gst_toc_entry_new (GST_TOC_ENTRY_TYPE_CHAPTER, ENTRY_SUB1);
   fail_if (subch == NULL);
-  tags = gst_tag_list_new_empty ();
-  gst_tag_list_add (tags, GST_TAG_MERGE_APPEND, GST_TAG_TITLE, ENTRY_TAG, NULL);
+  tags = gst_tag_list_new (GST_TAG_TITLE, ENTRY_TAG, NULL);
   gst_toc_entry_set_tags (subch, tags);
 
   CHECK_TOC_ENTRY (subch, GST_TOC_ENTRY_TYPE_CHAPTER, ENTRY_SUB1);
