@@ -728,7 +728,7 @@ gst_asf_mux_write_stream_properties (GstAsfMux * asfmux, guint8 ** buf,
     GST_WRITE_UINT32_LE (*buf + 4, audiopad->audioinfo.rate);
     GST_WRITE_UINT32_LE (*buf + 8, audiopad->audioinfo.av_bps);
     GST_WRITE_UINT16_LE (*buf + 12, audiopad->audioinfo.blockalign);
-    GST_WRITE_UINT16_LE (*buf + 14, audiopad->audioinfo.size);
+    GST_WRITE_UINT16_LE (*buf + 14, audiopad->audioinfo.bits_per_sample);
     GST_WRITE_UINT16_LE (*buf + 16, codec_data_length);
 
     GST_DEBUG_OBJECT (asfmux,
@@ -739,7 +739,7 @@ gst_asf_mux_write_stream_properties (GstAsfMux * asfmux, guint8 ** buf,
         G_GUINT16_FORMAT, audiopad->audioinfo.format,
         audiopad->audioinfo.channels, audiopad->audioinfo.rate,
         audiopad->audioinfo.av_bps, audiopad->audioinfo.blockalign,
-        audiopad->audioinfo.size, codec_data_length);
+        audiopad->audioinfo.bits_per_sample, codec_data_length);
 
 
     *buf += ASF_AUDIO_SPECIFIC_DATA_SIZE;
@@ -2029,7 +2029,7 @@ gst_asf_mux_pad_reset (GstAsfPad * pad)
     audiopad->audioinfo.format = 0;
     audiopad->audioinfo.av_bps = 0;
     audiopad->audioinfo.blockalign = 0;
-    audiopad->audioinfo.size = 0;
+    audiopad->audioinfo.bits_per_sample = 0;
   } else {
     GstAsfVideoPad *videopad = (GstAsfVideoPad *) pad;
     videopad->vidinfo.size = 0;
