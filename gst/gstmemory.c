@@ -107,13 +107,6 @@ static GstAllocator *_default_allocator;
 /* our predefined allocators */
 static GstAllocator *_default_mem_impl;
 
-#define SHARE_ONE (1 << 16)
-#define SHARE_MASK (~(SHARE_ONE - 1))
-#define LOCK_ONE (GST_LOCK_FLAG_LAST)
-#define FLAG_MASK (GST_LOCK_FLAG_LAST - 1)
-#define LOCK_MASK ((SHARE_ONE - 1) - FLAG_MASK)
-#define LOCK_FLAG_MASK (SHARE_ONE - 1)
-
 static GstMemory *
 _gst_memory_copy (GstMemory * mem)
 {
