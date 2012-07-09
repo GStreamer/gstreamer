@@ -70,6 +70,15 @@ push_one_eos (GstPad * pad)
   return NULL;
 }
 
+static gpointer
+push_one_stream_start (GstPad * pad)
+{
+  GST_DEBUG_OBJECT (pad, "Pushing STREAM_START event");
+  gst_pad_push_event (pad, gst_event_new_stream_start ());
+
+  return NULL;
+}
+
 GST_START_TEST (test_interface)
 {
   GstBin *bin, *bin2;
@@ -180,6 +189,64 @@ GST_START_TEST (test_eos)
   message = gst_bus_poll (bus, GST_MESSAGE_ERROR | GST_MESSAGE_EOS, -1);
   fail_if (message == NULL);
   fail_unless (GST_MESSAGE_TYPE (message) == GST_MESSAGE_EOS);
+  gst_message_unref (message);
+
+  /* Cleanup */
+  g_thread_join (thread1);
+  g_thread_join (thread2);
+
+  gst_element_set_state (GST_ELEMENT (pipeline), GST_STATE_NULL);
+  gst_pad_set_active (pad1, FALSE);
+  gst_pad_set_active (pad2, FALSE);
+  gst_check_teardown_src_pad (sink1);
+  gst_check_teardown_src_pad (sink2);
+  gst_object_unref (pipeline);
+}
+
+GST_END_TEST;
+
+GST_START_TEST (test_stream_start)
+{
+  GstBus *bus;
+  GstElement *pipeline, *sink1, *sink2;
+  GstMessage *message;
+  GstPad *pad1, *pad2;
+  GThread *thread1, *thread2;
+
+  pipeline = gst_pipeline_new ("test_stream_start");
+  bus = gst_pipeline_get_bus (GST_PIPELINE (pipeline));
+
+  sink1 = gst_element_factory_make ("fakesink", "sink1");
+  sink2 = gst_element_factory_make ("fakesink", "sink2");
+
+  gst_bin_add_many (GST_BIN (pipeline), sink1, sink2, NULL);
+
+  pad1 = gst_check_setup_src_pad_by_name (sink1, &srctemplate, "sink");
+  pad2 = gst_check_setup_src_pad_by_name (sink2, &srctemplate, "sink");
+
+  gst_pad_set_active (pad1, TRUE);
+  gst_pad_set_active (pad2, TRUE);
+
+  fail_if (gst_element_set_state (GST_ELEMENT (pipeline),
+          GST_STATE_PLAYING) == GST_STATE_CHANGE_FAILURE);
+
+  /* Send one STREAM_START to sink1 */
+  thread1 = g_thread_new ("thread1", (GThreadFunc) push_one_stream_start, pad1);
+
+  /* Make sure the STREAM_START message is not sent */
+  message =
+      gst_bus_poll (bus, GST_MESSAGE_ERROR | GST_MESSAGE_STREAM_START,
+      2 * GST_SECOND);
+  fail_if (message != NULL);
+
+  /* Send one STREAM_START to sink2 */
+  thread2 = g_thread_new ("thread2", (GThreadFunc) push_one_stream_start, pad2);
+
+  /* Make sure the STREAM_START message is sent then */
+  message =
+      gst_bus_poll (bus, GST_MESSAGE_ERROR | GST_MESSAGE_STREAM_START, -1);
+  fail_if (message == NULL);
+  fail_unless (GST_MESSAGE_TYPE (message) == GST_MESSAGE_STREAM_START);
   gst_message_unref (message);
 
   /* Cleanup */
@@ -1351,6 +1418,7 @@ gst_bin_suite (void)
   suite_add_tcase (s, tc_chain);
   tcase_add_test (tc_chain, test_interface);
   tcase_add_test (tc_chain, test_eos);
+  tcase_add_test (tc_chain, test_stream_start);
   tcase_add_test (tc_chain, test_children_state_change_order_flagged_sink);
   tcase_add_test (tc_chain, test_children_state_change_order_semi_sink);
   tcase_add_test (tc_chain, test_children_state_change_order_two_sink);
