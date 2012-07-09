@@ -54,7 +54,8 @@ gst_dummy_obj_class_init (GstDummyObjClass * klass)
       /* default value is out of bounds, should print a warning */
       g_object_class_install_property (gobject_class, 1,
           gst_param_spec_fraction ("ratio", "ratio", "ratio", 0, 1, 2, 1,
-              16, 4, G_PARAM_READWRITE)););
+              16, 4, G_PARAM_READWRITE));
+      );
 
   /* should be within bounds */
   g_object_class_install_property (gobject_class, 2,

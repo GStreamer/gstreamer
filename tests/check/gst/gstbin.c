@@ -418,7 +418,12 @@ GST_START_TEST (test_message_state_changed_children)
   ASSERT_OBJECT_REFCOUNT (sink, "sink", 1);
   ASSERT_OBJECT_REFCOUNT (pipeline, "pipeline", 1);
 
-  /* change state to PAUSED, spawning three messages */
+  /* change state to PAUSED, spawning four messages */
+  /* STATE_CHANGED (NULL => READY)
+   * STREAM_START
+   * ASYNC_DONE
+   * STATE_CHANGED (READY => PAUSED)
+   */
   GST_DEBUG ("setting pipeline to PAUSED");
   ret = gst_element_set_state (GST_ELEMENT (pipeline), GST_STATE_PAUSED);
   fail_unless (ret == GST_STATE_CHANGE_ASYNC);
@@ -431,9 +436,9 @@ GST_START_TEST (test_message_state_changed_children)
 
   /* wait for async thread to settle down */
   GST_DEBUG ("waiting for refcount");
-  while (GST_OBJECT_REFCOUNT_VALUE (pipeline) > 3)
+  while (GST_OBJECT_REFCOUNT_VALUE (pipeline) > 4)
     THREAD_SWITCH ();
-  GST_DEBUG ("refcount <= 3 now");
+  GST_DEBUG ("refcount <= 4 now");
 
   /* each object is referenced by a message;
    * base_src is blocked in the push and has an extra refcount.
@@ -444,9 +449,9 @@ GST_START_TEST (test_message_state_changed_children)
   /* refcount can be 4 if the bin is still processing the async_done message of
    * the sink. */
   ASSERT_OBJECT_REFCOUNT_BETWEEN (sink, "sink", 2, 3);
-  /* 2 or 3 is valid, because the pipeline might still be posting 
+  /* 3 or 4 is valid, because the pipeline might still be posting 
    * its state_change message */
-  ASSERT_OBJECT_REFCOUNT_BETWEEN (pipeline, "pipeline", 2, 3);
+  ASSERT_OBJECT_REFCOUNT_BETWEEN (pipeline, "pipeline", 3, 4);
 
   pop_messages (bus, 3);
   pop_async_done (bus);
