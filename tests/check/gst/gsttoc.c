@@ -84,6 +84,7 @@ CHECK_TOC (GstToc * toc_t)
 
   entries = gst_toc_get_entries (toc_t);
   fail_unless_equals_int (g_list_length (entries), 2);
+
   /* check edition1 */
   entry_t = g_list_nth_data (entries, 0);
   fail_if (entry_t == NULL);
@@ -102,26 +103,25 @@ CHECK_TOC (GstToc * toc_t)
   subsubentries = gst_toc_entry_get_sub_entries (subentry_t);
   fail_unless_equals_int (g_list_length (subsubentries), 0);
   CHECK_TOC_ENTRY (subentry_t, GST_TOC_ENTRY_TYPE_CHAPTER, ENTRY_CH2);
+
   /* check edition2 */
   entry_t = g_list_nth_data (entries, 1);
   fail_if (entry_t == NULL);
+  CHECK_TOC_ENTRY (entry_t, GST_TOC_ENTRY_TYPE_EDITION, ENTRY_ED2);
   subentries = gst_toc_entry_get_sub_entries (entry_t);
   fail_unless_equals_int (g_list_length (subentries), 1);
-  CHECK_TOC_ENTRY (entry_t, GST_TOC_ENTRY_TYPE_EDITION, ENTRY_ED2);
   /* check chapter3 */
   subentry_t = g_list_nth_data (subentries, 0);
   fail_if (subentry_t == NULL);
+  CHECK_TOC_ENTRY (subentry_t, GST_TOC_ENTRY_TYPE_CHAPTER, ENTRY_CH3);
   subsubentries = gst_toc_entry_get_sub_entries (subentry_t);
   fail_unless_equals_int (g_list_length (subsubentries), 1);
-  CHECK_TOC_ENTRY (subentry_t, GST_TOC_ENTRY_TYPE_CHAPTER, ENTRY_CH3);
   /* check subchapter1 */
-  subentry_t = g_list_nth_data (subentries, 0);
+  subentry_t = g_list_nth_data (subsubentries, 0);
   fail_if (subentry_t == NULL);
-  GST_ERROR ("%s", gst_toc_entry_get_uid (subentry_t));
-  subsubentries = gst_toc_entry_get_sub_entries (subentry_t);
-  GST_ERROR ("%p", subsubentries);
-  fail_unless_equals_int (g_list_length (subsubentries), 0);
   CHECK_TOC_ENTRY (subentry_t, GST_TOC_ENTRY_TYPE_CHAPTER, ENTRY_SUB1);
+  subsubentries = gst_toc_entry_get_sub_entries (subentry_t);
+  fail_unless_equals_int (g_list_length (subsubentries), 0);
 }
 
 /* This whole test is a bit pointless now that we just stuff a ref of
@@ -230,9 +230,13 @@ GST_START_TEST (test_serializing)
   gst_toc_append_entry (toc, ed);
   fail_unless_equals_int (g_list_length (gst_toc_get_entries (toc)), 2);
 
+  GST_INFO ("check original TOC");
+  CHECK_TOC (toc);
+
   /* test gst_toc_copy() */
   test_toc = gst_toc_copy (toc);
   fail_if (test_toc == NULL);
+  GST_INFO ("check TOC copy");
   CHECK_TOC (test_toc);
   gst_toc_unref (test_toc);
   test_toc = NULL;
@@ -246,6 +250,7 @@ GST_START_TEST (test_serializing)
   gst_event_parse_toc (event, &test_toc, &updated);
   fail_unless (updated == TRUE);
   fail_if (test_toc == NULL);
+  GST_INFO ("check TOC parsed from event");
   CHECK_TOC (test_toc);
   gst_toc_unref (test_toc);
   gst_event_unref (event);

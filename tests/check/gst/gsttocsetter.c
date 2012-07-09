@@ -103,11 +103,9 @@ CHECK_TOC (GstToc * toc_t)
   fail_unless_equals_int (g_list_length (subsubentries), 1);
   CHECK_TOC_ENTRY (subentry_t, GST_TOC_ENTRY_TYPE_CHAPTER, ENTRY_CH3);
   /* check subchapter1 */
-  subentry_t = g_list_nth_data (subentries, 0);
+  subentry_t = g_list_nth_data (subsubentries, 0);
   fail_if (subentry_t == NULL);
-  GST_ERROR ("%s", gst_toc_entry_get_uid (subentry_t));
   subsubentries = gst_toc_entry_get_sub_entries (subentry_t);
-  GST_ERROR ("%p", subsubentries);
   fail_unless_equals_int (g_list_length (subsubentries), 0);
   CHECK_TOC_ENTRY (subentry_t, GST_TOC_ENTRY_TYPE_CHAPTER, ENTRY_SUB1);
 }
