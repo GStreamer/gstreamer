@@ -227,10 +227,24 @@ gst_data_uri_src_create (GstBaseSrc * basesrc, guint64 offset, guint size,
    * larger than the max. available size if a segment at the end is requested */
   if (offset + size > gst_buffer_get_size (src->buffer)) {
     ret = GST_FLOW_EOS;
-  } else {
+  } else if (*buf != NULL) {
+    GstMapInfo src_info;
+    GstMapInfo dest_info;
+    gsize fill_size;
+
+    gst_buffer_map (src->buffer, &src_info, GST_MAP_READ);
+    gst_buffer_map (*buf, &dest_info, GST_MAP_WRITE);
+
+    fill_size = gst_buffer_fill (*buf, 0, src_info.data + offset, size);
+
+    gst_buffer_unmap (*buf, &dest_info);
+    gst_buffer_unmap (src->buffer, &src_info);
+    gst_buffer_set_size (*buf, fill_size);
     ret = GST_FLOW_OK;
+  } else {
     *buf =
         gst_buffer_copy_region (src->buffer, GST_BUFFER_COPY_ALL, offset, size);
+    ret = GST_FLOW_OK;
   }
   GST_OBJECT_UNLOCK (src);
 
