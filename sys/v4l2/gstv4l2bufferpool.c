@@ -356,9 +356,9 @@ gst_v4l2_buffer_pool_set_config (GstBufferPool * bpool, GstStructure * config)
   pool->num_buffers = num_buffers;
   pool->copy_threshold = copy_threshold;
   if (pool->allocator)
-    gst_allocator_unref (pool->allocator);
+    gst_object_unref (pool->allocator);
   if ((pool->allocator = allocator))
-    gst_allocator_ref (allocator);
+    gst_object_ref (allocator);
   pool->params = params;
 
   gst_buffer_pool_config_set_params (config, caps, size, min_buffers,
@@ -887,7 +887,7 @@ gst_v4l2_buffer_pool_finalize (GObject * object)
   if (pool->video_fd >= 0)
     v4l2_close (pool->video_fd);
   if (pool->allocator)
-    gst_allocator_unref (pool->allocator);
+    gst_object_unref (pool->allocator);
   g_free (pool->buffers);
 
   G_OBJECT_CLASS (parent_class)->finalize (object);

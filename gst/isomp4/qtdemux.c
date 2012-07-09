@@ -1796,7 +1796,7 @@ static void
 gst_qtdemux_stream_free (GstQTDemux * qtdemux, QtDemuxStream * stream)
 {
   if (stream->allocator)
-    gst_allocator_unref (stream->allocator);
+    gst_object_unref (stream->allocator);
   while (stream->buffers) {
     gst_buffer_unref (GST_BUFFER_CAST (stream->buffers->data));
     stream->buffers = g_slist_delete_link (stream->buffers, stream->buffers);
@@ -5027,7 +5027,7 @@ qtdemux_do_allocation (GstQTDemux * qtdemux, QtDemuxStream * stream)
   }
 
   if (stream->allocator)
-    gst_allocator_unref (stream->allocator);
+    gst_object_unref (stream->allocator);
 
   if (gst_query_get_n_allocation_params (query) > 0) {
     /* try the allocator */
