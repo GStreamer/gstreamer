@@ -164,25 +164,26 @@ GST_START_TEST (test_event)
 
   /* prepare playing */
   res = gst_element_set_state (bin, GST_STATE_PAUSED);
-  fail_unless (res != GST_STATE_CHANGE_FAILURE, NULL);
+  ck_assert_int_ne (res, GST_STATE_CHANGE_FAILURE);
 
   /* wait for completion */
   res = gst_element_get_state (bin, NULL, NULL, GST_CLOCK_TIME_NONE);
-  fail_unless (res != GST_STATE_CHANGE_FAILURE, NULL);
+  ck_assert_int_ne (res, GST_STATE_CHANGE_FAILURE);
 
   res = gst_element_send_event (bin, seek_event);
   fail_unless (res == TRUE, NULL);
 
   /* run pipeline */
   res = gst_element_set_state (bin, GST_STATE_PLAYING);
-  fail_unless (res != GST_STATE_CHANGE_FAILURE, NULL);
+  ck_assert_int_ne (res, GST_STATE_CHANGE_FAILURE);
 
+  GST_INFO ("running main loop");
   g_main_loop_run (main_loop);
 
   res = gst_element_set_state (bin, GST_STATE_NULL);
-  fail_unless (res != GST_STATE_CHANGE_FAILURE, NULL);
+  ck_assert_int_ne (res, GST_STATE_CHANGE_FAILURE);
 
-  fail_unless (position == 2 * GST_SECOND, NULL);
+  ck_assert_int_eq (position, 2 * GST_SECOND);
 
   /* cleanup */
   g_main_loop_unref (main_loop);
@@ -212,24 +213,24 @@ test_play_twice_message_received (GstBus * bus, GstMessage * message,
       play_count++;
       if (play_count == 1) {
         res = gst_element_set_state (GST_ELEMENT (bin), GST_STATE_READY);
-        fail_unless (res != GST_STATE_CHANGE_FAILURE, NULL);
+        ck_assert_int_ne (res, GST_STATE_CHANGE_FAILURE);
 
         /* prepare playing again */
         res = gst_element_set_state (GST_ELEMENT (bin), GST_STATE_PAUSED);
-        fail_unless (res != GST_STATE_CHANGE_FAILURE, NULL);
+        ck_assert_int_ne (res, GST_STATE_CHANGE_FAILURE);
 
         /* wait for completion */
         res =
             gst_element_get_state (GST_ELEMENT (bin), NULL, NULL,
             GST_CLOCK_TIME_NONE);
-        fail_unless (res != GST_STATE_CHANGE_FAILURE, NULL);
+        ck_assert_int_ne (res, GST_STATE_CHANGE_FAILURE);
 
         res = gst_element_send_event (GST_ELEMENT (bin),
             gst_event_ref (play_seek_event));
         fail_unless (res == TRUE, NULL);
 
         res = gst_element_set_state (GST_ELEMENT (bin), GST_STATE_PLAYING);
-        fail_unless (res != GST_STATE_CHANGE_FAILURE, NULL);
+        ck_assert_int_ne (res, GST_STATE_CHANGE_FAILURE);
       } else {
         g_main_loop_quit (main_loop);
       }
@@ -293,13 +294,13 @@ GST_START_TEST (test_play_twice)
 
   /* prepare playing */
   res = gst_element_set_state (bin, GST_STATE_PAUSED);
-  fail_unless (res != GST_STATE_CHANGE_FAILURE, NULL);
+  ck_assert_int_ne (res, GST_STATE_CHANGE_FAILURE);
 
   /* wait for completion */
   res =
       gst_element_get_state (GST_ELEMENT (bin), NULL, NULL,
       GST_CLOCK_TIME_NONE);
-  fail_unless (res != GST_STATE_CHANGE_FAILURE, NULL);
+  ck_assert_int_ne (res, GST_STATE_CHANGE_FAILURE);
 
   res = gst_element_send_event (bin, gst_event_ref (play_seek_event));
   fail_unless (res == TRUE, NULL);
@@ -308,14 +309,14 @@ GST_START_TEST (test_play_twice)
 
   /* run pipeline */
   res = gst_element_set_state (bin, GST_STATE_PLAYING);
-  fail_unless (res != GST_STATE_CHANGE_FAILURE, NULL);
+  ck_assert_int_ne (res, GST_STATE_CHANGE_FAILURE);
 
   g_main_loop_run (main_loop);
 
   res = gst_element_set_state (bin, GST_STATE_NULL);
-  fail_unless (res != GST_STATE_CHANGE_FAILURE, NULL);
+  ck_assert_int_ne (res, GST_STATE_CHANGE_FAILURE);
 
-  fail_unless (play_count == 2, NULL);
+  ck_assert_int_eq (play_count, 2);
 
   /* cleanup */
   g_main_loop_unref (main_loop);
@@ -382,13 +383,13 @@ GST_START_TEST (test_play_twice_then_add_and_play_again)
 
     /* prepare playing */
     res = gst_element_set_state (bin, GST_STATE_PAUSED);
-    fail_unless (res != GST_STATE_CHANGE_FAILURE, NULL);
+    ck_assert_int_ne (res, GST_STATE_CHANGE_FAILURE);
 
     /* wait for completion */
     res =
         gst_element_get_state (GST_ELEMENT (bin), NULL, NULL,
         GST_CLOCK_TIME_NONE);
-    fail_unless (res != GST_STATE_CHANGE_FAILURE, NULL);
+    ck_assert_int_ne (res, GST_STATE_CHANGE_FAILURE);
 
     res = gst_element_send_event (bin, gst_event_ref (play_seek_event));
     fail_unless (res == TRUE, NULL);
@@ -397,14 +398,14 @@ GST_START_TEST (test_play_twice_then_add_and_play_again)
 
     /* run pipeline */
     res = gst_element_set_state (bin, GST_STATE_PLAYING);
-    fail_unless (res != GST_STATE_CHANGE_FAILURE, NULL);
+    ck_assert_int_ne (res, GST_STATE_CHANGE_FAILURE);
 
     g_main_loop_run (main_loop);
 
     res = gst_element_set_state (bin, GST_STATE_READY);
-    fail_unless (res != GST_STATE_CHANGE_FAILURE, NULL);
+    ck_assert_int_ne (res, GST_STATE_CHANGE_FAILURE);
 
-    fail_unless (play_count == 2, NULL);
+    ck_assert_int_eq (play_count, 2);
 
     /* plug another source */
     if (i == 0) {
@@ -420,7 +421,7 @@ GST_START_TEST (test_play_twice_then_add_and_play_again)
   }
 
   res = gst_element_set_state (bin, GST_STATE_NULL);
-  fail_unless (res != GST_STATE_CHANGE_FAILURE, NULL);
+  ck_assert_int_ne (res, GST_STATE_CHANGE_FAILURE);
 
   /* cleanup */
   g_main_loop_unref (main_loop);
@@ -536,13 +537,13 @@ GST_START_TEST (test_live_seeking)
 
     /* prepare playing */
     res = gst_element_set_state (bin, GST_STATE_PAUSED);
-    fail_unless (res != GST_STATE_CHANGE_FAILURE);
+    ck_assert_int_ne (res, GST_STATE_CHANGE_FAILURE);
 
     /* wait for completion */
     res =
         gst_element_get_state (GST_ELEMENT (bin), NULL, NULL,
         GST_CLOCK_TIME_NONE);
-    fail_unless (res != GST_STATE_CHANGE_FAILURE, NULL);
+    ck_assert_int_ne (res, GST_STATE_CHANGE_FAILURE);
 
     res = gst_element_send_event (bin, gst_event_ref (play_seek_event));
 #if 1
@@ -556,14 +557,14 @@ GST_START_TEST (test_live_seeking)
 
     /* run pipeline */
     res = gst_element_set_state (bin, GST_STATE_PLAYING);
-    fail_unless (res != GST_STATE_CHANGE_FAILURE, NULL);
+    ck_assert_int_ne (res, GST_STATE_CHANGE_FAILURE);
 
     GST_INFO ("playing");
 
     g_main_loop_run (main_loop);
 
     res = gst_element_set_state (bin, GST_STATE_NULL);
-    fail_unless (res != GST_STATE_CHANGE_FAILURE, NULL);
+    ck_assert_int_ne (res, GST_STATE_CHANGE_FAILURE);
 
     gst_consistency_checker_reset (consist);
   }
@@ -626,13 +627,13 @@ GST_START_TEST (test_add_pad)
 
   /* prepare playing */
   res = gst_element_set_state (bin, GST_STATE_PAUSED);
-  fail_unless (res != GST_STATE_CHANGE_FAILURE, NULL);
+  ck_assert_int_ne (res, GST_STATE_CHANGE_FAILURE);
 
   /* wait for completion */
   res =
       gst_element_get_state (GST_ELEMENT (bin), NULL, NULL,
       GST_CLOCK_TIME_NONE);
-  fail_unless (res != GST_STATE_CHANGE_FAILURE, NULL);
+  ck_assert_int_ne (res, GST_STATE_CHANGE_FAILURE);
 
   /* add other element */
   gst_bin_add_many (GST_BIN (bin), src2, NULL);
@@ -646,12 +647,12 @@ GST_START_TEST (test_add_pad)
 
   /* now play all */
   res = gst_element_set_state (bin, GST_STATE_PLAYING);
-  fail_unless (res != GST_STATE_CHANGE_FAILURE, NULL);
+  ck_assert_int_ne (res, GST_STATE_CHANGE_FAILURE);
 
   g_main_loop_run (main_loop);
 
   res = gst_element_set_state (bin, GST_STATE_NULL);
-  fail_unless (res != GST_STATE_CHANGE_FAILURE, NULL);
+  ck_assert_int_ne (res, GST_STATE_CHANGE_FAILURE);
 
   /* cleanup */
   g_main_loop_unref (main_loop);
@@ -707,11 +708,11 @@ GST_START_TEST (test_remove_pad)
   /* prepare playing, this will not preroll as adder is waiting
    * on the unconnected sinkpad. */
   res = gst_element_set_state (bin, GST_STATE_PAUSED);
-  fail_unless (res != GST_STATE_CHANGE_FAILURE, NULL);
+  ck_assert_int_ne (res, GST_STATE_CHANGE_FAILURE);
 
   /* wait for completion for one second, will return ASYNC */
   res = gst_element_get_state (GST_ELEMENT (bin), NULL, NULL, GST_SECOND);
-  fail_unless (res == GST_STATE_CHANGE_ASYNC, NULL);
+  ck_assert_int_eq (res, GST_STATE_CHANGE_ASYNC);
 
   /* get rid of the pad now, adder should stop waiting on it and
    * continue the preroll */
@@ -722,16 +723,16 @@ GST_START_TEST (test_remove_pad)
   res =
       gst_element_get_state (GST_ELEMENT (bin), NULL, NULL,
       GST_CLOCK_TIME_NONE);
-  fail_unless (res != GST_STATE_CHANGE_FAILURE, NULL);
+  ck_assert_int_ne (res, GST_STATE_CHANGE_FAILURE);
 
   /* now play all */
   res = gst_element_set_state (bin, GST_STATE_PLAYING);
-  fail_unless (res != GST_STATE_CHANGE_FAILURE, NULL);
+  ck_assert_int_ne (res, GST_STATE_CHANGE_FAILURE);
 
   g_main_loop_run (main_loop);
 
   res = gst_element_set_state (bin, GST_STATE_NULL);
-  fail_unless (res != GST_STATE_CHANGE_FAILURE, NULL);
+  ck_assert_int_ne (res, GST_STATE_CHANGE_FAILURE);
 
   /* cleanup */
   g_main_loop_unref (main_loop);
@@ -787,7 +788,7 @@ GST_START_TEST (test_clip)
 
   /* set to playing */
   res = gst_element_set_state (bin, GST_STATE_PLAYING);
-  fail_unless (res != GST_STATE_CHANGE_FAILURE, NULL);
+  ck_assert_int_ne (res, GST_STATE_CHANGE_FAILURE);
 
   /* create an unconnected sinkpad in adder, should also automatically activate
    * the pad */
@@ -820,7 +821,7 @@ GST_START_TEST (test_clip)
   GST_BUFFER_DURATION (buffer) = 250 * GST_MSECOND;
   GST_DEBUG ("pushing buffer %p", buffer);
   ret = gst_pad_chain (sinkpad, buffer);
-  fail_unless (ret == GST_FLOW_OK);
+  ck_assert_int_eq (ret, GST_FLOW_OK);
   fail_unless (handoff_buffer == NULL);
 
   /* should be partially clipped */
@@ -829,7 +830,7 @@ GST_START_TEST (test_clip)
   GST_BUFFER_DURATION (buffer) = 250 * GST_MSECOND;
   GST_DEBUG ("pushing buffer %p", buffer);
   ret = gst_pad_chain (sinkpad, buffer);
-  fail_unless (ret == GST_FLOW_OK);
+  ck_assert_int_eq (ret, GST_FLOW_OK);
   fail_unless (handoff_buffer != NULL);
   gst_buffer_replace (&handoff_buffer, NULL);
 
@@ -839,7 +840,7 @@ GST_START_TEST (test_clip)
   GST_BUFFER_DURATION (buffer) = 250 * GST_MSECOND;
   GST_DEBUG ("pushing buffer %p", buffer);
   ret = gst_pad_chain (sinkpad, buffer);
-  fail_unless (ret == GST_FLOW_OK);
+  ck_assert_int_eq (ret, GST_FLOW_OK);
   fail_unless (handoff_buffer != NULL);
   gst_buffer_replace (&handoff_buffer, NULL);
 
@@ -849,9 +850,8 @@ GST_START_TEST (test_clip)
   GST_BUFFER_DURATION (buffer) = 250 * GST_MSECOND;
   GST_DEBUG ("pushing buffer %p", buffer);
   ret = gst_pad_chain (sinkpad, buffer);
-  fail_unless (ret == GST_FLOW_OK);
+  ck_assert_int_eq (ret, GST_FLOW_OK);
   fail_unless (handoff_buffer == NULL);
-
 
 }
 
