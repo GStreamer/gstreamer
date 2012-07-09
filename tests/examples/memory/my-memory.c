@@ -19,8 +19,6 @@
 
 #include "my-memory.h"
 
-static GstAllocator *_my_allocator;
-
 typedef struct
 {
   GstMemory mem;
@@ -31,7 +29,7 @@ typedef struct
 
 
 static GstMemory *
-_my_alloc_alloc (GstAllocator * allocator, gsize size,
+_my_alloc (GstAllocator * allocator, gsize size,
     GstAllocationParams * params, gpointer user_data)
 {
   MyMemory *mem;
@@ -47,6 +45,16 @@ _my_alloc_alloc (GstAllocator * allocator, gsize size,
   mem->data = NULL;
 
   return (GstMemory *) mem;
+}
+
+static void
+_my_free (GstAllocator * allocator, GstMemory * mem)
+{
+  MyMemory *mmem = (MyMemory *) mem;
+
+  g_free (mmem->data);
+  g_slice_free (MyMemory, mmem);
+  GST_DEBUG ("%p: freed", mmem);
 }
 
 static gpointer
@@ -78,14 +86,6 @@ _my_mem_unmap (MyMemory * mem)
   return TRUE;
 }
 
-static void
-_my_mem_free (MyMemory * mem)
-{
-  g_free (mem->data);
-  g_slice_free (MyMemory, mem);
-  GST_DEBUG ("%p: freed", mem);
-}
-
 static MyMemory *
 _my_mem_share (MyMemory * mem, gssize offset, gsize size)
 {
@@ -114,28 +114,47 @@ _my_mem_share (MyMemory * mem, gssize offset, gsize size)
   return sub;
 }
 
-static void
-free_allocator (GstMiniObject * obj)
+typedef struct
 {
-  g_slice_free (GstAllocator, (GstAllocator *) obj);
+  GstAllocator parent;
+} MyMemoryAllocator;
+
+typedef struct
+{
+  GstAllocatorClass parent_class;
+} MyMemoryAllocatorClass;
+
+GType my_memory_allocator_get_type (void);
+G_DEFINE_TYPE (MyMemoryAllocator, my_memory_allocator, GST_TYPE_ALLOCATOR);
+
+static void
+my_memory_allocator_class_init (MyMemoryAllocatorClass * klass)
+{
+  GstAllocatorClass *allocator_class;
+
+  allocator_class = (GstAllocatorClass *) klass;
+
+  allocator_class->alloc = _my_alloc;
+  allocator_class->free = _my_free;
+}
+
+static void
+my_memory_allocator_init (MyMemoryAllocator * allocator)
+{
+  GstAllocator *alloc = GST_ALLOCATOR_CAST (allocator);
+
+  alloc->mem_type = "MyMemory";
+  alloc->mem_map = (GstMemoryMapFunction) _my_mem_map;
+  alloc->mem_unmap = (GstMemoryUnmapFunction) _my_mem_unmap;
+  alloc->mem_share = (GstMemoryShareFunction) _my_mem_share;
 }
 
 void
 my_memory_init (void)
 {
-  static const GstMemoryInfo info = {
-    "MyMemory",
-    (GstAllocatorAllocFunction) _my_alloc_alloc,
-    (GstMemoryMapFunction) _my_mem_map,
-    (GstMemoryUnmapFunction) _my_mem_unmap,
-    (GstMemoryFreeFunction) _my_mem_free,
-    (GstMemoryCopyFunction) NULL,
-    (GstMemoryShareFunction) _my_mem_share,
-    (GstMemoryIsSpanFunction) NULL,
-  };
+  GstAllocator *allocator;
 
-  _my_allocator = g_slice_new (GstAllocator);
-  gst_allocator_init (_my_allocator, 0, &info, free_allocator);
+  allocator = g_object_new (my_memory_allocator_get_type (), NULL);
 
-  gst_allocator_register ("MyMemory", gst_allocator_ref (_my_allocator));
+  gst_allocator_register ("MyMemory", allocator);
 }

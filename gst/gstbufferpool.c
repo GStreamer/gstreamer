@@ -199,7 +199,7 @@ gst_buffer_pool_finalize (GObject * object)
   gst_structure_free (priv->config);
   g_rec_mutex_clear (&priv->rec_lock);
   if (priv->allocator)
-    gst_allocator_unref (priv->allocator);
+    gst_object_unref (priv->allocator);
 
   G_OBJECT_CLASS (gst_buffer_pool_parent_class)->finalize (object);
 }
@@ -493,9 +493,9 @@ default_set_config (GstBufferPool * pool, GstStructure * config)
   priv->max_buffers = max_buffers;
 
   if (priv->allocator)
-    gst_allocator_unref (priv->allocator);
+    gst_object_unref (priv->allocator);
   if ((priv->allocator = allocator))
-    gst_allocator_ref (allocator);
+    gst_object_ref (allocator);
   priv->params = params;
 
   return TRUE;
@@ -896,7 +896,7 @@ gst_buffer_pool_config_get_allocator (GstStructure * config,
   g_return_val_if_fail (config != NULL, FALSE);
 
   if (allocator)
-    *allocator = g_value_get_boxed (gst_structure_id_get_value (config,
+    *allocator = g_value_get_object (gst_structure_id_get_value (config,
             GST_QUARK (ALLOCATOR)));
   if (params) {
     GstAllocationParams *p;

@@ -34,12 +34,22 @@ typedef struct
 
 
 static GstMemory *
-_my_alloc_alloc (GstAllocator * allocator, gsize size,
+_my_alloc (GstAllocator * allocator, gsize size,
     GstAllocationParams * params, gpointer user_data)
 {
   g_warning ("Use my_vidmem_alloc() to allocate from this allocator");
 
   return NULL;
+}
+
+static void
+_my_free (GstAllocator * allocator, GstMemory * mem)
+{
+  MyVidmem *vmem = (MyVidmem *) mem;
+
+  g_free (vmem->data);
+  g_slice_free (MyVidmem, vmem);
+  GST_DEBUG ("%p: freed", vmem);
 }
 
 static gpointer
@@ -71,14 +81,6 @@ _my_vidmem_unmap (MyVidmem * mem)
   return TRUE;
 }
 
-static void
-_my_vidmem_free (MyVidmem * mem)
-{
-  g_free (mem->data);
-  g_slice_free (MyVidmem, mem);
-  GST_DEBUG ("%p: freed", mem);
-}
-
 static MyVidmem *
 _my_vidmem_share (MyVidmem * mem, gssize offset, gsize size)
 {
@@ -107,32 +109,48 @@ _my_vidmem_share (MyVidmem * mem, gssize offset, gsize size)
   return sub;
 }
 
-static void
-free_allocator (GstMiniObject * obj)
+typedef struct
 {
-  g_slice_free (GstAllocator, (GstAllocator *) obj);
+  GstAllocator parent;
+} MyVidmemAllocator;
+
+typedef struct
+{
+  GstAllocatorClass parent_class;
+} MyVidmemAllocatorClass;
+
+GType my_vidmem_allocator_get_type (void);
+G_DEFINE_TYPE (MyVidmemAllocator, my_vidmem_allocator, GST_TYPE_ALLOCATOR);
+
+static void
+my_vidmem_allocator_class_init (MyVidmemAllocatorClass * klass)
+{
+  GstAllocatorClass *allocator_class;
+
+  allocator_class = (GstAllocatorClass *) klass;
+
+  allocator_class->alloc = _my_alloc;
+  allocator_class->free = _my_free;
+}
+
+static void
+my_vidmem_allocator_init (MyVidmemAllocator * allocator)
+{
+  GstAllocator *alloc = GST_ALLOCATOR_CAST (allocator);
+
+  alloc->mem_type = "MyVidmem";
+  alloc->mem_map = (GstMemoryMapFunction) _my_vidmem_map;
+  alloc->mem_unmap = (GstMemoryUnmapFunction) _my_vidmem_unmap;
+  alloc->mem_share = (GstMemoryShareFunction) _my_vidmem_share;
 }
 
 void
 my_vidmem_init (void)
 {
-  static const GstMemoryInfo info = {
-    "MyVidmem",
-    (GstAllocatorAllocFunction) _my_alloc_alloc,
-    (GstMemoryMapFunction) _my_vidmem_map,
-    (GstMemoryUnmapFunction) _my_vidmem_unmap,
-    (GstMemoryFreeFunction) _my_vidmem_free,
-    (GstMemoryCopyFunction) NULL,
-    (GstMemoryShareFunction) _my_vidmem_share,
-    (GstMemoryIsSpanFunction) NULL,
-  };
+  _my_allocator = g_object_new (my_vidmem_allocator_get_type (), NULL);
 
-  _my_allocator = g_slice_new (GstAllocator);
-  gst_allocator_init (_my_allocator, 0, &info, free_allocator);
-
-  gst_allocator_register ("MyVidmem", gst_allocator_ref (_my_allocator));
+  gst_allocator_register ("MyVidmem", gst_object_ref (_my_allocator));
 }
-
 
 GstMemory *
 my_vidmem_alloc (guint format, guint width, guint height)

@@ -1837,7 +1837,7 @@ static void
 allocation_param_free (AllocationParam * ap)
 {
   if (ap->allocator)
-    gst_allocator_unref (ap->allocator);
+    gst_object_unref (ap->allocator);
 }
 
 /**
@@ -1865,7 +1865,7 @@ gst_query_add_allocation_param (GstQuery * query, GstAllocator * allocator,
       sizeof (AllocationParam), (GDestroyNotify) allocation_param_free);
 
   if ((ap.allocator = allocator))
-    gst_allocator_ref (allocator);
+    gst_object_ref (allocator);
   if (params)
     ap.params = *params;
   else
@@ -1930,7 +1930,7 @@ gst_query_parse_nth_allocation_param (GstQuery * query, guint index,
 
   if (allocator)
     if ((*allocator = ap->allocator))
-      gst_allocator_ref (*allocator);
+      gst_object_ref (*allocator);
   if (params)
     *params = ap->params;
 }
@@ -1964,7 +1964,7 @@ gst_query_set_nth_allocation_param (GstQuery * query, guint index,
   allocation_param_free (old);
 
   if ((ap.allocator = allocator))
-    gst_allocator_ref (allocator);
+    gst_object_ref (allocator);
   if (params)
     ap.params = *params;
   else

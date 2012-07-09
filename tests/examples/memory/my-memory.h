@@ -19,6 +19,7 @@
 
 #include <gst/gst.h>
 
+
 /* example of an allocator that delays allocation of the memory
  * until the memory is mapped */
 void my_memory_init (void);

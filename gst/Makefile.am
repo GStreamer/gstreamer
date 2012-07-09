@@ -48,6 +48,7 @@ EXTRA_libgstreamer_@GST_API_VERSION@_la_SOURCES = \
 libgstreamer_@GST_API_VERSION@_la_SOURCES = \
 	gst.c			\
 	gstobject.c		\
+	gstallocator.c		\
 	gstbin.c		\
 	gstbuffer.c		\
 	gstbufferlist.c		\
@@ -142,6 +143,7 @@ gst_headers =			\
 	gst.h			\
 	glib-compat.h		\
 	gstobject.h		\
+	gstallocator.h		\
 	gstbin.h		\
 	gstbuffer.h		\
 	gstbufferlist.h		\

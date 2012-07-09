@@ -26,7 +26,7 @@
 
 #include <gst/gstminiobject.h>
 #include <gst/gstclock.h>
-#include <gst/gstmemory.h>
+#include <gst/gstallocator.h>
 
 G_BEGIN_DECLS
 

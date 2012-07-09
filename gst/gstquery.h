@@ -33,6 +33,7 @@
 #include <gst/gststructure.h>
 #include <gst/gstformat.h>
 #include <gst/gstpad.h>
+#include <gst/gstallocator.h>
 #include <gst/gsttoc.h>
 
 G_BEGIN_DECLS

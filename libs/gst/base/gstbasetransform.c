@@ -785,7 +785,7 @@ gst_base_transform_set_allocation (GstBaseTransform * trans,
     gst_object_unref (oldpool);
   }
   if (oldalloc) {
-    gst_allocator_unref (oldalloc);
+    gst_object_unref (oldalloc);
   }
   if (oldquery) {
     gst_query_unref (oldquery);
@@ -883,7 +883,7 @@ gst_base_transform_default_decide_allocation (GstBaseTransform * trans,
   else
     gst_query_add_allocation_param (query, allocator, &params);
   if (allocator)
-    gst_allocator_unref (allocator);
+    gst_object_unref (allocator);
 
   if (pool) {
     gst_query_set_nth_allocation_pool (query, 0, pool, size, min, max);

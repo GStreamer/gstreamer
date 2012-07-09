@@ -2787,7 +2787,7 @@ gst_base_src_set_allocation (GstBaseSrc * basesrc, GstBufferPool * pool,
     gst_object_unref (oldpool);
   }
   if (oldalloc) {
-    gst_allocator_unref (oldalloc);
+    gst_object_unref (oldalloc);
   }
   return TRUE;
 
@@ -2870,7 +2870,7 @@ gst_base_src_decide_allocation_default (GstBaseSrc * basesrc, GstQuery * query)
   else
     gst_query_add_allocation_param (query, allocator, &params);
   if (allocator)
-    gst_allocator_unref (allocator);
+    gst_object_unref (allocator);
 
   if (pool) {
     gst_query_set_nth_allocation_pool (query, 0, pool, size, min, max);

@@ -26,7 +26,7 @@ main (int argc, char **argv)
   gst_memory_unmap (mem, &info);
 
   gst_memory_unref (mem);
-  gst_allocator_unref (alloc);
+  gst_object_unref (alloc);
 
   /* allocator with custom alloc API */
   my_vidmem_init ();
@@ -48,7 +48,7 @@ main (int argc, char **argv)
   gst_memory_unmap (mem, &info);
 
   gst_memory_unref (mem);
-  gst_allocator_unref (alloc);
+  gst_object_unref (alloc);
 
   return 0;
 }
