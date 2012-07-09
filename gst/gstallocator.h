@@ -77,35 +77,9 @@ struct _GstAllocationParams {
   gpointer _gst_reserved[GST_PADDING];
 };
 
-#if 0
-/**
- * GstAllocatorAllocFunction:
- * @allocator: a #GstAllocator
- * @size: the size
- * @params: allocator params
- * @user_data: user data
- *
- * Allocate a new #GstMemory from @allocator that can hold at least @size
- * bytes (+ padding) and is aligned to (@align + 1) bytes.
- *
- * The offset and size of the memory should be set and the prefix/padding must
- * be filled with 0 if @params flags contains #GST_MEMORY_FLAG_ZERO_PREFIXED and
- * #GST_MEMORY_FLAG_ZERO_PADDED respectively.
- *
- * @user_data is extra data passed to this function. The default
- * gst_allocator_alloc() passes the NULL but other implementations could pass
- * custom data.
- *
- * Returns: a newly allocated #GstMemory. Free with gst_memory_unref()
- */
-typedef GstMemory *  (*GstAllocatorAllocFunction)  (GstAllocator *allocator,
-                                                    gsize size, GstAllocationParams *params,
-                                                    gpointer user_data);
-#endif
-
 /**
  * GstAllocatorFlags:
- * @GST_ALLOCATOR_CUSTOM_ALLOC: The allocator has a custom alloc function.
+ * @GST_ALLOCATOR_FLAG_CUSTOM_ALLOC: The allocator has a custom alloc function.
  * @GST_ALLOCATOR_FLAG_LAST: first flag that can be used for custom purposes
  *
  * Flags for allocators.
@@ -118,11 +92,10 @@ typedef enum {
 
 /**
  * GstAllocator:
- * @mini_object: parent structure
+ * @object: parent structure
  * @mem_type: the memory type this allocator provides
  * @mem_map: the implementation of the GstMemoryMapFunction
  * @mem_unmap: the implementation of the GstMemoryUnmapFunction
- * @mem_free: the implementation of the GstMemoryFreeFunction
  * @mem_copy: the implementation of the GstMemoryCopyFunction
  * @mem_share: the implementation of the GstMemoryShareFunction
  * @mem_is_span: the implementation of the GstMemoryIsSpanFunction
@@ -142,9 +115,9 @@ struct _GstAllocator
   GstMemoryShareFunction    mem_share;
   GstMemoryIsSpanFunction   mem_is_span;
 
+  /*< private >*/
   gpointer _gst_reserved[GST_PADDING];
 
-  /*< private >*/
   GstAllocatorPrivate *priv;
 };
 
@@ -175,7 +148,7 @@ void           gst_allocation_params_free    (GstAllocationParams *params);
 /* allocating memory blocks */
 GstMemory *    gst_allocator_alloc           (GstAllocator * allocator, gsize size,
                                               GstAllocationParams *params);
-void           gst_allocator_free            (GstAllocator * allocator, GstMemory *mem);
+void           gst_allocator_free            (GstAllocator * allocator, GstMemory *memory);
 
 GstMemory *    gst_memory_new_wrapped  (GstMemoryFlags flags, gpointer data, gsize maxsize,
                                         gsize offset, gsize size, gpointer user_data,

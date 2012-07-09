@@ -1284,12 +1284,49 @@ gst_iterator_item_get_type
 gst_iterator_result_get_type
 </SECTION>
 
+<SECTION>
+<FILE>gstallocator</FILE>
+<TITLE>GstAllocator</TITLE>
+gst_memory_alignment
+
+GstAllocator
+GstAllocatorFlags
+GstAllocationParams
+
+GST_ALLOCATOR_SYSMEM
+gst_allocator_find
+gst_allocator_register
+gst_allocator_set_default
+
+gst_allocation_params_init
+gst_allocation_params_copy
+gst_allocation_params_free
+
+gst_allocator_alloc
+gst_allocator_free
+
+gst_memory_new_wrapped
+
+<SUBSECTION Standard>
+GST_ALLOCATOR
+GST_ALLOCATOR_CAST
+GST_ALLOCATOR_CLASS
+GST_ALLOCATOR_GET_CLASS
+GST_IS_ALLOCATOR
+GST_IS_ALLOCATOR_CLASS
+GstAllocatorClass
+<SUBSECTION Private>
+GST_TYPE_ALLOCATOR_FLAGS
+GstAllocatorPrivate
+GST_TYPE_ALLOCATION_PARAMS
+gst_allocation_params_get_type
+GST_TYPE_ALLOCATOR
+gst_allocator_get_type
+</SECTION>
 
 <SECTION>
 <FILE>gstmemory</FILE>
 <TITLE>GstMemory</TITLE>
-
-gst_memory_alignment
 
 GstMemoryFlags
 GST_MEMORY_FLAGS
@@ -1307,37 +1344,11 @@ GstMapInfo
 GST_MAP_INFO_INIT
 GST_MAP_READWRITE
 
-GstAllocationParams
-
-GstAllocatorAllocFunction
 GstMemoryMapFunction
 GstMemoryUnmapFunction
-GstMemoryFreeFunction
 GstMemoryCopyFunction
 GstMemoryShareFunction
 GstMemoryIsSpanFunction
-
-GstMemoryInfo
-
-GstAllocator
-
-gst_allocator_new
-gst_allocator_get_memory_type
-gst_allocator_ref
-gst_allocator_unref
-
-GST_ALLOCATOR_SYSMEM
-gst_allocator_find
-gst_allocator_register
-gst_allocator_set_default
-
-gst_allocation_params_init
-gst_allocation_params_copy
-gst_allocation_params_free
-
-gst_allocator_alloc
-
-gst_memory_new_wrapped
 
 gst_memory_ref
 gst_memory_unref
@@ -1365,10 +1376,6 @@ GST_TYPE_MAP_FLAGS
 gst_map_flags_get_type
 GST_TYPE_MEMORY_FLAGS
 gst_memory_flags_get_type
-GST_TYPE_ALLOCATION_PARAMS
-gst_allocation_params_get_type
-GST_TYPE_ALLOCATOR
-gst_allocator_get_type
 </SECTION>
 
 <SECTION>
