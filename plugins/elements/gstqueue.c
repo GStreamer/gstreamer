@@ -821,8 +821,18 @@ out_flushing:
 static gboolean
 gst_queue_is_empty (GstQueue * queue)
 {
+  GstMiniObject *head;
+
   if (queue->queue->length == 0)
     return TRUE;
+
+  /* Only consider the queue empty if the minimum thresholds
+   * are not reached and data is at the queue head. Otherwise
+   * we would block forever on serialized queries.
+   */
+  head = queue->queue->array[queue->queue->head];
+  if (!GST_IS_BUFFER (head) && !GST_IS_BUFFER_LIST (head))
+    return FALSE;
 
   /* It is possible that a max size is reached before all min thresholds are.
    * Therefore, only consider it empty if it is not filled. */
