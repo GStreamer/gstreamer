@@ -2911,7 +2911,7 @@ pause:
 
     if (ret == GST_FLOW_EOS) {
       /* handle end-of-stream/segment */
-      if (parse->segment.flags & GST_SEEK_FLAG_SEGMENT) {
+      if (parse->segment.flags & GST_SEGMENT_FLAG_SEGMENT) {
         gint64 stop;
 
         if ((stop = parse->segment.stop) == -1)

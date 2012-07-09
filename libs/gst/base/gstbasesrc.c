@@ -1622,7 +1622,7 @@ gst_base_src_perform_seek (GstBaseSrc * src, GstEvent * event, gboolean unlock)
     memcpy (&src->segment, &seeksegment, sizeof (GstSegment));
     GST_OBJECT_UNLOCK (src);
 
-    if (seeksegment.flags & GST_SEEK_FLAG_SEGMENT) {
+    if (seeksegment.flags & GST_SEGMENT_FLAG_SEGMENT) {
       GstMessage *message;
 
       message = gst_message_new_segment_start (GST_OBJECT (src),
@@ -2707,7 +2707,7 @@ pause:
       gint64 position;
 
       /* perform EOS logic */
-      flag_segment = (src->segment.flags & GST_SEEK_FLAG_SEGMENT) != 0;
+      flag_segment = (src->segment.flags & GST_SEGMENT_FLAG_SEGMENT) != 0;
       format = src->segment.format;
       position = src->segment.position;
 

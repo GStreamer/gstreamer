@@ -478,7 +478,7 @@ gst_type_find_element_seek (GstTypeFindElement * typefind, GstEvent * event)
   typefind->offset = typefind->segment.start;
 
   /* notify start of new segment */
-  if (typefind->segment.flags & GST_SEEK_FLAG_SEGMENT) {
+  if (typefind->segment.flags & GST_SEGMENT_FLAG_SEGMENT) {
     GstMessage *msg;
 
     msg = gst_message_new_segment_start (GST_OBJECT (typefind),
@@ -1090,7 +1090,7 @@ pause:
     if (ret == GST_FLOW_EOS) {
       /* perform EOS logic */
 
-      if (typefind->segment.flags & GST_SEEK_FLAG_SEGMENT) {
+      if (typefind->segment.flags & GST_SEGMENT_FLAG_SEGMENT) {
         gint64 stop;
 
         /* for segment playback we need to post when (in stream time)

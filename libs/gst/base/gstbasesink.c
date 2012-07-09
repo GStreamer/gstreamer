@@ -3591,7 +3591,7 @@ gst_base_sink_perform_seek (GstBaseSink * sink, GstPad * pad, GstEvent * event)
   if (res) {
     gst_segment_copy_into (&seeksegment, &sink->segment);
 
-    if (sink->segment.flags & GST_SEEK_FLAG_SEGMENT) {
+    if (sink->segment.flags & GST_SEGMENT_FLAG_SEGMENT) {
       gst_element_post_message (GST_ELEMENT (sink),
           gst_message_new_segment_start (GST_OBJECT (sink),
               sink->segment.format, sink->segment.position));
@@ -3760,7 +3760,7 @@ paused:
     gst_pad_pause_task (pad);
     if (result == GST_FLOW_EOS) {
       /* perform EOS logic */
-      if (basesink->segment.flags & GST_SEEK_FLAG_SEGMENT) {
+      if (basesink->segment.flags & GST_SEGMENT_FLAG_SEGMENT) {
         gst_element_post_message (GST_ELEMENT_CAST (basesink),
             gst_message_new_segment_done (GST_OBJECT_CAST (basesink),
                 basesink->segment.format, basesink->segment.position));
