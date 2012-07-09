@@ -44,12 +44,12 @@ struct _graph_t {
 #endif
 
 #ifdef __GST_PARSE_TRACE
-gchar  *__gst_parse_strdup (gchar *org);
-void	__gst_parse_strfree (gchar *str);
-link_t *__gst_parse_link_new ();
-void	__gst_parse_link_free (link_t *data);
-chain_t *__gst_parse_chain_new ();
-void	__gst_parse_chain_free (chain_t *data);
+G_GNUC_INTERNAL  gchar  *__gst_parse_strdup (gchar *org);
+G_GNUC_INTERNAL  void	__gst_parse_strfree (gchar *str);
+G_GNUC_INTERNAL  link_t *__gst_parse_link_new ();
+G_GNUC_INTERNAL  void	__gst_parse_link_free (link_t *data);
+G_GNUC_INTERNAL  chain_t *__gst_parse_chain_new ();
+G_GNUC_INTERNAL  void	__gst_parse_chain_free (chain_t *data);
 #  define gst_parse_strdup __gst_parse_strdup
 #  define gst_parse_strfree __gst_parse_strfree
 #  define gst_parse_link_new __gst_parse_link_new
@@ -95,7 +95,9 @@ gst_parse_unescape (gchar *str)
   *str = '\0';
 }
 
-GstElement *priv_gst_parse_launch (const gchar *, GError **,
-    GstParseContext *, GstParseFlags);
+G_GNUC_INTERNAL GstElement *priv_gst_parse_launch (const gchar      * str,
+                                                   GError          ** err,
+                                                   GstParseContext  * ctx,
+                                                   GstParseFlags      flags);
 
 #endif /* __GST_PARSE_TYPES_H__ */
