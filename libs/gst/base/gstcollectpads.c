@@ -109,6 +109,7 @@ struct _GstCollectPadsPrivate
 {
   /* with LOCK and/or STREAM_LOCK */
   gboolean started;
+  gboolean stream_started;
 
   /* with STREAM_LOCK */
   guint32 cookie;               /* @data list cookie */
@@ -235,6 +236,7 @@ gst_collect_pads_init (GstCollectPads * pads)
   pads->priv->queuedpads = 0;
   pads->priv->eospads = 0;
   pads->priv->started = FALSE;
+  pads->priv->stream_started = FALSE;
 
   g_rec_mutex_init (&pads->stream_lock);
 
@@ -1013,6 +1015,7 @@ gst_collect_pads_stop (GstCollectPads * pads)
     unref_data (pads->priv->earliest_data);
   pads->priv->earliest_data = NULL;
   pads->priv->earliest_time = GST_CLOCK_TIME_NONE;
+  pads->priv->stream_started = FALSE;
 
   GST_OBJECT_UNLOCK (pads);
   /* Wake them up so they can end the chain functions. */
@@ -1837,8 +1840,16 @@ gst_collect_pads_event_default (GstCollectPads * pads, GstCollectData * data,
        * accumulated and this is certainly not what we want. */
       goto eat;
     }
-    case GST_EVENT_CAPS:
     case GST_EVENT_STREAM_START:
+      /* let the only the first one go through */
+      if (!pads->priv->stream_started) {
+        pads->priv->stream_started = TRUE;
+        goto forward;
+      } else {
+        goto eat;
+      }
+      break;
+    case GST_EVENT_CAPS:
     case GST_EVENT_STREAM_CONFIG:
       goto eat;
     default:
