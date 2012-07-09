@@ -176,9 +176,8 @@ gst_mini_object_lock (GstMiniObject * object, GstLockFlags flags)
   g_return_val_if_fail (object != NULL, FALSE);
   g_return_val_if_fail (GST_MINI_OBJECT_IS_LOCKABLE (object), FALSE);
 
-  access_mode = flags & FLAG_MASK;
-
   do {
+    access_mode = flags & FLAG_MASK;
     newstate = state = g_atomic_int_get (&object->lockstate);
 
     GST_CAT_TRACE (GST_CAT_LOCKING, "lock %p: state %08x, access_mode %d",
@@ -234,9 +233,8 @@ gst_mini_object_unlock (GstMiniObject * object, GstLockFlags flags)
   g_return_if_fail (object != NULL);
   g_return_if_fail (GST_MINI_OBJECT_IS_LOCKABLE (object));
 
-  access_mode = flags & FLAG_MASK;
-
   do {
+    access_mode = flags & FLAG_MASK;
     newstate = state = g_atomic_int_get (&object->lockstate);
 
     GST_CAT_TRACE (GST_CAT_LOCKING, "unlock %p: state %08x, access_mode %d",
