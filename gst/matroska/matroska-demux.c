@@ -5337,11 +5337,11 @@ gst_matroska_demux_audio_caps (GstMatroskaTrackAudioContext *
       auds.rate = GST_READ_UINT32_LE (data + 4);
       auds.av_bps = GST_READ_UINT32_LE (data + 8);
       auds.blockalign = GST_READ_UINT16_LE (data + 12);
-      auds.size = GST_READ_UINT16_LE (data + 16);
+      auds.bits_per_sample = GST_READ_UINT16_LE (data + 16);
 
       /* 18 is the waveformatex size */
       codec_data = gst_buffer_new_wrapped_full (GST_MEMORY_FLAG_READONLY,
-          data + 18, auds.size, 0, auds.size, NULL, NULL);
+          data + 18, auds.bits_per_sample, 0, auds.bits_per_sample, NULL, NULL);
 
       if (riff_audio_fmt)
         *riff_audio_fmt = auds.format;

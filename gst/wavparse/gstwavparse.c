@@ -1203,7 +1203,7 @@ gst_wavparse_stream_headers (GstWavParse * wav)
     wav->rate = header->rate;
     wav->channels = header->channels;
     wav->blockalign = header->blockalign;
-    wav->depth = header->size;
+    wav->depth = header->bits_per_sample;
     wav->av_bps = header->av_bps;
     wav->vbr = FALSE;
 

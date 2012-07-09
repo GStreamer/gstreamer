@@ -769,11 +769,11 @@ gst_avi_mux_audsink_set_caps (GstPad * pad, GstCaps * vscaps)
     switch (fmt) {
       case GST_AUDIO_FORMAT_U8:
         avipad->auds.blockalign = 8;
-        avipad->auds.size = 8;
+        avipad->auds.bits_per_sample = 8;
         break;
       case GST_AUDIO_FORMAT_S16:
         avipad->auds.blockalign = 16;
-        avipad->auds.size = 16;
+        avipad->auds.bits_per_sample = 16;
         break;
       default:
         goto refuse_caps;
@@ -789,7 +789,7 @@ gst_avi_mux_audsink_set_caps (GstPad * pad, GstCaps * vscaps)
     /* set some defaults */
     avipad->auds.blockalign = 1;
     avipad->auds.av_bps = 0;
-    avipad->auds.size = 16;
+    avipad->auds.bits_per_sample = 16;
 
     if (!strcmp (mimetype, "audio/mpeg")) {
       gint mpegversion;
@@ -859,12 +859,12 @@ gst_avi_mux_audsink_set_caps (GstPad * pad, GstCaps * vscaps)
       avipad->auds.format = GST_RIFF_WAVE_FORMAT_A52;
     } else if (!strcmp (mimetype, "audio/x-alaw")) {
       avipad->auds.format = GST_RIFF_WAVE_FORMAT_ALAW;
-      avipad->auds.size = 8;
+      avipad->auds.bits_per_sample = 8;
       avipad->auds.blockalign = avipad->auds.channels;
       avipad->auds.av_bps = avipad->auds.blockalign * avipad->auds.rate;
     } else if (!strcmp (mimetype, "audio/x-mulaw")) {
       avipad->auds.format = GST_RIFF_WAVE_FORMAT_MULAW;
-      avipad->auds.size = 8;
+      avipad->auds.bits_per_sample = 8;
       avipad->auds.blockalign = avipad->auds.channels;
       avipad->auds.av_bps = avipad->auds.blockalign * avipad->auds.rate;
     } else if (!strcmp (mimetype, "audio/x-wma")) {
@@ -1298,7 +1298,7 @@ gst_avi_mux_riff_get_avi_header (GstAviMux * avimux)
       hdl &= gst_byte_writer_put_uint32_le (&bw, audpad->auds.rate);
       hdl &= gst_byte_writer_put_uint32_le (&bw, audpad->auds.av_bps);
       hdl &= gst_byte_writer_put_uint16_le (&bw, audpad->auds.blockalign);
-      hdl &= gst_byte_writer_put_uint16_le (&bw, audpad->auds.size);
+      hdl &= gst_byte_writer_put_uint16_le (&bw, audpad->auds.bits_per_sample);
       hdl &= gst_byte_writer_put_uint16_le (&bw, codec_size);
       if (audpad->auds_codec_data) {
         gst_buffer_map (audpad->auds_codec_data, &map, GST_MAP_READ);
