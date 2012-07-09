@@ -74,6 +74,10 @@ static gboolean gst_gl_filter_get_unit_size (GstBaseTransform * trans,
     GstCaps * caps, gsize * size);
 static GstFlowReturn gst_gl_filter_transform (GstBaseTransform * bt,
     GstBuffer * inbuf, GstBuffer * outbuf);
+static gboolean gst_gl_filter_propose_allocation (GstBaseTransform * trans,
+    GstQuery * decide_query, GstQuery * query);
+static gboolean gst_gl_filter_decide_allocation (GstBaseTransform * trans,
+    GstQuery * query);
 static gboolean gst_gl_filter_set_caps (GstBaseTransform * bt, GstCaps * incaps,
     GstCaps * outcaps);
 
@@ -99,6 +103,10 @@ gst_gl_filter_class_init (GstGLFilterClass * klass)
   GST_BASE_TRANSFORM_CLASS (klass)->start = gst_gl_filter_start;
   GST_BASE_TRANSFORM_CLASS (klass)->stop = gst_gl_filter_stop;
   GST_BASE_TRANSFORM_CLASS (klass)->set_caps = gst_gl_filter_set_caps;
+  GST_BASE_TRANSFORM_CLASS (klass)->propose_allocation =
+      gst_gl_filter_propose_allocation;
+  GST_BASE_TRANSFORM_CLASS (klass)->decide_allocation =
+      gst_gl_filter_decide_allocation;
   GST_BASE_TRANSFORM_CLASS (klass)->get_unit_size = gst_gl_filter_get_unit_size;
 
   g_object_class_install_property (gobject_class, PROP_EXTERNAL_OPENGL_CONTEXT,
@@ -313,27 +321,42 @@ gst_gl_filter_transform_caps (GstBaseTransform * bt,
 {
   //GstGLFilter* filter = GST_GL_FILTER (bt);
   GstStructure *structure;
-  GstCaps *newcaps;
+  GstCaps *newcaps, *result;
   const GValue *par;
+  guint i, n;
 
   par = NULL;
-  newcaps = gst_caps_make_writable (caps);
-  structure = gst_caps_get_structure (caps, 0);
+  newcaps = gst_caps_new_empty ();
+  n = gst_caps_get_size (caps);
+//  structure = gst_caps_get_structure (newcaps, 0);
 
-  structure = gst_structure_copy (gst_caps_get_structure (newcaps, 0));
+  for (i = 0; i < n; i++) {
+    structure = gst_caps_get_structure (caps, i);
 
-  gst_structure_set (structure,
-      "width", GST_TYPE_INT_RANGE, 1, G_MAXINT,
-      "height", GST_TYPE_INT_RANGE, 1, G_MAXINT, NULL);
+    if (i > 0 && gst_caps_is_subset_structure (newcaps, structure))
+      continue;
 
-  newcaps = gst_caps_merge_structure (newcaps, gst_structure_copy (structure));
+    structure = gst_structure_copy (structure);
 
-  if ((par = gst_structure_get_value (structure, "pixel-aspect-ratio"))) {
-    gst_structure_set (structure,
-        "pixel-aspect-ratio", GST_TYPE_FRACTION_RANGE, 0, 1, G_MAXINT, 1, NULL);
-    newcaps = gst_caps_merge_structure (newcaps, structure);
-  } else
-    gst_structure_free (structure);
+//    gst_structure_set (structure,
+//        "width", GST_TYPE_INT_RANGE, 1, G_MAXINT,
+//        "height", GST_TYPE_INT_RANGE, 1, G_MAXINT, NULL);
+
+    if ((par = gst_structure_get_value (structure, "pixel-aspect-ratio"))) {
+      gst_structure_set (structure,
+          "pixel-aspect-ratio", GST_TYPE_FRACTION_RANGE, 0, 1, G_MAXINT, 1,
+          NULL);
+    }
+
+    gst_caps_append_structure (newcaps, structure);
+  }
+
+  if (filter) {
+    result =
+        gst_caps_intersect_full (filter, newcaps, GST_CAPS_INTERSECT_FIRST);
+    gst_caps_unref (newcaps);
+    newcaps = result;
+  }
 
   GST_DEBUG_OBJECT (bt, "returning caps: %" GST_PTR_FORMAT, newcaps);
 
@@ -414,6 +437,132 @@ gst_gl_filter_set_caps (GstBaseTransform * bt, GstCaps * incaps,
   GST_DEBUG ("set_caps %d %d", filter->width, filter->height);
 
   return ret;
+}
+
+static gboolean
+gst_gl_filter_propose_allocation (GstBaseTransform * trans,
+    GstQuery * decide_query, GstQuery * query)
+{
+  GstGLFilter *filter = GST_GL_FILTER (trans);
+  GstBufferPool *pool;
+  GstStructure *config;
+  GstCaps *caps;
+  guint size;
+  gboolean need_pool;
+
+  gst_query_parse_allocation (query, &caps, &need_pool);
+
+  if (caps == NULL)
+    goto no_caps;
+
+  if ((pool = filter->pool))
+    gst_object_ref (pool);
+
+  if (pool != NULL) {
+    GstCaps *pcaps;
+
+    /* we had a pool, check caps */
+    GST_DEBUG_OBJECT (filter, "check existing pool caps");
+    config = gst_buffer_pool_get_config (pool);
+    gst_buffer_pool_config_get_params (config, &pcaps, &size, NULL, NULL);
+
+    if (!gst_caps_is_equal (caps, pcaps)) {
+      GST_DEBUG_OBJECT (filter, "pool has different caps");
+      /* different caps, we can't use this pool */
+      gst_object_unref (pool);
+      pool = NULL;
+    }
+    gst_structure_free (config);
+  }
+  if (pool == NULL && need_pool) {
+    GstVideoInfo info;
+
+    if (!gst_video_info_from_caps (&info, caps))
+      goto invalid_caps;
+
+    GST_DEBUG_OBJECT (filter, "create new pool");
+    pool = gst_gl_buffer_pool_new (filter->display);
+
+    /* the normal size of a frame */
+    size = info.size;
+
+    config = gst_buffer_pool_get_config (pool);
+    gst_buffer_pool_config_set_params (config, caps, size, 0, 0);
+    if (!gst_buffer_pool_set_config (pool, config))
+      goto config_failed;
+  }
+  /* we need at least 2 buffer because we hold on to the last one */
+  gst_query_add_allocation_pool (query, pool, size, 1, 0);
+
+  /* we also support various metadata */
+  gst_query_add_allocation_meta (query, GST_VIDEO_META_API_TYPE, 0);
+  gst_query_add_allocation_meta (query, GST_GL_META_API_TYPE, 0);
+
+  gst_object_unref (pool);
+
+  return TRUE;
+
+  /* ERRORS */
+no_caps:
+  {
+    GST_DEBUG_OBJECT (trans, "no caps specified");
+    return FALSE;
+  }
+invalid_caps:
+  {
+    GST_DEBUG_OBJECT (trans, "invalid caps specified");
+    return FALSE;
+  }
+config_failed:
+  {
+    GST_DEBUG_OBJECT (trans, "failed setting config");
+    return FALSE;
+  }
+}
+
+static gboolean
+gst_gl_filter_decide_allocation (GstBaseTransform * trans, GstQuery * query)
+{
+  GstGLFilter *filter = GST_GL_FILTER (trans);
+  GstBufferPool *pool = NULL;
+  GstStructure *config;
+  GstCaps *caps;
+  guint min, max, size;
+  gboolean update_pool;
+
+  gst_query_parse_allocation (query, &caps, NULL);
+
+  if (gst_query_get_n_allocation_pools (query) > 0) {
+    gst_query_parse_nth_allocation_pool (query, 0, &pool, &size, &min, &max);
+
+    update_pool = TRUE;
+  } else {
+    GstVideoInfo vinfo;
+
+    gst_video_info_init (&vinfo);
+    gst_video_info_from_caps (&vinfo, caps);
+    size = vinfo.size;
+    min = max = 0;
+    update_pool = FALSE;
+  }
+
+  if (!pool)
+    pool = gst_gl_buffer_pool_new (filter->display);
+
+  config = gst_buffer_pool_get_config (pool);
+  gst_buffer_pool_config_set_params (config, caps, size, min, max);
+  gst_buffer_pool_config_add_option (config, GST_BUFFER_POOL_OPTION_VIDEO_META);
+  gst_buffer_pool_config_add_option (config, GST_BUFFER_POOL_OPTION_GL_META);
+  gst_buffer_pool_set_config (pool, config);
+
+  if (update_pool)
+    gst_query_set_nth_allocation_pool (query, 0, pool, size, min, max);
+  else
+    gst_query_add_allocation_pool (query, pool, size, min, max);
+
+  gst_object_unref (pool);
+
+  return TRUE;
 }
 
 static GstFlowReturn

@@ -27,6 +27,7 @@
 #include <gst/base/gstbasetransform.h>
 #include <gst/video/video.h>
 
+#include "gstglbufferpool.h"
 #include "gstglmeta.h"
 
 G_BEGIN_DECLS
@@ -56,6 +57,8 @@ typedef void (*GstGLFilterGLStopFunc) (GstGLFilter *filter);
 struct _GstGLFilter
 {
   GstBaseTransform base_transform;
+
+  GstBufferPool *pool;
 
   GstGLDisplay *display;
 
