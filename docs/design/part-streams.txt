@@ -11,10 +11,11 @@ Stream objects
 The following objects are to be expected in the streaming thread:
 
  - events
-    - SEGMENT           (S)
-    - EOS		(EOS)  *
+    - STREAM_START      (START)
+    - SEGMENT           (SEGMENT)
+    - EOS             * (EOS)
     - TAG               (T)
- - buffers              (B)    *
+ - buffers            * (B)
 
 Objects marked with * need to be synchronised to the clock in sinks
 and live sources.
@@ -23,16 +24,21 @@ and live sources.
 Typical stream
 ~~~~~~~~~~~~~~
 
- A typical stream starts with a segment event that marks the
+ A typical stream starts with a stream start event that marks the
+ start of the stream, followed by a segment event that marks the
  buffer timestamp range. After that buffers are sent one after the
  other. After the last buffer an EOS marks the end of the stream. No
  more buffers are to be processed after the EOS event.
 
-  +-+ +-++-+     +-+ +---+
-  |S| |B||B| ... |B| |EOS|
-  +-+ +-++-+     +-+ +---+
+  +-----+-------+ +-++-+     +-+ +---+
+  |START|SEGMENT| |B||B| ... |B| |EOS|
+  +-----+-------+ +-++-+     +-+ +---+
 
-  1) SEGMENT, rate, start/stop, time
+  1) STREAM_START
+     - marks the start of a stream; unlike the SEGMENT event, there
+       will be no STREAM_START event after flushing seeks.
+
+  2) SEGMENT, rate, start/stop, time
      - marks valid buffer timestamp range (start, stop)
      - marks stream_time of buffers (time). This is the stream time of buffers
        with a timestamp of NS.start.
@@ -42,7 +48,7 @@ Typical stream
      - marks running_time of buffers. This is the time used to synchronize
        against the clock.
 
-  2) N buffers
+  3) N buffers
      - displayable buffers are between start/stop of the SEGMENT. Buffers
        outside the segment range should be dropped or clipped.
 
@@ -62,9 +68,15 @@ Typical stream
 
         * current position in stream between 0 and duration.
 
-  3) EOS
+  4) EOS
      - marks the end of data, nothing is to be expected after EOS, elements
        should refuse more data and return GST_FLOW_EOS. A FLUSH_STOP
        event clears the EOS state of an element.
 
 
+Elements
+~~~~~~~~
+
+These events are generated typically either by the GstBaseSrc class for
+sources operating in push mode, or by a parser/demuxer operating in pull-mode
+and pushing parsed/demuxed data downstream.

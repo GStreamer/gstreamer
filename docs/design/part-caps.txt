@@ -8,7 +8,8 @@ Caps are exposed on GstPadTemplates to describe all possible types a
 given pad can handle. They are also stored in the registry along with
 a description of the element.
 
-Caps are exposed on the element pads using the _get_caps() pad function.
+Caps are exposed on the element pads via CAPS and ACCEPT_CAPS queries.
+
 This function describes the possible types that the pad can handle or
 produce (see part-pads.txt and part-negotiation.txt).
 
