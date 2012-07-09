@@ -517,7 +517,7 @@ gst_riff_parse_strf_auds (GstElement * element,
   GST_INFO_OBJECT (element, " rate        %d", strf->rate);
   GST_INFO_OBJECT (element, " av_bps      %d", strf->av_bps);
   GST_INFO_OBJECT (element, " blockalign  %d", strf->blockalign);
-  GST_INFO_OBJECT (element, " size        %d", strf->size);
+  GST_INFO_OBJECT (element, " bits/sample %d", strf->bits_per_sample);
   if (*data)
     GST_INFO_OBJECT (element, " %" G_GSIZE_FORMAT " bytes extradata",
         gst_buffer_get_size (*data));

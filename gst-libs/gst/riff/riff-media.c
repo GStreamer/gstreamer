@@ -1179,22 +1179,22 @@ gst_riff_create_audio_caps (guint16 codec_id,
         GstAudioFormat format;
 
         /* If we have an empty blockalign, we take the width contained in 
-         * strf->size */
+         * strf->bits_per_sample */
         if (ba != 0)
           wd = ba * 8 / ch;
         else
-          wd = strf->size;
+          wd = strf->bits_per_sample;
 
-        if (strf->size > 32) {
+        if (strf->bits_per_sample > 32) {
           GST_WARNING ("invalid depth (%d) of pcm audio, overwriting.",
-              strf->size);
-          strf->size = 8 * ((wd + 7) / 8);
+              strf->bits_per_sample);
+          strf->bits_per_sample = 8 * ((wd + 7) / 8);
         }
 
         /* in riff, the depth is stored in the size field but it just means that
          * the _least_ significant bits are cleared. We can therefore just play
          * the sample as if it had a depth == width */
-        /* For reference, the actual depth is in strf->size */
+        /* For reference, the actual depth is in strf->bits_per_sample */
         ws = wd;
 
         format =
@@ -1222,7 +1222,7 @@ gst_riff_create_audio_caps (guint16 codec_id,
       }
       if (codec_name && strf)
         *codec_name = g_strdup_printf ("Uncompressed %d-bit PCM audio",
-            strf->size);
+            strf->bits_per_sample);
       break;
 
     case GST_RIFF_WAVE_FORMAT_ADPCM:
@@ -1264,7 +1264,7 @@ gst_riff_create_audio_caps (guint16 codec_id,
       }
       if (codec_name && strf)
         *codec_name = g_strdup_printf ("Uncompressed %d-bit IEEE float audio",
-            strf->size);
+            strf->bits_per_sample);
       break;
 
     case GST_RIFF_WAVE_FORMAT_IBM_CVSD:
@@ -1272,17 +1272,17 @@ gst_riff_create_audio_caps (guint16 codec_id,
 
     case GST_RIFF_WAVE_FORMAT_ALAW:
       if (strf != NULL) {
-        if (strf->size != 8) {
+        if (strf->bits_per_sample != 8) {
           GST_WARNING ("invalid depth (%d) of alaw audio, overwriting.",
-              strf->size);
-          strf->size = 8;
-          strf->blockalign = (strf->size * strf->channels) / 8;
+              strf->bits_per_sample);
+          strf->bits_per_sample = 8;
+          strf->blockalign = (strf->bits_per_sample * strf->channels) / 8;
           strf->av_bps = strf->blockalign * strf->rate;
         }
         if (strf->av_bps == 0 || strf->blockalign == 0) {
           GST_WARNING ("fixing av_bps (%d) and blockalign (%d) of alaw audio",
               strf->av_bps, strf->blockalign);
-          strf->blockalign = (strf->size * strf->channels) / 8;
+          strf->blockalign = (strf->bits_per_sample * strf->channels) / 8;
           strf->av_bps = strf->blockalign * strf->rate;
         }
       }
@@ -1297,8 +1297,8 @@ gst_riff_create_audio_caps (guint16 codec_id,
       if (strf != NULL) {
         gst_caps_set_simple (caps,
             "bitrate", G_TYPE_INT, strf->av_bps * 8,
-            "width", G_TYPE_INT, strf->size,
-            "depth", G_TYPE_INT, strf->size, NULL);
+            "width", G_TYPE_INT, strf->bits_per_sample,
+            "depth", G_TYPE_INT, strf->bits_per_sample, NULL);
       } else {
         gst_caps_set_simple (caps,
             "bitrate", GST_TYPE_INT_RANGE, 0, G_MAXINT, NULL);
@@ -1310,17 +1310,17 @@ gst_riff_create_audio_caps (guint16 codec_id,
 
     case GST_RIFF_WAVE_FORMAT_MULAW:
       if (strf != NULL) {
-        if (strf->size != 8) {
+        if (strf->bits_per_sample != 8) {
           GST_WARNING ("invalid depth (%d) of mulaw audio, overwriting.",
-              strf->size);
-          strf->size = 8;
-          strf->blockalign = (strf->size * strf->channels) / 8;
+              strf->bits_per_sample);
+          strf->bits_per_sample = 8;
+          strf->blockalign = (strf->bits_per_sample * strf->channels) / 8;
           strf->av_bps = strf->blockalign * strf->rate;
         }
         if (strf->av_bps == 0 || strf->blockalign == 0) {
           GST_WARNING ("fixing av_bps (%d) and blockalign (%d) of mulaw audio",
               strf->av_bps, strf->blockalign);
-          strf->blockalign = (strf->size * strf->channels) / 8;
+          strf->blockalign = (strf->bits_per_sample * strf->channels) / 8;
           strf->av_bps = strf->blockalign * strf->rate;
         }
       }
@@ -1454,7 +1454,7 @@ gst_riff_create_audio_caps (guint16 codec_id,
       if (strf != NULL) {
         gst_caps_set_simple (caps,
             "bitrate", G_TYPE_INT, strf->av_bps * 8,
-            "depth", G_TYPE_INT, strf->size, NULL);
+            "depth", G_TYPE_INT, strf->bits_per_sample, NULL);
       } else {
         gst_caps_set_simple (caps,
             "bitrate", GST_TYPE_INT_RANGE, 0, G_MAXINT, NULL);
@@ -1553,7 +1553,7 @@ gst_riff_create_audio_caps (guint16 codec_id,
             ws = wd;
 
             /* For reference, use this to get the actual depth:
-             * ws = strf->size;
+             * ws = strf->bits_per_sample;
              * if (valid_bits_per_sample != 0)
              *   ws = valid_bits_per_sample; */
 
@@ -1585,7 +1585,7 @@ gst_riff_create_audio_caps (guint16 codec_id,
 
             if (codec_name) {
               *codec_name = g_strdup_printf ("Uncompressed %d-bit PCM audio",
-                  strf->size);
+                  strf->bits_per_sample);
             }
           }
         } else if (subformat_guid[0] == 0x00000003) {
@@ -1619,16 +1619,16 @@ gst_riff_create_audio_caps (guint16 codec_id,
             if (codec_name) {
               *codec_name =
                   g_strdup_printf ("Uncompressed %d-bit IEEE float audio",
-                  strf->size);
+                  strf->bits_per_sample);
             }
           }
         } else if (subformat_guid[0] == 00000006) {
           GST_DEBUG ("ALAW");
           if (strf != NULL) {
-            if (strf->size != 8) {
+            if (strf->bits_per_sample != 8) {
               GST_WARNING ("invalid depth (%d) of alaw audio, overwriting.",
-                  strf->size);
-              strf->size = 8;
+                  strf->bits_per_sample);
+              strf->bits_per_sample = 8;
               strf->av_bps = 8;
               strf->blockalign = strf->av_bps * strf->channels;
             }
@@ -1636,7 +1636,7 @@ gst_riff_create_audio_caps (guint16 codec_id,
               GST_WARNING
                   ("fixing av_bps (%d) and blockalign (%d) of alaw audio",
                   strf->av_bps, strf->blockalign);
-              strf->av_bps = strf->size;
+              strf->av_bps = strf->bits_per_sample;
               strf->blockalign = strf->av_bps * strf->channels;
             }
           }
@@ -1648,10 +1648,10 @@ gst_riff_create_audio_caps (guint16 codec_id,
         } else if (subformat_guid[0] == 0x00000007) {
           GST_DEBUG ("MULAW");
           if (strf != NULL) {
-            if (strf->size != 8) {
+            if (strf->bits_per_sample != 8) {
               GST_WARNING ("invalid depth (%d) of mulaw audio, overwriting.",
-                  strf->size);
-              strf->size = 8;
+                  strf->bits_per_sample);
+              strf->bits_per_sample = 8;
               strf->av_bps = 8;
               strf->blockalign = strf->av_bps * strf->channels;
             }
@@ -1659,7 +1659,7 @@ gst_riff_create_audio_caps (guint16 codec_id,
               GST_WARNING
                   ("fixing av_bps (%d) and blockalign (%d) of mulaw audio",
                   strf->av_bps, strf->blockalign);
-              strf->av_bps = strf->size;
+              strf->av_bps = strf->bits_per_sample;
               strf->blockalign = strf->av_bps * strf->channels;
             }
           }
