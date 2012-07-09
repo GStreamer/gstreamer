@@ -552,6 +552,8 @@ gst_gl_display_set_error (GstGLDisplay * display, const char *format, ...)
   display->error_message = g_strdup_vprintf (format, args);
   va_end (args);
 
+  GST_WARNING (display->error_message);
+
   display->isAlive = FALSE;
 }
 
@@ -790,6 +792,9 @@ gst_gl_display_thread_destroy_context (GstGLDisplay * display)
 void
 gst_gl_display_thread_run_generic (GstGLDisplay * display)
 {
+  GST_TRACE ("running function:%" GST_PTR_FORMAT " data:%" GST_PTR_FORMAT,
+      display->generic_callback, display->data);
+
   display->generic_callback (display, display->data);
 }
 
@@ -828,6 +833,8 @@ gst_gl_display_thread_init_redisplay (GstGLDisplay * display)
 void
 gst_gl_display_thread_init_upload (GstGLDisplay * display)
 {
+  GST_TRACE ("initializing upload for format:%i", display->upload_video_format);
+
   switch (display->upload_video_format) {
     case GST_VIDEO_FORMAT_RGBx:
     case GST_VIDEO_FORMAT_BGRx:
@@ -1180,6 +1187,9 @@ gst_gl_display_thread_do_upload (GstGLDisplay * display)
 void
 gst_gl_display_thread_init_download (GstGLDisplay * display)
 {
+  GST_TRACE ("initializing download for format %i",
+      display->download_video_format);
+
   switch (display->download_video_format) {
     case GST_VIDEO_FORMAT_RGBx:
     case GST_VIDEO_FORMAT_BGRx:
@@ -1552,6 +1562,10 @@ gst_gl_display_thread_do_download (GstGLDisplay * display)
   GstVideoFormat video_format =
       GST_VIDEO_INFO_FORMAT (&display->download_frame->info);
 
+  GST_TRACE ("downloading image format:%i, dimensions:%ux%u", video_format,
+      GST_VIDEO_INFO_WIDTH (&display->download_frame->info),
+      GST_VIDEO_INFO_HEIGHT (&display->download_frame->info));
+
   switch (video_format) {
     case GST_VIDEO_FORMAT_RGBx:
     case GST_VIDEO_FORMAT_BGRx:
@@ -1587,6 +1601,9 @@ gst_gl_display_thread_gen_fbo (GstGLDisplay * display)
 {
   //a texture must be attached to the FBO
   GLuint fake_texture = 0;
+
+  GST_TRACE ("creating FBO dimensions:%ux%u", display->gen_fbo_width,
+      display->gen_fbo_height);
 
   //-- generate frame buffer object
 
@@ -1657,6 +1674,11 @@ gst_gl_display_thread_use_fbo (GstGLDisplay * display)
 #ifdef OPENGL_ES2
   GLint viewport_dim[4];
 #endif
+
+  GST_TRACE ("Binding v1 FBO %u dimensions:%ux%u with texture:%u "
+      "dimensions:%ux%u", display->use_fbo, display->use_fbo_width,
+      display->use_fbo_height, display->use_fbo_texture,
+      display->input_texture_width, display->input_texture_height);
 
   glBindFramebufferEXT (GL_FRAMEBUFFER_EXT, display->use_fbo);
 
@@ -1735,6 +1757,10 @@ gst_gl_display_thread_use_fbo_v2 (GstGLDisplay * display)
 {
   GLint viewport_dim[4];
 
+  GST_TRACE ("Binding v2 FBO %u dimensions:%ux%u with texture:%u ",
+      display->use_fbo, display->use_fbo_width,
+      display->use_fbo_height, display->use_fbo_texture);
+
   glBindFramebufferEXT (GL_FRAMEBUFFER_EXT, display->use_fbo);
 
   //setup a texture to render to
@@ -1773,6 +1799,8 @@ gst_gl_display_thread_use_fbo_v2 (GstGLDisplay * display)
 void
 gst_gl_display_thread_del_fbo (GstGLDisplay * display)
 {
+  GST_TRACE ("Deleting FBO %u", display->del_fbo);
+
   if (display->del_fbo) {
     glDeleteFramebuffersEXT (1, &display->del_fbo);
     display->del_fbo = 0;
@@ -1788,6 +1816,8 @@ gst_gl_display_thread_del_fbo (GstGLDisplay * display)
 void
 gst_gl_display_thread_gen_shader (GstGLDisplay * display)
 {
+  GST_TRACE ("Generating shader %" GST_PTR_FORMAT, display->gen_shader);
+
   if (GLEW_ARB_fragment_shader) {
     if (display->gen_shader_vertex_source ||
         display->gen_shader_fragment_source) {
@@ -1825,6 +1855,8 @@ gst_gl_display_thread_gen_shader (GstGLDisplay * display)
 void
 gst_gl_display_thread_del_shader (GstGLDisplay * display)
 {
+  GST_TRACE ("Deleting shader %" GST_PTR_FORMAT, display->del_shader);
+
   if (display->del_shader) {
     g_object_unref (G_OBJECT (display->del_shader));
     display->del_shader = NULL;
@@ -1859,6 +1891,8 @@ gst_gl_display_unlock (GstGLDisplay * display)
 void
 gst_gl_display_on_resize (GstGLDisplay * display, gint width, gint height)
 {
+  GST_TRACE ("GL Window resized to %ux%u", width, height);
+
   //check if a client reshape callback is registered
   if (display->clientReshapeCallback)
     display->clientReshapeCallback (width, height, display->client_data);
@@ -1901,7 +1935,7 @@ gst_gl_display_on_draw (GstGLDisplay * display)
     return;
 
   //opengl scene
-  GST_DEBUG ("on draw");
+  GST_TRACE ("on draw");
 
   //make sure that the environnement is clean
   if (display->upload_colorspace_conversion == GST_GL_DISPLAY_CONVERSION_GLSL)
@@ -2020,6 +2054,9 @@ void
 gst_gl_display_gen_texture_thread (GstGLDisplay * display, GLuint * pTexture,
     GstVideoFormat v_format, GLint width, GLint height)
 {
+  GST_TRACE ("Generating texture format:%u dimensions:%ux%u", v_format,
+      width, height);
+
   glGenTextures (1, pTexture);
   glBindTexture (GL_TEXTURE_RECTANGLE_ARB, *pTexture);
 
