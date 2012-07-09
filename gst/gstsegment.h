@@ -126,6 +126,7 @@ typedef enum {
  * @GST_SEGMENT_FLAG_RESET: reset the pipeline running_time to the segment
  *                          running_time
  * @GST_SEGMENT_FLAG_SKIP: perform skip playback
+ * @GST_SEGMENT_FLAG_SEGMENT: send SEGMENT_DONE instead of EOS
  *
  * Flags for the GstSegment structure. Currently mapped to the corresponding
  * values of the seek flags.
@@ -134,7 +135,8 @@ typedef enum {
 typedef enum {
   GST_SEGMENT_FLAG_NONE            = GST_SEEK_FLAG_NONE,
   GST_SEGMENT_FLAG_RESET           = GST_SEEK_FLAG_FLUSH,
-  GST_SEGMENT_FLAG_SKIP            = GST_SEEK_FLAG_SKIP
+  GST_SEGMENT_FLAG_SKIP            = GST_SEEK_FLAG_SKIP,
+  GST_SEGMENT_FLAG_SEGMENT         = GST_SEEK_FLAG_SEGMENT
 } GstSegmentFlags;
 
 /**

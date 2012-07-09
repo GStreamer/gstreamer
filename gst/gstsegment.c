@@ -323,6 +323,8 @@ gst_segment_do_seek (GstSegment * segment, gdouble rate,
     segment->flags |= GST_SEGMENT_FLAG_RESET;
   if ((flags & GST_SEEK_FLAG_SKIP) != 0)
     segment->flags |= GST_SEGMENT_FLAG_SKIP;
+  if ((flags & GST_SEEK_FLAG_SEGMENT) != 0)
+    segment->flags |= GST_SEGMENT_FLAG_SEGMENT;
   segment->start = start;
   segment->stop = stop;
   segment->time = start;
