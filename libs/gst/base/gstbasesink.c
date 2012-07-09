@@ -2010,8 +2010,8 @@ gst_base_sink_wait_clock (GstBaseSink * sink, GstClockTime time,
   /* FIXME: Casting to GstClockEntry only works because the types
    * are the same */
   if (G_LIKELY (sink->priv->cached_clock_id != NULL
-          && GST_CLOCK_ENTRY_CLOCK ((GstClockEntry *) sink->priv->
-              cached_clock_id) == clock)) {
+          && GST_CLOCK_ENTRY_CLOCK ((GstClockEntry *) sink->
+              priv->cached_clock_id) == clock)) {
     if (!gst_clock_single_shot_id_reinit (clock, sink->priv->cached_clock_id,
             time)) {
       gst_clock_id_unref (sink->priv->cached_clock_id);
@@ -2914,6 +2914,19 @@ gst_base_sink_default_event (GstBaseSink * basesink, GstEvent * event)
       GST_DEBUG_OBJECT (basesink, "Got seqnum #%" G_GUINT32_FORMAT, seqnum);
 
       message = gst_message_new_eos (GST_OBJECT_CAST (basesink));
+      gst_message_set_seqnum (message, seqnum);
+      gst_element_post_message (GST_ELEMENT_CAST (basesink), message);
+      break;
+    }
+    case GST_EVENT_STREAM_START:
+    {
+      GstMessage *message;
+      guint32 seqnum;
+
+      seqnum = gst_event_get_seqnum (event);
+      GST_DEBUG_OBJECT (basesink, "Now posting STREAM_START (seqnum:%d)",
+          seqnum);
+      message = gst_message_new_stream_start (GST_OBJECT_CAST (basesink));
       gst_message_set_seqnum (message, seqnum);
       gst_element_post_message (GST_ELEMENT_CAST (basesink), message);
       break;
