@@ -37,6 +37,8 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "playback-tutorial-7", "play
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "basic-tutorial-13", "basic-tutorial-13\basic-tutorial-13.vcxproj", "{6D962544-E7A2-450B-998B-6D09B17ACCB3}"
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "basic-tutorial-15", "basic-tutorial-15\basic-tutorial-15.vcxproj", "{94A762CB-2856-4CFF-BF1A-DB44882D4BD5}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Win32 = Debug|Win32
@@ -189,6 +191,14 @@ Global
 		{6D962544-E7A2-450B-998B-6D09B17ACCB3}.Release|Win32.Build.0 = Release|Win32
 		{6D962544-E7A2-450B-998B-6D09B17ACCB3}.Release|x64.ActiveCfg = Release|x64
 		{6D962544-E7A2-450B-998B-6D09B17ACCB3}.Release|x64.Build.0 = Release|x64
+		{94A762CB-2856-4CFF-BF1A-DB44882D4BD5}.Debug|Win32.ActiveCfg = Debug|Win32
+		{94A762CB-2856-4CFF-BF1A-DB44882D4BD5}.Debug|Win32.Build.0 = Debug|Win32
+		{94A762CB-2856-4CFF-BF1A-DB44882D4BD5}.Debug|x64.ActiveCfg = Debug|x64
+		{94A762CB-2856-4CFF-BF1A-DB44882D4BD5}.Debug|x64.Build.0 = Debug|x64
+		{94A762CB-2856-4CFF-BF1A-DB44882D4BD5}.Release|Win32.ActiveCfg = Release|Win32
+		{94A762CB-2856-4CFF-BF1A-DB44882D4BD5}.Release|Win32.Build.0 = Release|Win32
+		{94A762CB-2856-4CFF-BF1A-DB44882D4BD5}.Release|x64.ActiveCfg = Release|x64
+		{94A762CB-2856-4CFF-BF1A-DB44882D4BD5}.Release|x64.Build.0 = Release|x64
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
