@@ -212,6 +212,11 @@ gst_toc_append_entry (GstToc * toc, GstTocEntry * entry)
   g_return_if_fail (gst_mini_object_is_writable (GST_MINI_OBJECT_CAST (toc)));
 
   toc->entries = g_list_append (toc->entries, entry);
+
+  GST_LOG ("appended %s entry with uid %s to toc %p",
+      gst_toc_entry_type_get_nick (entry->type), entry->uid, toc);
+
+  gst_toc_dump (toc);
 }
 
 /**
@@ -595,6 +600,9 @@ gst_toc_entry_append_sub_entry (GstTocEntry * entry, GstTocEntry * subentry)
   g_return_if_fail (gst_mini_object_is_writable (GST_MINI_OBJECT_CAST (entry)));
 
   entry->subentries = g_list_append (entry->subentries, subentry);
+
+  GST_LOG ("appended %s subentry with uid %s to entry %s",
+      gst_toc_entry_type_get_nick (subentry->type), subentry->uid, entry->uid);
 }
 
 /**
@@ -677,4 +685,37 @@ gst_toc_entry_get_tags (const GstTocEntry * entry)
   g_return_val_if_fail (entry != NULL, NULL);
 
   return entry->tags;
+}
+
+#ifndef GST_DISABLE_GST_DEBUG
+static void
+gst_toc_dump_entries (GList * entries, guint depth)
+{
+  GList *e;
+  gchar *indent;
+
+  indent = g_malloc0 (depth + 1);
+  memset (indent, ' ', depth);
+  for (e = entries; e != NULL; e = e->next) {
+    GstTocEntry *entry = e->data;
+
+    GST_TRACE ("%s+ %s (%s), %" GST_TIME_FORMAT " - %" GST_TIME_FORMAT ", "
+        "tags: %" GST_PTR_FORMAT, indent, entry->uid,
+        gst_toc_entry_type_get_nick (entry->type),
+        GST_TIME_ARGS (entry->start), GST_TIME_ARGS (entry->stop), entry->tags);
+
+    if (entry->subentries != NULL)
+      gst_toc_dump_entries (entry->subentries, depth + 2);
+  }
+  g_free (indent);
+}
+#endif
+
+void
+gst_toc_dump (GstToc * toc)
+{
+#ifndef GST_DISABLE_GST_DEBUG
+  GST_TRACE ("        Toc %p, tags: %" GST_PTR_FORMAT, toc, toc->tags);
+  gst_toc_dump_entries (toc->entries, 2);
+#endif
 }

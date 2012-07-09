@@ -77,6 +77,8 @@ GstTagList *       gst_toc_get_tags                (const GstToc *toc);
 void               gst_toc_append_entry               (GstToc *toc, GstTocEntry *entry);
 GList *            gst_toc_get_entries             (const GstToc *toc);
 
+void               gst_toc_dump                    (GstToc *toc);
+
 #define gst_toc_ref(toc)            (GstToc*)gst_mini_object_ref(GST_MINI_OBJECT_CAST(toc))
 #define gst_toc_unref(toc)          gst_mini_object_unref(GST_MINI_OBJECT_CAST(toc))
 #define gst_toc_copy(toc)           (GstToc*)gst_mini_object_copy(GST_MINI_OBJECT_CAST(toc))

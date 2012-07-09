@@ -70,6 +70,9 @@
   GList *entries, *subentries, *subsubentries;                           \
   gchar *tag_t;                                                          \
                                                                          \
+  /* dump TOC */                                                         \
+  gst_toc_dump (toc_t);                                                  \
+                                                                         \
   /* check TOC */                                                        \
   tags = gst_toc_get_tags (toc_t);                                       \
   fail_unless (tags != NULL);                                            \
