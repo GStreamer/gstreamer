@@ -70,7 +70,7 @@ GstCheckABIStruct list[] = {
   {"GstTagDemuxClass", sizeof (GstTagDemuxClass), 552},
   {"GstTagDemux", sizeof (GstTagDemux), 304},
   {"GstVideoFilterClass", sizeof (GstVideoFilterClass), 872},
-  {"GstVideoFilter", sizeof (GstVideoFilter), 864},
+  {"GstVideoFilter", sizeof (GstVideoFilter), 848},
   {"GstVideoOrientationInterface", sizeof (GstVideoOrientationInterface), 80},
   {"GstVideoRectangle", sizeof (GstVideoRectangle), 16},
   {"GstVideoSinkClass", sizeof (GstVideoSinkClass), 832},
