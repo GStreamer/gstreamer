@@ -1009,6 +1009,43 @@ is_eos (GstBin * bin, guint32 * seqnum)
   return result && n_eos > 0;
 }
 
+
+/* Check if the bin is STREAM_START. We do this by scanning all sinks and
+ * checking if they posted an STREAM_START message.
+ *
+ * call with bin LOCK */
+static gboolean
+is_stream_start (GstBin * bin, guint32 * seqnum)
+{
+  gboolean result;
+  gint n_stream_start = 0;
+  GList *walk, *msgs;
+
+  result = TRUE;
+  for (walk = bin->children; walk; walk = g_list_next (walk)) {
+    GstElement *element;
+
+    element = GST_ELEMENT_CAST (walk->data);
+    if (bin_element_is_sink (element, bin) == 0) {
+      /* check if element posted STREAM_START */
+      if ((msgs =
+              find_message (bin, GST_OBJECT_CAST (element),
+                  GST_MESSAGE_STREAM_START))) {
+        GST_DEBUG ("sink '%s' posted STREAM_START", GST_ELEMENT_NAME (element));
+        *seqnum = gst_message_get_seqnum (GST_MESSAGE_CAST (msgs->data));
+        n_stream_start++;
+      } else {
+        GST_DEBUG ("sink '%s' did not post STREAM_START yet",
+            GST_ELEMENT_NAME (element));
+        result = FALSE;
+        break;
+      }
+    }
+  }
+
+  return result;
+}
+
 static void
 unlink_pads (const GValue * item, gpointer user_data)
 {
@@ -2518,6 +2555,8 @@ gst_bin_change_state_func (GstElement * element, GstStateChange transition)
       GST_DEBUG_OBJECT (element, "clearing EOS elements");
       bin_remove_messages (bin, NULL, GST_MESSAGE_EOS);
       bin->priv->posted_eos = FALSE;
+      if (current == GST_STATE_READY)
+        bin_remove_messages (bin, NULL, GST_MESSAGE_STREAM_START);
       GST_OBJECT_UNLOCK (bin);
       if (current == GST_STATE_READY)
         if (!(gst_bin_src_pads_activate (bin, TRUE)))
@@ -3126,6 +3165,35 @@ bin_do_eos (GstBin * bin)
   }
 }
 
+static void
+bin_do_stream_start (GstBin * bin)
+{
+  guint32 seqnum = 0;
+  gboolean stream_start;
+
+  GST_OBJECT_LOCK (bin);
+  /* If all sinks are STREAM_START we forward the STREAM_START message
+   * to the parent bin or application
+   */
+  stream_start = is_stream_start (bin, &seqnum);
+  GST_OBJECT_UNLOCK (bin);
+
+  if (stream_start) {
+    GstMessage *tmessage;
+
+    GST_OBJECT_LOCK (bin);
+    bin_remove_messages (bin, NULL, GST_MESSAGE_STREAM_START);
+    GST_OBJECT_UNLOCK (bin);
+
+    tmessage = gst_message_new_stream_start (GST_OBJECT_CAST (bin));
+    gst_message_set_seqnum (tmessage, seqnum);
+    GST_DEBUG_OBJECT (bin,
+        "all sinks posted STREAM_START, posting seqnum #%" G_GUINT32_FORMAT,
+        seqnum);
+    gst_element_post_message (GST_ELEMENT_CAST (bin), tmessage);
+  }
+}
+
 /* must be called with the object lock. This function releases the lock to post
  * the message. */
 static void
@@ -3243,6 +3311,18 @@ gst_bin_handle_message_func (GstBin * bin, GstMessage * message)
       GST_OBJECT_UNLOCK (bin);
 
       bin_do_eos (bin);
+      break;
+    }
+    case GST_MESSAGE_STREAM_START:
+    {
+
+      /* collect all stream_start messages from the children */
+      GST_OBJECT_LOCK (bin);
+      /* ref message for future use  */
+      bin_replace_message (bin, message, GST_MESSAGE_STREAM_START);
+      GST_OBJECT_UNLOCK (bin);
+
+      bin_do_stream_start (bin);
       break;
     }
     case GST_MESSAGE_STATE_DIRTY:
