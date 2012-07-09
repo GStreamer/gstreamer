@@ -33,7 +33,7 @@ GST_START_TEST (test_still_image)
 
   src = gst_element_factory_make ("filesrc", NULL);
   dec = gst_element_factory_make ("pngdec", NULL);
-  csp = gst_element_factory_make ("ffmpegcolorspace", NULL);
+  csp = gst_element_factory_make ("videoconvert", NULL);
   zbar = gst_element_factory_make ("zbar", NULL);
   sink = gst_element_factory_make ("fakesink", NULL);
 
