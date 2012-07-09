@@ -35,75 +35,81 @@
 #define ENTRY_TAG       "EntryTag"
 #define TOC_TAG         "TocTag"
 
-#define CHECK_TOC_ENTRY(entry_c,type_c,uid_c)                            \
-{                                                                        \
-  GstTagList *tags;                                                      \
-  gchar *tag_c;                                                          \
-                                                                         \
-  fail_unless_equals_string (gst_toc_entry_get_uid (entry_c), uid_c);    \
-  fail_unless (gst_toc_entry_get_entry_type (entry_c) == type_c);        \
-                                                                         \
-  tags = gst_toc_entry_get_tags (entry_c);                               \
-  fail_unless (tags != NULL);                                            \
-  fail_unless (gst_tag_list_get_string (tags,                            \
-               GST_TAG_TITLE, &tag_c));                                  \
-  fail_unless_equals_string (tag_c, ENTRY_TAG);                          \
-  g_free (tag_c);                                                        \
+static void
+CHECK_TOC_ENTRY (GstTocEntry * entry_c, GstTocEntryType type_c,
+    const gchar * uid_c)
+{
+  GstTagList *tags;
+  gchar *tag_c;
+
+  fail_unless_equals_string (gst_toc_entry_get_uid (entry_c), uid_c);
+  fail_unless (gst_toc_entry_get_entry_type (entry_c) == type_c);
+
+  tags = gst_toc_entry_get_tags (entry_c);
+  fail_unless (tags != NULL);
+  fail_unless (gst_tag_list_get_string (tags, GST_TAG_TITLE, &tag_c));
+  fail_unless_equals_string (tag_c, ENTRY_TAG);
+  g_free (tag_c);
 }
 
-#define CHECK_TOC(toc_t)                                                 \
-{                                                                        \
-  GstTocEntry *entry_t, *subentry_t;                                     \
-  GstTagList *tags;                                                      \
-  GList *entries, *subentries, *subsubentries;                           \
-  gchar *tag_t;                                                          \
-                                                                         \
-  /* check TOC */                                                        \
-  tags = gst_toc_get_tags (toc_t);                                       \
-  fail_unless (tags != NULL);                                            \
-  fail_unless (gst_tag_list_get_string (tags,                            \
-               GST_TAG_TITLE, &tag_t));                                  \
-  fail_unless_equals_string (tag_t, TOC_TAG);                            \
-  g_free (tag_t);                                                        \
-                                                                         \
-  entries = gst_toc_get_entries (toc_t);                                 \
-  fail_unless_equals_int (g_list_length (entries), 2);                   \
-  /* check edition1 */                                                   \
-  entry_t = g_list_nth_data (entries, 0);                                \
-  fail_if (entry_t == NULL);                                             \
-  subentries = gst_toc_entry_get_sub_entries (entry_t);                  \
-  fail_unless_equals_int (g_list_length (subentries), 2);                \
-  CHECK_TOC_ENTRY (entry_t, GST_TOC_ENTRY_TYPE_EDITION, ENTRY_ED1);      \
-  /* check chapter1 */                                                   \
-  subentry_t = g_list_nth_data (subentries, 0);                          \
-  fail_if (subentry_t == NULL);                                          \
-  subsubentries = gst_toc_entry_get_sub_entries (subentry_t);            \
-  fail_unless_equals_int (g_list_length (subsubentries), 0);             \
-  CHECK_TOC_ENTRY (subentry_t, GST_TOC_ENTRY_TYPE_CHAPTER, ENTRY_CH1);   \
-  /* check chapter2 */                                                   \
-  subentry_t = g_list_nth_data (subentries, 1);                          \
-  fail_if (subentry_t == NULL);                                          \
-  subsubentries = gst_toc_entry_get_sub_entries (subentry_t);            \
-  fail_unless_equals_int (g_list_length (subsubentries), 0);             \
-  CHECK_TOC_ENTRY (subentry_t, GST_TOC_ENTRY_TYPE_CHAPTER, ENTRY_CH2);   \
-  /* check edition2 */                                                   \
-  entry_t = g_list_nth_data (entries, 1);                                \
-  fail_if (entry_t == NULL);                                             \
-  subentries = gst_toc_entry_get_sub_entries (entry_t);                  \
-  fail_unless_equals_int (g_list_length (subentries), 1);                \
-  CHECK_TOC_ENTRY (entry_t, GST_TOC_ENTRY_TYPE_EDITION, ENTRY_ED2);      \
-  /* check chapter3 */                                                   \
-  subentry_t = g_list_nth_data (subentries, 0);                          \
-  fail_if (subentry_t == NULL);                                          \
-  subsubentries = gst_toc_entry_get_sub_entries (subentry_t);            \
-  fail_unless_equals_int (g_list_length (subsubentries), 1);             \
-  CHECK_TOC_ENTRY (subentry_t, GST_TOC_ENTRY_TYPE_CHAPTER, ENTRY_CH3);   \
-  /* check subchapter1 */                                                \
-  subentry_t = g_list_nth_data (subentries, 0);                          \
-  fail_if (subentry_t == NULL);                                          \
-  subsubentries = gst_toc_entry_get_sub_entries (subentry_t);            \
-  fail_unless_equals_int (g_list_length (subsubentries), 0);             \
-  CHECK_TOC_ENTRY (subentry_t, GST_TOC_ENTRY_TYPE_CHAPTER, ENTRY_SUB1);  \
+static void
+CHECK_TOC (GstToc * toc_t)
+{
+  GstTocEntry *entry_t, *subentry_t;
+  GstTagList *tags;
+  GList *entries, *subentries, *subsubentries;
+  gchar *tag_t;
+
+  /* dump TOC */
+  gst_toc_dump (toc_t);
+
+  /* check TOC */
+  tags = gst_toc_get_tags (toc_t);
+  fail_unless (tags != NULL);
+  fail_unless (gst_tag_list_get_string (tags, GST_TAG_TITLE, &tag_t));
+  fail_unless_equals_string (tag_t, TOC_TAG);
+  g_free (tag_t);
+
+  entries = gst_toc_get_entries (toc_t);
+  fail_unless_equals_int (g_list_length (entries), 2);
+  /* check edition1 */
+  entry_t = g_list_nth_data (entries, 0);
+  fail_if (entry_t == NULL);
+  subentries = gst_toc_entry_get_sub_entries (entry_t);
+  fail_unless_equals_int (g_list_length (subentries), 2);
+  CHECK_TOC_ENTRY (entry_t, GST_TOC_ENTRY_TYPE_EDITION, ENTRY_ED1);
+  /* check chapter1 */
+  subentry_t = g_list_nth_data (subentries, 0);
+  fail_if (subentry_t == NULL);
+  subsubentries = gst_toc_entry_get_sub_entries (subentry_t);
+  fail_unless_equals_int (g_list_length (subsubentries), 0);
+  CHECK_TOC_ENTRY (subentry_t, GST_TOC_ENTRY_TYPE_CHAPTER, ENTRY_CH1);
+  /* check chapter2 */
+  subentry_t = g_list_nth_data (subentries, 1);
+  fail_if (subentry_t == NULL);
+  subsubentries = gst_toc_entry_get_sub_entries (subentry_t);
+  fail_unless_equals_int (g_list_length (subsubentries), 0);
+  CHECK_TOC_ENTRY (subentry_t, GST_TOC_ENTRY_TYPE_CHAPTER, ENTRY_CH2);
+  /* check edition2 */
+  entry_t = g_list_nth_data (entries, 1);
+  fail_if (entry_t == NULL);
+  subentries = gst_toc_entry_get_sub_entries (entry_t);
+  fail_unless_equals_int (g_list_length (subentries), 1);
+  CHECK_TOC_ENTRY (entry_t, GST_TOC_ENTRY_TYPE_EDITION, ENTRY_ED2);
+  /* check chapter3 */
+  subentry_t = g_list_nth_data (subentries, 0);
+  fail_if (subentry_t == NULL);
+  subsubentries = gst_toc_entry_get_sub_entries (subentry_t);
+  fail_unless_equals_int (g_list_length (subsubentries), 1);
+  CHECK_TOC_ENTRY (subentry_t, GST_TOC_ENTRY_TYPE_CHAPTER, ENTRY_CH3);
+  /* check subchapter1 */
+  subentry_t = g_list_nth_data (subentries, 0);
+  fail_if (subentry_t == NULL);
+  GST_ERROR ("%s", gst_toc_entry_get_uid (subentry_t));
+  subsubentries = gst_toc_entry_get_sub_entries (subentry_t);
+  GST_ERROR ("%p", subsubentries);
+  fail_unless_equals_int (g_list_length (subsubentries), 0);
+  CHECK_TOC_ENTRY (subentry_t, GST_TOC_ENTRY_TYPE_CHAPTER, ENTRY_SUB1);
 }
 
 /* some minimal GstTocSetter object */
