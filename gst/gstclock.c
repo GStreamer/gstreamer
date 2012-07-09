@@ -643,7 +643,7 @@ gst_clock_id_unschedule (GstClockID id)
  * GstClock abstract base class implementation
  */
 #define gst_clock_parent_class parent_class
-G_DEFINE_TYPE (GstClock, gst_clock, GST_TYPE_OBJECT);
+G_DEFINE_ABSTRACT_TYPE (GstClock, gst_clock, GST_TYPE_OBJECT);
 
 static void
 gst_clock_class_init (GstClockClass * klass)
