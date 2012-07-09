@@ -81,9 +81,6 @@ struct _GstTocEntry
   GstClockTime start, stop;
   GList *subentries;
   GstTagList *tags;
-
-  /*< private > */
-  gpointer _gst_reserved[GST_PADDING];
 };
 
 struct _GstToc
@@ -92,9 +89,6 @@ struct _GstToc
 
   GList *entries;
   GstTagList *tags;
-
-  /*< private > */
-  gpointer _gst_reserved[GST_PADDING];
 };
 
 #undef gst_toc_copy
