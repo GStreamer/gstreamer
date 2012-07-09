@@ -64,7 +64,7 @@ static void gst_gl_effects_ghash_func_clean (gpointer key, gpointer value,
     gpointer data);
 
 static gboolean gst_gl_effects_filter (GstGLFilter * filter,
-    GstGLBuffer * inbuf, GstGLBuffer * outbuf);
+    GstBuffer * inbuf, GstBuffer * outbuf);
 
 /* dont' forget to edit the following when a new effect is added */
 typedef enum
@@ -438,13 +438,22 @@ gst_gl_effects_on_init_gl_context (GstGLFilter * filter)
 }
 
 static gboolean
-gst_gl_effects_filter (GstGLFilter * filter, GstGLBuffer * inbuf,
-    GstGLBuffer * outbuf)
+gst_gl_effects_filter (GstGLFilter * filter, GstBuffer * inbuf,
+    GstBuffer * outbuf)
 {
   GstGLEffects *effects = GST_GL_EFFECTS (filter);
+  GstGLMeta *in_gl_meta, *out_gl_meta;
 
-  effects->intexture = inbuf->texture;
-  effects->outtexture = outbuf->texture;
+  in_gl_meta = gst_buffer_get_gl_meta (inbuf);
+  out_gl_meta = gst_buffer_get_gl_meta (outbuf);
+
+  if (!in_gl_meta || !out_gl_meta) {
+    GST_ERROR ("buffers do not contain required GstGLMeta");
+    return FALSE;
+  }
+
+  effects->intexture = in_gl_meta->memory->tex_id;
+  effects->outtexture = out_gl_meta->memory->tex_id;
 
   if (effects->horizontal_swap == TRUE)
     gst_gl_display_thread_add (filter->display, set_horizontal_swap, effects);
