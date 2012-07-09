@@ -57,9 +57,9 @@ EXPORTS
 	gst_allocation_params_init
 	gst_allocator_alloc
 	gst_allocator_find
-	gst_allocator_get_memory_type
+	gst_allocator_flags_get_type
+	gst_allocator_free
 	gst_allocator_get_type
-	gst_allocator_new
 	gst_allocator_register
 	gst_allocator_set_default
 	gst_atomic_queue_get_type
@@ -326,6 +326,7 @@ EXPORTS
 	gst_debug_set_default_threshold
 	gst_debug_set_threshold_for_name
 	gst_debug_unset_threshold_for_name
+	gst_default_allocator_get_type
 	gst_deinit
 	gst_double_range_get_type
 	gst_element_abort_state
@@ -521,6 +522,7 @@ EXPORTS
 	gst_memory_flags_get_type
 	gst_memory_get_sizes
 	gst_memory_get_type
+	gst_memory_init
 	gst_memory_is_span
 	gst_memory_make_mapped
 	gst_memory_map
@@ -842,6 +844,7 @@ EXPORTS
 	gst_query_add_allocation_pool
 	gst_query_add_buffering_range
 	gst_query_add_scheduling_mode
+	gst_query_find_allocation_meta
 	gst_query_get_n_allocation_metas
 	gst_query_get_n_allocation_params
 	gst_query_get_n_allocation_pools
@@ -849,7 +852,6 @@ EXPORTS
 	gst_query_get_n_scheduling_modes
 	gst_query_get_structure
 	gst_query_get_type
-	gst_query_has_allocation_meta
 	gst_query_has_scheduling_mode
 	gst_query_new_accept_caps
 	gst_query_new_allocation
@@ -1134,6 +1136,7 @@ EXPORTS
 	gst_task_state_get_type
 	gst_task_stop
 	gst_toc_append_entry
+	gst_toc_dump
 	gst_toc_entry_append_sub_entry
 	gst_toc_entry_get_entry_type
 	gst_toc_entry_get_start_stop_times
