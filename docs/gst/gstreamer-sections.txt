@@ -1322,6 +1322,7 @@ GST_TYPE_ALLOCATION_PARAMS
 gst_allocation_params_get_type
 GST_TYPE_ALLOCATOR
 gst_allocator_get_type
+gst_allocator_flags_get_type
 </SECTION>
 
 <SECTION>
@@ -1340,9 +1341,10 @@ GST_MEMORY_IS_ZERO_PREFIXED
 GstMemory
 
 GstMapFlags
+GST_MAP_READWRITE
+
 GstMapInfo
 GST_MAP_INFO_INIT
-GST_MAP_READWRITE
 
 GstMemoryMapFunction
 GstMemoryUnmapFunction
@@ -1350,13 +1352,17 @@ GstMemoryCopyFunction
 GstMemoryShareFunction
 GstMemoryIsSpanFunction
 
+gst_memory_init
+
 gst_memory_ref
 gst_memory_unref
 
-gst_memory_is_writable
-
 gst_memory_get_sizes
 gst_memory_resize
+
+gst_memory_lock
+gst_memory_unlock
+gst_memory_is_writable
 
 gst_memory_make_mapped
 gst_memory_map
@@ -1500,26 +1506,28 @@ GST_MESSAGE_WAIT
 <FILE>gstminiobject</FILE>
 <TITLE>GstMiniObject</TITLE>
 GstMiniObject
-GstMiniObjectFlags
 GstMiniObjectCopyFunction
 GstMiniObjectDisposeFunction
 GstMiniObjectFreeFunction
-GstMiniObjectWeakNotify
+GstMiniObjectNotify
 
 GST_MINI_OBJECT_TYPE
+
+GstMiniObjectFlags
 GST_MINI_OBJECT_FLAGS
 GST_MINI_OBJECT_FLAG_IS_SET
 GST_MINI_OBJECT_FLAG_SET
 GST_MINI_OBJECT_FLAG_UNSET
+GST_MINI_OBJECT_IS_LOCKABLE
+
+GstLockFlags
+GST_LOCK_FLAG_READWRITE
+
 GST_MINI_OBJECT_REFCOUNT
 GST_MINI_OBJECT_REFCOUNT_VALUE
 
 GST_DEFINE_MINI_OBJECT_TYPE
 gst_mini_object_init
-
-gst_mini_object_copy
-gst_mini_object_is_writable
-gst_mini_object_make_writable
 
 gst_mini_object_ref
 gst_mini_object_unref
@@ -1527,12 +1535,20 @@ gst_mini_object_unref
 gst_mini_object_weak_ref
 gst_mini_object_weak_unref
 
-gst_mini_object_get_qdata
+gst_mini_object_lock
+gst_mini_object_unlock
+gst_mini_object_is_writable
+gst_mini_object_make_writable
+
+gst_mini_object_copy
+
 gst_mini_object_set_qdata
+gst_mini_object_get_qdata
+gst_mini_object_steal_qdata
 
 gst_mini_object_replace
-gst_mini_object_steal
 gst_mini_object_take
+gst_mini_object_steal
 
 <SUBSECTION Standard>
 GST_MINI_OBJECT
