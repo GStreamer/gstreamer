@@ -171,7 +171,7 @@ G_DEFINE_TYPE (GstFestival, gst_festival, GST_TYPE_ELEMENT)
   gst_element_class_set_details_simple (gstelement_class,
       "Festival Text-to-Speech synthesizer", "Filter/Effect/Audio",
       "Synthesizes plain text into audio",
-      "Wim Taymans <wim.taymans@chello.be>");
+      "Wim Taymans <wim.taymans@gmail.com>");
 }
 
 static void
@@ -283,9 +283,9 @@ gst_festival_chain (GstPad * pad, GstObject * parent, GstBuffer * buf)
   }
 
   fprintf (fd, "(tts_textall \"");
-  gst_buffer_map (buf, &info, GST_MAP_WRITE);
+  gst_buffer_map (buf, &info, GST_MAP_READ);
   p = info.data;
-  ep = p + gst_buffer_get_size (buf);
+  ep = p + info.size;
   for (; p < ep && (*p != '\0'); p++) {
     if ((*p == '"') || (*p == '\\')) {
       putc ('\\', fd);
@@ -295,6 +295,7 @@ gst_festival_chain (GstPad * pad, GstObject * parent, GstBuffer * buf)
   }
   fprintf (fd, "\" \"%s\")\n", festival->info->text_mode);
   fclose (fd);
+  gst_buffer_unmap (buf, &info);
 
   GST_DEBUG_OBJECT (festival, "issued tts_textall command");
 
