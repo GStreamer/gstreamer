@@ -822,6 +822,7 @@ gst_ogg_pad_submit_packet (GstOggPad * pad, ogg_packet * packet)
       }
     }
     if (pad->map.caps) {
+      gst_pad_push_event (GST_PAD (pad), gst_event_new_stream_start ());
       gst_pad_set_caps (GST_PAD (pad), pad->map.caps);
     } else {
       GST_WARNING_OBJECT (ogg, "stream parser didn't create src pad caps");
@@ -2646,6 +2647,8 @@ gst_ogg_demux_activate_chain (GstOggDemux * ogg, GstOggChain * chain,
           gst_event_new_tag ("GstDemuxer", pad->map.taglist));
       pad->map.taglist = NULL;
     }
+
+    gst_pad_push_event (GST_PAD (pad), gst_event_new_stream_start ());
 
     /* Set headers on caps */
     pad->map.caps =
