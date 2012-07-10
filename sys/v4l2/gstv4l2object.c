@@ -880,7 +880,13 @@ static const GstV4L2FormatDesc gst_v4l2_formats[] = {
 #endif
   {V4L2_PIX_FMT_DV, TRUE},
   {V4L2_PIX_FMT_MPEG, FALSE},
+#ifdef V4L2_PIX_FMT_MPEG4
+  {V4L2_PIX_FMT_MPEG4, TRUE},
+#endif
 
+#ifdef V4L2_PIX_FMT_H263
+  {V4L2_PIX_FMT_H263, TRUE},
+#endif
 #ifdef V4L2_PIX_FMT_H264
   {V4L2_PIX_FMT_H264, TRUE},
 #endif
@@ -1204,6 +1210,19 @@ gst_v4l2_object_v4l2fourcc_to_structure (guint32 fourcc)
     case V4L2_PIX_FMT_HI240:   /*  8  8-bit color   */
       /* FIXME: get correct fourccs here */
       break;
+#ifdef V4L2_PIX_FMT_MPEG4
+    case V4L2_PIX_FMT_MPEG4:
+      structure = gst_structure_new ("video/mpeg",
+          "mpegversion", G_TYPE_INT, 4, "systemstream",
+          G_TYPE_BOOLEAN, FALSE, NULL);
+      break;
+#endif
+#ifdef V4L2_PIX_FMT_H263
+    case V4L2_PIX_FMT_H263:
+      structure = gst_structure_new ("video/x-h263",
+          "variant", G_TYPE_STRING, "itu", NULL);
+      break;
+#endif
 #ifdef V4L2_PIX_FMT_H264
     case V4L2_PIX_FMT_H264:    /* H.264 */
       structure = gst_structure_new_empty ("video/x-h264");
@@ -1482,6 +1501,14 @@ gst_v4l2_object_get_caps_info (GstV4l2Object * v4l2object, GstCaps * caps,
       fourcc = V4L2_PIX_FMT_DV;
     } else if (g_str_equal (mimetype, "image/jpeg")) {
       fourcc = V4L2_PIX_FMT_JPEG;
+#ifdef V4L2_PIX_FMT_MPEG4
+    } else if (g_str_equal (mimetype, "video/mpeg")) {
+      fourcc = V4L2_PIX_FMT_MPEG4;
+#endif
+#ifdef V4L2_PIX_FMT_H263
+    } else if (g_str_equal (mimetype, "video/x-h263")) {
+      fourcc = V4L2_PIX_FMT_H263;
+#endif
 #ifdef V4L2_PIX_FMT_H264
     } else if (g_str_equal (mimetype, "video/x-h264")) {
       fourcc = V4L2_PIX_FMT_H264;
