@@ -39,8 +39,6 @@ G_BEGIN_DECLS
  *
  * Use this flag on GObject properties of GstElements to indicate that
  * they can be changed when the element is in the READY or lower state.
- *
- * Since: 0.10.23
  */
 #define GST_PARAM_MUTABLE_READY  (1 << (G_PARAM_USER_SHIFT + 2))
 
@@ -50,8 +48,6 @@ G_BEGIN_DECLS
  * Use this flag on GObject properties of GstElements to indicate that
  * they can be changed when the element is in the PAUSED or lower state.
  * This flag implies GST_PARAM_MUTABLE_READY.
- *
- * Since: 0.10.23
  */
 #define GST_PARAM_MUTABLE_PAUSED  (1 << (G_PARAM_USER_SHIFT + 3))
 
@@ -61,8 +57,6 @@ G_BEGIN_DECLS
  * Use this flag on GObject properties of GstElements to indicate that
  * they can be changed when the element is in the PLAYING or lower state.
  * This flag implies GST_PARAM_MUTABLE_PAUSED.
- *
- * Since: 0.10.23
  */
 #define GST_PARAM_MUTABLE_PLAYING  (1 << (G_PARAM_USER_SHIFT + 4))
 

@@ -42,8 +42,7 @@ G_DEFINE_POINTER_TYPE (GstTypeFind, gst_type_find);
 
 /**
  * gst_type_find_register:
- * @plugin: A #GstPlugin, or NULL for a static typefind function (note that
- *    passing NULL only works in GStreamer 0.10.16 and later)
+ * @plugin: A #GstPlugin, or NULL for a static typefind function
  * @name: The name for registering
  * @rank: The rank (or importance) of this typefind function
  * @func: The #GstTypeFindFunction to use
@@ -178,8 +177,6 @@ gst_type_find_suggest (GstTypeFind * find, guint probability, GstCaps * caps)
  * the values passed have the correct type (in terms of width in bytes when
  * passed to the vararg function - this applies particularly to gdouble and
  * guint64 arguments).
- *
- * Since: 0.10.20
  */
 void
 gst_type_find_suggest_simple (GstTypeFind * find, guint probability,

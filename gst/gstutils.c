@@ -697,8 +697,6 @@ gst_util_uint64_scale_int_ceil (guint64 val, gint num, gint denom)
  * Returns: A constantly incrementing 32-bit unsigned integer, which might
  * overflow back to 0 at some point. Use gst_util_seqnum_compare() to make sure
  * you handle wraparound correctly.
- *
- * Since: 0.10.22
  */
 guint32
 gst_util_seqnum_next (void)
@@ -718,8 +716,6 @@ gst_util_seqnum_next (void)
  *
  * Returns: A negative number if @s1 is before @s2, 0 if they are equal, or a
  * positive number if @s1 is after @s2.
- *
- * Since: 0.10.22
  */
 gint32
 gst_util_seqnum_compare (guint32 s1, guint32 s2)
@@ -1164,8 +1160,6 @@ gst_element_state_get_name (GstState state)
  *
  * Returns: (transfer none): a string with the name of the state
  *    result.
- *
- * Since: 0.10.11
  */
 const gchar *
 gst_element_state_change_return_get_name (GstStateChangeReturn state_ret)
@@ -1252,8 +1246,6 @@ gst_element_factory_can_accept_any_caps_in_direction (GstElementFactory *
  * Checks if the factory can sink all possible capabilities.
  *
  * Returns: %TRUE if the caps are fully compatible.
- *
- * Since: 0.10.33
  */
 gboolean
 gst_element_factory_can_sink_all_caps (GstElementFactory * factory,
@@ -1271,8 +1263,6 @@ gst_element_factory_can_sink_all_caps (GstElementFactory * factory,
  * Checks if the factory can src all possible capabilities.
  *
  * Returns: %TRUE if the caps are fully compatible.
- *
- * Since: 0.10.33
  */
 gboolean
 gst_element_factory_can_src_all_caps (GstElementFactory * factory,
@@ -1290,8 +1280,6 @@ gst_element_factory_can_src_all_caps (GstElementFactory * factory,
  * Checks if the factory can sink any possible capability.
  *
  * Returns: %TRUE if the caps have a common subset.
- *
- * Since: 0.10.33
  */
 gboolean
 gst_element_factory_can_sink_any_caps (GstElementFactory * factory,
@@ -1309,8 +1297,6 @@ gst_element_factory_can_sink_any_caps (GstElementFactory * factory,
  * Checks if the factory can src any possible capability.
  *
  * Returns: %TRUE if the caps have a common subset.
- *
- * Since: 0.10.33
  */
 gboolean
 gst_element_factory_can_src_any_caps (GstElementFactory * factory,
@@ -1537,8 +1523,6 @@ pad_link_maybe_ghosting (GstPad * src, GstPad * sink, GstPadLinkCheck flags)
  * This is a convenience function for gst_pad_link_full().
  *
  * Returns: TRUE if the pads could be linked, FALSE otherwise.
- *
- * Since: 0.10.30
  */
 gboolean
 gst_element_link_pads_full (GstElement * src, const gchar * srcpadname,
@@ -2276,8 +2260,6 @@ gst_element_query_convert (GstElement * element, GstFormat src_format,
  *
  * Returns: %TRUE if the seek operation succeeded. Flushing seeks will trigger a
  * preroll, which will emit %GST_MESSAGE_ASYNC_DONE.
- *
- * Since: 0.10.7
  */
 gboolean
 gst_element_seek_simple (GstElement * element, GstFormat format,
@@ -2955,8 +2937,6 @@ element_find_unlinked_pad (GstElement * element, GstPadDirection direction)
  * pad when it is not needed any longer.
  *
  * Returns: (transfer full): unlinked pad of the given direction, or NULL.
- *
- * Since: 0.10.20
  */
 GstPad *
 gst_bin_find_unlinked_pad (GstBin * bin, GstPadDirection direction)
@@ -3017,8 +2997,6 @@ gst_bin_find_unlinked_pad (GstBin * bin, GstPadDirection direction)
  * yourself).
  *
  * Returns: (transfer floating): a newly-created bin, or NULL if an error occurred.
- *
- * Since: 0.10.3
  */
 GstElement *
 gst_parse_bin_from_description (const gchar * bin_description,
@@ -3049,8 +3027,6 @@ gst_parse_bin_from_description (const gchar * bin_description,
  * yourself).
  *
  * Returns: (transfer full): a newly-created bin, or NULL if an error occurred.
- *
- * Since: 0.10.20
  */
 GstElement *
 gst_parse_bin_from_description_full (const gchar * bin_description,
@@ -3111,8 +3087,6 @@ gst_parse_bin_from_description_full (const gchar * bin_description,
  * The timestamp should not be interpreted in any other way.
  *
  * Returns: the timestamp
- *
- * Since: 0.10.16
  */
 GstClockTime
 gst_util_get_timestamp (void)
@@ -3149,8 +3123,6 @@ gst_util_get_timestamp (void)
  * The complexity of this search function is O(log (num_elements)).
  *
  * Returns: (transfer none): The address of the found element or %NULL if nothing was found
- *
- * Since: 0.10.23
  */
 gpointer
 gst_util_array_binary_search (gpointer array, guint num_elements,
@@ -3231,8 +3203,6 @@ gst_util_array_binary_search (gpointer array, guint num_elements,
  * and @b.
  *
  * Returns: Greatest common divisor of @a and @b
- *
- * Since: 0.10.26
  */
 gint
 gst_util_greatest_common_divisor (gint a, gint b)
@@ -3256,8 +3226,6 @@ gst_util_greatest_common_divisor (gint a, gint b)
  * and @b.
  *
  * Returns: Greatest common divisor of @a and @b
- *
- * Since: 0.11.0
  */
 gint64
 gst_util_greatest_common_divisor_int64 (gint64 a, gint64 b)
@@ -3280,8 +3248,6 @@ gst_util_greatest_common_divisor_int64 (gint64 a, gint64 b)
  * @dest: (out): pointer to a #gdouble for the result
  *
  * Transforms a fraction to a #gdouble.
- *
- * Since: 0.10.26
  */
 void
 gst_util_fraction_to_double (gint src_n, gint src_d, gdouble * dest)
@@ -3309,8 +3275,6 @@ gst_util_fraction_to_double (gint src_n, gint src_d, gdouble * dest)
  *
  * Transforms a #gdouble to a fraction and simplifies
  * the result.
- *
- * Since: 0.10.26
  */
 void
 gst_util_double_to_fraction (gdouble src, gint * dest_n, gint * dest_d)
@@ -3410,8 +3374,6 @@ gst_util_double_to_fraction (gdouble src, gint * dest_n, gint * dest_d)
  * the result in @res_n and @res_d.
  *
  * Returns: %FALSE on overflow, %TRUE otherwise.
- *
- * Since: 0.10.26
  */
 gboolean
 gst_util_fraction_multiply (gint a_n, gint a_d, gint b_n, gint b_d,
@@ -3469,8 +3431,6 @@ gst_util_fraction_multiply (gint a_n, gint a_d, gint b_n, gint b_d,
  * the result in @res_n and @res_d.
  *
  * Returns: %FALSE on overflow, %TRUE otherwise.
- *
- * Since: 0.10.26
  */
 gboolean
 gst_util_fraction_add (gint a_n, gint a_d, gint b_n, gint b_d, gint * res_n,
@@ -3536,8 +3496,6 @@ gst_util_fraction_add (gint a_n, gint a_d, gint b_n, gint b_d, gint * res_n,
  * -1 if a < b, 0 if a = b and 1 if a > b.
  *
  * Returns: -1 if a < b; 0 if a = b; 1 if a > b.
- *
- * Since: 0.10.31
  */
 gint
 gst_util_fraction_compare (gint a_n, gint a_d, gint b_n, gint b_d)

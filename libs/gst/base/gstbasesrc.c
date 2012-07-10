@@ -90,7 +90,7 @@
  * distributed and running.
  *
  * Live sources that synchronize and block on the clock (an audio source, for
- * example) can since 0.10.12 use gst_base_src_wait_playing() when the
+ * example) can use gst_base_src_wait_playing() when the
  * #GstBaseSrcClass.create() function was interrupted by a state change to
  * PAUSED.
  *
@@ -138,8 +138,8 @@
  * EOS message posted on the pipeline's bus to know when all data has
  * been processed and the pipeline can safely be stopped.
  *
- * Since GStreamer 0.10.16 an application may send an EOS event to a source
- * element to make it perform the EOS logic (send EOS event downstream or post a
+ * An application may send an EOS event to a source element to make it
+ * perform the EOS logic (send EOS event downstream or post a
  * #GST_MESSAGE_SEGMENT_DONE on the bus). This can typically be done
  * with the gst_element_send_event() function on the element or its parent bin.
  *
@@ -484,8 +484,6 @@ gst_base_src_finalize (GObject * object)
  * to a state change to READY or a FLUSH event (in which case this function
  * returns #GST_FLOW_FLUSHING).
  *
- * Since: 0.10.12
- *
  * Returns: #GST_FLOW_OK if @src is PLAYING and processing can
  * continue. Any other return value should be returned from the create vmethod.
  */
@@ -571,8 +569,6 @@ gst_base_src_is_live (GstBaseSrc * src)
  * operate in pull mode if the #GstBaseSrcClass.is_seekable() returns TRUE.
  *
  * This function must only be called in states < %GST_STATE_PAUSED.
- *
- * Since: 0.10.1
  */
 void
 gst_base_src_set_format (GstBaseSrc * src, GstFormat format)
@@ -593,8 +589,6 @@ gst_base_src_set_format (GstBaseSrc * src, GstFormat format)
  * If not @dynamic, size is only updated when needed, such as when trying to
  * read past current tracked size.  Otherwise, size is checked for upon each
  * read.
- *
- * Since: 0.10.36
  */
 void
 gst_base_src_set_dynamic_size (GstBaseSrc * src, gboolean dynamic)
@@ -662,8 +656,6 @@ gst_base_src_is_async (GstBaseSrc * src)
  * This function is mostly used by subclasses.
  *
  * Returns: TRUE if the query succeeded.
- *
- * Since: 0.10.13
  */
 gboolean
 gst_base_src_query_latency (GstBaseSrc * src, gboolean * live,
@@ -705,8 +697,6 @@ gst_base_src_query_latency (GstBaseSrc * src, gboolean * live,
  *
  * Set the number of bytes that @src will push out with each buffer. When
  * @blocksize is set to -1, a default length will be used.
- *
- * Since: 0.10.22
  */
 void
 gst_base_src_set_blocksize (GstBaseSrc * src, guint blocksize)
@@ -725,8 +715,6 @@ gst_base_src_set_blocksize (GstBaseSrc * src, guint blocksize)
  * Get the number of bytes that @src will push out with each buffer.
  *
  * Returns: the number of bytes pushed with each buffer.
- *
- * Since: 0.10.22
  */
 guint
 gst_base_src_get_blocksize (GstBaseSrc * src)
@@ -751,8 +739,6 @@ gst_base_src_get_blocksize (GstBaseSrc * src)
  * Configure @src to automatically timestamp outgoing buffers based on the
  * current running_time of the pipeline. This property is mostly useful for live
  * sources.
- *
- * Since: 0.10.15
  */
 void
 gst_base_src_set_do_timestamp (GstBaseSrc * src, gboolean timestamp)
@@ -771,8 +757,6 @@ gst_base_src_set_do_timestamp (GstBaseSrc * src, gboolean timestamp)
  * Query if @src timestamps outgoing buffers based on the current running_time.
  *
  * Returns: %TRUE if the base class will automatically timestamp outgoing buffers.
- *
- * Since: 0.10.15
  */
 gboolean
 gst_base_src_get_do_timestamp (GstBaseSrc * src)
@@ -803,8 +787,6 @@ gst_base_src_get_do_timestamp (GstBaseSrc * src)
  * configured with gst_base_src_set_format()
  *
  * Returns: %TRUE if preparation of the seamless segment succeeded.
- *
- * Since: 0.10.26
  */
 gboolean
 gst_base_src_new_seamless_segment (GstBaseSrc * src, gint64 start, gint64 stop,

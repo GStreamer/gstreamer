@@ -164,7 +164,8 @@ gst_bus_class_init (GstBusClass * klass)
   gobject_class->set_property = gst_bus_set_property;
   gobject_class->constructed = gst_bus_constructed;
 
-  /* GstBus:enable-async:
+  /**
+   * GstBus::enable-async:
    *
    * Enable async message delivery support for bus watches,
    * gst_bus_pop() and similar API. Without this only the
@@ -172,8 +173,6 @@ gst_bus_class_init (GstBusClass * klass)
    *
    * This property is used to create the child element buses
    * in #GstBin.
-   *
-   * Since: 0.10.33
    */
   g_object_class_install_property (gobject_class, PROP_ENABLE_ASYNC,
       g_param_spec_boolean ("enable-async", "Enable Async",
@@ -480,8 +479,6 @@ gst_bus_set_flushing (GstBus * bus, gboolean flushing)
  *     with gst_message_unref() after usage.
  *
  * MT safe.
- *
- * Since: 0.10.15
  */
 GstMessage *
 gst_bus_timed_pop_filtered (GstBus * bus, GstClockTime timeout,
@@ -578,8 +575,6 @@ beach:
  * gst_message_unref() after usage.
  *
  * MT safe.
- *
- * Since: 0.10.12
  */
 GstMessage *
 gst_bus_timed_pop (GstBus * bus, GstClockTime timeout)
@@ -605,8 +600,6 @@ gst_bus_timed_pop (GstBus * bus, GstClockTime timeout)
  *     gst_message_unref() after usage.
  *
  * MT safe.
- *
- * Since: 0.10.15
  */
 GstMessage *
 gst_bus_pop_filtered (GstBus * bus, GstMessageType types)
@@ -891,8 +884,8 @@ gst_bus_add_watch_full_unlocked (GstBus * bus, gint priority,
  * @notify: the function to call when the source is removed.
  *
  * Adds a bus watch to the default main context with the given @priority (e.g.
- * %G_PRIORITY_DEFAULT). Since 0.10.33 it is also possible to use a non-default
- * main context set up using g_main_context_push_thread_default() (before
+ * %G_PRIORITY_DEFAULT). It is also possible to use a non-default  main
+ * context set up using g_main_context_push_thread_default() (before
  * one had to create a bus watch source and attach it to the desired main
  * context 'manually').
  *
@@ -933,8 +926,8 @@ gst_bus_add_watch_full (GstBus * bus, gint priority,
  * @user_data: user data passed to @func.
  *
  * Adds a bus watch to the default main context with the default priority
- * (%G_PRIORITY_DEFAULT). Since 0.10.33 it is also possible to use a non-default
- * main context set up using g_main_context_push_thread_default() (before
+ * (%G_PRIORITY_DEFAULT). It is also possible to use a non-default main
+ * context set up using g_main_context_push_thread_default() (before
  * one had to create a bus watch source and attach it to the desired main
  * context 'manually').
  *
@@ -1228,8 +1221,8 @@ gst_bus_disable_sync_message_emission (GstBus * bus)
  * @priority: The priority of the watch.
  *
  * Adds a bus signal watch to the default main context with the given @priority
- * (e.g. %G_PRIORITY_DEFAULT). Since 0.10.33 it is also possible to use a
- * non-default main context set up using g_main_context_push_thread_default()
+ * (e.g. %G_PRIORITY_DEFAULT). It is also possible to use a non-default main
+ * context set up using g_main_context_push_thread_default()
  * (before one had to create a bus watch source and attach it to the desired
  * main context 'manually').
  *
@@ -1287,7 +1280,7 @@ add_failed:
  * @bus: a #GstBus on which you want to receive the "message" signal
  *
  * Adds a bus signal watch to the default main context with the default priority
- * (%G_PRIORITY_DEFAULT). Since 0.10.33 it is also possible to use a non-default
+ * (%G_PRIORITY_DEFAULT). It is also possible to use a non-default
  * main context set up using g_main_context_push_thread_default() (before
  * one had to create a bus watch source and attach it to the desired main
  * context 'manually').

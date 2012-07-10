@@ -160,8 +160,6 @@ gst_pipeline_class_init (GstPipelineClass * klass)
    * The expected delay needed for elements to spin up to the
    * PLAYING state expressed in nanoseconds.
    * see gst_pipeline_set_delay() for more information on this option.
-   *
-   * Since: 0.10.5
    **/
   g_object_class_install_property (gobject_class, PROP_DELAY,
       g_param_spec_uint64 ("delay", "Delay",
@@ -175,8 +173,6 @@ gst_pipeline_class_init (GstPipelineClass * klass)
    * Whether or not to automatically flush all messages on the
    * pipeline's bus when going from READY to NULL state. Please see
    * gst_pipeline_set_auto_flush_bus() for more information on this option.
-   *
-   * Since: 0.10.4
    **/
   g_object_class_install_property (gobject_class, PROP_AUTO_FLUSH_BUS,
       g_param_spec_boolean ("auto-flush-bus", "Auto Flush Bus",
@@ -748,8 +744,6 @@ gst_pipeline_auto_clock (GstPipeline * pipeline)
  * used.
  *
  * MT safe.
- *
- * Since: 0.10.5
  */
 void
 gst_pipeline_set_delay (GstPipeline * pipeline, GstClockTime delay)
@@ -771,8 +765,6 @@ gst_pipeline_set_delay (GstPipeline * pipeline, GstClockTime delay)
  * Returns: The configured delay.
  *
  * MT safe.
- *
- * Since: 0.10.5
  */
 GstClockTime
 gst_pipeline_get_delay (GstPipeline * pipeline)
@@ -808,8 +800,6 @@ gst_pipeline_get_delay (GstPipeline * pipeline)
  * automatic flushing is disabled else memory leaks will be introduced.
  *
  * MT safe.
- *
- * Since: 0.10.4
  */
 void
 gst_pipeline_set_auto_flush_bus (GstPipeline * pipeline, gboolean auto_flush)
@@ -832,8 +822,6 @@ gst_pipeline_set_auto_flush_bus (GstPipeline * pipeline, gboolean auto_flush)
  * going from READY to NULL state or not.
  *
  * MT safe.
- *
- * Since: 0.10.4
  */
 gboolean
 gst_pipeline_get_auto_flush_bus (GstPipeline * pipeline)

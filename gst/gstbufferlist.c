@@ -47,8 +47,6 @@
  * GstBufferList:
  *
  * Opaque list of grouped buffers.
- *
- * Since: 0.10.24
  */
 struct _GstBufferList
 {
@@ -124,8 +122,6 @@ gst_buffer_list_init (GstBufferList * list, guint asize)
  *
  * Returns: (transfer full): the new #GstBufferList. gst_buffer_list_unref()
  *     after usage.
- *
- * Since: 0.10.24
  */
 GstBufferList *
 gst_buffer_list_new_sized (guint size)
@@ -151,8 +147,6 @@ gst_buffer_list_new_sized (guint size)
  *
  * Returns: (transfer full): the new #GstBufferList. gst_buffer_list_unref()
  *     after usage.
- *
- * Since: 0.10.24
  */
 GstBufferList *
 gst_buffer_list_new (void)
@@ -167,8 +161,6 @@ gst_buffer_list_new (void)
  * Returns the number of buffers in @list.
  *
  * Returns: the number of buffers in the buffer list
- *
- * Since: 0.10.24
  */
 guint
 gst_buffer_list_length (GstBufferList * list)
@@ -189,8 +181,6 @@ gst_buffer_list_length (GstBufferList * list)
  * @func can modify the passed buffer pointer or its contents. The return value
  * of @func define if this function returns or if the remaining buffers in
  * the list should be skipped.
- *
- * Since: 0.10.24
  */
 void
 gst_buffer_list_foreach (GstBufferList * list, GstBufferListFunc func,
@@ -237,8 +227,6 @@ gst_buffer_list_foreach (GstBufferList * list, GstBufferListFunc func,
  *
  * Returns: (transfer none): the buffer at @idx in @group or NULL when there
  *     is no buffer. The buffer remains valid as long as @list is valid.
- *
- * Since: 0.10.24
  */
 GstBuffer *
 gst_buffer_list_get (GstBufferList * list, guint idx)

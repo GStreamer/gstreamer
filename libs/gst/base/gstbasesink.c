@@ -67,12 +67,12 @@
  * After synchronisation the virtual method #GstBaseSinkClass.render() will be
  * called. Subclasses should minimally implement this method.
  *
- * Since 0.10.3 subclasses that synchronise on the clock in the
- * #GstBaseSinkClass.render() method are supported as well. These classes
- * typically receive a buffer in the render method and can then potentially
- * block on the clock while rendering. A typical example is an audiosink.
- * Since 0.10.11 these subclasses can use gst_base_sink_wait_preroll() to
- * perform the blocking wait.
+ * Subclasses that synchronise on the clock in the #GstBaseSinkClass.render()
+ * method are supported as well. These classes typically receive a buffer in
+ * the render method and can then potentially block on the clock while
+ * rendering. A typical example is an audiosink.
+ * These subclasses can use gst_base_sink_wait_preroll() to perform the
+ * blocking wait.
  *
  * Upon receiving the EOS event in the PLAYING state, #GstBaseSink will wait
  * for the clock to reach the time indicated by the stop time of the last
@@ -131,9 +131,9 @@
  * information can then be used by upstream elements to reduce their processing
  * rate, for example.
  *
- * Since 0.10.15 the #GstBaseSink:async property can be used to instruct the
- * sink to never perform an ASYNC state change. This feature is mostly usable
- * when dealing with non-synchronized streams or sparse streams.
+ * The #GstBaseSink:async property can be used to instruct the sink to never
+ * perform an ASYNC state change. This feature is mostly usable when dealing
+ * with non-synchronized streams or sparse streams.
  *
  * Last reviewed on 2007-08-29 (0.10.15)
  */
@@ -436,8 +436,6 @@ gst_base_sink_class_init (GstBaseSinkClass * klass)
    * When set to #FALSE, the sink will not signal the parent when it prerolls.
    * Use this option when dealing with sparse streams or when synchronisation is
    * not required.
-   *
-   * Since: 0.10.15
    */
   g_object_class_install_property (gobject_class, PROP_ASYNC,
       g_param_spec_boolean ("async", "Async",
@@ -449,8 +447,6 @@ gst_base_sink_class_init (GstBaseSinkClass * klass)
    * Controls the final synchronisation, a negative value will render the buffer
    * earlier while a positive value delays playback. This property can be
    * used to fix synchronisation in bad files.
-   *
-   * Since: 0.10.15
    */
   g_object_class_install_property (gobject_class, PROP_TS_OFFSET,
       g_param_spec_int64 ("ts-offset", "TS Offset",
@@ -464,8 +460,6 @@ gst_base_sink_class_init (GstBaseSinkClass * klass)
    * reference to the last buffer arrived and the last-sample property is always
    * set to NULL. This can be useful if you need buffers to be released as soon
    * as possible, eg. if you're using a buffer pool.
-   *
-   * Since: 0.10.30
    */
   g_object_class_install_property (gobject_class, PROP_ENABLE_LAST_SAMPLE,
       g_param_spec_boolean ("enable-last-sample", "Enable Last Buffer",
@@ -478,8 +472,6 @@ gst_base_sink_class_init (GstBaseSinkClass * klass)
    * The last buffer that arrived in the sink and was used for preroll or for
    * rendering. This property can be used to generate thumbnails. This property
    * can be NULL when the sink has not yet received a bufer.
-   *
-   * Since: 0.10.15
    */
   g_object_class_install_property (gobject_class, PROP_LAST_SAMPLE,
       g_param_spec_boxed ("last-sample", "Last Sample",
@@ -489,8 +481,6 @@ gst_base_sink_class_init (GstBaseSinkClass * klass)
    * GstBaseSink:blocksize:
    *
    * The amount of bytes to pull when operating in pull mode.
-   *
-   * Since: 0.10.22
    */
   /* FIXME 0.11: blocksize property should be int, otherwise min>max.. */
   g_object_class_install_property (gobject_class, PROP_BLOCKSIZE,
@@ -503,8 +493,6 @@ gst_base_sink_class_init (GstBaseSinkClass * klass)
    * The additional delay between synchronisation and actual rendering of the
    * media. This property will add additional latency to the device in order to
    * make other sinks compensate for the delay.
-   *
-   * Since: 0.10.22
    */
   g_object_class_install_property (gobject_class, PROP_RENDER_DELAY,
       g_param_spec_uint64 ("render-delay", "Render Delay",
@@ -516,8 +504,6 @@ gst_base_sink_class_init (GstBaseSinkClass * klass)
    * The time to insert between buffers. This property can be used to control
    * the maximum amount of buffers per second to render. Setting this property
    * to a value bigger than 0 will make the sink create THROTTLE QoS events.
-   *
-   * Since: 0.10.33
    */
   g_object_class_install_property (gobject_class, PROP_THROTTLE_TIME,
       g_param_spec_uint64 ("throttle-time", "Throttle time",
@@ -680,8 +666,6 @@ gst_base_sink_finalize (GObject * object)
  * possible. If @sync is TRUE, the timestamps of the incomming
  * buffers will be used to schedule the exact render time of its
  * contents.
- *
- * Since: 0.10.4
  */
 void
 gst_base_sink_set_sync (GstBaseSink * sink, gboolean sync)
@@ -701,8 +685,6 @@ gst_base_sink_set_sync (GstBaseSink * sink, gboolean sync)
  * clock.
  *
  * Returns: TRUE if the sink is configured to synchronize against the clock.
- *
- * Since: 0.10.4
  */
 gboolean
 gst_base_sink_get_sync (GstBaseSink * sink)
@@ -727,8 +709,6 @@ gst_base_sink_get_sync (GstBaseSink * sink)
  * used to decide if a buffer should be dropped or not based on the
  * buffer timestamp and the current clock time. A value of -1 means
  * an unlimited time.
- *
- * Since: 0.10.4
  */
 void
 gst_base_sink_set_max_lateness (GstBaseSink * sink, gint64 max_lateness)
@@ -750,8 +730,6 @@ gst_base_sink_set_max_lateness (GstBaseSink * sink, gint64 max_lateness)
  * Returns: The maximum time in nanoseconds that a buffer can be late
  * before it is dropped and not rendered. A value of -1 means an
  * unlimited time.
- *
- * Since: 0.10.4
  */
 gint64
 gst_base_sink_get_max_lateness (GstBaseSink * sink)
@@ -773,8 +751,6 @@ gst_base_sink_get_max_lateness (GstBaseSink * sink)
  * @enabled: the new qos value.
  *
  * Configures @sink to send Quality-of-Service events upstream.
- *
- * Since: 0.10.5
  */
 void
 gst_base_sink_set_qos_enabled (GstBaseSink * sink, gboolean enabled)
@@ -792,8 +768,6 @@ gst_base_sink_set_qos_enabled (GstBaseSink * sink, gboolean enabled)
  * upstream.
  *
  * Returns: TRUE if the sink is configured to perform Quality-of-Service.
- *
- * Since: 0.10.5
  */
 gboolean
 gst_base_sink_is_qos_enabled (GstBaseSink * sink)
@@ -816,8 +790,6 @@ gst_base_sink_is_qos_enabled (GstBaseSink * sink)
  * disabled, the sink will immediately go to PAUSED instead of waiting for a
  * preroll buffer. This feature is useful if the sink does not synchronize
  * against the clock or when it is dealing with sparse streams.
- *
- * Since: 0.10.15
  */
 void
 gst_base_sink_set_async_enabled (GstBaseSink * sink, gboolean enabled)
@@ -839,8 +811,6 @@ gst_base_sink_set_async_enabled (GstBaseSink * sink, gboolean enabled)
  *
  * Returns: TRUE if the sink is configured to perform asynchronous state
  * changes.
- *
- * Since: 0.10.15
  */
 gboolean
 gst_base_sink_is_async_enabled (GstBaseSink * sink)
@@ -863,8 +833,6 @@ gst_base_sink_is_async_enabled (GstBaseSink * sink)
  * render buffers earlier than their timestamp. A positive value will delay
  * rendering. This function can be used to fix playback of badly timestamped
  * buffers.
- *
- * Since: 0.10.15
  */
 void
 gst_base_sink_set_ts_offset (GstBaseSink * sink, GstClockTimeDiff offset)
@@ -884,8 +852,6 @@ gst_base_sink_set_ts_offset (GstBaseSink * sink, GstClockTimeDiff offset)
  * Get the synchronisation offset of @sink.
  *
  * Returns: The synchronisation offset.
- *
- * Since: 0.10.15
  */
 GstClockTimeDiff
 gst_base_sink_get_ts_offset (GstBaseSink * sink)
@@ -915,8 +881,6 @@ gst_base_sink_get_ts_offset (GstBaseSink * sink)
  * Returns: (transfer full): a #GstSample. gst_sample_unref() after usage.
  *     This function returns NULL when no buffer has arrived in the sink yet
  *     or when the sink is not in PAUSED or PLAYING.
- *
- * Since: 0.10.15
  */
 GstSample *
 gst_base_sink_get_last_sample (GstBaseSink * sink)
@@ -982,8 +946,6 @@ gst_base_sink_set_last_buffer (GstBaseSink * sink, GstBuffer * buffer)
  *
  * Configures @sink to store the last received sample in the last-sample
  * property.
- *
- * Since: 0.10.30
  */
 void
 gst_base_sink_set_last_sample_enabled (GstBaseSink * sink, gboolean enabled)
@@ -1007,8 +969,6 @@ gst_base_sink_set_last_sample_enabled (GstBaseSink * sink, gboolean enabled)
  * the last-sample property.
  *
  * Returns: TRUE if the sink is configured to store the last received sample.
- *
- * Since: 0.10.30
  */
 gboolean
 gst_base_sink_is_last_sample_enabled (GstBaseSink * sink)
@@ -1025,8 +985,6 @@ gst_base_sink_is_last_sample_enabled (GstBaseSink * sink)
  * Get the currently configured latency.
  *
  * Returns: The configured latency.
- *
- * Since: 0.10.12
  */
 GstClockTime
 gst_base_sink_get_latency (GstBaseSink * sink)
@@ -1060,8 +1018,6 @@ gst_base_sink_get_latency (GstBaseSink * sink)
  * This function is mostly used by subclasses.
  *
  * Returns: TRUE if the query succeeded.
- *
- * Since: 0.10.12
  */
 gboolean
 gst_base_sink_query_latency (GstBaseSink * sink, gboolean * live,
@@ -1157,8 +1113,6 @@ gst_base_sink_query_latency (GstBaseSink * sink, gboolean * live,
  * other sinks will adjust their latency to delay the rendering of their media.
  *
  * This function is usually called by subclasses.
- *
- * Since: 0.10.21
  */
 void
 gst_base_sink_set_render_delay (GstBaseSink * sink, GstClockTime delay)
@@ -1189,8 +1143,6 @@ gst_base_sink_set_render_delay (GstBaseSink * sink, GstClockTime delay)
  * information about the render delay.
  *
  * Returns: the render delay of @sink.
- *
- * Since: 0.10.21
  */
 GstClockTime
 gst_base_sink_get_render_delay (GstBaseSink * sink)
@@ -1213,8 +1165,6 @@ gst_base_sink_get_render_delay (GstBaseSink * sink)
  *
  * Set the number of bytes that the sink will pull when it is operating in pull
  * mode.
- *
- * Since: 0.10.22
  */
 /* FIXME 0.11: blocksize property should be int, otherwise min>max.. */
 void
@@ -1236,8 +1186,6 @@ gst_base_sink_set_blocksize (GstBaseSink * sink, guint blocksize)
  * mode.
  *
  * Returns: the number of bytes @sink will pull in pull mode.
- *
- * Since: 0.10.22
  */
 /* FIXME 0.11: blocksize property should be int, otherwise min>max.. */
 guint
@@ -1262,8 +1210,6 @@ gst_base_sink_get_blocksize (GstBaseSink * sink)
  * Set the time that will be inserted between rendered buffers. This
  * can be used to control the maximum buffers per second that the sink
  * will render. 
- *
- * Since: 0.10.33
  */
 void
 gst_base_sink_set_throttle_time (GstBaseSink * sink, guint64 throttle)
@@ -1284,8 +1230,6 @@ gst_base_sink_set_throttle_time (GstBaseSink * sink, guint64 throttle)
  * maximum buffers per second.
  *
  * Returns: the number of nanoseconds @sink will put between frames.
- *
- * Since: 0.10.33
  */
 guint64
 gst_base_sink_get_throttle_time (GstBaseSink * sink)
@@ -1976,8 +1920,6 @@ gst_base_sink_adjust_time (GstBaseSink * basesink, GstClockTime time)
  * return and is not adjusted with any latency or offset configured in the
  * sink.
  *
- * Since: 0.10.20
- *
  * Returns: #GstClockReturn
  */
 GstClockReturn
@@ -2077,8 +2019,6 @@ no_clock:
  *
  * Returns: #GST_FLOW_OK if the preroll completed and processing can
  * continue. Any other return value should be returned from the render vmethod.
- *
- * Since: 0.10.11
  */
 GstFlowReturn
 gst_base_sink_wait_preroll (GstBaseSink * sink)
@@ -2124,8 +2064,6 @@ step_unlocked:
  *
  * Returns: #GST_FLOW_OK if the preroll completed and processing can
  * continue. Any other return value should be returned from the render vmethod.
- *
- * Since: 0.10.22
  */
 GstFlowReturn
 gst_base_sink_do_preroll (GstBaseSink * sink, GstMiniObject * obj)
@@ -2229,8 +2167,6 @@ preroll_failed:
  * and will be adjusted with any latency and offset configured in the sink.
  *
  * Returns: #GstFlowReturn
- *
- * Since: 0.10.15
  */
 GstFlowReturn
 gst_base_sink_wait (GstBaseSink * sink, GstClockTime time,

@@ -31,8 +31,6 @@ G_BEGIN_DECLS
  * GstStreamConsistency:
  *
  * Opaque consistency checker handle.
- *
- * Since: 0.10.24
  */
 typedef struct _GstStreamConsistency GstStreamConsistency;
 

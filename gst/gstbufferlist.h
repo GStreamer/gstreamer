@@ -72,8 +72,6 @@ typedef gboolean   (*GstBufferListFunc)   (GstBuffer **buffer, guint idx,
  * the number of memcpy operations in a pipeline.
  *
  * Returns: (transfer full): @list
- *
- * Since: 0.10.24
  */
 #ifdef _FOOL_GTK_DOC_
 G_INLINE_FUNC GstBufferList * gst_buffer_list_ref (GstBufferList * list);
@@ -92,8 +90,6 @@ gst_buffer_list_ref (GstBufferList * list)
  *
  * Decreases the refcount of the buffer list. If the refcount reaches 0, the
  * buffer list will be freed.
- *
- * Since: 0.10.24
  */
 #ifdef _FOOL_GTK_DOC_
 G_INLINE_FUNC void gst_buffer_list_unref (GstBufferList * list);
@@ -115,8 +111,6 @@ gst_buffer_list_unref (GstBufferList * list)
  * refcount of buffers pointed to will be increased by one.
  *
  * Returns: (transfer full): a new copy of @list.
- *
- * Since: 0.10.24
  */
 #ifdef _FOOL_GTK_DOC_
 G_INLINE_FUNC GstBufferList * gst_buffer_list_copy (const GstBufferList * list);
@@ -133,8 +127,6 @@ gst_buffer_list_copy (const GstBufferList * list)
  * @list: a #GstBufferList
  *
  * Tests if you can safely add buffers and groups into a buffer list.
- *
- * Since: 0.10.24
  */
 #define gst_buffer_list_is_writable(list) gst_mini_object_is_writable (GST_MINI_OBJECT_CAST (list))
 
@@ -148,8 +140,6 @@ gst_buffer_list_copy (const GstBufferList * list)
  *
  * Returns: (transfer full): a writable list, which may or may not be the
  *     same as @list
- *
- * Since: 0.10.24
  */
 #define gst_buffer_list_make_writable(list) GST_BUFFER_LIST_CAST (gst_mini_object_make_writable (GST_MINI_OBJECT_CAST (list)))
 

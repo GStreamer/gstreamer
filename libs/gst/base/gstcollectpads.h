@@ -47,8 +47,6 @@ typedef struct _GstCollectPadsClass GstCollectPadsClass;
  * A function that will be called when the #GstCollectData will be freed.
  * It is passed the pointer to the structure and should free any custom
  * memory and resources allocated for it.
- *
- * Since: 0.10.36
  */
 typedef void (*GstCollectDataDestroyNotify) (GstCollectData *data);
 
@@ -63,8 +61,6 @@ typedef void (*GstCollectDataDestroyNotify) (GstCollectData *data);
  * @GST_COLLECT_PADS_STATE_LOCKED:      Set collectdata's pad WAITING state must
  *                                      not be changed.
  * #GstCollectPadsStateFlags indicate private state of a collectdata('s pad).
- *
- * Since: 0.10.36
  */
 typedef enum {
   GST_COLLECT_PADS_STATE_EOS = 1 << 0,
@@ -80,8 +76,6 @@ typedef enum {
  *
  * A flags word containing #GstCollectPadsStateFlags flags set
  * on this collected pad.
- *
- * Since: 0.10.36
  */
 #define GST_COLLECT_PADS_STATE(data)                 (((GstCollectData *) data)->state)
 /**
@@ -90,8 +84,6 @@ typedef enum {
  * @flag: the #GstCollectPadsStateFlags to check.
  *
  * Gives the status of a specific flag on a collected pad.
- *
- * Since: 0.10.36
  */
 #define GST_COLLECT_PADS_STATE_IS_SET(data,flag)     !!(GST_COLLECT_PADS_STATE (data) & flag)
 /**
@@ -100,8 +92,6 @@ typedef enum {
  * @flag: the #GstCollectPadsStateFlags to set.
  *
  * Sets a state flag on a collected pad.
- *
- * Since: 0.10.36
  */
 #define GST_COLLECT_PADS_STATE_SET(data,flag)        (GST_COLLECT_PADS_STATE (data) |= flag)
 /**
@@ -110,8 +100,6 @@ typedef enum {
  * @flag: the #GstCollectPadsStateFlags to clear.
  *
  * Clears a state flag on a collected pad.
- *
- * Since: 0.10.36
  */
 #define GST_COLLECT_PADS_STATE_UNSET(data,flag)      (GST_COLLECT_PADS_STATE (data) &= ~(flag))
 
@@ -124,8 +112,6 @@ typedef enum {
  * @segment: last segment received.
  *
  * Structure used by the collect_pads.
- *
- * Since: 0.10.36
  */
 struct _GstCollectData
 {
@@ -154,8 +140,6 @@ struct _GstCollectData
  * A function that will be called when all pads have received data.
  *
  * Returns: #GST_FLOW_OK for success
- *
- * Since: 0.10.36
  */
 typedef GstFlowReturn (*GstCollectPadsFunction) (GstCollectPads *pads, gpointer user_data);
 
@@ -171,8 +155,6 @@ typedef GstFlowReturn (*GstCollectPadsFunction) (GstCollectPads *pads, gpointer 
  * and NULL @data.
  *
  * Returns: #GST_FLOW_OK for success
- *
- * Since: 0.10.36
  */
 typedef GstFlowReturn (*GstCollectPadsBufferFunction) (GstCollectPads *pads, GstCollectData *data,
                                                         GstBuffer *buffer, gpointer user_data);
@@ -191,8 +173,6 @@ typedef GstFlowReturn (*GstCollectPadsBufferFunction) (GstCollectPads *pads, Gst
  * Returns: Integer less than zero when first timestamp is deemed older than the second one.
  *          Zero if the timestamps are deemed equally old.
  *          Integer greate than zero when second timestamp is deemed older than the first one.
- *
- * Since: 0.10.36
  */
 typedef gint (*GstCollectPadsCompareFunction) (GstCollectPads *pads,
                                                 GstCollectData * data1, GstClockTime timestamp1,
@@ -212,8 +192,6 @@ typedef gint (*GstCollectPadsCompareFunction) (GstCollectPads *pads,
  * being handled by the default handler).
  *
  * Returns: %TRUE if the pad could handle the event
- *
- * Since: 0.10.36
  */
 typedef gboolean (*GstCollectPadsEventFunction)        (GstCollectPads *pads, GstCollectData * pad,
                                                          GstEvent * event, gpointer user_data);
@@ -231,8 +209,6 @@ typedef gboolean (*GstCollectPadsEventFunction)        (GstCollectPads *pads, Gs
  * events downstream (with gst_pad_event_default()).
  *
  * Returns: %TRUE if the pad could handle the event
- *
- * Since: 0.11.x
  */
 typedef gboolean (*GstCollectPadsQueryFunction)        (GstCollectPads *pads, GstCollectData * pad,
                                                          GstQuery * query, gpointer user_data);
@@ -255,8 +231,6 @@ typedef gboolean (*GstCollectPadsQueryFunction)        (GstCollectPads *pads, Gs
  * @outbuffer or return %NULL in @outbuffer if the buffer should be dropped.
  *
  * Returns: a #GstFlowReturn that corresponds to the result of clipping.
- *
- * Since: 0.10.36
  */
 typedef GstFlowReturn (*GstCollectPadsClipFunction) (GstCollectPads *pads, GstCollectData *data,
                                                    GstBuffer *inbuffer, GstBuffer **outbuffer,
@@ -269,8 +243,6 @@ typedef GstFlowReturn (*GstCollectPadsClipFunction) (GstCollectPads *pads, GstCo
  * Get the stream lock of @pads. The stream lock is used to coordinate and
  * serialize execution among the various streams being collected, and in
  * protecting the resources used to accomplish this.
- *
- * Since: 0.10.36
  */
 #define GST_COLLECT_PADS_GET_STREAM_LOCK(pads) (&((GstCollectPads *)pads)->stream_lock)
 /**
@@ -278,8 +250,6 @@ typedef GstFlowReturn (*GstCollectPadsClipFunction) (GstCollectPads *pads, GstCo
  * @pads: a #GstCollectPads
  *
  * Lock the stream lock of @pads.
- *
- * Since: 0.10.36
  */
 #define GST_COLLECT_PADS_STREAM_LOCK(pads)     g_rec_mutex_lock(GST_COLLECT_PADS_GET_STREAM_LOCK (pads))
 /**
@@ -287,8 +257,6 @@ typedef GstFlowReturn (*GstCollectPadsClipFunction) (GstCollectPads *pads, GstCo
  * @pads: a #GstCollectPads
  *
  * Unlock the stream lock of @pads.
- *
- * Since: 0.10.36
  */
 #define GST_COLLECT_PADS_STREAM_UNLOCK(pads)   g_rec_mutex_unlock(GST_COLLECT_PADS_GET_STREAM_LOCK (pads))
 
@@ -297,8 +265,6 @@ typedef GstFlowReturn (*GstCollectPadsClipFunction) (GstCollectPads *pads, GstCo
  * @data: #GList of #GstCollectData managed by this #GstCollectPads.
  *
  * Collectpads object.
- *
- * Since: 0.10.36
  */
 struct _GstCollectPads {
   GstObject      object;

@@ -507,8 +507,6 @@ gst_value_list_concat (GValue * dest, const GValue * value1,
  * The result will be put into @dest and will either be a list that will not
  * contain any duplicates, or a non-list type (if @value1 and @value2
  * were equal).
- *
- * Since: 0.10.32
  */
 void
 gst_value_list_merge (GValue * dest, const GValue * value1,
@@ -1189,8 +1187,6 @@ gst_value_lcopy_int64_range (const GValue * value, guint n_collect_values,
  * @step: the step of the range
  *
  * Sets @value to the range specified by @start, @end and @step.
- *
- * Since: 0.11.0
  */
 void
 gst_value_set_int64_range_step (GValue * value, gint64 start, gint64 end,
@@ -1214,8 +1210,6 @@ gst_value_set_int64_range_step (GValue * value, gint64 start, gint64 end,
  * @end: the end of the range
  *
  * Sets @value to the range specified by @start and @end.
- *
- * Since: 0.10.31
  */
 void
 gst_value_set_int64_range (GValue * value, gint64 start, gint64 end)
@@ -1230,8 +1224,6 @@ gst_value_set_int64_range (GValue * value, gint64 start, gint64 end)
  * Gets the minimum of the range specified by @value.
  *
  * Returns: the minimum of the range
- *
- * Since: 0.10.31
  */
 gint64
 gst_value_get_int64_range_min (const GValue * value)
@@ -1248,8 +1240,6 @@ gst_value_get_int64_range_min (const GValue * value)
  * Gets the maximum of the range specified by @value.
  *
  * Returns: the maxumum of the range
- *
- * Since: 0.10.31
  */
 gint64
 gst_value_get_int64_range_max (const GValue * value)
@@ -1266,8 +1256,6 @@ gst_value_get_int64_range_max (const GValue * value)
  * Gets the step of the range specified by @value.
  *
  * Returns: the step of the range
- *
- * Since: 0.11.0
  */
 gint64
 gst_value_get_int64_range_step (const GValue * value)
@@ -1910,8 +1898,6 @@ gst_value_deserialize_segment (GValue * dest, const gchar * s)
  * @structure: the structure to set the value to
  *
  * Sets the contents of @value to @structure.  The actual
- *
- * Since: 0.10.15
  */
 void
 gst_value_set_structure (GValue * value, const GstStructure * structure)
@@ -1930,8 +1916,6 @@ gst_value_set_structure (GValue * value, const GstStructure * structure)
  * Gets the contents of @value.
  *
  * Returns: (transfer none): the contents of @value
- *
- * Since: 0.10.15
  */
 const GstStructure *
 gst_value_get_structure (const GValue * value)

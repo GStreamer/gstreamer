@@ -800,8 +800,6 @@ gst_single_object_iterator_free (GstSingleObjectIterator * it)
  * for the #GstPadIterIntLinkFunction.
  *
  * Returns: the new #GstIterator for @object.
- *
- * Since: 0.10.25
  */
 GstIterator *
 gst_iterator_new_single (GType type, const GValue * object)

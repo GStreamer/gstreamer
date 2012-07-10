@@ -27,8 +27,6 @@
  *
  * These macros and functions are for internal use of the unit tests found
  * inside the 'check' directories of various GStreamer packages.
- *
- * Since: 0.10.24
  */
 
 #include "gstconsistencychecker.h"
@@ -210,8 +208,6 @@ add_pad (GstStreamConsistency * consist, GstPad * pad)
  * data flow is inconsistent.
  *
  * Returns: A #GstStreamConsistency structure used to track data flow.
- *
- * Since: 0.10.24
  */
 GstStreamConsistency *
 gst_consistency_checker_new (GstPad * pad)
@@ -238,8 +234,6 @@ gst_consistency_checker_new (GstPad * pad)
  * data flow is inconsistent.
  *
  * Returns: %TRUE if the pad was added
- *
- * Since: 0.10.37
  */
 gboolean
 gst_consistency_checker_add_pad (GstStreamConsistency * consist, GstPad * pad)
@@ -257,8 +251,6 @@ gst_consistency_checker_add_pad (GstStreamConsistency * consist, GstPad * pad)
  * @consist: The #GstStreamConsistency to reset.
  *
  * Reset the stream checker's internal variables.
- *
- * Since: 0.10.24
  */
 
 void
@@ -277,8 +269,6 @@ gst_consistency_checker_reset (GstStreamConsistency * consist)
  * @consist: The #GstStreamConsistency to free.
  *
  * Frees the allocated data and probes associated with @consist.
- *
- * Since: 0.10.24
  */
 
 void

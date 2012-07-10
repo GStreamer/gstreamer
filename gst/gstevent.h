@@ -95,13 +95,12 @@ typedef enum {
  * @GST_EVENT_SINK_MESSAGE: An event that sinks turn into a message. Used to
  *                          send messages that should be emitted in sync with
  *                          rendering.
- *                          Since: 0.10.26
  * @GST_EVENT_EOS: End-Of-Stream. No more data is to be expected to follow
  *                 without a SEGMENT event.
  * @GST_EVENT_SEGMENT_DONE: Marks the end of a segment playback.
  * @GST_EVENT_GAP: Marks a gap in the datastream.
  * @GST_EVENT_TOC: An event which indicates that a new table of contents (TOC)
- *                 was found or updated. Since: 0.10.37
+ *                 was found or updated.
  * @GST_EVENT_QOS: A quality message. Used to indicate to upstream elements
  *                 that the downstream elements should adjust their processing
  *                 rate.
@@ -111,13 +110,11 @@ typedef enum {
  *                        to upstream elements.
  * @GST_EVENT_LATENCY: Notification of new latency adjustment. Sinks will use
  *                     the latency information to adjust their synchronisation.
- *                     Since: 0.10.12
  * @GST_EVENT_STEP: A request for stepping through the media. Sinks will usually
- *                  execute the step operation. Since: 0.10.24
+ *                  execute the step operation.
  * @GST_EVENT_RECONFIGURE: A request for upstream renegotiating caps and reconfiguring.
- *                         Since: 0.11.0
  * @GST_EVENT_TOC_SELECT: A request for a new playback position based on TOC
- *                        entry's UID. Since 0.10.37
+ *                        entry's UID.
  * @GST_EVENT_CUSTOM_UPSTREAM: Upstream custom event
  * @GST_EVENT_CUSTOM_DOWNSTREAM: Downstream custom event that travels in the
  *                        data flow.
@@ -363,8 +360,6 @@ gst_event_take (GstEvent **old_event, GstEvent *new_event)
  *
  * The different types of QoS events that can be given to the
  * gst_event_new_qos() method.
- *
- * Since: 0.10.33
  */
 typedef enum {
   GST_QOS_TYPE_OVERFLOW        = 0,

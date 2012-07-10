@@ -55,8 +55,6 @@ typedef struct _GstDataQueueItem GstDataQueueItem;
  *
  * Structure used by #GstDataQueue. You can supply a different structure, as
  * long as the top of the structure is identical to this structure.
- *
- * Since: 0.10.11
  */
 
 struct _GstDataQueueItem
@@ -77,8 +75,6 @@ struct _GstDataQueueItem
  * @time: amount of time
  *
  * Structure describing the size of a queue.
- *
- * Since: 0.10.11
  */
 struct _GstDataQueueSize
 {
@@ -99,8 +95,6 @@ struct _GstDataQueueSize
  * considered as full.
  *
  * Returns: #TRUE if the queue should be considered full.
- *
- * Since: 0.10.11
  */
 typedef gboolean (*GstDataQueueCheckFullFunction) (GstDataQueue * queue,
     guint visible, guint bytes, guint64 time, gpointer checkdata);
@@ -113,8 +107,6 @@ typedef void (*GstDataQueueEmptyCallback) (GstDataQueue * queue, gpointer checkd
  * @object: the parent structure
  *
  * Opaque #GstDataQueue structure.
- *
- * Since: 0.10.11
  */
 struct _GstDataQueue
 {

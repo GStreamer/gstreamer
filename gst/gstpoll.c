@@ -547,8 +547,6 @@ gst_poll_collect_winsock_events (GstPoll * set)
  *
  * Returns: (transfer full): a new #GstPoll, or %NULL in case of an error.
  *     Free with gst_poll_free().
- *
- * Since: 0.10.18
  */
 GstPoll *
 gst_poll_new (gboolean controllable)
@@ -622,8 +620,6 @@ no_socket_pair:
  *
  * Returns: (transfer full): a new #GstPoll, or %NULL in case of an error.
  *     Free with gst_poll_free().
- *
- * Since: 0.10.23
  */
 GstPoll *
 gst_poll_new_timer (void)
@@ -646,8 +642,6 @@ done:
  * @set: (transfer full): a file descriptor set.
  *
  * Free a file descriptor set.
- *
- * Since: 0.10.18
  */
 void
 gst_poll_free (GstPoll * set)
@@ -689,8 +683,6 @@ gst_poll_free (GstPoll * set)
  *
  * Get a GPollFD for the reading part of the control socket. This is useful when
  * integrating with a GSource and GMainLoop.
- *
- * Since: 0.10.32
  */
 void
 gst_poll_get_read_gpollfd (GstPoll * set, GPollFD * fd)
@@ -717,8 +709,6 @@ gst_poll_get_read_gpollfd (GstPoll * set, GPollFD * fd)
  *
  * Initializes @fd. Alternatively you can initialize it with
  * #GST_POLL_FD_INIT.
- *
- * Since: 0.10.18
  */
 void
 gst_poll_fd_init (GstPollFD * fd)
@@ -779,8 +769,6 @@ gst_poll_add_fd_unlocked (GstPoll * set, GstPollFD * fd)
  * Add a file descriptor to the file descriptor set.
  *
  * Returns: %TRUE if the file descriptor was successfully added to the set.
- *
- * Since: 0.10.18
  */
 gboolean
 gst_poll_add_fd (GstPoll * set, GstPollFD * fd)
@@ -808,8 +796,6 @@ gst_poll_add_fd (GstPoll * set, GstPollFD * fd)
  * Remove a file descriptor from the file descriptor set.
  *
  * Returns: %TRUE if the file descriptor was successfully removed from the set.
- *
- * Since: 0.10.18
  */
 gboolean
 gst_poll_remove_fd (GstPoll * set, GstPollFD * fd)
@@ -859,8 +845,6 @@ gst_poll_remove_fd (GstPoll * set, GstPollFD * fd)
  * writability.
  *
  * Returns: %TRUE if the descriptor was successfully updated.
- *
- * Since: 0.10.18
  */
 gboolean
 gst_poll_fd_ctl_write (GstPoll * set, GstPollFD * fd, gboolean active)
@@ -940,8 +924,6 @@ gst_poll_fd_ctl_read_unlocked (GstPoll * set, GstPollFD * fd, gboolean active)
  * readability.
  *
  * Returns: %TRUE if the descriptor was successfully updated.
- *
- * Since: 0.10.18
  */
 gboolean
 gst_poll_fd_ctl_read (GstPoll * set, GstPollFD * fd, gboolean active)
@@ -974,8 +956,6 @@ gst_poll_fd_ctl_read (GstPoll * set, GstPollFD * fd, gboolean active)
  * The reason why this is needed is because the underlying implementation
  * might not allow querying the fd more than once between calls to one of
  * the re-enabling operations.
- *
- * Since: 0.10.18
  */
 void
 gst_poll_fd_ignored (GstPoll * set, GstPollFD * fd)
@@ -1009,8 +989,6 @@ gst_poll_fd_ignored (GstPoll * set, GstPollFD * fd)
  * Check if @fd in @set has closed the connection.
  *
  * Returns: %TRUE if the connection was closed.
- *
- * Since: 0.10.18
  */
 gboolean
 gst_poll_fd_has_closed (const GstPoll * set, GstPollFD * fd)
@@ -1054,8 +1032,6 @@ gst_poll_fd_has_closed (const GstPoll * set, GstPollFD * fd)
  * Check if @fd in @set has an error.
  *
  * Returns: %TRUE if the descriptor has an error.
- *
- * Since: 0.10.18
  */
 gboolean
 gst_poll_fd_has_error (const GstPoll * set, GstPollFD * fd)
@@ -1129,8 +1105,6 @@ gst_poll_fd_can_read_unlocked (const GstPoll * set, GstPollFD * fd)
  * Check if @fd in @set has data to be read.
  *
  * Returns: %TRUE if the descriptor has data to be read.
- *
- * Since: 0.10.18
  */
 gboolean
 gst_poll_fd_can_read (const GstPoll * set, GstPollFD * fd)
@@ -1158,8 +1132,6 @@ gst_poll_fd_can_read (const GstPoll * set, GstPollFD * fd)
  * Check if @fd in @set can be used for writing.
  *
  * Returns: %TRUE if the descriptor can be used for writing.
- *
- * Since: 0.10.18
  */
 gboolean
 gst_poll_fd_can_write (const GstPoll * set, GstPollFD * fd)
@@ -1214,8 +1186,6 @@ gst_poll_fd_can_write (const GstPoll * set, GstPollFD * fd)
  * Returns: The number of #GstPollFD in @set that have activity or 0 when no
  * activity was detected after @timeout. If an error occurs, -1 is returned
  * and errno is set.
- *
- * Since: 0.10.18
  */
 gint
 gst_poll_wait (GstPoll * set, GstClockTime timeout)
@@ -1470,8 +1440,6 @@ winsock_error:
  * gst_poll_set_flushing().
  *
  * Returns: %TRUE if the controllability of @set could be updated.
- *
- * Since: 0.10.18
  */
 gboolean
 gst_poll_set_controllable (GstPoll * set, gboolean controllable)
@@ -1493,8 +1461,6 @@ gst_poll_set_controllable (GstPoll * set, gboolean controllable)
  * used after adding or removing descriptors to @set.
  *
  * If @set is not controllable, then this call will have no effect.
- *
- * Since: 0.10.18
  */
 void
 gst_poll_restart (GstPoll * set)
@@ -1517,8 +1483,6 @@ gst_poll_restart (GstPoll * set)
  * to gst_poll_wait() will return -1, with errno set to EBUSY.
  *
  * Unsetting the flushing state will restore normal operation of @set.
- *
- * Since: 0.10.18
  */
 void
 gst_poll_set_flushing (GstPoll * set, gboolean flushing)
@@ -1553,8 +1517,6 @@ gst_poll_set_flushing (GstPoll * set, gboolean flushing)
  *
  * Returns: %TRUE on success. %FALSE when @set is not controllable or when the
  * byte could not be written.
- *
- * Since: 0.10.23
  */
 gboolean
 gst_poll_write_control (GstPoll * set)
@@ -1579,8 +1541,6 @@ gst_poll_write_control (GstPoll * set)
  *
  * Returns: %TRUE on success. %FALSE when @set is not controllable or when there
  * was no byte to read.
- *
- * Since: 0.10.23
  */
 gboolean
 gst_poll_read_control (GstPoll * set)

@@ -160,8 +160,6 @@ gst_fd_src_class_init (GstFdSrcClass * klass)
    * GstFdSrc:timeout
    *
    * Post a message after timeout microseconds
-   *
-   * Since: 0.10.21
    */
   g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_TIMEOUT,
       g_param_spec_uint64 ("timeout", "Timeout",

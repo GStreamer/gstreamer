@@ -35,8 +35,6 @@
  *
  * The #GstAtomicQueue object implements a queue that can be used from multiple
  * threads without performing any blocking operations.
- *
- * Since: 0.10.33
  */
 
 G_DEFINE_BOXED_TYPE (GstAtomicQueue, gst_atomic_queue,
@@ -153,8 +151,6 @@ clear_free_list (GstAtomicQueue * queue)
  * nearest power of 2 and used as the initial size of the queue.
  *
  * Returns: a new #GstAtomicQueue
- *
- * Since: 0.10.33
  */
 GstAtomicQueue *
 gst_atomic_queue_new (guint initial_size)
@@ -178,8 +174,6 @@ gst_atomic_queue_new (guint initial_size)
  * @queue: a #GstAtomicQueue
  *
  * Increase the refcount of @queue.
- *
- * Since: 0.10.33
  */
 void
 gst_atomic_queue_ref (GstAtomicQueue * queue)
@@ -204,8 +198,6 @@ gst_atomic_queue_free (GstAtomicQueue * queue)
  * @queue: a #GstAtomicQueue
  *
  * Unref @queue and free the memory when the refcount reaches 0.
- *
- * Since: 0.10.33
  */
 void
 gst_atomic_queue_unref (GstAtomicQueue * queue)
@@ -224,8 +216,6 @@ gst_atomic_queue_unref (GstAtomicQueue * queue)
  *
  * Returns: (transfer none): the head element of @queue or NULL when
  * the queue is empty.
- *
- * Since: 0.10.33
  */
 gpointer
 gst_atomic_queue_peek (GstAtomicQueue * queue)
@@ -276,8 +266,6 @@ gst_atomic_queue_peek (GstAtomicQueue * queue)
  *
  * Returns: (transfer full): the head element of @queue or NULL when
  * the queue is empty.
- *
- * Since: 0.10.33
  */
 gpointer
 gst_atomic_queue_pop (GstAtomicQueue * queue)
@@ -345,8 +333,6 @@ gst_atomic_queue_pop (GstAtomicQueue * queue)
  * @data: the data
  *
  * Append @data to the tail of the queue.
- *
- * Since: 0.10.33
  */
 void
 gst_atomic_queue_push (GstAtomicQueue * queue, gpointer data)
@@ -409,8 +395,6 @@ gst_atomic_queue_push (GstAtomicQueue * queue, gpointer data)
  * Get the amount of items in the queue.
  *
  * Returns: the number of elements in the queue.
- *
- * Since: 0.10.33
  */
 guint
 gst_atomic_queue_length (GstAtomicQueue * queue)

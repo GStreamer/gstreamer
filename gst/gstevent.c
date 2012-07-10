@@ -384,8 +384,6 @@ gst_event_writable_structure (GstEvent * event)
  * check the name of a custom event.
  *
  * Returns: %TRUE if @name matches the name of the event structure.
- *
- * Since: 0.10.20
  */
 gboolean
 gst_event_has_name (GstEvent * event, const gchar * name)
@@ -418,8 +416,6 @@ gst_event_has_name (GstEvent * event, const gchar * name)
  * Returns: The event's sequence number.
  *
  * MT safe.
- *
- * Since: 0.10.22
  */
 guint32
 gst_event_get_seqnum (GstEvent * event)
@@ -441,8 +437,6 @@ gst_event_get_seqnum (GstEvent * event)
  * more information.
  *
  * MT safe.
- *
- * Since: 0.10.22
  */
 void
 gst_event_set_seqnum (GstEvent * event, guint32 seqnum)
@@ -1397,8 +1391,6 @@ gst_event_new_navigation (GstStructure * structure)
  * the time format.
  *
  * Returns: (transfer full): a new #GstEvent
- *
- * Since: 0.10.12
  */
 GstEvent *
 gst_event_new_latency (GstClockTime latency)
@@ -1422,8 +1414,6 @@ gst_event_new_latency (GstClockTime latency)
  * @latency: (out): A pointer to store the latency in.
  *
  * Get the latency in the latency event.
- *
- * Since: 0.10.12
  */
 void
 gst_event_parse_latency (GstEvent * event, GstClockTime * latency)
@@ -1460,8 +1450,6 @@ gst_event_parse_latency (GstEvent * event, GstClockTime * latency)
  * part of a larger step operation.
  *
  * Returns: (transfer full): a new #GstEvent
- *
- * Since: 0.10.24
  */
 GstEvent *
 gst_event_new_step (GstFormat format, guint64 amount, gdouble rate,
@@ -1496,8 +1484,6 @@ gst_event_new_step (GstFormat format, guint64 amount, gdouble rate,
  *     boolean in
  *
  * Parse the step event.
- *
- * Since: 0.10.24
  */
 void
 gst_event_parse_step (GstEvent * event, GstFormat * format, guint64 * amount,
@@ -1536,8 +1522,6 @@ gst_event_parse_step (GstEvent * event, GstFormat * format, guint64 * amount,
  * or changing the topology of the pipeline.
  *
  * Returns: (transfer full): a new #GstEvent
- *
- * Since: 0.11.0
  */
 GstEvent *
 gst_event_new_reconfigure (void)
@@ -1563,8 +1547,6 @@ gst_event_new_reconfigure (void)
  * @name is used to store multiple sticky events on one pad.
  *
  * Returns: (transfer full): a new #GstEvent
- *
- * Since: 0.10.26
  */
 /* FIXME 0.11: take ownership of msg for consistency? */
 GstEvent *
@@ -1590,8 +1572,6 @@ gst_event_new_sink_message (const gchar * name, GstMessage * msg)
  * @msg: (out) (transfer full): a pointer to store the #GstMessage in.
  *
  * Parse the sink-message event. Unref @msg after usage.
- *
- * Since: 0.10.26
  */
 void
 gst_event_parse_sink_message (GstEvent * event, GstMessage ** msg)
@@ -1639,8 +1619,6 @@ gst_event_new_stream_start (void)
  * inform elements that some kind of the TOC was found.
  *
  * Returns: (transfer full): a new #GstEvent.
- *
- * Since: 0.10.37
  */
 GstEvent *
 gst_event_new_toc (GstToc * toc, gboolean updated)
@@ -1665,8 +1643,6 @@ gst_event_new_toc (GstToc * toc, gboolean updated)
  * @updated: (out): pointer to store TOC updated flag.
  *
  * Parse a TOC @event and store the results in the given @toc and @updated locations.
- *
- * Since: 0.10.37
  */
 void
 gst_event_parse_toc (GstEvent * event, GstToc ** toc, gboolean * updated)
@@ -1693,8 +1669,6 @@ gst_event_parse_toc (GstEvent * event, GstToc ** toc, gboolean * updated)
  * given @uid.
  *
  * Returns: a new #GstEvent.
- *
- * Since: 0.10.37
  */
 GstEvent *
 gst_event_new_toc_select (const gchar * uid)
@@ -1717,8 +1691,6 @@ gst_event_new_toc_select (const gchar * uid)
  * @uid: (out): storage for the selection UID.
  *
  * Parse a TOC select @event and store the results in the given @uid location.
- *
- * Since: 0.10.37
  */
 void
 gst_event_parse_toc_select (GstEvent * event, gchar ** uid)
@@ -1746,8 +1718,6 @@ gst_event_parse_toc_select (GstEvent * event, gchar ** uid)
  * finish playback of a segment as a result of a segment seek.
  *
  * Returns: (transfer full): a new #GstEvent
- *
- * Since: 0.11.0
  */
 GstEvent *
 gst_event_new_segment_done (GstFormat format, gint64 position)

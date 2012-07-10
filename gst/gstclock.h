@@ -123,8 +123,6 @@ typedef gpointer GstClockID;
  * @time: the time
  *
  * Convert a #GstClockTime to seconds.
- *
- * Since: 0.10.16
  */
 #define GST_TIME_AS_SECONDS(time)  ((time) / GST_SECOND)
 /**
@@ -132,8 +130,6 @@ typedef gpointer GstClockID;
  * @time: the time
  *
  * Convert a #GstClockTime to milliseconds (1/1000 of a second).
- *
- * Since: 0.10.16
  */
 #define GST_TIME_AS_MSECONDS(time) ((time) / G_GINT64_CONSTANT (1000000))
 /**
@@ -141,8 +137,6 @@ typedef gpointer GstClockID;
  * @time: the time
  *
  * Convert a #GstClockTime to microseconds (1/1000000 of a second).
- *
- * Since: 0.10.16
  */
 #define GST_TIME_AS_USECONDS(time) ((time) / G_GINT64_CONSTANT (1000))
 /**
@@ -150,8 +144,6 @@ typedef gpointer GstClockID;
  * @time: the time
  *
  * Convert a #GstClockTime to nanoseconds (1/1000000000 of a second).
- *
- * Since: 0.10.16
  */
 #define GST_TIME_AS_NSECONDS(time) (time)
 
@@ -275,7 +267,7 @@ typedef gboolean        (*GstClockCallback)     (GstClock *clock, GstClockTime t
  * @GST_CLOCK_BADTIME: A bad time was provided to a function.
  * @GST_CLOCK_ERROR: An error occurred
  * @GST_CLOCK_UNSUPPORTED: Operation is not supported
- * @GST_CLOCK_DONE: The ClockID is done waiting (Since: 0.10.32)
+ * @GST_CLOCK_DONE: The ClockID is done waiting
  *
  * The return value of a clock operation.
  */

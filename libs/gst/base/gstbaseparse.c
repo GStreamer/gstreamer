@@ -635,8 +635,6 @@ G_DEFINE_BOXED_TYPE (GstBaseParseFrame, gst_base_parse_frame,
  * sure gst_base_parse_frame_free() only frees the contents but not
  * the actual frame. Use this function to initialise a #GstBaseParseFrame
  * allocated on the stack.
- *
- * Since: 0.10.33
  */
 void
 gst_base_parse_frame_init (GstBaseParseFrame * frame)
@@ -660,8 +658,6 @@ gst_base_parse_frame_init (GstBaseParseFrame * frame)
  *
  * Returns: a newly-allocated #GstBaseParseFrame. Free with
  *     gst_base_parse_frame_free() when no longer needed.
- *
- * Since: 0.10.33
  */
 GstBaseParseFrame *
 gst_base_parse_frame_new (GstBuffer * buffer, GstBaseParseFrameFlags flags,
@@ -1242,8 +1238,6 @@ gst_base_parse_src_eventfunc (GstBaseParse * parse, GstEvent * event)
  * Default implementation of "convert" vmethod in #GstBaseParse class.
  *
  * Returns: TRUE if conversion was successful.
- *
- * Since: 0.10.33
  */
 gboolean
 gst_base_parse_convert_default (GstBaseParse * parse,
@@ -1512,8 +1506,6 @@ exit:
  * to the new entry, etc.
  *
  * Returns: #gboolean indicating whether entry was added
- *
- * Since: 0.10.33
  */
 gboolean
 gst_base_parse_add_index_entry (GstBaseParse * parse, guint64 offset,
@@ -1922,8 +1914,6 @@ gst_base_parse_handle_and_push_frame (GstBaseParse * parse,
  * This must be called with sinkpad STREAM_LOCK held.
  *
  * Returns: #GstFlowReturn
- *
- * Since: 0.10.33
  */
 GstFlowReturn
 gst_base_parse_push_frame (GstBaseParse * parse, GstBaseParseFrame * frame)
@@ -2139,8 +2129,6 @@ no_caps:
  * caller retains ownership of @frame.
  *
  * Returns: a #GstFlowReturn that should be escalated to caller (of caller)
- *
- * Since: 0.11.1
  */
 GstFlowReturn
 gst_base_parse_finish_frame (GstBaseParse * parse, GstBaseParseFrame * frame,
@@ -3086,8 +3074,6 @@ activate_failed:
  * duration.  Alternatively, if @interval is non-zero (default), then stream
  * duration is determined based on estimated bitrate, and updated every @interval
  * frames.
- *
- * Since: 0.10.33
  */
 void
 gst_base_parse_set_duration (GstBaseParse * parse,
@@ -3135,8 +3121,6 @@ exit:
  * is used to estimate the total duration of the stream and to estimate
  * a seek position, if there's no index and the format is syncable
  * (see gst_base_parse_set_syncable()).
- *
- * Since: 0.10.33
  */
 void
 gst_base_parse_set_average_bitrate (GstBaseParse * parse, guint bitrate)
@@ -3153,8 +3137,6 @@ gst_base_parse_set_average_bitrate (GstBaseParse * parse, guint bitrate)
  *
  * Subclass can use this function to tell the base class that it needs to
  * give at least #min_size buffers.
- *
- * Since: 0.10.33
  */
 void
 gst_base_parse_set_min_frame_size (GstBaseParse * parse, guint min_size)
@@ -3178,8 +3160,6 @@ gst_base_parse_set_min_frame_size (GstBaseParse * parse, guint min_size)
  * location, a corresponding decoder might need an initial @lead_in and a
  * following @lead_out number of frames to ensure the desired segment is
  * entirely filled upon decoding.
- *
- * Since: 0.10.33
  */
 void
 gst_base_parse_set_frame_rate (GstBaseParse * parse, guint fps_num,
@@ -3228,8 +3208,6 @@ gst_base_parse_set_frame_rate (GstBaseParse * parse, guint fps_num,
  * Set if frames carry timing information which the subclass can (generally)
  * parse and provide.  In particular, intrinsic (rather than estimated) time
  * can be obtained following a seek.
- *
- * Since: 0.10.33
  */
 void
 gst_base_parse_set_has_timing_info (GstBaseParse * parse, gboolean has_timing)
@@ -3246,8 +3224,6 @@ gst_base_parse_set_has_timing_info (GstBaseParse * parse, gboolean has_timing)
  * Set if frame starts can be identified. This is set by default and
  * determines whether seeking based on bitrate averages
  * is possible for a format/stream.
- *
- * Since: 0.10.33
  */
 void
 gst_base_parse_set_syncable (GstBaseParse * parse, gboolean syncable)
@@ -3268,8 +3244,6 @@ gst_base_parse_set_syncable (GstBaseParse * parse, gboolean syncable)
  * callbacks will be invoked, but @pre_push_frame will still be invoked,
  * so subclass can perform as much or as little is appropriate for
  * passthrough semantics in @pre_push_frame.
- *
- * Since: 0.10.33
  */
 void
 gst_base_parse_set_passthrough (GstBaseParse * parse, gboolean passthrough)
@@ -3287,8 +3261,6 @@ gst_base_parse_set_passthrough (GstBaseParse * parse, gboolean passthrough)
  * Sets the minimum and maximum (which may likely be equal) latency introduced
  * by the parsing process.  If there is such a latency, which depends on the
  * particular parsing of the format, it typically corresponds to 1 frame duration.
- *
- * Since: 0.10.36
  */
 void
 gst_base_parse_set_latency (GstBaseParse * parse, GstClockTime min_latency,

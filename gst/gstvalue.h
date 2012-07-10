@@ -98,8 +98,6 @@ G_BEGIN_DECLS
  * @x: the #GValue to check
  *
  * Checks if the given #GValue contains a #GST_TYPE_INT64_RANGE value.
- *
- * Since: 0.10.31
  */
 #define GST_VALUE_HOLDS_INT64_RANGE(x)    (G_VALUE_HOLDS((x), gst_int64_range_get_type ()))
 
@@ -148,8 +146,6 @@ G_BEGIN_DECLS
  * @x: the #GValue to check
  *
  * Checks if the given #GValue contains a #GST_TYPE_STRUCTURE value.
- *
- * Since: 0.10.15
  */
 #define GST_VALUE_HOLDS_STRUCTURE(x)            (G_VALUE_HOLDS((x), GST_TYPE_STRUCTURE))
 
@@ -182,8 +178,6 @@ G_BEGIN_DECLS
  * @x: the #GValue to check
  *
  * Checks if the given #GValue contains a #GST_TYPE_DATE_TIME value.
- *
- * Since: 0.10.31
  */
 #define GST_VALUE_HOLDS_DATE_TIME(x)    (G_VALUE_HOLDS((x), gst_date_time_get_type ()))
 
@@ -210,8 +204,6 @@ G_BEGIN_DECLS
  * a #GValue type that represents an #gint64 range
  *
  * Returns: the #GType of GstInt64Range
- *
- * Since: 0.10.31
  */
 #define GST_TYPE_INT64_RANGE             gst_int64_range_get_type ()
 
@@ -277,7 +269,6 @@ G_BEGIN_DECLS
  * a boxed #GValue type for #GstDateTime that represents a date and time.
  *
  * Returns: the #GType of GstDateTime
- * Since: 0.10.31
  */
 
 #define GST_TYPE_DATE_TIME               gst_date_time_get_type ()

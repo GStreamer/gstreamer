@@ -483,8 +483,6 @@ gst_init (int *argc, char **argv[])
  * or gst_init_check().
  *
  * Returns: TRUE if initialization has been done, FALSE otherwise.
- *
- * Since: 0.10.31
  */
 gboolean
 gst_is_initialized (void)
@@ -1174,8 +1172,6 @@ gst_version_string (void)
  * wants to install its own handler without GStreamer interfering.
  *
  * Returns: %TRUE if GStreamer is allowed to install a custom SIGSEGV handler.
- *
- * Since: 0.10.10
  */
 gboolean
 gst_segtrap_is_enabled (void)
@@ -1190,8 +1186,6 @@ gst_segtrap_is_enabled (void)
  *
  * Applications might want to disable/enable the SIGSEGV handling of
  * the GStreamer core. See gst_segtrap_is_enabled() for more information.
- *
- * Since: 0.10.10
  */
 void
 gst_segtrap_set_enabled (gboolean enabled)

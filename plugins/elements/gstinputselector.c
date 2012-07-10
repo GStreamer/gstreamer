@@ -47,8 +47,6 @@
  * #GST_FLOW_NOT_LINKED
  * </listitem>
  * </itemizedlist>
- *
- * Since: 0.10.32
  */
 
 #ifdef HAVE_CONFIG_H
@@ -1183,8 +1181,6 @@ gst_input_selector_class_init (GstInputSelectorClass * klass)
    * To make sure no buffers are dropped by input-selector
    * that might be needed when switching the active pad,
    * sync-mode should be set to "clock" and cache-buffers to TRUE.
-   *
-   * Since: 0.10.36
    */
   g_object_class_install_property (gobject_class, PROP_SYNC_STREAMS,
       g_param_spec_boolean ("sync-streams", "Sync Streams",
@@ -1203,8 +1199,6 @@ gst_input_selector_class_init (GstInputSelectorClass * klass)
    * be ahead of current clock time when switching the active pad, as the current
    * active pad may have pushed more buffers than what was displayed/consumed,
    * which may cause delays and some missing buffers.
-   *
-   * Since: 0.10.36
    */
   g_object_class_install_property (gobject_class, PROP_SYNC_MODE,
       g_param_spec_enum ("sync-mode", "Sync mode",

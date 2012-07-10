@@ -589,8 +589,6 @@ gst_mini_object_take (GstMiniObject ** olddata, GstMiniObject * newdata)
  * to the mini object without calling gst_mini_object_ref()
  * (gst_mini_object_ref() adds a strong reference, that is, forces the object
  * to stay alive).
- *
- * Since: 0.10.35
  */
 void
 gst_mini_object_weak_ref (GstMiniObject * object,
@@ -612,8 +610,6 @@ gst_mini_object_weak_ref (GstMiniObject * object,
  * @data: data to search for
  *
  * Removes a weak reference callback from a mini object.
- *
- * Since: 0.10.35
  */
 void
 gst_mini_object_weak_unref (GstMiniObject * object,

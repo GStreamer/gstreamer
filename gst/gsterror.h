@@ -53,7 +53,7 @@ G_BEGIN_DECLS
  * @GST_CORE_ERROR_MISSING_PLUGIN: used if a plugin is missing.
  * @GST_CORE_ERROR_CLOCK: used for clock related errors.
  * @GST_CORE_ERROR_DISABLED: used if functionality has been disabled at
- *                           compile time (Since: 0.10.13).
+ *                           compile time.
  * @GST_CORE_ERROR_NUM_ERRORS: the number of core error types.
  *
  * Core errors are errors inside the core GStreamer library.
@@ -170,9 +170,9 @@ typedef enum
  * @GST_STREAM_ERROR_FORMAT: used when the stream is of the wrong format
  * (for example, wrong caps).
  * @GST_STREAM_ERROR_DECRYPT: used when the stream is encrypted and can't be
- * decrypted because this is not supported by the element. (Since: 0.10.20)
+ * decrypted because this is not supported by the element.
  * @GST_STREAM_ERROR_DECRYPT_NOKEY: used when the stream is encrypted and
- * can't be decrypted because no suitable key is available. (Since: 0.10.20)
+ * can't be decrypted because no suitable key is available.
  * @GST_STREAM_ERROR_NUM_ERRORS: the number of stream error types.
  *
  * Stream errors are for anything related to the stream being processed:

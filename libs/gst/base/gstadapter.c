@@ -82,7 +82,7 @@
  * Also check the GST_BUFFER_FLAG_DISCONT flag on the buffer. Some elements might
  * need to clear the adapter after a discontinuity.
  *
- * Since 0.10.24, the adapter will keep track of the timestamps of the buffers
+ * The adapter will keep track of the timestamps of the buffers
  * that were pushed. The last seen timestamp before the current position
  * can be queried with gst_adapter_prev_timestamp(). This function can
  * optionally return the amount of bytes between the start of the buffer that
@@ -538,8 +538,6 @@ gst_adapter_unmap (GstAdapter * adapter)
  * The array @dest should be large enough to contain @size bytes.
  * The user should check that the adapter has (@offset + @size) bytes
  * available before calling this function.
- *
- * Since: 0.10.12
  */
 void
 gst_adapter_copy (GstAdapter * adapter, gpointer dest, gsize offset, gsize size)
@@ -726,8 +724,6 @@ gst_adapter_take (GstAdapter * adapter, gsize nbytes)
  *
  * Returns: (transfer full): a #GstBuffer containing the first @nbytes of
  *     the adapter, or #NULL if @nbytes bytes are not available
- *
- * Since: 0.10.6
  */
 GstBuffer *
 gst_adapter_take_buffer (GstAdapter * adapter, gsize nbytes)
@@ -805,8 +801,6 @@ done:
  * Returns: (element-type Gst.Buffer) (transfer full): a #GList of buffers
  *     containing the first @nbytes of the adapter, or #NULL if @nbytes bytes
  *     are not available
- *
- * Since: 0.10.31
  */
 GList *
 gst_adapter_take_list (GstAdapter * adapter, gsize nbytes)
@@ -970,8 +964,6 @@ gst_adapter_prev_dts (GstAdapter * adapter, guint64 * distance)
  * enough data (offset+size bytes) in the adapter.
  *
  * Returns: offset of the first match, or -1 if no match was found.
- *
- * Since: 0.10.30
  */
 gsize
 gst_adapter_masked_scan_uint32_peek (GstAdapter * adapter, guint32 mask,
@@ -1107,8 +1099,6 @@ gst_adapter_masked_scan_uint32_peek (GstAdapter * adapter, guint32 mask,
  * gst_adapter_masked_scan_uint32 (adapter, 0xffff0000, 0x02030000, 0, 4);
  * // -> returns -1
  * </programlisting>
- *
- * Since: 0.10.24
  */
 gsize
 gst_adapter_masked_scan_uint32 (GstAdapter * adapter, guint32 mask,

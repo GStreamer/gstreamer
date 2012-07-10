@@ -496,8 +496,6 @@ gst_index_set_resolver (GstIndex * index,
  *
  * Lets the app register a custom function to map index
  * ids to writer descriptions.
- *
- * Since: 0.10.18
  */
 void
 gst_index_set_resolver_full (GstIndex * index, GstIndexResolver resolver,

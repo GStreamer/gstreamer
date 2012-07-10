@@ -195,8 +195,6 @@ gst_identity_class_init (GstIdentityClass * klass)
    *
    * If set to #TRUE, the identity will emit a handoff signal when handling a buffer.
    * When set to #FALSE, no signal will be emited, which might improve performance.
-   *
-   * Since: 0.10.16
    */
   g_object_class_install_property (gobject_class, PROP_SIGNAL_HANDOFFS,
       g_param_spec_boolean ("signal-handoffs",

@@ -321,8 +321,6 @@ had_parent:
  * Returns: The message's sequence number.
  *
  * MT safe.
- *
- * Since: 0.10.22
  */
 guint32
 gst_message_get_seqnum (GstMessage * message)
@@ -344,8 +342,6 @@ gst_message_get_seqnum (GstMessage * message)
  * for more information.
  *
  * MT safe.
- *
- * Since: 0.10.22
  */
 void
 gst_message_set_seqnum (GstMessage * message, guint32 seqnum)
@@ -445,8 +441,6 @@ gst_message_new_warning (GstObject * src, GError * error, const gchar * debug)
  * MT safe.
  *
  * Returns: (transfer full): the new info message.
- *
- * Since: 0.10.12
  */
 GstMessage *
 gst_message_new_info (GstObject * src, GError * error, const gchar * debug)
@@ -510,8 +504,6 @@ gst_message_new_tag (GstObject * src, GstTagList * tag_list)
  * MT safe.
  *
  * Returns: (transfer full): The new buffering message.
- *
- * Since: 0.10.11
  */
 GstMessage *
 gst_message_new_buffering (GstObject * src, gint percent)
@@ -687,8 +679,6 @@ gst_message_new_new_clock (GstObject * src, GstClock * clock)
  * Returns: (transfer full): the new structure change message.
  *
  * MT safe.
- *
- * Since: 0.10.22.
  */
 GstMessage *
 gst_message_new_structure_change (GstObject * src, GstStructureChangeType type,
@@ -902,8 +892,6 @@ gst_message_new_async_done (GstObject * src, GstClockTime running_time)
  * Returns: (transfer full): The new latency message.
  *
  * MT safe.
- *
- * Since: 0.10.12
  */
 GstMessage *
 gst_message_new_latency (GstObject * src)
@@ -927,8 +915,6 @@ gst_message_new_latency (GstObject * src)
  * Returns: (transfer full): the new requst state message.
  *
  * MT safe.
- *
- * Since: 0.10.23
  */
 GstMessage *
 gst_message_new_request_state (GstObject * src, GstState state)
@@ -972,8 +958,6 @@ gst_message_get_structure (GstMessage * message)
  * check the name of a custom message.
  *
  * Returns: %TRUE if @name matches the name of the message structure.
- *
- * Since: 0.10.20
  */
 gboolean
 gst_message_has_name (GstMessage * message, const gchar * name)
@@ -1037,8 +1021,6 @@ gst_message_parse_tag (GstMessage * message, GstTagList ** tag_list)
  * gst_message_new_buffering().
  *
  * MT safe.
- *
- * Since: 0.10.11
  */
 void
 gst_message_parse_buffering (GstMessage * message, gint * percent)
@@ -1061,8 +1043,6 @@ gst_message_parse_buffering (GstMessage * message, gint * percent)
  * @buffering_left: amount of buffering time left in milliseconds
  *
  * Configures the buffering stats values in @message.
- *
- * Since: 0.10.20
  */
 void
 gst_message_set_buffering_stats (GstMessage * message, GstBufferingMode mode,
@@ -1087,8 +1067,6 @@ gst_message_set_buffering_stats (GstMessage * message, GstBufferingMode mode,
  *     milliseconds, or NULL
  *
  * Extracts the buffering stats values from @message.
- *
- * Since: 0.10.20
  */
 void
 gst_message_parse_buffering_stats (GstMessage * message,
@@ -1274,8 +1252,6 @@ gst_message_parse_new_clock (GstMessage * message, GstClock ** clock)
  * Extracts the change type and completion status from the GstMessage.
  *
  * MT safe.
- *
- * Since: 0.10.22
  */
 void
 gst_message_parse_structure_change (GstMessage * message,
@@ -1415,8 +1391,6 @@ gst_message_parse_warning (GstMessage * message, GError ** gerror,
  * in the output arguments are copies; the caller must free them when done.
  *
  * MT safe.
- *
- * Since: 0.10.12
  */
 void
 gst_message_parse_info (GstMessage * message, GError ** gerror, gchar ** debug)
@@ -1570,8 +1544,6 @@ gst_message_parse_async_done (GstMessage * message, GstClockTime * running_time)
  * Extract the requested state from the request_state message.
  *
  * MT safe.
- *
- * Since: 0.10.23
  */
 void
 gst_message_parse_request_state (GstMessage * message, GstState * state)
@@ -1600,8 +1572,6 @@ gst_message_parse_request_state (GstMessage * message, GstState * state)
  * Returns: (transfer full): the new stream status message.
  *
  * MT safe.
- *
- * Since: 0.10.24.
  */
 GstMessage *
 gst_message_new_stream_status (GstObject * src, GstStreamStatusType type,
@@ -1629,8 +1599,6 @@ gst_message_new_stream_status (GstObject * src, GstStreamStatusType type,
  * should thus not be unreffed.
  *
  * MT safe.
- *
- * Since: 0.10.24.
  */
 void
 gst_message_parse_stream_status (GstMessage * message,
@@ -1661,8 +1629,6 @@ gst_message_parse_stream_status (GstMessage * message,
  *
  * Configures the object handling the streaming thread. This is usually a
  * GstTask object but other objects might be added in the future.
- *
- * Since: 0.10.24
  */
 void
 gst_message_set_stream_status_object (GstMessage * message,
@@ -1686,8 +1652,6 @@ gst_message_set_stream_status_object (GstMessage * message,
  * Returns: a GValue containing the object that manages the streaming thread.
  * This object is usually of type GstTask but other types can be added in the
  * future. The object remains valid as long as @message is valid.
- *
- * Since: 0.10.24
  */
 const GValue *
 gst_message_get_stream_status_object (GstMessage * message)
@@ -1725,8 +1689,6 @@ gst_message_get_stream_status_object (GstMessage * message)
  * Returns: (transfer full): the new step_done message.
  *
  * MT safe.
- *
- * Since: 0.10.24
  */
 GstMessage *
 gst_message_new_step_done (GstObject * src, GstFormat format, guint64 amount,
@@ -1763,8 +1725,6 @@ gst_message_new_step_done (GstObject * src, GstFormat format, guint64 amount,
  * Extract the values the step_done message.
  *
  * MT safe.
- *
- * Since: 0.10.24
  */
 void
 gst_message_parse_step_done (GstMessage * message, GstFormat * format,
@@ -1811,8 +1771,6 @@ gst_message_parse_step_done (GstMessage * message, GstFormat * format,
  * Returns: (transfer full): The new step_start message. 
  *
  * MT safe.
- *
- * Since: 0.10.24
  */
 GstMessage *
 gst_message_new_step_start (GstObject * src, gboolean active, GstFormat format,
@@ -1846,8 +1804,6 @@ gst_message_new_step_start (GstObject * src, gboolean active, GstFormat format,
  * Extract the values from step_start message.
  *
  * MT safe.
- *
- * Since: 0.10.24
  */
 void
 gst_message_parse_step_start (GstMessage * message, gboolean * active,
@@ -1895,8 +1851,6 @@ gst_message_parse_step_start (GstMessage * message, gboolean * active,
  * Returns: (transfer full): The new qos message.
  *
  * MT safe.
- *
- * Since: 0.10.29
  */
 GstMessage *
 gst_message_new_qos (GstObject * src, gboolean live, guint64 running_time,
@@ -1934,8 +1888,6 @@ gst_message_new_qos (GstObject * src, gboolean live, guint64 running_time,
  * Set the QoS values that have been calculated/analysed from the QoS data
  *
  * MT safe.
- *
- * Since: 0.10.29
  */
 void
 gst_message_set_qos_values (GstMessage * message, gint64 jitter,
@@ -1971,8 +1923,6 @@ gst_message_set_qos_values (GstMessage * message, gint64 jitter,
  * invalid. Values of -1 for either @processed or @dropped mean unknown values.
  *
  * MT safe.
- *
- * Since: 0.10.29
  */
 void
 gst_message_set_qos_stats (GstMessage * message, GstFormat format,
@@ -2010,8 +1960,6 @@ gst_message_set_qos_stats (GstMessage * message, GstFormat format,
  * values.
  *
  * MT safe.
- *
- * Since: 0.10.29
  */
 void
 gst_message_parse_qos (GstMessage * message, gboolean * live,
@@ -2046,8 +1994,6 @@ gst_message_parse_qos (GstMessage * message, gboolean * live,
  * Extract the QoS values that have been calculated/analysed from the QoS data
  *
  * MT safe.
- *
- * Since: 0.10.29
  */
 void
 gst_message_parse_qos_values (GstMessage * message, gint64 * jitter,
@@ -2084,8 +2030,6 @@ gst_message_parse_qos_values (GstMessage * message, gint64 * jitter,
  * invalid. Values of -1 for either @processed or @dropped mean unknown values.
  *
  * MT safe.
- *
- * Since: 0.10.29
  */
 void
 gst_message_parse_qos_stats (GstMessage * message, GstFormat * format,
@@ -2117,8 +2061,6 @@ gst_message_parse_qos_stats (GstMessage * message, GstFormat * format,
  * @test should contain a user visible string detailing the current action.
  *
  * Returns: (transfer full): The new qos message.
- *
- * Since: 0.10.33
  */
 GstMessage *
 gst_message_new_progress (GstObject * src, GstProgressType type,
@@ -2153,8 +2095,6 @@ gst_message_new_progress (GstObject * src, GstProgressType type,
  * @text: (out) (allow-none) (transfer full): location for the text
  *
  * Parses the progress @type, @code and @text.
- *
- * Since: 0.10.33
  */
 void
 gst_message_parse_progress (GstMessage * message, GstProgressType * type,
@@ -2184,8 +2124,6 @@ gst_message_parse_progress (GstMessage * message, GstProgressType * type,
  * Returns: (transfer full): a new TOC message.
  *
  * MT safe.
- *
- * Since: 0.10.37
  */
 GstMessage *
 gst_message_new_toc (GstObject * src, GstToc * toc, gboolean updated)
@@ -2212,8 +2150,6 @@ gst_message_new_toc (GstObject * src, GstToc * toc, gboolean updated)
  * gst_toc_unref() when done.
  *
  * MT safe.
- *
- * Since: 0.10.37
  */
 void
 gst_message_parse_toc (GstMessage * message, GstToc ** toc, gboolean * updated)

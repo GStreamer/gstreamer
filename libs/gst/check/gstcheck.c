@@ -352,8 +352,6 @@ gst_check_teardown_sink_pad (GstElement * element)
  *
  * Unref and remove all buffers that are in the global @buffers GList,
  * emptying the list.
- *
- * Since: 0.10.18
  */
 void
 gst_check_drop_buffers (void)
@@ -371,8 +369,6 @@ gst_check_drop_buffers (void)
  *
  * Compare two caps with gst_caps_is_equal and fail unless they are
  * equal.
- *
- * Since: 0.10.18
  */
 void
 gst_check_caps_equal (GstCaps * caps1, GstCaps * caps2)
@@ -450,8 +446,6 @@ buffer_event_function (GstPad * pad, GstObject * noparent, GstEvent * event)
  * pushing the final buffer in the list.
  * This can be used to set up a test which pushes some buffers and then an
  * invalid buffer, when the final buffer is expected to fail, for example.
- * 
- * Since: 0.10.18
  */
 /* FIXME 0.11: rename this function now that there's GstBufferList? */
 void
@@ -593,8 +587,6 @@ gst_check_element_push_buffer_list (const gchar * element_name,
  * @buffer_in to this element. The element should create one buffer
  * and this will be compared with @buffer_out. We only check the caps
  * and the data of the buffers. This function unrefs the buffers.
- * 
- * Since: 0.10.18
  */
 void
 gst_check_element_push_buffer (const gchar * element_name,

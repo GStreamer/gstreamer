@@ -163,8 +163,6 @@ typedef struct _GstBufferPool GstBufferPool;
  * @buffer: a #GstBuffer
  *
  * Tests if the buffer marks a discontinuity in the stream.
- *
- * Since: 0.10.9
  */
 #define GST_BUFFER_IS_DISCONT(buffer)   (GST_BUFFER_FLAG_IS_SET (buffer, GST_BUFFER_FLAG_DISCONT))
 

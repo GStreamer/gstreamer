@@ -101,8 +101,6 @@ gboolean                gst_element_register                    (GstPlugin *plug
  *
  * If one or more of the MEDIA types are specified, then only elements
  * matching the specified media types will be selected.
- *
- * Since: 0.10.31
  */
 
 typedef guint64 GstElementFactoryListType;
@@ -131,8 +129,6 @@ typedef guint64 GstElementFactoryListType;
  *
  * Elements of any of the defined GST_ELEMENT_FACTORY_LIST types
  *
- * Since: 0.10.31
- *
  * Value: 562949953421311
  * Type: GstElementFactoryListType
  */
@@ -147,8 +143,6 @@ typedef guint64 GstElementFactoryListType;
  * media types. If you wish to do this, simply don't specify any
  * GST_ELEMENT_FACTORY_TYPE_MEDIA flag.
  *
- * Since: 0.10.31
- *
  * Value: 18446462598732840960
  * Type: GstElementFactoryListType
  */
@@ -158,8 +152,6 @@ typedef guint64 GstElementFactoryListType;
  * GST_ELEMENT_FACTORY_TYPE_VIDEO_ENCODER:
  *
  * All encoders handling video or image media types
- *
- * Since: 0.10.31
  *
  * Value: 2814749767106562
  * Type: GstElementFactoryListType
@@ -171,8 +163,6 @@ typedef guint64 GstElementFactoryListType;
  *
  * All encoders handling audio media types
  *
- * Since: 0.10.31
- *
  * Value: 1125899906842626
  * Type: GstElementFactoryListType
  */
@@ -183,8 +173,6 @@ typedef guint64 GstElementFactoryListType;
  *
  * All sinks handling audio, video or image media types
  *
- * Since: 0.10.31
- *
  * Value: 3940649673949188
  * Type: GstElementFactoryListType
  */
@@ -194,8 +182,6 @@ typedef guint64 GstElementFactoryListType;
  * GST_ELEMENT_FACTORY_TYPE_DECODABLE:
  *
  * All elements used to 'decode' streams (decoders, demuxers, parsers, depayloaders)
- *
- * Since: 0.10.31
  *
  * Value: 353
  * Type: GstElementFactoryListType

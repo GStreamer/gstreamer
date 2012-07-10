@@ -1727,8 +1727,6 @@ ensure_current_registry (GError ** error)
  *
  * Returns: %TRUE if GStreamer will use the child helper process when
  * rebuilding the registry.
- *
- * Since: 0.10.10
  */
 gboolean
 gst_registry_fork_is_enabled (void)
@@ -1743,8 +1741,6 @@ gst_registry_fork_is_enabled (void)
  * Applications might want to disable/enable spawning of a child helper process
  * when rebuilding the registry. See gst_registry_fork_is_enabled() for more
  * information.
- *
- * Since: 0.10.10
  */
 void
 gst_registry_fork_set_enabled (gboolean enabled)
@@ -1774,8 +1770,6 @@ gst_registry_fork_set_enabled (gboolean enabled)
  *
  * Returns: %TRUE if the registry has been updated successfully (does not
  *          imply that there were changes), otherwise %FALSE.
- *
- * Since: 0.10.12
  */
 gboolean
 gst_update_registry (void)
@@ -1814,8 +1808,6 @@ gst_update_registry (void)
  * every time a feature is added or removed from the registry.
  *
  * Returns: the feature list cookie.
- *
- * Since: 0.10.26
  */
 guint32
 gst_registry_get_feature_list_cookie (GstRegistry * registry)

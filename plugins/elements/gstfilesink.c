@@ -212,8 +212,6 @@ gst_file_sink_class_init (GstFileSinkClass * klass)
    * GstFileSink:append
    * 
    * Append to an already existing file.
-   *
-   * Since: 0.10.25
    */
   g_object_class_install_property (gobject_class, PROP_APPEND,
       g_param_spec_boolean ("append", "Append",

@@ -919,8 +919,6 @@ no_presets:
  *
  * Returns: (transfer full) (array zero-terminated=1) (element-type gchar*):
  *     list with names, ue g_strfreev() after usage.
- *
- * Since: 0.10.20
  */
 gchar **
 gst_preset_get_preset_names (GstPreset * preset)
@@ -938,8 +936,6 @@ gst_preset_get_preset_names (GstPreset * preset)
  *
  * Returns: (transfer full) (array zero-terminated=1) (element-type gchar*): an
  *   array of property names which should be freed with g_strfreev() after use.
- *
- * Since: 0.10.20
  */
 gchar **
 gst_preset_get_property_names (GstPreset * preset)
@@ -957,8 +953,6 @@ gst_preset_get_property_names (GstPreset * preset)
  * Load the given preset.
  *
  * Returns: %TRUE for success, %FALSE if e.g. there is no preset with that @name
- *
- * Since: 0.10.20
  */
 gboolean
 gst_preset_load_preset (GstPreset * preset, const gchar * name)
@@ -978,8 +972,6 @@ gst_preset_load_preset (GstPreset * preset, const gchar * name)
  * is already a preset by this @name it will be overwritten.
  *
  * Returns: %TRUE for success, %FALSE
- *
- * Since: 0.10.20
  */
 gboolean
 gst_preset_save_preset (GstPreset * preset, const gchar * name)
@@ -1000,8 +992,6 @@ gst_preset_save_preset (GstPreset * preset, const gchar * name)
  * overwritten.
  *
  * Returns: %TRUE for success, %FALSE if e.g. there is no preset with @old_name
- *
- * Since: 0.10.20
  */
 gboolean
 gst_preset_rename_preset (GstPreset * preset, const gchar * old_name,
@@ -1023,8 +1013,6 @@ gst_preset_rename_preset (GstPreset * preset, const gchar * old_name,
  * Delete the given preset.
  *
  * Returns: %TRUE for success, %FALSE if e.g. there is no preset with that @name
- *
- * Since: 0.10.20
  */
 gboolean
 gst_preset_delete_preset (GstPreset * preset, const gchar * name)
@@ -1047,8 +1035,6 @@ gst_preset_delete_preset (GstPreset * preset, const gchar * name)
  * @value will unset an existing value.
  *
  * Returns: %TRUE for success, %FALSE if e.g. there is no preset with that @name
- *
- * Since: 0.10.20
  */
 gboolean
 gst_preset_set_meta (GstPreset * preset, const gchar * name, const gchar * tag,
@@ -1073,8 +1059,6 @@ gst_preset_set_meta (GstPreset * preset, const gchar * name, const gchar * tag,
  *
  * Returns: %TRUE for success, %FALSE if e.g. there is no preset with that @name
  * or no value for the given @tag
- *
- * Since: 0.10.20
  */
 gboolean
 gst_preset_get_meta (GstPreset * preset, const gchar * name, const gchar * tag,
@@ -1097,8 +1081,6 @@ gst_preset_get_meta (GstPreset * preset, const gchar * name, const gchar * tag,
  * system presets.
  *
  * Returns: %TRUE for success, %FALSE if the dir already has been set
- *
- * Since: 0.10.36
  */
 gboolean
 gst_preset_set_app_dir (const gchar * app_dir)
@@ -1119,8 +1101,6 @@ gst_preset_set_app_dir (const gchar * app_dir)
  * application.
  *
  * Returns: the directory or %NULL, don't free or modify the string
- *
- * Since: 0.10.36
  */
 const gchar *
 gst_preset_get_app_dir (void)

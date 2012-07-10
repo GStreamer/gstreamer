@@ -40,8 +40,6 @@
  * Date information is handled using the proleptic Gregorian calendar.
  *
  * Provides basic creation functions and accessor functions to its fields.
- *
- * Since: 0.10.31
  */
 
 typedef enum
@@ -190,7 +188,6 @@ gst_date_time_has_second (const GstDateTime * datetime)
  * Call gst_date_time_has_year before, to avoid warnings.
  *
  * Return value: The year of this #GstDateTime
- * Since: 0.10.31
  */
 gint
 gst_date_time_get_year (const GstDateTime * datetime)
@@ -208,7 +205,6 @@ gst_date_time_get_year (const GstDateTime * datetime)
  * Call gst_date_time_has_month before, to avoid warnings.
  *
  * Return value: The month of this #GstDateTime
- * Since: 0.10.31
  */
 gint
 gst_date_time_get_month (const GstDateTime * datetime)
@@ -227,7 +223,6 @@ gst_date_time_get_month (const GstDateTime * datetime)
  * Call gst_date_time_has_day before, to avoid warnings.
  *
  * Return value: The day of this #GstDateTime
- * Since: 0.10.31
  */
 gint
 gst_date_time_get_day (const GstDateTime * datetime)
@@ -247,8 +242,6 @@ gst_date_time_get_day (const GstDateTime * datetime)
  * Call gst_date_time_has_haur before, to avoid warnings.
  *
  * Return value: the hour of the day
- *
- * Since: 0.10.31
  */
 gint
 gst_date_time_get_hour (const GstDateTime * datetime)
@@ -268,8 +261,6 @@ gst_date_time_get_hour (const GstDateTime * datetime)
  * Call gst_date_time_has_minute before, to avoid warnings.
  *
  * Return value: the minute of the hour
- *
- * Since: 0.10.31
  */
 gint
 gst_date_time_get_minute (const GstDateTime * datetime)
@@ -289,8 +280,6 @@ gst_date_time_get_minute (const GstDateTime * datetime)
  * Call gst_date_time_has_second before, to avoid warnings.
  *
  * Return value: the second represented by @datetime
- *
- * Since: 0.10.31
  */
 gint
 gst_date_time_get_second (const GstDateTime * datetime)
@@ -309,8 +298,6 @@ gst_date_time_get_second (const GstDateTime * datetime)
  * @datetime in the gregorian calendar.
  *
  * Return value: the microsecond of the second
- *
- * Since: 0.10.31
  */
 gint
 gst_date_time_get_microsecond (const GstDateTime * datetime)
@@ -331,7 +318,6 @@ gst_date_time_get_microsecond (const GstDateTime * datetime)
  * If @datetime represents UTC time, then the offset is zero.
  *
  * Return value: the offset from UTC in hours
- * Since: 0.10.31
  */
 gfloat
 gst_date_time_get_time_zone_offset (const GstDateTime * datetime)
@@ -355,8 +341,6 @@ gst_date_time_get_time_zone_offset (const GstDateTime * datetime)
  * Free-function: gst_date_time_unref
  *
  * Return value: (transfer full): the newly created #GstDateTime
- *
- * Since:
  */
 GstDateTime *
 gst_date_time_new_y (gint year)
@@ -380,8 +364,6 @@ gst_date_time_new_y (gint year)
  * Free-function: gst_date_time_unref
  *
  * Return value: (transfer full): the newly created #GstDateTime
- *
- * Since:
  */
 GstDateTime *
 gst_date_time_new_ym (gint year, gint month)
@@ -409,8 +391,6 @@ gst_date_time_new_ym (gint year, gint month)
  * Free-function: gst_date_time_unref
  *
  * Return value: (transfer full): the newly created #GstDateTime
- *
- * Since:
  */
 GstDateTime *
 gst_date_time_new_ymd (gint year, gint month, gint day)
@@ -428,8 +408,6 @@ gst_date_time_new_ymd (gint year, gint month, gint day)
  * Free-function: gst_date_time_unref
  *
  * Return value: (transfer full): the newly created #GstDateTime
- *
- * Since: 0.10.31
  */
 GstDateTime *
 gst_date_time_new_from_unix_epoch_local_time (gint64 secs)
@@ -450,8 +428,6 @@ gst_date_time_new_from_unix_epoch_local_time (gint64 secs)
  * Free-function: gst_date_time_unref
  *
  * Return value: (transfer full): the newly created #GstDateTime
- *
- * Since: 0.10.31
  */
 GstDateTime *
 gst_date_time_new_from_unix_epoch_utc (gint64 secs)
@@ -512,8 +488,6 @@ gst_date_time_check_fields (gint * year, gint * month, gint * day,
  * Free-function: gst_date_time_unref
  *
  * Return value: (transfer full): the newly created #GstDateTime
- *
- * Since: 0.10.31
  */
 GstDateTime *
 gst_date_time_new_local_time (gint year, gint month, gint day, gint hour,
@@ -548,8 +522,6 @@ gst_date_time_new_local_time (gint year, gint month, gint day, gint hour,
  *
  * Return value: (transfer full): the newly created #GstDateTime which should
  *     be freed with gst_date_time_unref().
- *
- * Since: 0.10.31
  */
 GstDateTime *
 gst_date_time_new_now_local_time (void)
@@ -567,8 +539,6 @@ gst_date_time_new_now_local_time (void)
  *
  * Return value: (transfer full): the newly created #GstDateTime which should
  *   be freed with gst_date_time_unref().
- *
- * Since: 0.10.31
  */
 GstDateTime *
 gst_date_time_new_now_utc (void)
@@ -627,8 +597,6 @@ __gst_date_time_compare (const GstDateTime * dt1, const GstDateTime * dt2)
  * Free-function: gst_date_time_unref
  *
  * Return value: (transfer full): the newly created #GstDateTime
- *
- * Since: 0.10.31
  */
 GstDateTime *
 gst_date_time_new (gfloat tzoffset, gint year, gint month, gint day, gint hour,
@@ -912,8 +880,6 @@ gst_date_time_free (GstDateTime * datetime)
  * Atomically increments the reference count of @datetime by one.
  *
  * Return value: (transfer full): the reference @datetime
- *
- * Since: 0.10.31
  */
 GstDateTime *
 gst_date_time_ref (GstDateTime * datetime)
@@ -930,8 +896,6 @@ gst_date_time_ref (GstDateTime * datetime)
  *
  * Atomically decrements the reference count of @datetime by one.  When the
  * reference count reaches zero, the structure is freed.
- *
- * Since: 0.10.31
  */
 void
 gst_date_time_unref (GstDateTime * datetime)

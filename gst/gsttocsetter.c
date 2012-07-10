@@ -111,8 +111,6 @@ gst_toc_setter_get_data (GstTocSetter * setter)
  *
  * Reset the internal TOC. Elements should call this from within the
  * state-change handler.
- *
- * Since: 0.10.37
  */
 void
 gst_toc_setter_reset (GstTocSetter * setter)
@@ -132,8 +130,6 @@ gst_toc_setter_reset (GstTocSetter * setter)
  *
  * Returns: (transfer full): TOC set, or NULL. Unref with gst_toc_unref()
  *     when no longer needed
- *
- * Since: 0.10.37
  */
 GstToc *
 gst_toc_setter_get_toc (GstTocSetter * setter)
@@ -161,8 +157,6 @@ gst_toc_setter_get_toc (GstTocSetter * setter)
  *
  * Set the given TOC on the setter. Previously setted TOC will be
  * unrefed before setting a new one.
- *
- * Since: 0.10.37
  */
 void
 gst_toc_setter_set_toc (GstTocSetter * setter, GstToc * toc)

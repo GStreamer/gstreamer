@@ -127,8 +127,6 @@
  *
  * printf format type used to debug GStreamer segments.
  * This can only be used on pointers to GstSegment structures.
- *
- * Since: 0.10.10
  */
 @GST_PRINTF_EXTENSION_SEGMENT_FORMAT_DEFINE@
 

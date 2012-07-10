@@ -372,8 +372,6 @@ gst_bin_class_init (GstBinClass * klass)
    * If set to #TRUE, the bin will handle asynchronous state changes.
    * This should be used only if the bin subclass is modifying the state
    * of its children on its own.
-   *
-   * Since: 0.10.13
    */
   g_object_class_install_property (gobject_class, PROP_ASYNC_HANDLING,
       g_param_spec_boolean ("async-handling", "Async Handling",
@@ -417,8 +415,6 @@ gst_bin_class_init (GstBinClass * klass)
    * Connect to this signal if the default latency calculations are not
    * sufficient, like when you need different latencies for different sinks in
    * the same pipeline.
-   *
-   * Since: 0.10.22
    */
   gst_bin_signals[DO_LATENCY] =
       g_signal_new ("do-latency", G_TYPE_FROM_CLASS (klass),
@@ -437,8 +433,6 @@ gst_bin_class_init (GstBinClass * klass)
    * source. The structure of the message is named 'GstBinForwarded' and contains
    * a field named 'message' of type GST_TYPE_MESSAGE that contains the original
    * forwarded message.
-   *
-   * Since: 0.10.31
    */
   g_object_class_install_property (gobject_class, PROP_MESSAGE_FORWARD,
       g_param_spec_boolean ("message-forward", "Message Forward",
@@ -2433,8 +2427,6 @@ failed:
  * calculations will be performed.
  *
  * Returns: %TRUE if the latency could be queried and reconfigured.
- *
- * Since: 0.10.22.
  */
 gboolean
 gst_bin_recalculate_latency (GstBin * bin)

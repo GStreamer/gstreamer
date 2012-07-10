@@ -1338,8 +1338,6 @@ gst_pad_is_blocked (GstPad * pad)
  * Returns: TRUE if the pad is blocking.
  *
  * MT safe.
- *
- * Since: 0.10.11
  */
 gboolean
 gst_pad_is_blocking (GstPad * pad)
@@ -1524,8 +1522,6 @@ gst_pad_set_chain_function_full (GstPad * pad, GstPadChainFunction chain,
  * Sets the given chain list function for the pad. The chainlist function is
  * called to process a #GstBufferList input buffer list. See
  * #GstPadChainListFunction for more details.
- *
- * Since: 0.10.24
  */
 void
 gst_pad_set_chain_list_function_full (GstPad * pad,
@@ -1663,8 +1659,6 @@ gst_pad_set_query_function_full (GstPad * pad, GstPadQueryFunction query,
  * @notify: notify called when @iterintlink will not be used anymore.
  *
  * Sets the given internal link iterator function for the pad.
- *
- * Since: 0.10.21
  */
 void
 gst_pad_set_iterate_internal_links_function_full (GstPad * pad,
@@ -2134,8 +2128,6 @@ done:
  *
  * Returns: A result code indicating if the connection worked or
  *          what went wrong.
- *
- * Since: 0.10.30
  */
 GstPadLinkReturn
 gst_pad_link_full (GstPad * srcpad, GstPad * sinkpad, GstPadLinkCheck flags)
@@ -2481,8 +2473,6 @@ no_peer:
  *
  * Returns: a #GstIterator of #GstPad, or NULL if @pad has no parent. Unref each
  * returned pad with gst_object_unref().
- *
- * Since: 0.10.21
  */
 GstIterator *
 gst_pad_iterate_internal_links_default (GstPad * pad, GstObject * parent)
@@ -2550,8 +2540,6 @@ no_parent:
  * Returns: (transfer full): a new #GstIterator of #GstPad or %NULL when the
  *     pad does not have an iterator function configured. Use
  *     gst_iterator_free() after usage.
- *
- * Since: 0.10.21
  */
 GstIterator *
 gst_pad_iterate_internal_links (GstPad * pad)
@@ -3442,8 +3430,6 @@ probe_stopped:
  *
  * Returns: TRUE if the query could be performed. This function returns %FALSE
  * if @pad has no peer.
- *
- * Since: 0.10.15
  */
 gboolean
 gst_pad_peer_query (GstPad * pad, GstQuery * query)
@@ -3764,8 +3750,6 @@ gst_pad_chain_list_default (GstPad * pad, GstObject * parent,
  * MT safe.
  *
  * Returns: a #GstFlowReturn from the pad.
- *
- * Since: 0.10.24
  */
 GstFlowReturn
 gst_pad_chain_list (GstPad * pad, GstBufferList * list)
@@ -3941,8 +3925,6 @@ gst_pad_push (GstPad * pad, GstBuffer * buffer)
  * Returns: a #GstFlowReturn from the peer pad.
  *
  * MT safe.
- *
- * Since: 0.10.24
  */
 GstFlowReturn
 gst_pad_push_list (GstPad * pad, GstBufferList * list)

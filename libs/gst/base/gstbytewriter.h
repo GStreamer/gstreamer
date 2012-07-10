@@ -73,8 +73,6 @@ GstBuffer *     gst_byte_writer_reset_and_get_buffer    (GstByteWriter *writer) 
  * @writer: #GstByteWriter instance
  *
  * Returns: The current position of the read/write cursor
- *
- * Since: 0.10.26
  */
 /**
  * gst_byte_writer_set_pos:
@@ -85,16 +83,12 @@ GstBuffer *     gst_byte_writer_reset_and_get_buffer    (GstByteWriter *writer) 
  * can only be between 0 and the current size.
  *
  * Returns: %TRUE if the new position could be set
- *
- * Since: 0.10.26
  */
 /**
  * gst_byte_writer_get_size:
  * @writer: #GstByteWriter instance
  *
  * Returns: The current, initialized size of the data
- *
- * Since: 0.10.26
  */
 #ifdef _FOOL_GTK_DOC_
 G_INLINE_FUNC guint     gst_byte_writer_get_pos  (const GstByteWriter *writer);
@@ -164,8 +158,6 @@ gboolean        gst_byte_writer_put_buffer        (GstByteWriter *writer, GstBuf
  * ISO-8859-1).
  *
  * Returns: %TRUE if the string could be written
- *
- * Since: 0.10.26
  */
 #define gst_byte_writer_put_string(writer, data) \
   gst_byte_writer_put_string_utf8(writer, data)

@@ -127,8 +127,6 @@ typedef enum {
  * @elem: a #GstElement to return the target state for.
  *
  * This macro returns the target #GstState of the element.
- *
- * Since: 0.10.13
  */
 #define GST_STATE_TARGET(elem)          (GST_ELEMENT_CAST(elem)->target_state)
 
@@ -315,7 +313,7 @@ typedef enum /*< flags=0 >*/
  * GstElementFlags:
  * @GST_ELEMENT_FLAG_LOCKED_STATE: ignore state changes from parent
  * @GST_ELEMENT_FLAG_SINK: the element is a sink
- * @GST_ELEMENT_FLAG_SOURCE: the element is a source. Since 0.10.31
+ * @GST_ELEMENT_FLAG_SOURCE: the element is a source.
  * @GST_ELEMENT_FLAG_PROVIDE_CLOCK: the element can provide a clock
  * @GST_ELEMENT_FLAG_REQUIRE_CLOCK: the element requires a clock
  * @GST_ELEMENT_FLAG_INDEXABLE: the element can use an index
@@ -391,8 +389,6 @@ typedef enum
  *
  * This macro returns the start_time of the @elem. The start_time is the
  * running_time of the pipeline when the element went to PAUSED.
- *
- * Since: 0.10.24
  */
 #define GST_ELEMENT_START_TIME(elem)            (GST_ELEMENT_CAST(elem)->start_time)
 
@@ -464,8 +460,6 @@ G_STMT_START {                                                          \
  * the application of something noteworthy that is not an error.
  * The pipeline will post a info message and the
  * application will be informed.
- *
- * Since: 0.10.12
  */
 #define GST_ELEMENT_INFO(el, domain, code, text, debug)                 \
 G_STMT_START {                                                          \

@@ -152,7 +152,7 @@ struct _GstBinClass {
   void		(*handle_message)	(GstBin *bin, GstMessage *message);
 
   /*< private >*/
-  /* signal added 0.10.22 */
+  /* signal */
   gboolean	(*do_latency)           (GstBin *bin);
 
   /*< private >*/

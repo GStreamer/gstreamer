@@ -261,8 +261,6 @@ gst_clock_entry_reinit (GstClock * clock, GstClockEntry * entry,
  *
  * Returns: %TRUE if the GstClockID could be reinitialized to the provided
  * @time, else %FALSE.
- *
- * Since: 0.10.32
  */
 gboolean
 gst_clock_single_shot_id_reinit (GstClock * clock, GstClockID id,
@@ -284,9 +282,6 @@ gst_clock_single_shot_id_reinit (GstClock * clock, GstClockID id,
  *
  * Returns: %TRUE if the GstClockID could be reinitialized to the provided
  * @time, else %FALSE.
- *
- * Since: 0.10.33
- *
  */
 gboolean
 gst_clock_periodic_id_reinit (GstClock * clock, GstClockID id,
@@ -557,8 +552,6 @@ not_supported:
  * Returns: the result of the non blocking wait.
  *
  * MT safe.
- *
- * Since: 0.10.30
  */
 GstClockReturn
 gst_clock_id_wait_async (GstClockID id,
@@ -865,8 +858,6 @@ gst_clock_adjust_unlocked (GstClock * clock, GstClockTime internal)
  * This function is the reverse of gst_clock_adjust_unlocked().
  *
  * Returns: the internal time of the clock corresponding to @external.
- *
- * Since: 0.10.13
  */
 GstClockTime
 gst_clock_unadjust_unlocked (GstClock * clock, GstClockTime external)

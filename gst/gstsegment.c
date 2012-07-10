@@ -93,8 +93,6 @@
  * Free-function: gst_segment_free
  *
  * Returns: (transfer full): a new #GstSegment, free with gst_segment_free().
- *
- * Since: 0.10.20
  */
 GstSegment *
 gst_segment_copy (const GstSegment * segment)
@@ -592,8 +590,6 @@ gst_segment_clip (const GstSegment * segment, GstFormat format, guint64 start,
  *
  * Returns: the position in the segment for @running_time. This function returns
  * -1 when @running_time is -1 or when it is not inside @segment.
- *
- * Since: 0.10.24
  */
 guint64
 gst_segment_to_position (const GstSegment * segment, GstFormat format,
@@ -664,8 +660,6 @@ gst_segment_to_position (const GstSegment * segment, GstFormat format,
  *
  * Returns: %TRUE if the segment could be updated successfully. If %FALSE is
  * returned, @running_time is -1 or not in @segment.
- *
- * Since: 0.10.24
  */
 gboolean
 gst_segment_set_running_time (GstSegment * segment, GstFormat format,

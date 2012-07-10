@@ -240,8 +240,6 @@ G_STMT_START {                                                      \
  * This macro checks that @a and @b are (almost) equal and aborts if this
  * is not the case, printing both expressions and the values they evaluated
  * to. This macro is for use in unit tests.
- *
- * Since: 0.10.14
  */
 #define fail_unless_equals_float(a, b)                            \
 G_STMT_START {                                                    \
@@ -261,8 +259,6 @@ G_STMT_START {                                                    \
  * This macro checks that @a and @b are (almost) equal and aborts if this
  * is not the case, printing both expressions and the values they evaluated
  * to. This macro is for use in unit tests.
- *
- * Since: 0.10.14
  */
 #define assert_equals_float(a, b) fail_unless_equals_float(a, b)
 

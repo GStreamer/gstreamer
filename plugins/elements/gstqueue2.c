@@ -340,8 +340,6 @@ gst_queue2_class_init (GstQueue2Class * klass)
    * GstQueue2:temp-remove
    *
    * When temp-template is set, remove the temporary file when going to READY.
-   *
-   * Since: 0.10.26
    */
   g_object_class_install_property (gobject_class, PROP_TEMP_REMOVE,
       g_param_spec_boolean ("temp-remove", "Remove the Temporary File",
@@ -353,8 +351,6 @@ gst_queue2_class_init (GstQueue2Class * klass)
    *
    * The maximum size of the ring buffer in bytes. If set to 0, the ring
    * buffer is disabled. Default 0.
-   *
-   * Since: 0.10.31
    */
   g_object_class_install_property (gobject_class, PROP_RING_BUFFER_MAX_SIZE,
       g_param_spec_uint64 ("ring-buffer-max-size",

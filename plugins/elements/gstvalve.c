@@ -34,8 +34,6 @@
  * gst-plugins-bad.
  *
  * Documentation last reviewed on 2010-12-30 (0.10.31)
- *
- * Since: 0.10.32
  */
 
 #ifdef HAVE_CONFIG_H

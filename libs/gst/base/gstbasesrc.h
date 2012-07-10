@@ -134,7 +134,6 @@ struct _GstBaseSrc {
  *   this if they support seeking in formats other than the configured native
  *   format. By default, it tries to convert the seek arguments to the
  *   configured native format and prepare a segment in that format.
- *   Since: 0.10.13
  * @do_seek: Perform seeking on the resource to the indicated segment.
  * @unlock: Unlock any pending access to the resource. Subclasses should
  *    unblock any blocked function ASAP. In particular, any create() function in

@@ -46,8 +46,6 @@
  * Free-function: gst_byte_writer_free
  *
  * Returns: (transfer full): a new, empty #GstByteWriter instance
- *
- * Since: 0.10.26
  */
 GstByteWriter *
 gst_byte_writer_new (void)
@@ -69,8 +67,6 @@ gst_byte_writer_new (void)
  * Free-function: gst_byte_writer_free
  *
  * Returns: (transfer full): a new #GstByteWriter instance
- *
- * Since: 0.10.26
  */
 GstByteWriter *
 gst_byte_writer_new_with_size (guint size, gboolean fixed)
@@ -98,8 +94,6 @@ gst_byte_writer_new_with_size (guint size, gboolean fixed)
  * Free-function: gst_byte_writer_free
  *
  * Returns: (transfer full): a new #GstByteWriter instance
- *
- * Since: 0.10.26
  */
 GstByteWriter *
 gst_byte_writer_new_with_data (guint8 * data, guint size, gboolean initialized)
@@ -120,8 +114,6 @@ gst_byte_writer_new_with_data (guint8 * data, guint size, gboolean initialized)
  * @writer: #GstByteWriter instance
  *
  * Initializes @writer to an empty instance
- *
- * Since: 0.10.26
  */
 void
 gst_byte_writer_init (GstByteWriter * writer)
@@ -140,8 +132,6 @@ gst_byte_writer_init (GstByteWriter * writer)
  * @fixed: If %TRUE the data can't be reallocated
  *
  * Initializes @writer with the given initial data size.
- *
- * Since: 0.10.26
  */
 void
 gst_byte_writer_init_with_size (GstByteWriter * writer, guint size,
@@ -167,8 +157,6 @@ gst_byte_writer_init_with_size (GstByteWriter * writer, guint size,
  * Initializes @writer with the given
  * memory area. If @initialized is %TRUE it is possible to
  * read @size bytes from the #GstByteWriter from the beginning.
- *
- * Since: 0.10.26
  */
 void
 gst_byte_writer_init_with_data (GstByteWriter * writer, guint8 * data,
@@ -191,8 +179,6 @@ gst_byte_writer_init_with_data (GstByteWriter * writer, guint8 * data,
  *
  * Resets @writer and frees the data if it's
  * owned by @writer.
- *
- * Since: 0.10.26
  */
 void
 gst_byte_writer_reset (GstByteWriter * writer)
@@ -214,8 +200,6 @@ gst_byte_writer_reset (GstByteWriter * writer)
  *
  * Returns: (array) (transfer full): the current data. g_free() after
  * usage.
- *
- * Since: 0.10.26
  */
 guint8 *
 gst_byte_writer_reset_and_get_data (GstByteWriter * writer)
@@ -243,8 +227,6 @@ gst_byte_writer_reset_and_get_data (GstByteWriter * writer)
  *
  * Returns: (transfer full): the current data as buffer. gst_buffer_unref()
  *     after usage.
- *
- * Since: 0.10.26
  */
 GstBuffer *
 gst_byte_writer_reset_and_get_buffer (GstByteWriter * writer)
@@ -272,8 +254,6 @@ gst_byte_writer_reset_and_get_buffer (GstByteWriter * writer)
  * @writer: (in) (transfer full): #GstByteWriter instance
  *
  * Frees @writer and all memory allocated by it.
- *
- * Since: 0.10.26
  */
 void
 gst_byte_writer_free (GstByteWriter * writer)
@@ -294,8 +274,6 @@ gst_byte_writer_free (GstByteWriter * writer)
  * Free-function: g_free
  *
  * Returns: (transfer full): the current data. g_free() after usage.
- *
- * Since: 0.10.26
  */
 guint8 *
 gst_byte_writer_free_and_get_data (GstByteWriter * writer)
@@ -321,8 +299,6 @@ gst_byte_writer_free_and_get_data (GstByteWriter * writer)
  *
  * Returns: (transfer full): the current data as buffer. gst_buffer_unref()
  *     after usage.
- *
- * Since: 0.10.26
  */
 GstBuffer *
 gst_byte_writer_free_and_get_buffer (GstByteWriter * writer)
@@ -345,8 +321,6 @@ gst_byte_writer_free_and_get_buffer (GstByteWriter * writer)
  * -1 is returned the remaining size is only limited by system resources.
  *
  * Returns: the remaining size of data that can still be written
- *
- * Since: 0.10.26
  */
 guint
 gst_byte_writer_get_remaining (const GstByteWriter * writer)
@@ -368,8 +342,6 @@ gst_byte_writer_get_remaining (const GstByteWriter * writer)
  * available and reallocates if necessary.
  *
  * Returns: %TRUE if at least @size bytes are still available
- *
- * Since: 0.10.26
  */
 gboolean
 gst_byte_writer_ensure_free_space (GstByteWriter * writer, guint size)
@@ -458,8 +430,6 @@ CREATE_WRITE_STRING_FUNC (32, guint32);
  * Writes a unsigned 8 bit integer to @writer.
  *
  * Returns: %TRUE if the value could be written
- *
- * Since: 0.10.26
  */
 /**
  * gst_byte_writer_put_uint16_be:
@@ -469,8 +439,6 @@ CREATE_WRITE_STRING_FUNC (32, guint32);
  * Writes a unsigned big endian 16 bit integer to @writer.
  *
  * Returns: %TRUE if the value could be written
- *
- * Since: 0.10.26
  */
 /**
  * gst_byte_writer_put_uint24_be:
@@ -480,8 +448,6 @@ CREATE_WRITE_STRING_FUNC (32, guint32);
  * Writes a unsigned big endian 24 bit integer to @writer.
  *
  * Returns: %TRUE if the value could be written
- *
- * Since: 0.10.26
  */
 /**
  * gst_byte_writer_put_uint32_be:
@@ -491,8 +457,6 @@ CREATE_WRITE_STRING_FUNC (32, guint32);
  * Writes a unsigned big endian 32 bit integer to @writer.
  *
  * Returns: %TRUE if the value could be written
- *
- * Since: 0.10.26
  */
 /**
  * gst_byte_writer_put_uint64_be:
@@ -502,8 +466,6 @@ CREATE_WRITE_STRING_FUNC (32, guint32);
  * Writes a unsigned big endian 64 bit integer to @writer.
  *
  * Returns: %TRUE if the value could be written
- *
- * Since: 0.10.26
  */
 /**
  * gst_byte_writer_put_uint16_le:
@@ -513,8 +475,6 @@ CREATE_WRITE_STRING_FUNC (32, guint32);
  * Writes a unsigned little endian 16 bit integer to @writer.
  *
  * Returns: %TRUE if the value could be written
- *
- * Since: 0.10.26
  */
 /**
  * gst_byte_writer_put_uint24_le:
@@ -524,8 +484,6 @@ CREATE_WRITE_STRING_FUNC (32, guint32);
  * Writes a unsigned little endian 24 bit integer to @writer.
  *
  * Returns: %TRUE if the value could be written
- *
- * Since: 0.10.26
  */
 /**
  * gst_byte_writer_put_uint32_le:
@@ -535,8 +493,6 @@ CREATE_WRITE_STRING_FUNC (32, guint32);
  * Writes a unsigned little endian 32 bit integer to @writer.
  *
  * Returns: %TRUE if the value could be written
- *
- * Since: 0.10.26
  */
 /**
  * gst_byte_writer_put_uint64_le:
@@ -546,8 +502,6 @@ CREATE_WRITE_STRING_FUNC (32, guint32);
  * Writes a unsigned little endian 64 bit integer to @writer.
  *
  * Returns: %TRUE if the value could be written
- *
- * Since: 0.10.26
  */
 /**
  * gst_byte_writer_put_int8:
@@ -557,8 +511,6 @@ CREATE_WRITE_STRING_FUNC (32, guint32);
  * Writes a signed 8 bit integer to @writer.
  *
  * Returns: %TRUE if the value could be written
- *
- * Since: 0.10.26
  */
 /**
  * gst_byte_writer_put_int16_be:
@@ -568,8 +520,6 @@ CREATE_WRITE_STRING_FUNC (32, guint32);
  * Writes a signed big endian 16 bit integer to @writer.
  *
  * Returns: %TRUE if the value could be written
- *
- * Since: 0.10.26
  */
 /**
  * gst_byte_writer_put_int24_be:
@@ -579,8 +529,6 @@ CREATE_WRITE_STRING_FUNC (32, guint32);
  * Writes a signed big endian 24 bit integer to @writer.
  *
  * Returns: %TRUE if the value could be written
- *
- * Since: 0.10.26
  */
 /**
  * gst_byte_writer_put_int32_be:
@@ -590,8 +538,6 @@ CREATE_WRITE_STRING_FUNC (32, guint32);
  * Writes a signed big endian 32 bit integer to @writer.
  *
  * Returns: %TRUE if the value could be written
- *
- * Since: 0.10.26
  */
 /**
  * gst_byte_writer_put_int64_be:
@@ -601,8 +547,6 @@ CREATE_WRITE_STRING_FUNC (32, guint32);
  * Writes a signed big endian 64 bit integer to @writer.
  *
  * Returns: %TRUE if the value could be written
- *
- * Since: 0.10.26
  */
 /**
  * gst_byte_writer_put_int16_le:
@@ -612,8 +556,6 @@ CREATE_WRITE_STRING_FUNC (32, guint32);
  * Writes a signed little endian 16 bit integer to @writer.
  *
  * Returns: %TRUE if the value could be written
- *
- * Since: 0.10.26
  */
 /**
  * gst_byte_writer_put_int24_le:
@@ -623,8 +565,6 @@ CREATE_WRITE_STRING_FUNC (32, guint32);
  * Writes a signed little endian 24 bit integer to @writer.
  *
  * Returns: %TRUE if the value could be written
- *
- * Since: 0.10.26
  */
 /**
  * gst_byte_writer_put_int32_le:
@@ -634,8 +574,6 @@ CREATE_WRITE_STRING_FUNC (32, guint32);
  * Writes a signed little endian 32 bit integer to @writer.
  *
  * Returns: %TRUE if the value could be written
- *
- * Since: 0.10.26
  */
 /**
  * gst_byte_writer_put_int64_le:
@@ -645,8 +583,6 @@ CREATE_WRITE_STRING_FUNC (32, guint32);
  * Writes a signed little endian 64 bit integer to @writer.
  *
  * Returns: %TRUE if the value could be written
- *
- * Since: 0.10.26
  */
 /**
  * gst_byte_writer_put_float32_be:
@@ -656,8 +592,6 @@ CREATE_WRITE_STRING_FUNC (32, guint32);
  * Writes a big endian 32 bit float to @writer.
  *
  * Returns: %TRUE if the value could be written
- *
- * Since: 0.10.27
  */
 /**
  * gst_byte_writer_put_float64_be:
@@ -667,8 +601,6 @@ CREATE_WRITE_STRING_FUNC (32, guint32);
  * Writes a big endian 64 bit float to @writer.
  *
  * Returns: %TRUE if the value could be written
- *
- * Since: 0.10.27
  */
 /**
  * gst_byte_writer_put_float32_le:
@@ -678,8 +610,6 @@ CREATE_WRITE_STRING_FUNC (32, guint32);
  * Writes a little endian 32 bit float to @writer.
  *
  * Returns: %TRUE if the value could be written
- *
- * Since: 0.10.27
  */
 /**
  * gst_byte_writer_put_float64_le:
@@ -689,8 +619,6 @@ CREATE_WRITE_STRING_FUNC (32, guint32);
  * Writes a little endian 64 bit float to @writer.
  *
  * Returns: %TRUE if the value could be written
- *
- * Since: 0.10.27
  */
 /**
  * gst_byte_writer_put_string_utf8:
@@ -701,8 +629,6 @@ CREATE_WRITE_STRING_FUNC (32, guint32);
  * Writes a NUL-terminated UTF8 string to @writer (including the terminator).
  *
  * Returns: %TRUE if the value could be written
- *
- * Since: 0.10.26
  */
 /**
  * gst_byte_writer_put_string_utf16:
@@ -712,8 +638,6 @@ CREATE_WRITE_STRING_FUNC (32, guint32);
  * Writes a NUL-terminated UTF16 string to @writer (including the terminator).
  *
  * Returns: %TRUE if the value could be written
- *
- * Since: 0.10.26
  */
 /**
  * gst_byte_writer_put_string_utf32:
@@ -723,8 +647,6 @@ CREATE_WRITE_STRING_FUNC (32, guint32);
  * Writes a NUL-terminated UTF32 string to @writer (including the terminator).
  *
  * Returns: %TRUE if the value could be written
- *
- * Since: 0.10.26
  */
 /**
  * gst_byte_writer_put_data:
@@ -735,8 +657,6 @@ CREATE_WRITE_STRING_FUNC (32, guint32);
  * Writes @size bytes of @data to @writer.
  *
  * Returns: %TRUE if the value could be written
- *
- * Since: 0.10.26
  */
 /**
  * gst_byte_writer_fill:
@@ -747,8 +667,6 @@ CREATE_WRITE_STRING_FUNC (32, guint32);
  * Writes @size bytes containing @value to @writer.
  *
  * Returns: %TRUE if the value could be written
- *
- * Since: 0.10.27
  */
 
 /**

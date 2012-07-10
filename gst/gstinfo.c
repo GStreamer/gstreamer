@@ -803,8 +803,6 @@ gst_debug_construct_term_color (guint colorinfo)
  * This function returns 0 on non-windows machines.
  *
  * Returns: an integer containing the color definition
- *
- * Since: 0.10.23
  */
 gint
 gst_debug_construct_win_color (guint colorinfo)

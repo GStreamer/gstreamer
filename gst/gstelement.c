@@ -502,8 +502,6 @@ gst_element_get_base_time (GstElement * element)
  * pipelines, and you can also ensure that the pipelines have the same clock.
  *
  * MT safe.
- *
- * Since: 0.10.24
  */
 void
 gst_element_set_start_time (GstElement * element, GstClockTime time)
@@ -535,8 +533,6 @@ gst_element_set_start_time (GstElement * element, GstClockTime time)
  * MT safe.
  *
  * Returns: the start time of the element.
- *
- * Since: 0.10.24
  */
 GstClockTime
 gst_element_get_start_time (GstElement * element)
@@ -1084,8 +1080,6 @@ gst_element_get_request_pad (GstElement * element, const gchar * name)
  *
  * Returns: (transfer full): requested #GstPad if found, otherwise %NULL.
  *     Release after usage.
- *
- * Since: 0.10.32
  */
 GstPad *
 gst_element_request_pad (GstElement * element,

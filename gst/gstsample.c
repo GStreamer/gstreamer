@@ -90,8 +90,6 @@ _gst_sample_free (GstSample * sample)
  *
  * Returns: (transfer full): the new #GstSample. gst_sample_unref()
  *     after usage.
- *
- * Since: 0.10.24
  */
 GstSample *
 gst_sample_new (GstBuffer * buffer, GstCaps * caps, const GstSegment * segment,

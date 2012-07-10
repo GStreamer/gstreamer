@@ -66,8 +66,6 @@ typedef enum
  *      in some cases)
  *
  * Parsing options.
- *
- * Since: 0.10.20
  */
 typedef enum
 {
@@ -81,8 +79,6 @@ typedef enum
  * GstParseContext:
  *
  * Opaque structure.
- *
- * Since: 0.10.20
  */
 typedef struct _GstParseContext GstParseContext;
 

@@ -93,11 +93,9 @@ typedef enum {
  * @GST_QUERY_SEGMENT: segment start/stop positions
  * @GST_QUERY_CONVERT: convert values between formats
  * @GST_QUERY_FORMATS: query supported formats for convert
- * @GST_QUERY_BUFFERING: query available media for efficient seeking. Since
- * 0.10.20.
- * @GST_QUERY_CUSTOM: a custom application or element defined query. Since
- * 0.10.22.
- * @GST_QUERY_URI: query the URI of the source or sink. Since 0.10.22.
+ * @GST_QUERY_BUFFERING: query available media for efficient seeking.
+ * @GST_QUERY_CUSTOM: a custom application or element defined query.
+ * @GST_QUERY_URI: query the URI of the source or sink.
  * @GST_QUERY_ALLOCATION: the buffer allocation properties
  * @GST_QUERY_SCHEDULING: the scheduling properties
  * @GST_QUERY_ACCEPT_CAPS: the accept caps query
@@ -148,8 +146,6 @@ typedef enum {
  * @query: the query to query
  *
  * Get a constant string representation of the #GstQueryType of the query.
- *
- * Since: 0.10.4
  */
 #define GST_QUERY_TYPE_NAME(query) (gst_query_type_get_name(GST_QUERY_TYPE(query)))
 

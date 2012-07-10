@@ -163,8 +163,6 @@ gst_pad_template_class_init (GstPadTemplateClass * klass)
    * GstPadTemplate:name-template:
    *
    * The name template of the pad template.
-   *
-   * Since: 0.10.21
    */
   g_object_class_install_property (gobject_class, PROP_NAME_TEMPLATE,
       g_param_spec_string ("name-template", "Name template",
@@ -175,8 +173,6 @@ gst_pad_template_class_init (GstPadTemplateClass * klass)
    * GstPadTemplate:direction:
    *
    * The direction of the pad described by the pad template.
-   *
-   * Since: 0.10.21
    */
   g_object_class_install_property (gobject_class, PROP_DIRECTION,
       g_param_spec_enum ("direction", "Direction",
@@ -188,8 +184,6 @@ gst_pad_template_class_init (GstPadTemplateClass * klass)
    * GstPadTemplate:presence:
    *
    * When the pad described by the pad template will become available.
-   *
-   * Since: 0.10.21
    */
   g_object_class_install_property (gobject_class, PROP_PRESENCE,
       g_param_spec_enum ("presence", "Presence",
@@ -201,8 +195,6 @@ gst_pad_template_class_init (GstPadTemplateClass * klass)
    * GstPadTemplate:caps:
    *
    * The capabilities of the pad described by the pad template.
-   *
-   * Since: 0.10.21
    */
   g_object_class_install_property (gobject_class, PROP_CAPS,
       g_param_spec_boxed ("caps", "Caps",

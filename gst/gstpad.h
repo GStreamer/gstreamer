@@ -137,23 +137,22 @@ typedef enum {
  * @GST_FLOW_NOT_SUPPORTED:	 This operation is not supported.
  * @GST_FLOW_CUSTOM_SUCCESS:	 Elements can use values starting from
  *                               this (and higher) to define custom success
- *                               codes. Since 0.10.7.
+ *                               codes.
  * @GST_FLOW_CUSTOM_SUCCESS_1:	 Pre-defined custom success code (define your
  *                               custom success code to this to avoid compiler
- *                               warnings). Since 0.10.29.
- * @GST_FLOW_CUSTOM_SUCCESS_2:	 Pre-defined custom success code. Since 0.10.29.
+ *                               warnings).
+ * @GST_FLOW_CUSTOM_SUCCESS_2:	 Pre-defined custom success code.
  * @GST_FLOW_CUSTOM_ERROR:	 Elements can use values starting from
  *                               this (and lower) to define custom error codes.
- *                               Since 0.10.7.
  * @GST_FLOW_CUSTOM_ERROR_1:	 Pre-defined custom error code (define your
  *                               custom error code to this to avoid compiler
- *                               warnings). Since 0.10.29.
- * @GST_FLOW_CUSTOM_ERROR_2:	 Pre-defined custom error code. Since 0.10.29.
+ *                               warnings).
+ * @GST_FLOW_CUSTOM_ERROR_2:	 Pre-defined custom error code.
  *
  * The result of passing data to a pad.
  *
  * Note that the custom return values should not be exposed outside of the
- * element scope and are available since 0.10.7.
+ * element scope.
  */
 /* FIXME 0.11: remove custom flow returns */
 typedef enum {
@@ -204,8 +203,6 @@ GQuark			gst_flow_to_quark	(GstFlowReturn ret);
  * use the default checks (%GST_PAD_LINK_CHECK_DEFAULT) or the regular methods
  * for linking the pads.
  * </para></warning>
- *
- * Since: 0.10.30
  */
 
 typedef enum {
@@ -220,8 +217,6 @@ typedef enum {
  *
  * The default checks done when linking pads (i.e. the ones used by
  * gst_pad_link()).
- *
- * Since: 0.10.30
  */
 #define GST_PAD_LINK_CHECK_DEFAULT ((GstPadLinkCheck) (GST_PAD_LINK_CHECK_HIERARCHY | GST_PAD_LINK_CHECK_CAPS))
 
@@ -381,8 +376,6 @@ typedef gboolean		(*GstPadEventFunction)		(GstPad *pad, GstObject *parent,
  * linked to the given pad on the inside of the parent element.
  *
  * the caller must call gst_iterator_free() after usage.
- *
- * Since 0.10.21
  */
 typedef GstIterator*           (*GstPadIterIntLinkFunction)    (GstPad *pad, GstObject *parent);
 

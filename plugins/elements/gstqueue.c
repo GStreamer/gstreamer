@@ -353,8 +353,6 @@ gst_queue_class_init (GstQueueClass * klass)
    *
    * Don't emit queue signals. Makes queues more lightweight if no signals are
    * needed.
-   *
-   * Since: 0.10.31
    */
   g_object_class_install_property (gobject_class, PROP_SILENT,
       g_param_spec_boolean ("silent", "Silent",

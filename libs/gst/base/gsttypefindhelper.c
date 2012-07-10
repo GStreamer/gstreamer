@@ -260,8 +260,6 @@ helper_find_get_length (gpointer data)
  *
  * Returns: (transfer full): the #GstCaps corresponding to the data stream.
  *     Returns #NULL if no #GstCaps matches the data stream.
- *
- * Since: 0.10.26
  */
 GstCaps *
 gst_type_find_helper_get_range (GstObject * obj, GstObject * parent,
@@ -601,8 +599,6 @@ gst_type_find_helper_for_buffer (GstObject * obj, GstBuffer * buf,
  * Returns: (transfer full): the #GstCaps corresponding to @extension, or
  *     #NULL if no type could be found. The caller should free the caps
  *     returned with gst_caps_unref().
- * 
- * Since: 0.10.23
  */
 GstCaps *
 gst_type_find_helper_for_extension (GstObject * obj, const gchar * extension)

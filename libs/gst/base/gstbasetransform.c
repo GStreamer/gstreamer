@@ -2498,8 +2498,6 @@ gst_base_transform_is_in_place (GstBaseTransform * trans)
  * when needed.
  *
  * MT safe.
- *
- * Since: 0.10.5
  */
 void
 gst_base_transform_update_qos (GstBaseTransform * trans,
@@ -2525,8 +2523,6 @@ gst_base_transform_update_qos (GstBaseTransform * trans,
  * Enable or disable QoS handling in the transform.
  *
  * MT safe.
- *
- * Since: 0.10.5
  */
 void
 gst_base_transform_set_qos_enabled (GstBaseTransform * trans, gboolean enabled)
@@ -2549,8 +2545,6 @@ gst_base_transform_set_qos_enabled (GstBaseTransform * trans, gboolean enabled)
  * Returns: TRUE if QoS is enabled.
  *
  * MT safe.
- *
- * Since: 0.10.5
  */
 gboolean
 gst_base_transform_is_qos_enabled (GstBaseTransform * trans)
@@ -2579,8 +2573,6 @@ gst_base_transform_is_qos_enabled (GstBaseTransform * trans)
  * unset the flag if the output is no neutral data.
  *
  * MT safe.
- *
- * Since: 0.10.16
  */
 void
 gst_base_transform_set_gap_aware (GstBaseTransform * trans, gboolean gap_aware)
@@ -2619,8 +2611,6 @@ gst_base_transform_reconfigure_sink (GstBaseTransform * trans)
  * Instructs @trans to renegotiate a new downstream transform on the next
  * buffer. This function is typically called after properties on the transform
  * were set that influence the output format.
- *
- * Since: 0.10.21
  */
 void
 gst_base_transform_reconfigure_src (GstBaseTransform * trans)

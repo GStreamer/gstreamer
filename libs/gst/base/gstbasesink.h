@@ -125,7 +125,7 @@ struct _GstBaseSink {
  *     unblock any blocked function ASAP
  * @unlock_stop: Clear the previous unlock request. Subclasses should clear
  *     any state they set during unlock(), such as clearing command queues.
- * @query: perform a #GstQuery on the element. Since: 0.10.36
+ * @query: perform a #GstQuery on the element.
  * @event: Override this to handle events arriving on the sink pad
  * @wait_eos: Override this to implement custom logic to wait for the EOS time.
  *     subclasses should always first chain up to the default implementation.
@@ -137,7 +137,7 @@ struct _GstBaseSink {
  * @render: Called when a buffer should be presented or output, at the
  *     correct moment if the #GstBaseSink has been set to sync to the clock.
  * @render_list: Same as @render but used whith buffer lists instead of
- *     buffers. Since: 0.10.24
+ *     buffers.
  *
  * Subclasses can override any of the available virtual methods or not, as
  * needed. At the minimum, the @render method should be overridden to

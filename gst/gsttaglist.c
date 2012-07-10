@@ -740,8 +740,6 @@ gst_tag_list_new_empty (void)
  *
  * Returns: (transfer full): a new #GstTagList. Free with gst_tag_list_unref()
  *     when no longer needed.
- *
- * Since: 0.10.24
  */
 GstTagList *
 gst_tag_list_new (const gchar * tag, ...)
@@ -770,8 +768,6 @@ gst_tag_list_new (const gchar * tag, ...)
  *
  * Returns: (transfer full): a new #GstTagList. Free with gst_tag_list_unref()
  *     when no longer needed.
- *
- * Since: 0.10.24
  */
 GstTagList *
 gst_tag_list_new_valist (va_list var_args)
@@ -795,8 +791,6 @@ gst_tag_list_new_valist (va_list var_args)
  *
  * Returns: a newly-allocated string, or NULL in case of an error. The
  *    string must be freed with g_free() when no longer needed.
- *
- * Since: 0.10.36
  */
 gchar *
 gst_tag_list_to_string (const GstTagList * list)
@@ -813,8 +807,6 @@ gst_tag_list_to_string (const GstTagList * list)
  * Deserializes a tag list.
  *
  * Returns: a new #GstTagList, or NULL in case of an error.
- *
- * Since: 0.10.36
  */
 GstTagList *
 gst_tag_list_new_from_string (const gchar * str)
@@ -870,8 +862,6 @@ gst_tag_list_nth_tag_name (const GstTagList * list, guint index)
  * Checks if the given taglist is empty.
  *
  * Returns: TRUE if the taglist is empty, otherwise FALSE.
- *
- * Since: 0.10.11
  */
 gboolean
 gst_tag_list_is_empty (const GstTagList * list)
@@ -911,8 +901,6 @@ gst_tag_list_fields_equal (const GValue * value1, const GValue * value2)
  * Checks if the two given taglists are equal.
  *
  * Returns: TRUE if the taglists are equal, otherwise FALSE
- *
- * Since: 0.10.36
  */
 gboolean
 gst_tag_list_is_equal (const GstTagList * list1, const GstTagList * list2)
@@ -1274,8 +1262,6 @@ gst_tag_list_add_valist_values (GstTagList * list, GstTagMergeMode mode,
  * @value: GValue for this tag
  *
  * Sets the GValue for a given tag using the specified mode.
- *
- * Since: 0.10.24
  */
 void
 gst_tag_list_add_value (GstTagList * list, GstTagMergeMode mode,
@@ -1698,7 +1684,7 @@ _gst_strdup0 (const gchar * s)
  * to retrieve the first string associated with this tag unmodified.
  *
  * The resulting string in @value will be in UTF-8 encoding and should be
- * freed by the caller using g_free when no longer needed. Since 0.10.24 the
+ * freed by the caller using g_free when no longer needed. The
  * returned string is also guaranteed to be non-NULL and non-empty.
  *
  * Free-function: g_free
@@ -1717,7 +1703,7 @@ _gst_strdup0 (const gchar * s)
  * list.
  *
  * The resulting string in @value will be in UTF-8 encoding and should be
- * freed by the caller using g_free when no longer needed. Since 0.10.24 the
+ * freed by the caller using g_free when no longer needed. The
  * returned string is also guaranteed to be non-NULL and non-empty.
  *
  * Free-function: g_free
@@ -1845,8 +1831,6 @@ gst_tag_list_get_date_index (const GstTagList * list,
  *
  * Returns: TRUE, if a datetime was copied, FALSE if the tag didn't exist in
  *              thegiven list or if it was #NULL.
- *
- * Since: 0.10.31
  */
 gboolean
 gst_tag_list_get_date_time (const GstTagList * list, const gchar * tag,
@@ -1883,8 +1867,6 @@ gst_tag_list_get_date_time (const GstTagList * list, const gchar * tag,
  *
  * Returns: TRUE, if a value was copied, FALSE if the tag didn't exist in the
  *              given list or if it was #NULL.
- *
- * Since: 0.10.31
  */
 gboolean
 gst_tag_list_get_date_time_index (const GstTagList * list,
@@ -1917,8 +1899,6 @@ gst_tag_list_get_date_time_index (const GstTagList * list,
  *
  * Returns: TRUE, if a buffer was copied, FALSE if the tag didn't exist in the
  *              given list or if it was #NULL.
- *
- * Since: 0.10.23
  */
 gboolean
 gst_tag_list_get_buffer (const GstTagList * list, const gchar * tag,
@@ -1953,8 +1933,6 @@ gst_tag_list_get_buffer (const GstTagList * list, const gchar * tag,
  *
  * Returns: TRUE, if a buffer was copied, FALSE if the tag didn't exist in the
  *              given list or if it was #NULL.
- *
- * Since: 0.10.23
  */
 gboolean
 gst_tag_list_get_buffer_index (const GstTagList * list,

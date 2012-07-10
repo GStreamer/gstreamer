@@ -229,8 +229,6 @@ gst_plugin_feature_list_free (GList * list)
  *
  * Returns: (transfer full) (element-type Gst.PluginFeature): a copy of @list,
  *     with each feature's reference count incremented.
- *
- * Since: 0.10.26
  */
 GList *
 gst_plugin_feature_list_copy (GList * list)
@@ -264,8 +262,6 @@ gst_plugin_feature_list_copy (GList * list)
  *     plugin features
  *
  * Debug the plugin feature names in @list.
- *
- * Since: 0.10.31
  */
 void
 gst_plugin_feature_list_debug (GList * list)
@@ -374,8 +370,6 @@ gst_plugin_feature_check_version (GstPluginFeature * feature,
  * equal but the name of p1 comes before the name of p2; zero if the rank
  * and names are equal; positive value if the rank of p1 < the rank of p2 or the
  * ranks are equal but the name of p2 comes after the name of p1
- *
- * Since: 0.10.31
  */
 gint
 gst_plugin_feature_rank_compare_func (gconstpointer p1, gconstpointer p2)

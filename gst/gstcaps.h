@@ -71,8 +71,6 @@ typedef enum {
  * another element's caps priority order when intersecting with its own caps.
  * Example: If caps1 is [A, B, C] and caps2 is [E, B, D, A], the result
  * would be [A, B], maintaining the first caps priority on the intersection.
- *
- * Since: 0.10.33
  */
 typedef enum {
   GST_CAPS_INTERSECT_ZIG_ZAG            =  0,

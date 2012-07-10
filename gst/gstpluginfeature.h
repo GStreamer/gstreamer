@@ -124,8 +124,6 @@ void            gst_plugin_feature_list_debug           (GList *list);
  *     plugin features
  *
  * Debug the plugin feature names in @list.
- *
- * Since: 0.10.31
  */
 #ifndef GST_DISABLE_GST_DEBUG
 #define GST_PLUGIN_FEATURE_LIST_DEBUG(list) gst_plugin_feature_list_debug(list)

@@ -315,8 +315,6 @@ gst_fake_src_class_init (GstFakeSrcClass * klass)
    * GstFakeSrc:format
    *
    * Set the format of the newsegment events to produce.
-   *
-   * Since: 0.10.20
    */
   g_object_class_install_property (gobject_class, PROP_FORMAT,
       g_param_spec_enum ("format", "Format",

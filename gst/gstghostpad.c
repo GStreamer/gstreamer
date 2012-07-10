@@ -75,8 +75,6 @@ static GstPad *gst_proxy_pad_get_target (GstPad * pad);
  * Invoke the default event of the proxy pad.
  *
  * Returns: TRUE if the event was handled.
- *
- * Since: 0.10.36
  */
 gboolean
 gst_proxy_pad_event_default (GstPad * pad, GstObject * parent, GstEvent * event)
@@ -183,8 +181,6 @@ done:
  * Invoke the default query function of the proxy pad.
  *
  * Returns: TRUE if the query could be performed.
- *
- * Since: 0.10.36
  */
 gboolean
 gst_proxy_pad_query_default (GstPad * pad, GstObject * parent, GstQuery * query)
@@ -242,8 +238,6 @@ gst_proxy_pad_query_default (GstPad * pad, GstObject * parent, GstQuery * query)
  *
  * Returns: a #GstIterator of #GstPad, or NULL if @pad has no parent. Unref each
  * returned pad with gst_object_unref().
- *
- * Since: 0.10.36
  */
 GstIterator *
 gst_proxy_pad_iterate_internal_links_default (GstPad * pad, GstObject * parent)
@@ -273,8 +267,6 @@ gst_proxy_pad_iterate_internal_links_default (GstPad * pad, GstObject * parent)
  * Invoke the default chain function of the proxy pad.
  *
  * Returns: a #GstFlowReturn from the pad.
- *
- * Since: 0.10.36
  */
 GstFlowReturn
 gst_proxy_pad_chain_default (GstPad * pad, GstObject * parent,
@@ -302,8 +294,6 @@ gst_proxy_pad_chain_default (GstPad * pad, GstObject * parent,
  * Invoke the default chain list function of the proxy pad.
  *
  * Returns: a #GstFlowReturn from the pad.
- *
- * Since: 0.10.36
  */
 GstFlowReturn
 gst_proxy_pad_chain_list_default (GstPad * pad, GstObject * parent,
@@ -333,8 +323,6 @@ gst_proxy_pad_chain_list_default (GstPad * pad, GstObject * parent,
  * Invoke the default getrange function of the proxy pad.
  *
  * Returns: a #GstFlowReturn from the pad.
- *
- * Since: 0.10.36
  */
 GstFlowReturn
 gst_proxy_pad_getrange_default (GstPad * pad, GstObject * parent,
@@ -377,8 +365,6 @@ gst_proxy_pad_get_target (GstPad * pad)
  *
  * Returns: (transfer full): the target #GstProxyPad, can be NULL.
  * Unref target pad after usage.
- *
- * Since: 0.10.36
  */
 GstProxyPad *
 gst_proxy_pad_get_internal (GstProxyPad * pad)
@@ -401,8 +387,6 @@ gst_proxy_pad_get_internal (GstProxyPad * pad)
  * @pad: a #GstPad to unlink
  *
  * Invoke the default unlink function of the proxy pad.
- *
- * Since: 0.10.36
  */
 void
 gst_proxy_pad_unlink_default (GstPad * pad)
@@ -640,8 +624,6 @@ gst_ghost_pad_activate_mode_default (GstPad * pad, GstObject * parent,
  * Invoke the default link function of a ghost pad.
  *
  * Returns: #GstPadLinkReturn of the operation
- *
- * Since: 0.10.36
  */
 GstPadLinkReturn
 gst_ghost_pad_link_default (GstPad * pad, GstPad * peer)
@@ -671,8 +653,6 @@ gst_ghost_pad_link_default (GstPad * pad, GstPad * peer)
  * @pad: the #GstPad to link.
  *
  * Invoke the default unlink function of a ghost pad.
- *
- * Since: 0.10.36
  */
 void
 gst_ghost_pad_unlink_default (GstPad * pad)
@@ -758,8 +738,6 @@ gst_ghost_pad_dispose (GObject * object)
  * (GST_TYPE_GHOST_PAD, "direction", @dir, ..., NULL).
  *
  * Returns: %TRUE if the construction succeeds, %FALSE otherwise.
- *
- * Since: 0.10.22
  */
 gboolean
 gst_ghost_pad_construct (GstGhostPad * gpad)
@@ -960,8 +938,6 @@ set_target_failed:
  * Will ref the target.
  *
  * Returns: (transfer full): a new #GstPad, or NULL in case of an error.
- *
- * Since: 0.10.10
  */
 
 GstPad *
@@ -1004,8 +980,6 @@ set_target_failed:
  * direction will be taken from the @templ.
  *
  * Returns: (transfer full): a new #GstPad, or NULL in case of an error.
- *
- * Since: 0.10.10
  */
 GstPad *
 gst_ghost_pad_new_no_target_from_template (const gchar * name,

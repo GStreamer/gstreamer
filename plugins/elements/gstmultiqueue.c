@@ -368,8 +368,6 @@ gst_multi_queue_class_init (GstMultiQueueClass * klass)
    * 
    * Enable the buffering option in multiqueue so that BUFFERING messages are
    * emited based on low-/high-percent thresholds.
-   *
-   * Since: 0.10.26
    */
   g_object_class_install_property (gobject_class, PROP_USE_BUFFERING,
       g_param_spec_boolean ("use-buffering", "Use buffering",
@@ -379,8 +377,6 @@ gst_multi_queue_class_init (GstMultiQueueClass * klass)
    * GstMultiQueue:low-percent
    * 
    * Low threshold percent for buffering to start.
-   *
-   * Since: 0.10.26
    */
   g_object_class_install_property (gobject_class, PROP_LOW_PERCENT,
       g_param_spec_int ("low-percent", "Low percent",
@@ -390,8 +386,6 @@ gst_multi_queue_class_init (GstMultiQueueClass * klass)
    * GstMultiQueue:high-percent
    * 
    * High threshold percent for buffering to finish.
-   *
-   * Since: 0.10.26
    */
   g_object_class_install_property (gobject_class, PROP_HIGH_PERCENT,
       g_param_spec_int ("high-percent", "High percent",
@@ -406,8 +400,6 @@ gst_multi_queue_class_init (GstMultiQueueClass * klass)
    * Otherwise multiqueue will synchronize the deactivated or not-linked
    * streams by keeping the order in which buffers and events arrived compared
    * to active and linked streams.
-   *
-   * Since: 0.10.36
    */
   g_object_class_install_property (gobject_class, PROP_SYNC_BY_RUNNING_TIME,
       g_param_spec_boolean ("sync-by-running-time", "Sync By Running Time",

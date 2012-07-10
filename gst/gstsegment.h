@@ -58,18 +58,17 @@ typedef enum {
  * @GST_SEEK_FLAG_SEGMENT: perform a segment seek.
  * @GST_SEEK_FLAG_SKIP: when doing fast foward or fast reverse playback, allow
  *                     elements to skip frames instead of generating all
- *                     frames. Since 0.10.22.
+ *                     frames.
  * @GST_SEEK_FLAG_SNAP_BEFORE: go to a location before the requested position,
  *                     if KEY_UNIT this means the keyframe at or before the
  *                     requested position the one at or before the seek target.
- *                     Since 0.10.37.
  * @GST_SEEK_FLAG_SNAP_AFTER: go to a location after the requested position,
  *                     if KEY_UNIT this means the keyframe at of after the
- *                     requested position. Since 0.10.37.
+ *                     requested position.
  * @GST_SEEK_FLAG_SNAP_NEAREST: go to a position near the requested position,
  *                     if KEY_UNIT this means the keyframe closest to the
  *                     requested position, if both keyframes are at an equal
- *                     distance, behaves like SNAP_BEFORE. Since 0.10.37.
+ *                     distance, behaves like SNAP_BEFORE.
  *
  * Flags to be used with gst_element_seek() or gst_event_new_seek(). All flags
  * can be used together.

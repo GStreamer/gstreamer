@@ -207,8 +207,6 @@ gst_fake_sink_class_init (GstFakeSinkClass * klass)
    * @pad: the pad that received it
    *
    * This signal gets emitted before unreffing the buffer.
-   *
-   * Since: 0.10.7
    */
   gst_fake_sink_signals[SIGNAL_PREROLL_HANDOFF] =
       g_signal_new ("preroll-handoff", G_TYPE_FROM_CLASS (klass),

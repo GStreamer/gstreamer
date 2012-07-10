@@ -163,8 +163,6 @@ gst_param_spec_fraction_get_type (void)
  * instance_init function.
  *
  * Returns: (transfer full): a newly created parameter specification
- *
- * Since: 0.10.14
  */
 GParamSpec *
 gst_param_spec_fraction (const gchar * name, const gchar * nick,

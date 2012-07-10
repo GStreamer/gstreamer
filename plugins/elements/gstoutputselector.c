@@ -22,8 +22,6 @@
  * @see_also: #GstOutputSelector, #GstInputSelector
  *
  * Direct input stream to one out of N output pads.
- *
- * Since: 0.10.32
  */
 
 #ifdef HAVE_CONFIG_H

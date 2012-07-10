@@ -386,8 +386,6 @@ gst_query_parse_duration (GstQuery * query, GstFormat * format,
  * Free-function: gst_query_unref
  *
  * Returns: (transfer full): a #GstQuery
- *
- * Since: 0.10.12
  */
 GstQuery *
 gst_query_new_latency (void)
@@ -413,8 +411,6 @@ gst_query_new_latency (void)
  * @max_latency: the maximal latency of the upstream elements
  *
  * Answer a latency query by setting the requested values in the given format.
- *
- * Since: 0.10.12
  */
 void
 gst_query_set_latency (GstQuery * query, gboolean live,
@@ -439,8 +435,6 @@ gst_query_set_latency (GstQuery * query, gboolean live,
  * @max_latency: (out) (allow-none): the storage for the max latency or NULL
  *
  * Parse a latency query answer.
- *
- * Since: 0.10.12
  */
 void
 gst_query_parse_latency (GstQuery * query, gboolean * live,
@@ -873,8 +867,6 @@ ensure_array (GstStructure * s, GQuark quark, gsize element_size,
  * Free-function: gst_query_unref
  *
  * Returns: (transfer full): a new #GstQuery
- *
- * Since: 0.10.4
  */
 GstQuery *
 gst_query_new_formats (void)
@@ -943,8 +935,6 @@ gst_query_set_formats (GstQuery * query, gint n_formats, ...)
  *
  * Set the formats query result fields in @query. The number of formats passed
  * in the @formats array must be equal to @n_formats.
- *
- * Since: 0.10.4
  */
 void
 gst_query_set_formatsv (GstQuery * query, gint n_formats,
@@ -973,8 +963,6 @@ gst_query_set_formatsv (GstQuery * query, gint n_formats,
  * @n_formats: (out) (allow-none): the number of formats in this query.
  *
  * Parse the number of formats in the formats @query.
- *
- * Since: 0.10.4
  */
 void
 gst_query_parse_n_formats (GstQuery * query, guint * n_formats)
@@ -1039,8 +1027,6 @@ gst_query_parse_nth_format (GstQuery * query, guint nth, GstFormat * format)
  * Free-function: gst_query_unref
  *
  * Returns: (transfer full): a new #GstQuery
- *
- * Since: 0.10.20
  */
 GstQuery *
 gst_query_new_buffering (GstFormat format)
@@ -1075,8 +1061,6 @@ gst_query_new_buffering (GstFormat format)
  *
  * Set the percentage of buffered data. This is a value between 0 and 100.
  * The @busy indicator is %TRUE when the buffering is in progress.
- *
- * Since: 0.10.20
  */
 void
 gst_query_set_buffering_percent (GstQuery * query, gboolean busy, gint percent)
@@ -1101,8 +1085,6 @@ gst_query_set_buffering_percent (GstQuery * query, gboolean busy, gint percent)
  *
  * Get the percentage of buffered data. This is a value between 0 and 100.
  * The @busy indicator is %TRUE when the buffering is in progress.
- *
- * Since: 0.10.20
  */
 void
 gst_query_parse_buffering_percent (GstQuery * query, gboolean * busy,
@@ -1130,8 +1112,6 @@ gst_query_parse_buffering_percent (GstQuery * query, gboolean * busy,
  * @buffering_left: amount of buffering time left
  *
  * Configures the buffering stats values in @query.
- *
- * Since: 0.10.20
  */
 void
 gst_query_set_buffering_stats (GstQuery * query, GstBufferingMode mode,
@@ -1159,8 +1139,6 @@ gst_query_set_buffering_stats (GstQuery * query, GstBufferingMode mode,
  * @buffering_left: (out) (allow-none): amount of buffering time left, or NULL
  *
  * Extracts the buffering stats values from @query.
- *
- * Since: 0.10.20
  */
 void
 gst_query_parse_buffering_stats (GstQuery * query,
@@ -1197,8 +1175,6 @@ gst_query_parse_buffering_stats (GstQuery * query,
  * @estimated_total: estimated total amount of download time
  *
  * Set the available query result fields in @query.
- *
- * Since: 0.10.20
  */
 void
 gst_query_set_buffering_range (GstQuery * query, GstFormat format,
@@ -1230,8 +1206,6 @@ gst_query_set_buffering_range (GstQuery * query, GstFormat format,
  * Parse an available query, writing the format into @format, and
  * other results into the passed parameters, if the respective parameters
  * are non-NULL
- *
- * Since: 0.10.20
  */
 void
 gst_query_parse_buffering_range (GstQuery * query, GstFormat * format,
@@ -1275,8 +1249,6 @@ typedef struct
  * start position of the array should be inferior to @start.
  *
  * Returns: a #gboolean indicating if the range was added or not.
- *
- * Since: 0.10.31
  */
 gboolean
 gst_query_add_buffering_range (GstQuery * query, gint64 start, gint64 stop)
@@ -1319,8 +1291,6 @@ gst_query_add_buffering_range (GstQuery * query, gint64 start, gint64 stop)
  * buffered-ranges array of the query's structure.
  *
  * Returns: the range array size as a #guint.
- *
- * Since: 0.10.31
  */
 guint
 gst_query_get_n_buffering_ranges (GstQuery * query)
@@ -1349,8 +1319,6 @@ gst_query_get_n_buffering_ranges (GstQuery * query)
  * at the @index of the buffered ranges array.
  *
  * Returns: a #gboolean indicating if the parsing succeeded.
- *
- * Since: 0.10.31
  */
 gboolean
 gst_query_parse_nth_buffering_range (GstQuery * query, guint index,
@@ -1389,8 +1357,6 @@ gst_query_parse_nth_buffering_range (GstQuery * query, guint index,
  * Free-function: gst_query_unref
  *
  * Returns: (transfer full): a new #GstQuery
- *
- * Since: 0.10.22
  */
 GstQuery *
 gst_query_new_uri (void)
@@ -1412,8 +1378,6 @@ gst_query_new_uri (void)
  * @uri: the URI to set
  *
  * Answer a URI query by setting the requested URI.
- *
- * Since: 0.10.22
  */
 void
 gst_query_set_uri (GstQuery * query, const gchar * uri)
@@ -1437,8 +1401,6 @@ gst_query_set_uri (GstQuery * query, const gchar * uri)
  * Parse an URI query, writing the URI into @uri as a newly
  * allocated string, if the respective parameters are non-NULL.
  * Free the string with g_free() after usage.
- *
- * Since: 0.10.22
  */
 void
 gst_query_parse_uri (GstQuery * query, gchar ** uri)

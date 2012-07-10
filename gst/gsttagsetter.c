@@ -146,8 +146,6 @@ gst_tag_setter_get_data (GstTagSetter * setter)
  *
  * Reset the internal taglist. Elements should call this from within the
  * state-change handler.
- *
- * Since: 0.10.22
  */
 void
 gst_tag_setter_reset_tags (GstTagSetter * setter)
@@ -313,8 +311,6 @@ gst_tag_setter_add_tag_valist_values (GstTagSetter * setter,
  * @value: GValue to set for the tag
  *
  * Adds the given tag / GValue pair on the setter using the given merge mode.
- *
- * Since: 0.10.24
  */
 void
 gst_tag_setter_add_tag_value (GstTagSetter * setter,

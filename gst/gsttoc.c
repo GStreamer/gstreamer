@@ -108,8 +108,6 @@ GST_DEFINE_MINI_OBJECT_TYPE (GstTocEntry, gst_toc_entry);
  *
  * Returns: (transfer full): newly allocated #GstToc structure, free it
  *     with gst_toc_unref().
- *
- * Since: 0.10.37
  */
 GstToc *
 gst_toc_new (void)
@@ -133,8 +131,6 @@ gst_toc_new (void)
  * @tags: (allow-none) (transfer full): A #GstTagList or %NULL
  *
  * Set a #GstTagList with tags for the complete @toc.
- *
- * Since: 0.10.37
  */
 void
 gst_toc_set_tags (GstToc * toc, GstTagList * tags)
@@ -154,8 +150,6 @@ gst_toc_set_tags (GstToc * toc, GstTagList * tags)
  * @mode: A #GstTagMergeMode
  *
  * Merge @tags into the existing tags of @toc using @mode.
- *
- * Since: 0.10.37
  */
 void
 gst_toc_merge_tags (GstToc * toc, GstTagList * tags, GstTagMergeMode mode)
@@ -179,8 +173,6 @@ gst_toc_merge_tags (GstToc * toc, GstTagList * tags, GstTagMergeMode mode)
  * Gets the tags for @toc.
  *
  * Returns: (transfer none): A #GstTagList for @entry
- *
- * Since: 0.10.37
  */
 GstTagList *
 gst_toc_get_tags (const GstToc * toc)
@@ -196,8 +188,6 @@ gst_toc_get_tags (const GstToc * toc)
  * @entry: (transfer full): A #GstTocEntry
  *
  * Appends the #GstTocEntry @entry to @toc.
- *
- * Since: 0.10.37
  */
 void
 gst_toc_append_entry (GstToc * toc, GstTocEntry * entry)
@@ -220,8 +210,6 @@ gst_toc_append_entry (GstToc * toc, GstTocEntry * entry)
  * Gets the list of #GstTocEntry of @toc.
  *
  * Returns: (transfer none) (element-type Gst.TocEntry): A #GList of #GstTocEntry for @entry
- *
- * Since: 0.10.37
  */
 GList *
 gst_toc_get_entries (const GstToc * toc)
@@ -258,8 +246,6 @@ gst_toc_entry_new_internal (GstTocEntryType type, const gchar * uid)
  * Create new #GstTocEntry structure.
  *
  * Returns: newly allocated #GstTocEntry structure, free it with gst_toc_entry_unref().
- *
- * Since: 0.10.37
  */
 GstTocEntry *
 gst_toc_entry_new (GstTocEntryType type, const gchar * uid)
@@ -326,8 +312,6 @@ gst_toc_check_entry_for_uid (const GstTocEntry * entry, const gchar * uid)
  * Find #GstTocEntry with given @uid in the @toc.
  *
  * Returns: #GstTocEntry with specified @uid from the @toc, or NULL if not found.
- *
- * Since: 0.10.37
  */
 GstTocEntry *
 gst_toc_find_entry (const GstToc * toc, const gchar * uid)
@@ -355,8 +339,6 @@ gst_toc_find_entry (const GstToc * toc, const gchar * uid)
  *
  * Returns: newly allocated #GstTocEntry in case of success, NULL otherwise;
  * free it when done with gst_toc_entry_unref().
- *
- * Since: 0.10.37
  */
 static GstTocEntry *
 gst_toc_entry_copy (const GstTocEntry * entry)
@@ -401,8 +383,6 @@ gst_toc_entry_copy (const GstTocEntry * entry)
  *
  * Returns: newly allocated #GstToc in case of success, NULL otherwise;
  * free it when done with gst_toc_free().
- *
- * Since: 0.10.37
  */
 static GstToc *
 gst_toc_copy (const GstToc * toc)
@@ -443,8 +423,6 @@ gst_toc_copy (const GstToc * toc)
  * @stop: stop value to set.
  *
  * Set @start and @stop values for the @entry.
- *
- * Since: 0.10.37
  */
 void
 gst_toc_entry_set_start_stop_times (GstTocEntry * entry, gint64 start,
@@ -466,8 +444,6 @@ gst_toc_entry_set_start_stop_times (GstTocEntry * entry, gint64 start,
  *
  * Returns: TRUE if all non-NULL storage pointers were filled with appropriate values,
  * FALSE otherwise.
- *
- * Since: 0.10.37
  */
 gboolean
 gst_toc_entry_get_start_stop_times (const GstTocEntry * entry, gint64 * start,
@@ -566,8 +542,6 @@ gst_toc_entry_is_sequence (const GstTocEntry * entry)
  * Gets the UID of @entry.
  *
  * Returns: (transfer none): The UID of @entry
- *
- * Since: 0.10.37
  */
 const gchar *
 gst_toc_entry_get_uid (const GstTocEntry * entry)
@@ -583,8 +557,6 @@ gst_toc_entry_get_uid (const GstTocEntry * entry)
  * @subentry: (transfer full): A #GstTocEntry
  *
  * Appends the #GstTocEntry @subentry to @entry.
- *
- * Since: 0.10.37
  */
 void
 gst_toc_entry_append_sub_entry (GstTocEntry * entry, GstTocEntry * subentry)
@@ -606,8 +578,6 @@ gst_toc_entry_append_sub_entry (GstTocEntry * entry, GstTocEntry * subentry)
  * Gets the sub-entries of @entry.
  *
  * Returns: (transfer none) (element-type Gst.TocEntry): A #GList of #GstTocEntry of @entry
- *
- * Since: 0.10.37
  */
 GList *
 gst_toc_entry_get_sub_entries (const GstTocEntry * entry)
@@ -623,8 +593,6 @@ gst_toc_entry_get_sub_entries (const GstTocEntry * entry)
  * @tags: (allow-none) (transfer full): A #GstTagList or %NULL
  *
  * Set a #GstTagList with tags for the complete @entry.
- *
- * Since: 0.10.37
  */
 void
 gst_toc_entry_set_tags (GstTocEntry * entry, GstTagList * tags)
@@ -644,8 +612,6 @@ gst_toc_entry_set_tags (GstTocEntry * entry, GstTagList * tags)
  * @mode: A #GstTagMergeMode
  *
  * Merge @tags into the existing tags of @entry using @mode.
- *
- * Since: 0.10.37
  */
 void
 gst_toc_entry_merge_tags (GstTocEntry * entry, GstTagList * tags,
@@ -670,8 +636,6 @@ gst_toc_entry_merge_tags (GstTocEntry * entry, GstTagList * tags,
  * Gets the tags for @entry.
  *
  * Returns: (transfer none): A #GstTagList for @entry
- *
- * Since: 0.10.37
  */
 GstTagList *
 gst_toc_entry_get_tags (const GstTocEntry * entry)

@@ -47,8 +47,6 @@
  * Free-function: gst_bit_reader_free
  *
  * Returns: (transfer full): a new #GstBitReader instance
- *
- * Since: 0.10.22
  */
 GstBitReader *
 gst_bit_reader_new (const guint8 * data, guint size)
@@ -67,8 +65,6 @@ gst_bit_reader_new (const guint8 * data, guint size)
  *
  * Frees a #GstBitReader instance, which was previously allocated by
  * gst_bit_reader_new().
- * 
- * Since: 0.10.22
  */
 void
 gst_bit_reader_free (GstBitReader * reader)
@@ -86,8 +82,6 @@ gst_bit_reader_free (GstBitReader * reader)
  *
  * Initializes a #GstBitReader instance to read from @data. This function
  * can be called on already initialized instances.
- * 
- * Since: 0.10.22
  */
 void
 gst_bit_reader_init (GstBitReader * reader, const guint8 * data, guint size)
@@ -108,8 +102,6 @@ gst_bit_reader_init (GstBitReader * reader, const guint8 * data, guint size)
  *
  * Returns: %TRUE if the position could be set successfully, %FALSE
  * otherwise.
- * 
- * Since: 0.10.22
  */
 gboolean
 gst_bit_reader_set_pos (GstBitReader * reader, guint pos)
@@ -132,8 +124,6 @@ gst_bit_reader_set_pos (GstBitReader * reader, guint pos)
  * Returns the current position of a #GstBitReader instance in bits.
  *
  * Returns: The current position of @reader in bits.
- * 
- * Since: 0.10.22
  */
 guint
 gst_bit_reader_get_pos (const GstBitReader * reader)
@@ -148,8 +138,6 @@ gst_bit_reader_get_pos (const GstBitReader * reader)
  * Returns the remaining number of bits of a #GstBitReader instance.
  *
  * Returns: The remaining number of bits of @reader instance.
- * 
- * Since: 0.10.22
  */
 guint
 gst_bit_reader_get_remaining (const GstBitReader * reader)
@@ -164,8 +152,6 @@ gst_bit_reader_get_remaining (const GstBitReader * reader)
  * Returns the total number of bits of a #GstBitReader instance.
  *
  * Returns: The total number of bits of @reader instance.
- * 
- * Since: 0.10.26
  */
 guint
 gst_bit_reader_get_size (const GstBitReader * reader)
@@ -181,8 +167,6 @@ gst_bit_reader_get_size (const GstBitReader * reader)
  * Skips @nbits bits of the #GstBitReader instance.
  *
  * Returns: %TRUE if @nbits bits could be skipped, %FALSE otherwise.
- * 
- * Since: 0.10.22
  */
 gboolean
 gst_bit_reader_skip (GstBitReader * reader, guint nbits)
@@ -197,8 +181,6 @@ gst_bit_reader_skip (GstBitReader * reader, guint nbits)
  * Skips until the next byte.
  *
  * Returns: %TRUE if successful, %FALSE otherwise.
- * 
- * Since: 0.10.22
  */
 gboolean
 gst_bit_reader_skip_to_byte (GstBitReader * reader)
@@ -215,8 +197,6 @@ gst_bit_reader_skip_to_byte (GstBitReader * reader)
  * Read @nbits bits into @val and update the current position.
  *
  * Returns: %TRUE if successful, %FALSE otherwise.
- * 
- * Since: 0.10.22
  */
 
 /**
@@ -228,8 +208,6 @@ gst_bit_reader_skip_to_byte (GstBitReader * reader)
  * Read @nbits bits into @val and update the current position.
  *
  * Returns: %TRUE if successful, %FALSE otherwise.
- * 
- * Since: 0.10.22
  */
 
 /**
@@ -241,8 +219,6 @@ gst_bit_reader_skip_to_byte (GstBitReader * reader)
  * Read @nbits bits into @val and update the current position.
  *
  * Returns: %TRUE if successful, %FALSE otherwise.
- * 
- * Since: 0.10.22
  */
 
 /**
@@ -254,8 +230,6 @@ gst_bit_reader_skip_to_byte (GstBitReader * reader)
  * Read @nbits bits into @val and update the current position.
  *
  * Returns: %TRUE if successful, %FALSE otherwise.
- * 
- * Since: 0.10.22
  */
 
 /**
@@ -267,8 +241,6 @@ gst_bit_reader_skip_to_byte (GstBitReader * reader)
  * Read @nbits bits into @val but keep the current position.
  *
  * Returns: %TRUE if successful, %FALSE otherwise.
- * 
- * Since: 0.10.22
  */
 
 /**
@@ -280,8 +252,6 @@ gst_bit_reader_skip_to_byte (GstBitReader * reader)
  * Read @nbits bits into @val but keep the current position.
  *
  * Returns: %TRUE if successful, %FALSE otherwise.
- * 
- * Since: 0.10.22
  */
 
 /**
@@ -293,8 +263,6 @@ gst_bit_reader_skip_to_byte (GstBitReader * reader)
  * Read @nbits bits into @val but keep the current position.
  *
  * Returns: %TRUE if successful, %FALSE otherwise.
- * 
- * Since: 0.10.22
  */
 
 /**
@@ -306,8 +274,6 @@ gst_bit_reader_skip_to_byte (GstBitReader * reader)
  * Read @nbits bits into @val but keep the current position.
  *
  * Returns: %TRUE if successful, %FALSE otherwise.
- * 
- * Since: 0.10.22
  */
 
 #define GST_BIT_READER_READ_BITS(bits) \

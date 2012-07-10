@@ -48,8 +48,6 @@ typedef struct _GstValveClass GstValveClass;
  * GstValve:
  *
  * The private valve structure
- *
- * Since: 0.10.32
  */
 struct _GstValve
 {

@@ -180,8 +180,7 @@ gst_element_factory_cleanup (GstElementFactory * factory)
 /**
  * gst_element_register:
  * @plugin: (allow-none): #GstPlugin to register the element with, or NULL for
- *     a static element (note that passing NULL only works in GStreamer 0.10.13
- *     and later)
+ *     a static element.
  * @name: name of elements of this type
  * @rank: rank of element (higher rank means more importance when autoplugging)
  * @type: GType of element to register
@@ -642,8 +641,6 @@ gst_element_factory_get_uri_protocols (GstElementFactory * factory)
  * Check if @factory implements the interface with name @interfacename.
  *
  * Returns: #TRUE when @factory implement the interface.
- *
- * Since: 0.10.14
  */
 gboolean
 gst_element_factory_has_interface (GstElementFactory * factory,
@@ -678,8 +675,6 @@ typedef struct
  * Check if @factory is of the given types.
  *
  * Returns: %TRUE if @factory is of @type.
- *
- * Since: 0.10.31
  */
 gboolean
 gst_element_factory_list_is_type (GstElementFactory * factory,
@@ -769,8 +764,6 @@ element_filter (GstPluginFeature * feature, FilterData * data)
  * Returns: (transfer full) (element-type Gst.ElementFactory): a #GList of
  *     #GstElementFactory elements. Use gst_plugin_feature_list_free() after
  *     usage.
- *
- * Since: 0.10.31
  */
 GList *
 gst_element_factory_list_get_elements (GstElementFactoryListType type,
@@ -811,8 +804,6 @@ gst_element_factory_list_get_elements (GstElementFactoryListType type,
  * Returns: (transfer full) (element-type Gst.ElementFactory): a #GList of
  *     #GstElementFactory elements that match the given requisits.
  *     Use #gst_plugin_feature_list_free after usage.
- *
- * Since: 0.10.31
  */
 GList *
 gst_element_factory_list_filter (GList * list,

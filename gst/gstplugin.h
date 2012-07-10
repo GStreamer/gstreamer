@@ -95,8 +95,6 @@ typedef enum
  *         the directory
  *
  * Flags used in connection with gst_plugin_add_dependency().
- *
- * Since: 0.10.22
  */
 typedef enum {
   GST_PLUGIN_DEPENDENCY_FLAG_NONE = 0,
@@ -131,9 +129,6 @@ typedef gboolean (*GstPluginInitFunc) (GstPlugin *plugin);
  * user data to be passed to init function (useful for bindings).
  *
  * Returns: %TRUE if plugin initialised successfully
- *
- * Since: 0.10.24
- *
  */
 /* FIXME 0.11: Merge with GstPluginInitFunc */
 typedef gboolean (*GstPluginInitFullFunc) (GstPlugin *plugin, gpointer user_data);
@@ -154,7 +149,7 @@ typedef gboolean (*GstPluginInitFullFunc) (GstPlugin *plugin, gpointer user_data
  *     subset thereof), or NULL. Allowed are the following formats:
  *     "YYYY-MM-DD" and "YYY-MM-DDTHH:MMZ" (with 'T' a separator and 'Z'
  *     indicating UTC/Zulu time). This field should be set via the
- *     GST_PACKAGE_RELEASE_DATETIME preprocessor macro (Since: 0.10.31)
+ *     GST_PACKAGE_RELEASE_DATETIME preprocessor macro.
  *
  * A plugin should export a variable of this type called plugin_desc. The plugin
  * loader will use the data provided there to initialize the plugin.

@@ -75,21 +75,21 @@ typedef struct _GstMessage GstMessage;
  * can get the new duration with a duration query.
  * @GST_MESSAGE_ASYNC_START: Posted by elements when they start an ASYNC
  * #GstStateChange. This message is not forwarded to the application but is used
- * internally. Since: 0.10.13.
+ * internally.
  * @GST_MESSAGE_ASYNC_DONE: Posted by elements when they complete an ASYNC
  * #GstStateChange. The application will only receive this message from the toplevel
- * pipeline. Since: 0.10.13
+ * pipeline.
  * @GST_MESSAGE_LATENCY: Posted by elements when their latency changes. The
- * application should recalculate and distribute a new latency. Since: 0.10.12
+ * application should recalculate and distribute a new latency.
  * @GST_MESSAGE_REQUEST_STATE: Posted by elements when they want the pipeline to
  * change state. This message is a suggestion to the application which can
- * decide to perform the state change on (part of) the pipeline. Since: 0.10.23.
- * @GST_MESSAGE_STEP_START: A stepping operation was started. Since: 0.10.24
+ * decide to perform the state change on (part of) the pipeline.
+ * @GST_MESSAGE_STEP_START: A stepping operation was started.
  * @GST_MESSAGE_QOS: A buffer was dropped or an element changed its processing
- * strategy for Quality of Service reasons. Since: 0.10.29
- * @GST_MESSAGE_PROGRESS: A progress message. Since: 0.10.33
+ * strategy for Quality of Service reasons.
+ * @GST_MESSAGE_PROGRESS: A progress message.
  * @GST_MESSAGE_TOC: A new table of contents (TOC) was found or previously found TOC
- * was updated. Since: 0.10.37
+ * was updated. Since:
  * @GST_MESSAGE_ANY: mask for all of the above messages.
  *
  * The different message types that are available.
@@ -167,8 +167,6 @@ typedef enum
  * @message: a #GstMessage
  *
  * Get a constant string representation of the #GstMessageType of @message.
- *
- * Since: 0.10.4
  */
 #define GST_MESSAGE_TYPE_NAME(message)  gst_message_type_get_name(GST_MESSAGE_TYPE(message))
 /**
@@ -201,8 +199,6 @@ typedef enum
  *
  * Get the name of the object that posted @message. Returns "(NULL)" if
  * the message has no source object set.
- *
- * Since: 0.10.24
  */
 #define GST_MESSAGE_SRC_NAME(message)   (GST_MESSAGE_SRC(message) ? \
     GST_OBJECT_NAME (GST_MESSAGE_SRC(message)) : "(NULL)")
@@ -213,8 +209,6 @@ typedef enum
  * @GST_STRUCTURE_CHANGE_TYPE_PAD_UNLINK: Pad unlinking is starting or done.
  *
  * The type of a %GST_MESSAGE_STRUCTURE_CHANGE.
- *
- * Since: 0.10.22
  */
 typedef enum {
   GST_STRUCTURE_CHANGE_TYPE_PAD_LINK   = 0,
@@ -233,8 +227,6 @@ typedef enum {
  *
  * The type of a %GST_MESSAGE_STREAM_STATUS. The stream status messages inform the
  * application of new streaming threads and their status.
- *
- * Since: 0.10.24
  */
 typedef enum {
   GST_STREAM_STATUS_TYPE_CREATE   = 0,
@@ -258,8 +250,6 @@ typedef enum {
  *
  * The type of a %GST_MESSAGE_PROGRESS. The progress messages inform the
  * application of the status of assynchronous tasks.
- *
- * Since: 0.10.33
  */
 typedef enum {
   GST_PROGRESS_TYPE_START    = 0,

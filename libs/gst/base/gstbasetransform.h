@@ -31,7 +31,6 @@ G_BEGIN_DECLS
 #define GST_BASE_TRANSFORM_GET_CLASS(obj)  (G_TYPE_INSTANCE_GET_CLASS((obj),GST_TYPE_BASE_TRANSFORM,GstBaseTransformClass))
 #define GST_IS_BASE_TRANSFORM(obj)	   (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_BASE_TRANSFORM))
 #define GST_IS_BASE_TRANSFORM_CLASS(klass) (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_BASE_TRANSFORM))
-/* since 0.10.4 */
 #define GST_BASE_TRANSFORM_CAST(obj)	((GstBaseTransform *)(obj))
 
 /**
@@ -52,8 +51,6 @@ G_BEGIN_DECLS
  * @obj: base transform instance
  *
  * Gives the pointer to the source #GstPad object of the element.
- *
- * Since: 0.10.4
  */
 #define GST_BASE_TRANSFORM_SRC_PAD(obj)		(GST_BASE_TRANSFORM_CAST (obj)->srcpad)
 
@@ -62,8 +59,6 @@ G_BEGIN_DECLS
  * @obj: base transform instance
  *
  * Gives the pointer to the sink #GstPad object of the element.
- *
- * Since: 0.10.4
  */
 #define GST_BASE_TRANSFORM_SINK_PAD(obj)	(GST_BASE_TRANSFORM_CAST (obj)->sinkpad)
 
@@ -72,8 +67,6 @@ G_BEGIN_DECLS
  *
  * A #GstFlowReturn that can be returned from transform and transform_ip to
  * indicate that no output buffer was generated.
- *
- * Since: 0.10.13
  */
 #define GST_BASE_TRANSFORM_FLOW_DROPPED   GST_FLOW_CUSTOM_SUCCESS
 
@@ -122,12 +115,12 @@ struct _GstBaseTransform {
  *                  caps, fixate the caps on the other pad. The function takes
  *                  ownership of @othercaps and returns a fixated version of
  *                  @othercaps. @othercaps is not guaranteed to be writable.
- * @accept_caps:    Optional. Since 0.10.30
+ * @accept_caps:    Optional.
  *                  Subclasses can override this method to check if @caps can be
  *                  handled by the element. The default implementation might not be
  *                  the most optimal way to check this in all cases.
  * @set_caps:       allows the subclass to be notified of the actual caps set.
- * @query:          Optional Since 0.10.36
+ * @query:          Optional.
  *                  Handle a requested query. Subclasses that implement this
  *                  should must chain up to the parent if they didn't handle the
  *                  query
@@ -186,7 +179,7 @@ struct _GstBaseTransform {
  *                  output buffer. By default this method is NULL and no
  *                  metadata is copied. subclasses can implement this method and
  *                  return TRUE if the metadata is to be copied.
- * @before_transform: Optional. Since 0.10.22
+ * @before_transform: Optional.
  *                    This method is called right before the base class will
  *                    start processing. Dynamic properties or other delayed
  *                    configuration could be performed in this method.

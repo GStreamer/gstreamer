@@ -368,8 +368,6 @@ gst_uri_get_protocol (const gchar * uri)
  * Checks if the protocol of a given valid URI matches @protocol.
  *
  * Returns: %TRUE if the protocol matches.
- *
- * Since: 0.10.4
  */
 gboolean
 gst_uri_has_protocol (const gchar * uri, const gchar * protocol)
@@ -539,8 +537,6 @@ get_element_factories_from_uri_protocol (const GstURIType type,
  * gst_element_make_from_uri() is guaranteed to work.
  *
  * Returns: TRUE
- *
- * Since: 0.10.13
 */
 gboolean
 gst_uri_protocol_is_supported (const GstURIType type, const gchar * protocol)
@@ -854,8 +850,6 @@ file_path_contains_relatives (const gchar * path)
  * will be canonicalised so that it doesn't contain any './' or '../' segments.
  *
  * On Windows #filename should be in UTF-8 encoding.
- *
- * Since: 0.10.33
  */
 gchar *
 gst_filename_to_uri (const gchar * filename, GError ** error)

@@ -453,8 +453,6 @@ is_running:
  *
  * Returns: (transfer full): the #GstTaskPool used by @task. gst_object_unref()
  * after usage.
- *
- * Since: 0.10.24
  */
 GstTaskPool *
 gst_task_get_pool (GstTask * task)
@@ -482,8 +480,6 @@ gst_task_get_pool (GstTask * task)
  * will be created by @task will now use @pool.
  *
  * MT safe.
- *
- * Since: 0.10.24
  */
 void
 gst_task_set_pool (GstTask * task, GstTaskPool * pool)
@@ -654,8 +650,6 @@ start_task (GstTask * task)
  * MT safe.
  *
  * Returns: %TRUE if the state could be changed.
- *
- * Since: 0.10.24
  */
 gboolean
 gst_task_set_state (GstTask * task, GstTaskState state)
