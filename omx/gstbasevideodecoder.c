@@ -2075,7 +2075,7 @@ gst_base_video_decoder_set_src_caps (GstBaseVideoDecoder * base_video_decoder)
   gst_buffer_pool_config_set_params (config, caps, size, min, max);
   state->bytes_per_picture = size;
 
-  if (gst_query_has_allocation_meta (query, GST_VIDEO_META_API_TYPE)) {
+  if (gst_query_find_allocation_meta (query, GST_VIDEO_META_API_TYPE, NULL)) {
     /* just set the option, if the pool can support it we will transparently use
      * it through the video info API. We could also see if the pool support this
      * option and only activate it then. */
@@ -2085,7 +2085,8 @@ gst_base_video_decoder_set_src_caps (GstBaseVideoDecoder * base_video_decoder)
 
   /* check if downstream supports cropping */
   base_video_decoder->use_cropping =
-      gst_query_has_allocation_meta (query, GST_VIDEO_CROP_META_API_TYPE);
+      gst_query_find_allocation_meta (query, GST_VIDEO_CROP_META_API_TYPE,
+      NULL);
 
   gst_buffer_pool_set_config (pool, config);
   /* and activate */
