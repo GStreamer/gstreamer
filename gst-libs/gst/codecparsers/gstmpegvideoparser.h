@@ -378,8 +378,8 @@ struct _GstMpegVideoPacket
   gint   size;
 };
 
-gboolean                                              gst_mpeg_video_parse (GstMpegVideoPacket * packet,
-                                                      const guint8 * data, gsize size, guint offset);
+gboolean gst_mpeg_video_parse                         (GstMpegVideoPacket * packet,
+                                                       const guint8 * data, gsize size, guint offset);
 
 gboolean gst_mpeg_video_parse_sequence_header         (GstMpegVideoSequenceHdr * params,
                                                        const guint8 * data, gsize size, guint offset);
