@@ -56,7 +56,7 @@ static void gst_gl_filter_filterblur_reset (GstGLFilter * filter);
 
 static gboolean gst_gl_filterblur_init_shader (GstGLFilter * filter);
 static gboolean gst_gl_filterblur_filter (GstGLFilter * filter,
-    GstGLBuffer * inbuf, GstGLBuffer * outbuf);
+    GstBuffer * inbuf, GstBuffer * outbuf);
 static void gst_gl_filterblur_hcallback (gint width, gint height, guint texture,
     gpointer stuff);
 static void gst_gl_filterblur_vcallback (gint width, gint height, guint texture,
@@ -182,16 +182,25 @@ gst_gl_filterblur_init_shader (GstGLFilter * filter)
 }
 
 static gboolean
-gst_gl_filterblur_filter (GstGLFilter * filter, GstGLBuffer * inbuf,
-    GstGLBuffer * outbuf)
+gst_gl_filterblur_filter (GstGLFilter * filter, GstBuffer * inbuf,
+    GstBuffer * outbuf)
 {
   GstGLFilterBlur *filterblur = GST_GL_FILTERBLUR (filter);
+  GstGLMeta *in_meta, *out_meta;
 
-  gst_gl_filter_render_to_target (filter, inbuf->texture,
+  in_meta = gst_buffer_get_gl_meta (inbuf);
+  out_meta = gst_buffer_get_gl_meta (outbuf);
+
+  if (!in_meta || !out_meta) {
+    GST_WARNING ("A buffer did not contain required GstGLMeta");
+    return FALSE;
+  }
+
+  gst_gl_filter_render_to_target (filter, in_meta->memory->tex_id,
       filterblur->midtexture, gst_gl_filterblur_hcallback, filterblur);
 
   gst_gl_filter_render_to_target (filter, filterblur->midtexture,
-      outbuf->texture, gst_gl_filterblur_vcallback, filterblur);
+      out_meta->memory->tex_id, gst_gl_filterblur_vcallback, filterblur);
 
   return TRUE;
 }
