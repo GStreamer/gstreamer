@@ -44,11 +44,14 @@
 #include "gstautoaudiosink.h"
 #include "gstautodetect.h"
 
+#define DEFAULT_TS_OFFSET           0
+
 /* Properties */
 enum
 {
   PROP_0,
   PROP_CAPS,
+  PROP_TS_OFFSET,
 };
 
 static GstStateChangeReturn
@@ -99,6 +102,11 @@ gst_auto_audio_sink_class_init (GstAutoAudioSinkClass * klass)
       g_param_spec_boxed ("filter-caps", "Filter caps",
           "Filter sink candidates using these caps.", GST_TYPE_CAPS,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
+  g_object_class_install_property (gobject_class, PROP_TS_OFFSET,
+      g_param_spec_int64 ("ts-offset", "TS Offset",
+          "Timestamp offset in nanoseconds", G_MININT64, G_MAXINT64,
+          DEFAULT_TS_OFFSET, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   gst_element_class_add_pad_template (eklass,
       gst_static_pad_template_get (&sink_template));
@@ -166,6 +174,7 @@ gst_auto_audio_sink_init (GstAutoAudioSink * sink)
 
   /* set the default raw audio caps */
   sink->filter_caps = gst_static_caps_get (&raw_caps);
+  sink->ts_offset = DEFAULT_TS_OFFSET;
 
   /* mark as sink */
   GST_OBJECT_FLAG_SET (sink, GST_ELEMENT_FLAG_SINK);
@@ -336,6 +345,8 @@ gst_auto_audio_sink_detect (GstAutoAudioSink * sink)
   if (!(esink = gst_auto_audio_sink_find_best (sink)))
     goto no_sink;
 
+  g_object_set (G_OBJECT (esink), "ts-offset", sink->ts_offset, NULL);
+
   sink->kid = esink;
   /* Ensure the child is brought up to the right state to match the parent
    * although it's currently always in READY and 
@@ -415,6 +426,11 @@ gst_auto_audio_sink_set_property (GObject * object, guint prop_id,
         gst_caps_unref (sink->filter_caps);
       sink->filter_caps = gst_caps_copy (gst_value_get_caps (value));
       break;
+    case PROP_TS_OFFSET:
+      sink->ts_offset = g_value_get_int64 (value);
+      if (sink->kid)
+        g_object_set_property (G_OBJECT (sink->kid), pspec->name, value);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -432,6 +448,9 @@ gst_auto_audio_sink_get_property (GObject * object, guint prop_id,
       gst_value_set_caps (value, sink->filter_caps);
       break;
     }
+    case PROP_TS_OFFSET:
+      g_value_set_int64 (value, sink->ts_offset);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
