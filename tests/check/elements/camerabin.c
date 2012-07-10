@@ -42,6 +42,24 @@
 #define VIDEO_PAD_SUPPORTED_CAPS "video/x-raw, format=RGB, width=600, height=480"
 #define IMAGE_PAD_SUPPORTED_CAPS "video/x-raw, format=RGB, width=800, height=600"
 
+static GstStaticPadTemplate vfsrc_template =
+GST_STATIC_PAD_TEMPLATE (GST_BASE_CAMERA_SRC_VIEWFINDER_PAD_NAME,
+    GST_PAD_SRC,
+    GST_PAD_ALWAYS,
+    GST_STATIC_CAPS_ANY);
+
+static GstStaticPadTemplate imgsrc_template =
+GST_STATIC_PAD_TEMPLATE (GST_BASE_CAMERA_SRC_IMAGE_PAD_NAME,
+    GST_PAD_SRC,
+    GST_PAD_ALWAYS,
+    GST_STATIC_CAPS_ANY);
+
+static GstStaticPadTemplate vidsrc_template =
+GST_STATIC_PAD_TEMPLATE (GST_BASE_CAMERA_SRC_VIDEO_PAD_NAME,
+    GST_PAD_SRC,
+    GST_PAD_ALWAYS,
+    GST_STATIC_CAPS_ANY);
+
 /* custom test camera src element */
 #define GST_TYPE_TEST_CAMERA_SRC \
   (gst_test_camera_src_get_type())
@@ -140,12 +158,19 @@ gst_test_camera_src_class_init (GstTestCameraSrcClass * klass)
       "Camera/Src",
       "Some test camera src",
       "Thiago Santos <thiago.sousa.santos@collabora.com>");
+
+  gst_element_class_add_pad_template (gstelement_class,
+      gst_static_pad_template_get (&vidsrc_template));
+  gst_element_class_add_pad_template (gstelement_class,
+      gst_static_pad_template_get (&imgsrc_template));
+  gst_element_class_add_pad_template (gstelement_class,
+      gst_static_pad_template_get (&vfsrc_template));
 }
 
 static void
 gst_test_camera_src_init (GstTestCameraSrc * self)
 {
-  GstElementClass *gstelement_class = GST_ELEMENT_CLASS (parent_class);
+  GstElementClass *gstelement_class = GST_ELEMENT_GET_CLASS (self);
   GstPadTemplate *template;
 
   /* create pads */
