@@ -2864,6 +2864,11 @@ gst_rtsp_connection_do_tunnel (GstRTSPConnection * conn,
     conn->read_socket = conn->socket1;
 
     conn->tstate = TUNNEL_STATE_COMPLETE;
+
+    g_free (conn->initial_buffer);
+    conn->initial_buffer = conn2->initial_buffer;
+    conn2->initial_buffer = NULL;
+    conn->initial_buffer_offset = conn2->initial_buffer_offset;
   }
 
   /* we need base64 decoding for the readfd */
