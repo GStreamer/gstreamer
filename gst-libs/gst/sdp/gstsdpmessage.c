@@ -196,7 +196,7 @@ gst_sdp_attribute_init (GstSDPAttribute * attr)
 
 /**
  * gst_sdp_message_new:
- * @msg: pointer to new #GstSDPMessage
+ * @msg: (out) (transfer full): pointer to new #GstSDPMessage
  *
  * Allocate a new GstSDPMessage and store the result in @msg.
  *
@@ -929,7 +929,7 @@ DEFINE_ARRAY_GETTER (time, times, const GstSDPTime);
  * @msg: a #GstSDPMessage
  * @start: the start time
  * @stop: the stop time
- * @repeat: the repeat times
+ * @repeat: (array): the repeat times
  *
  * Add time information @start and @stop to @msg.
  *
@@ -1176,7 +1176,7 @@ gst_sdp_message_add_media (GstSDPMessage * msg, GstSDPMedia * media)
 
 /**
  * gst_sdp_media_new:
- * @media: pointer to new #GstSDPMedia
+ * @media: (out): pointer to new #GstSDPMedia
  *
  * Allocate a new GstSDPMedia and store the result in @media.
  *
