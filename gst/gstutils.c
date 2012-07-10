@@ -2996,7 +2996,8 @@ gst_bin_find_unlinked_pad (GstBin * bin, GstPadDirection direction)
  * and want them all ghosted, you will have to create the ghost pads
  * yourself).
  *
- * Returns: (transfer floating): a newly-created bin, or NULL if an error occurred.
+ * Returns: (transfer floating) (type Gst.Bin): a newly-created bin,
+ *   or %NULL if an error occurred.
  */
 GstElement *
 gst_parse_bin_from_description (const gchar * bin_description,
@@ -3026,7 +3027,8 @@ gst_parse_bin_from_description (const gchar * bin_description,
  * and want them all ghosted, you will have to create the ghost pads
  * yourself).
  *
- * Returns: (transfer full): a newly-created bin, or NULL if an error occurred.
+ * Returns: (transfer full) (type Gst.Bin): a newly-created bin, or
+ *   %NULL if an error occurred.
  */
 GstElement *
 gst_parse_bin_from_description_full (const gchar * bin_description,
