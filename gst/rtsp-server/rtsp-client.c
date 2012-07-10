@@ -824,7 +824,7 @@ handle_blocksize (GstRTSPMedia * media, GstRTSPMessage * request)
   gboolean ret = TRUE;
 
   if (gst_rtsp_message_get_header (request, GST_RTSP_HDR_BLOCKSIZE,
-      &blocksize_str, 0) == GST_RTSP_OK) {
+          &blocksize_str, 0) == GST_RTSP_OK) {
     guint64 blocksize;
     gchar *end;
 
@@ -835,7 +835,7 @@ handle_blocksize (GstRTSPMedia * media, GstRTSPMessage * request)
     } else {
       if (blocksize > G_MAXUINT)
         blocksize = G_MAXUINT;
-      gst_rtsp_media_handle_mtu (media, (guint)blocksize);
+      gst_rtsp_media_handle_mtu (media, (guint) blocksize);
     }
   }
 
@@ -1906,7 +1906,7 @@ client_watch_notify (GstRTSPClient * client)
 
 static gboolean
 attach_client (GstRTSPClient * client, GSocket * socket,
-    GstRTSPConnection *conn, GError ** error)
+    GstRTSPConnection * conn, GError ** error)
 {
   GSocket *read_socket;
   GSocketAddress *addres;
@@ -2001,7 +2001,7 @@ gst_rtsp_client_create_from_socket (GstRTSPClient * client, GSocket * socket,
   GstRTSPResult res;
 
   GST_RTSP_CHECK (gst_rtsp_connection_create_from_socket (socket, ip, port,
-      initial_buffer, &conn), no_connection);
+          initial_buffer, &conn), no_connection);
 
   return attach_client (client, socket, conn, error);
 
@@ -2017,7 +2017,7 @@ no_connection:
 }
 
 /**
- * gst_rtsp_client_attach:
+ * gst_rtsp_client_accept:
  * @client: a #GstRTSPClient
  * @socket: a #GSocket
  * @cancellable: a #GCancellable
