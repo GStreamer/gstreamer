@@ -764,6 +764,13 @@ new_dvb_subtitles_cb (DvbSub * dvb_sub, DVBSubtitles * subs, gpointer user_data)
       subs->page_time_out, subs->num_rects, subs->pts,
       GST_TIME_ARGS (subs->pts));
 
+  /* spec says page_time_out is not to be taken very accurately anyway,
+   * and 0 does not make useful sense anyway */
+  if (!subs->page_time_out) {
+    GST_WARNING_OBJECT (overlay, "overriding page_time_out 0");
+    subs->page_time_out = 1;
+  }
+
   /* clip and convert to running time */
   start = subs->pts;
   stop = subs->pts + subs->page_time_out;
