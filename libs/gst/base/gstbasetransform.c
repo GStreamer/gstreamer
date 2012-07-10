@@ -1373,7 +1373,7 @@ gst_base_transform_default_propose_allocation (GstBaseTransform * trans,
 
       api = gst_query_parse_nth_allocation_meta (decide_query, i, &params);
       GST_DEBUG_OBJECT (trans, "proposing metadata %s", g_type_name (api));
-      gst_query_add_allocation_meta (query, api, gst_structure_copy (params));
+      gst_query_add_allocation_meta (query, api, params);
     }
     ret = TRUE;
   }

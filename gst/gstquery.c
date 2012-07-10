@@ -1675,13 +1675,13 @@ allocation_meta_free (AllocationMeta * am)
  * gst_query_add_allocation_meta:
  * @query: a GST_QUERY_ALLOCATION type query #GstQuery
  * @api: the metadata API
- * @params: (transfer full) (allow-none): API specific parameters
+ * @params: (transfer none) (allow-none): API specific parameters
  *
  * Add @api with @params as one of the supported metadata API to @query.
  */
 void
 gst_query_add_allocation_meta (GstQuery * query, GType api,
-    GstStructure * params)
+    const GstStructure * params)
 {
   GArray *array;
   GstStructure *structure;
@@ -1697,7 +1697,7 @@ gst_query_add_allocation_meta (GstQuery * query, GType api,
       (GDestroyNotify) allocation_meta_free);
 
   am.api = api;
-  am.params = params;
+  am.params = (params ? gst_structure_copy (params) : NULL);
 
   g_array_append_val (array, am);
 }
