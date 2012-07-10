@@ -79,7 +79,7 @@ static void gst_gl_filter_cube_reset (GstGLFilter * filter);
 static gboolean gst_gl_filter_cube_init_shader (GstGLFilter * filter);
 #endif
 static gboolean gst_gl_filter_cube_filter (GstGLFilter * filter,
-    GstGLBuffer * inbuf, GstGLBuffer * outbuf);
+    GstBuffer * inbuf, GstBuffer * outbuf);
 static void gst_gl_filter_cube_callback (gint width, gint height, guint texture,
     gpointer stuff);
 
@@ -275,18 +275,29 @@ gst_gl_filter_cube_init_shader (GstGLFilter * filter)
 #endif
 
 static gboolean
-gst_gl_filter_cube_filter (GstGLFilter * filter, GstGLBuffer * inbuf,
-    GstGLBuffer * outbuf)
+gst_gl_filter_cube_filter (GstGLFilter * filter, GstBuffer * inbuf,
+    GstBuffer * outbuf)
 {
   GstGLFilterCube *cube_filter = GST_GL_FILTER_CUBE (filter);
+  GstGLMeta *in_meta, *out_meta;
+  GstVideoMeta *in_v_meta;
 
+  in_meta = gst_buffer_get_gl_meta (inbuf);
+  out_meta = gst_buffer_get_gl_meta (outbuf);
+  in_v_meta = gst_buffer_get_video_meta (inbuf);
+
+  if (!in_meta || !in_v_meta || !out_meta) {
+    GST_WARNING ("A buffer does not contain required GstGLMeta"
+        " or GstVideoMeta");
+    return FALSE;
+  }
   //blocking call, use a FBO
   gst_gl_display_use_fbo (filter->display, filter->width, filter->height,
-      filter->fbo, filter->depthbuffer, outbuf->texture,
-      gst_gl_filter_cube_callback, inbuf->width, inbuf->height, inbuf->texture,
-      cube_filter->fovy, cube_filter->aspect, cube_filter->znear,
-      cube_filter->zfar, GST_GL_DISPLAY_PROJECTION_PERSPECTIVE,
-      (gpointer) cube_filter);
+      filter->fbo, filter->depthbuffer, out_meta->memory->tex_id,
+      gst_gl_filter_cube_callback, in_v_meta->width, in_v_meta->height,
+      in_meta->memory->tex_id, cube_filter->fovy, cube_filter->aspect,
+      cube_filter->znear, cube_filter->zfar,
+      GST_GL_DISPLAY_PROJECTION_PERSPECTIVE, (gpointer) cube_filter);
 
   return TRUE;
 }
