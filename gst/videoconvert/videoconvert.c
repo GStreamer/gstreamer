@@ -221,7 +221,8 @@ get_offset_scale (const GstVideoFormatInfo * finfo, GstVideoColorRange range,
       break;
   }
 
-  if (GST_VIDEO_FORMAT_INFO_IS_YUV (finfo)) {
+  if (GST_VIDEO_FORMAT_INFO_IS_YUV (finfo) ||
+      GST_VIDEO_FORMAT_INFO_IS_GRAY (finfo)) {
     offset[0] = 0;
     offset[1] = baseL;
     offset[2] = offset[3] = baseC;
@@ -233,15 +234,12 @@ get_offset_scale (const GstVideoFormatInfo * finfo, GstVideoColorRange range,
     offset[1] = offset[2] = offset[3] = baseL;
     scale[0] = 0;
     scale[1] = scale[2] = scale[3] = maxL - minL;
-  } else if (GST_VIDEO_FORMAT_INFO_IS_GRAY (finfo)) {
-    offset[0] = offset[2] = offset[3] = 0;
-    offset[1] = baseL;
-    scale[0] = scale[2] = scale[3] = 0;
-    scale[1] = maxL - minL;
   } else {
     offset[0] = offset[1] = offset[2] = offset[3] = 0;
     scale[0] = scale[1] = scale[2] = scale[3] = (maxL - minL);
   }
+  GST_DEBUG ("scale: %d %d %d %d", scale[0], scale[1], scale[2], scale[3]);
+  GST_DEBUG ("offset: %d %d %d %d", offset[0], offset[1], offset[2], offset[3]);
 }
 
 static gboolean
@@ -273,6 +271,7 @@ get_Kr_Kb (GstVideoColorMatrix matrix, gdouble * Kr, gdouble * Kb)
       *Kb = 0.087;
       break;
   }
+  GST_DEBUG ("matrix: %d, Kr %f, Kb %f", matrix, *Kr, *Kb);
   return res;
 }
 
@@ -319,12 +318,14 @@ videoconvert_convert_compute_matrix (VideoConvert * convert)
   else
     depth = 8;
 
+  GST_DEBUG ("depth: %d", depth);
+
   color_matrix_set_identity (&dst);
 
   /* 1, bring color components to [0..1.0] range */
   get_offset_scale (sfinfo, in_info->colorimetry.range, depth, offset, scale);
-
   color_matrix_offset_components (&dst, -offset[1], -offset[2], -offset[3]);
+
   color_matrix_scale_components (&dst, 1 / ((float) scale[1]),
       1 / ((float) scale[2]), 1 / ((float) scale[3]));
 
@@ -348,6 +349,7 @@ videoconvert_convert_compute_matrix (VideoConvert * convert)
   get_offset_scale (dfinfo, out_info->colorimetry.range, depth, offset, scale);
   color_matrix_scale_components (&dst, (float) scale[1], (float) scale[2],
       (float) scale[3]);
+
   color_matrix_offset_components (&dst, offset[1], offset[2], offset[3]);
 
   /* because we're doing 8-bit matrix coefficients */
