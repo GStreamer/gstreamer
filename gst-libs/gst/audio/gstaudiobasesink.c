@@ -903,6 +903,12 @@ gst_audio_base_sink_setcaps (GstBaseSink * bsink, GstCaps * caps)
   if (!gst_audio_ring_buffer_acquire (sink->ringbuffer, spec))
     goto acquire_error;
 
+  /* We need to resync since the ringbuffer restarted */
+  sink->priv->avg_skew = -1;
+  sink->next_sample = -1;
+  sink->priv->eos_time = -1;
+  sink->priv->discont_time = -1;
+
   if (bsink->pad_mode == GST_PAD_MODE_PUSH) {
     GST_DEBUG_OBJECT (sink, "activate ringbuffer");
     gst_audio_ring_buffer_activate (sink->ringbuffer, TRUE);
