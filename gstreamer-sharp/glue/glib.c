@@ -20,7 +20,7 @@
  */
 
 
-#include <glib/gthread.h>
+#include <glib.h>
 
 gboolean gstglibsharp_g_thread_supported (void);
 
