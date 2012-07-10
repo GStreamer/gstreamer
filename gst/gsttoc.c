@@ -283,25 +283,30 @@ gst_toc_entry_free (GstTocEntry * entry)
   g_slice_free (GstTocEntry, entry);
 }
 
-static gboolean
-gst_toc_check_entry_for_uid (const GstTocEntry * entry, const gchar * uid)
+static GstTocEntry *
+gst_toc_entry_find_sub_entry (const GstTocEntry * entry, const gchar * uid)
 {
   GList *cur;
+  GstTocEntry *subentry, *subsubentry;
 
-  g_return_val_if_fail (entry != NULL, FALSE);
-  g_return_val_if_fail (uid != NULL, FALSE);
-
-  if (g_strcmp0 (entry->uid, uid) == 0)
-    return TRUE;
+  g_return_val_if_fail (entry != NULL, NULL);
+  g_return_val_if_fail (uid != NULL, NULL);
 
   cur = entry->subentries;
   while (cur != NULL) {
-    if (gst_toc_check_entry_for_uid (cur->data, uid))
-      return TRUE;
+    subentry = cur->data;
+
+    if (g_strcmp0 (subentry->uid, uid) == 0)
+      return subentry;
+
+    subsubentry = gst_toc_entry_find_sub_entry (subentry, uid);
+    if (subsubentry != NULL)
+      return subsubentry;
+
     cur = cur->next;
   }
 
-  return FALSE;
+  return NULL;
 }
 
 /**
@@ -311,20 +316,27 @@ gst_toc_check_entry_for_uid (const GstTocEntry * entry, const gchar * uid)
  *
  * Find #GstTocEntry with given @uid in the @toc.
  *
- * Returns: #GstTocEntry with specified @uid from the @toc, or NULL if not found.
+ * Returns: (transfer none): #GstTocEntry with specified @uid from the @toc, or NULL if not found.
  */
 GstTocEntry *
 gst_toc_find_entry (const GstToc * toc, const gchar * uid)
 {
   GList *cur;
+  GstTocEntry *entry, *subentry;
 
   g_return_val_if_fail (toc != NULL, NULL);
   g_return_val_if_fail (uid != NULL, NULL);
 
   cur = toc->entries;
   while (cur != NULL) {
-    if (gst_toc_check_entry_for_uid (cur->data, uid))
-      return cur->data;
+    entry = cur->data;
+
+    if (g_strcmp0 (entry->uid, uid) == 0)
+      return entry;
+
+    subentry = gst_toc_entry_find_sub_entry (entry, uid);
+    if (subentry != NULL)
+      return subentry;
     cur = cur->next;
   }
 
