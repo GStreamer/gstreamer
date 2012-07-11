@@ -60,7 +60,7 @@ static void gst_gl_deinterlace_get_property (GObject * object,
 static void gst_gl_deinterlace_reset (GstGLFilter * filter);
 static gboolean gst_gl_deinterlace_init_shader (GstGLFilter * filter);
 static gboolean gst_gl_deinterlace_filter (GstGLFilter * filter,
-    GstGLBuffer * inbuf, GstGLBuffer * outbuf);
+    GstBuffer * inbuf, GstBuffer * outbuf);
 static void gst_gl_deinterlace_callback (gint width, gint height,
     guint texture, gpointer stuff);
 
@@ -99,7 +99,7 @@ static void
 gst_gl_deinterlace_init (GstGLDeinterlace * filter)
 {
   filter->shader = NULL;
-  filter->gl_buffer_prev = NULL;
+  filter->buffer_prev = NULL;
 }
 
 static void
@@ -107,9 +107,9 @@ gst_gl_deinterlace_reset (GstGLFilter * filter)
 {
   GstGLDeinterlace *deinterlace_filter = GST_GL_DEINTERLACE (filter);
 
-  if (deinterlace_filter->gl_buffer_prev) {
-    gst_buffer_unref (GST_BUFFER_CAST (deinterlace_filter->gl_buffer_prev));
-    deinterlace_filter->gl_buffer_prev = NULL;
+  if (deinterlace_filter->buffer_prev) {
+    gst_buffer_unref (deinterlace_filter->buffer_prev);
+    deinterlace_filter->buffer_prev = NULL;
   }
   //blocking call, wait the opengl thread has destroyed the shader
   gst_gl_display_del_shader (filter->display, deinterlace_filter->shader);
@@ -152,23 +152,33 @@ gst_gl_deinterlace_init_shader (GstGLFilter * filter)
 }
 
 static gboolean
-gst_gl_deinterlace_filter (GstGLFilter * filter, GstGLBuffer * inbuf,
-    GstGLBuffer * outbuf)
+gst_gl_deinterlace_filter (GstGLFilter * filter, GstBuffer * inbuf,
+    GstBuffer * outbuf)
 {
   GstGLDeinterlace *deinterlace_filter = GST_GL_DEINTERLACE (filter);
+  GstGLMeta *in_meta, *out_meta;
+  GstVideoMeta *in_v_meta;
 
+  in_meta = gst_buffer_get_gl_meta (inbuf);
+  out_meta = gst_buffer_get_gl_meta (outbuf);
+  in_v_meta = gst_buffer_get_video_meta (inbuf);
+
+  if (!in_meta || !out_meta || !in_v_meta) {
+    GST_WARNING ("A buffer does not contain required GstGLMeta or"
+        " GstVideoMeta");
+    return FALSE;
+  }
   //blocking call, use a FBO
   gst_gl_display_use_fbo (filter->display, filter->width, filter->height,
-      filter->fbo, filter->depthbuffer, outbuf->texture,
-      gst_gl_deinterlace_callback, inbuf->width, inbuf->height,
-      inbuf->texture, 0, filter->width, 0, filter->height,
+      filter->fbo, filter->depthbuffer, out_meta->memory->tex_id,
+      gst_gl_deinterlace_callback, in_v_meta->width, in_v_meta->height,
+      in_meta->memory->tex_id, 0, filter->width, 0, filter->height,
       GST_GL_DISPLAY_PROJECTION_ORTHO2D, (gpointer) deinterlace_filter);
 
-  if (deinterlace_filter->gl_buffer_prev)
-    gst_buffer_unref (GST_BUFFER_CAST (deinterlace_filter->gl_buffer_prev));
+  if (deinterlace_filter->buffer_prev)
+    gst_buffer_unref (deinterlace_filter->buffer_prev);
 
-  deinterlace_filter->gl_buffer_prev =
-      GST_GL_BUFFER (gst_buffer_ref (GST_BUFFER_CAST (inbuf)));
+  deinterlace_filter->buffer_prev = gst_buffer_ref (inbuf);
 
   return TRUE;
 }
@@ -180,7 +190,9 @@ gst_gl_deinterlace_callback (gint width, gint height, guint texture,
 {
   GstGLDeinterlace *deinterlace_filter = GST_GL_DEINTERLACE (stuff);
   GstGLFilter *filter = GST_GL_FILTER (stuff);
-  GstGLBuffer *gl_buffer_prev = deinterlace_filter->gl_buffer_prev;
+  GstBuffer *buffer_prev = deinterlace_filter->buffer_prev;
+  GstGLMeta *prev_meta;
+
 
   glMatrixMode (GL_PROJECTION);
   glLoadIdentity ();
@@ -189,10 +201,11 @@ gst_gl_deinterlace_callback (gint width, gint height, guint texture,
 
   glEnable (GL_TEXTURE_RECTANGLE_ARB);
 
-  if (gl_buffer_prev) {
+  if (buffer_prev) {
+    prev_meta = gst_buffer_get_gl_meta (buffer_prev);
     glActiveTexture (GL_TEXTURE1_ARB);
     gst_gl_shader_set_uniform_1i (deinterlace_filter->shader, "tex_prev", 1);
-    glBindTexture (GL_TEXTURE_RECTANGLE_ARB, gl_buffer_prev->texture);
+    glBindTexture (GL_TEXTURE_RECTANGLE_ARB, prev_meta->memory->tex_id);
   }
 
   glActiveTexture (GL_TEXTURE0_ARB);

@@ -39,7 +39,7 @@ struct _GstGLDeinterlace
 {
   GstGLFilter filter;
   GstGLShader *shader;
-  GstGLBuffer *gl_buffer_prev;
+  GstBuffer *buffer_prev;
 };
 
 struct _GstGLDeinterlaceClass
