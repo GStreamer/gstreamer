@@ -468,11 +468,6 @@ gst_multiudpsink_render (GstBaseSink * bsink, GstBuffer * buffer)
     mem = gst_buffer_get_memory (buffer, i);
     gst_memory_map (mem, &map[i], GST_MAP_READ);
 
-    if (map[i].size > UDP_MAX_SIZE) {
-      GST_WARNING ("Attempting to send a UDP packet larger than maximum "
-          "size (%" G_GSIZE_FORMAT " > %d)", map[i].size, UDP_MAX_SIZE);
-    }
-
     vec[i].buffer = map[i].data;
     vec[i].size = map[i].size;
 
@@ -485,6 +480,11 @@ gst_multiudpsink_render (GstBaseSink * bsink, GstBuffer * buffer)
    * fast as UDP never blocks */
   g_mutex_lock (&sink->client_lock);
   GST_LOG_OBJECT (bsink, "about to send %" G_GSIZE_FORMAT " bytes", size);
+
+  if (size > UDP_MAX_SIZE) {
+    GST_WARNING_OBJECT (bsink, "Attempting to send a UDP packet larger than "
+        "maximum size (%" G_GSIZE_FORMAT " > %d)", size, UDP_MAX_SIZE);
+  }
 
   no_clients = 0;
   num = 0;
