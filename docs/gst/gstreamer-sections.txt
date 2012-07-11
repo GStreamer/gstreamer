@@ -2753,7 +2753,9 @@ gst_toc_entry_ref
 gst_toc_entry_unref
 gst_toc_entry_copy
 gst_toc_find_entry
+gst_toc_entry_get_toc
 gst_toc_entry_get_uid
+gst_toc_entry_get_parent
 gst_toc_entry_get_sub_entries
 gst_toc_entry_append_sub_entry
 gst_toc_entry_get_start_stop_times

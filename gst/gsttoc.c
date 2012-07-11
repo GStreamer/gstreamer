@@ -76,6 +76,9 @@ struct _GstTocEntry
 {
   GstMiniObject mini_object;
 
+  GstToc *toc;
+  GstTocEntry *parent;
+
   gchar *uid;
   GstTocEntryType type;
   GstClockTime start, stop;
@@ -194,8 +197,12 @@ gst_toc_append_entry (GstToc * toc, GstTocEntry * entry)
 {
   g_return_if_fail (toc != NULL);
   g_return_if_fail (gst_mini_object_is_writable (GST_MINI_OBJECT_CAST (toc)));
+  g_return_if_fail (gst_mini_object_is_writable (GST_MINI_OBJECT_CAST (entry)));
+  g_return_if_fail (entry->toc == NULL);
+  g_return_if_fail (entry->parent == NULL);
 
   toc->entries = g_list_append (toc->entries, entry);
+  entry->toc = toc;
 
   GST_LOG ("appended %s entry with uid %s to toc %p",
       gst_toc_entry_type_get_nick (entry->type), entry->uid, toc);
@@ -576,8 +583,14 @@ gst_toc_entry_append_sub_entry (GstTocEntry * entry, GstTocEntry * subentry)
   g_return_if_fail (entry != NULL);
   g_return_if_fail (subentry != NULL);
   g_return_if_fail (gst_mini_object_is_writable (GST_MINI_OBJECT_CAST (entry)));
+  g_return_if_fail (gst_mini_object_is_writable (GST_MINI_OBJECT_CAST
+          (subentry)));
+  g_return_if_fail (subentry->toc == NULL);
+  g_return_if_fail (subentry->parent == NULL);
 
   entry->subentries = g_list_append (entry->subentries, subentry);
+  subentry->toc = entry->toc;
+  subentry->parent = entry;
 
   GST_LOG ("appended %s subentry with uid %s to entry %s",
       gst_toc_entry_type_get_nick (subentry->type), subentry->uid, entry->uid);
@@ -655,6 +668,38 @@ gst_toc_entry_get_tags (const GstTocEntry * entry)
   g_return_val_if_fail (entry != NULL, NULL);
 
   return entry->tags;
+}
+
+/**
+ * gst_toc_entry_get_toc:
+ * @entry: A #GstTocEntry instance
+ *
+ * Gets the parent #GstToc of @entry.
+ *
+ * Returns: (transfer none): The parent #GstToc of @entry
+ */
+GstToc *
+gst_toc_entry_get_toc (GstTocEntry * entry)
+{
+  g_return_val_if_fail (entry != NULL, NULL);
+
+  return entry->toc;
+}
+
+/**
+ * gst_toc_entry_get_parent:
+ * @entry: A #GstTocEntry instance
+ *
+ * Gets the parent #GstTocEntry of @entry.
+ *
+ * Returns: (transfer none): The parent #GstTocEntry of @entry
+ */
+GstTocEntry *
+gst_toc_entry_get_parent (GstTocEntry * entry)
+{
+  g_return_val_if_fail (entry != NULL, NULL);
+
+  return entry->parent;
 }
 
 #ifndef GST_DISABLE_GST_DEBUG

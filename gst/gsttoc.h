@@ -110,6 +110,9 @@ gboolean           gst_toc_entry_is_sequence             (const GstTocEntry *ent
 void               gst_toc_entry_set_start_stop_times    (GstTocEntry *entry, gint64 start, gint64 stop);
 gboolean           gst_toc_entry_get_start_stop_times    (const GstTocEntry *entry, gint64 *start, gint64 *stop);
 
+GstToc *           gst_toc_entry_get_toc                 (GstTocEntry *entry);
+GstTocEntry *      gst_toc_entry_get_parent              (GstTocEntry *entry);
+
 
 const gchar *      gst_toc_entry_type_get_nick     (GstTocEntryType type);
 
