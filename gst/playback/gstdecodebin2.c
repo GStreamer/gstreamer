@@ -1812,8 +1812,9 @@ connect_pad (GstDecodeBin * dbin, GstElement * src, GstDecodePad * dpad,
   g_return_val_if_fail (factories != NULL, FALSE);
   g_return_val_if_fail (factories->n_values > 0, FALSE);
 
-  GST_DEBUG_OBJECT (dbin, "pad %s:%s , chain:%p",
-      GST_DEBUG_PAD_NAME (pad), chain);
+  GST_DEBUG_OBJECT (dbin,
+      "pad %s:%s , chain:%p, %d factories, caps %" GST_PTR_FORMAT,
+      GST_DEBUG_PAD_NAME (pad), chain, factories->n_values, caps);
 
   /* 1. is element demuxer or parser */
   if (is_demuxer) {
@@ -1849,6 +1850,8 @@ connect_pad (GstDecodeBin * dbin, GstElement * src, GstDecodePad * dpad,
     /* Remove selected factory from the list. */
     g_value_array_remove (factories, 0);
 
+    GST_LOG_OBJECT (src, "trying factory %" GST_PTR_FORMAT, factory);
+
     /* Check if the caps are really supported by the factory. The
      * factory list is non-empty-subset filtered while caps
      * are only accepted by a pad if they are a subset of the
@@ -1876,6 +1879,9 @@ connect_pad (GstDecodeBin * dbin, GstElement * src, GstDecodePad * dpad,
           GstCaps *templcaps = gst_static_caps_get (&templ->static_caps);
 
           if (!gst_caps_is_subset (caps, templcaps)) {
+            GST_DEBUG_OBJECT (src,
+                "caps %" GST_PTR_FORMAT " not subset of %" GST_PTR_FORMAT, caps,
+                templcaps);
             gst_caps_unref (templcaps);
             skip = TRUE;
             break;
