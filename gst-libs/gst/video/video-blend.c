@@ -231,9 +231,8 @@ gst_video_blend_scale_linear_RGBA (GstVideoInfo * src, GstBuffer * src_buffer,
 }
 
 /* video_blend:
- * @dest: The #GstBlendVideoFormatInfo where to blend @src in
- * @src: the #GstBlendVideoFormatInfo that we want to blend into
- * @dest
+ * @dest: The #GstVideoFrame where to blend @src in
+ * @src: the #GstVideoFrame that we want to blend into
  * @x: The x offset in pixel where the @src image should be blended
  * @y: the y offset in pixel where the @src image should be blended
  * @global_alpha: the global_alpha each per-pixel alpha value is multiplied
