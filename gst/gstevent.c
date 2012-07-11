@@ -639,7 +639,7 @@ gst_event_new_caps (GstCaps * caps)
 /**
  * gst_event_parse_caps:
  * @event: The event to parse
- * @caps: (out): A pointer to the caps
+ * @caps: (out) (transfer none): A pointer to the caps
  *
  * Get the caps from @event. The caps remains valid as long as @event remains
  * valid.
