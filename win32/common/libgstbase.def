@@ -56,8 +56,8 @@ EXPORTS
 	gst_base_sink_set_sync
 	gst_base_sink_set_throttle_time
 	gst_base_sink_set_ts_offset
-	gst_base_sink_wait
 	gst_base_sink_wait_clock
+	gst_base_sink_wait_eos
 	gst_base_sink_wait_preroll
 	gst_base_src_get_blocksize
 	gst_base_src_get_do_timestamp
@@ -237,13 +237,6 @@ EXPORTS
 	gst_collect_pads_stop
 	gst_collect_pads_take_buffer
 	gst_push_src_get_type
-	gst_queue_array_drop_element
-	gst_queue_array_find
-	gst_queue_array_free
-	gst_queue_array_is_empty
-	gst_queue_array_new
-	gst_queue_array_pop_head
-	gst_queue_array_push_tail
 	gst_type_find_helper
 	gst_type_find_helper_for_buffer
 	gst_type_find_helper_for_data
