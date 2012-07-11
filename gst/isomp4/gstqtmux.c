@@ -2112,7 +2112,7 @@ static void
 check_and_subtract_ts (GstQTMux * qtmux, GstClockTime * ts_a, GstClockTime ts_b)
 {
   if (G_LIKELY (GST_CLOCK_TIME_IS_VALID (*ts_a))) {
-    if (G_LIKELY (*ts_a > ts_b)) {
+    if (G_LIKELY (*ts_a >= ts_b)) {
       *ts_a -= ts_b;
     } else {
       *ts_a = 0;
