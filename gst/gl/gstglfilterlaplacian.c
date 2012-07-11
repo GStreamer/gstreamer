@@ -60,7 +60,7 @@ static void gst_gl_filter_laplacian_get_property (GObject * object,
 static void gst_gl_filter_laplacian_reset (GstGLFilter * filter);
 static gboolean gst_gl_filter_laplacian_init_shader (GstGLFilter * filter);
 static gboolean gst_gl_filter_laplacian_filter (GstGLFilter * filter,
-    GstGLBuffer * inbuf, GstGLBuffer * outbuf);
+    GstBuffer * inbuf, GstBuffer * outbuf);
 static void gst_gl_filter_laplacian_callback (gint width, gint height,
     guint texture, gpointer stuff);
 
@@ -170,16 +170,27 @@ gst_gl_filter_laplacian_init_shader (GstGLFilter * filter)
 }
 
 static gboolean
-gst_gl_filter_laplacian_filter (GstGLFilter * filter, GstGLBuffer * inbuf,
-    GstGLBuffer * outbuf)
+gst_gl_filter_laplacian_filter (GstGLFilter * filter, GstBuffer * inbuf,
+    GstBuffer * outbuf)
 {
   gpointer laplacian_filter = GST_GL_FILTER_LAPLACIAN (filter);
+  GstGLMeta *in_meta, *out_meta;
+  GstVideoMeta *in_v_meta;
 
+  in_meta = gst_buffer_get_gl_meta (inbuf);
+  out_meta = gst_buffer_get_gl_meta (outbuf);
+  in_v_meta = gst_buffer_get_video_meta (inbuf);
+
+  if (!in_meta || !out_meta || !in_v_meta) {
+    GST_WARNING ("A buffer does not contain required GstGLMeta"
+        " or GstVideoMeta");
+    return FALSE;
+  }
   //blocking call, use a FBO
   gst_gl_display_use_fbo (filter->display, filter->width, filter->height,
-      filter->fbo, filter->depthbuffer, outbuf->texture,
-      gst_gl_filter_laplacian_callback, inbuf->width, inbuf->height,
-      inbuf->texture, 0, filter->width, 0, filter->height,
+      filter->fbo, filter->depthbuffer, out_meta->memory->tex_id,
+      gst_gl_filter_laplacian_callback, in_v_meta->width, in_v_meta->height,
+      in_meta->memory->tex_id, 0, filter->width, 0, filter->height,
       GST_GL_DISPLAY_PROJECTION_ORTHO2D, laplacian_filter);
 
   return TRUE;
