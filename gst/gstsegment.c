@@ -52,11 +52,10 @@
  * with a start value of 0 and a stop/duration of -1, which is undefined. The default
  * rate and applied_rate is 1.0.
  *
- * If the segment is used for managing seeks, the segment duration should be set with
- * gst_segment_set_duration(). The public duration field contains the duration of the
- * segment. When using the segment for seeking, the start and time members should
- * normally be left to their default 0 value. The stop position is left to -1 unless
- * explicitly configured to a different value after a seek event.
+ * The public duration field contains the duration of the segment. When using
+ * the segment for seeking, the start and time members should normally be left
+ * to their default 0 value. The stop position is left to -1 unless explicitly
+ * configured to a different value after a seek event.
  *
  * The current position in the segment should be set by changing the position
  * member in the structure.
