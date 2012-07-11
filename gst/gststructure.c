@@ -2851,13 +2851,13 @@ gst_structure_id_get_valist (const GstStructure * structure,
 /* ERRORS */
 no_such_field:
   {
-    GST_WARNING ("Expected field '%s' in structure: %" GST_PTR_FORMAT,
+    GST_DEBUG ("Expected field '%s' in structure: %" GST_PTR_FORMAT,
         GST_STR_NULL (g_quark_to_string (field_id)), structure);
     return FALSE;
   }
 wrong_type:
   {
-    GST_WARNING ("Expected field '%s' in structure to be of type '%s', but "
+    GST_DEBUG ("Expected field '%s' in structure to be of type '%s', but "
         "field was of type '%s': %" GST_PTR_FORMAT,
         g_quark_to_string (field_id),
         GST_STR_NULL (g_type_name (expected_type)),
