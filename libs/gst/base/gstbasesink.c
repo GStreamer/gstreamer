@@ -1758,14 +1758,9 @@ start_stepping (GstBaseSink * sink, GstSegment * segment,
   GST_DEBUG_OBJECT (sink, "step started at running_time %" GST_TIME_FORMAT,
       GST_TIME_ARGS (current->start));
 
-  if (current->amount == -1) {
-    GST_DEBUG_OBJECT (sink, "step amount == -1, stop stepping");
-    current->valid = FALSE;
-  } else {
-    GST_DEBUG_OBJECT (sink, "step amount: %" G_GUINT64_FORMAT ", format: %s, "
-        "rate: %f", current->amount, gst_format_get_name (current->format),
-        current->rate);
-  }
+  GST_DEBUG_OBJECT (sink, "step amount: %" G_GUINT64_FORMAT ", format: %s, "
+      "rate: %f", current->amount, gst_format_get_name (current->format),
+      current->rate);
 }
 
 static void
@@ -1839,6 +1834,9 @@ handle_stepping (GstBaseSink * sink, GstSegment * segment,
     gint64 * rstop)
 {
   gboolean step_end = FALSE;
+
+  if (current->amount == -1)
+    return TRUE;
 
   /* see if we need to skip this buffer because of stepping */
   switch (current->format) {
