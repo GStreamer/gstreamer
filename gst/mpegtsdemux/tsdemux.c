@@ -1300,7 +1300,8 @@ gst_ts_demux_parse_pes_header (GstTSDemux * demux, TSDemuxStream * stream,
   /* Remove PES headers */
   GST_DEBUG ("Moving data forward by %d bytes (packet_size:%d, have:%d)",
       header.header_size, header.packet_length, length);
-  stream->expected_size = header.packet_length;
+  g_assert (header.packet_length >= header.header_size);
+  stream->expected_size = header.packet_length - header.header_size;
   data += header.header_size;
   length -= header.header_size;
 
@@ -1582,8 +1583,10 @@ gst_ts_demux_handle_packet (GstTSDemux * demux, TSDemuxStream * stream,
     GST_DEBUG ("current_size:%d, expected_size:%d",
         stream->current_size, stream->expected_size);
     /* Finally check if the data we queued completes a packet */
-    if (stream->expected_size && stream->current_size == stream->expected_size)
+    if (stream->expected_size && stream->current_size == stream->expected_size) {
+      GST_LOG ("pushing complete packet");
       res = gst_ts_demux_push_pending_data (demux, stream);
+    }
   }
 
   return res;
