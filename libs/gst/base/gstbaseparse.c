@@ -337,6 +337,9 @@ struct _GstBaseParsePrivate
   gboolean detecting;
   GList *detect_buffers;
   guint detect_buffers_size;
+
+  /* if TRUE, a STREAM_START event needs to be pushed */
+  gboolean push_stream_start;
 };
 
 typedef struct _GstBaseParseSeek
@@ -2846,6 +2849,14 @@ gst_base_parse_loop (GstPad * pad)
   parse = GST_BASE_PARSE (gst_pad_get_parent (pad));
   klass = GST_BASE_PARSE_GET_CLASS (parse);
 
+  GST_DEBUG_OBJECT (parse, "hello");
+
+  if (G_UNLIKELY (parse->priv->push_stream_start)) {
+    GST_DEBUG_OBJECT (parse, "Pushing STREAM_START");
+    gst_pad_push_event (parse->srcpad, gst_event_new_stream_start ());
+    parse->priv->push_stream_start = FALSE;
+  }
+
   /* reverse playback:
    * first fragment (closest to stop time) is handled normally below,
    * then we pull in fragments going backwards */
@@ -2974,6 +2985,8 @@ gst_base_parse_sink_activate (GstPad * sinkpad, GstObject * parent)
   GST_DEBUG_OBJECT (parse, "trying to activate in pull mode");
   if (!gst_pad_activate_mode (sinkpad, GST_PAD_MODE_PULL, TRUE))
     goto baseparse_push;
+
+  parse->priv->push_stream_start = TRUE;
 
   return gst_pad_start_task (sinkpad, (GstTaskFunction) gst_base_parse_loop,
       sinkpad, NULL);
