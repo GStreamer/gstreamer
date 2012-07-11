@@ -950,12 +950,6 @@ gst_pad_set_active (GstPad * pad, gboolean active)
   if (G_UNLIKELY (!ret))
     goto failed;
 
-  if (!active) {
-    GST_OBJECT_LOCK (pad);
-    GST_OBJECT_FLAG_UNSET (pad, GST_PAD_FLAG_NEED_RECONFIGURE);
-    GST_OBJECT_FLAG_UNSET (pad, GST_PAD_FLAG_EOS);
-    GST_OBJECT_UNLOCK (pad);
-  }
   return ret;
 
   /* ERRORS */
@@ -1072,6 +1066,15 @@ gst_pad_activate_mode (GstPad * pad, GstPadMode mode, gboolean active)
 
 exit_success:
   res = TRUE;
+
+  /* Clear sticky flags on deactivation */
+  if (!active) {
+    GST_OBJECT_LOCK (pad);
+    GST_OBJECT_FLAG_UNSET (pad, GST_PAD_FLAG_NEED_RECONFIGURE);
+    GST_OBJECT_FLAG_UNSET (pad, GST_PAD_FLAG_EOS);
+    GST_OBJECT_UNLOCK (pad);
+  }
+
 exit:
   RELEASE_PARENT (parent);
 
