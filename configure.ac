@@ -325,7 +325,7 @@ GST_PLUGINS_NONPORTED=" aiff \
  gsettings jasper ladspa \
  musepack musicbrainz nas neon ofa openal rsvg sdl sndfile spandsp spc timidity \
  directsound directdraw direct3d9 acm wininet \
- wildmidi xvid lv2 teletextdec dvb sndio"
+ wildmidi xvid lv2 teletextdec sndio"
 AC_SUBST(GST_PLUGINS_NONPORTED)
 
 dnl these are all the gst plug-ins, compilable without additional libs
