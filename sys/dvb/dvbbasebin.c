@@ -107,7 +107,7 @@ static void dvb_base_bin_handle_message (GstBin * bin, GstMessage * message);
 static void dvb_base_bin_pat_info_cb (DvbBaseBin * dvbbasebin,
     const GstStructure * pat);
 static void dvb_base_bin_pmt_info_cb (DvbBaseBin * dvbbasebin,
-    GstStructure * pmt);
+    const GstStructure * pmt);
 static GstPad *dvb_base_bin_request_new_pad (GstElement * element,
     GstPadTemplate * templ, const gchar * name, const GstCaps * caps);
 static void dvb_base_bin_release_pad (GstElement * element, GstPad * pad);
@@ -120,6 +120,13 @@ static void dvb_base_bin_uri_handler_init (gpointer g_iface,
     gpointer iface_data);
 
 static void dvb_base_bin_program_destroy (gpointer data);
+
+#define dvb_base_bin_parent_class parent_class
+G_DEFINE_TYPE_EXTENDED (DvbBaseBin, dvb_base_bin, GST_TYPE_BIN,
+    0,
+    G_IMPLEMENT_INTERFACE (GST_TYPE_URI_HANDLER,
+        dvb_base_bin_uri_handler_init));
+
 
 static DvbBaseBinStream *
 dvb_base_bin_add_stream (DvbBaseBin * dvbbasebin, guint16 pid)
@@ -174,26 +181,6 @@ dvb_base_bin_get_program (DvbBaseBin * dvbbasebin, gint program_number)
 static guint signals [LAST_SIGNAL] = { 0 };
 */
 
-GST_BOILERPLATE_FULL (DvbBaseBin, dvb_base_bin, GstBin, GST_TYPE_BIN,
-    dvb_base_bin_setup_interfaces);
-
-static void
-dvb_base_bin_base_init (gpointer klass)
-{
-  GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
-
-  element_class->request_new_pad = dvb_base_bin_request_new_pad;
-  element_class->release_pad = dvb_base_bin_release_pad;
-
-  gst_element_class_add_static_pad_template (element_class, &program_template);
-  gst_element_class_add_static_pad_template (element_class, &src_template);
-
-  gst_element_class_set_details_simple (element_class, "DVB bin",
-      "Source/Bin/Video",
-      "Access descramble and split DVB streams",
-      "Alessandro Decina <alessandro@nnva.org>");
-}
-
 static void
 dvb_base_bin_class_init (DvbBaseBinClass * klass)
 {
@@ -231,6 +218,7 @@ dvb_base_bin_class_init (DvbBaseBinClass * klass)
   bin_class->handle_message = dvb_base_bin_handle_message;
 
   element_class = GST_ELEMENT_CLASS (klass);
+
   element_class->change_state = dvb_base_bin_change_state;
   element_class->request_new_pad = dvb_base_bin_request_new_pad;
   element_class->release_pad = dvb_base_bin_release_pad;
@@ -346,8 +334,8 @@ dvb_base_bin_init (DvbBaseBin * dvbbasebin)
 
   /* Expose tsparse source pad */
   pad = gst_element_get_static_pad (dvbbasebin->tsparse, "src");
-  gst_pad_add_buffer_probe (pad, G_CALLBACK (dvb_base_bin_ts_pad_probe_cb),
-      dvbbasebin);
+  gst_pad_add_probe (pad, GST_PAD_PROBE_TYPE_DATA_DOWNSTREAM,
+      dvb_base_bin_ts_pad_probe_cb, dvbbasebin, NULL);
   ghost = gst_ghost_pad_new ("src", pad);
   gst_element_add_pad (GST_ELEMENT (dvbbasebin), ghost);
 

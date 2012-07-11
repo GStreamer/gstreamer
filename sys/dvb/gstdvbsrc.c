@@ -1020,6 +1020,7 @@ gst_dvbsrc_create (GstPushSrc * element, GstBuffer ** buf)
   }
 
   g_mutex_unlock (&object->tune_mutex);
+
   return retval;
 
 }
