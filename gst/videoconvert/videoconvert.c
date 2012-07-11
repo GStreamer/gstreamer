@@ -284,7 +284,7 @@ videoconvert_convert_compute_matrix (VideoConvert * convert)
   const GstVideoFormatInfo *sfinfo, *dfinfo;
   gint depth;
   gint offset[4], scale[4];
-  gdouble Kr, Kb;
+  gdouble Kr = 0, Kb = 0;
 
   in_info = &convert->in_info;
   out_info = &convert->out_info;
