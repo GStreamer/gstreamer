@@ -1742,8 +1742,7 @@ non_fixed:
   }
 any_caps:
   {
-    GST_WARNING_OBJECT (pad,
-        "pad has ANY caps, not able to autoplug to anything");
+    GST_DEBUG_OBJECT (pad, "pad has ANY caps, delaying auto-pluggin");
     goto setup_caps_delay;
   }
 setup_caps_delay:
