@@ -1187,7 +1187,7 @@ _dvb_sub_parse_display_definition_segment (DvbSub * dvb_sub, guint8 * buf,
 
 static gint
 _dvb_sub_parse_end_of_display_set (DvbSub * dvb_sub, guint16 page_id,
-    guint8 * buf, gint buf_size, guint64 pts)
+    guint64 pts)
 {
   DVBSubRegionDisplay *display;
   DVBSubtitles *sub;
@@ -1195,7 +1195,7 @@ _dvb_sub_parse_end_of_display_set (DvbSub * dvb_sub, guint16 page_id,
   guint32 *clut_table;
   int i;
 
-  GST_DEBUG ("DISPLAY SET END: page_id = %u, length = %d", page_id, buf_size);
+  GST_DEBUG ("DISPLAY SET END: page_id = %u, length = %d", page_id);
 
   sub = g_slice_new0 (DVBSubtitles);
 
@@ -1386,7 +1386,13 @@ dvb_sub_feed_with_pts (DvbSub * dvb_sub, guint64 pts, guint8 * data, gint len)
 
   GST_DEBUG ("pts=%" G_GUINT64_FORMAT " and length %d", pts, len);
 
-  g_return_val_if_fail (data != NULL, -1);
+  g_return_val_if_fail (data != NULL || len == 0, -1);
+
+  if (G_UNLIKELY (data == NULL)) {
+    GST_DEBUG ("no data; forcing end-of-display-set");
+    _dvb_sub_parse_end_of_display_set (dvb_sub, 0, pts);
+    return 0;
+  }
 
   if (len <= 3) {               /* len(0x20 0x00 end_of_PES_data_field_marker) */
     GST_WARNING ("Data length too short");
@@ -1453,7 +1459,7 @@ dvb_sub_feed_with_pts (DvbSub * dvb_sub, guint64 pts, guint8 * data, gint len)
         break;
       case DVB_SUB_SEGMENT_END_OF_DISPLAY_SET:
         GST_DEBUG ("End of display set at buffer pos %u", pos);
-        _dvb_sub_parse_end_of_display_set (dvb_sub, page_id, data + pos, segment_len, pts);     /* FIXME: Not sure about args */
+        _dvb_sub_parse_end_of_display_set (dvb_sub, page_id, pts);      /* FIXME: Not sure about args */
         break;
       default:
         GST_FIXME ("Unhandled segment type 0x%x", segment_type);

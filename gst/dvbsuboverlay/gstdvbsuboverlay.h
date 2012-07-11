@@ -45,6 +45,7 @@ struct _GstDVBSubOverlay
   /* properties */
   gboolean enable;
   gint max_page_timeout;
+  gboolean force_end;
 
   /* <private> */
   GstSegment video_segment;
@@ -58,6 +59,11 @@ struct _GstDVBSubOverlay
 
   GMutex dvbsub_mutex; /* protects the queue and the DvbSub instance */
   DvbSub *dvb_sub;
+
+  /* subtitle data submitted to dvb_sub but no sub received yet */
+  gboolean pending_sub;
+  /* last text pts */
+  GstClockTime last_text_pts;
 };
 
 struct _GstDVBSubOverlayClass

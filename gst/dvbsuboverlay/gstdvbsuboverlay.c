@@ -57,10 +57,12 @@ enum
   PROP_0,
   PROP_ENABLE,
   PROP_MAX_PAGE_TIMEOUT,
+  PROP_FORCE_END
 };
 
 #define DEFAULT_ENABLE (TRUE)
 #define DEFAULT_MAX_PAGE_TIMEOUT (0)
+#define DEFAULT_FORCE_END (FALSE)
 
 static GstStaticPadTemplate src_factory = GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
@@ -138,6 +140,11 @@ gst_dvbsub_overlay_class_init (GstDVBSubOverlayClass * klass)
           0, G_MAXINT, DEFAULT_MAX_PAGE_TIMEOUT,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
+  g_object_class_install_property (gobject_class, PROP_FORCE_END,
+      g_param_spec_boolean ("force-end", "Force End",
+          "Assume PES-aligned subtitles and force end-of-display",
+          DEFAULT_FORCE_END, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
   gstelement_class->change_state =
       GST_DEBUG_FUNCPTR (gst_dvbsub_overlay_change_state);
 
@@ -177,6 +184,9 @@ gst_dvbsub_overlay_flush_subtitles (GstDVBSubOverlay * render)
     DvbSubCallbacks dvbsub_callbacks = { &new_dvb_subtitles_cb, };
     dvb_sub_set_callbacks (render->dvb_sub, &dvbsub_callbacks, render);
   }
+
+  render->last_text_pts = GST_CLOCK_TIME_NONE;
+  render->pending_sub = FALSE;
 
   g_mutex_unlock (&render->dvbsub_mutex);
 }
@@ -220,6 +230,7 @@ gst_dvbsub_overlay_init (GstDVBSubOverlay * render)
 
   render->enable = DEFAULT_ENABLE;
   render->max_page_timeout = DEFAULT_MAX_PAGE_TIMEOUT;
+  render->force_end = DEFAULT_FORCE_END;
 
   g_mutex_init (&render->dvbsub_mutex);
   gst_dvbsub_overlay_flush_subtitles (render);
@@ -266,6 +277,9 @@ gst_dvbsub_overlay_set_property (GObject * object, guint prop_id,
     case PROP_MAX_PAGE_TIMEOUT:
       g_atomic_int_set (&overlay->max_page_timeout, g_value_get_int (value));
       break;
+    case PROP_FORCE_END:
+      g_atomic_int_set (&overlay->force_end, g_value_get_boolean (value));
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -284,6 +298,9 @@ gst_dvbsub_overlay_get_property (GObject * object, guint prop_id,
       break;
     case PROP_MAX_PAGE_TIMEOUT:
       g_value_set_int (value, g_atomic_int_get (&overlay->max_page_timeout));
+      break;
+    case PROP_FORCE_END:
+      g_value_set_boolean (value, g_atomic_int_get (&overlay->force_end));
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -718,10 +735,17 @@ gst_dvbsub_overlay_process_text (GstDVBSubOverlay * overlay, GstBuffer * buffer,
 
   g_mutex_lock (&overlay->dvbsub_mutex);
   dvb_sub_feed_with_pts (overlay->dvb_sub, pts, map.data, map.size);
+  overlay->pending_sub = TRUE;
   g_mutex_unlock (&overlay->dvbsub_mutex);
 
   gst_buffer_unmap (buffer, &map);
   gst_buffer_unref (buffer);
+
+  if (overlay->pending_sub && overlay->force_end) {
+    GST_DEBUG_OBJECT (overlay, "forcing subtitle end");
+    dvb_sub_feed_with_pts (overlay->dvb_sub, overlay->last_text_pts, NULL, 0);
+    g_assert (overlay->pending_sub == FALSE);
+  }
 }
 
 static void
@@ -741,6 +765,7 @@ new_dvb_subtitles_cb (DvbSub * dvb_sub, DVBSubtitles * subs, gpointer user_data)
       GST_TIME_ARGS (subs->pts));
 
   g_queue_push_tail (overlay->pending_subtitles, subs);
+  overlay->pending_sub = FALSE;
 }
 
 static GstFlowReturn
@@ -767,6 +792,17 @@ gst_dvbsub_overlay_chain_text (GstPad * pad, GstObject * parent,
     gst_buffer_unref (buffer);
     return GST_FLOW_OK;
   }
+
+  /* spec states multiple PES packets may have same PTS,
+   * and same PTS packets make up a display set */
+  if (overlay->pending_sub &&
+      overlay->last_text_pts != GST_BUFFER_TIMESTAMP (buffer)) {
+    GST_DEBUG_OBJECT (overlay, "finishing previous subtitle");
+    dvb_sub_feed_with_pts (overlay->dvb_sub, overlay->last_text_pts, NULL, 0);
+    overlay->pending_sub = FALSE;
+  }
+
+  overlay->last_text_pts = GST_BUFFER_TIMESTAMP (buffer);
 
   /* As the passed start and stop is equal, we shouldn't need to care about out of segment at all,
    * the subtitle data for the PTS is completely out of interest to us. A given display set must
