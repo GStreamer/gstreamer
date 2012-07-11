@@ -733,8 +733,8 @@ gst_dvbsub_overlay_process_text (GstDVBSubOverlay * overlay, GstBuffer * buffer,
       map.size);
 
   g_mutex_lock (&overlay->dvbsub_mutex);
-  dvb_sub_feed_with_pts (overlay->dvb_sub, pts, map.data, map.size);
   overlay->pending_sub = TRUE;
+  dvb_sub_feed_with_pts (overlay->dvb_sub, pts, map.data, map.size);
   g_mutex_unlock (&overlay->dvbsub_mutex);
 
   gst_buffer_unmap (buffer, &map);
