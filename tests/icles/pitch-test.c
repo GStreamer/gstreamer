@@ -25,6 +25,9 @@
 #include <string.h>
 #include <unistd.h>
 #include <gst/gst.h>
+#include <gst/controller/gsttimedvaluecontrolsource.h>
+#include <gst/controller/gstinterpolationcontrolsource.h>
+#include <gst/controller/gstdirectcontrolbinding.h>
 
 int
 main (int argc, char **argv)
@@ -71,8 +74,8 @@ main (int argc, char **argv)
   cs = gst_interpolation_control_source_new ();
   g_object_set (cs, "mode", GST_INTERPOLATION_MODE_LINEAR, NULL);
 
-  gst_object_add_control_binding (pitch,
-      gst_direct_control_binding_new (pitch, "pitch", cs));
+  gst_object_add_control_binding (GST_OBJECT (pitch),
+      gst_direct_control_binding_new (GST_OBJECT (pitch), "pitch", cs));
   tvcs = (GstTimedValueControlSource *) cs;
 
   for (i = 0; i < 100; ++i) {
