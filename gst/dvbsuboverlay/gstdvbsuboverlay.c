@@ -724,9 +724,8 @@ gst_dvbsub_overlay_process_text (GstDVBSubOverlay * overlay, GstBuffer * buffer,
   GstMapInfo map;
 
   GST_DEBUG_OBJECT (overlay,
-      "Processing subtitles with fake PTS=%" G_GUINT64_FORMAT
-      " which is a running time of %" GST_TIME_FORMAT,
-      pts, GST_TIME_ARGS (pts));
+      "Processing subtitles with PTS=%" G_GUINT64_FORMAT
+      " which is a time of %" GST_TIME_FORMAT, pts, GST_TIME_ARGS (pts));
 
   gst_buffer_map (buffer, &map, GST_MAP_READ);
 
@@ -753,6 +752,7 @@ new_dvb_subtitles_cb (DvbSub * dvb_sub, DVBSubtitles * subs, gpointer user_data)
 {
   GstDVBSubOverlay *overlay = GST_DVBSUB_OVERLAY (user_data);
   int max_page_timeout;
+  gint64 start, stop;
 
   max_page_timeout = g_atomic_int_get (&overlay->max_page_timeout);
   if (max_page_timeout > 0)
@@ -760,12 +760,38 @@ new_dvb_subtitles_cb (DvbSub * dvb_sub, DVBSubtitles * subs, gpointer user_data)
 
   GST_INFO_OBJECT (overlay,
       "New DVB subtitles arrived with a page_time_out of %d and %d regions for PTS=%"
-      G_GUINT64_FORMAT ", which should be at running time %" GST_TIME_FORMAT,
+      G_GUINT64_FORMAT ", which should be at time %" GST_TIME_FORMAT,
       subs->page_time_out, subs->num_rects, subs->pts,
       GST_TIME_ARGS (subs->pts));
 
+  /* clip and convert to running time */
+  start = subs->pts;
+  stop = subs->pts + subs->page_time_out;
+
+  if (!(gst_segment_clip (&overlay->subtitle_segment, GST_FORMAT_TIME,
+              start, stop, &start, &stop)))
+    goto out_of_segment;
+
+  subs->page_time_out = stop - start;
+
+  gst_segment_to_running_time (&overlay->subtitle_segment, GST_FORMAT_TIME,
+      start);
+  g_assert (GST_CLOCK_TIME_IS_VALID (start));
+  subs->pts = start;
+
+  GST_DEBUG_OBJECT (overlay, "SUBTITLE real running time: %" GST_TIME_FORMAT,
+      GST_TIME_ARGS (start));
+
   g_queue_push_tail (overlay->pending_subtitles, subs);
   overlay->pending_sub = FALSE;
+
+  return;
+
+out_of_segment:
+  {
+    GST_DEBUG_OBJECT (overlay, "subtitle out of segment, discarding");
+    dvb_subtitles_free (subs);
+  }
 }
 
 static GstFlowReturn
@@ -773,7 +799,6 @@ gst_dvbsub_overlay_chain_text (GstPad * pad, GstObject * parent,
     GstBuffer * buffer)
 {
   GstDVBSubOverlay *overlay = GST_DVBSUB_OVERLAY (parent);
-  GstClockTime sub_running_time;
 
   GST_INFO_OBJECT (overlay,
       "subpicture/x-dvb buffer with size %" G_GSIZE_FORMAT,
@@ -813,15 +838,8 @@ gst_dvbsub_overlay_chain_text (GstPad * pad, GstObject * parent,
 
   overlay->subtitle_segment.position = GST_BUFFER_TIMESTAMP (buffer);
 
-  sub_running_time =
-      gst_segment_to_running_time (&overlay->subtitle_segment, GST_FORMAT_TIME,
+  gst_dvbsub_overlay_process_text (overlay, buffer,
       GST_BUFFER_TIMESTAMP (buffer));
-
-  GST_DEBUG_OBJECT (overlay, "SUBTITLE real running time: %" GST_TIME_FORMAT,
-      GST_TIME_ARGS (sub_running_time));
-
-  /* FIXME: We are abusing libdvbsub pts value for tracking our gstreamer running time instead of real PTS. Should be mostly fine though... */
-  gst_dvbsub_overlay_process_text (overlay, buffer, sub_running_time);
 
   return GST_FLOW_OK;
 }
