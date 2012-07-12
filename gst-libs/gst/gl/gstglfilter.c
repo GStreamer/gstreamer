@@ -187,10 +187,12 @@ gst_gl_filter_src_query (GstPad * pad, GstObject * parent, GstQuery * query)
         gst_structure_set (structure, "gstgldisplay", G_TYPE_POINTER,
             filter->display, NULL);
       } else {
+        gchar *name;
         /* at least one gl element is after in our gl chain */
-        res =
-            g_strcmp0 (gst_element_get_name (parent),
-            gst_structure_get_name (structure)) == 0;
+
+        name = gst_element_get_name (parent);
+        res = g_strcmp0 (name, gst_structure_get_name (structure)) == 0;
+        g_free (name);
       }
       if (!res)
         res = gst_pad_query_default (pad, parent, query);
@@ -240,6 +242,7 @@ gst_gl_filter_start (GstBaseTransform * bt)
   GstStructure *structure = NULL;
   GstQuery *query = NULL;
   gboolean isPerformed = FALSE;
+  gchar *name;
 
   if (!parent) {
     GST_ELEMENT_ERROR (filter, CORE, STATE_CHANGE, (NULL),
@@ -247,8 +250,10 @@ gst_gl_filter_start (GstBaseTransform * bt)
     return FALSE;
   }
 
-  structure = gst_structure_new_empty (gst_element_get_name (filter));
+  name = gst_element_get_name (filter);
+  structure = gst_structure_new_empty (name);
   query = gst_query_new_custom (GST_QUERY_CUSTOM, structure);
+  g_free (name);
 
   isPerformed = gst_element_query (parent, query);
 
