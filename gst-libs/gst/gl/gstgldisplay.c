@@ -792,7 +792,7 @@ gst_gl_display_thread_destroy_context (GstGLDisplay * display)
 void
 gst_gl_display_thread_run_generic (GstGLDisplay * display)
 {
-  GST_TRACE ("running function:%" GST_PTR_FORMAT " data:%" GST_PTR_FORMAT,
+  GST_TRACE ("running function:%p data:%p",
       display->generic_callback, display->data);
 
   display->generic_callback (display, display->data);
