@@ -69,7 +69,7 @@ static void gst_gl_bumper_get_property (GObject * object, guint prop_id,
 static void gst_gl_bumper_reset (GstGLFilter * filter);
 static gboolean gst_gl_bumper_init_shader (GstGLFilter * filter);
 static gboolean gst_gl_bumper_filter (GstGLFilter * filter,
-    GstGLBuffer * inbuf, GstGLBuffer * outbuf);
+    GstBuffer * inbuf, GstBuffer * outbuf);
 static void gst_gl_bumper_callback (gint width, gint height, guint texture,
     gpointer stuff);
 
@@ -356,17 +356,23 @@ gst_gl_bumper_init_shader (GstGLFilter * filter)
 }
 
 static gboolean
-gst_gl_bumper_filter (GstGLFilter * filter, GstGLBuffer * inbuf,
-    GstGLBuffer * outbuf)
+gst_gl_bumper_filter (GstGLFilter * filter, GstBuffer * inbuf,
+    GstBuffer * outbuf)
 {
+  GstGLMeta *in_gl_meta, *out_gl_meta;
+  GstVideoMeta *in_v_meta;
   gpointer bumper_filter = GST_GL_BUMPER (filter);
+
+  in_gl_meta = gst_buffer_get_gl_meta (inbuf);
+  out_gl_meta = gst_buffer_get_gl_meta (outbuf);
+  in_v_meta = gst_buffer_get_video_meta (inbuf);
 
   //blocking call, use a FBO
   gst_gl_display_use_fbo (filter->display, filter->width, filter->height,
-      filter->fbo, filter->depthbuffer, outbuf->texture, gst_gl_bumper_callback,
-      inbuf->width, inbuf->height, inbuf->texture,
-      //bumper_filter->fovy, bumper_filter->aspect, bumper_filter->znear, bumper_filter->zfar,
-      45, (gdouble) filter->width / (gdouble) filter->height, 0.1, 50,
+      filter->fbo, filter->depthbuffer, out_gl_meta->memory->tex_id,
+      gst_gl_bumper_callback, in_v_meta->width, in_v_meta->height,
+      in_gl_meta->memory->tex_id, 45,
+      (gdouble) filter->width / (gdouble) filter->height, 0.1, 50,
       GST_GL_DISPLAY_PROJECTION_PERSPECTIVE, bumper_filter);
 
   return TRUE;
