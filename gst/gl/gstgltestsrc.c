@@ -592,8 +592,9 @@ gst_gl_test_src_stop (GstBaseSrc * basesrc)
 }
 
 static gboolean
-gst_gl_test_src_decide_allocation (GstBaseSrc * trans, GstQuery * query)
+gst_gl_test_src_decide_allocation (GstBaseSrc * basesrc, GstQuery * query)
 {
+  GstGLTestSrc *src = GST_GL_TEST_SRC (basesrc);
   GstBufferPool *pool = NULL;
   GstStructure *config;
   GstCaps *caps;
@@ -617,7 +618,7 @@ gst_gl_test_src_decide_allocation (GstBaseSrc * trans, GstQuery * query)
   }
 
   if (!pool)
-    pool = gst_video_buffer_pool_new ();
+    pool = gst_gl_buffer_pool_new (src->display);
 
   config = gst_buffer_pool_get_config (pool);
   gst_buffer_pool_config_set_params (config, caps, size, min, max);
