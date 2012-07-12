@@ -137,7 +137,7 @@ static void
 gst_gl_mosaic_init (GstGLMosaic * mosaic)
 {
   mosaic->shader = NULL;
-  mosaic->input_gl_buffers = NULL;
+  mosaic->input_buffers = NULL;
 }
 
 static void
@@ -171,7 +171,7 @@ gst_gl_mosaic_reset (GstGLMixer * mixer)
 {
   GstGLMosaic *mosaic = GST_GL_MOSAIC (mixer);
 
-  mosaic->input_gl_buffers = NULL;
+  mosaic->input_buffers = NULL;
 
   //blocking call, wait the opengl thread has destroyed the shader
   gst_gl_display_del_shader (mixer->display, mosaic->shader);
@@ -191,14 +191,20 @@ static gboolean
 gst_gl_mosaic_proc (GstGLMixer * mix, GPtrArray * buffers, GstBuffer * outbuf)
 {
   GstGLMosaic *mosaic = GST_GL_MOSAIC (mix);
-  GstGLBuffer *gl_out_buffer = GST_GL_BUFFER (outbuf);
+  GstGLMeta *out_meta;
 
-  mosaic->input_gl_buffers = buffers;
+  mosaic->input_buffers = buffers;
 
+  out_meta = gst_buffer_get_gl_meta (outbuf);
+
+  if (!out_meta) {
+    GST_WARNING ("Output buffer does not have required GstGLMeta");
+    return FALSE;
+  }
   //blocking call, use a FBO
-  gst_gl_display_use_fbo_v2 (mix->display, mix->width, mix->height,
-      mix->fbo, mix->depthbuffer, gl_out_buffer->texture,
-      gst_gl_mosaic_callback, (gpointer) mosaic);
+  gst_gl_display_use_fbo_v2 (mix->display, GST_VIDEO_INFO_WIDTH (&mix->info),
+      GST_VIDEO_INFO_HEIGHT (&mix->info), mix->fbo, mix->depthbuffer,
+      out_meta->memory->tex_id, gst_gl_mosaic_callback, (gpointer) mosaic);
 
   return TRUE;
 }
@@ -247,14 +253,19 @@ gst_gl_mosaic_callback (gpointer stuff)
   attr_texture_loc =
       gst_gl_shader_get_attribute_location (mosaic->shader, "a_texCoord");
 
-  while (do_next && count < mosaic->input_gl_buffers->len && count < 6) {
-    GstGLBuffer *gl_in_buffer =
-        g_ptr_array_index (mosaic->input_gl_buffers, count);
+  while (do_next && count < mosaic->input_buffers->len && count < 6) {
+    GstBuffer *in_buffer;
+    GstGLMeta *in_meta;
+    GstVideoMeta *in_v_meta;
 
-    if (gl_in_buffer && gl_in_buffer->texture) {
-      GLuint texture = gl_in_buffer->texture;
-      GLfloat width = (GLfloat) gl_in_buffer->width;
-      GLfloat height = (GLfloat) gl_in_buffer->height;
+    in_buffer = g_ptr_array_index (mosaic->input_buffers, count);
+    in_meta = gst_buffer_get_gl_meta (in_buffer);
+    in_v_meta = gst_buffer_get_video_meta (in_buffer);
+
+    if (in_buffer && in_meta && in_v_meta) {
+      GLuint texture = in_meta->memory->tex_id;
+      GLfloat width = (GLfloat) in_v_meta->width;
+      GLfloat height = (GLfloat) in_v_meta->height;
 
       const GLfloat v_vertices[] = {
 
