@@ -1300,8 +1300,16 @@ gst_ts_demux_parse_pes_header (GstTSDemux * demux, TSDemuxStream * stream,
   /* Remove PES headers */
   GST_DEBUG ("Moving data forward by %d bytes (packet_size:%d, have:%d)",
       header.header_size, header.packet_length, length);
-  g_assert (header.packet_length >= header.header_size);
-  stream->expected_size = header.packet_length - header.header_size;
+  stream->expected_size = header.packet_length;
+  if (stream->expected_size) {
+    if (G_LIKELY (stream->expected_size > header.header_size)) {
+      stream->expected_size -= header.header_size;
+    } else {
+      /* next packet will have to complete this one */
+      GST_ERROR ("invalid header and packet size combination");
+      stream->expected_size = 0;
+    }
+  }
   data += header.header_size;
   length -= header.header_size;
 
