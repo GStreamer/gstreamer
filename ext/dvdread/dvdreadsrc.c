@@ -1770,7 +1770,7 @@ plugin_init (GstPlugin * plugin)
   bind_textdomain_codeset (GETTEXT_PACKAGE, "UTF-8");
 #endif /* ENABLE_NLS */
 
-  if (!gst_element_register (plugin, "dvdreadsrc", GST_RANK_SECONDARY,
+  if (!gst_element_register (plugin, "dvdreadsrc", GST_RANK_NONE,
           GST_TYPE_DVD_READ_SRC)) {
     return FALSE;
   }
