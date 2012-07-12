@@ -289,9 +289,6 @@ gst_glimage_sink_finalize (GObject * object)
     glimage_sink->par = NULL;
   }
 
-  if (glimage_sink->caps)
-    gst_caps_unref (glimage_sink->caps);
-
   g_free (glimage_sink->display_name);
 
   GST_DEBUG ("finalized");
@@ -417,10 +414,8 @@ gst_glimage_sink_change_state (GstElement * element, GstStateChange transition)
       glimage_sink->window_id = 0;
       //but do not reset glimage_sink->new_window_id
 
-      glimage_sink->fps_n = 0;
-      glimage_sink->fps_d = 1;
-      GST_VIDEO_SINK_WIDTH (glimage_sink) = 0;
-      GST_VIDEO_SINK_HEIGHT (glimage_sink) = 0;
+      GST_VIDEO_SINK_WIDTH (glimage_sink) = 1;
+      GST_VIDEO_SINK_HEIGHT (glimage_sink) = 1;
     }
       break;
     case GST_STATE_CHANGE_READY_TO_NULL:
@@ -445,10 +440,11 @@ gst_glimage_sink_get_times (GstBaseSink * bsink, GstBuffer * buf,
     if (GST_BUFFER_DURATION_IS_VALID (buf))
       *end = *start + GST_BUFFER_DURATION (buf);
     else {
-      if (glimagesink->fps_n > 0) {
+      if (GST_VIDEO_INFO_FPS_N (&glimagesink->info) > 0) {
         *end = *start +
-            gst_util_uint64_scale_int (GST_SECOND, glimagesink->fps_d,
-            glimagesink->fps_n);
+            gst_util_uint64_scale_int (GST_SECOND,
+            GST_VIDEO_INFO_FPS_D (&glimagesink->info),
+            GST_VIDEO_INFO_FPS_N (&glimagesink->info));
       }
     }
   }
@@ -461,7 +457,6 @@ gst_glimage_sink_set_caps (GstBaseSink * bsink, GstCaps * caps)
   gint width;
   gint height;
   gboolean ok;
-  gint fps_n, fps_d;
   gint par_n, par_d;
   gint display_par_n, display_par_d;
   guint display_ratio_num, display_ratio_den;
@@ -498,10 +493,11 @@ gst_glimage_sink_set_caps (GstBaseSink * bsink, GstCaps * caps)
   gst_gl_display_set_client_data (glimage_sink->display,
       glimage_sink->client_data);
 
-  fps_n = GST_VIDEO_INFO_FPS_N (&vinfo);
-  fps_d = GST_VIDEO_INFO_FPS_D (&vinfo);
   par_n = GST_VIDEO_INFO_PAR_N (&vinfo);
   par_d = GST_VIDEO_INFO_PAR_D (&vinfo);
+
+  if (!par_n)
+    par_n = 1;
 
   /* get display's PAR */
   if (glimage_sink->par) {
@@ -519,35 +515,31 @@ gst_glimage_sink_set_caps (GstBaseSink * bsink, GstCaps * caps)
   if (!ok)
     return FALSE;
 
+  GST_TRACE ("PAR: %u/%u DAR:%u/%u", par_n, par_d, display_par_n,
+      display_par_d);
+
   if (height % display_ratio_den == 0) {
     GST_DEBUG ("keeping video height");
-    glimage_sink->window_width = (guint)
+    GST_VIDEO_SINK_WIDTH (glimage_sink) = (guint)
         gst_util_uint64_scale_int (height, display_ratio_num,
         display_ratio_den);
-    glimage_sink->window_height = height;
+    GST_VIDEO_SINK_HEIGHT (glimage_sink) = height;
   } else if (width % display_ratio_num == 0) {
     GST_DEBUG ("keeping video width");
-    glimage_sink->window_width = width;
-    glimage_sink->window_height = (guint)
+    GST_VIDEO_SINK_WIDTH (glimage_sink) = width;
+    GST_VIDEO_SINK_HEIGHT (glimage_sink) = (guint)
         gst_util_uint64_scale_int (width, display_ratio_den, display_ratio_num);
   } else {
     GST_DEBUG ("approximating while keeping video height");
-    glimage_sink->window_width = (guint)
+    GST_VIDEO_SINK_WIDTH (glimage_sink) = (guint)
         gst_util_uint64_scale_int (height, display_ratio_num,
         display_ratio_den);
-    glimage_sink->window_height = height;
+    GST_VIDEO_SINK_HEIGHT (glimage_sink) = height;
   }
-  GST_DEBUG ("scaling to %dx%d",
-      glimage_sink->window_width, glimage_sink->window_height);
+  GST_DEBUG ("scaling to %dx%d", GST_VIDEO_SINK_WIDTH (glimage_sink),
+      GST_VIDEO_SINK_HEIGHT (glimage_sink));
 
-  GST_VIDEO_SINK_WIDTH (glimage_sink) = width;
-  GST_VIDEO_SINK_HEIGHT (glimage_sink) = height;
-  glimage_sink->width = width;
-  glimage_sink->height = height;
-  glimage_sink->fps_n = fps_n;
-  glimage_sink->fps_d = fps_d;
-  glimage_sink->par_n = par_n;
-  glimage_sink->par_d = par_d;
+  glimage_sink->info = vinfo;
 
   if (!glimage_sink->window_id && !glimage_sink->new_window_id)
     gst_video_overlay_prepare_window_handle (GST_VIDEO_OVERLAY (glimage_sink));
@@ -561,6 +553,8 @@ gst_glimage_sink_render (GstBaseSink * bsink, GstBuffer * buf)
   GstGLImageSink *glimage_sink;
   GstGLMeta *gl_meta;
   GstVideoMeta *v_meta;
+
+  GST_TRACE ("rendering buffer:%p", buf);
 
   glimage_sink = GST_GLIMAGE_SINK (bsink);
 
@@ -582,12 +576,24 @@ gst_glimage_sink_render (GstBaseSink * bsink, GstBuffer * buf)
   //store current buffer
   glimage_sink->stored_buffer = gst_buffer_ref (buf);
 
+  GST_TRACE ("redisplay tex:%u of size:%ux%u, window size:%ux%u",
+      gl_meta->memory->tex_id, v_meta->width, v_meta->height,
+      GST_VIDEO_SINK_WIDTH (glimage_sink),
+      GST_VIDEO_SINK_HEIGHT (glimage_sink));
+
+  if (GST_VIDEO_SINK_WIDTH (glimage_sink) < 1
+      || GST_VIDEO_SINK_HEIGHT (glimage_sink) < 1) {
+    goto redisplay_failed;
+  }
   //redisplay opengl scene
   if (!gst_gl_display_redisplay (glimage_sink->display,
           gl_meta->memory->tex_id, v_meta->width, v_meta->height,
-          glimage_sink->window_width, glimage_sink->window_height,
+          GST_VIDEO_SINK_WIDTH (glimage_sink),
+          GST_VIDEO_SINK_HEIGHT (glimage_sink),
           glimage_sink->keep_aspect_ratio))
     goto redisplay_failed;
+
+  GST_TRACE ("post redisplay");
 
   return GST_FLOW_OK;
 

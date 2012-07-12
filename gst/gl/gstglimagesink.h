@@ -58,13 +58,7 @@ struct _GstGLImageSink
     gulong new_window_id;
 
     //caps
-    GstCaps *caps;
-    gint width;
-    gint height;
-    gint window_width;
-    gint window_height;
-    gint fps_n, fps_d;
-    gint par_n, par_d;
+    GstVideoInfo info;
 
     GstGLDisplay *display;
     GstBuffer *stored_buffer;
