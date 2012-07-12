@@ -25,6 +25,8 @@
 #include <gst/video/video.h>
 #include "gstglmixerpad.h"
 
+#include "gstglbufferpool.h"
+
 G_BEGIN_DECLS
 
 #define GST_TYPE_GL_MIXER (gst_gl_mixer_get_type())
@@ -41,6 +43,7 @@ G_BEGIN_DECLS
 
 typedef struct _GstGLMixer GstGLMixer;
 typedef struct _GstGLMixerClass GstGLMixerClass;
+typedef struct _GstGLMixerPrivate GstGLMixerPrivate;
 
 typedef gboolean (*GstGLMixerSetCaps) (GstGLMixer* mixer,
   GstCaps* outcaps);
@@ -51,6 +54,8 @@ typedef gboolean (*GstGLMixerProcessFunc) (GstGLMixer *mix,
 struct _GstGLMixer
 {
   GstElement element;
+
+  GstGLMixerPrivate *priv;
 
   /* pad */
   GstPad *srcpad;
