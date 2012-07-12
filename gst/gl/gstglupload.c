@@ -225,9 +225,9 @@ gst_gl_upload_src_query (GstPad * pad, GstObject * object, GstQuery * query)
     case GST_QUERY_CUSTOM:
     {
       const GstStructure *structure = gst_query_get_structure (query);
-      res =
-          g_strcmp0 (gst_element_get_name (object),
-          gst_structure_get_name (structure)) == 0;
+      gchar *name = gst_element_get_name (object);
+      res = g_strcmp0 (name, gst_structure_get_name (structure)) == 0;
+      g_free (name);
       if (!res)
         res = gst_pad_query_default (pad, object, query);
       break;
@@ -258,6 +258,7 @@ gst_gl_upload_start (GstBaseTransform * bt)
   GstStructure *structure = NULL;
   GstQuery *query = NULL;
   gboolean isPerformed = FALSE;
+  gchar *name;
 
   if (!parent) {
     GST_ELEMENT_ERROR (upload, CORE, STATE_CHANGE, (NULL),
@@ -265,8 +266,10 @@ gst_gl_upload_start (GstBaseTransform * bt)
     return FALSE;
   }
 
-  structure = gst_structure_new_empty (gst_element_get_name (upload));
+  name = gst_element_get_name (upload);
+  structure = gst_structure_new_empty (name);
   query = gst_query_new_custom (GST_QUERY_CUSTOM, structure);
+  g_free (name);
 
   isPerformed = gst_element_query (parent, query);
 

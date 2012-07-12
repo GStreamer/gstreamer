@@ -318,9 +318,9 @@ gst_gl_test_src_src_query (GstPad * pad, GstObject * object, GstQuery * query)
     case GST_QUERY_CUSTOM:
     {
       const GstStructure *structure = gst_query_get_structure (query);
-      res =
-          g_strcmp0 (gst_element_get_name (object),
-          gst_structure_get_name (structure)) == 0;
+      gchar *name = gst_element_get_name (object);
+      res = g_strcmp0 (name, gst_structure_get_name (structure)) == 0;
+      g_free (name);
       break;
     }
     default:
@@ -536,6 +536,7 @@ gst_gl_test_src_start (GstBaseSrc * basesrc)
   GstStructure *structure = NULL;
   GstQuery *query = NULL;
   gboolean isPerformed = FALSE;
+  gchar *name;
 
   if (!parent) {
     GST_ELEMENT_ERROR (src, CORE, STATE_CHANGE, (NULL),
@@ -543,8 +544,10 @@ gst_gl_test_src_start (GstBaseSrc * basesrc)
     return FALSE;
   }
 
-  structure = gst_structure_new_empty (gst_element_get_name (src));
+  name = gst_element_get_name (src);
+  structure = gst_structure_new_empty (name);
   query = gst_query_new_custom (GST_QUERY_CUSTOM, structure);
+  g_free (name);
 
   isPerformed = gst_element_query (parent, query);
 

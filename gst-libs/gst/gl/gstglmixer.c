@@ -215,6 +215,7 @@ gst_gl_mixer_update_src_caps (GstGLMixer * mix)
       gst_structure_get_int (s, "width", &info.width);
       gst_structure_get_int (s, "height", &info.height);
       gst_structure_get_fraction (s, "fraction", &info.fps_n, &info.fps_d);
+      gst_caps_unref (caps);
     }
 
     caps = gst_video_info_to_caps (&info);
@@ -893,10 +894,10 @@ gst_gl_mixer_src_query (GstPad * pad, GstObject * parent, GstQuery * query)
        * comes from src pad with every display of the sink pads */
       GSList *walk = mix->sinkpads;
       GstStructure *structure = gst_query_writable_structure (query);
+      gchar *name = gst_element_get_name (mix);
 
-      res =
-          g_strcmp0 (gst_element_get_name (mix),
-          gst_structure_get_name (structure)) == 0;
+      res = g_strcmp0 (name, gst_structure_get_name (structure)) == 0;
+      g_free (name);
 
       if (!res) {
         GstGLDisplay *foreign_display = NULL;
@@ -1966,6 +1967,7 @@ gst_gl_mixer_change_state (GstElement * element, GstStateChange transition)
     {
       GSList *walk = mix->sinkpads;
       gint i = 0;
+      gchar *name;
 
       GstElement *parent = GST_ELEMENT (gst_element_get_parent (mix));
       GstStructure *structure = NULL;
@@ -1978,7 +1980,9 @@ gst_gl_mixer_change_state (GstElement * element, GstStateChange transition)
         return FALSE;
       }
 
-      structure = gst_structure_new_empty (gst_element_get_name (mix));
+      name = gst_element_get_name (mix);
+      structure = gst_structure_new_empty (name);
+      g_free (name);
       query = gst_query_new_custom (GST_QUERY_CUSTOM, structure);
 
       /* retrieve the gldisplay that is owned by gl elements after the gl mixer */

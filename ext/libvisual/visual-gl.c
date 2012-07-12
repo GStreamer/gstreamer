@@ -620,9 +620,11 @@ gst_visual_gl_src_query (GstPad * pad, GstQuery * query)
     case GST_QUERY_CUSTOM:
     {
       GstStructure *structure = gst_query_get_structure (query);
-      res =
-          g_strcmp0 (gst_element_get_name (visual),
-          gst_structure_get_name (structure)) == 0;
+      gchar *name = gst_element_get_name (visual);
+
+      res = g_strcmp0 (name, gst_structure_get_name (structure)) == 0;
+      g_free (name);
+
       if (!res)
         res = gst_pad_query_default (pad, query);
       break;
@@ -746,6 +748,7 @@ render_frame (GstVisualGL * visual)
   VisBuffer *lbuf, *rbuf;
   guint16 ldata[VISUAL_SAMPLES], rdata[VISUAL_SAMPLES];
   guint i;
+  gcahr *name;
 
   /* Read VISUAL_SAMPLES samples per channel */
   data =
@@ -798,10 +801,11 @@ render_frame (GstVisualGL * visual)
    * Indeed libprojectM has to unbind it before the first rendering pass
    * and then rebind it before the final pass. It's done from 2.0.1
    */
-  if (g_ascii_strncasecmp (gst_element_get_name (GST_ELEMENT (visual)),
-          "visualglprojectm", 16) == 0
+  name = gst_element_get_name (GST_ELEMENT (visual));
+  if (g_ascii_strncasecmp (name, "visualglprojectm", 16) == 0
       && !HAVE_PROJECTM_TAKING_CARE_OF_EXTERNAL_FBO)
     glBindFramebufferEXT (GL_FRAMEBUFFER_EXT, 0);
+  g_free (name);
 
   actor_negotiate (visual->display, visual);
 
@@ -1012,6 +1016,7 @@ gst_visual_gl_change_state (GstElement * element, GstStateChange transition)
       GstStructure *structure = NULL;
       GstQuery *query = NULL;
       gboolean isPerformed = FALSE;
+      gchar *name;
 
       if (!parent) {
         GST_ELEMENT_ERROR (visual, CORE, STATE_CHANGE, (NULL),
@@ -1019,8 +1024,10 @@ gst_visual_gl_change_state (GstElement * element, GstStateChange transition)
         return FALSE;
       }
 
-      structure = gst_structure_new (gst_element_get_name (visual), NULL);
+      name = gst_element_get_name (visual);
+      structure = gst_structure_new (name, NULL);
       query = gst_query_new_application (GST_QUERY_CUSTOM, structure);
+      g_free (name);
 
       isPerformed = gst_element_query (parent, query);
 
