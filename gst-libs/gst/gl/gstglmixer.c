@@ -66,6 +66,20 @@ enum
   PROP_PAD_0
 };
 
+#define GST_GL_MIXER_GET_PRIVATE(obj)  \
+    (G_TYPE_INSTANCE_GET_PRIVATE ((obj), GST_TYPE_GL_MIXER, GstGLMixerPrivate))
+
+struct _GstGLMixerPrivate
+{
+  gboolean negotiated;
+
+  GstBufferPool *pool;
+  gboolean pool_active;
+  GstAllocator *allocator;
+  GstAllocationParams params;
+  GstQuery *query;
+};
+
 G_DEFINE_TYPE (GstGLMixerPad, gst_gl_mixer_pad, GST_TYPE_PAD);
 
 static void
@@ -207,6 +221,7 @@ gst_gl_mixer_update_src_caps (GstGLMixer * mix)
 
     GST_GL_MIXER_UNLOCK (mix);
     ret = gst_gl_mixer_src_setcaps (mix->srcpad, mix, caps);
+//    ret = gst_pad_set_caps (mix->srcpad, caps);
     gst_caps_unref (caps);
   } else {
     GST_GL_MIXER_UNLOCK (mix);
@@ -334,6 +349,8 @@ gst_gl_mixer_pad_sink_query (GstPad * pad, GstObject * parent, GstQuery * query)
 {
   gboolean ret = FALSE;
 
+  GST_TRACE ("QUERY %d", GST_QUERY_TYPE (query));
+
   switch (GST_QUERY_TYPE (query)) {
     case GST_QUERY_CAPS:
     {
@@ -360,6 +377,7 @@ gst_gl_mixer_pad_sink_query (GstPad * pad, GstObject * parent, GstQuery * query)
       ret = gst_pad_query_default (pad, parent, query);
       break;
   }
+
   return ret;
 }
 
@@ -421,6 +439,14 @@ static gboolean gst_gl_mixer_query_caps (GstPad * pad, GstObject * parent,
 static gboolean gst_gl_mixer_query_duration (GstGLMixer * mix,
     GstQuery * query);
 static gboolean gst_gl_mixer_query_latency (GstGLMixer * mix, GstQuery * query);
+
+static gboolean gst_gl_mixer_do_bufferpool (GstGLMixer * mix,
+    GstCaps * outcaps);
+static gboolean gst_gl_mixer_decide_allocation (GstGLMixer * mix,
+    GstQuery * query);
+static gboolean gst_gl_mixer_set_allocation (GstGLMixer * mix,
+    GstBufferPool * pool, GstAllocator * allocator,
+    GstAllocationParams * params, GstQuery * query);
 
 static gint64 gst_gl_mixer_do_qos (GstGLMixer * mix, GstClockTime timestamp);
 static void gst_gl_mixer_update_qos (GstGLMixer * mix, gdouble proportion,
@@ -484,6 +510,8 @@ gst_gl_mixer_class_init (GstGLMixerClass * klass)
   gobject_class = (GObjectClass *) klass;
   element_class = GST_ELEMENT_CLASS (klass);
 
+  g_type_class_add_private (klass, sizeof (GstGLMixerPrivate));
+
   gobject_class->finalize = GST_DEBUG_FUNCPTR (gst_gl_mixer_finalize);
 
   gobject_class->get_property = gst_gl_mixer_get_property;
@@ -517,6 +545,7 @@ gst_gl_mixer_collect_free (GstGLMixerCollect * mixcol)
 static void
 gst_gl_mixer_reset (GstGLMixer * mix)
 {
+  GstGLMixerPrivate *priv = mix->priv;
   GSList *l;
 
   gst_video_info_init (&mix->info);
@@ -540,12 +569,16 @@ gst_gl_mixer_reset (GstGLMixer * mix)
 
   mix->newseg_pending = TRUE;
   mix->flush_stop_pending = FALSE;
+
+  priv->negotiated = FALSE;
 }
 
 static void
 gst_gl_mixer_init (GstGLMixer * mix)
 {
   GstElementClass *klass = GST_ELEMENT_GET_CLASS (mix);
+
+  mix->priv = GST_GL_MIXER_GET_PRIVATE (mix);
 
   mix->srcpad =
       gst_pad_new_from_template (gst_element_class_get_pad_template (klass,
@@ -928,11 +961,151 @@ gst_gl_mixer_src_query (GstPad * pad, GstObject * parent, GstQuery * query)
 }
 
 static gboolean
+gst_gl_mixer_decide_allocation (GstGLMixer * mix, GstQuery * query)
+{
+  GstBufferPool *pool = NULL;
+  GstStructure *config;
+  GstCaps *caps;
+  guint min, max, size;
+  gboolean update_pool;
+
+  gst_query_parse_allocation (query, &caps, NULL);
+
+  if (gst_query_get_n_allocation_pools (query) > 0) {
+    gst_query_parse_nth_allocation_pool (query, 0, &pool, &size, &min, &max);
+
+    update_pool = TRUE;
+  } else {
+    GstVideoInfo vinfo;
+
+    gst_video_info_init (&vinfo);
+    gst_video_info_from_caps (&vinfo, caps);
+    size = vinfo.size;
+    min = max = 0;
+    update_pool = FALSE;
+  }
+
+  if (!pool)
+    pool = gst_gl_buffer_pool_new (mix->display);
+
+  config = gst_buffer_pool_get_config (pool);
+  gst_buffer_pool_config_set_params (config, caps, size, min, max);
+  gst_buffer_pool_config_add_option (config, GST_BUFFER_POOL_OPTION_VIDEO_META);
+  gst_buffer_pool_config_add_option (config, GST_BUFFER_POOL_OPTION_GL_META);
+  gst_buffer_pool_set_config (pool, config);
+
+  if (update_pool)
+    gst_query_set_nth_allocation_pool (query, 0, pool, size, min, max);
+  else
+    gst_query_add_allocation_pool (query, pool, size, min, max);
+
+  gst_object_unref (pool);
+
+  return TRUE;
+}
+
+/* takes ownership of the pool, allocator and query */
+static gboolean
+gst_gl_mixer_set_allocation (GstGLMixer * mix,
+    GstBufferPool * pool, GstAllocator * allocator,
+    GstAllocationParams * params, GstQuery * query)
+{
+  GstAllocator *oldalloc;
+  GstBufferPool *oldpool;
+  GstQuery *oldquery;
+  GstGLMixerPrivate *priv = mix->priv;
+
+  GST_OBJECT_LOCK (mix);
+  oldpool = priv->pool;
+  priv->pool = pool;
+  priv->pool_active = FALSE;
+
+  oldalloc = priv->allocator;
+  priv->allocator = allocator;
+
+  oldquery = priv->query;
+  priv->query = query;
+
+  if (params)
+    priv->params = *params;
+  else
+    gst_allocation_params_init (&priv->params);
+  GST_OBJECT_UNLOCK (mix);
+
+  if (oldpool) {
+    GST_DEBUG_OBJECT (mix, "deactivating old pool %p", oldpool);
+    gst_buffer_pool_set_active (oldpool, FALSE);
+    gst_object_unref (oldpool);
+  }
+  if (oldalloc) {
+    gst_allocator_unref (oldalloc);
+  }
+  if (oldquery) {
+    gst_query_unref (oldquery);
+  }
+  return TRUE;
+}
+
+static gboolean
+gst_gl_mixer_do_bufferpool (GstGLMixer * mix, GstCaps * outcaps)
+{
+  GstQuery *query;
+  gboolean result = TRUE;
+  GstBufferPool *pool = NULL;
+  GstAllocator *allocator;
+  GstAllocationParams params;
+
+  /* find a pool for the negotiated caps now */
+  GST_DEBUG_OBJECT (mix, "doing allocation query");
+  query = gst_query_new_allocation (outcaps, TRUE);
+  if (!gst_pad_peer_query (mix->srcpad, query)) {
+    /* not a problem, just debug a little */
+    GST_DEBUG_OBJECT (mix, "peer ALLOCATION query failed");
+  }
+
+  GST_DEBUG_OBJECT (mix, "calling decide_allocation");
+  result = gst_gl_mixer_decide_allocation (mix, query);
+
+  GST_DEBUG_OBJECT (mix, "ALLOCATION (%d) params: %" GST_PTR_FORMAT, result,
+      query);
+
+  if (!result)
+    goto no_decide_allocation;
+
+  /* we got configuration from our peer or the decide_allocation method,
+   * parse them */
+  if (gst_query_get_n_allocation_params (query) > 0) {
+    gst_query_parse_nth_allocation_param (query, 0, &allocator, &params);
+  } else {
+    allocator = NULL;
+    gst_allocation_params_init (&params);
+  }
+
+  if (gst_query_get_n_allocation_pools (query) > 0)
+    gst_query_parse_nth_allocation_pool (query, 0, &pool, NULL, NULL, NULL);
+
+  /* now store */
+  result = gst_gl_mixer_set_allocation (mix, pool, allocator, &params, query);
+
+  return result;
+
+  /* Errors */
+no_decide_allocation:
+  {
+    GST_WARNING_OBJECT (mix, "Failed to decide allocation");
+    gst_query_unref (query);
+
+    return result;
+  }
+}
+
+static gboolean
 gst_gl_mixer_src_setcaps (GstPad * pad, GstGLMixer * mix, GstCaps * caps)
 {
   GstGLMixerClass *mixer_class = GST_GL_MIXER_GET_CLASS (mix);
+  GstGLMixerPrivate *priv = mix->priv;
   GstVideoInfo info;
-  gboolean ret;
+  gboolean ret = TRUE;
 
   GST_INFO_OBJECT (mix, "set src caps: %" GST_PTR_FORMAT, caps);
 
@@ -967,8 +1140,12 @@ gst_gl_mixer_src_setcaps (GstPad * pad, GstGLMixer * mix, GstCaps * caps)
   if (mixer_class->set_caps)
     mixer_class->set_caps (mix, caps);
 
-  ret = TRUE;
+  ret = gst_pad_set_caps (mix->srcpad, caps);
+
+  if (ret)
+    ret = gst_gl_mixer_do_bufferpool (mix, caps);
 done:
+  priv->negotiated = ret;
 
   return ret;
 }
@@ -1243,6 +1420,8 @@ gst_gl_mixer_process_buffers (GstGLMixer * mix, GstBuffer * outbuf)
   GSList *walk = mix->sinkpads;
   gint array_index = 0;
 
+  GST_TRACE ("Processing buffers");
+
   while (walk) {                /* We walk with this list because it's ordered */
     GstGLMixerPad *pad = GST_GL_MIXER_PAD (walk->data);
     GstGLMixerCollect *mixcol = pad->mixcol;
@@ -1401,14 +1580,23 @@ gst_gl_mixer_collected (GstCollectPads * pads, GstGLMixer * mix)
 
   jitter = gst_gl_mixer_do_qos (mix, output_start_time);
   if (jitter <= 0) {
-    /* FIXME: Use GstGLMeta */
-    /* Calculating out buffer size from input size */
-    /*ret = gst_gl_buffer_parse_caps (GST_PAD_CAPS (mix->srcpad), &width, &height);
 
-       gl_outbuf = gst_gl_buffer_new (mix->display, mix->width, mix->height);
+    if (!mix->priv->pool_active) {
+      if (!gst_buffer_pool_set_active (mix->priv->pool, TRUE)) {
+        GST_ELEMENT_ERROR (mix, RESOURCE, SETTINGS,
+            ("failed to activate bufferpool"),
+            ("failed to activate bufferpool"));
+        ret = GST_FLOW_ERROR;
+        goto error;
+      }
+      mix->priv->pool_active = TRUE;
+    }
 
-       outbuf = GST_BUFFER (gl_outbuf);
-       gst_buffer_set_caps (outbuf, GST_PAD_CAPS (mix->srcpad)); */
+    ret = gst_buffer_pool_acquire_buffer (mix->priv->pool, &outbuf, NULL);
+
+    gst_buffer_add_video_meta (outbuf, 0, GST_VIDEO_INFO_FORMAT (&mix->info),
+        GST_VIDEO_INFO_WIDTH (&mix->info), GST_VIDEO_INFO_HEIGHT (&mix->info));
+    gst_buffer_add_gl_meta (outbuf, mix->display);
 
     gst_gl_mixer_process_buffers (mix, outbuf);
     mix->qos_processed++;
