@@ -756,7 +756,6 @@ init_post (GOptionContext * context, GOptionGroup * group, gpointer data,
   g_type_class_ref (gst_search_mode_get_type ());
   g_type_class_ref (gst_progress_type_get_type ());
   g_type_class_ref (gst_caps_intersect_mode_get_type ());
-  g_type_class_ref (gst_toc_entry_type_get_type ());
 
   gst_structure_get_type ();
   _gst_value_initialize ();
@@ -768,7 +767,6 @@ init_post (GOptionContext * context, GOptionGroup * group, gpointer data,
   gst_buffer_list_iterator_get_type ();
   _gst_message_initialize ();
   _gst_tag_initialize ();
-  priv_gst_toc_initialize ();
   gst_parse_context_get_type ();
 
   _gst_plugin_initialize ();
@@ -1126,7 +1124,6 @@ gst_deinit (void)
   g_type_class_unref (g_type_class_peek (gst_param_spec_fraction_get_type ()));
   g_type_class_unref (g_type_class_peek (gst_progress_type_get_type ()));
   g_type_class_unref (g_type_class_peek (gst_caps_intersect_mode_get_type ()));
-  g_type_class_unref (g_type_class_peek (gst_toc_entry_type_get_type ()));
 
   gst_deinitialized = TRUE;
   GST_INFO ("deinitialized GStreamer");
