@@ -132,10 +132,12 @@ $GST/gstreamer/plugins\
 :$GST/gst-plugins-bad/ext\
 :$GST/gst-plugins-bad/gst\
 :$GST/gst-plugins-bad/sys\
-:$GST/gst-ffmpeg/ext\
-:$GST/gnonlin/gnl\
-:$GST/gst-openmax\
-:$GST/gst-plugins-gl/gst\
+:$GST/gst-ffmpeg/ext/.libs\
+:$GST/gnonlin/gnl/.libs\
+:$GST/gst-openmax/omx/.libs\
+:$GST/gst-omx/omx/.libs\
+:$GST/gst-plugins-gl/gst/.libs\
+:$GST/clutter-gst/clutter-gst/.libs\
 :$GST/plugins\
 :$GST/farsight2/gst\
 :$GST/farsight2/transmitters\
@@ -158,6 +160,11 @@ export GST_PLUGIN_SCANNER=$GST/gstreamer/libs/gst/helpers/gst-plugin-scanner
 export MANPATH=$GST/gstreamer/tools:$GST_PREFIX/share/man:$MANPATH
 pythonver=`python -c "import sys; print sys.version[:3]"`
 export PYTHONPATH=$GST/gst-python:$GST_PREFIX/lib/python$pythonver/site-packages${PYTHONPATH:+:$PYTHONPATH}
+
+# clutter-gst
+export PKG_CONFIG_PATH=$GST/clutter-gst:$PKG_CONFIG_PATH
+export LD_LIBRARY_PATH=$GST/clutter-gst/clutter-gst/.libs:$LD_LIBRARY_PATH
+export DYLD_LIBRARY_PATH=$GST/clutter-gst/clutter-gst/.libs:$DYLD_LIBRARY_PATH
 
 # totem-pl-parser
 export PKG_CONFIG_PATH=$GST/totem-pl-parser:$PKG_CONFIG_PATH
