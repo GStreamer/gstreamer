@@ -2698,7 +2698,6 @@ void
 mpegts_packetizer_clear_packet (MpegTSPacketizer2 * packetizer,
     MpegTSPacketizerPacket * packet)
 {
-  memset (packet, 0, sizeof (MpegTSPacketizerPacket));
   packetizer->priv->offset += packetizer->packet_size;
   packetizer->priv->available -= packetizer->packet_size;
   if (G_UNLIKELY (packetizer->priv->available < packetizer->packet_size)) {
