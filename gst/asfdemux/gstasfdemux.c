@@ -1520,6 +1520,7 @@ gst_asf_demux_push_complete_payloads (GstASFDemux * demux, gboolean force)
       ret = gst_pad_push (stream->pad, payload->buf);
       ret = gst_asf_demux_aggregate_flow_return (demux, stream, ret);
     } else {
+      gst_buffer_unref (payload->buf);
       ret = GST_FLOW_OK;
     }
     payload->buf = NULL;
