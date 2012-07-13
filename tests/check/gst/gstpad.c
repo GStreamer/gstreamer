@@ -1042,7 +1042,7 @@ test_pad_blocking_with_type (GstPadProbeType type)
 
   /* wait for the block */
   while (!gst_pad_is_blocking (pad)) {
-    g_usleep (100000);
+    g_usleep (10000);
   }
 
   /* stop with flushing */
@@ -1116,9 +1116,8 @@ test_queue_src_caps_notify (gboolean link_queue)
   gst_pad_send_event (sink, gst_event_new_caps (caps));
   gst_caps_unref (caps);
 
-  g_usleep (10000);
-
-  fail_unless (got_notify == TRUE);
+  while (got_notify == FALSE)
+    g_usleep (10000);
 
   gst_element_set_state (queue, GST_STATE_NULL);
 
