@@ -348,13 +348,13 @@ typedef struct
   guint8 *data;
 } GstMPEGDescriptor;
 
-void gst_mpegtsdesc_init_debug (void);
-gboolean gst_mpeg_descriptor_parse (GstMPEGDescriptor *result, guint8 * data, guint size);
+G_GNUC_INTERNAL void gst_mpegtsdesc_init_debug (void);
+G_GNUC_INTERNAL gboolean gst_mpeg_descriptor_parse (GstMPEGDescriptor *result, guint8 * data, guint size);
 
-guint gst_mpeg_descriptor_n_desc             (GstMPEGDescriptor * desc);
-guint8 *gst_mpeg_descriptor_find             (GstMPEGDescriptor * desc, gint tag);
-GArray *gst_mpeg_descriptor_find_all         (GstMPEGDescriptor * desc, gint tag);
+G_GNUC_INTERNAL guint gst_mpeg_descriptor_n_desc             (GstMPEGDescriptor * desc);
+G_GNUC_INTERNAL guint8 *gst_mpeg_descriptor_find             (GstMPEGDescriptor * desc, gint tag);
+G_GNUC_INTERNAL GArray *gst_mpeg_descriptor_find_all         (GstMPEGDescriptor * desc, gint tag);
 
-guint8 *gst_mpeg_descriptor_nth              (GstMPEGDescriptor * desc, guint i);
+G_GNUC_INTERNAL guint8 *gst_mpeg_descriptor_nth              (GstMPEGDescriptor * desc, guint i);
 
 #endif /* __GST_MPEG_DESC_H__ */

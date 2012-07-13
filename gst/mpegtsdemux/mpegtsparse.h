@@ -58,9 +58,9 @@ struct _MpegTSParse2Class {
   MpegTSBaseClass parent_class;
 };
 
-GType mpegts_parse_get_type(void);
+G_GNUC_INTERNAL GType mpegts_parse_get_type(void);
 
-gboolean gst_mpegtsparse_plugin_init (GstPlugin * plugin);
+G_GNUC_INTERNAL gboolean gst_mpegtsparse_plugin_init (GstPlugin * plugin);
 
 G_END_DECLS
 

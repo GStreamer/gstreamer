@@ -80,9 +80,9 @@ struct _GstTSDemuxClass
   MpegTSBaseClass parent_class;
 };
 
-GType gst_ts_demux_get_type (void);
+G_GNUC_INTERNAL GType gst_ts_demux_get_type (void);
 
-gboolean gst_ts_demux_plugin_init (GstPlugin * plugin);
+G_GNUC_INTERNAL gboolean gst_ts_demux_plugin_init (GstPlugin * plugin);
 
 G_END_DECLS
 #endif /* GST_TS_DEMUX_H */

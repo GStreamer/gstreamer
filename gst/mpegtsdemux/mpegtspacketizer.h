@@ -163,54 +163,54 @@ typedef enum {
   PACKET_NEED_MORE
 } MpegTSPacketizerPacketReturn;
 
-GType mpegts_packetizer_get_type(void);
+G_GNUC_INTERNAL GType mpegts_packetizer_get_type(void);
 
-MpegTSPacketizer2 *mpegts_packetizer_new (void);
-void mpegts_packetizer_clear (MpegTSPacketizer2 *packetizer);
-void mpegts_packetizer_flush (MpegTSPacketizer2 *packetizer);
-void mpegts_packetizer_push (MpegTSPacketizer2 *packetizer, GstBuffer *buffer);
-gboolean mpegts_packetizer_has_packets (MpegTSPacketizer2 *packetizer);
-MpegTSPacketizerPacketReturn mpegts_packetizer_next_packet (MpegTSPacketizer2 *packetizer,
+G_GNUC_INTERNAL MpegTSPacketizer2 *mpegts_packetizer_new (void);
+G_GNUC_INTERNAL void mpegts_packetizer_clear (MpegTSPacketizer2 *packetizer);
+G_GNUC_INTERNAL void mpegts_packetizer_flush (MpegTSPacketizer2 *packetizer);
+G_GNUC_INTERNAL void mpegts_packetizer_push (MpegTSPacketizer2 *packetizer, GstBuffer *buffer);
+G_GNUC_INTERNAL gboolean mpegts_packetizer_has_packets (MpegTSPacketizer2 *packetizer);
+G_GNUC_INTERNAL MpegTSPacketizerPacketReturn mpegts_packetizer_next_packet (MpegTSPacketizer2 *packetizer,
   MpegTSPacketizerPacket *packet);
-MpegTSPacketizerPacketReturn
+G_GNUC_INTERNAL MpegTSPacketizerPacketReturn
 mpegts_packetizer_process_next_packet(MpegTSPacketizer2 * packetizer);
-void mpegts_packetizer_clear_packet (MpegTSPacketizer2 *packetizer,
+G_GNUC_INTERNAL void mpegts_packetizer_clear_packet (MpegTSPacketizer2 *packetizer,
 				     MpegTSPacketizerPacket *packet);
-void mpegts_packetizer_remove_stream(MpegTSPacketizer2 *packetizer,
+G_GNUC_INTERNAL void mpegts_packetizer_remove_stream(MpegTSPacketizer2 *packetizer,
   gint16 pid);
 
-gboolean mpegts_packetizer_push_section (MpegTSPacketizer2 *packetzer,
+G_GNUC_INTERNAL gboolean mpegts_packetizer_push_section (MpegTSPacketizer2 *packetzer,
   MpegTSPacketizerPacket *packet, MpegTSPacketizerSection *section);
-GstStructure *mpegts_packetizer_parse_cat (MpegTSPacketizer2 *packetizer,
+G_GNUC_INTERNAL GstStructure *mpegts_packetizer_parse_cat (MpegTSPacketizer2 *packetizer,
   MpegTSPacketizerSection *section);
-GstStructure *mpegts_packetizer_parse_pat (MpegTSPacketizer2 *packetizer,
+G_GNUC_INTERNAL GstStructure *mpegts_packetizer_parse_pat (MpegTSPacketizer2 *packetizer,
   MpegTSPacketizerSection *section);
-GstStructure *mpegts_packetizer_parse_pmt (MpegTSPacketizer2 *packetizer,
+G_GNUC_INTERNAL GstStructure *mpegts_packetizer_parse_pmt (MpegTSPacketizer2 *packetizer,
   MpegTSPacketizerSection *section);
-GstStructure *mpegts_packetizer_parse_nit (MpegTSPacketizer2 *packetizer,
+G_GNUC_INTERNAL GstStructure *mpegts_packetizer_parse_nit (MpegTSPacketizer2 *packetizer,
   MpegTSPacketizerSection *section);
-GstStructure *mpegts_packetizer_parse_sdt (MpegTSPacketizer2 *packetizer,
+G_GNUC_INTERNAL GstStructure *mpegts_packetizer_parse_sdt (MpegTSPacketizer2 *packetizer,
   MpegTSPacketizerSection *section);
-GstStructure *mpegts_packetizer_parse_eit (MpegTSPacketizer2 *packetizer,
+G_GNUC_INTERNAL GstStructure *mpegts_packetizer_parse_eit (MpegTSPacketizer2 *packetizer,
   MpegTSPacketizerSection *section);
-GstStructure *mpegts_packetizer_parse_tdt (MpegTSPacketizer2 *packetizer,
+G_GNUC_INTERNAL GstStructure *mpegts_packetizer_parse_tdt (MpegTSPacketizer2 *packetizer,
   MpegTSPacketizerSection *section);
-GstStructure *mpegts_packetizer_parse_tot (MpegTSPacketizer2 *packetizer,
+G_GNUC_INTERNAL GstStructure *mpegts_packetizer_parse_tot (MpegTSPacketizer2 *packetizer,
   MpegTSPacketizerSection *section);
 
 /* Only valid if calculate_offset is TRUE */
-guint mpegts_packetizer_get_seen_pcr (MpegTSPacketizer2 *packetizer);
+G_GNUC_INTERNAL guint mpegts_packetizer_get_seen_pcr (MpegTSPacketizer2 *packetizer);
 
-GstClockTime
+G_GNUC_INTERNAL GstClockTime
 mpegts_packetizer_offset_to_ts (MpegTSPacketizer2 * packetizer,
 				guint64 offset, guint16 pcr_pid);
-guint64
+G_GNUC_INTERNAL guint64
 mpegts_packetizer_ts_to_offset (MpegTSPacketizer2 * packetizer,
 				GstClockTime ts, guint16 pcr_pid);
-GstClockTime
+G_GNUC_INTERNAL GstClockTime
 mpegts_packetizer_pts_to_ts (MpegTSPacketizer2 * packetizer,
 			     GstClockTime pts, guint16 pcr_pid);
-void
+G_GNUC_INTERNAL void
 mpegts_packetizer_set_reference_offset (MpegTSPacketizer2 * packetizer,
 					guint64 refoffset);
 G_END_DECLS
