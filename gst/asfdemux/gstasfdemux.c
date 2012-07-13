@@ -2368,6 +2368,7 @@ gst_asf_demux_activate_stream (GstASFDemux * demux, AsfStream * stream)
     gst_pad_set_active (stream->pad, TRUE);
     gst_pad_set_caps (stream->pad, stream->caps);
     gst_element_add_pad (GST_ELEMENT_CAST (demux), stream->pad);
+    gst_pad_push_event (stream->pad, gst_event_new_stream_start ());
     stream->active = TRUE;
   }
 }

@@ -1489,6 +1489,7 @@ gst_rmdemux_add_stream (GstRMDemux * rmdemux, GstRMDemuxStream * stream)
         ", stream_id=%d", GST_PAD_NAME (stream->pad), stream_caps, stream->id);
     gst_pad_set_active (stream->pad, TRUE);
     gst_element_add_pad (GST_ELEMENT_CAST (rmdemux), stream->pad);
+    gst_pad_push_event (stream->pad, gst_event_new_stream_start ());
 
     codec_name = gst_pb_utils_get_codec_description (stream_caps);
 

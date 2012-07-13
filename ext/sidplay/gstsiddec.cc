@@ -333,6 +333,7 @@ siddec_negotiate (GstSidDec * siddec)
       "layout", G_TYPE_STRING, "interleaved",
       "rate", G_TYPE_INT, siddec->config->frequency,
       "channels", G_TYPE_INT, siddec->config->channels, NULL);
+  gst_pad_push_event (siddec->srcpad, gst_event_new_stream_start ());
   gst_pad_set_caps (siddec->srcpad, caps);
   gst_caps_unref (caps);
 
