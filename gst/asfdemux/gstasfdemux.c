@@ -1516,8 +1516,12 @@ gst_asf_demux_push_complete_payloads (GstASFDemux * demux, gboolean force)
         GST_TIME_ARGS (GST_BUFFER_DURATION (payload->buf)),
         gst_buffer_get_size (payload->buf));
 
-    ret = gst_pad_push (stream->pad, payload->buf);
-    ret = gst_asf_demux_aggregate_flow_return (demux, stream, ret);
+    if (stream->active) {
+      ret = gst_pad_push (stream->pad, payload->buf);
+      ret = gst_asf_demux_aggregate_flow_return (demux, stream, ret);
+    } else {
+      ret = GST_FLOW_OK;
+    }
     payload->buf = NULL;
     g_array_remove_index (stream->payloads, 0);
 
