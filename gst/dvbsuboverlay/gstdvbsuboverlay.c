@@ -456,6 +456,48 @@ gst_dvbsub_overlay_getcaps (GstPad * pad, GstCaps * filter)
   return caps;
 }
 
+/* only negotiate/query video overlay composition support for now */
+static gboolean
+gst_dvbsub_overlay_negotiate (GstDVBSubOverlay * overlay)
+{
+  GstCaps *target;
+  GstQuery *query;
+  gboolean attach = FALSE;
+
+  GST_DEBUG_OBJECT (overlay, "performing negotiation");
+
+  target = gst_pad_get_current_caps (overlay->srcpad);
+
+  if (!target || gst_caps_is_empty (target))
+    goto no_format;
+
+  /* find supported meta */
+  query = gst_query_new_allocation (target, TRUE);
+
+  if (!gst_pad_peer_query (overlay->srcpad, query)) {
+    /* no problem, we use the query defaults */
+    GST_DEBUG_OBJECT (overlay, "ALLOCATION query failed");
+  }
+
+  if (gst_query_find_allocation_meta (query,
+          GST_VIDEO_OVERLAY_COMPOSITION_META_API_TYPE, NULL))
+    attach = TRUE;
+
+  overlay->attach_compo_to_buffer = attach;
+
+  gst_query_unref (query);
+  gst_caps_unref (target);
+
+  return TRUE;
+
+no_format:
+  {
+    if (target)
+      gst_caps_unref (target);
+    return FALSE;
+  }
+}
+
 static gboolean
 gst_dvbsub_overlay_setcaps_video (GstPad * pad, GstCaps * caps)
 {
@@ -471,6 +513,8 @@ gst_dvbsub_overlay_setcaps_video (GstPad * pad, GstCaps * caps)
   ret = gst_pad_set_caps (render->srcpad, caps);
   if (!ret)
     goto out;
+
+  gst_dvbsub_overlay_negotiate (render);
 
   GST_DEBUG_OBJECT (render, "ass renderer setup complete");
 
@@ -859,11 +903,17 @@ gst_dvbsub_overlay_chain_video (GstPad * pad, GstObject * parent,
     GstVideoFrame frame;
 
     buffer = gst_buffer_make_writable (buffer);
-    gst_video_frame_map (&frame, &overlay->info, buffer, GST_MAP_WRITE);
     g_assert (overlay->current_comp);
-    buffer = gst_buffer_make_writable (buffer);
-    gst_video_overlay_composition_blend (overlay->current_comp, &frame);
-    gst_video_frame_unmap (&frame);
+    if (overlay->attach_compo_to_buffer) {
+      GST_DEBUG_OBJECT (overlay, "Attaching overlay image to video buffer");
+      gst_buffer_add_video_overlay_composition_meta (buffer,
+          overlay->current_comp);
+    } else {
+      GST_DEBUG_OBJECT (overlay, "Blending overlay image to video buffer");
+      gst_video_frame_map (&frame, &overlay->info, buffer, GST_MAP_WRITE);
+      gst_video_overlay_composition_blend (overlay->current_comp, &frame);
+      gst_video_frame_unmap (&frame);
+    }
   }
   g_mutex_unlock (&overlay->dvbsub_mutex);
 

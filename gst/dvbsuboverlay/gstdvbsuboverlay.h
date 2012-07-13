@@ -66,6 +66,8 @@ struct _GstDVBSubOverlay
   gboolean pending_sub;
   /* last text pts */
   GstClockTime last_text_pts;
+
+  gboolean attach_compo_to_buffer;
 };
 
 struct _GstDVBSubOverlayClass
