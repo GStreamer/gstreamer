@@ -549,6 +549,16 @@ gst_flac_parse_frame_header_is_valid (GstFlacParse * flacparse,
     }
   }
 
+  /* documentation says:
+   * The "blocking strategy" bit must be the same throughout the entire stream. */
+  if (flacparse->blocking_strategy != blocking_strategy) {
+    if (flacparse->block_size != 0) {
+      GST_WARNING_OBJECT (flacparse, "blocking strategy is not constant");
+      if (suspect)
+        *suspect = TRUE;
+    }
+  }
+
   /* 
      The FLAC format documentation says:
      The "blocking strategy" bit determines how to calculate the sample number
