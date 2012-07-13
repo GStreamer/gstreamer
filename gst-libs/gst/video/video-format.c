@@ -1339,6 +1339,8 @@ typedef struct
  { fourcc, {GST_VIDEO_FORMAT_ ##name, G_STRINGIFY(name), desc, GST_VIDEO_FORMAT_FLAG_YUV | GST_VIDEO_FORMAT_FLAG_ALPHA, depth, pstride, plane, offs, sub, pack } }
 #define MAKE_YUVA_PACK_FORMAT(name, desc, fourcc, depth, pstride, plane, offs, sub, pack) \
  { fourcc, {GST_VIDEO_FORMAT_ ##name, G_STRINGIFY(name), desc, GST_VIDEO_FORMAT_FLAG_YUV | GST_VIDEO_FORMAT_FLAG_ALPHA | GST_VIDEO_FORMAT_FLAG_UNPACK, depth, pstride, plane, offs, sub, pack } }
+#define MAKE_YUVA_LE_PACK_FORMAT(name, desc, fourcc, depth, pstride, plane, offs, sub, pack) \
+ { fourcc, {GST_VIDEO_FORMAT_ ##name, G_STRINGIFY(name), desc, GST_VIDEO_FORMAT_FLAG_YUV | GST_VIDEO_FORMAT_FLAG_ALPHA | GST_VIDEO_FORMAT_FLAG_UNPACK | GST_VIDEO_FORMAT_FLAG_LE, depth, pstride, plane, offs, sub, pack } }
 #define MAKE_YUV_C_FORMAT(name, desc, fourcc, depth, pstride, plane, offs, sub, pack) \
  { fourcc, {GST_VIDEO_FORMAT_ ##name, G_STRINGIFY(name), desc, GST_VIDEO_FORMAT_FLAG_YUV | GST_VIDEO_FORMAT_FLAG_COMPLEX, depth, pstride, plane, offs, sub, pack } }
 
@@ -1352,6 +1354,8 @@ typedef struct
  { 0x00000000, {GST_VIDEO_FORMAT_ ##name, G_STRINGIFY(name), desc, GST_VIDEO_FORMAT_FLAG_RGB | GST_VIDEO_FORMAT_FLAG_ALPHA | GST_VIDEO_FORMAT_FLAG_PALETTE, depth, pstride, plane, offs, sub, pack } }
 #define MAKE_RGBA_PACK_FORMAT(name, desc, depth, pstride, plane, offs, sub, pack) \
  { 0x00000000, {GST_VIDEO_FORMAT_ ##name, G_STRINGIFY(name), desc, GST_VIDEO_FORMAT_FLAG_RGB | GST_VIDEO_FORMAT_FLAG_ALPHA | GST_VIDEO_FORMAT_FLAG_UNPACK, depth, pstride, plane, offs, sub, pack } }
+#define MAKE_RGBA_LE_PACK_FORMAT(name, desc, depth, pstride, plane, offs, sub, pack) \
+ { 0x00000000, {GST_VIDEO_FORMAT_ ##name, G_STRINGIFY(name), desc, GST_VIDEO_FORMAT_FLAG_RGB | GST_VIDEO_FORMAT_FLAG_ALPHA | GST_VIDEO_FORMAT_FLAG_UNPACK | GST_VIDEO_FORMAT_FLAG_LE, depth, pstride, plane, offs, sub, pack } }
 
 #define MAKE_GRAY_FORMAT(name, desc, depth, pstride, plane, offs, sub, pack) \
  { 0x00000000, {GST_VIDEO_FORMAT_ ##name, G_STRINGIFY(name), desc, GST_VIDEO_FORMAT_FLAG_GRAY, depth, pstride, plane, offs, sub, pack } }
@@ -1454,10 +1458,18 @@ static VideoFormat formats[] = {
       DPTH888, PSTR111, PLANE021, OFFS0, SUB410, PACK_410),
   MAKE_YUV_FORMAT (IYU1, "raw video", GST_MAKE_FOURCC ('I', 'Y', 'U', '1'),
       DPTH888, PSTR0, PLANE0, OFFS104, SUB411, PACK_IYU1),
+#if G_BYTE_ORDER == G_LITTLE_ENDIAN
+  MAKE_RGBA_LE_PACK_FORMAT (ARGB64, "raw video", DPTH16_16_16_16, PSTR8888,
+      PLANE0,
+      OFFS2460, SUB444, PACK_ARGB64),
+  MAKE_YUVA_LE_PACK_FORMAT (AYUV64, "raw video", 0x00000000, DPTH16_16_16_16,
+      PSTR8888, PLANE0, OFFS2460, SUB444, PACK_AYUV64),
+#else
   MAKE_RGBA_PACK_FORMAT (ARGB64, "raw video", DPTH16_16_16_16, PSTR8888, PLANE0,
       OFFS2460, SUB444, PACK_ARGB64),
   MAKE_YUVA_PACK_FORMAT (AYUV64, "raw video", 0x00000000, DPTH16_16_16_16,
       PSTR8888, PLANE0, OFFS2460, SUB444, PACK_AYUV64),
+#endif
   MAKE_RGB_FORMAT (r210, "raw video", DPTH10_10_10, PSTR444, PLANE0, OFFS0,
       SUB444, PACK_r210),
   MAKE_YUV_FORMAT (I420_10BE, "raw video", 0x00000000, DPTH10_10_10,
