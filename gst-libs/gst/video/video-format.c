@@ -1108,7 +1108,7 @@ pack_copy8 (const GstVideoFormatInfo * info, GstVideoPackFlags flags,
   memcpy (GET_LINE (y), src, width * 8);
 }
 
-#define PACK_r210 GST_VIDEO_FORMAT_AYUV64, unpack_r210, 1, pack_r210
+#define PACK_r210 GST_VIDEO_FORMAT_ARGB64, unpack_r210, 1, pack_r210
 static void
 unpack_r210 (const GstVideoFormatInfo * info, GstVideoPackFlags flags,
     gpointer dest, const gpointer data[GST_VIDEO_MAX_PLANES],
@@ -1458,8 +1458,8 @@ static VideoFormat formats[] = {
       OFFS2460, SUB444, PACK_ARGB64),
   MAKE_YUVA_PACK_FORMAT (AYUV64, "raw video", 0x00000000, DPTH16_16_16_16,
       PSTR8888, PLANE0, OFFS2460, SUB444, PACK_AYUV64),
-  MAKE_YUV_FORMAT (r210, "raw video", GST_MAKE_FOURCC ('r', '2', '1', '0'),
-      DPTH10_10_10, PSTR444, PLANE0, OFFS0, SUB444, PACK_r210),
+  MAKE_RGB_FORMAT (r210, "raw video", DPTH10_10_10, PSTR444, PLANE0, OFFS0,
+      SUB444, PACK_r210),
   MAKE_YUV_FORMAT (I420_10BE, "raw video", 0x00000000, DPTH10_10_10,
       PSTR222, PLANE012, OFFS0, SUB420, PACK_I420_10BE),
   MAKE_YUV_LE_FORMAT (I420_10LE, "raw video", 0x00000000, DPTH10_10_10,
