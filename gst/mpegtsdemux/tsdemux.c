@@ -1139,6 +1139,11 @@ gst_ts_demux_record_pts (GstTSDemux * demux, TSDemuxStream * stream,
 {
   MpegTSBaseStream *bs = (MpegTSBaseStream *) stream;
 
+  if (pts == -1) {
+    stream->pts = GST_CLOCK_TIME_NONE;
+    return;
+  }
+
   GST_LOG ("pid 0x%04x pts:%" G_GUINT64_FORMAT " at offset %"
       G_GUINT64_FORMAT, bs->pid, pts, offset);
 
@@ -1184,6 +1189,11 @@ gst_ts_demux_record_dts (GstTSDemux * demux, TSDemuxStream * stream,
     guint64 dts, guint64 offset)
 {
   MpegTSBaseStream *bs = (MpegTSBaseStream *) stream;
+
+  if (dts == -1) {
+    stream->dts = GST_CLOCK_TIME_NONE;
+    return;
+  }
 
   GST_LOG ("pid 0x%04x dts:%" G_GUINT64_FORMAT " at offset %"
       G_GUINT64_FORMAT, bs->pid, dts, offset);
@@ -1244,18 +1254,12 @@ gst_ts_demux_parse_pes_header (GstTSDemux * demux, TSDemuxStream * stream,
     goto discont;
   }
 
-  if (header.DTS != -1)
-    gst_ts_demux_record_dts (demux, stream, header.DTS, bufferoffset);
+  gst_ts_demux_record_dts (demux, stream, header.DTS, bufferoffset);
+  gst_ts_demux_record_pts (demux, stream, header.PTS, bufferoffset);
 
-  if (header.PTS != -1) {
-    gst_ts_demux_record_pts (demux, stream, header.PTS, bufferoffset);
-
-    GST_DEBUG_OBJECT (base,
-        "stream PTS %" GST_TIME_FORMAT " DTS %" GST_TIME_FORMAT,
-        GST_TIME_ARGS (stream->pts),
-        GST_TIME_ARGS (MPEGTIME_TO_GSTTIME (header.DTS)));
-
-  }
+  GST_DEBUG_OBJECT (base,
+      "stream PTS %" GST_TIME_FORMAT " DTS %" GST_TIME_FORMAT,
+      GST_TIME_ARGS (stream->pts), GST_TIME_ARGS (stream->dts));
 
   /* Remove PES headers */
   GST_DEBUG ("Moving data forward by %d bytes (packet_size:%d, have:%d)",
@@ -1500,8 +1504,9 @@ gst_ts_demux_push_pending_data (GstTSDemux * demux, TSDemuxStream * stream)
         demux->program->pcr_pid);
 
   GST_DEBUG_OBJECT (stream->pad,
-      "Pushing buffer with timestamp: %" GST_TIME_FORMAT,
-      GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (buffer)));
+      "Pushing buffer with PTS: %" GST_TIME_FORMAT " , DTS: %" GST_TIME_FORMAT,
+      GST_TIME_ARGS (GST_BUFFER_PTS (buffer)),
+      GST_TIME_ARGS (GST_BUFFER_DTS (buffer)));
 
   res = gst_pad_push (stream->pad, buffer);
   GST_DEBUG_OBJECT (stream->pad, "Returned %s", gst_flow_get_name (res));
