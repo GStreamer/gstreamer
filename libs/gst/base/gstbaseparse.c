@@ -3754,16 +3754,16 @@ gst_base_parse_handle_seek (GstBaseParse * parse, GstEvent * event)
   if (rate < 0.0 && parse->priv->pad_mode == GST_PAD_MODE_PUSH)
     goto negative_rate;
 
-  if (cur_type != GST_SEEK_TYPE_SET ||
-      (stop_type != GST_SEEK_TYPE_SET && stop_type != GST_SEEK_TYPE_NONE))
-    goto wrong_type;
-
   /* For any format other than TIME, see if upstream handles
    * it directly or fail. For TIME, try upstream, but do it ourselves if
    * it fails upstream */
   res = gst_pad_push_event (parse->sinkpad, event);
   if (format != GST_FORMAT_TIME || res)
     goto done;
+
+  if (cur_type != GST_SEEK_TYPE_SET ||
+      (stop_type != GST_SEEK_TYPE_SET && stop_type != GST_SEEK_TYPE_NONE))
+    goto wrong_type;
 
   /* get flush flag */
   flush = flags & GST_SEEK_FLAG_FLUSH;
