@@ -1005,6 +1005,8 @@ gst_ffmpegdemux_get_stream (GstFFMpegDemux * demux, AVStream * avstream)
   /* activate and add */
   gst_element_add_pad (GST_ELEMENT (demux), pad);
 
+  gst_pad_push_event (pad, gst_event_new_stream_start ());
+
   /* metadata */
   if ((codec = gst_ffmpeg_get_codecid_longname (ctx->codec_id))) {
     stream->tags = gst_tag_list_new_empty ();
